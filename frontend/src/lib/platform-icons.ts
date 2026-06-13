@@ -28,7 +28,7 @@ export const platformIcons = Object.freeze({
     id: "bilibili",
     label: "哔哩哔哩",
     glyph: "B",
-    background: "#00aeec",
+    background: "#fb65a2",
     foreground: white,
   }),
   douyin: Object.freeze({
@@ -49,7 +49,7 @@ export const platformIcons = Object.freeze({
     id: "wechatVideo",
     label: "微信视频号",
     glyph: "视频号",
-    background: "#07c160",
+    background: "#fe860b",
     foreground: white,
   }),
   x: Object.freeze({

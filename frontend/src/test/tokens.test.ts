@@ -81,6 +81,55 @@ const semanticMappings = {
   "--radius": "--creatoros-radius-card",
 } as const;
 
+const themeAliasMappings = {
+  "--font-heading": "--creatoros-font-sans",
+  "--font-sans": "--creatoros-font-sans",
+  "--color-canvas": "--creatoros-canvas",
+  "--color-surface": "--creatoros-surface",
+  "--color-surface-subtle": "--creatoros-surface-subtle",
+  "--color-brand": "--creatoros-brand",
+  "--color-brand-hover": "--creatoros-brand-hover",
+  "--color-brand-soft": "--creatoros-brand-soft",
+  "--color-text": "--creatoros-text",
+  "--color-text-muted": "--creatoros-text-muted",
+  "--color-text-subtle": "--creatoros-text-subtle",
+  "--color-border": "--creatoros-border",
+  "--color-border-strong": "--creatoros-border-strong",
+  "--color-success": "--creatoros-success",
+  "--color-success-soft": "--creatoros-success-soft",
+  "--color-warning": "--creatoros-warning",
+  "--color-warning-soft": "--creatoros-warning-soft",
+  "--color-danger": "--creatoros-danger",
+  "--color-danger-soft": "--creatoros-danger-soft",
+  "--color-info": "--creatoros-info",
+  "--color-info-soft": "--creatoros-info-soft",
+  "--spacing-sidebar": "--creatoros-sidebar-width",
+  "--spacing-header": "--creatoros-header-height",
+  "--spacing-page-gutter": "--creatoros-page-gutter",
+  "--spacing-section-gap": "--creatoros-section-gap",
+  "--spacing-card-gap": "--creatoros-card-gap",
+  "--radius-control": "--creatoros-radius-control",
+  "--radius-card": "--creatoros-radius-card",
+  "--radius-panel": "--creatoros-radius-panel",
+  "--text-xs": "--creatoros-text-xs",
+  "--text-sm": "--creatoros-text-sm",
+  "--text-md": "--creatoros-text-md",
+  "--text-lg": "--creatoros-text-lg",
+  "--text-xl": "--creatoros-text-xl",
+  "--text-2xl": "--creatoros-text-2xl",
+  "--shadow-card": "--creatoros-shadow-card",
+  "--shadow-popover": "--creatoros-shadow-popover",
+  "--z-index-header": "--creatoros-z-header",
+  "--z-index-sidebar": "--creatoros-z-sidebar",
+  "--z-index-overlay": "--creatoros-z-overlay",
+  "--z-index-dialog": "--creatoros-z-dialog",
+  "--color-chart-1": "--chart-1",
+  "--color-chart-2": "--chart-2",
+  "--color-chart-3": "--chart-3",
+  "--color-chart-4": "--chart-4",
+  "--color-chart-5": "--chart-5",
+} as const;
+
 function expectDeclaration(
   css: string,
   property: string,
@@ -122,13 +171,28 @@ describe("CreatorOS design tokens", () => {
     }
   });
 
-  test("exposes Tailwind font aliases without recursive variables", () => {
-    expect(globalsCss).toMatch(
-      /--font-sans\s*:\s*var\(--creatoros-font-sans\)\s*;/,
-    );
-    expect(globalsCss).not.toMatch(
-      /--font-sans\s*:\s*var\(--font-sans\)\s*;/,
-    );
+  test("exposes the complete CreatorOS contract through Tailwind aliases", () => {
+    for (const [alias, creatorToken] of Object.entries(themeAliasMappings)) {
+      expectDeclaration(
+        globalsCss,
+        alias,
+        `var\\(${creatorToken.replaceAll("-", "\\-")}\\)`,
+      );
+    }
+  });
+
+  test("does not define self-referential Tailwind aliases", () => {
+    const themeBlock = globalsCss.match(/@theme inline\s*{([\s\S]*?)\n}/)?.[1];
+
+    expect(themeBlock).toBeDefined();
+
+    for (const match of themeBlock?.matchAll(
+      /(--[\w-]+)\s*:\s*var\((--[\w-]+)\)\s*;/g,
+    ) ?? []) {
+      expect(match[2], `${match[1]} must not reference itself`).not.toBe(
+        match[1],
+      );
+    }
   });
 
   test("bundles the approved local font without Google font imports", () => {

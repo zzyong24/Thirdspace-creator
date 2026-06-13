@@ -28,16 +28,38 @@ const requiredCreatorIconKeys = [
   "sparkles",
 ] as const;
 
-const expectedPlatformLabels = {
-  youtube: "YouTube",
-  bilibili: "哔哩哔哩",
-  douyin: "抖音",
-  xiaohongshu: "小红书",
-  wechatVideo: "微信视频号",
-  x: "X",
+const expectedPlatforms = {
+  youtube: {
+    label: "YouTube",
+    background: "#ff0033",
+    foreground: "#ffffff",
+  },
+  bilibili: {
+    label: "哔哩哔哩",
+    background: "#fb65a2",
+    foreground: "#ffffff",
+  },
+  douyin: {
+    label: "抖音",
+    background: "#000000",
+    foreground: "#ffffff",
+  },
+  xiaohongshu: {
+    label: "小红书",
+    background: "#ff2442",
+    foreground: "#ffffff",
+  },
+  wechatVideo: {
+    label: "微信视频号",
+    background: "#fe860b",
+    foreground: "#ffffff",
+  },
+  x: {
+    label: "X",
+    background: "#000000",
+    foreground: "#ffffff",
+  },
 } as const;
-
-const localColorPattern = /^#[0-9a-f]{6}$/i;
 
 describe("CreatorOS semantic icons", () => {
   test("provides every approved semantic key from a frozen mapping", () => {
@@ -56,17 +78,15 @@ describe("CreatorOS platform icons", () => {
   test("provides frozen deterministic local platform metadata", () => {
     expect(Object.isFrozen(platformIcons)).toBe(true);
     expect(Object.keys(platformIcons).sort()).toEqual(
-      Object.keys(expectedPlatformLabels).sort(),
+      Object.keys(expectedPlatforms).sort(),
     );
 
-    for (const [id, label] of Object.entries(expectedPlatformLabels)) {
+    for (const [id, expected] of Object.entries(expectedPlatforms)) {
       const entry = platformIcons[id as keyof typeof platformIcons];
 
       expect(Object.isFrozen(entry)).toBe(true);
-      expect(entry).toMatchObject({ id, label });
+      expect(entry).toMatchObject({ id, ...expected });
       expect(entry.glyph.trim().length).toBeGreaterThan(0);
-      expect(entry.background).toMatch(localColorPattern);
-      expect(entry.foreground).toMatch(localColorPattern);
       expect(JSON.stringify(entry)).not.toMatch(/https?:\/\//);
     }
   });
