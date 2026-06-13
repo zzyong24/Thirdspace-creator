@@ -230,7 +230,7 @@ export function OverlayController({
       <div
         data-slot="overlay-layer"
         data-overlay="copilot"
-        className="fixed inset-0 z-(--z-overlay) flex items-stretch justify-end"
+        className="fixed inset-0 z-(--z-overlay) flex items-center justify-center p-6"
       >
         <div
           aria-hidden="true"
@@ -247,7 +247,7 @@ export function OverlayController({
           data-slot="overlay-panel"
           data-overlay-panel="copilot"
           className={cn(
-            "relative z-10 flex h-full w-full max-w-md flex-col gap-4 overflow-y-auto bg-surface p-6 text-foreground shadow-xl focus:outline-none",
+            "relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col gap-4 overflow-y-auto rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none",
             className,
           )}
         >

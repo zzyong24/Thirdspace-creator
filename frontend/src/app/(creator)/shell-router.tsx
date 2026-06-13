@@ -30,6 +30,7 @@ import type {
   TopHeaderProjectIdentity,
 } from "@/components/shell/top-header";
 import { OverlayController } from "@/components/overlays/overlay-controller";
+import { AICopilotDialog } from "@/components/overlays/ai-copilot-dialog";
 import { canonicalDataset } from "@/fixtures/canonical";
 
 // ---------------------------------------------------------------------------
@@ -194,34 +195,9 @@ export function ShellRouter({
           appears on the client, after hydration. */}
       <React.Suspense fallback={null}>
         <OverlayController>
-          <CopilotPanel pathname={pathname} />
+          <AICopilotDialog pathname={pathname} />
         </OverlayController>
       </React.Suspense>
     </AppShell>
-  );
-}
-
-function CopilotPanel({ pathname }: { pathname: string }) {
-  return (
-    <div className="flex flex-col gap-4">
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs uppercase tracking-wide text-text-subtle">
-            AI 助手
-          </span>
-          <h2 className="font-heading text-base font-medium text-foreground">
-            你的个人创作 Copilot
-          </h2>
-        </div>
-      </header>
-      <p className="text-sm text-muted-foreground">
-        当前页面：
-        <span className="font-medium text-foreground">{pathname}</span>
-      </p>
-      <p className="text-sm text-muted-foreground">
-        完整的 Copilot 面板将在后续任务中实现。此处仅验证
-        OverlayController 的路由、焦点陷阱和关闭行为。
-      </p>
-    </div>
   );
 }
