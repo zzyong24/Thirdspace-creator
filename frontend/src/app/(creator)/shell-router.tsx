@@ -1,13 +1,17 @@
 "use client";
 
 /**
- * ShellRouter derives the AppShell props from the current pathname.
+ * ShellRouter derives the AppShell props from the current pathname and
+ * mounts the overlay infrastructure that watches `?copilot=open` and any
+ * intercepting modal route currently active.
  *
  * The (creator) layout is a Server Component so the route outlet stays
  * server-rendered. ShellRouter is a small Client island that reads
  * `usePathname()` and maps the URL to a TopHeader mode, a Sidebar
- * contextual-card variant, a page heading and an optional current-project
- * identity.
+ * contextual-card variant, a page heading, an optional current-project
+ * identity, and an overlay-mask state. The `useSearchParams()` consumer
+ * is the child `OverlayController`, which Next.js prerenders with a
+ * Suspense fallback.
  *
  * Pure functions, no `Date.now`, no `Math.random`, no network access. The
  * resolver never branches on cookies or auth state.
@@ -25,6 +29,7 @@ import type {
   TopHeaderMode,
   TopHeaderProjectIdentity,
 } from "@/components/shell/top-header";
+import { OverlayController } from "@/components/overlays/overlay-controller";
 import { canonicalDataset } from "@/fixtures/canonical";
 
 // ---------------------------------------------------------------------------
@@ -159,12 +164,18 @@ function resolveRoute(pathname: string): RouteResolution {
 
 export interface ShellRouterProps {
   readonly children: React.ReactNode;
+  readonly hasInterceptingModal?: boolean;
   readonly overlayMasked?: boolean;
 }
 
-export function ShellRouter({ children, overlayMasked = false }: ShellRouterProps) {
+export function ShellRouter({
+  children,
+  hasInterceptingModal = false,
+  overlayMasked = false,
+}: ShellRouterProps) {
   const pathname = usePathname() ?? "/";
   const resolution = resolveRoute(pathname);
+
   return (
     <AppShell
       pathname={pathname}
@@ -174,9 +185,43 @@ export function ShellRouter({ children, overlayMasked = false }: ShellRouterProp
       contextualCardVariant={resolution.contextualCardVariant}
       sidebarContext={resolution.sidebarContext}
       project={resolution.project}
-      overlayMasked={overlayMasked}
+      overlayMasked={hasInterceptingModal || overlayMasked}
     >
       {children}
+      {/* The Copilot overlay controller is wrapped in a Suspense boundary
+          because it consumes `useSearchParams()`, which Next.js requires
+          during prerender. The fallback is `null` so the panel only
+          appears on the client, after hydration. */}
+      <React.Suspense fallback={null}>
+        <OverlayController>
+          <CopilotPanel pathname={pathname} />
+        </OverlayController>
+      </React.Suspense>
     </AppShell>
+  );
+}
+
+function CopilotPanel({ pathname }: { pathname: string }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <span className="text-xs uppercase tracking-wide text-text-subtle">
+            AI 助手
+          </span>
+          <h2 className="font-heading text-base font-medium text-foreground">
+            你的个人创作 Copilot
+          </h2>
+        </div>
+      </header>
+      <p className="text-sm text-muted-foreground">
+        当前页面：
+        <span className="font-medium text-foreground">{pathname}</span>
+      </p>
+      <p className="text-sm text-muted-foreground">
+        完整的 Copilot 面板将在后续任务中实现。此处仅验证
+        OverlayController 的路由、焦点陷阱和关闭行为。
+      </p>
+    </div>
   );
 }

@@ -5,11 +5,15 @@
  * CreatorOS. It owns:
  *  - the shared `AppShell`, routed by `ShellRouter` based on the current
  *    pathname,
- *  - the `@modal` parallel slot for intercepting-route overlays.
+ *  - the `@modal` parallel slot for intercepting-route overlays,
+ *  - the global `OverlayController` (mounted inside `OverlayHost`) that
+ *    watches the `?copilot=open` search parameter and renders the AI
+ *    Copilot panel above the AppShell.
  *
  * Pages remain Server Components by default. The router runs in a small
- * Client island so `usePathname()` can resolve the active nav, header
- * mode and contextual-card variant.
+ * Client island so `usePathname()` and `useSearchParams()` can resolve
+ * the active nav, header mode, contextual-card variant and overlay
+ * state.
  */
 
 import * as React from "react";
@@ -25,9 +29,9 @@ export default function CreatorLayout({ children, modal }: CreatorLayoutProps) {
   return (
     <>
       <ShellRouter>{children}</ShellRouter>
-      {/* @modal is rendered at the root level so overlays appear above the
-          page chrome. It contains intercepting routes for `/projects/new`
-          and the global AI Copilot trigger (added in Task 8). */}
+      {/* The @modal parallel slot renders intercepting-route overlays
+          (currently `/projects/new`). It is rendered above the AppShell
+          so the dialog appears above the page chrome. */}
       {modal}
     </>
   );
