@@ -1,12 +1,13 @@
 /**
- * Placeholder for the Knowledge & Memory page. The full layout is
- * implemented in a later task. For now the page renders a minimal
- * placeholder so the (creator) layout can wrap it during shell tests.
+ * Knowledge & Memory route entrypoint.
+ *
+ * The (creator) layout supplies the shared AppShell (Sidebar + TopHeader)
+ * and the global Header is configured for `/knowledge` in
+ * `shell-router.tsx`. The page itself is a Server Component
+ * (page-specs §11, D-002) and just provides the page slot.
  */
-export default function KnowledgePage() {
-  return (
-    <main data-app="creatoros" data-page="knowledge">
-      <p>知识库</p>
-    </main>
-  );
+import { KnowledgePage } from "@/features/knowledge/knowledge-page";
+
+export default function KnowledgeRoutePage() {
+  return <KnowledgePage />;
 }
