@@ -27,6 +27,19 @@ export interface ChartFrameProps {
   readonly height?: number;
   readonly className?: string;
   readonly testId?: string;
+  /**
+   * Optional override for the figure's `data-slot`. When provided, the
+   * chart exposes the supplied slot name in addition to the default
+   * `chart-frame` marker, so callers can target a specific chart from
+   * tests or per-chart styling hooks.
+   */
+  readonly slot?: string;
+  /**
+   * Optional `data-shape` value (e.g. `line`, `funnel`). Mirrors the
+   * inline-SVG charts so tests can assert the visual shape category
+   * uniformly across the page.
+   */
+  readonly shape?: string;
 }
 
 const CHART_PADDING = 8;
@@ -40,6 +53,8 @@ export function ChartFrame({
   height = 80,
   className,
   testId,
+  slot,
+  shape,
 }: ChartFrameProps) {
   const { path, viewBox, maxValue, minValue } = buildPath(trend, height);
   return (
@@ -51,7 +66,8 @@ export function ChartFrame({
       <figure
         role="figure"
         aria-label={title}
-        data-slot="chart-frame"
+        data-slot={slot ?? "chart-frame"}
+        data-shape={shape}
         data-testid={testId}
         className="flex flex-col gap-2"
       >
@@ -71,8 +87,10 @@ export function ChartFrame({
             strokeLinecap="round"
           />
         </svg>
-        <figcaption className="sr-only" data-slot="chart-frame-summary">
-          {summary}
+        <figcaption className="sr-only" data-slot="chart-summary">
+          <span data-slot="chart-frame-summary" className="sr-only">
+            {summary}
+          </span>
         </figcaption>
         <div
           aria-hidden="true"
