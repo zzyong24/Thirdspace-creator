@@ -16,6 +16,7 @@
     "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
+    "@fontsource-variable/noto-sans-sc": "5.2.10",
     "clsx": "2.1.1",
     "lucide-react": "1.18.0",
     "next": "16.2.9",

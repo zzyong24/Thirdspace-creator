@@ -10,6 +10,9 @@ importers:
 
   frontend:
     dependencies:
+      '@fontsource-variable/noto-sans-sc':
+        specifier: 5.2.10
+        version: 5.2.10
       clsx:
         specifier: 2.1.1
         version: 2.1.1
@@ -357,6 +360,9 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@fontsource-variable/noto-sans-sc@5.2.10':
+    resolution: {integrity: sha512-zdk10i5HrDQTXI7ldD61zToX1fsgig8vDTsu7zB48SXOitWfuX0e5viZAwnkHuhwh096PU6X6i1AyAsbBCISpA==}
 
   '@hono/node-server@1.19.14':
     resolution: {integrity: sha512-GwtvgtXxnWsucXvbQXkRgqksiH2Qed37H9xHZocE5sA3N8O8O8/8FA3uclQXxXVzc9XBZuEOMK7+r02FmSpHtw==}
@@ -3737,6 +3743,8 @@ snapshots:
   '@exodus/bytes@1.15.1(@noble/hashes@1.8.0)':
     optionalDependencies:
       '@noble/hashes': 1.8.0
+
+  '@fontsource-variable/noto-sans-sc@5.2.10': {}
 
   '@hono/node-server@1.19.14(hono@4.12.25)':
     dependencies:
