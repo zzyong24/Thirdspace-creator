@@ -4,19 +4,23 @@
  * NewProjectDialog is the intercepting-route shell for `/projects/new`
  * (SPEC §5, D-006).
  *
- * The full dialog content is implemented in a later page task. This shell
- * locks the routing contract:
+ * The dialog owns the routing contract:
  *  - the dialog renders above the AppShell with a backdrop mask,
  *  - the dialog traps focus and is closable from a Close button,
  *  - the Close button calls `router.back()` when the browser has a
  *    background entry to return to (the intercepting-route case),
  *  - when there is no background history, the Close button falls back to
  *    `router.replace('/projects')` so the dialog still closes.
+ *
+ * The form body is `NewProjectForm` (Task 11). The dialog routes the
+ * form's onCreate/onCancel callbacks to the routing close logic so the
+ * local-success transition lands on a route change.
  */
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { NewProjectForm } from "@/features/projects/new-project-form";
 import { cn } from "@/lib/utils";
 
 const DIALOG_TITLE = "新建项目";
@@ -127,7 +131,7 @@ export function NewProjectDialog() {
           <div className="flex flex-col gap-1">
             <h2 className="font-heading text-base font-medium">{DIALOG_TITLE}</h2>
             <p className="text-xs text-muted-foreground">
-              占位内容 — 完整的新建项目表单在后续任务中实现。
+              为新项目填写基础信息。后续可在工作区继续完善。
             </p>
           </div>
           <button
@@ -140,9 +144,20 @@ export function NewProjectDialog() {
             关闭
           </button>
         </header>
-        <div className="flex flex-col gap-3 text-sm text-muted-foreground">
-          <p>此处将渲染新建项目表单。</p>
-        </div>
+        <NewProjectForm
+          onCreate={() => {
+            // Local success transition: collapse the dialog via the same
+            // routing path as Cancel. Persistence is out of scope for
+            // this task — Task 26 wires the project store. The form
+            // values are intentionally not consumed here: the
+            // intercepting route is a one-shot navigation back to the
+            // projects list, and the project store reads the values
+            // from the form state directly when the user resumes from
+            // the new project entry.
+            close();
+          }}
+          onCancel={close}
+        />
       </div>
     </div>
   );
