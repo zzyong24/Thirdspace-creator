@@ -110,7 +110,7 @@ No implementation Agent may start before this task is complete.
 - [ ] GREEN: define the smallest token set shared by all reference pages.
 - [ ] Add local deterministic font loading and local platform icon mapping.
 - [ ] Verify no remote font, image or icon request occurs.
-- [ ] Run `pnpm test -- tokens`, `pnpm typecheck` and `pnpm build`.
+- [ ] Run `pnpm test tokens`, `pnpm typecheck` and `pnpm build`.
 
 ### Task 4: Create the typed canonical fixture contract
 
@@ -129,7 +129,7 @@ No implementation Agent may start before this task is complete.
 - [ ] GREEN: add the smallest canonical dataset covering all visible values in the 17 references.
 - [ ] Add typed scenario selection for `default`, `empty`, `loading`, `error` and `selected`.
 - [ ] Verify no fixture calls `Date.now`, `Math.random` or external network APIs.
-- [ ] Run `pnpm test -- fixtures` and `pnpm typecheck`.
+- [ ] Run `pnpm test fixtures` and `pnpm typecheck`.
 
 ### Task 5: Install and test approved UI primitives
 
@@ -171,6 +171,7 @@ Button, Badge, Input, Textarea, Checkbox, Switch, Tabs, Toggle Group, Select, Dr
 - [ ] GREEN: implement shared Shell and Header modes without page content.
 - [ ] Verify the Sidebar assistant/storage content is a variant, not a duplicate component.
 - [ ] Verify Header focus order and minimum desktop overflow behavior.
+- [ ] After adding the first accessibility test, remove `--pass-with-no-tests` from `test:a11y`.
 - [ ] Run Shell tests, AppShell E2E, axe, typecheck and build.
 
 ### Task 7: Implement shared business components
@@ -232,7 +233,9 @@ Each page task follows this exact cycle:
 
 **Tests:** one shared Shell; Home active; five metrics; three-column dashboard grid; visible Continue, Todo, Topics, Publications, Data and Suggestions sections; New Project entry routes to the overlay.
 
-**Commands:** `pnpm test -- dashboard-page`, `pnpm test:visual -- dashboard`, `pnpm typecheck`.
+**Commands:** `pnpm test dashboard-page`, `pnpm test:visual dashboard`, `pnpm typecheck`.
+
+- [ ] After adding the first visual test, remove `--pass-with-no-tests` from `test:visual`.
 
 ### Task 10: Projects
 
@@ -242,7 +245,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Projects active; approved status tabs and counts; canonical project row contains stage, progress, platforms and update time; New Project opens `/projects/new`; list/grid and sort controls expose accessible state without inventing an unapproved layout.
 
-**Commands:** `pnpm test -- projects-page`, `pnpm test:e2e -- projects`, `pnpm test:visual -- projects`.
+**Commands:** `pnpm test projects-page`, `pnpm test:e2e projects`, `pnpm test:visual projects`.
 
 ### Task 11: New Project
 
@@ -252,7 +255,7 @@ Each page task follows this exact cycle:
 
 **Tests:** exact field order; platform/type/mode cards are keyboard-selectable; project name is required; Cancel closes without mutation; Create produces the approved local success transition; focus is trapped and restored; background is masked in visual comparison.
 
-**Commands:** `pnpm test -- new-project-form`, `pnpm test:e2e -- new-project`, `pnpm test:visual -- new-project`.
+**Commands:** `pnpm test new-project-form`, `pnpm test:e2e new-project`, `pnpm test:visual new-project`.
 
 ### Task 12: Project Overview
 
@@ -262,7 +265,7 @@ Each page task follows this exact cycle:
 
 **Tests:** project-overview Header mode; full-width progress card; left-wide/right-narrow grid; five asset statistics; four right-rail cards in order; collaboration visuals do not expose team-management behavior.
 
-**Commands:** `pnpm test -- project-overview-page`, `pnpm test:visual -- project-overview`, `pnpm typecheck`.
+**Commands:** `pnpm test project-overview-page`, `pnpm test:visual project-overview`, `pnpm typecheck`.
 
 ### Task 13: Research Workspace
 
@@ -272,7 +275,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Research stage active; three trend cards; competitor table columns and threat levels; source tabs preserve approved order; notes, evidence and tags remain in the right rail.
 
-**Commands:** `pnpm test -- research-workspace-page`, `pnpm test:visual -- research`.
+**Commands:** `pnpm test research-workspace-page`, `pnpm test:visual research`.
 
 ### Task 14: Planning Workspace
 
@@ -282,7 +285,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Planning stage active; five planning tabs in approved order; four contract cards; separate core thesis; four-column structured thesis tree; evidence and key materials in the right rail.
 
-**Commands:** `pnpm test -- planning-workspace-page`, `pnpm test:visual -- planning`.
+**Commands:** `pnpm test planning-workspace-page`, `pnpm test:visual planning`.
 
 ### Task 15: Script Workspace
 
@@ -292,7 +295,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Script stage active; editor toolbar/document/status share one shell; visible timestamp and emphasis text; version strip remains below; right-rail order is Outline, AI Suggestions, Golden Quotes; toolbar controls expose approved state without a new editor framework.
 
-**Commands:** `pnpm test -- script-workspace-page`, `pnpm test:e2e -- script`, `pnpm test:visual -- script`.
+**Commands:** `pnpm test script-workspace-page`, `pnpm test:e2e script`, `pnpm test:visual script`.
 
 ### Task 16: Production Workspace
 
@@ -302,7 +305,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Production stage active; three production mode cards; script/assets/preview/settings regions; asset category tabs and three-column thumbnails; settings groups in order; single horizontal timeline.
 
-**Commands:** `pnpm test -- production-workspace-page`, `pnpm test:visual -- production`.
+**Commands:** `pnpm test production-workspace-page`, `pnpm test:visual production`.
 
 ### Task 17: Publishing Workspace
 
@@ -312,7 +315,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Publishing stage active; three-column layout; field order and labels; platform cards remain separate; preview/checklist/tips order; Confirm Publish uses fixture-only local behavior and performs no network publication.
 
-**Commands:** `pnpm test -- publishing-workspace-page`, `pnpm test:e2e -- publishing-workspace`, `pnpm test:visual -- publishing-workspace`.
+**Commands:** `pnpm test publishing-workspace-page`, `pnpm test:e2e publishing-workspace`, `pnpm test:visual publishing-workspace`.
 
 ### Task 18: Analytics & Review
 
@@ -322,7 +325,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Review stage active; seven metric cards in one row; views trend and conversion funnel chart types; three secondary charts; key moments; AI analysis and review history right rail; all charts provide text alternatives.
 
-**Commands:** `pnpm test -- analytics-review-page`, `pnpm test:visual -- analytics-review`, `pnpm test:a11y -- analytics-review`.
+**Commands:** `pnpm test analytics-review-page`, `pnpm test:visual analytics-review`, `pnpm test:a11y analytics-review`.
 
 ### Task 19: Knowledge & Memory
 
@@ -332,7 +335,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Knowledge active; global route remains outside project routes; contextual project identity follows D-002; five metrics; category/list/insight three-column region; graph remains on the same page; insight blocks retain order.
 
-**Commands:** `pnpm test -- knowledge-page`, `pnpm test:visual -- knowledge`.
+**Commands:** `pnpm test knowledge-page`, `pnpm test:visual knowledge`.
 
 ### Task 20: Assets Center
 
@@ -342,7 +345,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Assets active; internal type sidebar is distinct from global Sidebar; three-column asset grid; selecting an asset updates the fixed detail panel; media types have distinct deterministic thumbnails; shared Sidebar uses approved storage variant.
 
-**Commands:** `pnpm test -- assets-page`, `pnpm test:e2e -- assets`, `pnpm test:visual -- assets`.
+**Commands:** `pnpm test assets-page`, `pnpm test:e2e assets`, `pnpm test:visual assets`.
 
 ### Task 21: Publishing Center
 
@@ -352,7 +355,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Publishing active; content type tabs; publication table preserves approved columns; analytics rail order is metrics, platform comparison, trend, top content; platform icons and thumbnails remain visible.
 
-**Commands:** `pnpm test -- publishing-center-page`, `pnpm test:visual -- publishing-center`.
+**Commands:** `pnpm test publishing-center-page`, `pnpm test:visual publishing-center`.
 
 ### Task 22: Experience Center
 
@@ -362,7 +365,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Experience active; seven tabs in approved order; four summary cards; recent discoveries list; six category cards including failures; right-rail blocks preserve order.
 
-**Commands:** `pnpm test -- experience-page`, `pnpm test:visual -- experience`.
+**Commands:** `pnpm test experience-page`, `pnpm test:visual experience`.
 
 ### Task 23: Global Search
 
@@ -372,7 +375,7 @@ Each page task follows this exact cycle:
 
 **Tests:** search Header mode contains the single global search field; result sections remain typed and ordered; project results use three cards; asset/video thumbnails remain horizontal; right rail preserves filters, actions, history and tips; search query is represented in URL state.
 
-**Commands:** `pnpm test -- search-page`, `pnpm test:e2e -- search`, `pnpm test:visual -- search`.
+**Commands:** `pnpm test search-page`, `pnpm test:e2e search`, `pnpm test:visual search`.
 
 ### Task 24: AI Copilot
 
@@ -382,7 +385,7 @@ Each page task follows this exact cycle:
 
 **Tests:** `?copilot=open` opens the centered dialog; close removes only that query; browser Back closes it; prompt and action chips share the top card; three dashboard columns and bottom entries remain ordered; no message-thread UI or real AI request is added; background is masked.
 
-**Commands:** `pnpm test -- ai-copilot-content`, `pnpm test:e2e -- ai-copilot`, `pnpm test:visual -- ai-copilot`.
+**Commands:** `pnpm test ai-copilot-content`, `pnpm test:e2e ai-copilot`, `pnpm test:visual ai-copilot`.
 
 ### Task 25: Settings
 
@@ -392,7 +395,7 @@ Each page task follows this exact cycle:
 
 **Tests:** Settings active; eight tabs in approved order; left-wide/right-narrow grid; account/preferences/system card order; storage/model/other card order; controls have labels and fixture-only local state; no team, subscription detail page or server persistence.
 
-**Commands:** `pnpm test -- settings-page`, `pnpm test:e2e -- settings`, `pnpm test:visual -- settings`.
+**Commands:** `pnpm test settings-page`, `pnpm test:e2e settings`, `pnpm test:visual settings`.
 
 ## Phase 3: Whole-System Verification
 

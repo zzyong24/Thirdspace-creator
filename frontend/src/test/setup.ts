@@ -37,10 +37,12 @@ function installBrowserShims() {
     IntersectionObserver: {
       configurable: true,
       value: IntersectionObserverMock,
+      writable: true,
     },
     ResizeObserver: {
       configurable: true,
       value: ResizeObserverMock,
+      writable: true,
     },
   });
 
@@ -48,29 +50,33 @@ function installBrowserShims() {
     matchMedia: {
       configurable: true,
       value: matchMedia,
+      writable: true,
     },
     scrollTo: {
       configurable: true,
       value: vi.fn(),
+      writable: true,
     },
   });
 
   Object.defineProperty(Element.prototype, "scrollTo", {
     configurable: true,
     value: vi.fn(),
+    writable: true,
   });
 }
 
 installBrowserShims();
 
 afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  vi.useRealTimers();
   cleanup();
   window.history.replaceState(null, "", "/");
   window.localStorage.clear();
   window.sessionStorage.clear();
   document.body.replaceChildren();
-  vi.restoreAllMocks();
-  vi.unstubAllGlobals();
-  vi.resetAllMocks();
   installBrowserShims();
 });

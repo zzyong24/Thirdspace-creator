@@ -1,5 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
+delete process.env.NO_COLOR;
+
 export default defineConfig({
   expect: {
     toHaveScreenshot: {
@@ -9,12 +11,28 @@ export default defineConfig({
       scale: "css",
     },
   },
+  failOnFlakyTests: Boolean(process.env.CI),
   forbidOnly: Boolean(process.env.CI),
   fullyParallel: false,
   outputDir: "test-results",
   projects: [
     {
-      name: "chromium",
+      name: "e2e",
+      testMatch: "e2e/**/*.spec.ts",
+      use: {
+        browserName: "chromium",
+      },
+    },
+    {
+      name: "visual",
+      testMatch: "visual/**/*.spec.ts",
+      use: {
+        browserName: "chromium",
+      },
+    },
+    {
+      name: "accessibility",
+      testMatch: "accessibility/**/*.spec.ts",
       use: {
         browserName: "chromium",
       },
@@ -25,6 +43,7 @@ export default defineConfig({
   snapshotPathTemplate:
     "{testDir}/visual/__screenshots__/{testFilePath}/{projectName}/{arg}{ext}",
   testDir: "./tests",
+  updateSnapshots: "none",
   use: {
     baseURL: "http://127.0.0.1:3100",
     colorScheme: "light",

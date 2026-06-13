@@ -10,9 +10,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test tests/e2e",
-    "test:visual": "playwright test tests/visual --pass-with-no-tests",
-    "test:a11y": "playwright test tests/accessibility --pass-with-no-tests",
+    "test:e2e": "playwright test --project=e2e",
+    "test:visual": "playwright test --project=visual --pass-with-no-tests",
+    "test:a11y": "playwright test --project=accessibility --pass-with-no-tests",
     "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {

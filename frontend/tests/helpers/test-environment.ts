@@ -1,13 +1,20 @@
 import { expect, test as base } from "@playwright/test";
-
-const allowedHosts = new Set(["127.0.0.1", "localhost"]);
+import {
+  type ExternalNetworkAttempt,
+  formatExternalNetworkAttempts,
+  recordExternalNetworkAttempt,
+} from "./network-policy";
 
 export const test = base.extend({
   context: async ({ context }, provide) => {
-    await context.route("**/*", async (route) => {
-      const url = new URL(route.request().url());
+    const externalNetworkAttempts: ExternalNetworkAttempt[] = [];
 
-      if (!allowedHosts.has(url.hostname)) {
+    await context.route("**/*", async (route) => {
+      const url = route.request().url();
+
+      if (
+        recordExternalNetworkAttempt(externalNetworkAttempts, "http", url)
+      ) {
         await route.abort("blockedbyclient");
         return;
       }
@@ -16,9 +23,15 @@ export const test = base.extend({
     });
 
     await context.routeWebSocket("**/*", async (webSocket) => {
-      const url = new URL(webSocket.url());
+      const url = webSocket.url();
 
-      if (!allowedHosts.has(url.hostname)) {
+      if (
+        recordExternalNetworkAttempt(
+          externalNetworkAttempts,
+          "websocket",
+          url,
+        )
+      ) {
         await webSocket.close({
           code: 1008,
           reason: "External network requests are disabled in browser tests.",
@@ -30,6 +43,12 @@ export const test = base.extend({
     });
 
     await provide(context);
+
+    if (externalNetworkAttempts.length > 0) {
+      throw new Error(
+        formatExternalNetworkAttempts(externalNetworkAttempts),
+      );
+    }
   },
 });
 

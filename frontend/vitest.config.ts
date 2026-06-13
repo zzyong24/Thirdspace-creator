@@ -16,7 +16,7 @@ export default defineConfig({
       "tests/visual/**",
       "tests/accessibility/**",
     ],
-    globals: true,
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
     setupFiles: ["./src/test/setup.ts"],
   },
 });
