@@ -1,0 +1,225 @@
+/**
+ * Public selectors that map canonical data to page ViewModels.
+ *
+ * Pages import selectors from this barrel. Selector functions are pure and
+ * deterministic. Scenario handling for the five mandatory names lives in
+ * `src/fixtures/scenarios.ts`.
+ */
+
+import { getPlatformIcon } from "@/lib/platform-icons";
+import type { PlatformId } from "@/types/domain";
+import type {
+  ContentOutputSummary,
+  DashboardViewModel,
+  DataOverview,
+  MetricCard,
+  PlatformBadge,
+  ProjectsViewModel,
+  ProjectListRow,
+  StatusTab,
+} from "@/types/view-models";
+
+import { canonicalDataset, getProjectPlatforms, listProjects } from "../canonical";
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function platformBadge(platform: PlatformId): PlatformBadge {
+  const icon = getPlatformIcon(platform);
+  return { id: icon.id === "unknown" ? platform : icon.id, label: icon.label };
+}
+
+// ---------------------------------------------------------------------------
+// Projects
+// ---------------------------------------------------------------------------
+
+export interface BuildProjectsViewModelOptions {
+  rows?: ReadonlyArray<ProjectListRow>;
+}
+
+export type { ProjectListRow } from "@/types/view-models";
+
+export function buildProjectsViewModel(
+  options: BuildProjectsViewModelOptions = {},
+): ProjectsViewModel {
+  const projects = listProjects();
+  const rows =
+    options.rows ??
+    projects.map<ProjectListRow>((project) => ({
+      id: project.id,
+      title: project.title,
+      brief: project.brief,
+      contentCategory: project.contentCategory,
+      status: project.status,
+      currentStage: project.currentStage,
+      progressPct: project.progressPct,
+      platforms: getProjectPlatforms(project.id).map(platformBadge),
+      updatedAt: project.updatedAt,
+      primaryOutputId: pickPrimaryOutputId(project.id),
+      outputs: pickOutputsForProject(project.id),
+      starred: project.starred,
+    }));
+
+  const tabs: ReadonlyArray<StatusTab> = [
+    { id: "all", label: "全部", count: projects.length, active: true },
+    {
+      id: "active",
+      label: "进行中",
+      count: projects.filter((project) => project.status === "active").length,
+      active: false,
+    },
+    {
+      id: "paused",
+      label: "已暂停",
+      count: projects.filter((project) => project.status === "paused").length,
+      active: false,
+    },
+    {
+      id: "completed",
+      label: "已完成",
+      count: projects.filter((project) => project.status === "completed").length,
+      active: false,
+    },
+  ];
+
+  return {
+    scenario: "default",
+    kind: "projects",
+    tabs,
+    rows,
+    loading: false,
+    error: null,
+    selectedId: null,
+  };
+}
+
+function pickPrimaryOutputId(projectId: string): string {
+  return (
+    canonicalDataset.contentOutputs.find((output) => output.projectId === projectId)?.id ?? ""
+  );
+}
+
+function pickOutputsForProject(projectId: string): ReadonlyArray<ContentOutputSummary> {
+  return canonicalDataset.contentOutputs
+    .filter((output) => output.projectId === projectId)
+    .map<ContentOutputSummary>((output) => ({
+      id: output.id,
+      title: output.title,
+      contentType: output.contentType,
+      status: output.status,
+    }));
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard
+// ---------------------------------------------------------------------------
+
+const DASHBOARD_METRICS: ReadonlyArray<MetricCard> = [
+  { id: "m-active-projects", label: "进行中项目", value: "2", delta: "+1", trend: "up", tone: "neutral" },
+  { id: "m-publications", label: "已发布", value: "3", delta: "+1", trend: "up", tone: "positive" },
+  { id: "m-views", label: "累计播放", value: "2.8 万", delta: "+12%", trend: "up", tone: "positive" },
+  { id: "m-assets", label: "素材库", value: "186", delta: "+24", trend: "up", tone: "neutral" },
+  { id: "m-storage", label: "存储使用", value: "12.4 GB", delta: "-0.3 GB", trend: "down", tone: "warning" },
+];
+
+function buildDataOverview(): DataOverview {
+  return {
+    metrics: DASHBOARD_METRICS.slice(0, 4),
+    trend: [
+      { label: "周一", value: 1840 },
+      { label: "周二", value: 2210 },
+      { label: "周三", value: 1980 },
+      { label: "周四", value: 2740 },
+      { label: "周五", value: 3120 },
+      { label: "周六", value: 2960 },
+      { label: "周日", value: 3380 },
+    ],
+  };
+}
+
+export function buildDashboardViewModel(): DashboardViewModel {
+  const continueProject =
+    listProjects().find((project) => project.status === "active") ?? listProjects()[0];
+
+  const continueCreating = {
+    heading: "继续创作",
+    projectId: continueProject.id,
+    projectTitle: continueProject.title,
+    stage: continueProject.currentStage,
+    progressPct: continueProject.progressPct,
+    updatedAt: continueProject.updatedAt,
+  } as const;
+
+  const todos = canonicalDataset.tasks
+    .filter((task) => task.status !== "done")
+    .sort((a, b) => priorityOrder(a.priority) - priorityOrder(b.priority))
+    .map((task) => {
+      const project = canonicalDataset.projects.find((p) => p.id === task.projectId);
+      return {
+        id: task.id,
+        title: task.title,
+        projectId: task.projectId,
+        projectTitle: project?.title ?? "",
+        stage: task.stage,
+        dueAt: task.dueAt,
+        priority: task.priority,
+        status: task.status,
+      };
+    });
+
+  const recentPublications = canonicalDataset.publications
+    .slice()
+    .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
+    .map((publication) => {
+      const metricViews = canonicalDataset.metricValues
+        .filter((m) => m.dimensions["platform"] === publication.platform)
+        .filter((m) => m.metricKey === "views")
+        .reduce((sum, m) => sum + m.numericValue, 0);
+      return {
+        id: publication.id,
+        title: canonicalDataset.contentOutputs.find((c) => c.id === publication.contentOutputId)?.title ?? "",
+        platform: publication.platform,
+        status: publication.status,
+        views: metricViews,
+        engagement: 0,
+        publishedAt: publication.publishedAt ?? publication.updatedAt,
+      };
+    });
+
+  return {
+    scenario: "default",
+    kind: "dashboard",
+    metrics: DASHBOARD_METRICS,
+    continueCreating,
+    todos,
+    trendingTopics: [
+      { id: "topic-1", title: "AI Native Browser 深度解析", heat: 92, trend: "up" },
+      { id: "topic-2", title: "本地优先栈", heat: 78, trend: "up" },
+      { id: "topic-3", title: "代理任务设计", heat: 66, trend: "flat" },
+    ],
+    recentPublications,
+    dataOverview: buildDataOverview(),
+    suggestions: [
+      {
+        id: "sg-1",
+        title: "把研究阶段结论补充到脚本",
+        description: "研究产物《竞品浏览器对比》尚未被脚本引用。",
+        category: "script",
+      },
+      {
+        id: "sg-2",
+        title: "上传开场 B-Roll",
+        description: "开场 15 秒还缺 1 段视频素材。",
+        category: "production",
+      },
+    ],
+    assistantPrompt: "今天想先做点什么？",
+    loading: false,
+    error: null,
+  };
+}
+
+function priorityOrder(priority: number): number {
+  return priority;
+}
