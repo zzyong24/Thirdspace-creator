@@ -2,13 +2,12 @@
   "name": "creatoros-frontend",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.32.1",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "clsx": "2.1.1",
