@@ -9,7 +9,7 @@
  *    stage indicator on the stepper, primary action
  *    "进入下一步:内容发布").
  *  - The Production Mode Selector exposes three production mode cards
- *    in the locked spec order: 录制模式 / 剪辑模式 / 后期模式.
+ *    in the locked spec order: 真人口播 / 知识演示 / AI 数字人.
  *  - The Production Grid hosts four visual regions in the spec order:
  *    RecordingScriptPanel → AssetLibraryPanel → PreviewPanel →
  *    SettingsRail.
@@ -198,7 +198,7 @@ describe("ProductionWorkspacePage", () => {
       );
       return labelNode?.textContent ?? "";
     });
-    expect(labels).toEqual(["录制模式", "剪辑模式", "后期模式"]);
+    expect(labels).toEqual(["真人口播", "知识演示", "AI 数字人"]);
   });
 
   it("renders the four main regions (script/assets/preview/settings) in spec order", async () => {

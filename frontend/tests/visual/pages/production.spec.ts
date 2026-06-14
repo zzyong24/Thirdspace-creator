@@ -55,9 +55,9 @@ test.describe("Production Workspace page", () => {
     );
     await expect(modeCards).toHaveCount(3);
     await expect(modeCards).toHaveText([
-      /录制模式/,
-      /剪辑模式/,
-      /后期模式/,
+      /真人口播/,
+      /知识演示/,
+      /AI 数字人/,
     ]);
 
     // Four main regions in the spec order:
