@@ -434,26 +434,36 @@ function CoverThumbnail({
       <div
         data-slot="cover-preview"
         aria-label={label}
-        className="relative h-32 w-full overflow-hidden rounded-md border border-border"
+        className="relative h-36 w-full overflow-hidden rounded-md border border-border"
       >
         <div
           aria-hidden="true"
           className={`absolute inset-0 ${gradient} opacity-90`}
         />
-        <div className="relative flex h-full w-full flex-col justify-between p-2.5">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-white/80">
-            AI Native Browser · 深度解析
-          </span>
-          <div className="flex flex-wrap gap-1">
-            {tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                data-slot="cover-tag"
-                className="inline-flex h-5 items-center rounded-full bg-white/20 px-1.5 text-[10px] font-medium text-white backdrop-blur"
-              >
-                {tag}
-              </span>
-            ))}
+        <div className="relative flex h-full w-full flex-col justify-between p-3">
+          <div className="flex items-center gap-1.5">
+            <span className="rounded bg-white/30 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+              EP01
+            </span>
+            <span className="text-[10px] font-medium uppercase tracking-wider text-white/85">
+              深度解析 · 13min
+            </span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <h5 className="line-clamp-1 text-sm font-semibold text-white">
+              AI Native Browser · 深度解析
+            </h5>
+            <div className="flex flex-wrap gap-1">
+              {tags.slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  data-slot="cover-tag"
+                  className="inline-flex h-5 items-center rounded-full bg-white/25 px-1.5 text-[10px] font-medium text-white backdrop-blur"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -751,7 +761,7 @@ function PlatformPreview({
         >
           <div
             aria-hidden="true"
-            className="relative h-20 w-full overflow-hidden bg-gradient-to-br from-sky-500 via-indigo-500 to-violet-600"
+            className="relative h-24 w-full overflow-hidden bg-gradient-to-br from-violet-500 via-fuchsia-500 to-rose-500"
           >
             <div className="absolute inset-0 flex items-end p-2">
               <span className="rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-medium text-white">
@@ -759,7 +769,7 @@ function PlatformPreview({
               </span>
             </div>
           </div>
-          <div className="flex flex-col gap-1 p-2.5">
+          <div className="flex flex-col gap-1 px-2.5 pb-2.5">
             <header className="flex items-center gap-1.5">
               <PlatformIconView platform={preview.platform} size="xs" />
               <span className="text-[11px] text-muted-foreground">
