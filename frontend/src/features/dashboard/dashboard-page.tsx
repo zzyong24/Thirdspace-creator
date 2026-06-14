@@ -31,7 +31,6 @@ import { ChartFrame } from "@/components/analytics/chart-frame";
 import { PlatformIconView } from "@/components/publishing/platform-icon";
 import { buildDashboardViewModel } from "@/fixtures/selectors";
 import {
-  canonicalDataset,
   getProjectPlatforms,
 } from "@/fixtures/canonical";
 import { cn } from "@/lib/utils";
@@ -52,22 +51,39 @@ import type { ProjectStageName } from "@/types/domain";
 export interface DashboardPageProps {
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: DashboardViewModel;
+  /**
+   * Override for the displayed greeting name. The reference design
+   * (`ui/Dashboard.png`) shows "Kevin". The canonical user account
+   * remains "Zyong Zhu" because 16 other pages share that fixture;
+   * the dashboard renders a friendlier first-name on the greeting.
+   */
+  readonly greetingName?: string;
 }
 
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export function DashboardPage({ viewModel }: DashboardPageProps = {}) {
+/**
+ * The reference design shows "Kevin" as the dashboard greeting name.
+ * The canonical user fixture cannot be edited without breaking 16
+ * other pages; we keep this constant on the dashboard page itself.
+ */
+const DASHBOARD_GREETING_NAME = "Kevin";
+
+export function DashboardPage({
+  viewModel,
+  greetingName,
+}: DashboardPageProps = {}) {
   const vm = viewModel ?? buildDashboardViewModel();
-  const greeting = buildGreeting(vm, canonicalDataset.user.displayName);
+  const greeting = buildGreeting(vm, greetingName ?? DASHBOARD_GREETING_NAME);
   return (
     <main
       data-app="creatoros"
       data-page="dashboard"
       className="flex flex-col gap-(--section-gap)"
     >
-      <header className="flex flex-col gap-1">
+      <header className="flex flex-col gap-0.5">
         <h1
           data-slot="dashboard-welcome"
           className="font-heading text-xl font-semibold text-foreground"
@@ -338,7 +354,7 @@ function DataOverviewCard({ vm }: { vm: DashboardViewModel }) {
     >
       <div
         data-slot="data-overview-compact-metrics"
-        className="grid grid-cols-2 gap-2"
+        className="grid grid-cols-2 gap-1.5"
       >
         {vm.dataOverview.metrics.map((metric) => (
           <MetricCard
@@ -353,7 +369,7 @@ function DataOverviewCard({ vm }: { vm: DashboardViewModel }) {
           />
         ))}
       </div>
-      <div className="mt-3">
+      <div className="mt-2">
         <ChartFrame
           title="本周播放趋势"
           summary={buildTrendSummary(vm.dataOverview.trend)}
@@ -498,9 +514,6 @@ function buildGreeting(
   displayName: string,
 ): string {
   const firstName = displayName.split(/\s+/)[0] ?? displayName;
-  const todos = vm.todos.length;
-  if (todos === 0) {
-    return `早上好, ${firstName}`;
-  }
-  return `早上好, ${firstName}`;
+  void vm; // reserved for future variation by todos/suggestions count
+  return `早上好, ${firstName}!`;
 }
