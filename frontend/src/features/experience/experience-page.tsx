@@ -367,7 +367,7 @@ export function ExperiencePage({ viewModel }: ExperiencePageProps = {}) {
       data-app="creatoros"
       data-page="experience"
       data-experience-id="experience-root"
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-3.5"
     >
       <ExperienceTabs tabs={vm.tabs} />
       <ExperienceLayout
@@ -444,7 +444,7 @@ function ExperienceLayout({
     >
       <div
         data-slot="experience-main-column"
-        className="flex flex-col gap-(--section-gap)"
+        className="flex flex-col gap-4"
       >
         <AISummarySection cards={summaryCards} />
         <RecentDiscoveries rows={discoveries} />
@@ -489,13 +489,13 @@ function SummaryCard({ card }: { card: SummaryCardVm }) {
       data-slot="summary-card"
       data-summary-id={card.id}
       aria-label={card.label}
-      className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card"
+      className="flex flex-col gap-1.5 rounded-xl bg-surface-subtle px-4 py-3"
     >
       <span className="text-xs font-medium text-muted-foreground">
         {card.label}
       </span>
-      <div className="flex items-baseline gap-2">
-        <span className="text-xl font-semibold tabular-nums text-foreground">
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-[22px] font-semibold leading-tight tabular-nums text-foreground">
           {card.value}
         </span>
         <SummaryTrend trend={card.trend} tone={card.tone} delta={card.delta} />
@@ -561,7 +561,7 @@ function RecentDiscoveries({
             key={row.id}
             data-slot="discovery-row"
             data-discovery-id={row.id}
-            className="flex items-center justify-between gap-3 rounded-md border border-border bg-surface-subtle px-3 py-2 text-sm"
+            className="flex items-center justify-between gap-3 rounded-lg bg-surface-subtle px-3 py-2 text-sm"
           >
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="truncate text-foreground">{row.title}</span>
@@ -572,7 +572,7 @@ function RecentDiscoveries({
             <span
               data-slot="discovery-effect-data"
               data-effect={row.effectLabel}
-              className="shrink-0 font-mono text-xs font-medium text-foreground tabular-nums"
+              className="shrink-0 rounded-md bg-brand-soft px-2 py-0.5 font-mono text-[11px] font-medium text-brand tabular-nums"
             >
               {row.effectLabel}
             </span>
@@ -607,20 +607,20 @@ function ExperienceCategories({
             key={category.id}
             data-slot="experience-category-card"
             data-category-id={category.id}
-            className="flex flex-col gap-1 rounded-2xl border border-border bg-surface-subtle p-(--card-gap) text-sm"
+            className="flex flex-col gap-1.5 rounded-xl bg-surface-subtle px-4 py-3 text-sm"
           >
             <span
               aria-hidden="true"
               className={
                 category.tone === "brand"
-                  ? "size-2 rounded-full bg-brand"
+                  ? "size-1.5 rounded-full bg-brand"
                   : category.tone === "success"
-                    ? "size-2 rounded-full bg-success"
+                    ? "size-1.5 rounded-full bg-success"
                     : category.tone === "warning"
-                      ? "size-2 rounded-full bg-warning"
+                      ? "size-1.5 rounded-full bg-warning"
                       : category.tone === "info"
-                        ? "size-2 rounded-full bg-info"
-                        : "size-2 rounded-full bg-border-strong"
+                        ? "size-1.5 rounded-full bg-info"
+                        : "size-1.5 rounded-full bg-border-strong"
               }
             />
             <span className="font-medium text-foreground">{category.name}</span>
@@ -656,10 +656,10 @@ function RecentRecordsTable({
       >
         <thead>
           <tr className="border-b border-border text-xs text-muted-foreground">
-            <th className="py-2 text-left font-medium">标题</th>
-            <th className="py-2 text-left font-medium">分类</th>
-            <th className="py-2 text-right font-medium">更新</th>
-            <th className="py-2 text-right font-medium">复用次数</th>
+            <th className="pb-2 pt-1 text-left font-medium">标题</th>
+            <th className="pb-2 pt-1 text-left font-medium">分类</th>
+            <th className="pb-2 pt-1 text-right font-medium">更新</th>
+            <th className="pb-2 pt-1 text-right font-medium">复用次数</th>
           </tr>
         </thead>
         <tbody>
@@ -668,7 +668,7 @@ function RecentRecordsTable({
               key={row.id}
               data-slot="recent-record-row"
               data-record-id={row.id}
-              className="border-b border-border last:border-b-0"
+              className="border-b border-border/60 last:border-b-0"
             >
               <td className="py-2 text-foreground">{row.title}</td>
               <td className="py-2">
@@ -724,7 +724,7 @@ function ValueOverview({ vm }: { vm: ValueOverviewVm }) {
     <SectionCard title="价值概览" description="经验沉淀的整体价值">
       <div
         data-slot="value-overview"
-        className="flex flex-col gap-2 text-sm"
+        className="flex flex-col gap-2.5 text-sm"
       >
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{vm.totalLabel}</span>
@@ -736,9 +736,9 @@ function ValueOverview({ vm }: { vm: ValueOverviewVm }) {
           label="平均复用率"
           showValue
         />
-        <span className="text-xs text-muted-foreground">
-          {vm.improvementLabel}
-        </span>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{vm.improvementLabel}</span>
+        </div>
       </div>
     </SectionCard>
   );
@@ -782,7 +782,7 @@ function PopularExperienceList({
             key={item.id}
             data-slot="popular-experience-row"
             data-popular-id={item.id}
-            className="flex items-center justify-between gap-3 rounded-md border border-border bg-surface-subtle px-3 py-2 text-sm"
+            className="flex items-center justify-between gap-3 rounded-lg bg-surface-subtle px-3 py-2 text-sm"
           >
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="truncate text-foreground">{item.title}</span>
@@ -790,7 +790,7 @@ function PopularExperienceList({
                 {item.category}
               </span>
             </div>
-            <span className="shrink-0 font-mono text-xs text-foreground tabular-nums">
+            <span className="shrink-0 font-mono text-[11px] text-foreground tabular-nums">
               {item.usage}
             </span>
           </li>
@@ -821,7 +821,7 @@ function QuickRecordActions({
             type="button"
             data-slot="quick-record-action"
             data-action-id={action.id}
-            className="flex items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-2 text-left text-sm hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            className="flex items-center justify-between gap-3 rounded-card bg-surface-subtle px-3.5 py-2.5 text-left text-sm hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <span className="flex flex-col gap-0.5">
               <span className="font-medium text-foreground">{action.label}</span>
