@@ -39,6 +39,31 @@ import type {
 } from "@/types/view-models";
 import type { ProjectStageName } from "@/types/domain";
 
+/**
+ * Resolve the URL `[projectId]` segment to a canonical project id.
+ *
+ * The visual route fixture uses kebab-case slugs (e.g. `ai-native-browser`)
+ * while the canonical dataset uses prefixed IDs (e.g.
+ * `project-ainativebrowser`). We translate locally so the feature module
+ * can stay agnostic of the URL shape.
+ *
+ * Falls back to the original slug if no canonical match is found, in
+ * which case the caller surfaces the "未找到项目" empty state.
+ *
+ * NOTE: kept local to the Planning feature for now. The same pattern
+ * lives in `features/research` and `features/project-overview`; once a
+ * shared helper lands (see SHARED-CHANGE-REQUEST), all three call sites
+ * will collapse onto it.
+ */
+function resolveProjectIdSlug(slug: string): string {
+  if (!slug) return slug;
+  const knownIds = canonicalDataset.projects.map((project) => project.id);
+  if (knownIds.includes(slug)) return slug;
+  const candidate = `project-${slug.replace(/-/g, "")}`;
+  if (knownIds.includes(candidate)) return candidate;
+  return slug;
+}
+
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
@@ -188,10 +213,19 @@ function ContentContractSection({
       <SectionCard
         title="内容合同"
         description="与观众的契约:四个角度的内容承诺"
+        action={
+          <button
+            type="button"
+            data-slot="contract-view-all"
+            className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            查看全部
+          </button>
+        }
       >
         <ul
           data-slot="contract-card-list"
-          className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4"
+          className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4"
           aria-label="内容合同卡片"
         >
           {contracts.map((contract) => (
@@ -200,18 +234,18 @@ function ContentContractSection({
               data-slot="contract-card"
               data-contract-id={contract.id}
               data-status={contract.status}
-              className="flex flex-col gap-2 rounded-card border border-border bg-surface-subtle p-3"
+              className="flex flex-col gap-1.5 rounded-card border border-border bg-surface-subtle p-3"
             >
               <span
                 data-slot="contract-card-title"
-                className="text-sm font-semibold text-foreground"
+                className="text-[13px] font-semibold text-foreground"
               >
                 {contract.title}
               </span>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs leading-relaxed text-muted-foreground">
                 {contract.description}
               </p>
-              <span className="mt-auto">
+              <span className="mt-auto pt-1">
                 <TagChip
                   label={contract.status === "approved" ? "已确认" : "草案"}
                   tone={contract.status === "approved" ? "success" : "info"}
@@ -245,11 +279,13 @@ function CoreThesisCard({
         title="核心论点"
         description="整期内容的核心立意"
       >
-        <div className="flex flex-col gap-2">
-          <h2 className="truncate text-base font-semibold text-foreground">
+        <div className="flex flex-col gap-1.5 border-l-2 border-brand/60 pl-3">
+          <h2 className="text-base font-semibold leading-snug text-foreground">
             {title}
           </h2>
-          <p className="text-sm text-muted-foreground">{body}</p>
+          <p className="text-[13px] leading-relaxed text-muted-foreground">
+            {body}
+          </p>
         </div>
       </SectionCard>
     </div>
@@ -282,13 +318,13 @@ function ThesisTreeSection({
       >
         <div
           data-slot="thesis-tree-root"
-          className="mb-4 flex items-center justify-center rounded-card border border-brand/40 bg-brand-soft/40 px-3 py-2 text-sm font-semibold text-foreground"
+          className="mb-3 flex items-center justify-center rounded-card border border-brand/50 bg-brand-soft/50 px-4 py-2.5 text-[15px] font-semibold text-foreground"
         >
           AI Native Browser 重塑入口
         </div>
         <ul
           data-slot="thesis-column-list"
-          className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4"
+          className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4"
           aria-label="论点树分支"
         >
           {THESIS_COLUMNS.map((column) => {
@@ -298,11 +334,11 @@ function ThesisTreeSection({
                 key={column.id}
                 data-slot="thesis-column"
                 data-column-id={column.id}
-                className="flex flex-col gap-2 rounded-card border border-border bg-surface-subtle p-3"
+                className="flex flex-col gap-1.5 rounded-card border border-border bg-surface-subtle p-3"
               >
                 <span
                   data-slot="thesis-column-title"
-                  className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                  className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
                 >
                   {column.title}
                 </span>
@@ -311,7 +347,7 @@ function ThesisTreeSection({
                 ) : (
                   <ul
                     data-slot="thesis-node-list"
-                    className="flex flex-col gap-2"
+                    className="flex flex-col gap-1.5"
                     aria-label={`${column.title}节点`}
                   >
                     {columnNodes.map((node) => (
@@ -319,12 +355,12 @@ function ThesisTreeSection({
                         key={node.id}
                         data-slot="thesis-node"
                         data-node-id={node.id}
-                        className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
+                        className="flex flex-col gap-0.5 rounded-control border border-border bg-surface px-3 py-2"
                       >
-                        <span className="truncate text-sm font-medium text-foreground">
+                        <span className="text-[13px] font-medium text-foreground">
                           {node.title}
                         </span>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs leading-relaxed text-muted-foreground">
                           {node.summary}
                         </p>
                       </li>
@@ -360,7 +396,7 @@ function EvidenceMapCard({
         ) : (
           <ul
             data-slot="evidence-list"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-1.5"
             aria-label="证据地图"
           >
             {items.map((item) => (
@@ -368,9 +404,9 @@ function EvidenceMapCard({
                 key={item.id}
                 data-slot="evidence-row"
                 data-evidence-id={item.id}
-                className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
+                className="flex flex-col gap-0.5 rounded-control border border-border bg-surface px-3 py-2"
               >
-                <span className="truncate text-sm font-medium text-foreground">
+                <span className="text-[13px] font-medium text-foreground">
                   {item.title}
                 </span>
                 <span className="text-xs text-muted-foreground tabular-nums">
@@ -392,13 +428,25 @@ function KeyMaterialsCard({
 }) {
   return (
     <div data-slot="key-materials-card">
-      <SectionCard title="关键素材" description="本阶段引用的核心素材">
+      <SectionCard
+        title="关键素材"
+        description="本阶段引用的核心素材"
+        action={
+          <button
+            type="button"
+            data-slot="key-materials-view-all"
+            className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            全部素材
+          </button>
+        }
+      >
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">暂无关键素材。</p>
         ) : (
           <ul
             data-slot="key-materials-list"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-1.5"
             aria-label="关键素材"
           >
             {items.map((item) => (
@@ -408,7 +456,7 @@ function KeyMaterialsCard({
                 data-material-id={item.id}
                 className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
               >
-                <span className="truncate text-sm font-medium text-foreground">
+                <span className="text-[13px] font-medium text-foreground">
                   {item.title}
                 </span>
                 <span>
@@ -430,7 +478,8 @@ function KeyMaterialsCard({
 export function buildPlanningViewModel(
   projectId: string,
 ): PlanningViewModel {
-  const project = getProjectById(projectId);
+  const resolvedId = resolveProjectIdSlug(projectId);
+  const project = getProjectById(resolvedId);
   if (!project) {
     return {
       scenario: "empty",
