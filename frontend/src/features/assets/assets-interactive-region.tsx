@@ -58,7 +58,7 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
   return (
     <div
       data-slot="assets-interactive-region"
-      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_320px]"
+      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_296px]"
     >
       <div
         data-slot="asset-gallery"
@@ -179,7 +179,7 @@ function AssetCard({ asset, selected, onSelect }: AssetCardProps) {
       data-asset-type={asset.type}
       aria-label={`素材 ${asset.name}`}
       className={
-        "flex flex-col gap-2 rounded-card border bg-surface p-2 transition-colors hover:border-ring " +
+        "flex flex-col gap-1.5 rounded-card border bg-surface p-1.5 transition-colors hover:border-ring " +
         (selected
           ? "border-brand ring-2 ring-brand/40"
           : "border-border")
@@ -189,18 +189,18 @@ function AssetCard({ asset, selected, onSelect }: AssetCardProps) {
         type="button"
         data-slot="asset-card-button"
         onClick={() => onSelect(asset.id)}
-        className="flex w-full flex-col gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="flex w-full flex-col gap-1.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
         <MediaPreview asset={asset} />
-        <div className="flex flex-col gap-1 px-1">
-          <span className="truncate text-sm font-medium text-foreground">
+        <div className="flex flex-col gap-0.5 px-0.5">
+          <span className="truncate text-[13px] font-medium leading-tight text-foreground">
             {asset.name}
           </span>
-          <span className="line-clamp-2 text-xs text-muted-foreground">
+          <span className="line-clamp-1 text-[11px] leading-tight text-muted-foreground">
             {asset.description}
           </span>
         </div>
-        <div className="flex items-center justify-between px-1 pb-1 text-[11px] text-muted-foreground">
+        <div className="flex items-center justify-between px-0.5 pb-0.5 text-[10px] text-muted-foreground">
           <span className="font-mono tabular-nums">{asset.mimeType}</span>
           <span className="font-mono tabular-nums">
             {formatFileSize(asset.fileSizeBytes)}
@@ -407,7 +407,7 @@ function AssetDetailPanel({
       data-slot="asset-detail-panel"
       data-asset-id={asset?.id ?? ""}
       aria-label="素材详情"
-      className="flex h-fit flex-col gap-(--card-gap) rounded-card border border-border bg-surface p-3"
+      className="flex h-fit flex-col gap-3 rounded-card border border-border bg-surface p-2.5"
     >
       {asset ? (
         <>
