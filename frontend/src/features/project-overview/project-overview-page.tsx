@@ -108,7 +108,7 @@ export function ProjectOverviewPage({
         </div>
         <div
           data-slot="project-overview-side-column"
-          className="flex flex-col gap-(--card-gap) lg:col-span-1"
+          className="flex flex-col gap-3 lg:col-span-1"
         >
           <ProjectInfoCard
             projectId={vm.projectId}
@@ -275,6 +275,7 @@ function AssetSummaryCard({
               key={stat.id}
               data-slot="asset-stat"
               data-stat-id={stat.id}
+              data-tone={stat.tone}
               className="flex flex-col gap-1 rounded-card border border-border bg-surface-subtle p-3"
             >
               <span className="text-xs font-medium text-muted-foreground">
@@ -282,7 +283,7 @@ function AssetSummaryCard({
               </span>
               <span
                 data-slot="asset-stat-value"
-                className="text-lg font-semibold tabular-nums text-foreground"
+                className="text-[20px] font-semibold leading-tight tabular-nums text-foreground"
               >
                 {stat.value}
               </span>
@@ -318,7 +319,7 @@ function RecentFilesCard({
           <ul
             data-slot="recent-files-list"
             aria-label="最近文件"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-1.5"
           >
             {files.map((file) => {
               const Icon = fileTypeIcon(file.fileKind);
@@ -329,11 +330,11 @@ function RecentFilesCard({
                   data-file-kind={file.fileKind}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
                 >
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2.5">
                     <span
                       aria-hidden="true"
                       data-slot="recent-file-icon"
-                      className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-surface-subtle text-muted-foreground"
+                      className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-subtle text-muted-foreground"
                     >
                       <Icon className="size-4" />
                     </span>
@@ -380,7 +381,7 @@ function ProjectActivityCard({
           <ul
             data-slot="project-activity-list"
             aria-label="项目动态"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-1.5"
           >
             {activities.map((activity) => (
               <li
@@ -389,7 +390,7 @@ function ProjectActivityCard({
                 data-tone={activity.tone}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
               >
-                <div className="flex min-w-0 items-center gap-2">
+                <div className="flex min-w-0 items-center gap-2.5">
                   <Avatar
                     aria-hidden="true"
                     size="sm"
