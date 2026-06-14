@@ -63,7 +63,7 @@ export function ProgressBar({
       ) : null}
       <div
         className={cn(
-          "h-1.5 w-full overflow-hidden rounded-full bg-muted",
+          "h-2 w-full overflow-hidden rounded-full bg-muted",
           trackClassName,
         )}
         data-slot="progress-bar-track"

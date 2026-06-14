@@ -56,7 +56,7 @@ export function MetricCard({
       data-trend={trend}
       {...(id ? { id } : {})}
       className={cn(
-        "flex flex-col gap-2 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card",
+        "flex flex-col gap-1.5 rounded-xl border border-border bg-surface px-4 py-3 shadow-card",
         className,
       )}
     >
@@ -64,7 +64,7 @@ export function MetricCard({
         {label}
       </span>
       <div className="flex items-baseline gap-2">
-        <span className="text-xl font-semibold tabular-nums text-foreground">
+        <span className="text-[22px] font-semibold leading-tight tabular-nums text-foreground">
           {value}
         </span>
         <span
