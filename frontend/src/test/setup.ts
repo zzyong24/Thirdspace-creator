@@ -20,6 +20,10 @@ class IntersectionObserverMock implements IntersectionObserver {
 }
 
 function installBrowserShims() {
+  if (typeof window === "undefined" || typeof Element === "undefined") {
+    return;
+  }
+
   const matchMedia = vi.fn(
     (query: string): MediaQueryList => ({
       addEventListener: vi.fn(),
@@ -73,14 +77,16 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   vi.useRealTimers();
-  cleanup();
-  window.history.replaceState(null, "", "/");
-  if (typeof window.localStorage?.clear === "function") {
-    window.localStorage.clear();
+  if (typeof window !== "undefined" && typeof document !== "undefined") {
+    cleanup();
+    window.history.replaceState(null, "", "/");
+    if (typeof window.localStorage?.clear === "function") {
+      window.localStorage.clear();
+    }
+    if (typeof window.sessionStorage?.clear === "function") {
+      window.sessionStorage.clear();
+    }
+    document.body.replaceChildren();
   }
-  if (typeof window.sessionStorage?.clear === "function") {
-    window.sessionStorage.clear();
-  }
-  document.body.replaceChildren();
   installBrowserShims();
 });

@@ -1,7 +1,10 @@
 import { defineConfig } from "@playwright/test";
-import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { resolve, join, relative } from "node:path";
+import { resolve } from "node:path";
+
+import {
+  fingerprintReferences,
+  resolvePlaywrightPort,
+} from "./tests/visual/visual-lifecycle";
 
 delete process.env.NO_COLOR;
 
@@ -23,34 +26,9 @@ const REFERENCE_BASELINES_DIR = resolve(
   "__screenshots__",
   "reference-images",
 );
-const MANIFEST_PATH = join(REFERENCE_BASELINES_DIR, "INSTALL-MANIFEST.json");
-
-/**
- * Hash every file in tests/visual/__screenshots__/reference-images/
- * (other than README.md / INSTALL-MANIFEST.json) into a single
- * deterministic fingerprint. In CI we recompute this fingerprint
- * after the run and fail if it changed — that is the guard that
- * prevents a subagent from sneaking an updated baseline into the
- * repo by running --update-snapshots or by hand-editing files.
- */
-function hashReferenceBaselines() {
-  if (!existsSync(REFERENCE_BASELINES_DIR)) {
-    return { count: 0, hash: "empty", entries: [] as string[] };
-  }
-  const ignored = new Set(["README.md", "INSTALL-MANIFEST.json"]);
-  const entries = readdirSync(REFERENCE_BASELINES_DIR, { withFileTypes: true })
-    .filter((d) => d.isFile() && !ignored.has(d.name))
-    .map((d) => d.name)
-    .sort();
-  const hash = createHash("sha256");
-  for (const name of entries) {
-    hash.update(name);
-    hash.update(readFileSync(join(REFERENCE_BASELINES_DIR, name)));
-  }
-  return { count: entries.length, hash: hash.digest("hex"), entries };
-}
-
-const BASELINE_FINGERPRINT = hashReferenceBaselines();
+const BASELINE_FINGERPRINT = fingerprintReferences(REFERENCE_BASELINES_DIR);
+const TEST_PORT = resolvePlaywrightPort(process.env.CREATOROS_TEST_PORT);
+const TEST_BASE_URL = `http://127.0.0.1:${TEST_PORT}`;
 if (BASELINE_FINGERPRINT.count > 0) {
   console.log(
     `[playwright.config] Reference baselines: ${BASELINE_FINGERPRINT.count} files, ` +
@@ -61,10 +39,6 @@ if (BASELINE_FINGERPRINT.count > 0) {
     "[playwright.config] Reference baselines directory is empty. " +
       "Run `pnpm visual:install-baselines` to populate it (Controller-only).",
   );
-}
-
-if (process.env.CI && existsSync(MANIFEST_PATH)) {
-  process.env.PLAYWRIGHT_BASELINE_FINGERPRINT_BEFORE = BASELINE_FINGERPRINT.hash;
 }
 
 // Visual tests must point at the Controller-approved baseline
@@ -122,7 +96,7 @@ export default defineConfig({
   testDir: "./tests",
   updateSnapshots: "none",
   use: {
-    baseURL: "http://127.0.0.1:3201",
+    baseURL: TEST_BASE_URL,
     colorScheme: "light",
     contextOptions: {
       reducedMotion: "reduce",
@@ -146,10 +120,10 @@ export default defineConfig({
     },
   },
   webServer: {
-    command: `NO_PROXY=${NO_PROXY_VALUE} no_proxy=${NO_PROXY_VALUE} pnpm dev --hostname 127.0.0.1 --port 3201`,
-    reuseExistingServer: !process.env.CI,
+    command: `NO_PROXY=${NO_PROXY_VALUE} no_proxy=${NO_PROXY_VALUE} pnpm dev --hostname 127.0.0.1 --port ${TEST_PORT}`,
+    reuseExistingServer: false,
     timeout: 120_000,
-    url: "http://127.0.0.1:3201",
+    url: TEST_BASE_URL,
     stdout: "pipe",
     stderr: "pipe",
   },
@@ -160,26 +134,6 @@ export default defineConfig({
    * line of defence: if the reference baselines directory has been
    * modified during the run, fail loudly.
    */
-  globalSetup: process.env.CI
-    ? resolve(HERE, "tests", "visual", "__setup__.ts")
-    : undefined,
+  globalSetup: resolve(HERE, "tests", "visual", "__setup__.ts"),
+  globalTeardown: resolve(HERE, "tests", "visual", "__teardown__.ts"),
 });
-
-// Final baseline-integrity check for CI. This block runs after
-// defineConfig() returns, so it cannot intercept the run, but it
-// prints a clear warning to the operator and exits non-zero if
-// the reference-image directory has been mutated.
-if (process.env.CI) {
-  const before = process.env.PLAYWRIGHT_BASELINE_FINGERPRINT_BEFORE;
-  const after = hashReferenceBaselines().hash;
-  if (before && after !== before) {
-    console.error(
-      `[playwright.config] FATAL: reference baselines mutated during run ` +
-        `(${before.slice(0, 12)}… → ${after.slice(0, 12)}…). ` +
-        `This usually means a subagent ran --update-snapshots or hand-edited ` +
-        `${relative(HERE, REFERENCE_BASELINES_DIR)}. ` +
-        `Revert the change and re-run.`,
-    );
-    process.exit(2);
-  }
-}

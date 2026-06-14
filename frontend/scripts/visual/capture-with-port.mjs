@@ -61,14 +61,21 @@ async function main() {
 
   // wait for server
   const start = Date.now();
+  let ready = false;
   while (Date.now() - start < 30_000) {
     try {
       const res = await fetch(BASE_URL, { redirect: "manual" });
-      if (res.status >= 200 && res.status < 600) break;
+      if (res.status >= 200 && res.status < 600) {
+        ready = true;
+        break;
+      }
     } catch {
       // not ready
     }
     await sleep(500);
+  }
+  if (!ready) {
+    throw new Error(`Server did not become ready at ${BASE_URL}`);
   }
 
   const playwright = await loadPlaywright();
