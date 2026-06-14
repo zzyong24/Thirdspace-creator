@@ -237,7 +237,7 @@ function EditorToolbar() {
       role="toolbar"
       data-slot="editor-toolbar"
       aria-label="脚本编辑器工具栏"
-      className="flex flex-wrap items-center gap-1 rounded-control border border-border bg-surface-subtle p-2"
+      className="flex flex-wrap items-center gap-1 rounded-control border border-border bg-surface-subtle/70 p-1.5"
     >
       <ToolbarGroup label="格式">
         {TOOLBAR_FORMAT_BUTTONS.map((button) => (
@@ -339,7 +339,7 @@ function ScriptDocument({
   return (
     <div
       data-slot="script-document"
-      className="mt-3 flex flex-col gap-3 rounded-control border border-border bg-surface p-4"
+      className="mt-3 flex flex-col gap-2.5 rounded-control border border-border bg-surface p-3.5"
     >
       {sections.length === 0 ? (
         <p className="text-sm text-muted-foreground">暂无脚本正文。</p>
@@ -359,19 +359,19 @@ function ScriptSection({ section }: { section: ScriptSectionView }) {
       data-slot="script-section"
       data-section-id={section.id}
       data-section-type={section.type}
-      className="flex flex-col gap-2"
+      className="flex flex-col gap-1.5"
     >
       <header className="flex flex-wrap items-baseline gap-2">
         <h3
           data-slot="script-section-heading"
-          className="text-base font-semibold text-foreground"
+          className="text-[15px] font-semibold leading-tight text-foreground"
         >
           {section.heading}
         </h3>
         {timecodeLabel ? (
           <span
             data-slot="script-section-timecode"
-            className="rounded-md bg-surface-subtle px-1.5 py-0.5 font-mono text-xs text-muted-foreground tabular-nums"
+            className="inline-flex items-center rounded-md bg-surface-subtle px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground tabular-nums"
           >
             {timecodeLabel}
           </span>
@@ -535,7 +535,7 @@ function VersionHistoryStrip({
                 key={version.id}
                 data-slot="version-history-card"
                 data-version-id={version.id}
-                className="flex min-w-44 flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
+                className="flex min-w-40 flex-col gap-1 rounded-control border border-border bg-surface px-2.5 py-1.5"
               >
                 <span className="truncate text-sm font-medium text-foreground">
                   {version.label}
@@ -572,7 +572,7 @@ function OutlineStructureCard({
         ) : (
           <ol
             data-slot="outline-list"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-1.5"
             aria-label="大纲结构"
           >
             {items
@@ -583,9 +583,9 @@ function OutlineStructureCard({
                   key={item.id}
                   data-slot="outline-row"
                   data-outline-id={item.id}
-                  className="flex items-center gap-2 rounded-control border border-border bg-surface px-3 py-2"
+                  className="flex items-center gap-2 rounded-control border border-border bg-surface px-2.5 py-1.5"
                 >
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand tabular-nums">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-soft text-[11px] font-semibold text-brand tabular-nums">
                     {index + 1}
                   </span>
                   <span className="truncate text-sm font-medium text-foreground">
@@ -616,7 +616,7 @@ function AIWritingSuggestionsCard({
         ) : (
           <ul
             data-slot="ai-suggestion-list"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-1.5"
             aria-label="AI 写作建议"
           >
             {items.map((item, index) => {
@@ -627,7 +627,7 @@ function AIWritingSuggestionsCard({
                   data-slot="ai-suggestion-row"
                   data-suggestion-id={item.id}
                   data-tone={tone.name}
-                  className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
+                  className="flex flex-col gap-1 rounded-control border border-border bg-surface px-2.5 py-1.5"
                 >
                   <div className="flex items-center gap-2">
                     <span className="truncate text-sm font-medium text-foreground">
@@ -691,7 +691,7 @@ function GoldenQuotesCard({
         ) : (
           <ul
             data-slot="golden-quote-list"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-1.5"
             aria-label="金句候选"
           >
             {items.map((item) => (
@@ -699,7 +699,7 @@ function GoldenQuotesCard({
                 key={item.id}
                 data-slot="golden-quote-row"
                 data-quote-id={item.id}
-                className="rounded-control border border-border bg-brand-soft/40 px-3 py-2"
+                className="rounded-control border border-border bg-brand-soft/40 px-2.5 py-1.5"
               >
                 <p className="text-sm font-semibold text-brand">
                   “{item.text}”
