@@ -439,7 +439,7 @@ function KnowledgeToolbar() {
     <div
       data-slot="knowledge-toolbar"
       aria-label="知识库工具栏"
-      className="flex flex-wrap items-center gap-(--card-gap) border-b border-border pb-2"
+      className="flex flex-wrap items-center gap-2 border-b border-border pb-2"
     >
       <label className="sr-only" htmlFor="knowledge-search">
         搜索知识
@@ -449,11 +449,11 @@ function KnowledgeToolbar() {
         type="search"
         placeholder="搜索条目、标签或关联项目"
         data-slot="knowledge-search-input"
-        className="h-9 w-72 rounded-md border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        className="h-8 w-64 rounded-md border border-border bg-surface px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       />
       <div
         data-slot="knowledge-filter-chips"
-        className="flex flex-wrap items-center gap-1"
+        className="flex flex-wrap items-center gap-0.5"
       >
         <TagChip label="全部" tone="brand" size="sm" />
         <TagChip label="参考" tone="neutral" size="sm" />
@@ -517,7 +517,7 @@ function KnowledgeGrid({
   return (
     <div
       data-slot="knowledge-grid"
-      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[260px_minmax(0,1fr)_320px]"
+      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[220px_minmax(0,1fr)_300px]"
     >
       <CategoryPanel categories={categories} />
       <RecentKnowledgeTable rows={recent} />
@@ -545,7 +545,7 @@ function CategoryPanel({
       <SectionCard title="知识分类" description="按类型组织">
         <ul
           data-slot="category-list"
-          className="flex flex-col gap-1"
+          className="flex flex-col gap-0.5"
           aria-label="知识分类列表"
         >
           {categories.map((category) => (
@@ -553,26 +553,26 @@ function CategoryPanel({
               key={category.id}
               data-slot="category-row"
               data-category-id={category.id}
-              className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-surface-subtle"
+              className="flex items-center justify-between rounded-md px-2 py-1 text-[13px] hover:bg-surface-subtle"
             >
               <span className="flex items-center gap-2 text-foreground">
                 <span
                   aria-hidden="true"
                   className={
                     category.tone === "brand"
-                      ? "size-2 rounded-full bg-brand"
+                      ? "size-1.5 rounded-full bg-brand"
                       : category.tone === "success"
-                        ? "size-2 rounded-full bg-success"
+                        ? "size-1.5 rounded-full bg-success"
                         : category.tone === "warning"
-                          ? "size-2 rounded-full bg-warning"
+                          ? "size-1.5 rounded-full bg-warning"
                           : category.tone === "info"
-                            ? "size-2 rounded-full bg-info"
-                            : "size-2 rounded-full bg-border-strong"
+                            ? "size-1.5 rounded-full bg-info"
+                            : "size-1.5 rounded-full bg-border-strong"
                   }
                 />
                 {category.name}
               </span>
-              <span className="font-mono tabular-nums text-xs text-muted-foreground">
+              <span className="font-mono tabular-nums text-[11px] text-muted-foreground">
                 {category.count}
               </span>
             </li>
@@ -597,15 +597,15 @@ function RecentKnowledgeTable({
       <SectionCard title="最近更新" description="按更新时间倒序">
         <table
           data-slot="recent-knowledge-table"
-          className="w-full text-sm"
+          className="w-full text-[13px]"
           aria-label="最近知识条目"
         >
           <thead>
-            <tr className="border-b border-border text-xs text-muted-foreground">
-              <th className="py-2 text-left font-medium">标题</th>
-              <th className="py-2 text-left font-medium">类型</th>
-              <th className="py-2 text-left font-medium">标签</th>
-              <th className="py-2 text-right font-medium">更新</th>
+            <tr className="border-b border-border text-[11px] text-muted-foreground">
+              <th className="py-1.5 text-left font-medium">标题</th>
+              <th className="py-1.5 text-left font-medium">类型</th>
+              <th className="py-1.5 text-left font-medium">标签</th>
+              <th className="py-1.5 text-right font-medium">更新</th>
             </tr>
           </thead>
           <tbody>
@@ -617,10 +617,10 @@ function RecentKnowledgeTable({
                 data-status={row.status}
                 className="border-b border-border last:border-b-0"
               >
-                <td className="py-2 text-foreground">{row.title}</td>
-                <td className="py-2 text-muted-foreground">{row.type}</td>
-                <td className="py-2">
-                  <div className="flex flex-wrap gap-1">
+                <td className="py-1.5 text-foreground">{row.title}</td>
+                <td className="py-1.5 text-muted-foreground">{row.type}</td>
+                <td className="py-1.5">
+                  <div className="flex flex-wrap gap-0.5">
                     {row.tags.length > 0 ? (
                       row.tags.map((tag) => (
                         <TagChip
@@ -631,11 +631,11 @@ function RecentKnowledgeTable({
                         />
                       ))
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className="text-[11px] text-muted-foreground">—</span>
                     )}
                   </div>
                 </td>
-                <td className="py-2 text-right font-mono text-xs text-muted-foreground">
+                <td className="py-1.5 text-right font-mono text-[11px] text-muted-foreground">
                   {row.updatedAt}
                 </td>
               </tr>
@@ -681,7 +681,7 @@ function PopularTags({ tags }: { tags: ReadonlyArray<KnowledgeTag> }) {
     <SectionCard title="热门标签" description="使用频率最高的标签">
       <ul
         data-slot="popular-tags"
-        className="flex flex-wrap gap-1.5"
+        className="flex flex-wrap gap-1"
         aria-label="热门标签"
       >
         {tags.map((tag) => (
@@ -703,7 +703,7 @@ function MemoryInsights({
     <SectionCard title="记忆洞察" description="系统从知识库中提炼的要点">
       <ul
         data-slot="memory-insights"
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-1.5"
         aria-label="记忆洞察列表"
       >
         {items.map((item) => (
@@ -711,10 +711,12 @@ function MemoryInsights({
             key={item.id}
             data-slot="memory-insight-item"
             data-insight-id={item.id}
-            className="rounded-md border border-border bg-surface-subtle p-3 text-sm"
+            className="rounded-md border border-border bg-surface-subtle px-2.5 py-2 text-[13px]"
           >
             <div className="font-medium text-foreground">{item.title}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{item.body}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+              {item.body}
+            </p>
           </li>
         ))}
       </ul>
@@ -731,7 +733,7 @@ function UnsortedItems({
     <SectionCard title="未整理" description="尚未归类的知识条目">
       <ul
         data-slot="unsorted-items"
-        className="flex flex-col gap-1"
+        className="flex flex-col gap-0.5"
         aria-label="未整理条目"
       >
         {items.map((item) => (
@@ -739,10 +741,10 @@ function UnsortedItems({
             key={item.id}
             data-slot="unsorted-item-row"
             data-unsorted-id={item.id}
-            className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-surface-subtle"
+            className="flex items-center justify-between rounded-md px-2 py-1 text-[13px] hover:bg-surface-subtle"
           >
             <span className="truncate text-foreground">{item.title}</span>
-            <span className="ml-2 shrink-0 text-xs text-muted-foreground">
+            <span className="ml-2 shrink-0 text-[11px] text-muted-foreground">
               {item.ageLabel}
             </span>
           </li>
@@ -761,7 +763,7 @@ function ReusableSnippets({
     <SectionCard title="可复用片段" description="快速插入到脚本的模板">
       <ul
         data-slot="reusable-snippets"
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-1.5"
         aria-label="可复用片段列表"
       >
         {items.map((item) => (
@@ -769,10 +771,12 @@ function ReusableSnippets({
             key={item.id}
             data-slot="reusable-snippet-row"
             data-snippet-id={item.id}
-            className="rounded-md border border-border bg-surface-subtle p-3 text-sm"
+            className="rounded-md border border-border bg-surface-subtle px-2.5 py-2 text-[13px]"
           >
             <div className="font-medium text-foreground">{item.title}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{item.preview}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+              {item.preview}
+            </p>
           </li>
         ))}
       </ul>
@@ -795,7 +799,7 @@ function KnowledgeGraph({
       title="知识图谱"
       description="按类型分布的条目数"
     >
-      <div data-slot="knowledge-graph" className="flex flex-col gap-2">
+      <div data-slot="knowledge-graph" className="flex flex-col gap-1">
         <ChartFrame
           title="条目分布"
           description="按类型聚合的知识条目数"
@@ -804,6 +808,7 @@ function KnowledgeGraph({
           slot="knowledge-graph-chart"
           shape="line"
           testId="knowledge-graph-chart"
+          height={160}
         />
         <p data-slot="knowledge-graph-summary" className="sr-only">
           {summary}
