@@ -125,7 +125,7 @@ export function NewProjectDialog() {
         data-slot="overlay-panel"
         data-overlay-panel="new-project"
         className={cn(
-          "relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col gap-4 overflow-y-auto rounded-2xl bg-popover p-5 text-sm text-popover-foreground shadow-2xl ring-1 ring-foreground/10 focus:outline-none",
+          "relative z-10 flex max-h-[90vh] w-full max-w-[700px] flex-col gap-6 overflow-y-auto rounded-2xl bg-popover p-6 text-sm text-popover-foreground shadow-2xl ring-1 ring-foreground/10 focus:outline-none",
         )}
       >
         <header className="flex items-start justify-between gap-3">
