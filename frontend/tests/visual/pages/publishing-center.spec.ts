@@ -64,6 +64,11 @@ test.describe("Publishing Center page", () => {
       main.locator('[data-slot="publishing-toolbar"] input[type="search"]'),
     ).toBeVisible();
 
+    // BatchOperationBar present.
+    await expect(
+      main.locator('[data-slot="batch-operation-bar"]'),
+    ).toBeVisible();
+
     // PublicationTable with 7 columns in spec order.
     const table = main.locator('[data-slot="publication-table"]');
     await expect(table).toBeVisible();
