@@ -116,7 +116,7 @@ function AccountInformationCard({
         >
           <div
             aria-hidden="true"
-            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-soft text-md font-semibold text-brand"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand"
           >
             {viewModel.account.initials}
           </div>
@@ -215,7 +215,7 @@ function PreferenceSettingsCard({
               id="pref-default-home"
               data-slot="pref-default-home-trigger"
               size="sm"
-              className="w-44"
+              className="w-40"
             >
               <SelectValue placeholder="选择主页" />
             </SelectTrigger>
@@ -243,7 +243,7 @@ function PreferenceSettingsCard({
               id="pref-creation-mode"
               data-slot="pref-creation-mode-trigger"
               size="sm"
-              className="w-44"
+              className="w-40"
             >
               <SelectValue placeholder="选择模式" />
             </SelectTrigger>
@@ -271,7 +271,7 @@ function PreferenceSettingsCard({
               id="pref-visibility"
               data-slot="pref-visibility-trigger"
               size="sm"
-              className="w-44"
+              className="w-40"
             >
               <SelectValue placeholder="选择可见性" />
             </SelectTrigger>
@@ -375,7 +375,7 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
               id="sys-theme"
               data-slot="sys-theme-trigger"
               size="sm"
-              className="w-44"
+              className="w-40"
             >
               <SelectValue placeholder="选择主题" />
             </SelectTrigger>
@@ -401,7 +401,7 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
               id="sys-density"
               data-slot="sys-density-trigger"
               size="sm"
-              className="w-44"
+              className="w-40"
             >
               <SelectValue placeholder="选择密度" />
             </SelectTrigger>
@@ -427,7 +427,7 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
               id="sys-locale"
               data-slot="sys-locale-trigger"
               size="sm"
-              className="w-44"
+              className="w-40"
             >
               <SelectValue placeholder="选择语言" />
             </SelectTrigger>
@@ -563,7 +563,7 @@ function ModelConfigurationCard({
               id="model-provider"
               data-slot="model-provider-trigger"
               size="sm"
-              className="w-44"
+              className="w-40"
             >
               <SelectValue placeholder="选择提供商" />
             </SelectTrigger>
@@ -589,7 +589,7 @@ function ModelConfigurationCard({
               id="model-name"
               data-slot="model-name-trigger"
               size="sm"
-              className="w-44"
+              className="w-40"
             >
               <SelectValue placeholder="选择模型" />
             </SelectTrigger>
@@ -737,7 +737,7 @@ function SettingsFormRow({
     <div
       data-slot="settings-form-row"
       data-control-id={controlId}
-      className="grid grid-cols-1 items-start gap-2 border-b border-border pb-3 last:border-b-0 last:pb-0 md:grid-cols-[180px_minmax(0,1fr)]"
+      className="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-b-0 last:pb-0 md:grid-cols-[160px_minmax(0,1fr)]"
     >
       <div data-slot="form-row-label" className="flex flex-col gap-0.5">
         <label
