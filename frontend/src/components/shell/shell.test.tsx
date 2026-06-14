@@ -17,6 +17,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import type React from "react";
 
+// Capture computed CSS variables from :root so geometry assertions
+// align with the actual token layer (tokens.css → globals.css).
+function readRootVar(name: string): string {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+}
+
 // Stub `next/link` so we can query the rendered anchors without invoking the
 // real client-side router.
 vi.mock("next/link", () => ({
@@ -129,5 +137,97 @@ describe("AppShell", () => {
     expect(scroll).not.toBeNull();
     const content = screen.getByTestId("page-content");
     expect(scroll?.contains(content)).toBe(true);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Phase 2 — shared visual layer calibration
+  // Geometry contracts derived from 3 reference designs:
+  //  - ui/Dashboard.png
+  //  - ui/Projects.png
+  //  - ui/Research Workspace.png
+  // ---------------------------------------------------------------------------
+
+  it("exposes the sidebar width as a CSS variable in the 220-232px band", () => {
+    const raw = readRootVar("--creatoros-sidebar-width");
+    expect(raw).not.toBe("");
+    const px = parseInt(raw, 10);
+    expect(Number.isFinite(px)).toBe(true);
+    // Design band: ~224px (Dashboard/Projects/Research)
+    expect(px).toBeGreaterThanOrEqual(220);
+    expect(px).toBeLessThanOrEqual(232);
+  });
+
+  it("exposes the header height as a CSS variable in the 64-80px band", () => {
+    const raw = readRootVar("--creatoros-header-height");
+    expect(raw).not.toBe("");
+    const px = parseInt(raw, 10);
+    expect(Number.isFinite(px)).toBe(true);
+    // Design band: 64-80px (Dashboard top header)
+    expect(px).toBeGreaterThanOrEqual(64);
+    expect(px).toBeLessThanOrEqual(80);
+  });
+
+  it("exposes the page gutter as a CSS variable in the 24-40px band", () => {
+    const raw = readRootVar("--creatoros-page-gutter");
+    expect(raw).not.toBe("");
+    const px = parseInt(raw, 10);
+    expect(Number.isFinite(px)).toBe(true);
+    expect(px).toBeGreaterThanOrEqual(24);
+    expect(px).toBeLessThanOrEqual(40);
+  });
+
+  it("exposes the section gap as a CSS variable in the 16-24px band", () => {
+    const raw = readRootVar("--creatoros-section-gap");
+    expect(raw).not.toBe("");
+    const px = parseInt(raw, 10);
+    expect(Number.isFinite(px)).toBe(true);
+    expect(px).toBeGreaterThanOrEqual(16);
+    expect(px).toBeLessThanOrEqual(24);
+  });
+
+  it("sidebar renders 7 nav items, active one carries aria-current=page", async () => {
+    await renderShell({ pathname: "/projects" });
+    const sidebar = screen.getByRole("complementary", { name: /主侧栏/ });
+    const links = within(sidebar).getAllByRole("link");
+    // 7 nav items (no extra context section for the root).
+    expect(links.length).toBeGreaterThanOrEqual(7);
+    const current = within(sidebar).getByRole("link", { current: "page" });
+    expect(current).toHaveAttribute("href", "/projects");
+  });
+
+  it("sidebar contextual card default variant is assistant and includes brand color", async () => {
+    const { container } = await renderShell();
+    const card = container.querySelector(
+      '[data-slot="sidebar-contextual-card"][data-variant="assistant"]',
+    );
+    expect(card).not.toBeNull();
+    // brand-soft pill in assistant header
+    const pill = card?.querySelector("span");
+    expect(pill).not.toBeNull();
+  });
+
+  it("sidebar user profile shows avatar + name + email + plan label", async () => {
+    const { container } = await renderShell();
+    const profile = container.querySelector('[data-slot="sidebar-user-profile"]');
+    expect(profile).not.toBeNull();
+    expect(profile?.textContent ?? "").toMatch(/个人版/);
+  });
+
+  it("top header renders search trigger, notifications, share, more icons + primary CTA when provided", async () => {
+    const { container } = await renderShell({
+      primaryActionLabel: "新建项目",
+    });
+    const header = container.querySelector('[data-slot="app-top-header"]');
+    expect(header).not.toBeNull();
+    // buttons by aria-label
+    const searchBtn = within(header as HTMLElement).getByLabelText("搜索");
+    const bellBtn = within(header as HTMLElement).getByLabelText("通知");
+    const shareBtn = within(header as HTMLElement).getByLabelText("分享");
+    const moreBtn = within(header as HTMLElement).getByLabelText("更多");
+    expect(searchBtn).toBeInTheDocument();
+    expect(bellBtn).toBeInTheDocument();
+    expect(shareBtn).toBeInTheDocument();
+    expect(moreBtn).toBeInTheDocument();
+    expect(within(header as HTMLElement).getByText("新建项目")).toBeInTheDocument();
   });
 });

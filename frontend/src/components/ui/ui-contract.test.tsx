@@ -26,6 +26,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { MetricCard } from "@/components/project/metric-card";
+import { StatusBadge } from "@/components/project/status-badge";
+import { ProgressBar } from "@/components/project/progress-bar";
+import { SectionCard } from "@/components/project/section-card";
 import {
   ChartContainer,
 } from "@/components/ui/chart";
@@ -465,5 +469,64 @@ describe("ui primitives contract", () => {
 
     const container = screen.getByLabelText(/weekly engagement/i);
     expect(container).toBeInTheDocument();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Phase 2 — shared visual layer calibration
+  // Visual contracts derived from 3 reference designs.
+  // ---------------------------------------------------------------------------
+
+  it("Card has 12-16px corner radius (--creatoros-radius-card band)", () => {
+    const cardRadius = getComputedStyle(document.documentElement)
+      .getPropertyValue("--creatoros-radius-card")
+      .trim();
+    expect(cardRadius).not.toBe("");
+    const px = parseInt(cardRadius, 10);
+    expect(Number.isFinite(px)).toBe(true);
+    // Dashboard/Projects/Research cards: 12-16px corner radius band.
+    expect(px).toBeGreaterThanOrEqual(10);
+    expect(px).toBeLessThanOrEqual(16);
+  });
+
+  it("MetricCard renders label, value and trend together", () => {
+    render(
+      <MetricCard
+        label="进行中"
+        value="2"
+        delta="+1"
+        trend="up"
+        tone="positive"
+      />,
+    );
+    expect(screen.getByText("进行中")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("+1")).toBeInTheDocument();
+  });
+
+  it("StatusBadge renders label and color tone for active", () => {
+    const { container } = render(<StatusBadge status="active" />);
+    const badge = container.querySelector('[data-slot="status-badge"]');
+    expect(badge).not.toBeNull();
+    expect(badge?.textContent?.trim()).toBe("进行中");
+    expect(badge?.getAttribute("data-status")).toBe("active");
+  });
+
+  it("ProgressBar exposes percentage in aria-valuetext", () => {
+    const { container } = render(
+      <ProgressBar value={42} max={100} label="Upload progress" />,
+    );
+    const bar = container.querySelector('[role="progressbar"]');
+    expect(bar?.getAttribute("aria-valuenow")).toBe("42");
+    expect(bar?.getAttribute("aria-valuetext")).toMatch(/42%/);
+  });
+
+  it("SectionCard renders title inside a labelled region", () => {
+    render(
+      <SectionCard title="进行中">
+        <p>body content</p>
+      </SectionCard>,
+    );
+    expect(screen.getByRole("region", { name: /进行中/ })).toBeInTheDocument();
+    expect(screen.getByText("body content")).toBeInTheDocument();
   });
 });
