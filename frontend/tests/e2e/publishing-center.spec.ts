@@ -64,6 +64,14 @@ test.describe("Publishing Center page", () => {
       ),
     ).toBeVisible();
 
+    // BatchOperationBar present between toolbar and table.
+    await expect(
+      main.locator('[data-slot="batch-operation-bar"]'),
+    ).toBeVisible();
+    await expect(
+      main.locator('[data-slot="batch-select-all"]'),
+    ).toBeVisible();
+
     // PublicationTable with 7 approved columns in spec order.
     const table = main.locator('[data-slot="publication-table"]');
     await expect(table).toBeVisible();

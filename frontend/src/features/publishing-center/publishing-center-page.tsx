@@ -6,12 +6,14 @@
  *
  *   PublishingCenterPage
  *   ├── ContentTypeTabs            (locked order: 全部 / 视频 / 图文 / 音频)
- *   ├── PublishingToolbar          (search + filter affordances)
- *   ├── PublishingLayout
- *   │   ├── PublicationTable       (7 columns: 内容 / 项目 / 平台 /
- *   │   │                            发布时间 / 状态 / 表现 / 操作)
- *   │   │   └── PublicationPerformanceRow[] (each row keeps a platform
- *   │   │                                icon and a content thumbnail)
+ *   ├── Two-column grid
+ *   │   ├── Left stack
+ *   │   │   ├── PublishingToolbar  (search + filter affordances)
+ *   │   │   ├── BatchOperationBar  (全选 + 批量发布/下架/修改时间)
+ *   │   │   └── PublicationTable   (7 columns: 内容 / 项目 / 平台 /
+ *   │   │                             发布时间 / 状态 / 表现 / 操作)
+ *   │   │       └── PublicationPerformanceRow[] (each row keeps a platform
+ *   │   │                                    icon and a content thumbnail)
  *   │   └── AnalyticsRail          (locked order: PublishingMetrics →
  *   │                                PlatformComparisonChart →
  *   │                                TrendChart → TopContentList)
@@ -34,6 +36,8 @@
  *  - Platform icons and content thumbnails are preserved.
  *  - No new product structure, no fixture mutation, no Date.now /
  *    Math.random / network access.
+ *  - BatchOperationBar is placed between toolbar and table, aligned
+ *    with the design reference.
  *
  * The page is a Server Component. It does not own a Sidebar or a
  * TopHeader — those live in `(creator)/layout.tsx` and are mounted
@@ -502,17 +506,29 @@ export function PublishingCenterPage({
       data-app="creatoros"
       data-page="publishing-center"
       data-publishing-center-id="publishing-center-root"
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-(--card-gap)"
     >
       <ContentTypeTabs tabs={vm.contentTypeTabs} />
-      <PublishingToolbar />
-      <PublishingLayout
-        publications={vm.publications}
-        metrics={vm.metrics}
-        platformComparison={vm.platformComparison}
-        trend={vm.trend}
-        topContent={vm.topContent}
-      />
+      {/* Two-column layout: left stack (toolbar → batch → table) + right rail */}
+      <div
+        data-slot="publishing-two-col"
+        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_320px]"
+      >
+        <div
+          data-slot="publishing-left-stack"
+          className="flex flex-col gap-(--card-gap)"
+        >
+          <PublishingToolbar />
+          <BatchOperationBar />
+          <PublicationTable publications={vm.publications} />
+        </div>
+        <AnalyticsRail
+          metrics={vm.metrics}
+          platformComparison={vm.platformComparison}
+          trend={vm.trend}
+          topContent={vm.topContent}
+        />
+      </div>
       <Pagination
         currentPage={vm.pagination.currentPage}
         totalPages={vm.pagination.totalPages}
@@ -566,7 +582,7 @@ function PublishingToolbar() {
     <div
       data-slot="publishing-toolbar"
       aria-label="发布列表工具栏"
-      className="flex flex-wrap items-center gap-(--card-gap) border-b border-border pb-2"
+      className="flex flex-wrap items-center gap-(--card-gap)"
     >
       <label className="sr-only" htmlFor="publishing-search">
         搜索发布内容
@@ -599,6 +615,55 @@ function PublishingToolbar() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// BatchOperationBar — batch-select + batch actions
+// ---------------------------------------------------------------------------
+
+function BatchOperationBar() {
+  return (
+    <div
+      data-slot="batch-operation-bar"
+      aria-label="批量操作"
+      className="flex items-center gap-(--card-gap) rounded-xl border border-border bg-surface px-5 py-3.5"
+    >
+      <label className="flex items-center gap-2.5 cursor-pointer select-none">
+        <span
+          data-slot="batch-select-all"
+          role="checkbox"
+          aria-checked="false"
+          aria-label="全选"
+          tabIndex={0}
+          className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border-2 border-border bg-surface"
+        />
+        <span className="text-[13px] text-muted-foreground">
+          已选择 <span data-slot="batch-selected-count" className="font-mono tabular-nums font-medium text-foreground">0</span> 项
+        </span>
+      </label>
+      <span aria-hidden="true" className="h-5 w-px bg-border" />
+      <div className="flex items-center gap-2">
+        <span className="text-[11px] text-muted-foreground/60">
+          已选内容可批量：
+        </span>
+        <BatchActionButton label="批量发布" />
+        <BatchActionButton label="批量下架" />
+        <BatchActionButton label="修改时间" />
+      </div>
+    </div>
+  );
+}
+
+function BatchActionButton({ label }: { label: string }) {
+  return (
+    <button
+      type="button"
+      data-slot="batch-action-button"
+      className="inline-flex h-7 items-center rounded-md border border-border bg-surface px-2.5 text-[12px] text-muted-foreground hover:border-brand/40 hover:text-brand transition-colors"
+    >
+      {label}
+    </button>
+  );
+}
+
 function FilterChip({ label, active }: { label: string; active?: boolean }) {
   return (
     <button
@@ -613,41 +678,6 @@ function FilterChip({ label, active }: { label: string; active?: boolean }) {
     >
       {label}
     </button>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// PublishingLayout — PublicationTable + AnalyticsRail
-// ---------------------------------------------------------------------------
-
-interface PublishingLayoutProps {
-  readonly publications: ReadonlyArray<PublicationRow>;
-  readonly metrics: ReadonlyArray<MetricCardVm>;
-  readonly platformComparison: ReadonlyArray<PlatformShare>;
-  readonly trend: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-  readonly topContent: ReadonlyArray<TopContentRow>;
-}
-
-function PublishingLayout({
-  publications,
-  metrics,
-  platformComparison,
-  trend,
-  topContent,
-}: PublishingLayoutProps) {
-  return (
-    <div
-      data-slot="publishing-layout"
-      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_320px]"
-    >
-      <PublicationTable publications={publications} />
-      <AnalyticsRail
-        metrics={metrics}
-        platformComparison={platformComparison}
-        trend={trend}
-        topContent={topContent}
-      />
-    </div>
   );
 }
 
@@ -673,13 +703,13 @@ function PublicationTable({
       >
         <thead>
           <tr className="border-b border-border text-xs text-muted-foreground">
-            <th className="px-3 py-2 text-left font-medium">内容</th>
-            <th className="px-3 py-2 text-left font-medium">项目</th>
-            <th className="px-3 py-2 text-left font-medium">平台</th>
-            <th className="px-3 py-2 text-left font-medium">发布时间</th>
-            <th className="px-3 py-2 text-left font-medium">状态</th>
-            <th className="px-3 py-2 text-left font-medium">表现</th>
-            <th className="px-3 py-2 text-right font-medium">操作</th>
+            <th className="px-3 py-2.5 text-left font-medium">内容</th>
+            <th className="px-3 py-2.5 text-left font-medium">项目</th>
+            <th className="px-3 py-2.5 text-left font-medium">平台</th>
+            <th className="px-3 py-2.5 text-left font-medium">发布时间</th>
+            <th className="px-3 py-2.5 text-left font-medium">状态</th>
+            <th className="px-3 py-2.5 text-left font-medium">表现</th>
+            <th className="px-3 py-2.5 text-right font-medium">操作</th>
           </tr>
         </thead>
         <tbody>
@@ -700,35 +730,35 @@ function PublicationPerformanceRow({ row }: { row: PublicationRow }) {
       data-status={row.status}
       className="border-b border-border last:border-b-0 hover:bg-surface-subtle/40"
     >
-      <td className="px-3 py-2">
+      <td className="px-3 py-2.5">
         <div className="flex items-center gap-3">
           <ContentThumbnail
             platform={row.platform}
             token={row.thumbnailToken}
           />
-          <span className="line-clamp-2 max-w-[220px] text-foreground">
+          <span className="line-clamp-2 max-w-[220px] text-[13px] leading-snug text-foreground">
             {row.contentTitle}
           </span>
         </div>
       </td>
-      <td className="px-3 py-2 text-muted-foreground">{row.projectTitle}</td>
-      <td className="px-3 py-2">
-        <div className="flex items-center gap-2">
+      <td className="px-3 py-2.5 text-[13px] leading-snug text-muted-foreground">{row.projectTitle}</td>
+      <td className="px-3 py-2.5">
+        <div className="flex items-center gap-1.5">
           <PlatformIconView platform={row.platform} size="sm" />
-          <span className="text-foreground">{row.platformLabel}</span>
+          <span className="text-[13px] text-foreground">{row.platformLabel}</span>
         </div>
       </td>
-      <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
+      <td className="px-3 py-2.5 font-mono text-[11px] leading-snug text-muted-foreground">
         {row.publishedAtLabel}
       </td>
-      <td className="px-3 py-2">
+      <td className="px-3 py-2.5">
         <StatusBadge status={row.status} label={row.statusLabel} />
       </td>
-      <td className="px-3 py-2">
+      <td className="px-3 py-2.5">
         <div className="flex flex-col gap-0.5">
           <span
             data-slot="publication-views"
-            className="font-mono text-sm font-medium text-foreground tabular-nums"
+            className="font-mono text-[13px] font-medium text-foreground tabular-nums"
           >
             {row.views}
           </span>
@@ -737,21 +767,21 @@ function PublicationPerformanceRow({ row }: { row: PublicationRow }) {
             data-tone={row.engagementTone}
             className={
               row.engagementTone === "positive"
-                ? "text-xs text-success"
+                ? "text-[11px] text-success"
                 : row.engagementTone === "warning"
-                  ? "text-xs text-warning"
-                  : "text-xs text-muted-foreground"
+                  ? "text-[11px] text-warning"
+                  : "text-[11px] text-muted-foreground"
             }
           >
             {row.engagementLabel}
           </span>
         </div>
       </td>
-      <td className="px-3 py-2 text-right">
+      <td className="px-3 py-2.5 text-right">
         <button
           type="button"
           data-slot="publication-row-action"
-          className="inline-flex h-7 items-center rounded-control border border-border bg-surface px-2.5 text-xs text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          className="inline-flex h-7 items-center rounded-md border border-border bg-surface px-2.5 text-[11px] text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
         >
           查看
         </button>
@@ -807,7 +837,7 @@ function StatusBadge({
     <span
       data-slot="status-badge"
       data-status={status}
-      className={`inline-flex h-6 items-center rounded-full px-2 text-xs font-medium ${tone}`}
+      className={`inline-flex h-5 items-center rounded-md px-1.5 text-[11px] font-medium ${tone}`}
     >
       {label}
     </span>
