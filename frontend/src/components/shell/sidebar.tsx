@@ -113,7 +113,7 @@ export function Sidebar({
       data-testid="app-sidebar"
       aria-label="主侧栏"
       className={cn(
-        "flex h-screen w-sidebar shrink-0 flex-col gap-(--section-gap) border-r border-border bg-surface px-4 py-(--page-gutter)",
+        "flex h-screen w-sidebar shrink-0 flex-col gap-4 border-r border-border bg-surface px-3 py-5",
         className,
       )}
     >
@@ -148,9 +148,9 @@ function SidebarBrand() {
     <div
       data-slot="sidebar-brand"
       aria-hidden="true"
-      className="flex items-center gap-2 rounded-control px-2 py-1 text-sm font-semibold text-foreground"
+      className="flex items-center gap-2 px-2 py-1 text-[15px] font-semibold text-foreground"
     >
-      <span className="flex size-7 items-center justify-center rounded-control bg-brand text-primary-foreground">
+      <span className="flex size-7 items-center justify-center rounded-md bg-brand text-primary-foreground">
         <Sparkles className="size-4" />
       </span>
       <span>CreatorOS</span>
@@ -180,7 +180,7 @@ function PrimaryNav({ activeId }: { activeId: string }) {
             data-active={isActive ? "true" : "false"}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex h-9 items-center gap-2 rounded-control px-2.5 text-sm transition-colors",
+              "flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors",
               "text-muted-foreground hover:bg-muted hover:text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               isActive && "bg-brand-soft font-medium text-brand",
@@ -278,7 +278,7 @@ function SidebarContextualCard({ variant, userDisplayName }: SidebarContextualCa
     <div
       data-slot="sidebar-contextual-card"
       data-variant="assistant"
-      className="flex flex-col gap-2 rounded-card border border-border bg-surface-subtle p-3 text-xs"
+      className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-3 text-xs"
     >
       <div className="flex items-center gap-2 text-foreground">
         <span

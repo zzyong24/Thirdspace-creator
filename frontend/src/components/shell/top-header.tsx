@@ -107,7 +107,7 @@ export function TopHeader({
       data-mode={resolvedMode}
       data-masked={overlayMasked ? "true" : "false"}
       className={cn(
-        "flex h-header shrink-0 items-center gap-(--section-gap) border-b border-border bg-surface px-(--page-gutter)",
+        "flex h-header shrink-0 items-center gap-3 border-b border-border bg-surface px-(--page-gutter)",
         "min-w-0",
         className,
       )}
