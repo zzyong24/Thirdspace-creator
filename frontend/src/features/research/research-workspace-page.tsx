@@ -437,7 +437,7 @@ function RelatedTagsCard({ tags }: { tags: ResearchViewModel["relatedTags"] }) {
 export function buildResearchViewModel(
   projectId: string,
 ): ResearchViewModel {
-  const project = getProjectById(projectId);
+  const project = getProjectById(resolveProjectIdSlug(projectId));
   if (!project) {
     return {
       scenario: "empty",
@@ -474,6 +474,24 @@ export function buildResearchViewModel(
     loading: false,
     error: null,
   };
+}
+
+/**
+ * The route segment for a project is a URL slug (e.g. `ai-native-browser`)
+ * while the canonical dataset uses prefixed IDs (e.g.
+ * `project-ainativebrowser`). Translate between them so the page
+ * content can resolve the canonical project.
+ *
+ * Falls back to the original slug if no canonical match is found, in
+ * which case the caller surfaces the "未找到项目" empty state.
+ */
+function resolveProjectIdSlug(slug: string): string {
+  if (!slug) return slug;
+  const knownIds = canonicalDataset.projects.map((project) => project.id);
+  if (knownIds.includes(slug)) return slug;
+  const candidate = `project-${slug.replace(/-/g, "")}`;
+  if (knownIds.includes(candidate)) return candidate;
+  return slug;
 }
 
 const DEFAULT_SOURCE_TABS: ReadonlyArray<ResearchViewModel["sourceTabs"][number]> = [
