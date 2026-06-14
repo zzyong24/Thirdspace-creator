@@ -87,15 +87,15 @@ test.describe("Assets Center page", () => {
       ),
     ).toBe(false);
 
-    // Detail panel order inside the workspace:
+    // Layout order inside the assets page body (left rail + interactive region):
     //   AssetTypeSidebar < AssetGallery < AssetDetailPanel.
-    const workspace = main.locator('[data-slot="asset-workspace"]');
-    const workspaceBox = await workspace.boundingBox();
+    const body = main.locator('[data-slot="assets-page-body"]');
+    const bodyBox = await body.boundingBox();
     const sidebarBox = await typeSidebar.boundingBox();
     const galleryBox = await gallery.boundingBox();
     const panelBox = await panel.boundingBox();
     expect(
-      sidebarBox && galleryBox && panelBox && workspaceBox &&
+      sidebarBox && galleryBox && panelBox && bodyBox &&
         sidebarBox.x <= galleryBox.x && galleryBox.x <= panelBox.x,
     ).toBe(true);
 

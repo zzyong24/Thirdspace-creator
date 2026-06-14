@@ -201,7 +201,7 @@ function AssetCard({ asset, selected, onSelect }: AssetCardProps) {
       data-asset-type={asset.type}
       aria-label={`素材 ${asset.name}`}
       className={
-        "flex flex-col gap-1.5 overflow-hidden rounded-card border bg-surface p-1.5 transition-colors hover:border-ring " +
+        "flex flex-col gap-1 overflow-hidden rounded-card border bg-surface p-1 transition-colors hover:border-ring " +
         (selected
           ? "border-brand ring-2 ring-brand/40"
           : "border-border")
@@ -251,7 +251,7 @@ function MediaPreview({ asset }: { asset: AssetSummary }) {
       data-asset-thumbnail-token={token}
       aria-hidden="true"
       className={
-        "relative aspect-video w-full overflow-hidden rounded-control border " +
+        "relative aspect-[3/2] w-full overflow-hidden rounded-control border " +
         previewContainerClass(asset.type)
       }
     >
@@ -441,7 +441,7 @@ function AssetDetailPanel({
       data-slot="asset-detail-panel"
       data-asset-id={asset?.id ?? ""}
       aria-label="素材详情"
-      className="flex h-fit flex-col gap-3 rounded-card border border-border bg-surface p-2.5"
+      className="flex h-fit flex-col gap-2 rounded-card border border-border bg-surface p-2"
     >
       {asset ? (
         <>
@@ -449,53 +449,84 @@ function AssetDetailPanel({
             title="预览"
             description={TYPE_LABEL[asset.type]}
             contentClassName="p-0"
+            className="gap-1.5"
           >
             <MediaPreview asset={asset} />
           </SectionCard>
-          <SectionCard title="操作" description="管理此素材的使用方式">
-            <div data-slot="asset-actions" className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                data-slot="asset-action-insert"
-                className="inline-flex h-8 items-center rounded-control bg-brand px-3 text-xs font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              >
-                插入到项目
-              </button>
+          <SectionCard
+            title="操作"
+            description="管理此素材的使用方式"
+            className="gap-1.5"
+          >
+            <div data-slot="asset-actions" className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
               <button
                 type="button"
                 data-slot="asset-action-download"
-                className="inline-flex h-8 items-center rounded-control border border-border bg-surface px-3 text-xs text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
-                下载
+                <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
+                  <path d="M8 2.5 V10 M5 7 L8 10 L11 7 M3 12.5 H13" />
+                </svg>
+                <span>下载</span>
+              </button>
+              <button
+                type="button"
+                data-slot="asset-action-copy"
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
+                  <rect x={5} y={5} width={9} height={9} rx={1.2} />
+                  <path d="M3 11 V3 H11" />
+                </svg>
+                <span>复制链接</span>
+              </button>
+              <button
+                type="button"
+                data-slot="asset-action-favorite"
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="currentColor">
+                  <path d="M8 2.5 L9.85 6 L13.5 6.5 L10.75 9 L11.5 12.5 L8 10.8 L4.5 12.5 L5.25 9 L2.5 6.5 L6.15 6 Z" />
+                </svg>
+                <span>收藏</span>
               </button>
               <button
                 type="button"
                 data-slot="asset-action-rename"
-                className="inline-flex h-8 items-center rounded-control border border-border bg-surface px-3 text-xs text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
-                重命名
+                <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
+                  <circle cx={8} cy={8} r={1.2} fill="currentColor" />
+                  <circle cx={3.5} cy={8} r={1.2} fill="currentColor" />
+                  <circle cx={12.5} cy={8} r={1.2} fill="currentColor" />
+                </svg>
+                <span>更多</span>
               </button>
             </div>
           </SectionCard>
-          <SectionCard title="元数据" description="文件基础信息">
+          <SectionCard
+            title="元数据"
+            description="文件基础信息"
+            className="gap-1.5"
+          >
             <dl
               data-slot="asset-metadata"
-              className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground"
+              className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground"
             >
               <dt>类型</dt>
-              <dd className="text-foreground">{TYPE_LABEL[asset.type]}</dd>
+              <dd className="text-right text-foreground">{TYPE_LABEL[asset.type]}</dd>
               <dt>格式</dt>
-              <dd className="font-mono tabular-nums text-foreground">
+              <dd className="text-right font-mono tabular-nums text-foreground">
                 {asset.mimeType}
               </dd>
               <dt>大小</dt>
-              <dd className="font-mono tabular-nums text-foreground">
+              <dd className="text-right font-mono tabular-nums text-foreground">
                 {formatFileSize(asset.fileSizeBytes)}
               </dd>
               {asset.width !== null && asset.height !== null ? (
                 <>
                   <dt>尺寸</dt>
-                  <dd className="font-mono tabular-nums text-foreground">
+                  <dd className="text-right font-mono tabular-nums text-foreground">
                     {asset.width}×{asset.height}
                   </dd>
                 </>
@@ -503,18 +534,22 @@ function AssetDetailPanel({
               {asset.durationMs !== null ? (
                 <>
                   <dt>时长</dt>
-                  <dd className="font-mono tabular-nums text-foreground">
+                  <dd className="text-right font-mono tabular-nums text-foreground">
                     {formatDuration(asset.durationMs)}
                   </dd>
                 </>
               ) : null}
               <dt>更新</dt>
-              <dd className="font-mono tabular-nums text-foreground">
+              <dd className="text-right font-mono tabular-nums text-foreground">
                 {asset.updatedAt.slice(0, 10)}
               </dd>
             </dl>
           </SectionCard>
-          <SectionCard title="标签" description="已附加到此素材的标签">
+          <SectionCard
+            title="标签"
+            description="已附加到此素材的标签"
+            className="gap-1.5"
+          >
             <div data-slot="asset-tags" className="flex flex-wrap gap-1">
               {asset.tags.length > 0 ? (
                 asset.tags.map((tag) => (
@@ -526,14 +561,18 @@ function AssetDetailPanel({
                   />
                 ))
               ) : (
-                <span className="text-xs text-muted-foreground">—</span>
+                <span className="text-[11px] text-muted-foreground">—</span>
               )}
             </div>
           </SectionCard>
-          <SectionCard title="使用记录" description="此素材被引用的项目">
+          <SectionCard
+            title="使用记录"
+            description="此素材被引用的项目"
+            className="gap-1.5"
+          >
             <ul
               data-slot="asset-usage-history"
-              className="flex flex-col gap-1 text-xs"
+              className="flex flex-col gap-0.5 text-[11px]"
               aria-label="素材使用记录"
             >
               {usageForAsset.length > 0 ? (
@@ -542,12 +581,12 @@ function AssetDetailPanel({
                     key={row.id}
                     data-slot="asset-usage-row"
                     data-usage-id={row.id}
-                    className="flex items-center justify-between rounded-control bg-surface-subtle px-2 py-1"
+                    className="flex items-center justify-between gap-2 rounded-control bg-surface-subtle px-2 py-1"
                   >
                     <span className="truncate text-foreground">
                       {row.projectTitle}
                     </span>
-                    <span className="ml-2 shrink-0 font-mono tabular-nums text-muted-foreground">
+                    <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
                       {row.dateLabel}
                     </span>
                   </li>

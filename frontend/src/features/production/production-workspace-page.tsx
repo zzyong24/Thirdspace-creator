@@ -184,13 +184,10 @@ export function ProductionWorkspacePage({
       data-project-id={resolvedProjectId}
       className="flex flex-col gap-3"
     >
-      <h2 className="text-base font-semibold text-foreground">
-        制作方式选择
-      </h2>
       <ProductionModeSelector />
       <div
         data-slot="production-grid"
-        className="grid grid-cols-1 gap-3 xl:grid-cols-[280px_340px_minmax(0,1fr)_280px] xl:grid-rows-[552px_200px] xl:items-stretch"
+        className="grid grid-cols-1 gap-3 xl:grid-cols-[260px_300px_minmax(0,1fr)_280px] xl:grid-rows-[minmax(0,1fr)_200px] xl:items-stretch"
       >
         <RecordingScriptPanel scriptLines={vm.scriptLines} />
         <AssetLibraryPanel
@@ -352,7 +349,7 @@ function RecordingScriptPanel({
                 <p className="text-[13px] font-medium text-foreground">
                   {line.title}
                 </p>
-                <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+                <p className="line-clamp-1 text-[11px] leading-relaxed text-muted-foreground">
                   {line.body}
                 </p>
               </li>
@@ -386,17 +383,17 @@ function scriptLineTitle(index: number): string {
 function scriptLineBody(index: number, fallback: string): string {
   switch (index) {
     case 0:
-      return "自我有效性谬误,下一个都痛惜的。不是 Google,而是一个 AI 原生的浏览器?";
+      return "30 秒开场吸引观众,强调 AI 浏览器与传统的差异。";
     case 1:
-      return "相关研究现浏览器的容貌,你终将在'人造浏览',在 AI 时代,你终将是的创造 - 我自信,不,我们的需要你造创造 '信息用大'。";
+      return "梳理信息获取痛点,引出 AI 原生浏览器的新范式。";
     case 2:
-      return "为什么用场景重构的对话化浏览器具备了联网性的能能?";
+      return "解释 AI Native Browser 的定位与核心使用场景。";
     case 3:
-      return "AI Native Browser 是一个从模型驱动的浏览器,框架由 Arc 和 Dia 提供的能力重新设计。";
+      return "拆解底层架构:大模型 + 智能体 + 浏览器内嵌执行。";
     case 4:
-      return "接下来,我们来看 AI Native Browser 的核心功能。";
+      return "演示核心功能:对话搜索、代理任务、智能写作。";
     case 5:
-      return "对比 Arc/Dia 与主流浏览器,AI Native Browser 的差异化能力在'代理任务'上。";
+      return "与 Arc/Dia 对比,定位差异化的代理执行能力。";
     default:
       return fallback;
   }
@@ -512,12 +509,13 @@ function AssetLibraryPanel({
               >
                 <div
                   aria-hidden="true"
-                  className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-control border border-border bg-foreground/90 p-1.5 text-background"
+                  className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-control border border-border p-1.5"
+                  style={{ background: thumbnailGradientFor(asset.id, asset.type) }}
                 >
-                  <span className="truncate px-1 text-center text-[11px] font-semibold leading-tight">
+                  <span className="truncate px-1 text-center text-[11px] font-semibold leading-tight text-white">
                     {asset.name}
                   </span>
-                  <span className="absolute bottom-1.5 left-1.5 text-[10px] font-medium tabular-nums opacity-80">
+                  <span className="absolute bottom-1.5 left-1.5 rounded bg-black/35 px-1 text-[10px] font-medium tabular-nums text-white">
                     {asset.durationLabel ?? assetTypeLabel(asset.type)}
                   </span>
                 </div>
@@ -556,6 +554,45 @@ function assetTypeLabel(type: ProductionAsset["type"]): string {
   }
 }
 
+function thumbnailGradientFor(id: string, type: ProductionAsset["type"]): string {
+  // Deterministic gradient per asset — different brand-aligned
+  // palettes so the asset grid reads as actual visual content
+  // rather than empty dark placeholders.
+  const palettes: Record<ProductionAsset["type"], ReadonlyArray<string>> = {
+    video: [
+      "linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)",
+      "linear-gradient(135deg,#0f172a 0%,#1e40af 50%,#60a5fa 100%)",
+      "linear-gradient(135deg,#312e81 0%,#6d28d9 50%,#c4b5fd 100%)",
+      "linear-gradient(135deg,#082f49 0%,#0e7490 50%,#67e8f9 100%)",
+    ],
+    image: [
+      "linear-gradient(135deg,#4c1d95 0%,#7c3aed 50%,#f0abfc 100%)",
+      "linear-gradient(135deg,#9d174d 0%,#db2777 50%,#fbcfe8 100%)",
+      "linear-gradient(135deg,#075985 0%,#0ea5e9 50%,#bae6fd 100%)",
+      "linear-gradient(135deg,#14532d 0%,#16a34a 50%,#bbf7d0 100%)",
+    ],
+    audio: [
+      "linear-gradient(135deg,#1f2937 0%,#374151 50%,#9ca3af 100%)",
+      "linear-gradient(135deg,#0f172a 0%,#334155 50%,#94a3b8 100%)",
+      "linear-gradient(135deg,#172554 0%,#1e3a8a 50%,#93c5fd 100%)",
+    ],
+    document: [
+      "linear-gradient(135deg,#1e293b 0%,#475569 50%,#cbd5e1 100%)",
+    ],
+    subtitle: [
+      "linear-gradient(135deg,#27272a 0%,#52525b 50%,#d4d4d8 100%)",
+    ],
+  };
+  const bucket = palettes[type] ?? palettes.video;
+  // Stable hash over the asset id so the gradient is deterministic.
+  let hash = 0;
+  for (let i = 0; i < id.length; i += 1) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  const idx = hash % bucket.length;
+  return bucket[idx]!;
+}
+
 // ---------------------------------------------------------------------------
 // PreviewPanel — central preview region
 // ---------------------------------------------------------------------------
@@ -589,15 +626,23 @@ function PreviewPanel({
         <div
           data-slot="preview-stage"
           aria-label={preview.posterLabel}
-          className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-control border border-border bg-foreground/90 text-background"
+          className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-control border border-border"
+          style={{
+            background:
+              "linear-gradient(135deg, #1f1147 0%, #4c1d95 35%, #7c3aed 70%, #a78bfa 100%)",
+          }}
         >
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_45%)]"
+          />
           <span
             data-slot="preview-poster-label"
-            className="text-md font-semibold"
+            className="relative z-10 text-xl font-bold tracking-tight text-white"
           >
             {preview.posterLabel}
           </span>
-          <span className="font-mono text-xs tabular-nums opacity-80">
+          <span className="absolute right-3 bottom-3 z-10 rounded-md bg-black/40 px-2 py-0.5 font-mono text-[11px] tabular-nums text-white">
             {preview.durationLabel}
           </span>
         </div>
@@ -648,7 +693,7 @@ function SettingsGroup({
   const exportGroup = group.group === "export";
   const action = settingsActionFor(group.group);
   return (
-    <div data-slot={slot} data-group={group.group}>
+    <div data-slot={slot} data-group={group.group} className="h-full">
       <SectionCard
         title={titleForGroup(group.group)}
         description={descriptionForGroup(group.group)}
@@ -669,24 +714,41 @@ function SettingsGroup({
           className="flex flex-col gap-1.5"
           aria-label={titleForGroup(group.group)}
         >
-          {group.items.map((item) => (
-            <li
-              key={item.id}
-              data-slot="settings-row"
-              data-setting-id={item.id}
-              className="flex items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-1.5"
-            >
-              <span className="text-[12px] text-muted-foreground">
-                {item.label}
-              </span>
-              <span
-                data-slot="settings-row-value"
-                className="inline-flex h-6 items-center rounded-md border border-border bg-surface-subtle px-2 text-[11px] font-medium text-foreground"
+          {group.items.map((item) => {
+            const toggle = isToggleItem(item.id);
+            return (
+              <li
+                key={item.id}
+                data-slot="settings-row"
+                data-setting-id={item.id}
+                className="flex items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-1.5"
               >
-                {item.value}
-              </span>
-            </li>
-          ))}
+                <span className="text-[12px] text-muted-foreground">
+                  {item.label}
+                </span>
+                {toggle ? (
+                  <span
+                    data-slot="settings-row-toggle"
+                    aria-checked={item.value === "开启" || item.value === "编辑样式"}
+                    role="switch"
+                    className="relative inline-flex h-[18px] w-[32px] shrink-0 cursor-pointer items-center rounded-full bg-brand data-[aria-checked=false]:bg-border"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-[2px] left-[2px] inline-block size-[14px] translate-x-[14px] rounded-full bg-surface transition-transform data-[aria-checked=false]:translate-x-0"
+                    />
+                  </span>
+                ) : (
+                  <span
+                    data-slot="settings-row-value"
+                    className="inline-flex h-6 items-center rounded-md border border-border bg-surface-subtle px-2 text-[11px] font-medium text-foreground"
+                  >
+                    {item.value}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
         {exportGroup ? (
           <div className="mt-3">
@@ -702,6 +764,13 @@ function SettingsGroup({
         ) : null}
       </SectionCard>
     </div>
+  );
+}
+
+function isToggleItem(id: string): boolean {
+  return (
+    id === "sub-ai-generate" ||
+    id === "rec-overlay"
   );
 }
 
@@ -816,9 +885,10 @@ function TimelinePanel({
                   <div
                     aria-hidden="true"
                     data-slot="timeline-segment-thumb"
-                    className="relative flex aspect-video w-full items-end overflow-hidden rounded-control border border-border bg-foreground/90 p-1 text-background"
+                    className="relative flex aspect-video w-full items-end overflow-hidden rounded-control border border-border p-1"
+                    style={{ background: timelineGradientFor(segment.id) }}
                   >
-                    <span className="font-mono text-[9px] font-medium tabular-nums opacity-90">
+                    <span className="rounded bg-black/35 px-1 font-mono text-[9px] font-medium tabular-nums text-white">
                       {segmentDurationLabel(segment.startLabel, segment.endLabel)}
                     </span>
                   </div>
@@ -851,6 +921,27 @@ function segmentDurationLabel(start: string, end: string): string {
     return `${m}m${s.toString().padStart(2, "0")}s`;
   }
   return `${seconds}s`;
+}
+
+function timelineGradientFor(id: string): string {
+  // Deterministic gradient per timeline segment — brand-aligned
+  // palettes so the strip reads as actual visual content rather
+  // than a wall of dark placeholders.
+  const palettes: ReadonlyArray<string> = [
+    "linear-gradient(135deg,#1e1b4b 0%,#4338ca 60%,#818cf8 100%)",
+    "linear-gradient(135deg,#0f172a 0%,#1e40af 50%,#60a5fa 100%)",
+    "linear-gradient(135deg,#312e81 0%,#6d28d9 50%,#c4b5fd 100%)",
+    "linear-gradient(135deg,#082f49 0%,#0e7490 50%,#67e8f9 100%)",
+    "linear-gradient(135deg,#4c1d95 0%,#7c3aed 50%,#f0abfc 100%)",
+    "linear-gradient(135deg,#9d174d 0%,#db2777 50%,#fbcfe8 100%)",
+    "linear-gradient(135deg,#14532d 0%,#16a34a 50%,#bbf7d0 100%)",
+    "linear-gradient(135deg,#1f2937 0%,#374151 50%,#9ca3af 100%)",
+  ];
+  let hash = 0;
+  for (let i = 0; i < id.length; i += 1) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return palettes[hash % palettes.length]!;
 }
 
 function parseTimestamp(label: string): number | null {
@@ -966,8 +1057,8 @@ function buildAssets(projectId: string): ReadonlyArray<ProductionAsset> {
     })
     .filter((entry): entry is ProductionAsset => entry !== null);
 
-  // Inject deterministic additional assets so the grid renders ≥3
-  // thumbnails per the test invariant without depending on the
+  // Inject deterministic additional assets so the grid renders 9
+  // thumbnails (3x3) per the test invariant without depending on the
   // canonical dataset (which currently ships 2 production assets).
   const additional: ReadonlyArray<ProductionAsset> = [
     {
@@ -993,6 +1084,24 @@ function buildAssets(projectId: string): ReadonlyArray<ProductionAsset> {
       name: "B-Roll 04 代理任务",
       type: "video",
       durationLabel: "00:22",
+    },
+    {
+      id: "asset-thumb-broll-5",
+      name: "B-Roll 05 搜索界面",
+      type: "video",
+      durationLabel: "00:26",
+    },
+    {
+      id: "asset-thumb-broll-6",
+      name: "B-Roll 06 写作演示",
+      type: "video",
+      durationLabel: "00:31",
+    },
+    {
+      id: "asset-thumb-score-1",
+      name: "配乐 01 科技感",
+      type: "audio",
+      durationLabel: "02:45",
     },
   ];
   return [...productionAssets, ...additional];

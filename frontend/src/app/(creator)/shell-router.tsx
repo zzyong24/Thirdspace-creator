@@ -32,6 +32,7 @@ import type {
 } from "@/components/shell/top-header";
 import { OverlayController } from "@/components/overlays/overlay-controller";
 import { AICopilotDialog } from "@/components/overlays/ai-copilot-dialog";
+import { CopilotOverlayBridge } from "@/components/overlays/copilot-overlay-bridge";
 import { canonicalDataset } from "@/fixtures/canonical";
 
 // ---------------------------------------------------------------------------
@@ -271,6 +272,7 @@ export function ShellRouter({
       <React.Suspense fallback={null}>
         <OverlayController>
           <AICopilotDialog pathname={pathname} />
+          <CopilotOverlayBridge />
         </OverlayController>
       </React.Suspense>
     </AppShell>

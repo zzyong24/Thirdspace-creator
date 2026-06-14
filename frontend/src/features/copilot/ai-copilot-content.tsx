@@ -33,19 +33,25 @@ import * as React from "react";
 import {
   ArrowUp,
   BookOpenText,
+  ChartLine,
+  Crosshair,
+  FileSearch,
   FileText,
-  ListChecks,
-  PenLine,
+  FolderOpen,
+  Lightbulb,
+  Plus,
+  Search as SearchIcon,
+  Send,
   Sparkles,
   TrendingUp,
   Wand2,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -59,48 +65,61 @@ const PROMPT_VALUE = "";
 const SUGGESTED_ACTIONS: ReadonlyArray<{
   readonly id: string;
   readonly label: string;
+  readonly icon:
+    | "crosshair"
+    | "wand"
+    | "file-search"
+    | "sparkles"
+    | "image"
+    | "line-chart";
 }> = [
-  { id: "analyze", label: "分析机会" },
-  { id: "script", label: "生成脚本" },
-  { id: "assets", label: "寻找素材" },
-  { id: "title", label: "优化标题" },
-  { id: "cover", label: "生成封面" },
-  { id: "review", label: "发布复盘" },
+  { id: "analyze", label: "分析机会", icon: "crosshair" },
+  { id: "script", label: "生成脚本", icon: "wand" },
+  { id: "assets", label: "寻找素材", icon: "file-search" },
+  { id: "title", label: "优化标题", icon: "sparkles" },
+  { id: "cover", label: "生成封面", icon: "image" },
+  { id: "review", label: "发布复盘", icon: "line-chart" },
 ];
 
 const RECOMMENDED_COMMANDS: ReadonlyArray<{
   readonly id: string;
-  readonly icon: "wand" | "book" | "file" | "trending";
+  readonly icon: "crosshair" | "file" | "file-search" | "sparkles" | "line-chart";
+  readonly tone: "pink" | "violet" | "mint" | "orange" | "indigo";
   readonly title: string;
   readonly description: string;
 }> = [
   {
-    id: "research",
-    icon: "wand",
-    title: "生成竞品分析",
-    description: "基于当前项目主题搜集近 30 天同类爆款",
+    id: "market-opportunity",
+    icon: "crosshair",
+    tone: "pink",
+    title: "分析 AI Browser 市场机会",
+    description: "深度分析市场趋势和机会点",
   },
   {
-    id: "thesis",
-    icon: "book",
-    title: "梳理内容合同",
-    description: "为下一个 Output 自动生成 4 张合同卡",
-  },
-  {
-    id: "script",
+    id: "video-script",
     icon: "file",
-    title: "起草脚本大纲",
-    description: "结合项目主脚本与平台风格输出 3 个版本",
+    tone: "violet",
+    title: "生成视频脚本大纲",
+    description: "基于主题生成结构化脚本",
   },
   {
-    id: "publish",
-    icon: "trending",
-    title: "优化发布排期",
-    description: "根据历史表现给出 7 天发布排期建议",
+    id: "find-assets",
+    icon: "file-search",
+    tone: "mint",
+    title: "寻找相关素材",
+    description: "在全局素材库中搜索相关素材",
   },
   {
-    id: "review",
-    icon: "trending",
+    id: "title-cover",
+    icon: "sparkles",
+    tone: "orange",
+    title: "优化标题和封面",
+    description: "生成更吸引人的标题和封面",
+  },
+  {
+    id: "publish-review",
+    icon: "line-chart",
+    tone: "indigo",
     title: "发布效果复盘",
     description: "分析发布数据并给出优化建议",
   },
@@ -109,37 +128,37 @@ const RECOMMENDED_COMMANDS: ReadonlyArray<{
 const RECENT_TASKS: ReadonlyArray<{
   readonly id: string;
   readonly title: string;
-  readonly status: "完成" | "进行中" | "失败";
+  readonly project: string;
   readonly meta: string;
 }> = [
   {
     id: "task-1",
-    title: "AI Native Browser 竞品分析",
-    status: "完成",
-    meta: "5 分钟前 · 12 条结果",
+    title: "分析 AI Native Browser 的核心机会",
+    project: "AI Native Browser 深度解析",
+    meta: "2 小时前",
   },
   {
     id: "task-2",
-    title: "短视频脚本大纲 v2",
-    status: "进行中",
-    meta: "8 分钟前 · 编辑中",
+    title: "生成脚本：浏览器隐私趋势",
+    project: "下一代浏览器的机会与未来",
+    meta: "昨天 16:30",
   },
   {
     id: "task-3",
-    title: "周报复盘草稿",
-    status: "完成",
-    meta: "今早 09:42 · 1.2k 字",
+    title: "寻找 B-roll 素材：用户使用场景",
+    project: "AI 浏览器功能拆解",
+    meta: "昨天 10:15",
   },
   {
     id: "task-4",
     title: "优化标题：AI 浏览器真的来了吗？",
-    status: "完成",
+    project: "AI Native Browser 深度解析",
     meta: "2 天前",
   },
   {
     id: "task-5",
     title: "复盘视频发布效果",
-    status: "完成",
+    project: "Comet 产品分析报告",
     meta: "3 天前",
   },
 ];
@@ -147,100 +166,192 @@ const RECENT_TASKS: ReadonlyArray<{
 const CONTINUING_TASKS: ReadonlyArray<{
   readonly id: string;
   readonly title: string;
-  readonly progress: number;
+  readonly description: string;
+  readonly status: "进行中" | "排队中" | "已完成";
+  readonly progress: number | null;
+  readonly tone: "violet" | "amber" | "emerald";
 }> = [
-  { id: "cont-1", title: "整理 AI Native Browser 资料", progress: 64 },
-  { id: "cont-2", title: "起草视频脚本结尾段", progress: 38 },
-  { id: "cont-3", title: "生成本周发布排期", progress: 82 },
-  { id: "cont-4", title: "生成内容策略", progress: 100 },
+  {
+    id: "cont-1",
+    title: "生成脚本大纲",
+    description: "AI 浏览器的未来趋势",
+    status: "进行中",
+    progress: 45,
+    tone: "violet",
+  },
+  {
+    id: "cont-2",
+    title: "竞品对比分析",
+    description: "对比 6 款主流浏览器",
+    status: "排队中",
+    progress: null,
+    tone: "amber",
+  },
+  {
+    id: "cont-3",
+    title: "用户痛点挖掘",
+    description: "分析用户评论和反馈",
+    status: "排队中",
+    progress: null,
+    tone: "amber",
+  },
+  {
+    id: "cont-4",
+    title: "生成内容策略",
+    description: "品牌内容策略规划",
+    status: "已完成",
+    progress: 100,
+    tone: "emerald",
+  },
 ];
 
 const QUICK_ENTRIES: ReadonlyArray<{
   readonly id: string;
-  readonly icon: "sparkles" | "pen" | "list";
+  readonly icon: "plus" | "folder" | "search" | "image" | "send" | "book";
   readonly title: string;
-  readonly description: string;
 }> = [
-  {
-    id: "new-project",
-    icon: "sparkles",
-    title: "新建 AI 选题",
-    description: "从一条灵感开始",
-  },
-  {
-    id: "draft",
-    icon: "pen",
-    title: "续写脚本",
-    description: "回到上次未完成的章节",
-  },
-  {
-    id: "review",
-    icon: "list",
-    title: "查看今日待办",
-    description: "3 个任务等待处理",
-  },
-  {
-    id: "search",
-    icon: "list",
-    title: "全局搜索",
-    description: "搜索全部创作资料",
-  },
-  {
-    id: "assets",
-    icon: "sparkles",
-    title: "素材中心",
-    description: "管理图片与视频素材",
-  },
-  {
-    id: "knowledge",
-    icon: "pen",
-    title: "知识库",
-    description: "查找沉淀的知识",
-  },
+  { id: "new-project", icon: "plus", title: "新建项目" },
+  { id: "open-project", icon: "folder", title: "打开项目" },
+  { id: "search", icon: "search", title: "全局搜索" },
+  { id: "assets", icon: "image", title: "素材中心" },
+  { id: "publish", icon: "send", title: "发布中心" },
+  { id: "knowledge", icon: "book", title: "知识库" },
 ];
 
 const SMART_RECOMMENDATIONS: ReadonlyArray<{
   readonly id: string;
   readonly title: string;
-  readonly body: string;
 }> = [
-  {
-    id: "rec-1",
-    title: "把今天的内容合同加入 Project",
-    body: "你昨天生成了 4 张合同卡，可以一键附加到 AI Native Browser 项目。",
-  },
-  {
-    id: "rec-2",
-    title: "复盘上一条爆款的发布节奏",
-    body: "近 7 天播放最佳的发布于周三 20:15，建议复用时段。",
-  },
+  { id: "rec-1", title: "分析竞品策略" },
+  { id: "rec-2", title: "寻找最新数据" },
+  { id: "rec-3", title: "生成对比图表" },
 ];
 
 // ---------------------------------------------------------------------------
-// Icon helper
+// Icon helpers
 // ---------------------------------------------------------------------------
 
-function ActionIcon({ kind }: { kind: "wand" | "book" | "file" | "trending" }) {
+const TONE_BG: Record<string, string> = {
+  pink: "bg-pink-100 text-pink-600",
+  violet: "bg-violet-100 text-violet-600",
+  mint: "bg-emerald-100 text-emerald-600",
+  orange: "bg-orange-100 text-orange-600",
+  indigo: "bg-indigo-100 text-indigo-600",
+};
+
+const STATUS_BADGE: Record<string, string> = {
+  进行中: "bg-violet-100 text-violet-600",
+  排队中: "bg-amber-100 text-amber-700",
+  已完成: "bg-emerald-100 text-emerald-700",
+};
+
+const STATUS_BAR: Record<string, string> = {
+  进行中: "bg-violet-500",
+  已完成: "bg-emerald-500",
+};
+
+function RecommendedIcon({
+  kind,
+  tone,
+}: {
+  kind:
+    | "crosshair"
+    | "file"
+    | "file-search"
+    | "sparkles"
+    | "line-chart";
+  tone: "pink" | "violet" | "mint" | "orange" | "indigo";
+}) {
+  const toneClass = TONE_BG[tone] ?? TONE_BG.violet;
   switch (kind) {
-    case "wand":
-      return <Wand2 className="size-4 text-brand" aria-hidden="true" />;
-    case "book":
-      return <BookOpenText className="size-4 text-brand" aria-hidden="true" />;
+    case "crosshair":
+      return (
+        <span
+          className={`inline-flex size-7 items-center justify-center rounded-md ${toneClass}`}
+        >
+          <Crosshair className="size-3.5" aria-hidden="true" />
+        </span>
+      );
     case "file":
-      return <FileText className="size-4 text-brand" aria-hidden="true" />;
-    case "trending":
-      return <TrendingUp className="size-4 text-brand" aria-hidden="true" />;
+      return (
+        <span
+          className={`inline-flex size-7 items-center justify-center rounded-md ${toneClass}`}
+        >
+          <FileText className="size-3.5" aria-hidden="true" />
+        </span>
+      );
+    case "file-search":
+      return (
+        <span
+          className={`inline-flex size-7 items-center justify-center rounded-md ${toneClass}`}
+        >
+          <FileSearch className="size-3.5" aria-hidden="true" />
+        </span>
+      );
+    case "sparkles":
+      return (
+        <span
+          className={`inline-flex size-7 items-center justify-center rounded-md ${toneClass}`}
+        >
+          <Wand2 className="size-3.5" aria-hidden="true" />
+        </span>
+      );
+    case "line-chart":
+      return (
+        <span
+          className={`inline-flex size-7 items-center justify-center rounded-md ${toneClass}`}
+        >
+          <ChartLine className="size-3.5" aria-hidden="true" />
+        </span>
+      );
   }
 }
 
-function QuickIcon({ kind }: { kind: "sparkles" | "pen" | "list" }) {
+function ChipIcon({
+  kind,
+}: {
+  kind:
+    | "crosshair"
+    | "wand"
+    | "file-search"
+    | "sparkles"
+    | "image"
+    | "line-chart";
+}) {
   switch (kind) {
+    case "crosshair":
+      return <Crosshair className="size-3.5" aria-hidden="true" />;
+    case "wand":
+      return <Wand2 className="size-3.5" aria-hidden="true" />;
+    case "file-search":
+      return <FileSearch className="size-3.5" aria-hidden="true" />;
     case "sparkles":
-      return <Sparkles className="size-4" aria-hidden="true" />;
-    case "pen":
-      return <PenLine className="size-4" aria-hidden="true" />;
-    case "list":
-      return <ListChecks className="size-4" aria-hidden="true" />;
+      return <Sparkles className="size-3.5" aria-hidden="true" />;
+    case "image":
+      return <ImageIcon className="size-3.5" aria-hidden="true" />;
+    case "line-chart":
+      return <ChartLine className="size-3.5" aria-hidden="true" />;
+  }
+}
+
+function QuickIcon({
+  kind,
+}: {
+  kind: "plus" | "folder" | "search" | "image" | "send" | "book";
+}) {
+  switch (kind) {
+    case "plus":
+      return <Plus className="size-4" aria-hidden="true" />;
+    case "folder":
+      return <FolderOpen className="size-4" aria-hidden="true" />;
+    case "search":
+      return <SearchIcon className="size-4" aria-hidden="true" />;
+    case "image":
+      return <ImageIcon className="size-4" aria-hidden="true" />;
+    case "send":
+      return <Send className="size-4" aria-hidden="true" />;
+    case "book":
+      return <BookOpenText className="size-4" aria-hidden="true" />;
   }
 }
 
@@ -285,23 +396,11 @@ export function AICopilotContent() {
                     type="button"
                     data-slot="suggested-chip"
                     data-chip-id={action.id}
-                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-border bg-surface px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                    className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-border/80 bg-surface px-3 text-xs font-medium text-foreground transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                   >
-                    <ActionIcon
-                      kind={
-                        action.id === "analyze"
-                          ? "wand"
-                          : action.id === "script"
-                            ? "file"
-                            : action.id === "assets"
-                              ? "book"
-                              : action.id === "title"
-                                ? "trending"
-                                : action.id === "cover"
-                                  ? "wand"
-                                  : "trending"
-                      }
-                    />
+                    <span className="text-brand">
+                      <ChipIcon kind={action.icon} />
+                    </span>
                     {action.label}
                   </button>
                 ))}
@@ -339,23 +438,9 @@ export function AICopilotContent() {
           className="overflow-hidden border border-border"
         >
           <CardHeader className="px-3 pb-1 pt-2.5">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <CardTitle className="text-[12px] font-semibold">
-                  推荐指令
-                </CardTitle>
-                <CardDescription className="text-[10px]">
-                  根据当前项目生成的常用操作
-                </CardDescription>
-              </div>
-              <button
-                type="button"
-                data-slot="recommended-view-all"
-                className="text-[10px] font-medium text-brand hover:underline focus:outline-none"
-              >
-                查看全部 →
-              </button>
-            </div>
+            <CardTitle className="text-[12px] font-semibold">
+              推荐指令
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-1 px-3 pb-2.5 pt-0">
             {RECOMMENDED_COMMANDS.map((cmd) => (
@@ -364,9 +449,9 @@ export function AICopilotContent() {
                 type="button"
                 data-slot="recommended-command"
                 data-command-id={cmd.id}
-                className="flex min-h-9 items-start gap-1.5 rounded-md bg-surface px-1.5 py-1 text-left transition-colors hover:bg-surface-muted"
+                className="flex min-h-9 items-start gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-surface-muted"
               >
-                <ActionIcon kind={cmd.icon} />
+                <RecommendedIcon kind={cmd.icon} tone={cmd.tone} />
                 <div className="flex flex-col gap-0">
                   <span className="text-[11px] font-medium text-foreground leading-tight">
                     {cmd.title}
@@ -377,6 +462,13 @@ export function AICopilotContent() {
                 </div>
               </button>
             ))}
+            <button
+              type="button"
+              data-slot="recommended-view-all"
+              className="mt-1 self-center text-[10px] font-medium text-brand hover:underline focus:outline-none"
+            >
+              查看所有指令 →
+            </button>
           </CardContent>
         </Card>
 
@@ -384,12 +476,7 @@ export function AICopilotContent() {
         <Card data-slot="recent-tasks" className="overflow-hidden border border-border">
           <CardHeader className="px-3 pb-1 pt-2.5">
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <CardTitle className="text-[12px] font-semibold">最近任务</CardTitle>
-                <CardDescription className="text-[10px]">
-                  过去 24 小时内的生成记录
-                </CardDescription>
-              </div>
+              <CardTitle className="text-[12px] font-semibold">最近任务</CardTitle>
               <button
                 type="button"
                 data-slot="recent-view-all"
@@ -399,34 +486,31 @@ export function AICopilotContent() {
               </button>
             </div>
           </CardHeader>
-          <CardContent className="flex flex-col gap-1 px-3 pb-2.5 pt-0">
+          <CardContent className="flex flex-col gap-2 px-3 pb-2.5 pt-0">
             {RECENT_TASKS.map((task) => (
               <div
                 key={task.id}
                 data-slot="recent-task"
                 data-task-id={task.id}
-                className="flex items-start justify-between gap-2 rounded-md border border-border bg-surface px-2 py-1"
+                className="flex flex-col gap-0"
               >
-                <div className="flex flex-col gap-0">
+                <div className="flex items-start gap-1.5">
+                  <FileText
+                    className="mt-0.5 size-3.5 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                   <span className="text-[11px] font-medium text-foreground leading-tight">
                     {task.title}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-2 pl-5">
+                  <span className="text-[9.5px] leading-tight text-muted-foreground">
+                    项目：{task.project}
                   </span>
                   <span className="text-[9.5px] leading-tight text-muted-foreground">
                     {task.meta}
                   </span>
                 </div>
-                <Badge
-                  variant={
-                    task.status === "完成"
-                      ? "secondary"
-                      : task.status === "进行中"
-                        ? "default"
-                        : "destructive"
-                  }
-                  className="px-1.5 py-0 text-[9px]"
-                >
-                  {task.status}
-                </Badge>
               </div>
             ))}
           </CardContent>
@@ -439,12 +523,7 @@ export function AICopilotContent() {
         >
           <CardHeader className="px-3 pb-1 pt-2.5">
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <CardTitle className="text-[12px] font-semibold">继续任务</CardTitle>
-                <CardDescription className="text-[10px]">
-                  跨设备同步进行中的工作
-                </CardDescription>
-              </div>
+              <CardTitle className="text-[12px] font-semibold">继续任务</CardTitle>
               <button
                 type="button"
                 data-slot="continuing-view-all"
@@ -454,36 +533,64 @@ export function AICopilotContent() {
               </button>
             </div>
           </CardHeader>
-          <CardContent className="flex flex-col gap-1 px-3 pb-2.5 pt-0">
-            {CONTINUING_TASKS.map((task) => (
-              <div
-                key={task.id}
-                data-slot="continuing-task"
-                data-task-id={task.id}
-                className="flex flex-col gap-1 rounded-md border border-border bg-surface px-2 py-1.5"
-              >
-                <span className="text-[11px] font-medium text-foreground leading-tight">
-                  {task.title}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="h-1 flex-1 overflow-hidden rounded-full bg-surface-muted"
-                    role="progressbar"
-                    aria-valuenow={task.progress}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                  >
-                    <div
-                      className="h-full rounded-full bg-brand"
-                      style={{ width: `${task.progress}%` }}
-                    />
+          <CardContent className="flex flex-col gap-1.5 px-3 pb-2.5 pt-0">
+            {CONTINUING_TASKS.map((task) => {
+              const badgeClass = STATUS_BADGE[task.status] ?? STATUS_BADGE.进行中;
+              const barClass = STATUS_BAR[task.status] ?? STATUS_BAR.进行中;
+              const cardBg =
+                task.status === "进行中"
+                  ? "bg-violet-50"
+                  : task.status === "排队中"
+                    ? "bg-amber-50/60"
+                    : "bg-emerald-50";
+              return (
+                <div
+                  key={task.id}
+                  data-slot="continuing-task"
+                  data-task-id={task.id}
+                  className={`flex flex-col gap-1 rounded-lg ${cardBg} px-2.5 py-1.5`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-medium text-foreground leading-tight">
+                      {task.title}
+                    </span>
+                    <Badge
+                      className={`rounded-md border-0 px-1.5 py-0 text-[9px] font-medium ${badgeClass}`}
+                    >
+                      {task.status}
+                    </Badge>
                   </div>
-                  <span className="text-[9.5px] text-muted-foreground">
-                    {task.progress}%
-                  </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[9.5px] leading-tight text-muted-foreground">
+                      {task.description}
+                    </span>
+                    {task.progress !== null ? (
+                      <span className="text-[9.5px] leading-tight text-muted-foreground">
+                        {task.progress}%
+                      </span>
+                    ) : (
+                      <span className="text-[9.5px] leading-tight text-muted-foreground">
+                        等待中
+                      </span>
+                    )}
+                  </div>
+                  {task.progress !== null && (
+                    <div
+                      className="h-1 overflow-hidden rounded-full bg-white/60"
+                      role="progressbar"
+                      aria-valuenow={task.progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
+                      <div
+                        className={`h-full rounded-full ${barClass}`}
+                        style={{ width: `${task.progress}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       </section>
@@ -495,27 +602,32 @@ export function AICopilotContent() {
           data-slot="quick-entries"
           data-region="quick-entries"
           data-slot-region="copilot-region"
-          className="grid grid-cols-6 gap-1 rounded-lg border border-border p-2"
+          className="rounded-lg border border-border p-3"
         >
-        <h3 id="ai-copilot-quick-entries-title" className="sr-only">
-          快捷入口
-        </h3>
-          {QUICK_ENTRIES.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              data-slot="quick-entry"
-              data-entry-id={entry.id}
-              className="flex flex-col items-center gap-0.5 rounded-md px-1 py-1 text-center transition-colors hover:bg-surface-muted"
-            >
-              <span className="text-brand">
-                <QuickIcon kind={entry.icon} />
-              </span>
-              <span className="text-[10px] font-medium text-foreground leading-tight">
-                {entry.title}
-              </span>
-            </button>
-          ))}
+          <h3
+            id="ai-copilot-quick-entries-title"
+            className="mb-2 text-[11px] font-semibold text-foreground"
+          >
+            快捷入口
+          </h3>
+          <div className="grid grid-cols-6 gap-1">
+            {QUICK_ENTRIES.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                data-slot="quick-entry"
+                data-entry-id={entry.id}
+                className="flex flex-col items-center gap-1 rounded-md px-1 py-1 text-center transition-colors hover:bg-surface-muted"
+              >
+                <span className="text-foreground/70">
+                  <QuickIcon kind={entry.icon} />
+                </span>
+                <span className="text-[10px] font-medium text-foreground leading-tight">
+                  {entry.title}
+                </span>
+              </button>
+            ))}
+          </div>
         </section>
 
         {/* SmartRecommendation ----------------------------------------- */}
@@ -524,14 +636,20 @@ export function AICopilotContent() {
           data-slot="smart-recommendation"
           data-region="recommendation"
           data-slot-region="copilot-region"
-          className="flex flex-col gap-1.5 rounded-lg border border-border p-2"
+          className="flex flex-col gap-2 rounded-lg border border-border p-3"
         >
-        <h3
-          id="ai-copilot-smart-recommendation-title"
-          className="text-[10px] font-semibold uppercase tracking-wide text-text-subtle"
-        >
-          智能推荐
-        </h3>
+          <div className="flex items-center gap-1.5">
+            <Lightbulb
+              className="size-3.5 text-brand"
+              aria-hidden="true"
+            />
+            <h3
+              id="ai-copilot-smart-recommendation-title"
+              className="text-[11px] font-semibold text-foreground"
+            >
+              智能推荐
+            </h3>
+          </div>
           <p className="text-[10px] leading-snug text-muted-foreground">
             检测到你最近在研究「AI 浏览器」，要我帮你：
           </p>
@@ -542,8 +660,7 @@ export function AICopilotContent() {
                 type="button"
                 data-slot="smart-recommendation-item"
                 data-rec-id={rec.id}
-                className="rounded-md border border-brand/30 px-2 py-0.5 text-[10px] font-medium text-brand transition-colors hover:bg-brand-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                title={rec.body}
+                className="rounded-lg border border-brand/30 bg-surface px-2.5 py-1 text-[10px] font-medium text-brand transition-colors hover:bg-brand-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 {rec.title}
               </button>

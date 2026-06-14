@@ -6,18 +6,22 @@
  *
  *   AssetsPage
  *   ├── AssetToolbar           (search + filter + upload affordances)
- *   ├── AssetWorkspace
- *   │   ├── AssetTypeSidebar   (page-internal; distinct `data-slot`
- *   │   │                       from the global Sidebar — page-specs §12
- *   │   │                       invariant: "页面内部存在素材类型窄栏，
- *   │   │                       不可与全局 Sidebar 混淆")
- *   │   ├── AssetGallery       (GalleryControls + AssetCardGrid +
- *   │   │                       Pagination — three-column grid)
- *   │   └── AssetDetailPanel   (MediaPreview + AssetActions +
- *   │                           AssetMetadata + Tags + UsageHistory;
- *   │                           fixed right-rail — NOT a dialog/modal
- *   │                           per page-specs §12 "禁止改变")
- *   └── StorageUsageCard
+ *   ├── assets-page-body
+ *   │   ├── assets-left-rail
+ *   │   │   ├── AssetTypeSidebar   (page-internal; distinct `data-slot`
+ *   │   │   │                       from the global Sidebar — page-specs §12
+ *   │   │   │                       invariant: "页面内部存在素材类型窄栏，
+ *   │   │   │                       不可与全局 Sidebar 混淆")
+ *   │   │   └── StorageUsageCard   (page-internal; sits at the bottom
+ *   │   │                            of the in-page left rail — matches
+ *   │   │                            reference "左下保留存储空间卡")
+ *   │   └── AssetsInteractiveRegion
+ *   │       ├── AssetGallery       (GalleryControls + AssetCardGrid +
+ *   │       │                       Pagination — three-column grid)
+ *   │       └── AssetDetailPanel   (MediaPreview + AssetActions +
+ *   │                               AssetMetadata + Tags + UsageHistory;
+ *   │                               fixed right-rail — NOT a dialog/modal
+ *   │                               per page-specs §12 "禁止改变")
  *
  * The page is a Server Component (page-specs §12 + D-003 default).
  * Selection of the currently-active asset requires local UI state, so
@@ -272,8 +276,19 @@ export function AssetsPage({ viewModel }: AssetsPageProps = {}) {
       className="flex flex-col gap-3"
     >
       <AssetToolbar />
-      <AssetWorkspace viewModel={vm} />
-      <StorageUsageCard storage={vm.storage} />
+      <div
+        data-slot="assets-page-body"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[216px_minmax(0,1fr)]"
+      >
+        <div
+          data-slot="assets-left-rail"
+          className="flex flex-col gap-card-gap"
+        >
+          <AssetTypeSidebar />
+          <StorageUsageCard storage={vm.storage} />
+        </div>
+        <AssetsInteractiveRegion viewModel={vm} />
+      </div>
     </main>
   );
 }
@@ -367,27 +382,6 @@ function AssetToolbar() {
         </button>
       </div>
     </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// AssetWorkspace — internal type sidebar + interactive gallery + panel
-// ---------------------------------------------------------------------------
-
-interface AssetWorkspaceProps {
-  readonly viewModel: AssetsViewModel;
-}
-
-function AssetWorkspace({ viewModel }: AssetWorkspaceProps) {
-  return (
-    <section
-      data-slot="asset-workspace"
-      aria-label="素材工作区"
-      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[216px_minmax(0,1fr)_312px]"
-    >
-      <AssetTypeSidebar />
-      <AssetsInteractiveRegion viewModel={viewModel} />
-    </section>
   );
 }
 

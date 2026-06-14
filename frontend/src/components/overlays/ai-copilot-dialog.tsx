@@ -22,6 +22,12 @@
  * The `pathname` is forwarded so the content can show the current
  * page context inside the dashboard. The dialog never makes a real
  * network request — submit is fixture-only local action.
+ *
+ * The keyboard-shortcut hint ("按 Esc 关闭 · ↑↓ 切换 · Enter 执行")
+ * is rendered by `AICopilotShortcutHint` and dispatched by
+ * `CopilotOverlayBridge` so the hint can sit on the dimmer layer
+ * BELOW the dialog panel (it is part of the visual reference and
+ * must not be clipped by the panel's overflow-y-auto).
  */
 
 import * as React from "react";
