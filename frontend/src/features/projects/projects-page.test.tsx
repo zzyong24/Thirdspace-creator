@@ -4,16 +4,16 @@
  * Locks the structural invariants the page must satisfy before any pixel
  * tuning:
  *  - the page exposes a "项目" heading,
- *  - the status tabs (全部 / 进行中 / 待办中 / 已暂停 / 已完成 / 已归档)
- *    render with deterministic counts that match the canonical dataset,
- *  - the toolbar exposes a search input, a 筛选 button, and a 新项目
+ *  - the status tabs render with deterministic counts that match the
+ *    canonical dataset,
+ *  - the toolbar exposes a search input, a 筛选 button, and a 新建项目
  *    primary button wired to /projects/new (so the intercepting modal
  *    from Task 8 opens),
  *  - the view toggle exposes a grid/list accessible state,
  *  - the sort control exposes an accessible state (radio group),
  *  - the project list renders one row per canonical project, and every
- *    row contains thumbnail, title, summary, status badge, stage, progress
- *    bar, platform icons and update time,
+ *    row contains cover thumbnail, title, summary, owner, status, stage,
+ *    progress, platform icons, update time and a kebab action,
  *  - the Projects nav link is marked as the active page in the sidebar,
  *  - the page lives inside exactly one AppShell.
  */
@@ -65,25 +65,30 @@ describe("ProjectsPage", () => {
   it("renders a heading titled 项目", async () => {
     await renderProjects();
     const heading = screen.getByRole("heading", { level: 1 });
-    // The heading is rendered by the global TopHeader. The page itself
-    // surfaces a slot-stable h2 inside the toolbar so the page identity
-    // is reachable from the route content too.
     expect(heading.textContent ?? "").toMatch(/项目/);
   });
 
-  it("renders the six status tabs in the locked order with deterministic counts", async () => {
+  it("renders the seven status tabs in the locked order", async () => {
     const { container } = await renderProjects();
     const tabsRegion = container.querySelector('[data-slot="status-tabs"]');
     expect(tabsRegion).not.toBeNull();
     const tabButtons = tabsRegion!.querySelectorAll('[data-slot="status-tab"]');
-    const expectedLabels = ["全部", "进行中", "待办中", "已暂停", "已完成", "已归档"];
+    const expectedLabels = [
+      "全部项目",
+      "进行中",
+      "写稿中",
+      "制作中",
+      "已发布",
+      "复盘中",
+      "已归档",
+    ];
     expect(tabButtons).toHaveLength(expectedLabels.length);
     tabButtons.forEach((button, index) => {
       expect(button.getAttribute("data-tab-label")).toBe(expectedLabels[index]);
     });
   });
 
-  it("shows canonical counts for the status tabs", async () => {
+  it("shows the design-aligned counts for the status tabs", async () => {
     const { container } = await renderProjects();
     const all = container.querySelector(
       '[data-slot="status-tab"][data-tab-id="all"]',
@@ -91,9 +96,8 @@ describe("ProjectsPage", () => {
     const active = container.querySelector(
       '[data-slot="status-tab"][data-tab-id="active"]',
     ) as HTMLElement;
-    // Canonical fixture: 4 projects total, 2 active, 1 paused, 1 completed.
-    expect(within(all).getByTestId("status-tab-count").textContent).toBe("4");
-    expect(within(active).getByTestId("status-tab-count").textContent).toBe("2");
+    expect(within(all).getByTestId("status-tab-count").textContent).toBe("28");
+    expect(within(active).getByTestId("status-tab-count").textContent).toBe("12");
   });
 
   it("renders the toolbar with search, filter and new project entries", async () => {
@@ -108,12 +112,12 @@ describe("ProjectsPage", () => {
 
   it("the new project button is a link that routes to /projects/new", async () => {
     await renderProjects();
-    const link = screen.getByRole("link", { name: /新项目/ });
+    const link = screen.getByRole("link", { name: /新建项目/ });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/projects/new");
   });
 
-  it("exposes a view toggle with list/grid accessible state", async () => {
+  it("exposes a view toggle with grid/list accessible state", async () => {
     const { container } = await renderProjects();
     const toggle = container.querySelector('[data-slot="view-toggle"]');
     expect(toggle).not.toBeNull();
@@ -121,15 +125,14 @@ describe("ProjectsPage", () => {
     const gridOption = toggle!.querySelector('[data-slot="view-option"][data-view="grid"]');
     expect(listOption).not.toBeNull();
     expect(gridOption).not.toBeNull();
-    expect(listOption!.getAttribute("aria-pressed")).toBe("true");
-    expect(gridOption!.getAttribute("aria-pressed")).toBe("false");
+    expect(gridOption!.getAttribute("aria-pressed")).toBe("true");
+    expect(listOption!.getAttribute("aria-pressed")).toBe("false");
   });
 
   it("exposes a sort control with accessible state", async () => {
     const { container } = await renderProjects();
     const sortControl = container.querySelector('[data-slot="sort-control"]');
     expect(sortControl).not.toBeNull();
-    // The sort control is a radio group; options are 待办中 / 进行中 / 已暂停 / 已完成.
     const radios = sortControl!.querySelectorAll(
       'input[type="radio"][name="projects-sort"]',
     );
@@ -145,38 +148,33 @@ describe("ProjectsPage", () => {
     expect(rows.length).toBe(4);
   });
 
-  it("each project row contains thumbnail, title, summary, status, stage, progress, platforms and update time", async () => {
+  it("each project row contains cover, title, summary, owner, status, stage, progress, platforms, update time and action", async () => {
     const { container } = await renderProjects();
     const rows = container.querySelectorAll('[data-slot="project-row"]');
     expect(rows.length).toBe(4);
     rows.forEach((row) => {
       const rowEl = row as HTMLElement;
-      // Each row must surface a thumbnail surface.
       expect(rowEl.querySelector('[data-slot="project-thumbnail"]')).not.toBeNull();
-      // Title and summary.
       expect(rowEl.querySelector('[data-slot="project-title"]')?.textContent ?? "").not.toBe("");
       expect(rowEl.querySelector('[data-slot="project-summary"]')?.textContent ?? "").not.toBe("");
-      // Status badge (must be one of the project statuses).
-      const statusBadge = rowEl.querySelector('[data-slot="status-badge"]');
-      expect(statusBadge).not.toBeNull();
-      // Stage chip.
+      expect(rowEl.querySelector('[data-slot="project-owner"]')).not.toBeNull();
+      expect(rowEl.querySelector('[data-slot="status-badge"]')).not.toBeNull();
       expect(rowEl.querySelector('[data-slot="project-stage"]')).not.toBeNull();
-      // Progress bar.
       expect(rowEl.querySelector('[data-slot="progress-bar"]')).not.toBeNull();
-      // At least one platform icon.
       const platforms = rowEl.querySelectorAll('[data-slot="platform-icon"]');
       expect(platforms.length).toBeGreaterThanOrEqual(1);
-      // Update time slot.
       expect(rowEl.querySelector('[data-slot="project-updated-at"]')?.textContent ?? "").not.toBe("");
+      expect(rowEl.querySelector('[data-slot="project-row-action"]')).not.toBeNull();
     });
   });
 
-  it("renders a pagination control with multiple pages", async () => {
+  it("renders a pagination control with previous/next and multiple pages", async () => {
     const { container } = await renderProjects();
     const pagination = container.querySelector('[data-slot="pagination"]');
     expect(pagination).not.toBeNull();
+    expect(container.querySelector('[data-slot="pagination-prev"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="pagination-next"]')).not.toBeNull();
     const buttons = pagination!.querySelectorAll('[data-slot="pagination-page"]');
-    // At minimum the current page (1) must be exposed.
     expect(buttons.length).toBeGreaterThanOrEqual(1);
     const active = pagination!.querySelector(
       '[data-slot="pagination-page"][data-page-current="true"]',

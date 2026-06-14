@@ -32,71 +32,21 @@ export interface ViewAndSortControlsProps {
 }
 
 export function ViewAndSortControls({
-  defaultView = "list",
+  defaultView = "grid",
   defaultSort = "updated",
 }: ViewAndSortControlsProps) {
   const [view, setView] = React.useState<View>(defaultView);
   const [sort, setSort] = React.useState<string>(defaultSort);
+  const currentSortLabel =
+    SORT_OPTIONS.find((option) => option.id === sort)?.label ?? SORT_OPTIONS[0].label;
   return (
     <div className="flex items-center justify-end gap-3">
-      <div
-        data-slot="sort-control"
-        role="group"
-        aria-label="项目排序"
-        className="flex items-center gap-1 rounded-control border border-border bg-surface p-0.5"
-      >
-        <span className="px-2 text-xs text-muted-foreground">排序</span>
-        <fieldset className="flex items-center gap-1 border-0 p-0">
-          <legend className="sr-only">排序方式</legend>
-          {SORT_OPTIONS.map((option) => {
-            const checked = sort === option.id;
-            return (
-              <label
-                key={option.id}
-                className={cn(
-                  "inline-flex h-7 cursor-pointer items-center gap-1 rounded-full px-2 text-xs transition-colors",
-                  checked
-                    ? "bg-brand-soft text-brand"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <input
-                  type="radio"
-                  name="projects-sort"
-                  value={option.id}
-                  checked={checked}
-                  onChange={() => setSort(option.id)}
-                  className="sr-only"
-                />
-                <span>{option.label}</span>
-              </label>
-            );
-          })}
-        </fieldset>
-      </div>
       <div
         data-slot="view-toggle"
         role="group"
         aria-label="视图切换"
-        className="flex items-center gap-1 rounded-control border border-border bg-surface p-0.5"
+        className="flex items-center gap-0.5 rounded-control border border-border bg-surface p-0.5"
       >
-        <button
-          type="button"
-          data-slot="view-option"
-          data-view="list"
-          aria-pressed={view === "list"}
-          aria-label="列表视图"
-          onClick={() => setView("list")}
-          className={cn(
-            "inline-flex h-7 items-center gap-1 rounded-full px-2 text-xs transition-colors",
-            view === "list"
-              ? "bg-brand-soft text-brand"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          <span aria-hidden="true">☰</span>
-          <span>列表</span>
-        </button>
         <button
           type="button"
           data-slot="view-option"
@@ -105,15 +55,60 @@ export function ViewAndSortControls({
           aria-label="网格视图"
           onClick={() => setView("grid")}
           className={cn(
-            "inline-flex h-7 items-center gap-1 rounded-full px-2 text-xs transition-colors",
+            "inline-flex h-7 w-7 items-center justify-center rounded-md text-xs transition-colors",
             view === "grid"
               ? "bg-brand-soft text-brand"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
           <span aria-hidden="true">▦</span>
-          <span>网格</span>
         </button>
+        <button
+          type="button"
+          data-slot="view-option"
+          data-view="list"
+          aria-pressed={view === "list"}
+          aria-label="列表视图"
+          onClick={() => setView("list")}
+          className={cn(
+            "inline-flex h-7 w-7 items-center justify-center rounded-md text-xs transition-colors",
+            view === "list"
+              ? "bg-brand-soft text-brand"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <span aria-hidden="true">☰</span>
+        </button>
+      </div>
+      <div
+        data-slot="sort-control"
+        role="group"
+        aria-label="项目排序"
+        className="flex items-center gap-1 rounded-control border border-border bg-surface px-3 py-1.5 text-sm"
+      >
+        <fieldset className="flex items-center gap-1 border-0 p-0">
+          <legend className="sr-only">排序方式</legend>
+          {SORT_OPTIONS.map((option) => (
+            <label
+              key={option.id}
+              className={cn(
+                "sr-only cursor-pointer items-center gap-1 rounded-full px-2 text-xs transition-colors",
+              )}
+            >
+              <input
+                type="radio"
+                name="projects-sort"
+                value={option.id}
+                checked={sort === option.id}
+                onChange={() => setSort(option.id)}
+                className="sr-only"
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </fieldset>
+        <span className="text-foreground">{currentSortLabel}</span>
+        <span aria-hidden="true" className="text-muted-foreground">▾</span>
       </div>
     </div>
   );

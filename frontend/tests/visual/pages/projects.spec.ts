@@ -30,9 +30,9 @@ test.describe("Projects page", () => {
     await expect(page.locator('[data-slot="filter-button"]')).toBeVisible();
     await expect(page.locator('[data-slot="new-project-button"]')).toBeVisible();
 
-    // Six status tabs in the locked order.
+    // Seven status tabs in the locked order.
     const tabs = page.locator('[data-slot="status-tab"]');
-    await expect(tabs).toHaveCount(6);
+    await expect(tabs).toHaveCount(7);
 
     // View toggle and sort control expose accessible state.
     await expect(page.locator('[data-slot="view-toggle"]')).toBeVisible();
@@ -42,24 +42,27 @@ test.describe("Projects page", () => {
     const rows = page.locator('[data-slot="project-row"]');
     await expect(rows).toHaveCount(4);
 
-    // Each row has a thumbnail, title, summary, status badge, stage,
-    // progress bar, platforms and update time.
+    // Each row has a thumbnail, title, summary, owner, status badge,
+    // stage, progress bar, platforms, update time and action button.
     for (let i = 0; i < 4; i += 1) {
       const row = rows.nth(i);
       await expect(row.locator('[data-slot="project-thumbnail"]')).toBeVisible();
       await expect(row.locator('[data-slot="project-title"]')).toBeVisible();
       await expect(row.locator('[data-slot="project-summary"]')).toBeVisible();
+      await expect(row.locator('[data-slot="project-owner"]')).toBeVisible();
       await expect(row.locator('[data-slot="status-badge"]')).toBeVisible();
       await expect(row.locator('[data-slot="project-stage"]')).toBeVisible();
       await expect(row.locator('[data-slot="progress-bar"]')).toBeVisible();
-      await expect(
-        row.locator('[data-slot="project-platforms"] [data-slot="platform-icon"]'),
-      ).toHaveCount(1);
+      const platforms = row.locator('[data-slot="project-platforms"] [data-slot="platform-icon"]');
+      await expect(platforms.first()).toBeVisible();
       await expect(row.locator('[data-slot="project-updated-at"]')).toBeVisible();
+      await expect(row.locator('[data-slot="project-row-action"]')).toBeVisible();
     }
 
-    // Pagination must surface at least one page.
+    // Pagination must surface at least one page, plus previous/next.
     await expect(page.locator('[data-slot="pagination"]')).toBeVisible();
+    await expect(page.locator('[data-slot="pagination-prev"]')).toBeVisible();
+    await expect(page.locator('[data-slot="pagination-next"]')).toBeVisible();
 
     // Sidebar must mark the Projects nav item as the active page.
     const nav = page.getByRole("navigation", { name: "主要导航" });

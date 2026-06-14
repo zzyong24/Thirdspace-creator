@@ -24,7 +24,7 @@ export interface ProjectToolbarProps {
 }
 
 export function ProjectToolbar({
-  placeholder = "搜索项目名称、摘要或标签",
+  placeholder = "搜索项目名称、关键词…",
   defaultValue = "",
 }: ProjectToolbarProps) {
   const [value, setValue] = React.useState(defaultValue);
@@ -36,7 +36,7 @@ export function ProjectToolbar({
     >
       <div
         data-slot="search-field"
-        className="flex h-9 w-full min-w-0 flex-1 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm sm:max-w-md"
+        className="flex h-10 w-full min-w-0 flex-1 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm sm:max-w-md"
       >
         <span aria-hidden="true" className="text-muted-foreground">
           🔎
@@ -49,13 +49,19 @@ export function ProjectToolbar({
           onChange={(event) => setValue(event.target.value)}
           className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
+        <kbd
+          aria-hidden="true"
+          className="hidden h-6 items-center rounded border border-border bg-surface-subtle px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex"
+        >
+          ⌘ K
+        </kbd>
       </div>
       <div className="flex items-center gap-2">
         <button
           type="button"
           data-slot="filter-button"
           aria-label="筛选项目"
-          className="inline-flex h-9 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-sm text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          className="inline-flex h-10 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-sm text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
         >
           <span aria-hidden="true">⚙</span>
           <span>筛选</span>
@@ -64,11 +70,11 @@ export function ProjectToolbar({
           href="/projects/new"
           data-slot="new-project-button"
           className={cn(
-            "inline-flex h-9 items-center gap-1.5 rounded-control bg-brand px-3 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            "inline-flex h-10 items-center gap-1.5 rounded-control bg-brand px-4 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
           )}
         >
           <span aria-hidden="true">＋</span>
-          <span>新项目</span>
+          <span>新建项目</span>
         </Link>
       </div>
     </div>
