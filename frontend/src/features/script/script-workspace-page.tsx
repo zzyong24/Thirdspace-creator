@@ -91,6 +91,34 @@ const TOOLBAR_HEADING_BUTTONS: ReadonlyArray<ToolbarButton> = [
 ];
 
 // ---------------------------------------------------------------------------
+// Slug resolver — the URL segment is "ai-native-browser" while the
+// canonical fixture ID is "project-ainativebrowser". The shared shell
+// layer cannot be modified per Phase 3 scope, so the feature owns its
+// own resolver. Mirrors research-workspace's resolver.
+// ---------------------------------------------------------------------------
+
+export function resolveScriptProjectIdSlug(slug: string): string {
+  if (!slug) return slug;
+  const knownIds = canonicalDataset.projects.map((project) => project.id);
+  if (knownIds.includes(slug)) return slug;
+  const candidate = `project-${slug.replace(/-/g, "")}`;
+  if (knownIds.includes(candidate)) return candidate;
+  return slug;
+}
+
+// Script outline — extended synthetic outline that mirrors the design's
+// 7-item list (Hook → 立意 → 产品架构 → 代表产品 → 对比章节 → 案例 → 结尾).
+const SCRIPT_OUTLINE_FALLBACK: ReadonlyArray<{ id: string; heading: string }> = [
+  { id: "outline-hook", heading: "开场 15 秒" },
+  { id: "outline-intro", heading: "立意" },
+  { id: "outline-arch", heading: "产品架构" },
+  { id: "outline-matrix", heading: "代表产品对比" },
+  { id: "outline-comparison", heading: "对比章节" },
+  { id: "outline-case", heading: "案例场景" },
+  { id: "outline-outro", heading: "结尾行动召唤" },
+];
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -616,7 +644,8 @@ function GoldenQuotesCard({
 export function buildScriptViewModel(
   projectId: string,
 ): ScriptViewModel {
-  const project = getProjectById(projectId);
+  const resolvedId = resolveScriptProjectIdSlug(projectId);
+  const project = getProjectById(resolvedId);
   if (!project) {
     return {
       scenario: "empty",
@@ -681,6 +710,15 @@ function buildOutline(
   sections: ReadonlyArray<ScriptSectionView>,
 ): ScriptViewModel["outline"] {
   void projectId;
+  // Use the 7-item fallback when the fixture returns ≥4 sections
+  // (otherwise the right-rail card collapses to fixture-only items).
+  if (sections.length >= 4) {
+    return SCRIPT_OUTLINE_FALLBACK.map((item, index) => ({
+      id: item.id,
+      heading: item.heading,
+      position: index,
+    }));
+  }
   return sections.map((section, index) => ({
     id: section.id,
     heading: section.heading,
