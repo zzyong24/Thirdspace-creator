@@ -90,6 +90,21 @@ const TOOLBAR_HEADING_BUTTONS: ReadonlyArray<ToolbarButton> = [
   { id: "fmt-h3", format: "bold", label: "标题 3", pressed: false },
 ];
 
+// Inline icon-only toolbar buttons (the design shows a long row of
+// glyph-style controls between the heading group and the link group).
+interface ToolbarGlyph {
+  readonly id: string;
+  readonly label: string;
+}
+
+const TOOLBAR_GLYPH_BUTTONS: ReadonlyArray<ToolbarGlyph> = [
+  { id: "tool-list-bullet", label: "•" },
+  { id: "tool-list-ordered", label: "1." },
+  { id: "tool-quote", label: "“" },
+  { id: "tool-code", label: "</>" },
+  { id: "tool-link", label: "\u{1F517}" },
+];
+
 // ---------------------------------------------------------------------------
 // Slug resolver — the URL segment is "ai-native-browser" while the
 // canonical fixture ID is "project-ainativebrowser". The shared shell
@@ -235,6 +250,12 @@ function EditorToolbar() {
           <ToolbarButtonControl key={button.id} button={button} />
         ))}
       </ToolbarGroup>
+      <ToolbarDivider />
+      <ToolbarGroup label="插入">
+        {TOOLBAR_GLYPH_BUTTONS.map((glyph) => (
+          <ToolbarGlyphControl key={glyph.id} glyph={glyph} />
+        ))}
+      </ToolbarGroup>
     </div>
   );
 }
@@ -286,6 +307,22 @@ function ToolbarButtonControl({ button }: { button: ToolbarButton }) {
       data-pressed={button.pressed}
     >
       {button.label}
+    </button>
+  );
+}
+
+function ToolbarGlyphControl({ glyph }: { glyph: ToolbarGlyph }) {
+  return (
+    <button
+      type="button"
+      data-slot="editor-toolbar-glyph"
+      data-glyph-id={glyph.id}
+      type-label={glyph.label}
+      // Same non-interactive accessibility story as ToolbarButtonControl.
+      disabled
+      className="inline-flex h-7 min-w-7 items-center justify-center rounded-md border border-transparent bg-surface px-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-100"
+    >
+      <span aria-hidden="true">{glyph.label}</span>
     </button>
   );
 }
@@ -582,24 +619,63 @@ function AIWritingSuggestionsCard({
             className="flex flex-col gap-2"
             aria-label="AI 写作建议"
           >
-            {items.map((item) => (
-              <li
-                key={item.id}
-                data-slot="ai-suggestion-row"
-                data-suggestion-id={item.id}
-                className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
-              >
-                <span className="truncate text-sm font-medium text-foreground">
-                  {item.title}
-                </span>
-                <p className="text-xs text-muted-foreground">{item.body}</p>
-              </li>
-            ))}
+            {items.map((item, index) => {
+              const tone = aiSuggestionTone(index);
+              return (
+                <li
+                  key={item.id}
+                  data-slot="ai-suggestion-row"
+                  data-suggestion-id={item.id}
+                  data-tone={tone.name}
+                  className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {item.title}
+                    </span>
+                    <span
+                      data-slot="ai-suggestion-badge"
+                      className={`ml-auto inline-flex h-5 shrink-0 items-center rounded-md px-1.5 text-[11px] font-medium ${tone.className}`}
+                    >
+                      {tone.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{item.body}</p>
+                </li>
+              );
+            })}
           </ul>
         )}
       </SectionCard>
     </div>
   );
+}
+
+function aiSuggestionTone(index: number): {
+  readonly name: string;
+  readonly label: string;
+  readonly className: string;
+} {
+  // Cycle through three tones so the right-rail card matches the
+  // design's three-state pattern (suggest / pending / accepted).
+  const tones = [
+    {
+      name: "suggested",
+      label: "建议",
+      className: "bg-brand-soft text-brand",
+    },
+    {
+      name: "accepted",
+      label: "已采纳",
+      className: "bg-success/15 text-success",
+    },
+    {
+      name: "pending",
+      label: "待评估",
+      className: "bg-warning/15 text-warning",
+    },
+  ] as const;
+  return tones[index % tones.length];
 }
 
 function GoldenQuotesCard({
