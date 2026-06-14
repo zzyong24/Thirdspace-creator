@@ -116,16 +116,29 @@ function pickOutputsForProject(projectId: string): ReadonlyArray<ContentOutputSu
 // ---------------------------------------------------------------------------
 
 const DASHBOARD_METRICS: ReadonlyArray<MetricCard> = [
-  { id: "m-active-projects", label: "进行中项目", value: "2", delta: "+1", trend: "up", tone: "neutral" },
-  { id: "m-publications", label: "已发布", value: "3", delta: "+1", trend: "up", tone: "positive" },
-  { id: "m-views", label: "累计播放", value: "2.8 万", delta: "+12%", trend: "up", tone: "positive" },
-  { id: "m-assets", label: "素材库", value: "186", delta: "+24", trend: "up", tone: "neutral" },
-  { id: "m-storage", label: "存储使用", value: "12.4 GB", delta: "-0.3 GB", trend: "down", tone: "warning" },
+  { id: "m-active-projects", label: "进行中项目", value: "7", delta: "+1", trend: "up", tone: "positive" },
+  { id: "m-publications", label: "已完成", value: "12", delta: "+1", trend: "up", tone: "positive" },
+  { id: "m-views", label: "累计播放", value: "128.6w", delta: "+12%", trend: "up", tone: "positive" },
+  { id: "m-assets", label: "素材库", value: "43.25", delta: "+1.2%", trend: "up", tone: "positive" },
+  { id: "m-storage", label: "存储使用", value: "2.4w", delta: "-0.5%", trend: "down", tone: "warning" },
 ];
 
 function buildDataOverview(): DataOverview {
+  // The reference design renders the inner 2x2 grid using
+  // 已发布 / 累计播放 / 素材库 / 存储使用 (4 of the 5 top-row metrics),
+  // skipping 进行中项目. We pick the matching subset by id so the
+  // dashboard selector is the single source of truth.
+  const subsetIds = new Set([
+    "m-publications",
+    "m-views",
+    "m-assets",
+    "m-storage",
+  ]);
+  const metrics = DASHBOARD_METRICS.filter((metric) =>
+    subsetIds.has(metric.id),
+  );
   return {
-    metrics: DASHBOARD_METRICS.slice(0, 4),
+    metrics,
     trend: [
       { label: "周一", value: 1840 },
       { label: "周二", value: 2210 },
