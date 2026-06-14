@@ -226,7 +226,7 @@ export function SettingsPage({ viewModel }: SettingsPageProps = {}) {
       <SettingsTabsRow />
       <div
         data-slot="settings-grid"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_320px]"
+        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_304px]"
       >
         <SettingsMainColumn viewModel={vm} />
         <SettingsRailColumn viewModel={vm} />
@@ -244,7 +244,7 @@ function SettingsTabsRow() {
     <div
       data-slot="settings-tabs"
       aria-label="设置分类导航"
-      className="border-b border-border pb-2"
+      className="border-b border-border/50 pb-1.5"
     >
       <PageTabs
         tabs={SETTINGS_TABS}
