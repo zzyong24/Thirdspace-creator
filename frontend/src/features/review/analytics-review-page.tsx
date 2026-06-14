@@ -427,7 +427,7 @@ function PrimaryCharts() {
         data-slot="conversion-funnel"
         data-shape="funnel"
         data-testid="conversion-funnel"
-        className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card"
+        className="flex flex-col gap-1.5 rounded-2xl border border-border bg-surface p-3 shadow-card"
       >
         <header className="flex flex-col gap-1">
           <h3 className="text-md font-semibold text-foreground">转化漏斗</h3>
@@ -473,17 +473,17 @@ function FunnelChart({
       viewBox="0 0 200 100"
       preserveAspectRatio="none"
       aria-hidden="true"
-      className="h-24 w-full"
+      className="h-20 w-full"
     >
       {data.map((row, index) => {
         const ratio = row.value / max;
         const width = 40 + ratio * 160;
         const x = (200 - width) / 2;
-        const y = index * 18;
+        const y = index * 16;
         return (
           <polygon
             key={row.label}
-            points={`${x},${y} ${x + width},${y} ${x + width - 8},${y + 16} ${x + 8},${y + 16}`}
+            points={`${x},${y} ${x + width},${y} ${x + width - 8},${y + 14} ${x + 8},${y + 14}`}
             fill="var(--color-brand-soft)"
             stroke="var(--color-brand)"
             strokeWidth={0.6}
@@ -520,7 +520,11 @@ function SecondaryCharts({
       data-slot="secondary-charts"
       className="grid grid-cols-1 gap-(--card-gap) md:grid-cols-3"
     >
-      <SectionCard title="观众画像" description="年龄段分布">
+      <SectionCard
+        title="观众画像"
+        description="年龄段分布"
+        contentClassName="flex flex-col gap-1.5"
+      >
         <DonutChart
           slot="audience-profile"
           shape="donut"
@@ -548,7 +552,11 @@ function SecondaryCharts({
         </ul>
       </SectionCard>
 
-      <SectionCard title="观众来源" description="按渠道拆分">
+      <SectionCard
+        title="观众来源"
+        description="按渠道拆分"
+        contentClassName="flex flex-col gap-1.5"
+      >
         <HorizontalBarsChart
           slot="audience-source"
           shape="horizontal-bars"
@@ -576,7 +584,11 @@ function SecondaryCharts({
         </ul>
       </SectionCard>
 
-      <SectionCard title="留存曲线" description="完播随时间变化">
+      <SectionCard
+        title="留存曲线"
+        description="完播随时间变化"
+        contentClassName="flex flex-col gap-1.5"
+      >
         <RetentionCurveChart
           slot="retention-curve"
           shape="retention-curve"
@@ -814,10 +826,20 @@ function KeyMomentsSection({
   const list = moments.length > 0 ? moments : DEFAULT_KEY_MOMENTS;
   return (
     <section data-slot="key-moments-section" aria-label="关键时刻">
-      <SectionCard title="关键时刻表现" description="内容高光与流失节点">
+      <div
+        data-slot="key-moments-card"
+        className="flex flex-col gap-1 rounded-xl border border-border bg-surface p-3 shadow-card"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-0">
+            <h3 className="text-[13px] font-semibold text-foreground">
+              关键时刻表现
+            </h3>
+          </div>
+        </div>
         <ul
           data-slot="key-moments-list"
-          className="flex flex-col gap-1.5"
+          className="flex flex-col gap-0.5"
           aria-label="关键时刻列表"
         >
           {list.map((moment) => (
@@ -825,7 +847,7 @@ function KeyMomentsSection({
               key={moment.id}
               data-slot="key-moment-row"
               data-moment-id={moment.id}
-              className="flex items-center justify-between rounded-md border border-border bg-surface-subtle px-3 py-1.5 text-xs"
+              className="flex items-center justify-between rounded-md border border-border bg-surface-subtle px-2.5 py-0.5 text-[11px]"
             >
               <span className="font-medium text-foreground">{moment.label}</span>
               <span className="font-mono tabular-nums text-muted-foreground">
@@ -834,7 +856,7 @@ function KeyMomentsSection({
             </li>
           ))}
         </ul>
-      </SectionCard>
+      </div>
     </section>
   );
 }
@@ -854,18 +876,15 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
       className="flex flex-col gap-2"
     >
       <header className="flex items-center justify-between px-1">
-        <div className="flex flex-col gap-0.5">
-          <h3 className="text-[15px] font-semibold text-foreground">
+        <div className="flex flex-col gap-0">
+          <h3 className="text-[13px] font-semibold text-foreground">
             热门作品发布列表
           </h3>
-          <p className="text-xs text-muted-foreground">
-            近期表现最好的发布内容
-          </p>
         </div>
         <button
           type="button"
           data-slot="top-published-view-all"
-          className="inline-flex h-7 items-center rounded-md px-2 text-xs font-medium text-brand hover:bg-brand-soft"
+          className="inline-flex h-6 items-center rounded-md px-2 text-[11px] font-medium text-brand hover:bg-brand-soft"
         >
           查看全部
         </button>
@@ -926,7 +945,7 @@ function TopPublishedThumb({
   const palette = paletteForPlatform(platform);
   const sizeClass =
     tone === "primary"
-      ? "h-20 w-full md:h-24 md:w-40 md:shrink-0"
+      ? "h-16 w-full md:h-20 md:w-32 md:shrink-0"
       : "h-10 w-10 shrink-0";
   return (
     <div
