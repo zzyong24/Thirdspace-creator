@@ -19,6 +19,34 @@ class IntersectionObserverMock implements IntersectionObserver {
   unobserve = vi.fn();
 }
 
+class StorageMock implements Storage {
+  private readonly values = new Map<string, string>();
+
+  get length() {
+    return this.values.size;
+  }
+
+  clear() {
+    this.values.clear();
+  }
+
+  getItem(key: string) {
+    return this.values.get(key) ?? null;
+  }
+
+  key(index: number) {
+    return Array.from(this.values.keys())[index] ?? null;
+  }
+
+  removeItem(key: string) {
+    this.values.delete(key);
+  }
+
+  setItem(key: string, value: string) {
+    this.values.set(String(key), String(value));
+  }
+}
+
 function installBrowserShims() {
   if (typeof window === "undefined" || typeof Element === "undefined") {
     return;
@@ -62,6 +90,15 @@ function installBrowserShims() {
       writable: true,
     },
   });
+
+  for (const name of ["localStorage", "sessionStorage"] as const) {
+    if (typeof window[name]?.setItem !== "function") {
+      Object.defineProperty(window, name, {
+        configurable: true,
+        value: new StorageMock(),
+      });
+    }
+  }
 
   Object.defineProperty(Element.prototype, "scrollTo", {
     configurable: true,

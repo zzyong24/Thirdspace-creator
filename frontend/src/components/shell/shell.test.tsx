@@ -17,6 +17,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import type React from "react";
 
+import "@/styles/tokens.css";
+
 // Capture computed CSS variables from :root so geometry assertions
 // align with the actual token layer (tokens.css → globals.css).
 function readRootVar(name: string): string {

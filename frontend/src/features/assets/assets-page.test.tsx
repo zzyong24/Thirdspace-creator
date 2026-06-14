@@ -257,6 +257,25 @@ describe("AssetsPage", () => {
     expect(secondTokens.some((t) => t.length > 0)).toBe(true);
   });
 
+  it("never renders NaN SVG geometry for hexadecimal preview tokens", async () => {
+    const { container } = await renderAssets();
+    const geometryNodes = container.querySelectorAll(
+      "svg [width], svg [height], svg [x], svg [y]",
+    );
+
+    expect(geometryNodes.length).toBeGreaterThan(0);
+    for (const node of geometryNodes) {
+      for (const name of ["width", "height", "x", "y"]) {
+        const value = node.getAttribute(name);
+        if (value !== null) {
+          expect(value, `${node.tagName.toLowerCase()}[${name}]`).not.toBe(
+            "NaN",
+          );
+        }
+      }
+    }
+  });
+
   it("renders the StorageUsageCard with deterministic usage data", async () => {
     const { container } = await renderAssets();
     const card = container.querySelector(

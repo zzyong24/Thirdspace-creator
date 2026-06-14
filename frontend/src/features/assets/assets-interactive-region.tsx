@@ -285,6 +285,8 @@ function PreviewGlyph({ type, token }: { type: AssetType; token: string }) {
     .replace(/[^0-9a-f]/g, "")
     .slice(0, 4)
     .padEnd(4, "0");
+  const parseHexPair = (value: string) =>
+    Number.parseInt(value || "0", 16);
   if (type === "image") {
     return (
       <svg
@@ -295,7 +297,7 @@ function PreviewGlyph({ type, token }: { type: AssetType; token: string }) {
         aria-hidden="true"
       >
         <rect x={2} y={2} width={56} height={32} rx={3} fill="currentColor" opacity={0.25} />
-        <circle cx={Number(`0x${digits.slice(0, 2)}`) % 56 + 2} cy={Number(`0x${digits.slice(2, 4)}`) % 28 + 4} r={5} fill="currentColor" />
+        <circle cx={parseHexPair(digits.slice(0, 2)) % 56 + 2} cy={parseHexPair(digits.slice(2, 4)) % 28 + 4} r={5} fill="currentColor" />
         <path
           d="M2 34 L20 22 L34 30 L48 18 L58 28 L58 34 Z"
           fill="currentColor"
@@ -315,16 +317,16 @@ function PreviewGlyph({ type, token }: { type: AssetType; token: string }) {
       >
         <rect x={2} y={2} width={56} height={32} rx={3} fill="currentColor" opacity={0.18} />
         <polygon
-          points={`${(Number(`0x${digits.slice(0, 2)}`) % 12) + 18},${(Number(`0x${digits.slice(2, 4)}`) % 8) + 12} ${(Number(`0x${digits.slice(0, 2)}`) % 12) + 18},${(Number(`0x${digits.slice(2, 4)}`) % 8) + 24} ${(Number(`0x${digits.slice(0, 2)}`) % 12) + 32},18`}
+          points={`${(parseHexPair(digits.slice(0, 2)) % 12) + 18},${(parseHexPair(digits.slice(2, 4)) % 8) + 12} ${(parseHexPair(digits.slice(0, 2)) % 12) + 18},${(parseHexPair(digits.slice(2, 4)) % 8) + 24} ${(parseHexPair(digits.slice(0, 2)) % 12) + 32},18`}
           fill="currentColor"
         />
-        <rect x={6} y={32} width={Number(digits.slice(2, 4)) % 48 + 4} height={2} fill="currentColor" opacity={0.6} />
+        <rect x={6} y={32} width={parseHexPair(digits.slice(2, 4)) % 48 + 4} height={2} fill="currentColor" opacity={0.6} />
       </svg>
     );
   }
   if (type === "audio") {
     const barHeights = [0, 1, 2, 3, 4].map(
-      (i) => 4 + ((Number(`0x${digits.charAt(i) ?? "0"}`) % 24)),
+      (i) => 4 + (parseHexPair(digits.charAt(i)) % 24),
     );
     return (
       <svg
@@ -363,9 +365,9 @@ function PreviewGlyph({ type, token }: { type: AssetType; token: string }) {
       >
         <rect x={14} y={2} width={32} height={32} rx={2} fill="currentColor" opacity={0.2} />
         <rect x={18} y={8} width={24} height={2} fill="currentColor" opacity={0.7} />
-        <rect x={18} y={14} width={Number(digits.slice(0, 2)) % 16 + 8} height={2} fill="currentColor" opacity={0.7} />
-        <rect x={18} y={20} width={Number(digits.slice(2, 4)) % 18 + 6} height={2} fill="currentColor" opacity={0.7} />
-        <rect x={18} y={26} width={Number(digits.slice(0, 2)) % 12 + 10} height={2} fill="currentColor" opacity={0.7} />
+        <rect x={18} y={14} width={parseHexPair(digits.slice(0, 2)) % 16 + 8} height={2} fill="currentColor" opacity={0.7} />
+        <rect x={18} y={20} width={parseHexPair(digits.slice(2, 4)) % 18 + 6} height={2} fill="currentColor" opacity={0.7} />
+        <rect x={18} y={26} width={parseHexPair(digits.slice(0, 2)) % 12 + 10} height={2} fill="currentColor" opacity={0.7} />
       </svg>
     );
   }
@@ -379,8 +381,8 @@ function PreviewGlyph({ type, token }: { type: AssetType; token: string }) {
       aria-hidden="true"
     >
       <rect x={4} y={10} width={52} height={16} rx={2} fill="currentColor" opacity={0.2} />
-      <rect x={10} y={14} width={Number(digits.slice(0, 2)) % 28 + 12} height={2} fill="currentColor" />
-      <rect x={10} y={20} width={Number(digits.slice(2, 4)) % 24 + 14} height={2} fill="currentColor" />
+      <rect x={10} y={14} width={parseHexPair(digits.slice(0, 2)) % 28 + 12} height={2} fill="currentColor" />
+      <rect x={10} y={20} width={parseHexPair(digits.slice(2, 4)) % 24 + 14} height={2} fill="currentColor" />
     </svg>
   );
 }
