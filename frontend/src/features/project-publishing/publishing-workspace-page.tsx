@@ -6,18 +6,19 @@
  *  - a `PublishingTabs` row of page tabs (锁定状态),
  *  - a `PublishingGrid` with three visual regions in the spec order
  *    BasicInformationForm → PlatformPublishingPanel → PreviewRail.
- *    The BasicInformationForm renders Title → Description → Cover →
- *    Tags → Category/Series → Publishing Options in spec order; the
- *    PlatformPublishingPanel renders platform cards as separate cards
- *    plus BatchTime / ConfirmPublish / PrePublishCheck controls; the
- *    PreviewRail renders PlatformPreview → PublishChecklist →
+ *    The BasicInformationForm renders Title → Description → Cover
+ *    Thumbnail → Tags → Category/Series → Publishing Options in spec
+ *    order; the PlatformPublishingPanel renders platform cards as
+ *    separate cards plus BatchTime / ConfirmPublish / PrePublishCheck
+ *    controls and a ContentCalendar; the PreviewRail renders
+ *    PlatformPreview → PlatformMetrics → PublishChecklist →
  *    PublishTips in spec order.
  *
  * Layout invariants (locked by page-specs §9):
  *  - exactly THREE columns (basic / platform / preview),
  *  - platform publish cards remain separate (NOT merged with the
  *    basic info column),
- *  - the PreviewRail order is preview → checklist → tips,
+ *  - the PreviewRail order is preview → metrics → checklist → tips,
  *  - Confirm Publish is fixture-only: no `fetch`, no network
  *    publication side-effect.
  *
@@ -29,6 +30,7 @@
 import * as React from "react";
 
 import { PlatformIconView } from "@/components/publishing/platform-icon";
+import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { StatusBadge } from "@/components/project/status-badge";
 import { TagChip } from "@/components/content/tag-chip";
@@ -121,12 +123,116 @@ const DEFAULT_PLATFORM_CARDS: ReadonlyArray<PublishingViewModel["platforms"][num
     status: "draft",
     scheduledAt: null,
   },
+  {
+    id: "pcard-youtube",
+    platform: "youtube",
+    accountLabel: "Creator YouTube",
+    status: "draft",
+    scheduledAt: null,
+  },
 ];
 
 const PUBLISH_TIPS: ReadonlyArray<string> = [
   "标题前 16 字决定平台推荐曝光。",
   "首图分辨率 ≥ 1080×1440 适合双列信息流。",
   "勾选平台时间前先校对草稿。",
+];
+
+// ---------------------------------------------------------------------------
+// Locked content calendar — fixture-only, deterministic weekday grid.
+// ---------------------------------------------------------------------------
+
+const CALENDAR_DAYS: ReadonlyArray<{
+  readonly label: string;
+  readonly status: "active" | "draft" | "empty";
+  readonly platforms: ReadonlyArray<PlatformId>;
+}> = [
+  { label: "周一", status: "active", platforms: ["bilibili", "xiaohongshu"] },
+  { label: "周二", status: "active", platforms: ["wechatVideo"] },
+  { label: "周三", status: "draft", platforms: ["youtube"] },
+  { label: "周四", status: "empty", platforms: [] },
+  { label: "周五", status: "active", platforms: ["douyin", "bilibili"] },
+  { label: "周六", status: "draft", platforms: [] },
+  { label: "周日", status: "active", platforms: ["xiaohongshu", "wechatVideo"] },
+];
+
+// ---------------------------------------------------------------------------
+// Locked platform metrics summary (right column, between preview and tips)
+// ---------------------------------------------------------------------------
+
+interface PlatformMetricDescriptor {
+  readonly id: string;
+  readonly platform: PlatformId;
+  readonly label: string;
+  readonly value: string;
+  readonly delta: string;
+  readonly trend: "up" | "down" | "flat";
+  readonly tone: "neutral" | "positive" | "negative" | "warning" | "info";
+}
+
+const PLATFORM_METRICS: ReadonlyArray<PlatformMetricDescriptor> = [
+  {
+    id: "pm-views",
+    platform: "bilibili",
+    label: "累计播放",
+    value: "184,203",
+    delta: "+12.4%",
+    trend: "up",
+    tone: "positive",
+  },
+  {
+    id: "pm-likes",
+    platform: "xiaohongshu",
+    label: "互动量",
+    value: "23,481",
+    delta: "+8.1%",
+    trend: "up",
+    tone: "positive",
+  },
+  {
+    id: "pm-comments",
+    platform: "wechatVideo",
+    label: "新增评论",
+    value: "1,289",
+    delta: "+0.3%",
+    trend: "flat",
+    tone: "neutral",
+  },
+  {
+    id: "pm-shares",
+    platform: "youtube",
+    label: "外部分享",
+    value: "672",
+    delta: "-1.6%",
+    trend: "down",
+    tone: "negative",
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Locked recent activity rows (preview column bottom)
+// ---------------------------------------------------------------------------
+
+const RECENT_ACTIVITY: ReadonlyArray<{
+  readonly id: string;
+  readonly platform: PlatformId;
+  readonly title: string;
+  readonly tone: "positive" | "neutral";
+}> = [
+  { id: "act-1", platform: "bilibili", title: "首发上线 24h 突破 1.8 万播放", tone: "positive" },
+  { id: "act-2", platform: "xiaohongshu", title: "新增 312 条互动 · 收藏率 6.4%", tone: "positive" },
+  { id: "act-3", platform: "wechatVideo", title: "等待发布前 1 次校验", tone: "neutral" },
+];
+
+// ---------------------------------------------------------------------------
+// Cover gradient variants — keep the cover thumbnail in lockstep with the
+// projects list (so the same project always paints the same gradient).
+// ---------------------------------------------------------------------------
+
+const COVER_GRADIENTS: ReadonlyArray<string> = [
+  "bg-gradient-to-br from-violet-500 via-fuchsia-500 to-rose-500",
+  "bg-gradient-to-br from-sky-500 via-indigo-500 to-violet-600",
+  "bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600",
 ];
 
 // ---------------------------------------------------------------------------
@@ -143,25 +249,29 @@ export function PublishingWorkspacePage({
       data-app="creatoros"
       data-page="publishing"
       data-project-id={vm.projectId}
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-3"
     >
       <PublishingTabs tabs={vm.tabs} />
       <div
         data-slot="publishing-grid"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-3"
+        className="grid grid-cols-1 gap-3 lg:grid-cols-3"
       >
         <div
           data-slot="basic-information-form"
-          className="flex flex-col gap-(--card-gap)"
+          className="flex flex-col gap-3"
         >
           <SectionCard
             title="基础信息"
             description="标题、描述、封面、标签与发布选项"
           >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               <TitleField value={vm.form.title} />
               <DescriptionField value={vm.form.description} />
-              <CoverSelector label={vm.form.coverLabel} />
+              <CoverThumbnail
+                label={vm.form.coverLabel}
+                gradientIndex={gradientIndexFor(vm.projectId)}
+                tags={vm.form.tags}
+              />
               <TagsField tags={vm.form.tags} />
               <CategoryField
                 category={vm.form.category}
@@ -170,10 +280,11 @@ export function PublishingWorkspacePage({
               <PublishingOptionsField />
             </div>
           </SectionCard>
+          <PlatformMetricsSummary />
         </div>
         <div
           data-slot="platform-publishing-panel"
-          className="flex flex-col gap-(--card-gap)"
+          className="flex flex-col gap-3"
         >
           <SectionCard
             title="发布平台"
@@ -181,7 +292,7 @@ export function PublishingWorkspacePage({
           >
             <ul
               data-slot="platform-publish-list"
-              className="flex flex-col gap-3"
+              className="flex flex-col gap-2"
               aria-label="发布平台"
             >
               {vm.platforms.map((platform) => (
@@ -193,14 +304,16 @@ export function PublishingWorkspacePage({
           </SectionCard>
           <BatchTimeActions />
           <ConfirmPublishButton />
+          <ContentCalendar days={CALENDAR_DAYS} />
           <PrePublishCheck />
         </div>
         <div
           data-slot="preview-rail"
-          className="flex flex-col gap-(--card-gap)"
+          className="flex flex-col gap-3"
         >
           <PlatformPreview preview={vm.preview} />
           <PublishChecklist items={vm.checklist} />
+          <RecentActivity rows={RECENT_ACTIVITY} />
           <PublishTips tips={vm.tips} />
         </div>
       </div>
@@ -221,7 +334,7 @@ function PublishingTabs({
     <nav
       data-slot="publishing-tabs"
       aria-label="发布阶段"
-      className="flex flex-wrap items-center gap-2 border-b border-border pb-2"
+      className="flex flex-wrap items-center gap-1.5 border-b border-border pb-2"
     >
       {(tabs.length > 0 ? tabs : PUBLISHING_TABS).map((tab, index) => (
         <button
@@ -231,7 +344,7 @@ function PublishingTabs({
           data-slot="publishing-tab"
           data-tab-id={tab.id}
           data-pressed={index === 0}
-          className="inline-flex h-8 items-center rounded-full border border-border bg-surface px-3 text-xs font-medium text-foreground data-[pressed=true]:border-brand/60 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
+          className="inline-flex h-7 items-center rounded-md border border-transparent px-2.5 text-xs font-medium text-muted-foreground data-[pressed=true]:border-brand/40 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
         >
           {tab.label}
         </button>
@@ -249,7 +362,7 @@ function TitleField({ value }: { value: string }) {
     <div data-slot="title-field" className="flex flex-col gap-1">
       <label
         htmlFor="publish-title"
-        className="text-xs font-medium text-muted-foreground"
+        className="text-[11px] font-medium text-muted-foreground"
       >
         标题
       </label>
@@ -258,7 +371,7 @@ function TitleField({ value }: { value: string }) {
         data-slot="title-input"
         defaultValue={value}
         readOnly
-        className="h-9 rounded-md border border-border bg-surface px-3 text-sm text-foreground"
+        className="h-8 rounded-md border border-border bg-surface px-2.5 text-sm text-foreground"
       />
     </div>
   );
@@ -269,7 +382,7 @@ function DescriptionField({ value }: { value: string }) {
     <div data-slot="description-field" className="flex flex-col gap-1">
       <label
         htmlFor="publish-description"
-        className="text-xs font-medium text-muted-foreground"
+        className="text-[11px] font-medium text-muted-foreground"
       >
         描述
       </label>
@@ -278,23 +391,55 @@ function DescriptionField({ value }: { value: string }) {
         data-slot="description-input"
         defaultValue={value}
         readOnly
-        rows={3}
-        className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground"
+        rows={2}
+        className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground"
       />
     </div>
   );
 }
 
-function CoverSelector({ label }: { label: string }) {
+function CoverThumbnail({
+  label,
+  gradientIndex,
+  tags,
+}: {
+  label: string;
+  gradientIndex: number;
+  tags: ReadonlyArray<string>;
+}) {
+  const gradient =
+    COVER_GRADIENTS[gradientIndex % COVER_GRADIENTS.length] ??
+    COVER_GRADIENTS[0];
   return (
     <div data-slot="cover-selector" className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-muted-foreground">封面</span>
+      <span className="text-[11px] font-medium text-muted-foreground">
+        封面预览
+      </span>
       <div
         data-slot="cover-preview"
         aria-label={label}
-        className="flex h-28 w-full items-center justify-center rounded-md border border-dashed border-border bg-surface-subtle text-xs text-muted-foreground"
+        className="relative h-32 w-full overflow-hidden rounded-md border border-border"
       >
-        {label}
+        <div
+          aria-hidden="true"
+          className={`absolute inset-0 ${gradient} opacity-90`}
+        />
+        <div className="relative flex h-full w-full flex-col justify-between p-2.5">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-white/80">
+            AI Native Browser · 深度解析
+          </span>
+          <div className="flex flex-wrap gap-1">
+            {tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag}
+                data-slot="cover-tag"
+                className="inline-flex h-5 items-center rounded-full bg-white/20 px-1.5 text-[10px] font-medium text-white backdrop-blur"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -303,14 +448,14 @@ function CoverSelector({ label }: { label: string }) {
 function TagsField({ tags }: { tags: ReadonlyArray<string> }) {
   return (
     <div data-slot="tags-field" className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-muted-foreground">标签</span>
+      <span className="text-[11px] font-medium text-muted-foreground">标签</span>
       <div
         data-slot="tags-list"
         className="flex flex-wrap gap-1"
         aria-label="标签"
       >
         {tags.length === 0 ? (
-          <span className="text-xs text-muted-foreground">暂无标签。</span>
+          <span className="text-[11px] text-muted-foreground">暂无标签。</span>
         ) : (
           tags.map((tag) => (
             <TagChip key={tag} label={tag} tone="brand" size="sm" />
@@ -329,18 +474,21 @@ function CategoryField({
   series: string;
 }) {
   return (
-    <div data-slot="category-field" className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-muted-foreground">分类 / 系列</span>
-      <div className="grid grid-cols-2 gap-2">
+    <div data-slot="category-field" className="grid grid-cols-2 gap-2">
+      <div className="flex flex-col gap-1">
+        <span className="text-[11px] font-medium text-muted-foreground">分类</span>
         <div
           data-slot="category-input"
-          className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground"
+          className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground"
         >
           {category}
         </div>
+      </div>
+      <div className="flex flex-col gap-1">
+        <span className="text-[11px] font-medium text-muted-foreground">系列</span>
         <div
           data-slot="series-input"
-          className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground"
+          className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground"
         >
           {series}
         </div>
@@ -355,7 +503,7 @@ function PublishingOptionsField() {
       data-slot="publishing-options-field"
       className="flex flex-col gap-1"
     >
-      <span className="text-xs font-medium text-muted-foreground">发布选项</span>
+      <span className="text-[11px] font-medium text-muted-foreground">发布选项</span>
       <ul
         data-slot="publishing-options-list"
         className="flex flex-col gap-1"
@@ -366,7 +514,7 @@ function PublishingOptionsField() {
             key={opt.id}
             data-slot="publishing-option-row"
             data-option-id={opt.id}
-            className="flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-sm"
+            className="flex items-center justify-between rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs"
           >
             <span className="text-muted-foreground">{opt.label}</span>
             <span className="font-medium text-foreground">{opt.value}</span>
@@ -392,24 +540,24 @@ function PlatformPublishCardItem({
       data-slot="platform-publish-card"
       data-platform={card.platform}
       data-publish-card-id={card.id}
-      className="flex flex-col gap-2 rounded-card border border-border bg-surface p-3"
+      className="flex flex-col gap-1.5 rounded-card border border-border bg-surface p-2.5"
     >
       <header className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <PlatformIconView platform={card.platform} size="md" />
-          <span className="text-sm font-medium text-foreground">
+        <div className="flex items-center gap-1.5">
+          <PlatformIconView platform={card.platform} size="sm" />
+          <span className="text-xs font-medium text-foreground">
             {accountLabel(card.platform)}
           </span>
         </div>
         <StatusBadge status={status} />
       </header>
-      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
         <span data-slot="platform-account">{card.accountLabel}</span>
         <span
           data-slot="platform-scheduled"
           data-has-schedule={card.scheduledAt ? "true" : "false"}
         >
-          {card.scheduledAt ? formatSchedule(card.scheduledAt) : "立即发布"}
+          {card.scheduledAt ? `排期 ${formatSchedule(card.scheduledAt)}` : "立即发布"}
         </span>
       </div>
     </article>
@@ -451,13 +599,13 @@ function formatSchedule(iso: string): string {
 
 function BatchTimeActions() {
   return (
-    <div data-slot="batch-time-actions" className="flex flex-col gap-2">
+    <div data-slot="batch-time-actions">
       <SectionCard
         title="批量时间"
         description="统一配置多平台发布时间"
       >
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm text-muted-foreground">默认排期</span>
+          <span className="text-xs text-muted-foreground">默认排期</span>
           <span
             data-slot="batch-time-value"
             className="font-mono text-sm tabular-nums text-foreground"
@@ -476,15 +624,62 @@ function ConfirmPublishButton() {
   // deliberately inert so the test invariant "no network publication"
   // stays locked.
   return (
-    <div data-slot="confirm-publish-wrapper" className="flex justify-end">
+    <div data-slot="confirm-publish-wrapper">
       <button
         type="button"
         data-slot="confirm-publish-button"
         data-action="confirm-publish"
-        className="inline-flex h-9 items-center rounded-md bg-brand px-4 text-sm font-medium text-brand-foreground"
+        className="inline-flex h-9 w-full items-center justify-center rounded-md bg-brand text-sm font-medium text-brand-foreground"
       >
         确认发布
       </button>
+    </div>
+  );
+}
+
+function ContentCalendar({
+  days,
+}: {
+  days: ReadonlyArray<(typeof CALENDAR_DAYS)[number]>;
+}) {
+  return (
+    <div data-slot="content-calendar">
+      <SectionCard
+        title="内容日历"
+        description="未来 7 天排期总览"
+      >
+        <ul
+          data-slot="content-calendar-grid"
+          className="grid grid-cols-7 gap-1"
+          aria-label="内容日历"
+        >
+          {days.map((day) => (
+            <li
+              key={day.label}
+              data-slot="content-calendar-cell"
+              data-day-status={day.status}
+              className="flex flex-col items-center gap-0.5 rounded-md border border-border bg-surface px-1 py-1.5"
+            >
+              <span className="text-[10px] font-medium text-muted-foreground">
+                {day.label}
+              </span>
+              <span
+                className={
+                  day.status === "active"
+                    ? "inline-flex size-1.5 rounded-full bg-brand"
+                    : day.status === "draft"
+                      ? "inline-flex size-1.5 rounded-full bg-warning"
+                      : "inline-flex size-1.5 rounded-full bg-border"
+                }
+                aria-hidden="true"
+              />
+              <span className="text-[9px] text-muted-foreground">
+                {day.platforms.length}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </SectionCard>
     </div>
   );
 }
@@ -498,7 +693,7 @@ function PrePublishCheck() {
       >
         <ul
           data-slot="pre-publish-check-list"
-          className="flex flex-col gap-1 text-sm text-foreground"
+          className="flex flex-col gap-1 text-xs text-foreground"
           aria-label="发布前检查"
         >
           {PUBLISH_CHECKLIST_ITEMS.slice(0, 3).map((item) => (
@@ -536,26 +731,38 @@ function PlatformPreview({
         <article
           data-slot="platform-preview-card"
           data-platform={preview.platform}
-          className="flex flex-col gap-2 rounded-card border border-border bg-surface-subtle p-3"
+          className="flex flex-col gap-1.5 overflow-hidden rounded-card border border-border bg-surface-subtle"
         >
-          <header className="flex items-center gap-2">
-            <PlatformIconView platform={preview.platform} size="sm" />
-            <span className="text-xs text-muted-foreground">
-              {platformLabel(preview.platform)}
-            </span>
-          </header>
-          <h4
-            data-slot="platform-preview-title"
-            className="text-sm font-semibold text-foreground"
+          <div
+            aria-hidden="true"
+            className="relative h-20 w-full overflow-hidden bg-gradient-to-br from-sky-500 via-indigo-500 to-violet-600"
           >
-            {preview.title}
-          </h4>
-          <p
-            data-slot="platform-preview-description"
-            className="line-clamp-3 text-xs text-muted-foreground"
-          >
-            {preview.description}
-          </p>
+            <div className="absolute inset-0 flex items-end p-2">
+              <span className="rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                AI Native Browser · 深度解析
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1 p-2.5">
+            <header className="flex items-center gap-1.5">
+              <PlatformIconView platform={preview.platform} size="xs" />
+              <span className="text-[11px] text-muted-foreground">
+                {platformLabel(preview.platform)}
+              </span>
+            </header>
+            <h4
+              data-slot="platform-preview-title"
+              className="line-clamp-1 text-xs font-semibold text-foreground"
+            >
+              {preview.title}
+            </h4>
+            <p
+              data-slot="platform-preview-description"
+              className="line-clamp-2 text-[11px] text-muted-foreground"
+            >
+              {preview.description}
+            </p>
+          </div>
         </article>
       </SectionCard>
     </div>
@@ -585,10 +792,66 @@ function PublishChecklist({
               data-slot="publish-checklist-item"
               data-check-id={item.id}
               data-checked={item.checked}
-              className="flex items-center justify-between gap-2 text-sm"
+              className="flex items-center justify-between gap-2 text-xs"
             >
               <span className="text-foreground">{item.label}</span>
               <StatusBadge status={item.checked ? "validated" : "todo"} />
+            </li>
+          ))}
+        </ul>
+      </SectionCard>
+    </div>
+  );
+}
+
+function PlatformMetricsSummary() {
+  return (
+    <div
+      data-slot="platform-metrics-summary"
+      className="grid grid-cols-2 gap-2"
+    >
+      {PLATFORM_METRICS.map((m) => (
+        <MetricCard
+          key={m.id}
+          id={m.id}
+          label={m.label}
+          value={m.value}
+          delta={m.delta}
+          trend={m.trend}
+          tone={m.tone}
+        />
+      ))}
+    </div>
+  );
+}
+
+function RecentActivity({
+  rows,
+}: {
+  rows: ReadonlyArray<(typeof RECENT_ACTIVITY)[number]>;
+}) {
+  return (
+    <div data-slot="recent-activity">
+      <SectionCard
+        title="最近活动"
+        description="平台反馈摘要"
+      >
+        <ul
+          data-slot="recent-activity-list"
+          className="flex flex-col gap-1.5"
+          aria-label="最近活动"
+        >
+          {rows.map((row) => (
+            <li
+              key={row.id}
+              data-slot="recent-activity-row"
+              className="flex items-center gap-2 rounded-md border border-border bg-surface px-2 py-1.5"
+            >
+              <PlatformIconView platform={row.platform} size="xs" />
+              <span className="flex-1 text-[11px] text-foreground">
+                {row.title}
+              </span>
+              <StatusBadge status={row.tone === "positive" ? "validated" : "todo"} />
             </li>
           ))}
         </ul>
@@ -607,7 +870,7 @@ function PublishTips({ tips }: { tips: ReadonlyArray<string> }) {
       >
         <ul
           data-slot="publish-tips-list"
-          className="flex flex-col gap-2 text-sm text-foreground"
+          className="flex flex-col gap-1 text-xs text-foreground"
           aria-label="发布小贴士"
         >
           {list.map((tip, index) => (
@@ -615,7 +878,7 @@ function PublishTips({ tips }: { tips: ReadonlyArray<string> }) {
               key={tip}
               data-slot="publish-tip"
               data-tip-index={index}
-              className="rounded-md border border-border bg-surface-subtle px-3 py-2"
+              className="rounded-md border border-border bg-surface-subtle px-2 py-1.5"
             >
               {tip}
             </li>
@@ -633,12 +896,13 @@ function PublishTips({ tips }: { tips: ReadonlyArray<string> }) {
 export function buildPublishingViewModel(
   projectId: string,
 ): PublishingViewModel {
-  const project = getProjectById(projectId);
+  const canonicalId = resolveProjectIdSlug(projectId);
+  const project = getProjectById(canonicalId);
   if (!project) {
     return {
       scenario: "empty",
       kind: "publishing",
-      projectId,
+      projectId: canonicalId,
       tabs: PUBLISHING_TABS,
       form: {
         title: "",
@@ -673,10 +937,10 @@ export function buildPublishingViewModel(
     publications.some((pub) => pub.id === rev.publicationId),
   );
 
-  // Surface up to 3 platform cards (the spec asks for cards to remain
+  // Surface up to 4 platform cards (the spec asks for cards to remain
   // separate — one per platform — so we cap the fixture-driven set so
   // the column never overflows).
-  const fixtureCards = publications.slice(0, 3).map((pub) => ({
+  const fixtureCards = publications.slice(0, 4).map((pub) => ({
     id: pub.id,
     platform: pub.platform,
     accountLabel: pub.accountReference,
@@ -693,7 +957,7 @@ export function buildPublishingViewModel(
     title: firstRevision?.title ?? project.title,
     description: firstRevision?.description ?? project.brief,
     coverLabel: firstRevision?.coverAssetId ?? "封面 · AI Native Browser",
-    tags: firstRevision?.platformTags ?? ["独立创作者", "工作流"],
+    tags: firstRevision?.platformTags ?? ["独立创作者", "工作流", "AI"],
     category: firstRevision?.category ?? "播客",
     series: firstRevision?.series ?? "Creator 访谈",
   };
@@ -719,6 +983,32 @@ export function buildPublishingViewModel(
   };
 }
 
+/**
+ * The route segment for a project is a URL slug (e.g. `ai-native-browser`)
+ * while the canonical dataset uses prefixed IDs (e.g.
+ * `project-ainativebrowser`). Translate between them so the page
+ * content can resolve the canonical project.
+ *
+ * Falls back to the original slug if no canonical match is found, in
+ * which case the caller surfaces the "未找到项目" empty state.
+ */
+function resolveProjectIdSlug(slug: string): string {
+  if (!slug) return slug;
+  const knownIds = canonicalDataset.projects.map((project) => project.id);
+  if (knownIds.includes(slug)) return slug;
+  const candidate = `project-${slug.replace(/-/g, "")}`;
+  if (knownIds.includes(candidate)) return candidate;
+  return slug;
+}
+
 function platformLabel(platform: PlatformId): string {
   return accountLabel(platform);
+}
+
+function gradientIndexFor(projectId: string): number {
+  let hash = 0;
+  for (let i = 0; i < projectId.length; i += 1) {
+    hash = (hash * 31 + projectId.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) % COVER_GRADIENTS.length;
 }
