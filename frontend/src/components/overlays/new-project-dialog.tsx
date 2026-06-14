@@ -18,6 +18,7 @@
  */
 
 import * as React from "react";
+import { X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { NewProjectForm } from "@/features/projects/new-project-form";
@@ -107,7 +108,7 @@ export function NewProjectDialog() {
     <div
       data-slot="overlay-layer"
       data-overlay="new-project"
-      className="fixed inset-0 z-(--z-overlay) flex items-center justify-center"
+      className="fixed inset-0 z-(--z-overlay) flex items-center justify-center p-6"
     >
       <div
         aria-hidden="true"
@@ -124,12 +125,12 @@ export function NewProjectDialog() {
         data-slot="overlay-panel"
         data-overlay-panel="new-project"
         className={cn(
-          "relative z-10 flex w-full max-w-2xl flex-col gap-4 rounded-xl bg-popover p-6 text-sm text-popover-foreground shadow-xl ring-1 ring-foreground/10 focus:outline-none",
+          "relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col gap-4 overflow-y-auto rounded-2xl bg-popover p-5 text-sm text-popover-foreground shadow-2xl ring-1 ring-foreground/10 focus:outline-none",
         )}
       >
-        <header className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h2 className="font-heading text-base font-medium">{DIALOG_TITLE}</h2>
+        <header className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-0.5">
+            <h2 className="font-heading text-[17px] font-semibold leading-tight">{DIALOG_TITLE}</h2>
             <p className="text-xs text-muted-foreground">
               为新项目填写基础信息。后续可在工作区继续完善。
             </p>
@@ -137,11 +138,12 @@ export function NewProjectDialog() {
           <button
             ref={closeButtonRef}
             type="button"
+            aria-label="关闭"
             data-slot="overlay-close"
-            className="rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={close}
           >
-            关闭
+            <X className="size-4" aria-hidden="true" />
           </button>
         </header>
         <NewProjectForm
