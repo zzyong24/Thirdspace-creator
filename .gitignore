@@ -14,6 +14,20 @@ playwright-report/
 test-results/
 blob-report/
 
+# Visual diff pipeline: ignore generated artifacts.
+#
+# The Controller-approved baselines under reference-images/ are
+# NOT yet tracked here. After Phase 1 sign-off the Controller
+# will run `pnpm visual:install-baselines` and explicitly
+# commit the contents of reference-images/ — see the README in
+# that directory and scripts/visual/install-baselines.mjs.
+# Until then, the subagent-installer is local-only and the
+# Playwright suite will fail loudly if a baseline is missing.
+frontend/tests/visual/__artifacts__/
+frontend/tests/visual/__screenshots__/reference-images/*.png
+!frontend/tests/visual/__screenshots__/reference-images/README.md
+!frontend/tests/visual/__screenshots__/reference-images/INSTALL-MANIFEST.json
+
 .worktrees/
 
 *.log
