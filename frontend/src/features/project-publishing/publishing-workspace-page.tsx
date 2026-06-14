@@ -210,18 +210,33 @@ const PLATFORM_METRICS: ReadonlyArray<PlatformMetricDescriptor> = [
 ];
 
 // ---------------------------------------------------------------------------
-// Locked recent activity rows (preview column bottom)
+// Locked platform-comparison rows
 // ---------------------------------------------------------------------------
 
-const RECENT_ACTIVITY: ReadonlyArray<{
+const PLATFORM_COMPARISON: ReadonlyArray<{
   readonly id: string;
   readonly platform: PlatformId;
-  readonly title: string;
-  readonly tone: "positive" | "neutral";
+  readonly label: string;
+  readonly reach: string;
+  readonly conversion: string;
 }> = [
-  { id: "act-1", platform: "bilibili", title: "首发上线 24h 突破 1.8 万播放", tone: "positive" },
-  { id: "act-2", platform: "xiaohongshu", title: "新增 312 条互动 · 收藏率 6.4%", tone: "positive" },
-  { id: "act-3", platform: "wechatVideo", title: "等待发布前 1 次校验", tone: "neutral" },
+  { id: "pc-bili", platform: "bilibili", label: "哔哩哔哩", reach: "184,203", conversion: "5.4%" },
+  { id: "pc-xhs", platform: "xiaohongshu", label: "小红书", reach: "92,481", conversion: "8.1%" },
+  { id: "pc-wx", platform: "wechatVideo", label: "微信视频号", reach: "31,289", conversion: "3.2%" },
+  { id: "pc-yt", platform: "youtube", label: "YouTube", reach: "8,672", conversion: "1.6%" },
+];
+
+// ---------------------------------------------------------------------------
+// Locked recent-comments teaser (bottom of preview rail)
+// ---------------------------------------------------------------------------
+
+const COMMENTS_TEASER: ReadonlyArray<{
+  readonly id: string;
+  readonly author: string;
+  readonly body: string;
+}> = [
+  { id: "c-1", author: "@Meng", body: "AI Native Browser 真的会改变创作者工具栈吗？" },
+  { id: "c-2", author: "@Leo", body: "希望下期聊 Agent 框架的对比。" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -280,7 +295,6 @@ export function PublishingWorkspacePage({
               <PublishingOptionsField />
             </div>
           </SectionCard>
-          <PlatformMetricsSummary />
         </div>
         <div
           data-slot="platform-publishing-panel"
@@ -312,9 +326,11 @@ export function PublishingWorkspacePage({
           className="flex flex-col gap-3"
         >
           <PlatformPreview preview={vm.preview} />
+          <PlatformMetricsSummary />
+          <PlatformComparison />
           <PublishChecklist items={vm.checklist} />
-          <RecentActivity rows={RECENT_ACTIVITY} />
           <PublishTips tips={vm.tips} />
+          <CommentsTeaser />
         </div>
       </div>
     </main>
@@ -808,7 +824,7 @@ function PlatformMetricsSummary() {
   return (
     <div
       data-slot="platform-metrics-summary"
-      className="grid grid-cols-2 gap-2"
+      className="grid grid-cols-2 gap-1.5"
     >
       {PLATFORM_METRICS.map((m) => (
         <MetricCard
@@ -825,33 +841,73 @@ function PlatformMetricsSummary() {
   );
 }
 
-function RecentActivity({
-  rows,
-}: {
-  rows: ReadonlyArray<(typeof RECENT_ACTIVITY)[number]>;
-}) {
+function PlatformComparison() {
   return (
-    <div data-slot="recent-activity">
+    <div data-slot="platform-comparison">
       <SectionCard
-        title="最近活动"
-        description="平台反馈摘要"
+        title="平台对比"
+        description="按平台查看触达与转化"
+      >
+        <table
+          data-slot="platform-comparison-table"
+          className="w-full text-xs text-foreground"
+        >
+          <thead>
+            <tr className="border-b border-border text-[10px] text-muted-foreground">
+              <th className="py-1 text-left font-medium">平台</th>
+              <th className="py-1 text-right font-medium">触达</th>
+              <th className="py-1 text-right font-medium">转化</th>
+            </tr>
+          </thead>
+          <tbody>
+            {PLATFORM_COMPARISON.map((row) => (
+              <tr
+                key={row.id}
+                data-slot="platform-comparison-row"
+                data-platform={row.platform}
+                className="border-b border-border/50 last:border-b-0"
+              >
+                <td className="py-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <PlatformIconView platform={row.platform} size="xs" />
+                    <span>{row.label}</span>
+                  </div>
+                </td>
+                <td className="py-1.5 text-right tabular-nums">{row.reach}</td>
+                <td className="py-1.5 text-right tabular-nums text-muted-foreground">
+                  {row.conversion}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </SectionCard>
+    </div>
+  );
+}
+
+function CommentsTeaser() {
+  return (
+    <div data-slot="comments-teaser">
+      <SectionCard
+        title="评论区"
+        description="最近 2 条互动"
       >
         <ul
-          data-slot="recent-activity-list"
+          data-slot="comments-list"
           className="flex flex-col gap-1.5"
-          aria-label="最近活动"
+          aria-label="评论区"
         >
-          {rows.map((row) => (
+          {COMMENTS_TEASER.map((c) => (
             <li
-              key={row.id}
-              data-slot="recent-activity-row"
-              className="flex items-center gap-2 rounded-md border border-border bg-surface px-2 py-1.5"
+              key={c.id}
+              data-slot="comments-row"
+              className="rounded-md border border-border bg-surface-subtle px-2 py-1.5"
             >
-              <PlatformIconView platform={row.platform} size="xs" />
-              <span className="flex-1 text-[11px] text-foreground">
-                {row.title}
+              <span className="text-[11px] font-medium text-foreground">
+                {c.author}
               </span>
-              <StatusBadge status={row.tone === "positive" ? "validated" : "todo"} />
+              <p className="text-[11px] text-muted-foreground">{c.body}</p>
             </li>
           ))}
         </ul>
