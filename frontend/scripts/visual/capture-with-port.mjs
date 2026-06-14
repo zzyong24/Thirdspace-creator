@@ -21,6 +21,7 @@ const __dirname = dirname(__filename);
 const FRONTEND_ROOT = resolve(__dirname, "..", "..");
 const REPO_ROOT = resolve(FRONTEND_ROOT, "..");
 const OUT_DIR = resolve(FRONTEND_ROOT, "tests", "visual", "__artifacts__");
+const CURRENT_DIR = resolve(OUT_DIR, "current");
 
 const [, , portArg, nameArg, pathArg] = process.argv;
 if (!portArg || !nameArg || !pathArg) {
@@ -58,6 +59,7 @@ async function loadPlaywright() {
 
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
+  await mkdir(CURRENT_DIR, { recursive: true });
 
   // wait for server
   const start = Date.now();
@@ -106,6 +108,10 @@ async function main() {
   await page.waitForTimeout(800);
   const outPath = join(OUT_DIR, `shared-${nameArg}.png`);
   await page.screenshot({ path: outPath, fullPage: false });
+  await page.screenshot({
+    path: join(CURRENT_DIR, `${nameArg}.png`),
+    fullPage: false,
+  });
   console.log(`[capture-with-port]   OK → ${outPath}`);
   await browser.close();
 }

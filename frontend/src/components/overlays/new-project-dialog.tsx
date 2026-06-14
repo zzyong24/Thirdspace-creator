@@ -125,14 +125,16 @@ export function NewProjectDialog() {
         data-slot="overlay-panel"
         data-overlay-panel="new-project"
         className={cn(
-          "relative z-10 flex max-h-[90vh] w-full max-w-[700px] flex-col gap-6 overflow-y-auto rounded-2xl bg-popover p-6 text-sm text-popover-foreground shadow-2xl ring-1 ring-foreground/10 focus:outline-none",
+          "relative z-10 flex h-[860px] max-h-[calc(100vh-72px)] w-full max-w-[700px] flex-col gap-6 overflow-y-auto rounded-2xl bg-popover px-7 py-6 text-sm text-popover-foreground shadow-2xl ring-1 ring-foreground/10 focus:outline-none",
         )}
       >
         <header className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-0.5">
-            <h2 className="font-heading text-[17px] font-semibold leading-tight">{DIALOG_TITLE}</h2>
+            <h2 className="font-heading text-xl font-semibold leading-tight">
+              {DIALOG_TITLE}　<span className="text-brand">✦</span>
+            </h2>
             <p className="text-xs text-muted-foreground">
-              为新项目填写基础信息。后续可在工作区继续完善。
+              从一个想法开始，AI 将陪你完成从研究到发布的全过程
             </p>
           </div>
           <button

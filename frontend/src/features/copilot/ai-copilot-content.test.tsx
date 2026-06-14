@@ -96,14 +96,25 @@ describe("AI Copilot dialog (Task 24)", () => {
     expect(slot(dialog, "smart-recommendation")).not.toBeNull();
   });
 
-  it("renders 4 suggested chips, 4 recommended commands, 3 recent tasks, 3 continuing tasks, 3 quick entries, 2 smart recommendations", () => {
+  it("exposes the four approved visual regions in reference order", () => {
     renderDialog();
     const dialog = screen.getByRole("dialog");
-    expect(dialog.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(4);
-    expect(dialog.querySelectorAll('[data-slot="recommended-command"]')).toHaveLength(4);
-    expect(dialog.querySelectorAll('[data-slot="recent-task"]')).toHaveLength(3);
-    expect(dialog.querySelectorAll('[data-slot="continuing-task"]')).toHaveLength(3);
-    expect(dialog.querySelectorAll('[data-slot="quick-entry"]')).toHaveLength(3);
+
+    expect(
+      Array.from(dialog.querySelectorAll('[data-slot-region="copilot-region"]')).map(
+        (node) => node.getAttribute("data-region"),
+      ),
+    ).toEqual(["prompt", "dashboard", "quick-entries", "recommendation"]);
+  });
+
+  it("renders the reference fixture counts", () => {
+    renderDialog();
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6);
+    expect(dialog.querySelectorAll('[data-slot="recommended-command"]')).toHaveLength(5);
+    expect(dialog.querySelectorAll('[data-slot="recent-task"]')).toHaveLength(5);
+    expect(dialog.querySelectorAll('[data-slot="continuing-task"]')).toHaveLength(4);
+    expect(dialog.querySelectorAll('[data-slot="quick-entry"]')).toHaveLength(6);
     expect(dialog.querySelectorAll('[data-slot="smart-recommendation-item"]')).toHaveLength(2);
   });
 

@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * `AICopilotContent` is the page-specs §16 component tree for the
  * AI Copilot dialog (Task 24).
@@ -58,10 +60,12 @@ const SUGGESTED_ACTIONS: ReadonlyArray<{
   readonly id: string;
   readonly label: string;
 }> = [
-  { id: "summarize", label: "总结这篇文章" },
-  { id: "rewrite", label: "改写更口语" },
-  { id: "outline", label: "生成脚本大纲" },
-  { id: "thirty", label: "改写为 30 秒口播" },
+  { id: "analyze", label: "分析机会" },
+  { id: "script", label: "生成脚本" },
+  { id: "assets", label: "寻找素材" },
+  { id: "title", label: "优化标题" },
+  { id: "cover", label: "生成封面" },
+  { id: "review", label: "发布复盘" },
 ];
 
 const RECOMMENDED_COMMANDS: ReadonlyArray<{
@@ -94,6 +98,12 @@ const RECOMMENDED_COMMANDS: ReadonlyArray<{
     title: "优化发布排期",
     description: "根据历史表现给出 7 天发布排期建议",
   },
+  {
+    id: "review",
+    icon: "trending",
+    title: "发布效果复盘",
+    description: "分析发布数据并给出优化建议",
+  },
 ];
 
 const RECENT_TASKS: ReadonlyArray<{
@@ -120,6 +130,18 @@ const RECENT_TASKS: ReadonlyArray<{
     status: "完成",
     meta: "今早 09:42 · 1.2k 字",
   },
+  {
+    id: "task-4",
+    title: "优化标题：AI 浏览器真的来了吗？",
+    status: "完成",
+    meta: "2 天前",
+  },
+  {
+    id: "task-5",
+    title: "复盘视频发布效果",
+    status: "完成",
+    meta: "3 天前",
+  },
 ];
 
 const CONTINUING_TASKS: ReadonlyArray<{
@@ -130,6 +152,7 @@ const CONTINUING_TASKS: ReadonlyArray<{
   { id: "cont-1", title: "整理 AI Native Browser 资料", progress: 64 },
   { id: "cont-2", title: "起草视频脚本结尾段", progress: 38 },
   { id: "cont-3", title: "生成本周发布排期", progress: 82 },
+  { id: "cont-4", title: "生成内容策略", progress: 100 },
 ];
 
 const QUICK_ENTRIES: ReadonlyArray<{
@@ -155,6 +178,24 @@ const QUICK_ENTRIES: ReadonlyArray<{
     icon: "list",
     title: "查看今日待办",
     description: "3 个任务等待处理",
+  },
+  {
+    id: "search",
+    icon: "list",
+    title: "全局搜索",
+    description: "搜索全部创作资料",
+  },
+  {
+    id: "assets",
+    icon: "sparkles",
+    title: "素材中心",
+    description: "管理图片与视频素材",
+  },
+  {
+    id: "knowledge",
+    icon: "pen",
+    title: "知识库",
+    description: "查找沉淀的知识",
   },
 ];
 
@@ -213,29 +254,24 @@ export function AICopilotContent() {
       {/* PromptComposer ------------------------------------------------ */}
       <Card
         data-slot="prompt-composer"
-        className="border border-border bg-surface-muted"
+        data-region="prompt"
+        data-slot-region="copilot-region"
+        className="h-[124px] border border-border bg-surface-muted"
       >
         <CardContent className="p-3">
           <form
-            // No `action` and no `onSubmit` — submit is a fixture-only
-            // local action. No real AI request is issued (page-specs §16
-            // "禁止改变": no message thread, no real AI integration).
+            onSubmit={(event) => event.preventDefault()}
             className="flex flex-col gap-2"
             data-slot="prompt-form"
           >
-            <label
-              htmlFor="ai-copilot-prompt"
-              className="text-[11px] font-medium text-muted-foreground"
-            >
-              告诉 Copilot 你想做什么
-            </label>
             <textarea
               id="ai-copilot-prompt"
               name="prompt"
               defaultValue={PROMPT_VALUE}
-              rows={2}
-              placeholder="例如：把《AI Native Browser》主脚本的结尾改写得更情绪化"
-              className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-ring/40"
+              rows={1}
+              aria-label="我能帮你做什么"
+              placeholder="我能帮你做什么？"
+              className="h-10 w-full resize-none border-0 border-l-2 border-brand/30 bg-transparent px-2 py-2 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
               data-slot="prompt-input"
             />
             <div
@@ -251,7 +287,7 @@ export function AICopilotContent() {
                     size="sm"
                     data-slot="suggested-chip"
                     data-chip-id={action.id}
-                    className="h-7 px-2.5 text-xs"
+                  className="h-8 px-3 text-xs"
                   >
                     {action.label}
                   </Button>
@@ -261,11 +297,12 @@ export function AICopilotContent() {
                 type="submit"
                 size="sm"
                 data-slot="submit-button"
+                data-testid="submit-button"
                 aria-label="提交提示给 Copilot"
-                className="h-7 px-2.5"
+                className="size-8 rounded-full p-0"
               >
                 <Sparkles className="size-3.5" aria-hidden="true" />
-                生成
+                <span className="sr-only">生成</span>
               </Button>
             </div>
           </form>
@@ -276,7 +313,9 @@ export function AICopilotContent() {
       <section
         aria-labelledby="ai-copilot-dashboard-title"
         data-slot="copilot-dashboard"
-        className="grid grid-cols-1 gap-2 md:grid-cols-3"
+        data-region="dashboard"
+        data-slot-region="copilot-region"
+        className="grid h-[360px] grid-cols-1 gap-3 md:grid-cols-3"
       >
         <h3 id="ai-copilot-dashboard-title" className="sr-only">
           Copilot 控制台
@@ -285,9 +324,9 @@ export function AICopilotContent() {
         {/* RecommendedCommands */}
         <Card
           data-slot="recommended-commands"
-          className="border border-border"
+          className="overflow-hidden border border-border"
         >
-          <CardHeader className="px-3 pb-1.5 pt-3">
+          <CardHeader className="px-3 pb-1 pt-3">
             <CardTitle className="text-[13px] font-semibold">
               推荐指令
             </CardTitle>
@@ -295,14 +334,14 @@ export function AICopilotContent() {
               根据当前项目生成的常用操作
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-1.5 px-3 pb-3 pt-0">
+          <CardContent className="flex flex-col gap-1 px-3 pb-3 pt-0">
             {RECOMMENDED_COMMANDS.map((cmd) => (
               <button
                 key={cmd.id}
                 type="button"
                 data-slot="recommended-command"
                 data-command-id={cmd.id}
-                className="flex items-start gap-2 rounded-lg border border-border bg-surface p-2 text-left transition-colors hover:bg-surface-muted"
+                className="flex min-h-12 items-start gap-2 rounded-lg bg-surface px-2 py-1.5 text-left transition-colors hover:bg-surface-muted"
               >
                 <ActionIcon kind={cmd.icon} />
                 <div className="flex flex-col gap-0.5">
@@ -319,7 +358,7 @@ export function AICopilotContent() {
         </Card>
 
         {/* RecentTasks */}
-        <Card data-slot="recent-tasks" className="border border-border">
+        <Card data-slot="recent-tasks" className="overflow-hidden border border-border">
           <CardHeader className="px-3 pb-1.5 pt-3">
             <CardTitle className="text-[13px] font-semibold">最近任务</CardTitle>
             <CardDescription className="text-[11px]">
@@ -362,7 +401,7 @@ export function AICopilotContent() {
         {/* ContinuingTasks */}
         <Card
           data-slot="continuing-tasks"
-          className="border border-border"
+          className="overflow-hidden border border-border"
         >
           <CardHeader className="px-3 pb-1.5 pt-3">
             <CardTitle className="text-[13px] font-semibold">继续任务</CardTitle>
@@ -404,62 +443,64 @@ export function AICopilotContent() {
         </Card>
       </section>
 
-      {/* QuickEntries ------------------------------------------------- */}
-      <section
-        aria-labelledby="ai-copilot-quick-entries-title"
-        data-slot="quick-entries"
-        className="grid grid-cols-1 gap-1.5 sm:grid-cols-3"
-      >
+      <div className="grid grid-cols-[1.1fr_0.9fr] gap-3">
+        {/* QuickEntries ------------------------------------------------- */}
+        <section
+          aria-labelledby="ai-copilot-quick-entries-title"
+          data-slot="quick-entries"
+          data-region="quick-entries"
+          data-slot-region="copilot-region"
+          className="grid grid-cols-6 gap-1.5 rounded-xl border border-border p-3"
+        >
         <h3 id="ai-copilot-quick-entries-title" className="sr-only">
           快捷入口
         </h3>
-        {QUICK_ENTRIES.map((entry) => (
-          <button
-            key={entry.id}
-            type="button"
-            data-slot="quick-entry"
-            data-entry-id={entry.id}
-            className="flex items-center gap-2 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-left transition-colors hover:bg-surface-muted"
-          >
-            <QuickIcon kind={entry.icon} />
-            <div className="flex flex-col">
-              <span className="text-[13px] font-medium text-foreground">
+          {QUICK_ENTRIES.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              data-slot="quick-entry"
+              data-entry-id={entry.id}
+              className="flex flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-center transition-colors hover:bg-surface-muted"
+            >
+              <QuickIcon kind={entry.icon} />
+              <span className="text-[11px] font-medium text-foreground">
                 {entry.title}
               </span>
-              <span className="text-[11px] text-muted-foreground">
-                {entry.description}
-              </span>
-            </div>
-          </button>
-        ))}
-      </section>
+            </button>
+          ))}
+        </section>
 
-      {/* SmartRecommendation ----------------------------------------- */}
-      <section
-        aria-labelledby="ai-copilot-smart-recommendation-title"
-        data-slot="smart-recommendation"
-        className="flex flex-col gap-1.5"
-      >
+        {/* SmartRecommendation ----------------------------------------- */}
+        <section
+          aria-labelledby="ai-copilot-smart-recommendation-title"
+          data-slot="smart-recommendation"
+          data-region="recommendation"
+          data-slot-region="copilot-region"
+          className="flex flex-col gap-1.5 rounded-xl border border-border p-3"
+        >
         <h3
           id="ai-copilot-smart-recommendation-title"
           className="text-[11px] font-semibold uppercase tracking-wide text-text-subtle"
         >
           智能推荐
         </h3>
-        {SMART_RECOMMENDATIONS.map((rec) => (
-          <div
-            key={rec.id}
-            data-slot="smart-recommendation-item"
-            data-rec-id={rec.id}
-            className="flex flex-col gap-0.5 rounded-lg border border-dashed border-border bg-surface-muted/40 p-2"
-          >
-            <span className="text-[13px] font-medium text-foreground">
-              {rec.title}
-            </span>
-            <span className="text-[11px] text-muted-foreground">{rec.body}</span>
+          <div className="flex gap-2">
+            {SMART_RECOMMENDATIONS.map((rec) => (
+              <button
+                key={rec.id}
+                type="button"
+                data-slot="smart-recommendation-item"
+                data-rec-id={rec.id}
+                className="rounded-md border border-brand/30 px-2 py-1 text-[11px] font-medium text-brand"
+                title={rec.body}
+              >
+                {rec.title}
+              </button>
+            ))}
           </div>
-        ))}
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

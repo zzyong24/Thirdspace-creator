@@ -88,6 +88,21 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe("NewProjectForm — field order", () => {
+  it("exposes the five approved form sections in reference order", () => {
+    renderForm();
+
+    expect(
+      Array.from(document.querySelectorAll("[data-form-section]"))
+        .map((node) => node.getAttribute("data-section")),
+    ).toEqual([
+      "name",
+      "brief",
+      "platform",
+      "content-type",
+      "creation-mode",
+    ]);
+  });
+
   it("renders the spec-locked fields in the required order", async () => {
     const { NewProjectForm } = await importForm();
     render(

@@ -25,7 +25,7 @@
  */
 
 import * as React from "react";
-import { X } from "lucide-react";
+import { Clock3, Sparkles, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { AICopilotContent } from "@/features/copilot/ai-copilot-content";
@@ -36,34 +36,43 @@ export interface AICopilotDialogProps {
 
 export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
   return (
-    <div className="flex flex-col gap-4" data-slot="ai-copilot-dialog">
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] uppercase tracking-wide text-text-subtle">
-            AI 助手
-          </span>
+    <div
+      className="flex flex-col gap-4"
+      data-slot="ai-copilot-dialog"
+      data-current-path={pathname}
+    >
+      <header className="flex items-center justify-between gap-3 border-b border-border pb-4">
+        <div className="flex items-center gap-3">
+          <Sparkles className="size-6 text-brand" aria-hidden="true" />
           <h2
             id="ai-copilot-title"
-            className="font-heading text-[17px] font-semibold leading-tight text-foreground"
+            className="font-heading text-xl font-semibold leading-tight text-foreground"
           >
-            你的个人创作 Copilot
+            Creator Copilot
           </h2>
-          <p className="text-xs text-muted-foreground">
-            当前页面：
-            <span className="font-medium text-foreground">{pathname}</span>
-          </p>
+          <span className="rounded-md bg-brand-soft px-2 py-1 text-xs font-medium text-brand">
+            ⌘ K　全局唤醒
+          </span>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="关闭 AI 助手"
-          data-overlay-close
-          data-slot="ai-copilot-close"
-          className="shrink-0"
-        >
-          <X className="size-4" aria-hidden="true" />
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button type="button" variant="ghost" size="sm">
+            <Clock3 className="size-4" aria-hidden="true" />
+            历史记录
+          </Button>
+          <span className="h-6 w-px bg-border" aria-hidden="true" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="关闭 AI 助手"
+            data-overlay-close
+            data-slot="ai-copilot-close"
+            data-testid="ai-copilot-close"
+            className="shrink-0"
+          >
+            <X className="size-5" aria-hidden="true" />
+          </Button>
+        </div>
       </header>
 
       <AICopilotContent />

@@ -238,6 +238,8 @@ function ProjectNameField({ name, onChange }: ProjectNameFieldProps) {
     <div
       data-slot="new-project-name"
       data-testid="new-project-name"
+      data-form-section
+      data-section="name"
       data-name="name"
       className="grid gap-1.5"
     >
@@ -276,6 +278,8 @@ function ProjectBriefField({ brief, onChange }: ProjectBriefFieldProps) {
     <div
       data-slot="new-project-brief"
       data-testid="new-project-brief"
+      data-form-section
+      data-section="brief"
       data-name="brief"
       className="grid gap-1.5"
     >
@@ -305,6 +309,7 @@ function ProjectBriefField({ brief, onChange }: ProjectBriefFieldProps) {
 interface RadioCardGroupProps<TValue extends string> {
   readonly testId: string;
   readonly name: string;
+  readonly section: string;
   readonly legend: string;
   readonly options: ReadonlyArray<RadioOption<TValue>>;
   readonly value: TValue;
@@ -316,6 +321,7 @@ interface RadioCardGroupProps<TValue extends string> {
 function RadioCardGroup<TValue extends string>({
   testId,
   name,
+  section,
   legend,
   options,
   value,
@@ -327,6 +333,8 @@ function RadioCardGroup<TValue extends string>({
       data-slot="new-project-radio-group"
       data-testid={testId}
       data-name={name}
+      data-form-section
+      data-section={section}
       className="grid gap-1.5"
     >
       <legend className="text-[13px] font-medium text-foreground">{legend}</legend>
@@ -439,6 +447,7 @@ function TargetPlatformSelector({
     <RadioCardGroup
       testId="new-project-platform"
       name="target-platform"
+      section="platform"
       legend="目标平台"
       value={current}
       onChange={(next) => onChange([next])}
@@ -473,6 +482,7 @@ function ContentTypeSelector({ value, onChange }: ContentTypeSelectorProps) {
     <RadioCardGroup
       testId="new-project-content-type"
       name="content-type"
+      section="content-type"
       legend="内容类型"
       value={value}
       onChange={onChange}
@@ -503,6 +513,7 @@ function CreationModeSelector({ value, onChange }: CreationModeSelectorProps) {
     <RadioCardGroup
       testId="new-project-creation-mode"
       name="creation-mode"
+      section="creation-mode"
       legend="创作模式"
       value={value}
       onChange={onChange}
