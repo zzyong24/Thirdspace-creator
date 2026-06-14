@@ -497,9 +497,16 @@ export function SearchPage({
       data-search-id="search-root"
       className="flex flex-col gap-(--section-gap)"
     >
+      {/* The TopHeader already renders the global search input in
+          `search` mode; we keep a hidden mirror here so URL `?q=`
+          state stays in sync and screen-reader / programmatic users
+          can still drive the query. Visually it collapses to zero
+          height so the result-type tabs sit directly under the
+          header — matching the design rhythm. */}
       <SearchInteractiveRegion
         initialQuery={initialQuery}
         placeholder="搜索项目、素材、知识或视频"
+        className="sr-only"
       />
       <ResultTypeTabs tabs={vm.resultTypeTabs} />
       <div
@@ -536,7 +543,7 @@ function ResultTypeTabs({
     <nav
       data-slot="result-type-tabs"
       aria-label="搜索结果类型"
-      className="flex flex-wrap items-center gap-2 border-b border-border pb-2"
+      className="-mt-1 flex flex-wrap items-center gap-1.5"
     >
       {tabs.map((tab, index) => (
         <button
@@ -547,10 +554,13 @@ function ResultTypeTabs({
           data-tab-id={tab.id}
           data-pressed={index === 0 ? "true" : "false"}
           aria-selected={index === 0}
-          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-xs font-medium text-foreground data-[pressed=true]:border-brand/60 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
+          className="inline-flex h-7 items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 text-[12px] font-medium text-foreground data-[pressed=true]:border-brand/60 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
         >
           <span>{tab.label}</span>
-          <span className="font-mono text-[10px] text-muted-foreground">
+          <span
+            data-slot="result-type-tab-count"
+            className="font-mono text-[10px] text-muted-foreground data-[pressed=true]:text-brand/70"
+          >
             {tab.count}
           </span>
         </button>
