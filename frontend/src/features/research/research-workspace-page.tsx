@@ -152,15 +152,27 @@ function TrendBackgroundSection({
               key={card.id}
               data-slot="research-summary-card"
               data-tone={card.tone}
-              className="flex flex-col gap-2 rounded-card border border-border bg-surface-subtle p-3"
+              className="flex flex-col gap-1.5 rounded-card border border-border bg-surface-subtle p-3.5"
             >
-              <span className="text-xs font-medium text-muted-foreground">
-                {card.title}
-              </span>
-              <span className="text-lg font-semibold tabular-nums text-foreground">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {card.title}
+                </span>
+                <span
+                  aria-hidden="true"
+                  data-slot="trend-indicator"
+                  className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground"
+                >
+                  <span aria-hidden="true">↗</span>
+                  <span>趋势</span>
+                </span>
+              </div>
+              <span className="text-xl font-semibold tabular-nums text-foreground">
                 {card.metric}
               </span>
-              <p className="text-xs text-muted-foreground">{card.description}</p>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {card.description}
+              </p>
             </li>
           ))}
         </ul>
@@ -356,16 +368,19 @@ function ResearchNotesCard({
         ) : (
           <ul
             data-slot="research-notes-list"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-1.5"
             aria-label="研究笔记"
           >
-            {notes.map((note) => (
+            {notes.map((note, index) => (
               <li
                 key={note.id}
                 data-slot="research-note-row"
-                className="rounded-control border border-border bg-surface px-3 py-2 text-sm text-foreground"
+                className="flex gap-2 rounded-control border border-border bg-surface px-2.5 py-2 text-sm text-foreground"
               >
-                {note.content}
+                <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="flex-1 leading-relaxed">{note.content}</span>
               </li>
             ))}
           </ul>
@@ -388,19 +403,22 @@ function EvidenceCollectionCard({
         ) : (
           <ul
             data-slot="evidence-list"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-1.5"
             aria-label="证据列表"
           >
             {items.map((item) => (
               <li
                 key={item.id}
                 data-slot="evidence-row"
-                className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
+                className="flex items-center gap-2 rounded-control border border-border bg-surface px-2.5 py-2"
               >
-                <span className="truncate text-sm font-medium text-foreground">
-                  {item.title}
-                </span>
-                <span className="text-xs text-muted-foreground">{item.type}</span>
+                <span className="size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {item.title}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{item.type}</span>
+                </div>
               </li>
             ))}
           </ul>
@@ -417,7 +435,7 @@ function RelatedTagsCard({ tags }: { tags: ResearchViewModel["relatedTags"] }) {
         {tags.length === 0 ? (
           <p className="text-sm text-muted-foreground">暂无相关标签。</p>
         ) : (
-          <div className="flex flex-wrap gap-2" aria-label="相关标签">
+          <div className="flex flex-wrap gap-1.5" aria-label="相关标签">
             {tags.map((tag) => (
               <span key={tag} data-slot="related-tag">
                 <TagChip label={tag} tone="info" size="sm" />
