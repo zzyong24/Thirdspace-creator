@@ -565,6 +565,22 @@ function buildCompetitors(): ReadonlyArray<CompetitorRow> {
       threat: "high",
       note: "本地优先代理操作系统",
     },
+    {
+      id: "competitor-privacy-crusader",
+      name: "Privacy Crusader",
+      platform: "youtube",
+      views: 6_120,
+      threat: "low",
+      note: "以隐私为卖点的轻量浏览器",
+    },
+    {
+      id: "competitor-openai-atlas",
+      name: "Open AI Atlas",
+      platform: "bilibili",
+      views: 41_800,
+      threat: "high",
+      note: "Open AI 推出的 AI Native 浏览器",
+    },
   ];
 }
 
@@ -628,6 +644,11 @@ function buildEvidence(
     {
       id: "ev-2",
       title: "本地优先栈趋势",
+      type: "知识条目",
+    },
+    {
+      id: "ev-3",
+      title: "代理任务覆盖度对比",
       type: "知识条目",
     },
   ];

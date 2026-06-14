@@ -70,7 +70,7 @@ test.describe("Research Workspace page", () => {
     ]);
     await expect(
       competitorTable.locator('[data-slot="competitor-row"]'),
-    ).toHaveCount(3);
+    ).toHaveCount(5);
     const threatBadges = competitorTable.locator(
       '[data-slot="competitor-threat"]',
     );
