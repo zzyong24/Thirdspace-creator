@@ -22,6 +22,16 @@
  */
 
 import * as React from "react";
+import {
+  FileBarChart2,
+  FileSpreadsheet,
+  FileText,
+  FileVideo,
+  MoreHorizontal,
+  Share2,
+  Star,
+  Wand2,
+} from "lucide-react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { StatusBadge } from "@/components/project/status-badge";
@@ -29,6 +39,10 @@ import { ProgressBar } from "@/components/project/progress-bar";
 import { TagChip } from "@/components/content/tag-chip";
 import { PlatformIconView } from "@/components/publishing/platform-icon";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
+import {
+  Avatar,
+  AvatarFallback,
+} from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   canonicalDataset,
@@ -179,16 +193,32 @@ function ProjectProgressCard({
               <Button type="button" variant="outline" size="sm">
                 编辑信息
               </Button>
-              <Button type="button" variant="ghost" size="icon" aria-label="收藏">
-                <span aria-hidden="true">★</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="收藏"
+              >
+                <Star aria-hidden="true" className="size-4" />
               </Button>
-              <Button type="button" variant="ghost" size="icon" aria-label="分享">
-                <span aria-hidden="true">↗</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="分享"
+              >
+                <Share2 aria-hidden="true" className="size-4" />
               </Button>
-              <Button type="button" variant="ghost" size="icon" aria-label="更多">
-                <span aria-hidden="true">⋯</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="更多"
+              >
+                <MoreHorizontal aria-hidden="true" className="size-4" />
               </Button>
               <Button type="button" size="sm">
+                <Wand2 aria-hidden="true" className="size-4" />
                 进入工作台
               </Button>
             </div>
@@ -290,25 +320,38 @@ function RecentFilesCard({
             aria-label="最近文件"
             className="flex flex-col gap-2"
           >
-            {files.map((file) => (
-              <li
-                key={file.id}
-                data-slot="recent-file-row"
-                className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
-              >
-                <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {file.name}
+            {files.map((file) => {
+              const Icon = fileTypeIcon(file.fileKind);
+              return (
+                <li
+                  key={file.id}
+                  data-slot="recent-file-row"
+                  data-file-kind={file.fileKind}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span
+                      aria-hidden="true"
+                      data-slot="recent-file-icon"
+                      className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-surface-subtle text-muted-foreground"
+                    >
+                      <Icon className="size-4" />
+                    </span>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {file.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {file.type}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {formatRecentTimestamp(file.updatedAt)}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {file.type}
-                  </span>
-                </div>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {formatRecentTimestamp(file.updatedAt)}
-                </span>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </SectionCard>
@@ -346,9 +389,25 @@ function ProjectActivityCard({
                 data-tone={activity.tone}
                 className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
               >
-                <span className="truncate text-sm text-foreground">
-                  {activity.title}
-                </span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <Avatar
+                    aria-hidden="true"
+                    size="sm"
+                    data-slot="project-activity-avatar"
+                  >
+                    <AvatarFallback>
+                      {activityActorInitials(activity)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate text-sm text-foreground">
+                      {activity.title}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {activityActorLabel(activity)}
+                    </span>
+                  </div>
+                </div>
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {formatRecentTimestamp(activity.occurredAt)}
                 </span>
@@ -725,6 +784,7 @@ function buildRecentFiles(
       id: artifact.id,
       name: artifact.title,
       type: artifactTypeLabel(artifact.artifactType),
+      fileKind: artifactFileKind(artifact.artifactType),
       updatedAt: artifact.updatedAt,
     }));
 }
@@ -749,6 +809,7 @@ function activityToRow(
         title: "脚本被更新",
         occurredAt: activity.occurredAt,
         tone: "info",
+        eventType: activity.eventType,
       };
     case "evidence_linked":
       return {
@@ -756,6 +817,7 @@ function activityToRow(
         title: "研究阶段关联了新证据",
         occurredAt: activity.occurredAt,
         tone: "positive",
+        eventType: activity.eventType,
       };
     case "milestone_completed":
       return {
@@ -763,6 +825,7 @@ function activityToRow(
         title: "里程碑已完成",
         occurredAt: activity.occurredAt,
         tone: "positive",
+        eventType: activity.eventType,
       };
     default:
       return {
@@ -770,6 +833,7 @@ function activityToRow(
         title: "项目状态变化",
         occurredAt: activity.occurredAt,
         tone: "info",
+        eventType: activity.eventType,
       };
   }
 }
@@ -895,4 +959,70 @@ function formatRecentTimestamp(iso: string): string {
   if (!match) return iso;
   const [, year, month, day, hour, minute] = match;
   return `${year}-${month}-${day} ${hour}:${minute}`;
+}
+
+function artifactFileKind(
+  type: string,
+): ProjectOverviewViewModel["recentFiles"][number]["fileKind"] {
+  if (
+    type === "master_script" ||
+    type === "output_script" ||
+    type === "golden_quotes"
+  ) {
+    return "script";
+  }
+  if (type === "shot_list" || type === "timeline") {
+    return "shot";
+  }
+  if (
+    type === "trend_analysis" ||
+    type === "competitor_analysis" ||
+    type === "review_report"
+  ) {
+    return "data";
+  }
+  return "document";
+}
+
+function fileTypeIcon(
+  kind: ProjectOverviewViewModel["recentFiles"][number]["fileKind"],
+): React.ComponentType<{ className?: string }> {
+  switch (kind) {
+    case "script":
+      return FileText;
+    case "shot":
+      return FileVideo;
+    case "data":
+      return FileBarChart2;
+    default:
+      return FileSpreadsheet;
+  }
+}
+
+const PROJECT_OWNER_DISPLAY_NAME = "Zyong Zhu";
+
+function activityActorLabel(
+  activity: ProjectOverviewViewModel["activities"][number],
+): string {
+  switch (activity.eventType) {
+    case "artifact_updated":
+      return `${PROJECT_OWNER_DISPLAY_NAME} · 脚本编辑`;
+    case "evidence_linked":
+      return `${PROJECT_OWNER_DISPLAY_NAME} · 证据关联`;
+    case "milestone_completed":
+      return `${PROJECT_OWNER_DISPLAY_NAME} · 里程碑`;
+    default:
+      return PROJECT_OWNER_DISPLAY_NAME;
+  }
+}
+
+function activityActorInitials(
+  activity: ProjectOverviewViewModel["activities"][number],
+): string {
+  const label = activityActorLabel(activity);
+  // Take the first letter of the first two CJK / word characters.
+  const chars = Array.from(label).filter((c) => /\p{L}|\p{N}/u.test(c));
+  if (chars.length === 0) return "Z";
+  if (chars.length === 1) return chars[0]!.toUpperCase();
+  return (chars[0]! + chars[1]!).toUpperCase();
 }

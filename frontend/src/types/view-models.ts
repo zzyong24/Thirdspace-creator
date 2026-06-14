@@ -236,6 +236,8 @@ export interface ProjectOverviewViewModel extends BasePageViewModel {
     readonly id: Id;
     readonly name: string;
     readonly type: string;
+    /** Coarse icon hint for the row — `document`, `script`, `shot`, `data`. */
+    readonly fileKind: "document" | "script" | "shot" | "data";
     readonly updatedAt: Iso8601;
   }>;
   readonly activities: ReadonlyArray<{
@@ -243,6 +245,8 @@ export interface ProjectOverviewViewModel extends BasePageViewModel {
     readonly title: string;
     readonly occurredAt: Iso8601;
     readonly tone: "info" | "positive" | "warning";
+    /** Source activity event type, used to drive the actor label slot. */
+    readonly eventType: string;
   }>;
   readonly projectInfo: ReadonlyArray<{ readonly label: string; readonly value: string }>;
   readonly outputs: ReadonlyArray<ContentOutputSummary>;
