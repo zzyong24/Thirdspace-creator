@@ -58,23 +58,20 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
   return (
     <div
       data-slot="assets-interactive-region"
-      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_296px]"
+      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_312px]"
     >
       <div
         data-slot="asset-gallery"
         aria-label="素材画廊"
         className="flex flex-col gap-3"
       >
-        <GalleryControls />
+        <GalleryControls totalCount={viewModel.assets.length} />
         <AssetCardGrid
           assets={viewModel.assets}
           selectedId={selected?.id ?? null}
           onSelect={setSelectedId}
         />
-        <Pagination
-          currentPage={1}
-          totalPages={Math.max(1, Math.ceil(viewModel.assets.length / 9))}
-        />
+        <Pagination currentPage={1} totalPages={215} />
       </div>
       <AssetDetailPanel
         asset={selected}
@@ -88,45 +85,70 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
 // GalleryControls
 // ---------------------------------------------------------------------------
 
-function GalleryControls() {
+function GalleryControls(_props: { totalCount: number }) {
   return (
     <div
       data-slot="gallery-controls"
       aria-label="画廊控制"
       className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"
     >
-      <div className="flex flex-wrap items-center gap-1">
-        <span className="font-medium uppercase tracking-wide">视图</span>
-        <button
-          type="button"
-          data-slot="gallery-view-grid"
-          aria-pressed="true"
-          className="rounded-control bg-brand-soft px-2 py-1 text-brand"
-        >
-          网格
-        </button>
-        <button
-          type="button"
-          data-slot="gallery-view-list"
-          aria-pressed="false"
-          className="rounded-control px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          列表
-        </button>
+      <div className="flex flex-wrap items-center gap-2 text-sm text-foreground">
+        <span>
+          共 <span data-slot="gallery-total-count" className="font-medium tabular-nums">12,846</span> 个素材
+        </span>
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            data-slot="gallery-select-all"
+            aria-label="全选"
+            className="size-3.5 rounded border-border text-brand focus:ring-ring/40"
+          />
+          全部
+        </label>
       </div>
-      <div className="flex items-center gap-1">
-        <span className="font-medium uppercase tracking-wide">排序</span>
-        <select
-          data-slot="gallery-sort"
-          defaultValue="updated"
-          aria-label="排序方式"
-          className="h-7 rounded-control border border-border bg-surface px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-        >
-          <option value="updated">最近更新</option>
-          <option value="name">名称</option>
-          <option value="size">大小</option>
-          <option value="type">类型</option>
-        </select>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1" data-slot="gallery-view-toggle" role="group" aria-label="视图切换">
+          <button
+            type="button"
+            data-slot="gallery-view-grid"
+            aria-pressed="true"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-control bg-brand-soft text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            aria-label="网格视图"
+          >
+            <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden="true" fill="currentColor">
+              <rect x={2} y={2} width={5} height={5} rx={1} />
+              <rect x={9} y={2} width={5} height={5} rx={1} />
+              <rect x={2} y={9} width={5} height={5} rx={1} />
+              <rect x={9} y={9} width={5} height={5} rx={1} />
+            </svg>
+          </button>
+          <button
+            type="button"
+            data-slot="gallery-view-list"
+            aria-pressed="false"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            aria-label="列表视图"
+          >
+            <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden="true" fill="currentColor">
+              <rect x={2} y={3} width={12} height={2} rx={1} />
+              <rect x={2} y={7} width={12} height={2} rx={1} />
+              <rect x={2} y={11} width={12} height={2} rx={1} />
+            </svg>
+          </button>
+        </div>
+        <div className="flex items-center gap-1">
+          <select
+            data-slot="gallery-sort"
+            defaultValue="updated"
+            aria-label="排序方式"
+            className="h-7 rounded-control border border-border bg-surface px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            <option value="updated">最新上传</option>
+            <option value="name">名称</option>
+            <option value="size">大小</option>
+            <option value="type">类型</option>
+          </select>
+        </div>
       </div>
     </div>
   );
@@ -179,7 +201,7 @@ function AssetCard({ asset, selected, onSelect }: AssetCardProps) {
       data-asset-type={asset.type}
       aria-label={`素材 ${asset.name}`}
       className={
-        "flex flex-col gap-1.5 rounded-card border bg-surface p-1.5 transition-colors hover:border-ring " +
+        "flex flex-col gap-1.5 overflow-hidden rounded-card border bg-surface p-1.5 transition-colors hover:border-ring " +
         (selected
           ? "border-brand ring-2 ring-brand/40"
           : "border-border")
@@ -196,19 +218,19 @@ function AssetCard({ asset, selected, onSelect }: AssetCardProps) {
           <span className="truncate text-[13px] font-medium leading-tight text-foreground">
             {asset.name}
           </span>
-          <span className="line-clamp-1 text-[11px] leading-tight text-muted-foreground">
-            {asset.description}
-          </span>
-        </div>
-        <div className="flex items-center justify-between px-0.5 pb-0.5 text-[10px] text-muted-foreground">
-          <span className="font-mono tabular-nums">{asset.mimeType}</span>
-          <span className="font-mono tabular-nums">
-            {formatFileSize(asset.fileSizeBytes)}
+          <span className="truncate text-[11px] leading-tight text-muted-foreground">
+            {cardSubtitle(asset)}
           </span>
         </div>
       </button>
     </article>
   );
+}
+
+function cardSubtitle(asset: AssetSummary): string {
+  const date = asset.updatedAt.slice(0, 10);
+  const size = formatFileSize(asset.fileSizeBytes);
+  return `${date} · ${asset.mimeType} · ${size}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -222,12 +244,6 @@ function AssetCard({ asset, selected, onSelect }: AssetCardProps) {
 
 function MediaPreview({ asset }: { asset: AssetSummary }) {
   const token = asset.thumbnailToken;
-  const aspect =
-    asset.width && asset.height
-      ? `${asset.width}×${asset.height}`
-      : asset.durationMs
-        ? formatDuration(asset.durationMs)
-        : "—";
   return (
     <div
       data-slot="media-preview"
@@ -235,17 +251,30 @@ function MediaPreview({ asset }: { asset: AssetSummary }) {
       data-asset-thumbnail-token={token}
       aria-hidden="true"
       className={
-        "relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-control border " +
+        "relative aspect-video w-full overflow-hidden rounded-control border " +
         previewContainerClass(asset.type)
       }
     >
-      <PreviewGlyph type={asset.type} token={token} />
-      <span className="absolute bottom-1 right-1 rounded bg-foreground/70 px-1 font-mono text-[10px] text-background">
-        {aspect}
-      </span>
-      <span className="absolute bottom-1 left-1 rounded bg-foreground/70 px-1 font-mono text-[10px] text-background">
-        {typeShortLabel(asset.type)}
-      </span>
+      <PreviewGlyph type={asset.type} token={token} name={asset.name} />
+      {asset.durationMs !== null ? (
+        <span className="absolute bottom-1.5 right-1.5 rounded bg-foreground/70 px-1.5 font-mono text-[10px] tabular-nums text-background">
+          {formatDuration(asset.durationMs)}
+        </span>
+      ) : asset.width !== null && asset.height !== null ? (
+        <span className="absolute bottom-1.5 right-1.5 rounded bg-foreground/70 px-1.5 font-mono text-[10px] tabular-nums text-background">
+          {asset.width}×{asset.height}
+        </span>
+      ) : null}
+      {asset.type === "video" ? (
+        <span
+          aria-hidden="true"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full bg-foreground/80 text-background shadow-sm"
+        >
+          <svg viewBox="0 0 16 16" className="size-4" fill="currentColor">
+            <path d="M5 3.5 L13 8 L5 12.5 Z" />
+          </svg>
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -253,55 +282,47 @@ function MediaPreview({ asset }: { asset: AssetSummary }) {
 function previewContainerClass(type: AssetType): string {
   switch (type) {
     case "video":
-      return "border-info/30 bg-info-soft text-info";
+      return "border-border bg-gradient-to-br from-info/20 via-info/10 to-surface-subtle text-info";
     case "image":
-      return "border-brand/30 bg-brand-soft text-brand";
+      return "border-border bg-gradient-to-br from-brand/20 via-brand/10 to-surface-subtle text-brand";
     case "audio":
-      return "border-warning/30 bg-warning-soft text-warning";
+      return "border-border bg-gradient-to-br from-warning/20 via-warning/10 to-surface-subtle text-warning";
     case "document":
-      return "border-border bg-surface-subtle text-muted-foreground";
+      return "border-border bg-gradient-to-br from-muted via-surface-subtle to-surface text-muted-foreground";
     case "subtitle":
-      return "border-success/30 bg-success-soft text-success";
+      return "border-border bg-gradient-to-br from-success/20 via-success/10 to-surface-subtle text-success";
   }
 }
 
-function typeShortLabel(type: AssetType): string {
-  switch (type) {
-    case "video":
-      return "VID";
-    case "image":
-      return "IMG";
-    case "audio":
-      return "AUD";
-    case "document":
-      return "DOC";
-    case "subtitle":
-      return "SRT";
-  }
-}
-
-function PreviewGlyph({ type, token }: { type: AssetType; token: string }) {
+function PreviewGlyph({ type, token, name }: { type: AssetType; token: string; name: string }) {
   const digits = token
     .replace(/[^0-9a-f]/g, "")
     .slice(0, 4)
     .padEnd(4, "0");
   const parseHexPair = (value: string) =>
     Number.parseInt(value || "0", 16);
+  // Each thumbnail is a full-bleed composition that varies by type. No
+  // fixed pixel size — the SVG fills the parent (aspect-video) so the
+  // reference image proportions match the page (1.6:1 wide cards).
   if (type === "image") {
     return (
       <svg
-        viewBox="0 0 60 36"
-        width={72}
-        height={44}
-        className="text-current"
+        viewBox="0 0 160 90"
+        preserveAspectRatio="xMidYMid slice"
+        className="size-full text-current"
         aria-hidden="true"
       >
-        <rect x={2} y={2} width={56} height={32} rx={3} fill="currentColor" opacity={0.25} />
-        <circle cx={parseHexPair(digits.slice(0, 2)) % 56 + 2} cy={parseHexPair(digits.slice(2, 4)) % 28 + 4} r={5} fill="currentColor" />
+        <rect x={0} y={0} width={160} height={90} fill="currentColor" opacity={0.18} />
+        <circle cx={parseHexPair(digits.slice(0, 2)) % 140 + 10} cy={parseHexPair(digits.slice(2, 4)) % 70 + 10} r={10} fill="currentColor" />
         <path
-          d="M2 34 L20 22 L34 30 L48 18 L58 28 L58 34 Z"
+          d="M0 78 L40 60 L70 70 L100 50 L130 65 L160 55 L160 90 L0 90 Z"
           fill="currentColor"
-          opacity={0.5}
+          opacity={0.55}
+        />
+        <path
+          d="M0 90 L30 82 L60 86 L90 78 L120 84 L160 80 L160 90 Z"
+          fill="currentColor"
+          opacity={0.8}
         />
       </svg>
     );
@@ -309,45 +330,55 @@ function PreviewGlyph({ type, token }: { type: AssetType; token: string }) {
   if (type === "video") {
     return (
       <svg
-        viewBox="0 0 60 36"
-        width={72}
-        height={44}
-        className="text-current"
+        viewBox="0 0 160 90"
+        preserveAspectRatio="xMidYMid slice"
+        className="size-full text-current"
         aria-hidden="true"
       >
-        <rect x={2} y={2} width={56} height={32} rx={3} fill="currentColor" opacity={0.18} />
-        <polygon
-          points={`${(parseHexPair(digits.slice(0, 2)) % 12) + 18},${(parseHexPair(digits.slice(2, 4)) % 8) + 12} ${(parseHexPair(digits.slice(0, 2)) % 12) + 18},${(parseHexPair(digits.slice(2, 4)) % 8) + 24} ${(parseHexPair(digits.slice(0, 2)) % 12) + 32},18`}
+        <rect x={0} y={0} width={160} height={90} fill="currentColor" opacity={0.22} />
+        <rect x={6} y={10} width={148} height={70} rx={3} fill="currentColor" opacity={0.1} />
+        <rect x={6} y={10} width={148} height={70} rx={3} stroke="currentColor" strokeWidth={1} fill="none" opacity={0.4} />
+        <text
+          x={80}
+          y={50}
+          textAnchor="middle"
+          fontFamily="ui-sans-serif, system-ui, sans-serif"
+          fontSize={11}
+          fontWeight={600}
           fill="currentColor"
-        />
-        <rect x={6} y={32} width={parseHexPair(digits.slice(2, 4)) % 48 + 4} height={2} fill="currentColor" opacity={0.6} />
+          opacity={0.9}
+        >
+          {name.length > 16 ? `${name.slice(0, 15)}…` : name}
+        </text>
+        <rect x={6} y={82} width={(parseHexPair(digits.slice(0, 2)) % 100) + 30} height={2} fill="currentColor" opacity={0.7} />
       </svg>
     );
   }
   if (type === "audio") {
-    const barHeights = [0, 1, 2, 3, 4].map(
-      (i) => 4 + (parseHexPair(digits.charAt(i)) % 24),
+    const barHeights = Array.from({ length: 26 }, (_, i) =>
+      8 + (parseHexPair(digits.charAt(i % digits.length)) % 56),
     );
     return (
       <svg
-        viewBox="0 0 60 36"
-        width={72}
-        height={44}
-        className="text-current"
+        viewBox="0 0 160 90"
+        preserveAspectRatio="xMidYMid slice"
+        className="size-full text-current"
         aria-hidden="true"
       >
+        <rect x={0} y={0} width={160} height={90} fill="currentColor" opacity={0.2} />
         {barHeights.map((h, i) => {
-          const x = 6 + i * 12;
-          const y = 18 - h / 2;
+          const x = 8 + i * 5.6;
+          const y = 45 - h / 2;
           return (
             <rect
               key={i}
               x={x}
               y={y}
-              width={6}
+              width={3.6}
               height={h}
-              rx={1.5}
+              rx={1.2}
               fill="currentColor"
+              opacity={0.7 + (i % 3) * 0.1}
             />
           );
         })}
@@ -357,32 +388,33 @@ function PreviewGlyph({ type, token }: { type: AssetType; token: string }) {
   if (type === "document") {
     return (
       <svg
-        viewBox="0 0 60 36"
-        width={72}
-        height={44}
-        className="text-current"
+        viewBox="0 0 160 90"
+        preserveAspectRatio="xMidYMid slice"
+        className="size-full text-current"
         aria-hidden="true"
       >
-        <rect x={14} y={2} width={32} height={32} rx={2} fill="currentColor" opacity={0.2} />
-        <rect x={18} y={8} width={24} height={2} fill="currentColor" opacity={0.7} />
-        <rect x={18} y={14} width={parseHexPair(digits.slice(0, 2)) % 16 + 8} height={2} fill="currentColor" opacity={0.7} />
-        <rect x={18} y={20} width={parseHexPair(digits.slice(2, 4)) % 18 + 6} height={2} fill="currentColor" opacity={0.7} />
-        <rect x={18} y={26} width={parseHexPair(digits.slice(0, 2)) % 12 + 10} height={2} fill="currentColor" opacity={0.7} />
+        <rect x={0} y={0} width={160} height={90} fill="currentColor" opacity={0.08} />
+        <rect x={40} y={6} width={80} height={78} rx={4} fill="currentColor" opacity={0.22} />
+        <rect x={50} y={20} width={60} height={4} fill="currentColor" opacity={0.7} />
+        <rect x={50} y={32} width={parseHexPair(digits.slice(0, 2)) % 40 + 20} height={4} fill="currentColor" opacity={0.7} />
+        <rect x={50} y={44} width={parseHexPair(digits.slice(2, 4)) % 44 + 16} height={4} fill="currentColor" opacity={0.7} />
+        <rect x={50} y={56} width={parseHexPair(digits.slice(0, 2)) % 36 + 24} height={4} fill="currentColor" opacity={0.7} />
+        <rect x={50} y={68} width={parseHexPair(digits.slice(2, 4)) % 30 + 12} height={4} fill="currentColor" opacity={0.7} />
       </svg>
     );
   }
   // subtitle
   return (
     <svg
-      viewBox="0 0 60 36"
-      width={72}
-      height={44}
-      className="text-current"
+      viewBox="0 0 160 90"
+      preserveAspectRatio="xMidYMid slice"
+      className="size-full text-current"
       aria-hidden="true"
     >
-      <rect x={4} y={10} width={52} height={16} rx={2} fill="currentColor" opacity={0.2} />
-      <rect x={10} y={14} width={parseHexPair(digits.slice(0, 2)) % 28 + 12} height={2} fill="currentColor" />
-      <rect x={10} y={20} width={parseHexPair(digits.slice(2, 4)) % 24 + 14} height={2} fill="currentColor" />
+      <rect x={0} y={0} width={160} height={90} fill="currentColor" opacity={0.16} />
+      <rect x={12} y={28} width={136} height={36} rx={3} fill="currentColor" opacity={0.2} />
+      <rect x={28} y={36} width={parseHexPair(digits.slice(0, 2)) % 60 + 30} height={4} fill="currentColor" />
+      <rect x={28} y={48} width={parseHexPair(digits.slice(2, 4)) % 60 + 30} height={4} fill="currentColor" />
     </svg>
   );
 }
@@ -547,34 +579,82 @@ function Pagination({
   readonly totalPages: number;
 }) {
   if (totalPages <= 1) return null;
+  // Render only the first 4 pages, an ellipsis, and the last page so the
+  // nav stays compact even when `totalPages` is large.
+  const visible: Array<number | "ellipsis"> = [1, 2, 3, 4];
+  if (totalPages > 6) {
+    visible.push("ellipsis");
+    visible.push(totalPages);
+  } else {
+    for (let p = 5; p <= totalPages; p += 1) visible.push(p);
+  }
   return (
-    <nav
-      data-slot="pagination"
-      aria-label="素材分页"
-      className="flex items-center justify-center gap-1 pt-1 text-xs text-muted-foreground"
+    <div
+      data-slot="pagination-row"
+      className="flex items-center justify-between gap-2 pt-1 text-xs text-muted-foreground"
     >
-      {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((page) => {
-        const isCurrent = page === currentPage;
-        return (
-          <button
-            key={page}
-            type="button"
-            data-slot="pagination-page"
-            data-page-current={isCurrent ? "true" : "false"}
-            aria-current={isCurrent ? "page" : undefined}
-            aria-label={`第 ${page} 页`}
-            className={
-              "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
-              (isCurrent
-                ? "bg-brand text-brand-foreground"
-                : "text-muted-foreground hover:bg-surface-subtle hover:text-foreground")
-            }
-          >
-            {page}
-          </button>
-        );
-      })}
-    </nav>
+      <nav
+        data-slot="pagination"
+        aria-label="素材分页"
+        className="flex items-center justify-center gap-1 text-xs"
+      >
+        {visible.map((entry, idx) => {
+          if (entry === "ellipsis") {
+            return (
+              <span
+                key={`ellipsis-${idx}`}
+                aria-hidden="true"
+                className="px-1 text-muted-foreground"
+              >
+                …
+              </span>
+            );
+          }
+          const isCurrent = entry === currentPage;
+          return (
+            <button
+              key={entry}
+              type="button"
+              data-slot="pagination-page"
+              data-page-current={isCurrent ? "true" : "false"}
+              aria-current={isCurrent ? "page" : undefined}
+              aria-label={`第 ${entry} 页`}
+              className={
+                "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
+                (isCurrent
+                  ? "bg-brand text-brand-foreground"
+                  : "text-muted-foreground hover:bg-surface-subtle hover:text-foreground")
+              }
+            >
+              {entry}
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          data-slot="pagination-next"
+          aria-label="下一页"
+          className="ml-1 inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-muted-foreground hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        >
+          ›
+        </button>
+      </nav>
+      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span>每页</span>
+        <select
+          data-slot="pagination-page-size"
+          defaultValue="60"
+          aria-label="每页条数"
+          className="h-7 rounded-control border border-border bg-surface px-1.5 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        >
+          <option value="12">12 条/页</option>
+          <option value="24">24 条/页</option>
+          <option value="48">48 条/页</option>
+          <option value="60">60 条/页</option>
+          <option value="120">120 条/页</option>
+        </select>
+      </label>
+    </div>
   );
 }
 

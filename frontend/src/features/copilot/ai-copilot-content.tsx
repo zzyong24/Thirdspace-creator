@@ -31,6 +31,7 @@
 
 import * as React from "react";
 import {
+  ArrowUp,
   BookOpenText,
   FileText,
   ListChecks,
@@ -41,7 +42,6 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -256,54 +256,66 @@ export function AICopilotContent() {
         data-slot="prompt-composer"
         data-region="prompt"
         data-slot-region="copilot-region"
-        className="h-[124px] border border-border bg-surface-muted"
+        className="border border-border bg-surface p-4"
       >
-        <CardContent className="p-3">
+        <CardContent className="p-0">
           <form
             onSubmit={(event) => event.preventDefault()}
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-3"
             data-slot="prompt-form"
           >
             <textarea
               id="ai-copilot-prompt"
               name="prompt"
               defaultValue={PROMPT_VALUE}
-              rows={1}
+              rows={2}
               aria-label="我能帮你做什么"
               placeholder="我能帮你做什么？"
-              className="h-10 w-full resize-none border-0 border-l-2 border-brand/30 bg-transparent px-2 py-2 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+              className="min-h-12 w-full resize-none border-0 border-l-2 border-brand/40 bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               data-slot="prompt-input"
             />
             <div
               className="flex flex-wrap items-center justify-between gap-2"
               data-slot="suggested-action-chips"
             >
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {SUGGESTED_ACTIONS.map((action) => (
-                  <Button
+                  <button
                     key={action.id}
                     type="button"
-                    variant="outline"
-                    size="sm"
                     data-slot="suggested-chip"
                     data-chip-id={action.id}
-                  className="h-8 px-3 text-xs"
+                    className="inline-flex h-7 items-center gap-1 rounded-lg border border-border bg-surface px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                   >
+                    <ActionIcon
+                      kind={
+                        action.id === "analyze"
+                          ? "wand"
+                          : action.id === "script"
+                            ? "file"
+                            : action.id === "assets"
+                              ? "book"
+                              : action.id === "title"
+                                ? "trending"
+                                : action.id === "cover"
+                                  ? "wand"
+                                  : "trending"
+                      }
+                    />
                     {action.label}
-                  </Button>
+                  </button>
                 ))}
               </div>
-              <Button
+              <button
                 type="submit"
-                size="sm"
                 data-slot="submit-button"
                 data-testid="submit-button"
                 aria-label="提交提示给 Copilot"
-                className="size-8 rounded-full p-0"
+                className="flex size-9 items-center justify-center rounded-full bg-brand text-brand-foreground transition-colors hover:bg-brand/90 focus:outline-none focus:ring-0 focus-visible:ring-0"
               >
-                <Sparkles className="size-3.5" aria-hidden="true" />
+                <ArrowUp className="size-4" aria-hidden="true" />
                 <span className="sr-only">生成</span>
-              </Button>
+              </button>
             </div>
           </form>
         </CardContent>
@@ -315,7 +327,7 @@ export function AICopilotContent() {
         data-slot="copilot-dashboard"
         data-region="dashboard"
         data-slot-region="copilot-region"
-        className="grid h-[360px] grid-cols-1 gap-3 md:grid-cols-3"
+        className="grid h-[300px] grid-cols-1 gap-3 md:grid-cols-3"
       >
         <h3 id="ai-copilot-dashboard-title" className="sr-only">
           Copilot 控制台
@@ -326,29 +338,40 @@ export function AICopilotContent() {
           data-slot="recommended-commands"
           className="overflow-hidden border border-border"
         >
-          <CardHeader className="px-3 pb-1 pt-3">
-            <CardTitle className="text-[13px] font-semibold">
-              推荐指令
-            </CardTitle>
-            <CardDescription className="text-[11px]">
-              根据当前项目生成的常用操作
-            </CardDescription>
+          <CardHeader className="px-3 pb-1 pt-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <CardTitle className="text-[12px] font-semibold">
+                  推荐指令
+                </CardTitle>
+                <CardDescription className="text-[10px]">
+                  根据当前项目生成的常用操作
+                </CardDescription>
+              </div>
+              <button
+                type="button"
+                data-slot="recommended-view-all"
+                className="text-[10px] font-medium text-brand hover:underline focus:outline-none"
+              >
+                查看全部 →
+              </button>
+            </div>
           </CardHeader>
-          <CardContent className="flex flex-col gap-1 px-3 pb-3 pt-0">
+          <CardContent className="flex flex-col gap-1 px-3 pb-2.5 pt-0">
             {RECOMMENDED_COMMANDS.map((cmd) => (
               <button
                 key={cmd.id}
                 type="button"
                 data-slot="recommended-command"
                 data-command-id={cmd.id}
-                className="flex min-h-12 items-start gap-2 rounded-lg bg-surface px-2 py-1.5 text-left transition-colors hover:bg-surface-muted"
+                className="flex min-h-9 items-start gap-1.5 rounded-md bg-surface px-1.5 py-1 text-left transition-colors hover:bg-surface-muted"
               >
                 <ActionIcon kind={cmd.icon} />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[13px] font-medium text-foreground">
+                <div className="flex flex-col gap-0">
+                  <span className="text-[11px] font-medium text-foreground leading-tight">
                     {cmd.title}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-[9.5px] leading-tight text-muted-foreground">
                     {cmd.description}
                   </span>
                 </div>
@@ -359,25 +382,36 @@ export function AICopilotContent() {
 
         {/* RecentTasks */}
         <Card data-slot="recent-tasks" className="overflow-hidden border border-border">
-          <CardHeader className="px-3 pb-1.5 pt-3">
-            <CardTitle className="text-[13px] font-semibold">最近任务</CardTitle>
-            <CardDescription className="text-[11px]">
-              过去 24 小时内的生成记录
-            </CardDescription>
+          <CardHeader className="px-3 pb-1 pt-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <CardTitle className="text-[12px] font-semibold">最近任务</CardTitle>
+                <CardDescription className="text-[10px]">
+                  过去 24 小时内的生成记录
+                </CardDescription>
+              </div>
+              <button
+                type="button"
+                data-slot="recent-view-all"
+                className="text-[10px] font-medium text-brand hover:underline focus:outline-none"
+              >
+                查看全部 →
+              </button>
+            </div>
           </CardHeader>
-          <CardContent className="flex flex-col gap-1.5 px-3 pb-3 pt-0">
+          <CardContent className="flex flex-col gap-1 px-3 pb-2.5 pt-0">
             {RECENT_TASKS.map((task) => (
               <div
                 key={task.id}
                 data-slot="recent-task"
                 data-task-id={task.id}
-                className="flex items-start justify-between gap-2 rounded-lg border border-border bg-surface p-2"
+                className="flex items-start justify-between gap-2 rounded-md border border-border bg-surface px-2 py-1"
               >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[13px] font-medium text-foreground">
+                <div className="flex flex-col gap-0">
+                  <span className="text-[11px] font-medium text-foreground leading-tight">
                     {task.title}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-[9.5px] leading-tight text-muted-foreground">
                     {task.meta}
                   </span>
                 </div>
@@ -389,7 +423,7 @@ export function AICopilotContent() {
                         ? "default"
                         : "destructive"
                   }
-                  className="text-[10px]"
+                  className="px-1.5 py-0 text-[9px]"
                 >
                   {task.status}
                 </Badge>
@@ -403,26 +437,37 @@ export function AICopilotContent() {
           data-slot="continuing-tasks"
           className="overflow-hidden border border-border"
         >
-          <CardHeader className="px-3 pb-1.5 pt-3">
-            <CardTitle className="text-[13px] font-semibold">继续任务</CardTitle>
-            <CardDescription className="text-[11px]">
-              跨设备同步进行中的工作
-            </CardDescription>
+          <CardHeader className="px-3 pb-1 pt-2.5">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <CardTitle className="text-[12px] font-semibold">继续任务</CardTitle>
+                <CardDescription className="text-[10px]">
+                  跨设备同步进行中的工作
+                </CardDescription>
+              </div>
+              <button
+                type="button"
+                data-slot="continuing-view-all"
+                className="text-[10px] font-medium text-brand hover:underline focus:outline-none"
+              >
+                查看全部 →
+              </button>
+            </div>
           </CardHeader>
-          <CardContent className="flex flex-col gap-1.5 px-3 pb-3 pt-0">
+          <CardContent className="flex flex-col gap-1 px-3 pb-2.5 pt-0">
             {CONTINUING_TASKS.map((task) => (
               <div
                 key={task.id}
                 data-slot="continuing-task"
                 data-task-id={task.id}
-                className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-2"
+                className="flex flex-col gap-1 rounded-md border border-border bg-surface px-2 py-1.5"
               >
-                <span className="text-[13px] font-medium text-foreground">
+                <span className="text-[11px] font-medium text-foreground leading-tight">
                   {task.title}
                 </span>
                 <div className="flex items-center gap-2">
                   <div
-                    className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-muted"
+                    className="h-1 flex-1 overflow-hidden rounded-full bg-surface-muted"
                     role="progressbar"
                     aria-valuenow={task.progress}
                     aria-valuemin={0}
@@ -433,7 +478,7 @@ export function AICopilotContent() {
                       style={{ width: `${task.progress}%` }}
                     />
                   </div>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-[9.5px] text-muted-foreground">
                     {task.progress}%
                   </span>
                 </div>
@@ -450,7 +495,7 @@ export function AICopilotContent() {
           data-slot="quick-entries"
           data-region="quick-entries"
           data-slot-region="copilot-region"
-          className="grid grid-cols-6 gap-1.5 rounded-xl border border-border p-3"
+          className="grid grid-cols-6 gap-1 rounded-lg border border-border p-2"
         >
         <h3 id="ai-copilot-quick-entries-title" className="sr-only">
           快捷入口
@@ -461,10 +506,12 @@ export function AICopilotContent() {
               type="button"
               data-slot="quick-entry"
               data-entry-id={entry.id}
-              className="flex flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-center transition-colors hover:bg-surface-muted"
+              className="flex flex-col items-center gap-0.5 rounded-md px-1 py-1 text-center transition-colors hover:bg-surface-muted"
             >
-              <QuickIcon kind={entry.icon} />
-              <span className="text-[11px] font-medium text-foreground">
+              <span className="text-brand">
+                <QuickIcon kind={entry.icon} />
+              </span>
+              <span className="text-[10px] font-medium text-foreground leading-tight">
                 {entry.title}
               </span>
             </button>
@@ -477,22 +524,25 @@ export function AICopilotContent() {
           data-slot="smart-recommendation"
           data-region="recommendation"
           data-slot-region="copilot-region"
-          className="flex flex-col gap-1.5 rounded-xl border border-border p-3"
+          className="flex flex-col gap-1.5 rounded-lg border border-border p-2"
         >
         <h3
           id="ai-copilot-smart-recommendation-title"
-          className="text-[11px] font-semibold uppercase tracking-wide text-text-subtle"
+          className="text-[10px] font-semibold uppercase tracking-wide text-text-subtle"
         >
           智能推荐
         </h3>
-          <div className="flex gap-2">
+          <p className="text-[10px] leading-snug text-muted-foreground">
+            检测到你最近在研究「AI 浏览器」，要我帮你：
+          </p>
+          <div className="flex flex-wrap gap-1.5">
             {SMART_RECOMMENDATIONS.map((rec) => (
               <button
                 key={rec.id}
                 type="button"
                 data-slot="smart-recommendation-item"
                 data-rec-id={rec.id}
-                className="rounded-md border border-brand/30 px-2 py-1 text-[11px] font-medium text-brand"
+                className="rounded-md border border-brand/30 px-2 py-0.5 text-[10px] font-medium text-brand transition-colors hover:bg-brand-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 title={rec.body}
               >
                 {rec.title}

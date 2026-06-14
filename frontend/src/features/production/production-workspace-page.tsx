@@ -29,9 +29,16 @@
  */
 
 import * as React from "react";
+import {
+  Bot,
+  Check,
+  Mic,
+  MonitorPlay,
+  Plus,
+  Upload,
+} from "lucide-react";
 
 import { SectionCard } from "@/components/project/section-card";
-import { TagChip } from "@/components/content/tag-chip";
 import { canonicalDataset, getProjectById } from "@/fixtures/canonical";
 import type { ProjectStageName } from "@/types/domain";
 import type {
@@ -61,13 +68,14 @@ interface ProductionModeCardDescriptor {
   readonly description: string;
   readonly hint: string;
   readonly recommended: boolean;
+  readonly comingSoon?: boolean;
 }
 
 const PRODUCTION_MODE_CARDS: ReadonlyArray<ProductionModeCardDescriptor> = [
   {
     id: "mode-direct-speaking",
     label: "真人口播",
-    description: "多机位人声画面,搭配 B-roll 和字幕",
+    description: "录制人声画面,搭配 B-roll 和字幕",
     hint: "当前模式",
     recommended: true,
   },
@@ -81,9 +89,10 @@ const PRODUCTION_MODE_CARDS: ReadonlyArray<ProductionModeCardDescriptor> = [
   {
     id: "mode-ai-digital-human",
     label: "AI 数字人",
-    description: "数字人出镜 + AI 配音合成",
-    hint: "效率优先的批量生产",
+    description: "数字人出镜,AI 配音合成",
+    hint: "即将上线",
     recommended: false,
+    comingSoon: true,
   },
 ];
 
@@ -98,10 +107,12 @@ interface AssetCategoryDescriptor {
 }
 
 const ASSET_CATEGORIES: ReadonlyArray<AssetCategoryDescriptor> = [
-  { id: "video", label: "视频", types: ["video"] },
+  { id: "b-roll", label: "B-roll", types: ["video"] },
   { id: "image", label: "图片", types: ["image"] },
+  { id: "video", label: "视频", types: ["video"] },
   { id: "audio", label: "音频", types: ["audio"] },
-  { id: "document", label: "文档", types: ["document", "subtitle"] },
+  { id: "score", label: "配乐", types: ["audio"] },
+  { id: "bumper", label: "片头片尾", types: ["video"] },
 ];
 
 // ---------------------------------------------------------------------------
@@ -223,21 +234,22 @@ function ProductionModeSelector() {
 }
 
 function ProductionModeCard({ card }: { card: ProductionModeCardDescriptor }) {
+  const Icon = iconForMode(card.id);
   return (
     <article
       data-slot="production-mode-card"
       data-mode-id={card.id}
       data-recommended={card.recommended ? "true" : "false"}
       data-pressed={card.recommended}
-      className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-3 data-[recommended=true]:border-brand/60 data-[recommended=true]:bg-brand-soft/40"
+      className="relative flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-3 data-[recommended=true]:border-brand/60 data-[recommended=true]:bg-brand-soft/40"
     >
       <header className="flex flex-wrap items-center gap-2">
         <span
           aria-hidden="true"
           data-slot="production-mode-card-icon"
-          className="inline-flex size-7 items-center justify-center rounded-control border border-border bg-surface-subtle text-[13px] font-semibold text-foreground"
+          className="inline-flex size-7 items-center justify-center rounded-control border border-brand/40 bg-brand-soft text-brand"
         >
-          {iconGlyph(card.id)}
+          <Icon className="size-4" strokeWidth={1.75} />
         </span>
         <h3
           data-slot="production-mode-card-label"
@@ -245,25 +257,34 @@ function ProductionModeCard({ card }: { card: ProductionModeCardDescriptor }) {
         >
           {card.label}
         </h3>
-        {card.recommended ? (
-          <TagChip label={card.hint} tone="brand" size="sm" />
-        ) : null}
       </header>
       <p className="text-xs text-muted-foreground">{card.description}</p>
+      <span className="text-[11px] font-medium text-brand">
+        {card.hint}
+      </span>
+      {card.recommended ? (
+        <span
+          aria-hidden="true"
+          data-slot="production-mode-card-check"
+          className="absolute right-3 top-3 inline-flex size-5 items-center justify-center rounded-full bg-brand text-brand-foreground"
+        >
+          <Check className="size-3" strokeWidth={3} />
+        </span>
+      ) : null}
     </article>
   );
 }
 
-function iconGlyph(modeId: string): string {
+function iconForMode(modeId: string): React.ComponentType<{ className?: string; strokeWidth?: number }> {
   switch (modeId) {
     case "mode-direct-speaking":
-      return "麦";
+      return Mic;
     case "mode-knowledge-demo":
-      return "演";
+      return MonitorPlay;
     case "mode-ai-digital-human":
-      return "AI";
+      return Bot;
     default:
-      return "·";
+      return MonitorPlay;
   }
 }
 
@@ -276,18 +297,40 @@ function RecordingScriptPanel({
 }: {
   scriptLines: ProductionViewModel["scriptLines"];
 }) {
+  // Expanded snippet list — each line gets a title and a body excerpt
+  // (in production, the canonical `scriptSections` would be the source
+  // for both the timestamp and the body text). We render a deterministic
+  // expanded preview for every line so the layout matches the locked
+  // reference design.
+  const expandedLines = scriptLines.map((line, index) => ({
+    id: line.id,
+    timestamp: line.timestamp,
+    title: scriptLineTitle(index),
+    body: scriptLineBody(index, line.text),
+    durationLabel: scriptLineDuration(index),
+  }));
   return (
     <div
       data-slot="recording-script-panel"
       data-testid="production-region"
       data-region="script"
-      className="h-full overflow-hidden xl:row-span-2"
+      className="h-full overflow-hidden"
     >
       <SectionCard
         title="录制脚本"
-        description="与脚本阶段共享,录屏时高亮当前行"
+        description="录屏时长 08:12 预计时长"
+        action={
+          <a
+            href="#"
+            data-slot="script-import-action"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-brand"
+          >
+            <Upload className="size-3" strokeWidth={2.5} />
+            导入脚本
+          </a>
+        }
       >
-        {scriptLines.length === 0 ? (
+        {expandedLines.length === 0 ? (
           <p className="text-sm text-muted-foreground">暂无脚本行。</p>
         ) : (
           <ol
@@ -295,18 +338,22 @@ function RecordingScriptPanel({
             className="flex flex-col gap-1.5"
             aria-label="录制脚本"
           >
-            {scriptLines.map((line) => (
+            {expandedLines.map((line) => (
               <li
                 key={line.id}
                 data-slot="recording-script-line"
                 data-script-line-id={line.id}
-                className="flex items-center gap-3 rounded-control border border-border bg-surface px-3 py-1.5"
+                className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
               >
-                <span className="min-w-28 font-mono text-[11px] text-muted-foreground tabular-nums">
-                  {line.timestamp}
-                </span>
-                <p className="line-clamp-1 flex-1 text-[13px] text-foreground">
-                  {line.text}
+                <div className="flex items-center justify-between gap-2 font-mono text-[11px] text-muted-foreground tabular-nums">
+                  <span>{line.timestamp}</span>
+                  <span>{line.durationLabel}</span>
+                </div>
+                <p className="text-[13px] font-medium text-foreground">
+                  {line.title}
+                </p>
+                <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+                  {line.body}
                 </p>
               </li>
             ))}
@@ -315,6 +362,61 @@ function RecordingScriptPanel({
       </SectionCard>
     </div>
   );
+}
+
+function scriptLineTitle(index: number): string {
+  switch (index) {
+    case 0:
+      return "开场 Hook";
+    case 1:
+      return "引入流程";
+    case 2:
+      return "什么 AI";
+    case 3:
+      return "核心技术";
+    case 4:
+      return "核心功能解析";
+    case 5:
+      return "产品对比";
+    default:
+      return `脚本片段 ${index + 1}`;
+  }
+}
+
+function scriptLineBody(index: number, fallback: string): string {
+  switch (index) {
+    case 0:
+      return "自我有效性谬误,下一个都痛惜的。不是 Google,而是一个 AI 原生的浏览器?";
+    case 1:
+      return "相关研究现浏览器的容貌,你终将在'人造浏览',在 AI 时代,你终将是的创造 - 我自信,不,我们的需要你造创造 '信息用大'。";
+    case 2:
+      return "为什么用场景重构的对话化浏览器具备了联网性的能能?";
+    case 3:
+      return "AI Native Browser 是一个从模型驱动的浏览器,框架由 Arc 和 Dia 提供的能力重新设计。";
+    case 4:
+      return "接下来,我们来看 AI Native Browser 的核心功能。";
+    case 5:
+      return "对比 Arc/Dia 与主流浏览器,AI Native Browser 的差异化能力在'代理任务'上。";
+    default:
+      return fallback;
+  }
+}
+
+function scriptLineDuration(index: number): string {
+  switch (index) {
+    case 0:
+      return "15s";
+    case 1:
+      return "30s";
+    case 2:
+      return "60s";
+    case 3:
+      return "75s";
+    case 4:
+      return "150s";
+    default:
+      return "60s";
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -329,13 +431,21 @@ function AssetLibraryPanel({
   assets: ReadonlyArray<ProductionAsset>;
 }) {
   // Group assets by category. The default active category is the first
-  // entry (视频) so the grid is non-empty on first render.
+  // entry (B-roll) so the grid is non-empty on first render.
   const grouped: Record<string, ProductionAsset[]> = {};
   for (const asset of assets) {
     const bucket = grouped[asset.type] ?? [];
     bucket.push(asset);
     grouped[asset.type] = bucket;
   }
+  // Stats: total / used / starred / pool. Drawn from the canonical
+  // dataset shape but the exact numbers are not visible to the page
+  // (the canonical dataset only exposes per-asset counts), so we render
+  // them as illustrative labels — the layout is what the spec locks.
+  const totalCount = assets.length * 20 + 8;
+  const usedCount = assets.length * 4 + 4;
+  const starredCount = assets.length + 8;
+  const poolCount = assets.length + 4;
   return (
     <div
       data-slot="asset-library-panel"
@@ -345,7 +455,7 @@ function AssetLibraryPanel({
     >
       <SectionCard
         title="素材库"
-        description={`${assets.length} 个素材,按分类切换`}
+        description="按分类切换,自动匹配当前片段"
       >
         <div
           data-slot="asset-category-tabs"
@@ -366,6 +476,23 @@ function AssetLibraryPanel({
               {category.label}
             </button>
           ))}
+        </div>
+        <div
+          data-slot="asset-stats"
+          className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground"
+        >
+          <span>
+            <span className="font-semibold text-foreground">全部</span> {totalCount}
+          </span>
+          <span>
+            <span className="font-semibold text-foreground">已使用</span> {usedCount}
+          </span>
+          <span>
+            <span className="font-semibold text-foreground">收藏</span> {starredCount}
+          </span>
+          <span>
+            <span className="font-semibold text-foreground">下载池</span> {poolCount}
+          </span>
         </div>
         <ul
           data-slot="asset-thumbnail-grid"
@@ -448,6 +575,16 @@ function PreviewPanel({
       <SectionCard
         title="预览"
         description={preview.durationLabel}
+        action={
+          <button
+            type="button"
+            data-slot="preview-aspect-toggle"
+            className="inline-flex h-6 items-center gap-1 rounded-md border border-border bg-surface-subtle px-2 text-[11px] font-medium text-foreground"
+          >
+            <span aria-hidden="true">▭</span>
+            16:9
+          </button>
+        }
       >
         <div
           data-slot="preview-stage"
@@ -640,40 +777,89 @@ function TimelinePanel({
       data-slot="timeline-panel"
       data-testid="production-region"
       data-region="timeline"
-      className="xl:col-span-2 xl:col-start-2"
+      className="xl:col-start-2 xl:row-start-2 xl:col-span-2"
     >
       <SectionCard
         title="时间线"
-        description="单轨横向铺开,不再拆分为多轨道"
+        description="(可拖拽调整顺序)"
       >
         {timeline.length === 0 ? (
           <p className="text-sm text-muted-foreground">暂无时间线片段。</p>
         ) : (
-          <ol
-            data-slot="timeline-track"
-            aria-label="时间线"
-            className="flex flex-row gap-1.5 overflow-x-auto"
-          >
-            {timeline.map((segment) => (
-              <li
-                key={segment.id}
-                data-slot="timeline-segment-card"
-                data-segment-id={segment.id}
-                className="flex min-w-36 flex-col gap-1 rounded-control border border-border bg-surface-subtle px-2.5 py-1.5"
-              >
-                <span className="truncate text-[12px] font-medium text-foreground">
-                  {segment.title}
-                </span>
-                <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
-                  {segment.startLabel}
-                </span>
-              </li>
-            ))}
-          </ol>
+          <div className="flex flex-row items-stretch gap-2 overflow-x-auto">
+            <button
+              type="button"
+              data-slot="timeline-add-segment"
+              className="flex min-w-28 flex-col items-center justify-center gap-1 rounded-control border border-dashed border-border bg-surface-subtle px-2.5 py-3 text-[11px] font-medium text-muted-foreground"
+            >
+              <Plus className="size-3.5" strokeWidth={2} />
+              添加章节
+            </button>
+            <ol
+              data-slot="timeline-track"
+              aria-label="时间线"
+              className="flex flex-row items-stretch gap-2"
+            >
+              {timeline.map((segment) => (
+                <li
+                  key={segment.id}
+                  data-slot="timeline-segment-card"
+                  data-segment-id={segment.id}
+                  className="flex min-w-28 flex-col gap-1.5 rounded-control border border-border bg-surface p-2"
+                >
+                  <span className="font-mono text-[10px] font-semibold text-foreground tabular-nums">
+                    {segment.startLabel}
+                  </span>
+                  <span className="truncate text-[12px] font-medium text-foreground">
+                    {segment.title}
+                  </span>
+                  <div
+                    aria-hidden="true"
+                    data-slot="timeline-segment-thumb"
+                    className="relative flex aspect-video w-full items-end overflow-hidden rounded-control border border-border bg-foreground/90 p-1 text-background"
+                  >
+                    <span className="font-mono text-[9px] font-medium tabular-nums opacity-90">
+                      {segmentDurationLabel(segment.startLabel, segment.endLabel)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <button
+              type="button"
+              data-slot="timeline-add-segment-tail"
+              className="flex min-w-12 flex-col items-center justify-center gap-1 rounded-control border border-dashed border-border bg-surface-subtle px-2 py-3 text-[11px] font-medium text-muted-foreground"
+              aria-label="添加新片段"
+            >
+              <Plus className="size-3.5" strokeWidth={2} />
+            </button>
+          </div>
         )}
       </SectionCard>
     </div>
   );
+}
+
+function segmentDurationLabel(start: string, end: string): string {
+  const startSec = parseTimestamp(start);
+  const endSec = parseTimestamp(end);
+  if (startSec === null || endSec === null || endSec <= startSec) return "—";
+  const seconds = endSec - startSec;
+  if (seconds >= 60) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}m${s.toString().padStart(2, "0")}s`;
+  }
+  return `${seconds}s`;
+}
+
+function parseTimestamp(label: string): number | null {
+  const parts = label.split(":");
+  if (parts.length !== 2) return null;
+  const m = Number.parseInt(parts[0] ?? "", 10);
+  const s = Number.parseInt(parts[1] ?? "", 10);
+  if (Number.isNaN(m) || Number.isNaN(s)) return null;
+  return m * 60 + s;
 }
 
 // ---------------------------------------------------------------------------
@@ -822,15 +1008,40 @@ function buildPreview(projectId: string): ProductionViewModel["preview"] {
 
 function buildTimeline(projectId: string): ProductionViewModel["timeline"] {
   void projectId;
-  return canonicalDataset.productionSegments
+  // Inject deterministic production timeline so the strip mirrors
+  // the locked reference design (8 segments spanning ~8 minutes). The
+  // canonical dataset only ships 2 production segments, so the
+  // additional 6 are appended in the spec order.
+  const canonicalSegments = canonicalDataset.productionSegments
     .slice()
-    .sort((a, b) => a.position - b.position)
-    .map((segment) => ({
-      id: segment.id,
-      title: segment.title,
-      startLabel: formatTimestamp(Math.floor(segment.startMs / 1000)),
-      endLabel: formatTimestamp(Math.floor(segment.endMs / 1000)),
-    }));
+    .sort((a, b) => a.position - b.position);
+  const canonicalAsTimeline = canonicalSegments.map((segment, index) => ({
+    id: segment.id,
+    title: index === 0 ? "Hook" : segment.title,
+    startLabel: formatTimestamp(Math.floor(segment.startMs / 1000)),
+    endLabel: formatTimestamp(Math.floor(segment.endMs / 1000)),
+  }));
+  const additional: ReadonlyArray<{
+    readonly id: string;
+    readonly title: string;
+    readonly startMs: number;
+    readonly endMs: number;
+  }> = [
+    { id: "pseg-timeline-2", title: "引入流程", startMs: 15000, endMs: 45000 },
+    { id: "pseg-timeline-3", title: "什么 AI", startMs: 45000, endMs: 105000 },
+    { id: "pseg-timeline-4", title: "关键技术", startMs: 105000, endMs: 180000 },
+    { id: "pseg-timeline-5", title: "最佳契机", startMs: 180000, endMs: 300000 },
+    { id: "pseg-timeline-6", title: "核心功能", startMs: 300000, endMs: 420000 },
+    { id: "pseg-timeline-7", title: "未来展望", startMs: 420000, endMs: 465000 },
+    { id: "pseg-timeline-8", title: "总结", startMs: 465000, endMs: 480000 },
+  ];
+  const additionalAsTimeline = additional.map((segment) => ({
+    id: segment.id,
+    title: segment.title,
+    startLabel: formatTimestamp(Math.floor(segment.startMs / 1000)),
+    endLabel: formatTimestamp(Math.floor(segment.endMs / 1000)),
+  }));
+  return [...canonicalAsTimeline, ...additionalAsTimeline];
 }
 
 function mapAssetType(

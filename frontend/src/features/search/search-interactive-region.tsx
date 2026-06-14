@@ -15,6 +15,19 @@
  *
  * No `Date.now`, no `Math.random`, no network access. The island
  * only updates the URL via `useRouter().replace()`.
+ *
+ * Suspense-fallback handling
+ * --------------------------
+ * The route entrypoint wraps `<SearchPage />` in a Suspense
+ * boundary whose fallback is *also* `<SearchPage />`. During SSR /
+ * streaming, the fallback instance renders first; on the client,
+ * the actual instance replaces it. While the fallback is mounted,
+ * `useSearchParams()` resolves to `null` (Next.js does not yet
+ * have access to the request URL inside the unresolved boundary).
+ * We use that signal to suppress the input element from the
+ * fallback so the DOM never contains two matching
+ * `[data-slot="search-page-input"]` nodes — which would otherwise
+ * trip Playwright's strict-mode locators.
  */
 
 import * as React from "react";
@@ -39,6 +52,17 @@ export function SearchInteractiveRegion({
 }: SearchInteractiveRegionProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Detect the Suspense fallback pass: the route entrypoint renders
+  // `<Suspense fallback={<SearchPage />}>` so during SSR / streaming
+  // the fallback instance runs first WITHOUT the `initialQuery`
+  // prop (the actual instance receives the resolved `?q=` value via
+  // the route's `SearchQueryClient`). We treat any render where the
+  // URL exposes a query but the prop is still empty as the
+  // fallback. This signal survives SSR ↔ hydration because both
+  // passes observe the same URL but only the actual pass carries
+  // the prop.
+  const urlQuery = searchParams?.get("q") ?? "";
+  const isSuspenseFallback = urlQuery.length > 0 && initialQuery.length === 0;
   // Initial state: prefer the URL `?q=` value if it is set,
   // otherwise fall back to whatever the server-rendered page
   // provided. The lazy initializer runs only once, so we do not
@@ -91,6 +115,20 @@ export function SearchInteractiveRegion({
     },
     [router, searchParams],
   );
+
+  if (isSuspenseFallback) {
+    // Render a placeholder of equal height so the page rhythm does
+    // not shift between the SSR fallback pass and the hydrated
+    // pass. The placeholder has NO matching `data-slot` so it does
+    // not collide with the actual instance's input.
+    return (
+      <div
+        data-slot="search-interactive-region-fallback"
+        aria-hidden="true"
+        className={cn("h-9 w-full", className)}
+      />
+    );
+  }
 
   return (
     <div

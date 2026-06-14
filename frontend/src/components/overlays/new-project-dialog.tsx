@@ -19,7 +19,7 @@
 
 import * as React from "react";
 import { X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import { NewProjectForm } from "@/features/projects/new-project-form";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,6 @@ const DIALOG_TITLE = "新建项目";
 
 export function NewProjectDialog() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
   const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -49,14 +48,19 @@ export function NewProjectDialog() {
       return;
     }
 
-    // Direct visit — push the user back to the Projects index with no
-    // leftover query params.
-    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    // Direct visit — push the user back to the Projects index, preserving
+    // any non-copilot query params on the address bar. We read the URL
+    // straight from `window.location.search` (instead of `useSearchParams`)
+    // so the dialog does not have to live inside a Next.js Suspense
+    // boundary and does not retrigger RSC streaming on mount.
+    const params = new URLSearchParams(
+      typeof window !== "undefined" ? window.location.search : "",
+    );
     params.delete("copilot");
     const query = params.toString();
     const target = query.length > 0 ? `/projects?${query}` : "/projects";
     router.replace(target, { scroll: false });
-  }, [hasBackgroundRoute, router, searchParams]);
+  }, [hasBackgroundRoute, router]);
 
   // Initial focus + focus trap + Escape handler.
   React.useEffect(() => {
@@ -113,7 +117,7 @@ export function NewProjectDialog() {
       <div
         aria-hidden="true"
         data-slot="overlay-mask"
-        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/15 backdrop-blur-[1px]"
         onClick={close}
       />
       <div
@@ -125,7 +129,7 @@ export function NewProjectDialog() {
         data-slot="overlay-panel"
         data-overlay-panel="new-project"
         className={cn(
-          "relative z-10 flex h-[860px] max-h-[calc(100vh-72px)] w-full max-w-[700px] flex-col gap-6 overflow-y-auto rounded-2xl bg-popover px-7 py-6 text-sm text-popover-foreground shadow-2xl ring-1 ring-foreground/10 focus:outline-none",
+          "relative z-10 flex h-[860px] max-h-[calc(100vh-72px)] w-full max-w-[700px] flex-col gap-3.5 overflow-y-auto rounded-2xl bg-popover px-6 py-5 text-[13px] text-popover-foreground shadow-2xl ring-1 ring-foreground/10 focus:outline-none",
         )}
       >
         <header className="flex items-start justify-between gap-3">

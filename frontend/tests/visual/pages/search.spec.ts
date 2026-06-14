@@ -52,7 +52,13 @@ test.describe("Global Search page", () => {
         '[role="tab"], [data-slot="result-type-tab"]',
       )
       .allTextContents();
-    const cleaned = tabLabels.map((value) => value.trim()).filter(Boolean);
+    // Each tab concatenates its primary label with a numeric count
+    // badge (e.g. "项目" + "12" → "项目12"). Strip the trailing
+    // digits so the order check stays tolerant of the count
+    // decoration while still asserting the locked tab order.
+    const cleaned = tabLabels
+      .map((value) => value.trim().replace(/[\d]+$/u, "").trim())
+      .filter(Boolean);
     expect(cleaned[0]).toBe("项目");
     expect(cleaned.indexOf("项目")).toBeLessThan(cleaned.indexOf("知识"));
     expect(cleaned.indexOf("知识")).toBeLessThan(cleaned.indexOf("素材"));

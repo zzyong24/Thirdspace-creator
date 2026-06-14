@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Page entry for `/projects/new`.
  *
@@ -11,16 +9,13 @@
  * already provides the AppShell + TopHeader; we do not nest
  * another shell here.
  *
- * The page is a Client Component because the dialog composes the
- * `NewProjectForm` whose `onCreate` / `onCancel` props are
- * functions that cannot be serialised across the server/client
- * boundary.
+ * The page is a Server Component; `NewProjectDialog` is a Client
+ * island whose `onCreate` / `onCancel` callbacks are wired inside
+ * the dialog boundary.
  */
 
-import * as React from "react";
-
-import { NewProjectDialog } from "@/components/overlays/new-project-dialog";
 import { DashboardPage } from "@/features/dashboard/dashboard-page";
+import { NewProjectDialog } from "@/components/overlays/new-project-dialog";
 
 export default function NewProjectPage() {
   return (

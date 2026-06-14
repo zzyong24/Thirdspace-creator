@@ -626,7 +626,7 @@ function ProjectResultCard({ project }: { project: ProjectResult }) {
       data-slot="project-result-card"
       data-project-id={project.id}
       data-stage={project.currentStage}
-      className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-3"
+      className="flex flex-col gap-1.5 rounded-xl border border-border bg-surface-subtle p-3"
     >
       <header className="flex items-start justify-between gap-2">
         <h3 className="line-clamp-1 text-sm font-medium text-foreground">

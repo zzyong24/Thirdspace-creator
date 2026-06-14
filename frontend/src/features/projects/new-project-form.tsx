@@ -181,7 +181,7 @@ export function NewProjectForm({
       data-form="new-project"
       noValidate
       onSubmit={handleSubmit}
-      className={cn("flex flex-col gap-5", className)}
+      className={cn("flex flex-col gap-3.5", className)}
     >
       <ProjectNameField
         name={values.name}
@@ -295,7 +295,7 @@ function ProjectBriefField({ brief, onChange }: ProjectBriefFieldProps) {
         value={brief}
         onChange={(event) => onChange(event.target.value)}
         placeholder="一句话描述这次想做的内容（可选）"
-        rows={3}
+        rows={2}
         data-slot="new-project-brief-input"
       />
     </div>

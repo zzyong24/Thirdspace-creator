@@ -30,7 +30,6 @@
 import * as React from "react";
 
 import { PlatformIconView } from "@/components/publishing/platform-icon";
-import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { StatusBadge } from "@/components/project/status-badge";
 import { TagChip } from "@/components/content/tag-chip";
@@ -106,28 +105,28 @@ const DEFAULT_PLATFORM_CARDS: ReadonlyArray<PublishingViewModel["platforms"][num
   {
     id: "pcard-bilibili",
     platform: "bilibili",
-    accountLabel: "Creator 主账号",
+    accountLabel: "B站 (Bilibili)",
     status: "scheduled",
     scheduledAt: "2026-06-15T19:30:00+08:00",
   },
   {
     id: "pcard-xiaohongshu",
     platform: "xiaohongshu",
-    accountLabel: "Creator 小红书",
-    status: "draft",
-    scheduledAt: null,
+    accountLabel: "小红书",
+    status: "scheduled",
+    scheduledAt: "2026-05-18T20:00:00+08:00",
   },
   {
     id: "pcard-wechatVideo",
     platform: "wechatVideo",
-    accountLabel: "Creator 视频号",
+    accountLabel: "视频号",
     status: "draft",
     scheduledAt: null,
   },
   {
     id: "pcard-youtube",
     platform: "youtube",
-    accountLabel: "Creator YouTube",
+    accountLabel: "YouTube",
     status: "draft",
     scheduledAt: null,
   },
@@ -265,22 +264,22 @@ export function PublishingWorkspacePage({
       data-app="creatoros"
       data-page="publishing"
       data-project-id={vm.projectId}
-      className="flex flex-col gap-3"
+      className="flex flex-col gap-2"
     >
       <PublishingTabs tabs={vm.tabs} />
       <div
         data-slot="publishing-grid"
-        className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_1fr_0.8fr]"
+        className="grid grid-cols-1 gap-3 xl:grid-cols-[1.3fr_1fr_0.8fr]"
       >
         <div
           data-slot="basic-information-form"
-          className="flex flex-col gap-3"
+          className="flex flex-col gap-2"
         >
           <SectionCard
             title="基础信息"
             description="标题、描述、封面、标签与发布选项"
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               <TitleField value={vm.form.title} />
               <DescriptionField value={vm.form.description} />
               <CoverThumbnail
@@ -299,7 +298,7 @@ export function PublishingWorkspacePage({
         </div>
         <div
           data-slot="platform-publishing-panel"
-          className="flex flex-col gap-3"
+          className="flex flex-col gap-2"
         >
           <SectionCard
             title="发布平台"
@@ -307,7 +306,7 @@ export function PublishingWorkspacePage({
           >
             <ul
               data-slot="platform-publish-list"
-              className="flex flex-col gap-2"
+              className="flex flex-col gap-1.5"
               aria-label="发布平台"
             >
               {vm.platforms.map((platform) => (
@@ -324,7 +323,7 @@ export function PublishingWorkspacePage({
         </div>
         <div
           data-slot="preview-rail"
-          className="flex flex-col gap-3"
+          className="flex flex-col gap-1.5"
         >
           <PlatformPreview preview={vm.preview} />
           <PlatformMetricsSummary />
@@ -375,6 +374,7 @@ function PublishingTabs({
 // ---------------------------------------------------------------------------
 
 function TitleField({ value }: { value: string }) {
+  const charCount = value.length;
   return (
     <div data-slot="title-field" className="flex flex-col gap-1">
       <label
@@ -383,34 +383,44 @@ function TitleField({ value }: { value: string }) {
       >
         标题
       </label>
-      <input
-        id="publish-title"
-        data-slot="title-input"
-        defaultValue={value}
-        readOnly
-        className="h-8 rounded-md border border-border bg-surface px-2.5 text-sm text-foreground"
-      />
+      <div className="relative">
+        <input
+          id="publish-title"
+          data-slot="title-input"
+          defaultValue={value}
+          readOnly
+          className="h-7 w-full rounded-md border border-border bg-surface px-2.5 pr-12 text-xs text-foreground"
+        />
+        <span className="absolute inset-y-0 right-2 flex items-center text-[10px] tabular-nums text-muted-foreground">
+          {charCount}/100
+        </span>
+      </div>
     </div>
   );
 }
 
 function DescriptionField({ value }: { value: string }) {
+  const charCount = value.length;
   return (
     <div data-slot="description-field" className="flex flex-col gap-1">
-      <label
-        htmlFor="publish-description"
-        className="text-[11px] font-medium text-muted-foreground"
-      >
-        描述
-      </label>
-      <textarea
+      <div className="flex items-center justify-between">
+        <label
+          htmlFor="publish-description"
+          className="text-[11px] font-medium text-muted-foreground"
+        >
+          描述
+        </label>
+        <span className="text-[10px] tabular-nums text-muted-foreground">
+          {charCount}/2000
+        </span>
+      </div>
+      <div
         id="publish-description"
         data-slot="description-input"
-        defaultValue={value}
-        readOnly
-        rows={2}
-        className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground"
-      />
+        className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-[11px] leading-relaxed text-foreground"
+      >
+        {value}
+      </div>
     </div>
   );
 }
@@ -435,23 +445,27 @@ function CoverThumbnail({
       <div
         data-slot="cover-preview"
         aria-label={label}
-        className="relative h-36 w-full overflow-hidden rounded-md border border-border"
+        className="relative h-24 w-full overflow-hidden rounded-md border border-border bg-zinc-950"
       >
         <div
           aria-hidden="true"
-          className={`absolute inset-0 ${gradient} opacity-90`}
+          className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-black"
         />
-        <div className="relative flex h-full w-full flex-col justify-between p-3">
+        <div
+          aria-hidden="true"
+          className={`absolute inset-0 ${gradient} opacity-25 mix-blend-overlay`}
+        />
+        <div className="relative flex h-full w-full flex-col justify-between p-2.5">
           <div className="flex items-center gap-1.5">
-            <span className="rounded bg-white/30 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+            <span className="rounded bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white">
               EP01
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-wider text-white/85">
+            <span className="text-[9px] font-medium uppercase tracking-wider text-white/70">
               深度解析 · 13min
             </span>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <h5 className="line-clamp-1 text-sm font-semibold text-white">
+          <div className="flex flex-col gap-1">
+            <h5 className="line-clamp-1 text-[13px] font-semibold text-white">
               AI Native Browser · 深度解析
             </h5>
             <div className="flex flex-wrap gap-1">
@@ -459,7 +473,7 @@ function CoverThumbnail({
                 <span
                   key={tag}
                   data-slot="cover-tag"
-                  className="inline-flex h-5 items-center rounded-full bg-white/25 px-1.5 text-[10px] font-medium text-white backdrop-blur"
+                  className="inline-flex h-4 items-center rounded-full bg-white/20 px-1.5 text-[9px] font-medium text-white backdrop-blur"
                 >
                   #{tag}
                 </span>
@@ -501,12 +515,12 @@ function CategoryField({
   series: string;
 }) {
   return (
-    <div data-slot="category-field" className="grid grid-cols-2 gap-2">
+    <div data-slot="category-field" className="grid grid-cols-2 gap-1.5">
       <div className="flex flex-col gap-1">
         <span className="text-[11px] font-medium text-muted-foreground">分类</span>
         <div
           data-slot="category-input"
-          className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground"
+          className="rounded-md border border-border bg-surface px-2.5 py-1 text-[11px] text-foreground"
         >
           {category}
         </div>
@@ -515,7 +529,7 @@ function CategoryField({
         <span className="text-[11px] font-medium text-muted-foreground">系列</span>
         <div
           data-slot="series-input"
-          className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground"
+          className="rounded-md border border-border bg-surface px-2.5 py-1 text-[11px] text-foreground"
         >
           {series}
         </div>
@@ -533,7 +547,7 @@ function PublishingOptionsField() {
       <span className="text-[11px] font-medium text-muted-foreground">发布选项</span>
       <ul
         data-slot="publishing-options-list"
-        className="flex flex-col gap-1"
+        className="flex flex-col gap-0.5"
         aria-label="发布选项"
       >
         {PUBLISHING_OPTIONS.map((opt) => (
@@ -541,7 +555,7 @@ function PublishingOptionsField() {
             key={opt.id}
             data-slot="publishing-option-row"
             data-option-id={opt.id}
-            className="flex items-center justify-between rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs"
+            className="flex items-center justify-between rounded-md border border-border bg-surface px-2.5 py-1 text-[11px]"
           >
             <span className="text-muted-foreground">{opt.label}</span>
             <span className="font-medium text-foreground">{opt.value}</span>
@@ -562,12 +576,15 @@ function PlatformPublishCardItem({
   card: PublishingViewModel["platforms"][number];
 }) {
   const status = mapPublishStatus(card.status);
+  const scheduledDate = card.scheduledAt
+    ? formatScheduledDate(card.scheduledAt)
+    : "立即发布";
   return (
     <article
       data-slot="platform-publish-card"
       data-platform={card.platform}
       data-publish-card-id={card.id}
-      className="flex flex-col gap-1.5 rounded-card border border-border bg-surface p-2.5"
+      className="flex flex-col gap-1.5 rounded-md border border-border bg-surface p-2"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
@@ -578,17 +595,29 @@ function PlatformPublishCardItem({
         </div>
         <StatusBadge status={status} />
       </header>
-      <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-        <span data-slot="platform-account">{card.accountLabel}</span>
-        <span
-          data-slot="platform-scheduled"
-          data-has-schedule={card.scheduledAt ? "true" : "false"}
-        >
-          {card.scheduledAt ? `排期 ${formatSchedule(card.scheduledAt)}` : "立即发布"}
+      <div className="flex items-center justify-between gap-2 rounded-md border border-border/60 bg-surface-subtle px-2 py-1 text-[10px] text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <span>发布时间</span>
+          <span
+            data-slot="platform-scheduled"
+            data-has-schedule={card.scheduledAt ? "true" : "false"}
+            className="tabular-nums text-foreground"
+          >
+            {scheduledDate}
+          </span>
         </span>
+        <span aria-hidden="true" className="text-[8px]">▾</span>
       </div>
     </article>
   );
+}
+
+function formatScheduledDate(iso: string): string {
+  // Deterministic: derive YYYY-MM-DD from ISO prefix and HH:mm from suffix.
+  // "2026-06-15T19:30:00+08:00" → "2026-06-15 19:30"
+  const datePart = iso.slice(0, 10);
+  const timePart = iso.slice(11, 16);
+  return `${datePart} ${timePart}`;
 }
 
 function accountLabel(platform: PlatformId): string {
@@ -618,29 +647,29 @@ function mapPublishStatus(status: PublicationStatus): PublicationStatus {
   return status;
 }
 
-function formatSchedule(iso: string): string {
-  // Deterministic formatting: take the last 5 chars of the ISO datetime
-  // (HH:mm) so we never reach for Date.now() or Intl during render.
-  return iso.slice(-5);
-}
-
 function BatchTimeActions() {
   return (
-    <div data-slot="batch-time-actions">
-      <SectionCard
-        title="批量时间"
-        description="统一配置多平台发布时间"
-      >
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-xs text-muted-foreground">默认排期</span>
-          <span
-            data-slot="batch-time-value"
-            className="font-mono text-sm tabular-nums text-foreground"
-          >
-            19:30
-          </span>
-        </div>
-      </SectionCard>
+    <div
+      data-slot="batch-time-actions"
+      className="rounded-card border border-border bg-surface px-2.5 py-2"
+    >
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-[11px] font-medium text-muted-foreground">
+          批量时间
+        </span>
+        <span className="text-[10px] text-muted-foreground">
+          统一多平台发布时间
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] text-muted-foreground">默认排期</span>
+        <span
+          data-slot="batch-time-value"
+          className="font-mono text-xs tabular-nums text-foreground"
+        >
+          19:30
+        </span>
+      </div>
     </div>
   );
 }
@@ -656,7 +685,7 @@ function ConfirmPublishButton() {
         type="button"
         data-slot="confirm-publish-button"
         data-action="confirm-publish"
-        className="inline-flex h-9 w-full items-center justify-center rounded-md bg-brand text-sm font-medium text-brand-foreground"
+        className="inline-flex h-8 w-full items-center justify-center rounded-md bg-brand text-xs font-medium text-brand-foreground"
       >
         确认发布
       </button>
@@ -670,72 +699,84 @@ function ContentCalendar({
   days: ReadonlyArray<(typeof CALENDAR_DAYS)[number]>;
 }) {
   return (
-    <div data-slot="content-calendar">
-      <SectionCard
-        title="内容日历"
-        description="未来 7 天排期总览"
+    <div
+      data-slot="content-calendar"
+      className="rounded-card border border-border bg-surface px-2.5 py-2"
+    >
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-[11px] font-medium text-muted-foreground">
+          内容日历
+        </span>
+        <span className="text-[10px] text-muted-foreground">
+          未来 7 天排期总览
+        </span>
+      </div>
+      <ul
+        data-slot="content-calendar-grid"
+        className="grid grid-cols-7 gap-1"
+        aria-label="内容日历"
       >
-        <ul
-          data-slot="content-calendar-grid"
-          className="grid grid-cols-7 gap-1"
-          aria-label="内容日历"
-        >
-          {days.map((day) => (
-            <li
-              key={day.label}
-              data-slot="content-calendar-cell"
-              data-day-status={day.status}
-              className="flex flex-col items-center gap-0.5 rounded-md border border-border bg-surface px-1 py-1.5"
-            >
-              <span className="text-[10px] font-medium text-muted-foreground">
-                {day.label}
-              </span>
-              <span
-                className={
-                  day.status === "active"
-                    ? "inline-flex size-1.5 rounded-full bg-brand"
-                    : day.status === "draft"
-                      ? "inline-flex size-1.5 rounded-full bg-warning"
-                      : "inline-flex size-1.5 rounded-full bg-border"
-                }
-                aria-hidden="true"
-              />
-              <span className="text-[9px] text-muted-foreground">
-                {day.platforms.length}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
+        {days.map((day) => (
+          <li
+            key={day.label}
+            data-slot="content-calendar-cell"
+            data-day-status={day.status}
+            className="flex flex-col items-center gap-0.5 rounded-md border border-border bg-surface-subtle px-0.5 py-1"
+          >
+            <span className="text-[9px] font-medium text-muted-foreground">
+              {day.label}
+            </span>
+            <span
+              className={
+                day.status === "active"
+                  ? "inline-flex size-1.5 rounded-full bg-brand"
+                  : day.status === "draft"
+                    ? "inline-flex size-1.5 rounded-full bg-warning"
+                    : "inline-flex size-1.5 rounded-full bg-border"
+              }
+              aria-hidden="true"
+            />
+            <span className="text-[9px] text-muted-foreground">
+              {day.platforms.length}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
 function PrePublishCheck() {
   return (
-    <div data-slot="pre-publish-check">
-      <SectionCard
-        title="发布前检查"
-        description="确保内容合规、素材齐全"
+    <div
+      data-slot="pre-publish-check"
+      className="rounded-card border border-border bg-surface px-2.5 py-2"
+    >
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-[11px] font-medium text-muted-foreground">
+          发布前检查
+        </span>
+        <span className="text-[10px] text-muted-foreground">
+          确保内容合规、素材齐全
+        </span>
+      </div>
+      <ul
+        data-slot="pre-publish-check-list"
+        className="flex flex-col gap-1 text-[11px] text-foreground"
+        aria-label="发布前检查"
       >
-        <ul
-          data-slot="pre-publish-check-list"
-          className="flex flex-col gap-1 text-xs text-foreground"
-          aria-label="发布前检查"
-        >
-          {PUBLISH_CHECKLIST_ITEMS.slice(0, 3).map((item) => (
-            <li
-              key={item.id}
-              data-slot="pre-publish-check-row"
-              data-check-id={item.id}
-              className="flex items-center justify-between"
-            >
-              <span>{item.label}</span>
-              <StatusBadge status={item.checked ? "validated" : "todo"} />
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
+        {PUBLISH_CHECKLIST_ITEMS.slice(0, 3).map((item) => (
+          <li
+            key={item.id}
+            data-slot="pre-publish-check-row"
+            data-check-id={item.id}
+            className="flex items-center justify-between"
+          >
+            <span>{item.label}</span>
+            <StatusBadge status={item.checked ? "validated" : "todo"} />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -750,49 +791,50 @@ function PlatformPreview({
   preview: PublishingViewModel["preview"];
 }) {
   return (
-    <div data-slot="platform-preview">
-      <SectionCard
-        title="平台预览"
-        description={`${platformLabel(preview.platform)} 卡片样式`}
+    <article
+      data-slot="platform-preview"
+      data-platform={preview.platform}
+      className="flex flex-col gap-1 overflow-hidden rounded-card border border-border bg-surface"
+    >
+      <div
+        aria-hidden="true"
+        className="relative h-28 w-full overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-800 to-black"
       >
-        <article
-          data-slot="platform-preview-card"
-          data-platform={preview.platform}
-          className="flex flex-col gap-1.5 overflow-hidden rounded-card border border-border bg-surface-subtle"
-        >
-          <div
-            aria-hidden="true"
-            className="relative h-24 w-full overflow-hidden bg-gradient-to-br from-violet-500 via-fuchsia-500 to-rose-500"
-          >
-            <div className="absolute inset-0 flex items-end p-2">
-              <span className="rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                AI Native Browser · 深度解析
-              </span>
+        <div className="absolute inset-0 flex flex-col justify-between p-2">
+          <div className="flex items-center gap-1">
+            <PlatformIconView platform={preview.platform} size="xs" />
+            <span className="text-[9px] text-white/70">
+              {platformLabel(preview.platform)}
+            </span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-medium text-white">
+              AI Native Browser · 深度解析
+            </span>
+            <div className="flex items-center gap-1.5 text-[9px] tabular-nums text-white/80">
+              <span>12.3万</span>
+              <span>2560</span>
+              <span>1.2万</span>
+              <span>3天前</span>
             </div>
           </div>
-          <div className="flex flex-col gap-1 px-2.5 pb-2.5">
-            <header className="flex items-center gap-1.5">
-              <PlatformIconView platform={preview.platform} size="xs" />
-              <span className="text-[11px] text-muted-foreground">
-                {platformLabel(preview.platform)}
-              </span>
-            </header>
-            <h4
-              data-slot="platform-preview-title"
-              className="line-clamp-1 text-xs font-semibold text-foreground"
-            >
-              {preview.title}
-            </h4>
-            <p
-              data-slot="platform-preview-description"
-              className="line-clamp-2 text-[11px] text-muted-foreground"
-            >
-              {preview.description}
-            </p>
-          </div>
-        </article>
-      </SectionCard>
-    </div>
+        </div>
+      </div>
+      <div className="flex flex-col gap-0.5 px-2.5 pb-2 pt-1.5">
+        <h4
+          data-slot="platform-preview-title"
+          className="line-clamp-1 text-[11px] font-semibold text-foreground"
+        >
+          {preview.title}
+        </h4>
+        <p
+          data-slot="platform-preview-description"
+          className="line-clamp-2 text-[10px] text-muted-foreground"
+        >
+          {preview.description}
+        </p>
+      </div>
+    </article>
   );
 }
 
@@ -803,30 +845,48 @@ function PublishChecklist({
 }) {
   const list = items.length > 0 ? items : PUBLISH_CHECKLIST_ITEMS;
   return (
-    <div data-slot="publish-checklist">
-      <SectionCard
-        title="发布清单"
-        description="逐项核对"
+    <div
+      data-slot="publish-checklist"
+      className="rounded-card border border-border bg-surface px-2.5 py-2"
+    >
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-[11px] font-medium text-foreground">
+          发布清单
+        </span>
+        <span className="text-[10px] tabular-nums text-muted-foreground">
+          {list.filter((i) => i.checked).length}/{list.length}
+        </span>
+      </div>
+      <ul
+        data-slot="publish-checklist-list"
+        className="flex flex-col gap-1"
+        aria-label="发布清单"
       >
-        <ul
-          data-slot="publish-checklist-list"
-          className="flex flex-col gap-1"
-          aria-label="发布清单"
-        >
-          {list.map((item) => (
-            <li
-              key={item.id}
-              data-slot="publish-checklist-item"
-              data-check-id={item.id}
-              data-checked={item.checked}
-              className="flex items-center justify-between gap-2 text-xs"
-            >
-              <span className="text-foreground">{item.label}</span>
-              <StatusBadge status={item.checked ? "validated" : "todo"} />
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
+        {list.map((item) => (
+          <li
+            key={item.id}
+            data-slot="publish-checklist-item"
+            data-check-id={item.id}
+            data-checked={item.checked}
+            className="flex items-center justify-between gap-2 text-[11px]"
+          >
+            <span className="flex items-center gap-1 text-foreground">
+              <span
+                aria-hidden="true"
+                className={
+                  item.checked
+                    ? "inline-flex size-3 items-center justify-center rounded-full bg-success/15 text-success"
+                    : "inline-flex size-3 items-center justify-center rounded-full bg-warning/15 text-warning"
+                }
+              >
+                {item.checked ? "✓" : "·"}
+              </span>
+              {item.label}
+            </span>
+            <StatusBadge status={item.checked ? "validated" : "todo"} />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -835,18 +895,31 @@ function PlatformMetricsSummary() {
   return (
     <div
       data-slot="platform-metrics-summary"
-      className="grid grid-cols-2 gap-1.5"
+      className="grid grid-cols-4 gap-1"
     >
       {PLATFORM_METRICS.map((m) => (
-        <MetricCard
+        <div
           key={m.id}
-          id={m.id}
-          label={m.label}
-          value={m.value}
-          delta={m.delta}
-          trend={m.trend}
-          tone={m.tone}
-        />
+          data-slot="metric-card"
+          data-tone={m.tone}
+          data-trend={m.trend}
+          className="flex items-baseline gap-1 rounded-md border border-border/60 bg-surface px-1.5 py-0.5"
+        >
+          <span className="text-[10px] font-semibold tabular-nums text-foreground">
+            {m.value}
+          </span>
+          <span
+            className={
+              m.tone === "positive"
+                ? "text-[9px] font-medium text-success"
+                : m.tone === "negative"
+                  ? "text-[9px] font-medium text-danger"
+                  : "text-[9px] font-medium text-muted-foreground"
+            }
+          >
+            {m.trend === "up" ? "▲" : m.trend === "down" ? "▼" : "—"} {m.delta}
+          </span>
+        </div>
       ))}
     </div>
   );
@@ -854,75 +927,85 @@ function PlatformMetricsSummary() {
 
 function PlatformComparison() {
   return (
-    <div data-slot="platform-comparison">
-      <SectionCard
-        title="平台对比"
-        description="按平台查看触达与转化"
+    <div
+      data-slot="platform-comparison"
+      className="rounded-card border border-border bg-surface px-2.5 py-1.5"
+    >
+      <div className="mb-0.5 flex items-center justify-between">
+        <span className="text-[11px] font-medium text-foreground">
+          平台对比
+        </span>
+        <span className="text-[10px] text-muted-foreground">
+          按平台查看触达与转化
+        </span>
+      </div>
+      <table
+        data-slot="platform-comparison-table"
+        className="w-full text-[11px] text-foreground"
       >
-        <table
-          data-slot="platform-comparison-table"
-          className="w-full text-xs text-foreground"
-        >
-          <thead>
-            <tr className="border-b border-border text-[10px] text-muted-foreground">
-              <th className="py-1 text-left font-medium">平台</th>
-              <th className="py-1 text-right font-medium">触达</th>
-              <th className="py-1 text-right font-medium">转化</th>
+        <thead>
+          <tr className="border-b border-border text-[10px] text-muted-foreground">
+            <th className="py-0.5 text-left font-medium">平台</th>
+            <th className="py-0.5 text-right font-medium">触达</th>
+            <th className="py-0.5 text-right font-medium">转化</th>
+          </tr>
+        </thead>
+        <tbody>
+          {PLATFORM_COMPARISON.map((row) => (
+            <tr
+              key={row.id}
+              data-slot="platform-comparison-row"
+              data-platform={row.platform}
+              className="border-b border-border/50 last:border-b-0"
+            >
+              <td className="py-0.5">
+                <div className="flex items-center gap-1">
+                  <PlatformIconView platform={row.platform} size="xs" />
+                  <span>{row.label}</span>
+                </div>
+              </td>
+              <td className="py-0.5 text-right tabular-nums">{row.reach}</td>
+              <td className="py-0.5 text-right tabular-nums text-muted-foreground">
+                {row.conversion}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {PLATFORM_COMPARISON.map((row) => (
-              <tr
-                key={row.id}
-                data-slot="platform-comparison-row"
-                data-platform={row.platform}
-                className="border-b border-border/50 last:border-b-0"
-              >
-                <td className="py-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <PlatformIconView platform={row.platform} size="xs" />
-                    <span>{row.label}</span>
-                  </div>
-                </td>
-                <td className="py-1.5 text-right tabular-nums">{row.reach}</td>
-                <td className="py-1.5 text-right tabular-nums text-muted-foreground">
-                  {row.conversion}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </SectionCard>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
 
 function CommentsTeaser() {
   return (
-    <div data-slot="comments-teaser">
-      <SectionCard
-        title="评论区"
-        description="最近 2 条互动"
+    <div
+      data-slot="comments-teaser"
+      className="rounded-card border border-border bg-surface px-2.5 py-1.5"
+    >
+      <div className="mb-0.5 flex items-center justify-between">
+        <span className="text-[11px] font-medium text-foreground">
+          评论区
+        </span>
+        <span className="text-[10px] text-muted-foreground">最近 2 条互动</span>
+      </div>
+      <ul
+        data-slot="comments-list"
+        className="flex flex-col gap-0.5"
+        aria-label="评论区"
       >
-        <ul
-          data-slot="comments-list"
-          className="flex flex-col gap-1.5"
-          aria-label="评论区"
-        >
-          {COMMENTS_TEASER.map((c) => (
-            <li
-              key={c.id}
-              data-slot="comments-row"
-              className="rounded-md border border-border bg-surface-subtle px-2 py-1.5"
-            >
-              <span className="text-[11px] font-medium text-foreground">
-                {c.author}
-              </span>
-              <p className="text-[11px] text-muted-foreground">{c.body}</p>
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
+        {COMMENTS_TEASER.map((c) => (
+          <li
+            key={c.id}
+            data-slot="comments-row"
+            className="rounded-md border border-border bg-surface-subtle px-2 py-0.5"
+          >
+            <span className="text-[10px] font-medium text-foreground">
+              {c.author}
+            </span>
+            <p className="text-[10px] text-muted-foreground">{c.body}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -930,28 +1013,34 @@ function CommentsTeaser() {
 function PublishTips({ tips }: { tips: ReadonlyArray<string> }) {
   const list = tips.length > 0 ? tips : PUBLISH_TIPS;
   return (
-    <div data-slot="publish-tips">
-      <SectionCard
-        title="发布小贴士"
-        description="提升曝光的常见做法"
+    <div
+      data-slot="publish-tips"
+      className="rounded-card border border-border bg-surface px-2.5 py-1.5"
+    >
+      <div className="mb-0.5 flex items-center justify-between">
+        <span className="text-[11px] font-medium text-foreground">
+          发布小贴士
+        </span>
+        <span className="text-[10px] text-muted-foreground">
+          提升曝光的常见做法
+        </span>
+      </div>
+      <ul
+        data-slot="publish-tips-list"
+        className="flex flex-col gap-0.5 text-[11px] text-foreground"
+        aria-label="发布小贴士"
       >
-        <ul
-          data-slot="publish-tips-list"
-          className="flex flex-col gap-1 text-xs text-foreground"
-          aria-label="发布小贴士"
-        >
-          {list.map((tip, index) => (
-            <li
-              key={tip}
-              data-slot="publish-tip"
-              data-tip-index={index}
-              className="rounded-md border border-border bg-surface-subtle px-2 py-1.5"
-            >
-              {tip}
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
+        {list.map((tip, index) => (
+          <li
+            key={tip}
+            data-slot="publish-tip"
+            data-tip-index={index}
+            className="rounded-md border border-border bg-surface-subtle px-2 py-0.5"
+          >
+            {tip}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -1021,10 +1110,22 @@ export function buildPublishingViewModel(
   // blank slate).
   const firstRevision = revisions[0];
   const form = {
-    title: firstRevision?.title ?? project.title,
-    description: firstRevision?.description ?? project.brief,
+    title:
+      firstRevision?.title ??
+      (project.id === "project-ainativebrowser"
+        ? "AI Native Browser 深度解析：下一代浏览器的机会与未来"
+        : project.title),
+    description:
+      firstRevision?.description ??
+      (project.id === "project-ainativebrowser"
+        ? "AI Native Browser 不只是浏览器的升级，而是通往 AI Agent 时代的入口。本视频将深度解析它的核心价值、市场机会、关键功能和未来趋势，帮你看懂下一代浏览器的真正潜力。"
+        : project.brief),
     coverLabel: firstRevision?.coverAssetId ?? "封面 · AI Native Browser",
-    tags: firstRevision?.platformTags ?? ["独立创作者", "工作流", "AI"],
+    tags:
+      firstRevision?.platformTags ??
+      (project.id === "project-ainativebrowser"
+        ? ["AI", "浏览器", "生产力工具", "AI Agent", "未来趋势", "科技"]
+        : ["独立创作者", "工作流", "AI"]),
     category: firstRevision?.category ?? "播客",
     series: firstRevision?.series ?? "Creator 访谈",
   };
