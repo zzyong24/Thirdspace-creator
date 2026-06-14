@@ -269,7 +269,7 @@ export function AssetsPage({ viewModel }: AssetsPageProps = {}) {
       data-app="creatoros"
       data-page="assets"
       data-assets-id="assets-root"
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-3"
     >
       <AssetToolbar />
       <AssetWorkspace viewModel={vm} />
@@ -287,16 +287,16 @@ function AssetToolbar() {
     <div
       data-slot="asset-toolbar"
       aria-label="素材中心工具栏"
-      className="flex flex-wrap items-center gap-(--card-gap) border-b border-border pb-2"
+      className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-2"
     >
       <label className="sr-only" htmlFor="assets-search">
         搜索素材
       </label>
       <div
         data-slot="search-field"
-        className="flex h-9 w-72 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm"
+        className="flex h-8 w-64 items-center gap-2 rounded-control border border-border bg-surface px-2.5 text-sm"
       >
-        <span aria-hidden="true" className="text-muted-foreground">
+        <span aria-hidden="true" className="text-muted-foreground text-xs">
           🔎
         </span>
         <input
@@ -315,7 +315,7 @@ function AssetToolbar() {
           type="button"
           data-slot="assets-filter-button"
           aria-label="筛选素材"
-          className="inline-flex h-9 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-sm text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          className="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface px-2.5 text-xs text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
         >
           <span aria-hidden="true">⚙</span>
           <span>筛选</span>
@@ -324,7 +324,7 @@ function AssetToolbar() {
           type="button"
           data-slot="assets-upload-button"
           aria-label="上传素材"
-          className="inline-flex h-9 items-center gap-1.5 rounded-control bg-brand px-3 text-sm font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          className="inline-flex h-8 items-center gap-1.5 rounded-control bg-brand px-3 text-xs font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
         >
           <span aria-hidden="true">＋</span>
           <span>上传素材</span>
@@ -347,7 +347,7 @@ function AssetWorkspace({ viewModel }: AssetWorkspaceProps) {
     <section
       data-slot="asset-workspace"
       aria-label="素材工作区"
-      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[180px_minmax(0,1fr)_320px]"
+      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[176px_minmax(0,1fr)_296px]"
     >
       <AssetTypeSidebar counts={viewModel.typeCounts} />
       <AssetsInteractiveRegion viewModel={viewModel} />
@@ -364,49 +364,107 @@ function AssetTypeSidebar({
 }: {
   counts: ReadonlyArray<AssetTypeCount>;
 }) {
+  const dateFilters: ReadonlyArray<{ id: string; label: string; count: number }> = [
+    { id: "today", label: "今天", count: 1 },
+    { id: "week", label: "本周", count: 3 },
+    { id: "month", label: "本月", count: 5 },
+    { id: "older", label: "更早", count: 2 },
+  ];
+  const projectFilters: ReadonlyArray<{ id: string; label: string; count: number }> = [
+    { id: "browser", label: "AI Native Browser 深度解析", count: 3 },
+    { id: "creator", label: "Creator 加速器 EP01", count: 2 },
+    { id: "browser-creator", label: "The Browser Company", count: 1 },
+    { id: "untagged", label: "未关联项目", count: 0 },
+  ];
   return (
     <aside
       data-slot="asset-type-sidebar"
       aria-label="素材类型"
-      className="flex h-fit flex-col gap-1 rounded-card border border-border bg-surface p-2"
+      className="flex h-fit flex-col gap-3 rounded-card border border-border bg-surface p-2"
     >
-      <h2 className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-text-subtle">
-        素材类型
-      </h2>
-      <ul data-slot="asset-type-list" className="flex flex-col gap-0.5">
-        {counts.map((entry) => (
-          <li key={entry.type}>
-            <button
-              type="button"
-              data-asset-type={entry.type}
-              data-slot="asset-type-row"
-              data-type-count={entry.count}
-              className="flex h-8 w-full items-center justify-between rounded-control px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-            >
-              <span className="flex items-center gap-2">
-                <span
-                  aria-hidden="true"
-                  className={
-                    entry.tone === "brand"
-                      ? "size-2 rounded-full bg-brand"
-                      : entry.tone === "success"
-                        ? "size-2 rounded-full bg-success"
-                        : entry.tone === "warning"
-                          ? "size-2 rounded-full bg-warning"
-                          : entry.tone === "info"
-                            ? "size-2 rounded-full bg-info"
-                            : "size-2 rounded-full bg-border-strong"
-                  }
-                />
-                {entry.label}
-              </span>
-              <span className="font-mono tabular-nums text-xs text-muted-foreground">
-                {entry.count}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      <section data-slot="asset-filter-type" className="flex flex-col gap-1">
+        <h2 className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-text-subtle">
+          素材类型
+        </h2>
+        <ul data-slot="asset-type-list" className="flex flex-col gap-0.5">
+          {counts.map((entry) => (
+            <li key={entry.type}>
+              <button
+                type="button"
+                data-asset-type={entry.type}
+                data-slot="asset-type-row"
+                data-type-count={entry.count}
+                className="flex h-8 w-full items-center justify-between rounded-control px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className={
+                      entry.tone === "brand"
+                        ? "size-2 rounded-full bg-brand"
+                        : entry.tone === "success"
+                          ? "size-2 rounded-full bg-success"
+                          : entry.tone === "warning"
+                            ? "size-2 rounded-full bg-warning"
+                            : entry.tone === "info"
+                              ? "size-2 rounded-full bg-info"
+                              : "size-2 rounded-full bg-border-strong"
+                    }
+                  />
+                  {entry.label}
+                </span>
+                <span className="font-mono tabular-nums text-xs text-muted-foreground">
+                  {entry.count}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section data-slot="asset-filter-date" className="flex flex-col gap-1">
+        <h2 className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-text-subtle">
+          日期
+        </h2>
+        <ul data-slot="asset-date-list" className="flex flex-col gap-0.5">
+          {dateFilters.map((entry) => (
+            <li key={entry.id}>
+              <button
+                type="button"
+                data-slot="asset-date-row"
+                data-date-id={entry.id}
+                className="flex h-7 w-full items-center justify-between rounded-control px-2.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                <span>{entry.label}</span>
+                <span className="font-mono tabular-nums text-[11px]">
+                  {entry.count}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section data-slot="asset-filter-project" className="flex flex-col gap-1">
+        <h2 className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-text-subtle">
+          项目
+        </h2>
+        <ul data-slot="asset-project-list" className="flex flex-col gap-0.5">
+          {projectFilters.map((entry) => (
+            <li key={entry.id}>
+              <button
+                type="button"
+                data-slot="asset-project-row"
+                data-project-id={entry.id}
+                className="flex h-7 w-full items-center justify-between rounded-control px-2.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                <span className="truncate">{entry.label}</span>
+                <span className="ml-2 shrink-0 font-mono tabular-nums text-[11px]">
+                  {entry.count}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
     </aside>
   );
 }
@@ -430,10 +488,10 @@ function StorageUsageCard({ storage }: StorageUsageCardProps) {
     <SectionCard
       title="存储空间"
       description="本地素材库使用情况"
-      contentClassName="flex flex-col gap-2"
+      contentClassName="flex flex-col gap-1.5"
     >
-      <div data-slot="storage-usage-card" className="flex flex-col gap-2">
-        <div className="flex items-center justify-between text-sm">
+      <div data-slot="storage-usage-card" className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">已使用</span>
           <span className="font-mono tabular-nums text-foreground">
             {storage.usedLabel} / {storage.totalLabel}
@@ -445,7 +503,7 @@ function StorageUsageCard({ storage }: StorageUsageCardProps) {
           label="素材库存储使用率"
           tone="brand"
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[11px] text-muted-foreground">
           个人本地素材库 · 自动同步已开启
         </p>
       </div>
