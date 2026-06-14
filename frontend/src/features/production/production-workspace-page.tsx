@@ -65,24 +65,24 @@ interface ProductionModeCardDescriptor {
 
 const PRODUCTION_MODE_CARDS: ReadonlyArray<ProductionModeCardDescriptor> = [
   {
-    id: "mode-recording",
-    label: "录制模式",
-    description: "屏幕录制 + 摄像头 + 麦克风同步采集",
-    hint: "适合知识讲解、教程演示与会议复盘。",
+    id: "mode-direct-speaking",
+    label: "真人口播",
+    description: "多机位人声画面,搭配 B-roll 和字幕",
+    hint: "当前模式",
     recommended: true,
   },
   {
-    id: "mode-editing",
-    label: "剪辑模式",
-    description: "时间线剪辑、配音替换与字幕对齐",
-    hint: "适合二创剪辑与粗剪后再录制。",
+    id: "mode-knowledge-demo",
+    label: "知识演示",
+    description: "PPT + 录屏 + 配音讲解",
+    hint: "教程与产品演示场景",
     recommended: false,
   },
   {
-    id: "mode-post-production",
-    label: "后期模式",
-    description: "封面生成、字幕样式与导出预设",
-    hint: "适合最后阶段的包装与多平台发布。",
+    id: "mode-ai-digital-human",
+    label: "AI 数字人",
+    description: "数字人出镜 + AI 配音合成",
+    hint: "效率优先的批量生产",
     recommended: false,
   },
 ];
@@ -122,10 +122,11 @@ const SETTING_GROUPS: ReadonlyArray<SettingGroupDescriptor> = [
     title: "录制设置",
     description: "分辨率、帧率与采集设备",
     items: [
-      { id: "rec-resolution", label: "分辨率", value: "1920×1080" },
-      { id: "rec-fps", label: "帧率", value: "30 fps" },
-      { id: "rec-audio", label: "音频采样", value: "48 kHz / 立体声" },
-      { id: "rec-codec", label: "编码", value: "H.264" },
+      { id: "rec-camera", label: "摄像头", value: "FaceTime 高清摄像头" },
+      { id: "rec-mic", label: "麦克风", value: "RØDE NT-USB+" },
+      { id: "rec-quality", label: "画质", value: "1080P 30fps" },
+      { id: "rec-overlay", label: "摄像头", value: "开启" },
+      { id: "rec-screen", label: "录屏画面", value: "彩色" },
     ],
   },
   {
@@ -133,9 +134,13 @@ const SETTING_GROUPS: ReadonlyArray<SettingGroupDescriptor> = [
     title: "字幕设置",
     description: "字幕样式与语言",
     items: [
-      { id: "sub-language", label: "语言", value: "简体中文" },
-      { id: "sub-style", label: "样式", value: "底部居中 · 白底深字" },
-      { id: "sub-burn-in", label: "烧入视频", value: "关闭" },
+      { id: "sub-ai-generate", label: "AI 生成字幕", value: "开启" },
+      { id: "sub-style", label: "字幕样式", value: "编辑样式" },
+      { id: "sub-font", label: "字体", value: "思源黑体" },
+      { id: "sub-size", label: "字号", value: "48" },
+      { id: "sub-color", label: "颜色", value: "白色" },
+      { id: "sub-stroke", label: "描边", value: "黑色描边中" },
+      { id: "sub-position", label: "位置", value: "底部居中" },
     ],
   },
   {
@@ -144,10 +149,10 @@ const SETTING_GROUPS: ReadonlyArray<SettingGroupDescriptor> = [
     description: "码率、格式与发布包",
     items: [
       { id: "exp-format", label: "格式", value: "MP4" },
+      { id: "exp-resolution", label: "分辨率", value: "1080P" },
       { id: "exp-bitrate", label: "码率", value: "8 Mbps" },
-      { id: "exp-aspect", label: "画幅", value: "16:9" },
     ],
-    action: { id: "exp-action", label: "开始导出" },
+    action: { id: "exp-action", label: "导出视频" },
   },
 ];
 
@@ -159,12 +164,13 @@ export function ProductionWorkspacePage({
   projectId,
   viewModel,
 }: ProductionWorkspacePageProps) {
-  const vm = viewModel ?? buildProductionViewModel(projectId);
+  const resolvedProjectId = resolveProjectIdSlug(projectId);
+  const vm = viewModel ?? buildProductionViewModel(resolvedProjectId);
   return (
     <main
       data-app="creatoros"
       data-page="production"
-      data-project-id={vm.projectId}
+      data-project-id={resolvedProjectId}
       className="flex flex-col gap-(--section-gap)"
     >
       <ProductionModeSelector />
@@ -221,23 +227,42 @@ function ProductionModeCard({ card }: { card: ProductionModeCardDescriptor }) {
       data-mode-id={card.id}
       data-recommended={card.recommended ? "true" : "false"}
       data-pressed={card.recommended}
-      className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4 data-[recommended=true]:border-brand/60 data-[recommended=true]:bg-brand-soft/40"
+      className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-3 data-[recommended=true]:border-brand/60 data-[recommended=true]:bg-brand-soft/40"
     >
       <header className="flex flex-wrap items-center gap-2">
+        <span
+          aria-hidden="true"
+          data-slot="production-mode-card-icon"
+          className="inline-flex size-7 items-center justify-center rounded-control border border-border bg-surface-subtle text-[13px] font-semibold text-foreground"
+        >
+          {iconGlyph(card.id)}
+        </span>
         <h3
           data-slot="production-mode-card-label"
-          className="text-md font-semibold text-foreground"
+          className="text-[15px] font-semibold text-foreground"
         >
           {card.label}
         </h3>
         {card.recommended ? (
-          <TagChip label="推荐" tone="brand" size="sm" />
+          <TagChip label={card.hint} tone="brand" size="sm" />
         ) : null}
       </header>
-      <p className="text-sm text-foreground">{card.description}</p>
-      <p className="text-xs text-muted-foreground">{card.hint}</p>
+      <p className="text-xs text-muted-foreground">{card.description}</p>
     </article>
   );
+}
+
+function iconGlyph(modeId: string): string {
+  switch (modeId) {
+    case "mode-direct-speaking":
+      return "麦";
+    case "mode-knowledge-demo":
+      return "演";
+    case "mode-ai-digital-human":
+      return "AI";
+    default:
+      return "·";
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -260,7 +285,7 @@ function RecordingScriptPanel({
         ) : (
           <ol
             data-slot="recording-script-list"
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-1.5"
             aria-label="录制脚本"
           >
             {scriptLines.map((line) => (
@@ -268,12 +293,14 @@ function RecordingScriptPanel({
                 key={line.id}
                 data-slot="recording-script-line"
                 data-script-line-id={line.id}
-                className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
+                className="flex items-center gap-3 rounded-control border border-border bg-surface px-3 py-1.5"
               >
-                <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                <span className="min-w-28 font-mono text-[11px] text-muted-foreground tabular-nums">
                   {line.timestamp}
                 </span>
-                <p className="text-sm text-foreground">{line.text}</p>
+                <p className="line-clamp-1 flex-1 text-[13px] text-foreground">
+                  {line.text}
+                </p>
               </li>
             ))}
           </ol>
@@ -310,7 +337,7 @@ function AssetLibraryPanel({
       >
         <div
           data-slot="asset-category-tabs"
-          className="mb-3 flex flex-wrap gap-1"
+          className="mb-2 flex flex-wrap gap-1"
           role="tablist"
           aria-label="素材分类"
         >
@@ -322,7 +349,7 @@ function AssetLibraryPanel({
               data-slot="asset-category-tab"
               data-tab-id={category.id}
               data-pressed={index === 0}
-              className="inline-flex h-7 items-center rounded-full border border-border bg-surface-subtle px-3 text-xs font-medium text-foreground data-[pressed=true]:border-brand/60 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
+              className="inline-flex h-6 items-center rounded-md border border-border bg-surface-subtle px-2 text-[11px] font-medium text-foreground data-[pressed=true]:border-brand/60 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
             >
               {category.label}
             </button>
@@ -330,7 +357,7 @@ function AssetLibraryPanel({
         </div>
         <ul
           data-slot="asset-thumbnail-grid"
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"
+          className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3"
           aria-label="素材缩略图"
         >
           {assets.length === 0 ? (
@@ -342,20 +369,19 @@ function AssetLibraryPanel({
                 data-slot="asset-thumbnail"
                 data-asset-id={asset.id}
                 data-asset-type={asset.type}
-                className="flex flex-col gap-1 rounded-card border border-border bg-surface-subtle p-3"
+                className="flex flex-col gap-1 rounded-card border border-border bg-surface-subtle p-2"
               >
                 <div
                   aria-hidden="true"
-                  className="flex aspect-video w-full items-center justify-center rounded-control border border-border bg-surface text-xs font-medium text-muted-foreground"
+                  className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-control border border-border bg-foreground/90 p-1.5 text-background"
                 >
-                  {assetLabel(asset)}
+                  <span className="truncate px-1 text-center text-[11px] font-semibold leading-tight">
+                    {asset.name}
+                  </span>
+                  <span className="absolute bottom-1.5 left-1.5 text-[10px] font-medium tabular-nums opacity-80">
+                    {asset.durationLabel ?? assetTypeLabel(asset.type)}
+                  </span>
                 </div>
-                <span className="truncate text-sm font-medium text-foreground">
-                  {asset.name}
-                </span>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {asset.durationLabel ?? assetTypeLabel(asset.type)}
-                </span>
               </li>
             ))
           )}
@@ -369,26 +395,6 @@ function AssetLibraryPanel({
       </SectionCard>
     </div>
   );
-}
-
-function assetLabel(asset: ProductionAsset): string {
-  switch (asset.type) {
-    case "video":
-      return "VIDEO";
-    case "image":
-      return "IMG";
-    case "audio":
-      return "AUDIO";
-    case "document":
-      return "DOC";
-    case "subtitle":
-      return "SRT";
-    default: {
-      const _exhaustive: never = asset.type;
-      void _exhaustive;
-      return "FILE";
-    }
-  }
 }
 
 function assetTypeLabel(type: ProductionAsset["type"]): string {
@@ -486,15 +492,27 @@ function SettingsGroup({
 }) {
   const slot = `${group.group}-settings`;
   const exportGroup = group.group === "export";
+  const action = settingsActionFor(group.group);
   return (
     <div data-slot={slot} data-group={group.group}>
       <SectionCard
         title={titleForGroup(group.group)}
         description={descriptionForGroup(group.group)}
+        action={
+          action ? (
+            <a
+              href="#"
+              data-slot="settings-action"
+              className="text-[11px] font-medium text-brand"
+            >
+              {action}
+            </a>
+          ) : null
+        }
       >
         <ul
           data-slot="settings-list"
-          className="flex flex-col gap-2"
+          className="flex flex-col gap-1.5"
           aria-label={titleForGroup(group.group)}
         >
           {group.items.map((item) => (
@@ -502,28 +520,29 @@ function SettingsGroup({
               key={item.id}
               data-slot="settings-row"
               data-setting-id={item.id}
-              className="flex items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
+              className="flex items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-1.5"
             >
-              <span className="text-sm text-muted-foreground">
+              <span className="text-[12px] text-muted-foreground">
                 {item.label}
               </span>
-              <span className="text-sm font-medium text-foreground">
+              <span
+                data-slot="settings-row-value"
+                className="inline-flex h-6 items-center rounded-md border border-border bg-surface-subtle px-2 text-[11px] font-medium text-foreground"
+              >
                 {item.value}
               </span>
             </li>
           ))}
         </ul>
         {exportGroup ? (
-          <div className="mt-3 flex justify-end">
+          <div className="mt-3">
             <button
               type="button"
               data-slot="export-button"
               data-action="export"
-              className="inline-flex h-9 items-center rounded-md bg-brand px-4 text-sm font-medium text-brand-foreground"
+              className="inline-flex h-9 w-full items-center justify-center rounded-md bg-brand text-sm font-medium text-brand-foreground"
             >
-              {group.items[0]?.value
-                ? `${groupActionLabel()} · ${group.items[0]?.value}`
-                : groupActionLabel()}
+              {groupActionLabel()}
             </button>
           </div>
         ) : null}
@@ -533,7 +552,25 @@ function SettingsGroup({
 }
 
 function groupActionLabel(): string {
-  return "开始导出";
+  return "导出视频";
+}
+
+function settingsActionFor(
+  group: ProductionViewModel["settings"][number]["group"],
+): string | null {
+  switch (group) {
+    case "recording":
+      return "设备检测";
+    case "subtitle":
+      return "预览字幕效果";
+    case "export":
+      return null;
+    default: {
+      const _exhaustive: never = group;
+      void _exhaustive;
+      return null;
+    }
+  }
 }
 
 function titleForGroup(
@@ -593,20 +630,20 @@ function TimelinePanel({
           <ol
             data-slot="timeline-track"
             aria-label="时间线"
-            className="flex flex-row gap-2 overflow-x-auto"
+            className="flex flex-row gap-1.5 overflow-x-auto"
           >
             {timeline.map((segment) => (
               <li
                 key={segment.id}
                 data-slot="timeline-segment-card"
                 data-segment-id={segment.id}
-                className="flex min-w-44 flex-col gap-1 rounded-control border border-border bg-surface-subtle px-3 py-2"
+                className="flex min-w-36 flex-col gap-1 rounded-control border border-border bg-surface-subtle px-2.5 py-1.5"
               >
-                <span className="truncate text-sm font-medium text-foreground">
+                <span className="truncate text-[12px] font-medium text-foreground">
                   {segment.title}
                 </span>
-                <span className="font-mono text-xs text-muted-foreground tabular-nums">
-                  {segment.startLabel} – {segment.endLabel}
+                <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+                  {segment.startLabel}
                 </span>
               </li>
             ))}
@@ -694,7 +731,7 @@ function buildScriptLines(
     .map((section) => ({
       id: section.id,
       text: section.content,
-      timestamp: formatTimestamp(section.startSeconds ?? 0),
+      timestamp: `${formatTimestamp(section.startSeconds ?? 0)} – ${formatTimestamp(section.endSeconds ?? 0)}`,
     }));
 }
 
@@ -809,6 +846,25 @@ function formatTimestamp(totalSeconds: number): string {
 
 function pad2(value: number): string {
   return value < 10 ? `0${value}` : String(value);
+}
+
+/**
+ * The route segment for a project is a URL slug (e.g. `ai-native-browser`)
+ * while the canonical dataset uses prefixed IDs (e.g.
+ * `project-ainativebrowser`). Translate between them so the page
+ * content can resolve the canonical project even when the shared
+ * shell-router hasn't yet been taught the slug-to-id mapping.
+ *
+ * Falls back to the original slug if no canonical match is found, in
+ * which case the caller surfaces the empty project state.
+ */
+function resolveProjectIdSlug(slug: string): string {
+  if (!slug) return slug;
+  const knownIds = canonicalDataset.projects.map((project) => project.id);
+  if (knownIds.includes(slug)) return slug;
+  const candidate = `project-${slug.replace(/-/g, "")}`;
+  if (knownIds.includes(candidate)) return candidate;
+  return slug;
 }
 
 // Kept to silence unused-import warnings while preserving the public
