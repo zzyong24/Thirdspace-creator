@@ -207,6 +207,52 @@ const DEFAULT_KEY_MOMENTS: ReadonlyArray<KeyMoment> = [
 ];
 
 // ---------------------------------------------------------------------------
+// Locked default top published list (matches the 4-card band shown in
+// the Analytics & Review reference PNG). Falls back when the project
+// has no canonical publications (most page-spec projects are still in
+// the publishing → review transition).
+// ---------------------------------------------------------------------------
+
+interface TopPublished {
+  readonly id: string;
+  readonly title: string;
+  readonly platform: string;
+  readonly views: string;
+  readonly tone: "primary" | "compact";
+}
+
+const DEFAULT_TOP_PUBLISHED: ReadonlyArray<TopPublished> = [
+  {
+    id: "tp-1",
+    title: "AI Native Browser 时代：原生 AI 体验如何重构入口",
+    platform: "抖音",
+    views: "12.4 万播放",
+    tone: "primary",
+  },
+  {
+    id: "tp-2",
+    title: "浏览器 = AI 助理入口：从插件到原生",
+    platform: "小红书",
+    views: "8.2 万曝光",
+    tone: "compact",
+  },
+  {
+    id: "tp-3",
+    title: "深度评测：Atlas 与 Comet 谁更强",
+    platform: "B 站",
+    views: "5.6 万播放",
+    tone: "compact",
+  },
+  {
+    id: "tp-4",
+    title: "从 Chrome 插件到原生 AI 体验",
+    platform: "YouTube",
+    views: "4.3 万播放",
+    tone: "compact",
+  },
+];
+
+// ---------------------------------------------------------------------------
 // Locked default AI analysis + review history (fallback)
 // ---------------------------------------------------------------------------
 
@@ -256,12 +302,17 @@ const DEFAULT_REVIEW_HISTORY: ReadonlyArray<ReviewHistoryItem> = [
 // ---------------------------------------------------------------------------
 
 export function AnalyticsReviewPage({ projectId }: AnalyticsReviewPageProps) {
-  const project = getProjectById(projectId);
+  // The URL `[projectId]` segment can be either a canonical id
+  // (`project-ainativebrowser`) or a kebab slug (`ai-native-browser`).
+  // The visual route fixture uses the slug form, so resolve once up
+  // front so every downstream selector hits the canonical dataset.
+  const resolvedProjectId = resolveProjectIdSlug(projectId);
+  const project = getProjectById(resolvedProjectId);
   return (
     <main
       data-app="creatoros"
       data-page="analytics-review"
-      data-project-id={projectId}
+      data-project-id={resolvedProjectId}
       className="flex flex-col gap-(--section-gap)"
     >
       <AnalyticsTabs tabs={ANALYTICS_TABS} />
@@ -271,23 +322,24 @@ export function AnalyticsReviewPage({ projectId }: AnalyticsReviewPageProps) {
       >
         <div
           data-slot="analytics-main-column"
-          className="flex flex-col gap-(--card-gap)"
+          className="flex flex-col gap-3"
         >
           <CoreMetricsRow metrics={project ? CORE_METRICS : CORE_METRICS} />
           <PrimaryCharts />
           <SecondaryCharts
-            audienceProfile={pickAudienceProfile(projectId)}
-            audienceSource={pickAudienceSource(projectId)}
-            retentionCurve={pickRetentionCurve(projectId)}
+            audienceProfile={pickAudienceProfile(resolvedProjectId)}
+            audienceSource={pickAudienceSource(resolvedProjectId)}
+            retentionCurve={pickRetentionCurve(resolvedProjectId)}
           />
-          <KeyMomentsSection moments={pickKeyMoments(projectId)} />
+          <KeyMomentsSection moments={pickKeyMoments(resolvedProjectId)} />
+          <TopPublishedList items={pickTopPublished(resolvedProjectId)} />
         </div>
         <div
           data-slot="analytics-right-rail"
           className="flex flex-col gap-(--card-gap)"
         >
-          <AIAnalysisCard items={pickAiAnalysis(projectId)} />
-          <ReviewHistoryCard items={pickReviewHistory(projectId)} />
+          <AIAnalysisCard items={pickAiAnalysis(resolvedProjectId)} />
+          <ReviewHistoryCard items={pickReviewHistory(resolvedProjectId)} />
         </div>
       </div>
     </main>
@@ -375,7 +427,7 @@ function PrimaryCharts() {
         data-slot="conversion-funnel"
         data-shape="funnel"
         data-testid="conversion-funnel"
-        className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card"
+        className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card"
       >
         <header className="flex flex-col gap-1">
           <h3 className="text-md font-semibold text-foreground">转化漏斗</h3>
@@ -384,7 +436,7 @@ function PrimaryCharts() {
         <FunnelChart data={CONVERSION_FUNNEL} />
         <ul
           data-slot="conversion-funnel-list"
-          className="flex flex-col gap-1"
+          className="flex flex-col gap-0.5"
           aria-label="转化漏斗数据"
         >
           {CONVERSION_FUNNEL.map((row) => (
@@ -421,7 +473,7 @@ function FunnelChart({
       viewBox="0 0 200 100"
       preserveAspectRatio="none"
       aria-hidden="true"
-      className="h-32 w-full"
+      className="h-24 w-full"
     >
       {data.map((row, index) => {
         const ratio = row.value / max;
@@ -477,7 +529,7 @@ function SecondaryCharts({
         />
         <ul
           data-slot="audience-profile-list"
-          className="mt-3 flex flex-col gap-1"
+          className="mt-2 flex flex-col gap-0.5"
           aria-label="观众画像数据"
         >
           {audienceProfile.map((row) => (
@@ -505,7 +557,7 @@ function SecondaryCharts({
         />
         <ul
           data-slot="audience-source-list"
-          className="mt-3 flex flex-col gap-1"
+          className="mt-2 flex flex-col gap-0.5"
           aria-label="观众来源数据"
         >
           {audienceSource.map((row) => (
@@ -533,7 +585,7 @@ function SecondaryCharts({
         />
         <ul
           data-slot="retention-curve-list"
-          className="mt-3 flex flex-col gap-1"
+          className="mt-2 flex flex-col gap-0.5"
           aria-label="留存曲线数据"
         >
           {retentionCurve.map((row) => (
@@ -588,7 +640,7 @@ function DonutChart({
         data-slot={`${slot}-svg`}
         viewBox="0 0 42 42"
         aria-hidden="true"
-        className="h-24 w-24 self-center"
+        className="h-20 w-20 self-center"
       >
         {segments.map(({ row, fraction, start }) => (
           <circle
@@ -635,7 +687,7 @@ function HorizontalBarsChart({
         data-slot={`${slot}-svg`}
         viewBox={`0 0 100 ${data.length * 12}`}
         aria-hidden="true"
-        className="h-24 w-full"
+        className="h-20 w-full"
       >
         {data.map((row, index) => {
           const ratio = row.value / max;
@@ -694,7 +746,7 @@ function RetentionCurveChart({
         viewBox="0 0 100 24"
         preserveAspectRatio="none"
         aria-hidden="true"
-        className="h-24 w-full"
+        className="h-20 w-full"
       >
         <path
           d={path}
@@ -765,7 +817,7 @@ function KeyMomentsSection({
       <SectionCard title="关键时刻表现" description="内容高光与流失节点">
         <ul
           data-slot="key-moments-list"
-          className="flex flex-col gap-2"
+          className="flex flex-col gap-1.5"
           aria-label="关键时刻列表"
         >
           {list.map((moment) => (
@@ -773,7 +825,7 @@ function KeyMomentsSection({
               key={moment.id}
               data-slot="key-moment-row"
               data-moment-id={moment.id}
-              className="flex items-center justify-between rounded-md border border-border bg-surface-subtle px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-md border border-border bg-surface-subtle px-3 py-1.5 text-xs"
             >
               <span className="font-medium text-foreground">{moment.label}</span>
               <span className="font-mono tabular-nums text-muted-foreground">
@@ -788,6 +840,154 @@ function KeyMomentsSection({
 }
 
 // ---------------------------------------------------------------------------
+// TopPublishedList — band of 4 publication cards shown at the bottom
+// of the main column. Mirrors the "热门作品发布列表" row in the
+// Analytics & Review reference PNG.
+// ---------------------------------------------------------------------------
+
+function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
+  const list = items.length > 0 ? items : DEFAULT_TOP_PUBLISHED;
+  return (
+    <section
+      data-slot="top-published-section"
+      aria-label="热门作品发布列表"
+      className="flex flex-col gap-2"
+    >
+      <header className="flex items-center justify-between px-1">
+        <div className="flex flex-col gap-0.5">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            热门作品发布列表
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            近期表现最好的发布内容
+          </p>
+        </div>
+        <button
+          type="button"
+          data-slot="top-published-view-all"
+          className="inline-flex h-7 items-center rounded-md px-2 text-xs font-medium text-brand hover:bg-brand-soft"
+        >
+          查看全部
+        </button>
+      </header>
+      <ul
+        data-slot="top-published-list"
+        className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-4"
+        aria-label="热门作品发布"
+      >
+        {list.map((item) => (
+          <li
+            key={item.id}
+            data-slot="top-published-card"
+            data-published-id={item.id}
+            data-tone={item.tone}
+            className={
+              item.tone === "primary"
+                ? "col-span-1 flex flex-col gap-2 overflow-hidden rounded-xl border border-border bg-surface p-2 shadow-card md:col-span-2 md:row-span-1 md:flex-row"
+                : "flex items-center gap-2 overflow-hidden rounded-xl border border-border bg-surface p-1.5 shadow-card"
+            }
+          >
+            <TopPublishedThumb
+              tone={item.tone}
+              platform={item.platform}
+            />
+            <div
+              className={
+                item.tone === "primary"
+                  ? "flex min-w-0 flex-1 flex-col gap-1 p-1"
+                  : "flex min-w-0 flex-1 flex-col gap-0.5"
+              }
+            >
+              <span className="line-clamp-2 text-xs font-medium text-foreground">
+                {item.title}
+              </span>
+              <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                {item.platform} · {item.views}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function TopPublishedThumb({
+  tone,
+  platform,
+}: {
+  tone: "primary" | "compact";
+  platform: string;
+}) {
+  // The reference PNG uses solid pastel thumbnails with a one-line
+  // initial. We synthesise those here so the card density matches
+  // without depending on real cover assets (which are still in
+  // production for most page-spec projects).
+  const palette = paletteForPlatform(platform);
+  const sizeClass =
+    tone === "primary"
+      ? "h-20 w-full md:h-24 md:w-40 md:shrink-0"
+      : "h-10 w-10 shrink-0";
+  return (
+    <div
+      data-slot="top-published-thumb"
+      data-platform={platform}
+      aria-hidden="true"
+      className={`flex items-center justify-center rounded-md ${palette.bg} ${sizeClass}`}
+    >
+      <span className={`text-sm font-semibold ${palette.fg}`}>
+        {platformInitial(platform)}
+      </span>
+    </div>
+  );
+}
+
+interface Palette {
+  readonly bg: string;
+  readonly fg: string;
+}
+
+function paletteForPlatform(platform: string): Palette {
+  switch (platform) {
+    case "抖音":
+      return { bg: "bg-rose-100", fg: "text-rose-600" };
+    case "小红书":
+      return { bg: "bg-pink-100", fg: "text-pink-600" };
+    case "B 站":
+    case "bilibili":
+      return { bg: "bg-sky-100", fg: "text-sky-600" };
+    case "YouTube":
+    case "youtube":
+      return { bg: "bg-red-100", fg: "text-red-600" };
+    case "视频号":
+    case "wechatVideo":
+      return { bg: "bg-emerald-100", fg: "text-emerald-600" };
+    default:
+      return { bg: "bg-violet-100", fg: "text-violet-600" };
+  }
+}
+
+function platformInitial(platform: string): string {
+  switch (platform) {
+    case "抖音":
+      return "抖";
+    case "小红书":
+      return "书";
+    case "B 站":
+    case "bilibili":
+      return "B";
+    case "YouTube":
+    case "youtube":
+      return "Y";
+    case "视频号":
+    case "wechatVideo":
+      return "视";
+    default:
+      return "作";
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Right rail — AIAnalysisCard → ReviewHistoryCard
 // ---------------------------------------------------------------------------
 
@@ -798,7 +998,7 @@ function AIAnalysisCard({ items }: { items: ReadonlyArray<AiAnalysisItem> }) {
       data-slot="ai-analysis-card"
       aria-label="AI 分析"
       data-overlay="false"
-      className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card"
+      className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card"
     >
       <header className="flex flex-col gap-1">
         <h3 className="text-md font-semibold text-foreground">AI 分析</h3>
@@ -806,7 +1006,7 @@ function AIAnalysisCard({ items }: { items: ReadonlyArray<AiAnalysisItem> }) {
       </header>
       <ul
         data-slot="ai-analysis-list"
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-1.5"
         aria-label="AI 分析要点"
       >
         {list.map((item) => (
@@ -837,7 +1037,7 @@ function ReviewHistoryCard({
     <article
       data-slot="review-history-card"
       aria-label="复盘记录"
-      className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card"
+      className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card"
     >
       <header className="flex flex-col gap-1">
         <h3 className="text-md font-semibold text-foreground">复盘记录</h3>
@@ -845,7 +1045,7 @@ function ReviewHistoryCard({
       </header>
       <ul
         data-slot="review-history-list"
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-1.5"
         aria-label="复盘记录列表"
       >
         {list.map((item) => (
@@ -999,4 +1199,81 @@ function insightTitle(type: string): string {
 
 function reviewTitle(type: string): string {
   return type === "output" ? "发布复盘" : "项目复盘";
+}
+
+// ---------------------------------------------------------------------------
+// Slug → canonical project id resolver.
+//
+// The route segment for a project is a URL slug (e.g. `ai-native-browser`)
+// while the canonical dataset uses prefixed IDs (e.g.
+// `project-ainativebrowser`). The visual route fixture
+// (`tests/fixtures/routes.ts`) uses the slug form, so the page must
+// resolve the slug to the canonical id before any `getProjectById`
+// call can return a project.
+//
+// We try two known shapes:
+//   1. The exact slug is itself a canonical id (covers future
+//      slugs that happen to match an id verbatim).
+//   2. `project-${slug.replace(/-/g, "")}` — strip the dashes from
+//      the slug and prepend the canonical `project-` prefix. This
+//      matches the existing canonical ids
+//      (`project-ainativebrowser`, `project-podcastlaunch`, etc).
+//
+// If neither matches we fall back to the original slug so the page
+// renders its empty/empty-state copy instead of crashing.
+// ---------------------------------------------------------------------------
+
+function resolveProjectIdSlug(slug: string): string {
+  if (!slug) return slug;
+  const knownIds = canonicalDataset.projects.map((project) => project.id);
+  if (knownIds.includes(slug)) return slug;
+  const candidate = `project-${slug.replace(/-/g, "")}`;
+  if (knownIds.includes(candidate)) return candidate;
+  return slug;
+}
+
+function pickTopPublished(projectId: string): ReadonlyArray<TopPublished> {
+  // The reference PNG always shows four cards; the canonical dataset
+  // rarely has four live publications for a given project (most are
+  // still in publishing). We synthesise the band from the project's
+  // content outputs + a fallback so the slot is never empty.
+  const project = getProjectById(projectId);
+  if (!project) return DEFAULT_TOP_PUBLISHED;
+  const outputs = canonicalDataset.contentOutputs
+    .filter((output) => output.projectId === project.id)
+    .slice(0, 4);
+  if (outputs.length === 0) return DEFAULT_TOP_PUBLISHED;
+  const rows: TopPublished[] = outputs.map((output, index) => ({
+    id: `tp-${output.id}`,
+    title: output.title,
+    platform: platformLabelForContentType(output.contentType, index),
+    views: viewsLabel(index),
+    tone: index === 0 ? "primary" : "compact",
+  }));
+  // Pad to four cards with the canonical defaults so the band is
+  // visually full even for projects with a single content output.
+  while (rows.length < 4) {
+    const filler = DEFAULT_TOP_PUBLISHED[rows.length];
+    if (!filler) break;
+    rows.push(filler);
+  }
+  return rows;
+}
+
+function platformLabelForContentType(
+  contentType: string,
+  index: number,
+): string {
+  // Pick a deterministic platform label per content type so the band
+  // is plausible even when the project has no live publications.
+  const labels: ReadonlyArray<string> = ["抖音", "小红书", "B 站", "YouTube"];
+  if (contentType === "video" || contentType === "short") {
+    return labels[index % labels.length] ?? "抖音";
+  }
+  return labels[index % labels.length] ?? "抖音";
+}
+
+function viewsLabel(index: number): string {
+  const buckets = ["12.4 万播放", "8.2 万曝光", "5.6 万播放", "4.3 万播放"];
+  return buckets[index % buckets.length] ?? "1.0 万播放";
 }
