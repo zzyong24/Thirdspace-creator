@@ -151,11 +151,11 @@ export function PlanningWorkspacePage({
       <PlanningTabs tabs={vm.tabs} />
       <div
         data-slot="planning-grid"
-        className="grid grid-cols-1 gap-card-gap lg:grid-cols-3"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_400px]"
       >
         <div
           data-slot="planning-main-column"
-          className="flex flex-col gap-card-gap lg:col-span-2"
+          className="flex flex-col gap-card-gap"
         >
           <ContentContractSection contracts={vm.contracts} />
           <CoreThesisCard
@@ -167,7 +167,7 @@ export function PlanningWorkspacePage({
         </div>
         <div
           data-slot="planning-right-rail"
-          className="flex flex-col gap-card-gap lg:col-span-1"
+          className="flex flex-col gap-card-gap"
         >
           <EvidenceMapCard items={vm.evidenceMap} />
           <KeyMaterialsCard items={vm.keyMaterials} />

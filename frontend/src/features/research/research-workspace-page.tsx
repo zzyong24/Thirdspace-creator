@@ -75,11 +75,11 @@ export function ResearchWorkspacePage({
     >
       <div
         data-slot="research-grid"
-        className="grid grid-cols-1 gap-card-gap lg:grid-cols-3"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_400px]"
       >
         <div
           data-slot="research-main-column"
-          className="flex flex-col gap-card-gap lg:col-span-2"
+          className="flex flex-col gap-card-gap"
         >
           <ProjectIdeaCard
             title={vm.idea.title}
@@ -94,7 +94,7 @@ export function ResearchWorkspacePage({
         </div>
         <div
           data-slot="research-right-rail"
-          className="flex flex-col gap-card-gap lg:col-span-1"
+          className="flex flex-col gap-card-gap"
         >
           <ResearchNotesCard notes={vm.notes} />
           <EvidenceCollectionCard items={vm.evidence} />
