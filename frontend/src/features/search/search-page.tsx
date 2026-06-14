@@ -739,19 +739,26 @@ function AssetResultSection({
 function AssetThumb({ item }: { item: AssetResult }) {
   const hue = parseInt((item.token ?? "0").slice(-2), 16) * 12;
   const safeHue = Number.isFinite(hue) ? hue % 360 : 220;
+  const safeHue2 = (safeHue + 50) % 360;
   return (
     <figure
       data-slot="asset-result-thumb"
       data-asset-id={item.id}
       data-asset-type={item.typeLabel}
-      className="flex flex-col gap-1.5"
+      className="flex flex-col gap-1"
     >
       <div
         aria-hidden="true"
-        className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-md border border-border text-[10px] font-medium text-white"
-        style={{ backgroundColor: `hsl(${safeHue} 60% 45%)` }}
+        className="flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-md border border-border/60 text-[9px] font-medium"
+        style={{
+          backgroundImage: `linear-gradient(135deg, hsl(${safeHue} 35% 60%) 0%, hsl(${safeHue2} 40% 65%) 100%)`,
+          color: "white",
+          textShadow: "0 1px 2px rgba(0,0,0,0.15)",
+        }}
       >
-        {item.typeLabel}
+        <span className="inline-flex h-4 items-center rounded bg-white/25 px-1.5 text-[9px] font-semibold uppercase tracking-wider backdrop-blur-sm">
+          {item.typeLabel.slice(0, 2)}
+        </span>
       </div>
       <figcaption className="line-clamp-1 text-xs text-foreground">
         {item.title}
@@ -786,21 +793,26 @@ function VideoResultSection({
 function VideoThumb({ item }: { item: VideoResult }) {
   const hue = parseInt((item.token ?? "0").slice(-2), 16) * 12;
   const safeHue = Number.isFinite(hue) ? hue % 360 : 220;
+  const safeHue2 = (safeHue + 45) % 360;
   return (
     <figure
       data-slot="video-result-thumb"
       data-video-id={item.id}
       data-platform={item.platform}
-      className="flex flex-col gap-1.5"
+      className="flex flex-col gap-1"
     >
       <div
         aria-hidden="true"
-        className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border border-border text-[10px] font-medium text-white"
-        style={{ backgroundColor: `hsl(${safeHue} 60% 45%)` }}
+        className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border border-border/60 text-white"
+        style={{
+          backgroundImage: `linear-gradient(135deg, hsl(${safeHue} 45% 40%) 0%, hsl(${safeHue2} 50% 44%) 100%)`,
+        }}
       >
-        <span>16:9</span>
         <span className="absolute left-1.5 top-1.5 inline-flex">
           <PlatformIconView platform={item.platform} size="xs" />
+        </span>
+        <span className="absolute right-1.5 top-1.5 rounded bg-black/35 px-1 text-[9px] font-mono leading-tight text-white/80 backdrop-blur-sm">
+          16:9
         </span>
       </div>
       <figcaption className="flex flex-col gap-0.5 text-xs">
