@@ -353,4 +353,86 @@ describe("PublishingWorkspacePage", () => {
       container.querySelector('[data-slot="basic-information-form"] [data-slot="platform-publish-card"]'),
     ).toBeNull();
   });
+
+  it("renders the right-column design rhythm (preview → metrics → comparison → checklist → tips → comments)", async () => {
+    const { container } = await renderWorkspace();
+    const rail = container.querySelector(
+      '[data-slot="preview-rail"]',
+    ) as HTMLElement;
+    expect(rail).not.toBeNull();
+    const expectedSlots = [
+      "platform-preview",
+      "platform-metrics-summary",
+      "platform-comparison",
+      "publish-checklist",
+      "publish-tips",
+      "comments-teaser",
+    ];
+    const orderedNodes = expectedSlots.map((slot) =>
+      rail.querySelector(`[data-slot="${slot}"]`),
+    );
+    expect(orderedNodes.every((node) => node !== null)).toBe(true);
+    for (let i = 1; i < orderedNodes.length; i += 1) {
+      const node = orderedNodes[i] as Element;
+      const previous = orderedNodes[i - 1] as Element;
+      const relation = previous.compareDocumentPosition(node);
+      expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+  });
+
+  it("renders a content calendar in the platform panel", async () => {
+    const { container } = await renderWorkspace();
+    const panel = container.querySelector(
+      '[data-slot="platform-publishing-panel"]',
+    ) as HTMLElement;
+    const calendar = panel.querySelector('[data-slot="content-calendar"]');
+    expect(calendar).not.toBeNull();
+    const cells = panel.querySelectorAll(
+      '[data-slot="content-calendar-cell"]',
+    );
+    expect(cells.length).toBe(7);
+  });
+
+  it("renders a cover thumbnail tile with tag overlay", async () => {
+    const { container } = await renderWorkspace();
+    const form = container.querySelector(
+      '[data-slot="basic-information-form"]',
+    ) as HTMLElement;
+    const coverPreview = form.querySelector('[data-slot="cover-preview"]');
+    expect(coverPreview).not.toBeNull();
+    const coverTags = form.querySelectorAll(
+      '[data-slot="cover-preview"] [data-slot="cover-tag"]',
+    );
+    expect(coverTags.length).toBeGreaterThan(0);
+  });
+
+  it("renders the platform metrics summary with 4 tiles in a 2x2 grid", async () => {
+    const { container } = await renderWorkspace();
+    const summary = container.querySelector(
+      '[data-slot="platform-metrics-summary"]',
+    ) as HTMLElement;
+    expect(summary).not.toBeNull();
+    const tiles = summary.querySelectorAll('[data-slot="metric-card"]');
+    expect(tiles).toHaveLength(4);
+  });
+
+  it("renders the platform-comparison table with 4 rows", async () => {
+    const { container } = await renderWorkspace();
+    const table = container.querySelector(
+      '[data-slot="platform-comparison-table"]',
+    ) as HTMLElement;
+    expect(table).not.toBeNull();
+    const rows = table.querySelectorAll('[data-slot="platform-comparison-row"]');
+    expect(rows).toHaveLength(4);
+  });
+
+  it("renders a comments teaser with author + body rows", async () => {
+    const { container } = await renderWorkspace();
+    const teaser = container.querySelector(
+      '[data-slot="comments-teaser"]',
+    ) as HTMLElement;
+    expect(teaser).not.toBeNull();
+    const rows = teaser.querySelectorAll('[data-slot="comments-row"]');
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+  });
 });
