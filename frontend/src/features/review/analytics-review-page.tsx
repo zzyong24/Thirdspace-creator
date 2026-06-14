@@ -427,7 +427,7 @@ function PrimaryCharts() {
         data-slot="conversion-funnel"
         data-shape="funnel"
         data-testid="conversion-funnel"
-        className="flex flex-col gap-1.5 rounded-2xl border border-border bg-surface p-3 shadow-card"
+        className="flex flex-col gap-1 rounded-2xl border border-border bg-surface p-3 shadow-card"
       >
         <header className="flex flex-col gap-1">
           <h3 className="text-md font-semibold text-foreground">转化漏斗</h3>
@@ -444,7 +444,7 @@ function PrimaryCharts() {
               key={row.label}
               data-slot="conversion-funnel-row"
               data-funnel-label={row.label}
-              className="flex items-center justify-between text-xs"
+              className="flex items-center justify-between text-[11px]"
             >
               <span className="text-muted-foreground">{row.label}</span>
               <span className="font-medium tabular-nums text-foreground">
@@ -473,17 +473,17 @@ function FunnelChart({
       viewBox="0 0 200 100"
       preserveAspectRatio="none"
       aria-hidden="true"
-      className="h-20 w-full"
+      className="h-16 w-full"
     >
       {data.map((row, index) => {
         const ratio = row.value / max;
         const width = 40 + ratio * 160;
         const x = (200 - width) / 2;
-        const y = index * 16;
+        const y = index * 13;
         return (
           <polygon
             key={row.label}
-            points={`${x},${y} ${x + width},${y} ${x + width - 8},${y + 14} ${x + 8},${y + 14}`}
+            points={`${x},${y} ${x + width},${y} ${x + width - 6},${y + 11} ${x + 6},${y + 11}`}
             fill="var(--color-brand-soft)"
             stroke="var(--color-brand)"
             strokeWidth={0.6}
@@ -524,6 +524,7 @@ function SecondaryCharts({
         title="观众画像"
         description="年龄段分布"
         contentClassName="flex flex-col gap-1.5"
+        className="[--card-spacing:--spacing(3)]"
       >
         <DonutChart
           slot="audience-profile"
@@ -541,7 +542,7 @@ function SecondaryCharts({
               key={row.label}
               data-slot="audience-profile-row"
               data-profile-label={row.label}
-              className="flex items-center justify-between text-xs"
+              className="flex items-center justify-between text-[11px]"
             >
               <span className="text-muted-foreground">{row.label}</span>
               <span className="font-medium tabular-nums text-foreground">
@@ -556,6 +557,7 @@ function SecondaryCharts({
         title="观众来源"
         description="按渠道拆分"
         contentClassName="flex flex-col gap-1.5"
+        className="[--card-spacing:--spacing(3)]"
       >
         <HorizontalBarsChart
           slot="audience-source"
@@ -573,7 +575,7 @@ function SecondaryCharts({
               key={row.label}
               data-slot="audience-source-row"
               data-source-label={row.label}
-              className="flex items-center justify-between text-xs"
+              className="flex items-center justify-between text-[11px]"
             >
               <span className="text-muted-foreground">{row.label}</span>
               <span className="font-medium tabular-nums text-foreground">
@@ -588,6 +590,7 @@ function SecondaryCharts({
         title="留存曲线"
         description="完播随时间变化"
         contentClassName="flex flex-col gap-1.5"
+        className="[--card-spacing:--spacing(3)]"
       >
         <RetentionCurveChart
           slot="retention-curve"
@@ -605,7 +608,7 @@ function SecondaryCharts({
               key={row.label}
               data-slot="retention-curve-row"
               data-position-label={row.label}
-              className="flex items-center justify-between text-xs"
+              className="flex items-center justify-between text-[11px]"
             >
               <span className="text-muted-foreground">{row.label}</span>
               <span className="font-medium tabular-nums text-foreground">
@@ -873,7 +876,7 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
     <section
       data-slot="top-published-section"
       aria-label="热门作品发布列表"
-      className="flex flex-col gap-2"
+      className="flex flex-col gap-1.5"
     >
       <header className="flex items-center justify-between px-1">
         <div className="flex flex-col gap-0">
@@ -891,7 +894,7 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
       </header>
       <ul
         data-slot="top-published-list"
-        className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-4"
+        className="grid grid-cols-1 gap-1.5 md:grid-cols-2 lg:grid-cols-4"
         aria-label="热门作品发布"
       >
         {list.map((item) => (
@@ -902,8 +905,8 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
             data-tone={item.tone}
             className={
               item.tone === "primary"
-                ? "col-span-1 flex flex-col gap-2 overflow-hidden rounded-xl border border-border bg-surface p-2 shadow-card md:col-span-2 md:row-span-1 md:flex-row"
-                : "flex items-center gap-2 overflow-hidden rounded-xl border border-border bg-surface p-1.5 shadow-card"
+                ? "col-span-1 flex flex-col gap-1 overflow-hidden rounded-xl border border-border bg-surface p-1.5 shadow-card md:col-span-2 md:row-span-1 md:flex-row"
+                : "flex items-center gap-1.5 overflow-hidden rounded-xl border border-border bg-surface p-1 shadow-card"
             }
           >
             <TopPublishedThumb
@@ -913,14 +916,14 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
             <div
               className={
                 item.tone === "primary"
-                  ? "flex min-w-0 flex-1 flex-col gap-1 p-1"
-                  : "flex min-w-0 flex-1 flex-col gap-0.5"
+                  ? "flex min-w-0 flex-1 flex-col gap-0.5 p-1"
+                  : "flex min-w-0 flex-1 flex-col gap-0"
               }
             >
-              <span className="line-clamp-2 text-xs font-medium text-foreground">
+              <span className="line-clamp-2 text-[11px] font-medium text-foreground">
                 {item.title}
               </span>
-              <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+              <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
                 {item.platform} · {item.views}
               </span>
             </div>
@@ -945,7 +948,7 @@ function TopPublishedThumb({
   const palette = paletteForPlatform(platform);
   const sizeClass =
     tone === "primary"
-      ? "h-16 w-full md:h-20 md:w-32 md:shrink-0"
+      ? "h-14 w-full md:h-16 md:w-28 md:shrink-0"
       : "h-10 w-10 shrink-0";
   return (
     <div
