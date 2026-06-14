@@ -209,23 +209,23 @@ function QuickIcon({ kind }: { kind: "sparkles" | "pen" | "list" }) {
 
 export function AICopilotContent() {
   return (
-    <div className="flex flex-col gap-5" data-slot="ai-copilot-content">
+    <div className="flex flex-col gap-4" data-slot="ai-copilot-content">
       {/* PromptComposer ------------------------------------------------ */}
       <Card
         data-slot="prompt-composer"
         className="border border-border bg-surface-muted"
       >
-        <CardContent className="p-4">
+        <CardContent className="p-3">
           <form
             // No `action` and no `onSubmit` — submit is a fixture-only
             // local action. No real AI request is issued (page-specs §16
             // "禁止改变": no message thread, no real AI integration).
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-2"
             data-slot="prompt-form"
           >
             <label
               htmlFor="ai-copilot-prompt"
-              className="text-xs font-medium text-muted-foreground"
+              className="text-[11px] font-medium text-muted-foreground"
             >
               告诉 Copilot 你想做什么
             </label>
@@ -233,16 +233,16 @@ export function AICopilotContent() {
               id="ai-copilot-prompt"
               name="prompt"
               defaultValue={PROMPT_VALUE}
-              rows={3}
+              rows={2}
               placeholder="例如：把《AI Native Browser》主脚本的结尾改写得更情绪化"
-              className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-ring/40"
+              className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-foreground placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-ring/40"
               data-slot="prompt-input"
             />
             <div
               className="flex flex-wrap items-center justify-between gap-2"
               data-slot="suggested-action-chips"
             >
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {SUGGESTED_ACTIONS.map((action) => (
                   <Button
                     key={action.id}
@@ -251,6 +251,7 @@ export function AICopilotContent() {
                     size="sm"
                     data-slot="suggested-chip"
                     data-chip-id={action.id}
+                    className="h-7 px-2.5 text-xs"
                   >
                     {action.label}
                   </Button>
@@ -261,8 +262,9 @@ export function AICopilotContent() {
                 size="sm"
                 data-slot="submit-button"
                 aria-label="提交提示给 Copilot"
+                className="h-7 px-2.5"
               >
-                <Sparkles className="size-4" aria-hidden="true" />
+                <Sparkles className="size-3.5" aria-hidden="true" />
                 生成
               </Button>
             </div>
@@ -274,7 +276,7 @@ export function AICopilotContent() {
       <section
         aria-labelledby="ai-copilot-dashboard-title"
         data-slot="copilot-dashboard"
-        className="grid grid-cols-1 gap-3 md:grid-cols-3"
+        className="grid grid-cols-1 gap-2 md:grid-cols-3"
       >
         <h3 id="ai-copilot-dashboard-title" className="sr-only">
           Copilot 控制台
@@ -285,29 +287,29 @@ export function AICopilotContent() {
           data-slot="recommended-commands"
           className="border border-border"
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">
+          <CardHeader className="px-3 pb-1.5 pt-3">
+            <CardTitle className="text-[13px] font-semibold">
               推荐指令
             </CardTitle>
-            <CardDescription className="text-xs">
+            <CardDescription className="text-[11px]">
               根据当前项目生成的常用操作
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-2 pt-0">
+          <CardContent className="flex flex-col gap-1.5 px-3 pb-3 pt-0">
             {RECOMMENDED_COMMANDS.map((cmd) => (
               <button
                 key={cmd.id}
                 type="button"
                 data-slot="recommended-command"
                 data-command-id={cmd.id}
-                className="flex items-start gap-3 rounded-lg border border-border bg-surface p-3 text-left transition-colors hover:bg-surface-muted"
+                className="flex items-start gap-2 rounded-lg border border-border bg-surface p-2 text-left transition-colors hover:bg-surface-muted"
               >
                 <ActionIcon kind={cmd.icon} />
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-[13px] font-medium text-foreground">
                     {cmd.title}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[11px] text-muted-foreground">
                     {cmd.description}
                   </span>
                 </div>
@@ -318,25 +320,25 @@ export function AICopilotContent() {
 
         {/* RecentTasks */}
         <Card data-slot="recent-tasks" className="border border-border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">最近任务</CardTitle>
-            <CardDescription className="text-xs">
+          <CardHeader className="px-3 pb-1.5 pt-3">
+            <CardTitle className="text-[13px] font-semibold">最近任务</CardTitle>
+            <CardDescription className="text-[11px]">
               过去 24 小时内的生成记录
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-2 pt-0">
+          <CardContent className="flex flex-col gap-1.5 px-3 pb-3 pt-0">
             {RECENT_TASKS.map((task) => (
               <div
                 key={task.id}
                 data-slot="recent-task"
                 data-task-id={task.id}
-                className="flex items-start justify-between gap-3 rounded-lg border border-border bg-surface p-3"
+                className="flex items-start justify-between gap-2 rounded-lg border border-border bg-surface p-2"
               >
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-[13px] font-medium text-foreground">
                     {task.title}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[11px] text-muted-foreground">
                     {task.meta}
                   </span>
                 </div>
@@ -348,6 +350,7 @@ export function AICopilotContent() {
                         ? "default"
                         : "destructive"
                   }
+                  className="text-[10px]"
                 >
                   {task.status}
                 </Badge>
@@ -361,21 +364,21 @@ export function AICopilotContent() {
           data-slot="continuing-tasks"
           className="border border-border"
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">继续任务</CardTitle>
-            <CardDescription className="text-xs">
+          <CardHeader className="px-3 pb-1.5 pt-3">
+            <CardTitle className="text-[13px] font-semibold">继续任务</CardTitle>
+            <CardDescription className="text-[11px]">
               跨设备同步进行中的工作
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-2 pt-0">
+          <CardContent className="flex flex-col gap-1.5 px-3 pb-3 pt-0">
             {CONTINUING_TASKS.map((task) => (
               <div
                 key={task.id}
                 data-slot="continuing-task"
                 data-task-id={task.id}
-                className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-3"
+                className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-2"
               >
-                <span className="text-sm font-medium text-foreground">
+                <span className="text-[13px] font-medium text-foreground">
                   {task.title}
                 </span>
                 <div className="flex items-center gap-2">
@@ -391,7 +394,7 @@ export function AICopilotContent() {
                       style={{ width: `${task.progress}%` }}
                     />
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[11px] text-muted-foreground">
                     {task.progress}%
                   </span>
                 </div>
@@ -405,7 +408,7 @@ export function AICopilotContent() {
       <section
         aria-labelledby="ai-copilot-quick-entries-title"
         data-slot="quick-entries"
-        className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+        className="grid grid-cols-1 gap-1.5 sm:grid-cols-3"
       >
         <h3 id="ai-copilot-quick-entries-title" className="sr-only">
           快捷入口
@@ -416,14 +419,14 @@ export function AICopilotContent() {
             type="button"
             data-slot="quick-entry"
             data-entry-id={entry.id}
-            className="flex items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2 text-left transition-colors hover:bg-surface-muted"
+            className="flex items-center gap-2 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-left transition-colors hover:bg-surface-muted"
           >
             <QuickIcon kind={entry.icon} />
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-[13px] font-medium text-foreground">
                 {entry.title}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[11px] text-muted-foreground">
                 {entry.description}
               </span>
             </div>
@@ -435,11 +438,11 @@ export function AICopilotContent() {
       <section
         aria-labelledby="ai-copilot-smart-recommendation-title"
         data-slot="smart-recommendation"
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-1.5"
       >
         <h3
           id="ai-copilot-smart-recommendation-title"
-          className="text-xs font-semibold uppercase tracking-wide text-text-subtle"
+          className="text-[11px] font-semibold uppercase tracking-wide text-text-subtle"
         >
           智能推荐
         </h3>
@@ -448,12 +451,12 @@ export function AICopilotContent() {
             key={rec.id}
             data-slot="smart-recommendation-item"
             data-rec-id={rec.id}
-            className="flex flex-col gap-1 rounded-lg border border-dashed border-border bg-surface-muted/40 p-3"
+            className="flex flex-col gap-0.5 rounded-lg border border-dashed border-border bg-surface-muted/40 p-2"
           >
-            <span className="text-sm font-medium text-foreground">
+            <span className="text-[13px] font-medium text-foreground">
               {rec.title}
             </span>
-            <span className="text-xs text-muted-foreground">{rec.body}</span>
+            <span className="text-[11px] text-muted-foreground">{rec.body}</span>
           </div>
         ))}
       </section>

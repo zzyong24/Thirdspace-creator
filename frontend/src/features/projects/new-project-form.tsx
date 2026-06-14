@@ -239,11 +239,11 @@ function ProjectNameField({ name, onChange }: ProjectNameFieldProps) {
       data-slot="new-project-name"
       data-testid="new-project-name"
       data-name="name"
-      className="grid gap-2"
+      className="grid gap-1.5"
     >
       <label
         htmlFor="new-project-name-input"
-        className="text-sm font-medium text-foreground"
+        className="text-[13px] font-medium text-foreground"
       >
         项目名称
         <span aria-hidden="true" className="ml-1 text-destructive">
@@ -277,11 +277,11 @@ function ProjectBriefField({ brief, onChange }: ProjectBriefFieldProps) {
       data-slot="new-project-brief"
       data-testid="new-project-brief"
       data-name="brief"
-      className="grid gap-2"
+      className="grid gap-1.5"
     >
       <label
         htmlFor="new-project-brief-input"
-        className="text-sm font-medium text-foreground"
+        className="text-[13px] font-medium text-foreground"
       >
         项目简介
       </label>
@@ -291,7 +291,7 @@ function ProjectBriefField({ brief, onChange }: ProjectBriefFieldProps) {
         value={brief}
         onChange={(event) => onChange(event.target.value)}
         placeholder="一句话描述这次想做的内容（可选）"
-        rows={3}
+        rows={2}
         data-slot="new-project-brief-input"
       />
     </div>
@@ -327,9 +327,9 @@ function RadioCardGroup<TValue extends string>({
       data-slot="new-project-radio-group"
       data-testid={testId}
       data-name={name}
-      className="grid gap-2"
+      className="grid gap-1.5"
     >
-      <legend className="text-sm font-medium text-foreground">{legend}</legend>
+      <legend className="text-[13px] font-medium text-foreground">{legend}</legend>
       <div
         role="radiogroup"
         aria-label={legend}
@@ -387,7 +387,7 @@ const RadioCard = React.forwardRef<HTMLInputElement, RadioCardProps>(
         data-checked={checked ? "true" : "false"}
         onKeyDown={handleKeyDown}
         className={cn(
-          "flex cursor-pointer flex-col gap-1 rounded-lg border p-2.5 text-left transition-colors",
+          "flex cursor-pointer flex-col gap-0.5 rounded-lg border p-2 text-left transition-colors",
           "focus-within:ring-2 focus-within:ring-ring/50 focus-within:ring-offset-2 focus-within:ring-offset-popover",
           checked
             ? "border-primary bg-primary/5"
@@ -449,11 +449,11 @@ function TargetPlatformSelector({
       }))}
       renderOption={(option) => (
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium text-foreground">
+          <span className="text-[13px] font-medium text-foreground">
             {option.label}
           </span>
           {option.description ? (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[11px] text-muted-foreground">
               {option.description}
             </span>
           ) : null}
@@ -479,11 +479,11 @@ function ContentTypeSelector({ value, onChange }: ContentTypeSelectorProps) {
       options={CONTENT_TYPE_OPTIONS}
       renderOption={(option) => (
         <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium text-foreground">
+          <span className="text-[13px] font-medium text-foreground">
             {option.label}
           </span>
           {option.description ? (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[11px] text-muted-foreground">
               {option.description}
             </span>
           ) : null}
@@ -510,7 +510,7 @@ function CreationModeSelector({ value, onChange }: CreationModeSelectorProps) {
       renderOption={(option) => (
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium text-foreground">
+            <span className="text-[13px] font-medium text-foreground">
               {option.label}
             </span>
             {option.badge ? (
@@ -524,7 +524,7 @@ function CreationModeSelector({ value, onChange }: CreationModeSelectorProps) {
             ) : null}
           </div>
           {option.description ? (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[11px] text-muted-foreground">
               {option.description}
             </span>
           ) : null}
@@ -542,7 +542,7 @@ function DialogHint() {
   return (
     <p
       data-slot="new-project-hint"
-      className="text-xs text-muted-foreground"
+      className="text-[11px] text-muted-foreground"
     >
       提示：项目创建后可继续在「项目工作区」补充更多平台与阶段细节。
     </p>
@@ -566,7 +566,7 @@ function FormFooter({
     <div
       data-slot="new-project-footer"
       data-testid="new-project-footer"
-      className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3"
+      className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-2.5"
     >
       <label
         htmlFor="new-project-enter-after-create"

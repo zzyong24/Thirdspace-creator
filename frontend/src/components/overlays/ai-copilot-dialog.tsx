@@ -36,15 +36,15 @@ export interface AICopilotDialogProps {
 
 export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
   return (
-    <div className="flex flex-col gap-5" data-slot="ai-copilot-dialog">
+    <div className="flex flex-col gap-4" data-slot="ai-copilot-dialog">
       <header className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs uppercase tracking-wide text-text-subtle">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[11px] uppercase tracking-wide text-text-subtle">
             AI 助手
           </span>
           <h2
             id="ai-copilot-title"
-            className="font-heading text-lg font-semibold text-foreground"
+            className="font-heading text-[17px] font-semibold leading-tight text-foreground"
           >
             你的个人创作 Copilot
           </h2>
