@@ -247,7 +247,7 @@ export function OverlayController({
           data-slot="overlay-panel"
           data-overlay-panel="copilot"
           className={cn(
-            "relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col gap-4 overflow-y-auto rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none",
+            "relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col gap-4 overflow-y-auto rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none",
             className,
           )}
         >
