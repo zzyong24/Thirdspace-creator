@@ -52,10 +52,13 @@ export interface AnalyticsReviewPageProps {
 // ---------------------------------------------------------------------------
 
 const ANALYTICS_TABS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
-  { id: "overview", label: "数据总览" },
-  { id: "audience", label: "观众画像" },
-  { id: "retention", label: "留存曲线" },
-  { id: "review", label: "复盘记录" },
+  { id: "overview", label: "整体表现" },
+  { id: "platform", label: "平台表现" },
+  { id: "audience", label: "观众分析" },
+  { id: "content", label: "内容分析" },
+  { id: "revenue", label: "收益分析" },
+  { id: "comparison", label: "对比分析" },
+  { id: "experience", label: "经验沉淀" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -318,7 +321,7 @@ export function AnalyticsReviewPage({ projectId }: AnalyticsReviewPageProps) {
       <AnalyticsTabs tabs={ANALYTICS_TABS} />
       <div
         data-slot="analytics-grid"
-        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_320px]"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_350px]"
       >
         <div
           data-slot="analytics-main-column"

@@ -88,6 +88,7 @@ function buildProjectStages(currentStage: string): ReadonlyArray<TopHeaderStage>
 function resolveWorkspacePrimaryAction(stage: string): string {
   if (stage === "production") return "完成制作";
   if (stage === "publishing") return "查看数据";
+  if (stage === "review") return "导出报告";
   return "进入下一步";
 }
 

@@ -185,7 +185,7 @@ describe("ScriptWorkspacePage", () => {
     expect(primaryAction).toBeInTheDocument();
   });
 
-  it("renders the Script Tabs in spec order (主脚本/章节/引用/摘要)", async () => {
+  it("renders the six reference Script Tabs in order", async () => {
     const { container } = await renderWorkspace();
     const tabsSection = container.querySelector(
       '[data-slot="script-tabs"]',
@@ -194,20 +194,29 @@ describe("ScriptWorkspacePage", () => {
     const tabTriggers = tabsSection.querySelectorAll(
       '[data-slot="page-tabs"] [data-tab-id]',
     );
-    expect(tabTriggers).toHaveLength(4);
+    expect(tabTriggers).toHaveLength(6);
     const tabIds = Array.from(tabTriggers).map((tab) =>
       tab.getAttribute("data-tab-id"),
     );
     expect(tabIds).toEqual([
+      "outline",
       "master-script",
-      "chapters",
       "quotes",
-      "summary",
+      "mode",
+      "ai-rewrite",
+      "versions",
     ]);
     const tabLabels = Array.from(tabTriggers).map(
       (tab) => tab.textContent ?? "",
     );
-    expect(tabLabels).toEqual(["主脚本", "章节", "引用", "摘要"]);
+    expect(tabLabels).toEqual([
+      "大纲",
+      "正文",
+      "金句卡片",
+      "脚本模式",
+      "AI 改写",
+      "版本记录",
+    ]);
   });
 
   it("renders the editor toolbar with role=toolbar and buttons with aria-pressed", async () => {

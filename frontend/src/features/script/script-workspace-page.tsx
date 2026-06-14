@@ -58,10 +58,12 @@ export interface ScriptWorkspacePageProps {
 // ---------------------------------------------------------------------------
 
 const SCRIPT_TABS: ReadonlyArray<ScriptViewModel["tabs"][number]> = [
-  { id: "master-script", label: "主脚本" },
-  { id: "chapters", label: "章节" },
-  { id: "quotes", label: "引用" },
-  { id: "summary", label: "摘要" },
+  { id: "outline", label: "大纲" },
+  { id: "master-script", label: "正文" },
+  { id: "quotes", label: "金句卡片" },
+  { id: "mode", label: "脚本模式" },
+  { id: "ai-rewrite", label: "AI 改写" },
+  { id: "versions", label: "版本记录" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -152,11 +154,11 @@ export function ScriptWorkspacePage({
       <ScriptTabs tabs={vm.tabs} />
       <div
         data-slot="script-grid"
-        className="grid grid-cols-1 gap-card-gap lg:grid-cols-3"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_400px]"
       >
         <div
           data-slot="script-main-column"
-          className="flex flex-col gap-card-gap lg:col-span-2"
+          className="flex flex-col gap-card-gap"
         >
           <RichTextEditorShell
             sections={vm.sections}
@@ -166,7 +168,7 @@ export function ScriptWorkspacePage({
         </div>
         <div
           data-slot="script-right-rail"
-          className="flex flex-col gap-card-gap lg:col-span-1"
+          className="flex flex-col gap-card-gap"
         >
           <OutlineStructureCard items={vm.outline} />
           <AIWritingSuggestionsCard items={vm.aiSuggestions} />

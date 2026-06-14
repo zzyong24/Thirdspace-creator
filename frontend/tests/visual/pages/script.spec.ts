@@ -45,18 +45,20 @@ test.describe("Script Workspace page", () => {
     await expect(activeStage).toHaveCount(1);
     await expect(activeStage).toContainText("脚本");
 
-    // Script Tabs row with four tabs in spec order.
+    // Script Tabs row with six tabs in reference order.
     const tabsSection = page.locator('[data-slot="script-tabs"]');
     await expect(tabsSection).toBeVisible();
     const tabTriggers = tabsSection.locator(
       '[data-slot="page-tabs"] [data-tab-id]',
     );
-    await expect(tabTriggers).toHaveCount(4);
+    await expect(tabTriggers).toHaveCount(6);
     await expect(tabTriggers).toHaveText([
-      "主脚本",
-      "章节",
-      "引用",
-      "摘要",
+      "大纲",
+      "正文",
+      "金句卡片",
+      "脚本模式",
+      "AI 改写",
+      "版本记录",
     ]);
 
     // RichTextEditor shell with toolbar, document, and status bar.
