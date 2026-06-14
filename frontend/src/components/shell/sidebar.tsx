@@ -113,14 +113,14 @@ export function Sidebar({
       data-testid="app-sidebar"
       aria-label="主侧栏"
       className={cn(
-        "flex h-screen w-sidebar shrink-0 flex-col gap-4 border-r border-border bg-surface px-3 py-5",
+        "flex h-screen w-sidebar shrink-0 flex-col gap-4 border-r border-border bg-surface px-4 pb-8 pt-6",
         className,
       )}
     >
       <SidebarBrand />
       <PrimaryNav activeId={activeNavId} />
       {contextSection ? <ContextSection section={contextSection} /> : null}
-      <div className="mt-auto flex flex-col gap-(--card-gap)">
+      <div className="mt-auto flex flex-col gap-card-gap">
         <SidebarContextualCard
           variant={contextualCardVariant}
           userDisplayName={resolvedUser.displayName}
@@ -148,7 +148,7 @@ function SidebarBrand() {
     <div
       data-slot="sidebar-brand"
       aria-hidden="true"
-      className="flex items-center gap-2 px-2 py-1 text-[15px] font-semibold text-foreground"
+      className="mb-7 flex items-center gap-2 px-2 py-1 text-[15px] font-semibold text-foreground"
     >
       <span className="flex size-7 items-center justify-center rounded-md bg-brand text-primary-foreground">
         <Sparkles className="size-4" />
@@ -180,7 +180,7 @@ function PrimaryNav({ activeId }: { activeId: string }) {
             data-active={isActive ? "true" : "false"}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors",
+              "flex h-10 items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors",
               "text-muted-foreground hover:bg-muted hover:text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               isActive && "bg-brand-soft font-medium text-brand",
@@ -278,7 +278,7 @@ function SidebarContextualCard({ variant, userDisplayName }: SidebarContextualCa
     <div
       data-slot="sidebar-contextual-card"
       data-variant="assistant"
-      className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-3 text-xs"
+      className="flex min-h-36 flex-col gap-3 rounded-xl border border-border bg-surface-subtle p-4 text-xs"
     >
       <div className="flex items-center gap-2 text-foreground">
         <span

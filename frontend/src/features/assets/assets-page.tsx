@@ -347,7 +347,7 @@ function AssetWorkspace({ viewModel }: AssetWorkspaceProps) {
     <section
       data-slot="asset-workspace"
       aria-label="素材工作区"
-      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[176px_minmax(0,1fr)_296px]"
+      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[176px_minmax(0,1fr)_296px]"
     >
       <AssetTypeSidebar counts={viewModel.typeCounts} />
       <AssetsInteractiveRegion viewModel={viewModel} />

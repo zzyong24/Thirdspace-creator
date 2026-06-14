@@ -115,4 +115,26 @@ test.describe("AppShell", () => {
     await expect(scroll).toBeVisible();
     await expect(scroll).toHaveCount(1);
   });
+
+  test("applies shared page spacing tokens in the browser", async ({ page }) => {
+    await page.goto("/");
+
+    const styles = await page
+      .locator('[data-slot="app-page-content"]')
+      .evaluate((element) => {
+        const pageStyle = getComputedStyle(element);
+        const main = element.firstElementChild as HTMLElement;
+        return {
+          gap: getComputedStyle(main).gap,
+          paddingLeft: pageStyle.paddingLeft,
+          paddingRight: pageStyle.paddingRight,
+        };
+      });
+
+    expect(styles).toEqual({
+      gap: "20px",
+      paddingLeft: "24px",
+      paddingRight: "24px",
+    });
+  });
 });

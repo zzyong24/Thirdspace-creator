@@ -71,15 +71,15 @@ export function ResearchWorkspacePage({
       data-app="creatoros"
       data-page="research"
       data-project-id={vm.projectId}
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       <div
         data-slot="research-grid"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-3"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-3"
       >
         <div
           data-slot="research-main-column"
-          className="flex flex-col gap-(--card-gap) lg:col-span-2"
+          className="flex flex-col gap-card-gap lg:col-span-2"
         >
           <ProjectIdeaCard
             title={vm.idea.title}
@@ -94,7 +94,7 @@ export function ResearchWorkspacePage({
         </div>
         <div
           data-slot="research-right-rail"
-          className="flex flex-col gap-(--card-gap) lg:col-span-1"
+          className="flex flex-col gap-card-gap lg:col-span-1"
         >
           <ResearchNotesCard notes={vm.notes} />
           <EvidenceCollectionCard items={vm.evidence} />

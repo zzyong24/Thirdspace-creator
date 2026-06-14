@@ -95,7 +95,7 @@ export function AppShell({
       />
       <div
         data-slot="app-main-frame"
-        className="flex min-h-screen min-w-0 flex-1 flex-col"
+        className="relative flex min-h-screen min-w-0 flex-1 flex-col"
       >
         <TopHeader
           mode={headerMode}
@@ -111,7 +111,13 @@ export function AppShell({
           overlayMasked={overlayMasked}
         />
         <PageScrollArea>
-          <div data-slot="app-page-content" className="px-(--page-gutter) py-(--section-gap)">
+          <div
+            data-slot="app-page-content"
+            className={cn(
+              "px-page-gutter",
+              headerMode === "global" ? "py-8" : "py-section-gap",
+            )}
+          >
             {children}
           </div>
         </PageScrollArea>

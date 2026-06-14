@@ -495,7 +495,7 @@ export function SearchPage({
       data-app="creatoros"
       data-page="search"
       data-search-id="search-root"
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       {/* The TopHeader already renders the global search input in
           `search` mode; we keep a hidden mirror here so URL `?q=`
@@ -511,7 +511,7 @@ export function SearchPage({
       <ResultTypeTabs tabs={vm.resultTypeTabs} />
       <div
         data-slot="search-layout"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_320px]"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_320px]"
       >
         <SearchResults
           projects={vm.projectResults}
@@ -587,7 +587,7 @@ function SearchResults({
   return (
     <div
       data-slot="search-results"
-      className="flex flex-col gap-(--card-gap)"
+      className="flex flex-col gap-card-gap"
     >
       <ProjectResultSection projects={projects} />
       <KnowledgeResultSection rows={knowledge} />
@@ -610,7 +610,7 @@ function ProjectResultSection({
     <SectionCard title="项目" description="按相关度排序的匹配项目">
       <div
         data-slot="project-result-section"
-        className="grid grid-cols-1 gap-(--card-gap) sm:grid-cols-2 lg:grid-cols-3"
+        className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 lg:grid-cols-3"
       >
         {projects.map((project) => (
           <ProjectResultCard key={project.id} project={project} />
@@ -726,7 +726,7 @@ function AssetResultSection({
     <SectionCard title="素材" description="缩略图横向排列">
       <div
         data-slot="asset-result-section"
-        className="grid grid-cols-2 gap-(--card-gap) sm:grid-cols-3 lg:grid-cols-4"
+        className="grid grid-cols-2 gap-card-gap sm:grid-cols-3 lg:grid-cols-4"
       >
         {items.map((item) => (
           <AssetThumb key={item.id} item={item} />
@@ -780,7 +780,7 @@ function VideoResultSection({
     <SectionCard title="视频" description="匹配的视频内容">
       <div
         data-slot="video-result-section"
-        className="grid grid-cols-1 gap-(--card-gap) sm:grid-cols-2 lg:grid-cols-4"
+        className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 lg:grid-cols-4"
       >
         {items.map((item) => (
           <VideoThumb key={item.id} item={item} />
@@ -844,7 +844,7 @@ function SearchSideRail({
     <aside
       data-slot="search-side-rail"
       aria-label="搜索辅助"
-      className="flex flex-col gap-(--card-gap)"
+      className="flex flex-col gap-card-gap"
     >
       <SearchFilters filters={filters} />
       <QuickActions actions={quickActions} />

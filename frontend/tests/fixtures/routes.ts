@@ -33,7 +33,11 @@ export interface RouteSpec {
     | "experience"
     | "settings";
   /** Expected TopHeader mode from shell-router.tsx. */
-  readonly headerMode: "global" | "project-workspace" | "search";
+  readonly headerMode:
+    | "global"
+    | "project-overview"
+    | "project-workspace"
+    | "search";
   /** Reference image SHA-256 (TDD-PLAN §3-§25). */
   readonly imageSha256: string;
 }
@@ -62,7 +66,7 @@ export const ROUTES: ReadonlyArray<RouteSpec> = [
     pathname: "/projects/ai-native-browser",
     pageTitle: "AI Native Browser 深度解析",
     sidebarActiveId: "projects",
-    headerMode: "project-workspace",
+    headerMode: "project-overview",
     imageSha256:
       "e599bfe55f3db65bfe5c98489502ebbb818ba67033bcc898bdc8764e11af37fa",
   },

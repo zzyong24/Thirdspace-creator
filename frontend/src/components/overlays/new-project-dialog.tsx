@@ -108,7 +108,7 @@ export function NewProjectDialog() {
     <div
       data-slot="overlay-layer"
       data-overlay="new-project"
-      className="fixed inset-0 z-(--z-overlay) flex items-center justify-center p-6"
+      className="fixed inset-0 z-overlay flex items-center justify-center p-6"
     >
       <div
         aria-hidden="true"

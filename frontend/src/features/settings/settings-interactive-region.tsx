@@ -58,7 +58,7 @@ export function SettingsMainColumn({
   viewModel: SettingsViewModel;
 }) {
   return (
-    <div data-slot="main-settings" className="flex flex-col gap-(--card-gap)">
+    <div data-slot="main-settings" className="flex flex-col gap-card-gap">
       <AccountInformationCard viewModel={viewModel} />
       <PreferenceSettingsCard viewModel={viewModel} />
       <SystemSettingsCard viewModel={viewModel} />
@@ -78,7 +78,7 @@ export function SettingsRailColumn({
   return (
     <div
       data-slot="settings-rail"
-      className="flex flex-col gap-(--card-gap)"
+      className="flex flex-col gap-card-gap"
     >
       <StorageUsageCard storage={viewModel.storage} />
       <ModelConfigurationCard model={viewModel.model} />

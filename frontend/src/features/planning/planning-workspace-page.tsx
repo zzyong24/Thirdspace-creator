@@ -146,16 +146,16 @@ export function PlanningWorkspacePage({
       data-app="creatoros"
       data-page="planning"
       data-project-id={vm.projectId}
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       <PlanningTabs tabs={vm.tabs} />
       <div
         data-slot="planning-grid"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-3"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-3"
       >
         <div
           data-slot="planning-main-column"
-          className="flex flex-col gap-(--card-gap) lg:col-span-2"
+          className="flex flex-col gap-card-gap lg:col-span-2"
         >
           <ContentContractSection contracts={vm.contracts} />
           <CoreThesisCard
@@ -167,7 +167,7 @@ export function PlanningWorkspacePage({
         </div>
         <div
           data-slot="planning-right-rail"
-          className="flex flex-col gap-(--card-gap) lg:col-span-1"
+          className="flex flex-col gap-card-gap lg:col-span-1"
         >
           <EvidenceMapCard items={vm.evidenceMap} />
           <KeyMaterialsCard items={vm.keyMaterials} />

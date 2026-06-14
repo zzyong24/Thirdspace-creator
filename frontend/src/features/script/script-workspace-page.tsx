@@ -147,16 +147,16 @@ export function ScriptWorkspacePage({
       data-app="creatoros"
       data-page="script"
       data-project-id={vm.projectId}
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       <ScriptTabs tabs={vm.tabs} />
       <div
         data-slot="script-grid"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-3"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-3"
       >
         <div
           data-slot="script-main-column"
-          className="flex flex-col gap-(--card-gap) lg:col-span-2"
+          className="flex flex-col gap-card-gap lg:col-span-2"
         >
           <RichTextEditorShell
             sections={vm.sections}
@@ -166,7 +166,7 @@ export function ScriptWorkspacePage({
         </div>
         <div
           data-slot="script-right-rail"
-          className="flex flex-col gap-(--card-gap) lg:col-span-1"
+          className="flex flex-col gap-card-gap lg:col-span-1"
         >
           <OutlineStructureCard items={vm.outline} />
           <AIWritingSuggestionsCard items={vm.aiSuggestions} />

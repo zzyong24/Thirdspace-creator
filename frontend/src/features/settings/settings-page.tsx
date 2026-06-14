@@ -221,12 +221,12 @@ export function SettingsPage({ viewModel }: SettingsPageProps = {}) {
       data-app="creatoros"
       data-page="settings"
       data-settings-id="settings-root"
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       <SettingsTabsRow />
       <div
         data-slot="settings-grid"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_304px]"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_304px]"
       >
         <SettingsMainColumn viewModel={vm} />
         <SettingsRailColumn viewModel={vm} />

@@ -13,7 +13,7 @@ export default function CreatorNotFound() {
       role="status"
       aria-live="polite"
       data-slot="creator-not-found"
-      className="flex flex-col items-start gap-(--section-gap) p-(--page-gutter)"
+      className="flex flex-col items-start gap-section-gap p-page-gutter"
     >
       <div className="flex flex-col gap-2">
         <h1 className="text-xl font-semibold text-foreground">未找到该页面</h1>

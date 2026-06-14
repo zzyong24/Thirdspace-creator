@@ -133,12 +133,32 @@ describe("AppShell", () => {
     expect(header?.getAttribute("data-mode")).toBe("project-workspace");
   });
 
+  it("keeps global actions in an overlay header without consuming page height", async () => {
+    const { container } = await renderShell({
+      pathname: "/",
+      headerMode: "global",
+    });
+    const header = container.querySelector('[data-slot="app-top-header"]');
+
+    expect(header).toHaveAttribute("data-layout", "overlay");
+    expect(header).toHaveClass("absolute");
+  });
+
   it("renders the page content inside the page scroll area", async () => {
     const { container } = await renderShell();
     const scroll = container.querySelector('[data-slot="page-scroll-area"]');
     expect(scroll).not.toBeNull();
     const content = screen.getByTestId("page-content");
     expect(scroll?.contains(content)).toBe(true);
+  });
+
+  it("applies the shared page gutter and section gap tokens", async () => {
+    const { container } = await renderShell();
+    const pageContent = container.querySelector(
+      '[data-slot="app-page-content"]',
+    ) as HTMLElement;
+
+    expect(pageContent).toHaveClass("px-page-gutter", "py-8");
   });
 
   // ---------------------------------------------------------------------------
@@ -215,21 +235,18 @@ describe("AppShell", () => {
     expect(profile?.textContent ?? "").toMatch(/个人版/);
   });
 
-  it("top header renders search trigger, notifications, share, more icons + primary CTA when provided", async () => {
-    const { container } = await renderShell({
-      primaryActionLabel: "新建项目",
-    });
+  it("dashboard header renders search, notifications and the New Project CTA", async () => {
+    const { container } = await renderShell();
     const header = container.querySelector('[data-slot="app-top-header"]');
     expect(header).not.toBeNull();
-    // buttons by aria-label
     const searchBtn = within(header as HTMLElement).getByLabelText("搜索");
     const bellBtn = within(header as HTMLElement).getByLabelText("通知");
-    const shareBtn = within(header as HTMLElement).getByLabelText("分享");
-    const moreBtn = within(header as HTMLElement).getByLabelText("更多");
     expect(searchBtn).toBeInTheDocument();
     expect(bellBtn).toBeInTheDocument();
-    expect(shareBtn).toBeInTheDocument();
-    expect(moreBtn).toBeInTheDocument();
-    expect(within(header as HTMLElement).getByText("新建项目")).toBeInTheDocument();
+    expect(
+      within(header as HTMLElement).getByRole("link", {
+        name: /新建项目/,
+      }),
+    ).toHaveAttribute("href", "/projects/new");
   });
 });

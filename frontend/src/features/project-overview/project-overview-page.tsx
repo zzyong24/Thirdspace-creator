@@ -85,7 +85,7 @@ export function ProjectOverviewPage({
       data-app="creatoros"
       data-page="project-overview"
       data-project-id={vm.projectId}
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       <ProjectProgressCard
         projectTitle={vm.projectTitle}
@@ -96,11 +96,11 @@ export function ProjectOverviewPage({
       />
       <div
         data-slot="project-overview-grid"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-3"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-3"
       >
         <div
           data-slot="project-overview-main-column"
-          className="flex flex-col gap-(--card-gap) lg:col-span-2"
+          className="flex flex-col gap-card-gap lg:col-span-2"
         >
           <AssetSummaryCard stats={vm.assetStats} />
           <RecentFilesCard files={vm.recentFiles} />

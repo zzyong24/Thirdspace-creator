@@ -413,7 +413,7 @@ export function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
       data-app="creatoros"
       data-page="knowledge"
       data-knowledge-id="knowledge-root"
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       <KnowledgeToolbar />
       <KnowledgeMetrics metrics={vm.metrics} />
@@ -478,7 +478,7 @@ function KnowledgeMetrics({
     <section
       data-slot="knowledge-metrics"
       aria-label="知识统计"
-      className="grid grid-cols-1 gap-(--card-gap) sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+      className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
     >
       {metrics.map((metric) => (
         <MetricCard
@@ -517,7 +517,7 @@ function KnowledgeGrid({
   return (
     <div
       data-slot="knowledge-grid"
-      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[220px_minmax(0,1fr)_300px]"
+      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[220px_minmax(0,1fr)_300px]"
     >
       <CategoryPanel categories={categories} />
       <RecentKnowledgeTable rows={recent} />
@@ -666,7 +666,7 @@ function InsightRail({
     <div
       data-slot="insight-rail"
       aria-label="知识洞察"
-      className="flex flex-col gap-(--card-gap)"
+      className="flex flex-col gap-card-gap"
     >
       <PopularTags tags={popularTags} />
       <MemoryInsights items={memoryInsights} />

@@ -313,12 +313,12 @@ export function AnalyticsReviewPage({ projectId }: AnalyticsReviewPageProps) {
       data-app="creatoros"
       data-page="analytics-review"
       data-project-id={resolvedProjectId}
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       <AnalyticsTabs tabs={ANALYTICS_TABS} />
       <div
         data-slot="analytics-grid"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_320px]"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_320px]"
       >
         <div
           data-slot="analytics-main-column"
@@ -336,7 +336,7 @@ export function AnalyticsReviewPage({ projectId }: AnalyticsReviewPageProps) {
         </div>
         <div
           data-slot="analytics-right-rail"
-          className="flex flex-col gap-(--card-gap)"
+          className="flex flex-col gap-card-gap"
         >
           <AIAnalysisCard items={pickAiAnalysis(resolvedProjectId)} />
           <ReviewHistoryCard items={pickReviewHistory(resolvedProjectId)} />
@@ -387,7 +387,7 @@ function CoreMetricsRow({ metrics }: { metrics: ReadonlyArray<MetricCardVm> }) {
     <section
       data-slot="core-metrics-row"
       aria-label="核心指标"
-      className="grid grid-cols-1 gap-(--card-gap) sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7"
+      className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7"
     >
       {metrics.map((metric) => (
         <MetricCard
@@ -412,7 +412,7 @@ function PrimaryCharts() {
   return (
     <div
       data-slot="primary-charts"
-      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
     >
       <ChartFrame
         title="播放趋势"
@@ -518,7 +518,7 @@ function SecondaryCharts({
   return (
     <div
       data-slot="secondary-charts"
-      className="grid grid-cols-1 gap-(--card-gap) md:grid-cols-3"
+      className="grid grid-cols-1 gap-card-gap md:grid-cols-3"
     >
       <SectionCard
         title="观众画像"
@@ -1020,7 +1020,7 @@ function AIAnalysisCard({ items }: { items: ReadonlyArray<AiAnalysisItem> }) {
       data-slot="ai-analysis-card"
       aria-label="AI 分析"
       data-overlay="false"
-      className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card"
+      className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-card-gap shadow-card"
     >
       <header className="flex flex-col gap-1">
         <h3 className="text-md font-semibold text-foreground">AI 分析</h3>
@@ -1059,7 +1059,7 @@ function ReviewHistoryCard({
     <article
       data-slot="review-history-card"
       aria-label="复盘记录"
-      className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-(--card-gap) shadow-card"
+      className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-card-gap shadow-card"
     >
       <header className="flex flex-col gap-1">
         <h3 className="text-md font-semibold text-foreground">复盘记录</h3>

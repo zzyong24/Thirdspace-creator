@@ -12,10 +12,10 @@ export default function CreatorLoading() {
       aria-live="polite"
       aria-label="页面加载中"
       data-slot="creator-loading"
-      className="flex flex-col gap-(--section-gap) p-(--page-gutter)"
+      className="flex flex-col gap-section-gap p-page-gutter"
     >
       <div className="h-6 w-48 rounded-control bg-surface-subtle" />
-      <div className="grid grid-cols-1 gap-(--card-gap) md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-card-gap md:grid-cols-3">
         <div className="h-24 rounded-card bg-surface" />
         <div className="h-24 rounded-card bg-surface" />
         <div className="h-24 rounded-card bg-surface" />

@@ -28,6 +28,7 @@ import type {
 import type {
   TopHeaderMode,
   TopHeaderProjectIdentity,
+  TopHeaderStage,
 } from "@/components/shell/top-header";
 import { OverlayController } from "@/components/overlays/overlay-controller";
 import { AICopilotDialog } from "@/components/overlays/ai-copilot-dialog";
@@ -41,6 +42,13 @@ function startsWith(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
+function resolveProjectRouteId(projectId: string): string {
+  if (projectId === "ai-native-browser") {
+    return "project-ainativebrowser";
+  }
+  return projectId;
+}
+
 interface RouteResolution {
   readonly headerMode: TopHeaderMode;
   readonly pageTitle?: string;
@@ -48,9 +56,36 @@ interface RouteResolution {
   readonly contextualCardVariant: SidebarContextualCardVariant;
   readonly sidebarContext?: SidebarContextSection;
   readonly project?: TopHeaderProjectIdentity;
+  readonly primaryActionLabel?: string;
+  readonly secondaryActionLabel?: string;
+  readonly projectStages?: ReadonlyArray<TopHeaderStage>;
 }
 
-function resolveRoute(pathname: string): RouteResolution {
+const PROJECT_STAGES = [
+  { id: "research", label: "研究" },
+  { id: "planning", label: "策划" },
+  { id: "script", label: "写稿" },
+  { id: "production", label: "制作" },
+  { id: "publishing", label: "发布" },
+  { id: "review", label: "复盘" },
+] as const;
+
+function buildProjectStages(currentStage: string): ReadonlyArray<TopHeaderStage> {
+  const currentIndex = PROJECT_STAGES.findIndex(
+    (stage) => stage.id === currentStage,
+  );
+  return PROJECT_STAGES.map((stage, index) => ({
+    ...stage,
+    status:
+      index < currentIndex
+        ? "completed"
+        : index === currentIndex
+          ? "in_progress"
+          : "pending",
+  }));
+}
+
+export function resolveRoute(pathname: string): RouteResolution {
   if (pathname === "/") {
     return {
       headerMode: "global",
@@ -74,19 +109,22 @@ function resolveRoute(pathname: string): RouteResolution {
       contextualCardVariant: "assistant",
     };
   }
-  if (startsWith(pathname, "/projects/")) {
+  if (startsWith(pathname, "/projects")) {
     const segments = pathname.split("/").filter(Boolean);
     // /projects/:projectId/...
     const projectId = segments[1] ?? "";
     const stage = segments[2];
-    const project = canonicalDataset.projects.find((p) => p.id === projectId);
+    const resolvedProjectId = resolveProjectRouteId(projectId);
+    const project = canonicalDataset.projects.find(
+      (item) => item.id === resolvedProjectId,
+    );
     const identity: TopHeaderProjectIdentity | undefined = project
       ? {
           projectId: project.id,
           title: project.title,
           stage: project.currentStage,
           stageProgressPct: project.progressPct,
-          updatedLabel: "最近更新 —",
+          updatedLabel: "写稿中 · 更新于 今天 14:30",
           starred: project.starred,
         }
       : undefined;
@@ -97,6 +135,19 @@ function resolveRoute(pathname: string): RouteResolution {
         pageTitle: project?.title ?? "项目概览",
         contextualCardVariant: "assistant",
         project: identity,
+        primaryActionLabel: "进入工作台",
+        secondaryActionLabel: "分享",
+        sidebarContext: {
+          heading: "当前项目",
+          items: [
+            {
+              id: projectId,
+              label: project?.title ?? "AI Native Browser 深度解析",
+              href: pathname,
+              indicator: "active",
+            },
+          ],
+        },
       };
     }
     return {
@@ -104,6 +155,20 @@ function resolveRoute(pathname: string): RouteResolution {
       pageTitle: project?.title,
       contextualCardVariant: "assistant",
       project: identity,
+      projectStages: buildProjectStages(stage),
+      primaryActionLabel: "进入下一步",
+      secondaryActionLabel: "分享",
+      sidebarContext: {
+        heading: "当前项目",
+        items: [
+          {
+            id: projectId,
+            label: project?.title ?? "AI Native Browser 深度解析",
+            href: `/projects/${projectId}`,
+            indicator: "active",
+          },
+        ],
+      },
     };
   }
   if (pathname === "/knowledge") {
@@ -186,6 +251,9 @@ export function ShellRouter({
       contextualCardVariant={resolution.contextualCardVariant}
       sidebarContext={resolution.sidebarContext}
       project={resolution.project}
+      projectStages={resolution.projectStages}
+      primaryActionLabel={resolution.primaryActionLabel}
+      secondaryActionLabel={resolution.secondaryActionLabel}
       overlayMasked={hasInterceptingModal || overlayMasked}
     >
       {children}

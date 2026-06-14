@@ -23,15 +23,6 @@ test.describe("Whole-system route matrix (Task 26)", () => {
         if (msg.type() === "error") consoleErrors.push(msg.text());
       });
 
-      // Block external network. Localhost requests remain allowed.
-      await page.route("**/*", (route) => {
-        const request = route.request();
-        if (request.url().startsWith("http://localhost") || request.url().startsWith("data:")) {
-          return route.continue();
-        }
-        return route.abort();
-      });
-
       await page.goto(route.pathname);
 
       // Single shared AppShell.

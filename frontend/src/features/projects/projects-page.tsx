@@ -58,7 +58,7 @@ export function ProjectsPage({ viewModel }: ProjectsPageProps = {}) {
     <main
       data-app="creatoros"
       data-page="projects"
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       <header className="flex flex-col gap-1">
         <h1

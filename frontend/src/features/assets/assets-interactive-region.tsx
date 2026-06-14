@@ -58,7 +58,7 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
   return (
     <div
       data-slot="assets-interactive-region"
-      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_296px]"
+      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_296px]"
     >
       <div
         data-slot="asset-gallery"
@@ -147,7 +147,7 @@ function AssetCardGrid({ assets, selectedId, onSelect }: AssetCardGridProps) {
     <div
       data-slot="asset-card-grid"
       aria-label="素材卡片网格"
-      className="grid grid-cols-1 gap-(--card-gap) sm:grid-cols-2 lg:grid-cols-3"
+      className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 lg:grid-cols-3"
     >
       {assets.map((asset) => (
         <AssetCard

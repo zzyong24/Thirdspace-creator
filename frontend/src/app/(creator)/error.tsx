@@ -31,7 +31,7 @@ export default function CreatorError({ error, reset }: CreatorErrorProps) {
       role="alert"
       aria-live="assertive"
       data-slot="creator-error"
-      className="flex flex-col items-start gap-(--section-gap) p-(--page-gutter)"
+      className="flex flex-col items-start gap-section-gap p-page-gutter"
     >
       <div className="flex flex-col gap-2">
         <h1 className="text-xl font-semibold text-foreground">

@@ -17,7 +17,7 @@
 import * as React from "react";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { creatorIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -70,8 +70,8 @@ export type TopHeaderStage = {
 const DEFAULT_STAGES: ReadonlyArray<TopHeaderStage> = [
   { id: "research", label: "研究", status: "completed" },
   { id: "planning", label: "策划", status: "completed" },
-  { id: "script", label: "脚本", status: "in_progress" },
-  { id: "production", label: "拍摄", status: "pending" },
+  { id: "script", label: "写稿", status: "in_progress" },
+  { id: "production", label: "制作", status: "pending" },
   { id: "publishing", label: "发布", status: "pending" },
   { id: "review", label: "复盘", status: "pending" },
 ];
@@ -87,6 +87,7 @@ const MoreIcon = creatorIcons.more;
 
 export function TopHeader({
   mode = "global",
+  pathname = "/",
   pageTitle,
   pageDescription,
   project,
@@ -100,15 +101,22 @@ export function TopHeader({
 }: TopHeaderProps) {
   const resolvedMode: TopHeaderMode = overlayMasked ? "overlay-background" : mode;
   const resolvedStages: ReadonlyArray<TopHeaderStage> = projectStages ?? DEFAULT_STAGES;
+  const usesOverlayLayout =
+    resolvedMode === "global" || resolvedMode === "overlay-background";
   return (
     <header
       data-slot="app-top-header"
       data-testid="app-top-header"
       data-mode={resolvedMode}
+      data-layout={usesOverlayLayout ? "overlay" : "flow"}
       data-masked={overlayMasked ? "true" : "false"}
       className={cn(
-        "flex h-header shrink-0 items-center gap-3 border-b border-border bg-surface px-(--page-gutter)",
-        "min-w-0",
+        "z-header flex min-w-0 items-center gap-3 px-page-gutter",
+        usesOverlayLayout
+          ? "pointer-events-none absolute inset-x-0 top-0 h-20 justify-end border-0 bg-transparent pt-2"
+          : resolvedMode === "project-overview"
+            ? "h-40 shrink-0 items-start border-b border-border bg-surface py-5"
+            : "h-header shrink-0 border-b border-border bg-surface",
         className,
       )}
     >
@@ -124,10 +132,15 @@ export function TopHeader({
           mode={resolvedMode}
         />
       ) : (
-        <PageHeading title={pageTitle} description={pageDescription} />
+        <PageHeading
+          title={pageTitle}
+          description={pageDescription}
+          visuallyHidden={usesOverlayLayout}
+        />
       )}
       <HeaderActions
         mode={resolvedMode}
+        pathname={pathname}
         primaryActionLabel={primaryActionLabel}
         secondaryActionLabel={secondaryActionLabel}
       />
@@ -142,9 +155,11 @@ export function TopHeader({
 function PageHeading({
   title,
   description,
+  visuallyHidden = false,
 }: {
   title?: string;
   description?: string;
+  visuallyHidden?: boolean;
 }) {
   if (!title) {
     return <div data-slot="header-page-heading" className="min-w-0 flex-1" />;
@@ -152,7 +167,10 @@ function PageHeading({
   return (
     <div
       data-slot="header-page-heading"
-      className="flex min-w-0 flex-1 flex-col"
+      className={cn(
+        "flex min-w-0 flex-1 flex-col",
+        visuallyHidden && "sr-only",
+      )}
     >
       <h1 className="truncate text-md font-semibold text-foreground">
         {title}
@@ -176,16 +194,38 @@ function ProjectIdentityBlock({
   return (
     <div
       data-slot="header-project-identity"
-      className="flex min-w-0 flex-1 items-center gap-(--card-gap)"
+      className={cn(
+        "flex min-w-0 flex-1 gap-card-gap",
+        mode === "project-overview"
+          ? "flex-col items-start"
+          : "items-center",
+      )}
     >
-      <div className="flex min-w-0 flex-col">
-        <span className="truncate text-sm font-medium text-foreground">
-          {project?.title ?? "项目"}
-        </span>
-        <span className="truncate text-xs text-muted-foreground">
-          {project?.updatedLabel ?? "最近更新 —"}
-        </span>
-      </div>
+      {mode === "project-overview" ? (
+        <div className="flex min-w-0 flex-col gap-2">
+          <span className="text-xs text-muted-foreground">
+            项目　›　{project?.title ?? "项目概览"}
+          </span>
+          <span className="truncate text-2xl font-semibold text-foreground">
+            {project?.title ?? "项目概览"}　<span className="text-warning">★</span>
+          </span>
+          <span className="text-sm text-muted-foreground">
+            全面解析 AI Native Browser 的核心价值、市场机会与未来趋势
+          </span>
+          <span className="text-xs text-muted-foreground">
+            Kevin.Z　　创建于 2024-05-10　　最后更新 今天 14:30　　写稿中
+          </span>
+        </div>
+      ) : (
+        <div className="flex w-64 min-w-0 shrink-0 flex-col">
+          <span className="truncate text-sm font-medium text-foreground">
+            {project?.title ?? "项目"}
+          </span>
+          <span className="truncate text-xs text-muted-foreground">
+            {project?.updatedLabel ?? "最近更新 —"}
+          </span>
+        </div>
+      )}
       {mode === "project-workspace" ? (
         <ProjectStageStepper stages={stages} />
       ) : null}
@@ -202,13 +242,17 @@ function ProjectStageStepper({
     <ol
       data-slot="header-stage-stepper"
       aria-label="项目六阶段"
-      className="hidden items-center gap-1 overflow-x-auto md:flex"
+      className="hidden min-w-0 flex-1 items-stretch overflow-x-auto md:flex"
     >
       {stages.map((stage) => (
         <li
           key={stage.id}
           data-status={stage.status}
-          className="flex items-center gap-1 rounded-full bg-surface-subtle px-2.5 py-0.5 text-xs text-muted-foreground"
+          className={cn(
+            "flex h-12 min-w-24 flex-1 items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground first:border-l",
+            stage.status === "in_progress" &&
+              "border-brand/30 bg-brand-soft font-medium text-brand",
+          )}
         >
           <span
             aria-hidden="true"
@@ -264,13 +308,34 @@ function SearchField({
 
 function HeaderActions({
   mode,
+  pathname,
   primaryActionLabel,
   secondaryActionLabel,
 }: {
   mode: TopHeaderMode;
+  pathname: string;
   primaryActionLabel?: string;
   secondaryActionLabel?: string;
 }) {
+  if (
+    (mode === "global" || mode === "overlay-background") &&
+    pathname === "/"
+  ) {
+    return <DashboardHeaderActions />;
+  }
+  if (mode === "global" || mode === "overlay-background") {
+    return null;
+  }
+  if (mode === "project-workspace" || mode === "project-overview") {
+    return (
+      <ProjectHeaderActions
+        mode={mode}
+        primaryActionLabel={primaryActionLabel}
+        secondaryActionLabel={secondaryActionLabel}
+      />
+    );
+  }
+
   // For non-search modes the search trigger is the first focusable element
   // (D-005: focus order TopHeader -> PageContent).
   const showSearchTrigger = mode !== "search";
@@ -323,6 +388,80 @@ function HeaderActions({
           {primaryActionLabel}
         </Button>
       ) : null}
+    </div>
+  );
+}
+
+function ProjectHeaderActions({
+  mode,
+  primaryActionLabel,
+  secondaryActionLabel,
+}: {
+  mode: "project-overview" | "project-workspace";
+  primaryActionLabel?: string;
+  secondaryActionLabel?: string;
+}) {
+  return (
+    <div
+      data-slot="header-actions"
+      className={cn(
+        "flex shrink-0 items-center gap-3",
+        mode === "project-overview" && "pt-0.5",
+      )}
+    >
+      {mode === "project-workspace" ? (
+        <Link
+          href="/search"
+          aria-label="搜索"
+          className={buttonVariants({ variant: "outline", size: "icon-lg" })}
+        >
+          <SearchIcon className="size-4" aria-hidden="true" />
+        </Link>
+      ) : null}
+      {secondaryActionLabel ? (
+        <Button type="button" variant="outline" size="lg">
+          <ShareIcon className="size-4" aria-hidden="true" />
+          {secondaryActionLabel}
+        </Button>
+      ) : null}
+      <Button type="button" variant="outline" size="icon-lg" aria-label="更多">
+        <MoreIcon className="size-4" aria-hidden="true" />
+      </Button>
+      {primaryActionLabel ? (
+        <Button type="button" size="lg">
+          {primaryActionLabel} →
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+function DashboardHeaderActions() {
+  return (
+    <div
+      data-slot="header-actions"
+      className="pointer-events-auto flex shrink-0 items-center gap-3"
+    >
+      <Link
+        href="/search"
+        aria-label="搜索"
+        className="flex h-9 w-72 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm text-muted-foreground shadow-sm"
+      >
+        <SearchIcon className="size-4" aria-hidden="true" />
+        <span className="flex-1">搜索项目、内容、素材...</span>
+        <kbd className="rounded bg-surface-subtle px-1.5 py-0.5 text-[10px]">
+          ⌘ K
+        </kbd>
+      </Link>
+      <Button type="button" variant="outline" size="icon" aria-label="通知">
+        <BellIcon className="size-4" aria-hidden="true" />
+      </Button>
+      <Link
+        href="/projects/new"
+        className={buttonVariants({ size: "lg" })}
+      >
+        ＋ 新建项目
+      </Link>
     </div>
   );
 }

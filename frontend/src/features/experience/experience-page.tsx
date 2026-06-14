@@ -440,7 +440,7 @@ function ExperienceLayout({
   return (
     <div
       data-slot="experience-layout"
-      className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_320px]"
+      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_320px]"
     >
       <div
         data-slot="experience-main-column"
@@ -474,7 +474,7 @@ function AISummarySection({
     <section
       data-slot="ai-summary-section"
       aria-label="AI 洞察总结"
-      className="grid grid-cols-1 gap-(--card-gap) sm:grid-cols-2 md:grid-cols-4"
+      className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 md:grid-cols-4"
     >
       {cards.map((card) => (
         <SummaryCard key={card.id} card={card} />
@@ -600,7 +600,7 @@ function ExperienceCategories({
       <div
         data-slot="experience-categories"
         aria-label="经验库分类"
-        className="grid grid-cols-2 gap-(--card-gap) sm:grid-cols-3 md:grid-cols-6"
+        className="grid grid-cols-2 gap-card-gap sm:grid-cols-3 md:grid-cols-6"
       >
         {categories.map((category) => (
           <article
@@ -709,7 +709,7 @@ function RightRail({
     <aside
       data-slot="experience-right-rail"
       aria-label="经验沉淀侧栏"
-      className="flex flex-col gap-(--card-gap)"
+      className="flex flex-col gap-card-gap"
     >
       <ValueOverview vm={valueOverview} />
       <ApplicationEffectChart trend={applicationEffect} />

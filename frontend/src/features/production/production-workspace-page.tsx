@@ -171,16 +171,16 @@ export function ProductionWorkspacePage({
       data-app="creatoros"
       data-page="production"
       data-project-id={resolvedProjectId}
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       <ProductionModeSelector />
       <div
         data-slot="production-grid"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-3"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-3"
       >
         <div
           data-slot="production-main-column"
-          className="flex flex-col gap-(--card-gap) lg:col-span-2"
+          className="flex flex-col gap-card-gap lg:col-span-2"
         >
           <RecordingScriptPanel scriptLines={vm.scriptLines} />
           <AssetLibraryPanel
@@ -191,7 +191,7 @@ export function ProductionWorkspacePage({
         </div>
         <div
           data-slot="settings-rail"
-          className="flex flex-col gap-(--card-gap) lg:col-span-1"
+          className="flex flex-col gap-card-gap lg:col-span-1"
         >
           {vm.settings.map((group) => (
             <SettingsGroup key={group.group} group={group} />

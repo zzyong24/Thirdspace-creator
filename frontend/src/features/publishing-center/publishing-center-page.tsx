@@ -506,17 +506,17 @@ export function PublishingCenterPage({
       data-app="creatoros"
       data-page="publishing-center"
       data-publishing-center-id="publishing-center-root"
-      className="flex flex-col gap-(--card-gap)"
+      className="flex flex-col gap-card-gap"
     >
       <ContentTypeTabs tabs={vm.contentTypeTabs} />
       {/* Two-column layout: left stack (toolbar → batch → table) + right rail */}
       <div
         data-slot="publishing-two-col"
-        className="grid grid-cols-1 gap-(--card-gap) lg:grid-cols-[minmax(0,1fr)_320px]"
+        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_320px]"
       >
         <div
           data-slot="publishing-left-stack"
-          className="flex flex-col gap-(--card-gap)"
+          className="flex flex-col gap-card-gap"
         >
           <PublishingToolbar />
           <BatchOperationBar />
@@ -582,7 +582,7 @@ function PublishingToolbar() {
     <div
       data-slot="publishing-toolbar"
       aria-label="发布列表工具栏"
-      className="flex flex-wrap items-center gap-(--card-gap)"
+      className="flex flex-wrap items-center gap-card-gap"
     >
       <label className="sr-only" htmlFor="publishing-search">
         搜索发布内容
@@ -624,7 +624,7 @@ function BatchOperationBar() {
     <div
       data-slot="batch-operation-bar"
       aria-label="批量操作"
-      className="flex items-center gap-(--card-gap) rounded-xl border border-border bg-surface px-5 py-3.5"
+      className="flex items-center gap-card-gap rounded-xl border border-border bg-surface px-5 py-3.5"
     >
       <label className="flex items-center gap-2.5 cursor-pointer select-none">
         <span
@@ -864,7 +864,7 @@ function AnalyticsRail({
     <aside
       data-slot="analytics-rail"
       aria-label="发布数据"
-      className="flex flex-col gap-(--card-gap)"
+      className="flex flex-col gap-card-gap"
     >
       <PublishingMetrics metrics={metrics} />
       <PlatformComparisonChart shares={platformComparison} />
@@ -883,7 +883,7 @@ function PublishingMetrics({
     <section
       data-slot="publishing-metrics"
       aria-label="发布概览"
-      className="grid grid-cols-2 gap-(--card-gap)"
+      className="grid grid-cols-2 gap-card-gap"
     >
       {metrics.map((metric) => (
         <MetricCard

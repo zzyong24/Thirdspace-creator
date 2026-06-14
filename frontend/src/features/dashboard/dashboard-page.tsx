@@ -81,7 +81,7 @@ export function DashboardPage({
     <main
       data-app="creatoros"
       data-page="dashboard"
-      className="flex flex-col gap-(--section-gap)"
+      className="flex flex-col gap-section-gap"
     >
       <header className="flex flex-col gap-0.5">
         <h1
@@ -112,7 +112,7 @@ function SummaryMetrics({ metrics }: { metrics: DashboardViewModel["metrics"] })
     <section
       data-slot="dashboard-summary-metrics"
       aria-label="总览指标"
-      className="grid grid-cols-1 gap-(--card-gap) sm:grid-cols-2 lg:grid-cols-5"
+      className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 lg:grid-cols-5"
     >
       {metrics.map((metric) => (
         <MetricCard
@@ -138,7 +138,7 @@ function DashboardGrid({ vm }: { vm: DashboardViewModel }) {
     <section
       data-slot="dashboard-grid"
       aria-label="工作台"
-      className="grid grid-cols-1 gap-(--card-gap) md:grid-cols-2 lg:grid-cols-3"
+      className="grid grid-cols-1 gap-card-gap md:grid-cols-2 lg:grid-cols-3"
     >
       <ContinueCreatingCard
         continueCreating={vm.continueCreating}
