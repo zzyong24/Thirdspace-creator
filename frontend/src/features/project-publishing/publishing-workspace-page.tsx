@@ -61,8 +61,9 @@ export interface PublishingWorkspacePageProps {
 
 const PUBLISHING_TABS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
   { id: "publishing", label: "发布设置" },
-  { id: "schedule", label: "排期" },
-  { id: "history", label: "发布历史" },
+  { id: "history", label: "发布记录" },
+  { id: "platforms", label: "平台管理" },
+  { id: "batch", label: "批量发布" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -269,7 +270,7 @@ export function PublishingWorkspacePage({
       <PublishingTabs tabs={vm.tabs} />
       <div
         data-slot="publishing-grid"
-        className="grid grid-cols-1 gap-3 lg:grid-cols-3"
+        className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_1fr_0.8fr]"
       >
         <div
           data-slot="basic-information-form"

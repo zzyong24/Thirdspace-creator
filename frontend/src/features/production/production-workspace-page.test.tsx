@@ -88,7 +88,7 @@ async function renderWorkspace(
     <AppShell
       pathname={`/projects/${projectId}/production`}
       headerMode="project-workspace"
-      primaryActionLabel="进入下一步:内容发布"
+      primaryActionLabel="完成制作"
       project={
         project
           ? {
@@ -170,14 +170,14 @@ describe("ProductionWorkspacePage", () => {
     );
   });
 
-  it("exposes the 进入下一步:内容发布 primary action in the header", async () => {
+  it("exposes the 完成制作 primary action in the header", async () => {
     const { container } = await renderWorkspace();
     const header = container.querySelector(
       '[data-slot="app-top-header"]',
     ) as HTMLElement;
     expect(header).not.toBeNull();
     const primaryAction = within(header).getByRole("button", {
-      name: /进入下一步:内容发布/,
+      name: /完成制作/,
     });
     expect(primaryAction).toBeInTheDocument();
   });
@@ -223,6 +223,16 @@ describe("ProductionWorkspacePage", () => {
       const relation = previous.compareDocumentPosition(node);
       expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
+  });
+
+  it("exposes all six production regions in reference order", async () => {
+    const { container } = await renderWorkspace();
+
+    expect(
+      Array.from(
+        container.querySelectorAll('[data-testid="production-region"]'),
+      ).map((node) => node.getAttribute("data-region")),
+    ).toEqual(["mode", "script", "assets", "preview", "settings", "timeline"]);
   });
 
   it("renders asset category tabs in the AssetLibraryPanel", async () => {

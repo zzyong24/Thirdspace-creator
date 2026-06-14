@@ -29,9 +29,9 @@ test.describe("Production Workspace page", () => {
     );
     await expect(identity).toContainText("AI Native Browser 深度解析");
 
-    // Primary action "进入下一步:内容发布" lives in the header.
+    // Primary action "完成制作" lives in the header.
     await expect(
-      header.getByRole("button", { name: /进入下一步:内容发布/ }),
+      header.getByRole("button", { name: /完成制作/ }),
     ).toBeVisible();
 
     // The six-stage stepper in canonical order with Production active.

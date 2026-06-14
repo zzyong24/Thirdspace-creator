@@ -85,6 +85,12 @@ function buildProjectStages(currentStage: string): ReadonlyArray<TopHeaderStage>
   }));
 }
 
+function resolveWorkspacePrimaryAction(stage: string): string {
+  if (stage === "production") return "完成制作";
+  if (stage === "publishing") return "查看数据";
+  return "进入下一步";
+}
+
 export function resolveRoute(pathname: string): RouteResolution {
   if (pathname === "/") {
     return {
@@ -156,7 +162,7 @@ export function resolveRoute(pathname: string): RouteResolution {
       contextualCardVariant: "assistant",
       project: identity,
       projectStages: buildProjectStages(stage),
-      primaryActionLabel: "进入下一步",
+      primaryActionLabel: resolveWorkspacePrimaryAction(stage),
       secondaryActionLabel: "分享",
       sidebarContext: {
         heading: "当前项目",

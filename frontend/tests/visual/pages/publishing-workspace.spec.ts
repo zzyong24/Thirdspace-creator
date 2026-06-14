@@ -30,9 +30,9 @@ test.describe("Publishing Workspace page", () => {
     );
     await expect(identity).toContainText("AI Native Browser 深度解析");
 
-    // Primary action "进入下一步:数据复盘" lives in the header.
+    // Primary action "查看数据" lives in the header.
     await expect(
-      header.getByRole("button", { name: /进入下一步:数据复盘/ }),
+      header.getByRole("button", { name: /查看数据/ }),
     ).toBeVisible();
 
     // The six-stage stepper in canonical order with Publishing active.

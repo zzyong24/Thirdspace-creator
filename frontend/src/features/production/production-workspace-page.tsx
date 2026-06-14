@@ -171,34 +171,34 @@ export function ProductionWorkspacePage({
       data-app="creatoros"
       data-page="production"
       data-project-id={resolvedProjectId}
-      className="flex flex-col gap-section-gap"
+      className="flex flex-col gap-3"
     >
+      <h2 className="text-base font-semibold text-foreground">
+        制作方式选择
+      </h2>
       <ProductionModeSelector />
       <div
         data-slot="production-grid"
-        className="grid grid-cols-1 gap-card-gap lg:grid-cols-3"
+        className="grid grid-cols-1 gap-3 xl:grid-cols-[280px_340px_minmax(0,1fr)_280px] xl:grid-rows-[552px_200px] xl:items-stretch"
       >
-        <div
-          data-slot="production-main-column"
-          className="flex flex-col gap-card-gap lg:col-span-2"
-        >
-          <RecordingScriptPanel scriptLines={vm.scriptLines} />
-          <AssetLibraryPanel
-            categories={vm.assetCategories}
-            assets={vm.assets}
-          />
-          <PreviewPanel preview={vm.preview} />
-        </div>
+        <RecordingScriptPanel scriptLines={vm.scriptLines} />
+        <AssetLibraryPanel
+          categories={vm.assetCategories}
+          assets={vm.assets}
+        />
+        <PreviewPanel preview={vm.preview} />
         <div
           data-slot="settings-rail"
-          className="flex flex-col gap-card-gap lg:col-span-1"
+          data-testid="production-region"
+          data-region="settings"
+          className="flex flex-col gap-3 overflow-hidden xl:col-start-4 xl:row-span-2 xl:row-start-1"
         >
           {vm.settings.map((group) => (
             <SettingsGroup key={group.group} group={group} />
           ))}
         </div>
+        <TimelinePanel timeline={vm.timeline} />
       </div>
-      <TimelinePanel timeline={vm.timeline} />
     </main>
   );
 }
@@ -211,6 +211,8 @@ function ProductionModeSelector() {
   return (
     <div
       data-slot="production-mode-selector"
+      data-testid="production-region"
+      data-region="mode"
       className="grid grid-cols-1 gap-3 md:grid-cols-3"
     >
       {PRODUCTION_MODE_CARDS.map((card) => (
@@ -275,7 +277,12 @@ function RecordingScriptPanel({
   scriptLines: ProductionViewModel["scriptLines"];
 }) {
   return (
-    <div data-slot="recording-script-panel">
+    <div
+      data-slot="recording-script-panel"
+      data-testid="production-region"
+      data-region="script"
+      className="h-full overflow-hidden xl:row-span-2"
+    >
       <SectionCard
         title="录制脚本"
         description="与脚本阶段共享,录屏时高亮当前行"
@@ -330,7 +337,12 @@ function AssetLibraryPanel({
     grouped[asset.type] = bucket;
   }
   return (
-    <div data-slot="asset-library-panel">
+    <div
+      data-slot="asset-library-panel"
+      data-testid="production-region"
+      data-region="assets"
+      className="h-full overflow-hidden"
+    >
       <SectionCard
         title="素材库"
         description={`${assets.length} 个素材,按分类切换`}
@@ -427,7 +439,12 @@ function PreviewPanel({
   preview: ProductionViewModel["preview"];
 }) {
   return (
-    <div data-slot="preview-panel">
+    <div
+      data-slot="preview-panel"
+      data-testid="production-region"
+      data-region="preview"
+      className="h-full overflow-hidden"
+    >
       <SectionCard
         title="预览"
         description={preview.durationLabel}
@@ -619,7 +636,12 @@ function TimelinePanel({
   timeline: ProductionViewModel["timeline"];
 }) {
   return (
-    <div data-slot="timeline-panel">
+    <div
+      data-slot="timeline-panel"
+      data-testid="production-region"
+      data-region="timeline"
+      className="xl:col-span-2 xl:col-start-2"
+    >
       <SectionCard
         title="时间线"
         description="单轨横向铺开,不再拆分为多轨道"

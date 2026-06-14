@@ -91,7 +91,7 @@ async function renderWorkspace(
     <AppShell
       pathname={`/projects/${projectId}/publishing`}
       headerMode="project-workspace"
-      primaryActionLabel="进入下一步:数据复盘"
+      primaryActionLabel="查看数据"
       project={
         project
           ? {
@@ -173,14 +173,14 @@ describe("PublishingWorkspacePage", () => {
     );
   });
 
-  it("exposes the 进入下一步:数据复盘 primary action in the header", async () => {
+  it("exposes the 查看数据 primary action in the header", async () => {
     const { container } = await renderWorkspace();
     const header = container.querySelector(
       '[data-slot="app-top-header"]',
     ) as HTMLElement;
     expect(header).not.toBeNull();
     const primaryAction = within(header).getByRole("button", {
-      name: /进入下一步:数据复盘/,
+      name: /查看数据/,
     });
     expect(primaryAction).toBeInTheDocument();
   });
@@ -193,6 +193,22 @@ describe("PublishingWorkspacePage", () => {
     expect(tabs).not.toBeNull();
     const triggers = tabs.querySelectorAll('[data-tab-id]');
     expect(triggers.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders the four reference publishing tabs in order", async () => {
+    const { container } = await renderWorkspace();
+    const tabs = Array.from(
+      container.querySelectorAll(
+        '[data-slot="publishing-tabs"] [data-tab-id]',
+      ),
+    );
+
+    expect(tabs.map((tab) => tab.textContent?.trim())).toEqual([
+      "发布设置",
+      "发布记录",
+      "平台管理",
+      "批量发布",
+    ]);
   });
 
   it("renders a three-column PublishingGrid (basic/platform/preview) in spec order", async () => {
