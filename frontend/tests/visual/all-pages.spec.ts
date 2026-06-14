@@ -7,7 +7,7 @@ import { ROUTES } from "../fixtures/routes";
  * For every approved route we:
  *   1. Navigate to the route.
  *   2. Lock the structural assertion (the AppShell <main> region is visible).
- *   3. Take a full-page screenshot and diff it against the
+ *   3. Take a fixed 1536 x 1024 viewport screenshot and diff it against the
  *      Controller-approved baseline stored in
  *      `tests/visual/__screenshots__/reference-images/reference-<id>.png`.
  *
@@ -55,7 +55,7 @@ test.describe("Visual matrix (Task 26)", () => {
       // a directory it knows about — we use the test-results path
       // to keep behaviour identical to the project default.
       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
-        fullPage: true,
+        fullPage: false,
         maxDiffPixelRatio: 0.005,
       });
     });

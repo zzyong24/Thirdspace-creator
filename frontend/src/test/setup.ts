@@ -75,8 +75,12 @@ afterEach(() => {
   vi.useRealTimers();
   cleanup();
   window.history.replaceState(null, "", "/");
-  window.localStorage.clear();
-  window.sessionStorage.clear();
+  if (typeof window.localStorage?.clear === "function") {
+    window.localStorage.clear();
+  }
+  if (typeof window.sessionStorage?.clear === "function") {
+    window.sessionStorage.clear();
+  }
   document.body.replaceChildren();
   installBrowserShims();
 });

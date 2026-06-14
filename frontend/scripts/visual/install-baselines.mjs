@@ -101,6 +101,12 @@ async function main() {
   console.log(
     `[install-baselines] Parsed ${routes.length} routes from routes.ts`,
   );
+  if (routes.length !== 17) {
+    console.error(
+      `[install-baselines] Expected 17 routes, parsed ${routes.length}.`,
+    );
+    process.exit(2);
+  }
 
   await mkdir(BASELINES_DIR, { recursive: true });
 
@@ -170,6 +176,12 @@ async function main() {
     for (const f of failures) {
       console.error(`  ! ${f.id}: ${f.reason}`);
     }
+    process.exit(1);
+  }
+  if (installed.length !== 17) {
+    console.error(
+      `[install-baselines] Expected to install 17 baselines, installed ${installed.length}.`,
+    );
     process.exit(1);
   }
   console.log(
