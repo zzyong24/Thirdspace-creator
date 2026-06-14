@@ -173,16 +173,16 @@ function ProjectProgressCard({
         <div className="flex flex-col gap-4">
           <div
             data-slot="project-progress-header"
-            className="flex flex-wrap items-start justify-between gap-3"
+            className="flex flex-wrap items-center justify-between gap-3"
           >
-            <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex min-w-0 flex-col gap-0.5">
               <h1
                 data-slot="project-overview-title"
-                className="truncate font-heading text-xl font-semibold text-foreground"
+                className="truncate font-heading text-[15px] font-semibold text-foreground"
               >
                 {projectTitle}
               </h1>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground tabular-nums">
                 {`项目 ID · ${projectId}`}
               </p>
             </div>
