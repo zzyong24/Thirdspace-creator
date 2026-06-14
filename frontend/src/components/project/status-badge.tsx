@@ -95,7 +95,11 @@ export function StatusBadge({ status, className, children }: StatusBadgeProps) {
       data-slot="status-badge"
       data-status={status}
       variant="outline"
-      className={cn("border-transparent", TONE_CLASS[status], className)}
+      className={cn(
+        "h-5 rounded-md border-transparent px-1.5 text-[11px] font-medium",
+        TONE_CLASS[status],
+        className,
+      )}
     >
       {children ?? label}
     </Badge>

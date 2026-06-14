@@ -46,8 +46,8 @@ export function SectionCard({
       className={cn("gap-(--card-gap)", className)}
     >
       <CardHeader className="flex flex-row items-start justify-between gap-(--card-gap)">
-        <div className="flex min-w-0 flex-col gap-1">
-          <CardTitle id={labelledBy} className="text-md font-semibold">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <CardTitle id={labelledBy} className="text-[15px] font-semibold">
             {title}
           </CardTitle>
           {description ? (
