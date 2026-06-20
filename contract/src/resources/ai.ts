@@ -1,0 +1,104 @@
+import { z } from "zod";
+import { id, iso8601, aiTaskStatus } from "../primitives.js";
+
+// BaseEntity = { id }; Timestamped = { createdAt, updatedAt }. None of the AI
+// entities extend Timestamped, but several declare createdAt/updatedAt fields
+// explicitly — mapped one-to-one below.
+
+// AIConversation extends BaseEntity (declares createdAt/updatedAt explicitly).
+export const aiConversationResource = z.object({
+  id,
+  userId: id,
+  projectId: id.nullable(),
+  title: z.string(),
+  createdAt: iso8601,
+  updatedAt: iso8601,
+});
+export type AIConversationResource = z.infer<typeof aiConversationResource>;
+
+// AIMessageRole, defined locally (not in primitives).
+const aiMessageRole = z.enum(["user", "assistant", "system"]);
+
+// AIMessage extends BaseEntity (declares createdAt explicitly).
+export const aiMessageResource = z.object({
+  id,
+  conversationId: id,
+  role: aiMessageRole,
+  content: z.string(),
+  attachments: z.array(id),
+  modelMetadata: z.record(z.string(), z.unknown()),
+  createdAt: iso8601,
+});
+export type AIMessageResource = z.infer<typeof aiMessageResource>;
+
+// AITask extends BaseEntity (declares its own timestamp fields explicitly).
+export const aiTaskResource = z.object({
+  id,
+  userId: id,
+  projectId: id.nullable(),
+  contentOutputId: id.nullable(),
+  taskType: z.string(),
+  status: aiTaskStatus,
+  inputData: z.record(z.string(), z.unknown()),
+  modelKey: z.string(),
+  idempotencyKey: z.string(),
+  requestedAt: iso8601,
+  startedAt: iso8601.nullable(),
+  completedAt: iso8601.nullable(),
+  errorMessage: z.string().nullable(),
+});
+export type AITaskResource = z.infer<typeof aiTaskResource>;
+
+// AITaskReference extends BaseEntity only.
+export const aiTaskReferenceResource = z.object({
+  id,
+  aiTaskId: id,
+  entityType: z.string(),
+  entityId: id,
+  relationType: z.string(),
+});
+export type AITaskReferenceResource = z.infer<typeof aiTaskReferenceResource>;
+
+// AITaskResult extends BaseEntity only.
+export const aiTaskResultResource = z.object({
+  id,
+  aiTaskId: id,
+  resultType: z.string(),
+  artifactId: id.nullable(),
+  knowledgeItemId: id.nullable(),
+  assetId: id.nullable(),
+  resultData: z.record(z.string(), z.unknown()),
+});
+export type AITaskResultResource = z.infer<typeof aiTaskResultResource>;
+
+// AgentConfiguration extends BaseEntity (declares createdAt/updatedAt explicitly).
+export const agentConfigurationResource = z.object({
+  id,
+  userId: id,
+  name: z.string(),
+  agentType: z.string(),
+  status: z.string(),
+  capabilities: z.record(z.string(), z.unknown()),
+  settings: z.record(z.string(), z.unknown()),
+  secretReference: z.string(),
+  createdAt: iso8601,
+  updatedAt: iso8601,
+});
+export type AgentConfigurationResource = z.infer<
+  typeof agentConfigurationResource
+>;
+
+// ModelConfiguration extends BaseEntity only.
+export const modelConfigurationResource = z.object({
+  id,
+  userId: id,
+  capability: z.string(),
+  provider: z.string(),
+  modelName: z.string(),
+  secretReference: z.string(),
+  settings: z.record(z.string(), z.unknown()),
+  isDefault: z.boolean(),
+});
+export type ModelConfigurationResource = z.infer<
+  typeof modelConfigurationResource
+>;
