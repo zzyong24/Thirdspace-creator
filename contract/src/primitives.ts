@@ -69,6 +69,7 @@ export const publicationStatus = z.enum([
 export const aiTaskStatus = z.enum([
   "queued",
   "running",
+  "awaiting_confirmation",
   "succeeded",
   "failed",
   "cancelled",

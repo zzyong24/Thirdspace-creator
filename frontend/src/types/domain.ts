@@ -643,6 +643,7 @@ export interface AIMessage extends BaseEntity {
 export type AITaskStatus =
   | "queued"
   | "running"
+  | "awaiting_confirmation"
   | "succeeded"
   | "failed"
   | "cancelled";

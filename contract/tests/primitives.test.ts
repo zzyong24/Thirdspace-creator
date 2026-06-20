@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { id, iso8601, paginationQuery, platformId } from "../src/primitives.js";
+import { aiTaskStatus, id, iso8601, paginationQuery, platformId } from "../src/primitives.js";
 
 describe("primitives", () => {
   it("accepts a non-empty id", () => {
@@ -16,5 +16,18 @@ describe("primitives", () => {
   it("accepts a known platform id", () => {
     expect(platformId.parse("douyin")).toBe("douyin");
     expect(() => platformId.parse("myspace")).toThrow();
+  });
+});
+
+describe("aiTaskStatus", () => {
+  it("includes the candidate-confirm state between running and succeeded", () => {
+    expect(aiTaskStatus.options).toEqual([
+      "queued",
+      "running",
+      "awaiting_confirmation",
+      "succeeded",
+      "failed",
+      "cancelled",
+    ]);
   });
 });
