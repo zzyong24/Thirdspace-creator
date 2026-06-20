@@ -171,10 +171,13 @@ describe("ResearchWorkspacePage", () => {
       '[data-slot="app-top-header"]',
     ) as HTMLElement;
     expect(header).not.toBeNull();
-    const primaryAction = within(header).getByRole("button", {
+    const primaryAction = within(header).getByRole("link", {
       name: /进入下一步:策划构思/,
     });
-    expect(primaryAction).toBeInTheDocument();
+    expect(primaryAction).toHaveAttribute(
+      "href",
+      "/projects/project-ainativebrowser/planning",
+    );
   });
 
   it("renders the ProjectIdeaCard at the top of the Main column", async () => {

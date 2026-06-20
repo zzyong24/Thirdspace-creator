@@ -9,8 +9,18 @@ import {
   getProjectById,
   listProjects,
 } from "./canonical";
-import { scenarioSelectors, type FixtureScenarioName } from "./scenarios";
-import { buildDashboardViewModel, buildProjectsViewModel } from "./selectors";
+import {
+  buildPageScenario,
+  makePageScenarios,
+  scenarioSelectors,
+  type FixtureScenarioName,
+  type PageScenarioName,
+} from "./scenarios";
+import {
+  buildDashboardViewModel,
+  buildProjectsViewModel,
+  buildResearchViewModel,
+} from "./selectors";
 
 const FIXTURE_DIR = resolve(process.cwd(), "src/fixtures");
 const TYPES_DIR = resolve(process.cwd(), "src/types");
@@ -117,11 +127,57 @@ describe("Canonical fixture dataset", () => {
     expect(retrieved).toEqual(project);
   });
 
+  test("every Artifact.currentVersionId points to a version of the SAME artifact", () => {
+    const versionsById = new Map(
+      canonicalDataset.artifactVersions.map((version) => [version.id, version]),
+    );
+
+    for (const artifact of canonicalDataset.artifacts) {
+      const version = versionsById.get(artifact.currentVersionId);
+      expect(version, `missing version for ${artifact.id}`).toBeDefined();
+      expect(version?.artifactId).toBe(artifact.id);
+    }
+  });
+
+  test("MetricSnapshot.ingestionRunId resolves to an existing IngestionRun", () => {
+    const runIds = new Set(canonicalDataset.ingestionRuns.map((run) => run.id));
+    for (const snapshot of canonicalDataset.metricSnapshots) {
+      if (snapshot.ingestionRunId !== null) {
+        expect(runIds.has(snapshot.ingestionRunId)).toBe(true);
+      }
+    }
+  });
+
+  test("PublicationRevision.coverAssetId belongs to the same project as its publication", () => {
+    const outputsById = new Map(
+      canonicalDataset.contentOutputs.map((output) => [output.id, output]),
+    );
+    const publicationsById = new Map(
+      canonicalDataset.publications.map((publication) => [publication.id, publication]),
+    );
+    const projectAssetIds = new Map<string, Set<string>>();
+    for (const link of canonicalDataset.projectAssets) {
+      const set = projectAssetIds.get(link.projectId) ?? new Set<string>();
+      set.add(link.assetId);
+      projectAssetIds.set(link.projectId, set);
+    }
+
+    for (const revision of canonicalDataset.publicationRevisions) {
+      if (revision.coverAssetId === null) continue;
+      const publication = publicationsById.get(revision.publicationId);
+      expect(publication).toBeDefined();
+      const output = outputsById.get(publication!.contentOutputId);
+      expect(output).toBeDefined();
+      expect(projectAssetIds.get(output!.projectId)?.has(revision.coverAssetId)).toBe(true);
+    }
+  });
+
   test("exposes the full catalog of required entity collections", () => {
     const expectedKeys = [
       "user",
       "userPreferences",
       "projects",
+      "projectRelations",
       "projectStages",
       "projectTargetPlatforms",
       "contentOutputs",
@@ -142,14 +198,27 @@ describe("Canonical fixture dataset", () => {
       "learnings",
       "tags",
       "entityTags",
+      "projectKnowledge",
+      "projectAssets",
+      "artifactKnowledge",
+      "artifactAssets",
+      "outputAssets",
       "productions",
       "publications",
       "reviews",
       "reviewInsights",
       "aiConversations",
       "aiMessages",
+      "aiTasks",
+      "aiTaskReferences",
+      "aiTaskResults",
+      "agentConfigurations",
+      "externalSources",
+      "ingestionRuns",
+      "ingestionErrors",
       "notifications",
       "searchHistory",
+      "searchDocuments",
     ] as const;
 
     for (const key of expectedKeys) {
@@ -244,5 +313,109 @@ describe("Page ViewModel selectors", () => {
     expect(canonicalRow).toBeDefined();
     expect(canonicalRow?.title).toBe(canonicalProject.title);
     expect(canonicalRow?.platforms.length).toBeGreaterThan(0);
+  });
+});
+
+describe("Generic per-page scenario mechanism", () => {
+  const PAGE_SCENARIOS: PageScenarioName[] = [
+    "default",
+    "empty",
+    "loading",
+    "error",
+  ];
+
+  test("makePageScenarios exposes the four standard states", () => {
+    const scenarios = makePageScenarios(() =>
+      buildResearchViewModel(canonicalProject.id),
+    );
+    for (const name of PAGE_SCENARIOS) {
+      expect(scenarios[name]).toBeTypeOf("function");
+    }
+  });
+
+  test("default preserves the builder output and stamps scenario/loading/error", () => {
+    const research = makePageScenarios(() =>
+      buildResearchViewModel(canonicalProject.id),
+    ).default();
+
+    expect(research.scenario).toBe("default");
+    expect(research.loading).toBe(false);
+    expect(research.error).toBeNull();
+    // Default keeps the populated collections from the builder.
+    expect(research.competitors.length).toBeGreaterThan(0);
+    expect(research.trendCards.length).toBeGreaterThan(0);
+  });
+
+  test("empty clears every array-valued field on the ViewModel", () => {
+    const research = makePageScenarios(() =>
+      buildResearchViewModel(canonicalProject.id),
+    ).empty();
+
+    expect(research.scenario).toBe("empty");
+    expect(research.loading).toBe(false);
+    expect(research.error).toBeNull();
+    expect(research.competitors).toEqual([]);
+    expect(research.trendCards).toEqual([]);
+    expect(research.sources).toEqual([]);
+    expect(research.notes).toEqual([]);
+    expect(research.evidence).toEqual([]);
+    expect(research.relatedTags).toEqual([]);
+    expect(research.sourceTabs).toEqual([]);
+  });
+
+  test("loading sets loading=true with cleared collections", () => {
+    const research = makePageScenarios(() =>
+      buildResearchViewModel(canonicalProject.id),
+    ).loading();
+
+    expect(research.scenario).toBe("loading");
+    expect(research.loading).toBe(true);
+    expect(research.error).toBeNull();
+    expect(research.competitors).toEqual([]);
+  });
+
+  test("error attaches the fixture error payload with cleared collections", () => {
+    const research = makePageScenarios(() =>
+      buildResearchViewModel(canonicalProject.id),
+    ).error();
+
+    expect(research.scenario).toBe("error");
+    expect(research.loading).toBe(false);
+    expect(research.error?.code).toBe("FIXTURE_ERROR");
+    expect(research.competitors).toEqual([]);
+  });
+
+  test("works for a non-project-scoped page builder (dashboard)", () => {
+    const scenarios = makePageScenarios(() => buildDashboardViewModel());
+
+    const empty = scenarios.empty();
+    expect(empty.scenario).toBe("empty");
+    expect(empty.metrics).toEqual([]);
+    expect(empty.todos).toEqual([]);
+    expect(empty.recentPublications).toEqual([]);
+
+    const def = scenarios.default();
+    expect(def.scenario).toBe("default");
+    expect(def.metrics.length).toBeGreaterThan(0);
+  });
+
+  test("buildPageScenario produces a single variant equivalent to the map", () => {
+    const build = () => buildDashboardViewModel();
+    for (const name of PAGE_SCENARIOS) {
+      const single = buildPageScenario(build, name);
+      const fromMap = makePageScenarios(build)[name]();
+      expect(single).toEqual(fromMap);
+    }
+  });
+
+  test("the generic mechanism does not mutate the builder output", () => {
+    const original = buildResearchViewModel(canonicalProject.id);
+    const originalCompetitorCount = original.competitors.length;
+    buildPageScenario(
+      () => buildResearchViewModel(canonicalProject.id),
+      "empty",
+    );
+    const after = buildResearchViewModel(canonicalProject.id);
+    expect(after.competitors.length).toBe(originalCompetitorCount);
   });
 });

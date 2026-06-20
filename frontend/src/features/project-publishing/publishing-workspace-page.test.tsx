@@ -179,10 +179,13 @@ describe("PublishingWorkspacePage", () => {
       '[data-slot="app-top-header"]',
     ) as HTMLElement;
     expect(header).not.toBeNull();
-    const primaryAction = within(header).getByRole("button", {
+    const primaryAction = within(header).getByRole("link", {
       name: /查看数据/,
     });
-    expect(primaryAction).toBeInTheDocument();
+    expect(primaryAction).toHaveAttribute(
+      "href",
+      "/projects/project-ainativebrowser/review",
+    );
   });
 
   it("renders the PublishingTabs row", async () => {

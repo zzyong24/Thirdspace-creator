@@ -33,7 +33,7 @@ test.describe("Visual matrix (Task 26)", () => {
       page,
     }) => {
       await page.goto(route.pathname);
-      const main = page.locator("main");
+      const main = page.locator('main[data-app="creatoros"]');
       await expect(main).toBeVisible();
     });
 
@@ -41,7 +41,7 @@ test.describe("Visual matrix (Task 26)", () => {
       page,
     }) => {
       await page.goto(route.pathname);
-      await expect(page.locator("main")).toBeVisible();
+      await expect(page.locator('main[data-app="creatoros"]')).toBeVisible();
 
       // Wait for fonts/layout to settle. We use networkidle rather
       // than a hard sleep so the test stays fast on green paths.

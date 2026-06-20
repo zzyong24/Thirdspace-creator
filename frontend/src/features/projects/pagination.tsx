@@ -98,7 +98,7 @@ export function Pagination({
           <span aria-hidden="true">›</span>
         </button>
       </nav>
-      <span className="text-xs text-muted-foreground">每页显示 5 条</span>
+      <span className="text-xs text-muted-foreground">每页显示 10 条</span>
     </div>
   );
 }

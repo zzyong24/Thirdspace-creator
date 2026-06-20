@@ -9,6 +9,10 @@
 import type {
   AIConversation,
   AIMessage,
+  AITask,
+  AITaskReference,
+  AITaskResult,
+  AgentConfiguration,
   Asset,
   AssetFile,
   AudienceSnapshot,
@@ -16,6 +20,9 @@ import type {
   EntityTag,
   EvidenceLink,
   ExportRecord,
+  ExternalSource,
+  IngestionError,
+  IngestionRun,
   KnowledgeItem,
   KnowledgeRelation,
   KnowledgeRevision,
@@ -31,8 +38,14 @@ import type {
   ProductionSegment,
   Project,
   ProjectActivity,
+  ProjectAsset,
+  ProjectKnowledge,
+  ProjectRelation,
   ProjectStage,
   ProjectTargetPlatform,
+  ArtifactAsset,
+  ArtifactKnowledge,
+  OutputAsset,
   Publication,
   PublicationRevision,
   RetentionPoint,
@@ -40,6 +53,7 @@ import type {
   ReviewInsight,
   ReviewPublication,
   ScriptSection,
+  SearchDocument,
   SearchHistory,
   SegmentAsset,
   Tag,
@@ -844,6 +858,105 @@ const artifactVersions: ArtifactVersion[] = [
     aiTaskId: null,
     createdAt: shanghai(2026, 6, 4, 10, 0),
   },
+  {
+    id: "av-ainativebrowser-project-idea",
+    artifactId: "artifact-ainativebrowser-project-idea",
+    versionNumber: 1,
+    contentText: "项目立意初稿",
+    contentData: { angle: "AI 代理入口" },
+    changeSummary: "立项初稿",
+    createdByType: "user",
+    aiTaskId: null,
+    createdAt: iso.startedAt,
+  },
+  {
+    id: "av-ainativebrowser-trend",
+    artifactId: "artifact-ainativebrowser-trend",
+    versionNumber: 1,
+    contentText: "趋势分析初稿",
+    contentData: { signals: 6 },
+    changeSummary: "趋势初稿",
+    createdByType: "user",
+    aiTaskId: null,
+    createdAt: iso.startedAt,
+  },
+  {
+    id: "av-ainativebrowser-competitor",
+    artifactId: "artifact-ainativebrowser-competitor",
+    versionNumber: 1,
+    contentText: "竞品对比初稿",
+    contentData: { competitors: 3 },
+    changeSummary: "竞品初稿",
+    createdByType: "user",
+    aiTaskId: null,
+    createdAt: iso.startedAt,
+  },
+  {
+    id: "av-ainativebrowser-golden-quotes",
+    artifactId: "artifact-ainativebrowser-golden-quotes",
+    versionNumber: 1,
+    contentText: "金句候选初稿",
+    contentData: { quotes: 3 },
+    changeSummary: "金句初稿",
+    createdByType: "user",
+    aiTaskId: null,
+    createdAt: shanghai(2026, 6, 6, 9, 0),
+  },
+  {
+    id: "av-ainativebrowser-shot-list",
+    artifactId: "artifact-ainativebrowser-shot-list",
+    versionNumber: 1,
+    contentText: "镜头清单初稿",
+    contentData: { shots: 12 },
+    changeSummary: "镜头清单初稿",
+    createdByType: "user",
+    aiTaskId: null,
+    createdAt: shanghai(2026, 6, 7, 10, 0),
+  },
+  {
+    id: "av-ainativebrowser-timeline",
+    artifactId: "artifact-ainativebrowser-timeline",
+    versionNumber: 1,
+    contentText: "时间线初稿",
+    contentData: { segments: 4 },
+    changeSummary: "时间线初稿",
+    createdByType: "user",
+    aiTaskId: null,
+    createdAt: shanghai(2026, 6, 7, 10, 0),
+  },
+  {
+    id: "av-ainativebrowser-publish-package",
+    artifactId: "artifact-ainativebrowser-publish-package",
+    versionNumber: 1,
+    contentText: "发布包初稿",
+    contentData: { platforms: 3 },
+    changeSummary: "发布包初稿",
+    createdByType: "user",
+    aiTaskId: null,
+    createdAt: shanghai(2026, 6, 7, 10, 0),
+  },
+  {
+    id: "av-ainativebrowser-review-report",
+    artifactId: "artifact-ainativebrowser-review-report",
+    versionNumber: 1,
+    contentText: "复盘报告初稿",
+    contentData: {},
+    changeSummary: "复盘报告初稿",
+    createdByType: "user",
+    aiTaskId: null,
+    createdAt: shanghai(2026, 6, 7, 10, 0),
+  },
+  {
+    id: "av-podcast-review-report",
+    artifactId: "artifact-podcast-review-report",
+    versionNumber: 1,
+    contentText: "播客首期复盘报告",
+    contentData: { episodes: 1 },
+    changeSummary: "复盘报告定稿",
+    createdByType: "user",
+    aiTaskId: null,
+    createdAt: shanghai(2026, 4, 28, 10, 0),
+  },
 ];
 
 const artifacts: Artifact[] = [
@@ -851,7 +964,7 @@ const artifacts: Artifact[] = [
     id: "artifact-ainativebrowser-project-idea",
     projectId: "project-ainativebrowser",
     contentOutputId: null,
-    currentVersionId: "av-ainativebrowser-thesis-tree",
+    currentVersionId: "av-ainativebrowser-project-idea",
     stage: "research",
     artifactType: "project_idea",
     title: "AI Native Browser 项目立意",
@@ -864,7 +977,7 @@ const artifacts: Artifact[] = [
     id: "artifact-ainativebrowser-trend",
     projectId: "project-ainativebrowser",
     contentOutputId: null,
-    currentVersionId: "av-ainativebrowser-thesis-tree",
+    currentVersionId: "av-ainativebrowser-trend",
     stage: "research",
     artifactType: "trend_analysis",
     title: "浏览器市场趋势",
@@ -877,7 +990,7 @@ const artifacts: Artifact[] = [
     id: "artifact-ainativebrowser-competitor",
     projectId: "project-ainativebrowser",
     contentOutputId: null,
-    currentVersionId: "av-ainativebrowser-thesis-tree",
+    currentVersionId: "av-ainativebrowser-competitor",
     stage: "research",
     artifactType: "competitor_analysis",
     title: "竞品浏览器对比",
@@ -929,7 +1042,7 @@ const artifacts: Artifact[] = [
     id: "artifact-ainativebrowser-golden-quotes",
     projectId: "project-ainativebrowser",
     contentOutputId: "output-ainativebrowser-main",
-    currentVersionId: "av-ainativebrowser-output-script",
+    currentVersionId: "av-ainativebrowser-golden-quotes",
     stage: "script",
     artifactType: "golden_quotes",
     title: "金句候选",
@@ -942,7 +1055,7 @@ const artifacts: Artifact[] = [
     id: "artifact-ainativebrowser-shot-list",
     projectId: "project-ainativebrowser",
     contentOutputId: "output-ainativebrowser-main",
-    currentVersionId: "av-ainativebrowser-output-script",
+    currentVersionId: "av-ainativebrowser-shot-list",
     stage: "production",
     artifactType: "shot_list",
     title: "镜头清单",
@@ -955,7 +1068,7 @@ const artifacts: Artifact[] = [
     id: "artifact-ainativebrowser-timeline",
     projectId: "project-ainativebrowser",
     contentOutputId: "output-ainativebrowser-main",
-    currentVersionId: "av-ainativebrowser-output-script",
+    currentVersionId: "av-ainativebrowser-timeline",
     stage: "production",
     artifactType: "timeline",
     title: "时间线",
@@ -968,7 +1081,7 @@ const artifacts: Artifact[] = [
     id: "artifact-ainativebrowser-publish-package",
     projectId: "project-ainativebrowser",
     contentOutputId: "output-ainativebrowser-main",
-    currentVersionId: "av-ainativebrowser-output-script",
+    currentVersionId: "av-ainativebrowser-publish-package",
     stage: "publishing",
     artifactType: "publish_package",
     title: "发布包",
@@ -981,7 +1094,7 @@ const artifacts: Artifact[] = [
     id: "artifact-ainativebrowser-review-report",
     projectId: "project-ainativebrowser",
     contentOutputId: null,
-    currentVersionId: "av-ainativebrowser-output-script",
+    currentVersionId: "av-ainativebrowser-review-report",
     stage: "review",
     artifactType: "review_report",
     title: "复盘报告",
@@ -994,7 +1107,7 @@ const artifacts: Artifact[] = [
     id: "artifact-podcast-review-report",
     projectId: "project-podcast-launch",
     contentOutputId: "output-podcast-ep01",
-    currentVersionId: "av-ainativebrowser-output-script",
+    currentVersionId: "av-podcast-review-report",
     stage: "review",
     artifactType: "review_report",
     title: "播客首期复盘",
@@ -1537,7 +1650,7 @@ const learnings: Learning[] = [
     insight: "首期访谈样本偏少，导致趋势结论不显著。",
     recommendation: "未来研究阶段设定 100 样本硬性门槛。",
     validationStatus: "validated",
-    confidenceScore: 0.81,
+    confidenceScore: 81,
     createdAt: shanghai(2026, 4, 28, 10, 0),
     updatedAt: shanghai(2026, 4, 28, 10, 0),
   },
@@ -1550,7 +1663,7 @@ const learnings: Learning[] = [
     insight: "在前 15 秒承诺具体收益可显著提升完播率。",
     recommendation: "开头模板：问题 → 结果 → 路径。",
     validationStatus: "validated",
-    confidenceScore: 0.78,
+    confidenceScore: 78,
     createdAt: shanghai(2026, 4, 10, 10, 0),
     updatedAt: shanghai(2026, 4, 10, 10, 0),
   },
@@ -1563,7 +1676,7 @@ const learnings: Learning[] = [
     insight: "录屏 B-Roll 没有标注时观众在第 2 屏流失。",
     recommendation: "录屏必须叠加高亮与时间码。",
     validationStatus: "candidate",
-    confidenceScore: 0.62,
+    confidenceScore: 62,
     createdAt: shanghai(2026, 4, 5, 10, 0),
     updatedAt: shanghai(2026, 4, 5, 10, 0),
   },
@@ -1684,7 +1797,7 @@ const publicationRevisions: PublicationRevision[] = [
     revisionNumber: 1,
     title: "Creator 访谈 EP01",
     description: "首期嘉宾访谈，关于独立创作者的工作流。",
-    coverAssetId: "asset-poster-ainativebrowser",
+    coverAssetId: "asset-podcast-ep01",
     category: "播客",
     series: "Creator 访谈",
     platformTags: ["独立创作者", "工作流"],
@@ -1697,7 +1810,7 @@ const publicationRevisions: PublicationRevision[] = [
     revisionNumber: 1,
     title: "Creator 访谈 EP01 · 速读卡片",
     description: "图文版拆条。",
-    coverAssetId: "asset-poster-ainativebrowser",
+    coverAssetId: "asset-podcast-ep01",
     category: "成长",
     series: "Creator 访谈",
     platformTags: ["创作者", "访谈"],
@@ -2001,6 +2114,280 @@ const searchHistory: SearchHistory[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Project relations & resource associations
+// ---------------------------------------------------------------------------
+
+const projectRelations: ProjectRelation[] = [
+  {
+    id: "prel-promptcraft-ainativebrowser",
+    sourceProjectId: "project-promptcraft",
+    targetProjectId: "project-ainativebrowser",
+    relationType: "related",
+    note: "Prompt 系列引用 AI Native Browser 的代理论点",
+    createdAt: shanghai(2026, 5, 20, 10, 0),
+  },
+  {
+    id: "prel-podcast-secondbrain",
+    sourceProjectId: "project-podcast-launch",
+    targetProjectId: "project-secondbrain",
+    relationType: "series",
+    note: "访谈话题延伸出第二大脑选题",
+    createdAt: shanghai(2026, 6, 5, 10, 0),
+  },
+];
+
+const projectKnowledge: ProjectKnowledge[] = [
+  {
+    id: "pk-ainativebrowser-arc",
+    projectId: "project-ainativebrowser",
+    knowledgeItemId: "knowledge-arc-dia-research",
+    relationType: "reference",
+  },
+  {
+    id: "pk-ainativebrowser-local",
+    projectId: "project-ainativebrowser",
+    knowledgeItemId: "knowledge-local-memory-trend",
+    relationType: "reference",
+  },
+  {
+    id: "pk-secondbrain-interview",
+    projectId: "project-secondbrain",
+    knowledgeItemId: "knowledge-creator-interview-01",
+    relationType: "source",
+  },
+];
+
+const projectAssets: ProjectAsset[] = [
+  {
+    id: "pa-ainativebrowser-poster",
+    projectId: "project-ainativebrowser",
+    assetId: "asset-poster-ainativebrowser",
+    usageType: "cover",
+  },
+  {
+    id: "pa-ainativebrowser-broll-1",
+    projectId: "project-ainativebrowser",
+    assetId: "asset-broll-1",
+    usageType: "broll",
+  },
+  {
+    id: "pa-podcast-ep01",
+    projectId: "project-podcast-launch",
+    assetId: "asset-podcast-ep01",
+    usageType: "master",
+  },
+];
+
+const artifactKnowledge: ArtifactKnowledge[] = [
+  {
+    id: "ak-thesis-arc",
+    artifactId: "artifact-ainativebrowser-thesis-tree",
+    knowledgeItemId: "knowledge-arc-dia-research",
+    citationNote: "支撑代理任务论点的用户调研",
+  },
+  {
+    id: "ak-thesis-local",
+    artifactId: "artifact-ainativebrowser-thesis-tree",
+    knowledgeItemId: "knowledge-local-memory-trend",
+    citationNote: "本地优先栈趋势佐证",
+  },
+];
+
+const artifactAssets: ArtifactAsset[] = [
+  {
+    id: "aa-shot-broll-1",
+    artifactId: "artifact-ainativebrowser-shot-list",
+    assetId: "asset-broll-1",
+    usageType: "reference",
+    position: 0,
+  },
+  {
+    id: "aa-shot-broll-2",
+    artifactId: "artifact-ainativebrowser-shot-list",
+    assetId: "asset-broll-2",
+    usageType: "reference",
+    position: 1,
+  },
+];
+
+const outputAssets: OutputAsset[] = [
+  {
+    id: "oa-ainativebrowser-poster",
+    contentOutputId: "output-ainativebrowser-main",
+    assetId: "asset-poster-ainativebrowser",
+    role: "cover",
+  },
+  {
+    id: "oa-podcast-master",
+    contentOutputId: "output-podcast-ep01",
+    assetId: "asset-podcast-ep01",
+    role: "master",
+  },
+];
+
+// ---------------------------------------------------------------------------
+// AI tasks
+// ---------------------------------------------------------------------------
+
+const aiTasks: AITask[] = [
+  {
+    id: "aitask-script-polish",
+    userId: user.id,
+    projectId: "project-ainativebrowser",
+    contentOutputId: "output-ainativebrowser-main",
+    taskType: "script_polish",
+    status: "succeeded",
+    inputData: { artifactId: "artifact-ainativebrowser-master-script" },
+    modelKey: "script",
+    idempotencyKey: "aitask-script-polish-1",
+    requestedAt: shanghai(2026, 6, 6, 9, 0),
+    startedAt: shanghai(2026, 6, 6, 9, 0),
+    completedAt: shanghai(2026, 6, 6, 9, 2),
+    errorMessage: null,
+  },
+  {
+    id: "aitask-thesis-expand",
+    userId: user.id,
+    projectId: "project-ainativebrowser",
+    contentOutputId: null,
+    taskType: "thesis_expand",
+    status: "succeeded",
+    inputData: { artifactId: "artifact-ainativebrowser-thesis-tree" },
+    modelKey: "research",
+    idempotencyKey: "aitask-thesis-expand-1",
+    requestedAt: shanghai(2026, 6, 2, 9, 0),
+    startedAt: shanghai(2026, 6, 2, 9, 0),
+    completedAt: shanghai(2026, 6, 2, 9, 3),
+    errorMessage: null,
+  },
+];
+
+const aiTaskReferences: AITaskReference[] = [
+  {
+    id: "aitref-script-master",
+    aiTaskId: "aitask-script-polish",
+    entityType: "artifact",
+    entityId: "artifact-ainativebrowser-master-script",
+    relationType: "input",
+  },
+  {
+    id: "aitref-thesis-arc",
+    aiTaskId: "aitask-thesis-expand",
+    entityType: "knowledge_item",
+    entityId: "knowledge-arc-dia-research",
+    relationType: "context",
+  },
+];
+
+const aiTaskResults: AITaskResult[] = [
+  {
+    id: "aitres-script-version",
+    aiTaskId: "aitask-script-polish",
+    resultType: "artifact_version",
+    artifactId: "artifact-ainativebrowser-master-script",
+    knowledgeItemId: null,
+    assetId: null,
+    resultData: { versionId: "av-ainativebrowser-master-script" },
+  },
+  {
+    id: "aitres-thesis-version",
+    aiTaskId: "aitask-thesis-expand",
+    resultType: "artifact_version",
+    artifactId: "artifact-ainativebrowser-thesis-tree",
+    knowledgeItemId: null,
+    assetId: null,
+    resultData: { versionId: "av-ainativebrowser-thesis-tree" },
+  },
+];
+
+const agentConfigurations: AgentConfiguration[] = [
+  {
+    id: "agent-research-copilot",
+    userId: user.id,
+    name: "研究助理",
+    agentType: "research",
+    status: "active",
+    capabilities: { web: true, summarize: true },
+    settings: { maxSteps: 8 },
+    secretReference: "secret-agent-research",
+    createdAt: shanghai(2026, 5, 1, 10, 0),
+    updatedAt: shanghai(2026, 6, 1, 10, 0),
+  },
+];
+
+// ---------------------------------------------------------------------------
+// External sources & ingestion
+// ---------------------------------------------------------------------------
+
+const externalSources: ExternalSource[] = [
+  {
+    id: "extsource-bilibili-metrics",
+    userId: user.id,
+    sourceType: "platform_api",
+    name: "Bilibili 指标采集",
+    sourceIdentifier: "bilibili:creator",
+    secretReference: "secret-bilibili",
+    configuration: { interval: "daily" },
+    createdAt: shanghai(2026, 4, 1, 10, 0),
+  },
+];
+
+const ingestionRuns: IngestionRun[] = [
+  {
+    id: "run-1",
+    externalSourceId: "extsource-bilibili-metrics",
+    runType: "metrics",
+    idempotencyKey: "run-1-2026-06-12",
+    status: "completed",
+    recordsReceived: 8,
+    recordsWritten: 7,
+    recordsRejected: 1,
+    startedAt: shanghai(2026, 6, 12, 10, 0),
+    completedAt: shanghai(2026, 6, 12, 10, 1),
+  },
+];
+
+const ingestionErrors: IngestionError[] = [
+  {
+    id: "ingerr-1",
+    ingestionRunId: "run-1",
+    recordKey: "pub-podcast-wechatVideo",
+    errorCode: "MISSING_METRIC",
+    errorMessage: "视频号未返回完播率字段",
+    rejectedPayload: { platform: "wechatVideo" },
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Search documents (derived index)
+// ---------------------------------------------------------------------------
+
+const searchDocuments: SearchDocument[] = [
+  {
+    id: "sd-project-ainativebrowser",
+    userId: user.id,
+    entityType: "project",
+    entityId: "project-ainativebrowser",
+    title: "AI Native Browser 深度解析",
+    body: "深度拆解 AI Native Browser 的产品定位、技术架构与生态影响。",
+    searchText: "ai native browser 深度解析 浏览器 代理",
+    embedding: [0.01, 0.02, 0.03, 0.04],
+    indexedAt: iso.oneHourAgo,
+  },
+  {
+    id: "sd-knowledge-hook-formula",
+    userId: user.id,
+    entityType: "knowledge_item",
+    entityId: "knowledge-hook-formula",
+    title: "Hook 公式",
+    body: "Hook 公式",
+    searchText: "hook 公式 开场",
+    embedding: [0.05, 0.06, 0.07, 0.08],
+    indexedAt: shanghai(2026, 4, 12, 10, 0),
+  },
+];
+
+// ---------------------------------------------------------------------------
 // Public dataset
 // ---------------------------------------------------------------------------
 
@@ -2008,6 +2395,7 @@ export const canonicalDataset = {
   user,
   userPreferences,
   projects,
+  projectRelations,
   projectStages,
   projectTargetPlatforms,
   contentOutputs,
@@ -2031,6 +2419,11 @@ export const canonicalDataset = {
   learningApplications,
   tags,
   entityTags,
+  projectKnowledge,
+  projectAssets,
+  artifactKnowledge,
+  artifactAssets,
+  outputAssets,
   productions,
   productionSegments,
   segmentAssets,
@@ -2046,9 +2439,17 @@ export const canonicalDataset = {
   reviewInsights,
   aiConversations,
   aiMessages,
+  aiTasks,
+  aiTaskReferences,
+  aiTaskResults,
   modelConfigurations,
+  agentConfigurations,
+  externalSources,
+  ingestionRuns,
+  ingestionErrors,
   notifications,
   searchHistory,
+  searchDocuments,
 } as const;
 
 export function listProjects(): ReadonlyArray<Project> {

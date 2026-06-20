@@ -3,7 +3,7 @@ import { expect, test } from "../helpers/test-environment";
 /**
  * E2E contract for overlay routing (Task 8).
  *
- *  - Direct visit to `/projects/new` renders the full-page fallback.
+ *  - Direct visit to `/projects/new` renders the new-project overlay shell.
  *  - `?copilot=open` opens the Copilot overlay with the pathname
  *    preserved; pressing Back closes only the overlay.
  *  - Tab focus is contained inside an open overlay (focus trap).
@@ -15,21 +15,23 @@ import { expect, test } from "../helpers/test-environment";
  */
 
 test.describe("overlay routing", () => {
-  test("direct visit to /projects/new renders the full-page fallback (no modal)", async ({
+  test("direct visit to /projects/new renders the new-project overlay shell", async ({
     page,
   }) => {
     await page.goto("/projects/new");
 
-    // Page contents are server-rendered without a dialog role. The
-    // full-page fallback exposes a heading inside the page scroll area
-    // (not inside the TopHeader heading slot).
-    await expect(page.getByRole("dialog", { name: /新建项目/i })).toHaveCount(0);
-    const scroll = page.getByTestId("page-scroll-area");
+    const dialog = page.getByRole("dialog", { name: /新建项目/i });
+    await expect(dialog).toBeVisible();
     await expect(
-      scroll.getByRole("heading", { name: /新建项目/i }),
+      dialog.getByRole("heading", { name: /新建项目/i }),
     ).toBeVisible();
 
-    // The shell is not masked on the full-page fallback.
+    // The overlay owns its mask; the underlying shell stays unmasked.
+    await expect(
+      page.locator(
+        '[data-slot="overlay-layer"][data-overlay="new-project"] [data-slot="overlay-mask"]',
+      ),
+    ).toBeVisible();
     const shell = page.getByTestId("app-shell");
     await expect(shell).toHaveAttribute("data-masked", "false");
   });

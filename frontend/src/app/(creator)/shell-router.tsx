@@ -65,8 +65,8 @@ interface RouteResolution {
 const PROJECT_STAGES = [
   { id: "research", label: "研究" },
   { id: "planning", label: "策划" },
-  { id: "script", label: "写稿" },
-  { id: "production", label: "制作" },
+  { id: "script", label: "脚本" },
+  { id: "production", label: "拍摄" },
   { id: "publishing", label: "发布" },
   { id: "review", label: "复盘" },
 ] as const;
@@ -87,6 +87,9 @@ function buildProjectStages(currentStage: string): ReadonlyArray<TopHeaderStage>
 }
 
 function resolveWorkspacePrimaryAction(stage: string): string {
+  if (stage === "research") return "进入下一步:策划构思";
+  if (stage === "planning") return "进入下一步:脚本撰写";
+  if (stage === "script") return "进入下一步:拍摄制作";
   if (stage === "production") return "完成制作";
   if (stage === "publishing") return "查看数据";
   if (stage === "review") return "导出报告";

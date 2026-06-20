@@ -169,10 +169,13 @@ describe("PlanningWorkspacePage", () => {
       '[data-slot="app-top-header"]',
     ) as HTMLElement;
     expect(header).not.toBeNull();
-    const primaryAction = within(header).getByRole("button", {
+    const primaryAction = within(header).getByRole("link", {
       name: /进入下一步:脚本撰写/,
     });
-    expect(primaryAction).toBeInTheDocument();
+    expect(primaryAction).toHaveAttribute(
+      "href",
+      "/projects/project-ainativebrowser/script",
+    );
   });
 
   it("renders the Planning Tabs in spec order (内容合同/论点树/证据地图/受众洞察/差异化亮点)", async () => {

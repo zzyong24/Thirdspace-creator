@@ -59,7 +59,7 @@ export function StatusTabsBar({
       <div
         role="tablist"
         aria-label="项目状态筛选"
-        className="flex w-full items-center gap-2 overflow-x-auto"
+        className="flex w-full items-center gap-4 overflow-x-auto"
         data-slot="status-tabs-list"
       >
         {tabs.map((tab) => {
@@ -75,10 +75,10 @@ export function StatusTabsBar({
               data-tab-label={tab.label}
               onClick={() => handleSelect(tab.id)}
               className={
-                "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
+                "inline-flex h-10 shrink-0 items-center gap-2 rounded-control border px-4 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
                 (isActive
-                  ? "bg-brand-soft font-medium text-brand"
-                  : "bg-surface-subtle text-muted-foreground hover:text-foreground")
+                  ? "border-brand bg-surface font-medium text-brand"
+                  : "border-border bg-surface text-muted-foreground hover:text-foreground")
               }
             >
               <span>{tab.label}</span>

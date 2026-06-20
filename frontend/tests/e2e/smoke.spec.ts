@@ -7,7 +7,7 @@ test("root route exposes the CreatorOS application container", async ({
 
   await expect(page).toHaveTitle(/CreatorOS/);
 
-  const main = page.locator("main");
+  const main = page.locator('main[data-app="creatoros"]:visible');
 
   await expect(main).toHaveCount(1);
   await expect(main).toHaveAttribute("data-app", "creatoros");

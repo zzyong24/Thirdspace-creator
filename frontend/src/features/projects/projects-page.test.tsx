@@ -6,9 +6,9 @@
  *  - the page exposes a "项目" heading,
  *  - the status tabs render with deterministic counts that match the
  *    canonical dataset,
- *  - the toolbar exposes a search input, a 筛选 button, and a 新建项目
- *    primary button wired to /projects/new (so the intercepting modal
- *    from Task 8 opens),
+ *  - the shared top header exposes a search trigger, a 筛选 button, and
+ *    a 新建项目 primary button wired to /projects/new (so the intercepting
+ *    modal from Task 8 opens),
  *  - the view toggle exposes a grid/list accessible state,
  *  - the sort control exposes an accessible state (radio group),
  *  - the project list renders one row per canonical project, and every
@@ -100,14 +100,20 @@ describe("ProjectsPage", () => {
     expect(within(active).getByTestId("status-tab-count").textContent).toBe("12");
   });
 
-  it("renders the toolbar with search, filter and new project entries", async () => {
+  it("renders the projects top-header actions with search, filter and new project entries", async () => {
     const { container } = await renderProjects();
-    const toolbar = container.querySelector('[data-slot="projects-toolbar"]');
-    expect(toolbar).not.toBeNull();
-    expect(toolbar!.querySelector('[data-slot="search-field"]')).not.toBeNull();
-    expect(toolbar!.querySelector('[data-slot="filter-button"]')).not.toBeNull();
-    const newProject = toolbar!.querySelector('[data-slot="new-project-button"]');
-    expect(newProject).not.toBeNull();
+    const header = container.querySelector('[data-slot="app-top-header"]');
+    expect(header).not.toBeNull();
+    expect(
+      within(header as HTMLElement).getByRole("link", { name: "搜索项目" }),
+    ).toHaveAttribute("href", "/search");
+    expect(
+      within(header as HTMLElement).getByRole("button", { name: "筛选项目" }),
+    ).toBeInTheDocument();
+    expect(
+      within(header as HTMLElement).getByRole("link", { name: /新建项目/ }),
+    ).toHaveAttribute("href", "/projects/new");
+    expect(container.querySelector('[data-slot="projects-toolbar"]')).toBeNull();
   });
 
   it("the new project button is a link that routes to /projects/new", async () => {
@@ -139,33 +145,46 @@ describe("ProjectsPage", () => {
     expect(radios.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("renders one project row per canonical project", async () => {
+  it("renders the six design-aligned project rows on the first page", async () => {
     const { container } = await renderProjects();
     const list = container.querySelector('[data-slot="project-list"]');
     expect(list).not.toBeNull();
     const rows = list!.querySelectorAll('[data-slot="project-row"]');
-    // Canonical dataset ships 4 projects.
-    expect(rows.length).toBe(4);
+    expect(rows.length).toBe(6);
   });
 
   it("each project row contains cover, title, summary, owner, status, stage, progress, platforms, update time and action", async () => {
     const { container } = await renderProjects();
     const rows = container.querySelectorAll('[data-slot="project-row"]');
-    expect(rows.length).toBe(4);
+    expect(rows.length).toBe(6);
     rows.forEach((row) => {
       const rowEl = row as HTMLElement;
       expect(rowEl.querySelector('[data-slot="project-thumbnail"]')).not.toBeNull();
       expect(rowEl.querySelector('[data-slot="project-title"]')?.textContent ?? "").not.toBe("");
       expect(rowEl.querySelector('[data-slot="project-summary"]')?.textContent ?? "").not.toBe("");
       expect(rowEl.querySelector('[data-slot="project-owner"]')).not.toBeNull();
-      expect(rowEl.querySelector('[data-slot="status-badge"]')).not.toBeNull();
       expect(rowEl.querySelector('[data-slot="project-stage"]')).not.toBeNull();
       expect(rowEl.querySelector('[data-slot="progress-bar"]')).not.toBeNull();
       const platforms = rowEl.querySelectorAll('[data-slot="platform-icon"]');
       expect(platforms.length).toBeGreaterThanOrEqual(1);
       expect(rowEl.querySelector('[data-slot="project-updated-at"]')?.textContent ?? "").not.toBe("");
+      expect(rowEl.querySelector('[data-slot="project-open-action"]')).not.toBeNull();
       expect(rowEl.querySelector('[data-slot="project-row-action"]')).not.toBeNull();
     });
+  });
+
+  it("routes the first row open action to its current workspace", async () => {
+    const { container } = await renderProjects();
+    const firstRow = container.querySelector(
+      '[data-slot="project-row"][data-project-id="project-ainativebrowser"]',
+    ) as HTMLElement;
+    expect(firstRow).not.toBeNull();
+
+    const openAction = within(firstRow).getByRole("link", { name: "打开" });
+    expect(openAction).toHaveAttribute(
+      "href",
+      "/projects/ai-native-browser/script",
+    );
   });
 
   it("renders a pagination control with previous/next and multiple pages", async () => {

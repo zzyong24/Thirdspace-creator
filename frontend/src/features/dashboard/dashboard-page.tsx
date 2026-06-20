@@ -99,7 +99,38 @@ export function DashboardPage({
 
       <SummaryMetrics metrics={vm.metrics} />
       <DashboardGrid vm={vm} />
+      <SidebarAssistantCard prompt={vm.assistantPrompt} />
     </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SidebarAssistantCard (page-specs §1 component tree, R1-7)
+// ---------------------------------------------------------------------------
+
+function SidebarAssistantCard({ prompt }: { prompt: string }) {
+  return (
+    <aside
+      data-slot="sidebar-assistant-card"
+      aria-label="AI 助手"
+      className="flex items-center justify-between gap-3 rounded-card border border-brand/30 bg-brand-soft/40 p-4"
+    >
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-sm font-medium text-foreground">AI 助手</span>
+        <p className="truncate text-xs text-muted-foreground">{prompt}</p>
+      </div>
+      <Link
+        href="/?copilot=open"
+        data-slot="sidebar-assistant-cta"
+        className={cn(
+          "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-card bg-brand px-3 text-sm font-medium text-brand-foreground",
+          "transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        )}
+      >
+        <span aria-hidden="true">✦</span>
+        <span>开始对话</span>
+      </Link>
+    </aside>
   );
 }
 

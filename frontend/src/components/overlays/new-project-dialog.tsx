@@ -153,15 +153,13 @@ export function NewProjectDialog() {
           </button>
         </header>
         <NewProjectForm
-          onCreate={() => {
-            // Local success transition: collapse the dialog via the same
-            // routing path as Cancel. Persistence is out of scope for
-            // this task — Task 26 wires the project store. The form
-            // values are intentionally not consumed here: the
-            // intercepting route is a one-shot navigation back to the
-            // projects list, and the project store reads the values
-            // from the form state directly when the user resumes from
-            // the new project entry.
+          onCreate={(values) => {
+            if (values.enterAfterCreate) {
+              router.replace(`/projects/${slugFromProjectName(values.name)}/research`, {
+                scroll: false,
+              });
+              return;
+            }
             close();
           }}
           onCancel={close}
@@ -169,6 +167,17 @@ export function NewProjectDialog() {
       </div>
     </div>
   );
+}
+
+function slugFromProjectName(name: string): string {
+  const normalized = name
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return normalized.length > 0 ? normalized : "new-project";
 }
 
 // ---------------------------------------------------------------------------

@@ -176,10 +176,13 @@ describe("ProductionWorkspacePage", () => {
       '[data-slot="app-top-header"]',
     ) as HTMLElement;
     expect(header).not.toBeNull();
-    const primaryAction = within(header).getByRole("button", {
+    const primaryAction = within(header).getByRole("link", {
       name: /完成制作/,
     });
-    expect(primaryAction).toBeInTheDocument();
+    expect(primaryAction).toHaveAttribute(
+      "href",
+      "/projects/project-ainativebrowser/publishing",
+    );
   });
 
   it("renders the ProductionModeSelector with three production mode cards in spec order", async () => {

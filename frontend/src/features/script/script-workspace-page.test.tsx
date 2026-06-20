@@ -179,10 +179,13 @@ describe("ScriptWorkspacePage", () => {
       '[data-slot="app-top-header"]',
     ) as HTMLElement;
     expect(header).not.toBeNull();
-    const primaryAction = within(header).getByRole("button", {
+    const primaryAction = within(header).getByRole("link", {
       name: /进入下一步:拍摄制作/,
     });
-    expect(primaryAction).toBeInTheDocument();
+    expect(primaryAction).toHaveAttribute(
+      "href",
+      "/projects/project-ainativebrowser/production",
+    );
   });
 
   it("renders the six reference Script Tabs in order", async () => {

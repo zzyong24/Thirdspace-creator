@@ -38,10 +38,15 @@ test.describe("Script Workspace page", () => {
     );
     await expect(identity).toContainText("AI Native Browser 深度解析");
 
-    // Primary action "进入下一步:拍摄制作" lives in the header.
-    await expect(
-      header.getByRole("button", { name: /进入下一步:拍摄制作/ }),
-    ).toBeVisible();
+    // Primary action "进入下一步:拍摄制作" links to the next workspace.
+    const primaryAction = header.getByRole("link", {
+      name: /进入下一步:拍摄制作/,
+    });
+    await expect(primaryAction).toBeVisible();
+    await expect(primaryAction).toHaveAttribute(
+      "href",
+      "/projects/project-ainativebrowser/production",
+    );
 
     // The six-stage stepper in canonical order with Script active.
     const stepperItems = page.locator(

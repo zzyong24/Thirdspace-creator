@@ -77,7 +77,7 @@ test.describe("Assets Center page", () => {
     expect(cardCount).toBeGreaterThanOrEqual(4);
 
     // Detail panel is fixed right-rail (NOT a dialog).
-    const panel = page.locator('[data-slot="asset-detail-panel"]');
+    const panel = page.locator('[data-slot="asset-detail-panel"]:visible');
     await expect(panel).toBeVisible();
     expect(
       await panel.evaluate((el) => el.closest('[role="dialog"]') !== null),
@@ -92,7 +92,7 @@ test.describe("Assets Center page", () => {
     page,
   }) => {
     await page.goto("/assets");
-    const panel = page.locator('[data-slot="asset-detail-panel"]');
+    const panel = page.locator('[data-slot="asset-detail-panel"]:visible');
     await expect(panel).toBeVisible();
     const initialAssetId = await panel.getAttribute("data-asset-id");
     expect(initialAssetId).not.toBeNull();

@@ -34,15 +34,15 @@ test.describe("Accessibility matrix (Task 26)", () => {
       }
 
       // Every button has an accessible name.
-      const buttons = page.locator("button");
-      const buttonCount = await buttons.count();
-      for (let i = 0; i < buttonCount; i += 1) {
-        const name = await buttons.nth(i).evaluate((el) => {
+      const buttonNames = await page.locator("button:visible").evaluateAll((buttons) =>
+        buttons.map((el) => {
           const labelledBy = el.getAttribute("aria-labelledby");
           const label = el.getAttribute("aria-label");
           const text = el.textContent?.trim() ?? "";
           return labelledBy || label || text;
-        });
+        }),
+      );
+      for (const name of buttonNames) {
         expect(name).not.toBe("");
       }
     });

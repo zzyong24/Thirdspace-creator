@@ -58,6 +58,14 @@ export type ProjectStageName =
 export type ProjectStatus = "active" | "paused" | "archived" | "completed";
 export type StageStatus = "pending" | "in_progress" | "completed" | "skipped";
 
+export interface ProjectRelation extends BaseEntity {
+  readonly sourceProjectId: Id;
+  readonly targetProjectId: Id;
+  readonly relationType: string;
+  readonly note: string;
+  readonly createdAt: Iso8601;
+}
+
 export interface Project extends BaseEntity, Timestamped {
   readonly userId: Id;
   readonly title: string;
@@ -283,7 +291,8 @@ export interface EvidenceLink extends BaseEntity {
   readonly knowledgeItemId: Id | null;
   readonly assetId: Id | null;
   readonly excerpt: string;
-  readonly relationType: ArtifactRelationType;
+  /** Free-form per spec (EVIDENCE_LINK.relation_type is `string`). */
+  readonly relationType: string;
   readonly confidence: number;
   readonly position: number;
 }
@@ -334,7 +343,8 @@ export interface KnowledgeRevision extends BaseEntity {
 export interface KnowledgeRelation extends BaseEntity {
   readonly sourceKnowledgeId: Id;
   readonly targetKnowledgeId: Id;
-  readonly relationType: ArtifactRelationType;
+  /** Free-form per spec (KNOWLEDGE_RELATION.relation_type is `string`). */
+  readonly relationType: string;
   readonly strength: number;
   readonly createdByType: "user" | "ai";
 }
@@ -376,6 +386,10 @@ export interface Learning extends BaseEntity, Timestamped {
   readonly insight: string;
   readonly recommendation: string;
   readonly validationStatus: ValidationStatus;
+  /**
+   * Integer confidence per spec (LEARNING.confidence_score is `int`).
+   * Expressed on a 0-100 scale.
+   */
   readonly confidenceScore: number;
 }
 
@@ -408,6 +422,41 @@ export interface EntityTag extends BaseEntity {
   readonly tagId: Id;
   readonly entityType: TagEntityType;
   readonly entityId: Id;
+}
+
+// ---------------------------------------------------------------------------
+// Resource association tables
+// ---------------------------------------------------------------------------
+
+export interface ProjectKnowledge extends BaseEntity {
+  readonly projectId: Id;
+  readonly knowledgeItemId: Id;
+  readonly relationType: string;
+}
+
+export interface ProjectAsset extends BaseEntity {
+  readonly projectId: Id;
+  readonly assetId: Id;
+  readonly usageType: string;
+}
+
+export interface ArtifactKnowledge extends BaseEntity {
+  readonly artifactId: Id;
+  readonly knowledgeItemId: Id;
+  readonly citationNote: string;
+}
+
+export interface ArtifactAsset extends BaseEntity {
+  readonly artifactId: Id;
+  readonly assetId: Id;
+  readonly usageType: string;
+  readonly position: number;
+}
+
+export interface OutputAsset extends BaseEntity {
+  readonly contentOutputId: Id;
+  readonly assetId: Id;
+  readonly role: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -647,4 +696,73 @@ export interface SearchHistory extends BaseEntity {
   readonly filters: Readonly<Record<string, unknown>>;
   readonly resultCount: number;
   readonly searchedAt: Iso8601;
+}
+
+export interface AITaskReference extends BaseEntity {
+  readonly aiTaskId: Id;
+  readonly entityType: string;
+  readonly entityId: Id;
+  readonly relationType: string;
+}
+
+export interface AITaskResult extends BaseEntity {
+  readonly aiTaskId: Id;
+  readonly resultType: string;
+  readonly artifactId: Id | null;
+  readonly knowledgeItemId: Id | null;
+  readonly assetId: Id | null;
+  readonly resultData: Readonly<Record<string, unknown>>;
+}
+
+export interface AgentConfiguration extends BaseEntity {
+  readonly userId: Id;
+  readonly name: string;
+  readonly agentType: string;
+  readonly status: string;
+  readonly capabilities: Readonly<Record<string, unknown>>;
+  readonly settings: Readonly<Record<string, unknown>>;
+  readonly secretReference: string;
+  readonly createdAt: Iso8601;
+  readonly updatedAt: Iso8601;
+}
+
+export interface ExternalSource extends BaseEntity {
+  readonly userId: Id;
+  readonly sourceType: string;
+  readonly name: string;
+  readonly sourceIdentifier: string;
+  readonly secretReference: string;
+  readonly configuration: Readonly<Record<string, unknown>>;
+  readonly createdAt: Iso8601;
+}
+
+export interface IngestionRun extends BaseEntity {
+  readonly externalSourceId: Id;
+  readonly runType: string;
+  readonly idempotencyKey: string;
+  readonly status: string;
+  readonly recordsReceived: number;
+  readonly recordsWritten: number;
+  readonly recordsRejected: number;
+  readonly startedAt: Iso8601 | null;
+  readonly completedAt: Iso8601 | null;
+}
+
+export interface IngestionError extends BaseEntity {
+  readonly ingestionRunId: Id;
+  readonly recordKey: string;
+  readonly errorCode: string;
+  readonly errorMessage: string;
+  readonly rejectedPayload: Readonly<Record<string, unknown>>;
+}
+
+export interface SearchDocument extends BaseEntity {
+  readonly userId: Id;
+  readonly entityType: string;
+  readonly entityId: Id;
+  readonly title: string;
+  readonly body: string;
+  readonly searchText: string;
+  readonly embedding: ReadonlyArray<number>;
+  readonly indexedAt: Iso8601;
 }

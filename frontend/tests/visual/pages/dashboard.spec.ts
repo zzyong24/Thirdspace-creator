@@ -36,8 +36,8 @@ test.describe("Dashboard page", () => {
       await expect(grid.locator(`[data-slot="${slot}"]`)).toBeVisible();
     }
 
-    // The "新项目" entry must route to the intercepting modal route.
-    const newProject = page.getByRole("link", { name: /新项目/ });
+    // The "新建项目" entry must route to the intercepting modal route.
+    const newProject = page.getByRole("link", { name: "＋ 新建项目" });
     await expect(newProject).toBeVisible();
     await expect(newProject).toHaveAttribute("href", "/projects/new");
 

@@ -76,39 +76,51 @@ interface RadioOption<TValue extends string> {
   readonly badge?: string;
 }
 
+type ContentTemplateId =
+  | "deep-dive"
+  | "tutorial"
+  | "opinion"
+  | "review"
+  | "story"
+  | "other";
+
 const PLATFORM_OPTIONS: ReadonlyArray<PlatformOption> = [
-  { id: "douyin", label: "抖音", hint: "竖屏短视频" },
   { id: "bilibili", label: "B站", hint: "中长视频" },
-  { id: "xiaohongshu", label: "小红书", hint: "图文 / 短视频" },
+  { id: "douyin", label: "抖音", hint: "竖屏短视频" },
   { id: "wechatVideo", label: "视频号", hint: "微信生态" },
+  { id: "xiaohongshu", label: "小红书", hint: "图文 / 短视频" },
   { id: "youtube", label: "YouTube", hint: "海外长视频" },
-  { id: "x", label: "X", hint: "图文 / 短贴" },
+  { id: "x", label: "自定义", hint: "其他渠道" },
 ];
 
-const CONTENT_TYPE_OPTIONS: ReadonlyArray<RadioOption<ContentType>> = [
-  { value: "video", label: "视频", description: "长 / 短片视频" },
-  { value: "image", label: "图文", description: "图文卡片 / 长图" },
-  { value: "audio", label: "音频", description: "播客 / 配音" },
-  { value: "article", label: "长文", description: "公众号 / 专栏" },
+const CONTENT_TEMPLATE_OPTIONS: ReadonlyArray<
+  RadioOption<ContentTemplateId> & { readonly contentType: ContentType }
+> = [
+  { value: "deep-dive", contentType: "video", label: "深度解析", description: "对某个主题进行系统性分析和洞察" },
+  { value: "tutorial", contentType: "video", label: "教程干货", description: "提供实用方法、技巧和步骤" },
+  { value: "opinion", contentType: "article", label: "观点表达", description: "分享观点、看法或个人见解" },
+  { value: "review", contentType: "video", label: "评测对比", description: "产品、工具或方案对比评测" },
+  { value: "story", contentType: "audio", label: "故事叙事", description: "讲述故事、案例或经历" },
+  { value: "other", contentType: "image", label: "其他", description: "不确定，先创建再说" },
 ];
 
 const CREATION_MODE_OPTIONS: ReadonlyArray<RadioOption<CreationMode>> = [
   {
     value: "guided",
-    label: "推荐",
-    description: "AI 引导的 5 步流程",
-    badge: "推荐",
-  },
-  {
-    value: "flexible",
-    label: "省心",
-    description: "自定义阶段模板",
+    label: "AI 全流程创作",
+    description: "AI 帮你完成从选题到发布的全部工作",
     badge: "省心",
   },
   {
+    value: "flexible",
+    label: "AI 协作创作",
+    description: "你主导创作，AI 提供建议和辅助",
+    badge: "推荐",
+  },
+  {
     value: "freeform",
-    label: "自由",
-    description: "完全自定义",
+    label: "手动创作",
+    description: "完全由你掌控每一个创作环节",
     badge: "自由",
   },
 ];
@@ -125,6 +137,20 @@ const EMPTY_DEFAULTS: NewProjectFormValues = {
   creationMode: "guided",
   enterAfterCreate: true,
 };
+
+function contentTypeFromTemplate(template: ContentTemplateId): ContentType {
+  return (
+    CONTENT_TEMPLATE_OPTIONS.find((option) => option.value === template)
+      ?.contentType ?? "video"
+  );
+}
+
+function templateFromContentType(contentType: ContentType): ContentTemplateId {
+  return (
+    CONTENT_TEMPLATE_OPTIONS.find((option) => option.contentType === contentType)
+      ?.value ?? "deep-dive"
+  );
+}
 
 export function NewProjectForm({
   defaultValues,
@@ -143,6 +169,10 @@ export function NewProjectForm({
   );
 
   const [values, setValues] = React.useState<NewProjectFormValues>(initial);
+  const [contentTemplate, setContentTemplate] =
+    React.useState<ContentTemplateId>(() =>
+      templateFromContentType(initial.contentType),
+    );
   // Keep a ref to the latest callback so the form does not capture stale
   // closures across renders.
   const onCreateRef = React.useRef(onCreate);
@@ -160,18 +190,21 @@ export function NewProjectForm({
       onCreateRef.current({
         ...values,
         name: trimmedName,
+        contentType: contentTypeFromTemplate(contentTemplate),
       });
       // Local success transition: reset the form so the next mount starts
       // clean. The parent is expected to close the dialog.
       setValues(EMPTY_DEFAULTS);
+      setContentTemplate(templateFromContentType(EMPTY_DEFAULTS.contentType));
     },
-    [canCreate, trimmedName, values],
+    [canCreate, contentTemplate, trimmedName, values],
   );
 
   const handleCancel = React.useCallback(() => {
     // Reset to the last `defaultValues` snapshot so a re-open shows a
     // fresh form without leaking previous input.
     setValues(initial);
+    setContentTemplate(templateFromContentType(initial.contentType));
     onCancel();
   }, [initial, onCancel]);
 
@@ -198,10 +231,8 @@ export function NewProjectForm({
         }
       />
       <ContentTypeSelector
-        value={values.contentType}
-        onChange={(contentType) =>
-          setValues((prev) => ({ ...prev, contentType }))
-        }
+        value={contentTemplate}
+        onChange={setContentTemplate}
       />
       <CreationModeSelector
         value={values.creationMode}
@@ -287,14 +318,14 @@ function ProjectBriefField({ brief, onChange }: ProjectBriefFieldProps) {
         htmlFor="new-project-brief-input"
         className="text-[13px] font-medium text-foreground"
       >
-        项目简介
+        一句话描述
       </label>
       <Textarea
         id="new-project-brief-input"
         name="brief"
         value={brief}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="一句话描述这次想做的内容（可选）"
+        placeholder="用一句话描述你想创作的内容或解决的问题，AI 会帮你完善和拓展"
         rows={2}
         data-slot="new-project-brief-input"
       />
@@ -473,8 +504,8 @@ function TargetPlatformSelector({
 }
 
 interface ContentTypeSelectorProps {
-  readonly value: ContentType;
-  readonly onChange: (next: ContentType) => void;
+  readonly value: ContentTemplateId;
+  readonly onChange: (next: ContentTemplateId) => void;
 }
 
 function ContentTypeSelector({ value, onChange }: ContentTypeSelectorProps) {
@@ -486,7 +517,7 @@ function ContentTypeSelector({ value, onChange }: ContentTypeSelectorProps) {
       legend="内容类型"
       value={value}
       onChange={onChange}
-      options={CONTENT_TYPE_OPTIONS}
+      options={CONTENT_TEMPLATE_OPTIONS}
       renderOption={(option) => (
         <div className="flex flex-col gap-0.5">
           <span className="text-[13px] font-medium text-foreground">

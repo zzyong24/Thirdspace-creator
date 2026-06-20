@@ -85,18 +85,19 @@ describe("ProjectOverviewPage", () => {
       name: /AI Native Browser 深度解析/,
     });
     expect(heading).toBeInTheDocument();
-    // The 进入工作台 primary action is rendered as a button so it is
-    // keyboard-reachable. Scope to the project progress card to avoid
-    // matching the same action label rendered by the TopHeader in
-    // project-overview mode.
+    // Scope to the project progress card to avoid matching the same
+    // action label rendered by the TopHeader in project-overview mode.
     const progressCard = container.querySelector(
       '[data-slot="project-progress-card"]',
     ) as HTMLElement;
     expect(progressCard).not.toBeNull();
-    const enterAction = within(progressCard).getByRole("button", {
+    const enterAction = within(progressCard).getByRole("link", {
       name: /进入工作台/,
     });
-    expect(enterAction).toBeInTheDocument();
+    expect(enterAction).toHaveAttribute(
+      "href",
+      "/projects/ai-native-browser/script",
+    );
   });
 
   it("renders the full-width project progress card with a six-stage stepper in canonical order", async () => {

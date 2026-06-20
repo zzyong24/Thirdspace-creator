@@ -9,7 +9,7 @@ describe("resolveRoute", () => {
     );
 
     expect(resolution.headerMode).toBe("project-workspace");
-    expect(resolution.primaryActionLabel).toBe("进入下一步");
+    expect(resolution.primaryActionLabel).toBe("进入下一步:策划构思");
     expect(resolution.sidebarContext?.heading).toBe("当前项目");
     expect(resolution.projectStages?.[0]?.status).toBe("in_progress");
     expect(resolution.projectStages?.[1]?.status).toBe("pending");

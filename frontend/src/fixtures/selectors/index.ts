@@ -21,6 +21,26 @@ import type {
 
 import { canonicalDataset, getProjectPlatforms, listProjects } from "../canonical";
 
+// Per-page selectors live in sibling modules and are re-exported here so
+// pages import everything from the `@/fixtures/selectors` barrel.
+export { buildResearchViewModel } from "./research";
+export {
+  buildContentOutputsForRender,
+  buildProjectOverviewViewModel,
+} from "./project-overview";
+export { buildScriptViewModel } from "./script";
+export { buildPlanningViewModel } from "./planning";
+export { buildProductionViewModel } from "./production";
+export { buildAnalyticsReviewViewModel } from "./review";
+export { buildPublishingViewModel } from "./project-publishing";
+export { buildKnowledgeViewModel } from "./knowledge";
+export { buildAssetsViewModel } from "./assets";
+export { buildSettingsViewModel } from "./settings";
+export { buildPublishingCenterViewModel } from "./publishing-center";
+export { buildSearchViewModel } from "./search";
+export { buildExperienceViewModel } from "./experience";
+export { buildCopilotViewModel } from "./copilot";
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -28,6 +48,45 @@ import { canonicalDataset, getProjectPlatforms, listProjects } from "../canonica
 function platformBadge(platform: PlatformId): PlatformBadge {
   const icon = getPlatformIcon(platform);
   return { id: icon.id === "unknown" ? platform : icon.id, label: icon.label };
+}
+
+// ---------------------------------------------------------------------------
+// Notifications (COMP-006 / TopHeader notification popover)
+// ---------------------------------------------------------------------------
+
+export interface NotificationView {
+  readonly id: string;
+  readonly title: string;
+  readonly body: string;
+  readonly type: string;
+  readonly read: boolean;
+  readonly createdAt: string;
+}
+
+export interface NotificationsViewModel {
+  readonly items: ReadonlyArray<NotificationView>;
+  readonly unreadCount: number;
+}
+
+/**
+ * Project the canonical `notifications` into the shape the TopHeader
+ * popover consumes. Pure / deterministic — newest first by `createdAt`,
+ * unread count derived from `readAt`.
+ */
+export function buildNotificationsViewModel(): NotificationsViewModel {
+  const items = canonicalDataset.notifications
+    .slice()
+    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
+    .map<NotificationView>((notification) => ({
+      id: notification.id,
+      title: notification.title,
+      body: notification.body,
+      type: notification.notificationType,
+      read: notification.readAt !== null,
+      createdAt: notification.createdAt,
+    }));
+  const unreadCount = items.filter((item) => !item.read).length;
+  return { items, unreadCount };
 }
 
 // ---------------------------------------------------------------------------
@@ -115,30 +174,115 @@ function pickOutputsForProject(projectId: string): ReadonlyArray<ContentOutputSu
 // Dashboard
 // ---------------------------------------------------------------------------
 
-const DASHBOARD_METRICS: ReadonlyArray<MetricCard> = [
-  { id: "m-active-projects", label: "进行中项目", value: "7", delta: "+1", trend: "up", tone: "positive" },
-  { id: "m-publications", label: "已完成", value: "12", delta: "+1", trend: "up", tone: "positive" },
-  { id: "m-views", label: "累计播放", value: "128.6w", delta: "+12%", trend: "up", tone: "positive" },
-  { id: "m-assets", label: "素材库", value: "43.25", delta: "+1.2%", trend: "up", tone: "positive" },
-  { id: "m-storage", label: "存储使用", value: "2.4w", delta: "-0.5%", trend: "down", tone: "warning" },
-];
+// ---------------------------------------------------------------------------
+// Derived dashboard aggregations (R1-4).
+//
+// The summary metrics are DERIVED from the canonical dataset
+// (Project / Publication / MetricValue / Asset / AssetFile) so the cards
+// reconcile with the fixtures instead of carrying disconnected literals.
+// Pure / deterministic — no Date.now / Math.random / network.
+// ---------------------------------------------------------------------------
 
-function buildDataOverview(): DataOverview {
+/** Sum the `views` MetricValue rows across all platforms. */
+function aggregateTotalViews(): number {
+  return canonicalDataset.metricValues
+    .filter((metric) => metric.metricKey === "views")
+    .reduce((sum, metric) => sum + metric.numericValue, 0);
+}
+
+/** Total stored bytes across every asset file revision. */
+function aggregateStorageBytes(): number {
+  return canonicalDataset.assetFiles.reduce(
+    (sum, file) => sum + file.fileSize,
+    0,
+  );
+}
+
+function formatWan(value: number): string {
+  if (value >= 10000) {
+    return `${(value / 10000).toFixed(2)}w`;
+  }
+  return value.toLocaleString("zh-CN");
+}
+
+function formatBytes(bytes: number): string {
+  const mb = bytes / (1024 * 1024);
+  if (mb >= 1024) {
+    return `${(mb / 1024).toFixed(2)}GB`;
+  }
+  return `${mb.toFixed(1)}MB`;
+}
+
+function buildDashboardMetrics(): ReadonlyArray<MetricCard> {
+  const activeProjects = canonicalDataset.projects.filter(
+    (project) => project.status === "active",
+  ).length;
+  const completedPublications = canonicalDataset.publications.filter(
+    (publication) => publication.status === "published",
+  ).length;
+  const totalViews = aggregateTotalViews();
+  const assetCount = canonicalDataset.assets.length;
+  const storageBytes = aggregateStorageBytes();
+
+  return [
+    {
+      id: "m-active-projects",
+      label: "进行中项目",
+      value: String(activeProjects),
+      delta: "+1",
+      trend: "up",
+      tone: "positive",
+    },
+    {
+      id: "m-publications",
+      label: "已完成",
+      value: String(completedPublications),
+      delta: "+1",
+      trend: "up",
+      tone: "positive",
+    },
+    {
+      id: "m-views",
+      label: "累计播放",
+      value: formatWan(totalViews),
+      delta: "+12%",
+      trend: "up",
+      tone: "positive",
+    },
+    {
+      id: "m-assets",
+      label: "素材库",
+      value: String(assetCount),
+      delta: "+1.2%",
+      trend: "up",
+      tone: "positive",
+    },
+    {
+      id: "m-storage",
+      label: "存储使用",
+      value: formatBytes(storageBytes),
+      delta: "-0.5%",
+      trend: "down",
+      tone: "warning",
+    },
+  ];
+}
+
+function buildDataOverview(metrics: ReadonlyArray<MetricCard>): DataOverview {
   // The reference design renders the inner 2x2 grid using
   // 已发布 / 累计播放 / 素材库 / 存储使用 (4 of the 5 top-row metrics),
   // skipping 进行中项目. We pick the matching subset by id so the
-  // dashboard selector is the single source of truth.
+  // dashboard selector is the single source of truth and the grid keeps
+  // its four compact metrics.
   const subsetIds = new Set([
     "m-publications",
     "m-views",
     "m-assets",
     "m-storage",
   ]);
-  const metrics = DASHBOARD_METRICS.filter((metric) =>
-    subsetIds.has(metric.id),
-  );
+  const subset = metrics.filter((metric) => subsetIds.has(metric.id));
   return {
-    metrics,
+    metrics: subset,
     trend: [
       { label: "周一", value: 1840 },
       { label: "周二", value: 2210 },
@@ -185,9 +329,16 @@ export function buildDashboardViewModel(): DashboardViewModel {
     .slice()
     .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
     .map((publication) => {
-      const metricViews = canonicalDataset.metricValues
-        .filter((m) => m.dimensions["platform"] === publication.platform)
+      const platformMetrics = canonicalDataset.metricValues.filter(
+        (m) => m.dimensions["platform"] === publication.platform,
+      );
+      const metricViews = platformMetrics
         .filter((m) => m.metricKey === "views")
+        .reduce((sum, m) => sum + m.numericValue, 0);
+      // Engagement is DERIVED (likes + comments for this platform) rather
+      // than a hard-coded zero so the row reconciles with the fixtures.
+      const engagement = platformMetrics
+        .filter((m) => m.metricKey === "likes" || m.metricKey === "comments")
         .reduce((sum, m) => sum + m.numericValue, 0);
       return {
         id: publication.id,
@@ -195,15 +346,17 @@ export function buildDashboardViewModel(): DashboardViewModel {
         platform: publication.platform,
         status: publication.status,
         views: metricViews,
-        engagement: 0,
+        engagement,
         publishedAt: publication.publishedAt ?? publication.updatedAt,
       };
     });
 
+  const metrics = buildDashboardMetrics();
+
   return {
     scenario: "default",
     kind: "dashboard",
-    metrics: DASHBOARD_METRICS,
+    metrics,
     continueCreating,
     todos,
     trendingTopics: [
@@ -212,7 +365,7 @@ export function buildDashboardViewModel(): DashboardViewModel {
       { id: "topic-3", title: "代理任务设计", heat: 66, trend: "flat" },
     ],
     recentPublications,
-    dataOverview: buildDataOverview(),
+    dataOverview: buildDataOverview(metrics),
     suggestions: [
       {
         id: "sg-1",

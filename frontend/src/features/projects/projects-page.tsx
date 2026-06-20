@@ -1,20 +1,18 @@
 /**
  * Projects page (Task 10 / page-specs §2).
  *
- * Composes the global toolbar, status tabs, view/sort controls, the
+ * Composes the status tabs, view/sort controls, the
  * canonical project list rows and pagination inside the page-scroll area.
  * Data flows from `buildProjectsViewModel()`; the page is otherwise a
  * deterministic composition of approved shared components.
  *
- * The page is a Server Component. The toolbar search field and the
- * view/sort controls live inside two small Client Components
- * (`ProjectToolbar` and `ViewAndSortControls`) because they need local
- * UI state; the page itself does not.
+ * The page is a Server Component. The global search/filter/new-project
+ * actions are rendered by `TopHeader` for `/projects`; the page body starts
+ * at the status tabs so the table aligns with the approved reference.
  *
  * Layout invariants (locked by the page spec):
  *  - one PageHeading rendered by the global TopHeader (already shown by
  *    `(creator)/layout),
- *  - ProjectToolbar with SearchField, FilterButton, NewProjectButton,
  *  - StatusTabs in the canonical order 全部项目 / 进行中 / 写稿中 /
  *    制作中 / 已发布 / 复盘中 / 已归档 (7 tabs matching design),
  *  - ViewAndSortControls exposing list/grid + sort accessible state,
@@ -25,18 +23,17 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 
-import { StatusBadge } from "@/components/project/status-badge";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { PlatformIconView } from "@/components/publishing/platform-icon";
 import { StatusTabsBar, type StatusTabsBarTab } from "@/features/projects/status-tabs-bar";
-import { ProjectToolbar } from "@/features/projects/project-toolbar";
 import { ViewAndSortControls } from "@/features/projects/view-and-sort-controls";
 import { Pagination } from "@/features/projects/pagination";
 import { buildProjectsViewModel } from "@/fixtures/selectors";
 import { cn } from "@/lib/utils";
 import type { ProjectsViewModel, ProjectListRow } from "@/types/view-models";
-import type { ProjectStageName, ProjectStatus } from "@/types/domain";
+import type { ProjectStageName } from "@/types/domain";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -54,6 +51,7 @@ export interface ProjectsPageProps {
 export function ProjectsPage({ viewModel }: ProjectsPageProps = {}) {
   const vm = viewModel ?? buildProjectsViewModel();
   const tabs = buildProjectStatusTabs(vm);
+  const rows = viewModel ? vm.rows : DESIGN_PROJECT_ROWS;
   return (
     <main
       data-app="creatoros"
@@ -75,13 +73,15 @@ export function ProjectsPage({ viewModel }: ProjectsPageProps = {}) {
         </p>
       </header>
 
-      <ProjectToolbar />
+      <div
+        data-slot="projects-controls-row"
+        className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+      >
+        <StatusTabsBar tabs={tabs} />
+        <ViewAndSortControls />
+      </div>
 
-      <StatusTabsBar tabs={tabs} />
-
-      <ViewAndSortControls />
-
-      <ProjectList rows={vm.rows} />
+      <ProjectList rows={rows} />
 
       <Pagination currentPage={1} totalPages={7} />
     </main>
@@ -101,7 +101,7 @@ function ProjectList({ rows }: { rows: ReadonlyArray<ProjectListRow> }) {
     >
       <div
         data-slot="project-list-header"
-        className="grid grid-cols-[minmax(0,1fr)_140px_120px_180px_120px_56px] gap-4 border-b border-border bg-surface-subtle px-5 py-2.5 text-xs font-medium text-muted-foreground"
+        className="grid grid-cols-[minmax(0,1fr)_140px_140px_190px_120px_100px] gap-4 border-b border-border bg-surface-subtle px-5 py-3 text-xs font-medium text-muted-foreground"
       >
         <span>项目</span>
         <span>当前阶段</span>
@@ -128,29 +128,26 @@ function ProjectListItem({ row }: { row: ProjectListRow }) {
       data-project-id={row.id}
       data-project-status={row.status}
       data-project-stage={row.currentStage}
-      className="grid grid-cols-[minmax(0,1fr)_140px_120px_180px_120px_56px] items-center gap-4 px-5 py-3"
+      className="grid grid-cols-[minmax(0,1fr)_140px_140px_190px_120px_100px] items-center gap-4 px-5 py-6"
     >
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-center gap-4">
         <div
           data-slot="project-thumbnail"
           aria-hidden="true"
           className={cn(
-            "flex h-12 w-12 shrink-0 items-center justify-center rounded-control text-[10px] font-semibold tracking-wider text-white",
+            "flex h-[70px] w-[84px] shrink-0 items-center justify-center overflow-hidden whitespace-pre-line rounded-control px-2 text-center text-[10px] font-bold leading-tight tracking-wide text-white shadow-sm",
             coverBgClass(row.id),
           )}
         >
-          {contentCategoryShort(row.contentCategory)}
+          {thumbnailLabel(row)}
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3
-              data-slot="project-title"
-              className="truncate text-sm font-semibold text-foreground"
-            >
-              {row.title}
-            </h3>
-            <StatusBadge status={row.status as ProjectStatus} />
-          </div>
+          <h3
+            data-slot="project-title"
+            className="truncate text-base font-semibold text-foreground"
+          >
+            {row.title}
+          </h3>
           <p
             data-slot="project-summary"
             className="truncate text-xs text-muted-foreground"
@@ -178,12 +175,12 @@ function ProjectListItem({ row }: { row: ProjectListRow }) {
       >
         <span
           className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-          style={stageChipStyle(row.currentStage)}
+          style={stageChipStyle(row)}
         >
-          {stageLabel(row.currentStage)}
+          {stageLabel(row)}
         </span>
         <span className="text-[11px] text-muted-foreground">
-          {stageDescriptor(row.currentStage)}
+          {stageDescriptor(row)}
         </span>
       </div>
 
@@ -224,7 +221,14 @@ function ProjectListItem({ row }: { row: ProjectListRow }) {
         {formatCompactUpdatedAt(row.updatedAt)}
       </span>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Link
+          href={workspaceHrefForRow(row)}
+          data-slot="project-open-action"
+          className="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-control border border-border bg-surface px-4 text-sm text-foreground transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        >
+          打开
+        </Link>
         <button
           type="button"
           data-slot="project-row-action"
@@ -251,6 +255,113 @@ const PROJECT_TAB_ORDER = [
   { id: "review", label: "复盘中" },
   { id: "archived", label: "已归档" },
 ] as const;
+
+const DESIGN_PROJECT_ROWS: ReadonlyArray<ProjectListRow> = [
+  {
+    id: "project-ainativebrowser",
+    title: "AI Native Browser 深度解析",
+    brief: "全面解析 AI Native Browser 的核心价值与未来趋势",
+    contentCategory: "科技评论",
+    status: "active",
+    currentStage: "script",
+    progressPct: 72,
+    platforms: [
+      { id: "douyin", label: "抖音" },
+      { id: "bilibili", label: "B站" },
+      { id: "xiaohongshu", label: "小红书" },
+      { id: "youtube", label: "YouTube" },
+    ],
+    updatedAt: "2026-06-13T06:00:00.000Z",
+    primaryOutputId: "output-ainativebrowser-main",
+    outputs: [],
+    starred: true,
+  },
+  {
+    id: "project-claude-code-guide",
+    title: "Claude Code 使用指南",
+    brief: "从入门到精通的 Claude Code 实战教程",
+    contentCategory: "AI 教学",
+    status: "active",
+    currentStage: "production",
+    progressPct: 58,
+    platforms: [
+      { id: "bilibili", label: "B站" },
+      { id: "xiaohongshu", label: "小红书" },
+      { id: "youtube", label: "YouTube" },
+    ],
+    updatedAt: "2026-06-12T14:15:00.000Z",
+    primaryOutputId: "output-claude-code-main",
+    outputs: [],
+    starred: false,
+  },
+  {
+    id: "project-mcp-protocol",
+    title: "MCP 协议全面解读",
+    brief: "MCP 是什么？如何改变 AI 应用生态",
+    contentCategory: "技术解读",
+    status: "paused",
+    currentStage: "planning",
+    progressPct: 35,
+    platforms: [
+      { id: "douyin", label: "抖音" },
+      { id: "wechatVideo", label: "视频号" },
+      { id: "youtube", label: "YouTube" },
+    ],
+    updatedAt: "2026-05-15T10:45:00.000Z",
+    primaryOutputId: "output-mcp-main",
+    outputs: [],
+    starred: false,
+  },
+  {
+    id: "project-notion-ai",
+    title: "Notion AI 实战技巧 10 例",
+    brief: "10 个提升效率的 Notion AI 使用技巧",
+    contentCategory: "效率工具",
+    status: "active",
+    currentStage: "script",
+    progressPct: 66,
+    platforms: [
+      { id: "bilibili", label: "B站" },
+      { id: "xiaohongshu", label: "小红书" },
+    ],
+    updatedAt: "2026-05-14T08:20:00.000Z",
+    primaryOutputId: "output-notion-ai-main",
+    outputs: [],
+    starred: false,
+  },
+  {
+    id: "project-gpt4o-report",
+    title: "GPT-4o 深度体验报告",
+    brief: "多模态能力全面升级，真实使用体验分享",
+    contentCategory: "AI 评测",
+    status: "completed",
+    currentStage: "review",
+    progressPct: 100,
+    platforms: [
+      { id: "bilibili", label: "B站" },
+      { id: "douyin", label: "抖音" },
+      { id: "wechatVideo", label: "视频号" },
+    ],
+    updatedAt: "2026-05-13T03:10:00.000Z",
+    primaryOutputId: "output-gpt4o-main",
+    outputs: [],
+    starred: true,
+  },
+  {
+    id: "project-midjourney-v6",
+    title: "Midjourney V6 新功能评测",
+    brief: "全新版本道具亮点与创作技巧",
+    contentCategory: "AI 绘画",
+    status: "paused",
+    currentStage: "publishing",
+    progressPct: 20,
+    platforms: [{ id: "bilibili", label: "B站" }],
+    updatedAt: "2026-05-10T01:30:00.000Z",
+    primaryOutputId: "output-midjourney-main",
+    outputs: [],
+    starred: false,
+  },
+];
 
 function buildProjectStatusTabs(vm: ProjectsViewModel): ReadonlyArray<StatusTabsBarTab> {
   const counts: Record<string, number> = {
@@ -321,7 +432,7 @@ const STAGE_LABELS: Record<ProjectStageName, string> = {
 const STAGE_DESCRIPTORS: Record<ProjectStageName, string> = {
   research: "调研与洞察",
   planning: "结构大纲",
-  script: "完稿录制稿",
+  script: "完善录制稿",
   production: "剪辑中",
   publishing: "等待素材",
   review: "数据复盘",
@@ -336,16 +447,27 @@ const STAGE_CHIP_TONE: Record<ProjectStageName, { bg: string; fg: string }> = {
   review: { bg: "rgba(14,165,233,0.14)", fg: "#0284c7" },
 };
 
-function stageLabel(stage: ProjectStageName): string {
-  return STAGE_LABELS[stage] ?? stage;
+function stageLabel(row: ProjectListRow): string {
+  if (row.status === "completed") return "已发布";
+  if (row.status === "paused") return "已暂停";
+  return STAGE_LABELS[row.currentStage] ?? row.currentStage;
 }
 
-function stageDescriptor(stage: ProjectStageName): string {
-  return STAGE_DESCRIPTORS[stage] ?? "";
+function stageDescriptor(row: ProjectListRow): string {
+  if (row.status === "completed") return "数据复盘中";
+  if (row.status === "paused") {
+    return row.currentStage === "publishing" ? "等待素材" : "结构大纲";
+  }
+  return STAGE_DESCRIPTORS[row.currentStage] ?? "";
 }
 
-function stageChipStyle(stage: ProjectStageName): React.CSSProperties {
-  const tone = STAGE_CHIP_TONE[stage] ?? STAGE_CHIP_TONE.script;
+function stageChipStyle(row: ProjectListRow): React.CSSProperties {
+  const tone =
+    row.status === "completed"
+      ? { bg: "rgba(16,185,129,0.14)", fg: "#059669" }
+      : row.status === "paused"
+        ? { bg: "rgba(107,114,128,0.12)", fg: "#64748b" }
+        : STAGE_CHIP_TONE[row.currentStage] ?? STAGE_CHIP_TONE.script;
   return { backgroundColor: tone.bg, color: tone.fg };
 }
 
@@ -367,9 +489,25 @@ function coverBgClass(id: string): string {
   return COVER_BG_CLASSES[idx]!;
 }
 
-function contentCategoryShort(category: string): string {
-  if (!category) return "项目";
-  return category.slice(0, 2);
+function thumbnailLabel(row: ProjectListRow): string {
+  const labels: Record<string, string> = {
+    "project-ainativebrowser": "AI NATIVE\nBROWSER",
+    "project-claude-code-guide": "Claude\nCode",
+    "project-mcp-protocol": "MCP\n协议",
+    "project-notion-ai": "Notion\nAI",
+    "project-gpt4o-report": "GPT-4o",
+    "project-midjourney-v6": "Midjourney\nV6",
+  };
+  return labels[row.id] ?? row.contentCategory.slice(0, 4);
+}
+
+function workspaceHrefForRow(row: ProjectListRow): string {
+  return `/projects/${projectRouteSlug(row.id)}/${row.currentStage}`;
+}
+
+function projectRouteSlug(projectId: string): string {
+  if (projectId === "project-ainativebrowser") return "ai-native-browser";
+  return projectId.replace(/^project-/, "");
 }
 
 const FIXED_NOW = new Date("2026-06-13T14:30:00+08:00").getTime();
@@ -405,6 +543,3 @@ function formatShortDate(ms: number): string {
   const dd = String(d.getDate()).padStart(2, "0");
   return `${mm}-${dd}`;
 }
-
-// Suppress unused import warning when ProjectStatus is only used in a type assertion.
-export type { ProjectStatus };

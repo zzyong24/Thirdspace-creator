@@ -21,9 +21,8 @@
  * fixture-only local behavior — the dialog MUST NOT issue a real AI
  * request (page-specs §16 "禁止改变": "不新增 Agent 商店", and D-001
  * the product is personal / no real agent network). The chips and
- * cards below the prompt are pure fixture-driven data from
- * `canonicalDataset` and from a `COPILOT_FIXTURE` block defined in
- * this file.
+ * cards below the prompt are pure fixture-driven data produced by the
+ * `buildCopilotViewModel` selector in `@/fixtures/selectors`.
  *
  * Determinism: no `Date.now` / `Math.random` / network. The dialog
  * renders identically on every load.
@@ -43,7 +42,6 @@ import {
   Search as SearchIcon,
   Send,
   Sparkles,
-  TrendingUp,
   Wand2,
   Image as ImageIcon,
 } from "lucide-react";
@@ -55,177 +53,61 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { buildCopilotViewModel } from "@/fixtures/selectors";
+import type { BasePageViewModel } from "@/types/view-models";
 
 // ---------------------------------------------------------------------------
-// Fixture — locked, deterministic, local to this feature.
+// ViewModel — shaped by the `buildCopilotViewModel` selector. The Copilot
+// dialog carries richer per-row presentation hints (icon kinds, tones,
+// progress) than the shared `AICopilotViewModel`, so the dialog owns this
+// extended page-local projection. The selector imports it type-only.
 // ---------------------------------------------------------------------------
 
-const PROMPT_VALUE = "";
-
-const SUGGESTED_ACTIONS: ReadonlyArray<{
-  readonly id: string;
-  readonly label: string;
-  readonly icon:
-    | "crosshair"
-    | "wand"
-    | "file-search"
-    | "sparkles"
-    | "image"
-    | "line-chart";
-}> = [
-  { id: "analyze", label: "分析机会", icon: "crosshair" },
-  { id: "script", label: "生成脚本", icon: "wand" },
-  { id: "assets", label: "寻找素材", icon: "file-search" },
-  { id: "title", label: "优化标题", icon: "sparkles" },
-  { id: "cover", label: "生成封面", icon: "image" },
-  { id: "review", label: "发布复盘", icon: "line-chart" },
-];
-
-const RECOMMENDED_COMMANDS: ReadonlyArray<{
-  readonly id: string;
-  readonly icon: "crosshair" | "file" | "file-search" | "sparkles" | "line-chart";
-  readonly tone: "pink" | "violet" | "mint" | "orange" | "indigo";
-  readonly title: string;
-  readonly description: string;
-}> = [
-  {
-    id: "market-opportunity",
-    icon: "crosshair",
-    tone: "pink",
-    title: "分析 AI Browser 市场机会",
-    description: "深度分析市场趋势和机会点",
-  },
-  {
-    id: "video-script",
-    icon: "file",
-    tone: "violet",
-    title: "生成视频脚本大纲",
-    description: "基于主题生成结构化脚本",
-  },
-  {
-    id: "find-assets",
-    icon: "file-search",
-    tone: "mint",
-    title: "寻找相关素材",
-    description: "在全局素材库中搜索相关素材",
-  },
-  {
-    id: "title-cover",
-    icon: "sparkles",
-    tone: "orange",
-    title: "优化标题和封面",
-    description: "生成更吸引人的标题和封面",
-  },
-  {
-    id: "publish-review",
-    icon: "line-chart",
-    tone: "indigo",
-    title: "发布效果复盘",
-    description: "分析发布数据并给出优化建议",
-  },
-];
-
-const RECENT_TASKS: ReadonlyArray<{
-  readonly id: string;
-  readonly title: string;
-  readonly project: string;
-  readonly meta: string;
-}> = [
-  {
-    id: "task-1",
-    title: "分析 AI Native Browser 的核心机会",
-    project: "AI Native Browser 深度解析",
-    meta: "2 小时前",
-  },
-  {
-    id: "task-2",
-    title: "生成脚本：浏览器隐私趋势",
-    project: "下一代浏览器的机会与未来",
-    meta: "昨天 16:30",
-  },
-  {
-    id: "task-3",
-    title: "寻找 B-roll 素材：用户使用场景",
-    project: "AI 浏览器功能拆解",
-    meta: "昨天 10:15",
-  },
-  {
-    id: "task-4",
-    title: "优化标题：AI 浏览器真的来了吗？",
-    project: "AI Native Browser 深度解析",
-    meta: "2 天前",
-  },
-  {
-    id: "task-5",
-    title: "复盘视频发布效果",
-    project: "Comet 产品分析报告",
-    meta: "3 天前",
-  },
-];
-
-const CONTINUING_TASKS: ReadonlyArray<{
-  readonly id: string;
-  readonly title: string;
-  readonly description: string;
-  readonly status: "进行中" | "排队中" | "已完成";
-  readonly progress: number | null;
-  readonly tone: "violet" | "amber" | "emerald";
-}> = [
-  {
-    id: "cont-1",
-    title: "生成脚本大纲",
-    description: "AI 浏览器的未来趋势",
-    status: "进行中",
-    progress: 45,
-    tone: "violet",
-  },
-  {
-    id: "cont-2",
-    title: "竞品对比分析",
-    description: "对比 6 款主流浏览器",
-    status: "排队中",
-    progress: null,
-    tone: "amber",
-  },
-  {
-    id: "cont-3",
-    title: "用户痛点挖掘",
-    description: "分析用户评论和反馈",
-    status: "排队中",
-    progress: null,
-    tone: "amber",
-  },
-  {
-    id: "cont-4",
-    title: "生成内容策略",
-    description: "品牌内容策略规划",
-    status: "已完成",
-    progress: 100,
-    tone: "emerald",
-  },
-];
-
-const QUICK_ENTRIES: ReadonlyArray<{
-  readonly id: string;
-  readonly icon: "plus" | "folder" | "search" | "image" | "send" | "book";
-  readonly title: string;
-}> = [
-  { id: "new-project", icon: "plus", title: "新建项目" },
-  { id: "open-project", icon: "folder", title: "打开项目" },
-  { id: "search", icon: "search", title: "全局搜索" },
-  { id: "assets", icon: "image", title: "素材中心" },
-  { id: "publish", icon: "send", title: "发布中心" },
-  { id: "knowledge", icon: "book", title: "知识库" },
-];
-
-const SMART_RECOMMENDATIONS: ReadonlyArray<{
-  readonly id: string;
-  readonly title: string;
-}> = [
-  { id: "rec-1", title: "分析竞品策略" },
-  { id: "rec-2", title: "寻找最新数据" },
-  { id: "rec-3", title: "生成对比图表" },
-];
+export interface CopilotContentViewModel extends BasePageViewModel {
+  readonly kind: "ai-copilot";
+  readonly prompt: string;
+  readonly chips: ReadonlyArray<{
+    readonly id: string;
+    readonly label: string;
+    readonly icon:
+      | "crosshair"
+      | "wand"
+      | "file-search"
+      | "sparkles"
+      | "image"
+      | "line-chart";
+  }>;
+  readonly recommendedCommands: ReadonlyArray<{
+    readonly id: string;
+    readonly icon: "crosshair" | "file" | "file-search" | "sparkles" | "line-chart";
+    readonly tone: "pink" | "violet" | "mint" | "orange" | "indigo";
+    readonly title: string;
+    readonly description: string;
+  }>;
+  readonly recentTasks: ReadonlyArray<{
+    readonly id: string;
+    readonly title: string;
+    readonly project: string;
+    readonly meta: string;
+  }>;
+  readonly continuingTasks: ReadonlyArray<{
+    readonly id: string;
+    readonly title: string;
+    readonly description: string;
+    readonly status: "进行中" | "排队中" | "已完成";
+    readonly progress: number | null;
+    readonly tone: "violet" | "amber" | "emerald";
+  }>;
+  readonly quickEntries: ReadonlyArray<{
+    readonly id: string;
+    readonly icon: "plus" | "folder" | "search" | "image" | "send" | "book";
+    readonly title: string;
+  }>;
+  readonly smartRecommendations: ReadonlyArray<{
+    readonly id: string;
+    readonly title: string;
+  }>;
+}
 
 // ---------------------------------------------------------------------------
 // Icon helpers
@@ -359,9 +241,83 @@ function QuickIcon({
 // Component
 // ---------------------------------------------------------------------------
 
-export function AICopilotContent() {
+export interface AICopilotContentProps {
+  /** Override hook for tests; defaults to the production selector. */
+  readonly viewModel?: CopilotContentViewModel;
+}
+
+interface CopilotMessage {
+  readonly id: string;
+  readonly role: "user" | "assistant";
+  readonly text: string;
+}
+
+/**
+ * Deterministic, network-free assistant reply. The Copilot dialog MUST
+ * NOT issue a real AI request (page-specs §16, decision D-001) — instead
+ * we echo the prompt back with a fixed acknowledgement so the local
+ * interaction is fully reproducible.
+ */
+function cannedReply(prompt: string): string {
+  return `收到，我已记录你的请求：「${prompt}」。这是本地占位回复，尚未连接真实模型。`;
+}
+
+export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
+  const vm = viewModel ?? buildCopilotViewModel();
+
+  // Controlled composer + local (network-free) activity log seeded from
+  // the ViewModel prompt. Submitting appends the user message and a
+  // deterministic canned assistant reply — no fetch / Date.now / random.
+  const [prompt, setPrompt] = React.useState<string>(vm.prompt);
+  const [messages, setMessages] = React.useState<ReadonlyArray<CopilotMessage>>(
+    () =>
+      vm.prompt.trim().length > 0
+        ? [{ id: "seed-user", role: "user", text: vm.prompt }]
+        : [],
+  );
+  const submissionRef = React.useRef(0);
+
+  const isEmpty = prompt.trim().length === 0;
+
+  const handleSubmit = React.useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const value = prompt.trim();
+      if (value.length === 0) return;
+      const seq = (submissionRef.current += 1);
+      setMessages((prev) => [
+        ...prev,
+        { id: `u-${seq}`, role: "user", text: value },
+        { id: `a-${seq}`, role: "assistant", text: cannedReply(value) },
+      ]);
+      setPrompt("");
+    },
+    [prompt],
+  );
+
   return (
     <div className="flex flex-col gap-4" data-slot="ai-copilot-content">
+      {/* CopilotHeader ------------------------------------------------- */}
+      <div data-slot="copilot-header" className="flex items-center gap-2">
+        <span
+          aria-hidden="true"
+          className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"
+        >
+          <Sparkles className="size-4" />
+        </span>
+        <div className="flex flex-col">
+          <h2
+            data-slot="copilot-header-title"
+            className="text-sm font-semibold text-foreground"
+          >
+            AI 助手
+          </h2>
+          <p className="text-[11px] text-muted-foreground">
+            描述你的目标，我来帮你规划下一步
+          </p>
+        </div>
+      </div>
+
       {/* PromptComposer ------------------------------------------------ */}
       <Card
         data-slot="prompt-composer"
@@ -369,16 +325,39 @@ export function AICopilotContent() {
         data-slot-region="copilot-region"
         className="border border-border bg-surface p-4"
       >
-        <CardContent className="p-0">
+        <CardContent className="flex flex-col gap-3 p-0">
+          {messages.length > 0 ? (
+            <ol
+              data-slot="copilot-messages"
+              aria-label="助手活动记录"
+              className="flex flex-col gap-1.5"
+            >
+              {messages.map((message) => (
+                <li
+                  key={message.id}
+                  data-slot="copilot-message"
+                  data-role={message.role}
+                  className={
+                    message.role === "user"
+                      ? "self-end rounded-lg bg-brand-soft px-2.5 py-1.5 text-[11px] text-foreground"
+                      : "self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] text-muted-foreground"
+                  }
+                >
+                  {message.text}
+                </li>
+              ))}
+            </ol>
+          ) : null}
           <form
-            onSubmit={(event) => event.preventDefault()}
+            onSubmit={handleSubmit}
             className="flex flex-col gap-3"
             data-slot="prompt-form"
           >
             <textarea
               id="ai-copilot-prompt"
               name="prompt"
-              defaultValue={PROMPT_VALUE}
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
               rows={2}
               aria-label="我能帮你做什么"
               placeholder="我能帮你做什么？"
@@ -390,10 +369,11 @@ export function AICopilotContent() {
               data-slot="suggested-action-chips"
             >
               <div className="flex flex-wrap items-center gap-1.5">
-                {SUGGESTED_ACTIONS.map((action) => (
+                {vm.chips.map((action) => (
                   <button
                     key={action.id}
                     type="button"
+                    onClick={() => setPrompt(action.label)}
                     data-slot="suggested-chip"
                     data-chip-id={action.id}
                     className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-border/80 bg-surface px-3 text-xs font-medium text-foreground transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
@@ -405,16 +385,29 @@ export function AICopilotContent() {
                   </button>
                 ))}
               </div>
-              <button
-                type="submit"
-                data-slot="submit-button"
-                data-testid="submit-button"
-                aria-label="提交提示给 Copilot"
-                className="flex size-9 items-center justify-center rounded-full bg-brand text-brand-foreground transition-colors hover:bg-brand/90 focus:outline-none focus:ring-0 focus-visible:ring-0"
-              >
-                <ArrowUp className="size-4" aria-hidden="true" />
-                <span className="sr-only">生成</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPrompt("")}
+                  disabled={isEmpty}
+                  data-slot="prompt-clear"
+                  aria-label="清空输入"
+                  className="inline-flex h-8 items-center rounded-xl border border-border/80 bg-surface px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  清空
+                </button>
+                <button
+                  type="submit"
+                  disabled={isEmpty}
+                  data-slot="submit-button"
+                  data-testid="submit-button"
+                  aria-label="提交提示给 Copilot"
+                  className="flex size-9 items-center justify-center rounded-full bg-brand text-brand-foreground transition-colors hover:bg-brand/90 focus:outline-none focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ArrowUp className="size-4" aria-hidden="true" />
+                  <span className="sr-only">生成</span>
+                </button>
+              </div>
             </div>
           </form>
         </CardContent>
@@ -443,7 +436,7 @@ export function AICopilotContent() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-1 px-3 pb-2.5 pt-0">
-            {RECOMMENDED_COMMANDS.map((cmd) => (
+            {vm.recommendedCommands.map((cmd) => (
               <button
                 key={cmd.id}
                 type="button"
@@ -487,7 +480,7 @@ export function AICopilotContent() {
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 px-3 pb-2.5 pt-0">
-            {RECENT_TASKS.map((task) => (
+            {vm.recentTasks.map((task) => (
               <div
                 key={task.id}
                 data-slot="recent-task"
@@ -534,7 +527,7 @@ export function AICopilotContent() {
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-1.5 px-3 pb-2.5 pt-0">
-            {CONTINUING_TASKS.map((task) => {
+            {vm.continuingTasks.map((task) => {
               const badgeClass = STATUS_BADGE[task.status] ?? STATUS_BADGE.进行中;
               const barClass = STATUS_BAR[task.status] ?? STATUS_BAR.进行中;
               const cardBg =
@@ -611,7 +604,7 @@ export function AICopilotContent() {
             快捷入口
           </h3>
           <div className="grid grid-cols-6 gap-1">
-            {QUICK_ENTRIES.map((entry) => (
+            {vm.quickEntries.map((entry) => (
               <button
                 key={entry.id}
                 type="button"
@@ -654,7 +647,7 @@ export function AICopilotContent() {
             检测到你最近在研究「AI 浏览器」，要我帮你：
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {SMART_RECOMMENDATIONS.map((rec) => (
+            {vm.smartRecommendations.map((rec) => (
               <button
                 key={rec.id}
                 type="button"

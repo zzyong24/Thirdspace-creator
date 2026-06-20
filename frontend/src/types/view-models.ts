@@ -431,6 +431,14 @@ export interface PublishingViewModel extends BasePageViewModel {
 // Analytics & Review
 // ---------------------------------------------------------------------------
 
+export interface TopPublishedCard {
+  readonly id: Id;
+  readonly title: string;
+  readonly platform: string;
+  readonly views: string;
+  readonly tone: "primary" | "compact";
+}
+
 export interface AnalyticsViewModel extends BasePageViewModel {
   readonly kind: "analytics-review";
   readonly projectId: Id;
@@ -442,6 +450,7 @@ export interface AnalyticsViewModel extends BasePageViewModel {
   readonly audienceSource: ReadonlyArray<{ readonly label: string; readonly value: number }>;
   readonly retentionCurve: ReadonlyArray<{ readonly label: string; readonly value: number }>;
   readonly keyMoments: ReadonlyArray<{ readonly id: Id; readonly label: string; readonly value: string }>;
+  readonly topPublished: ReadonlyArray<TopPublishedCard>;
   readonly aiAnalysis: ReadonlyArray<{ readonly id: Id; readonly title: string; readonly body: string }>;
   readonly reviewHistory: ReadonlyArray<{
     readonly id: Id;

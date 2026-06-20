@@ -65,7 +65,7 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
         aria-label="素材画廊"
         className="flex flex-col gap-3"
       >
-        <GalleryControls totalCount={viewModel.assets.length} />
+        <GalleryControls />
         <AssetCardGrid
           assets={viewModel.assets}
           selectedId={selected?.id ?? null}
@@ -85,7 +85,7 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
 // GalleryControls
 // ---------------------------------------------------------------------------
 
-function GalleryControls(_props: { totalCount: number }) {
+function GalleryControls() {
   return (
     <div
       data-slot="gallery-controls"

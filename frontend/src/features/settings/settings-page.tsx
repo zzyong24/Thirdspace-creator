@@ -49,7 +49,7 @@
 import * as React from "react";
 
 import { PageTabs } from "@/components/navigation/page-tabs";
-import { canonicalDataset } from "@/fixtures/canonical";
+import { buildSettingsViewModel } from "@/fixtures/selectors";
 
 import {
   SettingsMainColumn,
@@ -134,81 +134,6 @@ const SETTINGS_TABS: ReadonlyArray<{ id: string; label: string }> = [
   { id: "data", label: "数据" },
   { id: "about", label: "关于" },
 ];
-
-// ---------------------------------------------------------------------------
-// View model — derived from canonical dataset, with deterministic
-// fallbacks so the page is never empty.
-// ---------------------------------------------------------------------------
-
-function buildSettingsViewModel(): SettingsViewModel {
-  const user = canonicalDataset.user;
-  const preferences =
-    canonicalDataset.userPreferences[0] ??
-    {
-      id: "pref-fallback",
-      userId: user.id,
-      defaultHome: "dashboard",
-      defaultCreationMode: "guided" as const,
-      defaultVisibility: "private" as const,
-      autosaveEnabled: true,
-      fileNamingRule: "{project}-{stage}-{date}",
-      analyticsEnabled: true,
-    };
-
-  return {
-    account: buildAccount(user.displayName),
-    preferences: {
-      defaultHome: preferences.defaultHome,
-      defaultCreationMode: preferences.defaultCreationMode,
-      defaultVisibility: preferences.defaultVisibility,
-      autosaveEnabled: preferences.autosaveEnabled,
-      analyticsEnabled: preferences.analyticsEnabled,
-    },
-    system: {
-      theme: "system",
-      density: "comfortable",
-      notifications: true,
-      locale: user.locale,
-    },
-    storage: buildStorage(),
-    model: {
-      provider: "anthropic",
-      model: "claude-sonnet",
-      temperature: 0.6,
-    },
-  };
-}
-
-function buildAccount(displayName: string): AccountInformation {
-  const initials = computeInitials(displayName);
-  return {
-    displayName,
-    email: "zyongzhu@creatoros.local",
-    initials,
-    planLabel: "个人版",
-    timezone: "Asia/Shanghai",
-  };
-}
-
-function computeInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0]!.slice(0, 1);
-  return `${parts[0]!.charAt(0)}${parts[parts.length - 1]!.charAt(0)}`.toUpperCase();
-}
-
-function buildStorage(): StorageState {
-  return {
-    usedGb: 18,
-    totalGb: 64,
-    breakdown: [
-      { id: "st-video", label: "视频素材", valueGb: 9.2, tone: "brand" },
-      { id: "st-image", label: "图片素材", valueGb: 4.4, tone: "success" },
-      { id: "st-audio", label: "音频素材", valueGb: 2.1, tone: "warning" },
-      { id: "st-doc", label: "文档与导出", valueGb: 2.3, tone: "neutral" },
-    ],
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Page

@@ -186,7 +186,7 @@ describe("NewProjectForm — project name field", () => {
 // ---------------------------------------------------------------------------
 
 describe("NewProjectForm — project brief field", () => {
-  it("renders a multi-line textarea labelled 项目简介", async () => {
+  it("renders a multi-line textarea labelled 一句话描述", async () => {
     const { NewProjectForm } = await importForm();
     render(
       <div role="dialog" aria-label="新建项目">
@@ -195,7 +195,7 @@ describe("NewProjectForm — project brief field", () => {
     );
     const briefField = screen.getByTestId("new-project-brief");
     const textarea = within(briefField).getByRole("textbox", {
-      name: /项目简介/i,
+      name: /一句话描述/i,
     });
     expect(textarea.tagName.toLowerCase()).toBe("textarea");
   });
@@ -238,10 +238,10 @@ describe("NewProjectForm — selection cards", () => {
       </div>,
     );
     const typeField = screen.getByTestId("new-project-content-type");
-    const audio = within(typeField).getByRole("radio", { name: /音频/i });
-    audio.focus();
+    const story = within(typeField).getByRole("radio", { name: /故事叙事/i });
+    story.focus();
     await user.keyboard("{Enter}");
-    expect(audio).toBeChecked();
+    expect(story).toBeChecked();
   });
 
   it("renders creation mode cards as keyboard-selectable radios", async () => {
@@ -336,7 +336,7 @@ describe("NewProjectForm — footer actions", () => {
     // does not carry state forward on cancel.
     const input = screen.getByLabelText(/项目名称/i);
     await user.type(input, "AI Native Browser");
-    const brief = screen.getByLabelText(/项目简介/i);
+    const brief = screen.getByLabelText(/一句话描述/i);
     await user.type(brief, "深度拆解");
     const cancel = screen.getByRole("button", { name: /^取消$/ });
     await user.click(cancel);
@@ -354,7 +354,7 @@ describe("NewProjectForm — footer actions", () => {
       </div>,
     );
     await user.type(screen.getByLabelText(/项目名称/i), "AI Native Browser");
-    await user.type(screen.getByLabelText(/项目简介/i), "深度拆解浏览器趋势");
+    await user.type(screen.getByLabelText(/一句话描述/i), "深度拆解浏览器趋势");
     // The platform default is `bilibili`, so to exercise the radio path
     // we first move to a different option and confirm the value lands.
     const youtube = within(screen.getByTestId("new-project-platform")).getByRole(
@@ -369,11 +369,11 @@ describe("NewProjectForm — footer actions", () => {
     );
     bilibili.focus();
     await user.keyboard("{Enter}");
-    const video = within(screen.getByTestId("new-project-content-type")).getByRole(
+    const deepDive = within(screen.getByTestId("new-project-content-type")).getByRole(
       "radio",
-      { name: /视频/i },
+      { name: /深度解析/i },
     );
-    video.focus();
+    deepDive.focus();
     await user.keyboard("{Enter}");
     const guided = within(
       screen.getByTestId("new-project-creation-mode"),
@@ -435,7 +435,7 @@ describe("NewProjectForm — default values", () => {
       </div>,
     );
     expect(screen.getByLabelText(/项目名称/i)).toHaveValue("AI Native Browser");
-    expect(screen.getByLabelText(/项目简介/i)).toHaveValue("深度拆解");
+    expect(screen.getByLabelText(/一句话描述/i)).toHaveValue("深度拆解");
     const bilibili = within(screen.getByTestId("new-project-platform")).getByRole(
       "radio",
       { name: /B站|bilibili/i },

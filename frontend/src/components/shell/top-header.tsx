@@ -19,6 +19,7 @@ import Link from "next/link";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NotificationPopover } from "./notification-popover";
 import { creatorIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
@@ -77,7 +78,6 @@ const DEFAULT_STAGES: ReadonlyArray<TopHeaderStage> = [
 ];
 
 const SearchIcon = creatorIcons.search;
-const BellIcon = creatorIcons.notifications;
 const ShareIcon = creatorIcons.share;
 const MoreIcon = creatorIcons.more;
 
@@ -141,6 +141,7 @@ export function TopHeader({
       <HeaderActions
         mode={resolvedMode}
         pathname={pathname}
+        project={project}
         primaryActionLabel={primaryActionLabel}
         secondaryActionLabel={secondaryActionLabel}
       />
@@ -172,9 +173,15 @@ function PageHeading({
         visuallyHidden && "sr-only",
       )}
     >
-      <h1 className="truncate text-md font-semibold text-foreground">
-        {title}
-      </h1>
+      {visuallyHidden ? (
+        <span className="truncate text-md font-semibold text-foreground">
+          {title}
+        </span>
+      ) : (
+        <h1 className="truncate text-md font-semibold text-foreground">
+          {title}
+        </h1>
+      )}
       {description ? (
         <p className="truncate text-sm text-muted-foreground">{description}</p>
       ) : null}
@@ -311,9 +318,11 @@ function HeaderActions({
   pathname,
   primaryActionLabel,
   secondaryActionLabel,
+  project,
 }: {
   mode: TopHeaderMode;
   pathname: string;
+  project?: TopHeaderProjectIdentity;
   primaryActionLabel?: string;
   secondaryActionLabel?: string;
 }) {
@@ -323,6 +332,12 @@ function HeaderActions({
   ) {
     return <DashboardHeaderActions />;
   }
+  if (
+    (mode === "global" || mode === "overlay-background") &&
+    pathname === "/projects"
+  ) {
+    return <ProjectsHeaderActions />;
+  }
   if (mode === "global" || mode === "overlay-background") {
     return null;
   }
@@ -330,6 +345,8 @@ function HeaderActions({
     return (
       <ProjectHeaderActions
         mode={mode}
+        pathname={pathname}
+        project={project}
         primaryActionLabel={primaryActionLabel}
         secondaryActionLabel={secondaryActionLabel}
       />
@@ -354,14 +371,7 @@ function HeaderActions({
           <SearchIcon className="size-4" aria-hidden="true" />
         </Link>
       ) : null}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label="通知"
-      >
-        <BellIcon className="size-4" aria-hidden="true" />
-      </Button>
+      <NotificationPopover />
       {secondaryActionLabel ? (
         <Button type="button" variant="outline" size="sm">
           {secondaryActionLabel}
@@ -394,13 +404,18 @@ function HeaderActions({
 
 function ProjectHeaderActions({
   mode,
+  pathname,
+  project,
   primaryActionLabel,
   secondaryActionLabel,
 }: {
   mode: "project-overview" | "project-workspace";
+  pathname: string;
+  project?: TopHeaderProjectIdentity;
   primaryActionLabel?: string;
   secondaryActionLabel?: string;
 }) {
+  const primaryHref = primaryActionHref({ mode, pathname, project });
   return (
     <div
       data-slot="header-actions"
@@ -428,12 +443,54 @@ function ProjectHeaderActions({
         <MoreIcon className="size-4" aria-hidden="true" />
       </Button>
       {primaryActionLabel ? (
-        <Button type="button" size="lg">
+        primaryHref ? (
+        <Link href={primaryHref} className={buttonVariants({ size: "lg" })}>
           {primaryActionLabel} →
-        </Button>
+        </Link>
+        ) : (
+          <Button type="button" size="lg">
+            {primaryActionLabel} →
+          </Button>
+        )
       ) : null}
     </div>
   );
+}
+
+function primaryActionHref({
+  mode,
+  pathname,
+  project,
+}: {
+  mode: "project-overview" | "project-workspace";
+  pathname: string;
+  project?: TopHeaderProjectIdentity;
+}): string | null {
+  if (mode === "project-overview" && project?.stage) {
+    return `${pathname.replace(/\/$/, "")}/${project.stage}`;
+  }
+  if (mode === "project-workspace") {
+    return nextWorkspaceHref(pathname);
+  }
+  return null;
+}
+
+const NEXT_STAGE: Record<string, string | null> = {
+  research: "planning",
+  planning: "script",
+  script: "production",
+  production: "publishing",
+  publishing: "review",
+  review: null,
+};
+
+function nextWorkspaceHref(pathname: string): string | null {
+  const segments = pathname.split("/").filter(Boolean);
+  const currentStage = segments[2];
+  if (!currentStage) return null;
+  const nextStage = NEXT_STAGE[currentStage];
+  if (!nextStage) return null;
+  return `/${segments.slice(0, 2).join("/")}/${nextStage}`;
 }
 
 function DashboardHeaderActions() {
@@ -453,8 +510,37 @@ function DashboardHeaderActions() {
           ⌘ K
         </kbd>
       </Link>
-      <Button type="button" variant="outline" size="icon" aria-label="通知">
-        <BellIcon className="size-4" aria-hidden="true" />
+      <NotificationPopover triggerClassName="size-9 border border-border bg-surface" />
+      <Link
+        href="/projects/new"
+        className={buttonVariants({ size: "lg" })}
+      >
+        ＋ 新建项目
+      </Link>
+    </div>
+  );
+}
+
+function ProjectsHeaderActions() {
+  return (
+    <div
+      data-slot="header-actions"
+      className="pointer-events-auto flex shrink-0 items-center gap-3"
+    >
+      <Link
+        href="/search"
+        aria-label="搜索项目"
+        className="flex h-10 w-72 items-center gap-2 rounded-control border border-border bg-surface px-3 text-sm text-muted-foreground shadow-sm"
+      >
+        <SearchIcon className="size-4" aria-hidden="true" />
+        <span className="flex-1">搜索项目名称、关键词...</span>
+        <kbd className="rounded bg-surface-subtle px-1.5 py-0.5 text-[10px]">
+          ⌘ K
+        </kbd>
+      </Link>
+      <Button type="button" variant="outline" size="lg" aria-label="筛选项目">
+        <span aria-hidden="true">⚙</span>
+        筛选
       </Button>
       <Link
         href="/projects/new"

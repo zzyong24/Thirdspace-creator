@@ -43,10 +43,13 @@ test.describe("Publishing Workspace page", () => {
     );
     await expect(identity).toContainText("AI Native Browser 深度解析");
 
-    // Primary action "查看数据" lives in the header.
-    await expect(
-      header.getByRole("button", { name: /查看数据/ }),
-    ).toBeVisible();
+    // Primary action "查看数据" links to the review workspace.
+    const primaryAction = header.getByRole("link", { name: /查看数据/ });
+    await expect(primaryAction).toBeVisible();
+    await expect(primaryAction).toHaveAttribute(
+      "href",
+      "/projects/project-ainativebrowser/review",
+    );
 
     // The six-stage stepper in canonical order with Publishing active.
     const stepperItems = page.locator(

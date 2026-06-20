@@ -45,7 +45,7 @@ export function ViewAndSortControls({
         data-slot="view-toggle"
         role="group"
         aria-label="视图切换"
-        className="flex items-center gap-0.5 rounded-control border border-border bg-surface p-0.5"
+        className="flex h-10 items-center gap-0.5 rounded-control border border-border bg-surface p-0.5"
       >
         <button
           type="button"
@@ -84,7 +84,7 @@ export function ViewAndSortControls({
         data-slot="sort-control"
         role="group"
         aria-label="项目排序"
-        className="flex items-center gap-1 rounded-control border border-border bg-surface px-3 py-1.5 text-sm"
+        className="flex h-10 min-w-32 items-center justify-between gap-2 whitespace-nowrap rounded-control border border-border bg-surface px-4 text-sm"
       >
         <fieldset className="flex items-center gap-1 border-0 p-0">
           <legend className="sr-only">排序方式</legend>

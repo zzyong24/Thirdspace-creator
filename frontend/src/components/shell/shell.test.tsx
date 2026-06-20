@@ -144,6 +144,22 @@ describe("AppShell", () => {
     expect(header).toHaveClass("absolute");
   });
 
+  it("does not create a duplicate h1 for global overlay page titles", async () => {
+    const { container } = await renderShell({
+      pathname: "/projects",
+      headerMode: "global",
+      pageTitle: "项目",
+      pageDescription: "所有项目及其当前阶段",
+    });
+    const headingSlot = container.querySelector(
+      '[data-slot="header-page-heading"]',
+    );
+
+    expect(headingSlot).not.toBeNull();
+    expect(headingSlot?.textContent).toContain("项目");
+    expect(headingSlot?.querySelector("h1")).toBeNull();
+  });
+
   it("renders the page content inside the page scroll area", async () => {
     const { container } = await renderShell();
     const scroll = container.querySelector('[data-slot="page-scroll-area"]');
@@ -248,5 +264,26 @@ describe("AppShell", () => {
         name: /新建项目/,
       }),
     ).toHaveAttribute("href", "/projects/new");
+  });
+
+  it("project overview header primary action links to the current workspace", async () => {
+    const { container } = await renderShell({
+      pathname: "/projects/ai-native-browser",
+      headerMode: "project-overview",
+      primaryActionLabel: "进入工作台",
+      project: {
+        projectId: "project-ainativebrowser",
+        title: "AI Native Browser 深度解析",
+        stage: "script",
+        stageProgressPct: 58,
+        updatedLabel: "写稿中 · 更新于 今天 14:30",
+        starred: true,
+      },
+    });
+    const header = container.querySelector('[data-slot="app-top-header"]');
+    expect(header).not.toBeNull();
+    expect(
+      within(header as HTMLElement).getByRole("link", { name: /进入工作台/ }),
+    ).toHaveAttribute("href", "/projects/ai-native-browser/script");
   });
 });
