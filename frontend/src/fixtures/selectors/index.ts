@@ -183,16 +183,33 @@ function pickOutputsForProject(projectId: string): ReadonlyArray<ContentOutputSu
 // Pure / deterministic — no Date.now / Math.random / network.
 // ---------------------------------------------------------------------------
 
+/**
+ * The slice of the canonical dataset the dashboard selector reads. Parameterizing
+ * over this `Pick` lets pages drive the selector from the mutable mock store
+ * (which is structurally a superset) while defaulting to `canonicalDataset` for
+ * back-compat. Pure / deterministic — no Date.now / Math.random / network.
+ */
+export type DashboardSource = Pick<
+  typeof canonicalDataset,
+  | "projects"
+  | "tasks"
+  | "publications"
+  | "metricValues"
+  | "contentOutputs"
+  | "assets"
+  | "assetFiles"
+>;
+
 /** Sum the `views` MetricValue rows across all platforms. */
-function aggregateTotalViews(): number {
-  return canonicalDataset.metricValues
+function aggregateTotalViews(dataset: DashboardSource): number {
+  return dataset.metricValues
     .filter((metric) => metric.metricKey === "views")
     .reduce((sum, metric) => sum + metric.numericValue, 0);
 }
 
 /** Total stored bytes across every asset file revision. */
-function aggregateStorageBytes(): number {
-  return canonicalDataset.assetFiles.reduce(
+function aggregateStorageBytes(dataset: DashboardSource): number {
+  return dataset.assetFiles.reduce(
     (sum, file) => sum + file.fileSize,
     0,
   );
@@ -213,16 +230,16 @@ function formatBytes(bytes: number): string {
   return `${mb.toFixed(1)}MB`;
 }
 
-function buildDashboardMetrics(): ReadonlyArray<MetricCard> {
-  const activeProjects = canonicalDataset.projects.filter(
+function buildDashboardMetrics(dataset: DashboardSource): ReadonlyArray<MetricCard> {
+  const activeProjects = dataset.projects.filter(
     (project) => project.status === "active",
   ).length;
-  const completedPublications = canonicalDataset.publications.filter(
+  const completedPublications = dataset.publications.filter(
     (publication) => publication.status === "published",
   ).length;
-  const totalViews = aggregateTotalViews();
-  const assetCount = canonicalDataset.assets.length;
-  const storageBytes = aggregateStorageBytes();
+  const totalViews = aggregateTotalViews(dataset);
+  const assetCount = dataset.assets.length;
+  const storageBytes = aggregateStorageBytes(dataset);
 
   return [
     {
@@ -295,9 +312,11 @@ function buildDataOverview(metrics: ReadonlyArray<MetricCard>): DataOverview {
   };
 }
 
-export function buildDashboardViewModel(): DashboardViewModel {
+export function buildDashboardViewModel(
+  dataset: DashboardSource = canonicalDataset,
+): DashboardViewModel {
   const continueProject =
-    listProjects().find((project) => project.status === "active") ?? listProjects()[0];
+    dataset.projects.find((project) => project.status === "active") ?? dataset.projects[0];
 
   const continueCreating = {
     heading: "继续创作",
@@ -308,11 +327,11 @@ export function buildDashboardViewModel(): DashboardViewModel {
     updatedAt: continueProject.updatedAt,
   } as const;
 
-  const todos = canonicalDataset.tasks
+  const todos = dataset.tasks
     .filter((task) => task.status !== "done")
     .sort((a, b) => priorityOrder(a.priority) - priorityOrder(b.priority))
     .map((task) => {
-      const project = canonicalDataset.projects.find((p) => p.id === task.projectId);
+      const project = dataset.projects.find((p) => p.id === task.projectId);
       return {
         id: task.id,
         title: task.title,
@@ -325,11 +344,11 @@ export function buildDashboardViewModel(): DashboardViewModel {
       };
     });
 
-  const recentPublications = canonicalDataset.publications
+  const recentPublications = dataset.publications
     .slice()
     .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
     .map((publication) => {
-      const platformMetrics = canonicalDataset.metricValues.filter(
+      const platformMetrics = dataset.metricValues.filter(
         (m) => m.dimensions["platform"] === publication.platform,
       );
       const metricViews = platformMetrics
@@ -342,7 +361,7 @@ export function buildDashboardViewModel(): DashboardViewModel {
         .reduce((sum, m) => sum + m.numericValue, 0);
       return {
         id: publication.id,
-        title: canonicalDataset.contentOutputs.find((c) => c.id === publication.contentOutputId)?.title ?? "",
+        title: dataset.contentOutputs.find((c) => c.id === publication.contentOutputId)?.title ?? "",
         platform: publication.platform,
         status: publication.status,
         views: metricViews,
@@ -351,7 +370,7 @@ export function buildDashboardViewModel(): DashboardViewModel {
       };
     });
 
-  const metrics = buildDashboardMetrics();
+  const metrics = buildDashboardMetrics(dataset);
 
   return {
     scenario: "default",
