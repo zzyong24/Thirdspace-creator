@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { resetStore } from "../index";
-import { client } from "@/lib/contract-client";
+import { client } from "@/server/mock-backend/in-process-client";
 
 describe("dashboard via the client", () => {
   beforeEach(() => resetStore());

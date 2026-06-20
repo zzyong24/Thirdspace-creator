@@ -31,7 +31,7 @@ import { StatusTabsBar, type StatusTabsBarTab } from "@/features/projects/status
 import { ViewAndSortControls } from "@/features/projects/view-and-sort-controls";
 import { Pagination } from "@/components/navigation/pagination";
 import { buildProjectsViewModel } from "@/fixtures/selectors";
-import { client } from "@/lib/contract-client";
+import { client } from "@/lib/contract-client.server";
 import { cn } from "@/lib/utils";
 import type { ProjectsViewModel, ProjectListRow } from "@/types/view-models";
 import type { Project, ProjectStageName } from "@/types/domain";

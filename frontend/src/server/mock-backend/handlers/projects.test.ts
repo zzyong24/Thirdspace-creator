@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { resetStore, getStore } from "../index";
-import { client } from "@/lib/contract-client";
+import { client } from "@/server/mock-backend/in-process-client";
 
 // The contract's list endpoints are typed `isList: boolean`, so the typed
 // client's return type collapses to the single resource rather than an array.

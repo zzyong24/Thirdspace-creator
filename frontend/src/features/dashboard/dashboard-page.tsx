@@ -29,7 +29,7 @@ import { ProgressBar } from "@/components/project/progress-bar";
 import { TagChip } from "@/components/content/tag-chip";
 import { ChartFrame } from "@/components/analytics/chart-frame";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
-import { client } from "@/lib/contract-client";
+import { client } from "@/lib/contract-client.server";
 import {
   getProjectPlatforms,
 } from "@/fixtures/canonical";
