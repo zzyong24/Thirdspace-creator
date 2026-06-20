@@ -50,11 +50,14 @@ type ProjectsPageProps = React.ComponentProps<
 async function renderProjects(overrides: Partial<ProjectsPageProps> = {}) {
   const { AppShell } = await import("@/components/shell/app-shell");
   const { ProjectsPage } = await import("./projects-page");
-  return render(
-    <AppShell pathname="/projects">
-      <ProjectsPage {...overrides} />
-    </AppShell>,
-  );
+  const { buildProjectsViewModel } = await import("@/fixtures/selectors");
+  // `ProjectsPage` is an async Server Component (it `await`s the client in
+  // production). The unit test drives it through the `viewModel?` override seam
+  // so it stays sync and fixture-driven — the list it renders is the canonical
+  // project set, identical to what the mock backend store serves.
+  const viewModel = overrides.viewModel ?? buildProjectsViewModel();
+  const element = await ProjectsPage({ ...overrides, viewModel });
+  return render(<AppShell pathname="/projects">{element}</AppShell>);
 }
 
 describe("ProjectsPage", () => {
@@ -145,18 +148,22 @@ describe("ProjectsPage", () => {
     expect(radios.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("renders the six design-aligned project rows on the first page", async () => {
+  it("renders one row per canonical project on the first page", async () => {
+    const { canonicalDataset } = await import("@/fixtures/canonical");
     const { container } = await renderProjects();
     const list = container.querySelector('[data-slot="project-list"]');
     expect(list).not.toBeNull();
     const rows = list!.querySelectorAll('[data-slot="project-row"]');
-    expect(rows.length).toBe(6);
+    // The list now comes from the mock backend store (cloned from the
+    // canonical dataset) instead of the legacy DESIGN_PROJECT_ROWS literal.
+    expect(rows.length).toBe(canonicalDataset.projects.length);
   });
 
   it("each project row contains cover, title, summary, owner, status, stage, progress, platforms, update time and action", async () => {
+    const { canonicalDataset } = await import("@/fixtures/canonical");
     const { container } = await renderProjects();
     const rows = container.querySelectorAll('[data-slot="project-row"]');
-    expect(rows.length).toBe(6);
+    expect(rows.length).toBe(canonicalDataset.projects.length);
     rows.forEach((row) => {
       const rowEl = row as HTMLElement;
       expect(rowEl.querySelector('[data-slot="project-thumbnail"]')).not.toBeNull();

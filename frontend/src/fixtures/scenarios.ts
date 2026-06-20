@@ -125,7 +125,7 @@ function buildProjectsViewModelForScenario(
   scenario: FixtureScenarioName,
   rows: ReadonlyArray<ProjectListRow>,
 ): ProjectsViewModel {
-  const base = buildProjectsViewModel({ rows });
+  const base = buildProjectsViewModel(listProjects(), { rows });
   return {
     ...base,
     scenario,

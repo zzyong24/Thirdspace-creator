@@ -31,9 +31,10 @@ import { StatusTabsBar, type StatusTabsBarTab } from "@/features/projects/status
 import { ViewAndSortControls } from "@/features/projects/view-and-sort-controls";
 import { Pagination } from "@/components/navigation/pagination";
 import { buildProjectsViewModel } from "@/fixtures/selectors";
+import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import type { ProjectsViewModel, ProjectListRow } from "@/types/view-models";
-import type { ProjectStageName } from "@/types/domain";
+import type { Project, ProjectStageName } from "@/types/domain";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -48,10 +49,27 @@ export interface ProjectsPageProps {
 // Page
 // ---------------------------------------------------------------------------
 
-export function ProjectsPage({ viewModel }: ProjectsPageProps = {}) {
-  const vm = viewModel ?? buildProjectsViewModel();
+export async function ProjectsPage({ viewModel }: ProjectsPageProps = {}) {
+  // Reads flow page -> await client.* -> MockTransport -> store -> DTO. The
+  // project list now always comes from the mock backend store; the `viewModel?`
+  // prop remains the test-override seam (fixture-driven, sync). The legacy
+  // DESIGN_PROJECT_ROWS fallback is gone — rows are the canonical projects.
+  // The contract's list endpoints are typed `isList: boolean`, so the typed
+  // client's return type collapses to the single resource rather than an array.
+  // At runtime the listEnvelope yields the array; cast to the array shape (same
+  // pattern as the projects handler tests). `ProjectResource` is structurally
+  // the domain `Project`, so `buildProjectsViewModel` consumes it directly.
+  const projects =
+    viewModel === undefined
+      ? ((await client.listProjects({
+          params: undefined,
+          query: { page: 1, pageSize: 50 },
+          body: undefined,
+        })) as unknown as ReadonlyArray<Project>)
+      : [];
+  const vm = viewModel ?? buildProjectsViewModel(projects);
   const tabs = buildProjectStatusTabs(vm);
-  const rows = viewModel ? vm.rows : DESIGN_PROJECT_ROWS;
+  const rows = vm.rows;
   return (
     <main
       data-app="creatoros"
@@ -255,113 +273,6 @@ const PROJECT_TAB_ORDER = [
   { id: "review", label: "复盘中" },
   { id: "archived", label: "已归档" },
 ] as const;
-
-const DESIGN_PROJECT_ROWS: ReadonlyArray<ProjectListRow> = [
-  {
-    id: "project-ainativebrowser",
-    title: "AI Native Browser 深度解析",
-    brief: "全面解析 AI Native Browser 的核心价值与未来趋势",
-    contentCategory: "科技评论",
-    status: "active",
-    currentStage: "script",
-    progressPct: 72,
-    platforms: [
-      { id: "douyin", label: "抖音" },
-      { id: "bilibili", label: "B站" },
-      { id: "xiaohongshu", label: "小红书" },
-      { id: "youtube", label: "YouTube" },
-    ],
-    updatedAt: "2026-06-13T06:00:00.000Z",
-    primaryOutputId: "output-ainativebrowser-main",
-    outputs: [],
-    starred: true,
-  },
-  {
-    id: "project-claude-code-guide",
-    title: "Claude Code 使用指南",
-    brief: "从入门到精通的 Claude Code 实战教程",
-    contentCategory: "AI 教学",
-    status: "active",
-    currentStage: "production",
-    progressPct: 58,
-    platforms: [
-      { id: "bilibili", label: "B站" },
-      { id: "xiaohongshu", label: "小红书" },
-      { id: "youtube", label: "YouTube" },
-    ],
-    updatedAt: "2026-06-12T14:15:00.000Z",
-    primaryOutputId: "output-claude-code-main",
-    outputs: [],
-    starred: false,
-  },
-  {
-    id: "project-mcp-protocol",
-    title: "MCP 协议全面解读",
-    brief: "MCP 是什么？如何改变 AI 应用生态",
-    contentCategory: "技术解读",
-    status: "paused",
-    currentStage: "planning",
-    progressPct: 35,
-    platforms: [
-      { id: "douyin", label: "抖音" },
-      { id: "wechatVideo", label: "视频号" },
-      { id: "youtube", label: "YouTube" },
-    ],
-    updatedAt: "2026-05-15T10:45:00.000Z",
-    primaryOutputId: "output-mcp-main",
-    outputs: [],
-    starred: false,
-  },
-  {
-    id: "project-notion-ai",
-    title: "Notion AI 实战技巧 10 例",
-    brief: "10 个提升效率的 Notion AI 使用技巧",
-    contentCategory: "效率工具",
-    status: "active",
-    currentStage: "script",
-    progressPct: 66,
-    platforms: [
-      { id: "bilibili", label: "B站" },
-      { id: "xiaohongshu", label: "小红书" },
-    ],
-    updatedAt: "2026-05-14T08:20:00.000Z",
-    primaryOutputId: "output-notion-ai-main",
-    outputs: [],
-    starred: false,
-  },
-  {
-    id: "project-gpt4o-report",
-    title: "GPT-4o 深度体验报告",
-    brief: "多模态能力全面升级，真实使用体验分享",
-    contentCategory: "AI 评测",
-    status: "completed",
-    currentStage: "review",
-    progressPct: 100,
-    platforms: [
-      { id: "bilibili", label: "B站" },
-      { id: "douyin", label: "抖音" },
-      { id: "wechatVideo", label: "视频号" },
-    ],
-    updatedAt: "2026-05-13T03:10:00.000Z",
-    primaryOutputId: "output-gpt4o-main",
-    outputs: [],
-    starred: true,
-  },
-  {
-    id: "project-midjourney-v6",
-    title: "Midjourney V6 新功能评测",
-    brief: "全新版本道具亮点与创作技巧",
-    contentCategory: "AI 绘画",
-    status: "paused",
-    currentStage: "publishing",
-    progressPct: 20,
-    platforms: [{ id: "bilibili", label: "B站" }],
-    updatedAt: "2026-05-10T01:30:00.000Z",
-    primaryOutputId: "output-midjourney-main",
-    outputs: [],
-    starred: false,
-  },
-];
 
 function buildProjectStatusTabs(vm: ProjectsViewModel): ReadonlyArray<StatusTabsBarTab> {
   const counts: Record<string, number> = {

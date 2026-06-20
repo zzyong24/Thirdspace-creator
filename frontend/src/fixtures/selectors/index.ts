@@ -7,7 +7,7 @@
  */
 
 import { getPlatformIcon } from "@/lib/platform-icons";
-import type { PlatformId } from "@/types/domain";
+import type { PlatformId, Project } from "@/types/domain";
 import type {
   ContentOutputSummary,
   DashboardViewModel,
@@ -100,9 +100,9 @@ export interface BuildProjectsViewModelOptions {
 export type { ProjectListRow } from "@/types/view-models";
 
 export function buildProjectsViewModel(
+  projects: ReadonlyArray<Project> = listProjects(),
   options: BuildProjectsViewModelOptions = {},
 ): ProjectsViewModel {
-  const projects = listProjects();
   const rows =
     options.rows ??
     projects.map<ProjectListRow>((project) => ({
