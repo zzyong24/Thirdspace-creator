@@ -73,3 +73,77 @@ describe("projects reads via client", () => {
     expect(activity.every((a) => a.projectId === id)).toBe(true);
   });
 });
+
+describe("projects writes via client", () => {
+  beforeEach(() => resetStore());
+
+  it("creates a project and appends it to the store", async () => {
+    const before = getStore().projects.length;
+    const p = await client.createProject({
+      params: undefined,
+      query: undefined,
+      body: { title: "新选题", brief: "" },
+    });
+    expect(p.id).toMatch(/-mock-/);
+    expect(p.title).toBe("新选题");
+    expect(p.status).toBe("active");
+    expect(p.currentStage).toBe("research");
+    expect(getStore().projects.length).toBe(before + 1);
+    expect(getStore().projects.some((x) => x.id === p.id)).toBe(true);
+  });
+
+  it("transitions a project to an adjacent stage and logs activity", async () => {
+    const id = getStore().projects[0]!.id; // currentStage "script"
+    const before = getStore().projectActivities.filter(
+      (a) => a.projectId === id,
+    ).length;
+    const p = await client.transitionProjectStage({
+      params: { projectId: id, stage: "planning" },
+      query: undefined,
+      body: {},
+    });
+    expect(p.currentStage).toBe("planning");
+    const activity = getStore().projectActivities.filter(
+      (a) => a.projectId === id,
+    );
+    expect(activity.length).toBe(before + 1);
+    expect(activity.some((a) => a.eventType === "stage_transition")).toBe(true);
+  });
+
+  it("throws for an illegal (non-adjacent) stage transition", async () => {
+    const id = getStore().projects[0]!.id; // currentStage "script"
+    await expect(
+      client.transitionProjectStage({
+        params: { projectId: id, stage: "review" },
+        query: undefined,
+        body: {},
+      }),
+    ).rejects.toThrow(/ConflictError/i);
+  });
+
+  it("archives a project (status + archivedAt)", async () => {
+    const id = getStore().projects[0]!.id;
+    const p = await client.archiveProject({
+      params: { projectId: id },
+      query: undefined,
+      body: undefined,
+    });
+    expect(p.status).toBe("archived");
+    expect(p.archivedAt).not.toBeNull();
+    expect(getStore().projects.find((x) => x.id === id)!.status).toBe(
+      "archived",
+    );
+  });
+
+  it("patches allowed project fields (shallow merge)", async () => {
+    const id = getStore().projects[0]!.id;
+    const p = await client.patchProject({
+      params: { projectId: id },
+      query: undefined,
+      body: { starred: true, title: "改名了" },
+    });
+    expect(p.starred).toBe(true);
+    expect(p.title).toBe("改名了");
+    expect(getStore().projects.find((x) => x.id === id)!.starred).toBe(true);
+  });
+});
