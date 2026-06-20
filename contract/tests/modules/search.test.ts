@@ -3,7 +3,7 @@ import {
   searchDocumentResource,
   searchHistoryResource,
 } from "../../src/resources/search.js";
-import { searchOperations } from "../../src/operations/search.js";
+import { ENDPOINTS } from "../../src/endpoints.js";
 
 describe("search contract", () => {
   it("parses a SearchDocument resource", () => {
@@ -34,10 +34,11 @@ describe("search contract", () => {
     expect(sh.resultCount).toBe(1);
   });
 
-  it("registers the search endpoint with method, path, and FR id", () => {
-    expect(searchOperations.search.method).toBe("GET");
-    expect(searchOperations.search.path).toBe("/search");
-    expect(searchOperations.search.isList).toBe(true);
-    expect(searchOperations.search.fr.length).toBeGreaterThan(0);
+  it("exposes the composed GET /search endpoint (owned by the page layer)", () => {
+    const search = Object.values(ENDPOINTS).find(
+      (e) => e.method === "GET" && e.path === "/search",
+    );
+    expect(search).toBeDefined();
+    expect(search!.fr.length).toBeGreaterThan(0);
   });
 });

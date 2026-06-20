@@ -44,7 +44,7 @@ export const aiOperations = {
     response: aiMessageResource,
     fr: ["FR-AI-MESSAGES-CREATE"],
   }),
-  createTask: defineEndpoint({
+  createAITask: defineEndpoint({
     id: "ai.tasks.create",
     method: "POST",
     path: "/ai/tasks",

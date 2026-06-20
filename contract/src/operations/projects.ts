@@ -29,7 +29,7 @@ export const projectsOperations = {
     path: "/projects",
     body: z.object({ title: z.string().min(1), brief: z.string().default("") }),
     response: projectResource,
-    fr: ["FR-PROJECTS-CREATE"],
+    fr: ["FR-PROJECTS-CREATE", "FR-002"],
   }),
   getProject: defineEndpoint({
     id: "projects.get",
@@ -67,7 +67,7 @@ export const projectsOperations = {
     params: z.object({ projectId: id, stage: projectStageName }),
     body: z.object({ reason: z.string().optional() }),
     response: projectResource,
-    fr: ["FR-STAGE-TRANSITION"],
+    fr: ["FR-STAGE-TRANSITION", "FR-006"],
   }),
   createOutput: defineEndpoint({
     id: "projects.outputs.create",

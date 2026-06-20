@@ -63,7 +63,7 @@ export const artifactsOperations = {
     query: paginationQuery,
     response: artifactVersionResource,
     isList: true,
-    fr: ["FR-ARTIFACTS-VERSION-LIST"],
+    fr: ["FR-ARTIFACTS-VERSION-LIST", "FR-014"],
   }),
   restoreArtifact: defineEndpoint({
     id: "artifacts.restore",
