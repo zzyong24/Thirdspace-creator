@@ -46,6 +46,18 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// The page now embeds the `ProjectOverviewActions` Client island (Task 8),
+// which calls `useRouter()`. Stub the router so the server-component render
+// can mount the island without a real App Router context.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 type ProjectOverviewPageProps = React.ComponentProps<
   typeof import("./project-overview-page").ProjectOverviewPage
 >;

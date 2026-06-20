@@ -22,6 +22,7 @@ import { X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { NewProjectForm } from "@/features/projects/new-project-form";
+import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 
 const DIALOG_TITLE = "新建项目";
@@ -165,9 +166,18 @@ export function NewProjectDialog() {
           </button>
         </header>
         <NewProjectForm
-          onCreate={(values) => {
+          onCreate={async (values) => {
+            // Island -> client.* -> store mutation. createProject appends a
+            // project to the mock store and returns it with its seeded
+            // `*-mock-*` id. We navigate to the *returned* id's research
+            // workspace (not a slug guess), so the new row resolves on arrival.
+            const created = await client.createProject({
+              params: undefined,
+              query: undefined,
+              body: { title: values.name, brief: values.brief },
+            });
             if (values.enterAfterCreate) {
-              router.replace(`/projects/${slugFromProjectName(values.name)}/research`, {
+              router.replace(`/projects/${created.id}/research`, {
                 scroll: false,
               });
               return;
@@ -179,17 +189,6 @@ export function NewProjectDialog() {
       </div>
     </div>
   );
-}
-
-function slugFromProjectName(name: string): string {
-  const normalized = name
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return normalized.length > 0 ? normalized : "new-project";
 }
 
 // ---------------------------------------------------------------------------

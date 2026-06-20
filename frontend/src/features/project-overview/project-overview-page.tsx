@@ -28,9 +28,6 @@ import {
   FileSpreadsheet,
   FileText,
   FileVideo,
-  MoreHorizontal,
-  Share2,
-  Star,
   Wand2,
 } from "lucide-react";
 
@@ -40,12 +37,13 @@ import { ProgressBar } from "@/components/project/progress-bar";
 import { TagChip } from "@/components/content/tag-chip";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
+import { ProjectOverviewActions } from "@/features/project-overview/project-actions";
 import {
   Avatar,
   AvatarFallback,
 } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { getProjectPlatforms } from "@/fixtures/canonical";
+import { getProjectById, getProjectPlatforms } from "@/fixtures/canonical";
 import {
   buildContentOutputsForRender,
   buildProjectOverviewViewModel,
@@ -186,30 +184,14 @@ function ProjectProgressCard({
               <Button type="button" variant="outline" size="sm">
                 编辑信息
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="收藏"
-              >
-                <Star aria-hidden="true" className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="分享"
-              >
-                <Share2 aria-hidden="true" className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="更多"
-              >
-                <MoreHorizontal aria-hidden="true" className="size-4" />
-              </Button>
+              {/* Mutating header affordances (收藏 / 归档 / 进入下一步) are a
+                  Client island so they can call the mock backend and revalidate
+                  the server tree. The 进入工作台 navigation stays a plain Link. */}
+              <ProjectOverviewActions
+                projectId={projectId}
+                currentStage={currentStage}
+                starred={getProjectById(projectId)?.starred ?? false}
+              />
               <Link
                 href={workspaceHrefForProject(projectId, currentStage)}
                 className={buttonVariants({ size: "sm" })}

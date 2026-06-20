@@ -63,6 +63,27 @@ vi.mock("next/navigation", () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// contract-client mock — the dialog drives `client.createProject` (Task 8).
+// The mock returns a project with a deterministic `*-mock-*` id so the test
+// can assert that navigation uses the *returned* id rather than a slug guess.
+// ---------------------------------------------------------------------------
+
+const mockClient = {
+  createProject: vi.fn(async ({ body }: { body: { title: string } }) => ({
+    id: "project-mock-1",
+    title: body.title,
+    currentStage: "research",
+  })),
+};
+
+vi.mock("@/lib/contract-client", () => ({
+  client: {
+    createProject: (input: { body: { title: string } }) =>
+      mockClient.createProject(input),
+  },
+}));
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -124,6 +145,7 @@ async function importNewProjectDialog() {
 
 beforeEach(() => {
   resetNext();
+  mockClient.createProject.mockClear();
 });
 
 afterEach(() => {
@@ -330,5 +352,32 @@ describe("NewProjectDialog (intercepting route shell)", () => {
     const close = screen.getByRole("button", { name: /关闭/i });
     await userEvent.click(close);
     expect(mockNext.state.back).toHaveBeenCalledTimes(1);
+  });
+
+  it("creates the project through the client and navigates to the returned id", async () => {
+    resetNext({ pathname: "/projects/new", searchParams: new URLSearchParams() });
+    const { NewProjectDialog } = await importNewProjectDialog();
+    render(<NewProjectDialog />);
+
+    // Fill the required name field and submit (enterAfterCreate defaults true).
+    const name = screen.getByRole("textbox", { name: /项目名称/i });
+    await userEvent.type(name, "新选题");
+    const create = screen.getByRole("button", { name: /^创建$/ });
+    await userEvent.click(create);
+
+    await waitFor(() => {
+      expect(mockClient.createProject).toHaveBeenCalledTimes(1);
+    });
+    // The create payload carries the typed title.
+    expect(mockClient.createProject.mock.calls[0]![0]).toMatchObject({
+      body: { title: "新选题" },
+    });
+    // Navigation lands on the *returned* project id's research workspace, not
+    // a slug guess derived from the name.
+    await waitFor(() => {
+      expect(mockNext.state.replace).toHaveBeenCalledTimes(1);
+    });
+    const [target] = mockNext.state.replace.mock.calls[0] ?? [];
+    expect(target).toBe("/projects/project-mock-1/research");
   });
 });

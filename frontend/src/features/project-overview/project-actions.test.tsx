@@ -1,0 +1,146 @@
+/**
+ * Contract tests for the Project Overview action island (Task 8).
+ *
+ * The island wires the project header's mutating affordances to the mock
+ * backend through the typed `client`, then asks the router to revalidate:
+ *  - 进入下一步 calls `client.transitionProjectStage` with the next adjacent
+ *    stage, then `router.refresh()`,
+ *  - 收藏 toggles `client.patchProject({ starred })`, then `router.refresh()`,
+ *  - 归档 calls `client.archiveProject`, then `router.refresh()`.
+ *
+ * Mutations flow island -> client.* -> store mutation -> router.refresh(),
+ * per the island-mode / URL-state-only architecture.
+ */
+
+import * as React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+const mockRouter = {
+  refresh: vi.fn(),
+  replace: vi.fn(),
+  push: vi.fn(),
+  back: vi.fn(),
+};
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => mockRouter,
+}));
+
+const mockClient = {
+  transitionProjectStage: vi.fn(
+    (input: unknown): Promise<unknown> =>
+      Promise.resolve({ id: "p", currentStage: "planning", input }),
+  ),
+  patchProject: vi.fn(
+    (input: unknown): Promise<unknown> =>
+      Promise.resolve({ id: "p", starred: true, input }),
+  ),
+  archiveProject: vi.fn(
+    (input: unknown): Promise<unknown> =>
+      Promise.resolve({ id: "p", status: "archived", input }),
+  ),
+};
+
+vi.mock("@/lib/contract-client", () => ({
+  client: {
+    transitionProjectStage: (input: unknown) =>
+      mockClient.transitionProjectStage(input),
+    patchProject: (input: unknown) => mockClient.patchProject(input),
+    archiveProject: (input: unknown) => mockClient.archiveProject(input),
+  },
+}));
+
+async function importIsland() {
+  return await import("./project-actions");
+}
+
+beforeEach(() => {
+  mockRouter.refresh.mockClear();
+  mockClient.transitionProjectStage.mockClear();
+  mockClient.patchProject.mockClear();
+  mockClient.archiveProject.mockClear();
+});
+
+afterEach(() => {
+  cleanup();
+});
+
+describe("ProjectOverviewActions", () => {
+  it("transitions to the next adjacent stage then refreshes", async () => {
+    const { ProjectOverviewActions } = await importIsland();
+    render(
+      <ProjectOverviewActions
+        projectId="project-ainativebrowser"
+        currentStage="research"
+        starred={false}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /进入下一步/ }));
+    await waitFor(() => {
+      expect(mockClient.transitionProjectStage).toHaveBeenCalledTimes(1);
+    });
+    expect(mockClient.transitionProjectStage.mock.calls[0]![0]).toMatchObject({
+      params: { projectId: "project-ainativebrowser", stage: "planning" },
+    });
+    await waitFor(() => {
+      expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("does not render a next-step action at the terminal stage", async () => {
+    const { ProjectOverviewActions } = await importIsland();
+    render(
+      <ProjectOverviewActions
+        projectId="project-ainativebrowser"
+        currentStage="review"
+        starred={false}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /进入下一步/ })).toBeNull();
+  });
+
+  it("toggles the starred flag then refreshes", async () => {
+    const { ProjectOverviewActions } = await importIsland();
+    render(
+      <ProjectOverviewActions
+        projectId="project-ainativebrowser"
+        currentStage="research"
+        starred={false}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /收藏/ }));
+    await waitFor(() => {
+      expect(mockClient.patchProject).toHaveBeenCalledTimes(1);
+    });
+    expect(mockClient.patchProject.mock.calls[0]![0]).toMatchObject({
+      params: { projectId: "project-ainativebrowser" },
+      body: { starred: true },
+    });
+    await waitFor(() => {
+      expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("archives the project then refreshes", async () => {
+    const { ProjectOverviewActions } = await importIsland();
+    render(
+      <ProjectOverviewActions
+        projectId="project-ainativebrowser"
+        currentStage="research"
+        starred={false}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /归档/ }));
+    await waitFor(() => {
+      expect(mockClient.archiveProject).toHaveBeenCalledTimes(1);
+    });
+    expect(mockClient.archiveProject.mock.calls[0]![0]).toMatchObject({
+      params: { projectId: "project-ainativebrowser" },
+    });
+    await waitFor(() => {
+      expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+    });
+  });
+});
