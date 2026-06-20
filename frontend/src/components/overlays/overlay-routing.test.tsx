@@ -306,7 +306,9 @@ describe("OverlayController", () => {
 
 describe("NewProjectDialog (intercepting route shell)", () => {
   it("renders the dialog shell above the page content", async () => {
-    resetNext({ pathname: "/projects", searchParams: new URLSearchParams() });
+    // The dialog renders only on its own route (/projects/new); that is the
+    // route the @modal slot mounts it under.
+    resetNext({ pathname: "/projects/new", searchParams: new URLSearchParams() });
     const { NewProjectDialog } = await importNewProjectDialog();
     render(
       <>
@@ -322,7 +324,7 @@ describe("NewProjectDialog (intercepting route shell)", () => {
   it("calls router.back() when a background route exists and Back is requested", async () => {
     // Simulate a history entry by pushing a back action via window.history.
     window.history.pushState(null, "", "/projects");
-    resetNext({ pathname: "/projects", searchParams: new URLSearchParams() });
+    resetNext({ pathname: "/projects/new", searchParams: new URLSearchParams() });
     const { NewProjectDialog } = await importNewProjectDialog();
     render(<NewProjectDialog />);
     const close = screen.getByRole("button", { name: /关闭/i });

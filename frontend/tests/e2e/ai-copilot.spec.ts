@@ -75,6 +75,9 @@ test.describe("AI Copilot dialog", () => {
       }
     });
     await page.goto("/?copilot=open");
+    // The composer disables submit while empty, so type first; the submit
+    // path is a local-only append and must still fire no network request.
+    await page.getByLabel("我能帮你做什么").fill("帮我分析这个选题");
     await page.getByTestId("submit-button").click();
     // Allow microtasks to settle.
     await page.waitForTimeout(50);

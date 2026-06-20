@@ -19,7 +19,7 @@
 
 import * as React from "react";
 import { X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { NewProjectForm } from "@/features/projects/new-project-form";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,12 @@ const DIALOG_TITLE = "新建项目";
 
 export function NewProjectDialog() {
   const router = useRouter();
+  // Render only while the route is actually /projects/new. The dialog lives
+  // in the `@modal` parallel slot; after `onCreate` navigates to a workspace,
+  // the modal slot can briefly linger on a soft navigation, so this gate
+  // ensures the dialog disappears the moment the route changes.
+  const pathname = usePathname();
+  const isActiveRoute = pathname === "/projects/new";
 
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
   const closeButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -64,6 +70,8 @@ export function NewProjectDialog() {
 
   // Initial focus + focus trap + Escape handler.
   React.useEffect(() => {
+    if (!isActiveRoute) return;
+
     const dialog = dialogRef.current;
     if (!dialog) return;
 
@@ -106,7 +114,11 @@ export function NewProjectDialog() {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [close]);
+  }, [close, isActiveRoute]);
+
+  if (!isActiveRoute) {
+    return null;
+  }
 
   return (
     <div
