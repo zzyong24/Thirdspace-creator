@@ -1,117 +1,147 @@
 # Stage 15 — Service Contract Design (CreatorOS)
 
-Date: 2026-06-21 · Stage: 15-service-contract (orchestrator frontier) ·
-Decision basis: user chose path B (advance the pipeline) + approach C
-(Zod-first contract with a swappable transport). Closes GAP-002.
+Date: 2026-06-21 (revised after critical self-review) · Stage:
+15-service-contract (orchestrator frontier) · Decision basis: user chose path B
+(advance the pipeline) + approach C (Zod-first contract with a swappable
+transport). Closes GAP-002.
+
+## 0. What changed in this revision
+
+A critical review corrected four things and split the work:
+- **Read responses are resource DTOs, not ViewModels.** Only 4 endpoints are
+  page-shaped (the application QueryServices, MODULE-ARCHITECTURE §5). The rest
+  return domain resources; the frontend composes ViewModels from them.
+- **Mock persistence is a server-side mock backend**, not island memory —
+  required so reads and writes share one mutable store under SSR.
+- **The read migration is mandatory, not optional churn**: once a contract
+  exists, the frontend must take data via the client, not deref fixtures.
+- **Scope is split** into **15a (contract package — this spec's deliverable)**
+  and **15b (frontend mock-backend integration + mutations — separate spec)**.
 
 ## 1. Goal
 
-Produce the single, executable, FE↔BE-shared **service contract** that the
-frontend and the (future) backend both build against. It is the missing
-"middle" of the workflow: today the frontend runs on deterministic fixtures
-with no API; mutating actions (save / publish / delete / transition) have
-nowhere to go. The contract gives every operation a typed home **now** (served
-by an in-memory mock) and a zero-rewrite swap to the real backend at stage 16.
+Produce the single, executable, FE↔BE-shared **service contract** both apps
+build against — the missing middle of the workflow. SPEC §3 mandates that the
+frontend access the backend **only** through an approved HTTP contract and never
+import backend internals; this package *is* that contract, expressed as pure
+Zod schemas + a typed client, so the backend reuses the same schemas to validate
+its routes (no drift) and the frontend gets a typed seam with no backend yet.
 
-Success criteria:
-- Every endpoint in `backend/SPEC.md §13` exists as a typed, validated contract operation.
+**This spec covers 15a only.** 15b (where buttons become real) is scoped at the
+end and gets its own spec/plan.
+
+Success criteria (15a):
+- Every endpoint in `backend/SPEC.md §13` is a typed, validated contract operation.
 - Each backend-bearing FR maps to ≥1 contract operation (GAP-002 traceability restored).
-- The frontend keeps running deterministically with **no backend** (visual baselines intact).
-- Mutations work **now** against a `MockTransport`; swapping to `HttpTransport` at stage 16 changes one wiring line, not page code.
+- The package is pure (zod only; no React/Next/backend internals) and both apps can import it.
+- `pnpm --filter @creatoros/contract test && typecheck` green; the frontend is **unchanged** (no behaviour/visual risk in 15a).
 
-## 2. Inputs (already exist — the contract is a convergence, not a green-field design)
+## 2. Inputs (the contract is a convergence of existing artifacts, not green-field)
 
-- **Endpoints**: `backend/SPEC.md §13` — ~60 REST routes under `/api/v1`, grouped by domain (projects/flow, artifacts, knowledge/assets, production/publishing, analytics/reviews/learnings, AI/search/system, ingestion).
-- **Envelope**: `backend/SPEC.md §14` — success `{data, meta}`, list `{data, meta:{page,pageSize,total}}`, error `{error:{code,message,details}, meta}`; error→HTTP map (ValidationError 400 … OwnershipError 404 … UnexpectedError 500).
-- **Schemas/types**: `backend/SPEC.md §9` (Zod-first), frontend `types/domain.ts` (58 entities) and `types/view-models.ts` (page ViewModels).
-- **Module map**: `backend/MODULE-ARCHITECTURE.md` — 16 domain modules + application query services + page→module mapping.
-- **Read logic**: frontend `fixtures/selectors/*` — 17 sync `build<Page>ViewModel()` functions that already derive every page's data from the canonical fixtures.
-- **State machines**: `SPEC.md §12` — Project / Stage / ContentOutput / Publication / AI-task transitions (the mutation semantics).
+- **Endpoints**: `backend/SPEC.md §13` — ~60 REST routes under `/api/v1`, grouped by domain.
+- **Envelope**: `backend/SPEC.md §14` — success `{data, meta}`, list `{data, meta:{page,pageSize,total}}`, error `{error:{code,message,details}, meta}`; error→HTTP map.
+- **Schemas/types**: `backend/SPEC.md §9` (Zod-first), frontend `types/domain.ts` (58 entities), `types/view-models.ts`.
+- **Resource vs page shape**: `backend/MODULE-ARCHITECTURE.md §5` — only **DashboardQueryService / ProjectOverviewQueryService / PublishingCenterQueryService / GlobalSearchQueryService** return page DTOs; all other endpoints return domain resources.
+- **State machines**: `SPEC.md §12` — Project / Stage / ContentOutput / Publication / AI-task transitions (mutation semantics, for 15b).
+- **Tech**: backend is Node LTS + Next.js + TypeScript strict + Zod + Drizzle + Vitest (SPEC §3) → a shared Zod package is the right contract form.
 
-## 3. Architecture
+## 3. Architecture (15a)
 
-A new pure-TypeScript workspace package `contract/` (sibling of `frontend`/`backend`,
-added to `pnpm-workspace.yaml`; deps: `zod` only — no React/Next), so both
-apps consume it via `workspace:*`.
+New pure-TypeScript workspace package `contract/` (sibling of `frontend`/`backend`,
+added to `pnpm-workspace.yaml`; name `@creatoros/contract`; dependency: `zod`
+only).
 
 ```
 contract/
-├── package.json            # name @creatoros/contract, exports, zod dep
+├── package.json            # @creatoros/contract, exports ./, zod dep, vitest
 ├── src/
-│   ├── envelope.ts         # Success/List/Error envelope schemas + ErrorCode enum (SPEC §14)
-│   ├── primitives.ts       # shared scalar schemas (Id, Iso8601, PlatformId, enums) re-using domain shapes
-│   ├── schemas/            # one file per module: request + response Zod schemas
-│   │   ├── projects.ts     #   (response schemas reuse the ViewModel shapes where the FE already defines them)
-│   │   ├── artifacts.ts
-│   │   ├── knowledge.ts  assets.ts  production.ts  publishing.ts
-│   │   ├── analytics.ts  reviews.ts  learnings.ts  ai.ts
-│   │   ├── search.ts  notifications.ts  settings.ts  ingestion.ts
-│   ├── endpoints.ts        # the operation registry: defineEndpoint({ id, method, path, params, query, body, response })
-│   ├── client.ts           # createClient(transport): typed methods, one per endpoint, applies the envelope
-│   ├── transport.ts        # Transport interface { request(endpoint, input): Promise<Envelope> }
+│   ├── envelope.ts         # Success/List/Error envelope + ErrorCode enum + error→HTTP map (SPEC §14)
+│   ├── primitives.ts       # shared scalars: Id, Iso8601, PlatformId, status enums (mirror domain shapes)
+│   ├── resources/          # resource DTO schemas (domain-shaped) — one file per module
+│   │   ├── projects.ts artifacts.ts knowledge.ts assets.ts production.ts
+│   │   ├── publishing.ts analytics.ts reviews.ts learnings.ts ai.ts
+│   │   └── search.ts notifications.ts settings.ts ingestion.ts taxonomy.ts
+│   ├── pages/              # the 4 page-shaped DTOs (composition endpoints)
+│   │   ├── dashboard.ts project-overview.ts publishing-center.ts global-search.ts
+│   ├── endpoints.ts        # operation registry: defineEndpoint({ id, method, path, params, query, body, response })
+│   ├── client.ts           # createClient(transport): one typed method per endpoint; applies the envelope
+│   ├── transport.ts        # Transport interface { request(endpoint, input): Promise<Envelope<unknown>> }
 │   └── index.ts            # public surface
-└── tests/                  # contract-level Zod round-trip + traceability tests
+└── tests/
+    ├── envelope.test.ts        # round-trip success/list/error
+    ├── registry.test.ts        # every §13 route is registered exactly once; paths well-formed
+    └── traceability.test.ts    # backend-bearing FR → operation id(s) map is complete
 ```
 
-Two transports (same interface, chosen at the composition root):
-- **`MockTransport`** (now): an in-memory `FixtureStore` seeded from the canonical dataset. Reads delegate to the existing `build<Page>ViewModel()` selectors; writes mutate the in-memory store **deterministically** (seeded id generator, `FIXED_NOW` clock — no `Date.now`/`Math.random`). Lives in `frontend` (it imports fixtures), not in the contract package.
-- **`HttpTransport`** (stage 16): `fetch` against `/api/v1`, parses the SPEC §14 envelope, maps error codes. Trivial; deferred.
+Key shapes:
+- **Resource DTOs** mirror the domain entities the backend owns (Project, Artifact, KnowledgeItem, Asset, Publication, MetricValue, Learning, AITaskReference, …) — NOT the frontend ViewModels.
+- **Page DTOs** (4) are the composition shapes for the dashboard / overview / publishing-center / search endpoints.
+- **`endpoints.ts`** is the registry binding method+path (from §13) to its params/query/body/response schemas. It is the machine-checkable form of §13.
+- **`client.ts`** turns the registry into typed methods; it is transport-agnostic. Transports (MockTransport in 15b, HttpTransport in stage 16) live in their consumers, not here.
 
-The contract package itself stays transport-agnostic and dependency-light so the backend can import the **same** schemas to validate its route handlers — one source of truth, no drift.
+15a writes NO transport and changes NO frontend code — it ships the typed boundary + tests only.
 
-## 4. Data flow
+## 4. Data flow (target, realised across 15a→15b→stage16)
 
-Read (server component):
+Read (server component, after 15b):
 ```
-Page (server) → await client.getDashboard()
-              → MockTransport.request(GET /analytics/dashboard)
-              → buildDashboardViewModel()  (existing selector)
-              → {data: DashboardViewModel, meta}   ← validated by response schema
+Page (server) → await client.getProjects(query)
+              → Transport.request(GET /projects, query)        [15b: MockStore | s16: HTTP]
+              → { data: ProjectResource[], meta:{page,…} }      ← validated by response schema
+Page → buildProjectsViewModel(resources)                        ← existing selector, now fed by DTOs
 ```
-Mutation (client island — the "buttons"):
+Mutation (client island — "buttons", 15b):
 ```
-Button onClick → client.transitionPublication(id, {to:'published'})
-              → MockTransport (validate body → mutate FixtureStore per §12 state machine → return new entity)
-              → island updates URL/local state on success
-   (stage 16: same call → HttpTransport → real API)
+onClick → client.transitionPublication(id,{to:'published'})
+        → Transport (validate body → mutate MockStore per §12 → return resource)
+        → island: router.refresh() → server re-renders from the mutated store
+   (stage 16: same call → HttpTransport → real API + DB)
 ```
+Read responses are **resource DTOs**; the frontend's `build<Page>ViewModel()`
+functions move from `build(canonicalDataset)` to `build(resourcesFromClient)`,
+keeping presentation in the frontend and resources in the contract/backend.
 
-The response **types are the existing ViewModels** for read endpoints, so the
-frontend's render code is unchanged in shape — only the data *source* moves
-from a direct `canonicalDataset` deref to `await client.*`.
+## 5. Scope
 
-## 5. Scope & phasing
+**15a (this spec — the stage-15 gate deliverable):**
+1. `contract/` package: envelope, primitives, all resource DTO schemas, the 4 page DTOs, endpoint registry, typed `client`, `transport` interface.
+2. Contract tests: envelope round-trip, registry completeness vs §13, FR→operation traceability.
+3. Wire `pnpm-workspace.yaml`; the package builds/tests independently. **No frontend change.**
 
-Stage 15 deliverable = **the contract package (all endpoints typed) + the client + MockTransport framework + one page proven end-to-end**. Frontend adoption and mutations are phased so every step stays green and visually stable:
+**15b (separate spec — where the buttons become real):**
+- A server-side **MockBackend** in the frontend: a resettable in-memory store seeded from the canonical fixtures; deterministic ids/clock (`FIXED_NOW`, seeded counter; no `Date.now`/`Math.random`). Implements the contract operations: reads from the store, writes mutate it per §12.
+- A `MockTransport` binding the client to the MockBackend; composition root selects it.
+- Migrate the 17 read paths to `await client.*` (selectors recomposed over resource DTOs); verify determinism + visual parity page-by-page.
+- Wire high-value mutations (stage transition, publication transition, script save/adopt, knowledge/asset create, notification read, insight→learning) with `router.refresh`.
 
-- **P1 — Contract package**: envelope, primitives, all module schemas, endpoint registry, `client`, `transport` interface. Contract tests: every §13 endpoint is registered; every backend-bearing FR maps to an operation (traceability table). No frontend change yet.
-- **P2 — MockTransport + one read path**: `FixtureStore` + read handlers delegating to selectors; convert **one** page (Dashboard or Projects) to `await client.*`; prove determinism + visual parity.
-- **P3 — Reads sweep**: migrate remaining 16 read paths page-by-page (each verified).
-- **P4 — Mutations (the buttons)**: wire high-value mutations through the client against MockTransport, honoring §12 state machines — e.g. stage transition (`进入工作台`/next stage), publication transition (draft→ready→published), script version save+adopt, knowledge/asset create, notification read, review-insight→learning. Replaces decorative buttons with real in-memory interactions.
-- **P5 — Stage 16 handoff**: backend implements routes against the shared schemas (TDD per `backend/TDD-PLAN.md`); composition root swaps MockTransport→HttpTransport.
+**Stage 16 (backend):** implement routes against the same schemas (TDD per `backend/TDD-PLAN.md`); swap MockTransport→HttpTransport at the composition root.
 
-P1–P3 are the stage-15 gate; P4 is where the user's "buttons don't work" is actually resolved; P5 is stage 16.
+## 6. Determinism & testing (15a)
 
-## 6. Determinism & testing
-
-- MockTransport uses `FIXED_NOW` + a seeded counter for any new ids; **no** `Date.now`/`Math.random`/network — same rule as fixtures/selectors. Visual baselines and existing tests stay valid.
-- Contract tests (in `contract/tests`): Zod round-trip per schema; endpoint-registry completeness vs §13; FR→operation traceability map.
-- Frontend: each migrated page keeps its existing unit + (eventually) visual tests; mutation islands get new interaction tests (don't weaken existing assertions).
-- `pnpm verify` stays the gate for the frontend; the contract package adds its own `test`/`typecheck`.
+- The package is logic-light (schemas + registry + a thin client); tests are pure Zod round-trips + registry/traceability assertions — no clock/network/randomness at all.
+- It adds its own `test`/`typecheck`; it does not touch `frontend`'s `pnpm verify`, so there is zero behaviour/visual risk in 15a.
 
 ## 7. Traceability (closes GAP-002)
 
-A `contract/tests/traceability.ts` table maps each backend-bearing FR → contract operation id(s). The orchestrator consistency gate (upstream→downstream) can then flip from FAIL toward PASS as operations land, and stage 16 tests attach to the same operation ids.
+`tests/traceability.test.ts` asserts a complete map from each backend-bearing FR
+to ≥1 operation id. The orchestrator consistency gate (upstream→downstream) can
+then move toward PASS as 15b/stage-16 attach implementations + tests to the same
+operation ids.
 
-## 8. Out of scope (explicit)
+## 8. Out of scope
 
-- Real backend implementation, DB, object storage, auth (stage 16).
-- Real AI task execution / ingestion pipeline (mock returns deterministic canned results).
-- Real-time/push, pagination beyond the envelope shape, rate limiting.
-- Replacing the visual reference baselines (stage 12, separate).
+- Any backend implementation, DB, storage, auth (stage 16).
+- Transports, the mock store, frontend read/mutation wiring (15b).
+- Real AI/ingestion execution; real-time/push; rate limiting.
+- Replacing visual reference baselines (stage 12).
 
-## 9. Risks / open decisions
+## 9. Decisions (resolved)
 
-- **Async read refactor**: moving server components from sync fixture derefs to `await client.*` touches every page. Mitigated by phasing (P2 proves the pattern on one page before the sweep) and by keeping response types = existing ViewModels.
-- **Branch**: this is a new stage; recommend a `feat/service-contract` branch off `remediation/frontend-spec-alignment` (or main once the remediation merges). To confirm with user.
-- **Package name/location**: `contract/` workspace pkg `@creatoros/contract`. If a flat `frontend/src/contract` is preferred short-term, it can be promoted later — but the shared-package form is what lets the backend reuse it without a bad dependency direction.
+- **Branch**: `feat/service-contract` off `remediation/frontend-spec-alignment` (the contract builds on the remediated frontend; rebase/merge when the remediation lands).
+- **Location**: top-level `contract/` workspace package `@creatoros/contract` — the only form that lets the backend reuse the schemas without importing across the FE↔BE boundary (SPEC §3).
+- **Form**: shared Zod (approach C). May additionally emit OpenAPI from the schemas later (for external-skill writers, SPEC §13 ingestion) — out of 15a scope.
+
+## 10. Risks
+
+- **Endpoint/response fidelity**: 15a must match §13 exactly; the registry-completeness test guards method+path coverage, but response *field* fidelity to §9/domain is reviewer-checked.
+- **15b async refactor** (deferred): moving 17 pages to `await client.*` is the large, risky part — isolated to 15b and phased page-by-page there, not in 15a.
