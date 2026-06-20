@@ -39,6 +39,9 @@ importers:
 
   frontend:
     dependencies:
+      '@creatoros/contract':
+        specifier: workspace:*
+        version: link:../contract
       '@fontsource-variable/noto-sans-sc':
         specifier: 5.2.10
         version: 5.2.10
