@@ -49,11 +49,15 @@ type DashboardPageProps = React.ComponentProps<
 async function renderDashboard(overrides: Partial<DashboardPageProps> = {}) {
   const { AppShell } = await import("@/components/shell/app-shell");
   const { DashboardPage } = await import("./dashboard-page");
-  return render(
-    <AppShell pathname="/">
-      <DashboardPage {...overrides} />
-    </AppShell>,
-  );
+  const { buildDashboardViewModel } = await import("@/fixtures/selectors");
+  // `DashboardPage` is an async Server Component (it `await`s the client in
+  // production). The unit test drives it through the `viewModel?` override seam
+  // with the fixture-composed view model — the same deterministic data the mock
+  // backend serves — and resolves the component to a concrete element before
+  // mounting it, so rendering stays synchronous and every assertion is intact.
+  const viewModel = overrides.viewModel ?? buildDashboardViewModel();
+  const element = await DashboardPage({ ...overrides, viewModel });
+  return render(<AppShell pathname="/">{element}</AppShell>);
 }
 
 describe("DashboardPage", () => {

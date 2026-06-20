@@ -29,7 +29,7 @@ import { ProgressBar } from "@/components/project/progress-bar";
 import { TagChip } from "@/components/content/tag-chip";
 import { ChartFrame } from "@/components/analytics/chart-frame";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
-import { buildDashboardViewModel } from "@/fixtures/selectors";
+import { client } from "@/lib/contract-client";
 import {
   getProjectPlatforms,
 } from "@/fixtures/canonical";
@@ -71,11 +71,17 @@ export interface DashboardPageProps {
  */
 const DASHBOARD_GREETING_NAME = "Kevin";
 
-export function DashboardPage({
+export async function DashboardPage({
   viewModel,
   greetingName,
 }: DashboardPageProps = {}) {
-  const vm = viewModel ?? buildDashboardViewModel();
+  const vm =
+    viewModel ??
+    (await client.getDashboard({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    }));
   const greeting = buildGreeting(vm, greetingName ?? DASHBOARD_GREETING_NAME);
   return (
     <main

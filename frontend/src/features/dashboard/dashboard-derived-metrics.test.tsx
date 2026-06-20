@@ -82,8 +82,12 @@ describe("Dashboard derived metrics", () => {
     expect(total).toBeGreaterThan(0);
   });
 
-  it("renders the spec-required SidebarAssistantCard", () => {
-    const { container } = render(<DashboardPage />);
+  it("renders the spec-required SidebarAssistantCard", async () => {
+    // `DashboardPage` is an async Server Component; drive it through the
+    // `viewModel?` override seam with the fixture-composed view model and
+    // resolve it to a concrete element so the render stays synchronous.
+    const element = await DashboardPage({ viewModel: buildDashboardViewModel() });
+    const { container } = render(element);
     const card = container.querySelector('[data-slot="sidebar-assistant-card"]');
     expect(card).not.toBeNull();
     expect(card!.textContent ?? "").toContain("AI 助手");
