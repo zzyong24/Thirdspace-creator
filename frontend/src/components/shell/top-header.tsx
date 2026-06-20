@@ -18,8 +18,8 @@ import * as React from "react";
 import Link from "next/link";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
+import { SearchField } from "@/components/navigation/search-field";
 import { NotificationPopover } from "./notification-popover";
 import { creatorIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -123,6 +123,9 @@ export function TopHeader({
     >
       {resolvedMode === "search" ? (
         <SearchField
+          id="app-header-search"
+          label="全局搜索"
+          dataSlot="header-search"
           placeholder={searchPlaceholder}
           value={searchValue}
         />
@@ -238,41 +241,6 @@ function ProjectIdentityBlock({
         <ProjectStageStepper variant="segmented" stages={stages} />
       ) : null}
     </div>
-  );
-}
-
-function SearchField({
-  placeholder,
-  value,
-}: {
-  placeholder: string;
-  value?: string;
-}) {
-  return (
-    <form
-      role="search"
-      data-slot="header-search"
-      className="flex min-w-0 flex-1 items-center gap-2"
-      onSubmit={(event) => event.preventDefault()}
-    >
-      <label className="sr-only" htmlFor="app-header-search">
-        全局搜索
-      </label>
-      <div className="relative flex flex-1 items-center">
-        <SearchIcon
-          className="pointer-events-none absolute left-2.5 size-4 text-muted-foreground"
-          aria-hidden="true"
-        />
-        <Input
-          id="app-header-search"
-          type="search"
-          placeholder={placeholder}
-          defaultValue={value}
-          autoComplete="off"
-          className="h-9 w-full pl-8"
-        />
-      </div>
-    </form>
   );
 }
 
