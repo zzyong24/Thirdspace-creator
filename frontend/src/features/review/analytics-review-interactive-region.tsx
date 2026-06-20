@@ -28,6 +28,10 @@
 import * as React from "react";
 
 import { ChartFrame } from "@/components/analytics/chart-frame";
+import { AudienceBreakdown } from "@/components/analytics/audience-breakdown";
+import { HorizontalBarsChart } from "@/components/analytics/horizontal-bars-chart";
+import { RetentionChart } from "@/components/analytics/retention-chart";
+import { InsightCard } from "@/components/analytics/insight-card";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
@@ -45,7 +49,6 @@ import type {
 
 type KeyMoment = AnalyticsViewModel["keyMoments"][number];
 type TopPublished = TopPublishedCard;
-type AiAnalysisItem = AnalyticsViewModel["aiAnalysis"][number];
 type ReviewHistoryItem = AnalyticsViewModel["reviewHistory"][number];
 
 // ---------------------------------------------------------------------------
@@ -128,7 +131,7 @@ export function AnalyticsReviewInteractiveRegion({
           data-slot="analytics-right-rail"
           className="flex flex-col gap-card-gap"
         >
-          <AIAnalysisCard items={viewModel.aiAnalysis} />
+          <InsightCard items={viewModel.aiAnalysis} />
           <ReviewHistoryCard
             items={viewModel.reviewHistory}
             activeId={activeReviewId}
@@ -371,7 +374,7 @@ function SecondaryCharts({
         contentClassName="flex flex-col gap-1.5"
         className="[--card-spacing:--spacing(3)]"
       >
-        <DonutChart
+        <AudienceBreakdown
           slot="audience-profile"
           shape="donut"
           data={audienceProfile}
@@ -437,7 +440,7 @@ function SecondaryCharts({
         contentClassName="flex flex-col gap-1.5"
         className="[--card-spacing:--spacing(3)]"
       >
-        <RetentionCurveChart
+        <RetentionChart
           slot="retention-curve"
           shape="retention-curve"
           data={retentionCurve}
@@ -465,178 +468,6 @@ function SecondaryCharts({
       </SectionCard>
     </div>
   );
-}
-
-function DonutChart({
-  slot,
-  shape,
-  data,
-  summary,
-}: {
-  slot: string;
-  shape: string;
-  data: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-  summary: string;
-}) {
-  const total = data.reduce((sum, row) => sum + row.value, 0) || 1;
-  const segments = data.map((row, index) => {
-    const fraction = row.value / total;
-    const start = data
-      .slice(0, index)
-      .reduce((acc, prev) => acc + prev.value / total, 0);
-    return { row, fraction, start };
-  });
-  return (
-    <figure
-      role="figure"
-      data-slot={slot}
-      data-shape={shape}
-      aria-label={slot}
-      className="flex flex-col gap-2"
-    >
-      <svg
-        data-slot={`${slot}-svg`}
-        viewBox="0 0 42 42"
-        aria-hidden="true"
-        className="h-20 w-20 self-center"
-      >
-        {segments.map(({ row, fraction, start }) => (
-          <circle
-            key={row.label}
-            cx="21"
-            cy="21"
-            r="15.91549430918954"
-            fill="transparent"
-            stroke="var(--color-brand)"
-            strokeWidth="6"
-            strokeDasharray={`${fraction * 100} ${100 - fraction * 100}`}
-            strokeDashoffset={25 - start * 100}
-          />
-        ))}
-      </svg>
-      <p data-slot="chart-summary" className="sr-only">
-        {summary}
-      </p>
-    </figure>
-  );
-}
-
-function HorizontalBarsChart({
-  slot,
-  shape,
-  data,
-  summary,
-}: {
-  slot: string;
-  shape: string;
-  data: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-  summary: string;
-}) {
-  const max = Math.max(...data.map((row) => row.value), 1);
-  return (
-    <figure
-      role="figure"
-      data-slot={slot}
-      data-shape={shape}
-      aria-label={slot}
-      className="flex flex-col gap-2"
-    >
-      <svg
-        data-slot={`${slot}-svg`}
-        viewBox={`0 0 100 ${data.length * 12}`}
-        aria-hidden="true"
-        className="h-20 w-full"
-      >
-        {data.map((row, index) => {
-          const ratio = row.value / max;
-          const y = index * 12;
-          return (
-            <g key={row.label}>
-              <rect
-                x={0}
-                y={y + 2}
-                width={ratio * 100}
-                height={8}
-                fill="var(--color-brand)"
-                rx={1}
-              />
-              <rect
-                x={ratio * 100}
-                y={y + 2}
-                width={100 - ratio * 100}
-                height={8}
-                fill="var(--color-border)"
-                rx={1}
-              />
-            </g>
-          );
-        })}
-      </svg>
-      <p data-slot="chart-summary" className="sr-only">
-        {summary}
-      </p>
-    </figure>
-  );
-}
-
-function RetentionCurveChart({
-  slot,
-  shape,
-  data,
-  summary,
-}: {
-  slot: string;
-  shape: string;
-  data: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-  summary: string;
-}) {
-  const path = buildRetentionPath(data, 24);
-  return (
-    <figure
-      role="figure"
-      data-slot={slot}
-      data-shape={shape}
-      aria-label={slot}
-      className="flex flex-col gap-2"
-    >
-      <svg
-        data-slot={`${slot}-svg`}
-        viewBox="0 0 100 24"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-        className="h-20 w-full"
-      >
-        <path
-          d={path}
-          fill="none"
-          stroke="var(--color-brand)"
-          strokeWidth={1.5}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-      </svg>
-      <p data-slot="chart-summary" className="sr-only">
-        {summary}
-      </p>
-    </figure>
-  );
-}
-
-function buildRetentionPath(
-  data: ReadonlyArray<{ readonly label: string; readonly value: number }>,
-  height: number,
-): string {
-  if (data.length === 0) return "";
-  const padding = 2;
-  const width = 100;
-  const range = 1; // retention is always 0..1
-  const step = (width - padding * 2) / (data.length - 1 || 1);
-  const points = data.map((row, index) => {
-    const x = padding + step * index;
-    const y = padding + (1 - row.value / range) * (height - padding * 2);
-    return `${x.toFixed(2)},${y.toFixed(2)}`;
-  });
-  return `M ${points.join(" L ")}`;
 }
 
 function summariseDistribution(
@@ -856,44 +687,8 @@ function platformInitial(platform: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Right rail — AIAnalysisCard → ReviewHistoryCard
+// Right rail — InsightCard → ReviewHistoryCard
 // ---------------------------------------------------------------------------
-
-function AIAnalysisCard({ items }: { items: ReadonlyArray<AiAnalysisItem> }) {
-  const list = items;
-  return (
-    <article
-      data-slot="ai-analysis-card"
-      aria-label="AI 分析"
-      data-overlay="false"
-      className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-card-gap shadow-card"
-    >
-      <header className="flex flex-col gap-1">
-        <h3 className="text-md font-semibold text-foreground">AI 分析</h3>
-        <p className="text-xs text-muted-foreground">基于本期复盘数据的要点</p>
-      </header>
-      <ul
-        data-slot="ai-analysis-list"
-        className="flex flex-col gap-1.5"
-        aria-label="AI 分析要点"
-      >
-        {list.map((item) => (
-          <li
-            key={item.id}
-            data-slot="ai-analysis-item"
-            data-analysis-id={item.id}
-            className="rounded-md border border-border bg-surface-subtle p-3 text-sm"
-          >
-            <div className="text-sm font-medium text-foreground">
-              {item.title}
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">{item.body}</p>
-          </li>
-        ))}
-      </ul>
-    </article>
-  );
-}
 
 function ReviewHistoryCard({
   items,

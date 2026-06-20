@@ -28,7 +28,7 @@ import { MetricCard as MetricCardView } from "@/components/project/metric-card";
 import { StatusBadge } from "@/components/project/status-badge";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { TagChip } from "@/components/content/tag-chip";
-import { PlatformIconView } from "@/components/publishing/platform-icon";
+import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
 import { PageTabs } from "@/components/navigation/page-tabs";
 import { ChartFrame } from "@/components/analytics/chart-frame";
@@ -131,7 +131,7 @@ describe("shared business components contract", () => {
 
   describe("PlatformIcon", () => {
     it("renders an icon with an accessible name for known platforms", () => {
-      render(<PlatformIconView platform="douyin" />);
+      render(<PlatformIcon platform="douyin" />);
       const icon = screen.getByLabelText(/抖音/i);
       expect(icon).toBeInTheDocument();
     });

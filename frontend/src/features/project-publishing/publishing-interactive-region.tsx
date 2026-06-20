@@ -23,7 +23,7 @@
 
 import * as React from "react";
 
-import { PlatformIconView } from "@/components/publishing/platform-icon";
+import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { SectionCard } from "@/components/project/section-card";
 import { StatusBadge } from "@/components/project/status-badge";
 import type { PlatformId, PublicationStatus } from "@/types/domain";
@@ -620,7 +620,7 @@ function PlatformPublishCardItem({
             aria-label={`选择 ${card.accountLabel}`}
             className="size-3 rounded border-border text-brand focus-visible:ring-ring/40"
           />
-          <PlatformIconView platform={card.platform} size="xs" />
+          <PlatformIcon platform={card.platform} size="xs" />
           <span className="text-[10px] font-medium text-foreground">
             {card.accountLabel}
           </span>
@@ -877,7 +877,7 @@ function PlatformPreview({
               data-pressed={p === preview.platform}
               className="inline-flex items-center gap-1 rounded px-1 text-[9px] font-medium text-muted-foreground data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
             >
-              <PlatformIconView platform={p} size="xs" />
+              <PlatformIcon platform={p} size="xs" />
               <span>{shortLabelFor(p)}</span>
             </button>
           ),
@@ -1059,7 +1059,7 @@ function PlatformComparison() {
             >
               <td className="py-0">
                 <div className="flex items-center gap-1">
-                  <PlatformIconView platform={row.platform} size="xs" />
+                  <PlatformIcon platform={row.platform} size="xs" />
                   <span>{row.label}</span>
                 </div>
               </td>

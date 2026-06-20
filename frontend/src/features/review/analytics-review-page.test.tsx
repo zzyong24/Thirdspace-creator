@@ -300,7 +300,7 @@ describe("AnalyticsReviewPage", () => {
     }
   });
 
-  it("renders the right rail with AIAnalysisCard and ReviewHistoryCard in that order", async () => {
+  it("renders the right rail with InsightCard and ReviewHistoryCard in that order", async () => {
     const { container } = await renderWorkspace();
     const rightRail = container.querySelector(
       '[data-slot="analytics-right-rail"]',

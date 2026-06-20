@@ -38,7 +38,7 @@ import { SectionCard } from "@/components/project/section-card";
 import { StatusBadge } from "@/components/project/status-badge";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { TagChip } from "@/components/content/tag-chip";
-import { PlatformIconView } from "@/components/publishing/platform-icon";
+import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
 import {
   Avatar,
@@ -490,7 +490,7 @@ function OutputPlanCard({
           aria-label="目标平台"
         >
           {platforms.map((platform) => (
-            <PlatformIconView
+            <PlatformIcon
               key={platform}
               platform={platform}
               size="xs"
@@ -562,7 +562,7 @@ function PublishingStatusCard({
                 className="flex flex-wrap items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
               >
                 <div className="flex min-w-0 items-center gap-2">
-                  <PlatformIconView platform={entry.platform} size="xs" />
+                  <PlatformIcon platform={entry.platform} size="xs" />
                   <span className="truncate text-sm text-foreground">
                     {entry.platform}
                   </span>

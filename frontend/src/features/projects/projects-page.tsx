@@ -26,7 +26,7 @@ import * as React from "react";
 import Link from "next/link";
 
 import { ProgressBar } from "@/components/project/progress-bar";
-import { PlatformIconView } from "@/components/publishing/platform-icon";
+import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { StatusTabsBar, type StatusTabsBarTab } from "@/features/projects/status-tabs-bar";
 import { ViewAndSortControls } from "@/features/projects/view-and-sort-controls";
 import { Pagination } from "@/components/navigation/pagination";
@@ -201,7 +201,7 @@ function ProjectListItem({ row }: { row: ProjectListRow }) {
         aria-label="目标平台"
       >
         {row.platforms.slice(0, 2).map((platform) => (
-          <PlatformIconView
+          <PlatformIcon
             key={platform.id}
             platform={platform.id}
             size="sm"

@@ -31,7 +31,7 @@ import * as React from "react";
 import { ChartFrame } from "@/components/analytics/chart-frame";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
-import { PlatformIconView } from "@/components/publishing/platform-icon";
+import { PlatformIcon } from "@/components/publishing/platform-icon";
 import type { MetricCard as MetricCardVm } from "@/types/view-models";
 import type {
   ContentTypeTab,
@@ -607,7 +607,7 @@ function PublicationPerformanceRow({
       </td>
       <td className="px-3 py-2.5">
         <div className="flex items-center gap-1.5">
-          <PlatformIconView platform={row.platform} size="sm" />
+          <PlatformIcon platform={row.platform} size="sm" />
           <span className="text-[13px] text-foreground">{row.platformLabel}</span>
         </div>
       </td>
@@ -854,7 +854,7 @@ function PlatformComparisonChart({
                 className="flex items-center justify-between gap-2 text-xs"
               >
                 <div className="flex items-center gap-2">
-                  <PlatformIconView platform={row.platform} size="sm" />
+                  <PlatformIcon platform={row.platform} size="sm" />
                   <span className="text-foreground">{row.platformLabel}</span>
                 </div>
                 <div className="flex items-center gap-2">

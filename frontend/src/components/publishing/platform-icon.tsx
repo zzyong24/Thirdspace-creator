@@ -36,7 +36,7 @@ const SIZE_TEXT: Record<NonNullable<PlatformIconProps["size"]>, string> = {
   lg: "text-md",
 };
 
-export function PlatformIconView({
+export function PlatformIcon({
   platform,
   size = "sm",
   showLabel = false,

@@ -13,7 +13,7 @@
  *        RetentionCurve) →
  *      KeyMomentsSection.
  *  - a `RightRail` with two cards in the locked order
- *      AIAnalysisCard → ReviewHistoryCard.
+ *      InsightCard → ReviewHistoryCard.
  *
  * Layout invariants (locked by page-specs §10):
  *  - exactly SEVEN CoreMetricsRow cards in a single row,

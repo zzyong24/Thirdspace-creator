@@ -56,7 +56,7 @@ import Link from "next/link";
 
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
-import { PlatformIconView } from "@/components/publishing/platform-icon";
+import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { buildSearchViewModel } from "@/fixtures/selectors";
 
 import { SearchInteractiveRegion } from "./search-interactive-region";
@@ -646,7 +646,7 @@ function VideoThumb({ item }: { item: VideoResult }) {
         }}
       >
         <span className="absolute left-1.5 top-1.5 inline-flex">
-          <PlatformIconView platform={item.platform} size="xs" />
+          <PlatformIcon platform={item.platform} size="xs" />
         </span>
         <span
           data-slot="video-result-duration"

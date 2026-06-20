@@ -28,7 +28,7 @@ import { StatusBadge } from "@/components/project/status-badge";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { TagChip } from "@/components/content/tag-chip";
 import { ChartFrame } from "@/components/analytics/chart-frame";
-import { PlatformIconView } from "@/components/publishing/platform-icon";
+import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { buildDashboardViewModel } from "@/fixtures/selectors";
 import {
   getProjectPlatforms,
@@ -352,7 +352,7 @@ function RecentPublicationsCard({
             className="flex items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-2"
           >
             <div className="flex min-w-0 items-center gap-2">
-              <PlatformIconView platform={row.platform} size="xs" />
+              <PlatformIcon platform={row.platform} size="xs" />
               <div className="flex min-w-0 flex-col">
                 <span className="truncate text-sm font-medium text-foreground">
                   {row.title}
