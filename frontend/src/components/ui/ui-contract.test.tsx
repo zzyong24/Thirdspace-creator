@@ -225,7 +225,7 @@ describe("ui primitives contract", () => {
     const user = userEvent.setup();
 
     render(
-      <ToggleGroup defaultValue={["bold"]} aria-label="Text formatting">
+      <ToggleGroup type="single" defaultValue="bold" aria-label="Text formatting">
         <ToggleGroupItem value="bold" aria-label="Bold">
           B
         </ToggleGroupItem>
@@ -235,13 +235,16 @@ describe("ui primitives contract", () => {
       </ToggleGroup>,
     );
 
-    const bold = screen.getByRole("button", { name: /bold/i });
-    const italic = screen.getByRole("button", { name: /italic/i });
+    // Radix's single-select ToggleGroup exposes radio semantics
+    // (radiogroup / radio + aria-checked). The behavioural contract is
+    // unchanged: selecting one option deselects the other.
+    const bold = screen.getByRole("radio", { name: /bold/i });
+    const italic = screen.getByRole("radio", { name: /italic/i });
 
-    expect(bold).toHaveAttribute("aria-pressed", "true");
+    expect(bold).toHaveAttribute("aria-checked", "true");
     await user.click(italic);
-    expect(italic).toHaveAttribute("aria-pressed", "true");
-    expect(bold).toHaveAttribute("aria-pressed", "false");
+    expect(italic).toHaveAttribute("aria-checked", "true");
+    expect(bold).toHaveAttribute("aria-checked", "false");
   });
 
   it("Select opens and exposes a labelled listbox", async () => {
@@ -350,8 +353,11 @@ describe("ui primitives contract", () => {
 
     const trigger = screen.getByLabelText(/help/i);
     await user.hover(trigger);
-    const tooltip = await screen.findByText(/need a hand/i);
-    expect(tooltip).toBeInTheDocument();
+    // Radix renders the visible tooltip (role="tooltip") plus a
+    // visually-hidden copy for screen readers, so scope the assertion to
+    // the tooltip role rather than matching raw text twice.
+    const tooltip = await screen.findByRole("tooltip");
+    expect(tooltip).toHaveTextContent(/need a hand/i);
   });
 
   it("Popover reveals content on hover", async () => {

@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 export const PageScrollArea = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div">
+  React.ComponentProps<typeof ScrollArea>
 >(function PageScrollArea({ className, children, ...rest }, ref) {
   return (
     <ScrollArea

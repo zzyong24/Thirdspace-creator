@@ -5,8 +5,8 @@
  * Analytics, Planning, Script, Experience, Publishing workspace, Search,
  * Settings, and a handful of other pages.
  *
- * It is a client component because the underlying `@base-ui/react/tabs`
- * is interactive.
+ * It is a client component because the underlying shadcn/ui Tabs
+ * primitive (Radix `@radix-ui/react-tabs`) is interactive.
  *
  * The component is intentionally thin: it does NOT own page routing.
  * Page-level callers wire `id` to their own router (via Next.js Link or

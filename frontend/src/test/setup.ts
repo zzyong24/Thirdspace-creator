@@ -105,6 +105,32 @@ function installBrowserShims() {
     value: vi.fn(),
     writable: true,
   });
+
+  // Radix UI primitives (Select, DropdownMenu, Tooltip, …) call Pointer
+  // Capture and scrollIntoView APIs that jsdom does not implement. Without
+  // these shims the primitives throw during open/keyboard interactions.
+  Object.defineProperties(Element.prototype, {
+    hasPointerCapture: {
+      configurable: true,
+      value: vi.fn(() => false),
+      writable: true,
+    },
+    setPointerCapture: {
+      configurable: true,
+      value: vi.fn(),
+      writable: true,
+    },
+    releasePointerCapture: {
+      configurable: true,
+      value: vi.fn(),
+      writable: true,
+    },
+    scrollIntoView: {
+      configurable: true,
+      value: vi.fn(),
+      writable: true,
+    },
+  });
 }
 
 installBrowserShims();
