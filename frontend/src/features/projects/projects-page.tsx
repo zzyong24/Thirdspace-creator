@@ -29,7 +29,7 @@ import { ProgressBar } from "@/components/project/progress-bar";
 import { PlatformIconView } from "@/components/publishing/platform-icon";
 import { StatusTabsBar, type StatusTabsBarTab } from "@/features/projects/status-tabs-bar";
 import { ViewAndSortControls } from "@/features/projects/view-and-sort-controls";
-import { Pagination } from "@/features/projects/pagination";
+import { Pagination } from "@/components/navigation/pagination";
 import { buildProjectsViewModel } from "@/fixtures/selectors";
 import { cn } from "@/lib/utils";
 import type { ProjectsViewModel, ProjectListRow } from "@/types/view-models";

@@ -1,7 +1,11 @@
 /**
  * `ProjectStageStepper` is the canonical six-stage project progress
- * indicator. It is used by the TopHeader in `project-workspace` mode and
- * by the Project Overview header.
+ * indicator (SPEC §5, §7). A single component serves both surfaces:
+ *
+ *  - `variant="compact"` (default): the dot + label + connector strip used
+ *    by the Project Overview progress card.
+ *  - `variant="segmented"`: the boxed segmented strip rendered inside the
+ *    TopHeader in `project-workspace` mode.
  *
  * Server component: no interactivity required (it is informational only;
  * the workspace's primary action lives in the header).
@@ -11,17 +15,16 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-import type { ProjectStageName } from "@/types/domain";
-
 export interface ProjectStageStepperStage {
-  readonly id: ProjectStageName;
+  readonly id: string;
   readonly label: string;
   readonly status: "pending" | "in_progress" | "completed" | "skipped";
 }
 
 export interface ProjectStageStepperProps {
-  readonly currentStage: ProjectStageName;
   readonly stages: ReadonlyArray<ProjectStageStepperStage>;
+  readonly currentStage?: string;
+  readonly variant?: "compact" | "segmented";
   readonly className?: string;
 }
 
@@ -40,10 +43,44 @@ const STATUS_TEXT: Record<ProjectStageStepperStage["status"], string> = {
 };
 
 export function ProjectStageStepper({
-  currentStage,
   stages,
+  currentStage,
+  variant = "compact",
   className,
 }: ProjectStageStepperProps) {
+  if (variant === "segmented") {
+    return (
+      <ol
+        role="list"
+        aria-label="项目六阶段"
+        data-slot="header-stage-stepper"
+        data-current={currentStage}
+        className={cn(
+          "hidden min-w-0 flex-1 items-stretch overflow-x-auto md:flex",
+          className,
+        )}
+      >
+        {stages.map((stage) => (
+          <li
+            key={stage.id}
+            data-status={stage.status}
+            className={cn(
+              "flex h-12 min-w-24 flex-1 items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground first:border-l",
+              stage.status === "in_progress" &&
+                "border-brand/30 bg-brand-soft font-medium text-brand",
+            )}
+          >
+            <span
+              aria-hidden="true"
+              className={cn("size-1.5 rounded-full", STATUS_INDICATOR[stage.status])}
+            />
+            {stage.label}
+          </li>
+        ))}
+      </ol>
+    );
+  }
+
   return (
     <ol
       role="list"
@@ -56,7 +93,10 @@ export function ProjectStageStepper({
       )}
     >
       {stages.map((stage, index) => {
-        const isCurrent = stage.id === currentStage;
+        const isCurrent =
+          currentStage !== undefined
+            ? stage.id === currentStage
+            : stage.status === "in_progress";
         return (
           <li
             key={stage.id}

@@ -2,6 +2,9 @@
   "name": "creatoros-frontend",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -17,6 +20,7 @@
     "visual:install-baselines": "node scripts/visual/install-baselines.mjs",
     "visual:capture-current": "node scripts/visual/capture-current.mjs",
     "visual:diff": "node scripts/visual/diff.mjs",
+    "fixtures:export": "tsx --tsconfig tsconfig.json scripts/fixtures/export-canonical-json.mts",
     "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
@@ -50,6 +54,7 @@
     "jsdom": "29.1.1",
     "pngjs": "^7.0.0",
     "tailwindcss": "4.3.1",
+    "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vite": "8.0.16",
     "vitest": "4.1.8"

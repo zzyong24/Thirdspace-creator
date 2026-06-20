@@ -19,6 +19,7 @@ import Link from "next/link";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
 import { NotificationPopover } from "./notification-popover";
 import { creatorIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -234,47 +235,9 @@ function ProjectIdentityBlock({
         </div>
       )}
       {mode === "project-workspace" ? (
-        <ProjectStageStepper stages={stages} />
+        <ProjectStageStepper variant="segmented" stages={stages} />
       ) : null}
     </div>
-  );
-}
-
-function ProjectStageStepper({
-  stages,
-}: {
-  stages: NonNullable<TopHeaderProps["projectStages"]>;
-}) {
-  return (
-    <ol
-      data-slot="header-stage-stepper"
-      aria-label="项目六阶段"
-      className="hidden min-w-0 flex-1 items-stretch overflow-x-auto md:flex"
-    >
-      {stages.map((stage) => (
-        <li
-          key={stage.id}
-          data-status={stage.status}
-          className={cn(
-            "flex h-12 min-w-24 flex-1 items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground first:border-l",
-            stage.status === "in_progress" &&
-              "border-brand/30 bg-brand-soft font-medium text-brand",
-          )}
-        >
-          <span
-            aria-hidden="true"
-            className={cn(
-              "size-1.5 rounded-full",
-              stage.status === "completed" && "bg-success",
-              stage.status === "in_progress" && "bg-brand",
-              stage.status === "pending" && "bg-border-strong",
-              stage.status === "skipped" && "bg-warning",
-            )}
-          />
-          {stage.label}
-        </li>
-      ))}
-    </ol>
   );
 }
 

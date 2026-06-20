@@ -1,0 +1,2430 @@
+{
+  "user": {
+    "id": "user-zyongzhu",
+    "email": "zyongzhu@creatoros.local",
+    "displayName": "Zyong Zhu",
+    "timezone": "Asia/Shanghai",
+    "locale": "zh-CN",
+    "createdAt": "2026-01-01T02:00:00.000Z",
+    "updatedAt": "2026-06-13T02:00:00.000Z"
+  },
+  "userPreferences": [
+    {
+      "id": "pref-zyongzhu",
+      "userId": "user-zyongzhu",
+      "defaultHome": "dashboard",
+      "defaultCreationMode": "guided",
+      "defaultVisibility": "private",
+      "autosaveEnabled": true,
+      "fileNamingRule": "{project}-{stage}-{date}",
+      "analyticsEnabled": true
+    }
+  ],
+  "projects": [
+    {
+      "id": "project-ainativebrowser",
+      "userId": "user-zyongzhu",
+      "title": "AI Native Browser 深度解析",
+      "brief": "深度拆解 AI Native Browser 的产品定位、技术架构与生态影响。",
+      "contentCategory": "科技评论",
+      "creationMode": "guided",
+      "status": "active",
+      "currentStage": "script",
+      "progressPct": 58,
+      "starred": true,
+      "startedAt": "2026-05-28T02:00:00.000Z",
+      "targetCompletedAt": "2026-06-20T10:00:00.000Z",
+      "completedAt": null,
+      "archivedAt": null,
+      "createdAt": "2026-05-28T02:00:00.000Z",
+      "updatedAt": "2026-06-13T01:00:00.000Z"
+    },
+    {
+      "id": "project-secondbrain",
+      "userId": "user-zyongzhu",
+      "title": "第二大脑搭建手册",
+      "brief": "面向个人创作者的本地知识库与外部记忆系统搭建指南。",
+      "contentCategory": "效率工具",
+      "creationMode": "flexible",
+      "status": "active",
+      "currentStage": "research",
+      "progressPct": 18,
+      "starred": false,
+      "startedAt": "2026-06-05T02:00:00.000Z",
+      "targetCompletedAt": "2026-07-05T02:00:00.000Z",
+      "completedAt": null,
+      "archivedAt": null,
+      "createdAt": "2026-06-05T02:00:00.000Z",
+      "updatedAt": "2026-06-11T02:00:00.000Z"
+    },
+    {
+      "id": "project-promptcraft",
+      "userId": "user-zyongzhu",
+      "title": "Prompt Craft 系列短片",
+      "brief": "8 期短视频系列，覆盖 Prompt 设计模式与失败案例复盘。",
+      "contentCategory": "AI 教学",
+      "creationMode": "freeform",
+      "status": "paused",
+      "currentStage": "planning",
+      "progressPct": 35,
+      "starred": false,
+      "startedAt": "2026-05-12T02:00:00.000Z",
+      "targetCompletedAt": "2026-08-12T02:00:00.000Z",
+      "completedAt": null,
+      "archivedAt": null,
+      "createdAt": "2026-05-12T02:00:00.000Z",
+      "updatedAt": "2026-06-06T02:00:00.000Z"
+    },
+    {
+      "id": "project-podcast-launch",
+      "userId": "user-zyongzhu",
+      "title": "Creator 访谈播客启动计划",
+      "brief": "面向独立创作者的访谈节目，从立项到首期发布全流程。",
+      "contentCategory": "播客",
+      "creationMode": "guided",
+      "status": "completed",
+      "currentStage": "review",
+      "progressPct": 100,
+      "starred": true,
+      "startedAt": "2026-03-01T02:00:00.000Z",
+      "targetCompletedAt": "2026-05-01T02:00:00.000Z",
+      "completedAt": "2026-04-28T02:00:00.000Z",
+      "archivedAt": null,
+      "createdAt": "2026-03-01T02:00:00.000Z",
+      "updatedAt": "2026-04-28T02:00:00.000Z"
+    }
+  ],
+  "projectRelations": [
+    {
+      "id": "prel-promptcraft-ainativebrowser",
+      "sourceProjectId": "project-promptcraft",
+      "targetProjectId": "project-ainativebrowser",
+      "relationType": "related",
+      "note": "Prompt 系列引用 AI Native Browser 的代理论点",
+      "createdAt": "2026-05-20T02:00:00.000Z"
+    },
+    {
+      "id": "prel-podcast-secondbrain",
+      "sourceProjectId": "project-podcast-launch",
+      "targetProjectId": "project-secondbrain",
+      "relationType": "series",
+      "note": "访谈话题延伸出第二大脑选题",
+      "createdAt": "2026-06-05T02:00:00.000Z"
+    }
+  ],
+  "projectStages": [
+    {
+      "id": "stage-ainativebrowser-research",
+      "projectId": "project-ainativebrowser",
+      "stage": "research",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-05-28T02:00:00.000Z",
+      "completedAt": "2026-06-01T10:00:00.000Z",
+      "updatedAt": "2026-06-01T10:00:00.000Z"
+    },
+    {
+      "id": "stage-ainativebrowser-planning",
+      "projectId": "project-ainativebrowser",
+      "stage": "planning",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-06-02T01:00:00.000Z",
+      "completedAt": "2026-06-05T10:00:00.000Z",
+      "updatedAt": "2026-06-05T10:00:00.000Z"
+    },
+    {
+      "id": "stage-ainativebrowser-script",
+      "projectId": "project-ainativebrowser",
+      "stage": "script",
+      "status": "in_progress",
+      "progressPct": 65,
+      "skipped": false,
+      "startedAt": "2026-06-06T01:00:00.000Z",
+      "completedAt": null,
+      "updatedAt": "2026-06-13T01:00:00.000Z"
+    },
+    {
+      "id": "stage-ainativebrowser-production",
+      "projectId": "project-ainativebrowser",
+      "stage": "production",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-05T10:00:00.000Z"
+    },
+    {
+      "id": "stage-ainativebrowser-publishing",
+      "projectId": "project-ainativebrowser",
+      "stage": "publishing",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-05T10:00:00.000Z"
+    },
+    {
+      "id": "stage-ainativebrowser-review",
+      "projectId": "project-ainativebrowser",
+      "stage": "review",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-05T10:00:00.000Z"
+    },
+    {
+      "id": "stage-secondbrain-research",
+      "projectId": "project-secondbrain",
+      "stage": "research",
+      "status": "in_progress",
+      "progressPct": 30,
+      "skipped": false,
+      "startedAt": "2026-06-05T02:00:00.000Z",
+      "completedAt": null,
+      "updatedAt": "2026-06-11T02:00:00.000Z"
+    },
+    {
+      "id": "stage-secondbrain-planning",
+      "projectId": "project-secondbrain",
+      "stage": "planning",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-05T02:00:00.000Z"
+    },
+    {
+      "id": "stage-secondbrain-script",
+      "projectId": "project-secondbrain",
+      "stage": "script",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-05T02:00:00.000Z"
+    },
+    {
+      "id": "stage-secondbrain-production",
+      "projectId": "project-secondbrain",
+      "stage": "production",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-05T02:00:00.000Z"
+    },
+    {
+      "id": "stage-secondbrain-publishing",
+      "projectId": "project-secondbrain",
+      "stage": "publishing",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-05T02:00:00.000Z"
+    },
+    {
+      "id": "stage-secondbrain-review",
+      "projectId": "project-secondbrain",
+      "stage": "review",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-05T02:00:00.000Z"
+    },
+    {
+      "id": "stage-promptcraft-research",
+      "projectId": "project-promptcraft",
+      "stage": "research",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-05-12T02:00:00.000Z",
+      "completedAt": "2026-05-19T02:00:00.000Z",
+      "updatedAt": "2026-05-19T02:00:00.000Z"
+    },
+    {
+      "id": "stage-promptcraft-planning",
+      "projectId": "project-promptcraft",
+      "stage": "planning",
+      "status": "in_progress",
+      "progressPct": 50,
+      "skipped": false,
+      "startedAt": "2026-05-20T02:00:00.000Z",
+      "completedAt": null,
+      "updatedAt": "2026-06-06T02:00:00.000Z"
+    },
+    {
+      "id": "stage-promptcraft-script",
+      "projectId": "project-promptcraft",
+      "stage": "script",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-05-20T02:00:00.000Z"
+    },
+    {
+      "id": "stage-promptcraft-production",
+      "projectId": "project-promptcraft",
+      "stage": "production",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-05-20T02:00:00.000Z"
+    },
+    {
+      "id": "stage-promptcraft-publishing",
+      "projectId": "project-promptcraft",
+      "stage": "publishing",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-05-20T02:00:00.000Z"
+    },
+    {
+      "id": "stage-promptcraft-review",
+      "projectId": "project-promptcraft",
+      "stage": "review",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-05-20T02:00:00.000Z"
+    },
+    {
+      "id": "stage-podcast-research",
+      "projectId": "project-podcast-launch",
+      "stage": "research",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-03-01T02:00:00.000Z",
+      "completedAt": "2026-03-05T02:00:00.000Z",
+      "updatedAt": "2026-03-05T02:00:00.000Z"
+    },
+    {
+      "id": "stage-podcast-planning",
+      "projectId": "project-podcast-launch",
+      "stage": "planning",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-03-06T02:00:00.000Z",
+      "completedAt": "2026-03-10T02:00:00.000Z",
+      "updatedAt": "2026-03-10T02:00:00.000Z"
+    },
+    {
+      "id": "stage-podcast-script",
+      "projectId": "project-podcast-launch",
+      "stage": "script",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-03-11T02:00:00.000Z",
+      "completedAt": "2026-03-20T02:00:00.000Z",
+      "updatedAt": "2026-03-20T02:00:00.000Z"
+    },
+    {
+      "id": "stage-podcast-production",
+      "projectId": "project-podcast-launch",
+      "stage": "production",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-03-21T02:00:00.000Z",
+      "completedAt": "2026-04-01T02:00:00.000Z",
+      "updatedAt": "2026-04-01T02:00:00.000Z"
+    },
+    {
+      "id": "stage-podcast-publishing",
+      "projectId": "project-podcast-launch",
+      "stage": "publishing",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-04-02T02:00:00.000Z",
+      "completedAt": "2026-04-15T02:00:00.000Z",
+      "updatedAt": "2026-04-15T02:00:00.000Z"
+    },
+    {
+      "id": "stage-podcast-review",
+      "projectId": "project-podcast-launch",
+      "stage": "review",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-04-16T02:00:00.000Z",
+      "completedAt": "2026-04-28T02:00:00.000Z",
+      "updatedAt": "2026-04-28T02:00:00.000Z"
+    }
+  ],
+  "projectTargetPlatforms": [
+    {
+      "id": "target-ainativebrowser-bilibili",
+      "projectId": "project-ainativebrowser",
+      "platform": "bilibili",
+      "priority": 1,
+      "planningNote": "首选长视频平台，受众匹配",
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    },
+    {
+      "id": "target-ainativebrowser-youtube",
+      "projectId": "project-ainativebrowser",
+      "platform": "youtube",
+      "priority": 2,
+      "planningNote": "二次发布，保留双语字幕",
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    },
+    {
+      "id": "target-ainativebrowser-xiaohongshu",
+      "projectId": "project-ainativebrowser",
+      "platform": "xiaohongshu",
+      "priority": 3,
+      "planningNote": "图文卡片拆条",
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    },
+    {
+      "id": "target-secondbrain-bilibili",
+      "projectId": "project-secondbrain",
+      "platform": "bilibili",
+      "priority": 1,
+      "planningNote": "主发平台",
+      "createdAt": "2026-06-05T02:00:00.000Z"
+    },
+    {
+      "id": "target-promptcraft-douyin",
+      "projectId": "project-promptcraft",
+      "platform": "douyin",
+      "priority": 1,
+      "planningNote": "短剧式教学",
+      "createdAt": "2026-05-12T02:00:00.000Z"
+    },
+    {
+      "id": "target-podcast-bilibili",
+      "projectId": "project-podcast-launch",
+      "platform": "bilibili",
+      "priority": 1,
+      "planningNote": "主发平台",
+      "createdAt": "2026-03-01T02:00:00.000Z"
+    }
+  ],
+  "contentOutputs": [
+    {
+      "id": "output-ainativebrowser-main",
+      "projectId": "project-ainativebrowser",
+      "title": "AI Native Browser 深度解析 · 主视频",
+      "contentType": "video",
+      "format": "mp4",
+      "aspectRatio": "16:9",
+      "targetDurationSeconds": 720,
+      "status": "drafting",
+      "primaryAssetId": "asset-poster-ainativebrowser",
+      "createdAt": "2026-05-28T02:00:00.000Z",
+      "updatedAt": "2026-06-13T01:00:00.000Z"
+    },
+    {
+      "id": "output-ainativebrowser-short",
+      "projectId": "project-ainativebrowser",
+      "title": "AI Native Browser 1 分钟速览",
+      "contentType": "video",
+      "format": "mp4",
+      "aspectRatio": "9:16",
+      "targetDurationSeconds": 60,
+      "status": "drafting",
+      "primaryAssetId": null,
+      "createdAt": "2026-06-07T02:00:00.000Z",
+      "updatedAt": "2026-06-09T10:00:00.000Z"
+    },
+    {
+      "id": "output-secondbrain-ep01",
+      "projectId": "project-secondbrain",
+      "title": "第二大脑搭建 · EP01 知识捕获",
+      "contentType": "video",
+      "format": "mp4",
+      "aspectRatio": "16:9",
+      "targetDurationSeconds": 900,
+      "status": "drafting",
+      "primaryAssetId": null,
+      "createdAt": "2026-06-05T02:00:00.000Z",
+      "updatedAt": "2026-06-11T02:00:00.000Z"
+    },
+    {
+      "id": "output-promptcraft-ep01",
+      "projectId": "project-promptcraft",
+      "title": "Prompt Craft EP01 · 任务拆解",
+      "contentType": "video",
+      "format": "mp4",
+      "aspectRatio": "9:16",
+      "targetDurationSeconds": 90,
+      "status": "drafting",
+      "primaryAssetId": null,
+      "createdAt": "2026-05-12T02:00:00.000Z",
+      "updatedAt": "2026-06-06T02:00:00.000Z"
+    },
+    {
+      "id": "output-podcast-ep01",
+      "projectId": "project-podcast-launch",
+      "title": "Creator 访谈 EP01 · 与独立创作者的对话",
+      "contentType": "audio",
+      "format": "mp3",
+      "aspectRatio": "1:1",
+      "targetDurationSeconds": 2700,
+      "status": "published",
+      "primaryAssetId": "asset-podcast-ep01",
+      "createdAt": "2026-03-01T02:00:00.000Z",
+      "updatedAt": "2026-04-15T02:00:00.000Z"
+    }
+  ],
+  "outputStages": [
+    {
+      "id": "ostage-ainativebrowser-main-script",
+      "contentOutputId": "output-ainativebrowser-main",
+      "stage": "script",
+      "status": "in_progress",
+      "progressPct": 65,
+      "skipped": false,
+      "startedAt": "2026-06-06T01:00:00.000Z",
+      "completedAt": null,
+      "updatedAt": "2026-06-13T01:00:00.000Z"
+    },
+    {
+      "id": "ostage-ainativebrowser-main-production",
+      "contentOutputId": "output-ainativebrowser-main",
+      "stage": "production",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-06T01:00:00.000Z"
+    },
+    {
+      "id": "ostage-ainativebrowser-main-publishing",
+      "contentOutputId": "output-ainativebrowser-main",
+      "stage": "publishing",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-06T01:00:00.000Z"
+    },
+    {
+      "id": "ostage-ainativebrowser-main-review",
+      "contentOutputId": "output-ainativebrowser-main",
+      "stage": "review",
+      "status": "pending",
+      "progressPct": 0,
+      "skipped": false,
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-06T01:00:00.000Z"
+    },
+    {
+      "id": "ostage-podcast-script",
+      "contentOutputId": "output-podcast-ep01",
+      "stage": "script",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-03-11T02:00:00.000Z",
+      "completedAt": "2026-03-20T02:00:00.000Z",
+      "updatedAt": "2026-03-20T02:00:00.000Z"
+    },
+    {
+      "id": "ostage-podcast-production",
+      "contentOutputId": "output-podcast-ep01",
+      "stage": "production",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-03-21T02:00:00.000Z",
+      "completedAt": "2026-04-01T02:00:00.000Z",
+      "updatedAt": "2026-04-01T02:00:00.000Z"
+    },
+    {
+      "id": "ostage-podcast-publishing",
+      "contentOutputId": "output-podcast-ep01",
+      "stage": "publishing",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-04-02T02:00:00.000Z",
+      "completedAt": "2026-04-15T02:00:00.000Z",
+      "updatedAt": "2026-04-15T02:00:00.000Z"
+    },
+    {
+      "id": "ostage-podcast-review",
+      "contentOutputId": "output-podcast-ep01",
+      "stage": "review",
+      "status": "completed",
+      "progressPct": 100,
+      "skipped": false,
+      "startedAt": "2026-04-16T02:00:00.000Z",
+      "completedAt": "2026-04-28T02:00:00.000Z",
+      "updatedAt": "2026-04-28T02:00:00.000Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-ainativebrowser-script-outline",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": "output-ainativebrowser-main",
+      "stage": "script",
+      "title": "完成脚本大纲与金句",
+      "description": "整理第三版大纲，提取 3 条金句。",
+      "status": "in_progress",
+      "priority": 2,
+      "dueAt": "2026-06-14T10:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "task-ainativebrowser-research-competitors",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": null,
+      "stage": "research",
+      "title": "补充三家竞品威胁评估",
+      "description": "针对浏览器 AI 扩展类竞品补一份详细对比。",
+      "status": "done",
+      "priority": 3,
+      "dueAt": "2026-06-01T10:00:00.000Z",
+      "completedAt": "2026-06-01T09:30:00.000Z"
+    },
+    {
+      "id": "task-secondbrain-research-interviews",
+      "projectId": "project-secondbrain",
+      "contentOutputId": null,
+      "stage": "research",
+      "title": "访谈 3 位独立创作者",
+      "description": "围绕第二大脑的搭建流程做半结构化访谈。",
+      "status": "todo",
+      "priority": 2,
+      "dueAt": "2026-06-18T10:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "task-promptcraft-planning-series",
+      "projectId": "project-promptcraft",
+      "contentOutputId": null,
+      "stage": "planning",
+      "title": "完成 8 期系列主题",
+      "description": "敲定主题、目标受众与差异化。",
+      "status": "in_progress",
+      "priority": 1,
+      "dueAt": "2026-06-16T10:00:00.000Z",
+      "completedAt": null
+    }
+  ],
+  "milestones": [
+    {
+      "id": "milestone-ainativebrowser-script",
+      "projectId": "project-ainativebrowser",
+      "title": "脚本终稿",
+      "milestoneType": "deliverable",
+      "status": "pending",
+      "targetAt": "2026-06-16T10:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "milestone-ainativebrowser-publish",
+      "projectId": "project-ainativebrowser",
+      "title": "主视频首发",
+      "milestoneType": "deliverable",
+      "status": "pending",
+      "targetAt": "2026-06-22T12:00:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "milestone-ainativebrowser-research",
+      "projectId": "project-ainativebrowser",
+      "title": "研究阶段完成",
+      "milestoneType": "checkpoint",
+      "status": "completed",
+      "targetAt": "2026-06-01T10:00:00.000Z",
+      "completedAt": "2026-06-01T09:45:00.000Z"
+    },
+    {
+      "id": "milestone-podcast-ep01",
+      "projectId": "project-podcast-launch",
+      "title": "EP01 首发",
+      "milestoneType": "deliverable",
+      "status": "completed",
+      "targetAt": "2026-04-15T02:00:00.000Z",
+      "completedAt": "2026-04-14T14:00:00.000Z"
+    }
+  ],
+  "projectActivities": [
+    {
+      "id": "activity-ainativebrowser-script-edit",
+      "projectId": "project-ainativebrowser",
+      "eventType": "artifact_updated",
+      "entityType": "artifact",
+      "entityId": "artifact-ainativebrowser-output-script",
+      "eventData": {
+        "summary": "编辑了脚本"
+      },
+      "occurredAt": "2026-06-13T01:00:00.000Z"
+    },
+    {
+      "id": "activity-ainativebrowser-research-attach",
+      "projectId": "project-ainativebrowser",
+      "eventType": "evidence_linked",
+      "entityType": "evidence_link",
+      "entityId": "evidence-ainativebrowser-1",
+      "eventData": {
+        "thesis": "AI Browser 重塑入口"
+      },
+      "occurredAt": "2026-06-12T02:00:00.000Z"
+    },
+    {
+      "id": "activity-ainativebrowser-milestone",
+      "projectId": "project-ainativebrowser",
+      "eventType": "milestone_completed",
+      "entityType": "milestone",
+      "entityId": "milestone-ainativebrowser-research",
+      "eventData": {
+        "title": "研究阶段完成"
+      },
+      "occurredAt": "2026-06-01T09:45:00.000Z"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "artifact-ainativebrowser-project-idea",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": null,
+      "currentVersionId": "av-ainativebrowser-project-idea",
+      "stage": "research",
+      "artifactType": "project_idea",
+      "title": "AI Native Browser 项目立意",
+      "status": "approved",
+      "createdAt": "2026-05-28T02:00:00.000Z",
+      "updatedAt": "2026-06-01T10:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-ainativebrowser-trend",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": null,
+      "currentVersionId": "av-ainativebrowser-trend",
+      "stage": "research",
+      "artifactType": "trend_analysis",
+      "title": "浏览器市场趋势",
+      "status": "approved",
+      "createdAt": "2026-05-28T02:00:00.000Z",
+      "updatedAt": "2026-06-01T10:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-ainativebrowser-competitor",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": null,
+      "currentVersionId": "av-ainativebrowser-competitor",
+      "stage": "research",
+      "artifactType": "competitor_analysis",
+      "title": "竞品浏览器对比",
+      "status": "approved",
+      "createdAt": "2026-05-28T02:00:00.000Z",
+      "updatedAt": "2026-06-01T10:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-ainativebrowser-thesis-tree",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": null,
+      "currentVersionId": "av-ainativebrowser-thesis-tree",
+      "stage": "planning",
+      "artifactType": "thesis_tree",
+      "title": "核心论点树",
+      "status": "approved",
+      "createdAt": "2026-06-02T01:00:00.000Z",
+      "updatedAt": "2026-06-04T02:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-ainativebrowser-master-script",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": "output-ainativebrowser-main",
+      "currentVersionId": "av-ainativebrowser-master-script",
+      "stage": "script",
+      "artifactType": "master_script",
+      "title": "主脚本",
+      "status": "in_review",
+      "createdAt": "2026-06-06T01:00:00.000Z",
+      "updatedAt": "2026-06-13T01:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-ainativebrowser-output-script",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": "output-ainativebrowser-main",
+      "currentVersionId": "av-ainativebrowser-output-script",
+      "stage": "script",
+      "artifactType": "output_script",
+      "title": "分镜脚本",
+      "status": "in_review",
+      "createdAt": "2026-06-06T01:00:00.000Z",
+      "updatedAt": "2026-06-13T00:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-ainativebrowser-golden-quotes",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": "output-ainativebrowser-main",
+      "currentVersionId": "av-ainativebrowser-golden-quotes",
+      "stage": "script",
+      "artifactType": "golden_quotes",
+      "title": "金句候选",
+      "status": "drafting",
+      "createdAt": "2026-06-06T01:00:00.000Z",
+      "updatedAt": "2026-06-12T02:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-ainativebrowser-shot-list",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": "output-ainativebrowser-main",
+      "currentVersionId": "av-ainativebrowser-shot-list",
+      "stage": "production",
+      "artifactType": "shot_list",
+      "title": "镜头清单",
+      "status": "drafting",
+      "createdAt": "2026-06-07T02:00:00.000Z",
+      "updatedAt": "2026-06-07T02:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-ainativebrowser-timeline",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": "output-ainativebrowser-main",
+      "currentVersionId": "av-ainativebrowser-timeline",
+      "stage": "production",
+      "artifactType": "timeline",
+      "title": "时间线",
+      "status": "drafting",
+      "createdAt": "2026-06-07T02:00:00.000Z",
+      "updatedAt": "2026-06-07T02:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-ainativebrowser-publish-package",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": "output-ainativebrowser-main",
+      "currentVersionId": "av-ainativebrowser-publish-package",
+      "stage": "publishing",
+      "artifactType": "publish_package",
+      "title": "发布包",
+      "status": "drafting",
+      "createdAt": "2026-06-07T02:00:00.000Z",
+      "updatedAt": "2026-06-07T02:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-ainativebrowser-review-report",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": null,
+      "currentVersionId": "av-ainativebrowser-review-report",
+      "stage": "review",
+      "artifactType": "review_report",
+      "title": "复盘报告",
+      "status": "drafting",
+      "createdAt": "2026-06-07T02:00:00.000Z",
+      "updatedAt": "2026-06-07T02:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "artifact-podcast-review-report",
+      "projectId": "project-podcast-launch",
+      "contentOutputId": "output-podcast-ep01",
+      "currentVersionId": "av-podcast-review-report",
+      "stage": "review",
+      "artifactType": "review_report",
+      "title": "播客首期复盘",
+      "status": "approved",
+      "createdAt": "2026-04-28T02:00:00.000Z",
+      "updatedAt": "2026-04-28T02:00:00.000Z",
+      "archivedAt": null
+    }
+  ],
+  "artifactVersions": [
+    {
+      "id": "av-ainativebrowser-master-script",
+      "artifactId": "artifact-ainativebrowser-master-script",
+      "versionNumber": 3,
+      "contentText": "主脚本第三版",
+      "contentData": {
+        "wordCount": 2840
+      },
+      "changeSummary": "加入第三幕案例",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-06-13T01:00:00.000Z"
+    },
+    {
+      "id": "av-ainativebrowser-output-script",
+      "artifactId": "artifact-ainativebrowser-output-script",
+      "versionNumber": 5,
+      "contentText": "分镜脚本第五版",
+      "contentData": {
+        "wordCount": 3120
+      },
+      "changeSummary": "调整开头 15 秒",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-06-13T00:00:00.000Z"
+    },
+    {
+      "id": "av-ainativebrowser-thesis-tree",
+      "artifactId": "artifact-ainativebrowser-thesis-tree",
+      "versionNumber": 2,
+      "contentText": "论点树第二版",
+      "contentData": {
+        "columns": 4
+      },
+      "changeSummary": "重构证据列",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-06-04T02:00:00.000Z"
+    },
+    {
+      "id": "av-ainativebrowser-project-idea",
+      "artifactId": "artifact-ainativebrowser-project-idea",
+      "versionNumber": 1,
+      "contentText": "项目立意初稿",
+      "contentData": {
+        "angle": "AI 代理入口"
+      },
+      "changeSummary": "立项初稿",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    },
+    {
+      "id": "av-ainativebrowser-trend",
+      "artifactId": "artifact-ainativebrowser-trend",
+      "versionNumber": 1,
+      "contentText": "趋势分析初稿",
+      "contentData": {
+        "signals": 6
+      },
+      "changeSummary": "趋势初稿",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    },
+    {
+      "id": "av-ainativebrowser-competitor",
+      "artifactId": "artifact-ainativebrowser-competitor",
+      "versionNumber": 1,
+      "contentText": "竞品对比初稿",
+      "contentData": {
+        "competitors": 3
+      },
+      "changeSummary": "竞品初稿",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    },
+    {
+      "id": "av-ainativebrowser-golden-quotes",
+      "artifactId": "artifact-ainativebrowser-golden-quotes",
+      "versionNumber": 1,
+      "contentText": "金句候选初稿",
+      "contentData": {
+        "quotes": 3
+      },
+      "changeSummary": "金句初稿",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-06-06T01:00:00.000Z"
+    },
+    {
+      "id": "av-ainativebrowser-shot-list",
+      "artifactId": "artifact-ainativebrowser-shot-list",
+      "versionNumber": 1,
+      "contentText": "镜头清单初稿",
+      "contentData": {
+        "shots": 12
+      },
+      "changeSummary": "镜头清单初稿",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-06-07T02:00:00.000Z"
+    },
+    {
+      "id": "av-ainativebrowser-timeline",
+      "artifactId": "artifact-ainativebrowser-timeline",
+      "versionNumber": 1,
+      "contentText": "时间线初稿",
+      "contentData": {
+        "segments": 4
+      },
+      "changeSummary": "时间线初稿",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-06-07T02:00:00.000Z"
+    },
+    {
+      "id": "av-ainativebrowser-publish-package",
+      "artifactId": "artifact-ainativebrowser-publish-package",
+      "versionNumber": 1,
+      "contentText": "发布包初稿",
+      "contentData": {
+        "platforms": 3
+      },
+      "changeSummary": "发布包初稿",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-06-07T02:00:00.000Z"
+    },
+    {
+      "id": "av-ainativebrowser-review-report",
+      "artifactId": "artifact-ainativebrowser-review-report",
+      "versionNumber": 1,
+      "contentText": "复盘报告初稿",
+      "contentData": {},
+      "changeSummary": "复盘报告初稿",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-06-07T02:00:00.000Z"
+    },
+    {
+      "id": "av-podcast-review-report",
+      "artifactId": "artifact-podcast-review-report",
+      "versionNumber": 1,
+      "contentText": "播客首期复盘报告",
+      "contentData": {
+        "episodes": 1
+      },
+      "changeSummary": "复盘报告定稿",
+      "createdByType": "user",
+      "aiTaskId": null,
+      "createdAt": "2026-04-28T02:00:00.000Z"
+    }
+  ],
+  "artifactRelations": [
+    {
+      "id": "arel-ainativebrowser-output-from-master",
+      "sourceArtifactId": "artifact-ainativebrowser-output-script",
+      "targetArtifactId": "artifact-ainativebrowser-master-script",
+      "relationType": "derived_from",
+      "createdAt": "2026-06-06T01:00:00.000Z"
+    },
+    {
+      "id": "arel-ainativebrowser-thesis-supports-idea",
+      "sourceArtifactId": "artifact-ainativebrowser-thesis-tree",
+      "targetArtifactId": "artifact-ainativebrowser-project-idea",
+      "relationType": "supports",
+      "createdAt": "2026-06-02T01:00:00.000Z"
+    },
+    {
+      "id": "arel-ainativebrowser-shot-from-script",
+      "sourceArtifactId": "artifact-ainativebrowser-shot-list",
+      "targetArtifactId": "artifact-ainativebrowser-output-script",
+      "relationType": "derived_from",
+      "createdAt": "2026-06-07T02:00:00.000Z"
+    },
+    {
+      "id": "arel-ainativebrowser-timeline-from-script",
+      "sourceArtifactId": "artifact-ainativebrowser-timeline",
+      "targetArtifactId": "artifact-ainativebrowser-output-script",
+      "relationType": "derived_from",
+      "createdAt": "2026-06-07T02:00:00.000Z"
+    }
+  ],
+  "thesisNodes": [
+    {
+      "id": "thesis-root-ainativebrowser",
+      "artifactVersionId": "av-ainativebrowser-thesis-tree",
+      "parentNodeId": null,
+      "nodeType": "root",
+      "title": "AI Native Browser 重塑入口",
+      "content": "浏览器将成为个人 AI 代理的主要入口，重塑信息分发与生产力。",
+      "position": 0
+    },
+    {
+      "id": "thesis-core-ainativebrowser",
+      "artifactVersionId": "av-ainativebrowser-thesis-tree",
+      "parentNodeId": "thesis-root-ainativebrowser",
+      "nodeType": "core_thesis",
+      "title": "核心论点",
+      "content": "AI Native Browser = 浏览器 + 代理 + 上下文记忆",
+      "position": 0
+    },
+    {
+      "id": "thesis-support-ainativebrowser-1",
+      "artifactVersionId": "av-ainativebrowser-thesis-tree",
+      "parentNodeId": "thesis-core-ainativebrowser",
+      "nodeType": "supporting",
+      "title": "从标签页到代理任务",
+      "content": "用户操作从打开标签页转向发起代理任务。",
+      "position": 0
+    },
+    {
+      "id": "thesis-support-ainativebrowser-2",
+      "artifactVersionId": "av-ainativebrowser-thesis-tree",
+      "parentNodeId": "thesis-core-ainativebrowser",
+      "nodeType": "supporting",
+      "title": "本地化上下文",
+      "content": "用户数据、记忆、订阅均在本地优先。",
+      "position": 1
+    },
+    {
+      "id": "thesis-evidence-ainativebrowser-1",
+      "artifactVersionId": "av-ainativebrowser-thesis-tree",
+      "parentNodeId": "thesis-support-ainativebrowser-1",
+      "nodeType": "evidence",
+      "title": "Arc / Dia 早期用户调研",
+      "content": "80% 受访者希望浏览器完成跨站点任务。",
+      "position": 0
+    },
+    {
+      "id": "thesis-counter-ainativebrowser-1",
+      "artifactVersionId": "av-ainativebrowser-thesis-tree",
+      "parentNodeId": "thesis-core-ainativebrowser",
+      "nodeType": "counterpoint",
+      "title": "代理幻觉风险",
+      "content": "代理生成结果的可信度仍是高门槛。",
+      "position": 0
+    }
+  ],
+  "scriptSections": [
+    {
+      "id": "section-ainativebrowser-hook",
+      "artifactVersionId": "av-ainativebrowser-output-script",
+      "parentSectionId": null,
+      "sectionType": "hook",
+      "title": "开场 15 秒",
+      "content": "三年前的浏览器和今天的浏览器，最大的区别是什么？",
+      "position": 0,
+      "startSeconds": 0,
+      "endSeconds": 15
+    },
+    {
+      "id": "section-ainativebrowser-intro",
+      "artifactVersionId": "av-ainativebrowser-output-script",
+      "parentSectionId": null,
+      "sectionType": "intro",
+      "title": "立意",
+      "content": "AI Native Browser 的产品定位与生态角色。",
+      "position": 1,
+      "startSeconds": 15,
+      "endSeconds": 90
+    },
+    {
+      "id": "section-ainativebrowser-body-1",
+      "artifactVersionId": "av-ainativebrowser-output-script",
+      "parentSectionId": null,
+      "sectionType": "body",
+      "title": "产品架构",
+      "content": "从渲染引擎到代理引擎的演进路径。",
+      "position": 2,
+      "startSeconds": 90,
+      "endSeconds": 240
+    },
+    {
+      "id": "section-ainativebrowser-body-2",
+      "artifactVersionId": "av-ainativebrowser-output-script",
+      "parentSectionId": null,
+      "sectionType": "body",
+      "title": "代表产品对比",
+      "content": "Arc / Dia / Sigma OS 的能力矩阵。",
+      "position": 3,
+      "startSeconds": 240,
+      "endSeconds": 420
+    },
+    {
+      "id": "section-ainativebrowser-quote-1",
+      "artifactVersionId": "av-ainativebrowser-output-script",
+      "parentSectionId": null,
+      "sectionType": "golden_quote",
+      "title": "金句 1",
+      "content": "浏览器不是页面容器，而是任务代理。",
+      "position": 4,
+      "startSeconds": 420,
+      "endSeconds": 430
+    },
+    {
+      "id": "section-ainativebrowser-outro",
+      "artifactVersionId": "av-ainativebrowser-output-script",
+      "parentSectionId": null,
+      "sectionType": "outro",
+      "title": "结尾",
+      "content": "回到个人创作者的工作流：浏览器如何帮我完成发布。",
+      "position": 5,
+      "startSeconds": 660,
+      "endSeconds": 720
+    }
+  ],
+  "evidenceLinks": [
+    {
+      "id": "evidence-ainativebrowser-1",
+      "artifactVersionId": "av-ainativebrowser-thesis-tree",
+      "thesisNodeId": "thesis-evidence-ainativebrowser-1",
+      "knowledgeItemId": "knowledge-arc-dia-research",
+      "assetId": null,
+      "excerpt": "80% 受访者希望浏览器完成跨站点任务",
+      "relationType": "supports",
+      "confidence": 0.82,
+      "position": 0
+    },
+    {
+      "id": "evidence-ainativebrowser-2",
+      "artifactVersionId": "av-ainativebrowser-thesis-tree",
+      "thesisNodeId": "thesis-support-ainativebrowser-2",
+      "knowledgeItemId": "knowledge-local-memory-trend",
+      "assetId": null,
+      "excerpt": "2026 年本地优先栈成为独立创作者默认选择",
+      "relationType": "supports",
+      "confidence": 0.74,
+      "position": 1
+    }
+  ],
+  "timelineSegments": [
+    {
+      "id": "timeline-ainativebrowser-1",
+      "artifactVersionId": "av-ainativebrowser-output-script",
+      "scriptSectionId": "section-ainativebrowser-hook",
+      "title": "开场动画",
+      "position": 0,
+      "startMs": 0,
+      "endMs": 15000,
+      "productionData": {
+        "shot": "A001",
+        "notes": "Logo 动画 + 文字叠加"
+      }
+    },
+    {
+      "id": "timeline-ainativebrowser-2",
+      "artifactVersionId": "av-ainativebrowser-output-script",
+      "scriptSectionId": "section-ainativebrowser-intro",
+      "title": "立意画面",
+      "position": 1,
+      "startMs": 15000,
+      "endMs": 90000,
+      "productionData": {
+        "shot": "A002"
+      }
+    },
+    {
+      "id": "timeline-ainativebrowser-3",
+      "artifactVersionId": "av-ainativebrowser-output-script",
+      "scriptSectionId": "section-ainativebrowser-body-1",
+      "title": "产品架构示意",
+      "position": 2,
+      "startMs": 90000,
+      "endMs": 240000,
+      "productionData": {
+        "shot": "A003-A010"
+      }
+    },
+    {
+      "id": "timeline-ainativebrowser-4",
+      "artifactVersionId": "av-ainativebrowser-output-script",
+      "scriptSectionId": "section-ainativebrowser-body-2",
+      "title": "代表产品对比",
+      "position": 3,
+      "startMs": 240000,
+      "endMs": 420000,
+      "productionData": {
+        "shot": "B001-B006"
+      }
+    }
+  ],
+  "knowledgeItems": [
+    {
+      "id": "knowledge-arc-dia-research",
+      "userId": "user-zyongzhu",
+      "currentRevisionId": "krevision-arc-dia-research",
+      "knowledgeType": "reference",
+      "title": "Arc / Dia 用户调研",
+      "sourceType": "manual",
+      "sourceUrl": null,
+      "sourceMetadata": {
+        "sampleSize": 120
+      },
+      "status": "active",
+      "createdAt": "2026-05-30T02:00:00.000Z",
+      "updatedAt": "2026-05-30T02:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "knowledge-local-memory-trend",
+      "userId": "user-zyongzhu",
+      "currentRevisionId": "krevision-local-memory-trend",
+      "knowledgeType": "note",
+      "title": "本地优先栈趋势",
+      "sourceType": "manual",
+      "sourceUrl": null,
+      "sourceMetadata": {},
+      "status": "active",
+      "createdAt": "2026-05-25T02:00:00.000Z",
+      "updatedAt": "2026-05-25T02:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "knowledge-hook-formula",
+      "userId": "user-zyongzhu",
+      "currentRevisionId": "krevision-hook-formula",
+      "knowledgeType": "snippet",
+      "title": "Hook 公式",
+      "sourceType": "manual",
+      "sourceUrl": null,
+      "sourceMetadata": {},
+      "status": "active",
+      "createdAt": "2026-04-12T02:00:00.000Z",
+      "updatedAt": "2026-04-12T02:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "knowledge-publish-checklist",
+      "userId": "user-zyongzhu",
+      "currentRevisionId": "krevision-hook-formula",
+      "knowledgeType": "note",
+      "title": "发布前自检清单",
+      "sourceType": "manual",
+      "sourceUrl": null,
+      "sourceMetadata": {},
+      "status": "active",
+      "createdAt": "2026-04-01T02:00:00.000Z",
+      "updatedAt": "2026-04-01T02:00:00.000Z",
+      "archivedAt": null
+    },
+    {
+      "id": "knowledge-creator-interview-01",
+      "userId": "user-zyongzhu",
+      "currentRevisionId": "krevision-hook-formula",
+      "knowledgeType": "transcript",
+      "title": "独立创作者访谈 01",
+      "sourceType": "import",
+      "sourceUrl": null,
+      "sourceMetadata": {},
+      "status": "active",
+      "createdAt": "2026-03-20T02:00:00.000Z",
+      "updatedAt": "2026-03-20T02:00:00.000Z",
+      "archivedAt": null
+    }
+  ],
+  "knowledgeRevisions": [
+    {
+      "id": "krevision-arc-dia-research",
+      "knowledgeItemId": "knowledge-arc-dia-research",
+      "revisionNumber": 1,
+      "content": "Arc / Dia 用户调研摘录",
+      "structuredData": {
+        "sample": 120
+      },
+      "createdAt": "2026-05-30T02:00:00.000Z"
+    },
+    {
+      "id": "krevision-local-memory-trend",
+      "knowledgeItemId": "knowledge-local-memory-trend",
+      "revisionNumber": 1,
+      "content": "本地优先栈趋势",
+      "structuredData": {
+        "source": "manual"
+      },
+      "createdAt": "2026-05-25T02:00:00.000Z"
+    },
+    {
+      "id": "krevision-hook-formula",
+      "knowledgeItemId": "knowledge-hook-formula",
+      "revisionNumber": 2,
+      "content": "Hook 公式",
+      "structuredData": {
+        "version": 2
+      },
+      "createdAt": "2026-04-12T02:00:00.000Z"
+    }
+  ],
+  "knowledgeRelations": [
+    {
+      "id": "krel-local-memory-arc",
+      "sourceKnowledgeId": "knowledge-local-memory-trend",
+      "targetKnowledgeId": "knowledge-arc-dia-research",
+      "relationType": "references",
+      "strength": 0.6,
+      "createdByType": "user"
+    }
+  ],
+  "assets": [
+    {
+      "id": "asset-poster-ainativebrowser",
+      "userId": "user-zyongzhu",
+      "currentFileId": "afile-poster-ainativebrowser",
+      "assetType": "image",
+      "name": "AI Native Browser 主封面",
+      "description": "主视频封面图",
+      "status": "active",
+      "createdAt": "2026-06-06T02:00:00.000Z",
+      "updatedAt": "2026-06-06T02:00:00.000Z",
+      "deletedAt": null
+    },
+    {
+      "id": "asset-broll-1",
+      "userId": "user-zyongzhu",
+      "currentFileId": "afile-broll-1",
+      "assetType": "video",
+      "name": "浏览器交互 B-Roll 01",
+      "description": "录制浏览器操作镜头",
+      "status": "active",
+      "createdAt": "2026-06-06T02:00:00.000Z",
+      "updatedAt": "2026-06-06T02:00:00.000Z",
+      "deletedAt": null
+    },
+    {
+      "id": "asset-broll-2",
+      "userId": "user-zyongzhu",
+      "currentFileId": "afile-broll-2",
+      "assetType": "video",
+      "name": "浏览器交互 B-Roll 02",
+      "description": "代理任务演示镜头",
+      "status": "active",
+      "createdAt": "2026-06-06T02:00:00.000Z",
+      "updatedAt": "2026-06-06T02:00:00.000Z",
+      "deletedAt": null
+    },
+    {
+      "id": "asset-audio-1",
+      "userId": "user-zyongzhu",
+      "currentFileId": "afile-audio-1",
+      "assetType": "audio",
+      "name": "开场音效",
+      "description": "15 秒合成音",
+      "status": "active",
+      "createdAt": "2026-06-06T02:00:00.000Z",
+      "updatedAt": "2026-06-06T02:00:00.000Z",
+      "deletedAt": null
+    },
+    {
+      "id": "asset-doc-1",
+      "userId": "user-zyongzhu",
+      "currentFileId": "afile-doc-1",
+      "assetType": "document",
+      "name": "立项简报",
+      "description": "项目立项简报 PDF",
+      "status": "active",
+      "createdAt": "2026-06-06T02:00:00.000Z",
+      "updatedAt": "2026-06-06T02:00:00.000Z",
+      "deletedAt": null
+    },
+    {
+      "id": "asset-podcast-ep01",
+      "userId": "user-zyongzhu",
+      "currentFileId": "afile-podcast-ep01",
+      "assetType": "audio",
+      "name": "播客 EP01 成品",
+      "description": "Creator 访谈 EP01 音频",
+      "status": "active",
+      "createdAt": "2026-04-01T02:00:00.000Z",
+      "updatedAt": "2026-04-01T02:00:00.000Z",
+      "deletedAt": null
+    }
+  ],
+  "assetFiles": [
+    {
+      "id": "afile-poster-ainativebrowser",
+      "assetId": "asset-poster-ainativebrowser",
+      "versionNumber": 1,
+      "storageKey": "posters/ainativebrowser-v1.png",
+      "mimeType": "image/png",
+      "fileSize": 327680,
+      "checksum": "fixed-checksum-1",
+      "width": 1920,
+      "height": 1080,
+      "durationMs": null,
+      "mediaMetadata": {},
+      "createdAt": "2026-06-06T02:00:00.000Z"
+    },
+    {
+      "id": "afile-broll-1",
+      "assetId": "asset-broll-1",
+      "versionNumber": 1,
+      "storageKey": "broll/01.mp4",
+      "mimeType": "video/mp4",
+      "fileSize": 25165824,
+      "checksum": "fixed-checksum-2",
+      "width": 1920,
+      "height": 1080,
+      "durationMs": 12000,
+      "mediaMetadata": {},
+      "createdAt": "2026-06-06T02:00:00.000Z"
+    },
+    {
+      "id": "afile-broll-2",
+      "assetId": "asset-broll-2",
+      "versionNumber": 1,
+      "storageKey": "broll/02.mp4",
+      "mimeType": "video/mp4",
+      "fileSize": 18874368,
+      "checksum": "fixed-checksum-3",
+      "width": 1920,
+      "height": 1080,
+      "durationMs": 9000,
+      "mediaMetadata": {},
+      "createdAt": "2026-06-06T02:00:00.000Z"
+    },
+    {
+      "id": "afile-audio-1",
+      "assetId": "asset-audio-1",
+      "versionNumber": 1,
+      "storageKey": "audio/intro.mp3",
+      "mimeType": "audio/mpeg",
+      "fileSize": 524288,
+      "checksum": "fixed-checksum-4",
+      "width": null,
+      "height": null,
+      "durationMs": 15000,
+      "mediaMetadata": {},
+      "createdAt": "2026-06-06T02:00:00.000Z"
+    },
+    {
+      "id": "afile-doc-1",
+      "assetId": "asset-doc-1",
+      "versionNumber": 1,
+      "storageKey": "docs/brief.pdf",
+      "mimeType": "application/pdf",
+      "fileSize": 81920,
+      "checksum": "fixed-checksum-5",
+      "width": null,
+      "height": null,
+      "durationMs": null,
+      "mediaMetadata": {},
+      "createdAt": "2026-06-06T02:00:00.000Z"
+    },
+    {
+      "id": "afile-podcast-ep01",
+      "assetId": "asset-podcast-ep01",
+      "versionNumber": 1,
+      "storageKey": "podcast/ep01.mp3",
+      "mimeType": "audio/mpeg",
+      "fileSize": 33554432,
+      "checksum": "fixed-checksum-6",
+      "width": null,
+      "height": null,
+      "durationMs": 2700000,
+      "mediaMetadata": {},
+      "createdAt": "2026-04-01T02:00:00.000Z"
+    }
+  ],
+  "learnings": [
+    {
+      "id": "learning-arc-research",
+      "userId": "user-zyongzhu",
+      "reviewId": "review-podcast-ep01",
+      "learningType": "strategy",
+      "title": "用户调研样本要超过 100 才稳定",
+      "insight": "首期访谈样本偏少，导致趋势结论不显著。",
+      "recommendation": "未来研究阶段设定 100 样本硬性门槛。",
+      "validationStatus": "validated",
+      "confidenceScore": 81,
+      "createdAt": "2026-04-28T02:00:00.000Z",
+      "updatedAt": "2026-04-28T02:00:00.000Z"
+    },
+    {
+      "id": "learning-hook-15s",
+      "userId": "user-zyongzhu",
+      "reviewId": null,
+      "learningType": "hook",
+      "title": "15 秒开场需包含可量化结果",
+      "insight": "在前 15 秒承诺具体收益可显著提升完播率。",
+      "recommendation": "开头模板：问题 → 结果 → 路径。",
+      "validationStatus": "validated",
+      "confidenceScore": 78,
+      "createdAt": "2026-04-10T02:00:00.000Z",
+      "updatedAt": "2026-04-10T02:00:00.000Z"
+    },
+    {
+      "id": "learning-failure-screenshot",
+      "userId": "user-zyongzhu",
+      "reviewId": null,
+      "learningType": "failure",
+      "title": "录屏类教程缺少关键节点标注",
+      "insight": "录屏 B-Roll 没有标注时观众在第 2 屏流失。",
+      "recommendation": "录屏必须叠加高亮与时间码。",
+      "validationStatus": "candidate",
+      "confidenceScore": 62,
+      "createdAt": "2026-04-05T02:00:00.000Z",
+      "updatedAt": "2026-04-05T02:00:00.000Z"
+    }
+  ],
+  "learningApplications": [
+    {
+      "id": "lapplied-arc-ainativebrowser",
+      "learningId": "learning-arc-research",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": "output-ainativebrowser-main",
+      "applicationNote": "研究阶段加入 120 样本用户调研",
+      "outcome": {
+        "researchSamples": 120
+      },
+      "appliedAt": "2026-05-30T02:00:00.000Z",
+      "evaluatedAt": "2026-06-01T09:00:00.000Z"
+    },
+    {
+      "id": "lapplied-hook-ainativebrowser",
+      "learningId": "learning-hook-15s",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": "output-ainativebrowser-main",
+      "applicationNote": "脚本开场 15 秒采用三段式",
+      "outcome": {
+        "template": "问题-结果-路径"
+      },
+      "appliedAt": "2026-06-06T01:00:00.000Z",
+      "evaluatedAt": null
+    }
+  ],
+  "tags": [
+    {
+      "id": "tag-ai",
+      "userId": "user-zyongzhu",
+      "name": "AI",
+      "color": "#7c3aed",
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    },
+    {
+      "id": "tag-browser",
+      "userId": "user-zyongzhu",
+      "name": "浏览器",
+      "color": "#3b82f6",
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    },
+    {
+      "id": "tag-script",
+      "userId": "user-zyongzhu",
+      "name": "脚本",
+      "color": "#22c55e",
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    },
+    {
+      "id": "tag-knowledge",
+      "userId": "user-zyongzhu",
+      "name": "知识",
+      "color": "#f59e0b",
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    },
+    {
+      "id": "tag-hook",
+      "userId": "user-zyongzhu",
+      "name": "Hook",
+      "color": "#ef4444",
+      "createdAt": "2026-05-28T02:00:00.000Z"
+    }
+  ],
+  "entityTags": [
+    {
+      "id": "etag-ainativebrowser-ai",
+      "tagId": "tag-ai",
+      "entityType": "project",
+      "entityId": "project-ainativebrowser"
+    },
+    {
+      "id": "etag-ainativebrowser-browser",
+      "tagId": "tag-browser",
+      "entityType": "project",
+      "entityId": "project-ainativebrowser"
+    },
+    {
+      "id": "etag-ainativebrowser-script",
+      "tagId": "tag-script",
+      "entityType": "artifact",
+      "entityId": "artifact-ainativebrowser-master-script"
+    },
+    {
+      "id": "etag-knowledge-arc",
+      "tagId": "tag-knowledge",
+      "entityType": "knowledge",
+      "entityId": "knowledge-arc-dia-research"
+    },
+    {
+      "id": "etag-knowledge-hook",
+      "tagId": "tag-hook",
+      "entityType": "knowledge",
+      "entityId": "knowledge-hook-formula"
+    }
+  ],
+  "projectKnowledge": [
+    {
+      "id": "pk-ainativebrowser-arc",
+      "projectId": "project-ainativebrowser",
+      "knowledgeItemId": "knowledge-arc-dia-research",
+      "relationType": "reference"
+    },
+    {
+      "id": "pk-ainativebrowser-local",
+      "projectId": "project-ainativebrowser",
+      "knowledgeItemId": "knowledge-local-memory-trend",
+      "relationType": "reference"
+    },
+    {
+      "id": "pk-secondbrain-interview",
+      "projectId": "project-secondbrain",
+      "knowledgeItemId": "knowledge-creator-interview-01",
+      "relationType": "source"
+    }
+  ],
+  "projectAssets": [
+    {
+      "id": "pa-ainativebrowser-poster",
+      "projectId": "project-ainativebrowser",
+      "assetId": "asset-poster-ainativebrowser",
+      "usageType": "cover"
+    },
+    {
+      "id": "pa-ainativebrowser-broll-1",
+      "projectId": "project-ainativebrowser",
+      "assetId": "asset-broll-1",
+      "usageType": "broll"
+    },
+    {
+      "id": "pa-podcast-ep01",
+      "projectId": "project-podcast-launch",
+      "assetId": "asset-podcast-ep01",
+      "usageType": "master"
+    }
+  ],
+  "artifactKnowledge": [
+    {
+      "id": "ak-thesis-arc",
+      "artifactId": "artifact-ainativebrowser-thesis-tree",
+      "knowledgeItemId": "knowledge-arc-dia-research",
+      "citationNote": "支撑代理任务论点的用户调研"
+    },
+    {
+      "id": "ak-thesis-local",
+      "artifactId": "artifact-ainativebrowser-thesis-tree",
+      "knowledgeItemId": "knowledge-local-memory-trend",
+      "citationNote": "本地优先栈趋势佐证"
+    }
+  ],
+  "artifactAssets": [
+    {
+      "id": "aa-shot-broll-1",
+      "artifactId": "artifact-ainativebrowser-shot-list",
+      "assetId": "asset-broll-1",
+      "usageType": "reference",
+      "position": 0
+    },
+    {
+      "id": "aa-shot-broll-2",
+      "artifactId": "artifact-ainativebrowser-shot-list",
+      "assetId": "asset-broll-2",
+      "usageType": "reference",
+      "position": 1
+    }
+  ],
+  "outputAssets": [
+    {
+      "id": "oa-ainativebrowser-poster",
+      "contentOutputId": "output-ainativebrowser-main",
+      "assetId": "asset-poster-ainativebrowser",
+      "role": "cover"
+    },
+    {
+      "id": "oa-podcast-master",
+      "contentOutputId": "output-podcast-ep01",
+      "assetId": "asset-podcast-ep01",
+      "role": "master"
+    }
+  ],
+  "productions": [
+    {
+      "id": "production-ainativebrowser-main",
+      "contentOutputId": "output-ainativebrowser-main",
+      "productionMode": "studio",
+      "status": "drafting",
+      "recordingConfig": {
+        "resolution": "1080p",
+        "fps": 30
+      },
+      "subtitleConfig": {
+        "language": "zh-CN"
+      },
+      "startedAt": null,
+      "completedAt": null,
+      "updatedAt": "2026-06-12T02:00:00.000Z"
+    },
+    {
+      "id": "production-podcast-ep01",
+      "contentOutputId": "output-podcast-ep01",
+      "productionMode": "remote_recording",
+      "status": "ready",
+      "recordingConfig": {
+        "format": "wav"
+      },
+      "subtitleConfig": {
+        "language": "zh-CN"
+      },
+      "startedAt": "2026-03-21T02:00:00.000Z",
+      "completedAt": "2026-04-01T02:00:00.000Z",
+      "updatedAt": "2026-04-01T02:00:00.000Z"
+    }
+  ],
+  "productionSegments": [
+    {
+      "id": "pseg-ainativebrowser-1",
+      "productionId": "production-ainativebrowser-main",
+      "scriptSectionId": "section-ainativebrowser-hook",
+      "title": "开场 15 秒",
+      "position": 0,
+      "startMs": 0,
+      "endMs": 15000,
+      "segmentConfig": {}
+    },
+    {
+      "id": "pseg-ainativebrowser-2",
+      "productionId": "production-ainativebrowser-main",
+      "scriptSectionId": "section-ainativebrowser-body-1",
+      "title": "产品架构",
+      "position": 1,
+      "startMs": 90000,
+      "endMs": 240000,
+      "segmentConfig": {}
+    }
+  ],
+  "segmentAssets": [
+    {
+      "id": "sasset-ainativebrowser-1",
+      "productionSegmentId": "pseg-ainativebrowser-1",
+      "assetId": "asset-broll-1",
+      "usageType": "video",
+      "position": 0
+    },
+    {
+      "id": "sasset-ainativebrowser-2",
+      "productionSegmentId": "pseg-ainativebrowser-2",
+      "assetId": "asset-broll-2",
+      "usageType": "video",
+      "position": 0
+    }
+  ],
+  "exportRecords": [
+    {
+      "id": "export-podcast-ep01",
+      "productionId": "production-podcast-ep01",
+      "resultAssetId": "asset-podcast-ep01",
+      "format": "mp3",
+      "resolution": "192kbps",
+      "aspectRatio": "1:1",
+      "bitrate": 192,
+      "status": "ready",
+      "exportConfig": {},
+      "createdAt": "2026-04-01T02:00:00.000Z",
+      "completedAt": "2026-04-01T03:00:00.000Z"
+    }
+  ],
+  "publications": [
+    {
+      "id": "pub-podcast-bilibili",
+      "contentOutputId": "output-podcast-ep01",
+      "platform": "bilibili",
+      "accountReference": "Creator 主账号",
+      "status": "published",
+      "currentRevisionId": "prev-podcast-bilibili",
+      "externalId": "BV1xx411c7xx",
+      "externalUrl": "https://www.bilibili.com/video/BV1xx411c7xx",
+      "scheduledAt": null,
+      "publishedAt": "2026-04-15T02:00:00.000Z",
+      "removedAt": null,
+      "createdAt": "2026-04-02T02:00:00.000Z",
+      "updatedAt": "2026-04-15T02:00:00.000Z"
+    },
+    {
+      "id": "pub-podcast-xiaohongshu",
+      "contentOutputId": "output-podcast-ep01",
+      "platform": "xiaohongshu",
+      "accountReference": "Creator 小红书",
+      "status": "published",
+      "currentRevisionId": "prev-podcast-xiaohongshu",
+      "externalId": "xhs-feed-1",
+      "externalUrl": "https://www.xiaohongshu.com/discovery/item/xhs-feed-1",
+      "scheduledAt": null,
+      "publishedAt": "2026-04-16T02:00:00.000Z",
+      "removedAt": null,
+      "createdAt": "2026-04-05T02:00:00.000Z",
+      "updatedAt": "2026-04-16T02:00:00.000Z"
+    },
+    {
+      "id": "pub-podcast-wechatVideo",
+      "contentOutputId": "output-podcast-ep01",
+      "platform": "wechatVideo",
+      "accountReference": "Creator 视频号",
+      "status": "published",
+      "currentRevisionId": "prev-podcast-bilibili",
+      "externalId": "wxv-1",
+      "externalUrl": "https://channels.weixin.qq.com/wxv-1",
+      "scheduledAt": null,
+      "publishedAt": "2026-04-17T02:00:00.000Z",
+      "removedAt": null,
+      "createdAt": "2026-04-05T02:00:00.000Z",
+      "updatedAt": "2026-04-17T02:00:00.000Z"
+    }
+  ],
+  "publicationRevisions": [
+    {
+      "id": "prev-podcast-bilibili",
+      "publicationId": "pub-podcast-bilibili",
+      "revisionNumber": 1,
+      "title": "Creator 访谈 EP01",
+      "description": "首期嘉宾访谈，关于独立创作者的工作流。",
+      "coverAssetId": "asset-podcast-ep01",
+      "category": "播客",
+      "series": "Creator 访谈",
+      "platformTags": [
+        "独立创作者",
+        "工作流"
+      ],
+      "platformSettings": {},
+      "createdAt": "2026-04-15T02:00:00.000Z"
+    },
+    {
+      "id": "prev-podcast-xiaohongshu",
+      "publicationId": "pub-podcast-xiaohongshu",
+      "revisionNumber": 1,
+      "title": "Creator 访谈 EP01 · 速读卡片",
+      "description": "图文版拆条。",
+      "coverAssetId": "asset-podcast-ep01",
+      "category": "成长",
+      "series": "Creator 访谈",
+      "platformTags": [
+        "创作者",
+        "访谈"
+      ],
+      "platformSettings": {},
+      "createdAt": "2026-04-16T02:00:00.000Z"
+    }
+  ],
+  "metricSnapshots": [
+    {
+      "id": "ms-podcast-bilibili-1",
+      "publicationId": "pub-podcast-bilibili",
+      "ingestionRunId": "run-1",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "source": "platform_api",
+      "rawMetrics": {},
+      "createdAt": "2026-06-12T02:00:00.000Z"
+    },
+    {
+      "id": "ms-podcast-xiaohongshu-1",
+      "publicationId": "pub-podcast-xiaohongshu",
+      "ingestionRunId": "run-1",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "source": "platform_api",
+      "rawMetrics": {},
+      "createdAt": "2026-06-12T02:00:00.000Z"
+    }
+  ],
+  "metricValues": [
+    {
+      "id": "mv-views-bilibili",
+      "metricSnapshotId": "ms-podcast-bilibili-1",
+      "metricKey": "views",
+      "numericValue": 18420,
+      "unit": "count",
+      "dimensions": {
+        "platform": "bilibili"
+      }
+    },
+    {
+      "id": "mv-likes-bilibili",
+      "metricSnapshotId": "ms-podcast-bilibili-1",
+      "metricKey": "likes",
+      "numericValue": 1240,
+      "unit": "count",
+      "dimensions": {
+        "platform": "bilibili"
+      }
+    },
+    {
+      "id": "mv-comments-bilibili",
+      "metricSnapshotId": "ms-podcast-bilibili-1",
+      "metricKey": "comments",
+      "numericValue": 312,
+      "unit": "count",
+      "dimensions": {
+        "platform": "bilibili"
+      }
+    },
+    {
+      "id": "mv-views-xiaohongshu",
+      "metricSnapshotId": "ms-podcast-xiaohongshu-1",
+      "metricKey": "views",
+      "numericValue": 9340,
+      "unit": "count",
+      "dimensions": {
+        "platform": "xiaohongshu"
+      }
+    },
+    {
+      "id": "mv-likes-xiaohongshu",
+      "metricSnapshotId": "ms-podcast-xiaohongshu-1",
+      "metricKey": "likes",
+      "numericValue": 880,
+      "unit": "count",
+      "dimensions": {
+        "platform": "xiaohongshu"
+      }
+    }
+  ],
+  "retentionPoints": [
+    {
+      "id": "rp-1",
+      "publicationId": "pub-podcast-bilibili",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "positionMs": 0,
+      "retentionRate": 1,
+      "viewerCount": 18420
+    },
+    {
+      "id": "rp-2",
+      "publicationId": "pub-podcast-bilibili",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "positionMs": 60000,
+      "retentionRate": 0.78,
+      "viewerCount": 14368
+    },
+    {
+      "id": "rp-3",
+      "publicationId": "pub-podcast-bilibili",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "positionMs": 300000,
+      "retentionRate": 0.55,
+      "viewerCount": 10131
+    },
+    {
+      "id": "rp-4",
+      "publicationId": "pub-podcast-bilibili",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "positionMs": 600000,
+      "retentionRate": 0.42,
+      "viewerCount": 7736
+    }
+  ],
+  "audienceSnapshots": [
+    {
+      "id": "aud-age-1",
+      "publicationId": "pub-podcast-bilibili",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "dimensionType": "age",
+      "dimensionValue": "18-24",
+      "percentage": 0.22,
+      "audienceCount": 4052
+    },
+    {
+      "id": "aud-age-2",
+      "publicationId": "pub-podcast-bilibili",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "dimensionType": "age",
+      "dimensionValue": "25-34",
+      "percentage": 0.41,
+      "audienceCount": 7552
+    },
+    {
+      "id": "aud-age-3",
+      "publicationId": "pub-podcast-bilibili",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "dimensionType": "age",
+      "dimensionValue": "35-44",
+      "percentage": 0.25,
+      "audienceCount": 4605
+    },
+    {
+      "id": "aud-source-1",
+      "publicationId": "pub-podcast-bilibili",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "dimensionType": "source",
+      "dimensionValue": "推荐流",
+      "percentage": 0.55,
+      "audienceCount": 10131
+    },
+    {
+      "id": "aud-source-2",
+      "publicationId": "pub-podcast-bilibili",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "dimensionType": "source",
+      "dimensionValue": "搜索",
+      "percentage": 0.2,
+      "audienceCount": 3684
+    },
+    {
+      "id": "aud-source-3",
+      "publicationId": "pub-podcast-bilibili",
+      "capturedAt": "2026-06-12T02:00:00.000Z",
+      "dimensionType": "source",
+      "dimensionValue": "关注更新",
+      "percentage": 0.25,
+      "audienceCount": 4605
+    }
+  ],
+  "reviews": [
+    {
+      "id": "review-podcast-ep01",
+      "projectId": "project-podcast-launch",
+      "contentOutputId": "output-podcast-ep01",
+      "reportArtifactId": "artifact-podcast-review-report",
+      "reviewType": "output",
+      "status": "completed",
+      "periodStart": "2026-04-14T16:00:00.000Z",
+      "periodEnd": "2026-05-14T16:00:00.000Z",
+      "createdAt": "2026-05-10T02:00:00.000Z",
+      "completedAt": "2026-04-28T02:00:00.000Z"
+    }
+  ],
+  "reviewPublications": [
+    {
+      "id": "rpub-1",
+      "reviewId": "review-podcast-ep01",
+      "publicationId": "pub-podcast-bilibili"
+    },
+    {
+      "id": "rpub-2",
+      "reviewId": "review-podcast-ep01",
+      "publicationId": "pub-podcast-xiaohongshu"
+    },
+    {
+      "id": "rpub-3",
+      "reviewId": "review-podcast-ep01",
+      "publicationId": "pub-podcast-wechatVideo"
+    }
+  ],
+  "reviewInsights": [
+    {
+      "id": "ri-success-hook",
+      "reviewId": "review-podcast-ep01",
+      "insightType": "success",
+      "title": "开场 60 秒包含核心观点",
+      "description": "首期完播率高于平均 12 个百分点。",
+      "evidence": {
+        "retentionAt60s": 0.78
+      },
+      "priority": 1
+    },
+    {
+      "id": "ri-action-thumb",
+      "reviewId": "review-podcast-ep01",
+      "insightType": "action",
+      "title": "优化小红书封面",
+      "description": "小红书首图点击率比预期低 30%。",
+      "evidence": {
+        "ctr": 0.018
+      },
+      "priority": 2
+    },
+    {
+      "id": "ri-issue-audio",
+      "reviewId": "review-podcast-ep01",
+      "insightType": "issue",
+      "title": "音频后期人声电平偏低",
+      "description": "Apple Podcast 反馈音量问题。",
+      "evidence": {
+        "lufs": -22
+      },
+      "priority": 2
+    }
+  ],
+  "aiConversations": [
+    {
+      "id": "ai-conv-script-help",
+      "userId": "user-zyongzhu",
+      "projectId": "project-ainativebrowser",
+      "title": "脚本润色助手",
+      "createdAt": "2026-06-06T01:00:00.000Z",
+      "updatedAt": "2026-06-12T02:00:00.000Z"
+    },
+    {
+      "id": "ai-conv-thesis",
+      "userId": "user-zyongzhu",
+      "projectId": "project-ainativebrowser",
+      "title": "论点发散",
+      "createdAt": "2026-06-02T01:00:00.000Z",
+      "updatedAt": "2026-06-04T02:00:00.000Z"
+    }
+  ],
+  "aiMessages": [
+    {
+      "id": "ai-msg-1",
+      "conversationId": "ai-conv-script-help",
+      "role": "user",
+      "content": "请把这一段开头改得更有冲击力。",
+      "attachments": [],
+      "modelMetadata": {},
+      "createdAt": "2026-06-06T01:00:00.000Z"
+    },
+    {
+      "id": "ai-msg-2",
+      "conversationId": "ai-conv-script-help",
+      "role": "assistant",
+      "content": "建议改成：三年前打开浏览器是搜索，今天打开浏览器是发任务。",
+      "attachments": [],
+      "modelMetadata": {
+        "model": "claude-sonnet"
+      },
+      "createdAt": "2026-06-06T01:01:00.000Z"
+    }
+  ],
+  "aiTasks": [
+    {
+      "id": "aitask-script-polish",
+      "userId": "user-zyongzhu",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": "output-ainativebrowser-main",
+      "taskType": "script_polish",
+      "status": "succeeded",
+      "inputData": {
+        "artifactId": "artifact-ainativebrowser-master-script"
+      },
+      "modelKey": "script",
+      "idempotencyKey": "aitask-script-polish-1",
+      "requestedAt": "2026-06-06T01:00:00.000Z",
+      "startedAt": "2026-06-06T01:00:00.000Z",
+      "completedAt": "2026-06-06T01:02:00.000Z",
+      "errorMessage": null
+    },
+    {
+      "id": "aitask-thesis-expand",
+      "userId": "user-zyongzhu",
+      "projectId": "project-ainativebrowser",
+      "contentOutputId": null,
+      "taskType": "thesis_expand",
+      "status": "succeeded",
+      "inputData": {
+        "artifactId": "artifact-ainativebrowser-thesis-tree"
+      },
+      "modelKey": "research",
+      "idempotencyKey": "aitask-thesis-expand-1",
+      "requestedAt": "2026-06-02T01:00:00.000Z",
+      "startedAt": "2026-06-02T01:00:00.000Z",
+      "completedAt": "2026-06-02T01:03:00.000Z",
+      "errorMessage": null
+    }
+  ],
+  "aiTaskReferences": [
+    {
+      "id": "aitref-script-master",
+      "aiTaskId": "aitask-script-polish",
+      "entityType": "artifact",
+      "entityId": "artifact-ainativebrowser-master-script",
+      "relationType": "input"
+    },
+    {
+      "id": "aitref-thesis-arc",
+      "aiTaskId": "aitask-thesis-expand",
+      "entityType": "knowledge_item",
+      "entityId": "knowledge-arc-dia-research",
+      "relationType": "context"
+    }
+  ],
+  "aiTaskResults": [
+    {
+      "id": "aitres-script-version",
+      "aiTaskId": "aitask-script-polish",
+      "resultType": "artifact_version",
+      "artifactId": "artifact-ainativebrowser-master-script",
+      "knowledgeItemId": null,
+      "assetId": null,
+      "resultData": {
+        "versionId": "av-ainativebrowser-master-script"
+      }
+    },
+    {
+      "id": "aitres-thesis-version",
+      "aiTaskId": "aitask-thesis-expand",
+      "resultType": "artifact_version",
+      "artifactId": "artifact-ainativebrowser-thesis-tree",
+      "knowledgeItemId": null,
+      "assetId": null,
+      "resultData": {
+        "versionId": "av-ainativebrowser-thesis-tree"
+      }
+    }
+  ],
+  "modelConfigurations": [
+    {
+      "id": "model-script",
+      "userId": "user-zyongzhu",
+      "capability": "script",
+      "provider": "anthropic",
+      "modelName": "claude-sonnet",
+      "secretReference": "secret-script",
+      "settings": {
+        "temperature": 0.6
+      },
+      "isDefault": true
+    },
+    {
+      "id": "model-research",
+      "userId": "user-zyongzhu",
+      "capability": "research",
+      "provider": "anthropic",
+      "modelName": "claude-opus",
+      "secretReference": "secret-research",
+      "settings": {
+        "temperature": 0.4
+      },
+      "isDefault": true
+    }
+  ],
+  "agentConfigurations": [
+    {
+      "id": "agent-research-copilot",
+      "userId": "user-zyongzhu",
+      "name": "研究助理",
+      "agentType": "research",
+      "status": "active",
+      "capabilities": {
+        "web": true,
+        "summarize": true
+      },
+      "settings": {
+        "maxSteps": 8
+      },
+      "secretReference": "secret-agent-research",
+      "createdAt": "2026-05-01T02:00:00.000Z",
+      "updatedAt": "2026-06-01T02:00:00.000Z"
+    }
+  ],
+  "externalSources": [
+    {
+      "id": "extsource-bilibili-metrics",
+      "userId": "user-zyongzhu",
+      "sourceType": "platform_api",
+      "name": "Bilibili 指标采集",
+      "sourceIdentifier": "bilibili:creator",
+      "secretReference": "secret-bilibili",
+      "configuration": {
+        "interval": "daily"
+      },
+      "createdAt": "2026-04-01T02:00:00.000Z"
+    }
+  ],
+  "ingestionRuns": [
+    {
+      "id": "run-1",
+      "externalSourceId": "extsource-bilibili-metrics",
+      "runType": "metrics",
+      "idempotencyKey": "run-1-2026-06-12",
+      "status": "completed",
+      "recordsReceived": 8,
+      "recordsWritten": 7,
+      "recordsRejected": 1,
+      "startedAt": "2026-06-12T02:00:00.000Z",
+      "completedAt": "2026-06-12T02:01:00.000Z"
+    }
+  ],
+  "ingestionErrors": [
+    {
+      "id": "ingerr-1",
+      "ingestionRunId": "run-1",
+      "recordKey": "pub-podcast-wechatVideo",
+      "errorCode": "MISSING_METRIC",
+      "errorMessage": "视频号未返回完播率字段",
+      "rejectedPayload": {
+        "platform": "wechatVideo"
+      }
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-1",
+      "userId": "user-zyongzhu",
+      "notificationType": "task",
+      "title": "脚本大纲即将到期",
+      "body": "AI Native Browser 项目的脚本大纲还有 1 天到期。",
+      "entityType": "task",
+      "entityId": "task-ainativebrowser-script-outline",
+      "readAt": null,
+      "createdAt": "2026-06-13T00:00:00.000Z"
+    },
+    {
+      "id": "notif-2",
+      "userId": "user-zyongzhu",
+      "notificationType": "publish",
+      "title": "播客首期数据已采集",
+      "body": "本期数据已从平台回传。",
+      "entityType": "publication",
+      "entityId": "pub-podcast-bilibili",
+      "readAt": "2026-06-12T04:00:00.000Z",
+      "createdAt": "2026-06-12T02:30:00.000Z"
+    }
+  ],
+  "searchHistory": [
+    {
+      "id": "sh-1",
+      "userId": "user-zyongzhu",
+      "query": "AI Native Browser",
+      "filters": {
+        "type": [
+          "project"
+        ]
+      },
+      "resultCount": 1,
+      "searchedAt": "2026-06-12T02:00:00.000Z"
+    },
+    {
+      "id": "sh-2",
+      "userId": "user-zyongzhu",
+      "query": "Hook 公式",
+      "filters": {
+        "type": [
+          "knowledge"
+        ]
+      },
+      "resultCount": 1,
+      "searchedAt": "2026-06-08T02:00:00.000Z"
+    }
+  ],
+  "searchDocuments": [
+    {
+      "id": "sd-project-ainativebrowser",
+      "userId": "user-zyongzhu",
+      "entityType": "project",
+      "entityId": "project-ainativebrowser",
+      "title": "AI Native Browser 深度解析",
+      "body": "深度拆解 AI Native Browser 的产品定位、技术架构与生态影响。",
+      "searchText": "ai native browser 深度解析 浏览器 代理",
+      "embedding": [
+        0.01,
+        0.02,
+        0.03,
+        0.04
+      ],
+      "indexedAt": "2026-06-13T01:00:00.000Z"
+    },
+    {
+      "id": "sd-knowledge-hook-formula",
+      "userId": "user-zyongzhu",
+      "entityType": "knowledge_item",
+      "entityId": "knowledge-hook-formula",
+      "title": "Hook 公式",
+      "body": "Hook 公式",
+      "searchText": "hook 公式 开场",
+      "embedding": [
+        0.05,
+        0.06,
+        0.07,
+        0.08
+      ],
+      "indexedAt": "2026-04-12T02:00:00.000Z"
+    }
+  ]
+}
