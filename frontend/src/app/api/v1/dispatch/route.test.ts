@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { POST } from "./route";
-import { resetStore, getStore } from "@/server/mock-backend/index";
+import { resetStore } from "@/server/mock-backend/index";
+import { __resetPersistenceForTests } from "@/server/persistence-client";
 
 function dispatch(id: string, input: unknown) {
   return POST(
@@ -12,23 +13,29 @@ function dispatch(id: string, input: unknown) {
   );
 }
 
-describe("POST /api/v1/dispatch (FE<->BE seam over HTTP)", () => {
-  beforeEach(() => resetStore());
+async function listProjectIds(): Promise<string[]> {
+  const res = await dispatch("projects.list", {
+    params: undefined,
+    query: { page: 1, pageSize: 50 },
+    body: undefined,
+  });
+  const json = (await res.json()) as { data: Array<{ id: string }> };
+  return json.data.map((p) => p.id);
+}
 
-  it("serves a read against the server store", async () => {
-    const res = await dispatch("projects.list", {
-      params: undefined,
-      query: { page: 1, pageSize: 20 },
-      body: undefined,
-    });
-    expect(res.status).toBe(200);
-    const json = (await res.json()) as { data: unknown[] };
-    expect(Array.isArray(json.data)).toBe(true);
-    expect(json.data.length).toBeGreaterThan(0);
+describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL)", () => {
+  beforeEach(() => {
+    resetStore(); // mock-backed ops (outputs/tasks/pages)
+    __resetPersistenceForTests(); // fresh pglite seed (project ops)
   });
 
-  it("persists a mutation server-side so the next read reflects it (the 联调 round-trip)", async () => {
-    const before = getStore().projects.length;
+  it("serves a project read from the persistence (seeded) store", async () => {
+    const ids = await listProjectIds();
+    expect(ids.length).toBeGreaterThan(0); // canonical seed
+  });
+
+  it("persists a create in SQL so the next read reflects it (the 联调 round-trip)", async () => {
+    const before = (await listProjectIds()).length;
 
     const created = await dispatch("projects.create", {
       params: undefined,
@@ -39,16 +46,20 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP)", () => {
     const createdJson = (await created.json()) as { data: { id: string; title: string } };
     expect(createdJson.data.title).toBe("联调测试项目");
 
-    // The server store grew — a fresh dispatch (as a browser island would issue
-    // after router.refresh()) sees the new row.
-    expect(getStore().projects.length).toBe(before + 1);
-    const list = await dispatch("projects.list", {
+    // A fresh dispatch (as a browser island issues after router.refresh()) sees
+    // the new row — read back out of pglite, not an in-memory clone.
+    const after = await listProjectIds();
+    expect(after.length).toBe(before + 1);
+    expect(after).toContain(createdJson.data.id);
+  });
+
+  it("falls back to the mock for non-persisted ops (e.g. the dashboard page DTO)", async () => {
+    const res = await dispatch("pages.dashboard.get", {
       params: undefined,
-      query: { page: 1, pageSize: 50 },
+      query: undefined,
       body: undefined,
     });
-    const listJson = (await list.json()) as { data: Array<{ id: string }> };
-    expect(listJson.data.some((p) => p.id === createdJson.data.id)).toBe(true);
+    expect(res.status).toBe(200);
   });
 
   it("returns 404 for an unknown operation", async () => {

@@ -1,8 +1,10 @@
 import "server-only";
+import { ENDPOINTS, createClient } from "@creatoros/contract";
+import { compositeTransport } from "@/server/persistence-client";
 
-// Server-only composition root (server components, route handlers). The guard
-// keeps the MockBackend + canonicalDataset out of any client bundle — a client
-// component importing this fails the build. Runs in-process against the server
-// store (no self-fetch; works during static generation). Stage 16 swaps the
-// transport behind `in-process-client` for real persistence.
-export { client } from "@/server/mock-backend/in-process-client";
+// Server-only composition root (server components, route handlers). Runs the
+// composite transport in-process: REAL SQL persistence (@creatoros/backend over
+// pglite) for project ops, the in-memory mock for the rest. The `server-only`
+// guard keeps the mock backend + pglite out of any client bundle. Server reads
+// and the /api/v1 route share this same store, so island writes persist.
+export const client = createClient(ENDPOINTS, compositeTransport);

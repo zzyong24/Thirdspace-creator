@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ENDPOINTS, type Endpoint } from "@creatoros/contract";
-import { mockTransport } from "@/server/mock-backend/mock-transport";
+import { compositeTransport } from "@/server/persistence-client";
 
 // RPC dispatch over HTTP. The browser's HttpTransport POSTs { id, input };
 // this runs the matching contract operation against the SERVER store and
@@ -27,7 +27,7 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   try {
-    const envelope = await mockTransport.request(
+    const envelope = await compositeTransport.request(
       endpoint,
       (payload.input ?? {}) as never,
     );
