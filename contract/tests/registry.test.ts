@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ENDPOINTS } from "../src/endpoints.js";
+import { ENDPOINTS } from "../src/endpoints";
 
 // The authoritative SPEC §13 surface — every "METHOD /path" line, verbatim.
 const SPEC_13: ReadonlyArray<[string, string]> = [

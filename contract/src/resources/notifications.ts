@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601 } from "../primitives.js";
+import { id, iso8601 } from "../primitives";
 
 // NotificationType is not exported by primitives.ts; define it locally with the
 // exact members from frontend/src/types/domain.ts.

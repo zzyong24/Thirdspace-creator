@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   metricSnapshotResource,
   audienceSnapshotResource,
-} from "../../src/resources/analytics.js";
-import { analyticsOperations } from "../../src/operations/analytics.js";
+} from "../../src/resources/analytics";
+import { analyticsOperations } from "../../src/operations/analytics";
 
 describe("analytics contract", () => {
   it("parses a MetricSnapshot resource", () => {

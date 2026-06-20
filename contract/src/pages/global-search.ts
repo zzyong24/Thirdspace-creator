@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601, platformId, projectStageName, assetType } from "../primitives.js";
+import { id, iso8601, platformId, projectStageName, assetType } from "../primitives";
 
 // PAGE composition DTO for the Global Search page. Modeled from the grouped
 // search result shape (`SearchViewModel`) in

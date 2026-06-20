@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { z } from "zod";
-import { defineEndpoint } from "../src/endpoints.js";
-import { createClient } from "../src/client.js";
-import type { Transport } from "../src/transport.js";
+import { defineEndpoint } from "../src/endpoints";
+import { createClient } from "../src/client";
+import type { Transport } from "../src/transport";
 
 const getThing = defineEndpoint({
   id: "things.get",

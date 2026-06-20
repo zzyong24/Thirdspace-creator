@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id, paginationQuery } from "../primitives.js";
-import { metricSnapshotResource } from "../resources/analytics.js";
+import { defineEndpoint } from "../endpoints";
+import { id, paginationQuery } from "../primitives";
+import { metricSnapshotResource } from "../resources/analytics";
 
 // SPEC §13 "数据与分析" group.
 export const analyticsOperations = {

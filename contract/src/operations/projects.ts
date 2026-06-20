@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id, paginationQuery, projectStageName } from "../primitives.js";
+import { defineEndpoint } from "../endpoints";
+import { id, paginationQuery, projectStageName } from "../primitives";
 import {
   projectResource,
   contentOutputResource,
   taskResource,
   projectActivityResource,
-} from "../resources/projects.js";
+} from "../resources/projects";
 
 const projectParams = z.object({ projectId: id });
 const outputParams = z.object({ outputId: id });

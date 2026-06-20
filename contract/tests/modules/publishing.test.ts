@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { publicationResource } from "../../src/resources/publishing.js";
-import { publishingOperations } from "../../src/operations/publishing.js";
+import { publicationResource } from "../../src/resources/publishing";
+import { publishingOperations } from "../../src/operations/publishing";
 
 describe("publishing contract", () => {
   it("parses a Publication resource", () => {

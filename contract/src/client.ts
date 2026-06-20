@@ -1,7 +1,7 @@
 import type { z } from "zod";
-import type { Endpoint } from "./endpoints.js";
-import type { EndpointInput, Transport } from "./transport.js";
-import { successEnvelope, listEnvelope } from "./envelope.js";
+import type { Endpoint } from "./endpoints";
+import type { EndpointInput, Transport } from "./transport";
+import { successEnvelope, listEnvelope } from "./envelope";
 
 type EndpointMap = Record<string, Endpoint>;
 

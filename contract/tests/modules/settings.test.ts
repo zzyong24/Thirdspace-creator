@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { modelConfigurationResource } from "../../src/resources/settings.js";
-import { settingsOperations } from "../../src/operations/settings.js";
+import { modelConfigurationResource } from "../../src/resources/settings";
+import { settingsOperations } from "../../src/operations/settings";
 
 describe("settings contract", () => {
   it("parses a ModelConfiguration resource", () => {

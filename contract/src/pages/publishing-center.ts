@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { id, iso8601, platformId, publicationStatus } from "../primitives.js";
-import { metricCard } from "./dashboard.js";
+import { id, iso8601, platformId, publicationStatus } from "../primitives";
+import { metricCard } from "./dashboard";
 
 // PAGE composition DTO for the Publishing Center page. Modeled from
 // `PublishingCenterViewModel` in frontend/src/types/view-models.ts.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { notificationResource } from "../../src/resources/notifications.js";
-import { notificationsOperations } from "../../src/operations/notifications.js";
+import { notificationResource } from "../../src/resources/notifications";
+import { notificationsOperations } from "../../src/operations/notifications";
 
 describe("notifications contract", () => {
   it("parses a Notification resource", () => {

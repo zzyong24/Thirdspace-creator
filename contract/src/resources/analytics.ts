@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601 } from "../primitives.js";
+import { id, iso8601 } from "../primitives";
 
 // All four entities extend BaseEntity ({ id }) only — no Timestamped spread.
 

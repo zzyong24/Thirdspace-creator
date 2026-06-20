@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { artifactResource } from "../../src/resources/artifacts.js";
-import { artifactsOperations } from "../../src/operations/artifacts.js";
+import { artifactResource } from "../../src/resources/artifacts";
+import { artifactsOperations } from "../../src/operations/artifacts";
 
 describe("artifacts contract", () => {
   it("parses an Artifact resource", () => {

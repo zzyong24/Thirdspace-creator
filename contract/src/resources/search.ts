@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601 } from "../primitives.js";
+import { id, iso8601 } from "../primitives";
 
 // SearchDocument extends BaseEntity only (no Timestamped).
 export const searchDocumentResource = z.object({

@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   searchDocumentResource,
   searchHistoryResource,
-} from "../../src/resources/search.js";
-import { ENDPOINTS } from "../../src/endpoints.js";
+} from "../../src/resources/search";
+import { ENDPOINTS } from "../../src/endpoints";
 
 describe("search contract", () => {
   it("parses a SearchDocument resource", () => {

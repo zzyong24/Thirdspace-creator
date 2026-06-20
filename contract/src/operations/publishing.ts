@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id, paginationQuery } from "../primitives.js";
+import { defineEndpoint } from "../endpoints";
+import { id, paginationQuery } from "../primitives";
 import {
   publicationResource,
   publicationRevisionResource,
-} from "../resources/publishing.js";
+} from "../resources/publishing";
 
 const outputParams = z.object({ outputId: id });
 const publicationParams = z.object({ publicationId: id });

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { knowledgeItemResource } from "../../src/resources/knowledge.js";
-import { knowledgeOperations } from "../../src/operations/knowledge.js";
+import { knowledgeItemResource } from "../../src/resources/knowledge";
+import { knowledgeOperations } from "../../src/operations/knowledge";
 
 describe("knowledge contract", () => {
   it("parses a KnowledgeItem resource", () => {

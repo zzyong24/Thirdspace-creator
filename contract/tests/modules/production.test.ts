@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { productionResource } from "../../src/resources/production.js";
-import { productionOperations } from "../../src/operations/production.js";
+import { productionResource } from "../../src/resources/production";
+import { productionOperations } from "../../src/operations/production";
 
 describe("production contract", () => {
   it("parses a Production resource", () => {

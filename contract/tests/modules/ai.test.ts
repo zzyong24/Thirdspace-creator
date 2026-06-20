@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { aiConversationResource } from "../../src/resources/ai.js";
-import { aiOperations } from "../../src/operations/ai.js";
+import { aiConversationResource } from "../../src/resources/ai";
+import { aiOperations } from "../../src/operations/ai";
 
 describe("ai contract", () => {
   it("parses an AIConversation resource", () => {

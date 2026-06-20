@@ -1,20 +1,20 @@
 import type { z } from "zod";
 
-import { projectsOperations } from "./operations/projects.js";
-import { artifactsOperations } from "./operations/artifacts.js";
-import { knowledgeOperations } from "./operations/knowledge.js";
-import { assetsOperations } from "./operations/assets.js";
-import { productionOperations } from "./operations/production.js";
-import { publishingOperations } from "./operations/publishing.js";
-import { analyticsOperations } from "./operations/analytics.js";
-import { reviewsOperations } from "./operations/reviews.js";
-import { learningsOperations } from "./operations/learnings.js";
-import { aiOperations } from "./operations/ai.js";
-import { searchOperations } from "./operations/search.js";
-import { notificationsOperations } from "./operations/notifications.js";
-import { settingsOperations } from "./operations/settings.js";
-import { ingestionOperations } from "./operations/ingestion.js";
-import { pagesOperations } from "./operations/pages.js";
+import { projectsOperations } from "./operations/projects";
+import { artifactsOperations } from "./operations/artifacts";
+import { knowledgeOperations } from "./operations/knowledge";
+import { assetsOperations } from "./operations/assets";
+import { productionOperations } from "./operations/production";
+import { publishingOperations } from "./operations/publishing";
+import { analyticsOperations } from "./operations/analytics";
+import { reviewsOperations } from "./operations/reviews";
+import { learningsOperations } from "./operations/learnings";
+import { aiOperations } from "./operations/ai";
+import { searchOperations } from "./operations/search";
+import { notificationsOperations } from "./operations/notifications";
+import { settingsOperations } from "./operations/settings";
+import { ingestionOperations } from "./operations/ingestion";
+import { pagesOperations } from "./operations/pages";
 
 export type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601, creationMode } from "../primitives.js";
+import { id, iso8601, creationMode } from "../primitives";
 
 // BaseEntity = { id }; Timestamped = { createdAt, updatedAt }.
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };

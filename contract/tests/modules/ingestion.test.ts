@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { ingestionRunResource } from "../../src/resources/ingestion.js";
-import { ingestionOperations } from "../../src/operations/ingestion.js";
+import { ingestionRunResource } from "../../src/resources/ingestion";
+import { ingestionOperations } from "../../src/operations/ingestion";
 
 describe("ingestion contract", () => {
   it("parses an IngestionRun resource", () => {

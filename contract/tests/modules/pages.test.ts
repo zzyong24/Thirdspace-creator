@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { dashboardPage } from "../../src/pages/dashboard.js";
-import { projectOverviewPage } from "../../src/pages/project-overview.js";
-import { globalSearchPage } from "../../src/pages/global-search.js";
-import { publishingCenterPage } from "../../src/pages/publishing-center.js";
-import { pagesOperations } from "../../src/operations/pages.js";
+import { dashboardPage } from "../../src/pages/dashboard";
+import { projectOverviewPage } from "../../src/pages/project-overview";
+import { globalSearchPage } from "../../src/pages/global-search";
+import { publishingCenterPage } from "../../src/pages/publishing-center";
+import { pagesOperations } from "../../src/operations/pages";
 
 // The frontend selectors live in a separate package and use `@/` path aliases
 // + JSX-only type imports, so importing `buildDashboardViewModel()` into this

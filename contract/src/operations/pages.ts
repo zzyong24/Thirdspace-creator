@@ -1,13 +1,13 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id } from "../primitives.js";
-import { dashboardPage } from "../pages/dashboard.js";
-import { projectOverviewPage } from "../pages/project-overview.js";
-import { globalSearchPage } from "../pages/global-search.js";
+import { defineEndpoint } from "../endpoints";
+import { id } from "../primitives";
+import { dashboardPage } from "../pages/dashboard";
+import { projectOverviewPage } from "../pages/project-overview";
+import { globalSearchPage } from "../pages/global-search";
 // publishing-center is composed client-side (GET /publications + analytics) and
 // has no distinct read path in SPEC §13. The DTO is re-exported for reuse only;
 // no endpoint is registered below.
-export { publishingCenterPage } from "../pages/publishing-center.js";
+export { publishingCenterPage } from "../pages/publishing-center";
 
 // PAGE composition DTO read endpoints. These responses are view-specific
 // projections built by selectors, not raw resources.

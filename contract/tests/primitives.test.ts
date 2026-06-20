@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { aiTaskStatus, id, iso8601, paginationQuery, platformId } from "../src/primitives.js";
+import { aiTaskStatus, id, iso8601, paginationQuery, platformId } from "../src/primitives";
 
 describe("primitives", () => {
   it("accepts a non-empty id", () => {

@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
+import { defineEndpoint } from "../endpoints";
 import {
   userResource,
   userPreferenceResource,
   modelConfigurationResource,
   agentConfigurationResource,
-} from "../resources/settings.js";
+} from "../resources/settings";
 
 // SPEC §13 "设置" group. `GET /settings` is the singleton settings view for the
 // authenticated user (not a collection); the remaining operations mutate the

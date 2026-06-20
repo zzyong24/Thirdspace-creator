@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601 } from "../primitives.js";
+import { id, iso8601 } from "../primitives";
 
 // All three entities extend BaseEntity only. ExternalSource additionally
 // carries a single `createdAt` field (it does NOT extend Timestamped).

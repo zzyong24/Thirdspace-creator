@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601 } from "../primitives.js";
+import { id, iso8601 } from "../primitives";
 
 // Enums below mirror frontend/src/types/domain.ts exactly. None are exported
 // from primitives.ts (shared file), so they are defined locally here.

@@ -6,7 +6,7 @@ import {
   errorEnvelope,
   ErrorCode,
   ERROR_HTTP,
-} from "../src/envelope.js";
+} from "../src/envelope";
 
 describe("envelope", () => {
   it("wraps a single datum with a requestId", () => {

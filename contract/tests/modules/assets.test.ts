@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { assetResource } from "../../src/resources/assets.js";
-import { assetsOperations } from "../../src/operations/assets.js";
+import { assetResource } from "../../src/resources/assets";
+import { assetsOperations } from "../../src/operations/assets";
 
 describe("assets contract", () => {
   it("parses an Asset resource", () => {

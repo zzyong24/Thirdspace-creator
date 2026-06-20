@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { Endpoint } from "./endpoints.js";
+import type { Endpoint } from "./endpoints";
 
 export type EndpointInput<E extends Endpoint> = {
   params: E["params"] extends z.ZodTypeAny ? z.infer<E["params"]> : undefined;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { reviewResource } from "../../src/resources/reviews.js";
-import { reviewsOperations } from "../../src/operations/reviews.js";
+import { reviewResource } from "../../src/resources/reviews";
+import { reviewsOperations } from "../../src/operations/reviews";
 
 describe("reviews contract", () => {
   it("parses a Review resource", () => {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601 } from "../primitives.js";
+import { id, iso8601 } from "../primitives";
 
 // All entities here extend BaseEntity only (no Timestamped). Any createdAt /
 // updatedAt / completedAt fields below are declared explicitly per domain.ts.

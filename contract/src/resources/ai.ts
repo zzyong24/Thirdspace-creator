@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601, aiTaskStatus } from "../primitives.js";
+import { id, iso8601, aiTaskStatus } from "../primitives";
 
 // BaseEntity = { id }; Timestamped = { createdAt, updatedAt }. None of the AI
 // entities extend Timestamped, but several declare createdAt/updatedAt fields

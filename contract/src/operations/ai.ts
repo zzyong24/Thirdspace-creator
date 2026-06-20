@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id, paginationQuery } from "../primitives.js";
+import { defineEndpoint } from "../endpoints";
+import { id, paginationQuery } from "../primitives";
 import {
   aiConversationResource,
   aiMessageResource,
   aiTaskResource,
-} from "../resources/ai.js";
+} from "../resources/ai";
 
 const conversationParams = z.object({ conversationId: id });
 const taskParams = z.object({ taskId: id });

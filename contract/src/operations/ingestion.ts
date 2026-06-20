@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id } from "../primitives.js";
-import { ingestionRunResource } from "../resources/ingestion.js";
+import { defineEndpoint } from "../endpoints";
+import { id } from "../primitives";
+import { ingestionRunResource } from "../resources/ingestion";
 
 const runParams = z.object({ runId: id });
 

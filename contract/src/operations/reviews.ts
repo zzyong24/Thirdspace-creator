@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id } from "../primitives.js";
+import { defineEndpoint } from "../endpoints";
+import { id } from "../primitives";
 import {
   reviewResource,
   reviewInsightResource,
-} from "../resources/reviews.js";
+} from "../resources/reviews";
 
 const projectParams = z.object({ projectId: id });
 const reviewParams = z.object({ reviewId: id });

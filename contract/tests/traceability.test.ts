@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ENDPOINTS } from "../src/endpoints.js";
+import { ENDPOINTS } from "../src/endpoints";
 
 // GAP-002 (orchestrator/TRACEABILITY_MATRIX.md) named the backend-bearing FR
 // chains that were broken because no service contract existed. This test

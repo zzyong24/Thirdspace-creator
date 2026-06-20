@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { learningResource } from "../../src/resources/learnings.js";
-import { learningsOperations } from "../../src/operations/learnings.js";
+import { learningResource } from "../../src/resources/learnings";
+import { learningsOperations } from "../../src/operations/learnings";
 
 describe("learnings contract", () => {
   it("parses a Learning resource", () => {

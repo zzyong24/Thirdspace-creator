@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id, paginationQuery } from "../primitives.js";
-import { notificationResource } from "../resources/notifications.js";
+import { defineEndpoint } from "../endpoints";
+import { id, paginationQuery } from "../primitives";
+import { notificationResource } from "../resources/notifications";
 
 // SPEC §13 "通知" group.
 export const notificationsOperations = {

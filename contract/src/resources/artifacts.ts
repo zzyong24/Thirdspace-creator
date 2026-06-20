@@ -3,7 +3,7 @@ import {
   id,
   iso8601,
   projectStageName,
-} from "../primitives.js";
+} from "../primitives";
 
 // BaseEntity = { id }; Timestamped = { createdAt, updatedAt }.
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };

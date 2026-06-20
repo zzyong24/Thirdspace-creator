@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { id, iso8601, platformId, projectStageName, publicationStatus, contentType } from "../primitives.js";
-import { metricCard } from "./dashboard.js";
+import { id, iso8601, platformId, projectStageName, publicationStatus, contentType } from "../primitives";
+import { metricCard } from "./dashboard";
 
 // PAGE composition DTO for the Project Overview page. Modeled from
 // `ProjectOverviewViewModel` in frontend/src/types/view-models.ts.

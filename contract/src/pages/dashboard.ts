@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601, platformId, projectStageName, publicationStatus } from "../primitives.js";
+import { id, iso8601, platformId, projectStageName, publicationStatus } from "../primitives";
 
 // PAGE composition DTO for the Dashboard page. Modeled from
 // `DashboardViewModel` in frontend/src/types/view-models.ts. Page DTOs project

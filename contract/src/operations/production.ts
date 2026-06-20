@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id } from "../primitives.js";
+import { defineEndpoint } from "../endpoints";
+import { id } from "../primitives";
 import {
   productionResource,
   productionSegmentResource,
   exportRecordResource,
-} from "../resources/production.js";
+} from "../resources/production";
 
 const outputParams = z.object({ outputId: id });
 const productionParams = z.object({ productionId: id });

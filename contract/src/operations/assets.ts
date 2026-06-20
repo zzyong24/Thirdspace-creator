@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id, iso8601, paginationQuery, assetType } from "../primitives.js";
-import { assetResource, assetFileResource } from "../resources/assets.js";
+import { defineEndpoint } from "../endpoints";
+import { id, iso8601, paginationQuery, assetType } from "../primitives";
+import { assetResource, assetFileResource } from "../resources/assets";
 
 const assetParams = z.object({ assetId: id });
 const uploadParams = z.object({ uploadId: id });

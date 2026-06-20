@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { defineEndpoint } from "../endpoints.js";
-import { id, paginationQuery } from "../primitives.js";
+import { defineEndpoint } from "../endpoints";
+import { id, paginationQuery } from "../primitives";
 import {
   artifactResource,
   artifactVersionResource,
   artifactRelationResource,
-} from "../resources/artifacts.js";
+} from "../resources/artifacts";
 
 const projectParams = z.object({ projectId: id });
 const artifactParams = z.object({ artifactId: id });
