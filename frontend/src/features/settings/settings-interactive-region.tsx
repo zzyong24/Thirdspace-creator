@@ -42,6 +42,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
@@ -128,13 +134,22 @@ function AccountInformationCard({
               {viewModel.account.email}
             </span>
             <div className="flex flex-wrap gap-1">
+              {/* 计划 chip is intentionally inert (decorative) — no billing
+                  entity exists in Wave 0 (Module 00, Task 12). */}
               <TagChip
                 label={`计划：${viewModel.account.planLabel}`}
                 tone="brand"
                 size="sm"
               />
+              {/* 时区 / 语言 chips bind to the REAL identity
+                  (`userResource.timezone` / `.locale`). */}
               <TagChip
                 label={`时区：${viewModel.account.timezone}`}
+                tone="neutral"
+                size="sm"
+              />
+              <TagChip
+                label={`语言：${viewModel.account.locale}`}
                 tone="neutral"
                 size="sm"
               />
@@ -144,24 +159,28 @@ function AccountInformationCard({
         <SettingsFormRow
           label="昵称"
           controlId="account-nickname"
-          help="展示给协作者与内容合作方。"
+          help="个人资料编辑暂未开放（PATCH /me 为未决的 §13 缺口，roadmap §6）。"
         >
           <Input
             id="account-nickname"
             data-slot="account-nickname-input"
-            defaultValue={viewModel.account.displayName}
+            value={viewModel.account.displayName}
+            readOnly
+            aria-readonly="true"
           />
         </SettingsFormRow>
         <SettingsFormRow
           label="邮箱"
           controlId="account-email"
-          help="登录与重要通知会发送到此邮箱。"
+          help="个人资料编辑暂未开放（PATCH /me 为未决的 §13 缺口，roadmap §6）。"
         >
           <Input
             id="account-email"
             type="email"
             data-slot="account-email-input"
-            defaultValue={viewModel.account.email}
+            value={viewModel.account.email}
+            readOnly
+            aria-readonly="true"
           />
         </SettingsFormRow>
       </div>
@@ -652,7 +671,15 @@ const MODEL_OPTIONS_FOR: Record<
 // ---------------------------------------------------------------------------
 
 function OtherSettingsCard() {
+  // Local arm state for the destructive "delete account" gate
+  // (`确认删除账户` switch is `wired-local` — it only flips this local
+  // flag, it performs no server action). Module 00, Task 12.
   const [confirmDelete, setConfirmDelete] = React.useState<boolean>(false);
+  // The account-delete REST surface (30-day window) is an unresolved
+  // roadmap §6 gap — `revokeAllForUser` + a future delete route are the
+  // eventual backing, out of scope for Wave 0. So even once the switch
+  // arms the gate the button stays intentionally inert via
+  // `aria-disabled` + a tooltip, never firing a server action.
   return (
     <SectionCard
       title="其他"
@@ -662,13 +689,16 @@ function OtherSettingsCard() {
         <SettingsFormRow
           label="导入数据"
           controlId="other-import"
-          help="从旧版 CreatorOS 或外部工具导入。"
+          help="从旧版 CreatorOS 或外部工具导入（暂未开放，无对应路由）。"
         >
+          {/* 导入 / 导出 are intentionally inert (decorative) — no route
+              is exposed in Wave 0 (Module 00, Task 12). */}
           <Button
             id="other-import"
             data-slot="other-import-button"
             variant="outline"
             size="sm"
+            aria-disabled="true"
           >
             导入
           </Button>
@@ -676,13 +706,14 @@ function OtherSettingsCard() {
         <SettingsFormRow
           label="导出全部数据"
           controlId="other-export"
-          help="导出为 JSON + Markdown 包。"
+          help="导出为 JSON + Markdown 包（暂未开放，无对应路由）。"
         >
           <Button
             id="other-export"
             data-slot="other-export-button"
             variant="outline"
             size="sm"
+            aria-disabled="true"
           >
             导出
           </Button>
@@ -701,14 +732,29 @@ function OtherSettingsCard() {
               onCheckedChange={(value) => setConfirmDelete(Boolean(value))}
               aria-label="确认删除账户"
             />
-            <Button
-              data-slot="other-delete-button"
-              variant="destructive"
-              size="sm"
-              disabled={!confirmDelete}
-            >
-              删除账户
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {/* The arm switch flips `confirmDelete` (local), but the
+                      button stays intentionally inert: `disabled` while
+                      un-armed and `aria-disabled` (no onClick) once armed,
+                      pending the account-delete REST surface (roadmap §6
+                      gap). It never performs a server action in Wave 0. */}
+                  <Button
+                    data-slot="other-delete-button"
+                    variant="destructive"
+                    size="sm"
+                    disabled={!confirmDelete}
+                    aria-disabled="true"
+                  >
+                    删除账户
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent data-slot="other-delete-tooltip">
+                  账户删除（30 天窗口）待账户删除 REST 接口落地（roadmap §6 缺口）。
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </SettingsFormRow>
       </div>

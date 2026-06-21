@@ -9,7 +9,23 @@
  * provides the page slot.
  */
 import { SettingsPage } from "@/features/settings/settings-page";
+import { resolveSession } from "@/lib/session.server";
 
-export default function SettingsRoutePage() {
-  return <SettingsPage />;
+export default async function SettingsRoutePage() {
+  // The (creator) layout already guards the session, so a resolved
+  // session is expected here; if absent (race / direct render) the page
+  // falls back to the fixture-derived account (Module 00, Task 12).
+  // Binds the account card's name / email / timezone / locale to the
+  // REAL logged-in identity (`userResource` — what `settings.get` will
+  // serve in Wave 1; in Wave 0 it comes from `identity.getCurrentUser`).
+  const session = await resolveSession();
+  const identity = session
+    ? {
+        displayName: session.user.displayName,
+        email: session.user.email,
+        timezone: session.user.timezone,
+        locale: session.user.locale,
+      }
+    : undefined;
+  return <SettingsPage identity={identity} />;
 }

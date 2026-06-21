@@ -68,6 +68,25 @@ export interface SettingsPageProps {
    * deterministic.
    */
   readonly viewModel?: SettingsViewModel;
+  /**
+   * Real logged-in identity (Module 00, Task 12). When supplied (by the
+   * `(creator)/settings` route, which resolves the session through the
+   * identity service — the `userResource` shape `settings.get` will
+   * serve in Wave 1), the account card's display name / email / timezone
+   * / locale come from the REAL user instead of the fixture default. The
+   * preference / system / storage / model rows stay fixture-derived
+   * (their persistence is the Settings module, Wave 1). Omitted in unit
+   * tests, which inject the full `viewModel` directly.
+   */
+  readonly identity?: SettingsIdentity;
+}
+
+/** The identity fields the Settings account card binds to (`userResource`). */
+export interface SettingsIdentity {
+  readonly displayName: string;
+  readonly email: string;
+  readonly timezone: string;
+  readonly locale: string;
 }
 
 export interface SettingsViewModel {
@@ -84,6 +103,12 @@ export interface AccountInformation {
   readonly initials: string;
   readonly planLabel: string;
   readonly timezone: string;
+  /**
+   * BCP-47 locale tag from the user's identity (`userResource.locale`).
+   * Rendered as a real identity chip (Module 00, Task 12); the 已验证
+   * badge + plan chip stay intentionally inert (decorative).
+   */
+  readonly locale: string;
 }
 
 export interface PreferencesState {
@@ -136,11 +161,49 @@ const SETTINGS_TABS: ReadonlyArray<{ id: string; label: string }> = [
 ];
 
 // ---------------------------------------------------------------------------
+// Identity overlay (Module 00, Task 12)
+// ---------------------------------------------------------------------------
+
+/**
+ * Overlay the real logged-in identity onto the account card of a base
+ * view model. Pure — no `Date.now` / `Math.random` / network. Only the
+ * account display fields are replaced; everything else is untouched.
+ */
+function applyIdentity(
+  base: SettingsViewModel,
+  identity: SettingsIdentity,
+): SettingsViewModel {
+  return {
+    ...base,
+    account: {
+      ...base.account,
+      displayName: identity.displayName,
+      email: identity.email,
+      timezone: identity.timezone,
+      locale: identity.locale,
+      initials: computeAccountInitials(identity.displayName),
+    },
+    system: {
+      ...base.system,
+      locale: identity.locale,
+    },
+  };
+}
+
+function computeAccountInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0]!.slice(0, 1).toUpperCase();
+  return `${parts[0]!.charAt(0)}${parts[parts.length - 1]!.charAt(0)}`.toUpperCase();
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export function SettingsPage({ viewModel }: SettingsPageProps = {}) {
-  const vm = viewModel ?? buildSettingsViewModel();
+export function SettingsPage({ viewModel, identity }: SettingsPageProps = {}) {
+  const base = viewModel ?? buildSettingsViewModel();
+  const vm = identity ? applyIdentity(base, identity) : base;
   return (
     <main
       data-app="creatoros"

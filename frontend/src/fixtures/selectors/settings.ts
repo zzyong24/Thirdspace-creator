@@ -36,7 +36,7 @@ export function buildSettingsViewModel(): SettingsViewModel {
     };
 
   return {
-    account: buildAccount(user.displayName),
+    account: buildAccount(user),
     preferences: {
       defaultHome: preferences.defaultHome,
       defaultCreationMode: preferences.defaultCreationMode,
@@ -59,14 +59,22 @@ export function buildSettingsViewModel(): SettingsViewModel {
   };
 }
 
-function buildAccount(displayName: string): AccountInformation {
-  const initials = computeInitials(displayName);
+function buildAccount(user: {
+  displayName: string;
+  email: string;
+  timezone: string;
+  locale: string;
+}): AccountInformation {
+  const initials = computeInitials(user.displayName);
   return {
-    displayName,
-    email: "zyongzhu@creatoros.local",
+    displayName: user.displayName,
+    email: user.email,
     initials,
+    // planLabel + 已验证 badge stay intentionally inert (decorative) —
+    // no billing/verification entity exists in Wave 0 (Module 00, Task 12).
     planLabel: "个人版",
-    timezone: "Asia/Shanghai",
+    timezone: user.timezone,
+    locale: user.locale,
   };
 }
 
