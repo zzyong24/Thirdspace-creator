@@ -54,6 +54,17 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// The interactive island mounts `useRouter()` (Module 10 Step 5 wiring); the page
+// here renders without a wiring prop (local-only), so a stub router suffices.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 type PublishingWorkspacePageProps = React.ComponentProps<
   typeof import("./publishing-workspace-page").PublishingWorkspacePage
 >;

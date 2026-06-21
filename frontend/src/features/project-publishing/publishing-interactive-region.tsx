@@ -22,12 +22,31 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { SectionCard } from "@/components/project/section-card";
 import { StatusBadge } from "@/components/project/status-badge";
+import { client } from "@/lib/contract-client";
 import type { PlatformId, PublicationStatus } from "@/types/domain";
 import type { PublishingViewModel } from "@/types/view-models";
+
+// ---------------------------------------------------------------------------
+// Wiring descriptor (Module 10 Step 5). The server shell resolves the project's
+// primary ContentOutput + its existing publications via `outputs.publications.list`
+// and threads `{ outputId, publications: { platform → publicationId } }` here so
+// the needs-backend (确认发布) and wired-local→backend (Title-input commit)
+// controls drive their mapped contract op (FE button → contract op → user-scoped
+// SQL → envelope → router.refresh()). Optional so the island still renders
+// identically in pure-fixture contexts (default page render / state snapshots);
+// when absent the wired controls degrade to local-only behavior.
+// ---------------------------------------------------------------------------
+
+export interface PublishingWiring {
+  readonly outputId: string;
+  /** platform id → existing publication id (empty when none created yet). */
+  readonly publications: Readonly<Record<string, string>>;
+}
 
 // ---------------------------------------------------------------------------
 // Locked descriptors (mirrors the previous server render verbatim)
@@ -157,8 +176,10 @@ const COVER_GRADIENTS: ReadonlyArray<string> = [
 
 export function PublishingInteractiveRegion({
   viewModel,
+  wiring,
 }: {
   readonly viewModel: PublishingViewModel;
+  readonly wiring?: PublishingWiring;
 }) {
   const vm = viewModel;
   return (
@@ -175,7 +196,11 @@ export function PublishingInteractiveRegion({
             contentClassName="p-2"
           >
             <div className="flex flex-col gap-1.5">
-              <TitleField value={vm.form.title} />
+              <TitleField
+                value={vm.form.title}
+                wiring={wiring}
+                platforms={vm.platforms}
+              />
               <DescriptionField value={vm.form.description} />
               <CoverAndTagsRow
                 coverLabel={vm.form.coverLabel}
@@ -191,7 +216,7 @@ export function PublishingInteractiveRegion({
             </div>
           </SectionCard>
         </div>
-        <PlatformPublishingPanel platforms={vm.platforms} />
+        <PlatformPublishingPanel platforms={vm.platforms} wiring={wiring} />
         <div data-slot="preview-rail" className="flex flex-col gap-1">
           <PlatformPreview preview={vm.preview} />
           <PlatformMetricsSummary />
@@ -244,9 +269,45 @@ function PublishingTabs({ tabs }: { tabs: PublishingViewModel["tabs"] }) {
 // BasicInformationForm — left column
 // ---------------------------------------------------------------------------
 
-function TitleField({ value }: { value: string }) {
+function TitleField({
+  value,
+  wiring,
+  platforms,
+}: {
+  value: string;
+  wiring?: PublishingWiring;
+  platforms: PublishingViewModel["platforms"];
+}) {
+  const router = useRouter();
+  const [, startTransition] = React.useTransition();
   const [title, setTitle] = React.useState<string>(value);
   const charCount = title.length;
+
+  // §4 Title-input commit (wired-local→backend): on commit (blur / Enter), append
+  // a new revision (`publications.revisions.create` { title, description }) for the
+  // active publication(s), then router.refresh(). The counter stays client-local.
+  // When unwired (default render / pure-fixture), the input is local-only.
+  const commit = React.useCallback(() => {
+    if (!wiring) return;
+    const trimmed = title.trim();
+    if (trimmed === "") return;
+    // The first selected/known platform's publication is the active one; an
+    // unpublished workspace may have no publications yet (revision waits for the
+    // 确认发布 create flow), so this no-ops when none exist.
+    const publicationId = platforms
+      .map((p) => wiring.publications[p.platform])
+      .find((id): id is string => Boolean(id));
+    if (!publicationId) return;
+    startTransition(async () => {
+      await client.createPublicationRevision({
+        params: { publicationId },
+        query: undefined,
+        body: { title: trimmed, description: "" },
+      });
+      router.refresh();
+    });
+  }, [platforms, router, title, wiring]);
+
   return (
     <div data-slot="title-field" className="flex flex-col gap-0.5">
       <div className="flex items-center justify-between">
@@ -267,6 +328,13 @@ function TitleField({ value }: { value: string }) {
           value={title}
           maxLength={100}
           onChange={(event) => setTitle(event.target.value)}
+          onBlur={commit}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              commit();
+            }
+          }}
           className="h-6 w-full rounded-md border border-border bg-surface px-2 pr-2 text-[11px] text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
         />
       </div>
@@ -507,9 +575,13 @@ function ExtraPublishingOptionsField() {
 
 function PlatformPublishingPanel({
   platforms,
+  wiring,
 }: {
   platforms: PublishingViewModel["platforms"];
+  wiring?: PublishingWiring;
 }) {
+  const router = useRouter();
+  const [, startTransition] = React.useTransition();
   // Selection of which platforms participate in the publish, plus a
   // CLIENT-side lifecycle for the confirm action. The confirm button
   // transitions every selected platform's local status:
@@ -537,7 +609,13 @@ function PlatformPublishingPanel({
     });
   }, []);
 
+  // §4 确认发布 (THE one needs-backend control): for EACH selected platform's
+  // publication — ensure it exists (`outputs.publications.create` if none), then
+  // `publications.transition` { status: "published" } (idempotent; the service
+  // collapses ready/scheduled). Then router.refresh(). The local status flip stays
+  // for immediate affordance. When unwired, this degrades to the local-only flip.
   const handleConfirm = React.useCallback(() => {
+    // Immediate local affordance (kept regardless of wiring).
     setStatuses((prev) => {
       const next = { ...prev };
       for (const p of platforms) {
@@ -547,7 +625,30 @@ function PlatformPublishingPanel({
       return next;
     });
     setPublishState((prev) => (prev === "draft" ? "ready" : "scheduled"));
-  }, [platforms, selected]);
+
+    if (!wiring) return;
+    const targets = platforms.filter((p) => selected.has(p.id));
+    if (targets.length === 0) return;
+    startTransition(async () => {
+      for (const p of targets) {
+        let publicationId = wiring.publications[p.platform];
+        if (!publicationId) {
+          const created = (await client.createPublication({
+            params: { outputId: wiring.outputId },
+            query: undefined,
+            body: { platform: p.platform, accountReference: p.accountLabel },
+          })) as { id: string };
+          publicationId = created.id;
+        }
+        await client.transitionPublication({
+          params: { publicationId },
+          query: undefined,
+          body: { status: "published" },
+        });
+      }
+      router.refresh();
+    });
+  }, [platforms, router, selected, wiring]);
 
   return (
     <div

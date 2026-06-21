@@ -18,10 +18,50 @@
  */
 
 import { PublishingWorkspacePage } from "@/features/project-publishing/publishing-workspace-page";
-import { listProjects } from "@/fixtures/canonical";
+import type { PublishingWiring } from "@/features/project-publishing/publishing-interactive-region";
+import { canonicalDataset, listProjects } from "@/fixtures/canonical";
+import { client } from "@/lib/contract-client.server";
 
 interface PublishingWorkspaceRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
+}
+
+// The project's primary ContentOutput — prefer a `*-main` output, else the first
+// output owned by the project. Returns null when the project has no output.
+function resolvePrimaryOutputId(projectId: string): string | null {
+  const outputs = canonicalDataset.contentOutputs.filter(
+    (o) => o.projectId === projectId,
+  );
+  if (outputs.length === 0) return null;
+  const main = outputs.find((o) => o.id.endsWith("-main"));
+  return (main ?? outputs[0]!).id;
+}
+
+// Module 10 Step 5 — resolve the publishing wiring server-side: map the project to
+// its primary ContentOutput and read its existing publications via the REAL
+// `outputs.publications.list` op (user-scoped pglite) into a platform→publicationId
+// map. The 确认发布 / Title-input controls use it to drive their contract ops. A
+// resolution failure degrades to no-wiring (the island renders local-only).
+async function resolveWiring(
+  resolvedId: string,
+): Promise<PublishingWiring | undefined> {
+  const outputId = resolvePrimaryOutputId(resolvedId);
+  if (outputId === null) return undefined;
+  try {
+    const list = (await client.listPublications({
+      params: { outputId },
+      query: { page: 1, pageSize: 50 },
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ id: string; platform: string }>;
+    const publications: Record<string, string> = {};
+    for (const pub of list) {
+      // Keep the newest per platform (the list is newest-first).
+      if (!publications[pub.platform]) publications[pub.platform] = pub.id;
+    }
+    return { outputId, publications };
+  } catch {
+    return undefined;
+  }
 }
 
 export default async function PublishingWorkspaceRoute({
@@ -29,7 +69,8 @@ export default async function PublishingWorkspaceRoute({
 }: PublishingWorkspaceRouteProps) {
   const { projectId } = await params;
   const resolvedId = resolveProjectIdParam(projectId);
-  return <PublishingWorkspacePage projectId={resolvedId} />;
+  const wiring = await resolveWiring(resolvedId);
+  return <PublishingWorkspacePage projectId={resolvedId} wiring={wiring} />;
 }
 
 /**

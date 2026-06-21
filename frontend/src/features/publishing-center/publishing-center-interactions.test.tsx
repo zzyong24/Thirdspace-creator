@@ -18,11 +18,22 @@
 
 import * as React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { buildPublishingCenterViewModel } from "@/fixtures/selectors";
 import { buildPageScenario } from "@/fixtures/scenarios";
 import { PublishingCenterPage } from "./publishing-center-page";
+
+// The interactive island mounts `useRouter()` (Module 10 Step 5 batch wiring);
+// these client-state tests don't assert on the network so a stub router suffices.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
 
 afterEach(() => {
   cleanup();

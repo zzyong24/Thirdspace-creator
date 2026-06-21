@@ -49,6 +49,16 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// The interactive island mounts `useRouter()` (Module 10 Step 5 batch wiring).
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 type PublishingCenterPageProps = React.ComponentProps<
   typeof import("./publishing-center-page").PublishingCenterPage
 >;

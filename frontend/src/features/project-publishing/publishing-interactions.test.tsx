@@ -21,6 +21,18 @@ import { buildPublishingViewModel } from "@/fixtures/selectors";
 import { buildPageScenario } from "@/fixtures/scenarios";
 import { PublishingWorkspacePage } from "./publishing-workspace-page";
 
+// The interactive island mounts `useRouter()`; these local-state tests render
+// WITHOUT wiring (island degrades to local behavior) so a stub router suffices and
+// the typed client is never reached.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 const PROJECT_ID = "project-ainativebrowser";
 
 afterEach(() => {

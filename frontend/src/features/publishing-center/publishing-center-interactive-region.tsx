@@ -27,11 +27,13 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 import { ChartFrame } from "@/components/analytics/chart-frame";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
+import { client } from "@/lib/contract-client";
 import type { MetricCard as MetricCardVm } from "@/types/view-models";
 import type {
   ContentTypeTab,
@@ -147,6 +149,8 @@ export function PublishingCenterInteractiveRegion({
 }: {
   readonly viewModel: PublishingCenterViewModel;
 }) {
+  const router = useRouter();
+  const [, startTransition] = React.useTransition();
   const [activeTab, setActiveTab] = React.useState<string>(
     viewModel.contentTypeTabs[0]?.id ?? "all",
   );
@@ -230,6 +234,67 @@ export function PublishingCenterInteractiveRegion({
     });
   }, [visibleIds]);
 
+  // The selected publication rows (the table row id IS the Publication id — the
+  // Wave-4 PublishingCenterQueryService composes the row over the same Publication;
+  // SPEC §19). Used by the 3 needs-backend batch mutations.
+  const selectedRows = React.useMemo(
+    () => viewModel.publications.filter((row) => selectedIds.has(row.id)),
+    [viewModel.publications, selectedIds],
+  );
+
+  // §4 批量发布 (needs-backend): for each selected row, transition → published;
+  // skip rows already published (idempotent FE no-op). Then router.refresh().
+  const handleBatchPublish = React.useCallback(() => {
+    const targets = selectedRows.filter((r) => r.status !== "published");
+    if (targets.length === 0) return;
+    startTransition(async () => {
+      for (const row of targets) {
+        await client.transitionPublication({
+          params: { publicationId: row.id },
+          query: undefined,
+          body: { status: "published" },
+        });
+      }
+      router.refresh();
+    });
+  }, [router, selectedRows]);
+
+  // §4 批量下架 (needs-backend): for each selected published row, transition →
+  // removed (published → removed). Then router.refresh().
+  const handleBatchRemove = React.useCallback(() => {
+    const targets = selectedRows.filter((r) => r.status === "published");
+    if (targets.length === 0) return;
+    startTransition(async () => {
+      for (const row of targets) {
+        await client.transitionPublication({
+          params: { publicationId: row.id },
+          query: undefined,
+          body: { status: "removed" },
+        });
+      }
+      router.refresh();
+    });
+  }, [router, selectedRows]);
+
+  // §4 修改时间 (needs-backend): for each selected row, transition → scheduled
+  // (draft → scheduled; the new schedule time would ride a revision's
+  // platformSettings.scheduledAt per Open Question 2 — the transition body carries
+  // only the status this wave). Then router.refresh().
+  const handleBatchReschedule = React.useCallback(() => {
+    const targets = selectedRows.filter((r) => r.status === "draft");
+    if (targets.length === 0) return;
+    startTransition(async () => {
+      for (const row of targets) {
+        await client.transitionPublication({
+          params: { publicationId: row.id },
+          query: undefined,
+          body: { status: "scheduled" },
+        });
+      }
+      router.refresh();
+    });
+  }, [router, selectedRows]);
+
   return (
     <>
       <ContentTypeTabs
@@ -256,6 +321,9 @@ export function PublishingCenterInteractiveRegion({
             selectedCount={selectedIds.size}
             allVisibleSelected={allVisibleSelected}
             onToggleSelectAll={toggleSelectAll}
+            onBatchPublish={handleBatchPublish}
+            onBatchRemove={handleBatchRemove}
+            onBatchReschedule={handleBatchReschedule}
           />
           <PublicationTable
             publications={pageRows}
@@ -418,10 +486,16 @@ function BatchOperationBar({
   selectedCount,
   allVisibleSelected,
   onToggleSelectAll,
+  onBatchPublish,
+  onBatchRemove,
+  onBatchReschedule,
 }: {
   selectedCount: number;
   allVisibleSelected: boolean;
   onToggleSelectAll: () => void;
+  onBatchPublish: () => void;
+  onBatchRemove: () => void;
+  onBatchReschedule: () => void;
 }) {
   const disabled = selectedCount === 0;
   return (
@@ -467,9 +541,21 @@ function BatchOperationBar({
         <span className="text-[11px] text-muted-foreground/60">
           已选内容可批量：
         </span>
-        <BatchActionButton label="批量发布" disabled={disabled} />
-        <BatchActionButton label="批量下架" disabled={disabled} />
-        <BatchActionButton label="修改时间" disabled={disabled} />
+        <BatchActionButton
+          label="批量发布"
+          disabled={disabled}
+          onClick={onBatchPublish}
+        />
+        <BatchActionButton
+          label="批量下架"
+          disabled={disabled}
+          onClick={onBatchRemove}
+        />
+        <BatchActionButton
+          label="修改时间"
+          disabled={disabled}
+          onClick={onBatchReschedule}
+        />
       </div>
     </div>
   );
@@ -478,15 +564,19 @@ function BatchOperationBar({
 function BatchActionButton({
   label,
   disabled,
+  onClick,
 }: {
   label: string;
   disabled: boolean;
+  onClick?: () => void;
 }) {
   return (
     <button
       type="button"
       data-slot="batch-action-button"
+      data-action-label={label}
       disabled={disabled}
+      onClick={onClick}
       className="inline-flex h-7 items-center rounded-md border border-border bg-surface px-2.5 text-[12px] text-muted-foreground transition-colors hover:border-brand/40 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:text-muted-foreground"
     >
       {label}

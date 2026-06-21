@@ -75,8 +75,21 @@ function toRevisionResource(
 type Input = { params?: unknown; query?: unknown; body?: unknown };
 
 function paginationFrom(query: unknown): { limit: number; offset: number } {
-  const q = (query ?? {}) as { limit?: number; offset?: number };
-  return { limit: q.limit ?? 20, offset: q.offset ?? 0 };
+  // The contract paginationQuery is { page, pageSize } (1-based). Map it to the
+  // repository's limit/offset. Tolerate a raw { limit, offset } too (the
+  // module's own tests drive the transport directly).
+  const q = (query ?? {}) as {
+    page?: number;
+    pageSize?: number;
+    limit?: number;
+    offset?: number;
+  };
+  if (q.limit !== undefined || q.offset !== undefined) {
+    return { limit: q.limit ?? 20, offset: q.offset ?? 0 };
+  }
+  const page = q.page ?? 1;
+  const pageSize = q.pageSize ?? 20;
+  return { limit: pageSize, offset: (page - 1) * pageSize };
 }
 
 export function createPublishingTransport(

@@ -34,7 +34,10 @@ import {
 } from "@/components/state/page-state";
 import { buildPublishingViewModel } from "@/fixtures/selectors";
 import type { PublishingViewModel } from "@/types/view-models";
-import { PublishingInteractiveRegion } from "./publishing-interactive-region";
+import {
+  PublishingInteractiveRegion,
+  type PublishingWiring,
+} from "./publishing-interactive-region";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -45,6 +48,8 @@ export interface PublishingWorkspacePageProps {
   readonly projectId: string;
   /** Override hook for tests; defaults to the publishing selector. */
   readonly viewModel?: PublishingViewModel;
+  /** Server-resolved publishing wiring (Module 10 Step 5). Optional → local-only. */
+  readonly wiring?: PublishingWiring;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,6 +59,7 @@ export interface PublishingWorkspacePageProps {
 export function PublishingWorkspacePage({
   projectId,
   viewModel,
+  wiring,
 }: PublishingWorkspacePageProps) {
   const vm = viewModel ?? buildPublishingViewModel(projectId);
   const isEmpty = vm.platforms.length === 0 && vm.tabs.length === 0;
@@ -76,7 +82,7 @@ export function PublishingWorkspacePage({
           description="该项目尚未生成可发布的内容或平台配置。"
         />
       ) : (
-        <PublishingInteractiveRegion viewModel={vm} />
+        <PublishingInteractiveRegion viewModel={vm} wiring={wiring} />
       )}
     </main>
   );
