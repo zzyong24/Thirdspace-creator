@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb } from "@creatoros/backend";
+import { createDb, type Db } from "@creatoros/backend";
+import {
+  createIdentityRepository,
+  type IdentityRepository,
+} from "./identity.repository";
 
 // Raw pglite client type, derived from createDb's return so the frontend test
 // needs no direct @electric-sql/pglite dependency (it is a transitive dep of
@@ -15,9 +19,10 @@ const FIXED_NOW = "2026-06-13T10:00:00+08:00";
 const FUTURE = "2099-01-01T00:00:00+08:00";
 
 let client: PgliteClient;
+let db: Db;
 
 beforeEach(async () => {
-  ({ client } = await createDb()); // fresh in-memory pglite per test
+  ({ client, db } = await createDb()); // fresh in-memory pglite per test
 });
 
 async function insertUser(over: Partial<Record<string, string>> = {}) {
@@ -97,5 +102,146 @@ describe("identity db-schema (pglite, Task 1 slice)", () => {
     await expect(
       insertSession({ id: "session-b", token_hash: "dup-token-hash" }),
     ).rejects.toThrow();
+  });
+});
+
+// Task 3 slice: the user-scoped identity repository over the same pglite store.
+// Deterministic deps — a fixed clock + a counter-based id generator — so every
+// assertion is reproducible (no Date.now / Math.random in the repo layer).
+
+const PAST = "2000-01-01T00:00:00+08:00";
+
+function makeDeps() {
+  let n = 0;
+  return {
+    now: () => FIXED_NOW,
+    nextId: (prefix: string) => `${prefix}-${++n}`,
+  };
+}
+
+const USER_A = {
+  id: "user-a",
+  email: "a@creatoros.local",
+  displayName: "User A",
+  timezone: "Asia/Shanghai",
+  locale: "zh-CN",
+  passwordHash: "salt:hash-a",
+  createdAt: FIXED_NOW,
+  updatedAt: FIXED_NOW,
+};
+const USER_B = {
+  id: "user-b",
+  email: "b@creatoros.local",
+  displayName: "User B",
+  timezone: "Asia/Shanghai",
+  locale: "zh-CN",
+  passwordHash: "salt:hash-b",
+  createdAt: FIXED_NOW,
+  updatedAt: FIXED_NOW,
+};
+
+describe("identity repository (pglite, Task 3 slice)", () => {
+  let repo: IdentityRepository;
+
+  beforeEach(async () => {
+    repo = createIdentityRepository(db, makeDeps());
+    await repo.seedUser(USER_A);
+    await repo.seedUser(USER_B);
+  });
+
+  it("seedUser is idempotent (onConflictDoNothing)", async () => {
+    await repo.seedUser(USER_A); // second call — no throw, no duplicate
+    const found = await repo.findUserByEmail(USER_A.email);
+    expect(found?.id).toBe(USER_A.id);
+    expect(found?.displayName).toBe("User A");
+  });
+
+  it("findUserByEmail is exact-match", async () => {
+    expect((await repo.findUserByEmail(USER_A.email))?.id).toBe("user-a");
+    expect(await repo.findUserByEmail("A@CREATOROS.LOCAL")).toBeUndefined();
+    expect(await repo.findUserByEmail("nobody@creatoros.local")).toBeUndefined();
+  });
+
+  it("getUserById throws OwnershipError for an unknown id", async () => {
+    expect((await repo.getUserById("user-a")).id).toBe("user-a");
+    await expect(repo.getUserById("user-ghost")).rejects.toThrow(/OwnershipError/);
+  });
+
+  it("revokeSession is user-scoped: B cannot revoke A's session", async () => {
+    const sessionA = await repo.createSession({
+      userId: USER_A.id,
+      tokenHash: "hash-a",
+      expiresAt: FUTURE,
+    });
+    await repo.createSession({
+      userId: USER_B.id,
+      tokenHash: "hash-b",
+      expiresAt: FUTURE,
+    });
+
+    // Cross-user revoke is a no-op: A's session stays active.
+    await repo.revokeSession(sessionA.tokenHash, USER_B.id);
+    expect(
+      await repo.findActiveSessionByTokenHash("hash-a"),
+    ).toBeDefined();
+
+    // Owner revoke succeeds: the session is no longer active.
+    await repo.revokeSession(sessionA.tokenHash, USER_A.id);
+    expect(
+      await repo.findActiveSessionByTokenHash("hash-a"),
+    ).toBeUndefined();
+  });
+
+  it("findActiveSessionByTokenHash excludes revoked and expired sessions", async () => {
+    await repo.createSession({
+      userId: USER_A.id,
+      tokenHash: "active",
+      expiresAt: FUTURE,
+    });
+    await repo.createSession({
+      userId: USER_A.id,
+      tokenHash: "expired",
+      expiresAt: PAST,
+    });
+    const revoked = await repo.createSession({
+      userId: USER_A.id,
+      tokenHash: "revoked",
+      expiresAt: FUTURE,
+    });
+    await repo.revokeSession(revoked.tokenHash, USER_A.id);
+
+    expect((await repo.findActiveSessionByTokenHash("active"))?.tokenHash).toBe(
+      "active",
+    );
+    expect(await repo.findActiveSessionByTokenHash("expired")).toBeUndefined();
+    expect(await repo.findActiveSessionByTokenHash("revoked")).toBeUndefined();
+    expect(await repo.findActiveSessionByTokenHash("missing")).toBeUndefined();
+  });
+
+  it("revokeAllForUser revokes only that user's sessions", async () => {
+    await repo.createSession({
+      userId: USER_A.id,
+      tokenHash: "a1",
+      expiresAt: FUTURE,
+    });
+    await repo.createSession({
+      userId: USER_A.id,
+      tokenHash: "a2",
+      expiresAt: FUTURE,
+    });
+    await repo.createSession({
+      userId: USER_B.id,
+      tokenHash: "b1",
+      expiresAt: FUTURE,
+    });
+
+    await repo.revokeAllForUser(USER_A.id);
+
+    expect(await repo.findActiveSessionByTokenHash("a1")).toBeUndefined();
+    expect(await repo.findActiveSessionByTokenHash("a2")).toBeUndefined();
+    // B's session is untouched.
+    expect((await repo.findActiveSessionByTokenHash("b1"))?.userId).toBe(
+      USER_B.id,
+    );
   });
 });
