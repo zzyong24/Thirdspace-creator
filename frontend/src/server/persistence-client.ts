@@ -28,6 +28,13 @@ import {
   NOTIFICATION_OP_IDS,
   type NotificationRow,
 } from "@/server/modules/notifications";
+import {
+  createSearchRepository,
+  createSearchService,
+  createSearchTransport,
+  SEARCH_OP_IDS,
+} from "@/server/modules/search";
+import { buildCanonicalSearchDocuments } from "@/server/modules/search/search.seed";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -45,6 +52,8 @@ const PERSISTED_OPS = new Set<string>([
   ...TAXONOMY_OP_IDS,
   // Notifications (module 01) — list + read served by REAL SQL persistence.
   ...NOTIFICATION_OP_IDS,
+  // Search (module 02) — the composed `pages.search.get` read served by REAL SQL.
+  ...SEARCH_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -52,6 +61,9 @@ const TAXONOMY_OPS = new Set<string>(TAXONOMY_OP_IDS);
 
 // The set of op ids owned by the notifications module's transport (module 01).
 const NOTIFICATION_OPS = new Set<string>(NOTIFICATION_OP_IDS);
+
+// The set of op ids owned by the search module's transport (module 02).
+const SEARCH_OPS = new Set<string>(SEARCH_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -106,6 +118,7 @@ interface PersistenceBundle {
   transport: Transport;
   taxonomy: Transport;
   notifications: Transport;
+  search: Transport;
   identity: IdentityService;
 }
 
@@ -154,6 +167,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createNotificationsService(notificationsRepo, deps),
   );
 
+  // Search (module 02): the composed `pages.search.get` read served over the
+  // SAME pglite store. The service mints a per-ctx repo internally so every index
+  // query + history write is scoped to `ctx.userId`; the transport's per-request
+  // serviceFactory can therefore return ONE shared service. Clock/ids share the
+  // deterministic `deps` (createSeq keeps searchdoc/searchhist ids collision-free).
+  const searchService = createSearchService(
+    (ctx) => createSearchRepository(db, { ...deps, userId: ctx.userId }),
+    deps,
+  );
+  const search = createSearchTransport(() => searchService);
+
   // Seed the Projects exemplar dataset (owned by the canonical user) AND the
   // canonical identity row, so real login resolves to `user-zyongzhu` and every
   // fixture-backed page + the Projects seed keep resolving under a real ctx
@@ -173,6 +197,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     canonicalDataset.notifications.map(toNotificationRow),
   );
 
+  // Seed the canonical user's search index (module 02, Wave-1 seed approach —
+  // plan open-question #4): derive SearchDocuments from the owned projects /
+  // knowledge / assets / publications so `/search` returns results before the
+  // Wave-2 producer wiring lands. seedDocuments is onConflictDoNothing → a
+  // re-built singleton never double-seeds. Owned by the canonical user.
+  await createSearchRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  }).seedDocuments(buildCanonicalSearchDocuments(canonicalDataset, FIXED_NOW_ISO));
+
   // The identity service shares the SAME db (and the same seeded canonical user)
   // as the persistence transport, so a ctx resolved from the session cookie owns
   // the rows the transport serves under it.
@@ -182,6 +216,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     transport: createPersistenceTransport(repoFactory),
     taxonomy,
     notifications,
+    search,
     identity,
   };
 }
@@ -203,6 +238,10 @@ async function getTaxonomy(): Promise<Transport> {
 
 async function getNotifications(): Promise<Transport> {
   return (await getBundle()).notifications;
+}
+
+async function getSearch(): Promise<Transport> {
+  return (await getBundle()).search;
 }
 
 /**
@@ -238,6 +277,12 @@ export const compositeTransport: Transport = {
     if (NOTIFICATION_OPS.has(endpoint.id)) {
       const notifications = await getNotifications();
       return notifications.request(endpoint, input, ctx);
+    }
+    // Search ops (module 02) — the composed `pages.search.get` read served by the
+    // module's own transport over the SAME pglite store (foundation §1 registry).
+    if (SEARCH_OPS.has(endpoint.id)) {
+      const search = await getSearch();
+      return search.request(endpoint, input, ctx);
     }
     // Persisted ops require ctx: the persistence transport throws
     // AuthenticationError when ctx is missing (unauthenticated dispatch → 401).
