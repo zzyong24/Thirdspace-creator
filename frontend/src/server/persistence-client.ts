@@ -95,6 +95,13 @@ import {
   createAnalyticsTransport,
   ANALYTICS_OP_IDS,
 } from "@/server/modules/analytics";
+import {
+  createIngestionRepository,
+  createIngestionService,
+  createIngestionTransport,
+  createMockIngestionSource,
+  INGESTION_OP_IDS,
+} from "@/server/modules/ingestion";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -128,6 +135,9 @@ const PERSISTED_OPS = new Set<string>([
   // Analytics (module 11) — publication/project metric reads, user-scoped over the
   // append-only metric store; idempotent appendSnapshot is the Ingestion seam.
   ...ANALYTICS_OP_IDS,
+  // Ingestion (module 12) — the 7 batch-push run ops, user-scoped, idempotent
+  // (§17), fanning out to peer Services. No FE page (external skill writes only).
+  ...INGESTION_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -162,6 +172,9 @@ const PUBLISHING_OPS = new Set<string>(PUBLISHING_OP_IDS);
 
 // The set of op ids owned by the analytics module's transport (module 11).
 const ANALYTICS_OPS = new Set<string>(ANALYTICS_OP_IDS);
+
+// The set of op ids owned by the ingestion module's transport (module 12).
+const INGESTION_OPS = new Set<string>(INGESTION_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -508,6 +521,7 @@ interface PersistenceBundle {
   production: Transport;
   publishing: Transport;
   analytics: Transport;
+  ingestion: Transport;
   identity: IdentityService;
 }
 
@@ -688,6 +702,87 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
   const analytics = createAnalyticsTransport(() => analyticsService);
+
+  // Ingestion (module 12): the service builds a per-ctx user-scoped repo over the
+  // shared db (the repo bakes userId in; the service mints one per request). It
+  // fans out to peer modules ONLY through their public Services, adapted onto the
+  // narrow IngestionPorts (no cross-module repository import, SPEC §17.6/.7):
+  //   - publishing.resolvePublication → publishingService.resolvePublication,
+  //   - analytics.appendSnapshot → analyticsService.appendSnapshot (idempotent),
+  //   - knowledge.ingest → knowledgeService.createKnowledge,
+  //   - assets.registerExternalAsset → the assets two-phase upload (createUpload +
+  //     completeUpload) so the external object lands as a real Asset,
+  //   - artifacts.createCandidateVersion → artifactsService.createVersion with
+  //     createdByType:"ingestion" (a CANDIDATE append — never current_version;
+  //     the downstream adopt gate promotes it, roadmap §401).
+  // The transport returns this ONE shared service. Clock/ids share the
+  // deterministic `deps`. The MockIngestionSource is the deterministic producer
+  // (foundation §4) used by dev/seeds — not on the dispatch path.
+  const ingestionMockSource = createMockIngestionSource();
+  void ingestionMockSource; // producer-side seam; reserved for dev/seed import flows
+  const ingestionService = createIngestionService({
+    deps,
+    db,
+    ports: {
+      publishing: {
+        resolvePublication: (ctx, ref) =>
+          publishingService.resolvePublication(ctx, ref),
+      },
+      analytics: {
+        appendSnapshot: (ctx, input) =>
+          analyticsService.appendSnapshot(ctx, input),
+      },
+      knowledge: {
+        ingest: (ctx, input) =>
+          knowledgeService.createKnowledge(ctx, {
+            title: input.title,
+            knowledgeType: input.knowledgeType,
+            content: input.content,
+          }),
+      },
+      assets: {
+        registerExternalAsset: async (ctx, input) => {
+          const upload = await assetsService.createUpload(ctx, {
+            assetType: input.assetType,
+            mimeType: "application/octet-stream",
+            fileSize: 0,
+          });
+          return assetsService.completeUpload(ctx, upload.uploadId, {
+            name: input.name,
+          });
+        },
+      },
+      artifacts: {
+        createCandidateVersion: (ctx, input) =>
+          artifactsService.createVersion(ctx, input.artifactId, {
+            contentText: input.contentText,
+            contentData: input.contentData,
+            changeSummary: input.changeSummary,
+            createdByType: input.createdByType,
+          }),
+      },
+    },
+  });
+  const ingestion = createIngestionTransport(() => ingestionService);
+
+  // Seed one canonical mock external source owned by the canonical user so a dev
+  // import resolves under the seeded login (foundation §2/§4). seedExternalSources
+  // is onConflictDoNothing → a re-built singleton never double-seeds.
+  await createIngestionRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  }).seedExternalSources([
+    {
+      id: "src-mock-canonical",
+      userId: canonicalDataset.user.id,
+      sourceType: "mock",
+      name: "Mock Ingestion Source",
+      sourceIdentifier: "mock://canonical",
+      secretReference: "",
+      configuration: {},
+      createdAt: FIXED_NOW_ISO,
+    },
+  ]);
 
   // Seed the Projects exemplar dataset (owned by the canonical user) AND the
   // canonical identity row, so real login resolves to `user-zyongzhu` and every
@@ -881,6 +976,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     production,
     publishing,
     analytics,
+    ingestion,
     identity,
   };
 }
@@ -934,6 +1030,10 @@ async function getPublishing(): Promise<Transport> {
 
 async function getAnalytics(): Promise<Transport> {
   return (await getBundle()).analytics;
+}
+
+async function getIngestion(): Promise<Transport> {
+  return (await getBundle()).ingestion;
 }
 
 /**
@@ -1032,6 +1132,14 @@ export const compositeTransport: Transport = {
     if (ANALYTICS_OPS.has(endpoint.id)) {
       const analytics = await getAnalytics();
       return analytics.request(endpoint, input, ctx);
+    }
+    // Ingestion ops (module 12) — the 7 batch-push run ops served by the module's
+    // own user-scoped transport over the SAME pglite store (foundation §1 registry).
+    // The fan-out to peer modules runs inside the service via injected public Service
+    // ports (no repo import). No ctx ⇒ AuthenticationError.
+    if (INGESTION_OPS.has(endpoint.id)) {
+      const ingestion = await getIngestion();
+      return ingestion.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1
