@@ -43,10 +43,14 @@ export function createLearningsTransport(
 
       switch (endpoint.id) {
         case "learnings.list": {
-          const q = (query ?? {}) as { limit?: number; offset?: number };
+          // The contract query is paginationQuery (page/pageSize, 1-based). Convert
+          // to the repo's limit/offset (mirrors the other list transports).
+          const q = (query ?? {}) as { page?: number; pageSize?: number };
+          const page = q.page ?? 1;
+          const pageSize = q.pageSize ?? 20;
           const { rows, total } = await service.listLearnings(ctx, {
-            limit: q.limit ?? 20,
-            offset: q.offset ?? 0,
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
           });
           return { data: rows, meta: { requestId, total } };
         }

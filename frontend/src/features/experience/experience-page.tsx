@@ -50,6 +50,10 @@ import { ProgressBar } from "@/components/project/progress-bar";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
 import { buildExperienceViewModel } from "@/fixtures/selectors";
+import {
+  ExperienceInteractiveRegion,
+  QuickRecordActionsIsland,
+} from "./experience-interactive-region";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -63,6 +67,12 @@ export interface ExperiencePageProps {
    * stable.
    */
   readonly viewModel?: ExperienceViewModel;
+  /**
+   * Owned projects the records' 应用经验 control targets (sourced from
+   * `projects.list`). Defaults to empty — the apply control is hidden when no
+   * project is available. The server page passes the real owned list.
+   */
+  readonly applyTargets?: ReadonlyArray<ApplyTarget>;
 }
 
 export interface ExperienceViewModel {
@@ -112,6 +122,21 @@ export interface ExperienceRecord {
   readonly category: string;
   readonly updatedAt: string;
   readonly reuseCount: number;
+  /**
+   * The backing Learning's id + status, present when the record is sourced from a
+   * real `learnings.list` row (Module 14 wiring). When absent the apply / evaluate
+   * affordances fall back to the record `id` so the fixture-only render still wires.
+   * `tabId` is the derived client-side filter category (see EXPERIENCE_TAB filter).
+   */
+  readonly learningId?: string;
+  readonly validationStatus?: "candidate" | "validated" | "discarded";
+  readonly tabId?: string;
+}
+
+/** An owned project the apply control can target (sourced from `projects.list`). */
+export interface ApplyTarget {
+  readonly id: string;
+  readonly title: string;
 }
 
 export interface ValueOverviewVm {
@@ -138,7 +163,10 @@ export interface QuickAction {
 // Page
 // ---------------------------------------------------------------------------
 
-export function ExperiencePage({ viewModel }: ExperiencePageProps = {}) {
+export function ExperiencePage({
+  viewModel,
+  applyTargets = [],
+}: ExperiencePageProps = {}) {
   const vm = viewModel ?? buildExperienceViewModel();
   return (
     <main
@@ -149,6 +177,7 @@ export function ExperiencePage({ viewModel }: ExperiencePageProps = {}) {
     >
       <ExperienceTabs tabs={vm.tabs} />
       <ExperienceLayout
+        tabs={vm.tabs}
         summaryCards={vm.summaryCards}
         discoveries={vm.discoveries}
         categories={vm.categories}
@@ -157,6 +186,7 @@ export function ExperiencePage({ viewModel }: ExperiencePageProps = {}) {
         applicationEffect={vm.applicationEffect}
         popularExperiences={vm.popularExperiences}
         quickActions={vm.quickActions}
+        applyTargets={applyTargets}
       />
     </main>
   );
@@ -192,6 +222,7 @@ function ExperienceTabs({
 // ---------------------------------------------------------------------------
 
 interface ExperienceLayoutProps {
+  readonly tabs: ReadonlyArray<ExperienceTabDescriptor>;
   readonly summaryCards: ReadonlyArray<SummaryCardVm>;
   readonly discoveries: ReadonlyArray<DiscoveryRow>;
   readonly categories: ReadonlyArray<ExperienceCategory>;
@@ -203,9 +234,11 @@ interface ExperienceLayoutProps {
   }>;
   readonly popularExperiences: ReadonlyArray<PopularExperience>;
   readonly quickActions: ReadonlyArray<QuickAction>;
+  readonly applyTargets: ReadonlyArray<ApplyTarget>;
 }
 
 function ExperienceLayout({
+  tabs,
   summaryCards,
   discoveries,
   categories,
@@ -214,6 +247,7 @@ function ExperienceLayout({
   applicationEffect,
   popularExperiences,
   quickActions,
+  applyTargets,
 }: ExperienceLayoutProps) {
   return (
     <div
@@ -227,7 +261,14 @@ function ExperienceLayout({
         <AISummarySection cards={summaryCards} />
         <RecentDiscoveries rows={discoveries} />
         <ExperienceCategories categories={categories} />
-        <RecentRecordsTable rows={records} />
+        {/* Wired island (Module 14 Step 5): the records table gains the 应用经验 /
+            验证 / 废弃 controls + the client-side category filter. Replaces the inert
+            server-only RecentRecordsTable. */}
+        <ExperienceInteractiveRegion
+          tabs={tabs}
+          records={records}
+          applyTargets={applyTargets}
+        />
       </div>
       <RightRail
         valueOverview={valueOverview}
@@ -413,60 +454,6 @@ function ExperienceCategories({
 }
 
 // ---------------------------------------------------------------------------
-// RecentRecordsTable — atomic-level block, visible in the reference
-// image as the "recent records" panel below the categories.
-// ---------------------------------------------------------------------------
-
-function RecentRecordsTable({
-  rows,
-}: {
-  rows: ReadonlyArray<ExperienceRecord>;
-}) {
-  return (
-    <SectionCard
-      title="最近经验记录"
-      description="按更新时间倒序"
-    >
-      <table
-        data-slot="recent-records-table"
-        aria-label="最近经验记录"
-        className="w-full text-sm"
-      >
-        <thead>
-          <tr className="border-b border-border text-xs text-muted-foreground">
-            <th className="pb-2 pt-1 text-left font-medium">标题</th>
-            <th className="pb-2 pt-1 text-left font-medium">分类</th>
-            <th className="pb-2 pt-1 text-right font-medium">更新</th>
-            <th className="pb-2 pt-1 text-right font-medium">复用次数</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr
-              key={row.id}
-              data-slot="recent-record-row"
-              data-record-id={row.id}
-              className="border-b border-border/60 last:border-b-0"
-            >
-              <td className="py-2 text-foreground">{row.title}</td>
-              <td className="py-2">
-                <TagChip label={row.category} tone="neutral" size="sm" />
-              </td>
-              <td className="py-2 text-right font-mono text-xs text-muted-foreground">
-                {row.updatedAt}
-              </td>
-              <td className="py-2 text-right font-mono text-xs text-foreground tabular-nums">
-                {row.reuseCount}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </SectionCard>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // RightRail — locked order:
 //   ValueOverview → ApplicationEffectChart → PopularExperienceList →
 //   QuickRecordActions
@@ -492,7 +479,9 @@ function RightRail({
       <ValueOverview vm={valueOverview} />
       <ApplicationEffectChart trend={applicationEffect} />
       <PopularExperienceList items={popularExperiences} />
-      <QuickRecordActions actions={quickActions} />
+      {/* Wired island (Module 14 Step 5): each quick-record button →
+          learnings.create. Replaces the inert server-only QuickRecordActions. */}
+      <QuickRecordActionsIsland actions={quickActions} />
     </aside>
   );
 }
@@ -578,39 +567,3 @@ function PopularExperienceList({
   );
 }
 
-function QuickRecordActions({
-  actions,
-}: {
-  actions: ReadonlyArray<QuickAction>;
-}) {
-  return (
-    <SectionCard
-      title="快速记录"
-      description="把这次的复盘沉淀下来"
-    >
-      <div
-        data-slot="quick-record-actions"
-        aria-label="快速记录操作"
-        className="flex flex-col gap-2"
-      >
-        {actions.map((action) => (
-          <button
-            key={action.id}
-            type="button"
-            data-slot="quick-record-action"
-            data-action-id={action.id}
-            className="flex items-center justify-between gap-3 rounded-card bg-surface-subtle px-3.5 py-2.5 text-left text-sm hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-          >
-            <span className="flex flex-col gap-0.5">
-              <span className="font-medium text-foreground">{action.label}</span>
-              <span className="text-xs text-muted-foreground">{action.hint}</span>
-            </span>
-            <span aria-hidden="true" className="text-muted-foreground">
-              +
-            </span>
-          </button>
-        ))}
-      </div>
-    </SectionCard>
-  );
-}
