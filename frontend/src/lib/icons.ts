@@ -29,6 +29,7 @@ export type CreatorIconKey =
   | "knowledge"
   | "assets"
   | "publishing"
+  | "monetization"
   | "experience"
   | "settings"
   | "search"
@@ -51,6 +52,7 @@ export const creatorIcons = Object.freeze({
   knowledge: BookOpen,
   assets: Images,
   publishing: Send,
+  monetization: Funnel,
   experience: Lightbulb,
   settings: Settings,
   search: Search,

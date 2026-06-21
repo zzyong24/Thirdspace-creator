@@ -131,7 +131,9 @@ import {
 import {
   createMonetizationService,
   createMonetizationTransport,
+  createMonetizationRepository,
   MONETIZATION_OP_IDS,
+  type ProductRow as MonetizationProductRow,
 } from "@/server/modules/monetization";
 import {
   createDashboardQueryService,
@@ -1546,6 +1548,43 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   ];
   await positioningSeedRepo.seedProfiles([canonicalProfile]);
   await positioningSeedRepo.seedStatements(canonicalStatements);
+
+  // Seed the canonical monetization products (module 18): two 柔性产品 owned by the
+  // canonical user so the /monetization 变现中心 page resolves real product rows under
+  // the seeded login (foundation §2). The funnel + leads start empty (honest漏损 — the
+  // unattributed bucket is 0/0 until登记/ingest). seedProducts is onConflictDoNothing
+  // → a re-built singleton never double-seeds. A user-scoped seed repo is minted.
+  const monetizationSeedRepo = createMonetizationRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  });
+  const canonicalProducts: MonetizationProductRow[] = [
+    {
+      id: "product-canonical-1",
+      userId: canonicalDataset.user.id,
+      name: "AI 工程训练营",
+      kind: "训练营",
+      tier: "核心",
+      deliveryWeight: "重",
+      targetPersona: "想系统落地 AI 的一线开发者",
+      status: "active",
+      createdAt: FIXED_NOW_ISO,
+      updatedAt: FIXED_NOW_ISO,
+    },
+    {
+      id: "product-canonical-2",
+      userId: canonicalDataset.user.id,
+      name: "论文精读陪跑（1v1）",
+      kind: "咨询",
+      tier: "高端",
+      deliveryWeight: "重",
+      targetPersona: "需要深度指导的研究者",
+      status: "active",
+      createdAt: FIXED_NOW_ISO,
+      updatedAt: FIXED_NOW_ISO,
+    },
+  ];
+  await monetizationSeedRepo.seedProducts(canonicalProducts);
 
   return {
     projects,

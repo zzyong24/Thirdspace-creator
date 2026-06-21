@@ -114,6 +114,14 @@ export function resolveRoute(pathname: string): RouteResolution {
       contextualCardVariant: "assistant",
     };
   }
+  if (pathname === "/monetization") {
+    return {
+      headerMode: "global",
+      pageTitle: "变现中心",
+      pageDescription: "产品 / Offer / 线索 / 成交漏斗 · 诚实归因（§4.5 不强行 100% 分配）",
+      contextualCardVariant: "assistant",
+    };
+  }
   if (pathname === "/projects") {
     return {
       headerMode: "global",

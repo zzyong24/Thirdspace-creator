@@ -71,6 +71,8 @@ const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   { id: "knowledge", label: "知识库", href: "/knowledge", icon: creatorIcons.knowledge, match: matchExact("/knowledge") },
   { id: "assets", label: "素材中心", href: "/assets", icon: creatorIcons.assets, match: matchExact("/assets") },
   { id: "publishing", label: "发布中心", href: "/publishing", icon: creatorIcons.publishing, match: matchExact("/publishing") },
+  // 变现/漏斗中心 — 七步⑦, SPEC §4.7.
+  { id: "monetization", label: "变现中心", href: "/monetization", icon: creatorIcons.monetization, match: matchExact("/monetization") },
   { id: "experience", label: "经验沉淀", href: "/experience", icon: creatorIcons.experience, match: matchExact("/experience") },
   { id: "settings", label: "设置", href: "/settings", icon: creatorIcons.settings, match: matchExact("/settings") },
 ];
