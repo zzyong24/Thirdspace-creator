@@ -38,9 +38,9 @@ function makeService(): ProductionService {
     db,
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${++seq}`,
-    setPrimaryOutputAsset,
-    searchIndexAsset,
-    recordExportActivity,
+    setPrimaryOutputAsset: setPrimaryOutputAsset as never,
+    searchIndexAsset: searchIndexAsset as never,
+    recordExportActivity: recordExportActivity as never,
   });
 }
 
