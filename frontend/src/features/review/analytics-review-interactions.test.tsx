@@ -24,6 +24,7 @@ import { canonicalDataset } from "@/fixtures/canonical";
 import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
 import { buildPageScenario } from "@/fixtures/scenarios";
 import { AnalyticsReviewPage } from "./analytics-review-page";
+import { buildAnalyticsReviewViewModelFromOp } from "./analytics-review-view-model";
 
 const PROJECT_ID = "project-podcast-launch";
 
@@ -204,5 +205,67 @@ describe("AnalyticsReviewPage states", () => {
     expect(
       container.querySelector('[data-slot="page-state-empty"]'),
     ).not.toBeNull();
+  });
+});
+
+// Module 11 Task 5/6 — the server read switch builds the page ViewModel from the
+// real `analytics.projects.get` payload (a MetricSnapshot[]); the two decorative
+// cards (查看全部 + top-published cards) carry data-inert="decorative" and fire no
+// navigation.
+describe("AnalyticsReviewPage analytics.projects.get-backed ViewModel", () => {
+  it("renders from a ViewModel derived from an analytics.projects.get-shaped payload", () => {
+    const canonicalId = resolveCanonicalId(PROJECT_ID);
+    const publicationIds = (() => {
+      const project = canonicalDataset.projects.find((p) => p.id === canonicalId);
+      if (!project) return [] as string[];
+      const outputIds = canonicalDataset.contentOutputs
+        .filter((o) => o.projectId === project.id)
+        .map((o) => o.id);
+      return canonicalDataset.publications
+        .filter((pub) => outputIds.includes(pub.contentOutputId))
+        .map((pub) => pub.id);
+    })();
+    // An `analytics.projects.get`-shaped payload (metricSnapshotResource[]) for the
+    // project's publications.
+    const snapshots = canonicalDataset.metricSnapshots
+      .filter((s) => publicationIds.includes(s.publicationId))
+      .map((s) => ({
+        id: s.id,
+        publicationId: s.publicationId,
+        capturedAt: s.capturedAt,
+        source: s.source,
+        rawMetrics: s.rawMetrics as Record<string, unknown>,
+      }));
+    expect(snapshots.length).toBeGreaterThan(0);
+
+    const vm = buildAnalyticsReviewViewModelFromOp(PROJECT_ID, snapshots);
+    const { container } = render(
+      <AnalyticsReviewPage projectId={PROJECT_ID} viewModel={vm} />,
+    );
+    // The page rendered the metric row from the op-backed ViewModel.
+    expect(
+      container.querySelectorAll(
+        '[data-slot="core-metrics-row"] [data-slot="metric-card"]',
+      ),
+    ).toHaveLength(7);
+  });
+
+  it("marks the 查看全部 + top-published cards intentionally inert (decorative)", () => {
+    const { container } = render(<AnalyticsReviewPage projectId={PROJECT_ID} />);
+    const viewAll = container.querySelector<HTMLButtonElement>(
+      '[data-slot="top-published-view-all"]',
+    );
+    expect(viewAll).not.toBeNull();
+    expect(viewAll!.getAttribute("data-inert")).toBe("decorative");
+    expect(viewAll!.onclick).toBeNull();
+
+    const cards = container.querySelectorAll<HTMLLIElement>(
+      '[data-slot="top-published-card"]',
+    );
+    expect(cards.length).toBeGreaterThan(0);
+    cards.forEach((card) => {
+      expect(card.getAttribute("data-inert")).toBe("decorative");
+      expect(card.onclick).toBeNull();
+    });
   });
 });

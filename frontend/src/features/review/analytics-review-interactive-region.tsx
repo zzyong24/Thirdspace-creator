@@ -571,6 +571,8 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
         <button
           type="button"
           data-slot="top-published-view-all"
+          data-inert="decorative"
+          aria-disabled="true"
           className="inline-flex h-6 items-center rounded-md px-2 text-[11px] font-medium text-brand hover:bg-brand-soft"
         >
           查看全部
@@ -587,6 +589,7 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
             data-slot="top-published-card"
             data-published-id={item.id}
             data-tone={item.tone}
+            data-inert="decorative"
             className={
               item.tone === "primary"
                 ? "col-span-1 flex flex-col gap-1 overflow-hidden rounded-xl border border-border bg-surface p-1.5 shadow-card md:col-span-2 md:row-span-1 md:flex-row"
