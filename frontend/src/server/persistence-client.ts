@@ -102,6 +102,11 @@ import {
   createMockIngestionSource,
   INGESTION_OP_IDS,
 } from "@/server/modules/ingestion";
+import {
+  createReviewsService,
+  createReviewsTransport,
+  REVIEWS_OP_IDS,
+} from "@/server/modules/reviews";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -138,6 +143,10 @@ const PERSISTED_OPS = new Set<string>([
   // Ingestion (module 12) — the 7 batch-push run ops, user-scoped, idempotent
   // (§17), fanning out to peer Services. No FE page (external skill writes only).
   ...INGESTION_OP_IDS,
+  // Reviews (module 13) — create/get review + insights.create + complete,
+  // user-scoped with §12 Review status machine (idempotent complete). Period from
+  // the Publishing window, evidence from the Analytics snapshot (injected ports).
+  ...REVIEWS_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -175,6 +184,9 @@ const ANALYTICS_OPS = new Set<string>(ANALYTICS_OP_IDS);
 
 // The set of op ids owned by the ingestion module's transport (module 12).
 const INGESTION_OPS = new Set<string>(INGESTION_OP_IDS);
+
+// The set of op ids owned by the reviews module's transport (module 13).
+const REVIEWS_OPS = new Set<string>(REVIEWS_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -522,6 +534,7 @@ interface PersistenceBundle {
   publishing: Transport;
   analytics: Transport;
   ingestion: Transport;
+  reviews: Transport;
   identity: IdentityService;
 }
 
@@ -765,6 +778,107 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const ingestion = createIngestionTransport(() => ingestionService);
 
+  // Reviews (module 13): the service builds a per-ctx user-scoped repo over the
+  // shared db (the repo bakes userId in; the service mints one per request). It
+  // reaches peer modules ONLY through injected narrow ports (no cross-module repo
+  // import, SPEC §22), satisfied here by the peers' public services / the shared
+  // projects repo (the composition root, not the module, owns these adapters):
+  //   - projects.verifyProjectOwned → projectsService.listOutputIdsByProject (the
+  //     project-ownership gate throws OwnershipError for a cross-user/unknown id),
+  //   - projects.verifyOutputOwned → projectsRepo.getOutput (output ownership gate),
+  //   - projects.recordActivity → projectsService.recordActivity-equivalent via the
+  //     projects repo appendActivity (best-effort; swallow on failure, SPEC §11),
+  //   - publishing.listProjectPublications → projectsService.listOutputIdsByProject
+  //     then publishingService.listPublications per output (the published window for
+  //     period derivation — min/max publishedAt),
+  //   - analytics.getProjectSnapshots → analyticsService.getProjectAnalytics reduced
+  //     to the small evidence record the AI review node (G15) + FE render share.
+  // The transport returns this ONE shared service. Clock/ids share the deterministic
+  // `deps` (createSeq keeps review/insight/reviewpub ids collision-free).
+  const reviewsService = createReviewsService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+    projects: {
+      verifyProjectOwned: async (ctx, projectId) => {
+        // listOutputIdsByProject gates the project's ownership (cross-user /
+        // unknown → OwnershipError → 404) before any review row is written.
+        await projectsService.listOutputIdsByProject(ctx, projectId);
+      },
+      verifyOutputOwned: async (ctx, contentOutputId) => {
+        // getOutput joins output→project and gates ownership (→ OwnershipError).
+        await projectsRepo.getOutput(ctx, contentOutputId);
+      },
+      recordActivity: async (ctx, input) => {
+        // Best-effort post-commit activity (SPEC §11) — a failure here must not
+        // roll back the review fact, so swallow. appendActivity is user-scoped via
+        // the parent project's ownership gate.
+        try {
+          await projectsRepo.appendActivity(ctx, {
+            id: deps.nextId("activity"),
+            projectId: input.projectId,
+            eventType: input.eventType,
+            entityType: input.entityType,
+            entityId: input.entityId,
+            eventData: {},
+            occurredAt: deps.now(),
+          });
+        } catch {
+          // intentionally swallowed — activity is non-critical telemetry.
+        }
+      },
+    },
+    publishing: {
+      listProjectPublications: async (ctx, projectId) => {
+        // Resolve project→ContentOutput ids via Projects (project-ownership gate
+        // lives there), then list Publishing's OWN publications per output. No
+        // cross-module repo import; an unwired/empty project → [].
+        const outputIds = await projectsService.listOutputIdsByProject(
+          ctx,
+          projectId,
+        );
+        const windows: {
+          contentOutputId: string;
+          publishedAt: string | null;
+        }[] = [];
+        for (const outputId of outputIds) {
+          const pubs = await publishingService.listPublications(ctx, outputId, {
+            limit: 200,
+            offset: 0,
+          });
+          for (const pub of pubs) {
+            windows.push({
+              contentOutputId: pub.contentOutputId,
+              publishedAt: pub.publishedAt ?? null,
+            });
+          }
+        }
+        return windows;
+      },
+    },
+    analytics: {
+      getProjectSnapshots: async (ctx, projectId, window) => {
+        // Reduce the project's Analytics snapshots to the small evidence record the
+        // AI review node + FE render share (determinate; never user-supplied). The
+        // project→publication resolution + user-scoping live inside Analytics.
+        const { rows, total } = await analyticsService.getProjectAnalytics(
+          ctx,
+          projectId,
+          1,
+          50,
+        );
+        if (total === 0) return {};
+        return {
+          source: "analytics",
+          window,
+          snapshotCount: total,
+          latestCapturedAt: rows[0]?.capturedAt ?? null,
+        };
+      },
+    },
+  });
+  const reviews = createReviewsTransport(() => reviewsService);
+
   // Seed one canonical mock external source owned by the canonical user so a dev
   // import resolves under the seeded login (foundation §2/§4). seedExternalSources
   // is onConflictDoNothing → a re-built singleton never double-seeds.
@@ -977,6 +1091,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     publishing,
     analytics,
     ingestion,
+    reviews,
     identity,
   };
 }
@@ -1034,6 +1149,10 @@ async function getAnalytics(): Promise<Transport> {
 
 async function getIngestion(): Promise<Transport> {
   return (await getBundle()).ingestion;
+}
+
+async function getReviews(): Promise<Transport> {
+  return (await getBundle()).reviews;
 }
 
 /**
@@ -1140,6 +1259,15 @@ export const compositeTransport: Transport = {
     if (INGESTION_OPS.has(endpoint.id)) {
       const ingestion = await getIngestion();
       return ingestion.request(endpoint, input, ctx);
+    }
+    // Reviews ops (module 13) — reviews.create/get + reviews.insights.create +
+    // reviews.complete served by the module's own user-scoped transport over the
+    // SAME pglite store (foundation §1 registry). Period/evidence derivation +
+    // ownership gates run inside the service via injected public peer ports. No ctx
+    // ⇒ AuthenticationError.
+    if (REVIEWS_OPS.has(endpoint.id)) {
+      const reviews = await getReviews();
+      return reviews.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1
