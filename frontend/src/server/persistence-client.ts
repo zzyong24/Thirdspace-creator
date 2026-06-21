@@ -138,7 +138,9 @@ import {
 import {
   createCandidateService,
   createCandidateTransport,
+  createCandidateRepository,
   CANDIDATE_OP_IDS,
+  type CandidateRow,
 } from "@/server/modules/candidate";
 import {
   createDashboardQueryService,
@@ -1657,6 +1659,68 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   ];
   await monetizationSeedRepo.seedProducts(canonicalProducts);
+
+  // Seed the canonical candidates (module 19): three 选题候选 owned by the canonical
+  // user so the /topics 选题候选池 page resolves real rows under the seeded login
+  // (foundation §2) — one idea, one trend (AI-sourced provenance), one demand, with
+  // varied predicted/positioning/demand scores so the monetization-weighted sort is
+  // observable. Deterministic ids/clock (FIXED_NOW_ISO). seedCandidates is
+  // onConflictDoNothing → a re-built singleton never double-seeds.
+  const candidateSeedRepo = createCandidateRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  });
+  const canonicalCandidates: CandidateRow[] = [
+    {
+      id: "cand-canonical-1",
+      userId: canonicalDataset.user.id,
+      title: "用 RAG 把内部文档变成问答助手",
+      angle: "从一篇论文到一条可跑的最小实现",
+      source: "trend",
+      contentRole: "traffic",
+      productAnchorId: null,
+      positioningFit: 82,
+      predictedScore: 74,
+      demandCount: 0,
+      status: "pool",
+      aiTaskId: null,
+      createdAt: FIXED_NOW_ISO,
+      updatedAt: FIXED_NOW_ISO,
+    },
+    {
+      id: "cand-canonical-2",
+      userId: canonicalDataset.user.id,
+      title: "为什么你的 Agent 总是跑偏",
+      angle: "三个最常见的上下文工程错误",
+      source: "demand",
+      contentRole: "trust",
+      productAnchorId: null,
+      positioningFit: 68,
+      predictedScore: 61,
+      demandCount: 0,
+      status: "pool",
+      aiTaskId: null,
+      createdAt: FIXED_NOW_ISO,
+      updatedAt: FIXED_NOW_ISO,
+    },
+    {
+      id: "cand-canonical-3",
+      userId: canonicalDataset.user.id,
+      title: "我的 AI 工程化训练营到底教什么",
+      angle: "一条转化向内容，锚定咨询产品",
+      source: "idea",
+      contentRole: "conversion",
+      productAnchorId: null,
+      positioningFit: 90,
+      predictedScore: 88,
+      demandCount: 0,
+      status: "pool",
+      aiTaskId: null,
+      createdAt: FIXED_NOW_ISO,
+      updatedAt: FIXED_NOW_ISO,
+    },
+  ];
+  await candidateSeedRepo.seedCandidates(canonicalCandidates);
 
   return {
     projects,

@@ -11,6 +11,7 @@ import {
   Images,
   LayoutDashboard,
   Lightbulb,
+  ListTodo,
   Pencil,
   Plus,
   Search,
@@ -25,6 +26,7 @@ import {
 export type CreatorIconKey =
   | "dashboard"
   | "positioning"
+  | "topics"
   | "projects"
   | "knowledge"
   | "assets"
@@ -48,6 +50,7 @@ export type CreatorIconKey =
 export const creatorIcons = Object.freeze({
   dashboard: LayoutDashboard,
   positioning: Crosshair,
+  topics: ListTodo,
   projects: FolderKanban,
   knowledge: BookOpen,
   assets: Images,

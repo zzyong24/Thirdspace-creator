@@ -130,6 +130,14 @@ export function resolveRoute(pathname: string): RouteResolution {
       contextualCardVariant: "assistant",
     };
   }
+  if (pathname === "/topics") {
+    return {
+      headerMode: "global",
+      pageTitle: "选题候选池",
+      pageDescription: "AI / 受众信号 → 按变现潜力排序的待选选题 · 一键晋升为 Project（七步③）",
+      contextualCardVariant: "assistant",
+    };
+  }
   if (pathname === "/projects/new") {
     return {
       headerMode: "global",

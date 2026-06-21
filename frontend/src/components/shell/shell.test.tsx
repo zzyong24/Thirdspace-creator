@@ -91,6 +91,8 @@ describe("AppShell", () => {
       "首页",
       "定位中心",
       "项目",
+      // 选题候选池 — 七步③, SPEC §5.5: pinned right after 项目 (选题先于落地为 Project).
+      "选题",
       "知识库",
       "素材中心",
       "发布中心",

@@ -9,6 +9,7 @@ import {
 const requiredCreatorIconKeys = [
   "dashboard",
   "positioning",
+  "topics",
   "projects",
   "knowledge",
   "assets",
