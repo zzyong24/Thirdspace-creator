@@ -37,7 +37,11 @@ export {
   buildKnowledgeViewModel,
   buildRecentRowsFromItems,
 } from "./knowledge";
-export { buildAssetsViewModel } from "./assets";
+export {
+  buildAssetsViewModel,
+  buildAssetSummariesFromResources,
+  type AssetListRow,
+} from "./assets";
 export { buildSettingsViewModel } from "./settings";
 export { buildPublishingCenterViewModel } from "./publishing-center";
 export { buildSearchViewModel } from "./search";

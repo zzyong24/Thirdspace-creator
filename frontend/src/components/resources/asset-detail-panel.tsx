@@ -31,9 +31,26 @@ const TYPE_LABEL: Record<AssetType, string> = {
 export interface AssetDetailPanelProps {
   readonly asset: ResourceAsset | null;
   readonly usageHistory: ReadonlyArray<ResourceAssetUsage>;
+  // Module 07 E3–E6 needs-backend handlers. Optional so the panel stays a pure
+  // Server Component when rendered without an island (no handlers → render-only
+  // buttons, the previous behavior). When the Assets island passes them, the
+  // four actions fire the mapped contract op (download/copy-link/favorite/trash).
+  readonly onDownload?: (assetId: string) => void;
+  readonly onCopyLink?: (assetId: string) => void;
+  readonly onFavorite?: (assetId: string) => void;
+  readonly onTrash?: (assetId: string) => void;
+  readonly actionsPending?: boolean;
 }
 
-export function AssetDetailPanel({ asset, usageHistory }: AssetDetailPanelProps) {
+export function AssetDetailPanel({
+  asset,
+  usageHistory,
+  onDownload,
+  onCopyLink,
+  onFavorite,
+  onTrash,
+  actionsPending = false,
+}: AssetDetailPanelProps) {
   const usageForAsset = asset
     ? usageHistory.filter((row) => row.assetId === asset.id)
     : [];
@@ -63,7 +80,11 @@ export function AssetDetailPanel({ asset, usageHistory }: AssetDetailPanelProps)
               <button
                 type="button"
                 data-slot="asset-action-download"
-                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                disabled={actionsPending}
+                onClick={
+                  onDownload ? () => onDownload(asset.id) : undefined
+                }
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
               >
                 <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
                   <path d="M8 2.5 V10 M5 7 L8 10 L11 7 M3 12.5 H13" />
@@ -73,7 +94,9 @@ export function AssetDetailPanel({ asset, usageHistory }: AssetDetailPanelProps)
               <button
                 type="button"
                 data-slot="asset-action-copy"
-                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                disabled={actionsPending}
+                onClick={onCopyLink ? () => onCopyLink(asset.id) : undefined}
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
               >
                 <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
                   <rect x={5} y={5} width={9} height={9} rx={1.2} />
@@ -84,7 +107,9 @@ export function AssetDetailPanel({ asset, usageHistory }: AssetDetailPanelProps)
               <button
                 type="button"
                 data-slot="asset-action-favorite"
-                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                disabled={actionsPending}
+                onClick={onFavorite ? () => onFavorite(asset.id) : undefined}
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
               >
                 <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="currentColor">
                   <path d="M8 2.5 L9.85 6 L13.5 6.5 L10.75 9 L11.5 12.5 L8 10.8 L4.5 12.5 L5.25 9 L2.5 6.5 L6.15 6 Z" />
@@ -94,7 +119,10 @@ export function AssetDetailPanel({ asset, usageHistory }: AssetDetailPanelProps)
               <button
                 type="button"
                 data-slot="asset-action-rename"
-                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                aria-label="更多操作（移入回收站）"
+                disabled={actionsPending}
+                onClick={onTrash ? () => onTrash(asset.id) : undefined}
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
               >
                 <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
                   <circle cx={8} cy={8} r={1.2} fill="currentColor" />

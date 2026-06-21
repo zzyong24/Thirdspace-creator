@@ -35,6 +35,18 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
+// Stub `next/navigation` so the client islands (AssetUploadButton +
+// AssetsInteractiveRegion, module 07 E2–E6) can call `useRouter()` without an
+// App Router provider mounted in the unit test.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 // Stub `next/link` so we can assert href values without the Next.js
 // runtime mounting a router.
 vi.mock("next/link", () => ({
@@ -63,6 +75,13 @@ type AssetsPageProps = React.ComponentProps<
 async function renderAssets(overrides: Partial<AssetsPageProps> = {}) {
   const { AppShell } = await import("@/components/shell/app-shell");
   const { AssetsPage } = await import("./assets-page");
+  const { buildAssetsViewModel } = await import("@/fixtures/selectors");
+  // AssetsPage is an async Server Component after the module-07 E1 read switch.
+  // Render it through the `viewModel?` override seam so the unit test stays sync
+  // + fixture-driven (no pglite read) — the DOM it produces is identical to a
+  // real route render fed by the seeded `assets.list` op (F4).
+  const viewModel = overrides.viewModel ?? buildAssetsViewModel();
+  const element = await AssetsPage({ ...overrides, viewModel });
   return render(
     <AppShell
       pathname="/assets"
@@ -70,7 +89,7 @@ async function renderAssets(overrides: Partial<AssetsPageProps> = {}) {
       pageTitle="素材中心"
       contextualCardVariant="storage"
     >
-      <AssetsPage {...overrides} />
+      {element}
     </AppShell>,
   );
 }

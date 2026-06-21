@@ -55,9 +55,15 @@ import * as React from "react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { ProgressBar } from "@/components/project/progress-bar";
-import { buildAssetsViewModel } from "@/fixtures/selectors";
+import {
+  buildAssetsViewModel,
+  buildAssetSummariesFromResources,
+  type AssetListRow,
+} from "@/fixtures/selectors";
+import { client } from "@/lib/contract-client.server";
 import type { AssetType } from "@/types/domain";
 import { AssetsInteractiveRegion } from "./assets-interactive-region";
+import { AssetUploadButton } from "./asset-upload-button";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -120,8 +126,25 @@ export interface StorageUsage {
 // Page
 // ---------------------------------------------------------------------------
 
-export function AssetsPage({ viewModel }: AssetsPageProps = {}) {
-  const vm = viewModel ?? buildAssetsViewModel();
+export async function AssetsPage({ viewModel }: AssetsPageProps = {}) {
+  // Module 07 E1: the gallery `assets` now come from the REAL `assets.list` op
+  // (pglite, user-scoped, active-only) instead of the fixture-derived list. The
+  // rest of the VM (typeCounts / usageHistory / storage) stays selector-derived
+  // this wave (those rows are decorative or Production/Settings-owned). The
+  // `viewModel?` prop remains the test-override seam: when provided, no network
+  // read happens (SSR stays deterministic, F4).
+  let vm: AssetsViewModel;
+  if (viewModel === undefined) {
+    const base = buildAssetsViewModel();
+    const rows = (await client.listAssets({
+      params: undefined,
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    })) as unknown as ReadonlyArray<AssetListRow>;
+    vm = { ...base, assets: buildAssetSummariesFromResources(rows) };
+  } else {
+    vm = viewModel;
+  }
   return (
     <main
       data-app="creatoros"
@@ -225,15 +248,7 @@ function AssetToolbar() {
             ▾
           </span>
         </button>
-        <button
-          type="button"
-          data-slot="assets-upload-button"
-          aria-label="上传素材"
-          className="inline-flex h-8 items-center gap-1.5 rounded-control bg-brand px-3 text-xs font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-        >
-          <span aria-hidden="true">＋</span>
-          <span>上传素材</span>
-        </button>
+        <AssetUploadButton />
       </div>
     </div>
   );

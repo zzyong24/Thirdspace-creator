@@ -56,6 +56,53 @@ function thumbnailTokenFor(assetType: AssetType, assetId: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Real-op mapping (module 07 E1): map `assets.list` rows → AssetSummary[]
+// ---------------------------------------------------------------------------
+
+// Minimal shape of the `assetResource` rows the `assets.list` op returns. The
+// list op does not join `asset_files`, so file-derived fields (mimeType /
+// fileSize / dimensions / duration) are resolved from the canonical files when a
+// matching `currentFileId` is seeded, else fall back to deterministic defaults.
+// Tags come from canonical entity_tags (Taxonomy-owned; decorative this wave).
+export interface AssetListRow {
+  readonly id: string;
+  readonly currentFileId: string;
+  readonly assetType: AssetType;
+  readonly name: string;
+  readonly description: string;
+  readonly updatedAt: string;
+}
+
+export function buildAssetSummariesFromResources(
+  rows: ReadonlyArray<AssetListRow>,
+): ReadonlyArray<AssetSummary> {
+  const filesById = new Map(
+    canonicalDataset.assetFiles.map((file) => [file.id, file] as const),
+  );
+  return rows.map<AssetSummary>((asset) => {
+    const file = filesById.get(asset.currentFileId);
+    const tagsForAsset = canonicalDataset.entityTags
+      .filter((row) => row.entityType === "asset" && row.entityId === asset.id)
+      .map((row) => canonicalDataset.tags.find((tag) => tag.id === row.tagId)?.name)
+      .filter((name): name is string => Boolean(name));
+    return {
+      id: asset.id,
+      name: asset.name,
+      description: asset.description,
+      type: asset.assetType,
+      mimeType: file?.mimeType ?? "application/octet-stream",
+      fileSizeBytes: file?.fileSize ?? 0,
+      width: file?.width ?? null,
+      height: file?.height ?? null,
+      durationMs: file?.durationMs ?? null,
+      tags: tagsForAsset,
+      thumbnailToken: thumbnailTokenFor(asset.assetType, asset.id),
+      updatedAt: asset.updatedAt,
+    };
+  });
+}
+
+// ---------------------------------------------------------------------------
 // View-model builder
 // ---------------------------------------------------------------------------
 

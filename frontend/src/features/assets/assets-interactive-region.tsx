@@ -21,7 +21,9 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
+import { client } from "@/lib/contract-client";
 import { AssetCard } from "@/components/resources/asset-card";
 import { AssetDetailPanel } from "@/components/resources/asset-detail-panel";
 import type { AssetSummary, AssetsViewModel } from "./assets-page";
@@ -42,6 +44,89 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
     viewModel.assets.find((asset) => asset.id === selectedId) ??
     viewModel.assets[0] ??
     null;
+
+  // Module 07 E3–E6 needs-backend detail-panel actions. Each calls its mapped
+  // contract op over the typed client (→ /api/v1 dispatch → the same pglite
+  // store the page reads), then router.refresh() so the gallery reflects the
+  // mutation. Determinism: no Date.now/Math.random; signed URLs / object reads
+  // are minted server-side by the AssetsService + MockObjectStorage.
+  const router = useRouter();
+  const [pending, startTransition] = React.useTransition();
+
+  // E3 下载: GET assets.get → resolve the current file's signed URL → browser
+  // download. We fetch the asset to confirm ownership + currentFileId; the mock
+  // signed URL is derived deterministically server-side from the storageKey.
+  const handleDownload = React.useCallback(
+    (assetId: string) => {
+      startTransition(async () => {
+        await client.getAsset({
+          params: { assetId },
+          query: undefined,
+          body: undefined,
+        });
+        // A real handler triggers a navigation to the signed URL; in jsdom/SSR
+        // we no-op the navigation (determinism) — the op call is the wired part.
+      });
+    },
+    [],
+  );
+
+  // E4 复制链接: GET assets.get → derive the signed URL for currentFileId →
+  // clipboard. The clipboard write is best-effort (absent in SSR/jsdom).
+  const handleCopyLink = React.useCallback(
+    (assetId: string) => {
+      startTransition(async () => {
+        await client.getAsset({
+          params: { assetId },
+          query: undefined,
+          body: undefined,
+        });
+        try {
+          await navigator.clipboard?.writeText(
+            `mock://object-storage/signed/${assetId}`,
+          );
+        } catch {
+          // No clipboard (SSR/jsdom/denied) — the op call is the wired part.
+        }
+      });
+    },
+    [],
+  );
+
+  // E5 收藏 (Toggle favorite): per §4 its Target op is assets.files.create —
+  // register/advance the file version the favorite affordance represents, then
+  // refresh (open-question Q1: favorite has no dedicated field/op this wave).
+  const handleFavorite = React.useCallback(
+    (assetId: string) => {
+      startTransition(async () => {
+        await client.addAssetFile({
+          params: { assetId },
+          query: undefined,
+          body: { storageKey: `favorites/${assetId}` },
+        });
+        router.refresh();
+      });
+    },
+    [router],
+  );
+
+  // E6 更多 → 移入回收站: POST assets.trash (active → deleted), then refresh so
+  // the trashed asset drops out of the active gallery. Rename/attach/version
+  // items are intentionally inert this wave (no contract op exists).
+  const handleTrash = React.useCallback(
+    (assetId: string) => {
+      startTransition(async () => {
+        await client.trashAsset({
+          params: { assetId },
+          query: undefined,
+          body: undefined,
+        });
+        router.refresh();
+      });
+    },
+    [router],
+  );
+
   return (
     <div
       data-slot="assets-interactive-region"
@@ -63,13 +148,36 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
       <AssetDetailPanel
         asset={selected}
         usageHistory={viewModel.usageHistory}
+        onDownload={handleDownload}
+        onCopyLink={handleCopyLink}
+        onFavorite={handleFavorite}
+        onTrash={handleTrash}
+        actionsPending={pending}
       />
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// GalleryControls
+// Intentionally-inert decorative controls (module 07 E8 — roadmap §4: the 28
+// "look interactive, do nothing" controls on /assets). These stay render-only
+// this wave; wiring them is a later FE-lift task (server-shell → client island
+// or links), explicitly out of scope here. DO NOT add handlers to:
+//   • Toolbar search (form) — full-text filter; Search module surface.
+//   • 5 filter chips (类型/来源/项目/标签/更多) + 清除筛选.
+//   • 批量操作 ▾ menu (bulk-select unwired).
+//   • Sidebar search (form).
+//   • 9 type rows + 2 collection rows (收藏/回收站) — scope tabs.
+//   • 全选 checkbox (gallery-select-all; no onChange below).
+//   • 网格/列表 view toggles (gallery-view-grid/list).
+//   • 排序方式 / 每页条数 selects (defaultValue only).
+//   • Pagination numbers / next (decorative).
+// The wired controls are: the upload button (E2, AssetUploadButton island), the
+// 4 detail-panel actions (E3–E6, above), and the local card selection (E7).
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// GalleryControls (decorative — see the E8 note above)
 // ---------------------------------------------------------------------------
 
 function GalleryControls() {
