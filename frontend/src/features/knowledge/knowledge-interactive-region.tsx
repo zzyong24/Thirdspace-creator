@@ -146,7 +146,10 @@ export function KnowledgeInteractiveRegion({
           query: undefined,
           body: {
             title,
-            knowledgeType: createType,
+            // `createType` is one of the 5 enum values from the typed <select>
+            // options; the contract body narrows to that union.
+            knowledgeType:
+              createType as "note" | "reference" | "inspiration" | "snippet" | "transcript",
             content: createContent,
           },
         });

@@ -33,7 +33,10 @@ export { buildPlanningViewModel } from "./planning";
 export { buildProductionViewModel } from "./production";
 export { buildAnalyticsReviewViewModel } from "./review";
 export { buildPublishingViewModel } from "./project-publishing";
-export { buildKnowledgeViewModel } from "./knowledge";
+export {
+  buildKnowledgeViewModel,
+  buildRecentRowsFromItems,
+} from "./knowledge";
 export { buildAssetsViewModel } from "./assets";
 export { buildSettingsViewModel } from "./settings";
 export { buildPublishingCenterViewModel } from "./publishing-center";
