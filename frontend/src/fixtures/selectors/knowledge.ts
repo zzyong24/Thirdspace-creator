@@ -332,7 +332,37 @@ function buildRecentRows(): ReadonlyArray<KnowledgeRow> {
     }));
 }
 
-function knowledgeTypeLabel(type: string): string {
+// Map a list of real KnowledgeItemResource rows (from `knowledge.list`) into the
+// page's `recent` VM rows. Module 06 F1a: the server read switches to the real op
+// and maps `KnowledgeItemResource[]` here so the search input + the 5 type chips
+// (which filter over the Chinese `type` label) keep working unchanged. Tags are
+// derived from the canonical entity_tags index (decorative — Taxonomy owns them).
+export interface KnowledgeListItem {
+  readonly id: string;
+  readonly title: string;
+  readonly knowledgeType: string;
+  readonly status: KnowledgeRow["status"];
+  readonly updatedAt: string;
+}
+
+export function buildRecentRowsFromItems(
+  items: ReadonlyArray<KnowledgeListItem>,
+): ReadonlyArray<KnowledgeRow> {
+  if (items.length === 0) return [];
+  return items
+    .slice()
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .map<KnowledgeRow>((item) => ({
+      id: item.id,
+      title: item.title,
+      type: knowledgeTypeLabel(item.knowledgeType),
+      updatedAt: item.updatedAt.slice(0, 10),
+      status: item.status,
+      tags: tagsForKnowledge(item.id),
+    }));
+}
+
+export function knowledgeTypeLabel(type: string): string {
   switch (type) {
     case "reference":
       return "参考";

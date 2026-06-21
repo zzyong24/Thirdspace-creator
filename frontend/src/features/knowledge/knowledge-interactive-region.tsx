@@ -28,7 +28,9 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
+import { client } from "@/lib/contract-client";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
@@ -59,6 +61,17 @@ const FILTER_CHIPS: ReadonlyArray<FilterChip> = [
   { id: "笔记", label: "笔记", tone: "neutral" },
   { id: "片段", label: "片段", tone: "success" },
   { id: "记录", label: "记录", tone: "warning" },
+];
+
+// The create form's type <select> covers the 5 `knowledgeType` enum values
+// (contract knowledge.create body). `inspiration`/灵感 has no filter chip but is
+// a valid create type (plan open-question #2: chips ⊂ enum).
+const KNOWLEDGE_TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "note", label: "笔记" },
+  { value: "reference", label: "参考" },
+  { value: "inspiration", label: "灵感" },
+  { value: "snippet", label: "片段" },
+  { value: "transcript", label: "记录" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -109,6 +122,61 @@ export function KnowledgeInteractiveRegion({
   const [activeFilter, setActiveFilter] = React.useState<string>("all");
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
+  // F1b/F1c write affordances. The island owns no global store: after a write it
+  // asks the App Router to revalidate the server tree so the real `knowledge.list`
+  // re-runs and the refreshed rows flow back through the page (island → client.*
+  // → pglite → router.refresh()). Determinism: no Date.now/Math.random/fetch here
+  // — real ids/clock live in the server/service layer.
+  const router = useRouter();
+  const [pending, startTransition] = React.useTransition();
+  const [showCreate, setShowCreate] = React.useState(false);
+  const [createTitle, setCreateTitle] = React.useState("");
+  const [createType, setCreateType] = React.useState("note");
+  const [createContent, setCreateContent] = React.useState("");
+  const [revisionContent, setRevisionContent] = React.useState("");
+
+  const handleCreateSubmit = React.useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const title = createTitle.trim();
+      if (title.length === 0) return;
+      startTransition(async () => {
+        await client.createKnowledge({
+          params: undefined,
+          query: undefined,
+          body: {
+            title,
+            knowledgeType: createType,
+            content: createContent,
+          },
+        });
+        setCreateTitle("");
+        setCreateContent("");
+        setShowCreate(false);
+        router.refresh();
+      });
+    },
+    [createTitle, createType, createContent, router],
+  );
+
+  const handleRevisionSubmit = React.useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const content = revisionContent.trim();
+      if (content.length === 0 || selectedId === null) return;
+      startTransition(async () => {
+        await client.createKnowledgeRevision({
+          params: { knowledgeId: selectedId },
+          query: undefined,
+          body: { content },
+        });
+        setRevisionContent("");
+        router.refresh();
+      });
+    },
+    [revisionContent, selectedId, router],
+  );
+
   const handleSearchChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const next = event.target.value;
@@ -132,6 +200,82 @@ export function KnowledgeInteractiveRegion({
 
   return (
     <>
+      {/* F1b — greenfield 新建知识 create affordance (closes the §4 Gap for
+          POST /knowledge). Opens an inline form; submit calls knowledge.create. */}
+      <div
+        data-slot="knowledge-create-region"
+        className="flex flex-col gap-2 border-b border-border pb-2"
+      >
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            data-slot="knowledge-create-button"
+            aria-expanded={showCreate}
+            disabled={pending}
+            onClick={() => setShowCreate((prev) => !prev)}
+            className="inline-flex h-8 items-center rounded-md border border-border bg-surface px-3 text-[13px] font-medium text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
+          >
+            新建知识
+          </button>
+        </div>
+        {showCreate ? (
+          <form
+            data-slot="knowledge-create-form"
+            onSubmit={handleCreateSubmit}
+            className="flex flex-col gap-2 rounded-md border border-border bg-surface-subtle p-2.5"
+          >
+            <label className="sr-only" htmlFor="knowledge-create-title">
+              标题
+            </label>
+            <input
+              id="knowledge-create-title"
+              data-slot="knowledge-create-title"
+              type="text"
+              placeholder="标题"
+              value={createTitle}
+              onChange={(event) => setCreateTitle(event.target.value)}
+              className="h-8 rounded-md border border-border bg-surface px-3 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            />
+            <label className="sr-only" htmlFor="knowledge-create-type">
+              类型
+            </label>
+            <select
+              id="knowledge-create-type"
+              data-slot="knowledge-create-type"
+              value={createType}
+              onChange={(event) => setCreateType(event.target.value)}
+              className="h-8 rounded-md border border-border bg-surface px-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              {KNOWLEDGE_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <label className="sr-only" htmlFor="knowledge-create-content">
+              内容
+            </label>
+            <textarea
+              id="knowledge-create-content"
+              data-slot="knowledge-create-content"
+              placeholder="内容（可选）"
+              value={createContent}
+              onChange={(event) => setCreateContent(event.target.value)}
+              rows={3}
+              className="rounded-md border border-border bg-surface px-3 py-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            />
+            <button
+              type="submit"
+              data-slot="knowledge-create-submit"
+              disabled={pending || createTitle.trim().length === 0}
+              className="inline-flex h-8 w-fit items-center rounded-md bg-brand px-3 text-[13px] font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
+            >
+              保存
+            </button>
+          </form>
+        ) : null}
+      </div>
+
       <KnowledgeToolbar
         query={query}
         onQueryChange={handleSearchChange}
@@ -150,6 +294,45 @@ export function KnowledgeInteractiveRegion({
         selectedId={selectedId}
         onSelectRow={setSelectedId}
       />
+
+      {/* F1c — inline 添加笔记/修订 affordance, revealed when a recent row is
+          selected. Submit calls knowledge.revisions.create (POST
+          /knowledge/:id/revisions), closing the §4 Gap for revisions.
+          F1d — intentionally inert (decorative) per roadmap §4: Category rows
+          (filter by category, no handler), Popular tags / row tags (inert
+          TagChip), Memory insights (adopt AI insight — belongs to AI module),
+          Unsorted items (open/categorize — would map to POST
+          /knowledge/:id/relations, deferred), Reusable snippets (insert into
+          script — belongs to Artifacts), Metrics ×5 / graph chart (display
+          only). These render with NO click handlers on purpose. */}
+      {selectedId !== null ? (
+        <form
+          data-slot="knowledge-add-revision"
+          onSubmit={handleRevisionSubmit}
+          className="flex flex-col gap-2 rounded-md border border-border bg-surface-subtle p-2.5"
+        >
+          <label className="sr-only" htmlFor="knowledge-revision-content">
+            修订内容
+          </label>
+          <textarea
+            id="knowledge-revision-content"
+            data-slot="knowledge-revision-content"
+            placeholder="为所选条目添加新的修订内容"
+            value={revisionContent}
+            onChange={(event) => setRevisionContent(event.target.value)}
+            rows={3}
+            className="rounded-md border border-border bg-surface px-3 py-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          />
+          <button
+            type="submit"
+            data-slot="knowledge-revision-submit"
+            disabled={pending || revisionContent.trim().length === 0}
+            className="inline-flex h-8 w-fit items-center rounded-md bg-brand px-3 text-[13px] font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
+          >
+            保存修订
+          </button>
+        </form>
+      ) : null}
     </>
   );
 }

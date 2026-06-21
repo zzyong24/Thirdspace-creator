@@ -45,7 +45,11 @@ import {
   LoadingState,
   resolvePageState,
 } from "@/components/state/page-state";
-import { buildKnowledgeViewModel } from "@/fixtures/selectors";
+import {
+  buildKnowledgeViewModel,
+  buildRecentRowsFromItems,
+} from "@/fixtures/selectors";
+import { client } from "@/lib/contract-client.server";
 import type {
   BasePageViewModel,
   MetricCard as MetricCardVm,
@@ -122,8 +126,30 @@ export interface KnowledgeSnippet {
 // Page
 // ---------------------------------------------------------------------------
 
-export function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
-  const vm = viewModel ?? buildKnowledgeViewModel();
+export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
+  // Module 06 F1a: the `recent` rows now come from the REAL `knowledge.list` op
+  // (pglite, user-scoped) instead of the fixture-derived list. The rest of the VM
+  // (metrics / categories / insights) stays selector-derived this wave (those
+  // rows are decorative — Taxonomy/AI/Analytics own them). The `viewModel?` prop
+  // remains the test-override seam: when provided, no network read happens.
+  let vm: KnowledgeViewModel;
+  if (viewModel === undefined) {
+    const base = buildKnowledgeViewModel();
+    const items = (await client.listKnowledge({
+      params: undefined,
+      query: { page: 1, pageSize: 50 },
+      body: undefined,
+    })) as unknown as ReadonlyArray<{
+      id: string;
+      title: string;
+      knowledgeType: string;
+      status: KnowledgeRow["status"];
+      updatedAt: string;
+    }>;
+    vm = { ...base, recent: buildRecentRowsFromItems(items) };
+  } else {
+    vm = viewModel;
+  }
   const isEmpty =
     vm.categories.length === 0 &&
     vm.recent.length === 0 &&

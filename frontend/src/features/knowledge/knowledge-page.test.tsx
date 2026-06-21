@@ -33,6 +33,13 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
+// The interactive island now calls `useRouter()` (F1b/F1c write affordances).
+// Stub `next/navigation` so the island mounts without a real App Router provider;
+// these structural tests never trigger a write, so a no-op router suffices.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
+}));
+
 // Stub `next/link` so we can assert href values without the Next.js
 // runtime mounting a router.
 vi.mock("next/link", () => ({
@@ -61,9 +68,17 @@ type KnowledgePageProps = React.ComponentProps<
 async function renderKnowledge(overrides: Partial<KnowledgePageProps> = {}) {
   const { AppShell } = await import("@/components/shell/app-shell");
   const { KnowledgePage } = await import("./knowledge-page");
+  const { buildKnowledgeViewModel } = await import("@/fixtures/selectors");
+  // `KnowledgePage` is now an async Server Component (F1a: it `await`s the real
+  // `knowledge.list` op in production). The unit test drives it through the
+  // `viewModel?` override seam so it stays sync + fixture-driven — the DOM it
+  // renders is identical to the previous server-only render. We resolve the
+  // async element first (mirrors the Projects page test), then mount it.
+  const viewModel = overrides.viewModel ?? buildKnowledgeViewModel();
+  const element = await KnowledgePage({ ...overrides, viewModel });
   return render(
     <AppShell pathname="/knowledge" headerMode="global" pageTitle="知识库">
-      <KnowledgePage {...overrides} />
+      {element}
     </AppShell>,
   );
 }
