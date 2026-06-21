@@ -449,6 +449,8 @@ function DashboardHeaderActions({
       >
         <SearchIcon className="size-4" aria-hidden="true" />
         <span className="flex-1">搜索项目、内容、素材...</span>
+        {/* §348 ⌘K kbd hint — decorative per roadmap §4 (intentionally inert:
+            no keydown listener; the Link itself navigates to /search). */}
         <kbd className="rounded bg-surface-subtle px-1.5 py-0.5 text-[10px]">
           ⌘ K
         </kbd>
@@ -480,6 +482,8 @@ function ProjectsHeaderActions() {
       >
         <SearchIcon className="size-4" aria-hidden="true" />
         <span className="flex-1">搜索项目名称、关键词...</span>
+        {/* §348 ⌘K kbd hint — decorative per roadmap §4 (intentionally inert:
+            no keydown listener; the Link itself navigates to /search). */}
         <kbd className="rounded bg-surface-subtle px-1.5 py-0.5 text-[10px]">
           ⌘ K
         </kbd>

@@ -280,6 +280,8 @@ function ResultTypeTabs({
       className="-mt-1 flex flex-col gap-2"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* §290 Result type tabs (项目/知识/素材/视频) — decorative per roadmap §4
+            (scope facet, intentionally inert: no onClick handler this wave). */}
         <nav
           data-slot="result-type-tabs"
           aria-label="搜索结果类型"
@@ -320,6 +322,8 @@ function ResultTypeTabs({
         <span data-slot="result-type-count">
           找到 <span className="font-mono text-foreground">{totalCount}</span> 个结果
         </span>
+        {/* §291 Topic filter chips (AI/教程/提示词/Agent/变现/出海) — decorative per
+            roadmap §4 (intentionally inert: no filter handler this wave). */}
         <div
           data-slot="result-type-filter-chips"
           className="flex flex-wrap items-center gap-1.5"
@@ -357,6 +361,8 @@ function SearchResults({
   readonly videos: ReadonlyArray<VideoResult>;
 }) {
   return (
+    // §293 Project/knowledge/asset/video result cards — decorative per roadmap §4
+    // (open-detail navigation not wired this wave; the cards are not links yet).
     <div
       data-slot="search-results"
       className="flex flex-col gap-3"
@@ -701,6 +707,8 @@ function SearchFilters({
 }) {
   return (
     <SectionCard title="筛选" description="按类型、阶段、标签缩小范围">
+      {/* §294 Side facet rows (type/stage/tag) — decorative per roadmap §4
+          (intentionally inert: no facet apply handler this wave). */}
       <ul
         data-slot="search-filters"
         className="flex flex-col gap-1.5"
@@ -774,12 +782,21 @@ function SearchHistory({ items }: { items: ReadonlyArray<HistoryItem> }) {
               key={item.id}
               data-slot="search-history-row"
               data-history-id={item.id}
-              className="flex items-center justify-between rounded-md px-2 py-1 text-xs hover:bg-surface-subtle"
             >
-              <span className="truncate text-foreground">{item.query}</span>
-              <span className="ml-2 shrink-0 font-mono text-[10px] text-muted-foreground">
-                {item.searchedAtLabel}
-              </span>
+              {/* §296 — Re-run a prior query by NAVIGATING to /search?q=<query>.
+                  The server `pages.search.get` read re-runs and re-appends a
+                  SearchHistory row (persistence is a server-side post-read
+                  side-effect — no mutation endpoint per the spec-gap resolution). */}
+              <Link
+                href={`/search?q=${encodeURIComponent(item.query)}`}
+                data-slot="search-history-link"
+                className="flex items-center justify-between rounded-md px-2 py-1 text-xs hover:bg-surface-subtle"
+              >
+                <span className="truncate text-foreground">{item.query}</span>
+                <span className="ml-2 shrink-0 font-mono text-[10px] text-muted-foreground">
+                  {item.searchedAtLabel}
+                </span>
+              </Link>
             </li>
           ))}
         </ul>
@@ -791,6 +808,7 @@ function SearchHistory({ items }: { items: ReadonlyArray<HistoryItem> }) {
 function SearchTips({ tips }: { tips: ReadonlyArray<string> }) {
   return (
     <SectionCard title="搜索技巧" description="更精确地搜索">
+      {/* §297 Search-tips rows — decorative per roadmap §4 (static syntax tips). */}
       <ul
         data-slot="search-tips"
         className="flex flex-col gap-1 text-xs text-muted-foreground"

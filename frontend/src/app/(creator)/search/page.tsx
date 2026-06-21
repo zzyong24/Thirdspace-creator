@@ -1,34 +1,53 @@
 /**
- * Global Search route entrypoint.
+ * Global Search route entrypoint (Module 02, Task 5 — server read switch).
  *
- * The (creator) layout supplies the shared AppShell (Sidebar +
- * TopHeader) and the global Header is configured for `/search`
- * with header mode `search` and the approved `assistant`
- * contextual-card variant in `shell-router.tsx` (page-specs §15,
- * D-003, D-005).
+ * The (creator) layout supplies the shared AppShell (Sidebar + TopHeader) and the
+ * global Header is configured for `/search` with header mode `search` and the
+ * approved `assistant` contextual-card variant in `shell-router.tsx`.
  *
- * The page itself is a Server Component. The `?q=...` URL state
- * is read on the client by the inner `SearchQueryClient` which
- * resolves the initial query once on mount and then renders the
- * server-side `SearchPage` with that value.
+ * This is a Server Component. It reads the `?q=` URL state from the route's
+ * `searchParams`, fetches the composed `pages.search.get` op server-side under the
+ * request's session ctx, maps the `globalSearchPage` DTO into the page's
+ * `SearchViewModel`, and renders `SearchPage` with that `viewModel`. The
+ * `viewModel?` seam is preserved: when there is no session ctx (SSR fallback /
+ * tests), `SearchPage` falls back to `buildSearchViewModel()`.
  *
- * The Suspense fallback is intentionally a minimal fragment, NOT
- * a second `<SearchPage />` instance. Rendering a second
- * `SearchPage` here would inject a second `<main data-page="search">`
- * into the SSR streaming payload (hidden, but in the DOM) and
- * cause the page-level `[data-slot="search-page-input"]` locator
- * to resolve to two nodes — tripping Playwright's strict-mode
- * locators and the visual matrix's `page.locator("main")` count.
+ * History rows re-run a prior query by navigating `/search?q=<row.query>` (a
+ * link), which re-reads `pages.search.get` and re-appends a SearchHistory row
+ * server-side (the spec-gap resolution — no invented mutation endpoint).
  */
 
 import * as React from "react";
 
-import { SearchQueryClient } from "./search-query-client";
+import { resolveSession } from "@/lib/session.server";
+import { createServerClient } from "@/lib/contract-client.server";
+import { SearchPage } from "@/features/search/search-page";
+import { globalSearchPageToViewModel } from "@/features/search/search-view-model";
 
-export default function SearchRoutePage() {
-  return (
-    <React.Suspense fallback={<></>}>
-      <SearchQueryClient />
-    </React.Suspense>
-  );
+interface SearchRoutePageProps {
+  readonly searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function SearchRoutePage({
+  searchParams,
+}: SearchRoutePageProps) {
+  const params = (await searchParams) ?? {};
+  const rawQ = params.q;
+  const q = Array.isArray(rawQ) ? (rawQ[0] ?? "") : (rawQ ?? "");
+
+  const session = await resolveSession();
+  if (!session) {
+    // No session (the (creator) layout guard will already have redirected on a
+    // real request). Render the fixture-composed fallback so SSR never crashes.
+    return <SearchPage initialQuery={q} />;
+  }
+
+  const page = (await createServerClient(session.ctx).getGlobalSearch({
+    params: undefined,
+    query: { q },
+    body: undefined,
+  })) as unknown as Parameters<typeof globalSearchPageToViewModel>[0];
+
+  const viewModel = globalSearchPageToViewModel(page);
+  return <SearchPage viewModel={viewModel} initialQuery={q} />;
 }

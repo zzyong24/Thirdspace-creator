@@ -111,9 +111,31 @@ export function SearchInteractiveRegion({
       }
       const query = params.toString();
       const url = query ? `/search?${query}` : "/search";
+      // Keystrokes mirror the URL via replace() (no history spam) so the
+      // server-rendered `pages.search.get` read stays in sync as the user types.
       router.replace(url, { scroll: false });
     },
     [router, searchParams],
+  );
+
+  // §346 — Global search submit (Enter): PUSH (not replace) so the executed
+  // search lands in browser history, re-runs the server `pages.search.get` read,
+  // and records a SearchHistory row server-side. The input is a real client
+  // island — no preventDefault dead-end remains.
+  const handleSubmit = React.useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const params = new URLSearchParams(searchParams?.toString() ?? "");
+      const trimmed = value.trim();
+      if (trimmed) {
+        params.set("q", trimmed);
+      } else {
+        params.delete("q");
+      }
+      const query = params.toString();
+      router.push(query ? `/search?${query}` : "/search", { scroll: false });
+    },
+    [router, searchParams, value],
   );
 
   if (isSuspenseFallback) {
@@ -131,8 +153,10 @@ export function SearchInteractiveRegion({
   }
 
   return (
-    <div
+    <form
+      role="search"
       data-slot="search-interactive-region"
+      onSubmit={handleSubmit}
       className={cn(
         "flex items-center gap-2 rounded-control border border-border bg-surface px-3",
         className,
@@ -155,6 +179,6 @@ export function SearchInteractiveRegion({
         autoComplete="off"
         className="h-9 w-full border-0 bg-transparent shadow-none focus-visible:ring-0"
       />
-    </div>
+    </form>
   );
 }
