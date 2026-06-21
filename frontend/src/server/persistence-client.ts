@@ -69,6 +69,15 @@ import {
   type AssetRow,
   type AssetFileRow,
 } from "@/server/modules/assets";
+import {
+  createArtifactRepository,
+  createArtifactsService,
+  createArtifactsTransport,
+  ARTIFACT_OP_IDS,
+  type ArtifactRow,
+  type ArtifactVersionRow,
+  type ArtifactRelationRow,
+} from "@/server/modules/artifacts";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -90,6 +99,9 @@ const PERSISTED_OPS = new Set<string>([
   ...KNOWLEDGE_OP_IDS,
   // Assets (module 07) — list/get + two-phase upload + files.create + trash/restore.
   ...ASSET_OP_IDS,
+  // Artifacts (module 08) — list/create/get + versions.create/list + restore +
+  // relations.create, all user-scoped with append-only immutable versions.
+  ...ARTIFACT_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -112,6 +124,9 @@ const KNOWLEDGE_OPS = new Set<string>(KNOWLEDGE_OP_IDS);
 
 // The set of op ids owned by the assets module's transport (module 07).
 const ASSET_OPS = new Set<string>(ASSET_OP_IDS);
+
+// The set of op ids owned by the artifacts module's transport (module 08).
+const ARTIFACT_OPS = new Set<string>(ARTIFACT_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -337,6 +352,59 @@ function toAssetFileRow(f: CanonicalAssetFile): AssetFileRow {
   };
 }
 
+// Artifacts (module 08) canonical mappers. The fixture artifact rows carry no
+// `userId` (they hang off projects owned by the canonical user), so the owner is
+// injected at seed time. Version rows match the DB shape (immutable, no updatedAt);
+// relations match directly.
+type CanonicalArtifact = (typeof canonicalDataset.artifacts)[number];
+type CanonicalArtifactVersion = (typeof canonicalDataset.artifactVersions)[number];
+type CanonicalArtifactRelation = (typeof canonicalDataset.artifactRelations)[number];
+
+function toArtifactRow(a: CanonicalArtifact, userId: string): ArtifactRow {
+  return {
+    id: a.id,
+    userId,
+    projectId: a.projectId,
+    contentOutputId: a.contentOutputId ?? null,
+    currentVersionId: a.currentVersionId ?? null,
+    stage: a.stage,
+    artifactType: a.artifactType,
+    title: a.title,
+    status: a.status,
+    archivedAt: a.archivedAt ?? null,
+    createdAt: a.createdAt,
+    updatedAt: a.updatedAt,
+  };
+}
+
+function toArtifactVersionRow(
+  v: CanonicalArtifactVersion,
+): ArtifactVersionRow {
+  return {
+    id: v.id,
+    artifactId: v.artifactId,
+    versionNumber: v.versionNumber,
+    contentText: v.contentText,
+    contentData: v.contentData as Record<string, unknown>,
+    changeSummary: v.changeSummary,
+    createdByType: v.createdByType,
+    aiTaskId: v.aiTaskId ?? null,
+    createdAt: v.createdAt,
+  };
+}
+
+function toArtifactRelationRow(
+  r: CanonicalArtifactRelation,
+): ArtifactRelationRow {
+  return {
+    id: r.id,
+    sourceArtifactId: r.sourceArtifactId,
+    targetArtifactId: r.targetArtifactId,
+    relationType: r.relationType,
+    createdAt: r.createdAt,
+  };
+}
+
 type CanonicalPreference = (typeof canonicalDataset.userPreferences)[number];
 type CanonicalModel = (typeof canonicalDataset.modelConfigurations)[number];
 type CanonicalAgent = (typeof canonicalDataset.agentConfigurations)[number];
@@ -401,6 +469,7 @@ interface PersistenceBundle {
   settings: Transport;
   knowledge: Transport;
   assets: Transport;
+  artifacts: Transport;
   identity: IdentityService;
 }
 
@@ -471,9 +540,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // the deterministic `deps` (createSeq keeps knowledge/revision/relation ids
   // collision-free across requests).
   const knowledgeRepo = createKnowledgeRepository(db, deps);
-  const knowledge = createKnowledgeTransport(() =>
-    createKnowledgeService(knowledgeRepo),
-  );
+  const knowledgeService = createKnowledgeService(knowledgeRepo);
+  const knowledge = createKnowledgeTransport(() => knowledgeService);
 
   // Assets (module 07): one user-scoped repository over the shared db (the repo
   // takes ctx per-call, not at construction). The service is the SOLE
@@ -487,9 +555,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const objectStorage = createMockObjectStorage({
     nextKey: () => `uploads/${deps.nextId("objkey")}`,
   });
-  const assets = createAssetsTransport(() =>
-    createAssetsService(assetsRepo, objectStorage, deps),
-  );
+  const assetsService = createAssetsService(assetsRepo, objectStorage, deps);
+  const assets = createAssetsTransport(() => assetsService);
+
+  // Artifacts (module 08): the service builds a per-ctx user-scoped repo over the
+  // shared db (the repo bakes userId in; the service mints one per request). The
+  // transport returns this ONE shared service. createVersion post-commit re-indexes
+  // via the Search service (best-effort, never rolls back); evidence-target
+  // ownership is validated through the Knowledge/Assets public services
+  // (getKnowledge/getAsset throw OwnershipError) — no cross-module repo import.
+  // Clock/ids share the deterministic `deps` (createSeq keeps artifact/version ids
+  // collision-free across requests).
+  const artifactsService = createArtifactsService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+    searchUpsert: (ctx, input) => searchService.upsertDocument(ctx, input),
+    assertKnowledgeOwned: (ctx, id) => knowledgeService.getKnowledge(ctx, id),
+    assertAssetOwned: (ctx, id) => assetsService.getAsset(ctx, id),
+  });
+  const artifacts = createArtifactsTransport(() => artifactsService);
 
   // Seed the Projects exemplar dataset (owned by the canonical user) AND the
   // canonical identity row, so real login resolves to `user-zyongzhu` and every
@@ -548,6 +633,29 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
   await assetsRepo.seedAssets(canonicalDataset.assets.map(toAssetRow));
 
+  // Seed the canonical artifacts graph (artifacts + their versions + relations),
+  // all owned by the canonical user, so the Script/Planning workspaces resolve the
+  // real rows under the seeded login (foundation §2). The fixture artifact rows
+  // carry no userId — inject the canonical owner here. Versions are seeded before
+  // artifacts so currentVersionId references resolve. seed* are onConflictDoNothing
+  // → a re-built singleton never double-seeds. A user-scoped seed repo is minted
+  // for the canonical owner.
+  const artifactsSeedRepo = createArtifactRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  });
+  await artifactsSeedRepo.seedVersions(
+    canonicalDataset.artifactVersions.map(toArtifactVersionRow),
+  );
+  await artifactsSeedRepo.seedArtifacts(
+    canonicalDataset.artifacts.map((a) =>
+      toArtifactRow(a, canonicalDataset.user.id),
+    ),
+  );
+  await artifactsSeedRepo.seedRelations(
+    canonicalDataset.artifactRelations.map(toArtifactRelationRow),
+  );
+
   // Seed the canonical user's search index (module 02, Wave-1 seed approach —
   // plan open-question #4): derive SearchDocuments from the owned projects /
   // knowledge / assets / publications so `/search` returns results before the
@@ -599,6 +707,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     settings,
     knowledge,
     assets,
+    artifacts,
     identity,
   };
 }
@@ -636,6 +745,10 @@ async function getKnowledge(): Promise<Transport> {
 
 async function getAssets(): Promise<Transport> {
   return (await getBundle()).assets;
+}
+
+async function getArtifacts(): Promise<Transport> {
+  return (await getBundle()).artifacts;
 }
 
 /**
@@ -698,6 +811,14 @@ export const compositeTransport: Transport = {
     if (ASSET_OPS.has(endpoint.id)) {
       const assets = await getAssets();
       return assets.request(endpoint, input, ctx);
+    }
+    // Artifacts ops (module 08) — list/create/get + versions.create/list +
+    // restore + relations.create served by the module's own user-scoped transport
+    // over the SAME pglite store (foundation §1 registry). No ctx ⇒
+    // AuthenticationError.
+    if (ARTIFACT_OPS.has(endpoint.id)) {
+      const artifacts = await getArtifacts();
+      return artifacts.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1

@@ -79,7 +79,7 @@ describe("artifacts.service — append-only versioning", () => {
 
   it("restoreVersion creates a NEW version (max+1), not a re-point to the old id", async () => {
     const artifact = await seedArtifact(ctxA);
-    const v1Id = artifact.currentVersionId;
+    const v1Id = artifact.currentVersionId!;
     await service.createVersion(ctxA, artifact.id, {
       contentText: "第二版",
       changeSummary: "edit",
@@ -134,7 +134,7 @@ describe("artifacts.service — structured-content guard", () => {
   it("replaceStructuredContent runs against the current version", async () => {
     const artifact = await seedArtifact(ctxA);
     await expect(
-      service.replaceStructuredContent(ctxA, artifact.id, artifact.currentVersionId, {
+      service.replaceStructuredContent(ctxA, artifact.id, artifact.currentVersionId!, {
         scriptSections: [
           { sectionType: "hook", title: "钩子", content: "...", position: 0 },
         ],
@@ -144,7 +144,7 @@ describe("artifacts.service — structured-content guard", () => {
 
   it("replaceStructuredContent refuses a stale (non-current) version id (ConflictError)", async () => {
     const artifact = await seedArtifact(ctxA);
-    const staleVersionId = artifact.currentVersionId;
+    const staleVersionId = artifact.currentVersionId!;
     // Mint a new current version → the old id is now stale.
     await service.createVersion(ctxA, artifact.id, {
       contentText: "第二版",
