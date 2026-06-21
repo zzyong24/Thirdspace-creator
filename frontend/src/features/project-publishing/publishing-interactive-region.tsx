@@ -48,6 +48,18 @@ export interface PublishingWiring {
   readonly publications: Readonly<Record<string, string>>;
 }
 
+// §4 内容日历 cells wiring (module 22 接管 — promotes the inert calendar). When present
+// (the server shell supplies the active account + a deterministic per-cell base instant),
+// clicking an empty cell issues `accounts.calendar.entries.create { plannedAt }` then
+// router.refresh(). Absent (default render / pure fixture) → the calendar stays
+// decorative (C-2: no client-invented entry state). The base instant is injected (C-5 —
+// never wall-clock); each cell derives its plannedAt by adding its index in days.
+export interface CalendarWiring {
+  readonly accountId: string;
+  /** ISO-8601 base instant for cell 0; cell N = base + N days (deterministic, C-5). */
+  readonly weekStart: string;
+}
+
 // ---------------------------------------------------------------------------
 // Locked descriptors (mirrors the previous server render verbatim)
 // ---------------------------------------------------------------------------
@@ -177,9 +189,11 @@ const COVER_GRADIENTS: ReadonlyArray<string> = [
 export function PublishingInteractiveRegion({
   viewModel,
   wiring,
+  calendarWiring,
 }: {
   readonly viewModel: PublishingViewModel;
   readonly wiring?: PublishingWiring;
+  readonly calendarWiring?: CalendarWiring;
 }) {
   const vm = viewModel;
   return (
@@ -216,7 +230,11 @@ export function PublishingInteractiveRegion({
             </div>
           </SectionCard>
         </div>
-        <PlatformPublishingPanel platforms={vm.platforms} wiring={wiring} />
+        <PlatformPublishingPanel
+          platforms={vm.platforms}
+          wiring={wiring}
+          calendarWiring={calendarWiring}
+        />
         <div data-slot="preview-rail" className="flex flex-col gap-1">
           <PlatformPreview preview={vm.preview} />
           <PlatformMetricsSummary />
@@ -576,9 +594,11 @@ function ExtraPublishingOptionsField() {
 function PlatformPublishingPanel({
   platforms,
   wiring,
+  calendarWiring,
 }: {
   platforms: PublishingViewModel["platforms"];
   wiring?: PublishingWiring;
+  calendarWiring?: CalendarWiring;
 }) {
   const router = useRouter();
   const [, startTransition] = React.useTransition();
@@ -680,7 +700,7 @@ function PlatformPublishingPanel({
       </SectionCard>
       <BatchTimeActions />
       <ConfirmPublishButton state={publishState} onConfirm={handleConfirm} />
-      <ContentCalendar days={CALENDAR_DAYS} />
+      <ContentCalendar days={CALENDAR_DAYS} calendarWiring={calendarWiring} />
       <PrePublishCheck />
     </div>
   );
@@ -855,11 +875,42 @@ function ConfirmPublishButton({
   );
 }
 
+// Deterministic per-cell instant: weekStart + index days (C-5 — no Date.now). The base
+// instant is injected by the server shell; the math is pure string→Date→string.
+function cellPlannedAt(weekStart: string, index: number): string {
+  const base = Date.parse(weekStart);
+  return new Date(base + index * 86_400_000).toISOString();
+}
+
 function ContentCalendar({
   days,
+  calendarWiring,
 }: {
   days: ReadonlyArray<(typeof CALENDAR_DAYS)[number]>;
+  calendarWiring?: CalendarWiring;
 }) {
+  const router = useRouter();
+  const [, startTransition] = React.useTransition();
+
+  // §4 内容日历 cells (module 22 接管): when wired, an empty cell is a create affordance
+  // → accounts.calendar.entries.create { plannedAt } then router.refresh(). Unwired →
+  // the cell is inert (decorative, C-2 — no client-invented entry state).
+  const createSlot = React.useCallback(
+    (index: number) => {
+      if (!calendarWiring) return;
+      const plannedAt = cellPlannedAt(calendarWiring.weekStart, index);
+      startTransition(async () => {
+        await client.createEntry({
+          params: { accountId: calendarWiring.accountId },
+          query: undefined,
+          body: { plannedAt },
+        });
+        router.refresh();
+      });
+    },
+    [calendarWiring, router],
+  );
+
   return (
     <div
       data-slot="content-calendar"
@@ -878,31 +929,45 @@ function ContentCalendar({
         className="grid grid-cols-7 gap-0.5"
         aria-label="内容日历"
       >
-        {days.map((day) => (
-          <li
-            key={day.label}
-            data-slot="content-calendar-cell"
-            data-day-status={day.status}
-            className="flex flex-col items-center gap-0.5 rounded-md border border-border bg-surface-subtle px-0.5 py-0.5"
-          >
-            <span className="text-[8px] font-medium text-muted-foreground">
-              {day.label}
-            </span>
-            <span
-              className={
-                day.status === "active"
-                  ? "inline-flex size-1 rounded-full bg-brand"
-                  : day.status === "draft"
-                    ? "inline-flex size-1 rounded-full bg-warning"
-                    : "inline-flex size-1 rounded-full bg-border"
-              }
-              aria-hidden="true"
-            />
-            <span className="text-[8px] text-muted-foreground">
-              {day.platforms.length}
-            </span>
-          </li>
-        ))}
+        {days.map((day, index) => {
+          const isEmpty = day.status === "empty";
+          const clickable = Boolean(calendarWiring) && isEmpty;
+          const Cell = clickable ? "button" : "div";
+          return (
+            <li key={day.label}>
+              <Cell
+                {...(clickable
+                  ? {
+                      type: "button" as const,
+                      onClick: () => createSlot(index),
+                      "aria-label": `为${day.label}新增计划`,
+                    }
+                  : {})}
+                data-slot="content-calendar-cell"
+                data-day-status={day.status}
+                data-clickable={clickable ? "true" : "false"}
+                className="flex w-full flex-col items-center gap-0.5 rounded-md border border-border bg-surface-subtle px-0.5 py-0.5"
+              >
+                <span className="text-[8px] font-medium text-muted-foreground">
+                  {day.label}
+                </span>
+                <span
+                  className={
+                    day.status === "active"
+                      ? "inline-flex size-1 rounded-full bg-brand"
+                      : day.status === "draft"
+                        ? "inline-flex size-1 rounded-full bg-warning"
+                        : "inline-flex size-1 rounded-full bg-border"
+                  }
+                  aria-hidden="true"
+                />
+                <span className="text-[8px] text-muted-foreground">
+                  {day.platforms.length}
+                </span>
+              </Cell>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

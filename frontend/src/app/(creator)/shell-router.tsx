@@ -130,6 +130,14 @@ export function resolveRoute(pathname: string): RouteResolution {
       contextualCardVariant: "assistant",
     };
   }
+  if (pathname === "/calendar") {
+    return {
+      headerMode: "global",
+      pageTitle: "内容日历",
+      pageDescription: "发布节奏 · 这周该发什么、哪个账号断更了（七步⑦ · §7.2）",
+      contextualCardVariant: "assistant",
+    };
+  }
   if (pathname === "/projects") {
     return {
       headerMode: "global",
