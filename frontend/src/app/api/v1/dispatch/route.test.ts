@@ -97,17 +97,20 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     expect(res.status).toBe(404);
   });
 
-  it("returns 501 for a not-yet-implemented operation", async () => {
-    // `calibration.rubrics.create` is now wired (module 20 Calibration, Wave 5–7),
-    // so use a content-calendar op (`accounts.cadence.attainment` — owned by the
-    // not-yet-built content-calendar/platform-accounts modules: not persisted, no
-    // mock handler → the mock transport raises "operation not implemented" → 501).
+  it("routes a wired op to its persistence-backed module (404 for a cross-/unknown-owner ref)", async () => {
+    // Every contract op is now wired into a real, user-scoped module transport — no
+    // contract op falls through to the mock's "operation not implemented" (501) path
+    // anymore. `accounts.cadence.attainment` (module 22 ContentCalendar, Wave 5–7) is
+    // the last formerly-unimplemented op; it now routes to the real transport, whose
+    // PlatformAccountService ownership gate rejects an unknown account id with
+    // OwnershipError → 404 (SPEC §14: 404 not 403, no existence leak). This proves the
+    // op is persistence-backed (not a 501 stub) AND multi-tenant from end to end.
     const res = await dispatch("accounts.cadence.attainment", {
-      params: undefined,
-      query: undefined,
+      params: { accountId: "acct-does-not-exist" },
+      query: { from: "2026-07-01T00:00:00.000Z", to: "2026-07-31T00:00:00.000Z" },
       body: undefined,
     });
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(404);
   });
 
   it("returns 401 for a persisted op WITHOUT a session cookie (ctx required)", async () => {
