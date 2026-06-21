@@ -96,6 +96,11 @@ export {
   aiTaskResults,
   AI_DDL,
 } from "./schema/ai";
+export {
+  creatorProfiles,
+  positioningStatements,
+  POSITIONING_DDL,
+} from "./schema/positioning";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their

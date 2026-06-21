@@ -1,0 +1,242 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { createDb, type Db } from "@creatoros/backend";
+import type { RequestContext } from "@creatoros/contract";
+import {
+  createPositioningService,
+  type PositioningProjectsPort,
+  type PositioningService,
+} from "./positioning.service";
+import {
+  ProfileRequiredError,
+  GateSubjectError,
+  StatementValidationError,
+} from "./positioning.errors";
+
+// Positioning service test (Task 3) — fake now/nextId, pglite db, stubbed
+// ProjectsPort. Covers: upsertProfile idempotency; append-only version chain (v2
+// leaves v1 byte-identical; the service exposes NO update/delete); 3-keyword guard;
+// ProfileRequiredError; deterministic advisory gate (same input → same score, twice;
+// non-mutating); AI-formalize tagging (created_by_type:"ai" + ai_task_id, no
+// parallel candidate machine); page DTO empty-state. Deterministic clock/ids (no
+// Date.now / Math.random).
+
+const NOW = "2026-06-21T00:00:00.000Z";
+const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
+
+function makeProjectsPort(
+  subject: { title: string; brief: string } = { title: "AI 论文精读", brief: "把最新论文做成代码" },
+): PositioningProjectsPort & { getProjectSubject: ReturnType<typeof vi.fn> } {
+  return {
+    getProjectSubject: vi.fn(async () => subject),
+  };
+}
+
+function makeService(
+  db: Db,
+  projects: PositioningProjectsPort,
+  tag = "a",
+): PositioningService {
+  let seq = 0;
+  return createPositioningService({
+    db,
+    now: () => NOW,
+    nextId: (prefix: string) => `${prefix}-${tag}-${++seq}`,
+    projects,
+  });
+}
+
+const PROFILE_INPUT = {
+  persona: "硬核科普",
+  field: "AI 工程",
+  audience: "一线开发者",
+  differentiation: "论文到代码",
+  capabilities: ["拆解", "演示"],
+};
+
+describe("positioning service", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("upsertProfile inserts then updates the same row (one profile per user)", async () => {
+    const service = makeService(db, makeProjectsPort());
+    const first = await service.upsertProfile(ctx, PROFILE_INPUT);
+    expect(first.field).toBe("AI 工程");
+    const second = await service.upsertProfile(ctx, {
+      ...PROFILE_INPUT,
+      field: "AI 应用",
+    });
+    expect(second.id).toBe(first.id); // same row, no duplicate
+    expect(second.field).toBe("AI 应用");
+    const center = await service.getPositioningCenter(ctx);
+    expect(center.history).toHaveLength(0);
+    expect(center.profile!.id).toBe(first.id);
+  });
+
+  it("createStatementVersion requires a profile first (ProfileRequiredError)", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await expect(
+      service.createStatementVersion(ctx, {
+        oneLiner: "x",
+        keywords: ["a", "b", "c"],
+        productAnchorIds: [],
+      }),
+    ).rejects.toBeInstanceOf(ProfileRequiredError);
+  });
+
+  it("append-only version chain: v2 is version 2 and leaves v1 byte-identical", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    const v1 = await service.createStatementVersion(ctx, {
+      oneLiner: "v1 文案",
+      keywords: ["论文", "代码", "工程化"],
+      productAnchorIds: ["product-1"],
+    });
+    expect(v1.versionNumber).toBe(1);
+    const v2 = await service.createStatementVersion(ctx, {
+      oneLiner: "v2 文案",
+      keywords: ["论文", "生产级", "工程化"],
+      productAnchorIds: ["product-1", "product-2"],
+    });
+    expect(v2.versionNumber).toBe(2);
+    // re-read v1 — unchanged.
+    const reread = await service.getStatement(ctx, v1.id);
+    expect(reread).toEqual(v1);
+    // No update/delete method exposed (immutability, mirrors Artifacts).
+    expect(
+      (service as unknown as Record<string, unknown>).updateStatement,
+    ).toBeUndefined();
+    expect(
+      (service as unknown as Record<string, unknown>).deleteStatement,
+    ).toBeUndefined();
+  });
+
+  it("rejects a statement whose keywords are not exactly 3", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    await expect(
+      service.createStatementVersion(ctx, {
+        oneLiner: "x",
+        keywords: ["a", "b"],
+        productAnchorIds: [],
+      }),
+    ).rejects.toBeInstanceOf(StatementValidationError);
+  });
+
+  it("AI-formalize: createStatementVersion tags created_by_type 'ai' + ai_task_id (no parallel candidate machine)", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    const aiVersion = await service.createStatementVersion(ctx, {
+      oneLiner: "AI 建议的定位",
+      keywords: ["论文", "代码", "工程化"],
+      productAnchorIds: [],
+      createdByType: "ai",
+      aiTaskId: "ai-task-9",
+    });
+    expect(aiVersion.createdByType).toBe("ai");
+    expect(aiVersion.aiTaskId).toBe("ai-task-9");
+    // Positioning owns no candidate lifecycle (C-3).
+    expect(
+      (service as unknown as Record<string, unknown>).submitCandidate,
+    ).toBeUndefined();
+    expect(
+      (service as unknown as Record<string, unknown>).confirm,
+    ).toBeUndefined();
+  });
+
+  it("evaluateGate is deterministic + advisory: same input → same score twice, no mutation", async () => {
+    const port = makeProjectsPort({
+      title: "论文精读：工程化落地",
+      brief: "把代码做成生产级",
+    });
+    const service = makeService(db, port);
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    await service.createStatementVersion(ctx, {
+      oneLiner: "把论文变代码",
+      keywords: ["论文", "代码", "工程化"],
+      productAnchorIds: ["product-1"],
+    });
+    const r1 = await service.evaluateGate(ctx, {
+      subjectType: "project",
+      subjectId: "project-1",
+    });
+    const r2 = await service.evaluateGate(ctx, {
+      subjectType: "project",
+      subjectId: "project-1",
+    });
+    expect(r1.positioningFit).toBe(r2.positioningFit);
+    expect(r1.reasons).toEqual(r2.reasons);
+    expect(r1.positioningFit).toBeGreaterThanOrEqual(0);
+    expect(r1.positioningFit).toBeLessThanOrEqual(100);
+    // Keyword hits: "论文" + "代码" + "工程化" all present in subject text → 3/3.
+    expect(r1.reasons).toContain("命中关键词 3/3");
+    // statement list unchanged by evaluation (advisory, not mutating).
+    const { total } = await service.listStatements(ctx, { limit: 50, offset: 0 });
+    expect(total).toBe(1);
+  });
+
+  it("evaluateGate with no statement → GateSubjectError", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    await expect(
+      service.evaluateGate(ctx, {
+        subjectType: "project",
+        subjectId: "project-1",
+      }),
+    ).rejects.toBeInstanceOf(GateSubjectError);
+  });
+
+  it("evaluateGate accepts an inline candidate payload (OQ5) and scores anchor/role", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    await service.createStatementVersion(ctx, {
+      oneLiner: "把论文变代码",
+      keywords: ["论文", "代码", "工程化"],
+      productAnchorIds: ["product-1"],
+    });
+    const r = await service.evaluateGate(ctx, {
+      subjectType: "candidate",
+      subjectId: "cand-1",
+      candidate: {
+        title: "论文解读",
+        angle: "工程化",
+        contentRole: "conversion",
+        productAnchorId: "product-1",
+      },
+    });
+    expect(r.subjectType).toBe("candidate");
+    expect(r.reasons).toContain("锚定产品一致");
+    expect(r.reasons).toContain("内容角色对齐 (conversion)");
+  });
+
+  it("getPositioningCenter empty-state returns nulls + empty arrays, not an error", async () => {
+    const service = makeService(db, makeProjectsPort());
+    const center = await service.getPositioningCenter(ctx);
+    expect(center.profile).toBeNull();
+    expect(center.currentStatement).toBeNull();
+    expect(center.keywords).toEqual([]);
+    expect(center.productAnchors).toEqual([]);
+    expect(center.history).toEqual([]);
+  });
+
+  it("getPositioningCenter returns current = max version + history version-desc", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    await service.createStatementVersion(ctx, {
+      oneLiner: "v1",
+      keywords: ["a", "b", "c"],
+      productAnchorIds: [],
+    });
+    await service.createStatementVersion(ctx, {
+      oneLiner: "v2",
+      keywords: ["d", "e", "f"],
+      productAnchorIds: ["product-9"],
+    });
+    const center = await service.getPositioningCenter(ctx);
+    expect(center.currentStatement!.versionNumber).toBe(2);
+    expect(center.keywords).toEqual(["d", "e", "f"]);
+    expect(center.productAnchors).toEqual(["product-9"]);
+    expect(center.history.map((h) => h.versionNumber)).toEqual([2, 1]);
+  });
+});

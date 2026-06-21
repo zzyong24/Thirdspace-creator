@@ -121,6 +121,14 @@ import {
   AI_OP_IDS,
 } from "@/server/modules/ai";
 import {
+  createPositioningService,
+  createPositioningTransport,
+  createPositioningRepository,
+  POSITIONING_OP_IDS,
+  type CreatorProfileRow,
+  type PositioningStatementRow,
+} from "@/server/modules/positioning";
+import {
   createDashboardQueryService,
   createProjectOverviewQueryService,
   createGlobalSearchQueryService,
@@ -184,6 +192,13 @@ const PERSISTED_OPS = new Set<string>([
   // public upstream services only (SPEC §19); pages.search.get is TAKEN OVER from
   // the Search module's interim composer here. publishingCenterPage has no op.
   ...QUERY_SERVICES_OP_IDS,
+  // Positioning (module 17, Wave 5) — 七步①② 定位中心. profile get/upsert +
+  // statements list/create/get (append-only immutable version chain) + gate.evaluate
+  // (deterministic advisory 0–100 fit) + pages.positioning.get (定位中心 page DTO),
+  // all user-scoped. The gate reaches Projects via the injected port; the AI 定位演进
+  // 回流 formalizes through createStatementVersion (createdByType:'ai') — no parallel
+  // candidate machine (C-3).
+  ...POSITIONING_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -238,6 +253,9 @@ const LEARNINGS_OPS = new Set<string>(LEARNINGS_OP_IDS);
 
 // The set of op ids owned by the ai module's transport (module 15).
 const AI_OPS = new Set<string>(AI_OP_IDS);
+
+// The set of op ids owned by the positioning module's transport (module 17).
+const POSITIONING_OPS = new Set<string>(POSITIONING_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -588,6 +606,7 @@ interface PersistenceBundle {
   reviews: Transport;
   learnings: Transport;
   ai: Transport;
+  positioning: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
   // reads, plus the Publishing Center composer (no endpoint — the FE calls it
   // server-side via getPublishingCenterService()).
@@ -1001,6 +1020,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const ai = createAiTransport(() => aiService);
 
+  // Positioning (module 17, Wave 5): the service builds a per-ctx user-scoped repo
+  // over the shared db (the repo bakes userId in; the service mints one per request).
+  // The transport returns this ONE shared service. The PositioningGate's project
+  // subject reaches Projects ONLY through the injected PositioningProjectsPort (no
+  // cross-module repo import, SPEC §22), satisfied here by the Projects public
+  // repo's ownership-gated get (a cross-user / unknown projectId throws
+  // OwnershipError → 404 BEFORE the gate scores). The AI 定位演进回流 formalizes
+  // through positioningService.createStatementVersion (createdByType:'ai') — wired on
+  // the AI side when module-15 adds the positioning_revise branch (OQ2); positioning
+  // owns no candidate state machine (C-3). Clock/ids share the deterministic `deps`
+  // (createSeq keeps profile/posstmt ids collision-free across requests).
+  const positioningService = createPositioningService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+    projects: {
+      getProjectSubject: async (ctx, projectId) => {
+        // projectsRepo.get gates the project's ownership (cross-user / unknown →
+        // OwnershipError → 404) and returns the title/brief the scorer reads.
+        const row = await projectsRepo.get(ctx, projectId);
+        return { title: row.title, brief: row.brief };
+      },
+    },
+  });
+  const positioning = createPositioningTransport(() => positioningService);
+
   // Query services (module Q, Wave 4 — SPEC §19). Composition module: NO repo, NO
   // SQL. Each composer is built with facade interfaces; here the composition root
   // binds those facades to the REAL public services (consumed only via their
@@ -1368,6 +1413,56 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     buildAiAgentConfigs(canonicalDataset.user.id, FIXED_NOW_ISO),
   );
 
+  // Seed the canonical positioning (module 17): one CreatorProfile + two immutable
+  // statement versions (v1→v2 append-only chain), owned by the canonical user, so
+  // the /positioning 定位中心 page resolves real rows under the seeded login
+  // (foundation §2). Deterministic ids/clock (FIXED_NOW_ISO). seed* are
+  // onConflictDoNothing → a re-built singleton never double-seeds. A user-scoped
+  // seed repo is minted for the canonical owner.
+  const positioningSeedRepo = createPositioningRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  });
+  const canonicalProfile: CreatorProfileRow = {
+    id: "profile-canonical",
+    userId: canonicalDataset.user.id,
+    persona: "把前沿 AI 论文工程化的硬核创作者",
+    field: "AI 工程 / 应用落地",
+    audience: "想把 AI 用起来的一线开发者",
+    differentiation: "每条内容都给出可运行的代码与踩坑记录",
+    capabilities: ["论文拆解", "代码演示", "工程化复盘"],
+    createdAt: FIXED_NOW_ISO,
+    updatedAt: FIXED_NOW_ISO,
+  };
+  const canonicalStatements: PositioningStatementRow[] = [
+    {
+      id: "posstmt-canonical-1",
+      userId: canonicalDataset.user.id,
+      profileId: canonicalProfile.id,
+      oneLiner: "我帮一线开发者把最新 AI 论文变成可运行的工程代码",
+      keywords: ["论文", "代码", "工程化"],
+      productAnchorIds: [],
+      versionNumber: 1,
+      createdByType: "human",
+      aiTaskId: null,
+      createdAt: FIXED_NOW_ISO,
+    },
+    {
+      id: "posstmt-canonical-2",
+      userId: canonicalDataset.user.id,
+      profileId: canonicalProfile.id,
+      oneLiner: "我帮一线开发者把最新 AI 论文变成生产级、可复用的工程代码",
+      keywords: ["论文", "生产级", "工程化"],
+      productAnchorIds: [],
+      versionNumber: 2,
+      createdByType: "human",
+      aiTaskId: null,
+      createdAt: FIXED_NOW_ISO,
+    },
+  ];
+  await positioningSeedRepo.seedProfiles([canonicalProfile]);
+  await positioningSeedRepo.seedStatements(canonicalStatements);
+
   return {
     projects,
     taxonomy,
@@ -1384,6 +1479,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     reviews,
     learnings,
     ai,
+    positioning,
     queryServices,
     publishingCenter,
     identity,
@@ -1455,6 +1551,10 @@ async function getLearnings(): Promise<Transport> {
 
 async function getAi(): Promise<Transport> {
   return (await getBundle()).ai;
+}
+
+async function getPositioning(): Promise<Transport> {
+  return (await getBundle()).positioning;
 }
 
 async function getQueryServices(): Promise<Transport> {
@@ -1603,6 +1703,16 @@ export const compositeTransport: Transport = {
     if (AI_OPS.has(endpoint.id)) {
       const ai = await getAi();
       return ai.request(endpoint, input, ctx);
+    }
+    // Positioning ops (module 17, Wave 5) — profile get/upsert + statements
+    // list/create/get + gate.evaluate + pages.positioning.get served by the module's
+    // own user-scoped transport over the SAME pglite store (foundation §1 registry).
+    // The append-only version chain + deterministic advisory gate run inside the
+    // service; the gate's project subject reaches Projects via the injected port. No
+    // ctx ⇒ AuthenticationError.
+    if (POSITIONING_OPS.has(endpoint.id)) {
+      const positioning = await getPositioning();
+      return positioning.request(endpoint, input, ctx);
     }
     // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
     // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by

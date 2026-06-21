@@ -98,11 +98,11 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
   });
 
   it("returns 501 for a not-yet-implemented operation", async () => {
-    // `pages.projectOverview.get` is now wired (module Q, Wave 4), so use the
-    // 定位中心 page op (`pages.positioning.get` — owned by the positioning module,
-    // not built in this worktree: not persisted, no mock handler → the mock
-    // transport raises "operation not implemented" → 501).
-    const res = await dispatch("pages.positioning.get", {
+    // `pages.positioning.get` is now wired (module 17, Wave 5), so use a
+    // monetization op (`products.list` — owned by the not-yet-built monetization
+    // module: not persisted, no mock handler → the mock transport raises
+    // "operation not implemented" → 501).
+    const res = await dispatch("products.list", {
       params: undefined,
       query: undefined,
       body: undefined,

@@ -16,6 +16,7 @@ import * as ingestionSchema from "./schema/ingestion";
 import * as reviewsSchema from "./schema/reviews";
 import * as learningsSchema from "./schema/learnings";
 import * as aiSchema from "./schema/ai";
+import * as positioningSchema from "./schema/positioning";
 import { PROJECTS_DDL } from "./schema/projects";
 import { IDENTITY_DDL } from "./schema/identity";
 import { TAXONOMY_DDL } from "./schema/taxonomy";
@@ -32,6 +33,7 @@ import { INGESTION_DDL } from "./schema/ingestion";
 import { REVIEWS_DDL } from "./schema/reviews";
 import { LEARNINGS_DDL } from "./schema/learnings";
 import { AI_DDL } from "./schema/ai";
+import { POSITIONING_DDL } from "./schema/positioning";
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
@@ -52,6 +54,7 @@ const schema = {
   ...reviewsSchema,
   ...learningsSchema,
   ...aiSchema,
+  ...positioningSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;
@@ -86,6 +89,9 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
   await client.exec(REVIEWS_DDL);
   await client.exec(LEARNINGS_DDL);
   await client.exec(AI_DDL);
+  // Positioning (module 17, Wave 5) — runs AFTER PROJECTS_DDL so its ALTER TABLE
+  // projects ADD COLUMN positioning_statement_id finds the projects table.
+  await client.exec(POSITIONING_DDL);
   const db = drizzle(client, { schema });
   return { db, client };
 }
