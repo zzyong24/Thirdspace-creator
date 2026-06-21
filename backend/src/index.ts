@@ -29,6 +29,12 @@ export {
   agentConfigurations,
   SETTINGS_DDL,
 } from "./schema/settings";
+export {
+  knowledgeItems,
+  knowledgeRevisions,
+  knowledgeRelations,
+  KNOWLEDGE_DDL,
+} from "./schema/knowledge";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their
