@@ -20,4 +20,4 @@ export type { RequestContext } from "./request-context";
 // user-scoped queries against the ONE shared-infra drizzle (foundation §1: the
 // db factory + ORM live in @creatoros/backend). Identity's repository is the
 // first such in-app module.
-export { eq, and, or, asc, desc, sql, isNull, count } from "drizzle-orm";
+export { eq, and, or, asc, desc, sql, isNull, count, ilike } from "drizzle-orm";
