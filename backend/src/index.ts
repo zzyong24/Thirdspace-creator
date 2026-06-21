@@ -9,3 +9,4 @@ export {
   UnsupportedOperationError,
 } from "./persistence-transport";
 export { projects, projectActivities, PROJECTS_DDL } from "./schema/projects";
+export { users, sessions, IDENTITY_DDL } from "./schema/identity";
