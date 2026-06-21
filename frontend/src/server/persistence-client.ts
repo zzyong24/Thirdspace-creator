@@ -143,6 +143,14 @@ import {
   type CandidateRow,
 } from "@/server/modules/candidate";
 import {
+  createCalibrationService,
+  createCalibrationTransport,
+  createCalibrationRepository,
+  CALIBRATION_OP_IDS,
+  type RubricRow as CalibrationRubricRow,
+  type RubricVersionRow as CalibrationRubricVersionRow,
+} from "@/server/modules/calibration";
+import {
   createDashboardQueryService,
   createProjectOverviewQueryService,
   createGlobalSearchQueryService,
@@ -227,6 +235,13 @@ const PERSISTED_OPS = new Set<string>([
   // (C-4 — no second write op). promote → Project reaches Projects via the injected
   // port; the PositioningGate is a nullable soft-dep port (fit=null when unwired).
   ...CANDIDATE_OP_IDS,
+  // Calibration (module 20, Wave 5–7) — 七步⑤⑥ 校准闭环. rubrics.create/bumpVersion/
+  // get + predictions.create/lock/get + results.create, all user-scoped. Prediction is
+  // immutable once locked; RubricVersion is an append-only chain; CalibrationResult.
+  // actualMetrics is recycled via a verified IngestionRun (§C-4/RISK-005). The §6.3
+  // confidence feedback reaches Learnings via an injected port (no cross-module repo
+  // import).
+  ...CALIBRATION_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -290,6 +305,9 @@ const MONETIZATION_OPS = new Set<string>(MONETIZATION_OP_IDS);
 
 // The set of op ids owned by the candidate module's transport (module 19).
 const CANDIDATE_OPS = new Set<string>(CANDIDATE_OP_IDS);
+
+// The set of op ids owned by the calibration module's transport (module 20).
+const CALIBRATION_OPS = new Set<string>(CALIBRATION_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -643,6 +661,7 @@ interface PersistenceBundle {
   positioning: Transport;
   monetization: Transport;
   candidate: Transport;
+  calibration: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
   // reads, plus the Publishing Center composer (no endpoint — the FE calls it
   // server-side via getPublishingCenterService()).
@@ -1206,6 +1225,40 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const candidate = createCandidateTransport(() => candidateService);
 
+  // Calibration (module 20, Wave 5–7): the service builds a per-ctx user-scoped repo
+  // over the shared db (the repo bakes userId in; the service mints one per request).
+  // The transport returns this ONE shared service. Peers are reached ONLY through
+  // injected narrow ports (no cross-module repo import, SPEC §22):
+  //   - ingestion.assertRunExists → ingestionService.getRun (§C-4/RISK-005 — the
+  //     CalibrationResult.actualMetrics must trace to a REAL, owned IngestionRun;
+  //     cross-user / unknown → OwnershipError → 404; no new external write path).
+  //   - learnings.adjustConfidence → BEST-EFFORT no-op this wave: the Learnings public
+  //     surface exposes no confidence-adjust write yet (plan OQ3 — a new public method is
+  //     the lighter path, deferred). The seam is wired so the §6.3 feedback lands in ONE
+  //     place the moment Learnings exposes it; swallow until then (the CalibrationResult
+  //     remains the source of truth, so this is non-destructive — SPEC §11).
+  // Clock/ids share the deterministic `deps` (createSeq keeps rubric/rubricver/pred/
+  // calibres ids collision-free across requests).
+  const calibrationService = createCalibrationService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+    ingestion: {
+      assertRunExists: async (ctx, runId) => {
+        // getRun is the ownership-gated IngestionRun read (cross-user / unknown →
+        // OwnershipError). RISK-005: reject 悬空 ingestionRunId before any
+        // CalibrationResult references it.
+        await ingestionService.getRun(ctx, runId);
+      },
+    },
+    learnings: {
+      // §6.3 confidence feedback bridge — no public adjust-write on the Learnings
+      // surface this wave (OQ3); best-effort no-op seam wired for when it lands.
+      adjustConfidence: async () => {},
+    },
+  });
+  const calibration = createCalibrationTransport(() => calibrationService);
+
   // Query services (module Q, Wave 4 — SPEC §19). Composition module: NO repo, NO
   // SQL. Each composer is built with facade interfaces; here the composition root
   // binds those facades to the REAL public services (consumed only via their
@@ -1722,6 +1775,42 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   ];
   await candidateSeedRepo.seedCandidates(canonicalCandidates);
 
+  // Seed the canonical 变现加权 rubric (module 20): one Rubric + its immutable v1
+  // RubricVersion (五维: hook 强度 / 利他性 / 人群匹配 / CTA 清晰度 / 为产品铺路程度,
+  // weights sum to 1.0), owned by the canonical user, so the calibration FE surface +
+  // the Candidate 变现加权 ranking resolve a real current RubricVersion under the seeded
+  // login (foundation §2). Deterministic ids/clock (FIXED_NOW_ISO). seed* are
+  // onConflictDoNothing → a re-built singleton never double-seeds. The version is seeded
+  // first so currentVersionId resolves.
+  const calibrationSeedRepo = createCalibrationRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  });
+  const canonicalRubricVersion: CalibrationRubricVersionRow = {
+    id: "rubricver-canonical-1",
+    userId: canonicalDataset.user.id,
+    rubricId: "rubric-canonical",
+    versionNumber: 1,
+    dimensions: [
+      { key: "hook", label: "hook 强度", weight: 0.25 },
+      { key: "altruism", label: "利他性", weight: 0.2 },
+      { key: "persona", label: "人群匹配", weight: 0.2 },
+      { key: "cta", label: "CTA 清晰度", weight: 0.15 },
+      { key: "product_path", label: "为产品铺路程度", weight: 0.2 },
+    ],
+    changeSummary: "",
+    createdAt: FIXED_NOW_ISO,
+  };
+  const canonicalRubric: CalibrationRubricRow = {
+    id: "rubric-canonical",
+    userId: canonicalDataset.user.id,
+    name: "变现加权评分标准",
+    currentVersionId: canonicalRubricVersion.id,
+    createdAt: FIXED_NOW_ISO,
+  };
+  await calibrationSeedRepo.seedRubricVersions([canonicalRubricVersion]);
+  await calibrationSeedRepo.seedRubrics([canonicalRubric]);
+
   return {
     projects,
     taxonomy,
@@ -1741,6 +1830,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     positioning,
     monetization,
     candidate,
+    calibration,
     queryServices,
     publishingCenter,
     identity,
@@ -1824,6 +1914,10 @@ async function getMonetization(): Promise<Transport> {
 
 async function getCandidate(): Promise<Transport> {
   return (await getBundle()).candidate;
+}
+
+async function getCalibration(): Promise<Transport> {
+  return (await getBundle()).calibration;
 }
 
 async function getQueryServices(): Promise<Transport> {
@@ -2002,6 +2096,16 @@ export const compositeTransport: Transport = {
     if (CANDIDATE_OPS.has(endpoint.id)) {
       const candidate = await getCandidate();
       return candidate.request(endpoint, input, ctx);
+    }
+    // Calibration ops (module 20, Wave 5–7) — rubrics.create/bumpVersion/get +
+    // predictions.create/lock/get + results.create served by the module's own
+    // user-scoped transport over the SAME pglite store (foundation §1 registry). The
+    // immutable lock + append-only RubricVersion + §C-4/RISK-005 run guard run inside
+    // the service; the IngestionRun existence + §6.3 Learnings feedback reach peers via
+    // injected ports. No ctx ⇒ AuthenticationError.
+    if (CALIBRATION_OPS.has(endpoint.id)) {
+      const calibration = await getCalibration();
+      return calibration.request(endpoint, input, ctx);
     }
     // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
     // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by
