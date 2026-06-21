@@ -1,5 +1,6 @@
-import type { Endpoint, Transport } from "@creatoros/contract";
+import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
 import type { ProjectRepository } from "./repositories/project-repository";
+import { AuthenticationError } from "./errors";
 
 // Thrown for operations this transport does not implement, so a caller can fall
 // back to another transport (e.g. the FE mock) without masking real errors.
@@ -23,9 +24,23 @@ type Input = { params?: unknown; query?: unknown; body?: unknown };
 // Persistence-backed Transport for the Projects entity operations. Stage-16
 // real SQL behind the same /api/v1/dispatch route the FE already calls — the
 // contract and HttpTransport are unchanged.
-export function createPersistenceTransport(repo: ProjectRepository): Transport {
+//
+// Task 8 threads `RequestContext` per request: the transport takes a
+// `repoFactory(ctx)` (NOT a pre-built repo) so each persisted op runs against a
+// repository bound to the caller's `ctx.userId` (creates stamp it; Wave-2
+// Projects tightens list/get filters to `eq(projects.userId, ctx.userId)` — this
+// task only plumbs ctx so it *can*). A persisted op reached with NO ctx is an
+// unauthenticated dispatch → AuthenticationError (→ 401, foundation §2).
+export function createPersistenceTransport(
+  repoFactory: (ctx: RequestContext) => ProjectRepository,
+): Transport {
   return {
-    async request(endpoint: Endpoint, input) {
+    async request(endpoint: Endpoint, input, ctx) {
+      // Every op this transport owns is a persisted (owned) op. No ctx ⇒ the
+      // dispatch was unauthenticated ⇒ reject before touching the store.
+      if (!ctx) throw new AuthenticationError();
+      const repo = repoFactory(ctx);
+
       const { params, body } = (input ?? {}) as Input;
       const p = (params ?? {}) as { projectId?: string; stage?: string };
 

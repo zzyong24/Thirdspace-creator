@@ -8,6 +8,7 @@ export {
   createPersistenceTransport,
   UnsupportedOperationError,
 } from "./persistence-transport";
+export { AuthenticationError } from "./errors";
 export { projects, projectActivities, PROJECTS_DDL } from "./schema/projects";
 export { users, sessions, IDENTITY_DDL } from "./schema/identity";
 export type { RequestContext } from "./request-context";

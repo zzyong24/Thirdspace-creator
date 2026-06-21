@@ -3,5 +3,6 @@ export const CONTRACT_API_BASE = "/api/v1";
 export * from "./envelope";
 export * from "./primitives";
 export * from "./endpoints";
+export * from "./request-context";
 export * from "./transport";
 export * from "./client";
