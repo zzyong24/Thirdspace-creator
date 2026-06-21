@@ -86,8 +86,10 @@ import {
 import {
   createPublishingService,
   createPublishingTransport,
+  createPublishingRepository,
   createMockPublisher,
   PUBLISHING_OP_IDS,
+  type PublicationRow,
 } from "@/server/modules/publishing";
 import {
   createAnalyticsRepository,
@@ -110,7 +112,9 @@ import {
 import {
   createLearningsService,
   createLearningsTransport,
+  createLearningsRepository,
   LEARNINGS_OP_IDS,
+  type LearningRow,
 } from "@/server/modules/learnings";
 import {
   createAiService,
@@ -1952,6 +1956,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   ];
   await platformAccountSeedRepo.seedAccounts(canonicalAccounts);
+
+  // Publishing (module 10) + Learnings (module 14) — seed the canonical rows into the
+  // persisted store so the 发布中心 / 经验沉淀 surfaces' action ops (publications.transition
+  // 「批量下架」, learnings.applications.create「应用经验」) resolve real, owned rows. Without
+  // this the pages render fixtures whose ids have no persisted row → the write op throws
+  // OwnershipError (404) on click. Ids match the fixtures (canonicalDataset), so a
+  // displayed row's id always finds its persisted twin. seed* is onConflictDoNothing
+  // (idempotent across a re-built singleton). User-scoped seed repos are minted.
+  const publishingSeedRepo = createPublishingRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  });
+  const canonicalPublications: PublicationRow[] = canonicalDataset.publications.map(
+    (pub) => ({ ...pub, userId: canonicalDataset.user.id }),
+  );
+  await publishingSeedRepo.seedPublications(canonicalPublications);
+
+  const learningsSeedRepo = createLearningsRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  });
+  await learningsSeedRepo.seedLearnings(
+    canonicalDataset.learnings as unknown as LearningRow[],
+  );
 
   return {
     projects,

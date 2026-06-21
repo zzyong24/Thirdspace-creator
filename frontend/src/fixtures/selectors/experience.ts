@@ -132,6 +132,9 @@ const DEFAULT_CATEGORIES: ReadonlyArray<ExperienceCategory> = [
 // Locked default records (recent records table)
 // ---------------------------------------------------------------------------
 
+// `learningId` ties each demo record to a real, seeded (canonicalDataset.learnings)
+// Learning row so the 应用经验 / 评估 controls resolve an owned target (else the apply
+// op 404s on a fixture-only id). The persisted seed lives in persistence-client.
 const DEFAULT_RECORDS: ReadonlyArray<ExperienceRecord> = [
   {
     id: "rec-1",
@@ -139,6 +142,7 @@ const DEFAULT_RECORDS: ReadonlyArray<ExperienceRecord> = [
     category: "脚本结构",
     updatedAt: "2026-05-30",
     reuseCount: 18,
+    learningId: "learning-hook-15s",
   },
   {
     id: "rec-2",
@@ -146,6 +150,7 @@ const DEFAULT_RECORDS: ReadonlyArray<ExperienceRecord> = [
     category: "互动运营",
     updatedAt: "2026-05-22",
     reuseCount: 12,
+    learningId: "learning-hook-15s",
   },
   {
     id: "rec-3",
@@ -153,6 +158,7 @@ const DEFAULT_RECORDS: ReadonlyArray<ExperienceRecord> = [
     category: "后期剪辑",
     updatedAt: "2026-05-15",
     reuseCount: 9,
+    learningId: "learning-failure-screenshot",
   },
   {
     id: "rec-4",
@@ -160,6 +166,7 @@ const DEFAULT_RECORDS: ReadonlyArray<ExperienceRecord> = [
     category: "复盘沉淀",
     updatedAt: "2026-05-08",
     reuseCount: 6,
+    learningId: "learning-failure-screenshot",
   },
   {
     id: "rec-5",
@@ -167,6 +174,7 @@ const DEFAULT_RECORDS: ReadonlyArray<ExperienceRecord> = [
     category: "选题策划",
     updatedAt: "2026-04-30",
     reuseCount: 11,
+    learningId: "learning-arc-research",
   },
 ];
 
