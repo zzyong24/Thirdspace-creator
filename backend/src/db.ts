@@ -12,6 +12,7 @@ import * as artifactsSchema from "./schema/artifacts";
 import * as productionSchema from "./schema/production";
 import * as publishingSchema from "./schema/publishing";
 import * as analyticsSchema from "./schema/analytics";
+import * as ingestionSchema from "./schema/ingestion";
 import { PROJECTS_DDL } from "./schema/projects";
 import { IDENTITY_DDL } from "./schema/identity";
 import { TAXONOMY_DDL } from "./schema/taxonomy";
@@ -24,6 +25,7 @@ import { ARTIFACTS_DDL } from "./schema/artifacts";
 import { PRODUCTION_DDL } from "./schema/production";
 import { PUBLISHING_DDL } from "./schema/publishing";
 import { ANALYTICS_DDL } from "./schema/analytics";
+import { INGESTION_DDL } from "./schema/ingestion";
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
@@ -40,6 +42,7 @@ const schema = {
   ...productionSchema,
   ...publishingSchema,
   ...analyticsSchema,
+  ...ingestionSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;
@@ -70,6 +73,7 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
   await client.exec(PRODUCTION_DDL);
   await client.exec(PUBLISHING_DDL);
   await client.exec(ANALYTICS_DDL);
+  await client.exec(INGESTION_DDL);
   const db = drizzle(client, { schema });
   return { db, client };
 }

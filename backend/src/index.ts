@@ -70,6 +70,13 @@ export {
   audienceSnapshots,
   ANALYTICS_DDL,
 } from "./schema/analytics";
+export {
+  externalSources,
+  ingestionRuns,
+  ingestionErrors,
+  ingestionRecords,
+  INGESTION_DDL,
+} from "./schema/ingestion";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their
