@@ -112,6 +112,14 @@ import {
   createLearningsTransport,
   LEARNINGS_OP_IDS,
 } from "@/server/modules/learnings";
+import {
+  createAiService,
+  createAiTransport,
+  createAiRepository,
+  buildAiModelConfigs,
+  buildAiAgentConfigs,
+  AI_OP_IDS,
+} from "@/server/modules/ai";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -157,6 +165,11 @@ const PERSISTED_OPS = new Set<string>([
   // discarded; validated→discarded). Apply-target project ownership + activity via
   // the injected Projects port; reusable across projects (reviewId nullable).
   ...LEARNINGS_OP_IDS,
+  // AI (module 15) — conversations list/create + messages.create + tasks
+  // create/confirm/cancel, user-scoped with the §12 AI Task state machine. confirmTask
+  // formalizes an artifact_version candidate through the Artifacts public service
+  // (createVersion createdByType:'ai'); the Agent SDK runs only in @creatoros/ai-worker.
+  ...AI_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -200,6 +213,9 @@ const REVIEWS_OPS = new Set<string>(REVIEWS_OP_IDS);
 
 // The set of op ids owned by the learnings module's transport (module 14).
 const LEARNINGS_OPS = new Set<string>(LEARNINGS_OP_IDS);
+
+// The set of op ids owned by the ai module's transport (module 15).
+const AI_OPS = new Set<string>(AI_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -549,6 +565,7 @@ interface PersistenceBundle {
   ingestion: Transport;
   reviews: Transport;
   learnings: Transport;
+  ai: Transport;
   identity: IdentityService;
 }
 
@@ -937,6 +954,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const learnings = createLearningsTransport(() => learningsService);
 
+  // AI (module 15): the service builds a per-ctx user-scoped repo over the shared db
+  // (the repo bakes userId in; the service mints one per request). The transport returns
+  // this ONE shared service. The candidate→confirm boundary (SPEC §18) reaches Artifacts
+  // ONLY through the injected AiArtifactsPort — satisfied here by the Artifacts public
+  // service's createVersion (createdByType:"ai" → a NEW immutable ArtifactVersion; the AI
+  // never writes a current version directly). No cross-module repo import (SPEC §22). The
+  // Agent SDK lives only in @creatoros/ai-worker; this composition never imports it
+  // (determinism boundary). Clock/ids share the deterministic `deps` (createSeq keeps
+  // ai-conv/ai-task/ai-msg/ai-ref/ai-result ids collision-free across requests).
+  const aiService = createAiService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+    artifacts: {
+      createVersion: (ctx, artifactId, input) =>
+        artifactsService.createVersion(ctx, artifactId, input),
+    },
+  });
+  const ai = createAiTransport(() => aiService);
+
   // Seed one canonical mock external source owned by the canonical user so a dev
   // import resolves under the seeded login (foundation §2/§4). seedExternalSources
   // is onConflictDoNothing → a re-built singleton never double-seeds.
@@ -1136,6 +1173,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     canonicalDataset.agentConfigurations.map(toAgentRow),
   );
 
+  // Seed the AI per-capability catalog (Step 3 seed; design-spec §3): one
+  // ModelConfiguration per capability (script.rewrite → fable-5/high, copilot.assist →
+  // opus-4-8/medium default, …) and one AgentConfiguration per node (capabilities.skills
+  // selects the enabled Skill), all owned by the canonical user. secretReference is
+  // "env:ANTHROPIC_API_KEY" (resolved at runtime, never hardcoded). The AI capabilities
+  // (`*.*` dotted) are disjoint from the Settings canonical capabilities (`script` /
+  // `research`), so the (user_id, capability) unique index never collides. seed* are
+  // onConflictDoNothing → a re-built singleton never double-seeds.
+  const aiSeedRepo = createAiRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  });
+  await aiSeedRepo.seedModelConfigs(
+    buildAiModelConfigs(canonicalDataset.user.id, FIXED_NOW_ISO),
+  );
+  await aiSeedRepo.seedAgentConfigs(
+    buildAiAgentConfigs(canonicalDataset.user.id, FIXED_NOW_ISO),
+  );
+
   return {
     projects,
     taxonomy,
@@ -1151,6 +1207,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     ingestion,
     reviews,
     learnings,
+    ai,
     identity,
   };
 }
@@ -1216,6 +1273,10 @@ async function getReviews(): Promise<Transport> {
 
 async function getLearnings(): Promise<Transport> {
   return (await getBundle()).learnings;
+}
+
+async function getAi(): Promise<Transport> {
+  return (await getBundle()).ai;
 }
 
 /**
@@ -1340,6 +1401,16 @@ export const compositeTransport: Transport = {
     if (LEARNINGS_OPS.has(endpoint.id)) {
       const learnings = await getLearnings();
       return learnings.request(endpoint, input, ctx);
+    }
+    // AI ops (module 15) — conversations list/create + messages.create + tasks
+    // create/confirm/cancel served by the module's own user-scoped transport over the
+    // SAME pglite store (foundation §1 registry). The §12 AI Task state machine +
+    // candidate→confirm formalize (through the injected Artifacts service) run inside the
+    // service; the Agent SDK runs only in @creatoros/ai-worker. No ctx ⇒
+    // AuthenticationError.
+    if (AI_OPS.has(endpoint.id)) {
+      const ai = await getAi();
+      return ai.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1

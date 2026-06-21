@@ -96,10 +96,10 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
   });
 
   it("returns 501 for a not-yet-implemented operation", async () => {
-    // `learnings.list` is now wired (module 14), so use an op from a module that is
-    // still unbuilt (AI, module 15 — not persisted, no mock handler → the mock
-    // transport raises "operation not implemented" → 501).
-    const res = await dispatch("ai.conversations.list", {
+    // `ai.conversations.list` is now wired (module 15), so use a Wave-4 page-composition
+    // query op that is still unbuilt (`pages.projectOverview.get` — not persisted, no
+    // mock handler → the mock transport raises "operation not implemented" → 501).
+    const res = await dispatch("pages.projectOverview.get", {
       params: undefined,
       query: undefined,
       body: undefined,
