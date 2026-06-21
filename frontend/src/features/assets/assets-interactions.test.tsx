@@ -26,19 +26,19 @@ const mockRouter = {
 vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 
 const mockClient = {
-  createUpload: vi.fn((): Promise<unknown> =>
+  createUpload: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ uploadId: "upload-1", storageKey: "k", uploadUrl: "u", expiresAt: "t" }),
   ),
-  completeUpload: vi.fn((): Promise<unknown> =>
+  completeUpload: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "asset-new", status: "active" }),
   ),
-  getAsset: vi.fn((): Promise<unknown> =>
+  getAsset: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "a", currentFileId: "f" }),
   ),
-  addAssetFile: vi.fn((): Promise<unknown> =>
+  addAssetFile: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "file-new", versionNumber: 2 }),
   ),
-  trashAsset: vi.fn((): Promise<unknown> =>
+  trashAsset: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "a", status: "deleted" }),
   ),
 };
