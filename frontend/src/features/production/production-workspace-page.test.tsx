@@ -50,6 +50,19 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// The interactive island uses `useRouter()` (its needs-backend controls call
+// router.refresh after a mutation). These contract tests render the page
+// without wiring, so the island degrades to local-only behavior — but the hook
+// still mounts, so stub the navigation router.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 type ProductionWorkspacePageProps = React.ComponentProps<
   typeof import("./production-workspace-page").ProductionWorkspacePage
 >;

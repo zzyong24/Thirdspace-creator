@@ -37,7 +37,10 @@ import {
 } from "@/components/state/page-state";
 import { buildProductionViewModel } from "@/fixtures/selectors";
 import type { ProductionViewModel } from "@/types/view-models";
-import { ProductionInteractiveRegion } from "./production-interactive-region";
+import {
+  ProductionInteractiveRegion,
+  type ProductionWiring,
+} from "./production-interactive-region";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -48,6 +51,14 @@ export interface ProductionWorkspacePageProps {
   readonly projectId: string;
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: ProductionViewModel;
+  /**
+   * Resolved by the (async) route via `outputs.production.get` — the
+   * `{ outputId, productionId }` the interactive island threads into its
+   * needs-backend / wired-local→backend contract ops (Module 09 Step 5). When
+   * absent the island degrades to local-only behavior, so the page stays a
+   * deterministic sync Server Component and the fixture render is unchanged.
+   */
+  readonly wiring?: ProductionWiring;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,6 +68,7 @@ export interface ProductionWorkspacePageProps {
 export function ProductionWorkspacePage({
   projectId,
   viewModel,
+  wiring,
 }: ProductionWorkspacePageProps) {
   const vm = viewModel ?? buildProductionViewModel(projectId);
   const isEmpty =
@@ -82,7 +94,7 @@ export function ProductionWorkspacePage({
           description="该项目尚未进入制作阶段或没有可用素材。"
         />
       ) : (
-        <ProductionInteractiveRegion viewModel={vm} />
+        <ProductionInteractiveRegion viewModel={vm} wiring={wiring} />
       )}
     </main>
   );

@@ -24,14 +24,40 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Bot, Check, Mic, MonitorPlay, Plus, Upload } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { SectionCard } from "@/components/project/section-card";
+import { client } from "@/lib/contract-client";
 import type {
   ProductionAsset,
   ProductionViewModel,
 } from "@/types/view-models";
+
+// ---------------------------------------------------------------------------
+// Wiring descriptor (Module 09 Step 5). The server shell resolves the project's
+// production via `outputs.production.get` and threads the resulting
+// `{ outputId, productionId }` here so the needs-backend / wired-local→backend
+// controls can drive their mapped contract op (FE button → contract op →
+// user-scoped SQL → envelope → router.refresh()). Optional so the island still
+// renders identically in pure-fixture contexts (default page render / state
+// snapshots); when absent the wired controls degrade to local-only behavior.
+// ---------------------------------------------------------------------------
+
+export interface ProductionWiring {
+  readonly outputId: string;
+  readonly productionId: string;
+}
+
+// Map a production mode card id → the contract `productionMode` enum (§4 rows:
+// 真人口播 → remote_recording, 知识演示 → screen_capture). AI 数字人 is decorative.
+type ProductionMode = "remote_recording" | "screen_capture" | "studio";
+const MODE_CARD_TO_PRODUCTION_MODE: Record<string, ProductionMode | undefined> =
+  {
+    "mode-direct-speaking": "remote_recording",
+    "mode-knowledge-demo": "screen_capture",
+  };
 
 // ---------------------------------------------------------------------------
 // Locked production mode descriptors (page-specs §8: spec order is the
@@ -82,12 +108,14 @@ const PRODUCTION_MODE_CARDS: ReadonlyArray<ProductionModeCardDescriptor> = [
 
 export function ProductionInteractiveRegion({
   viewModel,
+  wiring,
 }: {
   readonly viewModel: ProductionViewModel;
+  readonly wiring?: ProductionWiring;
 }) {
   return (
     <>
-      <ProductionModeSelector />
+      <ProductionModeSelector wiring={wiring} />
       <div
         data-slot="production-grid"
         className="grid grid-cols-1 gap-3 xl:grid-cols-[260px_300px_minmax(0,1fr)_280px] xl:grid-rows-[minmax(0,1fr)_200px] xl:items-stretch"
@@ -98,8 +126,8 @@ export function ProductionInteractiveRegion({
           assets={viewModel.assets}
         />
         <PreviewPanel preview={viewModel.preview} />
-        <SettingsRail settings={viewModel.settings} />
-        <TimelinePanel timeline={viewModel.timeline} />
+        <SettingsRail settings={viewModel.settings} wiring={wiring} />
+        <TimelinePanel timeline={viewModel.timeline} wiring={wiring} />
       </div>
     </>
   );
@@ -109,15 +137,44 @@ export function ProductionInteractiveRegion({
 // ProductionModeSelector — three selectable cards, top of page
 // ---------------------------------------------------------------------------
 
-function ProductionModeSelector() {
+function ProductionModeSelector({
+  wiring,
+}: {
+  readonly wiring?: ProductionWiring;
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = React.useTransition();
   const [activeMode, setActiveMode] = React.useState<string>(
     PRODUCTION_MODE_CARDS[0]!.id,
   );
+
+  // §4: 真人口播 / 知识演示 are wired-local→backend — selecting a mode persists
+  // the ContentOutput's productionMode via outputs.production.put, then refresh.
+  // AI 数字人 is decorative (disabled, no mapping). Local state still flips so
+  // the active-card affordance is immediate even before the refresh lands.
+  const handleSelect = React.useCallback(
+    (modeId: string) => {
+      setActiveMode(modeId);
+      const productionMode = MODE_CARD_TO_PRODUCTION_MODE[modeId];
+      if (!wiring || productionMode === undefined) return;
+      startTransition(async () => {
+        await client.putOutputProduction({
+          params: { outputId: wiring.outputId },
+          query: undefined,
+          body: { productionMode },
+        });
+        router.refresh();
+      });
+    },
+    [router, wiring],
+  );
+
   return (
     <div
       data-slot="production-mode-selector"
       data-testid="production-region"
       data-region="mode"
+      data-pending={pending ? "true" : "false"}
       className="grid grid-cols-1 gap-3 md:grid-cols-3"
     >
       {PRODUCTION_MODE_CARDS.map((card) => (
@@ -125,7 +182,7 @@ function ProductionModeSelector() {
           key={card.id}
           card={card}
           active={card.id === activeMode}
-          onSelect={setActiveMode}
+          onSelect={handleSelect}
         />
       ))}
     </div>
@@ -590,8 +647,10 @@ function PreviewPanel({
 
 function SettingsRail({
   settings,
+  wiring,
 }: {
   settings: ProductionViewModel["settings"];
+  wiring?: ProductionWiring;
 }) {
   return (
     <div
@@ -601,17 +660,39 @@ function SettingsRail({
       className="flex flex-col gap-3 overflow-hidden xl:col-start-4 xl:row-span-2 xl:row-start-1"
     >
       {settings.map((group) => (
-        <SettingsGroup key={group.group} group={group} />
+        <SettingsGroup key={group.group} group={group} wiring={wiring} />
       ))}
     </div>
   );
 }
 
+// Map a toggle setting id → the outputs.production.put patch it persists (§4:
+// rec-overlay → recordingConfig.overlay; sub-ai-generate → subtitleConfig.aiGenerate).
+function togglePatchFor(
+  settingId: string,
+  checked: boolean,
+):
+  | { recordingConfig: { overlay: boolean } }
+  | { subtitleConfig: { aiGenerate: boolean } }
+  | null {
+  if (settingId === "rec-overlay") {
+    return { recordingConfig: { overlay: checked } };
+  }
+  if (settingId === "sub-ai-generate") {
+    return { subtitleConfig: { aiGenerate: checked } };
+  }
+  return null;
+}
+
 function SettingsGroup({
   group,
+  wiring,
 }: {
   group: ProductionViewModel["settings"][number];
+  wiring?: ProductionWiring;
 }) {
+  const router = useRouter();
+  const [, startTransition] = React.useTransition();
   const slot = `${group.group}-settings`;
   const exportGroup = group.group === "export";
   const action = settingsActionFor(group.group);
@@ -629,10 +710,42 @@ function SettingsGroup({
     return next;
   });
 
-  // Export client action: idle → exporting → done. No network.
+  // Export action: idle → exporting → done. §4 导出视频 is needs-backend — the
+  // dev mock render synchronously stages then completes (plan open-question #1):
+  // productions.exports.create (queued) → exports.complete (queued→ready), which
+  // drives the cross-module fan-out (ContentOutput active→ready, primary asset,
+  // search index) inside the service UoW, then router.refresh(). When no wiring
+  // is threaded the button degrades to the local idle→done affordance (no net).
+  const router2 = useRouter();
   const [exportState, setExportState] = React.useState<
     "idle" | "exporting" | "done"
   >("idle");
+
+  const handleExport = React.useCallback(() => {
+    if (exportState === "exporting") return;
+    if (!wiring) {
+      setExportState("done");
+      return;
+    }
+    setExportState("exporting");
+    startTransition(async () => {
+      const created = (await client.createProductionExport({
+        params: { productionId: wiring.productionId },
+        query: undefined,
+        body: { format: "mp4", resolution: "1080p", aspectRatio: "16:9" },
+      })) as { id: string };
+      // The mock render finished out-of-band; the rendered file was staged
+      // through MockObjectStorage server-side (Production never touches S3). The
+      // resulting asset id is minted deterministically from the export id.
+      await client.completeExport({
+        params: { exportId: created.id },
+        query: undefined,
+        body: { resultAssetId: `asset-export-${created.id}` },
+      });
+      setExportState("done");
+      router2.refresh();
+    });
+  }, [exportState, router2, wiring]);
 
   return (
     <div data-slot={slot} data-group={group.group} className="h-full">
@@ -676,12 +789,24 @@ function SettingsGroup({
                     role="switch"
                     aria-checked={checked}
                     aria-label={item.label}
-                    onClick={() =>
-                      setToggles((prev) => ({
-                        ...prev,
-                        [item.id]: !(prev[item.id] ?? false),
-                      }))
-                    }
+                    onClick={() => {
+                      const next = !(toggles[item.id] ?? false);
+                      setToggles((prev) => ({ ...prev, [item.id]: next }));
+                      // §4: rec-overlay / sub-ai-generate are wired-local→backend
+                      // — persist the config patch via outputs.production.put,
+                      // then refresh. Other toggles (none currently) stay local.
+                      const patch = togglePatchFor(item.id, next);
+                      if (wiring && patch) {
+                        startTransition(async () => {
+                          await client.putOutputProduction({
+                            params: { outputId: wiring.outputId },
+                            query: undefined,
+                            body: patch,
+                          });
+                          router.refresh();
+                        });
+                      }
+                    }}
                     className="relative inline-flex h-[18px] w-[32px] shrink-0 cursor-pointer items-center rounded-full bg-brand aria-[checked=false]:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                   >
                     <span
@@ -712,9 +837,7 @@ function SettingsGroup({
               data-action="export"
               data-export-state={exportState}
               disabled={exportState === "exporting"}
-              onClick={() =>
-                setExportState((prev) => (prev === "done" ? "done" : "done"))
-              }
+              onClick={handleExport}
               className="inline-flex h-9 w-full items-center justify-center rounded-md bg-brand text-sm font-medium text-brand-foreground disabled:opacity-70"
             >
               {exportState === "done" ? "导出完成" : groupActionLabel()}
@@ -810,9 +933,13 @@ interface TimelineSegment {
 
 function TimelinePanel({
   timeline,
+  wiring,
 }: {
   timeline: ProductionViewModel["timeline"];
+  wiring?: ProductionWiring;
 }) {
+  const router = useRouter();
+  const [, startTransition] = React.useTransition();
   const [segments, setSegments] = React.useState<ReadonlyArray<TimelineSegment>>(
     () => timeline.map((s) => ({ ...s })),
   );
@@ -821,21 +948,42 @@ function TimelinePanel({
   );
   const addCounterRef = React.useRef<number>(0);
 
+  // §4: 添加章节 / 添加新片段 are wired-local→backend — append a deterministic
+  // segment locally (immediate affordance) AND persist it via
+  // productions.segments.create, then refresh. ms derive from the existing
+  // parse/format helpers (plan §133). No wiring → local-only append.
   const handleAdd = React.useCallback(() => {
     addCounterRef.current += 1;
     const n = addCounterRef.current;
     const last = segments[segments.length - 1];
     const startSec = last ? parseTimestamp(last.endLabel) ?? n * 30 : n * 30;
     const endSec = startSec + 30;
+    const position = segments.length + n;
+    const title = `新章节 ${n}`;
     const newSegment: TimelineSegment = {
       id: `seg-added-${n}`,
-      title: `新章节 ${n}`,
+      title,
       startLabel: formatTimestamp(startSec),
       endLabel: formatTimestamp(endSec),
     };
     setSegments((prev) => [...prev, newSegment]);
     setSelectedId(newSegment.id);
-  }, [segments]);
+    if (wiring) {
+      startTransition(async () => {
+        await client.createProductionSegment({
+          params: { productionId: wiring.productionId },
+          query: undefined,
+          body: {
+            title,
+            position,
+            startMs: startSec * 1000,
+            endMs: endSec * 1000,
+          },
+        });
+        router.refresh();
+      });
+    }
+  }, [router, segments, wiring]);
 
   return (
     <div

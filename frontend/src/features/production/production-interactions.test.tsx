@@ -13,11 +13,22 @@
 
 import * as React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { buildProductionViewModel } from "@/fixtures/selectors";
 import { buildPageScenario } from "@/fixtures/scenarios";
 import { ProductionWorkspacePage } from "./production-workspace-page";
+
+// The interactive island mounts `useRouter()`; these local-state tests render
+// without wiring (island degrades to local behavior) so a stub router suffices.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
 
 const PROJECT_ID = "project-ainativebrowser";
 
