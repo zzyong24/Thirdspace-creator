@@ -122,6 +122,14 @@ export function resolveRoute(pathname: string): RouteResolution {
       contextualCardVariant: "assistant",
     };
   }
+  if (pathname === "/accounts") {
+    return {
+      headerMode: "global",
+      pageTitle: "账号管理",
+      pageDescription: "多账号矩阵 · 每个发布/指标归到真实账号，而不是一个字符串（七步⑤）",
+      contextualCardVariant: "assistant",
+    };
+  }
   if (pathname === "/projects") {
     return {
       headerMode: "global",
