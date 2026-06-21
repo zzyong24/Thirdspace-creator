@@ -1,5 +1,19 @@
+import { z } from "zod";
 import type { AgentRunner, ContextTools } from "../ports.js";
 import { createFakeAgentRunner } from "./fake-agent-runner.js";
+
+// Convert a ToolSpec's loose inputSchema markers ("string" | "string[]" | "object") into
+// the Zod raw shape the Agent SDK's `tool()` requires. Keeps context-tools SDK-free while
+// the real runner produces a valid schema.
+function zodShape(schema: Record<string, unknown>): Record<string, z.ZodTypeAny> {
+  const shape: Record<string, z.ZodTypeAny> = {};
+  for (const [key, kind] of Object.entries(schema)) {
+    if (kind === "string[]") shape[key] = z.array(z.string());
+    else if (kind === "object") shape[key] = z.record(z.string(), z.unknown());
+    else shape[key] = z.string();
+  }
+  return shape;
+}
 
 // Task 11 — the runner factory (design-spec §8 / foundation §8). With ANTHROPIC_API_KEY
 // present, return the real ClaudeAgentRunner (lazily imported so the package builds +
@@ -10,6 +24,9 @@ import { createFakeAgentRunner } from "./fake-agent-runner.js";
 
 export interface AgentRunnerEnv {
   ANTHROPIC_API_KEY?: string;
+  // The local Claude Code subscription credential (`claude setup-token`). When set, the
+  // Agent SDK runs against the user's Pro/Max subscription — no API key / per-token bill.
+  CLAUDE_CODE_OAUTH_TOKEN?: string;
 }
 
 // The default fake "agent": deterministically derives an artifact_version candidate from
@@ -39,9 +56,13 @@ function artifactIdFromPrompt(prompt: string): string | null {
 }
 
 export function createAgentRunner(env: AgentRunnerEnv): AgentRunner {
-  const key = env.ANTHROPIC_API_KEY;
-  if (key && key.length > 0) {
-    return createClaudeAgentRunner(key);
+  // Real agent when EITHER credential is present: an API key (per-token billing) OR the
+  // local Claude Code subscription token. The SDK reads whichever from the process env.
+  const hasCredential =
+    (env.ANTHROPIC_API_KEY && env.ANTHROPIC_API_KEY.length > 0) ||
+    (env.CLAUDE_CODE_OAUTH_TOKEN && env.CLAUDE_CODE_OAUTH_TOKEN.length > 0);
+  if (hasCredential) {
+    return createClaudeAgentRunner();
   }
   // The default deterministic fake needs the prompt (to parse the artifactId), so wrap
   // createFakeAgentRunner in a run() that threads prompt → script.
@@ -61,7 +82,7 @@ export function createAgentRunner(env: AgentRunnerEnv): AgentRunner {
 // submit_candidate, NO Write/Edit/Bash (design-spec §4.2 write boundary), and captures
 // session/cost from the result stream. See ai-worker/.claude/skills/<node>/SKILL.md for
 // the per-node procedure (auto-invoked by description, settingSources:["project"]).
-export function createClaudeAgentRunner(apiKey: string): AgentRunner {
+export function createClaudeAgentRunner(): AgentRunner {
   return {
     async run({ prompt, options, tools }) {
       // Dynamic import keeps the SDK out of the module graph until a key is present. The
@@ -84,15 +105,16 @@ export function createClaudeAgentRunner(apiKey: string): AgentRunner {
       const mcpServer = sdk.createSdkMcpServer({
         name: "creatoros",
         tools: tools.toolSpecs.map((spec) =>
-          sdkTool(spec.name, spec.description, spec.inputSchema, spec.handler),
+          sdkTool(spec.name, spec.description, zodShape(spec.inputSchema), spec.handler),
         ),
       });
       const iterator = sdk.query({
         prompt,
         options: {
           model: options.model,
-          // The SDK reads the API key from the env; pass it explicitly for clarity.
-          env: { ANTHROPIC_API_KEY: apiKey },
+          // The SDK reads the credential from the process env — ANTHROPIC_API_KEY or the
+          // subscription CLAUDE_CODE_OAUTH_TOKEN. Do NOT override `env` here, or the OAuth
+          // token gets dropped.
           settingSources: options.settingSources,
           permissionMode: options.permissionMode,
           allowedTools: options.allowedTools,
