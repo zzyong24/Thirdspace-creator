@@ -301,8 +301,23 @@ export interface ResearchViewModel extends BasePageViewModel {
   readonly competitors: ReadonlyArray<CompetitorRow>;
   readonly sourceTabs: ReadonlyArray<{ readonly id: string; readonly label: string }>;
   readonly sources: ReadonlyArray<ResearchSourceRow>;
-  readonly notes: ReadonlyArray<{ readonly id: Id; readonly content: string }>;
-  readonly evidence: ReadonlyArray<{ readonly id: Id; readonly title: string; readonly type: string }>;
+  // `knowledgeId` (Module 06 F2a/F2b): a research note / evidence row is a
+  // KnowledgeItem surfaced via the project's knowledge list. The island uses it
+  // as the `knowledgeId` op param. `targetKnowledgeId` on evidence is the link
+  // target for `关联证据` → knowledge.relations.create (open-question #4: the
+  // join read path lands in Wave 4; the selector resolves it from canonical now).
+  readonly notes: ReadonlyArray<{
+    readonly id: Id;
+    readonly content: string;
+    readonly knowledgeId: Id;
+  }>;
+  readonly evidence: ReadonlyArray<{
+    readonly id: Id;
+    readonly title: string;
+    readonly type: string;
+    readonly knowledgeId: Id;
+    readonly targetKnowledgeId: Id;
+  }>;
   readonly relatedTags: ReadonlyArray<string>;
 }
 

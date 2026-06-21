@@ -191,41 +191,64 @@ function buildSources(projectId: string): ReadonlyArray<ResearchSourceRow> {
   ];
 }
 
+// Resolve canonical knowledge item ids so research notes / evidence carry a real
+// `knowledgeId` the F2 islands thread into the knowledge ops (Module 06 F2a/F2b).
+// Falls back to the first knowledge item when a specific id is absent so the VM
+// is never missing the field.
+function knowledgeIdOr(fallbackIndex: number, preferredId?: string): string {
+  const items = canonicalDataset.knowledgeItems;
+  if (preferredId && items.some((k) => k.id === preferredId)) return preferredId;
+  return items[fallbackIndex]?.id ?? items[0]?.id ?? "knowledge-arc-dia-research";
+}
+
 function buildNotes(projectId: string): ResearchViewModel["notes"] {
   void projectId;
   return [
     {
       id: "note-1",
       content: "代理浏览器重塑入口:用户从打开标签页转为发起代理任务。",
+      knowledgeId: knowledgeIdOr(1, "knowledge-local-memory-trend"),
     },
     {
       id: "note-2",
       content: "本地优先栈成为独立创作者的默认选择(2026 趋势观察)。",
+      knowledgeId: knowledgeIdOr(0, "knowledge-arc-dia-research"),
     },
     {
       id: "note-3",
       content: "研究阶段需引用至少 100 份用户样本,降低结论误差。",
+      knowledgeId: knowledgeIdOr(2, "knowledge-hook-formula"),
     },
   ];
 }
 
 function buildEvidence(projectId: string): ResearchViewModel["evidence"] {
   void projectId;
+  // Each evidence row is a KnowledgeItem (source); the link target is the
+  // research subject's primary knowledge item. `关联证据` creates a
+  // source→target KnowledgeRelation (relationType:'supports').
+  const target = knowledgeIdOr(1, "knowledge-local-memory-trend");
   return [
     {
       id: "ev-1",
       title: "Arc / Dia 用户调研摘录",
       type: "知识条目",
+      knowledgeId: knowledgeIdOr(0, "knowledge-arc-dia-research"),
+      targetKnowledgeId: target,
     },
     {
       id: "ev-2",
       title: "本地优先栈趋势",
       type: "知识条目",
+      knowledgeId: knowledgeIdOr(1, "knowledge-local-memory-trend"),
+      targetKnowledgeId: knowledgeIdOr(0, "knowledge-arc-dia-research"),
     },
     {
       id: "ev-3",
       title: "代理任务覆盖度对比",
       type: "知识条目",
+      knowledgeId: knowledgeIdOr(2, "knowledge-hook-formula"),
+      targetKnowledgeId: target,
     },
   ];
 }

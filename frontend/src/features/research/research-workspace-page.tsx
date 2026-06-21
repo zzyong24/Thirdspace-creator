@@ -45,6 +45,8 @@ import type {
   ResearchSummaryCard,
   ResearchViewModel,
 } from "@/types/view-models";
+import { ResearchNotesIsland } from "./research-notes-island";
+import { EvidenceCollectionIsland } from "./evidence-collection-island";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -96,8 +98,8 @@ export function ResearchWorkspacePage({
           data-slot="research-right-rail"
           className="flex flex-col gap-card-gap"
         >
-          <ResearchNotesCard notes={vm.notes} />
-          <EvidenceCollectionCard items={vm.evidence} />
+          <ResearchNotesIsland notes={vm.notes} />
+          <EvidenceCollectionIsland items={vm.evidence} />
           <RelatedTagsCard tags={vm.relatedTags} />
         </div>
       </div>
@@ -355,78 +357,14 @@ function ResearchCollectionSection({
 // Right rail
 // ---------------------------------------------------------------------------
 
-function ResearchNotesCard({
-  notes,
-}: {
-  notes: ResearchViewModel["notes"];
-}) {
-  return (
-    <div data-slot="research-notes-card">
-      <SectionCard title="研究笔记" description={`${notes.length} 条待整理笔记`}>
-        {notes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无研究笔记。</p>
-        ) : (
-          <ul
-            data-slot="research-notes-list"
-            className="flex flex-col gap-1.5"
-            aria-label="研究笔记"
-          >
-            {notes.map((note, index) => (
-              <li
-                key={note.id}
-                data-slot="research-note-row"
-                className="flex gap-2 rounded-control border border-border bg-surface px-2.5 py-2 text-sm text-foreground"
-              >
-                <span className="text-xs font-medium tabular-nums text-muted-foreground">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="flex-1 leading-relaxed">{note.content}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </SectionCard>
-    </div>
-  );
-}
-
-function EvidenceCollectionCard({
-  items,
-}: {
-  items: ResearchViewModel["evidence"];
-}) {
-  return (
-    <div data-slot="evidence-collection-card">
-      <SectionCard title="证据收藏" description="已关联到论点的证据">
-        {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无证据。</p>
-        ) : (
-          <ul
-            data-slot="evidence-list"
-            className="flex flex-col gap-1.5"
-            aria-label="证据列表"
-          >
-            {items.map((item) => (
-              <li
-                key={item.id}
-                data-slot="evidence-row"
-                className="flex items-center gap-2 rounded-control border border-border bg-surface px-2.5 py-2"
-              >
-                <span className="size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {item.title}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{item.type}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </SectionCard>
-    </div>
-  );
-}
+// F2c — Research decorative rows are intentionally inert (roadmap §4, wired-local
+// 6 · decorative 6): 资料类型 tabs (client filter, no-op today — GET /knowledge,
+// keep local), 竞品平台 TagChip (Analytics), 威胁等级 StatusBadge (Projects), 资料
+// 来源标签 TagChip (Taxonomy), 相关标签 TagChip (GET /search — Taxonomy; rendered as
+// navigational links to /search?tag=), 趋势卡片 indicator (Analytics), 竞品分析表
+// rows (read-only comparison). These render with NO mutating handlers on purpose.
+// The two needs-backend rows (研究笔记 / 证据收藏) are now islands:
+// ResearchNotesIsland (F2a) + EvidenceCollectionIsland (F2b).
 
 function RelatedTagsCard({ tags }: { tags: ResearchViewModel["relatedTags"] }) {
   return (

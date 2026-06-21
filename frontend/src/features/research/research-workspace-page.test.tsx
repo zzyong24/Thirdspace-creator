@@ -28,6 +28,13 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
+// The right-rail notes/evidence cards are now Client islands (F2a/F2b) that call
+// `useRouter()`. Stub `next/navigation` so they mount without a real App Router
+// provider; these structural tests never trigger a write, so a no-op router suffices.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
+}));
+
 // Stub `next/link` so we can assert href values without the Next.js
 // runtime mounting a router.
 vi.mock("next/link", () => ({
