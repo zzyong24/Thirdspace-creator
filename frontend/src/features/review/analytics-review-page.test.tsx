@@ -35,6 +35,18 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
+// Stub `next/navigation` — the review-authoring island (module 13 Step 5) mounts
+// `useRouter()`. The page renders WITHOUT reviewsWiring here, so the controls are
+// inert and the router is never actually used; the stub just satisfies the hook.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 // Stub `next/link` so we can assert href values without the Next.js
 // runtime mounting a router.
 vi.mock("next/link", () => ({

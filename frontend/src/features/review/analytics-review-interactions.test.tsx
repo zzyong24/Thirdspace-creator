@@ -18,7 +18,19 @@
 
 import * as React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+// Stub `next/navigation` — the review-authoring island (module 13 Step 5) mounts
+// `useRouter()`. These tests render the page WITHOUT reviewsWiring, so the controls
+// are inert and the router is never used; the stub just satisfies the hook.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
 
 import { canonicalDataset } from "@/fixtures/canonical";
 import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";

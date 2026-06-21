@@ -40,7 +40,10 @@ import {
 } from "@/components/state/page-state";
 import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
 import type { AnalyticsViewModel } from "@/types/view-models";
-import { AnalyticsReviewInteractiveRegion } from "./analytics-review-interactive-region";
+import {
+  AnalyticsReviewInteractiveRegion,
+  type ReviewsWiring,
+} from "./analytics-review-interactive-region";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -51,6 +54,12 @@ export interface AnalyticsReviewPageProps {
   readonly projectId: string;
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: AnalyticsViewModel;
+  /**
+   * Server-resolved Reviews wiring (module 13 Step 5). Optional → the authoring
+   * panel + history drill degrade to inert local affordances (so the fixture-only
+   * page tests render without a network call). The real route supplies it.
+   */
+  readonly reviewsWiring?: ReviewsWiring;
 }
 
 // ---------------------------------------------------------------------------
@@ -68,6 +77,7 @@ export interface AnalyticsReviewPageProps {
 export function AnalyticsReviewPage({
   projectId,
   viewModel,
+  reviewsWiring,
 }: AnalyticsReviewPageProps) {
   const vm = viewModel ?? buildAnalyticsReviewViewModel(projectId);
   const isEmpty =
@@ -93,7 +103,10 @@ export function AnalyticsReviewPage({
           description="发布内容并积累数据后即可在此查看复盘分析。"
         />
       ) : (
-        <AnalyticsReviewInteractiveRegion viewModel={vm} />
+        <AnalyticsReviewInteractiveRegion
+          viewModel={vm}
+          reviewsWiring={reviewsWiring}
+        />
       )}
     </main>
   );

@@ -56,7 +56,16 @@ export default async function AnalyticsReviewRoute({
   const { projectId } = await params;
   const resolvedId = resolveProjectIdParam(projectId);
   const viewModel = await resolveReviewViewModel(resolvedId);
-  return <AnalyticsReviewPage projectId={resolvedId} viewModel={viewModel} />;
+  // Module 13 Step 5 — supply the Reviews wiring so the authoring panel + history
+  // drill call the real ops (reviews.create/insights.create/complete/get) over the
+  // dispatch route, then router.refresh().
+  return (
+    <AnalyticsReviewPage
+      projectId={resolvedId}
+      viewModel={viewModel}
+      reviewsWiring={{ projectId: resolvedId }}
+    />
+  );
 }
 
 /**

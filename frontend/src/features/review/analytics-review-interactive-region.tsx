@@ -26,7 +26,9 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
+import { client } from "@/lib/contract-client";
 import { ChartFrame } from "@/components/analytics/chart-frame";
 import { AudienceBreakdown } from "@/components/analytics/audience-breakdown";
 import { HorizontalBarsChart } from "@/components/analytics/horizontal-bars-chart";
@@ -52,6 +54,38 @@ type TopPublished = TopPublishedCard;
 type ReviewHistoryItem = AnalyticsViewModel["reviewHistory"][number];
 
 // ---------------------------------------------------------------------------
+// Reviews wiring (module 13 Step 5). Present only when the server shell resolves
+// the real ops surface; absent → the authoring panel + history drill degrade to
+// inert local affordances (so the fixture-only render + visual baseline hold).
+// Each control maps to exactly one Reviews op; reads (history drill) skip refresh.
+// ---------------------------------------------------------------------------
+
+export interface ReviewsWiring {
+  readonly projectId: string;
+}
+
+// The insight-type select offers the four contract insightType values with the
+// roadmap §4 Chinese labels (成功亮点→success / 待优化→issue / 行动项→action / 假设→
+// hypothesis).
+const INSIGHT_TYPES: ReadonlyArray<{ readonly value: string; readonly label: string }> = [
+  { value: "success", label: "成功亮点" },
+  { value: "issue", label: "待优化" },
+  { value: "action", label: "行动项" },
+  { value: "hypothesis", label: "假设" },
+];
+
+// The shape returned by reviews.get / reviews.create (reviewResource) + the insight
+// (reviewInsightResource) — read structurally by the drill detail panel.
+interface ReviewDto {
+  readonly id: string;
+  readonly status: string;
+  readonly reviewType: string;
+  readonly periodStart: string;
+  readonly periodEnd: string;
+  readonly completedAt: string | null;
+}
+
+// ---------------------------------------------------------------------------
 // Tab → time-window mapping. Each analytics tab re-scopes the metric set
 // + views trend; the remaining tabs reuse the default ("all") window.
 // ---------------------------------------------------------------------------
@@ -72,8 +106,10 @@ const TAB_WINDOW: Readonly<Record<string, AnalyticsWindow>> = {
 
 export function AnalyticsReviewInteractiveRegion({
   viewModel,
+  reviewsWiring,
 }: {
   readonly viewModel: AnalyticsViewModel;
+  readonly reviewsWiring?: ReviewsWiring;
 }) {
   const [activeTab, setActiveTab] = React.useState<string>(
     viewModel.tabs[0]?.id ?? "overview",
@@ -84,6 +120,25 @@ export function AnalyticsReviewInteractiveRegion({
   );
   const [activeReviewId, setActiveReviewId] = React.useState<string | null>(
     null,
+  );
+  // Review-history drill (wired-local → backend): the selected review's detail
+  // (reviews.get). A read-only drill — no router.refresh().
+  const [reviewDetail, setReviewDetail] = React.useState<ReviewDto | null>(null);
+
+  const onSelectReview = React.useCallback(
+    (id: string) => {
+      setActiveReviewId(id);
+      if (!reviewsWiring) return; // inert without the ops surface (fixture-only)
+      void (async () => {
+        const detail = (await client.getReview({
+          params: { reviewId: id },
+          query: undefined,
+          body: undefined,
+        })) as ReviewDto;
+        setReviewDetail(detail);
+      })();
+    },
+    [reviewsWiring],
   );
 
   // Re-derive the metric set + views trend for the selected window. The
@@ -132,10 +187,15 @@ export function AnalyticsReviewInteractiveRegion({
           className="flex flex-col gap-card-gap"
         >
           <InsightCard items={viewModel.aiAnalysis} />
+          <ReviewAuthoringPanel
+            projectId={viewModel.projectId}
+            wiring={reviewsWiring}
+          />
           <ReviewHistoryCard
             items={viewModel.reviewHistory}
             activeId={activeReviewId}
-            onSelect={setActiveReviewId}
+            onSelect={onSelectReview}
+            detail={reviewDetail}
           />
         </div>
       </div>
@@ -697,10 +757,12 @@ function ReviewHistoryCard({
   items,
   activeId,
   onSelect,
+  detail,
 }: {
   items: ReadonlyArray<ReviewHistoryItem>;
   activeId: string | null;
   onSelect: (id: string) => void;
+  detail?: ReviewDto | null;
 }) {
   return (
     <article
@@ -740,6 +802,188 @@ function ReviewHistoryCard({
           );
         })}
       </ul>
+      {detail ? (
+        <div
+          data-slot="review-detail-panel"
+          data-review-id={detail.id}
+          data-review-status={detail.status}
+          className="flex flex-col gap-1 rounded-md border border-border bg-surface-subtle px-3 py-2 text-xs"
+        >
+          <span className="font-medium text-foreground">
+            复盘详情 · {detail.reviewType === "output" ? "单作品" : "项目"}
+          </span>
+          <span className="text-muted-foreground">
+            状态：{detail.status} · 周期 {detail.periodStart} ~ {detail.periodEnd}
+          </span>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ReviewAuthoringPanel — the greenfield review-authoring surface (roadmap §4
+// Gap / G13). Each control maps to exactly one Reviews op; mutations call the op
+// then router.refresh(). Without `wiring` the panel renders inert (no client
+// call) so the fixture-only page render + visual baseline hold. The decorative
+// controls (添加发布 / 生成复盘报告) carry data-inert="decorative" and issue NO call —
+// they belong to a future wave (attach has no contract op; AI report is G15).
+// ---------------------------------------------------------------------------
+
+function ReviewAuthoringPanel({
+  projectId,
+  wiring,
+}: {
+  projectId: string;
+  wiring?: ReviewsWiring;
+}) {
+  const router = useRouter();
+  // The active in_progress review id created via 开始复盘 (kept client-local so 添加洞察
+  // / 完成复盘 know which review to target). Null until a review is started.
+  const [activeReviewId, setActiveReviewId] = React.useState<string | null>(
+    null,
+  );
+  const [insightType, setInsightType] = React.useState<string>(
+    INSIGHT_TYPES[0]!.value,
+  );
+  const [title, setTitle] = React.useState<string>("");
+  const [description, setDescription] = React.useState<string>("");
+
+  const startReview = React.useCallback(() => {
+    if (!wiring) return;
+    void (async () => {
+      const review = (await client.createReview({
+        params: { projectId },
+        query: undefined,
+        body: { reviewType: "project", contentOutputId: null },
+      })) as { id: string };
+      setActiveReviewId(review.id);
+      router.refresh();
+    })();
+  }, [wiring, projectId, router]);
+
+  const addInsight = React.useCallback(() => {
+    if (!wiring || !activeReviewId || title.trim() === "") return;
+    void (async () => {
+      await client.createReviewInsight({
+        params: { reviewId: activeReviewId },
+        query: undefined,
+        body: {
+          insightType: insightType as
+            | "success"
+            | "issue"
+            | "action"
+            | "hypothesis",
+          title,
+          description,
+        },
+      });
+      setTitle("");
+      setDescription("");
+      router.refresh();
+    })();
+  }, [wiring, activeReviewId, insightType, title, description, router]);
+
+  const completeReview = React.useCallback(() => {
+    if (!wiring || !activeReviewId) return;
+    void (async () => {
+      await client.completeReview({
+        params: { reviewId: activeReviewId },
+        query: undefined,
+        body: undefined,
+      });
+      router.refresh();
+    })();
+  }, [wiring, activeReviewId, router]);
+
+  return (
+    <article
+      data-slot="review-authoring-panel"
+      aria-label="复盘编辑"
+      className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-card-gap shadow-card"
+    >
+      <header className="flex flex-col gap-1">
+        <h3 className="text-md font-semibold text-foreground">复盘编辑</h3>
+        <p className="text-xs text-muted-foreground">创建复盘、记录洞察并完成</p>
+      </header>
+      <button
+        type="button"
+        data-slot="start-review-button"
+        data-has-active={activeReviewId ? "true" : "false"}
+        onClick={startReview}
+        className="inline-flex h-8 items-center justify-center rounded-md border border-brand/60 bg-brand-soft px-3 text-xs font-medium text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      >
+        开始复盘
+      </button>
+
+      <div data-slot="add-insight-form" className="flex flex-col gap-1.5">
+        <select
+          data-slot="insight-type-select"
+          value={insightType}
+          onChange={(e) => setInsightType(e.target.value)}
+          className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground"
+        >
+          {INSIGHT_TYPES.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+        <input
+          data-slot="insight-title-input"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="洞察标题"
+          className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground"
+        />
+        <input
+          data-slot="insight-description-input"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="补充说明（可选）"
+          className="h-8 rounded-md border border-border bg-surface px-2 text-xs text-foreground"
+        />
+        <button
+          type="button"
+          data-slot="add-insight-button"
+          onClick={addInsight}
+          className="inline-flex h-8 items-center justify-center rounded-md border border-border bg-surface px-3 text-xs font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        >
+          添加洞察
+        </button>
+      </div>
+
+      <button
+        type="button"
+        data-slot="complete-review-button"
+        onClick={completeReview}
+        className="inline-flex h-8 items-center justify-center rounded-md border border-border bg-surface px-3 text-xs font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      >
+        完成复盘
+      </button>
+
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          data-slot="attach-publication-button"
+          data-inert="decorative"
+          aria-disabled="true"
+          disabled
+          className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-medium text-muted-foreground"
+        >
+          添加发布
+        </button>
+        <button
+          type="button"
+          data-slot="generate-report-button"
+          data-inert="decorative"
+          aria-disabled="true"
+          disabled
+          className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-medium text-muted-foreground"
+        >
+          生成复盘报告
+        </button>
+      </div>
     </article>
   );
 }
