@@ -12,6 +12,7 @@ import {
 import {
   projectResource,
   contentOutputResource,
+  contentRole,
   taskResource,
   projectActivityResource,
 } from "../resources/projects";
@@ -96,7 +97,12 @@ export const projectsOperations = {
     method: "POST",
     path: "/projects/:projectId/outputs",
     params: projectParams,
-    body: z.object({ title: z.string().min(1) }),
+    // contentRole is an OPTIONAL monetization-weighted intent field (§4.4);
+    // existing {title} callers keep validating against the base shape.
+    body: z.object({
+      title: z.string().min(1),
+      contentRole: contentRole.optional(),
+    }),
     response: contentOutputResource,
     fr: ["FR-OUTPUT-CREATE"],
   }),

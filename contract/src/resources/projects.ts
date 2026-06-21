@@ -38,6 +38,12 @@ const outputStatus = z.enum([
   "published",
 ]);
 
+// ContentRole — monetization-weighted intent layer (七步整合设计 §4.4).
+// Declares whether a content output is meant to drive traffic, build trust, or
+// convert. Optional so existing outputs (created before the field) keep parsing.
+export const contentRole = z.enum(["traffic", "trust", "conversion"]);
+export type ContentRole = z.infer<typeof contentRole>;
+
 export const contentOutputResource = z.object({
   id,
   projectId: id,
@@ -47,6 +53,7 @@ export const contentOutputResource = z.object({
   aspectRatio: z.string(),
   targetDurationSeconds: z.number(),
   status: outputStatus,
+  contentRole: contentRole.nullable().optional(),
   primaryAssetId: id.nullable(),
   ...timestamps,
 });

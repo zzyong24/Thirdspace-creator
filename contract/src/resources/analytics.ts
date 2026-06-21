@@ -38,7 +38,17 @@ export const retentionPointResource = z.object({
 export type RetentionPointResource = z.infer<typeof retentionPointResource>;
 
 // DimensionType — not exported by primitives.ts; defined locally from domain.ts.
-const dimensionType = z.enum(["age", "gender", "region", "source", "device"]);
+// Extended with monetization-weighted dimensions (§4.6): intent / paying.
+// Additive: existing values still parse.
+const dimensionType = z.enum([
+  "age",
+  "gender",
+  "region",
+  "source",
+  "device",
+  "intent",
+  "paying",
+]);
 
 // AudienceSnapshot
 export const audienceSnapshotResource = z.object({

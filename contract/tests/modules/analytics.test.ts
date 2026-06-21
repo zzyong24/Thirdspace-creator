@@ -33,6 +33,38 @@ describe("analytics contract", () => {
     expect(aud.dimensionType).toBe("age");
   });
 
+  // Monetization-weighted dimensionType additions (§4.6). Don't weaken: assert
+  // both new values parse while legacy values keep working above.
+  it.each(["intent", "paying"] as const)(
+    "accepts monetization audience dimensionType %s",
+    (dimensionType) => {
+      const aud = audienceSnapshotResource.parse({
+        id: "aud-monetization",
+        publicationId: "pub-podcast-bilibili",
+        capturedAt: "2026-06-12T02:00:00.000Z",
+        dimensionType,
+        dimensionValue: "high",
+        percentage: 0.12,
+        audienceCount: 320,
+      });
+      expect(aud.dimensionType).toBe(dimensionType);
+    },
+  );
+
+  it("still rejects an unknown dimensionType", () => {
+    expect(() =>
+      audienceSnapshotResource.parse({
+        id: "aud-x",
+        publicationId: "pub-podcast-bilibili",
+        capturedAt: "2026-06-12T02:00:00.000Z",
+        dimensionType: "not_a_dimension",
+        dimensionValue: "x",
+        percentage: 0.1,
+        audienceCount: 1,
+      }),
+    ).toThrow();
+  });
+
   it("registers the publication + project analytics endpoints", () => {
     expect(analyticsOperations.getPublicationAnalytics.method).toBe("GET");
     expect(analyticsOperations.getPublicationAnalytics.path).toBe(

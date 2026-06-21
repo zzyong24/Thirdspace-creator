@@ -5,12 +5,16 @@ import { id, iso8601 } from "../primitives";
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
 
 // Enums local to this module (not exported by primitives.ts).
+// learningType — extended with monetization-weighted types (§4.6):
+// conversion_pattern / offer_insight. Additive: existing values still parse.
 const learningType = z.enum([
   "strategy",
   "hook",
   "structure",
   "failure",
   "process",
+  "conversion_pattern",
+  "offer_insight",
 ]);
 const validationStatus = z.enum(["candidate", "validated", "discarded"]);
 

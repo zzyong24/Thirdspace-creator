@@ -224,6 +224,22 @@ Repository 不负责：
 
 禁止将 Drizzle 行类型直接作为 API 返回类型。API DTO 必须显式定义，避免数据库结构泄漏到前端。
 
+> **v0.3 变现加权枚举/指标扩展（跨线契约部分 · 七步整合设计 §4.4/§4.6）：** 以下为
+> 跨 wire 的枚举/字段扩展，均**追加不删改**，以 `@creatoros/contract` DTO 为准：
+>
+> - **ContentOutput** 新增可选 `content_role` 枚举 `traffic|trust|conversion`（意图层；
+>   resource 可空、createOutput body optional）。
+> - **Learning.learning_type** 在 `strategy|hook|structure|failure|process` 之上追加
+>   `conversion_pattern`、`offer_insight`。
+> - **AudienceSnapshot.dimension_type** 在 `age|gender|region|source|device` 之上追加
+>   `intent`、`paying`。
+> - **MetricValue.metric_key** 保持自由字符串（**契约不变**）；变现加权新增的取值约定为
+>   `profile_visit`、`cta_click`、`private_message`、`lead`、`inquiry`、`conversion`、`revenue`
+>   （仅约定 key 命名，不收窄类型）。
+>
+> 注：上述仅含「跨 wire」部分；`monetization`/`positioning`/`Candidate` 等新模块的完整
+> 实体与端点按七步整合设计 §8 分期单列，不在本次契约 patch 范围内。
+
 ## 10. RequestContext
 
 所有公开 service 方法必须接收上下文：
@@ -374,6 +390,11 @@ GET    /projects/:projectId/activity
 > 可选字段 `contentType`、`creationMode`、`targetPlatforms`（均 optional，保持对既有
 > `{title, brief}` 调用方的兼容）。`GET /projects` 的 query 在 `paginationQuery` 之外
 > 新增可选 `status`（projectStatus）与 `sort`（`updatedAt|createdAt|title`）。
+>
+> **v0.3 扩展（变现加权 · 不新增端点）：** `POST /projects/:projectId/outputs` 的 body
+> 在 `title` 之外新增**可选** `content_role`（契约 `contentRole` = `traffic|trust|conversion`，
+> 七步整合设计 §4.4 意图层），保持对既有 `{title}` 调用方的兼容；该值同时作为可选字段
+> 出现在 ContentOutput response DTO（`content_role`，可空）。
 
 ### 产物
 
