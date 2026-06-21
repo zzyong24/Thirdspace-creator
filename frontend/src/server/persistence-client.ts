@@ -35,6 +35,15 @@ import {
   SEARCH_OP_IDS,
 } from "@/server/modules/search";
 import { buildCanonicalSearchDocuments } from "@/server/modules/search/search.seed";
+import {
+  createSettingsRepository,
+  createSettingsService,
+  createSettingsTransport,
+  SETTINGS_OP_IDS,
+  type ModelConfigurationRow,
+  type UserPreferenceRow,
+  type AgentConfigurationRow,
+} from "@/server/modules/settings";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -54,6 +63,8 @@ const PERSISTED_OPS = new Set<string>([
   ...NOTIFICATION_OP_IDS,
   // Search (module 02) — the composed `pages.search.get` read served by REAL SQL.
   ...SEARCH_OP_IDS,
+  // Settings (module 03) — account read + preference/model/agent mutations.
+  ...SETTINGS_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -64,6 +75,9 @@ const NOTIFICATION_OPS = new Set<string>(NOTIFICATION_OP_IDS);
 
 // The set of op ids owned by the search module's transport (module 02).
 const SEARCH_OPS = new Set<string>(SEARCH_OP_IDS);
+
+// The set of op ids owned by the settings module's transport (module 03).
+const SETTINGS_OPS = new Set<string>(SETTINGS_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -104,6 +118,52 @@ function toNotificationRow(n: CanonicalNotification): NotificationRow {
   };
 }
 
+type CanonicalPreference = (typeof canonicalDataset.userPreferences)[number];
+type CanonicalModel = (typeof canonicalDataset.modelConfigurations)[number];
+type CanonicalAgent = (typeof canonicalDataset.agentConfigurations)[number];
+
+// USER_PREFERENCE is keyed by user_id (no own id column in the row); the canonical
+// fixture carries a DTO `id` which the schema does not persist — drop it here.
+function toPreferenceRow(p: CanonicalPreference): UserPreferenceRow {
+  return {
+    userId: p.userId,
+    defaultHome: p.defaultHome,
+    defaultCreationMode: p.defaultCreationMode,
+    defaultVisibility: p.defaultVisibility,
+    autosaveEnabled: p.autosaveEnabled,
+    fileNamingRule: p.fileNamingRule,
+    analyticsEnabled: p.analyticsEnabled,
+  };
+}
+
+function toModelRow(m: CanonicalModel): ModelConfigurationRow {
+  return {
+    id: m.id,
+    userId: m.userId,
+    capability: m.capability,
+    provider: m.provider,
+    modelName: m.modelName,
+    secretReference: m.secretReference,
+    settings: m.settings,
+    isDefault: m.isDefault,
+  };
+}
+
+function toAgentRow(a: CanonicalAgent): AgentConfigurationRow {
+  return {
+    id: a.id,
+    userId: a.userId,
+    name: a.name,
+    agentType: a.agentType,
+    status: a.status,
+    capabilities: a.capabilities,
+    settings: a.settings,
+    secretReference: a.secretReference,
+    createdAt: a.createdAt,
+    updatedAt: a.updatedAt,
+  };
+}
+
 // Pin the singleton on globalThis, NOT a module-level `let`: Next/Turbopack give
 // the route handler and server components separate module instances, so a
 // module-level singleton would be a SEPARATE in-memory pglite per entry — island
@@ -119,6 +179,7 @@ interface PersistenceBundle {
   taxonomy: Transport;
   notifications: Transport;
   search: Transport;
+  settings: Transport;
   identity: IdentityService;
 }
 
@@ -212,11 +273,40 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // the rows the transport serves under it.
   const identity = createIdentityService(identityRepo, deps);
 
+  // Settings (module 03): one repository over the shared db; the service's
+  // account read (`settings.get`) delegates to the Identity service's
+  // getCurrentUser (injected as the accountReader — NO cross-module repo import,
+  // foundation §1). The preference/model/agent mutations are user-scoped via the
+  // per-ctx repo. resolveModelForCapability (public on the service) is what the AI
+  // worker reads. Clock/ids share the deterministic `deps`.
+  const settingsRepo = createSettingsRepository(db, deps);
+  const settingsService = createSettingsService(
+    () => settingsRepo,
+    (ctx) => identity.getCurrentUser(ctx),
+  );
+  const settings = createSettingsTransport(() => settingsService);
+
+  // Seed the canonical user's Settings rows (plan Step 6 seed parity) so the
+  // /settings page resolves the real preference/model/agent rows under the seeded
+  // login. seed* is onConflictDoNothing → a re-built singleton never double-seeds.
+  // PK conflict targets: user_preferences(user_id), model_configurations(id),
+  // agent_configurations(id) — the canonical ids are stable/deterministic.
+  await settingsRepo.seedPreferences(
+    canonicalDataset.userPreferences.map(toPreferenceRow),
+  );
+  await settingsRepo.seedModels(
+    canonicalDataset.modelConfigurations.map(toModelRow),
+  );
+  await settingsRepo.seedAgents(
+    canonicalDataset.agentConfigurations.map(toAgentRow),
+  );
+
   return {
     transport: createPersistenceTransport(repoFactory),
     taxonomy,
     notifications,
     search,
+    settings,
     identity,
   };
 }
@@ -242,6 +332,10 @@ async function getNotifications(): Promise<Transport> {
 
 async function getSearch(): Promise<Transport> {
   return (await getBundle()).search;
+}
+
+async function getSettings(): Promise<Transport> {
+  return (await getBundle()).settings;
 }
 
 /**
@@ -283,6 +377,13 @@ export const compositeTransport: Transport = {
     if (SEARCH_OPS.has(endpoint.id)) {
       const search = await getSearch();
       return search.request(endpoint, input, ctx);
+    }
+    // Settings ops (module 03) — account read + preference/model/agent mutations
+    // served by the module's own transport over the SAME pglite store (foundation
+    // §1 registry).
+    if (SETTINGS_OPS.has(endpoint.id)) {
+      const settings = await getSettings();
+      return settings.request(endpoint, input, ctx);
     }
     // Persisted ops require ctx: the persistence transport throws
     // AuthenticationError when ctx is missing (unauthenticated dispatch → 401).

@@ -85,12 +85,12 @@ const PREFERENCE_DEFAULTS = {
 
 // Strip undefined values from a patch so an `update().set({})` never clobbers a
 // column with `undefined` and only the provided keys are written.
-function definedOnly<T extends Record<string, unknown>>(patch: T): Partial<T> {
-  const out: Partial<T> = {};
+function definedOnly(patch: PreferencePatch): Partial<PreferencePatch> {
+  const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(patch)) {
-    if (v !== undefined) (out as Record<string, unknown>)[k] = v;
+    if (v !== undefined) out[k] = v;
   }
-  return out;
+  return out as Partial<PreferencePatch>;
 }
 
 export function createSettingsRepository(
