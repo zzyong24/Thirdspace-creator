@@ -13,7 +13,7 @@ export interface IngestionSourcePort {
   ): Promise<Array<Record<string, unknown>>>;
 }
 
-export interface MockIngestionSource extends IngestionSourcePort {}
+export type MockIngestionSource = IngestionSourcePort;
 
 // Deterministic fixtures per runType. Record keys are stable so a re-fetch +
 // re-push is a no-op (SPEC §17.2). capturedAt is a fixed ISO string (the Analytics
