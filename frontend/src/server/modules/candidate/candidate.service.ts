@@ -56,8 +56,11 @@ export interface CandidateProjectsPort {
 }
 
 export interface CandidatePositioningPort {
-  // Deterministic advisory 0–100 fit for a candidate subject (SOFT dep — absent ⇒
-  // positioningFit:null). Pure of Date.now/Math.random (C-5).
+  // Deterministic advisory 0–100 fit for a candidate subject (SOFT dep). Returns
+  // `null` when the gate cannot score (e.g. the user has no positioning statement
+  // yet) so the Candidate renders ungated — the module is NOT blocked by module 17.
+  // The port itself is also OPTIONAL on ServiceDeps (absent ⇒ fit:null). Pure of
+  // Date.now/Math.random (C-5).
   evaluateFit(
     ctx: RequestContext,
     subject: {
@@ -66,7 +69,7 @@ export interface CandidatePositioningPort {
       contentRole?: string | null;
       productAnchorId?: string | null;
     },
-  ): Promise<number>;
+  ): Promise<number | null>;
 }
 
 export interface CandidateIngestionPort {

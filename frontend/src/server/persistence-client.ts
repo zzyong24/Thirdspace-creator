@@ -136,6 +136,11 @@ import {
   type ProductRow as MonetizationProductRow,
 } from "@/server/modules/monetization";
 import {
+  createCandidateService,
+  createCandidateTransport,
+  CANDIDATE_OP_IDS,
+} from "@/server/modules/candidate";
+import {
   createDashboardQueryService,
   createProjectOverviewQueryService,
   createGlobalSearchQueryService,
@@ -213,6 +218,13 @@ const PERSISTED_OPS = new Set<string>([
   // force-allocated). The conversion → §4.6 MetricValue fan-out + notify + index reach
   // peers via injected ports (no cross-module repo import).
   ...MONETIZATION_OP_IDS,
+  // Candidate (module 19, Wave 5) — 七步③ 选题情报层. candidates.list/create/get/
+  // patch/promote + audienceSignals.list/linkToCandidate, all user-scoped. AI-sourced
+  // candidates arrive via the service's createFromAIResult (C-3 formalize — no
+  // duplicate submit/confirm op); AudienceSignal writes ride Ingestion's intake
+  // (C-4 — no second write op). promote → Project reaches Projects via the injected
+  // port; the PositioningGate is a nullable soft-dep port (fit=null when unwired).
+  ...CANDIDATE_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -273,6 +285,9 @@ const POSITIONING_OPS = new Set<string>(POSITIONING_OP_IDS);
 
 // The set of op ids owned by the monetization module's transport (module 18).
 const MONETIZATION_OPS = new Set<string>(MONETIZATION_OP_IDS);
+
+// The set of op ids owned by the candidate module's transport (module 19).
+const CANDIDATE_OPS = new Set<string>(CANDIDATE_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -625,6 +640,7 @@ interface PersistenceBundle {
   ai: Transport;
   positioning: Transport;
   monetization: Transport;
+  candidate: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
   // reads, plus the Publishing Center composer (no endpoint — the FE calls it
   // server-side via getPublishingCenterService()).
@@ -1132,6 +1148,62 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const monetization = createMonetizationTransport(() => monetizationService);
 
+  // Candidate (module 19, Wave 5): the service builds a per-ctx user-scoped repo over
+  // the shared db (the repo bakes userId in; the service mints one per request). The
+  // transport returns this ONE shared service. Peers are reached ONLY through injected
+  // narrow ports (no cross-module repo import, SPEC §22), satisfied here by the peers'
+  // public services / the shared projects repo:
+  //   - projects.createProject → projectsService.createProject (promote → Project,
+  //     Research-stage seed; ProjectsService stamps ctx.userId). The promotion returns
+  //     the new project id so the FE can navigate to /projects/:id.
+  //   - positioning.evaluateFit → positioningService.evaluateGate (subjectType
+  //     "candidate", inline payload) → its deterministic 0–100 fit. SOFT dep: when the
+  //     user has no positioning statement the gate throws GateSubjectError — swallow to
+  //     null so the Candidate renders ungated (the page is not blocked by module 17).
+  //   - ingestion.assertRunExists → ingestionService.getRun (RISK-005 — the run must
+  //     be a REAL IngestionRun; cross-user / unknown → OwnershipError).
+  // Clock/ids share the deterministic `deps` (createSeq keeps cand/sig/promo ids
+  // collision-free across requests).
+  const candidateService = createCandidateService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+    projects: {
+      createProject: async (ctx, cmd) => {
+        const row = await projectsService.createProject(ctx, cmd);
+        return { id: row.id };
+      },
+    },
+    positioning: {
+      evaluateFit: async (ctx, subject) => {
+        try {
+          const result = await positioningService.evaluateGate(ctx, {
+            subjectType: "candidate",
+            subjectId: "candidate-inline",
+            candidate: {
+              title: subject.title,
+              angle: subject.angle,
+              contentRole: subject.contentRole ?? undefined,
+              productAnchorId: subject.productAnchorId ?? undefined,
+            },
+          });
+          return result.positioningFit;
+        } catch {
+          // SOFT dep — no positioning statement yet (GateSubjectError) ⇒ ungated.
+          // Return null so the Candidate renders without a fit; module 17 is not a
+          // hard blocker (a one-shot backfill recomputes fit when positioning lands).
+          return null;
+        }
+      },
+    },
+    ingestion: {
+      assertRunExists: async (ctx, runId) => {
+        await ingestionService.getRun(ctx, runId);
+      },
+    },
+  });
+  const candidate = createCandidateTransport(() => candidateService);
+
   // Query services (module Q, Wave 4 — SPEC §19). Composition module: NO repo, NO
   // SQL. Each composer is built with facade interfaces; here the composition root
   // binds those facades to the REAL public services (consumed only via their
@@ -1604,6 +1676,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     ai,
     positioning,
     monetization,
+    candidate,
     queryServices,
     publishingCenter,
     identity,
@@ -1683,6 +1756,10 @@ async function getPositioning(): Promise<Transport> {
 
 async function getMonetization(): Promise<Transport> {
   return (await getBundle()).monetization;
+}
+
+async function getCandidate(): Promise<Transport> {
+  return (await getBundle()).candidate;
 }
 
 async function getQueryServices(): Promise<Transport> {
@@ -1851,6 +1928,16 @@ export const compositeTransport: Transport = {
     if (MONETIZATION_OPS.has(endpoint.id)) {
       const monetization = await getMonetization();
       return monetization.request(endpoint, input, ctx);
+    }
+    // Candidate ops (module 19, Wave 5) — candidates.list/create/get/patch/promote +
+    // audienceSignals.list/linkToCandidate served by the module's own user-scoped
+    // transport over the SAME pglite store (foundation §1 registry). The lightweight
+    // pool + promote → Project + demand_count aggregation run inside the service;
+    // AI-sourced candidates arrive via createFromAIResult (C-3) and signal writes ride
+    // Ingestion (C-4) — neither is a contract op here. No ctx ⇒ AuthenticationError.
+    if (CANDIDATE_OPS.has(endpoint.id)) {
+      const candidate = await getCandidate();
+      return candidate.request(endpoint, input, ctx);
     }
     // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
     // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by
