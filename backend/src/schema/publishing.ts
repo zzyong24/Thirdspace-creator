@@ -1,0 +1,109 @@
+import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
+
+// Publishing tables (data-model §9 lines 509-537 + contract/src/resources/
+// publishing.ts; SPEC §13.3 "发布" group). Canonical defs live in shared infra
+// (@creatoros/backend) because createDb() applies PUBLISHING_DDL at init alongside
+// PROJECTS_DDL / PRODUCTION_DDL / … (foundation §1: the pglite/Drizzle db factory
+// is the shared-infra home). The publishing module
+// (frontend/src/server/modules/publishing) re-exports these so there is ONE source
+// of truth, mirroring production (backend/src/schema/production.ts ↔
+// publishing.db-schema.ts).
+//
+// `Publication` is an external fact-of-record (SPEC §13.3/§22): there is no
+// internal publish queue — statuses mirror external platform reality and the
+// actual side-effect is mocked behind MockPublisher (foundation §4). The
+// (platform, external_id) partial-unique index is the idempotency anchor
+// (data-model line 865 / rule 10): a re-publish to the same platform reuses the
+// row, never duplicates.
+//
+// Ownership: `user_id` lives on EVERY owned row (it is NOT in the data-model ER
+// diagram — it is the ownership column required by foundation §1/§3). The revision
+// child is additionally scoped through the parent publication's ownership gate
+// (foundation §2). Timestamps are ISO-8601 text (contract `iso8601`), enums are
+// text, json is jsonb. The §12 state machine (Publication.status) is enforced in
+// the SERVICE, not the schema.
+//
+// Monetization-weighted (seven-step spec §2.0/§4.4): the revision's
+// `platform_settings` jsonb carries the conversion-oriented publish config
+// (scheduled_at, 引导转化 CTA copy, 评论区置顶, conversion link refs) so the publish
+// fact is conversion-aware from the start, not traffic-only. `platform_tags`
+// carries the discovery + conversion tag set.
+
+export const publications = pgTable("publications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  contentOutputId: text("content_output_id").notNull(),
+  platform: text("platform").notNull(),
+  accountReference: text("account_reference").notNull(),
+  status: text("status").notNull().default("draft"),
+  currentRevisionId: text("current_revision_id"), // nullable until first revision
+  externalId: text("external_id"), // nullable until published (idempotency anchor)
+  externalUrl: text("external_url"), // nullable until published
+  scheduledAt: text("scheduled_at"), // nullable → contract iso8601|null
+  publishedAt: text("published_at"), // nullable → contract iso8601|null
+  removedAt: text("removed_at"), // nullable → contract iso8601|null
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+// PublicationRevision is append-only/immutable (contract resource extends
+// BaseEntity only — NO updatedAt; data-model line 524-537). New edits = new
+// revision row, never an UPDATE.
+export const publicationRevisions = pgTable("publication_revisions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  publicationId: text("publication_id").notNull(),
+  revisionNumber: integer("revision_number").notNull().default(1),
+  title: text("title").notNull(),
+  description: text("description").notNull().default(""),
+  coverAssetId: text("cover_asset_id"), // nullable — validated via AssetsService
+  category: text("category").notNull().default(""),
+  series: text("series").notNull().default(""),
+  platformTags: jsonb("platform_tags").notNull().default([]),
+  platformSettings: jsonb("platform_settings").notNull().default({}),
+  createdAt: text("created_at").notNull(),
+});
+
+// Raw DDL applied at db init (pglite has no migration runner wired here yet).
+//   - publications_external_ux: PARTIAL unique on (platform, external_id) WHERE
+//     external_id IS NOT NULL (data-model line 865 / rule 10) — the idempotency
+//     anchor for re-publish.
+//   - publications_user_ix / publications_output_ix: user-scoped + per-output
+//     lookups (the Publishing Workspace lists per ContentOutput).
+//   - publication_revisions_pub_ix: per-publication revision ordering.
+export const PUBLISHING_DDL = `
+CREATE TABLE IF NOT EXISTS publications (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  content_output_id TEXT NOT NULL,
+  platform TEXT NOT NULL,
+  account_reference TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'draft',
+  current_revision_id TEXT,
+  external_id TEXT,
+  external_url TEXT,
+  scheduled_at TEXT,
+  published_at TEXT,
+  removed_at TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS publications_external_ux ON publications(platform, external_id) WHERE external_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS publications_user_ix ON publications(user_id);
+CREATE INDEX IF NOT EXISTS publications_output_ix ON publications(content_output_id);
+CREATE TABLE IF NOT EXISTS publication_revisions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  publication_id TEXT NOT NULL,
+  revision_number INTEGER NOT NULL DEFAULT 1,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  cover_asset_id TEXT,
+  category TEXT NOT NULL DEFAULT '',
+  series TEXT NOT NULL DEFAULT '',
+  platform_tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+  platform_settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS publication_revisions_pub_ix ON publication_revisions(publication_id, revision_number);
+`;
