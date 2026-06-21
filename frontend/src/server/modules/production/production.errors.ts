@@ -14,7 +14,7 @@
 import { ErrorCode } from "@creatoros/contract";
 
 export { OwnershipError } from "@/server/modules/identity";
-export { UnsupportedOperationError } from "@creatoros/backend";
+export { UnsupportedOperationError, AuthenticationError } from "@creatoros/backend";
 
 export class ConflictError extends Error {
   readonly code = ErrorCode.ConflictError;

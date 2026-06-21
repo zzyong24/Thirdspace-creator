@@ -78,6 +78,11 @@ import {
   type ArtifactVersionRow,
   type ArtifactRelationRow,
 } from "@/server/modules/artifacts";
+import {
+  createProductionService,
+  createProductionTransport,
+  PRODUCTION_OP_IDS,
+} from "@/server/modules/production";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -102,6 +107,9 @@ const PERSISTED_OPS = new Set<string>([
   // Artifacts (module 08) — list/create/get + versions.create/list + restore +
   // relations.create, all user-scoped with append-only immutable versions.
   ...ARTIFACT_OP_IDS,
+  // Production (module 09) — get/put production + segments.create + exports
+  // create/complete, user-scoped with §12 status machine + cross-module fan-out.
+  ...PRODUCTION_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -127,6 +135,9 @@ const ASSET_OPS = new Set<string>(ASSET_OP_IDS);
 
 // The set of op ids owned by the artifacts module's transport (module 08).
 const ARTIFACT_OPS = new Set<string>(ARTIFACT_OP_IDS);
+
+// The set of op ids owned by the production module's transport (module 09).
+const PRODUCTION_OPS = new Set<string>(PRODUCTION_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -470,6 +481,7 @@ interface PersistenceBundle {
   knowledge: Transport;
   assets: Transport;
   artifacts: Transport;
+  production: Transport;
   identity: IdentityService;
 }
 
@@ -499,8 +511,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // transport mints a per-ctx service so the §12 state machines run under the
   // caller; the repo is shared (it takes ctx per-call, not at construction).
   const projectsRepo = createProjectRepository(db);
+  // A stable service handle (deterministic deps) reused both by the per-ctx
+  // transport factory AND by the Production module's completeExport fan-out
+  // (setPrimaryOutputAsset → patchOutput, which also appends the activity). The
+  // service is stateless per call (it takes ctx per method), so one instance is
+  // safe across requests.
+  const projectsService = createProjectsService(projectsRepo, deps);
   const projects = createProjectsTransport(() => ({
-    service: createProjectsService(projectsRepo, deps),
+    service: projectsService,
     repo: projectsRepo,
   }));
 
@@ -575,6 +593,27 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     assertAssetOwned: (ctx, id) => assetsService.getAsset(ctx, id),
   });
   const artifacts = createArtifactsTransport(() => artifactsService);
+
+  // Production (module 09): the service builds a per-ctx user-scoped repo over the
+  // shared db (the repo bakes userId in; the service mints one per request). The
+  // transport returns this ONE shared service. completeExport's cross-module
+  // fan-out reaches peers ONLY through their public services (no repo import):
+  //   - setPrimaryOutputAsset → projectsService.patchOutput (drives ContentOutput
+  //     active→ready primary-asset link AND appends the output activity),
+  //   - searchIndexAsset → searchService.upsertDocument (best-effort post-commit).
+  // Clock/ids share the deterministic `deps` (createSeq keeps production/segment/
+  // export ids collision-free across requests).
+  const productionService = createProductionService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+    setPrimaryOutputAsset: (ctx, input) =>
+      projectsService.patchOutput(ctx, input.outputId, {
+        primaryAssetId: input.assetId,
+      }),
+    searchIndexAsset: (ctx, input) => searchService.upsertDocument(ctx, input),
+  });
+  const production = createProductionTransport(() => productionService);
 
   // Seed the Projects exemplar dataset (owned by the canonical user) AND the
   // canonical identity row, so real login resolves to `user-zyongzhu` and every
@@ -708,6 +747,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     knowledge,
     assets,
     artifacts,
+    production,
     identity,
   };
 }
@@ -749,6 +789,10 @@ async function getAssets(): Promise<Transport> {
 
 async function getArtifacts(): Promise<Transport> {
   return (await getBundle()).artifacts;
+}
+
+async function getProduction(): Promise<Transport> {
+  return (await getBundle()).production;
 }
 
 /**
@@ -819,6 +863,15 @@ export const compositeTransport: Transport = {
     if (ARTIFACT_OPS.has(endpoint.id)) {
       const artifacts = await getArtifacts();
       return artifacts.request(endpoint, input, ctx);
+    }
+    // Production ops (module 09) — get/put production + segments.create + exports
+    // create/complete served by the module's own user-scoped transport over the
+    // SAME pglite store (foundation §1 registry). completeExport's cross-module
+    // fan-out runs inside the service via injected public peer services. No ctx ⇒
+    // AuthenticationError.
+    if (PRODUCTION_OPS.has(endpoint.id)) {
+      const production = await getProduction();
+      return production.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1
