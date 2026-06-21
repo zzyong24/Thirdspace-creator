@@ -174,7 +174,16 @@ export function NewProjectDialog() {
             const created = await client.createProject({
               params: undefined,
               query: undefined,
-              body: { title: values.name, brief: values.brief },
+              // contract v0.2/v0.4: contentType/creationMode/targetPlatforms are
+              // optional capture-fields the create UoW seeds (target platforms →
+              // project_target_platforms intent rows). title/brief stay required.
+              body: {
+                title: values.name,
+                brief: values.brief,
+                contentType: values.contentType,
+                creationMode: values.creationMode,
+                targetPlatforms: [...values.platforms],
+              },
             });
             // Invalidate the App Router cache so /projects re-reads from SQL on
             // return (otherwise the cached pre-create list hides the new row).

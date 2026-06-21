@@ -1,11 +1,6 @@
 import "server-only";
-import {
-  createDb,
-  createProjectRepository,
-  createPersistenceTransport,
-  UnsupportedOperationError,
-} from "@creatoros/backend";
-import type { Endpoint, RequestContext, Transport } from "@creatoros/contract";
+import { createDb, UnsupportedOperationError } from "@creatoros/backend";
+import type { Endpoint, Transport } from "@creatoros/contract";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
@@ -44,19 +39,28 @@ import {
   type UserPreferenceRow,
   type AgentConfigurationRow,
 } from "@/server/modules/settings";
+import {
+  createProjectRepository,
+  createProjectsService,
+  createProjectsTransport,
+  PROJECT_OP_IDS,
+  type ProjectRow,
+  type StageRow,
+  type TargetPlatformRow,
+  type ContentOutputRow,
+  type OutputStageRow,
+  type TaskRow,
+  type ActivityRow,
+} from "@/server/modules/projects";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
 // explicitly so non-persisted ops (e.g. the static Dashboard page DTO) never
 // trigger a pglite init — keeps pglite out of the static build.
 const PERSISTED_OPS = new Set<string>([
-  "projects.list",
-  "projects.get",
-  "projects.create",
-  "projects.patch",
-  "projects.archive",
-  "projects.stage.transition",
-  "projects.activity.list",
+  // Projects (module 05) — all 15 "项目与流程" ops served by the module's own
+  // user-scoped transport (outputs/tasks/stages/activity included).
+  ...PROJECT_OP_IDS,
   // Taxonomy (module 04) — tags + entity_tags served by REAL SQL persistence.
   ...TAXONOMY_OP_IDS,
   // Notifications (module 01) — list + read served by REAL SQL persistence.
@@ -79,9 +83,12 @@ const SEARCH_OPS = new Set<string>(SEARCH_OP_IDS);
 // The set of op ids owned by the settings module's transport (module 03).
 const SETTINGS_OPS = new Set<string>(SETTINGS_OP_IDS);
 
+// The set of op ids owned by the projects module's transport (module 05).
+const PROJECT_OPS = new Set<string>(PROJECT_OP_IDS);
+
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
-function toRow(p: CanonicalProject) {
+function toRow(p: CanonicalProject): ProjectRow {
   return {
     id: p.id,
     userId: p.userId,
@@ -99,6 +106,99 @@ function toRow(p: CanonicalProject) {
     archivedAt: p.archivedAt ?? null,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
+  };
+}
+
+// Mappers for the Wave-2 Projects child entities (stages/platforms/outputs/
+// output-stages/tasks/activities). The canonical fixture shapes match the DB
+// rows; `contentRole` is absent on the fixture outputs → default null.
+type CanonicalStage = (typeof canonicalDataset.projectStages)[number];
+type CanonicalPlatform = (typeof canonicalDataset.projectTargetPlatforms)[number];
+type CanonicalOutput = (typeof canonicalDataset.contentOutputs)[number];
+type CanonicalOutputStage = (typeof canonicalDataset.outputStages)[number];
+type CanonicalTask = (typeof canonicalDataset.tasks)[number];
+type CanonicalActivity = (typeof canonicalDataset.projectActivities)[number];
+
+function toStageRow(s: CanonicalStage): StageRow {
+  return {
+    id: s.id,
+    projectId: s.projectId,
+    stage: s.stage,
+    status: s.status,
+    progressPct: s.progressPct,
+    skipped: s.skipped,
+    startedAt: s.startedAt ?? null,
+    completedAt: s.completedAt ?? null,
+    updatedAt: s.updatedAt,
+  };
+}
+
+function toPlatformRow(p: CanonicalPlatform): TargetPlatformRow {
+  return {
+    id: p.id,
+    projectId: p.projectId,
+    platform: p.platform,
+    priority: p.priority,
+    planningNote: p.planningNote ?? "",
+    createdAt: p.createdAt,
+  };
+}
+
+function toOutputRow(o: CanonicalOutput): ContentOutputRow {
+  return {
+    id: o.id,
+    projectId: o.projectId,
+    title: o.title,
+    contentType: o.contentType,
+    format: o.format ?? "",
+    aspectRatio: o.aspectRatio ?? "",
+    targetDurationSeconds: o.targetDurationSeconds ?? 0,
+    status: o.status,
+    contentRole: (o as { contentRole?: string | null }).contentRole ?? null,
+    primaryAssetId: o.primaryAssetId ?? null,
+    createdAt: o.createdAt,
+    updatedAt: o.updatedAt,
+  };
+}
+
+function toOutputStageRow(s: CanonicalOutputStage): OutputStageRow {
+  return {
+    id: s.id,
+    contentOutputId: s.contentOutputId,
+    stage: s.stage,
+    status: s.status,
+    progressPct: s.progressPct,
+    skipped: s.skipped,
+    startedAt: s.startedAt ?? null,
+    completedAt: s.completedAt ?? null,
+    updatedAt: s.updatedAt,
+  };
+}
+
+function toTaskRow(t: CanonicalTask): TaskRow {
+  return {
+    id: t.id,
+    projectId: t.projectId,
+    contentOutputId: t.contentOutputId ?? null,
+    stage: t.stage,
+    title: t.title,
+    description: t.description ?? "",
+    status: t.status,
+    priority: t.priority,
+    dueAt: t.dueAt ?? null,
+    completedAt: t.completedAt ?? null,
+  };
+}
+
+function toActivityRow(a: CanonicalActivity): ActivityRow {
+  return {
+    id: a.id,
+    projectId: a.projectId,
+    eventType: a.eventType,
+    entityType: a.entityType,
+    entityId: a.entityId,
+    eventData: a.eventData as Record<string, unknown>,
+    occurredAt: a.occurredAt,
   };
 }
 
@@ -175,7 +275,7 @@ function toAgentRow(a: CanonicalAgent): AgentConfigurationRow {
 // cookie via `getIdentityService()`, so the ctx they thread into the transport
 // reads/writes the same store the persistence transport serves.
 interface PersistenceBundle {
-  transport: Transport;
+  projects: Transport;
   taxonomy: Transport;
   notifications: Transport;
   search: Transport;
@@ -204,11 +304,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     nextId: (prefix: string) => `${prefix}-p-${++createSeq}`,
   };
 
-  // Task 8: the persistence transport mints a per-request repository bound to
-  // `ctx.userId` (creates stamp it; Wave-2 Projects tightens list/get filters).
-  // One shared db (the globalThis pglite singleton) underlies every per-ctx repo.
-  const repoFactory = (ctx: RequestContext) =>
-    createProjectRepository(db, { ...deps, userId: ctx.userId });
+  // Projects (module 05): one user-scoped repository over the shared db (every
+  // query filters eq(userId, ctx.userId) / ownership-checks via the parent). The
+  // transport mints a per-ctx service so the §12 state machines run under the
+  // caller; the repo is shared (it takes ctx per-call, not at construction).
+  const projectsRepo = createProjectRepository(db);
+  const projects = createProjectsTransport(() => ({
+    service: createProjectsService(projectsRepo, deps),
+    repo: projectsRepo,
+  }));
 
   // Taxonomy (module 04): one repository over the shared db; its transport mints
   // a per-ctx service so every tag/entity_tag query is scoped to `ctx.userId`.
@@ -245,10 +349,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // (foundation §2). seedCanonicalUser is idempotent (onConflictDoNothing), so a
   // re-built singleton never double-seeds. IDENTITY_DDL was applied in createDb().
   const identityRepo = createIdentityRepository(db, deps);
-  await createProjectRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-  }).seedProjects(canonicalDataset.projects.map(toRow));
+  // Seed the full Projects graph (projects + stages + platforms + outputs +
+  // output-stages + tasks + activities), all owned by the canonical user. seed*
+  // are onConflictDoNothing → a re-built singleton never double-seeds.
+  await projectsRepo.seedProjects(canonicalDataset.projects.map(toRow));
+  await projectsRepo.seedStages(canonicalDataset.projectStages.map(toStageRow));
+  await projectsRepo.seedPlatforms(
+    canonicalDataset.projectTargetPlatforms.map(toPlatformRow),
+  );
+  await projectsRepo.seedOutputs(
+    canonicalDataset.contentOutputs.map(toOutputRow),
+  );
+  await projectsRepo.seedOutputStages(
+    canonicalDataset.outputStages.map(toOutputStageRow),
+  );
+  await projectsRepo.seedTasks(canonicalDataset.tasks.map(toTaskRow));
+  await projectsRepo.seedActivities(
+    canonicalDataset.projectActivities.map(toActivityRow),
+  );
   await seedCanonicalUser(identityRepo, deps);
 
   // Seed the canonical notifications ledger (notif-1 unread, notif-2 read), owned
@@ -302,7 +420,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
 
   return {
-    transport: createPersistenceTransport(repoFactory),
+    projects,
     taxonomy,
     notifications,
     search,
@@ -318,8 +436,8 @@ function getBundle(): Promise<PersistenceBundle> {
   return globalForPersistence.__creatorosPersistence;
 }
 
-async function getPersistence(): Promise<Transport> {
-  return (await getBundle()).transport;
+async function getProjects(): Promise<Transport> {
+  return (await getBundle()).projects;
 }
 
 async function getTaxonomy(): Promise<Transport> {
@@ -385,17 +503,22 @@ export const compositeTransport: Transport = {
       const settings = await getSettings();
       return settings.request(endpoint, input, ctx);
     }
-    // Persisted ops require ctx: the persistence transport throws
-    // AuthenticationError when ctx is missing (unauthenticated dispatch → 401).
-    const persistence = await getPersistence();
-    try {
-      return await persistence.request(endpoint, input, ctx);
-    } catch (err) {
-      if (err instanceof UnsupportedOperationError) {
-        return mockTransport.request(endpoint, input, ctx);
+    // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
+    // own user-scoped transport over the SAME pglite store (foundation §1
+    // registry). No ctx ⇒ the transport throws AuthenticationError (→401).
+    if (PROJECT_OPS.has(endpoint.id)) {
+      const projects = await getProjects();
+      try {
+        return await projects.request(endpoint, input, ctx);
+      } catch (err) {
+        if (err instanceof UnsupportedOperationError) {
+          return mockTransport.request(endpoint, input, ctx);
+        }
+        throw err;
       }
-      throw err;
     }
+    // Any other persisted op id with no owning module falls back to the mock.
+    return mockTransport.request(endpoint, input, ctx);
   },
 };
 
