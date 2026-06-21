@@ -211,8 +211,14 @@ export function SearchPage({
   viewModel,
   initialQuery = "",
 }: SearchPageProps = {}) {
+  // When an op-backed `viewModel` is supplied, the server already executed the
+  // query (`pages.search.get` → SearchService.search), so the groups are ALREADY
+  // filtered — re-applying the client-side `applyQuery` would double-filter and
+  // drop matches whose relevance lives in fields the VM doesn't expose. Only the
+  // fixture-fallback path (no op data) needs the client-side query filter.
+  const opBacked = viewModel !== undefined;
   const baseVm = viewModel ?? buildSearchViewModel();
-  const vm = applyQuery(baseVm, initialQuery);
+  const vm = opBacked ? baseVm : applyQuery(baseVm, initialQuery);
   const totalCount = vm.resultTypeTabs.reduce((acc, t) => acc + t.count, 0);
   return (
     <main
