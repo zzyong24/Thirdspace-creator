@@ -1,3 +1,4 @@
+import type { RequestContext } from "@creatoros/backend";
 import type { IdentityRepository, UserRow } from "./identity.repository";
 import {
   generateSessionToken,
@@ -22,18 +23,13 @@ import { AuthenticationError } from "./identity.errors";
 
 /**
  * RequestContext (SPEC §10) — the per-request ownership boundary every module
- * scopes against. Task 6 lifts this definition into shared infra
- * (`@creatoros/backend`) so every module imports one definition; until then the
- * identity service owns the canonical shape (it is the one place that *derives*
- * a context from a session). Tasks 8/9 consume `resolveContextFromToken`.
+ * scopes against. Task 6 lifted the canonical definition into shared infra
+ * (`@creatoros/backend`) so every module imports ONE definition; the identity
+ * service (the one place that *derives* a context from a session) imports it and
+ * re-exports it for back-compat with existing module consumers. Tasks 8/9 thread
+ * `resolveContextFromToken`'s result through the transport.
  */
-export interface RequestContext {
-  userId: string;
-  requestId: string;
-  source: "user" | "ingestion" | "ai";
-  ingestionRunId?: string;
-  aiTaskId?: string;
-}
+export type { RequestContext };
 
 /**
  * Public user payload. An EXPLICIT DTO — never the Drizzle `UserRow` — so the
