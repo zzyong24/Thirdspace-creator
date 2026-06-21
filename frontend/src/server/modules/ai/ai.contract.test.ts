@@ -107,7 +107,8 @@ describe("ai contract (each op validates against its DTO)", () => {
   });
 
   it("ai.tasks.confirm → aiTaskResource (succeeded)", async () => {
-    const transport = makeTransport(db);
+    // This case needs a service handle to seed a candidate (recordCandidate) before the
+    // transport confirm, so build the service + transport directly here.
     let seq = 100;
     const service = createAiService({
       db,
