@@ -158,6 +158,12 @@ import {
   type PlatformAccountRow,
 } from "@/server/modules/platform-account";
 import {
+  createContentCalendarService,
+  createContentCalendarTransport,
+  CONTENT_CALENDAR_OP_IDS,
+  type ContentCalendarService,
+} from "@/server/modules/content-calendar";
+import {
   createDashboardQueryService,
   createProjectOverviewQueryService,
   createGlobalSearchQueryService,
@@ -258,6 +264,14 @@ const PERSISTED_OPS = new Set<string>([
   // flip (attribution preserved); per-account metrics are a read-time rollup over
   // Publication.accountId (C-4 — no new metric write path, no MetricSnapshot.accountId).
   ...PLATFORM_ACCOUNT_OP_IDS,
+  // ContentCalendar (module 22, Wave 5–7) — 七步⑦ 发布节奏 / 内容日历. The 8 ops
+  // accounts.calendar.list / .entries.create + calendar.entries.update/transition/
+  // delete + accounts.cadence.get/upsert/attainment, all user-scoped. Entries hang off
+  // an account_id (a soft FK validated via PlatformAccountService — no cross-module repo
+  // import). The planned→published/missed reconcile reads already-ingested publishing
+  // reality (C-4 — no new external-write path); 断更 fires a Notification only on the
+  // planned→missed edge. attainment is a derived read (no stored table).
+  ...CONTENT_CALENDAR_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -327,6 +341,9 @@ const CALIBRATION_OPS = new Set<string>(CALIBRATION_OP_IDS);
 
 // The set of op ids owned by the platform-account module's transport (module 21).
 const PLATFORM_ACCOUNT_OPS = new Set<string>(PLATFORM_ACCOUNT_OP_IDS);
+
+// The set of op ids owned by the content-calendar module's transport (module 22).
+const CONTENT_CALENDAR_OPS = new Set<string>(CONTENT_CALENDAR_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -682,6 +699,7 @@ interface PersistenceBundle {
   candidate: Transport;
   calibration: Transport;
   platformAccount: Transport;
+  contentCalendar: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
   // reads, plus the Publishing Center composer (no endpoint — the FE calls it
   // server-side via getPublishingCenterService()).
@@ -1297,6 +1315,57 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     () => platformAccountService,
   );
 
+  // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
+  // repo over the shared db; peer modules are reached ONLY through narrow injected
+  // ports bound here to the REAL public services (no cross-module repo import,
+  // foundation §1). platformAccounts.getAccount is the account ownership gate;
+  // publishing.isOutputPublished reads already-ingested publishing reality for the
+  // reconcile pass (C-4 — derived from PublicationService.listPublications status, no
+  // new write path); candidates.exists is the C-3 FK validation (wraps getCandidate,
+  // which throws OwnershipError when absent — we never create a Candidate here);
+  // notifications.notify is the 断更 seam (best-effort no-op until a public
+  // create-notification op lands — mirrors the learnings.adjustConfidence seam below).
+  const contentCalendarService: ContentCalendarService =
+    createContentCalendarService({
+      db,
+      now: deps.now,
+      nextId: deps.nextId,
+      clock: { now: deps.now },
+      platformAccounts: {
+        getAccount: (ctx, accountId) =>
+          platformAccountService.getAccount(ctx, accountId),
+      },
+      publishing: {
+        isOutputPublished: async (ctx, contentOutputId) => {
+          const pubs = await publishingService.listPublications(
+            ctx,
+            contentOutputId,
+            { limit: 100, offset: 0 },
+          );
+          return pubs.some((p) => p.status === "published");
+        },
+      },
+      candidates: {
+        exists: async (ctx, candidateId) => {
+          try {
+            await candidateService.getCandidate(ctx, candidateId);
+            return true;
+          } catch {
+            return false;
+          }
+        },
+      },
+      notifications: {
+        // No public create-notification op this wave (OQ5): the 断更 reminder is a
+        // Notifications/Todo concern wired via getLaggingAccounts on the Wave-4
+        // Dashboard. Best-effort no-op seam keeps reconcile total + deterministic.
+        notify: async () => {},
+      },
+    });
+  const contentCalendar = createContentCalendarTransport(
+    () => contentCalendarService,
+  );
+
   // Query services (module Q, Wave 4 — SPEC §19). Composition module: NO repo, NO
   // SQL. Each composer is built with facade interfaces; here the composition root
   // binds those facades to the REAL public services (consumed only via their
@@ -1905,6 +1974,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     candidate,
     calibration,
     platformAccount,
+    contentCalendar,
     queryServices,
     publishingCenter,
     identity,
@@ -1996,6 +2066,10 @@ async function getCalibration(): Promise<Transport> {
 
 async function getPlatformAccount(): Promise<Transport> {
   return (await getBundle()).platformAccount;
+}
+
+async function getContentCalendar(): Promise<Transport> {
+  return (await getBundle()).contentCalendar;
 }
 
 async function getQueryServices(): Promise<Transport> {
@@ -2193,6 +2267,17 @@ export const compositeTransport: Transport = {
     if (PLATFORM_ACCOUNT_OPS.has(endpoint.id)) {
       const platformAccount = await getPlatformAccount();
       return platformAccount.request(endpoint, input, ctx);
+    }
+    // ContentCalendar ops (module 22, Wave 5–7) — accounts.calendar.list/.entries.create
+    // + calendar.entries.update/transition/delete + accounts.cadence.get/upsert/
+    // attainment served by the module's own user-scoped transport over the SAME pglite
+    // store (foundation §1 registry). The §7.2 state machine + 达成率/断更 reconcile run
+    // inside the service; account ownership is gated via the injected
+    // PlatformAccountService port (no cross-module repo import). No ctx ⇒
+    // AuthenticationError.
+    if (CONTENT_CALENDAR_OPS.has(endpoint.id)) {
+      const contentCalendar = await getContentCalendar();
+      return contentCalendar.request(endpoint, input, ctx);
     }
     // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
     // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by
