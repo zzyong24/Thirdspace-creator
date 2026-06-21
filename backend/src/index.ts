@@ -109,6 +109,12 @@ export {
   contentOutputProducts,
   MONETIZATION_DDL,
 } from "./schema/monetization";
+export {
+  candidates,
+  audienceSignals,
+  topicPromotions,
+  CANDIDATE_DDL,
+} from "./schema/candidate";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their

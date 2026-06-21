@@ -1,0 +1,399 @@
+import { and, desc, eq, type Db } from "@creatoros/backend";
+import {
+  candidates,
+  audienceSignals,
+  topicPromotions,
+} from "./candidate.db-schema";
+import { OwnershipError, DerivedFieldError } from "./candidate.errors";
+
+// Candidate repository (foundation §5.2) — user-scoped queries ONLY. `userId` is
+// baked into deps (mirrors the positioning/monetization repos): EVERY query filters
+// `eq(table.userId, deps.userId)` and EVERY insert stamps `userId: deps.userId`. A
+// getCandidate(id) throws OwnershipError when the scoped select returns empty —
+// never revealing cross-user existence (foundation §2: 404 not 403).
+//
+// Derived-field discipline: patchCandidate REJECTS `status:'promoted'` (only the
+// promote op sets it) and any `demandCount` write (it is a maintained
+// denormalization recomputed from linked signals). `setPromoted` is the ONLY path to
+// 'promoted'; `recomputeDemandCount` is the ONLY path to demandCount (bump on
+// link/ingest).
+
+export type CandidateRow = typeof candidates.$inferSelect;
+export type AudienceSignalRow = typeof audienceSignals.$inferSelect;
+export type TopicPromotionRow = typeof topicPromotions.$inferSelect;
+
+export interface RepoDeps {
+  now: () => string; // ISO-8601 clock (injected for deterministic tests)
+  nextId: (prefix: string) => string; // id generator (deterministic in tests)
+  userId: string; // the ownership boundary, baked in at construction
+}
+
+export type CandidateSort =
+  | "predictedScore"
+  | "positioningFit"
+  | "demandCount";
+
+export interface ListCandidatesQuery {
+  status?: string;
+  source?: string;
+  sort?: CandidateSort;
+  limit?: number;
+  offset?: number;
+}
+
+export interface CreateCandidateInput {
+  title: string;
+  angle: string;
+  source: string; // trend|benchmark|demand|idea
+  contentRole: string | null;
+  productAnchorId: string | null;
+  positioningFit: number | null;
+  predictedScore: number | null;
+  aiTaskId: string | null;
+}
+
+// A free curation patch — NO promoted, NO demandCount (derived-field guard).
+export interface PatchCandidateInput {
+  title?: string;
+  angle?: string;
+  contentRole?: string | null;
+  productAnchorId?: string | null;
+  status?: "pool" | "dropped";
+}
+
+export interface CreateSignalInput {
+  source: string;
+  rawText: string;
+  demandTag: string | null;
+  payingIntent: string | null;
+  linkedCandidateId: string | null;
+  ingestionRunId: string | null;
+}
+
+export interface ListSignalsQuery {
+  source?: string;
+  demandTag?: string;
+  linkedCandidateId?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface CandidateRepository {
+  // Fixture hydration (insert with explicit user_id already on the row).
+  seedCandidates(rows: CandidateRow[]): Promise<void>;
+
+  // Candidate reads/writes.
+  listCandidates(
+    query: ListCandidatesQuery,
+  ): Promise<{ rows: CandidateRow[]; total: number }>;
+  createCandidate(input: CreateCandidateInput): Promise<CandidateRow>;
+  getCandidate(id: string): Promise<CandidateRow>;
+  findCandidateByAiTaskId(aiTaskId: string): Promise<CandidateRow | undefined>;
+  patchCandidate(id: string, patch: PatchCandidateInput): Promise<CandidateRow>;
+  setPromoted(id: string): Promise<CandidateRow>;
+
+  // Promotion.
+  createPromotion(input: {
+    candidateId: string;
+    projectId: string;
+  }): Promise<TopicPromotionRow>;
+
+  // Signals.
+  createSignal(input: CreateSignalInput): Promise<AudienceSignalRow>;
+  getSignal(id: string): Promise<AudienceSignalRow>;
+  listSignals(
+    query: ListSignalsQuery,
+  ): Promise<{ rows: AudienceSignalRow[]; total: number }>;
+  listSignalsForCandidate(candidateId: string): Promise<AudienceSignalRow[]>;
+  findSignalByRunRecord(
+    ingestionRunId: string,
+    rawText: string,
+  ): Promise<AudienceSignalRow | undefined>;
+  linkSignal(signalId: string, candidateId: string): Promise<AudienceSignalRow>;
+  // Recompute demand_count from the linked-signal count (the derived denormalization).
+  recomputeDemandCount(candidateId: string): Promise<number>;
+}
+
+export function createCandidateRepository(
+  db: Db,
+  deps: RepoDeps,
+): CandidateRepository {
+  function sortColumn(sort: CandidateSort | undefined) {
+    switch (sort) {
+      case "positioningFit":
+        return candidates.positioningFit;
+      case "demandCount":
+        return candidates.demandCount;
+      case "predictedScore":
+      default:
+        return candidates.predictedScore;
+    }
+  }
+
+  return {
+    async seedCandidates(rows) {
+      if (rows.length === 0) return;
+      await db.insert(candidates).values(rows).onConflictDoNothing();
+    },
+
+    async listCandidates({ status, source, sort, limit = 100, offset = 0 }) {
+      const filters = [eq(candidates.userId, deps.userId)];
+      if (status) filters.push(eq(candidates.status, status));
+      if (source) filters.push(eq(candidates.source, source));
+      const where = and(...filters);
+      const rows = await db
+        .select()
+        .from(candidates)
+        .where(where)
+        .orderBy(desc(sortColumn(sort)))
+        .limit(limit)
+        .offset(offset);
+      const all = await db
+        .select({ id: candidates.id })
+        .from(candidates)
+        .where(where);
+      return { rows, total: all.length };
+    },
+
+    async createCandidate(input) {
+      const inserted = await db
+        .insert(candidates)
+        .values({
+          id: deps.nextId("cand"),
+          userId: deps.userId,
+          title: input.title,
+          angle: input.angle,
+          source: input.source,
+          contentRole: input.contentRole,
+          productAnchorId: input.productAnchorId,
+          positioningFit: input.positioningFit,
+          predictedScore: input.predictedScore,
+          demandCount: 0,
+          status: "pool",
+          aiTaskId: input.aiTaskId,
+          createdAt: deps.now(),
+          updatedAt: deps.now(),
+        })
+        .returning();
+      return inserted[0]!;
+    },
+
+    async getCandidate(id) {
+      const rows = await db
+        .select()
+        .from(candidates)
+        .where(
+          and(eq(candidates.userId, deps.userId), eq(candidates.id, id)),
+        );
+      const row = rows[0];
+      if (!row) {
+        throw new OwnershipError(
+          `OwnershipError: candidate not found: ${id}`,
+        );
+      }
+      return row;
+    },
+
+    async findCandidateByAiTaskId(aiTaskId) {
+      const rows = await db
+        .select()
+        .from(candidates)
+        .where(
+          and(
+            eq(candidates.userId, deps.userId),
+            eq(candidates.aiTaskId, aiTaskId),
+          ),
+        )
+        .limit(1);
+      return rows[0];
+    },
+
+    async patchCandidate(id, patch) {
+      // Derived-field guard: a free patch can NEVER set 'promoted' or demandCount.
+      const status = (patch as { status?: string }).status;
+      if (status === "promoted") {
+        throw new DerivedFieldError(
+          "DerivedFieldError: status 'promoted' is set ONLY by the promote op",
+        );
+      }
+      if ("demandCount" in (patch as Record<string, unknown>)) {
+        throw new DerivedFieldError(
+          "DerivedFieldError: demandCount is derived (count of linked signals); never patched",
+        );
+      }
+      // ownership gate before any write.
+      await this.getCandidate(id);
+      const set: Record<string, unknown> = { updatedAt: deps.now() };
+      if (patch.title !== undefined) set.title = patch.title;
+      if (patch.angle !== undefined) set.angle = patch.angle;
+      if (patch.contentRole !== undefined) set.contentRole = patch.contentRole;
+      if (patch.productAnchorId !== undefined)
+        set.productAnchorId = patch.productAnchorId;
+      if (patch.status !== undefined) set.status = patch.status;
+      const updated = await db
+        .update(candidates)
+        .set(set)
+        .where(
+          and(eq(candidates.userId, deps.userId), eq(candidates.id, id)),
+        )
+        .returning();
+      return updated[0]!;
+    },
+
+    async setPromoted(id) {
+      await this.getCandidate(id); // ownership gate
+      const updated = await db
+        .update(candidates)
+        .set({ status: "promoted", updatedAt: deps.now() })
+        .where(
+          and(eq(candidates.userId, deps.userId), eq(candidates.id, id)),
+        )
+        .returning();
+      return updated[0]!;
+    },
+
+    async createPromotion(input) {
+      const inserted = await db
+        .insert(topicPromotions)
+        .values({
+          id: deps.nextId("promo"),
+          userId: deps.userId,
+          candidateId: input.candidateId,
+          projectId: input.projectId,
+          promotedAt: deps.now(),
+        })
+        .returning();
+      return inserted[0]!;
+    },
+
+    async createSignal(input) {
+      const inserted = await db
+        .insert(audienceSignals)
+        .values({
+          id: deps.nextId("sig"),
+          userId: deps.userId,
+          source: input.source,
+          rawText: input.rawText,
+          demandTag: input.demandTag,
+          payingIntent: input.payingIntent,
+          linkedCandidateId: input.linkedCandidateId,
+          ingestionRunId: input.ingestionRunId,
+          createdAt: deps.now(),
+        })
+        .returning();
+      return inserted[0]!;
+    },
+
+    async getSignal(id) {
+      const rows = await db
+        .select()
+        .from(audienceSignals)
+        .where(
+          and(
+            eq(audienceSignals.userId, deps.userId),
+            eq(audienceSignals.id, id),
+          ),
+        );
+      const row = rows[0];
+      if (!row) {
+        throw new OwnershipError(
+          `OwnershipError: audience signal not found: ${id}`,
+        );
+      }
+      return row;
+    },
+
+    async listSignals({
+      source,
+      demandTag,
+      linkedCandidateId,
+      limit = 100,
+      offset = 0,
+    }) {
+      const filters = [eq(audienceSignals.userId, deps.userId)];
+      if (source) filters.push(eq(audienceSignals.source, source));
+      if (demandTag) filters.push(eq(audienceSignals.demandTag, demandTag));
+      if (linkedCandidateId)
+        filters.push(eq(audienceSignals.linkedCandidateId, linkedCandidateId));
+      const where = and(...filters);
+      const rows = await db
+        .select()
+        .from(audienceSignals)
+        .where(where)
+        .orderBy(desc(audienceSignals.createdAt))
+        .limit(limit)
+        .offset(offset);
+      const all = await db
+        .select({ id: audienceSignals.id })
+        .from(audienceSignals)
+        .where(where);
+      return { rows, total: all.length };
+    },
+
+    async listSignalsForCandidate(candidateId) {
+      return db
+        .select()
+        .from(audienceSignals)
+        .where(
+          and(
+            eq(audienceSignals.userId, deps.userId),
+            eq(audienceSignals.linkedCandidateId, candidateId),
+          ),
+        )
+        .orderBy(desc(audienceSignals.createdAt));
+    },
+
+    async findSignalByRunRecord(ingestionRunId, rawText) {
+      const rows = await db
+        .select()
+        .from(audienceSignals)
+        .where(
+          and(
+            eq(audienceSignals.userId, deps.userId),
+            eq(audienceSignals.ingestionRunId, ingestionRunId),
+            eq(audienceSignals.rawText, rawText),
+          ),
+        )
+        .limit(1);
+      return rows[0];
+    },
+
+    async linkSignal(signalId, candidateId) {
+      await this.getSignal(signalId); // ownership gate
+      const updated = await db
+        .update(audienceSignals)
+        .set({ linkedCandidateId: candidateId })
+        .where(
+          and(
+            eq(audienceSignals.userId, deps.userId),
+            eq(audienceSignals.id, signalId),
+          ),
+        )
+        .returning();
+      return updated[0]!;
+    },
+
+    async recomputeDemandCount(candidateId) {
+      const linked = await db
+        .select({ id: audienceSignals.id })
+        .from(audienceSignals)
+        .where(
+          and(
+            eq(audienceSignals.userId, deps.userId),
+            eq(audienceSignals.linkedCandidateId, candidateId),
+          ),
+        );
+      const count = linked.length;
+      await db
+        .update(candidates)
+        .set({ demandCount: count, updatedAt: deps.now() })
+        .where(
+          and(
+            eq(candidates.userId, deps.userId),
+            eq(candidates.id, candidateId),
+          ),
+        );
+      return count;
+    },
+  };
+}

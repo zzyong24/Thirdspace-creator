@@ -18,6 +18,7 @@ import * as learningsSchema from "./schema/learnings";
 import * as aiSchema from "./schema/ai";
 import * as positioningSchema from "./schema/positioning";
 import * as monetizationSchema from "./schema/monetization";
+import * as candidateSchema from "./schema/candidate";
 import { PROJECTS_DDL } from "./schema/projects";
 import { IDENTITY_DDL } from "./schema/identity";
 import { TAXONOMY_DDL } from "./schema/taxonomy";
@@ -36,6 +37,7 @@ import { LEARNINGS_DDL } from "./schema/learnings";
 import { AI_DDL } from "./schema/ai";
 import { POSITIONING_DDL } from "./schema/positioning";
 import { MONETIZATION_DDL } from "./schema/monetization";
+import { CANDIDATE_DDL } from "./schema/candidate";
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
@@ -58,6 +60,7 @@ const schema = {
   ...aiSchema,
   ...positioningSchema,
   ...monetizationSchema,
+  ...candidateSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;
@@ -98,6 +101,10 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
   // Monetization (module 18, Wave 5+) — 七步⑦ 变现/漏斗. Independent tables; runs
   // after the base modules. All CREATE … IF NOT EXISTS (idempotent).
   await client.exec(MONETIZATION_DDL);
+  // Candidate (module 19, Wave 5) — 七步③ 选题情报层 (Candidate + AudienceSignal +
+  // TopicPromotion). Independent tables; runs after the base modules. All
+  // CREATE … IF NOT EXISTS (idempotent).
+  await client.exec(CANDIDATE_DDL);
   const db = drizzle(client, { schema });
   return { db, client };
 }
