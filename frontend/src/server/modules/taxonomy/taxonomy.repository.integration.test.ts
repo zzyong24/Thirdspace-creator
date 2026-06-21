@@ -13,7 +13,7 @@ import {
 //     findTag(ctxB, tagA.id) === undefined.
 // Deterministic deps (fixed clock + counter id generator) keep ids stable.
 
-const FIXED_NOW = "2026-06-13T10:00:00+08:00";
+const FIXED_NOW = "2026-06-13T02:00:00.000Z";
 
 function makeDeps() {
   let n = 0;
