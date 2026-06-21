@@ -64,7 +64,7 @@ export function createCandidateTransport(
             limit: pageSize,
             offset: (page - 1) * pageSize,
           });
-          return { data: rows, meta: { requestId, total } };
+          return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "candidates.create": {
           const b = (body ?? {}) as {
@@ -123,7 +123,7 @@ export function createCandidateTransport(
             limit: pageSize,
             offset: (page - 1) * pageSize,
           });
-          return { data: rows, meta: { requestId, total } };
+          return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "audienceSignals.linkToCandidate": {
           const b = (body ?? {}) as { candidateId?: string };

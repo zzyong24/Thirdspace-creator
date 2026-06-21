@@ -52,7 +52,7 @@ export function createLearningsTransport(
             limit: pageSize,
             offset: (page - 1) * pageSize,
           });
-          return { data: rows, meta: { requestId, total } };
+          return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "learnings.create": {
           const b = (body ?? {}) as { title: string; insight?: string };

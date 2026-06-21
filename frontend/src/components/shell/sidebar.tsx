@@ -67,9 +67,10 @@ const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   { id: "dashboard", label: "首页", href: "/", icon: creatorIcons.dashboard, match: matchExact("/") },
   // 定位中心 — the upstream constraint source (七步①②, SPEC §3.4): 排在「项目」前.
   { id: "positioning", label: "定位中心", href: "/positioning", icon: creatorIcons.positioning, match: matchExact("/positioning") },
-  { id: "projects", label: "项目", href: "/projects", icon: creatorIcons.projects, match: matchPrefix("/projects") },
-  // 选题候选池 — 七步③, SPEC §5.5: AI/受众信号 → 按变现潜力排序的待选选题. 排在「项目」后.
+  // 选题候选池 — 七步③, SPEC §5.5: AI/受众信号 → 按变现潜力排序的待选选题. 紧跟定位中心
+  // (定位→选题→项目 的上游顺序): 定位约束选题, 选题落地为项目.
   { id: "topics", label: "选题", href: "/topics", icon: creatorIcons.topics, match: matchExact("/topics") },
+  { id: "projects", label: "项目", href: "/projects", icon: creatorIcons.projects, match: matchPrefix("/projects") },
   { id: "knowledge", label: "知识库", href: "/knowledge", icon: creatorIcons.knowledge, match: matchExact("/knowledge") },
   { id: "assets", label: "素材中心", href: "/assets", icon: creatorIcons.assets, match: matchExact("/assets") },
   { id: "publishing", label: "发布中心", href: "/publishing", icon: creatorIcons.publishing, match: matchExact("/publishing") },

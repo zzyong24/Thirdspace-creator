@@ -69,7 +69,7 @@ export function createMonetizationTransport(
             limit: pageSize,
             offset: (page - 1) * pageSize,
           });
-          return { data: rows, meta: { requestId, total } };
+          return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "products.create": {
           const b = (body ?? {}) as {
@@ -101,7 +101,10 @@ export function createMonetizationTransport(
         }
         case "products.offers.list": {
           const rows = await service.listOffers(ctx, p.productId ?? "");
-          return { data: rows, meta: { requestId, total: rows.length } };
+          return {
+            data: rows,
+            meta: { requestId, page: 1, pageSize: Math.max(rows.length, 1), total: rows.length },
+          };
         }
         case "products.offers.create": {
           const b = (body ?? {}) as {
@@ -119,7 +122,10 @@ export function createMonetizationTransport(
             ctx,
             p.outputId ?? "",
           );
-          return { data: rows, meta: { requestId, total: rows.length } };
+          return {
+            data: rows,
+            meta: { requestId, page: 1, pageSize: Math.max(rows.length, 1), total: rows.length },
+          };
         }
         case "outputs.products.link": {
           const b = (body ?? {}) as {
@@ -155,7 +161,7 @@ export function createMonetizationTransport(
             limit: pageSize,
             offset: (page - 1) * pageSize,
           });
-          return { data: rows, meta: { requestId, total } };
+          return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "leads.create": {
           const b = (body ?? {}) as {
@@ -185,7 +191,10 @@ export function createMonetizationTransport(
         }
         case "leads.conversions.list": {
           const rows = await service.listConversions(ctx, p.leadId ?? "");
-          return { data: rows, meta: { requestId, total: rows.length } };
+          return {
+            data: rows,
+            meta: { requestId, page: 1, pageSize: Math.max(rows.length, 1), total: rows.length },
+          };
         }
         case "leads.conversions.create": {
           const b = (body ?? {}) as {
@@ -213,7 +222,10 @@ export function createMonetizationTransport(
         }
         case "monetization.funnel.byOutput": {
           const rows = await service.getFunnelForOutput(ctx, p.outputId ?? "");
-          return { data: rows, meta: { requestId, total: rows.length } };
+          return {
+            data: rows,
+            meta: { requestId, page: 1, pageSize: Math.max(rows.length, 1), total: rows.length },
+          };
         }
         default:
           throw new UnsupportedOperationError(endpoint.id);

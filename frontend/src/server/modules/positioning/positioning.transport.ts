@@ -83,7 +83,7 @@ export function createPositioningTransport(
             limit: pageSize,
             offset: (page - 1) * pageSize,
           });
-          return { data: rows, meta: { requestId, total } };
+          return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "positioning.statements.create": {
           const b = (body ?? {}) as {
