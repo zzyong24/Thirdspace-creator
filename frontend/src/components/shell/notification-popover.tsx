@@ -77,7 +77,11 @@ export function NotificationPopover({
     // server re-read (G1) is the source of truth.
     void Promise.all(
       ids.map((id) =>
-        client.markNotificationRead({ params: { notificationId: id } }),
+        client.markNotificationRead({
+          params: { notificationId: id },
+          query: undefined,
+          body: undefined,
+        }),
       ),
     )
       .then(() => {

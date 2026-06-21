@@ -73,7 +73,9 @@ describe("notifications.transport (contract conformance)", () => {
   it("listNotifications → NotificationResource[] list envelope (readAt null + non-null both conform)", async () => {
     const client = createClient(ENDPOINTS, transport, ctx);
     const items = (await client.listNotifications({
+      params: undefined,
       query: { page: 1, pageSize: 20 },
+      body: undefined,
     })) as unknown as unknown[];
     expect(items).toHaveLength(2);
     items.forEach((r) => expect(() => notificationResource.parse(r)).not.toThrow());
@@ -94,6 +96,8 @@ describe("notifications.transport (contract conformance)", () => {
     const client = createClient(ENDPOINTS, transport, ctx);
     const read = await client.markNotificationRead({
       params: { notificationId: "notif-1" },
+      query: undefined,
+      body: undefined,
     });
     expect(() => notificationResource.parse(read)).not.toThrow();
     expect(read.readAt).toBe(NOW);

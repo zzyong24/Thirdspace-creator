@@ -11,7 +11,11 @@
 // TS type from ENDPOINTS, not a non-existent `@creatoros/contract/resources/...`
 // subpath (package.json exposes only the root export).
 import { ENDPOINTS } from "@creatoros/contract";
-import type { z } from "zod";
 
 export const notificationResource = ENDPOINTS.listNotifications.response; // === markNotificationRead.response
-export type NotificationResource = z.infer<typeof notificationResource>;
+// Derive the inferred output type from the schema's phantom `_output` (zod 4's
+// `z.infer<T>` is `T["_output"]`). The frontend package does not declare `zod`
+// as a direct dependency, so we avoid a bare `import type { z } from "zod"` and
+// read the output type structurally instead.
+export type NotificationResource =
+  (typeof notificationResource)["_output"];

@@ -49,7 +49,9 @@ async function loadNotifications(
   ctx: RequestContext,
 ): Promise<NotificationsViewModel> {
   const items = (await createServerClient(ctx).listNotifications({
+    params: undefined,
     query: { page: 1, pageSize: 20 },
+    body: undefined,
   })) as unknown as ReadonlyArray<{
     id: string;
     title: string;
