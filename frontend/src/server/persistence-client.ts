@@ -151,6 +151,13 @@ import {
   type RubricVersionRow as CalibrationRubricVersionRow,
 } from "@/server/modules/calibration";
 import {
+  createPlatformAccountService,
+  createPlatformAccountTransport,
+  createPlatformAccountRepository,
+  PLATFORM_ACCOUNT_OP_IDS,
+  type PlatformAccountRow,
+} from "@/server/modules/platform-account";
+import {
   createDashboardQueryService,
   createProjectOverviewQueryService,
   createGlobalSearchQueryService,
@@ -242,6 +249,15 @@ const PERSISTED_OPS = new Set<string>([
   // confidence feedback reaches Learnings via an injected port (no cross-module repo
   // import).
   ...CALIBRATION_OP_IDS,
+  // PlatformAccount (module 21, Wave 5–7) — 七步⑤ 多账号矩阵. accounts.list/create/
+  // get/update/archive, all user-scoped. Promotes 矩阵号 from a free-text
+  // account_reference string to a first-class user-scoped entity; the PUBLIC
+  // assertOwnedAccount(ctx, accountId, platform) guard is the cross-module binding seam
+  // Publishing/Projects call before stamping accountId (no cross-module repo import).
+  // secretReference is an opaque reference (§7.1) — never a raw token. archive is a soft
+  // flip (attribution preserved); per-account metrics are a read-time rollup over
+  // Publication.accountId (C-4 — no new metric write path, no MetricSnapshot.accountId).
+  ...PLATFORM_ACCOUNT_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -308,6 +324,9 @@ const CANDIDATE_OPS = new Set<string>(CANDIDATE_OP_IDS);
 
 // The set of op ids owned by the calibration module's transport (module 20).
 const CALIBRATION_OPS = new Set<string>(CALIBRATION_OP_IDS);
+
+// The set of op ids owned by the platform-account module's transport (module 21).
+const PLATFORM_ACCOUNT_OPS = new Set<string>(PLATFORM_ACCOUNT_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -662,6 +681,7 @@ interface PersistenceBundle {
   monetization: Transport;
   candidate: Transport;
   calibration: Transport;
+  platformAccount: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
   // reads, plus the Publishing Center composer (no endpoint — the FE calls it
   // server-side via getPublishingCenterService()).
@@ -1259,6 +1279,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const calibration = createCalibrationTransport(() => calibrationService);
 
+  // PlatformAccount (module 21, Wave 5–7): the service builds a per-ctx user-scoped repo
+  // over the shared db (the service mints one per request; the repo bakes userId in).
+  // The transport returns this ONE shared service. No external port + no peer fan-out —
+  // accounts are pure local records (the secretReference is an opaque reference resolved
+  // elsewhere; §7.1 + Settings precedent, never a raw token). The PUBLIC
+  // assertOwnedAccount(ctx, accountId, platform) guard is the cross-module binding seam
+  // Publishing/Projects call before stamping accountId (through index.ts, no cross-module
+  // repo import). Clock/ids share the deterministic `deps` (createSeq keeps acct ids
+  // collision-free across requests).
+  const platformAccountService = createPlatformAccountService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+  });
+  const platformAccount = createPlatformAccountTransport(
+    () => platformAccountService,
+  );
+
   // Query services (module Q, Wave 4 — SPEC §19). Composition module: NO repo, NO
   // SQL. Each composer is built with facade interfaces; here the composition root
   // binds those facades to the REAL public services (consumed only via their
@@ -1811,6 +1849,41 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   await calibrationSeedRepo.seedRubricVersions([canonicalRubricVersion]);
   await calibrationSeedRepo.seedRubrics([canonicalRubric]);
 
+  // Seed two canonical platform accounts (module 21): a douyin + a bilibili 矩阵号 owned
+  // by the canonical user so the 账号管理 surface resolves real rows under the seeded
+  // login (foundation §2). secretReference is an opaque env reference (§7.1 — never a raw
+  // token). Deterministic ids/clock (FIXED_NOW_ISO). seedAccounts is onConflictDoNothing
+  // → a re-built singleton never double-seeds. A user-scoped seed repo is minted.
+  const platformAccountSeedRepo = createPlatformAccountRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  });
+  const canonicalAccounts: PlatformAccountRow[] = [
+    {
+      id: "acct-canonical-douyin",
+      userId: canonicalDataset.user.id,
+      platform: "douyin",
+      accountHandle: "@ai-engineer-main",
+      secretReference: "env:DOUYIN_TOKEN_REF",
+      followerBaseline: 12000,
+      status: "active",
+      createdAt: FIXED_NOW_ISO,
+      updatedAt: FIXED_NOW_ISO,
+    },
+    {
+      id: "acct-canonical-bilibili",
+      userId: canonicalDataset.user.id,
+      platform: "bilibili",
+      accountHandle: "@AI工程实录",
+      secretReference: null,
+      followerBaseline: 8400,
+      status: "active",
+      createdAt: FIXED_NOW_ISO,
+      updatedAt: FIXED_NOW_ISO,
+    },
+  ];
+  await platformAccountSeedRepo.seedAccounts(canonicalAccounts);
+
   return {
     projects,
     taxonomy,
@@ -1831,6 +1904,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     monetization,
     candidate,
     calibration,
+    platformAccount,
     queryServices,
     publishingCenter,
     identity,
@@ -1918,6 +1992,10 @@ async function getCandidate(): Promise<Transport> {
 
 async function getCalibration(): Promise<Transport> {
   return (await getBundle()).calibration;
+}
+
+async function getPlatformAccount(): Promise<Transport> {
+  return (await getBundle()).platformAccount;
 }
 
 async function getQueryServices(): Promise<Transport> {
@@ -2106,6 +2184,15 @@ export const compositeTransport: Transport = {
     if (CALIBRATION_OPS.has(endpoint.id)) {
       const calibration = await getCalibration();
       return calibration.request(endpoint, input, ctx);
+    }
+    // PlatformAccount ops (module 21, Wave 5–7) — accounts.list/create/get/update/
+    // archive served by the module's own user-scoped transport over the SAME pglite
+    // store (foundation §1 registry). 矩阵号 registry + the assertOwnedAccount binding
+    // guard run inside the service; no peer fan-out (pure local records). No ctx ⇒
+    // AuthenticationError.
+    if (PLATFORM_ACCOUNT_OPS.has(endpoint.id)) {
+      const platformAccount = await getPlatformAccount();
+      return platformAccount.request(endpoint, input, ctx);
     }
     // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
     // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by
