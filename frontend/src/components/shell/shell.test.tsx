@@ -27,6 +27,19 @@ function readRootVar(name: string): string {
     .trim();
 }
 
+// Stub `next/navigation` so the NotificationPopover island (rendered inside the
+// TopHeader) can call `useRouter()` outside an App Router context (Module 01 G2:
+// the bell's "全部标记为已读" handler asks the router to revalidate). The shell
+// tests don't exercise the mutation; this just satisfies the hook.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 // Stub `next/link` so we can query the rendered anchors without invoking the
 // real client-side router.
 vi.mock("next/link", () => ({

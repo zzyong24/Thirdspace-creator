@@ -22,6 +22,19 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
+// Stub `next/navigation` so the NotificationPopover island (rendered inside the
+// AppShell's TopHeader) can call `useRouter()` outside an App Router context
+// (Module 01 G2). This test replicates the (creator) layout's AppShell wrapper;
+// the popover's mutation path is not exercised here.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 // Stub `next/link` so we can assert href values without the Next.js
 // runtime mounting a router.
 vi.mock("next/link", () => ({

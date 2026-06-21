@@ -35,6 +35,7 @@ import {
   type TopHeaderStage,
 } from "./top-header";
 import { cn } from "@/lib/utils";
+import type { NotificationsViewModel } from "@/fixtures/selectors";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -43,6 +44,8 @@ import { cn } from "@/lib/utils";
 export interface AppShellProps {
   readonly pathname: string;
   readonly user?: SidebarUser;
+  // G1: the server-read Shell notifications, forwarded to the TopHeader bell.
+  readonly notifications?: NotificationsViewModel;
   readonly headerMode?: TopHeaderMode;
   readonly pageTitle?: string;
   readonly pageDescription?: string;
@@ -66,6 +69,7 @@ export interface AppShellProps {
 export function AppShell({
   pathname,
   user,
+  notifications,
   headerMode = "global",
   pageTitle,
   pageDescription,
@@ -104,6 +108,7 @@ export function AppShell({
         <TopHeader
           mode={headerMode}
           pathname={pathname}
+          notifications={notifications}
           pageTitle={pageTitle}
           pageDescription={pageDescription}
           project={project}

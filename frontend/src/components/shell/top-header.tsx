@@ -23,6 +23,7 @@ import { SearchField } from "@/components/navigation/search-field";
 import { NotificationPopover } from "./notification-popover";
 import { creatorIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import type { NotificationsViewModel } from "@/fixtures/selectors";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -47,6 +48,9 @@ export interface TopHeaderProjectIdentity {
 export interface TopHeaderProps {
   readonly mode?: TopHeaderMode;
   readonly pathname?: string;
+  // G1: the server-read Shell notifications, passed to the bell popover as its
+  // `viewModel`. Optional so existing static renders fall back to the selector.
+  readonly notifications?: NotificationsViewModel;
   readonly pageTitle?: string;
   readonly pageDescription?: string;
   readonly project?: TopHeaderProjectIdentity;
@@ -89,6 +93,7 @@ const MoreIcon = creatorIcons.more;
 export function TopHeader({
   mode = "global",
   pathname = "/",
+  notifications,
   pageTitle,
   pageDescription,
   project,
@@ -146,6 +151,7 @@ export function TopHeader({
         mode={resolvedMode}
         pathname={pathname}
         project={project}
+        notifications={notifications}
         primaryActionLabel={primaryActionLabel}
         secondaryActionLabel={secondaryActionLabel}
       />
@@ -250,18 +256,20 @@ function HeaderActions({
   primaryActionLabel,
   secondaryActionLabel,
   project,
+  notifications,
 }: {
   mode: TopHeaderMode;
   pathname: string;
   project?: TopHeaderProjectIdentity;
   primaryActionLabel?: string;
   secondaryActionLabel?: string;
+  notifications?: NotificationsViewModel;
 }) {
   if (
     (mode === "global" || mode === "overlay-background") &&
     pathname === "/"
   ) {
-    return <DashboardHeaderActions />;
+    return <DashboardHeaderActions notifications={notifications} />;
   }
   if (
     (mode === "global" || mode === "overlay-background") &&
@@ -302,7 +310,7 @@ function HeaderActions({
           <SearchIcon className="size-4" aria-hidden="true" />
         </Link>
       ) : null}
-      <NotificationPopover />
+      <NotificationPopover viewModel={notifications} />
       {secondaryActionLabel ? (
         <Button type="button" variant="outline" size="sm">
           {secondaryActionLabel}
@@ -424,7 +432,11 @@ function nextWorkspaceHref(pathname: string): string | null {
   return `/${segments.slice(0, 2).join("/")}/${nextStage}`;
 }
 
-function DashboardHeaderActions() {
+function DashboardHeaderActions({
+  notifications,
+}: {
+  notifications?: NotificationsViewModel;
+}) {
   return (
     <div
       data-slot="header-actions"
@@ -441,7 +453,10 @@ function DashboardHeaderActions() {
           ⌘ K
         </kbd>
       </Link>
-      <NotificationPopover triggerClassName="size-9 border border-border bg-surface" />
+      <NotificationPopover
+        viewModel={notifications}
+        triggerClassName="size-9 border border-border bg-surface"
+      />
       <Link
         href="/projects/new"
         className={buttonVariants({ size: "lg" })}

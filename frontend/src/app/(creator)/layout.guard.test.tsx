@@ -76,6 +76,14 @@ vi.mock("@/server/persistence-client", () => ({
   }),
 }));
 
+// --- contract-client.server: the layout's G1 notifications read. Stub the
+//     server client so the guard test stays focused on identity (and never
+//     pulls the real compositeTransport / pglite into jsdom). ---
+const listNotifications = vi.fn(async () => [] as unknown[]);
+vi.mock("@/lib/contract-client.server", () => ({
+  createServerClient: () => ({ listNotifications }),
+}));
+
 async function importLayout() {
   return (await import("./layout")).default;
 }
@@ -92,6 +100,7 @@ beforeEach(() => {
   redirect.mockClear();
   resolveContextFromToken.mockReset();
   getCurrentUser.mockReset();
+  listNotifications.mockClear();
   cookieValue = undefined;
   pathnameHeader = "/settings";
 });

@@ -31,10 +31,45 @@ import { redirect } from "next/navigation";
 
 import { ShellRouter, type ShellUser } from "./shell-router";
 import { resolveSession, currentPathname } from "@/lib/session.server";
+import { createServerClient } from "@/lib/contract-client.server";
+import type { NotificationsViewModel } from "@/fixtures/selectors";
+import type { RequestContext } from "@creatoros/contract";
 
 interface CreatorLayoutProps {
   readonly children: React.ReactNode;
   readonly modal: React.ReactNode;
+}
+
+// G1 — the REAL Shell notifications read. The (creator) layout (an RSC) calls
+// `GET /notifications` via the server contract client under the request ctx and
+// projects the NotificationResource[] into the `NotificationsViewModel` the
+// popover consumes (read = readAt !== null). Threaded down through the Shell so
+// the bell + unread badge reflect real server state.
+async function loadNotifications(
+  ctx: RequestContext,
+): Promise<NotificationsViewModel> {
+  const items = (await createServerClient(ctx).listNotifications({
+    query: { page: 1, pageSize: 20 },
+  })) as unknown as ReadonlyArray<{
+    id: string;
+    title: string;
+    body: string;
+    notificationType: string;
+    readAt: string | null;
+    createdAt: string;
+  }>;
+  const views = items.map((n) => ({
+    id: n.id,
+    title: n.title,
+    body: n.body,
+    type: n.notificationType,
+    read: n.readAt !== null,
+    createdAt: n.createdAt,
+  }));
+  return {
+    items: views,
+    unreadCount: views.filter((v) => !v.read).length,
+  };
 }
 
 function initialsFromName(name: string): string {
@@ -65,9 +100,14 @@ export default async function CreatorLayout({
     initials: initialsFromName(session.user.displayName),
   };
 
+  // G1: real notifications for the Shell bell, read under the session ctx.
+  const notifications = await loadNotifications(session.ctx);
+
   return (
     <>
-      <ShellRouter user={user}>{children}</ShellRouter>
+      <ShellRouter user={user} notifications={notifications}>
+        {children}
+      </ShellRouter>
       {/* The @modal parallel slot renders intercepting-route overlays
           (currently `/projects/new`). It is rendered above the AppShell
           so the dialog appears above the page chrome. */}

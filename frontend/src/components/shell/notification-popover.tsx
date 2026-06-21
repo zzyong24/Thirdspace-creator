@@ -1,21 +1,29 @@
 "use client";
 
 /**
- * NotificationPopover (Increment 4 / COMP-006, page R1-5).
+ * NotificationPopover (Increment 4 / COMP-006, page R1-5; Module 01 G1-G3).
  *
- * The TopHeader bell becomes a real popover trigger: it lists the
- * canonical notifications (newest first) and surfaces an unread-count
- * badge on the bell. Built on the shared `ui/popover` (base-ui) and the
- * shared `ui/badge` — no new dependencies.
+ * The TopHeader bell is a real popover trigger: it lists the signed-in user's
+ * notifications (newest first) and surfaces a real unread-count badge.
  *
- * Determinism: notifications come from `buildNotificationsViewModel`,
- * which reads the canonical dataset with no `Date.now` / `Math.random` /
- * network. The popover is a controlled-by-the-primitive island; the only
- * local state is the open flag (owned by base-ui) and a "mark read" set
- * so the unread badge can clear on interaction.
+ *  - G1 (server read): the `viewModel` prop is the REAL `GET /notifications`
+ *    result, built server-side in the (creator) layout via the server contract
+ *    client and threaded down through the Shell. The `viewModel?` test seam is
+ *    preserved; only when omitted does it fall back to the deterministic
+ *    canonical selector (keeps Storybook/static renders working).
+ *  - G2 (全部标记为已读): there is NO bulk endpoint (roadmap §428), so the handler
+ *    issues N per-id `client.markNotificationRead` calls — one per currently
+ *    UNREAD item — awaits `Promise.all`, then `router.refresh()` so the server
+ *    re-reads (G1) and the badge clears from real state. An optimistic local
+ *    `readIds` set clears the badge instantly; truth comes from the refresh.
+ *  - G3 (list item): each `<li>` is intentionally DECORATIVE (no per-item
+ *    handler / deep-link) — see the comment on the item below.
+ *
+ * Mutations flow island -> client.markNotificationRead -> router.refresh().
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,6 +31,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { client } from "@/lib/contract-client";
 import { creatorIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import {
@@ -44,19 +53,40 @@ export function NotificationPopover({
   triggerClassName,
 }: NotificationPopoverProps) {
   const vm = viewModel ?? buildNotificationsViewModel();
-  // Locally track which notifications the user has dismissed/read so the
-  // unread badge can clear when the popover is opened.
+  const router = useRouter();
+  // Optimistic local set: which notifications the user has marked read this
+  // session, so the unread badge clears instantly. Server truth arrives via the
+  // post-mutation router.refresh() (re-reads G1).
   const [readIds, setReadIds] = React.useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [pending, setPending] = React.useState(false);
 
-  const unreadCount = vm.items.filter(
+  const unreadItems = vm.items.filter(
     (item) => !item.read && !readIds.has(item.id),
-  ).length;
+  );
+  const unreadCount = unreadItems.length;
 
   const markAllRead = React.useCallback(() => {
-    setReadIds(new Set(vm.items.map((item) => item.id)));
-  }, [vm.items]);
+    if (pending || unreadItems.length === 0) return;
+    const ids = unreadItems.map((item) => item.id);
+    // Optimistically clear the badge before the round-trip.
+    setReadIds((prev) => new Set([...prev, ...ids]));
+    setPending(true);
+    // No bulk endpoint (roadmap §428): N per-id reads, then revalidate so the
+    // server re-read (G1) is the source of truth.
+    void Promise.all(
+      ids.map((id) =>
+        client.markNotificationRead({ params: { notificationId: id } }),
+      ),
+    )
+      .then(() => {
+        router.refresh();
+      })
+      .finally(() => {
+        setPending(false);
+      });
+  }, [pending, router, unreadItems]);
 
   return (
     <Popover>
@@ -92,7 +122,8 @@ export function NotificationPopover({
               type="button"
               data-slot="notification-mark-read"
               onClick={markAllRead}
-              className="text-xs font-medium text-brand hover:underline focus:outline-none"
+              disabled={pending}
+              className="text-xs font-medium text-brand hover:underline focus:outline-none disabled:opacity-50"
             >
               全部标记为已读
             </button>
@@ -113,6 +144,10 @@ export function NotificationPopover({
           >
             {vm.items.map((item) => {
               const isUnread = !item.read && !readIds.has(item.id);
+              // G3 (decorative): the list item is intentionally INERT — no
+              // per-item onClick / deep-link (roadmap §4 line 351). A future
+              // per-item read would reuse `notifications.read`, but it is out of
+              // scope for Wave 1. Do NOT add a handler here.
               return (
                 <li
                   key={item.id}

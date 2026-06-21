@@ -34,6 +34,7 @@ import { OverlayController } from "@/components/overlays/overlay-controller";
 import { AICopilotDialog } from "@/components/overlays/ai-copilot-dialog";
 import { CopilotOverlayBridge } from "@/components/overlays/copilot-overlay-bridge";
 import { canonicalDataset } from "@/fixtures/canonical";
+import type { NotificationsViewModel } from "@/fixtures/selectors";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -256,6 +257,9 @@ export interface ShellUser {
 export interface ShellRouterProps {
   readonly children: React.ReactNode;
   readonly user?: ShellUser;
+  // G1: the server-read Shell notifications, forwarded untouched to the
+  // TopHeader bell. The resolver never branches on it.
+  readonly notifications?: NotificationsViewModel;
   readonly hasInterceptingModal?: boolean;
   readonly overlayMasked?: boolean;
 }
@@ -263,6 +267,7 @@ export interface ShellRouterProps {
 export function ShellRouter({
   children,
   user,
+  notifications,
   hasInterceptingModal = false,
   overlayMasked = false,
 }: ShellRouterProps) {
@@ -273,6 +278,7 @@ export function ShellRouter({
     <AppShell
       pathname={pathname}
       user={user}
+      notifications={notifications}
       headerMode={resolution.headerMode}
       pageTitle={resolution.pageTitle}
       pageDescription={resolution.pageDescription}
