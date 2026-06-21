@@ -4,6 +4,7 @@ import {
   BookOpen,
   Check,
   ChevronRight,
+  Crosshair,
   Ellipsis,
   FolderKanban,
   Funnel,
@@ -23,6 +24,7 @@ import {
 
 export type CreatorIconKey =
   | "dashboard"
+  | "positioning"
   | "projects"
   | "knowledge"
   | "assets"
@@ -44,6 +46,7 @@ export type CreatorIconKey =
 
 export const creatorIcons = Object.freeze({
   dashboard: LayoutDashboard,
+  positioning: Crosshair,
   projects: FolderKanban,
   knowledge: BookOpen,
   assets: Images,

@@ -65,6 +65,8 @@ interface NavEntry {
 
 const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   { id: "dashboard", label: "首页", href: "/", icon: creatorIcons.dashboard, match: matchExact("/") },
+  // 定位中心 — the upstream constraint source (七步①②, SPEC §3.4): 排在「项目」前.
+  { id: "positioning", label: "定位中心", href: "/positioning", icon: creatorIcons.positioning, match: matchExact("/positioning") },
   { id: "projects", label: "项目", href: "/projects", icon: creatorIcons.projects, match: matchPrefix("/projects") },
   { id: "knowledge", label: "知识库", href: "/knowledge", icon: creatorIcons.knowledge, match: matchExact("/knowledge") },
   { id: "assets", label: "素材中心", href: "/assets", icon: creatorIcons.assets, match: matchExact("/assets") },

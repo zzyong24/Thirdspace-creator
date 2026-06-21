@@ -47,6 +47,7 @@ import type {
 } from "@/types/view-models";
 import { ResearchNotesIsland } from "./research-notes-island";
 import { EvidenceCollectionIsland } from "./evidence-collection-island";
+import { PositioningFitBadge } from "@/features/positioning/positioning-fit-badge";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -86,6 +87,7 @@ export function ResearchWorkspacePage({
           <ProjectIdeaCard
             title={vm.idea.title}
             summary={vm.idea.summary}
+            projectId={vm.projectId}
           />
           <TrendBackgroundSection cards={vm.trendCards} />
           <CompetitorAnalysisTable rows={vm.competitors} />
@@ -114,17 +116,24 @@ export function ResearchWorkspacePage({
 function ProjectIdeaCard({
   title,
   summary,
+  projectId,
 }: {
   title: string;
   summary: string;
+  projectId: string;
 }) {
   return (
     <div data-slot="project-idea-card">
       <SectionCard title="项目创意" description="一句话立意与目标受众">
         <div className="flex flex-col gap-2">
-          <h2 className="truncate text-base font-semibold text-foreground">
-            {title}
-          </h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="truncate text-base font-semibold text-foreground">
+              {title}
+            </h2>
+            {/* 定位契合度 Badge (SPEC §3.4) — advisory, non-blocking; the score
+                comes from the deterministic backend gate via client.evaluateGate. */}
+            <PositioningFitBadge projectId={projectId} />
+          </div>
           <p className="text-sm text-muted-foreground">{summary}</p>
         </div>
       </SectionCard>

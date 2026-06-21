@@ -106,6 +106,14 @@ export function resolveRoute(pathname: string): RouteResolution {
       contextualCardVariant: "assistant",
     };
   }
+  if (pathname === "/positioning") {
+    return {
+      headerMode: "global",
+      pageTitle: "定位中心",
+      pageDescription: "账号定位与定位陈述版本链 · 下游选题/评分的约束源",
+      contextualCardVariant: "assistant",
+    };
+  }
   if (pathname === "/projects") {
     return {
       headerMode: "global",

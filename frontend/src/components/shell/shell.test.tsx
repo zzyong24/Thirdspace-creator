@@ -81,13 +81,15 @@ describe("AppShell", () => {
     expect(headers).toHaveLength(1);
   });
 
-  it("renders the seven approved primary nav items in order", async () => {
+  it("renders the approved primary nav items in order (定位中心 inserted as 2nd, 七步①②)", async () => {
     await renderShell();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const items = within(nav).getAllByRole("link");
     const labels = items.map((item) => item.textContent?.trim() ?? "");
+    // SPEC §3.4: 定位中心 is the upstream constraint source — pinned 2nd, before 项目.
     expect(labels).toEqual([
       "首页",
+      "定位中心",
       "项目",
       "知识库",
       "素材中心",
