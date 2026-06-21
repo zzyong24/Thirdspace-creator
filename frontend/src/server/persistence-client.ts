@@ -60,6 +60,15 @@ import {
   type KnowledgeItemRow,
   type KnowledgeRevisionRow,
 } from "@/server/modules/knowledge";
+import {
+  createAssetRepository,
+  createAssetsService,
+  createAssetsTransport,
+  createMockObjectStorage,
+  ASSET_OP_IDS,
+  type AssetRow,
+  type AssetFileRow,
+} from "@/server/modules/assets";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -79,6 +88,8 @@ const PERSISTED_OPS = new Set<string>([
   ...SETTINGS_OP_IDS,
   // Knowledge (module 06) — list/create/get + revisions.create + relations.create.
   ...KNOWLEDGE_OP_IDS,
+  // Assets (module 07) — list/get + two-phase upload + files.create + trash/restore.
+  ...ASSET_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -98,6 +109,9 @@ const PROJECT_OPS = new Set<string>(PROJECT_OP_IDS);
 
 // The set of op ids owned by the knowledge module's transport (module 06).
 const KNOWLEDGE_OPS = new Set<string>(KNOWLEDGE_OP_IDS);
+
+// The set of op ids owned by the assets module's transport (module 07).
+const ASSET_OPS = new Set<string>(ASSET_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -285,6 +299,44 @@ function toRelationRow(r: CanonicalRelation): {
   };
 }
 
+// Assets (module 07) canonical mappers. The fixture asset/file shapes match the
+// DB rows (ISO text timestamps, jsonb mediaMetadata); `description` defaults to
+// "" and `deletedAt`/nullable dimensions pass through.
+type CanonicalAsset = (typeof canonicalDataset.assets)[number];
+type CanonicalAssetFile = (typeof canonicalDataset.assetFiles)[number];
+
+function toAssetRow(a: CanonicalAsset): AssetRow {
+  return {
+    id: a.id,
+    userId: a.userId,
+    currentFileId: a.currentFileId ?? null,
+    assetType: a.assetType,
+    name: a.name,
+    description: a.description ?? "",
+    status: a.status,
+    deletedAt: a.deletedAt ?? null,
+    createdAt: a.createdAt,
+    updatedAt: a.updatedAt,
+  };
+}
+
+function toAssetFileRow(f: CanonicalAssetFile): AssetFileRow {
+  return {
+    id: f.id,
+    assetId: f.assetId,
+    versionNumber: f.versionNumber,
+    storageKey: f.storageKey,
+    mimeType: f.mimeType,
+    fileSize: f.fileSize,
+    checksum: f.checksum,
+    width: f.width ?? null,
+    height: f.height ?? null,
+    durationMs: f.durationMs ?? null,
+    mediaMetadata: f.mediaMetadata as Record<string, unknown>,
+    createdAt: f.createdAt,
+  };
+}
+
 type CanonicalPreference = (typeof canonicalDataset.userPreferences)[number];
 type CanonicalModel = (typeof canonicalDataset.modelConfigurations)[number];
 type CanonicalAgent = (typeof canonicalDataset.agentConfigurations)[number];
@@ -348,6 +400,7 @@ interface PersistenceBundle {
   search: Transport;
   settings: Transport;
   knowledge: Transport;
+  assets: Transport;
   identity: IdentityService;
 }
 
@@ -422,6 +475,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createKnowledgeService(knowledgeRepo),
   );
 
+  // Assets (module 07): one user-scoped repository over the shared db (the repo
+  // takes ctx per-call, not at construction). The service is the SOLE
+  // object-storage caller (SPEC §15) — it gets the MockObjectStorage swap-seam
+  // adapter (foundation §4; in-memory, deterministic keys). The transport mints a
+  // per-ctx service so every list/get/upload/file/trash/restore is scoped to
+  // `ctx.userId`; children inherit ownership via the parent asset's gate.
+  // Clock/ids share the deterministic `deps`; the mock's nextKey reuses createSeq
+  // so storage keys stay collision-free across requests.
+  const assetsRepo = createAssetRepository(db, deps);
+  const objectStorage = createMockObjectStorage({
+    nextKey: () => `uploads/${deps.nextId("objkey")}`,
+  });
+  const assets = createAssetsTransport(() =>
+    createAssetsService(assetsRepo, objectStorage, deps),
+  );
+
   // Seed the Projects exemplar dataset (owned by the canonical user) AND the
   // canonical identity row, so real login resolves to `user-zyongzhu` and every
   // fixture-backed page + the Projects seed keep resolving under a real ctx
@@ -468,6 +537,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   await knowledgeRepo.seedRelations(
     canonicalDataset.knowledgeRelations.map(toRelationRow),
   );
+
+  // Seed the canonical assets graph (assets + their files), all owned by the
+  // canonical user, so the /assets gallery resolves the real rows under the
+  // seeded login (foundation §2). seed* are onConflictDoNothing → a re-built
+  // singleton never double-seeds. Files are seeded first so currentFileId
+  // references resolve.
+  await assetsRepo.seedAssetFiles(
+    canonicalDataset.assetFiles.map(toAssetFileRow),
+  );
+  await assetsRepo.seedAssets(canonicalDataset.assets.map(toAssetRow));
 
   // Seed the canonical user's search index (module 02, Wave-1 seed approach —
   // plan open-question #4): derive SearchDocuments from the owned projects /
@@ -519,6 +598,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     search,
     settings,
     knowledge,
+    assets,
     identity,
   };
 }
@@ -552,6 +632,10 @@ async function getSettings(): Promise<Transport> {
 
 async function getKnowledge(): Promise<Transport> {
   return (await getBundle()).knowledge;
+}
+
+async function getAssets(): Promise<Transport> {
+  return (await getBundle()).assets;
 }
 
 /**
@@ -607,6 +691,13 @@ export const compositeTransport: Transport = {
     if (KNOWLEDGE_OPS.has(endpoint.id)) {
       const knowledge = await getKnowledge();
       return knowledge.request(endpoint, input, ctx);
+    }
+    // Assets ops (module 07) — list/get + two-phase upload + files.create +
+    // trash/restore served by the module's own user-scoped transport over the
+    // SAME pglite store (foundation §1 registry). No ctx ⇒ AuthenticationError.
+    if (ASSET_OPS.has(endpoint.id)) {
+      const assets = await getAssets();
+      return assets.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1
