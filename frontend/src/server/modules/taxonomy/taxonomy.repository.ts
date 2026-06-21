@@ -81,7 +81,10 @@ export function createTaxonomyRepository(
       return inserted[0]!;
     },
 
-    async listTags(ctx, _page) {
+    async listTags(ctx) {
+      // Pagination args are part of the contract query but not yet applied here
+      // (the list returns the user's full, deterministically-ordered tag set;
+      // LIMIT/OFFSET plumbing lands when a paginated consumer needs it).
       return db
         .select()
         .from(tags)
@@ -210,7 +213,9 @@ export function createTaxonomyRepository(
         .filter((t): t is TagRow => t !== undefined);
     },
 
-    async listEntityTagsForTag(ctx, tagId, _page) {
+    async listEntityTagsForTag(ctx, tagId) {
+      // Pagination args part of the contract query; not yet applied (returns the
+      // full, deterministically-ordered set for this tag — see listTags note).
       return db
         .select()
         .from(entityTags)
