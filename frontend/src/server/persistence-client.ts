@@ -120,6 +120,15 @@ import {
   buildAiAgentConfigs,
   AI_OP_IDS,
 } from "@/server/modules/ai";
+import {
+  createDashboardQueryService,
+  createProjectOverviewQueryService,
+  createGlobalSearchQueryService,
+  createPublishingCenterQueryService,
+  createQueryServicesTransport,
+  QUERY_SERVICES_OP_IDS,
+  type PublishingCenterQueryService,
+} from "@/server/modules/query-services";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -170,6 +179,11 @@ const PERSISTED_OPS = new Set<string>([
   // formalizes an artifact_version candidate through the Artifacts public service
   // (createVersion createdByType:'ai'); the Agent SDK runs only in @creatoros/ai-worker.
   ...AI_OP_IDS,
+  // Query services (module Q, Wave 4) — the 3 page-composition reads
+  // (pages.dashboard.get / pages.projectOverview.get / pages.search.get). Composes
+  // public upstream services only (SPEC §19); pages.search.get is TAKEN OVER from
+  // the Search module's interim composer here. publishingCenterPage has no op.
+  ...QUERY_SERVICES_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -178,8 +192,16 @@ const TAXONOMY_OPS = new Set<string>(TAXONOMY_OP_IDS);
 // The set of op ids owned by the notifications module's transport (module 01).
 const NOTIFICATION_OPS = new Set<string>(NOTIFICATION_OP_IDS);
 
-// The set of op ids owned by the search module's transport (module 02).
-const SEARCH_OPS = new Set<string>(SEARCH_OP_IDS);
+// The set of op ids the Search module's transport handles at DISPATCH time
+// (module 02). Wave-4 takeover (foundation §6): the query-services module now owns
+// `pages.search.get`, so the Search transport is NO LONGER routed for it — this set
+// is empty. The Search SERVICE is still consumed by the GlobalSearchQueryService
+// facade (search/recordSearch/listHistory). SEARCH_OP_IDS still feeds PERSISTED_OPS
+// (the op is persisted; it is just routed to query-services below).
+const SEARCH_OPS = new Set<string>();
+
+// The set of op ids owned by the query-services module's transport (module Q).
+const QUERY_SERVICES_OPS = new Set<string>(QUERY_SERVICES_OP_IDS);
 
 // The set of op ids owned by the settings module's transport (module 03).
 const SETTINGS_OPS = new Set<string>(SETTINGS_OP_IDS);
@@ -566,6 +588,11 @@ interface PersistenceBundle {
   reviews: Transport;
   learnings: Transport;
   ai: Transport;
+  // Query services (module Q, Wave 4): the composite transport for the 3 page
+  // reads, plus the Publishing Center composer (no endpoint — the FE calls it
+  // server-side via getPublishingCenterService()).
+  queryServices: Transport;
+  publishingCenter: PublishingCenterQueryService;
   identity: IdentityService;
 }
 
@@ -974,6 +1001,155 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const ai = createAiTransport(() => aiService);
 
+  // Query services (module Q, Wave 4 — SPEC §19). Composition module: NO repo, NO
+  // SQL. Each composer is built with facade interfaces; here the composition root
+  // binds those facades to the REAL public services (consumed only via their
+  // index.ts entries above — projectsService / publishingService / analyticsService
+  // / learningsService / notificationsRepo→service / knowledgeService / assetsService
+  // / searchService). The request's `ctx` is threaded UNCHANGED into every facade
+  // call, so each downstream service enforces its own eq(userId, ctx.userId) scope.
+  //
+  // Open question #1: several SPEC §19 read methods are NOT yet on the frozen
+  // upstream index.ts (Projects has no getDashboardSummary / project-overview read;
+  // Analytics has no dashboard/publishing metric rollup). Rather than read a peer
+  // repository (forbidden, SPEC §19/§22), the gap sections compose to DTO-valid
+  // EMPTY/zero projections — the page renders a real (possibly empty) composition,
+  // never a 500, and slots real data the moment those upstream reads land. The
+  // ownership-404 path is REAL: getProjectOverview gates via
+  // projectsService.listOutputIdsByProject (throws OwnershipError for a cross-user /
+  // unknown project id).
+  const notificationsServiceForQuery = createNotificationsService(
+    notificationsRepo,
+    deps,
+  );
+  const EMPTY_STAGE = "research" as const;
+
+  const dashboardQuery = createDashboardQueryService({
+    projects: {
+      // No getDashboardSummary on the frozen Projects index (open question #1):
+      // compose a DTO-valid empty summary. ctx threaded for the inherited-scope
+      // invariant + future slot-in.
+      getDashboardSummary: async (_ctx) => ({
+        continueCreating: null,
+        todos: [],
+      }),
+    },
+    publishing: {
+      getRecentPublications: async (ctx) => {
+        const rows = await publishingService.getRecentPublications(ctx, {
+          limit: 5,
+        });
+        // PublicationRow carries no title/views/engagement (title lives on a
+        // revision; metrics on Analytics). Map the columns we own; default the
+        // rest. The canonical Publishing seed is empty → [] in practice.
+        return rows.map((r) => ({
+          id: r.id,
+          title: r.id,
+          platform: r.platform as "youtube",
+          status: r.status as "published",
+          views: 0,
+          engagement: 0,
+          publishedAt: r.publishedAt ?? r.createdAt,
+        }));
+      },
+    },
+    analytics: {
+      // No dashboard metric rollup on the frozen Analytics index — empty.
+      getDashboardMetrics: async (_ctx) => ({ metrics: [], trend: [] }),
+    },
+    learnings: {
+      getSuggestions: async (ctx) => {
+        const rows = await learningsService.getSuggestions(ctx, { limit: 3 });
+        return rows.map((r) => ({
+          id: r.id,
+          title: r.title,
+          description: r.recommendation ?? r.insight ?? "",
+          category: r.learningType ?? "建议",
+        }));
+      },
+    },
+    notifications: {
+      getUnreadCount: (ctx) => notificationsServiceForQuery.getUnreadCount(ctx),
+    },
+    knowledge: {
+      // No trending-topic read on the frozen Knowledge index — empty.
+      getTrendingTopics: async (_ctx) => [],
+    },
+  });
+
+  const overviewQuery = createProjectOverviewQueryService({
+    projects: {
+      getProjectOverview: async (ctx, projectId) => {
+        // listOutputIdsByProject GATES ownership: a cross-user / unknown project
+        // throws OwnershipError (→404) BEFORE any overview section is composed.
+        await projectsService.listOutputIdsByProject(ctx, projectId);
+        return {
+          projectId,
+          projectTitle: "",
+          stage: EMPTY_STAGE,
+          progressPct: 0,
+          stages: [],
+          outputs: [],
+          activities: [],
+          projectInfo: [],
+          milestones: [],
+        };
+      },
+    },
+    assets: {
+      getProjectAssetStats: async (_ctx, _projectId) => ({
+        assetStats: [],
+        recentFiles: [],
+      }),
+    },
+    publishing: {
+      getProjectPublishing: async (_ctx, _projectId) => [],
+    },
+  });
+
+  const searchQuery = createGlobalSearchQueryService({
+    search: {
+      search: (ctx, query, opts) => searchService.search(ctx, query, opts),
+      recordSearch: (ctx, input) => searchService.recordSearch(ctx, input),
+      listHistory: (ctx, limit) => searchService.listHistory(ctx, limit),
+    },
+  });
+
+  const publishingCenter = createPublishingCenterQueryService({
+    publishing: {
+      listPublicationsForUser: async (ctx) => {
+        const rows = await publishingService.getRecentPublications(ctx, {
+          limit: 200,
+        });
+        return rows.map((r) => ({
+          id: r.id,
+          title: r.id,
+          projectId: r.contentOutputId,
+          projectTitle: "",
+          platform: r.platform as "youtube",
+          publishedAt: r.publishedAt ?? r.createdAt,
+          status: r.status as "published",
+          views: 0,
+          engagement: 0,
+        }));
+      },
+    },
+    analytics: {
+      getPublishingMetrics: async (_ctx) => ({
+        metrics: [],
+        platformComparison: [],
+        trend: [],
+        topContent: [],
+      }),
+    },
+  });
+
+  const queryServices = createQueryServicesTransport({
+    dashboard: dashboardQuery,
+    overview: overviewQuery,
+    search: searchQuery,
+  });
+
   // Seed one canonical mock external source owned by the canonical user so a dev
   // import resolves under the seeded login (foundation §2/§4). seedExternalSources
   // is onConflictDoNothing → a re-built singleton never double-seeds.
@@ -1208,6 +1384,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     reviews,
     learnings,
     ai,
+    queryServices,
+    publishingCenter,
     identity,
   };
 }
@@ -1277,6 +1455,20 @@ async function getLearnings(): Promise<Transport> {
 
 async function getAi(): Promise<Transport> {
   return (await getBundle()).ai;
+}
+
+async function getQueryServices(): Promise<Transport> {
+  return (await getBundle()).queryServices;
+}
+
+/**
+ * The Publishing Center composer (module Q). It has NO dispatch endpoint (SPEC §13
+ * has no read path; contract/src/operations/pages.ts:7-10) — the Server Component
+ * for `/publishing` calls this server-side to compose `publishingCenterPage` from
+ * public services only (touching no repository). Bound to the same pglite store.
+ */
+export async function getPublishingCenterService(): Promise<PublishingCenterQueryService> {
+  return (await getBundle()).publishingCenter;
 }
 
 /**
@@ -1411,6 +1603,16 @@ export const compositeTransport: Transport = {
     if (AI_OPS.has(endpoint.id)) {
       const ai = await getAi();
       return ai.request(endpoint, input, ctx);
+    }
+    // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
+    // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by
+    // the module's own transport, composing public upstream services (SPEC §19). This
+    // TAKES OVER pages.search.get from the Search interim composer (foundation §6) —
+    // checked before SEARCH_OPS (now empty) so exactly one handler owns it. No ctx ⇒
+    // AuthenticationError.
+    if (QUERY_SERVICES_OPS.has(endpoint.id)) {
+      const queryServices = await getQueryServices();
+      return queryServices.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1

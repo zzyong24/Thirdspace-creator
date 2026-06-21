@@ -54,17 +54,20 @@ describe("compositeTransport ctx threading (Task 8)", () => {
     ).rejects.toBeInstanceOf(AuthenticationError);
   });
 
-  it("ignores ctx for a non-persisted (mock) op and still resolves (back-compat)", async () => {
+  it("the composed dashboard page op is persisted + auth-gated (Wave-4 takeover)", async () => {
+    // `pages.dashboard.get` was an unauthenticated mock op pre-Wave-4; the
+    // query-services module (module Q) took it over, so it is now PERSISTED and
+    // ctx-gated: with a ctx it composes the owner's page; with NO ctx it is an
+    // unauthenticated dispatch → AuthenticationError (the page route always
+    // resolves ctx from the session before calling it).
     const withCtx = await compositeTransport.request(
       ep("pages.dashboard.get"),
       noInput,
       ctx(canonicalDataset.user.id),
     );
-    const withoutCtx = await compositeTransport.request(
-      ep("pages.dashboard.get"),
-      noInput,
-    );
     expect(withCtx).toBeDefined();
-    expect(withoutCtx).toBeDefined();
+    await expect(
+      compositeTransport.request(ep("pages.dashboard.get"), noInput),
+    ).rejects.toBeInstanceOf(AuthenticationError);
   });
 });

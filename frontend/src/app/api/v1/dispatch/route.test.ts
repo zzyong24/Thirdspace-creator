@@ -81,7 +81,9 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     expect(after).toContain(createdJson.data.id);
   });
 
-  it("falls back to the mock for non-persisted ops (e.g. the dashboard page DTO)", async () => {
+  it("serves the composed dashboard page DTO (module Q) with 200", async () => {
+    // pages.dashboard.get is now persisted (Wave-4 query-services takeover) — it
+    // composes public services and returns the dashboardPage envelope (200).
     const res = await dispatch("pages.dashboard.get", {
       params: undefined,
       query: undefined,
@@ -96,10 +98,11 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
   });
 
   it("returns 501 for a not-yet-implemented operation", async () => {
-    // `ai.conversations.list` is now wired (module 15), so use a Wave-4 page-composition
-    // query op that is still unbuilt (`pages.projectOverview.get` — not persisted, no
-    // mock handler → the mock transport raises "operation not implemented" → 501).
-    const res = await dispatch("pages.projectOverview.get", {
+    // `pages.projectOverview.get` is now wired (module Q, Wave 4), so use the
+    // 定位中心 page op (`pages.positioning.get` — owned by the positioning module,
+    // not built in this worktree: not persisted, no mock handler → the mock
+    // transport raises "operation not implemented" → 501).
+    const res = await dispatch("pages.positioning.get", {
       params: undefined,
       query: undefined,
       body: undefined,
