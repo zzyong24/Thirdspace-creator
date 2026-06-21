@@ -21,6 +21,7 @@ import * as monetizationSchema from "./schema/monetization";
 import * as candidateSchema from "./schema/candidate";
 import * as calibrationSchema from "./schema/calibration";
 import * as platformAccountSchema from "./schema/platform-account";
+import * as contentCalendarSchema from "./schema/content-calendar";
 import { PROJECTS_DDL } from "./schema/projects";
 import { IDENTITY_DDL } from "./schema/identity";
 import { TAXONOMY_DDL } from "./schema/taxonomy";
@@ -42,6 +43,7 @@ import { MONETIZATION_DDL } from "./schema/monetization";
 import { CANDIDATE_DDL } from "./schema/candidate";
 import { CALIBRATION_DDL } from "./schema/calibration";
 import { PLATFORM_ACCOUNT_DDL } from "./schema/platform-account";
+import { CONTENT_CALENDAR_DDL } from "./schema/content-calendar";
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
@@ -67,6 +69,7 @@ const schema = {
   ...candidateSchema,
   ...calibrationSchema,
   ...platformAccountSchema,
+  ...contentCalendarSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;
@@ -120,6 +123,11 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
   // platforms ADD COLUMN account_id finds the target tables. The platform_accounts
   // table + its consumer-column ALTERs are all CREATE/ADD … IF NOT EXISTS (idempotent).
   await client.exec(PLATFORM_ACCOUNT_DDL);
+  // ContentCalendar (module 22, Wave 5–7) — 七步⑦ 发布节奏 / 内容日历. Independent
+  // tables (content_calendar_entries + publishing_cadences) keyed by account_id (a
+  // soft FK validated in the service via PlatformAccountService, no DB FK across
+  // module schemas). All CREATE … IF NOT EXISTS (idempotent).
+  await client.exec(CONTENT_CALENDAR_DDL);
   const db = drizzle(client, { schema });
   return { db, client };
 }

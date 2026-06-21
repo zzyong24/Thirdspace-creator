@@ -126,6 +126,11 @@ export {
   platformAccounts,
   PLATFORM_ACCOUNT_DDL,
 } from "./schema/platform-account";
+export {
+  contentCalendarEntries,
+  publishingCadences,
+  CONTENT_CALENDAR_DDL,
+} from "./schema/content-calendar";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their
