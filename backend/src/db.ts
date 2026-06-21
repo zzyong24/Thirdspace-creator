@@ -19,6 +19,7 @@ import * as aiSchema from "./schema/ai";
 import * as positioningSchema from "./schema/positioning";
 import * as monetizationSchema from "./schema/monetization";
 import * as candidateSchema from "./schema/candidate";
+import * as calibrationSchema from "./schema/calibration";
 import { PROJECTS_DDL } from "./schema/projects";
 import { IDENTITY_DDL } from "./schema/identity";
 import { TAXONOMY_DDL } from "./schema/taxonomy";
@@ -38,6 +39,7 @@ import { AI_DDL } from "./schema/ai";
 import { POSITIONING_DDL } from "./schema/positioning";
 import { MONETIZATION_DDL } from "./schema/monetization";
 import { CANDIDATE_DDL } from "./schema/candidate";
+import { CALIBRATION_DDL } from "./schema/calibration";
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
@@ -61,6 +63,7 @@ const schema = {
   ...positioningSchema,
   ...monetizationSchema,
   ...candidateSchema,
+  ...calibrationSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;
@@ -105,6 +108,10 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
   // TopicPromotion). Independent tables; runs after the base modules. All
   // CREATE … IF NOT EXISTS (idempotent).
   await client.exec(CANDIDATE_DDL);
+  // Calibration (module 20, Wave 5–7) — 七步⑤⑥ 校准闭环 (Rubric + RubricVersion +
+  // Prediction + CalibrationResult). Independent tables; runs after the base modules.
+  // All CREATE … IF NOT EXISTS (idempotent).
+  await client.exec(CALIBRATION_DDL);
   const db = drizzle(client, { schema });
   return { db, client };
 }

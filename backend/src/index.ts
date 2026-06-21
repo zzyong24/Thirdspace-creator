@@ -115,6 +115,13 @@ export {
   topicPromotions,
   CANDIDATE_DDL,
 } from "./schema/candidate";
+export {
+  rubrics,
+  rubricVersions,
+  predictions,
+  calibrationResults,
+  CALIBRATION_DDL,
+} from "./schema/calibration";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their
