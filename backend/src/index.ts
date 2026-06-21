@@ -51,6 +51,13 @@ export {
   timelineSegments,
   ARTIFACTS_DDL,
 } from "./schema/artifacts";
+export {
+  productions,
+  productionSegments,
+  segmentAssets,
+  exportRecords,
+  PRODUCTION_DDL,
+} from "./schema/production";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their
