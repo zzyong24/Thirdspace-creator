@@ -81,6 +81,18 @@ export async function POST(req: Request): Promise<Response> {
     if (err instanceof OwnershipError) {
       return errorEnvelope(ErrorCode.OwnershipError, err.message);
     }
+    // Module domain errors carry a contract `ErrorCode` in `.code` (e.g.
+    // taxonomy's DuplicateTagError → ConflictError/409, InvalidEntityRefError →
+    // ValidationError/400, TagNotFoundError → OwnershipError/404). Map by that
+    // code so each module's errors surface with the SPEC §14 status without the
+    // route importing every module's error classes.
+    const code = (err as { code?: unknown }).code;
+    if (typeof code === "string" && code in ERROR_HTTP) {
+      return errorEnvelope(
+        code as ErrorCode,
+        err instanceof Error ? err.message : String(err),
+      );
+    }
     const message = err instanceof Error ? err.message : String(err);
     // Unimplemented operations surface as 501 so the client throws clearly;
     // everything else is a 400 (matches the pre-Task-9 split).
