@@ -107,6 +107,11 @@ import {
   createReviewsTransport,
   REVIEWS_OP_IDS,
 } from "@/server/modules/reviews";
+import {
+  createLearningsService,
+  createLearningsTransport,
+  LEARNINGS_OP_IDS,
+} from "@/server/modules/learnings";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -147,6 +152,11 @@ const PERSISTED_OPS = new Set<string>([
   // user-scoped with §12 Review status machine (idempotent complete). Period from
   // the Publishing window, evidence from the Analytics snapshot (injected ports).
   ...REVIEWS_OP_IDS,
+  // Learnings (module 14) — list/create + applications.create + evaluate,
+  // user-scoped with the §12 validationStatus machine (candidate→validated|
+  // discarded; validated→discarded). Apply-target project ownership + activity via
+  // the injected Projects port; reusable across projects (reviewId nullable).
+  ...LEARNINGS_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -187,6 +197,9 @@ const INGESTION_OPS = new Set<string>(INGESTION_OP_IDS);
 
 // The set of op ids owned by the reviews module's transport (module 13).
 const REVIEWS_OPS = new Set<string>(REVIEWS_OP_IDS);
+
+// The set of op ids owned by the learnings module's transport (module 14).
+const LEARNINGS_OPS = new Set<string>(LEARNINGS_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -535,6 +548,7 @@ interface PersistenceBundle {
   analytics: Transport;
   ingestion: Transport;
   reviews: Transport;
+  learnings: Transport;
   identity: IdentityService;
 }
 
@@ -879,6 +893,50 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const reviews = createReviewsTransport(() => reviewsService);
 
+  // Learnings (module 14): the service builds a per-ctx user-scoped repo over the
+  // shared db (the repo bakes userId in; the service mints one per request). It
+  // reaches Projects ONLY through the injected LearningsProjectsPort (no cross-module
+  // repo import, SPEC §22), satisfied here by the Projects public service / shared
+  // repo (the composition root, not the module, owns these adapters):
+  //   - projects.assertOwnsProject → projectsService.listOutputIdsByProject (the
+  //     project-ownership gate throws OwnershipError for a cross-user/unknown id
+  //     before any application row is written),
+  //   - projects.recordActivity → projectsRepo.appendActivity (best-effort; swallow
+  //     on failure, SPEC §11 — an activity-append must not roll back the apply fact).
+  // The transport returns this ONE shared service. Clock/ids share the deterministic
+  // `deps` (createSeq keeps learning/learning-app ids collision-free).
+  const learningsService = createLearningsService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+    projects: {
+      assertOwnsProject: async (ctx, projectId) => {
+        // listOutputIdsByProject gates the project's ownership (cross-user /
+        // unknown → OwnershipError → 404) before any application row is written.
+        await projectsService.listOutputIdsByProject(ctx, projectId);
+      },
+      recordActivity: async (ctx, input) => {
+        // Best-effort post-commit activity (SPEC §11) — a failure here must not roll
+        // back the application fact, so swallow. appendActivity is user-scoped via
+        // the parent project's ownership gate.
+        try {
+          await projectsRepo.appendActivity(ctx, {
+            id: deps.nextId("activity"),
+            projectId: input.projectId,
+            eventType: input.eventType,
+            entityType: "learning",
+            entityId: input.refId,
+            eventData: {},
+            occurredAt: deps.now(),
+          });
+        } catch {
+          // intentionally swallowed — activity is non-critical telemetry.
+        }
+      },
+    },
+  });
+  const learnings = createLearningsTransport(() => learningsService);
+
   // Seed one canonical mock external source owned by the canonical user so a dev
   // import resolves under the seeded login (foundation §2/§4). seedExternalSources
   // is onConflictDoNothing → a re-built singleton never double-seeds.
@@ -1092,6 +1150,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     analytics,
     ingestion,
     reviews,
+    learnings,
     identity,
   };
 }
@@ -1153,6 +1212,10 @@ async function getIngestion(): Promise<Transport> {
 
 async function getReviews(): Promise<Transport> {
   return (await getBundle()).reviews;
+}
+
+async function getLearnings(): Promise<Transport> {
+  return (await getBundle()).learnings;
 }
 
 /**
@@ -1268,6 +1331,15 @@ export const compositeTransport: Transport = {
     if (REVIEWS_OPS.has(endpoint.id)) {
       const reviews = await getReviews();
       return reviews.request(endpoint, input, ctx);
+    }
+    // Learnings ops (module 14) — learnings.list/create + learnings.applications.create
+    // + learnings.evaluate served by the module's own user-scoped transport over the
+    // SAME pglite store (foundation §1 registry). The §12 validationStatus machine +
+    // apply-target ownership/activity run inside the service via the injected Projects
+    // port. No ctx ⇒ AuthenticationError.
+    if (LEARNINGS_OPS.has(endpoint.id)) {
+      const learnings = await getLearnings();
+      return learnings.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1
