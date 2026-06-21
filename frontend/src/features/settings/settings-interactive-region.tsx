@@ -31,7 +31,9 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
+import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -53,6 +55,41 @@ import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
 
 import type { SettingsViewModel } from "./settings-page";
+
+// ---------------------------------------------------------------------------
+// useSettingsMutation — the shared island mutation seam (plan Step 5)
+// ---------------------------------------------------------------------------
+//
+// Every needs-backend control optimistically flips its local state, fires the
+// mapped Settings op, then `router.refresh()` so the server re-reads the seeded
+// repo (mirrors `project-overview/project-actions.tsx`). A `pending` guard blocks
+// concurrent writes. The optimistic value is the source of truth in the control
+// while the refresh round-trips; the server read confirms it on the next render.
+function useSettingsMutation() {
+  const router = useRouter();
+  const [pending, setPending] = React.useState(false);
+  const run = React.useCallback(
+    (mutate: () => Promise<unknown>) => {
+      if (pending) return;
+      setPending(true);
+      void (async () => {
+        try {
+          await mutate();
+          router.refresh();
+        } finally {
+          setPending(false);
+        }
+      })();
+    },
+    [pending, router],
+  );
+  return { pending, run };
+}
+
+// The model card's configured capability. The `/settings` model card shows
+// provider/model/temperature with no per-capability selector, so the PUT pins to
+// a single capability (plan O3). "script" is the canonical default capability.
+const MODEL_CAPABILITY = "script";
 
 // ---------------------------------------------------------------------------
 // SettingsMainColumn
@@ -215,6 +252,19 @@ function PreferenceSettingsCard({
   const [analyticsEnabled, setAnalyticsEnabled] = React.useState<boolean>(
     initial.analyticsEnabled,
   );
+  const { pending, run } = useSettingsMutation();
+
+  // Each preference control optimistically updates local state, then PATCHes only
+  // its own key (op `settings.preferences.patch`) and refreshes the server read.
+  const patch = React.useCallback(
+    (
+      body: Parameters<typeof client.patchPreferences>[0]["body"],
+    ) =>
+      run(() =>
+        client.patchPreferences({ params: undefined, query: undefined, body }),
+      ),
+    [run],
+  );
   return (
     <SectionCard
       title="偏好设置"
@@ -228,13 +278,18 @@ function PreferenceSettingsCard({
         >
           <Select
             value={defaultHome}
-            onValueChange={(value) => setDefaultHome(String(value))}
+            onValueChange={(value) => {
+              const next = String(value);
+              setDefaultHome(next);
+              patch({ defaultHome: next });
+            }}
           >
             <SelectTrigger
               id="pref-default-home"
               data-slot="pref-default-home-trigger"
               size="sm"
               className="w-40"
+              disabled={pending}
             >
               <SelectValue placeholder="选择主页" />
             </SelectTrigger>
@@ -254,15 +309,18 @@ function PreferenceSettingsCard({
         >
           <Select
             value={defaultCreationMode}
-            onValueChange={(value) =>
-              setDefaultCreationMode(value as CreationMode)
-            }
+            onValueChange={(value) => {
+              const next = value as CreationMode;
+              setDefaultCreationMode(next);
+              patch({ defaultCreationMode: next });
+            }}
           >
             <SelectTrigger
               id="pref-creation-mode"
               data-slot="pref-creation-mode-trigger"
               size="sm"
               className="w-40"
+              disabled={pending}
             >
               <SelectValue placeholder="选择模式" />
             </SelectTrigger>
@@ -282,15 +340,18 @@ function PreferenceSettingsCard({
         >
           <Select
             value={defaultVisibility}
-            onValueChange={(value) =>
-              setDefaultVisibility(value as Visibility)
-            }
+            onValueChange={(value) => {
+              const next = value as Visibility;
+              setDefaultVisibility(next);
+              patch({ defaultVisibility: next });
+            }}
           >
             <SelectTrigger
               id="pref-visibility"
               data-slot="pref-visibility-trigger"
               size="sm"
               className="w-40"
+              disabled={pending}
             >
               <SelectValue placeholder="选择可见性" />
             </SelectTrigger>
@@ -313,7 +374,12 @@ function PreferenceSettingsCard({
             data-slot="pref-autosave-switch"
             size="sm"
             checked={autosaveEnabled}
-            onCheckedChange={(value) => setAutosaveEnabled(Boolean(value))}
+            disabled={pending}
+            onCheckedChange={(value) => {
+              const next = Boolean(value);
+              setAutosaveEnabled(next);
+              patch({ autosaveEnabled: next });
+            }}
             aria-label="启用自动保存"
           />
         </SettingsFormRow>
@@ -327,7 +393,12 @@ function PreferenceSettingsCard({
             data-slot="pref-analytics-switch"
             size="sm"
             checked={analyticsEnabled}
-            onCheckedChange={(value) => setAnalyticsEnabled(Boolean(value))}
+            disabled={pending}
+            onCheckedChange={(value) => {
+              const next = Boolean(value);
+              setAnalyticsEnabled(next);
+              patch({ analyticsEnabled: next });
+            }}
             aria-label="启用使用情况分析"
           />
         </SettingsFormRow>
@@ -563,6 +634,27 @@ function ModelConfigurationCard({
   const [temperature, setTemperature] = React.useState<number>(
     model.temperature,
   );
+  const { pending, run } = useSettingsMutation();
+
+  // PUT is a FULL upsert on the pinned capability — always send the current
+  // provider + modelName (op `settings.models.put`, params `{capability}`), plus
+  // temperature in `settings` when it is the field changing. Provider/model use
+  // the post-update values; temperature reads current state.
+  const putModel = React.useCallback(
+    (next: { provider: ModelProvider; modelName: ModelName; temperature: number }) =>
+      run(() =>
+        client.putModel({
+          params: { capability: MODEL_CAPABILITY },
+          query: undefined,
+          body: {
+            provider: next.provider,
+            modelName: next.modelName,
+            settings: { temperature: next.temperature },
+          },
+        }),
+      ),
+    [run],
+  );
   return (
     <SectionCard
       title="模型配置"
@@ -576,13 +668,27 @@ function ModelConfigurationCard({
         >
           <Select
             value={provider}
-            onValueChange={(value) => setProvider(value as ModelProvider)}
+            onValueChange={(value) => {
+              const nextProvider = value as ModelProvider;
+              // Switching provider re-bounds the model list — snap modelName to
+              // the new provider's first option so the upsert is always valid.
+              const nextModel =
+                MODEL_OPTIONS_FOR[nextProvider][0]?.value ?? modelName;
+              setProvider(nextProvider);
+              setModelName(nextModel);
+              putModel({
+                provider: nextProvider,
+                modelName: nextModel,
+                temperature,
+              });
+            }}
           >
             <SelectTrigger
               id="model-provider"
               data-slot="model-provider-trigger"
               size="sm"
               className="w-40"
+              disabled={pending}
             >
               <SelectValue placeholder="选择提供商" />
             </SelectTrigger>
@@ -602,13 +708,18 @@ function ModelConfigurationCard({
         >
           <Select
             value={modelName}
-            onValueChange={(value) => setModelName(value as ModelName)}
+            onValueChange={(value) => {
+              const nextModel = value as ModelName;
+              setModelName(nextModel);
+              putModel({ provider, modelName: nextModel, temperature });
+            }}
           >
             <SelectTrigger
               id="model-name"
               data-slot="model-name-trigger"
               size="sm"
               className="w-40"
+              disabled={pending}
             >
               <SelectValue placeholder="选择模型" />
             </SelectTrigger>
@@ -635,10 +746,18 @@ function ModelConfigurationCard({
             data-slot="model-temperature-input"
             className="w-24"
             value={temperature}
+            disabled={pending}
             onChange={(event) => {
               const next = Number(event.target.value);
               if (!Number.isNaN(next)) {
                 setTemperature(next);
+              }
+            }}
+            onBlur={(event) => {
+              // Persist on blur (debounce: one PUT per edit, not per keystroke).
+              const next = Number(event.target.value);
+              if (!Number.isNaN(next)) {
+                putModel({ provider, modelName, temperature: next });
               }
             }}
           />

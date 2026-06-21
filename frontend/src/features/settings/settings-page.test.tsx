@@ -50,6 +50,20 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// The settings interactive island (preference + model cards) calls
+// `useRouter()` and the typed `client` for its needs-backend wiring
+// (Settings module Step 5). Stub both so the structural render runs
+// without a Next router context or a real HTTP transport.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }),
+}));
+vi.mock("@/lib/contract-client", () => ({
+  client: {
+    patchPreferences: vi.fn().mockResolvedValue({}),
+    putModel: vi.fn().mockResolvedValue({}),
+  },
+}));
+
 type SettingsPageProps = React.ComponentProps<
   typeof import("./settings-page").SettingsPage
 >;
