@@ -27,6 +27,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
@@ -472,8 +473,17 @@ function PopularTags({ tags }: { tags: ReadonlyArray<KnowledgeTag> }) {
         aria-label="热门标签"
       >
         {tags.map((tag) => (
+          // Module 04 §5b: each popular-tag chip now links to the Knowledge list
+          // filtered by that tag name (/knowledge?tag=<name>). The `?tag=`
+          // consumption (filtering the list) is delivered by the Knowledge
+          // module (06); this plan supplies the navigational chip + tag data.
           <li key={tag.id}>
-            <TagChip label={tag.name} tone={tag.tone} size="sm" />
+            <Link
+              href={`/knowledge?tag=${encodeURIComponent(tag.name)}`}
+              className="inline-flex rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <TagChip label={tag.name} tone={tag.tone} size="sm" />
+            </Link>
           </li>
         ))}
       </ul>

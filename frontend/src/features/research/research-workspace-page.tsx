@@ -24,6 +24,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 
 import { SectionCard } from "@/components/project/section-card";
 import { StatusBadge } from "@/components/project/status-badge";
@@ -436,9 +437,20 @@ function RelatedTagsCard({ tags }: { tags: ResearchViewModel["relatedTags"] }) {
         ) : (
           <div className="flex flex-wrap gap-1.5" aria-label="相关标签">
             {tags.map((tag) => (
-              <span key={tag} data-slot="related-tag">
+              // Module 04 §5a: the "相关标签" chips are now navigational — each
+              // links to the Search page filtered by that tag name
+              // (/search?tag=<name>). The Search module (02) owns the result
+              // page that consumes `?tag=`. The chip stays a presentational
+              // TagChip wrapped in the link; the `data-slot="related-tag"`
+              // anchor is the click target.
+              <Link
+                key={tag}
+                data-slot="related-tag"
+                href={`/search?tag=${encodeURIComponent(tag)}`}
+                className="inline-flex rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
                 <TagChip label={tag} tone="info" size="sm" />
-              </span>
+              </Link>
             ))}
           </div>
         )}
