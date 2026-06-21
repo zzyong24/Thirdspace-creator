@@ -9,7 +9,16 @@ export {
   UnsupportedOperationError,
 } from "./persistence-transport";
 export { AuthenticationError } from "./errors";
-export { projects, projectActivities, PROJECTS_DDL } from "./schema/projects";
+export {
+  projects,
+  projectActivities,
+  projectStages,
+  projectTargetPlatforms,
+  contentOutputs,
+  outputStages,
+  tasks,
+  PROJECTS_DDL,
+} from "./schema/projects";
 export { users, sessions, IDENTITY_DDL } from "./schema/identity";
 export { tags, entityTags, TAXONOMY_DDL } from "./schema/taxonomy";
 export { notifications, NOTIFICATIONS_DDL } from "./schema/notifications";
