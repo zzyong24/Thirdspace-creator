@@ -15,8 +15,12 @@
  * module can stay agnostic.
  */
 
+import { notFound } from "next/navigation";
+
 import { ProjectOverviewPage } from "@/features/project-overview/project-overview-page";
 import { listProjects } from "@/fixtures/canonical";
+import { resolveSession } from "@/lib/session.server";
+import { createServerClient } from "@/lib/contract-client.server";
 
 interface ProjectOverviewRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -27,7 +31,46 @@ export default async function ProjectOverviewRoute({
 }: ProjectOverviewRouteProps) {
   const { projectId } = await params;
   const resolvedId = resolveProjectIdParam(projectId);
+
+  // Wave-4 server-read switch (module Q): gate the read through
+  // `pages.projectOverview.get`. The ProjectOverviewQueryService threads the
+  // session ctx into the Projects service, which raises OwnershipError for a
+  // cross-user / unknown project — surfaced here as a 404 (notFound), never a
+  // leaked page (foundation §2; SPEC §20). The composed gap sections are still
+  // empty pending the upstream reads (open question #1), so the rich fixture VM
+  // remains the render source for owned projects; the op call is the ownership
+  // gate + the wiring seam for when those reads land.
+  const session = await resolveSession();
+  if (session) {
+    try {
+      await createServerClient(session.ctx).getProjectOverview({
+        params: { projectId: resolvedId },
+        query: undefined,
+        body: undefined,
+      });
+    } catch (err) {
+      if (isOwnershipError(err)) notFound();
+      throw err;
+    }
+  }
+
   return <ProjectOverviewPage projectId={resolvedId} />;
+}
+
+/**
+ * An OwnershipError surfaces from the dispatch transport with `code` set to the
+ * contract `OwnershipError` code (→ HTTP 404 on the wire). The composed op is
+ * called in-process here, so the thrown error carries that `.code`; match on it
+ * structurally (no class import across the server-only boundary).
+ */
+function isOwnershipError(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    typeof (err as { code: unknown }).code === "string" &&
+    /Ownership/i.test((err as { code: string }).code)
+  );
 }
 
 /**
