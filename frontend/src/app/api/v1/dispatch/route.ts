@@ -1,29 +1,37 @@
 import { NextResponse } from "next/server";
-import { ENDPOINTS, type Endpoint, type RequestContext } from "@creatoros/contract";
-import { compositeTransport } from "@/server/persistence-client";
-import { canonicalDataset } from "@/fixtures/canonical";
+import {
+  ENDPOINTS,
+  ErrorCode,
+  ERROR_HTTP,
+  type Endpoint,
+} from "@creatoros/contract";
+import { compositeTransport, getIdentityService } from "@/server/persistence-client";
+import {
+  AuthenticationError,
+  OwnershipError,
+} from "@/server/modules/identity";
+import { readSessionCookie } from "../auth/_session";
 
 // RPC dispatch over HTTP. The browser's HttpTransport POSTs { id, input };
 // this runs the matching contract operation against the SERVER store and
-// returns the contract envelope. Stage 16 replaces `mockTransport` with a
-// persistence-backed transport behind this same route — the HttpTransport and
-// the contract are unchanged.
+// returns the contract envelope.
+//
+// Task 9: this route now DERIVES the RequestContext from the session cookie
+// (foundation §2 "RequestContext derivation"). No/invalid cookie → 401. The ctx
+// is threaded as the transport's third arg (Task 8 signature). Thrown domain
+// errors map to the SPEC §14 status table (OwnershipError → 404,
+// AuthenticationError → 401, ConflictError → 409, else 501/400).
 
 const ENDPOINTS_BY_ID: Record<string, Endpoint> = Object.fromEntries(
   Object.values(ENDPOINTS).map((e) => [e.id, e]),
 );
 
-// Task 8 threaded `ctx` through the transport: persisted ops now REQUIRE a
-// RequestContext (no ctx → AuthenticationError). Until Task 9 derives ctx from
-// the session cookie (and returns 401 on no/invalid cookie), this route binds
-// the seeded canonical ctx so the working Projects round-trip stays green —
-// symmetric to the default `client` in contract-client.server.ts. Task 9
-// replaces this with cookie→resolveContextFromToken + the 401/404 mapper.
-const DEFAULT_CTX: RequestContext = {
-  userId: canonicalDataset.user.id,
-  requestId: "dispatch-default",
-  source: "user",
-};
+function errorEnvelope(code: ErrorCode, message: string): NextResponse {
+  return NextResponse.json(
+    { error: { code, message, details: {} }, meta: { requestId: "dispatch" } },
+    { status: ERROR_HTTP[code] },
+  );
+}
 
 export async function POST(req: Request): Promise<Response> {
   let payload: { id?: unknown; input?: unknown };
@@ -39,16 +47,43 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: `unknown operation: ${id}` }, { status: 404 });
   }
 
+  // Derive RequestContext from the session cookie. No/invalid cookie → 401
+  // (foundation §2 "Unauthenticated → 401"). The composite transport also
+  // enforces this for persisted ops, but deriving here keeps every dispatch
+  // request user-scoped and lets the ctx reach the transport.
+  const rawToken = readSessionCookie(req);
+  if (!rawToken) {
+    return errorEnvelope(ErrorCode.AuthenticationError, "Not authenticated");
+  }
+  const identity = await getIdentityService();
+  let ctx;
+  try {
+    ctx = await identity.resolveContextFromToken(rawToken);
+  } catch (err) {
+    if (err instanceof AuthenticationError) {
+      return errorEnvelope(ErrorCode.AuthenticationError, err.message);
+    }
+    throw err;
+  }
+
   try {
     const envelope = await compositeTransport.request(
       endpoint,
       (payload.input ?? {}) as never,
-      DEFAULT_CTX,
+      ctx,
     );
     return NextResponse.json(envelope);
   } catch (err) {
+    // SPEC §14 status mapping for thrown domain errors.
+    if (err instanceof AuthenticationError) {
+      return errorEnvelope(ErrorCode.AuthenticationError, err.message);
+    }
+    if (err instanceof OwnershipError) {
+      return errorEnvelope(ErrorCode.OwnershipError, err.message);
+    }
     const message = err instanceof Error ? err.message : String(err);
-    // Unimplemented operations surface as 501 so the client throws clearly.
+    // Unimplemented operations surface as 501 so the client throws clearly;
+    // everything else is a 400 (matches the pre-Task-9 split).
     const status = /not implemented/i.test(message) ? 501 : 400;
     return NextResponse.json({ error: message }, { status });
   }

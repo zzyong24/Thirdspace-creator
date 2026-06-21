@@ -11,7 +11,9 @@ import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
 import {
   createIdentityRepository,
+  createIdentityService,
   seedCanonicalUser,
+  type IdentityService,
 } from "@/server/modules/identity";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
@@ -56,11 +58,21 @@ function toRow(p: CanonicalProject) {
 // module-level singleton would be a SEPARATE in-memory pglite per entry — island
 // writes (via the route) would never be visible to page reads. globalThis is
 // per-process, shared across all module graphs, so both see one store.
+// The persistence bundle cached on globalThis: the composite-backing
+// persistence transport AND the identity service, BOTH bound to the SAME pglite
+// db. Task 9's dispatch + auth routes resolve `RequestContext` from the session
+// cookie via `getIdentityService()`, so the ctx they thread into the transport
+// reads/writes the same store the persistence transport serves.
+interface PersistenceBundle {
+  transport: Transport;
+  identity: IdentityService;
+}
+
 const globalForPersistence = globalThis as unknown as {
-  __creatorosPersistence?: Promise<Transport>;
+  __creatorosPersistence?: Promise<PersistenceBundle>;
 };
 
-async function buildPersistence(): Promise<Transport> {
+async function buildPersistence(): Promise<PersistenceBundle> {
   const { db } = await createDb(); // session-scoped pglite (real SQL; resets on restart)
 
   // Deterministic clock/ids keep the seeded dataset reproducible (visual/test
@@ -85,20 +97,40 @@ async function buildPersistence(): Promise<Transport> {
   // fixture-backed page + the Projects seed keep resolving under a real ctx
   // (foundation §2). seedCanonicalUser is idempotent (onConflictDoNothing), so a
   // re-built singleton never double-seeds. IDENTITY_DDL was applied in createDb().
+  const identityRepo = createIdentityRepository(db, deps);
   await createProjectRepository(db, {
     ...deps,
     userId: canonicalDataset.user.id,
   }).seedProjects(canonicalDataset.projects.map(toRow));
-  await seedCanonicalUser(createIdentityRepository(db, deps), deps);
+  await seedCanonicalUser(identityRepo, deps);
 
-  return createPersistenceTransport(repoFactory);
+  // The identity service shares the SAME db (and the same seeded canonical user)
+  // as the persistence transport, so a ctx resolved from the session cookie owns
+  // the rows the transport serves under it.
+  const identity = createIdentityService(identityRepo, deps);
+
+  return { transport: createPersistenceTransport(repoFactory), identity };
 }
 
-function getPersistence(): Promise<Transport> {
+function getBundle(): Promise<PersistenceBundle> {
   if (!globalForPersistence.__creatorosPersistence) {
     globalForPersistence.__creatorosPersistence = buildPersistence();
   }
   return globalForPersistence.__creatorosPersistence;
+}
+
+async function getPersistence(): Promise<Transport> {
+  return (await getBundle()).transport;
+}
+
+/**
+ * The shared identity service, bound to the same pglite store as the composite
+ * transport. The dispatch route + the three auth routes (Task 9) resolve ctx /
+ * mint sessions / read the current user through this — never the db client
+ * directly (SPEC §22). Routes go through identity.service or compositeTransport.
+ */
+export async function getIdentityService(): Promise<IdentityService> {
+  return (await getBundle()).identity;
 }
 
 // Composite server transport: persistence for project ops, mock for the rest.
