@@ -88,6 +88,14 @@ export {
   learningApplications,
   LEARNINGS_DDL,
 } from "./schema/learnings";
+export {
+  aiConversations,
+  aiMessages,
+  aiTasks,
+  aiTaskReferences,
+  aiTaskResults,
+  AI_DDL,
+} from "./schema/ai";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their
