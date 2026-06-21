@@ -26,6 +26,7 @@ import {
   Sidebar,
   type SidebarContextSection,
   type SidebarContextualCardVariant,
+  type SidebarUser,
 } from "./sidebar";
 import {
   TopHeader,
@@ -41,6 +42,7 @@ import { cn } from "@/lib/utils";
 
 export interface AppShellProps {
   readonly pathname: string;
+  readonly user?: SidebarUser;
   readonly headerMode?: TopHeaderMode;
   readonly pageTitle?: string;
   readonly pageDescription?: string;
@@ -63,6 +65,7 @@ export interface AppShellProps {
 
 export function AppShell({
   pathname,
+  user,
   headerMode = "global",
   pageTitle,
   pageDescription,
@@ -90,6 +93,7 @@ export function AppShell({
     >
       <Sidebar
         pathname={pathname}
+        user={user}
         contextualCardVariant={contextualCardVariant}
         contextSection={sidebarContext}
       />
@@ -132,6 +136,7 @@ export {
   PageScrollArea,
   type SidebarContextSection,
   type SidebarContextualCardVariant,
+  type SidebarUser,
   type TopHeaderMode,
   type TopHeaderProjectIdentity,
 };

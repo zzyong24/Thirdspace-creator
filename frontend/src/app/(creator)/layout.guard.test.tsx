@@ -1,0 +1,162 @@
+/**
+ * Session-guard tests for the (creator) segment layout (Module 00, Task 11).
+ *
+ * The (creator) layout is the single shell wrapping every authenticated page.
+ * Foundation §2 makes it the session guard:
+ *  - no / invalid session cookie → `redirect("/login?from=<pathname>")`,
+ *  - a valid cookie → derive `ctx`, render children, and bind the Shell user
+ *    card to the REAL identity (`displayName` / `email` from the resolved
+ *    user — the `userResource` shape `settings.get` will eventually serve).
+ *
+ * `next/headers` (cookies + headers), `next/navigation` (redirect +
+ * usePathname/useSearchParams used by the client ShellRouter island), and the
+ * shared identity service are all mocked so the async server layout is
+ * exercisable in jsdom without the Next server runtime.
+ */
+
+import * as React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+
+// --- next/navigation: redirect throws (Next semantics) so control stops; the
+//     client ShellRouter island reads usePathname/useSearchParams. ---
+class RedirectError extends Error {
+  constructor(public readonly target: string) {
+    super(`NEXT_REDIRECT:${target}`);
+  }
+}
+const redirect = vi.fn((target: string) => {
+  throw new RedirectError(target);
+});
+vi.mock("next/navigation", () => ({
+  redirect: (target: string) => redirect(target),
+  usePathname: () => "/settings",
+  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
+// --- next/headers: cookies() + headers() are async in Next 16. ---
+let cookieValue: string | undefined;
+let pathnameHeader: string | undefined;
+vi.mock("next/headers", () => ({
+  cookies: async () => ({
+    get: (name: string) =>
+      name === "creatoros_session" && cookieValue !== undefined
+        ? { name, value: cookieValue }
+        : undefined,
+  }),
+  headers: async () => ({
+    get: (name: string) =>
+      name === "x-pathname" ? (pathnameHeader ?? null) : null,
+  }),
+}));
+
+// --- identity service: resolve a ctx from the cookie + return the user. ---
+const CANONICAL_USER = {
+  id: "user-zyongzhu",
+  email: "zyongzhu@creatoros.local",
+  displayName: "Zyong Zhu",
+  timezone: "Asia/Shanghai",
+  locale: "zh-CN",
+  createdAt: "2025-01-01T00:00:00.000Z",
+  updatedAt: "2025-01-01T00:00:00.000Z",
+};
+
+const resolveContextFromToken = vi.fn();
+const getCurrentUser = vi.fn();
+vi.mock("@/server/persistence-client", () => ({
+  getIdentityService: async () => ({
+    resolveContextFromToken,
+    getCurrentUser,
+  }),
+}));
+
+async function importLayout() {
+  return (await import("./layout")).default;
+}
+
+// AuthenticationError must be the SAME class instance the layout's module graph
+// catches. With `vi.resetModules()` between tests the dynamic layout import gets
+// a fresh identity module, so we import the error from that same fresh graph
+// (after resetModules) rather than a stale top-level import.
+async function importAuthenticationError() {
+  return (await import("@/server/modules/identity")).AuthenticationError;
+}
+
+beforeEach(() => {
+  redirect.mockClear();
+  resolveContextFromToken.mockReset();
+  getCurrentUser.mockReset();
+  cookieValue = undefined;
+  pathnameHeader = "/settings";
+});
+
+afterEach(() => {
+  cleanup();
+  vi.resetModules();
+});
+
+describe("(creator) layout — session guard", () => {
+  it("redirects to /login with the current pathname when no cookie is present", async () => {
+    cookieValue = undefined;
+    const Layout = await importLayout();
+
+    await expect(
+      Layout({ children: <div>child</div>, modal: null }),
+    ).rejects.toMatchObject({ target: "/login?from=%2Fsettings" });
+
+    expect(redirect).toHaveBeenCalledWith("/login?from=%2Fsettings");
+    expect(resolveContextFromToken).not.toHaveBeenCalled();
+  });
+
+  it("redirects to /login when the cookie is invalid (resolve throws AuthenticationError)", async () => {
+    cookieValue = "garbage-token";
+    const AuthenticationError = await importAuthenticationError();
+    resolveContextFromToken.mockRejectedValue(new AuthenticationError());
+    const Layout = await importLayout();
+
+    await expect(
+      Layout({ children: <div>child</div>, modal: null }),
+    ).rejects.toMatchObject({ target: "/login?from=%2Fsettings" });
+
+    expect(redirect).toHaveBeenCalledWith("/login?from=%2Fsettings");
+  });
+
+  it("renders children + the user card bound to the canonical user on a valid session", async () => {
+    cookieValue = "valid-raw-token";
+    resolveContextFromToken.mockResolvedValue({
+      userId: "user-zyongzhu",
+      requestId: "req-1",
+      source: "user",
+    });
+    getCurrentUser.mockResolvedValue(CANONICAL_USER);
+
+    const Layout = await importLayout();
+    const tree = await Layout({
+      children: <div data-testid="guarded-child">guarded</div>,
+      modal: null,
+    });
+    render(tree);
+
+    expect(redirect).not.toHaveBeenCalled();
+    expect(resolveContextFromToken).toHaveBeenCalledWith("valid-raw-token");
+    expect(getCurrentUser).toHaveBeenCalledWith({
+      userId: "user-zyongzhu",
+      requestId: "req-1",
+      source: "user",
+    });
+
+    // children render inside the shell
+    expect(screen.getByTestId("guarded-child")).toBeInTheDocument();
+
+    // the user card renders the REAL identity (not a hardcoded fixture import):
+    const userCard = screen.getByTestId("app-sidebar");
+    expect(userCard.textContent).toContain("Zyong Zhu");
+    expect(userCard.textContent).toContain("zyongzhu@creatoros.local");
+  });
+});

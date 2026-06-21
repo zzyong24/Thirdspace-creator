@@ -40,16 +40,18 @@ export interface SidebarContextSection {
   }>;
 }
 
+export interface SidebarUser {
+  readonly displayName: string;
+  readonly email: string;
+  readonly planLabel: string;
+  readonly initials: string;
+}
+
 export interface SidebarProps {
   readonly pathname: string;
   readonly contextualCardVariant?: SidebarContextualCardVariant;
   readonly contextSection?: SidebarContextSection;
-  readonly user?: {
-    readonly displayName: string;
-    readonly email: string;
-    readonly planLabel: string;
-    readonly initials: string;
-  };
+  readonly user?: SidebarUser;
   readonly className?: string;
 }
 

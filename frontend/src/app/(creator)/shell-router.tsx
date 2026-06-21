@@ -239,14 +239,30 @@ export function resolveRoute(pathname: string): RouteResolution {
 // Component
 // ---------------------------------------------------------------------------
 
+/**
+ * The Shell user-card identity (Module 00, Task 11). Derived on the server (the
+ * (creator) layout session guard) from `identity.getCurrentUser(ctx)` and passed
+ * down so the user profile card renders the logged-in user instead of importing
+ * a static fixture. The resolver itself stays auth-agnostic — it never branches
+ * on this value; it is forwarded to the Sidebar untouched.
+ */
+export interface ShellUser {
+  readonly displayName: string;
+  readonly email: string;
+  readonly planLabel: string;
+  readonly initials: string;
+}
+
 export interface ShellRouterProps {
   readonly children: React.ReactNode;
+  readonly user?: ShellUser;
   readonly hasInterceptingModal?: boolean;
   readonly overlayMasked?: boolean;
 }
 
 export function ShellRouter({
   children,
+  user,
   hasInterceptingModal = false,
   overlayMasked = false,
 }: ShellRouterProps) {
@@ -256,6 +272,7 @@ export function ShellRouter({
   return (
     <AppShell
       pathname={pathname}
+      user={user}
       headerMode={resolution.headerMode}
       pageTitle={resolution.pageTitle}
       pageDescription={resolution.pageDescription}
