@@ -47,7 +47,14 @@ function toRow(p: CanonicalProject) {
   };
 }
 
-let cached: Promise<Transport> | null = null;
+// Pin the singleton on globalThis, NOT a module-level `let`: Next/Turbopack give
+// the route handler and server components separate module instances, so a
+// module-level singleton would be a SEPARATE in-memory pglite per entry — island
+// writes (via the route) would never be visible to page reads. globalThis is
+// per-process, shared across all module graphs, so both see one store.
+const globalForPersistence = globalThis as unknown as {
+  __creatorosPersistence?: Promise<Transport>;
+};
 
 async function buildPersistence(): Promise<Transport> {
   const { db } = await createDb(); // session-scoped pglite (real SQL; resets on restart)
@@ -64,8 +71,10 @@ async function buildPersistence(): Promise<Transport> {
 }
 
 function getPersistence(): Promise<Transport> {
-  if (!cached) cached = buildPersistence();
-  return cached;
+  if (!globalForPersistence.__creatorosPersistence) {
+    globalForPersistence.__creatorosPersistence = buildPersistence();
+  }
+  return globalForPersistence.__creatorosPersistence;
 }
 
 // Composite server transport: persistence for project ops, mock for the rest.
@@ -91,5 +100,5 @@ export const compositeTransport: Transport = {
 
 // Test hook: drop the pglite singleton so each test starts from a fresh seed.
 export function __resetPersistenceForTests(): void {
-  cached = null;
+  globalForPersistence.__creatorosPersistence = undefined;
 }
