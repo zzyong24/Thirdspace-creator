@@ -1,7 +1,13 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import { createIdentityRepository } from "./identity.repository";
-import { createIdentityService, type IdentityService } from "./identity.service";
+import {
+  createIdentityService,
+  seedCanonicalUser,
+  CANONICAL_USER_ID,
+  DEV_PASSWORD,
+  type IdentityService,
+} from "./identity.service";
 import { AuthenticationError } from "./identity.errors";
 import { hashPassword, hashToken } from "./identity.crypto";
 
@@ -138,5 +144,42 @@ describe("identity.service session lifecycle (Task 5)", () => {
       updatedAt: SEEDED_USER.updatedAt,
     });
     expect(dto).not.toHaveProperty("passwordHash");
+  });
+});
+
+describe("identity.service seedCanonicalUser (Task 7)", () => {
+  it("seeds the canonical user so login resolves to user-zyongzhu", async () => {
+    const { db } = await createDb();
+    const repo = createIdentityRepository(db, makeDeps());
+    await seedCanonicalUser(repo, makeDeps());
+    const svc = createIdentityService(repo, makeDeps());
+
+    const { user, rawToken } = await svc.login({
+      email: "zyongzhu@creatoros.local",
+      password: DEV_PASSWORD,
+    });
+    expect(user.id).toBe(CANONICAL_USER_ID);
+    expect(user.id).toBe("user-zyongzhu");
+    expect(user.displayName).toBe("Zyong Zhu");
+    expect(user.timezone).toBe("Asia/Shanghai");
+    expect(user.locale).toBe("zh-CN");
+
+    const ctx = await svc.resolveContextFromToken(rawToken);
+    expect(ctx.userId).toBe("user-zyongzhu");
+  });
+
+  it("is idempotent — a second seed is a no-op (onConflictDoNothing)", async () => {
+    const { db } = await createDb();
+    const repo = createIdentityRepository(db, makeDeps());
+    await seedCanonicalUser(repo, makeDeps());
+    // A second seed must not throw (e.g. unique-email violation) and must not
+    // overwrite the existing row — login still works with the dev password.
+    await seedCanonicalUser(repo, makeDeps());
+    const svc = createIdentityService(repo, makeDeps());
+
+    const ctx = await svc
+      .login({ email: "zyongzhu@creatoros.local", password: DEV_PASSWORD })
+      .then((r) => svc.resolveContextFromToken(r.rawToken));
+    expect(ctx.userId).toBe("user-zyongzhu");
   });
 });

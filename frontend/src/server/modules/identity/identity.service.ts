@@ -1,7 +1,9 @@
 import type { RequestContext } from "@creatoros/backend";
+import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import type { IdentityRepository, UserRow } from "./identity.repository";
 import {
   generateSessionToken,
+  hashPassword,
   hashToken,
   verifyPassword,
 } from "./identity.crypto";
@@ -136,4 +138,58 @@ export function createIdentityService(
       await repo.revokeSession(hashToken(rawToken), ctx.userId);
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Canonical-user seed (Module 00, Task 7)
+// ---------------------------------------------------------------------------
+//
+// Every existing fixture-backed page and the Projects persistence seed resolve
+// against `id:"user-zyongzhu"` (the canonical fixture user, frontend/src/
+// fixtures/canonical.ts). To make real login resolve to that same id — so all
+// those fixtures keep working under the seeded ctx — we seed a row whose values
+// are EXACTLY the fixture's, plus the identity-infra `passwordHash`.
+//
+// Determinism: `createdAt/updatedAt` use the fixtures' FIXED_NOW_ISO (never
+// Date.now). The dev credential is read from CREATOROS_DEV_PASSWORD (default
+// "creatoros-dev", documented) — it is hashed at seed time and NEVER logged
+// (SPEC §20/§21). The seed itself is idempotent: the repo's seedUser uses
+// onConflictDoNothing, so a second buildPersistence()/seed call is a no-op and
+// never overwrites an existing row or trips the users_email_uk unique index.
+
+/** Canonical fixture user id — the seeded login resolves to this. */
+export const CANONICAL_USER_ID = "user-zyongzhu";
+
+/**
+ * Dev login credential for the seeded canonical user. Read from env so a deploy
+ * can override it; the documented default is "creatoros-dev". Never logged.
+ */
+export const DEV_PASSWORD =
+  process.env.CREATOROS_DEV_PASSWORD ?? "creatoros-dev";
+
+/** Canonical user row values — EXACTLY the fixture's (canonical.ts L113-118). */
+const CANONICAL_USER = {
+  id: CANONICAL_USER_ID,
+  email: "zyongzhu@creatoros.local",
+  displayName: "Zyong Zhu",
+  timezone: "Asia/Shanghai",
+  locale: "zh-CN",
+  createdAt: FIXED_NOW_ISO,
+  updatedAt: FIXED_NOW_ISO,
+} as const;
+
+/**
+ * Idempotently seed the canonical user so every fixture-backed page and the
+ * Projects persistence seed keep resolving under a real session ctx. The
+ * password hash is derived from DEV_PASSWORD at call time (salted scrypt). Safe
+ * to call on every buildPersistence() — onConflictDoNothing makes re-runs no-ops.
+ */
+export async function seedCanonicalUser(
+  repo: IdentityRepository,
+  _deps: ServiceDeps,
+): Promise<void> {
+  await repo.seedUser({
+    ...CANONICAL_USER,
+    passwordHash: hashPassword(DEV_PASSWORD),
+  });
 }

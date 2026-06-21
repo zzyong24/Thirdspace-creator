@@ -3,12 +3,15 @@
 // Later modules import Identity ONLY through this file (never its internals),
 // for `RequestContext` + `resolveContextFromToken` (Tasks 8/9 consume both).
 //
-// Task 5 surface: the service factory + its DTO/context types, plus the
-// repository factory needed to construct the service over the shared db. The
-// canonical-user seed helper lands in Task 7 and is re-exported here then.
+// Surface: the service factory + its DTO/context types, the repository factory
+// needed to construct the service over the shared db, and (Task 7) the
+// canonical-user seed helper so every fixture-backed page keeps resolving.
 
 export {
   createIdentityService,
+  seedCanonicalUser,
+  CANONICAL_USER_ID,
+  DEV_PASSWORD,
   type IdentityService,
   type RequestContext,
   type UserDTO,
