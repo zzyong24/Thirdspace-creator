@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://creatoros/orchestrator/manifest.schema.json",
+  "title": "Product-to-Code Orchestrator — Artifact Manifest",
+  "description": "Structural + enum contract for ARTIFACT_MANIFEST.yaml. Convert YAML to JSON and validate with any draft-07 validator (e.g. ajv), or rely on orchestrator/process/reconcile.mjs which performs equivalent checks dependency-free.",
+  "type": "object",
+  "required": ["project", "stages", "stage_defaults", "consistency_gate"],
+  "definitions": {
+    "status": {
+      "type": "string",
+      "enum": ["not-started", "draft", "needs-user-confirmation", "blocked", "passed", "accepted-risk", "invalidated"]
+    },
+    "gateStatus": {
+      "type": "string",
+      "enum": ["not-run", "pass", "fail", "accepted-risk"]
+    },
+    "stage": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "#/definitions/status" },
+        "gate": { "type": "string" },
+        "gate_status": { "$ref": "#/definitions/gateStatus" },
+        "confirmation_required": { "type": "boolean" },
+        "artifacts": { "type": "array" },
+        "notes": { "type": "string" }
+      }
+    }
+  },
+  "properties": {
+    "project": {
+      "type": "object",
+      "required": ["name", "current_stage", "frontier", "updated_at"],
+      "properties": {
+        "name": { "type": "string" },
+        "artifact_root": { "type": "string" },
+        "work_branch": { "type": "string", "description": "Branch the build reality is verified against." },
+        "current_stage": { "type": "string" },
+        "frontier": { "type": "string" },
+        "updated_at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "notes": { "type": "string" }
+      }
+    },
+    "stages": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/stage" }
+    },
+    "stage_defaults": {
+      "type": "object",
+      "required": ["valid_statuses"],
+      "properties": {
+        "valid_statuses": { "type": "array", "items": { "$ref": "#/definitions/status" } },
+        "transition_rule": { "type": "string" }
+      }
+    },
+    "consistency_gate": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "#/definitions/gateStatus" },
+        "reason": { "type": "string" },
+        "blocks": { "type": "array", "items": { "type": "string" }, "description": "Stage ids that may NOT be `passed` while this gate is `fail`." },
+        "downstream_to_upstream": { "type": "string" },
+        "recorded_in": { "type": "string" }
+      }
+    }
+  }
+}

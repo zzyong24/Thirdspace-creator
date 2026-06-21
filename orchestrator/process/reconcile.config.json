@@ -1,0 +1,9 @@
+{
+  "work_branch": "feat/service-contract",
+  "probes": [
+    { "stage": "15-service-contract",    "path": "contract/package.json" },
+    { "stage": "16-backend-tdd",         "path": "backend/src" },
+    { "stage": "16-backend-tdd",         "path": "ai-worker" },
+    { "stage": "17-integration-release", "path": "frontend/src/app/api/v1/dispatch" }
+  ]
+}
