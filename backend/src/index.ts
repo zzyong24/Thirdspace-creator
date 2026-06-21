@@ -122,6 +122,10 @@ export {
   calibrationResults,
   CALIBRATION_DDL,
 } from "./schema/calibration";
+export {
+  platformAccounts,
+  PLATFORM_ACCOUNT_DDL,
+} from "./schema/platform-account";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their

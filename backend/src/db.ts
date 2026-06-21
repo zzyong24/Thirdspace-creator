@@ -20,6 +20,7 @@ import * as positioningSchema from "./schema/positioning";
 import * as monetizationSchema from "./schema/monetization";
 import * as candidateSchema from "./schema/candidate";
 import * as calibrationSchema from "./schema/calibration";
+import * as platformAccountSchema from "./schema/platform-account";
 import { PROJECTS_DDL } from "./schema/projects";
 import { IDENTITY_DDL } from "./schema/identity";
 import { TAXONOMY_DDL } from "./schema/taxonomy";
@@ -40,6 +41,7 @@ import { POSITIONING_DDL } from "./schema/positioning";
 import { MONETIZATION_DDL } from "./schema/monetization";
 import { CANDIDATE_DDL } from "./schema/candidate";
 import { CALIBRATION_DDL } from "./schema/calibration";
+import { PLATFORM_ACCOUNT_DDL } from "./schema/platform-account";
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
@@ -64,6 +66,7 @@ const schema = {
   ...monetizationSchema,
   ...candidateSchema,
   ...calibrationSchema,
+  ...platformAccountSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;
@@ -112,6 +115,11 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
   // Prediction + CalibrationResult). Independent tables; runs after the base modules.
   // All CREATE … IF NOT EXISTS (idempotent).
   await client.exec(CALIBRATION_DDL);
+  // PlatformAccount (module 21, Wave 5–7) — 七步⑤ 多账号矩阵. Runs AFTER
+  // PROJECTS_DDL + PUBLISHING_DDL so its ALTER TABLE publications / project_target_
+  // platforms ADD COLUMN account_id finds the target tables. The platform_accounts
+  // table + its consumer-column ALTERs are all CREATE/ADD … IF NOT EXISTS (idempotent).
+  await client.exec(PLATFORM_ACCOUNT_DDL);
   const db = drizzle(client, { schema });
   return { db, client };
 }
