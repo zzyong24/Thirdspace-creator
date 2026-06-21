@@ -11,6 +11,7 @@ export {
 export { AuthenticationError } from "./errors";
 export { projects, projectActivities, PROJECTS_DDL } from "./schema/projects";
 export { users, sessions, IDENTITY_DDL } from "./schema/identity";
+export { tags, entityTags, TAXONOMY_DDL } from "./schema/taxonomy";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their

@@ -2,12 +2,14 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import * as projectsSchema from "./schema/projects";
 import * as identitySchema from "./schema/identity";
+import * as taxonomySchema from "./schema/taxonomy";
 import { PROJECTS_DDL } from "./schema/projects";
 import { IDENTITY_DDL } from "./schema/identity";
+import { TAXONOMY_DDL } from "./schema/taxonomy";
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
-const schema = { ...projectsSchema, ...identitySchema };
+const schema = { ...projectsSchema, ...identitySchema, ...taxonomySchema };
 
 export type Db = PgliteDatabase<typeof schema>;
 
@@ -27,6 +29,7 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
   const client = options.dataDir ? new PGlite(options.dataDir) : new PGlite();
   await client.exec(PROJECTS_DDL);
   await client.exec(IDENTITY_DDL);
+  await client.exec(TAXONOMY_DDL);
   const db = drizzle(client, { schema });
   return { db, client };
 }
