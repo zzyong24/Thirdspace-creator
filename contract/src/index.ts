@@ -20,3 +20,63 @@ export {
   type EntityTagResource,
   type TagEntityType,
 } from "./resources/taxonomy";
+
+// contract v0.4 — 七步 (seven-step) module resource DTOs. Re-exported so each
+// module's `<module>.schema.ts` can validate against the single source of truth
+// (same convention as taxonomy above).
+export {
+  creatorProfileResource,
+  positioningStatementResource,
+  positioningGateResultResource,
+  positioningCenterResource,
+  type CreatorProfileResource,
+  type PositioningStatementResource,
+  type PositioningGateResultResource,
+  type PositioningCenterResource,
+} from "./resources/positioning";
+export {
+  productResource,
+  offerResource,
+  leadResource,
+  conversionEventResource,
+  contentOutputProductResource,
+  funnelStageResource,
+  monetizationFunnelResource,
+  type ProductResource,
+  type OfferResource,
+  type LeadResource,
+  type ConversionEventResource,
+  type ContentOutputProductResource,
+  type FunnelStageResource,
+  type MonetizationFunnelResource,
+} from "./resources/monetization";
+export {
+  candidateResource,
+  audienceSignalResource,
+  topicPromotionResource,
+  type CandidateResource,
+  type AudienceSignalResource,
+  type TopicPromotionResource,
+} from "./resources/candidate";
+export {
+  rubricResource,
+  rubricVersionResource,
+  predictionResource,
+  calibrationResultResource,
+  type RubricResource,
+  type RubricVersionResource,
+  type PredictionResource,
+  type CalibrationResultResource,
+} from "./resources/calibration";
+export {
+  platformAccountResource,
+  type PlatformAccountResource,
+} from "./resources/platform-accounts";
+export {
+  contentCalendarEntryResource,
+  publishingCadenceResource,
+  cadenceAttainmentResource,
+  type ContentCalendarEntryResource,
+  type PublishingCadenceResource,
+  type CadenceAttainmentResource,
+} from "./resources/content-calendar";

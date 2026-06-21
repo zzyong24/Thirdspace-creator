@@ -4,6 +4,7 @@ import { id } from "../primitives";
 import { dashboardPage } from "../pages/dashboard";
 import { projectOverviewPage } from "../pages/project-overview";
 import { globalSearchPage } from "../pages/global-search";
+import { positioningCenterResource } from "../resources/positioning";
 // publishing-center is composed client-side (GET /publications + analytics) and
 // has no distinct read path in SPEC §13. The DTO is re-exported for reuse only;
 // no endpoint is registered below.
@@ -34,5 +35,13 @@ export const pagesOperations = {
     query: z.object({ q: z.string(), type: z.string().optional() }),
     response: globalSearchPage,
     fr: ["FR-PAGE-SEARCH"],
+  }),
+  // 定位中心 page (七步 ③). Owned/implemented by the positioning module.
+  getPositioningCenter: defineEndpoint({
+    id: "pages.positioning.get",
+    method: "GET",
+    path: "/positioning/center",
+    response: positioningCenterResource,
+    fr: ["FR-PAGE-POSITIONING"],
   }),
 } as const;

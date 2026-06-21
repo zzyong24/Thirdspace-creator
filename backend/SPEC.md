@@ -509,6 +509,116 @@ POST /ingestion/runs/:runId/complete
 GET  /ingestion/runs/:runId
 ```
 
+### 定位 (positioning · v0.4 · 七步 ①②③)
+
+账号级定位：`CreatorProfile`（账号自我认知）+ `PositioningStatement`（**不可变版本链**，
+ArtifactVersion 风格）+ `PositioningGate`（值对象，确定性打分 0–100，不阻断）。
+`GET /positioning/center` 为定位中心页组合 DTO（由 positioning 模块拥有并实现）。
+
+```text
+GET    /positioning/profile
+POST   /positioning/profile
+GET    /positioning/statements
+POST   /positioning/statements
+GET    /positioning/statements/:statementId
+POST   /positioning/gate/evaluate
+GET    /positioning/center
+```
+
+### 变现 (monetization · v0.4 · 七步⑦)
+
+柔性 `Product`/`Offer`（价格挂 Offer，与 Product 解耦）+ 归因层 `Lead`/`ConversionEvent`
++ 意图层 `ContentOutputProduct` + §4.5 三层口径漏斗（**永远保留诚实的 `unattributed` 桶，
+不强行 100% 分配**）。
+
+```text
+GET    /products
+POST   /products
+GET    /products/:productId
+PATCH  /products/:productId
+POST   /products/:productId/retire
+GET    /products/:productId/offers
+POST   /products/:productId/offers
+
+GET    /outputs/:outputId/products
+POST   /outputs/:outputId/products
+DELETE /outputs/:outputId/products/:productId
+
+GET    /leads
+POST   /leads
+GET    /leads/:leadId
+PATCH  /leads/:leadId
+GET    /leads/:leadId/conversions
+POST   /leads/:leadId/conversions
+
+GET    /monetization/funnel
+GET    /outputs/:outputId/funnel
+```
+
+### 选题候选 (candidate · v0.4 · 七步③)
+
+`Candidate`（轻量选题，按变现潜力排序）+ `AudienceSignal`（受众信号，经 Ingestion 写入）
++ `TopicPromotion`（Candidate → Project 晋升记录）。AI 生成的候选走 §C-3 候选确认流
+（`submit_candidate → awaiting_confirmation → confirmResult`），不在此新增写状态机；
+`POST /candidates` 仅限手工 `source:"idea"`。
+
+```text
+GET    /candidates
+POST   /candidates
+GET    /candidates/:candidateId
+PATCH  /candidates/:candidateId
+POST   /candidates/:candidateId/promote
+GET    /audience-signals
+POST   /audience-signals/:signalId/link
+```
+
+### 校准 (calibration · v0.4 · 七步⑤⑥)
+
+变现加权 `Rubric`/`RubricVersion`（**不可变版本链**）+ `Prediction`（发布前盲预测，
+创建后锁定不可改）+ `CalibrationResult`（预测 vs 实际偏差，实际指标经 §C-4 Ingestion 回收）。
+`predictedScore`/`deviation` 均由服务端按维度权重派生。AI 生成的预测走 §C-3 确认流，
+`predictions.lock` 为 AI-free 的 formalize 步骤。
+
+```text
+POST   /calibration/rubrics
+POST   /calibration/rubrics/:rubricId/versions
+GET    /calibration/rubrics/:rubricId
+POST   /calibration/predictions
+POST   /calibration/predictions/:predictionId/lock
+GET    /calibration/predictions/:predictionId
+POST   /calibration/predictions/:predictionId/result
+```
+
+### 平台账号 (platform-account · v0.4 · 七步 §7.1)
+
+多账号矩阵：`PlatformAccount(platform, account_handle, secret_reference, follower_baseline)`。
+仅存 secret **引用**，永不存原始 token。归档为软删除（保留历史归因）。
+
+```text
+GET    /accounts
+POST   /accounts
+GET    /accounts/:accountId
+PATCH  /accounts/:accountId
+POST   /accounts/:accountId/archive
+```
+
+### 内容日历 (content-calendar · v0.4 · 七步 §7.2)
+
+`ContentCalendarEntry`（每账号 planned/published/missed 时段，可绑 ContentOutput 或
+Candidate，二者互斥）+ `PublishingCadence`（每账号目标频率 + 偏好时段）+ 节奏达成率
+（派生计算，含断更检测）。所有时间计算走注入的 `clock`/`from`/`to`，无 wall-clock。
+
+```text
+GET    /accounts/:accountId/calendar
+POST   /accounts/:accountId/calendar/entries
+PATCH  /calendar/entries/:entryId
+POST   /calendar/entries/:entryId/transition
+DELETE /calendar/entries/:entryId
+GET    /accounts/:accountId/cadence
+PUT    /accounts/:accountId/cadence
+GET    /accounts/:accountId/cadence/attainment
+```
+
 ## 14. API 响应
 
 成功：

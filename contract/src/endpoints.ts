@@ -15,6 +15,12 @@ import { searchOperations } from "./operations/search";
 import { notificationsOperations } from "./operations/notifications";
 import { settingsOperations } from "./operations/settings";
 import { ingestionOperations } from "./operations/ingestion";
+import { positioningOperations } from "./operations/positioning";
+import { monetizationOperations } from "./operations/monetization";
+import { candidateOperations } from "./operations/candidate";
+import { calibrationOperations } from "./operations/calibration";
+import { platformAccountOperations } from "./operations/platform-accounts";
+import { contentCalendarOperations } from "./operations/content-calendar";
 import { pagesOperations } from "./operations/pages";
 
 export type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
@@ -83,6 +89,13 @@ export const ENDPOINTS = {
   ...notificationsOperations,
   ...settingsOperations,
   ...ingestionOperations,
+  // contract v0.4 — 七步 (seven-step) module groups.
+  ...positioningOperations,
+  ...monetizationOperations,
+  ...candidateOperations,
+  ...calibrationOperations,
+  ...platformAccountOperations,
+  ...contentCalendarOperations,
   ...pagesOperations,
 } as const;
 
