@@ -330,6 +330,15 @@ queued / running → cancelled
 
 状态机由所属模块 service 实现。Repository 只能执行 service 已批准的更新。
 
+> **契约枚举为准（v0.2 注记）：** 上述散文状态机在命名上与 `@creatoros/contract`
+> 的 DTO 枚举存在差异时，**以契约 DTO 枚举为准**，service 负责把内部状态映射到契约值：
+> - AI Task 终态 `succeeded`（契约 `aiTaskStatus`）== 散文 `completed`；
+> - ContentOutput 状态遵循契约 `["drafting","recording","editing","ready","published"]`，
+>   service 把散文机（`draft→active→ready→published→retired`，`active→cancelled`）映射到此枚举；
+> - Publication / Learning 状态同样以契约枚举为输出真相。
+>
+> 本注记不改动任何契约枚举，仅声明映射方向。
+
 ## 13. API 规范
 
 API 基础路径：
@@ -361,6 +370,11 @@ PATCH  /tasks/:taskId
 GET    /projects/:projectId/activity
 ```
 
+> **v0.2 扩展（不新增端点）：** `POST /projects` 的 body 在 `title`/`brief` 之外新增
+> 可选字段 `contentType`、`creationMode`、`targetPlatforms`（均 optional，保持对既有
+> `{title, brief}` 调用方的兼容）。`GET /projects` 的 query 在 `paginationQuery` 之外
+> 新增可选 `status`（projectStatus）与 `sort`（`updatedAt|createdAt|title`）。
+
 ### 产物
 
 ```text
@@ -389,6 +403,22 @@ GET    /assets/:assetId
 POST   /assets/:assetId/files
 POST   /assets/:assetId/trash
 POST   /assets/:assetId/restore
+```
+
+#### 标签 / Taxonomy (v0.2)
+
+跨项目的用户级 `Tag` 与多态 `EntityTag` 关联。`POST …/delete` 与 `POST …/remove`
+沿用契约既有约定（无 HTTP `DELETE`，对齐 `projects.archive`）。
+
+```text
+GET    /tags                      列出当前用户的标签（分页）
+POST   /tags                      创建标签（name、可选 color/kind）
+PATCH  /tags/:tagId               重命名 / 改色 / 改 kind
+POST   /tags/:tagId/delete        删除标签并级联其 EntityTag
+POST   /tags/assignments          将 N 个标签分配到一个 (entityType, entityId)
+POST   /tags/assignments/remove   从某实体上解除一个标签
+GET    /tags/for-entity           列出某实体已分配的标签
+GET    /tags/:tagId/entities      列出某标签关联的实体（驱动“相关标签”导航）
 ```
 
 ### 制作与发布

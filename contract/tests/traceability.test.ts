@@ -31,6 +31,7 @@ describe("FR → operation traceability (GAP-002)", () => {
       ["FR-049", "Idempotent ingestion", has("POST", "/ingestion/runs/:runId/complete")],
       ["FR-052", "Raw + normalized metrics", has("POST", "/ingestion/runs/:runId/metrics")],
       ["FR-053", "Metrics aggregation", has("GET", "/analytics/projects/:projectId")],
+      ["FR-TAXONOMY", "Tag CRUD + polymorphic entity tagging (v0.2)", has("GET", "/tags") && has("POST", "/tags") && has("PATCH", "/tags/:tagId") && has("POST", "/tags/:tagId/delete") && has("POST", "/tags/assignments") && has("POST", "/tags/assignments/remove") && has("GET", "/tags/for-entity") && has("GET", "/tags/:tagId/entities")],
     ];
     const uncovered = coverage.filter(([, , ok]) => !ok).map(([fr]) => fr);
     expect(uncovered, `uncovered GAP-002 FRs: ${uncovered.join(", ")}`).toEqual([]);

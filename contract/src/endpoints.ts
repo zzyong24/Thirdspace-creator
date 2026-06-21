@@ -3,6 +3,7 @@ import type { z } from "zod";
 import { projectsOperations } from "./operations/projects";
 import { artifactsOperations } from "./operations/artifacts";
 import { knowledgeOperations } from "./operations/knowledge";
+import { taxonomyOperations } from "./operations/taxonomy";
 import { assetsOperations } from "./operations/assets";
 import { productionOperations } from "./operations/production";
 import { publishingOperations } from "./operations/publishing";
@@ -70,6 +71,7 @@ export const ENDPOINTS = {
   ...projectsOperations,
   ...artifactsOperations,
   ...knowledgeOperations,
+  ...taxonomyOperations,
   ...assetsOperations,
   ...productionOperations,
   ...publishingOperations,

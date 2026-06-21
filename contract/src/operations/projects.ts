@@ -1,6 +1,14 @@
 import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
-import { id, paginationQuery, projectStageName } from "../primitives";
+import {
+  id,
+  paginationQuery,
+  projectStageName,
+  projectStatus,
+  contentType,
+  creationMode,
+  platformId,
+} from "../primitives";
 import {
   projectResource,
   contentOutputResource,
@@ -18,7 +26,12 @@ export const projectsOperations = {
     id: "projects.list",
     method: "GET",
     path: "/projects",
-    query: paginationQuery,
+    // paginationQuery + optional status filter and sort key (v0.2). Both are
+    // optional so existing callers keep validating against the base shape.
+    query: paginationQuery.extend({
+      status: projectStatus.optional(),
+      sort: z.enum(["updatedAt", "createdAt", "title"]).optional(),
+    }),
     response: projectResource,
     isList: true,
     fr: ["FR-PROJECTS-LIST"],
@@ -27,7 +40,16 @@ export const projectsOperations = {
     id: "projects.create",
     method: "POST",
     path: "/projects",
-    body: z.object({ title: z.string().min(1), brief: z.string().default("") }),
+    // title/brief are the required v0.1 fields; contentType/creationMode/
+    // targetPlatforms are OPTIONAL v0.2 additions so the existing
+    // {title, brief} create handlers still validate.
+    body: z.object({
+      title: z.string().min(1),
+      brief: z.string().default(""),
+      contentType: contentType.optional(),
+      creationMode: creationMode.optional(),
+      targetPlatforms: z.array(platformId).optional(),
+    }),
     response: projectResource,
     fr: ["FR-PROJECTS-CREATE", "FR-002"],
   }),
