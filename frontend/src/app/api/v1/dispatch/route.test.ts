@@ -98,11 +98,11 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
   });
 
   it("returns 501 for a not-yet-implemented operation", async () => {
-    // `products.list` is now wired (module 18 Monetization, Wave 5+), so use a
-    // calibration op (`calibration.rubrics.create` — owned by the not-yet-built
-    // Calibration module: not persisted, no mock handler → the mock transport
-    // raises "operation not implemented" → 501).
-    const res = await dispatch("calibration.rubrics.create", {
+    // `calibration.rubrics.create` is now wired (module 20 Calibration, Wave 5–7),
+    // so use a content-calendar op (`accounts.cadence.attainment` — owned by the
+    // not-yet-built content-calendar/platform-accounts modules: not persisted, no
+    // mock handler → the mock transport raises "operation not implemented" → 501).
+    const res = await dispatch("accounts.cadence.attainment", {
       params: undefined,
       query: undefined,
       body: undefined,
