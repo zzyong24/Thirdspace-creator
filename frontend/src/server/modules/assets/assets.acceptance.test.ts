@@ -80,12 +80,15 @@ describe("G1 — module-structure acceptance", () => {
     expect(crossModule).toBe(false);
   });
 
-  it("G5 — AssetsService is the ONLY object-storage caller (no sibling module imports the port)", () => {
-    // Grep every module dir EXCEPT assets for an object-storage import. SPEC §15.
+  it("G5 — object storage is used only by the file-producing modules (Assets + Production)", () => {
+    // SPEC §15 + foundation §4: object storage is a SHARED port owned by Assets,
+    // also used by Production for export artifacts. Any OTHER module importing it
+    // is the violation this guard catches.
+    const STORAGE_ALLOWED = new Set(["assets", "production"]);
     const modulesRoot = join(HERE, "..");
     const offenders: string[] = [];
     for (const mod of readdirSync(modulesRoot, { withFileTypes: true })) {
-      if (!mod.isDirectory() || mod.name === "assets") continue;
+      if (!mod.isDirectory() || STORAGE_ALLOWED.has(mod.name)) continue;
       const dir = join(modulesRoot, mod.name);
       for (const f of readdirSync(dir)) {
         if (!f.endsWith(".ts") && !f.endsWith(".tsx")) continue;
