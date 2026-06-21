@@ -52,6 +52,14 @@ import {
   type TaskRow,
   type ActivityRow,
 } from "@/server/modules/projects";
+import {
+  createKnowledgeRepository,
+  createKnowledgeService,
+  createKnowledgeTransport,
+  KNOWLEDGE_OP_IDS,
+  type KnowledgeItemRow,
+  type KnowledgeRevisionRow,
+} from "@/server/modules/knowledge";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -69,6 +77,8 @@ const PERSISTED_OPS = new Set<string>([
   ...SEARCH_OP_IDS,
   // Settings (module 03) — account read + preference/model/agent mutations.
   ...SETTINGS_OP_IDS,
+  // Knowledge (module 06) — list/create/get + revisions.create + relations.create.
+  ...KNOWLEDGE_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -85,6 +95,9 @@ const SETTINGS_OPS = new Set<string>(SETTINGS_OP_IDS);
 
 // The set of op ids owned by the projects module's transport (module 05).
 const PROJECT_OPS = new Set<string>(PROJECT_OP_IDS);
+
+// The set of op ids owned by the knowledge module's transport (module 06).
+const KNOWLEDGE_OPS = new Set<string>(KNOWLEDGE_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -218,6 +231,60 @@ function toNotificationRow(n: CanonicalNotification): NotificationRow {
   };
 }
 
+// Knowledge (module 06) canonical mappers. The fixture item/revision shapes match
+// the DB rows (ISO text timestamps, jsonb metadata); the relation fixture carries
+// a NUMERIC `strength` which the DB stores as a decimal string (the repo
+// Number()-parses on read), so stringify here.
+type CanonicalKnowledge = (typeof canonicalDataset.knowledgeItems)[number];
+type CanonicalRevision = (typeof canonicalDataset.knowledgeRevisions)[number];
+type CanonicalRelation = (typeof canonicalDataset.knowledgeRelations)[number];
+
+function toKnowledgeRow(k: CanonicalKnowledge): KnowledgeItemRow {
+  return {
+    id: k.id,
+    userId: k.userId,
+    currentRevisionId: k.currentRevisionId,
+    knowledgeType: k.knowledgeType,
+    title: k.title,
+    sourceType: k.sourceType,
+    sourceUrl: k.sourceUrl ?? null,
+    sourceMetadata: k.sourceMetadata as Record<string, unknown>,
+    status: k.status,
+    archivedAt: k.archivedAt ?? null,
+    createdAt: k.createdAt,
+    updatedAt: k.updatedAt,
+  };
+}
+
+function toRevisionRow(r: CanonicalRevision): KnowledgeRevisionRow {
+  return {
+    id: r.id,
+    knowledgeItemId: r.knowledgeItemId,
+    revisionNumber: r.revisionNumber,
+    content: r.content,
+    structuredData: r.structuredData as Record<string, unknown>,
+    createdAt: r.createdAt,
+  };
+}
+
+function toRelationRow(r: CanonicalRelation): {
+  id: string;
+  sourceKnowledgeId: string;
+  targetKnowledgeId: string;
+  relationType: string;
+  strength: string;
+  createdByType: string;
+} {
+  return {
+    id: r.id,
+    sourceKnowledgeId: r.sourceKnowledgeId,
+    targetKnowledgeId: r.targetKnowledgeId,
+    relationType: r.relationType,
+    strength: String(r.strength),
+    createdByType: r.createdByType,
+  };
+}
+
 type CanonicalPreference = (typeof canonicalDataset.userPreferences)[number];
 type CanonicalModel = (typeof canonicalDataset.modelConfigurations)[number];
 type CanonicalAgent = (typeof canonicalDataset.agentConfigurations)[number];
@@ -280,6 +347,7 @@ interface PersistenceBundle {
   notifications: Transport;
   search: Transport;
   settings: Transport;
+  knowledge: Transport;
   identity: IdentityService;
 }
 
@@ -343,6 +411,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
   const search = createSearchTransport(() => searchService);
 
+  // Knowledge (module 06): one user-scoped repository over the shared db (the
+  // repo takes ctx per-call, not at construction). Its transport mints a per-ctx
+  // service so every list/get/create/revise/relate is scoped to `ctx.userId`,
+  // and children inherit ownership via the parent item's gate. Clock/ids share
+  // the deterministic `deps` (createSeq keeps knowledge/revision/relation ids
+  // collision-free across requests).
+  const knowledgeRepo = createKnowledgeRepository(db, deps);
+  const knowledge = createKnowledgeTransport(() =>
+    createKnowledgeService(knowledgeRepo),
+  );
+
   // Seed the Projects exemplar dataset (owned by the canonical user) AND the
   // canonical identity row, so real login resolves to `user-zyongzhu` and every
   // fixture-backed page + the Projects seed keep resolving under a real ctx
@@ -374,6 +453,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // §2). seed() is onConflictDoNothing → a re-built singleton never double-seeds.
   await notificationsRepo.seed(
     canonicalDataset.notifications.map(toNotificationRow),
+  );
+
+  // Seed the canonical knowledge graph (items + revisions + relations), all owned
+  // by the canonical user, so the /knowledge page + Research workspace resolve the
+  // real rows under the seeded login (foundation §2). seed* are onConflictDoNothing
+  // → a re-built singleton never double-seeds.
+  await knowledgeRepo.seedKnowledge(
+    canonicalDataset.knowledgeItems.map(toKnowledgeRow),
+  );
+  await knowledgeRepo.seedRevisions(
+    canonicalDataset.knowledgeRevisions.map(toRevisionRow),
+  );
+  await knowledgeRepo.seedRelations(
+    canonicalDataset.knowledgeRelations.map(toRelationRow),
   );
 
   // Seed the canonical user's search index (module 02, Wave-1 seed approach —
@@ -425,6 +518,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     notifications,
     search,
     settings,
+    knowledge,
     identity,
   };
 }
@@ -454,6 +548,10 @@ async function getSearch(): Promise<Transport> {
 
 async function getSettings(): Promise<Transport> {
   return (await getBundle()).settings;
+}
+
+async function getKnowledge(): Promise<Transport> {
+  return (await getBundle()).knowledge;
 }
 
 /**
@@ -502,6 +600,13 @@ export const compositeTransport: Transport = {
     if (SETTINGS_OPS.has(endpoint.id)) {
       const settings = await getSettings();
       return settings.request(endpoint, input, ctx);
+    }
+    // Knowledge ops (module 06) — list/create/get + revisions.create +
+    // relations.create served by the module's own user-scoped transport over the
+    // SAME pglite store (foundation §1 registry). No ctx ⇒ AuthenticationError.
+    if (KNOWLEDGE_OPS.has(endpoint.id)) {
+      const knowledge = await getKnowledge();
+      return knowledge.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1
