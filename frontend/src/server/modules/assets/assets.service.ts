@@ -1,0 +1,241 @@
+import type { RequestContext } from "@creatoros/contract";
+import type {
+  AssetRepository,
+  AssetRow,
+  AssetFileRow,
+  ListAssetsQuery,
+} from "./assets.repository";
+import type { ObjectStoragePort } from "./object-storage";
+import type { RepoDeps } from "./assets.repository";
+import {
+  OwnershipError,
+  InvalidTransitionError,
+  ConflictError,
+  UploadValidationError,
+} from "./assets.errors";
+
+// Assets service (foundation §5.3) — RequestContext-taking methods that thread
+// `ctx.userId` into the user-scoped repository (foundation §2). It is the ONLY
+// object-storage caller (SPEC §15) and the SOLE owner of the §12 lifecycle state
+// machine (the repository never transitions on its own):
+//
+//   active ↔ archived
+//   active  → deleted   (trash; stamps deletedAt = clock.now())
+//   deleted → active    (restore; clears deletedAt)
+//
+// Upload is two-phase (SPEC §15): createUpload (phase 1) mints a presigned key +
+// persists a `created` session; completeUpload (phase 2) validates the object
+// (SPEC §20) and materializes the Asset + first AssetFile, linking currentFileId.
+// No cross-module repo import.
+
+// Valid upload asset types (contract primitives `assetType` enum). Kept local so
+// createUpload can reject a bad type as an UploadValidationError without importing
+// zod into this layer.
+const ASSET_TYPES = new Set([
+  "image",
+  "video",
+  "audio",
+  "document",
+  "subtitle",
+]);
+
+export interface AssetUploadDto {
+  uploadId: string;
+  storageKey: string;
+  uploadUrl: string;
+  expiresAt: string;
+}
+
+export interface AssetsService {
+  listAssets(ctx: RequestContext, query: ListAssetsQuery): Promise<AssetRow[]>;
+  getAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
+  createUpload(
+    ctx: RequestContext,
+    input: { assetType: string; mimeType: string; fileSize: number },
+  ): Promise<AssetUploadDto>;
+  completeUpload(
+    ctx: RequestContext,
+    uploadId: string,
+    input: { name: string },
+  ): Promise<AssetRow>;
+  addAssetFile(
+    ctx: RequestContext,
+    assetId: string,
+    input: { storageKey: string },
+  ): Promise<AssetFileRow>;
+  trashAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
+  restoreAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
+  archiveAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
+  unarchiveAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
+}
+
+export function createAssetsService(
+  repo: AssetRepository,
+  storage: ObjectStoragePort,
+  deps: RepoDeps,
+): AssetsService {
+  // Load an owned asset or raise OwnershipError (404, no existence leak).
+  async function requireAsset(
+    ctx: RequestContext,
+    assetId: string,
+  ): Promise<AssetRow> {
+    const row = await repo.getAsset(ctx.userId, assetId);
+    if (!row) throw new OwnershipError("Asset not found");
+    return row;
+  }
+
+  return {
+    async listAssets(ctx, query) {
+      return repo.listAssets(ctx.userId, query);
+    },
+
+    async getAsset(ctx, assetId) {
+      return requireAsset(ctx, assetId);
+    },
+
+    async createUpload(ctx, input) {
+      // SPEC §20 input validation (phase 1).
+      if (!ASSET_TYPES.has(input.assetType)) {
+        throw new UploadValidationError(`Invalid assetType: ${input.assetType}`);
+      }
+      if (!input.mimeType || input.mimeType.trim() === "") {
+        throw new UploadValidationError("mimeType is required");
+      }
+      if (!(input.fileSize > 0)) {
+        throw new UploadValidationError("fileSize must be positive");
+      }
+      const { storageKey, uploadUrl } = storage.createPresignedUpload({
+        assetType: input.assetType,
+        mimeType: input.mimeType,
+        fileSize: input.fileSize,
+      });
+      const expiresAt = deps.now();
+      const session = await repo.createUploadSession(ctx.userId, {
+        assetType: input.assetType,
+        mimeType: input.mimeType,
+        fileSize: input.fileSize,
+        storageKey,
+        expiresAt,
+      });
+      return {
+        uploadId: session.id,
+        storageKey: session.storageKey,
+        uploadUrl,
+        expiresAt: session.expiresAt,
+      };
+    },
+
+    async completeUpload(ctx, uploadId, input) {
+      // Load the session scoped to the ctx user (foreign/unknown → 404).
+      const session = await repo.getUploadSession(ctx.userId, uploadId);
+      if (!session) throw new OwnershipError("Upload session not found");
+      // Idempotency guard: a session is single-use (created → completed).
+      if (session.status !== "created") {
+        throw new ConflictError("Upload session already completed");
+      }
+      // SPEC §20: validate the stored object's MIME/size/checksum via headObject.
+      const head = storage.headObject(session.storageKey);
+      // Materialize: create the asset (active), then the first file (v1), then
+      // re-point currentFileId. The repo stamps userId + status='active'.
+      const asset = await repo.insertAsset(ctx.userId, {
+        assetType: session.assetType,
+        name: input.name,
+        currentFileId: null,
+      });
+      const file = await repo.insertAssetFile(ctx.userId, {
+        assetId: asset.id,
+        storageKey: session.storageKey,
+        mimeType: head.mimeType || session.mimeType,
+        fileSize: head.fileSize || session.fileSize,
+        checksum: head.checksum,
+        width: head.width,
+        height: head.height,
+        durationMs: head.durationMs,
+        mediaMetadata: head.mediaMetadata,
+      });
+      const updated = await repo.updateAssetStatus(ctx.userId, asset.id, {
+        currentFileId: file.id,
+      });
+      await repo.markUploadCompleted(ctx.userId, uploadId);
+      return updated ?? asset;
+    },
+
+    async addAssetFile(ctx, assetId, input) {
+      // Verify ownership (C2) before touching storage/repo.
+      await requireAsset(ctx, assetId);
+      const head = storage.headObject(input.storageKey);
+      const file = await repo.insertAssetFile(ctx.userId, {
+        assetId,
+        storageKey: input.storageKey,
+        mimeType: head.mimeType,
+        fileSize: head.fileSize,
+        checksum: head.checksum,
+        width: head.width,
+        height: head.height,
+        durationMs: head.durationMs,
+        mediaMetadata: head.mediaMetadata,
+      });
+      // Advance currentFileId to the new file (the favorite/version affordance).
+      await repo.updateAssetStatus(ctx.userId, assetId, {
+        currentFileId: file.id,
+      });
+      return file;
+    },
+
+    async trashAsset(ctx, assetId) {
+      const asset = await requireAsset(ctx, assetId);
+      if (asset.status !== "active") {
+        throw new InvalidTransitionError(
+          `Cannot trash an asset in status '${asset.status}'`,
+        );
+      }
+      const updated = await repo.updateAssetStatus(ctx.userId, assetId, {
+        status: "deleted",
+        deletedAt: deps.now(),
+      });
+      return updated!;
+    },
+
+    async restoreAsset(ctx, assetId) {
+      const asset = await requireAsset(ctx, assetId);
+      if (asset.status !== "deleted") {
+        throw new InvalidTransitionError(
+          `Cannot restore an asset in status '${asset.status}'`,
+        );
+      }
+      const updated = await repo.updateAssetStatus(ctx.userId, assetId, {
+        status: "active",
+        deletedAt: null,
+      });
+      return updated!;
+    },
+
+    async archiveAsset(ctx, assetId) {
+      // §12 active ↔ archived. No FE wiring yet; exists to satisfy the state
+      // machine completeness (plan C8).
+      const asset = await requireAsset(ctx, assetId);
+      if (asset.status !== "active") {
+        throw new InvalidTransitionError(
+          `Cannot archive an asset in status '${asset.status}'`,
+        );
+      }
+      const updated = await repo.updateAssetStatus(ctx.userId, assetId, {
+        status: "archived",
+      });
+      return updated!;
+    },
+
+    async unarchiveAsset(ctx, assetId) {
+      const asset = await requireAsset(ctx, assetId);
+      if (asset.status !== "archived") {
+        throw new InvalidTransitionError(
+          `Cannot unarchive an asset in status '${asset.status}'`,
+        );
+      }
+      const updated = await repo.updateAssetStatus(ctx.userId, assetId, {
+        status: "active",
+      });
+      return updated!;
+    },
+  };
+}
