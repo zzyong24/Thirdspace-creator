@@ -80,3 +80,27 @@ export {
   type PublishingCadenceResource,
   type CadenceAttainmentResource,
 } from "./resources/content-calendar";
+
+// PAGE composition DTOs (SPEC §19). The dashboard / projectOverview / globalSearch
+// DTOs are reachable via `ENDPOINTS.<op>.response`; `publishingCenterPage` has NO
+// endpoint (composed server-side by the query-services module), so it is surfaced
+// here so the module's `<module>.schema.ts` can validate against the single source
+// of truth (same convention as the resource re-exports above).
+export {
+  dashboardPage,
+  metricCard,
+  type DashboardPage,
+  type MetricCard,
+} from "./pages/dashboard";
+export {
+  projectOverviewPage,
+  type ProjectOverviewPage,
+} from "./pages/project-overview";
+export {
+  globalSearchPage,
+  type GlobalSearchPage,
+} from "./pages/global-search";
+export {
+  publishingCenterPage,
+  type PublishingCenterPage,
+} from "./pages/publishing-center";
