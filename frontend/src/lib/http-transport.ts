@@ -14,6 +14,11 @@ export function createHttpTransport(baseUrl = "/api/v1"): Transport {
       const res = await fetch(`${baseUrl}/dispatch`, {
         method: "POST",
         headers: { "content-type": "application/json" },
+        // Send the httpOnly session cookie so the route can derive the
+        // RequestContext (multi-tenant). Same-origin defaults to sending it,
+        // but make it explicit so a future base-url change can't silently drop
+        // auth.
+        credentials: "same-origin",
         body: JSON.stringify({ id: endpoint.id, input }),
       });
       if (!res.ok) {

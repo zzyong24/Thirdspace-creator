@@ -32,13 +32,19 @@ interface NextNavState {
   replace: ReturnType<typeof vi.fn>;
   back: ReturnType<typeof vi.fn>;
   push: ReturnType<typeof vi.fn>;
+  refresh: ReturnType<typeof vi.fn>;
 }
 
 const mockNext: {
   state: NextNavState;
   usePathname: () => string;
   useSearchParams: () => URLSearchParams;
-  useRouter: () => { replace: NextNavState["replace"]; back: NextNavState["back"]; push: NextNavState["push"] };
+  useRouter: () => {
+    replace: NextNavState["replace"];
+    back: NextNavState["back"];
+    push: NextNavState["push"];
+    refresh: NextNavState["refresh"];
+  };
 } = {
   state: {
     pathname: "/",
@@ -46,6 +52,7 @@ const mockNext: {
     replace: vi.fn(),
     back: vi.fn(),
     push: vi.fn(),
+    refresh: vi.fn(),
   },
   usePathname: () => mockNext.state.pathname,
   useSearchParams: () => mockNext.state.searchParams,
@@ -53,6 +60,7 @@ const mockNext: {
     replace: mockNext.state.replace,
     back: mockNext.state.back,
     push: mockNext.state.push,
+    refresh: mockNext.state.refresh,
   }),
 };
 
@@ -110,6 +118,7 @@ function resetNext(initial?: Partial<NextNavState>) {
   });
   mockNext.state.back = vi.fn();
   mockNext.state.push = vi.fn();
+  mockNext.state.refresh = vi.fn();
   nextTickListeners = [];
 }
 

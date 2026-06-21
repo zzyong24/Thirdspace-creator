@@ -176,6 +176,9 @@ export function NewProjectDialog() {
               query: undefined,
               body: { title: values.name, brief: values.brief },
             });
+            // Invalidate the App Router cache so /projects re-reads from SQL on
+            // return (otherwise the cached pre-create list hides the new row).
+            router.refresh();
             if (values.enterAfterCreate) {
               router.replace(`/projects/${created.id}/research`, {
                 scroll: false,
