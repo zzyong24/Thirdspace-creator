@@ -1,4 +1,4 @@
-import { and, desc, eq, type Db } from "@creatoros/backend";
+import { and, desc, eq, inArray, type Db } from "@creatoros/backend";
 import { publications, publicationRevisions } from "./publishing.db-schema";
 import { OwnershipError } from "./publishing.errors";
 
@@ -62,6 +62,10 @@ export interface PublishingRepository {
     limit: number;
     offset: number;
   }): Promise<PublicationRow[]>;
+  // User-scoped publication ids for a set of ContentOutput ids (Analytics project
+  // read resolves project→outputs→publications without an Analytics cross-module
+  // join). Empty input → empty list.
+  listPublicationIdsByOutputs(outputIds: ReadonlyArray<string>): Promise<string[]>;
   getPublication(publicationId: string): Promise<PublicationRow>;
   createRevision(
     publicationId: string,
@@ -161,6 +165,20 @@ export function createPublishingRepository(
         .orderBy(desc(publications.createdAt))
         .limit(page.limit)
         .offset(page.offset);
+    },
+
+    async listPublicationIdsByOutputs(outputIds) {
+      if (outputIds.length === 0) return [];
+      const rows = await db
+        .select({ id: publications.id })
+        .from(publications)
+        .where(
+          and(
+            eq(publications.userId, userId),
+            inArray(publications.contentOutputId, [...outputIds]),
+          ),
+        );
+      return rows.map((r) => r.id);
     },
 
     getPublication: getPublicationRowById,

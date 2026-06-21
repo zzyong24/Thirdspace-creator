@@ -112,6 +112,16 @@ export interface ProjectsService {
     taskId: string,
     patch: { status?: TaskStatus; title?: string },
   ): Promise<TaskRow>;
+
+  // Cross-module resolver (SPEC §22) — the user-scoped ContentOutput ids for a
+  // project, gated by the project's ownership check (a cross-user / unknown
+  // project throws OwnershipError). Consumed by Publishing's
+  // listPublicationIdsByProject (→ Analytics project read) so neither module
+  // cross-module-joins content_outputs.
+  listOutputIdsByProject(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<string[]>;
 }
 
 // Stage machine (SPEC §12, shared by Project & Output stages):
@@ -459,6 +469,14 @@ export function createProjectsService(
         }
       }
       return repo.updateTaskRow(ctx, taskId, set);
+    },
+
+    async listOutputIdsByProject(ctx, projectId) {
+      // repo.listOutputs gates the parent project's ownership (cross-user /
+      // unknown → OwnershipError) then returns the user-scoped outputs; we expose
+      // only the ids so downstream resolvers never see the full row.
+      const outputs = await repo.listOutputs(ctx, projectId);
+      return outputs.map((o) => o.id);
     },
   };
 }

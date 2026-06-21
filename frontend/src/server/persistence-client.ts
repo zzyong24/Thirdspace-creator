@@ -89,6 +89,12 @@ import {
   createMockPublisher,
   PUBLISHING_OP_IDS,
 } from "@/server/modules/publishing";
+import {
+  createAnalyticsRepository,
+  createAnalyticsService,
+  createAnalyticsTransport,
+  ANALYTICS_OP_IDS,
+} from "@/server/modules/analytics";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -119,6 +125,9 @@ const PERSISTED_OPS = new Set<string>([
   // Publishing (module 10) — list/create/get publications + revisions.create +
   // transition, user-scoped with §12 publish machine + MockPublisher idempotency.
   ...PUBLISHING_OP_IDS,
+  // Analytics (module 11) — publication/project metric reads, user-scoped over the
+  // append-only metric store; idempotent appendSnapshot is the Ingestion seam.
+  ...ANALYTICS_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -150,6 +159,9 @@ const PRODUCTION_OPS = new Set<string>(PRODUCTION_OP_IDS);
 
 // The set of op ids owned by the publishing module's transport (module 10).
 const PUBLISHING_OPS = new Set<string>(PUBLISHING_OP_IDS);
+
+// The set of op ids owned by the analytics module's transport (module 11).
+const ANALYTICS_OPS = new Set<string>(ANALYTICS_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -495,6 +507,7 @@ interface PersistenceBundle {
   artifacts: Transport;
   production: Transport;
   publishing: Transport;
+  analytics: Transport;
   identity: IdentityService;
 }
 
@@ -650,8 +663,31 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     searchIndex: (ctx, input) =>
       searchService.upsertDocument(ctx, input),
     assertCoverOwned: (ctx, id) => assetsService.getAsset(ctx, id),
+    // Project→ContentOutput-ids resolver — drives Analytics' project metric read
+    // (publishing.listPublicationIdsByProject → analytics.projects.get) without an
+    // Analytics cross-module join. The project-ownership gate lives in Projects.
+    listOutputIdsByProject: (ctx, projectId) =>
+      projectsService.listOutputIdsByProject(ctx, projectId),
   });
   const publishing = createPublishingTransport(() => publishingService);
+
+  // Analytics (module 11): one user-scoped repository over the shared db (the repo
+  // takes userId per-call — the metric store is append-only). The service reaches
+  // Publishing ONLY through the injected AnalyticsPublishingPort (no cross-module
+  // repo import): resolvePublication = ownership gate via getPublication;
+  // listPublicationIdsByProject = the project→publication resolver. The transport
+  // returns this ONE shared service. Clock/ids share the deterministic `deps`.
+  const analyticsRepo = createAnalyticsRepository(db, deps);
+  const analyticsService = createAnalyticsService({
+    repo: analyticsRepo,
+    publishing: {
+      resolvePublication: (ctx, publicationId) =>
+        publishingService.getPublication(ctx, publicationId),
+      listPublicationIdsByProject: (ctx, projectId) =>
+        publishingService.listPublicationIdsByProject(ctx, projectId),
+    },
+  });
+  const analytics = createAnalyticsTransport(() => analyticsService);
 
   // Seed the Projects exemplar dataset (owned by the canonical user) AND the
   // canonical identity row, so real login resolves to `user-zyongzhu` and every
@@ -743,6 +779,63 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     userId: canonicalDataset.user.id,
   }).seedDocuments(buildCanonicalSearchDocuments(canonicalDataset, FIXED_NOW_ISO));
 
+  // Seed the canonical analytics graph (metric snapshots + values + retention +
+  // audience), all owned by the canonical user, so the Analytics & Review page
+  // resolves real metric rows under the seeded login (foundation §2). The fixture
+  // rows carry no userId — inject the canonical owner here. seed* are
+  // onConflictDoNothing → a re-built singleton never double-seeds. Publications
+  // (parents of the snapshots) are NOT seeded into the DB this wave (Publishing's
+  // canonical seed is empty), so analytics.projects.get resolves an empty
+  // publication-id set for live projects; the seeded snapshots are reachable via
+  // analytics.publications.get for the fixture publication ids.
+  const canonicalOwner = canonicalDataset.user.id;
+  await analyticsRepo.seedSnapshots(
+    canonicalDataset.metricSnapshots.map((s) => ({
+      id: s.id,
+      userId: canonicalOwner,
+      publicationId: s.publicationId,
+      ingestionRunId: s.ingestionRunId ?? null,
+      capturedAt: s.capturedAt,
+      source: s.source,
+      rawMetrics: s.rawMetrics as Record<string, unknown>,
+      createdAt: s.createdAt,
+    })),
+  );
+  await analyticsRepo.seedValues(
+    canonicalDataset.metricValues.map((v) => ({
+      id: v.id,
+      userId: canonicalOwner,
+      metricSnapshotId: v.metricSnapshotId,
+      metricKey: v.metricKey,
+      numericValue: v.numericValue,
+      unit: v.unit,
+      dimensions: v.dimensions as Record<string, string>,
+    })),
+  );
+  await analyticsRepo.seedRetentionPoints(
+    canonicalDataset.retentionPoints.map((r) => ({
+      id: r.id,
+      userId: canonicalOwner,
+      publicationId: r.publicationId,
+      capturedAt: r.capturedAt,
+      positionMs: r.positionMs,
+      retentionRate: r.retentionRate,
+      viewerCount: r.viewerCount,
+    })),
+  );
+  await analyticsRepo.seedAudienceSnapshots(
+    canonicalDataset.audienceSnapshots.map((a) => ({
+      id: a.id,
+      userId: canonicalOwner,
+      publicationId: a.publicationId,
+      capturedAt: a.capturedAt,
+      dimensionType: a.dimensionType,
+      dimensionValue: a.dimensionValue,
+      percentage: a.percentage,
+      audienceCount: a.audienceCount,
+    })),
+  );
+
   // The identity service shares the SAME db (and the same seeded canonical user)
   // as the persistence transport, so a ctx resolved from the session cookie owns
   // the rows the transport serves under it.
@@ -787,6 +880,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     artifacts,
     production,
     publishing,
+    analytics,
     identity,
   };
 }
@@ -836,6 +930,10 @@ async function getProduction(): Promise<Transport> {
 
 async function getPublishing(): Promise<Transport> {
   return (await getBundle()).publishing;
+}
+
+async function getAnalytics(): Promise<Transport> {
+  return (await getBundle()).analytics;
 }
 
 /**
@@ -925,6 +1023,15 @@ export const compositeTransport: Transport = {
     if (PUBLISHING_OPS.has(endpoint.id)) {
       const publishing = await getPublishing();
       return publishing.request(endpoint, input, ctx);
+    }
+    // Analytics ops (module 11) — analytics.publications.get / analytics.projects.get
+    // served by the module's own user-scoped transport over the SAME pglite store
+    // (foundation §1 registry). The project→publication ownership resolve runs
+    // inside the service via the injected Publishing public seam. No ctx ⇒
+    // AuthenticationError.
+    if (ANALYTICS_OPS.has(endpoint.id)) {
+      const analytics = await getAnalytics();
+      return analytics.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1

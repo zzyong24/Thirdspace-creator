@@ -81,6 +81,15 @@ export interface ServiceDeps {
   notify?: NotifyPublished;
   /** Optional cover validation seam (AssetsService.getAsset) — SPEC §15. */
   assertCoverOwned?: (ctx: RequestContext, assetId: string) => Promise<unknown>;
+  /**
+   * Project→ContentOutput-ids resolver (ProjectsService.listOutputIdsByProject).
+   * Used by listPublicationIdsByProject so Publishing never cross-module-joins
+   * content_outputs. When unwired, listPublicationIdsByProject resolves to [].
+   */
+  listOutputIdsByProject?: (
+    ctx: RequestContext,
+    projectId: string,
+  ) => Promise<string[]>;
 }
 
 export interface PublishingService {
@@ -126,6 +135,15 @@ export interface PublishingService {
     ctx: RequestContext,
     externalSourceRef: { platform: string; externalId: string },
   ): Promise<PublicationRow | null>;
+  // Cross-module resolver for Analytics (SPEC §11/§22): the user-scoped
+  // publication ids belonging to a project. Resolves project→ContentOutput ids
+  // via the injected ProjectsService seam (project-ownership gate lives there),
+  // then queries Publishing's OWN publications by those output ids — no Analytics
+  // cross-module join. An unwired seam → []; a project with no outputs → [].
+  listPublicationIdsByProject(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<string[]>;
 }
 
 export function createPublishingService(deps: ServiceDeps): PublishingService {
@@ -317,6 +335,17 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         externalSourceRef.platform,
         externalSourceRef.externalId,
       );
+    },
+
+    async listPublicationIdsByProject(ctx, projectId) {
+      // Resolve the project's ContentOutput ids via the Projects public seam (the
+      // project-ownership gate runs there — cross-user/unknown → OwnershipError),
+      // then query our OWN publications by those output ids (user-scoped). No
+      // Analytics-side cross-module join.
+      if (!deps.listOutputIdsByProject) return [];
+      const outputIds = await deps.listOutputIdsByProject(ctx, projectId);
+      if (outputIds.length === 0) return [];
+      return repoFor(ctx).listPublicationIdsByOutputs(outputIds);
     },
   };
 }
