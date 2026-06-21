@@ -63,10 +63,17 @@ export {
   publicationRevisions,
   PUBLISHING_DDL,
 } from "./schema/publishing";
+export {
+  metricSnapshots,
+  metricValues,
+  retentionPoints,
+  audienceSnapshots,
+  ANALYTICS_DDL,
+} from "./schema/analytics";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their
 // user-scoped queries against the ONE shared-infra drizzle (foundation §1: the
 // db factory + ORM live in @creatoros/backend). Identity's repository is the
 // first such in-app module.
-export { eq, and, or, asc, desc, sql, isNull, count, ilike } from "drizzle-orm";
+export { eq, and, or, asc, desc, sql, isNull, count, ilike, inArray } from "drizzle-orm";
