@@ -83,6 +83,11 @@ export {
   reviewPublications,
   REVIEWS_DDL,
 } from "./schema/reviews";
+export {
+  learnings,
+  learningApplications,
+  LEARNINGS_DDL,
+} from "./schema/learnings";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their
