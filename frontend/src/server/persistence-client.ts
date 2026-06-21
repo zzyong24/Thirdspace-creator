@@ -83,6 +83,12 @@ import {
   createProductionTransport,
   PRODUCTION_OP_IDS,
 } from "@/server/modules/production";
+import {
+  createPublishingService,
+  createPublishingTransport,
+  createMockPublisher,
+  PUBLISHING_OP_IDS,
+} from "@/server/modules/publishing";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -110,6 +116,9 @@ const PERSISTED_OPS = new Set<string>([
   // Production (module 09) — get/put production + segments.create + exports
   // create/complete, user-scoped with §12 status machine + cross-module fan-out.
   ...PRODUCTION_OP_IDS,
+  // Publishing (module 10) — list/create/get publications + revisions.create +
+  // transition, user-scoped with §12 publish machine + MockPublisher idempotency.
+  ...PUBLISHING_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -138,6 +147,9 @@ const ARTIFACT_OPS = new Set<string>(ARTIFACT_OP_IDS);
 
 // The set of op ids owned by the production module's transport (module 09).
 const PRODUCTION_OPS = new Set<string>(PRODUCTION_OP_IDS);
+
+// The set of op ids owned by the publishing module's transport (module 10).
+const PUBLISHING_OPS = new Set<string>(PUBLISHING_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -482,6 +494,7 @@ interface PersistenceBundle {
   assets: Transport;
   artifacts: Transport;
   production: Transport;
+  publishing: Transport;
   identity: IdentityService;
 }
 
@@ -614,6 +627,31 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     searchIndexAsset: (ctx, input) => searchService.upsertDocument(ctx, input),
   });
   const production = createProductionTransport(() => productionService);
+
+  // Publishing (module 10): the service builds a per-ctx user-scoped repo over the
+  // shared db (the repo bakes userId in; the service mints one per request). The
+  // transport returns this ONE shared service. The platform publish/remove
+  // side-effect goes through the MockPublisher swap-seam (foundation §4; SPEC §15:
+  // Publishing never calls a platform SDK / S3 directly) — deterministic external
+  // id for idempotency. The transition fan-out reaches peers ONLY through their
+  // public services (no repo import):
+  //   - searchIndex → searchService.upsertDocument (best-effort post-commit),
+  //   - assertCoverOwned → assetsService.getAsset (cover validation, SPEC §15).
+  // The ContentOutput active→published rollup / notify / activity seams are
+  // optional and left unwired this wave (best-effort, SPEC §11) — the realized
+  // Production module likewise wired only the seams with a concrete peer method.
+  // Clock/ids share the deterministic `deps` (createSeq keeps pub/rev ids
+  // collision-free across requests).
+  const publishingService = createPublishingService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+    publisher: createMockPublisher(),
+    searchIndex: (ctx, input) =>
+      searchService.upsertDocument(ctx, input),
+    assertCoverOwned: (ctx, id) => assetsService.getAsset(ctx, id),
+  });
+  const publishing = createPublishingTransport(() => publishingService);
 
   // Seed the Projects exemplar dataset (owned by the canonical user) AND the
   // canonical identity row, so real login resolves to `user-zyongzhu` and every
@@ -748,6 +786,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     assets,
     artifacts,
     production,
+    publishing,
     identity,
   };
 }
@@ -793,6 +832,10 @@ async function getArtifacts(): Promise<Transport> {
 
 async function getProduction(): Promise<Transport> {
   return (await getBundle()).production;
+}
+
+async function getPublishing(): Promise<Transport> {
+  return (await getBundle()).publishing;
 }
 
 /**
@@ -872,6 +915,16 @@ export const compositeTransport: Transport = {
     if (PRODUCTION_OPS.has(endpoint.id)) {
       const production = await getProduction();
       return production.request(endpoint, input, ctx);
+    }
+    // Publishing ops (module 10) — list/create/get publications + revisions.create
+    // + transition served by the module's own user-scoped transport over the SAME
+    // pglite store (foundation §1 registry). The transition publish/remove
+    // side-effect runs inside the service via the MockPublisher seam; the
+    // cross-module fan-out reaches peers via injected public services. No ctx ⇒
+    // AuthenticationError.
+    if (PUBLISHING_OPS.has(endpoint.id)) {
+      const publishing = await getPublishing();
+      return publishing.request(endpoint, input, ctx);
     }
     // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
     // own user-scoped transport over the SAME pglite store (foundation §1
