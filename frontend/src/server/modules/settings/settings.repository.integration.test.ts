@@ -1,0 +1,169 @@
+import { describe, it, expect, beforeEach } from "vitest";
+import { createDb, type Db, type RequestContext } from "@creatoros/backend";
+import { createSettingsRepository } from "./settings.repository";
+
+// Settings repository integration tests (plan Step 1 schema-slice + Step 2
+// ownership/upsert/patch), pglite-backed. EVERY query is user-scoped: user A can
+// never read user B (foundation §5.2). putModel is idempotent on
+// (userId, capability); patchPreferences is insert-then-update on the provided
+// keys only.
+
+const DEPS = {
+  now: () => "2026-06-21T00:00:00.000Z",
+  nextId: (() => {
+    let n = 0;
+    return (prefix: string) => `${prefix}-t-${++n}`;
+  })(),
+};
+
+const ctxA: RequestContext = { userId: "user-a", requestId: "req-a", source: "user" };
+const ctxB: RequestContext = { userId: "user-b", requestId: "req-b", source: "user" };
+
+describe("settings.repository (schema slice — round-trips)", () => {
+  let db: Db;
+
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("round-trips a preference, model, and agent row", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+
+    const pref = await repo.patchPreferences(ctxA, {
+      defaultHome: "dashboard",
+      defaultCreationMode: "guided",
+      defaultVisibility: "private",
+    });
+    expect(pref.userId).toBe("user-a");
+    expect(pref.defaultHome).toBe("dashboard");
+
+    const model = await repo.putModel(ctxA, "script", {
+      provider: "anthropic",
+      modelName: "claude-opus-4-8",
+    });
+    expect(model.userId).toBe("user-a");
+    expect(model.capability).toBe("script");
+
+    const agent = await repo.createAgent(ctxA, {
+      name: "研究助理",
+      agentType: "research",
+    });
+    expect(agent.userId).toBe("user-a");
+    expect(agent.name).toBe("研究助理");
+    expect(agent.status).toBe("active");
+  });
+});
+
+describe("settings.repository (ownership — user A ≠ user B)", () => {
+  let db: Db;
+
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("never returns another user's preference / model / agent", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+
+    await repo.patchPreferences(ctxA, {
+      defaultHome: "projects",
+      defaultCreationMode: "flexible",
+      defaultVisibility: "unlisted",
+    });
+    await repo.patchPreferences(ctxB, {
+      defaultHome: "dashboard",
+      defaultCreationMode: "guided",
+      defaultVisibility: "private",
+    });
+    await repo.putModel(ctxA, "script", { provider: "anthropic", modelName: "a-model" });
+    await repo.putModel(ctxB, "script", { provider: "openai", modelName: "b-model" });
+
+    // getPreferences is scoped: B never sees A's defaultHome.
+    const prefB = await repo.getPreferences(ctxB);
+    expect(prefB?.defaultHome).toBe("dashboard");
+    const prefA = await repo.getPreferences(ctxA);
+    expect(prefA?.defaultHome).toBe("projects");
+
+    // getModel is scoped: B's "script" model is B's only.
+    const modelB = await repo.getModel(ctxB, "script");
+    expect(modelB?.modelName).toBe("b-model");
+    expect(modelB?.provider).toBe("openai");
+
+    // listModels(ctxA) excludes B's rows.
+    const listA = await repo.listModels(ctxA);
+    expect(listA).toHaveLength(1);
+    expect(listA[0]!.modelName).toBe("a-model");
+  });
+});
+
+describe("settings.repository (putModel upsert)", () => {
+  let db: Db;
+
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("inserts then updates in place on the same (userId, capability)", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+
+    await repo.putModel(ctxA, "script", {
+      provider: "anthropic",
+      modelName: "claude-sonnet",
+      settings: { temperature: 0.6 },
+    });
+    const after = await repo.putModel(ctxA, "script", {
+      provider: "openai",
+      modelName: "gpt-4o",
+      settings: { temperature: 0.2 },
+    });
+
+    // Row count stays 1 (upsert, not insert).
+    const list = await repo.listModels(ctxA);
+    expect(list).toHaveLength(1);
+    expect(after.provider).toBe("openai");
+    expect(after.modelName).toBe("gpt-4o");
+    expect(after.settings).toEqual({ temperature: 0.2 });
+  });
+
+  it("defaults secretReference to '' and settings to {} when omitted", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+    const model = await repo.putModel(ctxA, "research", {
+      provider: "anthropic",
+      modelName: "claude-opus",
+    });
+    expect(model.secretReference).toBe("");
+    expect(model.settings).toEqual({});
+    expect(model.isDefault).toBe(false);
+  });
+});
+
+describe("settings.repository (patchPreferences insert-then-update)", () => {
+  let db: Db;
+
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("seeds defaults+patch first, then mutates only provided keys", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+
+    // First patch: no row exists → insert with patch over defaults.
+    const first = await repo.patchPreferences(ctxA, {
+      fileNamingRule: "{project}-{stage}",
+      autosaveEnabled: false,
+    });
+    expect(first.fileNamingRule).toBe("{project}-{stage}");
+    expect(first.autosaveEnabled).toBe(false);
+    // Unset keys take schema defaults.
+    expect(first.analyticsEnabled).toBe(true);
+
+    // Second patch: only analyticsEnabled — fileNamingRule untouched.
+    const second = await repo.patchPreferences(ctxA, { analyticsEnabled: false });
+    expect(second.analyticsEnabled).toBe(false);
+    expect(second.fileNamingRule).toBe("{project}-{stage}");
+    expect(second.autosaveEnabled).toBe(false);
+
+    // Still one row.
+    const pref = await repo.getPreferences(ctxA);
+    expect(pref?.fileNamingRule).toBe("{project}-{stage}");
+  });
+});
