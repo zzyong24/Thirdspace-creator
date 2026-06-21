@@ -21,6 +21,13 @@ import {
   createTaxonomyTransport,
   TAXONOMY_OP_IDS,
 } from "@/server/modules/taxonomy";
+import {
+  createNotificationRepository,
+  createNotificationsService,
+  createNotificationsTransport,
+  NOTIFICATION_OP_IDS,
+  type NotificationRow,
+} from "@/server/modules/notifications";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -36,10 +43,15 @@ const PERSISTED_OPS = new Set<string>([
   "projects.activity.list",
   // Taxonomy (module 04) — tags + entity_tags served by REAL SQL persistence.
   ...TAXONOMY_OP_IDS,
+  // Notifications (module 01) — list + read served by REAL SQL persistence.
+  ...NOTIFICATION_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
 const TAXONOMY_OPS = new Set<string>(TAXONOMY_OP_IDS);
+
+// The set of op ids owned by the notifications module's transport (module 01).
+const NOTIFICATION_OPS = new Set<string>(NOTIFICATION_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -64,6 +76,22 @@ function toRow(p: CanonicalProject) {
   };
 }
 
+type CanonicalNotification = (typeof canonicalDataset.notifications)[number];
+
+function toNotificationRow(n: CanonicalNotification): NotificationRow {
+  return {
+    id: n.id,
+    userId: n.userId,
+    notificationType: n.notificationType,
+    title: n.title,
+    body: n.body,
+    entityType: n.entityType,
+    entityId: n.entityId,
+    readAt: n.readAt ?? null,
+    createdAt: n.createdAt,
+  };
+}
+
 // Pin the singleton on globalThis, NOT a module-level `let`: Next/Turbopack give
 // the route handler and server components separate module instances, so a
 // module-level singleton would be a SEPARATE in-memory pglite per entry — island
@@ -77,6 +105,7 @@ function toRow(p: CanonicalProject) {
 interface PersistenceBundle {
   transport: Transport;
   taxonomy: Transport;
+  notifications: Transport;
   identity: IdentityService;
 }
 
@@ -116,6 +145,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createTaxonomyService(taxonomyRepo),
   );
 
+  // Notifications (module 01): one repository over the shared db; its transport
+  // mints a per-ctx service so every list/read is scoped to `ctx.userId`. The
+  // clock comes from the deterministic `deps` (FIXED_NOW) so a markRead stamps a
+  // reproducible readAt (visual/test parity).
+  const notificationsRepo = createNotificationRepository(db);
+  const notifications = createNotificationsTransport(() =>
+    createNotificationsService(notificationsRepo, deps),
+  );
+
   // Seed the Projects exemplar dataset (owned by the canonical user) AND the
   // canonical identity row, so real login resolves to `user-zyongzhu` and every
   // fixture-backed page + the Projects seed keep resolving under a real ctx
@@ -128,6 +166,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   }).seedProjects(canonicalDataset.projects.map(toRow));
   await seedCanonicalUser(identityRepo, deps);
 
+  // Seed the canonical notifications ledger (notif-1 unread, notif-2 read), owned
+  // by the seeded login so the Shell bell resolves under a real ctx (foundation
+  // §2). seed() is onConflictDoNothing → a re-built singleton never double-seeds.
+  await notificationsRepo.seed(
+    canonicalDataset.notifications.map(toNotificationRow),
+  );
+
   // The identity service shares the SAME db (and the same seeded canonical user)
   // as the persistence transport, so a ctx resolved from the session cookie owns
   // the rows the transport serves under it.
@@ -136,6 +181,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   return {
     transport: createPersistenceTransport(repoFactory),
     taxonomy,
+    notifications,
     identity,
   };
 }
@@ -153,6 +199,10 @@ async function getPersistence(): Promise<Transport> {
 
 async function getTaxonomy(): Promise<Transport> {
   return (await getBundle()).taxonomy;
+}
+
+async function getNotifications(): Promise<Transport> {
+  return (await getBundle()).notifications;
 }
 
 /**
@@ -182,6 +232,12 @@ export const compositeTransport: Transport = {
     if (TAXONOMY_OPS.has(endpoint.id)) {
       const taxonomy = await getTaxonomy();
       return taxonomy.request(endpoint, input, ctx);
+    }
+    // Notifications ops (module 01) are served by the module's own transport over
+    // the SAME pglite store. Each module owns its op ids (foundation §1 registry).
+    if (NOTIFICATION_OPS.has(endpoint.id)) {
+      const notifications = await getNotifications();
+      return notifications.request(endpoint, input, ctx);
     }
     // Persisted ops require ctx: the persistence transport throws
     // AuthenticationError when ctx is missing (unauthenticated dispatch → 401).
