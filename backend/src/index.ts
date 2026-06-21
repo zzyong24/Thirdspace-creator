@@ -35,6 +35,12 @@ export {
   knowledgeRelations,
   KNOWLEDGE_DDL,
 } from "./schema/knowledge";
+export {
+  assets,
+  assetFiles,
+  assetUploads,
+  ASSETS_DDL,
+} from "./schema/assets";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their
