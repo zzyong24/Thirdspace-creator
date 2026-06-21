@@ -4,10 +4,12 @@ import * as projectsSchema from "./schema/projects";
 import * as identitySchema from "./schema/identity";
 import * as taxonomySchema from "./schema/taxonomy";
 import * as notificationsSchema from "./schema/notifications";
+import * as searchSchema from "./schema/search";
 import { PROJECTS_DDL } from "./schema/projects";
 import { IDENTITY_DDL } from "./schema/identity";
 import { TAXONOMY_DDL } from "./schema/taxonomy";
 import { NOTIFICATIONS_DDL } from "./schema/notifications";
+import { SEARCH_DDL } from "./schema/search";
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
@@ -16,6 +18,7 @@ const schema = {
   ...identitySchema,
   ...taxonomySchema,
   ...notificationsSchema,
+  ...searchSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;
@@ -38,6 +41,7 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
   await client.exec(IDENTITY_DDL);
   await client.exec(TAXONOMY_DDL);
   await client.exec(NOTIFICATIONS_DDL);
+  await client.exec(SEARCH_DDL);
   const db = drizzle(client, { schema });
   return { db, client };
 }
