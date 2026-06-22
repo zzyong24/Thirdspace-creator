@@ -160,6 +160,21 @@ describe("DashboardPage", () => {
     expect(rows.length).toBeGreaterThanOrEqual(1);
   });
 
+  it("each todo row deep-links to its project", async () => {
+    const { container } = await renderDashboard();
+    const todoCard = container.querySelector(
+      '[data-slot="todo-card"]',
+    ) as HTMLElement;
+    const links = todoCard.querySelectorAll<HTMLAnchorElement>(
+      'a[data-slot="todo-row-link"]',
+    );
+    // There is at least one actionable row and every row links into /projects/.
+    expect(links.length).toBeGreaterThanOrEqual(1);
+    for (const link of Array.from(links)) {
+      expect(link.getAttribute("href") ?? "").toMatch(/^\/projects\/[^/]+/);
+    }
+  });
+
   it("trending topics card shows heat labels", async () => {
     const { container } = await renderDashboard();
     const trending = container.querySelector(
@@ -170,6 +185,36 @@ describe("DashboardPage", () => {
     // title and a non-empty body.
     expect(trending).toBeInTheDocument();
     expect(trending.textContent ?? "").not.toBe("");
+  });
+
+  it("trending topics card exposes a card-level action to the topic pool", async () => {
+    const { container } = await renderDashboard();
+    const trending = container.querySelector(
+      '[data-slot="trending-topics-card"]',
+    ) as HTMLElement;
+    const action = trending.querySelector<HTMLAnchorElement>(
+      'a[data-slot="trending-topics-action"]',
+    );
+    expect(action).not.toBeNull();
+    expect(action).toHaveAttribute("href", "/topics");
+  });
+
+  it("each creation suggestion exposes a one-click CTA to a real route", async () => {
+    const { container } = await renderDashboard();
+    const suggestionsCard = container.querySelector(
+      '[data-slot="creation-suggestions-card"]',
+    ) as HTMLElement;
+    const ctas = suggestionsCard.querySelectorAll<HTMLAnchorElement>(
+      'a[data-slot="suggestion-cta"]',
+    );
+    expect(ctas.length).toBeGreaterThanOrEqual(1);
+    // Every CTA targets a real surface: the topic pool, a project stage, or
+    // the new-project overlay.
+    for (const cta of Array.from(ctas)) {
+      expect(cta.getAttribute("href") ?? "").toMatch(
+        /^\/topics$|^\/projects\/[^/]+(\/[a-z]+)?$|^\/projects\/new$/,
+      );
+    }
   });
 
   it("data overview card renders a chart frame with a textual summary", async () => {
