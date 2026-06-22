@@ -36,6 +36,7 @@ import { SectionCard } from "@/components/project/section-card";
 import { PageTabs } from "@/components/navigation/page-tabs";
 import { buildScriptViewModel } from "@/fixtures/selectors";
 import { ScriptInteractiveRegion } from "./script-interactive-region";
+import { ScriptDraftIsland } from "./script-draft-island";
 import type {
   ScriptViewModel,
 } from "@/types/view-models";
@@ -87,6 +88,13 @@ export function ScriptWorkspacePage({
           data-slot="script-right-rail"
           className="flex flex-col gap-card-gap"
         >
+          {vm.scriptArtifactId ? (
+            <ScriptDraftIsland
+              projectId={vm.projectId}
+              artifactId={vm.scriptArtifactId}
+              topic={vm.topic}
+            />
+          ) : null}
           <OutlineStructureCard items={vm.outline} />
           <AIWritingSuggestionsCard items={vm.aiSuggestions} />
           <GoldenQuotesCard items={vm.goldenQuotes} />

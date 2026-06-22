@@ -56,6 +56,19 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// The page now mounts the ScriptDraftIsland (script.draft node) → AdoptCandidateCard,
+// which calls `useRouter()`. Stub `next/navigation` so the structural render mounts
+// without a real App Router provider; these tests never trigger a write, so a no-op
+// router suffices.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 type ScriptWorkspacePageProps = React.ComponentProps<
   typeof import("./script-workspace-page").ScriptWorkspacePage
 >;

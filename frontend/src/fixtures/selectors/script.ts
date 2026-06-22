@@ -69,6 +69,8 @@ export function buildScriptViewModel(
       scenario: "empty",
       kind: "script",
       projectId,
+      scriptArtifactId: null,
+      topic: "",
       tabs: SCRIPT_TABS,
       sections: [],
       outline: [],
@@ -90,6 +92,8 @@ export function buildScriptViewModel(
     scenario: "default",
     kind: "script",
     projectId: project.id,
+    scriptArtifactId: resolveScriptArtifactId(project.id),
+    topic: project.title,
     tabs: SCRIPT_TABS,
     sections,
     outline: buildOutline(project.id, sections),
@@ -104,6 +108,20 @@ export function buildScriptViewModel(
     loading: false,
     error: null,
   };
+}
+
+// Resolve the artifact the script.draft node appends a new ArtifactVersion to: the
+// project's 分镜脚本 (output_script). Falls back to the 主脚本 (master_script) when the
+// project has no output_script yet. Returns null when neither exists (the script-draft
+// island then hides 采纳 rather than targeting a non-existent artifact).
+function resolveScriptArtifactId(projectId: string): string | null {
+  const artifacts = canonicalDataset.artifacts.filter(
+    (a) => a.projectId === projectId && a.stage === "script",
+  );
+  const output = artifacts.find((a) => a.artifactType === "output_script");
+  if (output) return output.id;
+  const master = artifacts.find((a) => a.artifactType === "master_script");
+  return master?.id ?? null;
 }
 
 function buildSections(projectId: string): ReadonlyArray<ScriptSectionView> {

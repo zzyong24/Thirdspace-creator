@@ -126,6 +126,7 @@ import {
 } from "@/server/modules/ai";
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerate } from "@/server/ai/topic-runner";
+import { runScriptDraft } from "@/server/ai/script-runner";
 import { runReviewAnalyze } from "@/server/ai/review-runner";
 import {
   createPositioningService,
@@ -1229,6 +1230,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             ctx,
             {
               id: String(task.id),
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "script.draft" &&
+          task.status === "queued"
+        ) {
+          // 分镜脚本 node — drafts a storyboard from the full creative context, records an
+          // `artifact_version` candidate; 采纳 appends a new ArtifactVersion (reuses the
+          // existing artifact_version confirm path).
+          void runScriptDraft(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
               inputData: (task.inputData ?? {}) as Record<string, unknown>,
             },
             {
