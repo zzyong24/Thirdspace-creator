@@ -1,5 +1,5 @@
 /**
- * Project Overview route (Task 12).
+ * Project Overview route (Task 12 / "工作台读侧做真").
  *
  * `/projects/[projectId]` renders the project-overview Header mode page
  * (page-specs §4). The route lives inside the `(creator)` segment so the
@@ -10,17 +10,30 @@
  *   1. A canonical project id (e.g. `project-ainativebrowser`), or
  *   2. A kebab-cased slug derived from the project title
  *      (e.g. `ai-native-browser`).
- * The visual route fixture (`tests/fixtures/routes.ts`) uses the slug
- * form. We resolve the slug to the canonical id here so the feature
- * module can stay agnostic.
+ * The slug is resolved against the REAL persisted project list
+ * (`projects.list`) so the feature module can stay agnostic.
+ *
+ * The page view model is composed SERVER-SIDE from the REAL contract ops
+ * (`projects.get` + `projects.outputs.list` + `projects.activity.list`),
+ * assembled in `project-overview-workspace-data.ts` (mirrors the Research
+ * template). Reads run through the session ctx so they stay user-scoped and a
+ * cross-user / unknown project 404s (notFound). Sections with no read path yet
+ * compose to empty for real projects so the cards render their empty state. A
+ * resolution failure degrades to the feature's own default render so SSR never
+ * crashes.
  */
 
 import { notFound } from "next/navigation";
 
 import { ProjectOverviewPage } from "@/features/project-overview/project-overview-page";
-import { listProjects } from "@/fixtures/canonical";
+import {
+  buildProjectOverviewWorkspaceViewModel,
+  isOwnershipError,
+  type ProjectOverviewDataClient,
+} from "@/features/project-overview/project-overview-workspace-data";
 import { resolveSession } from "@/lib/session.server";
-import { createServerClient } from "@/lib/contract-client.server";
+import { createServerClient, client } from "@/lib/contract-client.server";
+import type { ProjectOverviewViewModel } from "@/types/view-models";
 
 interface ProjectOverviewRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -30,71 +43,62 @@ export default async function ProjectOverviewRoute({
   params,
 }: ProjectOverviewRouteProps) {
   const { projectId } = await params;
-  const resolvedId = resolveProjectIdParam(projectId);
+  const resolvedId = await resolveProjectIdParam(projectId);
 
-  // Wave-4 server-read switch (module Q): gate the read through
-  // `pages.projectOverview.get`. The ProjectOverviewQueryService threads the
-  // session ctx into the Projects service, which raises OwnershipError for a
-  // cross-user / unknown project — surfaced here as a 404 (notFound), never a
-  // leaked page (foundation §2; SPEC §20). The composed gap sections are still
-  // empty pending the upstream reads (open question #1), so the rich fixture VM
-  // remains the render source for owned projects; the op call is the ownership
-  // gate + the wiring seam for when those reads land.
+  // Wave-4 server-read switch: read through the session ctx so a cross-user /
+  // unknown project raises OwnershipError → 404, never a leaked page
+  // (foundation §2; SPEC §20). With no session (SSR fallback / tests) the
+  // feature renders its own default so SSR never crashes.
   const session = await resolveSession();
-  if (session) {
-    try {
-      await createServerClient(session.ctx).getProjectOverview({
-        params: { projectId: resolvedId },
-        query: undefined,
-        body: undefined,
-      });
-    } catch (err) {
-      if (isOwnershipError(err)) notFound();
-      throw err;
-    }
+  if (!session) {
+    return <ProjectOverviewPage projectId={resolvedId} />;
   }
 
-  return <ProjectOverviewPage projectId={resolvedId} />;
+  const scoped = createServerClient(session.ctx);
+  let viewModel: ProjectOverviewViewModel | undefined;
+  try {
+    viewModel = await buildProjectOverviewWorkspaceViewModel(
+      resolvedId,
+      scoped as unknown as ProjectOverviewDataClient,
+    );
+  } catch (err) {
+    if (isOwnershipError(err)) notFound();
+    // Any other read failure degrades to the feature's default render.
+    viewModel = undefined;
+  }
+
+  return <ProjectOverviewPage projectId={resolvedId} viewModel={viewModel} />;
 }
 
 /**
- * An OwnershipError surfaces from the dispatch transport with `code` set to the
- * contract `OwnershipError` code (→ HTTP 404 on the wire). The composed op is
- * called in-process here, so the thrown error carries that `.code`; match on it
- * structurally (no class import across the server-only boundary).
- */
-function isOwnershipError(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    typeof (err as { code: unknown }).code === "string" &&
-    /Ownership/i.test((err as { code: string }).code)
-  );
-}
-
-/**
- * Resolve the URL `[projectId]` segment to a canonical project id.
+ * Resolve the URL `[projectId]` segment to a canonical project id against the
+ * REAL persisted project list (`projects.list`).
  *
- * - If `param` matches a known canonical id (e.g. `project-ainativebrowser`),
- *   return it unchanged so existing callers (visual specs, deep links)
- *   continue to work.
+ * - If `param` matches a known canonical id, return it unchanged.
  * - Otherwise, look for a project whose kebab-cased title equals `param`
  *   (e.g. `AI Native Browser 深度解析` → `ai-native-browser`).
- * - If no project matches, return the original param so the page renders
- *   its "未找到项目" empty state instead of crashing.
+ * - If no project matches (or the read fails), return the original param so the
+ *   page renders its "未找到项目" empty state instead of crashing.
  */
-function resolveProjectIdParam(param: string): string {
+async function resolveProjectIdParam(param: string): Promise<string> {
   if (!param) return param;
-  const projects = listProjects();
-  if (projects.some((project) => project.id === param)) {
+  try {
+    const projects = (await client.listProjects({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ id: string; title: string }>;
+    if (projects.some((project) => project.id === param)) {
+      return param;
+    }
+    const slug = param.toLowerCase();
+    const match = projects.find(
+      (project) => slugifyTitle(project.title) === slug,
+    );
+    return match?.id ?? param;
+  } catch {
     return param;
   }
-  const slug = param.toLowerCase();
-  const match = projects.find(
-    (project) => slugifyTitle(project.title) === slug,
-  );
-  return match?.id ?? param;
 }
 
 function slugifyTitle(title: string): string {
