@@ -1178,6 +1178,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         return pub;
       },
     },
+    // Plan A5 用料链 — when a material_list candidate is 采纳ed, each new KnowledgeItem is
+    // also tied to the task's project via a material-link (料库⇄创作 live edge). Lazy:
+    // materialLinksService is constructed below; this thunk only runs at confirm time.
+    materialLinks: {
+      link: (ctx, input) => materialLinksService.create(ctx, input),
+    },
   });
   const aiBase = createAiTransport(() => aiService);
 

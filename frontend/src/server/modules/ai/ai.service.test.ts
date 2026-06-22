@@ -37,6 +37,7 @@ function makeService(
   const publishing = {
     createPublicationFromDraft: vi.fn(async () => ({ id: "pub-new" })),
   };
+  const materialLinks = { link: vi.fn(async () => ({ id: "mlink-new" })) };
   const service = createAiService({
     db,
     now: () => NOW,
@@ -46,8 +47,9 @@ function makeService(
     candidate,
     learnings,
     publishing,
+    materialLinks,
   });
-  return { service, port, knowledge, candidate, learnings, publishing };
+  return { service, port, knowledge, candidate, learnings, publishing, materialLinks };
 }
 
 describe("ai service", () => {
@@ -123,6 +125,39 @@ describe("ai service", () => {
       1,
       ctx,
       expect.objectContaining({ aiTaskId: `${task.id}#0`, resultType: "candidate" }),
+    );
+  });
+
+  it("confirmTask on a material_list materializes each material via knowledge.createKnowledge AND links it to the project (Plan A5)", async () => {
+    const { service, knowledge, materialLinks } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "research.gather",
+      inputData: { projectId: "p-1", topic: "t" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "material_list",
+      resultData: {
+        items: [
+          { title: "素材A", url: "https://a", source: "web", why_relevant: "相关A" },
+          { title: "素材B", url: "https://b", source: "web", why_relevant: "相关B" },
+        ],
+      },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    expect(knowledge.createKnowledge).toHaveBeenCalledTimes(2);
+    // 用料链: each new KnowledgeItem is tied to the task's project (one link per item).
+    expect(materialLinks.link).toHaveBeenCalledTimes(2);
+    expect(materialLinks.link).toHaveBeenNthCalledWith(
+      1,
+      ctx,
+      expect.objectContaining({
+        projectId: "p-1",
+        entityType: "knowledge",
+        entityId: "k-new",
+        role: "reference",
+        stage: "research",
+      }),
     );
   });
 
