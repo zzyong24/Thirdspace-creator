@@ -82,12 +82,17 @@ export function ProjectStageStepper({
             currentStage !== undefined
               ? stage.id === currentStage
               : stage.status === "in_progress";
-          // Reachable = current stage, any earlier/already-reached stage, or
-          // the immediate next stage. Stages further ahead stay gated.
+          // Reachable = any stage that has ALREADY been reached (completed /
+          // in_progress / skipped — so a finished project lets you click back
+          // into ANY past stage to review it), the current stage, OR the
+          // immediate next stage. Stages further ahead than that stay gated.
+          const alreadyReached =
+            stage.status === "completed" ||
+            stage.status === "in_progress" ||
+            stage.status === "skipped";
           const reachable =
-            currentIndex === -1
-              ? false
-              : index <= currentIndex + 1;
+            alreadyReached ||
+            (currentIndex === -1 ? false : index <= currentIndex + 1);
           const navigable = reachable && Boolean(projectId);
           const segmentClassName = cn(
             "flex h-full w-full items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground",
