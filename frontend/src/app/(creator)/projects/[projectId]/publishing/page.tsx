@@ -12,14 +12,12 @@
  *   1. A canonical project id (e.g. `project-ainativebrowser`), or
  *   2. A kebab-cased slug derived from the project title
  *      (e.g. `ai-native-browser`).
- * The visual route fixture (`tests/fixtures/routes.ts`) uses the slug
- * form. We resolve the slug to the canonical id here so the feature
- * module can stay agnostic.
+ * The slug is resolved against the REAL persisted project list
+ * (`projects.list`) so the feature module can stay agnostic.
  */
 
 import { PublishingWorkspacePage } from "@/features/project-publishing/publishing-workspace-page";
 import type { PublishingWiring } from "@/features/project-publishing/publishing-interactive-region";
-import { canonicalDataset, listProjects } from "@/fixtures/canonical";
 import { client } from "@/lib/contract-client.server";
 
 interface PublishingWorkspaceRouteProps {
@@ -27,14 +25,21 @@ interface PublishingWorkspaceRouteProps {
 }
 
 // The project's primary ContentOutput — prefer a `*-main` output, else the first
-// output owned by the project. Returns null when the project has no output.
-function resolvePrimaryOutputId(projectId: string): string | null {
-  const outputs = canonicalDataset.contentOutputs.filter(
-    (o) => o.projectId === projectId,
-  );
-  if (outputs.length === 0) return null;
-  const main = outputs.find((o) => o.id.endsWith("-main"));
-  return (main ?? outputs[0]!).id;
+// output owned by the project — read via the REAL `projects.outputs.list` op.
+// Returns null when the project has no output.
+async function resolvePrimaryOutputId(projectId: string): Promise<string | null> {
+  try {
+    const outputs = (await client.listOutputs({
+      params: { projectId },
+      query: undefined,
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ id: string }>;
+    if (outputs.length === 0) return null;
+    const main = outputs.find((o) => o.id.endsWith("-main"));
+    return (main ?? outputs[0]!).id;
+  } catch {
+    return null;
+  }
 }
 
 // Module 10 Step 5 — resolve the publishing wiring server-side: map the project to
@@ -45,7 +50,7 @@ function resolvePrimaryOutputId(projectId: string): string | null {
 async function resolveWiring(
   resolvedId: string,
 ): Promise<PublishingWiring | undefined> {
-  const outputId = resolvePrimaryOutputId(resolvedId);
+  const outputId = await resolvePrimaryOutputId(resolvedId);
   if (outputId === null) return undefined;
   try {
     const list = (await client.listPublications({
@@ -68,31 +73,39 @@ export default async function PublishingWorkspaceRoute({
   params,
 }: PublishingWorkspaceRouteProps) {
   const { projectId } = await params;
-  const resolvedId = resolveProjectIdParam(projectId);
+  const resolvedId = await resolveProjectIdParam(projectId);
   const wiring = await resolveWiring(resolvedId);
   return <PublishingWorkspacePage projectId={resolvedId} wiring={wiring} />;
 }
 
 /**
- * Resolve the URL `[projectId]` segment to a canonical project id.
- *
- * Mirrors the resolver in `app/(creator)/projects/[projectId]/page.tsx`
- * so a slug like `ai-native-browser` collapses to the canonical
- * `project-ainativebrowser` before the feature renders. If no project
- * matches, the original param is passed through so the page surfaces
- * the "未找到项目" empty state instead of crashing.
+ * Resolve the URL `[projectId]` segment to a canonical project id against the
+ * REAL persisted project list (`projects.list`). Mirrors the resolver in
+ * `app/(creator)/projects/[projectId]/page.tsx`: a slug like
+ * `ai-native-browser` collapses to the canonical `project-ainativebrowser`
+ * (matched on the kebab-cased project title) before the feature renders. If no
+ * project matches (or the read fails), the original param is passed through so
+ * the page surfaces the "未找到项目" empty state instead of crashing.
  */
-function resolveProjectIdParam(param: string): string {
+async function resolveProjectIdParam(param: string): Promise<string> {
   if (!param) return param;
-  const projects = listProjects();
-  if (projects.some((project) => project.id === param)) {
+  try {
+    const projects = (await client.listProjects({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ id: string; title: string }>;
+    if (projects.some((project) => project.id === param)) {
+      return param;
+    }
+    const slug = param.toLowerCase();
+    const match = projects.find(
+      (project) => slugifyTitle(project.title) === slug,
+    );
+    return match?.id ?? param;
+  } catch {
     return param;
   }
-  const slug = param.toLowerCase();
-  const match = projects.find(
-    (project) => slugifyTitle(project.title) === slug,
-  );
-  return match?.id ?? param;
 }
 
 function slugifyTitle(title: string): string {

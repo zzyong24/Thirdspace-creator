@@ -22,7 +22,6 @@ import {
   type MetricSnapshotDto,
 } from "@/features/review/analytics-review-view-model";
 import type { AnalyticsViewModel } from "@/types/view-models";
-import { listProjects } from "@/fixtures/canonical";
 import { client } from "@/lib/contract-client.server";
 
 interface AnalyticsReviewRouteProps {
@@ -54,7 +53,7 @@ export default async function AnalyticsReviewRoute({
   params,
 }: AnalyticsReviewRouteProps) {
   const { projectId } = await params;
-  const resolvedId = resolveProjectIdParam(projectId);
+  const resolvedId = await resolveProjectIdParam(projectId);
   const viewModel = await resolveReviewViewModel(resolvedId);
   // Module 13 Step 5 — supply the Reviews wiring so the authoring panel + history
   // drill call the real ops (reviews.create/insights.create/complete/get) over the
@@ -69,23 +68,33 @@ export default async function AnalyticsReviewRoute({
 }
 
 /**
- * Resolve the URL `[projectId]` segment to a canonical project id.
- * Mirrors the publishing/production routes so a slug like
- * `ai-native-browser` collapses to the canonical `project-ainativebrowser`
- * before the feature renders. If no project matches, the original param is
- * passed through so the page surfaces its empty state instead of crashing.
+ * Resolve the URL `[projectId]` segment to a canonical project id against the
+ * REAL persisted project list (`projects.list`). Mirrors the
+ * publishing/production routes so a slug like `ai-native-browser` collapses to
+ * the canonical `project-ainativebrowser` (matched on the kebab-cased project
+ * title) before the feature renders. If no project matches (or the read fails),
+ * the original param is passed through so the page surfaces its empty state
+ * instead of crashing.
  */
-function resolveProjectIdParam(param: string): string {
+async function resolveProjectIdParam(param: string): Promise<string> {
   if (!param) return param;
-  const projects = listProjects();
-  if (projects.some((project) => project.id === param)) {
+  try {
+    const projects = (await client.listProjects({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ id: string; title: string }>;
+    if (projects.some((project) => project.id === param)) {
+      return param;
+    }
+    const slug = param.toLowerCase();
+    const match = projects.find(
+      (project) => slugifyTitle(project.title) === slug,
+    );
+    return match?.id ?? param;
+  } catch {
     return param;
   }
-  const slug = param.toLowerCase();
-  const match = projects.find(
-    (project) => slugifyTitle(project.title) === slug,
-  );
-  return match?.id ?? param;
 }
 
 function slugifyTitle(title: string): string {
