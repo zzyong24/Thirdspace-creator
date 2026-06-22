@@ -402,3 +402,15 @@ Owner: agent (user-directed via /goal)
 Revisit Trigger: Run init.sh and drive the loop; or wire the GitHub Action on feat/service-contract.
 Status: active
 ```
+
+## DEC-012 (2026-06-23) — page-spec 交互契约缺口补全
+
+**背景**:用户撞见首页"最近发布"显示 publication id + 0 播放、"本周播放趋势"恒空、多 tab 未实现。
+根因:`frontend/specs/page-specs.md` 只定义了组件树+视觉还原,从未定义每个按钮/tab 的动作+数据来源+状态。
+
+**决策**(用户选「全量 17+ surface 交互契约」):产出 `frontend/specs/INTERACTION_SPEC.md` —— 对 22 个
+surface 全量只读审计(6 并行 agent),逐元素定死 动作→数据来源(契约op)→状态。共 344 元素行、
+158 处 ❌/⚠️ 缺口。已分 P0/P1/P2 backlog,按 3 波实现,每波跑 gate。
+
+**影响**:08-page-spec 增补交互契约维度(此前 gate 仅覆盖视觉);11-frontend-implementation 据此分波做真。
+**风险接受**:成熟的 Positioning/Monetization/Accounts/Calendar/Topics 本轮不动。
