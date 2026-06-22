@@ -27,6 +27,13 @@ export default async function PlanningWorkspaceRoute({
   params,
 }: PlanningWorkspaceRouteProps) {
   const { projectId } = await params;
-  const viewModel = await buildPlanningWorkspaceViewModel(projectId);
-  return <PlanningWorkspacePage projectId={projectId} viewModel={viewModel} />;
+  const { viewModel, thesisArtifactId } =
+    await buildPlanningWorkspaceViewModel(projectId);
+  return (
+    <PlanningWorkspacePage
+      projectId={projectId}
+      viewModel={viewModel}
+      thesisArtifactId={thesisArtifactId}
+    />
+  );
 }

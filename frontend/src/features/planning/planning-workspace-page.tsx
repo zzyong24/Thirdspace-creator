@@ -32,6 +32,7 @@ import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
 import { PageTabs } from "@/components/navigation/page-tabs";
 import { buildPlanningViewModel } from "@/fixtures/selectors";
+import { PlanningThesisIsland } from "@/features/planning/planning-thesis-island";
 import type {
   ContractCard,
   PlanningViewModel,
@@ -47,6 +48,13 @@ export interface PlanningWorkspacePageProps {
   readonly projectId: string;
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: PlanningViewModel;
+  /**
+   * The project's `thesis_tree` artifact id — the write target for the planning.thesis
+   * AI node. When present, the page mounts the `PlanningThesisIsland` so the creator can
+   * draft + 采纳 a 论点树 (which appends a new ArtifactVersion the read side picks up).
+   * Optional so the existing page tests (which omit it) keep rendering unchanged.
+   */
+  readonly thesisArtifactId?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -70,6 +78,7 @@ const THESIS_COLUMNS: ReadonlyArray<{
 export function PlanningWorkspacePage({
   projectId,
   viewModel,
+  thesisArtifactId,
 }: PlanningWorkspacePageProps) {
   const vm = viewModel ?? buildPlanningViewModel(projectId);
   return (
@@ -95,6 +104,15 @@ export function PlanningWorkspacePage({
             body={vm.coreThesis.body}
           />
           <ThesisTreeSection nodes={vm.thesisTree} />
+          {thesisArtifactId ? (
+            <div data-slot="planning-thesis-node">
+              <PlanningThesisIsland
+                projectId={vm.projectId}
+                artifactId={thesisArtifactId}
+                topic={vm.coreThesis.title}
+              />
+            </div>
+          ) : null}
         </div>
         <div
           data-slot="planning-right-rail"
