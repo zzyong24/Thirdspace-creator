@@ -131,6 +131,7 @@ export async function runGatherMaterial(
   deps: GatherDeps,
 ): Promise<void> {
   try {
+    await deps.ai.markRunning(ctx, task.id); // honest status while the agent works
     const topic =
       typeof task.inputData.topic === "string" ? task.inputData.topic : "";
     const angle =

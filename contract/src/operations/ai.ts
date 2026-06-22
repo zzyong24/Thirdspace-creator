@@ -56,6 +56,14 @@ export const aiOperations = {
     response: aiTaskResource,
     fr: ["FR-AI-TASKS-CREATE"],
   }),
+  getTask: defineEndpoint({
+    id: "ai.tasks.get",
+    method: "GET",
+    path: "/ai/tasks/:taskId",
+    params: taskParams,
+    response: aiTaskResource,
+    fr: ["FR-AI-TASKS-GET"],
+  }),
   listTaskResults: defineEndpoint({
     id: "ai.tasks.results.list",
     method: "GET",

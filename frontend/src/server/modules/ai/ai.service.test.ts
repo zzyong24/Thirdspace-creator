@@ -76,6 +76,20 @@ describe("ai service", () => {
     expect(refs.map((r) => r.entityId).sort()).toEqual(["artifact-1", "k-1"]);
   });
 
+  it("markRunning flips queued→running (honest status while the agent works), no-op once past queued", async () => {
+    const { service } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "research.gather_material",
+      inputData: { projectId: "p-1", topic: "t" },
+    });
+    expect(task.status).toBe("queued");
+    await service.markRunning(ctx, task.id);
+    expect((await service.getTask(ctx, task.id)).status).toBe("running");
+    // idempotent: a second call does not throw and leaves it running
+    await service.markRunning(ctx, task.id);
+    expect((await service.getTask(ctx, task.id)).status).toBe("running");
+  });
+
   it("confirmTask rejects a task not in awaiting_confirmation (state-machine guard)", async () => {
     const { service } = makeService(db);
     const task = await service.createTask(ctx, {
