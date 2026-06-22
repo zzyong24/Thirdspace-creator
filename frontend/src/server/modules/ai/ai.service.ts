@@ -408,6 +408,36 @@ export function createAiService(deps: ServiceDeps): AiService {
         return toTaskDto(updated);
       }
 
+      // material_link_list (material.match node, 制作 stage, Plan D2) — formalize each
+      // matched asset into a material-link (entityType:"asset", stage:"production") via the
+      // MaterialLinks module (AI never writes the link table directly). The candidate carries
+      // `resultData.matches: [{ assetId, role, reason }]`. Only fires when the task carries a
+      // project; the 素材库⇄制作 edge becomes a live record per accepted match.
+      if (candidate.resultType === "material_link_list") {
+        const data = (candidate.resultData ?? {}) as { matches?: unknown };
+        const matches = Array.isArray(data.matches) ? data.matches : [];
+        for (const raw of matches) {
+          const m = (raw ?? {}) as Record<string, unknown>;
+          const assetId = typeof m.assetId === "string" ? m.assetId : "";
+          if (!assetId) continue;
+          const role = typeof m.role === "string" && m.role ? m.role : "clip";
+          if (typeof task.projectId === "string" && task.projectId.length > 0) {
+            await deps.materialLinks.link(ctx, {
+              projectId: task.projectId,
+              entityType: "asset",
+              entityId: assetId,
+              role,
+              stage: "production",
+            });
+          }
+        }
+        const updated = await repo.updateTaskStatus(taskId, {
+          status: "succeeded",
+          completedAt: deps.now(),
+        });
+        return toTaskDto(updated);
+      }
+
       // candidate_list (topic.generate node, 机制④) — formalize each generated topic into
       // a 选题池 Candidate via the candidate module's C-3 createFromAIResult seam. A
       // per-item synthetic aiTaskId (`${taskId}#${i}`) keeps that seam's idempotency at

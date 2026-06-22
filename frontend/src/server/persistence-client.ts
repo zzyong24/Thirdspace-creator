@@ -129,6 +129,7 @@ import { runTopicGenerate } from "@/server/ai/topic-runner";
 import { runScriptDraft } from "@/server/ai/script-runner";
 import { runReviewAnalyze } from "@/server/ai/review-runner";
 import { runPlatformAdapt } from "@/server/ai/platform-adapt-runner";
+import { runMaterialMatch } from "@/server/ai/material-match-runner";
 import {
   createPositioningService,
   createPositioningTransport,
@@ -1233,6 +1234,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           getSuggestions: (c: RequestContext, opts: { limit?: number }) =>
             learningsService.getSuggestions(c, opts),
         };
+        // 素材库 reader (Plan D2) — the creator's asset library (id + name + type) feeds the
+        // material.match node's context so the agent matches REAL assets. Maps the Asset DTO
+        // (name, assetType) onto the runner's {id,name,type} shape.
+        const assetsReader = {
+          list: async (c: RequestContext) =>
+            (await assetsService.listAssets(c, { limit: 200, cursor: null })).map(
+              (a) => ({ id: a.id, name: a.name, type: a.assetType }),
+            ),
+        };
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
@@ -1331,6 +1341,31 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "material.match" &&
+          task.status === "queued"
+        ) {
+          // 素材匹配 node (制作 stage, Plan D2) — scans the creator's asset library and
+          // proposes which real assets fit this content (role + reason), records a
+          // `material_link_list` candidate; 采纳 ties each match to the project as a
+          // material-link (entityType:"asset", stage:"production") via the materialLinks
+          // port wired above (素材库⇄制作 live edge).
+          void runMaterialMatch(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
+              assets: assetsReader,
             },
           );
         }

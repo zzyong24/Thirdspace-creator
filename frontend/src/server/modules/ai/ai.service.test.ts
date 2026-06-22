@@ -161,6 +161,50 @@ describe("ai service", () => {
     );
   });
 
+  it("confirmTask on a material_link_list links each matched asset to the project (entityType asset, stage production, Plan D2)", async () => {
+    const { service, materialLinks } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "material.match",
+      inputData: { projectId: "p-1", outputId: "out-1", topic: "t" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "material_link_list",
+      resultData: {
+        outputId: "out-1",
+        matches: [
+          { assetId: "asset-1", role: "broll", reason: "空镜A" },
+          { assetId: "asset-2", role: "cover", reason: "封面B" },
+        ],
+      },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    // 用料链: each matched asset is tied to the task's project (one link per match).
+    expect(materialLinks.link).toHaveBeenCalledTimes(2);
+    expect(materialLinks.link).toHaveBeenNthCalledWith(
+      1,
+      ctx,
+      expect.objectContaining({
+        projectId: "p-1",
+        entityType: "asset",
+        entityId: "asset-1",
+        role: "broll",
+        stage: "production",
+      }),
+    );
+    expect(materialLinks.link).toHaveBeenNthCalledWith(
+      2,
+      ctx,
+      expect.objectContaining({
+        projectId: "p-1",
+        entityType: "asset",
+        entityId: "asset-2",
+        role: "cover",
+        stage: "production",
+      }),
+    );
+  });
+
   it("confirmTask on a learning_list materializes each 爆款要素 via learnings.createLearning", async () => {
     const { service, learnings } = makeService(db);
     const task = await service.createTask(ctx, {

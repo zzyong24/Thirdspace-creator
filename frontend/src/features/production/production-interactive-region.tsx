@@ -30,6 +30,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { client } from "@/lib/contract-client";
+import { MaterialMatchIsland } from "./material-match-island";
 import type {
   ProductionAsset,
   ProductionViewModel,
@@ -116,6 +117,16 @@ export function ProductionInteractiveRegion({
   return (
     <>
       <ProductionModeSelector wiring={wiring} />
+      {wiring ? (
+        // 素材匹配 node (Plan D2) — only when the project's output is resolved (wiring
+        // present) can we tie matches to a real project/output. The project id comes from
+        // the view-model; the topic falls back to the project title for the agent.
+        <MaterialMatchIsland
+          projectId={viewModel.projectId}
+          outputId={wiring.outputId}
+          topic={viewModel.preview.posterLabel}
+        />
+      ) : null}
       <div
         data-slot="production-grid"
         className="grid grid-cols-1 gap-3 xl:grid-cols-[260px_300px_minmax(0,1fr)_280px] xl:grid-rows-[minmax(0,1fr)_200px] xl:items-stretch"

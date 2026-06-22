@@ -17,6 +17,10 @@ export interface CreativeContext {
   // 飞轮回流 — a brief of past 复盘 爆款要素 (Learnings). Empty until the learnings reader
   // is wired (机制②扩展, plan A7); the field exists now so topic/script nodes can read it.
   learningsBrief: string;
+  // 素材库 brief — a compact listing of the creator's asset library (id | name (type))
+  // so a production-stage node (material.match) can propose which real assets to use.
+  // Empty string until the assets reader is wired (Plan D2) or when the library is empty.
+  assetsBrief: string;
   topic: { title: string; angle: string };
   projectId: string | null;
 }
@@ -46,9 +50,19 @@ export interface LearningsReader {
   ): Promise<Array<{ title: string; insight: string }>>;
 }
 
+// 素材库 reader — the creator's asset library (id + name + type). Optional: only the
+// production-stage material-match node passes it; other nodes omit it. The composition
+// root binds it to the Assets public service's list method.
+export interface AssetsReader {
+  list(
+    ctx: RequestContext,
+  ): Promise<Array<{ id: string; name: string; type?: string }>>;
+}
+
 export interface ContextDeps {
   positioning: PositioningReader;
   learnings?: LearningsReader;
+  assets?: AssetsReader;
 }
 
 export interface AssembleInput {
@@ -84,9 +98,22 @@ export async function assembleCreativeContext(
     }
   }
 
+  let assetsBrief = "";
+  if (deps.assets) {
+    try {
+      const rows = await deps.assets.list(ctx);
+      assetsBrief = rows
+        .map((a) => `· ${a.id} | ${a.name}${a.type ? ` (${a.type})` : ""}`)
+        .join("\n");
+    } catch {
+      assetsBrief = ""; // 素材库 is best-effort context; never block a node on it
+    }
+  }
+
   return {
     positioningBrief,
     learningsBrief,
+    assetsBrief,
     topic: { title: input.topic, angle: input.angle ?? "" },
     projectId: input.projectId,
   };
