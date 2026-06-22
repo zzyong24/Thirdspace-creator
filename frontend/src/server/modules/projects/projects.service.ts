@@ -122,6 +122,29 @@ export interface ProjectsService {
     ctx: RequestContext,
     projectId: string,
   ): Promise<string[]>;
+
+  // GAP-DASH-1 — dashboard read: the user's "continue creating" project (the
+  // most-recently-updated non-archived project) plus its top open tasks. Pure
+  // read; returns empty/null on no data (never throws on absence).
+  getDashboardSummary(ctx: RequestContext): Promise<{
+    continueCreating: {
+      projectId: string;
+      projectTitle: string;
+      stage: string;
+      progressPct: number;
+      updatedAt: string;
+    } | null;
+    todos: ReadonlyArray<{
+      id: string;
+      title: string;
+      projectId: string;
+      projectTitle: string;
+      stage: string;
+      dueAt: string | null;
+      priority: number;
+      status: string;
+    }>;
+  }>;
 }
 
 // Stage machine (SPEC §12, shared by Project & Output stages):
@@ -477,6 +500,53 @@ export function createProjectsService(
       // only the ids so downstream resolvers never see the full row.
       const outputs = await repo.listOutputs(ctx, projectId);
       return outputs.map((o) => o.id);
+    },
+
+    async getDashboardSummary(ctx) {
+      // continueCreating = most-recently-updated non-archived project (in-module
+      // read only; repo.list is already user-scoped).
+      const projectRows = await repo.list(ctx);
+      const active = projectRows.filter((p) => p.status !== "archived");
+      const latest = active.reduce<ProjectRow | null>(
+        (best, p) =>
+          best === null || p.updatedAt > best.updatedAt ? p : best,
+        null,
+      );
+      if (latest === null) {
+        return { continueCreating: null, todos: [] };
+      }
+      const continueCreating = {
+        projectId: latest.id,
+        projectTitle: latest.title,
+        stage: latest.currentStage,
+        progressPct: latest.progressPct,
+        updatedAt: latest.updatedAt,
+      };
+      // todos = that project's open tasks, priority desc then dueAt asc, top 5.
+      const CLOSED = new Set(["done", "completed", "archived"]);
+      const taskRows = await repo.listTasks(ctx, latest.id);
+      const todos = taskRows
+        .filter((t) => !CLOSED.has(t.status))
+        .sort((a, b) => {
+          if (b.priority !== a.priority) return b.priority - a.priority;
+          // dueAt asc; nulls sort last (no due date = least urgent for the tie).
+          if (a.dueAt === b.dueAt) return 0;
+          if (a.dueAt === null) return 1;
+          if (b.dueAt === null) return -1;
+          return a.dueAt < b.dueAt ? -1 : 1;
+        })
+        .slice(0, 5)
+        .map((t) => ({
+          id: t.id,
+          title: t.title,
+          projectId: t.projectId,
+          projectTitle: continueCreating.projectTitle,
+          stage: t.stage,
+          dueAt: t.dueAt,
+          priority: t.priority,
+          status: t.status,
+        }));
+      return { continueCreating, todos };
     },
   };
 }

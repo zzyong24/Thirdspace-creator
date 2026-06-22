@@ -57,6 +57,21 @@ export interface AnalyticsService {
     page: number,
     pageSize: number,
   ): Promise<Page<MetricSnapshotRow>>;
+  // GAP-DASH-2 — user-scoped dashboard rollup. Reads Analytics' own
+  // metric_snapshots only (no Publishing seam), takes each publication's latest
+  // snapshot, sums the count metrics and averages ctr/finish. No snapshots →
+  // all-zero rollup, never throws.
+  getDashboardRollup(ctx: RequestContext): Promise<{
+    plays: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    favorites: number;
+    followerGain: number;
+    ctrAvg: number;
+    finishAvg: number;
+    snapshotCount: number;
+  }>;
 }
 
 export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
@@ -88,6 +103,13 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
       const ids = await publishing.listPublicationIdsByProject(ctx, projectId);
       if (ids.length === 0) return { rows: [], total: 0 };
       return repo.listSnapshotsByProject(ctx.userId, ids, page, pageSize);
+    },
+
+    async getDashboardRollup(ctx) {
+      // No Publishing seam: the rollup is computed from Analytics' own
+      // user-scoped metric_snapshots. Empty store → repo returns the all-zero
+      // rollup (snapshotCount 0); we never throw.
+      return repo.getDashboardRollup(ctx.userId);
     },
   };
 }

@@ -51,6 +51,23 @@ export interface Page<T> {
   total: number;
 }
 
+// GAP-DASH-2 data layer — the per-user dashboard rollup the repo computes by
+// reducing one "latest snapshot per publication" row set. Sums are over count
+// metrics; ctr/finish are averaged across the contributing snapshots. snapshotCount
+// is the number of latest-per-publication snapshots that fed the rollup (0 when the
+// user has no snapshots at all).
+export interface DashboardRollup {
+  plays: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  favorites: number;
+  followerGain: number;
+  ctrAvg: number;
+  finishAvg: number;
+  snapshotCount: number;
+}
+
 export interface AnalyticsRepository {
   seedSnapshots(rows: MetricSnapshotRow[]): Promise<void>;
   seedValues(rows: MetricValueRow[]): Promise<void>;
@@ -76,6 +93,11 @@ export interface AnalyticsRepository {
     userId: string,
     metricSnapshotId: string,
   ): Promise<MetricValueRow[]>;
+  // GAP-DASH-2 — user-scoped aggregate read over metric_snapshots ONLY. For each
+  // of the user's publications, take the snapshot with the MAX(captured_at), then
+  // sum the count rawMetrics and average ctr/finish_rate across those latest
+  // snapshots. No snapshots → all-zero rollup, snapshotCount 0 (never throws).
+  getDashboardRollup(userId: string): Promise<DashboardRollup>;
 }
 
 export function createAnalyticsRepository(
@@ -212,6 +234,65 @@ export function createAnalyticsRepository(
           ),
         )
         .orderBy(asc(metricValues.metricKey));
+    },
+
+    async getDashboardRollup(userId) {
+      // Pull ALL of the user's snapshots newest-first, then in JS keep the first
+      // (newest) row per publicationId. Data volume per user is small, so the
+      // dedup-then-reduce path is correct and simple (the task explicitly allows
+      // JS aggregation over a SQL window join). Query touches metric_snapshots
+      // ONLY — no cross-module read.
+      const rows = await db
+        .select()
+        .from(metricSnapshots)
+        .where(eq(metricSnapshots.userId, userId))
+        .orderBy(desc(metricSnapshots.capturedAt));
+
+      const latestByPublication = new Map<string, MetricSnapshotRow>();
+      for (const row of rows) {
+        // First occurrence wins = newest captured_at (rows are DESC-ordered).
+        if (!latestByPublication.has(row.publicationId)) {
+          latestByPublication.set(row.publicationId, row);
+        }
+      }
+
+      const latest = [...latestByPublication.values()];
+      const rollup: DashboardRollup = {
+        plays: 0,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        favorites: 0,
+        followerGain: 0,
+        ctrAvg: 0,
+        finishAvg: 0,
+        snapshotCount: latest.length,
+      };
+      if (latest.length === 0) return rollup;
+
+      // Coerce a jsonb value to a finite number (missing / non-numeric → 0).
+      const num = (raw: Record<string, unknown>, key: string): number => {
+        const v = raw[key];
+        const n = typeof v === "number" ? v : Number(v);
+        return Number.isFinite(n) ? n : 0;
+      };
+
+      let ctrSum = 0;
+      let finishSum = 0;
+      for (const snap of latest) {
+        const m = (snap.rawMetrics ?? {}) as Record<string, unknown>;
+        rollup.plays += num(m, "plays");
+        rollup.likes += num(m, "likes");
+        rollup.comments += num(m, "comments");
+        rollup.shares += num(m, "shares");
+        rollup.favorites += num(m, "favorites");
+        rollup.followerGain += num(m, "follower_gain");
+        ctrSum += num(m, "ctr");
+        finishSum += num(m, "finish_rate");
+      }
+      rollup.ctrAvg = ctrSum / latest.length;
+      rollup.finishAvg = finishSum / latest.length;
+      return rollup;
     },
   };
 }
