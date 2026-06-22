@@ -28,21 +28,49 @@ import { AssetCard } from "@/components/resources/asset-card";
 import { AssetDetailPanel } from "@/components/resources/asset-detail-panel";
 import type { AssetSummary, AssetsViewModel } from "./assets-page";
 
+// A project the user can attach an asset to (用料链 consumption from the library).
+export interface ProjectOption {
+  readonly id: string;
+  readonly title: string;
+}
+
+// Plan D1: the derived gallery the page hands to the island — filtered + paged
+// REAL `assets.list` rows, real paging meta, and the projects picker source.
+export interface GalleryProps {
+  readonly assets: ReadonlyArray<AssetSummary>;
+  readonly totalCount: number;
+  readonly currentPage: number;
+  readonly pageSize: number;
+  readonly totalPages: number;
+  readonly activeType: string | null;
+  readonly query: string;
+  readonly projects: ReadonlyArray<ProjectOption>;
+}
+
 // ---------------------------------------------------------------------------
 // AssetsInteractiveRegion
 // ---------------------------------------------------------------------------
 
 interface AssetsInteractiveRegionProps {
   readonly viewModel: AssetsViewModel;
+  // Optional so the unit test (which passes only `viewModel`) keeps rendering
+  // the full fixture list, page 1, no filter — its DOM-shape assertions hold.
+  readonly gallery?: GalleryProps;
 }
 
-export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionProps) {
+export function AssetsInteractiveRegion({
+  viewModel,
+  gallery,
+}: AssetsInteractiveRegionProps) {
+  // When the page supplies a derived gallery, render its filtered+paged rows;
+  // otherwise (tests) fall back to the whole view-model list.
+  const galleryAssets = gallery?.assets ?? viewModel.assets;
   const [selectedId, setSelectedId] = React.useState<string | null>(
-    viewModel.assets[0]?.id ?? null,
+    galleryAssets[0]?.id ?? null,
   );
   const selected =
-    viewModel.assets.find((asset) => asset.id === selectedId) ??
-    viewModel.assets[0] ??
+    galleryAssets.find((asset) => asset.id === selectedId) ??
+    galleryAssets[0] ??
     null;
 
   // Module 07 E3–E6 needs-backend detail-panel actions. Each calls its mapped
@@ -111,8 +139,7 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
   );
 
   // E6 更多 → 移入回收站: POST assets.trash (active → deleted), then refresh so
-  // the trashed asset drops out of the active gallery. Rename/attach/version
-  // items are intentionally inert this wave (no contract op exists).
+  // the trashed asset drops out of the active gallery.
   const handleTrash = React.useCallback(
     (assetId: string) => {
       startTransition(async () => {
@@ -120,6 +147,29 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
           params: { assetId },
           query: undefined,
           body: undefined,
+        });
+        router.refresh();
+      });
+    },
+    [router],
+  );
+
+  // Plan D1 附到项目: the 用料链 consumption from the library side. POST
+  // materialLinks.create { projectId, entityType:"asset", entityId, role, stage }
+  // then refresh so any usage-derived rows reflect the new link.
+  const handleAttach = React.useCallback(
+    (assetId: string, projectId: string) => {
+      startTransition(async () => {
+        await client.createMaterialLink({
+          params: undefined,
+          query: undefined,
+          body: {
+            projectId,
+            entityType: "asset",
+            entityId: assetId,
+            role: "clip",
+            stage: "production",
+          },
         });
         router.refresh();
       });
@@ -137,13 +187,23 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
         aria-label="素材画廊"
         className="flex flex-col gap-3"
       >
-        <GalleryControls />
+        <GalleryHeader
+          totalCount={gallery?.totalCount ?? galleryAssets.length}
+        />
         <AssetCardGrid
-          assets={viewModel.assets}
+          assets={galleryAssets}
           selectedId={selected?.id ?? null}
           onSelect={setSelectedId}
         />
-        <Pagination currentPage={1} totalPages={215} />
+        {gallery ? (
+          <Pagination
+            currentPage={gallery.currentPage}
+            totalPages={gallery.totalPages}
+            pageSize={gallery.pageSize}
+            activeType={gallery.activeType}
+            query={gallery.query}
+          />
+        ) : null}
       </div>
       <AssetDetailPanel
         asset={selected}
@@ -152,6 +212,8 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
         onCopyLink={handleCopyLink}
         onFavorite={handleFavorite}
         onTrash={handleTrash}
+        projects={gallery?.projects ?? []}
+        onAttach={handleAttach}
         actionsPending={pending}
       />
     </div>
@@ -159,92 +221,39 @@ export function AssetsInteractiveRegion({ viewModel }: AssetsInteractiveRegionPr
 }
 
 // ---------------------------------------------------------------------------
-// Intentionally-inert decorative controls (module 07 E8 — roadmap §4: the 28
-// "look interactive, do nothing" controls on /assets). These stay render-only
-// this wave; wiring them is a later FE-lift task (server-shell → client island
-// or links), explicitly out of scope here. DO NOT add handlers to:
-//   • Toolbar search (form) — full-text filter; Search module surface.
-//   • 5 filter chips (类型/来源/项目/标签/更多) + 清除筛选.
-//   • 批量操作 ▾ menu (bulk-select unwired).
-//   • Sidebar search (form).
-//   • 9 type rows + 2 collection rows (收藏/回收站) — scope tabs.
-//   • 全选 checkbox (gallery-select-all; no onChange below).
-//   • 网格/列表 view toggles (gallery-view-grid/list).
-//   • 排序方式 / 每页条数 selects (defaultValue only).
-//   • Pagination numbers / next (decorative).
-// The wired controls are: the upload button (E2, AssetUploadButton island), the
-// 4 detail-panel actions (E3–E6, above), and the local card selection (E7).
+// Plan D1 cleanup — removed decorative controls that had no real backing:
+//   • 5 toolbar filter chips (类型/来源/项目/标签/更多) + 清除筛选 → no `assets.list`
+//     param backs them. Real type filtering is the type sidebar (`?type=`).
+//   • 批量操作 ▾ menu (no bulk op exists).
+//   • Sidebar duplicate search field.
+//   • 全选 checkbox, 网格/列表 view toggle, 排序方式 select → no backing op.
+//   • The fabricated "共 12,846 个素材" count → now the REAL filtered count.
+// Wired controls: toolbar search (`?q=`), type sidebar (`?type=`), real
+// pagination (`?page=`/`?pageSize=`), upload (real file input), the 4 detail
+// actions, card selection, and 附到项目 (materialLinks.create).
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// GalleryControls (decorative — see the E8 note above)
+// GalleryHeader — the REAL result count (no fabricated number)
 // ---------------------------------------------------------------------------
 
-function GalleryControls() {
+function GalleryHeader({ totalCount }: { readonly totalCount: number }) {
   return (
     <div
       data-slot="gallery-controls"
       aria-label="画廊控制"
       className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"
     >
-      <div className="flex flex-wrap items-center gap-2 text-sm text-foreground">
-        <span>
-          共 <span data-slot="gallery-total-count" className="font-medium tabular-nums">12,846</span> 个素材
-        </span>
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <input
-            type="checkbox"
-            data-slot="gallery-select-all"
-            aria-label="全选"
-            className="size-3.5 rounded border-border text-brand focus:ring-ring/40"
-          />
-          全部
-        </label>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1" data-slot="gallery-view-toggle" role="group" aria-label="视图切换">
-          <button
-            type="button"
-            data-slot="gallery-view-grid"
-            aria-pressed="true"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-control bg-brand-soft text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-            aria-label="网格视图"
-          >
-            <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden="true" fill="currentColor">
-              <rect x={2} y={2} width={5} height={5} rx={1} />
-              <rect x={9} y={2} width={5} height={5} rx={1} />
-              <rect x={2} y={9} width={5} height={5} rx={1} />
-              <rect x={9} y={9} width={5} height={5} rx={1} />
-            </svg>
-          </button>
-          <button
-            type="button"
-            data-slot="gallery-view-list"
-            aria-pressed="false"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-            aria-label="列表视图"
-          >
-            <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden="true" fill="currentColor">
-              <rect x={2} y={3} width={12} height={2} rx={1} />
-              <rect x={2} y={7} width={12} height={2} rx={1} />
-              <rect x={2} y={11} width={12} height={2} rx={1} />
-            </svg>
-          </button>
-        </div>
-        <div className="flex items-center gap-1">
-          <select
-            data-slot="gallery-sort"
-            defaultValue="updated"
-            aria-label="排序方式"
-            className="h-7 rounded-control border border-border bg-surface px-2 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-          >
-            <option value="updated">最新上传</option>
-            <option value="name">名称</option>
-            <option value="size">大小</option>
-            <option value="type">类型</option>
-          </select>
-        </div>
-      </div>
+      <span className="text-sm text-foreground">
+        共{" "}
+        <span
+          data-slot="gallery-total-count"
+          className="font-medium tabular-nums"
+        >
+          {totalCount.toLocaleString("en-US")}
+        </span>{" "}
+        个素材
+      </span>
     </div>
   );
 }
@@ -279,26 +288,69 @@ function AssetCardGrid({ assets, selectedId, onSelect }: AssetCardGridProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Pagination
+// Pagination — Plan D1: REAL `assets.list` paging via the URL `?page=`/`?pageSize=`
+// query. Each control navigates `/assets?...`, the Server Component re-reads the
+// list at the new page, and the gallery re-renders.
 // ---------------------------------------------------------------------------
+
+function buildAssetsHref(params: {
+  page: number;
+  pageSize: number;
+  activeType: string | null;
+  query: string;
+}): string {
+  const sp = new URLSearchParams();
+  if (params.activeType !== null) sp.set("type", params.activeType);
+  if (params.query.trim().length > 0) sp.set("q", params.query.trim());
+  if (params.page > 1) sp.set("page", String(params.page));
+  sp.set("pageSize", String(params.pageSize));
+  const qs = sp.toString();
+  return qs.length > 0 ? `/assets?${qs}` : "/assets";
+}
+
+const PAGE_SIZE_OPTIONS = [12, 24, 48, 60, 100] as const;
 
 function Pagination({
   currentPage,
   totalPages,
+  pageSize,
+  activeType,
+  query,
 }: {
   readonly currentPage: number;
   readonly totalPages: number;
+  readonly pageSize: number;
+  readonly activeType: string | null;
+  readonly query: string;
 }) {
-  if (totalPages <= 1) return null;
-  // Render only the first 4 pages, an ellipsis, and the last page so the
-  // nav stays compact even when `totalPages` is large.
-  const visible: Array<number | "ellipsis"> = [1, 2, 3, 4];
+  const router = useRouter();
+  const go = React.useCallback(
+    (page: number, nextPageSize: number) => {
+      const clamped = Math.min(Math.max(1, page), Math.max(1, totalPages));
+      router.push(
+        buildAssetsHref({
+          page: clamped,
+          pageSize: nextPageSize,
+          activeType,
+          query,
+        }),
+      );
+    },
+    [router, totalPages, activeType, query],
+  );
+
+  // Render the first 4 pages, an ellipsis, and the last page so the nav stays
+  // compact even when `totalPages` is large.
+  const visible: Array<number | "ellipsis"> = [];
+  const head = Math.min(4, totalPages);
+  for (let p = 1; p <= head; p += 1) visible.push(p);
   if (totalPages > 6) {
     visible.push("ellipsis");
     visible.push(totalPages);
   } else {
     for (let p = 5; p <= totalPages; p += 1) visible.push(p);
   }
+
   return (
     <div
       data-slot="pagination-row"
@@ -330,6 +382,7 @@ function Pagination({
               data-page-current={isCurrent ? "true" : "false"}
               aria-current={isCurrent ? "page" : undefined}
               aria-label={`第 ${entry} 页`}
+              onClick={() => go(entry, pageSize)}
               className={
                 "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
                 (isCurrent
@@ -345,7 +398,9 @@ function Pagination({
           type="button"
           data-slot="pagination-next"
           aria-label="下一页"
-          className="ml-1 inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-muted-foreground hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          disabled={currentPage >= totalPages}
+          onClick={() => go(currentPage + 1, pageSize)}
+          className="ml-1 inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-muted-foreground hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-40"
         >
           ›
         </button>
@@ -354,15 +409,16 @@ function Pagination({
         <span>每页</span>
         <select
           data-slot="pagination-page-size"
-          defaultValue="60"
+          value={String(pageSize)}
           aria-label="每页条数"
+          onChange={(e) => go(1, Number(e.target.value))}
           className="h-7 rounded-control border border-border bg-surface px-1.5 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
         >
-          <option value="12">12 条/页</option>
-          <option value="24">24 条/页</option>
-          <option value="48">48 条/页</option>
-          <option value="60">60 条/页</option>
-          <option value="120">120 条/页</option>
+          {PAGE_SIZE_OPTIONS.map((size) => (
+            <option key={size} value={size}>
+              {size} 条/页
+            </option>
+          ))}
         </select>
       </label>
     </div>

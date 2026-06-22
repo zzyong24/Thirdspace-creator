@@ -41,6 +41,9 @@ const mockClient = {
   trashAsset: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "a", status: "deleted" }),
   ),
+  createMaterialLink: vi.fn((_input: unknown): Promise<unknown> =>
+    Promise.resolve({ id: "link-1", projectId: "proj-1", entityType: "asset" }),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -49,6 +52,7 @@ vi.mock("@/lib/contract-client", () => ({
     getAsset: (i: unknown) => mockClient.getAsset(i),
     addAssetFile: (i: unknown) => mockClient.addAssetFile(i),
     trashAsset: (i: unknown) => mockClient.trashAsset(i),
+    createMaterialLink: (i: unknown) => mockClient.createMaterialLink(i),
   },
 }));
 
@@ -62,7 +66,23 @@ async function renderIsland() {
   const { AssetsInteractiveRegion } = await import(
     "./assets-interactive-region"
   );
-  return render(<AssetsInteractiveRegion viewModel={buildAssetsViewModel()} />);
+  const vm = buildAssetsViewModel();
+  const gallery = {
+    assets: vm.assets,
+    totalCount: vm.assets.length,
+    currentPage: 1,
+    pageSize: 24,
+    totalPages: 1,
+    activeType: null,
+    query: "",
+    projects: [
+      { id: "proj-1", title: "项目一" },
+      { id: "proj-2", title: "项目二" },
+    ],
+  };
+  return render(
+    <AssetsInteractiveRegion viewModel={vm} gallery={gallery} />,
+  );
 }
 
 async function renderUploadButton() {
@@ -71,19 +91,38 @@ async function renderUploadButton() {
 }
 
 describe("Assets needs-backend wiring", () => {
-  it("E2 ＋上传素材 runs the two-phase upload then refresh", async () => {
+  it("E2 ＋上传素材 selecting a real file runs the two-phase upload with its real name/type/size then refresh", async () => {
     const { container } = await renderUploadButton();
     const btn = container.querySelector<HTMLButtonElement>(
       '[data-slot="assets-upload-button"]',
     );
     expect(btn).not.toBeNull();
-    fireEvent.click(btn!);
+    const input = container.querySelector<HTMLInputElement>(
+      '[data-slot="assets-upload-input"]',
+    );
+    expect(input).not.toBeNull();
+
+    // A real File: name/type/size are read off the File object.
+    const file = new File(["hello-bytes"], "clip.png", { type: "image/png" });
+    fireEvent.change(input!, { target: { files: [file] } });
+
     await waitFor(() => expect(mockClient.completeUpload).toHaveBeenCalledTimes(1));
     expect(mockClient.createUpload).toHaveBeenCalledTimes(1);
+    // createUpload carries the file's REAL type + size, mapped to assetType.
+    expect(mockClient.createUpload).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: {
+          assetType: "image",
+          mimeType: "image/png",
+          fileSize: file.size,
+        },
+      }),
+    );
+    // completeUpload carries the file's REAL name.
     expect(mockClient.completeUpload).toHaveBeenCalledWith(
       expect.objectContaining({
         params: { uploadId: "upload-1" },
-        body: { name: expect.any(String) },
+        body: { name: "clip.png" },
       }),
     );
     expect(mockRouter.refresh).toHaveBeenCalled();
@@ -134,5 +173,41 @@ describe("Assets needs-backend wiring", () => {
       expect.objectContaining({ params: { assetId: expect.any(String) } }),
     );
     expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  it("D1 附到项目 creates a material link (用料链) for the selected asset + project then refresh", async () => {
+    const { container } = await renderIsland();
+    const select = container.querySelector<HTMLSelectElement>(
+      '[data-slot="asset-attach-project-select"]',
+    );
+    const attachBtn = container.querySelector<HTMLButtonElement>(
+      '[data-slot="asset-attach-button"]',
+    );
+    expect(select).not.toBeNull();
+    expect(attachBtn).not.toBeNull();
+
+    // Pick the second project, then attach.
+    fireEvent.change(select!, { target: { value: "proj-2" } });
+    fireEvent.click(attachBtn!);
+
+    await waitFor(() =>
+      expect(mockClient.createMaterialLink).toHaveBeenCalledTimes(1),
+    );
+    expect(mockClient.createMaterialLink).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: {
+          projectId: "proj-2",
+          entityType: "asset",
+          entityId: expect.any(String),
+          role: "clip",
+          stage: "production",
+        },
+      }),
+    );
+    expect(mockRouter.refresh).toHaveBeenCalled();
+    // A success affordance appears.
+    expect(
+      container.querySelector('[data-slot="asset-attach-success"]'),
+    ).not.toBeNull();
   });
 });

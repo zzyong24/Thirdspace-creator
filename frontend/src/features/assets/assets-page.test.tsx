@@ -336,4 +336,91 @@ describe("AssetsPage", () => {
     expect(card).not.toBeNull();
     expect(card!.getAttribute("data-variant")).toBe("storage");
   });
+
+  // ── Plan D1: real filters / counts / pagination ─────────────────────────
+
+  it("shows REAL type-filter counts in the sidebar (not fabricated numbers)", async () => {
+    const { buildAssetsViewModel } = await import("@/fixtures/selectors");
+    const vm = buildAssetsViewModel();
+    const { container } = await renderAssets();
+    // The "全部素材" row's count equals the real active-asset total.
+    const allRow = container.querySelector(
+      '[data-slot="asset-type-row"][data-asset-type="all"]',
+    ) as HTMLElement;
+    expect(allRow).not.toBeNull();
+    expect(allRow.getAttribute("data-type-count")).toBe(
+      String(vm.assets.length),
+    );
+    // Each per-type row carries the real count for that type.
+    const videoCount = vm.assets.filter((a) => a.type === "video").length;
+    const videoRow = container.querySelector(
+      '[data-slot="asset-type-row"][data-asset-type="video"]',
+    ) as HTMLElement;
+    expect(videoRow.getAttribute("data-type-count")).toBe(String(videoCount));
+    // Type rows are real filter links carrying the `?type=` query.
+    expect(videoRow.getAttribute("href")).toBe("/assets?type=video");
+  });
+
+  it("`?type=` filters the gallery to that asset type", async () => {
+    const { buildAssetsViewModel } = await import("@/fixtures/selectors");
+    const vm = buildAssetsViewModel();
+    const { container } = await renderAssets({ viewModel: vm, type: "video" });
+    const cards = container.querySelectorAll('[data-slot="asset-card"]');
+    const videoCount = vm.assets.filter((a) => a.type === "video").length;
+    expect(cards.length).toBe(videoCount);
+    expect(videoCount).toBeGreaterThan(0);
+  });
+
+  it("`?q=` filters the gallery by a name/description/tag substring", async () => {
+    const { buildAssetsViewModel } = await import("@/fixtures/selectors");
+    const vm = buildAssetsViewModel();
+    const target = vm.assets[0]!;
+    // Use a distinctive slice of the first asset's name as the needle.
+    const needle = target.name.slice(0, Math.min(3, target.name.length));
+    const expected = vm.assets.filter((a) =>
+      [a.name, a.description, ...a.tags]
+        .join(" ")
+        .toLowerCase()
+        .includes(needle.toLowerCase()),
+    ).length;
+    const { container } = await renderAssets({ viewModel: vm, q: needle });
+    const cards = container.querySelectorAll('[data-slot="asset-card"]');
+    expect(cards.length).toBe(expected);
+  });
+
+  it("removed the fabricated decorative controls (filter chips / batch menu / view toggle)", async () => {
+    const { container } = await renderAssets();
+    // The 5 fake filter chips + 清除筛选 are gone.
+    expect(
+      container.querySelector('[data-slot="assets-filter-type"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="assets-filter-source"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="assets-filter-clear"]'),
+    ).toBeNull();
+    // The 批量操作 menu, view toggle, and sort select are gone.
+    expect(
+      container.querySelector('[data-slot="assets-batch-button"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="gallery-view-toggle"]'),
+    ).toBeNull();
+    expect(container.querySelector('[data-slot="gallery-sort"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="gallery-select-all"]'),
+    ).toBeNull();
+  });
+
+  it("renders the REAL gallery total count (not a fabricated number)", async () => {
+    const { buildAssetsViewModel } = await import("@/fixtures/selectors");
+    const vm = buildAssetsViewModel();
+    const { container } = await renderAssets();
+    const total = container.querySelector(
+      '[data-slot="gallery-total-count"]',
+    ) as HTMLElement;
+    expect(total).not.toBeNull();
+    expect(total.textContent).toBe(vm.assets.length.toLocaleString("en-US"));
+  });
 });

@@ -14,6 +14,10 @@ import {
   formatDuration,
   formatFileSize,
 } from "@/components/resources/asset-format";
+import {
+  AssetAttachToProject,
+  type AttachProjectOption,
+} from "@/components/resources/asset-attach-to-project";
 import type {
   ResourceAsset,
   ResourceAssetUsage,
@@ -39,6 +43,11 @@ export interface AssetDetailPanelProps {
   readonly onCopyLink?: (assetId: string) => void;
   readonly onFavorite?: (assetId: string) => void;
   readonly onTrash?: (assetId: string) => void;
+  // Plan D1 附到项目 (用料链): the user's projects + the attach handler. When
+  // provided the panel renders the project picker; the handler fires
+  // materialLinks.create. Optional so the panel stays render-only without them.
+  readonly projects?: ReadonlyArray<AttachProjectOption>;
+  readonly onAttach?: (assetId: string, projectId: string) => void;
   readonly actionsPending?: boolean;
 }
 
@@ -49,6 +58,8 @@ export function AssetDetailPanel({
   onCopyLink,
   onFavorite,
   onTrash,
+  projects = [],
+  onAttach,
   actionsPending = false,
 }: AssetDetailPanelProps) {
   const usageForAsset = asset
@@ -132,6 +143,12 @@ export function AssetDetailPanel({
                 <span>更多</span>
               </button>
             </div>
+            <AssetAttachToProject
+              assetId={asset.id}
+              projects={projects}
+              onAttach={onAttach}
+              pending={actionsPending}
+            />
           </SectionCard>
           <SectionCard
             title="元数据"

@@ -52,6 +52,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 
 import { SectionCard } from "@/components/project/section-card";
 import { ProgressBar } from "@/components/project/progress-bar";
@@ -62,8 +63,30 @@ import {
 } from "@/fixtures/selectors";
 import { client } from "@/lib/contract-client.server";
 import type { AssetType } from "@/types/domain";
-import { AssetsInteractiveRegion } from "./assets-interactive-region";
+import {
+  AssetsInteractiveRegion,
+  type ProjectOption,
+} from "./assets-interactive-region";
 import { AssetUploadButton } from "./asset-upload-button";
+import { AssetsToolbarSearch } from "./assets-toolbar-search";
+
+// The asset-type enum used by the filter sidebar. Mirrors contract
+// `primitives.assetType`; these are the ONLY values `?type=` accepts.
+const FILTERABLE_TYPES: ReadonlyArray<AssetType> = [
+  "image",
+  "video",
+  "audio",
+  "document",
+  "subtitle",
+];
+
+const TYPE_LABEL: Record<AssetType, string> = {
+  image: "图片",
+  video: "视频",
+  audio: "音频",
+  document: "文档",
+  subtitle: "字幕",
+};
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -76,6 +99,14 @@ export interface AssetsPageProps {
    * from the fixed fixtures (D-010) so SSR output is deterministic.
    */
   readonly viewModel?: AssetsViewModel;
+  /** `?type=` — asset-type filter (one of FILTERABLE_TYPES, or undefined = all). */
+  readonly type?: string;
+  /** `?q=` — name/description/tag substring filter. */
+  readonly q?: string;
+  /** `?page=` — 1-based gallery page (real `assets.list` paging). */
+  readonly page?: string;
+  /** `?pageSize=` — gallery page size (real `assets.list` paging). */
+  readonly pageSize?: string;
 }
 
 export interface AssetsViewModel {
@@ -123,17 +154,111 @@ export interface StorageUsage {
 }
 
 // ---------------------------------------------------------------------------
+// Derived gallery state (Plan D1)
+// ---------------------------------------------------------------------------
+//
+// `assets.list` only accepts `page`/`pageSize` (see contract/operations/
+// assets.ts — its query is the bare `paginationQuery`). There is NO server-side
+// `type` / `q` filter param. So the page reads the real paged list, then applies
+// the `?type=` / `?q=` filters as a substring pass over the read page. Paging is
+// REAL (the `?page=`/`?pageSize=` query re-reads `assets.list`); the
+// type/search filters are an honest client-over-page fallback. Type counts are
+// computed from the REAL read rows — no fabricated numbers.
+
+interface GalleryState {
+  readonly assets: ReadonlyArray<AssetSummary>;
+  readonly totalCount: number;
+  readonly currentPage: number;
+  readonly pageSize: number;
+  readonly totalPages: number;
+  readonly activeType: AssetType | null;
+  readonly query: string;
+  readonly typeCounts: ReadonlyArray<{ readonly type: AssetType; readonly label: string; readonly count: number }>;
+  readonly projects: ReadonlyArray<ProjectOption>;
+}
+
+function coercePositiveInt(value: string | undefined, fallback: number): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : fallback;
+}
+
+function normalizeType(value: string | undefined): AssetType | null {
+  return FILTERABLE_TYPES.includes(value as AssetType)
+    ? (value as AssetType)
+    : null;
+}
+
+function deriveGallery(
+  all: ReadonlyArray<AssetSummary>,
+  projects: ReadonlyArray<ProjectOption>,
+  opts: { type?: string; q?: string; page?: string; pageSize?: string },
+): GalleryState {
+  const activeType = normalizeType(opts.type);
+  const query = (opts.q ?? "").trim();
+  const needle = query.toLowerCase();
+
+  const filtered = all.filter((asset) => {
+    if (activeType !== null && asset.type !== activeType) return false;
+    if (needle.length > 0) {
+      const haystack = [
+        asset.name,
+        asset.description,
+        ...asset.tags,
+      ]
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(needle)) return false;
+    }
+    return true;
+  });
+
+  const pageSize = coercePositiveInt(opts.pageSize, 24);
+  const totalCount = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const currentPage = Math.min(coercePositiveInt(opts.page, 1), totalPages);
+  const start = (currentPage - 1) * pageSize;
+  const pageAssets = filtered.slice(start, start + pageSize);
+
+  // Real type counts over the full (unfiltered) read rows.
+  const typeCounts = FILTERABLE_TYPES.map((type) => ({
+    type,
+    label: TYPE_LABEL[type],
+    count: all.filter((asset) => asset.type === type).length,
+  }));
+
+  return {
+    assets: pageAssets,
+    totalCount,
+    currentPage,
+    pageSize,
+    totalPages,
+    activeType,
+    query,
+    typeCounts,
+    projects,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export async function AssetsPage({ viewModel }: AssetsPageProps = {}) {
-  // Module 07 E1: the gallery `assets` now come from the REAL `assets.list` op
-  // (pglite, user-scoped, active-only) instead of the fixture-derived list. The
-  // rest of the VM (typeCounts / usageHistory / storage) stays selector-derived
-  // this wave (those rows are decorative or Production/Settings-owned). The
-  // `viewModel?` prop remains the test-override seam: when provided, no network
-  // read happens (SSR stays deterministic, F4).
+export async function AssetsPage({
+  viewModel,
+  type,
+  q,
+  page,
+  pageSize,
+}: AssetsPageProps = {}) {
+  // Module 07 E1 + Plan D1: the gallery `assets` come from the REAL `assets.list`
+  // op (pglite, user-scoped, active-only). We read a broad page (pageSize 200) so
+  // the type-filter sidebar counts + the `?type=`/`?q=` filter pass see the whole
+  // active library, then paginate the filtered result for display (the list op
+  // has no server-side type/search param). The projects picker reads the real
+  // `projects.list`. The `viewModel?` prop remains the test-override seam: when
+  // provided, no network read happens (SSR stays deterministic, F4).
   let vm: AssetsViewModel;
+  let projects: ReadonlyArray<ProjectOption>;
   if (viewModel === undefined) {
     const base = buildAssetsViewModel();
     const rows = (await client.listAssets({
@@ -141,10 +266,25 @@ export async function AssetsPage({ viewModel }: AssetsPageProps = {}) {
       query: { page: 1, pageSize: 200 },
       body: undefined,
     })) as unknown as ReadonlyArray<AssetListRow>;
+    const projectRows = (await client.listProjects({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ id: string; title: string }>;
+    projects = projectRows.map((p) => ({ id: p.id, title: p.title }));
     vm = { ...base, assets: buildAssetSummariesFromResources(rows) };
   } else {
     vm = viewModel;
+    projects = [];
   }
+
+  const gallery = deriveGallery(vm.assets, projects, {
+    type,
+    q,
+    page,
+    pageSize,
+  });
+
   return (
     <main
       data-app="creatoros"
@@ -152,7 +292,7 @@ export async function AssetsPage({ viewModel }: AssetsPageProps = {}) {
       data-assets-id="assets-root"
       className="flex flex-col gap-3"
     >
-      <AssetToolbar />
+      <AssetToolbar query={gallery.query} activeType={gallery.activeType} />
       <div
         data-slot="assets-page-body"
         className="grid grid-cols-1 gap-card-gap lg:grid-cols-[216px_minmax(0,1fr)]"
@@ -161,27 +301,36 @@ export async function AssetsPage({ viewModel }: AssetsPageProps = {}) {
           data-slot="assets-left-rail"
           className="flex flex-col gap-card-gap"
         >
-          <AssetTypeSidebar />
+          <AssetTypeSidebar
+            typeCounts={gallery.typeCounts}
+            totalCount={vm.assets.length}
+            activeType={gallery.activeType}
+            query={gallery.query}
+          />
           <StorageUsageCard storage={vm.storage} />
         </div>
-        <AssetsInteractiveRegion viewModel={vm} />
+        <AssetsInteractiveRegion viewModel={vm} gallery={gallery} />
       </div>
     </main>
   );
 }
 
 // ---------------------------------------------------------------------------
-// AssetToolbar — search + filter affordances pinned at the top
+// AssetToolbar — wired search + upload (Plan D1)
 // ---------------------------------------------------------------------------
+//
+// The 5 fabricated filter chips (类型/来源/项目/标签/更多筛选) and the 批量操作 ▾
+// menu were removed: `assets.list` backs none of them, so they were pure
+// decoration. Real type filtering lives in the type sidebar (`?type=`), real
+// search is the wired `AssetsToolbarSearch` island (`?q=`).
 
-function AssetToolbar() {
-  const filters: ReadonlyArray<{ id: string; label: string; value: string }> = [
-    { id: "type", label: "全部类型", value: "all" },
-    { id: "source", label: "全部来源", value: "all" },
-    { id: "project", label: "全部项目", value: "all" },
-    { id: "tag", label: "全部标签", value: "all" },
-    { id: "more", label: "更多筛选", value: "all" },
-  ];
+function AssetToolbar({
+  query,
+  activeType,
+}: {
+  readonly query: string;
+  readonly activeType: AssetType | null;
+}) {
   return (
     <div
       data-slot="asset-toolbar"
@@ -192,62 +341,15 @@ function AssetToolbar() {
         data-slot="assets-toolbar-filters"
         className="flex flex-wrap items-center gap-2"
       >
-        <label className="sr-only" htmlFor="assets-search">
-          搜索素材
-        </label>
-        <div
-          data-slot="search-field"
-          className="flex h-8 w-72 items-center gap-2 rounded-control border border-border bg-surface px-2.5 text-sm"
-        >
-          <span aria-hidden="true" className="text-muted-foreground text-xs">
-            🔎
-          </span>
-          <input
-            id="assets-search"
-            type="search"
-            placeholder="搜索素材名称、标签、描述、项目..."
-            data-slot="assets-search-input"
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-          />
-        </div>
-        {filters.map((filter) => (
-          <button
-            key={filter.id}
-            type="button"
-            data-slot={`assets-filter-${filter.id}`}
-            aria-label={filter.label}
-            className="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface px-2.5 text-xs text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-          >
-            <span>{filter.label}</span>
-            <span aria-hidden="true" className="text-[10px] text-muted-foreground">
-              ▾
-            </span>
-          </button>
-        ))}
-        <button
-          type="button"
-          data-slot="assets-filter-clear"
-          aria-label="清除筛选"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-border bg-surface text-xs text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-        >
-          <span aria-hidden="true">⌧</span>
-        </button>
+        <AssetsToolbarSearch
+          query={query}
+          activeType={activeType}
+        />
       </div>
       <div
         data-slot="assets-toolbar-actions"
         className="flex flex-wrap items-center gap-2"
       >
-        <button
-          type="button"
-          data-slot="assets-batch-button"
-          aria-label="批量操作"
-          className="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface px-2.5 text-xs text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-        >
-          <span>批量操作</span>
-          <span aria-hidden="true" className="text-[10px] text-muted-foreground">
-            ▾
-          </span>
-        </button>
         <AssetUploadButton />
       </div>
     </div>
@@ -258,33 +360,72 @@ function AssetToolbar() {
 // AssetTypeSidebar — page-internal; DISTINCT from the global Sidebar
 // ---------------------------------------------------------------------------
 
-interface AssetTypeSidebarEntry {
-  readonly id: string;
-  readonly label: string;
-  readonly count: number;
-  readonly icon: "all" | "video" | "image" | "audio" | "document" | "cover" | "broll" | "screenshot" | "screen-recording" | "favorites" | "trash";
-  readonly active?: boolean;
+type SidebarIcon =
+  | "all"
+  | "video"
+  | "image"
+  | "audio"
+  | "document"
+  | "cover"
+  | "broll"
+  | "screenshot"
+  | "screen-recording"
+  | "favorites"
+  | "trash";
+
+const TYPE_ICON: Record<AssetType, SidebarIcon> = {
+  image: "image",
+  video: "video",
+  audio: "audio",
+  document: "document",
+  subtitle: "document",
+};
+
+interface AssetTypeSidebarProps {
+  readonly typeCounts: ReadonlyArray<{
+    readonly type: AssetType;
+    readonly label: string;
+    readonly count: number;
+  }>;
+  readonly totalCount: number;
+  readonly activeType: AssetType | null;
+  readonly query: string;
 }
 
-function AssetTypeSidebar() {
-  // The reference mockup shows 9 display categories with curated counts;
-  // we keep them deterministic (no `Math.random`/fixture lookup) so the
-  // sidebar visual is stable across renders and matches the Controller
-  // reference proportions.
-  const entries: ReadonlyArray<AssetTypeSidebarEntry> = [
-    { id: "all", label: "全部素材", count: 12846, icon: "all", active: true },
-    { id: "video", label: "视频", count: 3245, icon: "video" },
-    { id: "image", label: "图片", count: 4732, icon: "image" },
-    { id: "audio", label: "音频", count: 1287, icon: "audio" },
-    { id: "screenshot", label: "截图", count: 1856, icon: "screenshot" },
-    { id: "screen-recording", label: "录屏", count: 642, icon: "screen-recording" },
-    { id: "document", label: "文档", count: 498, icon: "document" },
-    { id: "cover", label: "封面", count: 326, icon: "cover" },
-    { id: "broll", label: "B-roll", count: 260, icon: "broll" },
-  ];
-  const collections: ReadonlyArray<AssetTypeSidebarEntry> = [
-    { id: "favorites", label: "我的收藏", count: 156, icon: "favorites" },
-    { id: "trash", label: "回收站", count: 32, icon: "trash" },
+// Plan D1: the type rows are REAL filter links. Each navigates `?type=<type>`
+// (preserving the active `?q=`), the server re-reads + re-derives the gallery,
+// and the counts come from the real `assets.list` rows — no fabricated numbers.
+// The fabricated 截图/录屏/封面/B-roll/我的收藏/回收站 rows + the duplicate search
+// field were removed: `assets.list` backs none of them.
+function AssetTypeSidebar({
+  typeCounts,
+  totalCount,
+  activeType,
+  query,
+}: AssetTypeSidebarProps) {
+  const q = query.trim();
+  const hrefFor = (type: AssetType | null): string => {
+    const params = new URLSearchParams();
+    if (type !== null) params.set("type", type);
+    if (q.length > 0) params.set("q", q);
+    const qs = params.toString();
+    return qs.length > 0 ? `/assets?${qs}` : "/assets";
+  };
+  const entries: ReadonlyArray<{
+    readonly id: string;
+    readonly type: AssetType | null;
+    readonly label: string;
+    readonly count: number;
+    readonly icon: SidebarIcon;
+  }> = [
+    { id: "all", type: null, label: "全部素材", count: totalCount, icon: "all" },
+    ...typeCounts.map((entry) => ({
+      id: entry.type,
+      type: entry.type,
+      label: entry.label,
+      count: entry.count,
+      icon: TYPE_ICON[entry.type],
+    })),
   ];
   return (
     <aside
@@ -292,81 +433,46 @@ function AssetTypeSidebar() {
       aria-label="素材类型"
       className="flex h-fit flex-col gap-3 rounded-card border border-border bg-surface p-2.5"
     >
-      <div
-        data-slot="asset-search-field"
-        className="flex h-8 w-full items-center gap-2 rounded-control border border-border bg-surface-subtle px-2.5 text-xs"
-      >
-        <span aria-hidden="true" className="text-muted-foreground text-xs">
-          🔎
-        </span>
-        <input
-          type="search"
-          placeholder="搜索素材名称、标签、描述、项目..."
-          aria-label="搜索素材"
-          data-slot="asset-type-search"
-          className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
-        />
-      </div>
       <section data-slot="asset-filter-type" className="flex flex-col gap-1">
         <h2 className="px-2 py-1 text-[13px] font-medium text-foreground">
           素材类型
         </h2>
         <ul data-slot="asset-type-list" className="flex flex-col gap-0.5">
-          {entries.map((entry) => (
-            <li key={entry.id}>
-              <button
-                type="button"
-                data-asset-type={entry.id}
-                data-slot="asset-type-row"
-                data-type-count={entry.count}
-                aria-current={entry.active ? "true" : undefined}
-                className={
-                  "flex h-8 w-full items-center justify-between rounded-control px-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
-                  (entry.active
-                    ? "bg-brand-soft font-medium text-brand"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground")
-                }
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <SidebarGlyph icon={entry.icon} />
-                  <span className="truncate">{entry.label}</span>
-                </span>
-                <span className="shrink-0 font-mono tabular-nums text-[11px] text-muted-foreground">
-                  {entry.count.toLocaleString("en-US")}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <div aria-hidden="true" className="mx-1 h-px bg-border" />
-      <section data-slot="asset-filter-collection" className="flex flex-col gap-1">
-        <ul data-slot="asset-collection-list" className="flex flex-col gap-0.5">
-          {collections.map((entry) => (
-            <li key={entry.id}>
-              <button
-                type="button"
-                data-slot="asset-collection-row"
-                data-collection-id={entry.id}
-                className="flex h-8 w-full items-center justify-between rounded-control px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <SidebarGlyph icon={entry.icon} />
-                  <span className="truncate">{entry.label}</span>
-                </span>
-                <span className="shrink-0 font-mono tabular-nums text-[11px] text-muted-foreground">
-                  {entry.count.toLocaleString("en-US")}
-                </span>
-              </button>
-            </li>
-          ))}
+          {entries.map((entry) => {
+            const active = entry.type === activeType;
+            return (
+              <li key={entry.id}>
+                <Link
+                  href={hrefFor(entry.type)}
+                  data-asset-type={entry.id}
+                  data-slot="asset-type-row"
+                  data-type-count={entry.count}
+                  aria-current={active ? "true" : undefined}
+                  className={
+                    "flex h-8 w-full items-center justify-between rounded-control px-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
+                    (active
+                      ? "bg-brand-soft font-medium text-brand"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground")
+                  }
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <SidebarGlyph icon={entry.icon} />
+                    <span className="truncate">{entry.label}</span>
+                  </span>
+                  <span className="shrink-0 font-mono tabular-nums text-[11px] text-muted-foreground">
+                    {entry.count.toLocaleString("en-US")}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </section>
     </aside>
   );
 }
 
-function SidebarGlyph({ icon }: { icon: AssetTypeSidebarEntry["icon"] }) {
+function SidebarGlyph({ icon }: { icon: SidebarIcon }) {
   const baseClass = "flex size-4 shrink-0 items-center justify-center text-current";
   switch (icon) {
     case "all":
