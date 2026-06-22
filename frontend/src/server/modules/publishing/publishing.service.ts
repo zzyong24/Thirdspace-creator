@@ -135,6 +135,15 @@ export interface PublishingService {
     ctx: RequestContext,
     opts: { limit: number; offset?: number },
   ): Promise<PublicationRow[]>;
+  // Dashboard「最近发布」(GAP-DASH-3): the recent publications joined with their
+  // REAL display title (resolved from the owning revision — the title lives on a
+  // PublicationRevision, never on the PublicationRow). Stays inside the Publishing
+  // module (revisions are ours); the play count is joined by the dashboard facade
+  // via Analytics (cross-module composition stays at the facade layer).
+  getRecentPublicationsWithTitle(
+    ctx: RequestContext,
+    opts: { limit: number; offset?: number },
+  ): Promise<Array<PublicationRow & { title: string }>>;
   // Declared for the Ingestion wave (SPEC §11) — signature only this wave.
   resolvePublication(
     ctx: RequestContext,
@@ -338,6 +347,39 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         limit: opts.limit,
         offset: opts.offset ?? 0,
       });
+    },
+
+    async getRecentPublicationsWithTitle(ctx, opts) {
+      const repo = repoFor(ctx);
+      const rows = await repo.listPublicationsForUser({
+        limit: opts.limit,
+        offset: opts.offset ?? 0,
+      });
+      // Resolve each publication's display title from its revisions (prefer the
+      // current revision, else the highest revisionNumber). A publication with no
+      // revision keeps "" so the facade can fall back (output title / 未命名发布).
+      return Promise.all(
+        rows.map(async (r) => {
+          let title = "";
+          try {
+            const revisions = await repo.listRevisions(r.id, {
+              limit: 20,
+              offset: 0,
+            });
+            if (revisions.length > 0) {
+              const current =
+                revisions.find((rev) => rev.id === r.currentRevisionId) ??
+                revisions
+                  .slice()
+                  .sort((a, b) => b.revisionNumber - a.revisionNumber)[0];
+              title = current?.title?.trim() ?? "";
+            }
+          } catch {
+            title = "";
+          }
+          return { ...r, title };
+        }),
+      );
     },
 
     async resolvePublication(ctx, externalSourceRef) {
