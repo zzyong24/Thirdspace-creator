@@ -37,6 +37,7 @@ function makeTransport(db: Db) {
     artifacts: { createVersion: async () => ({}) },
     knowledge: { createKnowledge: async () => ({ id: "k-new" }) },
       candidate: { createFromAIResult: async () => ({ id: "cand-new" }) },
+      learnings: { createLearning: async () => ({ id: "learn-new" }) },
   });
   return createAiTransport(() => service);
 }
@@ -119,6 +120,7 @@ describe("ai contract (each op validates against its DTO)", () => {
       artifacts: { createVersion: async () => ({}) },
       knowledge: { createKnowledge: async () => ({ id: "k-new" }) },
       candidate: { createFromAIResult: async () => ({ id: "cand-new" }) },
+      learnings: { createLearning: async () => ({ id: "learn-new" }) },
     });
     const t = await service.createTask(ctx, {
       taskType: "script.rewrite",

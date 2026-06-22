@@ -37,8 +37,18 @@ export interface PositioningReader {
   }>;
 }
 
+// 飞轮回流 reader — the project's relevant past 复盘 Learnings (爆款要素). Optional: nodes
+// that benefit from the flywheel (topic.generate / script.draft) pass it; others omit it.
+export interface LearningsReader {
+  getSuggestions(
+    ctx: RequestContext,
+    opts: { limit?: number },
+  ): Promise<Array<{ title: string; insight: string }>>;
+}
+
 export interface ContextDeps {
   positioning: PositioningReader;
+  learnings?: LearningsReader;
 }
 
 export interface AssembleInput {
@@ -61,9 +71,22 @@ export async function assembleCreativeContext(
     // the agent just loses the relevance constraint. Degrade, never block.
     positioningBrief = "";
   }
+
+  let learningsBrief = "";
+  if (deps.learnings) {
+    try {
+      const rows = await deps.learnings.getSuggestions(ctx, { limit: 5 });
+      learningsBrief = rows
+        .map((l) => `· ${l.title}${l.insight ? `：${l.insight}` : ""}`)
+        .join("\n");
+    } catch {
+      learningsBrief = ""; // 飞轮 is best-effort context; never block a node on it
+    }
+  }
+
   return {
     positioningBrief,
-    learningsBrief: "", // wired in plan A7 (LearningsReader); empty keeps nodes working now
+    learningsBrief,
     topic: { title: input.topic, angle: input.angle ?? "" },
     projectId: input.projectId,
   };

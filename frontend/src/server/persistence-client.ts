@@ -126,6 +126,7 @@ import {
 } from "@/server/modules/ai";
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerate } from "@/server/ai/topic-runner";
+import { runReviewAnalyze } from "@/server/ai/review-runner";
 import {
   createPositioningService,
   createPositioningTransport,
@@ -1129,6 +1130,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       createFromAIResult: (ctx, result) =>
         candidateService.createFromAIResult(ctx, result),
     },
+    // 机制④⑤ 复盘 — confirmTask materializes a learning_list into Learnings (which then
+    // feed back into later nodes' context). learningsService is constructed above.
+    learnings: {
+      createLearning: (ctx, body) =>
+        learningsService.createLearning(ctx, body),
+    },
   });
   const aiBase = createAiTransport(() => aiService);
 
@@ -1173,6 +1180,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           getPositioningCenter: (c: RequestContext) =>
             positioningService.getPositioningCenter(c),
         };
+        // 飞轮回流 — top validated Learnings feed the agent's context (topic/script nodes).
+        const learningsReader = {
+          getSuggestions: (c: RequestContext, opts: { limit?: number }) =>
+            learningsService.getSuggestions(c, opts),
+        };
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
@@ -1203,7 +1215,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               id: String(task.id),
               inputData: (task.inputData ?? {}) as Record<string, unknown>,
             },
-            { ai: aiService, positioning: positioningReader },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "review.analyze" &&
+          task.status === "queued"
+        ) {
+          void runReviewAnalyze(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
+            },
           );
         }
       }
