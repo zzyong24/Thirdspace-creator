@@ -5,6 +5,21 @@ import { mockTransport } from "@/server/mock-backend/mock-transport";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
 import {
+  douyinProjects,
+  douyinProjectStages,
+  douyinContentOutputs,
+  douyinOutputStages,
+  douyinPublications,
+  douyinMetricSnapshots,
+  douyinMetricValues,
+  douyinAudienceSnapshots,
+  douyinArtifacts,
+  douyinArtifactVersions,
+  douyinKnowledgeItems,
+  douyinKnowledgeRevisions,
+  DOUYIN_FAN_TOTAL,
+} from "@/fixtures/douyin-real";
+import {
   createIdentityRepository,
   createIdentityService,
   seedCanonicalUser,
@@ -2285,9 +2300,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       id: "acct-canonical-douyin",
       userId: canonicalDataset.user.id,
       platform: "douyin",
-      accountHandle: "@ai-engineer-main",
+      accountHandle: "@抖音创作者",
       secretReference: "env:DOUYIN_TOKEN_REF",
-      followerBaseline: 12000,
+      // Real follower total from ~/.hermes/douyin_stats.db (2026-06-21 snapshot).
+      followerBaseline: DOUYIN_FAN_TOTAL,
       status: "active",
       createdAt: FIXED_NOW_ISO,
       updatedAt: FIXED_NOW_ISO,
@@ -2328,6 +2344,92 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   await learningsSeedRepo.seedLearnings(
     canonicalDataset.learnings as unknown as LearningRow[],
+  );
+
+  // ── Real Douyin catalog + metrics (用户抖音作品初始化) ─────────────────────
+  // Append the user's REAL Douyin works (58 published videos) + their REAL
+  // creator-center metrics on top of the canonical demo dataset. Source of truth:
+  // ~/.hermes/douyin_stats.db + vault 04-项目/内容创作/创作, frozen into
+  // src/fixtures/douyin-real.ts (regenerate via /tmp/douyin-real/gen.mjs). Every
+  // seed* is onConflictDoNothing, so this is idempotent across a re-built
+  // singleton and never collides with the canonical (project-*/pub-*) ids — the
+  // Douyin rows are namespaced `dy-*`. All rows are owned by the canonical login.
+  const DY_OWNER = canonicalDataset.user.id;
+  await projectsRepo.seedProjects(
+    douyinProjects.map((p) =>
+      toRow({ ...p, userId: DY_OWNER } as unknown as CanonicalProject),
+    ),
+  );
+  await projectsRepo.seedStages(
+    douyinProjectStages.map((s) => toStageRow(s as unknown as CanonicalStage)),
+  );
+  await projectsRepo.seedOutputs(
+    douyinContentOutputs.map((o) => toOutputRow(o as unknown as CanonicalOutput)),
+  );
+  await projectsRepo.seedOutputStages(
+    douyinOutputStages.map((s) =>
+      toOutputStageRow(s as unknown as CanonicalOutputStage),
+    ),
+  );
+  await knowledgeRepo.seedKnowledge(
+    douyinKnowledgeItems.map((k) =>
+      toKnowledgeRow({ ...k, userId: DY_OWNER } as unknown as CanonicalKnowledge),
+    ),
+  );
+  await knowledgeRepo.seedRevisions(
+    douyinKnowledgeRevisions.map((r) =>
+      toRevisionRow(r as unknown as CanonicalRevision),
+    ),
+  );
+  await artifactsSeedRepo.seedVersions(
+    douyinArtifactVersions.map((v) =>
+      toArtifactVersionRow(v as unknown as CanonicalArtifactVersion),
+    ),
+  );
+  await artifactsSeedRepo.seedArtifacts(
+    douyinArtifacts.map((a) =>
+      toArtifactRow(a as unknown as CanonicalArtifact, DY_OWNER),
+    ),
+  );
+  await analyticsRepo.seedSnapshots(
+    douyinMetricSnapshots.map((s) => ({
+      id: s.id,
+      userId: DY_OWNER,
+      publicationId: s.publicationId,
+      ingestionRunId: s.ingestionRunId ?? null,
+      capturedAt: s.capturedAt,
+      source: s.source,
+      rawMetrics: s.rawMetrics as Record<string, unknown>,
+      createdAt: s.createdAt,
+    })),
+  );
+  await analyticsRepo.seedValues(
+    douyinMetricValues.map((v) => ({
+      id: v.id,
+      userId: DY_OWNER,
+      metricSnapshotId: v.metricSnapshotId,
+      metricKey: v.metricKey,
+      numericValue: v.numericValue,
+      unit: v.unit,
+      dimensions: v.dimensions as Record<string, string>,
+    })),
+  );
+  await analyticsRepo.seedAudienceSnapshots(
+    douyinAudienceSnapshots.map((a) => ({
+      id: a.id,
+      userId: DY_OWNER,
+      publicationId: a.publicationId,
+      capturedAt: a.capturedAt,
+      dimensionType: a.dimensionType,
+      dimensionValue: a.dimensionValue,
+      percentage: a.percentage,
+      audienceCount: a.audienceCount,
+    })),
+  );
+  await publishingSeedRepo.seedPublications(
+    douyinPublications.map(
+      (pub) => ({ ...pub, userId: DY_OWNER }) as unknown as PublicationRow,
+    ),
   );
 
   return {
