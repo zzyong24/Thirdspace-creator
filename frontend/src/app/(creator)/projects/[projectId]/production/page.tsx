@@ -15,10 +15,18 @@
  * their mapped contract ops (mode select, settings toggles, add-segment,
  * export). A resolution failure degrades to no-wiring (the island renders
  * local-only) — the page never throws.
+ *
+ * READ side made real: the route ALSO assembles a REAL ProductionViewModel from
+ * `outputs.production.get` (mode) + `materialLinks.list`→`assets.get` (matched
+ * 已配素材), passing it as a `viewModel` override so AI-matched assets and the
+ * persisted production mode surface on the page. See
+ * `production-workspace-data.ts` for the assembly + per-field degradation
+ * contract. A real project NEVER renders "未找到项目".
  */
 
 import { client } from "@/lib/contract-client.server";
 import { ProductionWorkspacePage } from "@/features/production/production-workspace-page";
+import { buildProductionWorkspaceViewModel } from "@/features/production/production-workspace-data";
 import type { ProductionWiring } from "@/features/production/production-interactive-region";
 
 interface ProductionWorkspaceRouteProps {
@@ -84,6 +92,15 @@ export default async function ProductionWorkspaceRoute({
   params,
 }: ProductionWorkspaceRouteProps) {
   const { projectId } = await params;
-  const wiring = await resolveWiring(projectId);
-  return <ProductionWorkspacePage projectId={projectId} wiring={wiring} />;
+  const [wiring, viewModel] = await Promise.all([
+    resolveWiring(projectId),
+    buildProductionWorkspaceViewModel(projectId),
+  ]);
+  return (
+    <ProductionWorkspacePage
+      projectId={projectId}
+      viewModel={viewModel}
+      wiring={wiring}
+    />
+  );
 }

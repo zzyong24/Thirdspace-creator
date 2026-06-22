@@ -18,6 +18,7 @@
 
 import { PublishingWorkspacePage } from "@/features/project-publishing/publishing-workspace-page";
 import type { PublishingWiring } from "@/features/project-publishing/publishing-interactive-region";
+import { buildPublishingWorkspaceViewModel } from "@/features/project-publishing/publishing-workspace-data";
 import { client } from "@/lib/contract-client.server";
 
 interface PublishingWorkspaceRouteProps {
@@ -74,8 +75,20 @@ export default async function PublishingWorkspaceRoute({
 }: PublishingWorkspaceRouteProps) {
   const { projectId } = await params;
   const resolvedId = await resolveProjectIdParam(projectId);
-  const wiring = await resolveWiring(resolvedId);
-  return <PublishingWorkspacePage projectId={resolvedId} wiring={wiring} />;
+  // READ side made real: assemble the REAL PublishingViewModel from the
+  // project's outputs → publications (一稿多平台 nodes), degrading per-field /
+  // wholesale to the fixture builder. See `publishing-workspace-data.ts`.
+  const [viewModel, wiring] = await Promise.all([
+    buildPublishingWorkspaceViewModel(projectId),
+    resolveWiring(resolvedId),
+  ]);
+  return (
+    <PublishingWorkspacePage
+      projectId={resolvedId}
+      viewModel={viewModel}
+      wiring={wiring}
+    />
+  );
 }
 
 /**

@@ -7,9 +7,17 @@
  * Sidebar + one TopHeader in `project-workspace` mode, with the
  * Planning stage active) wraps it; the page itself is a Server
  * Component.
+ *
+ * READ side made real ("策划工作台读侧做真"): instead of letting the page derive
+ * its ViewModel from the fixture selector (which renders "未找到项目" for any
+ * non-canonical project), the route assembles a REAL PlanningViewModel from
+ * `projects.get` + `artifacts.list` + `artifacts.versions.list`, falling back to
+ * the fixture VM per-field / wholesale on failure. See
+ * `planning-workspace-data.ts` for the assembly + degradation contract.
  */
 
 import { PlanningWorkspacePage } from "@/features/planning/planning-workspace-page";
+import { buildPlanningWorkspaceViewModel } from "@/features/planning/planning-workspace-data";
 
 interface PlanningWorkspaceRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -19,5 +27,6 @@ export default async function PlanningWorkspaceRoute({
   params,
 }: PlanningWorkspaceRouteProps) {
   const { projectId } = await params;
-  return <PlanningWorkspacePage projectId={projectId} />;
+  const viewModel = await buildPlanningWorkspaceViewModel(projectId);
+  return <PlanningWorkspacePage projectId={projectId} viewModel={viewModel} />;
 }

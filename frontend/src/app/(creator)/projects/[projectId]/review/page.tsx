@@ -9,44 +9,24 @@
  *
  * Module 11 server read switch: the route fetches the REAL op
  * `analytics.projects.get` (user-scoped pglite) and builds the page
- * ViewModel from the returned `MetricSnapshot[]` via
- * `buildAnalyticsReviewViewModelFromOp`. The per-tab window
+ * ViewModel from the returned `MetricSnapshot[]`. The per-tab window
  * re-derivation stays a pure client selector over the already-fetched
  * data (no new fetch per tab). A resolution failure degrades to the
  * deterministic fixture default so the page never crashes.
+ *
+ * 工作台读侧做真: the ViewModel is now assembled by
+ * `buildReviewWorkspaceViewModel`, which keeps the (mock) metrics/chart base
+ * from the analytics op AND overlays the REAL AI 洞察/经验 region from
+ * `learnings.list` (the AI-distilled experience persisted by the 复盘 pipeline).
+ * See `review-workspace-data.ts` for the real/mock split + degradation contract.
  */
 
 import { AnalyticsReviewPage } from "@/features/review/analytics-review-page";
-import {
-  buildAnalyticsReviewViewModelFromOp,
-  type MetricSnapshotDto,
-} from "@/features/review/analytics-review-view-model";
-import type { AnalyticsViewModel } from "@/types/view-models";
+import { buildReviewWorkspaceViewModel } from "@/features/review/review-workspace-data";
 import { client } from "@/lib/contract-client.server";
 
 interface AnalyticsReviewRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
-}
-
-// Module 11 Step 5 — resolve the review ViewModel server-side from the REAL
-// `analytics.projects.get` op (user-scoped pglite). The op responds with the
-// project's owned MetricSnapshot[]; the builder overlays that live signal onto the
-// deterministic fixture-derived chart shapes (Open Question #2 defers the
-// value/retention/audience read ops). A resolution failure degrades to the fixture
-// default so the page renders its default/empty copy instead of crashing.
-async function resolveReviewViewModel(
-  resolvedId: string,
-): Promise<AnalyticsViewModel | undefined> {
-  try {
-    const snapshots = (await client.getProjectAnalytics({
-      params: { projectId: resolvedId },
-      query: { page: 1, pageSize: 100 },
-      body: undefined,
-    })) as unknown as ReadonlyArray<MetricSnapshotDto>;
-    return buildAnalyticsReviewViewModelFromOp(resolvedId, snapshots);
-  } catch {
-    return undefined;
-  }
 }
 
 export default async function AnalyticsReviewRoute({
@@ -54,7 +34,7 @@ export default async function AnalyticsReviewRoute({
 }: AnalyticsReviewRouteProps) {
   const { projectId } = await params;
   const resolvedId = await resolveProjectIdParam(projectId);
-  const viewModel = await resolveReviewViewModel(resolvedId);
+  const viewModel = await buildReviewWorkspaceViewModel(resolvedId);
   // Module 13 Step 5 — supply the Reviews wiring so the authoring panel + history
   // drill call the real ops (reviews.create/insights.create/complete/get) over the
   // dispatch route, then router.refresh().

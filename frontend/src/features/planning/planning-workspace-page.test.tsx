@@ -30,6 +30,17 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
+// Stub `next/navigation` so the A6 WorkspacePrimaryAction island (in the TopHeader)
+// can call `useRouter()` outside an App Router context.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 // Stub `next/link` so we can assert href values without the Next.js
 // runtime mounting a router.
 vi.mock("next/link", () => ({
@@ -169,13 +180,11 @@ describe("PlanningWorkspacePage", () => {
       '[data-slot="app-top-header"]',
     ) as HTMLElement;
     expect(header).not.toBeNull();
-    const primaryAction = within(header).getByRole("link", {
+    // A6: the advancing primary action is now a transition button (persist-then-navigate).
+    const primaryAction = within(header).getByRole("button", {
       name: /进入下一步:脚本撰写/,
     });
-    expect(primaryAction).toHaveAttribute(
-      "href",
-      "/projects/project-ainativebrowser/script",
-    );
+    expect(primaryAction).not.toBeNull();
   });
 
   it("renders the Planning Tabs in spec order (内容合同/论点树/证据地图/受众洞察/差异化亮点)", async () => {
