@@ -22,6 +22,7 @@ export const AI_OP_IDS = [
   "ai.conversations.list",
   "ai.conversations.create",
   "ai.conversations.messages.create",
+  "ai.conversations.messages.list",
   "ai.tasks.create",
   "ai.tasks.get",
   "ai.tasks.results.list",
@@ -70,6 +71,18 @@ export function createAiTransport(
             b,
           );
           return { data: message, meta: { requestId } };
+        }
+        case "ai.conversations.messages.list": {
+          const rows = await service.listMessages(ctx, p.conversationId ?? "");
+          return {
+            data: rows,
+            meta: {
+              requestId,
+              page: 1,
+              pageSize: Math.max(rows.length, 1),
+              total: rows.length,
+            },
+          };
         }
         case "ai.tasks.create": {
           const b = (body ?? {}) as {

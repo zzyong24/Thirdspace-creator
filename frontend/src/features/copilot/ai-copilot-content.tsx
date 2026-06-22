@@ -16,16 +16,13 @@
  *   ├── QuickEntries
  *   └── SmartRecommendation
  *
- * The content is a Server Component (no `"use client"`). The submit
- * button uses a `<form>` with no `action`, which is a no-op
- * fixture-only local behavior — the dialog MUST NOT issue a real AI
- * request (page-specs §16 "禁止改变": "不新增 Agent 商店", and D-001
- * the product is personal / no real agent network). The chips and
- * cards below the prompt are pure fixture-driven data produced by the
- * `buildCopilotViewModel` selector in `@/fixtures/selectors`.
- *
- * Determinism: no `Date.now` / `Math.random` / network. The dialog
- * renders identically on every load.
+ * This is a client island. The composer is wired to the REAL backend: a
+ * submit ensures a per-session AI conversation, posts the USER message,
+ * and polls `listMessages` for the assistant reply — produced async by the
+ * positioning-aware copilot runner (Claude on the user's subscription).
+ * The chips and cards below the prompt remain pure fixture-driven data
+ * produced by the `buildCopilotViewModel` selector in `@/fixtures/selectors`
+ * (decorative only — unchanged).
  */
 
 import * as React from "react";
@@ -54,6 +51,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { buildCopilotViewModel } from "@/fixtures/selectors";
+import { client } from "@/lib/contract-client";
 import type { BasePageViewModel } from "@/types/view-models";
 
 // ---------------------------------------------------------------------------
@@ -252,22 +250,24 @@ interface CopilotMessage {
   readonly text: string;
 }
 
-/**
- * Deterministic, network-free assistant reply. The Copilot dialog MUST
- * NOT issue a real AI request (page-specs §16, decision D-001) — instead
- * we echo the prompt back with a fixed acknowledgement so the local
- * interaction is fully reproducible.
- */
-function cannedReply(prompt: string): string {
-  return `收到，我已记录你的请求：「${prompt}」。这是本地占位回复，尚未连接真实模型。`;
+// The wire shape of an AIMessage as returned by the list op (cast structurally so the
+// island has no contract-package type dependency, mirroring other list call sites).
+interface WireMessage {
+  readonly id: string;
+  readonly role: "user" | "assistant" | "system";
+  readonly content: string;
 }
+
+const POLL_INTERVAL_MS = 3000;
+const MAX_POLLS = 20; // ~60s — the agent reply (subscription subprocess) usually lands sooner.
 
 export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   const vm = viewModel ?? buildCopilotViewModel();
 
-  // Controlled composer + local (network-free) activity log seeded from
-  // the ViewModel prompt. Submitting appends the user message and a
-  // deterministic canned assistant reply — no fetch / Date.now / random.
+  // Controlled composer wired to the REAL backend. The first submit ensures a
+  // conversation exists (reused for the session); each submit posts the USER message,
+  // optimistically renders the user bubble, then polls listMessages until a real
+  // assistant reply (produced async by the positioning-aware copilot runner) appears.
   const [prompt, setPrompt] = React.useState<string>(vm.prompt);
   const [messages, setMessages] = React.useState<ReadonlyArray<CopilotMessage>>(
     () =>
@@ -275,24 +275,97 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
         ? [{ id: "seed-user", role: "user", text: vm.prompt }]
         : [],
   );
+  const [thinking, setThinking] = React.useState(false);
+  const [timedOut, setTimedOut] = React.useState(false);
+  const conversationIdRef = React.useRef<string | null>(null);
   const submissionRef = React.useRef(0);
+  const cancelledRef = React.useRef(false);
+
+  React.useEffect(
+    () => () => {
+      cancelledRef.current = true;
+    },
+    [],
+  );
 
   const isEmpty = prompt.trim().length === 0;
 
+  // Ensure a single per-session conversation. Created lazily on first submit and reused.
+  const ensureConversation = React.useCallback(async (): Promise<string> => {
+    if (conversationIdRef.current) return conversationIdRef.current;
+    const conversation = (await client.createConversation({
+      params: undefined,
+      query: undefined,
+      body: { title: "AI 助手" },
+    })) as { id: string };
+    conversationIdRef.current = conversation.id;
+    return conversation.id;
+  }, []);
+
   const handleSubmit = React.useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
+    async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const value = prompt.trim();
-      if (value.length === 0) return;
+      if (value.length === 0 || thinking) return;
       const seq = (submissionRef.current += 1);
+      // Optimistically render the user bubble + clear the composer.
       setMessages((prev) => [
         ...prev,
         { id: `u-${seq}`, role: "user", text: value },
-        { id: `a-${seq}`, role: "assistant", text: cannedReply(value) },
       ]);
       setPrompt("");
+      setTimedOut(false);
+      setThinking(true);
+      try {
+        const conversationId = await ensureConversation();
+        const baseline = (await client.listMessages({
+          params: { conversationId },
+          query: undefined,
+          body: undefined,
+        })) as unknown as ReadonlyArray<WireMessage>;
+        const baselineAssistant = baseline.filter(
+          (m) => m.role === "assistant",
+        ).length;
+        await client.createMessage({
+          params: { conversationId },
+          query: undefined,
+          body: { content: value },
+        });
+        // Poll until a NEW assistant reply (one more than baseline) lands.
+        for (let i = 0; i < MAX_POLLS; i++) {
+          if (cancelledRef.current) return;
+          await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+          if (cancelledRef.current) return;
+          const rows = (await client.listMessages({
+            params: { conversationId },
+            query: undefined,
+            body: undefined,
+          })) as unknown as ReadonlyArray<WireMessage>;
+          const assistantRows = rows.filter((m) => m.role === "assistant");
+          if (assistantRows.length > baselineAssistant) {
+            // Render the real thread from the fetched messages (drop system rows).
+            setMessages(
+              rows
+                .filter((m) => m.role === "user" || m.role === "assistant")
+                .map((m) => ({
+                  id: m.id,
+                  role: m.role as "user" | "assistant",
+                  text: m.content,
+                })),
+            );
+            setThinking(false);
+            return;
+          }
+        }
+        // Budget exhausted — leave the optimistic user bubble + a gentle note.
+        setTimedOut(true);
+        setThinking(false);
+      } catch {
+        setTimedOut(true);
+        setThinking(false);
+      }
     },
-    [prompt],
+    [prompt, thinking, ensureConversation],
   );
 
   return (
@@ -346,6 +419,24 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                   {message.text}
                 </li>
               ))}
+              {thinking ? (
+                <li
+                  data-slot="copilot-thinking"
+                  aria-live="polite"
+                  className="flex items-center gap-1.5 self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] text-muted-foreground"
+                >
+                  <span className="size-3 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                  助手思考中…
+                </li>
+              ) : null}
+              {timedOut ? (
+                <li
+                  data-slot="copilot-timeout"
+                  className="self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] text-muted-foreground"
+                >
+                  助手还在思考，稍后刷新查看回复。
+                </li>
+              ) : null}
             </ol>
           ) : null}
           <form
@@ -398,7 +489,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                 </button>
                 <button
                   type="submit"
-                  disabled={isEmpty}
+                  disabled={isEmpty || thinking}
                   data-slot="submit-button"
                   data-testid="submit-button"
                   aria-label="提交提示给 Copilot"

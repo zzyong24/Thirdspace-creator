@@ -78,6 +78,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/ai/conversations"],
   ["POST", "/ai/conversations"],
   ["POST", "/ai/conversations/:conversationId/messages"],
+  ["GET", "/ai/conversations/:conversationId/messages"],
   ["POST", "/ai/tasks"],
   ["GET", "/ai/tasks/:taskId"],
   ["GET", "/ai/tasks/:taskId/results"],

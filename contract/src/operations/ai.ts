@@ -45,6 +45,15 @@ export const aiOperations = {
     response: aiMessageResource,
     fr: ["FR-AI-MESSAGES-CREATE"],
   }),
+  listMessages: defineEndpoint({
+    id: "ai.conversations.messages.list",
+    method: "GET",
+    path: "/ai/conversations/:conversationId/messages",
+    params: conversationParams,
+    response: aiMessageResource,
+    isList: true,
+    fr: ["FR-AI-MESSAGES-LIST"],
+  }),
   createAITask: defineEndpoint({
     id: "ai.tasks.create",
     method: "POST",

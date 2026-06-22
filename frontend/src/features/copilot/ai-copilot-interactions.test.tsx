@@ -1,22 +1,29 @@
 /**
- * Behavior tests for the AI Copilot composer (Increment 4 / page-specs §16).
+ * Behavior tests for the AI Copilot composer (page-specs §16, Copilot 做真).
  *
- * These cover the client interactivity added in the functional remediation:
- *  - the composer textarea is controlled,
- *  - submitting a non-empty prompt appends the user message AND a
- *    deterministic, network-free canned assistant reply,
- *  - a suggested-action chip fills the composer with its label,
- *  - the submit/clear controls are disabled when the composer is empty,
- *  - a CopilotHeader is rendered (page-specs §16 component tree).
- *
- * Determinism: the assistant reply is a pure echo — no fetch / Date.now /
- * Math.random — so the rendered text is fully reproducible.
+ * The composer is now wired to the REAL backend: submitting a prompt ensures a
+ * conversation, posts the USER message, and polls `listMessages` for the assistant
+ * reply produced async by the positioning-aware copilot runner. These tests mock
+ * `@/lib/contract-client` (like research-notes-island.test.tsx) and assert the
+ * backend calls + the optimistic user bubble + the polled assistant reply.
  */
 
 import * as React from "react";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const createConversation = vi.fn();
+const createMessage = vi.fn();
+const listMessages = vi.fn();
+
+vi.mock("@/lib/contract-client", () => ({
+  client: {
+    createConversation: (...args: unknown[]) => createConversation(...args),
+    createMessage: (...args: unknown[]) => createMessage(...args),
+    listMessages: (...args: unknown[]) => listMessages(...args),
+  },
+}));
 
 import { AICopilotContent } from "./ai-copilot-content";
 import type { CopilotContentViewModel } from "./ai-copilot-content";
@@ -40,7 +47,13 @@ const VM: CopilotContentViewModel = {
   smartRecommendations: [],
 };
 
-describe("AI Copilot composer behavior", () => {
+beforeEach(() => {
+  createConversation.mockReset();
+  createMessage.mockReset();
+  listMessages.mockReset();
+});
+
+describe("AI Copilot composer behavior (backend-wired)", () => {
   it("renders a CopilotHeader (page-specs §16 component tree)", () => {
     render(<AICopilotContent viewModel={VM} />);
     expect(document.querySelector('[data-slot="copilot-header"]')).not.toBeNull();
@@ -57,23 +70,50 @@ describe("AI Copilot composer behavior", () => {
     expect(submit).not.toBeDisabled();
   });
 
-  it("submitting appends the user message and a deterministic canned reply", async () => {
+  it("submitting ensures a conversation, posts the user message, and renders the polled assistant reply", async () => {
     const user = userEvent.setup();
+    createConversation.mockResolvedValue({ id: "conv-1" });
+    // baseline (empty) → after reply lands (user + assistant)
+    listMessages
+      .mockResolvedValueOnce([])
+      .mockResolvedValue([
+        { id: "m-user", role: "user", content: "帮我做选题" },
+        { id: "m-assistant", role: "assistant", content: "基于你的定位，建议从……" },
+      ]);
+    createMessage.mockResolvedValue({ id: "m-user", role: "user" });
+
     render(<AICopilotContent viewModel={VM} />);
     const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
-
     await user.type(textarea, "帮我做选题");
-    await user.click(screen.getByLabelText("提交提示给 Copilot"));
 
-    const list = document.querySelector('[data-slot="copilot-messages"]') as HTMLElement;
-    expect(list).not.toBeNull();
-    const messages = within(list).getAllByRole("listitem");
-    // one user echo + one assistant reply
-    expect(messages).toHaveLength(2);
-    expect(messages[0]).toHaveAttribute("data-role", "user");
-    expect(messages[0].textContent).toContain("帮我做选题");
-    expect(messages[1]).toHaveAttribute("data-role", "assistant");
-    expect(messages[1].textContent).toContain("帮我做选题");
+    // Optimistic user bubble appears immediately on submit.
+    await user.click(screen.getByLabelText("提交提示给 Copilot"));
+    await waitFor(() => {
+      const list = document.querySelector(
+        '[data-slot="copilot-messages"]',
+      ) as HTMLElement;
+      expect(within(list).getByText("帮我做选题")).not.toBeNull();
+    });
+
+    // Backend calls fired with the right shapes.
+    expect(createConversation).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { title: "AI 助手" } }),
+    );
+    expect(createMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: { conversationId: "conv-1" },
+        body: { content: "帮我做选题" },
+      }),
+    );
+
+    // The polled assistant reply renders into the thread (poll interval is ~3s real-time).
+    await waitFor(
+      () => {
+        const assistant = document.querySelector('[data-role="assistant"]');
+        expect(assistant?.textContent ?? "").toContain("基于你的定位");
+      },
+      { timeout: 8000 },
+    );
 
     // composer cleared after submit
     expect(textarea.value).toBe("");
@@ -87,16 +127,6 @@ describe("AI Copilot composer behavior", () => {
 
     await user.click(screen.getByText("帮我写脚本开场"));
     expect(textarea.value).toBe("帮我写脚本开场");
-    // and submit becomes enabled
     expect(screen.getByLabelText("提交提示给 Copilot")).not.toBeDisabled();
-  });
-
-  it("does not issue a network request: assistant reply is the local echo placeholder", async () => {
-    const user = userEvent.setup();
-    render(<AICopilotContent viewModel={VM} />);
-    await user.type(screen.getByLabelText("我能帮你做什么"), "测试");
-    await user.click(screen.getByLabelText("提交提示给 Copilot"));
-    const assistant = document.querySelector('[data-role="assistant"]');
-    expect(assistant?.textContent ?? "").toContain("本地占位回复");
   });
 });

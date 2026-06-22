@@ -329,7 +329,7 @@ describe("ai service", () => {
     expect(c2.status).toBe("cancelled");
   });
 
-  it("createMessage appends a user message then a stubbed assistant reply, bumps conversation updatedAt", async () => {
+  it("createMessage writes ONLY the user message; the assistant reply lands via appendAssistantMessage", async () => {
     const { service } = makeService(db);
     const conv = await service.createConversation(ctx, {
       title: "Copilot",
@@ -340,8 +340,18 @@ describe("ai service", () => {
       attachments: [],
     });
     expect(userMsg.role).toBe("user");
+    // No synchronous assistant stub — the thread has just the user message now.
+    const afterUser = await service.listMessages(ctx, conv.id);
+    expect(afterUser.map((m) => m.role)).toEqual(["user"]);
+
+    // The composition-layer runner appends the real reply through this seam.
+    const reply = await service.appendAssistantMessage(
+      ctx,
+      conv.id,
+      "建议从一个反常识钩子开场……",
+    );
+    expect(reply.role).toBe("assistant");
     const all = await service.listMessages(ctx, conv.id);
-    // user message + deterministic assistant stub
     expect(all.map((m) => m.role)).toEqual(["user", "assistant"]);
     expect(all[1]!.content.length).toBeGreaterThan(0);
   });

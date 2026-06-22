@@ -98,6 +98,34 @@ describe("ai contract (each op validates against its DTO)", () => {
     expect(parsed.content).toBe("改写开场");
   });
 
+  it("ai.conversations.messages.list → aiMessageResource[] (list envelope)", async () => {
+    const transport = makeTransport(db);
+    const conv = await call(
+      transport,
+      "ai.conversations.create",
+      { body: { title: "C" } },
+      ctx,
+    );
+    const convId = (conv.data as { id: string }).id;
+    await call(
+      transport,
+      "ai.conversations.messages.create",
+      { params: { conversationId: convId }, body: { content: "改写开场" } },
+      ctx,
+    );
+    const env = await call(
+      transport,
+      "ai.conversations.messages.list",
+      { params: { conversationId: convId } },
+      ctx,
+    );
+    const items = (env.data as unknown[]) ?? [];
+    // createMessage now writes ONLY the user message (the assistant reply lands async).
+    expect(items.length).toBe(1);
+    for (const item of items) ENDPOINTS.listMessages.response.parse(item);
+    expect((env.meta as { total?: number }).total).toBe(1);
+  });
+
   it("ai.tasks.create → aiTaskResource (queued)", async () => {
     const transport = makeTransport(db);
     const env = await call(

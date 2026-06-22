@@ -159,6 +159,15 @@ export interface AiService {
     conversationId: string,
     body: { content: string; attachments?: string[] },
   ): Promise<AIMessageResource>;
+  // Composition-layer write seam (机制④ async exec, mirrors recordCandidate): the
+  // copilot runner produces a real positioning-aware reply on the user's subscription
+  // token in the BACKGROUND, then appends it as an assistant-role message here. The
+  // service stays deterministic (no SDK); the UI surfaces the reply via listMessages.
+  appendAssistantMessage(
+    ctx: RequestContext,
+    conversationId: string,
+    content: string,
+  ): Promise<AIMessageResource>;
   listMessages(
     ctx: RequestContext,
     conversationId: string,
@@ -244,16 +253,6 @@ function stableHash(parts: string[]): string {
   return (h >>> 0).toString(16).padStart(8, "0");
 }
 
-// Deterministic assistant reply stub for the Copilot advisory path (design-spec §9 Q3
-// v1 poll-to-result). Until ANTHROPIC_API_KEY is supplied + the worker drains the
-// copilot.assist task, the message thread renders this stub so the chain is testable.
-// Derived purely from the prompt — no clock / randomness.
-function assistantStub(content: string): string {
-  const trimmed = content.trim();
-  const preview = trimmed.length > 40 ? `${trimmed.slice(0, 40)}…` : trimmed;
-  return `已收到你的请求：「${preview}」。我会基于当前项目上下文给出建议（AI 执行中，稍后刷新查看完整回复）。`;
-}
-
 export function createAiService(deps: ServiceDeps): AiService {
   function repoFor(ctx: RequestContext): AiRepository {
     return createAiRepository(deps.db, {
@@ -279,23 +278,27 @@ export function createAiService(deps: ServiceDeps): AiService {
 
     async createMessage(ctx, conversationId, body) {
       const repo = repoFor(ctx);
+      // Write ONLY the user message. The real assistant reply is produced async by the
+      // composition-layer copilot runner (positioning-aware Claude on the user's
+      // subscription token) and appended via appendAssistantMessage; the UI surfaces it
+      // by polling listMessages. The service stays deterministic (no SDK inline).
       const userRow = await repo.createMessage(conversationId, {
         role: "user",
         content: body.content,
         attachments: body.attachments ?? [],
         modelMetadata: {},
       });
-      // v1 deterministic assistant reply (design-spec §9 Q3). The real async reply is
-      // produced by the worker's copilot.assist node; the stub keeps the thread
-      // coherent without the Agent SDK. Returns the USER message (the 生成 button row);
-      // the assistant reply renders on the next poll/refresh.
-      await repo.createMessage(conversationId, {
-        role: "assistant",
-        content: assistantStub(body.content),
-        attachments: [],
-        modelMetadata: { stub: true },
-      });
       return toMessageDto(userRow);
+    },
+
+    async appendAssistantMessage(ctx, conversationId, content) {
+      const row = await repoFor(ctx).createMessage(conversationId, {
+        role: "assistant",
+        content,
+        attachments: [],
+        modelMetadata: {},
+      });
+      return toMessageDto(row);
     },
 
     async listMessages(ctx, conversationId) {

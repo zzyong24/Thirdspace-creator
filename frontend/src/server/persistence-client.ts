@@ -130,6 +130,7 @@ import { runScriptDraft } from "@/server/ai/script-runner";
 import { runReviewAnalyze } from "@/server/ai/review-runner";
 import { runPlatformAdapt } from "@/server/ai/platform-adapt-runner";
 import { runMaterialMatch } from "@/server/ai/material-match-runner";
+import { runCopilotAssist } from "@/server/ai/copilot-runner";
 import {
   createPositioningService,
   createPositioningTransport,
@@ -1366,6 +1367,44 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               positioning: positioningReader,
               learnings: learningsReader,
               assets: assetsReader,
+            },
+          );
+        }
+      }
+      // 全局 AI 助手 (copilot.assist) — a USER message create fires the positioning-aware
+      // assistant runner in the BACKGROUND (fire-and-forget, mirrors the task triggers).
+      // The runner reads the conversation, assembles the positioning brief (+ 飞轮
+      // learnings), runs real Claude, and appends the assistant reply via the service; the
+      // UI polls listMessages for it. The AI module/service stays deterministic.
+      if (endpoint.id === "ai.conversations.messages.create" && ctx) {
+        const { params, body } = (input ?? {}) as {
+          params?: { conversationId?: string };
+          body?: { projectId?: string };
+        };
+        const conversationId =
+          typeof params?.conversationId === "string"
+            ? params.conversationId
+            : "";
+        if (conversationId) {
+          const positioningReader = {
+            getPositioningCenter: (c: RequestContext) =>
+              positioningService.getPositioningCenter(c),
+          };
+          const learningsReader = {
+            getSuggestions: (c: RequestContext, opts: { limit?: number }) =>
+              learningsService.getSuggestions(c, opts),
+          };
+          void runCopilotAssist(
+            ctx,
+            {
+              conversationId,
+              projectId:
+                typeof body?.projectId === "string" ? body.projectId : null,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
             },
           );
         }
