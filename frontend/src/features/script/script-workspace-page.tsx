@@ -60,6 +60,30 @@ export interface ScriptWorkspacePageProps {
    * round-trips into the editor. When omitted, the fixture `vm.sections` render.
    */
   readonly sectionsOverride?: ReadonlyArray<ScriptSectionView> | null;
+  /**
+   * GAP-SCR-1: the REAL version history (artifacts.versions.list). When supplied
+   * (non-null), it overrides the fixture `vm.versions`. An empty array is a valid
+   * real result (renders the "暂无版本记录" empty state). null → keep fixture.
+   */
+  readonly versionsOverride?: ScriptViewModel["versions"] | null;
+  /**
+   * GAP-SCR-1: the REAL outline derived from the CURRENT version's section
+   * headings. Overrides the fixture `vm.outline` when supplied. null → fixture.
+   */
+  readonly outlineOverride?: ScriptViewModel["outline"] | null;
+  /**
+   * GAP-SCR-1: REAL pull-quote candidates derived from emphasis sections.
+   * Overrides the fixture `vm.goldenQuotes` when supplied. null → fixture.
+   */
+  readonly goldenQuotesOverride?: ScriptViewModel["goldenQuotes"] | null;
+  /**
+   * GAP-SCR-1: switches the AI 写作建议 card to its honest empty-state guidance
+   * (there is no deterministic suggestions producer this wave). The async route
+   * passes `true` for a real, persisted script so the rail stops rendering the
+   * fixture桩 and instead guides the creator to run the 分镜脚本 AI node. Defaults
+   * to false so the fixture/demo path keeps its curated suggestions.
+   */
+  readonly aiSuggestionsGuide?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -70,6 +94,10 @@ export function ScriptWorkspacePage({
   projectId,
   viewModel,
   sectionsOverride,
+  versionsOverride,
+  outlineOverride,
+  goldenQuotesOverride,
+  aiSuggestionsGuide = false,
 }: ScriptWorkspacePageProps) {
   const vm = viewModel ?? buildScriptViewModel(projectId);
   // Prefer the saved / AI-drafted version's sections (round-trip) when the route
@@ -78,6 +106,12 @@ export function ScriptWorkspacePage({
     sectionsOverride && sectionsOverride.length > 0
       ? sectionsOverride
       : vm.sections;
+  // GAP-SCR-1 per-field overrides: a non-null override (even an empty array) is a
+  // REAL read result and wins over the fixture桩; null keeps the fixture field so
+  // the demo / unit-test baseline does not regress.
+  const versions = versionsOverride ?? vm.versions;
+  const outline = outlineOverride ?? vm.outline;
+  const goldenQuotes = goldenQuotesOverride ?? vm.goldenQuotes;
   return (
     <main
       data-app="creatoros"
@@ -100,7 +134,7 @@ export function ScriptWorkspacePage({
             artifactId={vm.scriptArtifactId}
           />
           <VersionHistoryStrip
-            versions={vm.versions}
+            versions={versions}
             artifactId={vm.scriptArtifactId}
           />
         </div>
@@ -115,9 +149,12 @@ export function ScriptWorkspacePage({
               topic={vm.topic}
             />
           ) : null}
-          <OutlineStructureCard items={vm.outline} />
-          <AIWritingSuggestionsCard items={vm.aiSuggestions} />
-          <GoldenQuotesCard items={vm.goldenQuotes} />
+          <OutlineStructureCard items={outline} />
+          <AIWritingSuggestionsCard
+            items={vm.aiSuggestions}
+            guide={aiSuggestionsGuide}
+          />
+          <GoldenQuotesCard items={goldenQuotes} />
         </div>
       </div>
     </main>
@@ -219,7 +256,9 @@ function OutlineStructureCard({
         description={`${items.length} 个章节`}
       >
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无大纲。</p>
+          <p className="text-sm text-muted-foreground">
+            保存或生成脚本后，这里会列出各分段标题作为大纲。
+          </p>
         ) : (
           <ol
             data-slot="outline-list"
@@ -253,9 +292,36 @@ function OutlineStructureCard({
 
 function AIWritingSuggestionsCard({
   items,
+  guide,
 }: {
   items: ScriptViewModel["aiSuggestions"];
+  /**
+   * GAP-SCR-1: when true, this card has NO deterministic suggestions producer, so
+   * it renders an honest "AI 生成区" empty-state that guides the creator to run the
+   * 分镜脚本 AI node (right rail above) instead of showing a fixture桩.
+   */
+  guide?: boolean;
 }) {
+  if (guide) {
+    return (
+      <div
+        data-slot="ai-writing-suggestions-card"
+        data-ai-region="true"
+        data-empty="guide"
+      >
+        <SectionCard title="AI 写作建议" description="AI 生成区">
+          <div className="flex flex-col gap-1.5 rounded-control border border-dashed border-border bg-surface px-2.5 py-2">
+            <p className="text-sm font-medium text-foreground">
+              点上方「帮我写分镜脚本」生成建议
+            </p>
+            <p className="text-xs text-muted-foreground">
+              本区由 AI 分镜节点产出，跑一次后这里会给出针对当前脚本的写作建议。
+            </p>
+          </div>
+        </SectionCard>
+      </div>
+    );
+  }
   return (
     <div data-slot="ai-writing-suggestions-card">
       <SectionCard
@@ -338,7 +404,9 @@ function GoldenQuotesCard({
     <div data-slot="golden-quotes-card">
       <SectionCard title="金句" description={`${items.length} 条候选`}>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无金句。</p>
+          <p className="text-sm text-muted-foreground">
+            把脚本里想强调的句子标为金句段，这里会自动汇总成候选。
+          </p>
         ) : (
           <ul
             data-slot="golden-quote-list"

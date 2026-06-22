@@ -60,6 +60,7 @@ import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { buildSearchViewModel } from "@/fixtures/selectors";
 
 import { SearchInteractiveRegion } from "./search-interactive-region";
+import { ResultTypeTabs } from "./result-type-tabs";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -278,95 +279,12 @@ export function SearchPage({
 }
 
 // ---------------------------------------------------------------------------
-// ResultTypeTabs
+// ResultTypeTabs is now a client island (`./result-type-tabs.tsx`). It makes the
+// four type tabs a REAL client-side facet over the already-grouped results
+// (§290). The former decorative topic chips (§291 AI/教程/…) had NO data backing
+// in the VM (the adapter drops per-entity tags) and have been removed rather
+// than left as silent inert buttons (GAP-SRCH-1, D-SRCH-a).
 // ---------------------------------------------------------------------------
-
-const FILTER_CHIPS: ReadonlyArray<{ id: string; label: string }> = [
-  { id: "chip-ai", label: "AI" },
-  { id: "chip-tutorial", label: "教程" },
-  { id: "chip-prompt", label: "提示词" },
-  { id: "chip-agent", label: "Agent" },
-  { id: "chip-monetize", label: "变现" },
-  { id: "chip-global", label: "出海" },
-];
-
-function ResultTypeTabs({
-  tabs,
-  totalCount,
-}: {
-  tabs: ReadonlyArray<ResultTypeTab>;
-  totalCount: number;
-}) {
-  return (
-    <div
-      data-slot="result-type-tabs-block"
-      className="-mt-1 flex flex-col gap-2"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* §290 Result type tabs (项目/知识/素材/视频) — decorative per roadmap §4
-            (scope facet, intentionally inert: no onClick handler this wave). */}
-        <nav
-          data-slot="result-type-tabs"
-          aria-label="搜索结果类型"
-          className="flex flex-wrap items-center gap-1.5"
-        >
-          {tabs.map((tab, index) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              data-slot="result-type-tab"
-              data-tab-id={tab.id}
-              data-pressed={index === 0 ? "true" : "false"}
-              aria-selected={index === 0}
-              className="inline-flex h-7 items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 text-[12px] font-medium text-foreground data-[pressed=true]:border-brand/60 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
-            >
-              <span>{tab.label}</span>
-              <span
-                data-slot="result-type-tab-count"
-                className="font-mono text-[10px] text-muted-foreground data-[pressed=true]:text-brand/70"
-              >
-                {tab.count}
-              </span>
-            </button>
-          ))}
-        </nav>
-        <span
-          data-slot="result-type-sort"
-          className="text-[11px] text-muted-foreground"
-        >
-          按相关性排序
-        </span>
-      </div>
-      <div
-        data-slot="result-type-meta"
-        className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground"
-      >
-        <span data-slot="result-type-count">
-          找到 <span className="font-mono text-foreground">{totalCount}</span> 个结果
-        </span>
-        {/* §291 Topic filter chips (AI/教程/提示词/Agent/变现/出海) — decorative per
-            roadmap §4 (intentionally inert: no filter handler this wave). */}
-        <div
-          data-slot="result-type-filter-chips"
-          className="flex flex-wrap items-center gap-1.5"
-        >
-          {FILTER_CHIPS.map((chip) => (
-            <button
-              key={chip.id}
-              type="button"
-              data-slot="result-type-filter-chip"
-              data-chip-id={chip.id}
-              className="inline-flex h-5 items-center rounded-full border border-border bg-surface px-2 text-[10px] font-medium text-foreground hover:bg-surface-subtle"
-            >
-              {chip.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // SearchResults
@@ -392,10 +310,23 @@ function SearchResults({
       data-slot="search-results"
       className="flex flex-col gap-3"
     >
-      <ProjectResultSection projects={projects} />
-      <KnowledgeResultSection rows={knowledge} />
-      <AssetResultSection items={assets} />
-      <VideoResultSection items={videos} />
+      {/* Each group carries `data-result-group` so the ResultTypeTabs client
+          island can filter the visible groups by entity type (§290) by toggling
+          the wrapper's `hidden` attribute. Plain block wrappers (not
+          `display:contents`) so the UA `[hidden] { display:none }` rule actually
+          removes the group when filtered. */}
+      <div data-result-group="project">
+        <ProjectResultSection projects={projects} />
+      </div>
+      <div data-result-group="knowledge">
+        <KnowledgeResultSection rows={knowledge} />
+      </div>
+      <div data-result-group="asset">
+        <AssetResultSection items={assets} />
+      </div>
+      <div data-result-group="video">
+        <VideoResultSection items={videos} />
+      </div>
     </div>
   );
 }
@@ -745,20 +676,36 @@ function SearchFilters({
   filters: ReadonlyArray<SearchFilterOption>;
 }) {
   return (
-    <SectionCard title="筛选" description="按类型、阶段、标签缩小范围">
-      {/* §294 Side facet rows (type/stage/tag) — decorative per roadmap §4
-          (intentionally inert: no facet apply handler this wave). */}
+    <SectionCard
+      title="筛选"
+      description="按类型、阶段、标签缩小范围"
+      action={
+        <span
+          data-slot="search-filters-planned-badge"
+          className="inline-flex h-4 items-center rounded-full border border-border bg-surface-subtle px-1.5 text-[9px] font-medium text-muted-foreground"
+        >
+          规划中
+        </span>
+      }
+    >
+      {/* §294 Side facet rows (type/stage/tag). The facet COUNTS are real (from
+          the `pages.search.get` DTO `filters[].options`), but applying a facet
+          needs a server-side `search.facets` aggregation op that does not exist
+          this wave (GAP-SRCH-1, D-SRCH-a). Rather than fake clickable buttons,
+          these render as a read-only facet summary with an explicit「规划中」
+          badge — honest counts, no silent inert control. Result-type narrowing
+          is fully real via the ResultTypeTabs client facet above. */}
       <ul
         data-slot="search-filters"
         className="flex flex-col gap-1.5"
-        aria-label="搜索筛选"
+        aria-label="搜索筛选（规划中）"
       >
         {filters.map((filter) => (
           <li
             key={filter.id}
             data-slot="search-filter-row"
             data-filter-id={filter.id}
-            className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-surface-subtle"
+            className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm"
           >
             <span className="flex items-center gap-2 text-foreground">
               <TagChip label={filter.label} tone={filter.tone} size="sm" />
@@ -769,6 +716,9 @@ function SearchFilters({
           </li>
         ))}
       </ul>
+      <p className="mt-1.5 px-2 text-[10px] leading-snug text-muted-foreground">
+        高级分面筛选（类型 / 阶段 / 标签组合）即将开放；当前可用上方「结果类型」标签快速定位。
+      </p>
     </SectionCard>
   );
 }

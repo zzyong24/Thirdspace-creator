@@ -5,41 +5,58 @@ import {
   buildKnowledgeViewModel,
   buildRecentRowsFromItems,
 } from "@/fixtures/selectors";
-import type { KnowledgeViewModel } from "./knowledge-page";
+import type {
+  KnowledgeViewModel,
+  KnowledgeTag as KnowledgeTagVm,
+  KnowledgeInsight as KnowledgeInsightVm,
+  KnowledgeUnsorted as KnowledgeUnsortedVm,
+  KnowledgeSnippet as KnowledgeSnippetVm,
+} from "./knowledge-page";
 import type { MetricCard as MetricCardVm } from "@/types/view-models";
 
 /**
  * Knowledge & Memory READ-side data assembly ("知识库读侧做真").
  *
  * Assembles a REAL `KnowledgeViewModel` for the `/knowledge` route from the
- * one real read op the page has — `knowledge.list` (pglite, user-scoped). The
- * prior page derived only the `recent` table from this op; this helper extends
- * the real derivation to the parts that the list can actually support:
+ * real read ops the page has — `knowledge.list`, `knowledge.relations.list`
+ * (fanned out per item), and `taxonomy.tags.list` (pglite, user-scoped).
  *
  *   - `metrics`     → 知识条目 (total), 本周新增 (createdAt within 7d), 复用片段
  *                     (knowledgeType==="snippet"), 知识关联 (real edge count,
  *                     aggregated via knowledge.relations.list over every item).
- *                     These four are REAL counts. 记忆命中率 has no read op
- *                     (no memory analytics) → kept from the fixture metrics.
- *   - `categories`  → REAL tally by `knowledgeType` over the live list. Empty
- *                     list → honest empty category panel (no fake counts).
- *   - `recent`      → REAL rows (unchanged behavior, via buildRecentRowsFromItems).
- *
- * Everything else (popularTags / memoryInsights / unsorted / snippets list /
- * graphSeries) has no real read path this wave and stays fixture-backed so the
- * insight rail + knowledge-graph chart remain non-empty (page-specs §11 keeps
- * the MemoryInsights block visible). AI-search-confirmed material that writes a
- * KnowledgeItem (knowledge.create, sourceType "ai") flows into `knowledge.list`,
- * so the new entry is reflected in the total / 本周新增 / category counts.
+ *                     These four are REAL counts. 记忆命中率 (km-memory) has NO
+ *                     read op (no memory analytics) → rendered as a 「规划中」
+ *                     placeholder (value "—") instead of a fabricated number.
+ *   - `categories`  → REAL tally by `knowledgeType` over the live list.
+ *   - `recent`      → REAL rows (via buildRecentRowsFromItems).
+ *   - `snippets`    → REAL rows where knowledgeType==="snippet" (the snippet
+ *                     LIST, not just the count). Empty → honest empty state.
+ *   - `unsorted`    → REAL rows with NO relation edge (neither source nor
+ *                     target of any knowledge.relations edge). The resource
+ *                     `status` enum is only active/archived (no "draft"), so
+ *                     the "未整理" signal is "unlinked", derived from the same
+ *                     relations fan-out used for the metric/graph. Empty →
+ *                     honest "全部已整理" empty state.
+ *   - `graphSeries` → REAL graph: one bucket per knowledgeType node with its
+ *                     incident-edge count, derived from the collected edges.
+ *   - `popularTags` → REAL tags from `taxonomy.tags.list`, ranked by the
+ *                     server-derived `usageCount` (descending). Tag read fails
+ *                     or empty → its own empty state, does not block the rest.
+ *   - `memoryInsights` → light insights DERIVED from the relations graph (most
+ *                     connected items). No edges → fixture fallback (page-specs
+ *                     §11 keeps the block non-empty).
  *
  * Degrades gracefully: the whole assembly is wrapped in try/catch and falls
  * back to the pure fixture VM (`buildKnowledgeViewModel()`) if the list read
- * throws, preserving the previous render. The contract client is injected so
- * this helper is unit-testable without the in-process backend.
+ * throws, preserving the previous render. Each secondary read (relations, tags)
+ * is independently guarded so one failure never zeroes the page. The contract
+ * client is injected so this helper is unit-testable without the backend.
  */
 
 // Minimal structural DTO — `knowledge.list` returns KnowledgeItemResource rows;
-// we only read the fields we map.
+// we only read the fields we map. NOTE: the contract resource `status` enum is
+// `active | archived` (no "draft"); we keep the wider union only to stay
+// assignable from the fixture row type.
 interface KnowledgeListDto {
   readonly id: string;
   readonly title: string;
@@ -50,9 +67,28 @@ interface KnowledgeListDto {
 }
 
 // `knowledge.relations.list` returns KnowledgeRelationResource rows for ONE
-// source item; we only count them.
+// source item; we read the endpoints + type to build graph edges.
 interface KnowledgeRelationDto {
   readonly id: string;
+  readonly sourceKnowledgeId: string;
+  readonly targetKnowledgeId: string;
+  readonly relationType: string;
+}
+
+// `taxonomy.tags.list` returns TagResource rows; `usageCount` is the
+// server-derived denormalized popularity counter.
+interface TagDto {
+  readonly id: string;
+  readonly name: string;
+  readonly color?: string;
+  readonly usageCount: number;
+}
+
+// A collected graph edge (one per knowledge.relations row).
+interface GraphEdge {
+  readonly source: string;
+  readonly target: string;
+  readonly type: string;
 }
 
 export interface KnowledgeDataClient {
@@ -64,6 +100,12 @@ export interface KnowledgeDataClient {
   listKnowledgeRelations(input: {
     params: { knowledgeId: string };
     query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+  // taxonomy.tags.list — paginated tag list; ranked client-side by usageCount.
+  listTags(input: {
+    params: undefined;
+    query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
 }
@@ -113,33 +155,49 @@ export async function buildKnowledgeDashboardViewModel(
     return base;
   }
 
-  // REAL 知识关联 count: relations are stored per source item, so we fan out
-  // `knowledge.relations.list` across every live item and sum the edges. A null
-  // result (read threw on every item) signals "no real source" → buildMetrics
-  // keeps the fixture km-relations card instead of showing a fake 0.
-  const relationCount = await countRelations(client, items);
+  // REAL relations: relations are stored per source item, so we fan out
+  // `knowledge.relations.list` across every live item and COLLECT the edges
+  // (one read serves the 知识关联 metric, the graph, the unsorted "unlinked"
+  // signal, and the derived memory insights). A `null` result (read threw on
+  // every item) signals "no real source" → metric keeps the fixture card and
+  // the edge-derived blocks fall back to fixtures.
+  const relations = await collectRelations(client, items);
+
+  // REAL popular tags via taxonomy.tags.list — independently guarded so a tag
+  // read failure (or no taxonomy data) never blocks the rest of the page.
+  const popularTags = await buildPopularTags(client, base.popularTags);
 
   return {
     ...base,
-    metrics: buildMetrics(items, base.metrics, relationCount),
+    metrics: buildMetrics(items, base.metrics, relations?.count ?? null),
     categories: buildCategories(items),
     recent: buildRecentRowsFromItems(items),
+    snippets: buildSnippets(items),
+    unsorted: buildUnsorted(items, relations?.edges ?? null, base.unsorted),
+    graphSeries: buildGraphSeries(items, relations?.edges ?? null, base.graphSeries),
+    memoryInsights: buildMemoryInsights(
+      items,
+      relations?.edges ?? null,
+      base.memoryInsights,
+    ),
+    popularTags,
   };
 }
 
 /**
- * Sum the outgoing relations of every knowledge item via
- * `knowledge.relations.list`. Each per-item read is independently try/caught so
- * one failure does not zero the whole count. Returns `null` ONLY if the list was
- * empty or EVERY per-item read failed (no real signal → keep the fixture card);
- * otherwise the real edge total (which may legitimately be 0).
+ * Fan out `knowledge.relations.list` across every item and COLLECT both the
+ * edge total and the edge list (source/target/type). Each per-item read is
+ * independently try/caught so one failure does not zero the whole result.
+ * Returns `null` ONLY if the list was empty or EVERY per-item read failed (no
+ * real signal → keep fixtures); otherwise `{ count, edges }` where `count` may
+ * legitimately be 0 (real, with `edges: []`).
  */
-async function countRelations(
+async function collectRelations(
   client: KnowledgeDataClient,
   items: ReadonlyArray<KnowledgeListDto>,
-): Promise<number | null> {
+): Promise<{ count: number; edges: ReadonlyArray<GraphEdge> } | null> {
   if (items.length === 0) return null;
-  let total = 0;
+  const edges: GraphEdge[] = [];
   let anyOk = false;
   await Promise.all(
     items.map(async (item) => {
@@ -150,13 +208,19 @@ async function countRelations(
           body: undefined,
         })) as ReadonlyArray<KnowledgeRelationDto>;
         anyOk = true;
-        total += rels.length;
+        for (const rel of rels) {
+          edges.push({
+            source: rel.sourceKnowledgeId,
+            target: rel.targetKnowledgeId,
+            type: rel.relationType,
+          });
+        }
       } catch {
         // Per-item read failed — skip it, keep aggregating the rest.
       }
     }),
   );
-  return anyOk ? total : null;
+  return anyOk ? { count: edges.length, edges } : null;
 }
 
 /**
@@ -215,7 +279,17 @@ function buildMetrics(
               delta: "",
               trend: "flat" as const,
             };
-      // km-memory has no real source — keep the fixture card.
+      case "km-memory":
+        // 记忆命中率 has NO read op (no memory analytics). We refuse to render
+        // the fixture number (78%) as if real — show a 「规划中」 placeholder so
+        // the five-card row stays intact without fabricating a metric.
+        return {
+          ...card,
+          value: "—",
+          delta: "规划中",
+          trend: "flat" as const,
+          tone: "neutral" as const,
+        };
       default:
         return card;
     }
@@ -243,6 +317,185 @@ function buildCategories(
       count,
       tone: CATEGORY_TONE[type] ?? "neutral",
     }));
+}
+
+/**
+ * REAL reusable-snippets LIST: the live `knowledge.list` rows whose
+ * `knowledgeType` is "snippet" (the metric already counts them; this surfaces
+ * the actual rows). Most-recently-updated first, capped at 6 for the rail.
+ * Empty → `[]` so ReusableSnippets renders its honest empty state (no fixture).
+ */
+function buildSnippets(
+  items: ReadonlyArray<KnowledgeListDto>,
+): ReadonlyArray<KnowledgeSnippetVm> {
+  return items
+    .filter((item) => item.knowledgeType === "snippet")
+    .slice()
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, 6)
+    .map<KnowledgeSnippetVm>((item) => ({
+      id: item.id,
+      title: item.title,
+      // No revision body in the list read — surface the type as the preview
+      // line so the row is informative without an extra per-item fetch.
+      preview: "可复用片段",
+    }));
+}
+
+/**
+ * REAL 未整理 LIST: items that participate in NO relation edge (neither source
+ * nor target of any collected `knowledge.relations` edge) — the honest
+ * "unlinked / uncategorized" signal. The contract resource `status` enum is
+ * only active/archived (no "draft"), so we derive this from the relations graph
+ * rather than a status flag. `edges === null` (no relations signal) → fixture
+ * fallback; real-but-all-linked → `[]` → "全部已整理" empty state.
+ */
+function buildUnsorted(
+  items: ReadonlyArray<KnowledgeListDto>,
+  edges: ReadonlyArray<GraphEdge> | null,
+  fixture: ReadonlyArray<KnowledgeUnsortedVm>,
+): ReadonlyArray<KnowledgeUnsortedVm> {
+  if (edges === null) return fixture;
+  const linked = new Set<string>();
+  for (const edge of edges) {
+    linked.add(edge.source);
+    linked.add(edge.target);
+  }
+  return items
+    .filter((item) => !linked.has(item.id))
+    .slice()
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, 8)
+    .map<KnowledgeUnsortedVm>((item) => ({
+      id: item.id,
+      title: item.title,
+      ageLabel: ageLabelFor(item.updatedAt),
+    }));
+}
+
+/**
+ * REAL knowledge graph: one series bucket per `knowledgeType`, valued by the
+ * number of relation edges incident to items of that type. `edges === null`
+ * (no relations signal) → fixture fallback. Real-but-no-edges → `[]` → the
+ * KnowledgeGraph "暂无数据" summary (already handled by the page).
+ */
+function buildGraphSeries(
+  items: ReadonlyArray<KnowledgeListDto>,
+  edges: ReadonlyArray<GraphEdge> | null,
+  fixture: ReadonlyArray<{ readonly label: string; readonly value: number }>,
+): ReadonlyArray<{ readonly label: string; readonly value: number }> {
+  if (edges === null) return fixture;
+  const typeOf = new Map<string, string>();
+  for (const item of items) typeOf.set(item.id, item.knowledgeType);
+  const tally = new Map<string, number>();
+  const bump = (id: string) => {
+    const type = typeOf.get(id);
+    if (type === undefined) return;
+    tally.set(type, (tally.get(type) ?? 0) + 1);
+  };
+  for (const edge of edges) {
+    bump(edge.source);
+    bump(edge.target);
+  }
+  return Array.from(tally.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, value]) => ({
+      label: GRAPH_TYPE_LABEL[type] ?? type,
+      value,
+    }));
+}
+
+/**
+ * REAL 记忆洞察 (light): derive a few insights from the relations graph — the
+ * most-connected knowledge items ("高关联条目"). `edges === null` or no edges →
+ * fixture fallback so the block stays non-empty (page-specs §11 keeps it).
+ */
+function buildMemoryInsights(
+  items: ReadonlyArray<KnowledgeListDto>,
+  edges: ReadonlyArray<GraphEdge> | null,
+  fixture: ReadonlyArray<KnowledgeInsightVm>,
+): ReadonlyArray<KnowledgeInsightVm> {
+  if (edges === null || edges.length === 0) return fixture;
+  const titleOf = new Map<string, string>();
+  for (const item of items) titleOf.set(item.id, item.title);
+  const degree = new Map<string, number>();
+  const bump = (id: string) => degree.set(id, (degree.get(id) ?? 0) + 1);
+  for (const edge of edges) {
+    bump(edge.source);
+    bump(edge.target);
+  }
+  const ranked = Array.from(degree.entries())
+    .filter(([id]) => titleOf.has(id))
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+  if (ranked.length === 0) return fixture;
+  return ranked.map<KnowledgeInsightVm>(([id, count]) => ({
+    id: `mi-rel-${id}`,
+    title: `高关联条目:${titleOf.get(id) ?? id}`,
+    body: `与其它条目存在 ${count} 条关联,可作为该主题的中心节点。`,
+  }));
+}
+
+/**
+ * REAL 热门标签 via `taxonomy.tags.list`, ranked by the server-derived
+ * `usageCount` (descending). The read is independently guarded: any failure or
+ * an empty tag set falls back to the fixture tags so the rail block survives.
+ */
+async function buildPopularTags(
+  client: KnowledgeDataClient,
+  fixture: ReadonlyArray<KnowledgeTagVm>,
+): Promise<ReadonlyArray<KnowledgeTagVm>> {
+  let tags: ReadonlyArray<TagDto>;
+  try {
+    tags = (await client.listTags({
+      params: undefined,
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    })) as ReadonlyArray<TagDto>;
+  } catch {
+    return fixture;
+  }
+  if (tags.length === 0) return fixture;
+  return tags
+    .slice()
+    .sort((a, b) => b.usageCount - a.usageCount)
+    .slice(0, 8)
+    .map<KnowledgeTagVm>((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      tone: TAG_COLOR_TONE[tag.color ?? ""] ?? "neutral",
+    }));
+}
+
+// Chinese labels for the knowledgeType graph buckets (mirrors CATEGORY_LABEL,
+// kept separate so graph + category labelling can diverge if needed).
+const GRAPH_TYPE_LABEL: Record<string, string> = {
+  reference: "参考",
+  note: "笔记",
+  snippet: "片段",
+  transcript: "记录",
+  inspiration: "灵感",
+};
+
+// Map a tag's `color` hex to a chip tone (mirrors the fixture selector's
+// color→tone mapping so real tags render consistently).
+const TAG_COLOR_TONE: Record<string, KnowledgeTagVm["tone"]> = {
+  "#f59e0b": "warning",
+  "#0ea5e9": "info",
+  "#22c55e": "success",
+  "#a855f7": "brand",
+};
+
+// Coarse "N 天前 / N 周前" label from an ISO updatedAt. Deterministic given the
+// clock; used only for the 未整理 rail (display-only).
+function ageLabelFor(updatedAt: string): string {
+  const ts = Date.parse(updatedAt);
+  if (!Number.isFinite(ts)) return "";
+  const days = Math.max(0, Math.floor((Date.now() - ts) / (24 * 60 * 60 * 1000)));
+  if (days <= 0) return "今天";
+  if (days < 7) return `${days} 天前`;
+  if (days < 30) return `${Math.floor(days / 7)} 周前`;
+  return `${Math.floor(days / 30)} 个月前`;
 }
 
 function formatCount(value: number): string {

@@ -48,12 +48,12 @@
 
 import * as React from "react";
 
-import { PageTabs } from "@/components/navigation/page-tabs";
 import { buildSettingsViewModel } from "@/fixtures/selectors";
 
 import {
   SettingsMainColumn,
   SettingsRailColumn,
+  SettingsTabsNav,
 } from "./settings-interactive-region";
 
 // ---------------------------------------------------------------------------
@@ -234,11 +234,10 @@ function SettingsTabsRow() {
       aria-label="设置分类导航"
       className="border-b border-border/50 pb-1.5"
     >
-      <PageTabs
-        tabs={SETTINGS_TABS}
-        defaultValue={SETTINGS_TABS[0]!.id}
-        ariaLabel="设置分类导航"
-      />
+      {/* Controlled tab strip: selecting a tab scrolls to and highlights its
+          matching settings section (real partitioned navigation), instead of
+          the prior decorative no-op tabs. */}
+      <SettingsTabsNav tabs={SETTINGS_TABS} defaultValue={SETTINGS_TABS[0]!.id} />
     </div>
   );
 }

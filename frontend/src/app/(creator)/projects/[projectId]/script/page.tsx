@@ -11,7 +11,7 @@
 
 import { ScriptWorkspacePage } from "@/features/script/script-workspace-page";
 import { buildScriptViewModel } from "@/fixtures/selectors";
-import { loadScriptEditorSections } from "@/features/script/script-editor-data";
+import { loadScriptEditorData } from "@/features/script/script-editor-data";
 
 interface ScriptWorkspaceRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -25,11 +25,15 @@ export default async function ScriptWorkspaceRoute({
   // or AI-drafted script shows up in the editor (Plan: 脚本编辑器做真). Falls back to
   // the fixture sections when nothing is persisted (loader returns null).
   const vm = buildScriptViewModel(projectId);
-  const sectionsOverride = await loadScriptEditorSections(vm.scriptArtifactId);
+  const scriptData = await loadScriptEditorData(vm.scriptArtifactId);
   return (
     <ScriptWorkspacePage
       projectId={projectId}
-      sectionsOverride={sectionsOverride}
+      sectionsOverride={scriptData?.sections ?? null}
+      versionsOverride={scriptData ? scriptData.versions : null}
+      outlineOverride={scriptData ? scriptData.outline : null}
+      goldenQuotesOverride={scriptData ? scriptData.goldenQuotes : null}
+      aiSuggestionsGuide={scriptData !== null}
     />
   );
 }

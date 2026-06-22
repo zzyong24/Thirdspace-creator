@@ -544,6 +544,14 @@ function PopularExperienceList({
         aria-label="热门经验列表"
         className="flex flex-col gap-2"
       >
+        {items.length === 0 ? (
+          <li
+            data-slot="popular-experience-empty"
+            className="rounded-lg bg-surface-subtle px-3 py-2 text-sm text-muted-foreground"
+          >
+            暂无热门经验
+          </li>
+        ) : null}
         {items.map((item) => (
           <li
             key={item.id}

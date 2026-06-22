@@ -26,7 +26,10 @@
 
 import { client } from "@/lib/contract-client.server";
 import { ProductionWorkspacePage } from "@/features/production/production-workspace-page";
-import { buildProductionWorkspaceViewModel } from "@/features/production/production-workspace-data";
+import {
+  buildProductionWorkspaceViewModel,
+  countAssetLibrary,
+} from "@/features/production/production-workspace-data";
 import type { ProductionWiring } from "@/features/production/production-interactive-region";
 
 interface ProductionWorkspaceRouteProps {
@@ -92,15 +95,17 @@ export default async function ProductionWorkspaceRoute({
   params,
 }: ProductionWorkspaceRouteProps) {
   const { projectId } = await params;
-  const [wiring, viewModel] = await Promise.all([
+  const [wiring, viewModel, assetLibraryTotal] = await Promise.all([
     resolveWiring(projectId),
     buildProductionWorkspaceViewModel(projectId),
+    countAssetLibrary(),
   ]);
   return (
     <ProductionWorkspacePage
       projectId={projectId}
       viewModel={viewModel}
       wiring={wiring}
+      assetLibraryTotal={assetLibraryTotal}
     />
   );
 }

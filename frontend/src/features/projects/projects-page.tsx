@@ -29,6 +29,7 @@ import { ProgressBar } from "@/components/project/progress-bar";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { StatusTabsBar, type StatusTabsBarTab } from "@/features/projects/status-tabs-bar";
 import { ViewAndSortControls } from "@/features/projects/view-and-sort-controls";
+import { ProjectRowMenu } from "@/features/projects/project-row-menu";
 import { Pagination } from "@/components/navigation/pagination";
 import { buildProjectsViewModel } from "@/fixtures/selectors";
 import { client } from "@/lib/contract-client.server";
@@ -286,14 +287,11 @@ function ProjectListItem({ row }: { row: ProjectListRow }) {
         >
           打开
         </Link>
-        <button
-          type="button"
-          data-slot="project-row-action"
-          aria-label={`${row.title} 的更多操作`}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted-foreground transition-colors hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-        >
-          <span aria-hidden="true">⋯</span>
-        </button>
+        <ProjectRowMenu
+          projectId={row.id}
+          projectTitle={row.title}
+          openHref={workspaceHrefForRow(row)}
+        />
       </div>
     </article>
   );
@@ -329,21 +327,9 @@ function buildProjectStatusTabs(vm: ProjectsViewModel): ReadonlyArray<StatusTabs
       counts[key] = (counts[key] ?? 0) + 1;
     }
   }
-  // Pads counts to the design's 28 total — keeps the tab counts
-  // visually consistent with the reference image while still being
-  // deterministic.
-  const targetTotals: Record<string, number> = {
-    all: 28,
-    active: 12,
-    drafting: 6,
-    production: 4,
-    published: 5,
-    review: 1,
-    archived: 0,
-  };
-  for (const [key, target] of Object.entries(targetTotals)) {
-    counts[key] = target;
-  }
+  // Tab counts are the REAL project distribution (D-PRJ-b): no fixture
+  // `targetTotals` override. `all` is the full list length; per-status
+  // buckets come from `mapProjectStatusToTab` over the live rows.
   return PROJECT_TAB_ORDER.map((descriptor) => ({
     id: descriptor.id,
     label: descriptor.label,

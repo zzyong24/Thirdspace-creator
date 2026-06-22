@@ -124,14 +124,17 @@ export interface KnowledgeSnippet {
 
 export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
   // READ-side made real ("知识库读侧做真"): the VM now derives `recent`, the
-  // `metrics` row (知识条目 total / 本周新增 / 复用片段 are REAL counts; 知识关联
-  // and 记忆命中率 keep their fixture cards — no read op this wave), and the
-  // `categories` tally from the REAL `knowledge.list` op (pglite, user-scoped).
+  // `metrics` row (知识条目 total / 本周新增 / 复用片段 / 知识关联 are REAL counts;
+  // 记忆命中率 has no read op → 「规划中」 placeholder, not a fixture number),
+  // `categories` tally, the reusable-snippet LIST, the 未整理 (unlinked) LIST,
+  // the knowledge GRAPH, and light memory-insights — all from the REAL
+  // `knowledge.list` + `knowledge.relations.list` ops (pglite, user-scoped).
+  // 热门标签 derives from the REAL `taxonomy.tags.list` op (ranked by usageCount).
   // AI-search material confirmed into a KnowledgeItem flows through this list,
-  // so the new entry is reflected in the total / week / category counts. The
-  // insight rail + knowledge-graph chart stay fixture-backed (no read path).
-  // Assembly degrades to the pure fixture VM on read failure. The `viewModel?`
-  // prop remains the test-override seam: when provided, no network read happens.
+  // so the new entry is reflected in the total / week / category counts.
+  // Assembly degrades to the pure fixture VM on read failure; each secondary
+  // read (relations, tags) is independently guarded. The `viewModel?` prop
+  // remains the test-override seam: when provided, no network read happens.
   const vm: KnowledgeViewModel =
     viewModel ?? (await buildKnowledgeDashboardViewModel());
   const isEmpty =

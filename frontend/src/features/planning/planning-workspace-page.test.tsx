@@ -297,6 +297,60 @@ describe("PlanningWorkspacePage", () => {
     });
   });
 
+  it("derives the thesis-tree root from the VM (NOT the hardcoded 'AI Native Browser 重塑入口' constant)", async () => {
+    const { buildPlanningViewModel } = await import("@/fixtures/selectors");
+    const base = buildPlanningViewModel("project-ainativebrowser");
+    // A real project whose core thesis is unrelated to the old hardcoded constant,
+    // with an adopted thesis tree carrying a real `core` column node.
+    const vm = {
+      ...base,
+      coreThesis: { ...base.coreThesis, title: "如何用一支视频讲清复利" },
+      thesisTree: [
+        {
+          id: "thesis-0",
+          column: "core" as const,
+          title: "复利是时间的朋友",
+          summary: "核心立意",
+        },
+        ...base.thesisTree.filter((n) => n.column !== "core"),
+      ],
+    };
+    const { container } = await renderWorkspace("project-ainativebrowser", {
+      viewModel: vm,
+    });
+    const root = container.querySelector(
+      '[data-slot="thesis-tree-root"]',
+    ) as HTMLElement;
+    expect(root).not.toBeNull();
+    // The adopted core node wins as the root label.
+    expect(root.textContent ?? "").toContain("复利是时间的朋友");
+    // The hardcoded constant must never appear anywhere on the page again.
+    expect(container.textContent ?? "").not.toContain(
+      "AI Native Browser 重塑入口",
+    );
+  });
+
+  it("falls back the thesis-tree root to coreThesis.title when no core node is adopted", async () => {
+    const { buildPlanningViewModel } = await import("@/fixtures/selectors");
+    const base = buildPlanningViewModel("project-ainativebrowser");
+    const vm = {
+      ...base,
+      coreThesis: { ...base.coreThesis, title: "项目真实核心论点占位" },
+      // No `core` column node → root falls back to coreThesis.title.
+      thesisTree: base.thesisTree.filter((n) => n.column !== "core"),
+    };
+    const { container } = await renderWorkspace("project-ainativebrowser", {
+      viewModel: vm,
+    });
+    const root = container.querySelector(
+      '[data-slot="thesis-tree-root"]',
+    ) as HTMLElement;
+    expect(root.textContent ?? "").toContain("项目真实核心论点占位");
+    expect(container.textContent ?? "").not.toContain(
+      "AI Native Browser 重塑入口",
+    );
+  });
+
   it("preserves the approved order of Main column blocks (contract → core thesis → thesis tree)", async () => {
     const { container } = await renderWorkspace();
     const main = container.querySelector(

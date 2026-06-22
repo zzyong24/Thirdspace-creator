@@ -103,7 +103,10 @@ export function PlanningWorkspacePage({
             title={vm.coreThesis.title}
             body={vm.coreThesis.body}
           />
-          <ThesisTreeSection nodes={vm.thesisTree} />
+          <ThesisTreeSection
+            nodes={vm.thesisTree}
+            rootLabel={vm.coreThesis.title}
+          />
           {thesisArtifactId ? (
             <div data-slot="planning-thesis-node">
               <PlanningThesisIsland
@@ -161,7 +164,7 @@ function ContentContractSection({
     <div data-slot="content-contract-section">
       <SectionCard
         title="内容合同"
-        description="与观众的契约:四个角度的内容承诺"
+        description="与观众的契约:四个角度的内容承诺（策划脚手架,随 AI 生成回填）"
         action={
           <button
             type="button"
@@ -247,8 +250,10 @@ function CoreThesisCard({
 
 function ThesisTreeSection({
   nodes,
+  rootLabel,
 }: {
   nodes: ReadonlyArray<ThesisNodeView>;
+  rootLabel: string;
 }) {
   const nodesByColumn: Record<ThesisNodeView["column"], ThesisNodeView[]> = {
     core: [],
@@ -259,6 +264,12 @@ function ThesisTreeSection({
   for (const node of nodes) {
     nodesByColumn[node.column].push(node);
   }
+  // The root is the project's REAL core proposition: the first 核心论点 (core column)
+  // node when the AI thesis tree has been adopted, else the project's coreThesis title.
+  // NEVER a hardcoded constant — a real project must show its own core thesis.
+  const rootText =
+    nodesByColumn.core.find((n) => n.title.trim().length > 0)?.title ??
+    (rootLabel.trim().length > 0 ? rootLabel : "核心论点（用 AI 起草论点树后回填）");
   return (
     <div data-slot="thesis-tree-section">
       <SectionCard
@@ -267,9 +278,9 @@ function ThesisTreeSection({
       >
         <div
           data-slot="thesis-tree-root"
-          className="mb-3 flex items-center justify-center rounded-card border border-brand/50 bg-brand-soft/50 px-4 py-2.5 text-[15px] font-semibold text-foreground"
+          className="mb-3 flex items-center justify-center rounded-card border border-brand/50 bg-brand-soft/50 px-4 py-2.5 text-center text-[15px] font-semibold text-foreground"
         >
-          AI Native Browser 重塑入口
+          {rootText}
         </div>
         <ul
           data-slot="thesis-column-list"

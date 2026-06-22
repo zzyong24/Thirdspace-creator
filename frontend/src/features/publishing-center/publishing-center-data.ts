@@ -2,10 +2,13 @@ import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
 import { buildPublishingCenterViewModel } from "@/fixtures/selectors";
+import type { MetricCard as MetricCardVm } from "@/types/view-models";
 import type {
+  PlatformShare,
   PublicationContentType,
   PublicationRow,
   PublishingCenterViewModel,
+  TopContentRow,
 } from "./publishing-center-page";
 
 /**
@@ -20,20 +23,26 @@ import type {
  *                                   target platform — they all surface here).
  *
  * The REAL publication list drives the `PublicationTable` rows (内容标题 / 项目 /
- * 平台 / 发布时间 / 状态). The analytics rail (PublishingMetrics /
- * PlatformComparisonChart / TrendChart / TopContentList) has NO real read path
- * this wave — those are kept from the fixture VM (the page's existing baseline)
- * so the rail does not regress. We do not fabricate per-row 表现 (views /
- * engagement) numbers for real rows: real publications carry no analytics
- * snapshot here, so each real row renders a neutral "暂无数据" 表现 cell instead
- * of a fake play count.
+ * 平台 / 发布时间 / 状态 / 表现). The analytics rail (PublishingMetrics /
+ * PlatformComparisonChart / TrendChart / TopContentList) is aggregated REAL
+ * too: every publication's latest analytics snapshot
+ * (`analytics.publications.get` → `rawMetrics`) is collected ONCE while
+ * building each row, then horizontally aggregated by `buildRailFromSnapshots`
+ * (总播放 / 总互动 / 平台对比 / 按 capturedAt 日序的趋势 / 播放量 top N) — a pure,
+ * deterministic fold (no `Date.now` / `Math.random`). A publication with no
+ * snapshot contributes nothing to the rail and renders a neutral "暂无数据" 表现
+ * cell rather than a fabricated number.
  *
- * Degrades gracefully:
+ * Honest empty state (no more fixture masking):
  *   - per-output: a failed publications read for one output contributes no rows,
+ *   - per-pub rail: a failed/empty snapshot read drops that pub from the rail
+ *     aggregation but never throws,
  *   - wholesale: if the projects read throws, the WHOLE VM falls back to the
- *     fixture builder (preserving the existing visual baseline),
- *   - empty: zero real publications → fall back to the fixture baseline so the
- *     page does not regress to an empty table while the canonical seed is empty.
+ *     fixture builder (the only remaining fallback — an outright read failure,
+ *     not an empty result),
+ *   - empty: zero real publications → an HONEST empty VM (publications:[] + an
+ *     empty rail), so the page renders its 空态 instead of masking it with the
+ *     fixture baseline.
  *
  * The contract client is injected so this helper is unit-testable without the
  * real in-process backend.
@@ -206,16 +215,29 @@ function numOf(raw: Record<string, unknown>, key: string): number {
 }
 
 /**
- * Resolve a publication's REAL 表现 (views + engagement) from its latest analytics
- * snapshot (`analytics.publications.get` → metric snapshots; we read the newest
- * snapshot's `rawMetrics`, the self-describing payload the seed writes). Returns
- * `null` when there is no snapshot / the read fails, so the caller keeps the
- * honest "暂无数据" cell rather than fabricating a number.
+ * The latest analytics snapshot for one publication, normalized to the numbers
+ * both the 表现 cell and the rail aggregation need. `null` when there is no
+ * snapshot / the read fails — read ONCE per publication so the rail never
+ * re-reads (no double N+1).
  */
-async function resolvePerformance(
+interface LatestSnapshot {
+  readonly plays: number;
+  readonly interactions: number;
+  /** ISO timestamp of the newest snapshot — drives the real day-series trend. */
+  readonly capturedAt: string;
+}
+
+/**
+ * Resolve a publication's latest analytics snapshot (`analytics.publications.get`
+ * → metric snapshots; newest `rawMetrics`, the self-describing payload the seed
+ * writes). Returns `null` when there is no snapshot / the read fails, so callers
+ * keep the honest "暂无数据" cell and drop the pub from the rail aggregation
+ * rather than fabricating numbers.
+ */
+async function resolveLatestSnapshot(
   client: PublishingCenterDataClient,
   publicationId: string,
-): Promise<{ views: string; engagementLabel: string; engagementTone: "positive" | "neutral" | "warning" } | null> {
+): Promise<LatestSnapshot | null> {
   try {
     const snapshots = (await client.getPublicationAnalytics({
       params: { publicationId },
@@ -227,19 +249,14 @@ async function resolvePerformance(
       .slice()
       .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0]!;
     const raw = latest.rawMetrics ?? {};
-    const plays = numOf(raw, "plays");
-    const interactions =
-      numOf(raw, "likes") + numOf(raw, "comments") + numOf(raw, "shares") + numOf(raw, "favorites");
-    const rate = plays > 0 ? interactions / plays : 0;
-    // tone: ≥6% interaction rate is strong, ≥2% ok, below is weak (douyin heuristics)
-    const tone = rate >= 0.06 ? "positive" : rate >= 0.02 ? "neutral" : "warning";
     return {
-      views: `${formatCount(plays)} 播放`,
-      engagementLabel:
-        interactions > 0
-          ? `${formatCount(interactions)} 互动 · ${(rate * 100).toFixed(1)}%`
-          : "0 互动",
-      engagementTone: tone,
+      plays: numOf(raw, "plays"),
+      interactions:
+        numOf(raw, "likes") +
+        numOf(raw, "comments") +
+        numOf(raw, "shares") +
+        numOf(raw, "favorites"),
+      capturedAt: latest.capturedAt,
     };
   } catch {
     return null;
@@ -247,13 +264,58 @@ async function resolvePerformance(
 }
 
 /**
- * Build the REAL publication rows by walking projects → outputs → publications.
- * Returns `null` (not `[]`) when the projects read throws, so the caller can
- * distinguish "read failed → fall back wholesale" from "read ok, zero rows".
+ * Format a publication's latest snapshot into the table's 表现 cell. `null`
+ * snapshot → the honest "暂无数据" trio rather than a fabricated number.
+ */
+function formatPerformance(
+  snapshot: LatestSnapshot | null,
+): { views: string; engagementLabel: string; engagementTone: "positive" | "neutral" | "warning" } {
+  if (!snapshot) {
+    return { views: "暂无数据", engagementLabel: "暂无数据", engagementTone: "neutral" };
+  }
+  const { plays, interactions } = snapshot;
+  const rate = plays > 0 ? interactions / plays : 0;
+  // tone: ≥6% interaction rate is strong, ≥2% ok, below is weak (douyin heuristics)
+  const tone = rate >= 0.06 ? "positive" : rate >= 0.02 ? "neutral" : "warning";
+  return {
+    views: `${formatCount(plays)} 播放`,
+    engagementLabel:
+      interactions > 0
+        ? `${formatCount(interactions)} 互动 · ${(rate * 100).toFixed(1)}%`
+        : "0 互动",
+    engagementTone: tone,
+  };
+}
+
+/**
+ * Per-publication input to the analytics rail aggregation. Carries the fields
+ * the rail folds over: 平台 (grouping), 标题 (top-content label), publication
+ * status (已发布 count), and the latest snapshot (plays / interactions /
+ * capturedAt). A pub with no snapshot has `snapshot: null` and contributes to
+ * the 已发布 count but not to play/interaction/trend totals.
+ */
+interface RailInput {
+  readonly publicationId: string;
+  readonly platform: string;
+  readonly title: string;
+  readonly status: PublicationRow["status"];
+  readonly snapshot: LatestSnapshot | null;
+}
+
+interface AssembledRows {
+  readonly rows: ReadonlyArray<PublicationRow>;
+  readonly railInputs: ReadonlyArray<RailInput>;
+}
+
+/**
+ * Build the REAL publication rows (and the rail aggregation inputs) by walking
+ * projects → outputs → publications. Returns `null` (not an empty result) when
+ * the projects read throws, so the caller can distinguish "read failed → fall
+ * back wholesale" from "read ok, zero rows → honest empty".
  */
 async function assembleRealRows(
   client: PublishingCenterDataClient,
-): Promise<ReadonlyArray<PublicationRow> | null> {
+): Promise<AssembledRows | null> {
   let projects: ReadonlyArray<ProjectDto>;
   try {
     projects = (await client.listProjects({
@@ -285,7 +347,7 @@ async function assembleRealRows(
           body: undefined,
         })) as ReadonlyArray<ContentOutputDto>;
       } catch {
-        return [] as ReadonlyArray<PublicationRow>;
+        return [] as ReadonlyArray<{ row: PublicationRow; railInput: RailInput }>;
       }
 
       const outputById = new Map<string, ContentOutputDto>();
@@ -306,7 +368,7 @@ async function assembleRealRows(
       );
 
       return Promise.all(
-        publicationLists.flat().map<Promise<PublicationRow>>(async (pub) => {
+        publicationLists.flat().map<Promise<{ row: PublicationRow; railInput: RailInput }>>(async (pub) => {
         const output = outputById.get(pub.contentOutputId);
         const status = mapStatus(pub.status);
         // 发布时间: prefer the real published timestamp, then the scheduled one,
@@ -317,75 +379,236 @@ async function assembleRealRows(
         // Falls back to the owning output's title placeholder when the revision
         // read yields nothing (empty title / read fails). A platform suffix
         // disambiguates a 一稿多平台 fan-out where one output has N rows.
-        const [revisionTitle, performance] = await Promise.all([
+        const [revisionTitle, snapshot] = await Promise.all([
           resolveRevisionTitle(client, pub),
-          resolvePerformance(client, pub.id),
+          // Read the publication's latest snapshot ONCE — it feeds both the
+          // table 表现 cell and the rail aggregation, so no double N+1.
+          resolveLatestSnapshot(client, pub.id),
         ]);
+        const performance = formatPerformance(snapshot);
         const fallbackTitle = output
           ? `${output.title} · ${platformLabel(pub.platform)}`
           : platformLabel(pub.platform);
+        // 标题 (rail top-content) prefers the bare revision title (no platform
+        // suffix); falls back to the output title, then the platform label.
+        const railTitle = revisionTitle ?? output?.title ?? platformLabel(pub.platform);
         return {
-          id: pub.id,
-          contentTitle: revisionTitle
-            ? `${revisionTitle} · ${platformLabel(pub.platform)}`
-            : fallbackTitle,
-          projectId: project.id,
-          projectTitle: projectTitleById.get(project.id) ?? project.id,
-          contentType: mapContentType(output?.contentType ?? "video"),
-          platform: pub.platform,
-          platformLabel: platformLabel(pub.platform),
-          publishedAt: when,
-          publishedAtLabel: formatDate(when),
-          status,
-          statusLabel: STATUS_LABELS[status],
-          // 表现: REAL play count + engagement from the publication's latest
-          // analytics snapshot (analytics.publications.get → rawMetrics). When a
-          // publication has no snapshot, performance is null → keep the honest
-          // "暂无数据" cell rather than fabricate a number.
-          views: performance ? performance.views : "暂无数据",
-          engagementLabel: performance ? performance.engagementLabel : "暂无数据",
-          engagementTone: performance ? performance.engagementTone : "neutral",
-          thumbnailToken: `pub-${pub.id}`,
+          row: {
+            id: pub.id,
+            contentTitle: revisionTitle
+              ? `${revisionTitle} · ${platformLabel(pub.platform)}`
+              : fallbackTitle,
+            projectId: project.id,
+            projectTitle: projectTitleById.get(project.id) ?? project.id,
+            contentType: mapContentType(output?.contentType ?? "video"),
+            platform: pub.platform,
+            platformLabel: platformLabel(pub.platform),
+            publishedAt: when,
+            publishedAtLabel: formatDate(when),
+            status,
+            statusLabel: STATUS_LABELS[status],
+            // 表现: REAL play count + engagement from the publication's latest
+            // analytics snapshot. No snapshot → the honest "暂无数据" cell.
+            views: performance.views,
+            engagementLabel: performance.engagementLabel,
+            engagementTone: performance.engagementTone,
+            thumbnailToken: `pub-${pub.id}`,
+          },
+          railInput: {
+            publicationId: pub.id,
+            platform: pub.platform,
+            title: railTitle,
+            status,
+            snapshot,
+          },
         };
         }),
       );
     }),
   );
 
-  return perProject
-    .flat()
+  const assembled = perProject.flat();
+  const rows = assembled
+    .map((entry) => entry.row)
     .slice()
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  const railInputs = assembled.map((entry) => entry.railInput);
+  return { rows, railInputs };
+}
+
+// How many rows the 热门内容 rail block shows (D2: top-5).
+const TOP_CONTENT_N = 5;
+
+interface RailBlocks {
+  readonly metrics: ReadonlyArray<MetricCardVm>;
+  readonly platformComparison: ReadonlyArray<PlatformShare>;
+  readonly trend: ReadonlyArray<{ readonly label: string; readonly value: number }>;
+  readonly topContent: ReadonlyArray<TopContentRow>;
+}
+
+// 互动率 percentage label, fixed to one decimal (deterministic).
+function ratePct(interactions: number, plays: number): string {
+  const rate = plays > 0 ? interactions / plays : 0;
+  return `${(rate * 100).toFixed(1)}%`;
 }
 
 /**
- * Build the REAL Publishing Center ViewModel, degrading to the fixture VM.
+ * Aggregate the analytics rail (指标 / 平台对比 / 趋势 / 热门内容) from the REAL
+ * per-publication snapshots collected while building the rows. PURE +
+ * deterministic — a fold over `railInputs`, no `Date.now` / `Math.random` /
+ * network — so SSR output is stable.
+ *
+ * Aggregation口径 (INTERACTION_SPEC GAP-PUBC-1):
+ *   - metrics: 总播放 = Σplays; 总互动 = Σ(likes+comments+shares+favorites);
+ *     平均互动率 = 总互动/总播放; 已发布数 = status==='published' 行数. delta 留空
+ *     (no historical baseline → no fabricated trend). No-snapshot pubs show "—".
+ *   - platformComparison: group by platform, Σplays per group, descending;
+ *     `share` is the raw Σplays (the chart renders proportions from it).
+ *   - trend: bucket Σplays by the snapshot `capturedAt` DATE (real day-series),
+ *     ascending; no snapshots → empty array.
+ *   - topContent: pubs with a snapshot, by plays descending, top N.
+ *
+ * An empty `railInputs` (or one with no snapshots) yields empty/`—` blocks so
+ * the page renders honest 空态 instead of fabricating data.
+ */
+function buildRailFromSnapshots(railInputs: ReadonlyArray<RailInput>): RailBlocks {
+  const withSnapshot = railInputs.filter(
+    (r): r is RailInput & { snapshot: LatestSnapshot } => r.snapshot !== null,
+  );
+  const hasSnapshot = withSnapshot.length > 0;
+
+  const totalPlays = withSnapshot.reduce((acc, r) => acc + r.snapshot.plays, 0);
+  const totalInteractions = withSnapshot.reduce(
+    (acc, r) => acc + r.snapshot.interactions,
+    0,
+  );
+  const publishedCount = railInputs.filter((r) => r.status === "published").length;
+
+  // 指标卡 — `—` when there is no snapshot to derive a real number from (D3:
+  // distinguish "no data" from a real 0). delta stays "" (no baseline).
+  const metrics: ReadonlyArray<MetricCardVm> = [
+    {
+      id: "pubc-total-plays",
+      label: "总播放",
+      value: hasSnapshot ? formatCount(totalPlays) : "—",
+      delta: "",
+      trend: "flat",
+      tone: "info",
+    },
+    {
+      id: "pubc-total-interactions",
+      label: "总互动",
+      value: hasSnapshot ? formatCount(totalInteractions) : "—",
+      delta: "",
+      trend: "flat",
+      tone: "info",
+    },
+    {
+      id: "pubc-avg-engagement",
+      label: "平均互动率",
+      value: hasSnapshot ? ratePct(totalInteractions, totalPlays) : "—",
+      delta: "",
+      trend: "flat",
+      tone: "neutral",
+    },
+    {
+      id: "pubc-published-count",
+      label: "已发布",
+      value: publishedCount.toLocaleString("zh-CN"),
+      delta: "",
+      trend: "flat",
+      tone: "positive",
+    },
+  ];
+
+  // 平台对比 — Σplays per platform, descending; empty groups absent.
+  const playsByPlatform = new Map<string, number>();
+  for (const r of withSnapshot) {
+    playsByPlatform.set(
+      r.platform,
+      (playsByPlatform.get(r.platform) ?? 0) + r.snapshot.plays,
+    );
+  }
+  const platformComparison: ReadonlyArray<PlatformShare> = [...playsByPlatform.entries()]
+    .filter(([, plays]) => plays > 0)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([platform, plays]) => ({
+      platform,
+      platformLabel: platformLabel(platform),
+      share: plays,
+      views: `${formatCount(plays)} 播放`,
+    }));
+
+  // 趋势 — Σplays bucketed by snapshot capturedAt DATE, ascending (real day序).
+  const playsByDate = new Map<string, number>();
+  for (const r of withSnapshot) {
+    const day = formatDate(r.snapshot.capturedAt);
+    playsByDate.set(day, (playsByDate.get(day) ?? 0) + r.snapshot.plays);
+  }
+  const trend = [...playsByDate.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([label, value]) => ({ label, value }));
+
+  // 热门内容 — pubs with a snapshot, plays descending, top N.
+  const topContent: ReadonlyArray<TopContentRow> = withSnapshot
+    .slice()
+    .sort(
+      (a, b) =>
+        b.snapshot.plays - a.snapshot.plays ||
+        a.publicationId.localeCompare(b.publicationId),
+    )
+    .slice(0, TOP_CONTENT_N)
+    .map((r) => ({
+      id: r.publicationId,
+      title: r.title,
+      platform: r.platform,
+      platformLabel: platformLabel(r.platform),
+      views: `${formatCount(r.snapshot.plays)} 播放`,
+      engagement:
+        r.snapshot.interactions > 0
+          ? `${formatCount(r.snapshot.interactions)} 互动`
+          : "0 互动",
+    }));
+
+  return { metrics, platformComparison, trend, topContent };
+}
+
+/**
+ * Build the REAL Publishing Center ViewModel.
+ *
+ * Wholesale fixture fallback survives ONLY for an outright projects-read
+ * failure (`realRows === null`); a successful read with zero rows returns an
+ * HONEST empty VM (publications:[] + an empty rail) so the page shows its 空态
+ * rather than masking it.
  *
  * @param client  the contract client (server-bound). Injected for tests.
  */
 export async function buildPublishingCenterViewModelReal(
   client: PublishingCenterDataClient = defaultClient as unknown as PublishingCenterDataClient,
 ): Promise<PublishingCenterViewModel> {
-  // The fixture VM is the analytics-rail source (no real read path) and the
-  // WHOLE fallback when the projects read fails or there are no real rows.
+  // The fixture VM is the WHOLE fallback ONLY when the projects read outright
+  // fails (null) — never to mask a successful-but-empty result.
   const fixtureVm = buildPublishingCenterViewModel();
 
-  let realRows: ReadonlyArray<PublicationRow> | null;
+  let assembled: AssembledRows | null;
   try {
-    realRows = await assembleRealRows(client);
+    assembled = await assembleRealRows(client);
   } catch {
     return fixtureVm;
   }
 
-  // Projects read failed, or there are no real publications yet → keep the
-  // fixture baseline so the page does not regress to an empty table.
-  if (realRows === null || realRows.length === 0) {
+  // Projects read failed (threw) → keep the fixture baseline (a read failure,
+  // not an empty result). A successful empty read falls through to the honest
+  // empty VM below.
+  if (assembled === null) {
     return fixtureVm;
   }
 
-  // REAL publication rows win for the table; the analytics rail (metrics /
-  // platformComparison / trend / topContent) stays fixture-sourced — it has no
-  // real read path this wave and is honestly the demo baseline.
+  const realRows = assembled.rows;
+  const rail = buildRailFromSnapshots(assembled.railInputs);
+
+  // The content-type tab LABELS come from the fixture (locked order/labels);
+  // the COUNTS reflect the real rows (zero when empty).
   const contentTypeTabs = fixtureVm.contentTypeTabs.map((tab) => ({
     id: tab.id,
     label: tab.label,
@@ -395,6 +618,9 @@ export async function buildPublishingCenterViewModelReal(
         : realRows.filter((row) => row.contentType === tab.id).length,
   }));
 
+  // Zero real rows → an HONEST empty VM. publications:[] drives the page's
+  // existing 空态; the rail is the empty/`—` skeleton from buildRailFromSnapshots
+  // (no fixture masking). Non-zero → real rows + real aggregated rail.
   return {
     scenario: "default",
     kind: "publishing-center",
@@ -402,10 +628,10 @@ export async function buildPublishingCenterViewModelReal(
     error: null,
     contentTypeTabs,
     publications: realRows,
-    metrics: fixtureVm.metrics,
-    platformComparison: fixtureVm.platformComparison,
-    trend: fixtureVm.trend,
-    topContent: fixtureVm.topContent,
+    metrics: rail.metrics,
+    platformComparison: rail.platformComparison,
+    trend: rail.trend,
+    topContent: rail.topContent,
     pagination: { currentPage: 1, totalPages: 1 },
   };
 }

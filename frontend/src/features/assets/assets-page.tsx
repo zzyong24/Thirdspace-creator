@@ -56,12 +56,6 @@ import Link from "next/link";
 
 import { SectionCard } from "@/components/project/section-card";
 import { ProgressBar } from "@/components/project/progress-bar";
-import {
-  buildAssetsViewModel,
-  buildAssetSummariesFromResources,
-  type AssetListRow,
-} from "@/fixtures/selectors";
-import { client } from "@/lib/contract-client.server";
 import type { AssetType } from "@/types/domain";
 import {
   AssetsInteractiveRegion,
@@ -69,6 +63,7 @@ import {
 } from "./assets-interactive-region";
 import { AssetUploadButton } from "./asset-upload-button";
 import { AssetsToolbarSearch } from "./assets-toolbar-search";
+import { buildAssetsViewModelReal } from "./assets-data";
 
 // The asset-type enum used by the filter sidebar. Mirrors contract
 // `primitives.assetType`; these are the ONLY values `?type=` accepts.
@@ -250,29 +245,17 @@ export async function AssetsPage({
   page,
   pageSize,
 }: AssetsPageProps = {}) {
-  // Module 07 E1 + Plan D1: the gallery `assets` come from the REAL `assets.list`
-  // op (pglite, user-scoped, active-only). We read a broad page (pageSize 200) so
-  // the type-filter sidebar counts + the `?type=`/`?q=` filter pass see the whole
-  // active library, then paginate the filtered result for display (the list op
-  // has no server-side type/search param). The projects picker reads the real
-  // `projects.list`. The `viewModel?` prop remains the test-override seam: when
-  // provided, no network read happens (SSR stays deterministic, F4).
+  // Module 07 E1 + Plan D1 + GAP-AST-1: the REAL Assets Center VM is assembled
+  // by the server-only `buildAssetsViewModelReal` helper (assets.list gallery +
+  // projects.list picker + materialLinks.list 用料历史 + 弱真 storage 已用). The
+  // `viewModel?` prop remains the test-override seam: when provided, no network
+  // read happens (SSR stays deterministic, F4).
   let vm: AssetsViewModel;
   let projects: ReadonlyArray<ProjectOption>;
   if (viewModel === undefined) {
-    const base = buildAssetsViewModel();
-    const rows = (await client.listAssets({
-      params: undefined,
-      query: { page: 1, pageSize: 200 },
-      body: undefined,
-    })) as unknown as ReadonlyArray<AssetListRow>;
-    const projectRows = (await client.listProjects({
-      params: undefined,
-      query: { page: 1, pageSize: 100 },
-      body: undefined,
-    })) as unknown as ReadonlyArray<{ id: string; title: string }>;
-    projects = projectRows.map((p) => ({ id: p.id, title: p.title }));
-    vm = { ...base, assets: buildAssetSummariesFromResources(rows) };
+    const real = await buildAssetsViewModelReal();
+    vm = real.viewModel;
+    projects = real.projects.map((p) => ({ id: p.id, title: p.title }));
   } else {
     vm = viewModel;
     projects = [];

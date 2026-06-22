@@ -20,12 +20,22 @@
  * submit ensures a per-session AI conversation, posts the USER message,
  * and polls `listMessages` for the assistant reply — produced async by the
  * positioning-aware copilot runner (Claude on the user's subscription).
- * The chips and cards below the prompt remain pure fixture-driven data
- * produced by the `buildCopilotViewModel` selector in `@/fixtures/selectors`
- * (decorative only — unchanged).
+ *
+ * The dashboard chips below the prompt are fixture-driven (via the
+ * `buildCopilotViewModel` selector in `@/fixtures/selectors`) but their
+ * interactions are now REAL (GAP-COP-1, low-cost做真):
+ *   - RecommendedCommands / SmartRecommendation chips fill the composer
+ *     (`setPrompt`), feeding straight into the real-backend submit path.
+ *   - QuickEntries navigate to their real (creator) routes via `next/link`.
+ *   - RecentTasks / ContinuingTasks remain fixture content and are explicitly
+ *     labelled 规划中: a cross-project task feed needs a global tasks op that
+ *     does not exist (projects.tasks.list is project-scoped — see
+ *     INTERACTION_SPEC GAP-COP-1 / D-COP-a). The fake "live" progress bars are
+ *     removed so nothing presents fixture data as real progress.
  */
 
 import * as React from "react";
+import Link from "next/link";
 import {
   ArrowUp,
   BookOpenText,
@@ -125,10 +135,34 @@ const STATUS_BADGE: Record<string, string> = {
   已完成: "bg-emerald-100 text-emerald-700",
 };
 
-const STATUS_BAR: Record<string, string> = {
-  进行中: "bg-violet-500",
-  已完成: "bg-emerald-500",
+// Quick-entry → real route map. The fixture rows carry a stable `id` (no `href`
+// field in the shared VM), so this island owns the id→route mapping rather than
+// adding a VM field. Every target is an existing (creator) route. Unmapped ids
+// degrade gracefully to the projects index.
+const QUICK_ENTRY_HREF: Record<string, string> = {
+  "new-project": "/projects/new",
+  "open-project": "/projects",
+  search: "/search",
+  assets: "/assets",
+  publish: "/publishing",
+  knowledge: "/knowledge",
 };
+
+// Small "规划中" (planned) badge. The recent/continuing task lists below are
+// fixture-only — Copilot needs a CROSS-project task feed and there is no global
+// tasks op (projects.tasks.list is project-scoped; see INTERACTION_SPEC GAP-COP-1
+// decision D-COP-a). Rather than render fake progress as if it were live, the
+// lists are explicitly labelled 规划中 so nothing misleads the user.
+function PlannedBadge() {
+  return (
+    <Badge
+      data-slot="copilot-planned-badge"
+      className="rounded-md border-0 bg-muted px-1.5 py-0 text-[9px] font-medium text-muted-foreground"
+    >
+      规划中
+    </Badge>
+  );
+}
 
 function RecommendedIcon({
   kind,
@@ -534,9 +568,10 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
               <button
                 key={cmd.id}
                 type="button"
+                onClick={() => setPrompt(cmd.title)}
                 data-slot="recommended-command"
                 data-command-id={cmd.id}
-                className="flex min-h-9 items-start gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-surface-muted"
+                className="flex min-h-9 items-start gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 <RecommendedIcon kind={cmd.icon} tone={cmd.tone} />
                 <div className="flex flex-col gap-0">
@@ -549,13 +584,13 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                 </div>
               </button>
             ))}
-            <button
-              type="button"
+            <span
               data-slot="recommended-view-all"
-              className="mt-1 self-center text-[10px] font-medium text-brand hover:underline focus:outline-none"
+              className="mt-1 flex items-center justify-center gap-1 text-[10px] font-medium text-muted-foreground"
             >
-              查看所有指令 →
-            </button>
+              查看所有指令
+              <PlannedBadge />
+            </span>
           </CardContent>
         </Card>
 
@@ -563,14 +598,16 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
         <Card data-slot="recent-tasks" className="overflow-hidden border border-border">
           <CardHeader className="px-3 pb-1 pt-2.5">
             <div className="flex items-start justify-between gap-2">
-              <CardTitle className="text-[12px] font-semibold">最近任务</CardTitle>
-              <button
-                type="button"
+              <div className="flex items-center gap-1.5">
+                <CardTitle className="text-[12px] font-semibold">最近任务</CardTitle>
+                <PlannedBadge />
+              </div>
+              <span
                 data-slot="recent-view-all"
-                className="text-[10px] font-medium text-brand hover:underline focus:outline-none"
+                className="text-[10px] font-medium text-muted-foreground"
               >
-                查看全部 →
-              </button>
+                查看全部
+              </span>
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 px-3 pb-2.5 pt-0">
@@ -610,20 +647,21 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
         >
           <CardHeader className="px-3 pb-1 pt-2.5">
             <div className="flex items-start justify-between gap-2">
-              <CardTitle className="text-[12px] font-semibold">继续任务</CardTitle>
-              <button
-                type="button"
+              <div className="flex items-center gap-1.5">
+                <CardTitle className="text-[12px] font-semibold">继续任务</CardTitle>
+                <PlannedBadge />
+              </div>
+              <span
                 data-slot="continuing-view-all"
-                className="text-[10px] font-medium text-brand hover:underline focus:outline-none"
+                className="text-[10px] font-medium text-muted-foreground"
               >
-                查看全部 →
-              </button>
+                查看全部
+              </span>
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-1.5 px-3 pb-2.5 pt-0">
             {vm.continuingTasks.map((task) => {
               const badgeClass = STATUS_BADGE[task.status] ?? STATUS_BADGE.进行中;
-              const barClass = STATUS_BAR[task.status] ?? STATUS_BAR.进行中;
               const cardBg =
                 task.status === "进行中"
                   ? "bg-violet-50"
@@ -651,30 +689,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                     <span className="text-[9.5px] leading-tight text-muted-foreground">
                       {task.description}
                     </span>
-                    {task.progress !== null ? (
-                      <span className="text-[9.5px] leading-tight text-muted-foreground">
-                        {task.progress}%
-                      </span>
-                    ) : (
-                      <span className="text-[9.5px] leading-tight text-muted-foreground">
-                        等待中
-                      </span>
-                    )}
                   </div>
-                  {task.progress !== null && (
-                    <div
-                      className="h-1 overflow-hidden rounded-full bg-white/60"
-                      role="progressbar"
-                      aria-valuenow={task.progress}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                    >
-                      <div
-                        className={`h-full rounded-full ${barClass}`}
-                        style={{ width: `${task.progress}%` }}
-                      />
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -699,12 +714,12 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
           </h3>
           <div className="grid grid-cols-6 gap-1">
             {vm.quickEntries.map((entry) => (
-              <button
+              <Link
                 key={entry.id}
-                type="button"
+                href={QUICK_ENTRY_HREF[entry.id] ?? "/projects"}
                 data-slot="quick-entry"
                 data-entry-id={entry.id}
-                className="flex flex-col items-center gap-1 rounded-md px-1 py-1 text-center transition-colors hover:bg-surface-muted"
+                className="flex flex-col items-center gap-1 rounded-md px-1 py-1 text-center transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 <span className="text-foreground/70">
                   <QuickIcon kind={entry.icon} />
@@ -712,7 +727,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                 <span className="text-[10px] font-medium text-foreground leading-tight">
                   {entry.title}
                 </span>
-              </button>
+              </Link>
             ))}
           </div>
         </section>
@@ -745,6 +760,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
               <button
                 key={rec.id}
                 type="button"
+                onClick={() => setPrompt(rec.title)}
                 data-slot="smart-recommendation-item"
                 data-rec-id={rec.id}
                 className="rounded-lg border border-brand/30 bg-surface px-2.5 py-1 text-[10px] font-medium text-brand transition-colors hover:bg-brand-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"

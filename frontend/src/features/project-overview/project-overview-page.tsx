@@ -43,12 +43,9 @@ import {
   AvatarFallback,
 } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { getProjectById, getProjectPlatforms } from "@/fixtures/canonical";
-import {
-  buildContentOutputsForRender,
-  buildProjectOverviewViewModel,
-} from "@/fixtures/selectors";
-import type { ContentOutput, ProjectStageName } from "@/types/domain";
+import { getProjectById } from "@/fixtures/canonical";
+import { buildProjectOverviewViewModel } from "@/fixtures/selectors";
+import type { ProjectStageName } from "@/types/domain";
 import type { ProjectOverviewViewModel } from "@/types/view-models";
 
 // ---------------------------------------------------------------------------
@@ -107,7 +104,7 @@ export function ProjectOverviewPage({
           />
           <OutputPlanCard
             projectId={vm.projectId}
-            outputs={buildContentOutputsForRender(vm.projectId)}
+            outputs={vm.outputs}
           />
           <PublishingStatusCard
             projectId={vm.projectId}
@@ -256,7 +253,15 @@ function AssetSummaryCard({
         title="项目资产概览"
         description="文档、脚本、素材、数据与经验沉淀"
       >
-        <ul
+        {stats.length === 0 ? (
+          <p
+            data-slot="asset-summary-empty"
+            className="text-sm text-muted-foreground"
+          >
+            暂无资产数据。
+          </p>
+        ) : (
+          <ul
           data-slot="asset-summary-list"
           className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
         >
@@ -282,7 +287,8 @@ function AssetSummaryCard({
               </span>
             </li>
           ))}
-        </ul>
+          </ul>
+        )}
       </SectionCard>
     </div>
   );
@@ -457,54 +463,46 @@ function OutputPlanCard({
   outputs,
 }: {
   projectId: string;
-  outputs: ReadonlyArray<ContentOutput>;
+  outputs: ProjectOverviewViewModel["outputs"];
 }) {
-  const platforms = getProjectPlatforms(projectId);
   return (
     <div data-slot="output-plan-card">
       <SectionCard
         title="输出规划"
-        description="已规划的内容与目标平台"
+        description="已规划的内容与状态"
       >
-        <div
-          data-slot="output-plan-platforms"
-          className="flex flex-wrap items-center gap-2"
-          aria-label="目标平台"
-        >
-          {platforms.map((platform) => (
-            <PlatformIcon
-              key={platform}
-              platform={platform}
-              size="xs"
-              showLabel
-            />
-          ))}
-        </div>
-        <ul
-          data-slot="output-plan-list"
-          className="mt-3 flex flex-col gap-2"
-          aria-label="内容输出"
-        >
-          {outputs.map((output) => (
-            <li
-              key={output.id}
-              data-slot="output-plan-row"
-              className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-sm font-medium text-foreground">
-                  {output.title}
-                </span>
-                <StatusBadge status={output.status} />
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <TagChip label={output.contentType} tone="brand" size="sm" />
-                <span>{output.aspectRatio}</span>
-                <span>{`约 ${Math.round(output.targetDurationSeconds / 60)} 分钟`}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
+        {outputs.length === 0 ? (
+          <p
+            data-slot="output-plan-empty"
+            className="text-sm text-muted-foreground"
+          >
+            {`项目 ${projectId} 暂无产出规划，去工作台生成。`}
+          </p>
+        ) : (
+          <ul
+            data-slot="output-plan-list"
+            className="flex flex-col gap-2"
+            aria-label="内容输出"
+          >
+            {outputs.map((output) => (
+              <li
+                key={output.id}
+                data-slot="output-plan-row"
+                className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {output.title}
+                  </span>
+                  <StatusBadge status={output.status} />
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <TagChip label={output.contentType} tone="brand" size="sm" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </SectionCard>
     </div>
   );
@@ -575,7 +573,12 @@ function MilestoneCard({
         description="关键节点与交付物"
       >
         {entries.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无里程碑。</p>
+          <p
+            data-slot="milestone-empty"
+            className="text-sm text-muted-foreground"
+          >
+            里程碑将随阶段推进自动生成。
+          </p>
         ) : (
           <ul
             data-slot="milestone-list"

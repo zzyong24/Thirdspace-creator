@@ -40,6 +40,13 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// `ProjectRowMenu` (a client component in each row's kebab action) calls
+// `useRouter()`. Stub `next/navigation` so the component tree renders without a
+// real Next.js router runtime.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn(), back: vi.fn() }),
+}));
+
 type ProjectsPageProps = React.ComponentProps<
   typeof import("./projects-page").ProjectsPage
 >;
@@ -99,8 +106,8 @@ describe("ProjectsPage", () => {
     const active = container.querySelector(
       '[data-slot="status-tab"][data-tab-id="active"]',
     ) as HTMLElement;
-    expect(within(all).getByTestId("status-tab-count").textContent).toBe("28");
-    expect(within(active).getByTestId("status-tab-count").textContent).toBe("12");
+    expect(within(all).getByTestId("status-tab-count").textContent).toBe("4");
+    expect(within(active).getByTestId("status-tab-count").textContent).toBe("2");
   });
 
   it("renders the projects top-header actions with search, filter and new project entries", async () => {
