@@ -154,6 +154,10 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/accounts/:accountId/cadence"],
   ["PUT", "/accounts/:accountId/cadence"],
   ["GET", "/accounts/:accountId/cadence/attainment"],
+  // 用料链 (material-links / Bill-of-Materials, Plan A4)
+  ["GET", "/material-links"],
+  ["POST", "/material-links"],
+  ["POST", "/material-links/:linkId/delete"],
 ];
 
 describe("endpoint registry", () => {

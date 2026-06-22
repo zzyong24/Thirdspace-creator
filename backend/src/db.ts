@@ -22,6 +22,7 @@ import * as candidateSchema from "./schema/candidate";
 import * as calibrationSchema from "./schema/calibration";
 import * as platformAccountSchema from "./schema/platform-account";
 import * as contentCalendarSchema from "./schema/content-calendar";
+import * as materialLinksSchema from "./schema/material-links";
 import { PROJECTS_DDL } from "./schema/projects";
 import { IDENTITY_DDL } from "./schema/identity";
 import { TAXONOMY_DDL } from "./schema/taxonomy";
@@ -44,6 +45,7 @@ import { CANDIDATE_DDL } from "./schema/candidate";
 import { CALIBRATION_DDL } from "./schema/calibration";
 import { PLATFORM_ACCOUNT_DDL } from "./schema/platform-account";
 import { CONTENT_CALENDAR_DDL } from "./schema/content-calendar";
+import { MATERIAL_LINKS_DDL } from "./schema/material-links";
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
@@ -70,6 +72,7 @@ const schema = {
   ...calibrationSchema,
   ...platformAccountSchema,
   ...contentCalendarSchema,
+  ...materialLinksSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;
@@ -128,6 +131,11 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
   // soft FK validated in the service via PlatformAccountService, no DB FK across
   // module schemas). All CREATE … IF NOT EXISTS (idempotent).
   await client.exec(CONTENT_CALENDAR_DDL);
+  // MaterialLinks (用料链 / Bill-of-Materials, Plan A4) — the self-contained edge
+  // linking the knowledge/asset libraries to a project/output (role + stage +
+  // provenance). Independent table, no cross-module FK; CREATE … IF NOT EXISTS
+  // (idempotent). Runs after the base modules.
+  await client.exec(MATERIAL_LINKS_DDL);
   const db = drizzle(client, { schema });
   return { db, client };
 }
