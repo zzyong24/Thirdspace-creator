@@ -174,11 +174,12 @@ describe("ai acceptance (SPEC §22)", () => {
     expect(/sk-ant-[a-zA-Z0-9]/.test(seedSrc)).toBe(false);
   });
 
-  it("registers the eight owned ops into the module op-id list", () => {
+  it("registers the nine owned ops into the module op-id list", () => {
     expect([...AI_OP_IDS].sort()).toEqual([
       "ai.conversations.create",
       "ai.conversations.list",
       "ai.conversations.messages.create",
+      "ai.conversations.messages.list",
       "ai.tasks.cancel",
       "ai.tasks.confirm",
       "ai.tasks.create",
