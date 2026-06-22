@@ -219,7 +219,24 @@ export function SearchPage({
   const opBacked = viewModel !== undefined;
   const baseVm = viewModel ?? buildSearchViewModel();
   const vm = opBacked ? baseVm : applyQuery(baseVm, initialQuery);
-  const totalCount = vm.resultTypeTabs.reduce((acc, t) => acc + t.count, 0);
+  // The result-type tab counts must reflect the ACTUAL rendered result groups,
+  // not a frozen decorative number. The fixture VM ships hardcoded counts
+  // (12/38/84/19) that never match the few cards it renders, and on the
+  // fixture-fallback path `applyQuery` further filters the groups while leaving
+  // those counts stale. Recompute every tab's count from the real group length
+  // (keyed by tab id) so the badge and the "找到 N 个结果" total are honest for
+  // both the op-backed and fixture paths.
+  const groupLengthByTab: Record<string, number> = {
+    project: vm.projectResults.length,
+    knowledge: vm.knowledgeResults.length,
+    asset: vm.assetResults.length,
+    video: vm.videoResults.length,
+  };
+  const resultTypeTabs = vm.resultTypeTabs.map((tab) => ({
+    ...tab,
+    count: groupLengthByTab[tab.id] ?? tab.count,
+  }));
+  const totalCount = resultTypeTabs.reduce((acc, t) => acc + t.count, 0);
   return (
     <main
       data-app="creatoros"
@@ -238,7 +255,7 @@ export function SearchPage({
         placeholder="搜索项目、素材、知识或视频"
         className="sr-only"
       />
-      <ResultTypeTabs tabs={vm.resultTypeTabs} totalCount={totalCount} />
+      <ResultTypeTabs tabs={resultTypeTabs} totalCount={totalCount} />
       <div
         data-slot="search-layout"
         className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_320px]"
@@ -367,8 +384,10 @@ function SearchResults({
   readonly videos: ReadonlyArray<VideoResult>;
 }) {
   return (
-    // §293 Project/knowledge/asset/video result cards — decorative per roadmap §4
-    // (open-detail navigation not wired this wave; the cards are not links yet).
+    // §293 Project/knowledge/asset/video result cards. Each card is a real
+    // next/link: projects deep-link to /projects/<id>; knowledge/asset/video
+    // link to their respective center list (/knowledge, /assets, /publishing)
+    // since no per-entity detail route exists yet.
     <div
       data-slot="search-results"
       className="flex flex-col gap-3"
@@ -418,12 +437,16 @@ function ProjectResultSection({
 }
 
 function ProjectResultCard({ project }: { project: ProjectResult }) {
+  // Link to the project's overview when we hold a real entity id; otherwise fall
+  // back to the projects list (never a dead card, never a fake detail route).
+  const href = project.id ? `/projects/${project.id}` : "/projects";
   return (
-    <article
+    <Link
+      href={href}
       data-slot="project-result-card"
       data-project-id={project.id}
       data-stage={project.currentStage}
-      className="flex flex-col gap-1 rounded-lg border border-border bg-surface-subtle p-2.5"
+      className="flex flex-col gap-1 rounded-lg border border-border bg-surface-subtle p-2.5 transition-colors hover:border-brand/50 hover:bg-surface"
     >
       <header className="flex items-start justify-between gap-2">
         <h3 className="line-clamp-1 text-[12px] font-medium text-foreground">
@@ -459,7 +482,7 @@ function ProjectResultCard({ project }: { project: ProjectResult }) {
           <TagChip key={`${project.id}-${tag}`} label={tag} tone="neutral" size="sm" />
         ))}
       </div>
-    </article>
+    </Link>
   );
 }
 
@@ -497,31 +520,37 @@ function KnowledgeResultSection({
             key={row.id}
             data-slot="knowledge-result-row"
             data-knowledge-id={row.id}
-            className="flex items-start gap-2 rounded-md border border-border bg-surface-subtle p-2 text-sm"
           >
-            <span
-              aria-hidden="true"
-              data-slot="knowledge-result-icon"
-              className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border bg-surface text-[9px] font-semibold text-brand"
+            {/* No per-entity knowledge detail route exists yet — link to the
+                knowledge center list rather than fabricate a detail URL. */}
+            <Link
+              href="/knowledge"
+              className="flex items-start gap-2 rounded-md border border-border bg-surface-subtle p-2 text-sm transition-colors hover:border-brand/50 hover:bg-surface"
             >
-              {row.typeLabel.slice(0, 1)}
-            </span>
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-[12px] font-medium text-foreground">
-                  {row.title}
-                </span>
-                <span className="shrink-0 text-[10px] text-muted-foreground">
-                  {row.typeLabel}
+              <span
+                aria-hidden="true"
+                data-slot="knowledge-result-icon"
+                className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border bg-surface text-[9px] font-semibold text-brand"
+              >
+                {row.typeLabel.slice(0, 1)}
+              </span>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-[12px] font-medium text-foreground">
+                    {row.title}
+                  </span>
+                  <span className="shrink-0 text-[10px] text-muted-foreground">
+                    {row.typeLabel}
+                  </span>
+                </div>
+                <p className="line-clamp-1 text-[10px] text-muted-foreground">
+                  {row.excerpt}
+                </p>
+                <span className="font-mono text-[9px] text-muted-foreground">
+                  {row.updatedAt}
                 </span>
               </div>
-              <p className="line-clamp-1 text-[10px] text-muted-foreground">
-                {row.excerpt}
-              </p>
-              <span className="font-mono text-[9px] text-muted-foreground">
-                {row.updatedAt}
-              </span>
-            </div>
+            </Link>
           </li>
         ))}
       </ul>
@@ -570,11 +599,13 @@ function AssetThumb({ item }: { item: AssetResult }) {
   const safeHue = Number.isFinite(hue) ? hue % 360 : 220;
   const safeHue2 = (safeHue + 50) % 360;
   return (
-    <figure
+    // No per-asset detail route exists yet — link to the asset center list.
+    <Link
+      href="/assets"
       data-slot="asset-result-thumb"
       data-asset-id={item.id}
       data-asset-type={item.typeLabel}
-      className="flex flex-col gap-1"
+      className="flex flex-col gap-1 transition-opacity hover:opacity-80"
     >
       <div
         aria-hidden="true"
@@ -589,10 +620,10 @@ function AssetThumb({ item }: { item: AssetResult }) {
           {item.typeLabel.slice(0, 2)}
         </span>
       </div>
-      <figcaption className="line-clamp-1 text-[10px] text-foreground">
+      <span className="line-clamp-1 text-[10px] text-foreground">
         {item.title}
-      </figcaption>
-    </figure>
+      </span>
+    </Link>
   );
 }
 
@@ -644,11 +675,13 @@ function VideoThumb({ item }: { item: VideoResult }) {
   const seconds = (parseInt((item.token ?? "0").slice(-3, -1), 16) * 13) % 60;
   const duration = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   return (
-    <figure
+    // No per-video detail route exists yet — link to the publishing center.
+    <Link
+      href="/publishing"
       data-slot="video-result-thumb"
       data-video-id={item.id}
       data-platform={item.platform}
-      className="flex flex-col gap-1"
+      className="flex flex-col gap-1 transition-opacity hover:opacity-80"
     >
       <div
         aria-hidden="true"
@@ -667,13 +700,13 @@ function VideoThumb({ item }: { item: VideoResult }) {
           {duration}
         </span>
       </div>
-      <figcaption className="flex flex-col gap-0.5 text-[11px]">
+      <span className="flex flex-col gap-0.5 text-[11px]">
         <span className="line-clamp-1 text-foreground">{item.title}</span>
         <span className="text-muted-foreground">
           {item.platformLabel} · {item.publishedAtLabel} · {item.views}
         </span>
-      </figcaption>
-    </figure>
+      </span>
+    </Link>
   );
 }
 
