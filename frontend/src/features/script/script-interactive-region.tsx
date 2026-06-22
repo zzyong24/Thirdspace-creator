@@ -26,9 +26,11 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
+import { client } from "@/lib/contract-client";
 import type { ScriptSectionView, ScriptViewModel } from "@/types/view-models";
 
 // ---------------------------------------------------------------------------
@@ -77,12 +79,22 @@ type SaveStatus = ScriptViewModel["toolbarState"]["status"];
 export interface ScriptInteractiveRegionProps {
   readonly sections: ReadonlyArray<ScriptSectionView>;
   readonly toolbarState: ScriptViewModel["toolbarState"];
+  /**
+   * The 分镜脚本 artifact the 保存 button appends a new version to. When set, 保存
+   * persists a real ArtifactVersion (contentText + contentData.sections) and
+   * refreshes the server read so a reload shows the saved 分镜. When null (the
+   * fixture-only render used by structural tests), 保存 stays local-only.
+   */
+  readonly artifactId?: string | null;
 }
 
 export function ScriptInteractiveRegion({
   sections,
   toolbarState,
+  artifactId = null,
 }: ScriptInteractiveRegionProps) {
+  const router = useRouter();
+  const [pending, startTransition] = React.useTransition();
   // Live, editable section bodies keyed by section id.
   const [bodies, setBodies] = React.useState<Record<string, string>>(() =>
     Object.fromEntries(sections.map((section) => [section.id, section.body])),
@@ -117,8 +129,43 @@ export function ScriptInteractiveRegion({
   );
 
   const handleSave = React.useCallback(() => {
-    setSaveStatus("saved");
-  }, []);
+    // Fixture-only render (no artifactId, e.g. structural tests) keeps the old
+    // local-only behavior so those tests stay green.
+    if (!artifactId) {
+      setSaveStatus("saved");
+      return;
+    }
+    // Serialize the live section id→text map (in section order) into a
+    // structured contentData payload AND a readable flat contentText, then
+    // append a new ArtifactVersion. router.refresh() re-reads the saved version.
+    const ordered = sections.map((section) => ({
+      id: section.id,
+      heading: section.heading,
+      body: bodies[section.id] ?? section.body,
+    }));
+    const contentText = ordered
+      .map((s) => `${s.heading}\n${s.body}`.trim())
+      .join("\n\n");
+    setSaveStatus("saving");
+    startTransition(async () => {
+      try {
+        await client.createArtifactVersion({
+          params: { artifactId },
+          query: undefined,
+          body: {
+            contentText,
+            contentData: { sections: ordered },
+            changeSummary: "编辑脚本",
+          },
+        });
+        setSaveStatus("saved");
+        router.refresh();
+      } catch {
+        // Surface the failure to the user as still-dirty so they can retry.
+        setSaveStatus("dirty");
+      }
+    });
+  }, [artifactId, bodies, sections, router]);
 
   const toggleFormat = React.useCallback((id: string) => {
     setPressed((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -135,6 +182,7 @@ export function ScriptInteractiveRegion({
           onToggleFormat={toggleFormat}
           onSave={handleSave}
           saveStatus={saveStatus}
+          saving={pending}
         />
         <ScriptDocument
           sections={sections}
@@ -156,11 +204,13 @@ function EditorToolbar({
   onToggleFormat,
   onSave,
   saveStatus,
+  saving,
 }: {
   pressed: Record<string, boolean>;
   onToggleFormat: (id: string) => void;
   onSave: () => void;
   saveStatus: SaveStatus;
+  saving: boolean;
 }) {
   return (
     <div
@@ -201,7 +251,7 @@ function EditorToolbar({
         type="button"
         data-slot="editor-save-button"
         onClick={onSave}
-        disabled={saveStatus === "saved"}
+        disabled={saveStatus === "saved" || saving}
         className="ml-auto inline-flex h-7 items-center rounded-md border border-transparent bg-brand px-2.5 text-xs font-medium text-brand-foreground transition-colors hover:bg-brand/90 disabled:cursor-not-allowed disabled:opacity-50"
       >
         保存

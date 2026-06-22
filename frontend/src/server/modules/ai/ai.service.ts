@@ -551,10 +551,19 @@ export function createAiService(deps: ServiceDeps): AiService {
         );
       }
       // AI never writes a current ArtifactVersion directly — go through the Artifacts
-      // service (immutable append, createdByType:"ai").
+      // service (immutable append, createdByType:"ai"). Forward the structured
+      // `contentData` (e.g. the script.draft node's editable 分镜 sections) when the
+      // candidate carries one, so an AI-confirmed version round-trips into the editor.
+      const contentData =
+        data.contentData !== null &&
+        typeof data.contentData === "object" &&
+        !Array.isArray(data.contentData)
+          ? (data.contentData as Record<string, unknown>)
+          : undefined;
       await deps.artifacts.createVersion(ctx, artifactId, {
         contentText: body,
         changeSummary: typeof data.summary === "string" ? data.summary : "",
+        ...(contentData ? { contentData } : {}),
         createdByType: "ai",
         aiTaskId: taskId,
       });

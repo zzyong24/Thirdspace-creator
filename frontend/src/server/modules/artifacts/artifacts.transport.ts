@@ -134,6 +134,7 @@ export function createArtifactsTransport(
           const b = (body ?? {}) as {
             contentText?: string;
             changeSummary?: string;
+            contentData?: Record<string, unknown>;
           };
           const row = await service.createVersion(ctx, p.artifactId ?? "", b);
           return { data: toVersionResource(row), meta: { requestId } };

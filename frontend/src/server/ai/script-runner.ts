@@ -102,6 +102,25 @@ function renderBody(board: Storyboard): string {
   return lines.join("\n");
 }
 
+// Build the editable 分镜 sections the editor renders after 采纳 (Plan: 脚本编辑器做真).
+// One section per shot: heading = a short 时长/口播-derived label, body = 口播 + 画面 +
+// 字幕. These ride alongside the Markdown `body` as `contentData.sections` so the confirmed
+// ArtifactVersion carries editable structure (not only the flat contentText blob).
+function renderSections(
+  board: Storyboard,
+): Array<{ heading: string; body: string }> {
+  return board.sections.map((shot, i) => {
+    const label = shot.口播 ? shot.口播.slice(0, 16) : `分镜 ${i + 1}`;
+    const heading = shot.时长 ? `${i + 1}. ${label}（${shot.时长}）` : `${i + 1}. ${label}`;
+    const bodyLines = [
+      shot.口播 && `口播：${shot.口播}`,
+      shot.画面 && `画面：${shot.画面}`,
+      shot.字幕 && `字幕：${shot.字幕}`,
+    ].filter((l): l is string => Boolean(l));
+    return { heading, body: bodyLines.join("\n") };
+  });
+}
+
 function renderSummary(board: Storyboard): string {
   const n = board.sections.length;
   const hook = board.hook ? `钩子「${board.hook}」` : "AI 分镜脚本";
@@ -141,9 +160,18 @@ export async function runScriptDraft(
       resultData: {
         body: renderBody(board),
         summary: renderSummary(board),
+        // Raw shots — kept so the 采纳 card preview (ScriptDraftIsland.parseShots)
+        // still renders 口播/画面/字幕/时长.
         sections: board.sections,
         hook: board.hook,
         cta: board.cta,
+        // Structured editable payload forwarded by the AI confirm branch to
+        // createVersion as `contentData` (round-trips into the 脚本 editor).
+        contentData: {
+          sections: renderSections(board),
+          hook: board.hook,
+          cta: board.cta,
+        },
       },
     });
   } catch (err) {
