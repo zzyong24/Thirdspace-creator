@@ -124,6 +124,7 @@ import {
   buildAiAgentConfigs,
   AI_OP_IDS,
 } from "@/server/modules/ai";
+import { runGatherMaterial } from "@/server/ai/research-runner";
 import {
   createPositioningService,
   createPositioningTransport,
@@ -1114,8 +1115,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       createVersion: (ctx, artifactId, input) =>
         artifactsService.createVersion(ctx, artifactId, input),
     },
+    // 机制③ candidate-confirm bus — confirmTask materializes a `material_list` candidate
+    // (research_gather node) into KnowledgeItems through the Knowledge public service.
+    knowledge: {
+      createKnowledge: (ctx, input) =>
+        knowledgeService.createKnowledge(ctx, input),
+    },
   });
-  const ai = createAiTransport(() => aiService);
+  const aiBase = createAiTransport(() => aiService);
 
   // Positioning (module 17, Wave 5): the service builds a per-ctx user-scoped repo
   // over the shared db (the repo bakes userId in; the service mints one per request).
@@ -1142,6 +1149,48 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
   const positioning = createPositioningTransport(() => positioningService);
+
+  // 机制③④ — the gather-trigger seam. The AI module/service stays deterministic (never
+  // imports the Agent SDK); the non-determinism lives HERE in the composition layer. We
+  // wrap the AI transport so that a freshly-queued `research.gather_material` task fires
+  // the real-agent runner in the BACKGROUND (Option A: in-process, non-blocking). The
+  // runner assembles CreativeContext (positioning + topic), runs Claude + WebSearch, and
+  // records a `material_list` candidate via aiService.recordCandidate → awaiting_confirmation.
+  const ai: Transport = {
+    async request(endpoint, input, ctx) {
+      const res = await aiBase.request(endpoint, input, ctx);
+      if (endpoint.id === "ai.tasks.create" && ctx) {
+        const task = (res as { data?: Record<string, unknown> }).data;
+        if (
+          task &&
+          task.taskType === "research.gather_material" &&
+          task.status === "queued"
+        ) {
+          // Fire-and-forget: the HTTP response returns immediately (running); the agent
+          // (30–60s subprocess) drains in the background against the shared pglite. The
+          // UI polls getTask/listResults for the candidate.
+          void runGatherMaterial(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+              modelKey: String(task.modelKey ?? "claude-opus-4-8"),
+            },
+            {
+              ai: aiService,
+              positioning: {
+                getPositioningCenter: (c) =>
+                  positioningService.getPositioningCenter(c),
+              },
+            },
+          );
+        }
+      }
+      return res;
+    },
+  };
 
   // Monetization (module 18, Wave 5+): the service builds a per-ctx user-scoped repo
   // over the shared db (the repo bakes userId in; the service mints one per request).

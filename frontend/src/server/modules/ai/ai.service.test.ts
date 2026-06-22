@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
-import { createAiService, type AiArtifactsPort } from "./ai.service";
+import {
+  createAiService,
+  type AiArtifactsPort,
+  type AiKnowledgePort,
+} from "./ai.service";
 import { ConflictError } from "./ai.errors";
 
 // AI service test (Step 3) — the six cases: idempotent create, references persisted +
@@ -13,18 +17,27 @@ import { ConflictError } from "./ai.errors";
 const NOW = "2026-06-21T00:00:00.000Z";
 const ctx: RequestContext = { userId: "user-a", requestId: "r1", source: "user" };
 
-function makeService(db: Db, artifactsPort?: Partial<AiArtifactsPort>) {
+function makeService(
+  db: Db,
+  artifactsPort?: Partial<AiArtifactsPort>,
+  knowledgePort?: Partial<AiKnowledgePort>,
+) {
   let seq = 0;
   const port: AiArtifactsPort = {
     createVersion: artifactsPort?.createVersion ?? vi.fn(async () => ({})),
+  };
+  const knowledge: AiKnowledgePort = {
+    createKnowledge:
+      knowledgePort?.createKnowledge ?? vi.fn(async () => ({ id: "k-new" })),
   };
   const service = createAiService({
     db,
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${++seq}`,
     artifacts: port,
+    knowledge,
   });
-  return { service, port };
+  return { service, port, knowledge };
 }
 
 describe("ai service", () => {

@@ -14,11 +14,13 @@ import type {
   ConversationRow,
   MessageRow,
   TaskRow,
+  ResultRow,
 } from "./ai.repository";
 
 export const aiConversationResource = ENDPOINTS.createConversation.response;
 export const aiMessageResource = ENDPOINTS.createMessage.response;
 export const aiTaskResource = ENDPOINTS.createAITask.response;
+export const aiTaskResultResource = ENDPOINTS.listTaskResults.response;
 
 // Derive the inferred output type from the schema's phantom `_output` (zod 4's
 // z.infer<T> is T["_output"]). The frontend package does not declare `zod` as a direct
@@ -26,6 +28,7 @@ export const aiTaskResource = ENDPOINTS.createAITask.response;
 export type AIConversationResource = (typeof aiConversationResource)["_output"];
 export type AIMessageResource = (typeof aiMessageResource)["_output"];
 export type AITaskResource = (typeof aiTaskResource)["_output"];
+export type AITaskResultResource = (typeof aiTaskResultResource)["_output"];
 
 // Row → DTO mappers (SPEC §9: the API DTO is built by an explicit mapper, NEVER the
 // Drizzle row). The service + contract test share ONE mapping so a wire-shape change is
@@ -50,6 +53,18 @@ export function toMessageDto(row: MessageRow): AIMessageResource {
     attachments: (row.attachments ?? []) as string[],
     modelMetadata: (row.modelMetadata ?? {}) as Record<string, unknown>,
     createdAt: row.createdAt,
+  };
+}
+
+export function toResultDto(row: ResultRow): AITaskResultResource {
+  return {
+    id: row.id,
+    aiTaskId: row.aiTaskId,
+    resultType: row.resultType,
+    artifactId: row.artifactId ?? null,
+    knowledgeItemId: row.knowledgeItemId ?? null,
+    assetId: row.assetId ?? null,
+    resultData: (row.resultData ?? {}) as Record<string, unknown>,
   };
 }
 

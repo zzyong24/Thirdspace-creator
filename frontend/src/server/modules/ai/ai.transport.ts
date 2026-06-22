@@ -23,6 +23,7 @@ export const AI_OP_IDS = [
   "ai.conversations.create",
   "ai.conversations.messages.create",
   "ai.tasks.create",
+  "ai.tasks.results.list",
   "ai.tasks.confirm",
   "ai.tasks.cancel",
 ] as const;
@@ -76,6 +77,13 @@ export function createAiTransport(
           };
           const task = await service.createTask(ctx, b);
           return { data: task, meta: { requestId } };
+        }
+        case "ai.tasks.results.list": {
+          const rows = await service.listResults(ctx, p.taskId ?? "");
+          return {
+            data: rows,
+            meta: { requestId, page: 1, pageSize: Math.max(rows.length, 1), total: rows.length },
+          };
         }
         case "ai.tasks.confirm": {
           const task = await service.confirmTask(ctx, p.taskId ?? "");

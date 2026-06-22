@@ -20,6 +20,7 @@ export {
   type AiService,
   type ServiceDeps,
   type AiArtifactsPort,
+  type AiKnowledgePort,
   type CreateTaskInput,
   type RecordCandidateInput,
 } from "./ai.service";
@@ -47,12 +48,15 @@ export {
   aiConversationResource,
   aiMessageResource,
   aiTaskResource,
+  aiTaskResultResource,
   toConversationDto,
   toMessageDto,
   toTaskDto,
+  toResultDto,
   type AIConversationResource,
   type AIMessageResource,
   type AITaskResource,
+  type AITaskResultResource,
 } from "./ai.schema";
 
 export { buildAiModelConfigs, buildAiAgentConfigs } from "./ai.seed";
