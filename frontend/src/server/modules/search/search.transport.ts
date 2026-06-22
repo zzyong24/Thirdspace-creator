@@ -19,7 +19,7 @@ import type { SearchDocumentResource } from "./search.schema";
 // The opId list is the registry this module owns; persistence-client builds
 // PERSISTED_OPS from SEARCH_OP_IDS (adding the module = registering it).
 
-export const SEARCH_OP_IDS = ["pages.search.get"] as const;
+export const SEARCH_OP_IDS = ["pages.search.get", "search.facets"] as const;
 
 // The 4 locked result tabs, in the approved order (项目 / 知识 / 素材 / 视频).
 const TAB_DEFS = [
@@ -103,10 +103,22 @@ export function createSearchTransport(
   return {
     async request(endpoint: Endpoint, input, ctx) {
       if (!ctx) throw new AuthenticationError();
+      const service = serviceFactory(ctx);
+
+      // search.facets (GAP-SRCH-facets) — GET /search/facets?q= → per-dimension
+      // facet buckets (entityType / tag) with hit counts over the matched docs.
+      // A DERIVED read (no history side-effect, no write); empty q ⇒ empty buckets.
+      if (endpoint.id === "search.facets") {
+        const { query: fq } = (input ?? {}) as Input;
+        const fqObj = (fq ?? {}) as { q?: string };
+        const rawFacetQuery = typeof fqObj.q === "string" ? fqObj.q : "";
+        const facets = await service.facets(ctx, rawFacetQuery);
+        return { data: facets, meta: { requestId: ctx.requestId } };
+      }
+
       if (endpoint.id !== "pages.search.get") {
         throw new UnsupportedOperationError(endpoint.id);
       }
-      const service = serviceFactory(ctx);
 
       const { query } = (input ?? {}) as Input;
       const q = (query ?? {}) as { q?: string; type?: string };

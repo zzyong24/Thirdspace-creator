@@ -34,6 +34,8 @@ export const KNOWLEDGE_OP_IDS = [
   "knowledge.revisions.list",
   "knowledge.relations.create",
   "knowledge.relations.list",
+  "knowledge.archive",
+  "knowledge.relations.delete",
 ] as const;
 
 function toItemResource(row: KnowledgeItemRow): KnowledgeItemResource {
@@ -86,7 +88,7 @@ export function createKnowledgeTransport(
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
-      // All 7 ops are persisted (owned). No ctx ⇒ unauthenticated dispatch ⇒
+      // All 9 ops are persisted (owned). No ctx ⇒ unauthenticated dispatch ⇒
       // reject before touching the store.
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory(ctx);
@@ -164,6 +166,24 @@ export function createKnowledgeTransport(
             relationType: string;
           };
           const row = await service.createRelation(ctx, p.knowledgeId ?? "", b);
+          return {
+            data: toRelationResource(row),
+            meta: { requestId: ctx.requestId },
+          };
+        }
+        case "knowledge.archive": {
+          const row = await service.archiveKnowledge(ctx, p.knowledgeId ?? "");
+          return {
+            data: toItemResource(row),
+            meta: { requestId: ctx.requestId },
+          };
+        }
+        case "knowledge.relations.delete": {
+          const b = (body ?? {}) as {
+            targetKnowledgeId: string;
+            relationType: string;
+          };
+          const row = await service.removeRelation(ctx, p.knowledgeId ?? "", b);
           return {
             data: toRelationResource(row),
             meta: { requestId: ctx.requestId },

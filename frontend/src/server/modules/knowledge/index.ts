@@ -26,7 +26,11 @@ export {
 
 export { KNOWLEDGE_DDL } from "./knowledge.db-schema";
 
-export { OwnershipError, ConflictError } from "./knowledge.errors";
+export {
+  OwnershipError,
+  ConflictError,
+  InvalidTransitionError,
+} from "./knowledge.errors";
 
 export {
   knowledgeItemResource,

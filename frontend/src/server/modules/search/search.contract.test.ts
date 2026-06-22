@@ -158,6 +158,53 @@ describe("search.transport (pages.search.get contract conformance)", () => {
     expect(parsed.videos).toEqual([]);
   });
 
+  it("search.facets aggregates entityType + tag buckets, user-scoped", async () => {
+    const raw = await transport.request(
+      ep("search.facets"),
+      { query: { q: "钩子" } } as never,
+      ctxA,
+    );
+    const facets = (raw as { data: { query: string; entityType: ReadonlyArray<{ value: string; count: number }>; tag: ReadonlyArray<{ value: string; count: number }> } }).data;
+    expect(facets.query).toBe("钩子");
+    // A's four docs span four entity types, one each.
+    expect(facets.entityType).toEqual(
+      expect.arrayContaining([
+        { value: "project", count: 1 },
+        { value: "knowledge", count: 1 },
+        { value: "asset", count: 1 },
+        { value: "video", count: 1 },
+      ]),
+    );
+    expect(facets.entityType).toHaveLength(4);
+    // Only the knowledge doc carries tags (AI / 教程), one hit each.
+    expect(facets.tag).toEqual([
+      { value: "AI", count: 1 },
+      { value: "教程", count: 1 },
+    ]);
+  });
+
+  it("search.facets — B's documents never appear in A's buckets", async () => {
+    const raw = await transport.request(
+      ep("search.facets"),
+      { query: { q: "钩子" } } as never,
+      ctxB,
+    );
+    const facets = (raw as { data: { entityType: ReadonlyArray<{ value: string; count: number }>; tag: ReadonlyArray<unknown> } }).data;
+    // B owns only one project doc; A's 4 docs must not leak.
+    expect(facets.entityType).toEqual([{ value: "project", count: 1 }]);
+    expect(facets.tag).toEqual([]);
+  });
+
+  it("search.facets — empty query → empty buckets", async () => {
+    const raw = await transport.request(
+      ep("search.facets"),
+      { query: { q: "" } } as never,
+      ctxA,
+    );
+    const facets = (raw as { data: { query: string; entityType: ReadonlyArray<unknown>; tag: ReadonlyArray<unknown> } }).data;
+    expect(facets).toEqual({ query: "", entityType: [], tag: [] });
+  });
+
   it("unknown op id → UnsupportedOperationError", async () => {
     await expect(
       transport.request(ep("search.nope"), {} as never, ctxA),

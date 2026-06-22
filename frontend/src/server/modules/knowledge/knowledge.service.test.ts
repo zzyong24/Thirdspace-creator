@@ -6,7 +6,11 @@ import {
   createKnowledgeService,
   type KnowledgeService,
 } from "./knowledge.service";
-import { OwnershipError, ConflictError } from "./knowledge.errors";
+import {
+  OwnershipError,
+  ConflictError,
+  InvalidTransitionError,
+} from "./knowledge.errors";
 
 // C1 — service invariants (foundation §5.3, §12). The service takes a
 // RequestContext and threads ctx.userId into the user-scoped repo. It enforces:
@@ -101,5 +105,68 @@ describe("knowledge.service — invariants", () => {
     const aList = await service.listKnowledge(ctxA);
     expect(aList).toHaveLength(1);
     expect(aList[0]!.userId).toBe("user-a");
+  });
+});
+
+describe("knowledge.service — soft-delete (GAP-RES-1)", () => {
+  it("archiveKnowledge flips status active→archived and stamps archivedAt", async () => {
+    const item = await service.createKnowledge(ctxA, { title: "笔记" });
+    expect(item.status).toBe("active");
+    const archived = await service.archiveKnowledge(ctxA, item.id);
+    expect(archived.status).toBe("archived");
+    expect(archived.archivedAt).toBe(NOW);
+  });
+
+  it("archiveKnowledge on an already-archived item throws InvalidTransitionError", async () => {
+    const item = await service.createKnowledge(ctxA, { title: "笔记" });
+    await service.archiveKnowledge(ctxA, item.id);
+    await expect(
+      service.archiveKnowledge(ctxA, item.id),
+    ).rejects.toBeInstanceOf(InvalidTransitionError);
+  });
+
+  it("archiveKnowledge for a non-owned id throws OwnershipError", async () => {
+    const item = await service.createKnowledge(ctxA, { title: "A 的" });
+    await expect(
+      service.archiveKnowledge(ctxB, item.id),
+    ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("removeRelation drops the matching relation and echoes it back", async () => {
+    const a = await service.createKnowledge(ctxA, { title: "A" });
+    const b = await service.createKnowledge(ctxA, { title: "B" });
+    await service.createRelation(ctxA, a.id, {
+      targetKnowledgeId: b.id,
+      relationType: "supports",
+    });
+    const removed = await service.removeRelation(ctxA, a.id, {
+      targetKnowledgeId: b.id,
+      relationType: "supports",
+    });
+    expect(removed.sourceKnowledgeId).toBe(a.id);
+    expect(removed.targetKnowledgeId).toBe(b.id);
+    const after = await service.listRelations(ctxA, a.id);
+    expect(after).toHaveLength(0);
+  });
+
+  it("removeRelation for an unknown relation throws OwnershipError (no leak)", async () => {
+    const a = await service.createKnowledge(ctxA, { title: "A" });
+    const b = await service.createKnowledge(ctxA, { title: "B" });
+    await expect(
+      service.removeRelation(ctxA, a.id, {
+        targetKnowledgeId: b.id,
+        relationType: "supports",
+      }),
+    ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("removeRelation on a non-owned source throws OwnershipError", async () => {
+    const a = await service.createKnowledge(ctxA, { title: "A" });
+    await expect(
+      service.removeRelation(ctxB, a.id, {
+        targetKnowledgeId: "knowledge-x",
+        relationType: "supports",
+      }),
+    ).rejects.toBeInstanceOf(OwnershipError);
   });
 });

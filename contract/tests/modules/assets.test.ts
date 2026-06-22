@@ -12,6 +12,7 @@ describe("assets contract", () => {
       name: "AI Native Browser 主封面",
       description: "主视频封面图",
       status: "active",
+      isFavorite: false,
       deletedAt: null,
       createdAt: "2026-06-06T02:00:00.000Z",
       updatedAt: "2026-06-06T02:00:00.000Z",

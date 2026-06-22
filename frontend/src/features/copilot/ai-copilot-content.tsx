@@ -292,6 +292,38 @@ interface WireMessage {
   readonly content: string;
 }
 
+// The wire shape of an AITask as returned by the global feed op (ai.tasks.list). Cast
+// structurally — same convention as WireMessage.
+interface WireTask {
+  readonly id: string;
+  readonly projectId: string | null;
+  readonly taskType: string;
+  readonly status:
+    | "queued"
+    | "running"
+    | "awaiting_confirmation"
+    | "succeeded"
+    | "failed"
+    | "cancelled";
+  readonly requestedAt: string;
+}
+
+// AI task status → human label for the 最近任务 feed. Honest mirror of the §12 machine.
+const TASK_STATUS_LABEL: Record<WireTask["status"], string> = {
+  queued: "排队中",
+  running: "进行中",
+  awaiting_confirmation: "待确认",
+  succeeded: "已完成",
+  failed: "失败",
+  cancelled: "已取消",
+};
+
+// taskType (e.g. "research.analyze") → a readable title for the feed row. The taskType IS
+// the title surface the copilot shows (spec: {id,title|taskType,...}).
+function taskTitle(t: WireTask): string {
+  return t.taskType;
+}
+
 const POLL_INTERVAL_MS = 3000;
 // ~4min — the assistant reply runs a real Claude subprocess (subscription) whose startup
 // + reasoning can take 1–3min; the poll window must comfortably outlast it (verified e2e:
@@ -324,6 +356,33 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
     },
     [],
   );
+
+  // GAP-COP-feed: 最近任务 is now backed by the REAL global task feed (ai.tasks.list) —
+  // the user's cross-project AI tasks, newest first. `recentTasks` is null while loading,
+  // [] when the feed is genuinely empty (honest empty state — no fixture rows).
+  const [recentTasks, setRecentTasks] = React.useState<
+    ReadonlyArray<WireTask> | null
+  >(null);
+  React.useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const rows = (await client.listAITasks({
+          params: undefined,
+          query: { page: 1, pageSize: 6 },
+          body: undefined,
+        })) as unknown as ReadonlyArray<WireTask>;
+        if (active) setRecentTasks(rows);
+      } catch {
+        // Feed unavailable (e.g. unauthenticated dispatch) — fall back to an empty,
+        // honest feed rather than fixture rows.
+        if (active) setRecentTasks([]);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const isEmpty = prompt.trim().length === 0;
 
@@ -594,49 +653,65 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
           </CardContent>
         </Card>
 
-        {/* RecentTasks */}
+        {/* RecentTasks — REAL global AI-task feed (GAP-COP-feed / ai.tasks.list). */}
         <Card data-slot="recent-tasks" className="overflow-hidden border border-border">
           <CardHeader className="px-3 pb-1 pt-2.5">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-1.5">
                 <CardTitle className="text-[12px] font-semibold">最近任务</CardTitle>
-                <PlannedBadge />
               </div>
-              <span
+              <Link
+                href="/copilot"
                 data-slot="recent-view-all"
-                className="text-[10px] font-medium text-muted-foreground"
+                className="text-[10px] font-medium text-muted-foreground hover:text-foreground"
               >
                 查看全部
-              </span>
+              </Link>
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 px-3 pb-2.5 pt-0">
-            {vm.recentTasks.map((task) => (
-              <div
-                key={task.id}
-                data-slot="recent-task"
-                data-task-id={task.id}
-                className="flex flex-col gap-0"
+            {recentTasks === null ? (
+              <span
+                data-slot="recent-tasks-loading"
+                className="text-[10px] leading-tight text-muted-foreground"
               >
-                <div className="flex items-start gap-1.5">
-                  <FileText
-                    className="mt-0.5 size-3.5 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                  <span className="text-[11px] font-medium text-foreground leading-tight">
-                    {task.title}
-                  </span>
+                加载中…
+              </span>
+            ) : recentTasks.length === 0 ? (
+              <span
+                data-slot="recent-tasks-empty"
+                className="text-[10px] leading-tight text-muted-foreground"
+              >
+                暂无 AI 任务，发起一个创作节点后会出现在这里。
+              </span>
+            ) : (
+              recentTasks.map((task) => (
+                <div
+                  key={task.id}
+                  data-slot="recent-task"
+                  data-task-id={task.id}
+                  className="flex flex-col gap-0"
+                >
+                  <div className="flex items-start gap-1.5">
+                    <FileText
+                      className="mt-0.5 size-3.5 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                    <span className="text-[11px] font-medium text-foreground leading-tight">
+                      {taskTitle(task)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 pl-5">
+                    <span className="text-[9.5px] leading-tight text-muted-foreground">
+                      项目：{task.projectId ?? "—"}
+                    </span>
+                    <span className="text-[9.5px] leading-tight text-muted-foreground">
+                      {TASK_STATUS_LABEL[task.status]}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 pl-5">
-                  <span className="text-[9.5px] leading-tight text-muted-foreground">
-                    项目：{task.project}
-                  </span>
-                  <span className="text-[9.5px] leading-tight text-muted-foreground">
-                    {task.meta}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
 

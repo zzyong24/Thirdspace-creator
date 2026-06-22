@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   projectResource,
+  projectStageResource,
   contentOutputResource,
 } from "../../src/resources/projects";
 import { projectsOperations } from "../../src/operations/projects";
@@ -104,6 +105,40 @@ describe("projects contract", () => {
     });
     // unknown role rejected
     expect(() => body!.parse({ title: "x", contentRole: "viral" })).toThrow();
+  });
+
+  it("parses a ProjectStage resource", () => {
+    const s = projectStageResource.parse({
+      stage: "script",
+      status: "in_progress",
+      progressPct: 40,
+      startedAt: "2026-01-01T02:00:00.000Z",
+      completedAt: null,
+    });
+    expect(s.stage).toBe("script");
+    expect(s.status).toBe("in_progress");
+    expect(s.progressPct).toBe(40);
+  });
+
+  it("rejects an unknown stage status", () => {
+    expect(() =>
+      projectStageResource.parse({
+        stage: "script",
+        status: "halfway", // not a StageStatus member
+        progressPct: 40,
+        startedAt: null,
+        completedAt: null,
+      }),
+    ).toThrow();
+  });
+
+  it("registers projects.stages.list as a GET list endpoint", () => {
+    expect(projectsOperations.listStages.id).toBe("projects.stages.list");
+    expect(projectsOperations.listStages.method).toBe("GET");
+    expect(projectsOperations.listStages.path).toBe(
+      "/projects/:projectId/stages",
+    );
+    expect(projectsOperations.listStages.isList).toBe(true);
   });
 
   it("registers the project list + transition endpoints with FR ids", () => {

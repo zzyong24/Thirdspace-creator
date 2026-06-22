@@ -24,6 +24,7 @@ export const AI_OP_IDS = [
   "ai.conversations.messages.create",
   "ai.conversations.messages.list",
   "ai.tasks.create",
+  "ai.tasks.list",
   "ai.tasks.get",
   "ai.tasks.results.list",
   "ai.tasks.confirm",
@@ -91,6 +92,18 @@ export function createAiTransport(
           };
           const task = await service.createTask(ctx, b);
           return { data: task, meta: { requestId } };
+        }
+        case "ai.tasks.list": {
+          // paginationQuery (page/pageSize, 1-based) → repo limit/offset (mirrors
+          // ai.conversations.list). Global cross-project task feed for the copilot.
+          const q = (query ?? {}) as { page?: number; pageSize?: number };
+          const page = q.page ?? 1;
+          const pageSize = q.pageSize ?? 20;
+          const { rows, total } = await service.listTasks(ctx, {
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
+          });
+          return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "ai.tasks.get": {
           const task = await service.getTask(ctx, p.taskId ?? "");

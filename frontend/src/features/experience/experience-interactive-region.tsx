@@ -118,8 +118,8 @@ export function ExperienceInteractiveRegion({
       : records.filter((record) => recordTabId(record) === activeTab);
 
   // Honest empty-state copy keyed off the active tab's label (七步 stage name).
-  // The 后期剪辑 (`edit`) tab is empty until an `editing` learningType exists upstream
-  // (followUp) — the empty row says so instead of rendering a silent blank table.
+  // The 后期剪辑 (`edit`) tab buckets learnings tagged with the `editing` learningType
+  // (GAP-EXP-edit) — when none exist the empty row says so instead of a silent blank table.
   const activeLabel =
     tabs.find((tab) => tab.id === activeTab)?.label ?? "该分类";
   const emptyCopy =

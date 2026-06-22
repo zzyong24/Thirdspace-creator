@@ -166,6 +166,45 @@ describe("calibration contract (each of 7 ops validates against its DTO)", () =>
     expect(() => predictionResource.parse(r.data)).not.toThrow();
   });
 
+  it("calibration.predictions.list → predictionResource[] (createdAt desc, per-dim score derived)", async () => {
+    const t = makeTransport(db);
+    const { versionId } = await seedRubric(t);
+    // Two predictions; per-dim scores ride predictedConversion → non-zero predictedScore.
+    await call(t, "calibration.predictions.create", {
+      body: {
+        subjectType: "content_output",
+        subjectId: "output-1",
+        rubricVersionId: versionId,
+        predictedMetrics: {},
+        predictedConversion: { hook: 4, persona: 5, cta: 3 },
+        confidence: "high",
+      },
+    });
+    await call(t, "calibration.predictions.create", {
+      body: {
+        subjectType: "content_output",
+        subjectId: "output-2",
+        rubricVersionId: versionId,
+        predictedMetrics: {},
+        predictedConversion: { hook: 2, persona: 2, cta: 2 },
+        confidence: "low",
+      },
+    });
+    const r = await call(t, "calibration.predictions.list", {
+      query: { page: 1, pageSize: 20 },
+    });
+    const rows = (r.data as unknown[]).map((d) => predictionResource.parse(d));
+    expect(rows).toHaveLength(2);
+    // createdAt desc — both share NOW, so assert membership rather than order strictly.
+    const subjectIds = rows.map((p) => p.subjectId).sort();
+    expect(subjectIds).toEqual(["output-1", "output-2"]);
+    // per-dim scores landed → predictedScore is the 变现加权 sum, NOT 0.
+    const first = rows.find((p) => p.subjectId === "output-1")!;
+    expect(first.predictedScore).toBeGreaterThan(0);
+    // DIMENSIONS weights: hook .4*4 + persona .3*5 + cta .3*3 = 1.6+1.5+0.9 = 4.0
+    expect(first.predictedScore).toBeCloseTo(4.0, 4);
+  });
+
   it("calibration.results.create → calibrationResultResource (deviation object, ingestionRunId present)", async () => {
     const t = makeTransport(db);
     const predId = await seedLockedPrediction(t);

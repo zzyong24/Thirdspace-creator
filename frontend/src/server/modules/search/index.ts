@@ -10,6 +10,8 @@ export {
   type SearchService,
   type ServiceDeps,
   type SearchIndexOutcome,
+  type SearchFacets,
+  type SearchFacetValue,
   type UpsertInput,
   type RebuildDoc,
 } from "./search.service";

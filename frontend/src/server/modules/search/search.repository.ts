@@ -51,6 +51,15 @@ export interface SearchRepository {
   upsertDocument(input: UpsertDocumentInput): Promise<SearchDocumentRow>;
   removeDocument(entityType: string, entityId: string): Promise<void>;
   search(query: string, opts?: SearchOpts): Promise<SearchDocumentRow[]>;
+  /**
+   * Rows matching `query` WITHOUT the entityType narrowing — the raw material the
+   * service aggregates into facet buckets. Same FTS predicate as `search()`
+   * (user-scoped ILIKE over search_text), but never filtered by entityType so the
+   * service can count EVERY dimension's values from one read. Empty/whitespace
+   * query ⇒ [] (no full-table dump), matching `search()`. No limit: facet counts
+   * must reflect the whole match set, not the first page.
+   */
+  facetMatches(query: string): Promise<SearchDocumentRow[]>;
   appendHistory(input: AppendHistoryInput): Promise<SearchHistoryRow>;
   listHistory(limit?: number): Promise<SearchHistoryRow[]>;
   deleteAllDocuments(): Promise<void>;
@@ -132,6 +141,21 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
         .where(predicate)
         .orderBy(desc(searchDocuments.indexedAt))
         .limit(opts?.limit ?? 50);
+    },
+
+    async facetMatches(query) {
+      // Empty / whitespace query → [] (no full-table dump), same guard as search().
+      const trimmed = query.trim();
+      if (trimmed === "") return [];
+      const pattern = `%${escapeLike(trimmed.toLowerCase())}%`;
+      // Deliberately NO entityType narrowing: the service buckets across every
+      // dimension from this one match set. No limit (facet counts are over the
+      // whole match set). Ordered for a deterministic read.
+      return db
+        .select()
+        .from(searchDocuments)
+        .where(and(scopedDoc, ilike(searchDocuments.searchText, pattern)))
+        .orderBy(desc(searchDocuments.indexedAt));
     },
 
     async appendHistory(input) {

@@ -46,10 +46,12 @@ export {
 
 export {
   projectResource,
+  projectStageResource,
   contentOutputResource,
   taskResource,
   projectActivityResource,
   type ProjectResource,
+  type ProjectStageResource,
   type ContentOutputResource,
   type TaskResource,
   type ProjectActivityResource,

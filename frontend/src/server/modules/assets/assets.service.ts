@@ -3,6 +3,7 @@ import type {
   AssetRepository,
   AssetRow,
   AssetFileRow,
+  MaterialLinkRow,
   ListAssetsQuery,
 } from "./assets.repository";
 import type { ObjectStoragePort } from "./object-storage";
@@ -65,6 +66,11 @@ export interface AssetsService {
   ): Promise<AssetFileRow>;
   trashAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
   restoreAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
+  toggleFavorite(ctx: RequestContext, assetId: string): Promise<AssetRow>;
+  listAssetUsage(
+    ctx: RequestContext,
+    assetId: string,
+  ): Promise<MaterialLinkRow[]>;
   archiveAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
   unarchiveAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
 }
@@ -208,6 +214,24 @@ export function createAssetsService(
         deletedAt: null,
       });
       return updated!;
+    },
+
+    async toggleFavorite(ctx, assetId) {
+      // 收藏翻转 (mirror trashAsset's load→update shape). 收藏 is orthogonal to the
+      // §12 status machine, so there is NO transition guard — any owned asset can
+      // be (un)favorited. Flips the current isFavorite and re-reads the row.
+      const asset = await requireAsset(ctx, assetId);
+      const updated = await repo.updateAssetStatus(ctx.userId, assetId, {
+        isFavorite: !asset.isFavorite,
+      });
+      return updated!;
+    },
+
+    async listAssetUsage(ctx, assetId) {
+      // 用料反查: assert ownership first (foreign/unknown → 404, no leak), then
+      // return the 用料链 edges that reference this asset.
+      await requireAsset(ctx, assetId);
+      return repo.listAssetUsage(ctx.userId, assetId);
     },
 
     async archiveAsset(ctx, assetId) {

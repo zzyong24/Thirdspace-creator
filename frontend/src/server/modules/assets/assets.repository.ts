@@ -1,6 +1,13 @@
 import { and, asc, eq, desc, type Db } from "@creatoros/backend";
+import { materialLinks } from "@creatoros/backend";
 import { assets, assetFiles, assetUploads } from "./assets.db-schema";
 import { OwnershipError } from "./assets.errors";
+
+// Inverse-usage read row (用料反查): the 用料链 edges that reference an asset.
+// We import the materialLinks TABLE (not the material-links module/repo — no
+// cross-module repo import) for a user-scoped read of the BillOfMaterials edges
+// pointing AT this asset. Shape == contract materialLinkResource.
+export type MaterialLinkRow = typeof materialLinks.$inferSelect;
 
 // Assets repository (foundation §5.2) — user-scoped queries ONLY. Every
 // read/write on `assets`/`asset_uploads` filters on `userId`; `asset_files`
@@ -15,7 +22,14 @@ import { OwnershipError } from "./assets.errors";
 // own): the repo only stamps `status='active'` at insert and exposes
 // updateAssetStatus for the service to drive trash/restore/archive.
 
-export type AssetRow = typeof assets.$inferSelect;
+// isFavorite is a notNull(.default(false)) column added for 收藏 persistence.
+// We mark it OPTIONAL on the exported AssetRow so external seeders (the shared
+// persistence-client `toAssetRow` mapper, outside this module's lane) that build
+// an AssetRow literal without 收藏 still type-check — the DB column defaults to
+// false on insert, and every reader (transport/service) coalesces `?? false`.
+export type AssetRow = Omit<typeof assets.$inferSelect, "isFavorite"> & {
+  isFavorite?: boolean;
+};
 type AssetFileDbRow = typeof assetFiles.$inferSelect;
 export type AssetUploadRow = typeof assetUploads.$inferSelect;
 
@@ -63,8 +77,14 @@ export interface AssetRepository {
       status?: string;
       deletedAt?: string | null;
       currentFileId?: string;
+      isFavorite?: boolean;
     },
   ): Promise<AssetRow | null>;
+  // 用料反查 (mirror material-links list, inverse direction): the user-scoped 用料链
+  // edges whose entity_type='asset' AND entity_id=assetId — i.e. which 创作 use
+  // this asset. Newest-first. No ownership gate on the asset itself here; the
+  // SERVICE asserts asset ownership first (requireAsset) before calling this.
+  listAssetUsage(userId: string, assetId: string): Promise<MaterialLinkRow[]>;
   listAssetFiles(userId: string, assetId: string): Promise<AssetFileRow[]>;
   insertAssetFile(
     userId: string,
@@ -168,6 +188,7 @@ export function createAssetRepository(
       if (patch.deletedAt !== undefined) set.deletedAt = patch.deletedAt;
       if (patch.currentFileId !== undefined)
         set.currentFileId = patch.currentFileId;
+      if (patch.isFavorite !== undefined) set.isFavorite = patch.isFavorite;
       await db
         .update(assets)
         .set(set)
@@ -179,6 +200,24 @@ export function createAssetRepository(
         .from(assets)
         .where(and(eq(assets.id, assetId), eq(assets.userId, userId)));
       return rows[0] ?? null;
+    },
+
+    async listAssetUsage(userId, assetId) {
+      // 用料反查: user-scoped 用料链 edges that reference THIS asset (entity_type
+      // 'asset'). Newest-first. The service has already asserted asset ownership;
+      // the userId filter here additionally scopes the edges to the same owner.
+      const rows = await db
+        .select()
+        .from(materialLinks)
+        .where(
+          and(
+            eq(materialLinks.userId, userId),
+            eq(materialLinks.entityType, "asset"),
+            eq(materialLinks.entityId, assetId),
+          ),
+        )
+        .orderBy(desc(materialLinks.createdAt));
+      return rows;
     },
 
     async listAssetFiles(userId, assetId) {

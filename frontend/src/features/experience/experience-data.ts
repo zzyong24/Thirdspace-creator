@@ -47,16 +47,15 @@ import type {
 // CATEGORY_TO_TAB map in experience-interactive-region.tsx). The Learning's
 // `learningType` enum is the real source; an unknown type falls through to 复盘沉淀.
 //
-// `editing → 后期剪辑` is a PLACEHOLDER mapping reserved for a future `editing`
-// learningType (see followUp): the contract enum does NOT yet emit `editing`, so
-// today this key never matches a real learning and the 后期剪辑 (`edit`) tab stays
-// honestly empty rather than silently borrowing another stage's rows.
+// `editing → 后期剪辑` maps the post-production learningType (GAP-EXP-edit): the
+// contract `learningType` enum now emits `editing`, so real learnings tagged
+// `editing` bucket into the 后期剪辑 (`edit`) tab instead of falling through to 复盘沉淀.
 const LEARNING_TYPE_TO_CATEGORY: Record<string, string> = {
   strategy: "选题策划",
   hook: "脚本结构",
   structure: "脚本结构",
   process: "拍摄执行",
-  editing: "后期剪辑", // reserved — no real source yet (followUp)
+  editing: "后期剪辑", // post-production bucket (GAP-EXP-edit)
   failure: "复盘沉淀",
   conversion_pattern: "互动运营",
   offer_insight: "互动运营",
@@ -124,8 +123,9 @@ function learningToRecord(learning: LearningDto): ExperienceRecord {
     validationStatus: learning.validationStatus,
     // Stamp the real, learningType-derived filter tab so the client-side七步 tab
     // filter buckets each row by its REAL stage (not by re-deriving the display
-    // label). The 后期剪辑 (`edit`) tab gets no rows until an `editing` learningType
-    // exists upstream — honest empty rather than a borrowed bucket.
+    // label). The 后期剪辑 (`edit`) tab now buckets learnings tagged with the
+    // `editing` learningType (GAP-EXP-edit); it stays empty only when no such
+    // learning exists — honest empty rather than a borrowed bucket.
     tabId: tabIdForLearning(learning),
   };
 }

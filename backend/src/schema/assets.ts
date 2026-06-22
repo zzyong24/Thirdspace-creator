@@ -1,4 +1,11 @@
-import { pgTable, text, integer, bigint, jsonb } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  integer,
+  bigint,
+  jsonb,
+  boolean,
+} from "drizzle-orm/pg-core";
 
 // Assets tables (data-model §「ASSET」/「ASSET_FILE」 lines 358–384 + contract/
 // src/resources/assets.ts; SPEC §13 "素材库" group). Canonical defs live in shared
@@ -24,6 +31,7 @@ export const assets = pgTable("assets", {
   name: text("name").notNull(),
   description: text("description").notNull().default(""),
   status: text("status").notNull().default("active"),
+  isFavorite: boolean("is_favorite").notNull().default(false), // 收藏 flag (toggled by assets.favorite.toggle)
   deletedAt: text("deleted_at"), // nullable → contract iso8601|null
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
@@ -75,6 +83,7 @@ CREATE TABLE IF NOT EXISTS assets (
   name TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'active',
+  is_favorite BOOLEAN NOT NULL DEFAULT FALSE,
   deleted_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL

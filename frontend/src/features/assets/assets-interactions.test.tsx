@@ -5,8 +5,8 @@
  *   - E2 ＋上传素材  → createUpload then completeUpload (+ refresh)
  *   - E3 下载        → getAsset
  *   - E4 复制链接    → getAsset
- *   - E5 收藏        → 规划中 (no 收藏 field/op this wave): announces the
- *                      planned state, does NOT call addAssetFile (the old hack)
+ *   - E5 收藏        → REAL toggleFavorite (+ refresh); does NOT call the old
+ *                      addAssetFile { storageKey: favorites/... } hack
  *   - E6 更多(回收站) → trashAsset (+ refresh)
  *
  * Determinism: the client is mocked; no Date.now/Math.random/network. The island
@@ -42,6 +42,9 @@ const mockClient = {
   trashAsset: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "a", status: "deleted" }),
   ),
+  toggleFavorite: vi.fn((_input: unknown): Promise<unknown> =>
+    Promise.resolve({ id: "a", isFavorite: true }),
+  ),
   createMaterialLink: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "link-1", projectId: "proj-1", entityType: "asset" }),
   ),
@@ -53,6 +56,7 @@ vi.mock("@/lib/contract-client", () => ({
     getAsset: (i: unknown) => mockClient.getAsset(i),
     addAssetFile: (i: unknown) => mockClient.addAssetFile(i),
     trashAsset: (i: unknown) => mockClient.trashAsset(i),
+    toggleFavorite: (i: unknown) => mockClient.toggleFavorite(i),
     createMaterialLink: (i: unknown) => mockClient.createMaterialLink(i),
   },
 }));
@@ -147,18 +151,23 @@ describe("Assets needs-backend wiring", () => {
     await waitFor(() => expect(mockClient.getAsset).toHaveBeenCalledTimes(1));
   });
 
-  it("E5 收藏 is 规划中: announces the planned state and does NOT call the addAssetFile hack", async () => {
+  it("E5 收藏 calls assets.favorite.toggle then refresh (not the addAssetFile hack)", async () => {
     const { container } = await renderIsland();
     const btn = container.querySelector<HTMLButtonElement>(
       '[data-slot="asset-action-favorite"]',
     );
     fireEvent.click(btn!);
-    // The misleading assets.files.create hack is gone — no 收藏 field/op exists.
+    await waitFor(() =>
+      expect(mockClient.toggleFavorite).toHaveBeenCalledTimes(1),
+    );
+    // Reflects the new 收藏 state and refreshes the gallery.
     await waitFor(() =>
       expect(
         container.querySelector('[data-slot="asset-action-status"]')?.textContent,
-      ).toContain("收藏规划中"),
+      ).toContain("已加入收藏"),
     );
+    expect(mockRouter.refresh).toHaveBeenCalled();
+    // The misleading assets.files.create { storageKey: favorites/... } hack is gone.
     expect(mockClient.addAssetFile).not.toHaveBeenCalled();
   });
 

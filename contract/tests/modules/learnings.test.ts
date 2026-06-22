@@ -45,6 +45,26 @@ describe("learnings contract", () => {
     },
   );
 
+  // Post-production learningType (GAP-EXP-edit). Additive: the 后期剪辑 stage now has
+  // a real source value while every legacy/monetization value keeps parsing above.
+  it("accepts the editing learningType", () => {
+    const l = learningResource.parse({
+      id: "learning-editing",
+      userId: "user-zyongzhu",
+      reviewId: null,
+      learningType: "editing",
+      title: "粗剪先定节奏再调色",
+      insight: "先把叙事节奏锁死再进精剪，返工率明显下降。",
+      recommendation: "后期阶段固化：节奏 → 精剪 → 调色 三段顺序。",
+      validationStatus: "validated",
+      confidenceScore: 72,
+      reuseCount: 1,
+      createdAt: "2026-04-28T02:00:00.000Z",
+      updatedAt: "2026-04-28T02:00:00.000Z",
+    });
+    expect(l.learningType).toBe("editing");
+  });
+
   it("still rejects an unknown learningType", () => {
     expect(() =>
       learningResource.parse({

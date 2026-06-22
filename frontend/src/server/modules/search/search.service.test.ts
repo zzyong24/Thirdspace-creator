@@ -100,6 +100,7 @@ describe("SearchService", () => {
       upsertDocument: async () => { throw new Error("nope"); },
       removeDocument: async () => {},
       search: async () => [],
+      facetMatches: async () => [],
       appendHistory: async () => { throw new Error("history write failed"); },
       listHistory: async () => [],
       deleteAllDocuments: async () => {},
@@ -150,5 +151,74 @@ describe("SearchService", () => {
     await expect(
       svc.removeDocument(ctxA, "project", "does-not-exist"),
     ).resolves.toBeUndefined();
+  });
+
+  it("7. facets aggregates entityType + tag buckets, user-scoped, ordered by count then value", async () => {
+    const svc = realService(db);
+    // Two knowledge docs + one project doc all matching "ai"; tags live in the
+    // body JSON payload (the same convention the page composer reads).
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-1",
+      title: "AI Hook 公式",
+      body: JSON.stringify({ tags: ["AI", "教程"] }),
+    });
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-2",
+      title: "AI 提示词",
+      body: JSON.stringify({ tags: ["AI"] }),
+    });
+    await svc.upsertDocument(ctxA, {
+      entityType: "project",
+      entityId: "p-1",
+      title: "AI Native Browser",
+      body: JSON.stringify({ snippet: "ai project" }),
+    });
+    // ctxB has a matching doc that must NOT leak into ctxA's facets.
+    await svc.upsertDocument(ctxB, {
+      entityType: "video",
+      entityId: "v-b",
+      title: "AI 视频",
+      body: JSON.stringify({ tags: ["AI"] }),
+    });
+
+    const facets = await svc.facets(ctxA, "ai");
+    expect(facets.query).toBe("ai");
+    // entityType: knowledge(2) before project(1) — descending count.
+    expect(facets.entityType).toEqual([
+      { value: "knowledge", count: 2 },
+      { value: "project", count: 1 },
+    ]);
+    // tag: AI(2) before 教程(1).
+    expect(facets.tag).toEqual([
+      { value: "AI", count: 2 },
+      { value: "教程", count: 1 },
+    ]);
+  });
+
+  it("7b. facets returns empty buckets for an empty / whitespace query", async () => {
+    const svc = realService(db);
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-1",
+      title: "AI Hook",
+      body: JSON.stringify({ tags: ["AI"] }),
+    });
+    expect(await svc.facets(ctxA, "")).toEqual({ query: "", entityType: [], tag: [] });
+    expect(await svc.facets(ctxA, "   ")).toEqual({ query: "", entityType: [], tag: [] });
+  });
+
+  it("7c. facets tolerates plain-text bodies (no tags) — only entityType buckets", async () => {
+    const svc = realService(db);
+    await svc.upsertDocument(ctxA, {
+      entityType: "asset",
+      entityId: "a-1",
+      title: "AI 封面",
+      body: "纯文本正文，无 JSON",
+    });
+    const facets = await svc.facets(ctxA, "ai");
+    expect(facets.entityType).toEqual([{ value: "asset", count: 1 }]);
+    expect(facets.tag).toEqual([]);
   });
 });

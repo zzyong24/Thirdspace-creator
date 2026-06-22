@@ -19,3 +19,15 @@ export class ConflictError extends Error {
     this.name = "ConflictError";
   }
 }
+
+// `InvalidTransitionError` guards the §12-style status machine — here archiving
+// an item that is not `active` (already archived). It carries
+// `ErrorCode.ConflictError` (→409) in `.code` so the dispatch route maps it by
+// code without importing the class (mirrors assets.trash's transition guard).
+export class InvalidTransitionError extends Error {
+  readonly code = ErrorCode.ConflictError;
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidTransitionError";
+  }
+}

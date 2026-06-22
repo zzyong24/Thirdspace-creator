@@ -172,6 +172,12 @@ export interface AiService {
     ctx: RequestContext,
     conversationId: string,
   ): Promise<AIMessageResource[]>;
+  // Global cross-project AI-task feed (copilot 「最近任务/继续任务」). Scoped to the
+  // user, newest-requested first; mirrors listConversations' pagination envelope.
+  listTasks(
+    ctx: RequestContext,
+    page: { limit: number; offset: number },
+  ): Promise<{ rows: AITaskResource[]; total: number }>;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
   confirmTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
   cancelTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
@@ -590,6 +596,11 @@ export function createAiService(deps: ServiceDeps): AiService {
         completedAt: deps.now(),
       });
       return toTaskDto(updated);
+    },
+
+    async listTasks(ctx, page) {
+      const { rows, total } = await repoFor(ctx).listTasks(page);
+      return { rows: rows.map(toTaskDto), total };
     },
 
     async getTask(ctx, taskId) {

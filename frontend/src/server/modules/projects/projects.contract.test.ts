@@ -20,12 +20,13 @@ import { createProjectsService } from "./projects.service";
 import { createProjectsTransport } from "./projects.transport";
 import {
   projectResource,
+  projectStageResource,
   contentOutputResource,
   taskResource,
   projectActivityResource,
 } from "./projects.schema";
 
-// Drive each of the 15 ops through the transport with a valid input and assert
+// Drive each of the 16 ops through the transport with a valid input and assert
 // the envelope `data` validates against the op's contract response DTO
 // (per-item for isList). A returning call == DTO conformance (foundation §5.4).
 
@@ -60,7 +61,7 @@ async function call(id: string, input: unknown, isList = false) {
   return transport.request(ep(id, isList), input as never, ctx);
 }
 
-describe("projects.transport — 15-op contract conformance", () => {
+describe("projects.transport — 16-op contract conformance", () => {
   it("projects.create / list / get → ProjectResource", async () => {
     const created = await call("projects.create", {
       body: { title: "深度解析", brief: "拆解", targetPlatforms: ["bilibili"] },
@@ -184,7 +185,21 @@ describe("projects.transport — 15-op contract conformance", () => {
     expect(parsed.data[0]!.eventType).toBe("project_created");
   });
 
-  it("covers all 15 op ids + unknown → UnsupportedOperationError", async () => {
+  it("projects.stages.list → ProjectStageResource[]", async () => {
+    const created = await call("projects.create", { body: { title: "T" } });
+    const projectId = (created as { data: { id: string } }).data.id;
+
+    const list = await call(
+      "projects.stages.list",
+      { params: { projectId } },
+      true,
+    );
+    const parsed = listEnvelope(projectStageResource).parse(list);
+    // createProject seeds the 6-stage pipeline.
+    expect(parsed.data.length).toBe(6);
+  });
+
+  it("covers all 16 op ids + unknown → UnsupportedOperationError", async () => {
     const ids = Object.values(ENDPOINTS)
       .filter((e) =>
         [
@@ -196,6 +211,7 @@ describe("projects.transport — 15-op contract conformance", () => {
           "projects.stage.transition",
           "projects.outputs.create",
           "projects.outputs.list",
+          "projects.stages.list",
           "outputs.get",
           "outputs.patch",
           "outputs.stage.transition",
@@ -206,7 +222,7 @@ describe("projects.transport — 15-op contract conformance", () => {
         ].includes(e.id),
       )
       .map((e) => e.id);
-    expect(ids).toHaveLength(15);
+    expect(ids).toHaveLength(16);
 
     await expect(
       transport.request(ep("projects.nope"), {} as never, ctx),

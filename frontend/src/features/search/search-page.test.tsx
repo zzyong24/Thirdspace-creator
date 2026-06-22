@@ -195,12 +195,15 @@ describe("SearchPage", () => {
     ).not.toBeNull();
   });
 
-  it("renders the SearchSideRail in the locked spec order (Filters → QuickActions → History → Tips)", async () => {
+  it("renders the SearchSideRail in the locked spec order (Facets → QuickActions → History → Tips)", async () => {
     const { container } = await renderSearchPage();
     const rail = container.querySelector(
       '[data-slot="search-side-rail"]',
     ) as HTMLElement;
     expect(rail).not.toBeNull();
+    // The former「规划中」decorative SearchFilters is now the REAL
+    // `SearchFacetsPanel` client island (GAP-SRCH-facets, backed by search.facets);
+    // it keeps the stable `search-filters` slot so the locked rail order holds.
     const expectedSlots = [
       "search-filters",
       "search-quick-actions",

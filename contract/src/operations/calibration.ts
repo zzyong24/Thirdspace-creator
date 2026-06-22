@@ -2,6 +2,7 @@ import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
 import {
   id,
+  paginationQuery,
   calibrationConfidence,
   calibrationSubjectType,
 } from "../primitives";
@@ -86,6 +87,18 @@ export const calibrationOperations = {
     params: predictionParams,
     response: predictionResource,
     fr: ["FR-CALIB-PRED-GET"],
+  }),
+  // GAP-CAL-1: the 盲预测 list read op — user-scoped, createdAt desc, page/pageSize.
+  // Mirrors getPrediction's response (predictionResource) as a list so the calibration
+  // surface can render the already-locked predictions + the回流 entry per row.
+  listPredictions: defineEndpoint({
+    id: "calibration.predictions.list",
+    method: "GET",
+    path: "/calibration/predictions",
+    query: paginationQuery,
+    response: predictionResource,
+    isList: true,
+    fr: ["FR-CALIB-PRED-LIST"],
   }),
   createResult: defineEndpoint({
     id: "calibration.results.create",

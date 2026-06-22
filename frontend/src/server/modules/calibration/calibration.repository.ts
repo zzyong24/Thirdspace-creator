@@ -1,4 +1,4 @@
-import { and, asc, eq, type Db } from "@creatoros/backend";
+import { and, asc, desc, eq, type Db } from "@creatoros/backend";
 import {
   rubrics,
   rubricVersions,
@@ -76,6 +76,11 @@ export interface CalibrationRepository {
   createPrediction(input: CreatePredictionInput): Promise<PredictionRow>;
   lockPrediction(predictionId: string): Promise<PredictionRow>;
   getPrediction(predictionId: string): Promise<PredictionRow>;
+  // GAP-CAL-1: user-scoped 盲预测 list (createdAt desc) + total count, for pagination.
+  listPredictions(page: {
+    limit: number;
+    offset: number;
+  }): Promise<{ rows: PredictionRow[]; total: number }>;
 
   createResult(input: CreateResultInput): Promise<CalibrationResultRow>;
   getResultByPrediction(
@@ -268,6 +273,21 @@ export function createCalibrationRepository(
 
     async getPrediction(predictionId) {
       return getPredictionRow(predictionId);
+    },
+
+    async listPredictions({ limit, offset }) {
+      const rows = await db
+        .select()
+        .from(predictions)
+        .where(eq(predictions.userId, deps.userId))
+        .orderBy(desc(predictions.createdAt))
+        .limit(limit)
+        .offset(offset);
+      const all = await db
+        .select({ id: predictions.id })
+        .from(predictions)
+        .where(eq(predictions.userId, deps.userId));
+      return { rows, total: all.length };
     },
 
     async createResult(input) {
