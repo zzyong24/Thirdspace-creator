@@ -25,6 +25,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { PlatformIcon } from "@/components/publishing/platform-icon";
+import { PlatformAdaptIsland } from "./platform-adapt-island";
 import { SectionCard } from "@/components/project/section-card";
 import { StatusBadge } from "@/components/project/status-badge";
 import { client } from "@/lib/contract-client";
@@ -234,6 +235,8 @@ export function PublishingInteractiveRegion({
           platforms={vm.platforms}
           wiring={wiring}
           calendarWiring={calendarWiring}
+          projectId={vm.projectId}
+          topic={vm.preview.title}
         />
         <div data-slot="preview-rail" className="flex flex-col gap-1">
           <PlatformPreview preview={vm.preview} />
@@ -595,10 +598,14 @@ function PlatformPublishingPanel({
   platforms,
   wiring,
   calendarWiring,
+  projectId,
+  topic,
 }: {
   platforms: PublishingViewModel["platforms"];
   wiring?: PublishingWiring;
   calendarWiring?: CalendarWiring;
+  projectId: string;
+  topic: string;
 }) {
   const router = useRouter();
   const [, startTransition] = React.useTransition();
@@ -676,6 +683,13 @@ function PlatformPublishingPanel({
       data-publish-state={publishState}
       className="flex flex-col gap-2"
     >
+      {wiring?.outputId ? (
+        <PlatformAdaptIsland
+          projectId={projectId}
+          outputId={wiring.outputId}
+          topic={topic}
+        />
+      ) : null}
       <SectionCard
         title="发布平台"
         description="按平台配置账号、排期与状态"

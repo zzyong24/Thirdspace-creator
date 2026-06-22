@@ -128,6 +128,7 @@ import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerate } from "@/server/ai/topic-runner";
 import { runScriptDraft } from "@/server/ai/script-runner";
 import { runReviewAnalyze } from "@/server/ai/review-runner";
+import { runPlatformAdapt } from "@/server/ai/platform-adapt-runner";
 import {
   createPositioningService,
   createPositioningTransport,
@@ -1153,6 +1154,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       createLearning: (ctx, body) =>
         learningsService.createLearning(ctx, body),
     },
+    // 机制③ 一稿多平台 — confirmTask materializes a publication_drafts candidate into real
+    // Publications (+ an initial revision carrying the adapted title/body) via the
+    // Publishing public service. The agent's per-platform label is normalized to the
+    // Publishing platform enum (wechat → wechatVideo); accountReference is empty (the user
+    // binds an account at 发布 time). publishingService is constructed above.
+    publishing: {
+      createPublicationFromDraft: async (ctx, outputId, draft) => {
+        const PLATFORM_ALIAS: Record<string, string> = {
+          wechat: "wechatVideo",
+          weixin: "wechatVideo",
+        };
+        const platform = PLATFORM_ALIAS[draft.platform] ?? draft.platform;
+        const pub = await publishingService.createPublication(ctx, outputId, {
+          platform,
+          accountReference: "",
+        });
+        await publishingService.createRevision(ctx, pub.id, {
+          title: draft.title,
+          description: draft.body,
+          platformTags: draft.tags ?? [],
+        });
+        return pub;
+      },
+    },
   });
   const aiBase = createAiTransport(() => aiService);
 
@@ -1266,6 +1291,29 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           task.status === "queued"
         ) {
           void runReviewAnalyze(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "publish.platform_adapt" &&
+          task.status === "queued"
+        ) {
+          // 一稿多平台 node — adapts one finished script into a per-platform draft
+          // (抖音/B站/小红书/公众号), records a `publication_drafts` candidate; 采纳
+          // materializes each draft into a real Publication (+ revision) via the
+          // publishing port wired above.
+          void runPlatformAdapt(
             ctx,
             {
               id: String(task.id),
