@@ -30,14 +30,18 @@ function makeService(
     createKnowledge:
       knowledgePort?.createKnowledge ?? vi.fn(async () => ({ id: "k-new" })),
   };
+  const candidate = {
+    createFromAIResult: vi.fn(async () => ({ id: "cand-new" })),
+  };
   const service = createAiService({
     db,
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${++seq}`,
     artifacts: port,
     knowledge,
+    candidate,
   });
-  return { service, port, knowledge };
+  return { service, port, knowledge, candidate };
 }
 
 describe("ai service", () => {
@@ -88,6 +92,32 @@ describe("ai service", () => {
     // idempotent: a second call does not throw and leaves it running
     await service.markRunning(ctx, task.id);
     expect((await service.getTask(ctx, task.id)).status).toBe("running");
+  });
+
+  it("confirmTask on a candidate_list materializes each topic via candidate.createFromAIResult and flips succeeded", async () => {
+    const { service, candidate } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "topic.generate",
+      inputData: {},
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "candidate_list",
+      resultData: {
+        items: [
+          { title: "选题A", angle: "切入A", source: "trend", contentRole: "traffic", predictedScore: 80 },
+          { title: "选题B", angle: "切入B", source: "benchmark", contentRole: "引流" },
+        ],
+      },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    expect(candidate.createFromAIResult).toHaveBeenCalledTimes(2);
+    // per-item synthetic aiTaskId keeps the C-3 idempotency at candidate granularity
+    expect(candidate.createFromAIResult).toHaveBeenNthCalledWith(
+      1,
+      ctx,
+      expect.objectContaining({ aiTaskId: `${task.id}#0`, resultType: "candidate" }),
+    );
   });
 
   it("confirmTask rejects a task not in awaiting_confirmation (state-machine guard)", async () => {

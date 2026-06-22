@@ -36,6 +36,7 @@ import {
   type CandidateSortKey,
 } from "./topics-interactive-region";
 import { AudienceQuestionsCard } from "./audience-questions-card";
+import { TopicGenerateIsland } from "./topic-generate-island";
 
 export interface TopicsViewModel {
   readonly candidates: CandidateResource[];
@@ -108,6 +109,8 @@ export function TopicsView({
       data-testid="topics"
       className="flex flex-col gap-section-gap"
     >
+      <TopicGenerateIsland />
+
       <SectionCard title="选题候选池">
         <div className="flex flex-col gap-3 py-2">
           <div className="flex items-center justify-between">

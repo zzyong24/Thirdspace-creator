@@ -14,6 +14,9 @@ export interface CreativeContext {
   // A human-readable positioning brief the agent reasons against (人设/领域/人群/差异化/
   // 关键词/变现锚). Empty string when the user has not set positioning yet.
   positioningBrief: string;
+  // 飞轮回流 — a brief of past 复盘 爆款要素 (Learnings). Empty until the learnings reader
+  // is wired (机制②扩展, plan A7); the field exists now so topic/script nodes can read it.
+  learningsBrief: string;
   topic: { title: string; angle: string };
   projectId: string | null;
 }
@@ -60,6 +63,7 @@ export async function assembleCreativeContext(
   }
   return {
     positioningBrief,
+    learningsBrief: "", // wired in plan A7 (LearningsReader); empty keeps nodes working now
     topic: { title: input.topic, angle: input.angle ?? "" },
     projectId: input.projectId,
   };

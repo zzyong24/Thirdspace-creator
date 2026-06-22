@@ -1,6 +1,6 @@
 import "server-only";
 import { createDb, UnsupportedOperationError } from "@creatoros/backend";
-import type { Endpoint, Transport } from "@creatoros/contract";
+import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
@@ -125,6 +125,7 @@ import {
   AI_OP_IDS,
 } from "@/server/modules/ai";
 import { runGatherMaterial } from "@/server/ai/research-runner";
+import { runTopicGenerate } from "@/server/ai/topic-runner";
 import {
   createPositioningService,
   createPositioningTransport,
@@ -1121,6 +1122,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       createKnowledge: (ctx, input) =>
         knowledgeService.createKnowledge(ctx, input),
     },
+    // 机制④ 选题会 — confirmTask materializes a candidate_list into 选题池 Candidates via
+    // the candidate module's C-3 seam. Lazy: candidateService is constructed below, and
+    // this thunk only runs at confirm time (request), never at construction.
+    candidate: {
+      createFromAIResult: (ctx, result) =>
+        candidateService.createFromAIResult(ctx, result),
+    },
   });
   const aiBase = createAiTransport(() => aiService);
 
@@ -1161,14 +1169,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const res = await aiBase.request(endpoint, input, ctx);
       if (endpoint.id === "ai.tasks.create" && ctx) {
         const task = (res as { data?: Record<string, unknown> }).data;
+        const positioningReader = {
+          getPositioningCenter: (c: RequestContext) =>
+            positioningService.getPositioningCenter(c),
+        };
+        // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
+        // subprocess) drains in the background against the shared pglite. The UI polls
+        // getTask/listResults for the candidate. Each node has a runner; one trigger map.
         if (
           task &&
           task.taskType === "research.gather_material" &&
           task.status === "queued"
         ) {
-          // Fire-and-forget: the HTTP response returns immediately (running); the agent
-          // (30–60s subprocess) drains in the background against the shared pglite. The
-          // UI polls getTask/listResults for the candidate.
           void runGatherMaterial(
             ctx,
             {
@@ -1178,13 +1190,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               inputData: (task.inputData ?? {}) as Record<string, unknown>,
               modelKey: String(task.modelKey ?? "claude-opus-4-8"),
             },
+            { ai: aiService, positioning: positioningReader },
+          );
+        } else if (
+          task &&
+          task.taskType === "topic.generate" &&
+          task.status === "queued"
+        ) {
+          void runTopicGenerate(
+            ctx,
             {
-              ai: aiService,
-              positioning: {
-                getPositioningCenter: (c) =>
-                  positioningService.getPositioningCenter(c),
-              },
+              id: String(task.id),
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
             },
+            { ai: aiService, positioning: positioningReader },
           );
         }
       }

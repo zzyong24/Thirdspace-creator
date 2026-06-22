@@ -38,6 +38,7 @@ function makeService(db: Db, createVersion?: AiArtifactsPort["createVersion"]) {
     nextId: (prefix: string) => `${prefix}-${++seq}`,
     artifacts: port,
     knowledge: { createKnowledge: vi.fn(async () => ({ id: "k-new" })) },
+    candidate: { createFromAIResult: vi.fn(async () => ({ id: "cand-new" })) },
   });
 }
 

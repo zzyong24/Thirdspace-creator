@@ -6,6 +6,7 @@ import {
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
+import { runClaudeAgent, parseJsonArray } from "./agent-run";
 
 // 机制③④ 素材搜集 runner — the first real AI node wired into the app. It runs in the
 // composition layer (NOT the AI module/service, which must stay deterministic per
@@ -61,52 +62,15 @@ ${positioning}
 async function gatherMaterials(
   context: CreativeContext,
 ): Promise<MaterialItem[]> {
-  const sdkSpecifier = "@anthropic-ai/claude-agent-sdk";
-  const sdk = (await import(sdkSpecifier).catch(() => null)) as {
-    query?: (args: unknown) => AsyncIterable<Record<string, unknown>>;
-  } | null;
-  if (!sdk?.query) {
-    throw new Error(
-      "research-runner: @anthropic-ai/claude-agent-sdk not available in the server runtime",
-    );
-  }
-  let finalText = "";
-  // NOTE: do NOT pass `model` — the local Claude Code SUBSCRIPTION resolves its own
-  // default model. Passing a per-task modelKey (e.g. a seeded "claude-sonnet" alias) can
-  // name a model the subscription can't access → the agent errors. (Per-capability model
-  // routing is a follow-on once the seed uses subscription-valid ids.)
-  for await (const message of sdk.query({
-    prompt: buildGatherPrompt(context),
-    options: {
-      allowedTools: ["WebSearch", "WebFetch"],
-      permissionMode: "bypassPermissions",
-    },
-  })) {
-    const m = message as { type?: string; subtype?: string; result?: string };
-    if (m.type === "result" && typeof m.result === "string") finalText = m.result;
-  }
-  return parseMaterials(finalText);
+  const text = await runClaudeAgent(buildGatherPrompt(context), {
+    allowedTools: ["WebSearch", "WebFetch"],
+  });
+  return parseMaterials(text);
 }
 
-// Robustly pull the JSON array out of the agent's final text (tolerate ``` fences /
-// stray prose). Returns [] when nothing parseable — the caller treats empty as a failed
-// gather rather than confirming an empty candidate.
+// Parse the agent's final text into material items (tolerant JSON-array extraction).
 export function parseMaterials(text: string): MaterialItem[] {
-  if (!text) return [];
-  let body = text.trim();
-  const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(body);
-  if (fence?.[1]) body = fence[1].trim();
-  const start = body.indexOf("[");
-  const end = body.lastIndexOf("]");
-  if (start === -1 || end === -1 || end <= start) return [];
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(body.slice(start, end + 1));
-  } catch {
-    return [];
-  }
-  if (!Array.isArray(parsed)) return [];
-  return parsed
+  return parseJsonArray(text)
     .map((raw): MaterialItem | null => {
       const o = (raw ?? {}) as Record<string, unknown>;
       const title = typeof o.title === "string" ? o.title.trim() : "";
