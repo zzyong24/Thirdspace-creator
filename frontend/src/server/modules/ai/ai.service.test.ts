@@ -34,6 +34,9 @@ function makeService(
     createFromAIResult: vi.fn(async () => ({ id: "cand-new" })),
   };
   const learnings = { createLearning: vi.fn(async () => ({ id: "learn-new" })) };
+  const publishing = {
+    createPublicationFromDraft: vi.fn(async () => ({ id: "pub-new" })),
+  };
   const service = createAiService({
     db,
     now: () => NOW,
@@ -42,8 +45,9 @@ function makeService(
     knowledge,
     candidate,
     learnings,
+    publishing,
   });
-  return { service, port, knowledge, candidate, learnings };
+  return { service, port, knowledge, candidate, learnings, publishing };
 }
 
 describe("ai service", () => {
@@ -140,6 +144,33 @@ describe("ai service", () => {
     const done = await service.confirmTask(ctx, task.id);
     expect(done.status).toBe("succeeded");
     expect(learnings.createLearning).toHaveBeenCalledTimes(2);
+  });
+
+  it("confirmTask on a publication_drafts candidate materializes each draft via publishing.createPublicationFromDraft and flips succeeded", async () => {
+    const { service, publishing } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "publish.platform_adapt",
+      inputData: { projectId: "p-1", outputId: "out-1" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "publication_drafts",
+      resultData: {
+        outputId: "out-1",
+        drafts: [
+          { platform: "douyin", title: "抖音标题", body: "抖音文案", tags: ["AI"], coverIdea: "封面A" },
+          { platform: "xiaohongshu", title: "小红书标题", body: "小红书文案", tags: [] },
+        ],
+      },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    expect(publishing.createPublicationFromDraft).toHaveBeenCalledTimes(2);
+    expect(publishing.createPublicationFromDraft).toHaveBeenNthCalledWith(
+      1,
+      ctx,
+      "out-1",
+      expect.objectContaining({ platform: "douyin", title: "抖音标题" }),
+    );
   });
 
   it("confirmTask rejects a task not in awaiting_confirmation (state-machine guard)", async () => {
