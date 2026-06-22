@@ -1,0 +1,39 @@
+{
+  "$comment": "Guardrails for UNATTENDED autonomous runs. Pass via `claude --settings orchestrator/process/harness/settings.autonomous.json` (or use in the GitHub Action). Do NOT make this the always-on project settings — the Stop hook would fire on every interactive turn. Run inside a sandbox/container.",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Bash(node orchestrator/process/*)",
+      "Bash(cd frontend && pnpm *)",
+      "Bash(pnpm *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "deny": [
+      "Bash(git push*)",
+      "Bash(rm -rf *)",
+      "Bash(git reset --hard*)",
+      "WebFetch",
+      "Bash(curl *)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node orchestrator/process/reconcile.mjs",
+            "$comment": "Every turn must end with the manifest reconciling to reality — no silent drift."
+          }
+        ]
+      }
+    ]
+  }
+}

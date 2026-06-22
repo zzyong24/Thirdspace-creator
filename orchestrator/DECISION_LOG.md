@@ -372,3 +372,33 @@ Revisit Trigger: Backport the executable-gate + retained-history changes into th
         the control artifacts onto feat/service-contract (OPEN-005).
 Status: active
 ```
+
+```text
+ID: DEC-014
+Date: 2026-06-22
+Stage: process (long-running autonomous harness)
+Type: scope-change / process-improvement
+Decision: Add a long-running autonomous harness so the orchestrator can run UNATTENDED for hours/days to
+         implement the remaining verticals, following Anthropic's official "Effective harnesses for
+         long-running agents" (three-agent initializer/coding/evaluator + progress checklist + commit-per-step).
+Work done:
+  - progress.json — feature-grained task queue, DERIVED from work-branch reality via process/progress.mjs
+    (not hand-written). 21 verticals; honest status: only `projects` persisted, 20 scaffolded, 0 e2e_verified
+    (matches the ~30% maturity note). `e2e_verified` is human/evaluator-set, never inferred.
+  - process/progress.mjs — generate (from git reality) / status / next (the loop's task picker).
+  - process/harness/ — README (3-agent model + run via /goal, headless loop, or GitHub Action), init.sh
+    (initializer), coding-agent.md, evaluator.md, settings.autonomous.json (permission allowlist +
+    Stop-hook = reconcile.mjs, for unattended runs only — NOT always-on project settings).
+  - rules §"Autonomous Mode": scope-envelope pre-authorization replaces synchronous per-stage gates; an async
+    decision queue lets the loop continue on unblocked verticals while a human answers asynchronously.
+  - Backported to the skill (both copies) so future projects inherit the harness.
+Rationale: User asked to research Anthropic's official long-running-agent practice and make the skill support
+         it. Research confirmed the three-agent harness + /goal + self-verification + fresh-context-per-step.
+Source: anthropic.com/engineering/effective-harnesses-for-long-running-agents; Claude Code /goal; Agent SDK.
+Affected Artifacts: progress.json, process/harness/*, process/progress.mjs, rules (updated), skill copies; a
+         detailed KB doc written to ThirdSpace (03-知识).
+Invalidates: none (additive process layer; no code/spec change).
+Owner: agent (user-directed via /goal)
+Revisit Trigger: Run init.sh and drive the loop; or wire the GitHub Action on feat/service-contract.
+Status: active
+```

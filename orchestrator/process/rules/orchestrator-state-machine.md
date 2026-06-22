@@ -52,3 +52,47 @@ Confirmation required: <yes/no and why>
 Invalidates: <downstream stages or none>
 Next action: <generate | revise | ask | validate | implement>
 ```
+
+## Executable Enforcement (v2 — added 2026-06-22)
+
+The statuses and gates above are necessary but not sufficient: prose self-attestation let a manifest drift
+out of sync with reality. These rules make the control layer machine-checkable.
+
+1. **Manifest drift check is mandatory.** Treat `ARTIFACT_MANIFEST.yaml` as untrusted until
+   `node orchestrator/process/reconcile.mjs` passes. It validates structure against
+   `manifest.schema.json`, checks each non-`not-started` stage's claimed artifact against git+filesystem
+   reality on `project.work_branch` (drift in BOTH directions is an error), and flags `updated_at` older
+   than the newest `DECISION_LOG` date. Wire it as a required CI check. (Analogue: `terraform plan` drift.)
+2. **Consistency gate is BLOCKING.** When `consistency_gate.status: fail`, no stage listed in
+   `consistency_gate.blocks` may be `passed`. To proceed anyway, set that stage to `accepted-risk` with an
+   explicit `DECISION_LOG` entry — never leave it `passed` over a broken release-critical chain.
+3. **Failed verdicts are RETAINED, never silently invalidated.** A gate FAIL that is later superseded by a
+   PASS keeps its record plus a delta (what changed, which re-run). Do not relabel the FAIL `invalidated`;
+   `invalidated` is only for artifacts made stale by an *upstream change*, not for hiding a prior failing
+   audit. (Analogue: immutable ADR history.)
+4. **Gates require executable evidence.** Each gate's `Status: pass` must cite a command + result, not a
+   paragraph. See `gates/_GATE_EVIDENCE.md`.
+5. **Pin the definition with the project.** Vendor the rule/gate files (or a commit SHA) into the project's
+   `orchestrator/process/` so an audit is reproducible on any machine, not dependent on a machine-local
+   skill install.
+
+## Autonomous Mode (long-running harness)
+
+For unattended multi-hour/day runs (see `process/harness/`), the synchronous per-stage confirmation model is
+replaced by:
+
+1. **Scope-envelope pre-authorization.** The human confirms requirements + domain model + service contract +
+   release criteria ONCE (the stages 01–14 batch). That single sign-off pre-authorizes autonomous build of
+   all downstream verticals. Record it as a DEC entry; afterward the loop does not stop for routine
+   per-vertical progress.
+2. **Async decision queue.** The loop halts ONLY for a genuinely new decision affecting product direction, IA,
+   data ownership, security, contracts, or release criteria. It appends the question to `DECISION_LOG.md`
+   (status: needs-user-confirmation), sets `blocked_reason` on the affected item, and CONTINUES on other
+   unblocked verticals. Humans answer asynchronously.
+3. **Per-iteration durable state.** Each iteration: reconcile → `progress.mjs next` → fresh subagent → TDD +
+   verify → commit → update `progress.json`. progress.json + git + the manifest are the cross-session memory.
+4. **`e2e_verified` is human/evaluator-set, never inferred.** A vertical is not release-done until its real
+   round-trip + visual check pass (don't trust "looks done").
+
+This keeps the workflow's guarantees (traceability, gates, retained history) while removing the synchronous
+stalls that block long runs.

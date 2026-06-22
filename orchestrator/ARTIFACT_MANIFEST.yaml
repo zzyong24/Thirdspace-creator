@@ -284,6 +284,8 @@ reconciliation:
     - "orchestrator/process/manifest.schema.json"
     - "orchestrator/process/rules/orchestrator-state-machine.md (pinned copy of the external skill rule)"
     - "orchestrator/process/README.md (best-practice rationale + how to run)"
+    - "orchestrator/progress.json + process/progress.mjs (DEC-014: derived feature-grained task queue)"
+    - "orchestrator/process/harness/* (DEC-014: long-running autonomous 3-agent harness)"
   policy:
     fail_history: "Failed gate verdicts are RETAINED with a delta when superseded — never silently 'invalidated' (anti-laundering, ADR-style)."
     drift_check: "Run `node orchestrator/process/reconcile.mjs` before trusting this manifest; CI-as-gate."
