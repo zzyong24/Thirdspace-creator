@@ -106,6 +106,15 @@ export interface PublishingCenterDataClient {
   }): Promise<unknown>;
 }
 
+// Canonical demo projects — still seeded (tests assert their ids) but hidden
+// from the user-facing publishing table so only REAL publications show.
+const DEMO_PROJECT_IDS = new Set<string>([
+  "project-ainativebrowser",
+  "project-secondbrain",
+  "project-promptcraft",
+  "project-podcast-launch",
+]);
+
 const PLATFORM_LABELS: Record<string, string> = {
   youtube: "YouTube",
   bilibili: "哔哩哔哩",
@@ -249,12 +258,15 @@ async function assembleRealRows(
   try {
     projects = (await client.listProjects({
       params: undefined,
-      query: { page: 1, pageSize: 100 },
+      query: { page: 1, pageSize: 500 },
       body: undefined,
     })) as ReadonlyArray<ProjectDto>;
   } catch {
     return null;
   }
+  // Drop the canonical demo projects so the publishing table shows only the
+  // user's REAL publications (mirrors the Projects list demo filter).
+  projects = projects.filter((p) => !DEMO_PROJECT_IDS.has(p.id));
 
   const projectTitleById = new Map<string, string>();
   for (const project of projects) {

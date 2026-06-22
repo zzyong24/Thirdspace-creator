@@ -43,33 +43,66 @@ import type { Project, ProjectStageName } from "@/types/domain";
 export interface ProjectsPageProps {
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: ProjectsViewModel;
+  /** 1-based page number (from the route's ?page= search param). */
+  readonly page?: number;
 }
+
+// Demo/seed projects from the canonical baseline dataset. They stay seeded (the
+// acceptance/integration tests assert their ids), but the user-facing list shows
+// only the user's REAL works + anything they create — never these demos.
+const DEMO_PROJECT_IDS = new Set<string>([
+  "project-ainativebrowser",
+  "project-secondbrain",
+  "project-promptcraft",
+  "project-podcast-launch",
+]);
+
+const PROJECTS_PAGE_SIZE = 10;
 
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export async function ProjectsPage({ viewModel }: ProjectsPageProps = {}) {
+export async function ProjectsPage({
+  viewModel,
+  page = 1,
+}: ProjectsPageProps = {}) {
   // Reads flow page -> await client.* -> MockTransport -> store -> DTO. The
-  // project list now always comes from the mock backend store; the `viewModel?`
-  // prop remains the test-override seam (fixture-driven, sync). The legacy
-  // DESIGN_PROJECT_ROWS fallback is gone — rows are the canonical projects.
-  // The contract's list endpoints are typed `isList: boolean`, so the typed
-  // client's return type collapses to the single resource rather than an array.
-  // At runtime the listEnvelope yields the array; cast to the array shape (same
-  // pattern as the projects handler tests). `ProjectResource` is structurally
-  // the domain `Project`, so `buildProjectsViewModel` consumes it directly.
-  const projects =
+  // `viewModel?` prop remains the test-override seam (fixture-driven, sync).
+  // Real read: pull the user's projects, drop the canonical demos, sort
+  // newest-first (createdAt desc), then page 10/screen.
+  const all =
     viewModel === undefined
       ? ((await client.listProjects({
           params: undefined,
-          query: { page: 1, pageSize: 50 },
+          query: { page: 1, pageSize: 500 },
           body: undefined,
         })) as unknown as ReadonlyArray<Project>)
       : [];
-  const vm = viewModel ?? buildProjectsViewModel(projects);
+  const realProjects = all
+    .filter((project) => !DEMO_PROJECT_IDS.has(project.id))
+    .slice()
+    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+
+  // Build the VM from the FULL real set so the status-tab counts stay correct,
+  // then slice the rows to the current page for display.
+  const vm = viewModel ?? buildProjectsViewModel(realProjects);
   const tabs = buildProjectStatusTabs(vm);
-  const rows = vm.rows;
+
+  // Pagination only applies to the real-read path; the test-override VM renders
+  // its rows verbatim (totalPages 1) so existing page tests stay green.
+  const paginate = viewModel === undefined;
+  const totalPages = paginate
+    ? Math.max(1, Math.ceil(vm.rows.length / PROJECTS_PAGE_SIZE))
+    : 1;
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const rows = paginate
+    ? vm.rows.slice(
+        (currentPage - 1) * PROJECTS_PAGE_SIZE,
+        currentPage * PROJECTS_PAGE_SIZE,
+      )
+    : vm.rows;
+  const totalLabel = `共 ${vm.rows.length} 个项目`;
   return (
     <main
       data-app="creatoros"
@@ -101,7 +134,13 @@ export async function ProjectsPage({ viewModel }: ProjectsPageProps = {}) {
 
       <ProjectList rows={rows} />
 
-      <Pagination currentPage={1} totalPages={7} />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalLabel={totalLabel}
+        perPageLabel={`每页显示 ${PROJECTS_PAGE_SIZE} 条`}
+        hrefForPage={paginate ? (p) => `/projects?page=${p}` : undefined}
+      />
     </main>
   );
 }
