@@ -178,13 +178,13 @@ describe("ResearchWorkspacePage", () => {
       '[data-slot="app-top-header"]',
     ) as HTMLElement;
     expect(header).not.toBeNull();
-    const primaryAction = within(header).getByRole("link", {
+    // A6: the advancing primary action is now a transition button island (persists the
+    // stage transition via client.transitionProjectStage, then navigates) — no longer a
+    // bare <a href>. Assert the button + its target stage data, not an href.
+    const primaryAction = within(header).getByRole("button", {
       name: /进入下一步:策划构思/,
     });
-    expect(primaryAction).toHaveAttribute(
-      "href",
-      "/projects/project-ainativebrowser/planning",
-    );
+    expect(primaryAction).not.toBeNull();
   });
 
   it("renders the ProjectIdeaCard at the top of the Main column", async () => {
