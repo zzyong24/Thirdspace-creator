@@ -122,4 +122,58 @@ describe("analytics service", () => {
     const res = await service.getPublicationAnalytics(ctxA, "pub-1", 1, 20);
     expect(res.total).toBe(1);
   });
+
+  it("getDashboardRollup rolls up the user's latest-per-publication snapshots (no Publishing seam)", async () => {
+    // Publishing port must NOT be touched by the rollup path — wire it to throw.
+    const publishing: AnalyticsPublishingPort = {
+      resolvePublication: () => {
+        throw new Error("publishing seam must not be used by rollup");
+      },
+      listPublicationIdsByProject: () => {
+        throw new Error("publishing seam must not be used by rollup");
+      },
+    };
+    const service = makeService(db, publishing);
+    await service.appendSnapshot(ctxA, {
+      publicationId: "pub-1",
+      capturedAt: "2026-06-12T10:00:00.000Z",
+      source: "platform_api",
+      rawMetrics: { plays: 100, likes: 10, comments: 5, shares: 2, favorites: 4, follower_gain: 3, ctr: 0.2, finish_rate: 0.6 },
+      values: [],
+    });
+    await service.appendSnapshot(ctxA, {
+      publicationId: "pub-2",
+      capturedAt: "2026-06-11T10:00:00.000Z",
+      source: "platform_api",
+      rawMetrics: { plays: 50, likes: 4, comments: 1, shares: 0, favorites: 6, follower_gain: 7, ctr: 0.4, finish_rate: 0.8 },
+      values: [],
+    });
+
+    const r = await service.getDashboardRollup(ctxA);
+    expect(r.snapshotCount).toBe(2);
+    expect(r.plays).toBe(150);
+    expect(r.followerGain).toBe(10);
+    expect(r.ctrAvg).toBeCloseTo(0.3, 10);
+    expect(r.finishAvg).toBeCloseTo(0.7, 10);
+  });
+
+  it("getDashboardRollup with no snapshots returns an all-zero rollup (no throw)", async () => {
+    const publishing: AnalyticsPublishingPort = {
+      resolvePublication: () => Promise.resolve(),
+      listPublicationIdsByProject: () => Promise.resolve([]),
+    };
+    const service = makeService(db, publishing);
+    const r = await service.getDashboardRollup(ctxA);
+    expect(r).toEqual({
+      plays: 0,
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      favorites: 0,
+      followerGain: 0,
+      ctrAvg: 0,
+      finishAvg: 0,
+      snapshotCount: 0,
+    });
+  });
 });

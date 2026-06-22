@@ -141,4 +141,71 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
     expect(empty.total).toBe(0);
     expect(empty.rows).toEqual([]);
   });
+
+  it("getDashboardRollup: sums across pubs, takes each pub's latest, averages ctr/finish (user-scoped)", async () => {
+    const repo = makeRepo(db);
+    await repo.seedSnapshots([
+      // pub-1: older snapshot (should be IGNORED in favor of the newer one)
+      snapshotRow({
+        id: "ms-1-old",
+        userId: "user-a",
+        publicationId: "pub-1",
+        capturedAt: "2026-06-10T10:00:00.000Z",
+        rawMetrics: { plays: 1, likes: 1, comments: 1, shares: 1, favorites: 1, follower_gain: 1, ctr: 0.1, finish_rate: 0.1 },
+      }),
+      // pub-1: newest → its metrics are the ones that count
+      snapshotRow({
+        id: "ms-1-new",
+        userId: "user-a",
+        publicationId: "pub-1",
+        capturedAt: "2026-06-12T10:00:00.000Z",
+        rawMetrics: { plays: 100, likes: 10, comments: 5, shares: 2, favorites: 4, follower_gain: 3, ctr: 0.2, finish_rate: 0.6 },
+      }),
+      // pub-2: single snapshot
+      snapshotRow({
+        id: "ms-2",
+        userId: "user-a",
+        publicationId: "pub-2",
+        capturedAt: "2026-06-11T10:00:00.000Z",
+        rawMetrics: { plays: 50, likes: 4, comments: 1, shares: 0, favorites: 6, follower_gain: 7, ctr: 0.4, finish_rate: 0.8 },
+      }),
+      // user-b: must NOT leak into user-a's rollup
+      snapshotRow({
+        id: "ms-b",
+        userId: "user-b",
+        publicationId: "pub-9",
+        capturedAt: "2026-06-13T10:00:00.000Z",
+        rawMetrics: { plays: 9999, likes: 9999, comments: 9999, shares: 9999, favorites: 9999, follower_gain: 9999, ctr: 0.99, finish_rate: 0.99 },
+      }),
+    ]);
+
+    const r = await repo.getDashboardRollup("user-a");
+    expect(r.snapshotCount).toBe(2); // pub-1 (newest) + pub-2
+    // sums over the two latest-per-pub snapshots (100+50, 10+4, 5+1, 2+0, 4+6, 3+7)
+    expect(r.plays).toBe(150);
+    expect(r.likes).toBe(14);
+    expect(r.comments).toBe(6);
+    expect(r.shares).toBe(2);
+    expect(r.favorites).toBe(10);
+    expect(r.followerGain).toBe(10);
+    // averages: ctr (0.2+0.4)/2, finish (0.6+0.8)/2
+    expect(r.ctrAvg).toBeCloseTo(0.3, 10);
+    expect(r.finishAvg).toBeCloseTo(0.7, 10);
+  });
+
+  it("getDashboardRollup: no snapshots → all-zero rollup, snapshotCount 0 (no throw)", async () => {
+    const repo = makeRepo(db);
+    const r = await repo.getDashboardRollup("user-empty");
+    expect(r).toEqual({
+      plays: 0,
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      favorites: 0,
+      followerGain: 0,
+      ctrAvg: 0,
+      finishAvg: 0,
+      snapshotCount: 0,
+    });
+  });
 });

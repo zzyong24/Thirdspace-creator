@@ -458,6 +458,47 @@ export interface TopPublishedCard {
   readonly tone: "primary" | "compact";
 }
 
+// REV-2 对比分析 tab — one row per publication of the project, derived by
+// grouping the analytics snapshots by publicationId. Empty `rows` (<2 pubs)
+// renders the honest "需 2 个发布才能对比" empty state.
+export interface ComparisonRow {
+  readonly id: Id;
+  readonly title: string;
+  readonly platform: string;
+  readonly plays: number;
+  readonly finishRate: number;
+  readonly likeRate: number;
+  readonly shareRate: number;
+  /** "best" / "worst" highlight on the plays column; "" for the rest. */
+  readonly highlight: "best" | "worst" | "";
+}
+
+export interface ComparisonTab {
+  readonly rows: ReadonlyArray<ComparisonRow>;
+}
+
+// REV-1 收益分析 tab — the project's monetization funnel (曝光→线索→成交→金额)
+// + the products its outputs are linked to. Empty (no leads/conversions /
+// products) renders the honest empty state.
+export interface RevenueFunnelStage {
+  readonly label: string;
+  readonly value: number;
+}
+
+export interface RevenueProductRow {
+  readonly id: Id;
+  readonly name: string;
+  readonly tier: string;
+  readonly contentRole: string;
+}
+
+export interface RevenueTab {
+  readonly funnel: ReadonlyArray<RevenueFunnelStage>;
+  readonly revenueAttributed: number;
+  readonly unattributedRatio: number;
+  readonly products: ReadonlyArray<RevenueProductRow>;
+}
+
 export interface AnalyticsViewModel extends BasePageViewModel {
   readonly kind: "analytics-review";
   readonly projectId: Id;
@@ -477,6 +518,10 @@ export interface AnalyticsViewModel extends BasePageViewModel {
     readonly completedAt: Iso8601;
     readonly tone: "positive" | "warning" | "neutral";
   }>;
+  // REV-2 对比分析 / REV-1 收益分析 tabs. Optional + additive: pages that don't
+  // render these tabs ignore them; absence means "no real data" → empty state.
+  readonly comparison?: ComparisonTab;
+  readonly revenue?: RevenueTab;
 }
 
 // ---------------------------------------------------------------------------

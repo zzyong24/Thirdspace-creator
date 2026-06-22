@@ -18,7 +18,12 @@
  */
 
 import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
-import type { AnalyticsViewModel, MetricCard } from "@/types/view-models";
+import type {
+  AnalyticsViewModel,
+  ComparisonRow,
+  ComparisonTab,
+  MetricCard,
+} from "@/types/view-models";
 
 // The subset of the `metricSnapshotResource` DTO this builder reads. Mirrors
 // contract/src/resources/analytics.ts (the op responds with metricSnapshotResource).
@@ -49,14 +54,82 @@ const TREND_WEIGHTS: ReadonlyArray<number> = [
 ];
 
 /**
+ * REV-2 对比分析 — build the per-publication horizontal comparison from the SAME
+ * `analytics.projects.get` snapshots (zero new backend op). The project's
+ * snapshots carry one row per publication; we group by `publicationId` and emit
+ * one comparison row each (plays / 完播率 / 点赞率 / 分享率). Pure + deterministic.
+ *
+ * Honest empty state: fewer than 2 publications → empty `rows` (the page shows
+ * "至少需 2 个发布才能对比"); the comparison table is never rendered from fixtures.
+ *
+ * @param snapshots the MetricSnapshot[] returned by `analytics.projects.get`.
+ * @param labels    optional publicationId → { title, platform } map (route layer
+ *                  supplies real titles; absent → a stable fallback label).
+ */
+export function buildComparisonViewModel(
+  snapshots: ReadonlyArray<MetricSnapshotDto>,
+  labels: Readonly<Record<string, { title: string; platform: string }>> = {},
+): ComparisonTab {
+  // Group by publicationId, keeping the LAST snapshot per publication (the
+  // cumulative latest). The snapshots are user-scoped to this project already.
+  const byPub = new Map<string, MetricSnapshotDto>();
+  for (const s of snapshots) {
+    if (s.publicationId) byPub.set(s.publicationId, s);
+  }
+
+  // <2 publications → honest empty state (no single-row "comparison").
+  if (byPub.size < 2) return { rows: [] };
+
+  const rate = (numerator: number, denominator: number): number =>
+    denominator > 0 ? Number(((numerator / denominator) * 100).toFixed(1)) : 0;
+
+  const draft = Array.from(byPub.entries()).map(([publicationId, s]) => {
+    const r = s.rawMetrics ?? {};
+    const plays = num(r, "plays");
+    const likes = num(r, "likes");
+    const shares = num(r, "shares");
+    // finish_rate is already a percent (0–100) in the seed; pass through.
+    const finishRate = num(r, "finish_rate");
+    const label = labels[publicationId];
+    return {
+      id: publicationId,
+      title: label?.title ?? `发布 ${publicationId.slice(0, 8)}`,
+      platform: label?.platform ?? "—",
+      plays,
+      finishRate,
+      likeRate: rate(likes, plays),
+      shareRate: rate(shares, plays),
+    };
+  });
+
+  // Highlight best / worst by plays (the headline横向对比 column).
+  const playsList = draft.map((d) => d.plays);
+  const maxPlays = Math.max(...playsList);
+  const minPlays = Math.min(...playsList);
+  const rows: ReadonlyArray<ComparisonRow> = draft.map((d) => ({
+    ...d,
+    highlight:
+      maxPlays !== minPlays && d.plays === maxPlays
+        ? "best"
+        : maxPlays !== minPlays && d.plays === minPlays
+          ? "worst"
+          : "",
+  }));
+
+  return { rows };
+}
+
+/**
  * Build the review ViewModel from the real `analytics.projects.get` payload.
  *
  * @param projectId the route project id (slug or canonical).
  * @param snapshots the MetricSnapshot[] returned by `analytics.projects.get`.
+ * @param labels    optional publicationId → label map for the REV-2 comparison.
  */
 export function buildAnalyticsReviewViewModelFromOp(
   projectId: string,
   snapshots: ReadonlyArray<MetricSnapshotDto>,
+  labels: Readonly<Record<string, { title: string; platform: string }>> = {},
 ): AnalyticsViewModel {
   const base = buildAnalyticsReviewViewModel(projectId);
   // Zero owned snapshots → reflect real persistence (the empty state), not the
@@ -134,5 +207,7 @@ export function buildAnalyticsReviewViewModelFromOp(
     metrics,
     conversionFunnel,
     viewsTrend,
+    // REV-2: per-publication comparison over the SAME snapshots (empty <2 pubs).
+    comparison: buildComparisonViewModel(snapshots, labels),
   };
 }
