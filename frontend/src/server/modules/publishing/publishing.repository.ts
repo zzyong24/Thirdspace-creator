@@ -78,6 +78,10 @@ export interface PublishingRepository {
   getCurrentRevision(
     publicationId: string,
   ): Promise<PublicationRevisionRow | null>;
+  listRevisions(
+    publicationId: string,
+    page: { limit: number; offset: number },
+  ): Promise<PublicationRevisionRow[]>;
   updatePublicationStatus(
     publicationId: string,
     patch: UpdateStatusPatch,
@@ -253,6 +257,22 @@ export function createPublishingRepository(
           ),
         );
       return rows[0] ?? null;
+    },
+
+    async listRevisions(publicationId, page) {
+      await getPublicationRowById(publicationId); // parent-ownership gate
+      return db
+        .select()
+        .from(publicationRevisions)
+        .where(
+          and(
+            eq(publicationRevisions.userId, userId),
+            eq(publicationRevisions.publicationId, publicationId),
+          ),
+        )
+        .orderBy(desc(publicationRevisions.revisionNumber))
+        .limit(page.limit)
+        .offset(page.offset);
     },
 
     async updatePublicationStatus(publicationId, patch) {

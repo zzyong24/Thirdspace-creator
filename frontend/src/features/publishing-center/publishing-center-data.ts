@@ -58,10 +58,17 @@ interface PublicationDto {
   readonly contentOutputId: string;
   readonly platform: string;
   readonly status: string;
+  readonly currentRevisionId: string;
   readonly scheduledAt: string | null;
   readonly publishedAt: string | null;
   readonly removedAt: string | null;
   readonly createdAt: string;
+}
+
+interface PublicationRevisionDto {
+  readonly id: string;
+  readonly title: string;
+  readonly revisionNumber: number;
 }
 
 export interface PublishingCenterDataClient {
@@ -77,6 +84,11 @@ export interface PublishingCenterDataClient {
   }): Promise<unknown>;
   listPublications(input: {
     params: { outputId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  listPublicationRevisions(input: {
+    params: { publicationId: string };
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
@@ -131,6 +143,34 @@ function mapContentType(contentType: string): PublicationContentType {
 
 function formatDate(iso: string): string {
   return iso.length < 10 ? iso : iso.slice(0, 10);
+}
+
+/**
+ * Resolve a publication's REAL current-revision title (the 真标题 stored in
+ * `publicationRevisions`). Reads the publication's revisions (newest-first),
+ * prefers the row matching `currentRevisionId`, else the newest. A non-empty
+ * title wins; anything missing/blank → `null` so the caller falls back to the
+ * owning output title placeholder. Try/catch → `null` (never throws into the
+ * row build). N+1 over a small publication set — acceptable this wave.
+ */
+async function resolveRevisionTitle(
+  client: PublishingCenterDataClient,
+  pub: PublicationDto,
+): Promise<string | null> {
+  try {
+    const revisions = (await client.listPublicationRevisions({
+      params: { publicationId: pub.id },
+      query: { page: 1, pageSize: 20 },
+      body: undefined,
+    })) as ReadonlyArray<PublicationRevisionDto>;
+    if (revisions.length === 0) return null;
+    const current =
+      revisions.find((r) => r.id === pub.currentRevisionId) ?? revisions[0];
+    const title = current?.title?.trim();
+    return title ? title : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -189,20 +229,27 @@ async function assembleRealRows(
         }),
       );
 
-      return publicationLists.flat().map<PublicationRow>((pub) => {
+      return Promise.all(
+        publicationLists.flat().map<Promise<PublicationRow>>(async (pub) => {
         const output = outputById.get(pub.contentOutputId);
         const status = mapStatus(pub.status);
         // 发布时间: prefer the real published timestamp, then the scheduled one,
         // then creation — so排期中 rows still show their scheduled date.
         const when = pub.publishedAt ?? pub.scheduledAt ?? pub.createdAt;
+        // 内容标题: the publication's REAL current-revision title (the 真标题/文案
+        // stored in publicationRevisions, read via publications.revisions.list).
+        // Falls back to the owning output's title placeholder when the revision
+        // read yields nothing (empty title / read fails). A platform suffix
+        // disambiguates a 一稿多平台 fan-out where one output has N rows.
+        const revisionTitle = await resolveRevisionTitle(client, pub);
+        const fallbackTitle = output
+          ? `${output.title} · ${platformLabel(pub.platform)}`
+          : platformLabel(pub.platform);
         return {
           id: pub.id,
-          // 内容标题: the owning output's title (publications carry their copy in
-          // revisions, which have no list read op this wave). A platform suffix
-          // disambiguates a 一稿多平台 fan-out where one output has N rows.
-          contentTitle: output
-            ? `${output.title} · ${platformLabel(pub.platform)}`
-            : platformLabel(pub.platform),
+          contentTitle: revisionTitle
+            ? `${revisionTitle} · ${platformLabel(pub.platform)}`
+            : fallbackTitle,
           projectId: project.id,
           projectTitle: projectTitleById.get(project.id) ?? project.id,
           contentType: mapContentType(output?.contentType ?? "video"),
@@ -219,7 +266,8 @@ async function assembleRealRows(
           engagementTone: "neutral",
           thumbnailToken: `pub-${pub.id}`,
         };
-      });
+        }),
+      );
     }),
   );
 

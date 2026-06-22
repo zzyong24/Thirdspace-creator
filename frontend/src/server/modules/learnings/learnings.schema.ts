@@ -32,7 +32,14 @@ export type LearningApplicationResource =
 // is caught once. user_id is dropped from the application DTO (it is a denormalized
 // ownership boundary, never on the wire). The learning DTO keeps `userId` because the
 // contract learningResource declares it.
-export function toLearningDto(row: LearningRow): LearningResource {
+// `reuseCount` is the number of LearningApplications referencing this learning
+// (server-derived). Write-path callers (create / promote / evaluate) have no
+// application yet — they default to 0; the read paths (list / get) pass the real
+// aggregated count from the repository.
+export function toLearningDto(
+  row: LearningRow,
+  reuseCount = 0,
+): LearningResource {
   return {
     id: row.id,
     userId: row.userId,
@@ -44,6 +51,7 @@ export function toLearningDto(row: LearningRow): LearningResource {
     validationStatus:
       row.validationStatus as LearningResource["validationStatus"],
     confidenceScore: row.confidenceScore,
+    reuseCount,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

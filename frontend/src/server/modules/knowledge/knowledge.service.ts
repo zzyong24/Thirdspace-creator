@@ -25,6 +25,14 @@ export interface KnowledgeService {
     ctx: RequestContext,
     knowledgeId: string,
   ): Promise<KnowledgeItemRow>;
+  listRevisions(
+    ctx: RequestContext,
+    knowledgeId: string,
+  ): Promise<KnowledgeRevisionRow[]>;
+  listRelations(
+    ctx: RequestContext,
+    knowledgeId: string,
+  ): Promise<KnowledgeRelationRow[]>;
   createKnowledge(
     ctx: RequestContext,
     input: { title: string; knowledgeType?: string; content?: string },
@@ -51,6 +59,18 @@ export function createKnowledgeService(
 
     async getKnowledge(ctx, knowledgeId) {
       return repo.get(ctx.userId, knowledgeId);
+    },
+
+    async listRevisions(ctx, knowledgeId) {
+      // Read op: the parent's ownership gate lives in the repo (404 on a
+      // cross-user / unknown id). Returns newest-first so the head revision
+      // (with the current content) is rows[0].
+      return repo.listRevisions(ctx.userId, knowledgeId);
+    },
+
+    async listRelations(ctx, knowledgeId) {
+      // Read op: relations of the (owned) source item; repo gates ownership.
+      return repo.listRelations(ctx.userId, knowledgeId);
     },
 
     async createKnowledge(ctx, input) {

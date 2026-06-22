@@ -21,7 +21,7 @@ import {
   knowledgeRelationResource,
 } from "./knowledge.schema";
 
-// E1 — drive each of the 5 ops through the transport against a seeded pglite db
+// E1 — drive each of the 7 ops through the transport against a seeded pglite db
 // and assert the envelope `data` validates against the op's contract response DTO
 // (foundation §5.4). Confirms `strength` is numeric, `sourceMetadata`/
 // `structuredData` are records, and nullable `sourceUrl`/`archivedAt` serialize.
@@ -56,7 +56,7 @@ async function call(id: string, input: unknown, isList = false) {
   return transport.request(ep(id, isList), input as never, ctx);
 }
 
-describe("knowledge.transport — 5-op contract conformance", () => {
+describe("knowledge.transport — 7-op contract conformance", () => {
   it("knowledge.create / list / get → KnowledgeItemResource", async () => {
     const created = await call("knowledge.create", {
       body: { title: "笔记", knowledgeType: "note", content: "v1" },
@@ -106,7 +106,49 @@ describe("knowledge.transport — 5-op contract conformance", () => {
     expect(parsed.data.createdByType).toBe("user");
   });
 
-  it("covers all 5 op ids + unknown → UnsupportedOperationError", async () => {
+  it("knowledge.revisions.list → KnowledgeRevisionResource[] (head first, content readable)", async () => {
+    const created = await call("knowledge.create", { body: { title: "笔记", content: "v1" } });
+    const knowledgeId = (created as { data: { id: string } }).data.id;
+    await call("knowledge.revisions.create", {
+      params: { knowledgeId },
+      body: { content: "v2" },
+    });
+
+    const list = await call("knowledge.revisions.list", { params: { knowledgeId } }, true);
+    const parsed = listEnvelope(knowledgeRevisionResource).parse(list);
+    // Newest-first: rows[0] is the head revision (#2) carrying the current content.
+    expect(parsed.data.length).toBe(2);
+    expect(parsed.data[0]!.revisionNumber).toBe(2);
+    expect(parsed.data[0]!.content).toBe("v2");
+  });
+
+  it("knowledge.relations.list → KnowledgeRelationResource[] (numeric strength)", async () => {
+    const a = await call("knowledge.create", { body: { title: "A" } });
+    const b = await call("knowledge.create", { body: { title: "B" } });
+    const aId = (a as { data: { id: string } }).data.id;
+    const bId = (b as { data: { id: string } }).data.id;
+    await call("knowledge.relations.create", {
+      params: { knowledgeId: aId },
+      body: { targetKnowledgeId: bId, relationType: "supports" },
+    });
+
+    const list = await call("knowledge.relations.list", { params: { knowledgeId: aId } }, true);
+    const parsed = listEnvelope(knowledgeRelationResource).parse(list);
+    expect(parsed.data.length).toBe(1);
+    expect(typeof parsed.data[0]!.strength).toBe("number");
+    expect(parsed.data[0]!.targetKnowledgeId).toBe(bId);
+  });
+
+  it("empty relations.list still satisfies the list envelope (pageSize ≥ 1)", async () => {
+    const a = await call("knowledge.create", { body: { title: "lonely" } });
+    const aId = (a as { data: { id: string } }).data.id;
+    const list = await call("knowledge.relations.list", { params: { knowledgeId: aId } }, true);
+    const parsed = listEnvelope(knowledgeRelationResource).parse(list);
+    expect(parsed.data).toEqual([]);
+    expect(parsed.meta.total).toBe(0);
+  });
+
+  it("covers all 7 op ids + unknown → UnsupportedOperationError", async () => {
     const ids = Object.values(ENDPOINTS)
       .filter((e) =>
         [
@@ -114,11 +156,13 @@ describe("knowledge.transport — 5-op contract conformance", () => {
           "knowledge.create",
           "knowledge.get",
           "knowledge.revisions.create",
+          "knowledge.revisions.list",
           "knowledge.relations.create",
+          "knowledge.relations.list",
         ].includes(e.id),
       )
       .map((e) => e.id);
-    expect(ids).toHaveLength(5);
+    expect(ids).toHaveLength(7);
 
     await expect(
       transport.request(ep("knowledge.nope"), {} as never, ctx),

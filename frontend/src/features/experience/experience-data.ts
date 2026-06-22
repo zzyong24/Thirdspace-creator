@@ -67,6 +67,10 @@ interface LearningDto {
   readonly learningType: string;
   readonly validationStatus: "candidate" | "validated" | "discarded";
   readonly confidenceScore: number;
+  // Real reuse signal — number of LearningApplications referencing this learning
+  // (server-derived from the learningApplications table). May be absent on an
+  // older payload, defaulted to 0 at the read site.
+  readonly reuseCount?: number;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -86,9 +90,10 @@ function learningToRecord(learning: LearningDto): ExperienceRecord {
     title: learning.title,
     category: categoryForLearning(learning),
     updatedAt: (learning.updatedAt ?? learning.createdAt ?? "").slice(0, 10),
-    // No real reuse-count source on the Learning resource this wave — keep it
-    // honest at 0 rather than inventing a number.
-    reuseCount: 0,
+    // Real reuse count — number of LearningApplications referencing this learning,
+    // server-derived on `learnings.list`. Falls back to 0 only if the field is
+    // absent (older payload / honest zero for a never-applied learning).
+    reuseCount: learning.reuseCount ?? 0,
     learningId: learning.id,
     validationStatus: learning.validationStatus,
   };
@@ -123,9 +128,11 @@ function buildSummaryCards(
   const candidates = learnings.filter(
     (l) => l.validationStatus === "candidate",
   ).length;
-  // "复用率" has no real reuse source — surface the validated ratio (validated /
-  // total) as the closest real signal so the card is a count of real data.
-  const reuseRate = total > 0 ? Math.round((verified / total) * 100) : 0;
+  // "复用率" — now a REAL signal: the share of learnings that have been reused at
+  // least once (reuseCount > 0), derived from the server-aggregated reuseCount on
+  // each learning. 0% when nothing has been applied yet (honest empty).
+  const reused = learnings.filter((l) => (l.reuseCount ?? 0) > 0).length;
+  const reuseRate = total > 0 ? Math.round((reused / total) * 100) : 0;
 
   // Patch each fixture card's `value` from real counts by id; keep everything
   // else (label / delta / trend / tone) from the fixture so the card stays

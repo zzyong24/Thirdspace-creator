@@ -45,6 +45,10 @@ export interface KnowledgeRepository {
     userId: string,
     revisionId: string,
   ): Promise<KnowledgeRevisionRow>;
+  listRevisions(
+    userId: string,
+    knowledgeId: string,
+  ): Promise<KnowledgeRevisionRow[]>;
   listRelations(
     userId: string,
     knowledgeId: string,
@@ -127,6 +131,18 @@ export function createKnowledgeRepository(
       // Ownership gate: the parent item must be owned by `userId` (throws if not).
       await get(userId, rev.knowledgeItemId);
       return rev;
+    },
+
+    async listRevisions(userId, knowledgeId) {
+      // Ownership gate on the parent item (cross-user / unknown id → 404, no
+      // leak). Newest revision first so the caller can read the current head
+      // (highest revisionNumber) as rows[0] without re-querying the item.
+      await get(userId, knowledgeId);
+      return db
+        .select()
+        .from(knowledgeRevisions)
+        .where(eq(knowledgeRevisions.knowledgeItemId, knowledgeId))
+        .orderBy(desc(knowledgeRevisions.revisionNumber));
     },
 
     async listRelations(userId, knowledgeId) {

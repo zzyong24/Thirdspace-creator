@@ -14,6 +14,7 @@ describe("learnings contract", () => {
       recommendation: "未来研究阶段设定 100 样本硬性门槛。",
       validationStatus: "validated",
       confidenceScore: 81,
+      reuseCount: 3,
       createdAt: "2026-04-28T02:00:00.000Z",
       updatedAt: "2026-04-28T02:00:00.000Z",
     });
@@ -36,6 +37,7 @@ describe("learnings contract", () => {
         recommendation: "r",
         validationStatus: "candidate",
         confidenceScore: 50,
+        reuseCount: 0,
         createdAt: "2026-04-28T02:00:00.000Z",
         updatedAt: "2026-04-28T02:00:00.000Z",
       });

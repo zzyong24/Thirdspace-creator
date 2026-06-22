@@ -7,7 +7,7 @@ import {
 import { canonicalDataset } from "@/fixtures/canonical";
 import { PUBLISHING_OP_IDS } from "./publishing.transport";
 
-// Step 4/6 — the 5 publishing ops are registered into the composite
+// Step 4/6 — the 6 publishing ops are registered into the composite
 // (PERSISTED_OPS) and the create → list → revisions.create → transition chain
 // round-trips through compositeTransport against the seeded pglite store. Proves
 // the module is wired into the SAME store server reads + the /api/v1 route share
@@ -30,7 +30,7 @@ beforeEach(() => {
 const OUTPUT_ID = canonicalDataset.contentOutputs[0]!.id;
 
 describe("publishing ops registered in the composite transport", () => {
-  it("the 5 publishing op ids are persistence-backed (not the mock)", async () => {
+  it("the 6 publishing op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of PUBLISHING_OP_IDS) {
@@ -38,7 +38,7 @@ describe("publishing ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(PUBLISHING_OP_IDS).toHaveLength(5);
+    expect(PUBLISHING_OP_IDS).toHaveLength(6);
   });
 
   it("create → list → revise → transition(published) round-trips over the shared store", async () => {
@@ -82,6 +82,20 @@ describe("publishing ops registered in the composite transport", () => {
     )) as { data: { id: string; title: string; revisionNumber: number } };
     expect(rev.data.title).toBe("正式标题");
     expect(rev.data.revisionNumber).toBe(2);
+
+    // GET revisions list returns both revisions newest-first (rev-2 then rev-1).
+    const revs = (await compositeTransport.request(
+      ep("publications.revisions.list"),
+      {
+        params: { publicationId },
+        query: { limit: 20, offset: 0 },
+        body: undefined,
+      } as never,
+      owner,
+    )) as { data: Array<{ id: string; revisionNumber: number; title: string }> };
+    expect(revs.data.length).toBe(2);
+    expect(revs.data[0]!.revisionNumber).toBe(2);
+    expect(revs.data[0]!.title).toBe("正式标题");
 
     // POST transition → published (确认发布). MockPublisher mints external id.
     const published = (await compositeTransport.request(

@@ -53,6 +53,12 @@ export interface LearningsService {
     ctx: RequestContext,
     page: { limit: number; offset: number },
   ): Promise<{ rows: LearningResource[]; total: number }>;
+  // Single-learning read (contract op learnings.get). Ownership-gated; the DTO
+  // carries the real reuseCount (application count) like the list read.
+  getLearning(
+    ctx: RequestContext,
+    learningId: string,
+  ): Promise<LearningResource>;
   createLearning(
     ctx: RequestContext,
     body: { title: string; insight?: string },
@@ -114,8 +120,32 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
 
   return {
     async listLearnings(ctx, page) {
-      const { rows, total } = await repoFor(ctx).listLearnings(page);
-      return { rows: rows.map(toLearningDto), total };
+      const repo = repoFor(ctx);
+      const { rows, total } = await repo.listLearnings(page);
+      // Reuse signal: one grouped read of learningApplications for the page's ids
+      // (degrades to 0 per learning if the aggregate fails or has no rows).
+      let counts: Map<string, number>;
+      try {
+        counts = await repo.countApplicationsByLearning(rows.map((r) => r.id));
+      } catch {
+        counts = new Map<string, number>();
+      }
+      return {
+        rows: rows.map((r) => toLearningDto(r, counts.get(r.id) ?? 0)),
+        total,
+      };
+    },
+
+    async getLearning(ctx, learningId) {
+      const repo = repoFor(ctx);
+      const row = await repo.getLearningRowById(learningId); // ownership gate
+      let reuseCount = 0;
+      try {
+        reuseCount = await repo.countApplications(learningId);
+      } catch {
+        reuseCount = 0;
+      }
+      return toLearningDto(row, reuseCount);
     },
 
     async createLearning(ctx, body) {

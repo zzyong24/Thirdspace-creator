@@ -19,6 +19,14 @@ export const learningsOperations = {
     isList: true,
     fr: ["FR-LEARNINGS-LIST"],
   }),
+  getLearning: defineEndpoint({
+    id: "learnings.get",
+    method: "GET",
+    path: "/learnings/:learningId",
+    params: learningParams,
+    response: learningResource,
+    fr: ["FR-LEARNINGS-GET"],
+  }),
   createLearning: defineEndpoint({
     id: "learnings.create",
     method: "POST",

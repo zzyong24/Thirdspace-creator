@@ -130,11 +130,12 @@ describe("learnings acceptance (SPEC §22)", () => {
     expect(typeof service.getSuggestions).toBe("function");
   });
 
-  it("registers the four owned ops into the module op-id list", () => {
+  it("registers the owned ops into the module op-id list", () => {
     expect([...LEARNINGS_OP_IDS].sort()).toEqual([
       "learnings.applications.create",
       "learnings.create",
       "learnings.evaluate",
+      "learnings.get",
       "learnings.list",
     ]);
   });
