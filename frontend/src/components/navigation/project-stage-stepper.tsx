@@ -7,11 +7,16 @@
  *  - `variant="segmented"`: the boxed segmented strip rendered inside the
  *    TopHeader in `project-workspace` mode.
  *
- * Server component: no interactivity required (it is informational only;
- * the workspace's primary action lives in the header).
+ * Server component: the segmented strip is navigable. Each segment for the
+ * current stage, any earlier/already-reached stage, or the immediate next
+ * stage renders as a `next/link` anchor to that stage's workspace route
+ * (`/projects/<id>/<stage>`). Stages further ahead than current+1 stay gated
+ * (non-clickable). Clickability requires a `projectId`; without it the segments
+ * stay informational `<li>` content (e.g. when rendered outside a route).
  */
 
 import * as React from "react";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
@@ -25,6 +30,11 @@ export interface ProjectStageStepperProps {
   readonly stages: ReadonlyArray<ProjectStageStepperStage>;
   readonly currentStage?: string;
   readonly variant?: "compact" | "segmented";
+  /**
+   * The route-level project id. When provided (segmented variant), reachable
+   * stage segments become navigable links to `/projects/<projectId>/<stage>`.
+   */
+  readonly projectId?: string;
   readonly className?: string;
 }
 
@@ -46,9 +56,16 @@ export function ProjectStageStepper({
   stages,
   currentStage,
   variant = "compact",
+  projectId,
   className,
 }: ProjectStageStepperProps) {
   if (variant === "segmented") {
+    // Resolve the current stage index: prefer the explicit `currentStage`,
+    // else fall back to whichever segment is `in_progress`.
+    const currentIndex =
+      currentStage !== undefined
+        ? stages.findIndex((stage) => stage.id === currentStage)
+        : stages.findIndex((stage) => stage.status === "in_progress");
     return (
       <ol
         role="list"
@@ -60,23 +77,69 @@ export function ProjectStageStepper({
           className,
         )}
       >
-        {stages.map((stage) => (
-          <li
-            key={stage.id}
-            data-status={stage.status}
-            className={cn(
-              "flex h-12 min-w-24 flex-1 items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground first:border-l",
-              stage.status === "in_progress" &&
-                "border-brand/30 bg-brand-soft font-medium text-brand",
-            )}
-          >
-            <span
-              aria-hidden="true"
-              className={cn("size-1.5 rounded-full", STATUS_INDICATOR[stage.status])}
-            />
-            {stage.label}
-          </li>
-        ))}
+        {stages.map((stage, index) => {
+          const isCurrent =
+            currentStage !== undefined
+              ? stage.id === currentStage
+              : stage.status === "in_progress";
+          // Reachable = current stage, any earlier/already-reached stage, or
+          // the immediate next stage. Stages further ahead stay gated.
+          const reachable =
+            currentIndex === -1
+              ? false
+              : index <= currentIndex + 1;
+          const navigable = reachable && Boolean(projectId);
+          const segmentClassName = cn(
+            "flex h-full w-full items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground",
+            index === 0 && "border-l",
+            stage.status === "in_progress" &&
+              "border-brand/30 bg-brand-soft font-medium text-brand",
+            navigable
+              ? "cursor-pointer transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              : !reachable && "cursor-not-allowed opacity-70",
+          );
+          const inner = (
+            <>
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "size-1.5 rounded-full",
+                  STATUS_INDICATOR[stage.status],
+                )}
+              />
+              {stage.label}
+            </>
+          );
+          return (
+            <li
+              key={stage.id}
+              data-status={stage.status}
+              data-current={isCurrent ? "true" : "false"}
+              className="flex h-12 min-w-24 flex-1 items-stretch"
+            >
+              {navigable ? (
+                <Link
+                  href={`/projects/${projectId}/${stage.id}`}
+                  data-slot="header-stage-link"
+                  data-testid={`stage-segment-${stage.id}`}
+                  aria-current={isCurrent ? "step" : undefined}
+                  className={segmentClassName}
+                >
+                  {inner}
+                </Link>
+              ) : (
+                <span
+                  data-testid={`stage-segment-${stage.id}`}
+                  aria-current={isCurrent ? "step" : undefined}
+                  aria-disabled={!reachable ? "true" : undefined}
+                  className={segmentClassName}
+                >
+                  {inner}
+                </span>
+              )}
+            </li>
+          );
+        })}
       </ol>
     );
   }

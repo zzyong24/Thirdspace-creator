@@ -21,6 +21,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
 import { SearchField } from "@/components/navigation/search-field";
 import { NotificationPopover } from "./notification-popover";
+import { WorkspacePrimaryAction } from "./workspace-primary-action";
 import { creatorIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import type { NotificationsViewModel } from "@/fixtures/selectors";
@@ -139,6 +140,7 @@ export function TopHeader({
           project={project}
           stages={resolvedStages}
           mode={resolvedMode}
+          pathname={pathname}
         />
       ) : (
         <PageHeading
@@ -203,11 +205,16 @@ function ProjectIdentityBlock({
   project,
   stages,
   mode,
+  pathname,
 }: {
   project?: TopHeaderProjectIdentity;
   stages: NonNullable<TopHeaderProps["projectStages"]>;
   mode: "project-overview" | "project-workspace";
+  pathname: string;
 }) {
+  const segments = pathname.split("/").filter(Boolean);
+  const routeProjectId = segments[1];
+  const currentStage = segments[2];
   return (
     <div
       data-slot="header-project-identity"
@@ -244,7 +251,12 @@ function ProjectIdentityBlock({
         </div>
       )}
       {mode === "project-workspace" ? (
-        <ProjectStageStepper variant="segmented" stages={stages} />
+        <ProjectStageStepper
+          variant="segmented"
+          stages={stages}
+          currentStage={currentStage}
+          projectId={routeProjectId}
+        />
       ) : null}
     </div>
   );
@@ -354,7 +366,20 @@ function ProjectHeaderActions({
   primaryActionLabel?: string;
   secondaryActionLabel?: string;
 }) {
-  const primaryHref = primaryActionHref({ mode, pathname, project });
+  // The Overview header's primary action enters the workspace (navigation only,
+  // no stage change). The Workspace header's primary action PERSISTS the stage
+  // transition through the same contract op the overview page uses, so progress
+  // and position never desync (Plan A6).
+  const overviewHref =
+    mode === "project-overview" && project?.stage
+      ? `${pathname.replace(/\/$/, "")}/${project.stage}`
+      : null;
+  const segments = pathname.split("/").filter(Boolean);
+  const routeProjectId = segments[1] ?? "";
+  const currentStage = segments[2] ?? "";
+  // Advancing labels are the "进入下一步:<next>" ones; terminal/non-advancing
+  // labels ("完成制作", "查看数据", "导出报告") stay plain buttons.
+  const advances = (primaryActionLabel ?? "").startsWith("进入下一步");
   return (
     <div
       data-slot="header-actions"
@@ -382,10 +407,17 @@ function ProjectHeaderActions({
         <MoreIcon className="size-4" aria-hidden="true" />
       </Button>
       {primaryActionLabel ? (
-        primaryHref ? (
-        <Link href={primaryHref} className={buttonVariants({ size: "lg" })}>
-          {primaryActionLabel} →
-        </Link>
+        mode === "project-workspace" ? (
+          <WorkspacePrimaryAction
+            label={primaryActionLabel}
+            routeProjectId={routeProjectId}
+            currentStage={currentStage}
+            advances={advances}
+          />
+        ) : overviewHref ? (
+          <Link href={overviewHref} className={buttonVariants({ size: "lg" })}>
+            {primaryActionLabel} →
+          </Link>
         ) : (
           <Button type="button" size="lg">
             {primaryActionLabel} →
@@ -394,42 +426,6 @@ function ProjectHeaderActions({
       ) : null}
     </div>
   );
-}
-
-function primaryActionHref({
-  mode,
-  pathname,
-  project,
-}: {
-  mode: "project-overview" | "project-workspace";
-  pathname: string;
-  project?: TopHeaderProjectIdentity;
-}): string | null {
-  if (mode === "project-overview" && project?.stage) {
-    return `${pathname.replace(/\/$/, "")}/${project.stage}`;
-  }
-  if (mode === "project-workspace") {
-    return nextWorkspaceHref(pathname);
-  }
-  return null;
-}
-
-const NEXT_STAGE: Record<string, string | null> = {
-  research: "planning",
-  planning: "script",
-  script: "production",
-  production: "publishing",
-  publishing: "review",
-  review: null,
-};
-
-function nextWorkspaceHref(pathname: string): string | null {
-  const segments = pathname.split("/").filter(Boolean);
-  const currentStage = segments[2];
-  if (!currentStage) return null;
-  const nextStage = NEXT_STAGE[currentStage];
-  if (!nextStage) return null;
-  return `/${segments.slice(0, 2).join("/")}/${nextStage}`;
 }
 
 function DashboardHeaderActions({

@@ -158,6 +158,63 @@ describe("shared business components contract", () => {
       const items = list.querySelectorAll("li");
       expect(items).toHaveLength(6);
     });
+
+    it("renders navigable segments for reached + immediate-next stages (segmented)", () => {
+      render(
+        <ProjectStageStepper
+          variant="segmented"
+          projectId="project-ainativebrowser"
+          currentStage="script"
+          stages={[
+            { id: "research", label: "研究", status: "completed" },
+            { id: "planning", label: "策划", status: "completed" },
+            { id: "script", label: "脚本", status: "in_progress" },
+            { id: "production", label: "拍摄", status: "pending" },
+            { id: "publishing", label: "发布", status: "pending" },
+            { id: "review", label: "复盘", status: "pending" },
+          ]}
+        />,
+      );
+
+      const list = screen.getByRole("list", { name: /项目六阶段/i });
+      // Six <li> wrappers preserved (existing selector contract).
+      expect(list.querySelectorAll("li")).toHaveLength(6);
+
+      // Reached stages + current + immediate next (research..production) are links.
+      for (const stage of ["research", "planning", "script", "production"]) {
+        const seg = screen.getByTestId(`stage-segment-${stage}`);
+        expect(seg.tagName).toBe("A");
+        expect(seg).toHaveAttribute(
+          "href",
+          `/projects/project-ainativebrowser/${stage}`,
+        );
+      }
+      // The current stage marks aria-current="step".
+      expect(screen.getByTestId("stage-segment-script")).toHaveAttribute(
+        "aria-current",
+        "step",
+      );
+      // Stages further ahead than current+1 stay gated (not links).
+      for (const stage of ["publishing", "review"]) {
+        const seg = screen.getByTestId(`stage-segment-${stage}`);
+        expect(seg.tagName).not.toBe("A");
+        expect(seg).toHaveAttribute("aria-disabled", "true");
+      }
+    });
+
+    it("keeps segments non-navigable when no projectId is supplied (segmented)", () => {
+      render(
+        <ProjectStageStepper
+          variant="segmented"
+          currentStage="research"
+          stages={[
+            { id: "research", label: "研究", status: "in_progress" },
+            { id: "planning", label: "策划", status: "pending" },
+          ]}
+        />,
+      );
+      expect(screen.getByTestId("stage-segment-research").tagName).not.toBe("A");
+    });
   });
 
   describe("PageTabs", () => {
