@@ -1,7 +1,8 @@
 /**
  * F2d — EvidenceCollectionIsland contract test. 关联证据 calls
  * client.createKnowledgeRelation with { targetKnowledgeId, relationType:'supports' };
- * the 取消关联 (unlink) button is disabled (no contract op — known gap).
+ * 取消关联 (unlink) calls client.removeKnowledgeRelation with the same body
+ * (GAP-RES-1: the knowledge.relations.delete soft-delete op).
  */
 
 import * as React from "react";
@@ -15,11 +16,16 @@ const mockClient = {
   createKnowledgeRelation: vi.fn((input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "rel-new", input }),
   ),
+  removeKnowledgeRelation: vi.fn((input: unknown): Promise<unknown> =>
+    Promise.resolve({ id: "rel-removed", input }),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createKnowledgeRelation: (input: unknown) =>
       mockClient.createKnowledgeRelation(input),
+    removeKnowledgeRelation: (input: unknown) =>
+      mockClient.removeKnowledgeRelation(input),
   },
 }));
 
@@ -37,6 +43,7 @@ afterEach(() => cleanup());
 beforeEach(() => {
   mockRouter.refresh.mockClear();
   mockClient.createKnowledgeRelation.mockClear();
+  mockClient.removeKnowledgeRelation.mockClear();
 });
 
 async function renderIsland() {
@@ -75,13 +82,26 @@ describe("EvidenceCollectionIsland (F2b)", () => {
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 
-  it("the 取消关联 (unlink) button is disabled (no contract op)", async () => {
+  it("取消关联 calls removeKnowledgeRelation with the same target + relationType", async () => {
     const { container } = await renderIsland();
     const unlink = container.querySelector<HTMLButtonElement>(
       '[data-slot="evidence-unlink-button"]',
     );
     expect(unlink).not.toBeNull();
-    expect(unlink!.disabled).toBe(true);
-    expect(unlink!.getAttribute("title")).toBe("暂不支持取消关联");
+    expect(unlink!.disabled).toBe(false);
+    fireEvent.click(unlink!);
+    await waitFor(() =>
+      expect(mockClient.removeKnowledgeRelation).toHaveBeenCalledTimes(1),
+    );
+    expect(mockClient.removeKnowledgeRelation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: { knowledgeId: "knowledge-arc-dia-research" },
+        body: {
+          targetKnowledgeId: "knowledge-local-memory-trend",
+          relationType: "supports",
+        },
+      }),
+    );
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 });

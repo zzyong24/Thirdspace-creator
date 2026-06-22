@@ -11,6 +11,7 @@ import {
 } from "../primitives";
 import {
   projectResource,
+  projectStageResource,
   contentOutputResource,
   contentRole,
   taskResource,
@@ -114,6 +115,15 @@ export const projectsOperations = {
     response: contentOutputResource,
     isList: true,
     fr: ["FR-OUTPUT-LIST"],
+  }),
+  listStages: defineEndpoint({
+    id: "projects.stages.list",
+    method: "GET",
+    path: "/projects/:projectId/stages",
+    params: projectParams,
+    response: projectStageResource,
+    isList: true,
+    fr: ["FR-STAGE-LIST"],
   }),
   getOutput: defineEndpoint({
     id: "outputs.get",

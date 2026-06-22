@@ -15,11 +15,16 @@ const mockClient = {
   createKnowledgeRevision: vi.fn((input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "rev-new", input }),
   ),
+  archiveKnowledge: vi.fn((input: unknown): Promise<unknown> =>
+    Promise.resolve({ id: "item-archived", input }),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createKnowledgeRevision: (input: unknown) =>
       mockClient.createKnowledgeRevision(input),
+    archiveKnowledge: (input: unknown) =>
+      mockClient.archiveKnowledge(input),
   },
 }));
 
@@ -32,6 +37,7 @@ afterEach(() => cleanup());
 beforeEach(() => {
   mockRouter.refresh.mockClear();
   mockClient.createKnowledgeRevision.mockClear();
+  mockClient.archiveKnowledge.mockClear();
 });
 
 async function renderIsland() {
@@ -104,5 +110,23 @@ describe("ResearchNotesIsland (F2a)", () => {
         body: { content: "改后的内容" },
       }),
     );
+  });
+
+  it("删除 a row calls archiveKnowledge with that row's knowledgeId (GAP-RES-1)", async () => {
+    const { container } = await renderIsland();
+    const deleteButtons = container.querySelectorAll<HTMLButtonElement>(
+      '[data-slot="research-note-delete"]',
+    );
+    expect(deleteButtons).toHaveLength(2);
+    fireEvent.click(deleteButtons[1]!);
+    await waitFor(() =>
+      expect(mockClient.archiveKnowledge).toHaveBeenCalledTimes(1),
+    );
+    expect(mockClient.archiveKnowledge).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: { knowledgeId: "knowledge-arc-dia-research" },
+      }),
+    );
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 });

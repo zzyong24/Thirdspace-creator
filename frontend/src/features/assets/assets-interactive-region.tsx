@@ -130,15 +130,23 @@ export function AssetsInteractiveRegion({
     [],
   );
 
-  // E5 收藏 (Toggle favorite): 规划中. There is NO 收藏 field/op this wave — the
-  // earlier `assets.files.create { storageKey: favorites/... }` was a misleading
-  // hack (it advanced the asset's file version, not a favorite), so it is
-  // removed. The status line is honest that 收藏 is not yet persisted.
+  // E5 收藏 (Toggle favorite): REAL. POST assets.favorite.toggle flips the
+  // asset's persisted isFavorite flag (replacing the old misleading
+  // `assets.files.create { storageKey: favorites/... }` file-version hack), then
+  // refreshes so the gallery reflects the new 收藏 state.
   const handleFavorite = React.useCallback(
-    (_assetId: string) => {
-      setActionStatus("收藏规划中：暂无收藏字段，此操作尚未持久化。");
+    (assetId: string) => {
+      startTransition(async () => {
+        const updated = (await client.toggleFavorite({
+          params: { assetId },
+          query: undefined,
+          body: undefined,
+        })) as { isFavorite?: boolean };
+        setActionStatus(updated?.isFavorite ? "已加入收藏。" : "已取消收藏。");
+        router.refresh();
+      });
     },
-    [],
+    [router],
   );
 
   // E6 更多 → 移入回收站: POST assets.trash (active → deleted), then refresh so
@@ -220,8 +228,9 @@ export function AssetsInteractiveRegion({
           onAttach={handleAttach}
           actionsPending={pending}
         />
-        {/* GAP-AST-1: honest 规划中 status for download / 复制链接 / 收藏 — we never
-            claim a byte download / real public link / saved favorite succeeded. */}
+        {/* GAP-AST-1: honest status line. 收藏 is REAL (persisted toggle);
+            download / 复制链接 stay 规划中 — we never claim a byte download / real
+            public link succeeded. */}
         <p
           data-slot="asset-action-status"
           role="status"

@@ -18,6 +18,7 @@ export {
   type AssetRow,
   type AssetFileRow,
   type AssetUploadRow,
+  type MaterialLinkRow,
 } from "./assets.repository";
 
 export {

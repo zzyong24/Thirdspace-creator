@@ -4,6 +4,7 @@ import {
   iso8601,
   projectStatus,
   projectStageName,
+  stageStatus,
   creationMode,
   contentType,
 } from "../primitives";
@@ -29,6 +30,18 @@ export const projectResource = z.object({
   ...timestamps,
 });
 export type ProjectResource = z.infer<typeof projectResource>;
+
+// ProjectStage — per-stage progress row for the 6-stage pipeline (project_stages
+// table). Read-only view consumed by the Project Overview stepper so it reflects
+// real per-stage status instead of a derived `currentStage`.
+export const projectStageResource = z.object({
+  stage: projectStageName,
+  status: stageStatus,
+  progressPct: z.number().int().min(0).max(100),
+  startedAt: iso8601.nullable(),
+  completedAt: iso8601.nullable(),
+});
+export type ProjectStageResource = z.infer<typeof projectStageResource>;
 
 const outputStatus = z.enum([
   "drafting",

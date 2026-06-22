@@ -4,12 +4,17 @@ import {
   UnsupportedOperationError,
 } from "@creatoros/backend";
 import type { AssetsService } from "./assets.service";
-import type { AssetRow, AssetFileRow } from "./assets.repository";
+import type {
+  AssetRow,
+  AssetFileRow,
+  MaterialLinkRow,
+} from "./assets.repository";
 import type {
   AssetResource,
   AssetFileResource,
   AssetUpload,
 } from "./assets.schema";
+import type { MaterialLinkResource } from "@creatoros/contract";
 
 // Assets transport (foundation §5.4) — the module's 7 contract ops served over
 // REAL SQL behind the same /api/v1/dispatch route. Mirrors the realized
@@ -30,6 +35,8 @@ export const ASSET_OP_IDS = [
   "assets.files.create",
   "assets.trash",
   "assets.restore",
+  "assets.favorite.toggle",
+  "assets.usage.list",
 ] as const;
 
 function toAssetResource(row: AssetRow): AssetResource {
@@ -45,9 +52,28 @@ function toAssetResource(row: AssetRow): AssetResource {
     name: row.name,
     description: row.description,
     status: row.status as AssetResource["status"],
+    isFavorite: row.isFavorite ?? false,
     deletedAt: row.deletedAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  };
+}
+
+// 用料反查 row → contract materialLinkResource. MaterialLinkRow ($inferSelect)
+// already carries the wire fields; coerce the nullable contentOutputId and
+// narrow entityType to the DTO union.
+function toMaterialLinkResource(row: MaterialLinkRow): MaterialLinkResource {
+  return {
+    id: row.id,
+    userId: row.userId,
+    projectId: row.projectId,
+    contentOutputId: row.contentOutputId ?? null,
+    entityType: row.entityType as MaterialLinkResource["entityType"],
+    entityId: row.entityId,
+    role: row.role,
+    stage: row.stage,
+    addedByType: row.addedByType,
+    createdAt: row.createdAt,
   };
 }
 
@@ -146,6 +172,25 @@ export function createAssetsTransport(
           return {
             data: toAssetResource(row),
             meta: { requestId: ctx.requestId },
+          };
+        }
+        case "assets.favorite.toggle": {
+          const row = await service.toggleFavorite(ctx, p.assetId ?? "");
+          return {
+            data: toAssetResource(row),
+            meta: { requestId: ctx.requestId },
+          };
+        }
+        case "assets.usage.list": {
+          const rows = await service.listAssetUsage(ctx, p.assetId ?? "");
+          return {
+            data: rows.map(toMaterialLinkResource),
+            meta: {
+              requestId: ctx.requestId,
+              page: 1,
+              pageSize: rows.length,
+              total: rows.length,
+            },
           };
         }
         default:

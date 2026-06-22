@@ -25,6 +25,7 @@ export const CALIBRATION_OP_IDS = [
   "calibration.predictions.create",
   "calibration.predictions.lock",
   "calibration.predictions.get",
+  "calibration.predictions.list",
   "calibration.results.create",
 ] as const;
 
@@ -38,7 +39,7 @@ export function createCalibrationTransport(
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory();
       const requestId = (ctx as RequestContext).requestId;
-      const { params, body } = (input ?? {}) as Input;
+      const { params, query, body } = (input ?? {}) as Input;
       const p = (params ?? {}) as { rubricId?: string; predictionId?: string };
 
       switch (endpoint.id) {
@@ -91,6 +92,18 @@ export function createCalibrationTransport(
         case "calibration.predictions.get": {
           const dto = await service.getPrediction(ctx, p.predictionId ?? "");
           return { data: dto, meta: { requestId } };
+        }
+        case "calibration.predictions.list": {
+          // The contract query is paginationQuery (page/pageSize, 1-based). Convert to
+          // limit/offset; the list envelope mirrors ai.conversations.list.
+          const q = (query ?? {}) as { page?: number; pageSize?: number };
+          const page = q.page ?? 1;
+          const pageSize = q.pageSize ?? 20;
+          const { rows, total } = await service.listPredictions(ctx, {
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
+          });
+          return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "calibration.results.create": {
           const b = (body ?? {}) as {

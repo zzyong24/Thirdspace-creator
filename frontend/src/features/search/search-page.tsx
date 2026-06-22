@@ -61,6 +61,7 @@ import { buildSearchViewModel } from "@/fixtures/selectors";
 
 import { SearchInteractiveRegion } from "./search-interactive-region";
 import { ResultTypeTabs } from "./result-type-tabs";
+import { SearchFacetsPanel } from "./search-facets-panel";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -268,7 +269,7 @@ export function SearchPage({
           videos={vm.videoResults}
         />
         <SearchSideRail
-          filters={vm.filters}
+          initialQuery={initialQuery}
           quickActions={vm.quickActions}
           history={vm.history}
           tips={vm.tips}
@@ -646,12 +647,12 @@ function VideoThumb({ item }: { item: VideoResult }) {
 // ---------------------------------------------------------------------------
 
 function SearchSideRail({
-  filters,
+  initialQuery,
   quickActions,
   history,
   tips,
 }: {
-  readonly filters: ReadonlyArray<SearchFilterOption>;
+  readonly initialQuery: string;
   readonly quickActions: ReadonlyArray<QuickAction>;
   readonly history: ReadonlyArray<HistoryItem>;
   readonly tips: ReadonlyArray<string>;
@@ -662,64 +663,18 @@ function SearchSideRail({
       aria-label="搜索辅助"
       className="flex flex-col gap-3"
     >
-      <SearchFilters filters={filters} />
+      {/* §294 — REAL facet panel (GAP-SRCH-facets). The former「规划中」inert
+          summary is replaced by `SearchFacetsPanel`, a client island backed by
+          the `search.facets` server op (GET /search/facets?q=). It fetches the
+          per-dimension facet buckets (entityType / tag) with hit counts for the
+          current query and renders each value as a clickable control that REALLY
+          narrows the server read (entityType → `?type=`) or re-searches
+          (tag → query append). */}
+      <SearchFacetsPanel initialQuery={initialQuery} />
       <QuickActions actions={quickActions} />
       <SearchHistory items={history} />
       <SearchTips tips={tips} />
     </aside>
-  );
-}
-
-function SearchFilters({
-  filters,
-}: {
-  filters: ReadonlyArray<SearchFilterOption>;
-}) {
-  return (
-    <SectionCard
-      title="筛选"
-      description="按类型、阶段、标签缩小范围"
-      action={
-        <span
-          data-slot="search-filters-planned-badge"
-          className="inline-flex h-4 items-center rounded-full border border-border bg-surface-subtle px-1.5 text-[9px] font-medium text-muted-foreground"
-        >
-          规划中
-        </span>
-      }
-    >
-      {/* §294 Side facet rows (type/stage/tag). The facet COUNTS are real (from
-          the `pages.search.get` DTO `filters[].options`), but applying a facet
-          needs a server-side `search.facets` aggregation op that does not exist
-          this wave (GAP-SRCH-1, D-SRCH-a). Rather than fake clickable buttons,
-          these render as a read-only facet summary with an explicit「规划中」
-          badge — honest counts, no silent inert control. Result-type narrowing
-          is fully real via the ResultTypeTabs client facet above. */}
-      <ul
-        data-slot="search-filters"
-        className="flex flex-col gap-1.5"
-        aria-label="搜索筛选（规划中）"
-      >
-        {filters.map((filter) => (
-          <li
-            key={filter.id}
-            data-slot="search-filter-row"
-            data-filter-id={filter.id}
-            className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm"
-          >
-            <span className="flex items-center gap-2 text-foreground">
-              <TagChip label={filter.label} tone={filter.tone} size="sm" />
-            </span>
-            <span className="font-mono text-xs text-muted-foreground">
-              {filter.count}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <p className="mt-1.5 px-2 text-[10px] leading-snug text-muted-foreground">
-        高级分面筛选（类型 / 阶段 / 标签组合）即将开放；当前可用上方「结果类型」标签快速定位。
-      </p>
-    </SectionCard>
   );
 }
 

@@ -27,12 +27,10 @@ import type {
  *                              and that link surfaces here as a usage row.
  *
  * What is REAL vs 规划中 (INTERACTION_SPEC GAP-AST-1 决策表):
- *   - 用料历史:    REAL via materialLinks.list. The contract op requires a
- *                  `projectId` (no by-assetId reverse lookup op exists), so this
- *                  helper takes Option A — walk `projects.list` and read each
- *                  project's links, then keep the asset edges. N reads, but no
- *                  backend change. A clean `assets.usage.list` (Option B) is a
- *                  followUp.
+ *   - 用料历史:    REAL via assets.usage.list (用料反查, Option B — GAP-AST). The
+ *                  by-assetId reverse-lookup op returns the 用料链 edges that
+ *                  reference each asset directly (no N-project walk). projects.list
+ *                  is still read to resolve each edge's project title.
  *   - 存储「已用」: 弱真 — Σ of the REAL `fileSizeBytes` over the read asset
  *                  rows (a front-end aggregate, NOT a fabricated GB). The total
  *                  QUOTA has no op → a fixed cap label, flagged 规划中.
@@ -82,6 +80,13 @@ export interface AssetsDataClient {
     query: { page: number; pageSize: number; projectId: string };
     body: undefined;
   }): Promise<unknown>;
+  // 用料反查 (GAP-AST usage): the by-assetId reverse lookup — which 创作 (用料链
+  // edges) reference THIS asset. Replaces the N-project walk for usage history.
+  listAssetUsage(input: {
+    params: { assetId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
 }
 
 export interface ProjectOptionDto {
@@ -101,47 +106,49 @@ function isoDay(iso: string): string {
 }
 
 /**
- * Read every user project's material links and keep the ASSET edges, mapped to
- * `AssetUsageRow`. Option A (no by-assetId op): walk `projects.list` → each
- * project's `materialLinks.list({ projectId })` → filter `entityType==="asset"`.
- * A per-project read that throws contributes no rows (never throws upward). The
- * detail panel filters these by the selected `assetId` and renders an honest
- * 「尚未被项目引用」 empty state when none match.
+ * Read the 用料链 edges that reference each asset (用料反查) and map them to
+ * `AssetUsageRow`. Option B (GAP-AST): the by-assetId reverse-lookup op
+ * `assets.usage.list({ assetId })` — one read per asset, no N-project walk, no
+ * per-project filter. A per-asset read that throws contributes no rows (never
+ * throws upward). The detail panel filters these by the selected `assetId` and
+ * renders an honest 「尚未被项目引用」 empty state when none match.
+ *
+ * The edge carries `projectId` but not the title; we resolve the human title
+ * from the `projects.list` map (falls back to the raw id when unknown).
  */
 async function assembleUsageHistory(
   client: AssetsDataClient,
+  assetIds: ReadonlyArray<string>,
   projects: ReadonlyArray<ProjectDto>,
 ): Promise<ReadonlyArray<AssetUsageRow>> {
   const projectTitleById = new Map<string, string>();
   for (const project of projects) projectTitleById.set(project.id, project.title);
 
-  const perProject = await Promise.all(
-    projects.map(async (project) => {
+  const perAsset = await Promise.all(
+    assetIds.map(async (assetId) => {
       let links: ReadonlyArray<MaterialLinkDto>;
       try {
-        links = (await client.listMaterialLinks({
-          params: undefined,
-          query: { page: 1, pageSize: 200, projectId: project.id },
+        links = (await client.listAssetUsage({
+          params: { assetId },
+          query: undefined,
           body: undefined,
         })) as ReadonlyArray<MaterialLinkDto>;
       } catch {
         return [] as ReadonlyArray<AssetUsageRow>;
       }
-      return links
-        .filter((link) => link.entityType === "asset")
-        .map<AssetUsageRow>((link) => ({
-          id: link.id,
-          assetId: link.entityId,
-          projectTitle: projectTitleById.get(link.projectId) ?? link.projectId,
-          // 用料链 role/stage as the human note (e.g. "clip · production").
-          note: [link.role, link.stage].filter(Boolean).join(" · "),
-          dateLabel: isoDay(link.createdAt),
-        }));
+      return links.map<AssetUsageRow>((link) => ({
+        id: link.id,
+        assetId: link.entityId,
+        projectTitle: projectTitleById.get(link.projectId) ?? link.projectId,
+        // 用料链 role/stage as the human note (e.g. "clip · production").
+        note: [link.role, link.stage].filter(Boolean).join(" · "),
+        dateLabel: isoDay(link.createdAt),
+      }));
     }),
   );
 
   // Newest first so the most recent usage shows at the top of the panel list.
-  return perProject
+  return perAsset
     .flat()
     .slice()
     .sort((a, b) => b.dateLabel.localeCompare(a.dateLabel));
@@ -194,7 +201,11 @@ export async function buildAssetsViewModelReal(
   // (per-project failures already degrade to []), so the panel never breaks.
   let usageHistory: ReadonlyArray<AssetUsageRow>;
   try {
-    usageHistory = await assembleUsageHistory(client, projects);
+    usageHistory = await assembleUsageHistory(
+      client,
+      summaries.map((s) => s.id),
+      projects,
+    );
   } catch {
     usageHistory = fixtureVm.usageHistory;
   }

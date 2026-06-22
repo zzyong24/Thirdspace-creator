@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   searchDocumentResource,
   searchHistoryResource,
+  searchFacetsResource,
 } from "../../src/resources/search";
 import { ENDPOINTS } from "../../src/endpoints";
 
@@ -40,5 +41,29 @@ describe("search contract", () => {
     );
     expect(search).toBeDefined();
     expect(search!.fr.length).toBeGreaterThan(0);
+  });
+
+  it("parses a SearchFacets resource (entityType / tag buckets with counts)", () => {
+    const facets = searchFacetsResource.parse({
+      query: "ai",
+      entityType: [
+        { value: "knowledge", count: 3 },
+        { value: "project", count: 1 },
+      ],
+      tag: [{ value: "AI", count: 2 }],
+    });
+    expect(facets.entityType).toHaveLength(2);
+    expect(facets.entityType[0]!.value).toBe("knowledge");
+    expect(facets.tag[0]!.count).toBe(2);
+  });
+
+  it("exposes the standalone GET /search/facets endpoint (search.facets)", () => {
+    const facets = ENDPOINTS.getSearchFacets;
+    expect(facets).toBeDefined();
+    expect(facets.id).toBe("search.facets");
+    expect(facets.method).toBe("GET");
+    expect(facets.path).toBe("/search/facets");
+    expect(facets.isList).toBe(false);
+    expect(facets.fr.length).toBeGreaterThan(0);
   });
 });

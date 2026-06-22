@@ -24,4 +24,15 @@ describe("ai contract", () => {
     expect(aiOperations.confirmTask.path).toBe("/ai/tasks/:taskId/confirm");
     expect(aiOperations.listConversations.fr.length).toBeGreaterThan(0);
   });
+
+  it("registers the global task feed list endpoint", () => {
+    // GAP-COP-feed: cross-project AI-task feed for the copilot 「最近任务」 surface.
+    expect(aiOperations.listAITasks.id).toBe("ai.tasks.list");
+    expect(aiOperations.listAITasks.method).toBe("GET");
+    expect(aiOperations.listAITasks.path).toBe("/ai/tasks");
+    expect(aiOperations.listAITasks.isList).toBe(true);
+    // Distinct from the param'd single-task read.
+    expect(aiOperations.getTask.path).toBe("/ai/tasks/:taskId");
+    expect(aiOperations.listAITasks.fr.length).toBeGreaterThan(0);
+  });
 });

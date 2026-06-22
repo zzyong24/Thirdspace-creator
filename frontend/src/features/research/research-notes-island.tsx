@@ -15,8 +15,12 @@
  * Determinism: no Date.now/Math.random/fetch — the real revision id/clock live in
  * the server/service layer (injected RepoDeps).
  *
- * No `knowledge.notes.delete` op exists in this module's surface — "delete" is a
- * known gap (the only writes are append-only revisions); we expose add + edit.
+ * 删除 (delete) is a soft-delete (GAP-RES-1): a note is a KnowledgeItem, so
+ * "delete" archives it via the real knowledge.archive op (status→archived):
+ *
+ *   island → client.archiveKnowledge({ params:{ knowledgeId } }) → router.refresh()
+ *
+ * The archived item drops out of the project's active note list on refresh.
  */
 
 import * as React from "react";
@@ -58,6 +62,26 @@ export function ResearchNotesIsland({
     [router],
   );
 
+  // 删除 = soft-delete (GAP-RES-1): archive the note's KnowledgeItem
+  // (status→archived); it drops off the active list on refresh.
+  const archiveNote = React.useCallback(
+    (knowledgeId: string) => {
+      startTransition(async () => {
+        await client.archiveKnowledge({
+          params: { knowledgeId },
+          query: undefined,
+          body: undefined,
+        });
+        if (editingId !== null) {
+          setEditingId(null);
+          setDraft("");
+        }
+        router.refresh();
+      });
+    },
+    [router, editingId],
+  );
+
   return (
     <div data-slot="research-notes-card">
       <SectionCard title="研究笔记" description={`${notes.length} 条待整理笔记`}>
@@ -93,6 +117,15 @@ export function ResearchNotesIsland({
                       className="shrink-0 text-xs font-medium text-brand hover:underline disabled:opacity-50"
                     >
                       编辑
+                    </button>
+                    <button
+                      type="button"
+                      data-slot="research-note-delete"
+                      disabled={pending}
+                      onClick={() => archiveNote(note.knowledgeId)}
+                      className="shrink-0 text-xs font-medium text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50"
+                    >
+                      删除
                     </button>
                   </div>
                   {editingId === note.id ? (

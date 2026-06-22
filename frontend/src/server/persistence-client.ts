@@ -324,11 +324,16 @@ const NOTIFICATION_OPS = new Set<string>(NOTIFICATION_OP_IDS);
 
 // The set of op ids the Search module's transport handles at DISPATCH time
 // (module 02). Wave-4 takeover (foundation §6): the query-services module now owns
-// `pages.search.get`, so the Search transport is NO LONGER routed for it — this set
-// is empty. The Search SERVICE is still consumed by the GlobalSearchQueryService
-// facade (search/recordSearch/listHistory). SEARCH_OP_IDS still feeds PERSISTED_OPS
-// (the op is persisted; it is just routed to query-services below).
-const SEARCH_OPS = new Set<string>();
+// `pages.search.get`, so the Search transport is NO LONGER routed for it. But the
+// module DOES still own its own standalone reads — `search.facets`
+// (GAP-SRCH-facets, GET /search/facets) is routed here. So this set is
+// SEARCH_OP_IDS minus the taken-over page op (rather than a hardcoded empty set):
+// adding a new standalone op to SEARCH_OP_IDS auto-registers it for dispatch, while
+// pages.search.get stays owned by query-services below. The Search SERVICE is also
+// consumed by the GlobalSearchQueryService facade (search/recordSearch/listHistory).
+const SEARCH_OPS = new Set<string>(
+  SEARCH_OP_IDS.filter((opId) => opId !== "pages.search.get"),
+);
 
 // The set of op ids owned by the query-services module's transport (module Q).
 const QUERY_SERVICES_OPS = new Set<string>(QUERY_SERVICES_OP_IDS);

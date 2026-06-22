@@ -11,11 +11,13 @@
 import { ENDPOINTS } from "@creatoros/contract";
 
 export const projectResource = ENDPOINTS.getProject.response;
+export const projectStageResource = ENDPOINTS.listStages.response;
 export const contentOutputResource = ENDPOINTS.getOutput.response;
 export const taskResource = ENDPOINTS.listTasks.response;
 export const projectActivityResource = ENDPOINTS.listActivity.response;
 
 export type ProjectResource = (typeof projectResource)["_output"];
+export type ProjectStageResource = (typeof projectStageResource)["_output"];
 export type ContentOutputResource = (typeof contentOutputResource)["_output"];
 export type TaskResource = (typeof taskResource)["_output"];
 export type ProjectActivityResource = (typeof projectActivityResource)["_output"];

@@ -7,10 +7,11 @@ import {
 import { canonicalDataset } from "@/fixtures/canonical";
 import { KNOWLEDGE_OP_IDS } from "./knowledge.transport";
 
-// D2 — the 7 knowledge ops are registered into the composite (PERSISTED_OPS) and
+// D2 — the 9 knowledge ops are registered into the composite (PERSISTED_OPS) and
 // a knowledge.create round-trips through compositeTransport against the seeded
 // pglite store. Proves the module is wired into the same store server reads +
-// the /api/v1 route share (foundation §1 registry).
+// the /api/v1 route share (foundation §1 registry). The 9 include the two
+// GAP-RES-1 soft-delete ops (knowledge.archive, knowledge.relations.delete).
 
 const ep = (id: string, isList = false) => ({ id, isList }) as unknown as Endpoint;
 const ctx = (userId: string): RequestContext => ({
@@ -24,7 +25,7 @@ beforeEach(() => {
 });
 
 describe("knowledge ops registered in the composite transport", () => {
-  it("the 7 knowledge op ids are persistence-backed (not the mock)", async () => {
+  it("the 9 knowledge op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of KNOWLEDGE_OP_IDS) {
@@ -32,7 +33,10 @@ describe("knowledge ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(KNOWLEDGE_OP_IDS).toHaveLength(7);
+    expect(KNOWLEDGE_OP_IDS).toHaveLength(9);
+    // The two GAP-RES-1 soft-delete ops are in the owned set.
+    expect(KNOWLEDGE_OP_IDS).toContain("knowledge.archive");
+    expect(KNOWLEDGE_OP_IDS).toContain("knowledge.relations.delete");
   });
 
   it("knowledge.list returns the seeded canonical items for the owner", async () => {

@@ -81,4 +81,29 @@ export const knowledgeOperations = {
     response: knowledgeRelationResource,
     fr: ["FR-KNOWLEDGE-RELATION-CREATE"],
   }),
+  // Soft-delete the item (status 'active' → 'archived', stamps archivedAt).
+  // Mirrors assets.trash: a status transition, returns the updated item.
+  archiveKnowledge: defineEndpoint({
+    id: "knowledge.archive",
+    method: "POST",
+    path: "/knowledge/:knowledgeId/archive",
+    params: knowledgeParams,
+    response: knowledgeItemResource,
+    fr: ["FR-KNOWLEDGE-ARCHIVE"],
+  }),
+  // Remove one relation off the (owned) source item. POST /remove keeps the
+  // collection path style consistent with relations.create's POST; identifies
+  // the relation to drop via the body's targetKnowledgeId + relationType.
+  removeKnowledgeRelation: defineEndpoint({
+    id: "knowledge.relations.delete",
+    method: "POST",
+    path: "/knowledge/:knowledgeId/relations/remove",
+    params: knowledgeParams,
+    body: z.object({
+      targetKnowledgeId: id,
+      relationType: z.string().min(1),
+    }),
+    response: knowledgeRelationResource,
+    fr: ["FR-KNOWLEDGE-RELATION-DELETE"],
+  }),
 } as const;

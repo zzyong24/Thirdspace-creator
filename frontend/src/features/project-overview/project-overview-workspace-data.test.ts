@@ -22,6 +22,7 @@ vi.mock("@/lib/contract-client.server", () => ({
   client: {
     getProject: vi.fn(),
     listOutputs: vi.fn(),
+    listStages: vi.fn(),
     listActivity: vi.fn(),
     listMaterialLinks: vi.fn(),
     getAsset: vi.fn(),
@@ -52,6 +53,13 @@ interface FakeData {
         title: string;
         contentType: string;
         status: string;
+      }>
+    | "throw";
+  readonly stages?:
+    | ReadonlyArray<{
+        stage: string;
+        status: string;
+        progressPct: number;
       }>
     | "throw";
   readonly activity?: ReadonlyArray<{
@@ -103,6 +111,10 @@ function fakeClient(data: FakeData): ProjectOverviewDataClient {
       if (data.outputs === "throw") throw new Error("500");
       return data.outputs ?? [];
     },
+    async listStages() {
+      if (data.stages === "throw") throw new Error("500");
+      return data.stages ?? [];
+    },
     async listActivity() {
       return data.activity ?? [];
     },
@@ -135,15 +147,48 @@ const REAL_PROJECT = {
 };
 
 describe("buildProjectOverviewWorkspaceViewModel (GAP-OVW-1)", () => {
-  it("derives the stage stepper from currentStage + progressPct (not all pending)", async () => {
+  it("renders the stage stepper from the real projects.stages.list rows", async () => {
     const vm = await buildProjectOverviewWorkspaceViewModel(
       REAL_PROJECT.id,
+      fakeClient({
+        project: REAL_PROJECT,
+        // Real per-stage rows DIFFER from the currentStage derivation: research is
+        // only in_progress (not completed) and script is skipped — proving the op
+        // wins over the derivation.
+        stages: [
+          { stage: "research", status: "in_progress", progressPct: 30 },
+          { stage: "planning", status: "completed", progressPct: 100 },
+          { stage: "script", status: "skipped", progressPct: 0 },
+          { stage: "production", status: "pending", progressPct: 0 },
+          { stage: "publishing", status: "pending", progressPct: 0 },
+          { stage: "review", status: "pending", progressPct: 0 },
+        ],
+      }),
+    );
+
+    const byStage = Object.fromEntries(vm.stages.map((s) => [s.stage, s]));
+    expect(byStage.research.status).toBe("in_progress");
+    expect(byStage.research.progressPct).toBe(30);
+    expect(byStage.script.status).toBe("skipped");
+    // All six canonical stages render in order.
+    expect(vm.stages.map((s) => s.stage)).toEqual([
+      "research",
+      "planning",
+      "script",
+      "production",
+      "publishing",
+      "review",
+    ]);
+  });
+
+  it("derives the stage stepper from currentStage + progressPct when no stage rows exist", async () => {
+    const vm = await buildProjectOverviewWorkspaceViewModel(
+      REAL_PROJECT.id,
+      // stages default to [] → fall back to the currentStage derivation.
       fakeClient({ project: REAL_PROJECT }),
     );
 
-    const byStage = Object.fromEntries(
-      vm.stages.map((s) => [s.stage, s]),
-    );
+    const byStage = Object.fromEntries(vm.stages.map((s) => [s.stage, s]));
     // research/planning are before "script" → completed.
     expect(byStage.research.status).toBe("completed");
     expect(byStage.research.progressPct).toBe(100);

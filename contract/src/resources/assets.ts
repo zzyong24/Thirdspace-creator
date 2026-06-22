@@ -16,6 +16,9 @@ export const assetResource = z.object({
   name: z.string(),
   description: z.string(),
   status: assetStatus,
+  // 收藏 (favorite) flag — toggled by assets.favorite.toggle. Persisted on the
+  // asset row so the gallery 收藏 affordance survives reloads (not a client hack).
+  isFavorite: z.boolean(),
   deletedAt: iso8601.nullable(),
   ...timestamps,
 });

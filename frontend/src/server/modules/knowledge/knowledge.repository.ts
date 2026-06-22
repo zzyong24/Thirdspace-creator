@@ -67,6 +67,12 @@ export interface KnowledgeRepository {
     sourceKnowledgeId: string,
     input: { targetKnowledgeId: string; relationType: string },
   ): Promise<KnowledgeRelationRow>;
+  archive(userId: string, knowledgeId: string): Promise<KnowledgeItemRow>;
+  removeRelation(
+    userId: string,
+    sourceKnowledgeId: string,
+    input: { targetKnowledgeId: string; relationType: string },
+  ): Promise<KnowledgeRelationRow>;
 }
 
 function parseRelation(row: KnowledgeRelationDbRow): KnowledgeRelationRow {
@@ -251,6 +257,50 @@ export function createKnowledgeRepository(
         .from(knowledgeRelations)
         .where(eq(knowledgeRelations.id, relId));
       return parseRelation(rows[0]!);
+    },
+
+    async archive(userId, knowledgeId) {
+      // Ownership gate (cross-user / unknown id → 404, no leak). The §12-style
+      // status transition (active → archived) is enforced by the SERVICE; the
+      // repo only stamps the new status + archivedAt + updatedAt. Re-read scoped
+      // so a cross-user update surfaces as a no-op (WHERE matched 0 rows).
+      await get(userId, knowledgeId);
+      const now = deps.now();
+      await db
+        .update(knowledgeItems)
+        .set({ status: "archived", archivedAt: now, updatedAt: now })
+        .where(
+          and(
+            eq(knowledgeItems.id, knowledgeId),
+            eq(knowledgeItems.userId, userId),
+          ),
+        );
+      return get(userId, knowledgeId);
+    },
+
+    async removeRelation(userId, sourceKnowledgeId, input) {
+      // Ownership gate on the source item (the only end we need to own to drop
+      // an outgoing relation; cross-user / unknown id → 404, no leak).
+      await get(userId, sourceKnowledgeId);
+      // Capture the row we're about to delete so the op can echo the removed
+      // relation back (mirrors the create op's return shape). A missing relation
+      // is a 404 (OwnershipError) — never reveal whether it ever existed.
+      const existing = await db
+        .select()
+        .from(knowledgeRelations)
+        .where(
+          and(
+            eq(knowledgeRelations.sourceKnowledgeId, sourceKnowledgeId),
+            eq(knowledgeRelations.targetKnowledgeId, input.targetKnowledgeId),
+            eq(knowledgeRelations.relationType, input.relationType),
+          ),
+        );
+      const row = existing[0];
+      if (!row) throw new OwnershipError("Relation not found");
+      await db
+        .delete(knowledgeRelations)
+        .where(eq(knowledgeRelations.id, row.id));
+      return parseRelation(row);
     },
   };
 }

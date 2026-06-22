@@ -112,7 +112,11 @@ describe("AI Copilot dialog (Task 24)", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6);
     expect(dialog.querySelectorAll('[data-slot="recommended-command"]')).toHaveLength(5);
-    expect(dialog.querySelectorAll('[data-slot="recent-task"]')).toHaveLength(5);
+    // RecentTasks is now backed by the REAL global feed (GAP-COP-feed / ai.tasks.list):
+    // on first synchronous render the feed is still loading (no fixture rows), so there
+    // are no recent-task rows yet — the loading slot is present instead. Honest, not fake.
+    expect(dialog.querySelectorAll('[data-slot="recent-task"]')).toHaveLength(0);
+    expect(slot(dialog, "recent-tasks-loading")).not.toBeNull();
     expect(dialog.querySelectorAll('[data-slot="continuing-task"]')).toHaveLength(4);
     expect(dialog.querySelectorAll('[data-slot="quick-entry"]')).toHaveLength(6);
     expect(dialog.querySelectorAll('[data-slot="smart-recommendation-item"]')).toHaveLength(2);

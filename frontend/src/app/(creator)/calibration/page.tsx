@@ -8,12 +8,11 @@
  *  - 新建评分维度版本 (BumpRubricVersionButton) → client.bumpRubricVersion
  *  - the decorative 据此修正定位 / 采纳 AI 盲预测 affordances (wired in their own modules)
  *
- * Data source: the contract has NO list op for predictions (§13 — only get-by-id +
- * create/lock/result), so the page seeds the rubric via `calibration.rubrics.get`
- * ({ rubricId: "rubric-canonical" } — the persistence-client canonical seed). The
- * predictions list cannot be server-read this wave; the surface exposes the create +
- * rubric-version controls. Empty state (no rubric yet) renders the create affordance and
- * never crashes.
+ * Data source: the rubric is seeded via `calibration.rubrics.get`
+ * ({ rubricId: "rubric-canonical" } — the persistence-client canonical seed). GAP-CAL-1:
+ * the 盲预测 list is now server-read via `calibration.predictions.list` (loadPredictions)
+ * and rendered as `PredictionRow[]` (lock / 回流 entry per real id). Empty state (no rubric
+ * / no predictions) renders the create affordance / 「暂无盲预测」 and never crashes.
  *
  * Determinism (C-5): no Date.now / Math.random in the render. `/calibration` is a
  * brand-new page — 暂不纳入视觉门禁 until the stage-12 re-baseline (R2-9).
@@ -24,14 +23,19 @@ import * as React from "react";
 import { SectionCard } from "@/components/project/section-card";
 import { Badge } from "@/components/ui/badge";
 import { client } from "@/lib/contract-client.server";
-import type { RubricResource } from "@/server/modules/calibration";
+import type {
+  RubricResource,
+  PredictionResource,
+} from "@/server/modules/calibration";
 
 import {
   BlindPredictForm,
+  PredictionRow,
   BumpRubricVersionButton,
   ReviseFromCalibrationButton,
   AdoptAiPredictionButton,
 } from "@/features/calibration/calibration-interactive-region";
+import { loadPredictions } from "@/features/calibration/calibration-data";
 
 // The canonical 变现加权 rubric seeded by the persistence-client composition root
 // (五维: hook 强度 / 利他性 / 人群匹配 / CTA 清晰度 / 为产品铺路程度).
@@ -51,15 +55,20 @@ async function loadRubric(): Promise<RubricResource | null> {
 }
 
 export default async function CalibrationRoutePage() {
-  const rubric = await loadRubric();
-  return <CalibrationView rubric={rubric} />;
+  const [rubric, predictions] = await Promise.all([
+    loadRubric(),
+    loadPredictions(),
+  ]);
+  return <CalibrationView rubric={rubric} predictions={predictions} />;
 }
 
 // Pure render — split out so tests can drive it synchronously with a fixed rubric.
 export function CalibrationView({
   rubric,
+  predictions = [],
 }: {
   readonly rubric: RubricResource | null;
+  readonly predictions?: readonly PredictionResource[];
 }) {
   return (
     <main
@@ -98,6 +107,29 @@ export function CalibrationView({
                 dimensions={rubric.currentVersion.dimensions}
               />
             </div>
+          </SectionCard>
+
+          <SectionCard
+            title="已锁预测"
+            description="发布前盲预测列表，锁定后回流真实数据校准"
+          >
+            {predictions.length > 0 ? (
+              <ul
+                data-testid="prediction-list"
+                className="flex flex-col gap-2 py-2"
+              >
+                {predictions.map((prediction) => (
+                  <PredictionRow key={prediction.id} prediction={prediction} />
+                ))}
+              </ul>
+            ) : (
+              <p
+                data-testid="prediction-list-empty"
+                className="py-2 text-sm text-muted-foreground"
+              >
+                暂无盲预测。在上方填内容 id 并打分，提交后即在此回显（含变现加权评分）。
+              </p>
+            )}
           </SectionCard>
 
           <SectionCard

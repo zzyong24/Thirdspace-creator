@@ -86,16 +86,22 @@ export function BlindPredictForm({
   const scoringDimensions: readonly ScoringDimension[] =
     dimensions && dimensions.length > 0 ? dimensions : DEFAULT_DIMENSIONS;
 
-  // Per-dimension 0-5 scores. Local-only guidance: the creator scores against each
-  // anchor before betting. NOT threaded into createPrediction (the contract op takes no
-  // per-dim scores this wave) — kept as the scoring workbench so anchors are actually
-  // used. Honors blind immutability: no actual/real data is shown here.
+  // Per-dimension 0-5 scores. GAP-CAL-1: these are now THREADED into createPrediction's
+  // `predictedConversion` (key=dimension.key, value=0-5), so the server `deriveScore`
+  // computes a real 变现加权 `predictedScore` (no longer恒 0) and predictions.list回显s
+  // it. Honors blind immutability: no actual/real data is shown here.
   const [scores, setScores] = React.useState<Record<string, number>>({});
 
   const valid = subjectId.trim().length > 0;
 
   function submit() {
     if (!valid) return;
+    // Build a complete {dimKey: score} record — default each anchor to 3 (the form's
+    // own default) so an unedited dimension still contributes its weighted mid-score.
+    const predictedConversion: Record<string, number> = {};
+    for (const dim of scoringDimensions) {
+      predictedConversion[dim.key] = scores[dim.key] ?? 3;
+    }
     run(() =>
       client.createPrediction({
         params: undefined,
@@ -105,7 +111,7 @@ export function BlindPredictForm({
           subjectId: subjectId.trim(),
           rubricVersionId,
           predictedMetrics: {},
-          predictedConversion: {},
+          predictedConversion,
           confidence,
         },
       }),
@@ -366,39 +372,42 @@ export function BumpRubricVersionButton({
   );
 }
 
-// Decorative (this wave): belongs to positioning/candidate modules — inert here. Issues
-// NO Calibration network call (§6.5 飞轮, wired in those plans).
+// GAP-CAL-1 (D4): the 据此修正定位 / 新增选题 飞轮关口 belongs to the positioning /
+// candidate modules, which expose NO write op this wave. Rather than a silent empty
+// onClick (a fake button), render it DISABLED with an honest 「规划中」 tooltip so the
+// surface never pretends to wire something it can't.
 export function ReviseFromCalibrationButton() {
   return (
     <Button
       type="button"
       variant="ghost"
       size="sm"
+      disabled
+      title="规划中：将把校准偏差回灌到定位/选题（positioning/candidate 模块尚无写 op）"
       data-testid="revise-from-calibration"
-      onClick={() => {
-        /* decorative — wired in positioning/candidate plans */
-      }}
+      data-planned="true"
     >
-      据此修正定位 / 新增选题
+      据此修正定位 / 新增选题（规划中）
     </Button>
   );
 }
 
-// Decorative (this wave): the AI-proposed blind prediction rides the AI vertical
-// (`ai.confirm` → `confirmResult` → `calibration.lockPrediction`, §C-3). Issues NO
-// direct Calibration network call here (no parallel candidate machine).
+// GAP-CAL-1 (D5): 采纳 AI 盲预测 rides the AI vertical (`ai.confirm` → `confirmResult`
+// → `calibration.lockPrediction`, §C-3). The AI review node does not yet produce a
+// prediction candidate, so there is nothing to 采纳 this wave. Render DISABLED + 「规划中」
+// rather than a fake empty onClick (no parallel candidate machine here).
 export function AdoptAiPredictionButton() {
   return (
     <Button
       type="button"
       variant="ghost"
       size="sm"
+      disabled
+      title="规划中：等 AI review 节点产出盲预测候选后接入（ai.confirm → calibration.lockPrediction）"
       data-testid="adopt-ai-prediction"
-      onClick={() => {
-        /* decorative — AI confirm flow owns this (module 15) */
-      }}
+      data-planned="true"
     >
-      采纳 AI 盲预测
+      采纳 AI 盲预测（规划中）
     </Button>
   );
 }

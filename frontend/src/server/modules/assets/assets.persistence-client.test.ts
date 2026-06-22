@@ -7,7 +7,7 @@ import {
 import { canonicalDataset } from "@/fixtures/canonical";
 import { ASSET_OP_IDS } from "./assets.transport";
 
-// D8 / G7 — the 7 assets ops are registered into the composite (PERSISTED_OPS)
+// D8 / G7 — the 9 assets ops are registered into the composite (PERSISTED_OPS)
 // and round-trip through compositeTransport against the seeded pglite store.
 // Proves the module is wired into the same store server reads + the /api/v1 route
 // share (foundation §1 registry), and asserts the multi-tenant boundary at the
@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 describe("assets ops registered in the composite transport", () => {
-  it("the 7 assets op ids are persistence-backed (not the mock)", async () => {
+  it("the 9 assets op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of ASSET_OP_IDS) {
@@ -34,7 +34,7 @@ describe("assets ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(ASSET_OP_IDS).toHaveLength(7);
+    expect(ASSET_OP_IDS).toHaveLength(9);
   });
 
   it("assets.list returns the seeded canonical assets for the owner", async () => {
@@ -115,5 +115,68 @@ describe("assets ops registered in the composite transport", () => {
         ctx("user-intruder"),
       ),
     ).rejects.toThrow();
+  });
+
+  it("assets.favorite.toggle flips the persisted isFavorite and is re-readable", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    const assetId = canonicalDataset.assets[0]!.id;
+    const before = (await compositeTransport.request(
+      ep("assets.get"),
+      { params: { assetId }, query: undefined, body: undefined } as never,
+      owner,
+    )) as { data: { isFavorite: boolean } };
+    const toggled = (await compositeTransport.request(
+      ep("assets.favorite.toggle"),
+      { params: { assetId }, query: undefined, body: undefined } as never,
+      owner,
+    )) as { data: { isFavorite: boolean } };
+    expect(toggled.data.isFavorite).toBe(!before.data.isFavorite);
+    // Persisted: a fresh get reflects the new flag.
+    const after = (await compositeTransport.request(
+      ep("assets.get"),
+      { params: { assetId }, query: undefined, body: undefined } as never,
+      owner,
+    )) as { data: { isFavorite: boolean } };
+    expect(after.data.isFavorite).toBe(!before.data.isFavorite);
+  });
+
+  it("assets.usage.list returns the 用料链 edges referencing the asset (用料反查)", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    const assetId = canonicalDataset.assets[0]!.id;
+    // Create a 用料链 edge that references this asset, then reverse-look it up.
+    const projectId = canonicalDataset.projects[0]!.id;
+    await compositeTransport.request(
+      ep("materialLinks.create"),
+      {
+        params: undefined,
+        query: undefined,
+        body: {
+          projectId,
+          entityType: "asset",
+          entityId: assetId,
+          role: "clip",
+          stage: "production",
+        },
+      } as never,
+      owner,
+    );
+    const usage = (await compositeTransport.request(
+      ep("assets.usage.list", true),
+      { params: { assetId }, query: undefined, body: undefined } as never,
+      owner,
+    )) as { data: Array<{ entityId: string; entityType: string }> };
+    expect(usage.data.length).toBeGreaterThan(0);
+    for (const row of usage.data) {
+      expect(row.entityType).toBe("asset");
+      expect(row.entityId).toBe(assetId);
+    }
+
+    // Multi-tenant: user B sees no usage for A's asset.
+    const bUsage = (await compositeTransport.request(
+      ep("assets.usage.list", true),
+      { params: { assetId }, query: undefined, body: undefined } as never,
+      ctx("user-intruder"),
+    ).catch(() => ({ data: [] }))) as { data: unknown[] };
+    expect(bUsage.data).toHaveLength(0);
   });
 });

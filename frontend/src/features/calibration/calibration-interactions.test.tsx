@@ -126,12 +126,20 @@ describe("calibration island wiring", () => {
     expect(screen.getByText("服务端锚点描述")).toBeTruthy();
   });
 
-  it("anchor scoring does not change the createPrediction call shape (no per-dim scores)", async () => {
-    render(<BlindPredictForm rubricVersionId="rubricver-1" />);
+  it("GAP-CAL-1: per-dim scores are threaded into createPrediction.predictedConversion", async () => {
+    // Use a single explicit dimension so the expected predictedConversion is exact.
+    render(
+      <BlindPredictForm
+        rubricVersionId="rubricver-1"
+        dimensions={[
+          { key: "hook", label: "钩子强度", weight: 1, description: "锚点" },
+        ]}
+      />,
+    );
     fireEvent.change(screen.getByLabelText("预测内容 id"), {
       target: { value: "output-x" },
     });
-    // Score a dimension — local guidance only, must not leak into the op body.
+    // Score the dimension — now PERSISTED via predictedConversion (no longer local-only).
     fireEvent.change(screen.getByLabelText("钩子强度 评分（0-5，对照锚点）"), {
       target: { value: "5" },
     });
@@ -147,9 +155,34 @@ describe("calibration island wiring", () => {
       subjectId: "output-x",
       rubricVersionId: "rubricver-1",
       predictedMetrics: {},
-      predictedConversion: {},
+      // The scored dimension rides predictedConversion (key=dim.key, value=0-5) so the
+      // server deriveScore computes a real 变现加权 predictedScore.
+      predictedConversion: { hook: 5 },
       confidence: "med",
     });
+  });
+
+  it("GAP-CAL-1: unedited dimensions default to 3 in predictedConversion", async () => {
+    render(
+      <BlindPredictForm
+        rubricVersionId="rubricver-1"
+        dimensions={[
+          { key: "hook", label: "钩子强度", weight: 0.5, description: "a" },
+          { key: "cta", label: "CTA 清晰度", weight: 0.5, description: "b" },
+        ]}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("预测内容 id"), {
+      target: { value: "output-y" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "盲预测" }));
+    await waitFor(() =>
+      expect(mockClient.createPrediction).toHaveBeenCalledTimes(1),
+    );
+    const arg = mockClient.createPrediction.mock.calls[0]![0] as {
+      body: { predictedConversion: Record<string, number> };
+    };
+    expect(arg.body.predictedConversion).toEqual({ hook: 3, cta: 3 });
   });
 
   it("锁定预测 → lockPrediction (draft row only)", async () => {
@@ -204,17 +237,24 @@ describe("calibration island wiring", () => {
     expect(arg.params.rubricId).toBe("rubric-1");
   });
 
-  it("decorative controls issue NO Calibration network call", () => {
+  it("GAP-CAL-1: flywheel buttons are disabled + 「规划中」 (no fake empty onClick)", () => {
     render(
       <>
         <ReviseFromCalibrationButton />
         <AdoptAiPredictionButton />
       </>,
     );
-    fireEvent.click(
-      screen.getByRole("button", { name: "据此修正定位 / 新增选题" }),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "采纳 AI 盲预测" }));
+    const revise = screen.getByRole("button", {
+      name: "据此修正定位 / 新增选题（规划中）",
+    });
+    const adopt = screen.getByRole("button", { name: "采纳 AI 盲预测（规划中）" });
+    // Honest 「规划中」: disabled, no network call possible (no目标 op this wave).
+    expect(revise).toBeDisabled();
+    expect(adopt).toBeDisabled();
+    expect(revise.getAttribute("data-planned")).toBe("true");
+    expect(adopt.getAttribute("data-planned")).toBe("true");
+    fireEvent.click(revise);
+    fireEvent.click(adopt);
     expect(mockClient.createPrediction).not.toHaveBeenCalled();
     expect(mockClient.lockPrediction).not.toHaveBeenCalled();
     expect(mockClient.createResult).not.toHaveBeenCalled();

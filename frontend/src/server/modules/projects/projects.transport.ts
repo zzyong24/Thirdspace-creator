@@ -7,12 +7,14 @@ import type { ProjectsService } from "./projects.service";
 import type {
   ProjectRepository,
   ProjectRow,
+  StageRow,
   ContentOutputRow,
   TaskRow,
   ActivityRow,
 } from "./projects.repository";
 import type {
   ProjectResource,
+  ProjectStageResource,
   ContentOutputResource,
   TaskResource,
   ProjectActivityResource,
@@ -37,6 +39,7 @@ export const PROJECT_OP_IDS = [
   "projects.stage.transition",
   "projects.outputs.create",
   "projects.outputs.list",
+  "projects.stages.list",
   "outputs.get",
   "outputs.patch",
   "outputs.stage.transition",
@@ -64,6 +67,16 @@ function toProject(row: ProjectRow): ProjectResource {
     archivedAt: row.archivedAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  };
+}
+
+function toStage(row: StageRow): ProjectStageResource {
+  return {
+    stage: row.stage as ProjectStageResource["stage"],
+    status: row.status as ProjectStageResource["status"],
+    progressPct: row.progressPct,
+    startedAt: row.startedAt ?? null,
+    completedAt: row.completedAt ?? null,
   };
 }
 
@@ -208,6 +221,10 @@ export function createProjectsTransport(
         case "projects.outputs.list": {
           const rows = await repo.listOutputs(ctx, p.projectId ?? "");
           return { data: rows.map(toOutput), meta: listMeta(rows.length) };
+        }
+        case "projects.stages.list": {
+          const rows = await repo.listStages(ctx, p.projectId ?? "");
+          return { data: rows.map(toStage), meta: listMeta(rows.length) };
         }
         case "outputs.get":
           return {

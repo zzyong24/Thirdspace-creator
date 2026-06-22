@@ -29,6 +29,21 @@ export type SearchIndexOutcome =
   | { ok: true }
   | { ok: false; retryable: true; error: string };
 
+// One selectable facet value + its hit count over the current match set.
+export interface SearchFacetValue {
+  value: string;
+  count: number;
+}
+
+// Per-dimension facet aggregation for a query. DERIVED at read time from the
+// matched SearchDocument rows; never stored. Buckets are ordered descending by
+// count then ascending by value for a deterministic wire shape.
+export interface SearchFacets {
+  query: string;
+  entityType: SearchFacetValue[];
+  tag: SearchFacetValue[];
+}
+
 export interface UpsertInput {
   entityType: string;
   entityId: string;
@@ -56,6 +71,13 @@ export interface SearchService {
   upsertDocument(ctx: RequestContext, input: UpsertInput): Promise<SearchDocumentResource>;
   removeDocument(ctx: RequestContext, entityType: string, entityId: string): Promise<void>;
   search(ctx: RequestContext, query: string, opts?: SearchOpts): Promise<SearchDocumentResource[]>;
+  /**
+   * Aggregate the documents matching `query` into per-dimension facet buckets
+   * (entityType / tag) with hit counts. DERIVED read over the same user-scoped
+   * index `search()` queries — stores nothing. Empty/whitespace query ⇒ all
+   * buckets empty (matches the `search()` empty-query contract).
+   */
+  facets(ctx: RequestContext, query: string): Promise<SearchFacets>;
   recordSearch(
     ctx: RequestContext,
     input: { query: string; filters: Record<string, unknown>; resultCount: number },
@@ -70,6 +92,30 @@ export interface SearchService {
 // Math.random — the value is a pure function of its inputs.
 function deriveSearchText(title: string, body: string): string {
   return `${title}\n${body}`.toLowerCase().trim();
+}
+
+// Owning modules denormalize card-only fields (incl. `tags` for knowledge docs)
+// as a JSON payload in `body` at upsert time (same convention the page composer
+// reads). Parse defensively: plain-text bodies (e.g. legacy seeds) carry no tags.
+function parseTags(body: string): string[] {
+  try {
+    const parsed = JSON.parse(body) as unknown;
+    if (!parsed || typeof parsed !== "object") return [];
+    const tags = (parsed as Record<string, unknown>).tags;
+    return Array.isArray(tags)
+      ? tags.filter((t): t is string => typeof t === "string" && t.trim() !== "")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+// Turn a value→count map into a stable bucket array: descending count, then
+// ascending value (locale-independent) so the wire shape is deterministic.
+function toBuckets(counts: Map<string, number>): SearchFacetValue[] {
+  return [...counts.entries()]
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => (b.count - a.count) || (a.value < b.value ? -1 : a.value > b.value ? 1 : 0));
 }
 
 function toResource(row: SearchDocumentRow): SearchDocumentResource {
@@ -113,6 +159,32 @@ export function createSearchService(
     async search(ctx, query, opts) {
       const rows = await repoForCtx(ctx).search(query, opts);
       return rows.map(toResource);
+    },
+
+    async facets(ctx, query) {
+      const normalized = query.trim();
+      // Empty/whitespace query ⇒ all buckets empty (mirrors search()'s guard;
+      // the repo also short-circuits, so this is belt-and-suspenders).
+      if (normalized === "") {
+        return { query: "", entityType: [], tag: [] };
+      }
+      const rows = await repoForCtx(ctx).facetMatches(query);
+      const entityTypeCounts = new Map<string, number>();
+      const tagCounts = new Map<string, number>();
+      for (const row of rows) {
+        entityTypeCounts.set(
+          row.entityType,
+          (entityTypeCounts.get(row.entityType) ?? 0) + 1,
+        );
+        for (const tag of parseTags(row.body)) {
+          tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+        }
+      }
+      return {
+        query: normalized,
+        entityType: toBuckets(entityTypeCounts),
+        tag: toBuckets(tagCounts),
+      };
     },
 
     async recordSearch(ctx, input) {

@@ -51,4 +51,33 @@ describe("knowledge contract", () => {
     );
     expect(knowledgeOperations.listKnowledge.fr.length).toBeGreaterThan(0);
   });
+
+  it("registers the soft-delete archive endpoint (status→archived)", () => {
+    expect(knowledgeOperations.archiveKnowledge.id).toBe("knowledge.archive");
+    expect(knowledgeOperations.archiveKnowledge.method).toBe("POST");
+    expect(knowledgeOperations.archiveKnowledge.path).toBe(
+      "/knowledge/:knowledgeId/archive",
+    );
+    // Returns the updated KnowledgeItem (mirrors assets.trash's shape).
+    expect(knowledgeOperations.archiveKnowledge.response).toBe(
+      knowledgeItemResource,
+    );
+    expect(knowledgeOperations.archiveKnowledge.fr.length).toBeGreaterThan(0);
+  });
+
+  it("registers the relations.delete endpoint with target+relationType body", () => {
+    expect(knowledgeOperations.removeKnowledgeRelation.id).toBe(
+      "knowledge.relations.delete",
+    );
+    expect(knowledgeOperations.removeKnowledgeRelation.method).toBe("POST");
+    expect(knowledgeOperations.removeKnowledgeRelation.path).toBe(
+      "/knowledge/:knowledgeId/relations/remove",
+    );
+    const body = knowledgeOperations.removeKnowledgeRelation.body!.parse({
+      targetKnowledgeId: "knowledge-b",
+      relationType: "supports",
+    });
+    expect(body.targetKnowledgeId).toBe("knowledge-b");
+    expect(body.relationType).toBe("supports");
+  });
 });

@@ -11,9 +11,13 @@
  *              body:{ targetKnowledgeId, relationType:'supports' } })
  *          → router.refresh()
  *
- * "unlink" has NO contract op in this module's surface (no
- * knowledge.relations.delete), so the 取消关联 button is rendered DISABLED with a
- * title explaining it — a known gap, NOT a fabricated op.
+ * 取消关联 (unlink) is the soft-delete counterpart (GAP-RES-1): it drops the same
+ * source→target 'supports' relation via the real knowledge.relations.delete op:
+ *
+ *   island → client.removeKnowledgeRelation({
+ *              params:{ knowledgeId: sourceId },
+ *              body:{ targetKnowledgeId, relationType:'supports' } })
+ *          → router.refresh()
  *
  * The island keeps the existing `data-slot`s (`evidence-list`, `evidence-row`) so
  * `research-workspace-page.test.tsx` selectors hold. Determinism: no
@@ -40,6 +44,21 @@ export function EvidenceCollectionIsland({
       if (pending) return;
       startTransition(async () => {
         await client.createKnowledgeRelation({
+          params: { knowledgeId: sourceId },
+          query: undefined,
+          body: { targetKnowledgeId, relationType: "supports" },
+        });
+        router.refresh();
+      });
+    },
+    [pending, router],
+  );
+
+  const onUnlink = React.useCallback(
+    (sourceId: string, targetKnowledgeId: string) => {
+      if (pending) return;
+      startTransition(async () => {
+        await client.removeKnowledgeRelation({
           params: { knowledgeId: sourceId },
           query: undefined,
           body: { targetKnowledgeId, relationType: "supports" },
@@ -87,14 +106,14 @@ export function EvidenceCollectionIsland({
                 >
                   关联证据
                 </button>
-                {/* unlink has no contract op (no knowledge.relations.delete) →
-                    rendered disabled with an explanatory title; known gap. */}
+                {/* 取消关联 → knowledge.relations.delete (GAP-RES-1): drops the
+                    same 'supports' relation this row's 关联证据 creates. */}
                 <button
                   type="button"
                   data-slot="evidence-unlink-button"
-                  disabled
-                  title="暂不支持取消关联"
-                  className="shrink-0 cursor-not-allowed text-xs font-medium text-muted-foreground opacity-50"
+                  disabled={pending}
+                  onClick={() => onUnlink(item.knowledgeId, item.targetKnowledgeId)}
+                  className="shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground hover:underline disabled:opacity-50"
                 >
                   取消关联
                 </button>

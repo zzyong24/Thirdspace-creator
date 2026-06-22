@@ -5,6 +5,7 @@ import type {
   KnowledgeRevisionRow,
   KnowledgeRelationRow,
 } from "./knowledge.repository";
+import { InvalidTransitionError } from "./knowledge.errors";
 
 // Knowledge service (foundation §5.3) — RequestContext-taking methods that thread
 // `ctx.userId` into the user-scoped repository (foundation §2). It applies the
@@ -43,6 +44,15 @@ export interface KnowledgeService {
     input: { content: string },
   ): Promise<KnowledgeRevisionRow>;
   createRelation(
+    ctx: RequestContext,
+    knowledgeId: string,
+    input: { targetKnowledgeId: string; relationType: string },
+  ): Promise<KnowledgeRelationRow>;
+  archiveKnowledge(
+    ctx: RequestContext,
+    knowledgeId: string,
+  ): Promise<KnowledgeItemRow>;
+  removeRelation(
     ctx: RequestContext,
     knowledgeId: string,
     input: { targetKnowledgeId: string; relationType: string },
@@ -96,6 +106,27 @@ export function createKnowledgeService(
       // Self-link + cross-user ownership are enforced by the repo; surface
       // unswallowed (Conflict→409, Ownership→404 at the dispatch route).
       return repo.createRelation(ctx.userId, knowledgeId, input);
+    },
+
+    async archiveKnowledge(ctx, knowledgeId) {
+      // §12-style one-way soft-delete: active → archived (mirrors
+      // assets.trashAsset). The service owns the transition guard — archiving an
+      // already-archived item is an InvalidTransitionError (→409); the repo only
+      // gates ownership + stamps the new status/archivedAt.
+      const item = await repo.get(ctx.userId, knowledgeId);
+      if (item.status !== "active") {
+        throw new InvalidTransitionError(
+          `Cannot archive a knowledge item in status '${item.status}'`,
+        );
+      }
+      return repo.archive(ctx.userId, knowledgeId);
+    },
+
+    async removeRelation(ctx, knowledgeId, input) {
+      // Drop one outgoing relation off the (owned) source item. Ownership of the
+      // source + existence of the relation are enforced by the repo (a missing
+      // relation → OwnershipError → 404, no existence leak).
+      return repo.removeRelation(ctx.userId, knowledgeId, input);
     },
   };
 }

@@ -16,12 +16,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const createConversation = vi.fn();
 const createMessage = vi.fn();
 const listMessages = vi.fn();
+const listTasks = vi.fn();
 
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createConversation: (...args: unknown[]) => createConversation(...args),
     createMessage: (...args: unknown[]) => createMessage(...args),
     listMessages: (...args: unknown[]) => listMessages(...args),
+    // GAP-COP-feed: the 最近任务 feed loads from the real op on mount; default empty.
+    listAITasks: (...args: unknown[]) => listTasks(...args),
   },
 }));
 
@@ -51,6 +54,8 @@ beforeEach(() => {
   createConversation.mockReset();
   createMessage.mockReset();
   listMessages.mockReset();
+  listTasks.mockReset();
+  listTasks.mockResolvedValue([]);
 });
 
 describe("AI Copilot composer behavior (backend-wired)", () => {

@@ -98,6 +98,10 @@ export interface AiRepository {
   ): Promise<MessageRow>;
   listMessages(conversationId: string): Promise<MessageRow[]>;
 
+  listTasks(page: {
+    limit: number;
+    offset: number;
+  }): Promise<{ rows: TaskRow[]; total: number }>;
   findTaskByIdempotencyKey(idempotencyKey: string): Promise<TaskRow | null>;
   createTask(input: CreateTaskInput): Promise<TaskRow>;
   requireTask(taskId: string): Promise<TaskRow>;
@@ -226,6 +230,23 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .from(aiMessages)
         .where(eq(aiMessages.conversationId, conversationId))
         .orderBy(asc(aiMessages.createdAt));
+    },
+
+    async listTasks({ limit, offset }) {
+      // Global cross-project task feed for the copilot 「最近任务」 surface — scoped to
+      // the user (mirrors listConversations), newest-requested first.
+      const rows = await db
+        .select()
+        .from(aiTasks)
+        .where(eq(aiTasks.userId, deps.userId))
+        .orderBy(desc(aiTasks.requestedAt))
+        .limit(limit)
+        .offset(offset);
+      const all = await db
+        .select({ id: aiTasks.id })
+        .from(aiTasks)
+        .where(eq(aiTasks.userId, deps.userId));
+      return { rows, total: all.length };
     },
 
     async findTaskByIdempotencyKey(idempotencyKey) {

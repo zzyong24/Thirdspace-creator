@@ -131,6 +131,12 @@ export interface CalibrationService {
     ctx: RequestContext,
     predictionId: string,
   ): Promise<PredictionResource>;
+  // GAP-CAL-1: user-scoped 盲预测 list (createdAt desc, paginated) — the calibration
+  // surface renders one PredictionRow per row (lock / 回流 entry per real id).
+  listPredictions(
+    ctx: RequestContext,
+    page: { limit: number; offset: number },
+  ): Promise<{ rows: PredictionResource[]; total: number }>;
   recordResult(
     ctx: RequestContext,
     predictionId: string,
@@ -310,6 +316,11 @@ export function createCalibrationService(
     async getPrediction(ctx, predictionId) {
       const row = await repoFor(ctx).getPrediction(predictionId); // ownership gate
       return toPredictionDto(row);
+    },
+
+    async listPredictions(ctx, page) {
+      const { rows, total } = await repoFor(ctx).listPredictions(page);
+      return { rows: rows.map(toPredictionDto), total };
     },
 
     async recordResult(ctx, predictionId, input) {

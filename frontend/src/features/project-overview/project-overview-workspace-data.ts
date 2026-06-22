@@ -67,6 +67,13 @@ interface ProjectActivityDto {
   readonly occurredAt: string;
 }
 
+// `projects.stages.list` rows — per-stage progress for the 6-stage pipeline.
+interface ProjectStageDto {
+  readonly stage: StageName;
+  readonly status: ProjectOverviewViewModel["stages"][number]["status"];
+  readonly progressPct: number;
+}
+
 // `materialLinks.list` rows — the project↔library edges (用料链, Plan A4).
 interface MaterialLinkDto {
   readonly id: string;
@@ -100,6 +107,11 @@ export interface ProjectOverviewDataClient {
     body: undefined;
   }): Promise<unknown>;
   listOutputs(input: {
+    params: { projectId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+  listStages(input: {
     params: { projectId: string };
     query: undefined;
     body: undefined;
@@ -240,6 +252,25 @@ export async function buildProjectOverviewWorkspaceViewModel(
 
   // ---- REAL project from here: every section degrades to EMPTY on failure ----
 
+  // 阶段 stepper — real `projects.stages.list` (per-stage status/progress from the
+  // project_stages table), ordered onto the canonical STAGE_ORDER. Falls back to
+  // the `currentStage` + `progressPct` derivation if the read fails or returns no
+  // rows (a project seeded before the stage rows existed).
+  let stages: ProjectOverviewViewModel["stages"];
+  try {
+    const list = (await client.listStages({
+      params: { projectId },
+      query: undefined,
+      body: undefined,
+    })) as ReadonlyArray<ProjectStageDto>;
+    stages =
+      list.length > 0
+        ? orderStages(list, project.currentStage, project.progressPct)
+        : buildStages(project.currentStage, project.progressPct);
+  } catch {
+    stages = buildStages(project.currentStage, project.progressPct);
+  }
+
   // 资产概览 + 最近文件 — both derive from `materialLinks.list` (用料链). Fetch
   // once; the asset rows additionally fan out to `assets.get` for display fields.
   let assetStats: ProjectOverviewViewModel["assetStats"] = [];
@@ -356,10 +387,8 @@ export async function buildProjectOverviewWorkspaceViewModel(
     projectInfo: buildProjectInfo(project),
     outputs,
     activities,
-    // 阶段 stepper — derived from `currentStage` + `progressPct` (no per-stage
-    // read op): stages before current = completed, current = in_progress (carries
-    // the real progressPct), after = pending.
-    stages: buildStages(project.currentStage, project.progressPct),
+    // 阶段 stepper — real `projects.stages.list` (degrades to the derivation).
+    stages,
     assetStats,
     recentFiles,
     publishing,
@@ -399,6 +428,26 @@ function buildStages(
       };
     }
     return { stage, status: "pending" as const, progressPct: 0 };
+  });
+}
+
+/**
+ * Project the REAL `projects.stages.list` rows onto the canonical STAGE_ORDER so
+ * the stepper always renders all six stages in order. A stage with no row falls
+ * back to the `currentStage` + `progressPct` derivation for that single slot, so
+ * a partially-seeded project never drops a stage.
+ */
+function orderStages(
+  rows: ReadonlyArray<ProjectStageDto>,
+  currentStage: StageName,
+  progressPct: number,
+): ProjectOverviewViewModel["stages"] {
+  const byStage = new Map(rows.map((r) => [r.stage, r]));
+  const derived = buildStages(currentStage, progressPct);
+  return STAGE_ORDER.map((stage, index) => {
+    const row = byStage.get(stage);
+    if (!row) return derived[index]!;
+    return { stage, status: row.status, progressPct: row.progressPct };
   });
 }
 
