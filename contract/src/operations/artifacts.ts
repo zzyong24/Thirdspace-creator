@@ -51,6 +51,10 @@ export const artifactsOperations = {
     body: z.object({
       contentText: z.string().default(""),
       changeSummary: z.string().default(""),
+      // Structured, editable payload (jsonb). The 脚本 editor serializes its
+      // section id→text map here as { sections: [{ id, heading, body }] } so a
+      // saved/AI-drafted version round-trips back into editable 分镜 sections.
+      contentData: z.record(z.string(), z.unknown()).optional(),
     }),
     response: artifactVersionResource,
     fr: ["FR-ARTIFACTS-VERSION-CREATE"],

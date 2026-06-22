@@ -276,7 +276,13 @@ describe("ai service", () => {
     await service.recordCandidate(ctx, task.id, {
       resultType: "artifact_version",
       artifactId: "artifact-1",
-      resultData: { body: "改写稿", summary: "收紧开场" },
+      resultData: {
+        body: "改写稿",
+        summary: "收紧开场",
+        // Editable 分镜 sections ride alongside the flat body; the confirm branch
+        // must forward them to createVersion as contentData (round-trip).
+        contentData: { sections: [{ heading: "1. 钩子", body: "口播：…" }] },
+      },
     });
     const confirmed = await service.confirmTask(ctx, task.id);
     expect(confirmed.status).toBe("succeeded");
@@ -286,6 +292,11 @@ describe("ai service", () => {
     expect((input as { createdByType?: string }).createdByType).toBe("ai");
     expect((input as { contentText?: string }).contentText).toBe("改写稿");
     expect((input as { aiTaskId?: string }).aiTaskId).toBe(task.id);
+    // contentData is forwarded when the candidate carries one.
+    expect(
+      (input as { contentData?: { sections?: unknown[] } }).contentData
+        ?.sections,
+    ).toEqual([{ heading: "1. 钩子", body: "口播：…" }]);
   });
 
   it("cancelTask transitions queued/awaiting_confirmation → cancelled; rejects from a terminal state", async () => {

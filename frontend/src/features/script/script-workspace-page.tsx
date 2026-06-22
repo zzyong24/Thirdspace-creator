@@ -37,7 +37,9 @@ import { PageTabs } from "@/components/navigation/page-tabs";
 import { buildScriptViewModel } from "@/fixtures/selectors";
 import { ScriptInteractiveRegion } from "./script-interactive-region";
 import { ScriptDraftIsland } from "./script-draft-island";
+import { ScriptVersionRestore } from "./script-version-restore";
 import type {
+  ScriptSectionView,
   ScriptViewModel,
 } from "@/types/view-models";
 import type { ProjectStageName } from "@/types/domain";
@@ -51,6 +53,13 @@ export interface ScriptWorkspacePageProps {
   readonly projectId: string;
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: ScriptViewModel;
+  /**
+   * Editor sections derived from the 分镜脚本 artifact's CURRENT version
+   * (contentData.sections, or contentText as a single section). Supplied by the
+   * async route (`loadScriptEditorSections`) so a saved / AI-drafted script
+   * round-trips into the editor. When omitted, the fixture `vm.sections` render.
+   */
+  readonly sectionsOverride?: ReadonlyArray<ScriptSectionView> | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -60,8 +69,15 @@ export interface ScriptWorkspacePageProps {
 export function ScriptWorkspacePage({
   projectId,
   viewModel,
+  sectionsOverride,
 }: ScriptWorkspacePageProps) {
   const vm = viewModel ?? buildScriptViewModel(projectId);
+  // Prefer the saved / AI-drafted version's sections (round-trip) when the route
+  // resolved a non-empty override; otherwise the fixture sections.
+  const editorSections =
+    sectionsOverride && sectionsOverride.length > 0
+      ? sectionsOverride
+      : vm.sections;
   return (
     <main
       data-app="creatoros"
@@ -79,10 +95,14 @@ export function ScriptWorkspacePage({
           className="flex flex-col gap-card-gap"
         >
           <ScriptInteractiveRegion
-            sections={vm.sections}
+            sections={editorSections}
             toolbarState={vm.toolbarState}
+            artifactId={vm.scriptArtifactId}
           />
-          <VersionHistoryStrip versions={vm.versions} />
+          <VersionHistoryStrip
+            versions={vm.versions}
+            artifactId={vm.scriptArtifactId}
+          />
         </div>
         <div
           data-slot="script-right-rail"
@@ -132,8 +152,10 @@ function ScriptTabs({
 
 function VersionHistoryStrip({
   versions,
+  artifactId,
 }: {
   versions: ScriptViewModel["versions"];
+  artifactId: string | null;
 }) {
   return (
     <div
@@ -166,6 +188,12 @@ function VersionHistoryStrip({
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {version.createdAt}
                 </span>
+                {artifactId ? (
+                  <ScriptVersionRestore
+                    artifactId={artifactId}
+                    versionId={version.id}
+                  />
+                ) : null}
               </li>
             ))}
           </ul>

@@ -13,14 +13,33 @@
  */
 
 import * as React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ScriptInteractiveRegion } from "./script-interactive-region";
 import type { ScriptSectionView, ScriptViewModel } from "@/types/view-models";
 
+// next/navigation + contract-client stubs — the real 保存 (with an artifactId) flows
+// island → client.createArtifactVersion → router.refresh(). The local-only render
+// (no artifactId) never touches either, so the existing structural tests stay green.
+const mockRouter = { refresh: vi.fn(), replace: vi.fn(), push: vi.fn(), back: vi.fn() };
+vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
+
+const mockCreateArtifactVersion = vi.fn(
+  (input: unknown): Promise<unknown> => Promise.resolve({ id: "av-new", input }),
+);
+vi.mock("@/lib/contract-client", () => ({
+  client: {
+    createArtifactVersion: (input: unknown) => mockCreateArtifactVersion(input),
+  },
+}));
+
 afterEach(() => cleanup());
+beforeEach(() => {
+  mockRouter.refresh.mockClear();
+  mockCreateArtifactVersion.mockClear();
+});
 
 const SECTIONS: ReadonlyArray<ScriptSectionView> = [
   {
@@ -132,5 +151,60 @@ describe("Script editor interactivity", () => {
     const body = screen.getByLabelText("编辑「开场 15 秒」段落") as HTMLTextAreaElement;
     await user.type(body, "ABCDE");
     expect(wordCount.textContent ?? "").not.toBe(before);
+  });
+
+  it("local-only Save (no artifactId) does NOT call the contract client", async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    const body = screen.getByLabelText("编辑「开场 15 秒」段落") as HTMLTextAreaElement;
+    await user.type(body, "补充");
+    await user.click(screen.getByRole("button", { name: "保存" }));
+    expect(mockCreateArtifactVersion).not.toHaveBeenCalled();
+  });
+
+  it("real Save (with artifactId) persists a new version via createArtifactVersion and refreshes", async () => {
+    const user = userEvent.setup();
+    render(
+      <ScriptInteractiveRegion
+        sections={SECTIONS}
+        toolbarState={TOOLBAR_STATE}
+        artifactId="artifact-1"
+      />,
+    );
+    const body = screen.getByLabelText("编辑「开场 15 秒」段落") as HTMLTextAreaElement;
+    await user.type(body, "！");
+    await user.click(screen.getByRole("button", { name: "保存" }));
+
+    await waitFor(() =>
+      expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(1),
+    );
+    const call = mockCreateArtifactVersion.mock.calls[0]![0] as {
+      params: { artifactId: string };
+      body: {
+        contentText: string;
+        contentData: { sections: Array<{ id: string; heading: string; body: string }> };
+        changeSummary: string;
+      };
+    };
+    expect(call.params).toEqual({ artifactId: "artifact-1" });
+    expect(call.body.changeSummary).toBe("编辑脚本");
+    // contentData carries the section id→heading→body map in section order.
+    expect(call.body.contentData.sections.map((s) => s.id)).toEqual([
+      "sec-1",
+      "sec-2",
+    ]);
+    expect(call.body.contentData.sections[0]!.heading).toBe("开场 15 秒");
+    expect(call.body.contentData.sections[0]!.body).toContain("！");
+    // contentText is a readable heading+body concatenation.
+    expect(call.body.contentText).toContain("开场 15 秒");
+    expect(call.body.contentText).toContain("金句");
+
+    const status = document.querySelector(
+      '[data-slot="editor-status-save-status"]',
+    ) as HTMLElement;
+    await waitFor(() =>
+      expect(status.getAttribute("data-save-status")).toBe("saved"),
+    );
+    expect(mockRouter.refresh).toHaveBeenCalled();
   });
 });
