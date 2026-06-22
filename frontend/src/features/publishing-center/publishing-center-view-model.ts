@@ -97,6 +97,7 @@ export function publishingCenterPageToViewModel(
     return {
       id: r.id,
       contentTitle: r.title,
+      projectId: r.projectId,
       projectTitle: r.projectTitle,
       contentType: mapContentType(r.platform),
       platform: r.platform,

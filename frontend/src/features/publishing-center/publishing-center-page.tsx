@@ -95,6 +95,8 @@ export type PublicationContentType = "video" | "image" | "audio";
 export interface PublicationRow {
   readonly id: string;
   readonly contentTitle: string;
+  /** The owning project's id, when resolvable — drives the row 查看 deep link (D3). */
+  readonly projectId?: string;
   readonly projectTitle: string;
   readonly contentType: PublicationContentType;
   readonly platform: string;

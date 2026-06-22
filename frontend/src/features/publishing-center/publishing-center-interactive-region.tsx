@@ -27,6 +27,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { ChartFrame } from "@/components/analytics/chart-frame";
@@ -731,15 +732,18 @@ function PublicationPerformanceRow({
         </div>
       </td>
       <td className="px-3 py-2.5 text-right">
-        <button
-          type="button"
+        {/* D3: 查看 deep-links to the content's owning project when resolvable,
+            else the Projects index. Still marks the row active on click so the
+            existing highlight affordance is preserved. */}
+        <Link
+          href={row.projectId ? `/projects/${row.projectId}` : "/projects"}
           data-slot="publication-row-action"
           aria-pressed={active}
           onClick={() => onActivateRow(row.id)}
           className="inline-flex h-7 items-center rounded-md border border-border bg-surface px-2.5 text-[11px] text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 aria-pressed:border-brand/60 aria-pressed:bg-brand-soft aria-pressed:text-brand"
         >
           查看
-        </button>
+        </Link>
       </td>
     </tr>
   );

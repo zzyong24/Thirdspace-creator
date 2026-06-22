@@ -154,6 +154,14 @@ export function resolveRoute(pathname: string): RouteResolution {
       contextualCardVariant: "assistant",
     };
   }
+  if (pathname === "/calibration") {
+    return {
+      headerMode: "global",
+      pageTitle: "校准",
+      pageDescription: "发布前盲预测 + 回流校准评分维度（七步⑤⑥ · §6.5）",
+      contextualCardVariant: "assistant",
+    };
+  }
   if (pathname === "/projects/new") {
     return {
       headerMode: "global",
