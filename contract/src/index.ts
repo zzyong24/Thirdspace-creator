@@ -80,6 +80,10 @@ export {
   type PublishingCadenceResource,
   type CadenceAttainmentResource,
 } from "./resources/content-calendar";
+export {
+  materialLinkResource,
+  type MaterialLinkResource,
+} from "./resources/material-links";
 
 // PAGE composition DTOs (SPEC §19). The dashboard / projectOverview / globalSearch
 // DTOs are reachable via `ENDPOINTS.<op>.response`; `publishingCenterPage` has NO

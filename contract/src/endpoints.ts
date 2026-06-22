@@ -21,6 +21,7 @@ import { candidateOperations } from "./operations/candidate";
 import { calibrationOperations } from "./operations/calibration";
 import { platformAccountOperations } from "./operations/platform-accounts";
 import { contentCalendarOperations } from "./operations/content-calendar";
+import { materialLinksOperations } from "./operations/material-links";
 import { pagesOperations } from "./operations/pages";
 
 export type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
@@ -96,6 +97,7 @@ export const ENDPOINTS = {
   ...calibrationOperations,
   ...platformAccountOperations,
   ...contentCalendarOperations,
+  ...materialLinksOperations,
   ...pagesOperations,
 } as const;
 

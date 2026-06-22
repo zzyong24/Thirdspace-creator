@@ -131,6 +131,10 @@ export {
   publishingCadences,
   CONTENT_CALENDAR_DDL,
 } from "./schema/content-calendar";
+export {
+  materialLinks,
+  MATERIAL_LINKS_DDL,
+} from "./schema/material-links";
 export type { RequestContext } from "./request-context";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their

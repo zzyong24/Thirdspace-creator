@@ -171,6 +171,11 @@ import {
   type ContentCalendarService,
 } from "@/server/modules/content-calendar";
 import {
+  createMaterialLinksService,
+  createMaterialLinksTransport,
+  MATERIAL_LINKS_OP_IDS,
+} from "@/server/modules/material-links";
+import {
   createDashboardQueryService,
   createProjectOverviewQueryService,
   createGlobalSearchQueryService,
@@ -279,6 +284,13 @@ const PERSISTED_OPS = new Set<string>([
   // reality (C-4 — no new external-write path); 断更 fires a Notification only on the
   // planned→missed edge. attainment is a derived read (no stored table).
   ...CONTENT_CALENDAR_OP_IDS,
+  // MaterialLinks (用料链 / Bill-of-Materials, Plan A4) — materialLinks.list/create/
+  // delete, all user-scoped. The 料库⇄创作 edge: a project (and optionally an output)
+  // USES a KnowledgeItem or Asset with a role + stage + provenance. Pure local records
+  // (entityId/contentOutputId are soft references validated at the caller's seam, no
+  // cross-module repo import); delete is ownership-gated (cross-user → OwnershipError →
+  // 404).
+  ...MATERIAL_LINKS_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -351,6 +363,9 @@ const PLATFORM_ACCOUNT_OPS = new Set<string>(PLATFORM_ACCOUNT_OP_IDS);
 
 // The set of op ids owned by the content-calendar module's transport (module 22).
 const CONTENT_CALENDAR_OPS = new Set<string>(CONTENT_CALENDAR_OP_IDS);
+
+// The set of op ids owned by the material-links module's transport (Plan A4).
+const MATERIAL_LINKS_OPS = new Set<string>(MATERIAL_LINKS_OP_IDS);
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -707,6 +722,7 @@ interface PersistenceBundle {
   calibration: Transport;
   platformAccount: Transport;
   contentCalendar: Transport;
+  materialLinks: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
   // reads, plus the Publishing Center composer (no endpoint — the FE calls it
   // server-side via getPublishingCenterService()).
@@ -1473,6 +1489,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     () => contentCalendarService,
   );
 
+  // MaterialLinks (用料链 / Bill-of-Materials, Plan A4): the service builds a per-ctx
+  // user-scoped repo over the shared db (the service mints one per request; the repo
+  // bakes userId in). The transport returns this ONE shared service. No external port +
+  // no peer fan-out — links are pure local records (entityId/contentOutputId are soft
+  // references validated at the caller's seam, never a DB FK across module schemas).
+  // delete is ownership-gated (cross-user → OwnershipError → 404). Clock/ids share the
+  // deterministic `deps` (createSeq keeps matlink ids collision-free across requests).
+  const materialLinksService = createMaterialLinksService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+  });
+  const materialLinks = createMaterialLinksTransport(
+    () => materialLinksService,
+  );
+
   // Query services (module Q, Wave 4 — SPEC §19). Composition module: NO repo, NO
   // SQL. Each composer is built with facade interfaces; here the composition root
   // binds those facades to the REAL public services (consumed only via their
@@ -2106,6 +2138,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     calibration,
     platformAccount,
     contentCalendar,
+    materialLinks,
     queryServices,
     publishingCenter,
     identity,
@@ -2201,6 +2234,10 @@ async function getPlatformAccount(): Promise<Transport> {
 
 async function getContentCalendar(): Promise<Transport> {
   return (await getBundle()).contentCalendar;
+}
+
+async function getMaterialLinks(): Promise<Transport> {
+  return (await getBundle()).materialLinks;
 }
 
 async function getQueryServices(): Promise<Transport> {
@@ -2409,6 +2446,15 @@ export const compositeTransport: Transport = {
     if (CONTENT_CALENDAR_OPS.has(endpoint.id)) {
       const contentCalendar = await getContentCalendar();
       return contentCalendar.request(endpoint, input, ctx);
+    }
+    // MaterialLinks ops (Plan A4) — materialLinks.list/create/delete served by the
+    // module's own user-scoped transport over the SAME pglite store (foundation §1
+    // registry). The 料库⇄创作 用料链 edge; delete is ownership-gated (cross-user →
+    // OwnershipError → 404). No peer fan-out (pure local records). No ctx ⇒
+    // AuthenticationError.
+    if (MATERIAL_LINKS_OPS.has(endpoint.id)) {
+      const materialLinks = await getMaterialLinks();
+      return materialLinks.request(endpoint, input, ctx);
     }
     // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
     // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by
