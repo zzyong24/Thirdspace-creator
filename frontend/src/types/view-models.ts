@@ -367,6 +367,10 @@ export interface ScriptSectionView {
 export interface ScriptViewModel extends BasePageViewModel {
   readonly kind: "script";
   readonly projectId: Id;
+  /** The 分镜脚本 (output_script) artifact id the script.draft node appends a version to. */
+  readonly scriptArtifactId: Id | null;
+  /** The project's 选题/立意 — feeds the script.draft agent's creative context. */
+  readonly topic: string;
   readonly tabs: ReadonlyArray<{ readonly id: string; readonly label: string }>;
   readonly sections: ReadonlyArray<ScriptSectionView>;
   readonly outline: ReadonlyArray<{ readonly id: Id; readonly heading: string; readonly position: number }>;
