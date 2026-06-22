@@ -414,3 +414,9 @@ surface 全量只读审计(6 并行 agent),逐元素定死 动作→数据来源
 
 **影响**:08-page-spec 增补交互契约维度(此前 gate 仅覆盖视觉);11-frontend-implementation 据此分波做真。
 **风险接受**:成熟的 Positioning/Monetization/Accounts/Calendar/Topics 本轮不动。
+
+## DEC-013 (2026-06-23) — 全量做真:建缺的 AI producer + 新增后端 op
+
+用户对两个范围决策均选最完整:① 无 producer 的 AI 产物区 → **本轮新建缺的 AI producer 节点**(趋势/竞品/证据地图等),不留 fixture、不止于空态。② 需新增的后端契约 op → **全部做真含重活**(独立观众读 op、calibration predictions.list、knowledge 归档/解关联、跨项目对比、文件字节上传/下载等)。
+
+**含义**:CreatorOS 走向完整目标产品,23 个 GAP 全部做真。按 INTERACTION_SPEC「目标设计与实现方案」分波实现(Wave1 P0 首页+复盘 → Wave2 P1 工作台/中心 → Wave3 producer 缺口+P2),每波 typecheck+test+渲染 gate 后合并。多会话推进。
