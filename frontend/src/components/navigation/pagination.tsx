@@ -10,6 +10,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,12 @@ export interface PaginationProps {
   readonly windowSize?: number;
   readonly totalLabel?: string;
   readonly perPageLabel?: string;
+  /**
+   * When provided, the page controls become navigating `<Link>`s to
+   * `hrefForPage(n)` (e.g. `/projects?page=2`). Omitted → inert `<button>`s
+   * (the legacy visual-only baseline; existing callers + tests unchanged).
+   */
+  readonly hrefForPage?: (page: number) => string;
 }
 
 export function Pagination({
@@ -27,6 +34,7 @@ export function Pagination({
   windowSize = 5,
   totalLabel = "共 28 个项目",
   perPageLabel = "每页显示 10 条",
+  hrefForPage,
 }: PaginationProps) {
   if (totalPages <= 0) return null;
   const half = Math.max(1, Math.floor(windowSize / 2));
@@ -39,6 +47,52 @@ export function Pagination({
   const showTrailingEllipsis = end < totalPages;
   const hasPrev = currentPage > 1;
   const hasNext = currentPage < totalPages;
+
+  // One control = a Link (when hrefForPage is set and the target is enabled) or
+  // an inert button (legacy baseline / disabled edges). Keeps every data-slot +
+  // aria attribute identical so existing tests still match.
+  const Ctrl = ({
+    page,
+    slot,
+    ariaLabel,
+    className,
+    disabled,
+    current,
+    children,
+  }: {
+    page: number;
+    slot: string;
+    ariaLabel: string;
+    className: string;
+    disabled?: boolean;
+    current?: boolean;
+    children: React.ReactNode;
+  }) => {
+    const attrs = {
+      "data-slot": slot,
+      "aria-label": ariaLabel,
+      className,
+      ...(current !== undefined
+        ? {
+            "data-page-current": current ? "true" : "false",
+            "aria-current": current ? ("page" as const) : undefined,
+          }
+        : {}),
+    };
+    if (hrefForPage && !disabled) {
+      return (
+        <Link href={hrefForPage(page)} {...attrs}>
+          {children}
+        </Link>
+      );
+    }
+    return (
+      <button type="button" disabled={disabled} {...attrs}>
+        {children}
+      </button>
+    );
+  };
+
   return (
     <div className="flex items-center justify-between gap-4 pt-2 text-sm">
       <span className="text-xs text-muted-foreground">{totalLabel}</span>
@@ -47,25 +101,24 @@ export function Pagination({
         aria-label="项目分页"
         className="flex items-center gap-1"
       >
-        <button
-          type="button"
-          data-slot="pagination-prev"
-          aria-label="上一页"
+        <Ctrl
+          page={currentPage - 1}
+          slot="pagination-prev"
+          ariaLabel="上一页"
           disabled={!hasPrev}
           className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <span aria-hidden="true">‹</span>
-        </button>
+        </Ctrl>
         {pages.map((page) => {
           const isCurrent = page === currentPage;
           return (
-            <button
+            <Ctrl
               key={page}
-              type="button"
-              data-slot="pagination-page"
-              data-page-current={isCurrent ? "true" : "false"}
-              aria-current={isCurrent ? "page" : undefined}
-              aria-label={`第 ${page} 页`}
+              page={page}
+              slot="pagination-page"
+              current={isCurrent}
+              ariaLabel={`第 ${page} 页`}
               className={cn(
                 "inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                 isCurrent
@@ -74,7 +127,7 @@ export function Pagination({
               )}
             >
               {page}
-            </button>
+            </Ctrl>
           );
         })}
         {showTrailingEllipsis ? (
@@ -82,26 +135,26 @@ export function Pagination({
             <span aria-hidden="true" className="px-1 text-muted-foreground">
               …
             </span>
-            <button
-              type="button"
-              data-slot="pagination-page"
-              data-page-current="false"
-              aria-label={`第 ${totalPages} 页`}
+            <Ctrl
+              page={totalPages}
+              slot="pagination-page"
+              current={false}
+              ariaLabel={`第 ${totalPages} 页`}
               className="inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-muted-foreground hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               {totalPages}
-            </button>
+            </Ctrl>
           </>
         ) : null}
-        <button
-          type="button"
-          data-slot="pagination-next"
-          aria-label="下一页"
+        <Ctrl
+          page={currentPage + 1}
+          slot="pagination-next"
+          ariaLabel="下一页"
           disabled={!hasNext}
           className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <span aria-hidden="true">›</span>
-        </button>
+        </Ctrl>
       </nav>
       <span className="text-xs text-muted-foreground">{perPageLabel}</span>
     </div>
