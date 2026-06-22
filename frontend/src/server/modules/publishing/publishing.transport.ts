@@ -29,6 +29,7 @@ export const PUBLISHING_OP_IDS = [
   "outputs.publications.create",
   "publications.get",
   "publications.revisions.create",
+  "publications.revisions.list",
   "publications.transition",
 ] as const;
 
@@ -143,6 +144,23 @@ export function createPublishingTransport(
             b,
           );
           return { data: toRevisionResource(row), meta: { requestId } };
+        }
+        case "publications.revisions.list": {
+          const page = paginationFrom(query);
+          const rows = await service.listRevisions(
+            ctx,
+            p.publicationId ?? "",
+            page,
+          );
+          return {
+            data: rows.map(toRevisionResource),
+            meta: {
+              requestId,
+              page: Math.floor(page.offset / page.limit) + 1,
+              pageSize: page.limit,
+              total: rows.length,
+            },
+          };
         }
         case "publications.transition": {
           const b = (body ?? {}) as { status: string };

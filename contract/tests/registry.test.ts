@@ -33,7 +33,9 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/knowledge"],
   ["GET", "/knowledge/:knowledgeId"],
   ["POST", "/knowledge/:knowledgeId/revisions"],
+  ["GET", "/knowledge/:knowledgeId/revisions"],
   ["POST", "/knowledge/:knowledgeId/relations"],
+  ["GET", "/knowledge/:knowledgeId/relations"],
   // 知识与素材 — Taxonomy (Tag / EntityTag) sub-group (v0.2)
   ["GET", "/tags"],
   ["POST", "/tags"],
@@ -60,6 +62,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/outputs/:outputId/publications"],
   ["GET", "/publications/:publicationId"],
   ["POST", "/publications/:publicationId/revisions"],
+  ["GET", "/publications/:publicationId/revisions"],
   ["POST", "/publications/:publicationId/transition"],
   // 分析、复盘和经验
   ["GET", "/analytics/publications/:publicationId"],
@@ -70,6 +73,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/reviews/:reviewId/insights"],
   ["POST", "/reviews/:reviewId/complete"],
   ["GET", "/learnings"],
+  ["GET", "/learnings/:learningId"],
   ["POST", "/learnings"],
   ["POST", "/learnings/:learningId/applications"],
   ["POST", "/learnings/:learningId/evaluate"],

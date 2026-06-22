@@ -52,7 +52,15 @@ interface PublicationDto {
   readonly platform: PlatformId;
   readonly accountReference: string;
   readonly status: PublicationStatus;
+  readonly currentRevisionId: string;
   readonly scheduledAt: string | null;
+}
+
+interface PublicationRevisionDto {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly revisionNumber: number;
 }
 
 export interface PublishingDataClient {
@@ -68,6 +76,11 @@ export interface PublishingDataClient {
   }): Promise<unknown>;
   listPublications(input: {
     params: { outputId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  listPublicationRevisions(input: {
+    params: { publicationId: string };
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
@@ -101,6 +114,33 @@ async function resolveProjectId(
     return { id: param, isReal: false };
   } catch {
     return { id: param, isReal: false };
+  }
+}
+
+/**
+ * Resolve a publication's REAL current-revision { title, description } (the
+ * 真标题/文案 stored in publicationRevisions, read via publications.revisions.list).
+ * Prefers the row matching `currentRevisionId`, else the newest. Returns `null`
+ * when the read yields nothing or throws (caller keeps its placeholder). N+1 over
+ * a small publication set — acceptable this wave.
+ */
+async function resolveRevision(
+  client: PublishingDataClient,
+  pub: PublicationDto,
+): Promise<{ title: string; description: string } | null> {
+  try {
+    const revisions = (await client.listPublicationRevisions({
+      params: { publicationId: pub.id },
+      query: { page: 1, pageSize: 20 },
+      body: undefined,
+    })) as ReadonlyArray<PublicationRevisionDto>;
+    if (revisions.length === 0) return null;
+    const current =
+      revisions.find((r) => r.id === pub.currentRevisionId) ?? revisions[0];
+    if (!current) return null;
+    return { title: current.title ?? "", description: current.description ?? "" };
+  } catch {
+    return null;
   }
 }
 
@@ -140,6 +180,9 @@ export async function buildPublishingWorkspaceViewModel(
   const isFixtureProject = fixtureVm.scenario !== "empty";
 
   let realCards: ReadonlyArray<PlatformPublishCard> = [];
+  // The REAL 标题/文案 from the first publication's current revision (read via
+  // publications.revisions.list). Null until/unless we resolve one.
+  let realForm: { title: string; description: string } | null = null;
 
   try {
     const outputs = (await client.listOutputs({
@@ -173,6 +216,14 @@ export async function buildPublishingWorkspaceViewModel(
       status: pub.status,
       scheduledAt: pub.scheduledAt ?? null,
     }));
+
+    // 标题/文案 做真: read the first publication's current-revision title/description
+    // (the form previously had no real source — placeholder empty for real
+    // projects). One extra read per first publication; try/catch → keep null.
+    const firstPub = publications[0];
+    if (firstPub) {
+      realForm = await resolveRevision(client, firstPub);
+    }
   } catch {
     // Outputs read failed — keep cards empty; the fallback below picks fixture
     // cards for the canonical demo project.
@@ -198,24 +249,36 @@ export async function buildPublishingWorkspaceViewModel(
         }
       : fixtureVm.preview;
 
+  // Form: fixture content for demo projects, blank slate for real projects. The
+  // 标题/文案 are overridden with the REAL current-revision values when we resolved
+  // one (a non-empty real title/description wins over the placeholder/fixture).
+  const baseForm = isFixtureProject
+    ? fixtureVm.form
+    : {
+        title: "",
+        description: "",
+        coverLabel: "无封面",
+        tags: [],
+        category: "未分类",
+        series: "无系列",
+      };
+  const form = realForm
+    ? {
+        ...baseForm,
+        title: realForm.title.trim() ? realForm.title : baseForm.title,
+        description: realForm.description.trim()
+          ? realForm.description
+          : baseForm.description,
+      }
+    : baseForm;
+
   return {
     scenario: "default",
     kind: "publishing",
     projectId: resolvedId,
     // Static page-tab taxonomy — always the fixture's.
     tabs: fixtureVm.tabs,
-    // No real read path for the form this wave — fixture content for demo
-    // projects, blank slate for real projects.
-    form: isFixtureProject
-      ? fixtureVm.form
-      : {
-          title: "",
-          description: "",
-          coverLabel: "无封面",
-          tags: [],
-          category: "未分类",
-          series: "无系列",
-        },
+    form,
     platforms,
     preview,
     // No real source for checklist/tips this wave — fixture for demo projects,

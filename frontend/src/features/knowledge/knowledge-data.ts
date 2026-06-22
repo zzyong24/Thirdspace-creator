@@ -17,9 +17,10 @@ import type { MetricCard as MetricCardVm } from "@/types/view-models";
  * the real derivation to the parts that the list can actually support:
  *
  *   - `metrics`     → 知识条目 (total), 本周新增 (createdAt within 7d), 复用片段
- *                     (knowledgeType==="snippet"). These three are REAL counts.
- *                     知识关联 / 记忆命中率 have NO read op (no relations.list,
- *                     no memory analytics) → kept from the fixture metrics.
+ *                     (knowledgeType==="snippet"), 知识关联 (real edge count,
+ *                     aggregated via knowledge.relations.list over every item).
+ *                     These four are REAL counts. 记忆命中率 has no read op
+ *                     (no memory analytics) → kept from the fixture metrics.
  *   - `categories`  → REAL tally by `knowledgeType` over the live list. Empty
  *                     list → honest empty category panel (no fake counts).
  *   - `recent`      → REAL rows (unchanged behavior, via buildRecentRowsFromItems).
@@ -48,10 +49,21 @@ interface KnowledgeListDto {
   readonly updatedAt: string;
 }
 
+// `knowledge.relations.list` returns KnowledgeRelationResource rows for ONE
+// source item; we only count them.
+interface KnowledgeRelationDto {
+  readonly id: string;
+}
+
 export interface KnowledgeDataClient {
   listKnowledge(input: {
     params: undefined;
     query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  listKnowledgeRelations(input: {
+    params: { knowledgeId: string };
+    query: undefined;
     body: undefined;
   }): Promise<unknown>;
 }
@@ -101,23 +113,64 @@ export async function buildKnowledgeDashboardViewModel(
     return base;
   }
 
+  // REAL 知识关联 count: relations are stored per source item, so we fan out
+  // `knowledge.relations.list` across every live item and sum the edges. A null
+  // result (read threw on every item) signals "no real source" → buildMetrics
+  // keeps the fixture km-relations card instead of showing a fake 0.
+  const relationCount = await countRelations(client, items);
+
   return {
     ...base,
-    metrics: buildMetrics(items, base.metrics),
+    metrics: buildMetrics(items, base.metrics, relationCount),
     categories: buildCategories(items),
     recent: buildRecentRowsFromItems(items),
   };
 }
 
 /**
- * 5 metric cards. Total / this-week / snippets are REAL counts derived from the
- * live list; 知识关联 (relations) and 记忆命中率 (memory hit rate) have no read
- * op this wave, so their fixture cards pass through unchanged. Card identity +
- * order are preserved so the row stays exactly five cards (test invariant).
+ * Sum the outgoing relations of every knowledge item via
+ * `knowledge.relations.list`. Each per-item read is independently try/caught so
+ * one failure does not zero the whole count. Returns `null` ONLY if the list was
+ * empty or EVERY per-item read failed (no real signal → keep the fixture card);
+ * otherwise the real edge total (which may legitimately be 0).
+ */
+async function countRelations(
+  client: KnowledgeDataClient,
+  items: ReadonlyArray<KnowledgeListDto>,
+): Promise<number | null> {
+  if (items.length === 0) return null;
+  let total = 0;
+  let anyOk = false;
+  await Promise.all(
+    items.map(async (item) => {
+      try {
+        const rels = (await client.listKnowledgeRelations({
+          params: { knowledgeId: item.id },
+          query: undefined,
+          body: undefined,
+        })) as ReadonlyArray<KnowledgeRelationDto>;
+        anyOk = true;
+        total += rels.length;
+      } catch {
+        // Per-item read failed — skip it, keep aggregating the rest.
+      }
+    }),
+  );
+  return anyOk ? total : null;
+}
+
+/**
+ * 5 metric cards. Total / this-week / snippets / relations are REAL counts;
+ * total/this-week/snippets derive from the live list, 知识关联 from the
+ * aggregated relations.list edge count (`relationCount`; `null` ⇒ no real
+ * signal ⇒ keep the fixture card). 记忆命中率 (memory hit rate) has no read op,
+ * so its fixture card passes through unchanged. Card identity + order are
+ * preserved so the row stays exactly five cards (test invariant).
  */
 function buildMetrics(
   items: ReadonlyArray<KnowledgeListDto>,
   fixtureMetrics: ReadonlyArray<MetricCardVm>,
+  relationCount: number | null,
 ): ReadonlyArray<MetricCardVm> {
   const total = items.length;
   const now = Date.now();
@@ -152,7 +205,17 @@ function buildMetrics(
           delta: "",
           trend: "flat" as const,
         };
-      // km-relations / km-memory have no real source — keep the fixture card.
+      case "km-relations":
+        // Real edge count when we have a signal; otherwise keep the fixture card.
+        return relationCount === null
+          ? card
+          : {
+              ...card,
+              value: formatCount(relationCount),
+              delta: "",
+              trend: "flat" as const,
+            };
+      // km-memory has no real source — keep the fixture card.
       default:
         return card;
     }

@@ -19,6 +19,7 @@ vi.mock("@/lib/contract-client.server", () => ({
     getProject: vi.fn(),
     listMaterialLinks: vi.fn(),
     getKnowledge: vi.fn(),
+    listKnowledgeRevisions: vi.fn(),
   },
 }));
 
@@ -47,6 +48,12 @@ interface FakeData {
       createdAt: string;
     }
   >;
+  // Per-knowledgeId revision rows for knowledge.revisions.list (newest-first).
+  // An id with `"throw"` simulates a failed read (→ note falls back to title).
+  readonly revisions?: Record<
+    string,
+    ReadonlyArray<{ revisionNumber: number; content: string }> | "throw"
+  >;
 }
 
 function fakeClient(data: FakeData): ResearchDataClient {
@@ -71,6 +78,12 @@ function fakeClient(data: FakeData): ResearchDataClient {
       const item = data.knowledge?.[params.knowledgeId];
       if (!item) throw new Error("404");
       return item;
+    },
+    async listKnowledgeRevisions({ params }) {
+      const revs = data.revisions?.[params.knowledgeId];
+      if (revs === "throw") throw new Error("500");
+      // Default: no revisions → note falls back to the item title.
+      return revs ?? [];
     },
   };
 }
@@ -125,6 +138,13 @@ describe("buildResearchWorkspaceViewModel", () => {
             createdAt: "2026-06-02T00:00:00+08:00",
           },
         },
+        // The note's real body lives in its current revision (head = #2).
+        revisions: {
+          "k-2": [
+            { revisionNumber: 2, content: "本地优先栈的取舍与边界条件" },
+            { revisionNumber: 1, content: "初稿" },
+          ],
+        },
       }),
     );
     // Both knowledge links become sources; the asset link does not.
@@ -134,7 +154,33 @@ describe("buildResearchWorkspaceViewModel", () => {
       "本地优先栈笔记",
     ]);
     expect(vm.sources[0]?.id).toBe("source-k-1");
-    // Only the note-typed item becomes a research note.
+    // Only the note-typed item becomes a research note; its content is the HEAD
+    // revision body (not the title).
+    expect(vm.notes).toHaveLength(1);
+    expect(vm.notes[0]).toMatchObject({
+      content: "本地优先栈的取舍与边界条件",
+      knowledgeId: "k-2",
+    });
+  });
+
+  it("falls back to the note title when the revision read fails", async () => {
+    const vm = await buildResearchWorkspaceViewModel(
+      "project-p-24",
+      fakeClient({
+        project: { id: "project-p-24", title: "新项目", brief: "b" },
+        links: [{ entityType: "knowledge", entityId: "k-2" }],
+        knowledge: {
+          "k-2": {
+            id: "k-2",
+            title: "本地优先栈笔记",
+            knowledgeType: "note",
+            createdAt: "2026-06-02T00:00:00+08:00",
+          },
+        },
+        // Revision read throws → the note NEVER renders blank, falls back to title.
+        revisions: { "k-2": "throw" },
+      }),
+    );
     expect(vm.notes).toHaveLength(1);
     expect(vm.notes[0]).toMatchObject({
       content: "本地优先栈笔记",

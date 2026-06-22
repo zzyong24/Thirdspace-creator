@@ -31,7 +31,9 @@ export const KNOWLEDGE_OP_IDS = [
   "knowledge.create",
   "knowledge.get",
   "knowledge.revisions.create",
+  "knowledge.revisions.list",
   "knowledge.relations.create",
+  "knowledge.relations.list",
 ] as const;
 
 function toItemResource(row: KnowledgeItemRow): KnowledgeItemResource {
@@ -84,7 +86,7 @@ export function createKnowledgeTransport(
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
-      // All 5 ops are persisted (owned). No ctx ⇒ unauthenticated dispatch ⇒
+      // All 7 ops are persisted (owned). No ctx ⇒ unauthenticated dispatch ⇒
       // reject before touching the store.
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory(ctx);
@@ -128,6 +130,32 @@ export function createKnowledgeTransport(
           return {
             data: toRevisionResource(row),
             meta: { requestId: ctx.requestId },
+          };
+        }
+        case "knowledge.revisions.list": {
+          const rows = await service.listRevisions(ctx, p.knowledgeId ?? "");
+          return {
+            data: rows.map(toRevisionResource),
+            // listMeta.pageSize must be POSITIVE — clamp to ≥1 so an empty
+            // revision set still passes the list envelope (page 1 of N).
+            meta: {
+              requestId: ctx.requestId,
+              page: 1,
+              pageSize: Math.max(rows.length, 1),
+              total: rows.length,
+            },
+          };
+        }
+        case "knowledge.relations.list": {
+          const rows = await service.listRelations(ctx, p.knowledgeId ?? "");
+          return {
+            data: rows.map(toRelationResource),
+            meta: {
+              requestId: ctx.requestId,
+              page: 1,
+              pageSize: Math.max(rows.length, 1),
+              total: rows.length,
+            },
           };
         }
         case "knowledge.relations.create": {

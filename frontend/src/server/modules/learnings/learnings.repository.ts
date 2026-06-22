@@ -1,4 +1,4 @@
-import { and, desc, eq, type Db } from "@creatoros/backend";
+import { and, desc, eq, inArray, sql, type Db } from "@creatoros/backend";
 import { learnings, learningApplications } from "./learnings.db-schema";
 import { OwnershipError } from "./learnings.errors";
 
@@ -57,6 +57,12 @@ export interface LearningsRepository {
     input: CreateApplicationInput,
   ): Promise<LearningApplicationRow>;
   countApplications(learningId: string): Promise<number>;
+  // Batch reuse-count: one user-scoped grouped read returning the application
+  // count for each of the given learning ids (missing ids ⇒ absent from the map,
+  // the caller defaults to 0). Avoids an N+1 over countApplications for list reads.
+  countApplicationsByLearning(
+    learningIds: string[],
+  ): Promise<Map<string, number>>;
 }
 
 export function createLearningsRepository(
@@ -172,6 +178,28 @@ export function createLearningsRepository(
           ),
         );
       return rows.length;
+    },
+
+    async countApplicationsByLearning(learningIds) {
+      if (learningIds.length === 0) return new Map<string, number>();
+      const rows = await db
+        .select({
+          learningId: learningApplications.learningId,
+          count: sql<number>`count(*)`,
+        })
+        .from(learningApplications)
+        .where(
+          and(
+            eq(learningApplications.userId, deps.userId),
+            inArray(learningApplications.learningId, learningIds),
+          ),
+        )
+        .groupBy(learningApplications.learningId);
+      const map = new Map<string, number>();
+      for (const r of rows) {
+        map.set(r.learningId, Number(r.count));
+      }
+      return map;
     },
   };
 }

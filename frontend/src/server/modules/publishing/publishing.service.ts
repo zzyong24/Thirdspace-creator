@@ -120,6 +120,11 @@ export interface PublishingService {
       platformSettings?: Record<string, unknown>;
     },
   ): Promise<PublicationRevisionRow>;
+  listRevisions(
+    ctx: RequestContext,
+    publicationId: string,
+    pagination: { limit: number; offset: number },
+  ): Promise<PublicationRevisionRow[]>;
   transition(
     ctx: RequestContext,
     publicationId: string,
@@ -199,6 +204,12 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       const rev = await repo.createRevision(publicationId, body);
       await repo.setCurrentRevision(publicationId, rev.id);
       return rev;
+    },
+
+    async listRevisions(ctx, publicationId, pagination) {
+      const repo = repoFor(ctx);
+      await repo.getPublication(publicationId); // ownership gate (cross-user → 404)
+      return repo.listRevisions(publicationId, pagination);
     },
 
     async transition(ctx, publicationId, body) {

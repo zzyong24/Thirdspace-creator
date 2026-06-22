@@ -21,6 +21,7 @@ import type { LearningsService } from "./learnings.service";
 
 export const LEARNINGS_OP_IDS = [
   "learnings.list",
+  "learnings.get",
   "learnings.create",
   "learnings.applications.create",
   "learnings.evaluate",
@@ -53,6 +54,10 @@ export function createLearningsTransport(
             offset: (page - 1) * pageSize,
           });
           return { data: rows, meta: { requestId, page, pageSize, total } };
+        }
+        case "learnings.get": {
+          const learning = await service.getLearning(ctx, p.learningId ?? "");
+          return { data: learning, meta: { requestId } };
         }
         case "learnings.create": {
           const b = (body ?? {}) as { title: string; insight?: string };

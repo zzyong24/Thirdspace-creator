@@ -49,6 +49,14 @@ interface KnowledgeItemDto {
   readonly createdAt: string;
 }
 
+// `knowledge.revisions.list` returns KnowledgeRevisionResource rows newest-first;
+// rows[0] is the head revision carrying the item's current body text. We only
+// read `revisionNumber` (for ordering safety) + `content`.
+interface KnowledgeRevisionDto {
+  readonly revisionNumber: number;
+  readonly content: string;
+}
+
 export interface ResearchDataClient {
   getProject(input: {
     params: { projectId: string };
@@ -65,6 +73,40 @@ export interface ResearchDataClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+  listKnowledgeRevisions(input: {
+    params: { knowledgeId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+}
+
+/**
+ * Read a knowledge item's CURRENT body text via `knowledge.revisions.list`.
+ * Revisions come back newest-first, so the head (highest revisionNumber) is the
+ * current content. Returns the trimmed body, or `null` when the read fails / the
+ * item has no non-empty revision (caller falls back to the item title — a real
+ * item NEVER renders blank).
+ */
+async function readCurrentContent(
+  client: ResearchDataClient,
+  knowledgeId: string,
+): Promise<string | null> {
+  try {
+    const revisions = (await client.listKnowledgeRevisions({
+      params: { knowledgeId },
+      query: undefined,
+      body: undefined,
+    })) as ReadonlyArray<KnowledgeRevisionDto>;
+    if (revisions.length === 0) return null;
+    // Defence-in-depth: pick the max revisionNumber rather than trusting order.
+    const head = revisions.reduce((a, b) =>
+      b.revisionNumber > a.revisionNumber ? b : a,
+    );
+    const content = head.content.trim();
+    return content.length > 0 ? content : null;
+  } catch {
+    return null;
+  }
 }
 
 const NO_BRIEF_PLACEHOLDER = "（暂无项目立意，去策划阶段补充）";
@@ -153,17 +195,24 @@ export async function buildResearchWorkspaceViewModel(
       tags: [],
     }));
 
-    // 研究笔记: knowledge items whose type is "note". There is no content read
-    // op this wave (content lives in revisions, no read endpoint), so the
-    // item title carries the note text. Empty if there are no notes — the
-    // 研究笔记 island owns the empty state.
-    notes = resolved
-      .filter((item) => item.knowledgeType === "note")
-      .map((item) => ({
-        id: `note-${item.id}`,
-        content: item.title,
-        knowledgeId: item.id,
-      }));
+    // 研究笔记: knowledge items whose type is "note". The note BODY lives in the
+    // item's current revision — read it via knowledge.revisions.list and use the
+    // head content; fall back to the item title when the body read fails or is
+    // empty so a real note NEVER renders blank. Empty list ⇒ no notes (the
+    // 研究笔记 island owns the empty state).
+    const noteItems = resolved.filter(
+      (item) => item.knowledgeType === "note",
+    );
+    notes = await Promise.all(
+      noteItems.map(async (item) => {
+        const body = await readCurrentContent(client, item.id);
+        return {
+          id: `note-${item.id}`,
+          content: body ?? item.title,
+          knowledgeId: item.id,
+        };
+      }),
+    );
   } catch {
     // Material-links read failed — keep sources/notes empty (real project) or
     // fall back to fixture content (canonical demo project).

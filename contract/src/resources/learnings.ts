@@ -29,6 +29,10 @@ export const learningResource = z.object({
   recommendation: z.string(),
   validationStatus,
   confidenceScore: z.number().int(),
+  // Reuse signal — how many times this learning has been applied (one row in the
+  // learningApplications table per application). Server-derived, read-only; filled
+  // by both the list and the single-get read so the contract shape is uniform.
+  reuseCount: z.number().int(),
   ...timestamps,
 });
 export type LearningResource = z.infer<typeof learningResource>;

@@ -53,6 +53,16 @@ export const publishingOperations = {
     response: publicationRevisionResource,
     fr: ["FR-PUBLISHING-REVISION-CREATE"],
   }),
+  listPublicationRevisions: defineEndpoint({
+    id: "publications.revisions.list",
+    method: "GET",
+    path: "/publications/:publicationId/revisions",
+    params: publicationParams,
+    query: paginationQuery,
+    response: publicationRevisionResource,
+    isList: true,
+    fr: ["FR-PUBLISHING-REVISION-LIST"],
+  }),
   transitionPublication: defineEndpoint({
     id: "publications.transition",
     method: "POST",
