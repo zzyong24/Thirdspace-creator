@@ -31,6 +31,7 @@ import { ChartFrame } from "@/components/analytics/chart-frame";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { client } from "@/lib/contract-client.server";
 import {
+  canonicalDataset,
   getProjectPlatforms,
 } from "@/fixtures/canonical";
 import { cn } from "@/lib/utils";
@@ -52,10 +53,9 @@ export interface DashboardPageProps {
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: DashboardViewModel;
   /**
-   * Override for the displayed greeting name. The reference design
-   * (`ui/Dashboard.png`) shows "Kevin". The canonical user account
-   * remains "Zyong Zhu" because 16 other pages share that fixture;
-   * the dashboard renders a friendlier first-name on the greeting.
+   * Override for the displayed greeting name (test seam). In production the
+   * greeting uses the real account holder — `canonicalDataset.user.displayName`,
+   * the same source the sidebar's `resolveUser` reads.
    */
   readonly greetingName?: string;
 }
@@ -63,13 +63,6 @@ export interface DashboardPageProps {
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
-
-/**
- * The reference design shows "Kevin" as the dashboard greeting name.
- * The canonical user fixture cannot be edited without breaking 16
- * other pages; we keep this constant on the dashboard page itself.
- */
-const DASHBOARD_GREETING_NAME = "Kevin";
 
 export async function DashboardPage({
   viewModel,
@@ -82,7 +75,13 @@ export async function DashboardPage({
       query: undefined,
       body: undefined,
     }));
-  const greeting = buildGreeting(vm, greetingName ?? DASHBOARD_GREETING_NAME);
+  // Greet the real account holder — the same source the sidebar uses
+  // (`resolveUser` → `canonicalDataset.user.displayName`). Tests may still
+  // override via the `greetingName` prop seam.
+  const greeting = buildGreeting(
+    vm,
+    greetingName ?? canonicalDataset.user.displayName,
+  );
   return (
     <main
       data-app="creatoros"
@@ -185,7 +184,10 @@ function DashboardGrid({ vm }: { vm: DashboardViewModel }) {
       <TrendingTopicsCard topics={vm.trendingTopics} />
       <RecentPublicationsCard publications={vm.recentPublications} />
       <DataOverviewCard vm={vm} />
-      <CreationSuggestionsCard suggestions={vm.suggestions} />
+      <CreationSuggestionsCard
+        suggestions={vm.suggestions}
+        continueCreating={vm.continueCreating}
+      />
     </section>
   );
 }
@@ -270,22 +272,29 @@ function TodoCard({ todos }: { todos: ReadonlyArray<TodoRow> }) {
             key={todo.id}
             data-slot="todo-row"
             data-priority={todo.priority}
-            className="flex flex-col gap-1.5 rounded-card border border-border bg-surface p-3"
           >
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-sm font-medium text-foreground">
-                {todo.title}
-              </span>
-              <TagChip
-                label={priorityLabel(todo.priority)}
-                tone={priorityTone(todo.priority)}
-                size="sm"
-              />
-            </div>
-            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span className="truncate">{todo.projectTitle}</span>
-              <span>{stageLabel(todo.stage)}</span>
-            </div>
+            {/* D3: each todo deep-links to its project — to the stage workspace
+                when `stage` is a real project stage, else the project overview. */}
+            <Link
+              href={todoHref(todo)}
+              data-slot="todo-row-link"
+              className="flex flex-col gap-1.5 rounded-card border border-border bg-surface p-3 transition-colors hover:border-brand/40 hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate text-sm font-medium text-foreground">
+                  {todo.title}
+                </span>
+                <TagChip
+                  label={priorityLabel(todo.priority)}
+                  tone={priorityTone(todo.priority)}
+                  size="sm"
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span className="truncate">{todo.projectTitle}</span>
+                <span>{stageLabel(todo.stage)}</span>
+              </div>
+            </Link>
           </li>
         ))}
       </ul>
@@ -301,7 +310,20 @@ function TodoCard({ todos }: { todos: ReadonlyArray<TodoRow> }) {
 function TrendingTopicsCard({ topics }: { topics: ReadonlyArray<TopicRow> }) {
   return (
     <div data-slot="trending-topics-card">
-    <SectionCard title="热门选题" description="来自知识库的灵感与热点">
+    <SectionCard
+      title="热门选题"
+      description="来自知识库的灵感与热点"
+      action={
+        <Link
+          href="/topics"
+          data-slot="trending-topics-action"
+          className="inline-flex items-center gap-1 text-xs font-medium text-brand underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span>去选题池</span>
+          <span aria-hidden="true">→</span>
+        </Link>
+      }
+    >
       <ul
         data-slot="trending-topics"
         className="flex flex-col gap-2"
@@ -433,8 +455,10 @@ function DataOverviewCard({ vm }: { vm: DashboardViewModel }) {
 
 function CreationSuggestionsCard({
   suggestions,
+  continueCreating,
 }: {
   suggestions: ReadonlyArray<CreationSuggestion>;
+  continueCreating: ContinueCreating;
 }) {
   return (
     <div data-slot="creation-suggestions-card">
@@ -467,6 +491,22 @@ function CreationSuggestionsCard({
             <p className="text-xs text-muted-foreground">
               {suggestion.description}
             </p>
+            {(() => {
+              // D3: each suggestion routes to the most relevant real surface
+              // for its category — there is no per-suggestion projectId, so the
+              // target is resolved from the category + the active project.
+              const cta = suggestionCta(suggestion.category, continueCreating);
+              return (
+                <Link
+                  href={cta.href}
+                  data-slot="suggestion-cta"
+                  className="mt-0.5 inline-flex items-center gap-1 self-start text-xs font-medium text-brand underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span>{cta.label}</span>
+                  <span aria-hidden="true">→</span>
+                </Link>
+              );
+            })()}
           </li>
         ))}
       </ul>
@@ -478,6 +518,53 @@ function CreationSuggestionsCard({
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+// The six project stages that map to a real `/projects/<id>/<stage>` route.
+// A `TodoRow.stage` may instead be an OutputStageName (recording/editing/…),
+// which has no stage route — those fall back to the project overview.
+const PROJECT_STAGE_ROUTES: ReadonlySet<ProjectStageName> = new Set([
+  "research",
+  "planning",
+  "script",
+  "production",
+  "publishing",
+  "review",
+]);
+
+function isProjectStageRoute(stage: string): stage is ProjectStageName {
+  return PROJECT_STAGE_ROUTES.has(stage as ProjectStageName);
+}
+
+/**
+ * Deep-link target for a todo row: the stage workspace when `stage` is a real
+ * project stage, otherwise the project overview.
+ */
+function todoHref(todo: TodoRow): string {
+  return isProjectStageRoute(todo.stage)
+    ? `/projects/${todo.projectId}/${todo.stage}`
+    : `/projects/${todo.projectId}`;
+}
+
+/**
+ * Category-aware CTA for a creation suggestion. Stage categories resume the
+ * active project in that stage; the 选题/研究 category routes to the topic pool;
+ * anything else falls back to starting a new project.
+ */
+function suggestionCta(
+  category: string,
+  continueCreating: ContinueCreating,
+): { href: string; label: string } {
+  if (category === "research" || category === "topic" || category === "planning") {
+    return { href: "/topics", label: "去选题池" };
+  }
+  if (isProjectStageRoute(category)) {
+    return {
+      href: `/projects/${continueCreating.projectId}/${category}`,
+      label: "立即创作",
+    };
+  }
+  return { href: "/projects/new", label: "立即创作" };
+}
 
 const STAGE_LABELS: Record<ProjectStageName | string, string> = {
   research: "研究",
