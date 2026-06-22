@@ -1,0 +1,418 @@
+import { and, asc, eq, desc, type Db } from "@creatoros/backend";
+import {
+  artifacts,
+  artifactVersions,
+  artifactRelations,
+  thesisNodes,
+  scriptSections,
+  evidenceLinks,
+  timelineSegments,
+} from "./artifacts.db-schema";
+import { OwnershipError } from "./artifacts.errors";
+
+// Artifacts repository (foundation §5.2) — user-scoped queries ONLY. `user_id`
+// lives on the owned-root row (`artifacts`); every read/write of an artifact row
+// filters `eq(artifacts.userId, deps.userId)`. The single ownership gate is the
+// private `requireArtifact(artifactId)` — every child-table method calls it
+// first, so child rows (versions / relations / structured tables) are never
+// reachable cross-user (foundation §2, SPEC §14: cross-user → OwnershipError 404,
+// never 403).
+//
+// `userId` is baked into `deps` (one repo instance per ctx) — the service builds
+// a fresh repo per request via `repoFor(ctx)`. The clock/id generator are
+// injected for deterministic tests.
+//
+// data-model §9 invariants enforced here:
+//  - create mints version #1 and sets currentVersionId (born `drafting`).
+//  - createVersion appends the next version (max+1), repoints currentVersionId,
+//    and NEVER UPDATE/DELETE an existing artifact_versions row (rule 6).
+//  - restore CLONES the target version into a NEW version; currentVersionId moves
+//    to the clone, never back to the old id (rule 7).
+
+export type ArtifactRow = typeof artifacts.$inferSelect;
+export type ArtifactVersionRow = typeof artifactVersions.$inferSelect;
+export type ArtifactRelationRow = typeof artifactRelations.$inferSelect;
+export type ThesisNodeRow = typeof thesisNodes.$inferSelect;
+export type ScriptSectionRow = typeof scriptSections.$inferSelect;
+export type EvidenceLinkRow = typeof evidenceLinks.$inferSelect;
+export type TimelineSegmentRow = typeof timelineSegments.$inferSelect;
+
+export interface RepoDeps {
+  now: () => string; // ISO-8601 clock (injected for deterministic tests)
+  nextId: (prefix: string) => string; // id generator (deterministic in tests)
+  userId: string; // owner — baked in; the service mints one repo per ctx
+}
+
+export interface StructuredContent {
+  thesisNodes?: Array<{
+    parentNodeId?: string | null;
+    nodeType: string;
+    title?: string;
+    content?: string;
+    position?: number;
+  }>;
+  scriptSections?: Array<{
+    parentSectionId?: string | null;
+    sectionType: string;
+    title?: string;
+    content?: string;
+    position?: number;
+    startSeconds?: number | null;
+    endSeconds?: number | null;
+  }>;
+  evidenceLinks?: Array<{
+    thesisNodeId?: string | null;
+    knowledgeItemId?: string | null;
+    assetId?: string | null;
+    excerpt?: string;
+    relationType?: string;
+    confidence?: number;
+    position?: number;
+  }>;
+  timelineSegments?: Array<{
+    scriptSectionId?: string | null;
+    title?: string;
+    position?: number;
+    startMs?: number;
+    endMs?: number;
+    productionData?: Record<string, unknown>;
+  }>;
+}
+
+export interface ArtifactRepository {
+  seedArtifacts(rows: ArtifactRow[]): Promise<void>;
+  seedVersions(rows: ArtifactVersionRow[]): Promise<void>;
+  seedRelations(rows: ArtifactRelationRow[]): Promise<void>;
+  listByProject(projectId: string): Promise<ArtifactRow[]>;
+  requireArtifact(artifactId: string): Promise<ArtifactRow>;
+  create(input: {
+    projectId: string;
+    title: string;
+    artifactType: string;
+    stage: string;
+    contentOutputId?: string | null;
+  }): Promise<ArtifactRow>;
+  createVersion(
+    artifactId: string,
+    input: {
+      contentText?: string;
+      changeSummary?: string;
+      contentData?: Record<string, unknown>;
+      createdByType?: string;
+      aiTaskId?: string | null;
+    },
+  ): Promise<ArtifactVersionRow>;
+  listVersions(artifactId: string): Promise<ArtifactVersionRow[]>;
+  getVersion(versionId: string): Promise<ArtifactVersionRow>;
+  restore(artifactId: string, versionId: string): Promise<ArtifactRow>;
+  createRelation(
+    sourceArtifactId: string,
+    input: { targetArtifactId: string; relationType: string },
+  ): Promise<ArtifactRelationRow>;
+  replaceStructuredContent(
+    artifactVersionId: string,
+    payload: StructuredContent,
+  ): Promise<void>;
+  getScriptSections(artifactVersionId: string): Promise<ScriptSectionRow[]>;
+  getThesisNodes(artifactVersionId: string): Promise<ThesisNodeRow[]>;
+}
+
+export function createArtifactRepository(
+  db: Db,
+  deps: RepoDeps,
+): ArtifactRepository {
+  const userId = deps.userId;
+
+  async function requireArtifact(artifactId: string): Promise<ArtifactRow> {
+    const rows = await db
+      .select()
+      .from(artifacts)
+      .where(and(eq(artifacts.id, artifactId), eq(artifacts.userId, userId)));
+    const row = rows[0];
+    // Cross-user / unknown id is indistinguishable (foundation §2: 404, never
+    // reveal existence) → OwnershipError.
+    if (!row) throw new OwnershipError("Artifact not found");
+    return row;
+  }
+
+  // Allocate the next version number for an artifact (max+1, starting at 1).
+  async function nextVersionNumber(artifactId: string): Promise<number> {
+    const existing = await db
+      .select()
+      .from(artifactVersions)
+      .where(eq(artifactVersions.artifactId, artifactId))
+      .orderBy(desc(artifactVersions.versionNumber));
+    return (existing[0]?.versionNumber ?? 0) + 1;
+  }
+
+  async function insertVersion(
+    artifactId: string,
+    versionNumber: number,
+    input: {
+      contentText?: string;
+      changeSummary?: string;
+      contentData?: Record<string, unknown>;
+      createdByType?: string;
+      aiTaskId?: string | null;
+    },
+  ): Promise<ArtifactVersionRow> {
+    const now = deps.now();
+    const versionId = deps.nextId("artifactversion");
+    await db.insert(artifactVersions).values({
+      id: versionId,
+      artifactId,
+      versionNumber,
+      contentText: input.contentText ?? "",
+      contentData: input.contentData ?? {},
+      changeSummary: input.changeSummary ?? "",
+      createdByType: input.createdByType ?? "user",
+      aiTaskId: input.aiTaskId ?? null,
+      createdAt: now,
+    });
+    const rows = await db
+      .select()
+      .from(artifactVersions)
+      .where(eq(artifactVersions.id, versionId));
+    return rows[0]!;
+  }
+
+  return {
+    async seedArtifacts(rows) {
+      if (rows.length === 0) return;
+      await db.insert(artifacts).values(rows).onConflictDoNothing();
+    },
+    async seedVersions(rows) {
+      if (rows.length === 0) return;
+      await db.insert(artifactVersions).values(rows).onConflictDoNothing();
+    },
+    async seedRelations(rows) {
+      if (rows.length === 0) return;
+      await db.insert(artifactRelations).values(rows).onConflictDoNothing();
+    },
+
+    async listByProject(projectId) {
+      return db
+        .select()
+        .from(artifacts)
+        .where(
+          and(eq(artifacts.userId, userId), eq(artifacts.projectId, projectId)),
+        )
+        .orderBy(asc(artifacts.createdAt));
+    },
+
+    requireArtifact,
+
+    async create(input) {
+      const now = deps.now();
+      const artifactId = deps.nextId("artifact");
+
+      // Insert the artifact first (currentVersionId null), then mint version #1
+      // and repoint currentVersionId — one UoW (artifact + version #1 atomically).
+      await db.insert(artifacts).values({
+        id: artifactId,
+        userId,
+        projectId: input.projectId,
+        contentOutputId: input.contentOutputId ?? null,
+        currentVersionId: null,
+        stage: input.stage,
+        artifactType: input.artifactType,
+        title: input.title,
+        status: "drafting",
+        archivedAt: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const version = await insertVersion(artifactId, 1, {
+        contentText: "",
+        changeSummary: "初稿",
+      });
+      await db
+        .update(artifacts)
+        .set({ currentVersionId: version.id, updatedAt: now })
+        .where(and(eq(artifacts.id, artifactId), eq(artifacts.userId, userId)));
+      return requireArtifact(artifactId);
+    },
+
+    async createVersion(artifactId, input) {
+      // Ownership gate: a cross-user / unknown id throws before any write.
+      await requireArtifact(artifactId);
+      const versionNumber = await nextVersionNumber(artifactId);
+      const version = await insertVersion(artifactId, versionNumber, input);
+      // Promotion is a parent-row pointer move; the version itself is never
+      // mutated (append-only, data-model §9 rule 6).
+      await db
+        .update(artifacts)
+        .set({ currentVersionId: version.id, updatedAt: deps.now() })
+        .where(and(eq(artifacts.id, artifactId), eq(artifacts.userId, userId)));
+      return version;
+    },
+
+    async listVersions(artifactId) {
+      await requireArtifact(artifactId);
+      return db
+        .select()
+        .from(artifactVersions)
+        .where(eq(artifactVersions.artifactId, artifactId))
+        .orderBy(asc(artifactVersions.versionNumber));
+    },
+
+    async getVersion(versionId) {
+      const rows = await db
+        .select()
+        .from(artifactVersions)
+        .where(eq(artifactVersions.id, versionId));
+      const row = rows[0];
+      if (!row) throw new OwnershipError("Version not found");
+      // Ownership gate: the parent artifact must be owned (throws if not).
+      await requireArtifact(row.artifactId);
+      return row;
+    },
+
+    async restore(artifactId, versionId) {
+      await requireArtifact(artifactId);
+      // Load the target version and assert it belongs to THIS artifact (rule 7).
+      const targetRows = await db
+        .select()
+        .from(artifactVersions)
+        .where(eq(artifactVersions.id, versionId));
+      const target = targetRows[0];
+      if (!target || target.artifactId !== artifactId) {
+        throw new OwnershipError("Version not found for this artifact");
+      }
+      // Clone the target content into a NEW version (max+1) — never re-point to
+      // the old id.
+      const versionNumber = await nextVersionNumber(artifactId);
+      const clone = await insertVersion(artifactId, versionNumber, {
+        contentText: target.contentText,
+        contentData: (target.contentData ?? {}) as Record<string, unknown>,
+        changeSummary: `restore v${target.versionNumber}`,
+        createdByType: "user",
+      });
+      await db
+        .update(artifacts)
+        .set({ currentVersionId: clone.id, updatedAt: deps.now() })
+        .where(and(eq(artifacts.id, artifactId), eq(artifacts.userId, userId)));
+      return requireArtifact(artifactId);
+    },
+
+    async createRelation(sourceArtifactId, input) {
+      // Both ends must be owned (cross-user link → OwnershipError, no leak).
+      await requireArtifact(sourceArtifactId);
+      await requireArtifact(input.targetArtifactId);
+
+      const relId = deps.nextId("artifactrelation");
+      await db.insert(artifactRelations).values({
+        id: relId,
+        sourceArtifactId,
+        targetArtifactId: input.targetArtifactId,
+        relationType: input.relationType,
+        createdAt: deps.now(),
+      });
+      const rows = await db
+        .select()
+        .from(artifactRelations)
+        .where(eq(artifactRelations.id, relId));
+      return rows[0]!;
+    },
+
+    async replaceStructuredContent(artifactVersionId, payload) {
+      // Internal — only ever called when minting a NEW version (the service
+      // guards that). Delete-then-insert the structured rows for this version id;
+      // version-scoped, so the immutable-plan rule holds (we mutate the just-made
+      // version's structured children, never a prior live one).
+      if (payload.thesisNodes) {
+        await db
+          .delete(thesisNodes)
+          .where(eq(thesisNodes.artifactVersionId, artifactVersionId));
+        if (payload.thesisNodes.length > 0) {
+          await db.insert(thesisNodes).values(
+            payload.thesisNodes.map((n) => ({
+              id: deps.nextId("thesisnode"),
+              artifactVersionId,
+              parentNodeId: n.parentNodeId ?? null,
+              nodeType: n.nodeType,
+              title: n.title ?? "",
+              content: n.content ?? "",
+              position: n.position ?? 0,
+            })),
+          );
+        }
+      }
+      if (payload.scriptSections) {
+        await db
+          .delete(scriptSections)
+          .where(eq(scriptSections.artifactVersionId, artifactVersionId));
+        if (payload.scriptSections.length > 0) {
+          await db.insert(scriptSections).values(
+            payload.scriptSections.map((s) => ({
+              id: deps.nextId("scriptsection"),
+              artifactVersionId,
+              parentSectionId: s.parentSectionId ?? null,
+              sectionType: s.sectionType,
+              title: s.title ?? "",
+              content: s.content ?? "",
+              position: s.position ?? 0,
+              startSeconds: s.startSeconds ?? null,
+              endSeconds: s.endSeconds ?? null,
+            })),
+          );
+        }
+      }
+      if (payload.evidenceLinks) {
+        await db
+          .delete(evidenceLinks)
+          .where(eq(evidenceLinks.artifactVersionId, artifactVersionId));
+        if (payload.evidenceLinks.length > 0) {
+          await db.insert(evidenceLinks).values(
+            payload.evidenceLinks.map((e) => ({
+              id: deps.nextId("evidencelink"),
+              artifactVersionId,
+              thesisNodeId: e.thesisNodeId ?? null,
+              knowledgeItemId: e.knowledgeItemId ?? null,
+              assetId: e.assetId ?? null,
+              excerpt: e.excerpt ?? "",
+              relationType: e.relationType ?? "",
+              confidence: e.confidence ?? 1,
+              position: e.position ?? 0,
+            })),
+          );
+        }
+      }
+      if (payload.timelineSegments) {
+        await db
+          .delete(timelineSegments)
+          .where(eq(timelineSegments.artifactVersionId, artifactVersionId));
+        if (payload.timelineSegments.length > 0) {
+          await db.insert(timelineSegments).values(
+            payload.timelineSegments.map((t) => ({
+              id: deps.nextId("timelinesegment"),
+              artifactVersionId,
+              scriptSectionId: t.scriptSectionId ?? null,
+              title: t.title ?? "",
+              position: t.position ?? 0,
+              startMs: t.startMs ?? 0,
+              endMs: t.endMs ?? 0,
+              productionData: t.productionData ?? {},
+            })),
+          );
+        }
+      }
+    },
+
+    async getScriptSections(artifactVersionId) {
+      return db
+        .select()
+        .from(scriptSections)
+        .where(eq(scriptSections.artifactVersionId, artifactVersionId))
+        .orderBy(asc(scriptSections.position));
+    },
+
+    async getThesisNodes(artifactVersionId) {
+      return db
+        .select()
+        .from(thesisNodes)
+        .where(eq(thesisNodes.artifactVersionId, artifactVersionId))
+        .orderBy(asc(thesisNodes.position));
+    },
+  };
+}

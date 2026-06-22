@@ -1,0 +1,133 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "../styles/tokens.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-heading: var(--creatoros-font-sans);
+  --font-sans: var(--creatoros-font-sans);
+  --color-canvas: var(--creatoros-canvas);
+  --color-surface: var(--creatoros-surface);
+  --color-surface-subtle: var(--creatoros-surface-subtle);
+  --color-brand: var(--creatoros-brand);
+  --color-brand-hover: var(--creatoros-brand-hover);
+  --color-brand-soft: var(--creatoros-brand-soft);
+  --color-text: var(--creatoros-text);
+  --color-text-muted: var(--creatoros-text-muted);
+  --color-text-subtle: var(--creatoros-text-subtle);
+  --color-border-strong: var(--creatoros-border-strong);
+  --color-success: var(--creatoros-success);
+  --color-success-soft: var(--creatoros-success-soft);
+  --color-warning: var(--creatoros-warning);
+  --color-warning-soft: var(--creatoros-warning-soft);
+  --color-danger: var(--creatoros-danger);
+  --color-danger-soft: var(--creatoros-danger-soft);
+  --color-info: var(--creatoros-info);
+  --color-info-soft: var(--creatoros-info-soft);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--creatoros-border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-control: var(--creatoros-radius-control);
+  --radius-card: var(--creatoros-radius-card);
+  --radius-panel: var(--creatoros-radius-panel);
+  --radius-sm: var(--creatoros-radius-control);
+  --radius-md: var(--creatoros-radius-control);
+  --radius-lg: var(--creatoros-radius-card);
+  --radius-xl: var(--creatoros-radius-panel);
+  --text-xs: var(--creatoros-text-xs);
+  --text-sm: var(--creatoros-text-sm);
+  --text-md: var(--creatoros-text-md);
+  --text-lg: var(--creatoros-text-lg);
+  --text-xl: var(--creatoros-text-xl);
+  --text-2xl: var(--creatoros-text-2xl);
+  --shadow-card: var(--creatoros-shadow-card);
+  --shadow-popover: var(--creatoros-shadow-popover);
+  --spacing-sidebar: var(--creatoros-sidebar-width);
+  --spacing-header: var(--creatoros-header-height);
+  --spacing-page-gutter: var(--creatoros-page-gutter);
+  --spacing-section-gap: var(--creatoros-section-gap);
+  --spacing-card-gap: var(--creatoros-card-gap);
+  --z-index-header: var(--creatoros-z-header);
+  --z-index-sidebar: var(--creatoros-z-sidebar);
+  --z-index-overlay: var(--creatoros-z-overlay);
+  --z-index-dialog: var(--creatoros-z-dialog);
+}
+
+:root {
+  --background: var(--creatoros-canvas);
+  --foreground: var(--creatoros-text);
+  --card: var(--creatoros-surface);
+  --card-foreground: var(--creatoros-text);
+  --popover: var(--creatoros-surface);
+  --popover-foreground: var(--creatoros-text);
+  --primary: var(--creatoros-brand);
+  --primary-foreground: var(--creatoros-surface);
+  --secondary: var(--creatoros-brand-soft);
+  --secondary-foreground: var(--creatoros-text);
+  --muted: var(--creatoros-surface-subtle);
+  --muted-foreground: var(--creatoros-text-muted);
+  --accent: var(--creatoros-brand-soft);
+  --accent-foreground: var(--creatoros-brand-hover);
+  --destructive: var(--creatoros-danger);
+  --border: var(--creatoros-border);
+  --input: var(--creatoros-border-strong);
+  --ring: var(--creatoros-brand);
+  --chart-1: var(--creatoros-chart-1);
+  --chart-2: var(--creatoros-chart-2);
+  --chart-3: var(--creatoros-chart-3);
+  --chart-4: var(--creatoros-chart-4);
+  --chart-5: var(--creatoros-chart-5);
+  --radius: var(--creatoros-radius-card);
+  --sidebar: var(--creatoros-surface);
+  --sidebar-foreground: var(--creatoros-text);
+  --sidebar-primary: var(--creatoros-brand);
+  --sidebar-primary-foreground: var(--creatoros-surface);
+  --sidebar-accent: var(--creatoros-brand-soft);
+  --sidebar-accent-foreground: var(--creatoros-brand-hover);
+  --sidebar-border: var(--creatoros-border);
+  --sidebar-ring: var(--creatoros-brand);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html {
+    @apply font-sans;
+  }
+}

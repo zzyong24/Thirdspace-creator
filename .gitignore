@@ -5,6 +5,7 @@
 
 node_modules/
 .next/
+**/next-env.d.ts
 out/
 dist/
 coverage/
@@ -12,6 +13,12 @@ coverage/
 playwright-report/
 test-results/
 blob-report/
+
+# Visual diff pipeline: ignore generated artifacts.
+#
+# The Controller-approved baselines under reference-images/ are tracked.
+# Generated current screenshots and diff artifacts remain local-only.
+frontend/tests/visual/__artifacts__/
 
 .worktrees/
 

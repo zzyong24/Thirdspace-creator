@@ -1,0 +1,110 @@
+import { z } from "zod";
+import { defineEndpoint } from "../endpoints";
+import {
+  id,
+  iso8601,
+  paginationQuery,
+  calendarEntryStatus,
+  cadenceFrequency,
+} from "../primitives";
+import {
+  contentCalendarEntryResource,
+  publishingCadenceResource,
+  cadenceAttainmentResource,
+} from "../resources/content-calendar";
+
+const accountParams = z.object({ accountId: id });
+const entryParams = z.object({ entryId: id });
+const windowQuery = z.object({ from: iso8601, to: iso8601 });
+
+const preferredSlots = z.array(
+  z.object({ weekday: z.number().int(), time: z.string() }),
+);
+
+// SPEC §13 "内容日历 (content-calendar)" group (七步 §7.2, contract v0.4).
+export const contentCalendarOperations = {
+  listCalendar: defineEndpoint({
+    id: "accounts.calendar.list",
+    method: "GET",
+    path: "/accounts/:accountId/calendar",
+    params: accountParams,
+    query: windowQuery.extend(paginationQuery.shape),
+    response: contentCalendarEntryResource,
+    isList: true,
+    fr: ["FR-CAL-LIST"],
+  }),
+  createEntry: defineEndpoint({
+    id: "accounts.calendar.entries.create",
+    method: "POST",
+    path: "/accounts/:accountId/calendar/entries",
+    params: accountParams,
+    body: z.object({
+      plannedAt: iso8601,
+      contentOutputId: id.optional(),
+      candidateId: id.optional(),
+      note: z.string().optional(),
+    }),
+    response: contentCalendarEntryResource,
+    fr: ["FR-CAL-ENTRY-CREATE"],
+  }),
+  updateEntry: defineEndpoint({
+    id: "calendar.entries.update",
+    method: "PATCH",
+    path: "/calendar/entries/:entryId",
+    params: entryParams,
+    body: z.object({
+      plannedAt: iso8601.optional(),
+      contentOutputId: id.optional(),
+      candidateId: id.optional(),
+      note: z.string().optional(),
+    }),
+    response: contentCalendarEntryResource,
+    fr: ["FR-CAL-ENTRY-UPDATE"],
+  }),
+  transitionEntry: defineEndpoint({
+    id: "calendar.entries.transition",
+    method: "POST",
+    path: "/calendar/entries/:entryId/transition",
+    params: entryParams,
+    body: z.object({ status: calendarEntryStatus }),
+    response: contentCalendarEntryResource,
+    fr: ["FR-CAL-ENTRY-TRANSITION"],
+  }),
+  deleteEntry: defineEndpoint({
+    id: "calendar.entries.delete",
+    method: "DELETE",
+    path: "/calendar/entries/:entryId",
+    params: entryParams,
+    response: z.object({ id, deleted: z.literal(true) }),
+    fr: ["FR-CAL-ENTRY-DELETE"],
+  }),
+  getCadence: defineEndpoint({
+    id: "accounts.cadence.get",
+    method: "GET",
+    path: "/accounts/:accountId/cadence",
+    params: accountParams,
+    response: publishingCadenceResource.nullable(),
+    fr: ["FR-CAL-CADENCE-GET"],
+  }),
+  upsertCadence: defineEndpoint({
+    id: "accounts.cadence.upsert",
+    method: "PUT",
+    path: "/accounts/:accountId/cadence",
+    params: accountParams,
+    body: z.object({
+      frequency: cadenceFrequency,
+      preferredSlots: preferredSlots.default([]),
+    }),
+    response: publishingCadenceResource,
+    fr: ["FR-CAL-CADENCE-UPSERT"],
+  }),
+  getCadenceAttainment: defineEndpoint({
+    id: "accounts.cadence.attainment",
+    method: "GET",
+    path: "/accounts/:accountId/cadence/attainment",
+    params: accountParams,
+    query: windowQuery,
+    response: cadenceAttainmentResource,
+    fr: ["FR-CAL-CADENCE-ATTAINMENT"],
+  }),
+} as const;

@@ -1,0 +1,41 @@
+/**
+ * Publishing Center route entrypoint.
+ *
+ * The (creator) layout supplies the shared AppShell (Sidebar + TopHeader) and the
+ * global Header is configured for `/publishing` with title "发布中心", description
+ * "已发布内容、表现与排期" and the approved `assistant` contextual-card variant in
+ * `shell-router.tsx` (D-003, page-specs §13). The page is a Server Component.
+ *
+ * READ side made real ("发布中心读侧做真"): the publication table is assembled from
+ * the user's REAL publications by walking `projects.list` → `projects.outputs.list`
+ * → `outputs.publications.list` (see `publishing-center-data.ts`). A 一稿多平台
+ * fan-out — one output published to N platforms — surfaces N rows here. The
+ * analytics rail (PublishingMetrics / PlatformComparisonChart / TrendChart /
+ * TopContentList) has no real read path this wave and stays fixture-sourced.
+ *
+ * The assembly is bound to the request session's `ctx` so reads stay user-scoped.
+ * When there are no real publications yet (the canonical seed is empty), the helper
+ * falls back to the fixture baseline so the page does not regress to an empty table.
+ */
+import { PublishingCenterPage } from "@/features/publishing-center/publishing-center-page";
+import type { PublishingCenterDataClient } from "@/features/publishing-center/publishing-center-data";
+import { buildPublishingCenterViewModelReal } from "@/features/publishing-center/publishing-center-data";
+import { resolveSession } from "@/lib/session.server";
+import { createServerClient } from "@/lib/contract-client.server";
+
+export default async function PublishingCenterRoutePage() {
+  const session = await resolveSession();
+  if (!session) {
+    // No session (the (creator) layout guard redirects on a real request).
+    return <PublishingCenterPage />;
+  }
+
+  // Bind the read assembly to the request's session ctx so the projects /
+  // outputs / publications reads stay user-scoped. Any read failure degrades
+  // inside the helper to the fixture baseline (the page never throws).
+  const client = createServerClient(
+    session.ctx,
+  ) as unknown as PublishingCenterDataClient;
+  const viewModel = await buildPublishingCenterViewModelReal(client);
+  return <PublishingCenterPage viewModel={viewModel} />;
+}

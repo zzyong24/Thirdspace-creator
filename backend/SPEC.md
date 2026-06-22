@@ -224,6 +224,22 @@ Repository 不负责：
 
 禁止将 Drizzle 行类型直接作为 API 返回类型。API DTO 必须显式定义，避免数据库结构泄漏到前端。
 
+> **v0.3 变现加权枚举/指标扩展（跨线契约部分 · 七步整合设计 §4.4/§4.6）：** 以下为
+> 跨 wire 的枚举/字段扩展，均**追加不删改**，以 `@creatoros/contract` DTO 为准：
+>
+> - **ContentOutput** 新增可选 `content_role` 枚举 `traffic|trust|conversion`（意图层；
+>   resource 可空、createOutput body optional）。
+> - **Learning.learning_type** 在 `strategy|hook|structure|failure|process` 之上追加
+>   `conversion_pattern`、`offer_insight`。
+> - **AudienceSnapshot.dimension_type** 在 `age|gender|region|source|device` 之上追加
+>   `intent`、`paying`。
+> - **MetricValue.metric_key** 保持自由字符串（**契约不变**）；变现加权新增的取值约定为
+>   `profile_visit`、`cta_click`、`private_message`、`lead`、`inquiry`、`conversion`、`revenue`
+>   （仅约定 key 命名，不收窄类型）。
+>
+> 注：上述仅含「跨 wire」部分；`monetization`/`positioning`/`Candidate` 等新模块的完整
+> 实体与端点按七步整合设计 §8 分期单列，不在本次契约 patch 范围内。
+
 ## 10. RequestContext
 
 所有公开 service 方法必须接收上下文：
@@ -330,6 +346,15 @@ queued / running → cancelled
 
 状态机由所属模块 service 实现。Repository 只能执行 service 已批准的更新。
 
+> **契约枚举为准（v0.2 注记）：** 上述散文状态机在命名上与 `@creatoros/contract`
+> 的 DTO 枚举存在差异时，**以契约 DTO 枚举为准**，service 负责把内部状态映射到契约值：
+> - AI Task 终态 `succeeded`（契约 `aiTaskStatus`）== 散文 `completed`；
+> - ContentOutput 状态遵循契约 `["drafting","recording","editing","ready","published"]`，
+>   service 把散文机（`draft→active→ready→published→retired`，`active→cancelled`）映射到此枚举；
+> - Publication / Learning 状态同样以契约枚举为输出真相。
+>
+> 本注记不改动任何契约枚举，仅声明映射方向。
+
 ## 13. API 规范
 
 API 基础路径：
@@ -361,6 +386,16 @@ PATCH  /tasks/:taskId
 GET    /projects/:projectId/activity
 ```
 
+> **v0.2 扩展（不新增端点）：** `POST /projects` 的 body 在 `title`/`brief` 之外新增
+> 可选字段 `contentType`、`creationMode`、`targetPlatforms`（均 optional，保持对既有
+> `{title, brief}` 调用方的兼容）。`GET /projects` 的 query 在 `paginationQuery` 之外
+> 新增可选 `status`（projectStatus）与 `sort`（`updatedAt|createdAt|title`）。
+>
+> **v0.3 扩展（变现加权 · 不新增端点）：** `POST /projects/:projectId/outputs` 的 body
+> 在 `title` 之外新增**可选** `content_role`（契约 `contentRole` = `traffic|trust|conversion`，
+> 七步整合设计 §4.4 意图层），保持对既有 `{title}` 调用方的兼容；该值同时作为可选字段
+> 出现在 ContentOutput response DTO（`content_role`，可空）。
+
 ### 产物
 
 ```text
@@ -389,6 +424,22 @@ GET    /assets/:assetId
 POST   /assets/:assetId/files
 POST   /assets/:assetId/trash
 POST   /assets/:assetId/restore
+```
+
+#### 标签 / Taxonomy (v0.2)
+
+跨项目的用户级 `Tag` 与多态 `EntityTag` 关联。`POST …/delete` 与 `POST …/remove`
+沿用契约既有约定（无 HTTP `DELETE`，对齐 `projects.archive`）。
+
+```text
+GET    /tags                      列出当前用户的标签（分页）
+POST   /tags                      创建标签（name、可选 color/kind）
+PATCH  /tags/:tagId               重命名 / 改色 / 改 kind
+POST   /tags/:tagId/delete        删除标签并级联其 EntityTag
+POST   /tags/assignments          将 N 个标签分配到一个 (entityType, entityId)
+POST   /tags/assignments/remove   从某实体上解除一个标签
+GET    /tags/for-entity           列出某实体已分配的标签
+GET    /tags/:tagId/entities      列出某标签关联的实体（驱动“相关标签”导航）
 ```
 
 ### 制作与发布
@@ -456,6 +507,116 @@ POST /ingestion/runs/:runId/assets
 POST /ingestion/runs/:runId/artifacts
 POST /ingestion/runs/:runId/complete
 GET  /ingestion/runs/:runId
+```
+
+### 定位 (positioning · v0.4 · 七步 ①②③)
+
+账号级定位：`CreatorProfile`（账号自我认知）+ `PositioningStatement`（**不可变版本链**，
+ArtifactVersion 风格）+ `PositioningGate`（值对象，确定性打分 0–100，不阻断）。
+`GET /positioning/center` 为定位中心页组合 DTO（由 positioning 模块拥有并实现）。
+
+```text
+GET    /positioning/profile
+POST   /positioning/profile
+GET    /positioning/statements
+POST   /positioning/statements
+GET    /positioning/statements/:statementId
+POST   /positioning/gate/evaluate
+GET    /positioning/center
+```
+
+### 变现 (monetization · v0.4 · 七步⑦)
+
+柔性 `Product`/`Offer`（价格挂 Offer，与 Product 解耦）+ 归因层 `Lead`/`ConversionEvent`
++ 意图层 `ContentOutputProduct` + §4.5 三层口径漏斗（**永远保留诚实的 `unattributed` 桶，
+不强行 100% 分配**）。
+
+```text
+GET    /products
+POST   /products
+GET    /products/:productId
+PATCH  /products/:productId
+POST   /products/:productId/retire
+GET    /products/:productId/offers
+POST   /products/:productId/offers
+
+GET    /outputs/:outputId/products
+POST   /outputs/:outputId/products
+DELETE /outputs/:outputId/products/:productId
+
+GET    /leads
+POST   /leads
+GET    /leads/:leadId
+PATCH  /leads/:leadId
+GET    /leads/:leadId/conversions
+POST   /leads/:leadId/conversions
+
+GET    /monetization/funnel
+GET    /outputs/:outputId/funnel
+```
+
+### 选题候选 (candidate · v0.4 · 七步③)
+
+`Candidate`（轻量选题，按变现潜力排序）+ `AudienceSignal`（受众信号，经 Ingestion 写入）
++ `TopicPromotion`（Candidate → Project 晋升记录）。AI 生成的候选走 §C-3 候选确认流
+（`submit_candidate → awaiting_confirmation → confirmResult`），不在此新增写状态机；
+`POST /candidates` 仅限手工 `source:"idea"`。
+
+```text
+GET    /candidates
+POST   /candidates
+GET    /candidates/:candidateId
+PATCH  /candidates/:candidateId
+POST   /candidates/:candidateId/promote
+GET    /audience-signals
+POST   /audience-signals/:signalId/link
+```
+
+### 校准 (calibration · v0.4 · 七步⑤⑥)
+
+变现加权 `Rubric`/`RubricVersion`（**不可变版本链**）+ `Prediction`（发布前盲预测，
+创建后锁定不可改）+ `CalibrationResult`（预测 vs 实际偏差，实际指标经 §C-4 Ingestion 回收）。
+`predictedScore`/`deviation` 均由服务端按维度权重派生。AI 生成的预测走 §C-3 确认流，
+`predictions.lock` 为 AI-free 的 formalize 步骤。
+
+```text
+POST   /calibration/rubrics
+POST   /calibration/rubrics/:rubricId/versions
+GET    /calibration/rubrics/:rubricId
+POST   /calibration/predictions
+POST   /calibration/predictions/:predictionId/lock
+GET    /calibration/predictions/:predictionId
+POST   /calibration/predictions/:predictionId/result
+```
+
+### 平台账号 (platform-account · v0.4 · 七步 §7.1)
+
+多账号矩阵：`PlatformAccount(platform, account_handle, secret_reference, follower_baseline)`。
+仅存 secret **引用**，永不存原始 token。归档为软删除（保留历史归因）。
+
+```text
+GET    /accounts
+POST   /accounts
+GET    /accounts/:accountId
+PATCH  /accounts/:accountId
+POST   /accounts/:accountId/archive
+```
+
+### 内容日历 (content-calendar · v0.4 · 七步 §7.2)
+
+`ContentCalendarEntry`（每账号 planned/published/missed 时段，可绑 ContentOutput 或
+Candidate，二者互斥）+ `PublishingCadence`（每账号目标频率 + 偏好时段）+ 节奏达成率
+（派生计算，含断更检测）。所有时间计算走注入的 `clock`/`from`/`to`，无 wall-clock。
+
+```text
+GET    /accounts/:accountId/calendar
+POST   /accounts/:accountId/calendar/entries
+PATCH  /calendar/entries/:entryId
+POST   /calendar/entries/:entryId/transition
+DELETE /calendar/entries/:entryId
+GET    /accounts/:accountId/cadence
+PUT    /accounts/:accountId/cadence
+GET    /accounts/:accountId/cadence/attainment
 ```
 
 ## 14. API 响应

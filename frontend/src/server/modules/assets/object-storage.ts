@@ -1,0 +1,107 @@
+// Object-storage swap-seam (foundation §4). AssetsService is the ONLY module
+// allowed to touch object storage (SPEC §15) — it depends on this port, never a
+// concrete client. This wave binds `MockObjectStorage` (in-memory map;
+// deterministic fake storageKey + signed URL; no network). The real S3 adapter
+// is a stage-N swap with NO domain change: it implements the same port.
+//
+// Determinism: the mock takes an injected `nextKey`/`now` so every storageKey,
+// uploadUrl, and signed URL is reproducible in tests (no Date.now / Math.random
+// / crypto). The repository/service layer injects the real clock/id source.
+
+export interface PresignedUpload {
+  // Deterministic object key under which the bytes will be stored.
+  storageKey: string;
+  // Where the client PUTs the bytes (phase 1 of the two-phase upload).
+  uploadUrl: string;
+}
+
+// Metadata the storage backend reports for an uploaded object (SPEC §20: the
+// service validates MIME/size/checksum against this at completeUpload). The mock
+// echoes the values recorded at createPresignedUpload time.
+export interface HeadObjectResult {
+  mimeType: string;
+  fileSize: number;
+  checksum: string;
+  width: number | null;
+  height: number | null;
+  durationMs: number | null;
+  mediaMetadata: Record<string, unknown>;
+}
+
+export interface ObjectStoragePort {
+  // Phase 1: mint a deterministic key + upload URL for an about-to-be-uploaded
+  // object. Records the declared metadata so headObject can echo it back.
+  createPresignedUpload(input: {
+    assetType: string;
+    mimeType: string;
+    fileSize: number;
+  }): PresignedUpload;
+  // Inspect a stored object's metadata (phase-2 validation source).
+  headObject(storageKey: string): HeadObjectResult;
+  // A short-lived, read-only signed URL for download / copy-link. Never logged
+  // (SPEC §20). Deterministic in the mock so download/copy-link tests are stable.
+  getSignedUrl(storageKey: string): string;
+}
+
+export interface MockObjectStorageDeps {
+  // Deterministic key generator (injected; no crypto/Math.random). Called once
+  // per createPresignedUpload.
+  nextKey: () => string;
+}
+
+// In-memory object store. `createPresignedUpload` records the declared metadata
+// keyed by the minted storageKey so a later `headObject` echoes it back (this
+// stands in for the real backend having actually received + introspected the
+// bytes). Pre-seeded keys (the canonical fixture's storageKeys) resolve to a
+// generic object so download/copy-link of seeded assets returns a signed URL.
+export function createMockObjectStorage(
+  deps: MockObjectStorageDeps,
+): ObjectStoragePort {
+  const objects = new Map<string, HeadObjectResult>();
+
+  return {
+    createPresignedUpload({ assetType, mimeType, fileSize }) {
+      const storageKey = deps.nextKey();
+      objects.set(storageKey, {
+        mimeType,
+        fileSize,
+        checksum: `mock-checksum-${storageKey}`,
+        // Image/video carry deterministic placeholder dimensions; others null.
+        width: assetType === "image" || assetType === "video" ? 1920 : null,
+        height: assetType === "image" || assetType === "video" ? 1080 : null,
+        durationMs:
+          assetType === "video" || assetType === "audio" ? 1000 : null,
+        mediaMetadata: {},
+      });
+      return {
+        storageKey,
+        uploadUrl: `mock://object-storage/upload/${storageKey}`,
+      };
+    },
+
+    headObject(storageKey) {
+      const existing = objects.get(storageKey);
+      if (existing) return existing;
+      // Unknown key (e.g. a seeded fixture storageKey, or a key passed straight
+      // to assets.files.create) → a deterministic generic object. The bytes are
+      // assumed present (the mock never reaches the network); the real adapter
+      // would 404 here, surfacing as an UploadValidationError upstream.
+      return {
+        mimeType: "application/octet-stream",
+        fileSize: 0,
+        checksum: `mock-checksum-${storageKey}`,
+        width: null,
+        height: null,
+        durationMs: null,
+        mediaMetadata: {},
+      };
+    },
+
+    getSignedUrl(storageKey) {
+      // Deterministic, short-lived signed URL. The ?sig token is a stable mock
+      // (never a real secret) so tests can assert on it; the real adapter mints
+      // an expiring signature. Never logged (SPEC §20).
+      return `mock://object-storage/signed/${storageKey}?sig=mock`;
+    },
+  };
+}

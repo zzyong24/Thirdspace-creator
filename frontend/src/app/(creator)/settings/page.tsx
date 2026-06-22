@@ -1,0 +1,67 @@
+/**
+ * Settings route entrypoint.
+ *
+ * The (creator) layout supplies the shared AppShell (Sidebar + TopHeader)
+ * and the global Header is configured for `/settings` with title
+ * "设置", description "账号、偏好与系统" and the approved `assistant`
+ * contextual-card variant in `shell-router.tsx` (D-003, page-specs §17).
+ * The page itself is a Server Component (page-specs §17) and just
+ * provides the page slot.
+ *
+ * Step 6 (Settings module): the account card now reads the REAL
+ * `settings.get` op through the server-bound contract client (in-process
+ * over the seeded pglite store), exercising the module's transport on the
+ * server read path. The preference / model / storage rows stay
+ * fixture-derived (the seed mirrors the fixture exactly, so SSR stays
+ * deterministic against the canonical user); their mutations persist through
+ * the island ops and a `router.refresh()` re-runs this read. Falls back to
+ * the session identity when the op read is unavailable (race / direct
+ * render), then to the fixture default.
+ */
+import { SettingsPage } from "@/features/settings/settings-page";
+import { createServerClient } from "@/lib/contract-client.server";
+import { resolveSession } from "@/lib/session.server";
+
+export default async function SettingsRoutePage() {
+  // Resolve the request's session → ctx (the (creator) layout already guarded
+  // it). Read the account card from the real `settings.get` op under that ctx
+  // (user-scoped). Fall back to the session user DTO, then to the fixture, so
+  // the page never renders empty.
+  const session = await resolveSession();
+
+  let identity:
+    | {
+        displayName: string;
+        email: string;
+        timezone: string;
+        locale: string;
+      }
+    | undefined;
+
+  if (session) {
+    try {
+      const account = await createServerClient(session.ctx).getSettings({
+        params: undefined,
+        query: undefined,
+        body: undefined,
+      });
+      identity = {
+        displayName: account.displayName,
+        email: account.email,
+        timezone: account.timezone,
+        locale: account.locale,
+      };
+    } catch {
+      // `settings.get` unavailable (e.g. transport race) → fall back to the
+      // session user DTO the layout already resolved.
+      identity = {
+        displayName: session.user.displayName,
+        email: session.user.email,
+        timezone: session.user.timezone,
+        locale: session.user.locale,
+      };
+    }
+  }
+
+  return <SettingsPage identity={identity} />;
+}

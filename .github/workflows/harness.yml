@@ -1,0 +1,63 @@
+name: CreatorOS Autonomous Harness
+
+# Unattended long-running build loop (orchestrator/process/harness).
+# PREREQS (one-time): push `feat/service-contract` to origin; add repo secret ANTHROPIC_API_KEY.
+# Manual run: Actions → "CreatorOS Autonomous Harness" → Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_iters:
+        description: "Max tasks this run"
+        default: "15"
+      only_step:
+        description: "Restrict to one task type (repo | frontend | flow | data-source | e2e | any)"
+        default: "repo"
+  schedule:
+    - cron: "0 18 * * *"   # daily 18:00 UTC; advances a few verticals per day
+
+permissions:
+  contents: write          # the loop commits + we push results
+
+concurrency:
+  group: harness-feat-service-contract   # never two harness runs at once (anti-conflict)
+  cancel-in-progress: false
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/service-contract
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install deps (pnpm workspace)
+        run: pnpm install --frozen-lockfile
+      - name: Install Claude Code CLI
+        run: npm i -g @anthropic-ai/claude-code
+      - name: Git identity
+        run: |
+          git config user.name "creatoros-harness[bot]"
+          git config user.email "harness@creatoros.local"
+      - name: Run harness loop
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          HARNESS_MAX_ITERS: ${{ github.event.inputs.max_iters || '8' }}
+          HARNESS_ONLY_STEP: ${{ github.event.inputs.only_step || 'repo' }}
+          HARNESS_MAX_TURNS: "50"
+        run: bash orchestrator/process/harness/run.sh
+      - name: Push results
+        if: always()
+        run: git push origin HEAD:feat/service-contract
+      - name: Upload run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-run-log
+          path: orchestrator/process/harness/run.log

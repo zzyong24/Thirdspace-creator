@@ -1,0 +1,398 @@
+# Artifact Manifest — CreatorOS
+# Source of truth for product-to-code-orchestrator workflow state.
+# RECONCILED 2026-06-22 (DEC-013): stage rows were a stale 2026-06-20 snapshot contradicted by
+#   DEC-008..012 (the 2026-06-21 backend/contract/ai-worker build). Rows below now match repo reality.
+#   Validate with: `node orchestrator/process/reconcile.mjs` (drift detector — fails on manifest↔repo drift).
+# Schema: orchestrator/process/manifest.schema.json
+# status: not-started | draft | needs-user-confirmation | blocked | passed | accepted-risk | invalidated
+# RATIFICATION RESULT: documentation stages 00-14 are content-complete and their gates PASS on
+# completeness/consistency. Stages whose `confirmation_required: true` now sit at
+# `needs-user-confirmation` (gate passed, awaiting one batch user sign-off to become `passed`).
+
+# GROUND-TRUTH TOPOLOGY (verified 2026-06-22):
+#   - All implementation lives on branch `feat/service-contract` (317 commits ahead of `main`, 0 behind).
+#   - `main` contains specs + this orchestrator/ dir only; frontend/ and backend/ are markdown-spec-only on main.
+#   - Worktree `.worktrees/frontend-implementation` is checked out to `feat/service-contract` (dir name ≠ branch).
+#   - These control artifacts are COMMITTED on `feat/service-contract` (DEC-013, 2026-06-22); `main` does not carry them.
+
+project:
+  name: "CreatorOS (Thirdspace-creator)"
+  artifact_root: "orchestrator/"
+  work_branch: "feat/service-contract"   # where all implementation reality lives; manifest claims verified against this
+  current_stage: "01-project-kickoff"    # earliest stage still needing its FIRST sign-off (01-14 await batch confirmation)
+  frontier: "16-backend-tdd"             # build frontier: Projects vertical persisted end-to-end; remaining verticals fan out
+  updated_at: "2026-06-22"
+  notes: >
+    RECONCILED 2026-06-22. The pipeline has advanced FAR past the 2026-06-20 ratification snapshot the
+    stage rows used to show: service contract (@creatoros/contract v0.4.0, 65 tests), FE mock+HTTP seam,
+    a real-persistence backend slice (@creatoros/backend, pglite, 8 tests), an AI execution layer
+    (@creatoros/ai-worker, 27 tests), and a live FE↔BE↔SQL round-trip for the Projects vertical all exist
+    on `feat/service-contract` (DEC-008..011). DEC-012 adopted the Seven-Step Integration extension.
+    Two distinct fronts remain open: (1) the spec FOUNDATION (stages 01-14) still awaits its first batch
+    user sign-off (OPEN-001) even though build has run ahead of it — a process inversion, recorded honestly;
+    (2) the upstream->downstream consistency chain is still partially broken (most verticals lack persisted
+    API+TEST) — see consistency_gate. Frontend `pnpm verify` GREEN on host; visual suite still red (OPEN-002).
+
+stages:
+  "00-intake":
+    status: "passed"
+    gate: "00-intake-gate"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/CreatorOS-implementation-plan.md (context)"
+    notes: "Idea, users, outcome, constraints captured across docs/. No confirmation required."
+
+  "01-project-kickoff":
+    status: "needs-user-confirmation"
+    gate: "00-intake-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "frontend/AGENT-PROTOCOL.md"
+    notes: "Agent rules present. Awaiting sign-off."
+
+  "02-product-brainstorming":
+    status: "needs-user-confirmation"
+    gate: "01-product-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "docs/CreatorOS-implementation-plan.md (capability outline)"
+    notes: "Capability outline implied; FR set extracted."
+
+  "03-product-spec":
+    status: "needs-user-confirmation"
+    gate: "01-product-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "docs/CreatorOS-implementation-plan.md + data-model.md"
+    notes: "FR-001..068, NFR-001..024 assigned. What/why precede how. Awaiting sign-off."
+
+  "04-business-flow":
+    status: "needs-user-confirmation"
+    gate: "02-business-flow-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "docs/CreatorOS-storage-and-business-logic.md"
+    notes: "FLOW-001..022 assigned; consistent with product spec, failure paths acknowledged."
+
+  "05-light-domain-model":
+    status: "needs-user-confirmation"
+    gate: "03-domain-model-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "docs/CreatorOS-data-model.md"
+    notes: "ENT-001..058 assigned; product vocabulary; lifecycle states support flows."
+
+  "06-ia-spec":
+    status: "needs-user-confirmation"
+    gate: "04-ia-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "frontend/src/app route tree + shared-components.md"
+    notes: "IA-001..009 assigned. Navigation supports core journeys."
+
+  "07-ui-generation-or-import":
+    status: "needs-user-confirmation"
+    gate: "05-ui-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "ui/*.png (17 screens) + frontend reference-images baselines"
+    notes: "Visual source of truth named; baselines wired to visual-regression tests."
+
+  "08-page-spec":
+    status: "needs-user-confirmation"
+    gate: "06-page-spec-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "frontend/specs/page-specs.md"
+    notes: "PAGE-001..018 assigned; each traces to IA + FLOW (see matrix)."
+
+  "09-frontend-spec":
+    status: "needs-user-confirmation"
+    gate: "07-frontend-spec-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "frontend/SPEC.md + IMPLEMENTATION-ARCHITECTURE.md + specs/shared-components.md"
+    notes: "COMP-001..042 assigned; components trace to page specs."
+
+  "10-mock-data-spec":
+    status: "passed"
+    gate: "08-mock-data-gate"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "frontend/src/.../fixtures/ (+ fixtures.test.ts)"
+    notes: "Synthetic fixtures with a test, matching domain model. No confirmation required -> passed."
+
+  "11-frontend-implementation":
+    status: "passed"
+    gate: "09-frontend-implementation-gate"
+    gate_status: "pass"
+    confirmation_required: false
+    artifacts:
+      - existing: "frontend/src on remediation/frontend-spec-alignment (off feat/frontend-implementation)"
+    notes: >
+      GATE RE-RUN PASS (see orchestrator/STAGE-09-GATE-RERUN.md, 2026-06-21). DEC-006 full alignment
+      executed (INC-1..INC-5). Behaviour now traces to specs: states + actions wired (RISK-001/002/008),
+      selector layer built and consumed (RISK-003), 13 entities + fixture integrity restored
+      (RISK-004/005), UI stack migrated back to shadcn/Radix with 0 @base-ui imports (RISK-006), metrics
+      derived (RISK-009), Node/preflight addressed (RISK-010). RISK-007 substantially resolved (shared
+      components ~10 -> 20; analytics/resource/nav layers extracted, names aligned); residual single-use
+      content components permitted inline by SPEC §8. pnpm verify GREEN (lint/tsc/398 tests/next build).
+      Visual re-validation (R2-9) deferred to stage-12 (design-locked references).
+
+  "12-frontend-validation":
+    status: "draft"
+    gate: "10-frontend-validation-gate"
+    gate_status: "not-run"
+    confirmation_required: true
+    artifacts:
+      - existing: "frontend/tests/visual/* (per-page visual + a11y specs); no report doc"
+    notes: >
+      Unblocked by stage 11 PASS (2026-06-21). Remaining work (R2-9): re-validate the rendered pages
+      against the design-locked reference images (tests/visual/__screenshots__/reference-images, SHA-pinned
+      via verify-shas.mjs) after the INC-3 UI-stack migration, by running `pnpm test:visual`. Reference
+      updates are Controller-gated (anti snapshot-laundering). `pnpm verify` excludes the visual suite, so
+      it stays green independently.
+
+  "13-backend-spec":
+    status: "needs-user-confirmation"
+    gate: "11-backend-spec-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "backend/SPEC.md"
+    notes: >
+      Scope, security, persistence, integrations explicit. Awaiting sign-off. (NB: backend CODE now exists
+      on the work branch per DEC-011 — the @creatoros/backend persistence slice — so "no code yet" no longer
+      holds; the spec itself is still what awaits confirmation here.)
+
+  "14-module-workflow-spec":
+    status: "needs-user-confirmation"
+    gate: "11-backend-spec-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "backend/MODULE-ARCHITECTURE.md"
+    notes: "Module architecture documented; awaiting sign-off."
+
+  "15-service-contract":
+    status: "draft"
+    gate: "12-service-contract-gate"
+    gate_status: "pass"
+    confirmation_required: true
+    artifacts:
+      - existing: "contract/ package @creatoros/contract @0.4.0 on feat/service-contract"
+      - existing: "docs/superpowers/specs/2026-06-21-service-contract-design.md (design)"
+      - existing: "docs/superpowers/plans/2026-06-21-service-contract-15a.md (plan)"
+    notes: >
+      15a + 15b DONE (DEC-008, DEC-009). @creatoros/contract now v0.4.0 (20 test files / 65 tests):
+      Zod envelope (SPEC §14) + primitives + 15 module resource DTOs + 4 page DTOs + endpoint registry
+      (76 routes, each once) + typed client + swappable Transport. DEC-009 seam fix: NodeNext .js ->
+      bundler resolution (Next 16/Turbopack/vitest all bundlers); awaiting_confirmation added to AITaskStatus.
+      15b wired the FE via MockTransport with real Projects mutations. Confirmation still required (contract
+      is a confirmation point). REMAINING GOVERNANCE GAP: the 76 routes were NOT assigned stable API-### IDs
+      in ID_REGISTRY (DEC-012 chose pragmatic continuation) — tracked as OPEN-004, not silently dropped.
+
+  "16-backend-tdd":
+    status: "draft"   # CHANGED from not-started — contradicted by DEC-011 (real code + tests exist)
+    gate: "13-tdd-gate"
+    gate_status: "not-run"   # gate not run across all verticals; only the Projects slice is proven
+    confirmation_required: false
+    artifacts:
+      - existing: "@creatoros/backend on feat/service-contract (Drizzle schema + pglite + ProjectRepository + createPersistenceTransport)"
+      - existing: "backend/src/ — 30 .ts files; 8 pglite-backed tests green (typecheck 0)"
+      - existing: "@creatoros/ai-worker (AI execution layer, 27 tests) — DEC-009"
+      - existing: "backend/TDD-PLAN.md (plan)"
+    notes: >
+      PARTIALLY DONE (DEC-011), not not-started. A real-persistence Projects slice exists and is proven:
+      pglite (pure-WASM Postgres, chosen over the TDD-PLAN's Testcontainers — no Docker), Drizzle schema
+      (projects, project_activities), ProjectRepository, createPersistenceTransport. Infra-decision deviation
+      from TDD-PLAN is intentional and recorded. REMAINING = pure fan-out of a proven path: the other 6
+      Projects ops + the other module verticals (Knowledge/Assets/Artifacts/Publishing/Analytics/Reviews/
+      Learnings/AI/Notifications), each a Drizzle schema+repo added to PERSISTED_OPS. Was "Blocked on 15" —
+      15 is now done, so unblocked and in progress.
+
+  "17-integration-release":
+    status: "draft"   # CHANGED from not-started — DEC-010/011 delivered a live FE↔BE↔SQL round-trip
+    gate: "14-integration-gate"
+    gate_status: "not-run"
+    confirmation_required: true
+    artifacts:
+      - existing: "frontend/app/api/v1/dispatch route + HttpTransport + compositeTransport (server/persistence-client.ts)"
+      - existing: "route.test proves create->persist(SQL)->list round-trip (DEC-010, DEC-011)"
+    notes: >
+      THIN SLICE DONE (DEC-010 seam, DEC-011 live cutover), not not-started. The Projects vertical runs a
+      real HTTP FE↔BE round-trip durable to pglite SQL and survives router.refresh(). The "swap one line at
+      stage 17" promise is realized as "swap the transport behind /api/v1/dispatch". REMAINING: fan out the
+      remaining verticals over this seam; cross-restart durability (dataDir); full release review. Still
+      gated by stage-12 visual re-validation (OPEN-002) and the open consistency chain for a true release.
+
+stage_defaults:
+  valid_statuses:
+    - "not-started"
+    - "draft"
+    - "needs-user-confirmation"
+    - "blocked"
+    - "passed"
+    - "accepted-risk"
+    - "invalidated"
+  transition_rule: "orchestrator/process/rules/orchestrator-state-machine.md (pinned in-repo copy; was an external skill ref)"
+
+consistency_gate:
+  status: "fail"   # BLOCKING for stage 17 release; non-blocking for per-vertical progress (recorded, not laundered)
+  reason: >
+    Upstream->downstream orphan scan still partially broken. CHANGED since 2026-06-20: the service contract
+    (DEC-008) now defines API operations for the backend-bearing FRs (contract half of GAP-002 CLOSED), and
+    the Projects vertical now has a persisted API + backend TEST (DEC-011). REMAINING broken chains: the
+    other module verticals (Knowledge/Assets/Artifacts/Publishing/Analytics/Reviews/Learnings/AI/
+    Notifications) have a contract API but NO persisted backend TEST yet. Gate cannot return pass until those
+    chains close. Enforcement: `node orchestrator/process/reconcile.mjs` refuses to let any stage be `passed`
+    downstream of this fail unless explicitly `accepted-risk` (anti-laundering).
+  downstream_to_upstream: "pass (no orphan pages/components/tests)"
+  blocks: ["17-integration-release"]
+  recorded_in: "TRACEABILITY_MATRIX.md > Orphan Scan"
+
+implementation_gate:
+  status: "pass"
+  reason: "Stage-09 gate re-run 2026-06-21 after DEC-006 remediation (INC-1..INC-5). Behaviour traces to specs across state/action/data-access/domain/UI-foundation; RISK-001-006,008-010 resolved, RISK-007 substantially resolved (residual single-use components permitted by SPEC §8)."
+  recorded_in: "STAGE-09-GATE-RERUN.md (re-run); CODE_RECONCILIATION.md (original fail)"
+  risks: "RISK-001..010 — see STAGE-09-GATE-RERUN.md risk register"
+  resolved_decision: "DEC-006 full spec alignment executed and verified (pnpm verify GREEN on host)."
+
+ratification_status: "REMEDIATION COMPLETE (host) — DEC-006 full spec alignment executed. Stage-09 gate re-run PASS; stage 11 promoted to passed. Stage-12 visual re-validation (R2-9) and the non-blocking R2 tail remain."
+
+reconciliation:
+  date: "2026-06-22"
+  decision: "DEC-013"
+  summary: >
+    Manifest reconciled to repo reality after drift (stage rows were a 2026-06-20 snapshot; build had run
+    to DEC-012). Added in-repo executable process layer (orchestrator/process/) implementing: JSON-Schema
+    validation, manifest↔repo drift detection (reconcile.mjs), and the blocking consistency rule.
+  added_artifacts:
+    - "orchestrator/CHANGE_IMPACT.md (was required by state-machine + consistency gate; previously missing)"
+    - "orchestrator/process/reconcile.mjs (drift detector / executable gate)"
+    - "orchestrator/process/manifest.schema.json"
+    - "orchestrator/process/rules/orchestrator-state-machine.md (pinned copy of the external skill rule)"
+    - "orchestrator/process/README.md (best-practice rationale + how to run)"
+    - "orchestrator/progress.json + process/progress.mjs (DEC-014: derived feature-grained task queue)"
+    - "orchestrator/process/harness/* (DEC-014: long-running autonomous 3-agent harness)"
+  policy:
+    fail_history: "Failed gate verdicts are RETAINED with a delta when superseded — never silently 'invalidated' (anti-laundering, ADR-style)."
+    drift_check: "Run `node orchestrator/process/reconcile.mjs` before trusting this manifest; CI-as-gate."
+
+remediation:
+  decision: "DEC-006 full alignment (specs authoritative)"
+  backlog: "orchestrator/REMEDIATION_BACKLOG.md"
+  increments:
+    - id: "INC-1"
+      scope: "Data layer: R0-4 (13 missing entities), R0-5 (fixture integrity), R0-6 (enum/field alignment)"
+      status: "done"
+      verify: "tsc --noEmit PASS (0); vitest src/fixtures 18/18 PASS"
+      result: "Added 13 entities + AITask fixtures; fixed 9 cross-artifact currentVersionId + dangling ingestionRunId + podcast coverAssetId; Learning.confidenceScore->int, relationType->string; +3 integrity tests."
+    - id: "INC-2"
+      scope: "R0-2 selector layer (15 builders) + R0-3 state infra (scenarios for all pages)"
+      status: "done"
+      verify: "tsc 0; 0 canonicalDataset derefs in feature pages; all page tests + fixtures 26/26 PASS"
+      result: "14 new build<Page>ViewModel selectors; all 15 pages refactored to consume selectors; generic makePageScenarios/buildPageScenario added. Deferred: experience/copilot still source from in-selector constants (not relational canonical) to avoid baseline regression."
+    - id: "INC-3"
+      scope: "R0-1 UI stack migration @base-ui -> shadcn/Radix"
+      status: "done"
+      verify: "pnpm verify GREEN on host (lint 0, tsc 0, 398 tests, next build). 0 @base-ui imports remain."
+      result: >
+        Migrated all 18 ui/* primitives from @base-ui/react to shadcn/ui on Radix via the unified
+        radix-ui@1.6.0 package; exports, variants and classNames preserved (base-ui data-attr variants
+        translated to data-[state=...], render= -> asChild, Positioner/Popup -> Content, base-ui CSS vars
+        -> --radix-*). components.json base-nova -> new-york; @base-ui/react removed. jsdom Pointer Capture
+        shims added for Radix Select/DropdownMenu/Tooltip; ToggleGroup contract test moved to Radix
+        single-select radio semantics; Tooltip asserts via role=tooltip."
+    - id: "INC-4"
+      scope: "P1 functional: wire 6 stub pages, Copilot, Script editor, derived metrics, notifications"
+      status: "done"
+      verify: "tsc 0; eslint 0; per-cluster vitest all PASS (production/publishing/knowledge 65, publishing-center/review 74, copilot/script/dashboard/shell 75 + fixtures)"
+      result: >
+        Wired actions + loading/error/empty states on Production, Publishing Workspace, Knowledge,
+        Publishing Center, Analytics/Review (via new *-interactive-region islands + shared
+        components/state/page-state.tsx). Copilot now a real composer (state, append, chips, header);
+        Script editor editable with working toolbar + save-status; NotificationPopover built on ui/popover
+        with unread badge; dashboard + analytics metrics now DERIVED from canonicalDataset (not literals);
+        SidebarAssistantCard added. New interaction/state tests added across all touched pages."
+    - id: "INC-5"
+      scope: "P2 component extraction, naming, structure, re-baseline, re-run stage-09 gate"
+      status: "done-partial"
+      verify: "pnpm verify GREEN on host (lint 0, tsc 0, 398 tests, next build) across 4 committed milestones (A-D)."
+      result: >
+        R2-2 de-dup ProjectStageStepper (TopHeader private copy removed; shared component gains
+        variant=compact|segmented). R2-5 moved Pagination/ViewModeToggle/SortSelect to components/navigation.
+        R2-4 renamed PlatformIconView->PlatformIcon, DonutChart->AudienceBreakdown,
+        RetentionCurveChart->RetentionChart, AIAnalysisCard->InsightCard. R2-1 extracted analytics layer
+        (AudienceBreakdown/RetentionChart/HorizontalBarsChart/InsightCard) and resource layer
+        (AssetCard/MediaPreview/AssetDetailPanel via structural ResourceAsset types). R2-3 extracted shared
+        SearchField primitive (TopHeader adopts). R2-7 added public/fixtures/ (deterministic canonical.json
+        + tsx generator) ; R2-8 pinned Node 24 LTS. Shared component dirs: ~10 -> 20 components.
+      residual: >
+        Non-blocking tail (see STAGE-09-GATE-RERUN.md): R2-1 content-layer items still inline where
+        single-use (ArtifactListItem/KnowledgeListItem/EvidenceCard/FileThumbnail/VersionCard, SPEC §8
+        cover); R2-3 FilterBar + per-page search unification; R2-6 ui/* primitive sweep; R2-7 test-dir
+        relocation; R2-9 stage-12 visual re-validation (design-locked references)."
+
+open_items:
+  - id: "OPEN-001"
+    stage: "00-14"
+    type: "missing-artifact"
+    description: "Stable IDs now assigned (RESOLVED in ratification pass). Batch user confirmation still needed to promote needs-user-confirmation -> passed."
+    owner: "user"
+    revisit_trigger: "User reviews ID_REGISTRY + matrix and confirms."
+    status: "open"
+  - id: "OPEN-002"
+    stage: "11/12-frontend-implementation/validation"
+    type: "validation-finding"
+    description: >
+      `pnpm verify` GREEN on host (lint 0, tsc 0, build OK; test count grew 398->427 across DEC-009..011).
+      BUT the visual suite is RED — last run 25 passed / 27 failed (STAGE-09-GATE-RERUN.md) — and `pnpm verify`
+      is deliberately scoped to EXCLUDE it. Stage 11 is `passed` on a green that cannot see those 27 failures:
+      anti-laundering flag. Stage 12 visual re-validation (R2-9) must run before stage 11 can be considered
+      release-clean.
+    owner: "user"
+    revisit_trigger: "Stage-12 visual re-validation (run `pnpm test:visual`, Controller-gate reference updates)."
+    status: "partially-resolved"
+  - id: "OPEN-003"
+    stage: "15-service-contract"
+    type: "missing-artifact"
+    description: "RESOLVED — @creatoros/contract v0.4.0 exists (DEC-008/009), FE consumes it via Mock+HttpTransport. Contract half of GAP-002 closed."
+    owner: "user+agent"
+    revisit_trigger: "n/a"
+    status: "resolved"
+  - id: "OPEN-004"
+    stage: "15-service-contract / ID-governance"
+    type: "governance-gap"
+    description: >
+      The contract's 76 routes and the backend tests have NO stable API-### / TEST-### IDs in ID_REGISTRY
+      (prefixes are defined but never instantiated; TRACEABILITY_MATRIX API/TEST columns are all '—').
+      DEC-012 explicitly chose 'pragmatic continuation' over the spec's formal C-1 freeze. This is an
+      accepted-risk, now recorded explicitly instead of being a silent hole. Closing it = back-assign API/TEST
+      IDs and fill the matrix so the upstream->downstream scan is machine-checkable per operation.
+    owner: "user+agent"
+    revisit_trigger: "Before stage-17 release review, or when fanning out the remaining verticals."
+    status: "accepted-risk"
+  - id: "OPEN-005"
+    stage: "process / git-topology"
+    type: "process-risk"
+    description: >
+      RESOLVED (DEC-013, 2026-06-22): orchestrator/ (incl. process/ layer + CHANGE_IMPACT.md) is now COMMITTED
+      on `feat/service-contract`, so the source of truth travels with the code it describes. Residual note:
+      worktree dir '.worktrees/frontend-implementation' is on branch 'feat/service-contract' (name ≠ branch) —
+      documented here; rename when convenient. `main` still does not carry the control artifacts (it is the
+      near-empty spec-only branch); they live with the work.
+    owner: "user"
+    revisit_trigger: "If the work branch merges to main, ensure orchestrator/ travels with it."
+    status: "resolved"
