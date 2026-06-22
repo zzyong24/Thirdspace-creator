@@ -29,9 +29,9 @@ and verify in this one session.
 4. **Commit just this task.** `git add` only the files for this step; commit
    `feat(<vertical>): <step> persist+test (autonomous)` with the Co-Authored-By trailer.
 
-5. **Update the queue + STOP.** Record the commit hash under the vertical's `commits.<step>` in
-   `progress.json`. Do NOT set `tasks.<step>=done` by hand — the next `progress.mjs generate` derives it from
-   the files you just committed. Then STOP. One task per session.
+5. **Mark done + STOP.** Run `node orchestrator/process/progress.mjs done <vertical>:<step> --commit <hash>`
+   (this records the commit and advances the queue — required for data-source/flow/e2e which aren't
+   file-derived; harmless for repo/frontend which `generate` re-derives). Then STOP. One task per session.
 
 ## Rules
 

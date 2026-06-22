@@ -6,9 +6,9 @@
   },
   "summary": {
     "verticals": 21,
-    "tasks_done": 8,
+    "tasks_done": 12,
     "tasks_total": 87,
-    "tasks_pending": 79,
+    "tasks_pending": 75,
     "verticals_complete": 0
   },
   "verticals": [
@@ -48,7 +48,7 @@
       "tasks": [
         {
           "step": "repo",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "data-source",
@@ -75,7 +75,7 @@
       "tasks": [
         {
           "step": "repo",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "data-source",
@@ -268,7 +268,7 @@
       "tasks": [
         {
           "step": "repo",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "data-source",
@@ -344,7 +344,7 @@
       "tasks": [
         {
           "step": "repo",
-          "status": "pending"
+          "status": "done"
         },
         {
           "step": "frontend",

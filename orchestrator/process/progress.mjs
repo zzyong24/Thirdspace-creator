@@ -156,6 +156,27 @@ if (cmd === 'batch') {
   process.exit(0);
 }
 
+if (cmd === 'done') {
+  // mark a task done + record its commit. Needed for data-source/flow/e2e (not file-derived);
+  // for repo/frontend it's redundant (generate re-derives from signals) but harmless.
+  const key = process.argv[3];
+  if (!key || !key.includes(':')) { console.error('usage: done <vertical:step> [--commit <hash>]'); process.exit(2); }
+  const [vid, step] = key.split(':');
+  const v = doc.verticals.find(x => x.id === vid);
+  const t = v?.tasks.find(x => x.step === step);
+  if (!t) { console.error(`unknown task ${key}`); process.exit(2); }
+  t.status = 'done';
+  const ci = process.argv.indexOf('--commit');
+  if (ci > 0) (v.commits ||= {})[step] = process.argv[ci + 1];
+  delete leases[key];
+  doc.summary.tasks_done = doc.verticals.reduce((n, x) => n + x.tasks.filter(z => z.status === 'done').length, 0);
+  doc.summary.tasks_pending = doc.summary.tasks_total - doc.summary.tasks_done;
+  doc.summary.verticals_complete = doc.verticals.filter(x => x.tasks.every(z => z.status === 'done')).length;
+  writeFileSync(OUT, JSON.stringify(doc, null, 2) + '\n');
+  console.log(`marked ${key} done${ci > 0 ? ` (commit ${process.argv[ci + 1]})` : ''}`);
+  process.exit(0);
+}
+
 if (cmd === 'claim' || cmd === 'release') {
   const key = process.argv[3];
   if (!key || !key.includes(':')) { console.error('usage: claim|release <vertical:step> [--agent <id>]'); process.exit(2); }
