@@ -80,12 +80,20 @@ export function WorkspacePrimaryAction({
     void (async () => {
       try {
         // Persist the transition (current → next) through the SAME op the
-        // overview page uses, THEN navigate + revalidate.
-        await client.transitionProjectStage({
-          params: { projectId: routeProjectId, stage: nextStage },
-          query: undefined,
-          body: {},
-        });
+        // overview page uses — but it is BEST-EFFORT navigation: advancing is
+        // only legal from a pending/in_progress stage. On a COMPLETED project
+        // (every stage already done) the machine rejects re-advancing a
+        // completed stage, and that's fine — the user is just browsing forward,
+        // so we navigate regardless of whether the transition mutated anything.
+        try {
+          await client.transitionProjectStage({
+            params: { projectId: routeProjectId, stage: nextStage },
+            query: undefined,
+            body: {},
+          });
+        } catch {
+          // Already-completed / terminal stage → no mutation, navigate anyway.
+        }
         router.push(`/projects/${routeProjectId}/${nextStage}`);
         router.refresh();
       } finally {

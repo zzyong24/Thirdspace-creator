@@ -91,12 +91,17 @@ videos.forEach((v, i) => {
     startedAt: pubAt, targetCompletedAt: pubAt, completedAt: pubAt,
     archivedAt: null, createdAt: pubAt, updatedAt: CAPTURED,
   });
-  // a single terminal review stage (completed) keeps the stepper honest
-  projectStages.push({
-    id: `dy-stage-${n}-review`, projectId: projId, stage: "review",
-    status: "completed", progressPct: 100, skipped: false,
-    startedAt: pubAt, completedAt: pubAt, updatedAt: pubAt,
-  });
+  // A published work has walked the full pipeline — seed ALL 6 stage rows as
+  // completed (matches createProject, which inserts every stage). Without the
+  // full set the stepper can't show / navigate earlier stages and a transition
+  // 404s ("Stage not found").
+  for (const stg of ["research", "planning", "script", "production", "publishing", "review"]) {
+    projectStages.push({
+      id: `dy-stage-${n}-${stg}`, projectId: projId, stage: stg,
+      status: "completed", progressPct: 100, skipped: false,
+      startedAt: pubAt, completedAt: pubAt, updatedAt: pubAt,
+    });
+  }
 
   contentOutputs.push({
     id: outId, projectId: projId, title: title,
