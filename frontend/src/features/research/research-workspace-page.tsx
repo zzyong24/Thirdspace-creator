@@ -47,6 +47,7 @@ import type {
 } from "@/types/view-models";
 import { ResearchNotesIsland } from "./research-notes-island";
 import { EvidenceCollectionIsland } from "./evidence-collection-island";
+import { GatherMaterialIsland } from "./gather-material-island";
 import { PositioningFitBadge } from "@/features/positioning/positioning-fit-badge";
 
 // ---------------------------------------------------------------------------
@@ -100,6 +101,11 @@ export function ResearchWorkspacePage({
           data-slot="research-right-rail"
           className="flex flex-col gap-card-gap"
         >
+          <GatherMaterialIsland
+            projectId={vm.projectId}
+            topic={vm.idea.title}
+            angle={vm.idea.summary}
+          />
           <ResearchNotesIsland notes={vm.notes} />
           <EvidenceCollectionIsland items={vm.evidence} />
           <RelatedTagsCard tags={vm.relatedTags} />
