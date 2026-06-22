@@ -86,13 +86,13 @@ describe("AppShell", () => {
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const items = within(nav).getAllByRole("link");
     const labels = items.map((item) => item.textContent?.trim() ?? "");
-    // SPEC §3.4: 定位中心 is the upstream constraint source — pinned 2nd, before 项目.
+    // SPEC §3.4: 定位中心 is the upstream constraint source — pinned 2nd. 选题 sits right
+    // under it (定位→选题→项目 upstream order: 定位约束选题, 选题落地为项目).
     expect(labels).toEqual([
       "首页",
       "定位中心",
-      "项目",
-      // 选题候选池 — 七步③, SPEC §5.5: pinned right after 项目 (选题先于落地为 Project).
       "选题",
+      "项目",
       "知识库",
       "素材中心",
       "发布中心",
