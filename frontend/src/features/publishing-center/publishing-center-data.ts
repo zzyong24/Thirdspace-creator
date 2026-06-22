@@ -71,6 +71,13 @@ interface PublicationRevisionDto {
   readonly revisionNumber: number;
 }
 
+interface MetricSnapshotDto {
+  readonly id: string;
+  readonly publicationId: string;
+  readonly capturedAt: string;
+  readonly rawMetrics: Record<string, unknown>;
+}
+
 export interface PublishingCenterDataClient {
   listProjects(input: {
     params: undefined;
@@ -88,6 +95,11 @@ export interface PublishingCenterDataClient {
     body: undefined;
   }): Promise<unknown>;
   listPublicationRevisions(input: {
+    params: { publicationId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  getPublicationAnalytics(input: {
     params: { publicationId: string };
     query: { page: number; pageSize: number };
     body: undefined;
@@ -173,6 +185,58 @@ async function resolveRevisionTitle(
   }
 }
 
+// 表现 cell formatting — Chinese 万 grouping for large counts.
+function formatCount(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return "0";
+  if (n >= 10000) return `${(n / 10000).toFixed(n >= 100000 ? 0 : 1)}万`;
+  return n.toLocaleString("zh-CN");
+}
+function numOf(raw: Record<string, unknown>, key: string): number {
+  const v = raw[key];
+  return typeof v === "number" && Number.isFinite(v) ? v : 0;
+}
+
+/**
+ * Resolve a publication's REAL 表现 (views + engagement) from its latest analytics
+ * snapshot (`analytics.publications.get` → metric snapshots; we read the newest
+ * snapshot's `rawMetrics`, the self-describing payload the seed writes). Returns
+ * `null` when there is no snapshot / the read fails, so the caller keeps the
+ * honest "暂无数据" cell rather than fabricating a number.
+ */
+async function resolvePerformance(
+  client: PublishingCenterDataClient,
+  publicationId: string,
+): Promise<{ views: string; engagementLabel: string; engagementTone: "positive" | "neutral" | "warning" } | null> {
+  try {
+    const snapshots = (await client.getPublicationAnalytics({
+      params: { publicationId },
+      query: { page: 1, pageSize: 20 },
+      body: undefined,
+    })) as ReadonlyArray<MetricSnapshotDto>;
+    if (!snapshots || snapshots.length === 0) return null;
+    const latest = snapshots
+      .slice()
+      .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0]!;
+    const raw = latest.rawMetrics ?? {};
+    const plays = numOf(raw, "plays");
+    const interactions =
+      numOf(raw, "likes") + numOf(raw, "comments") + numOf(raw, "shares") + numOf(raw, "favorites");
+    const rate = plays > 0 ? interactions / plays : 0;
+    // tone: ≥6% interaction rate is strong, ≥2% ok, below is weak (douyin heuristics)
+    const tone = rate >= 0.06 ? "positive" : rate >= 0.02 ? "neutral" : "warning";
+    return {
+      views: `${formatCount(plays)} 播放`,
+      engagementLabel:
+        interactions > 0
+          ? `${formatCount(interactions)} 互动 · ${(rate * 100).toFixed(1)}%`
+          : "0 互动",
+      engagementTone: tone,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Build the REAL publication rows by walking projects → outputs → publications.
  * Returns `null` (not `[]`) when the projects read throws, so the caller can
@@ -241,7 +305,10 @@ async function assembleRealRows(
         // Falls back to the owning output's title placeholder when the revision
         // read yields nothing (empty title / read fails). A platform suffix
         // disambiguates a 一稿多平台 fan-out where one output has N rows.
-        const revisionTitle = await resolveRevisionTitle(client, pub);
+        const [revisionTitle, performance] = await Promise.all([
+          resolveRevisionTitle(client, pub),
+          resolvePerformance(client, pub.id),
+        ]);
         const fallbackTitle = output
           ? `${output.title} · ${platformLabel(pub.platform)}`
           : platformLabel(pub.platform);
@@ -259,11 +326,13 @@ async function assembleRealRows(
           publishedAtLabel: formatDate(when),
           status,
           statusLabel: STATUS_LABELS[status],
-          // 表现: no analytics snapshot for real publications this wave — keep it
-          // honest (no fabricated play count). The cell renders 暂无数据.
-          views: "暂无数据",
-          engagementLabel: "暂无数据",
-          engagementTone: "neutral",
+          // 表现: REAL play count + engagement from the publication's latest
+          // analytics snapshot (analytics.publications.get → rawMetrics). When a
+          // publication has no snapshot, performance is null → keep the honest
+          // "暂无数据" cell rather than fabricate a number.
+          views: performance ? performance.views : "暂无数据",
+          engagementLabel: performance ? performance.engagementLabel : "暂无数据",
+          engagementTone: performance ? performance.engagementTone : "neutral",
           thumbnailToken: `pub-${pub.id}`,
         };
         }),
