@@ -93,20 +93,33 @@ export function CalibrationView({
                 </span>
                 <BumpRubricVersionButton rubricId={rubric.id} />
               </div>
-              <BlindPredictForm rubricVersionId={rubric.currentVersion.id} />
+              <BlindPredictForm
+                rubricVersionId={rubric.currentVersion.id}
+                dimensions={rubric.currentVersion.dimensions}
+              />
             </div>
           </SectionCard>
 
-          <SectionCard title="评分维度" description="当前 RubricVersion 的权重">
+          <SectionCard
+            title="评分维度"
+            description="当前 RubricVersion 的权重与 0/3/5 锚点"
+          >
             <ul
               data-testid="rubric-dimensions"
-              className="flex flex-wrap gap-2 py-2"
+              className="flex flex-col gap-2 py-2"
             >
               {rubric.currentVersion.dimensions.map((dim) => (
-                <li key={dim.key}>
-                  <Badge variant="outline" className="text-[10px]">
-                    {dim.label} · {Math.round(dim.weight * 100)}%
-                  </Badge>
+                <li key={dim.key} className="flex flex-col gap-0.5">
+                  <span className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px]">
+                      {dim.label} · {Math.round(dim.weight * 100)}%
+                    </Badge>
+                  </span>
+                  {dim.description ? (
+                    <span className="text-[11px] leading-snug text-muted-foreground">
+                      {dim.description}
+                    </span>
+                  ) : null}
                 </li>
               ))}
             </ul>

@@ -91,6 +91,67 @@ describe("calibration island wiring", () => {
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 
+  it("renders anchored scoring rows (default merged dims) with 0/3/5 guidance", () => {
+    render(<BlindPredictForm rubricVersionId="rubricver-1" />);
+    // Merged 传播+变现 rubric: 6 anchored dimensions, each with its anchor description
+    // + a 0-5 score select, so scoring is anchored not blind.
+    expect(screen.getAllByTestId(/^rubric-scoring-row-/)).toHaveLength(6);
+    expect(screen.getByTestId("rubric-scoring-row-hook")).toBeTruthy();
+    expect(screen.getByTestId("rubric-scoring-row-emotion")).toBeTruthy();
+    expect(screen.getByTestId("rubric-scoring-row-quotable")).toBeTruthy();
+    // Anchor text rendered as guidance.
+    expect(screen.getByText(/无法停止处理的具体场景或断言/)).toBeTruthy();
+    // Per-dimension 0-5 score input present.
+    expect(
+      screen.getByLabelText("钩子强度 评分（0-5，对照锚点）"),
+    ).toBeTruthy();
+  });
+
+  it("prefers server RubricVersion dimensions when passed (anchors flow through)", () => {
+    render(
+      <BlindPredictForm
+        rubricVersionId="rubricver-1"
+        dimensions={[
+          {
+            key: "hook",
+            label: "钩子强度",
+            weight: 1,
+            description: "服务端锚点描述",
+          },
+        ]}
+      />,
+    );
+    const rows = screen.getAllByTestId(/^rubric-scoring-row-/);
+    expect(rows).toHaveLength(1);
+    expect(screen.getByText("服务端锚点描述")).toBeTruthy();
+  });
+
+  it("anchor scoring does not change the createPrediction call shape (no per-dim scores)", async () => {
+    render(<BlindPredictForm rubricVersionId="rubricver-1" />);
+    fireEvent.change(screen.getByLabelText("预测内容 id"), {
+      target: { value: "output-x" },
+    });
+    // Score a dimension — local guidance only, must not leak into the op body.
+    fireEvent.change(screen.getByLabelText("钩子强度 评分（0-5，对照锚点）"), {
+      target: { value: "5" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "盲预测" }));
+    await waitFor(() =>
+      expect(mockClient.createPrediction).toHaveBeenCalledTimes(1),
+    );
+    const arg = mockClient.createPrediction.mock.calls[0]![0] as {
+      body: Record<string, unknown>;
+    };
+    expect(arg.body).toEqual({
+      subjectType: "content_output",
+      subjectId: "output-x",
+      rubricVersionId: "rubricver-1",
+      predictedMetrics: {},
+      predictedConversion: {},
+      confidence: "med",
+    });
+  });
+
   it("锁定预测 → lockPrediction (draft row only)", async () => {
     render(<PredictionRow prediction={DRAFT} />);
     fireEvent.click(screen.getByRole("button", { name: "锁定预测" }));

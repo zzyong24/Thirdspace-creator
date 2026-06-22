@@ -13,6 +13,9 @@ const rubricDimension = z.object({
   key: z.string(),
   label: z.string(),
   weight: z.number(),
+  // 0/3/5 anchor guidance borrowed from cheat-on-content's calibrated rubric.
+  // OPTIONAL for back-compat: pre-anchor dimensions (no `description`) still validate.
+  description: z.string().optional(),
 });
 
 // RubricVersion — immutable version chain (ArtifactVersion 范式).
