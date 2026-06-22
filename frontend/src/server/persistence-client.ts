@@ -127,6 +127,7 @@ import {
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerate } from "@/server/ai/topic-runner";
 import { runScriptDraft } from "@/server/ai/script-runner";
+import { runPlanningThesis } from "@/server/ai/planning-runner";
 import { runReviewAnalyze } from "@/server/ai/review-runner";
 import { runPlatformAdapt } from "@/server/ai/platform-adapt-runner";
 import { runMaterialMatch } from "@/server/ai/material-match-runner";
@@ -1289,6 +1290,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // `artifact_version` candidate; 采纳 appends a new ArtifactVersion (reuses the
           // existing artifact_version confirm path).
           void runScriptDraft(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "planning.thesis" &&
+          task.status === "queued"
+        ) {
+          // 论点树 node (策划 stage) — drafts a thesis tree (核心论点 + 支撑/证据/反驳
+          // 分支) from the creative context, records an `artifact_version` candidate;
+          // 采纳 appends a new ArtifactVersion onto the project's `thesis_tree` artifact
+          // (reuses the existing artifact_version confirm path). The 策划 workspace reads
+          // that version's contentData.nodes back into the 论点树 surface.
+          void runPlanningThesis(
             ctx,
             {
               id: String(task.id),
