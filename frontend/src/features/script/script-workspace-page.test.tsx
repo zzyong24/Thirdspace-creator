@@ -192,13 +192,11 @@ describe("ScriptWorkspacePage", () => {
       '[data-slot="app-top-header"]',
     ) as HTMLElement;
     expect(header).not.toBeNull();
-    const primaryAction = within(header).getByRole("link", {
+    // A6: advancing primary action is now a transition button (persist-then-navigate).
+    const primaryAction = within(header).getByRole("button", {
       name: /进入下一步:拍摄制作/,
     });
-    expect(primaryAction).toHaveAttribute(
-      "href",
-      "/projects/project-ainativebrowser/production",
-    );
+    expect(primaryAction).not.toBeNull();
   });
 
   it("renders the six reference Script Tabs in order", async () => {
