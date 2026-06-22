@@ -199,6 +199,7 @@ export function buildPublishingCenterViewModel(): PublishingCenterViewModel {
       return {
         id: pub.id,
         contentTitle: publicationTitle(pub.id),
+        projectId: projectIdForPublication(pub.id),
         projectTitle: projectTitleForPublication(pub.id),
         contentType: contentTypeForPublication(pub.id),
         platform: pub.platform,
@@ -319,6 +320,17 @@ function publicationLabelFromPlatform(platform: string): string {
     default:
       return "已发布内容";
   }
+}
+
+function projectIdForPublication(publicationId: string): string | undefined {
+  const pub = canonicalDataset.publications.find(
+    (row) => row.id === publicationId,
+  );
+  if (!pub) return undefined;
+  const output = canonicalDataset.contentOutputs.find(
+    (row) => row.id === pub.contentOutputId,
+  );
+  return output?.projectId;
 }
 
 function projectTitleForPublication(publicationId: string): string {

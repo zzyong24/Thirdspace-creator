@@ -201,6 +201,9 @@ function ContinueCreatingCard({
   continueCreating: ContinueCreating;
   projectPlatforms: ReadonlyArray<string>;
 }) {
+  // Deep-link the project row to its current-stage workspace (D3): the project's
+  // current stage IS the workspace the creator should resume in.
+  const projectHref = `/projects/${continueCreating.projectId}/${continueCreating.stage}`;
   return (
     <div data-slot="continue-creating-card">
     <SectionCard
@@ -208,9 +211,10 @@ function ContinueCreatingCard({
       description="最近编辑的项目与下一步行动"
     >
       <div className="flex flex-col gap-3">
-        <article
+        <Link
+          href={projectHref}
           data-slot="continue-creating-row"
-          className="flex flex-col gap-2 rounded-card border border-border bg-surface-subtle p-3"
+          className="flex flex-col gap-2 rounded-card border border-border bg-surface-subtle p-3 transition-colors hover:border-brand/40 hover:bg-brand-soft/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="truncate text-sm font-medium text-foreground">
@@ -230,7 +234,7 @@ function ContinueCreatingCard({
             showValue
             label="项目进度"
           />
-        </article>
+        </Link>
         <Link
           href="/projects/new"
           data-slot="new-project-entry"
@@ -352,23 +356,27 @@ function RecentPublicationsCard({
         aria-label="最近发布"
       >
         {publications.slice(0, 4).map((row) => (
-          <li
-            key={row.id}
-            data-slot="publication-row"
-            className="flex items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-2"
-          >
-            <div className="flex min-w-0 items-center gap-2">
-              <PlatformIcon platform={row.platform} size="xs" />
-              <div className="flex min-w-0 flex-col">
-                <span className="truncate text-sm font-medium text-foreground">
-                  {row.title}
-                </span>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {row.views.toLocaleString()} 次播放
-                </span>
+          <li key={row.id} data-slot="publication-row">
+            {/* D3: 最近发布 rows deep-link to the Publishing Center (the lean
+                dashboard publication row carries no projectId, so /publishing is
+                the cleanest real target). */}
+            <Link
+              href="/publishing"
+              className="flex items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 py-2 transition-colors hover:border-brand/40 hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <PlatformIcon platform={row.platform} size="xs" />
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {row.title}
+                  </span>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {row.views.toLocaleString()} 次播放
+                  </span>
+                </div>
               </div>
-            </div>
-            <StatusBadge status={row.status} />
+              <StatusBadge status={row.status} />
+            </Link>
           </li>
         ))}
       </ul>
