@@ -259,7 +259,10 @@ interface WireMessage {
 }
 
 const POLL_INTERVAL_MS = 3000;
-const MAX_POLLS = 20; // ~60s — the agent reply (subscription subprocess) usually lands sooner.
+// ~4min — the assistant reply runs a real Claude subprocess (subscription) whose startup
+// + reasoning can take 1–3min; the poll window must comfortably outlast it (verified e2e:
+// a positioning-aware reply landed well past 60s).
+const MAX_POLLS = 80;
 
 export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   const vm = viewModel ?? buildCopilotViewModel();
