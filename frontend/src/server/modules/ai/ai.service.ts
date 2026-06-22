@@ -103,6 +103,23 @@ export interface AiPublishingPort {
   ): Promise<unknown>;
 }
 
+// The MaterialLinks seam (用料链 / Bill-of-Materials, Plan A5): when a `material_list`
+// candidate is 采纳ed, each new KnowledgeItem is ALSO tied to the task's project via a
+// material-link row — so the 料库⇄创作 edge becomes a live record. AI never writes the
+// link table directly; the MaterialLinks module owns the entity.
+export interface AiMaterialLinksPort {
+  link(
+    ctx: RequestContext,
+    input: {
+      projectId: string;
+      entityType: "knowledge" | "asset";
+      entityId: string;
+      role?: string;
+      stage?: string;
+    },
+  ): Promise<unknown>;
+}
+
 export interface ServiceDeps {
   db: Db;
   now: () => string;
@@ -112,6 +129,7 @@ export interface ServiceDeps {
   candidate: AiCandidatePort;
   learnings: AiLearningsPort;
   publishing: AiPublishingPort;
+  materialLinks: AiMaterialLinksPort;
 }
 
 export interface CreateTaskInput {
@@ -366,11 +384,22 @@ export function createAiService(deps: ServiceDeps): AiService {
           ]
             .filter(Boolean)
             .join("\n");
-          await deps.knowledge.createKnowledge(ctx, {
+          const created = await deps.knowledge.createKnowledge(ctx, {
             title,
             knowledgeType: "reference",
             content,
           });
+          // Plan A5 — tie each new KnowledgeItem to the task's project so the 料库⇄创作
+          // edge becomes a live row (用料链). Only fires when the task carries a project.
+          if (typeof task.projectId === "string" && task.projectId.length > 0) {
+            await deps.materialLinks.link(ctx, {
+              projectId: task.projectId,
+              entityType: "knowledge",
+              entityId: created.id,
+              role: "reference",
+              stage: "research",
+            });
+          }
         }
         const updated = await repo.updateTaskStatus(taskId, {
           status: "succeeded",

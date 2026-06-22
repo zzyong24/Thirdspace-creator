@@ -39,6 +39,7 @@ function makeTransport(db: Db) {
       candidate: { createFromAIResult: async () => ({ id: "cand-new" }) },
       learnings: { createLearning: async () => ({ id: "learn-new" }) },
       publishing: { createPublicationFromDraft: async () => ({ id: "pub-new" }) },
+      materialLinks: { link: async () => ({ id: "mlink-new" }) },
   });
   return createAiTransport(() => service);
 }
@@ -123,6 +124,7 @@ describe("ai contract (each op validates against its DTO)", () => {
       candidate: { createFromAIResult: async () => ({ id: "cand-new" }) },
       learnings: { createLearning: async () => ({ id: "learn-new" }) },
       publishing: { createPublicationFromDraft: async () => ({ id: "pub-new" }) },
+      materialLinks: { link: async () => ({ id: "mlink-new" }) },
     });
     const t = await service.createTask(ctx, {
       taskType: "script.rewrite",
