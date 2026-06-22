@@ -121,7 +121,7 @@ videos.forEach((v, i) => {
   publicationRevisions.push({
     id: revId, publicationId: pubId, revisionNumber: 1,
     title, description: brief, coverAssetId: null,
-    category, series: null, platformTags: work ? (work.hashtags || []) : [],
+    category, series: "", platformTags: work ? (work.hashtags || []) : [],
     platformSettings: {}, createdAt: pubAt,
   });
 

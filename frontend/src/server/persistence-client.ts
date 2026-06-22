@@ -10,6 +10,7 @@ import {
   douyinContentOutputs,
   douyinOutputStages,
   douyinPublications,
+  douyinPublicationRevisions,
   douyinMetricSnapshots,
   douyinMetricValues,
   douyinAudienceSnapshots,
@@ -1731,21 +1732,50 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     publishing: {
       getRecentPublications: async (ctx) => {
-        const rows = await publishingService.getRecentPublications(ctx, {
+        // GAP-DASH-3 做真:真标题(来自 revision,publishing 模块内解析)+ 真播放/
+        // 互动(facade 层 join analytics 最新快照 rawMetrics,跨模块组合只在此层)。
+        const rows = await publishingService.getRecentPublicationsWithTitle(ctx, {
           limit: 5,
         });
-        // PublicationRow carries no title/views/engagement (title lives on a
-        // revision; metrics on Analytics). Map the columns we own; default the
-        // rest. The canonical Publishing seed is empty → [] in practice.
-        return rows.map((r) => ({
-          id: r.id,
-          title: r.id,
-          platform: r.platform as "youtube",
-          status: r.status as "published",
-          views: 0,
-          engagement: 0,
-          publishedAt: r.publishedAt ?? r.createdAt,
-        }));
+        const numOf = (raw: Record<string, unknown>, key: string): number => {
+          const v = raw[key];
+          return typeof v === "number" && Number.isFinite(v) ? v : 0;
+        };
+        return Promise.all(
+          rows.map(async (r) => {
+            let views = 0;
+            let engagement = 0;
+            try {
+              const page = await analyticsService.getPublicationAnalytics(
+                ctx,
+                r.id,
+                1,
+                10,
+              );
+              const latest = page.rows
+                .slice()
+                .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
+              const raw = (latest?.rawMetrics ?? {}) as Record<string, unknown>;
+              views = numOf(raw, "plays");
+              engagement =
+                numOf(raw, "likes") +
+                numOf(raw, "comments") +
+                numOf(raw, "shares");
+            } catch {
+              // A single publication's analytics read failing degrades to 0 —
+              // never crashes the whole dashboard composition.
+            }
+            return {
+              id: r.id,
+              title: r.title || "未命名发布",
+              platform: r.platform as "youtube",
+              status: r.status as "published",
+              views,
+              engagement,
+              publishedAt: r.publishedAt ?? r.createdAt,
+            };
+          }),
+        );
       },
     },
     analytics: {
@@ -2429,6 +2459,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   await publishingSeedRepo.seedPublications(
     douyinPublications.map(
       (pub) => ({ ...pub, userId: DY_OWNER }) as unknown as PublicationRow,
+    ),
+  );
+  // Seed the dy publication revisions so the REAL video title (it lives on the
+  // revision, not the publication row) resolves on the Dashboard「最近发布」+
+  // 发布中心 title column. userId injected (the fixture rows carry none).
+  await publishingSeedRepo.seedRevisions(
+    douyinPublicationRevisions.map(
+      (rev) =>
+        ({ ...rev, userId: DY_OWNER }) as unknown as Parameters<
+          typeof publishingSeedRepo.seedRevisions
+        >[0][number],
     ),
   );
 

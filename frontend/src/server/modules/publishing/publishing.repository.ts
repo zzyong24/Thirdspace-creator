@@ -50,6 +50,7 @@ export interface UpdateStatusPatch {
 
 export interface PublishingRepository {
   seedPublications(rows: PublicationRow[]): Promise<void>;
+  seedRevisions(rows: PublicationRevisionRow[]): Promise<void>;
   createPublication(
     outputId: string,
     input: CreatePublicationInput,
@@ -122,6 +123,11 @@ export function createPublishingRepository(
     async seedPublications(rows) {
       if (rows.length === 0) return;
       await db.insert(publications).values(rows).onConflictDoNothing();
+    },
+
+    async seedRevisions(rows) {
+      if (rows.length === 0) return;
+      await db.insert(publicationRevisions).values(rows).onConflictDoNothing();
     },
 
     async createPublication(outputId, input) {
