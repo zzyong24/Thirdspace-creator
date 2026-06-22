@@ -44,6 +44,7 @@ import {
   AnalyticsReviewInteractiveRegion,
   type ReviewsWiring,
 } from "./analytics-review-interactive-region";
+import { ReviewAnalyzeIsland } from "./review-analyze-island";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -103,10 +104,13 @@ export function AnalyticsReviewPage({
           description="发布内容并积累数据后即可在此查看复盘分析。"
         />
       ) : (
-        <AnalyticsReviewInteractiveRegion
-          viewModel={vm}
-          reviewsWiring={reviewsWiring}
-        />
+        <>
+          <ReviewAnalyzeIsland projectId={vm.projectId} />
+          <AnalyticsReviewInteractiveRegion
+            viewModel={vm}
+            reviewsWiring={reviewsWiring}
+          />
+        </>
       )}
     </main>
   );

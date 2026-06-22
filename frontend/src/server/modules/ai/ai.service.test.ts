@@ -33,6 +33,7 @@ function makeService(
   const candidate = {
     createFromAIResult: vi.fn(async () => ({ id: "cand-new" })),
   };
+  const learnings = { createLearning: vi.fn(async () => ({ id: "learn-new" })) };
   const service = createAiService({
     db,
     now: () => NOW,
@@ -40,8 +41,9 @@ function makeService(
     artifacts: port,
     knowledge,
     candidate,
+    learnings,
   });
-  return { service, port, knowledge, candidate };
+  return { service, port, knowledge, candidate, learnings };
 }
 
 describe("ai service", () => {
@@ -118,6 +120,26 @@ describe("ai service", () => {
       ctx,
       expect.objectContaining({ aiTaskId: `${task.id}#0`, resultType: "candidate" }),
     );
+  });
+
+  it("confirmTask on a learning_list materializes each 爆款要素 via learnings.createLearning", async () => {
+    const { service, learnings } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "review.analyze",
+      inputData: { projectId: "p-1" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "learning_list",
+      resultData: {
+        items: [
+          { title: "前3秒用具体数字", insight: "可量化收益提升完播" },
+          { title: "争议性钩子", insight: "" },
+        ],
+      },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    expect(learnings.createLearning).toHaveBeenCalledTimes(2);
   });
 
   it("confirmTask rejects a task not in awaiting_confirmation (state-machine guard)", async () => {
