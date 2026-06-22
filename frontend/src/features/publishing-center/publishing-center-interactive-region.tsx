@@ -929,6 +929,18 @@ function PlatformComparisonChart({
   shares: ReadonlyArray<PlatformShare>;
 }) {
   const total = shares.reduce((acc, row) => acc + row.share, 0) || 1;
+  if (shares.length === 0) {
+    return (
+      <SectionCard title="平台对比" description="按平台播放量占比">
+        <p
+          data-slot="platform-comparison-empty"
+          className="py-6 text-center text-xs text-muted-foreground"
+        >
+          暂无数据
+        </p>
+      </SectionCard>
+    );
+  }
   return (
     <SectionCard title="平台对比" description="按平台播放量占比">
       <div data-slot="platform-comparison-chart" className="flex flex-col gap-2">
@@ -986,6 +998,18 @@ function TrendChart({
 }: {
   trend: ReadonlyArray<{ readonly label: string; readonly value: number }>;
 }) {
+  if (trend.length === 0) {
+    return (
+      <SectionCard title="发布趋势" description="按日播放量">
+        <p
+          data-slot="trend-chart-empty"
+          className="py-6 text-center text-xs text-muted-foreground"
+        >
+          暂无数据
+        </p>
+      </SectionCard>
+    );
+  }
   const summary = `发布趋势：${
     trend[0]?.label ?? ""
   } ${trend[0]?.value.toLocaleString() ?? ""}，${
@@ -1009,8 +1033,20 @@ function TopContentList({
 }: {
   items: ReadonlyArray<TopContentRow>;
 }) {
+  if (items.length === 0) {
+    return (
+      <SectionCard title="热门内容" description="播放量最高">
+        <p
+          data-slot="top-content-empty"
+          className="py-6 text-center text-xs text-muted-foreground"
+        >
+          暂无数据
+        </p>
+      </SectionCard>
+    );
+  }
   return (
-    <SectionCard title="热门内容" description="近 30 天播放量最高">
+    <SectionCard title="热门内容" description="播放量最高">
       <ul
         data-slot="top-content-list"
         className="flex flex-col gap-2"

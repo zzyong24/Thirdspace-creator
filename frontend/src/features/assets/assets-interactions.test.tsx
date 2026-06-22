@@ -5,7 +5,8 @@
  *   - E2 ＋上传素材  → createUpload then completeUpload (+ refresh)
  *   - E3 下载        → getAsset
  *   - E4 复制链接    → getAsset
- *   - E5 收藏        → addAssetFile (+ refresh)
+ *   - E5 收藏        → 规划中 (no 收藏 field/op this wave): announces the
+ *                      planned state, does NOT call addAssetFile (the old hack)
  *   - E6 更多(回收站) → trashAsset (+ refresh)
  *
  * Determinism: the client is mocked; no Date.now/Math.random/network. The island
@@ -146,20 +147,19 @@ describe("Assets needs-backend wiring", () => {
     await waitFor(() => expect(mockClient.getAsset).toHaveBeenCalledTimes(1));
   });
 
-  it("E5 收藏 calls assets.files.create then refresh", async () => {
+  it("E5 收藏 is 规划中: announces the planned state and does NOT call the addAssetFile hack", async () => {
     const { container } = await renderIsland();
     const btn = container.querySelector<HTMLButtonElement>(
       '[data-slot="asset-action-favorite"]',
     );
     fireEvent.click(btn!);
-    await waitFor(() => expect(mockClient.addAssetFile).toHaveBeenCalledTimes(1));
-    expect(mockClient.addAssetFile).toHaveBeenCalledWith(
-      expect.objectContaining({
-        params: { assetId: expect.any(String) },
-        body: { storageKey: expect.any(String) },
-      }),
+    // The misleading assets.files.create hack is gone — no 收藏 field/op exists.
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="asset-action-status"]')?.textContent,
+      ).toContain("收藏规划中"),
     );
-    expect(mockRouter.refresh).toHaveBeenCalled();
+    expect(mockClient.addAssetFile).not.toHaveBeenCalled();
   });
 
   it("E6 更多(移入回收站) calls assets.trash then refresh", async () => {

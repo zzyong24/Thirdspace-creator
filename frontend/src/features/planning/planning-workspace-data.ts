@@ -15,8 +15,13 @@ import type { PlanningViewModel, ThesisNodeView } from "@/types/view-models";
  * `thesis_tree` artifact version whose `contentData.nodes` this helper reads back. When the
  * project's thesis_tree artifact has a current version carrying non-empty `nodes`, those
  * override the fixture `thesisTree`; otherwise the surface degrades honestly (real project
- * → empty 论点树; canonical demo project → its curated fixture content). The evidence
- * map / key materials still have no producer, so they keep the existing degradation.
+ * → empty 论点树; canonical demo project → its curated fixture content).
+ *
+ * 关键素材 is ALSO real this wave: `materialLinks.list` (planning/research stage) fans out
+ * to `assets.get` / `knowledge.get` for display names — a real project shows its real
+ * linked materials, or an honest empty state when it has none. The evidence map / content
+ * contract still have no producer, so they keep the existing degradation (scaffolding /
+ * empty state, never fake data).
  *
  * `thesisArtifactId` is resolved (and created on demand for a real project that has none
  * yet) so the planning UI can pass it to the planning.thesis node as the write target.
@@ -42,6 +47,29 @@ interface ArtifactVersionDto {
   readonly contentData?: Record<string, unknown> | null;
 }
 
+// A project↔(knowledge|asset) association with a role + stage. Only the entity
+// pointer + stage are read here; the display name is resolved per entityType.
+interface MaterialLinkDto {
+  readonly entityType: "knowledge" | "asset";
+  readonly entityId: string;
+  readonly role: string;
+  readonly stage: string;
+}
+
+interface AssetDto {
+  readonly id: string;
+  readonly name: string;
+  readonly assetType: string;
+}
+
+interface KnowledgeItemDto {
+  readonly id: string;
+  readonly title: string;
+  readonly knowledgeType: string;
+}
+
+type KeyMaterialView = PlanningViewModel["keyMaterials"][number];
+
 export interface PlanningDataClient {
   getProject(input: {
     params: { projectId: string };
@@ -61,6 +89,24 @@ export interface PlanningDataClient {
   listArtifactVersions?(input: {
     params: { artifactId: string };
     query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  // Key-materials fan-out: the project's material-links → resolve each link's
+  // display name via assets.get / knowledge.get. Optional so existing callers /
+  // tests that omit them keep degrading to the fixture keyMaterials.
+  listMaterialLinks?(input: {
+    params: undefined;
+    query: { projectId: string; page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  getAsset?(input: {
+    params: { assetId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+  getKnowledge?(input: {
+    params: { knowledgeId: string };
+    query: undefined;
     body: undefined;
   }): Promise<unknown>;
 }
@@ -148,6 +194,80 @@ async function loadThesisTree(
   }
 }
 
+// The planning/research stages a key material can belong to. material-links carry a
+// free-form `stage`; key materials for the 策划 workspace are the planning- + research-
+// stage associations (the upstream evidence the thesis is built on).
+const KEY_MATERIAL_STAGES = new Set(["planning", "research"]);
+
+// Resolve the project's REAL key materials from `materialLinks.list` → fan out each
+// link to assets.get / knowledge.get for a display name + type. Returns null on any
+// read failure or when the op set is unavailable (caller falls back to the fixture /
+// empty state); returns [] when the project genuinely has no in-stage links (caller
+// renders the honest "暂无关键素材" empty state for a real project).
+async function loadKeyMaterials(
+  projectId: string,
+  client: PlanningDataClient,
+): Promise<ReadonlyArray<KeyMaterialView> | null> {
+  if (!client.listMaterialLinks) return null;
+  try {
+    const listed = await client.listMaterialLinks({
+      params: undefined,
+      query: { projectId, page: 1, pageSize: 100 },
+      body: undefined,
+    });
+    const links = (Array.isArray(listed) ? listed : []) as MaterialLinkDto[];
+    const inStage = links.filter((l) => KEY_MATERIAL_STAGES.has(l.stage));
+    const resolved = await Promise.all(
+      inStage.map(async (link): Promise<KeyMaterialView | null> => {
+        try {
+          if (link.entityType === "asset") {
+            if (!client.getAsset) return null;
+            const asset = (await client.getAsset({
+              params: { assetId: link.entityId },
+              query: undefined,
+              body: undefined,
+            })) as AssetDto;
+            const title = typeof asset?.name === "string" ? asset.name : "";
+            if (!title) return null;
+            return {
+              id: `material-${link.entityId}`,
+              title,
+              type:
+                typeof asset.assetType === "string" && asset.assetType
+                  ? asset.assetType
+                  : "素材",
+            };
+          }
+          if (link.entityType === "knowledge") {
+            if (!client.getKnowledge) return null;
+            const item = (await client.getKnowledge({
+              params: { knowledgeId: link.entityId },
+              query: undefined,
+              body: undefined,
+            })) as KnowledgeItemDto;
+            const title = typeof item?.title === "string" ? item.title : "";
+            if (!title) return null;
+            return {
+              id: `material-${link.entityId}`,
+              title,
+              type:
+                typeof item.knowledgeType === "string" && item.knowledgeType
+                  ? item.knowledgeType
+                  : "资料",
+            };
+          }
+          return null;
+        } catch {
+          return null;
+        }
+      }),
+    );
+    return resolved.filter((m): m is KeyMaterialView => m !== null);
+  } catch {
+    return null;
+  }
+}
+
 export interface PlanningWorkspaceData {
   viewModel: PlanningViewModel;
   // The project's thesis_tree artifact id — the write target the planning.thesis node
@@ -190,10 +310,21 @@ export async function buildPlanningWorkspaceViewModel(
   const thesisArtifactId = await resolveThesisArtifactId(projectId, client);
   const realThesisTree = await loadThesisTree(thesisArtifactId, client);
 
+  // 关键素材: resolve the project's real material-links (planning/research stage) →
+  // asset/knowledge display names. null ⇒ read unavailable/failed (fixture fallback);
+  // [] ⇒ real project with no in-stage links (honest empty state).
+  const realKeyMaterials = await loadKeyMaterials(projectId, client);
+
   // 论点树: a real AI-drafted tree (contentData.nodes) wins; else the fixture for a
   // canonical demo project; else empty for a real non-fixture project.
   const thesisTree: ReadonlyArray<ThesisNodeView> =
     realThesisTree ?? (fixtureIsPlaceholder ? [] : fixture.thesisTree);
+
+  // 关键素材: real material-links win (even when empty — a real project with no links
+  // shows the honest empty state). Only when the read was unavailable/failed (null) do
+  // we keep the fixture for a canonical demo project / empty for a real project.
+  const keyMaterials: PlanningViewModel["keyMaterials"] =
+    realKeyMaterials ?? (fixtureIsPlaceholder ? [] : fixture.keyMaterials);
 
   return {
     viewModel: {
@@ -204,13 +335,13 @@ export async function buildPlanningWorkspaceViewModel(
         title: project.title,
         body: brief,
       },
-      // Keep the 4 locked content-contract cards (structural scaffolding). For a real
-      // non-fixture project, the evidence map / key materials have no real producer yet →
-      // empty states, not placeholder fixture content.
+      // Keep the 4 locked content-contract cards (structural scaffolding, no producer).
+      // For a real non-fixture project the evidence map has no real producer yet → empty
+      // state; 关键素材 IS real (material-links fan-out above), 论点树 is real once adopted.
       contracts: fixture.contracts,
       thesisTree,
       evidenceMap: fixtureIsPlaceholder ? [] : fixture.evidenceMap,
-      keyMaterials: fixtureIsPlaceholder ? [] : fixture.keyMaterials,
+      keyMaterials,
     },
     thesisArtifactId,
   };

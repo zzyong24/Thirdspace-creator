@@ -46,6 +46,10 @@ export function AssetUploadButton() {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
   const inputRef = React.useRef<HTMLInputElement>(null);
+  // GAP-AST-1: honest 规划中 feedback — the upload persists REAL metadata
+  // (name/type/size) but ships no bytes (no byte-upload op / object storage this
+  // wave), so the success line says so rather than implying the file was stored.
+  const [uploadStatus, setUploadStatus] = React.useState<string>("");
 
   const handleFile = React.useCallback(
     (file: File) => {
@@ -67,6 +71,9 @@ export function AssetUploadButton() {
           query: undefined,
           body: { name: file.name },
         });
+        setUploadStatus(
+          `已登记素材信息「${file.name}」（文件字节存储规划中）。`,
+        );
         router.refresh();
       });
     },
@@ -92,6 +99,7 @@ export function AssetUploadButton() {
         type="button"
         data-slot="assets-upload-button"
         aria-label="上传素材"
+        title="上传仅登记素材信息，文件字节存储规划中"
         disabled={pending}
         onClick={() => inputRef.current?.click()}
         className="inline-flex h-8 items-center gap-1.5 rounded-control bg-brand px-3 text-xs font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
@@ -99,6 +107,14 @@ export function AssetUploadButton() {
         <span aria-hidden="true">＋</span>
         <span>上传素材</span>
       </button>
+      <span
+        data-slot="assets-upload-status"
+        role="status"
+        aria-live="polite"
+        className={uploadStatus ? "text-[11px] text-muted-foreground" : "sr-only"}
+      >
+        {uploadStatus}
+      </span>
     </>
   );
 }

@@ -62,6 +62,53 @@ export interface CalendarWiring {
 }
 
 // ---------------------------------------------------------------------------
+// Right-rail真来源 (GAP-PUBW-1). The server shell aggregates each publication's
+// latest analytics snapshot (`analytics.publications.get` → metricSnapshot
+// rawMetrics) into per-platform metric cards / a comparison table / preview
+// stats and threads them here. ALL fields optional → when absent the rail
+// renders honest "暂无指标" empty states instead of the old hardcoded numbers
+// (C-2: no client-invented metrics). There is NO contract comments op, so the
+// 评论区 block is permanently 规划中 (no real source this wave).
+// ---------------------------------------------------------------------------
+
+export interface PlatformMetricStat {
+  readonly id: string;
+  readonly platform: PlatformId;
+  /** What the value measures, e.g. "累计播放" / "互动量". */
+  readonly label: string;
+  /** Already-formatted display value, e.g. "184,203" / "12.3万". */
+  readonly value: string;
+}
+
+export interface PlatformComparisonRow {
+  readonly id: string;
+  readonly platform: PlatformId;
+  readonly label: string;
+  /** Formatted 触达 (views / reach). */
+  readonly reach: string;
+  /** Formatted 转化, or null when the conversion 口径 is undefined (hide cell). */
+  readonly conversion: string | null;
+}
+
+export interface PreviewStats {
+  /** Formatted 播放 count, e.g. "12.3万". */
+  readonly plays: string;
+  /** Formatted 点赞 count. */
+  readonly likes: string;
+  /** Formatted 评论 count. */
+  readonly comments: string;
+}
+
+export interface PublishingRightRail {
+  /** Per-platform metric cards. Empty → "暂无指标" skeleton. */
+  readonly metrics?: ReadonlyArray<PlatformMetricStat>;
+  /** Comparison table rows. Empty → "暂无指标" empty state. */
+  readonly comparison?: ReadonlyArray<PlatformComparisonRow>;
+  /** Preview overlay stats. Absent → the preview hides its number row. */
+  readonly previewStats?: PreviewStats;
+}
+
+// ---------------------------------------------------------------------------
 // Locked descriptors (mirrors the previous server render verbatim)
 // ---------------------------------------------------------------------------
 
@@ -138,44 +185,10 @@ const CALENDAR_DAYS: ReadonlyArray<{
   { label: "周日", status: "active", platforms: ["xiaohongshu", "wechatVideo"] },
 ];
 
-interface PlatformMetricDescriptor {
-  readonly id: string;
-  readonly platform: PlatformId;
-  readonly label: string;
-  readonly value: string;
-  readonly delta: string;
-  readonly trend: "up" | "down" | "flat";
-  readonly tone: "neutral" | "positive" | "negative" | "warning" | "info";
-}
-
-const PLATFORM_METRICS: ReadonlyArray<PlatformMetricDescriptor> = [
-  { id: "pm-views", platform: "bilibili", label: "累计播放", value: "184,203", delta: "+12.4%", trend: "up", tone: "positive" },
-  { id: "pm-likes", platform: "xiaohongshu", label: "互动量", value: "23,481", delta: "+8.1%", trend: "up", tone: "positive" },
-  { id: "pm-comments", platform: "wechatVideo", label: "新增评论", value: "1,289", delta: "+0.3%", trend: "flat", tone: "neutral" },
-  { id: "pm-shares", platform: "youtube", label: "外部分享", value: "672", delta: "-1.6%", trend: "down", tone: "negative" },
-];
-
-const PLATFORM_COMPARISON: ReadonlyArray<{
-  readonly id: string;
-  readonly platform: PlatformId;
-  readonly label: string;
-  readonly reach: string;
-  readonly conversion: string;
-}> = [
-  { id: "pc-bili", platform: "bilibili", label: "哔哩哔哩", reach: "184,203", conversion: "5.4%" },
-  { id: "pc-xhs", platform: "xiaohongshu", label: "小红书", reach: "92,481", conversion: "8.1%" },
-  { id: "pc-wx", platform: "wechatVideo", label: "微信视频号", reach: "31,289", conversion: "3.2%" },
-  { id: "pc-yt", platform: "youtube", label: "YouTube", reach: "8,672", conversion: "1.6%" },
-];
-
-const COMMENTS_TEASER: ReadonlyArray<{
-  readonly id: string;
-  readonly author: string;
-  readonly body: string;
-}> = [
-  { id: "c-1", author: "@Meng", body: "AI Native Browser 真的会改变创作者工具栈吗？" },
-  { id: "c-2", author: "@Leo", body: "希望下期聊 Agent 框架的对比。" },
-];
+// 右栏指标/对比 are now 100% props-driven from the server's analytics snapshots
+// (see PublishingRightRail). The previous hardcoded PLATFORM_METRICS /
+// PLATFORM_COMPARISON / COMMENTS_TEASER constants were deleted (GAP-PUBW-1 AC2):
+// no fake "184,203 累计播放" / "@Meng" rows. Absent data → honest empty states.
 
 const COVER_GRADIENTS: ReadonlyArray<string> = [
   "bg-gradient-to-br from-violet-500 via-fuchsia-500 to-rose-500",
@@ -191,10 +204,13 @@ export function PublishingInteractiveRegion({
   viewModel,
   wiring,
   calendarWiring,
+  rightRail,
 }: {
   readonly viewModel: PublishingViewModel;
   readonly wiring?: PublishingWiring;
   readonly calendarWiring?: CalendarWiring;
+  /** Server-resolved 右栏真来源 (GAP-PUBW-1). Absent → honest empty states. */
+  readonly rightRail?: PublishingRightRail;
 }) {
   const vm = viewModel;
   return (
@@ -239,9 +255,9 @@ export function PublishingInteractiveRegion({
           topic={vm.preview.title}
         />
         <div data-slot="preview-rail" className="flex flex-col gap-1">
-          <PlatformPreview preview={vm.preview} />
-          <PlatformMetricsSummary />
-          <PlatformComparison />
+          <PlatformPreview preview={vm.preview} stats={rightRail?.previewStats} />
+          <PlatformMetricsSummary metrics={rightRail?.metrics} />
+          <PlatformComparison rows={rightRail?.comparison} />
           <PublishChecklist items={vm.checklist} />
           <PublishTips tips={vm.tips} />
           <CommentsTeaser />
@@ -1033,8 +1049,11 @@ function PrePublishCheck() {
 
 function PlatformPreview({
   preview,
+  stats,
 }: {
   preview: PublishingViewModel["preview"];
+  /** Real 播放/点赞/评论 from the latest analytics snapshot. Absent → hide the row. */
+  stats?: PreviewStats;
 }) {
   return (
     <article
@@ -1074,18 +1093,22 @@ function PlatformPreview({
             </span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-[11px] font-semibold text-white">
-              AI Native Browser
+            <span className="line-clamp-1 text-[11px] font-semibold text-white">
+              {preview.title}
             </span>
-            <span className="text-[8px] text-white/70">
-              下一代浏览器的机会与未来
+            <span className="line-clamp-1 text-[8px] text-white/70">
+              {preview.description}
             </span>
-            <div className="flex items-center gap-1.5 text-[8px] tabular-nums text-white/80">
-              <span>12.3万</span>
-              <span>2560</span>
-              <span>1.2万</span>
-              <span>3天前</span>
-            </div>
+            {stats ? (
+              <div
+                data-slot="platform-preview-stats"
+                className="flex items-center gap-1.5 text-[8px] tabular-nums text-white/80"
+              >
+                <span data-stat="plays">{stats.plays} 播放</span>
+                <span data-stat="likes">{stats.likes} 点赞</span>
+                <span data-stat="comments">{stats.comments} 评论</span>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -1172,33 +1195,44 @@ function PublishChecklist({
   );
 }
 
-function PlatformMetricsSummary() {
+function PlatformMetricsSummary({
+  metrics,
+}: {
+  /** Real per-platform metric snapshots. Empty/absent → 暂无指标 skeleton. */
+  metrics?: ReadonlyArray<PlatformMetricStat>;
+}) {
+  const list = metrics ?? [];
+  if (list.length === 0) {
+    return (
+      <div
+        data-slot="platform-metrics-summary"
+        data-empty="true"
+        className="rounded-md border border-dashed border-border/60 bg-surface px-2 py-2 text-center"
+      >
+        <p className="text-[10px] font-medium text-muted-foreground">暂无指标</p>
+        <p className="text-[9px] text-muted-foreground">发布后自动回填各平台数据</p>
+      </div>
+    );
+  }
   return (
     <div
       data-slot="platform-metrics-summary"
+      data-empty="false"
       className="grid grid-cols-2 gap-0.5"
     >
-      {PLATFORM_METRICS.map((m) => (
+      {list.map((m) => (
         <div
           key={m.id}
           data-slot="metric-card"
-          data-tone={m.tone}
-          data-trend={m.trend}
+          data-platform={m.platform}
           className="flex flex-col gap-0 rounded-md border border-border/60 bg-surface px-1 py-0.5"
         >
           <span className="text-[10px] font-semibold tabular-nums text-foreground">
             {m.value}
           </span>
-          <span
-            className={
-              m.tone === "positive"
-                ? "text-[8px] font-medium text-success"
-                : m.tone === "negative"
-                  ? "text-[8px] font-medium text-danger"
-                  : "text-[8px] font-medium text-muted-foreground"
-            }
-          >
-            {m.trend === "up" ? "▲" : m.trend === "down" ? "▼" : "—"} {m.delta}
+          <span className="flex items-center gap-0.5 text-[8px] font-medium text-muted-foreground">
+            <PlatformIcon platform={m.platform} size="xs" />
+            {m.label}
           </span>
         </div>
       ))}
@@ -1206,10 +1240,20 @@ function PlatformMetricsSummary() {
   );
 }
 
-function PlatformComparison() {
+function PlatformComparison({
+  rows,
+}: {
+  /** Real per-platform 触达/转化 rows. Empty/absent → 暂无指标 empty state. */
+  rows?: ReadonlyArray<PlatformComparisonRow>;
+}) {
+  const list = rows ?? [];
+  // Hide the 转化 column entirely when no row carries a conversion 口径 (the
+  // metric snapshot has no defined conversion field this wave — see D-PUBW-c).
+  const hasConversion = list.some((row) => row.conversion !== null);
   return (
     <div
       data-slot="platform-comparison"
+      data-empty={list.length === 0 ? "true" : "false"}
       className="rounded-md border border-border bg-surface px-2 py-1"
     >
       <div className="mb-0.5 flex items-center justify-between">
@@ -1218,71 +1262,76 @@ function PlatformComparison() {
           按平台查看触达与转化
         </span>
       </div>
-      <table
-        data-slot="platform-comparison-table"
-        className="w-full text-[10px] text-foreground"
-      >
-        <thead>
-          <tr className="border-b border-border text-[9px] text-muted-foreground">
-            <th className="py-0 text-left font-medium">平台</th>
-            <th className="py-0 text-right font-medium">触达</th>
-            <th className="py-0 text-right font-medium">转化</th>
-          </tr>
-        </thead>
-        <tbody>
-          {PLATFORM_COMPARISON.map((row) => (
-            <tr
-              key={row.id}
-              data-slot="platform-comparison-row"
-              data-platform={row.platform}
-              className="border-b border-border/50 last:border-b-0"
-            >
-              <td className="py-0">
-                <div className="flex items-center gap-1">
-                  <PlatformIcon platform={row.platform} size="xs" />
-                  <span>{row.label}</span>
-                </div>
-              </td>
-              <td className="py-0 text-right tabular-nums">{row.reach}</td>
-              <td className="py-0 text-right tabular-nums text-muted-foreground">
-                {row.conversion}
-              </td>
+      {list.length === 0 ? (
+        <p className="py-1 text-center text-[9px] text-muted-foreground">
+          暂无指标,发布后回填
+        </p>
+      ) : (
+        <table
+          data-slot="platform-comparison-table"
+          className="w-full text-[10px] text-foreground"
+        >
+          <thead>
+            <tr className="border-b border-border text-[9px] text-muted-foreground">
+              <th className="py-0 text-left font-medium">平台</th>
+              <th className="py-0 text-right font-medium">触达</th>
+              {hasConversion ? (
+                <th className="py-0 text-right font-medium">转化</th>
+              ) : null}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {list.map((row) => (
+              <tr
+                key={row.id}
+                data-slot="platform-comparison-row"
+                data-platform={row.platform}
+                className="border-b border-border/50 last:border-b-0"
+              >
+                <td className="py-0">
+                  <div className="flex items-center gap-1">
+                    <PlatformIcon platform={row.platform} size="xs" />
+                    <span>{row.label}</span>
+                  </div>
+                </td>
+                <td className="py-0 text-right tabular-nums">{row.reach}</td>
+                {hasConversion ? (
+                  <td className="py-0 text-right tabular-nums text-muted-foreground">
+                    {row.conversion ?? "—"}
+                  </td>
+                ) : null}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
 
+// 评论区: there is NO comments contract op (the contract has no comments module),
+// so this block is permanently 规划中 (GAP-PUBW-1 AC4 / D-PUBW-a). It carries a
+// visible 规划中 badge and NO fake @用户名 rows — honesty over a fabricated teaser.
 function CommentsTeaser() {
   return (
     <div
       data-slot="comments-teaser"
-      className="rounded-md border border-border bg-surface px-2 py-0.5"
+      data-planned="true"
+      className="rounded-md border border-dashed border-border bg-surface px-2 py-1"
     >
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-medium text-foreground">评论区</span>
-        <span className="text-[9px] text-muted-foreground">最近 2 条互动</span>
+        <span
+          data-slot="planned-badge"
+          title="评论能力规划中:暂无评论数据源"
+          className="rounded-full bg-warning/15 px-1 text-[8px] font-medium text-warning"
+        >
+          规划中
+        </span>
       </div>
-      <ul
-        data-slot="comments-list"
-        className="flex flex-col gap-0.5"
-        aria-label="评论区"
-      >
-        {COMMENTS_TEASER.map((c) => (
-          <li
-            key={c.id}
-            data-slot="comments-row"
-            className="rounded-md border border-border bg-surface-subtle px-1.5 py-0.5"
-          >
-            <span className="text-[9px] font-medium text-foreground">
-              {c.author}
-            </span>
-            <p className="text-[9px] text-muted-foreground">{c.body}</p>
-          </li>
-        ))}
-      </ul>
+      <p className="text-[9px] text-muted-foreground">
+        发布后将在此汇总各平台评论互动。
+      </p>
     </div>
   );
 }

@@ -59,6 +59,13 @@ export interface ProductionWorkspacePageProps {
    * deterministic sync Server Component and the fixture render is unchanged.
    */
   readonly wiring?: ProductionWiring;
+  /**
+   * REAL whole-library asset count (`assets.list`) resolved by the route via
+   * `countAssetLibrary`, threaded to the island for the 素材库「全部」stat
+   * (GAP-PRD-1 AC1 — replaces the old fabricated formula). Optional: when absent
+   * the island degrades to the matched-asset count, never a made-up number.
+   */
+  readonly assetLibraryTotal?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +76,7 @@ export function ProductionWorkspacePage({
   projectId,
   viewModel,
   wiring,
+  assetLibraryTotal,
 }: ProductionWorkspacePageProps) {
   const vm = viewModel ?? buildProductionViewModel(projectId);
   const isEmpty =
@@ -94,7 +102,11 @@ export function ProductionWorkspacePage({
           description="该项目尚未进入制作阶段或没有可用素材。"
         />
       ) : (
-        <ProductionInteractiveRegion viewModel={vm} wiring={wiring} />
+        <ProductionInteractiveRegion
+          viewModel={vm}
+          wiring={wiring}
+          assetLibraryTotal={assetLibraryTotal}
+        />
       )}
     </main>
   );

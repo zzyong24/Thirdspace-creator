@@ -80,10 +80,18 @@ export function AssetsInteractiveRegion({
   // are minted server-side by the AssetsService + MockObjectStorage.
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
+  // GAP-AST-1: an honest aria-live status line. Download / 复制链接 / 收藏 are
+  // 规划中 (real object storage + a 收藏 field have no op this wave), so instead
+  // of pretending a file was downloaded / a public link copied / a favorite
+  // saved, the handler announces the 规划中 state. The detail-panel buttons keep
+  // a 规划中 badge once that prop lands (followUp — the panel is a shared
+  // component outside this lane).
+  const [actionStatus, setActionStatus] = React.useState<string>("");
 
-  // E3 下载: GET assets.get → resolve the current file's signed URL → browser
-  // download. We fetch the asset to confirm ownership + currentFileId; the mock
-  // signed URL is derived deterministically server-side from the storageKey.
+  // E3 下载: GET assets.get confirms ownership + currentFileId, but the real
+  // signed URL points at `mock://object-storage` (no byte store this wave). We
+  // do NOT fabricate a download — the op call is the wired part, and the status
+  // line is honest that byte download is 规划中.
   const handleDownload = React.useCallback(
     (assetId: string) => {
       startTransition(async () => {
@@ -92,15 +100,15 @@ export function AssetsInteractiveRegion({
           query: undefined,
           body: undefined,
         });
-        // A real handler triggers a navigation to the signed URL; in jsdom/SSR
-        // we no-op the navigation (determinism) — the op call is the wired part.
+        setActionStatus("文件字节下载规划中：已登记素材信息，暂未连接真实对象存储。");
       });
     },
     [],
   );
 
-  // E4 复制链接: GET assets.get → derive the signed URL for currentFileId →
-  // clipboard. The clipboard write is best-effort (absent in SSR/jsdom).
+  // E4 复制链接: GET assets.get derives a `mock://` signed URL (no real object
+  // storage this wave). Best-effort clipboard write of the mock URL, but the
+  // status line is honest that it is a placeholder link (规划中).
   const handleCopyLink = React.useCallback(
     (assetId: string) => {
       startTransition(async () => {
@@ -116,26 +124,21 @@ export function AssetsInteractiveRegion({
         } catch {
           // No clipboard (SSR/jsdom/denied) — the op call is the wired part.
         }
+        setActionStatus("公开链接规划中：已复制占位链接，真实对象存储签名链接尚未接入。");
       });
     },
     [],
   );
 
-  // E5 收藏 (Toggle favorite): per §4 its Target op is assets.files.create —
-  // register/advance the file version the favorite affordance represents, then
-  // refresh (open-question Q1: favorite has no dedicated field/op this wave).
+  // E5 收藏 (Toggle favorite): 规划中. There is NO 收藏 field/op this wave — the
+  // earlier `assets.files.create { storageKey: favorites/... }` was a misleading
+  // hack (it advanced the asset's file version, not a favorite), so it is
+  // removed. The status line is honest that 收藏 is not yet persisted.
   const handleFavorite = React.useCallback(
-    (assetId: string) => {
-      startTransition(async () => {
-        await client.addAssetFile({
-          params: { assetId },
-          query: undefined,
-          body: { storageKey: `favorites/${assetId}` },
-        });
-        router.refresh();
-      });
+    (_assetId: string) => {
+      setActionStatus("收藏规划中：暂无收藏字段，此操作尚未持久化。");
     },
-    [router],
+    [],
   );
 
   // E6 更多 → 移入回收站: POST assets.trash (active → deleted), then refresh so
@@ -205,17 +208,32 @@ export function AssetsInteractiveRegion({
           />
         ) : null}
       </div>
-      <AssetDetailPanel
-        asset={selected}
-        usageHistory={viewModel.usageHistory}
-        onDownload={handleDownload}
-        onCopyLink={handleCopyLink}
-        onFavorite={handleFavorite}
-        onTrash={handleTrash}
-        projects={gallery?.projects ?? []}
-        onAttach={handleAttach}
-        actionsPending={pending}
-      />
+      <div className="flex flex-col gap-2">
+        <AssetDetailPanel
+          asset={selected}
+          usageHistory={viewModel.usageHistory}
+          onDownload={handleDownload}
+          onCopyLink={handleCopyLink}
+          onFavorite={handleFavorite}
+          onTrash={handleTrash}
+          projects={gallery?.projects ?? []}
+          onAttach={handleAttach}
+          actionsPending={pending}
+        />
+        {/* GAP-AST-1: honest 规划中 status for download / 复制链接 / 收藏 — we never
+            claim a byte download / real public link / saved favorite succeeded. */}
+        <p
+          data-slot="asset-action-status"
+          role="status"
+          aria-live="polite"
+          className={
+            "px-2 text-[11px] text-muted-foreground " +
+            (actionStatus ? "" : "sr-only")
+          }
+        >
+          {actionStatus}
+        </p>
+      </div>
     </div>
   );
 }

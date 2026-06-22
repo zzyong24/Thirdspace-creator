@@ -658,6 +658,14 @@ function PopularTags({ tags }: { tags: ReadonlyArray<KnowledgeTag> }) {
         className="flex flex-wrap gap-1"
         aria-label="热门标签"
       >
+        {tags.length === 0 ? (
+          <li
+            data-slot="popular-tags-empty"
+            className="text-[12px] text-muted-foreground"
+          >
+            暂无标签
+          </li>
+        ) : null}
         {tags.map((tag) => (
           // Module 04 §5b: each popular-tag chip now links to the Knowledge list
           // filtered by that tag name (/knowledge?tag=<name>). The `?tag=`
@@ -719,6 +727,14 @@ function UnsortedItems({
         className="flex flex-col gap-0.5"
         aria-label="未整理条目"
       >
+        {items.length === 0 ? (
+          <li
+            data-slot="unsorted-empty"
+            className="px-2 py-1 text-[12px] text-muted-foreground"
+          >
+            全部已整理
+          </li>
+        ) : null}
         {items.map((item) => (
           <li
             key={item.id}
@@ -749,6 +765,14 @@ function ReusableSnippets({
         className="flex flex-col gap-1.5"
         aria-label="可复用片段列表"
       >
+        {items.length === 0 ? (
+          <li
+            data-slot="reusable-snippets-empty"
+            className="text-[12px] text-muted-foreground"
+          >
+            暂无可复用片段
+          </li>
+        ) : null}
         {items.map((item) => (
           <li
             key={item.id}

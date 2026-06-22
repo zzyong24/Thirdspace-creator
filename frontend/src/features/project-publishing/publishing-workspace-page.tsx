@@ -36,6 +36,8 @@ import { buildPublishingViewModel } from "@/fixtures/selectors";
 import type { PublishingViewModel } from "@/types/view-models";
 import {
   PublishingInteractiveRegion,
+  type CalendarWiring,
+  type PublishingRightRail,
   type PublishingWiring,
 } from "./publishing-interactive-region";
 
@@ -50,6 +52,18 @@ export interface PublishingWorkspacePageProps {
   readonly viewModel?: PublishingViewModel;
   /** Server-resolved publishing wiring (Module 10 Step 5). Optional → local-only. */
   readonly wiring?: PublishingWiring;
+  /**
+   * Server-resolved 内容日历 wiring (GAP-PUBW-1): the active account + a
+   * deterministic per-cell base instant. Absent → the calendar stays inert
+   * (decorative). Threaded straight to the interactive island.
+   */
+  readonly calendarWiring?: CalendarWiring;
+  /**
+   * Server-resolved 右栏真来源 (GAP-PUBW-1): per-platform metric cards / comparison
+   * rows / preview stats aggregated from analytics snapshots. Absent → the rail
+   * renders honest 暂无指标 empty states instead of fabricated numbers.
+   */
+  readonly rightRail?: PublishingRightRail;
 }
 
 // ---------------------------------------------------------------------------
@@ -60,6 +74,8 @@ export function PublishingWorkspacePage({
   projectId,
   viewModel,
   wiring,
+  calendarWiring,
+  rightRail,
 }: PublishingWorkspacePageProps) {
   const vm = viewModel ?? buildPublishingViewModel(projectId);
   const isEmpty = vm.platforms.length === 0 && vm.tabs.length === 0;
@@ -82,7 +98,12 @@ export function PublishingWorkspacePage({
           description="该项目尚未生成可发布的内容或平台配置。"
         />
       ) : (
-        <PublishingInteractiveRegion viewModel={vm} wiring={wiring} />
+        <PublishingInteractiveRegion
+          viewModel={vm}
+          wiring={wiring}
+          calendarWiring={calendarWiring}
+          rightRail={rightRail}
+        />
       )}
     </main>
   );

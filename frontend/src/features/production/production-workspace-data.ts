@@ -69,6 +69,11 @@ export interface ProductionDataClient {
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
+  listAssets(input: {
+    params: undefined;
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
   listOutputs(input: {
     params: { projectId: string };
     query: undefined;
@@ -131,6 +136,30 @@ async function resolvePrimaryOutputId(
     return (main ?? outputs[0]!).id;
   } catch {
     return null;
+  }
+}
+
+/**
+ * REAL whole-library asset count for the 素材库「全部」stat (GAP-PRD-1 AC1).
+ *
+ * Reads ONE large page of `assets.list` (same source as the Assets 中心) and
+ * returns its length. The previous panel used a fabricated `assets.length*20+8`
+ * formula; this replaces it with the honest library size. Returns `undefined`
+ * on any read failure so the panel degrades to the matched-asset count rather
+ * than a wrong number.
+ */
+export async function countAssetLibrary(
+  client: ProductionDataClient = defaultClient as unknown as ProductionDataClient,
+): Promise<number | undefined> {
+  try {
+    const rows = (await client.listAssets({
+      params: undefined,
+      query: { page: 1, pageSize: 500 },
+      body: undefined,
+    })) as ReadonlyArray<unknown>;
+    return rows.length;
+  } catch {
+    return undefined;
   }
 }
 

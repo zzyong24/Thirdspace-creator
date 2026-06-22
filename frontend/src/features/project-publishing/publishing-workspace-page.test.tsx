@@ -434,33 +434,45 @@ describe("PublishingWorkspacePage", () => {
     expect(coverTags.length).toBeGreaterThan(0);
   });
 
-  it("renders the platform metrics summary with 4 tiles in a 2x2 grid", async () => {
+  it("renders the metrics summary empty state when no rightRail snapshots are provided (GAP-PUBW-1)", async () => {
+    // Right-rail指标 is now 100% props-driven from analytics snapshots. With no
+    // rightRail wired (default page render), the summary shows an honest 暂无指标
+    // skeleton instead of the old hardcoded "184,203 累计播放" tiles.
     const { container } = await renderWorkspace();
     const summary = container.querySelector(
       '[data-slot="platform-metrics-summary"]',
     ) as HTMLElement;
     expect(summary).not.toBeNull();
-    const tiles = summary.querySelectorAll('[data-slot="metric-card"]');
-    expect(tiles).toHaveLength(4);
+    expect(summary.getAttribute("data-empty")).toBe("true");
+    expect(summary.querySelectorAll('[data-slot="metric-card"]')).toHaveLength(0);
+    expect(summary.textContent ?? "").toContain("暂无指标");
   });
 
-  it("renders the platform-comparison table with 4 rows", async () => {
+  it("renders the platform-comparison empty state with no fabricated rows (GAP-PUBW-1)", async () => {
     const { container } = await renderWorkspace();
-    const table = container.querySelector(
-      '[data-slot="platform-comparison-table"]',
+    const comparison = container.querySelector(
+      '[data-slot="platform-comparison"]',
     ) as HTMLElement;
-    expect(table).not.toBeNull();
-    const rows = table.querySelectorAll('[data-slot="platform-comparison-row"]');
-    expect(rows).toHaveLength(4);
+    expect(comparison).not.toBeNull();
+    expect(comparison.getAttribute("data-empty")).toBe("true");
+    // No fabricated comparison rows / table when there are no real snapshots.
+    expect(
+      comparison.querySelectorAll('[data-slot="platform-comparison-row"]'),
+    ).toHaveLength(0);
   });
 
-  it("renders a comments teaser with author + body rows", async () => {
+  it("marks the comments teaser 规划中 with no fake author rows (GAP-PUBW-1)", async () => {
     const { container } = await renderWorkspace();
     const teaser = container.querySelector(
       '[data-slot="comments-teaser"]',
     ) as HTMLElement;
     expect(teaser).not.toBeNull();
-    const rows = teaser.querySelectorAll('[data-slot="comments-row"]');
-    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(teaser.getAttribute("data-planned")).toBe("true");
+    expect(
+      teaser.querySelector('[data-slot="planned-badge"]')?.textContent,
+    ).toContain("规划中");
+    // No fabricated @用户名 comment rows.
+    expect(teaser.querySelectorAll('[data-slot="comments-row"]')).toHaveLength(0);
+    expect(teaser.textContent ?? "").not.toContain("@Meng");
   });
 });

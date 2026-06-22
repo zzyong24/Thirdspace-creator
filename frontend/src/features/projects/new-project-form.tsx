@@ -14,8 +14,11 @@
  *    activated by Enter or Space,
  *  - the footer exposes a Cancel button, the EnterAfterCreate checkbox
  *    and the primary Create button,
- *  - Create calls `onCreate(values)` and resets the form (local success
- *    transition — no network calls),
+ *  - Create calls `onCreate(values)` (which may be async). While the
+ *    promise is pending the Create/Cancel buttons disable and Create shows
+ *    「创建中…」; on success the form resets (local success transition);
+ *    on rejection an inline `role="alert"` error renders and the form
+ *    values are preserved (user input is never dropped),
  *  - Cancel calls `onCancel()` without firing `onCreate`,
  *  - the component consumes tokens only (no hard-coded colours or
  *    dimensions).
@@ -51,8 +54,14 @@ export interface NewProjectFormValues {
 export interface NewProjectFormProps {
   /** Initial values used when the dialog re-opens with state to restore. */
   readonly defaultValues?: Partial<NewProjectFormValues>;
-  /** Fired when the user clicks Create with a valid name. */
-  readonly onCreate: (values: NewProjectFormValues) => void;
+  /**
+   * Fired when the user clicks Create with a valid name. May return a
+   * promise — the form awaits it to drive loading/error state. A rejected
+   * promise surfaces an inline error and preserves the user's input.
+   */
+  readonly onCreate: (
+    values: NewProjectFormValues,
+  ) => void | Promise<void>;
   /** Fired when the user clicks Cancel. */
   readonly onCancel: () => void;
   /** Optional className for the form root. */
@@ -173,6 +182,12 @@ export function NewProjectForm({
     React.useState<ContentTemplateId>(() =>
       templateFromContentType(initial.contentType),
     );
+  // Submission lifecycle: idle -> submitting -> (idle on success | error on
+  // reject). `errorMsg` carries the inline alert text; values are never reset
+  // on error so the user keeps their input.
+  const [status, setStatus] =
+    React.useState<"idle" | "submitting" | "error">("idle");
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   // Keep a ref to the latest callback so the form does not capture stale
   // closures across renders.
   const onCreateRef = React.useRef(onCreate);
@@ -181,32 +196,52 @@ export function NewProjectForm({
   }, [onCreate]);
 
   const trimmedName = values.name.trim();
-  const canCreate = trimmedName.length > 0;
+  const submitting = status === "submitting";
+  const canCreate = trimmedName.length > 0 && !submitting;
 
   const handleSubmit = React.useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
+    async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (!canCreate) return;
-      onCreateRef.current({
-        ...values,
-        name: trimmedName,
-        contentType: contentTypeFromTemplate(contentTemplate),
-      });
-      // Local success transition: reset the form so the next mount starts
-      // clean. The parent is expected to close the dialog.
-      setValues(EMPTY_DEFAULTS);
-      setContentTemplate(templateFromContentType(EMPTY_DEFAULTS.contentType));
+      if (trimmedName.length === 0 || submitting) return;
+      setStatus("submitting");
+      setErrorMsg(null);
+      try {
+        await onCreateRef.current({
+          ...values,
+          name: trimmedName,
+          contentType: contentTypeFromTemplate(contentTemplate),
+        });
+        // Local success transition: reset the form so the next mount starts
+        // clean. The parent is expected to close the dialog/navigate.
+        setValues(EMPTY_DEFAULTS);
+        setContentTemplate(
+          templateFromContentType(EMPTY_DEFAULTS.contentType),
+        );
+        setStatus("idle");
+      } catch (error) {
+        // Surface the failure inline and PRESERVE the user's input — never
+        // silently swallow a rejected create.
+        setStatus("error");
+        setErrorMsg(
+          error instanceof Error && error.message
+            ? error.message
+            : "创建失败，请稍后重试。",
+        );
+      }
     },
-    [canCreate, contentTemplate, trimmedName, values],
+    [contentTemplate, submitting, trimmedName, values],
   );
 
   const handleCancel = React.useCallback(() => {
+    if (submitting) return;
     // Reset to the last `defaultValues` snapshot so a re-open shows a
     // fresh form without leaking previous input.
     setValues(initial);
     setContentTemplate(templateFromContentType(initial.contentType));
+    setStatus("idle");
+    setErrorMsg(null);
     onCancel();
-  }, [initial, onCancel]);
+  }, [initial, onCancel, submitting]);
 
   return (
     <form
@@ -241,9 +276,19 @@ export function NewProjectForm({
         }
       />
       <DialogHint />
+      {status === "error" && errorMsg ? (
+        <p
+          role="alert"
+          data-slot="new-project-error"
+          className="rounded-control border border-destructive/30 bg-destructive/10 px-3 py-2 text-[12px] text-destructive"
+        >
+          {errorMsg}
+        </p>
+      ) : null}
       <FormFooter
         enterAfterCreate={values.enterAfterCreate}
         canCreate={canCreate}
+        submitting={submitting}
         onEnterAfterCreateChange={(enterAfterCreate) =>
           setValues((prev) => ({ ...prev, enterAfterCreate }))
         }
@@ -594,6 +639,7 @@ function DialogHint() {
 interface FormFooterProps {
   readonly enterAfterCreate: boolean;
   readonly canCreate: boolean;
+  readonly submitting: boolean;
   readonly onEnterAfterCreateChange: (next: boolean) => void;
   readonly onCancel: () => void;
 }
@@ -601,6 +647,7 @@ interface FormFooterProps {
 function FormFooter({
   enterAfterCreate,
   canCreate,
+  submitting,
   onEnterAfterCreateChange,
   onCancel,
 }: FormFooterProps) {
@@ -629,6 +676,7 @@ function FormFooter({
           type="button"
           variant="outline"
           onClick={onCancel}
+          disabled={submitting}
           data-slot="new-project-cancel"
         >
           取消
@@ -637,9 +685,10 @@ function FormFooter({
           type="submit"
           variant="default"
           disabled={!canCreate}
+          aria-busy={submitting}
           data-slot="new-project-submit"
         >
-          创建
+          {submitting ? "创建中…" : "创建"}
         </Button>
       </div>
     </div>

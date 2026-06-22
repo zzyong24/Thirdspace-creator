@@ -2,6 +2,13 @@ import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
 import { buildPublishingViewModel } from "@/fixtures/selectors";
+import type {
+  CalendarWiring,
+  PlatformComparisonRow,
+  PlatformMetricStat,
+  PreviewStats,
+  PublishingRightRail,
+} from "./publishing-interactive-region";
 import type { PlatformId, PublicationStatus } from "@/types/domain";
 import type { PlatformPublishCard, PublishingViewModel } from "@/types/view-models";
 
@@ -84,6 +91,180 @@ export interface PublishingDataClient {
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
+  listAccounts(input: {
+    params: undefined;
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  getPublicationAnalytics(input: {
+    params: { publicationId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+}
+
+// Account row — only the fields we read to pick the active publishing account.
+interface PlatformAccountDto {
+  readonly id: string;
+  readonly status: string;
+}
+
+// Metric snapshot — the self-describing analytics payload (`rawMetrics`) the
+// seed writes per publication, read via `analytics.publications.get`.
+interface MetricSnapshotDto {
+  readonly id: string;
+  readonly publicationId: string;
+  readonly capturedAt: string;
+  readonly rawMetrics: Record<string, unknown>;
+}
+
+const PLATFORM_LABELS: Record<string, string> = {
+  youtube: "YouTube",
+  bilibili: "哔哩哔哩",
+  douyin: "抖音",
+  xiaohongshu: "小红书",
+  wechatVideo: "微信视频号",
+  x: "X",
+};
+
+function platformLabel(platform: string): string {
+  return PLATFORM_LABELS[platform] ?? platform;
+}
+
+// Chinese 万 grouping for large counts (mirrors publishing-center-data).
+function formatCount(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return "0";
+  if (n >= 10000) return `${(n / 10000).toFixed(n >= 100000 ? 0 : 1)}万`;
+  return n.toLocaleString("zh-CN");
+}
+
+function numOf(raw: Record<string, unknown>, key: string): number {
+  const v = raw[key];
+  return typeof v === "number" && Number.isFinite(v) ? v : 0;
+}
+
+/**
+ * Resolve the 内容日历 wiring (GAP-PUBW-1 AC1): the first ACTIVE platform account
+ * (else the first account) + a DETERMINISTIC weekStart base instant (C-5 — never
+ * wall-clock). `weekStart` is injected by the caller (route) so SSR stays
+ * deterministic. Returns `undefined` when no account exists or the read fails →
+ * the calendar stays inert (no client-invented entry state, C-2).
+ */
+export async function resolvePublishingCalendarWiring(
+  weekStart: string,
+  client: PublishingDataClient = defaultClient as unknown as PublishingDataClient,
+): Promise<CalendarWiring | undefined> {
+  try {
+    const accounts = (await client.listAccounts({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as ReadonlyArray<PlatformAccountDto>;
+    const active =
+      accounts.find((a) => a.status === "active") ?? accounts[0];
+    if (!active) return undefined;
+    return { accountId: active.id, weekStart };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Resolve a publication's latest metric snapshot `rawMetrics` (newest by
+ * `capturedAt`) via `analytics.publications.get`. Returns `null` on no-data /
+ * read failure so the caller skips that platform rather than fabricating.
+ */
+async function latestSnapshot(
+  client: PublishingDataClient,
+  publicationId: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const snapshots = (await client.getPublicationAnalytics({
+      params: { publicationId },
+      query: { page: 1, pageSize: 20 },
+      body: undefined,
+    })) as ReadonlyArray<MetricSnapshotDto>;
+    if (!snapshots || snapshots.length === 0) return null;
+    const latest = snapshots
+      .slice()
+      .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0]!;
+    return latest.rawMetrics ?? {};
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Assemble the REAL 右栏真来源 (GAP-PUBW-1 AC2/AC3): per-platform metric cards +
+ * a comparison table + the preview overlay stats, aggregated from each
+ * publication's latest analytics snapshot. Every field degrades to empty (the
+ * island renders honest 暂无指标 / hides the preview number row) — never throws,
+ * never fabricates. Conversion 口径 is undefined this wave (D-PUBW-c) → each row's
+ * `conversion` is `null` and the island hides that column.
+ *
+ * @param publications  platform → publicationId map (from the route's resolveWiring).
+ */
+export async function resolvePublishingRightRail(
+  publications: Readonly<Record<string, string>>,
+  client: PublishingDataClient = defaultClient as unknown as PublishingDataClient,
+): Promise<PublishingRightRail> {
+  const entries = Object.entries(publications);
+  if (entries.length === 0) return {};
+
+  const perPlatform = await Promise.all(
+    entries.map(async ([platform, publicationId]) => {
+      const raw = await latestSnapshot(client, publicationId);
+      if (!raw) return null;
+      const plays = numOf(raw, "plays");
+      const likes = numOf(raw, "likes");
+      const comments = numOf(raw, "comments");
+      const shares = numOf(raw, "shares");
+      const favorites = numOf(raw, "favorites");
+      return {
+        platform: platform as PlatformId,
+        plays,
+        likes,
+        comments,
+        shares,
+        favorites,
+      };
+    }),
+  );
+
+  const live = perPlatform.filter(
+    (p): p is NonNullable<typeof p> => p !== null,
+  );
+  if (live.length === 0) return {};
+
+  // Metric cards: 累计播放 per platform (most legible single number for the rail).
+  const metrics: ReadonlyArray<PlatformMetricStat> = live.map((p) => ({
+    id: `pm-${p.platform}`,
+    platform: p.platform,
+    label: "累计播放",
+    value: formatCount(p.plays),
+  }));
+
+  // Comparison: 触达 = plays; 转化 left null (no defined 口径 this wave — D-PUBW-c).
+  const comparison: ReadonlyArray<PlatformComparisonRow> = live
+    .slice()
+    .sort((a, b) => b.plays - a.plays)
+    .map((p) => ({
+      id: `pc-${p.platform}`,
+      platform: p.platform,
+      label: platformLabel(p.platform),
+      reach: formatCount(p.plays),
+      conversion: null,
+    }));
+
+  // Preview overlay stats: the top (most-played) platform's snapshot.
+  const top = live.slice().sort((a, b) => b.plays - a.plays)[0]!;
+  const previewStats: PreviewStats = {
+    plays: formatCount(top.plays),
+    likes: formatCount(top.likes),
+    comments: formatCount(top.comments),
+  };
+
+  return { metrics, comparison, previewStats };
 }
 
 /**

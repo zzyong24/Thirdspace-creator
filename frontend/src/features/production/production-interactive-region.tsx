@@ -110,9 +110,15 @@ const PRODUCTION_MODE_CARDS: ReadonlyArray<ProductionModeCardDescriptor> = [
 export function ProductionInteractiveRegion({
   viewModel,
   wiring,
+  assetLibraryTotal,
 }: {
   readonly viewModel: ProductionViewModel;
   readonly wiring?: ProductionWiring;
+  /**
+   * REAL whole-library asset count (`assets.list`) threaded by the route for the
+   * 素材库「全部」stat. Optional — degrades to the matched-asset count.
+   */
+  readonly assetLibraryTotal?: number;
 }) {
   return (
     <>
@@ -131,10 +137,14 @@ export function ProductionInteractiveRegion({
         data-slot="production-grid"
         className="grid grid-cols-1 gap-3 xl:grid-cols-[260px_300px_minmax(0,1fr)_280px] xl:grid-rows-[minmax(0,1fr)_200px] xl:items-stretch"
       >
-        <RecordingScriptPanel scriptLines={viewModel.scriptLines} />
+        <RecordingScriptPanel
+          scriptLines={viewModel.scriptLines}
+          projectId={viewModel.projectId}
+        />
         <AssetLibraryPanel
           categories={viewModel.assetCategories}
           assets={viewModel.assets}
+          libraryTotal={assetLibraryTotal}
         />
         <PreviewPanel preview={viewModel.preview} />
         <SettingsRail settings={viewModel.settings} wiring={wiring} />
@@ -258,15 +268,23 @@ function ProductionModeCard({
 
 function RecordingScriptPanel({
   scriptLines,
+  projectId,
 }: {
   scriptLines: ProductionViewModel["scriptLines"];
+  projectId: string;
 }) {
-  const expandedLines = scriptLines.map((line, index) => ({
+  // The script is authored/generated in the 分镜 (script) stage — "脚本编辑"
+  // navigates there instead of the old inert `href="#"`.
+  const scriptStageHref = `/projects/${projectId}/script`;
+  // 做真 (GAP-PRD-1): render the REAL persisted script lines (B3/B4 落库) — the
+  // line `text` and `timestamp` come straight from the view-model. The previous
+  // `scriptLineTitle/Body/Duration(index)` hardcoded copy ("开场 Hook" …) is gone:
+  // it fabricated titles/durations that had no backing data. The script body is
+  // the real line text; no fake per-index title/duration is shown.
+  const lines = scriptLines.map((line) => ({
     id: line.id,
     timestamp: line.timestamp,
-    title: scriptLineTitle(index),
-    body: scriptLineBody(index, line.text),
-    durationLabel: scriptLineDuration(index),
+    body: line.text,
   }));
   return (
     <div
@@ -277,27 +295,32 @@ function RecordingScriptPanel({
     >
       <SectionCard
         title="录制脚本"
-        description="录屏时长 08:12 预计时长"
+        description={
+          lines.length > 0 ? `共 ${lines.length} 段脚本` : "脚本来自分镜阶段"
+        }
         action={
           <a
-            href="#"
+            href={scriptStageHref}
             data-slot="script-import-action"
+            title="脚本在分镜阶段编辑/生成"
             className="inline-flex items-center gap-1 text-[11px] font-medium text-brand"
           >
             <Upload className="size-3" strokeWidth={2.5} />
-            导入脚本
+            脚本编辑
           </a>
         }
       >
-        {expandedLines.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无脚本行。</p>
+        {lines.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            暂无脚本行。请先在分镜阶段生成脚本。
+          </p>
         ) : (
           <ol
             data-slot="recording-script-list"
             className="flex flex-col gap-1.5"
             aria-label="录制脚本"
           >
-            {expandedLines.map((line) => (
+            {lines.map((line, index) => (
               <li
                 key={line.id}
                 data-slot="recording-script-line"
@@ -306,12 +329,9 @@ function RecordingScriptPanel({
               >
                 <div className="flex items-center justify-between gap-2 font-mono text-[11px] text-muted-foreground tabular-nums">
                   <span>{line.timestamp}</span>
-                  <span>{line.durationLabel}</span>
+                  <span>#{index + 1}</span>
                 </div>
-                <p className="text-[13px] font-medium text-foreground">
-                  {line.title}
-                </p>
-                <p className="line-clamp-1 text-[11px] leading-relaxed text-muted-foreground">
+                <p className="text-[13px] leading-relaxed text-foreground">
                   {line.body}
                 </p>
               </li>
@@ -323,61 +343,6 @@ function RecordingScriptPanel({
   );
 }
 
-function scriptLineTitle(index: number): string {
-  switch (index) {
-    case 0:
-      return "开场 Hook";
-    case 1:
-      return "引入流程";
-    case 2:
-      return "什么 AI";
-    case 3:
-      return "核心技术";
-    case 4:
-      return "核心功能解析";
-    case 5:
-      return "产品对比";
-    default:
-      return `脚本片段 ${index + 1}`;
-  }
-}
-
-function scriptLineBody(index: number, fallback: string): string {
-  switch (index) {
-    case 0:
-      return "30 秒开场吸引观众,强调 AI 浏览器与传统的差异。";
-    case 1:
-      return "梳理信息获取痛点,引出 AI 原生浏览器的新范式。";
-    case 2:
-      return "解释 AI Native Browser 的定位与核心使用场景。";
-    case 3:
-      return "拆解底层架构:大模型 + 智能体 + 浏览器内嵌执行。";
-    case 4:
-      return "演示核心功能:对话搜索、代理任务、智能写作。";
-    case 5:
-      return "与 Arc/Dia 对比,定位差异化的代理执行能力。";
-    default:
-      return fallback;
-  }
-}
-
-function scriptLineDuration(index: number): string {
-  switch (index) {
-    case 0:
-      return "15s";
-    case 1:
-      return "30s";
-    case 2:
-      return "60s";
-    case 3:
-      return "75s";
-    case 4:
-      return "150s";
-    default:
-      return "60s";
-  }
-}
-
 // ---------------------------------------------------------------------------
 // AssetLibraryPanel — selectable category tabs + filtered thumbnail grid
 // ---------------------------------------------------------------------------
@@ -385,9 +350,16 @@ function scriptLineDuration(index: number): string {
 function AssetLibraryPanel({
   categories,
   assets,
+  libraryTotal,
 }: {
   categories: ProductionViewModel["assetCategories"];
   assets: ReadonlyArray<ProductionAsset>;
+  /**
+   * REAL total of the whole asset library (`assets.list` count), threaded by the
+   * route. When absent (test/fixture render) it degrades to the matched-asset
+   * count so the stat is never a fabricated formula.
+   */
+  libraryTotal?: number;
 }) {
   const [activeCategory, setActiveCategory] = React.useState<string>(
     categories[0]?.id ?? "",
@@ -401,10 +373,18 @@ function AssetLibraryPanel({
     return matching.length > 0 ? matching : assets;
   }, [assets, activeCategory]);
 
-  const totalCount = assets.length * 20 + 8;
-  const usedCount = assets.length * 4 + 4;
-  const starredCount = assets.length + 8;
-  const poolCount = assets.length + 4;
+  // 做真 (GAP-PRD-1 AC1): the previous `assets.length * 20 + 8` / `* 4 + 4` /
+  // `+ 8` / `+ 4` formulas were fabricated. Now:
+  //  - 已使用 = the count of assets actually matched to THIS project (the
+  //    `materialLinks.list`→`assets.get` set the route resolved into
+  //    `viewModel.assets`), i.e. `assets.length` — REAL.
+  //  - 全部 = the whole library count from `assets.list` (threaded as
+  //    `libraryTotal`); degrades to the matched count when not threaded so it
+  //    is never less than 已使用 and never a made-up number.
+  // 收藏 / 下载池 dropped (D-PRD-a): no backing field/op (收藏 is an Assets-side
+  // hack, 下载池 has no source) — fabricating them most damaged trust.
+  const usedCount = assets.length;
+  const allCount = Math.max(libraryTotal ?? assets.length, usedCount);
   return (
     <div
       data-slot="asset-library-panel"
@@ -442,21 +422,13 @@ function AssetLibraryPanel({
           data-slot="asset-stats"
           className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground"
         >
-          <span>
+          <span data-stat="all">
             <span className="font-semibold text-foreground">全部</span>{" "}
-            {totalCount}
+            {allCount}
           </span>
-          <span>
+          <span data-stat="used">
             <span className="font-semibold text-foreground">已使用</span>{" "}
             {usedCount}
-          </span>
-          <span>
-            <span className="font-semibold text-foreground">收藏</span>{" "}
-            {starredCount}
-          </span>
-          <span>
-            <span className="font-semibold text-foreground">下载池</span>{" "}
-            {poolCount}
           </span>
         </div>
         <ul
@@ -561,12 +533,17 @@ function PreviewPanel({
 }: {
   preview: ProductionViewModel["preview"];
 }) {
+  // 规划中 (GAP-PRD-1 AC3): real media playback needs a video render / 媒体管线
+  // that is NOT in this wave. The play/pause/reset controls are an honest
+  // placeholder affordance — flagged `data-planned` and `aria-disabled` so we
+  // never pretend a real preview is playing.
   const [playing, setPlaying] = React.useState<boolean>(false);
   return (
     <div
       data-slot="preview-panel"
       data-testid="production-region"
       data-region="preview"
+      data-planned="true"
       data-playing={playing ? "true" : "false"}
       className="h-full overflow-hidden"
     >
@@ -574,14 +551,12 @@ function PreviewPanel({
         title="预览"
         description={preview.durationLabel}
         action={
-          <button
-            type="button"
-            data-slot="preview-aspect-toggle"
-            className="inline-flex h-6 items-center gap-1 rounded-md border border-border bg-surface-subtle px-2 text-[11px] font-medium text-foreground"
+          <span
+            data-slot="preview-planned-badge"
+            className="inline-flex h-6 items-center gap-1 rounded-md border border-border bg-surface-subtle px-2 text-[11px] font-medium text-muted-foreground"
           >
-            <span aria-hidden="true">▭</span>
-            16:9
-          </button>
+            规划中
+          </span>
         }
       >
         <div
@@ -612,9 +587,16 @@ function PreviewPanel({
           >
             {playing ? "播放中" : "已暂停"}
           </span>
+          <span
+            data-slot="preview-planned-caption"
+            className="absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-md bg-black/45 px-2 py-0.5 text-[11px] font-medium text-white"
+          >
+            实时预览规划中
+          </span>
         </div>
         <div
           data-slot="preview-controls"
+          data-planned="true"
           className="mt-3 flex flex-wrap items-center gap-2"
         >
           <button
@@ -622,6 +604,7 @@ function PreviewPanel({
             data-slot="preview-control"
             data-control="play"
             aria-pressed={playing}
+            aria-disabled="true"
             onClick={() => setPlaying(true)}
             className="inline-flex h-8 items-center rounded-md border border-border bg-surface px-3 text-xs font-medium text-foreground data-[control=play]:aria-pressed:border-brand"
           >
@@ -765,13 +748,25 @@ function SettingsGroup({
         description={descriptionForGroup(group.group)}
         action={
           action ? (
-            <a
-              href="#"
-              data-slot="settings-action"
-              className="text-[11px] font-medium text-brand"
-            >
-              {action}
-            </a>
+            action.planned ? (
+              // 规划中 (GAP-PRD-1 AC3): 设备检测 = browser device enumeration, not
+              // this wave. Honest non-interactive badge instead of an inert link.
+              <span
+                data-slot="settings-action"
+                data-planned="true"
+                className="text-[11px] font-medium text-muted-foreground"
+              >
+                {action.label}（规划中）
+              </span>
+            ) : (
+              <a
+                href="#"
+                data-slot="settings-action"
+                className="text-[11px] font-medium text-brand"
+              >
+                {action.label}
+              </a>
+            )
           ) : null
         }
       >
@@ -879,12 +874,13 @@ function groupActionLabel(): string {
 
 function settingsActionFor(
   group: ProductionViewModel["settings"][number]["group"],
-): string | null {
+): { label: string; planned: boolean } | null {
   switch (group) {
     case "recording":
-      return "设备检测";
+      // 设备检测 = browser device enumeration — out of scope this wave.
+      return { label: "设备检测", planned: true };
     case "subtitle":
-      return "预览字幕效果";
+      return { label: "预览字幕效果", planned: false };
     case "export":
       return null;
     default: {
@@ -1001,9 +997,12 @@ function TimelinePanel({
       data-slot="timeline-panel"
       data-testid="production-region"
       data-region="timeline"
+      data-planned="partial"
       className="xl:col-start-2 xl:row-start-2 xl:col-span-2"
     >
-      <SectionCard title="时间线" description="(可拖拽调整顺序)">
+      {/* AC4 (GAP-PRD-1): 章节结构可编辑并落库 (productions.segments.create)，
+          但真实剪辑 (拖拽渲染 / NLE 媒体管线) 规划中 — 在角标显式说明，不假装可剪。 */}
+      <SectionCard title="时间线" description="章节结构 · 剪辑渲染规划中">
         {segments.length === 0 ? (
           <p className="text-sm text-muted-foreground">暂无时间线片段。</p>
         ) : (

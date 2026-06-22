@@ -18,8 +18,16 @@
 
 import { PublishingWorkspacePage } from "@/features/project-publishing/publishing-workspace-page";
 import type { PublishingWiring } from "@/features/project-publishing/publishing-interactive-region";
-import { buildPublishingWorkspaceViewModel } from "@/features/project-publishing/publishing-workspace-data";
+import {
+  buildPublishingWorkspaceViewModel,
+  resolvePublishingCalendarWiring,
+  resolvePublishingRightRail,
+} from "@/features/project-publishing/publishing-workspace-data";
 import { client } from "@/lib/contract-client.server";
+
+// Deterministic 内容日历 anchor (C-5: never wall-clock). A fixed fixture Monday so
+// SSR stays stable across requests; the calendar derives its week cells from this.
+const PUBLISHING_WEEK_START = "2026-06-22T00:00:00.000Z";
 
 interface PublishingWorkspaceRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -78,15 +86,23 @@ export default async function PublishingWorkspaceRoute({
   // READ side made real: assemble the REAL PublishingViewModel from the
   // project's outputs → publications (一稿多平台 nodes), degrading per-field /
   // wholesale to the fixture builder. See `publishing-workspace-data.ts`.
-  const [viewModel, wiring] = await Promise.all([
+  const [viewModel, wiring, calendarWiring] = await Promise.all([
     buildPublishingWorkspaceViewModel(projectId),
     resolveWiring(resolvedId),
+    resolvePublishingCalendarWiring(PUBLISHING_WEEK_START),
   ]);
+  // 右栏真来源 (GAP-PUBW-1): aggregate per-platform analytics for the resolved
+  // publications. Absent wiring → empty rail (the island shows honest 暂无指标).
+  const rightRail = await resolvePublishingRightRail(
+    wiring?.publications ?? {},
+  );
   return (
     <PublishingWorkspacePage
       projectId={resolvedId}
       viewModel={viewModel}
       wiring={wiring}
+      calendarWiring={calendarWiring}
+      rightRail={rightRail}
     />
   );
 }

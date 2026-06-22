@@ -34,6 +34,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -50,6 +51,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { PageTabs } from "@/components/navigation/page-tabs";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
@@ -92,6 +94,142 @@ function useSettingsMutation() {
 const MODEL_CAPABILITY = "script";
 
 // ---------------------------------------------------------------------------
+// Local appearance persistence (GAP-SET-1 — theme/density made真持久)
+// ---------------------------------------------------------------------------
+//
+// The `settings.preferences.patch` contract op has NO theme/density field, so
+// these two appearance controls persist client-side via localStorage and apply
+// real `document.documentElement` classes. This is真持久 (survives reload), not
+// inert, and touches no shared contract surface. (Locale stays identity-derived
+// display only; notifications/account-edit/import/export/delete are规划中.)
+const THEME_STORAGE_KEY = "creatoros.settings.theme";
+const DENSITY_STORAGE_KEY = "creatoros.settings.density";
+
+type Theme = "system" | "light" | "dark";
+type Density = "comfortable" | "compact";
+
+const THEME_VALUES: ReadonlyArray<Theme> = ["system", "light", "dark"];
+const DENSITY_VALUES: ReadonlyArray<Density> = ["comfortable", "compact"];
+
+function readStored<T extends string>(
+  key: string,
+  allowed: ReadonlyArray<T>,
+  fallback: T,
+): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (raw && (allowed as ReadonlyArray<string>).includes(raw)) {
+      return raw as T;
+    }
+  } catch {
+    // localStorage unavailable (private mode / SSR) — fall back to default.
+  }
+  return fallback;
+}
+
+function writeStored(key: string, value: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Best-effort persistence; ignore quota / disabled-storage errors.
+  }
+}
+
+/** Apply the resolved theme as a `.dark` / no-`.dark` class on <html>. */
+function applyTheme(theme: Theme): void {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const prefersDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  root.classList.toggle("dark", prefersDark);
+  root.dataset.theme = theme;
+}
+
+/** Apply density as a `data-density` attribute on <html> for layout hooks. */
+function applyDensity(density: Density): void {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset.density = density;
+}
+
+// ---------------------------------------------------------------------------
+// PlanningBadge — a visible「规划中」marker for不做真 (inert) controls
+// ---------------------------------------------------------------------------
+//
+// Replaces the prior tooltip-only / aria-disabled signalling so the deferred
+// surfaces (notifications, account edit, import/export, delete) carry an
+// explicit, visible「规划中」label — the GAP-SET-1 acceptance requirement.
+function PlanningBadge() {
+  return (
+    <Badge
+      data-slot="planning-badge"
+      variant="outline"
+      className="border-warning/40 bg-warning-soft text-warning"
+    >
+      规划中
+    </Badge>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SettingsTabsNav — controlled tab strip that drives a real partition
+// ---------------------------------------------------------------------------
+//
+// The page previously rendered an UNcontrolled `PageTabs` whose value changed
+// nothing — every card showed regardless of the active tab (a decorative tab).
+// This controlled version makes the tab真实分区: selecting a tab scrolls to the
+// matching `data-settings-section` anchor and toggles a highlight outline on it,
+// so the eight tabs become a working in-page section navigator. All sections
+// stay mounted (no content is hidden), so the structural page tests still see
+// every card.
+export function SettingsTabsNav({
+  tabs,
+  defaultValue,
+}: {
+  tabs: ReadonlyArray<{ id: string; label: string }>;
+  defaultValue: string;
+}) {
+  const [active, setActive] = React.useState<string>(defaultValue);
+
+  const focusSection = React.useCallback((tabId: string) => {
+    if (typeof document === "undefined") return;
+    const sections = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-settings-section]"),
+    );
+    let matched: HTMLElement | null = null;
+    for (const node of sections) {
+      const owns = (node.dataset.settingsTabs ?? "").split(" ").includes(tabId);
+      node.dataset.settingsActive = owns ? "true" : "false";
+      if (owns && !matched) matched = node;
+    }
+    matched?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const onValueChange = React.useCallback(
+    (value: string) => {
+      setActive(value);
+      focusSection(value);
+    },
+    [focusSection],
+  );
+
+  return (
+    <PageTabs
+      tabs={tabs}
+      value={active}
+      defaultValue={defaultValue}
+      onValueChange={onValueChange}
+      ariaLabel="设置分类导航"
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
 // SettingsMainColumn
 // ---------------------------------------------------------------------------
 
@@ -102,9 +240,48 @@ export function SettingsMainColumn({
 }) {
   return (
     <div data-slot="main-settings" className="flex flex-col gap-card-gap">
-      <AccountInformationCard viewModel={viewModel} />
-      <PreferenceSettingsCard viewModel={viewModel} />
-      <SystemSettingsCard viewModel={viewModel} />
+      <SettingsSection sectionId="account">
+        <AccountInformationCard viewModel={viewModel} />
+      </SettingsSection>
+      <SettingsSection sectionId="preferences">
+        <PreferenceSettingsCard viewModel={viewModel} />
+      </SettingsSection>
+      {/* 外观 (theme/density/locale) + 通知 share the system card. */}
+      <SettingsSection sectionId="appearance" alsoFor={["notifications"]}>
+        <SystemSettingsCard viewModel={viewModel} />
+      </SettingsSection>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SettingsSection — a real, anchorable partition for a settings tab
+// ---------------------------------------------------------------------------
+//
+// Each settings card is wrapped in a section that carries the tab id(s) it
+// serves. The tab strip (`SettingsTabsNav`) targets these `id` anchors so a tab
+// click really scrolls to and highlights its section — a real partitioned
+// display rather than a decorative tab. All sections stay mounted (the page
+// tests assert every card is present at once), so this never hides content.
+function SettingsSection({
+  sectionId,
+  alsoFor,
+  children,
+}: {
+  sectionId: string;
+  alsoFor?: ReadonlyArray<string>;
+  children: React.ReactNode;
+}) {
+  const tabIds = [sectionId, ...(alsoFor ?? [])].join(" ");
+  return (
+    <div
+      id={`settings-section-${sectionId}`}
+      data-slot="settings-section"
+      data-settings-section={sectionId}
+      data-settings-tabs={tabIds}
+      className="scroll-mt-24 transition-[outline] data-[settings-active=true]:outline data-[settings-active=true]:outline-2 data-[settings-active=true]:outline-offset-4 data-[settings-active=true]:outline-brand/40"
+    >
+      {children}
     </div>
   );
 }
@@ -123,9 +300,16 @@ export function SettingsRailColumn({
       data-slot="settings-rail"
       className="flex flex-col gap-card-gap"
     >
-      <StorageUsageCard storage={viewModel.storage} />
-      <ModelConfigurationCard model={viewModel.model} />
-      <OtherSettingsCard />
+      <SettingsSection sectionId="storage">
+        <StorageUsageCard storage={viewModel.storage} />
+      </SettingsSection>
+      {/* 集成 → model providers; 关于 falls through to the model/other rail. */}
+      <SettingsSection sectionId="integrations" alsoFor={["about"]}>
+        <ModelConfigurationCard model={viewModel.model} />
+      </SettingsSection>
+      <SettingsSection sectionId="data">
+        <OtherSettingsCard />
+      </SettingsSection>
     </div>
   );
 }
@@ -198,27 +382,33 @@ function AccountInformationCard({
           controlId="account-nickname"
           help="个人资料编辑暂未开放（PATCH /me 为未决的 §13 缺口，roadmap §6）。"
         >
-          <Input
-            id="account-nickname"
-            data-slot="account-nickname-input"
-            value={viewModel.account.displayName}
-            readOnly
-            aria-readonly="true"
-          />
+          <div className="flex w-full items-center gap-2">
+            <Input
+              id="account-nickname"
+              data-slot="account-nickname-input"
+              value={viewModel.account.displayName}
+              readOnly
+              aria-readonly="true"
+            />
+            <PlanningBadge />
+          </div>
         </SettingsFormRow>
         <SettingsFormRow
           label="邮箱"
           controlId="account-email"
           help="个人资料编辑暂未开放（PATCH /me 为未决的 §13 缺口，roadmap §6）。"
         >
-          <Input
-            id="account-email"
-            type="email"
-            data-slot="account-email-input"
-            value={viewModel.account.email}
-            readOnly
-            aria-readonly="true"
-          />
+          <div className="flex w-full items-center gap-2">
+            <Input
+              id="account-email"
+              type="email"
+              data-slot="account-email-input"
+              value={viewModel.account.email}
+              readOnly
+              aria-readonly="true"
+            />
+            <PlanningBadge />
+          </div>
         </SettingsFormRow>
       </div>
     </SectionCard>
@@ -434,18 +624,52 @@ const VISIBILITY_OPTIONS: ReadonlyArray<{ value: Visibility; label: string }> =
 // SystemSettingsCard
 // ---------------------------------------------------------------------------
 
-type Theme = "system" | "light" | "dark";
-type Density = "comfortable" | "compact";
-
 function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
+  // Theme / density are真持久 via localStorage (no contract field exists). We
+  // lazy-init from the fixture/identity default, then overwrite from storage on
+  // mount (avoids an SSR/CSR hydration mismatch — the server can't read
+  // localStorage). Every change writes back AND applies real <html> classes.
   const [theme, setTheme] = React.useState<Theme>(viewModel.system.theme);
   const [density, setDensity] = React.useState<Density>(
     viewModel.system.density,
   );
-  const [notifications, setNotifications] = React.useState<boolean>(
-    viewModel.system.notifications,
-  );
+  // 桌面通知 is规划中 (no settings op) — display the fixture default but the
+  // control is inert, so no setter is needed.
+  const notifications = viewModel.system.notifications;
   const [locale, setLocale] = React.useState<string>(viewModel.system.locale);
+
+  React.useEffect(() => {
+    const storedTheme = readStored(
+      THEME_STORAGE_KEY,
+      THEME_VALUES,
+      viewModel.system.theme,
+    );
+    const storedDensity = readStored(
+      DENSITY_STORAGE_KEY,
+      DENSITY_VALUES,
+      viewModel.system.density,
+    );
+    setTheme(storedTheme);
+    setDensity(storedDensity);
+    applyTheme(storedTheme);
+    applyDensity(storedDensity);
+    // Run once on mount; the fixture defaults are stable so deps are intentionally
+    // limited to the initial identity-derived values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onThemeChange = React.useCallback((next: Theme) => {
+    setTheme(next);
+    writeStored(THEME_STORAGE_KEY, next);
+    applyTheme(next);
+  }, []);
+
+  const onDensityChange = React.useCallback((next: Density) => {
+    setDensity(next);
+    writeStored(DENSITY_STORAGE_KEY, next);
+    applyDensity(next);
+  }, []);
+
   return (
     <SectionCard
       title="系统设置"
@@ -455,11 +679,11 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
         <SettingsFormRow
           label="主题"
           controlId="sys-theme"
-          help="跟随系统或手动切换浅色/深色。"
+          help="跟随系统或手动切换浅色/深色（已本地持久，刷新后保持）。"
         >
           <Select
             value={theme}
-            onValueChange={(value) => setTheme(value as Theme)}
+            onValueChange={(value) => onThemeChange(value as Theme)}
           >
             <SelectTrigger
               id="sys-theme"
@@ -481,11 +705,11 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
         <SettingsFormRow
           label="密度"
           controlId="sys-density"
-          help="列表与卡片的间距。"
+          help="列表与卡片的间距（已本地持久，刷新后保持）。"
         >
           <Select
             value={density}
-            onValueChange={(value) => setDensity(value as Density)}
+            onValueChange={(value) => onDensityChange(value as Density)}
           >
             <SelectTrigger
               id="sys-density"
@@ -533,16 +757,24 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
         <SettingsFormRow
           label="桌面通知"
           controlId="sys-notifications"
-          help="发布完成与系统消息提醒。"
+          help="发布完成与系统消息提醒（需通知系统与权限，暂未开放，无对应 settings op）。"
         >
-          <Switch
-            id="sys-notifications"
-            data-slot="sys-notifications-switch"
-            size="sm"
-            checked={notifications}
-            onCheckedChange={(value) => setNotifications(Boolean(value))}
-            aria-label="启用桌面通知"
-          />
+          {/* 桌面通知 needs a notification system + browser permission and has
+              NO backing settings op — kept inert (disabled, no persistence) with
+              a visible「规划中」badge so it never pretends to take effect. */}
+          <div className="flex items-center gap-2">
+            <Switch
+              id="sys-notifications"
+              data-slot="sys-notifications-switch"
+              size="sm"
+              checked={notifications}
+              disabled
+              aria-disabled="true"
+              onCheckedChange={() => undefined}
+              aria-label="启用桌面通知"
+            />
+            <PlanningBadge />
+          </div>
         </SettingsFormRow>
       </div>
     </SectionCard>
@@ -810,32 +1042,41 @@ function OtherSettingsCard() {
           controlId="other-import"
           help="从旧版 CreatorOS 或外部工具导入（暂未开放，无对应路由）。"
         >
-          {/* 导入 / 导出 are intentionally inert (decorative) — no route
-              is exposed in Wave 0 (Module 00, Task 12). */}
-          <Button
-            id="other-import"
-            data-slot="other-import-button"
-            variant="outline"
-            size="sm"
-            aria-disabled="true"
-          >
-            导入
-          </Button>
+          {/* 导入 / 导出 are intentionally inert — file-package import/export is
+              heavy work with no route exposed (Module 00, Task 12). Marked with a
+              visible「规划中」badge. */}
+          <div className="flex items-center gap-2">
+            <Button
+              id="other-import"
+              data-slot="other-import-button"
+              variant="outline"
+              size="sm"
+              disabled
+              aria-disabled="true"
+            >
+              导入
+            </Button>
+            <PlanningBadge />
+          </div>
         </SettingsFormRow>
         <SettingsFormRow
           label="导出全部数据"
           controlId="other-export"
           help="导出为 JSON + Markdown 包（暂未开放，无对应路由）。"
         >
-          <Button
-            id="other-export"
-            data-slot="other-export-button"
-            variant="outline"
-            size="sm"
-            aria-disabled="true"
-          >
-            导出
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              id="other-export"
+              data-slot="other-export-button"
+              variant="outline"
+              size="sm"
+              disabled
+              aria-disabled="true"
+            >
+              导出
+            </Button>
+            <PlanningBadge />
+          </div>
         </SettingsFormRow>
         <SettingsFormRow
           label="删除账户"
@@ -874,6 +1115,7 @@ function OtherSettingsCard() {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            <PlanningBadge />
           </div>
         </SettingsFormRow>
       </div>

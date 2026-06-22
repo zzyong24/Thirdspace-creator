@@ -1,7 +1,10 @@
 import "server-only";
 
 import { client } from "@/lib/contract-client.server";
-import type { ScriptSectionView } from "@/types/view-models";
+import type {
+  ScriptSectionView,
+  ScriptViewModel,
+} from "@/types/view-models";
 
 // Read the 分镜脚本 artifact's CURRENT version content and shape it into the editor's
 // `sections` (Plan: 脚本编辑器做真, read side / round-trip). Used by the async Script
@@ -47,55 +50,158 @@ function coerceSavedSections(
   return out.length > 0 ? out : null;
 }
 
+// A single version row as returned by `artifacts.versions.list`. We only read the
+// fields we map (id / versionNumber / changeSummary / createdAt / content*).
+interface VersionRow {
+  readonly id: string;
+  readonly versionNumber: number;
+  readonly changeSummary?: unknown;
+  readonly createdAt?: unknown;
+  readonly contentText?: unknown;
+  readonly contentData?: unknown;
+}
+
+// One versions fetch, shared by every Script read-side derivation (sections,
+// versions strip, outline, golden quotes). `artifacts.get` exposes only
+// `currentVersionId` (not the content), so we read the full version list once and
+// pick the CURRENT version from it. Returns null on any failure / missing artifact.
+async function fetchVersionsAndCurrent(
+  artifactId: string,
+): Promise<{ rows: VersionRow[]; current: VersionRow } | null> {
+  const artifact = await client.getArtifact({
+    params: { artifactId },
+    query: undefined,
+    body: undefined,
+  });
+  const versions = await client.listArtifactVersions({
+    params: { artifactId },
+    query: { page: 1, pageSize: 100 },
+    body: undefined,
+  });
+  const rows = (Array.isArray(versions) ? versions : []) as VersionRow[];
+  if (rows.length === 0) return null;
+  const current =
+    rows.find((v) => v.id === artifact.currentVersionId) ??
+    // Fallback: highest versionNumber if currentVersionId did not resolve.
+    rows.slice().sort((a, b) => b.versionNumber - a.versionNumber)[0];
+  if (!current) return null;
+  return { rows, current };
+}
+
+// Shape the CURRENT version's content into the editor's `sections`:
+//   - contentData.sections (non-empty) → structured editor sections,
+//   - else contentText → a single "脚本正文" section,
+//   - else null.
+function sectionsFromVersion(current: VersionRow): ScriptSectionView[] | null {
+  let counter = 0;
+  const next = () => counter++;
+  const structured = coerceSavedSections(
+    (current.contentData as { sections?: unknown } | undefined)?.sections,
+    next,
+  );
+  if (structured) return structured;
+
+  const contentText =
+    typeof current.contentText === "string" ? current.contentText : "";
+  if (contentText.trim().length > 0) {
+    return [
+      {
+        id: "script-content-text",
+        type: "body",
+        heading: "脚本正文",
+        body: contentText,
+        emphasis: false,
+        startSeconds: null,
+        endSeconds: null,
+      },
+    ];
+  }
+  return null;
+}
+
 export async function loadScriptEditorSections(
   artifactId: string | null,
 ): Promise<ScriptSectionView[] | null> {
   if (!artifactId) return null;
   try {
-    // artifacts.get exposes only currentVersionId (not the content), so read the
-    // version list and pick the artifact's CURRENT version's content.
-    const artifact = await client.getArtifact({
-      params: { artifactId },
-      query: undefined,
-      body: undefined,
-    });
-    const versions = await client.listArtifactVersions({
-      params: { artifactId },
-      query: { page: 1, pageSize: 100 },
-      body: undefined,
-    });
-    const rows = Array.isArray(versions) ? versions : [];
-    const current =
-      rows.find((v) => v.id === artifact.currentVersionId) ??
-      // Fallback: highest versionNumber if currentVersionId did not resolve.
-      rows.slice().sort((a, b) => b.versionNumber - a.versionNumber)[0];
-    if (!current) return null;
-
-    let counter = 0;
-    const next = () => counter++;
-
-    const structured = coerceSavedSections(
-      (current.contentData as { sections?: unknown } | undefined)?.sections,
-      next,
-    );
-    if (structured) return structured;
-
-    const contentText =
-      typeof current.contentText === "string" ? current.contentText : "";
-    if (contentText.trim().length > 0) {
-      return [
-        {
-          id: "script-content-text",
-          type: "body",
-          heading: "脚本正文",
-          body: contentText,
-          emphasis: false,
-          startSeconds: null,
-          endSeconds: null,
-        },
-      ];
-    }
+    const fetched = await fetchVersionsAndCurrent(artifactId);
+    if (!fetched) return null;
+    return sectionsFromVersion(fetched.current);
+  } catch {
     return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// loadScriptEditorData — the GAP-SCR-1 combined read (版本列表 / 大纲 / 金句)
+// ---------------------------------------------------------------------------
+
+export interface ScriptEditorData {
+  /** CURRENT version's editor sections (same as loadScriptEditorSections). */
+  readonly sections: ScriptSectionView[] | null;
+  /** REAL version history (newest-first) from artifacts.versions.list. */
+  readonly versions: ScriptViewModel["versions"];
+  /** Outline derived from the CURRENT version's section headings. */
+  readonly outline: ScriptViewModel["outline"];
+  /** Pull-quote candidates derived from emphasis sections of the CURRENT version. */
+  readonly goldenQuotes: ScriptViewModel["goldenQuotes"];
+}
+
+/**
+ * GAP-SCR-1 read-side做真: assemble the Script root VM's previously-fixture regions
+ * (版本列表 / 大纲 / 金句) from ONE `artifacts.versions.list` fetch (shared with the
+ * editor sections — no double read).
+ *
+ *   - 版本列表: every ArtifactVersion → {id, label "v<n>", changeSummary摘要, createdAt}.
+ *   - 大纲:     the CURRENT version's section headings → outline rows.
+ *   - 金句:     the CURRENT version's emphasis sections (golden_quote / emphasis:true)
+ *               → pull-quote candidates. Empty when none — the card owns its empty state.
+ *
+ * Returns null (caller keeps the fixture VM fields) when there is no artifact id or the
+ * read fails. A real, persisted script NEVER renders a fixture桩 nor crashes.
+ */
+export async function loadScriptEditorData(
+  artifactId: string | null,
+): Promise<ScriptEditorData | null> {
+  if (!artifactId) return null;
+  try {
+    const fetched = await fetchVersionsAndCurrent(artifactId);
+    if (!fetched) return null;
+    const { rows, current } = fetched;
+
+    const sections = sectionsFromVersion(current);
+
+    const versions = rows
+      .slice()
+      .sort((a, b) => b.versionNumber - a.versionNumber)
+      .map((v) => {
+        const summary =
+          typeof v.changeSummary === "string" && v.changeSummary.trim()
+            ? ` · ${v.changeSummary.trim()}`
+            : "";
+        return {
+          id: v.id,
+          label: `脚本 · v${v.versionNumber}${summary}`,
+          createdAt: typeof v.createdAt === "string" ? v.createdAt : "",
+        };
+      });
+
+    const outline = (sections ?? [])
+      .filter((s) => s.heading.trim().length > 0)
+      .map((s, index) => ({
+        id: `script-outline-${s.id}`,
+        heading: s.heading,
+        position: index,
+      }));
+
+    const goldenQuotes = (sections ?? [])
+      .filter(
+        (s) =>
+          (s.emphasis || s.type === "golden_quote") && s.body.trim().length > 0,
+      )
+      .map((s) => ({ id: `script-quote-${s.id}`, text: s.body.trim() }));
+
+    return { sections, versions, outline, goldenQuotes };
   } catch {
     return null;
   }

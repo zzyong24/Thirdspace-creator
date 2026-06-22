@@ -67,6 +67,32 @@ interface ProjectActivityDto {
   readonly occurredAt: string;
 }
 
+// `materialLinks.list` rows — the project↔library edges (用料链, Plan A4).
+interface MaterialLinkDto {
+  readonly id: string;
+  readonly entityType: "knowledge" | "asset";
+  readonly entityId: string;
+  readonly role: string;
+  readonly stage: string;
+  readonly createdAt: string;
+}
+
+// `assets.get` resource — we only read the display fields.
+interface AssetDto {
+  readonly id: string;
+  readonly assetType: "image" | "video" | "audio" | "document" | "subtitle";
+  readonly name: string;
+  readonly updatedAt: string;
+}
+
+// `outputs.publications.list` rows — a 一稿多平台 publication per platform.
+interface PublicationDto {
+  readonly id: string;
+  readonly platform: string;
+  readonly status: string;
+  readonly publishedAt: string | null;
+}
+
 export interface ProjectOverviewDataClient {
   getProject(input: {
     params: { projectId: string };
@@ -81,6 +107,21 @@ export interface ProjectOverviewDataClient {
   listActivity(input: {
     params: { projectId: string };
     query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+  listMaterialLinks(input: {
+    params: undefined;
+    query: { projectId: string; page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  getAsset(input: {
+    params: { assetId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+  listPublications(input: {
+    params: { outputId: string };
+    query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
 }
@@ -172,6 +213,138 @@ export async function buildProjectOverviewWorkspaceViewModel(
     activities = isFixtureProject ? fixtureVm.activities : [];
   }
 
+  // Demo / canonical projects keep their curated fixture rollups untouched
+  // (spec: "demo 项目行为不变"). Only REAL projects fan out to the live read ops
+  // below, so the rest of this function early-returns the fixture content for
+  // them.
+  if (isFixtureProject) {
+    return {
+      scenario: "default",
+      kind: "project-overview",
+      projectId: project.id,
+      projectTitle: project.title,
+      stage: project.currentStage,
+      progressPct: project.progressPct,
+      projectInfo: buildProjectInfo(project),
+      outputs,
+      activities,
+      stages: fixtureVm.stages,
+      assetStats: fixtureVm.assetStats,
+      recentFiles: fixtureVm.recentFiles,
+      publishing: fixtureVm.publishing,
+      milestones: fixtureVm.milestones,
+      loading: false,
+      error: null,
+    };
+  }
+
+  // ---- REAL project from here: every section degrades to EMPTY on failure ----
+
+  // 资产概览 + 最近文件 — both derive from `materialLinks.list` (用料链). Fetch
+  // once; the asset rows additionally fan out to `assets.get` for display fields.
+  let assetStats: ProjectOverviewViewModel["assetStats"] = [];
+  let recentFiles: ProjectOverviewViewModel["recentFiles"] = [];
+  try {
+    const links = (await client.listMaterialLinks({
+      params: undefined,
+      query: { projectId, page: 1, pageSize: 100 },
+      body: undefined,
+    })) as ReadonlyArray<MaterialLinkDto>;
+
+    // 资产概览: real, derivable counts (素材/知识 from links, 产出/已发布 from
+    // outputs + publishing). A zero count is an honest "0", not fake data.
+    const assetLinks = links.filter((l) => l.entityType === "asset");
+    const knowledgeCount = links.filter(
+      (l) => l.entityType === "knowledge",
+    ).length;
+
+    // 最近文件: the project's linked ASSET items, resolved via `assets.get` for
+    // name/type/updatedAt, newest first, capped at a small N.
+    const assets = await Promise.all(
+      assetLinks.map(async (link) => {
+        try {
+          return (await client.getAsset({
+            params: { assetId: link.entityId },
+            query: undefined,
+            body: undefined,
+          })) as AssetDto;
+        } catch {
+          return null;
+        }
+      }),
+    );
+    const resolvedAssets = assets.filter((a): a is AssetDto => a !== null);
+    recentFiles = resolvedAssets
+      .slice()
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .slice(0, 8)
+      .map((asset) => ({
+        id: asset.id,
+        name: asset.name,
+        type: assetTypeLabel(asset.assetType),
+        fileKind: assetFileKind(asset.assetType),
+        updatedAt: asset.updatedAt,
+      }));
+
+    assetStats = buildAssetStats({
+      assetCount: assetLinks.length,
+      knowledgeCount,
+      outputCount: outputs.length,
+      // `publishedCount` is computed below from `publishing`; fill after.
+      publishedCount: 0,
+      activityCount: activities.length,
+    });
+  } catch {
+    // Material-links read failed — empty so the cards render their empty states.
+    assetStats = [];
+    recentFiles = [];
+  }
+
+  // 发布状态 — fan out from outputs to `outputs.publications.list`. One row per
+  // (output, platform) publication; newest publish first.
+  let publishing: ProjectOverviewViewModel["publishing"] = [];
+  try {
+    const perOutput = await Promise.all(
+      outputs.map(async (output) => {
+        try {
+          return (await client.listPublications({
+            params: { outputId: output.id },
+            query: { page: 1, pageSize: 50 },
+            body: undefined,
+          })) as ReadonlyArray<PublicationDto>;
+        } catch {
+          return [] as ReadonlyArray<PublicationDto>;
+        }
+      }),
+    );
+    const rows = perOutput
+      .flat()
+      .map((pub) => ({
+        id: pub.id,
+        platform: normalizePlatform(pub.platform),
+        status: mapPublicationStatus(pub.status),
+        publishedAt: pub.publishedAt,
+      }))
+      .sort((a, b) =>
+        (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
+      );
+    publishing = rows;
+  } catch {
+    publishing = [];
+  }
+
+  // Back-fill the 已发布 stat now that publishing is known.
+  if (assetStats.length > 0) {
+    const publishedCount = publishing.filter(
+      (p) => p.status === "published",
+    ).length;
+    assetStats = assetStats.map((stat) =>
+      stat.id === "stat-published"
+        ? { ...stat, value: String(publishedCount) }
+        : stat,
+    );
+  }
+
   return {
     scenario: "default",
     kind: "project-overview",
@@ -183,25 +356,134 @@ export async function buildProjectOverviewWorkspaceViewModel(
     projectInfo: buildProjectInfo(project),
     outputs,
     activities,
-    // No per-stage status read op on the frozen surface → fixture content for
-    // demo projects, every stage pending for real projects.
-    stages: isFixtureProject
-      ? fixtureVm.stages
-      : STAGE_ORDER.map((stage) => ({
-          stage,
-          status: "pending" as const,
-          progressPct: 0,
-        })),
-    // No asset / file / publishing / milestones read op on the frozen surface →
-    // fixture content for demo projects, EMPTY for real projects so the cards
-    // render their empty states instead of fake data.
-    assetStats: isFixtureProject ? fixtureVm.assetStats : [],
-    recentFiles: isFixtureProject ? fixtureVm.recentFiles : [],
-    publishing: isFixtureProject ? fixtureVm.publishing : [],
-    milestones: isFixtureProject ? fixtureVm.milestones : [],
+    // 阶段 stepper — derived from `currentStage` + `progressPct` (no per-stage
+    // read op): stages before current = completed, current = in_progress (carries
+    // the real progressPct), after = pending.
+    stages: buildStages(project.currentStage, project.progressPct),
+    assetStats,
+    recentFiles,
+    publishing,
+    // 里程碑 has no producer / read op — real projects show the card's empty
+    // state ("里程碑将随阶段推进自动生成").
+    milestones: [],
     loading: false,
     error: null,
   };
+}
+
+/**
+ * Derive per-stage status from the project's `currentStage` + `progressPct`.
+ * No per-stage read op exists on the frozen surface, so we project the single
+ * pointer onto the canonical STAGE_ORDER: stages before current are `completed`
+ * (100%), the current stage is `in_progress` carrying the real `progressPct`,
+ * and stages after current are `pending` (0%). The current stage always exists,
+ * so a real project is never "all pending" again.
+ */
+function buildStages(
+  currentStage: StageName,
+  progressPct: number,
+): ProjectOverviewViewModel["stages"] {
+  const currentIndex = STAGE_ORDER.indexOf(currentStage);
+  return STAGE_ORDER.map((stage, index) => {
+    if (currentIndex < 0) {
+      return { stage, status: "pending" as const, progressPct: 0 };
+    }
+    if (index < currentIndex) {
+      return { stage, status: "completed" as const, progressPct: 100 };
+    }
+    if (index === currentIndex) {
+      return {
+        stage,
+        status: "in_progress" as const,
+        progressPct,
+      };
+    }
+    return { stage, status: "pending" as const, progressPct: 0 };
+  });
+}
+
+/**
+ * Build the 5-stat 资产概览 from derivable real counts (D-OVW-a: fill the four
+ * derivable slots — 素材/知识/产出/已发布 — and use 动态 count for the fifth so
+ * no slot is faked). `stat-published` is back-filled after publishing resolves.
+ */
+function buildAssetStats(counts: {
+  assetCount: number;
+  knowledgeCount: number;
+  outputCount: number;
+  publishedCount: number;
+  activityCount: number;
+}): ProjectOverviewViewModel["assetStats"] {
+  const stat = (
+    id: string,
+    label: string,
+    value: number,
+  ): ProjectOverviewViewModel["assetStats"][number] => ({
+    id,
+    label,
+    value: String(value),
+    delta: "",
+    trend: "flat",
+    tone: "neutral",
+  });
+  return [
+    stat("stat-assets", "关联素材", counts.assetCount),
+    stat("stat-knowledge", "关联知识", counts.knowledgeCount),
+    stat("stat-outputs", "产出", counts.outputCount),
+    stat("stat-published", "已发布", counts.publishedCount),
+    stat("stat-activity", "动态", counts.activityCount),
+  ];
+}
+
+function assetTypeLabel(assetType: AssetDto["assetType"]): string {
+  const labels: Readonly<Record<AssetDto["assetType"], string>> = {
+    image: "图片",
+    video: "视频",
+    audio: "音频",
+    document: "文档",
+    subtitle: "字幕",
+  };
+  return labels[assetType] ?? assetType;
+}
+
+function assetFileKind(
+  assetType: AssetDto["assetType"],
+): ProjectOverviewViewModel["recentFiles"][number]["fileKind"] {
+  switch (assetType) {
+    case "video":
+      return "shot";
+    case "document":
+    case "subtitle":
+      return "document";
+    default:
+      return "data";
+  }
+}
+
+const KNOWN_PLATFORMS: ReadonlyArray<ProjectOverviewViewModel["publishing"][number]["platform"]> =
+  ["youtube", "bilibili", "douyin", "xiaohongshu", "wechatVideo", "x"];
+
+function normalizePlatform(
+  platform: string,
+): ProjectOverviewViewModel["publishing"][number]["platform"] {
+  return (
+    KNOWN_PLATFORMS.find((p) => p === platform) ?? "douyin"
+  );
+}
+
+function mapPublicationStatus(
+  status: string,
+): ProjectOverviewViewModel["publishing"][number]["status"] {
+  switch (status) {
+    case "published":
+    case "scheduled":
+    case "draft":
+    case "removed":
+    case "failed":
+      return status;
+    default:
+      return "draft";
+  }
 }
 
 function buildProjectInfo(
