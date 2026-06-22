@@ -45,15 +45,11 @@ import {
   LoadingState,
   resolvePageState,
 } from "@/components/state/page-state";
-import {
-  buildKnowledgeViewModel,
-  buildRecentRowsFromItems,
-} from "@/fixtures/selectors";
-import { client } from "@/lib/contract-client.server";
 import type {
   BasePageViewModel,
   MetricCard as MetricCardVm,
 } from "@/types/view-models";
+import { buildKnowledgeDashboardViewModel } from "./knowledge-data";
 import { KnowledgeInteractiveRegion } from "./knowledge-interactive-region";
 
 // ---------------------------------------------------------------------------
@@ -127,29 +123,17 @@ export interface KnowledgeSnippet {
 // ---------------------------------------------------------------------------
 
 export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
-  // Module 06 F1a: the `recent` rows now come from the REAL `knowledge.list` op
-  // (pglite, user-scoped) instead of the fixture-derived list. The rest of the VM
-  // (metrics / categories / insights) stays selector-derived this wave (those
-  // rows are decorative — Taxonomy/AI/Analytics own them). The `viewModel?` prop
-  // remains the test-override seam: when provided, no network read happens.
-  let vm: KnowledgeViewModel;
-  if (viewModel === undefined) {
-    const base = buildKnowledgeViewModel();
-    const items = (await client.listKnowledge({
-      params: undefined,
-      query: { page: 1, pageSize: 50 },
-      body: undefined,
-    })) as unknown as ReadonlyArray<{
-      id: string;
-      title: string;
-      knowledgeType: string;
-      status: KnowledgeRow["status"];
-      updatedAt: string;
-    }>;
-    vm = { ...base, recent: buildRecentRowsFromItems(items) };
-  } else {
-    vm = viewModel;
-  }
+  // READ-side made real ("知识库读侧做真"): the VM now derives `recent`, the
+  // `metrics` row (知识条目 total / 本周新增 / 复用片段 are REAL counts; 知识关联
+  // and 记忆命中率 keep their fixture cards — no read op this wave), and the
+  // `categories` tally from the REAL `knowledge.list` op (pglite, user-scoped).
+  // AI-search material confirmed into a KnowledgeItem flows through this list,
+  // so the new entry is reflected in the total / week / category counts. The
+  // insight rail + knowledge-graph chart stay fixture-backed (no read path).
+  // Assembly degrades to the pure fixture VM on read failure. The `viewModel?`
+  // prop remains the test-override seam: when provided, no network read happens.
+  const vm: KnowledgeViewModel =
+    viewModel ?? (await buildKnowledgeDashboardViewModel());
   const isEmpty =
     vm.categories.length === 0 &&
     vm.recent.length === 0 &&
