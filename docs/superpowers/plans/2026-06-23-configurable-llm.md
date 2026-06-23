@@ -46,7 +46,7 @@
 
 Run（在工作目录根）:
 ```bash
-pnpm --filter frontend add @anthropic-ai/sdk
+pnpm --filter creatoros-frontend add @anthropic-ai/sdk
 ```
 Expected: `frontend/package.json` 的 `dependencies` 出现 `"@anthropic-ai/sdk": "^0.x"`;pnpm-lock 更新。
 
@@ -146,7 +146,7 @@ describe("buildSystem", () => {
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/ai/llm/parse.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/ai/llm/parse.test.ts
 ```
 Expected: FAIL（`Cannot find module './parse'`）。
 
@@ -217,7 +217,7 @@ export function buildSystem(
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/ai/llm/parse.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/ai/llm/parse.test.ts
 ```
 Expected: PASS（10 个断言全绿）。
 
@@ -289,7 +289,7 @@ describe("createLlmCompleter", () => {
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/ai/llm/provider.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/ai/llm/provider.test.ts
 ```
 Expected: FAIL（`Cannot find module './provider'`）。
 
@@ -403,7 +403,7 @@ export function createLlmCompleter(
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/ai/llm/provider.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/ai/llm/provider.test.ts
 ```
 Expected: PASS。
 
@@ -498,7 +498,7 @@ describe("createAnthropicProvider.complete (injected client)", () => {
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/ai/llm/anthropic-adapter.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/ai/llm/anthropic-adapter.test.ts
 ```
 Expected: FAIL（模块缺失 / 函数未定义）。
 
@@ -566,7 +566,7 @@ export function createAnthropicProvider(
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/ai/llm/anthropic-adapter.test.ts src/server/ai/llm/provider.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/ai/llm/anthropic-adapter.test.ts src/server/ai/llm/provider.test.ts
 ```
 Expected: PASS（adapter + provider 全绿;若 Task 2 用过占位 adapter,此时换成真实实现后 provider 测试仍绿）。
 
@@ -628,7 +628,7 @@ git commit -m "feat(llm): anthropic adapter (configurable baseURL + bearer/x-api
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/modules/settings/settings.repository.integration.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/modules/settings/settings.repository.integration.test.ts
 ```
 Expected: FAIL（`baseUrl`/`apiFormat` 不存在 / 类型报错）。
 
@@ -690,7 +690,7 @@ Expected: 这两文件只是 **re-export** `@creatoros/backend`(无独立列清�
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/modules/settings/settings.repository.integration.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/modules/settings/settings.repository.integration.test.ts
 pnpm --filter @creatoros/contract exec vitest run tests/registry.test.ts
 ```
 Expected: repo 往返 PASS;registry PASS（只扩字段没动路由,SPEC §13 不变)。
@@ -822,7 +822,7 @@ describe("resolveLlmConfig — tier 3 + error", () => {
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/ai/llm/resolve.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/ai/llm/resolve.test.ts
 ```
 Expected: FAIL（`Cannot find module './resolve'`）。
 
@@ -935,7 +935,7 @@ export async function resolveLlmConfig(
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/ai/llm/resolve.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/ai/llm/resolve.test.ts
 ```
 Expected: PASS（6 用例全绿）。
 
@@ -1000,7 +1000,7 @@ import { resolveLlmConfig } from "@/server/ai/llm/resolve";
 
 Run:
 ```bash
-pnpm --filter frontend exec tsc --noEmit
+pnpm --filter creatoros-frontend exec tsc --noEmit
 ```
 Expected: 报 6 处 “`llm` 不在 XxxDeps 上” 类型错误。这是预期的——Task 7 给每个 Deps 加 `llm` 后即消。**不要在此 commit**(留到 Task 7 末尾一起,保持每次 commit 可编译)。
 
@@ -1094,7 +1094,7 @@ describe("runPlanningThesis with injected llm", () => {
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/ai/planning-runner.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/ai/planning-runner.test.ts
 ```
 Expected: FAIL（当前 `runPlanningThesis` 仍调 `runClaudeAgent`,`deps.llm` 未被调用 / 类型缺 `llm`)。
 
@@ -1133,7 +1133,7 @@ Expected: FAIL（当前 `runPlanningThesis` 仍调 `runClaudeAgent`,`deps.llm` �
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/ai/planning-runner.test.ts
+pnpm --filter creatoros-frontend exec vitest run src/server/ai/planning-runner.test.ts
 ```
 Expected: PASS。
 
@@ -1153,7 +1153,7 @@ Expected: PASS。
 
 Run:
 ```bash
-pnpm --filter frontend exec tsc --noEmit
+pnpm --filter creatoros-frontend exec tsc --noEmit
 ```
 Expected: 0 error。若仍报 `runClaudeAgent` 未使用 import,删掉对应 runner 顶部残留的 import。
 
@@ -1161,7 +1161,7 @@ Expected: 0 error。若仍报 `runClaudeAgent` 未使用 import,删掉对应 run
 
 Run:
 ```bash
-pnpm --filter frontend exec vitest run src/server/modules/ai/ai.acceptance.test.ts src/server/ai
+pnpm --filter creatoros-frontend exec vitest run src/server/modules/ai/ai.acceptance.test.ts src/server/ai
 ```
 Expected: PASS。`agent-run.ts` 仍被 research/topic 两个 runner 使用,未删除。
 
@@ -1203,7 +1203,7 @@ MINIMAX_AUTH_TOKEN=<用户的真实 sk-... token>
 
 Run:
 ```bash
-pnpm --filter frontend dev
+pnpm --filter creatoros-frontend dev
 ```
 打开任一项目 → 策划阶段 → 触发「AI 论点树」生成 → 等候 → 应出现真实 MiniMax 生成的论点树草稿候选(核心论点 + 支撑/证据/反驳分支),可采纳。浏览器控制台 0 报错。
 - 验证「走的是 MiniMax 而非订阅」:临时把 `MINIMAX_AUTH_TOKEN` 改成无效值重试 → 任务应 failed 且日志含可读的 `LlmCredentialError`/上游 401(证明确实打的是配置端点)。改回有效值恢复。
