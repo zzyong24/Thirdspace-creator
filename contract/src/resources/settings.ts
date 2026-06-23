@@ -39,6 +39,8 @@ export const modelConfigurationResource = z.object({
   provider: z.string(),
   modelName: z.string(),
   secretReference: z.string(),
+  baseUrl: z.string().nullable(),
+  apiFormat: z.enum(["anthropic", "openai_chat"]),
   settings: z.record(z.string(), z.unknown()),
   isDefault: z.boolean(),
 });

@@ -44,6 +44,8 @@ export const settingsOperations = {
       provider: z.string().min(1),
       modelName: z.string().min(1),
       secretReference: z.string().optional(),
+      baseUrl: z.string().optional(),
+      apiFormat: z.enum(["anthropic", "openai_chat"]).optional(),
       settings: z.record(z.string(), z.unknown()).optional(),
       isDefault: z.boolean().optional(),
     }),

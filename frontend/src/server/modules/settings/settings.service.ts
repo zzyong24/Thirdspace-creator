@@ -58,6 +58,10 @@ export interface SettingsService {
     ctx: RequestContext,
     capability: string,
   ): Promise<ResolvedModel>;
+  getModelConfig(
+    ctx: RequestContext,
+    capability: string,
+  ): Promise<ModelConfigurationResource | null>;
   createAgentConfiguration(
     ctx: RequestContext,
     input: AgentCreateInput,
@@ -94,6 +98,8 @@ function toModelResource(
     provider: row.provider,
     modelName: row.modelName,
     secretReference: row.secretReference,
+    baseUrl: row.baseUrl ?? null,
+    apiFormat: (row.apiFormat as "anthropic" | "openai_chat") ?? "anthropic",
     settings: (row.settings as Record<string, unknown>) ?? {},
     isDefault: row.isDefault,
   };
@@ -149,6 +155,11 @@ export function createSettingsService(
       }
       // 3) deterministic hard default (foundation §3).
       return { ...HARD_DEFAULT_MODEL };
+    },
+
+    async getModelConfig(ctx, capability) {
+      const row = await repoForCtx(ctx).getModel(ctx, capability);
+      return row ? toModelResource(row) : null;
     },
 
     async createAgentConfiguration(ctx, input) {

@@ -150,6 +150,8 @@ import { runReviewAnalyze } from "@/server/ai/review-runner";
 import { runPlatformAdapt } from "@/server/ai/platform-adapt-runner";
 import { runMaterialMatch } from "@/server/ai/material-match-runner";
 import { runCopilotAssist } from "@/server/ai/copilot-runner";
+import { createLlmCompleter } from "@/server/ai/llm/provider";
+import { resolveLlmConfig } from "@/server/ai/llm/resolve";
 import {
   createPositioningService,
   createPositioningTransport,
@@ -698,6 +700,10 @@ function toModelRow(m: CanonicalModel): ModelConfigurationRow {
     provider: m.provider,
     modelName: m.modelName,
     secretReference: m.secretReference,
+    // The canonical fixture predates the cc-switch baseUrl/apiFormat columns; default to
+    // the official Anthropic endpoint so the seeded rows match the extended row type.
+    baseUrl: null,
+    apiFormat: "anthropic",
     settings: m.settings,
     isDefault: m.isDefault,
   };
@@ -1324,6 +1330,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              llm: llmCompleter,
             },
           );
         } else if (
@@ -1348,6 +1355,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              llm: llmCompleter,
             },
           );
         } else if (
@@ -1367,6 +1375,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              llm: llmCompleter,
             },
           );
         } else if (
@@ -1390,6 +1399,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              llm: llmCompleter,
             },
           );
         } else if (
@@ -1415,6 +1425,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               positioning: positioningReader,
               learnings: learningsReader,
               assets: assetsReader,
+              llm: llmCompleter,
             },
           );
         }
@@ -1453,6 +1464,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              llm: llmCompleter,
             },
           );
         }
@@ -2146,6 +2158,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     (ctx) => identity.getCurrentUser(ctx),
   );
   const settings = createSettingsTransport(() => settingsService);
+
+  // 纯-prompt 节点的可配置 LLM completer:resolveLlmConfig 读 settings 拥有的
+  // model_configurations 行(注入 getModelConfig,settings 不反向依赖 ai 层)+ process.env。
+  // 在此(settingsService 已定义后)构造;6 个 `void runXxx(...)` dispatch 调用位于
+  // `ai` transport 的 request 回调里——该回调在请求期才执行(工厂体初始化早已完成),
+  // 故按闭包引用捕获此 `const llmCompleter` 无 TDZ 问题。
+  const llmCompleter = createLlmCompleter((ctx, capability) =>
+    resolveLlmConfig(ctx, capability, {
+      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      env: process.env,
+    }),
+  );
 
   // Seed the canonical user's Settings rows (plan Step 6 seed parity) so the
   // /settings page resolves the real preference/model/agent rows under the seeded

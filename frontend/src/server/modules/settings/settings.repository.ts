@@ -38,6 +38,8 @@ export interface ModelPutBody {
   provider: string;
   modelName: string;
   secretReference?: string;
+  baseUrl?: string;
+  apiFormat?: "anthropic" | "openai_chat";
   settings?: Record<string, unknown>;
   isDefault?: boolean;
 }
@@ -157,6 +159,8 @@ export function createSettingsRepository(
       const secretReference = body.secretReference ?? "";
       const settings = body.settings ?? {};
       const isDefault = body.isDefault ?? false;
+      const baseUrl = body.baseUrl ?? null;
+      const apiFormat = body.apiFormat ?? "anthropic";
       const inserted = await db
         .insert(modelConfigurations)
         .values({
@@ -167,6 +171,8 @@ export function createSettingsRepository(
           modelName: body.modelName,
           secretReference,
           settings,
+          baseUrl,
+          apiFormat,
           isDefault,
         })
         .onConflictDoUpdate({
@@ -176,6 +182,8 @@ export function createSettingsRepository(
             modelName: body.modelName,
             secretReference,
             settings,
+            baseUrl,
+            apiFormat,
             isDefault,
           },
         })

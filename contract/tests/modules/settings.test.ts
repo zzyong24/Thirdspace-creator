@@ -11,6 +11,8 @@ describe("settings contract", () => {
       provider: "anthropic",
       modelName: "claude-sonnet",
       secretReference: "secret-script",
+      baseUrl: null,
+      apiFormat: "anthropic",
       settings: { temperature: 0.6 },
       isDefault: true,
     });

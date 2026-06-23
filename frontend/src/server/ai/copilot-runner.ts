@@ -6,7 +6,7 @@ import {
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import { runClaudeAgent } from "./agent-run";
+import type { LlmCompleter } from "@/server/ai/llm/provider";
 
 // 全局 AI 助手 runner (copilot.assist, 机制②④). Like the other node runners it lives in the
 // COMPOSITION layer (never in the AI module/service — which must stay deterministic, no
@@ -17,6 +17,7 @@ import { runClaudeAgent } from "./agent-run";
 
 export interface CopilotDeps extends ContextDeps {
   ai: AiService;
+  llm: LlmCompleter;
 }
 
 export interface CopilotAssistInput {
@@ -66,7 +67,7 @@ export async function runCopilotAssist(
       deps,
     );
     const prompt = buildCopilotPrompt(context, history);
-    const reply = await runClaudeAgent(prompt, { allowedTools: [] });
+    const { text: reply } = await deps.llm(ctx, "copilot.assist", prompt);
     const text = reply.trim().length > 0 ? reply.trim() : FALLBACK_REPLY;
     await deps.ai.appendAssistantMessage(ctx, conversationId, text);
   } catch (err) {

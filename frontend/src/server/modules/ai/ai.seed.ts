@@ -78,6 +78,8 @@ export function buildAiModelConfigs(
     provider: "anthropic",
     modelName: c.modelName,
     secretReference: SECRET_REF,
+    baseUrl: null,
+    apiFormat: "anthropic",
     settings: { effort: c.effort },
     isDefault: c.isDefault ?? false,
   }));

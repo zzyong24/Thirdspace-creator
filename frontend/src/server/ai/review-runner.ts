@@ -6,7 +6,11 @@ import {
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import { runClaudeAgent, parseJsonArray } from "./agent-run";
+import { parseJsonArray } from "./agent-run";
+import type {
+  LlmCompleteOptions,
+  LlmCompleter,
+} from "@/server/ai/llm/provider";
 
 // 复盘 runner (review.analyze node, 机制③④⑤). Extracts reusable 爆款要素/方法论 from a piece
 // of content (against the creator's positioning) as `learning_list` candidates; on 采纳,
@@ -22,7 +26,13 @@ export interface LearningItem {
 
 export interface ReviewDeps extends ContextDeps {
   ai: AiService;
+  llm: LlmCompleter;
 }
+
+type Complete = (
+  prompt: string,
+  opts?: LlmCompleteOptions,
+) => Promise<{ text: string }>;
 
 export interface ReviewTask {
   id: string;
@@ -51,8 +61,11 @@ ${positioning}${priorLearnings}
 【输出】最后只输出一个 JSON 数组,每条:{"title"(一句话方法论,如"前3秒用具体数字承诺收益"),"insight"(为什么有效/适用场景,一两句中文)}。不要多余文字、不要代码块包裹。`;
 }
 
-async function analyzeReview(context: CreativeContext): Promise<LearningItem[]> {
-  const text = await runClaudeAgent(buildReviewPrompt(context));
+async function analyzeReview(
+  context: CreativeContext,
+  complete: Complete,
+): Promise<LearningItem[]> {
+  const { text } = await complete(buildReviewPrompt(context), { schema: true });
   return parseJsonArray(text)
     .map((raw): LearningItem | null => {
       const o = (raw ?? {}) as Record<string, unknown>;
@@ -77,7 +90,9 @@ export async function runReviewAnalyze(
       { projectId: task.projectId, topic },
       deps,
     );
-    const items = await analyzeReview(context);
+    const items = await analyzeReview(context, (prompt, opts) =>
+      deps.llm(ctx, "review.insights", prompt, opts),
+    );
     if (items.length === 0) {
       throw new Error("review-runner: agent returned no parseable learnings");
     }
