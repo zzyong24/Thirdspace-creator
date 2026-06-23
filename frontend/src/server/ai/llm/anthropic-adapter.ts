@@ -29,7 +29,14 @@ interface MessagesClient {
 type ClientFactory = (config: ResolvedLlmConfig) => MessagesClient;
 
 const defaultClientFactory: ClientFactory = (config) =>
-  new Anthropic(buildAnthropicClientOptions(config)) as unknown as MessagesClient;
+  new Anthropic({
+    ...buildAnthropicClientOptions(config),
+    // Bound the call so a slow/stalled provider fails fast (the task surfaces a
+    // readable error) instead of spinning forever. Reasoning models (MiniMax-M3)
+    // can take ~40s+, so allow generous headroom but not the SDK's 10-min default.
+    timeout: 150000,
+    maxRetries: 1,
+  }) as unknown as MessagesClient;
 
 export function createAnthropicProvider(
   config: ResolvedLlmConfig,
