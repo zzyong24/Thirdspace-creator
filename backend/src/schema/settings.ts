@@ -36,6 +36,8 @@ export const modelConfigurations = pgTable("model_configurations", {
   modelName: text("model_name").notNull(),
   secretReference: text("secret_reference").notNull().default(""),
   settings: jsonb("settings").notNull(),
+  baseUrl: text("base_url"),
+  apiFormat: text("api_format").notNull().default("anthropic"),
   isDefault: boolean("is_default").notNull().default(false),
 });
 
@@ -75,6 +77,8 @@ CREATE TABLE IF NOT EXISTS model_configurations (
   model_name TEXT NOT NULL,
   secret_reference TEXT NOT NULL DEFAULT '',
   settings JSONB NOT NULL,
+  base_url TEXT,
+  api_format TEXT NOT NULL DEFAULT 'anthropic',
   is_default BOOLEAN NOT NULL DEFAULT FALSE
 );
 CREATE TABLE IF NOT EXISTS agent_configurations (

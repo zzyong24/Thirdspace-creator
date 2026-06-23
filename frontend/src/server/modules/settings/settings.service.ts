@@ -94,6 +94,8 @@ function toModelResource(
     provider: row.provider,
     modelName: row.modelName,
     secretReference: row.secretReference,
+    baseUrl: row.baseUrl ?? null,
+    apiFormat: (row.apiFormat as "anthropic" | "openai_chat") ?? "anthropic",
     settings: (row.settings as Record<string, unknown>) ?? {},
     isDefault: row.isDefault,
   };

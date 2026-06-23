@@ -52,6 +52,31 @@ describe("settings.repository (schema slice — round-trips)", () => {
     expect(agent.name).toBe("研究助理");
     expect(agent.status).toBe("active");
   });
+
+  it("putModel persists baseUrl + apiFormat and getModel reads them back", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+    await repo.putModel(ctxA, "planning.thesis", {
+      provider: "minimax",
+      modelName: "MiniMax-M3",
+      baseUrl: "https://api.minimaxi.com/anthropic",
+      apiFormat: "anthropic",
+      secretReference: "env:MINIMAX_AUTH_TOKEN",
+    });
+    const row = await repo.getModel(ctxA, "planning.thesis");
+    expect(row?.baseUrl).toBe("https://api.minimaxi.com/anthropic");
+    expect(row?.apiFormat).toBe("anthropic");
+  });
+
+  it("putModel defaults apiFormat to 'anthropic' and baseUrl to null when omitted", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+    await repo.putModel(ctxA, "copy.generate", {
+      provider: "anthropic",
+      modelName: "claude-opus-4-8",
+    });
+    const row = await repo.getModel(ctxA, "copy.generate");
+    expect(row?.apiFormat).toBe("anthropic");
+    expect(row?.baseUrl ?? null).toBeNull();
+  });
 });
 
 describe("settings.repository (ownership — user A ≠ user B)", () => {
