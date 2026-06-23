@@ -6,7 +6,11 @@ import {
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import { runClaudeAgent, parseJsonArray } from "./agent-run";
+import { parseJsonArray } from "./agent-run";
+import type {
+  LlmCompleteOptions,
+  LlmCompleter,
+} from "@/server/ai/llm/provider";
 
 // 一稿多平台 runner (publish.platform_adapt node, 机制③④). Mirrors topic-runner but ADAPTS
 // one finished script into a per-platform draft (抖音竖屏短 / B站横屏中视频 / 小红书图文 /
@@ -25,7 +29,13 @@ export interface PlatformDraft {
 
 export interface PlatformAdaptDeps extends ContextDeps {
   ai: AiService;
+  llm: LlmCompleter;
 }
+
+type Complete = (
+  prompt: string,
+  opts?: LlmCompleteOptions,
+) => Promise<{ text: string }>;
 
 export interface PlatformAdaptTask {
   id: string;
@@ -81,10 +91,11 @@ async function adaptDrafts(
   context: CreativeContext,
   scriptText: string,
   platforms: string[],
+  complete: Complete,
 ): Promise<PlatformDraft[]> {
-  const text = await runClaudeAgent(
+  const { text } = await complete(
     buildAdaptPrompt(context, scriptText, platforms),
-    { allowedTools: [] },
+    { schema: true },
   );
   return parseJsonArray(text)
     .map((raw): PlatformDraft | null => {
@@ -140,7 +151,12 @@ export async function runPlatformAdapt(
       { projectId: task.projectId, topic },
       deps,
     );
-    const drafts = await adaptDrafts(context, scriptText, platforms);
+    const drafts = await adaptDrafts(
+      context,
+      scriptText,
+      platforms,
+      (prompt, opts) => deps.llm(ctx, "script.rewrite", prompt, opts),
+    );
     if (drafts.length === 0) {
       throw new Error(
         "platform-adapt-runner: agent returned no parseable drafts",

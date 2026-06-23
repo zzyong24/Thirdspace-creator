@@ -6,7 +6,11 @@ import {
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import { runClaudeAgent, parseJsonArray } from "./agent-run";
+import { parseJsonArray } from "./agent-run";
+import type {
+  LlmCompleteOptions,
+  LlmCompleter,
+} from "@/server/ai/llm/provider";
 
 // 素材匹配 runner (material.match node, 制作 stage). It scans the creator's asset library
 // (assetsBrief) and proposes which REAL assets fit this content + how (role + reason). It
@@ -22,7 +26,13 @@ export interface MaterialMatchItem {
 
 export interface MaterialMatchDeps extends ContextDeps {
   ai: AiService;
+  llm: LlmCompleter;
 }
+
+type Complete = (
+  prompt: string,
+  opts?: LlmCompleteOptions,
+) => Promise<{ text: string }>;
 
 export interface MaterialMatchTask {
   id: string;
@@ -58,9 +68,10 @@ ${library}
 async function matchMaterials(
   context: CreativeContext,
   topic: string,
+  complete: Complete,
 ): Promise<MaterialMatchItem[]> {
-  const text = await runClaudeAgent(buildMatchPrompt(context, topic), {
-    allowedTools: [],
+  const { text } = await complete(buildMatchPrompt(context, topic), {
+    schema: true,
   });
   return parseJsonArray(text)
     .map((raw): MaterialMatchItem | null => {
@@ -92,7 +103,9 @@ export async function runMaterialMatch(
       { projectId: task.projectId, topic },
       deps,
     );
-    const matches = await matchMaterials(context, topic);
+    const matches = await matchMaterials(context, topic, (prompt, opts) =>
+      deps.llm(ctx, "copy.generate", prompt, opts),
+    );
     if (matches.length === 0) {
       throw new Error(
         "material-match-runner: agent returned no parseable matches",

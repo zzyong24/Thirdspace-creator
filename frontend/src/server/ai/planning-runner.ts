@@ -6,7 +6,10 @@ import {
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import { runClaudeAgent } from "./agent-run";
+import type {
+  LlmCompleteOptions,
+  LlmCompleter,
+} from "@/server/ai/llm/provider";
 
 // 论点树 runner (planning.thesis node, 机制③④). Mirrors script-runner but DRAFTS a
 // thesis tree (论点树) from the creative context, then records an `artifact_version`
@@ -22,7 +25,13 @@ import { runClaudeAgent } from "./agent-run";
 
 export interface PlanningDeps extends ContextDeps {
   ai: AiService;
+  llm: LlmCompleter;
 }
+
+type Complete = (
+  prompt: string,
+  opts?: LlmCompleteOptions,
+) => Promise<{ text: string }>;
 
 export interface PlanningTask {
   id: string;
@@ -112,10 +121,11 @@ function normalizeColumn(raw: unknown): ThesisColumn | null {
   return null;
 }
 
-async function draftThesisTree(context: CreativeContext): Promise<ThesisTree> {
-  const text = await runClaudeAgent(buildThesisPrompt(context), {
-    allowedTools: [],
-  });
+async function draftThesisTree(
+  context: CreativeContext,
+  complete: Complete,
+): Promise<ThesisTree> {
+  const { text } = await complete(buildThesisPrompt(context), { schema: true });
   const obj = parseJsonObject(text);
   const coreRaw = (obj?.core ?? {}) as Record<string, unknown>;
   const core = {
@@ -204,7 +214,9 @@ export async function runPlanningThesis(
       { projectId: task.projectId, topic },
       deps,
     );
-    const tree = await draftThesisTree(context);
+    const tree = await draftThesisTree(context, (prompt, opts) =>
+      deps.llm(ctx, "planning.thesis", prompt, opts),
+    );
     const nodes = renderNodes(tree);
     if (nodes.length === 0) {
       throw new Error("planning-runner: agent returned no parseable thesis nodes");

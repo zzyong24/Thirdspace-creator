@@ -74,6 +74,8 @@ function makeFakeRepo(): SettingsRepository & {
         provider: body.provider,
         modelName: body.modelName,
         secretReference: body.secretReference ?? "",
+        baseUrl: body.baseUrl ?? null,
+        apiFormat: body.apiFormat ?? "anthropic",
         settings: body.settings ?? {},
         isDefault: body.isDefault ?? false,
       };

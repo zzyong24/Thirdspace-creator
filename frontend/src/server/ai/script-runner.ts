@@ -6,7 +6,11 @@ import {
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import { runClaudeAgent, parseJsonArray } from "./agent-run";
+import { parseJsonArray } from "./agent-run";
+import type {
+  LlmCompleteOptions,
+  LlmCompleter,
+} from "@/server/ai/llm/provider";
 
 // 分镜脚本 runner (script.draft node, 机制③④). Mirrors topic-runner but DRAFTS a storyboard
 // (分镜脚本) from the full creative context, then records an `artifact_version` CANDIDATE.
@@ -26,7 +30,13 @@ export interface ScriptShot {
 
 export interface ScriptDeps extends ContextDeps {
   ai: AiService;
+  llm: LlmCompleter;
 }
+
+type Complete = (
+  prompt: string,
+  opts?: LlmCompleteOptions,
+) => Promise<{ text: string }>;
 
 export interface ScriptTask {
   id: string;
@@ -65,10 +75,11 @@ ${positioning}${learnings}${topic}
 第一镜必须是前3秒钩子,最后一镜必须落在 CTA。6-10 镜为宜。`;
 }
 
-async function draftStoryboard(context: CreativeContext): Promise<Storyboard> {
-  const text = await runClaudeAgent(buildScriptPrompt(context), {
-    allowedTools: [],
-  });
+async function draftStoryboard(
+  context: CreativeContext,
+  complete: Complete,
+): Promise<Storyboard> {
+  const { text } = await complete(buildScriptPrompt(context), { schema: true });
   const shots = parseJsonArray(text)
     .map((raw): ScriptShot | null => {
       const o = (raw ?? {}) as Record<string, unknown>;
@@ -150,7 +161,9 @@ export async function runScriptDraft(
       { projectId: task.projectId, topic },
       deps,
     );
-    const board = await draftStoryboard(context);
+    const board = await draftStoryboard(context, (prompt, opts) =>
+      deps.llm(ctx, "script.rewrite", prompt, opts),
+    );
     if (board.sections.length === 0) {
       throw new Error("script-runner: agent returned no parseable shots");
     }
