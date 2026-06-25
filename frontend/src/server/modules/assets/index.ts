@@ -26,6 +26,12 @@ export {
   type ObjectStoragePort,
 } from "./object-storage";
 
+export {
+  createS3ObjectStorage,
+  ensureBucket,
+  type S3ObjectStorageConfig,
+} from "./s3-object-storage";
+
 export { createAssetsTransport, ASSET_OP_IDS } from "./assets.transport";
 
 export { ASSETS_DDL } from "./assets.db-schema";
