@@ -87,6 +87,9 @@ import {
   createAssetsService,
   createAssetsTransport,
   createMockObjectStorage,
+  createS3ObjectStorage,
+  ensureBucket,
+  type ObjectStoragePort,
   ASSET_OP_IDS,
   type AssetRow,
   type AssetFileRow,
@@ -860,9 +863,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // Clock/ids share the deterministic `deps`; the mock's nextKey reuses createSeq
   // so storage keys stay collision-free across requests.
   const assetsRepo = createAssetRepository(db, deps);
-  const objectStorage = createMockObjectStorage({
-    nextKey: () => `uploads/${deps.nextId("objkey")}`,
-  });
+  // P3: real object storage when S3_BUCKET is set (S3 / MinIO / OSS) — file bytes really land
+  // in the bucket via presigned PUT/GET. Without it, the deterministic in-memory mock
+  // (vitest / no-storage env). Same `nextKey` so storage keys stay collision-free.
+  const nextKey = () => `uploads/${deps.nextId("objkey")}`;
+  const s3Bucket = process.env.S3_BUCKET;
+  let objectStorage: ObjectStoragePort;
+  if (s3Bucket) {
+    const s3cfg = {
+      endpoint: process.env.S3_ENDPOINT,
+      region: process.env.S3_REGION ?? "us-east-1",
+      accessKeyId: process.env.S3_ACCESS_KEY_ID ?? "",
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "",
+      bucket: s3Bucket,
+      forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== "false",
+    };
+    await ensureBucket(s3cfg);
+    objectStorage = createS3ObjectStorage(s3cfg, { nextKey });
+  } else {
+    objectStorage = createMockObjectStorage({ nextKey });
+  }
   const assetsService = createAssetsService(assetsRepo, objectStorage, deps);
   const assets = createAssetsTransport(() => assetsService);
 

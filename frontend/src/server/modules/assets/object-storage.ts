@@ -35,12 +35,12 @@ export interface ObjectStoragePort {
     assetType: string;
     mimeType: string;
     fileSize: number;
-  }): PresignedUpload;
+  }): Promise<PresignedUpload>;
   // Inspect a stored object's metadata (phase-2 validation source).
-  headObject(storageKey: string): HeadObjectResult;
+  headObject(storageKey: string): Promise<HeadObjectResult>;
   // A short-lived, read-only signed URL for download / copy-link. Never logged
   // (SPEC §20). Deterministic in the mock so download/copy-link tests are stable.
-  getSignedUrl(storageKey: string): string;
+  getSignedUrl(storageKey: string): Promise<string>;
 }
 
 export interface MockObjectStorageDeps {
@@ -60,7 +60,7 @@ export function createMockObjectStorage(
   const objects = new Map<string, HeadObjectResult>();
 
   return {
-    createPresignedUpload({ assetType, mimeType, fileSize }) {
+    async createPresignedUpload({ assetType, mimeType, fileSize }) {
       const storageKey = deps.nextKey();
       objects.set(storageKey, {
         mimeType,
@@ -79,7 +79,7 @@ export function createMockObjectStorage(
       };
     },
 
-    headObject(storageKey) {
+    async headObject(storageKey) {
       const existing = objects.get(storageKey);
       if (existing) return existing;
       // Unknown key (e.g. a seeded fixture storageKey, or a key passed straight
@@ -97,7 +97,7 @@ export function createMockObjectStorage(
       };
     },
 
-    getSignedUrl(storageKey) {
+    async getSignedUrl(storageKey) {
       // Deterministic, short-lived signed URL. The ?sig token is a stable mock
       // (never a real secret) so tests can assert on it; the real adapter mints
       // an expiring signature. Never logged (SPEC §20).
