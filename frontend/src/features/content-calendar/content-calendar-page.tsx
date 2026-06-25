@@ -17,13 +17,25 @@
  */
 
 import { ContentCalendarView } from "./content-calendar-view";
-import { client } from "@/lib/contract-client.server";
+import { client as defaultClient } from "@/lib/contract-client.server";
 import type {
   ContentCalendarEntryResource,
   PublishingCadenceResource,
   CadenceAttainmentResource,
 } from "@/server/modules/content-calendar";
 import type { PlatformAccountResource } from "@/server/modules/platform-account";
+
+/**
+ * Structural seam for the server reads. The route passes a session-scoped
+ * `createServerClient(ctx)` so accounts/calendar/cadence/attainment stay
+ * user-scoped (a brand-new empty account reads empty, not the user-zyongzhu
+ * seed); the default keeps the singleton (canonical ctx) as the SSR/test
+ * fallback seam.
+ */
+export type ContentCalendarReadClient = Pick<
+  typeof defaultClient,
+  "listAccounts" | "listCalendar" | "getCadence" | "getCadenceAttainment"
+>;
 
 // A deterministic 4-week reference window anchored on a fixed instant (C-5 — never
 // wall-clock). The seed/page reads this window so the render is reproducible.
@@ -43,16 +55,25 @@ export interface ContentCalendarViewModel {
 export interface ContentCalendarPageProps {
   /** Override hook for tests; defaults to the server reads. */
   readonly viewModel?: ContentCalendarViewModel;
+  /**
+   * Session-scoped contract client for the production read path. The route
+   * passes `createServerClient(session.ctx)`; defaults to the singleton seam so
+   * SSR / direct render still resolves.
+   */
+  readonly client?: ContentCalendarReadClient;
 }
 
 export async function ContentCalendarPage({
   viewModel,
+  client = defaultClient,
 }: ContentCalendarPageProps) {
-  const vm = viewModel ?? (await loadViewModel());
+  const vm = viewModel ?? (await loadViewModel(client));
   return <ContentCalendarView viewModel={vm} />;
 }
 
-async function loadViewModel(): Promise<ContentCalendarViewModel> {
+async function loadViewModel(
+  client: ContentCalendarReadClient,
+): Promise<ContentCalendarViewModel> {
   const accounts = (await client.listAccounts({
     params: undefined,
     query: { page: 1, pageSize: 100 },
