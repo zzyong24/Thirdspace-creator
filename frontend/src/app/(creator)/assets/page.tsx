@@ -7,15 +7,27 @@
  * page itself is a Server Component (page-specs §12) and just provides
  * the page slot.
  *
- * Plan D1: the gallery is now a REAL library. The URL search params drive the
- * server read:
+ * Plan D1: the gallery is a REAL library. The URL search params drive the
+ * read:
  *   - `?page=` / `?pageSize=` → the real `assets.list` paging query.
  *   - `?type=` → asset-type filter (applied over the page; the list op has no
  *     server-side type param — see assets-page.tsx note).
  *   - `?q=` → name/description/tag substring filter (same client-over-page
  *     caveat).
+ *
+ * Tri-state (GAP-AST-tristate): the route resolves the request session and
+ * builds the REAL VM with a session-SCOPED contract client, so a logged-in user
+ * reads THEIR OWN `ctx.userId` assets — a fresh empty account reads empty (its
+ * own 空态), NOT the canonical user-zyongzhu seed. A read FAILURE surfaces as an
+ * error state (no fabricated fixture VM). The no-session branch keeps the
+ * fixture seam (`<AssetsPage />` builds via the singleton) for SSR/tests; the
+ * (creator) layout guard already redirects unauthenticated real requests.
  */
 import { AssetsPage } from "@/features/assets/assets-page";
+import type { AssetsDataClient } from "@/features/assets/assets-data";
+import { buildAssetsViewModelReal } from "@/features/assets/assets-data";
+import { resolveSession } from "@/lib/session.server";
+import { createServerClient } from "@/lib/contract-client.server";
 
 interface AssetsRoutePageProps {
   readonly searchParams?: Promise<
@@ -33,12 +45,34 @@ export default async function AssetsRoutePage({
   searchParams,
 }: AssetsRoutePageProps) {
   const params = (await searchParams) ?? {};
+  const search = {
+    type: firstParam(params.type),
+    q: firstParam(params.q),
+    page: firstParam(params.page),
+    pageSize: firstParam(params.pageSize),
+  };
+
+  const session = await resolveSession();
+  if (!session) {
+    // No session (the (creator) layout guard redirects on a real request). Keep
+    // the fixture seam: the page builds via the singleton client for SSR/tests.
+    return <AssetsPage {...search} />;
+  }
+
+  // Bind the read to the request's session ctx so assets.list / projects.list /
+  // assets.usage.list stay user-scoped (ctx.userId). A read failure returns the
+  // error tri-state; a successful-but-empty read returns the honest 空态.
+  const client = createServerClient(
+    session.ctx,
+  ) as unknown as AssetsDataClient;
+  const real = await buildAssetsViewModelReal(client);
   return (
     <AssetsPage
-      type={firstParam(params.type)}
-      q={firstParam(params.q)}
-      page={firstParam(params.page)}
-      pageSize={firstParam(params.pageSize)}
+      {...search}
+      viewModel={real.viewModel}
+      projects={real.projects.map((p) => ({ id: p.id, title: p.title }))}
+      state={real.state}
+      error={real.error}
     />
   );
 }

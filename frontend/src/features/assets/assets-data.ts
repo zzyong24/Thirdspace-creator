@@ -12,6 +12,7 @@ import type {
   AssetsViewModel,
   StorageUsage,
 } from "./assets-page";
+import type { ViewModelError } from "@/types/view-models";
 
 /**
  * Assets Center READ-side data assembly ("素材中心读侧做真", GAP-AST-1).
@@ -38,13 +39,26 @@ import type {
  *                  metadata upload stays real; the byte transfer is out of scope.
  *                  Those affordances carry a 规划中 marker in the UI islands.
  *
- * Honest fallback discipline (读侧做真): per-project link reads that throw
- * contribute no usage rows; the gallery summaries fall back field-by-field to
- * the fixture builder; and a wholesale read failure (assets read throws) falls
- * back to the WHOLE fixture VM so the page never renders 崩溃/空白.
+ * Honest tri-state discipline (读侧做真, GAP-AST-tristate): the gallery read
+ * (assets.list) is the page's core and drives the tri-state outcome —
+ *   - read SUCCEEDS, rows present → real summaries,
+ *   - read SUCCEEDS, no rows      → real EMPTY list → honest 空态 (NOT the
+ *                                    fixture gallery; a fresh empty account must
+ *                                    see its own emptiness, not user-zyongzhu's
+ *                                    seed),
+ *   - read FAILS                  → `state: "error"` so the route renders an
+ *                                    error state. We DO NOT fall back to the
+ *                                    whole fixture VM on a real read failure —
+ *                                    dressing a failure as fake data is the bug
+ *                                    this lane removes.
+ * Secondary reads (projects, per-asset usage) stay independently guarded: a
+ * failure there contributes no rows but never downgrades the gallery to error.
+ * The storage QUOTA cap (totalLabel) has no op → a fixed planning label, and
+ * 已用 is the 弱真 Σ of the REAL read bytes (not fabricated).
  *
  * The contract client is injected so this helper is unit-testable without the
- * real in-process backend (mirrors publishing-center-data.ts).
+ * real in-process backend (mirrors publishing-center-data.ts). The route
+ * production path passes a session-scoped client so reads are ctx.userId-scoped.
  */
 
 // Minimal structural DTOs — the contract client returns parsed resources; we
@@ -95,10 +109,42 @@ export interface ProjectOptionDto {
 }
 
 export interface AssetsRealData {
-  /** The assembled (REAL or honest-fallback) Assets Center ViewModel. */
+  /**
+   * Tri-state read outcome of the gallery read (assets.list):
+   *   - "ready" → the read succeeded; `viewModel.assets` is the REAL list,
+   *               which may legitimately be empty (honest 空态).
+   *   - "error" → the read FAILED; the route renders an error state. The VM is
+   *               an empty placeholder (NOT a fabricated fixture VM) — we refuse
+   *               to dress a read failure as if it were real, empty data.
+   */
+  readonly state: "ready" | "error";
+  /** The error payload when `state === "error"` (drives the page error state). */
+  readonly error?: ViewModelError;
+  /** The assembled REAL Assets Center ViewModel (empty placeholder on error). */
   readonly viewModel: AssetsViewModel;
   /** The user's projects — the 附到项目 picker source (real `projects.list`). */
   readonly projects: ReadonlyArray<ProjectOptionDto>;
+}
+
+/**
+ * An empty Assets VM placeholder used for the error tri-state. It carries NO
+ * fabricated assets/usage rows — the storage card keeps the planning quota cap
+ * (totalLabel, which has no op) but reports zero 已用. We never reuse the
+ * fixture gallery for an error: a read failure must not masquerade as data.
+ */
+function emptyAssetsViewModel(): AssetsViewModel {
+  const fixtureVm = buildAssetsViewModel();
+  return {
+    assets: [],
+    typeCounts: fixtureVm.typeCounts,
+    usageHistory: [],
+    storage: {
+      usedBytes: 0,
+      totalBytes: fixtureVm.storage.totalBytes,
+      usedLabel: "0.00 GB",
+      totalLabel: fixtureVm.storage.totalLabel,
+    },
+  };
 }
 
 function isoDay(iso: string): string {
@@ -155,20 +201,20 @@ async function assembleUsageHistory(
 }
 
 /**
- * Build the REAL Assets Center ViewModel + projects picker.
+ * Build the REAL Assets Center ViewModel + projects picker, tri-state.
  *
- * Wholesale fixture fallback survives ONLY for an outright assets-read failure
- * (the gallery is the page's core); a successful-but-empty read returns the real
- * (possibly empty) summaries so the page renders its honest 空态.
+ * A successful read returns the REAL (possibly empty) summaries so the page
+ * renders its honest 空态; a read FAILURE returns `state: "error"` with an empty
+ * placeholder VM so the route renders an error state. There is NO wholesale
+ * fixture fallback on a real read failure — that anti-pattern (dressing a
+ * failure as fake seed data) is removed in this lane.
  *
- * @param client  the contract client (server-bound). Injected for tests.
+ * @param client  the contract client (server-bound, session-scoped on the
+ *                route production path). Injected for tests.
  */
 export async function buildAssetsViewModelReal(
   client: AssetsDataClient = defaultClient as unknown as AssetsDataClient,
 ): Promise<AssetsRealData> {
-  // The fixture VM is the per-field + wholesale fallback baseline.
-  const fixtureVm = buildAssetsViewModel();
-
   // --- Gallery summaries (REAL assets.list) -------------------------------
   let summaries: ReadonlyArray<AssetSummary>;
   try {
@@ -178,10 +224,18 @@ export async function buildAssetsViewModelReal(
       body: undefined,
     })) as unknown as ReadonlyArray<AssetListRow>;
     summaries = buildAssetSummariesFromResources(rows);
-  } catch {
-    // Assets read failed → the gallery is the page's core; fall back to the
-    // WHOLE fixture VM (with an empty projects picker) rather than a blank page.
-    return { viewModel: fixtureVm, projects: [] };
+  } catch (err) {
+    // Assets read FAILED → honest error tri-state. We do NOT fabricate a
+    // fixture gallery: the route renders an error state instead of fake data.
+    return {
+      state: "error",
+      error: {
+        code: "assets_read_failed",
+        message: err instanceof Error ? err.message : "素材库读取失败",
+      },
+      viewModel: emptyAssetsViewModel(),
+      projects: [],
+    };
   }
 
   // --- Projects (REAL projects.list) — picker + usage-history walk ---------
@@ -196,9 +250,10 @@ export async function buildAssetsViewModelReal(
     projects = [];
   }
 
-  // --- 用料历史 (REAL materialLinks.list, Option A) -----------------------
-  // A wholesale usage assembly failure degrades to the fixture usage rows
-  // (per-project failures already degrade to []), so the panel never breaks.
+  // --- 用料历史 (REAL assets.usage.list, Option B) ------------------------
+  // The gallery read already succeeded, so usage is a SECONDARY read: a
+  // wholesale assembly failure degrades to NO rows (honest empty 用料历史),
+  // never to fabricated fixture rows. Per-asset failures already degrade to [].
   let usageHistory: ReadonlyArray<AssetUsageRow>;
   try {
     usageHistory = await assembleUsageHistory(
@@ -207,7 +262,7 @@ export async function buildAssetsViewModelReal(
       projects,
     );
   } catch {
-    usageHistory = fixtureVm.usageHistory;
+    usageHistory = [];
   }
 
   // --- 存储「已用」(弱真: Σ real fileSizeBytes) ----------------------------
@@ -218,13 +273,17 @@ export async function buildAssetsViewModelReal(
     (acc, asset) => acc + (Number.isFinite(asset.fileSizeBytes) ? asset.fileSizeBytes : 0),
     0,
   );
-  const totalBytes = fixtureVm.storage.totalBytes;
+  // The storage QUOTA cap has no read op → keep the fixed planning label from
+  // the fixture (flagged 规划中 in the spec). This is a static cap LABEL, not
+  // fabricated usage data: 已用 above is the 弱真 Σ of the REAL read bytes.
+  const fixtureStorage = buildAssetsViewModel().storage;
+  const totalBytes = fixtureStorage.totalBytes;
   const usedLabel = `${(usedBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   const storage: StorageUsage = {
     usedBytes,
     totalBytes,
     usedLabel,
-    totalLabel: fixtureVm.storage.totalLabel,
+    totalLabel: fixtureStorage.totalLabel,
   };
 
   // typeCounts in the VM are computed downstream by the page's deriveGallery
@@ -232,7 +291,7 @@ export async function buildAssetsViewModelReal(
   // page recomputes its own real counts), keeping the VM shape stable.
   const viewModel: AssetsViewModel = {
     assets: summaries,
-    typeCounts: fixtureVm.typeCounts,
+    typeCounts: buildAssetsViewModel().typeCounts,
     usageHistory,
     storage,
   };
@@ -242,5 +301,5 @@ export async function buildAssetsViewModelReal(
     title: p.title,
   }));
 
-  return { viewModel, projects: projectOptions };
+  return { state: "ready", viewModel, projects: projectOptions };
 }

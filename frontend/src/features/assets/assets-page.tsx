@@ -56,6 +56,8 @@ import Link from "next/link";
 
 import { SectionCard } from "@/components/project/section-card";
 import { ProgressBar } from "@/components/project/progress-bar";
+import { ErrorState } from "@/components/state/page-state";
+import type { ViewModelError } from "@/types/view-models";
 import type { AssetType } from "@/types/domain";
 import {
   AssetsInteractiveRegion,
@@ -89,11 +91,27 @@ const TYPE_LABEL: Record<AssetType, string> = {
 
 export interface AssetsPageProps {
   /**
-   * Override hook for tests; defaults to the canonical dataset. The
-   * page does not consume network or runtime data — it pulls everything
-   * from the fixed fixtures (D-010) so SSR output is deterministic.
+   * The REAL Assets Center ViewModel, produced by the route from a
+   * session-scoped contract client (`buildAssetsViewModelReal`). Also the
+   * test-override seam: when provided, the page renders it directly and does
+   * NOT issue a network read (SSR stays deterministic, F4). An empty
+   * `viewModel.assets` renders the honest 空态 gallery (a fresh account sees
+   * its own emptiness, not another user's seed).
    */
   readonly viewModel?: AssetsViewModel;
+  /**
+   * The 附到项目 picker source (real `projects.list`), passed by the route
+   * alongside `viewModel`. When omitted (test seam), the picker is empty.
+   */
+  readonly projects?: ReadonlyArray<ProjectOption>;
+  /**
+   * Tri-state read outcome. `"error"` makes the page render an error state
+   * instead of a (fabricated) gallery — a read failure is NOT dressed as data.
+   * Defaults to `"ready"` so the test/fixture seam renders the gallery.
+   */
+  readonly state?: "ready" | "error";
+  /** Error payload rendered when `state === "error"`. */
+  readonly error?: ViewModelError;
   /** `?type=` — asset-type filter (one of FILTERABLE_TYPES, or undefined = all). */
   readonly type?: string;
   /** `?q=` — name/description/tag substring filter. */
@@ -240,25 +258,50 @@ function deriveGallery(
 
 export async function AssetsPage({
   viewModel,
+  projects: projectsProp,
+  state = "ready",
+  error,
   type,
   q,
   page,
   pageSize,
 }: AssetsPageProps = {}) {
-  // Module 07 E1 + Plan D1 + GAP-AST-1: the REAL Assets Center VM is assembled
-  // by the server-only `buildAssetsViewModelReal` helper (assets.list gallery +
-  // projects.list picker + materialLinks.list 用料历史 + 弱真 storage 已用). The
-  // `viewModel?` prop remains the test-override seam: when provided, no network
-  // read happens (SSR stays deterministic, F4).
+  // GAP-AST-tristate: the route (server component) resolves the session, builds
+  // the REAL VM with a session-scoped client via `buildAssetsViewModelReal`, and
+  // passes `viewModel` + `projects` + `state`/`error` here. The `viewModel?`
+  // prop is also the test/fixture seam (deterministic SSR, F4). When NOTHING is
+  // passed (e.g. no-session SSR/test direct render), we degrade to the singleton
+  // client build — the fixture seam — so the page still renders.
   let vm: AssetsViewModel;
   let projects: ReadonlyArray<ProjectOption>;
+  let resolvedState: "ready" | "error" = state;
+  let resolvedError: ViewModelError | undefined = error;
   if (viewModel === undefined) {
     const real = await buildAssetsViewModelReal();
     vm = real.viewModel;
     projects = real.projects.map((p) => ({ id: p.id, title: p.title }));
+    resolvedState = real.state;
+    resolvedError = real.error;
   } else {
     vm = viewModel;
-    projects = [];
+    projects = projectsProp ?? [];
+  }
+
+  // Error tri-state: a real read failure renders an honest error state — never a
+  // fabricated gallery. The toolbar stays so the page chrome is intact.
+  if (resolvedState === "error") {
+    return (
+      <main
+        data-app="creatoros"
+        data-page="assets"
+        data-assets-id="assets-root"
+        data-page-state="error"
+        className="flex flex-col gap-3"
+      >
+        <AssetToolbar query={(q ?? "").trim()} activeType={normalizeType(type)} />
+        <ErrorState error={resolvedError ?? null} />
+      </main>
+    );
   }
 
   const gallery = deriveGallery(vm.assets, projects, {
@@ -273,6 +316,7 @@ export async function AssetsPage({
       data-app="creatoros"
       data-page="assets"
       data-assets-id="assets-root"
+      data-page-state={vm.assets.length === 0 ? "empty" : "default"}
       className="flex flex-col gap-3"
     >
       <AssetToolbar query={gallery.query} activeType={gallery.activeType} />

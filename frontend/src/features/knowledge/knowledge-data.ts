@@ -46,11 +46,21 @@ import type { MetricCard as MetricCardVm } from "@/types/view-models";
  *                     connected items). No edges → fixture fallback (page-specs
  *                     §11 keeps the block non-empty).
  *
- * Degrades gracefully: the whole assembly is wrapped in try/catch and falls
- * back to the pure fixture VM (`buildKnowledgeViewModel()`) if the list read
- * throws, preserving the previous render. Each secondary read (relations, tags)
- * is independently guarded so one failure never zeroes the page. The contract
- * client is injected so this helper is unit-testable without the backend.
+ * Honest tri-state (GAP-KM-tristate): the primary `knowledge.list` read drives
+ * the page state —
+ *   - read SUCCEEDS, rows present → real VM (scenario "default"),
+ *   - read SUCCEEDS, no rows      → real EMPTY VM (scenario "default", all
+ *                                    collections empty) → the page renders its
+ *                                    honest 空态. A fresh empty account reads
+ *                                    EMPTY, never user-zyongzhu's seed,
+ *   - read FAILS                  → scenario "error" + an `error` payload (NOT
+ *                                    the fixture VM). The wholesale "read fail →
+ *                                    fixture VM" fallback is removed in this lane.
+ * Secondary reads (relations, tags) stay independently guarded but degrade to
+ * EMPTY, not to seed fixtures: an empty account's relations/tags blocks read
+ * empty. The 记忆命中率 metric still has no op → 「规划中」 placeholder. The
+ * contract client is injected (and the route passes a session-scoped client) so
+ * reads stay ctx.userId-scoped and the helper stays unit-testable.
  */
 
 // Minimal structural DTO — `knowledge.list` returns KnowledgeItemResource rows;
@@ -139,8 +149,9 @@ const CATEGORY_LABEL: Record<string, string> = {
 export async function buildKnowledgeDashboardViewModel(
   client: KnowledgeDataClient = defaultClient as unknown as KnowledgeDataClient,
 ): Promise<KnowledgeViewModel> {
-  // The fixture VM is the per-field fallback source for everything without a
-  // real read path, and the WHOLE fallback if the list read fails.
+  // `base` supplies ONLY the VM shell + the five metric-card identities/order
+  // (the five-card row is a test invariant). It is NOT used as a content
+  // fallback: an empty account must read EMPTY blocks, not seed fixtures.
   const base = buildKnowledgeViewModel();
 
   let items: ReadonlyArray<KnowledgeListDto>;
@@ -150,36 +161,50 @@ export async function buildKnowledgeDashboardViewModel(
       query: { page: 1, pageSize: 200 },
       body: undefined,
     })) as ReadonlyArray<KnowledgeListDto>;
-  } catch {
-    // List read failed — preserve the previous fixture render wholesale.
-    return base;
+  } catch (err) {
+    // Primary list read FAILED → honest ERROR tri-state (scenario "error" +
+    // payload). We do NOT fall back to the fixture VM: a failure is not data.
+    return {
+      ...base,
+      scenario: "error",
+      error: {
+        code: "knowledge_read_failed",
+        message: err instanceof Error ? err.message : "知识库读取失败",
+      },
+      metrics: [],
+      categories: [],
+      recent: [],
+      snippets: [],
+      unsorted: [],
+      graphSeries: [],
+      memoryInsights: [],
+      popularTags: [],
+    };
   }
 
   // REAL relations: relations are stored per source item, so we fan out
   // `knowledge.relations.list` across every live item and COLLECT the edges
   // (one read serves the 知识关联 metric, the graph, the unsorted "unlinked"
-  // signal, and the derived memory insights). A `null` result (read threw on
-  // every item) signals "no real source" → metric keeps the fixture card and
-  // the edge-derived blocks fall back to fixtures.
+  // signal, and the derived memory insights). A `null` result (empty list, or
+  // every per-item read threw) means "no relations signal" → those blocks read
+  // EMPTY (honest), never seed fixtures.
   const relations = await collectRelations(client, items);
 
-  // REAL popular tags via taxonomy.tags.list — independently guarded so a tag
-  // read failure (or no taxonomy data) never blocks the rest of the page.
-  const popularTags = await buildPopularTags(client, base.popularTags);
+  // REAL popular tags via taxonomy.tags.list — independently guarded; a read
+  // failure or no taxonomy data reads EMPTY (honest), not seed fixtures.
+  const popularTags = await buildPopularTags(client);
 
   return {
     ...base,
+    scenario: "default",
+    error: null,
     metrics: buildMetrics(items, base.metrics, relations?.count ?? null),
     categories: buildCategories(items),
     recent: buildRecentRowsFromItems(items),
     snippets: buildSnippets(items),
-    unsorted: buildUnsorted(items, relations?.edges ?? null, base.unsorted),
-    graphSeries: buildGraphSeries(items, relations?.edges ?? null, base.graphSeries),
-    memoryInsights: buildMemoryInsights(
-      items,
-      relations?.edges ?? null,
-      base.memoryInsights,
-    ),
+    unsorted: buildUnsorted(items, relations?.edges ?? null),
+    graphSeries: buildGraphSeries(items, relations?.edges ?? null),
+    memoryInsights: buildMemoryInsights(items, relations?.edges ?? null),
     popularTags,
   };
 }
@@ -347,15 +372,15 @@ function buildSnippets(
  * nor target of any collected `knowledge.relations` edge) — the honest
  * "unlinked / uncategorized" signal. The contract resource `status` enum is
  * only active/archived (no "draft"), so we derive this from the relations graph
- * rather than a status flag. `edges === null` (no relations signal) → fixture
- * fallback; real-but-all-linked → `[]` → "全部已整理" empty state.
+ * rather than a status flag. `edges === null` (no relations signal, e.g. empty
+ * account) → `[]` (honest empty, NOT seed); real-but-all-linked → `[]` →
+ * "全部已整理" empty state.
  */
 function buildUnsorted(
   items: ReadonlyArray<KnowledgeListDto>,
   edges: ReadonlyArray<GraphEdge> | null,
-  fixture: ReadonlyArray<KnowledgeUnsortedVm>,
 ): ReadonlyArray<KnowledgeUnsortedVm> {
-  if (edges === null) return fixture;
+  if (edges === null) return [];
   const linked = new Set<string>();
   for (const edge of edges) {
     linked.add(edge.source);
@@ -376,15 +401,15 @@ function buildUnsorted(
 /**
  * REAL knowledge graph: one series bucket per `knowledgeType`, valued by the
  * number of relation edges incident to items of that type. `edges === null`
- * (no relations signal) → fixture fallback. Real-but-no-edges → `[]` → the
- * KnowledgeGraph "暂无数据" summary (already handled by the page).
+ * (no relations signal, e.g. empty account) → `[]` (honest empty, NOT seed).
+ * Real-but-no-edges → `[]` → the KnowledgeGraph "暂无数据" summary (handled by
+ * the page).
  */
 function buildGraphSeries(
   items: ReadonlyArray<KnowledgeListDto>,
   edges: ReadonlyArray<GraphEdge> | null,
-  fixture: ReadonlyArray<{ readonly label: string; readonly value: number }>,
 ): ReadonlyArray<{ readonly label: string; readonly value: number }> {
-  if (edges === null) return fixture;
+  if (edges === null) return [];
   const typeOf = new Map<string, string>();
   for (const item of items) typeOf.set(item.id, item.knowledgeType);
   const tally = new Map<string, number>();
@@ -408,14 +433,14 @@ function buildGraphSeries(
 /**
  * REAL 记忆洞察 (light): derive a few insights from the relations graph — the
  * most-connected knowledge items ("高关联条目"). `edges === null` or no edges →
- * fixture fallback so the block stays non-empty (page-specs §11 keeps it).
+ * `[]` (honest empty, NOT seed). The MemoryInsights block stays in the layout
+ * (page-specs §11) but renders its own empty state when there are no insights.
  */
 function buildMemoryInsights(
   items: ReadonlyArray<KnowledgeListDto>,
   edges: ReadonlyArray<GraphEdge> | null,
-  fixture: ReadonlyArray<KnowledgeInsightVm>,
 ): ReadonlyArray<KnowledgeInsightVm> {
-  if (edges === null || edges.length === 0) return fixture;
+  if (edges === null || edges.length === 0) return [];
   const titleOf = new Map<string, string>();
   for (const item of items) titleOf.set(item.id, item.title);
   const degree = new Map<string, number>();
@@ -428,7 +453,7 @@ function buildMemoryInsights(
     .filter(([id]) => titleOf.has(id))
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
-  if (ranked.length === 0) return fixture;
+  if (ranked.length === 0) return [];
   return ranked.map<KnowledgeInsightVm>(([id, count]) => ({
     id: `mi-rel-${id}`,
     title: `高关联条目:${titleOf.get(id) ?? id}`,
@@ -439,11 +464,11 @@ function buildMemoryInsights(
 /**
  * REAL 热门标签 via `taxonomy.tags.list`, ranked by the server-derived
  * `usageCount` (descending). The read is independently guarded: any failure or
- * an empty tag set falls back to the fixture tags so the rail block survives.
+ * an empty tag set reads EMPTY (`[]`, honest), NOT seed fixtures — the rail
+ * block renders its own empty state. A failure here never blocks the rest.
  */
 async function buildPopularTags(
   client: KnowledgeDataClient,
-  fixture: ReadonlyArray<KnowledgeTagVm>,
 ): Promise<ReadonlyArray<KnowledgeTagVm>> {
   let tags: ReadonlyArray<TagDto>;
   try {
@@ -453,9 +478,9 @@ async function buildPopularTags(
       body: undefined,
     })) as ReadonlyArray<TagDto>;
   } catch {
-    return fixture;
+    return [];
   }
-  if (tags.length === 0) return fixture;
+  if (tags.length === 0) return [];
   return tags
     .slice()
     .sort((a, b) => b.usageCount - a.usageCount)

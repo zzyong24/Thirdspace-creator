@@ -7,7 +7,9 @@
  *     read per asset by id (用料反查, Option B), title resolved from projects.list,
  *   - 存储「已用」is the弱真 Σ of the read rows' real fileSizeBytes,
  *   - a per-asset usage read failure contributes no usage rows (never throws),
- *   - an outright assets-read failure falls back to the WHOLE fixture VM.
+ *   - a SUCCESSFUL-but-empty assets read returns the honest empty VM (NOT seed),
+ *   - an outright assets-read FAILURE returns the error tri-state (state:"error",
+ *     empty placeholder VM) — it does NOT fabricate the whole fixture VM.
  *
  * The contract client is injected (a hand-rolled fake) so the test never touches
  * the real in-process backend. The server composition root is mocked so importing
@@ -205,13 +207,27 @@ describe("buildAssetsViewModelReal (GAP-AST-1 读侧做真)", () => {
     expect(viewModel.usageHistory[0]!.assetId).toBe(firstAsset.id);
   });
 
-  it("falls back to the WHOLE fixture VM when the assets read throws", async () => {
-    const { viewModel, projects } = await buildAssetsViewModelReal(
+  it("returns honest EMPTY (not seed) when the assets read succeeds with no rows", async () => {
+    const { state, viewModel, projects } = await buildAssetsViewModelReal(
+      fakeClient({ assets: [], projects: [] }),
+    );
+    // A fresh empty account reads its OWN emptiness, NOT user-zyongzhu's seed.
+    expect(state).toBe("ready");
+    expect(viewModel.assets).toEqual([]);
+    expect(viewModel.usageHistory).toEqual([]);
+    expect(viewModel.storage.usedBytes).toBe(0);
+    expect(projects).toEqual([]);
+  });
+
+  it("returns the ERROR tri-state (no fabricated fixture VM) when the assets read throws", async () => {
+    const { state, error, viewModel, projects } = await buildAssetsViewModelReal(
       fakeClient({ assets: "throw" }),
     );
-    // Fixture VM has a non-empty asset list + a storage card.
-    expect(viewModel.assets.length).toBeGreaterThan(0);
-    expect(viewModel.storage.totalLabel).toBe("50 GB");
+    // Honest error: NO fabricated gallery rows, an error payload for the page.
+    expect(state).toBe("error");
+    expect(error?.code).toBe("assets_read_failed");
+    expect(viewModel.assets).toEqual([]);
+    expect(viewModel.usageHistory).toEqual([]);
     expect(projects).toEqual([]);
   });
 });
