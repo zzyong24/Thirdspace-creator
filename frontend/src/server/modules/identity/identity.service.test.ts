@@ -8,7 +8,7 @@ import {
   DEV_PASSWORD,
   type IdentityService,
 } from "./identity.service";
-import { AuthenticationError } from "./identity.errors";
+import { AuthenticationError, EmailTakenError } from "./identity.errors";
 import { hashPassword, hashToken } from "./identity.crypto";
 
 // Task 5: the identity service — the session lifecycle (none → active →
@@ -93,6 +93,46 @@ describe("identity.service login (Task 5)", () => {
     }
     expect(wrongPwMsg).toBe(unknownMsg);
     expect(wrongPwMsg).not.toBe("");
+  });
+});
+
+describe("identity.service register (P2 — 用户注册真账号)", () => {
+  it("creates a fresh account, mints an active session, and never leaks the hash", async () => {
+    const { user, rawToken, expiresAt } = await service.register({
+      email: "newbie@creatoros.local",
+      password: "a-new-password",
+      displayName: "New Bie",
+    });
+
+    expect(rawToken).toMatch(/^[0-9a-f]{64}$/);
+    expect(expiresAt > FIXED_NOW).toBe(true);
+    expect(user).not.toHaveProperty("passwordHash");
+    expect(user.email).toBe("newbie@creatoros.local");
+    expect(user.displayName).toBe("New Bie");
+
+    // The new user can authenticate via the issued session AND via login.
+    const ctx = await service.resolveContextFromToken(rawToken);
+    expect(ctx.userId).toBe(user.id);
+
+    const relogin = await service.login({
+      email: "newbie@creatoros.local",
+      password: "a-new-password",
+    });
+    expect(relogin.user.id).toBe(user.id);
+  });
+
+  it("defaults displayName to the email local-part when omitted", async () => {
+    const { user } = await service.register({
+      email: "solo@creatoros.local",
+      password: "pw",
+    });
+    expect(user.displayName).toBe("solo");
+  });
+
+  it("throws EmailTakenError when the email is already registered", async () => {
+    await expect(
+      service.register({ email: SEEDED_USER.email, password: "whatever" }),
+    ).rejects.toBeInstanceOf(EmailTakenError);
   });
 });
 

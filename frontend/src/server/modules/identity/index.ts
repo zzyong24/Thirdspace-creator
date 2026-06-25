@@ -17,6 +17,8 @@ export {
   type UserDTO,
   type LoginInput,
   type LoginResult,
+  type RegisterInput,
+  type RegisterResult,
   type ServiceDeps,
 } from "./identity.service";
 
@@ -28,4 +30,8 @@ export {
   type SessionRow,
 } from "./identity.repository";
 
-export { AuthenticationError, OwnershipError } from "./identity.errors";
+export {
+  AuthenticationError,
+  OwnershipError,
+  EmailTakenError,
+} from "./identity.errors";

@@ -23,6 +23,7 @@ import { platformAccountOperations } from "./operations/platform-accounts";
 import { contentCalendarOperations } from "./operations/content-calendar";
 import { materialLinksOperations } from "./operations/material-links";
 import { pagesOperations } from "./operations/pages";
+import { authOperations } from "./operations/auth";
 
 export type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
@@ -99,6 +100,9 @@ export const ENDPOINTS = {
   ...contentCalendarOperations,
   ...materialLinksOperations,
   ...pagesOperations,
+  // Identity / auth (P2 — 用户注册真账号). register is the first auth action
+  // lifted into the contract dispatch surface; login/logout/me remain bare routes.
+  ...authOperations,
 } as const;
 
 export type Endpoints = typeof ENDPOINTS;

@@ -45,3 +45,22 @@ export class OwnershipError extends Error {
     Object.setPrototypeOf(this, OwnershipError.prototype);
   }
 }
+
+/**
+ * Registration conflict — the requested email is already taken (maps to HTTP
+ * 409 via `ErrorCode.ConflictError`).
+ *
+ * Unlike login (which uses ONE generic message to avoid user enumeration),
+ * registration MUST tell the caller their chosen email is unavailable so they
+ * can pick another — the conflict signal is unavoidable and expected here. The
+ * default message stays neutral (no account detail beyond "taken").
+ */
+export class EmailTakenError extends Error {
+  readonly code = ErrorCode.ConflictError;
+
+  constructor(message = "Email already registered") {
+    super(message);
+    this.name = "EmailTakenError";
+    Object.setPrototypeOf(this, EmailTakenError.prototype);
+  }
+}
