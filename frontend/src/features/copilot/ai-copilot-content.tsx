@@ -27,11 +27,13 @@
  *   - RecommendedCommands / SmartRecommendation chips fill the composer
  *     (`setPrompt`), feeding straight into the real-backend submit path.
  *   - QuickEntries navigate to their real (creator) routes via `next/link`.
- *   - RecentTasks / ContinuingTasks remain fixture content and are explicitly
- *     labelled 规划中: a cross-project task feed needs a global tasks op that
- *     does not exist (projects.tasks.list is project-scoped — see
- *     INTERACTION_SPEC GAP-COP-1 / D-COP-a). The fake "live" progress bars are
- *     removed so nothing presents fixture data as real progress.
+ *   - RecentTasks is backed by the REAL global AI-task feed (ai.tasks.list); it
+ *     resolves to an honest empty state on a fresh DB.
+ *   - ContinuingTasks no longer ships fixture rows: a cross-project in-progress
+ *     feed needs a global tasks op that does not exist (projects.tasks.list is
+ *     project-scoped — see INTERACTION_SPEC GAP-COP-1 / D-COP-a), so the list is
+ *     an empty array that renders an honest 「暂无进行中的任务」 empty state and
+ *     keeps the 规划中 badge until that op lands.
  */
 
 import * as React from "react";
@@ -371,8 +373,10 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
           params: undefined,
           query: { page: 1, pageSize: 6 },
           body: undefined,
-        })) as unknown as ReadonlyArray<WireTask>;
-        if (active) setRecentTasks(rows);
+        })) as unknown as ReadonlyArray<WireTask> | null | undefined;
+        // null→[] 收敛:若 op 成功 resolve 但返回 null/undefined(空 DB 的某些 transport
+        // 路径),仍要把状态推进到空数组,否则 spinner 会一直转。empty array 触发诚实空态。
+        if (active) setRecentTasks(rows ?? []);
       } catch {
         // Feed unavailable (e.g. unauthenticated dispatch) — fall back to an empty,
         // honest feed rather than fixture rows.
@@ -735,6 +739,14 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-1.5 px-3 pb-2.5 pt-0">
+            {vm.continuingTasks.length === 0 ? (
+              <span
+                data-slot="continuing-tasks-empty"
+                className="text-[10px] leading-tight text-muted-foreground"
+              >
+                暂无进行中的任务。
+              </span>
+            ) : null}
             {vm.continuingTasks.map((task) => {
               const badgeClass = STATUS_BADGE[task.status] ?? STATUS_BADGE.进行中;
               const cardBg =
