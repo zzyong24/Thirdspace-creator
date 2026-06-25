@@ -1,4 +1,4 @@
-# 本地开发用 Postgres(P1 持久化底座)。仅起数据库,不部署 app。
+# 本地开发用 Postgres(P1 持久化底座)+ MinIO(P3 对象存储,S3 兼容)。仅起依赖,不部署 app。
 # 用法:pnpm db:up  →  pnpm db:migrate  →  pnpm dev
 services:
   postgres:
@@ -18,5 +18,26 @@ services:
       timeout: 3s
       retries: 10
 
+  # S3-compatible object storage for dev. Swap to real S3/OSS in prod via the same
+  # S3 env (endpoint/bucket/keys) — the adapter doesn't change.
+  minio:
+    image: minio/minio:latest
+    container_name: creatoros-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: creatoros
+      MINIO_ROOT_PASSWORD: creatoros-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - creatoros-miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
 volumes:
   creatoros-pgdata:
+  creatoros-miniodata:
