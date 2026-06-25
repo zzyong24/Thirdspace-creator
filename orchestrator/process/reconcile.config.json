@@ -5,5 +5,13 @@
     { "stage": "16-backend-tdd",         "path": "backend/src" },
     { "stage": "16-backend-tdd",         "path": "ai-worker" },
     { "stage": "17-integration-release", "path": "frontend/src/app/api/v1/dispatch" }
+  ],
+  "lessons": [
+    {
+      "led": "LED-001",
+      "what": ".env.local(含真实密钥)被提交进 git",
+      "check": "! git ls-files | grep -qF .env.local",
+      "onFail": "有 .env.local 被 git 跟踪——密钥可能入库。git rm --cached <file> 移出索引,并确认 .gitignore 含 .env*.local。"
+    }
   ]
 }
