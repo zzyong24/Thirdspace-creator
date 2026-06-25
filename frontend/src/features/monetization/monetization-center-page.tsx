@@ -18,12 +18,22 @@ import * as React from "react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { Badge } from "@/components/ui/badge";
-import { client } from "@/lib/contract-client.server";
+import { client as defaultClient } from "@/lib/contract-client.server";
 import type {
   ProductResource,
   LeadResource,
   MonetizationFunnelResource,
 } from "@/server/modules/monetization";
+
+/**
+ * Structural seam for the server reads. The route passes a session-scoped
+ * `createServerClient(ctx)` so the funnel/products/leads stay user-scoped; the
+ * default keeps the singleton (canonical ctx) as the SSR/test fallback seam.
+ */
+export type MonetizationReadClient = Pick<
+  typeof defaultClient,
+  "listProducts" | "listLeads" | "getFunnel"
+>;
 
 import {
   CreateProductForm,
@@ -41,16 +51,25 @@ export interface MonetizationCenterViewModel {
 export interface MonetizationCenterPageProps {
   /** Override hook for tests; defaults to the server reads. */
   readonly viewModel?: MonetizationCenterViewModel;
+  /**
+   * Session-scoped contract client for the production read path. The route
+   * passes `createServerClient(session.ctx)`; defaults to the singleton seam so
+   * SSR / direct render still resolves.
+   */
+  readonly client?: MonetizationReadClient;
 }
 
 export async function MonetizationCenterPage({
   viewModel,
+  client = defaultClient,
 }: MonetizationCenterPageProps) {
-  const vm = viewModel ?? (await loadViewModel());
+  const vm = viewModel ?? (await loadViewModel(client));
   return <MonetizationCenterView viewModel={vm} />;
 }
 
-async function loadViewModel(): Promise<MonetizationCenterViewModel> {
+async function loadViewModel(
+  client: MonetizationReadClient,
+): Promise<MonetizationCenterViewModel> {
   const products = (await client.listProducts({
     params: undefined,
     query: { page: 1, pageSize: 100 },

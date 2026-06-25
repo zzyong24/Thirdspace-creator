@@ -32,7 +32,7 @@ import { ViewAndSortControls } from "@/features/projects/view-and-sort-controls"
 import { ProjectRowMenu } from "@/features/projects/project-row-menu";
 import { Pagination } from "@/components/navigation/pagination";
 import { buildProjectsViewModel } from "@/fixtures/selectors";
-import { client } from "@/lib/contract-client.server";
+import { client as defaultClient } from "@/lib/contract-client.server";
 import { cn } from "@/lib/utils";
 import type { ProjectsViewModel, ProjectListRow } from "@/types/view-models";
 import type { Project, ProjectStageName } from "@/types/domain";
@@ -41,11 +41,23 @@ import type { Project, ProjectStageName } from "@/types/domain";
 // Public types
 // ---------------------------------------------------------------------------
 
+/**
+ * Structural seam for the server read. The route passes a session-scoped
+ * `createServerClient(ctx)` so the projects list stays user-scoped; the default
+ * keeps the singleton (canonical ctx) as the SSR/test fallback seam.
+ */
+export type ProjectsReadClient = Pick<typeof defaultClient, "listProjects">;
+
 export interface ProjectsPageProps {
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: ProjectsViewModel;
   /** 1-based page number (from the route's ?page= search param). */
   readonly page?: number;
+  /**
+   * Session-scoped contract client for the production read path. The route
+   * passes `createServerClient(session.ctx)`; defaults to the singleton seam.
+   */
+  readonly client?: ProjectsReadClient;
 }
 
 // Demo/seed projects from the canonical baseline dataset. They stay seeded (the
@@ -67,6 +79,7 @@ const PROJECTS_PAGE_SIZE = 10;
 export async function ProjectsPage({
   viewModel,
   page = 1,
+  client = defaultClient,
 }: ProjectsPageProps = {}) {
   // Reads flow page -> await client.* -> MockTransport -> store -> DTO. The
   // `viewModel?` prop remains the test-override seam (fixture-driven, sync).
