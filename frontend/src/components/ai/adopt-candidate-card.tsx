@@ -13,6 +13,16 @@
  * Generic over the item type T so each node supplies only its taskType, inputData,
  * parseItems (resultData → T[]) and renderItem. This is "AI proposes → human reviews →
  * 采纳 materializes" made into one widget; new nodes never re-implement polling/state.
+ *
+ * P4 hydration (切页不丢): the AI task lives server-side, but `phase`/`items`/`taskId` are
+ * component-local React state — navigating away and back would reset them to idle even
+ * though a task is still running or sitting in awaiting_confirmation. So on mount we
+ * reconcile against the server: client.listAITasks → filter to THIS node's
+ * (taskType ∩ inputData.projectId) with status∈{queued,running,awaiting_confirmation},
+ * pick the newest, and resume — awaiting_confirmation → fetch its results → review;
+ * queued/running → re-enter the poll loop. Reuses the existing ai.tasks.list read op
+ * (no new contract op needed). Because every island wraps this one component, all nodes
+ * inherit hydration for free.
  */
 
 import * as React from "react";
@@ -57,6 +67,9 @@ export function AdoptCandidateCard<T>({
   const [taskId, setTaskId] = React.useState<string | null>(null);
   const [confirming, setConfirming] = React.useState(false);
   const cancelledRef = React.useRef(false);
+  // Set once the user (or hydration) takes over the loop, so a late-resolving mount
+  // hydration never clobbers a fresh task the user just started in this same mount.
+  const claimedRef = React.useRef(false);
 
   React.useEffect(
     () => () => {
@@ -65,7 +78,52 @@ export function AdoptCandidateCard<T>({
     [],
   );
 
+  // Fetch a task's results and enter review. Shared by the poll loop (on
+  // awaiting_confirmation) and by hydration (when a task is ALREADY awaiting on mount).
+  const enterReview = React.useCallback(
+    async (id: string) => {
+      const results = (await client.listTaskResults({
+        params: { taskId: id },
+        query: undefined,
+        body: undefined,
+      })) as unknown as Array<{ resultData: Record<string, unknown> }>;
+      const candidate = results[results.length - 1];
+      const got = candidate ? parseItems(candidate.resultData) : [];
+      setItems(got);
+      setPhase("review");
+    },
+    [parseItems],
+  );
+
+  // The createAITask→poll loop, factored out so both 「start」 (fresh task) and
+  // hydration (resuming a queued/running task found server-side) drive the same machine.
+  const pollUntilDone = React.useCallback(
+    async (id: string) => {
+      for (let i = 0; i < MAX_POLLS; i++) {
+        if (cancelledRef.current) return;
+        await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+        if (cancelledRef.current) return;
+        const status = (await client.getTask({
+          params: { taskId: id },
+          query: undefined,
+          body: undefined,
+        })) as { status: string };
+        if (status.status === "awaiting_confirmation") {
+          await enterReview(id);
+          return;
+        }
+        if (status.status === "cancelled" || status.status === "failed") {
+          setPhase("error");
+          return;
+        }
+      }
+      setPhase("error"); // budget exhausted
+    },
+    [enterReview],
+  );
+
   const start = React.useCallback(async () => {
+    claimedRef.current = true; // user takes over → hydration must not clobber
     setPhase("running");
     setItems([]);
     try {
@@ -75,37 +133,64 @@ export function AdoptCandidateCard<T>({
         body: { taskType, inputData },
       })) as { id: string };
       setTaskId(task.id);
-      for (let i = 0; i < MAX_POLLS; i++) {
-        if (cancelledRef.current) return;
-        await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-        if (cancelledRef.current) return;
-        const status = (await client.getTask({
-          params: { taskId: task.id },
-          query: undefined,
-          body: undefined,
-        })) as { status: string };
-        if (status.status === "awaiting_confirmation") {
-          const results = (await client.listTaskResults({
-            params: { taskId: task.id },
-            query: undefined,
-            body: undefined,
-          })) as unknown as Array<{ resultData: Record<string, unknown> }>;
-          const candidate = results[results.length - 1];
-          const got = candidate ? parseItems(candidate.resultData) : [];
-          setItems(got);
-          setPhase("review");
-          return;
-        }
-        if (status.status === "cancelled" || status.status === "failed") {
-          setPhase("error");
-          return;
-        }
-      }
-      setPhase("error"); // budget exhausted
+      await pollUntilDone(task.id);
     } catch {
       setPhase("error");
     }
-  }, [taskType, inputData, parseItems]);
+  }, [taskType, inputData, pollUntilDone]);
+
+  // P4 hydration (切页不丢): on mount, reconcile against the server so an in-flight task
+  // survives navigating away and back. Only hydrates from idle (never clobbers a task the
+  // user started in this same mount). Filters ai.tasks.list to THIS node — same taskType
+  // AND same projectId (so two projects' 论点树 tasks don't cross-wire) — and to in-flight
+  // statuses, then resumes the newest (the list is newest-requested first).
+  const projectId =
+    typeof inputData.projectId === "string" ? inputData.projectId : undefined;
+  React.useEffect(() => {
+    let abandoned = false;
+    void (async () => {
+      try {
+        const tasks = (await client.listAITasks({
+          params: undefined,
+          query: { page: 1, pageSize: 100 },
+          body: undefined,
+        })) as unknown as Array<{
+          id: string;
+          taskType: string;
+          projectId: string | null;
+          status: string;
+        }>;
+        const match = tasks.find(
+          (t) =>
+            t.taskType === taskType &&
+            (projectId === undefined || t.projectId === projectId) &&
+            (t.status === "queued" ||
+              t.status === "running" ||
+              t.status === "awaiting_confirmation"),
+        );
+        if (abandoned || cancelledRef.current || claimedRef.current || !match)
+          return;
+        claimedRef.current = true; // hydration owns the loop now
+        setTaskId(match.id);
+        if (match.status === "awaiting_confirmation") {
+          await enterReview(match.id);
+        } else {
+          setPhase("running");
+          await pollUntilDone(match.id);
+        }
+      } catch {
+        // Hydration is best-effort — a failed reconcile just leaves the card idle, which
+        // is the pre-P4 behavior. The user can still 「start」 a fresh task.
+      }
+    })();
+    return () => {
+      abandoned = true;
+    };
+    // Mount-only reconcile: keyed by node identity (taskType ∩ projectId). The poll/review
+    // callbacks are stable for a given parseItems; re-running on their identity churn would
+    // double-hydrate, so they're intentionally excluded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskType, projectId]);
 
   const adopt = React.useCallback(async () => {
     if (!taskId) return;

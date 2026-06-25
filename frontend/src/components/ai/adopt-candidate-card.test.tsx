@@ -24,6 +24,9 @@ const mockClient = {
   confirmTask: vi.fn((_i: unknown) =>
     Promise.resolve({ id: "task-1", status: "succeeded" }),
   ),
+  // P4 hydration: default to "no in-flight task" so the idle→start path is unchanged;
+  // individual tests override per-mount to exercise resume.
+  listAITasks: vi.fn((_i: unknown) => Promise.resolve([] as unknown[])),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -31,6 +34,7 @@ vi.mock("@/lib/contract-client", () => ({
     getTask: (i: unknown) => mockClient.getTask(i),
     listTaskResults: (i: unknown) => mockClient.listTaskResults(i),
     confirmTask: (i: unknown) => mockClient.confirmTask(i),
+    listAITasks: (i: unknown) => mockClient.listAITasks(i),
   },
 }));
 
@@ -100,5 +104,73 @@ describe("AdoptCandidateCard", () => {
     });
     expect(container.querySelector('[data-slot="adopt-error"]')).not.toBeNull();
     expect(queryByText("甲")).toBeNull();
+  });
+
+  // P4 hydration (切页不丢): a fresh mount must reconcile against the server.
+
+  it("hydrates an awaiting_confirmation task on mount → straight to review (no click)", async () => {
+    mockClient.listAITasks.mockResolvedValueOnce([
+      {
+        id: "task-9",
+        taskType: "test.node",
+        projectId: "p-1",
+        status: "awaiting_confirmation",
+      },
+    ]);
+    const { queryByText, container } = await renderCard();
+    // Flush the mount hydration effect (listAITasks → listTaskResults → review).
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-slot="adopt-review"]')).not.toBeNull();
+    expect(queryByText("甲")).not.toBeNull();
+    expect(queryByText("乙")).not.toBeNull();
+    // 采纳 confirms the HYDRATED task id, proving taskId was restored.
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="adopt-confirm"]')!);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(mockClient.confirmTask).toHaveBeenCalledWith({
+      params: { taskId: "task-9" },
+      query: undefined,
+      body: undefined,
+    });
+  });
+
+  it("hydrates a running task on mount → resumes polling into review", async () => {
+    mockClient.listAITasks.mockResolvedValueOnce([
+      { id: "task-7", taskType: "test.node", projectId: "p-1", status: "running" },
+    ]);
+    const { queryByText, container } = await renderCard();
+    // Mount effect resolves → running phase; one poll interval → getTask(awaiting) → review.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(container.querySelector('[data-slot="adopt-running"]')).not.toBeNull();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+    expect(mockClient.getTask).toHaveBeenCalledWith({
+      params: { taskId: "task-7" },
+      query: undefined,
+      body: undefined,
+    });
+    expect(queryByText("甲")).not.toBeNull();
+  });
+
+  it("ignores in-flight tasks of a different node (taskType / projectId mismatch)", async () => {
+    mockClient.listAITasks.mockResolvedValueOnce([
+      { id: "x", taskType: "other.node", projectId: "p-1", status: "running" },
+      { id: "y", taskType: "test.node", projectId: "p-2", status: "running" },
+    ]);
+    const { container } = await renderCard();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    // Neither matches (taskType test.node ∩ projectId p-1) → stays idle.
+    expect(container.querySelector('[data-slot="adopt-start"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="adopt-running"]')).toBeNull();
+    expect(container.querySelector('[data-slot="adopt-review"]')).toBeNull();
   });
 });
