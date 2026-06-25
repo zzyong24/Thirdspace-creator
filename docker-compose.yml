@@ -1,0 +1,22 @@
+# 本地开发用 Postgres(P1 持久化底座)。仅起数据库,不部署 app。
+# 用法:pnpm db:up  →  pnpm db:migrate  →  pnpm dev
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: creatoros-pg
+    environment:
+      POSTGRES_USER: creatoros
+      POSTGRES_PASSWORD: creatoros
+      POSTGRES_DB: creatoros
+    ports:
+      - "5432:5432"
+    volumes:
+      - creatoros-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U creatoros -d creatoros"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  creatoros-pgdata:

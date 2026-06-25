@@ -1,5 +1,9 @@
 import "server-only";
-import { createDb, UnsupportedOperationError } from "@creatoros/backend";
+import {
+  createDb,
+  createRuntimeDb,
+  UnsupportedOperationError,
+} from "@creatoros/backend";
 import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
@@ -770,7 +774,13 @@ const globalForPersistence = globalThis as unknown as {
 };
 
 async function buildPersistence(): Promise<PersistenceBundle> {
-  const { db } = await createDb(); // session-scoped pglite (real SQL; resets on restart)
+  // Hybrid driver (P1): runtime with DATABASE_URL → real Postgres (persists across
+  // restarts, applies versioned migrations via node-postgres migrator); without it
+  // (vitest / no-DB env) → in-memory pglite. Both apply the SAME drizzle/0000_init
+  // migration, so test and runtime schemas are identical.
+  const { db } = process.env.DATABASE_URL
+    ? await createRuntimeDb()
+    : await createDb();
 
   // Deterministic clock/ids keep the seeded dataset reproducible (visual/test
   // parity); new creates get collision-free ids distinct from the slug seeds.

@@ -1,4 +1,11 @@
-export { createDb, schema, type Db, type CreateDbOptions } from "./db";
+export {
+  createDb,
+  createRuntimeDb,
+  schema,
+  type Db,
+  type CreateDbOptions,
+  type RuntimeDb,
+} from "./db";
 export {
   createProjectRepository,
   type ProjectRepository,
