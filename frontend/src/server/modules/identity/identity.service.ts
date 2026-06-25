@@ -70,6 +70,14 @@ export interface RegisterInput {
   displayName?: string;
 }
 
+// The editable profile fields (`PATCH /me`). Every key optional — only the
+// provided keys are written. `email` / `timezone` are intentionally NOT editable
+// here (email is the login identifier + unique key; no timezone control exists).
+export interface ProfilePatch {
+  displayName?: string;
+  locale?: string;
+}
+
 // Registration yields the same shape as login — a fresh user DTO plus an active
 // session — so the route can set the session cookie and the new user lands
 // authenticated, exactly like a post-login redirect.
@@ -80,6 +88,7 @@ export interface IdentityService {
   register(input: RegisterInput): Promise<RegisterResult>;
   resolveContextFromToken(rawToken: string): Promise<RequestContext>;
   getCurrentUser(ctx: RequestContext): Promise<UserDTO>;
+  updateProfile(ctx: RequestContext, patch: ProfilePatch): Promise<UserDTO>;
   logout(ctx: RequestContext, rawToken: string): Promise<void>;
 }
 
@@ -174,6 +183,27 @@ export function createIdentityService(
       // context derived from a live session that should not normally happen.
       const user = await repo.getUserById(ctx.userId);
       return toUserDTO(user);
+    },
+
+    async updateProfile(ctx, patch) {
+      // User-scoped profile edit (`PATCH /me`). The repo's UPDATE is pinned to
+      // ctx.userId, so a patch can never touch another tenant's row. Only the
+      // provided keys (displayName / locale) are written; updatedAt is stamped
+      // from the injected clock (deterministic in tests, never Date.now). An
+      // empty patch is a no-op read so the caller still gets the current DTO
+      // without a needless write.
+      const hasChange =
+        patch.displayName !== undefined || patch.locale !== undefined;
+      if (!hasChange) {
+        const current = await repo.getUserById(ctx.userId);
+        return toUserDTO(current);
+      }
+      const row = await repo.updateUser(ctx.userId, {
+        displayName: patch.displayName,
+        locale: patch.locale,
+        updatedAt: deps.now(),
+      });
+      return toUserDTO(row);
     },
 
     async logout(ctx, rawToken) {

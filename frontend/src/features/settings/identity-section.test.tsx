@@ -12,9 +12,12 @@
  *    The view is injected through the deterministic `viewModel?`
  *    override seam (foundation §5) so the assertion is hermetic and
  *    does not depend on the live cookie/session.
- *  - the 昵称 / 邮箱 inputs are READ-ONLY (profile-edit deferred —
- *    `PATCH /me` is an unresolved §13 gap, roadmap §6). They show the
- *    identity values but cannot be edited here.
+ *  - the 昵称 input is EDITABLE and真持久: saving fires the
+ *    `identity.profile.patch` op (`PATCH /me`, body `{ displayName }`)
+ *    which writes the identity-owned `users.displayName`, then
+ *    refreshes the server read. The 邮箱 input stays READ-ONLY (it is
+ *    the login identifier + `users_email_uk` unique key — out of the
+ *    editable surface this wave).
  *  - the 删除账户 button is DISABLED until the local "确认删除账户"
  *    switch arms it; the account-delete REST surface is a roadmap §6
  *    gap, so even when armed the button stays disabled (intentionally
@@ -43,6 +46,7 @@ vi.mock("@/lib/contract-client", () => ({
   client: {
     patchPreferences: vi.fn().mockResolvedValue({}),
     putModel: vi.fn().mockResolvedValue({}),
+    patchProfile: vi.fn().mockResolvedValue({}),
   },
 }));
 
@@ -129,7 +133,9 @@ describe("Settings identity section (Task 12)", () => {
     expect(email!.value).toBe(STUB_IDENTITY.email);
   });
 
-  it("renders the nickname + email inputs as read-only (PATCH /me deferred)", () => {
+  it("renders the nickname input editable + the email input read-only", () => {
+    // 昵称 is now真持久 via `PATCH /me` (identity.profile.patch) — editable, no
+    // longer read-only. 邮箱 stays read-only (login identifier + unique key).
     const { container } = renderSettings();
     const nickname = container.querySelector<HTMLInputElement>(
       '[data-slot="account-nickname-input"]',
@@ -137,8 +143,29 @@ describe("Settings identity section (Task 12)", () => {
     const email = container.querySelector<HTMLInputElement>(
       '[data-slot="account-email-input"]',
     );
-    expect(nickname!.readOnly).toBe(true);
+    expect(nickname!.readOnly).toBe(false);
     expect(email!.readOnly).toBe(true);
+  });
+
+  it("saving an edited nickname calls patchProfile({ displayName }) then refresh", async () => {
+    const { client } = await import("@/lib/contract-client");
+    const { container } = renderSettings();
+    const nickname = container.querySelector<HTMLInputElement>(
+      '[data-slot="account-nickname-input"]',
+    )!;
+    const save = container.querySelector<HTMLButtonElement>(
+      '[data-slot="account-nickname-save"]',
+    )!;
+    // Save is disabled until the draft diverges from the current name.
+    expect(save.disabled).toBe(true);
+    fireEvent.change(nickname, { target: { value: "Renamed User" } });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+    expect(client.patchProfile).toHaveBeenCalledWith({
+      params: undefined,
+      query: undefined,
+      body: { displayName: "Renamed User" },
+    });
   });
 
   it("disables the 删除账户 button until the confirm switch is armed", () => {
@@ -191,7 +218,9 @@ describe("Settings identity section (Task 12)", () => {
       '[data-slot="account-nickname-input"]',
     );
     expect(nickname!.value).toBe(STUB_IDENTITY.displayName);
-    expect(nickname!.readOnly).toBe(true);
+    // 昵称 is now editable (real `PATCH /me`); it is seeded from the injected
+    // identity but no longer read-only.
+    expect(nickname!.readOnly).toBe(false);
   });
 
   it("keeps 导入 / 导出 buttons present but intentionally inert", () => {

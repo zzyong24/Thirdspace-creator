@@ -3,7 +3,10 @@ import {
   AuthenticationError,
   UnsupportedOperationError,
 } from "@creatoros/backend";
-import type { SettingsService } from "./settings.service";
+import type {
+  SettingsService,
+  AccountProfilePatch,
+} from "./settings.service";
 import type { PreferencePatch, ModelPutBody } from "./settings.repository";
 
 // Settings transport (foundation §5.4) — the module's four contract ops served
@@ -19,6 +22,12 @@ import type { PreferencePatch, ModelPutBody } from "./settings.repository";
 
 export const SETTINGS_OP_IDS = [
   "settings.get",
+  // `PATCH /me` (identity.profile.patch) is served HERE rather than by a bare
+  // Identity route because Identity owns no dispatch transport — the Settings
+  // transport already proxies the account READ (settings.get → accountReader),
+  // so it proxies the account WRITE the same way (→ accountWriter). The op id
+  // keeps the `identity.*` namespace because Identity owns the `users` table.
+  "identity.profile.patch",
   "settings.preferences.patch",
   "settings.models.put",
   "settings.agents.create",
@@ -41,6 +50,13 @@ export function createSettingsTransport(
       switch (endpoint.id) {
         case "settings.get": {
           const data = await service.getAccount(ctx);
+          return { data, meta: { requestId: ctx.requestId } };
+        }
+        case "identity.profile.patch": {
+          const data = await service.updateAccount(
+            ctx,
+            (body ?? {}) as AccountProfilePatch,
+          );
           return { data, meta: { requestId: ctx.requestId } };
         }
         case "settings.preferences.patch": {

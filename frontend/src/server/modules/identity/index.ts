@@ -19,6 +19,7 @@ export {
   type LoginResult,
   type RegisterInput,
   type RegisterResult,
+  type ProfilePatch,
   type ServiceDeps,
 } from "./identity.service";
 
@@ -28,6 +29,7 @@ export {
   type RepoDeps,
   type UserRow,
   type SessionRow,
+  type UserProfilePatch,
 } from "./identity.repository";
 
 export {

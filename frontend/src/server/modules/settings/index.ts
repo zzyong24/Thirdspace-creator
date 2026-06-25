@@ -13,6 +13,8 @@ export {
   createSettingsService,
   type SettingsService,
   type AccountReader,
+  type AccountWriter,
+  type AccountProfilePatch,
   type ResolvedModel,
 } from "./settings.service";
 

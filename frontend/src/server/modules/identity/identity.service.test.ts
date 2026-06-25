@@ -187,6 +187,63 @@ describe("identity.service session lifecycle (Task 5)", () => {
   });
 });
 
+describe("identity.service updateProfile (PATCH /me)", () => {
+  async function ctxFor() {
+    const { rawToken } = await service.login({
+      email: SEEDED_USER.email,
+      password: PASSWORD,
+    });
+    return service.resolveContextFromToken(rawToken);
+  }
+
+  it("writes only the provided keys (displayName + locale) and returns the refreshed DTO", async () => {
+    const ctx = await ctxFor();
+    const dto = await service.updateProfile(ctx, {
+      displayName: "Renamed",
+      locale: "en-US",
+    });
+    expect(dto.displayName).toBe("Renamed");
+    expect(dto.locale).toBe("en-US");
+    // Email / timezone are untouched (not in the editable surface).
+    expect(dto.email).toBe(SEEDED_USER.email);
+    expect(dto.timezone).toBe(SEEDED_USER.timezone);
+    expect(dto).not.toHaveProperty("passwordHash");
+
+    // The write persisted — a fresh read sees the new values.
+    const reread = await service.getCurrentUser(ctx);
+    expect(reread.displayName).toBe("Renamed");
+    expect(reread.locale).toBe("en-US");
+  });
+
+  it("a partial patch leaves the un-provided field unchanged", async () => {
+    const ctx = await ctxFor();
+    const dto = await service.updateProfile(ctx, { locale: "ja-JP" });
+    expect(dto.locale).toBe("ja-JP");
+    expect(dto.displayName).toBe(SEEDED_USER.displayName);
+  });
+
+  it("an empty patch is a no-op read that still returns the current DTO", async () => {
+    const ctx = await ctxFor();
+    const dto = await service.updateProfile(ctx, {});
+    expect(dto.displayName).toBe(SEEDED_USER.displayName);
+    expect(dto.locale).toBe(SEEDED_USER.locale);
+  });
+
+  it("is user-scoped — patching under ctxA never touches another user's row", async () => {
+    // Seed a second user and assert ctxA's patch leaves it untouched.
+    const repo2 = createIdentityRepository(db, makeDeps());
+    await repo2.seedUser({
+      ...SEEDED_USER,
+      id: "user-other",
+      email: "other@creatoros.local",
+    });
+    const ctx = await ctxFor();
+    await service.updateProfile(ctx, { displayName: "Only Mine" });
+    const other = await repo2.getUserById("user-other");
+    expect(other.displayName).toBe(SEEDED_USER.displayName);
+  });
+});
+
 describe("identity.service seedCanonicalUser (Task 7)", () => {
   it("seeds the canonical user so login resolves to user-zyongzhu", async () => {
     const { db } = await createDb();

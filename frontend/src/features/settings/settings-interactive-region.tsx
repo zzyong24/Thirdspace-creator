@@ -323,6 +323,35 @@ function AccountInformationCard({
 }: {
   viewModel: SettingsViewModel;
 }) {
+  // 昵称 is now REAL: it edits the identity-owned `users.displayName` via the
+  // `identity.profile.patch` op (`PATCH /me`) — a真持久 server write, not a
+  // read-only桩. The input is a controlled draft; saving fires the op and
+  // refreshes the server read so the chips/avatar reflect the new name. 邮箱
+  // stays read-only (it is the login identifier + unique key — out of the
+  // editable surface this wave).
+  const initialName = viewModel.account.displayName;
+  const [draftName, setDraftName] = React.useState<string>(initialName);
+  const { pending, run } = useSettingsMutation();
+
+  // Re-sync the draft when the server read changes the identity (post-refresh).
+  React.useEffect(() => {
+    setDraftName(initialName);
+  }, [initialName]);
+
+  const trimmed = draftName.trim();
+  const dirty = trimmed.length > 0 && trimmed !== initialName;
+
+  const saveName = React.useCallback(() => {
+    if (!dirty) return;
+    run(() =>
+      client.patchProfile({
+        params: undefined,
+        query: undefined,
+        body: { displayName: trimmed },
+      }),
+    );
+  }, [dirty, run, trimmed]);
+
   return (
     <SectionCard
       title="账户信息"
@@ -380,24 +409,44 @@ function AccountInformationCard({
         <SettingsFormRow
           label="昵称"
           controlId="account-nickname"
-          help="个人资料编辑暂未开放（PATCH /me 为未决的 §13 缺口，roadmap §6）。"
+          help="显示名称，保存后立即生效（PATCH /me，真持久）。"
         >
           <div className="flex w-full items-center gap-2">
             <Input
               id="account-nickname"
               data-slot="account-nickname-input"
-              value={viewModel.account.displayName}
-              readOnly
-              aria-readonly="true"
+              value={draftName}
+              disabled={pending}
+              onChange={(event) => setDraftName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  saveName();
+                }
+              }}
+              aria-label="账户昵称"
             />
-            <PlanningBadge />
+            <Button
+              type="button"
+              data-slot="account-nickname-save"
+              variant="outline"
+              size="sm"
+              disabled={!dirty || pending}
+              onClick={saveName}
+            >
+              保存
+            </Button>
           </div>
         </SettingsFormRow>
         <SettingsFormRow
           label="邮箱"
           controlId="account-email"
-          help="个人资料编辑暂未开放（PATCH /me 为未决的 §13 缺口，roadmap §6）。"
+          help="邮箱是登录标识与唯一键，暂不支持在此修改。"
         >
+          {/* 邮箱 stays read-only: it is the login identifier + users_email_uk
+              unique key. Editing it needs a re-auth / uniqueness flow with no
+              route yet — kept inert with a visible「规划中」badge so it never
+              pretends to take effect. */}
           <div className="flex w-full items-center gap-2">
             <Input
               id="account-email"
@@ -636,7 +685,31 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
   // 桌面通知 is规划中 (no settings op) — display the fixture default but the
   // control is inert, so no setter is needed.
   const notifications = viewModel.system.notifications;
+  // 系统语言 is now REAL: it persists to the identity-owned `users.locale` via
+  // the `identity.profile.patch` op (`PATCH /me`) — the same locale the account
+  // 语言 chip and timezone display read. No longer a local-only桩. Optimistic
+  // local state + the op + router.refresh() (via useSettingsMutation).
   const [locale, setLocale] = React.useState<string>(viewModel.system.locale);
+  const { pending: localePending, run: runLocale } = useSettingsMutation();
+
+  // Re-sync after a server refresh changes the identity-derived locale.
+  React.useEffect(() => {
+    setLocale(viewModel.system.locale);
+  }, [viewModel.system.locale]);
+
+  const onLocaleChange = React.useCallback(
+    (next: string) => {
+      setLocale(next);
+      runLocale(() =>
+        client.patchProfile({
+          params: undefined,
+          query: undefined,
+          body: { locale: next },
+        }),
+      );
+    },
+    [runLocale],
+  );
 
   React.useEffect(() => {
     const storedTheme = readStored(
@@ -731,17 +804,18 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
         <SettingsFormRow
           label="语言"
           controlId="sys-locale"
-          help="界面与时区显示。"
+          help="界面与时区显示语言，保存后即生效（PATCH /me，真持久）。"
         >
           <Select
             value={locale}
-            onValueChange={(value) => setLocale(String(value))}
+            onValueChange={(value) => onLocaleChange(String(value))}
           >
             <SelectTrigger
               id="sys-locale"
               data-slot="sys-locale-trigger"
               size="sm"
               className="w-40"
+              disabled={localePending}
             >
               <SelectValue placeholder="选择语言" />
             </SelectTrigger>

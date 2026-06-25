@@ -2190,6 +2190,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const settingsService = createSettingsService(
     () => settingsRepo,
     (ctx) => identity.getCurrentUser(ctx),
+    // Account profile WRITE (`PATCH /me`) — delegated to Identity's
+    // updateProfile, the same boundary as the read above. Settings owns no
+    // `users` repo (foundation §1: no cross-module repository import).
+    (ctx, patch) => identity.updateProfile(ctx, patch),
   );
   const settings = createSettingsTransport(() => settingsService);
 

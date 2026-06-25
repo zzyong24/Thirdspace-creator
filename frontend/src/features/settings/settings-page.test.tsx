@@ -61,6 +61,7 @@ vi.mock("@/lib/contract-client", () => ({
   client: {
     patchPreferences: vi.fn().mockResolvedValue({}),
     putModel: vi.fn().mockResolvedValue({}),
+    patchProfile: vi.fn().mockResolvedValue({}),
   },
 }));
 

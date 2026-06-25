@@ -47,6 +47,22 @@ const accountReader = async (c: RequestContext) => ({
   updatedAt: NOW,
 });
 
+// Fake accountWriter (Identity's updateProfile stand-in) — echoes the patch over
+// the reader's base DTO so the transport's `identity.profile.patch` case can be
+// asserted against the userResource envelope.
+const accountWriter = async (
+  c: RequestContext,
+  patch: { displayName?: string; locale?: string },
+) => ({
+  id: c.userId,
+  email: "c@creatoros.local",
+  displayName: patch.displayName ?? "Contract User",
+  timezone: "Asia/Shanghai",
+  locale: patch.locale ?? "zh-CN",
+  createdAt: NOW,
+  updatedAt: NOW,
+});
+
 const ep = (id: string) => ({ id, isList: false }) as unknown as Endpoint;
 
 describe("settings.transport (contract conformance)", () => {
@@ -58,6 +74,7 @@ describe("settings.transport (contract conformance)", () => {
     const service = createSettingsService(
       () => createSettingsRepository(db, deps),
       accountReader,
+      accountWriter,
     );
     transport = createSettingsTransport(() => service);
   });
@@ -74,6 +91,28 @@ describe("settings.transport (contract conformance)", () => {
     const raw = await transport.request(ep("settings.get"), {} as never, ctx);
     const parsed = successEnvelope(userResource).parse(raw);
     expect(parsed.data.id).toBe("user-c");
+  });
+
+  it("identity.profile.patch (PATCH /me) → userResource single envelope", async () => {
+    const client = createClient(ENDPOINTS, transport, ctx);
+    const account = await client.patchProfile({
+      params: undefined,
+      query: undefined,
+      body: { displayName: "Renamed", locale: "en-US" },
+    });
+    expect(() => userResource.parse(account)).not.toThrow();
+    expect(account.displayName).toBe("Renamed");
+    expect(account.locale).toBe("en-US");
+
+    const raw = await transport.request(
+      ep("identity.profile.patch"),
+      { body: { locale: "ja-JP" } } as never,
+      ctx,
+    );
+    const parsed = successEnvelope(userResource).parse(raw);
+    expect(parsed.data.locale).toBe("ja-JP");
+    // Un-patched displayName falls through to the reader's base value.
+    expect(parsed.data.displayName).toBe("Contract User");
   });
 
   it("settings.preferences.patch → userPreferenceResource single envelope", async () => {

@@ -17,11 +17,13 @@ vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 const mockClient = {
   patchPreferences: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   putModel: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
+  patchProfile: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
     patchPreferences: (input: unknown) => mockClient.patchPreferences(input),
     putModel: (input: unknown) => mockClient.putModel(input),
+    patchProfile: (input: unknown) => mockClient.patchProfile(input),
   },
 }));
 
@@ -61,6 +63,7 @@ beforeEach(() => {
   mockRouter.refresh.mockClear();
   mockClient.patchPreferences.mockClear();
   mockClient.putModel.mockClear();
+  mockClient.patchProfile.mockClear();
 });
 
 afterEach(() => cleanup());
@@ -79,6 +82,30 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     );
     expect(mockClient.patchPreferences).toHaveBeenCalledWith(
       expect.objectContaining({ body: { autosaveEnabled: false } }),
+    );
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("saving an edited 昵称 calls patchProfile({ displayName }) then router.refresh()", async () => {
+    const { container } = render(<SettingsMainColumn viewModel={VM} />);
+    const input = container.querySelector(
+      '[data-slot="account-nickname-input"]',
+    ) as HTMLInputElement;
+    const save = container.querySelector(
+      '[data-slot="account-nickname-save"]',
+    ) as HTMLButtonElement;
+    expect(input).not.toBeNull();
+    // Save disabled until the draft diverges from the current displayName.
+    expect(save.disabled).toBe(true);
+    fireEvent.change(input, { target: { value: "新昵称" } });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+
+    await waitFor(() =>
+      expect(mockClient.patchProfile).toHaveBeenCalledTimes(1),
+    );
+    expect(mockClient.patchProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { displayName: "新昵称" } }),
     );
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
   });
