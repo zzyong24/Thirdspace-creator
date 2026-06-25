@@ -29,15 +29,27 @@
  *   - QuickEntries navigate to their real (creator) routes via `next/link`.
  *   - RecentTasks is backed by the REAL global AI-task feed (ai.tasks.list); it
  *     resolves to an honest empty state on a fresh DB.
- *   - ContinuingTasks no longer ships fixture rows: a cross-project in-progress
- *     feed needs a global tasks op that does not exist (projects.tasks.list is
- *     project-scoped — see INTERACTION_SPEC GAP-COP-1 / D-COP-a), so the list is
- *     an empty array that renders an honest 「暂无进行中的任务」 empty state and
- *     keeps the 规划中 badge until that op lands.
+ *   - ContinuingTasks is now REAL (GAP-COP-1 做真): it reuses the SAME
+ *     ai.tasks.list fetch and filters to the user's cross-project in-progress
+ *     tasks (status ∈ {queued, running, awaiting_confirmation}). Each row gets a
+ *     「继续」 button that routes to the task's project/stage, derived from
+ *     `task.projectId` + `task.taskType` (taskType → stage map below). Tasks
+ *     without a `projectId` (global tasks) can't be resumed into a project route,
+ *     so their 「继续」 degrades to a disabled state. When the feed is genuinely
+ *     empty it renders an honest 「暂无进行中的任务」 empty state — no fixture rows,
+ *     no 规划中 badge.
+ *
+ *     Honest limit (see sharedChangesNeeded): ai.tasks.list returns paginated
+ *     {id, projectId, taskType, status, requestedAt} but NOT a per-task resume
+ *     anchor (e.g. the conversation/node id to re-open) nor a server-side
+ *     status filter. We resume at the stage granularity (project/stage route)
+ *     and filter client-side over a single page; a deep-link anchor + a
+ *     status-scoped query would make 「继续」 land exactly on the in-flight node.
  */
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowUp,
   BookOpenText,
@@ -131,11 +143,12 @@ const TONE_BG: Record<string, string> = {
   indigo: "bg-indigo-100 text-indigo-600",
 };
 
-const STATUS_BADGE: Record<string, string> = {
-  进行中: "bg-violet-100 text-violet-600",
-  排队中: "bg-amber-100 text-amber-700",
-  已完成: "bg-emerald-100 text-emerald-700",
-};
+// Color-keyed badge classes shared by the real 「继续任务」 status mapping below.
+const STATUS_BADGE_BASE = {
+  violet: "bg-violet-100 text-violet-600",
+  amber: "bg-amber-100 text-amber-700",
+  emerald: "bg-emerald-100 text-emerald-700",
+} as const;
 
 // Quick-entry → real route map. The fixture rows carry a stable `id` (no `href`
 // field in the shared VM), so this island owns the id→route mapping rather than
@@ -326,6 +339,58 @@ function taskTitle(t: WireTask): string {
   return t.taskType;
 }
 
+// In-progress statuses that belong in the 「继续任务」 feed. A user can resume any
+// task that is queued / running / awaiting their confirmation; terminal states
+// (succeeded/failed/cancelled) live in the 最近任务 feed instead.
+const CONTINUING_STATUSES: ReadonlySet<WireTask["status"]> = new Set([
+  "queued",
+  "running",
+  "awaiting_confirmation",
+]);
+
+// taskType prefix (the segment before the first ".") → the creator project STAGE
+// route segment that owns that node. Anchored to where each AI node island lives:
+//   research.* → research workbench   (research.gather / research.analyze)
+//   topic.*    → planning             (topic.generate)
+//   script.*   → script editor        (script.draft / script.rewrite)
+//   material.* → production           (material.match)
+//   publish.*  → publishing           (publish.platform_adapt)
+//   review.*   → review               (review.analyze)
+// Unknown prefixes degrade to the project root (the stepper lets the user pick up
+// from there) rather than guessing a wrong stage.
+const TASK_TYPE_STAGE: Record<string, string> = {
+  research: "research",
+  topic: "planning",
+  script: "script",
+  material: "production",
+  publish: "publishing",
+  review: "review",
+};
+
+// Derive the 「继续」 route for an in-progress task from projectId + taskType. Returns
+// null when the task has no projectId (a global task with no project route to resume
+// into — the button degrades to disabled). Resume granularity is the stage route; a
+// deep-link anchor would need a new resume field on ai.tasks.list (see sharedChangesNeeded).
+function resumeHref(t: WireTask): string | null {
+  if (!t.projectId) return null;
+  const prefix = t.taskType.split(".")[0] ?? "";
+  const stage = TASK_TYPE_STAGE[prefix];
+  return stage
+    ? `/projects/${t.projectId}/${stage}`
+    : `/projects/${t.projectId}`;
+}
+
+// Status → continuing-card tone/badge (honest mirror of the §12 machine, no fake progress).
+const CONTINUING_BADGE: Record<string, { label: string; badge: string; bg: string }> = {
+  queued: { label: "排队中", badge: STATUS_BADGE_BASE.amber, bg: "bg-amber-50/60" },
+  running: { label: "进行中", badge: STATUS_BADGE_BASE.violet, bg: "bg-violet-50" },
+  awaiting_confirmation: {
+    label: "待确认",
+    badge: STATUS_BADGE_BASE.amber,
+    bg: "bg-amber-50/60",
+  },
+};
+
 const POLL_INTERVAL_MS = 3000;
 // ~4min — the assistant reply runs a real Claude subprocess (subscription) whose startup
 // + reasoning can take 1–3min; the poll window must comfortably outlast it (verified e2e:
@@ -334,6 +399,7 @@ const MAX_POLLS = 80;
 
 export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   const vm = viewModel ?? buildCopilotViewModel();
+  const router = useRouter();
 
   // Controlled composer wired to the REAL backend. The first submit ensures a
   // conversation exists (reused for the session); each submit posts the USER message,
@@ -387,6 +453,15 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
       active = false;
     };
   }, []);
+
+  // GAP-COP-1 做真: 「继续任务」 reuses the SAME ai.tasks.list fetch (no second
+  // round-trip) and filters to the user's CROSS-project in-progress tasks
+  // (queued / running / awaiting_confirmation). `null` while loading, `[]` when
+  // there is genuinely nothing in flight → honest empty state.
+  const continuingTasks = React.useMemo<ReadonlyArray<WireTask> | null>(() => {
+    if (recentTasks === null) return null;
+    return recentTasks.filter((t) => CONTINUING_STATUSES.has(t.status));
+  }, [recentTasks]);
 
   const isEmpty = prompt.trim().length === 0;
 
@@ -719,7 +794,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
           </CardContent>
         </Card>
 
-        {/* ContinuingTasks */}
+        {/* ContinuingTasks — REAL cross-project in-progress feed (GAP-COP-1 / ai.tasks.list). */}
         <Card
           data-slot="continuing-tasks"
           className="overflow-hidden border border-border"
@@ -728,58 +803,79 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-1.5">
                 <CardTitle className="text-[12px] font-semibold">继续任务</CardTitle>
-                <PlannedBadge />
               </div>
-              <span
+              <Link
+                href="/copilot"
                 data-slot="continuing-view-all"
-                className="text-[10px] font-medium text-muted-foreground"
+                className="text-[10px] font-medium text-muted-foreground hover:text-foreground"
               >
                 查看全部
-              </span>
+              </Link>
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-1.5 px-3 pb-2.5 pt-0">
-            {vm.continuingTasks.length === 0 ? (
+            {continuingTasks === null ? (
+              <span
+                data-slot="continuing-tasks-loading"
+                className="text-[10px] leading-tight text-muted-foreground"
+              >
+                加载中…
+              </span>
+            ) : continuingTasks.length === 0 ? (
               <span
                 data-slot="continuing-tasks-empty"
                 className="text-[10px] leading-tight text-muted-foreground"
               >
                 暂无进行中的任务。
               </span>
-            ) : null}
-            {vm.continuingTasks.map((task) => {
-              const badgeClass = STATUS_BADGE[task.status] ?? STATUS_BADGE.进行中;
-              const cardBg =
-                task.status === "进行中"
-                  ? "bg-violet-50"
-                  : task.status === "排队中"
-                    ? "bg-amber-50/60"
-                    : "bg-emerald-50";
-              return (
-                <div
-                  key={task.id}
-                  data-slot="continuing-task"
-                  data-task-id={task.id}
-                  className={`flex flex-col gap-1 rounded-lg ${cardBg} px-2.5 py-1.5`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-medium text-foreground leading-tight">
-                      {task.title}
-                    </span>
-                    <Badge
-                      className={`rounded-md border-0 px-1.5 py-0 text-[9px] font-medium ${badgeClass}`}
-                    >
-                      {task.status}
-                    </Badge>
+            ) : (
+              continuingTasks.map((task) => {
+                const meta =
+                  CONTINUING_BADGE[task.status] ?? CONTINUING_BADGE.running;
+                const href = resumeHref(task);
+                return (
+                  <div
+                    key={task.id}
+                    data-slot="continuing-task"
+                    data-task-id={task.id}
+                    className={`flex flex-col gap-1 rounded-lg ${meta.bg} px-2.5 py-1.5`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-medium text-foreground leading-tight">
+                        {taskTitle(task)}
+                      </span>
+                      <Badge
+                        className={`rounded-md border-0 px-1.5 py-0 text-[9px] font-medium ${meta.badge}`}
+                      >
+                        {meta.label}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[9.5px] leading-tight text-muted-foreground">
+                        项目：{task.projectId ?? "—"}
+                      </span>
+                      <button
+                        type="button"
+                        data-slot="continuing-resume"
+                        data-task-id={task.id}
+                        disabled={href === null}
+                        title={
+                          href === null
+                            ? "该任务未关联项目，暂无法继续"
+                            : undefined
+                        }
+                        onClick={() => {
+                          if (href) router.push(href);
+                        }}
+                        className="inline-flex h-6 items-center rounded-md border border-brand/30 bg-surface px-2 text-[9.5px] font-medium text-brand transition-colors hover:bg-brand-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        继续
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[9.5px] leading-tight text-muted-foreground">
-                      {task.description}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </CardContent>
         </Card>
       </section>

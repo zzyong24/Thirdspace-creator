@@ -18,6 +18,13 @@ const createMessage = vi.fn();
 const listMessages = vi.fn();
 const listTasks = vi.fn();
 
+// 「继续」 routing uses next/navigation's useRouter; mock it so the island mounts
+// under the test renderer (no real app-router provider).
+const routerPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: routerPush, replace: vi.fn(), back: vi.fn(), refresh: vi.fn() }),
+}));
+
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createConversation: (...args: unknown[]) => createConversation(...args),
@@ -56,6 +63,7 @@ beforeEach(() => {
   listMessages.mockReset();
   listTasks.mockReset();
   listTasks.mockResolvedValue([]);
+  routerPush.mockReset();
 });
 
 describe("AI Copilot composer behavior (backend-wired)", () => {
@@ -122,6 +130,72 @@ describe("AI Copilot composer behavior (backend-wired)", () => {
 
     // composer cleared after submit
     expect(textarea.value).toBe("");
+  });
+
+  it("renders the REAL continuing-task feed (in-progress only) and 「继续」 routes to the task's project/stage", async () => {
+    const user = userEvent.setup();
+    // ai.tasks.list returns a mix: two in-progress (running script / awaiting publish),
+    // one terminal (succeeded) that must be filtered OUT of 继续任务, and one global
+    // task with no projectId whose 继续 must be disabled.
+    listTasks.mockResolvedValue([
+      {
+        id: "t-running",
+        projectId: "proj-1",
+        taskType: "script.draft",
+        status: "running",
+        requestedAt: "2026-06-25T00:00:00.000Z",
+      },
+      {
+        id: "t-await",
+        projectId: "proj-2",
+        taskType: "publish.platform_adapt",
+        status: "awaiting_confirmation",
+        requestedAt: "2026-06-25T00:00:00.000Z",
+      },
+      {
+        id: "t-done",
+        projectId: "proj-3",
+        taskType: "research.gather",
+        status: "succeeded",
+        requestedAt: "2026-06-25T00:00:00.000Z",
+      },
+      {
+        id: "t-global",
+        projectId: null,
+        taskType: "topic.generate",
+        status: "queued",
+        requestedAt: "2026-06-25T00:00:00.000Z",
+      },
+    ]);
+
+    render(<AICopilotContent viewModel={VM} />);
+
+    // The in-progress rows render; the terminal one does NOT appear under 继续任务.
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-slot="continuing-task"][data-task-id="t-running"]'),
+      ).not.toBeNull();
+    });
+    expect(
+      document.querySelector('[data-slot="continuing-task"][data-task-id="t-await"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-slot="continuing-task"][data-task-id="t-done"]'),
+    ).toBeNull();
+
+    // The global (no-projectId) task is shown but its 继续 button is disabled.
+    const globalResume = document.querySelector(
+      '[data-slot="continuing-resume"][data-task-id="t-global"]',
+    ) as HTMLButtonElement;
+    expect(globalResume).not.toBeNull();
+    expect(globalResume.disabled).toBe(true);
+
+    // Clicking 继续 on the running script task routes to its project's script stage.
+    const resume = document.querySelector(
+      '[data-slot="continuing-resume"][data-task-id="t-running"]',
+    ) as HTMLButtonElement;
+    await user.click(resume);
+    expect(routerPush).toHaveBeenCalledWith("/projects/proj-1/script");
   });
 
   it("clicking a suggested-action chip fills the composer with its label", async () => {

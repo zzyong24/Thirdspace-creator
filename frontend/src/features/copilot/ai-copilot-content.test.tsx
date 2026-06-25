@@ -13,7 +13,7 @@
  *      CopilotDashboard
  *        ├── RecommendedCommands (4 cards)
  *        ├── RecentTasks (real feed; loading/empty state, no fixture rows)
- *        └── ContinuingTasks (no fixture rows; honest empty state)
+ *        └── ContinuingTasks (real in-progress feed; loading/empty state, no fixture rows)
  *      QuickEntries (3 entries)
  *      SmartRecommendation (2 items)
  *  - The dialog closes when `data-overlay-close` is clicked (close button).
@@ -117,11 +117,13 @@ describe("AI Copilot dialog (Task 24)", () => {
     // are no recent-task rows yet — the loading slot is present instead. Honest, not fake.
     expect(dialog.querySelectorAll('[data-slot="recent-task"]')).toHaveLength(0);
     expect(slot(dialog, "recent-tasks-loading")).not.toBeNull();
-    // ContinuingTasks no longer ships fixture rows (cont-1..4 removed): there is no
-    // cross-project in-progress feed op, so the list is empty and renders an honest
-    // 「暂无进行中的任务」 empty state instead of fake progress.
+    // ContinuingTasks is now backed by the REAL global feed (GAP-COP-1 / ai.tasks.list),
+    // filtered to in-progress (queued/running/awaiting_confirmation) tasks. Like
+    // RecentTasks, on first synchronous render the feed is still loading (no fixture
+    // rows), so there are no continuing-task rows yet — the loading slot is present
+    // instead of fake progress.
     expect(dialog.querySelectorAll('[data-slot="continuing-task"]')).toHaveLength(0);
-    expect(slot(dialog, "continuing-tasks-empty")).not.toBeNull();
+    expect(slot(dialog, "continuing-tasks-loading")).not.toBeNull();
     expect(dialog.querySelectorAll('[data-slot="quick-entry"]')).toHaveLength(6);
     expect(dialog.querySelectorAll('[data-slot="smart-recommendation-item"]')).toHaveLength(2);
   });
