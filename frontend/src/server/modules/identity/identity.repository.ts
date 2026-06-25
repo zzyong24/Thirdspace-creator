@@ -24,11 +24,21 @@ export interface RepoDeps {
 export type UserRow = typeof users.$inferSelect;
 export type SessionRow = typeof sessions.$inferSelect;
 
+// The editable profile columns of a `users` row (every key optional; only the
+// provided keys are written). Mirrors the contract `PATCH /me` body plus the
+// service-stamped `updatedAt`.
+export interface UserProfilePatch {
+  displayName?: string;
+  locale?: string;
+  updatedAt: string;
+}
+
 export interface IdentityRepository {
   seedUser(row: UserRow): Promise<void>;
   createUser(row: UserRow): Promise<UserRow>;
   findUserByEmail(email: string): Promise<UserRow | undefined>;
   getUserById(userId: string): Promise<UserRow>;
+  updateUser(userId: string, patch: UserProfilePatch): Promise<UserRow>;
   createSession(input: {
     userId: string;
     tokenHash: string;
@@ -71,6 +81,24 @@ export function createIdentityRepository(
     async getUserById(userId) {
       const rows = await db.select().from(users).where(eq(users.id, userId));
       const row = rows[0];
+      if (!row) throw new Error(`OwnershipError: user not found: ${userId}`);
+      return row;
+    },
+
+    async updateUser(userId, patch) {
+      // User-scoped UPDATE: the WHERE clause pins the row to `userId` so a
+      // patch can never reach another tenant's row. Only the provided profile
+      // keys are written; `updatedAt` is always stamped (service-supplied). The
+      // `.returning()` row is the refreshed DTO source.
+      const typedSet: Partial<UserRow> = { updatedAt: patch.updatedAt };
+      if (patch.displayName !== undefined) typedSet.displayName = patch.displayName;
+      if (patch.locale !== undefined) typedSet.locale = patch.locale;
+      const updated = await db
+        .update(users)
+        .set(typedSet)
+        .where(eq(users.id, userId))
+        .returning();
+      const row = updated[0];
       if (!row) throw new Error(`OwnershipError: user not found: ${userId}`);
       return row;
     },

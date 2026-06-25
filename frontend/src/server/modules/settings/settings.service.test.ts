@@ -119,18 +119,46 @@ const accountReader = async (c: RequestContext) => ({
   updatedAt: NOW,
 });
 
+// Fake accountWriter (Identity's updateProfile stand-in). Echoes the patch over
+// the reader's base DTO so the service's delegation is observable.
+const accountWriter = async (
+  c: RequestContext,
+  patch: { displayName?: string; locale?: string },
+) => ({
+  id: c.userId,
+  email: "z@creatoros.local",
+  displayName: patch.displayName ?? "Zyong",
+  timezone: "Asia/Shanghai",
+  locale: patch.locale ?? "zh-CN",
+  createdAt: NOW,
+  updatedAt: NOW,
+});
+
 describe("settings.service", () => {
   it("getAccount delegates to the injected account reader (userResource shape)", async () => {
-    const svc = createSettingsService(() => makeFakeRepo(), accountReader);
+    const svc = createSettingsService(() => makeFakeRepo(), accountReader, accountWriter);
     const account = await svc.getAccount(ctx);
     expect(account.id).toBe("user-z");
     expect(account.email).toBe("z@creatoros.local");
     expect(account.displayName).toBe("Zyong");
   });
 
+  it("updateAccount delegates to the injected account writer (PATCH /me)", async () => {
+    const svc = createSettingsService(() => makeFakeRepo(), accountReader, accountWriter);
+    const account = await svc.updateAccount(ctx, {
+      displayName: "Renamed",
+      locale: "en-US",
+    });
+    expect(account.id).toBe("user-z");
+    expect(account.displayName).toBe("Renamed");
+    expect(account.locale).toBe("en-US");
+    // Un-patched identity fields fall through to the reader's base values.
+    expect(account.email).toBe("z@creatoros.local");
+  });
+
   it("updatePreferences synthesizes id='pref-'+userId and changes only patched fields", async () => {
     const repo = makeFakeRepo();
-    const svc = createSettingsService(() => repo, accountReader);
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
     const dto = await svc.updatePreferences(ctx, { defaultHome: "projects" });
     expect(dto.id).toBe("pref-user-z");
     expect(dto.userId).toBe("user-z");
@@ -141,7 +169,7 @@ describe("settings.service", () => {
 
   it("setModelConfiguration upserts; secretReference/settings default when omitted", async () => {
     const repo = makeFakeRepo();
-    const svc = createSettingsService(() => repo, accountReader);
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
     const dto = await svc.setModelConfiguration(ctx, "script", {
       provider: "anthropic",
       modelName: "claude-opus-4-8",
@@ -154,7 +182,7 @@ describe("settings.service", () => {
 
   it("resolveModelForCapability fallback chain: exact → isDefault → hard default", async () => {
     const repo = makeFakeRepo();
-    const svc = createSettingsService(() => repo, accountReader);
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
 
     // Hard default when nothing configured.
     const hard = await svc.resolveModelForCapability(ctx, "script");
@@ -180,7 +208,7 @@ describe("settings.service", () => {
 
   it("createAgentConfiguration stamps status:active, empty json, createdAt==updatedAt", async () => {
     const repo = makeFakeRepo();
-    const svc = createSettingsService(() => repo, accountReader);
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
     const dto = await svc.createAgentConfiguration(ctx, {
       name: "研究助理",
       agentType: "research",

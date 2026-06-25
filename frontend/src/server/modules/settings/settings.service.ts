@@ -43,8 +43,28 @@ const HARD_DEFAULT_MODEL: ResolvedModel = {
 /** Reads the authenticated user's account row (Identity's getCurrentUser). */
 export type AccountReader = (ctx: RequestContext) => Promise<UserResource>;
 
+/**
+ * The editable account-profile fields (`PATCH /me`). Every key optional — only
+ * the provided keys are written. Settings does NOT own `users`, so the write is
+ * injected (Identity's updateProfile), mirroring the read-side `accountReader`.
+ */
+export interface AccountProfilePatch {
+  displayName?: string;
+  locale?: string;
+}
+
+/** Writes the authenticated user's profile (Identity's updateProfile). */
+export type AccountWriter = (
+  ctx: RequestContext,
+  patch: AccountProfilePatch,
+) => Promise<UserResource>;
+
 export interface SettingsService {
   getAccount(ctx: RequestContext): Promise<UserResource>;
+  updateAccount(
+    ctx: RequestContext,
+    patch: AccountProfilePatch,
+  ): Promise<UserResource>;
   updatePreferences(
     ctx: RequestContext,
     patch: PreferencePatch,
@@ -125,11 +145,18 @@ function toAgentResource(
 export function createSettingsService(
   repoForCtx: (ctx: RequestContext) => SettingsRepository,
   accountReader: AccountReader,
+  accountWriter: AccountWriter,
 ): SettingsService {
   return {
     async getAccount(ctx) {
       // Delegated to Identity (injected). Settings does not own `users`.
       return accountReader(ctx);
+    },
+
+    async updateAccount(ctx, patch) {
+      // Delegated to Identity (injected) — the same boundary as the read.
+      // Settings owns NO `users` repo; the profile write lives in Identity.
+      return accountWriter(ctx, patch);
     },
 
     async updatePreferences(ctx, patch) {

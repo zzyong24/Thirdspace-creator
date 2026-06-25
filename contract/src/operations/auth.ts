@@ -26,4 +26,24 @@ export const authOperations = {
     response: userResource,
     fr: ["FR-AUTH-REGISTER"],
   }),
+
+  // `PATCH /me` is the second auth action lifted into the contract: the
+  // authenticated user's editable profile fields. The body is a partial patch
+  // (every key optional) over the identity-owned `users` row — `displayName`
+  // backs the Settings 昵称 input and `locale` backs the Settings 系统语言
+  // selector (both previously read-only / local-only桩). `email` / `timezone`
+  // stay out of the editable surface in this wave (email is the login identifier
+  // / unique key; timezone has no dedicated control). The response is the
+  // refreshed public `userResource` so the caller can re-render immediately.
+  patchProfile: defineEndpoint({
+    id: "identity.profile.patch",
+    method: "PATCH",
+    path: "/me",
+    body: z.object({
+      displayName: z.string().min(1).optional(),
+      locale: z.string().min(1).optional(),
+    }),
+    response: userResource,
+    fr: ["FR-AUTH-PROFILE-UPDATE"],
+  }),
 } as const;
