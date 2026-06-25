@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   // runtime instead of trying to bundle the WASM asset.
   serverExternalPackages: [
     "@electric-sql/pglite",
+    // node-postgres (P1 runtime driver) — keep external so its native/dynamic deps resolve
+    // at server runtime instead of being bundled.
+    "pg",
     // The Claude Agent SDK spawns the Claude Code binary as a subprocess — keep it out
     // of the bundle so its runtime resolves at server runtime (research-runner.ts).
     "@anthropic-ai/claude-agent-sdk",
