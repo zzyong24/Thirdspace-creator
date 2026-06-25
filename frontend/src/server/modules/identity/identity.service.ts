@@ -7,7 +7,7 @@ import {
   hashToken,
   verifyPassword,
 } from "./identity.crypto";
-import { AuthenticationError } from "./identity.errors";
+import { AuthenticationError, EmailTakenError } from "./identity.errors";
 
 // Identity service (Module 00, Task 5). The auth state actions + RequestContext
 // derivation. There is no §12 *business* state machine for Identity (foundation
@@ -64,8 +64,20 @@ export interface LoginResult {
   expiresAt: string;
 }
 
+export interface RegisterInput {
+  email: string;
+  password: string;
+  displayName?: string;
+}
+
+// Registration yields the same shape as login — a fresh user DTO plus an active
+// session — so the route can set the session cookie and the new user lands
+// authenticated, exactly like a post-login redirect.
+export type RegisterResult = LoginResult;
+
 export interface IdentityService {
   login(input: LoginInput): Promise<LoginResult>;
+  register(input: RegisterInput): Promise<RegisterResult>;
   resolveContextFromToken(rawToken: string): Promise<RequestContext>;
   getCurrentUser(ctx: RequestContext): Promise<UserDTO>;
   logout(ctx: RequestContext, rawToken: string): Promise<void>;
@@ -105,6 +117,38 @@ export function createIdentityService(
       const { raw, hash } = generateSessionToken();
       const expiresAt = new Date(
         new Date(deps.now()).getTime() + SESSION_TTL_MS,
+      ).toISOString();
+      await repo.createSession({ userId: user.id, tokenHash: hash, expiresAt });
+
+      return { user: toUserDTO(user), rawToken: raw, expiresAt };
+    },
+
+    async register({ email, password, displayName }) {
+      // Email must be unique (users_email_uk). Guard explicitly so the caller
+      // gets a clear EmailTakenError (409) rather than a raw DB constraint
+      // violation; the unique index remains the backstop for a concurrent race.
+      const existing = await repo.findUserByEmail(email);
+      if (existing) throw new EmailTakenError();
+
+      // A brand-new EMPTY account. displayName defaults to the email local-part
+      // when omitted. timezone/locale take neutral defaults (matching the users
+      // NOT NULL columns) — the user can change them later via settings.
+      const nowIso = deps.now();
+      const user = await repo.createUser({
+        id: deps.nextId("user"),
+        email,
+        displayName: displayName?.trim() || email.split("@")[0]!,
+        timezone: "UTC",
+        locale: "en-US",
+        passwordHash: hashPassword(password),
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+
+      // Issue a session exactly like login so the new user lands authenticated.
+      const { raw, hash } = generateSessionToken();
+      const expiresAt = new Date(
+        new Date(nowIso).getTime() + SESSION_TTL_MS,
       ).toISOString();
       await repo.createSession({ userId: user.id, tokenHash: hash, expiresAt });
 

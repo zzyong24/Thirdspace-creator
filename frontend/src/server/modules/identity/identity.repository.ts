@@ -26,6 +26,7 @@ export type SessionRow = typeof sessions.$inferSelect;
 
 export interface IdentityRepository {
   seedUser(row: UserRow): Promise<void>;
+  createUser(row: UserRow): Promise<UserRow>;
   findUserByEmail(email: string): Promise<UserRow | undefined>;
   getUserById(userId: string): Promise<UserRow>;
   createSession(input: {
@@ -48,6 +49,15 @@ export function createIdentityRepository(
     async seedUser(row) {
       // Idempotent seed: a re-run (e.g. a second buildPersistence()) is a no-op.
       await db.insert(users).values(row).onConflictDoNothing();
+    },
+
+    async createUser(row) {
+      // Real INSERT (NOT onConflictDoNothing): a duplicate email must surface so
+      // the service can raise EmailTakenError (409). The service guards email
+      // uniqueness first via findUserByEmail; the DB's users_email_uk unique
+      // index is the backstop for a race. `.returning()` yields the new row.
+      const inserted = await db.insert(users).values(row).returning();
+      return inserted[0]!;
     },
 
     async findUserByEmail(email) {

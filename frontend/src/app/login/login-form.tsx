@@ -17,6 +17,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -124,6 +125,16 @@ export function LoginForm(): React.JSX.Element {
       <Button type="submit" disabled={!canSubmit} className="w-full">
         登录
       </Button>
+
+      <p className="text-center text-sm text-muted-foreground">
+        还没有账号？{" "}
+        <Link
+          href="/register"
+          className="font-medium text-foreground underline"
+        >
+          注册
+        </Link>
+      </p>
     </form>
   );
 }
