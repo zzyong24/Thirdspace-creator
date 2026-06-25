@@ -31,4 +31,21 @@ const canonicalServerCtx: RequestContext = {
 // Default server client — a thin binding to the canonical ctx. Existing green
 // pages import `client` unchanged; once a page derives its real session ctx it
 // switches to `createServerClient(ctx)`.
+/**
+ * @deprecated Canonical-ctx singleton — SSR seam / test fixtures ONLY.
+ *
+ * This client is hard-bound to `canonicalServerCtx` (`user-zyongzhu`), so every
+ * read it issues is scoped to the seeded canonical tenant regardless of who is
+ * signed in. Using it from a production page leaks the canonical tenant's data
+ * to other users / breaks multi-tenant isolation.
+ *
+ * Production pages and feature data loaders MUST derive the per-request
+ * `RequestContext` from the session and call `createServerClient(session.ctx)`
+ * instead. Reach for this singleton only when there is genuinely no session
+ * (pure SSR scaffolding) or in tests that intentionally pin the canonical ctx.
+ *
+ * Enforced by the `no-restricted-imports` ESLint rule (currently `warn` while
+ * pages finish migrating; bump to `error` once `src/features/**` and
+ * `src/app/**` route modules no longer import it).
+ */
 export const client = createServerClient(canonicalServerCtx);
