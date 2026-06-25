@@ -789,14 +789,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // parity); new creates get collision-free ids distinct from the slug seeds.
   // `createSeq` lives at build scope (NOT per-request) so ids stay stable across
   // the many per-ctx repos the factory mints below.
+  // Real persistent DB (P1): the deterministic counter RESETS each process but rows
+  // PERSIST, so generated ids + timestamps must be PROCESS-UNIQUE — otherwise runtime
+  // creates (register user / login session / new project / activity…) collide on PK
+  // across restarts (the `duplicate key … _pkey` bug). Seeds use explicit slug ids +
+  // fixture timestamps, so seed idempotency is unaffected. Tests / pglite (no
+  // DATABASE_URL) keep the fully-deterministic `p` base + FIXED_NOW for reproducibility.
+  const persistent = Boolean(process.env.DATABASE_URL);
+  const idBase = persistent ? globalThis.crypto.randomUUID().slice(0, 8) : "p";
   let createSeq = 0;
   const deps = {
-    now: () => FIXED_NOW_ISO,
-    // Prefix-generic id minting so every module (projects/activities/tags/
-    // entity_tags) gets a stable, collision-free `<prefix>-p-<n>` id. Projects
-    // historically used `project-p-`/`activity-p-`; the same scheme now serves
-    // the taxonomy `tag`/`entitytag` prefixes.
-    nextId: (prefix: string) => `${prefix}-p-${++createSeq}`,
+    now: persistent ? () => new Date().toISOString() : () => FIXED_NOW_ISO,
+    nextId: (prefix: string) => `${prefix}-${idBase}-${++createSeq}`,
   };
 
   // Projects (module 05): one user-scoped repository over the shared db (every
