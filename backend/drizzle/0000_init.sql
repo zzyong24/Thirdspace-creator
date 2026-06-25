@@ -1,4 +1,3 @@
--- projects
 CREATE TABLE IF NOT EXISTS projects (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -17,6 +16,7 @@ CREATE TABLE IF NOT EXISTS projects (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS project_activities (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS project_activities (
   event_data JSONB NOT NULL,
   occurred_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS project_stages (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
@@ -38,6 +39,7 @@ CREATE TABLE IF NOT EXISTS project_stages (
   updated_at TEXT NOT NULL,
   UNIQUE (project_id, stage)
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS project_target_platforms (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
@@ -47,6 +49,7 @@ CREATE TABLE IF NOT EXISTS project_target_platforms (
   created_at TEXT NOT NULL,
   UNIQUE (project_id, platform)
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS content_outputs (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
@@ -61,6 +64,7 @@ CREATE TABLE IF NOT EXISTS content_outputs (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS output_stages (
   id TEXT PRIMARY KEY,
   content_output_id TEXT NOT NULL,
@@ -73,6 +77,7 @@ CREATE TABLE IF NOT EXISTS output_stages (
   updated_at TEXT NOT NULL,
   UNIQUE (content_output_id, stage)
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
@@ -86,7 +91,6 @@ CREATE TABLE IF NOT EXISTS tasks (
   completed_at TEXT
 );
 --> statement-breakpoint
--- identity
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL,
@@ -97,6 +101,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -105,10 +110,11 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires_at TEXT NOT NULL,
   revoked_at TEXT
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_uk ON users(email);
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS sessions_token_hash_uk ON sessions(token_hash);
 --> statement-breakpoint
--- taxonomy
 CREATE TABLE IF NOT EXISTS tags (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -119,7 +125,9 @@ CREATE TABLE IF NOT EXISTS tags (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS tags_user_name_uq ON tags(user_id, name);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS entity_tags (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -128,11 +136,13 @@ CREATE TABLE IF NOT EXISTS entity_tags (
   entity_id TEXT NOT NULL,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS entity_tags_tag_entity_uq ON entity_tags(tag_id, entity_type, entity_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS entity_tags_entity_ix ON entity_tags(user_id, entity_type, entity_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS entity_tags_tag_ix ON entity_tags(user_id, tag_id);
 --> statement-breakpoint
--- notifications
 CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -144,10 +154,11 @@ CREATE TABLE IF NOT EXISTS notifications (
   read_at TEXT,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS notifications_user_created_ix ON notifications(user_id, created_at);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS notifications_user_unread_ix ON notifications(user_id, read_at);
 --> statement-breakpoint
--- search
 CREATE TABLE IF NOT EXISTS search_documents (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -159,8 +170,11 @@ CREATE TABLE IF NOT EXISTS search_documents (
   embedding JSONB NOT NULL DEFAULT '[]',
   indexed_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS search_documents_user_entity_uniq ON search_documents (user_id, entity_type, entity_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS search_documents_user_indexed_ix ON search_documents(user_id, indexed_at);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS search_history (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -169,9 +183,9 @@ CREATE TABLE IF NOT EXISTS search_history (
   result_count INTEGER NOT NULL DEFAULT 0,
   searched_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS search_history_user_searched_ix ON search_history(user_id, searched_at);
 --> statement-breakpoint
--- settings
 CREATE TABLE IF NOT EXISTS user_preferences (
   user_id TEXT PRIMARY KEY,
   default_home TEXT NOT NULL,
@@ -181,6 +195,7 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   file_naming_rule TEXT NOT NULL DEFAULT '',
   analytics_enabled BOOLEAN NOT NULL DEFAULT TRUE
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS model_configurations (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -193,6 +208,7 @@ CREATE TABLE IF NOT EXISTS model_configurations (
   api_format TEXT NOT NULL DEFAULT 'anthropic',
   is_default BOOLEAN NOT NULL DEFAULT FALSE
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS agent_configurations (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -205,9 +221,9 @@ CREATE TABLE IF NOT EXISTS agent_configurations (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS model_config_user_capability ON model_configurations (user_id, capability);
 --> statement-breakpoint
--- knowledge
 CREATE TABLE IF NOT EXISTS knowledge_items (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -222,7 +238,9 @@ CREATE TABLE IF NOT EXISTS knowledge_items (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS knowledge_items_user_created_ix ON knowledge_items(user_id, created_at);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS knowledge_revisions (
   id TEXT PRIMARY KEY,
   knowledge_item_id TEXT NOT NULL,
@@ -231,7 +249,9 @@ CREATE TABLE IF NOT EXISTS knowledge_revisions (
   structured_data JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS knowledge_revisions_item_ix ON knowledge_revisions(knowledge_item_id, revision_number);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS knowledge_relations (
   id TEXT PRIMARY KEY,
   source_knowledge_id TEXT NOT NULL,
@@ -240,9 +260,9 @@ CREATE TABLE IF NOT EXISTS knowledge_relations (
   strength TEXT NOT NULL DEFAULT '1',
   created_by_type TEXT NOT NULL DEFAULT 'user'
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS knowledge_relations_source_ix ON knowledge_relations(source_knowledge_id);
 --> statement-breakpoint
--- assets
 CREATE TABLE IF NOT EXISTS assets (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -256,7 +276,9 @@ CREATE TABLE IF NOT EXISTS assets (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS assets_user_status_ix ON assets(user_id, status);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS asset_files (
   id TEXT PRIMARY KEY,
   asset_id TEXT NOT NULL,
@@ -271,7 +293,9 @@ CREATE TABLE IF NOT EXISTS asset_files (
   media_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS asset_files_asset_version_ux ON asset_files(asset_id, version_number);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS asset_uploads (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -284,7 +308,6 @@ CREATE TABLE IF NOT EXISTS asset_uploads (
   created_at TEXT NOT NULL
 );
 --> statement-breakpoint
--- artifacts
 CREATE TABLE IF NOT EXISTS artifacts (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -299,7 +322,9 @@ CREATE TABLE IF NOT EXISTS artifacts (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS artifacts_user_project_ix ON artifacts(user_id, project_id, created_at);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS artifact_versions (
   id TEXT PRIMARY KEY,
   artifact_id TEXT NOT NULL,
@@ -311,7 +336,9 @@ CREATE TABLE IF NOT EXISTS artifact_versions (
   ai_task_id TEXT,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS artifact_versions_artifact_ix ON artifact_versions(artifact_id, version_number);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS artifact_relations (
   id TEXT PRIMARY KEY,
   source_artifact_id TEXT NOT NULL,
@@ -319,7 +346,9 @@ CREATE TABLE IF NOT EXISTS artifact_relations (
   relation_type TEXT NOT NULL,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS artifact_relations_source_ix ON artifact_relations(source_artifact_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS thesis_nodes (
   id TEXT PRIMARY KEY,
   artifact_version_id TEXT NOT NULL,
@@ -329,7 +358,9 @@ CREATE TABLE IF NOT EXISTS thesis_nodes (
   content TEXT NOT NULL DEFAULT '',
   position INTEGER NOT NULL DEFAULT 0
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS thesis_nodes_version_ix ON thesis_nodes(artifact_version_id, position);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS script_sections (
   id TEXT PRIMARY KEY,
   artifact_version_id TEXT NOT NULL,
@@ -341,7 +372,9 @@ CREATE TABLE IF NOT EXISTS script_sections (
   start_seconds REAL,
   end_seconds REAL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS script_sections_version_ix ON script_sections(artifact_version_id, position);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS evidence_links (
   id TEXT PRIMARY KEY,
   artifact_version_id TEXT NOT NULL,
@@ -353,7 +386,9 @@ CREATE TABLE IF NOT EXISTS evidence_links (
   confidence REAL NOT NULL DEFAULT 1,
   position INTEGER NOT NULL DEFAULT 0
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS evidence_links_version_ix ON evidence_links(artifact_version_id, position);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS timeline_segments (
   id TEXT PRIMARY KEY,
   artifact_version_id TEXT NOT NULL,
@@ -364,9 +399,9 @@ CREATE TABLE IF NOT EXISTS timeline_segments (
   end_ms INTEGER NOT NULL DEFAULT 0,
   production_data JSONB NOT NULL DEFAULT '{}'::jsonb
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS timeline_segments_version_ix ON timeline_segments(artifact_version_id, position);
 --> statement-breakpoint
--- production
 CREATE TABLE IF NOT EXISTS productions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -379,8 +414,11 @@ CREATE TABLE IF NOT EXISTS productions (
   completed_at TEXT,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS productions_output_ux ON productions(content_output_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS productions_user_ix ON productions(user_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS production_segments (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -392,7 +430,9 @@ CREATE TABLE IF NOT EXISTS production_segments (
   end_ms INTEGER NOT NULL DEFAULT 0,
   segment_config JSONB NOT NULL DEFAULT '{}'::jsonb
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS production_segments_production_ix ON production_segments(production_id, position);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS segment_assets (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -401,7 +441,9 @@ CREATE TABLE IF NOT EXISTS segment_assets (
   usage_type TEXT NOT NULL,
   position INTEGER NOT NULL DEFAULT 0
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS segment_assets_segment_ix ON segment_assets(production_segment_id, position);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS export_records (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -416,9 +458,9 @@ CREATE TABLE IF NOT EXISTS export_records (
   created_at TEXT NOT NULL,
   completed_at TEXT
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS export_records_production_ix ON export_records(production_id);
 --> statement-breakpoint
--- publishing
 CREATE TABLE IF NOT EXISTS publications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -435,9 +477,13 @@ CREATE TABLE IF NOT EXISTS publications (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS publications_external_ux ON publications(platform, external_id) WHERE external_id IS NOT NULL;
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS publications_user_ix ON publications(user_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS publications_output_ix ON publications(content_output_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS publication_revisions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -452,9 +498,9 @@ CREATE TABLE IF NOT EXISTS publication_revisions (
   platform_settings JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS publication_revisions_pub_ix ON publication_revisions(publication_id, revision_number);
 --> statement-breakpoint
--- analytics
 CREATE TABLE IF NOT EXISTS metric_snapshots (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -465,9 +511,13 @@ CREATE TABLE IF NOT EXISTS metric_snapshots (
   raw_metrics JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS uq_metric_snapshot_pub_source_captured ON metric_snapshots (publication_id, source, captured_at);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_metric_snapshots_pub ON metric_snapshots (user_id, publication_id, captured_at);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_metric_snapshots_user ON metric_snapshots (user_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS metric_values (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -477,7 +527,9 @@ CREATE TABLE IF NOT EXISTS metric_values (
   unit TEXT NOT NULL DEFAULT '',
   dimensions JSONB NOT NULL DEFAULT '{}'::jsonb
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_metric_values_snapshot ON metric_values (user_id, metric_snapshot_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS retention_points (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -487,7 +539,9 @@ CREATE TABLE IF NOT EXISTS retention_points (
   retention_rate DOUBLE PRECISION NOT NULL,
   viewer_count INTEGER NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_retention_points_pub ON retention_points (user_id, publication_id, position_ms);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS audience_snapshots (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -498,9 +552,9 @@ CREATE TABLE IF NOT EXISTS audience_snapshots (
   percentage DOUBLE PRECISION NOT NULL,
   audience_count INTEGER NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_audience_snapshots_pub ON audience_snapshots (user_id, publication_id);
 --> statement-breakpoint
--- ingestion
 CREATE TABLE IF NOT EXISTS external_sources (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -511,7 +565,9 @@ CREATE TABLE IF NOT EXISTS external_sources (
   configuration JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_external_sources_user ON external_sources (user_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS ingestion_runs (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -525,8 +581,11 @@ CREATE TABLE IF NOT EXISTS ingestion_runs (
   started_at TEXT,
   completed_at TEXT
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS ux_ingestion_runs_source_idem ON ingestion_runs (external_source_id, idempotency_key);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_ingestion_runs_user ON ingestion_runs (user_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS ingestion_errors (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -536,7 +595,9 @@ CREATE TABLE IF NOT EXISTS ingestion_errors (
   error_message TEXT NOT NULL DEFAULT '',
   rejected_payload JSONB NOT NULL DEFAULT '{}'::jsonb
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_ingestion_errors_run ON ingestion_errors (user_id, ingestion_run_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS ingestion_records (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -545,10 +606,11 @@ CREATE TABLE IF NOT EXISTS ingestion_records (
   result TEXT NOT NULL,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS ux_ingestion_records_run_key ON ingestion_records (ingestion_run_id, record_key);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_ingestion_records_run ON ingestion_records (user_id, ingestion_run_id);
 --> statement-breakpoint
--- reviews
 CREATE TABLE IF NOT EXISTS reviews (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -562,7 +624,9 @@ CREATE TABLE IF NOT EXISTS reviews (
   created_at TEXT NOT NULL,
   completed_at TEXT
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_reviews_project ON reviews (user_id, project_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS review_insights (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -573,16 +637,18 @@ CREATE TABLE IF NOT EXISTS review_insights (
   evidence JSONB NOT NULL DEFAULT '{}'::jsonb,
   priority INTEGER NOT NULL DEFAULT 0
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_review_insights_review ON review_insights (user_id, review_id, priority);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS review_publications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   review_id TEXT NOT NULL,
   publication_id TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS reviews_review_publication_uq ON review_publications (review_id, publication_id);
 --> statement-breakpoint
--- learnings
 CREATE TABLE IF NOT EXISTS learnings (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -596,7 +662,9 @@ CREATE TABLE IF NOT EXISTS learnings (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_learnings_status ON learnings (user_id, validation_status);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS learning_applications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -608,9 +676,9 @@ CREATE TABLE IF NOT EXISTS learning_applications (
   applied_at TEXT NOT NULL,
   evaluated_at TEXT
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_learning_apps_learning ON learning_applications (user_id, learning_id);
 --> statement-breakpoint
--- ai
 CREATE TABLE IF NOT EXISTS ai_conversations (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -619,7 +687,9 @@ CREATE TABLE IF NOT EXISTS ai_conversations (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_ai_conversations_user ON ai_conversations (user_id, updated_at);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS ai_messages (
   id TEXT PRIMARY KEY,
   conversation_id TEXT NOT NULL,
@@ -629,7 +699,9 @@ CREATE TABLE IF NOT EXISTS ai_messages (
   model_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_ai_messages_conversation ON ai_messages (conversation_id, created_at);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS ai_tasks (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -647,8 +719,11 @@ CREATE TABLE IF NOT EXISTS ai_tasks (
   session_id TEXT,
   cost_usd REAL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS ai_tasks_user_idempotency ON ai_tasks (user_id, idempotency_key);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_ai_tasks_status ON ai_tasks (status);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS ai_task_references (
   id TEXT PRIMARY KEY,
   ai_task_id TEXT NOT NULL,
@@ -656,7 +731,9 @@ CREATE TABLE IF NOT EXISTS ai_task_references (
   entity_id TEXT NOT NULL,
   relation_type TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_ai_task_refs_task ON ai_task_references (ai_task_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS ai_task_results (
   id TEXT PRIMARY KEY,
   ai_task_id TEXT NOT NULL,
@@ -666,9 +743,9 @@ CREATE TABLE IF NOT EXISTS ai_task_results (
   asset_id TEXT,
   result_data JSONB NOT NULL DEFAULT '{}'::jsonb
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_ai_task_results_task ON ai_task_results (ai_task_id);
 --> statement-breakpoint
--- positioning
 CREATE TABLE IF NOT EXISTS creator_profiles (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -680,7 +757,9 @@ CREATE TABLE IF NOT EXISTS creator_profiles (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS uq_creator_profiles_user ON creator_profiles (user_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS positioning_statements (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -693,11 +772,13 @@ CREATE TABLE IF NOT EXISTS positioning_statements (
   ai_task_id TEXT,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS uq_positioning_statements_version ON positioning_statements (profile_id, version_number);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_positioning_statements_current ON positioning_statements (user_id, profile_id, version_number DESC);
+--> statement-breakpoint
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS positioning_statement_id TEXT;
 --> statement-breakpoint
--- monetization
 CREATE TABLE IF NOT EXISTS products (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -710,6 +791,7 @@ CREATE TABLE IF NOT EXISTS products (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS offers (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -723,7 +805,9 @@ CREATE TABLE IF NOT EXISTS offers (
   status TEXT NOT NULL DEFAULT 'active',
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS uq_offers_product_version ON offers (user_id, product_id, version);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS leads (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -739,8 +823,11 @@ CREATE TABLE IF NOT EXISTS leads (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS uq_leads_ingest_key ON leads (user_id, ingestion_run_id, record_key);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_leads_funnel ON leads (user_id, attributed_content_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS conversion_events (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -754,8 +841,11 @@ CREATE TABLE IF NOT EXISTS conversion_events (
   ingestion_run_id TEXT,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS uq_conversion_dedup ON conversion_events (user_id, lead_id, event_type, occurred_at);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_conversion_funnel ON conversion_events (user_id, lead_id);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS content_output_products (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -764,9 +854,9 @@ CREATE TABLE IF NOT EXISTS content_output_products (
   content_role TEXT,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS uq_content_output_products ON content_output_products (user_id, content_output_id, product_id);
 --> statement-breakpoint
--- candidate
 CREATE TABLE IF NOT EXISTS candidates (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -783,6 +873,7 @@ CREATE TABLE IF NOT EXISTS candidates (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS audience_signals (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -794,6 +885,7 @@ CREATE TABLE IF NOT EXISTS audience_signals (
   ingestion_run_id TEXT,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS topic_promotions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -801,11 +893,13 @@ CREATE TABLE IF NOT EXISTS topic_promotions (
   project_id TEXT NOT NULL,
   promoted_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS ix_audience_signals_candidate ON audience_signals (linked_candidate_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS ix_candidates_user_status ON candidates (user_id, status);
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS uq_topic_promotions_candidate ON topic_promotions (candidate_id);
 --> statement-breakpoint
--- calibration
 CREATE TABLE IF NOT EXISTS rubrics (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -813,6 +907,7 @@ CREATE TABLE IF NOT EXISTS rubrics (
   current_version_id TEXT,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS rubric_versions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -822,7 +917,9 @@ CREATE TABLE IF NOT EXISTS rubric_versions (
   change_summary TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS rubric_versions_rubric_ver_uq ON rubric_versions (rubric_id, version_number);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS predictions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -837,6 +934,7 @@ CREATE TABLE IF NOT EXISTS predictions (
   locked_at TEXT,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS calibration_results (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -846,10 +944,11 @@ CREATE TABLE IF NOT EXISTS calibration_results (
   deviation JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS calibration_results_prediction_uq ON calibration_results (prediction_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS calibration_results_run_idx ON calibration_results (ingestion_run_id);
 --> statement-breakpoint
--- platform-account
 CREATE TABLE IF NOT EXISTS platform_accounts (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -861,14 +960,19 @@ CREATE TABLE IF NOT EXISTS platform_accounts (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS platform_accounts_handle_ux ON platform_accounts(user_id, platform, account_handle);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS platform_accounts_user_created_ix ON platform_accounts(user_id, created_at);
+--> statement-breakpoint
 ALTER TABLE publications ADD COLUMN IF NOT EXISTS account_id TEXT;
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS publications_account_ix ON publications(account_id);
+--> statement-breakpoint
 ALTER TABLE project_target_platforms ADD COLUMN IF NOT EXISTS account_id TEXT;
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS project_target_platforms_account_ix ON project_target_platforms(account_id);
 --> statement-breakpoint
--- content-calendar
 CREATE TABLE IF NOT EXISTS content_calendar_entries (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -882,6 +986,7 @@ CREATE TABLE IF NOT EXISTS content_calendar_entries (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS publishing_cadences (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -891,10 +996,11 @@ CREATE TABLE IF NOT EXISTS publishing_cadences (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS content_calendar_entries_window_ix ON content_calendar_entries(user_id, account_id, planned_at);
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS publishing_cadences_account_ux ON publishing_cadences(user_id, account_id);
 --> statement-breakpoint
--- material-links
 CREATE TABLE IF NOT EXISTS material_links (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -907,5 +1013,7 @@ CREATE TABLE IF NOT EXISTS material_links (
   added_by_type TEXT NOT NULL DEFAULT 'user',
   created_at TEXT NOT NULL
 );
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS material_links_user_project_ix ON material_links(user_id, project_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS material_links_entity_ix ON material_links(user_id, entity_type, entity_id);

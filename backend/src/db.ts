@@ -23,29 +23,20 @@ import * as calibrationSchema from "./schema/calibration";
 import * as platformAccountSchema from "./schema/platform-account";
 import * as contentCalendarSchema from "./schema/content-calendar";
 import * as materialLinksSchema from "./schema/material-links";
-import { PROJECTS_DDL } from "./schema/projects";
-import { IDENTITY_DDL } from "./schema/identity";
-import { TAXONOMY_DDL } from "./schema/taxonomy";
-import { NOTIFICATIONS_DDL } from "./schema/notifications";
-import { SEARCH_DDL } from "./schema/search";
-import { SETTINGS_DDL } from "./schema/settings";
-import { KNOWLEDGE_DDL } from "./schema/knowledge";
-import { ASSETS_DDL } from "./schema/assets";
-import { ARTIFACTS_DDL } from "./schema/artifacts";
-import { PRODUCTION_DDL } from "./schema/production";
-import { PUBLISHING_DDL } from "./schema/publishing";
-import { ANALYTICS_DDL } from "./schema/analytics";
-import { INGESTION_DDL } from "./schema/ingestion";
-import { REVIEWS_DDL } from "./schema/reviews";
-import { LEARNINGS_DDL } from "./schema/learnings";
-import { AI_DDL } from "./schema/ai";
-import { POSITIONING_DDL } from "./schema/positioning";
-import { MONETIZATION_DDL } from "./schema/monetization";
-import { CANDIDATE_DDL } from "./schema/candidate";
-import { CALIBRATION_DDL } from "./schema/calibration";
-import { PLATFORM_ACCOUNT_DDL } from "./schema/platform-account";
-import { CONTENT_CALENDAR_DDL } from "./schema/content-calendar";
-import { MATERIAL_LINKS_DDL } from "./schema/material-links";
+import { Pool } from "pg";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
+import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
+import { migrate as migratePglite } from "drizzle-orm/pglite/migrator";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Versioned migrations live in backend/drizzle (baseline 0000_init derived from the
+// per-module *_DDL). The pglite (tests) and node-postgres (runtime) migrators apply this
+// ONE folder, so test and runtime schemas share a single source.
+const MIGRATIONS_FOLDER = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../drizzle",
+);
 
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
@@ -91,53 +82,36 @@ export async function createDb(options: CreateDbOptions = {}): Promise<{
   client: PGlite;
 }> {
   const client = options.dataDir ? new PGlite(options.dataDir) : new PGlite();
-  await client.exec(PROJECTS_DDL);
-  await client.exec(IDENTITY_DDL);
-  await client.exec(TAXONOMY_DDL);
-  await client.exec(NOTIFICATIONS_DDL);
-  await client.exec(SEARCH_DDL);
-  await client.exec(SETTINGS_DDL);
-  await client.exec(KNOWLEDGE_DDL);
-  await client.exec(ASSETS_DDL);
-  await client.exec(ARTIFACTS_DDL);
-  await client.exec(PRODUCTION_DDL);
-  await client.exec(PUBLISHING_DDL);
-  await client.exec(ANALYTICS_DDL);
-  await client.exec(INGESTION_DDL);
-  await client.exec(REVIEWS_DDL);
-  await client.exec(LEARNINGS_DDL);
-  await client.exec(AI_DDL);
-  // Positioning (module 17, Wave 5) — runs AFTER PROJECTS_DDL so its ALTER TABLE
-  // projects ADD COLUMN positioning_statement_id finds the projects table.
-  await client.exec(POSITIONING_DDL);
-  // Monetization (module 18, Wave 5+) — 七步⑦ 变现/漏斗. Independent tables; runs
-  // after the base modules. All CREATE … IF NOT EXISTS (idempotent).
-  await client.exec(MONETIZATION_DDL);
-  // Candidate (module 19, Wave 5) — 七步③ 选题情报层 (Candidate + AudienceSignal +
-  // TopicPromotion). Independent tables; runs after the base modules. All
-  // CREATE … IF NOT EXISTS (idempotent).
-  await client.exec(CANDIDATE_DDL);
-  // Calibration (module 20, Wave 5–7) — 七步⑤⑥ 校准闭环 (Rubric + RubricVersion +
-  // Prediction + CalibrationResult). Independent tables; runs after the base modules.
-  // All CREATE … IF NOT EXISTS (idempotent).
-  await client.exec(CALIBRATION_DDL);
-  // PlatformAccount (module 21, Wave 5–7) — 七步⑤ 多账号矩阵. Runs AFTER
-  // PROJECTS_DDL + PUBLISHING_DDL so its ALTER TABLE publications / project_target_
-  // platforms ADD COLUMN account_id finds the target tables. The platform_accounts
-  // table + its consumer-column ALTERs are all CREATE/ADD … IF NOT EXISTS (idempotent).
-  await client.exec(PLATFORM_ACCOUNT_DDL);
-  // ContentCalendar (module 22, Wave 5–7) — 七步⑦ 发布节奏 / 内容日历. Independent
-  // tables (content_calendar_entries + publishing_cadences) keyed by account_id (a
-  // soft FK validated in the service via PlatformAccountService, no DB FK across
-  // module schemas). All CREATE … IF NOT EXISTS (idempotent).
-  await client.exec(CONTENT_CALENDAR_DDL);
-  // MaterialLinks (用料链 / Bill-of-Materials, Plan A4) — the self-contained edge
-  // linking the knowledge/asset libraries to a project/output (role + stage +
-  // provenance). Independent table, no cross-module FK; CREATE … IF NOT EXISTS
-  // (idempotent). Runs after the base modules.
-  await client.exec(MATERIAL_LINKS_DDL);
   const db = drizzle(client, { schema });
+  // Apply the same versioned migrations the runtime uses. pglite is Postgres-WASM, so the
+  // baseline drizzle/0000_init.sql is identical across drivers. Replaces the old
+  // per-module client.exec(*_DDL) sequence — the schema is now built by the migration.
+  await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
   return { db, client };
+}
+
+export interface RuntimeDb {
+  db: Db;
+  pool: Pool;
+}
+
+// Runtime (dev/prod) db over a REAL Postgres via node-postgres. Reads DATABASE_URL,
+// applies the versioned migrations, returns a Drizzle db typed as the shared `Db`. The
+// node-postgres and pglite query APIs are identical at the PgDatabase level, so the single
+// localized cast here lets every repo stay typed against one `Db`. Caller owns pool.end().
+export async function createRuntimeDb(
+  options: { connectionString?: string } = {},
+): Promise<RuntimeDb> {
+  const connectionString = options.connectionString ?? process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error(
+      "createRuntimeDb: DATABASE_URL is not set (see .env.local / docker-compose.yml).",
+    );
+  }
+  const pool = new Pool({ connectionString });
+  const db = drizzlePg(pool, { schema });
+  await migratePg(db, { migrationsFolder: MIGRATIONS_FOLDER });
+  return { db: db as unknown as Db, pool };
 }
 
 export { schema };

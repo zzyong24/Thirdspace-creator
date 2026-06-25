@@ -62,13 +62,20 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(HERE, "../drizzle");
 mkdirSync(resolve(OUT, "meta"), { recursive: true });
 
-// One chunk per module, separated by drizzle's statement-breakpoint marker. Each chunk is
-// itself multi-statement DDL (CREATE TABLE / INDEX / ALTER) — run as a single exec by both
-// the node-postgres and pglite migrators (simple-query protocol allows multi-statement).
-const sql =
-  ORDER.map(([name, ddl]) => `-- ${name}\n${ddl.trim()}`).join(
-    "\n--> statement-breakpoint\n",
-  ) + "\n";
+// Split each module's DDL into INDIVIDUAL statements, one per drizzle statement-breakpoint.
+// The pglite migrator runs each chunk as a prepared statement, which permits exactly ONE
+// command — so multi-statement chunks fail ("cannot insert multiple commands"). One
+// statement per breakpoint works on both pglite and node-postgres. Safe to split on ';'
+// because the DDL contains no functions / triggers / dollar-quoted bodies (verified).
+function splitStatements(ddl: string): string[] {
+  return ddl
+    .split(";")
+    .map((s) => s.trim())
+    .filter((s) => s.replace(/--[^\n]*/g, "").trim().length > 0)
+    .map((s) => `${s};`);
+}
+const statements = ORDER.flatMap(([, ddl]) => splitStatements(ddl));
+const sql = statements.join("\n--> statement-breakpoint\n") + "\n";
 writeFileSync(resolve(OUT, "0000_init.sql"), sql, "utf8");
 
 const journal = {
