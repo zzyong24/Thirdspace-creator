@@ -24,11 +24,13 @@
  * contract. A real project NEVER renders "未找到项目".
  */
 
-import { client } from "@/lib/contract-client.server";
+import { createServerClient } from "@/lib/contract-client.server";
+import { resolveSession } from "@/lib/session.server";
 import { ProductionWorkspacePage } from "@/features/production/production-workspace-page";
 import {
   buildProductionWorkspaceViewModel,
   countAssetLibrary,
+  type ProductionDataClient,
 } from "@/features/production/production-workspace-data";
 import type { ProductionWiring } from "@/features/production/production-interactive-region";
 
@@ -38,8 +40,11 @@ interface ProductionWorkspaceRouteProps {
 
 // Slug → canonical project id, resolved against the REAL persisted project list
 // (projects.list). Mirrors the selector's resolveProjectIdSlug but sourced from
-// the server client instead of the fixture dataset.
-async function resolveProjectId(slug: string): Promise<string> {
+// the (user-scoped) server client instead of the fixture dataset.
+async function resolveProjectId(
+  client: ProductionDataClient,
+  slug: string,
+): Promise<string> {
   if (!slug) return slug;
   try {
     const projects = (await client.listProjects({
@@ -59,7 +64,10 @@ async function resolveProjectId(slug: string): Promise<string> {
 // The project's primary ContentOutput — prefer a `*-main` output, else the first
 // output owned by the project — read via the REAL `projects.outputs.list` op.
 // Returns null when the project has no output.
-async function resolvePrimaryOutputId(projectId: string): Promise<string | null> {
+async function resolvePrimaryOutputId(
+  client: ProductionDataClient,
+  projectId: string,
+): Promise<string | null> {
   try {
     const outputs = (await client.listOutputs({
       params: { projectId },
@@ -74,9 +82,12 @@ async function resolvePrimaryOutputId(projectId: string): Promise<string | null>
   }
 }
 
-async function resolveWiring(slug: string): Promise<ProductionWiring | undefined> {
-  const projectId = await resolveProjectId(slug);
-  const outputId = await resolvePrimaryOutputId(projectId);
+async function resolveWiring(
+  client: ProductionDataClient,
+  slug: string,
+): Promise<ProductionWiring | undefined> {
+  const projectId = await resolveProjectId(client, slug);
+  const outputId = await resolvePrimaryOutputId(client, projectId);
   if (outputId === null) return undefined;
   try {
     const production = (await client.getOutputProduction({
@@ -95,10 +106,19 @@ export default async function ProductionWorkspaceRoute({
   params,
 }: ProductionWorkspaceRouteProps) {
   const { projectId } = await params;
+  // Session → ctx (layout already guarded). No session → fixture-deriving page.
+  const session = await resolveSession();
+  if (!session) {
+    return <ProductionWorkspacePage projectId={projectId} />;
+  }
+  // User-scoped reads: an empty account reads empty, not the canonical seed.
+  const client = createServerClient(
+    session.ctx,
+  ) as unknown as ProductionDataClient;
   const [wiring, viewModel, assetLibraryTotal] = await Promise.all([
-    resolveWiring(projectId),
-    buildProductionWorkspaceViewModel(projectId),
-    countAssetLibrary(),
+    resolveWiring(client, projectId),
+    buildProductionWorkspaceViewModel(projectId, client),
+    countAssetLibrary(client),
   ]);
   return (
     <ProductionWorkspacePage

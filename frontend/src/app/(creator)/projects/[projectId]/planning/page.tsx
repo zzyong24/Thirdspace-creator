@@ -17,7 +17,12 @@
  */
 
 import { PlanningWorkspacePage } from "@/features/planning/planning-workspace-page";
-import { buildPlanningWorkspaceViewModel } from "@/features/planning/planning-workspace-data";
+import {
+  buildPlanningWorkspaceViewModel,
+  type PlanningDataClient,
+} from "@/features/planning/planning-workspace-data";
+import { createServerClient } from "@/lib/contract-client.server";
+import { resolveSession } from "@/lib/session.server";
 
 interface PlanningWorkspaceRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -27,8 +32,17 @@ export default async function PlanningWorkspaceRoute({
   params,
 }: PlanningWorkspaceRouteProps) {
   const { projectId } = await params;
+  // Session → ctx (layout already guarded). No session → fixture-deriving page.
+  const session = await resolveSession();
+  if (!session) {
+    return <PlanningWorkspacePage projectId={projectId} />;
+  }
+  // User-scoped read: an empty account reads empty, not the canonical seed.
+  const client = createServerClient(
+    session.ctx,
+  ) as unknown as PlanningDataClient;
   const { viewModel, thesisArtifactId } =
-    await buildPlanningWorkspaceViewModel(projectId);
+    await buildPlanningWorkspaceViewModel(projectId, client);
   return (
     <PlanningWorkspacePage
       projectId={projectId}

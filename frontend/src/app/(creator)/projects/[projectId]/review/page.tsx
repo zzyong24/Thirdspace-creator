@@ -22,19 +22,46 @@
  */
 
 import { AnalyticsReviewPage } from "@/features/review/analytics-review-page";
-import { buildReviewWorkspaceViewModel } from "@/features/review/review-workspace-data";
-import { client } from "@/lib/contract-client.server";
+import {
+  buildReviewWorkspaceViewModel,
+  type ReviewDataClient,
+} from "@/features/review/review-workspace-data";
+import { createServerClient } from "@/lib/contract-client.server";
+import { resolveSession } from "@/lib/session.server";
 
 interface AnalyticsReviewRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
+}
+
+// Minimal client shape `resolveProjectIdParam` needs (projects.list) — narrower
+// than ReviewDataClient, which has no listProjects op.
+interface ProjectListClient {
+  listProjects(input: {
+    params: undefined;
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
 }
 
 export default async function AnalyticsReviewRoute({
   params,
 }: AnalyticsReviewRouteProps) {
   const { projectId } = await params;
-  const resolvedId = await resolveProjectIdParam(projectId);
-  const viewModel = await buildReviewWorkspaceViewModel(resolvedId);
+  // Session → ctx (layout already guarded). No session → fixture-deriving page.
+  const session = await resolveSession();
+  if (!session) {
+    return <AnalyticsReviewPage projectId={projectId} />;
+  }
+  // User-scoped read: an empty account reads empty, not the canonical seed.
+  const scoped = createServerClient(session.ctx);
+  const resolvedId = await resolveProjectIdParam(
+    scoped as unknown as ProjectListClient,
+    projectId,
+  );
+  const viewModel = await buildReviewWorkspaceViewModel(
+    resolvedId,
+    scoped as unknown as ReviewDataClient,
+  );
   // Module 13 Step 5 — supply the Reviews wiring so the authoring panel + history
   // drill call the real ops (reviews.create/insights.create/complete/get) over the
   // dispatch route, then router.refresh().
@@ -56,7 +83,10 @@ export default async function AnalyticsReviewRoute({
  * the original param is passed through so the page surfaces its empty state
  * instead of crashing.
  */
-async function resolveProjectIdParam(param: string): Promise<string> {
+async function resolveProjectIdParam(
+  client: ProjectListClient,
+  param: string,
+): Promise<string> {
   if (!param) return param;
   try {
     const projects = (await client.listProjects({

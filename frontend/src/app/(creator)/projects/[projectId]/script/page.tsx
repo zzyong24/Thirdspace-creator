@@ -11,7 +11,12 @@
 
 import { ScriptWorkspacePage } from "@/features/script/script-workspace-page";
 import { buildScriptViewModel } from "@/fixtures/selectors";
-import { loadScriptEditorData } from "@/features/script/script-editor-data";
+import {
+  loadScriptEditorData,
+  type ScriptDataClient,
+} from "@/features/script/script-editor-data";
+import { createServerClient } from "@/lib/contract-client.server";
+import { resolveSession } from "@/lib/session.server";
 
 interface ScriptWorkspaceRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -21,11 +26,19 @@ export default async function ScriptWorkspaceRoute({
   params,
 }: ScriptWorkspaceRouteProps) {
   const { projectId } = await params;
+  // Session → ctx (layout already guarded). No session → fixture-deriving page.
+  const session = await resolveSession();
+  if (!session) {
+    return <ScriptWorkspacePage projectId={projectId} />;
+  }
   // Round-trip: read the 分镜脚本 artifact's CURRENT version so a previously-saved
-  // or AI-drafted script shows up in the editor (Plan: 脚本编辑器做真). Falls back to
-  // the fixture sections when nothing is persisted (loader returns null).
+  // or AI-drafted script shows up in the editor (Plan: 脚本编辑器做真). The read goes
+  // through the user-scoped client so a logged-in user only sees their own ctx
+  // artifacts (empty account → null → fixture fallback). Falls back to the
+  // fixture sections when nothing is persisted (loader returns null).
+  const client = createServerClient(session.ctx) as unknown as ScriptDataClient;
   const vm = buildScriptViewModel(projectId);
-  const scriptData = await loadScriptEditorData(vm.scriptArtifactId);
+  const scriptData = await loadScriptEditorData(vm.scriptArtifactId, client);
   return (
     <ScriptWorkspacePage
       projectId={projectId}
