@@ -17,7 +17,12 @@
  */
 
 import { ResearchWorkspacePage } from "@/features/research/research-workspace-page";
-import { buildResearchWorkspaceViewModel } from "@/features/research/research-workspace-data";
+import {
+  buildResearchWorkspaceViewModel,
+  type ResearchDataClient,
+} from "@/features/research/research-workspace-data";
+import { createServerClient } from "@/lib/contract-client.server";
+import { resolveSession } from "@/lib/session.server";
 
 interface ResearchWorkspaceRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -27,6 +32,17 @@ export default async function ResearchWorkspaceRoute({
   params,
 }: ResearchWorkspaceRouteProps) {
   const { projectId } = await params;
-  const viewModel = await buildResearchWorkspaceViewModel(projectId);
+  // Resolve the request's session → ctx (the (creator) layout already guarded
+  // it). With no session, fall back to the fixture-deriving page (SSR/tests).
+  const session = await resolveSession();
+  if (!session) {
+    return <ResearchWorkspacePage projectId={projectId} />;
+  }
+  // Read the REAL ViewModel under the user's ctx (user-scoped): a new empty
+  // account reads empty, NOT the canonical user-zyongzhu seed.
+  const client = createServerClient(
+    session.ctx,
+  ) as unknown as ResearchDataClient;
+  const viewModel = await buildResearchWorkspaceViewModel(projectId, client);
   return <ResearchWorkspacePage projectId={projectId} viewModel={viewModel} />;
 }

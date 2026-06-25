@@ -19,7 +19,7 @@ import * as React from "react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { Badge } from "@/components/ui/badge";
-import { client } from "@/lib/contract-client.server";
+import { client as defaultClient } from "@/lib/contract-client.server";
 import type { PositioningCenterResource } from "@/server/modules/positioning";
 
 import {
@@ -29,13 +29,29 @@ import {
 
 export type PositioningCenterViewModel = PositioningCenterResource;
 
+/**
+ * Structural seam for the server read. The route passes a session-scoped
+ * `createServerClient(ctx)` so the positioning read stays user-scoped; the
+ * default keeps the singleton (canonical ctx) as the SSR/test fallback seam.
+ */
+export type PositioningReadClient = Pick<
+  typeof defaultClient,
+  "getPositioningCenter"
+>;
+
 export interface PositioningCenterPageProps {
   /** Override hook for tests; defaults to the server read of pages.positioning.get. */
   readonly viewModel?: PositioningCenterViewModel;
+  /**
+   * Session-scoped contract client for the production read path. The route
+   * passes `createServerClient(session.ctx)`; defaults to the singleton seam.
+   */
+  readonly client?: PositioningReadClient;
 }
 
 export async function PositioningCenterPage({
   viewModel,
+  client = defaultClient,
 }: PositioningCenterPageProps) {
   const vm =
     viewModel ??

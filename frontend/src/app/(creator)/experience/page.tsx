@@ -16,19 +16,37 @@
  * 废弃 hit a real Learning) and the 4 summary cards count real learnings. The helper
  * degrades to the fixture VM on any read failure, and renders an honest empty state
  * (not fixture rows) when the read succeeds with zero learnings.
+ *
+ * Session-scoped read (lane center-pages): the route resolves the request's
+ * session and constructs `createServerClient(session.ctx)` so BOTH reads
+ * (projects.list apply targets + learnings.list ViewModel) are scoped to the
+ * logged-in user — a brand-new empty account reads its own empty learnings /
+ * projects, not the user-zyongzhu seed. With no session both reads run through the
+ * singleton seam (fixture fallback) so SSR/tests never crash.
  */
 
 import { ExperiencePage } from "@/features/experience/experience-page";
 import type { ApplyTarget } from "@/features/experience/experience-page";
-import { buildExperienceWorkspaceViewModel } from "@/features/experience/experience-data";
-import { client } from "@/lib/contract-client.server";
+import {
+  buildExperienceWorkspaceViewModel,
+  type ExperienceDataClient,
+} from "@/features/experience/experience-data";
+import {
+  client as defaultClient,
+  createServerClient,
+} from "@/lib/contract-client.server";
+import { resolveSession } from "@/lib/session.server";
 
 interface ProjectListItemDto {
   readonly id: string;
   readonly title: string;
 }
 
-async function resolveApplyTargets(): Promise<ReadonlyArray<ApplyTarget>> {
+type ProjectsReadClient = Pick<typeof defaultClient, "listProjects">;
+
+async function resolveApplyTargets(
+  client: ProjectsReadClient,
+): Promise<ReadonlyArray<ApplyTarget>> {
   try {
     const projects = (await client.listProjects({
       params: undefined,
@@ -42,9 +60,16 @@ async function resolveApplyTargets(): Promise<ReadonlyArray<ApplyTarget>> {
 }
 
 export default async function ExperienceRoute() {
+  const session = await resolveSession();
+  // Session-scoped client on the production path; singleton seam (canonical ctx)
+  // when there is no session so SSR/tests keep resolving against the fixture seed.
+  const client = session ? createServerClient(session.ctx) : defaultClient;
+
   const [applyTargets, viewModel] = await Promise.all([
-    resolveApplyTargets(),
-    buildExperienceWorkspaceViewModel(),
+    resolveApplyTargets(client),
+    buildExperienceWorkspaceViewModel(
+      client as unknown as ExperienceDataClient,
+    ),
   ]);
   return <ExperiencePage viewModel={viewModel} applyTargets={applyTargets} />;
 }

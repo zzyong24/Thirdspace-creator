@@ -94,40 +94,11 @@ const RECENT_TASKS: CopilotContentViewModel["recentTasks"] = [
   },
 ];
 
-const CONTINUING_TASKS: CopilotContentViewModel["continuingTasks"] = [
-  {
-    id: "cont-1",
-    title: "生成脚本大纲",
-    description: "AI 浏览器的未来趋势",
-    status: "进行中",
-    progress: 45,
-    tone: "violet",
-  },
-  {
-    id: "cont-2",
-    title: "竞品对比分析",
-    description: "对比 6 款主流浏览器",
-    status: "排队中",
-    progress: null,
-    tone: "amber",
-  },
-  {
-    id: "cont-3",
-    title: "用户痛点挖掘",
-    description: "分析用户评论和反馈",
-    status: "排队中",
-    progress: null,
-    tone: "amber",
-  },
-  {
-    id: "cont-4",
-    title: "生成内容策略",
-    description: "品牌内容策略规划",
-    status: "已完成",
-    progress: 100,
-    tone: "emerald",
-  },
-];
+// 继续任务原为 cont-1..4 硬编码 fixture。Copilot 需要一个 CROSS-project 的进行中
+// 任务流,而该 op 尚不存在(projects.tasks.list 是 project-scoped — 见 INTERACTION_SPEC
+// GAP-COP-1 / D-COP-a)。与其把假任务伪装成真进度,不如返回空数组让 UI 渲染诚实空态
+// 「暂无进行中的任务」并保留「规划中」徽章,直到全局任务流 op 落地。
+const CONTINUING_TASKS: CopilotContentViewModel["continuingTasks"] = [];
 
 const QUICK_ENTRIES: CopilotContentViewModel["quickEntries"] = [
   { id: "new-project", icon: "plus", title: "新建项目" },

@@ -1,10 +1,28 @@
 import "server-only";
 
-import { client } from "@/lib/contract-client.server";
+import { client as defaultClient } from "@/lib/contract-client.server";
 import type {
   ScriptSectionView,
   ScriptViewModel,
 } from "@/types/view-models";
+
+// Injectable client seam (mirrors the other *-workspace-data helpers): the Script
+// route passes a request-scoped, user-bound client so a logged-in user reads
+// their own ctx.userId artifacts (empty account → empty), while the default stays
+// the canonical singleton for SSR/tests. Only the read ops this module uses are
+// declared.
+export interface ScriptDataClient {
+  getArtifact(input: {
+    params: { artifactId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<{ currentVersionId?: unknown }>;
+  listArtifactVersions(input: {
+    params: { artifactId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+}
 
 // Read the 分镜脚本 artifact's CURRENT version content and shape it into the editor's
 // `sections` (Plan: 脚本编辑器做真, read side / round-trip). Used by the async Script
@@ -66,6 +84,7 @@ interface VersionRow {
 // `currentVersionId` (not the content), so we read the full version list once and
 // pick the CURRENT version from it. Returns null on any failure / missing artifact.
 async function fetchVersionsAndCurrent(
+  client: ScriptDataClient,
   artifactId: string,
 ): Promise<{ rows: VersionRow[]; current: VersionRow } | null> {
   const artifact = await client.getArtifact({
@@ -121,10 +140,11 @@ function sectionsFromVersion(current: VersionRow): ScriptSectionView[] | null {
 
 export async function loadScriptEditorSections(
   artifactId: string | null,
+  client: ScriptDataClient = defaultClient as unknown as ScriptDataClient,
 ): Promise<ScriptSectionView[] | null> {
   if (!artifactId) return null;
   try {
-    const fetched = await fetchVersionsAndCurrent(artifactId);
+    const fetched = await fetchVersionsAndCurrent(client, artifactId);
     if (!fetched) return null;
     return sectionsFromVersion(fetched.current);
   } catch {
@@ -162,10 +182,11 @@ export interface ScriptEditorData {
  */
 export async function loadScriptEditorData(
   artifactId: string | null,
+  client: ScriptDataClient = defaultClient as unknown as ScriptDataClient,
 ): Promise<ScriptEditorData | null> {
   if (!artifactId) return null;
   try {
-    const fetched = await fetchVersionsAndCurrent(artifactId);
+    const fetched = await fetchVersionsAndCurrent(client, artifactId);
     if (!fetched) return null;
     const { rows, current } = fetched;
 

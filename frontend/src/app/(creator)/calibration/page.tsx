@@ -16,13 +16,25 @@
  *
  * Determinism (C-5): no Date.now / Math.random in the render. `/calibration` is a
  * brand-new page — 暂不纳入视觉门禁 until the stage-12 re-baseline (R2-9).
+ *
+ * Session-scoped read (lane center-pages): the route resolves the request's
+ * session and constructs `createServerClient(session.ctx)` so the 盲预测 list is
+ * scoped to the logged-in user — a brand-new empty account reads its own (empty)
+ * predictions, not the user-zyongzhu seed. The 变现加权 Rubric is the shared
+ * canonical rubric (keyed by `rubric-canonical`), so it resolves the same under any
+ * ctx. With no session both reads run through the singleton seam so SSR/tests never
+ * crash.
  */
 
 import * as React from "react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { Badge } from "@/components/ui/badge";
-import { client } from "@/lib/contract-client.server";
+import {
+  client as defaultClient,
+  createServerClient,
+} from "@/lib/contract-client.server";
+import { resolveSession } from "@/lib/session.server";
 import type {
   RubricResource,
   PredictionResource,
@@ -41,7 +53,11 @@ import { loadPredictions } from "@/features/calibration/calibration-data";
 // (五维: hook 强度 / 利他性 / 人群匹配 / CTA 清晰度 / 为产品铺路程度).
 const CANONICAL_RUBRIC_ID = "rubric-canonical";
 
-async function loadRubric(): Promise<RubricResource | null> {
+type RubricReadClient = Pick<typeof defaultClient, "getRubric">;
+
+async function loadRubric(
+  client: RubricReadClient,
+): Promise<RubricResource | null> {
   try {
     return (await client.getRubric({
       params: { rubricId: CANONICAL_RUBRIC_ID },
@@ -55,9 +71,14 @@ async function loadRubric(): Promise<RubricResource | null> {
 }
 
 export default async function CalibrationRoutePage() {
+  const session = await resolveSession();
+  // Session-scoped client on the production path; singleton seam (canonical ctx)
+  // when there is no session so SSR/tests keep resolving against the fixture seed.
+  const client = session ? createServerClient(session.ctx) : defaultClient;
+
   const [rubric, predictions] = await Promise.all([
-    loadRubric(),
-    loadPredictions(),
+    loadRubric(client),
+    loadPredictions(client),
   ]);
   return <CalibrationView rubric={rubric} predictions={predictions} />;
 }

@@ -23,11 +23,21 @@ import * as React from "react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { Badge } from "@/components/ui/badge";
-import { client } from "@/lib/contract-client.server";
+import { client as defaultClient } from "@/lib/contract-client.server";
 import type {
   CandidateResource,
   AudienceSignalResource,
 } from "@/server/modules/candidate";
+
+/**
+ * Structural seam for the server reads. The route passes a session-scoped
+ * `createServerClient(ctx)` so candidates / audience signals stay user-scoped;
+ * the default keeps the singleton (canonical ctx) as the SSR/test fallback seam.
+ */
+export type TopicsReadClient = Pick<
+  typeof defaultClient,
+  "listCandidates" | "listAudienceSignals"
+>;
 
 import {
   CreateCandidateForm,
@@ -49,6 +59,11 @@ export interface TopicsPageProps {
   readonly viewModel?: TopicsViewModel;
   /** The active sort, read from the search params (defaults to predictedScore). */
   readonly sort?: CandidateSortKey;
+  /**
+   * Session-scoped contract client for the production read path. The route
+   * passes `createServerClient(session.ctx)`; defaults to the singleton seam.
+   */
+  readonly client?: TopicsReadClient;
 }
 
 const SORT_KEYS: readonly CandidateSortKey[] = [
@@ -63,14 +78,19 @@ function normalizeSort(sort: string | undefined): CandidateSortKey {
     : "predictedScore";
 }
 
-export async function TopicsPage({ viewModel, sort }: TopicsPageProps) {
+export async function TopicsPage({
+  viewModel,
+  sort,
+  client = defaultClient,
+}: TopicsPageProps) {
   const activeSort = normalizeSort(sort);
-  const vm = viewModel ?? (await loadViewModel(activeSort));
+  const vm = viewModel ?? (await loadViewModel(activeSort, client));
   return <TopicsView viewModel={vm} />;
 }
 
 async function loadViewModel(
   sort: CandidateSortKey,
+  client: TopicsReadClient,
 ): Promise<TopicsViewModel> {
   const candidates = (await client.listCandidates({
     params: undefined,

@@ -10,10 +10,22 @@
  * back to the「暂无盲预测」empty state instead of crashing — the island's `useMutation`
  * seam only governs writes, so the read side owns its own try/catch fallback.
  */
-import { client } from "@/lib/contract-client.server";
+import { client as defaultClient } from "@/lib/contract-client.server";
 import type { PredictionResource } from "@/server/modules/calibration";
 
-export async function loadPredictions(): Promise<PredictionResource[]> {
+/**
+ * Structural seam for the predictions read. The route passes a session-scoped
+ * `createServerClient(ctx)` so 盲预测 stay user-scoped; the default keeps the
+ * singleton (canonical ctx) as the SSR/test fallback seam.
+ */
+export type CalibrationReadClient = Pick<
+  typeof defaultClient,
+  "listPredictions"
+>;
+
+export async function loadPredictions(
+  client: CalibrationReadClient = defaultClient,
+): Promise<PredictionResource[]> {
   try {
     const rows = (await client.listPredictions({
       params: undefined,
