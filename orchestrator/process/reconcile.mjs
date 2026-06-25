@@ -137,4 +137,28 @@ if (existsSync(DECLOG) && updatedAt) {
 if (currentStage && !stages[currentStage])
   warn(`current_stage "${currentStage}" is not a stage id in the manifest.`);
 
+// Lessons guard checks (self-evolving loop, Phase 0). Each active lesson in
+// reconcile.config.json "lessons" carries an executable GuardCheck. Re-running them
+// every reconcile turns a past pitfall into a gate: a non-zero exit from `check` means
+// the pitfall has RECURRED => ERROR => exit 1, so the same mistake can only happen once.
+// A lesson whose check is "manual"/empty is recorded but can't be auto-verified (WARN).
+// Human-readable backing records live in orchestrator/LESSON_LEDGER.md (LED-* rows).
+if (Array.isArray(cfg.lessons) && cfg.lessons.length) {
+  for (const L of cfg.lessons) {
+    const id = L.led || '(unnamed lesson)';
+    if (!L.check || L.check === 'manual') {
+      warn(`lesson ${id}: manual guard (no executable check) — verify by hand: ${L.what || ''}`);
+      continue;
+    }
+    try {
+      execSync(L.check, { cwd: REPO, stdio: 'ignore', shell: '/bin/bash' });
+      ok(`lesson ${id}: guard holds (${L.what || ''})`);
+    } catch {
+      err(`lesson ${id} RECURRED — ${L.onFail || L.what || 'guard check failed'}`);
+    }
+  }
+} else {
+  warn('no lessons configured (reconcile.config.json "lessons") — pitfall guards skipped.');
+}
+
 die();
