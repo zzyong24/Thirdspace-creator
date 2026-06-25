@@ -110,7 +110,7 @@ export function createAssetsService(
       if (!(input.fileSize > 0)) {
         throw new UploadValidationError("fileSize must be positive");
       }
-      const { storageKey, uploadUrl } = storage.createPresignedUpload({
+      const { storageKey, uploadUrl } = await storage.createPresignedUpload({
         assetType: input.assetType,
         mimeType: input.mimeType,
         fileSize: input.fileSize,
@@ -140,7 +140,7 @@ export function createAssetsService(
         throw new ConflictError("Upload session already completed");
       }
       // SPEC §20: validate the stored object's MIME/size/checksum via headObject.
-      const head = storage.headObject(session.storageKey);
+      const head = await storage.headObject(session.storageKey);
       // Materialize: create the asset (active), then the first file (v1), then
       // re-point currentFileId. The repo stamps userId + status='active'.
       const asset = await repo.insertAsset(ctx.userId, {
@@ -169,7 +169,7 @@ export function createAssetsService(
     async addAssetFile(ctx, assetId, input) {
       // Verify ownership (C2) before touching storage/repo.
       await requireAsset(ctx, assetId);
-      const head = storage.headObject(input.storageKey);
+      const head = await storage.headObject(input.storageKey);
       const file = await repo.insertAssetFile(ctx.userId, {
         assetId,
         storageKey: input.storageKey,
