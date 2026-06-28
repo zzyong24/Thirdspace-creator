@@ -120,6 +120,36 @@ export interface AiMaterialLinksPort {
   ): Promise<unknown>;
 }
 
+// The Positioning seam (定位演进回流, Plan Phase A / OQ2): when a `positioning_profile`
+// candidate (positioning.generate node) is 采纳ed, the AI module formalizes it through the
+// Positioning module's PUBLIC service — never by writing creator_profiles /
+// positioning_statements directly. upsertProfile lands the 5-facet profile; then
+// createStatementVersion appends a NEW statement version tagged createdByType:"ai" +
+// aiTaskId (the OQ2 演进回流 source). Positioning owns the immutability + version chain;
+// the AI module only orchestrates the confirm.
+export interface AiPositioningPort {
+  upsertProfile(
+    ctx: RequestContext,
+    input: {
+      persona: string;
+      field: string;
+      audience: string;
+      differentiation: string;
+      capabilities: string[];
+    },
+  ): Promise<unknown>;
+  createStatementVersion(
+    ctx: RequestContext,
+    input: {
+      oneLiner: string;
+      keywords: string[];
+      productAnchorIds: string[];
+      createdByType?: "human" | "ai";
+      aiTaskId?: string | null;
+    },
+  ): Promise<unknown>;
+}
+
 export interface ServiceDeps {
   db: Db;
   now: () => string;
@@ -130,6 +160,7 @@ export interface ServiceDeps {
   learnings: AiLearningsPort;
   publishing: AiPublishingPort;
   materialLinks: AiMaterialLinksPort;
+  positioning: AiPositioningPort;
 }
 
 export interface CreateTaskInput {
@@ -245,6 +276,7 @@ const DEFAULT_MODEL_FOR_CAPABILITY: Record<string, string> = {
   "copy.generate": "claude-opus-4-8",
   "review.insights": "claude-opus-4-8",
   "copilot.assist": "claude-opus-4-8",
+  "positioning.generate": "claude-opus-4-8",
 };
 
 // A deterministic FNV-1a hash → stable idempotency key when the caller omits one. No
@@ -543,9 +575,44 @@ export function createAiService(deps: ServiceDeps): AiService {
         return toTaskDto(updated);
       }
 
+      // positioning_profile (positioning.generate node, Plan Phase A / OQ2) — formalize
+      // the AI 定位提案 into the creator's positioning via the Positioning module (AI never
+      // writes creator_profiles / positioning_statements directly). The candidate carries
+      // `resultData.suggestion: {persona, field, audience, differentiation, capabilities[],
+      // oneLiner, keywords[3]}`. We upsert the 5-facet profile, then append a NEW statement
+      // version tagged createdByType:"ai" + aiTaskId — closing the 定位演进回流 (OQ2). The
+      // positioning service enforces keywords.length === 3 (StatementValidationError);
+      // we forward whatever the candidate carries and let that invariant surface.
+      if (candidate.resultType === "positioning_profile") {
+        const data = (candidate.resultData ?? {}) as { suggestion?: unknown };
+        const s = (data.suggestion ?? {}) as Record<string, unknown>;
+        const str = (v: unknown) => (typeof v === "string" ? v : "");
+        const strArr = (v: unknown): string[] =>
+          Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+        await deps.positioning.upsertProfile(ctx, {
+          persona: str(s.persona),
+          field: str(s.field),
+          audience: str(s.audience),
+          differentiation: str(s.differentiation),
+          capabilities: strArr(s.capabilities),
+        });
+        await deps.positioning.createStatementVersion(ctx, {
+          oneLiner: str(s.oneLiner),
+          keywords: strArr(s.keywords),
+          productAnchorIds: [],
+          createdByType: "ai",
+          aiTaskId: taskId,
+        });
+        const updated = await repo.updateTaskStatus(taskId, {
+          status: "succeeded",
+          completedAt: deps.now(),
+        });
+        return toTaskDto(updated);
+      }
+
       // Only artifact_version + material_list + candidate_list + learning_list +
-      // publication_drafts are wired so far; other candidate types throw until their
-      // owning services ship the path.
+      // publication_drafts + positioning_profile are wired so far; other candidate types
+      // throw until their owning services ship the path.
       if (candidate.resultType !== "artifact_version") {
         throw new ConflictError(
           `confirm not implemented for resultType ${candidate.resultType}`,

@@ -21,6 +21,11 @@ export interface CreativeContext {
   // so a production-stage node (material.match) can propose which real assets to use.
   // Empty string until the assets reader is wired (Plan D2) or when the library is empty.
   assetsBrief: string;
+  // 抖音账号画像 brief — the creator's connected platform accounts (平台 | 账号 | 粉丝量).
+  // Feeds the positioning.generate node so the agent grounds a positioning *suggestion* in
+  // who this person already is on-platform. Empty until the accounts reader is wired
+  // (Plan Phase A) or when the creator has connected no accounts.
+  accountsBrief: string;
   topic: { title: string; angle: string };
   projectId: string | null;
 }
@@ -59,10 +64,23 @@ export interface AssetsReader {
   ): Promise<Array<{ id: string; name: string; type?: string }>>;
 }
 
+// 抖音账号 reader — the creator's connected platform accounts (platform + handle +
+// follower baseline). Optional: only the positioning.generate node passes it (it grounds
+// a positioning suggestion in the on-platform identity); other nodes omit it. The
+// composition root binds it to the platform-account public service's list method.
+export interface AccountsReader {
+  list(
+    ctx: RequestContext,
+  ): Promise<
+    Array<{ platform: string; accountHandle: string; followerBaseline: number }>
+  >;
+}
+
 export interface ContextDeps {
   positioning: PositioningReader;
   learnings?: LearningsReader;
   assets?: AssetsReader;
+  accounts?: AccountsReader;
 }
 
 export interface AssembleInput {
@@ -110,10 +128,26 @@ export async function assembleCreativeContext(
     }
   }
 
+  let accountsBrief = "";
+  if (deps.accounts) {
+    try {
+      const rows = await deps.accounts.list(ctx);
+      accountsBrief = rows
+        .map(
+          (a) =>
+            `· ${a.platform} | ${a.accountHandle} | 粉丝 ${a.followerBaseline}`,
+        )
+        .join("\n");
+    } catch {
+      accountsBrief = ""; // 抖音账号画像 is best-effort context; never block a node on it
+    }
+  }
+
   return {
     positioningBrief,
     learningsBrief,
     assetsBrief,
+    accountsBrief,
     topic: { title: input.topic, angle: input.angle ?? "" },
     projectId: input.projectId,
   };

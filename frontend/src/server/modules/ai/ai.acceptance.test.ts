@@ -44,6 +44,10 @@ function makeService(db: Db, createVersion?: AiArtifactsPort["createVersion"]) {
       createPublicationFromDraft: vi.fn(async () => ({ id: "pub-new" })),
     },
     materialLinks: { link: vi.fn(async () => ({ id: "mlink-new" })) },
+    positioning: {
+      upsertProfile: vi.fn(async () => ({ id: "profile-new" })),
+      createStatementVersion: vi.fn(async () => ({ id: "stmt-new" })),
+    },
   });
 }
 

@@ -158,6 +158,7 @@ import { runPlanningThesis } from "@/server/ai/planning-runner";
 import { runReviewAnalyze } from "@/server/ai/review-runner";
 import { runPlatformAdapt } from "@/server/ai/platform-adapt-runner";
 import { runMaterialMatch } from "@/server/ai/material-match-runner";
+import { runPositioningGenerate } from "@/server/ai/positioning-runner";
 import { runCopilotAssist } from "@/server/ai/copilot-runner";
 import { createLlmCompleter } from "@/server/ai/llm/provider";
 import { resolveLlmConfig } from "@/server/ai/llm/resolve";
@@ -1293,6 +1294,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     materialLinks: {
       link: (ctx, input) => materialLinksService.create(ctx, input),
     },
+    // Plan Phase A 定位演进回流 (OQ2) — when a positioning_profile candidate
+    // (positioning.generate node) is 采纳ed, the AI confirm branch formalizes it through
+    // the Positioning public service: upsertProfile lands the 5-facet profile, then
+    // createStatementVersion appends a NEW statement version tagged createdByType:"ai" +
+    // aiTaskId. Lazy: positioningService is constructed below; this thunk only runs at
+    // confirm time (request), never at construction. The AI module never writes
+    // creator_profiles / positioning_statements directly (SPEC §22).
+    positioning: {
+      upsertProfile: (ctx, input) =>
+        positioningService.upsertProfile(ctx, input),
+      createStatementVersion: (ctx, input) =>
+        positioningService.createStatementVersion(ctx, input),
+    },
   });
   const aiBase = createAiTransport(() => aiService);
 
@@ -1303,9 +1317,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // cross-module repo import, SPEC §22), satisfied here by the Projects public
   // repo's ownership-gated get (a cross-user / unknown projectId throws
   // OwnershipError → 404 BEFORE the gate scores). The AI 定位演进回流 formalizes
-  // through positioningService.createStatementVersion (createdByType:'ai') — wired on
-  // the AI side when module-15 adds the positioning_revise branch (OQ2); positioning
-  // owns no candidate state machine (C-3). Clock/ids share the deterministic `deps`
+  // through positioningService.upsertProfile + createStatementVersion (createdByType:'ai')
+  // — WIRED (Plan Phase A): the AI module's `positioning_profile` confirm branch calls
+  // these via the AiPositioningPort below, fed by the positioning.generate runner. (OQ2
+  // closed.) positioning owns no candidate state machine (C-3). Clock/ids share the
+  // deterministic `deps`
   // (createSeq keeps profile/posstmt ids collision-free across requests).
   const positioningService = createPositioningService({
     db,
@@ -1350,6 +1366,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             (await assetsService.listAssets(c, { limit: 200, cursor: null })).map(
               (a) => ({ id: a.id, name: a.name, type: a.assetType }),
             ),
+        };
+        // 抖音账号 reader (Plan Phase A) — the creator's connected platform accounts
+        // (platform + handle + follower baseline) feed the positioning.generate node's
+        // context as material for who they already are on-platform. Maps the
+        // PlatformAccount DTO onto the runner's {platform, accountHandle, followerBaseline}
+        // shape. platformAccountService is constructed below; this thunk only runs inside
+        // the (async) request handler, never at construction.
+        const accountsReader = {
+          list: async (c: RequestContext) =>
+            (
+              await platformAccountService.listAccounts(c, {
+                limit: 100,
+                offset: 0,
+              })
+            ).rows.map((a) => ({
+              platform: a.platform,
+              accountHandle: a.accountHandle,
+              followerBaseline: a.followerBaseline,
+            })),
         };
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
@@ -1502,6 +1537,31 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               positioning: positioningReader,
               learnings: learningsReader,
               assets: assetsReader,
+              llm: llmCompleter,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "positioning.generate" &&
+          task.status === "queued"
+        ) {
+          // 定位生成 node (positioning.generate, Plan Phase A — the audit's level-1 gap:
+          // 定位中心 could only *use* positioning, never *generate* one). Reads the
+          // creator's CURRENT positioning + 抖音账号画像, runs the configurable LLM
+          // (item A) to draft a structured 定位提案, records a `positioning_profile`
+          // candidate; 采纳 formalizes it into a CreatorProfile (upsertProfile) + a NEW
+          // statement version (createdByType:"ai", aiTaskId) via the positioning port —
+          // the OQ2 演进回流 source.
+          void runPositioningGenerate(
+            ctx,
+            {
+              id: String(task.id),
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              accounts: accountsReader,
               llm: llmCompleter,
             },
           );

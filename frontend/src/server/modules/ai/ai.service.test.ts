@@ -5,6 +5,7 @@ import {
   createAiService,
   type AiArtifactsPort,
   type AiKnowledgePort,
+  type AiPositioningPort,
 } from "./ai.service";
 import { ConflictError } from "./ai.errors";
 
@@ -21,6 +22,7 @@ function makeService(
   db: Db,
   artifactsPort?: Partial<AiArtifactsPort>,
   knowledgePort?: Partial<AiKnowledgePort>,
+  positioningPort?: AiPositioningPort,
 ) {
   let seq = 0;
   const port: AiArtifactsPort = {
@@ -38,6 +40,10 @@ function makeService(
     createPublicationFromDraft: vi.fn(async () => ({ id: "pub-new" })),
   };
   const materialLinks = { link: vi.fn(async () => ({ id: "mlink-new" })) };
+  const positioning: AiPositioningPort = positioningPort ?? {
+    upsertProfile: vi.fn(async () => ({ id: "profile-new" })),
+    createStatementVersion: vi.fn(async () => ({ id: "stmt-new" })),
+  };
   const service = createAiService({
     db,
     now: () => NOW,
@@ -48,8 +54,18 @@ function makeService(
     learnings,
     publishing,
     materialLinks,
+    positioning,
   });
-  return { service, port, knowledge, candidate, learnings, publishing, materialLinks };
+  return {
+    service,
+    port,
+    knowledge,
+    candidate,
+    learnings,
+    publishing,
+    materialLinks,
+    positioning,
+  };
 }
 
 describe("ai service", () => {
@@ -250,6 +266,86 @@ describe("ai service", () => {
       "out-1",
       expect.objectContaining({ platform: "douyin", title: "抖音标题" }),
     );
+  });
+
+  it("confirmTask on a positioning_profile materializes the profile (upsertProfile) + an AI statement version (createdByType:'ai', aiTaskId) and flips succeeded (Plan Phase A / OQ2)", async () => {
+    const { service, positioning } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "positioning.generate",
+      inputData: {},
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "positioning_profile",
+      resultData: {
+        suggestion: {
+          persona: "硬核 AI 科普人",
+          field: "AI 工程",
+          audience: "一线开发者",
+          differentiation: "论文到代码",
+          capabilities: ["拆解", "演示", "复盘"],
+          oneLiner: "把最新 AI 论文翻译成你今晚就能跑的代码",
+          keywords: ["论文", "代码", "工程化"],
+        },
+      },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    // 1) the 5-facet profile is upserted (AI never writes the entity directly — goes
+    //    through the positioning service's upsertProfile).
+    expect(positioning.upsertProfile).toHaveBeenCalledTimes(1);
+    expect(positioning.upsertProfile).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        persona: "硬核 AI 科普人",
+        field: "AI 工程",
+        audience: "一线开发者",
+        differentiation: "论文到代码",
+        capabilities: ["拆解", "演示", "复盘"],
+      }),
+    );
+    // 2) a NEW PositioningStatement version is appended, tagged createdByType:'ai' +
+    //    aiTaskId = this task's id (the OQ2 演进回流 source).
+    expect(positioning.createStatementVersion).toHaveBeenCalledTimes(1);
+    expect(positioning.createStatementVersion).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        oneLiner: "把最新 AI 论文翻译成你今晚就能跑的代码",
+        keywords: ["论文", "代码", "工程化"],
+        createdByType: "ai",
+        aiTaskId: task.id,
+      }),
+    );
+  });
+
+  it("confirmTask on a positioning_profile with bad keyword count throws (the statement invariant surfaces, not silently dropped)", async () => {
+    // The positioning service enforces keywords.length === 3; the AI confirm branch must
+    // forward whatever the candidate carries and let that invariant surface as the error.
+    const positioningThrows: AiPositioningPort = {
+      upsertProfile: async () => ({ id: "profile-x" }),
+      createStatementVersion: async () => {
+        throw new Error("StatementValidationError: keywords must be exactly 3");
+      },
+    };
+    const { service } = makeService(db, undefined, undefined, positioningThrows);
+    const task = await service.createTask(ctx, {
+      taskType: "positioning.generate",
+      inputData: {},
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "positioning_profile",
+      resultData: {
+        suggestion: {
+          persona: "x",
+          field: "",
+          audience: "",
+          differentiation: "",
+          capabilities: [],
+          oneLiner: "y",
+          keywords: ["只有两个", "关键词"],
+        },
+      },
+    });
+    await expect(service.confirmTask(ctx, task.id)).rejects.toThrow();
   });
 
   it("confirmTask rejects a task not in awaiting_confirmation (state-machine guard)", async () => {
