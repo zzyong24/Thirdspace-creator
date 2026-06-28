@@ -3,6 +3,8 @@ import { defineEndpoint } from "../endpoints";
 import { id, paginationQuery, positioningSubjectType } from "../primitives";
 import {
   creatorProfileResource,
+  creatorProfileFacets,
+  creatorProfileDownstreamRules,
   positioningStatementResource,
   positioningGateResultResource,
 } from "../resources/positioning";
@@ -29,6 +31,11 @@ export const positioningOperations = {
       audience: z.string().default(""),
       differentiation: z.string().default(""),
       capabilities: z.array(z.string()).default([]),
+      // 定位中心重建 — the richer facets + downstream rules. Optional so existing
+      // callers (and the AI confirm) stay valid; absence = keep blank. The transport
+      // + service normalize a partial/absent object to the full "" key set.
+      facets: creatorProfileFacets.optional(),
+      downstreamRules: creatorProfileDownstreamRules.optional(),
     }),
     response: creatorProfileResource,
     fr: ["FR-POSITIONING-PROFILE-UPSERT"],

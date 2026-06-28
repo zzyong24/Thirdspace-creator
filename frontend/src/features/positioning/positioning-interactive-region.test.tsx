@@ -130,6 +130,21 @@ describe("PositioningDraftDrawer", () => {
     audience: "开发者",
     differentiation: "论文到代码",
     capabilities: ["拆解", "演示"],
+    facets: {
+      contentScope: "",
+      avoid: "",
+      corePain: "",
+      coreValue: "",
+      tone: "",
+      statusNote: "",
+    },
+    downstreamRules: {
+      topicRule: "",
+      scriptRule: "",
+      projectRule: "",
+      forbidRule: "",
+      expressionRule: "",
+    },
     createdAt: "2026-06-21T00:00:00.000Z",
     updatedAt: "2026-06-21T00:00:00.000Z",
   };

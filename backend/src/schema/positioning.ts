@@ -31,6 +31,12 @@ export const creatorProfiles = pgTable("creator_profiles", {
   audience: text("audience").notNull().default(""), // 目标人群
   differentiation: text("differentiation").notNull().default(""), // 差异化
   capabilities: jsonb("capabilities").notNull().default([]), // 能力清单 (string[])
+  // 定位中心重建 (迁移 0003) — the richer self-knowledge facets (内容范围/不做什么/
+  // 核心痛点/核心价值/表达风格/当前状态) as ONE jsonb object, and the 5 定位规则
+  // (选题/写稿/项目/禁止/表达) as ONE jsonb object. Additive, default '{}' — every
+  // existing row reads back an empty object; the mapper fills missing keys.
+  facets: jsonb("facets").notNull().default({}),
+  downstreamRules: jsonb("downstream_rules").notNull().default({}),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -64,10 +70,14 @@ CREATE TABLE IF NOT EXISTS creator_profiles (
   audience TEXT NOT NULL DEFAULT '',
   differentiation TEXT NOT NULL DEFAULT '',
   capabilities JSONB NOT NULL DEFAULT '[]'::jsonb,
+  facets JSONB NOT NULL DEFAULT '{}'::jsonb,
+  downstream_rules JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_creator_profiles_user ON creator_profiles (user_id);
+ALTER TABLE creator_profiles ADD COLUMN IF NOT EXISTS facets JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE creator_profiles ADD COLUMN IF NOT EXISTS downstream_rules JSONB NOT NULL DEFAULT '{}'::jsonb;
 CREATE TABLE IF NOT EXISTS positioning_statements (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,

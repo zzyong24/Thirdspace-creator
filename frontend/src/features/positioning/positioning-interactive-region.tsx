@@ -80,6 +80,23 @@ export function PositioningProfileForm({
   const [capabilities, setCapabilities] = React.useState(
     (profile?.capabilities ?? []).join("、"),
   );
+  // 定位中心重建 — the 6 richer facets (内容范围/不做什么/核心痛点/核心价值/表达风格/当前状态).
+  const f = profile?.facets;
+  const [contentScope, setContentScope] = React.useState(f?.contentScope ?? "");
+  const [avoid, setAvoid] = React.useState(f?.avoid ?? "");
+  const [corePain, setCorePain] = React.useState(f?.corePain ?? "");
+  const [coreValue, setCoreValue] = React.useState(f?.coreValue ?? "");
+  const [tone, setTone] = React.useState(f?.tone ?? "");
+  const [statusNote, setStatusNote] = React.useState(f?.statusNote ?? "");
+  // 5 定位规则（供下游模块使用）.
+  const r = profile?.downstreamRules;
+  const [topicRule, setTopicRule] = React.useState(r?.topicRule ?? "");
+  const [scriptRule, setScriptRule] = React.useState(r?.scriptRule ?? "");
+  const [projectRule, setProjectRule] = React.useState(r?.projectRule ?? "");
+  const [forbidRule, setForbidRule] = React.useState(r?.forbidRule ?? "");
+  const [expressionRule, setExpressionRule] = React.useState(
+    r?.expressionRule ?? "",
+  );
 
   function submit() {
     run(
@@ -96,6 +113,21 @@ export function PositioningProfileForm({
               .split(/[、,，]/)
               .map((c) => c.trim())
               .filter((c) => c.length > 0),
+            facets: {
+              contentScope,
+              avoid,
+              corePain,
+              coreValue,
+              tone,
+              statusNote,
+            },
+            downstreamRules: {
+              topicRule,
+              scriptRule,
+              projectRule,
+              forbidRule,
+              expressionRule,
+            },
           },
         }),
       onSuccess,
@@ -131,7 +163,7 @@ export function PositioningProfileForm({
       />
       <Input
         aria-label="差异化"
-        placeholder="差异化"
+        placeholder="差异化视角"
         value={differentiation}
         onChange={(e) => setDifferentiation(e.target.value)}
       />
@@ -141,6 +173,81 @@ export function PositioningProfileForm({
         value={capabilities}
         onChange={(e) => setCapabilities(e.target.value)}
       />
+
+      <p className="pt-1 text-[11px] font-medium text-text-subtle">
+        定位 facet 补全（首屏 9 格网格，留空则不显示该格）
+      </p>
+      <Textarea
+        aria-label="内容范围"
+        placeholder="内容范围（我会讲什么 / 选题边界）"
+        value={contentScope}
+        onChange={(e) => setContentScope(e.target.value)}
+      />
+      <Textarea
+        aria-label="不做什么"
+        placeholder="不做什么（明确排除）"
+        value={avoid}
+        onChange={(e) => setAvoid(e.target.value)}
+      />
+      <Textarea
+        aria-label="核心痛点"
+        placeholder="核心痛点（受众最痛的问题）"
+        value={corePain}
+        onChange={(e) => setCorePain(e.target.value)}
+      />
+      <Textarea
+        aria-label="核心价值"
+        placeholder="核心价值（我给受众的根本回报）"
+        value={coreValue}
+        onChange={(e) => setCoreValue(e.target.value)}
+      />
+      <Textarea
+        aria-label="表达风格"
+        placeholder="表达风格（语气 / 调性）"
+        value={tone}
+        onChange={(e) => setTone(e.target.value)}
+      />
+      <Textarea
+        aria-label="当前状态"
+        placeholder="当前状态（账号此刻所处阶段）"
+        value={statusNote}
+        onChange={(e) => setStatusNote(e.target.value)}
+      />
+
+      <p className="pt-1 text-[11px] font-medium text-text-subtle">
+        定位规则（供下游模块使用，作为硬约束注入选题 / 写稿 / 项目）
+      </p>
+      <Textarea
+        aria-label="选题规则"
+        placeholder="选题规则（什么该做 / 不该做）"
+        value={topicRule}
+        onChange={(e) => setTopicRule(e.target.value)}
+      />
+      <Textarea
+        aria-label="写稿规则"
+        placeholder="写稿规则（结构 / 钩子 / 表达约束）"
+        value={scriptRule}
+        onChange={(e) => setScriptRule(e.target.value)}
+      />
+      <Textarea
+        aria-label="项目规则"
+        placeholder="项目规则（立项 / 节奏约束）"
+        value={projectRule}
+        onChange={(e) => setProjectRule(e.target.value)}
+      />
+      <Textarea
+        aria-label="禁止事项"
+        placeholder="禁止事项（绝对红线）"
+        value={forbidRule}
+        onChange={(e) => setForbidRule(e.target.value)}
+      />
+      <Textarea
+        aria-label="表达风格规则"
+        placeholder="表达风格规则（统一语气的硬约束）"
+        value={expressionRule}
+        onChange={(e) => setExpressionRule(e.target.value)}
+      />
+
       <Button type="submit" disabled={pending} className="self-start">
         {ctaLabel}
       </Button>
@@ -254,8 +361,8 @@ export interface PositioningDraftDrawerProps {
   readonly profile: CreatorProfileResource | null;
   /** Trigger button label, e.g. 「+ 新建定位版本」/「编辑」/「复制为草稿」. */
   readonly triggerLabel: string;
-  /** Trigger button visual: default (页头主按钮) | outline (英雄区/历史行). */
-  readonly triggerVariant?: "default" | "outline";
+  /** Trigger button visual: default (页头主按钮) | outline (历史行) | ghost (编辑). */
+  readonly triggerVariant?: "default" | "outline" | "ghost";
   readonly triggerSize?: "default" | "sm";
   /** Show a + / pencil icon on the trigger. */
   readonly triggerIcon?: "plus" | "pencil" | "none";

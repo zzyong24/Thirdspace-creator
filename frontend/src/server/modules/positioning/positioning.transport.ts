@@ -65,6 +65,8 @@ export function createPositioningTransport(
             audience?: string;
             differentiation?: string;
             capabilities?: string[];
+            facets?: Record<string, string>;
+            downstreamRules?: Record<string, string>;
           };
           const profile = await service.upsertProfile(ctx, {
             persona: b.persona ?? "",
@@ -72,6 +74,10 @@ export function createPositioningTransport(
             audience: b.audience ?? "",
             differentiation: b.differentiation ?? "",
             capabilities: b.capabilities ?? [],
+            // facets/rules are optional (defaulted in the contract body); the service
+            // normalizes a partial/absent object to the full key set.
+            facets: b.facets,
+            downstreamRules: b.downstreamRules,
           });
           return { data: profile, meta: { requestId } };
         }

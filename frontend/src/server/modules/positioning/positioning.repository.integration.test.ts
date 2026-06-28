@@ -16,6 +16,24 @@ import { OwnershipError } from "./positioning.errors";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
+// 定位中心重建 — the facets / downstream-rules jsonb the repo now persists. Blank
+// defaults keep the existing assertions focused; one test fills + round-trips them.
+const BLANK_FACETS = {
+  contentScope: "",
+  avoid: "",
+  corePain: "",
+  coreValue: "",
+  tone: "",
+  statusNote: "",
+};
+const BLANK_RULES = {
+  topicRule: "",
+  scriptRule: "",
+  projectRule: "",
+  forbidRule: "",
+  expressionRule: "",
+};
+
 function repoFor(db: Db, userId: string, tag = userId): PositioningRepository {
   let seq = 0;
   return createPositioningRepository(db, {
@@ -31,7 +49,7 @@ describe("positioning repository (integration, user-scoped)", () => {
     ({ db } = await createDb());
   });
 
-  it("creator_profiles round-trips with jsonb capabilities + defaults", async () => {
+  it("creator_profiles round-trips with jsonb capabilities + facets + downstream rules", async () => {
     const repo = repoFor(db, "user-a");
     const row = await repo.insertProfile({
       persona: "硬核科普创作者",
@@ -39,10 +57,32 @@ describe("positioning repository (integration, user-scoped)", () => {
       audience: "一线开发者",
       differentiation: "把论文落到可运行代码",
       capabilities: ["拆解论文", "代码演示", "工程化"],
+      facets: {
+        contentScope: "论文精读到工程落地",
+        avoid: "纯理论推导",
+        corePain: "看得懂论文却落不了地",
+        coreValue: "今天就能 clone 跑通",
+        tone: "硬核工程师口吻",
+        statusNote: "稳定更新中",
+      },
+      downstreamRules: {
+        topicRule: "只做能产出可运行代码的选题",
+        scriptRule: "开头 15 秒抛可复现结果",
+        projectRule: "每个项目绑定可演示代码产物",
+        forbidRule: "不贴无法运行的截图",
+        expressionRule: "统一工程师口吻不用营销腔",
+      },
     });
     expect(row.userId).toBe("user-a");
     expect(row.field).toBe("AI 工程");
     expect(row.capabilities).toEqual(["拆解论文", "代码演示", "工程化"]);
+    // 定位中心重建 — the two jsonb columns round-trip key-by-key from real SQL.
+    expect((row.facets as { corePain: string }).corePain).toBe(
+      "看得懂论文却落不了地",
+    );
+    expect((row.downstreamRules as { topicRule: string }).topicRule).toBe(
+      "只做能产出可运行代码的选题",
+    );
     expect(row.createdAt).toBe(NOW);
     expect(row.updatedAt).toBe(NOW);
   });
@@ -55,6 +95,8 @@ describe("positioning repository (integration, user-scoped)", () => {
       audience: "a",
       differentiation: "d",
       capabilities: [],
+      facets: BLANK_FACETS,
+      downstreamRules: BLANK_RULES,
     });
     const v1 = await repo.insertStatement({
       profileId: profile.id,
@@ -101,6 +143,8 @@ describe("positioning repository (integration, user-scoped)", () => {
       audience: "aa",
       differentiation: "da",
       capabilities: [],
+      facets: BLANK_FACETS,
+      downstreamRules: BLANK_RULES,
     });
     const stmtA = await repoA.insertStatement({
       profileId: profileA.id,

@@ -33,6 +33,25 @@ export interface CreativeContext {
 // The narrow read port — mirrors how the AI module reaches Artifacts/Knowledge through a
 // port rather than a module import. The composition root (persistence-client) supplies a
 // reader bound to the positioning service.
+// The richer facets + 5 downstream rules (定位中心重建) the brief now injects so
+// 选题/写稿/项目 runners read them as hard constraints. Optional on the read shape
+// (a partial reader / empty profile degrades to the legacy 5-field brief).
+export interface PositioningFacets {
+  contentScope?: string;
+  avoid?: string;
+  corePain?: string;
+  coreValue?: string;
+  tone?: string;
+  statusNote?: string;
+}
+export interface PositioningDownstreamRules {
+  topicRule?: string;
+  scriptRule?: string;
+  projectRule?: string;
+  forbidRule?: string;
+  expressionRule?: string;
+}
+
 export interface PositioningReader {
   getPositioningCenter(ctx: RequestContext): Promise<{
     profile: {
@@ -41,6 +60,8 @@ export interface PositioningReader {
       audience: string;
       differentiation: string;
       capabilities: string[];
+      facets?: PositioningFacets;
+      downstreamRules?: PositioningDownstreamRules;
     } | null;
     currentStatement: { oneLiner: string; keywords: string[] } | null;
   }>;
@@ -160,6 +181,8 @@ function formatPositioning(center: {
     audience: string;
     differentiation: string;
     capabilities: string[];
+    facets?: PositioningFacets;
+    downstreamRules?: PositioningDownstreamRules;
   } | null;
   currentStatement: { oneLiner: string; keywords: string[] } | null;
 }): string {
@@ -177,6 +200,30 @@ function formatPositioning(center: {
     if (p.audience) lines.push(`目标人群：${p.audience}`);
     if (p.differentiation) lines.push(`差异化：${p.differentiation}`);
     if (p.capabilities?.length) lines.push(`能力清单：${p.capabilities.join("、")}`);
+    // 账号定位 facet 补全 — the richer self-knowledge the downstream node grounds against.
+    const f = p.facets;
+    if (f) {
+      if (f.contentScope) lines.push(`内容范围：${f.contentScope}`);
+      if (f.avoid) lines.push(`不做什么：${f.avoid}`);
+      if (f.corePain) lines.push(`核心痛点：${f.corePain}`);
+      if (f.coreValue) lines.push(`核心价值：${f.coreValue}`);
+      if (f.tone) lines.push(`表达风格：${f.tone}`);
+      if (f.statusNote) lines.push(`当前状态：${f.statusNote}`);
+    }
+    // 定位规则（供下游模块使用）— injected as explicit HARD constraints so the agent
+    // treats them as rules, not background. This is the "定位规则约束下游" landing point.
+    const r = p.downstreamRules;
+    if (r) {
+      const ruleLines: string[] = [];
+      if (r.topicRule) ruleLines.push(`· 选题规则：${r.topicRule}`);
+      if (r.scriptRule) ruleLines.push(`· 写稿规则：${r.scriptRule}`);
+      if (r.projectRule) ruleLines.push(`· 项目规则：${r.projectRule}`);
+      if (r.forbidRule) ruleLines.push(`· 禁止事项：${r.forbidRule}`);
+      if (r.expressionRule) ruleLines.push(`· 表达风格规则：${r.expressionRule}`);
+      if (ruleLines.length > 0) {
+        lines.push(`【定位规则（必须遵守）】\n${ruleLines.join("\n")}`);
+      }
+    }
   }
   return lines.join("\n");
 }

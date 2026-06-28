@@ -7,23 +7,43 @@
  * real SQL via the composite transport). Empty-state (brand-new user, no profile)
  * renders a 「创建定位」 CTA (the draft drawer) instead of the version timeline.
  *
- * Layout (Stitch redesign-v1, Phase B): 页头 + 新建定位版本 → 英雄区 当前定位母版
- * (一句话放大 + facet 网格) → AI 赋能带 (✨ AI 生成定位建议) → 下游影响 (可折叠,真 facet)
- * → 历史版本紧凑表 (查看 / 复制为草稿). The mutating controls live in the client
- * islands `positioning-interactive-region.tsx` (drawer = upsertProfile +
- * createStatement) and `generate-positioning-island.tsx` (positioning.generate
- * AI task → 采纳 = confirmTask). Built from real shadcn tokens — NOT Stitch HTML.
+ * Layout (定位中心重建, two-column): 页头 + 新建定位版本 → 两栏 grid:
+ *   - 左主栏: 英雄区 当前定位母版 (一句话放大 + 9-facet 图标 chip 网格) → AI 区
+ *       (✨ AI 生成定位建议) → 版本历史表.
+ *   - 右规则栏: 「定位规则（供下游模块使用）」 5 条规则卡 (彩色图标 chip + 短文),
+ *       prominent / NOT collapsed (these are the constraints the downstream brief injects).
+ * The mutating controls live in the client islands `positioning-interactive-region.tsx`
+ * (drawer = upsertProfile + createStatement) and `generate-positioning-island.tsx`
+ * (positioning.generate AI task → 采纳 = confirmTask). Built from real shadcn tokens.
  *
  * Determinism (C-5): no Date.now / Math.random / fetch in the render or selectors;
- * the timeline order comes from the version-desc `history` the server composed.
- * `/positioning` is annotated "暂不纳入视觉门禁" until stage-12 re-baseline (R2-9).
+ * the timeline order comes from the version-desc `history` the server composed. Empty
+ * facets / empty rules are dropped (never invented) — the fields exist + are editable.
  */
 
 import * as React from "react";
+import {
+  User,
+  Compass,
+  Users,
+  Ban,
+  HeartPulse,
+  Sparkles,
+  MessageCircle,
+  Gem,
+  Activity,
+  Lightbulb,
+  PenLine,
+  FolderKanban,
+  ShieldAlert,
+  Mic2,
+  type LucideIcon,
+} from "lucide-react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { Badge } from "@/components/ui/badge";
 import { client as defaultClient } from "@/lib/contract-client.server";
+import { cn } from "@/lib/utils";
 import type {
   CreatorProfileResource,
   PositioningCenterResource,
@@ -69,7 +89,45 @@ export async function PositioningCenterPage({
   return <PositioningCenterView viewModel={vm} />;
 }
 
-// Pure render — split out so tests can drive it synchronously with a fixed VM.
+// ── Colored icon chip ─────────────────────────────────────────────────────────
+// A small Lucide line icon inside a tinted rounded square. `tone` selects one of the
+// design-system soft-backed semantic colors so the facet/rule grid reads as a colorful
+// set of chips (not a flat list). Pure presentation — no state.
+type ChipTone = "brand" | "info" | "success" | "warning" | "rose" | "violet";
+
+const TONE_CLASS: Record<ChipTone, string> = {
+  brand: "bg-brand-soft text-brand",
+  info: "bg-info-soft text-info",
+  success: "bg-success-soft text-success",
+  warning: "bg-warning-soft text-warning",
+  rose: "bg-rose-50 text-rose-500",
+  violet: "bg-violet-50 text-violet-600",
+};
+
+function IconChip({
+  icon: Icon,
+  tone,
+  className,
+}: {
+  readonly icon: LucideIcon;
+  readonly tone: ChipTone;
+  readonly className?: string;
+}) {
+  return (
+    <span
+      data-slot="icon-chip"
+      aria-hidden
+      className={cn(
+        "flex size-8 shrink-0 items-center justify-center rounded-control",
+        TONE_CLASS[tone],
+        className,
+      )}
+    >
+      <Icon className="size-[18px]" strokeWidth={2} />
+    </span>
+  );
+}
+
 export function PositioningCenterView({
   viewModel,
 }: {
@@ -106,25 +164,25 @@ export function PositioningCenterView({
           </div>
         </SectionCard>
       ) : (
-        <>
-          <HeroMaster
-            profile={profile}
-            currentStatement={currentStatement}
-            keywords={keywords}
-            productAnchors={productAnchors}
-          />
+        // 两栏：左主 (英雄区 + AI 区 + 历史表) + 右规则栏 (定位规则). 在窄屏堆叠。
+        <div className="grid grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="flex min-w-0 flex-col gap-section-gap">
+            <HeroMaster
+              profile={profile}
+              currentStatement={currentStatement}
+              keywords={keywords}
+              productAnchors={productAnchors}
+            />
 
-          <div data-testid="positioning-ai-band">
-            <GeneratePositioningIsland />
+            <div data-testid="positioning-ai-band">
+              <GeneratePositioningIsland />
+            </div>
+
+            <HistoryTable history={history} profile={profile} />
           </div>
 
-          <DownstreamImpact
-            profile={profile}
-            currentStatement={currentStatement}
-          />
-
-          <HistoryTable history={history} profile={profile} />
-        </>
+          <DownstreamRules profile={profile} />
+        </div>
       )}
     </div>
   );
@@ -159,7 +217,15 @@ function PageHeader({
   );
 }
 
-// 英雄区 当前定位母版：当前使用 pill + 一句话放大 + facet 网格(只读真字段).
+// 英雄区 当前定位母版：当前使用 pill + 最近更新 + 编辑 + 一句话放大 + 9-facet 图标网格.
+// Each facet = 彩色 Lucide 图标 chip + 标签 + 一行值; an empty facet is DROPPED.
+type Facet = {
+  readonly label: string;
+  readonly value: string;
+  readonly icon: LucideIcon;
+  readonly tone: ChipTone;
+};
+
 function HeroMaster({
   profile,
   currentStatement,
@@ -171,35 +237,65 @@ function HeroMaster({
   readonly keywords: readonly string[];
   readonly productAnchors: readonly string[];
 }) {
-  // facet 网格 — ONLY real fields; an empty facet is dropped, never invented.
-  const facets: ReadonlyArray<readonly [string, string]> = [
-    ["我是谁", profile.persona],
-    ["领域 / 赛道", profile.field],
-    ["目标人群", profile.audience],
-    ["差异化视角", profile.differentiation],
-    ["能力清单", profile.capabilities.join("、")],
-    ["产品锚", productAnchors.join("、")],
+  const f = profile.facets;
+  // 完整 9 facet (按 spec 顺序): 我是谁 / 内容范围 / 目标人群 / 不做什么 / 核心痛点 /
+  // 表达风格 / 核心价值 / 当前状态 / 差异化视角. Each carries a colored icon chip.
+  const facets: ReadonlyArray<Facet> = [
+    { label: "我是谁", value: profile.persona, icon: User, tone: "brand" },
+    { label: "内容范围", value: f.contentScope, icon: Compass, tone: "info" },
+    { label: "目标人群", value: profile.audience, icon: Users, tone: "success" },
+    { label: "不做什么", value: f.avoid, icon: Ban, tone: "rose" },
+    { label: "核心痛点", value: f.corePain, icon: HeartPulse, tone: "warning" },
+    { label: "表达风格", value: f.tone, icon: MessageCircle, tone: "violet" },
+    { label: "核心价值", value: f.coreValue, icon: Gem, tone: "brand" },
+    { label: "当前状态", value: f.statusNote, icon: Activity, tone: "info" },
+    {
+      label: "差异化视角",
+      value: profile.differentiation,
+      icon: Sparkles,
+      tone: "violet",
+    },
   ];
-  const shown = facets.filter(([, v]) => v.trim().length > 0);
+  const shown = facets.filter((x) => x.value.trim().length > 0);
+
+  // 能力清单 + 产品锚 keep their compact tag rows (secondary signals, not in the 9 grid).
+  const capabilities = profile.capabilities.filter((c) => c.trim().length > 0);
 
   return (
     <SectionCard
       title="当前定位母版"
       action={
-        currentStatement ? (
-          <Badge
-            data-testid="positioning-current-pill"
-            className="bg-success/15 text-success"
-          >
-            当前使用 · v{currentStatement.versionNumber}
-          </Badge>
-        ) : null
+        <div className="flex items-center gap-2">
+          {currentStatement ? (
+            <Badge
+              data-testid="positioning-current-pill"
+              className="bg-success/15 text-success"
+            >
+              当前使用 · v{currentStatement.versionNumber}
+            </Badge>
+          ) : null}
+          {currentStatement ? (
+            <span className="text-xs text-text-subtle">
+              最近更新 {formatDate(profile.updatedAt)}
+            </span>
+          ) : null}
+          <PositioningDraftDrawer
+            profile={profile}
+            triggerLabel="编辑"
+            triggerVariant="ghost"
+            triggerSize="sm"
+            triggerIcon="pencil"
+            title="编辑当前定位"
+            description="更新账号画像，或追加一条新的不可变定位陈述。"
+          />
+        </div>
       }
     >
-      <div className="flex flex-col gap-4 py-1">
+      <div className="flex flex-col gap-5 py-1">
+        {/* 一句话定位放大 — headline-lg 粗体. */}
         <p
           data-testid="positioning-one-liner"
-          className="text-lg font-semibold leading-snug text-foreground"
+          className="text-2xl font-bold leading-snug tracking-tight text-foreground"
         >
           {currentStatement?.oneLiner ?? "尚未填写定位陈述"}
         </p>
@@ -207,7 +303,11 @@ function HeroMaster({
         {keywords.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {keywords.map((kw) => (
-              <Badge key={kw} variant="secondary" className="text-xs">
+              <Badge
+                key={kw}
+                variant="secondary"
+                className="bg-brand-soft text-brand text-xs"
+              >
                 {kw}
               </Badge>
             ))}
@@ -217,100 +317,144 @@ function HeroMaster({
         {shown.length > 0 ? (
           <dl
             data-testid="positioning-facets"
-            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"
           >
-            {shown.map(([label, value]) => (
+            {shown.map((facet) => (
               <div
-                key={label}
+                key={facet.label}
                 data-testid="positioning-facet"
-                className="flex flex-col gap-0.5 rounded-control border border-border bg-surface px-3 py-2"
+                className="flex items-start gap-3 rounded-card border border-border bg-card px-3 py-3 transition-colors hover:border-brand/40"
               >
-                <dt className="text-[11px] text-text-subtle">{label}</dt>
-                <dd className="text-sm text-foreground">{value}</dd>
+                <IconChip icon={facet.icon} tone={facet.tone} />
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <dt className="text-[11px] font-medium text-text-subtle">
+                    {facet.label}
+                  </dt>
+                  <dd className="text-[13px] leading-snug text-foreground">
+                    {facet.value}
+                  </dd>
+                </div>
               </div>
             ))}
           </dl>
         ) : null}
 
-        <div className="pt-1">
-          <PositioningDraftDrawer
-            profile={profile}
-            triggerLabel="编辑"
-            triggerVariant="outline"
-            triggerSize="sm"
-            triggerIcon="pencil"
-            title="编辑当前定位"
-            description="更新账号画像，或追加一条新的不可变定位陈述。"
-          />
-        </div>
+        {capabilities.length > 0 || productAnchors.length > 0 ? (
+          <div className="flex flex-col gap-2 border-t border-border pt-3">
+            {capabilities.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] text-text-subtle">能力清单</span>
+                {capabilities.map((c) => (
+                  <Badge key={c} variant="outline" className="text-[11px]">
+                    {c}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+            {productAnchors.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] text-text-subtle">产品锚</span>
+                {productAnchors.map((a) => (
+                  <Badge key={a} variant="outline" className="text-[11px]">
+                    {a}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </SectionCard>
   );
 }
 
-// 下游影响（可折叠、次级）：诚实展示这套定位如何约束下游——真 facet 注入下游 AI 提示。
-function DownstreamImpact({
+// 右规则栏「定位规则（供下游模块使用）」— 5 条规则卡, prominent / not collapsed.
+// Each = 彩色图标 chip + 标签 + 短文. Empty rule → that card is dropped (never invented).
+// These ARE the fields creative-context injects as HARD constraints into 选题/写稿/项目.
+type Rule = {
+  readonly label: string;
+  readonly value: string;
+  readonly icon: LucideIcon;
+  readonly tone: ChipTone;
+};
+
+function DownstreamRules({
   profile,
-  currentStatement,
 }: {
   readonly profile: CreatorProfileResource;
-  readonly currentStatement: PositioningStatementResource | null;
 }) {
-  // The facets actually injected into every downstream runner's prompt
-  // (creative-context.ts formatPositioning). Each row shown only if it has a value.
-  const injected: ReadonlyArray<readonly [string, string]> = [
-    ["定位一句话", currentStatement?.oneLiner ?? ""],
-    ["关键词", (currentStatement?.keywords ?? []).join("、")],
-    ["人设", profile.persona],
-    ["领域", profile.field],
-    ["目标人群", profile.audience],
-    ["差异化", profile.differentiation],
-    ["能力清单", profile.capabilities.join("、")],
+  const r = profile.downstreamRules;
+  const rules: ReadonlyArray<Rule> = [
+    { label: "选题规则", value: r.topicRule, icon: Lightbulb, tone: "warning" },
+    { label: "写稿规则", value: r.scriptRule, icon: PenLine, tone: "info" },
+    {
+      label: "项目规则",
+      value: r.projectRule,
+      icon: FolderKanban,
+      tone: "brand",
+    },
+    {
+      label: "禁止事项",
+      value: r.forbidRule,
+      icon: ShieldAlert,
+      tone: "rose",
+    },
+    {
+      label: "表达风格规则",
+      value: r.expressionRule,
+      icon: Mic2,
+      tone: "violet",
+    },
   ];
-  const shown = injected.filter(([, v]) => v.trim().length > 0);
+  const shown = rules.filter((x) => x.value.trim().length > 0);
 
   return (
-    <details
+    <aside
       data-testid="positioning-downstream"
-      className="group rounded-card border border-border bg-card"
+      className="flex flex-col gap-3 rounded-card border border-border bg-card p-card-padding lg:sticky lg:top-4 lg:self-start"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-card-padding py-3 text-[15px] font-semibold text-foreground">
-        这套定位如何约束下游
-        <span className="text-xs font-normal text-muted-foreground group-open:hidden">
-          展开
-        </span>
-        <span className="hidden text-xs font-normal text-muted-foreground group-open:inline">
-          收起
-        </span>
-      </summary>
-      <div className="flex flex-col gap-3 px-card-padding pb-card-padding text-sm">
-        <p className="text-muted-foreground">
-          每次 AI 生成（选题、脚本草稿、评分、素材匹配、一稿多平台改写、Copilot
-          回答）都会把下面这些字段注入提示，作为账号一致性的约束源。改定位即改下游所有 AI 的行为。
+      <div className="flex flex-col gap-0.5">
+        <h2 className="text-[15px] font-semibold text-foreground">
+          定位规则（供下游模块使用）
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          每次 AI 生成（选题 / 写稿 / 项目 / 评分 / Copilot）都会把下面这些规则作为硬约束注入。改规则即改下游所有 AI 的行为。
         </p>
-        {shown.length > 0 ? (
-          <dl
-            data-testid="positioning-downstream-fields"
-            className="flex flex-col divide-y divide-border rounded-control border border-border"
-          >
-            {shown.map(([label, value]) => (
-              <div key={label} className="flex gap-3 px-3 py-2">
-                <dt className="w-20 shrink-0 text-text-subtle">{label}</dt>
-                <dd className="text-foreground">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            当前定位还没有可注入的字段。补全账号画像与一句话定位后，下游 AI 就会以它为约束。
-          </p>
-        )}
       </div>
-    </details>
+
+      {shown.length > 0 ? (
+        <div
+          data-testid="positioning-downstream-fields"
+          className="flex flex-col gap-2.5"
+        >
+          {shown.map((rule) => (
+            <div
+              key={rule.label}
+              data-testid="positioning-rule-card"
+              className="flex items-start gap-2.5 rounded-control border border-border bg-surface px-3 py-2.5"
+            >
+              <IconChip icon={rule.icon} tone={rule.tone} className="size-7" />
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <span className="text-[12px] font-medium text-foreground">
+                  {rule.label}
+                </span>
+                <span className="text-[12px] leading-snug text-muted-foreground">
+                  {rule.value}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-control border border-dashed border-border px-3 py-4 text-xs text-muted-foreground">
+          还没有设置定位规则。在「编辑」抽屉里填写选题 / 写稿 / 项目 / 禁止 / 表达规则后，下游 AI 会以它们为硬约束。
+        </p>
+      )}
+    </aside>
   );
 }
 
-// 历史版本紧凑表：版本号 / 一句话 / 时间 / 状态 pill / 操作（查看 · 复制为草稿）.
+// 历史版本紧凑表：版本号 / 一句话 / 状态 pill / 操作（复制为草稿）.
 function HistoryTable({
   history,
   profile,
@@ -365,4 +509,9 @@ function HistoryTable({
       </ol>
     </SectionCard>
   );
+}
+
+// Deterministic ISO-8601 → YYYY-MM-DD (C-5: no Date.now; parse the stored string only).
+function formatDate(iso: string): string {
+  return iso.slice(0, 10);
 }

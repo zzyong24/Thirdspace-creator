@@ -38,6 +38,40 @@ export type PositioningGateResultResource =
 export type PositioningCenterResource =
   (typeof positioningCenterResource)["_output"];
 
+// jsonb projection — a stored profile row may carry a partial / empty `{}` facets or
+// rules object (old rows, AI confirm). Normalize to the full key set with "" defaults so
+// the DTO always matches creatorProfileResource (every key present, string-typed).
+type FacetsDto = CreatorProfileResource["facets"];
+type RulesDto = CreatorProfileResource["downstreamRules"];
+
+function str(o: Record<string, unknown> | null | undefined, k: string): string {
+  const v = o?.[k];
+  return typeof v === "string" ? v : "";
+}
+
+function toFacetsDto(raw: unknown): FacetsDto {
+  const o = (raw ?? {}) as Record<string, unknown>;
+  return {
+    contentScope: str(o, "contentScope"),
+    avoid: str(o, "avoid"),
+    corePain: str(o, "corePain"),
+    coreValue: str(o, "coreValue"),
+    tone: str(o, "tone"),
+    statusNote: str(o, "statusNote"),
+  };
+}
+
+function toRulesDto(raw: unknown): RulesDto {
+  const o = (raw ?? {}) as Record<string, unknown>;
+  return {
+    topicRule: str(o, "topicRule"),
+    scriptRule: str(o, "scriptRule"),
+    projectRule: str(o, "projectRule"),
+    forbidRule: str(o, "forbidRule"),
+    expressionRule: str(o, "expressionRule"),
+  };
+}
+
 // Row → DTO mappers (SPEC §9: the API DTO is built by an explicit mapper, NEVER the
 // Drizzle row). The service + contract test share ONE mapping so a wire-shape change
 // is caught once.
@@ -52,6 +86,8 @@ export function toCreatorProfileDto(
     audience: row.audience,
     differentiation: row.differentiation,
     capabilities: (row.capabilities ?? []) as string[],
+    facets: toFacetsDto(row.facets),
+    downstreamRules: toRulesDto(row.downstreamRules),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

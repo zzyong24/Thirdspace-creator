@@ -2364,6 +2364,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     audience: "想把 AI 用起来的一线开发者",
     differentiation: "每条内容都给出可运行的代码与踩坑记录",
     capabilities: ["论文拆解", "代码演示", "工程化复盘"],
+    // 定位中心重建 — the richer facets (英雄区 9 格) + 5 downstream rules (右栏规则卡),
+    // real on-brand values for the canonical creator (NOT placeholders).
+    facets: {
+      contentScope: "前沿 AI 论文精读、把模型/算法落成可跑的工程代码、Agent 与 RAG 实战",
+      avoid: "纯理论推导、不写无法复现的演示、不追与开发者无关的泛 AI 热点",
+      corePain: "看得懂论文却落不了地：环境、依赖、踩坑让 idea 卡在 demo",
+      coreValue: "把论文里的 idea 变成一线开发者今天就能 clone 跑通的工程代码",
+      tone: "硬核、克制、工程师口吻——少形容词,多结论与代码",
+      statusNote: "稳定更新中,正从单条论文精读扩展到成体系的工程化专栏",
+    },
+    downstreamRules: {
+      topicRule: "只做能产出可运行代码或踩坑结论的选题;纯概念科普不立项",
+      scriptRule: "开头 15 秒抛出可复现的结果钩子;正文按「问题→论文方案→工程落地→踩坑」展开",
+      projectRule: "每个项目必须绑定一个可演示的代码产物;无 demo 不进入制作",
+      forbidRule: "不夸大效果、不贴无法运行的截图、不引用未读过的论文",
+      expressionRule: "统一工程师口吻:第一人称、给结论、给代码,不用营销腔与情绪词",
+    },
     createdAt: FIXED_NOW_ISO,
     updatedAt: FIXED_NOW_ISO,
   };

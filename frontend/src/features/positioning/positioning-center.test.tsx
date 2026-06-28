@@ -49,6 +49,22 @@ const STATEMENT = (versionNumber: number, oneLiner: string, ai = false) => ({
   createdAt: "2026-06-21T00:00:00.000Z",
 });
 
+const FACETS = {
+  contentScope: "论文精读到工程落地",
+  avoid: "纯理论推导",
+  corePain: "看得懂论文却落不了地",
+  coreValue: "今天就能 clone 跑通",
+  tone: "硬核工程师口吻",
+  statusNote: "稳定更新中",
+};
+const RULES = {
+  topicRule: "只做能产出可运行代码的选题",
+  scriptRule: "开头 15 秒抛可复现结果",
+  projectRule: "每个项目绑定可演示代码产物",
+  forbidRule: "不贴无法运行的截图",
+  expressionRule: "统一工程师口吻不用营销腔",
+};
+
 const POPULATED: PositioningCenterViewModel = {
   profile: {
     id: "profile-1",
@@ -58,6 +74,8 @@ const POPULATED: PositioningCenterViewModel = {
     audience: "开发者",
     differentiation: "论文到代码",
     capabilities: ["拆解", "演示"],
+    facets: FACETS,
+    downstreamRules: RULES,
     createdAt: "2026-06-21T00:00:00.000Z",
     updatedAt: "2026-06-21T00:00:00.000Z",
   },
@@ -92,7 +110,7 @@ describe("PositioningCenterView", () => {
     expect(screen.queryByTestId("positioning-ai-band")).toBeNull();
   });
 
-  it("renders the 当前定位母版 英雄区: one-liner enlarged, current pill, facet grid with product anchors", () => {
+  it("renders the 当前定位母版 英雄区: one-liner enlarged, current pill, 9-facet grid", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
     expect(screen.getByTestId("positioning-one-liner").textContent).toContain(
       "v2 把论文变生产级代码",
@@ -101,10 +119,14 @@ describe("PositioningCenterView", () => {
       "v2",
     );
     expect(screen.getByText("论文")).toBeTruthy();
-    // facet grid carries the real profile fields incl. the product anchor.
+    // facet grid carries the real profile fields + the 6 richer facets.
     const facets = screen.getByTestId("positioning-facets");
-    expect(facets.textContent).toContain("硬核科普");
-    expect(facets.textContent).toContain("product-1");
+    expect(facets.textContent).toContain("硬核科普"); // 我是谁
+    expect(facets.textContent).toContain("论文精读到工程落地"); // 内容范围
+    expect(facets.textContent).toContain("看得懂论文却落不了地"); // 核心痛点
+    expect(facets.textContent).toContain("论文到代码"); // 差异化视角
+    // 9 facet labels present (all populated in the fixture).
+    expect(screen.getAllByTestId("positioning-facet").length).toBe(9);
   });
 
   it("drops facets with no value rather than inventing them", () => {
@@ -114,15 +136,16 @@ describe("PositioningCenterView", () => {
         ...POPULATED.profile!,
         audience: "",
         differentiation: "",
-        capabilities: [],
+        facets: { ...FACETS, corePain: "", avoid: "" },
       },
-      productAnchors: [],
     };
     render(<PositioningCenterView viewModel={sparse} />);
     const facets = screen.getByTestId("positioning-facets");
     expect(facets.textContent).toContain("硬核科普"); // persona kept
     expect(facets.textContent).not.toContain("目标人群"); // empty audience dropped
-    expect(facets.textContent).not.toContain("产品锚"); // empty anchors dropped
+    expect(facets.textContent).not.toContain("不做什么"); // empty avoid dropped
+    // 9 - 4 empty (audience, differentiation, corePain, avoid) = 5 shown.
+    expect(screen.getAllByTestId("positioning-facet").length).toBe(5);
   });
 
   it("renders the AI 赋能带 with the single real 生成定位建议 button", () => {
@@ -131,14 +154,28 @@ describe("PositioningCenterView", () => {
     expect(screen.getByText(/AI 生成定位建议/)).toBeTruthy();
   });
 
-  it("renders the 下游影响 collapsible with the real injected positioning fields", () => {
+  it("renders the right-rail 定位规则 with the 5 rule cards (downstream constraints)", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
     const panel = screen.getByTestId("positioning-downstream");
-    expect(panel).toBeTruthy();
+    expect(panel.textContent).toContain("定位规则（供下游模块使用）");
     const fields = screen.getByTestId("positioning-downstream-fields");
-    // injected facets actually fed to downstream runners (creative-context).
-    expect(fields.textContent).toContain("差异化");
-    expect(fields.textContent).toContain("论文到代码");
+    // the 5 rules actually injected into downstream runners (creative-context).
+    expect(fields.textContent).toContain("选题规则");
+    expect(fields.textContent).toContain("只做能产出可运行代码的选题");
+    expect(fields.textContent).toContain("禁止事项");
+    expect(screen.getAllByTestId("positioning-rule-card").length).toBe(5);
+  });
+
+  it("drops empty rule cards rather than inventing them", () => {
+    const sparse: PositioningCenterViewModel = {
+      ...POPULATED,
+      profile: {
+        ...POPULATED.profile!,
+        downstreamRules: { ...RULES, projectRule: "", forbidRule: "" },
+      },
+    };
+    render(<PositioningCenterView viewModel={sparse} />);
+    expect(screen.getAllByTestId("positioning-rule-card").length).toBe(3);
   });
 
   it("renders the history timeline version-desc with the AI badge on AI rows", () => {

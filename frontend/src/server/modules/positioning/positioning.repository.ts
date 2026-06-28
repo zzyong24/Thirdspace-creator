@@ -26,12 +26,33 @@ export interface RepoDeps {
   userId: string; // the ownership boundary, baked in at construction
 }
 
+// The richer facets + downstream rules (定位中心重建) — persisted as ONE jsonb each.
+// Stored as plain objects (string fields); the service/mapper own the key set.
+export interface ProfileFacetsInput {
+  contentScope: string;
+  avoid: string;
+  corePain: string;
+  coreValue: string;
+  tone: string;
+  statusNote: string;
+}
+
+export interface ProfileDownstreamRulesInput {
+  topicRule: string;
+  scriptRule: string;
+  projectRule: string;
+  forbidRule: string;
+  expressionRule: string;
+}
+
 export interface InsertProfileInput {
   persona: string;
   field: string;
   audience: string;
   differentiation: string;
   capabilities: string[];
+  facets: ProfileFacetsInput;
+  downstreamRules: ProfileDownstreamRulesInput;
 }
 
 export interface UpdateProfileInput {
@@ -40,6 +61,8 @@ export interface UpdateProfileInput {
   audience: string;
   differentiation: string;
   capabilities: string[];
+  facets: ProfileFacetsInput;
+  downstreamRules: ProfileDownstreamRulesInput;
 }
 
 export interface InsertStatementInput {
@@ -113,6 +136,8 @@ export function createPositioningRepository(
           audience: input.audience,
           differentiation: input.differentiation,
           capabilities: input.capabilities,
+          facets: input.facets,
+          downstreamRules: input.downstreamRules,
           createdAt: deps.now(),
           updatedAt: deps.now(),
         })
@@ -129,6 +154,8 @@ export function createPositioningRepository(
           audience: input.audience,
           differentiation: input.differentiation,
           capabilities: input.capabilities,
+          facets: input.facets,
+          downstreamRules: input.downstreamRules,
           updatedAt: deps.now(),
         })
         .where(eq(creatorProfiles.userId, deps.userId))

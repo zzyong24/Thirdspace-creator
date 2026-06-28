@@ -54,12 +54,34 @@ export interface ServiceDeps {
   projects: PositioningProjectsPort;
 }
 
+// Partial facets / rules accepted from callers (the transport passes the contract
+// body, the AI confirm may pass a subset). The service normalizes to the full key
+// set so the repo always writes a complete jsonb object.
+export interface UpsertProfileFacets {
+  contentScope?: string;
+  avoid?: string;
+  corePain?: string;
+  coreValue?: string;
+  tone?: string;
+  statusNote?: string;
+}
+
+export interface UpsertProfileDownstreamRules {
+  topicRule?: string;
+  scriptRule?: string;
+  projectRule?: string;
+  forbidRule?: string;
+  expressionRule?: string;
+}
+
 export interface UpsertProfileInput {
   persona: string;
   field: string;
   audience: string;
   differentiation: string;
   capabilities: string[];
+  facets?: UpsertProfileFacets;
+  downstreamRules?: UpsertProfileDownstreamRules;
 }
 
 export interface CreateStatementInput {
@@ -191,9 +213,33 @@ export function createPositioningService(
     async upsertProfile(ctx, input) {
       const repo = repoFor(ctx);
       const existing = await repo.getProfile();
+      // Normalize the partial facets/rules to the full key set ("" defaults) so the
+      // repo always writes a complete jsonb object (the DTO round-trips cleanly).
+      const normalized = {
+        persona: input.persona,
+        field: input.field,
+        audience: input.audience,
+        differentiation: input.differentiation,
+        capabilities: input.capabilities,
+        facets: {
+          contentScope: input.facets?.contentScope ?? "",
+          avoid: input.facets?.avoid ?? "",
+          corePain: input.facets?.corePain ?? "",
+          coreValue: input.facets?.coreValue ?? "",
+          tone: input.facets?.tone ?? "",
+          statusNote: input.facets?.statusNote ?? "",
+        },
+        downstreamRules: {
+          topicRule: input.downstreamRules?.topicRule ?? "",
+          scriptRule: input.downstreamRules?.scriptRule ?? "",
+          projectRule: input.downstreamRules?.projectRule ?? "",
+          forbidRule: input.downstreamRules?.forbidRule ?? "",
+          expressionRule: input.downstreamRules?.expressionRule ?? "",
+        },
+      };
       const row = existing
-        ? await repo.updateProfileRow(input)
-        : await repo.insertProfile(input);
+        ? await repo.updateProfileRow(normalized)
+        : await repo.insertProfile(normalized);
       return toCreatorProfileDto(row);
     },
 
