@@ -10,16 +10,13 @@ describe("resolveLlmConfig — tier 1 DB row", () => {
   it("uses the DB row when its secretReference resolves non-empty", async () => {
     const cfg = await resolveLlmConfig(ctx, "planning.thesis", {
       getModelConfig: async () => ({
-        id: "m1",
-        userId: "u1",
-        capability: "planning.thesis",
         provider: "minimax",
         modelName: "MiniMax-M3",
         baseUrl: "https://api.minimaxi.com/anthropic",
         apiFormat: "anthropic",
         secretReference: "env:MINIMAX_AUTH_TOKEN",
+        secretValue: null,
         settings: { effort: "high" },
-        isDefault: false,
       }),
       env: { MINIMAX_AUTH_TOKEN: "tok-db" },
     });
@@ -31,6 +28,44 @@ describe("resolveLlmConfig — tier 1 DB row", () => {
       token: "tok-db",
       settings: { effort: "high" },
     });
+  });
+
+  it("prefers a stored secretValue over the env-ref (local-db key)", async () => {
+    const cfg = await resolveLlmConfig(ctx, "default", {
+      getModelConfig: async () => ({
+        provider: "minimax",
+        modelName: "MiniMax-M3",
+        baseUrl: "https://api.minimaxi.com/anthropic",
+        apiFormat: "anthropic",
+        secretReference: "",
+        secretValue: "sk-stored",
+        settings: {},
+      }),
+      env: {},
+    });
+    expect(cfg.token).toBe("sk-stored");
+    expect(cfg.baseUrl).toBe("https://api.minimaxi.com/anthropic");
+    expect(cfg.authStyle).toBe("bearer");
+  });
+
+  it("falls back to the 'default' capability row when the exact one is missing", async () => {
+    const cfg = await resolveLlmConfig(ctx, "script.draft", {
+      getModelConfig: async (_c, cap) =>
+        cap === "default"
+          ? {
+              provider: "anthropic",
+              modelName: "claude-opus-4-8",
+              baseUrl: null,
+              apiFormat: "anthropic",
+              secretReference: "",
+              secretValue: "sk-default",
+              settings: {},
+            }
+          : null,
+      env: {},
+    });
+    expect(cfg.token).toBe("sk-default");
+    expect(cfg.model).toBe("claude-opus-4-8");
   });
 });
 

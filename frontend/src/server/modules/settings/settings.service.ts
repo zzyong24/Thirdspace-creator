@@ -40,6 +40,20 @@ const HARD_DEFAULT_MODEL: ResolvedModel = {
   modelName: "claude-opus-4-8",
 };
 
+// The AI-consumed model config (resolve.ts reads this) — carries the RAW secret
+// (secretValue) so resolve can authenticate. Server-only; NEVER serialized to the
+// client. The public DTO (toModelResource) masks the secret to `hasSecret`.
+// resolve prefers secretValue, else resolves secretReference via env.
+export interface ModelConfigInternal {
+  provider: string;
+  modelName: string;
+  baseUrl: string | null;
+  apiFormat: "anthropic" | "openai_chat";
+  secretReference: string;
+  secretValue: string | null;
+  settings: Record<string, unknown>;
+}
+
 /** Reads the authenticated user's account row (Identity's getCurrentUser). */
 export type AccountReader = (ctx: RequestContext) => Promise<UserResource>;
 
@@ -81,7 +95,10 @@ export interface SettingsService {
   getModelConfig(
     ctx: RequestContext,
     capability: string,
-  ): Promise<ModelConfigurationResource | null>;
+  ): Promise<ModelConfigInternal | null>;
+  listModelConfigs(
+    ctx: RequestContext,
+  ): Promise<ModelConfigurationResource[]>;
   createAgentConfiguration(
     ctx: RequestContext,
     input: AgentCreateInput,
@@ -122,6 +139,24 @@ function toModelResource(
     apiFormat: (row.apiFormat as "anthropic" | "openai_chat") ?? "anthropic",
     settings: (row.settings as Record<string, unknown>) ?? {},
     isDefault: row.isDefault,
+    // Masked: a usable secret is configured (stored value OR env-ref). The raw
+    // secret value is NEVER serialized — only this boolean.
+    hasSecret:
+      Boolean(row.secretValue && row.secretValue.length > 0) ||
+      Boolean(row.secretReference && row.secretReference.length > 0),
+  };
+}
+
+// Server-only projection for resolve.ts — carries the RAW secret. Never serialize.
+function toModelInternal(row: ModelConfigurationRow): ModelConfigInternal {
+  return {
+    provider: row.provider,
+    modelName: row.modelName,
+    baseUrl: row.baseUrl ?? null,
+    apiFormat: (row.apiFormat as "anthropic" | "openai_chat") ?? "anthropic",
+    secretReference: row.secretReference,
+    secretValue: row.secretValue ?? null,
+    settings: (row.settings as Record<string, unknown>) ?? {},
   };
 }
 
@@ -186,7 +221,12 @@ export function createSettingsService(
 
     async getModelConfig(ctx, capability) {
       const row = await repoForCtx(ctx).getModel(ctx, capability);
-      return row ? toModelResource(row) : null;
+      return row ? toModelInternal(row) : null;
+    },
+
+    async listModelConfigs(ctx) {
+      const rows = await repoForCtx(ctx).listModels(ctx);
+      return rows.map(toModelResource);
     },
 
     async createAgentConfiguration(ctx, input) {

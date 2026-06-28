@@ -67,6 +67,9 @@ function makeFakeRepo(): SettingsRepository & {
       return state._models.find((m) => m.capability === capability) ?? null;
     },
     async putModel(_c: RequestContext, capability: string, body: ModelPutBody) {
+      const prev = state._models.find((m) => m.capability === capability);
+      const secretProvided =
+        typeof body.secret === "string" && body.secret.length > 0;
       const row: ModelConfigurationRow = {
         id: "model-fake",
         userId: ctx.userId,
@@ -74,6 +77,7 @@ function makeFakeRepo(): SettingsRepository & {
         provider: body.provider,
         modelName: body.modelName,
         secretReference: body.secretReference ?? "",
+        secretValue: secretProvided ? body.secret! : (prev?.secretValue ?? null),
         baseUrl: body.baseUrl ?? null,
         apiFormat: body.apiFormat ?? "anthropic",
         settings: body.settings ?? {},
@@ -178,6 +182,48 @@ describe("settings.service", () => {
     expect(dto.secretReference).toBe("");
     expect(dto.settings).toEqual({});
     expect(dto.isDefault).toBe(false);
+  });
+
+  it("masks the secret on the DTO: hasSecret reflects config, raw value never serialized", async () => {
+    const repo = makeFakeRepo();
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    const dto = await svc.setModelConfiguration(ctx, "default", {
+      provider: "minimax",
+      modelName: "MiniMax-M3",
+      secret: "sk-real-key",
+    });
+    expect(dto.hasSecret).toBe(true);
+    // The raw secret is NEVER on the public DTO.
+    expect((dto as Record<string, unknown>).secret).toBeUndefined();
+    expect((dto as Record<string, unknown>).secretValue).toBeUndefined();
+    // An env-ref alone also counts as configured.
+    const dto2 = await svc.setModelConfiguration(ctx, "research", {
+      provider: "minimax",
+      modelName: "MiniMax-M3",
+      secretReference: "env:MINIMAX_AUTH_TOKEN",
+    });
+    expect(dto2.hasSecret).toBe(true);
+    // Neither stored nor referenced → not configured.
+    const dto3 = await svc.setModelConfiguration(ctx, "copy", {
+      provider: "anthropic",
+      modelName: "claude-opus-4-8",
+    });
+    expect(dto3.hasSecret).toBe(false);
+  });
+
+  it("listModelConfigs returns masked DTOs for the user's rows", async () => {
+    const repo = makeFakeRepo();
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    await svc.setModelConfiguration(ctx, "default", {
+      provider: "minimax",
+      modelName: "MiniMax-M3",
+      secret: "sk-real-key",
+    });
+    const list = await svc.listModelConfigs(ctx);
+    expect(list).toHaveLength(1);
+    expect(list[0]!.capability).toBe("default");
+    expect(list[0]!.hasSecret).toBe(true);
+    expect((list[0] as Record<string, unknown>).secretValue).toBeUndefined();
   });
 
   it("resolveModelForCapability fallback chain: exact → isDefault → hard default", async () => {

@@ -1,6 +1,6 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
-import type { ModelConfigurationResource } from "@/server/modules/settings/settings.schema";
+import type { ModelConfigInternal } from "@/server/modules/settings/settings.service";
 import {
   LlmCredentialError,
   type ApiFormat,
@@ -11,7 +11,7 @@ export interface ResolveDeps {
   getModelConfig: (
     ctx: RequestContext,
     capability: string,
-  ) => Promise<ModelConfigurationResource | null>;
+  ) => Promise<ModelConfigInternal | null>;
   env: Record<string, string | undefined>;
 }
 
@@ -33,6 +33,33 @@ function deriveAuthStyle(baseUrl: string | null): "bearer" | "x-api-key" {
   return baseUrl ? "bearer" : "x-api-key";
 }
 
+// The global-default capability key. A per-capability lookup that misses falls
+// back to this row (cc-switch's "global default" + per-app override, mapped to
+// per-capability granularity) before the env default.
+const DEFAULT_CAPABILITY = "default";
+
+// Build a ResolvedLlmConfig from a user-configured DB row, or null when no usable
+// token. A stored secretValue (the local-db key) takes precedence over an
+// env-ref secretReference (cc-switch first_non_empty).
+function tryDbRow(
+  row: ModelConfigInternal | null,
+  env: Record<string, string | undefined>,
+): ResolvedLlmConfig | null {
+  if (!row) return null;
+  const token =
+    row.secretValue?.trim() || resolveSecret(row.secretReference, env);
+  if (!token) return null;
+  const baseUrl = row.baseUrl ?? null;
+  return {
+    apiFormat: row.apiFormat,
+    baseUrl,
+    model: row.modelName,
+    authStyle: deriveAuthStyle(baseUrl),
+    token,
+    settings: row.settings ?? {},
+  };
+}
+
 export async function resolveLlmConfig(
   ctx: RequestContext,
   capability: string,
@@ -40,21 +67,16 @@ export async function resolveLlmConfig(
 ): Promise<ResolvedLlmConfig> {
   const { env } = deps;
 
-  // Tier 1 — the per-capability DB row (user-configured).
-  const row = await deps.getModelConfig(ctx, capability);
-  if (row) {
-    const token = resolveSecret(row.secretReference, env);
-    if (token) {
-      const baseUrl = row.baseUrl ?? null;
-      return {
-        apiFormat: row.apiFormat,
-        baseUrl,
-        model: row.modelName,
-        authStyle: deriveAuthStyle(baseUrl),
-        token,
-        settings: row.settings ?? {},
-      };
-    }
+  // Tier 1 — the user-configured DB row. Prefer the per-capability row, then the
+  // global "default" row. A stored secretValue wins; else the env-ref resolves.
+  const fromCap = tryDbRow(await deps.getModelConfig(ctx, capability), env);
+  if (fromCap) return fromCap;
+  if (capability !== DEFAULT_CAPABILITY) {
+    const fromDefault = tryDbRow(
+      await deps.getModelConfig(ctx, DEFAULT_CAPABILITY),
+      env,
+    );
+    if (fromDefault) return fromDefault;
   }
 
   // Tier 2 — the .env.local default provider.

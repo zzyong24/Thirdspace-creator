@@ -38,6 +38,9 @@ export interface ModelPutBody {
   provider: string;
   modelName: string;
   secretReference?: string;
+  // Inline secret value — stored directly in the (local) db. Absent/empty = keep
+  // the existing stored key (a partial update never wipes it).
+  secret?: string;
   baseUrl?: string;
   apiFormat?: "anthropic" | "openai_chat";
   settings?: Record<string, unknown>;
@@ -161,6 +164,22 @@ export function createSettingsRepository(
       const isDefault = body.isDefault ?? false;
       const baseUrl = body.baseUrl ?? null;
       const apiFormat = body.apiFormat ?? "anthropic";
+      // Only a non-empty `secret` is a write; absent/empty preserves the stored
+      // value on update (and inserts NULL on a first create). The upsert `set`
+      // therefore excludes secretValue unless provided — a partial update
+      // (provider/model only) never clobbers an existing stored key.
+      const secretProvided =
+        typeof body.secret === "string" && body.secret.length > 0;
+      const updateSet: Record<string, unknown> = {
+        provider: body.provider,
+        modelName: body.modelName,
+        secretReference,
+        settings,
+        baseUrl,
+        apiFormat,
+        isDefault,
+      };
+      if (secretProvided) updateSet.secretValue = body.secret;
       const inserted = await db
         .insert(modelConfigurations)
         .values({
@@ -170,6 +189,7 @@ export function createSettingsRepository(
           provider: body.provider,
           modelName: body.modelName,
           secretReference,
+          secretValue: secretProvided ? body.secret! : null,
           settings,
           baseUrl,
           apiFormat,
@@ -177,15 +197,7 @@ export function createSettingsRepository(
         })
         .onConflictDoUpdate({
           target: [modelConfigurations.userId, modelConfigurations.capability],
-          set: {
-            provider: body.provider,
-            modelName: body.modelName,
-            secretReference,
-            settings,
-            baseUrl,
-            apiFormat,
-            isDefault,
-          },
+          set: updateSet,
         })
         .returning();
       return inserted[0]!;

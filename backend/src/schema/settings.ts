@@ -35,6 +35,10 @@ export const modelConfigurations = pgTable("model_configurations", {
   provider: text("provider").notNull(),
   modelName: text("model_name").notNull(),
   secretReference: text("secret_reference").notNull().default(""),
+  // Inline secret value (the actual key), stored directly in the LOCAL db (the
+  // app's end form is a local client — no leak surface). The public DTO masks
+  // this to a `hasSecret` boolean and NEVER serializes the raw value.
+  secretValue: text("secret_value"),
   settings: jsonb("settings").notNull(),
   baseUrl: text("base_url"),
   apiFormat: text("api_format").notNull().default("anthropic"),
@@ -76,6 +80,7 @@ CREATE TABLE IF NOT EXISTS model_configurations (
   provider TEXT NOT NULL,
   model_name TEXT NOT NULL,
   secret_reference TEXT NOT NULL DEFAULT '',
+  secret_value TEXT,
   settings JSONB NOT NULL,
   base_url TEXT,
   api_format TEXT NOT NULL DEFAULT 'anthropic',

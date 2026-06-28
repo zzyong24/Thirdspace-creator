@@ -159,6 +159,28 @@ describe("settings.repository (putModel upsert)", () => {
     expect(model.settings).toEqual({});
     expect(model.isDefault).toBe(false);
   });
+
+  it("stores an inline secret value and a partial update preserves it", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+    await repo.putModel(ctxA, "default", {
+      provider: "minimax",
+      modelName: "MiniMax-M3",
+      baseUrl: "https://api.minimaxi.com/anthropic",
+      apiFormat: "anthropic",
+      secret: "sk-real",
+    });
+    const row = await repo.getModel(ctxA, "default");
+    expect(row?.secretValue).toBe("sk-real");
+
+    // A partial update (provider/model only, no secret) keeps the stored key.
+    const after = await repo.putModel(ctxA, "default", {
+      provider: "minimax",
+      modelName: "MiniMax-M3-v2",
+    });
+    expect(after.modelName).toBe("MiniMax-M3-v2");
+    const row2 = await repo.getModel(ctxA, "default");
+    expect(row2?.secretValue).toBe("sk-real");
+  });
 });
 
 describe("settings.repository (patchPreferences insert-then-update)", () => {
