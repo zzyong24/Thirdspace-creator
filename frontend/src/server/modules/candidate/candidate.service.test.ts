@@ -112,6 +112,47 @@ describe("candidate service", () => {
     expect(list.rows.filter((r) => r.aiTaskId === "ait-1")).toHaveLength(1);
   });
 
+  it("createCandidate starts with an empty 选题卡 (待评估 — no oneLiner)", async () => {
+    const c = await svc.createCandidate(ctx, { title: "空卡选题" });
+    expect(c.card.oneLiner).toBeUndefined();
+    expect(c.card.contentStructure).toEqual([]);
+    expect(c.card.audiencePainScore).toBeNull();
+    expect(c.card.productionDifficulty).toBeNull();
+  });
+
+  it("enrichCard cleans + replaces the stored card (topic.enrich confirm seam)", async () => {
+    const c = await svc.createCandidate(ctx, { title: "待补全选题" });
+    const enriched = await svc.enrichCard(ctx, c.id, {
+      oneLiner: "一句话",
+      targetAudience: "AI 创作者",
+      contentStructure: ["开头", "中段", "结尾"],
+      audiencePainScore: 88,
+      materialScore: 130, // out of range → clamped to null (honest)
+      productionDifficulty: "mid",
+      bogusField: "dropped", // unknown key → dropped
+    });
+    expect(enriched.card.oneLiner).toBe("一句话");
+    expect(enriched.card.targetAudience).toBe("AI 创作者");
+    expect(enriched.card.contentStructure).toEqual(["开头", "中段", "结尾"]);
+    expect(enriched.card.audiencePainScore).toBe(88);
+    expect(enriched.card.materialScore).toBeNull();
+    expect(enriched.card.productionDifficulty).toBe("mid");
+    expect((enriched.card as Record<string, unknown>).bogusField).toBeUndefined();
+    // It REPLACES (not merges) — a re-read returns the enriched card.
+    const reread = await svc.getCandidate(ctx, c.id);
+    expect(reread.card.oneLiner).toBe("一句话");
+  });
+
+  it("patchCandidate.card shallow-merges a partial 选题卡 edit (other fields untouched)", async () => {
+    const c = await svc.createCandidate(ctx, { title: "可编辑选题" });
+    await svc.enrichCard(ctx, c.id, { oneLiner: "原一句话", hook: "原 Hook" });
+    const patched = await svc.patchCandidate(ctx, c.id, {
+      card: { hook: "新 Hook" },
+    });
+    expect(patched.card.oneLiner).toBe("原一句话"); // untouched
+    expect(patched.card.hook).toBe("新 Hook"); // edited
+  });
+
   it("ingestAudienceSignal requires a real IngestionRun (RISK-005 dangling-run rejection)", async () => {
     ports.ingestion.assertRunExists.mockRejectedValueOnce(
       new OwnershipError("OwnershipError: run not found"),
@@ -240,5 +281,40 @@ describe("candidate service", () => {
     });
     const idx = (id: string) => list.rows.findIndex((r) => r.id === id);
     expect(idx(high.id)).toBeLessThan(idx(low.id));
+  });
+
+  it("getTopicsOverview derives the 6-state funnel from real rows (no status column)", async () => {
+    // 待评估: a bare pool candidate (empty card).
+    await svc.createCandidate(ctx, { title: "待评估选题" });
+    // 待补充: a pool candidate WITH an enriched card (oneLiner present).
+    const enriched = await svc.createCandidate(ctx, { title: "待补充选题" });
+    await svc.enrichCard(ctx, enriched.id, { oneLiner: "已补全一句话" });
+    // 已丢弃: a dropped candidate.
+    const drop = await svc.createCandidate(ctx, { title: "废弃选题" });
+    await svc.patchCandidate(ctx, drop.id, { status: "dropped" });
+    // 待收集: an unlinked audience signal.
+    await svc.ingestAudienceSignal(ingestCtx, {
+      source: "comment",
+      rawText: "未挂接的评论问题",
+    });
+    // 已立项: promote one candidate → topic_promotions row.
+    const promo = await svc.createCandidate(ctx, { title: "立项选题" });
+    await svc.promote(ctx, promo.id);
+
+    const ov = await svc.getTopicsOverview(ctx);
+    const f = Object.fromEntries(ov.funnel.map((x) => [x.key, x.count]));
+    expect(f.collecting).toBe(1); // 待收集 — unlinked signal
+    expect(f.evaluating).toBe(1); // 待评估 — pool, empty card
+    expect(f.enriching).toBe(1); // 待补充 — pool, enriched card
+    expect(f.promoted).toBe(1); // 已立项 — one promotion
+    expect(f.dropped).toBe(1); // 已丢弃 — one dropped
+    // 来源: comment count is real; 手动灵感 counts idea candidates (all created here).
+    const s = Object.fromEntries(ov.sources.map((x) => [x.key, x.count]));
+    expect(s.comment).toBe(1);
+    expect(s.idea).toBeGreaterThanOrEqual(3);
+    expect(ov.sources).toHaveLength(7);
+    // SOFT cross-module deps are unwired here → honest 0/"".
+    expect(ov.basis.knowledgeCards).toBe(0);
+    expect(ov.basis.positioningLabel).toBe("");
   });
 });

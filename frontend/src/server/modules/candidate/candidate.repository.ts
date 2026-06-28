@@ -53,12 +53,15 @@ export interface CreateCandidateInput {
 }
 
 // A free curation patch — NO promoted, NO demandCount (derived-field guard).
+// `card` is a PARTIAL 选题卡 patch — shallow-merged over the stored card (the user can
+// edit any subset of 详情/指标 without clobbering the rest).
 export interface PatchCandidateInput {
   title?: string;
   angle?: string;
   contentRole?: string | null;
   productAnchorId?: string | null;
   status?: "pool" | "dropped";
+  card?: Record<string, unknown>;
 }
 
 export interface CreateSignalInput {
@@ -91,6 +94,9 @@ export interface CandidateRepository {
   findCandidateByAiTaskId(aiTaskId: string): Promise<CandidateRow | undefined>;
   patchCandidate(id: string, patch: PatchCandidateInput): Promise<CandidateRow>;
   setPromoted(id: string): Promise<CandidateRow>;
+  // 选题卡 upsert (topic.enrich confirm) — REPLACE the stored card with the AI-filled
+  // one. Ownership-gated; the only path other than patchCandidate that writes `card`.
+  enrichCard(id: string, card: Record<string, unknown>): Promise<CandidateRow>;
 
   // Promotion.
   createPromotion(input: {
@@ -112,6 +118,20 @@ export interface CandidateRepository {
   linkSignal(signalId: string, candidateId: string): Promise<AudienceSignalRow>;
   // Recompute demand_count from the linked-signal count (the derived denormalization).
   recomputeDemandCount(candidateId: string): Promise<number>;
+
+  // 选题中心总览 — the candidate-module-owned counts the topics.overview read derives
+  // its 来源 + 漏斗 from (everything computable WITHOUT a cross-module read). All
+  // user-scoped. The card-emptiness split (待评估 vs 待补充) is decided in JS off each
+  // pool candidate's stored card (oneLiner present ⇒ 已补全).
+  topicsOverviewCounts(): Promise<{
+    signalsTotal: number; // audience_signals 总数
+    signalsUnlinked: number; // 待收集 — linkedCandidateId IS NULL
+    signalsBySource: Record<string, number>; // 评论问题/客户咨询… 按 source 计数
+    poolWithCard: number; // 待补充 — status=pool 且 card 已补全 (有 oneLiner)
+    poolWithoutCard: number; // 待评估 — status=pool 且 card 空 (无 oneLiner)
+    droppedCount: number; // 已丢弃 — status=dropped
+    promotionsCount: number; // 已立项 — topic_promotions 计数
+  }>;
 }
 
 export function createCandidateRepository(
@@ -221,8 +241,8 @@ export function createCandidateRepository(
           "DerivedFieldError: demandCount is derived (count of linked signals); never patched",
         );
       }
-      // ownership gate before any write.
-      await this.getCandidate(id);
+      // ownership gate before any write (also gives us the current card as merge base).
+      const current = await this.getCandidate(id);
       const set: Record<string, unknown> = { updatedAt: deps.now() };
       if (patch.title !== undefined) set.title = patch.title;
       if (patch.angle !== undefined) set.angle = patch.angle;
@@ -230,9 +250,30 @@ export function createCandidateRepository(
       if (patch.productAnchorId !== undefined)
         set.productAnchorId = patch.productAnchorId;
       if (patch.status !== undefined) set.status = patch.status;
+      if (patch.card !== undefined) {
+        // Shallow-merge the partial 选题卡 over the stored card so editing one field
+        // never clobbers the rest (the contract patch is candidateCard.partial()).
+        const base = ((current as { card?: unknown }).card ?? {}) as Record<
+          string,
+          unknown
+        >;
+        set.card = { ...base, ...patch.card };
+      }
       const updated = await db
         .update(candidates)
         .set(set)
+        .where(
+          and(eq(candidates.userId, deps.userId), eq(candidates.id, id)),
+        )
+        .returning();
+      return updated[0]!;
+    },
+
+    async enrichCard(id, card) {
+      await this.getCandidate(id); // ownership gate
+      const updated = await db
+        .update(candidates)
+        .set({ card, updatedAt: deps.now() })
         .where(
           and(eq(candidates.userId, deps.userId), eq(candidates.id, id)),
         )
@@ -394,6 +435,62 @@ export function createCandidateRepository(
           ),
         );
       return count;
+    },
+
+    async topicsOverviewCounts() {
+      // All user-scoped. Read the rows once and reduce in JS — the candidate pool is
+      // small per user, and the card-emptiness split needs the jsonb card anyway.
+      const sigRows = await db
+        .select({
+          source: audienceSignals.source,
+          linkedCandidateId: audienceSignals.linkedCandidateId,
+        })
+        .from(audienceSignals)
+        .where(eq(audienceSignals.userId, deps.userId));
+      const signalsBySource: Record<string, number> = {};
+      let signalsUnlinked = 0;
+      for (const s of sigRows) {
+        signalsBySource[s.source] = (signalsBySource[s.source] ?? 0) + 1;
+        // 待收集 — a signal not yet tied to a Candidate (linkedCandidateId IS NULL).
+        if (!s.linkedCandidateId) signalsUnlinked++;
+      }
+
+      const candRows = await db
+        .select({ status: candidates.status, card: candidates.card })
+        .from(candidates)
+        .where(eq(candidates.userId, deps.userId));
+      let poolWithCard = 0;
+      let poolWithoutCard = 0;
+      let droppedCount = 0;
+      for (const c of candRows) {
+        if (c.status === "dropped") {
+          droppedCount++; // 已丢弃
+          continue;
+        }
+        if (c.status !== "pool") continue; // promoted is counted via topic_promotions
+        // 已补全 vs 待评估 — a pool candidate whose card carries a oneLiner has been
+        // enriched (待补充/待决策); an empty card is 待评估.
+        const card = (c.card ?? {}) as Record<string, unknown>;
+        const enriched =
+          typeof card.oneLiner === "string" && card.oneLiner.length > 0;
+        if (enriched) poolWithCard++;
+        else poolWithoutCard++;
+      }
+
+      const promoRows = await db
+        .select({ id: topicPromotions.id })
+        .from(topicPromotions)
+        .where(eq(topicPromotions.userId, deps.userId));
+
+      return {
+        signalsTotal: sigRows.length,
+        signalsUnlinked,
+        signalsBySource,
+        poolWithCard,
+        poolWithoutCard,
+        droppedCount,
+        promotionsCount: promoRows.length,
+      };
     },
   };
 }

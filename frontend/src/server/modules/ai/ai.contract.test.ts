@@ -36,7 +36,10 @@ function makeTransport(db: Db) {
     nextId: (prefix: string) => `${prefix}-${++seq}`,
     artifacts: { createVersion: async () => ({}) },
     knowledge: { createKnowledge: async () => ({ id: "k-new" }) },
-      candidate: { createFromAIResult: async () => ({ id: "cand-new" }) },
+      candidate: {
+        createFromAIResult: async () => ({ id: "cand-new" }),
+        enrichCard: async () => ({ id: "cand-new" }),
+      },
       learnings: { createLearning: async () => ({ id: "learn-new" }) },
       publishing: { createPublicationFromDraft: async () => ({ id: "pub-new" }) },
       materialLinks: { link: async () => ({ id: "mlink-new" }) },
@@ -153,7 +156,10 @@ describe("ai contract (each op validates against its DTO)", () => {
       nextId: (prefix: string) => `${prefix}-${++seq}`,
       artifacts: { createVersion: async () => ({}) },
       knowledge: { createKnowledge: async () => ({ id: "k-new" }) },
-      candidate: { createFromAIResult: async () => ({ id: "cand-new" }) },
+      candidate: {
+        createFromAIResult: async () => ({ id: "cand-new" }),
+        enrichCard: async () => ({ id: "cand-new" }),
+      },
       learnings: { createLearning: async () => ({ id: "learn-new" }) },
       publishing: { createPublicationFromDraft: async () => ({ id: "pub-new" }) },
       materialLinks: { link: async () => ({ id: "mlink-new" }) },

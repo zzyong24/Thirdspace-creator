@@ -9,8 +9,10 @@ import {
 } from "../primitives";
 import {
   candidateResource,
+  candidateCard,
   audienceSignalResource,
   topicPromotionResource,
+  topicsOverviewResource,
 } from "../resources/candidate";
 
 const candidateParams = z.object({ candidateId: id });
@@ -68,6 +70,10 @@ export const candidateOperations = {
       contentRole: contentRole.optional(),
       productAnchorId: id.optional(),
       status: z.enum(["pool", "dropped"]).optional(),
+      // 选题卡可编辑 — a partial card patch merges over the stored card (the user can
+      // edit any subset of 详情/指标). `.partial()` drops candidateCard's array
+      // default so an absent field is left untouched rather than reset to [].
+      card: candidateCard.partial().optional(),
     }),
     response: candidateResource,
     fr: ["FR-CAND-PATCH"],
@@ -103,5 +109,15 @@ export const candidateOperations = {
     body: z.object({ candidateId: id.optional() }),
     response: candidateResource,
     fr: ["FR-CAND-SIGNAL-LINK"],
+  }),
+  // 选题中心总览 (选题中心大改) — a read-only aggregate (出题依据 + 7 来源 + 6 态漏斗),
+  // every count DERIVED from real rows at read time (no stored 总览 table). Owned by the
+  // candidate module's transport.
+  overviewTopics: defineEndpoint({
+    id: "topics.overview",
+    method: "GET",
+    path: "/topics/overview",
+    response: topicsOverviewResource,
+    fr: ["FR-CAND-OVERVIEW"],
   }),
 } as const;

@@ -151,6 +151,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/candidates/:candidateId/promote"],
   ["GET", "/audience-signals"],
   ["POST", "/audience-signals/:signalId/link"],
+  ["GET", "/topics/overview"],
   // 校准 (calibration)
   ["POST", "/calibration/rubrics"],
   ["POST", "/calibration/rubrics/:rubricId/versions"],

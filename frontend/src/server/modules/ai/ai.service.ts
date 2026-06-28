@@ -73,6 +73,14 @@ export interface AiCandidatePort {
       };
     },
   ): Promise<unknown>;
+  // 选题卡补全 (topic.enrich node, 选题中心大改): confirmTask formalizes a `topic_card`
+  // candidate by upserting the AI-filled card onto the existing candidate via the
+  // candidate module's enrichCard seam (AI never writes the candidates row directly).
+  enrichCard(
+    ctx: RequestContext,
+    candidateId: string,
+    card: Record<string, unknown>,
+  ): Promise<unknown>;
 }
 
 // The Learnings seam (机制④⑤ 复盘 node): confirmTask formalizes a `learning_list`
@@ -277,6 +285,7 @@ const DEFAULT_MODEL_FOR_CAPABILITY: Record<string, string> = {
   "review.insights": "claude-opus-4-8",
   "copilot.assist": "claude-opus-4-8",
   "positioning.generate": "claude-opus-4-8",
+  "topic.enrich": "claude-opus-4-8",
 };
 
 // A deterministic FNV-1a hash → stable idempotency key when the caller omits one. No
@@ -508,6 +517,37 @@ export function createAiService(deps: ServiceDeps): AiService {
           });
           i++;
         }
+        const updated = await repo.updateTaskStatus(taskId, {
+          status: "succeeded",
+          completedAt: deps.now(),
+        });
+        return toTaskDto(updated);
+      }
+
+      // topic_card (topic.enrich node, 选题中心大改) — formalize the AI-filled 选题卡 onto
+      // the existing 选题候选 via the candidate module's enrichCard seam (AI never writes
+      // the candidates row directly). The candidate carries `resultData.candidateId` +
+      // `resultData.card` (the 10 详情字段 + 3 指标). enrichCard is ownership-gated
+      // (cross-user / unknown candidateId → OwnershipError → 404).
+      if (candidate.resultType === "topic_card") {
+        const data = (candidate.resultData ?? {}) as {
+          candidateId?: unknown;
+          card?: unknown;
+        };
+        const candidateId =
+          typeof data.candidateId === "string" ? data.candidateId : "";
+        if (!candidateId) {
+          throw new ConflictError(
+            `AI task ${taskId} topic_card candidate is missing candidateId`,
+          );
+        }
+        const card =
+          data.card !== null &&
+          typeof data.card === "object" &&
+          !Array.isArray(data.card)
+            ? (data.card as Record<string, unknown>)
+            : {};
+        await deps.candidate.enrichCard(ctx, candidateId, card);
         const updated = await repo.updateTaskStatus(taskId, {
           status: "succeeded",
           completedAt: deps.now(),

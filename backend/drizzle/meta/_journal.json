@@ -29,6 +29,13 @@
       "when": 1782379200000,
       "tag": "0003_positioning_facets_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782379300000,
+      "tag": "0004_candidate_card",
+      "breakpoints": true
     }
   ]
 }

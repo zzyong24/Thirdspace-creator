@@ -28,6 +28,7 @@ export const CANDIDATE_OP_IDS = [
   "candidates.promote",
   "audienceSignals.list",
   "audienceSignals.linkToCandidate",
+  "topics.overview",
 ] as const;
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
@@ -92,6 +93,7 @@ export function createCandidateTransport(
             contentRole?: "traffic" | "trust" | "conversion";
             productAnchorId?: string;
             status?: "pool" | "dropped";
+            card?: Record<string, unknown>;
           };
           const patched = await service.patchCandidate(ctx, p.candidateId ?? "", {
             title: b.title,
@@ -99,6 +101,8 @@ export function createCandidateTransport(
             contentRole: b.contentRole,
             productAnchorId: b.productAnchorId,
             status: b.status,
+            // 选题卡可编辑 — the partial card is sanitized in the service before merge.
+            card: b.card,
           });
           return { data: patched, meta: { requestId } };
         }
@@ -133,6 +137,10 @@ export function createCandidateTransport(
             b.candidateId,
           );
           return { data: candidate, meta: { requestId } };
+        }
+        case "topics.overview": {
+          const overview = await service.getTopicsOverview(ctx);
+          return { data: overview, meta: { requestId } };
         }
         default:
           throw new UnsupportedOperationError(endpoint.id);

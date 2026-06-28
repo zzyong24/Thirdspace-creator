@@ -26,6 +26,14 @@ export interface CreativeContext {
   // who this person already is on-platform. Empty until the accounts reader is wired
   // (Plan Phase A) or when the creator has connected no accounts.
   accountsBrief: string;
+  // 受众信号 brief — a compact listing of the creator's audience signals (评论/私信/咨询/
+  // 复盘 raw text + demand tag) so the topic.generate `comments` basis can出题 from real
+  // demand. Empty until the signals reader is wired or when there are no signals.
+  signalsBrief: string;
+  // 知识库 brief — a compact listing of the creator's KnowledgeItems (title (type)) so the
+  // topic.generate `knowledge` basis can出题 from accumulated material. Empty until the
+  // knowledge reader is wired or when the library is empty.
+  knowledgeBrief: string;
   topic: { title: string; angle: string };
   projectId: string | null;
 }
@@ -97,11 +105,33 @@ export interface AccountsReader {
   >;
 }
 
+// 受众信号 reader — the creator's audience signals (评论/私信/咨询/复盘). Optional: only
+// the topic.generate node (comments basis) passes it. The composition root binds it to
+// the candidate public service's listSignals method.
+export interface SignalsReader {
+  list(
+    ctx: RequestContext,
+    opts: { limit?: number },
+  ): Promise<Array<{ source: string; rawText: string; demandTag: string | null }>>;
+}
+
+// 知识库 reader — the creator's KnowledgeItems (title + type). Optional: only the
+// topic.generate node (knowledge basis) passes it. The composition root binds it to the
+// knowledge public service's listKnowledge method.
+export interface KnowledgeReader {
+  list(
+    ctx: RequestContext,
+    opts: { limit?: number },
+  ): Promise<Array<{ title: string; knowledgeType: string }>>;
+}
+
 export interface ContextDeps {
   positioning: PositioningReader;
   learnings?: LearningsReader;
   assets?: AssetsReader;
   accounts?: AccountsReader;
+  signals?: SignalsReader;
+  knowledge?: KnowledgeReader;
 }
 
 export interface AssembleInput {
@@ -164,11 +194,40 @@ export async function assembleCreativeContext(
     }
   }
 
+  let signalsBrief = "";
+  if (deps.signals) {
+    try {
+      const rows = await deps.signals.list(ctx, { limit: 30 });
+      signalsBrief = rows
+        .map(
+          (s) =>
+            `· [${s.source}]${s.demandTag ? ` (${s.demandTag})` : ""} ${s.rawText}`,
+        )
+        .join("\n");
+    } catch {
+      signalsBrief = ""; // 受众信号 is best-effort context; never block a node on it
+    }
+  }
+
+  let knowledgeBrief = "";
+  if (deps.knowledge) {
+    try {
+      const rows = await deps.knowledge.list(ctx, { limit: 40 });
+      knowledgeBrief = rows
+        .map((k) => `· ${k.title}${k.knowledgeType ? ` (${k.knowledgeType})` : ""}`)
+        .join("\n");
+    } catch {
+      knowledgeBrief = ""; // 知识库 is best-effort context; never block a node on it
+    }
+  }
+
   return {
     positioningBrief,
     learningsBrief,
     assetsBrief,
     accountsBrief,
+    signalsBrief,
+    knowledgeBrief,
     topic: { title: input.topic, angle: input.angle ?? "" },
     projectId: input.projectId,
   };

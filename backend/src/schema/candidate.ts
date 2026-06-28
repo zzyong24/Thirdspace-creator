@@ -1,4 +1,4 @@
-import { pgTable, text, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 
 // Candidate / AudienceSignal / TopicPromotion tables (七步整合设计 §5 — 选题情报层;
 // contract v0.4 resources/candidate.ts; SPEC §13 "选题候选 (candidate)" group). The
@@ -41,6 +41,11 @@ export const candidates = pgTable("candidates", {
   demandCount: integer("demand_count").notNull().default(0), // derived (linked signals)
   status: text("status").notNull().default("pool"), // pool|promoted|dropped
   aiTaskId: text("ai_task_id"), // provenance for AI-sourced (soft FK → ai_tasks)
+  // 选题卡 (topic.enrich, 选题中心大改) — the AI-filled 详情/指标 payload (10 详情字段 +
+  // 3 指标). Shape is the contract `candidateCard` zod object (all fields optional);
+  // `{}` until a topic.enrich task formalizes it. Editable via candidates.patch.card.
+  // jsonb so a card grows without a migration; an empty card means 待评估 (no oneLiner).
+  card: jsonb("card").notNull().default({}),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -85,6 +90,7 @@ CREATE TABLE IF NOT EXISTS candidates (
   demand_count INTEGER NOT NULL DEFAULT 0,
   status TEXT NOT NULL DEFAULT 'pool',
   ai_task_id TEXT,
+  card JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

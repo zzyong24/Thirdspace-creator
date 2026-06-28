@@ -34,6 +34,7 @@ function makeService(
   };
   const candidate = {
     createFromAIResult: vi.fn(async () => ({ id: "cand-new" })),
+    enrichCard: vi.fn(async () => ({ id: "cand-new" })),
   };
   const learnings = { createLearning: vi.fn(async () => ({ id: "learn-new" })) };
   const publishing = {
@@ -142,6 +143,42 @@ describe("ai service", () => {
       ctx,
       expect.objectContaining({ aiTaskId: `${task.id}#0`, resultType: "candidate" }),
     );
+  });
+
+  it("confirmTask on a topic_card upserts the card onto the candidate via candidate.enrichCard and flips succeeded", async () => {
+    const { service, candidate } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "topic.enrich",
+      inputData: { candidateId: "cand-7" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "topic_card",
+      resultData: {
+        candidateId: "cand-7",
+        card: { oneLiner: "一句话", audiencePainScore: 80 },
+      },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    expect(candidate.enrichCard).toHaveBeenCalledTimes(1);
+    expect(candidate.enrichCard).toHaveBeenCalledWith(
+      ctx,
+      "cand-7",
+      expect.objectContaining({ oneLiner: "一句话", audiencePainScore: 80 }),
+    );
+  });
+
+  it("confirmTask on a topic_card missing candidateId throws (no silent no-op)", async () => {
+    const { service } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "topic.enrich",
+      inputData: {},
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "topic_card",
+      resultData: { card: { oneLiner: "x" } },
+    });
+    await expect(service.confirmTask(ctx, task.id)).rejects.toBeTruthy();
   });
 
   it("confirmTask on a material_list materializes each material via knowledge.createKnowledge AND links it to the project (Plan A5)", async () => {

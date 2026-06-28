@@ -154,6 +154,17 @@ describe("candidate contract", () => {
     expect(parsed.source).toBe("demand");
   });
 
+  it("topics.overview → topicsOverviewResource (derived, SOFT deps degrade to 0/\"\")", async () => {
+    // No overview port wired → 出题依据 cross-module counts are 0/"" (honest); the
+    // candidate-module-owned funnel/source counts are real (0 on an empty store).
+    const res = await call(transport, "topics.overview", {});
+    const parsed = ENDPOINTS.overviewTopics.response.parse(res.data);
+    expect(parsed.basis.positioningLabel).toBe("");
+    expect(parsed.sources).toHaveLength(7);
+    expect(parsed.funnel).toHaveLength(6);
+    expect(res.meta?.requestId).toBe("r1");
+  });
+
   it("unknown op id throws UnsupportedOperationError", async () => {
     await expect(call(transport, "candidates.bogus", {})).rejects.toBeInstanceOf(
       UnsupportedOperationError,

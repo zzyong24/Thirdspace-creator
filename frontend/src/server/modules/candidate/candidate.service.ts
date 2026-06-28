@@ -10,9 +10,12 @@ import {
   toCandidateDto,
   toAudienceSignalDto,
   toTopicPromotionDto,
+  toCardDto,
+  pickCardFields,
   type CandidateResource,
   type AudienceSignalResource,
   type TopicPromotionResource,
+  type TopicsOverviewResource,
 } from "./candidate.schema";
 import {
   PromoteStateError,
@@ -78,6 +81,18 @@ export interface CandidateIngestionPort {
   assertRunExists(ctx: RequestContext, runId: string): Promise<void>;
 }
 
+// 选题中心总览 — the cross-module read-only aggregates topics.overview surfaces that the
+// candidate module cannot compute from its OWN tables (定位 / 知识库 / 历史爆款 / 复盘回流).
+// OPTIONAL (SOFT dep): an absent port (or any rejecting call) degrades to "" / 0 — the
+// overview NEVER fabricates a number for a data source that isn't wired. Each method is
+// bound at the composition root to a peer's PUBLIC service (no cross-module repo import).
+export interface CandidateOverviewPort {
+  positioningLabel(ctx: RequestContext): Promise<string>; // 定位领域一句 ("" when 未设定)
+  knowledgeCount(ctx: RequestContext): Promise<number>; // knowledge 条数
+  highPerformerCount(ctx: RequestContext): Promise<number>; // 历史爆款 (高表现作品)
+  learningsCount(ctx: RequestContext): Promise<number>; // 复盘回流经验条数
+}
+
 export interface ServiceDeps {
   db: Db;
   now: () => string;
@@ -85,6 +100,9 @@ export interface ServiceDeps {
   projects: CandidateProjectsPort;
   positioning?: CandidatePositioningPort;
   ingestion: CandidateIngestionPort;
+  // SOFT dep — the cross-module aggregates for topics.overview's 出题依据 + 历史爆款/复盘
+  // sources. Absent ⇒ those numbers report 0 / "" (honest, never fabricated).
+  overview?: CandidateOverviewPort;
 }
 
 export interface CreateCandidateInput {
@@ -100,6 +118,8 @@ export interface PatchCandidateInput {
   contentRole?: "traffic" | "trust" | "conversion" | null;
   productAnchorId?: string | null;
   status?: "pool" | "dropped";
+  // 选题卡可编辑 — a partial 选题卡 patch, shallow-merged over the stored card.
+  card?: Record<string, unknown>;
 }
 
 export interface ListCandidatesQuery {
@@ -174,12 +194,26 @@ export interface CandidateService {
     result: CandidateAIResult,
   ): Promise<CandidateResource>;
 
+  // 选题卡 enrich seam (topic.enrich confirm) — called by the AI module's confirmTask
+  // `topic_card` branch (AI-free). NOT a contract op. Cleans the AI-filled card into
+  // the full contract shape and REPLACES the candidate's stored card. Ownership-gated.
+  enrichCard(
+    ctx: RequestContext,
+    candidateId: string,
+    card: Record<string, unknown>,
+  ): Promise<CandidateResource>;
+
   // C-4 intake seam — called by the Ingestion module per record. NOT a contract op.
   // Requires ctx.ingestionRunId; rejects 悬空 runId (RISK-005); bumps demandCount.
   ingestAudienceSignal(
     ctx: RequestContext,
     record: IngestSignalInput,
   ): Promise<AudienceSignalResource>;
+
+  // 选题中心总览 (topics.overview) — 出题依据 + 7 来源 + 6 态漏斗, every count DERIVED
+  // from real rows at read time (candidate-module counts + the SOFT overview port for
+  // cross-module aggregates). No stored 总览 table, no new status column.
+  getTopicsOverview(ctx: RequestContext): Promise<TopicsOverviewResource>;
 
   listSignals(
     ctx: RequestContext,
@@ -195,7 +229,7 @@ export interface CandidateService {
 }
 
 export function createCandidateService(deps: ServiceDeps): CandidateService {
-  const { db, now, nextId, projects, positioning, ingestion } = deps;
+  const { db, now, nextId, projects, positioning, ingestion, overview } = deps;
 
   function repoFor(ctx: RequestContext): CandidateRepository {
     const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
@@ -248,7 +282,13 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async patchCandidate(ctx, candidateId, patch) {
-      const row = await repoFor(ctx).patchCandidate(candidateId, patch);
+      // Sanitize a partial 选题卡 patch (drop unknown keys / clamp metrics) before it
+      // reaches the repo's shallow-merge; everything else passes through unchanged.
+      const cleaned: typeof patch =
+        patch.card !== undefined
+          ? { ...patch, card: pickCardFields(patch.card) }
+          : patch;
+      const row = await repoFor(ctx).patchCandidate(candidateId, cleaned);
       return toCandidateDto(row);
     },
 
@@ -304,6 +344,15 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       return toCandidateDto(row);
     },
 
+    async enrichCard(ctx, candidateId, card) {
+      // Clean the AI-filled card into the FULL contract shape (every detail field + the
+      // 3 metrics, defaults applied), then REPLACE the stored card. getCandidate inside
+      // enrichCard gates ownership (cross-user / unknown → OwnershipError → 404).
+      const cleaned = toCardDto(card) as unknown as Record<string, unknown>;
+      const row = await repoFor(ctx).enrichCard(candidateId, cleaned);
+      return toCandidateDto(row);
+    },
+
     async ingestAudienceSignal(ctx, record) {
       const runId = ctx.ingestionRunId;
       if (!runId) {
@@ -329,6 +378,76 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         await repo.recomputeDemandCount(record.linkedCandidateRef);
       }
       return toAudienceSignalDto(signal);
+    },
+
+    async getTopicsOverview(ctx) {
+      // Candidate-module-owned counts (audience_signals / candidates / card / promotions)
+      // come from ONE user-scoped repo read. Cross-module aggregates (定位 / 知识库 /
+      // 历史爆款 / 复盘回流) come from the SOFT overview port — absent / rejecting calls
+      // degrade to "" / 0 (honest, never fabricated).
+      const counts = await repoFor(ctx).topicsOverviewCounts();
+
+      const soft = async <T>(p: Promise<T> | undefined, fallback: T): Promise<T> => {
+        if (!p) return fallback;
+        try {
+          return await p;
+        } catch {
+          return fallback; // SOFT dep — a peer failure never blocks the overview read.
+        }
+      };
+      const positioningLabel = await soft(overview?.positioningLabel(ctx), "");
+      const knowledgeCards = await soft(overview?.knowledgeCount(ctx), 0);
+      const highPerformers = await soft(overview?.highPerformerCount(ctx), 0);
+      const learningsCount = await soft(overview?.learningsCount(ctx), 0);
+
+      // 选题来源 — the 7 intake channels. Comment/咨询/审评/私信 counts come from the real
+      // audience_signals.source distribution; 知识库/历史爆款 from the peer ports; 手动灵感
+      // from candidates.source='idea'; 项目复盘 from learnings. A channel with no backing
+      // data source reports 0 (never fabricated).
+      const bySrc = counts.signalsBySource;
+      const ideaRows = await repoFor(ctx).listCandidates({
+        source: "idea",
+        limit: 1000,
+        offset: 0,
+      });
+      const sources = [
+        { key: "comment", label: "评论问题", count: bySrc.comment ?? 0 },
+        { key: "consultation", label: "客户咨询", count: bySrc.consultation ?? 0 },
+        { key: "knowledge", label: "知识库资料", count: knowledgeCards },
+        { key: "highPerformer", label: "历史爆款", count: highPerformers },
+        // 行业热点 has no first-class store this wave — topic.generate(trend) reads it
+        // live via WebSearch, so there is no count to surface (honest 0, not fabricated).
+        { key: "trend", label: "行业热点", count: 0 },
+        { key: "review", label: "项目复盘", count: learningsCount },
+        { key: "idea", label: "手动灵感", count: ideaRows.total },
+      ];
+
+      // 选题漏斗 — 6 states DERIVED from real rows (NOT a status column on candidates):
+      //   待收集     = audience_signals where linkedCandidateId IS NULL
+      //   待评估     = candidates status=pool 且 card 空 (无 oneLiner)
+      //   待补充     = candidates status=pool 且 card 非空 (已补全待决策)
+      //   已立项     = topic_promotions 计数
+      //   已丢弃     = candidates status=dropped
+      //   已发布回流 = learnings 计数 (复盘回流经验条数)
+      const funnel = [
+        { key: "collecting", label: "待收集", count: counts.signalsUnlinked },
+        { key: "evaluating", label: "待评估", count: counts.poolWithoutCard },
+        { key: "enriching", label: "待补充", count: counts.poolWithCard },
+        { key: "promoted", label: "已立项", count: counts.promotionsCount },
+        { key: "dropped", label: "已丢弃", count: counts.droppedCount },
+        { key: "recycled", label: "已发布回流", count: learningsCount },
+      ];
+
+      return {
+        basis: {
+          positioningLabel,
+          commentSignals: counts.signalsTotal,
+          knowledgeCards,
+          highPerformers,
+        },
+        sources,
+        funnel,
+      };
     },
 
     async listSignals(ctx, query) {

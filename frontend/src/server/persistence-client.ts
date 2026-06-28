@@ -153,6 +153,7 @@ import {
 } from "@/server/modules/ai";
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerate } from "@/server/ai/topic-runner";
+import { runTopicEnrich } from "@/server/ai/topic-enrich-runner";
 import { runScriptDraft } from "@/server/ai/script-runner";
 import { runPlanningThesis } from "@/server/ai/planning-runner";
 import { runReviewAnalyze } from "@/server/ai/review-runner";
@@ -1252,11 +1253,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         knowledgeService.createKnowledge(ctx, input),
     },
     // 机制④ 选题会 — confirmTask materializes a candidate_list into 选题池 Candidates via
-    // the candidate module's C-3 seam. Lazy: candidateService is constructed below, and
-    // this thunk only runs at confirm time (request), never at construction.
+    // the candidate module's C-3 seam. enrichCard formalizes a topic_card candidate
+    // (topic.enrich node, 选题中心大改) onto an existing candidate. Lazy: candidateService
+    // is constructed below, and these thunks only run at confirm time (request), never at
+    // construction.
     candidate: {
       createFromAIResult: (ctx, result) =>
         candidateService.createFromAIResult(ctx, result),
+      enrichCard: (ctx, candidateId, card) =>
+        candidateService.enrichCard(ctx, candidateId, card),
     },
     // 机制④⑤ 复盘 — confirmTask materializes a learning_list into Learnings (which then
     // feed back into later nodes' context). learningsService is constructed above.
@@ -1386,6 +1391,31 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               followerBaseline: a.followerBaseline,
             })),
         };
+        // 受众信号 reader (topic.generate comments basis, 选题中心大改) — the creator's
+        // audience signals feed the agent's context so it can出题 from REAL demand. Maps the
+        // AudienceSignal DTO onto the runner's {source, rawText, demandTag} shape.
+        const signalsReader = {
+          list: async (c: RequestContext, opts: { limit?: number }) =>
+            (
+              await candidateService.listSignals(c, {
+                limit: opts.limit ?? 30,
+                offset: 0,
+              })
+            ).rows.map((s) => ({
+              source: s.source,
+              rawText: s.rawText,
+              demandTag: s.demandTag,
+            })),
+        };
+        // 知识库 reader (topic.generate knowledge basis + topic.enrich 素材依据) — the
+        // creator's KnowledgeItems feed the agent's context so选题 has 素材依据. Maps the
+        // KnowledgeItem row onto the runner's {title, knowledgeType} shape.
+        const knowledgeReader = {
+          list: async (c: RequestContext, opts: { limit?: number }) =>
+            (await knowledgeService.listKnowledge(c))
+              .slice(0, opts.limit ?? 40)
+              .map((k) => ({ title: k.title, knowledgeType: k.knowledgeType })),
+        };
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
@@ -1420,6 +1450,43 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              signals: signalsReader,
+              knowledge: knowledgeReader,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "topic.enrich" &&
+          task.status === "queued"
+        ) {
+          // 选题补全 node (topic.enrich, 选题中心大改) — fills the 选题卡 (10 详情字段 + 3
+          // 指标) for ONE existing 选题候选 (inputData.candidateId), records a `topic_card`
+          // candidate; 采纳 upserts the card onto that candidate via the candidate module's
+          // enrichCard seam (wired on the AiCandidatePort above). The candidate reader is
+          // bound to candidateService.getCandidate (ownership-gated, no cross-module repo
+          // import).
+          void runTopicEnrich(
+            ctx,
+            {
+              id: String(task.id),
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
+              signals: signalsReader,
+              knowledge: knowledgeReader,
+              candidate: {
+                get: async (c: RequestContext, candidateId: string) => {
+                  const cand = await candidateService.getCandidate(
+                    c,
+                    candidateId,
+                  );
+                  return { title: cand.title, angle: cand.angle };
+                },
+              },
+              llm: llmCompleter,
             },
           );
         } else if (
@@ -1729,6 +1796,37 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     ingestion: {
       assertRunExists: async (ctx, runId) => {
         await ingestionService.getRun(ctx, runId);
+      },
+    },
+    // 选题中心总览 cross-module aggregates (topics.overview 出题依据 + 来源). Each binds to a
+    // peer's PUBLIC service (no cross-module repo import). SOFT — the service catches any
+    // rejection and degrades to 0/"" so the overview never blocks on a peer.
+    overview: {
+      // 定位领域一句 — the creator's positioning field (or one-liner) for the 出题依据 label.
+      positioningLabel: async (ctx) => {
+        const center = await positioningService.getPositioningCenter(ctx);
+        return (
+          center.profile?.field ||
+          center.currentStatement?.oneLiner ||
+          ""
+        );
+      },
+      // 知识库条数 — count of the creator's KnowledgeItems (listKnowledge returns the rows).
+      knowledgeCount: async (ctx) =>
+        (await knowledgeService.listKnowledge(ctx)).length,
+      // 历史爆款 (高表现作品数) — there is NO honest per-publication 高表现 read on the
+      // Analytics public surface yet (getDashboardRollup is an account-wide rollup, not a
+      // per-work threshold count). Rather than fabricate one, report 0 until Analytics
+      // exposes a real 高表现 count (零造假 — no 对应数据源, count=0).
+      highPerformerCount: async () => 0,
+      // 复盘回流经验条数 — count of the creator's Learnings (复盘沉淀, drives 已发布回流 +
+      // 项目复盘 source). listLearnings returns the page total.
+      learningsCount: async (ctx) => {
+        const { total } = await learningsService.listLearnings(ctx, {
+          limit: 1,
+          offset: 0,
+        });
+        return total;
       },
     },
   });
@@ -2474,6 +2572,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       demandCount: 0,
       status: "pool",
       aiTaskId: null,
+      // 已补全的选题卡(待补充/待决策)— AI 工程化创作者口吻,非占位。
+      card: {
+        oneLiner: "不调 API、不写框架,30 行代码把你公司的文档变成能问答的助手",
+        targetAudience: "想落地 AI 但被「框架太重」劝退的中小团队技术负责人",
+        audiencePain:
+          "看了一堆 LangChain 教程,真要接自己文档时全是版本报错,搭一周搭不出能用的",
+        coreConflict: "大家以为 RAG 很高大上,其实核心就是「切片+向量检索+塞进 prompt」三步",
+        hook: "你司那份没人看的 200 页 SOP,今天我让它自己开口回答问题",
+        contentStructure: [
+          "开场:演示——对着内部文档直接提问,秒回带出处的答案",
+          "拆解:RAG 三步走(切片 / 嵌入检索 / 拼进 prompt),每步一句话讲透",
+          "实操:30 行最小实现,边写边解释为什么不需要框架",
+          "收尾:这套能扩到客服/法务/培训,留个「评论区报你的场景」钩子",
+        ],
+        format: "口播 + 屏幕录制代码演示,8-10 分钟",
+        materialBasis: "自己之前给客户做的内部知识库项目截图 + 一份可脱敏的 SOP 样例",
+        riskNote: "演示要避开真实公司数据;代码别用付费 API,否则观众复现门槛高",
+        proposal: "做——蹭 RAG 热度但落到「最小实现」,既引流又给训练营铺信任,优先级高",
+        audiencePainScore: 78,
+        materialScore: 70,
+        productionDifficulty: "mid",
+      },
       createdAt: FIXED_NOW_ISO,
       updatedAt: FIXED_NOW_ISO,
     },
@@ -2490,6 +2610,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       demandCount: 0,
       status: "pool",
       aiTaskId: null,
+      // 已补全的选题卡——来自评论区反复出现的真实需求(source=demand)。
+      card: {
+        oneLiner: "Agent 不是不够聪明,是你把上下文喂错了——三个错误今天讲清楚",
+        targetAudience: "自己搭过 Agent、但效果时好时坏、说不清问题在哪的开发者",
+        audiencePain:
+          "同样的 prompt,昨天好好的今天就胡说;以为是模型问题,其实是上下文管理",
+        coreConflict: "大家拼命换更强的模型,真正的杠杆却在「给模型看什么、不看什么」",
+        hook: "你的 Agent 跑偏,90% 不是模型笨,是这三个上下文错误你天天在犯",
+        contentStructure: [
+          "错误一:把全部历史塞进去——噪声淹没指令",
+          "错误二:工具返回值不裁剪——一次检索撑爆窗口",
+          "错误三:没有显式的当前目标——模型自己脑补任务",
+          "每个错误配「错误写法 vs 修正写法」对照,最后给一张自查清单",
+        ],
+        format: "口播为主 + 关键处贴代码对照图,6-8 分钟",
+        materialBasis: "评论区和私信里攒的真实提问截图 + 自己踩坑的 prompt 前后对比",
+        riskNote: "三个错误要给得具体可复现,泛泛而谈会被评论区质疑「正确的废话」",
+        proposal: "做——直接回应受众真实提问,信任向内容,顺带为训练营「上下文工程」模块预热",
+        audiencePainScore: 85,
+        materialScore: 64,
+        productionDifficulty: "low",
+      },
       createdAt: FIXED_NOW_ISO,
       updatedAt: FIXED_NOW_ISO,
     },
@@ -2501,6 +2643,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       source: "idea",
       contentRole: "conversion",
       productAnchorId: null,
+      // 待评估 — 空选题卡(无 oneLiner),让漏斗里「待评估」与前两条「待补充」都有真数据。
+      card: {},
       positioningFit: 90,
       predictedScore: 88,
       demandCount: 0,

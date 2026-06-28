@@ -52,11 +52,15 @@ export {
 } from "./resources/monetization";
 export {
   candidateResource,
+  candidateCard,
   audienceSignalResource,
   topicPromotionResource,
+  topicsOverviewResource,
   type CandidateResource,
+  type CandidateCard,
   type AudienceSignalResource,
   type TopicPromotionResource,
+  type TopicsOverviewResource,
 } from "./resources/candidate";
 export {
   rubricResource,
