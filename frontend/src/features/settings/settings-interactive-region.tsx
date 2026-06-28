@@ -17,9 +17,7 @@
  *    SystemSettingsCard, each with `SettingsFormRow` rows that
  *    hold local Switch / Select / Input controls.
  *  - `SettingsRailColumn` (the right column of SettingsGrid) — host
- *    StorageUsageCard → ModelConfigurationCard →
- *    OtherSettingsCard, with a destructive "delete account"
- *    affordance pinned in the OtherSettingsCard.
+ *    StorageUsageCard → ModelConfigurationCard.
  *
  * The page-level `SettingsPage` Server Component is responsible for
  * laying out the columns inside `SettingsGrid`. This island keeps
@@ -45,12 +43,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { PageTabs } from "@/components/navigation/page-tabs";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { SectionCard } from "@/components/project/section-card";
@@ -102,7 +94,7 @@ const MODEL_CAPABILITY = "default";
 // these two appearance controls persist client-side via localStorage and apply
 // real `document.documentElement` classes. This is真持久 (survives reload), not
 // inert, and touches no shared contract surface. (Locale stays identity-derived
-// display only; notifications/account-edit/import/export/delete are规划中.)
+// display only.)
 const THEME_STORAGE_KEY = "creatoros.settings.theme";
 const DENSITY_STORAGE_KEY = "creatoros.settings.density";
 
@@ -156,25 +148,6 @@ function applyTheme(theme: Theme): void {
 function applyDensity(density: Density): void {
   if (typeof document === "undefined") return;
   document.documentElement.dataset.density = density;
-}
-
-// ---------------------------------------------------------------------------
-// PlanningBadge — a visible「规划中」marker for不做真 (inert) controls
-// ---------------------------------------------------------------------------
-//
-// Replaces the prior tooltip-only / aria-disabled signalling so the deferred
-// surfaces (notifications, account edit, import/export, delete) carry an
-// explicit, visible「规划中」label — the GAP-SET-1 acceptance requirement.
-function PlanningBadge() {
-  return (
-    <Badge
-      data-slot="planning-badge"
-      variant="outline"
-      className="border-warning/40 bg-warning-soft text-warning"
-    >
-      规划中
-    </Badge>
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -247,8 +220,8 @@ export function SettingsMainColumn({
       <SettingsSection sectionId="preferences">
         <PreferenceSettingsCard viewModel={viewModel} />
       </SettingsSection>
-      {/* 外观 (theme/density/locale) + 通知 share the system card. */}
-      <SettingsSection sectionId="appearance" alsoFor={["notifications"]}>
+      {/* 外观 (theme/density/locale). */}
+      <SettingsSection sectionId="appearance">
         <SystemSettingsCard viewModel={viewModel} />
       </SettingsSection>
     </div>
@@ -304,12 +277,9 @@ export function SettingsRailColumn({
       <SettingsSection sectionId="storage">
         <StorageUsageCard storage={viewModel.storage} />
       </SettingsSection>
-      {/* 集成 → model providers; 关于 falls through to the model/other rail. */}
-      <SettingsSection sectionId="integrations" alsoFor={["about"]}>
+      {/* 集成 → model providers. */}
+      <SettingsSection sectionId="integrations">
         <ModelConfigurationCard model={viewModel.model} />
-      </SettingsSection>
-      <SettingsSection sectionId="data">
-        <OtherSettingsCard />
       </SettingsSection>
     </div>
   );
@@ -446,19 +416,15 @@ function AccountInformationCard({
         >
           {/* 邮箱 stays read-only: it is the login identifier + users_email_uk
               unique key. Editing it needs a re-auth / uniqueness flow with no
-              route yet — kept inert with a visible「规划中」badge so it never
-              pretends to take effect. */}
-          <div className="flex w-full items-center gap-2">
-            <Input
-              id="account-email"
-              type="email"
-              data-slot="account-email-input"
-              value={viewModel.account.email}
-              readOnly
-              aria-readonly="true"
-            />
-            <PlanningBadge />
-          </div>
+              route yet — shown as a read-only field. */}
+          <Input
+            id="account-email"
+            type="email"
+            data-slot="account-email-input"
+            value={viewModel.account.email}
+            readOnly
+            aria-readonly="true"
+          />
         </SettingsFormRow>
       </div>
     </SectionCard>
@@ -683,9 +649,6 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
   const [density, setDensity] = React.useState<Density>(
     viewModel.system.density,
   );
-  // 桌面通知 is规划中 (no settings op) — display the fixture default but the
-  // control is inert, so no setter is needed.
-  const notifications = viewModel.system.notifications;
   // 系统语言 is now REAL: it persists to the identity-owned `users.locale` via
   // the `identity.profile.patch` op (`PATCH /me`) — the same locale the account
   // 语言 chip and timezone display read. No longer a local-only桩. Optimistic
@@ -828,28 +791,6 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
               ))}
             </SelectContent>
           </Select>
-        </SettingsFormRow>
-        <SettingsFormRow
-          label="桌面通知"
-          controlId="sys-notifications"
-          help="发布完成与系统消息提醒（需通知系统与权限，暂未开放，无对应 settings op）。"
-        >
-          {/* 桌面通知 needs a notification system + browser permission and has
-              NO backing settings op — kept inert (disabled, no persistence) with
-              a visible「规划中」badge so it never pretends to take effect. */}
-          <div className="flex items-center gap-2">
-            <Switch
-              id="sys-notifications"
-              data-slot="sys-notifications-switch"
-              size="sm"
-              checked={notifications}
-              disabled
-              aria-disabled="true"
-              onCheckedChange={() => undefined}
-              aria-label="启用桌面通知"
-            />
-            <PlanningBadge />
-          </div>
         </SettingsFormRow>
       </div>
     </SectionCard>
@@ -1146,112 +1087,6 @@ function ModelConfigurationCard({
             保存模型配置
           </Button>
         </div>
-      </div>
-    </SectionCard>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// OtherSettingsCard
-// ---------------------------------------------------------------------------
-
-function OtherSettingsCard() {
-  // Local arm state for the destructive "delete account" gate
-  // (`确认删除账户` switch is `wired-local` — it only flips this local
-  // flag, it performs no server action). Module 00, Task 12.
-  const [confirmDelete, setConfirmDelete] = React.useState<boolean>(false);
-  // The account-delete REST surface (30-day window) is an unresolved
-  // roadmap §6 gap — `revokeAllForUser` + a future delete route are the
-  // eventual backing, out of scope for Wave 0. So even once the switch
-  // arms the gate the button stays intentionally inert via
-  // `aria-disabled` + a tooltip, never firing a server action.
-  return (
-    <SectionCard
-      title="其他"
-      description="数据导入导出与账户操作"
-    >
-      <div data-slot="other-settings-card" className="flex flex-col gap-3">
-        <SettingsFormRow
-          label="导入数据"
-          controlId="other-import"
-          help="从旧版 CreatorOS 或外部工具导入（暂未开放，无对应路由）。"
-        >
-          {/* 导入 / 导出 are intentionally inert — file-package import/export is
-              heavy work with no route exposed (Module 00, Task 12). Marked with a
-              visible「规划中」badge. */}
-          <div className="flex items-center gap-2">
-            <Button
-              id="other-import"
-              data-slot="other-import-button"
-              variant="outline"
-              size="sm"
-              disabled
-              aria-disabled="true"
-            >
-              导入
-            </Button>
-            <PlanningBadge />
-          </div>
-        </SettingsFormRow>
-        <SettingsFormRow
-          label="导出全部数据"
-          controlId="other-export"
-          help="导出为 JSON + Markdown 包（暂未开放，无对应路由）。"
-        >
-          <div className="flex items-center gap-2">
-            <Button
-              id="other-export"
-              data-slot="other-export-button"
-              variant="outline"
-              size="sm"
-              disabled
-              aria-disabled="true"
-            >
-              导出
-            </Button>
-            <PlanningBadge />
-          </div>
-        </SettingsFormRow>
-        <SettingsFormRow
-          label="删除账户"
-          controlId="other-delete"
-          help="删除后 30 天内可恢复，届时将永久清除。"
-        >
-          <div className="flex items-center gap-2">
-            <Switch
-              id="other-delete"
-              data-slot="other-delete-switch"
-              size="sm"
-              checked={confirmDelete}
-              onCheckedChange={(value) => setConfirmDelete(Boolean(value))}
-              aria-label="确认删除账户"
-            />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  {/* The arm switch flips `confirmDelete` (local), but the
-                      button stays intentionally inert: `disabled` while
-                      un-armed and `aria-disabled` (no onClick) once armed,
-                      pending the account-delete REST surface (roadmap §6
-                      gap). It never performs a server action in Wave 0. */}
-                  <Button
-                    data-slot="other-delete-button"
-                    variant="destructive"
-                    size="sm"
-                    disabled={!confirmDelete}
-                    aria-disabled="true"
-                  >
-                    删除账户
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent data-slot="other-delete-tooltip">
-                  账户删除（30 天窗口）待账户删除 REST 接口落地（roadmap §6 缺口）。
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <PlanningBadge />
-          </div>
-        </SettingsFormRow>
       </div>
     </SectionCard>
   );

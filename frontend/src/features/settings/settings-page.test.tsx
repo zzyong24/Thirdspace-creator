@@ -8,12 +8,12 @@
  *    (configured by `(creator)/shell-router.tsx`).
  *  - The sidebar marks "设置" as the active nav item.
  *  - The contextual card variant is `assistant` (D-003, NOT `storage`).
- *  - SettingsTabs renders 8 tabs in the approved order from the
- *    reference image (page-specs §17: "顶部设置 Tab 保持八项及顺序").
+ *  - SettingsTabs renders 5 tabs in the approved order
+ *    (account / preferences / appearance / integrations / storage).
  *  - SettingsGrid contains MainSettings in order
  *      AccountInformationCard → PreferenceSettingsCard → SystemSettingsCard
  *    and SettingsRail in order
- *      StorageUsageCard → ModelConfigurationCard → OtherSettingsCard
+ *      StorageUsageCard → ModelConfigurationCard
  *    (page-specs §17 "组件树").
  *  - Form rows follow the "label + control" compact pattern.
  *  - The page is wrapped in the shared AppShell with exactly one
@@ -126,23 +126,19 @@ describe("SettingsPage", () => {
     expect(storage).toBeNull();
   });
 
-  it("renders SettingsTabs with 8 tabs in the approved order", async () => {
+  it("renders SettingsTabs with 5 tabs in the approved order", async () => {
     const { container } = await renderSettings();
     const tabs = container.querySelector('[data-slot="settings-tabs"]');
     expect(tabs).not.toBeNull();
     const triggers = Array.from(
       tabs!.querySelectorAll('[role="tab"]'),
     ).map((node) => node.textContent?.trim() ?? "");
-    // page-specs §17: 顶部设置 Tab 保持八项及顺序
     expect(triggers).toEqual([
       "账户",
       "偏好",
-      "通知",
       "外观",
       "集成",
       "存储",
-      "数据",
-      "关于",
     ]);
   });
 
@@ -169,7 +165,7 @@ describe("SettingsPage", () => {
     }
   });
 
-  it("renders SettingsRail (storage → model → other) inside SettingsGrid", async () => {
+  it("renders SettingsRail (storage → model) inside SettingsGrid", async () => {
     const { container } = await renderSettings();
     const grid = container.querySelector('[data-slot="settings-grid"]');
     expect(grid).not.toBeNull();
@@ -178,7 +174,6 @@ describe("SettingsPage", () => {
     const expectedSlots = [
       "storage-usage-card",
       "model-configuration-card",
-      "other-settings-card",
     ];
     const orderedNodes = expectedSlots.map((slot) =>
       rail!.querySelector(`[data-slot="${slot}"]`),

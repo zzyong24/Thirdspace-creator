@@ -18,21 +18,15 @@
  *    refreshes the server read. The 邮箱 input stays READ-ONLY (it is
  *    the login identifier + `users_email_uk` unique key — out of the
  *    editable surface this wave).
- *  - the 删除账户 button is DISABLED until the local "确认删除账户"
- *    switch arms it; the account-delete REST surface is a roadmap §6
- *    gap, so even when armed the button stays disabled (intentionally
- *    inert pending that surface) — toggling the switch only flips
- *    LOCAL arm state, it performs no server action.
- *  - the 已验证 badge, plan chip, and 导入 / 导出 buttons stay
- *    intentionally inert (decorative) — no verification/billing/
- *    import-export entity or route exists in Wave 0.
+ *  - the 已验证 badge and plan chip stay intentionally inert
+ *    (decorative) — no verification/billing entity exists in Wave 0.
  *
  * Determinism: every visible value comes from the injected view model;
  * no `Date.now` / `Math.random` / network.
  */
 
 import * as React from "react";
-import { cleanup, fireEvent, render, within } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // The settings interactive island (preference + model cards) calls
@@ -172,38 +166,6 @@ describe("Settings identity section (Task 12)", () => {
     });
   });
 
-  it("disables the 删除账户 button until the confirm switch is armed", () => {
-    const { container } = renderSettings();
-    const deleteButton = container.querySelector<HTMLButtonElement>(
-      '[data-slot="other-delete-button"]',
-    );
-    expect(deleteButton).not.toBeNull();
-    expect(deleteButton!.disabled).toBe(true);
-  });
-
-  it("toggling the confirm switch only flips local arm state (no server action)", () => {
-    const { container } = renderSettings();
-    const card = container.querySelector('[data-slot="other-settings-card"]')!;
-    const deleteSwitch = within(card as HTMLElement).getByRole("switch", {
-      name: "确认删除账户",
-    });
-    const deleteButton = card.querySelector<HTMLButtonElement>(
-      '[data-slot="other-delete-button"]',
-    )!;
-
-    // Disabled before arming.
-    expect(deleteButton.disabled).toBe(true);
-
-    // Arming the switch flips local state — the destructive button is
-    // no longer fully blocked by the arm gate, but it remains
-    // intentionally inert (account-delete REST surface is a roadmap §6
-    // gap) via aria-disabled + a tooltip, so it still cannot fire a
-    // server action.
-    fireEvent.click(deleteSwitch);
-    expect(deleteSwitch.getAttribute("aria-checked")).toBe("true");
-    expect(deleteButton.getAttribute("aria-disabled")).toBe("true");
-  });
-
   it("binds the account card to the injected `identity` (settings.get read)", () => {
     // The route passes the resolved-session identity via the `identity`
     // prop (the Wave-0 stand-in for `settings.get` — same `userResource`
@@ -225,15 +187,5 @@ describe("Settings identity section (Task 12)", () => {
     // 昵称 is now editable (real `PATCH /me`); it is seeded from the injected
     // identity but no longer read-only.
     expect(nickname!.readOnly).toBe(false);
-  });
-
-  it("keeps 导入 / 导出 buttons present but intentionally inert", () => {
-    const { container } = renderSettings();
-    expect(
-      container.querySelector('[data-slot="other-import-button"]'),
-    ).not.toBeNull();
-    expect(
-      container.querySelector('[data-slot="other-export-button"]'),
-    ).not.toBeNull();
   });
 });

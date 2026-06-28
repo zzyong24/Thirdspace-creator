@@ -25,7 +25,7 @@
 
 ```text
 SettingsPage
-├── SettingsTabs                   (8 tabs in approved order)
+├── SettingsTabs                   (5 tabs in approved order)
 └── SettingsGrid
     ├── MainSettings
     │   ├── AccountInformationCard
@@ -33,21 +33,19 @@ SettingsPage
     │   └── SystemSettingsCard
     └── SettingsRail
         ├── StorageUsageCard
-        ├── ModelConfigurationCard
-        └── OtherSettingsCard
+        └── ModelConfigurationCard
 ```
 
 ## 4. 截图区块拆解
 
 | 顺序 | 区块 | 位置 | 关键尺寸关系 | 主要内容 |
 |---|---|---|---|---|
-| 1 | SettingsTabs | 页面顶部 | 横向一行 8 个 Tab | 账户 / 偏好 / 通知 / 外观 / 集成 / 存储 / 数据 / 关于 |
+| 1 | SettingsTabs | 页面顶部 | 横向一行 5 个 Tab | 账户 / 偏好 / 外观 / 集成 / 存储 |
 | 2 | AccountInformationCard | 左列上 | 单卡 | 头像 + 昵称 + 邮箱 + 计划/时区 Tag + 昵称/邮箱 Input |
 | 3 | PreferenceSettingsCard | 左列中 | 单卡（5 行） | 默认主页 / 默认创作模式 / 默认可见性 / 自动保存 / 使用情况分析 |
-| 4 | SystemSettingsCard | 左列下 | 单卡（4 行） | 主题 / 密度 / 语言 / 桌面通知 |
+| 4 | SystemSettingsCard | 左列下 | 单卡（3 行） | 主题 / 密度 / 语言 |
 | 5 | StorageUsageCard | 右列上 | 单卡 | ProgressBar + 4 行分布 |
 | 6 | ModelConfigurationCard | 右列中 | 单卡（3 行） | 提供商 / 模型 / 温度 |
-| 7 | OtherSettingsCard | 右列下 | 单卡（3 行） | 导入 / 导出 / 删除账户 |
 
 ## 5. 组件复用计划
 
@@ -56,9 +54,9 @@ SettingsPage
 | 组件 | 用途 |
 |---|---|
 | `Input` | AccountInformationCard、ModelConfigurationCard 的文本/数值输入 |
-| `Switch` | PreferenceSettingsCard / SystemSettingsCard / OtherSettingsCard 开关 |
+| `Switch` | PreferenceSettingsCard 开关 |
 | `Select` | PreferenceSettingsCard / SystemSettingsCard / ModelConfigurationCard 下拉 |
-| `Button` | OtherSettingsCard 的导入 / 导出 / 删除按钮 |
+| `Button` | AccountInformationCard 的昵称保存 / ModelConfigurationCard 的保存按钮 |
 
 ### 复用共享业务组件
 

@@ -5,14 +5,13 @@
  * the spec order:
  *
  *   SettingsPage
- *   ├── SettingsTabs                  (8 tabs in approved order)
+ *   ├── SettingsTabs                  (5 tabs in approved order)
  *   └── SettingsGrid
  *       ├── MainSettings              (AccountInformationCard →
  *       │                               PreferenceSettingsCard →
  *       │                               SystemSettingsCard)
  *       └── SettingsRail              (StorageUsageCard →
- *                                       ModelConfigurationCard →
- *                                       OtherSettingsCard)
+ *                                       ModelConfigurationCard)
  *
  * Layout invariants (page-specs §17, D-003, D-005):
  *  - The route is a global resource-center route. The Header region
@@ -21,15 +20,14 @@
  *  - The shared Sidebar uses the approved `assistant` contextual-card
  *    variant (D-003). The page itself does NOT render the global
  *    Sidebar — that lives in `(creator)/layout.tsx`.
- *  - The SettingsTabs strip renders 8 tabs in the approved order
- *    (page-specs §17 "顶部设置 Tab 保持八项及顺序").
+ *  - The SettingsTabs strip renders 5 tabs in the approved order
+ *    (account / preferences / appearance / integrations / storage).
  *  - The SettingsGrid is a two-column grid (left wide / right narrow).
  *  - The MainSettings column stacks Account → Preference → System
  *    vertically (page-specs §17 "账户信息、偏好设置、系统设置
  *    纵向排列").
- *  - The SettingsRail column stacks Storage → Model → Other
- *    vertically (page-specs §17 "存储空间、模型配置、导入导出和
- *    删除账户位于右栏").
+ *  - The SettingsRail column stacks Storage → Model vertically
+ *    (page-specs §17 "存储空间、模型配置位于右栏").
  *  - Form rows follow the "label + control" compact pattern.
  *  - No team / permission / collaboration settings are added
  *    (D-001 + page-specs §17 "禁止改变": "不新增团队或权限设置").
@@ -163,18 +161,15 @@ export interface ModelState {
 }
 
 // ---------------------------------------------------------------------------
-// SettingsTabs — 8 tabs in the approved order
+// SettingsTabs — 5 tabs in the approved order
 // ---------------------------------------------------------------------------
 
 const SETTINGS_TABS: ReadonlyArray<{ id: string; label: string }> = [
   { id: "account", label: "账户" },
   { id: "preferences", label: "偏好" },
-  { id: "notifications", label: "通知" },
   { id: "appearance", label: "外观" },
   { id: "integrations", label: "集成" },
   { id: "storage", label: "存储" },
-  { id: "data", label: "数据" },
-  { id: "about", label: "关于" },
 ];
 
 // ---------------------------------------------------------------------------
