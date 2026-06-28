@@ -161,6 +161,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/calibration/predictions/:predictionId/lock"],
   ["GET", "/calibration/predictions/:predictionId"],
   ["POST", "/calibration/predictions/:predictionId/result"],
+  ["GET", "/calibration/overview"],
   // 平台账号 (platform-account)
   ["GET", "/accounts"],
   ["POST", "/accounts"],

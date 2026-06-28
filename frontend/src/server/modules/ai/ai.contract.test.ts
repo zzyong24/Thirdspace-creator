@@ -47,6 +47,9 @@ function makeTransport(db: Db) {
         upsertProfile: async () => ({ id: "profile-new" }),
         createStatementVersion: async () => ({ id: "stmt-new" }),
       },
+      calibration: {
+        createDraftPrediction: async () => ({ id: "pred-new" }),
+      },
   });
   return createAiTransport(() => service);
 }
@@ -166,6 +169,9 @@ describe("ai contract (each op validates against its DTO)", () => {
       positioning: {
         upsertProfile: async () => ({ id: "profile-new" }),
         createStatementVersion: async () => ({ id: "stmt-new" }),
+      },
+      calibration: {
+        createDraftPrediction: async () => ({ id: "pred-new" }),
       },
     });
     const t = await service.createTask(ctx, {

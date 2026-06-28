@@ -154,6 +154,7 @@ import {
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerate } from "@/server/ai/topic-runner";
 import { runTopicEnrich } from "@/server/ai/topic-enrich-runner";
+import { runCalibrationDiagnose } from "@/server/ai/calibration-diagnose-runner";
 import { runScriptDraft } from "@/server/ai/script-runner";
 import { runPlanningThesis } from "@/server/ai/planning-runner";
 import { runReviewAnalyze } from "@/server/ai/review-runner";
@@ -192,6 +193,8 @@ import {
   CALIBRATION_OP_IDS,
   type RubricRow as CalibrationRubricRow,
   type RubricVersionRow as CalibrationRubricVersionRow,
+  type PredictionRow as CalibrationPredictionRow,
+  type CalibrationResultRow,
 } from "@/server/modules/calibration";
 import {
   createPlatformAccountService,
@@ -1312,6 +1315,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       createStatementVersion: (ctx, input) =>
         positioningService.createStatementVersion(ctx, input),
     },
+    // 校准中心大改 Slice 1 — when a `calibration_diagnosis` candidate (calibration.diagnose
+    // node) is 采纳ed, the AI confirm branch mints ONE draft Prediction through the
+    // Calibration public service (AI never writes the predictions row directly, SPEC §22).
+    // Lazy: calibrationService is constructed below; this thunk only runs at confirm time.
+    calibration: {
+      createDraftPrediction: (ctx, input) =>
+        calibrationService.createDraftPrediction(ctx, input),
+    },
   });
   const aiBase = createAiTransport(() => aiService);
 
@@ -1487,6 +1498,81 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 },
               },
               llm: llmCompleter,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "calibration.diagnose" &&
+          task.status === "queued"
+        ) {
+          // AI 编导诊断 node (calibration.diagnose, 校准中心大改 Slice 1) — scores ONE content
+          // subject (content_output / publication) against the creator's current 变现加权
+          // rubric + records a `calibration_diagnosis` candidate; 采纳 mints a draft Prediction
+          // via the calibration_diagnosis confirm branch (wired on the AiCalibrationPort
+          // above). The subject reader is bound to the projects/publishing services
+          // (ownership-gated, no cross-module repo import); the rubric reader resolves the
+          // creator's default rubric's current version.
+          void runCalibrationDiagnose(
+            ctx,
+            {
+              id: String(task.id),
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
+              llm: llmCompleter,
+              subject: {
+                get: async (
+                  c: RequestContext,
+                  subjectType: string,
+                  subjectId: string,
+                ) => {
+                  if (subjectType === "publication") {
+                    // publication → its title + current revision body (the 文稿 the agent
+                    // scores). A publication with no revision keeps "" (尽力诊断).
+                    const pub = await publishingService.getPublication(
+                      c,
+                      subjectId,
+                    );
+                    const revisions = await publishingService.listRevisions(
+                      c,
+                      subjectId,
+                      { limit: 1, offset: 0 },
+                    );
+                    const rev = revisions[0];
+                    return {
+                      title: rev?.title || `${pub.platform} 发布`,
+                      scriptText: rev?.description ?? "",
+                    };
+                  }
+                  // content_output → its title (the storyboard/文稿 plumbing lands later; the
+                  // agent grounds on title + positioning + rubric for Slice 1).
+                  const output = await projectsRepo.getOutput(c, subjectId);
+                  return { title: output.title, scriptText: "" };
+                },
+              },
+              rubric: {
+                current: async (c: RequestContext) => {
+                  // The creator's default 变现加权 rubric (canonical seed id) — its current
+                  // version's dimensions are exactly what the agent scores. inputData may
+                  // override the rubricVersionId; otherwise resolve the default rubric's
+                  // current version.
+                  const v = await calibrationService.getCurrentRubricVersion(
+                    c,
+                    "rubric-canonical",
+                  );
+                  return {
+                    rubricVersionId: v.id,
+                    dimensions: v.dimensions.map((d) => ({
+                      key: d.key,
+                      label: d.label,
+                      description: d.description,
+                    })),
+                  };
+                },
+              },
             },
           );
         } else if (
@@ -1862,6 +1948,62 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // §6.3 confidence feedback bridge — no public adjust-write on the Learnings
       // surface this wave (OQ3); best-effort no-op seam wired for when it lands.
       adjustConfidence: async () => {},
+    },
+    // 校准中心总览 cross-module aggregates (calibration.overview 待校准内容 + 经验沉淀). Each
+    // binds to a peer's PUBLIC service (no cross-module repo import, SPEC §22). SOFT — the
+    // service catches any rejection and degrades to [] so the overview never blocks.
+    overview: {
+      // 待校准内容 — the user's content_outputs (per project) + publications (with title).
+      // content_outputs carry no platform (未发布), so platform="" there; publications carry
+      // their real platform. The service subtracts subjects that already have a locked
+      // prediction. Best-effort: a peer read failure degrades the whole list to [].
+      listSubjects: async (ctx) => {
+        const subjects: Array<{
+          subjectType: "content_output" | "publication";
+          subjectId: string;
+          title: string;
+          platform: string;
+        }> = [];
+        // content_outputs — iterate the user's projects, then each project's outputs.
+        const projectRows = await projectsRepo.list(ctx);
+        for (const proj of projectRows) {
+          const outputs = await projectsRepo.listOutputs(ctx, proj.id);
+          for (const o of outputs) {
+            subjects.push({
+              subjectType: "content_output",
+              subjectId: o.id,
+              title: o.title,
+              platform: "",
+            });
+          }
+        }
+        // publications — the user's recent publications with their resolved display title.
+        const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
+          limit: 100,
+          offset: 0,
+        });
+        for (const p of pubs) {
+          subjects.push({
+            subjectType: "publication",
+            subjectId: p.id,
+            title: p.title || `${p.platform} 发布`,
+            platform: p.platform,
+          });
+        }
+        return subjects;
+      },
+      // 经验沉淀 — the user's Learnings (复盘回流经验), newest first, capped.
+      listLearnings: async (ctx, limit) => {
+        const { rows } = await learningsService.listLearnings(ctx, {
+          limit,
+          offset: 0,
+        });
+        return rows.map((l) => ({
+          id: l.id,
+          title: l.title,
+          insight: l.insight ?? "",
+        }));
+      },
     },
   });
   const calibration = createCalibrationTransport(() => calibrationService);
@@ -2730,6 +2872,151 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   await calibrationSeedRepo.seedRubricVersions([canonicalRubricVersion]);
   await calibrationSeedRepo.seedRubrics([canonicalRubric]);
 
+  // Seed canonical 盲预测 + 回流 (module 20, 校准中心大改 Slice 1) so the 校准中心 surface
+  // resolves REAL data: 3 locked predictions carrying the 维度评分约定 jsonb
+  // (predictedConversion.dimensions = 6 维 1–5 评分 + 理由 + 建议; predictedMetrics =
+  // performance chips + 编导诊断), attached to 3 real published content_outputs; + 2
+  // calibration_results so the KPI (completedReflows / avgDeviation / latestFinding) +
+  // 发布后回流对照 + 经验沉淀 have live rows. Deterministic ids/clock (FIXED_NOW_ISO);
+  // ingestionRunId is a synthetic seed reference (the seed repo writes the row directly,
+  // bypassing the service's §C-4 IngestionRun guard — the guard only applies to the live
+  // results.create op). predictedScore is the deterministic 变现加权 weighted-sum (here 0 —
+  // the 1–5 维度评分 lives in the dimensions array, not at the conversion-map top level; the
+  // 1–5 评分 is the primary 校准 signal, predictedScore a secondary aggregate). seed* is
+  // onConflictDoNothing → idempotent across a re-built singleton.
+  const calUser = canonicalDataset.user.id;
+  const calRubricVer = canonicalRubricVersion.id;
+  // 维度评分约定 — one prediction's predictedConversion jsonb (6 维 1–5 + 理由 + 建议).
+  const predDimensions = (
+    scores: Array<[string, number, string, string]>,
+  ) => ({
+    dimensions: scores.map(([key, score, reason, suggestion]) => ({
+      key,
+      score,
+      reason,
+      suggestion,
+    })),
+  });
+  const predMetrics = (
+    perf: [number | null, number | null, number | null, number | null],
+    verdict: string,
+    mainIssues: string[],
+    priorityFixes: string[],
+  ) => ({
+    performance: {
+      完播率: perf[0],
+      收藏率: perf[1],
+      评论率: perf[2],
+      转化意向: perf[3],
+    },
+    diagnosis: { verdict, mainIssues, priorityFixes },
+  });
+  const canonicalPredictions: CalibrationPredictionRow[] = [
+    {
+      id: "pred-canonical-1",
+      userId: calUser,
+      subjectType: "content_output",
+      subjectId: "dy-out-00", // 「AI 产出差不是工具的锅」
+      rubricVersionId: calRubricVer,
+      predictedConversion: predDimensions([
+        ["hook", 4, "反直觉断言「不是工具的锅」前3秒能抓人", "把锅甩给谁说得更具体"],
+        ["emotion", 4, "戳中「我也产出差」的自我识别", "加一句更扎心的共鸣"],
+        ["product_path", 3, "隐约指向方法论但没落到产品", "结尾接一个可下一步的钩子"],
+        ["social", 3, "AI 焦虑是公共话题但角度不新", "命名一个没人说破的结构性原因"],
+        ["cta", 2, "几乎没有明确 CTA", "结尾加一句自然的行动召唤"],
+        ["quotable", 4, "「不是工具的锅」本身就是金句", "中段再埋一句可截图的"],
+      ]),
+      predictedMetrics: predMetrics(
+        [68, 22, 8, 30],
+        "传播力强但转化弱：钩子和金句到位，缺 CTA 与产品落点",
+        ["几乎无 CTA", "产品铺路不足"],
+        ["结尾补一句行动召唤", "中段埋一个产品价值锚"],
+      ),
+      predictedScore: "0",
+      confidence: "high",
+      status: "locked",
+      lockedAt: FIXED_NOW_ISO,
+      createdAt: FIXED_NOW_ISO,
+    },
+    {
+      id: "pred-canonical-2",
+      userId: calUser,
+      subjectType: "content_output",
+      subjectId: "dy-out-01", // 「装了5个AI工具还是不会用？四步跑通你的第一条工作流」
+      rubricVersionId: calRubricVer,
+      predictedConversion: predDimensions([
+        ["hook", 5, "「装了5个还是不会用」精准戳痛点", "保持"],
+        ["emotion", 3, "共鸣一般，偏功能", "加一个具体翻车场景"],
+        ["product_path", 4, "四步工作流天然为产品/课程铺路", "把第四步和产品更紧绑定"],
+        ["social", 2, "纯个人效率话题", "可不强求社会共振"],
+        ["cta", 4, "四步结构自带行动指引", "结尾再明确一句"],
+        ["quotable", 3, "「四步跑通第一条工作流」可记", "提炼一句更狠的"],
+      ]),
+      predictedMetrics: predMetrics(
+        [72, 35, 10, 48],
+        "转化型选题：痛点+方法论+产品路径齐全，预期收藏高",
+        ["社会共振弱（可接受）"],
+        ["第四步与产品强绑定"],
+      ),
+      predictedScore: "0",
+      confidence: "med",
+      status: "locked",
+      lockedAt: FIXED_NOW_ISO,
+      createdAt: FIXED_NOW_ISO,
+    },
+    {
+      id: "pred-canonical-3",
+      userId: calUser,
+      subjectType: "content_output",
+      subjectId: "dy-out-03", // 「开源我的 Agent-native 知识操作系统」
+      rubricVersionId: calRubricVer,
+      predictedConversion: predDimensions([
+        ["hook", 3, "「开源我的…」对泛人群钩子一般", "前3秒加一个反差或数字"],
+        ["emotion", 2, "偏展示，情感弱", "加入做这件事的个人动机"],
+        ["product_path", 5, "开源项目本身就是最强信任锚", "保持"],
+        ["social", 4, "Agent-native 是当下结构性议题", "点明它改变了什么"],
+        ["cta", 3, "可引导去看仓库但不够明确", "结尾直给一句「去主页拿」"],
+        ["quotable", 2, "缺独立可传播的金句", "提炼一句关于知识操作系统的断言"],
+      ]),
+      predictedMetrics: predMetrics(
+        [55, 18, 6, 25],
+        "信任型内容：产品铺路极强但钩子/情感偏弱，泛流量有限",
+        ["钩子弱", "缺金句", "情感共鸣不足"],
+        ["前3秒加反差", "提炼一句金句", "补个人动机"],
+      ),
+      predictedScore: "0",
+      confidence: "med",
+      status: "locked",
+      lockedAt: FIXED_NOW_ISO,
+      createdAt: FIXED_NOW_ISO,
+    },
+  ];
+  // 2 calibration_results — 真实维度子分 (actualMetrics keyed by dimension key) + 服务端口径
+  // 的 deviation (actual - predicted)。pred-canonical-1 偏差小（预测准），pred-canonical-3
+  // 偏差大（钩子实际更差），让 KPI 档位 + 回流对照 + latestFinding 有真信号。
+  const canonicalResults: CalibrationResultRow[] = [
+    {
+      id: "calibres-canonical-1",
+      userId: calUser,
+      predictionId: "pred-canonical-1",
+      ingestionRunId: "seed-run-calibration-1",
+      actualMetrics: { hook: 4, emotion: 4, product_path: 3, social: 2, cta: 2, quotable: 5 },
+      deviation: { hook: 0, emotion: 0, product_path: 0, social: -1, cta: 0, quotable: 1 },
+      createdAt: FIXED_NOW_ISO,
+    },
+    {
+      id: "calibres-canonical-3",
+      userId: calUser,
+      predictionId: "pred-canonical-3",
+      ingestionRunId: "seed-run-calibration-3",
+      actualMetrics: { hook: 1, emotion: 2, product_path: 5, social: 4, cta: 2, quotable: 2 },
+      deviation: { hook: -2, emotion: 0, product_path: 0, social: 0, cta: -1, quotable: 0 },
+      createdAt: FIXED_NOW_ISO,
+    },
+  ];
+  await calibrationSeedRepo.seedPredictions(canonicalPredictions);
+  await calibrationSeedRepo.seedResults(canonicalResults);
+
   // Seed two canonical platform accounts (module 21): a douyin + a bilibili 矩阵号 owned
   // by the canonical user so the 账号管理 surface resolves real rows under the seeded
   // login (foundation §2). secretReference is an opaque env reference (§7.1 — never a raw
@@ -3204,8 +3491,8 @@ export const compositeTransport: Transport = {
       return candidate.request(endpoint, input, ctx);
     }
     // Calibration ops (module 20, Wave 5–7) — rubrics.create/bumpVersion/get +
-    // predictions.create/lock/get + results.create served by the module's own
-    // user-scoped transport over the SAME pglite store (foundation §1 registry). The
+    // predictions.create/lock/get/list + results.create + overview (校准中心总览) served by
+    // the module's own user-scoped transport over the SAME pglite store (registry). The
     // immutable lock + append-only RubricVersion + §C-4/RISK-005 run guard run inside
     // the service; the IngestionRun existence + §6.3 Learnings feedback reach peers via
     // injected ports. No ctx ⇒ AuthenticationError.

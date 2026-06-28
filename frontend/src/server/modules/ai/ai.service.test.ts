@@ -45,6 +45,9 @@ function makeService(
     upsertProfile: vi.fn(async () => ({ id: "profile-new" })),
     createStatementVersion: vi.fn(async () => ({ id: "stmt-new" })),
   };
+  const calibration = {
+    createDraftPrediction: vi.fn(async () => ({ id: "pred-new" })),
+  };
   const service = createAiService({
     db,
     now: () => NOW,
@@ -56,6 +59,7 @@ function makeService(
     publishing,
     materialLinks,
     positioning,
+    calibration,
   });
   return {
     service,
@@ -66,6 +70,7 @@ function makeService(
     publishing,
     materialLinks,
     positioning,
+    calibration,
   };
 }
 

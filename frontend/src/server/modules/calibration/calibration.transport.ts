@@ -27,6 +27,7 @@ export const CALIBRATION_OP_IDS = [
   "calibration.predictions.get",
   "calibration.predictions.list",
   "calibration.results.create",
+  "calibration.overview",
 ] as const;
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
@@ -115,6 +116,12 @@ export function createCalibrationTransport(
             actualMetrics: b.actualMetrics ?? {},
           });
           return { data: dto, meta: { requestId } };
+        }
+        case "calibration.overview": {
+          // 校准中心总览 — a read-only aggregate (4 KPI + 待校准内容 + 回流对照 + 经验沉淀),
+          // every value DERIVED from real rows at read time (no body/params).
+          const overview = await service.getOverview(ctx);
+          return { data: overview, meta: { requestId } };
         }
         default:
           throw new UnsupportedOperationError(endpoint.id);

@@ -158,6 +158,27 @@ export interface AiPositioningPort {
   ): Promise<unknown>;
 }
 
+// The Calibration seam (AI 编导诊断, 校准中心大改 Slice 1): when a `calibration_diagnosis`
+// candidate (calibration.diagnose node) is 采纳ed, the AI confirm branch formalizes it into
+// ONE draft Prediction via the Calibration module's PUBLIC service (AI never writes the
+// predictions row directly; SPEC §22). The 维度评分 (1–5 + 理由 + 建议) lands in
+// predictedConversion.dimensions; the 表现 chips + 诊断 land in predictedMetrics. The
+// prediction starts 'draft' — the user reviews + locks the 盲预测 themselves (the AI never
+// auto-locks).
+export interface AiCalibrationPort {
+  createDraftPrediction(
+    ctx: RequestContext,
+    input: {
+      subjectType: "content_output" | "publication";
+      subjectId: string;
+      rubricVersionId: string;
+      predictedMetrics: Record<string, unknown>;
+      predictedConversion: Record<string, unknown>;
+      confidence: "high" | "med" | "low";
+    },
+  ): Promise<unknown>;
+}
+
 export interface ServiceDeps {
   db: Db;
   now: () => string;
@@ -169,6 +190,7 @@ export interface ServiceDeps {
   publishing: AiPublishingPort;
   materialLinks: AiMaterialLinksPort;
   positioning: AiPositioningPort;
+  calibration: AiCalibrationPort;
 }
 
 export interface CreateTaskInput {
@@ -286,6 +308,7 @@ const DEFAULT_MODEL_FOR_CAPABILITY: Record<string, string> = {
   "copilot.assist": "claude-opus-4-8",
   "positioning.generate": "claude-opus-4-8",
   "topic.enrich": "claude-opus-4-8",
+  "calibration.diagnose": "claude-opus-4-8",
 };
 
 // A deterministic FNV-1a hash → stable idempotency key when the caller omits one. No
@@ -548,6 +571,99 @@ export function createAiService(deps: ServiceDeps): AiService {
             ? (data.card as Record<string, unknown>)
             : {};
         await deps.candidate.enrichCard(ctx, candidateId, card);
+        const updated = await repo.updateTaskStatus(taskId, {
+          status: "succeeded",
+          completedAt: deps.now(),
+        });
+        return toTaskDto(updated);
+      }
+
+      // calibration_diagnosis (calibration.diagnose node, 校准中心大改 Slice 1) — formalize
+      // the AI 编导诊断 into ONE draft Prediction via the Calibration module (AI never writes
+      // the predictions row directly). The candidate carries `resultData.{subjectType,
+      // subjectId, rubricVersionId, diagnosis}`. We pack the 维度评分约定 jsonb:
+      //   predictedConversion = { dimensions: [{key, score, reason, suggestion}] }
+      //   predictedMetrics    = { performance: {…chips}, diagnosis: {verdict, mainIssues,
+      //                           priorityFixes} }
+      // The prediction starts 'draft' — the user reviews + locks the 盲预测 themselves.
+      if (candidate.resultType === "calibration_diagnosis") {
+        const data = (candidate.resultData ?? {}) as {
+          subjectType?: unknown;
+          subjectId?: unknown;
+          rubricVersionId?: unknown;
+          diagnosis?: unknown;
+        };
+        const subjectType =
+          data.subjectType === "content_output" ||
+          data.subjectType === "publication"
+            ? data.subjectType
+            : "content_output";
+        const subjectId =
+          typeof data.subjectId === "string" ? data.subjectId : "";
+        const rubricVersionId =
+          typeof data.rubricVersionId === "string" ? data.rubricVersionId : "";
+        if (!subjectId || !rubricVersionId) {
+          throw new ConflictError(
+            `AI task ${taskId} calibration_diagnosis candidate is missing subjectId or rubricVersionId`,
+          );
+        }
+        const d =
+          data.diagnosis !== null &&
+          typeof data.diagnosis === "object" &&
+          !Array.isArray(data.diagnosis)
+            ? (data.diagnosis as Record<string, unknown>)
+            : {};
+        const num = (v: unknown): number | null =>
+          typeof v === "number" && Number.isFinite(v) ? v : null;
+        const rawDims = Array.isArray(d.dimensions) ? d.dimensions : [];
+        const dimensions = rawDims
+          .map((raw) => {
+            const m = (raw ?? {}) as Record<string, unknown>;
+            return {
+              key: typeof m.key === "string" ? m.key : "",
+              score: num(m.score),
+              reason: typeof m.reason === "string" ? m.reason : "",
+              suggestion: typeof m.suggestion === "string" ? m.suggestion : "",
+            };
+          })
+          .filter((x) => x.key && x.score !== null);
+        const perf = (d.performance ?? {}) as Record<string, unknown>;
+        const diag = {
+          verdict: typeof d.verdict === "string" ? d.verdict : "",
+          mainIssues: Array.isArray(d.mainIssues)
+            ? d.mainIssues.filter((x): x is string => typeof x === "string")
+            : [],
+          priorityFixes: Array.isArray(d.priorityFixes)
+            ? d.priorityFixes.filter((x): x is string => typeof x === "string")
+            : [],
+        };
+        const confidence =
+          d.confidence === "high" || d.confidence === "med" || d.confidence === "low"
+            ? d.confidence
+            : "med";
+        await deps.calibration.createDraftPrediction(ctx, {
+          subjectType,
+          subjectId,
+          rubricVersionId,
+          // 维度评分约定 — the deterministic 变现加权 weighted sum (deriveScore) reads numeric
+          // values keyed by the dimension `key`; the dimensions array is the structured
+          // detail the FE 评分表 renders. We DON'T flatten scores into the conversion map's
+          // top level (the rubric keys would collide with the dimensions array), so the
+          // derived predictedScore is 0 unless the rubric dimension keys also appear at the
+          // top level — acceptable: predictedScore is a secondary aggregate; the 1–5 维度评分
+          // is the primary signal the 校准中心 surfaces.
+          predictedConversion: { dimensions },
+          predictedMetrics: {
+            performance: {
+              完播率: num(perf["完播率"]),
+              收藏率: num(perf["收藏率"]),
+              评论率: num(perf["评论率"]),
+              转化意向: num(perf["转化意向"]),
+            },
+            diagnosis: diag,
+          },
+          confidence,
+        });
         const updated = await repo.updateTaskStatus(taskId, {
           status: "succeeded",
           completedAt: deps.now(),

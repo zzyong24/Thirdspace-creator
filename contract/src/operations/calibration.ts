@@ -11,6 +11,7 @@ import {
   rubricVersionResource,
   predictionResource,
   calibrationResultResource,
+  calibrationOverviewResource,
 } from "../resources/calibration";
 
 const rubricParams = z.object({ rubricId: id });
@@ -111,5 +112,15 @@ export const calibrationOperations = {
     }),
     response: calibrationResultResource,
     fr: ["FR-CALIB-RESULT-CREATE"],
+  }),
+  // 校准中心总览 (校准中心大改 Slice 1) — a read-only aggregate (4 KPI + 待校准内容 +
+  // 发布后回流对照 + 经验沉淀), every count DERIVED from real rows at read time (no stored
+  // 总览 table). Owned by the calibration module's transport.
+  overview: defineEndpoint({
+    id: "calibration.overview",
+    method: "GET",
+    path: "/calibration/overview",
+    response: calibrationOverviewResource,
+    fr: ["FR-CALIB-OVERVIEW"],
   }),
 } as const;

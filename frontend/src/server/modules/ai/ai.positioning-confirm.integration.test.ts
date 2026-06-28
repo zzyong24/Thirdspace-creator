@@ -50,6 +50,9 @@ function makeWiredService(db: Db) {
       createStatementVersion: (c, input) =>
         positioningService.createStatementVersion(c, input),
     },
+    calibration: {
+      createDraftPrediction: vi.fn(async () => ({ id: "pred-new" })),
+    },
   });
   return { ai, positioningService };
 }

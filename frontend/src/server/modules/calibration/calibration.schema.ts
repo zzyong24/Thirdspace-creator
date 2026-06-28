@@ -23,6 +23,10 @@ export const rubricResource = ENDPOINTS.createRubric.response;
 export const rubricVersionResource = ENDPOINTS.bumpRubricVersion.response;
 export const predictionResource = ENDPOINTS.createPrediction.response;
 export const calibrationResultResource = ENDPOINTS.createResult.response;
+// 校准中心总览 (calibration.overview) — the read-only aggregate DTO (no row mapper; the
+// service composes it from multiple reads + derivations, then the transport validates it
+// against this contract shape via the contract test).
+export const calibrationOverviewResource = ENDPOINTS.overview.response;
 
 // Derive the inferred output type from the schema's phantom `_output` (zod 4's
 // `z.infer<T>` is `T["_output"]`). The frontend package does not declare `zod` as a
@@ -32,6 +36,8 @@ export type RubricVersionResource = (typeof rubricVersionResource)["_output"];
 export type PredictionResource = (typeof predictionResource)["_output"];
 export type CalibrationResultResource =
   (typeof calibrationResultResource)["_output"];
+export type CalibrationOverviewResource =
+  (typeof calibrationOverviewResource)["_output"];
 
 // Row → DTO mappers (SPEC §9: the API DTO is built by an explicit mapper, NEVER the
 // Drizzle row). The service + contract test share ONE mapping so a wire-shape change

@@ -61,6 +61,10 @@ export interface CalibrationRepository {
   // Fixture hydration (insert with explicit user_id already on the row).
   seedRubrics(rows: RubricRow[]): Promise<void>;
   seedRubricVersions(rows: RubricVersionRow[]): Promise<void>;
+  // Canonical seed for 校准中心 (predictions + results carrying the 维度评分约定 jsonb), so the
+  // overview KPI / 回流对照 / 中栏评分表 resolve real rows. onConflictDoNothing (idempotent).
+  seedPredictions(rows: PredictionRow[]): Promise<void>;
+  seedResults(rows: CalibrationResultRow[]): Promise<void>;
 
   createRubric(input: { name: string }): Promise<RubricRow>;
   insertRubricVersion(input: InsertRubricVersionInput): Promise<RubricVersionRow>;
@@ -86,6 +90,15 @@ export interface CalibrationRepository {
   getResultByPrediction(
     predictionId: string,
   ): Promise<CalibrationResultRow | null>;
+
+  // --- Overview reads (校准中心总览, Slice 1) — all user-scoped, derived at read time. ---
+  // All predictions for the user (createdAt desc), no pagination — the overview derives
+  // KPI counts + per-subject badges + reflow joins from the full set (the canonical
+  // dataset is small; if it grows, page this).
+  listAllPredictions(): Promise<PredictionRow[]>;
+  // All calibration results for the user (createdAt desc) — drives completedReflows count,
+  // avgDeviation, latestFinding, and the reflow对照 join (result ⋈ its prediction).
+  listAllResults(): Promise<CalibrationResultRow[]>;
 }
 
 export function createCalibrationRepository(
@@ -153,6 +166,16 @@ export function createCalibrationRepository(
     async seedRubricVersions(rows) {
       if (rows.length === 0) return;
       await db.insert(rubricVersions).values(rows).onConflictDoNothing();
+    },
+
+    async seedPredictions(rows) {
+      if (rows.length === 0) return;
+      await db.insert(predictions).values(rows).onConflictDoNothing();
+    },
+
+    async seedResults(rows) {
+      if (rows.length === 0) return;
+      await db.insert(calibrationResults).values(rows).onConflictDoNothing();
     },
 
     async createRubric({ name }) {
@@ -328,6 +351,22 @@ export function createCalibrationRepository(
           ),
         );
       return rows[0] ?? null;
+    },
+
+    async listAllPredictions() {
+      return db
+        .select()
+        .from(predictions)
+        .where(eq(predictions.userId, deps.userId))
+        .orderBy(desc(predictions.createdAt));
+    },
+
+    async listAllResults() {
+      return db
+        .select()
+        .from(calibrationResults)
+        .where(eq(calibrationResults.userId, deps.userId))
+        .orderBy(desc(calibrationResults.createdAt));
     },
   };
 }
