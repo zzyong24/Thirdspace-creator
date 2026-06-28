@@ -30,6 +30,7 @@ export const SETTINGS_OP_IDS = [
   "identity.profile.patch",
   "settings.preferences.patch",
   "settings.models.put",
+  "settings.models.list",
   "settings.agents.create",
 ] as const;
 
@@ -73,6 +74,10 @@ export function createSettingsTransport(
             p.capability ?? "",
             (body ?? {}) as ModelPutBody,
           );
+          return { data, meta: { requestId: ctx.requestId } };
+        }
+        case "settings.models.list": {
+          const data = await service.listModelConfigs(ctx);
           return { data, meta: { requestId: ctx.requestId } };
         }
         case "settings.agents.create": {

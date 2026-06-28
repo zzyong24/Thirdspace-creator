@@ -156,6 +156,25 @@ describe("settings.transport (contract conformance)", () => {
     expect(parsed.data.settings).toEqual({ temperature: 0.3 });
   });
 
+  it("settings.models.list → array of masked modelConfigurationResource", async () => {
+    const client = createClient(ENDPOINTS, transport, ctx);
+    await client.putModel({
+      params: { capability: "default" },
+      query: undefined,
+      body: { provider: "minimax", modelName: "MiniMax-M3", secret: "sk-real-key" },
+    });
+    const list = await client.listModels({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    });
+    expect(Array.isArray(list)).toBe(true);
+    const def = list.find((m) => m.capability === "default");
+    expect(def?.hasSecret).toBe(true);
+    // Masked: the raw secret value is never serialized over the wire.
+    expect((def as Record<string, unknown>).secretValue).toBeUndefined();
+  });
+
   it("settings.agents.create → agentConfigurationResource single envelope", async () => {
     const client = createClient(ENDPOINTS, transport, ctx);
     const agent = await client.createAgent({
