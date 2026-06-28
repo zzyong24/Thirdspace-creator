@@ -1002,7 +1002,7 @@ function ModelConfigurationCard({
   return (
     <SectionCard
       title="模型配置"
-      description="自定义绑定厂商 / 模型 / 接口地址 / 密钥(参照 cc-switch,改完点保存)"
+      description="自定义绑定厂商 / 模型 / 接口地址 / 密钥;修改后点保存生效"
     >
       <div data-slot="model-configuration-card" className="flex flex-col gap-3">
         <SettingsFormRow
