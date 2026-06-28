@@ -56,7 +56,15 @@ const VM: SettingsViewModel = {
     locale: "zh-CN",
   },
   storage: { usedGb: 18, totalGb: 64, breakdown: [] },
-  model: { provider: "anthropic", model: "claude-sonnet", temperature: 0.6 },
+  model: {
+    capability: "default",
+    provider: "anthropic",
+    modelName: "claude-opus-4-8",
+    baseUrl: "",
+    apiFormat: "anthropic",
+    hasSecret: false,
+    temperature: 0.6,
+  },
 };
 
 beforeEach(() => {
@@ -123,26 +131,76 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     );
   });
 
-  it("blurring 温度 PUTs the model with the pinned capability + temperature in settings", async () => {
+  it("saving the model form PUTs the whole default config (provider/model/baseUrl/format/secret/temperature)", async () => {
     const { container } = render(<SettingsRailColumn viewModel={VM} />);
-    const input = container.querySelector(
+    const provider = container.querySelector(
+      '[data-slot="model-provider-input"]',
+    ) as HTMLInputElement;
+    const modelName = container.querySelector(
+      '[data-slot="model-name-input"]',
+    ) as HTMLInputElement;
+    const baseUrl = container.querySelector(
+      '[data-slot="model-base-url-input"]',
+    ) as HTMLInputElement;
+    const secret = container.querySelector(
+      '[data-slot="model-secret-input"]',
+    ) as HTMLInputElement;
+    const temperature = container.querySelector(
       '[data-slot="model-temperature-input"]',
     ) as HTMLInputElement;
-    expect(input).not.toBeNull();
-    fireEvent.change(input, { target: { value: "0.9" } });
-    fireEvent.blur(input);
+    const save = container.querySelector(
+      '[data-slot="model-save"]',
+    ) as HTMLButtonElement;
+    expect(provider).not.toBeNull();
+    expect(save).not.toBeNull();
+
+    fireEvent.change(provider, { target: { value: "minimax" } });
+    fireEvent.change(modelName, { target: { value: "MiniMax-M3" } });
+    fireEvent.change(baseUrl, {
+      target: { value: "https://api.minimaxi.com/anthropic" },
+    });
+    fireEvent.change(secret, { target: { value: "sk-real-key" } });
+    fireEvent.change(temperature, { target: { value: "0.9" } });
+    fireEvent.click(save);
 
     await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1));
     expect(mockClient.putModel).toHaveBeenCalledWith(
       expect.objectContaining({
-        params: { capability: "script" },
+        params: { capability: "default" },
         body: expect.objectContaining({
-          provider: "anthropic",
-          modelName: "claude-sonnet",
+          provider: "minimax",
+          modelName: "MiniMax-M3",
+          baseUrl: "https://api.minimaxi.com/anthropic",
+          apiFormat: "anthropic",
+          secret: "sk-real-key",
           settings: { temperature: 0.9 },
         }),
       }),
     );
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("omits the secret when left blank (a re-save keeps the stored key)", async () => {
+    const VM_WITH_SECRET: SettingsViewModel = {
+      ...VM,
+      model: { ...VM.model, hasSecret: true },
+    };
+    const { container } = render(
+      <SettingsRailColumn viewModel={VM_WITH_SECRET} />,
+    );
+    const modelName = container.querySelector(
+      '[data-slot="model-name-input"]',
+    ) as HTMLInputElement;
+    const save = container.querySelector(
+      '[data-slot="model-save"]',
+    ) as HTMLButtonElement;
+    fireEvent.change(modelName, { target: { value: "claude-opus-4-8-v2" } });
+    fireEvent.click(save);
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1));
+    const call = mockClient.putModel.mock.calls[0]![0] as {
+      body: Record<string, unknown>;
+    };
+    expect(call.body.secret).toBeUndefined();
+    expect(call.body.modelName).toBe("claude-opus-4-8-v2");
   });
 });

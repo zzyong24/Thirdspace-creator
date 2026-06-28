@@ -79,6 +79,13 @@ export interface SettingsPageProps {
    * tests, which inject the full `viewModel` directly.
    */
   readonly identity?: SettingsIdentity;
+  /**
+   * Real DB-backed model config for the "default" capability (read by the
+   * `(creator)/settings` route via `settings.models.list`). When supplied, the
+   * model card reflects the stored provider / model / baseUrl / format /
+   * hasSecret instead of the fixture default. Omitted in unit tests.
+   */
+  readonly model?: ModelState;
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */
@@ -140,8 +147,18 @@ export interface StorageBreakdownRow {
 }
 
 export interface ModelState {
-  readonly provider: "anthropic" | "openai" | "google";
-  readonly model: "claude-sonnet" | "gpt-4o" | "gemini-2";
+  /** The configured capability — the card pins to the global "default". */
+  readonly capability: string;
+  /** Free-form provider name (bind any vendor). */
+  readonly provider: string;
+  /** Free-form model id (e.g. claude-opus-4-8 / MiniMax-M3). */
+  readonly modelName: string;
+  /** Custom baseUrl (relay / MiniMax); "" = official default. */
+  readonly baseUrl: string;
+  /** Wire/auth format. */
+  readonly apiFormat: "anthropic" | "openai_chat";
+  /** Masked: a secret is configured (raw value never sent to the client). */
+  readonly hasSecret: boolean;
   readonly temperature: number;
 }
 
@@ -201,9 +218,14 @@ function computeAccountInitials(name: string): string {
 // Page
 // ---------------------------------------------------------------------------
 
-export function SettingsPage({ viewModel, identity }: SettingsPageProps = {}) {
+export function SettingsPage({
+  viewModel,
+  identity,
+  model,
+}: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
-  const vm = identity ? applyIdentity(base, identity) : base;
+  const withIdentity = identity ? applyIdentity(base, identity) : base;
+  const vm = model ? { ...withIdentity, model } : withIdentity;
   return (
     <main
       data-app="creatoros"

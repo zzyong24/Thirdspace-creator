@@ -18,7 +18,10 @@
  * the session identity when the op read is unavailable (race / direct
  * render), then to the fixture default.
  */
-import { SettingsPage } from "@/features/settings/settings-page";
+import {
+  SettingsPage,
+  type ModelState,
+} from "@/features/settings/settings-page";
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
 
@@ -63,5 +66,37 @@ export default async function SettingsRoutePage() {
     }
   }
 
-  return <SettingsPage identity={identity} />;
+  // Read the real DB-backed "default" model config (settings.models.list) so the
+  // model card reflects the stored provider / model / baseUrl / format /
+  // hasSecret. A read failure leaves it undefined → the card shows the fixture
+  // default (deterministic SSR fallback).
+  let model: ModelState | undefined;
+  if (session) {
+    try {
+      const models = await createServerClient(session.ctx).listModels({
+        params: undefined,
+        query: undefined,
+        body: undefined,
+      });
+      const row =
+        models.find((m) => m.capability === "default") ??
+        models.find((m) => m.isDefault);
+      if (row) {
+        const temp = (row.settings as { temperature?: unknown }).temperature;
+        model = {
+          capability: row.capability,
+          provider: row.provider,
+          modelName: row.modelName,
+          baseUrl: row.baseUrl ?? "",
+          apiFormat: row.apiFormat,
+          hasSecret: row.hasSecret,
+          temperature: typeof temp === "number" ? temp : 0.6,
+        };
+      }
+    } catch {
+      // listModels unavailable (transport race) → fall back to the fixture.
+    }
+  }
+
+  return <SettingsPage identity={identity} model={model} />;
 }

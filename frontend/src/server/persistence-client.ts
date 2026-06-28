@@ -707,6 +707,9 @@ function toModelRow(m: CanonicalModel): ModelConfigurationRow {
     provider: m.provider,
     modelName: m.modelName,
     secretReference: m.secretReference,
+    // The canonical fixture stores no inline key — it resolves via the env-ref
+    // secretReference; secretValue (the cc-switch local-db key column) stays null.
+    secretValue: null,
     // The canonical fixture predates the cc-switch baseUrl/apiFormat columns; default to
     // the official Anthropic endpoint so the seeded rows match the extended row type.
     baseUrl: null,

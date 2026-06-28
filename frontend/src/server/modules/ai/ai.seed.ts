@@ -78,6 +78,7 @@ export function buildAiModelConfigs(
     provider: "anthropic",
     modelName: c.modelName,
     secretReference: SECRET_REF,
+    secretValue: null,
     baseUrl: null,
     apiFormat: "anthropic",
     settings: { effort: c.effort },

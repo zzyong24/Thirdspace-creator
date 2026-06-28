@@ -192,6 +192,7 @@ describe("ai repository (pglite)", () => {
       provider: "anthropic",
       modelName: "claude-fable-5",
       secretReference: "env:ANTHROPIC_API_KEY",
+      secretValue: null,
       baseUrl: null,
       apiFormat: "anthropic",
       settings: { effort: "high" },

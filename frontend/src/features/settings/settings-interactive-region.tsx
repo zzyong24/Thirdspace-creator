@@ -88,10 +88,11 @@ function useSettingsMutation() {
   return { pending, run };
 }
 
-// The model card's configured capability. The `/settings` model card shows
-// provider/model/temperature with no per-capability selector, so the PUT pins to
-// a single capability (plan O3). "script" is the canonical default capability.
-const MODEL_CAPABILITY = "script";
+// The model card configures the GLOBAL DEFAULT model (capability "default"). All
+// AI nodes resolve against it (resolve.ts: per-capability row → "default" row →
+// env → built-in). Per-capability overrides stay an advanced surface (the
+// contract + resolve already support them); the card pins to "default".
+const MODEL_CAPABILITY = "default";
 
 // ---------------------------------------------------------------------------
 // Local appearance persistence (GAP-SET-1 — theme/density made真持久)
@@ -925,81 +926,154 @@ function StorageUsageCard({
 // ModelConfigurationCard
 // ---------------------------------------------------------------------------
 
-type ModelProvider = "anthropic" | "openai" | "google";
-type ModelName = "claude-sonnet" | "gpt-4o" | "gemini-2";
+type ApiFormat = "anthropic" | "openai_chat";
 
+const API_FORMAT_OPTIONS: ReadonlyArray<{ value: ApiFormat; label: string }> = [
+  { value: "anthropic", label: "Anthropic 兼容" },
+  { value: "openai_chat", label: "OpenAI Chat 兼容" },
+];
+
+// Free-form provider suggestions — the input is NOT restricted to these (bind any
+// vendor: an Anthropic relay, MiniMax, an OpenAI-compatible gateway, etc.).
+const PROVIDER_SUGGESTIONS: ReadonlyArray<string> = [
+  "anthropic",
+  "minimax",
+  "openai",
+  "google",
+  "deepseek",
+];
+
+// cc-switch-style configurable provider binding. provider / model / baseUrl /
+// apiFormat are free-form; the API key is stored in the LOCAL db (masked to
+// `hasSecret` on read — the raw key is never echoed back). A single 保存 upserts
+// the "default" capability via `settings.models.put`; resolve.ts then reads it
+// (stored key preferred over env-ref) with a global-default fallback.
 function ModelConfigurationCard({
   model,
 }: {
   model: SettingsViewModel["model"];
 }) {
-  const [provider, setProvider] = React.useState<ModelProvider>(
-    model.provider,
-  );
-  const [modelName, setModelName] = React.useState<ModelName>(model.model);
+  const [provider, setProvider] = React.useState<string>(model.provider);
+  const [modelName, setModelName] = React.useState<string>(model.modelName);
+  const [baseUrl, setBaseUrl] = React.useState<string>(model.baseUrl);
+  const [apiFormat, setApiFormat] = React.useState<ApiFormat>(model.apiFormat);
+  // Blank = keep the existing stored key (the read never returns the raw value).
+  const [secret, setSecret] = React.useState<string>("");
   const [temperature, setTemperature] = React.useState<number>(
     model.temperature,
   );
   const { pending, run } = useSettingsMutation();
 
-  // PUT is a FULL upsert on the pinned capability — always send the current
-  // provider + modelName (op `settings.models.put`, params `{capability}`), plus
-  // temperature in `settings` when it is the field changing. Provider/model use
-  // the post-update values; temperature reads current state.
-  const putModel = React.useCallback(
-    (next: { provider: ModelProvider; modelName: ModelName; temperature: number }) =>
-      run(() =>
-        client.putModel({
+  // Re-sync drafts when a server refresh changes the stored config.
+  React.useEffect(() => {
+    setProvider(model.provider);
+    setModelName(model.modelName);
+    setBaseUrl(model.baseUrl);
+    setApiFormat(model.apiFormat);
+    setTemperature(model.temperature);
+    setSecret("");
+  }, [model]);
+
+  const canSave =
+    provider.trim().length > 0 && modelName.trim().length > 0 && !pending;
+
+  // One PUT upserts the whole "default" config; an empty secret is omitted so a
+  // re-save without re-typing the key preserves the stored one.
+  const save = React.useCallback(() => {
+    if (!canSave) return;
+    run(() =>
+      client
+        .putModel({
           params: { capability: MODEL_CAPABILITY },
           query: undefined,
           body: {
-            provider: next.provider,
-            modelName: next.modelName,
-            settings: { temperature: next.temperature },
+            provider: provider.trim(),
+            modelName: modelName.trim(),
+            baseUrl: baseUrl.trim() || undefined,
+            apiFormat,
+            secret: secret.length > 0 ? secret : undefined,
+            settings: { temperature },
           },
-        }),
-      ),
-    [run],
-  );
+        })
+        .then(() => setSecret("")),
+    );
+  }, [canSave, run, provider, modelName, baseUrl, apiFormat, secret, temperature]);
+
   return (
     <SectionCard
       title="模型配置"
-      description="AI Copilot 与脚本生成的默认模型"
+      description="自定义绑定厂商 / 模型 / 接口地址 / 密钥(参照 cc-switch,改完点保存)"
     >
       <div data-slot="model-configuration-card" className="flex flex-col gap-3">
         <SettingsFormRow
           label="提供商"
           controlId="model-provider"
-          help="选择默认调用的模型服务商。"
+          help="任意厂商名,可自定义。"
+        >
+          <Input
+            id="model-provider"
+            data-slot="model-provider-input"
+            list="model-provider-suggestions"
+            value={provider}
+            disabled={pending}
+            onChange={(event) => setProvider(event.target.value)}
+            aria-label="模型提供商"
+          />
+          <datalist id="model-provider-suggestions">
+            {PROVIDER_SUGGESTIONS.map((p) => (
+              <option key={p} value={p} />
+            ))}
+          </datalist>
+        </SettingsFormRow>
+        <SettingsFormRow
+          label="模型"
+          controlId="model-name"
+          help="模型 id,如 claude-opus-4-8 / MiniMax-M3。"
+        >
+          <Input
+            id="model-name"
+            data-slot="model-name-input"
+            value={modelName}
+            disabled={pending}
+            onChange={(event) => setModelName(event.target.value)}
+            aria-label="模型名称"
+          />
+        </SettingsFormRow>
+        <SettingsFormRow
+          label="接口地址"
+          controlId="model-base-url"
+          help="自定义 baseUrl(中转 / MiniMax);留空走官方默认。"
+        >
+          <Input
+            id="model-base-url"
+            data-slot="model-base-url-input"
+            value={baseUrl}
+            disabled={pending}
+            placeholder="https://api.anthropic.com(留空=默认)"
+            onChange={(event) => setBaseUrl(event.target.value)}
+            aria-label="接口地址"
+          />
+        </SettingsFormRow>
+        <SettingsFormRow
+          label="接口格式"
+          controlId="model-api-format"
+          help="鉴权与请求体格式。"
         >
           <Select
-            value={provider}
-            onValueChange={(value) => {
-              const nextProvider = value as ModelProvider;
-              // Switching provider re-bounds the model list — snap modelName to
-              // the new provider's first option so the upsert is always valid.
-              const nextModel =
-                MODEL_OPTIONS_FOR[nextProvider][0]?.value ?? modelName;
-              setProvider(nextProvider);
-              setModelName(nextModel);
-              putModel({
-                provider: nextProvider,
-                modelName: nextModel,
-                temperature,
-              });
-            }}
+            value={apiFormat}
+            onValueChange={(value) => setApiFormat(value as ApiFormat)}
           >
             <SelectTrigger
-              id="model-provider"
-              data-slot="model-provider-trigger"
+              id="model-api-format"
+              data-slot="model-api-format-trigger"
               size="sm"
-              className="w-40"
+              className="w-44"
               disabled={pending}
             >
-              <SelectValue placeholder="选择提供商" />
+              <SelectValue placeholder="选择格式" />
             </SelectTrigger>
-            <SelectContent data-slot="model-provider-content">
-              {PROVIDER_OPTIONS.map((option) => (
+            <SelectContent data-slot="model-api-format-content">
+              {API_FORMAT_OPTIONS.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -1008,35 +1082,35 @@ function ModelConfigurationCard({
           </Select>
         </SettingsFormRow>
         <SettingsFormRow
-          label="模型"
-          controlId="model-name"
-          help="模型配置位于本页（不跳转独立页面，page-specs §17）。"
+          label="密钥"
+          controlId="model-secret"
+          help={
+            model.hasSecret
+              ? "已配置;留空保持不变,填入则覆盖。"
+              : "粘贴 API Key(存于本地库)。"
+          }
         >
-          <Select
-            value={modelName}
-            onValueChange={(value) => {
-              const nextModel = value as ModelName;
-              setModelName(nextModel);
-              putModel({ provider, modelName: nextModel, temperature });
-            }}
-          >
-            <SelectTrigger
-              id="model-name"
-              data-slot="model-name-trigger"
-              size="sm"
-              className="w-40"
+          <div className="flex w-full items-center gap-2">
+            <Input
+              id="model-secret"
+              type="password"
+              data-slot="model-secret-input"
+              value={secret}
               disabled={pending}
-            >
-              <SelectValue placeholder="选择模型" />
-            </SelectTrigger>
-            <SelectContent data-slot="model-name-content">
-              {MODEL_OPTIONS_FOR[provider].map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              placeholder={model.hasSecret ? "已配置(留空不变)" : "粘贴 API Key"}
+              onChange={(event) => setSecret(event.target.value)}
+              aria-label="模型密钥"
+            />
+            {model.hasSecret ? (
+              <Badge
+                data-slot="model-secret-status"
+                variant="outline"
+                className="border-success/40 bg-success-soft text-success"
+              >
+                已配置
+              </Badge>
+            ) : null}
+          </div>
         </SettingsFormRow>
         <SettingsFormRow
           label="温度"
@@ -1055,41 +1129,27 @@ function ModelConfigurationCard({
             disabled={pending}
             onChange={(event) => {
               const next = Number(event.target.value);
-              if (!Number.isNaN(next)) {
-                setTemperature(next);
-              }
+              if (!Number.isNaN(next)) setTemperature(next);
             }}
-            onBlur={(event) => {
-              // Persist on blur (debounce: one PUT per edit, not per keystroke).
-              const next = Number(event.target.value);
-              if (!Number.isNaN(next)) {
-                putModel({ provider, modelName, temperature: next });
-              }
-            }}
+            aria-label="模型温度"
           />
         </SettingsFormRow>
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            data-slot="model-save"
+            variant="outline"
+            size="sm"
+            disabled={!canSave}
+            onClick={save}
+          >
+            保存模型配置
+          </Button>
+        </div>
       </div>
     </SectionCard>
   );
 }
-
-const PROVIDER_OPTIONS: ReadonlyArray<{
-  value: ModelProvider;
-  label: string;
-}> = [
-  { value: "anthropic", label: "Anthropic" },
-  { value: "openai", label: "OpenAI" },
-  { value: "google", label: "Google" },
-];
-
-const MODEL_OPTIONS_FOR: Record<
-  ModelProvider,
-  ReadonlyArray<{ value: ModelName; label: string }>
-> = {
-  anthropic: [{ value: "claude-sonnet", label: "Claude Sonnet" }],
-  openai: [{ value: "gpt-4o", label: "GPT-4o" }],
-  google: [{ value: "gemini-2", label: "Gemini 2" }],
-};
 
 // ---------------------------------------------------------------------------
 // OtherSettingsCard

@@ -52,8 +52,12 @@ export function buildSettingsViewModel(): SettingsViewModel {
     },
     storage: buildStorage(),
     model: {
+      capability: "default",
       provider: "anthropic",
-      model: "claude-sonnet",
+      modelName: "claude-opus-4-8",
+      baseUrl: "",
+      apiFormat: "anthropic",
+      hasSecret: false,
       temperature: 0.6,
     },
   };
