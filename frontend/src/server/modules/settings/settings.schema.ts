@@ -26,3 +26,8 @@ export type ModelConfigurationResource =
 export const agentConfigurationResource = ENDPOINTS.createAgent.response;
 export type AgentConfigurationResource =
   (typeof agentConfigurationResource)["_output"];
+
+// settings.storage.get / put → storageConfigResource (item B).
+export const storageConfigResource = ENDPOINTS.getStorage.response;
+export type StorageConfigResource =
+  (typeof storageConfigResource)["_output"];

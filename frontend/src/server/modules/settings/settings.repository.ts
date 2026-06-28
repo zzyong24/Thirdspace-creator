@@ -1,8 +1,10 @@
-import { and, eq, type Db, type RequestContext } from "@creatoros/backend";
+import { and, eq, sql, type Db, type RequestContext } from "@creatoros/backend";
+import { assets, assetFiles } from "@creatoros/backend";
 import {
   userPreferences,
   modelConfigurations,
   agentConfigurations,
+  storageConfigs,
 } from "./settings.db-schema";
 
 // Settings repository (foundation §5.2) — user-scoped queries ONLY. Every method
@@ -23,6 +25,21 @@ export interface RepoDeps {
 export type UserPreferenceRow = typeof userPreferences.$inferSelect;
 export type ModelConfigurationRow = typeof modelConfigurations.$inferSelect;
 export type AgentConfigurationRow = typeof agentConfigurations.$inferSelect;
+export type StorageConfigRow = typeof storageConfigs.$inferSelect;
+
+// item B — the editable storage-config fields (every key optional; only provided
+// keys are written on the user_id-PK upsert).
+export interface StorageConfigPatch {
+  backend?: "local" | "s3";
+  rootPath?: string;
+}
+
+// item B — one { assetType, bytes } pair from the usage aggregation (the real
+// SUM(file_size) per asset_type for the ctx user).
+export interface AssetTypeUsage {
+  assetType: string;
+  bytes: number;
+}
 
 // The contract PATCH body — every key optional; only provided keys are written.
 export interface PreferencePatch {
@@ -68,6 +85,14 @@ export interface SettingsRepository {
     body: ModelPutBody,
   ): Promise<ModelConfigurationRow>;
   listModels(ctx: RequestContext): Promise<ModelConfigurationRow[]>;
+  getStorageConfig(ctx: RequestContext): Promise<StorageConfigRow | null>;
+  putStorageConfig(
+    ctx: RequestContext,
+    patch: StorageConfigPatch,
+  ): Promise<StorageConfigRow>;
+  // Real usage: SUM(asset_files.file_size) grouped by asset.asset_type, scoped to
+  // the ctx user (joins asset_files → assets on the user-owned root).
+  sumUsageByAssetType(ctx: RequestContext): Promise<AssetTypeUsage[]>;
   createAgent(
     ctx: RequestContext,
     input: AgentCreateInput,
@@ -208,6 +233,59 @@ export function createSettingsRepository(
         .select()
         .from(modelConfigurations)
         .where(eq(modelConfigurations.userId, ctx.userId));
+    },
+
+    async getStorageConfig(ctx) {
+      const rows = await db
+        .select()
+        .from(storageConfigs)
+        .where(eq(storageConfigs.userId, ctx.userId))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    async putStorageConfig(ctx, patch) {
+      const now = deps.now();
+      // user_id-PK upsert: insert defaults overlaid with the provided keys, or on
+      // conflict update ONLY the provided keys (a partial patch never clobbers the
+      // other column). `created_at` is preserved on update (excluded from `set`).
+      const backend = patch.backend;
+      const rootPath = patch.rootPath;
+      const updateSet: Record<string, unknown> = { updatedAt: now };
+      if (backend !== undefined) updateSet.backend = backend;
+      if (rootPath !== undefined) updateSet.rootPath = rootPath;
+      const inserted = await db
+        .insert(storageConfigs)
+        .values({
+          userId: ctx.userId,
+          backend: backend ?? "local",
+          rootPath: rootPath ?? "",
+          createdAt: now,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: storageConfigs.userId,
+          set: updateSet,
+        })
+        .returning();
+      return inserted[0]!;
+    },
+
+    async sumUsageByAssetType(ctx) {
+      const rows = await db
+        .select({
+          assetType: assets.assetType,
+          bytes: sql<number>`COALESCE(SUM(${assetFiles.fileSize}), 0)`,
+        })
+        .from(assetFiles)
+        .innerJoin(assets, eq(assetFiles.assetId, assets.id))
+        .where(eq(assets.userId, ctx.userId))
+        .groupBy(assets.assetType);
+      // pglite/pg may return the SUM as a string; Number() it defensively.
+      return rows.map((r) => ({
+        assetType: r.assetType,
+        bytes: Number(r.bytes) || 0,
+      }));
     },
 
     async createAgent(ctx, input) {

@@ -7,7 +7,11 @@ import type {
   SettingsService,
   AccountProfilePatch,
 } from "./settings.service";
-import type { PreferencePatch, ModelPutBody } from "./settings.repository";
+import type {
+  PreferencePatch,
+  ModelPutBody,
+  StorageConfigPatch,
+} from "./settings.repository";
 
 // Settings transport (foundation §5.4) — the module's four contract ops served
 // over REAL SQL behind the same /api/v1/dispatch route. Mirrors the realized
@@ -32,6 +36,8 @@ export const SETTINGS_OP_IDS = [
   "settings.models.put",
   "settings.models.list",
   "settings.agents.create",
+  "settings.storage.get",
+  "settings.storage.put",
 ] as const;
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
@@ -86,6 +92,17 @@ export function createSettingsTransport(
             name: b.name ?? "",
             agentType: b.agentType ?? "",
           });
+          return { data, meta: { requestId: ctx.requestId } };
+        }
+        case "settings.storage.get": {
+          const data = await service.getStorage(ctx);
+          return { data, meta: { requestId: ctx.requestId } };
+        }
+        case "settings.storage.put": {
+          const data = await service.updateStorage(
+            ctx,
+            (body ?? {}) as StorageConfigPatch,
+          );
           return { data, meta: { requestId: ctx.requestId } };
         }
         default:

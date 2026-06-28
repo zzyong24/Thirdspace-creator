@@ -18,12 +18,14 @@ const mockClient = {
   patchPreferences: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   putModel: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   patchProfile: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
+  putStorage: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
     patchPreferences: (input: unknown) => mockClient.patchPreferences(input),
     putModel: (input: unknown) => mockClient.putModel(input),
     patchProfile: (input: unknown) => mockClient.patchProfile(input),
+    putStorage: (input: unknown) => mockClient.putStorage(input),
   },
 }));
 
@@ -55,7 +57,13 @@ const VM: SettingsViewModel = {
     notifications: true,
     locale: "zh-CN",
   },
-  storage: { usedGb: 18, totalGb: 64, breakdown: [] },
+  storage: {
+    backend: "local" as const,
+    rootPath: "~/CreatorOS/media",
+    usedBytes: 18_000_000_000,
+    totalBytes: 64_000_000_000,
+    breakdown: [],
+  },
   model: {
     capability: "default",
     provider: "anthropic",
@@ -72,6 +80,7 @@ beforeEach(() => {
   mockClient.patchPreferences.mockClear();
   mockClient.putModel.mockClear();
   mockClient.patchProfile.mockClear();
+  mockClient.putStorage.mockClear();
 });
 
 afterEach(() => cleanup());
@@ -202,5 +211,43 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     };
     expect(call.body.secret).toBeUndefined();
     expect(call.body.modelName).toBe("claude-opus-4-8-v2");
+  });
+
+  // item B — StorageUsageCard 保存 wiring.
+  it("saving an edited 媒体路径 calls putStorage({ rootPath }) then router.refresh()", async () => {
+    const VM_STORAGE: SettingsViewModel = {
+      ...VM,
+      storage: {
+        backend: "local",
+        rootPath: "~/CreatorOS/media",
+        usedBytes: 5_000_000_000,
+        totalBytes: 500_000_000_000,
+        breakdown: [
+          { assetType: "video", label: "视频素材", bytes: 5_000_000_000, tone: "brand" },
+        ],
+      },
+    };
+    const { container } = render(<SettingsRailColumn viewModel={VM_STORAGE} />);
+    const input = container.querySelector(
+      '[data-slot="storage-root-path-input"]',
+    ) as HTMLInputElement;
+    const save = container.querySelector(
+      '[data-slot="storage-save-button"]',
+    ) as HTMLButtonElement;
+    expect(input).not.toBeNull();
+    expect(save).not.toBeNull();
+    // The real used-bytes render goes through /1e9 → "5.0 GB".
+    expect(container.textContent).toContain("5.0 GB");
+
+    fireEvent.change(input, { target: { value: "/tmp/creatoros-media" } });
+    fireEvent.click(save);
+
+    await waitFor(() => expect(mockClient.putStorage).toHaveBeenCalledTimes(1));
+    expect(mockClient.putStorage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: { rootPath: "/tmp/creatoros-media" },
+      }),
+    );
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
   });
 });

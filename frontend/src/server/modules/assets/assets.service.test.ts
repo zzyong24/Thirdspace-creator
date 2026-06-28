@@ -50,7 +50,9 @@ beforeEach(async () => {
   const storage = createMockObjectStorage({
     nextKey: () => `uploads/key-${++keySeq}`,
   });
-  service = createAssetsService(repo, storage, deps);
+  // item B: AssetsService now takes a per-ctx storage factory (not a singleton).
+  // The test pins ONE deterministic mock for every ctx.
+  service = createAssetsService(repo, async () => storage, deps);
 });
 
 // Helper: run the full two-phase upload, returning the created asset resource.

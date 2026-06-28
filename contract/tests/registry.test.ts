@@ -102,6 +102,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/settings/models"],
   ["PUT", "/settings/models/:capability"],
   ["POST", "/settings/agents"],
+  ["GET", "/settings/storage"],
+  ["PUT", "/settings/storage"],
   // 身份/认证(register 是首个进 dispatch 表的 auth op;login/logout 仍是 bare route)
   ["POST", "/auth/register"],
   ["PATCH", "/me"],

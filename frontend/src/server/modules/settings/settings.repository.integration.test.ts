@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db, type RequestContext } from "@creatoros/backend";
 import { createSettingsRepository } from "./settings.repository";
+import { createAssetRepository } from "../assets/assets.repository";
 
 // Settings repository integration tests (plan Step 1 schema-slice + Step 2
 // ownership/upsert/patch), pglite-backed. EVERY query is user-scoped: user A can
@@ -212,5 +213,71 @@ describe("settings.repository (patchPreferences insert-then-update)", () => {
     // Still one row.
     const pref = await repo.getPreferences(ctxA);
     expect(pref?.fileNamingRule).toBe("{project}-{stage}");
+  });
+});
+
+describe("settings.repository (storage config — item B)", () => {
+  let db: Db;
+
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("upserts storage_config on the user_id PK (partial patch preserves other column)", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+    // First put sets the rootPath; backend defaults to 'local'.
+    const a = await repo.putStorageConfig(ctxA, { rootPath: "/tmp/a-media" });
+    expect(a.userId).toBe("user-a");
+    expect(a.backend).toBe("local");
+    expect(a.rootPath).toBe("/tmp/a-media");
+    // Second put changes only the backend → rootPath is preserved.
+    const b = await repo.putStorageConfig(ctxA, { backend: "s3" });
+    expect(b.backend).toBe("s3");
+    expect(b.rootPath).toBe("/tmp/a-media");
+    // Still one row, scoped to user-a.
+    const got = await repo.getStorageConfig(ctxA);
+    expect(got?.rootPath).toBe("/tmp/a-media");
+    expect(await repo.getStorageConfig(ctxB)).toBeNull();
+  });
+
+  it("sumUsageByAssetType returns real SUM(file_size) grouped by asset_type, user-scoped", async () => {
+    const settings = createSettingsRepository(db, DEPS);
+    const assetsRepo = createAssetRepository(db, DEPS);
+
+    async function seedAssetWithFile(
+      ctx: RequestContext,
+      assetType: string,
+      bytes: number,
+    ) {
+      const asset = await assetsRepo.insertAsset(ctx.userId, {
+        assetType,
+        name: `${assetType}-asset`,
+        currentFileId: null,
+      });
+      await assetsRepo.insertAssetFile(ctx.userId, {
+        assetId: asset.id,
+        storageKey: `${assetType}/${asset.id}`,
+        mimeType: "application/octet-stream",
+        fileSize: bytes,
+        checksum: "",
+        width: null,
+        height: null,
+        durationMs: null,
+        mediaMetadata: {},
+      });
+    }
+
+    await seedAssetWithFile(ctxA, "image", 1000);
+    await seedAssetWithFile(ctxA, "image", 500); // two image files → SUM 1500
+    await seedAssetWithFile(ctxA, "video", 4000);
+    await seedAssetWithFile(ctxB, "image", 9999); // user B — must NOT leak into A
+
+    const usage = await settings.sumUsageByAssetType(ctxA);
+    const byType = new Map(usage.map((u) => [u.assetType, u.bytes]));
+    expect(byType.get("image")).toBe(1500);
+    expect(byType.get("video")).toBe(4000);
+    // user B's bytes are excluded from A's aggregation.
+    const totalA = usage.reduce((s, u) => s + u.bytes, 0);
+    expect(totalA).toBe(5500);
   });
 });

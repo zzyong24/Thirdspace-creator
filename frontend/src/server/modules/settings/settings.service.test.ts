@@ -1,14 +1,20 @@
 import { describe, it, expect } from "vitest";
 import type { RequestContext } from "@creatoros/backend";
 import { createSettingsService } from "./settings.service";
+import { StorageValidationError } from "./settings.errors";
+import * as os from "node:os";
+import * as path from "node:path";
 import type {
   SettingsRepository,
   UserPreferenceRow,
   ModelConfigurationRow,
   AgentConfigurationRow,
+  StorageConfigRow,
   PreferencePatch,
   ModelPutBody,
   AgentCreateInput,
+  StorageConfigPatch,
+  AssetTypeUsage,
 } from "./settings.repository";
 
 // SettingsService unit tests (plan Step 3), against an in-memory fake repo + a
@@ -23,15 +29,19 @@ const NOW = "2026-06-21T00:00:00.000Z";
 // A tiny in-memory fake of the user-scoped repository. It ignores ctx scoping
 // (the integration test covers scoping); it just records state for the mapping
 // assertions.
-function makeFakeRepo(): SettingsRepository & {
+function makeFakeRepo(
+  opts: { usage?: AssetTypeUsage[] } = {},
+): SettingsRepository & {
   _pref?: UserPreferenceRow;
   _models: ModelConfigurationRow[];
   _agents: AgentConfigurationRow[];
+  _storage?: StorageConfigRow;
 } {
   const state = {
     _pref: undefined as UserPreferenceRow | undefined,
     _models: [] as ModelConfigurationRow[],
     _agents: [] as AgentConfigurationRow[],
+    _storage: undefined as StorageConfigRow | undefined,
   };
   return {
     ...state,
@@ -106,6 +116,26 @@ function makeFakeRepo(): SettingsRepository & {
       };
       state._agents.push(row);
       return row;
+    },
+    async getStorageConfig() {
+      return state._storage ?? null;
+    },
+    async putStorageConfig(_c: RequestContext, patch: StorageConfigPatch) {
+      const base: StorageConfigRow = state._storage ?? {
+        userId: ctx.userId,
+        backend: "local",
+        rootPath: "",
+        createdAt: NOW,
+        updatedAt: NOW,
+      };
+      const provided = Object.fromEntries(
+        Object.entries(patch).filter(([, v]) => v !== undefined),
+      );
+      state._storage = { ...base, ...provided, updatedAt: NOW } as StorageConfigRow;
+      return state._storage;
+    },
+    async sumUsageByAssetType() {
+      return opts.usage ?? [];
     },
     async seedPreferences() {},
     async seedModels() {},
@@ -264,5 +294,57 @@ describe("settings.service", () => {
     expect(dto.settings).toEqual({});
     expect(dto.secretReference).toBe("");
     expect(dto.createdAt).toBe(dto.updatedAt);
+  });
+
+  // item B — storage config.
+  it("getStorage defaults rootPath to ~/CreatorOS/media + sums usage by type", async () => {
+    const repo = makeFakeRepo({
+      usage: [
+        { assetType: "image", bytes: 1000 },
+        { assetType: "video", bytes: 2500 },
+      ],
+    });
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    const s = await svc.getStorage(ctx);
+    // No stored config → default backend 'local' + default media root.
+    expect(s.backend).toBe("local");
+    expect(s.rootPath).toBe(path.join(os.homedir(), "CreatorOS", "media"));
+    // usedBytes is the SUM across types; breakdown carries every known type
+    // (missing ones filled with 0).
+    expect(s.usedBytes).toBe(3500);
+    const image = s.breakdown.find((b) => b.assetType === "image");
+    const audio = s.breakdown.find((b) => b.assetType === "audio");
+    expect(image?.bytes).toBe(1000);
+    expect(audio?.bytes).toBe(0);
+  });
+
+  it("updateStorage expands a `~`-prefixed rootPath via os.homedir()", async () => {
+    const repo = makeFakeRepo();
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    const s = await svc.updateStorage(ctx, { rootPath: "~/CreatorOS/custom" });
+    expect(s.rootPath).toBe(
+      path.join(os.homedir(), "CreatorOS", "custom"),
+    );
+  });
+
+  it("updateStorage rejects an illegal (system-directory) rootPath", async () => {
+    const repo = makeFakeRepo();
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    await expect(
+      svc.updateStorage(ctx, { rootPath: "/etc/creatoros" }),
+    ).rejects.toBeInstanceOf(StorageValidationError);
+    await expect(
+      svc.updateStorage(ctx, { rootPath: "/" }),
+    ).rejects.toBeInstanceOf(StorageValidationError);
+  });
+
+  it("resolveStorageRoot / resolveStorageBackend reflect the stored config", async () => {
+    const repo = makeFakeRepo();
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    // Persist a custom path under the OS tmp dir (writable, legal).
+    const tmpRoot = path.join(os.tmpdir(), "creatoros-svc-test-root");
+    await svc.updateStorage(ctx, { backend: "local", rootPath: tmpRoot });
+    expect(await svc.resolveStorageRoot(ctx)).toBe(path.resolve(tmpRoot));
+    expect(await svc.resolveStorageBackend(ctx)).toBe("local");
   });
 });

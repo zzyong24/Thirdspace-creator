@@ -55,7 +55,7 @@ beforeEach(async () => {
   const storage = createMockObjectStorage({
     nextKey: () => `uploads/k-${++keySeq}`,
   });
-  const service = createAssetsService(repo, storage, deps);
+  const service = createAssetsService(repo, async () => storage, deps);
   transport = createAssetsTransport(() => service);
 });
 

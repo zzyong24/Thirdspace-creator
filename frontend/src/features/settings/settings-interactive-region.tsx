@@ -818,21 +818,100 @@ const LOCALE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
 // StorageUsageCard
 // ---------------------------------------------------------------------------
 
+// Format bytes as a GB string with one decimal (decimal GB, 1e9). Real values.
+function gb(bytes: number): string {
+  return (bytes / 1e9).toFixed(1);
+}
+
+// item B — StorageUsageCard 做真. Shows the REAL backend + media root (editable +
+// 保存 → settings.storage.put), the real used-vs-disk-capacity progress bar, and
+// the per-asset-type breakdown (real bytes). The path edit persists through the
+// op + router.refresh() (via useSettingsMutation), then the server re-reads
+// settings.storage.get.
 function StorageUsageCard({
   storage,
 }: {
   storage: SettingsViewModel["storage"];
 }) {
+  const [rootPath, setRootPath] = React.useState<string>(storage.rootPath);
+  const { pending, run } = useSettingsMutation();
+
+  // Re-sync the draft path when a server refresh changes the stored config.
+  React.useEffect(() => {
+    setRootPath(storage.rootPath);
+  }, [storage.rootPath]);
+
+  const canSave = rootPath.trim().length > 0 && rootPath !== storage.rootPath && !pending;
+
+  const save = React.useCallback(() => {
+    if (!canSave) return;
+    run(() =>
+      client.putStorage({
+        params: undefined,
+        query: undefined,
+        body: { rootPath: rootPath.trim() },
+      }),
+    );
+  }, [canSave, run, rootPath]);
+
+  // GB display via /1e9 (decision: (bytes/1e9).toFixed(1)). totalBytes 0 = unknown
+  // capacity → the bar uses usedBytes as its own max so it still renders.
+  const usedGb = gb(storage.usedBytes);
+  const totalGb = storage.totalBytes > 0 ? gb(storage.totalBytes) : null;
+
+  const backendLabel = storage.backend === "s3" ? "云存储 (S3)" : "本地磁盘";
+
   return (
-    <SectionCard
-      title="存储空间"
-      description="素材、知识库与导出文件"
-    >
+    <SectionCard title="存储空间" description="素材、知识库与导出文件">
       <div data-slot="storage-usage-card" className="flex flex-col gap-3">
+        <SettingsFormRow
+          label="存储后端"
+          controlId="storage-backend"
+          help="当前媒体字节落地的位置。"
+        >
+          <Badge
+            id="storage-backend"
+            data-slot="storage-backend"
+            variant="outline"
+            className="border-brand/40 bg-brand-soft text-brand"
+          >
+            {backendLabel}
+          </Badge>
+        </SettingsFormRow>
+        <SettingsFormRow
+          label="媒体路径"
+          controlId="storage-root-path"
+          help="素材落盘的根目录;支持 ~ 展开。修改后点保存生效(settings.storage.put)。"
+        >
+          <div className="flex w-full items-center gap-2">
+            <Input
+              id="storage-root-path"
+              data-slot="storage-root-path-input"
+              value={rootPath}
+              disabled={pending}
+              placeholder="~/CreatorOS/media"
+              onChange={(event) => setRootPath(event.target.value)}
+              aria-label="媒体存储路径"
+            />
+            <Button
+              type="button"
+              size="sm"
+              data-slot="storage-save-button"
+              disabled={!canSave}
+              onClick={save}
+            >
+              保存
+            </Button>
+          </div>
+        </SettingsFormRow>
         <ProgressBar
-          value={storage.usedGb}
-          max={storage.totalGb}
-          label={`已用 ${storage.usedGb} GB / ${storage.totalGb} GB`}
+          value={storage.usedBytes}
+          max={storage.totalBytes > 0 ? storage.totalBytes : storage.usedBytes || 1}
+          label={
+            totalGb
+              ? `已用 ${usedGb} GB / ${totalGb} GB`
+              : `已用 ${usedGb} GB`
+          }
           showValue
           tone="brand"
         />
@@ -843,9 +922,9 @@ function StorageUsageCard({
         >
           {storage.breakdown.map((row) => (
             <li
-              key={row.id}
+              key={row.assetType}
               data-slot="storage-breakdown-row"
-              data-storage-id={row.id}
+              data-storage-asset-type={row.assetType}
               className="flex items-center justify-between"
             >
               <span className="flex items-center gap-2 text-foreground">
@@ -853,7 +932,7 @@ function StorageUsageCard({
                 {row.label}
               </span>
               <span className="font-mono tabular-nums text-xs text-muted-foreground">
-                {row.valueGb} GB
+                {gb(row.bytes)} GB
               </span>
             </li>
           ))}

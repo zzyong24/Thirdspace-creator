@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { modelConfigurationResource } from "../../src/resources/settings";
+import {
+  modelConfigurationResource,
+  storageConfigResource,
+} from "../../src/resources/settings";
 import { settingsOperations } from "../../src/operations/settings";
 
 describe("settings contract", () => {
@@ -61,5 +64,34 @@ describe("settings contract", () => {
     expect(settingsOperations.listModels.path).toBe("/settings/models");
     const arr = settingsOperations.listModels.response.parse([]);
     expect(Array.isArray(arr)).toBe(true);
+  });
+
+  it("parses a StorageConfiguration resource", () => {
+    const s = storageConfigResource.parse({
+      backend: "local",
+      rootPath: "/Users/x/CreatorOS/media",
+      usedBytes: 1234,
+      totalBytes: 500_000_000_000,
+      breakdown: [
+        { assetType: "image", bytes: 1000 },
+        { assetType: "video", bytes: 234 },
+      ],
+    });
+    expect(s.backend).toBe("local");
+    expect(s.rootPath).toContain("media");
+    expect(s.breakdown).toHaveLength(2);
+  });
+
+  it("registers settings.storage.get / put with FR ids", () => {
+    expect(settingsOperations.getStorage.method).toBe("GET");
+    expect(settingsOperations.getStorage.path).toBe("/settings/storage");
+    expect(settingsOperations.getStorage.fr.length).toBeGreaterThan(0);
+    expect(settingsOperations.putStorage.method).toBe("PUT");
+    expect(settingsOperations.putStorage.path).toBe("/settings/storage");
+    // The PUT body accepts a partial { backend?, rootPath? }.
+    const body = settingsOperations.putStorage.body.parse({
+      rootPath: "/tmp/creatoros-media",
+    });
+    expect(body.rootPath).toBe("/tmp/creatoros-media");
   });
 });

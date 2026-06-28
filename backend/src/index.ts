@@ -34,6 +34,7 @@ export {
   userPreferences,
   modelConfigurations,
   agentConfigurations,
+  storageConfigs,
   SETTINGS_DDL,
 } from "./schema/settings";
 export {

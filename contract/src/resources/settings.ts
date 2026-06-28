@@ -51,6 +51,29 @@ export type ModelConfigurationResource = z.infer<
   typeof modelConfigurationResource
 >;
 
+// StorageConfiguration — the media-storage binding (item B). `backend`/`rootPath`
+// are the editable config; `usedBytes`/`totalBytes`/`breakdown` are read-only
+// real usage (computed from asset_files + the disk that holds `rootPath`). The
+// raw secret / signing material is NEVER part of this DTO — only the backend
+// choice + resolved root path are surfaced.
+export const storageConfigResource = z.object({
+  backend: z.enum(["local", "s3"]),
+  // The resolved absolute media root (default `~/CreatorOS/media` when unset).
+  rootPath: z.string(),
+  // Real bytes consumed by the user's asset files (SUM(file_size)).
+  usedBytes: z.number(),
+  // Capacity of the disk that holds `rootPath` (fs.statfs); 0 if unknown.
+  totalBytes: z.number(),
+  // Per-asset-type usage (drives the StorageUsageCard breakdown rows).
+  breakdown: z.array(
+    z.object({
+      assetType: z.string(),
+      bytes: z.number(),
+    }),
+  ),
+});
+export type StorageConfigResource = z.infer<typeof storageConfigResource>;
+
 // AgentConfiguration extends BaseEntity only; carries explicit createdAt/updatedAt.
 export const agentConfigurationResource = z.object({
   id,

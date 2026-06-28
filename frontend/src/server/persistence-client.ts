@@ -57,6 +57,7 @@ import {
   createSettingsService,
   createSettingsTransport,
   SETTINGS_OP_IDS,
+  type SettingsService,
   type ModelConfigurationRow,
   type UserPreferenceRow,
   type AgentConfigurationRow,
@@ -88,8 +89,9 @@ import {
   createAssetsTransport,
   createMockObjectStorage,
   createS3ObjectStorage,
+  createLocalFsObjectStorage,
   ensureBucket,
-  type ObjectStoragePort,
+  type ObjectStorageForCtx,
   ASSET_OP_IDS,
   type AssetRow,
   type AssetFileRow,
@@ -773,6 +775,9 @@ interface PersistenceBundle {
   queryServices: Transport;
   publishingCenter: PublishingCenterQueryService;
   identity: IdentityService;
+  // item B — exposed so the blob route (no dispatch endpoint) can resolve the
+  // request user's media root, the same root uploads were minted against.
+  settingsService: SettingsService;
 }
 
 const globalForPersistence = globalThis as unknown as {
@@ -870,27 +875,62 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // Clock/ids share the deterministic `deps`; the mock's nextKey reuses createSeq
   // so storage keys stay collision-free across requests.
   const assetsRepo = createAssetRepository(db, deps);
-  // P3: real object storage when S3_BUCKET is set (S3 / MinIO / OSS) — file bytes really land
-  // in the bucket via presigned PUT/GET. Without it, the deterministic in-memory mock
-  // (vitest / no-storage env). Same `nextKey` so storage keys stay collision-free.
+  // item B — per-ctx object-storage factory (硬决策 2). AssetsService no longer
+  // holds a singleton adapter: each storage-touching method resolves the adapter
+  // for the REQUEST's ctx. The choice reads that user's storage_config (via the
+  // SettingsService, built below — the factory runs at request time so closing
+  // over the later `settingsService` const is TDZ-safe, same as `llmCompleter`):
+  //
+  //   backend='s3' AND S3_* env present → createS3ObjectStorage (bytes land in the
+  //     bucket via presigned PUT/GET),
+  //   else → createLocalFsObjectStorage at resolveStorageRoot(ctx) (bytes land on
+  //     local disk under the user's configured media root; the FE PUTs to the
+  //     token-gated /api/v1/blob route).
+  //
+  // When no SettingsService is wired yet (defensive) OR neither backend resolves,
+  // fall back to the deterministic in-memory mock (vitest / no-storage env).
   const nextKey = () => `uploads/${deps.nextId("objkey")}`;
   const s3Bucket = process.env.S3_BUCKET;
-  let objectStorage: ObjectStoragePort;
-  if (s3Bucket) {
-    const s3cfg = {
-      endpoint: process.env.S3_ENDPOINT,
-      region: process.env.S3_REGION ?? "us-east-1",
-      accessKeyId: process.env.S3_ACCESS_KEY_ID ?? "",
-      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "",
-      bucket: s3Bucket,
-      forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== "false",
-    };
-    await ensureBucket(s3cfg);
-    objectStorage = createS3ObjectStorage(s3cfg, { nextKey });
-  } else {
-    objectStorage = createMockObjectStorage({ nextKey });
-  }
-  const assetsService = createAssetsService(assetsRepo, objectStorage, deps);
+  const s3Cfg = s3Bucket
+    ? {
+        endpoint: process.env.S3_ENDPOINT,
+        region: process.env.S3_REGION ?? "us-east-1",
+        accessKeyId: process.env.S3_ACCESS_KEY_ID ?? "",
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "",
+        bucket: s3Bucket,
+        forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== "false",
+      }
+    : null;
+  if (s3Cfg) await ensureBucket(s3Cfg);
+  // The in-memory mock (no real backend) — pinned once for the vitest / no-storage
+  // path so storage keys stay collision-free.
+  const mockStorage = createMockObjectStorage({ nextKey });
+  // Whether local-fs is usable at all: in vitest we keep the deterministic mock
+  // (no real disk writes / blob route). The runtime (Next server) opts in via
+  // CREATOROS_STORAGE=local or simply by NOT being a test env.
+  const localFsEnabled =
+    process.env.CREATOROS_STORAGE === "local" ||
+    (process.env.NODE_ENV !== "test" && !process.env.VITEST);
+
+  const objectStorageForCtx: ObjectStorageForCtx = async (ctx) => {
+    // Defensive: before settingsService exists, or for the mock path.
+    const svc = settingsService as SettingsService | undefined;
+    if (!svc) return mockStorage;
+    const backend = await svc.resolveStorageBackend(ctx);
+    if (backend === "s3" && s3Cfg) {
+      return createS3ObjectStorage(s3Cfg, { nextKey });
+    }
+    if (localFsEnabled) {
+      const rootPath = await svc.resolveStorageRoot(ctx);
+      return createLocalFsObjectStorage(
+        { rootPath, publicBaseUrl: "/api/v1/blob" },
+        { nextKey },
+      );
+    }
+    return mockStorage;
+  };
+
+  const assetsService = createAssetsService(assetsRepo, objectStorageForCtx, deps);
   const assets = createAssetsTransport(() => assetsService);
 
   // Artifacts (module 08): the service builds a per-ctx user-scoped repo over the
@@ -2652,6 +2692,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     queryServices,
     publishingCenter,
     identity,
+    settingsService,
   };
 }
 
@@ -2772,6 +2813,20 @@ export async function getPublishingCenterService(): Promise<PublishingCenterQuer
  */
 export async function getIdentityService(): Promise<IdentityService> {
   return (await getBundle()).identity;
+}
+
+/**
+ * item B — resolve the request user's absolute media root. The blob route
+ * (/api/v1/blob/[...key]) has no dispatch endpoint, so it resolves ctx from the
+ * session cookie and calls this to learn WHERE on disk to read/write bytes — the
+ * same root the local-fs adapter minted the upload URL against. Bound to the same
+ * pglite store as the composite transport.
+ */
+export async function getStorageRootForRequest(
+  ctx: RequestContext,
+): Promise<string> {
+  const { settingsService } = await getBundle();
+  return settingsService.resolveStorageRoot(ctx);
 }
 
 // Composite server transport: persistence for project ops, mock for the rest.

@@ -75,9 +75,19 @@ export interface AssetsService {
   unarchiveAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
 }
 
+// The per-ctx object-storage factory (item B). AssetsService no longer holds a
+// singleton storage adapter: each storage-touching method resolves the adapter
+// for the request's ctx (the composition layer reads that user's storage_config →
+// S3 when backend='s3' + env present, else local-fs at the user's resolved root).
+// This keeps AssetsService the SOLE object-storage caller (SPEC §15) while making
+// the backend a per-user choice.
+export type ObjectStorageForCtx = (
+  ctx: RequestContext,
+) => Promise<ObjectStoragePort>;
+
 export function createAssetsService(
   repo: AssetRepository,
-  storage: ObjectStoragePort,
+  objectStorageForCtx: ObjectStorageForCtx,
   deps: RepoDeps,
 ): AssetsService {
   // Load an owned asset or raise OwnershipError (404, no existence leak).
@@ -110,6 +120,7 @@ export function createAssetsService(
       if (!(input.fileSize > 0)) {
         throw new UploadValidationError("fileSize must be positive");
       }
+      const storage = await objectStorageForCtx(ctx);
       const { storageKey, uploadUrl } = await storage.createPresignedUpload({
         assetType: input.assetType,
         mimeType: input.mimeType,
@@ -140,6 +151,7 @@ export function createAssetsService(
         throw new ConflictError("Upload session already completed");
       }
       // SPEC §20: validate the stored object's MIME/size/checksum via headObject.
+      const storage = await objectStorageForCtx(ctx);
       const head = await storage.headObject(session.storageKey);
       // Materialize: create the asset (active), then the first file (v1), then
       // re-point currentFileId. The repo stamps userId + status='active'.
@@ -169,6 +181,7 @@ export function createAssetsService(
     async addAssetFile(ctx, assetId, input) {
       // Verify ownership (C2) before touching storage/repo.
       await requireAsset(ctx, assetId);
+      const storage = await objectStorageForCtx(ctx);
       const head = await storage.headObject(input.storageKey);
       const file = await repo.insertAssetFile(ctx.userId, {
         assetId,

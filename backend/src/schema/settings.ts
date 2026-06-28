@@ -45,6 +45,19 @@ export const modelConfigurations = pgTable("model_configurations", {
   isDefault: boolean("is_default").notNull().default(false),
 });
 
+// STORAGE_CONFIGURATION (item B) — the media-storage binding, keyed by user_id
+// (one row per user). `backend` is 'local' | 's3'; `root_path` is the media root
+// (empty → the service resolves the default `~/CreatorOS/media`). The repo upserts
+// on the user_id PK. No secret/signing material lives here (the blob HMAC secret
+// is a process env, not per-user state).
+export const storageConfigs = pgTable("storage_configs", {
+  userId: text("user_id").primaryKey(),
+  backend: text("backend").notNull().default("local"),
+  rootPath: text("root_path").notNull().default(""),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
 // AGENT_CONFIGURATION — append/create surface (Wave-1 ships create only). Carries
 // explicit createdAt/updatedAt (data-model has both).
 export const agentConfigurations = pgTable("agent_configurations", {
@@ -99,4 +112,11 @@ CREATE TABLE IF NOT EXISTS agent_configurations (
   updated_at TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS model_config_user_capability ON model_configurations (user_id, capability);
+CREATE TABLE IF NOT EXISTS storage_configs (
+  user_id TEXT PRIMARY KEY,
+  backend TEXT NOT NULL DEFAULT 'local',
+  root_path TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 `;

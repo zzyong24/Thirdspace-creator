@@ -6,3 +6,17 @@
 // class exists for the rare not-found path (and the account read delegates to
 // Identity, which throws its own OwnershipError on a missing user).
 export { OwnershipError } from "@/server/modules/identity";
+
+import { ErrorCode } from "@creatoros/contract";
+
+// putStorage validation — an illegal media root (empty, the filesystem root, a
+// system-sensitive prefix, or a path that fails the mkdir-p writability probe) is
+// rejected, NOT silently accepted. Carries `ErrorCode.ValidationError` so the
+// dispatch route maps it to HTTP 400.
+export class StorageValidationError extends Error {
+  readonly code = ErrorCode.ValidationError;
+  constructor(message: string) {
+    super(message);
+    this.name = "StorageValidationError";
+  }
+}

@@ -5,6 +5,7 @@ import {
   userPreferenceResource,
   modelConfigurationResource,
   agentConfigurationResource,
+  storageConfigResource,
 } from "../resources/settings";
 
 // SPEC §13 "设置" group. `GET /settings` is the singleton settings view for the
@@ -72,5 +73,26 @@ export const settingsOperations = {
     }),
     response: agentConfigurationResource,
     fr: ["FR-SETTINGS-AGENT-CREATE"],
+  }),
+  // item B — media-storage binding. `getStorage` returns the resolved config +
+  // real usage; `putStorage` updates the backend choice and/or media root path
+  // (validated server-side: a non-writable / system-sensitive path is rejected).
+  getStorage: defineEndpoint({
+    id: "settings.storage.get",
+    method: "GET",
+    path: "/settings/storage",
+    response: storageConfigResource,
+    fr: ["FR-SETTINGS-STORAGE-GET"],
+  }),
+  putStorage: defineEndpoint({
+    id: "settings.storage.put",
+    method: "PUT",
+    path: "/settings/storage",
+    body: z.object({
+      backend: z.enum(["local", "s3"]).optional(),
+      rootPath: z.string().optional(),
+    }),
+    response: storageConfigResource,
+    fr: ["FR-SETTINGS-STORAGE-UPDATE"],
   }),
 } as const;

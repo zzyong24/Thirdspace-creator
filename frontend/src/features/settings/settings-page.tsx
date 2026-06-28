@@ -84,6 +84,13 @@ export interface SettingsPageProps {
    * hasSecret instead of the fixture default. Omitted in unit tests.
    */
   readonly model?: ModelState;
+  /**
+   * Real DB-backed storage config + usage (read by the `(creator)/settings`
+   * route via `settings.storage.get`). When supplied, the StorageUsageCard shows
+   * the real media root / backend / used-vs-capacity / per-type breakdown instead
+   * of the fixture default. Omitted in unit tests.
+   */
+  readonly storage?: StorageState;
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */
@@ -132,15 +139,24 @@ export interface SystemState {
 }
 
 export interface StorageState {
-  readonly usedGb: number;
-  readonly totalGb: number;
+  /** Configured backend ('local' = local disk, 's3' = bucket). */
+  readonly backend: "local" | "s3";
+  /** Resolved absolute media root (editable; saved via settings.storage.put). */
+  readonly rootPath: string;
+  /** Real bytes consumed by the user's asset files. */
+  readonly usedBytes: number;
+  /** Capacity of the disk holding rootPath (0 = unknown). */
+  readonly totalBytes: number;
   readonly breakdown: ReadonlyArray<StorageBreakdownRow>;
 }
 
 export interface StorageBreakdownRow {
-  readonly id: string;
+  /** Contract asset_type (e.g. "video" | "image" | …). */
+  readonly assetType: string;
+  /** Localized display label. */
   readonly label: string;
-  readonly valueGb: number;
+  /** Real bytes for this asset type. */
+  readonly bytes: number;
   readonly tone: "neutral" | "brand" | "success" | "warning";
 }
 
@@ -217,10 +233,12 @@ export function SettingsPage({
   viewModel,
   identity,
   model,
+  storage,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
-  const vm = model ? { ...withIdentity, model } : withIdentity;
+  const withModel = model ? { ...withIdentity, model } : withIdentity;
+  const vm = storage ? { ...withModel, storage } : withModel;
   return (
     <main
       data-app="creatoros"

@@ -21,9 +21,22 @@
 import {
   SettingsPage,
   type ModelState,
+  type StorageState,
 } from "@/features/settings/settings-page";
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
+
+// item B — localized labels + tones for the StorageUsageCard breakdown rows.
+const STORAGE_TYPE_LABELS: Record<
+  string,
+  { label: string; tone: StorageState["breakdown"][number]["tone"] }
+> = {
+  video: { label: "视频素材", tone: "brand" },
+  image: { label: "图片素材", tone: "success" },
+  audio: { label: "音频素材", tone: "warning" },
+  document: { label: "文档与导出", tone: "neutral" },
+  subtitle: { label: "字幕文件", tone: "neutral" },
+};
 
 export default async function SettingsRoutePage() {
   // Resolve the request's session → ctx (the (creator) layout already guarded
@@ -98,5 +111,40 @@ export default async function SettingsRoutePage() {
     }
   }
 
-  return <SettingsPage identity={identity} model={model} />;
+  // Read the real DB-backed storage config + usage (settings.storage.get) so the
+  // StorageUsageCard shows the real media root / backend / used-vs-capacity /
+  // per-type breakdown. A read failure leaves it undefined → the card shows the
+  // fixture default (deterministic SSR fallback).
+  let storage: StorageState | undefined;
+  if (session) {
+    try {
+      const s = await createServerClient(session.ctx).getStorage({
+        params: undefined,
+        query: undefined,
+        body: undefined,
+      });
+      storage = {
+        backend: s.backend,
+        rootPath: s.rootPath,
+        usedBytes: s.usedBytes,
+        totalBytes: s.totalBytes,
+        breakdown: s.breakdown.map((b) => {
+          const meta = STORAGE_TYPE_LABELS[b.assetType] ?? {
+            label: b.assetType,
+            tone: "neutral" as const,
+          };
+          return {
+            assetType: b.assetType,
+            label: meta.label,
+            bytes: b.bytes,
+            tone: meta.tone,
+          };
+        }),
+      };
+    } catch {
+      // getStorage unavailable (transport race) → fall back to the fixture.
+    }
+  }
+
+  return <SettingsPage identity={identity} model={model} storage={storage} />;
 }

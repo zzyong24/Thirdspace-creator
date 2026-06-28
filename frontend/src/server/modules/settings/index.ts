@@ -25,9 +25,11 @@ export {
   type UserPreferenceRow,
   type ModelConfigurationRow,
   type AgentConfigurationRow,
+  type StorageConfigRow,
   type PreferencePatch,
   type ModelPutBody,
   type AgentCreateInput,
+  type StorageConfigPatch,
 } from "./settings.repository";
 
 export {
@@ -37,15 +39,17 @@ export {
 
 export { SETTINGS_DDL } from "./settings.db-schema";
 
-export { OwnershipError } from "./settings.errors";
+export { OwnershipError, StorageValidationError } from "./settings.errors";
 
 export {
   userResource,
   userPreferenceResource,
   modelConfigurationResource,
   agentConfigurationResource,
+  storageConfigResource,
   type UserResource,
   type UserPreferenceResource,
   type ModelConfigurationResource,
   type AgentConfigurationResource,
+  type StorageConfigResource,
 } from "./settings.schema";

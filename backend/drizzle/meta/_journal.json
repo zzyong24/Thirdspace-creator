@@ -15,6 +15,13 @@
       "when": 1782379000000,
       "tag": "0001_model_secret_value",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782379100000,
+      "tag": "0002_storage_configs",
+      "breakpoints": true
     }
   ]
 }

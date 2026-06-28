@@ -1,19 +1,26 @@
+import * as fs from "node:fs/promises";
 import type { RequestContext } from "@creatoros/backend";
 import type {
   SettingsRepository,
   UserPreferenceRow,
   ModelConfigurationRow,
   AgentConfigurationRow,
+  StorageConfigRow,
   PreferencePatch,
   ModelPutBody,
   AgentCreateInput,
+  StorageConfigPatch,
 } from "./settings.repository";
 import type {
   UserResource,
   UserPreferenceResource,
   ModelConfigurationResource,
   AgentConfigurationResource,
+  StorageConfigResource,
 } from "./settings.schema";
+import { resolveRootPath } from "@/server/modules/assets/media-root";
+import { rootPathLegalityReason } from "@/server/modules/assets/blob-security";
+import { StorageValidationError } from "./settings.errors";
 
 // SettingsService (foundation §5.3) — RequestContext-taking methods. Settings has
 // NO §12 business state machine (plan §11: preferences/model/agent are mutable
@@ -103,6 +110,22 @@ export interface SettingsService {
     ctx: RequestContext,
     input: AgentCreateInput,
   ): Promise<AgentConfigurationResource>;
+  // item B — read the resolved storage config + real usage.
+  getStorage(ctx: RequestContext): Promise<StorageConfigResource>;
+  // item B — update the backend choice / media root (validated: an illegal /
+  // non-writable path throws StorageValidationError, never silently accepted).
+  updateStorage(
+    ctx: RequestContext,
+    patch: StorageConfigPatch,
+  ): Promise<StorageConfigResource>;
+  // item B — resolve the absolute media root for the ctx user (the per-ctx
+  // storage-adapter factory + the blob route both call this so uploads land at
+  // and are served from the same on-disk location). Settings only computes the
+  // path string — it never touches the storage port itself (SPEC §15).
+  resolveStorageRoot(ctx: RequestContext): Promise<string>;
+  // item B — the resolved backend ('local' | 's3') for the ctx user (the per-ctx
+  // factory uses it to choose the adapter).
+  resolveStorageBackend(ctx: RequestContext): Promise<"local" | "s3">;
 }
 
 // USER_PREFERENCE is keyed by user_id (no own id column), but the DTO requires an
@@ -233,5 +256,87 @@ export function createSettingsService(
       const row = await repoForCtx(ctx).createAgent(ctx, input);
       return toAgentResource(row);
     },
+
+    async resolveStorageRoot(ctx) {
+      const row = await repoForCtx(ctx).getStorageConfig(ctx);
+      return resolveRootPath(row?.rootPath);
+    },
+
+    async resolveStorageBackend(ctx) {
+      const row = await repoForCtx(ctx).getStorageConfig(ctx);
+      return (row?.backend as "local" | "s3") ?? "local";
+    },
+
+    async getStorage(ctx) {
+      const repo = repoForCtx(ctx);
+      const row = await repo.getStorageConfig(ctx);
+      const usage = await repo.sumUsageByAssetType(ctx);
+      return buildStorageResource(row, usage);
+    },
+
+    async updateStorage(ctx, patch) {
+      // Validate the proposed rootPath (when provided) BEFORE persisting: reject
+      // an illegal shape (system dir / fs root / empty) and probe writability via
+      // mkdir -p. A failure throws StorageValidationError (→400), never silently
+      // accepts a bad path.
+      if (patch.rootPath !== undefined) {
+        const resolved = resolveRootPath(patch.rootPath);
+        const reason = rootPathLegalityReason(resolved);
+        if (reason) throw new StorageValidationError(reason);
+        try {
+          await fs.mkdir(resolved, { recursive: true });
+          // Probe writability with a throwaway file (removed immediately).
+          const probe = `${resolved}/.creatoros-write-probe`;
+          await fs.writeFile(probe, "");
+          await fs.rm(probe, { force: true });
+        } catch {
+          throw new StorageValidationError(
+            `media root is not writable: ${resolved}`,
+          );
+        }
+      }
+      const repo = repoForCtx(ctx);
+      const row = await repo.putStorageConfig(ctx, patch);
+      const usage = await repo.sumUsageByAssetType(ctx);
+      return buildStorageResource(row, usage);
+    },
   };
+}
+
+// Asset types surfaced in the StorageUsageCard breakdown (stable order). The
+// usage query only returns types with files; the resource fills missing ones with
+// 0 so the card always shows the same rows.
+const STORAGE_BREAKDOWN_TYPES = [
+  "video",
+  "image",
+  "audio",
+  "document",
+  "subtitle",
+] as const;
+
+// Build the storage DTO from the (possibly absent) config row + the real usage
+// rows. `totalBytes` is the capacity of the disk that holds the resolved root
+// (fs.statfs); 0 when it can't be read. `usedBytes` is the SUM across types.
+async function buildStorageResource(
+  row: StorageConfigRow | null,
+  usage: { assetType: string; bytes: number }[],
+): Promise<StorageConfigResource> {
+  const rootPath = resolveRootPath(row?.rootPath);
+  const backend = (row?.backend as "local" | "s3") ?? "local";
+  const byType = new Map(usage.map((u) => [u.assetType, u.bytes]));
+  const breakdown = STORAGE_BREAKDOWN_TYPES.map((assetType) => ({
+    assetType,
+    bytes: byType.get(assetType) ?? 0,
+  }));
+  const usedBytes = breakdown.reduce((sum, b) => sum + b.bytes, 0);
+  let totalBytes = 0;
+  try {
+    const stat = await fs.statfs(rootPath);
+    totalBytes = Number(stat.blocks) * Number(stat.bsize);
+  } catch {
+    // Disk capacity unavailable (path missing on a fresh install / platform
+    // without statfs) → 0; the card shows used without a hard cap.
+    totalBytes = 0;
+  }
+  return { backend, rootPath, usedBytes, totalBytes, breakdown };
 }

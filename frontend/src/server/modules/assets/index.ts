@@ -9,6 +9,7 @@ export {
   createAssetsService,
   type AssetsService,
   type AssetUploadDto,
+  type ObjectStorageForCtx,
 } from "./assets.service";
 
 export {
@@ -31,6 +32,13 @@ export {
   ensureBucket,
   type S3ObjectStorageConfig,
 } from "./s3-object-storage";
+
+export {
+  createLocalFsObjectStorage,
+  type LocalFsObjectStorageConfig,
+} from "./localfs-object-storage";
+
+export { resolveRootPath, defaultMediaRoot } from "./media-root";
 
 export { createAssetsTransport, ASSET_OP_IDS } from "./assets.transport";
 

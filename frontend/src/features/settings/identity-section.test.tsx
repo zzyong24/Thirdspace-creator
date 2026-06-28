@@ -81,8 +81,10 @@ function buildStubViewModel(): SettingsViewModel {
       locale: STUB_IDENTITY.locale,
     },
     storage: {
-      usedGb: 1,
-      totalGb: 10,
+      backend: "local" as const,
+      rootPath: "~/CreatorOS/media",
+      usedBytes: 1_000_000_000,
+      totalBytes: 10_000_000_000,
       breakdown: [],
     },
     model: {

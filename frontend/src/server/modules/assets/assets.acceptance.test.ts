@@ -35,7 +35,7 @@ function buildService(db: Db) {
   const storage = createMockObjectStorage({
     nextKey: () => `uploads/key-${++keySeq}`,
   });
-  return { service: createAssetsService(repo, storage, deps), repo };
+  return { service: createAssetsService(repo, async () => storage, deps), repo };
 }
 
 async function upload(

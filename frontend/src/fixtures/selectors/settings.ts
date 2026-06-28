@@ -89,15 +89,20 @@ function computeInitials(name: string): string {
   return `${parts[0]!.charAt(0)}${parts[parts.length - 1]!.charAt(0)}`.toUpperCase();
 }
 
+// Deterministic fixture fallback (item B — real shape: bytes, not GB). The
+// `(creator)/settings` route overlays the real `settings.storage.get` values;
+// this fixture only keeps SSR non-empty before the read resolves.
 function buildStorage(): StorageState {
   return {
-    usedGb: 18,
-    totalGb: 64,
+    backend: "local",
+    rootPath: "~/CreatorOS/media",
+    usedBytes: 18_000_000_000,
+    totalBytes: 64_000_000_000,
     breakdown: [
-      { id: "st-video", label: "视频素材", valueGb: 9.2, tone: "brand" },
-      { id: "st-image", label: "图片素材", valueGb: 4.4, tone: "success" },
-      { id: "st-audio", label: "音频素材", valueGb: 2.1, tone: "warning" },
-      { id: "st-doc", label: "文档与导出", valueGb: 2.3, tone: "neutral" },
+      { assetType: "video", label: "视频素材", bytes: 9_200_000_000, tone: "brand" },
+      { assetType: "image", label: "图片素材", bytes: 4_400_000_000, tone: "success" },
+      { assetType: "audio", label: "音频素材", bytes: 2_100_000_000, tone: "warning" },
+      { assetType: "document", label: "文档与导出", bytes: 2_300_000_000, tone: "neutral" },
     ],
   };
 }
