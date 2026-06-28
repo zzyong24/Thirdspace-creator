@@ -1,56 +1,61 @@
 /**
- * 选题候选池 page (七步③ · SPEC §5.5) — the 选题情报 surface answering spec §9.2
- * 「我有多少条按变现潜力排序的待选选题？最近用户在评论里反复问什么？」.
+ * 选题中心 page (选题中心大改 · Slice 2 三栏重构) — the 选题情报 surface.
  *
- * Server-component shell with a `viewModel?` test seam (mirrors monetization/
- * positioning/knowledge). The default render reads `candidates.list` (sorted) +
- * `audienceSignals.list` (real SQL via the composite transport — C-2: contract op →
- * dispatch → Drizzle/pglite, NOT fixtures-only). The card pool is sorted by the
- * monetization-weighted signal (predictedScore default; positioningFit / demandCount
- * switchable). The mutating controls (新增候选 / 晋升为 Project / 候选状态 drop / 排序 /
- * 一键转 Candidate) live in the client island `topics-interactive-region.tsx`, calling
- * the mapped contract op then `router.refresh()`.
+ * Layout (照目标设计):
+ *   1. AI 选题会 带 (紫色 accent): 4 出题按钮 (基于定位/评论/知识库/热点) + 「当前依据」面板.
+ *   2. 三栏 grid (左 选题来源 7 来源 · 中 选题候选池 富候选卡 · 右 选题卡详情).
+ *   3. 选题流转漏斗: 6 态 (待收集/待评估/待补充/已立项/已丢弃/已发布回流).
  *
- * Determinism (C-5): no Date.now / Math.random / fetch in the render or selectors.
- * `/topics` is a brand-new page — per spec C-5 (R2-9) the visual baseline is NOT
- * re-based here; this page is 暂不纳入视觉门禁 until the stage-12 re-baseline.
+ * Server-component shell with a `viewModel?` test seam. The default render reads
+ * `candidates.list` (sorted) + `topics.overview` (出题依据 + 7 来源 + 6 态漏斗, every count
+ * DERIVED from real rows — composite transport → Drizzle/pglite, NOT fixtures-only). The
+ * selection-driven three-column body (中候选池 ⇄ 右详情 共享 selected-candidate state) lives
+ * in the client island `topics-interactive-region.tsx`; the AI 选题会 带 in
+ * `topic-generate-island.tsx`. Mutations (新建/补全/立项/丢弃/采纳) → mapped contract op then
+ * `router.refresh()`.
  *
- * Roadmap note: the Knowledge page's decorative 「热门选题」row is SUPERSEDED by this
- * page for AI-sourced trend candidates — that row stays inert (no double-wire).
+ * Determinism (C-5): no Date.now / Math.random / fetch in the render or selectors. Empty
+ * 选题卡 字段 are dropped (never invented); null 指标 render 「—」.
  */
 
 import * as React from "react";
+import {
+  Inbox,
+  ClipboardList,
+  Sparkles,
+  Rocket,
+  Trash2,
+  RefreshCw,
+  ArrowRight,
+  type LucideIcon,
+} from "lucide-react";
 
-import { SectionCard } from "@/components/project/section-card";
-import { Badge } from "@/components/ui/badge";
 import { client as defaultClient } from "@/lib/contract-client.server";
+import { cn } from "@/lib/utils";
 import type {
   CandidateResource,
-  AudienceSignalResource,
+  TopicsOverviewResource,
 } from "@/server/modules/candidate";
+
+import {
+  TopicsWorkspace,
+  type CandidateSortKey,
+} from "./topics-interactive-region";
+import { TopicGenerateBand } from "./topic-generate-island";
 
 /**
  * Structural seam for the server reads. The route passes a session-scoped
- * `createServerClient(ctx)` so candidates / audience signals stay user-scoped;
- * the default keeps the singleton (canonical ctx) as the SSR/test fallback seam.
+ * `createServerClient(ctx)` so candidates / overview stay user-scoped; the default keeps
+ * the singleton (canonical ctx) as the SSR/test fallback seam.
  */
 export type TopicsReadClient = Pick<
   typeof defaultClient,
-  "listCandidates" | "listAudienceSignals"
+  "listCandidates" | "overviewTopics"
 >;
-
-import {
-  CreateCandidateForm,
-  CandidateCard,
-  CandidateSortControl,
-  type CandidateSortKey,
-} from "./topics-interactive-region";
-import { AudienceQuestionsCard } from "./audience-questions-card";
-import { TopicGenerateIsland } from "./topic-generate-island";
 
 export interface TopicsViewModel {
   readonly candidates: CandidateResource[];
-  readonly signals: AudienceSignalResource[];
+  readonly overview: TopicsOverviewResource;
   readonly sort: CandidateSortKey;
 }
 
@@ -60,8 +65,8 @@ export interface TopicsPageProps {
   /** The active sort, read from the search params (defaults to predictedScore). */
   readonly sort?: CandidateSortKey;
   /**
-   * Session-scoped contract client for the production read path. The route
-   * passes `createServerClient(session.ctx)`; defaults to the singleton seam.
+   * Session-scoped contract client for the production read path. The route passes
+   * `createServerClient(session.ctx)`; defaults to the singleton seam.
    */
   readonly client?: TopicsReadClient;
 }
@@ -97,20 +102,13 @@ async function loadViewModel(
     query: { page: 1, pageSize: 100, sort },
     body: undefined,
   })) as unknown as CandidateResource[];
-  const signals = (await client.listAudienceSignals({
+  const overview = (await client.overviewTopics({
     params: undefined,
-    query: { page: 1, pageSize: 100 },
+    query: undefined,
     body: undefined,
-  })) as unknown as AudienceSignalResource[];
-  return { candidates, signals, sort };
+  })) as unknown as TopicsOverviewResource;
+  return { candidates, overview, sort };
 }
-
-const SOURCE_LABELS: Record<string, string> = {
-  trend: "趋势",
-  benchmark: "对标",
-  demand: "需求",
-  idea: "灵感",
-};
 
 // Pure render — split out so tests can drive it synchronously with a fixed VM.
 export function TopicsView({
@@ -118,10 +116,7 @@ export function TopicsView({
 }: {
   readonly viewModel: TopicsViewModel;
 }) {
-  const { candidates, signals, sort } = viewModel;
-  // pool candidates only on the board; dropped ones are filtered (still listed via
-  // status, but the pool surface is the curation focus, §5.5).
-  const pool = candidates.filter((c) => c.status !== "dropped");
+  const { candidates, overview, sort } = viewModel;
 
   return (
     <div
@@ -129,68 +124,90 @@ export function TopicsView({
       data-testid="topics"
       className="flex flex-col gap-section-gap"
     >
-      <TopicGenerateIsland />
+      <header className="flex flex-col gap-1">
+        <h1 className="text-xl font-semibold text-foreground">选题中心</h1>
+        <p className="text-sm text-muted-foreground">
+          从真实信号出题、补全选题卡、择优立项——一条选题从灵感到立项的全流程。
+        </p>
+      </header>
 
-      <SectionCard title="选题候选池">
-        <div className="flex flex-col gap-3 py-2">
-          <div className="flex items-center justify-between">
-            <CreateCandidateForm />
-            <CandidateSortControl sort={sort} />
-          </div>
-          <ul
-            data-testid="candidate-pool"
-            data-sort={sort}
-            className="flex flex-col gap-2"
-          >
-            {pool.length === 0 ? (
-              <li
-                data-testid="candidate-empty-state"
-                className="text-sm text-muted-foreground"
-              >
-                还没有候选选题。手工新增一条，或等 AI/受众信号补充。
-              </li>
-            ) : (
-              pool.map((c) => (
-                <CandidateCard
-                  key={c.id}
-                  candidate={c}
-                  sourceLabel={SOURCE_LABELS[c.source] ?? c.source}
-                />
-              ))
-            )}
-          </ul>
-        </div>
-      </SectionCard>
+      {/* 1. AI 选题会 带 */}
+      <TopicGenerateBand basis={overview.basis} />
 
-      {/* 评论区 & 客户问题 — 受众信号聚合，一键转 Candidate (§5.5). */}
-      <AudienceQuestionsCard signals={signals} />
+      {/* 2. 三栏：来源 / 候选池 / 详情 */}
+      <TopicsWorkspace
+        candidates={candidates}
+        sources={overview.sources}
+        sort={sort}
+      />
 
-      {/* 已晋升/已丢弃的候选保留一个 inert 小结，方便复盘 (decorative). */}
-      <SectionCard title="选题流转">
-        <ul data-testid="candidate-status-summary" className="flex flex-wrap gap-2 py-2">
-          {candidates.length === 0 ? (
-            <li className="text-sm text-muted-foreground">暂无数据</li>
-          ) : (
-            <>
-              <li>
-                <Badge variant="secondary" className="text-[10px]">
-                  候选池 {candidates.filter((c) => c.status === "pool").length}
-                </Badge>
-              </li>
-              <li>
-                <Badge variant="outline" className="text-[10px]">
-                  已晋升 {candidates.filter((c) => c.status === "promoted").length}
-                </Badge>
-              </li>
-              <li>
-                <Badge variant="outline" className="text-[10px]">
-                  已丢弃 {candidates.filter((c) => c.status === "dropped").length}
-                </Badge>
-              </li>
-            </>
-          )}
-        </ul>
-      </SectionCard>
+      {/* 3. 选题流转漏斗 */}
+      <FunnelStrip funnel={overview.funnel} />
     </div>
+  );
+}
+
+// ── 选题流转漏斗 (6 态横向) ───────────────────────────────────────────────────────
+const FUNNEL_ICONS: Record<string, LucideIcon> = {
+  collecting: Inbox,
+  evaluating: ClipboardList,
+  enriching: Sparkles,
+  promoted: Rocket,
+  dropped: Trash2,
+  recycled: RefreshCw,
+};
+
+function FunnelStrip({
+  funnel,
+}: {
+  readonly funnel: TopicsOverviewResource["funnel"];
+}) {
+  return (
+    <section
+      data-testid="topics-funnel"
+      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground">选题流转漏斗</h3>
+        <span className="text-xs text-text-subtle">全部流转</span>
+      </div>
+      <div className="flex flex-wrap items-stretch gap-2">
+        {funnel.map((stage, i) => {
+          const Icon = FUNNEL_ICONS[stage.key] ?? Inbox;
+          const isTerminal = stage.key === "dropped";
+          return (
+            <React.Fragment key={stage.key}>
+              <div
+                data-testid="funnel-stage"
+                data-stage={stage.key}
+                className="flex min-w-[110px] flex-1 flex-col items-center gap-1.5 rounded-control border border-border bg-surface-subtle/50 px-3 py-3"
+              >
+                <span
+                  className={cn(
+                    "flex size-8 items-center justify-center rounded-control",
+                    isTerminal
+                      ? "bg-surface-subtle text-text-subtle"
+                      : "bg-brand-soft text-brand",
+                  )}
+                >
+                  <Icon className="size-4" strokeWidth={2} />
+                </span>
+                <span className="text-lg font-semibold tabular-nums text-foreground">
+                  {stage.count}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {stage.label}
+                </span>
+              </div>
+              {i < funnel.length - 1 ? (
+                <span className="hidden items-center self-center text-text-subtle md:flex">
+                  <ArrowRight className="size-4" />
+                </span>
+              ) : null}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </section>
   );
 }

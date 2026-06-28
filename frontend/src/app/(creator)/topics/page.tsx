@@ -3,9 +3,9 @@
  *
  * The (creator) layout supplies the shared AppShell (Sidebar + TopHeader) and the
  * global Header is configured for `/topics` in `shell-router.tsx`. The page itself is
- * a Server Component that renders the 选题候选池 feature shell, which reads
- * candidates.list (sorted) + audienceSignals.list (real SQL via the composite
- * transport). The `?sort=` URL state selects the monetization-weighted sort.
+ * a Server Component that renders the 选题中心 feature shell (选题中心大改 · Slice 2 三栏),
+ * which reads candidates.list (sorted) + topics.overview (出题依据 + 7 来源 + 6 态漏斗, real
+ * SQL via the composite transport). The `?sort=` URL state selects the candidate sort.
  *
  * Session-scoped read (lane center-pages): the route resolves the request's
  * session and constructs `createServerClient(session.ctx)` so candidates / audience
