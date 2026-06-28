@@ -149,7 +149,7 @@ describe("PositioningDraftDrawer", () => {
     updatedAt: "2026-06-21T00:00:00.000Z",
   };
 
-  it("opens a drawer that houses BOTH real forms (账号画像 + 新版本定位)", () => {
+  it("opens a CENTERED dialog with 3 tabs that house BOTH real forms (账号画像 + 定位陈述)", () => {
     render(
       <PositioningDraftDrawer
         profile={PROFILE}
@@ -158,20 +158,26 @@ describe("PositioningDraftDrawer", () => {
         description="更新账号画像，或追加一条新的不可变定位陈述。"
       />,
     );
-    // drawer body is mounted only on open.
+    // dialog body is mounted only on open.
     expect(screen.queryByTestId("positioning-profile-form")).toBeNull();
-    fireEvent.click(
-      screen.getByRole("button", { name: /新建定位版本/ }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /新建定位版本/ }));
+    // dialog (not a side sheet) is open.
+    expect(screen.getByTestId("positioning-draft-dialog")).toBeTruthy();
+    // default tab = 账号画像 → the profile form is mounted + pre-filled.
     expect(screen.getByTestId("positioning-profile-form")).toBeTruthy();
-    expect(screen.getByTestId("positioning-statement-form")).toBeTruthy();
-    // profile form pre-filled from the current profile.
     expect((screen.getByLabelText("人设") as HTMLInputElement).value).toBe(
       "硬核科普",
     );
+    // sticky footer 取消 + 保存 are present.
+    expect(screen.getByTestId("positioning-draft-cancel")).toBeTruthy();
+    expect(screen.getByTestId("positioning-draft-save")).toBeTruthy();
+    // switching to the 定位陈述 tab mounts the statement form.
+    fireEvent.click(screen.getByRole("tab", { name: /定位陈述/ }));
+    expect(screen.getByTestId("positioning-statement-form")).toBeTruthy();
+    expect(screen.getByLabelText("一句话定位")).toBeTruthy();
   });
 
-  it("seeds the drawer's statement form when given a 复制为草稿 seed", () => {
+  it("seeds the dialog's statement form when given a 复制为草稿 seed", () => {
     render(
       <PositioningDraftDrawer
         profile={PROFILE}
@@ -187,6 +193,8 @@ describe("PositioningDraftDrawer", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "复制为草稿" }));
+    // the statement form lives on the 定位陈述 tab — switch to it first.
+    fireEvent.click(screen.getByRole("tab", { name: /定位陈述/ }));
     expect(
       (screen.getByLabelText("一句话定位") as HTMLTextAreaElement).value,
     ).toBe("v2 把论文变生产级代码");
