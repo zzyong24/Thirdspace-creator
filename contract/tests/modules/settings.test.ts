@@ -15,9 +15,11 @@ describe("settings contract", () => {
       apiFormat: "anthropic",
       settings: { temperature: 0.6 },
       isDefault: true,
+      hasSecret: true,
     });
     expect(m.capability).toBe("script");
     expect(m.isDefault).toBe(true);
+    expect(m.hasSecret).toBe(true);
   });
 
   it("rejects a missing required field", () => {
@@ -41,5 +43,23 @@ describe("settings contract", () => {
     expect(settingsOperations.putModel.method).toBe("PUT");
     expect(settingsOperations.putModel.path).toBe("/settings/models/:capability");
     expect(settingsOperations.getSettings.fr.length).toBeGreaterThan(0);
+  });
+
+  it("putModel body accepts an inline secret (stored, not just env-ref)", () => {
+    const body = settingsOperations.putModel.body.parse({
+      provider: "minimax",
+      modelName: "MiniMax-M3",
+      baseUrl: "https://api.minimaxi.com/anthropic",
+      apiFormat: "anthropic",
+      secret: "sk-real-key",
+    });
+    expect(body.secret).toBe("sk-real-key");
+  });
+
+  it("registers settings.models.list (GET /settings/models) returning an array", () => {
+    expect(settingsOperations.listModels.method).toBe("GET");
+    expect(settingsOperations.listModels.path).toBe("/settings/models");
+    const arr = settingsOperations.listModels.response.parse([]);
+    expect(Array.isArray(arr)).toBe(true);
   });
 });

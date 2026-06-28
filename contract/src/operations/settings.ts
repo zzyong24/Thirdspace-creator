@@ -48,9 +48,19 @@ export const settingsOperations = {
       apiFormat: z.enum(["anthropic", "openai_chat"]).optional(),
       settings: z.record(z.string(), z.unknown()).optional(),
       isDefault: z.boolean().optional(),
+      // Inline secret value — stored directly in the (local) DB. Absent or empty
+      // string = keep the existing secret (a partial update never wipes it).
+      secret: z.string().optional(),
     }),
     response: modelConfigurationResource,
     fr: ["FR-SETTINGS-MODEL-UPSERT"],
+  }),
+  listModels: defineEndpoint({
+    id: "settings.models.list",
+    method: "GET",
+    path: "/settings/models",
+    response: z.array(modelConfigurationResource),
+    fr: ["FR-SETTINGS-MODEL-LIST"],
   }),
   createAgent: defineEndpoint({
     id: "settings.agents.create",

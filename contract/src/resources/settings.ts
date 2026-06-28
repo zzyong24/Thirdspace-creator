@@ -43,6 +43,9 @@ export const modelConfigurationResource = z.object({
   apiFormat: z.enum(["anthropic", "openai_chat"]),
   settings: z.record(z.string(), z.unknown()),
   isDefault: z.boolean(),
+  // Masked indicator: a usable secret is configured (stored value OR env-ref).
+  // The raw secret is NEVER serialized to the client — only this boolean.
+  hasSecret: z.boolean(),
 });
 export type ModelConfigurationResource = z.infer<
   typeof modelConfigurationResource
