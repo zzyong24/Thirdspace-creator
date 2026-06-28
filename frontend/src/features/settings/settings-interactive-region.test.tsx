@@ -29,10 +29,7 @@ vi.mock("@/lib/contract-client", () => ({
   },
 }));
 
-import {
-  SettingsMainColumn,
-  SettingsRailColumn,
-} from "./settings-interactive-region";
+import { SettingsDialog } from "./settings-interactive-region";
 import type { SettingsViewModel } from "./settings-page";
 
 const VM: SettingsViewModel = {
@@ -85,10 +82,19 @@ beforeEach(() => {
 
 afterEach(() => cleanup());
 
+// SettingsDialog renders through a Radix Portal (mounted on document.body), so
+// queries go through `document` rather than the render container. The dialog is
+// open by default and every tab panel is force-mounted, so all controls are in
+// the DOM regardless of the active tab.
+function renderDialog(vm: SettingsViewModel = VM) {
+  render(<SettingsDialog viewModel={vm} />);
+  return document;
+}
+
 describe("Settings island wiring (needs-backend → op + refresh)", () => {
   it("toggling 自动保存 calls patchPreferences({ autosaveEnabled }) then router.refresh()", async () => {
-    const { container } = render(<SettingsMainColumn viewModel={VM} />);
-    const sw = container.querySelector(
+    const doc = renderDialog();
+    const sw = doc.querySelector(
       '[data-slot="pref-autosave-switch"]',
     ) as HTMLElement;
     expect(sw).not.toBeNull();
@@ -104,11 +110,11 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("saving an edited 昵称 calls patchProfile({ displayName }) then router.refresh()", async () => {
-    const { container } = render(<SettingsMainColumn viewModel={VM} />);
-    const input = container.querySelector(
+    const doc = renderDialog();
+    const input = doc.querySelector(
       '[data-slot="account-nickname-input"]',
     ) as HTMLInputElement;
-    const save = container.querySelector(
+    const save = doc.querySelector(
       '[data-slot="account-nickname-save"]',
     ) as HTMLButtonElement;
     expect(input).not.toBeNull();
@@ -128,8 +134,8 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("toggling 使用情况分析 PATCHes only its own key", async () => {
-    const { container } = render(<SettingsMainColumn viewModel={VM} />);
-    const sw = container.querySelector(
+    const doc = renderDialog();
+    const sw = doc.querySelector(
       '[data-slot="pref-analytics-switch"]',
     ) as HTMLElement;
     fireEvent.click(sw);
@@ -141,23 +147,23 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("saving the model form PUTs the whole default config (provider/model/baseUrl/format/secret/temperature)", async () => {
-    const { container } = render(<SettingsRailColumn viewModel={VM} />);
-    const provider = container.querySelector(
+    const doc = renderDialog();
+    const provider = doc.querySelector(
       '[data-slot="model-provider-input"]',
     ) as HTMLInputElement;
-    const modelName = container.querySelector(
+    const modelName = doc.querySelector(
       '[data-slot="model-name-input"]',
     ) as HTMLInputElement;
-    const baseUrl = container.querySelector(
+    const baseUrl = doc.querySelector(
       '[data-slot="model-base-url-input"]',
     ) as HTMLInputElement;
-    const secret = container.querySelector(
+    const secret = doc.querySelector(
       '[data-slot="model-secret-input"]',
     ) as HTMLInputElement;
-    const temperature = container.querySelector(
+    const temperature = doc.querySelector(
       '[data-slot="model-temperature-input"]',
     ) as HTMLInputElement;
-    const save = container.querySelector(
+    const save = doc.querySelector(
       '[data-slot="model-save"]',
     ) as HTMLButtonElement;
     expect(provider).not.toBeNull();
@@ -194,13 +200,11 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       ...VM,
       model: { ...VM.model, hasSecret: true },
     };
-    const { container } = render(
-      <SettingsRailColumn viewModel={VM_WITH_SECRET} />,
-    );
-    const modelName = container.querySelector(
+    const doc = renderDialog(VM_WITH_SECRET);
+    const modelName = doc.querySelector(
       '[data-slot="model-name-input"]',
     ) as HTMLInputElement;
-    const save = container.querySelector(
+    const save = doc.querySelector(
       '[data-slot="model-save"]',
     ) as HTMLButtonElement;
     fireEvent.change(modelName, { target: { value: "claude-opus-4-8-v2" } });
@@ -227,17 +231,18 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         ],
       },
     };
-    const { container } = render(<SettingsRailColumn viewModel={VM_STORAGE} />);
-    const input = container.querySelector(
+    const doc = renderDialog(VM_STORAGE);
+    const input = doc.querySelector(
       '[data-slot="storage-root-path-input"]',
     ) as HTMLInputElement;
-    const save = container.querySelector(
+    const save = doc.querySelector(
       '[data-slot="storage-save-button"]',
     ) as HTMLButtonElement;
     expect(input).not.toBeNull();
     expect(save).not.toBeNull();
     // The real used-bytes render goes through /1e9 → "5.0 GB".
-    expect(container.textContent).toContain("5.0 GB");
+    const storageCard = doc.querySelector('[data-slot="storage-usage-card"]');
+    expect(storageCard?.textContent ?? "").toContain("5.0 GB");
 
     fireEvent.change(input, { target: { value: "/tmp/creatoros-media" } });
     fireEvent.click(save);

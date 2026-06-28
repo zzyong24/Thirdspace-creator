@@ -43,10 +43,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { PageTabs } from "@/components/navigation/page-tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
+import { cn } from "@/lib/utils";
+import {
+  UserRound,
+  SlidersHorizontal,
+  Palette,
+  Cpu,
+  HardDrive,
+  type LucideIcon,
+} from "lucide-react";
 
 import type { SettingsViewModel } from "./settings-page";
 
@@ -151,136 +165,154 @@ function applyDensity(density: Density): void {
 }
 
 // ---------------------------------------------------------------------------
-// SettingsTabsNav — controlled tab strip that drives a real partition
+// SettingsDialog — 居中大弹窗 + 左竖 Tab 栏 + 右框内滚动
 // ---------------------------------------------------------------------------
 //
-// The page previously rendered an UNcontrolled `PageTabs` whose value changed
-// nothing — every card showed regardless of the active tab (a decorative tab).
-// This controlled version makes the tab真实分区: selecting a tab scrolls to the
-// matching `data-settings-section` anchor and toggles a highlight outline on it,
-// so the eight tabs become a working in-page section navigator. All sections
-// stay mounted (no content is hidden), so the structural page tests still see
-// every card.
-export function SettingsTabsNav({
-  tabs,
-  defaultValue,
-}: {
-  tabs: ReadonlyArray<{ id: string; label: string }>;
-  defaultValue: string;
-}) {
-  const [active, setActive] = React.useState<string>(defaultValue);
+// 设置从「一屏全部铺满的整页」改为弹窗式:打开 /settings 即弹出一个居中大弹窗
+// (max-w-4xl / h-[85vh] 固定高度),左侧竖向 Tab 栏分组(账户 / 偏好 / 外观 /
+// 模型配置 / 存储),右侧内容区按选中的 Tab 各自 `overflow-y-auto` 框内滚动——
+// 不再一屏塞满。关闭(点 X / Esc / 点遮罩)→ router.back() 回上一页。
+//
+// 每个 Tab panel 用 forceMount + data-[state=inactive]:hidden 全部挂载:这样
+// 各卡里的本地草稿/受控态在切 Tab 时不丢,同时结构测试也能一次看到所有卡的
+// data-slot(account-information-card / model-configuration-card 等)。
 
-  const focusSection = React.useCallback((tabId: string) => {
-    if (typeof document === "undefined") return;
-    const sections = Array.from(
-      document.querySelectorAll<HTMLElement>("[data-settings-section]"),
-    );
-    let matched: HTMLElement | null = null;
-    for (const node of sections) {
-      const owns = (node.dataset.settingsTabs ?? "").split(" ").includes(tabId);
-      node.dataset.settingsActive = owns ? "true" : "false";
-      if (owns && !matched) matched = node;
-    }
-    matched?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
-  const onValueChange = React.useCallback(
-    (value: string) => {
-      setActive(value);
-      focusSection(value);
-    },
-    [focusSection],
-  );
-
-  return (
-    <PageTabs
-      tabs={tabs}
-      value={active}
-      defaultValue={defaultValue}
-      onValueChange={onValueChange}
-      ariaLabel="设置分类导航"
-    />
-  );
+interface SettingsTabDef {
+  readonly id: string;
+  readonly label: string;
+  readonly icon: LucideIcon;
 }
 
-// ---------------------------------------------------------------------------
-// SettingsMainColumn
-// ---------------------------------------------------------------------------
+const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
+  { id: "account", label: "账户", icon: UserRound },
+  { id: "preferences", label: "偏好", icon: SlidersHorizontal },
+  { id: "appearance", label: "外观", icon: Palette },
+  { id: "models", label: "模型配置", icon: Cpu },
+  { id: "storage", label: "存储", icon: HardDrive },
+];
 
-export function SettingsMainColumn({
+export function SettingsDialog({
   viewModel,
 }: {
   viewModel: SettingsViewModel;
 }) {
+  const router = useRouter();
+  const [open, setOpen] = React.useState(true);
+  const [tab, setTab] = React.useState<string>(SETTINGS_DIALOG_TABS[0]!.id);
+
+  // 关闭弹窗:回上一页(回到打开设置之前的位置),没有历史时兜底回首页。
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      setOpen(next);
+      if (!next) {
+        if (typeof window !== "undefined" && window.history.length > 1) {
+          router.back();
+        } else {
+          router.push("/");
+        }
+      }
+    },
+    [router],
+  );
+
   return (
-    <div data-slot="main-settings" className="flex flex-col gap-card-gap">
-      <SettingsSection sectionId="account">
-        <AccountInformationCard viewModel={viewModel} />
-      </SettingsSection>
-      <SettingsSection sectionId="preferences">
-        <PreferenceSettingsCard viewModel={viewModel} />
-      </SettingsSection>
-      {/* 外观 (theme/density/locale). */}
-      <SettingsSection sectionId="appearance">
-        <SystemSettingsCard viewModel={viewModel} />
-      </SettingsSection>
-    </div>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        showCloseButton
+        data-slot="settings-dialog"
+        className="flex h-[85vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl"
+      >
+        {/* sticky header — 标题 + 描述 (关闭按钮由 DialogContent 自带的 X 提供). */}
+        <div className="flex shrink-0 flex-col gap-1 border-b border-border/70 px-6 py-4">
+          <DialogTitle className="text-lg">设置</DialogTitle>
+          <DialogDescription>账号、偏好与系统</DialogDescription>
+        </div>
+
+        {/* 主体:左竖 Tab 栏 + 右内容区 (各自框内滚动). */}
+        <div className="flex min-h-0 flex-1">
+          {/* 左侧竖向 Tab 栏. */}
+          <nav
+            data-slot="settings-tabs"
+            aria-label="设置分类导航"
+            className="flex w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border/70 bg-surface-subtle/40 p-2"
+          >
+            {SETTINGS_DIALOG_TABS.map((t) => {
+              const TabIcon = t.icon;
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  data-tab-id={t.id}
+                  data-active={active}
+                  onClick={() => setTab(t.id)}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                    active
+                      ? "bg-brand-soft text-brand"
+                      : "text-muted-foreground hover:bg-surface-subtle hover:text-foreground",
+                  )}
+                >
+                  <TabIcon className="size-4 shrink-0" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* 右侧内容区:每个 Tab panel 各自框内滚动 (不是一屏铺满). */}
+          <div
+            data-slot="settings-panels"
+            className="min-w-0 flex-1 overflow-y-auto px-6 py-5"
+          >
+            <SettingsPanel tabId="account" active={tab}>
+              <div data-slot="main-settings" className="flex flex-col gap-card-gap">
+                <AccountInformationCard viewModel={viewModel} />
+              </div>
+            </SettingsPanel>
+            <SettingsPanel tabId="preferences" active={tab}>
+              <PreferenceSettingsCard viewModel={viewModel} />
+            </SettingsPanel>
+            <SettingsPanel tabId="appearance" active={tab}>
+              <SystemSettingsCard viewModel={viewModel} />
+            </SettingsPanel>
+            <SettingsPanel tabId="models" active={tab}>
+              <div data-slot="settings-rail" className="flex flex-col gap-card-gap">
+                <ModelConfigurationCard model={viewModel.model} />
+              </div>
+            </SettingsPanel>
+            <SettingsPanel tabId="storage" active={tab}>
+              <StorageUsageCard storage={viewModel.storage} />
+            </SettingsPanel>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-// ---------------------------------------------------------------------------
-// SettingsSection — a real, anchorable partition for a settings tab
-// ---------------------------------------------------------------------------
-//
-// Each settings card is wrapped in a section that carries the tab id(s) it
-// serves. The tab strip (`SettingsTabsNav`) targets these `id` anchors so a tab
-// click really scrolls to and highlights its section — a real partitioned
-// display rather than a decorative tab. All sections stay mounted (the page
-// tests assert every card is present at once), so this never hides content.
-function SettingsSection({
-  sectionId,
-  alsoFor,
+// 单个 Tab panel:所有 panel 都挂载 (草稿不丢 + 结构测试可一次看到全部卡),
+// 仅非选中态用 hidden 视觉隐藏。
+function SettingsPanel({
+  tabId,
+  active,
   children,
 }: {
-  sectionId: string;
-  alsoFor?: ReadonlyArray<string>;
+  tabId: string;
+  active: string;
   children: React.ReactNode;
 }) {
-  const tabIds = [sectionId, ...(alsoFor ?? [])].join(" ");
   return (
     <div
-      id={`settings-section-${sectionId}`}
-      data-slot="settings-section"
-      data-settings-section={sectionId}
-      data-settings-tabs={tabIds}
-      className="scroll-mt-24 transition-[outline] data-[settings-active=true]:outline data-[settings-active=true]:outline-2 data-[settings-active=true]:outline-offset-4 data-[settings-active=true]:outline-brand/40"
+      role="tabpanel"
+      data-slot="settings-panel"
+      data-tab-id={tabId}
+      data-active={active === tabId}
+      hidden={active !== tabId}
     >
       {children}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// SettingsRailColumn
-// ---------------------------------------------------------------------------
-
-export function SettingsRailColumn({
-  viewModel,
-}: {
-  viewModel: SettingsViewModel;
-}) {
-  return (
-    <div
-      data-slot="settings-rail"
-      className="flex flex-col gap-card-gap"
-    >
-      <SettingsSection sectionId="storage">
-        <StorageUsageCard storage={viewModel.storage} />
-      </SettingsSection>
-      {/* 集成 → model providers. */}
-      <SettingsSection sectionId="integrations">
-        <ModelConfigurationCard model={viewModel.model} />
-      </SettingsSection>
     </div>
   );
 }
@@ -645,34 +677,13 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
   // lazy-init from the fixture/identity default, then overwrite from storage on
   // mount (avoids an SSR/CSR hydration mismatch — the server can't read
   // localStorage). Every change writes back AND applies real <html> classes.
+  //
+  // 语言/locale: i18n 本期不落地 → 切换 locale 没有任何可见效果(界面始终中文)。
+  // 一个切了没反应的下拉 = 假控件,本期移除(铁律:真实有效或删除)。当前 locale
+  // 仍在账户卡作只读 chip 展示(读自真实 identity)。等 i18n 落地后再加回可切换控件。
   const [theme, setTheme] = React.useState<Theme>(viewModel.system.theme);
   const [density, setDensity] = React.useState<Density>(
     viewModel.system.density,
-  );
-  // 系统语言 is now REAL: it persists to the identity-owned `users.locale` via
-  // the `identity.profile.patch` op (`PATCH /me`) — the same locale the account
-  // 语言 chip and timezone display read. No longer a local-only桩. Optimistic
-  // local state + the op + router.refresh() (via useSettingsMutation).
-  const [locale, setLocale] = React.useState<string>(viewModel.system.locale);
-  const { pending: localePending, run: runLocale } = useSettingsMutation();
-
-  // Re-sync after a server refresh changes the identity-derived locale.
-  React.useEffect(() => {
-    setLocale(viewModel.system.locale);
-  }, [viewModel.system.locale]);
-
-  const onLocaleChange = React.useCallback(
-    (next: string) => {
-      setLocale(next);
-      runLocale(() =>
-        client.patchProfile({
-          params: undefined,
-          query: undefined,
-          body: { locale: next },
-        }),
-      );
-    },
-    [runLocale],
   );
 
   React.useEffect(() => {
@@ -709,8 +720,8 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
 
   return (
     <SectionCard
-      title="系统设置"
-      description="外观、语言与通知"
+      title="外观"
+      description="主题与界面密度(本地持久,刷新后保持)"
     >
       <div data-slot="system-settings-card" className="flex flex-col gap-3">
         <SettingsFormRow
@@ -765,33 +776,6 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
             </SelectContent>
           </Select>
         </SettingsFormRow>
-        <SettingsFormRow
-          label="语言"
-          controlId="sys-locale"
-          help="界面与时区显示语言，保存后即生效（PATCH /me，真持久）。"
-        >
-          <Select
-            value={locale}
-            onValueChange={(value) => onLocaleChange(String(value))}
-          >
-            <SelectTrigger
-              id="sys-locale"
-              data-slot="sys-locale-trigger"
-              size="sm"
-              className="w-40"
-              disabled={localePending}
-            >
-              <SelectValue placeholder="选择语言" />
-            </SelectTrigger>
-            <SelectContent data-slot="sys-locale-content">
-              {LOCALE_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </SettingsFormRow>
       </div>
     </SectionCard>
   );
@@ -806,12 +790,6 @@ const THEME_OPTIONS: ReadonlyArray<{ value: Theme; label: string }> = [
 const DENSITY_OPTIONS: ReadonlyArray<{ value: Density; label: string }> = [
   { value: "comfortable", label: "舒适" },
   { value: "compact", label: "紧凑" },
-];
-
-const LOCALE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "zh-CN", label: "简体中文" },
-  { value: "en-US", label: "English (US)" },
-  { value: "ja-JP", label: "日本語" },
 ];
 
 // ---------------------------------------------------------------------------

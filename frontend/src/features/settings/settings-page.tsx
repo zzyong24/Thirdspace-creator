@@ -48,11 +48,7 @@ import * as React from "react";
 
 import { buildSettingsViewModel } from "@/fixtures/selectors";
 
-import {
-  SettingsMainColumn,
-  SettingsRailColumn,
-  SettingsTabsNav,
-} from "./settings-interactive-region";
+import { SettingsDialog } from "./settings-interactive-region";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -177,18 +173,6 @@ export interface ModelState {
 }
 
 // ---------------------------------------------------------------------------
-// SettingsTabs — 5 tabs in the approved order
-// ---------------------------------------------------------------------------
-
-const SETTINGS_TABS: ReadonlyArray<{ id: string; label: string }> = [
-  { id: "account", label: "账户" },
-  { id: "preferences", label: "偏好" },
-  { id: "appearance", label: "外观" },
-  { id: "integrations", label: "集成" },
-  { id: "storage", label: "存储" },
-];
-
-// ---------------------------------------------------------------------------
 // Identity overlay (Module 00, Task 12)
 // ---------------------------------------------------------------------------
 
@@ -239,6 +223,10 @@ export function SettingsPage({
   const withIdentity = identity ? applyIdentity(base, identity) : base;
   const withModel = model ? { ...withIdentity, model } : withIdentity;
   const vm = storage ? { ...withModel, storage } : withModel;
+  // 设置改弹窗式:页面本身只留一个 marker (供 shell-router 路由 + 测试定位),
+  // 真正的内容是浮在其上的居中大弹窗 (SettingsDialog,Radix Portal 到 body)。
+  // 弹窗默认打开,关闭 → router.back() 回上一页。背景仍是 (creator) 的 AppShell
+  // (sidebar/header 真实数据读取不变)。
   return (
     <main
       data-app="creatoros"
@@ -246,33 +234,7 @@ export function SettingsPage({
       data-settings-id="settings-root"
       className="flex flex-col gap-section-gap"
     >
-      <SettingsTabsRow />
-      <div
-        data-slot="settings-grid"
-        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_304px]"
-      >
-        <SettingsMainColumn viewModel={vm} />
-        <SettingsRailColumn viewModel={vm} />
-      </div>
+      <SettingsDialog viewModel={vm} />
     </main>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// SettingsTabsRow — 8 tabs in the approved order
-// ---------------------------------------------------------------------------
-
-function SettingsTabsRow() {
-  return (
-    <div
-      data-slot="settings-tabs"
-      aria-label="设置分类导航"
-      className="border-b border-border/50 pb-1.5"
-    >
-      {/* Controlled tab strip: selecting a tab scrolls to and highlights its
-          matching settings section (real partitioned navigation), instead of
-          the prior decorative no-op tabs. */}
-      <SettingsTabsNav tabs={SETTINGS_TABS} defaultValue={SETTINGS_TABS[0]!.id} />
-    </div>
   );
 }

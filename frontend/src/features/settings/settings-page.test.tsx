@@ -55,13 +55,19 @@ vi.mock("next/link", () => ({
 // (Settings module Step 5). Stub both so the structural render runs
 // without a Next router context or a real HTTP transport.
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({
+    refresh: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+  }),
 }));
 vi.mock("@/lib/contract-client", () => ({
   client: {
     patchPreferences: vi.fn().mockResolvedValue({}),
     putModel: vi.fn().mockResolvedValue({}),
     patchProfile: vi.fn().mockResolvedValue({}),
+    putStorage: vi.fn().mockResolvedValue({}),
   },
 }));
 
@@ -107,11 +113,16 @@ describe("SettingsPage", () => {
   });
 
   it("marks the Settings nav item as the active page in the sidebar", async () => {
-    await renderSettings();
-    const nav = screen.getByRole("navigation", { name: "主要导航" });
-    const active = within(nav).getByRole("link", { current: "page" });
-    expect(active).toHaveAttribute("href", "/settings");
-    expect(active.textContent?.trim()).toBe("设置");
+    // 设置弹窗 modal 打开后,Radix 给背景 AppShell(含 sidebar)加 aria-hidden,
+    // getByRole(走可访问树)便够不到 nav。sidebar 仍在 DOM 里、仍把 /settings 标为
+    // 当前页 —— 直接用 DOM 查询断言。
+    const { container } = await renderSettings();
+    const nav = container.querySelector('nav[aria-label="主要导航"]');
+    expect(nav).not.toBeNull();
+    const active = nav!.querySelector('[aria-current="page"]');
+    expect(active).not.toBeNull();
+    expect(active!.getAttribute("href")).toBe("/settings");
+    expect(active!.textContent?.trim()).toBe("设置");
   });
 
   it("uses the assistant contextual-card variant (NOT storage)", async () => {
@@ -126,9 +137,12 @@ describe("SettingsPage", () => {
     expect(storage).toBeNull();
   });
 
-  it("renders SettingsTabs with 5 tabs in the approved order", async () => {
-    const { container } = await renderSettings();
-    const tabs = container.querySelector('[data-slot="settings-tabs"]');
+  // The settings content now lives in a centered Dialog (Radix Portal → body),
+  // so dialog-internal queries go through `document` rather than the render
+  // container. The dialog opens by default.
+  it("renders the settings dialog with 5 vertical tabs in the approved order", async () => {
+    await renderSettings();
+    const tabs = document.querySelector('[data-slot="settings-tabs"]');
     expect(tabs).not.toBeNull();
     const triggers = Array.from(
       tabs!.querySelectorAll('[role="tab"]'),
@@ -137,63 +151,48 @@ describe("SettingsPage", () => {
       "账户",
       "偏好",
       "外观",
-      "集成",
+      "模型配置",
       "存储",
     ]);
   });
 
-  it("renders SettingsGrid with MainSettings (account → preference → system)", async () => {
-    const { container } = await renderSettings();
-    const grid = container.querySelector('[data-slot="settings-grid"]');
-    expect(grid).not.toBeNull();
-    const main = grid!.querySelector('[data-slot="main-settings"]');
-    expect(main).not.toBeNull();
+  it("opens as a centered dialog (not a full-page flood layout)", async () => {
+    await renderSettings();
+    const dialog = document.querySelector('[data-slot="settings-dialog"]');
+    expect(dialog).not.toBeNull();
+    // Left vertical tab nav + right scrollable panels area both exist.
+    expect(dialog!.querySelector('[data-slot="settings-tabs"]')).not.toBeNull();
+    expect(
+      dialog!.querySelector('[data-slot="settings-panels"]'),
+    ).not.toBeNull();
+  });
+
+  it("mounts every settings card (account/preference/system/storage/model)", async () => {
+    await renderSettings();
+    // All panels are force-mounted so the full inventory is present regardless
+    // of the active tab.
     const expectedSlots = [
       "account-information-card",
       "preference-settings-card",
       "system-settings-card",
-    ];
-    const orderedNodes = expectedSlots.map((slot) =>
-      main!.querySelector(`[data-slot="${slot}"]`),
-    );
-    expect(orderedNodes.every((node) => node !== null)).toBe(true);
-    for (let i = 1; i < orderedNodes.length; i += 1) {
-      const node = orderedNodes[i] as Element;
-      const previous = orderedNodes[i - 1] as Element;
-      const relation = previous.compareDocumentPosition(node);
-      expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    }
-  });
-
-  it("renders SettingsRail (storage → model) inside SettingsGrid", async () => {
-    const { container } = await renderSettings();
-    const grid = container.querySelector('[data-slot="settings-grid"]');
-    expect(grid).not.toBeNull();
-    const rail = grid!.querySelector('[data-slot="settings-rail"]');
-    expect(rail).not.toBeNull();
-    const expectedSlots = [
       "storage-usage-card",
       "model-configuration-card",
     ];
-    const orderedNodes = expectedSlots.map((slot) =>
-      rail!.querySelector(`[data-slot="${slot}"]`),
-    );
-    expect(orderedNodes.every((node) => node !== null)).toBe(true);
-    for (let i = 1; i < orderedNodes.length; i += 1) {
-      const node = orderedNodes[i] as Element;
-      const previous = orderedNodes[i - 1] as Element;
-      const relation = previous.compareDocumentPosition(node);
-      expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    for (const slot of expectedSlots) {
+      expect(
+        document.querySelector(`[data-slot="${slot}"]`),
+      ).not.toBeNull();
     }
   });
 
   it("renders form rows with the compact label + control pattern", async () => {
-    const { container } = await renderSettings();
-    const main = container.querySelector('[data-slot="main-settings"]');
+    await renderSettings();
+    const main = document.querySelector('[data-slot="main-settings"]');
     expect(main).not.toBeNull();
-    const rows = main!.querySelectorAll('[data-slot="settings-form-row"]');
+    // Account panel + preference panel together have the form rows; assert the
+    // label/control pattern across the whole dialog.
+    const rows = document.querySelectorAll('[data-slot="settings-form-row"]');
     expect(rows.length).toBeGreaterThanOrEqual(3);
-    // Each row has a label slot AND a control slot.
     for (const row of Array.from(rows)) {
       const label = row.querySelector('[data-slot="form-row-label"]');
       const control = row.querySelector('[data-slot="form-row-control"]');
@@ -203,8 +202,8 @@ describe("SettingsPage", () => {
   });
 
   it("renders StorageUsageCard with a progress bar", async () => {
-    const { container } = await renderSettings();
-    const storage = container.querySelector(
+    await renderSettings();
+    const storage = document.querySelector(
       '[data-slot="storage-usage-card"]',
     );
     expect(storage).not.toBeNull();

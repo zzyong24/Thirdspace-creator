@@ -34,13 +34,19 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 // (Settings module Step 5). Stub both so this render runs without a
 // Next router context or a real HTTP transport.
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({
+    refresh: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+  }),
 }));
 vi.mock("@/lib/contract-client", () => ({
   client: {
     patchPreferences: vi.fn().mockResolvedValue({}),
     putModel: vi.fn().mockResolvedValue({}),
     patchProfile: vi.fn().mockResolvedValue({}),
+    putStorage: vi.fn().mockResolvedValue({}),
   },
 }));
 
@@ -108,9 +114,12 @@ describe("Settings identity section (Task 12)", () => {
     cleanup();
   });
 
+  // The account card now lives in the settings Dialog (Radix Portal → body) on
+  // its default "account" tab, so dialog-internal queries go through `document`
+  // rather than the render container.
   it("renders timezone + locale chips from the injected identity", () => {
-    const { container } = renderSettings();
-    const card = container.querySelector(
+    renderSettings();
+    const card = document.querySelector(
       '[data-slot="account-information-card"]',
     );
     expect(card).not.toBeNull();
@@ -120,11 +129,11 @@ describe("Settings identity section (Task 12)", () => {
   });
 
   it("populates the nickname + email inputs from the injected identity", () => {
-    const { container } = renderSettings();
-    const nickname = container.querySelector<HTMLInputElement>(
+    renderSettings();
+    const nickname = document.querySelector<HTMLInputElement>(
       '[data-slot="account-nickname-input"]',
     );
-    const email = container.querySelector<HTMLInputElement>(
+    const email = document.querySelector<HTMLInputElement>(
       '[data-slot="account-email-input"]',
     );
     expect(nickname).not.toBeNull();
@@ -136,11 +145,11 @@ describe("Settings identity section (Task 12)", () => {
   it("renders the nickname input editable + the email input read-only", () => {
     // 昵称 is now真持久 via `PATCH /me` (identity.profile.patch) — editable, no
     // longer read-only. 邮箱 stays read-only (login identifier + unique key).
-    const { container } = renderSettings();
-    const nickname = container.querySelector<HTMLInputElement>(
+    renderSettings();
+    const nickname = document.querySelector<HTMLInputElement>(
       '[data-slot="account-nickname-input"]',
     );
-    const email = container.querySelector<HTMLInputElement>(
+    const email = document.querySelector<HTMLInputElement>(
       '[data-slot="account-email-input"]',
     );
     expect(nickname!.readOnly).toBe(false);
@@ -149,11 +158,11 @@ describe("Settings identity section (Task 12)", () => {
 
   it("saving an edited nickname calls patchProfile({ displayName }) then refresh", async () => {
     const { client } = await import("@/lib/contract-client");
-    const { container } = renderSettings();
-    const nickname = container.querySelector<HTMLInputElement>(
+    renderSettings();
+    const nickname = document.querySelector<HTMLInputElement>(
       '[data-slot="account-nickname-input"]',
     )!;
-    const save = container.querySelector<HTMLButtonElement>(
+    const save = document.querySelector<HTMLButtonElement>(
       '[data-slot="account-nickname-save"]',
     )!;
     // Save is disabled until the draft diverges from the current name.
@@ -172,8 +181,8 @@ describe("Settings identity section (Task 12)", () => {
     // The route passes the resolved-session identity via the `identity`
     // prop (the Wave-0 stand-in for `settings.get` — same `userResource`
     // shape). It must override the fixture account fields.
-    const { container } = render(<SettingsPage identity={STUB_IDENTITY} />);
-    const card = container.querySelector(
+    render(<SettingsPage identity={STUB_IDENTITY} />);
+    const card = document.querySelector(
       '[data-slot="account-information-card"]',
     );
     expect(card).not.toBeNull();
@@ -182,7 +191,7 @@ describe("Settings identity section (Task 12)", () => {
     expect(text).toContain(STUB_IDENTITY.email);
     expect(text).toContain(STUB_IDENTITY.timezone);
     expect(text).toContain(STUB_IDENTITY.locale);
-    const nickname = container.querySelector<HTMLInputElement>(
+    const nickname = document.querySelector<HTMLInputElement>(
       '[data-slot="account-nickname-input"]',
     );
     expect(nickname!.value).toBe(STUB_IDENTITY.displayName);
