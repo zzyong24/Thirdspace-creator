@@ -58,6 +58,13 @@ export interface AppShellProps {
   readonly searchPlaceholder?: string;
   readonly searchValue?: string;
   readonly overlayMasked?: boolean;
+  /**
+   * 固定高度「填满」模式 (多栏工作台页). 为真时 AppShell 不再用 PageScrollArea 包裹
+   * children——改让页面自己填满主框剩余高度并自管内部滚动 (band/funnel 钉住、中间列
+   * 各自框内滚)。这样避免「外层 PageScrollArea 整页滚 + 内层列各自滚」的双滚动条。
+   * 为假 (默认) 维持现状：children 落在 PageScrollArea 里整体滚动 (简单页够用)。
+   */
+  readonly contentFill?: boolean;
   readonly children: React.ReactNode;
   readonly className?: string;
 }
@@ -82,6 +89,7 @@ export function AppShell({
   searchPlaceholder,
   searchValue,
   overlayMasked = false,
+  contentFill = false,
   children,
   className,
 }: AppShellProps) {
@@ -123,17 +131,29 @@ export function AppShell({
           searchValue={searchValue}
           overlayMasked={overlayMasked}
         />
-        <PageScrollArea>
+        {contentFill ? (
+          // 填满模式：页面自己占满主框剩余高度 + 自管内部滚动 (band/funnel 钉住、中间
+          // 列各自框内滚)。不套 PageScrollArea → 无外层整页滚动条,杜绝双滚动条。
           <div
             data-slot="app-page-content"
-            className={cn(
-              "px-page-gutter",
-              headerMode === "global" ? "py-8" : "py-section-gap",
-            )}
+            data-fill="true"
+            className="flex h-full min-h-0 flex-col overflow-hidden px-page-gutter py-6"
           >
             {children}
           </div>
-        </PageScrollArea>
+        ) : (
+          <PageScrollArea>
+            <div
+              data-slot="app-page-content"
+              className={cn(
+                "px-page-gutter",
+                headerMode === "global" ? "py-8" : "py-section-gap",
+              )}
+            >
+              {children}
+            </div>
+          </PageScrollArea>
+        )}
       </div>
     </div>
   );

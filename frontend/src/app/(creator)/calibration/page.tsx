@@ -41,13 +41,14 @@ export default async function CalibrationRoutePage() {
   const data = await loadCalibrationWorkbench(client);
 
   return (
+    // 固定高度填满：页头 shrink-0 钉住,工作台 flex-1 占满剩余高度并自管内部滚动。
     <main
       data-app="creatoros"
       data-page="calibration"
       data-testid="calibration"
-      className="flex flex-col gap-section-gap"
+      className="flex h-full min-h-0 flex-col gap-4"
     >
-      <header className="flex flex-col gap-0.5">
+      <header className="flex shrink-0 flex-col gap-0.5">
         <h1 className="font-heading text-xl font-semibold text-foreground">
           校准中心
         </h1>
@@ -56,12 +57,14 @@ export default async function CalibrationRoutePage() {
         </p>
       </header>
 
-      <CalibrationWorkbench
-        overview={data.overview}
-        predictions={data.predictions}
-        rubric={data.rubric}
-        subjectTitles={data.subjectTitles}
-      />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <CalibrationWorkbench
+          overview={data.overview}
+          predictions={data.predictions}
+          rubric={data.rubric}
+          subjectTitles={data.subjectTitles}
+        />
+      </div>
     </main>
   );
 }

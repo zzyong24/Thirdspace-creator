@@ -63,6 +63,22 @@ interface RouteResolution {
   readonly projectStages?: ReadonlyArray<TopHeaderStage>;
 }
 
+/**
+ * 走「填满」固定高度布局的工作台路由集合 (band/funnel 钉住、中间列各自框内滚)。
+ * 这些页自己用 flex 真高度排版,自管内部滚动 → 开启 AppShell 的 contentFill 模式,
+ * 不需要外层 PageScrollArea 整页滚动 (避免双滚动条)。简单页不在此集合,维持整体滚动。
+ */
+const CONTENT_FILL_ROUTES: ReadonlySet<string> = new Set([
+  "/topics",
+  "/calibration",
+  "/positioning",
+]);
+
+/** 该路由是否走固定高度填满模式。仅这几条工作台路由开启 (精确匹配,不含子路由)。 */
+export function isContentFillRoute(pathname: string): boolean {
+  return CONTENT_FILL_ROUTES.has(pathname);
+}
+
 const PROJECT_STAGES = [
   { id: "research", label: "研究" },
   { id: "planning", label: "策划" },
@@ -336,6 +352,7 @@ export function ShellRouter({
       projectStages={resolution.projectStages}
       primaryActionLabel={resolution.primaryActionLabel}
       secondaryActionLabel={resolution.secondaryActionLabel}
+      contentFill={isContentFillRoute(pathname)}
       overlayMasked={hasInterceptingModal || overlayMasked}
     >
       {children}

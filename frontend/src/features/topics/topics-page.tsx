@@ -119,30 +119,36 @@ export function TopicsView({
   const { candidates, overview, sort } = viewModel;
 
   return (
+    // 固定高度填满：页头 + AI 选题会带 + 漏斗 shrink-0 钉住,中间三栏 flex-1 占满剩余
+    // 高度、每列框内独立滚动 (整页不再滚动)。
     <div
       data-slot="topics"
       data-testid="topics"
-      className="flex flex-col gap-section-gap"
+      className="flex h-full min-h-0 flex-col gap-4"
     >
-      <header className="flex flex-col gap-1">
+      <header className="flex shrink-0 flex-col gap-1">
         <h1 className="text-xl font-semibold text-foreground">选题中心</h1>
         <p className="text-sm text-muted-foreground">
           从真实信号出题、补全选题卡、择优立项——一条选题从灵感到立项的全流程。
         </p>
       </header>
 
-      {/* 1. AI 选题会 带 */}
-      <TopicGenerateBand basis={overview.basis} />
+      {/* 1. AI 选题会 带 (钉住) */}
+      <div className="shrink-0">
+        <TopicGenerateBand basis={overview.basis} />
+      </div>
 
-      {/* 2. 三栏：来源 / 候选池 / 详情 */}
+      {/* 2. 三栏：来源 / 候选池 / 详情 (flex-1 占满,每列各自框内滚) */}
       <TopicsWorkspace
         candidates={candidates}
         sources={overview.sources}
         sort={sort}
       />
 
-      {/* 3. 选题流转漏斗 */}
-      <FunnelStrip funnel={overview.funnel} />
+      {/* 3. 选题流转漏斗 (钉住底部) */}
+      <div className="shrink-0">
+        <FunnelStrip funnel={overview.funnel} />
+      </div>
     </div>
   );
 }

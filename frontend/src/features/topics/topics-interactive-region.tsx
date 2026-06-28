@@ -526,10 +526,10 @@ function SourcesColumn({
   return (
     <aside
       data-testid="topics-sources"
-      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4"
+      className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4"
     >
-      <h3 className="text-sm font-semibold text-foreground">选题来源</h3>
-      <ul className="flex flex-col gap-1">
+      <h3 className="shrink-0 text-sm font-semibold text-foreground">选题来源</h3>
+      <ul className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         {sources.map((s) => {
           const Icon = SOURCE_ICONS[s.key] ?? Lightbulb;
           return (
@@ -588,39 +588,42 @@ function CandidateDetailPanel({
   return (
     <aside
       data-testid="topics-detail"
-      className="flex flex-col gap-4 rounded-card border border-border bg-surface p-4"
+      className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4"
     >
-      <h3 className="text-sm font-semibold text-foreground">选题卡详情</h3>
+      <h3 className="shrink-0 text-sm font-semibold text-foreground">选题卡详情</h3>
 
-      {candidate === null ? (
-        <div
-          data-testid="detail-no-selection"
-          className="flex flex-1 flex-col items-center justify-center gap-2 py-10 text-center"
-        >
-          <span className="flex size-10 items-center justify-center rounded-full bg-surface-subtle text-text-subtle">
-            <FileText className="size-5" />
-          </span>
-          <p className="text-sm text-muted-foreground">
-            从中间候选池选一条，查看它的选题卡。
-          </p>
-        </div>
-      ) : !candidate.card.oneLiner ? (
-        // card 为空：不显示空字段,给一个 CTA(不编).
-        <div
-          data-testid="detail-empty-card"
-          className="flex flex-1 flex-col items-start gap-3 py-6"
-        >
-          <p className="text-base font-medium text-foreground">
-            {candidate.title}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            这条还没有选题卡。让 AI 按你的定位 + 素材补全一句话选题、观众痛点、推荐结构等。
-          </p>
-          <EnrichButton candidate={candidate} className="h-8 px-3" />
-        </div>
-      ) : (
-        <CandidateCardDetail candidate={candidate} />
-      )}
+      {/* 详情体可能较长 → 框内独立滚动 (列内裁切而非整页滚)。 */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-1">
+        {candidate === null ? (
+          <div
+            data-testid="detail-no-selection"
+            className="flex flex-1 flex-col items-center justify-center gap-2 py-10 text-center"
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-surface-subtle text-text-subtle">
+              <FileText className="size-5" />
+            </span>
+            <p className="text-sm text-muted-foreground">
+              从中间候选池选一条，查看它的选题卡。
+            </p>
+          </div>
+        ) : !candidate.card.oneLiner ? (
+          // card 为空：不显示空字段,给一个 CTA(不编).
+          <div
+            data-testid="detail-empty-card"
+            className="flex flex-1 flex-col items-start gap-3 py-6"
+          >
+            <p className="text-base font-medium text-foreground">
+              {candidate.title}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              这条还没有选题卡。让 AI 按你的定位 + 素材补全一句话选题、观众痛点、推荐结构等。
+            </p>
+            <EnrichButton candidate={candidate} className="h-8 px-3" />
+          </div>
+        ) : (
+          <CandidateCardDetail candidate={candidate} />
+        )}
+      </div>
     </aside>
   );
 }
@@ -734,13 +737,13 @@ function PoolColumn({
     : pool;
 
   return (
-    <section className="flex min-w-0 flex-col gap-3 rounded-card border border-border bg-surface p-4">
-      <div className="flex items-center justify-between gap-2">
+    <section className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4">
+      <div className="flex shrink-0 items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">选题候选池</h3>
         <CreateCandidateForm />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
         <span className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-subtle" />
           <Input
@@ -757,7 +760,7 @@ function PoolColumn({
       <ul
         data-testid="candidate-pool"
         data-sort={sort}
-        className="flex flex-col gap-2"
+        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1"
       >
         {filtered.length === 0 ? (
           <li
@@ -802,9 +805,11 @@ export function TopicsWorkspace({
 
   return (
     <SelectionCtx.Provider value={ctx}>
+      {/* flex-1 min-h-0 → 三栏占满中间剩余高度;每列各自框内滚动 (列内裁切而非整页滚)。
+          窄屏 (无 lg) 退回单列纵向、由外层页面统一处理高度。 */}
       <div
         data-testid="topics-three-column"
-        className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)_360px]"
+        className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)_360px]"
       >
         <SourcesColumn sources={sources} />
         <PoolColumn pool={pool} sort={sort} />

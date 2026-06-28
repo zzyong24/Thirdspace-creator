@@ -187,6 +187,28 @@ describe("AppShell", () => {
     expect(scroll?.contains(content)).toBe(true);
   });
 
+  it("contentFill mode renders a fixed-height fill region without the PageScrollArea (no double scrollbar)", async () => {
+    const { container } = await renderShell({ contentFill: true });
+    // 填满模式：不套 PageScrollArea (避免外层整页滚 + 列内滚的双滚动条)。
+    expect(
+      container.querySelector('[data-slot="page-scroll-area"]'),
+    ).toBeNull();
+    const fill = container.querySelector(
+      '[data-slot="app-page-content"][data-fill="true"]',
+    ) as HTMLElement | null;
+    expect(fill).not.toBeNull();
+    // 页面自填满固定高度 + 自管内部滚动 (h-full / min-h-0 / overflow-hidden)。
+    expect(fill).toHaveClass(
+      "flex",
+      "h-full",
+      "min-h-0",
+      "flex-col",
+      "overflow-hidden",
+    );
+    // children 仍渲染在填满区里。
+    expect(fill?.contains(screen.getByTestId("page-content"))).toBe(true);
+  });
+
   it("applies the shared page gutter and section gap tokens", async () => {
     const { container } = await renderShell();
     const pageContent = container.querySelector(

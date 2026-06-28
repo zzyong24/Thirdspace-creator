@@ -431,9 +431,9 @@ function PendingColumn({
   return (
     <section
       data-testid="calibration-pending"
-      className="flex min-w-0 flex-col gap-3 rounded-card border border-border bg-surface-subtle/40 p-4"
+      className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface-subtle/40 p-4"
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex shrink-0 items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">待校准内容</h3>
         <Badge variant="secondary" className="text-[10px] tabular-nums">
           {subjects.length}
@@ -447,7 +447,8 @@ function PendingColumn({
           没有待校准内容。所有内容都已有盲预测，发布后回流即可校准。
         </p>
       ) : (
-        <ul className="flex max-h-[640px] flex-col gap-2 overflow-y-auto pr-1">
+        // flex 真高度替代之前的 max-h-[640px] 硬高 → 列内独立滚动。
+        <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
           {subjects.map((s) => (
             <PendingSubjectRow key={`${s.subjectType}:${s.subjectId}`} subject={s} />
           ))}
@@ -570,9 +571,9 @@ function PredictionColumn({
     return (
       <section
         data-testid="calibration-prediction"
-        className="flex min-w-0 flex-col gap-3 rounded-card border border-border bg-surface p-4"
+        className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4"
       >
-        <h3 className="text-sm font-semibold text-foreground">发布前预测</h3>
+        <h3 className="shrink-0 text-sm font-semibold text-foreground">发布前预测</h3>
         <div
           data-testid="prediction-no-selection"
           className="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center"
@@ -596,9 +597,9 @@ function PredictionColumn({
   return (
     <section
       data-testid="calibration-prediction"
-      className="flex min-w-0 flex-col gap-3.5 rounded-card border border-border bg-surface p-4"
+      className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4"
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex shrink-0 items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">发布前预测</h3>
         <Badge
           variant={prediction.status === "locked" ? "secondary" : "outline"}
@@ -613,45 +614,48 @@ function PredictionColumn({
         </Badge>
       </div>
 
-      {/* 内容预览 */}
-      <div className="flex flex-col gap-1 rounded-control bg-surface-subtle px-3 py-2.5">
-        <span className="flex items-center gap-1.5 text-[11px] font-medium text-text-subtle">
-          <FileText className="size-3.5 text-brand" />
-          预测对象
-        </span>
-        <span className="text-sm font-medium leading-snug text-foreground">
-          {title ?? prediction.subjectId}
-        </span>
-        <span className="text-[11px] text-muted-foreground">
-          {prediction.subjectType === "publication" ? "已发布作品" : "内容产出"} ·{" "}
-          {prediction.subjectId}
-        </span>
+      {/* 内容预览 + 评分表可能较长 → 框内独立滚动;header 与底部动作钉住。 */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto pr-1">
+        {/* 内容预览 */}
+        <div className="flex flex-col gap-1 rounded-control bg-surface-subtle px-3 py-2.5">
+          <span className="flex items-center gap-1.5 text-[11px] font-medium text-text-subtle">
+            <FileText className="size-3.5 text-brand" />
+            预测对象
+          </span>
+          <span className="text-sm font-medium leading-snug text-foreground">
+            {title ?? prediction.subjectId}
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            {prediction.subjectType === "publication" ? "已发布作品" : "内容产出"} ·{" "}
+            {prediction.subjectId}
+          </span>
+        </div>
+
+        {/* 评估维度评分表 */}
+        {dims.length > 0 ? (
+          <div className="flex flex-col">
+            <span className="mb-1 text-[11px] font-medium text-text-subtle">
+              评估维度评分（变现加权 · 1–5）
+            </span>
+            <ul data-testid="score-table" className="flex flex-col">
+              {dims.map((d) => (
+                <ScoreTableRow
+                  key={d.key}
+                  dim={d}
+                  weightLabel={weightByKey.get(d.key) ?? null}
+                />
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="rounded-control border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
+            这条预测还没有维度评分。
+          </p>
+        )}
       </div>
 
-      {/* 评估维度评分表 */}
-      {dims.length > 0 ? (
-        <div className="flex flex-col">
-          <span className="mb-1 text-[11px] font-medium text-text-subtle">
-            评估维度评分（变现加权 · 1–5）
-          </span>
-          <ul data-testid="score-table" className="flex flex-col">
-            {dims.map((d) => (
-              <ScoreTableRow
-                key={d.key}
-                dim={d}
-                weightLabel={weightByKey.get(d.key) ?? null}
-              />
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p className="rounded-control border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
-          这条预测还没有维度评分。
-        </p>
-      )}
-
-      {/* 底部动作 */}
-      <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
+      {/* 底部动作 (钉住) */}
+      <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border pt-3">
         <span className="text-[11px] text-text-subtle">
           锁定后盲预测不可改，发布后用真实数据校准
         </span>
@@ -678,13 +682,15 @@ function DiagnosisColumn({
   return (
     <aside
       data-testid="calibration-diagnosis"
-      className="flex flex-col gap-3.5 rounded-card border border-border bg-surface p-4"
+      className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4"
     >
-      <h3 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+      <h3 className="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-foreground">
         <Sparkles className="size-4 text-brand" />
         AI 编导诊断
       </h3>
 
+      {/* 诊断体可能较长 → 框内独立滚动。 */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto pr-1">
       {!prediction ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center">
           <span className="flex size-10 items-center justify-center rounded-full bg-surface-subtle text-text-subtle">
@@ -782,6 +788,7 @@ function DiagnosisColumn({
           ) : null}
         </>
       )}
+      </div>
     </aside>
   );
 }
@@ -1049,35 +1056,28 @@ export function CalibrationWorkbench({
     : null;
 
   return (
-    <div className="flex flex-col gap-section-gap">
-      <KpiBand kpis={overview.kpis} />
-
-      <WorkbenchToolbar
-        rubric={rubric}
-        goal={goal}
-        setGoal={setGoal}
-        onNewPrediction={onNewPrediction}
-      />
-
-      {/* 三栏 */}
-      <div
-        data-testid="calibration-three-column"
-        className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_minmax(0,1fr)_340px]"
-      >
-        <PendingColumn subjects={filteredPending} />
-        <PredictionColumn
-          prediction={selected}
-          title={selectedTitle}
-          rubric={rubric}
-        />
-        <DiagnosisColumn prediction={selected} />
+    // 固定高度填满：KPI 带 / 工具条 / 预测选择带 shrink-0 钉在顶部,三栏 flex-1 占满中段、
+    // 每列各自框内滚,底部回流对照 + 经验沉淀作一个高度受限 (≤40%) 的 shrink-0 自滚区
+    // (而非把整页拉长成长滚动)。
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <div className="shrink-0">
+        <KpiBand kpis={overview.kpis} />
       </div>
 
-      {/* 已锁定预测选择带 — quick-switch the middle/right columns across all predictions. */}
+      <div className="shrink-0">
+        <WorkbenchToolbar
+          rubric={rubric}
+          goal={goal}
+          setGoal={setGoal}
+          onNewPrediction={onNewPrediction}
+        />
+      </div>
+
+      {/* 已锁定预测选择带 (钉住) — quick-switch the middle/right columns across all predictions. */}
       {predictions.length > 0 ? (
         <div
           data-testid="prediction-switcher"
-          className="flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface px-3 py-2.5"
+          className="flex shrink-0 flex-wrap items-center gap-2 rounded-card border border-border bg-surface px-3 py-2.5"
         >
           <span className="text-[11px] font-medium text-text-subtle">
             已锁定预测
@@ -1113,9 +1113,25 @@ export function CalibrationWorkbench({
         </div>
       ) : null}
 
-      {/* 底部 */}
-      <ReflowTable rows={overview.reflowRows} subjectTitles={subjectTitles} />
-      <LearningsPanel learnings={overview.learnings} />
+      {/* 三栏 (flex-1 占满中段,每列各自框内滚) */}
+      <div
+        data-testid="calibration-three-column"
+        className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[300px_minmax(0,1fr)_340px]"
+      >
+        <PendingColumn subjects={filteredPending} />
+        <PredictionColumn
+          prediction={selected}
+          title={selectedTitle}
+          rubric={rubric}
+        />
+        <DiagnosisColumn prediction={selected} />
+      </div>
+
+      {/* 底部回流对照 + 经验沉淀：高度受限的自滚区 (≤40% 视高),不把整页拉成长滚动。 */}
+      <div className="flex max-h-[40%] shrink-0 flex-col gap-4 overflow-y-auto pr-1">
+        <ReflowTable rows={overview.reflowRows} subjectTitles={subjectTitles} />
+        <LearningsPanel learnings={overview.learnings} />
+      </div>
     </div>
   );
 }

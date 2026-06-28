@@ -138,35 +138,41 @@ export function PositioningCenterView({
   const isEmpty = profile === null;
 
   return (
+    // 固定高度填满：页头 shrink-0 钉住,两栏 flex-1 占满剩余高度、每列各自框内滚。
     <div
       data-slot="positioning-center"
       data-testid="positioning-center"
-      className="flex flex-col gap-section-gap"
+      className="flex h-full min-h-0 flex-col gap-4"
     >
-      <PageHeader profile={profile} isEmpty={isEmpty} />
+      <div className="shrink-0">
+        <PageHeader profile={profile} isEmpty={isEmpty} />
+      </div>
 
       {isEmpty ? (
-        <SectionCard title="账号定位">
-          <div
-            data-testid="positioning-empty-state"
-            className="flex flex-col items-start gap-3 py-4"
-          >
-            <p className="text-sm text-muted-foreground">
-              还没有账号定位。先创建你的账号画像与第一条定位陈述，下游的选题、评分与变现都会以它为约束源。
-            </p>
-            <PositioningDraftDrawer
-              profile={null}
-              triggerLabel="创建定位"
-              triggerIcon="plus"
-              title="创建定位"
-              description="填写账号画像与第一条定位陈述。"
-            />
-          </div>
-        </SectionCard>
+        <div className="shrink-0">
+          <SectionCard title="账号定位">
+            <div
+              data-testid="positioning-empty-state"
+              className="flex flex-col items-start gap-3 py-4"
+            >
+              <p className="text-sm text-muted-foreground">
+                还没有账号定位。先创建你的账号画像与第一条定位陈述，下游的选题、评分与变现都会以它为约束源。
+              </p>
+              <PositioningDraftDrawer
+                profile={null}
+                triggerLabel="创建定位"
+                triggerIcon="plus"
+                title="创建定位"
+                description="填写账号画像与第一条定位陈述。"
+              />
+            </div>
+          </SectionCard>
+        </div>
       ) : (
-        // 两栏：左主 (英雄区 + AI 区 + 历史表) + 右规则栏 (定位规则). 在窄屏堆叠。
-        <div className="grid grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="flex min-w-0 flex-col gap-section-gap">
+        // 两栏：左主 (英雄区 + AI 区 + 历史表) + 右规则栏 (定位规则). flex-1 占满,每列各自
+        // 框内滚动 (列内裁切而非整页滚)。窄屏 (无 lg) 退回单列。
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="flex min-h-0 min-w-0 flex-col gap-section-gap overflow-y-auto pr-1">
             <HeroMaster
               profile={profile}
               currentStatement={currentStatement}
@@ -409,11 +415,12 @@ function DownstreamRules({
   const shown = rules.filter((x) => x.value.trim().length > 0);
 
   return (
+    // 固定高度下作独立框滚动列 (取代旧的 lg:sticky 整页滚定位)。
     <aside
       data-testid="positioning-downstream"
-      className="flex flex-col gap-3 rounded-card border border-border bg-card p-card-padding lg:sticky lg:top-4 lg:self-start"
+      className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-card p-card-padding"
     >
-      <div className="flex flex-col gap-0.5">
+      <div className="flex shrink-0 flex-col gap-0.5">
         <h2 className="text-[15px] font-semibold text-foreground">
           定位规则（供下游模块使用）
         </h2>
@@ -425,7 +432,7 @@ function DownstreamRules({
       {shown.length > 0 ? (
         <div
           data-testid="positioning-downstream-fields"
-          className="flex flex-col gap-2.5"
+          className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pr-1"
         >
           {shown.map((rule) => (
             <div
