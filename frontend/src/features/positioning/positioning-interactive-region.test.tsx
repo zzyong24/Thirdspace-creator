@@ -28,6 +28,7 @@ vi.mock("@/lib/contract-client", () => ({
 }));
 
 import {
+  PositioningDraftDrawer,
   PositioningProfileForm,
   PositioningStatementForm,
 } from "./positioning-interactive-region";
@@ -92,5 +93,87 @@ describe("PositioningStatementForm", () => {
     expect(arg.body.keywords).toEqual(["论文", "代码", "工程化"]);
     expect(arg.body.oneLiner).toBe("把论文变代码");
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("pre-fills the statement form from a 复制为草稿 seed", () => {
+    render(
+      <PositioningStatementForm
+        seed={{
+          oneLiner: "把论文变代码",
+          keywords: ["论文", "代码", "工程化"],
+          productAnchorIds: ["product-1"],
+        }}
+      />,
+    );
+    expect((screen.getByLabelText("一句话定位") as HTMLTextAreaElement).value).toBe(
+      "把论文变代码",
+    );
+    expect((screen.getByLabelText("关键词 1") as HTMLInputElement).value).toBe(
+      "论文",
+    );
+    expect((screen.getByLabelText("产品锚") as HTMLInputElement).value).toBe(
+      "product-1",
+    );
+    // already valid → submit enabled with no further typing.
+    expect(
+      screen.getByRole("button", { name: "保存新版本定位" }),
+    ).not.toBeDisabled();
+  });
+});
+
+describe("PositioningDraftDrawer", () => {
+  const PROFILE = {
+    id: "profile-1",
+    userId: "user-a",
+    persona: "硬核科普",
+    field: "AI 工程",
+    audience: "开发者",
+    differentiation: "论文到代码",
+    capabilities: ["拆解", "演示"],
+    createdAt: "2026-06-21T00:00:00.000Z",
+    updatedAt: "2026-06-21T00:00:00.000Z",
+  };
+
+  it("opens a drawer that houses BOTH real forms (账号画像 + 新版本定位)", () => {
+    render(
+      <PositioningDraftDrawer
+        profile={PROFILE}
+        triggerLabel="新建定位版本"
+        title="新建定位版本"
+        description="更新账号画像，或追加一条新的不可变定位陈述。"
+      />,
+    );
+    // drawer body is mounted only on open.
+    expect(screen.queryByTestId("positioning-profile-form")).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: /新建定位版本/ }),
+    );
+    expect(screen.getByTestId("positioning-profile-form")).toBeTruthy();
+    expect(screen.getByTestId("positioning-statement-form")).toBeTruthy();
+    // profile form pre-filled from the current profile.
+    expect((screen.getByLabelText("人设") as HTMLInputElement).value).toBe(
+      "硬核科普",
+    );
+  });
+
+  it("seeds the drawer's statement form when given a 复制为草稿 seed", () => {
+    render(
+      <PositioningDraftDrawer
+        profile={PROFILE}
+        triggerLabel="复制为草稿"
+        triggerIcon="none"
+        title="复制 v2 为草稿"
+        description="基于该版本预填，编辑后保存为新版本。"
+        statementSeed={{
+          oneLiner: "v2 把论文变生产级代码",
+          keywords: ["论文", "代码", "工程化"],
+          productAnchorIds: [],
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "复制为草稿" }));
+    expect(
+      (screen.getByLabelText("一句话定位") as HTMLTextAreaElement).value,
+    ).toBe("v2 把论文变生产级代码");
   });
 });

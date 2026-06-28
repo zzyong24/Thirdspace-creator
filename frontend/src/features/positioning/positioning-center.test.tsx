@@ -2,9 +2,14 @@ import * as React from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// The view embeds the client islands (PositioningProfileForm/StatementForm) which
-// call useRouter + client.* — stub both so the render test stays deterministic and
-// network-free (the mutation wiring is asserted in positioning-interactive-region.test).
+// The view embeds client islands: the draft-drawer forms (PositioningProfileForm/
+// StatementForm → upsertProfile/createStatement) AND the AI band
+// (GeneratePositioningIsland → AdoptCandidateCard, which on mount reconciles via
+// client.listAITasks and can poll createAITask/getTask/...). Stub next/navigation +
+// the whole client surface so the render test stays deterministic and network-free.
+// The island's hydration effect is async + catches its own errors, so the synchronous
+// render asserts on layout structure only; the AI create→poll→confirm wiring lives in
+// AdoptCandidateCard's own tests and the positioning-confirm integration test.
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh() {}, push() {}, replace() {} }),
 }));
@@ -12,16 +17,22 @@ vi.mock("@/lib/contract-client", () => ({
   client: {
     upsertProfile: () => Promise.resolve({}),
     createStatement: () => Promise.resolve({}),
+    createAITask: () => Promise.resolve({ id: "t1" }),
+    getTask: () => Promise.resolve({ status: "running" }),
+    listTaskResults: () => Promise.resolve([]),
+    confirmTask: () => Promise.resolve({}),
+    listAITasks: () => Promise.resolve([]),
   },
 }));
 
 import { PositioningCenterView } from "./positioning-center";
 import type { PositioningCenterViewModel } from "./positioning-center";
 
-// 定位中心 page render test (Task 6.4 — viewModel seam). Asserts the empty-state CTA,
-// the current定位 + keyword chips, and the version-desc history timeline. The
-// mutation wiring (client.* + router.refresh) is covered by
-// positioning-interactive-region.test.tsx. Deterministic VM (no network).
+// 定位中心 page render test (Phase B redesign — viewModel seam). Asserts the page
+// header + 新建定位版本 trigger, the empty-state CTA, the 当前定位母版 英雄区
+// (一句话放大 + facet 网格 incl. product anchors), the AI 赋能带, the 下游影响
+// collapsible (real injected facets), and the version-desc history table with the
+// AI badge + 复制为草稿 action. Deterministic VM (no network).
 
 afterEach(cleanup);
 
@@ -65,21 +76,69 @@ const EMPTY: PositioningCenterViewModel = {
 };
 
 describe("PositioningCenterView", () => {
+  it("renders the page header with the title and the 新建定位版本 trigger (populated)", () => {
+    render(<PositioningCenterView viewModel={POPULATED} />);
+    expect(screen.getByText("定位中心")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: /新建定位版本/ }),
+    ).toBeTruthy();
+  });
+
   it("renders the empty-state CTA when there is no profile (brand-new user)", () => {
     render(<PositioningCenterView viewModel={EMPTY} />);
     expect(screen.getByTestId("positioning-empty-state")).toBeTruthy();
     expect(screen.getByRole("button", { name: "创建定位" })).toBeTruthy();
+    // No 英雄区 / AI 带 / history before there is a profile.
+    expect(screen.queryByTestId("positioning-ai-band")).toBeNull();
   });
 
-  it("renders the current one-liner, keyword chips, and product anchors", () => {
+  it("renders the 当前定位母版 英雄区: one-liner enlarged, current pill, facet grid with product anchors", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
     expect(screen.getByTestId("positioning-one-liner").textContent).toContain(
       "v2 把论文变生产级代码",
     );
+    expect(screen.getByTestId("positioning-current-pill").textContent).toContain(
+      "v2",
+    );
     expect(screen.getByText("论文")).toBeTruthy();
-    expect(
-      screen.getByTestId("positioning-product-anchors").textContent,
-    ).toContain("product-1");
+    // facet grid carries the real profile fields incl. the product anchor.
+    const facets = screen.getByTestId("positioning-facets");
+    expect(facets.textContent).toContain("硬核科普");
+    expect(facets.textContent).toContain("product-1");
+  });
+
+  it("drops facets with no value rather than inventing them", () => {
+    const sparse: PositioningCenterViewModel = {
+      ...POPULATED,
+      profile: {
+        ...POPULATED.profile!,
+        audience: "",
+        differentiation: "",
+        capabilities: [],
+      },
+      productAnchors: [],
+    };
+    render(<PositioningCenterView viewModel={sparse} />);
+    const facets = screen.getByTestId("positioning-facets");
+    expect(facets.textContent).toContain("硬核科普"); // persona kept
+    expect(facets.textContent).not.toContain("目标人群"); // empty audience dropped
+    expect(facets.textContent).not.toContain("产品锚"); // empty anchors dropped
+  });
+
+  it("renders the AI 赋能带 with the single real 生成定位建议 button", () => {
+    render(<PositioningCenterView viewModel={POPULATED} />);
+    expect(screen.getByTestId("positioning-ai-band")).toBeTruthy();
+    expect(screen.getByText(/AI 生成定位建议/)).toBeTruthy();
+  });
+
+  it("renders the 下游影响 collapsible with the real injected positioning fields", () => {
+    render(<PositioningCenterView viewModel={POPULATED} />);
+    const panel = screen.getByTestId("positioning-downstream");
+    expect(panel).toBeTruthy();
+    const fields = screen.getByTestId("positioning-downstream-fields");
+    // injected facets actually fed to downstream runners (creative-context).
+    expect(fields.textContent).toContain("差异化");
+    expect(fields.textContent).toContain("论文到代码");
   });
 
   it("renders the history timeline version-desc with the AI badge on AI rows", () => {
@@ -88,5 +147,12 @@ describe("PositioningCenterView", () => {
     expect(rows.map((r) => r.getAttribute("data-version"))).toEqual(["2", "1"]);
     // v1 was AI-suggested → AI 建议 badge present once.
     expect(screen.getByText("AI 建议")).toBeTruthy();
+  });
+
+  it("offers a 复制为草稿 action per history row (createStatement seed) and NO 设为当前", () => {
+    render(<PositioningCenterView viewModel={POPULATED} />);
+    expect(screen.getAllByRole("button", { name: "复制为草稿" }).length).toBe(2);
+    // statements are append-only — there is no real 设为当前 op, so no such button.
+    expect(screen.queryByRole("button", { name: "设为当前" })).toBeNull();
   });
 });
