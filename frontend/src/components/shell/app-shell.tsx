@@ -91,7 +91,9 @@ export function AppShell({
       data-testid="app-shell"
       data-masked={overlayMasked ? "true" : "false"}
       className={cn(
-        "relative flex min-h-screen w-full bg-canvas text-foreground",
+        // 固定整窗高度 + 隐藏外层溢出 → 只让内部 PageScrollArea 滚动(框内滚动,
+        // 而非整页滚动)。Sidebar / TopHeader 因此被钉死。
+        "relative flex h-screen w-full overflow-hidden bg-canvas text-foreground",
         className,
       )}
     >
@@ -103,7 +105,9 @@ export function AppShell({
       />
       <div
         data-slot="app-main-frame"
-        className="relative flex min-h-screen min-w-0 flex-1 flex-col"
+        // h-full + min-h-0 → 主框占满固定高度并允许子级(PageScrollArea)以 flex-1
+        // 撑出可滚区域;TopHeader 自然高度被钉在顶部。
+        className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col"
       >
         <TopHeader
           mode={headerMode}
