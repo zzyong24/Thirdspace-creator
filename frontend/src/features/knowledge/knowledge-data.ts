@@ -295,15 +295,13 @@ function buildMetrics(
           trend: "flat" as const,
         };
       case "km-relations":
-        // Real edge count when we have a signal; otherwise keep the fixture card.
-        return relationCount === null
-          ? card
-          : {
-              ...card,
-              value: formatCount(relationCount),
-              delta: "",
-              trend: "flat" as const,
-            };
+        // KNOW-08:真边数;无信号(空账号/读失败)显真 0,绝不回退 fixture 386(数据要真)。
+        return {
+          ...card,
+          value: formatCount(relationCount ?? 0),
+          delta: "",
+          trend: "flat" as const,
+        };
       case "km-memory":
         // 记忆命中率 has NO read op (no memory analytics). We refuse to render
         // the fixture number (78%) as if real — show a 「规划中」 placeholder so
