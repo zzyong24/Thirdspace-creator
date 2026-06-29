@@ -241,6 +241,8 @@ function normalizeContentRole(
 const DEFAULT_MODEL_FOR_CAPABILITY: Record<string, string> = {
   "research.analyze": "claude-opus-4-8",
   "planning.thesis": "claude-opus-4-8",
+  "planning.contract": "claude-opus-4-8",
+  "planning.outline": "claude-opus-4-8",
   "script.rewrite": "claude-fable-5",
   "copy.generate": "claude-opus-4-8",
   "review.insights": "claude-opus-4-8",

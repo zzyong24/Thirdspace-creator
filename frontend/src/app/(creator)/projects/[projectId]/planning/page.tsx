@@ -41,13 +41,15 @@ export default async function PlanningWorkspaceRoute({
   const client = createServerClient(
     session.ctx,
   ) as unknown as PlanningDataClient;
-  const { viewModel, thesisArtifactId } =
+  const { viewModel, thesisArtifactId, contractArtifactId, outlineArtifactId } =
     await buildPlanningWorkspaceViewModel(projectId, client);
   return (
     <PlanningWorkspacePage
       projectId={projectId}
       viewModel={viewModel}
       thesisArtifactId={thesisArtifactId}
+      contractArtifactId={contractArtifactId}
+      outlineArtifactId={outlineArtifactId}
     />
   );
 }

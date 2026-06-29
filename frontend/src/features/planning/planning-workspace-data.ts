@@ -2,7 +2,11 @@ import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
 import { buildPlanningViewModel } from "@/fixtures/selectors";
-import type { PlanningViewModel, ThesisNodeView } from "@/types/view-models";
+import type {
+  ContractCard,
+  PlanningViewModel,
+  ThesisNodeView,
+} from "@/types/view-models";
 
 /**
  * 策划工作台读侧做真 — assemble a REAL `PlanningViewModel` so a real/newly-created
@@ -112,12 +116,18 @@ export interface PlanningDataClient {
 }
 
 const THESIS_ARTIFACT_TYPE = "thesis_tree";
+const CONTRACT_ARTIFACT_TYPE = "content_contract";
+const OUTLINE_ARTIFACT_TYPE = "content_outline";
 
-// Read the project's `thesis_tree` artifact id, creating one on demand when a real project
-// has none yet (so the planning.thesis node always has a write target). Returns null only
-// when the artifact cannot be resolved or created (the island then hides the 采纳 surface).
-async function resolveThesisArtifactId(
+// Read the project's artifact id for `artifactType`, creating one on demand when a real
+// project has none yet (so the matching planning AI node always has a write target).
+// Returns null only when the artifact cannot be resolved or created (the island then hides
+// the 采纳 surface). Generalized over artifactType so the 论点树/内容合同/结构方案 nodes all
+// share one getOrCreate path.
+async function resolveArtifactId(
   projectId: string,
+  artifactType: string,
+  title: string,
   client: PlanningDataClient,
 ): Promise<string | null> {
   if (!client.listArtifacts) return null;
@@ -128,20 +138,55 @@ async function resolveThesisArtifactId(
       body: undefined,
     });
     const rows = (Array.isArray(listed) ? listed : []) as ArtifactDto[];
-    const existing = rows.find((a) => a.artifactType === THESIS_ARTIFACT_TYPE);
+    const existing = rows.find((a) => a.artifactType === artifactType);
     if (existing) return existing.id;
-    // No thesis_tree artifact yet — create one so the AI node can append a version onto it.
+    // No artifact of this type yet — create one so the AI node can append a version onto it.
     if (!client.createArtifact) return null;
     const created = (await client.createArtifact({
       params: { projectId },
       query: undefined,
-      body: {
-        title: "论点树",
-        artifactType: THESIS_ARTIFACT_TYPE,
-        stage: "planning",
-      },
+      body: { title, artifactType, stage: "planning" },
     })) as ArtifactDto;
     return typeof created?.id === "string" ? created.id : null;
+  } catch {
+    return null;
+  }
+}
+
+// Read the content_contract artifact's CURRENT version's `contentData.cards` → the four
+// ContractCard view-model slots (reader side of the writer↔reader contract). Returns null
+// when there is no version, no cards, or a read/parse failure (the page then keeps the
+// fixture scaffolding cards).
+async function loadContractCards(
+  artifactId: string | null,
+  client: PlanningDataClient,
+): Promise<ReadonlyArray<ContractCard> | null> {
+  if (!artifactId || !client.listArtifactVersions) return null;
+  try {
+    const versions = await client.listArtifactVersions({
+      params: { artifactId },
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    });
+    const rows = (Array.isArray(versions) ? versions : []) as ArtifactVersionDto[];
+    if (rows.length === 0) return null;
+    const current = rows
+      .slice()
+      .sort((a, b) => b.versionNumber - a.versionNumber)[0];
+    const rawCards = (current?.contentData as { cards?: unknown } | undefined)
+      ?.cards;
+    if (!Array.isArray(rawCards) || rawCards.length === 0) return null;
+    const out: ContractCard[] = [];
+    rawCards.forEach((raw, i) => {
+      const o = (raw ?? {}) as Record<string, unknown>;
+      const id = typeof o.id === "string" && o.id ? o.id : `contract-${i}`;
+      const title = typeof o.title === "string" ? o.title : "";
+      const body = typeof o.body === "string" ? o.body : "";
+      if (!title && !body) return;
+      // An AI-adopted contract card is a signed承诺 → status "approved".
+      out.push({ id, title, description: body, status: "approved" });
+    });
+    return out.length > 0 ? out : null;
   } catch {
     return null;
   }
@@ -274,6 +319,12 @@ export interface PlanningWorkspaceData {
   // appends a new ArtifactVersion onto. null when it could not be resolved/created (the
   // island then hides the 采纳 surface).
   thesisArtifactId: string | null;
+  // The project's content_contract artifact id — the write target the planning.contract
+  // node appends onto. null when unresolved (island hidden).
+  contractArtifactId: string | null;
+  // The project's content_outline artifact id — the write target the planning.outline
+  // node appends onto. null when unresolved (island hidden).
+  outlineArtifactId: string | null;
 }
 
 export async function buildPlanningWorkspaceViewModel(
@@ -292,10 +343,20 @@ export async function buildPlanningWorkspaceViewModel(
   } catch {
     // Unknown / cross-user / unreadable project → keep the fixture VM (preserves the
     // "未找到项目" empty-state for genuinely invalid ids).
-    return { viewModel: fixture, thesisArtifactId: null };
+    return {
+      viewModel: fixture,
+      thesisArtifactId: null,
+      contractArtifactId: null,
+      outlineArtifactId: null,
+    };
   }
   if (!project || typeof project.title !== "string") {
-    return { viewModel: fixture, thesisArtifactId: null };
+    return {
+      viewModel: fixture,
+      thesisArtifactId: null,
+      contractArtifactId: null,
+      outlineArtifactId: null,
+    };
   }
 
   // The fixture is rich ONLY for canonical demo projects; for an unknown id it returns the
@@ -307,8 +368,31 @@ export async function buildPlanningWorkspaceViewModel(
       : "（暂无核心论点——用 AI 起草论点树后回填）";
 
   // Resolve the thesis_tree artifact (create on demand) + read its current 论点树.
-  const thesisArtifactId = await resolveThesisArtifactId(projectId, client);
+  const thesisArtifactId = await resolveArtifactId(
+    projectId,
+    THESIS_ARTIFACT_TYPE,
+    "论点树",
+    client,
+  );
   const realThesisTree = await loadThesisTree(thesisArtifactId, client);
+
+  // Resolve the content_contract + content_outline artifacts (create on demand) so the
+  // planning.contract / planning.outline nodes always have a write target. Read the
+  // contract's current cards back so an adopted 内容合同 surfaces real承诺 (overriding the
+  // fixture scaffolding cards).
+  const contractArtifactId = await resolveArtifactId(
+    projectId,
+    CONTRACT_ARTIFACT_TYPE,
+    "内容合同",
+    client,
+  );
+  const outlineArtifactId = await resolveArtifactId(
+    projectId,
+    OUTLINE_ARTIFACT_TYPE,
+    "结构方案",
+    client,
+  );
+  const realContractCards = await loadContractCards(contractArtifactId, client);
 
   // 关键素材: resolve the project's real material-links (planning/research stage) →
   // asset/knowledge display names. null ⇒ read unavailable/failed (fixture fallback);
@@ -326,6 +410,12 @@ export async function buildPlanningWorkspaceViewModel(
   const keyMaterials: PlanningViewModel["keyMaterials"] =
     realKeyMaterials ?? (fixtureIsPlaceholder ? [] : fixture.keyMaterials);
 
+  // 内容合同: an AI-adopted contract (contentData.cards) wins; else the fixture's 4 locked
+  // scaffolding cards for a canonical demo project; else the scaffolding cards for a real
+  // project (they are structural slots, not fake data — the AI fills them on 采纳).
+  const contracts: ReadonlyArray<ContractCard> =
+    realContractCards ?? fixture.contracts;
+
   return {
     viewModel: {
       ...fixture,
@@ -335,14 +425,17 @@ export async function buildPlanningWorkspaceViewModel(
         title: project.title,
         body: brief,
       },
-      // Keep the 4 locked content-contract cards (structural scaffolding, no producer).
-      // For a real non-fixture project the evidence map has no real producer yet → empty
-      // state; 关键素材 IS real (material-links fan-out above), 论点树 is real once adopted.
-      contracts: fixture.contracts,
+      // 内容合同 is real once adopted (planning.contract → content_contract artifact); until
+      // then the 4 locked cards are structural scaffolding. For a real non-fixture project
+      // the evidence map has no real producer yet → empty state; 关键素材 IS real
+      // (material-links fan-out above), 论点树 is real once adopted.
+      contracts,
       thesisTree,
       evidenceMap: fixtureIsPlaceholder ? [] : fixture.evidenceMap,
       keyMaterials,
     },
     thesisArtifactId,
+    contractArtifactId,
+    outlineArtifactId,
   };
 }
