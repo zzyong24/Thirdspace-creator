@@ -803,11 +803,14 @@ function SettingsGroup({
                     />
                   </button>
                 ) : (
+                  // PROD-14/19:这些是静态示例配置(无每项目读写),标"示例"避免被当真实配置。
                   <span
                     data-slot="settings-row-value"
-                    className="inline-flex h-6 items-center rounded-md border border-border bg-surface-subtle px-2 text-[11px] font-medium text-foreground"
+                    title="示例配置（暂不可改）"
+                    className="inline-flex h-6 items-center gap-1 rounded-md border border-border bg-surface-subtle px-2 text-[11px] font-medium text-muted-foreground"
                   >
                     {item.value}
+                    <span className="text-[9px] text-text-subtle">示例</span>
                   </span>
                 )}
               </li>
