@@ -5,4 +5,4 @@
 // here via the public identity entry (no deep import). Re-exported so the service
 // + tests reference one class.
 
-export { OwnershipError } from "@/server/modules/identity";
+export { OwnershipError } from "@creatoros/backend";

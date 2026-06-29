@@ -27,3 +27,20 @@ export class AuthenticationError extends Error {
     Object.setPrototypeOf(this, AuthenticationError.prototype);
   }
 }
+
+/**
+ * Ownership / not-found-for-this-scope failure (maps to HTTP 404 via
+ * `ErrorCode.OwnershipError`). Shared-infra canonical home so backend modules
+ * raise it WITHOUT importing the identity module (前后端分离:模块不跨依赖 identity)。
+ * The identity module keeps a mirror class carrying the SAME `.code`; the dispatch
+ * route mapper resolves both to 404 structurally by `.code`, never by instanceof.
+ */
+export class OwnershipError extends Error {
+  readonly code = ErrorCode.OwnershipError;
+
+  constructor(message = "Not found") {
+    super(message);
+    this.name = "OwnershipError";
+    Object.setPrototypeOf(this, OwnershipError.prototype);
+  }
+}

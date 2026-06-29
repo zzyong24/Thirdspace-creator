@@ -5,7 +5,7 @@
 // are user-scoped upserts/creates, so most operations cannot ownership-fail; this
 // class exists for the rare not-found path (and the account read delegates to
 // Identity, which throws its own OwnershipError on a missing user).
-export { OwnershipError } from "@/server/modules/identity";
+export { OwnershipError } from "@creatoros/backend";
 
 import { ErrorCode } from "@creatoros/contract";
 

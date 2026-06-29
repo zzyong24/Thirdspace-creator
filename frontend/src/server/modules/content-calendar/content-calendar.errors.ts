@@ -8,7 +8,7 @@
 // mapping consistent with the sibling platform-account module.
 import { ErrorCode } from "@creatoros/contract";
 
-export { OwnershipError } from "@/server/modules/identity";
+export { OwnershipError } from "@creatoros/backend";
 export {
   UnsupportedOperationError,
   AuthenticationError,

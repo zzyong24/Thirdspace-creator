@@ -15,7 +15,7 @@ export {
   createPersistenceTransport,
   UnsupportedOperationError,
 } from "./persistence-transport";
-export { AuthenticationError } from "./errors";
+export { AuthenticationError, OwnershipError } from "./errors";
 export {
   projects,
   projectActivities,

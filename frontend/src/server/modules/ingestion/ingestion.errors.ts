@@ -4,7 +4,7 @@
 // tenants, SPEC §20). `UnsupportedOperationError` / `AuthenticationError` are
 // re-exported from shared infra so the transport's default + no-ctx branches raise
 // them (the composite never masks a real error).
-export { OwnershipError } from "@/server/modules/identity";
+export { OwnershipError } from "@creatoros/backend";
 export {
   UnsupportedOperationError,
   AuthenticationError,

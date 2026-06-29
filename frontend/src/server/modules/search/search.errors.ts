@@ -6,4 +6,4 @@
 // its operations are idempotent no-ops rather than ownership failures; this class
 // exists for the rare not-found path so a cross-user reference surfaces as 404
 // structurally (by `.code`) exactly like every other module's ownership failures.
-export { OwnershipError } from "@/server/modules/identity";
+export { OwnershipError } from "@creatoros/backend";

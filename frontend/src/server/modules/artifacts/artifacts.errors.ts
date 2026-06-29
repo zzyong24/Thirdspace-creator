@@ -11,7 +11,7 @@
 // route maps it to 409 without importing the class.
 import { ErrorCode } from "@creatoros/contract";
 
-export { OwnershipError } from "@/server/modules/identity";
+export { OwnershipError } from "@creatoros/backend";
 
 export class ConflictError extends Error {
   readonly code = ErrorCode.ConflictError;

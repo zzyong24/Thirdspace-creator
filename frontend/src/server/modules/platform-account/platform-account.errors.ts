@@ -17,7 +17,7 @@
 // real error).
 import { ErrorCode } from "@creatoros/contract";
 
-export { OwnershipError } from "@/server/modules/identity";
+export { OwnershipError } from "@creatoros/backend";
 export {
   UnsupportedOperationError,
   AuthenticationError,

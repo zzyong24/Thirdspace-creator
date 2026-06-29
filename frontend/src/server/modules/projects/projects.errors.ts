@@ -9,7 +9,7 @@
 // `.code` so the dispatch route maps them by code without importing each class.
 import { ErrorCode } from "@creatoros/contract";
 
-export { OwnershipError } from "@/server/modules/identity";
+export { OwnershipError } from "@creatoros/backend";
 
 export class StageTransitionError extends Error {
   readonly code = ErrorCode.ConflictError;

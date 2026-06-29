@@ -16,7 +16,7 @@
 //     head-object checks).
 import { ErrorCode } from "@creatoros/contract";
 
-export { OwnershipError } from "@/server/modules/identity";
+export { OwnershipError } from "@creatoros/backend";
 
 export class InvalidTransitionError extends Error {
   readonly code = ErrorCode.ConflictError;
