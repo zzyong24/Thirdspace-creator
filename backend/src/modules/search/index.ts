@@ -38,3 +38,5 @@ export {
   type GlobalSearchPage,
   type SearchDocumentResource,
 } from "./search.schema";
+
+export { buildCanonicalSearchDocuments } from "./search.seed";

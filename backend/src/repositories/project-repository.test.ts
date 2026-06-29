@@ -78,7 +78,7 @@ describe("ProjectRepository (pglite-backed real persistence)", () => {
       userId: "user-1",
       title: "种子项目",
       brief: "",
-      briefDetail: null,
+      briefDetail: {},
       contentCategory: "",
       creationMode: "guided",
       status: "active",

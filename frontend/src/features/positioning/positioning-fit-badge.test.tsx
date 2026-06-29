@@ -3,7 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { PositioningFitBadge } from "./positioning-fit-badge";
-import type { PositioningGateResultResource } from "@/server/modules/positioning";
+import type { PositioningGateResultResource } from "@creatoros/backend/modules/positioning";
 
 // 定位契合度 Badge test (Task 6.4). With the viewModel seam (no network) it asserts
 // the returned positioningFit renders and the Badge stays non-blocking when below

@@ -48,7 +48,7 @@ import type {
   CreatorProfileResource,
   PositioningCenterResource,
   PositioningStatementResource,
-} from "@/server/modules/positioning";
+} from "@creatoros/backend/modules/positioning";
 
 import { GeneratePositioningIsland } from "./generate-positioning-island";
 import { PositioningDraftDrawer } from "./positioning-interactive-region";

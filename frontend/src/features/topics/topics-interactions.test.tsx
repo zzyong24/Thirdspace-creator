@@ -53,7 +53,7 @@ import { TopicsView } from "./topics-page";
 import type {
   CandidateResource,
   TopicsOverviewResource,
-} from "@/server/modules/candidate";
+} from "@creatoros/backend/modules/candidate";
 
 const ISO = "2026-06-21T00:00:00.000Z";
 

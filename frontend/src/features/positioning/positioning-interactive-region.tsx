@@ -62,7 +62,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { CreatorProfileResource } from "@/server/modules/positioning";
+import type { CreatorProfileResource } from "@creatoros/backend/modules/positioning";
 
 // Shared island mutation seam: a `pending` guard blocks concurrent writes; on
 // success it calls router.refresh() so the server re-reads the persisted rows,

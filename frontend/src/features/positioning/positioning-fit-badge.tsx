@@ -21,7 +21,7 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
-import type { PositioningGateResultResource } from "@/server/modules/positioning";
+import type { PositioningGateResultResource } from "@creatoros/backend/modules/positioning";
 
 export interface PositioningFitBadgeProps {
   readonly projectId: string;

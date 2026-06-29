@@ -35,7 +35,7 @@ import { cn } from "@/lib/utils";
 import type {
   CandidateResource,
   TopicsOverviewResource,
-} from "@/server/modules/candidate";
+} from "@creatoros/backend/modules/candidate";
 
 import {
   TopicsWorkspace,

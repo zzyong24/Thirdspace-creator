@@ -44,14 +44,14 @@ import {
   createNotificationsTransport,
   NOTIFICATION_OP_IDS,
   type NotificationRow,
-} from "@/server/modules/notifications";
+} from "@creatoros/backend/modules/notifications";
 import {
   createSearchRepository,
   createSearchService,
   createSearchTransport,
   SEARCH_OP_IDS,
-} from "@/server/modules/search";
-import { buildCanonicalSearchDocuments } from "@/server/modules/search/search.seed";
+} from "@creatoros/backend/modules/search";
+import { buildCanonicalSearchDocuments } from "@creatoros/backend/modules/search";
 import {
   createSettingsRepository,
   createSettingsService,
@@ -75,7 +75,7 @@ import {
   type OutputStageRow,
   type TaskRow,
   type ActivityRow,
-} from "@/server/modules/projects";
+} from "@creatoros/backend/modules/projects";
 import {
   createKnowledgeRepository,
   createKnowledgeService,
@@ -124,19 +124,19 @@ import {
   createAnalyticsService,
   createAnalyticsTransport,
   ANALYTICS_OP_IDS,
-} from "@/server/modules/analytics";
+} from "@creatoros/backend/modules/analytics";
 import {
   createIngestionRepository,
   createIngestionService,
   createIngestionTransport,
   createMockIngestionSource,
   INGESTION_OP_IDS,
-} from "@/server/modules/ingestion";
+} from "@creatoros/backend/modules/ingestion";
 import {
   createReviewsService,
   createReviewsTransport,
   REVIEWS_OP_IDS,
-} from "@/server/modules/reviews";
+} from "@creatoros/backend/modules/reviews";
 import {
   createLearningsService,
   createLearningsTransport,
@@ -175,21 +175,21 @@ import {
   POSITIONING_OP_IDS,
   type CreatorProfileRow,
   type PositioningStatementRow,
-} from "@/server/modules/positioning";
+} from "@creatoros/backend/modules/positioning";
 import {
   createMonetizationService,
   createMonetizationTransport,
   createMonetizationRepository,
   MONETIZATION_OP_IDS,
   type ProductRow as MonetizationProductRow,
-} from "@/server/modules/monetization";
+} from "@creatoros/backend/modules/monetization";
 import {
   createCandidateService,
   createCandidateTransport,
   createCandidateRepository,
   CANDIDATE_OP_IDS,
   type CandidateRow,
-} from "@/server/modules/candidate";
+} from "@creatoros/backend/modules/candidate";
 import {
   createCalibrationService,
   createCalibrationTransport,
@@ -200,7 +200,7 @@ import {
   type PredictionRow as CalibrationPredictionRow,
   type CalibrationResultRow,
   type RuleSuggestionRow as CalibrationRuleSuggestionRow,
-} from "@/server/modules/calibration";
+} from "@creatoros/backend/modules/calibration";
 import {
   createPlatformAccountService,
   createPlatformAccountTransport,
@@ -218,7 +218,7 @@ import {
   createMaterialLinksService,
   createMaterialLinksTransport,
   MATERIAL_LINKS_OP_IDS,
-} from "@/server/modules/material-links";
+} from "@creatoros/backend/modules/material-links";
 import {
   createDashboardQueryService,
   createProjectOverviewQueryService,

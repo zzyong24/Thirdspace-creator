@@ -5,7 +5,7 @@ import { createAiService, type AiArtifactsPort } from "./ai.service";
 import {
   createPositioningService,
   type PositioningService,
-} from "@/server/modules/positioning/positioning.service";
+} from "@creatoros/backend/modules/positioning";
 
 // 定位生成采纳真落库 (Plan Phase A / OQ2). The unit ai.service.test mocks the positioning
 // port; THIS integration test wires the REAL positioningService as the AI module's

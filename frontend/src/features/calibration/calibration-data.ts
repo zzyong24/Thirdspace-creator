@@ -31,7 +31,7 @@ import type {
   CalibrationOverviewResource,
   PredictionResource,
   RubricResource,
-} from "@/server/modules/calibration";
+} from "@creatoros/backend/modules/calibration";
 
 const CANONICAL_RUBRIC_ID = "rubric-canonical";
 

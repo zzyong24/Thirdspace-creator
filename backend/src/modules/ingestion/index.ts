@@ -51,4 +51,6 @@ export { OwnershipError } from "./ingestion.errors";
 export {
   ingestionRunResource,
   type IngestionRunResource,
+  type MetricRecord,
+  parseMetricRecord,
 } from "./ingestion.schema";

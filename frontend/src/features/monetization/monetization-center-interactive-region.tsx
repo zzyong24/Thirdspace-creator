@@ -26,7 +26,7 @@ import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import type { ProductResource, LeadResource } from "@/server/modules/monetization";
+import type { ProductResource, LeadResource } from "@creatoros/backend/modules/monetization";
 
 // Shared island mutation seam: a `pending` guard blocks concurrent writes; on success
 // it calls router.refresh() so the server re-reads the persisted rows.

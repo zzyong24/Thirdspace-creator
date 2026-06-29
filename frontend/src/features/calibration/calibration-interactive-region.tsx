@@ -58,7 +58,7 @@ import type {
   CalibrationOverviewResource,
   PredictionResource,
   RubricResource,
-} from "@/server/modules/calibration";
+} from "@creatoros/backend/modules/calibration";
 
 // ── shared mutation seam ────────────────────────────────────────────────────────
 function useMutation() {

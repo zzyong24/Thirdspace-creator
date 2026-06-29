@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: refactor/agent-and-structure @ 40fde5c
+LAST_SYNCED: refactor/agent-and-structure @ e877cb3
 
 ## 这是什么(定位)
 
@@ -14,9 +14,9 @@ CreatorOS —— 自媒体「编导创作操作系统」:项目/选题/研究/�
 
 ## 重构进度:物理架构边界(门卫)
 
-剩余违规 **298** 条(目标 0,随 Phase 2 消减):
+剩余违规 **178** 条(目标 0,随 Phase 2 消减):
 
-- 266 × `R1-no-backend-in-frontend`
+- 146 × `R1-no-backend-in-frontend`
 - 31 × `R2-no-agent-sdk-in-frontend-pages`
 - 1 × `R3-no-cross-module-repository-import`
 
@@ -37,5 +37,5 @@ CreatorOS —— 自媒体「编导创作操作系统」:项目/选题/研究/�
 
 ## 模块地图(生成自 backend/src/modules)
 
-`taxonomy`
+`analytics` · `calibration` · `candidate` · `ingestion` · `material-links` · `monetization` · `notifications` · `positioning` · `projects` · `reviews` · `search` · `taxonomy`
 

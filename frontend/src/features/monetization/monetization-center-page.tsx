@@ -23,7 +23,7 @@ import type {
   ProductResource,
   LeadResource,
   MonetizationFunnelResource,
-} from "@/server/modules/monetization";
+} from "@creatoros/backend/modules/monetization";
 
 /**
  * Structural seam for the server reads. The route passes a session-scoped

@@ -1,5 +1,5 @@
 import "server-only";
-import type { MetricRecord } from "@/server/modules/ingestion/ingestion.schema";
+import type { MetricRecord } from "@creatoros/backend/modules/ingestion";
 
 // 抖音真实指标抓取适配器(线 B)。通过 Chrome CDP 连用户**常驻已登录**的浏览器
 // (chromium.connectOverCDP),拦截创作者中心 XHR 拿 JSON,映射成 ingestion 的

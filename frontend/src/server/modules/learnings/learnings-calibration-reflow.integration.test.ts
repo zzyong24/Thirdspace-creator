@@ -9,7 +9,7 @@ import {
 import {
   createCalibrationService,
   type CalibrationService,
-} from "@/server/modules/calibration";
+} from "@creatoros/backend/modules/calibration";
 
 // 复盘飞轮回流 轨B (Learning→校准) — end-to-end integration over ONE pglite db, wiring the
 // REAL Learnings service to the REAL Calibration service through the same injected port the

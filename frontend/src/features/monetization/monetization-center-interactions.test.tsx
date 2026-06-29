@@ -51,7 +51,7 @@ import type {
   ProductResource,
   LeadResource,
   MonetizationFunnelResource,
-} from "@/server/modules/monetization";
+} from "@creatoros/backend/modules/monetization";
 
 const PRODUCT: ProductResource = {
   id: "prod-1",

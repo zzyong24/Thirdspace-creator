@@ -31,7 +31,7 @@ import {
 
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
-import type { TopicsOverviewResource } from "@/server/modules/candidate";
+import type { TopicsOverviewResource } from "@creatoros/backend/modules/candidate";
 
 type Basis = "positioning" | "comments" | "knowledge" | "trend";
 type Phase = "idle" | "running" | "review" | "done" | "error";
