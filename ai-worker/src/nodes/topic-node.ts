@@ -24,6 +24,8 @@ export interface RunTopicNodeInput {
   model: LanguageModel;
   /** 装配好的定位简报(creative-context 产)。 */
   positioningBrief: string;
+  /** 按出题依据装配的额外上下文(评论信号 / 知识库…),让各 basis 真的不同。 */
+  basisBrief?: string;
   /** 出题依据。 */
   basis: TopicBasis;
   /** 步骤回调 —— 喂窗口步骤日志。 */
@@ -40,13 +42,16 @@ const BASIS_HINT: Record<TopicBasis, string> = {
 function buildPrompt(
   positioningBrief: string,
   basis: TopicBasis,
+  basisBrief?: string,
 ): { system: string; prompt: string } {
-  // 提示词模板化解耦(脊柱-1):system/正文来自外置模板,这里只装配 facets(定位兜底 + 依据提示)。
+  // 提示词模板化解耦(脊柱-1):system/正文来自外置模板,这里只装配 facets(定位兜底 + 依据提示 + 依据上下文)。
   // 换写作方法论 = 换 TOPIC_GENERATE_TEMPLATE,不动本 runner。
   return bindPrompt(TOPIC_GENERATE_TEMPLATE, {
     positioning:
       positioningBrief || "（创作者尚未设置定位——按通用爆款逻辑出题）",
     basisHint: BASIS_HINT[basis],
+    // Sfix:把出题依据对应的真实上下文(评论信号 / 知识库)注进去,让各 basis 真的不同。
+    basisContext: basisBrief ? `\n\n【依据材料】\n${basisBrief}` : "",
   });
 }
 
@@ -93,7 +98,11 @@ export interface RunTopicNodeResult {
 export async function runTopicNode(
   input: RunTopicNodeInput,
 ): Promise<RunTopicNodeResult> {
-  const { system, prompt } = buildPrompt(input.positioningBrief, input.basis);
+  const { system, prompt } = buildPrompt(
+    input.positioningBrief,
+    input.basis,
+    input.basisBrief,
+  );
   const res = await runAgentNode({
     model: input.model,
     system,

@@ -12,7 +12,7 @@ export const TOPIC_GENERATE_TEMPLATE: PromptTemplate = {
   template: `【创作者定位】
 {{positioning}}
 
-【出题依据】{{basisHint}}
+【出题依据】{{basisHint}}{{basisContext}}
 
 【任务】产 6-8 条高潜力选题。每条按 钩子强度/定位契合/变现潜力 衡量。
 【输出】只输出一个 JSON 数组,每条:{"title","angle"(切入一句),"contentRole"(traffic|trust|conversion),"source"(trend|benchmark|demand),"predictedScore"(0-100),"reason"(一句中文)}。不要多余文字、不要代码块包裹。`,

@@ -26,18 +26,21 @@ export interface RunTopicTaskInput {
   taskId: string;
   model: LanguageModel;
   positioningBrief: string;
+  /** 按出题依据装配的额外上下文(评论信号 / 知识库…),让各 basis 真的不同。 */
+  basisBrief?: string;
   basis: TopicBasis;
   ports: TopicTaskPorts;
 }
 
 /** 跑完整一次选题任务。fire-and-forget 调用方无需 await 结果,异常已内部收敛成 cancelTask。 */
 export async function runTopicTask(input: RunTopicTaskInput): Promise<void> {
-  const { taskId, model, positioningBrief, basis, ports } = input;
+  const { taskId, model, positioningBrief, basisBrief, basis, ports } = input;
   try {
     await ports.markRunning(taskId);
     const { topics } = await runTopicNode({
       model,
       positioningBrief,
+      basisBrief,
       basis,
       onStep: async (e) => {
         await ports.recordStep(taskId, {

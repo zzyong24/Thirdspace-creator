@@ -63,11 +63,20 @@ export async function runTopicGenerateV2(
       { projectId: null, topic: "" },
       deps,
     );
+    // Sfix(basis 装配 bug):按出题依据装配对应 brief 一起喂进去,让 4 个按钮真的不同
+    // (评论→评论信号 / 知识→知识库)。之前只传 positioningBrief,导致各 basis 出一样的题。
+    const basisBrief =
+      basis === "comments"
+        ? context.signalsBrief
+        : basis === "knowledge"
+          ? context.knowledgeBrief
+          : "";
     // 4) 跑整条编排:markRunning → 跑节点(发步骤)→ recordCandidate;失败 cancelTask。
     await runTopicTask({
       taskId: task.id,
       model: modelFor(spec),
       positioningBrief: context.positioningBrief,
+      basisBrief,
       basis,
       ports: {
         markRunning: (id: string) => deps.ai.markRunning(ctx, id),
