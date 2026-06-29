@@ -93,7 +93,7 @@ async function importLayout() {
 // a fresh identity module, so we import the error from that same fresh graph
 // (after resetModules) rather than a stale top-level import.
 async function importAuthenticationError() {
-  return (await import("@/server/modules/identity")).AuthenticationError;
+  return (await import("@creatoros/backend/modules/identity")).AuthenticationError;
 }
 
 beforeEach(() => {

@@ -4,7 +4,7 @@ import { POST as logoutPOST } from "./logout/route";
 import { GET as meGET } from "./me/route";
 import { resetStore } from "@/server/mock-backend/index";
 import { __resetPersistenceForTests } from "@/server/persistence-client";
-import { DEV_PASSWORD, CANONICAL_USER_ID } from "@/server/modules/identity";
+import { DEV_PASSWORD, CANONICAL_USER_ID } from "@creatoros/backend/modules/identity";
 
 // Module 00, Task 9 — the three bare auth routes (foundation §2, SPEC §13):
 //   POST /api/v1/auth/login   — email+password → set httpOnly session cookie

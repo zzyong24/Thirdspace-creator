@@ -5,7 +5,7 @@ import { getIdentityService } from "@/server/persistence-client";
 import {
   AuthenticationError,
   type UserDTO,
-} from "@/server/modules/identity";
+} from "@creatoros/backend/modules/identity";
 import { SESSION_COOKIE } from "@/app/api/v1/auth/_session";
 
 // Server-only session helper (Module 00, Task 11). The (creator) layout session

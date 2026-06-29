@@ -31,7 +31,7 @@ import {
   createIdentityService,
   seedCanonicalUser,
   type IdentityService,
-} from "@/server/modules/identity";
+} from "@creatoros/backend/modules/identity";
 import {
   createTaxonomyRepository,
   createTaxonomyService,
@@ -61,7 +61,7 @@ import {
   type ModelConfigurationRow,
   type UserPreferenceRow,
   type AgentConfigurationRow,
-} from "@/server/modules/settings";
+} from "@creatoros/backend/modules/settings";
 import {
   createProjectRepository,
   createProjectsService,

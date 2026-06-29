@@ -9,7 +9,7 @@ import { compositeTransport, getIdentityService } from "@/server/persistence-cli
 import {
   AuthenticationError,
   OwnershipError,
-} from "@/server/modules/identity";
+} from "@creatoros/backend/modules/identity";
 import { readSessionCookie } from "../auth/_session";
 
 // RPC dispatch over HTTP. The browser's HttpTransport POSTs { id, input };

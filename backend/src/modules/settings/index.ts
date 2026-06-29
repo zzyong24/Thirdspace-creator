@@ -16,6 +16,7 @@ export {
   type AccountWriter,
   type AccountProfilePatch,
   type ResolvedModel,
+  type ModelConfigInternal,
 } from "./settings.service";
 
 export {

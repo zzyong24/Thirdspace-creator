@@ -4,7 +4,7 @@ import { getIdentityService } from "@/server/persistence-client";
 import {
   AuthenticationError,
   OwnershipError,
-} from "@/server/modules/identity";
+} from "@creatoros/backend/modules/identity";
 import { errorResponse, nextRequestId, readSessionCookie } from "../_session";
 
 // GET /api/v1/auth/me (Module 00, Task 9). Read the cookie → resolve ctx →

@@ -1,6 +1,6 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
-import type { ModelConfigInternal } from "@/server/modules/settings/settings.service";
+import type { ModelConfigInternal } from "@creatoros/backend/modules/settings";
 import {
   LlmCredentialError,
   type ApiFormat,

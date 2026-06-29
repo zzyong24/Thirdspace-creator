@@ -3,7 +3,7 @@ import { POST } from "./route";
 import { POST as loginPOST } from "../auth/login/route";
 import { resetStore } from "@/server/mock-backend/index";
 import { __resetPersistenceForTests } from "@/server/persistence-client";
-import { DEV_PASSWORD } from "@/server/modules/identity";
+import { DEV_PASSWORD } from "@creatoros/backend/modules/identity";
 
 const CANONICAL_EMAIL = "zyongzhu@creatoros.local";
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ErrorCode } from "@creatoros/contract";
 import { getIdentityService } from "@/server/persistence-client";
-import { AuthenticationError } from "@/server/modules/identity";
+import { AuthenticationError } from "@creatoros/backend/modules/identity";
 import {
   errorResponse,
   nextRequestId,

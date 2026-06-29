@@ -1,6 +1,10 @@
 import type { RequestContext } from "@creatoros/backend";
-import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import type { IdentityRepository, UserRow } from "./identity.repository";
+
+// FIXED clock for the canonical seed user's createdAt/updatedAt — decoupled from the
+// frontend mock-backend (= fixtures FIXED_NOW 2026-06-13T10:00:00+08:00). identity 是后端
+// 模块,不依赖前端 fixtures。
+const FIXED_NOW_ISO = "2026-06-13T02:00:00.000Z";
 import {
   generateSessionToken,
   hashPassword,
