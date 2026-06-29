@@ -5,7 +5,7 @@
 {"id":"T-005","phase":"P1","title":"LESSON_LEDGER LED-002(结构腐烂反思)固化成 guard","status":"done","created":"2026-06-29","ref":"","closed":"2026-06-29"}
 {"id":"T-006","phase":"P2","title":"24 模块 frontend/src/server/modules → backend/src/modules(门卫 R1 清零)","status":"done","created":"2026-06-29","ref":"","closed":"2026-06-29"}
 {"id":"T-007","phase":"P2","title":"清 R2(31 处 AI SDK 前端泄漏)+ R3(跨模块 repo)","status":"open","created":"2026-06-29","ref":""}
-{"id":"T-008","phase":"P3","title":"Agent Runtime 薄壳:Vercel AI SDK + 函数注册表 + ReAct 循环 + zod 输出 + ai_task_steps","status":"open","created":"2026-06-29","ref":""}
+{"id":"T-008","phase":"P3","title":"Agent Runtime 薄壳:Vercel AI SDK + 函数注册表 + ReAct 循环 + zod 输出 + ai_task_steps","status":"wip","created":"2026-06-29","ref":""}
 {"id":"T-009","phase":"P3","title":"选题节点端到端打通 + 窗口实时步骤日志","status":"open","created":"2026-06-29","ref":""}
 {"id":"T-010","phase":"P4","title":"~13 runner 迁移成 skill+工具,删孤儿 ai-worker 与旧 frontend/src/server/ai/*","status":"open","created":"2026-06-29","ref":""}
 {"id":"T-011","phase":"P5","title":"多模型按 capability(DeepSeek写文案/GPT做图/Claude推理)+ 即时可视化 spec","status":"open","created":"2026-06-29","ref":""}
