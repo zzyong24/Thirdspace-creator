@@ -93,6 +93,37 @@ describe("ai service", () => {
     expect(b.id).toBe(a.id);
   });
 
+  it("createTask de-dups an IN-FLIGHT (running) duplicate by deterministic key", async () => {
+    const { service } = makeService(db);
+    const a = await service.createTask(ctx, {
+      taskType: "topic.generate",
+      inputData: { basis: "positioning" }, // no explicit key → deterministic hash
+    });
+    await service.markRunning(ctx, a.id); // now in-flight
+    const b = await service.createTask(ctx, {
+      taskType: "topic.generate",
+      inputData: { basis: "positioning" },
+    });
+    expect(b.id).toBe(a.id); // a real double-submit returns the running task
+  });
+
+  it("createTask re-triggers a FRESH task once the prior run reached a terminal state", async () => {
+    const { service } = makeService(db);
+    const a = await service.createTask(ctx, {
+      taskType: "topic.generate",
+      inputData: { basis: "positioning" },
+    });
+    await service.cancelTask(ctx, a.id); // queued→cancelled (terminal)
+    const b = await service.createTask(ctx, {
+      taskType: "topic.generate",
+      inputData: { basis: "positioning" },
+    });
+    // The whole point of 选题会 is to regenerate — a click after the prior run finished
+    // must NOT pin to the stale task (that bug = agent never re-runs + FE 无限转圈).
+    expect(b.id).not.toBe(a.id);
+    expect(b.status).toBe("queued");
+  });
+
   it("createTask persists AITaskReference rows from inputData refs and stamps status queued", async () => {
     const { service } = makeService(db);
     const task = await service.createTask(ctx, {

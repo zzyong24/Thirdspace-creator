@@ -381,14 +381,27 @@ export function createAiService(deps: ServiceDeps): AiService {
     async createTask(ctx, body) {
       const repo = repoFor(ctx);
       const inputData = body.inputData ?? {};
-      const idempotencyKey =
+      let idempotencyKey =
         typeof inputData.idempotencyKey === "string" && inputData.idempotencyKey
           ? inputData.idempotencyKey
           : stableHash([ctx.userId, body.taskType, JSON.stringify(inputData)]);
 
-      // Idempotency (SPEC §17 / design-spec §7): a duplicate returns the existing task.
+      // Idempotency (SPEC §17 / design-spec §7): dedup only IN-FLIGHT duplicates
+      // (queued/running) — that is the real double-submit / network-retry case. An
+      // EXPLICIT re-trigger after the prior run already reached a terminal-ish state
+      // (awaiting_confirmation/succeeded/failed/cancelled) must start a FRESH run: the
+      // deterministic key is stable per (user, taskType, inputData), so without this an
+      // action whose whole point is to regenerate (选题会 / AI 诊断 / 复盘 …) would forever
+      // hit its first task — the agent never re-runs and the FE polls a never-changing
+      // terminal status → 无限转圈. The unique index (user, idempotency_key) forbids a new
+      // row under the same key, so a terminal hit freshens the key for the new attempt.
       const existing = await repo.findTaskByIdempotencyKey(idempotencyKey);
-      if (existing) return toTaskDto(existing);
+      if (existing) {
+        if (existing.status === "queued" || existing.status === "running") {
+          return toTaskDto(existing);
+        }
+        idempotencyKey = `${idempotencyKey}:${deps.now()}`;
+      }
 
       const modelKey =
         (await repo.getModelConfig(body.taskType))?.modelName ??

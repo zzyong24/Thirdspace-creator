@@ -9,6 +9,12 @@ import "server-only";
 
 export interface RunClaudeOptions {
   allowedTools?: string[];
+  // Hard ceiling on one agent run. A multi-angle WebSearch agent normally finishes in
+  // ~1 min; if the SDK ever stalls (network/subprocess), we must NOT leave the caller
+  // (and its AI task) hanging forever — on timeout we throw so the runner's catch flips
+  // the task to a terminal state (cancelTask) and the UI shows a clean failure + 重试,
+  // instead of an endless spinner. Default 4 min < the FE poll's 5-min give-up window.
+  timeoutMs?: number;
 }
 
 export async function runClaudeAgent(
@@ -24,18 +30,35 @@ export async function runClaudeAgent(
       "agent-run: @anthropic-ai/claude-agent-sdk not available in the server runtime",
     );
   }
-  let finalText = "";
-  for await (const message of sdk.query({
-    prompt,
-    options: {
-      allowedTools: options.allowedTools ?? [],
-      permissionMode: "bypassPermissions",
-    },
-  })) {
-    const m = message as { type?: string; result?: string };
-    if (m.type === "result" && typeof m.result === "string") finalText = m.result;
+  const query = sdk.query; // capture after the guard (narrowing is lost inside the IIFE)
+  const timeoutMs = options.timeoutMs ?? 240_000;
+  const drain = (async () => {
+    let finalText = "";
+    for await (const message of query({
+      prompt,
+      options: {
+        allowedTools: options.allowedTools ?? [],
+        permissionMode: "bypassPermissions",
+      },
+    })) {
+      const m = message as { type?: string; result?: string };
+      if (m.type === "result" && typeof m.result === "string")
+        finalText = m.result;
+    }
+    return finalText;
+  })();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`agent-run: timed out after ${timeoutMs}ms`)),
+      timeoutMs,
+    );
+  });
+  try {
+    return await Promise.race([drain, timeout]);
+  } finally {
+    clearTimeout(timer);
   }
-  return finalText;
 }
 
 // Robustly pull a JSON array out of an agent's final text (tolerate ``` fences / leading

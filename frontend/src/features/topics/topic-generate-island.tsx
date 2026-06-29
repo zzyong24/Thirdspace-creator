@@ -171,6 +171,14 @@ export function TopicGenerateBand({
         setPhase("error");
         return;
       }
+      // Defensive: a `succeeded` task is one already adopted — its candidates were
+      // consumed, so there is nothing left to review. Stop polling instead of spinning
+      // out the full window. (With in-flight-only idempotency a click always starts a
+      // fresh run, so this is belt-and-suspenders against ever 无限转圈.)
+      if (status.status === "succeeded") {
+        setPhase("done");
+        return;
+      }
     }
     setPhase("error");
   }, []);

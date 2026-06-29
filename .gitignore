@@ -21,6 +21,9 @@ blob-report/
 frontend/tests/visual/__artifacts__/
 
 .worktrees/
+.claude/
+.codegraph/
+.stitch-demo/
 
 *.log
 pnpm-debug.log*
