@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
-import { id } from "../primitives";
+import { id, iso8601 } from "../primitives";
 import { ingestionRunResource } from "../resources/ingestion";
 
 const runParams = z.object({ runId: id });
@@ -19,6 +19,19 @@ export const ingestionOperations = {
     }),
     response: ingestionRunResource,
     fr: ["FR-INGESTION-CREATE"],
+  }),
+  // 抖音真实指标刷新(线 B):一步完成 createRun→CDP 抓取→ingestMetrics→completeRun。
+  // 真抓在服务端经 chromium.connectOverCDP 连用户常驻已登录 Chrome(见 ingestion/douyin-cdp.ts)。
+  refreshDouyin: defineEndpoint({
+    id: "ingestion.douyin.refresh",
+    method: "POST",
+    path: "/ingestion/douyin/refresh",
+    body: z.object({
+      externalSourceId: id,
+      capturedAt: iso8601.optional(),
+    }),
+    response: ingestionRunResource,
+    fr: ["FR-INGESTION-DOUYIN"],
   }),
   pushMetrics: defineEndpoint({
     id: "ingestion.runs.metrics",

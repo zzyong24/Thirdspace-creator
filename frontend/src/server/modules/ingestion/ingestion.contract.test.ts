@@ -63,10 +63,11 @@ describe("ingestion contract conformance", () => {
     transport = createIngestionTransport(() => service);
   });
 
-  it("exposes exactly the 7 ingestion run op ids", () => {
+  it("exposes exactly the 8 ingestion op ids (7 run + 抖音刷新)", () => {
     expect([...INGESTION_OP_IDS].sort()).toEqual(
       [
         "ingestion.runs.create",
+        "ingestion.douyin.refresh",
         "ingestion.runs.metrics",
         "ingestion.runs.knowledge",
         "ingestion.runs.assets",

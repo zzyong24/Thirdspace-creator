@@ -154,6 +154,7 @@ import {
 } from "@/server/modules/ai";
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerate } from "@/server/ai/topic-runner";
+import { fetchDouyinMetrics } from "@/server/ingestion/douyin-cdp";
 import { runTopicEnrich } from "@/server/ai/topic-enrich-runner";
 import { runCalibrationDiagnose } from "@/server/ai/calibration-diagnose-runner";
 import { runScriptDraft } from "@/server/ai/script-runner";
@@ -1095,6 +1096,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             createdByType: input.createdByType,
           }),
       },
+    },
+    // 线 B:抖音真抓端口 —— 真连用户常驻 CDP(见 server/ingestion/douyin-cdp.ts)。
+    // 测试经各自的 createIngestionService 注入 fake,不连真浏览器。
+    douyinFetch: {
+      fetch: (opts) => fetchDouyinMetrics(opts),
     },
   });
   const ingestion = createIngestionTransport(() => ingestionService);
@@ -2425,6 +2431,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       sourceType: "mock",
       name: "Mock Ingestion Source",
       sourceIdentifier: "mock://canonical",
+      secretReference: "",
+      configuration: {},
+      createdAt: FIXED_NOW_ISO,
+    },
+    {
+      // 线 B:抖音真抓来源。refreshDouyin 据此校验来源类型=douyin;真抓走 CDP 连
+      // 用户已登录 Chrome,此处不存任何 cookie/凭据。
+      id: "src-douyin-canonical",
+      userId: canonicalDataset.user.id,
+      sourceType: "douyin",
+      name: "抖音创作者中心",
+      sourceIdentifier: "douyin://creator",
       secretReference: "",
       configuration: {},
       createdAt: FIXED_NOW_ISO,

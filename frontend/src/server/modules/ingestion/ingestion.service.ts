@@ -13,6 +13,7 @@ import {
   parseAssetRecord,
   parseArtifactRecord,
   type ValidationResult,
+  type MetricRecord,
 } from "./ingestion.schema";
 
 // Ingestion service (foundation §5.3) — RequestContext-taking methods that thread
@@ -89,6 +90,11 @@ export interface IngestionPorts {
   artifacts: IngestionArtifactsPort;
 }
 
+// 抖音抓取端口 —— composition root 注入 fetchDouyinMetrics(真连 CDP);测试注 fake。
+export interface DouyinFetchPort {
+  fetch(opts: { capturedAt: string; cdpUrl?: string }): Promise<MetricRecord[]>;
+}
+
 export interface ServiceDeps {
   now: () => string;
   nextId: (prefix: string) => string;
@@ -117,14 +123,20 @@ export interface IngestionService {
   ): Promise<IngestionRunRow>;
   getRun(ctx: RequestContext, runId: string): Promise<IngestionRunRow>;
   listErrors(ctx: RequestContext, runId: string): Promise<IngestionErrorRow[]>;
+  // 抖音真实指标刷新:校验来源→CDP 抓取→createRun→ingestMetrics→completeRun。
+  refreshDouyin(
+    ctx: RequestContext,
+    input: { externalSourceId: string; capturedAt?: string },
+  ): Promise<IngestionRunRow>;
 }
 
 export function createIngestionService(args: {
   deps: ServiceDeps;
   ports: IngestionPorts;
   db: Db;
+  douyinFetch?: DouyinFetchPort;
 }): IngestionService {
-  const { deps, ports, db } = args;
+  const { deps, ports, db, douyinFetch } = args;
 
   function repoFor(ctx: RequestContext): IngestionRepository {
     return createIngestionRepository(db, {
@@ -197,7 +209,7 @@ export function createIngestionService(args: {
     return repo.getRun(input.runId);
   }
 
-  return {
+  const service: IngestionService = {
     async createRun(ctx, input) {
       const repo = repoFor(ctx);
       // §17.3 — a duplicate (external_source_id, idempotency_key) returns the
@@ -302,5 +314,33 @@ export function createIngestionService(args: {
     async listErrors(ctx, runId) {
       return repoFor(ctx).listErrors(runId);
     },
+
+    async refreshDouyin(ctx, input) {
+      if (!douyinFetch) {
+        throw new Error("抖音抓取端口未配置(douyinFetch)");
+      }
+      const repo = repoFor(ctx);
+      const src = await repo.getExternalSource(input.externalSourceId);
+      if (!src) {
+        throw new Error(`外部来源不存在:${input.externalSourceId}`);
+      }
+      if (src.sourceType !== "douyin") {
+        throw new Error("该外部来源不是抖音(sourceType≠douyin)");
+      }
+      const capturedAt = input.capturedAt ?? deps.now();
+      // 真抓(CDP)→ records;失败/无登录态会抛,run 不会被建(快速失败)。
+      const records = await douyinFetch.fetch({ capturedAt });
+      const run = await service.createRun(ctx, {
+        externalSourceId: input.externalSourceId,
+        runType: "douyin_metrics",
+        idempotencyKey: capturedAt,
+      });
+      await service.ingestMetrics(ctx, {
+        runId: run.id,
+        records: records as unknown as Array<Record<string, unknown>>,
+      });
+      return service.completeRun(ctx, { runId: run.id });
+    },
   };
+  return service;
 }

@@ -21,6 +21,7 @@ import type { IngestionRunResource } from "./ingestion.schema";
 
 export const INGESTION_OP_IDS = [
   "ingestion.runs.create",
+  "ingestion.douyin.refresh",
   "ingestion.runs.metrics",
   "ingestion.runs.knowledge",
   "ingestion.runs.assets",
@@ -75,6 +76,17 @@ export function createIngestionTransport(
             externalSourceId: b.externalSourceId ?? "",
             runType: b.runType ?? "",
             idempotencyKey: b.idempotencyKey ?? "",
+          });
+          return { data: toRunResource(run), meta };
+        }
+        case "ingestion.douyin.refresh": {
+          const b = (body ?? {}) as {
+            externalSourceId?: string;
+            capturedAt?: string;
+          };
+          const run = await service.refreshDouyin(ctx, {
+            externalSourceId: b.externalSourceId ?? "",
+            capturedAt: b.capturedAt,
           });
           return { data: toRunResource(run), meta };
         }

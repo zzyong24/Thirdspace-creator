@@ -109,6 +109,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["PATCH", "/me"],
   // 外置 Skill 写入
   ["POST", "/ingestion/runs"],
+  ["POST", "/ingestion/douyin/refresh"],
   ["POST", "/ingestion/runs/:runId/metrics"],
   ["POST", "/ingestion/runs/:runId/knowledge"],
   ["POST", "/ingestion/runs/:runId/assets"],
