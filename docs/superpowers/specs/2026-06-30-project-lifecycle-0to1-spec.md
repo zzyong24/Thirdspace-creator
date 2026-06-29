@@ -11,29 +11,28 @@
 
 逐字段摸完底,真正要做的不是"逐页填坑",是这 6 件横切的事。每个阶段的字段都服务于它们:
 
-- **脊柱-1 视频类型轴(从 0 立)**:项目类型 = **视频类型**(口播科普/代码演示/论文解读/工具实测/教程/观点输出/资讯快讯,可配),不是平台。当前**根本没有类型轴**(`content_category` 是死字段),要从 0 打通 schema→contract→service→新建表单→展示→可改。
-- **脊柱-2 平台退回发布层**:平台已是 `publications.platform` 列(已下沉),只需把"立项必填平台"降级 + 统一 `project_target_platforms` 专表与 `brief_detail.targetPlatforms` jsonb 两个数据源。
-- **脊柱-3 CollabField 人机协作(最大缺口)**:当前所有 AI 产物**只能整批采纳/丢弃,不能逐字编辑**;后端有 `replaceStructuredContent`/`createArtifactVersion` 能力但 UI 没接。**这是要补的第一缺口**——见 §2。
-- **脊柱-4 统一 AI 步骤日志**:`ai_task_steps` 全套都在,但**只有 `topic.generate` 真用了**;研究/策划/脚本/素材匹配/复盘/校准/发布 8 类 AI 节点只有转圈无日志。统一规范铺开——见 §3。
-- **脊柱-5 接通阶段交接缝**:`策划→脚本` 断(`content_outline` 无下游、脚本 AI 上下文不含策划产物)、`脚本→拍摄` 断(制作提词读真账号恒空)。见 §10。
-- **脊柱-6 闭合飞轮后半圈**:真实表现全 mock、`CalibrationResult` 回流无录入入口。补真实采集(数据源 spec)+ 回流录入,让"预测 vs 真实 → 修 rubric"跑起来。见 §11。
+- **脊柱-1 统一 Vercel AI SDK + 提示词模板化解耦(AI 架构地基,最高优先)**:① 全部 AI 节点走 **Vercel AI SDK**(ai-worker `modelFor`/`runAgentNode`),**弃 Claude Agent SDK + 旧 LlmCompleter**(选题已迁,其余 7 个 runner 待迁)。② 提示词**不内联代码**——做成 `模板(skill,外置/可版本化/未来服务端可推送) + 上下文注入(定位/风格/knowledge) + 绑定层`,**千万解耦**。见 §3。
+- **脊柱-2 CollabField 人机协作(最大缺口)**:当前所有 AI 产物**只能整批采纳/丢弃,不能逐字编辑**;后端有 `replaceStructuredContent`/`createArtifactVersion` 能力但 UI 没接。**这是要补的第一缺口**——见 §2。
+- **脊柱-3 统一 AI 步骤日志**:`ai_task_steps` 全套都在,但**只有 `topic.generate` 真用了**;研究/策划/脚本/素材匹配/复盘/校准/发布 8 类 AI 节点只有转圈无日志。统一规范铺开——见 §3。
+- **脊柱-4 接通阶段交接缝**:`策划→脚本` 断(`content_outline` 无下游、脚本 AI 上下文不含策划产物)、`脚本→拍摄` 断(制作提词读真账号恒空)。见 §10。
+- **脊柱-5 闭合飞轮后半圈**:真实表现全 mock、`CalibrationResult` 回流无录入入口。补真实采集(数据源 spec)+ 回流录入,让"预测 vs 真实 → 修 rubric"跑起来。见 §11。
+- **不分类型,只留横/竖屏**:产品只产出**文案 + 结构 + 管素材**,不管用户怎么剪,**不做项目类型分类**。最多保留 `横屏/竖屏`(orientation)一个轻量属性(复用已有 `content_outputs.aspect_ratio` 16:9/9:16),**仅用于喂 AI 让文案/结构适配**(竖屏 hook 前置/时长更短),非分类轴。原 videoType 枚举全链路**砍掉**。
+- **平台退回发布层**:平台已是 `publications.platform` 列(已下沉),只需把"立项必填平台"降级 + 统一两个数据源。
 
 全局不变量:严禁假按钮(真/删/标规划中)· 数据要真(禁 fixture 回退、禁 LLM 读数)· 三态诚实 · AI 不直接写领域实体(走 service Port)。
 
 ---
 
-## §1 项目骨架:视频类型轴 + 阶段机修复
+## §1 项目骨架:横/竖屏轻量属性 + 阶段机修复
 
-### 1.1 视频类型轴(脊柱-1,从 0 全链路)
+### 1.1 不做类型分类,只留横/竖屏(orientation)
+**决策:产品不做项目类型分类轴**(我们只产文案+结构+管素材,不管怎么剪)。原 videoType 枚举全链路**砍掉**。只保留一个轻量的横/竖屏属性,**仅供 AI 适配文案/结构**。
+
 | ID | 工作项 | 落点 | 验收 |
 |---|---|---|---|
-| SKL-01 | 新增 `videoType` 受控枚举 | `contract/src/primitives.ts` + 镜像 `frontend/src/types/domain.ts` | 枚举含 7 类(可配),contract 测试过 |
-| SKL-02 | `projects` 加 `video_type` 列(Drizzle + 裸 DDL 同步)+ 迁移 | `backend/src/schema/projects.ts` | 迁移可跑,旧行默认值合法 |
-| SKL-03 | `projectResource` + `createProject.body` + `patchProject.body` 收 `videoType` | `contract/src/resources|operations/projects.ts` | 创建可带、可 patch 改 |
-| SKL-04 | service `createProject` 写入 + `CreateProjectCommand` 加字段(去掉硬编码 "") | `backend/src/modules/projects/projects.service.ts` | 新建项目 video_type 真落库 |
-| SKL-05 | 新建表单加"视频类型"选择器(区别于现有"内容类型=媒介 video/image/…") | `new-project-form.tsx` + `new-project-dialog.tsx` | 选了即落库 |
-| SKL-06 | 详情「项目类型」改读 `videoType` + 可改入口(修死掉的"编辑信息"按钮) | `project-overview-*` | 详情显真类型,可编辑落库 |
-| SKL-07 | 弃用 `content_category`(或迁为 videoType);canonical fixture 改新枚举值 | fixtures | 无残留死字段 |
+| SKL-01 | 不新增类型枚举;`orientation`(横屏/竖屏)轻量属性,**对齐/复用已有** `content_outputs.aspect_ratio`(16:9 / 9:16),不新建分类表/枚举轴 | `new-project-form.tsx`(一个 toggle)+ 复用 aspect_ratio | 新建可选横/竖屏,落 aspect_ratio;**不引入项目类型枚举** |
+| SKL-02 | orientation 注入 AI 上下文(creative-context 一个 facet),让 `script.draft`/`planning.outline` 的文案/结构按横/竖屏适配(竖屏 hook 前置、时长更短) | `creative-context.ts` + 相关 runner | script/outline prompt 含 orientation 提示 |
+| SKL-03 | 清理死字段 `content_category`(删或弃用),不再当"项目类型"展示 | schema + `project-overview-*` + fixtures | 无残留"项目类型"假展示 |
 
 ### 1.2 平台退回发布层(脊柱-2)
 | ID | 工作项 | 落点 | 验收 |
@@ -49,7 +48,7 @@
 
 ---
 
-## §2 CollabField 人机协作体系(脊柱-3·全规格的心脏)
+## §2 CollabField 人机协作体系(脊柱-2·全规格的心脏)
 
 **问题**:AI 填的东西人改不了(只能整批采纳/丢弃,采纳后无编辑入口)。**这违背"AI 填完人要能变更、编辑、感知、查看"的核心诉求。**
 
@@ -72,8 +71,37 @@
 
 ---
 
-## §3 统一 AI 节点规范(脊柱-4)
+## §3 AI 架构地基:Vercel SDK 统一 + 提示词模板化 + 步骤日志(脊柱-1/3)
 
+### 3.0 统一到 Vercel AI SDK(弃 Claude Agent SDK + 旧 LlmCompleter)
+选题已迁(ai-worker `modelFor`/`runAgentNode`,按 capability 配模型);其余 runner 还在旧 SDK 上,全部迁过来。
+
+| ID | 工作项 | 验收 |
+|---|---|---|
+| AISDK-01 | 7 个 inline runner(research / planning ×3 / script / publish / review / calibration)迁到 ai-worker 的 Vercel AI SDK 运行时(`modelFor` + `runAgentNode`),**弃 `runClaudeAgent`(Claude Agent SDK)+ 旧 `LlmCompleter`** | 全 8 节点走同一 SDK + 同一模型网关;按 capability 配模型 |
+| AISDK-02 | 研究的 web 搜索:从 Claude Code 订阅的内置 WebSearch 改为 **Vercel SDK 的工具**(tool registry 注册一个 search 工具)或暂置并诚实标"需配检索工具" | 不再依赖 `CLAUDE_CODE_OAUTH_TOKEN`;web 检索经 Vercel SDK tool |
+
+### 3.1 提示词模板化 + 可注入 + 解耦(脊柱-1·为服务端推 skill 铺路)
+**铁律:提示词不内联在 runner 代码里。** 每个 AI 能力拆成三层,**解耦**:
+
+```
+最终 prompt = 模板(skill) ⊕ 上下文注入(facets) ⊕ 绑定层
+   模板/skill:{ id, version, system, instruction, outputSchema, requiredFacets:[positioning,style,knowledge,...] }
+              外置(文件/DB),可版本化,未来服务端可推送到客户端
+   上下文:creative-context 装配的 facets(定位 / 风格 / knowledge / learnings / orientation / 评论…)
+   绑定:bindPrompt(template, context) —— 模板声明要哪些 facet,装配层提供,绑定层注入
+```
+
+写文案的例子(这正是你要的解耦):`script.draft` = **写文案 skill 模板** 注入 `{用户定位, 风格, 相关 knowledge, 横/竖屏}` → 最终 prompt。换方法论 = 换模板,不改 runner 代码;A/B 测提示词、服务端热推 skill 都靠这层。
+
+| ID | 工作项 | 验收 |
+|---|---|---|
+| PROMPT-01 | 建 PromptTemplate / skill 注册表(外置 + 版本化);schema 含 requiredFacets + outputSchema | 提示词集中可查、可版本化,不散落 runner |
+| PROMPT-02 | `bindPrompt(template, assembledContext)` 绑定层:模板声明 facet → creative-context 提供 → 注入 | 缺某 facet 报缺,不静默拼空 |
+| PROMPT-03 | 8 个 AI 节点的内联 prompt 全改为 template+context 绑定 | 改 skill 模板不动 runner;写文案真结合定位+风格+skill |
+| PROMPT-04 | 预留服务端推送接口(模板可被外部源覆盖/更新)的扩展点(不必现在实现远端,但接口留口) | 模板源可插拔(本地→未来远端) |
+
+### 3.2 统一 AI 步骤日志 + 弹窗范式(脊柱-3)
 **8 类 AI 节点**(逐个接 AI-STD-01..04 = 弹窗+步骤日志 / 后台真跑 / 关弹窗不杀 / 重开可看):
 
 | 节点 taskType | 阶段 | 执行子模式 | 现状 | 处置 |
@@ -199,7 +227,7 @@
 
 ---
 
-## §10 阶段交接缝(脊柱-5)
+## §10 阶段交接缝(脊柱-4)
 
 | ID | 断点 | 接法 | 验收 |
 |---|---|---|---|
@@ -211,7 +239,7 @@
 
 ---
 
-## §11 飞轮闭环(脊柱-6)—— 让"预测→真实→进化"跑起来
+## §11 飞轮闭环(脊柱-5)—— 让"预测→真实→进化"跑起来
 
 依赖 `data-source-pipeline-design.md`(采集自己作品真实表现)。闭环接线:
 
@@ -248,7 +276,9 @@
 
 ## §14 全局验收(每条可勾选)
 
-- [ ] 项目按**视频类型**分类、可建可改;平台只在发布层、立项不强制
+- [ ] **不做项目类型分类**;只留横/竖屏(复用 aspect_ratio)喂 AI 适配;平台只在发布层、立项不强制
+- [ ] **全部 AI 走 Vercel AI SDK**(无 Claude Agent SDK / 旧 LlmCompleter);按 capability 配模型
+- [ ] **提示词模板化解耦**:模板(skill,可版本化/可推送)+ 上下文注入 + 绑定;写文案真结合 定位+风格+skill,换模板不改 runner
 - [ ] **每个 AI 产物字段人都能逐字编辑并落库**(CollabField),来源角标准确,可"让 AI 重做这段",可回滚
 - [ ] **8 类 AI 节点全有步骤日志 + 弹窗 + 后台续跑 + 重开可看**
 - [ ] 阶段交接缝全通:策划产物进脚本上下文 + 脚本进拍摄提词 + 章节溯源脚本
