@@ -136,6 +136,9 @@ export function TopicGenerateBand({
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [activeBasis, setActiveBasis] = React.useState<Basis | null>(null);
   const [items, setItems] = React.useState<TopicItem[]>([]);
+  const [steps, setSteps] = React.useState<
+    { stepNo: number; text: string; kind: string }[]
+  >([]);
   const [taskId, setTaskId] = React.useState<string | null>(null);
   const [confirming, setConfirming] = React.useState(false);
   const cancelledRef = React.useRef(false);
@@ -151,6 +154,21 @@ export function TopicGenerateBand({
       if (cancelledRef.current) return;
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
       if (cancelledRef.current) return;
+      // 拉实时步骤事件 —— 喂「窗口步骤日志」(第1步读人设…第N步生成)。
+      try {
+        const stepRows = (await client.listTaskSteps({
+          params: { taskId: id },
+          query: undefined,
+          body: undefined,
+        })) as unknown as Array<{
+          stepNo: number;
+          text: string;
+          kind: string;
+        }>;
+        if (!cancelledRef.current && Array.isArray(stepRows)) setSteps(stepRows);
+      } catch {
+        /* 步骤是辅助信息,拉失败不影响主轮询 */
+      }
       const status = (await client.getTask({
         params: { taskId: id },
         query: undefined,
@@ -189,6 +207,7 @@ export function TopicGenerateBand({
       setActiveBasis(b);
       setPhase("running");
       setItems([]);
+      setSteps([]);
       try {
         const task = (await client.createAITask({
           params: undefined,
@@ -271,12 +290,32 @@ export function TopicGenerateBand({
 
           {/* 运行 / 审阅 / 完成 / 错误 状态. */}
           {phase === "running" ? (
-            <div
-              data-slot="band-running"
-              className="flex items-center gap-2 text-sm text-muted-foreground"
-            >
-              <span className="size-3.5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-              {RUNNING_LABEL}
+            <div data-slot="band-running" className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="size-3.5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                {RUNNING_LABEL}
+              </div>
+              {steps.length > 0 ? (
+                <ol
+                  data-slot="band-steps"
+                  className="flex flex-col gap-1 rounded-card border border-brand/15 bg-surface/60 p-2.5"
+                >
+                  {steps.map((s) => (
+                    <li
+                      key={s.stepNo}
+                      className="flex items-start gap-2 text-xs text-foreground"
+                    >
+                      <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-brand-soft text-[10px] font-medium text-brand">
+                        {s.stepNo}
+                      </span>
+                      <span className="leading-snug text-text-subtle">
+                        {s.kind === "tool_call" ? "调工具 · " : ""}
+                        {s.text || "（思考中…）"}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
             </div>
           ) : null}
 

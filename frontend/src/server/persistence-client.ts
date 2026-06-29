@@ -153,7 +153,7 @@ import {
   AI_OP_IDS,
 } from "@creatoros/backend/modules/ai";
 import { runGatherMaterial } from "@/server/ai/research-runner";
-import { runTopicGenerate } from "@/server/ai/topic-runner";
+import { runTopicGenerateV2 } from "@/server/ai/topic-task-adapter";
 import { fetchDouyinMetrics } from "@/server/ingestion/douyin-cdp";
 import { runTopicEnrich } from "@/server/ai/topic-enrich-runner";
 import { runCalibrationDiagnose } from "@/server/ai/calibration-diagnose-runner";
@@ -1615,7 +1615,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           task.taskType === "topic.generate" &&
           task.status === "queued"
         ) {
-          void runTopicGenerate(
+          // Phase 3 A 路径:跑在新 Agent Runtime 上(按 capability 配的 model + 步骤日志),
+          // 替掉旧的 runClaudeAgent 订阅路径。没配 model key → 适配器 cancelTask(不假成功)。
+          void runTopicGenerateV2(
             ctx,
             {
               id: String(task.id),
@@ -1627,6 +1629,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               learnings: learningsReader,
               signals: signalsReader,
               knowledge: knowledgeReader,
+              resolveModelSpec,
             },
           );
         } else if (
@@ -2782,6 +2785,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       env: process.env,
     }),
   );
+
+  // resolveModelSpec — 新 Agent Runtime(modelFor)按 capability 解析用户配的 model;复用
+  // llmCompleter 同一套 resolve(getModelConfig + env),投影成 ModelSpec。没配 key → 抛
+  // LlmCredentialError(适配器接住 → cancelTask,不假成功)。
+  const resolveModelSpec = async (ctx: RequestContext, capability: string) => {
+    const cfg = await resolveLlmConfig(ctx, capability, {
+      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      env: process.env,
+    });
+    return {
+      apiFormat: cfg.apiFormat,
+      baseUrl: cfg.baseUrl,
+      model: cfg.model,
+      token: cfg.token,
+    };
+  };
 
   // Seed the canonical user's Settings rows (plan Step 6 seed parity) so the
   // /settings page resolves the real preference/model/agent rows under the seeded

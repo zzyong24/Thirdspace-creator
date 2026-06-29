@@ -28,6 +28,7 @@
     "@anthropic-ai/sdk": "^0.105.0",
     "@aws-sdk/client-s3": "^3.1075.0",
     "@aws-sdk/s3-request-presigner": "^3.1075.0",
+    "@creatoros/ai-worker": "workspace:*",
     "@creatoros/backend": "workspace:*",
     "@creatoros/contract": "workspace:*",
     "@fontsource-variable/noto-sans-sc": "5.2.10",
