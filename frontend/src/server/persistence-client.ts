@@ -67,6 +67,7 @@ import {
   createProjectsService,
   createProjectsTransport,
   PROJECT_OP_IDS,
+  type StageGateReadersRef,
   type ProjectRow,
   type StageRow,
   type TargetPlatformRow,
@@ -821,12 +822,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // transport mints a per-ctx service so the §12 state machines run under the
   // caller; the repo is shared (it takes ctx per-call, not at construction).
   const projectsRepo = createProjectRepository(db);
+  // §15/§16 内容门禁的只读数据源 holder。projectsService 先于它依赖的 peer service
+  // (artifacts / production / publishing / reviews)在本文件下方创建,所以 gate 的
+  // reader 用一个可变 holder 后置绑定:此处先传空 holder 构造 service,等所有 peer
+  // service 建好后再填 stageGateReadersRef.current(见本文件末尾的「gate readers
+  // 后置绑定」)。绑定前 gate 所有项「无数据源」→ 诚实跳过 → gate 恒过(不破坏任何
+  // 在 service 构造后、绑定前发生的调用)。
+  const stageGateReadersRef: StageGateReadersRef = { current: null };
   // A stable service handle (deterministic deps) reused both by the per-ctx
   // transport factory AND by the Production module's completeExport fan-out
   // (setPrimaryOutputAsset → patchOutput, which also appends the activity). The
   // service is stateless per call (it takes ctx per method), so one instance is
   // safe across requests.
-  const projectsService = createProjectsService(projectsRepo, deps);
+  const projectsService = createProjectsService(
+    projectsRepo,
+    deps,
+    stageGateReadersRef,
+  );
   const projects = createProjectsTransport(() => ({
     service: projectsService,
     repo: projectsRepo,
@@ -1187,6 +1199,54 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
   const reviews = createReviewsTransport(() => reviewsService);
+
+  // ── gate readers 后置绑定(§15/§16 内容门禁的真实数据源)──────────────────
+  // 此时 artifacts / production / publishing / reviews 服务都已构造好。把 projectsService
+  // 的 stageGateReadersRef 填上,让阶段流转 gate 经各模块的公共 service 读真实交付物
+  // (零跨模块 repo import)。每个 reader 用的数据源:
+  //   - research/planning/script → artifactsService.listProjectArtifacts(按 artifactType)
+  //   - production               → 遍历 project 的 outputs,任一 production.status==='ready'
+  //   - publishing               → publishingService.listPublicationIdsByProject 非空
+  //   - review                   → reviewsService.listCompletedReviewInsights 非空
+  // 诚实标注的近似:
+  //   - production reader 用 productionService.getProduction(get-or-create),对未进
+  //     制作的 output 会幂等地建一个 drafting production 行(与制作页加载行为一致;
+  //     drafting≠ready 不影响 gate 判定)。
+  //   - review gate 用「完成复盘的洞察非空」近似「存在 ReviewReport」:reviews 模块
+  //     的公共 service 只暴露 listCompletedReviewInsights(不暴露 hasCompletedReview),
+  //     不为一个 gate 反向扩散改 reviews 模块。一个有完成复盘但零洞察的极端情形会被
+  //     判为「缺失」——这与「复盘交付物 = 报告+洞察」的语义一致,不算编造。
+  stageGateReadersRef.current = {
+    listProjectArtifactTypes: async (ctx, projectId) => {
+      const rows = await artifactsService.listProjectArtifacts(ctx, projectId);
+      return rows.map((r) => r.artifactType);
+    },
+    hasReadyProduction: async (ctx, projectId) => {
+      const outputIds = await projectsService.listOutputIdsByProject(
+        ctx,
+        projectId,
+      );
+      for (const outputId of outputIds) {
+        const production = await productionService.getProduction(ctx, outputId);
+        if (production.status === "ready") return true;
+      }
+      return false;
+    },
+    hasPublication: async (ctx, projectId) => {
+      const ids = await publishingService.listPublicationIdsByProject(
+        ctx,
+        projectId,
+      );
+      return ids.length > 0;
+    },
+    hasCompletedReview: async (ctx, projectId) => {
+      const insights = await reviewsService.listCompletedReviewInsights(
+        ctx,
+        projectId,
+      );
+      return insights.length > 0;
+    },
+  };
 
   // Learnings (module 14): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). It

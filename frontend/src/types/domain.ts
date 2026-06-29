@@ -56,7 +56,13 @@ export type ProjectStageName =
   | "review";
 
 export type ProjectStatus = "active" | "paused" | "archived" | "completed";
-export type StageStatus = "pending" | "in_progress" | "completed" | "skipped";
+// §16 needs_review:阶段「声称完成」但内容 gate 未过(核心交付物缺失)时的停泊态。
+export type StageStatus =
+  | "pending"
+  | "in_progress"
+  | "needs_review"
+  | "completed"
+  | "skipped";
 
 export interface ProjectRelation extends BaseEntity {
   readonly sourceProjectId: Id;

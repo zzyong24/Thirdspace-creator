@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveRoute } from "./shell-router";
+import { isContentFillRoute, resolveRoute } from "./shell-router";
+
+describe("isContentFillRoute", () => {
+  it("opts the multi-column workbench routes into fixed-height fill mode", () => {
+    expect(isContentFillRoute("/topics")).toBe(true);
+    expect(isContentFillRoute("/calibration")).toBe(true);
+    expect(isContentFillRoute("/positioning")).toBe(true);
+  });
+
+  it("leaves simple pages on the default (PageScrollArea) whole-page scroll", () => {
+    expect(isContentFillRoute("/")).toBe(false);
+    expect(isContentFillRoute("/projects")).toBe(false);
+    expect(isContentFillRoute("/settings")).toBe(false);
+    // 仅精确匹配,不波及子路由 (项目工作台另有自己的布局)。
+    expect(isContentFillRoute("/topics/anything")).toBe(false);
+  });
+});
 
 describe("resolveRoute", () => {
   it("uses project workspace header mode for project stage routes", () => {

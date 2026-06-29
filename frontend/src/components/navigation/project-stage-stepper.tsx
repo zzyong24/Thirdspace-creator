@@ -23,7 +23,14 @@ import { cn } from "@/lib/utils";
 export interface ProjectStageStepperStage {
   readonly id: string;
   readonly label: string;
-  readonly status: "pending" | "in_progress" | "completed" | "skipped";
+  // §16 needs_review:阶段「声称完成」但内容 gate 未过(核心交付物缺失)的停泊态,
+  // stepper 以 warning 样式标出「待补」,让创作者看到为什么进不去下一阶段。
+  readonly status:
+    | "pending"
+    | "in_progress"
+    | "needs_review"
+    | "completed"
+    | "skipped";
 }
 
 export interface ProjectStageStepperProps {
@@ -41,6 +48,7 @@ export interface ProjectStageStepperProps {
 const STATUS_INDICATOR: Record<ProjectStageStepperStage["status"], string> = {
   completed: "bg-success",
   in_progress: "bg-brand",
+  needs_review: "bg-warning",
   pending: "bg-border-strong",
   skipped: "bg-warning",
 };
@@ -48,6 +56,7 @@ const STATUS_INDICATOR: Record<ProjectStageStepperStage["status"], string> = {
 const STATUS_TEXT: Record<ProjectStageStepperStage["status"], string> = {
   completed: "text-foreground",
   in_progress: "text-foreground",
+  needs_review: "text-warning",
   pending: "text-muted-foreground",
   skipped: "text-muted-foreground line-through",
 };
@@ -89,6 +98,7 @@ export function ProjectStageStepper({
           const alreadyReached =
             stage.status === "completed" ||
             stage.status === "in_progress" ||
+            stage.status === "needs_review" ||
             stage.status === "skipped";
           const reachable =
             alreadyReached ||

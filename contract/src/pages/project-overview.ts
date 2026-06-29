@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { id, iso8601, platformId, projectStageName, publicationStatus, contentType } from "../primitives";
+import { id, iso8601, platformId, projectStageName, stageStatus, publicationStatus, contentType } from "../primitives";
 import { metricCard } from "./dashboard";
 
 // PAGE composition DTO for the Project Overview page. Modeled from
@@ -26,7 +26,8 @@ const contentOutputSummary = z.object({
 
 const stageRow = z.object({
   stage: projectStageName,
-  status: z.enum(["pending", "in_progress", "completed", "skipped"]),
+  // 单一来源:复用 primitives 的 stageStatus(含 §16 needs_review),避免内联漂移。
+  status: stageStatus,
   progressPct: z.number(),
 });
 

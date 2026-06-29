@@ -17,6 +17,7 @@ import type {
   ProjectStageName,
   ProjectStatus,
   PublicationStatus,
+  StageStatus,
   TaskStatus,
   Visibility,
 } from "./domain";
@@ -228,7 +229,7 @@ export interface ProjectOverviewViewModel extends BasePageViewModel {
   readonly progressPct: number;
   readonly stages: ReadonlyArray<{
     readonly stage: ProjectStageName;
-    readonly status: "pending" | "in_progress" | "completed" | "skipped";
+    readonly status: StageStatus;
     readonly progressPct: number;
   }>;
   readonly assetStats: ReadonlyArray<MetricCard>;

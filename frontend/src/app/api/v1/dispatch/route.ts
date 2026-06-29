@@ -26,9 +26,13 @@ const ENDPOINTS_BY_ID: Record<string, Endpoint> = Object.fromEntries(
   Object.values(ENDPOINTS).map((e) => [e.id, e]),
 );
 
-function errorEnvelope(code: ErrorCode, message: string): NextResponse {
+function errorEnvelope(
+  code: ErrorCode,
+  message: string,
+  details: Record<string, unknown> = {},
+): NextResponse {
   return NextResponse.json(
-    { error: { code, message, details: {} }, meta: { requestId: "dispatch" } },
+    { error: { code, message, details }, meta: { requestId: "dispatch" } },
     { status: ERROR_HTTP[code] },
   );
 }
@@ -88,9 +92,18 @@ export async function POST(req: Request): Promise<Response> {
     // route importing every module's error classes.
     const code = (err as { code?: unknown }).code;
     if (typeof code === "string" && code in ERROR_HTTP) {
+      // Domain errors may carry a structured `details` payload (e.g. Projects'
+      // StageGateError → { stage, missing } so the stepper can render「为什么进不
+      // 去」). Pass it through to the error envelope's details when present.
+      const rawDetails = (err as { details?: unknown }).details;
+      const details =
+        rawDetails && typeof rawDetails === "object"
+          ? (rawDetails as Record<string, unknown>)
+          : {};
       return errorEnvelope(
         code as ErrorCode,
         err instanceof Error ? err.message : String(err),
+        details,
       );
     }
     const message = err instanceof Error ? err.message : String(err);

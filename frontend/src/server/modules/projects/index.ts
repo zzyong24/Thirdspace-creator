@@ -12,6 +12,9 @@ export {
   type ServiceDeps,
   type CreateProjectCommand,
   type CreateOutputCommand,
+  type StageGateReaders,
+  type StageGateReadersRef,
+  type StageGateResult,
   PROJECT_STAGES,
   OUTPUT_STAGES,
 } from "./projects.service";
@@ -42,6 +45,7 @@ export {
   OutputStateError,
   TaskStateError,
   ProjectStateError,
+  StageGateError,
 } from "./projects.errors";
 
 export {

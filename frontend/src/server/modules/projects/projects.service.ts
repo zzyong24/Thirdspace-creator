@@ -13,6 +13,7 @@ import {
   OutputStateError,
   TaskStateError,
   ProjectStateError,
+  StageGateError,
 } from "./projects.errors";
 
 // Projects service (foundation §5.3) — all public methods (ctx, command). The
@@ -23,6 +24,53 @@ import {
 export interface ServiceDeps {
   now: () => string; // ISO-8601 clock (deterministic in tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
+}
+
+// §15/§16 内容门禁的只读数据源端口。每个阶段离开(完成)前,gate 经这些注入的
+// reader 查对应模块的真实交付物(artifacts / production / publishing / reviews);
+// 模块的所有权 / user-scope 由各自的公共 service 内部保证。注入是惰性的:
+// projectsService 先于这些 peer service 在 composition root 创建,所以 reader 通过
+// 一个可变 holder 后置绑定(见 createProjectsService 的 gateReadersRef 参数)。
+// reader 缺失(holder 未绑定 / 某 reader 为 undefined)=== 该阶段「无可用数据源」,
+// gate 诚实跳过该项,不编造缺失。
+export interface StageGateReaders {
+  // research → 该 project 下是否存在研究类 artifact(research_note / trend_analysis
+  // 等)或内容合同前置。判定接 artifacts.listProjectArtifacts(按 artifactType)。
+  listProjectArtifactTypes?: (
+    ctx: RequestContext,
+    projectId: string,
+  ) => Promise<string[]>;
+  // production → 该 project 的 ContentOutput 是否有 production 进到 ready
+  // (ProductionItem「关键项 done」的真实承载是 productions.status='ready')。
+  hasReadyProduction?: (
+    ctx: RequestContext,
+    projectId: string,
+  ) => Promise<boolean>;
+  // publishing → 该 project 是否存在 publication(PublishPackage/Publication)。
+  hasPublication?: (
+    ctx: RequestContext,
+    projectId: string,
+  ) => Promise<boolean>;
+  // review → 该 project 是否存在已完成的 review(ReviewReport)。
+  hasCompletedReview?: (
+    ctx: RequestContext,
+    projectId: string,
+  ) => Promise<boolean>;
+}
+
+// 后置绑定 holder:composition root 先用一个空 holder 构造 projectsService,等所有
+// peer service 建好后再 holder.current = {...}。闭包持有 holder 引用,所以
+// transition 时读到的是已填充的 readers。
+export interface StageGateReadersRef {
+  current: StageGateReaders | null;
+}
+
+// validateStageGate 的返回:ok=false 时 missing 是「人类可读中文缺失项」列表;
+// skipped 是「因无数据源被诚实跳过」的项(仅用于调试/透明,不影响 ok)。
+export interface StageGateResult {
+  ok: boolean;
+  missing: string[];
+  skipped: string[];
 }
 
 // The project's six fixed stages, in pipeline order (data-model §3 / SPEC §22).
@@ -40,10 +88,19 @@ export type ProjectStageName = (typeof PROJECT_STAGES)[number];
 export const OUTPUT_STAGES = ["script", "production", "publishing", "review"] as const;
 export type OutputStageName = (typeof OUTPUT_STAGES)[number];
 
-// Stage status vocabulary (domain `StageStatus` = pending|in_progress|completed|
-// skipped) plus the internal `blocked` state (SPEC §12 in_progress↔blocked).
-// Stages are NOT a contract DTO, so `blocked` is never serialized/validated.
-type StageStatus = "pending" | "in_progress" | "completed" | "blocked" | "skipped";
+// Stage status vocabulary (domain `StageStatus` = pending|in_progress|
+// needs_review|completed|skipped) plus the internal `blocked` state (SPEC §12
+// in_progress↔blocked). `needs_review` (§16) is the gate-rejected state: a stage
+// that tried to complete but failed the §15 content gate parks here instead of
+// advancing. `blocked` is NOT a contract DTO so it is never serialized; the rest
+// mirror the contract `stageStatus` enum.
+type StageStatus =
+  | "pending"
+  | "in_progress"
+  | "needs_review"
+  | "completed"
+  | "blocked"
+  | "skipped";
 
 const TASK_STATUSES = ["todo", "in_progress", "done", "blocked"] as const;
 type TaskStatus = (typeof TASK_STATUSES)[number];
@@ -84,6 +141,16 @@ export interface ProjectsService {
     stage: string,
     cmd: { reason?: string },
   ): Promise<ProjectRow>;
+
+  // §15/§16 内容门禁的只读预检:某阶段「核心交付物是否齐备」。transition 在真正
+  // 把 in_progress→completed 前会内部调它;也公开出来,让前端 stepper 可在点「完成」
+  // 之前预检并提示缺什么(不改任何状态)。无对应数据源的项诚实跳过(计入 skipped,
+  // 不计入 missing)。
+  validateStageGate(
+    ctx: RequestContext,
+    projectId: string,
+    fromStage: string,
+  ): Promise<StageGateResult>;
 
   createOutput(
     ctx: RequestContext,
@@ -147,10 +214,12 @@ export interface ProjectsService {
   }>;
 }
 
-// Stage machine (SPEC §12, shared by Project & Output stages):
+// Stage machine (SPEC §12 + §16, shared by Project & Output stages):
 //   pending → in_progress → completed
 //   in_progress ↔ blocked
-//   (pending | in_progress) → skipped  (guard: reason required)
+//   in_progress → needs_review          (gate-rejected completion, §16)
+//   needs_review → in_progress | completed | skipped
+//   (pending | in_progress | needs_review) → skipped  (guard: reason required)
 function assertStageTransition(
   from: StageStatus,
   to: StageStatus,
@@ -158,7 +227,8 @@ function assertStageTransition(
 ): void {
   const legal: Record<StageStatus, StageStatus[]> = {
     pending: ["in_progress", "skipped"],
-    in_progress: ["completed", "blocked", "skipped"],
+    in_progress: ["needs_review", "completed", "blocked", "skipped"],
+    needs_review: ["in_progress", "completed", "skipped"],
     blocked: ["in_progress"],
     completed: [],
     skipped: [],
@@ -191,10 +261,149 @@ function statusToProgress(status: StageStatus, current: number): number {
   return current;
 }
 
+// 各阶段 gate 的「核心交付物」配置。每条声明:该阶段被 gate 的语义、用哪个 reader、
+// 缺失时的中文文案。production 阶段映射到 contract 的 `production`(SPEC 内部叫
+// publishing 阶段之前那个),与 PROJECT_STAGES 的命名一致。`script` 阶段的核心交付物
+// 是脚本类 artifact;gap 报告提到的「至少 N 个 ScriptSegment」其真实承载在 production
+// 模块(production_segments,属下游制作阶段),故 script 阶段只校验脚本 artifact 存在,
+// segment 数不在此阶段诚实地不作要求(避免编造跨阶段的假条件)。
+const RESEARCH_ARTIFACT_TYPES = new Set([
+  "research_note",
+  "trend_analysis",
+  "market_analysis",
+  "competitor_analysis",
+  "audience_research",
+  "evidence_map",
+]);
+const PLANNING_ARTIFACT_TYPES = new Set([
+  "content_contract",
+  "thesis_tree",
+  "content_outline",
+  "differentiation",
+]);
+const SCRIPT_ARTIFACT_TYPES = new Set(["master_script", "output_script"]);
+
 export function createProjectsService(
   repo: ProjectRepository,
   deps: ServiceDeps,
+  // §15/§16 gate 的只读数据源。可选:不传(或传 { current: null })时所有 gate 项
+  // 「无数据源」→ 诚实跳过 → gate 恒过(保持旧行为,不破坏既有调用方/测试)。
+  gateReadersRef: StageGateReadersRef = { current: null },
 ): ProjectsService {
+  // 把某阶段交付存在与否解析成 gate 结果的一项。reader 缺失(无注入)→ 跳过(skipped),
+  // reader 存在但返回 false → 缺失(missing)。
+  async function checkArtifactDeliverable(
+    ctx: RequestContext,
+    projectId: string,
+    accept: Set<string>,
+    missingLabel: string,
+  ): Promise<"ok" | "missing" | "skipped"> {
+    const reader = gateReadersRef.current?.listProjectArtifactTypes;
+    if (!reader) return "skipped";
+    const types = await reader(ctx, projectId);
+    return types.some((t) => accept.has(t)) ? "ok" : "missing";
+  }
+
+  async function checkBoolDeliverable(
+    ctx: RequestContext,
+    projectId: string,
+    reader:
+      | ((ctx: RequestContext, projectId: string) => Promise<boolean>)
+      | undefined,
+  ): Promise<"ok" | "missing" | "skipped"> {
+    if (!reader) return "skipped";
+    return (await reader(ctx, projectId)) ? "ok" : "missing";
+  }
+
+  async function validateStageGate(
+    ctx: RequestContext,
+    projectId: string,
+    fromStage: string,
+  ): Promise<StageGateResult> {
+    const missing: string[] = [];
+    const skipped: string[] = [];
+    const readers = gateReadersRef.current;
+
+    // 每阶段:(label, 解析出的 "ok"|"missing"|"skipped")。
+    const checks: Array<{ label: string; outcome: "ok" | "missing" | "skipped" }> =
+      [];
+
+    switch (fromStage) {
+      case "research":
+        checks.push({
+          label: "可用的研究结论或证据(research_note / 市场或竞品分析等 artifact)",
+          outcome: await checkArtifactDeliverable(
+            ctx,
+            projectId,
+            RESEARCH_ARTIFACT_TYPES,
+            "research",
+          ),
+        });
+        break;
+      case "planning":
+        checks.push({
+          label: "内容合同 / 论点树 / 结构方案(content_contract 等 artifact)",
+          outcome: await checkArtifactDeliverable(
+            ctx,
+            projectId,
+            PLANNING_ARTIFACT_TYPES,
+            "planning",
+          ),
+        });
+        break;
+      case "script":
+        checks.push({
+          label: "脚本(master_script / output_script artifact)",
+          outcome: await checkArtifactDeliverable(
+            ctx,
+            projectId,
+            SCRIPT_ARTIFACT_TYPES,
+            "script",
+          ),
+        });
+        break;
+      case "production":
+        checks.push({
+          label: "已完成的制作产物(至少一个 ContentOutput 的 production 进到 ready)",
+          outcome: await checkBoolDeliverable(
+            ctx,
+            projectId,
+            readers?.hasReadyProduction,
+          ),
+        });
+        break;
+      case "publishing":
+        checks.push({
+          label: "发布包 / 发布记录(至少一条 publication)",
+          outcome: await checkBoolDeliverable(
+            ctx,
+            projectId,
+            readers?.hasPublication,
+          ),
+        });
+        break;
+      case "review":
+        checks.push({
+          label: "已完成的复盘报告(completed review)",
+          outcome: await checkBoolDeliverable(
+            ctx,
+            projectId,
+            readers?.hasCompletedReview,
+          ),
+        });
+        break;
+      default:
+        // 未知阶段名:无可校验项(不应发生,stage 已被 contract 枚举约束)。
+        break;
+    }
+
+    for (const c of checks) {
+      if (c.outcome === "missing") missing.push(c.label);
+      else if (c.outcome === "skipped") skipped.push(c.label);
+    }
+    return { ok: missing.length === 0, missing, skipped };
+  }
+
   function activity(
     projectId: string,
     eventType: string,
@@ -317,6 +526,39 @@ export function createProjectsService(
       const target = nextStageStatus(row.status as StageStatus, cmd.reason);
       assertStageTransition(row.status as StageStatus, target, cmd.reason);
       const ts = deps.now();
+      // §15/§16 内容门禁:只在「真正完成离开本阶段」(→completed)时跑;skipped 带理由
+      // 跳过(显式放弃,不要求交付物),其余 in_progress/blocked 等内部流转不受 gate。
+      // gate 不过 → 把本阶段从 in_progress 落到 needs_review(持久化卡点,让 stepper
+      // 看得到「卡在待补」),写一条 gate_blocked activity,再抛 StageGateError(带
+      // missing 列表)。补齐交付物后再次 transition(needs_review→completed)会重跑 gate
+      // 并放行。
+      if (target === "completed") {
+        const gate = await validateStageGate(ctx, projectId, stage);
+        if (!gate.ok) {
+          if (row.status !== "needs_review") {
+            await repo.updateStage(ctx, row.id, {
+              status: "needs_review",
+              progressPct: row.progressPct,
+              updatedAt: ts,
+            });
+            const blockedStages = await repo.listStages(ctx, projectId);
+            await repo.updateProjectRow(ctx, projectId, {
+              currentStage:
+                computeCurrentStage(blockedStages) ?? project.currentStage,
+              updatedAt: ts,
+            });
+          }
+          await repo.appendActivity(
+            ctx,
+            activity(projectId, "stage_gate_blocked", "project", projectId, {
+              stage,
+              missing: gate.missing,
+              skipped: gate.skipped,
+            }),
+          );
+          throw new StageGateError(stage, gate.missing);
+        }
+      }
       await repo.updateStage(ctx, row.id, {
         status: target,
         skipped: target === "skipped" ? true : row.skipped,
@@ -345,6 +587,11 @@ export function createProjectsService(
         }),
       );
       return updated;
+    },
+
+    async validateStageGate(ctx, projectId, fromStage) {
+      await repo.get(ctx, projectId); // ownership before reading peer deliverables
+      return validateStageGate(ctx, projectId, fromStage);
     },
 
     async createOutput(ctx, projectId, cmd) {
@@ -553,18 +800,27 @@ export function createProjectsService(
 
 // The next stage status under the default forward progression. A stage with a
 // reason targeting a skip resolves to `skipped`; otherwise pending→in_progress,
-// in_progress→completed. Blocked stages resume to in_progress.
+// in_progress→completed, needs_review→completed (gate retry). Blocked stages
+// resume to in_progress.
 function nextStageStatus(
   from: StageStatus,
   reason: string | undefined,
 ): StageStatus {
-  if (reason !== undefined && reason.trim() !== "" && (from === "pending" || from === "in_progress")) {
+  if (
+    reason !== undefined &&
+    reason.trim() !== "" &&
+    (from === "pending" || from === "in_progress" || from === "needs_review")
+  ) {
     return "skipped";
   }
   switch (from) {
     case "pending":
       return "in_progress";
     case "in_progress":
+      return "completed";
+    // 阶段卡在 needs_review(gate 曾拦截)→ 再次 transition 表示「我补齐了,放行」,
+    // 默认前进到 completed(transition 会重跑 gate;仍缺则再次落回 needs_review)。
+    case "needs_review":
       return "completed";
     case "blocked":
       return "in_progress";

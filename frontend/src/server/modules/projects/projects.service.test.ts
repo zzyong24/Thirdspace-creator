@@ -7,10 +7,15 @@ import {
   type ProjectRow,
   type TaskRow,
 } from "./projects.repository";
-import { createProjectsService, type ProjectsService } from "./projects.service";
+import {
+  createProjectsService,
+  type ProjectsService,
+  type StageGateReadersRef,
+} from "./projects.service";
 import {
   StageTransitionError,
   ProjectStateError,
+  StageGateError,
 } from "./projects.errors";
 
 const NOW = "2026-06-13T10:00:00+08:00";
@@ -285,5 +290,168 @@ describe("getDashboardSummary (GAP-DASH-1)", () => {
     expect(ids).not.toContain("t-done");
     expect(summary.todos.every((t) => t.projectTitle === "我的项目")).toBe(true);
     expect(summary.todos.length).toBeLessThanOrEqual(5);
+  });
+});
+
+// §15/§16 内容门禁(阶段流转 gate)。用一个可控的 StageGateReadersRef 注入「假交付物
+// 数据源」(测试不需要真起 artifacts/production 等模块,只验证 gate 接线/拦截/放行/
+// needs_review 落点/诚实跳过 这套 projects 模块内部的逻辑)。
+describe("Stage gate (§15/§16 content gate)", () => {
+  // 一个可变 holder + 一个「project 已有的交付物类型集合」状态,模拟 artifacts 等
+  // 数据源。默认所有 reader 都接好(非「无数据源」),由 artifactTypes 决定有无。
+  function makeGatedService() {
+    const artifactTypes = new Set<string>();
+    let readyProduction = false;
+    let hasPublication = false;
+    let hasReview = false;
+    const ref: StageGateReadersRef = {
+      current: {
+        listProjectArtifactTypes: async () => [...artifactTypes],
+        hasReadyProduction: async () => readyProduction,
+        hasPublication: async () => hasPublication,
+        hasCompletedReview: async () => hasReview,
+      },
+    };
+    const gated = createProjectsService(repo, deterministicDeps(), ref);
+    return {
+      gated,
+      ref,
+      addArtifact: (t: string) => artifactTypes.add(t),
+      setReadyProduction: (v: boolean) => (readyProduction = v),
+      setPublication: (v: boolean) => (hasPublication = v),
+      setReview: (v: boolean) => (hasReview = v),
+    };
+  }
+
+  it("research → completed 被拦:缺研究 artifact → 落 needs_review + 抛 StageGateError(带 missing)", async () => {
+    const { gated } = makeGatedService();
+    const p = await gated.createProject(ctx, { title: "T" }); // research in_progress
+    // research 此时无任何研究类 artifact → gate 不过。
+    await expect(
+      gated.transitionProjectStage(ctx, p.id, "research", {}),
+    ).rejects.toBeInstanceOf(StageGateError);
+
+    // 该阶段被持久化为 needs_review(卡点),而非 completed。
+    const research = (await repo.listStages(ctx, p.id)).find(
+      (s) => s.stage === "research",
+    )!;
+    expect(research.status).toBe("needs_review");
+
+    // 写了一条 gate_blocked 活动,携带 missing 列表。
+    const acts = await repo.listActivity(ctx, p.id);
+    const blocked = acts.find((a) => a.eventType === "stage_gate_blocked");
+    expect(blocked).toBeDefined();
+    expect(
+      (blocked!.eventData as { missing: string[] }).missing.length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("StageGateError 携带 stage + 中文 missing 列表(供前端 stepper 透传)", async () => {
+    const { gated } = makeGatedService();
+    const p = await gated.createProject(ctx, { title: "T" });
+    try {
+      await gated.transitionProjectStage(ctx, p.id, "research", {});
+      throw new Error("应当抛 StageGateError");
+    } catch (e) {
+      expect(e).toBeInstanceOf(StageGateError);
+      const ge = e as StageGateError;
+      expect(ge.details.stage).toBe("research");
+      expect(ge.details.missing.length).toBeGreaterThan(0);
+      expect(ge.code).toBe("ConflictError");
+    }
+  });
+
+  it("补齐研究 artifact 后,从 needs_review → completed 放行", async () => {
+    const { gated, addArtifact } = makeGatedService();
+    const p = await gated.createProject(ctx, { title: "T" });
+    // 第一次被拦 → needs_review。
+    await expect(
+      gated.transitionProjectStage(ctx, p.id, "research", {}),
+    ).rejects.toBeInstanceOf(StageGateError);
+    // 补上一个研究类 artifact。
+    addArtifact("research_note");
+    // 再次 transition(needs_review → completed)→ 放行。
+    const after = await gated.transitionProjectStage(ctx, p.id, "research", {});
+    const research = (await repo.listStages(ctx, p.id)).find(
+      (s) => s.stage === "research",
+    )!;
+    expect(research.status).toBe("completed");
+    expect(after.progressPct).toBeGreaterThan(0);
+  });
+
+  it("交付物齐备时 in_progress → completed 直接放行(不经 needs_review)", async () => {
+    const { gated, addArtifact } = makeGatedService();
+    const p = await gated.createProject(ctx, { title: "T" });
+    addArtifact("market_analysis"); // research 交付物先就位
+    const after = await gated.transitionProjectStage(ctx, p.id, "research", {});
+    expect(after).toBeDefined();
+    const research = (await repo.listStages(ctx, p.id)).find(
+      (s) => s.stage === "research",
+    )!;
+    expect(research.status).toBe("completed");
+  });
+
+  it("→skipped(带理由)绕过 gate:即便缺交付物也能跳过", async () => {
+    const { gated } = makeGatedService();
+    const p = await gated.createProject(ctx, { title: "T" });
+    // research in_progress,缺交付物,但带理由 → 跳过(不跑 gate)。
+    const skipped = await gated.transitionProjectStage(ctx, p.id, "research", {
+      reason: "本期不做研究",
+    });
+    expect(skipped).toBeDefined();
+    const research = (await repo.listStages(ctx, p.id)).find(
+      (s) => s.stage === "research",
+    )!;
+    expect(research.status).toBe("skipped");
+  });
+
+  it("validateStageGate 预检:缺 → ok=false + missing;齐 → ok=true", async () => {
+    const { gated, addArtifact } = makeGatedService();
+    const p = await gated.createProject(ctx, { title: "T" });
+    const before = await gated.validateStageGate(ctx, p.id, "planning");
+    expect(before.ok).toBe(false);
+    expect(before.missing.length).toBeGreaterThan(0);
+    addArtifact("content_contract");
+    const afterCheck = await gated.validateStageGate(ctx, p.id, "planning");
+    expect(afterCheck.ok).toBe(true);
+    expect(afterCheck.missing).toEqual([]);
+  });
+
+  it("各阶段接对应数据源:production/publishing/review", async () => {
+    const {
+      gated,
+      setReadyProduction,
+      setPublication,
+      setReview,
+    } = makeGatedService();
+    const p = await gated.createProject(ctx, { title: "T" });
+    // production:无 ready production → 拦;有 → 过。
+    expect((await gated.validateStageGate(ctx, p.id, "production")).ok).toBe(false);
+    setReadyProduction(true);
+    expect((await gated.validateStageGate(ctx, p.id, "production")).ok).toBe(true);
+    // publishing。
+    expect((await gated.validateStageGate(ctx, p.id, "publishing")).ok).toBe(false);
+    setPublication(true);
+    expect((await gated.validateStageGate(ctx, p.id, "publishing")).ok).toBe(true);
+    // review。
+    expect((await gated.validateStageGate(ctx, p.id, "review")).ok).toBe(false);
+    setReview(true);
+    expect((await gated.validateStageGate(ctx, p.id, "review")).ok).toBe(true);
+  });
+
+  it("无数据源(holder 未绑定)→ 诚实跳过 → gate 恒过(保持旧行为)", async () => {
+    // service 用默认 holder(current=null),无任何 reader。
+    const p = await service.createProject(ctx, { title: "T" });
+    const result = await service.validateStageGate(ctx, p.id, "research");
+    expect(result.ok).toBe(true); // 无数据源 → 不拦
+    expect(result.skipped.length).toBeGreaterThan(0); // 但诚实记为 skipped
+    expect(result.missing).toEqual([]);
+    // transition 也照旧放行(in_progress → completed)。
+    const after = await service.transitionProjectStage(ctx, p.id, "research", {});
+    const research = (await repo.listStages(ctx, p.id)).find(
+      (s) => s.stage === "research",
+    )!;
+    expect(research.status).toBe("completed");
+    expect(after).toBeDefined();
   });
 });

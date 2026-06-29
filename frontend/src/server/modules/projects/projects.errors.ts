@@ -42,3 +42,17 @@ export class ProjectStateError extends Error {
     this.name = "ProjectStateError";
   }
 }
+
+// §15/§16 内容门禁失败:一个阶段「声称完成」但其核心交付物缺失。是一种 ConflictError
+// (→409),但额外携带 `details.missing`(人类可读的中文缺失项列表)+ `details.stage`,
+// 让 dispatch route 把它透传进 error envelope 的 details,前端 stepper 据此显示
+// 「为什么进不去」。
+export class StageGateError extends Error {
+  readonly code = ErrorCode.ConflictError;
+  readonly details: { stage: string; missing: string[] };
+  constructor(stage: string, missing: string[]) {
+    super(`阶段「${stage}」核心交付物缺失,无法流转:${missing.join("、")}`);
+    this.name = "StageGateError";
+    this.details = { stage, missing };
+  }
+}

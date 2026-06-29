@@ -42,6 +42,9 @@ export const projectStageName = z.enum([
 export const stageStatus = z.enum([
   "pending",
   "in_progress",
+  // §16 内容门禁:一个阶段「声称完成」但 gate 未过(核心交付物缺失)时停在
+  // needs_review,等补齐交付物后再 → completed(而不是带空输入进下一阶段)。
+  "needs_review",
   "completed",
   "skipped",
 ]);
