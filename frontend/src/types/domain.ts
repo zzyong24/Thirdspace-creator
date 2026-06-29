@@ -48,12 +48,25 @@ export type Visibility = "private" | "unlisted" | "public";
 // ---------------------------------------------------------------------------
 
 export type ProjectStageName =
+  // 立项 Brief 地基:brief 是项目第一个阶段(新建/选题立项从 brief 起)。
+  | "brief"
   | "research"
   | "planning"
   | "script"
   | "production"
   | "publishing"
   | "review";
+
+// 结构化 Brief(立项 Brief 地基 / PRD §5.2)—— 装在 projects.brief_detail jsonb。
+export interface ProjectBriefDetail {
+  readonly targetAudience?: string;
+  readonly contentGoal?: string;
+  readonly contentFormat?: string;
+  readonly targetPlatforms: ReadonlyArray<string>;
+  readonly durationEstimate?: string;
+  readonly coreMessage?: string;
+  readonly successCriteria?: string;
+}
 
 export type ProjectStatus = "active" | "paused" | "archived" | "completed";
 // §16 needs_review:阶段「声称完成」但内容 gate 未过(核心交付物缺失)时的停泊态。
@@ -76,6 +89,9 @@ export interface Project extends BaseEntity, Timestamped {
   readonly userId: Id;
   readonly title: string;
   readonly brief: string;
+  // 结构化 Brief —— optional 于 domain Project(存量/demo 项目不带,读侧默认 {})。
+  // 真实 wire 形状由契约 projectResource.briefDetail 保证全字段。
+  readonly briefDetail?: ProjectBriefDetail;
   readonly contentCategory: string;
   readonly creationMode: CreationMode;
   readonly status: ProjectStatus;

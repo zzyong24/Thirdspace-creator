@@ -250,6 +250,17 @@ export interface ProjectOverviewViewModel extends BasePageViewModel {
     readonly eventType: string;
   }>;
   readonly projectInfo: ReadonlyArray<{ readonly label: string; readonly value: string }>;
+  // 结构化 Brief(立项 Brief 地基)—— current_stage===brief 时立项工作台读它做初值。
+  // 缺省时(老 VM / 非 brief 阶段)为 undefined,工作台按空 Brief 渲染。
+  readonly briefDetail?: {
+    readonly targetAudience?: string;
+    readonly contentGoal?: string;
+    readonly contentFormat?: string;
+    readonly targetPlatforms: ReadonlyArray<string>;
+    readonly durationEstimate?: string;
+    readonly coreMessage?: string;
+    readonly successCriteria?: string;
+  };
   readonly outputs: ReadonlyArray<ContentOutputSummary>;
   readonly publishing: ReadonlyArray<{
     readonly id: Id;

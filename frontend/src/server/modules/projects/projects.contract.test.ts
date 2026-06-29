@@ -195,8 +195,8 @@ describe("projects.transport — 16-op contract conformance", () => {
       true,
     );
     const parsed = listEnvelope(projectStageResource).parse(list);
-    // createProject seeds the 6-stage pipeline.
-    expect(parsed.data.length).toBe(6);
+    // createProject seeds the 7-stage pipeline (brief + 6, 立项 Brief 地基).
+    expect(parsed.data.length).toBe(7);
   });
 
   it("covers all 16 op ids + unknown → UnsupportedOperationError", async () => {

@@ -33,6 +33,7 @@ import type { ProjectStageName } from "@/types/domain";
 // `review` is terminal. Mirrors STAGE_ORDER in ProjectOverviewActions and the
 // transition handler.
 const STAGE_ORDER: ReadonlyArray<ProjectStageName> = [
+  "brief",
   "research",
   "planning",
   "script",

@@ -3,7 +3,7 @@ import {
   AuthenticationError,
   UnsupportedOperationError,
 } from "@creatoros/backend";
-import type { ProjectsService } from "./projects.service";
+import type { ProjectsService, BriefDetail } from "./projects.service";
 import type {
   ProjectRepository,
   ProjectRow,
@@ -49,12 +49,34 @@ export const PROJECT_OP_IDS = [
   "projects.activity.list",
 ] as const;
 
+// jsonb(unknown)→ 契约 projectBriefDetail 的规范形状(立项 Brief 地基)。丢未知键、
+// 平台数组只留非空字符串、字符串字段原样透传(empty `{}` → 全默认)。DTO 由显式
+// mapper 构造(SPEC §9),绝不直接把 Drizzle row 当 wire。
+function toBriefDetail(raw: unknown): ProjectResource["briefDetail"] {
+  const c = (raw ?? {}) as Record<string, unknown>;
+  const str = (v: unknown): string | undefined =>
+    typeof v === "string" && v.length > 0 ? v : undefined;
+  const platforms = Array.isArray(c.targetPlatforms)
+    ? c.targetPlatforms.filter((x): x is string => typeof x === "string")
+    : [];
+  return {
+    targetAudience: str(c.targetAudience),
+    contentGoal: str(c.contentGoal),
+    contentFormat: str(c.contentFormat),
+    targetPlatforms: platforms,
+    durationEstimate: str(c.durationEstimate),
+    coreMessage: str(c.coreMessage),
+    successCriteria: str(c.successCriteria),
+  };
+}
+
 function toProject(row: ProjectRow): ProjectResource {
   return {
     id: row.id,
     userId: row.userId,
     title: row.title,
     brief: row.brief,
+    briefDetail: toBriefDetail((row as { briefDetail?: unknown }).briefDetail),
     contentCategory: row.contentCategory,
     creationMode: row.creationMode as ProjectResource["creationMode"],
     status: row.status as ProjectResource["status"],
@@ -165,6 +187,7 @@ export function createProjectsTransport(
           const row = await service.createProject(ctx, {
             title: String(b.title ?? ""),
             brief: b.brief as string | undefined,
+            briefDetail: b.briefDetail as BriefDetail | undefined,
             contentType: b.contentType as string | undefined,
             creationMode: b.creationMode as string | undefined,
             targetPlatforms: b.targetPlatforms as string[] | undefined,
@@ -182,6 +205,10 @@ export function createProjectsTransport(
               await service.patchProject(ctx, p.projectId ?? "", {
                 title: b.title as string | undefined,
                 brief: b.brief as string | undefined,
+                briefDetail:
+                  "briefDetail" in b
+                    ? (b.briefDetail as Record<string, unknown> | undefined)
+                    : undefined,
                 starred: b.starred as boolean | undefined,
               }),
             ),

@@ -15,6 +15,10 @@ export const projects = pgTable("projects", {
   userId: text("user_id").notNull(),
   title: text("title").notNull(),
   brief: text("brief").notNull().default(""),
+  // 结构化 Brief(立项 Brief 地基 / PRD §5.2)—— jsonb 扩展位(沿用 facets/card 模式,
+  // 不新建 project_brief 表)。装 {targetAudience, contentGoal, contentFormat,
+  // targetPlatforms[], durationEstimate, coreMessage, successCriteria}。默认空对象。
+  briefDetail: jsonb("brief_detail").notNull().default({}),
   contentCategory: text("content_category").notNull().default(""),
   creationMode: text("creation_mode").notNull(),
   status: text("status").notNull(),
@@ -118,6 +122,7 @@ CREATE TABLE IF NOT EXISTS projects (
   user_id TEXT NOT NULL,
   title TEXT NOT NULL,
   brief TEXT NOT NULL DEFAULT '',
+  brief_detail JSONB NOT NULL DEFAULT '{}'::jsonb,
   content_category TEXT NOT NULL DEFAULT '',
   creation_mode TEXT NOT NULL,
   status TEXT NOT NULL,

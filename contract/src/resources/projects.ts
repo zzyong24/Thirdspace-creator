@@ -12,11 +12,30 @@ import {
 // BaseEntity = { id }; Timestamped = { createdAt, updatedAt }.
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
 
+// 结构化 Brief(立项 Brief 地基 / PRD §5.2)—— 装在 projects.brief_detail jsonb
+// (沿用 facets/card 的 jsonb 扩展模式,不新建 project_brief 表)。EVERY field 是
+// optional/default 所以一个裸 `{}` 是合法的空 Brief(刚立项),立项工作台逐字段填,
+// brief 阶段 gate 校验核心必填齐(目标受众/内容目标/内容形式/目标平台≥1/核心信息)。
+export const projectBriefDetail = z.object({
+  targetAudience: z.string().optional(), // 目标受众
+  contentGoal: z.string().optional(), // 内容目标(这条内容要达成什么)
+  contentFormat: z.string().optional(), // 内容形式(口播 / 短剧 / 图文…)
+  targetPlatforms: z.array(z.string()).default([]), // 目标平台
+  durationEstimate: z.string().optional(), // 预估时长
+  coreMessage: z.string().optional(), // 核心信息(一句话主张)
+  successCriteria: z.string().optional(), // 成功标准
+});
+export type ProjectBriefDetail = z.infer<typeof projectBriefDetail>;
+
 export const projectResource = z.object({
   id,
   userId: id,
   title: z.string(),
   brief: z.string(),
+  // 结构化 Brief —— `{}` 解析为全默认(空 Brief);整体 default 用「解析后的空 Brief」
+  // (含 targetPlatforms:[]),保证存量 payload(不带 briefDetail)仍能 parse 且形状一致
+  // (zod 的外层 .default 不会再跑内层字段默认,故显式 parse 一次)。create/patch 可写。
+  briefDetail: projectBriefDetail.default(() => projectBriefDetail.parse({})),
   contentCategory: z.string(),
   creationMode,
   status: projectStatus,

@@ -30,6 +30,7 @@ import type { ProjectOverviewViewModel } from "@/types/view-models";
  */
 
 const STAGE_ORDER = [
+  "brief",
   "research",
   "planning",
   "script",
@@ -52,6 +53,32 @@ interface ProjectDto {
   readonly progressPct: number;
   readonly startedAt: string;
   readonly targetCompletedAt: string | null;
+  // 结构化 Brief —— 立项工作台读它做初值(契约 projectResource.briefDetail)。
+  readonly briefDetail?: {
+    readonly targetAudience?: string;
+    readonly contentGoal?: string;
+    readonly contentFormat?: string;
+    readonly targetPlatforms?: ReadonlyArray<string>;
+    readonly durationEstimate?: string;
+    readonly coreMessage?: string;
+    readonly successCriteria?: string;
+  };
+}
+
+// 把 projects.get 的 briefDetail 投影到 VM 形状(targetPlatforms 兜底为 [])。
+function projectBriefDetail(
+  project: ProjectDto,
+): ProjectOverviewViewModel["briefDetail"] {
+  const b = project.briefDetail ?? {};
+  return {
+    targetAudience: b.targetAudience,
+    contentGoal: b.contentGoal,
+    contentFormat: b.contentFormat,
+    targetPlatforms: b.targetPlatforms ?? [],
+    durationEstimate: b.durationEstimate,
+    coreMessage: b.coreMessage,
+    successCriteria: b.successCriteria,
+  };
 }
 
 interface ContentOutputDto {
@@ -238,6 +265,7 @@ export async function buildProjectOverviewWorkspaceViewModel(
       stage: project.currentStage,
       progressPct: project.progressPct,
       projectInfo: buildProjectInfo(project),
+      briefDetail: projectBriefDetail(project),
       outputs,
       activities,
       stages: fixtureVm.stages,
@@ -385,6 +413,7 @@ export async function buildProjectOverviewWorkspaceViewModel(
     stage: project.currentStage,
     progressPct: project.progressPct,
     projectInfo: buildProjectInfo(project),
+    briefDetail: projectBriefDetail(project),
     outputs,
     activities,
     // 阶段 stepper — real `projects.stages.list` (degrades to the derivation).

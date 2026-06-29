@@ -232,6 +232,37 @@ describe("candidate service", () => {
     expect(refreshed.status).toBe("promoted");
   });
 
+  // 选题 → Brief 映射(§6.1):promote 用候选标题 + 选题卡填一份结构化 Brief 草稿,
+  // 随立项落到新项目 brief 阶段(立项工作台)。这里断言传给 createProject 的 briefDetail。
+  it("promote seeds a brief draft from the candidate title + card (选题→Brief 映射)", async () => {
+    const cand = await svc.createCandidate(ctx, {
+      title: "如何选定内容定位",
+      angle: "用一条视频讲清楚定位",
+      contentRole: "trust",
+    });
+    // 补全选题卡(targetAudience / oneLiner / format / proposal)。
+    await svc.patchCandidate(ctx, cand.id, {
+      card: {
+        targetAudience: "想转型做内容的职场人",
+        oneLiner: "三步找到你的内容定位",
+        format: "口播",
+        proposal: "建立专业信任,引导私域咨询",
+      },
+    });
+    await svc.promote(ctx, cand.id);
+    const [, cmd] = ports.projects.createProject.mock.calls[0]!;
+    // current_stage=brief 由 ProjectsService 内部设(promote 不显式传);此处验草稿映射。
+    expect(cmd.briefDetail).toEqual({
+      targetAudience: "想转型做内容的职场人",
+      contentGoal: "建立专业信任,引导私域咨询",
+      contentFormat: "口播",
+      coreMessage: "三步找到你的内容定位",
+    });
+    // 标题 → 项目名;来源标注写进 brief 文本(手动灵感)。
+    expect(cmd.title).toBe("如何选定内容定位");
+    expect(cmd.brief).toContain("手动灵感");
+  });
+
   it("promote on an already-promoted Candidate throws PromoteStateError (no double-promote)", async () => {
     const cand = await svc.createCandidate(ctx, { title: "选题", angle: "" });
     await svc.promote(ctx, cand.id);

@@ -11,6 +11,7 @@ import {
 } from "../primitives";
 import {
   projectResource,
+  projectBriefDetail,
   projectStageResource,
   contentOutputResource,
   contentRole,
@@ -48,6 +49,8 @@ export const projectsOperations = {
     body: z.object({
       title: z.string().min(1),
       brief: z.string().default(""),
+      // 结构化 Brief 草稿(可选)—— 选题立项会带候选填的 brief 草稿;手动新建可不带。
+      briefDetail: projectBriefDetail.optional(),
       contentType: contentType.optional(),
       creationMode: creationMode.optional(),
       targetPlatforms: z.array(platformId).optional(),
@@ -71,6 +74,8 @@ export const projectsOperations = {
     body: z.object({
       title: z.string().optional(),
       brief: z.string().optional(),
+      // 立项工作台保存 —— 结构化 Brief 可编辑(整体替换 brief_detail jsonb)。
+      briefDetail: projectBriefDetail.optional(),
       starred: z.boolean().optional(),
     }),
     response: projectResource,

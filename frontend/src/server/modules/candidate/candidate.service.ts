@@ -44,13 +44,24 @@ import {
 // with the same aiTaskId is idempotent (no duplicate Candidate).
 
 export interface CandidateProjectsPort {
-  // Ownership-stamped project create for promote → Project (Research-stage seed).
+  // Ownership-stamped project create for promote → Project. 立项 Brief 地基:新建项目
+  // 从 brief 阶段起(ProjectsService 内部设 current_stage=brief),promote 额外带一份用
+  // 候选填好的结构化 Brief 草稿(briefDetail),落到立项工作台供创作者核对/补全。
   // Returns at least the new project id.
   createProject(
     ctx: RequestContext,
     cmd: {
       title: string;
       brief?: string;
+      briefDetail?: {
+        targetAudience?: string;
+        contentGoal?: string;
+        contentFormat?: string;
+        targetPlatforms?: string[];
+        durationEstimate?: string;
+        coreMessage?: string;
+        successCriteria?: string;
+      };
       contentType?: string;
       creationMode?: string;
       targetPlatforms?: string[];
@@ -300,11 +311,38 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
           `PromoteStateError: candidate ${candidateId} is already promoted`,
         );
       }
-      // 1. create the Research-stage Project (类比 promoteReviewInsight). The
-      //    ProjectsService stamps ctx.userId on the new project.
+      // 选题 → Brief 映射(§6.1):用候选(标题 + 选题卡)填一份结构化 Brief 草稿,随
+      //   立项一起落到新项目的 brief 阶段(立项工作台),供创作者核对/补全后过 gate:
+      //     title          → 项目名(下方 createProject 的 title)
+      //     card.targetAudience → 目标受众
+      //     card.oneLiner / angle → 核心信息(一句话主张)
+      //     card.format    → 内容形式
+      //     card.proposal  → 内容目标(立项建议作内容目标的起点)
+      //     source         → 来源标注(写进 brief 文本,便于追溯)
+      const dto = toCandidateDto(cand);
+      const card = dto.card;
+      const briefDraft = {
+        targetAudience: card.targetAudience,
+        contentGoal: card.proposal,
+        contentFormat: card.format,
+        coreMessage: card.oneLiner ?? (dto.angle || undefined),
+      };
+      const SOURCE_LABELS: Record<string, string> = {
+        trend: "行业热点",
+        benchmark: "对标拆解",
+        demand: "受众需求",
+        idea: "手动灵感",
+      };
+      const sourceLabel = SOURCE_LABELS[dto.source] ?? dto.source;
+      const briefText = dto.angle
+        ? `${dto.angle}（选题来源:${sourceLabel}）`
+        : `选题立项,来源:${sourceLabel}`;
+      // 1. create the Project at the brief stage with the seeded Brief draft. The
+      //    ProjectsService stamps ctx.userId + sets current_stage=brief internally.
       const project = await projects.createProject(ctx, {
         title: cand.title,
-        brief: cand.angle,
+        brief: briefText,
+        briefDetail: briefDraft,
       });
       // 2. flip the candidate to promoted + 3. write the topic_promotions row.
       //    pglite is in-process synchronous; the writes run back-to-back inside this

@@ -21,6 +21,7 @@ import type {
 import type { ProjectOverviewViewModel } from "@/types/view-models";
 
 const STAGE_ORDER: ReadonlyArray<ProjectStageName> = [
+  "brief",
   "research",
   "planning",
   "script",

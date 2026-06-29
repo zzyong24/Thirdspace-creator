@@ -73,8 +73,11 @@ export interface StageGateResult {
   skipped: string[];
 }
 
-// The project's six fixed stages, in pipeline order (data-model §3 / SPEC §22).
+// The project's fixed stages, in pipeline order (data-model §3 / SPEC §22).
+// 立项 Brief 地基(项目工作流补真 ②):brief 是第一个阶段 —— 新建/选题立项的项目
+// 从 brief 起,填齐结构化 Brief 经 gate 后才进 research。存量项目 current_stage 不变。
 export const PROJECT_STAGES = [
+  "brief",
   "research",
   "planning",
   "script",
@@ -114,9 +117,24 @@ type OutputStatus =
   | "ready"
   | "published";
 
+// 结构化 Brief(立项 Brief 地基 / PRD §5.2)—— 服务内部的规范形状。装在
+// projects.brief_detail jsonb,沿用 facets/card 的 jsonb 扩展模式。所有字段可选,
+// 一个空 `{}` 是合法的「刚立项」Brief;brief 阶段 gate 才校验核心必填齐。
+export interface BriefDetail {
+  targetAudience?: string;
+  contentGoal?: string;
+  contentFormat?: string;
+  targetPlatforms?: string[];
+  durationEstimate?: string;
+  coreMessage?: string;
+  successCriteria?: string;
+}
+
 export interface CreateProjectCommand {
   title: string;
   brief?: string;
+  // 结构化 Brief 草稿(选题立项会带候选填的草稿;手动新建可不带 → 空 Brief)。
+  briefDetail?: BriefDetail;
   contentType?: string;
   creationMode?: string;
   targetPlatforms?: string[];
@@ -132,7 +150,13 @@ export interface ProjectsService {
   patchProject(
     ctx: RequestContext,
     projectId: string,
-    patch: { title?: string; brief?: string; starred?: boolean },
+    patch: {
+      title?: string;
+      brief?: string;
+      // 立项工作台保存 —— 结构化 Brief 整体替换 brief_detail jsonb。
+      briefDetail?: BriefDetail;
+      starred?: boolean;
+    },
   ): Promise<ProjectRow>;
   archiveProject(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
   transitionProjectStage(
@@ -283,6 +307,49 @@ const PLANNING_ARTIFACT_TYPES = new Set([
 ]);
 const SCRIPT_ARTIFACT_TYPES = new Set(["master_script", "output_script"]);
 
+// brief 阶段 gate 的核心必填项(立项 Brief 地基 / PRD §5.2 + §7)。每条:从规范化
+// briefDetail 取值的 getter + 缺失时的中文文案。项目名(title)单列(在 project row 上)。
+const BRIEF_REQUIRED_FIELDS: Array<{
+  label: string;
+  get: (b: BriefDetail) => unknown;
+}> = [
+  { label: "目标受众", get: (b) => b.targetAudience },
+  { label: "内容目标", get: (b) => b.contentGoal },
+  { label: "内容形式", get: (b) => b.contentFormat },
+  {
+    label: "目标平台(至少 1 个)",
+    get: (b) => (b.targetPlatforms && b.targetPlatforms.length > 0 ? "ok" : ""),
+  },
+  { label: "核心信息", get: (b) => b.coreMessage },
+];
+
+// jsonb(unknown / 旧空值)→ 规范化的 BriefDetail。丢未知键、字符串裁空白、平台数组
+// 只留非空字符串。纯函数(无 Date.now/随机),所以服务的确定性不被破坏。
+export function normalizeBriefDetail(raw: unknown): BriefDetail {
+  const c = (raw ?? {}) as Record<string, unknown>;
+  const s = (v: unknown): string | undefined =>
+    typeof v === "string" && v.trim().length > 0 ? v.trim() : undefined;
+  const platforms = Array.isArray(c.targetPlatforms)
+    ? c.targetPlatforms.filter(
+        (x): x is string => typeof x === "string" && x.trim().length > 0,
+      )
+    : [];
+  const out: BriefDetail = { targetPlatforms: platforms };
+  const ta = s(c.targetAudience);
+  if (ta) out.targetAudience = ta;
+  const cg = s(c.contentGoal);
+  if (cg) out.contentGoal = cg;
+  const cf = s(c.contentFormat);
+  if (cf) out.contentFormat = cf;
+  const de = s(c.durationEstimate);
+  if (de) out.durationEstimate = de;
+  const cm = s(c.coreMessage);
+  if (cm) out.coreMessage = cm;
+  const sc = s(c.successCriteria);
+  if (sc) out.successCriteria = sc;
+  return out;
+}
+
 export function createProjectsService(
   repo: ProjectRepository,
   deps: ServiceDeps,
@@ -329,6 +396,33 @@ export function createProjectsService(
       [];
 
     switch (fromStage) {
+      case "brief": {
+        // brief 阶段 gate(立项 Brief 地基 / PRD §7):核心必填齐才能离开 brief 进
+        // research。数据源是 PROJECT 自身(title + brief_detail jsonb),不是 peer
+        // reader,所以这里直接读 project row —— 永远可校验,绝不「无数据源诚实跳过」
+        // (缺就是 missing)。复用第①步的 missing/needs_review 机制。
+        const project = await repo.get(ctx, projectId);
+        const brief = normalizeBriefDetail(
+          (project as { briefDetail?: unknown }).briefDetail,
+        );
+        // 项目名(title 在 project row 上,单列校验)。
+        checks.push({
+          label: "项目名称",
+          outcome:
+            typeof project.title === "string" && project.title.trim() !== ""
+              ? "ok"
+              : "missing",
+        });
+        for (const field of BRIEF_REQUIRED_FIELDS) {
+          const v = field.get(brief);
+          checks.push({
+            label: field.label,
+            outcome:
+              typeof v === "string" && v.trim() !== "" ? "ok" : "missing",
+          });
+        }
+        break;
+      }
       case "research":
         checks.push({
           label: "可用的研究结论或证据(research_note / 市场或竞品分析等 artifact)",
@@ -426,16 +520,19 @@ export function createProjectsService(
     async createProject(ctx, cmd) {
       const ts = deps.now();
       const projectId = deps.nextId("project");
-      // 1. insert the root project (status active, first stage research).
+      // 1. insert the root project (status active). 立项 Brief 地基:新建项目从
+      //    `brief` 阶段起(填齐结构化 Brief 经 gate 才进 research)。briefDetail 装
+      //    选题立项带来的草稿(手动新建则为空 {})。
       const project = await repo.insertProject(ctx, {
         id: projectId,
         userId: ctx.userId,
         title: cmd.title,
         brief: cmd.brief ?? "",
+        briefDetail: normalizeBriefDetail(cmd.briefDetail),
         contentCategory: "",
         creationMode: cmd.creationMode ?? "guided",
         status: "active",
-        currentStage: "research",
+        currentStage: "brief",
         progressPct: 0,
         starred: false,
         startedAt: ts,
@@ -445,7 +542,7 @@ export function createProjectsService(
         createdAt: ts,
         updatedAt: ts,
       });
-      // 2. seed the six fixed stages (first in_progress/started, rest pending).
+      // 2. seed the fixed stages (first = brief in_progress/started, rest pending).
       const stageRows: StageRow[] = PROJECT_STAGES.map((stage, idx) => ({
         id: deps.nextId("stage"),
         projectId,
@@ -490,6 +587,10 @@ export function createProjectsService(
       const set: Partial<ProjectRow> = { updatedAt: deps.now() };
       if (patch.title !== undefined) set.title = patch.title;
       if (patch.brief !== undefined) set.brief = patch.brief;
+      // 立项工作台保存 —— 结构化 Brief 整体替换 brief_detail(规范化后落库)。
+      if (patch.briefDetail !== undefined) {
+        set.briefDetail = normalizeBriefDetail(patch.briefDetail);
+      }
       if (patch.starred !== undefined) set.starred = patch.starred;
       return repo.updateProjectRow(ctx, projectId, set);
     },

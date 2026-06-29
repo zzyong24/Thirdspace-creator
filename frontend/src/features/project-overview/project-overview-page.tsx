@@ -38,6 +38,7 @@ import { TagChip } from "@/components/content/tag-chip";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
 import { ProjectOverviewActions } from "@/features/project-overview/project-actions";
+import { BriefWorkbench } from "@/features/project-overview/brief-workbench";
 import {
   Avatar,
   AvatarFallback,
@@ -68,6 +69,17 @@ export function ProjectOverviewPage({
   viewModel,
 }: ProjectOverviewPageProps) {
   const vm = viewModel ?? buildProjectOverviewViewModel(projectId);
+  // 立项 Brief 地基:current_stage===brief 时渲染立项工作台(PRD §7)替代标准总览栅格。
+  // 工作台是 Client island,保存/进入下一步走真 patchProject / transition。
+  if (vm.stage === "brief") {
+    return (
+      <BriefWorkbench
+        projectId={vm.projectId}
+        projectTitle={vm.projectTitle}
+        briefDetail={vm.briefDetail}
+      />
+    );
+  }
   return (
     <main
       data-app="creatoros"
@@ -122,6 +134,7 @@ export function ProjectOverviewPage({
 // ---------------------------------------------------------------------------
 
 const STAGE_LABELS: Record<ProjectStageName, string> = {
+  brief: "立项准备",
   research: "选题调研",
   planning: "策划构思",
   script: "脚本撰写",
@@ -131,6 +144,7 @@ const STAGE_LABELS: Record<ProjectStageName, string> = {
 };
 
 const STAGE_ORDER: ReadonlyArray<ProjectStageName> = [
+  "brief",
   "research",
   "planning",
   "script",

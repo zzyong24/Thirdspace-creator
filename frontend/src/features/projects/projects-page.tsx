@@ -370,6 +370,7 @@ function mapProjectStatusToTab(status: string): string {
 // ---------------------------------------------------------------------------
 
 const STAGE_LABELS: Record<ProjectStageName, string> = {
+  brief: "立项中",
   research: "复盘中",
   planning: "策划中",
   script: "写稿中",
@@ -379,6 +380,7 @@ const STAGE_LABELS: Record<ProjectStageName, string> = {
 };
 
 const STAGE_DESCRIPTORS: Record<ProjectStageName, string> = {
+  brief: "立项准备",
   research: "调研与洞察",
   planning: "结构大纲",
   script: "完善录制稿",
@@ -388,6 +390,7 @@ const STAGE_DESCRIPTORS: Record<ProjectStageName, string> = {
 };
 
 const STAGE_CHIP_TONE: Record<ProjectStageName, { bg: string; fg: string }> = {
+  brief: { bg: "rgba(148,163,184,0.16)", fg: "#475569" },
   research: { bg: "rgba(124,58,237,0.12)", fg: "#7c3aed" },
   planning: { bg: "rgba(245,158,11,0.12)", fg: "#d97706" },
   script: { bg: "rgba(16,185,129,0.14)", fg: "#059669" },

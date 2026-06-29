@@ -30,6 +30,7 @@ import type { ProjectStageName } from "@/types/domain";
 // The project pipeline order. The next stage is the adjacent forward step;
 // `review` is terminal. Mirrors STAGE_ORDER in the transition handler.
 const STAGE_ORDER: ReadonlyArray<ProjectStageName> = [
+  "brief",
   "research",
   "planning",
   "script",

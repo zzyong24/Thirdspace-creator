@@ -567,6 +567,7 @@ function suggestionCta(
 }
 
 const STAGE_LABELS: Record<ProjectStageName | string, string> = {
+  brief: "立项",
   research: "研究",
   planning: "策划",
   script: "脚本",

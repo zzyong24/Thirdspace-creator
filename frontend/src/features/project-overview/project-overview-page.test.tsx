@@ -118,12 +118,14 @@ describe("ProjectOverviewPage", () => {
       '[data-slot="project-progress-card"]',
     );
     expect(progressCard).not.toBeNull();
-    // The stepper surfaces 6 stages in the canonical Chinese order.
+    // The stepper surfaces 7 stages in the canonical Chinese order (立项 Brief
+    // 地基:brief「立项准备」是第一个阶段)。
     const stepperItems = within(progressCard as HTMLElement).getAllByRole(
       "listitem",
     );
-    expect(stepperItems).toHaveLength(6);
+    expect(stepperItems).toHaveLength(7);
     const expectedStageLabels = [
+      "立项准备",
       "选题调研",
       "策划构思",
       "脚本撰写",

@@ -170,8 +170,12 @@ describe("buildProjectOverviewWorkspaceViewModel (GAP-OVW-1)", () => {
     expect(byStage.research.status).toBe("in_progress");
     expect(byStage.research.progressPct).toBe(30);
     expect(byStage.script.status).toBe("skipped");
-    // All six canonical stages render in order.
+    // 立项 Brief 地基:brief 是第一个阶段。这里 stages 列表不含 brief 行(老项目),
+    // orderStages 用 currentStage(script)派生该槽 → brief 在 script 之前 → completed。
+    expect(byStage.brief.status).toBe("completed");
+    // All seven canonical stages render in order (brief first).
     expect(vm.stages.map((s) => s.stage)).toEqual([
+      "brief",
       "research",
       "planning",
       "script",

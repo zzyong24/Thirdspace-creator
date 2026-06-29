@@ -31,6 +31,11 @@ export const projectStatus = z.enum([
 ]);
 
 export const projectStageName = z.enum([
+  // 立项 Brief 地基(项目工作流补真 ②):brief 是项目的第一个阶段 —— 新建/选题立项
+  // 的项目从 brief 起,在立项工作台填齐结构化 Brief(目标受众/内容目标/内容形式/
+  // 目标平台/核心信息)后,经 gate 校验才能离开 brief 进 research。存量项目的
+  // current_stage 不被改写(多在 research,仍合法),只影响新建项目的起点。
+  "brief",
   "research",
   "planning",
   "script",

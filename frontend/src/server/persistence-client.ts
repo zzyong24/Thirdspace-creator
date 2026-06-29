@@ -421,6 +421,7 @@ function toRow(p: CanonicalProject): ProjectRow {
     userId: p.userId,
     title: p.title,
     brief: p.brief ?? "",
+    briefDetail: p.briefDetail ?? {},
     contentCategory: p.contentCategory ?? "",
     creationMode: p.creationMode,
     status: p.status,
@@ -1918,6 +1919,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: deps.now,
     nextId: deps.nextId,
     projects: {
+      // promote → Project:转发 briefDetail 草稿,新项目落 brief 阶段(立项工作台)。
       createProject: async (ctx, cmd) => {
         const row = await projectsService.createProject(ctx, cmd);
         return { id: row.id };
