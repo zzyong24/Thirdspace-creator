@@ -144,3 +144,27 @@ contract(合同:zod 定义的操作/资源/工具 schema)
 - 其余模块 0~1 跨模块耦合,共享依赖安家后可批量(workflow 一 agent 一模块,worktree 隔离)。
 
 发现的隐藏 bug(已修):backend `project-repository.test.ts` 缺 `briefDetail` 字段——旧 `pnpm verify` 没跑 backend typecheck,被新结构揪出。
+
+---
+
+## 附:Phase 3 构建计划(Agent Runtime,已验证真实 API)
+
+**已装真包**:`ai@7.0.4` + `@ai-sdk/openai@4` `@ai-sdk/anthropic@4` `@ai-sdk/deepseek@3` `@ai-sdk/openai-compatible@3`(进 `ai-worker` 包)。
+**API 取自 node_modules 真实 .d.ts(非猜)**:
+- 工具:`tool({ description, inputSchema: zodSchema, execute })`(导出自 `ai`)。
+- Agent 循环:`generateText({ model, system, prompt, tools, stopWhen: stepCountIs(N), onStepFinish })` —— `stopWhen`/`stepCountIs`/`onStepFinish`/`hasToolCall` 均确认存在;另有 `Agent`/`ToolLoopAgent` 类可选。
+- 结构化输出:`generateObject({ model, schema })` 或 `generateText({..., experimental_output: Output.object({ schema }) })`(`Output` 确认导出)。
+- 测试可注入:`MockLanguageModelV4`(from `ai/test`)+ `simulateReadableStream` —— 不用真 key 跑确定性单测。
+- Provider 工厂:`createOpenAI/createAnthropic/createDeepSeek/createOpenAICompatible({ apiKey, baseURL })`(用户自带 key + relay)。
+
+**现状(架构地图)**:`frontend/src/server/ai/` 有 **13 个 runner**,两套执行路径——A) `runClaudeAgent`(订阅 SDK,topic/research 用,不可换模型)B) `llmCompleter`(provider 网关,其余 11 个)。`ai-worker` 是**孤儿包**(已有 state-machine/ports/agent-runner-factory/fake-agent-runner/candidate-schemas + 各节点 SKILL.md)。触发在 `persistence-client.ts:1602–1964` 的 `void runX()` fire-and-forget。`ai.service` 状态机:queued→running→awaiting_confirmation→succeeded/failed/cancelled;唯一写口 `recordCandidate`。
+
+**构建步骤**:
+1. **复活 `ai-worker`** 当 Agent Runtime 家(它已有 skills + 状态机骨架);新增 `provider-factory.ts`:把现有 `ResolvedLlmConfig`(apiFormat/baseUrl/model/token,resolveLlmConfig 已按 capability 解析)映射成 AI SDK `LanguageModel`。
+2. **工具注册表** `tools/`:`{ name, inputSchema(zod), execute }` → 包成 `tool()`。execute 调 backend service port(读人设/搜热点/读知识/存候选);写类工具**只产候选**不直接落库(保不变量)。复用 creative-context 的 reader。
+3. **AgentRuntime**(薄壳):`generateText` + `stopWhen: stepCountIs` + `onStepFinish`→写 `ai_task_steps`;最终输出 `Output.object({ schema })` 校验,不合格重试。护栏:最大步数/超时。
+4. **`ai_task_steps` 表**(新迁移)+ 契约 `ai.tasks.steps.list`(后续加 SSE 流):字段 taskId/stepNo/kind(think|tool_call|tool_result|final)/label/data jsonb/createdAt。
+5. **先打通「选题」一个节点**端到端跑在新 Runtime,发步骤事件;`MockLanguageModelV4` 写确定性单测 + 真链路冒烟。
+6. **迁移其余 12 节点** → skill+工具;删 `frontend/src/server/ai/*` 与旧 `runClaudeAgent` → **门卫 R2 清零**(AI SDK 离开前端)。
+7. **前端步骤日志 UI**:把现在的转圈换成实时「第1步读人设…第5步生成可视化」。
+8. **多模型(Phase 5)**:按 capability 配 DeepSeek写文案/GPT做图/Claude推理 —— 就是 provider-factory + 现有 resolve 的几行配置。
