@@ -1,5 +1,5 @@
 import type { LanguageModel } from "ai";
-import { runTopicNode, type TopicBasis, type TopicItem } from "../nodes/topic-node.js";
+import { runTopicNode, type TopicBasis, type TopicItem } from "../nodes/topic-node";
 
 // 选题任务编排(Phase 3)—— 把「一次选题 AI 任务」从开跑到落候选的完整生命周期串起来,
 // 跑在新 Agent Runtime 上。这层是厂商中立 + 不碰具体持久化:所有副作用走注入的 ports

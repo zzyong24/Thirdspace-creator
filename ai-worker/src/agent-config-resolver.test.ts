@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveRunOptions } from "./agent-config-resolver.js";
+import { resolveRunOptions } from "./agent-config-resolver";
 
 const agentConfig = {
   agentType: "script.rewrite",

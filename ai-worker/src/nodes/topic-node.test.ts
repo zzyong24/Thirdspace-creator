@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
-import { runTopicNode, parseTopics } from "./topic-node.js";
+import { runTopicNode, parseTopics } from "./topic-node";
 
 function finalText(text: string): LanguageModelV4GenerateResult {
   return {

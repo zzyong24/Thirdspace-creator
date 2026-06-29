@@ -1,5 +1,5 @@
-import type { AiTaskStore, ArtifactVersionView, DomainWritePort } from "./ports.js";
-import { canTransition } from "./state-machine.js";
+import type { AiTaskStore, ArtifactVersionView, DomainWritePort } from "./ports";
+import { canTransition } from "./state-machine";
 
 export interface ConfirmDeps {
   tasks: AiTaskStore;

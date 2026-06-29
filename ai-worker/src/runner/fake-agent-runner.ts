@@ -1,4 +1,4 @@
-import type { AgentRunner, ContextTools } from "../ports.js";
+import type { AgentRunner, ContextTools } from "../ports";
 
 export interface FakeRunnerConfig {
   script: (tools: ContextTools) => void;

@@ -8,27 +8,27 @@ export const AI_WORKER_PACKAGE = "@creatoros/ai-worker";
 export {
   createAgentRunner,
   createClaudeAgentRunner,
-} from "./runner/agent-runner-factory.js";
-export type { AgentRunnerEnv } from "./runner/agent-runner-factory.js";
-export { createFakeAgentRunner } from "./runner/fake-agent-runner.js";
-export { drainQueue } from "./run-loop.js";
-export type { RunLoopDeps, RunLoopOutcome } from "./run-loop.js";
-export { runTask } from "./orchestrator.js";
-export type { RunTaskDeps, RunTaskResult } from "./orchestrator.js";
-export { confirmResult, rejectResult } from "./confirm.js";
-export { canTransition, AI_TASK_STATUSES } from "./state-machine.js";
-export type { AiTaskStatus } from "./state-machine.js";
-export { resolveRunOptions } from "./agent-config-resolver.js";
+} from "./runner/agent-runner-factory";
+export type { AgentRunnerEnv } from "./runner/agent-runner-factory";
+export { createFakeAgentRunner } from "./runner/fake-agent-runner";
+export { drainQueue } from "./run-loop";
+export type { RunLoopDeps, RunLoopOutcome } from "./run-loop";
+export { runTask } from "./orchestrator";
+export type { RunTaskDeps, RunTaskResult } from "./orchestrator";
+export { confirmResult, rejectResult } from "./confirm";
+export { canTransition, AI_TASK_STATUSES } from "./state-machine";
+export type { AiTaskStatus } from "./state-machine";
+export { resolveRunOptions } from "./agent-config-resolver";
 export type {
   AgentConfigRow,
   ModelConfigRow,
-} from "./agent-config-resolver.js";
-export { createContextTools } from "./context-tools.js";
+} from "./agent-config-resolver";
+export { createContextTools } from "./context-tools";
 export {
   parseCandidate,
   formalizes,
   RESULT_TYPES,
-} from "./candidate-schemas.js";
+} from "./candidate-schemas";
 export type {
   AgentRunner,
   AgentRunOptions,
@@ -40,7 +40,7 @@ export type {
   ContextTools,
   DomainReadPort,
   DomainWritePort,
-} from "./ports.js";
+} from "./ports";
 
 // Phase 3 Agent Runtime(Vercel AI SDK 薄壳)+ 节点 + 编排。host(persistence-client)
 // 解析 model(modelFor)+ 装配 positioningBrief + 注入真 ports,调 runTopicTask 即可。
@@ -49,21 +49,21 @@ export {
   type AgentStepEvent,
   type RunAgentNodeOptions,
   type RunAgentNodeResult,
-} from "./runtime/agent-runtime.js";
+} from "./runtime/agent-runtime";
 export {
   modelFor,
   type ModelSpec,
   type ApiFormat,
-} from "./runtime/provider-factory.js";
-export { toToolSet, type ToolDef } from "./runtime/tool-registry.js";
+} from "./runtime/provider-factory";
+export { toToolSet, type ToolDef } from "./runtime/tool-registry";
 export {
   runTopicNode,
   parseTopics,
   type TopicItem,
   type TopicBasis,
-} from "./nodes/topic-node.js";
+} from "./nodes/topic-node";
 export {
   runTopicTask,
   type TopicTaskPorts,
   type RunTopicTaskInput,
-} from "./orchestrate/run-topic-task.js";
+} from "./orchestrate/run-topic-task";

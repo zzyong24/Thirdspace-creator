@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { createContextTools } from "./context-tools.js";
-import { createFixtureStore } from "./fixtures/fixture-store.js";
+import { createContextTools } from "./context-tools";
+import { createFixtureStore } from "./fixtures/fixture-store";
 
 function refs() {
   return [

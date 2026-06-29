@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
-import { runTopicTask, type TopicTaskPorts } from "./run-topic-task.js";
-import type { TopicItem } from "../nodes/topic-node.js";
+import { runTopicTask, type TopicTaskPorts } from "./run-topic-task";
+import type { TopicItem } from "../nodes/topic-node";
 
 function finalText(text: string): LanguageModelV4GenerateResult {
   return {

@@ -8,7 +8,7 @@ import type {
   DomainWritePort,
   KnowledgeItemView,
   ProjectView,
-} from "../ports.js";
+} from "../ports";
 
 export interface FixtureStore {
   tasks: AiTaskStore;

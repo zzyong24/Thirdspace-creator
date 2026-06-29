@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseCandidate, RESULT_TYPES } from "./candidate-schemas.js";
+import { parseCandidate, RESULT_TYPES } from "./candidate-schemas";
 
 describe("parseCandidate", () => {
   it("accepts a valid artifact_version candidate", () => {

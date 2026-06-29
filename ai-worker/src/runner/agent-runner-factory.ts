@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { AgentRunner, ContextTools } from "../ports.js";
-import { createFakeAgentRunner } from "./fake-agent-runner.js";
+import type { AgentRunner, ContextTools } from "../ports";
+import { createFakeAgentRunner } from "./fake-agent-runner";
 
 // Convert a ToolSpec's loose inputSchema markers ("string" | "string[]" | "object") into
 // the Zod raw shape the Agent SDK's `tool()` requires. Keeps context-tools SDK-free while

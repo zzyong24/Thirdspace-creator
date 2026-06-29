@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { canTransition, AI_TASK_STATUSES } from "./state-machine.js";
+import { canTransition, AI_TASK_STATUSES } from "./state-machine";
 
 describe("canTransition", () => {
   it("allows the candidate-confirm happy path", () => {

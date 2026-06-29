@@ -1,4 +1,4 @@
-import type { AiTaskStatus } from "./state-machine.js";
+import type { AiTaskStatus } from "./state-machine";
 
 export interface AiTaskRecord {
   id: string;

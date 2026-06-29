@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { drainQueue } from "./run-loop.js";
-import { createAgentRunner } from "./runner/agent-runner-factory.js";
-import { createFixtureStore } from "./fixtures/fixture-store.js";
+import { drainQueue } from "./run-loop";
+import { createAgentRunner } from "./runner/agent-runner-factory";
+import { createFixtureStore } from "./fixtures/fixture-store";
 
 // run-loop test — the dev drainer claims the queued task, runs it through the orchestrator
 // on the deterministic fake runner, and stops when the queue is empty. The claimed task

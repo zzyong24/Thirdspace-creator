@@ -1,8 +1,8 @@
-import type { AgentRunner, AiTaskStore, DomainReadPort } from "./ports.js";
-import type { AgentConfigRow, ModelConfigRow } from "./agent-config-resolver.js";
-import { resolveRunOptions } from "./agent-config-resolver.js";
-import { createContextTools } from "./context-tools.js";
-import { parseCandidate, formalizes } from "./candidate-schemas.js";
+import type { AgentRunner, AiTaskStore, DomainReadPort } from "./ports";
+import type { AgentConfigRow, ModelConfigRow } from "./agent-config-resolver";
+import { resolveRunOptions } from "./agent-config-resolver";
+import { createContextTools } from "./context-tools";
+import { parseCandidate, formalizes } from "./candidate-schemas";
 
 export interface RunTaskDeps {
   tasks: AiTaskStore;

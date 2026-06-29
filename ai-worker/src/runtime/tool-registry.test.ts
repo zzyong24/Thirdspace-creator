@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
-import { toToolSet, type ToolDef } from "./tool-registry.js";
-import { runAgentNode } from "./agent-runtime.js";
+import { toToolSet, type ToolDef } from "./tool-registry";
+import { runAgentNode } from "./agent-runtime";
 
 const FINAL: LanguageModelV4GenerateResult = {
   content: [{ type: "text", text: "完成" }],

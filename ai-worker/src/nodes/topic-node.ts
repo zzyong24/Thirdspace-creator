@@ -1,5 +1,5 @@
 import type { LanguageModel } from "ai";
-import { runAgentNode, type AgentStepEvent } from "../runtime/agent-runtime.js";
+import { runAgentNode, type AgentStepEvent } from "../runtime/agent-runtime";
 
 // 选题节点(Phase 3 第一个跑在新 Agent Runtime 上的真节点)。一个「节点」= 一个 skill:
 // 系统提示(角色/方法论)+ 用哪个 capability 的模型(由调用方解析后传 model)+ 输出怎么解析。

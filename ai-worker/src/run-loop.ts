@@ -2,9 +2,9 @@ import type {
   AgentRunner,
   AiTaskStore,
   DomainReadPort,
-} from "./ports.js";
-import type { AgentConfigRow, ModelConfigRow } from "./agent-config-resolver.js";
-import { runTask, type RunTaskResult } from "./orchestrator.js";
+} from "./ports";
+import type { AgentConfigRow, ModelConfigRow } from "./agent-config-resolver";
+import { runTask, type RunTaskResult } from "./orchestrator";
 
 // Task 11 dev run mode (foundation §3 / design-spec §4.1). A bounded polling loop:
 // claimNextQueued → runTask(orchestrator) → repeat until the queue drains or a max-batch

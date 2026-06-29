@@ -1,4 +1,4 @@
-import type { AgentRunOptions } from "./ports.js";
+import type { AgentRunOptions } from "./ports";
 
 export interface AgentConfigRow {
   agentType: string;

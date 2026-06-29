@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { modelFor } from "./provider-factory.js";
+import { modelFor } from "./provider-factory";
 
 // 只验「按 apiFormat/baseUrl 能构造出一个 LanguageModel」—— 不走网络(假 key)。
 // 证明模型中立层把三种协议族 + 自定义端点都接住了。

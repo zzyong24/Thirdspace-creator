@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { createFakeAgentRunner } from "./fake-agent-runner.js";
-import { createContextTools } from "../context-tools.js";
-import { createFixtureStore } from "../fixtures/fixture-store.js";
+import { createFakeAgentRunner } from "./fake-agent-runner";
+import { createContextTools } from "../context-tools";
+import { createFixtureStore } from "../fixtures/fixture-store";
 
 const refs = [
   { id: "r1", aiTaskId: "task-1", entityType: "artifact", entityId: "artifact-1", relationType: "rewrite_source" },

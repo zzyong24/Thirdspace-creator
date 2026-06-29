@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createFixtureStore } from "./fixture-store.js";
+import { createFixtureStore } from "./fixture-store";
 
 describe("fixture store", () => {
   it("claims the queued task and flips it to running", async () => {

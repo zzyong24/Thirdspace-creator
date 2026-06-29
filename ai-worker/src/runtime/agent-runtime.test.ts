@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { MockLanguageModelV4 } from "ai/test";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
-import { runAgentNode } from "./agent-runtime.js";
+import { runAgentNode } from "./agent-runtime";
 
 // 用 MockLanguageModelV4 跑确定性单测 —— 不用真 API key,证明 runtime 的 generateText
 // 接线 + 步骤事件采集 + 结果回传都对。工具多步链路的测试随工具注册表落地后补。

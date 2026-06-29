@@ -5,7 +5,7 @@ import type {
   DomainReadPort,
   ToolInvocation,
   ToolSpec,
-} from "./ports.js";
+} from "./ports";
 
 const SERVER = "creatoros";
 

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { createAgentRunner } from "./agent-runner-factory.js";
-import { createContextTools } from "../context-tools.js";
-import { createFixtureStore } from "../fixtures/fixture-store.js";
-import { runTask } from "../orchestrator.js";
+import { createAgentRunner } from "./agent-runner-factory";
+import { createContextTools } from "../context-tools";
+import { createFixtureStore } from "../fixtures/fixture-store";
+import { runTask } from "../orchestrator";
 
 // Task 11 runner factory test — with ANTHROPIC_API_KEY UNSET, createAgentRunner()
 // returns the deterministic FakeAgentRunner; the orchestrator drives a queued task to

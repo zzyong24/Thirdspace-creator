@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { runTask } from "./orchestrator.js";
-import { confirmResult, rejectResult } from "./confirm.js";
-import { createFixtureStore } from "./fixtures/fixture-store.js";
-import { createFakeAgentRunner } from "./runner/fake-agent-runner.js";
+import { runTask } from "./orchestrator";
+import { confirmResult, rejectResult } from "./confirm";
+import { createFixtureStore } from "./fixtures/fixture-store";
+import { createFakeAgentRunner } from "./runner/fake-agent-runner";
 
 const agentConfig = { agentType: "script.rewrite", capabilities: {}, settings: {} };
 const modelConfig = { capability: "script.rewrite", modelName: "claude-fable-5", settings: {} };
