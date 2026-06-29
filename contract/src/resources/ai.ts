@@ -71,6 +71,17 @@ export const aiTaskResultResource = z.object({
 });
 export type AITaskResultResource = z.infer<typeof aiTaskResultResource>;
 
+// AITaskStep (Phase 3 Agent Runtime 步骤流) — 一次 agent 运行逐步产生的过程事件,喂窗口步骤
+// 日志(第1步读人设 / 第2步搜热点…)。read-only,按 stepNo 升序。
+export const aiTaskStepResource = z.object({
+  stepNo: z.number().int(),
+  kind: z.string(), // step | tool_call | final
+  text: z.string(),
+  toolCalls: z.array(z.unknown()),
+  createdAt: iso8601,
+});
+export type AITaskStepResource = z.infer<typeof aiTaskStepResource>;
+
 // AgentConfiguration extends BaseEntity (declares createdAt/updatedAt explicitly).
 export const agentConfigurationResource = z.object({
   id,

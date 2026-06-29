@@ -6,6 +6,7 @@ import {
   aiMessageResource,
   aiTaskResource,
   aiTaskResultResource,
+  aiTaskStepResource,
 } from "../resources/ai";
 
 const conversationParams = z.object({ conversationId: id });
@@ -88,6 +89,15 @@ export const aiOperations = {
     path: "/ai/tasks/:taskId/results",
     params: taskParams,
     response: aiTaskResultResource,
+    isList: true,
+    fr: ["FR-AI-TASKS-RESULTS-LIST"],
+  }),
+  listTaskSteps: defineEndpoint({
+    id: "ai.tasks.steps.list",
+    method: "GET",
+    path: "/ai/tasks/:taskId/steps",
+    params: taskParams,
+    response: aiTaskStepResource,
     isList: true,
     fr: ["FR-AI-TASKS-RESULTS-LIST"],
   }),

@@ -27,6 +27,7 @@ export const AI_OP_IDS = [
   "ai.tasks.list",
   "ai.tasks.get",
   "ai.tasks.results.list",
+  "ai.tasks.steps.list",
   "ai.tasks.confirm",
   "ai.tasks.cancel",
 ] as const;
@@ -111,6 +112,13 @@ export function createAiTransport(
         }
         case "ai.tasks.results.list": {
           const rows = await service.listResults(ctx, p.taskId ?? "");
+          return {
+            data: rows,
+            meta: { requestId, page: 1, pageSize: Math.max(rows.length, 1), total: rows.length },
+          };
+        }
+        case "ai.tasks.steps.list": {
+          const rows = await service.listSteps(ctx, p.taskId ?? "");
           return {
             data: rows,
             meta: { requestId, page: 1, pageSize: Math.max(rows.length, 1), total: rows.length },
