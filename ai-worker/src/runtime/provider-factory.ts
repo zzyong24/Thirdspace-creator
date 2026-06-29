@@ -25,12 +25,25 @@ export interface ModelSpec {
   token: string;
 }
 
+/**
+ * 统一 anthropic baseURL 约定 —— 与旧 @anthropic-ai/sdk 路径共用同一份模型配置。
+ * 旧 SDK 给 baseURL `…/anthropic` 会自己补 `/v1/messages`;而 @ai-sdk/anthropic 只补 `/messages`
+ * (它默认 baseURL 本身已含 `/v1`)。若不归一,同一条 `…/anthropic` 配置在新路径会缺 `/v1` → 404。
+ * 这里把缺版本段(/vN)的 anthropic baseURL 补上 `/v1`,用户只配 `…/anthropic` 两条 SDK 路径都通。
+ */
+export function normalizeAnthropicBaseUrl(baseUrl: string): string {
+  const trimmed = baseUrl.replace(/\/+$/, "");
+  return /\/v\d+$/.test(trimmed) ? trimmed : `${trimmed}/v1`;
+}
+
 /** 把 ModelSpec 解析成一个可直接喂给 runAgentNode 的 LanguageModel。 */
 export function modelFor(spec: ModelSpec): LanguageModel {
   if (spec.apiFormat === "anthropic") {
     const provider = createAnthropic({
       apiKey: spec.token,
-      ...(spec.baseUrl ? { baseURL: spec.baseUrl } : {}),
+      ...(spec.baseUrl
+        ? { baseURL: normalizeAnthropicBaseUrl(spec.baseUrl) }
+        : {}),
     });
     return provider(spec.model);
   }
