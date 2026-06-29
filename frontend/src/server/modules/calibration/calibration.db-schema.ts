@@ -9,5 +9,6 @@ export {
   rubricVersions,
   predictions,
   calibrationResults,
+  calibrationRuleSuggestions,
   CALIBRATION_DDL,
 } from "@creatoros/backend";

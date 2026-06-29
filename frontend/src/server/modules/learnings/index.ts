@@ -18,6 +18,9 @@ export {
   type LearningsService,
   type ServiceDeps,
   type LearningsProjectsPort,
+  type LearningsCalibrationPort,
+  type CalibrationRuleSuggestionDto,
+  type SuggestCalibrationRuleInput,
   type PromoteReviewInsightInput,
 } from "./learnings.service";
 

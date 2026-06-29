@@ -12,6 +12,7 @@ import {
   rubricVersionResource,
   predictionResource,
   calibrationResultResource,
+  calibrationRuleSuggestionResource,
 } from "./calibration.schema";
 
 // Calibration contract test (Step 4) — for EACH of the 7 op ids, drive the transport
@@ -33,15 +34,22 @@ async function call(
   return res as { data: unknown };
 }
 
-function makeTransport(db: Db): Transport {
+function makeService(db: Db) {
   let seq = 0;
-  const service = createCalibrationService({
+  return createCalibrationService({
     db,
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${++seq}`,
     ingestion: { assertRunExists: async () => {} },
     learnings: { adjustConfidence: async () => {} },
   });
+}
+
+function makeTransport(db: Db): Transport {
+  // ONE service per transport (the factory returns the same instance every request) so the
+  // deterministic id seq stays monotonic across calls — a fresh service per request would
+  // reset seq=0 and collide on the predictions PK.
+  const service = makeService(db);
   return createCalibrationTransport(() => service);
 }
 
@@ -215,5 +223,68 @@ describe("calibration contract (each of 7 ops validates against its DTO)", () =>
     const dto = calibrationResultResource.parse(r.data);
     expect(dto.ingestionRunId).toBe("run-1");
     expect(typeof dto.deviation).toBe("object");
+  });
+
+  // --- 复盘飞轮回流 轨B (Learning→校准) ---
+
+  it("calibration.suggestions.list → calibrationRuleSuggestionResource[] (pending only)", async () => {
+    const t = makeTransport(db);
+    const svc = makeService(db);
+    const { rubricId } = await seedRubric(t);
+    // The Learnings service reaches this seam through the injected port; here we call the
+    // public service directly to seed a real CalibrationRuleSuggestion row.
+    await svc.createRuleSuggestion(ctx, {
+      learningId: "learning-1",
+      rubricId,
+      proposedDimension: {
+        key: "altruism",
+        label: "利他性",
+        weight: 0.2,
+        description: "复盘回流维度",
+      },
+      rationale: "复盘结论回流",
+    });
+    const r = await call(t, "calibration.suggestions.list", {
+      query: { page: 1, pageSize: 20 },
+    });
+    const rows = (r.data as unknown[]).map((row) =>
+      calibrationRuleSuggestionResource.parse(row),
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.status).toBe("pending");
+    expect(rows[0]!.learningId).toBe("learning-1");
+    expect(rows[0]!.proposedDimension.key).toBe("altruism");
+  });
+
+  it("calibration.suggestions.adopt → rubricVersionResource (folds dim, renormalized Σ=1, marks adopted)", async () => {
+    const t = makeTransport(db);
+    const svc = makeService(db);
+    const { rubricId } = await seedRubric(t);
+    const sug = await svc.createRuleSuggestion(ctx, {
+      learningId: "learning-1",
+      rubricId,
+      proposedDimension: {
+        key: "altruism",
+        label: "利他性",
+        weight: 0.2,
+        description: "复盘回流维度",
+      },
+      rationale: "复盘结论回流",
+    });
+    const r = await call(t, "calibration.suggestions.adopt", {
+      params: { suggestionId: sug.id },
+    });
+    const version = rubricVersionResource.parse(r.data);
+    // The new version appends the proposed dimension (DIMENSIONS had hook/persona/cta).
+    expect(version.versionNumber).toBe(2);
+    const keys = version.dimensions.map((d) => d.key);
+    expect(keys).toContain("altruism");
+    const sum = version.dimensions.reduce((acc, d) => acc + d.weight, 0);
+    expect(sum).toBeCloseTo(1.0, 4);
+    // The suggestion is now terminal: a re-list returns it no longer (pending-only).
+    const list = await call(t, "calibration.suggestions.list", {
+      query: { page: 1, pageSize: 20 },
+    });
+    expect(list.data as unknown[]).toHaveLength(0);
   });
 });

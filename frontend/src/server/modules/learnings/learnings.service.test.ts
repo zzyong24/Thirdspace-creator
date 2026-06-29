@@ -206,3 +206,124 @@ describe("learnings service (validationStatus machine + confidence + apply)", ()
     expect(learning.recommendation).toBe("脚本前置钩子");
   });
 });
+
+// 复盘飞轮回流 轨B (Learning→校准) — suggestCalibrationRule promotes a Learning into a
+// CalibrationRuleSuggestion through the injected port. Covers: ownership gate, the
+// type→维度 derivation, body override, and the honest no-seam / no-rubric ConflictError.
+describe("learnings suggestCalibrationRule (复盘飞轮回流 轨B)", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  function makeCalibrationPort(rubricId: string | null = "rubric-x") {
+    const createSuggestion = vi.fn(
+      async (
+        _ctx: RequestContext,
+        input: {
+          learningId: string;
+          rubricId: string;
+          proposedDimension: {
+            key: string;
+            label: string;
+            weight: number;
+            description: string;
+          };
+          rationale: string;
+        },
+      ) => ({
+        id: "calibsug-1",
+        userId: "user-a",
+        learningId: input.learningId,
+        rubricId: input.rubricId,
+        status: "pending" as const,
+        proposedDimension: input.proposedDimension,
+        rationale: input.rationale,
+        adoptedVersionId: null,
+        createdAt: NOW,
+        adoptedAt: null,
+      }),
+    );
+    return {
+      resolveCurrentRubricId: vi.fn(async () => rubricId),
+      createSuggestion,
+    };
+  }
+
+  function makeServiceWithCalib(
+    calibration: ReturnType<typeof makeCalibrationPort> | undefined,
+  ): LearningsService {
+    let seq = 0;
+    return createLearningsService({
+      db,
+      now: () => NOW,
+      nextId: (prefix: string) => `${prefix}-c-${++seq}`,
+      projects: makeProjectsPort(),
+      calibration,
+    });
+  }
+
+  it("derives the 维度建议 from the Learning type and writes a real suggestion", async () => {
+    const calib = makeCalibrationPort();
+    const service = makeServiceWithCalib(calib);
+    // A 'hook' learning (promoteReviewInsight stamps the type).
+    const learning = await service.promoteReviewInsight(ctx, {
+      reviewId: "review-1",
+      insightTitle: "前三秒抛冲突保留率高",
+      insightBody: "body",
+      learningType: "hook",
+      recommendation: "",
+    });
+    const suggestion = await service.suggestCalibrationRule(
+      ctx,
+      learning.id,
+      {},
+    );
+    expect(suggestion.status).toBe("pending");
+    expect(suggestion.rubricId).toBe("rubric-x");
+    expect(suggestion.proposedDimension.key).toBe("hook"); // hook → 钩子强度
+    // The port received the ownership-gated learning id + derived rationale.
+    expect(calib.createSuggestion).toHaveBeenCalledTimes(1);
+    const arg = calib.createSuggestion.mock.calls[0]![1];
+    expect(arg.learningId).toBe(learning.id);
+    expect(arg.rationale).toContain("前三秒抛冲突保留率高");
+  });
+
+  it("honors a body override (dimensionKey/label/weight)", async () => {
+    const calib = makeCalibrationPort();
+    const service = makeServiceWithCalib(calib);
+    const learning = await service.createLearning(ctx, { title: "L" });
+    const suggestion = await service.suggestCalibrationRule(ctx, learning.id, {
+      dimensionKey: "cta",
+      dimensionLabel: "CTA 清晰度",
+      weight: 0.3,
+      rationale: "自定义",
+    });
+    expect(suggestion.proposedDimension.key).toBe("cta");
+    expect(suggestion.proposedDimension.weight).toBe(0.3);
+    expect(suggestion.rationale).toBe("自定义");
+  });
+
+  it("rejects a cross-user / unknown learning with OwnershipError (404)", async () => {
+    const service = makeServiceWithCalib(makeCalibrationPort());
+    await expect(
+      service.suggestCalibrationRule(ctx, "learning-nope", {}),
+    ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("ConflictError when no calibration seam is wired", async () => {
+    const service = makeServiceWithCalib(undefined);
+    const learning = await service.createLearning(ctx, { title: "L" });
+    await expect(
+      service.suggestCalibrationRule(ctx, learning.id, {}),
+    ).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("ConflictError when there is no rubric to reflow into", async () => {
+    const service = makeServiceWithCalib(makeCalibrationPort(null));
+    const learning = await service.createLearning(ctx, { title: "L" });
+    await expect(
+      service.suggestCalibrationRule(ctx, learning.id, {}),
+    ).rejects.toBeInstanceOf(ConflictError);
+  });
+});

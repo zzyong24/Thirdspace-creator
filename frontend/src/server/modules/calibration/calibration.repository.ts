@@ -4,6 +4,7 @@ import {
   rubricVersions,
   predictions,
   calibrationResults,
+  calibrationRuleSuggestions,
 } from "./calibration.db-schema";
 import { OwnershipError } from "./calibration.errors";
 
@@ -20,6 +21,8 @@ export type RubricRow = typeof rubrics.$inferSelect;
 export type RubricVersionRow = typeof rubricVersions.$inferSelect;
 export type PredictionRow = typeof predictions.$inferSelect;
 export type CalibrationResultRow = typeof calibrationResults.$inferSelect;
+export type RuleSuggestionRow =
+  typeof calibrationRuleSuggestions.$inferSelect;
 
 export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
@@ -57,6 +60,21 @@ export interface CreateResultInput {
   deviation: Record<string, unknown>;
 }
 
+// 复盘飞轮回流 轨B — the CalibrationRuleSuggestion write/read inputs.
+export interface ProposedDimension {
+  key: string;
+  label: string;
+  weight: number;
+  description: string;
+}
+
+export interface CreateRuleSuggestionInput {
+  learningId: string;
+  rubricId: string;
+  proposedDimension: ProposedDimension;
+  rationale: string;
+}
+
 export interface CalibrationRepository {
   // Fixture hydration (insert with explicit user_id already on the row).
   seedRubrics(rows: RubricRow[]): Promise<void>;
@@ -65,6 +83,9 @@ export interface CalibrationRepository {
   // overview KPI / 回流对照 / 中栏评分表 resolve real rows. onConflictDoNothing (idempotent).
   seedPredictions(rows: PredictionRow[]): Promise<void>;
   seedResults(rows: CalibrationResultRow[]): Promise<void>;
+  // 复盘飞轮回流 轨B — canonical seed for the CalibrationRuleSuggestion (so the 校准中心 demo
+  // shows a real pending reflow suggestion). onConflictDoNothing → idempotent.
+  seedRuleSuggestions(rows: RuleSuggestionRow[]): Promise<void>;
 
   createRubric(input: { name: string }): Promise<RubricRow>;
   insertRubricVersion(input: InsertRubricVersionInput): Promise<RubricVersionRow>;
@@ -99,6 +120,26 @@ export interface CalibrationRepository {
   // All calibration results for the user (createdAt desc) — drives completedReflows count,
   // avgDeviation, latestFinding, and the reflow对照 join (result ⋈ its prediction).
   listAllResults(): Promise<CalibrationResultRow[]>;
+
+  // --- 复盘飞轮回流 轨B (Learning→校准) CalibrationRuleSuggestion ---
+  // Idempotent on (learning_id, rubric_id, status='pending'): a re-reflow of the same
+  // Learning onto the same Rubric returns the EXISTING pending suggestion (never a dup).
+  createRuleSuggestion(
+    input: CreateRuleSuggestionInput,
+  ): Promise<RuleSuggestionRow>;
+  // The ownership-gated single read (cross-user / unknown → OwnershipError → 404).
+  getRuleSuggestion(suggestionId: string): Promise<RuleSuggestionRow>;
+  // User-scoped pending-suggestion list (createdAt desc) + total, for pagination.
+  listPendingRuleSuggestions(page: {
+    limit: number;
+    offset: number;
+  }): Promise<{ rows: RuleSuggestionRow[]; total: number }>;
+  // Mark a suggestion terminal (adopted|dismissed); stamps adoptedVersionId + adoptedAt.
+  // SQL guard `status='pending'` backs the terminal invariant at the DB layer.
+  markRuleSuggestionAdopted(
+    suggestionId: string,
+    input: { status: "adopted" | "dismissed"; adoptedVersionId: string | null },
+  ): Promise<RuleSuggestionRow>;
 }
 
 export function createCalibrationRepository(
@@ -176,6 +217,14 @@ export function createCalibrationRepository(
     async seedResults(rows) {
       if (rows.length === 0) return;
       await db.insert(calibrationResults).values(rows).onConflictDoNothing();
+    },
+
+    async seedRuleSuggestions(rows) {
+      if (rows.length === 0) return;
+      await db
+        .insert(calibrationRuleSuggestions)
+        .values(rows)
+        .onConflictDoNothing();
     },
 
     async createRubric({ name }) {
@@ -367,6 +416,106 @@ export function createCalibrationRepository(
         .from(calibrationResults)
         .where(eq(calibrationResults.userId, deps.userId))
         .orderBy(desc(calibrationResults.createdAt));
+    },
+
+    async createRuleSuggestion(input) {
+      // Idempotent reflow: if a PENDING suggestion already exists for this
+      // (learning, rubric), return it instead of inserting a duplicate — re-clicking
+      // 回流到校准 never spawns a second pending row.
+      const existing = await db
+        .select()
+        .from(calibrationRuleSuggestions)
+        .where(
+          and(
+            eq(calibrationRuleSuggestions.userId, deps.userId),
+            eq(calibrationRuleSuggestions.learningId, input.learningId),
+            eq(calibrationRuleSuggestions.rubricId, input.rubricId),
+            eq(calibrationRuleSuggestions.status, "pending"),
+          ),
+        );
+      if (existing[0]) return existing[0];
+      const inserted = await db
+        .insert(calibrationRuleSuggestions)
+        .values({
+          id: deps.nextId("calibsug"),
+          userId: deps.userId,
+          learningId: input.learningId,
+          rubricId: input.rubricId,
+          status: "pending",
+          proposedDimension: input.proposedDimension,
+          rationale: input.rationale,
+          adoptedVersionId: null,
+          createdAt: deps.now(),
+          adoptedAt: null,
+        })
+        .returning();
+      return inserted[0]!;
+    },
+
+    async getRuleSuggestion(suggestionId) {
+      const rows = await db
+        .select()
+        .from(calibrationRuleSuggestions)
+        .where(
+          and(
+            eq(calibrationRuleSuggestions.userId, deps.userId),
+            eq(calibrationRuleSuggestions.id, suggestionId),
+          ),
+        );
+      const row = rows[0];
+      if (!row) {
+        throw new OwnershipError(
+          `OwnershipError: calibration rule suggestion not found: ${suggestionId}`,
+        );
+      }
+      return row;
+    },
+
+    async listPendingRuleSuggestions({ limit, offset }) {
+      const rows = await db
+        .select()
+        .from(calibrationRuleSuggestions)
+        .where(
+          and(
+            eq(calibrationRuleSuggestions.userId, deps.userId),
+            eq(calibrationRuleSuggestions.status, "pending"),
+          ),
+        )
+        .orderBy(desc(calibrationRuleSuggestions.createdAt))
+        .limit(limit)
+        .offset(offset);
+      const all = await db
+        .select({ id: calibrationRuleSuggestions.id })
+        .from(calibrationRuleSuggestions)
+        .where(
+          and(
+            eq(calibrationRuleSuggestions.userId, deps.userId),
+            eq(calibrationRuleSuggestions.status, "pending"),
+          ),
+        );
+      return { rows, total: all.length };
+    },
+
+    async markRuleSuggestionAdopted(suggestionId, input) {
+      // SQL `status='pending'` guard backs the terminal invariant (a re-adopt of an
+      // already-terminal suggestion matches 0 rows). The service enforces the state
+      // machine + ownership on top.
+      const updated = await db
+        .update(calibrationRuleSuggestions)
+        .set({
+          status: input.status,
+          adoptedVersionId: input.adoptedVersionId,
+          adoptedAt: deps.now(),
+        })
+        .where(
+          and(
+            eq(calibrationRuleSuggestions.userId, deps.userId),
+            eq(calibrationRuleSuggestions.id, suggestionId),
+            eq(calibrationRuleSuggestions.status, "pending"),
+          ),
+        )
+        .returning();
+      return updated[0]!;
     },
   };
 }

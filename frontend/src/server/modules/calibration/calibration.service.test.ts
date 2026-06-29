@@ -254,4 +254,112 @@ describe("calibration service", () => {
     expect(again.deviation).toMatchObject({ views: 200, leads: -2 });
     expect(adjustConfidence).toHaveBeenCalledTimes(1); // not fired again
   });
+
+  // --- 复盘飞轮回流 轨B (Learning→校准) CalibrationRuleSuggestion ---
+
+  it("createRuleSuggestion is ownership-gated on the rubric + idempotent on pending", async () => {
+    const ctx = ctxFor("user-a");
+    const rubric = await service.createRubric(ctx, {
+      name: "r",
+      dimensions: DIMENSIONS,
+    });
+    const dim = {
+      key: "altruism",
+      label: "利他性",
+      weight: 0.2,
+      description: "复盘回流",
+    };
+    const s1 = await service.createRuleSuggestion(ctx, {
+      learningId: "learning-1",
+      rubricId: rubric.id,
+      proposedDimension: dim,
+      rationale: "复盘结论",
+    });
+    expect(s1.status).toBe("pending");
+    // Idempotent: re-reflowing the SAME (learning, rubric) returns the existing pending row.
+    const s2 = await service.createRuleSuggestion(ctx, {
+      learningId: "learning-1",
+      rubricId: rubric.id,
+      proposedDimension: dim,
+      rationale: "复盘结论",
+    });
+    expect(s2.id).toBe(s1.id);
+    const { rows, total } = await service.listRuleSuggestions(ctx, {
+      limit: 20,
+      offset: 0,
+    });
+    expect(total).toBe(1);
+    expect(rows).toHaveLength(1);
+    // Cross-user rubric → OwnershipError (404).
+    await expect(
+      service.createRuleSuggestion(ctxFor("user-b"), {
+        learningId: "learning-1",
+        rubricId: rubric.id,
+        proposedDimension: dim,
+        rationale: "x",
+      }),
+    ).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("adoptRuleSuggestion appends a NEW version folding the dim, renormalized Σ=1, marks adopted", async () => {
+    const ctx = ctxFor("user-a");
+    const rubric = await service.createRubric(ctx, {
+      name: "r",
+      dimensions: DIMENSIONS,
+    });
+    const sug = await service.createRuleSuggestion(ctx, {
+      learningId: "learning-1",
+      rubricId: rubric.id,
+      proposedDimension: {
+        key: "altruism",
+        label: "利他性",
+        weight: 0.2,
+        description: "复盘回流",
+      },
+      rationale: "复盘结论",
+    });
+    const version = await service.adoptRuleSuggestion(ctx, sug.id);
+    expect(version.versionNumber).toBe(2);
+    const keys = version.dimensions.map((d) => d.key);
+    expect(keys).toContain("altruism");
+    expect(keys).toContain("hook"); // existing dims preserved
+    const sum = version.dimensions.reduce((acc, d) => acc + d.weight, 0);
+    expect(sum).toBeCloseTo(1.0, 4);
+    // The rubric's current version is re-pointed to the new one.
+    const refetched = await service.getRubric(ctx, rubric.id);
+    expect(refetched.currentVersion.versionNumber).toBe(2);
+    // The suggestion is now terminal (pending list empty) — a re-adopt → ConflictError.
+    const { total } = await service.listRuleSuggestions(ctx, {
+      limit: 20,
+      offset: 0,
+    });
+    expect(total).toBe(0);
+    await expect(
+      service.adoptRuleSuggestion(ctx, sug.id),
+    ).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("adoptRuleSuggestion REPLACES an existing dimension key (bump weight) rather than dup", async () => {
+    const ctx = ctxFor("user-a");
+    const rubric = await service.createRubric(ctx, {
+      name: "r",
+      dimensions: DIMENSIONS, // has hook/persona/cta
+    });
+    const sug = await service.createRuleSuggestion(ctx, {
+      learningId: "learning-1",
+      rubricId: rubric.id,
+      proposedDimension: {
+        key: "hook", // already present
+        label: "钩子强度（复盘加权）",
+        weight: 0.6,
+        description: "复盘回流：强化钩子",
+      },
+      rationale: "复盘结论",
+    });
+    const version = await service.adoptRuleSuggestion(ctx, sug.id);
+    const hookDims = version.dimensions.filter((d) => d.key === "hook");
+    expect(hookDims).toHaveLength(1); // replaced, not duplicated
+    const sum = version.dimensions.reduce((acc, d) => acc + d.weight, 0);
+    expect(sum).toBeCloseTo(1.0, 4);
+  });
 });

@@ -176,3 +176,28 @@ export const calibrationOverviewResource = z.object({
 export type CalibrationOverviewResource = z.infer<
   typeof calibrationOverviewResource
 >;
+
+// CalibrationRuleSuggestion — 复盘飞轮回流 轨B (Learning→校准). A 复盘 Learning promoted into an
+// explicit, adoptable rubric-rule suggestion. `proposedDimension` is the 维度建议 the 采纳 folds
+// into a NEW RubricVersion (renormalized); status pending→adopted|dismissed is terminal.
+const ruleSuggestionDimension = z.object({
+  key: z.string(),
+  label: z.string(),
+  weight: z.number(),
+  description: z.string().default(""),
+});
+export const calibrationRuleSuggestionResource = z.object({
+  id,
+  userId: id,
+  learningId: id, // the source 复盘 Learning
+  rubricId: id, // the target Rubric this suggestion bumps
+  status: z.enum(["pending", "adopted", "dismissed"]),
+  proposedDimension: ruleSuggestionDimension,
+  rationale: z.string(), // 一句话:这条复盘为什么得出这个维度建议
+  adoptedVersionId: id.nullable(), // the RubricVersion 采纳 minted (null until adopted)
+  createdAt: iso8601,
+  adoptedAt: iso8601.nullable(), // null until adopted/dismissed
+});
+export type CalibrationRuleSuggestionResource = z.infer<
+  typeof calibrationRuleSuggestionResource
+>;

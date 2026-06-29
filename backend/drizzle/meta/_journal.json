@@ -43,6 +43,13 @@
       "when": 1782379400000,
       "tag": "0005_project_brief_detail",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782379500000,
+      "tag": "0006_calibration_rule_suggestions",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,7 @@ import {
   learningResource,
   learningApplicationResource,
 } from "../resources/learnings";
+import { calibrationRuleSuggestionResource } from "../resources/calibration";
 
 const learningParams = z.object({ learningId: id });
 
@@ -62,5 +63,26 @@ export const learningsOperations = {
     }),
     response: learningResource,
     fr: ["FR-LEARNINGS-EVALUATE"],
+  }),
+  // 复盘飞轮回流 轨B (Learning→校准): promote a 复盘 Learning into an EXPLICIT, adoptable
+  // calibration rule-suggestion (creates a real CalibrationRuleSuggestion the 校准中心 reads).
+  // The optional body carries the 维度建议 (key/label/weight/rubricId); omitted fields default
+  // server-side from the Learning's type. This is the 显式回流 op — a Learning becomes a rule
+  // that constrains future scoring, not just passive downstream context.
+  suggestCalibrationRule: defineEndpoint({
+    id: "learnings.calibrationSuggestions.create",
+    method: "POST",
+    path: "/learnings/:learningId/calibration-suggestions",
+    params: learningParams,
+    body: z.object({
+      rubricId: id.optional(),
+      dimensionKey: z.string().optional(),
+      dimensionLabel: z.string().optional(),
+      weight: z.number().optional(),
+      description: z.string().optional(),
+      rationale: z.string().optional(),
+    }),
+    response: calibrationRuleSuggestionResource,
+    fr: ["FR-LEARNINGS-REFLOW-CALIB"],
   }),
 } as const;

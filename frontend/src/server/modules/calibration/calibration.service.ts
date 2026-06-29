@@ -5,17 +5,20 @@ import {
   type CalibrationRepository,
   type RepoDeps,
   type RubricDimension,
+  type ProposedDimension,
 } from "./calibration.repository";
 import {
   toRubricDto,
   toRubricVersionDto,
   toPredictionDto,
   toCalibrationResultDto,
+  toRuleSuggestionDto,
   type RubricResource,
   type RubricVersionResource,
   type PredictionResource,
   type CalibrationResultResource,
   type CalibrationOverviewResource,
+  type CalibrationRuleSuggestionResource,
 } from "./calibration.schema";
 import {
   ConflictError,
@@ -182,6 +185,18 @@ export interface CreateDraftPredictionInput {
   confidence: "high" | "med" | "low";
 }
 
+// 复盘飞轮回流 轨B (Learning→校准). createRuleSuggestion is the cross-module write seam the
+// Learnings service reaches through an injected port (LearningsCalibrationPort) — a 复盘
+// Learning becomes an EXPLICIT, adoptable rubric-rule suggestion. The rubricId defaults to
+// the user's current rubric when omitted (resolved by the composition seam, NOT here — the
+// service requires an explicit rubricId so ownership is always gated).
+export interface CreateRuleSuggestionInput {
+  learningId: string;
+  rubricId: string;
+  proposedDimension: ProposedDimension;
+  rationale: string;
+}
+
 export interface CalibrationService {
   createRubric(
     ctx: RequestContext,
@@ -235,6 +250,29 @@ export interface CalibrationService {
   // every value DERIVED from real rows at read time (calibration-module rows + the SOFT
   // overview port for cross-module subjects/learnings). No stored 总览 table.
   getOverview(ctx: RequestContext): Promise<CalibrationOverviewResource>;
+
+  // --- 复盘飞轮回流 轨B (Learning→校准) ---
+  // createRuleSuggestion: the cross-module write the Learnings service calls (через the
+  // injected port) to promote a 复盘 Learning into a real, adoptable CalibrationRuleSuggestion.
+  // Ownership-gated on the target Rubric (cross-user → OwnershipError → 404). Idempotent on a
+  // pending (learning, rubric) — re-reflowing the same Learning returns the existing pending.
+  createRuleSuggestion(
+    ctx: RequestContext,
+    input: CreateRuleSuggestionInput,
+  ): Promise<CalibrationRuleSuggestionResource>;
+  // listRuleSuggestions: 校准中心 reads the user's PENDING reflowed suggestions (createdAt desc).
+  listRuleSuggestions(
+    ctx: RequestContext,
+    page: { limit: number; offset: number },
+  ): Promise<{ rows: CalibrationRuleSuggestionResource[]; total: number }>;
+  // adoptRuleSuggestion: 采纳 → append a NEW RubricVersion folding in `proposedDimension`
+  // (weights renormalized to sum to 1.0), mark the suggestion adopted (terminal, provenance =
+  // the new versionId), and return the new RubricVersion. Idempotent guards: a non-pending
+  // suggestion → ConflictError (already 采纳/dismissed — never double-bumps the rubric).
+  adoptRuleSuggestion(
+    ctx: RequestContext,
+    suggestionId: string,
+  ): Promise<RubricVersionResource>;
 }
 
 // Validate the 变现加权维度 (§6.2 / §2.0). Non-empty; weights sum to the normalizer;
@@ -641,7 +679,109 @@ export function createCalibrationService(
       }
       return toCalibrationResultDto(row);
     },
+
+    async createRuleSuggestion(ctx, input) {
+      const repo = repoFor(ctx);
+      // Ownership gate on the target Rubric (cross-user / unknown → OwnershipError → 404)
+      // BEFORE any suggestion row is written.
+      await repo.getRubric(input.rubricId);
+      const row = await repo.createRuleSuggestion({
+        learningId: input.learningId,
+        rubricId: input.rubricId,
+        proposedDimension: input.proposedDimension,
+        rationale: input.rationale,
+      });
+      return toRuleSuggestionDto(row);
+    },
+
+    async listRuleSuggestions(ctx, page) {
+      const { rows, total } =
+        await repoFor(ctx).listPendingRuleSuggestions(page);
+      return { rows: rows.map(toRuleSuggestionDto), total };
+    },
+
+    async adoptRuleSuggestion(ctx, suggestionId) {
+      const repo = repoFor(ctx);
+      // 1. Ownership + terminal guard: the suggestion must be PENDING (a re-adopt of an
+      //    already 采纳/dismissed suggestion → ConflictError; never double-bumps the rubric).
+      const suggestion = await repo.getRuleSuggestion(suggestionId); // ownership gate
+      if (suggestion.status !== "pending") {
+        throw new ConflictError(
+          `calibration rule suggestion is already ${suggestion.status}: ${suggestionId}`,
+        );
+      }
+      // 2. Resolve the target rubric's CURRENT immutable version (ownership re-checked).
+      const rubric = await repo.getRubric(suggestion.rubricId);
+      const current = await repo.getRubricVersion(rubric.currentVersionId!);
+      const currentDims = (current.dimensions ?? []) as RubricDimension[];
+      const proposed = (suggestion.proposedDimension ?? {}) as ProposedDimension;
+      // 3. Fold the proposed dimension into the version's dimensions: REPLACE if the key
+      //    already exists (bump its weight/label/desc), else APPEND. Then renormalize all
+      //    weights so the set still sums to 1.0 (validateDimensions invariant). The 采纳
+      //    keeps the conversion/铺路/利他 direction (the source dim or an existing one).
+      const merged = mergeProposedDimension(currentDims, proposed);
+      const renormalized = renormalizeWeights(merged);
+      validateDimensions(renormalized);
+      // 4. Append a NEW immutable RubricVersion (never an update — data-model 约束 6) and
+      //    re-point the rubric's current_version_id, exactly like bumpRubricVersion.
+      const versionNumber = (await repo.countRubricVersions(suggestion.rubricId)) + 1;
+      const version = await repo.insertRubricVersion({
+        rubricId: suggestion.rubricId,
+        versionNumber,
+        dimensions: renormalized,
+        changeSummary: `复盘回流采纳：${suggestion.rationale || proposed.label || proposed.key}`,
+      });
+      await repo.setRubricCurrentVersion(suggestion.rubricId, version.id);
+      // 5. Mark the suggestion terminal (adopted), recording the new version as provenance.
+      await repo.markRuleSuggestionAdopted(suggestionId, {
+        status: "adopted",
+        adoptedVersionId: version.id,
+      });
+      return toRubricVersionDto(version);
+    },
   };
+}
+
+// Fold a proposed dimension into an existing dimension set: REPLACE the matching `key`
+// (bumping its weight/label/description), else APPEND. Returns a NEW array (pure).
+function mergeProposedDimension(
+  current: RubricDimension[],
+  proposed: ProposedDimension,
+): RubricDimension[] {
+  const next = current.map((d) => ({ ...d }));
+  const idx = next.findIndex((d) => d.key === proposed.key);
+  const incoming: RubricDimension = {
+    key: proposed.key,
+    label: proposed.label,
+    weight: proposed.weight,
+    // description is OPTIONAL on the contract dimension; pass it through when present.
+    ...(proposed.description ? { description: proposed.description } : {}),
+  } as RubricDimension;
+  if (idx >= 0) {
+    next[idx] = incoming;
+  } else {
+    next.push(incoming);
+  }
+  return next;
+}
+
+// Renormalize weights so the set sums to 1.0 (the validateDimensions invariant). When the
+// raw sum is ≤ 0 (defensive), fall back to an equal split. Rounds to 4 decimals and pins the
+// rounding residue onto the last dimension so the sum is EXACTLY 1.0 (no epsilon drift).
+function renormalizeWeights(dims: RubricDimension[]): RubricDimension[] {
+  if (dims.length === 0) return dims;
+  const rawSum = dims.reduce((acc, d) => acc + (d.weight > 0 ? d.weight : 0), 0);
+  const useEqual = rawSum <= 0;
+  const scaled = dims.map((d) => {
+    const w = useEqual ? 1 / dims.length : (d.weight > 0 ? d.weight : 0) / rawSum;
+    return { ...d, weight: Math.round(w * 10000) / 10000 };
+  });
+  // Pin the residue onto the last dim so Σ === 1.0 exactly (within float repr).
+  const sumScaled = scaled.reduce((acc, d) => acc + d.weight, 0);
+  const residue = Math.round((1 - sumScaled) * 10000) / 10000;
+  const last = scaled[scaled.length - 1]!;
+  last.weight = Math.round((last.weight + residue) * 10000) / 10000;
+  return scaled;
 }
 
 // A single deviation magnitude (normalized) used to decide the confidence nudge / bump

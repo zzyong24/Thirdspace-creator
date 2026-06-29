@@ -33,11 +33,74 @@ export interface LearningsProjectsPort {
   ): Promise<void>;
 }
 
+// 复盘飞轮回流 轨B (Learning→校准). The narrow cross-module write seam: a 复盘 Learning is
+// promoted into a real CalibrationRuleSuggestion through the Calibration PUBLIC service (no
+// cross-module repository import, SPEC §22). The composition root binds this to
+// calibrationService.createRuleSuggestion + a current-rubric resolver. `proposedDimension` is
+// the 维度建议 derived from the Learning; `rubricId` is the target Rubric (resolved by the
+// composition seam — the user's current rubric). Returns the opaque suggestion DTO the
+// transport re-shapes onto the wire. A SOFT dep: absent / rejecting → the op surfaces an
+// honest error (the FE never shows the button unless this is wired).
+export interface CalibrationRuleSuggestionDto {
+  id: string;
+  userId: string;
+  learningId: string;
+  rubricId: string;
+  status: "pending" | "adopted" | "dismissed";
+  proposedDimension: {
+    key: string;
+    label: string;
+    weight: number;
+    description: string;
+  };
+  rationale: string;
+  adoptedVersionId: string | null;
+  createdAt: string;
+  adoptedAt: string | null;
+}
+
+export interface LearningsCalibrationPort {
+  // Resolve the user's current rubric id (the 采纳 target). Null when the user has no
+  // rubric yet — the service then rejects the reflow with a ConflictError (nothing to bump).
+  resolveCurrentRubricId(ctx: RequestContext): Promise<string | null>;
+  // Create the CalibrationRuleSuggestion against the resolved rubric (ownership gated in the
+  // calibration service). Returns the persisted suggestion DTO.
+  createSuggestion(
+    ctx: RequestContext,
+    input: {
+      learningId: string;
+      rubricId: string;
+      proposedDimension: {
+        key: string;
+        label: string;
+        weight: number;
+        description: string;
+      };
+      rationale: string;
+    },
+  ): Promise<CalibrationRuleSuggestionDto>;
+}
+
 export interface ServiceDeps {
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
   projects: LearningsProjectsPort;
+  // 复盘飞轮回流 轨B — OPTIONAL cross-module seam. Wired at composition; when absent the
+  // suggestCalibrationRule op rejects with a ConflictError (the FE hides the button).
+  calibration?: LearningsCalibrationPort;
+}
+
+// 复盘飞轮回流 轨B — the suggestCalibrationRule body. Every field is optional; the service
+// fills sensible defaults from the source Learning (its title/type), so the FE can fire the
+// reflow with NO body (the simplest 「回流到校准」 one-click) OR override the 维度建议.
+export interface SuggestCalibrationRuleInput {
+  rubricId?: string;
+  dimensionKey?: string;
+  dimensionLabel?: string;
+  weight?: number;
+  description?: string;
+  rationale?: string;
 }
 
 export interface PromoteReviewInsightInput {
@@ -86,7 +149,72 @@ export interface LearningsService {
     ctx: RequestContext,
     opts: { limit?: number },
   ): Promise<LearningResource[]>;
+  // 复盘飞轮回流 轨B (Learning→校准, contract op learnings.calibrationSuggestions.create) —
+  // promote a 复盘 Learning into an EXPLICIT, adoptable CalibrationRuleSuggestion. The Learning
+  // is ownership-gated first; the 维度建议 is derived from its type (or overridden by the body);
+  // the write reaches Calibration ONLY through the injected port (no cross-module repo import).
+  suggestCalibrationRule(
+    ctx: RequestContext,
+    learningId: string,
+    input: SuggestCalibrationRuleInput,
+  ): Promise<CalibrationRuleSuggestionDto>;
 }
+
+// learningType → a sensible default 维度建议 (key/label/weight) for the reflow. A hook/structure
+// Learning suggests bumping the corresponding rubric dimension; an unknown type falls back to a
+// generic 利他性 (altruism) dimension (an accepted 变现加权 direction, so the renormalized rubric
+// still passes validateDimensions). The weight is a modest 0.2 (the adopt path renormalizes).
+const LEARNING_TYPE_TO_DIMENSION: Record<
+  string,
+  { key: string; label: string; description: string }
+> = {
+  hook: {
+    key: "hook",
+    label: "钩子强度",
+    description: "前3秒能否逼观众看下去（复盘回流：强化开场钩子的评分权重）",
+  },
+  structure: {
+    key: "structure",
+    label: "结构清晰度",
+    description: "叙事结构是否让观众一路看完（复盘回流：把结构纳入评分维度）",
+  },
+  strategy: {
+    key: "product_path",
+    label: "为产品铺路",
+    description: "内容能否为信任/转化铺路（复盘回流：强化变现导向）",
+  },
+  process: {
+    key: "cta",
+    label: "CTA 清晰度",
+    description: "行动召唤是否清晰不突兀（复盘回流：把 CTA 纳入评分）",
+  },
+  editing: {
+    key: "quotable",
+    label: "金句密度",
+    description: "有几句能被截图独立传播（复盘回流：强化金句维度）",
+  },
+  failure: {
+    key: "altruism",
+    label: "利他性",
+    description: "内容是否真给观众价值（复盘回流：把利他性纳入评分）",
+  },
+  conversion_pattern: {
+    key: "product_path",
+    label: "为产品铺路",
+    description: "内容能否为转化铺路（复盘回流：强化变现导向）",
+  },
+  offer_insight: {
+    key: "cta",
+    label: "CTA 清晰度",
+    description: "行动召唤是否清晰（复盘回流：把 CTA 纳入评分）",
+  },
+};
+
+const DEFAULT_REFLOW_DIMENSION = {
+  key: "altruism",
+  label: "利他性",
+  description: "内容是否真给观众价值（复盘回流：把利他性纳入评分维度）",
+};
 
 // Allowed validationStatus transitions (SPEC §12 + contract enum). candidate is the
 // source state; discarded is terminal. Same-state and any unlisted transition →
@@ -98,7 +226,7 @@ const ALLOWED_TRANSITIONS: Record<string, ReadonlySet<string>> = {
 };
 
 export function createLearningsService(deps: ServiceDeps): LearningsService {
-  const { db, now, nextId, projects } = deps;
+  const { db, now, nextId, projects, calibration } = deps;
 
   function repoFor(ctx: RequestContext): LearningsRepository {
     const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
@@ -246,6 +374,55 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
         .sort((a, b) => b.confidenceScore - a.confidenceScore)
         .slice(0, limit)
         .map(toLearningDto);
+    },
+
+    async suggestCalibrationRule(ctx, learningId, input) {
+      // 1. Ownership gate: the Learning must be owned (cross-user / unknown →
+      //    OwnershipError → 404) BEFORE any cross-module write.
+      const learning = await repoFor(ctx).getLearningRowById(learningId);
+      // 2. The reflow needs a wired Calibration seam + a target Rubric. No seam OR no
+      //    rubric ⇒ nothing to bump ⇒ ConflictError (the FE only shows 回流到校准 when a
+      //    rubric exists, so this is the honest defensive path, never a fake success).
+      if (!calibration) {
+        throw new ConflictError(
+          "calibration reflow is not available (no calibration seam wired)",
+        );
+      }
+      const rubricId =
+        input.rubricId ?? (await calibration.resolveCurrentRubricId(ctx));
+      if (!rubricId) {
+        throw new ConflictError(
+          "no rubric to reflow into — create a 评分标准 (Rubric) first",
+        );
+      }
+      // 3. Derive the 维度建议 from the Learning's type (overridable by the body). The
+      //    weight defaults to 0.2 (the adopt path renormalizes the whole set to sum 1.0).
+      const base =
+        LEARNING_TYPE_TO_DIMENSION[learning.learningType] ??
+        DEFAULT_REFLOW_DIMENSION;
+      const proposedDimension = {
+        key: input.dimensionKey ?? base.key,
+        label: input.dimensionLabel ?? base.label,
+        weight:
+          typeof input.weight === "number" && input.weight > 0
+            ? input.weight
+            : 0.2,
+        description: input.description ?? base.description,
+      };
+      // The rationale ties the suggestion back to the 复盘 conclusion (the Learning's
+      // title/insight) so the 校准中心 shows WHY this rule was proposed.
+      const rationale =
+        input.rationale ??
+        (learning.title
+          ? `复盘结论「${learning.title}」回流为评分维度`
+          : "复盘结论回流为评分维度");
+      // 4. The real cross-module write (ownership re-gated inside calibration on the rubric).
+      return calibration.createSuggestion(ctx, {
+        learningId,
+        rubricId,
+        proposedDimension,
+        rationale,
+      });
     },
   };
 }

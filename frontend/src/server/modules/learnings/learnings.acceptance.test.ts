@@ -133,6 +133,7 @@ describe("learnings acceptance (SPEC §22)", () => {
   it("registers the owned ops into the module op-id list", () => {
     expect([...LEARNINGS_OP_IDS].sort()).toEqual([
       "learnings.applications.create",
+      "learnings.calibrationSuggestions.create",
       "learnings.create",
       "learnings.evaluate",
       "learnings.get",

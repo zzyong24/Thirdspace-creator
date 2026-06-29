@@ -199,6 +199,7 @@ import {
   type RubricVersionRow as CalibrationRubricVersionRow,
   type PredictionRow as CalibrationPredictionRow,
   type CalibrationResultRow,
+  type RuleSuggestionRow as CalibrationRuleSuggestionRow,
 } from "@/server/modules/calibration";
 import {
   createPlatformAccountService,
@@ -414,6 +415,11 @@ const CONTENT_CALENDAR_OPS = new Set<string>(CONTENT_CALENDAR_OP_IDS);
 
 // The set of op ids owned by the material-links module's transport (Plan A4).
 const MATERIAL_LINKS_OPS = new Set<string>(MATERIAL_LINKS_OP_IDS);
+
+// The shared canonical 变现加权 Rubric id seeded below (the calibration page + the 复盘飞轮回流
+// 轨B Learning→校准 reflow both target it). Kept as one const so the seed + the reflow seam
+// agree on the same key.
+const CANONICAL_RUBRIC_ID = "rubric-canonical";
 
 type CanonicalProject = (typeof canonicalDataset.projects)[number];
 
@@ -1297,6 +1303,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // intentionally swallowed — activity is non-critical telemetry.
         }
       },
+    },
+    // 复盘飞轮回流 轨B (Learning→校准): the cross-module write seam. A 复盘 Learning is promoted
+    // into a real CalibrationRuleSuggestion through the Calibration PUBLIC service (no
+    // cross-module repo import, SPEC §22). Lazy thunks — `calibrationService` is constructed
+    // BELOW; these run at request time, never at construction (TDZ-safe, same as the AI
+    // module's positioning/candidate/calibration confirm thunks). The current rubric resolves
+    // to the shared canonical rubric (`rubric-canonical`) when the user can read it; null
+    // (→ honest ConflictError) when no rubric exists.
+    calibration: {
+      resolveCurrentRubricId: async (ctx) => {
+        try {
+          const rubric = await calibrationService.getRubric(
+            ctx,
+            CANONICAL_RUBRIC_ID,
+          );
+          return rubric.id;
+        } catch {
+          return null;
+        }
+      },
+      createSuggestion: (ctx, input) =>
+        calibrationService.createRuleSuggestion(ctx, input),
     },
   });
   const learnings = createLearningsTransport(() => learningsService);
@@ -3279,6 +3307,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   await learningsSeedRepo.seedLearnings(
     canonicalDataset.learnings as unknown as LearningRow[],
   );
+
+  // 复盘飞轮回流 轨B (Learning→校准) — seed ONE canonical pending CalibrationRuleSuggestion so
+  // the 校准中心「复盘回流建议」surface shows a real adoptable row out of the box (it ties the
+  // seeded 复盘 `learning-hook-15s` to the canonical rubric). onConflictDoNothing → idempotent.
+  const canonicalRuleSuggestion: CalibrationRuleSuggestionRow = {
+    id: "calibsug-canonical-1",
+    userId: canonicalDataset.user.id,
+    learningId: "learning-hook-15s",
+    rubricId: "rubric-canonical",
+    status: "pending",
+    proposedDimension: {
+      key: "hook",
+      label: "钩子强度",
+      weight: 0.25,
+      description: "前15秒抛冲突显著提升保留率（复盘回流：上调钩子评分权重）",
+    },
+    rationale: "复盘结论「前15秒抛冲突」回流为评分维度，建议上调钩子权重",
+    adoptedVersionId: null,
+    createdAt: FIXED_NOW_ISO,
+    adoptedAt: null,
+  };
+  await calibrationSeedRepo.seedRuleSuggestions([canonicalRuleSuggestion]);
 
   // ── Real Douyin catalog + metrics (用户抖音作品初始化) ─────────────────────
   // Append the user's REAL Douyin works (58 published videos) + their REAL

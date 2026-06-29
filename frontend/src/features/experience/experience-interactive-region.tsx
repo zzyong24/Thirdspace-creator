@@ -112,6 +112,33 @@ export function ExperienceInteractiveRegion({
     [run],
   );
 
+  // 复盘飞轮回流 轨B (Learning→校准): promote this 复盘结论 into a CalibrationRuleSuggestion the
+  // 校准中心 can 采纳 (→ a rubric维度 bump). The reflow lands on the 校准 page, so we surface a
+  // per-row「已回流」/「回流失败」hint here rather than navigating away. A learning with no
+  // rubric (or no calibration seam) gets an honest ConflictError → the hint shows the reason.
+  const [reflowState, setReflowState] = React.useState<
+    Record<string, "ok" | "err">
+  >({});
+  const router = useRouter();
+  const suggestCalibrationRule = React.useCallback(
+    (learningId: string) => {
+      void (async () => {
+        try {
+          await client.suggestCalibrationRule({
+            params: { learningId },
+            query: undefined,
+            body: {},
+          });
+          setReflowState((prev) => ({ ...prev, [learningId]: "ok" }));
+          router.refresh();
+        } catch {
+          setReflowState((prev) => ({ ...prev, [learningId]: "err" }));
+        }
+      })();
+    },
+    [router],
+  );
+
   const visibleRecords =
     activeTab === "all"
       ? records
@@ -238,6 +265,35 @@ export function ExperienceInteractiveRegion({
                             废弃
                           </button>
                         </>
+                      ) : null}
+                      {/* 复盘飞轮回流 轨B：把这条复盘结论显式回流成校准评分维度建议。 */}
+                      {reflowState[learningId] === "ok" ? (
+                        <span
+                          data-slot="record-reflow-ok"
+                          className="rounded-control bg-success/10 px-2 py-1 text-xs font-medium text-success"
+                        >
+                          已回流到校准
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          data-slot="record-reflow-calibration"
+                          disabled={pending}
+                          onClick={() => suggestCalibrationRule(learningId)}
+                          title="把这条复盘结论变成约束未来评分的维度建议，到校准中心采纳"
+                          className="rounded-control border border-brand/40 bg-brand/5 px-2 py-1 text-xs font-medium text-brand hover:bg-brand/10 disabled:opacity-50"
+                        >
+                          回流到校准
+                        </button>
+                      )}
+                      {reflowState[learningId] === "err" ? (
+                        <span
+                          data-slot="record-reflow-err"
+                          className="text-xs text-muted-foreground"
+                          title="回流需要一个评分标准（Rubric）。先到校准中心确认有 Rubric。"
+                        >
+                          需先有 Rubric
+                        </span>
                       ) : null}
                     </div>
                   </td>

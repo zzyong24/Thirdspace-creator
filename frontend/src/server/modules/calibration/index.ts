@@ -25,6 +25,7 @@ export {
   type CreatePredictionInput,
   type CreateDraftPredictionInput,
   type RecordResultInput,
+  type CreateRuleSuggestionInput,
 } from "./calibration.service";
 
 export {
@@ -47,15 +48,18 @@ export {
   predictionResource,
   calibrationResultResource,
   calibrationOverviewResource,
+  calibrationRuleSuggestionResource,
   toRubricDto,
   toRubricVersionDto,
   toPredictionDto,
   toCalibrationResultDto,
+  toRuleSuggestionDto,
   type RubricResource,
   type RubricVersionResource,
   type PredictionResource,
   type CalibrationResultResource,
   type CalibrationOverviewResource,
+  type CalibrationRuleSuggestionResource,
 } from "./calibration.schema";
 
 // The repository factory + row types are exported ONLY for the composition root's
@@ -70,5 +74,7 @@ export {
   type RubricVersionRow,
   type PredictionRow,
   type CalibrationResultRow,
+  type RuleSuggestionRow,
   type RubricDimension,
+  type ProposedDimension,
 } from "./calibration.repository";
