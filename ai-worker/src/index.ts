@@ -81,3 +81,11 @@ export {
   overrideTemplates,
 } from "./prompt/registry";
 export { TOPIC_GENERATE_TEMPLATE } from "./prompt/templates/topic-generate";
+export { SCRIPT_DRAFT_TEMPLATE } from "./prompt/templates/script-draft";
+export {
+  runScriptNode,
+  parseShots,
+  type ScriptShot,
+  type RunScriptNodeInput,
+  type RunScriptNodeResult,
+} from "./nodes/script-node";

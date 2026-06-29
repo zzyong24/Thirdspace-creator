@@ -1,42 +1,27 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec, ScriptShot } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
-  type CreativeContext,
 } from "./creative-context";
-import { parseJsonArray } from "./agent-run";
-import type {
-  LlmCompleteOptions,
-  LlmCompleter,
-} from "@/server/ai/llm/provider";
 
-// 分镜脚本 runner (script.draft node, 机制③④). Mirrors topic-runner but DRAFTS a storyboard
-// (分镜脚本) from the full creative context, then records an `artifact_version` CANDIDATE.
-// On 采纳, the AI service's EXISTING artifact_version confirm branch appends a new
-// ArtifactVersion (createdByType:"ai") onto the project's 分镜脚本 artifact — we REUSE that
-// path (the candidate carries `artifactId` + `resultData.body`/`summary`). No web tools:
-// the draft is grounded purely in positioningBrief + learningsBrief + topic.
+export type { ScriptShot };
 
-// One storyboard shot — the agent's JSON array element. Bound to the 爆款公式
-// 钩子→痛点→价值→卡点→CTA so each shot reads as a beat of that arc.
-export interface ScriptShot {
-  口播: string;
-  画面: string;
-  字幕: string;
-  时长: string;
-}
+// 分镜脚本 runner (script.draft node) —— 写文案的旗舰例子,跑在 **Vercel AI SDK** 上(弃旧 LlmCompleter)。
+// 提示词走外置模板 script.draft(脊柱-1 解耦):写文案 = 模板 ⊕ {定位,过往爆款,选题,横竖屏}。
+// AI 逻辑在 @creatoros/ai-worker 的 runScriptNode(产 ScriptShot[] + 步骤事件);本 runner 只负责
+// 装配上下文 / 解析 model / 落候选(artifact_version,复用既有 confirm 分支 append 新 ArtifactVersion)。
 
 export interface ScriptDeps extends ContextDeps {
   ai: AiService;
-  llm: LlmCompleter;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
 }
-
-type Complete = (
-  prompt: string,
-  opts?: LlmCompleteOptions,
-) => Promise<{ text: string }>;
 
 export interface ScriptTask {
   id: string;
@@ -44,56 +29,11 @@ export interface ScriptTask {
   inputData: Record<string, unknown>;
 }
 
-// The parsed storyboard the agent returns: a 前3秒 hook, the shot beats, and a CTA.
+// The parsed storyboard: a 前3秒 hook, the shot beats, and a CTA.
 interface Storyboard {
   hook: string;
   sections: ScriptShot[];
   cta: string;
-}
-
-function buildScriptPrompt(context: CreativeContext): string {
-  const positioning = context.positioningBrief
-    ? context.positioningBrief
-    : "（创作者尚未设置定位——按通用爆款逻辑写脚本）";
-  const learnings = context.learningsBrief
-    ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
-    : "";
-  const topic = context.topic.title
-    ? `\n【本期选题】${context.topic.title}${
-        context.topic.angle ? `（切入：${context.topic.angle}）` : ""
-      }`
-    : "";
-  return `你是这位创作者的「分镜脚本 agent」。
-
-【创作者定位】
-${positioning}${learnings}${topic}
-
-【任务】像一个专业短视频编导那样,基于定位(+过往爆款要素)+选题,写一条**分镜脚本**。
-严格按爆款公式编排:钩子(前3秒抓人)→痛点(戳中人群)→价值(干货/反差)→卡点(信息密度/节奏)→CTA(行动召唤)。
-【输出】只输出一个 JSON 数组(不要多余文字、不要代码块包裹),数组每一项是一个分镜:
-{"口播"(这一镜要说的话),"画面"(画面/运镜/字幕板提示),"字幕"(屏幕字幕,一句),"时长"(如 "0-3s")}。
-第一镜必须是前3秒钩子,最后一镜必须落在 CTA。6-10 镜为宜。`;
-}
-
-async function draftStoryboard(
-  context: CreativeContext,
-  complete: Complete,
-): Promise<Storyboard> {
-  const { text } = await complete(buildScriptPrompt(context), { schema: true });
-  const shots = parseJsonArray(text)
-    .map((raw): ScriptShot | null => {
-      const o = (raw ?? {}) as Record<string, unknown>;
-      const 口播 = typeof o.口播 === "string" ? o.口播.trim() : "";
-      const 画面 = typeof o.画面 === "string" ? o.画面.trim() : "";
-      const 字幕 = typeof o.字幕 === "string" ? o.字幕.trim() : "";
-      const 时长 = typeof o.时长 === "string" ? o.时长.trim() : "";
-      if (!口播 && !画面 && !字幕) return null;
-      return { 口播, 画面, 字幕, 时长 };
-    })
-    .filter((s): s is ScriptShot => s !== null);
-  const hook = shots[0]?.字幕 || shots[0]?.口播 || "";
-  const cta = shots[shots.length - 1]?.口播 || shots[shots.length - 1]?.字幕 || "";
-  return { hook, sections: shots, cta };
 }
 
 // Serialize the parsed storyboard into a readable Markdown table (the ArtifactVersion's
@@ -161,9 +101,30 @@ export async function runScriptDraft(
       { projectId: task.projectId, topic },
       deps,
     );
-    const board = await draftStoryboard(context, (prompt, opts) =>
-      deps.llm(ctx, "script.rewrite", prompt, opts),
-    );
+    // Vercel AI SDK 路径:解析 model(按 capability) + 跑 ai-worker 写文案节点(外置 script.draft 模板),
+    // 步骤事件落 ai_task_steps(窗口步骤日志)。弃旧 LlmCompleter。
+    const spec = await deps.resolveModelSpec(ctx, "script.draft");
+    const { modelFor, runScriptNode } = await import("@creatoros/ai-worker");
+    const { shots } = await runScriptNode({
+      model: modelFor(spec),
+      positioningBrief: context.positioningBrief,
+      learningsBrief: context.learningsBrief,
+      topicTitle: context.topic.title,
+      topicAngle: context.topic.angle,
+      onStep: async (e) => {
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: e.stepNo,
+          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
+          text: e.text,
+          toolCalls: e.toolCalls,
+        });
+      },
+    });
+    const board: Storyboard = {
+      hook: shots[0]?.字幕 || shots[0]?.口播 || "",
+      sections: shots,
+      cta: shots[shots.length - 1]?.口播 || shots[shots.length - 1]?.字幕 || "",
+    };
     if (board.sections.length === 0) {
       throw new Error("script-runner: agent returned no parseable shots");
     }

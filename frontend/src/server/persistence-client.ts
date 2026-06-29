@@ -1762,7 +1762,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
-              llm: llmCompleter,
+              // Vercel AI SDK 路径(弃 LlmCompleter):写文案节点跑在 ai-worker + 外置模板。
+              resolveModelSpec,
             },
           );
         } else if (
