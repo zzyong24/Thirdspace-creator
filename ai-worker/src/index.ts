@@ -82,6 +82,13 @@ export {
 } from "./prompt/registry";
 export { TOPIC_GENERATE_TEMPLATE } from "./prompt/templates/topic-generate";
 export { SCRIPT_DRAFT_TEMPLATE } from "./prompt/templates/script-draft";
+// 脊柱-1 第二批:6 个 runner 迁 Vercel SDK 共用的外置模板(提示词模板化解耦)。
+export { PLANNING_THESIS_TEMPLATE } from "./prompt/templates/planning-thesis";
+export { PLANNING_CONTRACT_TEMPLATE } from "./prompt/templates/planning-contract";
+export { PLANNING_OUTLINE_TEMPLATE } from "./prompt/templates/planning-outline";
+export { PLATFORM_ADAPT_TEMPLATE } from "./prompt/templates/platform-adapt";
+export { REVIEW_INSIGHTS_TEMPLATE } from "./prompt/templates/review-insights";
+export { CALIBRATION_DIAGNOSE_TEMPLATE } from "./prompt/templates/calibration-diagnose";
 export {
   runScriptNode,
   parseShots,
@@ -89,3 +96,9 @@ export {
   type RunScriptNodeInput,
   type RunScriptNodeResult,
 } from "./nodes/script-node";
+// 通用模板节点 —— 6 个无工具纯生成 runner 共用(bindPrompt → runAgentNode → {text, steps})。
+export {
+  runTemplatedNode,
+  type RunTemplatedNodeInput,
+  type RunTemplatedNodeResult,
+} from "./nodes/templated-node";

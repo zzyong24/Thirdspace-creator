@@ -1,16 +1,13 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
 import { parseJsonArray } from "./agent-run";
-import type {
-  LlmCompleteOptions,
-  LlmCompleter,
-} from "@/server/ai/llm/provider";
 
 // 复盘 runner (review.analyze node, 机制③④⑤). Extracts reusable 爆款要素/方法论 from a piece
 // of content (against the creator's positioning) as `learning_list` candidates; on 采纳,
@@ -26,13 +23,12 @@ export interface LearningItem {
 
 export interface ReviewDeps extends ContextDeps {
   ai: AiService;
-  llm: LlmCompleter;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
 }
-
-type Complete = (
-  prompt: string,
-  opts?: LlmCompleteOptions,
-) => Promise<{ text: string }>;
 
 export interface ReviewTask {
   id: string;
@@ -40,32 +36,26 @@ export interface ReviewTask {
   inputData: Record<string, unknown>;
 }
 
-function buildReviewPrompt(context: CreativeContext): string {
-  const positioning = context.positioningBrief
-    ? context.positioningBrief
-    : "（未设置定位——按通用内容方法论提炼）";
-  const topic = context.topic.title
-    ? context.topic.title
-    : "（未指定具体内容,按这个账号的整体表现提炼)";
-  const priorLearnings = context.learningsBrief
-    ? `\n【已有经验(避免重复)】\n${context.learningsBrief}`
-    : "";
-  return `你是这位创作者的「复盘 agent」。
-
-【创作者定位】
-${positioning}${priorLearnings}
-
-【本次复盘对象】${topic}
-
-【任务】像专业编导做数据复盘那样,提炼 3-6 条**可复用的爆款要素/方法论**作为经验沉淀(钩子、节奏、选题角度、CTA、踩坑等),要具体、可迁移到下一条内容,且与已有经验不重复。
-【输出】最后只输出一个 JSON 数组,每条:{"title"(一句话方法论,如"前3秒用具体数字承诺收益"),"insight"(为什么有效/适用场景,一两句中文)}。不要多余文字、不要代码块包裹。`;
+// 把 CreativeContext 映射成 review.insights 模板的 facets(占位化原 buildReviewPrompt 的上下文块）。
+// subject(本次复盘对象)是必需 facet,沿用原 prompt 的兜底文案(未指定内容时按账号整体表现提炼)。
+function reviewFacets(
+  context: CreativeContext,
+): Record<string, string | undefined> {
+  return {
+    positioning: context.positioningBrief
+      ? context.positioningBrief
+      : "（未设置定位——按通用内容方法论提炼）",
+    priorLearnings: context.learningsBrief
+      ? `\n【已有经验(避免重复)】\n${context.learningsBrief}`
+      : "",
+    subject: context.topic.title
+      ? context.topic.title
+      : "（未指定具体内容,按这个账号的整体表现提炼)",
+  };
 }
 
-async function analyzeReview(
-  context: CreativeContext,
-  complete: Complete,
-): Promise<LearningItem[]> {
-  const { text } = await complete(buildReviewPrompt(context), { schema: true });
+// Parse the agent's final text into reusable learnings (parse 逻辑原样保留)。
+function parseLearnings(text: string): LearningItem[] {
   return parseJsonArray(text)
     .map((raw): LearningItem | null => {
       const o = (raw ?? {}) as Record<string, unknown>;
@@ -90,9 +80,25 @@ export async function runReviewAnalyze(
       { projectId: task.projectId, topic },
       deps,
     );
-    const items = await analyzeReview(context, (prompt, opts) =>
-      deps.llm(ctx, "review.insights", prompt, opts),
-    );
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 通用模板节点(外置 review.insights 模板),
+    // 步骤事件落 ai_task_steps。弃旧 LlmCompleter。
+    const spec = await deps.resolveModelSpec(ctx, "review.insights");
+    const { modelFor, runTemplatedNode, REVIEW_INSIGHTS_TEMPLATE } =
+      await import("@creatoros/ai-worker");
+    const { text } = await runTemplatedNode({
+      model: modelFor(spec),
+      template: REVIEW_INSIGHTS_TEMPLATE,
+      facets: reviewFacets(context),
+      onStep: async (e) => {
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: e.stepNo,
+          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
+          text: e.text,
+          toolCalls: e.toolCalls,
+        });
+      },
+    });
+    const items = parseLearnings(text);
     if (items.length === 0) {
       throw new Error("review-runner: agent returned no parseable learnings");
     }

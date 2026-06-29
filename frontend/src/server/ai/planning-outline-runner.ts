@@ -1,15 +1,12 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import type {
-  LlmCompleteOptions,
-  LlmCompleter,
-} from "@/server/ai/llm/provider";
 
 // 结构方案 runner (planning.outline node, 策划 stage — 脚本阶段的入口票). It reads the
 // creative context (内容合同 + 论点树 + 定位 + 选题) and DRAFTS ONE 结构方案: a structure
@@ -24,13 +21,12 @@ import type {
 
 export interface PlanningOutlineDeps extends ContextDeps {
   ai: AiService;
-  llm: LlmCompleter;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
 }
-
-type Complete = (
-  prompt: string,
-  opts?: LlmCompleteOptions,
-) => Promise<{ text: string }>;
 
 export interface PlanningOutlineTask {
   id: string;
@@ -51,35 +47,26 @@ interface Outline {
   cta: string; // 行动召唤
 }
 
-function buildOutlinePrompt(context: CreativeContext): string {
-  const positioning = context.positioningBrief
-    ? context.positioningBrief
-    : "（创作者尚未设置定位——按通用爆款逻辑产结构方案）";
-  const contract = context.contractBrief
-    ? `\n【已确认的内容合同】\n${context.contractBrief}`
-    : "";
-  const thesis = context.thesisBrief
-    ? `\n【已搭好的论点树】\n${context.thesisBrief}`
-    : "";
-  const topic = context.topic.title
-    ? `\n【本期选题】${context.topic.title}${
-        context.topic.angle ? `（切入：${context.topic.angle}）` : ""
-      }`
-    : "";
-  return `你是这位创作者的「策划 agent」，负责把内容合同 + 论点树落成一份**结构方案**——这是脚本阶段的入口票。
-
-【创作者定位】
-${positioning}${contract}${thesis}${topic}
-
-【任务】产 **1 个**结构方案，让脚本作者照着就能写：
-- 结构类型：这条内容用哪种叙事结构(如 总分总 / 问题-解决 / 故事线 / 清单体)；
-- 开头策略：前 3-5 秒怎么开场抓人；
-- 段落安排：按顺序列出每个段落/节拍(如 钩子→痛点→价值→卡点)，每段说清楚要完成什么；
-- 结尾：怎么收束、留下什么记忆点；
-- 行动召唤：结尾 CTA。
-
-【输出】只输出一个 JSON 对象(不要多余文字、不要代码块包裹)，形如：
-{"structureType":"...","opening":"...","sections":[{"label":"钩子","intent":"..."},{"label":"痛点","intent":"..."}],"ending":"...","cta":"..."}`;
+// 把 CreativeContext 映射成 planning.outline 模板的 facets(占位化原 buildOutlinePrompt 的上下文块）。
+function outlineFacets(
+  context: CreativeContext,
+): Record<string, string | undefined> {
+  return {
+    positioning: context.positioningBrief
+      ? context.positioningBrief
+      : "（创作者尚未设置定位——按通用爆款逻辑产结构方案）",
+    contract: context.contractBrief
+      ? `\n【已确认的内容合同】\n${context.contractBrief}`
+      : "",
+    thesis: context.thesisBrief
+      ? `\n【已搭好的论点树】\n${context.thesisBrief}`
+      : "",
+    topic: context.topic.title
+      ? `\n【本期选题】${context.topic.title}${
+          context.topic.angle ? `（切入：${context.topic.angle}）` : ""
+        }`
+      : "",
+  };
 }
 
 function parseJsonObject(text: string): Record<string, unknown> | null {
@@ -104,13 +91,8 @@ function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
 }
 
-async function draftOutline(
-  context: CreativeContext,
-  complete: Complete,
-): Promise<Outline> {
-  const { text } = await complete(buildOutlinePrompt(context), {
-    schema: true,
-  });
+// Parse the agent's final text into an Outline (parse 逻辑原样保留,只换"拿 text"的来源)。
+function parseOutline(text: string): Outline {
   const obj = parseJsonObject(text) ?? {};
   const rawSections = Array.isArray(obj.sections) ? obj.sections : [];
   const sections = rawSections
@@ -179,9 +161,25 @@ export async function runPlanningOutline(
       { projectId: task.projectId, topic },
       deps,
     );
-    const outline = await draftOutline(context, (prompt, opts) =>
-      deps.llm(ctx, "planning.outline", prompt, opts),
-    );
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 通用模板节点(外置 planning.outline 模板),
+    // 步骤事件落 ai_task_steps。弃旧 LlmCompleter。
+    const spec = await deps.resolveModelSpec(ctx, "planning.outline");
+    const { modelFor, runTemplatedNode, PLANNING_OUTLINE_TEMPLATE } =
+      await import("@creatoros/ai-worker");
+    const { text } = await runTemplatedNode({
+      model: modelFor(spec),
+      template: PLANNING_OUTLINE_TEMPLATE,
+      facets: outlineFacets(context),
+      onStep: async (e) => {
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: e.stepNo,
+          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
+          text: e.text,
+          toolCalls: e.toolCalls,
+        });
+      },
+    });
+    const outline = parseOutline(text);
     if (outline.sections.length === 0 && !outline.structureType) {
       throw new Error(
         "planning-outline-runner: agent returned no parseable outline",

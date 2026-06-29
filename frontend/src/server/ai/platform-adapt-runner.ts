@@ -1,16 +1,13 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
 import { parseJsonArray } from "./agent-run";
-import type {
-  LlmCompleteOptions,
-  LlmCompleter,
-} from "@/server/ai/llm/provider";
 
 // 一稿多平台 runner (publish.platform_adapt node, 机制③④). Mirrors topic-runner but ADAPTS
 // one finished script into a per-platform draft (抖音竖屏短 / B站横屏中视频 / 小红书图文 /
@@ -29,13 +26,12 @@ export interface PlatformDraft {
 
 export interface PlatformAdaptDeps extends ContextDeps {
   ai: AiService;
-  llm: LlmCompleter;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
 }
-
-type Complete = (
-  prompt: string,
-  opts?: LlmCompleteOptions,
-) => Promise<{ text: string }>;
 
 export interface PlatformAdaptTask {
   id: string;
@@ -55,48 +51,31 @@ const PLATFORM_LABEL: Record<string, string> = {
   wechat: "公众号（长文，结构完整、有标题有小标题、可深读）",
 };
 
-function buildAdaptPrompt(
+// 把 CreativeContext + 脚本 + 目标平台映射成 platform.adapt 模板的 facets(占位化原 buildAdaptPrompt
+// 的上下文块）。targets(目标平台清单)是必需 facet,调用方按 platforms 计算。
+function adaptFacets(
   context: CreativeContext,
   scriptText: string,
   platforms: string[],
-): string {
-  const positioning = context.positioningBrief
-    ? context.positioningBrief
-    : "（创作者尚未设置定位——按通用爆款逻辑适配）";
-  const topic = context.topic.title
-    ? `\n【本期选题】${context.topic.title}${
-        context.topic.angle ? `（切入：${context.topic.angle}）` : ""
-      }`
-    : "";
-  const script = scriptText
-    ? `\n【原始脚本/内容】\n${scriptText}`
-    : "";
-  const targets = platforms
-    .map((p) => `· ${p}：${PLATFORM_LABEL[p] ?? p}`)
-    .join("\n");
-  return `你是这位创作者的「一稿多平台 agent」。
-
-【创作者定位】
-${positioning}${topic}${script}
-
-【任务】像一个专业自媒体编导那样,把同一份内容**一稿改多平台**。针对下面每个目标平台,产出符合该平台调性的标题/正文/标签/封面创意:
-${targets}
-
-【输出】只输出一个 JSON 数组(不要多余文字、不要代码块包裹、不要前言),每个目标平台一项:
-{"platform"(平台标识,用上面给的英文标识),"title"(该平台标题),"body"(该平台正文/文案),"tags"(标签数组,3-6个),"coverIdea"(封面创意,一句)}。
-【严格 JSON 要求】① 正文/标题里如需引号,一律用中文「」或『』,**禁止用英文半角双引号 "**(否则会破坏 JSON);② 换行用 \\n,不要真实换行;③ 每个平台 body 控制在 200 字以内,精炼即可。`;
+): Record<string, string | undefined> {
+  return {
+    positioning: context.positioningBrief
+      ? context.positioningBrief
+      : "（创作者尚未设置定位——按通用爆款逻辑适配）",
+    topic: context.topic.title
+      ? `\n【本期选题】${context.topic.title}${
+          context.topic.angle ? `（切入：${context.topic.angle}）` : ""
+        }`
+      : "",
+    script: scriptText ? `\n【原始脚本/内容】\n${scriptText}` : "",
+    targets: platforms
+      .map((p) => `· ${p}：${PLATFORM_LABEL[p] ?? p}`)
+      .join("\n"),
+  };
 }
 
-async function adaptDrafts(
-  context: CreativeContext,
-  scriptText: string,
-  platforms: string[],
-  complete: Complete,
-): Promise<PlatformDraft[]> {
-  const { text } = await complete(
-    buildAdaptPrompt(context, scriptText, platforms),
-    { schema: true },
-  );
+// Parse the agent's final text into per-platform drafts (parse 逻辑原样保留)。
+function parsePlatformDrafts(text: string): PlatformDraft[] {
   return parseJsonArray(text)
     .map((raw): PlatformDraft | null => {
       const o = (raw ?? {}) as Record<string, unknown>;
@@ -151,12 +130,25 @@ export async function runPlatformAdapt(
       { projectId: task.projectId, topic },
       deps,
     );
-    const drafts = await adaptDrafts(
-      context,
-      scriptText,
-      platforms,
-      (prompt, opts) => deps.llm(ctx, "script.rewrite", prompt, opts),
-    );
+    // Vercel AI SDK 路径:按 "script.rewrite" capability 解析 model + 跑 ai-worker 通用模板节点
+    // (外置 platform.adapt 模板),步骤事件落 ai_task_steps。弃旧 LlmCompleter。
+    const spec = await deps.resolveModelSpec(ctx, "script.rewrite");
+    const { modelFor, runTemplatedNode, PLATFORM_ADAPT_TEMPLATE } =
+      await import("@creatoros/ai-worker");
+    const { text } = await runTemplatedNode({
+      model: modelFor(spec),
+      template: PLATFORM_ADAPT_TEMPLATE,
+      facets: adaptFacets(context, scriptText, platforms),
+      onStep: async (e) => {
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: e.stepNo,
+          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
+          text: e.text,
+          toolCalls: e.toolCalls,
+        });
+      },
+    });
+    const drafts = parsePlatformDrafts(text);
     if (drafts.length === 0) {
       throw new Error(
         "platform-adapt-runner: agent returned no parseable drafts",

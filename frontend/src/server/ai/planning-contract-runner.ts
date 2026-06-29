@@ -1,15 +1,12 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import type {
-  LlmCompleteOptions,
-  LlmCompleter,
-} from "@/server/ai/llm/provider";
 
 // 内容合同 runner (planning.contract node, 策划 stage). It reads the creative context
 // (定位 + 选题 + 已采纳的论点树) and DRAFTS a 内容合同 — the creator's contract with the
@@ -27,13 +24,12 @@ import type {
 
 export interface PlanningContractDeps extends ContextDeps {
   ai: AiService;
-  llm: LlmCompleter;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
 }
-
-type Complete = (
-  prompt: string,
-  opts?: LlmCompleteOptions,
-) => Promise<{ text: string }>;
 
 export interface PlanningContractTask {
   id: string;
@@ -57,35 +53,26 @@ interface ContractCardDraft {
   body: string;
 }
 
-function buildContractPrompt(context: CreativeContext): string {
-  const positioning = context.positioningBrief
-    ? context.positioningBrief
-    : "（创作者尚未设置定位——按通用爆款逻辑产内容合同）";
-  const learnings = context.learningsBrief
-    ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
-    : "";
-  const thesis = context.thesisBrief
-    ? `\n【已搭好的论点树(策划判断)】\n${context.thesisBrief}`
-    : "";
-  const topic = context.topic.title
-    ? `\n【本期选题】${context.topic.title}${
-        context.topic.angle ? `（切入：${context.topic.angle}）` : ""
-      }`
-    : "";
-  return `你是这位创作者的「策划 agent」，负责为一期内容产一份**内容合同**——也就是这条内容与观众立下的契约。
-
-【创作者定位】
-${positioning}${learnings}${thesis}${topic}
-
-【任务】基于定位(+论点树+选题)，从四个固定角度写清楚这条内容对观众的承诺：
-- 受众定位：目标人群是谁、他们的痛点与触发场景；
-- 价值主张：这条内容承诺的独特价值与差异化收益；
-- 核心节奏：开场 15 秒怎么抓人、幕间过渡、高潮节点的节奏安排；
-- 行动召唤：结尾的 CTA 文案与转化路径。
-每个角度写 1-3 句具体、可执行的承诺，别空泛。
-
-【输出】只输出一个 JSON 对象(不要多余文字、不要代码块包裹)，形如：
-{"受众定位":"...","价值主张":"...","核心节奏":"...","行动召唤":"..."}`;
+// 把 CreativeContext 映射成 planning.contract 模板的 facets(占位化原 buildContractPrompt 的上下文块）。
+function contractFacets(
+  context: CreativeContext,
+): Record<string, string | undefined> {
+  return {
+    positioning: context.positioningBrief
+      ? context.positioningBrief
+      : "（创作者尚未设置定位——按通用爆款逻辑产内容合同）",
+    learnings: context.learningsBrief
+      ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
+      : "",
+    thesis: context.thesisBrief
+      ? `\n【已搭好的论点树(策划判断)】\n${context.thesisBrief}`
+      : "",
+    topic: context.topic.title
+      ? `\n【本期选题】${context.topic.title}${
+          context.topic.angle ? `（切入：${context.topic.angle}）` : ""
+        }`
+      : "",
+  };
 }
 
 // Robustly pull a single JSON object out of the agent's final text (tolerate ``` fences /
@@ -123,13 +110,8 @@ function pickBody(
   return "";
 }
 
-async function draftContract(
-  context: CreativeContext,
-  complete: Complete,
-): Promise<ContractCardDraft[]> {
-  const { text } = await complete(buildContractPrompt(context), {
-    schema: true,
-  });
+// Parse the agent's final text into the four locked ContractCard slots (parse 逻辑原样保留)。
+function parseContract(text: string): ContractCardDraft[] {
   const obj = parseJsonObject(text) ?? {};
   return CONTRACT_ANGLES.map((angle): ContractCardDraft => ({
     id: angle.id,
@@ -171,9 +153,25 @@ export async function runPlanningContract(
       { projectId: task.projectId, topic },
       deps,
     );
-    const cards = await draftContract(context, (prompt, opts) =>
-      deps.llm(ctx, "planning.contract", prompt, opts),
-    );
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 通用模板节点(外置 planning.contract 模板),
+    // 步骤事件落 ai_task_steps。弃旧 LlmCompleter。
+    const spec = await deps.resolveModelSpec(ctx, "planning.contract");
+    const { modelFor, runTemplatedNode, PLANNING_CONTRACT_TEMPLATE } =
+      await import("@creatoros/ai-worker");
+    const { text } = await runTemplatedNode({
+      model: modelFor(spec),
+      template: PLANNING_CONTRACT_TEMPLATE,
+      facets: contractFacets(context),
+      onStep: async (e) => {
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: e.stepNo,
+          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
+          text: e.text,
+          toolCalls: e.toolCalls,
+        });
+      },
+    });
+    const cards = parseContract(text);
     if (cards.length === 0) {
       throw new Error(
         "planning-contract-runner: agent returned no parseable contract cards",

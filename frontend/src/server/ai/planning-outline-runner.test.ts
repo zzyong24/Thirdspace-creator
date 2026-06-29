@@ -1,10 +1,21 @@
 import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
+
+// 结构方案 runner 迁 Vercel SDK 后:mock ai-worker 的 runTemplatedNode(动态 import 目标),
+// 验证 capability 解析、候选记录、parse(structureType + sections)仍按约定产出。
+const runTemplatedNode = vi.fn(async () => ({ text: "", steps: [] }));
+vi.mock("@creatoros/ai-worker", () => ({
+  modelFor: vi.fn(() => ({}) as never),
+  runTemplatedNode,
+  PLANNING_OUTLINE_TEMPLATE: { id: "planning.outline" },
+}));
+
 import { runPlanningOutline } from "./planning-outline-runner";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 
 function makeDeps(llmText: string) {
+  runTemplatedNode.mockResolvedValue({ text: llmText, steps: [] } as never);
   const recordCandidate = vi.fn(
     async (
       _ctx: RequestContext,
@@ -16,12 +27,18 @@ function makeDeps(llmText: string) {
       },
     ) => undefined,
   );
-  const llm = vi.fn(async () => ({ text: llmText }));
+  const resolveModelSpec = vi.fn(async () => ({
+    apiFormat: "anthropic" as const,
+    baseUrl: null,
+    model: "claude-opus-4-8",
+    token: "k",
+  }));
   return {
     deps: {
       ai: {
         markRunning: vi.fn(async () => undefined),
         recordCandidate,
+        recordStep: vi.fn(async () => undefined),
         cancelTask: vi.fn(async () => undefined),
       } as never,
       positioning: {
@@ -33,29 +50,25 @@ function makeDeps(llmText: string) {
       learnings: { getSuggestions: async () => [] } as never,
       thesis: { getThesisNodes: async () => [] } as never,
       contract: { getContractCards: async () => [] } as never,
-      llm,
+      resolveModelSpec,
     },
     recordCandidate,
-    llm,
+    resolveModelSpec,
   };
 }
 
-describe("runPlanningOutline with injected llm", () => {
-  it("calls deps.llm with planning.outline capability and records an artifact_version candidate", async () => {
+describe("runPlanningOutline (Vercel SDK + 外置模板)", () => {
+  it("resolves the planning.outline capability and records an artifact_version candidate", async () => {
     const obj =
       '{"structureType":"问题-解决","opening":"前3秒抛冲突","sections":[{"label":"钩子","intent":"抓注意"},{"label":"价值","intent":"给干货"}],"ending":"金句收束","cta":"关注追更"}';
-    const { deps, recordCandidate, llm } = makeDeps(obj);
+    const { deps, recordCandidate, resolveModelSpec } = makeDeps(obj);
     await runPlanningOutline(
       ctx,
       { id: "t1", projectId: "p1", inputData: { artifactId: "a1" } },
       deps,
     );
-    expect(llm).toHaveBeenCalledWith(
-      ctx,
-      "planning.outline",
-      expect.any(String),
-      expect.objectContaining({ schema: true }),
-    );
+    expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "planning.outline");
+    expect(runTemplatedNode).toHaveBeenCalledTimes(1);
     expect(recordCandidate).toHaveBeenCalledTimes(1);
     const input = recordCandidate.mock.calls[0]![2];
     expect(input.resultType).toBe("artifact_version");

@@ -1,10 +1,21 @@
 import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
+
+// 内容合同 runner 迁 Vercel SDK 后:mock ai-worker 的 runTemplatedNode(动态 import 目标),
+// 验证 capability 解析、候选记录、parse(四个固定合同槽)仍按约定产出。
+const runTemplatedNode = vi.fn(async () => ({ text: "", steps: [] }));
+vi.mock("@creatoros/ai-worker", () => ({
+  modelFor: vi.fn(() => ({}) as never),
+  runTemplatedNode,
+  PLANNING_CONTRACT_TEMPLATE: { id: "planning.contract" },
+}));
+
 import { runPlanningContract } from "./planning-contract-runner";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 
 function makeDeps(llmText: string) {
+  runTemplatedNode.mockResolvedValue({ text: llmText, steps: [] } as never);
   const recordCandidate = vi.fn(
     async (
       _ctx: RequestContext,
@@ -16,12 +27,18 @@ function makeDeps(llmText: string) {
       },
     ) => undefined,
   );
-  const llm = vi.fn(async () => ({ text: llmText }));
+  const resolveModelSpec = vi.fn(async () => ({
+    apiFormat: "anthropic" as const,
+    baseUrl: null,
+    model: "claude-opus-4-8",
+    token: "k",
+  }));
   return {
     deps: {
       ai: {
         markRunning: vi.fn(async () => undefined),
         recordCandidate,
+        recordStep: vi.fn(async () => undefined),
         cancelTask: vi.fn(async () => undefined),
       } as never,
       // assembleCreativeContext reads getPositioningCenter (PositioningReader) +
@@ -35,29 +52,25 @@ function makeDeps(llmText: string) {
       } as never,
       learnings: { getSuggestions: async () => [] } as never,
       thesis: { getThesisNodes: async () => [] } as never,
-      llm,
+      resolveModelSpec,
     },
     recordCandidate,
-    llm,
+    resolveModelSpec,
   };
 }
 
-describe("runPlanningContract with injected llm", () => {
-  it("calls deps.llm with planning.contract capability and records an artifact_version candidate", async () => {
+describe("runPlanningContract (Vercel SDK + 外置模板)", () => {
+  it("resolves the planning.contract capability and records an artifact_version candidate", async () => {
     const obj =
       '{"受众定位":"给一线产品经理","价值主张":"用真实案例拆解","核心节奏":"前3秒抛冲突","行动召唤":"关注追更"}';
-    const { deps, recordCandidate, llm } = makeDeps(obj);
+    const { deps, recordCandidate, resolveModelSpec } = makeDeps(obj);
     await runPlanningContract(
       ctx,
       { id: "t1", projectId: "p1", inputData: { artifactId: "a1" } },
       deps,
     );
-    expect(llm).toHaveBeenCalledWith(
-      ctx,
-      "planning.contract",
-      expect.any(String),
-      expect.objectContaining({ schema: true }),
-    );
+    expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "planning.contract");
+    expect(runTemplatedNode).toHaveBeenCalledTimes(1);
     expect(recordCandidate).toHaveBeenCalledTimes(1);
     const input = recordCandidate.mock.calls[0]![2];
     expect(input.resultType).toBe("artifact_version");

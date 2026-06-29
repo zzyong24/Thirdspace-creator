@@ -1,16 +1,13 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
 import { parseJsonLoose } from "@/server/ai/llm/parse";
-import type {
-  LlmCompleteOptions,
-  LlmCompleter,
-} from "@/server/ai/llm/provider";
 
 // AI 编导诊断 runner (calibration.diagnose node, 校准中心大改 Slice 1). Reads ONE content
 // subject (script / content_output) + the creator's current 变现加权 rubric + creative
@@ -20,10 +17,11 @@ import type {
 // branch mints ONE draft prediction (predictedConversion/predictedMetrics filled by the
 // 维度评分约定) via the AiCalibrationPort.
 //
-// Mirrors topic-enrich-runner (deps.llm → real configurable LLM; narrow injected readers;
-// owns its lifecycle — markRunning → recordCandidate, cancel on any failure). The subject's
-// content is read through a narrow injected reader (no cross-module repo import); the rubric
-// dimensions come from a narrow rubric reader bound to the calibration service.
+// 跑在 Vercel AI SDK 上(弃旧 LlmCompleter):resolveModelSpec 按 capability 解析用户配的 model,
+// 提示词走外置模板 calibration.diagnose(脊柱-1 模板化解耦)。narrow injected readers; owns its
+// lifecycle — markRunning → recordCandidate, cancel on any failure. The subject's content is
+// read through a narrow injected reader (no cross-module repo import); the rubric dimensions
+// come from a narrow rubric reader bound to the calibration service.
 
 // One dimension score the agent returns (the 中栏 评分表 row): rubric key + 1–5 + 理由 + 建议.
 export interface DiagnosisDimensionScore {
@@ -75,35 +73,28 @@ export interface DiagnosisRubricReader {
 
 export interface CalibrationDiagnoseDeps extends ContextDeps {
   ai: AiService;
-  llm: LlmCompleter;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
   subject: DiagnosisSubjectReader;
   rubric: DiagnosisRubricReader;
 }
-
-type Complete = (
-  prompt: string,
-  opts?: LlmCompleteOptions,
-) => Promise<{ text: string }>;
 
 export interface CalibrationDiagnoseTask {
   id: string;
   inputData: Record<string, unknown>;
 }
 
-function buildDiagnosePrompt(
+// 把 CreativeContext + 待诊断主体 + rubric 维度映射成 calibration.diagnose 模板的 facets
+// (占位化原 buildDiagnosePrompt 的上下文块）。rubricBlock(逐维度评分清单)是必需 facet,
+// 调用方按 dimensions 计算;title/script 来自 subject(文稿沿用原兜底文案)。
+function diagnoseFacets(
   context: CreativeContext,
   subject: { title: string; scriptText: string },
   dimensions: Array<{ key: string; label: string; description?: string }>,
-): string {
-  const positioning = context.positioningBrief
-    ? context.positioningBrief
-    : "（创作者尚未设置定位——按通用爆款逻辑判断）";
-  const learnings = context.learningsBrief
-    ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
-    : "";
-  const script = subject.scriptText
-    ? subject.scriptText
-    : "（暂无文稿——请基于标题与定位做尽力诊断，拿不准的指标给 null）";
+): Record<string, string | undefined> {
   // The rubric block the agent scores against — one line per dimension with its anchor.
   const rubricBlock = dimensions
     .map((d, i) => {
@@ -111,29 +102,19 @@ function buildDiagnosePrompt(
       return `${i + 1}. ${d.label}（key=${d.key}）${anchor}`;
     })
     .join("\n");
-
-  return `你是这位创作者的「AI 编导」。下面是一条**发布前的内容**，请你按创作者的**变现加权评分标准**逐维度盲评，并给出编导诊断。
-
-【创作者定位】
-${positioning}${learnings}
-
-【评分维度（必须逐条打分，key 原样回填）】
-${rubricBlock}
-
-【待诊断内容】
-标题：${subject.title}
-文稿：
-${script}
-
-【任务】像一个严苛的内容主编：① 对上面每个维度给 1-5 分（1=很差 5=极强），写一句**打分理由**和一句**修改建议**；② 估计发布后表现（完播率/收藏率/评论率/转化意向，0-100，拿不准给 null，别编）；③ 写综合判断、主要问题、优先修改。confidence 给你对这次诊断的整体把握（high/med/low）。
-
-【输出】只输出一个 JSON 对象（不要多余文字、不要代码块包裹），形如：
-{"dimensions":[{"key":"原样回填的key","score":1到5的整数,"reason":"打分理由一句","suggestion":"修改建议一句"}],
- "performance":{"完播率":0-100或null,"收藏率":0-100或null,"评论率":0-100或null,"转化意向":0-100或null},
- "verdict":"综合判断一句",
- "mainIssues":["主要问题1","主要问题2"],
- "priorityFixes":["优先修改1","优先修改2"],
- "confidence":"high|med|low"}`;
+  return {
+    positioning: context.positioningBrief
+      ? context.positioningBrief
+      : "（创作者尚未设置定位——按通用爆款逻辑判断）",
+    learnings: context.learningsBrief
+      ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
+      : "",
+    rubricBlock,
+    title: subject.title,
+    script: subject.scriptText
+      ? subject.scriptText
+      : "（暂无文稿——请基于标题与定位做尽力诊断，拿不准的指标给 null）",
+  };
 }
 
 function str(v: unknown): string {
@@ -209,20 +190,6 @@ export function parseDiagnosis(
   };
 }
 
-async function generateDiagnosis(
-  context: CreativeContext,
-  subject: { title: string; scriptText: string },
-  dimensions: Array<{ key: string; label: string; description?: string }>,
-  complete: Complete,
-): Promise<CalibrationDiagnosis | null> {
-  const { text } = await complete(
-    buildDiagnosePrompt(context, subject, dimensions),
-    { schema: true },
-  );
-  const rubricKeys = new Set(dimensions.map((d) => d.key));
-  return parseDiagnosis(text, rubricKeys);
-}
-
 // Orchestrate one calibration.diagnose task end to end. Owns its lifecycle: on any failure
 // (missing subject ids, no current rubric, unparseable output, LlmCredentialError when no
 // key is configured) it cancels the task (→ a terminal the UI renders as 失败) so it never
@@ -260,11 +227,27 @@ export async function runCalibrationDiagnose(
       { projectId: null, topic: subject.title, angle: "" },
       deps,
     );
-    const diagnosis = await generateDiagnosis(
-      context,
-      subject,
-      rubric.dimensions,
-      (prompt, opts) => deps.llm(ctx, "calibration.diagnose", prompt, opts),
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 通用模板节点(外置 calibration.diagnose
+    // 模板),步骤事件落 ai_task_steps。弃旧 LlmCompleter。parseDiagnosis 原样保留(只换"拿 text"的来源)。
+    const spec = await deps.resolveModelSpec(ctx, "calibration.diagnose");
+    const { modelFor, runTemplatedNode, CALIBRATION_DIAGNOSE_TEMPLATE } =
+      await import("@creatoros/ai-worker");
+    const { text } = await runTemplatedNode({
+      model: modelFor(spec),
+      template: CALIBRATION_DIAGNOSE_TEMPLATE,
+      facets: diagnoseFacets(context, subject, rubric.dimensions),
+      onStep: async (e) => {
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: e.stepNo,
+          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
+          text: e.text,
+          toolCalls: e.toolCalls,
+        });
+      },
+    });
+    const diagnosis = parseDiagnosis(
+      text,
+      new Set(rubric.dimensions.map((d) => d.key)),
     );
     if (!diagnosis) {
       throw new Error(

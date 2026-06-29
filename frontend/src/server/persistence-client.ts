@@ -1689,7 +1689,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
-              llm: llmCompleter,
+              // Vercel AI SDK 路径(弃 LlmCompleter):AI 编导诊断跑在 ai-worker + 外置模板。
+              resolveModelSpec,
               subject: {
                 get: async (
                   c: RequestContext,
@@ -1788,7 +1789,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
-              llm: llmCompleter,
+              // Vercel AI SDK 路径(弃 LlmCompleter):论点树节点跑在 ai-worker + 外置模板。
+              resolveModelSpec,
             },
           );
         } else if (
@@ -1815,7 +1817,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               positioning: positioningReader,
               learnings: learningsReader,
               thesis: thesisReader,
-              llm: llmCompleter,
+              // Vercel AI SDK 路径(弃 LlmCompleter):内容合同节点跑在 ai-worker + 外置模板。
+              resolveModelSpec,
             },
           );
         } else if (
@@ -1842,7 +1845,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               learnings: learningsReader,
               thesis: thesisReader,
               contract: contractReader,
-              llm: llmCompleter,
+              // Vercel AI SDK 路径(弃 LlmCompleter):结构方案节点跑在 ai-worker + 外置模板。
+              resolveModelSpec,
             },
           );
         } else if (
@@ -1862,7 +1866,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
-              llm: llmCompleter,
+              // Vercel AI SDK 路径(弃 LlmCompleter):复盘节点跑在 ai-worker + 外置模板。
+              resolveModelSpec,
             },
           );
         } else if (
@@ -1886,7 +1891,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
-              llm: llmCompleter,
+              // Vercel AI SDK 路径(弃 LlmCompleter):一稿多平台节点跑在 ai-worker + 外置模板。
+              resolveModelSpec,
             },
           );
         } else if (

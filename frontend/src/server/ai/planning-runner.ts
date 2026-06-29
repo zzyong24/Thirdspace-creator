@@ -1,15 +1,12 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import type {
-  LlmCompleteOptions,
-  LlmCompleter,
-} from "@/server/ai/llm/provider";
 
 // 论点树 runner (planning.thesis node, 机制③④). Mirrors script-runner but DRAFTS a
 // thesis tree (论点树) from the creative context, then records an `artifact_version`
@@ -25,13 +22,12 @@ import type {
 
 export interface PlanningDeps extends ContextDeps {
   ai: AiService;
-  llm: LlmCompleter;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
 }
-
-type Complete = (
-  prompt: string,
-  opts?: LlmCompleteOptions,
-) => Promise<{ text: string }>;
 
 export interface PlanningTask {
   id: string;
@@ -61,36 +57,24 @@ interface ThesisNode {
   summary: string;
 }
 
-function buildThesisPrompt(context: CreativeContext): string {
-  const positioning = context.positioningBrief
-    ? context.positioningBrief
-    : "（创作者尚未设置定位——按通用爆款逻辑构建论点树）";
-  const learnings = context.learningsBrief
-    ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
-    : "";
-  const topic = context.topic.title
-    ? `\n【本期选题】${context.topic.title}${
-        context.topic.angle ? `（切入：${context.topic.angle}）` : ""
-      }`
-    : "";
-  return `你是这位创作者的「策划 agent」，负责为一期内容搭建**论点树**。
-
-【创作者定位】
-${positioning}${learnings}${topic}
-
-【任务】基于定位(+过往爆款要素)+选题,构建一棵**论点树**:
-- 一个**核心论点**(core):整期内容要立的那个观点,一句话标题 + 一句话展开。
-- 3-6 个**分支**,每个分支属于以下三类之一:
-  · support(支撑依据):为核心论点提供逻辑支撑的子论点;
-  · evidence(证据):可引用的事实/数据/案例;
-  · counter(反驳):预判受众的反对意见并给出回应。
-分支要覆盖至少 support / evidence / counter 三类,使论点树立得住、辩得赢。
-
-【输出】只输出一个 JSON 对象(不要多余文字、不要代码块包裹),形如:
-{"core":{"title":"核心论点标题","summary":"一句话展开"},
- "branches":[{"column":"support","title":"...","summary":"..."},
-             {"column":"evidence","title":"...","summary":"..."},
-             {"column":"counter","title":"...","summary":"..."}]}`;
+// 把 CreativeContext 映射成 planning.thesis 模板的 facets(占位化原 buildThesisPrompt 的上下文块）。
+// 文字与兜底逻辑与原 prompt 一致,只是从内联拼串改成模板注入。
+function thesisFacets(
+  context: CreativeContext,
+): Record<string, string | undefined> {
+  return {
+    positioning: context.positioningBrief
+      ? context.positioningBrief
+      : "（创作者尚未设置定位——按通用爆款逻辑构建论点树）",
+    learnings: context.learningsBrief
+      ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
+      : "",
+    topic: context.topic.title
+      ? `\n【本期选题】${context.topic.title}${
+          context.topic.angle ? `（切入：${context.topic.angle}）` : ""
+        }`
+      : "",
+  };
 }
 
 // Robustly pull a single JSON object out of the agent's final text (tolerate ``` fences /
@@ -121,11 +105,8 @@ function normalizeColumn(raw: unknown): ThesisColumn | null {
   return null;
 }
 
-async function draftThesisTree(
-  context: CreativeContext,
-  complete: Complete,
-): Promise<ThesisTree> {
-  const { text } = await complete(buildThesisPrompt(context), { schema: true });
+// Parse the agent's final text into a ThesisTree (parse 逻辑原样保留,只换"拿 text"的来源)。
+function parseThesisTree(text: string): ThesisTree {
   const obj = parseJsonObject(text);
   const coreRaw = (obj?.core ?? {}) as Record<string, unknown>;
   const core = {
@@ -214,9 +195,25 @@ export async function runPlanningThesis(
       { projectId: task.projectId, topic },
       deps,
     );
-    const tree = await draftThesisTree(context, (prompt, opts) =>
-      deps.llm(ctx, "planning.thesis", prompt, opts),
-    );
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 通用模板节点(外置 planning.thesis 模板),
+    // 步骤事件落 ai_task_steps(窗口步骤日志)。弃旧 LlmCompleter。
+    const spec = await deps.resolveModelSpec(ctx, "planning.thesis");
+    const { modelFor, runTemplatedNode, PLANNING_THESIS_TEMPLATE } =
+      await import("@creatoros/ai-worker");
+    const { text } = await runTemplatedNode({
+      model: modelFor(spec),
+      template: PLANNING_THESIS_TEMPLATE,
+      facets: thesisFacets(context),
+      onStep: async (e) => {
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: e.stepNo,
+          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
+          text: e.text,
+          toolCalls: e.toolCalls,
+        });
+      },
+    });
+    const tree = parseThesisTree(text);
     const nodes = renderNodes(tree);
     if (nodes.length === 0) {
       throw new Error("planning-runner: agent returned no parseable thesis nodes");
