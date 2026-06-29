@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: refactor/agent-and-structure @ 80c48c7
+LAST_SYNCED: refactor/agent-and-structure @ 85a70de
 
 ## 这是什么(定位)
 
@@ -14,9 +14,9 @@ CreatorOS —— 自媒体「编导创作操作系统」:项目/选题/研究/�
 
 ## 重构进度:物理架构边界(门卫)
 
-剩余违规 **308** 条(目标 0,随 Phase 2 消减):
+剩余违规 **298** 条(目标 0,随 Phase 2 消减):
 
-- 276 × `R1-no-backend-in-frontend`
+- 266 × `R1-no-backend-in-frontend`
 - 31 × `R2-no-agent-sdk-in-frontend-pages`
 - 1 × `R3-no-cross-module-repository-import`
 
@@ -24,7 +24,7 @@ CreatorOS —— 自媒体「编导创作操作系统」:项目/选题/研究/�
 
 ## 开放任务(欠债)
 
-- [open] T-006 (P2) 24 模块 frontend/src/server/modules → backend/src/modules(门卫 R1 清零)
+- [wip] T-006 (P2) 24 模块 frontend/src/server/modules → backend/src/modules(门卫 R1 清零)
 - [open] T-007 (P2) 清 R2(31 处 AI SDK 前端泄漏)+ R3(跨模块 repo)
 - [open] T-008 (P3) Agent Runtime 薄壳:Vercel AI SDK + 函数注册表 + ReAct 循环 + zod 输出 + ai_task_steps
 - [open] T-009 (P3) 选题节点端到端打通 + 窗口实时步骤日志
@@ -35,7 +35,7 @@ CreatorOS —— 自媒体「编导创作操作系统」:项目/选题/研究/�
 
 全部任务:`node orchestrator/process/pmem.mjs tasks`
 
-## 模块地图(生成自 frontend/src/server/modules)
+## 模块地图(生成自 backend/src/modules)
 
-`ai` · `analytics` · `artifacts` · `assets` · `calibration` · `candidate` · `content-calendar` · `identity` · `ingestion` · `knowledge` · `learnings` · `material-links` · `monetization` · `notifications` · `platform-account` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `reviews` · `search` · `settings` · `taxonomy`
+`taxonomy`
 

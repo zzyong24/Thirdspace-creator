@@ -37,7 +37,7 @@ import {
   createTaxonomyService,
   createTaxonomyTransport,
   TAXONOMY_OP_IDS,
-} from "@/server/modules/taxonomy";
+} from "@creatoros/backend/modules/taxonomy";
 import {
   createNotificationRepository,
   createNotificationsService,

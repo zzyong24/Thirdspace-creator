@@ -1,5 +1,5 @@
 {
-  "count": 308,
+  "count": 298,
   "violations": [
     "R1-no-backend-in-frontend::frontend/src/server/modules/ai/ai.acceptance.test.ts",
     "R1-no-backend-in-frontend::frontend/src/server/modules/ai/ai.contract.test.ts",
@@ -267,16 +267,6 @@
     "R1-no-backend-in-frontend::frontend/src/server/modules/settings/settings.service.test.ts",
     "R1-no-backend-in-frontend::frontend/src/server/modules/settings/settings.service.ts",
     "R1-no-backend-in-frontend::frontend/src/server/modules/settings/settings.transport.ts",
-    "R1-no-backend-in-frontend::frontend/src/server/modules/taxonomy/index.ts",
-    "R1-no-backend-in-frontend::frontend/src/server/modules/taxonomy/taxonomy.contract.test.ts",
-    "R1-no-backend-in-frontend::frontend/src/server/modules/taxonomy/taxonomy.db-schema.ts",
-    "R1-no-backend-in-frontend::frontend/src/server/modules/taxonomy/taxonomy.errors.ts",
-    "R1-no-backend-in-frontend::frontend/src/server/modules/taxonomy/taxonomy.repository.integration.test.ts",
-    "R1-no-backend-in-frontend::frontend/src/server/modules/taxonomy/taxonomy.repository.ts",
-    "R1-no-backend-in-frontend::frontend/src/server/modules/taxonomy/taxonomy.schema.ts",
-    "R1-no-backend-in-frontend::frontend/src/server/modules/taxonomy/taxonomy.service.test.ts",
-    "R1-no-backend-in-frontend::frontend/src/server/modules/taxonomy/taxonomy.service.ts",
-    "R1-no-backend-in-frontend::frontend/src/server/modules/taxonomy/taxonomy.transport.ts",
     "R2-no-agent-sdk-in-frontend-pages::frontend/src/app/(creator)/shell-router.tsx::@/components/overlays/ai-copilot-dialog",
     "R2-no-agent-sdk-in-frontend-pages::frontend/src/components/overlays/ai-copilot-dialog.tsx::@/features/copilot/ai-copilot-content",
     "R2-no-agent-sdk-in-frontend-pages::frontend/src/components/project/status-badge.tsx::@/types/domain",

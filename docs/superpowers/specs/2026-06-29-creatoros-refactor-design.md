@@ -121,3 +121,26 @@ contract(合同:zod 定义的操作/资源/工具 schema)
 - **Agent Runtime 自维护成本**:薄壳 + Vercel AI SDK 扛掉厂商差异;护栏(步数/超时/zod)防跑飞。
 - **文档腐烂**:`pmem sync` + staleness 检查让「忘更新」变 CI 失败,而非悄悄烂。
 - **范围过大**:严格按 Phase 推进,一阶段一验收,绝不一次性推倒。
+
+---
+
+## 附:Phase 2 搬迁配方(已在 taxonomy 验证到绿)
+
+一次性地基(已做):`backend/package.json` 加 subpath 导出 `"./modules/*"` → `./src/modules/*/index.ts`。
+**关键:`backend/src/index.ts` 不回引模块,所以模块内 `@creatoros/backend` self-import 无循环。**
+
+每个模块的机械步骤:
+1. `git mv frontend/src/server/modules/<m> backend/src/modules/<m>`(测试一起搬,自动归 backend vitest 跑)。
+2. 改所有消费方:`@/server/modules/<m>` → `@creatoros/backend/modules/<m>`(多数只有 persistence-client)。
+3. 验证四件套全绿:backend typecheck + backend test + frontend typecheck + dispatch/persistence 组合测试。
+4. `node orchestrator/process/boundary-scan.mjs --update-baseline` 收紧基线(R1 递减)。
+
+**搬迁顺序(由依赖图决定,不能乱搬):**
+- ✅ `taxonomy`(0 个 `@/` 引用,真叶子,已搬,门卫 R1 276→266)。
+- ⚠️ 先安家**共享依赖**,否则叶子模块的 `@/` 引用会断:
+  - `identity`(几乎所有模块 re-export 它的 `OwnershipError` + RequestContext 基座;它自身还 import `@/server/mock-backend/store`)。
+  - `@/fixtures/canonical`(seed fixtures)、`@/server/persistence-*`。
+  - 建议:把共享的 `OwnershipError` 等错误类下沉到 `backend/src/errors`(让模块从 `@creatoros/backend` 取,不再依赖 identity 模块),再搬其余。
+- 其余模块 0~1 跨模块耦合,共享依赖安家后可批量(workflow 一 agent 一模块,worktree 隔离)。
+
+发现的隐藏 bug(已修):backend `project-repository.test.ts` 缺 `briefDetail` 字段——旧 `pnpm verify` 没跑 backend typecheck,被新结构揪出。
