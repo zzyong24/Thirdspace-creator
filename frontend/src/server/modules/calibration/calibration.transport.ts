@@ -27,6 +27,9 @@ export const CALIBRATION_OP_IDS = [
   "calibration.predictions.get",
   "calibration.predictions.list",
   "calibration.results.create",
+  // 复盘飞轮回流 轨B (Learning→校准): list pending reflowed rule-suggestions + 采纳 one.
+  "calibration.suggestions.list",
+  "calibration.suggestions.adopt",
 ] as const;
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
@@ -40,7 +43,11 @@ export function createCalibrationTransport(
       const service = serviceFactory();
       const requestId = (ctx as RequestContext).requestId;
       const { params, query, body } = (input ?? {}) as Input;
-      const p = (params ?? {}) as { rubricId?: string; predictionId?: string };
+      const p = (params ?? {}) as {
+        rubricId?: string;
+        predictionId?: string;
+        suggestionId?: string;
+      };
 
       switch (endpoint.id) {
         case "calibration.rubrics.create": {
@@ -114,6 +121,25 @@ export function createCalibrationTransport(
             ingestionRunId: b.ingestionRunId,
             actualMetrics: b.actualMetrics ?? {},
           });
+          return { data: dto, meta: { requestId } };
+        }
+        case "calibration.suggestions.list": {
+          // 复盘飞轮回流 轨B — paginated PENDING reflowed rule-suggestions (list envelope).
+          const q = (query ?? {}) as { page?: number; pageSize?: number };
+          const page = q.page ?? 1;
+          const pageSize = q.pageSize ?? 20;
+          const { rows, total } = await service.listRuleSuggestions(ctx, {
+            limit: pageSize,
+            offset: (page - 1) * pageSize,
+          });
+          return { data: rows, meta: { requestId, page, pageSize, total } };
+        }
+        case "calibration.suggestions.adopt": {
+          // 采纳 → a NEW RubricVersion (single-resource envelope).
+          const dto = await service.adoptRuleSuggestion(
+            ctx,
+            p.suggestionId ?? "",
+          );
           return { data: dto, meta: { requestId } };
         }
         default:

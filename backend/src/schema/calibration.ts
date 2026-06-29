@@ -75,6 +75,31 @@ export const calibrationResults = pgTable("calibration_results", {
   createdAt: text("created_at").notNull(),
 });
 
+// CalibrationRuleSuggestion — 复盘飞轮回流 轨B (Learning→校准). A 复盘 Learning is promoted
+// into an EXPLICIT, actionable rule suggestion against a Rubric: 「把这条复盘结论变成约束未来
+// 评分的维度」. The suggestion is a REAL row the 校准中心 reads + the user 采纳 (→ a NEW
+// RubricVersion folding in `proposed_dimension`, renormalized). `learning_id` is the source
+// 复盘结论; `proposed_dimension` is the 维度建议 jsonb ({ key, label, weight, description });
+// status pending→adopted|dismissed is terminal (an adopted/dismissed suggestion is never
+// re-actioned). `adopted_version_id` records the RubricVersion the 采纳 minted (provenance).
+// The table lives in the calibration module (它是校准的承载体；学习模块经注入端口写入,零跨
+// 模块 repo import).
+export const calibrationRuleSuggestions = pgTable(
+  "calibration_rule_suggestions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    learningId: text("learning_id").notNull(), // the source 复盘 Learning
+    rubricId: text("rubric_id").notNull(), // the target Rubric this suggestion bumps
+    status: text("status").notNull().default("pending"), // pending|adopted|dismissed
+    proposedDimension: jsonb("proposed_dimension").notNull().default({}), // { key, label, weight, description }
+    rationale: text("rationale").notNull().default(""), // 一句话说明为什么从这条复盘得出
+    adoptedVersionId: text("adopted_version_id"), // the RubricVersion 采纳 minted (nullable until adopted)
+    createdAt: text("created_at").notNull(),
+    adoptedAt: text("adopted_at"), // nullable — set only at 采纳/dismiss terminal
+  },
+);
+
 // Raw DDL applied at db init (pglite has no migration runner wired here yet). All
 // CREATE … IF NOT EXISTS (idempotent — re-run on a re-built singleton is a no-op).
 //   - rubric_versions_rubric_ver_uq: one row per (rubric, version) — append-only chain.
@@ -123,4 +148,18 @@ CREATE TABLE IF NOT EXISTS calibration_results (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS calibration_results_prediction_uq ON calibration_results (prediction_id);
 CREATE INDEX IF NOT EXISTS calibration_results_run_idx ON calibration_results (ingestion_run_id);
+CREATE TABLE IF NOT EXISTS calibration_rule_suggestions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  learning_id TEXT NOT NULL,
+  rubric_id TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  proposed_dimension JSONB NOT NULL DEFAULT '{}'::jsonb,
+  rationale TEXT NOT NULL DEFAULT '',
+  adopted_version_id TEXT,
+  created_at TEXT NOT NULL,
+  adopted_at TEXT
+);
+CREATE INDEX IF NOT EXISTS calibration_rule_suggestions_user_idx ON calibration_rule_suggestions (user_id, status);
+CREATE INDEX IF NOT EXISTS calibration_rule_suggestions_learning_idx ON calibration_rule_suggestions (learning_id);
 `;

@@ -127,6 +127,7 @@ export {
   rubricVersions,
   predictions,
   calibrationResults,
+  calibrationRuleSuggestions,
   CALIBRATION_DDL,
 } from "./schema/calibration";
 export {

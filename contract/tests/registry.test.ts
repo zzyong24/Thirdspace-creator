@@ -82,6 +82,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/learnings"],
   ["POST", "/learnings/:learningId/applications"],
   ["POST", "/learnings/:learningId/evaluate"],
+  ["POST", "/learnings/:learningId/calibration-suggestions"],
   // AI、搜索和系统
   ["GET", "/search"],
   ["GET", "/search/facets"],
@@ -157,6 +158,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/calibration/predictions/:predictionId/lock"],
   ["GET", "/calibration/predictions/:predictionId"],
   ["POST", "/calibration/predictions/:predictionId/result"],
+  ["GET", "/calibration/suggestions"],
+  ["POST", "/calibration/suggestions/:suggestionId/adopt"],
   // 平台账号 (platform-account)
   ["GET", "/accounts"],
   ["POST", "/accounts"],

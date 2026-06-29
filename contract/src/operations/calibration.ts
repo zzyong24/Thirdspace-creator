@@ -11,9 +11,11 @@ import {
   rubricVersionResource,
   predictionResource,
   calibrationResultResource,
+  calibrationRuleSuggestionResource,
 } from "../resources/calibration";
 
 const rubricParams = z.object({ rubricId: id });
+const suggestionParams = z.object({ suggestionId: id });
 const predictionParams = z.object({ predictionId: id });
 
 const rubricDimension = z.object({
@@ -111,5 +113,26 @@ export const calibrationOperations = {
     }),
     response: calibrationResultResource,
     fr: ["FR-CALIB-RESULT-CREATE"],
+  }),
+  // 复盘飞轮回流 轨B (Learning→校准): 校准中心 lists the pending rule-suggestions reflowed
+  // from 复盘 Learnings (user-scoped, status='pending'), each adoptable into a rubric bump.
+  listRuleSuggestions: defineEndpoint({
+    id: "calibration.suggestions.list",
+    method: "GET",
+    path: "/calibration/suggestions",
+    query: paginationQuery,
+    response: calibrationRuleSuggestionResource,
+    isList: true,
+    fr: ["FR-CALIB-REFLOW-LIST"],
+  }),
+  // 采纳 a pending suggestion → append a NEW RubricVersion folding in `proposedDimension`
+  // (renormalized), mark the suggestion adopted (terminal), and return the new version.
+  adoptRuleSuggestion: defineEndpoint({
+    id: "calibration.suggestions.adopt",
+    method: "POST",
+    path: "/calibration/suggestions/:suggestionId/adopt",
+    params: suggestionParams,
+    response: rubricVersionResource,
+    fr: ["FR-CALIB-REFLOW-ADOPT"],
   }),
 } as const;

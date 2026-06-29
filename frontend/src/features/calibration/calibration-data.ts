@@ -11,7 +11,10 @@
  * seam only governs writes, so the read side owns its own try/catch fallback.
  */
 import { client as defaultClient } from "@/lib/contract-client.server";
-import type { PredictionResource } from "@/server/modules/calibration";
+import type {
+  PredictionResource,
+  CalibrationRuleSuggestionResource,
+} from "@/server/modules/calibration";
 
 /**
  * Structural seam for the predictions read. The route passes a session-scoped
@@ -20,7 +23,7 @@ import type { PredictionResource } from "@/server/modules/calibration";
  */
 export type CalibrationReadClient = Pick<
   typeof defaultClient,
-  "listPredictions"
+  "listPredictions" | "listRuleSuggestions"
 >;
 
 export async function loadPredictions(
@@ -35,6 +38,26 @@ export async function loadPredictions(
     return rows;
   } catch {
     // No predictions yet / read failure → empty list → 「暂无盲预测」empty state.
+    return [];
+  }
+}
+
+/**
+ * 复盘飞轮回流 轨B (Learning→校准): the PENDING CalibrationRuleSuggestions reflowed from 复盘
+ * Learnings — each adoptable into a rubric维度 bump. Failure-isolated like loadPredictions.
+ */
+export async function loadRuleSuggestions(
+  client: CalibrationReadClient = defaultClient,
+): Promise<CalibrationRuleSuggestionResource[]> {
+  try {
+    const rows = (await client.listRuleSuggestions({
+      params: undefined,
+      query: { page: 1, pageSize: 50 },
+      body: undefined,
+    })) as unknown as CalibrationRuleSuggestionResource[];
+    return rows;
+  } catch {
+    // No suggestions yet / read failure → empty list → 「暂无复盘回流建议」empty state.
     return [];
   }
 }

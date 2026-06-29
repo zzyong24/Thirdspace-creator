@@ -189,4 +189,58 @@ describe("calibration repository (integration, user-scoped)", () => {
     const fetched = await repo.getResultByPrediction("pred-1");
     expect(fetched?.id).toBe(first.id);
   });
+
+  // --- 复盘飞轮回流 轨B (Learning→校准) CalibrationRuleSuggestion ---
+
+  it("rule-suggestion round-trips, is pending-scoped, idempotent, terminal on adopt, user-scoped", async () => {
+    const a = repoFor(db, "user-a");
+    const b = repoFor(db, "user-b");
+    const dim = {
+      key: "altruism",
+      label: "利他性",
+      weight: 0.2,
+      description: "复盘回流维度",
+    };
+    const s1 = await a.createRuleSuggestion({
+      learningId: "learning-1",
+      rubricId: "rubric-a",
+      proposedDimension: dim,
+      rationale: "复盘结论",
+    });
+    expect(s1.userId).toBe("user-a");
+    expect(s1.status).toBe("pending");
+    expect(s1.proposedDimension).toEqual(dim);
+    expect(s1.adoptedVersionId).toBeNull();
+    expect(s1.adoptedAt).toBeNull();
+    // Idempotent on pending (learning, rubric).
+    const s1b = await a.createRuleSuggestion({
+      learningId: "learning-1",
+      rubricId: "rubric-a",
+      proposedDimension: dim,
+      rationale: "复盘结论",
+    });
+    expect(s1b.id).toBe(s1.id);
+    // Pending list scoping — user A sees 1, user B sees none.
+    const listA = await a.listPendingRuleSuggestions({ limit: 20, offset: 0 });
+    expect(listA.total).toBe(1);
+    const listB = await b.listPendingRuleSuggestions({ limit: 20, offset: 0 });
+    expect(listB.total).toBe(0);
+    // Cross-user single read → OwnershipError (404).
+    await expect(b.getRuleSuggestion(s1.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    // Mark adopted (terminal) — stamps version + adoptedAt; leaves pending list empty.
+    const adopted = await a.markRuleSuggestionAdopted(s1.id, {
+      status: "adopted",
+      adoptedVersionId: "rubricver-2",
+    });
+    expect(adopted.status).toBe("adopted");
+    expect(adopted.adoptedVersionId).toBe("rubricver-2");
+    expect(adopted.adoptedAt).toBe(NOW);
+    const listAfter = await a.listPendingRuleSuggestions({
+      limit: 20,
+      offset: 0,
+    });
+    expect(listAfter.total).toBe(0);
+  });
 });

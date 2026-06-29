@@ -38,6 +38,7 @@ import { resolveSession } from "@/lib/session.server";
 import type {
   RubricResource,
   PredictionResource,
+  CalibrationRuleSuggestionResource,
 } from "@/server/modules/calibration";
 
 import {
@@ -46,8 +47,12 @@ import {
   BumpRubricVersionButton,
   ReviseFromCalibrationButton,
   AdoptAiPredictionButton,
+  ReflowSuggestionsList,
 } from "@/features/calibration/calibration-interactive-region";
-import { loadPredictions } from "@/features/calibration/calibration-data";
+import {
+  loadPredictions,
+  loadRuleSuggestions,
+} from "@/features/calibration/calibration-data";
 
 // The canonical 变现加权 rubric seeded by the persistence-client composition root
 // (五维: hook 强度 / 利他性 / 人群匹配 / CTA 清晰度 / 为产品铺路程度).
@@ -76,20 +81,29 @@ export default async function CalibrationRoutePage() {
   // when there is no session so SSR/tests keep resolving against the fixture seed.
   const client = session ? createServerClient(session.ctx) : defaultClient;
 
-  const [rubric, predictions] = await Promise.all([
+  const [rubric, predictions, reflowSuggestions] = await Promise.all([
     loadRubric(client),
     loadPredictions(client),
+    loadRuleSuggestions(client),
   ]);
-  return <CalibrationView rubric={rubric} predictions={predictions} />;
+  return (
+    <CalibrationView
+      rubric={rubric}
+      predictions={predictions}
+      reflowSuggestions={reflowSuggestions}
+    />
+  );
 }
 
 // Pure render — split out so tests can drive it synchronously with a fixed rubric.
 export function CalibrationView({
   rubric,
   predictions = [],
+  reflowSuggestions = [],
 }: {
   readonly rubric: RubricResource | null;
   readonly predictions?: readonly PredictionResource[];
+  readonly reflowSuggestions?: readonly CalibrationRuleSuggestionResource[];
 }) {
   return (
     <main
@@ -178,7 +192,16 @@ export function CalibrationView({
             </ul>
           </SectionCard>
 
-          {/* 飞轮关口 — decorative this wave (wired in positioning/candidate + AI 模块). */}
+          {/* 复盘飞轮回流 轨B（Learning→校准）— REAL: 经验沉淀页对一条复盘点「回流到校准」会落库为
+              一条 CalibrationRuleSuggestion，在此采纳即 bump 评分维度（→ 新 RubricVersion）。 */}
+          <SectionCard
+            title="复盘回流建议"
+            description="把复盘结论采纳为约束未来评分的维度（来自经验沉淀页的「回流到校准」）"
+          >
+            <ReflowSuggestionsList suggestions={reflowSuggestions} />
+          </SectionCard>
+
+          {/* 飞轮关口 — 定位/选题回灌仍 decorative（positioning/candidate 模块尚无写 op）。 */}
           <SectionCard title="校准飞轮" description="把校准结果回灌到定位与选题">
             <div className="flex flex-wrap items-center gap-2 py-2">
               <ReviseFromCalibrationButton />

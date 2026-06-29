@@ -31,7 +31,10 @@ import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import type { PredictionResource } from "@/server/modules/calibration";
+import type {
+  PredictionResource,
+  CalibrationRuleSuggestionResource,
+} from "@/server/modules/calibration";
 
 // Shared island mutation seam: a `pending` guard blocks concurrent writes; on success
 // it calls router.refresh() so the server re-reads the persisted rows.
@@ -409,5 +412,80 @@ export function AdoptAiPredictionButton() {
     >
       采纳 AI 盲预测（规划中）
     </Button>
+  );
+}
+
+// 复盘飞轮回流 轨B (Learning→校准): the REAL reflow surface — list the PENDING
+// CalibrationRuleSuggestions promoted from 复盘 Learnings, each 采纳-able into a rubric维度
+// bump (→ a NEW RubricVersion, weights renormalized). 采纳 → client.adoptRuleSuggestion →
+// router.refresh() (the rubric version回显s in 评分维度). This is the 唯一 non-decorative
+// 飞轮关口 this wave — the 据此修正定位/采纳AI 仍诚实 disabled above.
+export function ReflowSuggestionsList({
+  suggestions,
+}: {
+  readonly suggestions: readonly CalibrationRuleSuggestionResource[];
+}) {
+  const { pending, run } = useMutation();
+
+  function adopt(suggestionId: string) {
+    run(() =>
+      client.adoptRuleSuggestion({
+        params: { suggestionId },
+        query: undefined,
+        body: undefined,
+      }),
+    );
+  }
+
+  if (suggestions.length === 0) {
+    return (
+      <p
+        data-testid="reflow-suggestions-empty"
+        className="py-2 text-sm text-muted-foreground"
+      >
+        暂无复盘回流建议。在「经验沉淀」页对一条复盘点「回流到校准」，即可在此采纳为评分维度。
+      </p>
+    );
+  }
+
+  return (
+    <ul
+      data-testid="reflow-suggestions-list"
+      className="flex flex-col gap-2 py-2"
+    >
+      {suggestions.map((s) => (
+        <li
+          key={s.id}
+          data-testid="reflow-suggestion-row"
+          data-suggestion-id={s.id}
+          className="flex flex-col gap-2 rounded-md border border-border px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary" className="text-[10px]">
+                维度 {s.proposedDimension.label || s.proposedDimension.key}
+              </Badge>
+              <Badge variant="outline" className="text-[10px]">
+                权重 {Math.round(s.proposedDimension.weight * 100)}%
+              </Badge>
+            </span>
+            <span className="text-[12px] leading-snug text-muted-foreground">
+              {s.rationale || "复盘结论回流为评分维度"}
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            disabled={pending}
+            onClick={() => adopt(s.id)}
+            data-testid="adopt-reflow-suggestion"
+            className="shrink-0 self-start sm:self-center"
+          >
+            采纳为评分维度
+          </Button>
+        </li>
+      ))}
+    </ul>
   );
 }

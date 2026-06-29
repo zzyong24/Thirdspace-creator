@@ -25,6 +25,8 @@ export const LEARNINGS_OP_IDS = [
   "learnings.create",
   "learnings.applications.create",
   "learnings.evaluate",
+  // 复盘飞轮回流 轨B (Learning→校准): promote a Learning into a CalibrationRuleSuggestion.
+  "learnings.calibrationSuggestions.create",
 ] as const;
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
@@ -86,6 +88,23 @@ export function createLearningsTransport(
             b,
           );
           return { data: learning, meta: { requestId } };
+        }
+        case "learnings.calibrationSuggestions.create": {
+          // 复盘飞轮回流 轨B — promote this Learning into a CalibrationRuleSuggestion.
+          const b = (body ?? {}) as {
+            rubricId?: string;
+            dimensionKey?: string;
+            dimensionLabel?: string;
+            weight?: number;
+            description?: string;
+            rationale?: string;
+          };
+          const suggestion = await service.suggestCalibrationRule(
+            ctx,
+            p.learningId ?? "",
+            b,
+          );
+          return { data: suggestion, meta: { requestId } };
         }
         default:
           throw new UnsupportedOperationError(endpoint.id);

@@ -17,12 +17,17 @@ import type {
   RubricVersionRow,
   PredictionRow,
   CalibrationResultRow,
+  RuleSuggestionRow,
 } from "./calibration.repository";
 
 export const rubricResource = ENDPOINTS.createRubric.response;
 export const rubricVersionResource = ENDPOINTS.bumpRubricVersion.response;
 export const predictionResource = ENDPOINTS.createPrediction.response;
 export const calibrationResultResource = ENDPOINTS.createResult.response;
+// 复盘飞轮回流 轨B — the CalibrationRuleSuggestion DTO (the list/adopt + Learnings reflow ops
+// all share this resource; adopt returns a rubricVersionResource so its wire shape is reused).
+export const calibrationRuleSuggestionResource =
+  ENDPOINTS.listRuleSuggestions.response;
 
 // Derive the inferred output type from the schema's phantom `_output` (zod 4's
 // `z.infer<T>` is `T["_output"]`). The frontend package does not declare `zod` as a
@@ -32,6 +37,8 @@ export type RubricVersionResource = (typeof rubricVersionResource)["_output"];
 export type PredictionResource = (typeof predictionResource)["_output"];
 export type CalibrationResultResource =
   (typeof calibrationResultResource)["_output"];
+export type CalibrationRuleSuggestionResource =
+  (typeof calibrationRuleSuggestionResource)["_output"];
 
 // Row → DTO mappers (SPEC §9: the API DTO is built by an explicit mapper, NEVER the
 // Drizzle row). The service + contract test share ONE mapping so a wire-shape change
@@ -96,5 +103,32 @@ export function toCalibrationResultDto(
     actualMetrics: (row.actualMetrics ?? {}) as Record<string, unknown>,
     deviation: (row.deviation ?? {}) as Record<string, unknown>,
     createdAt: row.createdAt,
+  };
+}
+
+// 复盘飞轮回流 轨B — CalibrationRuleSuggestion row → DTO. The `proposedDimension` jsonb is
+// shaped { key, label, weight, description } at write time; default a missing description.
+export function toRuleSuggestionDto(
+  row: RuleSuggestionRow,
+): CalibrationRuleSuggestionResource {
+  const dim = (row.proposedDimension ?? {}) as Partial<
+    CalibrationRuleSuggestionResource["proposedDimension"]
+  >;
+  return {
+    id: row.id,
+    userId: row.userId,
+    learningId: row.learningId,
+    rubricId: row.rubricId,
+    status: row.status as CalibrationRuleSuggestionResource["status"],
+    proposedDimension: {
+      key: dim.key ?? "",
+      label: dim.label ?? "",
+      weight: typeof dim.weight === "number" ? dim.weight : 0,
+      description: dim.description ?? "",
+    },
+    rationale: row.rationale,
+    adoptedVersionId: row.adoptedVersionId ?? null,
+    createdAt: row.createdAt,
+    adoptedAt: row.adoptedAt ?? null,
   };
 }
