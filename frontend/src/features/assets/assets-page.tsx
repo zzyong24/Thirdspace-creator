@@ -692,7 +692,8 @@ function StorageUsageCard({ storage }: StorageUsageCardProps) {
           tone="brand"
         />
         <p className="text-[11px] text-muted-foreground">
-          个人本地素材库 · 自动同步已开启
+          {/* ASSET-17:去掉"自动同步已开启"假文案(无同步机制支撑)。 */}
+          个人本地素材库
         </p>
       </div>
     </SectionCard>
