@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: refactor/agent-and-structure @ 4cd8401
+LAST_SYNCED: refactor/agent-and-structure @ 997c2fb
 
 ## 这是什么(定位)
 
@@ -23,8 +23,7 @@ CreatorOS —— 自媒体「编导创作操作系统」:项目/选题/研究/�
 ## 开放任务(欠债)
 
 - [open] T-007 (P2) 清 R2(31 处 AI SDK 前端泄漏)+ R3(跨模块 repo)
-- [wip] T-008 (P3) Agent Runtime 薄壳:Vercel AI SDK + 函数注册表 + ReAct 循环 + zod 输出 + ai_task_steps
-- [open] T-009 (P3) 选题节点端到端打通 + 窗口实时步骤日志
+- [wip] T-009 (P3) 选题节点端到端打通 + 窗口实时步骤日志
 - [open] T-010 (P4) ~13 runner 迁移成 skill+工具,删孤儿 ai-worker 与旧 frontend/src/server/ai/*
 - [open] T-011 (P5) 多模型按 capability(DeepSeek写文案/GPT做图/Claude推理)+ 即时可视化 spec
 - [open] T-012 (P6) (后续 YAGNI)Redis+BullMQ 持久队列 + worker 独立进程 + DB 写属主收口
