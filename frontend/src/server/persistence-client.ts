@@ -143,7 +143,7 @@ import {
   createLearningsRepository,
   LEARNINGS_OP_IDS,
   type LearningRow,
-} from "@/server/modules/learnings";
+} from "@creatoros/backend/modules/learnings";
 import {
   createAiService,
   createAiTransport,
@@ -151,7 +151,7 @@ import {
   buildAiModelConfigs,
   buildAiAgentConfigs,
   AI_OP_IDS,
-} from "@/server/modules/ai";
+} from "@creatoros/backend/modules/ai";
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerate } from "@/server/ai/topic-runner";
 import { fetchDouyinMetrics } from "@/server/ingestion/douyin-cdp";

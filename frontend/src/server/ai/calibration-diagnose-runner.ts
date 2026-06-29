@@ -1,6 +1,6 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
-import type { AiService } from "@/server/modules/ai";
+import type { AiService } from "@creatoros/backend/modules/ai";
 import {
   assembleCreativeContext,
   type ContextDeps,
