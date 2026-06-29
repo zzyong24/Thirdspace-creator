@@ -32,7 +32,7 @@ import type {
   ContentCalendarEntryResource,
   PublishingCadenceResource,
   CadenceAttainmentResource,
-} from "@/server/modules/content-calendar";
+} from "@creatoros/backend/modules/content-calendar";
 
 const FREQUENCIES = [
   "daily",

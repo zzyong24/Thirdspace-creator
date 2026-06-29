@@ -28,7 +28,7 @@ import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import type { PlatformAccountResource } from "@/server/modules/platform-account";
+import type { PlatformAccountResource } from "@creatoros/backend/modules/platform-account";
 
 // The contract platformId enum (kept inline — deterministic, no zod in the FE bundle).
 const PLATFORMS = [

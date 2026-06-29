@@ -5,7 +5,7 @@ import {
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
-import { ASSET_OP_IDS } from "./assets.transport";
+import { ASSET_OP_IDS } from "@creatoros/backend/modules/assets";
 
 // D8 / G7 — the 9 assets ops are registered into the composite (PERSISTED_OPS)
 // and round-trip through compositeTransport against the seeded pglite store.

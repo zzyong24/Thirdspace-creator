@@ -5,7 +5,7 @@ import {
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
-import { PUBLISHING_OP_IDS } from "./publishing.transport";
+import { PUBLISHING_OP_IDS } from "@creatoros/backend/modules/publishing";
 
 // Step 4/6 — the 6 publishing ops are registered into the composite
 // (PERSISTED_OPS) and the create → list → revisions.create → transition chain

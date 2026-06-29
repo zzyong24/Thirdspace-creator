@@ -1,4 +1,3 @@
-import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   DashboardPage,

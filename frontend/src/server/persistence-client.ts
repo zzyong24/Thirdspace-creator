@@ -83,7 +83,7 @@ import {
   KNOWLEDGE_OP_IDS,
   type KnowledgeItemRow,
   type KnowledgeRevisionRow,
-} from "@/server/modules/knowledge";
+} from "@creatoros/backend/modules/knowledge";
 import {
   createAssetRepository,
   createAssetsService,
@@ -96,7 +96,7 @@ import {
   ASSET_OP_IDS,
   type AssetRow,
   type AssetFileRow,
-} from "@/server/modules/assets";
+} from "@creatoros/backend/modules/assets";
 import {
   createArtifactRepository,
   createArtifactsService,
@@ -105,12 +105,12 @@ import {
   type ArtifactRow,
   type ArtifactVersionRow,
   type ArtifactRelationRow,
-} from "@/server/modules/artifacts";
+} from "@creatoros/backend/modules/artifacts";
 import {
   createProductionService,
   createProductionTransport,
   PRODUCTION_OP_IDS,
-} from "@/server/modules/production";
+} from "@creatoros/backend/modules/production";
 import {
   createPublishingService,
   createPublishingTransport,
@@ -118,7 +118,7 @@ import {
   createMockPublisher,
   PUBLISHING_OP_IDS,
   type PublicationRow,
-} from "@/server/modules/publishing";
+} from "@creatoros/backend/modules/publishing";
 import {
   createAnalyticsRepository,
   createAnalyticsService,
@@ -207,13 +207,13 @@ import {
   createPlatformAccountRepository,
   PLATFORM_ACCOUNT_OP_IDS,
   type PlatformAccountRow,
-} from "@/server/modules/platform-account";
+} from "@creatoros/backend/modules/platform-account";
 import {
   createContentCalendarService,
   createContentCalendarTransport,
   CONTENT_CALENDAR_OP_IDS,
   type ContentCalendarService,
-} from "@/server/modules/content-calendar";
+} from "@creatoros/backend/modules/content-calendar";
 import {
   createMaterialLinksService,
   createMaterialLinksTransport,
@@ -227,7 +227,7 @@ import {
   createQueryServicesTransport,
   QUERY_SERVICES_OP_IDS,
   type PublishingCenterQueryService,
-} from "@/server/modules/query-services";
+} from "@creatoros/backend/modules/query-services";
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed

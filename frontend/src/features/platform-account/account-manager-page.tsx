@@ -23,7 +23,7 @@
 
 import { AccountManagerView } from "./account-manager-view";
 import { client as defaultClient } from "@/lib/contract-client.server";
-import type { PlatformAccountResource } from "@/server/modules/platform-account";
+import type { PlatformAccountResource } from "@creatoros/backend/modules/platform-account";
 
 /**
  * Structural seam for the server read. The route passes a session-scoped

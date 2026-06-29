@@ -1,4 +1,3 @@
-import "server-only";
 import type { SearchDocumentRow } from "./search.repository";
 
 // Wave-1 search-index seed (plan open-question #4). SPEC §16 says "索引内容由拥有数据

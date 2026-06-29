@@ -5,7 +5,7 @@ import {
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
-import { PLATFORM_ACCOUNT_OP_IDS } from "./platform-account.transport";
+import { PLATFORM_ACCOUNT_OP_IDS } from "@creatoros/backend/modules/platform-account";
 
 // Step 4/6 — the 5 account ops are registered into the composite (PERSISTED_OPS) and an
 // accounts.create round-trips through compositeTransport against the seeded pglite store.

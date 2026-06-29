@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db, type RequestContext } from "@creatoros/backend";
 import { createSettingsRepository } from "./settings.repository";
-import { createAssetRepository } from "../assets/assets.repository";
+import { createAssetRepository } from "@creatoros/backend/modules/assets";
 
 // Settings repository integration tests (plan Step 1 schema-slice + Step 2
 // ownership/upsert/patch), pglite-backed. EVERY query is user-scoped: user A can

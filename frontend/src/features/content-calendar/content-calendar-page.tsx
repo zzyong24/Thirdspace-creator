@@ -22,8 +22,8 @@ import type {
   ContentCalendarEntryResource,
   PublishingCadenceResource,
   CadenceAttainmentResource,
-} from "@/server/modules/content-calendar";
-import type { PlatformAccountResource } from "@/server/modules/platform-account";
+} from "@creatoros/backend/modules/content-calendar";
+import type { PlatformAccountResource } from "@creatoros/backend/modules/platform-account";
 
 /**
  * Structural seam for the server reads. The route passes a session-scoped

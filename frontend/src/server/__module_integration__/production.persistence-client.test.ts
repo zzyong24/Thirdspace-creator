@@ -5,7 +5,7 @@ import {
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
-import { PRODUCTION_OP_IDS } from "./production.transport";
+import { PRODUCTION_OP_IDS } from "@creatoros/backend/modules/production";
 
 // Step 4/6 — the 5 production ops are registered into the composite
 // (PERSISTED_OPS) and the get → put → segments → export → complete chain

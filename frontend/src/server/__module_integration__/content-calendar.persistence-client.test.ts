@@ -5,7 +5,7 @@ import {
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
-import { CONTENT_CALENDAR_OP_IDS } from "./content-calendar.transport";
+import { CONTENT_CALENDAR_OP_IDS } from "@creatoros/backend/modules/content-calendar";
 
 // Step 4/6 — the 8 calendar ops are registered into the composite (PERSISTED_OPS) and a
 // create→list round-trips through compositeTransport against the seeded pglite store.

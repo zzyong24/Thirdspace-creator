@@ -5,7 +5,7 @@ import {
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
-import { KNOWLEDGE_OP_IDS } from "./knowledge.transport";
+import { KNOWLEDGE_OP_IDS } from "@creatoros/backend/modules/knowledge";
 
 // D2 — the 9 knowledge ops are registered into the composite (PERSISTED_OPS) and
 // a knowledge.create round-trips through compositeTransport against the seeded

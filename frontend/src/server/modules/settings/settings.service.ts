@@ -18,8 +18,8 @@ import type {
   AgentConfigurationResource,
   StorageConfigResource,
 } from "./settings.schema";
-import { resolveRootPath } from "@/server/modules/assets/media-root";
-import { rootPathLegalityReason } from "@/server/modules/assets/blob-security";
+import { resolveRootPath } from "@creatoros/backend/modules/assets";
+import { rootPathLegalityReason } from "@creatoros/backend/modules/assets";
 import { StorageValidationError } from "./settings.errors";
 
 // SettingsService (foundation §5.3) — RequestContext-taking methods. Settings has

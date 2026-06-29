@@ -5,7 +5,7 @@ import {
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
-import { ARTIFACT_OP_IDS } from "./artifacts.transport";
+import { ARTIFACT_OP_IDS } from "@creatoros/backend/modules/artifacts";
 
 // Step 4/5 — the 7 artifacts ops are registered into the composite (PERSISTED_OPS)
 // and a versions.create round-trips through compositeTransport against the seeded

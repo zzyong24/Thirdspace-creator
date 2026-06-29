@@ -38,7 +38,21 @@ export {
   type LocalFsObjectStorageConfig,
 } from "./localfs-object-storage";
 
-export { resolveRootPath, defaultMediaRoot } from "./media-root";
+export { resolveRootPath, defaultMediaRoot, blobRouteRoot } from "./media-root";
+
+// Blob-security primitives (signed-URL token + path-traversal guard). Exposed via the
+// public index so consumers (blob route, settings storage-config) never deep-import
+// module internals across the package boundary (前后端分离:走 index 公开出口)。
+export {
+  safeJoin,
+  signBlobToken,
+  verifyBlobToken,
+  blobSecret,
+  rootPathLegalityReason,
+  PathTraversalError,
+  type BlobMethod,
+  type VerifyResult,
+} from "./blob-security";
 
 export { createAssetsTransport, ASSET_OP_IDS } from "./assets.transport";
 

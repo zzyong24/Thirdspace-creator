@@ -18,6 +18,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1075.0",
+    "@aws-sdk/s3-request-presigner": "^3.1075.0",
     "@creatoros/contract": "workspace:*",
     "@electric-sql/pglite": "^0.2.0",
     "drizzle-orm": "^0.36.0",

@@ -35,7 +35,7 @@ import {
   AccountRow,
 } from "./account-manager-interactive-region";
 import { AccountManagerView } from "./account-manager-view";
-import type { PlatformAccountResource } from "@/server/modules/platform-account";
+import type { PlatformAccountResource } from "@creatoros/backend/modules/platform-account";
 
 const DOUYIN: PlatformAccountResource = {
   id: "acct-d",

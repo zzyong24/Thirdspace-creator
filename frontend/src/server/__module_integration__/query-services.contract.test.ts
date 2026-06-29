@@ -10,7 +10,7 @@ import {
   __resetPersistenceForTests,
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
-import { QUERY_SERVICES_OP_IDS } from "./query-services.transport";
+import { QUERY_SERVICES_OP_IDS } from "@creatoros/backend/modules/query-services";
 
 // Task 4/6 — the 3 page-read ops are registered into the composite (PERSISTED_OPS)
 // and resolve through compositeTransport against the seeded pglite store. Proves

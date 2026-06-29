@@ -6,7 +6,7 @@ import {
   verifyBlobToken,
   PathTraversalError,
   type BlobMethod,
-} from "@/server/modules/assets/blob-security";
+} from "@creatoros/backend/modules/assets";
 import {
   getStorageRootForRequest,
   getIdentityService,

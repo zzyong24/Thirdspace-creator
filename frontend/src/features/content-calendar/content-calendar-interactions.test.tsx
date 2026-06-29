@@ -45,7 +45,7 @@ import { ContentCalendarView } from "./content-calendar-view";
 import type {
   ContentCalendarEntryResource,
   CadenceAttainmentResource,
-} from "@/server/modules/content-calendar";
+} from "@creatoros/backend/modules/content-calendar";
 
 const ACC = "acct-d";
 
