@@ -25,6 +25,14 @@ import { OwnershipError } from "./ai.errors";
 export type ConversationRow = typeof aiConversations.$inferSelect;
 export type MessageRow = typeof aiMessages.$inferSelect;
 export type TaskRow = typeof aiTasks.$inferSelect;
+
+/** 选题弹窗跨刷新缓存用:最近待审阅 topic.generate 任务的精简投影。 */
+export interface PendingTopicReviewRow {
+  taskId: string;
+  basis: string;
+  count: number;
+  requestedAt: string; // 与 TaskRow.requestedAt 一致(库里存 ISO 串,toTaskDto 直接透传)
+}
 export type ReferenceRow = typeof aiTaskReferences.$inferSelect;
 export type ResultRow = typeof aiTaskResults.$inferSelect;
 export type StepRow = typeof aiTaskSteps.$inferSelect;
@@ -123,6 +131,8 @@ export interface AiRepository {
   listResults(taskId: string): Promise<ResultRow[]>;
   insertStep(rec: InsertStepInput): Promise<StepRow>;
   listSteps(taskId: string): Promise<StepRow[]>;
+  /** 最近一条待审阅(awaiting_confirmation)的 topic.generate 任务 + 候选数;无则 null。 */
+  findLatestPendingTopicReview(): Promise<PendingTopicReviewRow | null>;
 
   getModelConfig(capability: string): Promise<ModelConfigRow | null>;
   getDefaultModelConfig(): Promise<ModelConfigRow | null>;
@@ -403,6 +413,44 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .from(aiTaskSteps)
         .where(eq(aiTaskSteps.aiTaskId, taskId))
         .orderBy(asc(aiTaskSteps.stepNo));
+    },
+
+    async findLatestPendingTopicReview() {
+      // user-scoped:只看本人最近一条还在等采纳的选题任务。
+      const taskRows = await db
+        .select()
+        .from(aiTasks)
+        .where(
+          and(
+            eq(aiTasks.userId, deps.userId),
+            eq(aiTasks.taskType, "topic.generate"),
+            eq(aiTasks.status, "awaiting_confirmation"),
+          ),
+        )
+        .orderBy(desc(aiTasks.requestedAt))
+        .limit(1);
+      const task = taskRows[0];
+      if (!task) return null;
+      // 候选数真来自该任务最新一条 candidate_list 的 items 长度(不编造)。
+      const resultRows = await db
+        .select()
+        .from(aiTaskResults)
+        .where(
+          and(
+            eq(aiTaskResults.aiTaskId, task.id),
+            eq(aiTaskResults.resultType, "candidate_list"),
+          ),
+        );
+      const last = resultRows[resultRows.length - 1];
+      const data = (last?.resultData ?? {}) as Record<string, unknown>;
+      const items = Array.isArray(data.items) ? (data.items as unknown[]) : [];
+      const basisRaw = ((task.inputData ?? {}) as Record<string, unknown>).basis;
+      return {
+        taskId: task.id,
+        basis: typeof basisRaw === "string" ? basisRaw : "",
+        count: items.length,
+        requestedAt: task.requestedAt,
+      };
     },
 
     async getModelConfig(capability) {

@@ -82,6 +82,23 @@ export const aiTaskStepResource = z.object({
 });
 export type AITaskStepResource = z.infer<typeof aiTaskStepResource>;
 
+// PendingTopicReview (选题弹窗·跨刷新持久缓存) — 当前用户「最近一条待审阅(awaiting_confirmation)
+// 的 topic.generate 任务」+ 候选数。候选本就永久存 ai_task_results,这个读 op 只负责让前端刷新
+// 页面后仍能定位回那条任务、重读候选、免重复调 AI。无待审阅任务时 review = null。
+export const aiPendingTopicReviewResource = z.object({
+  review: z
+    .object({
+      taskId: id,
+      basis: z.string(), // 出题依据 positioning|comments|knowledge|trend
+      count: z.number().int(), // 该任务候选条数(真来自 result_data.items 长度)
+      requestedAt: iso8601,
+    })
+    .nullable(),
+});
+export type AIPendingTopicReviewResource = z.infer<
+  typeof aiPendingTopicReviewResource
+>;
+
 // AgentConfiguration extends BaseEntity (declares createdAt/updatedAt explicitly).
 export const agentConfigurationResource = z.object({
   id,

@@ -284,6 +284,15 @@ export interface AiService {
       createdAt: string;
     }[]
   >;
+  // 选题弹窗跨刷新缓存:本人最近一条待审阅 topic.generate 任务 + 候选数(无则 review: null)。
+  getPendingTopicReview(ctx: RequestContext): Promise<{
+    review: {
+      taskId: string;
+      basis: string;
+      count: number;
+      requestedAt: string;
+    } | null;
+  }>;
 }
 
 // Allowed AI Task transitions — IDENTICAL to @creatoros/ai-worker state-machine.ts
@@ -904,6 +913,11 @@ export function createAiService(deps: ServiceDeps): AiService {
         toolCalls: Array.isArray(r.toolCalls) ? (r.toolCalls as unknown[]) : [],
         createdAt: r.createdAt,
       }));
+    },
+
+    async getPendingTopicReview(ctx) {
+      const review = await repoFor(ctx).findLatestPendingTopicReview();
+      return { review };
     },
 
     async listReferences(ctx, taskId) {

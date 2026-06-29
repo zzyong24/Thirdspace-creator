@@ -41,7 +41,10 @@ import {
   TopicsWorkspace,
   type CandidateSortKey,
 } from "./topics-interactive-region";
-import { TopicGenerateBand } from "./topic-generate-island";
+import {
+  TopicGenerateBand,
+  type PendingTopicReview,
+} from "./topic-generate-island";
 
 /**
  * Structural seam for the server reads. The route passes a session-scoped
@@ -50,13 +53,15 @@ import { TopicGenerateBand } from "./topic-generate-island";
  */
 export type TopicsReadClient = Pick<
   typeof defaultClient,
-  "listCandidates" | "overviewTopics"
+  "listCandidates" | "overviewTopics" | "pendingTopicReview"
 >;
 
 export interface TopicsViewModel {
   readonly candidates: CandidateResource[];
   readonly overview: TopicsOverviewResource;
   readonly sort: CandidateSortKey;
+  /** 最近一条待审阅的 topic.generate 任务(跨刷新缓存);无则 null。 */
+  readonly pendingReview: PendingTopicReview | null;
 }
 
 export interface TopicsPageProps {
@@ -107,7 +112,21 @@ async function loadViewModel(
     query: undefined,
     body: undefined,
   })) as unknown as TopicsOverviewResource;
-  return { candidates, overview, sort };
+  const pending = (await client.pendingTopicReview({
+    params: undefined,
+    query: undefined,
+    body: undefined,
+  })) as unknown as {
+    review: { taskId: string; basis: string; count: number } | null;
+  };
+  const pendingReview: PendingTopicReview | null = pending.review
+    ? {
+        taskId: pending.review.taskId,
+        basis: pending.review.basis,
+        count: pending.review.count,
+      }
+    : null;
+  return { candidates, overview, sort, pendingReview };
 }
 
 // Pure render — split out so tests can drive it synchronously with a fixed VM.
@@ -116,7 +135,7 @@ export function TopicsView({
 }: {
   readonly viewModel: TopicsViewModel;
 }) {
-  const { candidates, overview, sort } = viewModel;
+  const { candidates, overview, sort, pendingReview } = viewModel;
 
   return (
     // 固定高度填满：页头 + AI 选题会带 + 漏斗 shrink-0 钉住,中间三栏 flex-1 占满剩余
@@ -133,9 +152,9 @@ export function TopicsView({
         </p>
       </header>
 
-      {/* 1. AI 选题会 带 (钉住) */}
+      {/* 1. AI 选题会 带 (钉住·固定高度,候选/步骤进弹窗) */}
       <div className="shrink-0">
-        <TopicGenerateBand basis={overview.basis} />
+        <TopicGenerateBand basis={overview.basis} pendingReview={pendingReview} />
       </div>
 
       {/* 2. 三栏：来源 / 候选池 / 详情 (flex-1 占满,每列各自框内滚) */}

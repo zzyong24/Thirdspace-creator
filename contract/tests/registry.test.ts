@@ -95,6 +95,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/ai/tasks/:taskId"],
   ["GET", "/ai/tasks/:taskId/results"],
   ["GET", "/ai/tasks/:taskId/steps"],
+  ["GET", "/ai/tasks/pending-topic-review"],
   ["POST", "/ai/tasks/:taskId/confirm"],
   ["POST", "/ai/tasks/:taskId/cancel"],
   ["GET", "/notifications"],

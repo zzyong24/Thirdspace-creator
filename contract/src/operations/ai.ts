@@ -7,6 +7,7 @@ import {
   aiTaskResource,
   aiTaskResultResource,
   aiTaskStepResource,
+  aiPendingTopicReviewResource,
 } from "../resources/ai";
 
 const conversationParams = z.object({ conversationId: id });
@@ -99,6 +100,13 @@ export const aiOperations = {
     params: taskParams,
     response: aiTaskStepResource,
     isList: true,
+    fr: ["FR-AI-TASKS-RESULTS-LIST"],
+  }),
+  pendingTopicReview: defineEndpoint({
+    id: "ai.tasks.pending_topic_review",
+    method: "GET",
+    path: "/ai/tasks/pending-topic-review",
+    response: aiPendingTopicReviewResource,
     fr: ["FR-AI-TASKS-RESULTS-LIST"],
   }),
   confirmTask: defineEndpoint({

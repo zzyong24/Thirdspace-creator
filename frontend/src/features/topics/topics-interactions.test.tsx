@@ -30,6 +30,10 @@ const mockClient = {
     (_i: unknown): Promise<unknown> => Promise.resolve({ id: "task-1" }),
   ),
 };
+const mockListTaskResults = vi.fn(
+  (): Promise<Array<{ resultData: Record<string, unknown> }>> =>
+    Promise.resolve([]),
+);
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createCandidate: (i: unknown) => mockClient.createCandidate(i),
@@ -37,8 +41,10 @@ vi.mock("@/lib/contract-client", () => ({
     patchCandidate: (i: unknown) => mockClient.patchCandidate(i),
     createAITask: (i: unknown) => mockClient.createAITask(i),
     getTask: () => Promise.resolve({ status: "queued" }),
-    listTaskResults: () => Promise.resolve([]),
+    listTaskResults: () => mockListTaskResults(),
+    listTaskSteps: () => Promise.resolve([]),
     confirmTask: () => Promise.resolve({}),
+    cancelTask: () => Promise.resolve({}),
   },
 }));
 
@@ -147,6 +153,7 @@ describe("topics view (pure render, deterministic)", () => {
           candidates: [candidate({ card: filledCard() })],
           overview: overview(),
           sort: "predictedScore",
+          pendingReview: null,
         }}
       />,
     );
@@ -178,6 +185,7 @@ describe("topics view (pure render, deterministic)", () => {
           ],
           overview: overview(),
           sort: "predictedScore",
+          pendingReview: null,
         }}
       />,
     );
@@ -191,6 +199,7 @@ describe("topics view (pure render, deterministic)", () => {
           candidates: [candidate()],
           overview: overview(),
           sort: "predictedScore",
+          pendingReview: null,
         }}
       />,
     );
@@ -210,6 +219,7 @@ describe("topics view (pure render, deterministic)", () => {
           candidates: [candidate()], // empty card
           overview: overview(),
           sort: "predictedScore",
+          pendingReview: null,
         }}
       />,
     );
@@ -317,6 +327,38 @@ describe("topics islands (needs-backend wiring)", () => {
     };
     expect(arg.body.taskType).toBe("topic.generate");
     expect(arg.body.inputData.basis).toBe("positioning");
+  });
+
+  it("待审阅 pill renders the cached count + opens the dialog by re-reading results (NO re-generate)", async () => {
+    // SSR 给了一条「上次待审阅」指针 → band 显示 pill。点开应只读已存候选,绝不再调 createAITask。
+    mockListTaskResults.mockResolvedValueOnce([
+      {
+        resultData: {
+          items: [
+            { title: "缓存选题甲", angle: "切入甲", predictedScore: 88 },
+            { title: "缓存选题乙", angle: "切入乙", predictedScore: 80 },
+          ],
+        },
+      },
+    ]);
+    render(
+      <TopicGenerateBand
+        basis={overview().basis}
+        pendingReview={{ taskId: "task-x", basis: "trend", count: 2 }}
+      />,
+    );
+    // pill 显示真实缓存条数
+    const pill = screen.getByTestId("topics-pending-review");
+    expect(pill).toHaveTextContent("上次生成 2 条选题待审阅");
+    // 点开 → 弹窗读回候选(listTaskResults 被调),createAITask 绝不被调
+    fireEvent.click(pill);
+    await waitFor(() =>
+      expect(screen.getByTestId("topics-review-list")).toBeInTheDocument(),
+    );
+    const list = screen.getByTestId("topics-review-list");
+    expect(within(list).getByText("缓存选题甲")).toBeInTheDocument();
+    expect(within(list).getByText("缓存选题乙")).toBeInTheDocument();
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
   it("promote button is disabled for an already-promoted candidate", () => {
