@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: refactor/agent-and-structure @ 9296c70
+LAST_SYNCED: refactor/agent-and-structure @ 1ee8e86
 
 ## 这是什么(定位)
 
