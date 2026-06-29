@@ -41,3 +41,29 @@ export type {
   DomainReadPort,
   DomainWritePort,
 } from "./ports.js";
+
+// Phase 3 Agent Runtime(Vercel AI SDK 薄壳)+ 节点 + 编排。host(persistence-client)
+// 解析 model(modelFor)+ 装配 positioningBrief + 注入真 ports,调 runTopicTask 即可。
+export {
+  runAgentNode,
+  type AgentStepEvent,
+  type RunAgentNodeOptions,
+  type RunAgentNodeResult,
+} from "./runtime/agent-runtime.js";
+export {
+  modelFor,
+  type ModelSpec,
+  type ApiFormat,
+} from "./runtime/provider-factory.js";
+export { toToolSet, type ToolDef } from "./runtime/tool-registry.js";
+export {
+  runTopicNode,
+  parseTopics,
+  type TopicItem,
+  type TopicBasis,
+} from "./nodes/topic-node.js";
+export {
+  runTopicTask,
+  type TopicTaskPorts,
+  type RunTopicTaskInput,
+} from "./orchestrate/run-topic-task.js";
