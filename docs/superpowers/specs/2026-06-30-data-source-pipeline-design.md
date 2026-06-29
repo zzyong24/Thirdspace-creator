@@ -1,129 +1,115 @@
-# CreatorOS 数据源链路设计(对标博主 + 评论 → 选题)
+# CreatorOS 通用「调度 Agent 作业」+ 自有数据采集 设计
 
 > 状态:设计稿,待 review。落地前先过这份 spec。
-> 决策已定(用户拍板):**两源并行** · **采集功能迁移进 CreatorOS(非调用外部)** · **全重写成 TS(进 @creatoros/ai-worker)** · **cron 周期采集**。
+> 决策已定(用户逐轮拍板):
+> - **对标博主抖音爬取:先不做**(反爬/签名风险最高的那块砍掉)。
+> - **抓"自己的数据"(自己主页/作品/评论)+ 通用定时任务:做。**
+> - **定时任务做成通用原语**:`提示词 + 调度器 → 周期唤醒 Agent → 用浏览器工具抓数据 → 落库`。
+> - **采集能力全用 TS 重写,进 @creatoros/ai-worker**(复用 Phase 3 Agent Runtime)。
+> - **浏览器:CDP 驱动本机已登录 Chrome 起步**,工具接口抽象成 `BrowserDriver`,后续可 swap 服务端 Playwright。
 
-## 1. 目标与背景
+## 1. 核心洞察
 
-让选题的数据源**真实、自有、可周期采集、可视化**。当前 CreatorOS 的 7 个选题源里:
+把"定时任务"做成一个**通用原语**:一个作业 = 一段提示词 + 一个调度。调度器到点唤醒 Agent,Agent 用授权的浏览器工具去执行(抓自己主页数据等),产出结构化数据落库。
 
-- ✅ 真:评论问题 / 客户咨询(`audience_signals`)、知识库(`knowledgeService`)、项目复盘(`learningsService`)、手动灵感(`candidates.source='idea'`)
-- ❌ 假:**历史爆款**(写死 0)、**行业热点**(写死 0,仅靠实时 WebSearch 不落库)
-- ⚠️ 真 bug:新 `runTopicGenerateV2` 只读了 `positioningBrief`,**没按 basis 装配评论/知识 brief** —— 现在点"基于评论/知识"出的题其实和"基于定位"一样。
+- **通用**:加新自动化 = 写提示词 + 配调度,不写新采集器代码。
+- **复用现成**:"唤醒 Agent" = 带工具集跑一个 agent 节点(`runAgentNode` + `tool-registry`,已建)。
+- **绕开鉴权**:CDP 驱动你**本机已登录**的 Chrome,用你现成的会话抓"自己的"数据 —— 不碰抖音签名/反爬,也不存任何平台 cookie(最符合 secrets 规则)。
 
-外部采集器 `dy_download`(Python,抖音账号监测/作品/逐字稿/增量快照,有 sqlite+FastAPI)和 `cheat-on-content`(Python,douyin/bilibili/xhs 评论适配器,Markdown/JSON)是**移植的源代码与参照**,不是运行时依赖。
+## 2. 三条铁律(设计约束,违反即返工)
 
-## 2. 架构(6 层)
+**① 数值程序化抽取,LLM 不"看"数字。** Agent 只编排"去哪页 / 点哪 / 要抓哪些字段";真数值由工具从 **DOM `evaluate` 或拦截的网络响应 JSON** 里取(确定性、可校验)。绝不让模型从截图/文本里"读"播放量——那会造数,违反"数据要真"。
+
+**② 发现一次,确定性重放。** Agent 首跑摸清后产出一份 `recipe`(选择器 / 接口路径 / 步骤);之后定时运行**确定性重放 recipe,不调 LLM**;只有 recipe 失效(抓取为空/结构变)才再唤醒 Agent 重新发现并更新 recipe。既有适应力,又有 cron 的稳定与便宜。
+
+**③ 作业是带约束的单元,不是裸提示词。** `ScheduledAgentJob = prompt + schedule + 工具授权(偏只读)+ 输出 schema + 落库目标 + provenance`。工具只读+落库(无发帖/删除/转账);落库走 backend service 守卫(AI 不直接写领域实体)。防止提示词漂移去做危险动作。
+
+## 3. 架构
 
 ```
-① 采集 Worker(新·TS·@creatoros/ai-worker)
-   ├─ 抖音对标采集器  account 监测 → 作品列表 + 元数据 + 增量快照
-   └─ 评论采集器      平台评论 → 原文 + 聚类
-        ↓ 经 backend service port 写 CreatorOS Postgres(AI 不直接写,走 service 守卫)
-② 源表(自有)  benchmark_account / benchmark_work / benchmark_snapshot(新) · audience_signals(有) · trend_item(新)
-        ↓ 每次采集记一条 ingestion_run(provenance:source / started / finished / counts / status)
-③ 调度(新)   cron 周期触发采集 runner,按天幂等(参照 cheat-data-refresh inventory→refresh→aggregate)
-④ 数据源中心(新·页面)  各源:采集器状态 / 条数 / 最新样本 / 上次同步 / 「立即采集」
+ScheduledAgentJob(用户配:名称 + 提示词 + 调度 + 目标源)
+        ↓ 调度器到点(cron/interval) → fire-and-forget 起 agent 运行(像 topic.generate)
+Agent 运行(@creatoros/ai-worker,runAgentNode + 授权工具)
+   ├─ browser 工具(BrowserDriver·CDP 实现)：navigate / evaluate 取 DOM 真值 / 拦截网络 JSON
+   └─ save 工具：结构化行 → 经 backend service port 落库(带 jobRunId)
+        ↓
+源表(自有)  self_work / self_metric_snapshot(自己作品+指标) · audience_signals(评论·已有) · …
+        ↓ 每次运行记一条 job_run(provenance:job / started / finished / status / itemsNew/Updated / 步骤日志)
+任务中心(新·页面)  作业列表 + 上次/下次运行 + 状态 + 「立即运行」+ 启用开关 + 运行详情(步骤日志)
         ↓ 消费
-⑤ topic.generate  修 basis 装配 bug;新增第 5 依据「对标博主」读 benchmark_work;评论 basis 读 audience_signals
-⑥ 录入弹窗(问题一)  「新增选题卡」2 字段 → 富字段 Dialog
+自己真数据周期刷新 → Dashboard/复盘读真表;评论作业 → audience_signals → 选题"评论"依据
 ```
 
-**模块归属(守门约束)**:采集 runner 在 `@creatoros/ai-worker`(像 topic-node 一样,纯逻辑 + 注入 port);落库走 backend 新模块 `datasource`(或扩 `ingestion`)的 service;前端只读。不跨模块直 import repository。
+**BrowserDriver 抽象**(关键,为了不锁死 CDP):
+```ts
+interface BrowserDriver {
+  navigate(url: string): Promise<void>;
+  evaluate<T>(fn: string): Promise<T>;        // 程序化取 DOM 真值
+  onNetwork(filter): AsyncIterable<Response>;  // 拦截接口真 JSON
+  close(): Promise<void>;
+}
+```
+- 起步实现 `CdpBrowserDriver`:连本机 Chrome 的 CDP(`ws://localhost:9222`,Chrome 带 `--remote-debugging-port=9222` 启动)。
+- 后续可加 `PlaywrightBrowserDriver`(服务端 headless + storageState)做真无人值守 —— 工具接口不变。
 
-## 3. 数据模型(backend schema + 迁移)
+## 4. 数据模型(backend schema + 迁移)
 
-复用已有:`audience_signals`(评论/咨询,字段 rawText/demandTag/payingIntent/source/linkedCandidateId/ingestionRunId)。
-
-新增:
-
-| 表 | 关键列 | 来源映射(dy_download) |
+| 表 | 关键列 | 说明 |
 |---|---|---|
-| `benchmark_account` | id, userId, platform, handle, secUid, displayName, followerCount, signature, monitorEnabled, lastSyncAt | monitor_accounts |
-| `benchmark_work` | id, accountId, platform, externalId, title, publishedAt, transcript(nullable), videoUrl | downloads + transcripts |
-| `benchmark_snapshot` | id, workId, diggCount, commentCount, shareCount, diggDelta, commentDelta, snapshotAt | monitor_snapshots(带 delta) |
-| `trend_item` | id, userId, source, keyword, title, heat, capturedAt, raw | 热点采集落库(替掉写死 0) |
-| `ingestion_run` | id, userId, source(benchmark_douyin / comment_douyin / trend / …), startedAt, finishedAt, status, itemsNew, itemsUpdated, error | 每次采集一条,provenance + 数据源中心新鲜度 |
+| `scheduled_job` | id, userId, name, prompt, schedule(cron expr), toolGrants(jsonb), outputKind, target(源标识), recipe(jsonb·nullable), enabled, lastRunAt, nextRunAt | 通用作业定义 |
+| `job_run` | id, jobId, userId, startedAt, finishedAt, status(running/succeeded/failed), itemsNew, itemsUpdated, error, steps(jsonb·步骤日志) | 每次运行,provenance + 任务中心新鲜度 |
+| `self_work` | id, userId, platform, externalId, title, publishedAt, url | 自己的作品 |
+| `self_metric_snapshot` | id, workId, playCount, diggCount, commentCount, shareCount, snapshotAt, jobRunId | 周期指标快照(替/补一次性 douyin-real fixture) |
+| 复用 `audience_signals` | rawText, demandTag, payingIntent, source, ingestionRunId→jobRunId | 评论作业落这里 |
 
-provenance 不变量:任何采集进来的行都带 `ingestionRunId`,能追到"哪次采集、什么时候、从哪个源"。
+> 注:P1 已有 `douyinProjects/douyinMetricSnapshots` 等(douyin-real fixture 一次性导入);本设计让"自己数据"从一次性 fixture 升级成**周期自动刷新的真表**。落地时先确认能否直接复用这些表,避免重复建模。
 
-## 4. 采集器设计(TS 重写)
+## 5. 调度器(cron)
 
-### 4.1 抖音对标采集器(诚实说清难点)
+- ai-worker 暴露 `runScheduledJob(ctx, jobId, ports)`:载 job → 有有效 recipe 则确定性重放,否则唤醒 Agent 发现 → 产结构化行 → save → 记 job_run。
+- 触发:本机/dev 在 persistence-client 进程内 `node-cron` 轮询到点的 enabled job;部署后换平台 cron 打内部端点(密钥保护)。
+- 「立即运行」= 手动触发同一 runner(fire-and-forget,UI 轮询步骤日志,复用选题弹窗那套)。
+- 幂等:同 `(job, 自然日)` 不重复采(参照 cheat-data-refresh 按天幂等)。
 
-抖音抓取分两档,难度天差地别 —— **spec 必须诚实标注**:
+## 6. 任务中心 UI(新页 `/automations` 或并入"数据源")
 
-- **低风险档(先做)**:给定作品分享链/账号作品页,走 `iesdouyin.com` 公开分享页(无 cookie),拿到作品元数据 + 逐字稿(`douyin-transcribe` skill 已验证此通路可行,现在用 TS 重写其 HTTP+正则解析)。→ 填 `benchmark_work` + `transcript`。
-- **高风险档(后做/需鉴权)**:账号级监测(完整作品列表、粉丝数、周期增量快照)需要抖音 web API 的 `a_bogus/X-Bogus` 签名或登录 cookie。TS 重写签名算法**脆弱、易随抖音更新失效**。策略:用户在设置页提供抖音 cookie(加密存库、**绝不入 Git**,遵守 secrets 规则),采集器带 cookie 调;cookie 失效则该源标"需重新授权"(数据源中心可见),不假装有数据。
+固定高度工作台(沿用 contentFill)。作业卡:名称 / 提示词摘要 / 调度(每天 09:00…)/ 上次运行+本次 new/updated / 下次运行 / 状态(正常/需重连 Chrome/失败)/「立即运行」/ 启用开关。运行详情抽屉:job_run 历史 + 步骤日志。
+**这同时就是"数据链路可视化"**:每个作业 = 一条数据源,新鲜度/来路/产出一眼可见。
 
-> 风险结论:对标的"作品+逐字稿"可稳;"账号周期监测"取决于抖音反爬,先把可稳的做实,深度监测作为带鉴权的增强,采集失败一律 honest 标注、绝不造数。
+## 7. 消费 + 独立快赢
 
-### 4.2 评论采集器
+- **Sfix(独立·该立即修):basis 装配 bug** —— `runTopicGenerateV2` 现在只读 positioningBrief,要按 basis 真装配 signalsBrief/knowledgeBrief,让 4 个出题按钮真的不同。
+- **S0(独立快赢):富录入弹窗** —— 「新增选题卡」2 字段 → 居中 Dialog 分组录入整张候选卡(沿用审阅弹窗范式)。
+- 自己数据周期刷新后:Dashboard / 复盘读真表;评论作业 → audience_signals → 选题"评论"依据变活。
 
-移植 cheat-on-content 三个适配器的思路(douyin-session / bilibili / xhs),TS 重写抓评论原文 → 经 LLM 归一成 `audience_signals`(demandTag / payingIntent,走已有模型网关 `modelFor`)。MVP 先做 bilibili(公开 API 无登录,最稳)+ 抖音评论(带 cookie),小红书后补。
+## 8. 风险与约束
 
-### 4.3 通用形态
+- **CDP 本机依赖**:CDP 版要你电脑 + Chrome(带 `--remote-debugging-port`)开着,关机跑不了——起步可接受,真无人值守等 Playwright 版。
+- **数值程序化抽取**(铁律①):杜绝 LLM 造数。
+- **工具只读 + 落库走守卫**:无发帖/删除;AI 不直接写领域实体。
+- **secrets**:CDP 版不存任何平台 cookie(用你的活会话);若后续上 Playwright 版,storageState 加密存、绝不入 Git。
+- **限速**:抓取节流,按天幂等。
+- **门卫**:浏览器/抓取逻辑只准在 ai-worker / 新 datasource 模块,不进 frontend(R2)。
 
-每个采集器 = `runCollect(target, { model?, ports })`:纯 TS,产 normalized 行 + `IngestionRunResult`;副作用走注入的 backend service port(`upsertBenchmarkWorks` / `recordSnapshots` / `ingestAudienceSignal` / `recordIngestionRun`)。和 topic-node 同范式,可 MockModel 确定性单测。
+## 9. 拆解(切片)
 
-## 5. 调度(cron)
+**独立快赢(不依赖调度系统,可立即做):**
+- `Sfix` basis 装配 bug 修复 —— 小,该立即。
+- `S0` 富录入弹窗 —— 半天级。
 
-- ai-worker 暴露 `runScheduledCollection(ctx, ports)`:遍历用户启用监测的账号/源,逐个 `runCollect`,按天幂等(同一 `(source, target, date)` 不重复采)。
-- 触发:CreatorOS 加一个 cron 入口(Node 侧 `node-cron`,或部署后用平台 cron 打 `/api/v1/cron/collect` 内部端点 + 密钥保护)。本地 dev 可手动调。
-- 数据源中心的「立即采集」按钮 = 复用同一 runner 的手动触发(fire-and-forget,像 topic.generate)。
+**调度 Agent 作业系统(spec review 后按序):**
+- `D1` 数据模型(scheduled_job + job_run + self_work/self_metric_snapshot)+ datasource 模块骨架 + 契约。
+- `D2` BrowserDriver 接口 + `CdpBrowserDriver`(连本机 Chrome CDP)+ browser/save 工具(程序化抽值),MockDriver 确定性单测。
+- `D3` `runScheduledJob` runner(发现/重放)+ job_run 落库 + 步骤日志。
+- `D4` 调度器(node-cron 到点起 job)+「立即运行」手动触发。
+- `D5` 第一个真作业:抓自己抖音主页作品+指标 → self_metric_snapshot。
+- `D6` 任务中心 UI(列表 + 运行详情 + 步骤日志)= 数据链路可视化。
+- `D7` recipe 发现-重放优化 + 评论作业(抓评论 → audience_signals)+ 消费接通。
 
-## 6. 数据源中心(可视化页 `/data-sources`)
+每片 = contract→backend→ai-worker→frontend 的小垂直切片,三步验证 + 自截图 + 真链路冒烟。
 
-固定高度工作台(沿用 contentFill 范式)。每个源一张卡:
+## 10. 验收
 
-- 采集器状态:已连接 / 需授权(cookie 失效)/ 未配置
-- 真实计数:benchmark 账号数 · 作品数 · 评论信号数 · 热点数
-- 最新样本(最近 3 条,点进详情)
-- 上次同步时间 + 本次 new/updated(读 `ingestion_run`)
-- 「立即采集」按钮 + 采集进度(像选题弹窗的步骤日志)
-
-"数据链路可视化" = 让用户一眼看到每个源的真实新鲜度与来路。
-
-## 7. 消费(选题侧)
-
-1. **修 basis bug**:`runTopicGenerateV2` 调 `assembleCreativeContext(basis)` 真按依据装配 brief(评论→signalsBrief / 知识→knowledgeBrief),不再只喂 positioningBrief。
-2. **新增第 5 依据「对标博主」**:basis=`benchmark` → 读 `benchmark_work` TOP(by diggDelta)+ 逐字稿摘要装配 brief → 出"对标账号最近爆款"风格选题。选题中心加第 5 个按钮。
-3. **历史爆款/热点计数变真**:overview 的 highPerformers 读 benchmark、trend 读 `trend_item`,替掉写死 0。
-
-## 8. 录入弹窗(问题一,独立快赢)
-
-`CreateCandidateForm` 2 字段(标题/切入)→ 居中 Dialog(沿用审阅弹窗范式),分组录入整张候选卡:
-基本(标题*/切入)· 核心(一句话/目标观众/痛点/核心冲突/Hook)· 结构(内容结构/格式/素材依据)· 立项(风险/建议)。
-契约:扩 `candidates.create` body 接受可选 card(或 create 后 patch,patch 已接受 card)。一步建全卡。
-
-## 9. 风险与约束
-
-- **抖音反爬/鉴权**(最大风险):见 4.1。可稳的先做实,深度监测带鉴权 + honest 降级。
-- **secrets**:抖音/平台 cookie 加密存库,绝不入 Git(`.env.local`/DB secret_value),遵守既有规则。
-- **AI 不直接写领域实体**:采集 runner 只产候选/normalized 行,落库走 backend service 守卫。
-- **限速/封号**:采集带节流(参照 cheat-data-refresh 的 30s/视频),按天幂等避免重复打。
-- **门卫**:采集 SDK/抓取逻辑只准在 ai-worker / 新 datasource 模块,不进 frontend 页面(R2)。
-
-## 10. 拆解与排期(切片)
-
-**独立快赢(不依赖采集子系统,可立即做):**
-- **S0 富录入弹窗**(问题一)—— 半天级。
-- **Sfix basis 装配 bug 修复** —— 让 4 个出题按钮真的不同。小、该立即修。
-
-**采集子系统(spec review 通过后按序):**
-- **S1 数据模型 + datasource 模块骨架** —— 新表 + 迁移 + service port + ingestion_run。
-- **S2 抖音对标采集器(低风险档)** —— 分享页作品+逐字稿 → benchmark_work,确定性单测。
-- **S3 评论采集器(bilibili 公开 API 先)** —— → audience_signals。
-- **S4 cron 调度 + 「立即采集」** —— runScheduledCollection + 手动触发。
-- **S5 数据源中心页** —— 可视化各源新鲜度。
-- **S6 消费接通** —— 对标博主第 5 依据 + 历史爆款/热点计数变真。
-- **S7(增强)抖音账号级监测(带 cookie)** —— 深度快照,honest 降级。
-
-每片 = contract→backend→ai-worker→frontend 的小垂直切片,三步验证 + 自截图。
-
-## 11. 验收
-
-- 数据源中心显示的每个数字都能追到真实采集行(无写死)。
-- 配一个对标账号 → 采集 → benchmark_work 有真作品 → 「对标博主」出题真带出对标特征。
-- cron 跑一轮,ingestion_run 有记录,重复跑不重复入(按天幂等)。
-- 抖音鉴权失效时,数据源中心如实显示"需授权",不假装有数据。
+- 任务中心每个数字都能追到真实 job_run(无写死);抓来的播放/赞数 == 页面实际值(程序化抽取,非 LLM 读)。
+- 配一个"每天抓我主页"作业 → 到点自动跑 / 点「立即运行」→ self_metric_snapshot 有真快照 → Dashboard 数据是新鲜的。
+- recipe 失效(页面结构变)时自动重新发现;Chrome 没开时如实标"需连接 Chrome",不假装有数据。
