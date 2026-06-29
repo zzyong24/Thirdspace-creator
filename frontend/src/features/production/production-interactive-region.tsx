@@ -533,18 +533,13 @@ function PreviewPanel({
 }: {
   preview: ProductionViewModel["preview"];
 }) {
-  // 规划中 (GAP-PRD-1 AC3): real media playback needs a video render / 媒体管线
-  // that is NOT in this wave. The play/pause/reset controls are an honest
-  // placeholder affordance — flagged `data-planned` and `aria-disabled` so we
-  // never pretend a real preview is playing.
-  const [playing, setPlaying] = React.useState<boolean>(false);
+  // 实时预览无渲染管线(规划中):播放/暂停/重置控件真禁用(PROD-12/13),不假装在播真视频。
   return (
     <div
       data-slot="preview-panel"
       data-testid="production-region"
       data-region="preview"
       data-planned="true"
-      data-playing={playing ? "true" : "false"}
       className="h-full overflow-hidden"
     >
       <SectionCard
@@ -585,7 +580,7 @@ function PreviewPanel({
             data-slot="preview-status"
             className="absolute left-3 bottom-3 z-10 rounded-md bg-black/40 px-2 py-0.5 text-[11px] font-medium text-white"
           >
-            {playing ? "播放中" : "已暂停"}
+            预览规划中
           </span>
           <span
             data-slot="preview-planned-caption"
@@ -599,36 +594,20 @@ function PreviewPanel({
           data-planned="true"
           className="mt-3 flex flex-wrap items-center gap-2"
         >
-          <button
-            type="button"
-            data-slot="preview-control"
-            data-control="play"
-            aria-pressed={playing}
-            aria-disabled="true"
-            onClick={() => setPlaying(true)}
-            className="inline-flex h-8 items-center rounded-md border border-border bg-surface px-3 text-xs font-medium text-foreground data-[control=play]:aria-pressed:border-brand"
-          >
-            播放
-          </button>
-          <button
-            type="button"
-            data-slot="preview-control"
-            data-control="pause"
-            aria-pressed={!playing}
-            onClick={() => setPlaying(false)}
-            className="inline-flex h-8 items-center rounded-md border border-border bg-surface px-3 text-xs font-medium text-foreground"
-          >
-            暂停
-          </button>
-          <button
-            type="button"
-            data-slot="preview-control"
-            data-control="reset"
-            onClick={() => setPlaying(false)}
-            className="inline-flex h-8 items-center rounded-md border border-border bg-surface px-3 text-xs font-medium text-foreground"
-          >
-            重置
-          </button>
+          {/* PROD-12/13:预览无渲染管线(规划中),控件真禁用 —— 不再点了假装"播放中"。 */}
+          {(["play", "pause", "reset"] as const).map((c) => (
+            <button
+              key={c}
+              type="button"
+              data-slot="preview-control"
+              data-control={c}
+              disabled
+              title="实时预览规划中"
+              className="inline-flex h-8 cursor-not-allowed items-center rounded-md border border-border bg-surface px-3 text-xs font-medium text-muted-foreground opacity-50"
+            >
+              {c === "play" ? "播放" : c === "pause" ? "暂停" : "重置"}
+            </button>
+          ))}
         </div>
       </SectionCard>
     </div>
@@ -854,7 +833,8 @@ function SettingsGroup({
                 role="status"
                 className="text-[11px] font-medium text-success"
               >
-                视频已导出到本地草稿包。
+                {/* PROD-21:实为开发态模拟渲染(生成导出记录+资产链),非用户可下载的真实视频文件。 */}
+                已生成导出记录（模拟渲染,真实视频导出规划中）。
               </p>
             ) : null}
           </div>
@@ -880,7 +860,8 @@ function settingsActionFor(
       // 设备检测 = browser device enumeration — out of scope this wave.
       return { label: "设备检测", planned: true };
     case "subtitle":
-      return { label: "预览字幕效果", planned: false };
+      // PROD-18:无字幕预览管线 → 标规划中(走规划中徽标,不再 href="#" 死链)。
+      return { label: "预览字幕效果", planned: true };
     case "export":
       return null;
     default: {
