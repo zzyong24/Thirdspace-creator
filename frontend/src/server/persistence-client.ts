@@ -159,6 +159,8 @@ import { runTopicEnrich } from "@/server/ai/topic-enrich-runner";
 import { runCalibrationDiagnose } from "@/server/ai/calibration-diagnose-runner";
 import { runScriptDraft } from "@/server/ai/script-runner";
 import { runPlanningThesis } from "@/server/ai/planning-runner";
+import { runPlanningContract } from "@/server/ai/planning-contract-runner";
+import { runPlanningOutline } from "@/server/ai/planning-outline-runner";
 import { runReviewAnalyze } from "@/server/ai/review-runner";
 import { runPlatformAdapt } from "@/server/ai/platform-adapt-runner";
 import { runMaterialMatch } from "@/server/ai/material-match-runner";
@@ -1494,6 +1496,73 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               .slice(0, opts.limit ?? 40)
               .map((k) => ({ title: k.title, knowledgeType: k.knowledgeType })),
         };
+        // 论点树 reader (策划 downstream nodes) — read the project's `thesis_tree` artifact's
+        // current version's `contentData.nodes` back as the upstream 编导判断 that
+        // planning.contract / planning.outline build on. Reaches Artifacts ONLY through the
+        // public service (listProjectArtifacts + listVersions); no cross-module repo import.
+        const readArtifactContentData = async (
+          c: RequestContext,
+          projectId: string,
+          artifactType: string,
+        ): Promise<Record<string, unknown> | null> => {
+          const artifacts = await artifactsService.listProjectArtifacts(
+            c,
+            projectId,
+          );
+          const target = artifacts.find((a) => a.artifactType === artifactType);
+          if (!target) return null;
+          const versions = await artifactsService.listVersions(c, target.id);
+          if (versions.length === 0) return null;
+          const current = versions
+            .slice()
+            .sort((a, b) => b.versionNumber - a.versionNumber)[0];
+          const data = current?.contentData;
+          return data && typeof data === "object" && !Array.isArray(data)
+            ? (data as Record<string, unknown>)
+            : null;
+        };
+        const thesisReader = {
+          getThesisNodes: async (c: RequestContext, projectId: string) => {
+            const data = await readArtifactContentData(
+              c,
+              projectId,
+              "thesis_tree",
+            );
+            const rawNodes = Array.isArray(data?.nodes) ? data!.nodes : [];
+            return rawNodes
+              .map((raw) => {
+                const o = (raw ?? {}) as Record<string, unknown>;
+                return {
+                  column: typeof o.column === "string" ? o.column : "",
+                  title: typeof o.title === "string" ? o.title : "",
+                  summary: typeof o.summary === "string" ? o.summary : "",
+                };
+              })
+              .filter((n) => n.column && (n.title || n.summary));
+          },
+        };
+        // 内容合同 reader (planning.outline) — read the project's `content_contract`
+        // artifact's current version's `contentData.cards` back as the constraint the
+        // structure must honor.
+        const contractReader = {
+          getContractCards: async (c: RequestContext, projectId: string) => {
+            const data = await readArtifactContentData(
+              c,
+              projectId,
+              "content_contract",
+            );
+            const rawCards = Array.isArray(data?.cards) ? data!.cards : [];
+            return rawCards
+              .map((raw) => {
+                const o = (raw ?? {}) as Record<string, unknown>;
+                return {
+                  title: typeof o.title === "string" ? o.title : "",
+                  body: typeof o.body === "string" ? o.body : "",
+                };
+              })
+              .filter((c2) => c2.title || c2.body);
+          },
+        };
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
@@ -1687,6 +1756,60 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              llm: llmCompleter,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "planning.contract" &&
+          task.status === "queued"
+        ) {
+          // 内容合同 node (策划 stage) — drafts the audience contract (受众定位/价值主张/
+          // 核心节奏/行动召唤) from 定位 + 选题 + 已采纳论点树, records an `artifact_version`
+          // candidate; 采纳 appends a new ArtifactVersion onto the project's
+          // `content_contract` artifact (reuses the existing artifact_version confirm path).
+          // The 策划 workspace reads that version's contentData.cards back into the 内容合同
+          // surface.
+          void runPlanningContract(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
+              thesis: thesisReader,
+              llm: llmCompleter,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "planning.outline" &&
+          task.status === "queued"
+        ) {
+          // 结构方案 node (策划 stage, 脚本阶段入口票) — drafts ONE structure plan
+          // (结构类型/开头策略/段落安排/结尾/CTA) from 内容合同 + 论点树, records an
+          // `artifact_version` candidate; 采纳 appends a new ArtifactVersion onto the
+          // project's `content_outline` artifact (reuses the existing artifact_version
+          // confirm path).
+          void runPlanningOutline(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              learnings: learningsReader,
+              thesis: thesisReader,
+              contract: contractReader,
               llm: llmCompleter,
             },
           );

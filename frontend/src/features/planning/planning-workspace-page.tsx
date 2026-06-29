@@ -33,6 +33,8 @@ import { TagChip } from "@/components/content/tag-chip";
 import { PageTabs } from "@/components/navigation/page-tabs";
 import { buildPlanningViewModel } from "@/fixtures/selectors";
 import { PlanningThesisIsland } from "@/features/planning/planning-thesis-island";
+import { PlanningContractIsland } from "@/features/planning/planning-contract-island";
+import { PlanningOutlineIsland } from "@/features/planning/planning-outline-island";
 import type {
   ContractCard,
   PlanningViewModel,
@@ -55,6 +57,18 @@ export interface PlanningWorkspacePageProps {
    * Optional so the existing page tests (which omit it) keep rendering unchanged.
    */
   readonly thesisArtifactId?: string | null;
+  /**
+   * The project's `content_contract` artifact id — the write target for the
+   * planning.contract AI node. When present, the page mounts the `PlanningContractIsland`
+   * (帮我生成内容合同). Optional so existing tests keep rendering unchanged.
+   */
+  readonly contractArtifactId?: string | null;
+  /**
+   * The project's `content_outline` artifact id — the write target for the
+   * planning.outline AI node. When present, the page mounts the `PlanningOutlineIsland`
+   * (帮我生成结构方案). Optional so existing tests keep rendering unchanged.
+   */
+  readonly outlineArtifactId?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +93,8 @@ export function PlanningWorkspacePage({
   projectId,
   viewModel,
   thesisArtifactId,
+  contractArtifactId,
+  outlineArtifactId,
 }: PlanningWorkspacePageProps) {
   const vm = viewModel ?? buildPlanningViewModel(projectId);
   return (
@@ -98,6 +114,15 @@ export function PlanningWorkspacePage({
           className="flex flex-col gap-card-gap"
         >
           <ContentContractSection contracts={vm.contracts} />
+          {contractArtifactId ? (
+            <div data-slot="planning-contract-node">
+              <PlanningContractIsland
+                projectId={vm.projectId}
+                artifactId={contractArtifactId}
+                topic={vm.coreThesis.title}
+              />
+            </div>
+          ) : null}
           <CoreThesisCard
             id={vm.coreThesis.id}
             title={vm.coreThesis.title}
@@ -112,6 +137,15 @@ export function PlanningWorkspacePage({
               <PlanningThesisIsland
                 projectId={vm.projectId}
                 artifactId={thesisArtifactId}
+                topic={vm.coreThesis.title}
+              />
+            </div>
+          ) : null}
+          {outlineArtifactId ? (
+            <div data-slot="planning-outline-node">
+              <PlanningOutlineIsland
+                projectId={vm.projectId}
+                artifactId={outlineArtifactId}
                 topic={vm.coreThesis.title}
               />
             </div>

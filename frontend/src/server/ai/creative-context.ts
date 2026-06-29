@@ -34,6 +34,16 @@ export interface CreativeContext {
   // topic.generate `knowledge` basis can出题 from accumulated material. Empty until the
   // knowledge reader is wired or when the library is empty.
   knowledgeBrief: string;
+  // 论点树 brief — a compact rendering of the project's ADOPTED thesis tree (核心论点 +
+  // 支撑/证据/反驳). The 策划 stage's downstream nodes (planning.contract / planning.outline)
+  // read it as the upstream 编导判断 they build on. Empty string until the thesis reader is
+  // wired or when the project has no adopted thesis tree yet.
+  thesisBrief: string;
+  // 内容合同 brief — a compact rendering of the project's ADOPTED content contract (受众定位/
+  // 价值主张/核心节奏/行动召唤). planning.outline reads it as the constraint the structure
+  // must honor. Empty string until the contract reader is wired or when the project has no
+  // adopted content contract yet.
+  contractBrief: string;
   topic: { title: string; angle: string };
   projectId: string | null;
 }
@@ -125,6 +135,27 @@ export interface KnowledgeReader {
   ): Promise<Array<{ title: string; knowledgeType: string }>>;
 }
 
+// 论点树 reader — the project's ADOPTED thesis tree (核心论点 + 支撑/证据/反驳 分支), read
+// back from the `thesis_tree` artifact's current ArtifactVersion `contentData.nodes`.
+// Optional: only the 策划 downstream nodes (planning.contract / planning.outline) pass it;
+// other nodes omit it. The composition root binds it to the Artifacts public service.
+export interface ThesisReader {
+  getThesisNodes(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<Array<{ column: string; title: string; summary: string }>>;
+}
+
+// 内容合同 reader — the project's ADOPTED content contract (受众定位/价值主张/核心节奏/
+// 行动召唤), read back from the `content_contract` artifact's current ArtifactVersion
+// `contentData.cards`. Optional: only planning.outline passes it; other nodes omit it.
+export interface ContractReader {
+  getContractCards(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<Array<{ title: string; body: string }>>;
+}
+
 export interface ContextDeps {
   positioning: PositioningReader;
   learnings?: LearningsReader;
@@ -132,6 +163,8 @@ export interface ContextDeps {
   accounts?: AccountsReader;
   signals?: SignalsReader;
   knowledge?: KnowledgeReader;
+  thesis?: ThesisReader;
+  contract?: ContractReader;
 }
 
 export interface AssembleInput {
@@ -221,6 +254,29 @@ export async function assembleCreativeContext(
     }
   }
 
+  let thesisBrief = "";
+  if (deps.thesis && input.projectId) {
+    try {
+      const nodes = await deps.thesis.getThesisNodes(ctx, input.projectId);
+      thesisBrief = formatThesisNodes(nodes);
+    } catch {
+      thesisBrief = ""; // 论点树 is best-effort context; never block a node on it
+    }
+  }
+
+  let contractBrief = "";
+  if (deps.contract && input.projectId) {
+    try {
+      const cards = await deps.contract.getContractCards(ctx, input.projectId);
+      contractBrief = cards
+        .map((c) => `· ${c.title.trim()}：${c.body.trim()}`)
+        .filter((line) => line.length > 3)
+        .join("\n");
+    } catch {
+      contractBrief = ""; // 内容合同 is best-effort context; never block a node on it
+    }
+  }
+
   return {
     positioningBrief,
     learningsBrief,
@@ -228,9 +284,39 @@ export async function assembleCreativeContext(
     accountsBrief,
     signalsBrief,
     knowledgeBrief,
+    thesisBrief,
+    contractBrief,
     topic: { title: input.topic, angle: input.angle ?? "" },
     projectId: input.projectId,
   };
+}
+
+// Render the adopted thesis nodes into a compact brief the downstream 策划 nodes reason
+// against (grouped by column, in the locked 核心论点→支撑→证据→反驳 order).
+const THESIS_COLUMN_LABEL: Record<string, string> = {
+  core: "核心论点",
+  support: "支撑依据",
+  evidence: "证据",
+  counter: "反驳",
+};
+
+function formatThesisNodes(
+  nodes: Array<{ column: string; title: string; summary: string }>,
+): string {
+  if (nodes.length === 0) return "";
+  const lines: string[] = [];
+  for (const column of ["core", "support", "evidence", "counter"]) {
+    const inColumn = nodes.filter((n) => n.column === column);
+    if (inColumn.length === 0) continue;
+    lines.push(`【${THESIS_COLUMN_LABEL[column] ?? column}】`);
+    for (const n of inColumn) {
+      const title = n.title.trim();
+      const summary = n.summary.trim();
+      if (!title && !summary) continue;
+      lines.push(`· ${title}${title && summary ? "：" : ""}${summary}`);
+    }
+  }
+  return lines.join("\n");
 }
 
 function formatPositioning(center: {
