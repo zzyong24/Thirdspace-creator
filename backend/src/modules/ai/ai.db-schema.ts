@@ -14,6 +14,7 @@ export {
   aiTasks,
   aiTaskReferences,
   aiTaskResults,
+  aiTaskSteps,
   agentConfigurations,
   modelConfigurations,
   AI_DDL,

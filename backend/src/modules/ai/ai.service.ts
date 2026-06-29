@@ -266,6 +266,24 @@ export interface AiService {
     taskId: string,
     input: RecordCandidateInput,
   ): Promise<AITaskResource>;
+  // Agent Runtime 步骤流(Phase 3):runtime 每步把一个事件落库,喂窗口步骤日志 + 审计。
+  recordStep(
+    ctx: RequestContext,
+    taskId: string,
+    input: { stepNo: number; kind: string; text: string; toolCalls: unknown[] },
+  ): Promise<void>;
+  listSteps(
+    ctx: RequestContext,
+    taskId: string,
+  ): Promise<
+    {
+      stepNo: number;
+      kind: string;
+      text: string;
+      toolCalls: unknown[];
+      createdAt: string;
+    }[]
+  >;
 }
 
 // Allowed AI Task transitions — IDENTICAL to @creatoros/ai-worker state-machine.ts
@@ -862,6 +880,30 @@ export function createAiService(deps: ServiceDeps): AiService {
       await repo.requireTask(taskId); // ownership gate (404 on cross-user)
       const rows = await repo.listResults(taskId);
       return rows.map(toResultDto);
+    },
+
+    async recordStep(ctx, taskId, input) {
+      const repo = repoFor(ctx);
+      await repo.insertStep({
+        aiTaskId: taskId,
+        stepNo: input.stepNo,
+        kind: input.kind,
+        text: input.text,
+        toolCalls: input.toolCalls,
+      });
+    },
+
+    async listSteps(ctx, taskId) {
+      const repo = repoFor(ctx);
+      await repo.requireTask(taskId); // ownership gate (404 on cross-user)
+      const rows = await repo.listSteps(taskId);
+      return rows.map((r) => ({
+        stepNo: r.stepNo,
+        kind: r.kind,
+        text: r.text,
+        toolCalls: Array.isArray(r.toolCalls) ? (r.toolCalls as unknown[]) : [],
+        createdAt: r.createdAt,
+      }));
     },
 
     async listReferences(ctx, taskId) {

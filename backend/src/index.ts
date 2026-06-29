@@ -102,6 +102,7 @@ export {
   aiTasks,
   aiTaskReferences,
   aiTaskResults,
+  aiTaskSteps,
   AI_DDL,
 } from "./schema/ai";
 export {

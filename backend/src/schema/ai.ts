@@ -1,4 +1,4 @@
-import { pgTable, text, jsonb, real } from "drizzle-orm/pg-core";
+import { pgTable, text, jsonb, real, integer } from "drizzle-orm/pg-core";
 
 // AI tables (Module 15; data-model §7 ER "AI、搜索和系统"; contract/src/resources/ai.ts;
 // SPEC §12 AI Task state machine / §18 candidate-confirm). The canonical defs live in
@@ -83,6 +83,19 @@ export const aiTaskResults = pgTable("ai_task_results", {
   resultData: jsonb("result_data").notNull().default({}),
 });
 
+// ai_task_steps (Phase 3, Agent Runtime 步骤流) — 一个 ai_task 一次运行里逐步产生的过程事件
+// (想了什么/调了什么工具/最终)。子表,无 user_id:经 requireTask 的 ownership gate 到达。
+// 喂「窗口步骤日志」+ 审计。runtime 的 AgentStepEvent → 一行。
+export const aiTaskSteps = pgTable("ai_task_steps", {
+  id: text("id").primaryKey(),
+  aiTaskId: text("ai_task_id").notNull(), // owned via requireTask
+  stepNo: integer("step_no").notNull(),
+  kind: text("kind").notNull().default("step"), // step | tool_call | final
+  text: text("text").notNull().default(""),
+  toolCalls: jsonb("tool_calls").notNull().default([]),
+  createdAt: text("created_at").notNull(),
+});
+
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 //   - idx_ai_conversations_user: backs listConversations (user + updatedAt order).
 //   - idx_ai_messages_conversation: backs listMessages (per-conversation order).
@@ -148,4 +161,14 @@ CREATE TABLE IF NOT EXISTS ai_task_results (
   result_data JSONB NOT NULL DEFAULT '{}'::jsonb
 );
 CREATE INDEX IF NOT EXISTS idx_ai_task_results_task ON ai_task_results (ai_task_id);
+CREATE TABLE IF NOT EXISTS ai_task_steps (
+  id TEXT PRIMARY KEY,
+  ai_task_id TEXT NOT NULL,
+  step_no INTEGER NOT NULL,
+  kind TEXT NOT NULL DEFAULT 'step',
+  text TEXT NOT NULL DEFAULT '',
+  tool_calls JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ai_task_steps_task ON ai_task_steps (ai_task_id, step_no);
 `;

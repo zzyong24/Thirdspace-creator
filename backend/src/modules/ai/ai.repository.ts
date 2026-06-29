@@ -5,6 +5,7 @@ import {
   aiTasks,
   aiTaskReferences,
   aiTaskResults,
+  aiTaskSteps,
   agentConfigurations,
   modelConfigurations,
 } from "./ai.db-schema";
@@ -26,6 +27,7 @@ export type MessageRow = typeof aiMessages.$inferSelect;
 export type TaskRow = typeof aiTasks.$inferSelect;
 export type ReferenceRow = typeof aiTaskReferences.$inferSelect;
 export type ResultRow = typeof aiTaskResults.$inferSelect;
+export type StepRow = typeof aiTaskSteps.$inferSelect;
 export type AgentConfigRow = typeof agentConfigurations.$inferSelect;
 export type ModelConfigRow = typeof modelConfigurations.$inferSelect;
 
@@ -72,6 +74,14 @@ export interface InsertResultInput {
   resultData: Record<string, unknown>;
 }
 
+export interface InsertStepInput {
+  aiTaskId: string;
+  stepNo: number;
+  kind: string; // step | tool_call | final
+  text: string;
+  toolCalls: unknown[];
+}
+
 export interface TaskStatusPatch {
   status?: string;
   startedAt?: string | null;
@@ -111,6 +121,8 @@ export interface AiRepository {
   insertResult(rec: InsertResultInput): Promise<ResultRow>;
   getResult(resultId: string): Promise<ResultRow>;
   listResults(taskId: string): Promise<ResultRow[]>;
+  insertStep(rec: InsertStepInput): Promise<StepRow>;
+  listSteps(taskId: string): Promise<StepRow[]>;
 
   getModelConfig(capability: string): Promise<ModelConfigRow | null>;
   getDefaultModelConfig(): Promise<ModelConfigRow | null>;
@@ -365,6 +377,32 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .select()
         .from(aiTaskResults)
         .where(eq(aiTaskResults.aiTaskId, taskId));
+    },
+
+    async insertStep(rec) {
+      await getTask(rec.aiTaskId); // scoped ownership gate on the parent task
+      const inserted = await db
+        .insert(aiTaskSteps)
+        .values({
+          id: deps.nextId("ai-step"),
+          aiTaskId: rec.aiTaskId,
+          stepNo: rec.stepNo,
+          kind: rec.kind,
+          text: rec.text,
+          toolCalls: rec.toolCalls,
+          createdAt: deps.now(),
+        })
+        .returning();
+      return inserted[0]!;
+    },
+
+    async listSteps(taskId) {
+      await getTask(taskId); // scoped ownership gate
+      return db
+        .select()
+        .from(aiTaskSteps)
+        .where(eq(aiTaskSteps.aiTaskId, taskId))
+        .orderBy(asc(aiTaskSteps.stepNo));
     },
 
     async getModelConfig(capability) {
