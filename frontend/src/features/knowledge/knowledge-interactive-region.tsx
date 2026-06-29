@@ -672,8 +672,9 @@ function PopularTags({ tags }: { tags: ReadonlyArray<KnowledgeTag> }) {
           // consumption (filtering the list) is delivered by the Knowledge
           // module (06); this plan supplies the navigational chip + tag data.
           <li key={tag.id}>
+            {/* KNOW-13:`?tag=` 无人消费(死参)→ 改走已工作的搜索 `?q=`,点标签真过滤列表。 */}
             <Link
-              href={`/knowledge?tag=${encodeURIComponent(tag.name)}`}
+              href={`/knowledge?q=${encodeURIComponent(tag.name)}`}
               className="inline-flex rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               <TagChip label={tag.name} tone={tag.tone} size="sm" />
