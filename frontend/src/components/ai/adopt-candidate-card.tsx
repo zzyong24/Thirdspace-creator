@@ -64,6 +64,10 @@ export function AdoptCandidateCard<T>({
   const router = useRouter();
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [items, setItems] = React.useState<T[]>([]);
+  // 步骤日志(AISTD):runner 每步 recordStep,这里轮询拉出来实时显示 —— 不是干转圈。
+  const [steps, setSteps] = React.useState<
+    { stepNo: number; text: string; kind: string }[]
+  >([]);
   const [taskId, setTaskId] = React.useState<string | null>(null);
   const [confirming, setConfirming] = React.useState(false);
   const cancelledRef = React.useRef(false);
@@ -103,6 +107,22 @@ export function AdoptCandidateCard<T>({
         if (cancelledRef.current) return;
         await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
         if (cancelledRef.current) return;
+        // 拉实时步骤事件喂步骤日志(辅助信息,拉失败不影响主轮询)。
+        try {
+          const stepRows = (await client.listTaskSteps({
+            params: { taskId: id },
+            query: undefined,
+            body: undefined,
+          })) as unknown as Array<{
+            stepNo: number;
+            text: string;
+            kind: string;
+          }>;
+          if (!cancelledRef.current && Array.isArray(stepRows))
+            setSteps(stepRows);
+        } catch {
+          /* 步骤是辅助信息 */
+        }
         const status = (await client.getTask({
           params: { taskId: id },
           query: undefined,
@@ -126,6 +146,7 @@ export function AdoptCandidateCard<T>({
     claimedRef.current = true; // user takes over → hydration must not clobber
     setPhase("running");
     setItems([]);
+    setSteps([]);
     try {
       const task = (await client.createAITask({
         params: undefined,
@@ -226,12 +247,32 @@ export function AdoptCandidateCard<T>({
           ) : null}
 
           {phase === "running" ? (
-            <div
-              data-slot="adopt-running"
-              className="flex items-center gap-2 text-sm text-muted-foreground"
-            >
-              <span className="size-3.5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-              {runningLabel}
+            <div data-slot="adopt-running" className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="size-3.5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                {runningLabel}
+              </div>
+              {steps.length > 0 ? (
+                <ol
+                  data-slot="adopt-steps"
+                  className="flex flex-col gap-1 rounded-card border border-brand/15 bg-surface/60 p-2.5"
+                >
+                  {steps.map((s) => (
+                    <li
+                      key={s.stepNo}
+                      className="flex items-start gap-2 text-xs text-foreground"
+                    >
+                      <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-brand-soft text-[10px] font-medium text-brand">
+                        {s.stepNo}
+                      </span>
+                      <span className="leading-snug text-text-subtle">
+                        {s.kind === "tool_call" ? "调工具 · " : ""}
+                        {s.text || "（思考中…）"}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
             </div>
           ) : null}
 
