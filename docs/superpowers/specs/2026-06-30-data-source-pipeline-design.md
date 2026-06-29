@@ -2,11 +2,12 @@
 
 > 状态:设计稿,待 review。落地前先过这份 spec。
 > 决策已定(用户逐轮拍板):
-> - **对标博主抖音爬取:先不做**(反爬/签名风险最高的那块砍掉)。
-> - **抓"自己的数据"(自己主页/作品/评论)+ 通用定时任务:做。**
-> - **定时任务做成通用原语**:`提示词 + 调度器 → 周期唤醒 Agent → 用浏览器工具抓数据 → 落库`。
-> - **采集能力全用 TS 重写,进 @creatoros/ai-worker**(复用 Phase 3 Agent Runtime)。
+> - **三类数据源都做,且统一在同一个「调度 Agent 作业 + CDP」原语下**:① 自己主页/作品/指标 ② 对标博主主页/作品/指标 ③ 评论。
+> - **对标博主:用 CDP 驱动本机已登录 Chrome 看对标公开主页**(和看自己主页同一动作),程序化抽真值——**不碰抖音签名/反爬**;之前"对标难"是误以为要服务端破签名 API,CDP 路线解掉了。
+> - **定时任务做成通用原语**:`提示词 + 调度器 → 周期唤醒 Agent → 用浏览器工具抓数据 → 落库`。换数据源 = 换 target,不写新采集器。
+> - **采集能力全用 TS 重写,进 @creatoros/ai-worker**(复用 Phase 3 Agent Runtime;参照 dy_download/cheat-on-content 改写)。
 > - **浏览器:CDP 驱动本机已登录 Chrome 起步**,工具接口抽象成 `BrowserDriver`,后续可 swap 服务端 Playwright。
+> - **"行业热点"由对标驱动**:不是泛全网 WebSearch,而是"对标博主最近爆款"(`benchmark_snapshot` 按 `digg_delta` TOP)。
 
 ## 1. 核心洞察
 
@@ -60,7 +61,12 @@ interface BrowserDriver {
 | `job_run` | id, jobId, userId, startedAt, finishedAt, status(running/succeeded/failed), itemsNew, itemsUpdated, error, steps(jsonb·步骤日志) | 每次运行,provenance + 任务中心新鲜度 |
 | `self_work` | id, userId, platform, externalId, title, publishedAt, url | 自己的作品 |
 | `self_metric_snapshot` | id, workId, playCount, diggCount, commentCount, shareCount, snapshotAt, jobRunId | 周期指标快照(替/补一次性 douyin-real fixture) |
+| `benchmark_account` | id, userId, platform, handle, secUid, displayName, followerCount, homepageUrl, monitorEnabled, lastSyncAt | 对标账号(用户配主页 URL) |
+| `benchmark_work` | id, accountId, platform, externalId, title, publishedAt, url, transcript(nullable) | 对标作品 |
+| `benchmark_snapshot` | id, workId, playCount, diggCount, commentCount, shareCount, diggDelta, commentDelta, snapshotAt, jobRunId | 对标增量快照;按 diggDelta TOP = "热点/最近爆款" |
 | 复用 `audience_signals` | rawText, demandTag, payingIntent, source, ingestionRunId→jobRunId | 评论作业落这里 |
+
+> `self_*` 与 `benchmark_*` 结构几乎同构(都是 作品+周期指标快照),只是归属不同(自己 vs 对标账号)、抓取 recipe 不同(自己主页 vs 对标主页)。同一 `runScheduledJob` 机制,不同 target。
 
 > 注:P1 已有 `douyinProjects/douyinMetricSnapshots` 等(douyin-real fixture 一次性导入);本设计让"自己数据"从一次性 fixture 升级成**周期自动刷新的真表**。落地时先确认能否直接复用这些表,避免重复建模。
 
@@ -78,8 +84,9 @@ interface BrowserDriver {
 
 ## 7. 消费 + 独立快赢
 
-- **Sfix(独立·该立即修):basis 装配 bug** —— `runTopicGenerateV2` 现在只读 positioningBrief,要按 basis 真装配 signalsBrief/knowledgeBrief,让 4 个出题按钮真的不同。
+- **Sfix(独立·该立即修):basis 装配 bug** —— `runTopicGenerateV2` 现在只读 positioningBrief,要按 basis 真装配 signalsBrief/knowledgeBrief/benchmarkBrief,让出题按钮真的不同。
 - **S0(独立快赢):富录入弹窗** —— 「新增选题卡」2 字段 → 居中 Dialog 分组录入整张候选卡(沿用审阅弹窗范式)。
+- **热点/对标依据真喂选题**:`basis=trend`(行业热点)读 `benchmark_snapshot` 按 `diggDelta` TOP(对标最近爆款)+ 对标作品逐字稿摘要装配 `benchmarkBrief`,替掉旧的 WebSearch-only;可另留一个"对标博主"显式依据(学某账号风格)。historicalPerformers/trend 计数从 benchmark 真表来,替掉写死 0。
 - 自己数据周期刷新后:Dashboard / 复盘读真表;评论作业 → audience_signals → 选题"评论"依据变活。
 
 ## 8. 风险与约束
@@ -103,8 +110,9 @@ interface BrowserDriver {
 - `D3` `runScheduledJob` runner(发现/重放)+ job_run 落库 + 步骤日志。
 - `D4` 调度器(node-cron 到点起 job)+「立即运行」手动触发。
 - `D5` 第一个真作业:抓自己抖音主页作品+指标 → self_metric_snapshot。
+- `D5b` 对标作业:配对标账号主页 URL → 抓对标作品+增量快照 → benchmark_*(复用 D2-D4 同机制,新增对标主页 recipe)。
 - `D6` 任务中心 UI(列表 + 运行详情 + 步骤日志)= 数据链路可视化。
-- `D7` recipe 发现-重放优化 + 评论作业(抓评论 → audience_signals)+ 消费接通。
+- `D7` recipe 发现-重放优化 + 评论作业(抓评论 → audience_signals);消费接通:trend/对标依据读 benchmark + 评论依据读 signals。
 
 每片 = contract→backend→ai-worker→frontend 的小垂直切片,三步验证 + 自截图 + 真链路冒烟。
 
