@@ -1,0 +1,41 @@
+# PROJECT.md — 项目活记忆(新会话先读这一个文件)
+
+> 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
+> 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
+
+LAST_SYNCED: refactor/agent-and-structure @ 80c48c7
+
+## 这是什么(定位)
+
+CreatorOS —— 自媒体「编导创作操作系统」:项目/选题/研究/脚本/素材/发布/复盘/经验八大工作台 + 嵌在每个环节的可换模型 Agent 能力。pnpm monorepo(frontend Next.js / backend 库 / contract zod / worker)。
+
+物理架构与依赖规则见 [orchestrator/SYSTEM_ARCHITECTURE.md](orchestrator/SYSTEM_ARCHITECTURE.md)。
+正在进行:彻底重构,见 [docs/superpowers/specs/2026-06-29-creatoros-refactor-design.md](docs/superpowers/specs/2026-06-29-creatoros-refactor-design.md)。
+
+## 重构进度:物理架构边界(门卫)
+
+剩余违规 **308** 条(目标 0,随 Phase 2 消减):
+
+- 276 × `R1-no-backend-in-frontend`
+- 31 × `R2-no-agent-sdk-in-frontend-pages`
+- 1 × `R3-no-cross-module-repository-import`
+
+查实时:`node orchestrator/process/boundary-scan.mjs`
+
+## 开放任务(欠债)
+
+- [open] T-006 (P2) 24 模块 frontend/src/server/modules → backend/src/modules(门卫 R1 清零)
+- [open] T-007 (P2) 清 R2(31 处 AI SDK 前端泄漏)+ R3(跨模块 repo)
+- [open] T-008 (P3) Agent Runtime 薄壳:Vercel AI SDK + 函数注册表 + ReAct 循环 + zod 输出 + ai_task_steps
+- [open] T-009 (P3) 选题节点端到端打通 + 窗口实时步骤日志
+- [open] T-010 (P4) ~13 runner 迁移成 skill+工具,删孤儿 ai-worker 与旧 frontend/src/server/ai/*
+- [open] T-011 (P5) 多模型按 capability(DeepSeek写文案/GPT做图/Claude推理)+ 即时可视化 spec
+- [open] T-012 (P6) (后续 YAGNI)Redis+BullMQ 持久队列 + worker 独立进程 + DB 写属主收口
+- [open] T-013 (SKILL) 房子图纸 gate + 门卫 + pmem + 大白话输出规则 promote 进 skill lab
+
+全部任务:`node orchestrator/process/pmem.mjs tasks`
+
+## 模块地图(生成自 frontend/src/server/modules)
+
+`ai` · `analytics` · `artifacts` · `assets` · `calibration` · `candidate` · `content-calendar` · `identity` · `ingestion` · `knowledge` · `learnings` · `material-links` · `monetization` · `notifications` · `platform-account` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `reviews` · `search` · `settings` · `taxonomy`
+

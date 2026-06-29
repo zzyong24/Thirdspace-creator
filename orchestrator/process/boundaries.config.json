@@ -1,0 +1,30 @@
+{
+  "_doc": "物理架构边界规则(SYSTEM_ARCHITECTURE 的可执行版)。boundary-scan.mjs 读它扫违规。ratchet:新违规才 fail,已知违规进 baseline 随重构消减。",
+  "ignoreDirs": ["node_modules", ".next", ".git", ".codegraph", "dist", "out", "coverage", ".worktrees", ".claude", "__artifacts__"],
+  "rules": [
+    {
+      "id": "R1-no-backend-in-frontend",
+      "desc": "后端业务模块不准放在 frontend(前后端必须分离)。目标:全部搬进 backend/src/modules。",
+      "type": "forbidden-paths",
+      "dirs": ["frontend/src/server/modules"],
+      "ext": [".ts", ".tsx"]
+    },
+    {
+      "id": "R2-no-agent-sdk-in-frontend-pages",
+      "desc": "Agent SDK / Vercel AI SDK 只准在 worker / ai-runtime,不准在 frontend 的页面或 server 杂处。",
+      "type": "forbidden-import",
+      "scopeDirs": ["frontend/src/app", "frontend/src/features", "frontend/src/components"],
+      "specifiers": ["@anthropic-ai/claude-agent-sdk", "ai", "@ai-sdk/"],
+      "ext": [".ts", ".tsx"]
+    },
+    {
+      "id": "R3-no-cross-module-repository-import",
+      "desc": "模块之间不准直接 import 对方的 repository(只能走 service port)。",
+      "type": "forbidden-import",
+      "scopeDirs": ["frontend/src/server/modules", "backend/src/modules"],
+      "specifiers": [".repository", "/repository"],
+      "ext": [".ts"],
+      "allowSameModule": true
+    }
+  ]
+}

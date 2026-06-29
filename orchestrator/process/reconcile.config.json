@@ -1,5 +1,5 @@
 {
-  "work_branch": "feat/service-contract",
+  "work_branch": "refactor/agent-and-structure",
   "probes": [
     { "stage": "15-service-contract",    "path": "contract/package.json" },
     { "stage": "16-backend-tdd",         "path": "backend/src" },
@@ -12,6 +12,12 @@
       "what": ".env.local(含真实密钥)被提交进 git",
       "check": "! git ls-files | grep -qF .env.local",
       "onFail": "有 .env.local 被 git 跟踪——密钥可能入库。git rm --cached <file> 移出索引,并确认 .gitignore 含 .env*.local。"
+    },
+    {
+      "led": "LED-003",
+      "what": "物理架构边界回归(后端嵌前端 / AI SDK 泄漏 / 跨模块 repo)",
+      "check": "node orchestrator/process/boundary-scan.mjs --quiet",
+      "onFail": "门卫拦截:出现【新】边界违规(结构回归)。见 boundary-scan 输出与 orchestrator/SYSTEM_ARCHITECTURE.md。修掉新违规;若是有意消减,跑 boundary-scan.mjs --update-baseline 收紧基线。"
     }
   ]
 }
