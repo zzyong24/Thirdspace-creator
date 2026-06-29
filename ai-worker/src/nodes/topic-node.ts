@@ -1,5 +1,7 @@
 import type { LanguageModel } from "ai";
 import { runAgentNode, type AgentStepEvent } from "../runtime/agent-runtime";
+import { bindPrompt } from "../prompt/template";
+import { TOPIC_GENERATE_TEMPLATE } from "../prompt/templates/topic-generate";
 
 // 选题节点(Phase 3 第一个跑在新 Agent Runtime 上的真节点)。一个「节点」= 一个 skill:
 // 系统提示(角色/方法论)+ 用哪个 capability 的模型(由调用方解析后传 model)+ 输出怎么解析。
@@ -39,11 +41,13 @@ function buildPrompt(
   positioningBrief: string,
   basis: TopicBasis,
 ): { system: string; prompt: string } {
-  const positioning = positioningBrief || "（创作者尚未设置定位——按通用爆款逻辑出题）";
-  const system =
-    "你是这位创作者的「选题会 agent」,像专业自媒体编导那样按依据产高潜力选题。";
-  const prompt = `【创作者定位】\n${positioning}\n\n【出题依据】${BASIS_HINT[basis]}\n\n【任务】产 6-8 条高潜力选题。每条按 钩子强度/定位契合/变现潜力 衡量。\n【输出】只输出一个 JSON 数组,每条:{"title","angle"(切入一句),"contentRole"(traffic|trust|conversion),"source"(trend|benchmark|demand),"predictedScore"(0-100),"reason"(一句中文)}。不要多余文字、不要代码块包裹。`;
-  return { system, prompt };
+  // 提示词模板化解耦(脊柱-1):system/正文来自外置模板,这里只装配 facets(定位兜底 + 依据提示)。
+  // 换写作方法论 = 换 TOPIC_GENERATE_TEMPLATE,不动本 runner。
+  return bindPrompt(TOPIC_GENERATE_TEMPLATE, {
+    positioning:
+      positioningBrief || "（创作者尚未设置定位——按通用爆款逻辑出题）",
+    basisHint: BASIS_HINT[basis],
+  });
 }
 
 /** 从 agent 最终文本里宽容地抽出 JSON 数组(容忍 ``` 包裹 / 前后散文)。 */
