@@ -628,14 +628,20 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
             热门作品发布列表
           </h3>
         </div>
+        {/* T-010: 装饰按钮无后端,加显式「规划中」标注 + tooltip,不让用户白点。 */}
         <button
           type="button"
           data-slot="top-published-view-all"
           data-inert="decorative"
+          data-planned="true"
           aria-disabled="true"
-          className="inline-flex h-6 items-center rounded-md px-2 text-[11px] font-medium text-brand hover:bg-brand-soft"
+          title="规划中,敬请期待"
+          className="inline-flex h-6 cursor-not-allowed items-center gap-1 rounded-md px-2 text-[11px] font-medium text-muted-foreground"
         >
           查看全部
+          <span className="rounded-full border border-border bg-surface-subtle px-1.5 py-0.5 text-[9px] font-medium">
+            规划中
+          </span>
         </button>
       </header>
       <ul
@@ -962,26 +968,38 @@ function ReviewAuthoringPanel({
         完成复盘
       </button>
 
+      {/* T-010: 添加发布 / 生成复盘报告 属经验沉淀飞轮(SPEC §2)未接通的能力,
+          真禁用 + 显式「规划中」标注 + tooltip,不假装可点。 */}
       <div className="flex items-center gap-1.5">
         <button
           type="button"
           data-slot="attach-publication-button"
           data-inert="decorative"
+          data-planned="true"
           aria-disabled="true"
           disabled
-          className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-medium text-muted-foreground"
+          title="规划中,敬请期待"
+          className="inline-flex h-7 cursor-not-allowed items-center gap-1 rounded-md px-2 text-[11px] font-medium text-muted-foreground"
         >
           添加发布
+          <span className="rounded-full border border-border bg-surface-subtle px-1.5 py-0.5 text-[9px] font-medium">
+            规划中
+          </span>
         </button>
         <button
           type="button"
           data-slot="generate-report-button"
           data-inert="decorative"
+          data-planned="true"
           aria-disabled="true"
           disabled
-          className="inline-flex h-7 items-center rounded-md px-2 text-[11px] font-medium text-muted-foreground"
+          title="规划中,敬请期待"
+          className="inline-flex h-7 cursor-not-allowed items-center gap-1 rounded-md px-2 text-[11px] font-medium text-muted-foreground"
         >
           生成复盘报告
+          <span className="rounded-full border border-border bg-surface-subtle px-1.5 py-0.5 text-[9px] font-medium">
+            规划中
+          </span>
         </button>
       </div>
     </article>

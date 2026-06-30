@@ -91,7 +91,9 @@ describe("ProductionWorkspacePage interactions", () => {
     expect(selected).not.toBeNull();
   });
 
-  it("triggers the export client action and surfaces a result", () => {
+  // T-010: 视频导出 = NLE 级真实渲染(本任务不做真),按钮真禁用 + 标「规划中」。
+  // 不再有「点了 → data-export-state=done + 假成功提示」的误导流程。
+  it("marks the export button as planned (disabled, no fake success)", () => {
     const { container } = render(
       <ProductionWorkspacePage projectId={PROJECT_ID} />,
     );
@@ -99,14 +101,16 @@ describe("ProductionWorkspacePage interactions", () => {
       '[data-slot="export-button"]',
     );
     expect(exportButton).not.toBeNull();
+    expect(exportButton!.disabled).toBe(true);
+    expect(exportButton!.getAttribute("data-planned")).toBe("true");
+    expect(exportButton!.getAttribute("data-export-state")).toBe("planned");
+    // 显式「规划中」说明存在,且不再有假成功结果。
+    expect(
+      container.querySelector('[data-slot="export-planned-note"]'),
+    ).not.toBeNull();
     expect(
       container.querySelector('[data-slot="export-result"]'),
     ).toBeNull();
-    fireEvent.click(exportButton!);
-    expect(exportButton!.getAttribute("data-export-state")).toBe("done");
-    expect(
-      container.querySelector('[data-slot="export-result"]'),
-    ).not.toBeNull();
   });
 });
 

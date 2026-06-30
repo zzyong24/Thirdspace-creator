@@ -252,7 +252,18 @@ function ProductionModeCard({
         </h3>
       </header>
       <p className="text-xs text-muted-foreground">{card.description}</p>
-      <span className="text-[11px] font-medium text-brand">{card.hint}</span>
+      {card.comingSoon ? (
+        // T-010: 显式「规划中」徽标 —— 不让禁用卡看起来像可选模式,诚实标未上线。
+        <span
+          data-slot="production-mode-card-planned"
+          data-planned="true"
+          className="inline-flex w-fit items-center rounded-full border border-border bg-surface-subtle px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+        >
+          规划中 · 敬请期待
+        </span>
+      ) : (
+        <span className="text-[11px] font-medium text-brand">{card.hint}</span>
+      )}
       {active ? (
         <span
           aria-hidden="true"
@@ -687,42 +698,9 @@ function SettingsGroup({
     return next;
   });
 
-  // Export action: idle → exporting → done. §4 导出视频 is needs-backend — the
-  // dev mock render synchronously stages then completes (plan open-question #1):
-  // productions.exports.create (queued) → exports.complete (queued→ready), which
-  // drives the cross-module fan-out (ContentOutput active→ready, primary asset,
-  // search index) inside the service UoW, then router.refresh(). When no wiring
-  // is threaded the button degrades to the local idle→done affordance (no net).
-  const router2 = useRouter();
-  const [exportState, setExportState] = React.useState<
-    "idle" | "exporting" | "done"
-  >("idle");
-
-  const handleExport = React.useCallback(() => {
-    if (exportState === "exporting") return;
-    if (!wiring) {
-      setExportState("done");
-      return;
-    }
-    setExportState("exporting");
-    startTransition(async () => {
-      const created = (await client.createProductionExport({
-        params: { productionId: wiring.productionId },
-        query: undefined,
-        body: { format: "mp4", resolution: "1080p", aspectRatio: "16:9" },
-      })) as { id: string };
-      // The mock render finished out-of-band; the rendered file was staged
-      // through MockObjectStorage server-side (Production never touches S3). The
-      // resulting asset id is minted deterministically from the export id.
-      await client.completeExport({
-        params: { exportId: created.id },
-        query: undefined,
-        body: { resultAssetId: `asset-export-${created.id}` },
-      });
-      setExportState("done");
-      router2.refresh();
-    });
-  }, [exportState, router2, wiring]);
+  // T-010: 视频导出按钮改真禁用 + 标「规划中」(见下 export-button)。原 mock
+  // 导出流程(productions.exports.create/complete)产生记录但无用户可下载视频,
+  // 属「看着成功实没做」,已移除假流程;真实 NLE 渲染管线接通时再恢复。
 
   return (
     <div data-slot={slot} data-group={group.group} className="h-full">
@@ -823,27 +801,31 @@ function SettingsGroup({
         </ul>
         {exportGroup ? (
           <div className="mt-3 flex flex-col gap-1.5">
+            {/* T-010: 视频导出 = NLE 级真实渲染管线(本任务不做真)。原 idle→done
+                假流程「看着导出成功实没生成可下载视频」违反产品诚实,改为真禁用 +
+                显式「规划中」徽标,不再让用户误以为导出了视频文件。 */}
             <button
               type="button"
               data-slot="export-button"
               data-action="export"
-              data-export-state={exportState}
-              disabled={exportState === "exporting"}
-              onClick={handleExport}
-              className="inline-flex h-9 w-full items-center justify-center rounded-md bg-brand text-sm font-medium text-brand-foreground disabled:opacity-70"
+              data-export-state="planned"
+              data-planned="true"
+              disabled
+              aria-disabled="true"
+              title="真实视频导出规划中"
+              className="inline-flex h-9 w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-md border border-border bg-surface-subtle text-sm font-medium text-muted-foreground"
             >
-              {exportState === "done" ? "导出完成" : groupActionLabel()}
+              {groupActionLabel()}
+              <span className="rounded-full border border-border bg-surface px-1.5 py-0.5 text-[10px] font-medium">
+                规划中
+              </span>
             </button>
-            {exportState === "done" ? (
-              <p
-                data-slot="export-result"
-                role="status"
-                className="text-[11px] font-medium text-success"
-              >
-                {/* PROD-21:实为开发态模拟渲染(生成导出记录+资产链),非用户可下载的真实视频文件。 */}
-                已生成导出记录（模拟渲染,真实视频导出规划中）。
-              </p>
-            ) : null}
+            <p
+              data-slot="export-planned-note"
+              className="text-[11px] text-muted-foreground"
+            >
+              真实视频渲染 / 导出(NLE 媒体管线)规划中,敬请期待。
+            </p>
           </div>
         ) : null}
       </SectionCard>

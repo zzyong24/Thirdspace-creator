@@ -225,30 +225,19 @@ describe("Production needs-backend wiring", () => {
     );
   });
 
-  it("导出视频 calls createProductionExport then completeExport then refresh", async () => {
+  // T-010: 视频导出按钮改真禁用 + 标「规划中」(真实 NLE 渲染管线本任务不做真)。
+  // 即使 wiring 在场,点击也**不发起任何导出网络调用**,杜绝「看着导出成功实没生成视频」。
+  it("导出视频 is planned: disabled and issues NO export network call", async () => {
     const { container } = await renderIsland();
     const exportButton = container.querySelector<HTMLButtonElement>(
       '[data-slot="export-button"]',
     );
     expect(exportButton).not.toBeNull();
+    expect(exportButton!.disabled).toBe(true);
+    expect(exportButton!.getAttribute("data-planned")).toBe("true");
     fireEvent.click(exportButton!);
-    await waitFor(() =>
-      expect(mockClient.completeExport).toHaveBeenCalledTimes(1),
-    );
-    expect(mockClient.createProductionExport).toHaveBeenCalledTimes(1);
-    expect(mockClient.createProductionExport).toHaveBeenCalledWith(
-      expect.objectContaining({
-        params: { productionId: WIRING.productionId },
-        body: { format: "mp4", resolution: "1080p", aspectRatio: "16:9" },
-      }),
-    );
-    expect(mockClient.completeExport).toHaveBeenCalledWith(
-      expect.objectContaining({
-        params: { exportId: "export-1" },
-        body: { resultAssetId: expect.any(String) },
-      }),
-    );
-    expect(mockRouter.refresh).toHaveBeenCalled();
+    expect(mockClient.createProductionExport).not.toHaveBeenCalled();
+    expect(mockClient.completeExport).not.toHaveBeenCalled();
   });
 
   it("decorative controls issue NO network call", async () => {

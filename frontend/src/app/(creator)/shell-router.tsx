@@ -88,6 +88,24 @@ const PROJECT_STAGES = [
   { id: "review", label: "复盘" },
 ] as const;
 
+// T-010: 项目概览头部元信息读真值。阶段标签取自真实 currentStage,「更新于」由
+// 真实 updatedAt 派生为粗粒度相对时间(不再写死「今天 14:30」)。
+function stageLabel(stageId: string): string {
+  return PROJECT_STAGES.find((stage) => stage.id === stageId)?.label ?? stageId;
+}
+
+function relativeUpdatedLabel(updatedAt: string): string {
+  const updated = new Date(updatedAt).getTime();
+  if (Number.isNaN(updated)) return "";
+  const diffMs = Date.now() - updated;
+  const day = 24 * 60 * 60 * 1000;
+  if (diffMs < 60 * 60 * 1000) return "更新于 1 小时内";
+  if (diffMs < day) return "更新于 今天";
+  if (diffMs < 2 * day) return "更新于 昨天";
+  const days = Math.floor(diffMs / day);
+  return `更新于 ${days} 天前`;
+}
+
 function buildProjectStages(currentStage: string): ReadonlyArray<TopHeaderStage> {
   const currentIndex = PROJECT_STAGES.findIndex(
     (stage) => stage.id === currentStage,
@@ -200,7 +218,14 @@ export function resolveRoute(pathname: string): RouteResolution {
           title: project.title,
           stage: project.currentStage,
           stageProgressPct: project.progressPct,
-          updatedLabel: "写稿中 · 更新于 今天 14:30",
+          // T-010: 真实「<阶段> · 更新于 …」,派生自 project 真值,无假时间。
+          updatedLabel: [
+            stageLabel(project.currentStage),
+            relativeUpdatedLabel(project.updatedAt),
+          ]
+            .filter(Boolean)
+            .join(" · "),
+          brief: project.brief,
           starred: project.starred,
         }
       : undefined;

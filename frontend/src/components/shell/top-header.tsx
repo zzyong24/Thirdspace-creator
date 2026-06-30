@@ -44,6 +44,13 @@ export interface TopHeaderProjectIdentity {
   readonly stageProgressPct: number;
   readonly updatedLabel: string;
   readonly starred: boolean;
+  /**
+   * REAL project one-liner (`projects.brief`), threaded by the shell router so
+   * the project-overview subtitle renders the actual project context instead of
+   * a hardcoded constant. Optional — when absent the subtitle is omitted rather
+   * than faked.
+   */
+  readonly brief?: string;
 }
 
 export interface TopHeaderProps {
@@ -231,14 +238,25 @@ function ProjectIdentityBlock({
             项目　›　{project?.title ?? "项目概览"}
           </span>
           <span className="truncate text-2xl font-semibold text-foreground">
-            {project?.title ?? "项目概览"}　<span className="text-warning">★</span>
+            {project?.title ?? "项目概览"}
+            {project?.starred ? (
+              <>
+                　<span className="text-warning">★</span>
+              </>
+            ) : null}
           </span>
-          <span className="text-sm text-muted-foreground">
-            全面解析 AI Native Browser 的核心价值、市场机会与未来趋势
-          </span>
-          <span className="text-xs text-muted-foreground">
-            Kevin.Z　　创建于 2024-05-10　　最后更新 今天 14:30　　写稿中
-          </span>
+          {/* T-010: 副标题读真实项目 brief(projects.brief),无 brief 则省略 —
+              不再渲染硬编码假文案「全面解析 AI Native Browser…」。 */}
+          {project?.brief ? (
+            <span className="text-sm text-muted-foreground">{project.brief}</span>
+          ) : null}
+          {/* T-010: 元信息只渲染真值(updatedLabel 由 router 透传)。原假作者
+              「Kevin.Z」/ 假创建日期「2024-05-10」无数据来源,删除不编造。 */}
+          {project?.updatedLabel ? (
+            <span className="text-xs text-muted-foreground">
+              {project.updatedLabel}
+            </span>
+          ) : null}
         </div>
       ) : (
         <div className="flex w-64 min-w-0 shrink-0 flex-col">
