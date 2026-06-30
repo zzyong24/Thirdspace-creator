@@ -1,6 +1,18 @@
 # CreatorOS 通用「调度 Agent 作业」+ 自有数据采集 设计
 
-> 状态:设计稿,待 review。落地前先过这份 spec。
+> ## ⛔ SPEC 审核裁决(2026-06-30,spec-review gate):**FAIL —— 落地前必须重写后再过审**
+>
+> 跨上下文独立评审(对照宪法 + 真实代码,起 3 个核实子代理)。**两个 blocker 都是"SPEC 写于实现前、现状已被超越却没对账":**
+> 1. **采集底座押错路线(reinvent-wheel)**:整份建在 `connectOverCDP`/`ws://localhost:9222` 上,但项目已在 commit `53efbb7` 重写为 `launchPersistentContext + 扫码登录`并显式弃用 CDP(对用户 Chrome 149 报 `Browser context management is not supported`、`/json/list` 0 target;见 `frontend/src/server/ingestion/douyin-cdp.ts:184-185` + memory `douyin-collection-approach`)。→ **改:`BrowserDriver` 起步实现直接落到已跑通的 `launchPersistentContext(.auth/)+扫码+headless复刷`,删 CDP/9222 作首选。**
+> 2. **数据归属撞已 ✅ 的 T-001(fit-positioning)**:宪法级姊妹 SPEC `data-foundation §1.1` 已定"自己作品=`projects(source:imported)`,不另建作品库实体"且已落地(commit `9010166`)。本 SPEC 新建 `self_work`/`self_metric_snapshot` 平行表 = 逐字段核实纯重复建模(表达力更弱、丢幂等锚)。→ **改:删 `self_work`/`self_metric_snapshot`;"自己数据周期刷新"= 调度作业周期性调已有 `refreshDouyin→ensureImportedProject→ingestMetrics`,指标继续落 `metric_snapshots`/`metric_values`。只有 `benchmark_*`(对标账号)是真新增。**
+>
+> **3 个 major**:Sfix 修了已不存在的 bug(`topic-task-adapter.ts:68-80` 已按 basis 装配 signals/knowledge,只缺 benchmark/trend);新表迁移号缺(下一个空号 **0009**,0008 已被 T-001 占);已有 `ai_tasks`/`ai_task_steps`/`drainQueue` 队列未对账就另起 `job_run`(应 `scheduled_job→产 ai_task 走现有队列`,job_run 仅瘦触发记录)。3 个 minor 见 BACKLOG T-007 行 / git 审核记录。
+>
+> **好的一面(如实记)**:核心原语 `prompt+schedule→唤醒 Agent→recipe 重放` 成立、合飞轮定位;`runAgentNode`/`tool-registry`/全程 Vercel SDK 复用基础确实齐备。
+>
+> **⚠️ 需用户拍板的产品决策(escalate)**:`对标博主`采集(self/comment 之外的第三源)reviewer 标注为"可能让产品扩张成通用爬虫平台"的 fit-positioning 风险点。重写前请确认 `benchmark_*`/对标是否纳入本期范围。**未拍板前 T-007 不动。**
+>
+> 状态:设计稿,**审核 FAIL,待按上述重写后再过审**。落地前先过这份 spec。
 > 决策已定(用户逐轮拍板):
 > - **三类数据源都做,且统一在同一个「调度 Agent 作业 + CDP」原语下**:① 自己主页/作品/指标 ② 对标博主主页/作品/指标 ③ 评论。
 > - **对标博主:用 CDP 驱动本机已登录 Chrome 看对标公开主页**(和看自己主页同一动作),程序化抽真值——**不碰抖音签名/反爬**;之前"对标难"是误以为要服务端破签名 API,CDP 路线解掉了。
