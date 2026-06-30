@@ -210,8 +210,13 @@ export async function buildProjectOverviewWorkspaceViewModel(
     // Cross-user / unknown project → let the route 404 instead of leaking a
     // degraded page.
     if (isOwnershipError(err)) throw err;
-    // Any other read failure → preserve old behavior (fixture VM, which renders
-    // "未找到项目" only for ids absent from the canonical dataset).
+    // Any other read failure → degrade to the fixture VM. 但这条 fallback 历史上**静默**吞错:
+    // 一条数据/schema 不匹配(如非法枚举值)的真实项目会被伪装成「未找到项目」、真项目被藏掉、
+    // 错误也不可见 —— 排查困难。所以这里显式记一条 error(命名根因),保留降级渲染不崩页。
+    console.error(
+      `[project-overview] getProject(${projectId}) failed; degrading to fixture VM:`,
+      err,
+    );
     return fixtureVm;
   }
 
