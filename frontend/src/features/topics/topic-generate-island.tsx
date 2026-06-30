@@ -142,7 +142,13 @@ function BasisPanel({ basis }: { readonly basis: TopicsOverviewResource["basis"]
 }
 
 // ── 候选卡(弹窗内复用) ───────────────────────────────────────────────────────────
-function CandidateRow({ t }: { readonly t: TopicItem }) {
+function CandidateRow({
+  t,
+  onRemove,
+}: {
+  readonly t: TopicItem;
+  readonly onRemove?: () => void;
+}) {
   return (
     <li className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2.5 text-sm">
       <div className="flex items-start gap-2">
@@ -158,6 +164,17 @@ function CandidateRow({ t }: { readonly t: TopicItem }) {
           <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
             {ROLE_LABEL[t.contentRole]}
           </span>
+        ) : null}
+        {onRemove ? (
+          // CollabField:采纳前逐条删掉不要的候选。
+          <button
+            type="button"
+            aria-label="删除这条候选"
+            onClick={onRemove}
+            className="inline-flex size-5 shrink-0 items-center justify-center rounded-control border border-border text-xs text-muted-foreground hover:border-destructive hover:text-destructive"
+          >
+            ×
+          </button>
         ) : null}
       </div>
       {t.angle ? (
@@ -182,6 +199,11 @@ export function TopicGenerateBand({
   const [phase, setPhase] = React.useState<Phase>("running");
   const [activeBasis, setActiveBasis] = React.useState<Basis | null>(null);
   const [items, setItems] = React.useState<TopicItem[]>([]);
+  // CollabField(COLLAB-02):原始 items(用于 patch)+ 人删掉的下标 —— 采纳前可逐条筛。
+  const [rawItems, setRawItems] = React.useState<unknown[]>([]);
+  const [removed, setRemoved] = React.useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
   const [steps, setSteps] = React.useState<
     { stepNo: number; text: string; kind: string }[]
   >([]);
@@ -233,8 +255,14 @@ export function TopicGenerateBand({
         })) as unknown as Array<{ resultData: Record<string, unknown> }>;
         const last = results[results.length - 1];
         const parsed = last ? parseTopics(last.resultData) : [];
+        const raw =
+          last && Array.isArray(last.resultData.items)
+            ? (last.resultData.items as unknown[])
+            : [];
         if (cancelledRef.current) return;
         setItems(parsed);
+        setRawItems(raw);
+        setRemoved(new Set());
         setPhase("review");
         return;
       }
@@ -297,16 +325,35 @@ export function TopicGenerateBand({
       const last = results[results.length - 1];
       if (cancelledRef.current) return;
       setItems(last ? parseTopics(last.resultData) : []);
+      setRawItems(
+        last && Array.isArray(last.resultData.items)
+          ? (last.resultData.items as unknown[])
+          : [],
+      );
+      setRemoved(new Set());
       setPhase("review");
     } catch {
       if (!cancelledRef.current) setPhase("error");
     }
   }, [pending]);
 
+  // CollabField:原始 items 与解析后的 items 1:1 对齐时才允许逐条删(否则下标对不上,禁编辑)。
+  const canEdit = rawItems.length === items.length && items.length > 0;
+  const keptCount = canEdit ? items.length - removed.size : items.length;
+
   const adopt = React.useCallback(async () => {
     if (!taskId) return;
     setConfirming(true);
     try {
+      // 删过候选 → 先把保留项 patch 回最新结果,再 confirm 物化(只入留下的)。
+      if (canEdit && removed.size > 0) {
+        const kept = rawItems.filter((_, i) => !removed.has(i));
+        await client.patchTaskResultItems({
+          params: { taskId },
+          query: undefined,
+          body: { items: kept },
+        });
+      }
       await client.confirmTask({
         params: { taskId },
         query: undefined,
@@ -320,7 +367,7 @@ export function TopicGenerateBand({
     } finally {
       setConfirming(false);
     }
-  }, [taskId, router]);
+  }, [taskId, router, canEdit, removed, rawItems]);
 
   // 丢弃 = 取消该任务(进 cancelled 终态),待审阅入口随之消失。
   const discard = React.useCallback(async () => {
@@ -475,9 +522,19 @@ export function TopicGenerateBand({
                   data-testid="topics-review-list"
                   className="flex flex-col gap-2"
                 >
-                  {items.map((t, i) => (
-                    <CandidateRow key={i} t={t} />
-                  ))}
+                  {items.map((t, i) =>
+                    removed.has(i) ? null : (
+                      <CandidateRow
+                        key={i}
+                        t={t}
+                        onRemove={
+                          canEdit
+                            ? () => setRemoved((s) => new Set(s).add(i))
+                            : undefined
+                        }
+                      />
+                    ),
+                  )}
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -517,11 +574,11 @@ export function TopicGenerateBand({
               <button
                 type="button"
                 data-slot="band-confirm"
-                disabled={confirming}
+                disabled={confirming || keptCount === 0}
                 onClick={adopt}
                 className="inline-flex h-9 items-center rounded-control bg-brand px-4 text-xs font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
               >
-                {confirming ? "采纳中…" : `采纳全部（${items.length}）入候选池`}
+                {confirming ? "采纳中…" : `采纳（${keptCount}）入候选池`}
               </button>
             </DialogFooter>
           ) : null}
