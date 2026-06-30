@@ -128,7 +128,10 @@ const work = (
   platform: "douyin",
   externalId,
   capturedAt: NOW,
-  metrics: { plays: views, likes: 10 },
+  // 真采集键形状(douyin-cdp toMetricRecords 写 `views`,非演示 fixture 的 `plays`)。
+  //   读侧 rollup 必须对真 key 鲁棒(views ?? plays)—— 原来此处误写 `plays`,恰好与
+  //   旧读侧的 `plays` 对上,把真 imported 作品播放显 0 的 bug 掩盖了。
+  metrics: { views, likes: 10 },
   title,
   publishedAt: "2026-06-20T08:00:00.000Z",
 });
@@ -266,5 +269,47 @@ describe("数据底座 §1.4 — 优先读 source:imported 真值,fixture 兜底
     });
     expect(emptyScoped.snapshotCount).toBe(0);
     expect(emptyScoped.plays).toBe(0);
+  });
+
+  // 指标 key 归一回归(bug2):rollup 必须把真采集的 `views` 与演示 fixture 的 `plays`
+  //   都汇成 rollup.plays。原读侧只认 `plays`,真 imported 作品(写 `views`)播放恒 0;
+  //   这条断言会让退化(只读 `plays`)的代码红——正是原单测漏掉的形状。
+  it("getDashboardRollup 对真采集 key(views)与 fixture key(plays)都鲁棒", async () => {
+    const { projectsService, publishingService, analyticsService } = wire(db, []);
+    const proj = await projectsService.createProject(ctx, { title: "P" });
+
+    // 作品 A:真采集 key 形状 `{views,likes,comments,shares,favorites}`(douyin ingestion)。
+    const outReal = await projectsService.createOutput(ctx, proj.id, { title: "真" });
+    const pubReal = await publishingService.createPublication(ctx, outReal.id, {
+      platform: "douyin",
+      accountReference: "@a",
+    });
+    await analyticsService.appendSnapshot(ctx, {
+      publicationId: pubReal.id,
+      capturedAt: NOW,
+      source: "douyin",
+      rawMetrics: { views: 4877, likes: 119, comments: 4, shares: 12, favorites: 83 },
+    });
+
+    // 作品 B:演示 fixture key 形状(写 `plays`)。
+    const outFix = await projectsService.createOutput(ctx, proj.id, { title: "演示" });
+    const pubFix = await publishingService.createPublication(ctx, outFix.id, {
+      platform: "douyin",
+      accountReference: "@b",
+    });
+    await analyticsService.appendSnapshot(ctx, {
+      publicationId: pubFix.id,
+      capturedAt: NOW,
+      source: "manual",
+      rawMetrics: { plays: 1000, likes: 5 },
+    });
+
+    const rollup = await analyticsService.getDashboardRollup(ctx, {
+      publicationIds: [pubReal.id, pubFix.id],
+    });
+    expect(rollup.snapshotCount).toBe(2);
+    // 真采集 4877(views)+ fixture 1000(plays)= 5877。退化到只读 plays 时会变成 1000 → 红。
+    expect(rollup.plays).toBe(5877);
+    expect(rollup.likes).toBe(124); // likes 两侧同键,正常累加
   });
 });

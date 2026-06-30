@@ -2764,7 +2764,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 .slice()
                 .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
               const raw = (latest?.rawMetrics ?? {}) as Record<string, unknown>;
-              views = numOf(raw, "plays");
+              // 数据底座(SPEC §1.4):播放量键名归一 —— 真采集(douyin ingestion)写
+              //   `views`,演示 fixture 写 `plays`;优先真 `views`,缺失回退 `plays`(二者
+              //   不并存)。否则真实导入作品的播放恒为 0(原只读 `plays`)。
+              views = numOf(raw, "views") || numOf(raw, "plays");
               engagement =
                 numOf(raw, "likes") +
                 numOf(raw, "comments") +
