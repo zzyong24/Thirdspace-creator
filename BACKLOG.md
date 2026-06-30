@@ -16,7 +16,7 @@
 | T-003 | 三方向读侧接真(底座→各模块) | 📋 | [同上 §2](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 校准/选题评论/定位/知识库/首页 读真,mock 让位 |
 | T-004 | ChatBox 进化(上下文感知) | 📋 | [同上 §3](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | Copilot→useChat + ChatContext 三层注入 + 首波 5 工具 + 指挥/画布 |
 | T-005 | Skill 三位一体 + 每轮 schema 约束 | 📋 | [同上 §4](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 模板⊕工具⊕Zod schema + JSON Schema 配置口子 |
-| T-006 | research.gather_material 迁 Vercel | 📋 | [同上 §6](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 去最后一个 Claude Agent SDK 依赖 + 门卫断言 |
+| T-006 | research.gather_material 迁 Vercel | ✅ | [同上 §6](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 去最后一个 Claude Agent SDK 依赖 + 门卫断言 |
 | T-007 | 任务调度系统 + 调度页面 | 📋 | [data-source-pipeline-design](docs/superpowers/specs/2026-06-30-data-source-pipeline-design.md) | 定时采集 prompt+scheduler → 唤醒 Agent → CDP 采集(**曾被丢的需求**) |
 | T-008 | 横竖屏:平台退回发布层 | 📋 | [project-lifecycle-0to1-spec](docs/superpowers/specs/2026-06-30-project-lifecycle-0to1-spec.md) | 项目层去平台、平台只在发布(原 #185 剩余) |
 | T-009 | SEAM-01/02 策划→脚本上下文 | 📋 | [project-lifecycle-0to1-spec](docs/superpowers/specs/2026-06-30-project-lifecycle-0to1-spec.md) | 阶段交接缝(原 #186) |
