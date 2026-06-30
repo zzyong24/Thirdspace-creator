@@ -154,7 +154,8 @@ import {
 } from "@creatoros/backend/modules/ai";
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerateV2 } from "@/server/ai/topic-task-adapter";
-import { fetchDouyinMetrics } from "@/server/ingestion/douyin-cdp";
+import * as nodePath from "node:path";
+import { fetchDouyinMetrics, loginDouyin } from "@/server/ingestion/douyin-cdp";
 import { runTopicEnrich } from "@/server/ai/topic-enrich-runner";
 import { runCalibrationDiagnose } from "@/server/ai/calibration-diagnose-runner";
 import { runScriptDraft } from "@/server/ai/script-runner";
@@ -1106,10 +1107,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           }),
       },
     },
-    // 线 B:抖音真抓端口 —— 真连用户常驻 CDP(见 server/ingestion/douyin-cdp.ts)。
-    // 测试经各自的 createIngestionService 注入 fake,不连真浏览器。
+    // 线 B:抖音真抓端口 —— 自起持久化 Chromium(.auth/ 复用扫码登录态,见 douyin-cdp.ts)。
+    // authDir 走 env 配置,默认落项目内 .auth/douyin(cookie 只在本机,不入 Git)。测试经各自
+    // 的 createIngestionService 注入 fake,不连真浏览器。
     douyinFetch: {
-      fetch: (opts) => fetchDouyinMetrics(opts),
+      fetch: (opts) =>
+        fetchDouyinMetrics({
+          capturedAt: opts.capturedAt,
+          authDir:
+            process.env.CREATOROS_DOUYIN_AUTH_DIR ??
+            nodePath.join(process.cwd(), ".auth", "douyin"),
+        }),
+      login: () =>
+        loginDouyin({
+          authDir:
+            process.env.CREATOROS_DOUYIN_AUTH_DIR ??
+            nodePath.join(process.cwd(), ".auth", "douyin"),
+        }),
     },
   });
   const ingestion = createIngestionTransport(() => ingestionService);

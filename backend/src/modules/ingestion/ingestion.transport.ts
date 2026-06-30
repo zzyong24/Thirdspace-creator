@@ -22,6 +22,7 @@ import type { IngestionRunResource } from "./ingestion.schema";
 export const INGESTION_OP_IDS = [
   "ingestion.runs.create",
   "ingestion.douyin.refresh",
+  "ingestion.douyin.login",
   "ingestion.runs.metrics",
   "ingestion.runs.knowledge",
   "ingestion.runs.assets",
@@ -89,6 +90,10 @@ export function createIngestionTransport(
             capturedAt: b.capturedAt,
           });
           return { data: toRunResource(run), meta };
+        }
+        case "ingestion.douyin.login": {
+          const result = await service.loginDouyin(ctx);
+          return { data: result, meta };
         }
         case "ingestion.runs.metrics": {
           const run = await service.ingestMetrics(ctx, {

@@ -28,3 +28,4 @@ frontend/tests/visual/__artifacts__/
 *.log
 pnpm-debug.log*
 npm-debug.log*
+.auth/

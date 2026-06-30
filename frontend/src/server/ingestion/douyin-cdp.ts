@@ -131,56 +131,122 @@ export function toMetricRecords(
 // ---------------------------------------------------------------------------
 
 export interface FetchDouyinOptions {
-  /** CDP endpoint;默认读 env CREATOROS_CDP_URL,再默认 localhost:9222。 */
-  cdpUrl?: string;
+  /** 持久化 profile 目录(cookie 落这;首次扫码后复刷复用)。 */
+  authDir: string;
   /** 抓取的 capturedAt(ISO8601);调用方传入(纯函数化 Date)。 */
   capturedAt: string;
-  /** 最多翻几页 work_list(防止无限滚动卡死)。 */
+  /** 最多翻几页(防无限滚动卡死)。 */
   maxPages?: number;
 }
 
-const WORK_LIST_HINT = "/creator/pc/work_list";
-const DETAIL_HINTS = ["/data_center", "/data_external", "/aweme_statistic"];
-const CREATOR_HOME = "https://creator.douyin.com/creator-micro/content/manage";
+export interface LoginDouyinOptions {
+  authDir: string;
+  /** 扫码最多等多少秒(默认 240)。 */
+  timeoutSec?: number;
+}
+
+// 未登录抖音创作者中心 —— 调用方据此提示用户先「登录抖音」(弹窗扫码),区别于真正抓取失败。
+export class DouyinNotLoggedInError extends Error {
+  constructor() {
+    super("DouyinNotLoggedInError: 未检测到抖音创作者中心登录态,请先扫码登录");
+    this.name = "DouyinNotLoggedInError";
+  }
+}
+
+const CREATOR_LOGIN_HOME = "https://creator.douyin.com/creator-micro/home";
+const CREATOR_CONTENT = "https://creator.douyin.com/creator-micro/content/manage";
+// 作品列表 XHR —— cheat-on-content 验证过的真端点 + 旧 work_list 兜底(match 任一)。
+const WORK_LIST_HINTS = [
+  "/aweme/v1/creator/item/list",
+  "/creator/pc/work_list",
+  "/web/aweme/post",
+];
+
+// launchPersistentContext 前清掉上次异常退出残留的单例锁,否则 relaunch 报
+// "SingletonLock: File exists" 直接 abort。
+async function clearSingletonLocks(authDir: string): Promise<void> {
+  const { rm } = await import("node:fs/promises");
+  const { join } = await import("node:path");
+  for (const n of ["SingletonLock", "SingletonCookie", "SingletonSocket"]) {
+    await rm(join(authDir, n), { force: true }).catch(() => {});
+  }
+}
+
+// 自起 Chromium + 持久化 profile(.auth/),不连用户现成浏览器(connectOverCDP 那条路对真实
+// 用户 Chrome 不稳)。headless=false 用于扫码登录;true 用于复刷抓取。
+async function openContext(authDir: string, headless: boolean) {
+  const { chromium } = await import("@playwright/test");
+  const { mkdir } = await import("node:fs/promises");
+  await mkdir(authDir, { recursive: true }).catch(() => {});
+  await clearSingletonLocks(authDir);
+  return chromium.launchPersistentContext(authDir, {
+    headless,
+    viewport: { width: 1440, height: 900 },
+    args: [
+      "--disable-blink-features=AutomationControlled",
+      "--no-proxy-server", // 抖音国内站直连,跳过系统代理避免 Clash 端口变化报错
+    ],
+  });
+}
+
+async function isLoggedIn(
+  ctx: import("@playwright/test").BrowserContext,
+): Promise<boolean> {
+  const cookies = await ctx.cookies("https://creator.douyin.com");
+  return cookies.some((c) => c.name === "sessionid" || c.name === "sessionid_ss");
+}
 
 /**
- * 真抓:连用户常驻 Chrome(已登录)→ 导航创作者中心 → 拦截 work_list / 明细 XHR →
- * 礼貌滚动翻页 → 映射成 MetricRecord[]。**不落库**(落库由 ingestion.service 负责)。
- * 仅在用户带 --remote-debugging-port 起的已登录 Chrome 上运行;CI/测试不调用。
+ * 登录:headed 弹 Chromium 窗口让用户扫码;轮询 sessionid cookie,检测到即成功(落 .auth/)。
+ * 仅在用户机器上跑(server 弹窗)。返回是否登录成功。
+ */
+export async function loginDouyin(opts: LoginDouyinOptions): Promise<boolean> {
+  const timeoutSec = opts.timeoutSec ?? 240;
+  const ctx = await openContext(opts.authDir, false);
+  try {
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+    await page
+      .goto(CREATOR_LOGIN_HOME, { waitUntil: "domcontentloaded" })
+      .catch(() => {});
+    for (let i = 0; i < timeoutSec; i++) {
+      if (await isLoggedIn(ctx)) return true;
+      await page.waitForTimeout(1000);
+    }
+    return false;
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
+  }
+}
+
+/**
+ * 真抓:headless 复用 .auth/ 登录态 → 导航创作者中心 → 拦作品列表 XHR → 礼貌滚动翻页 →
+ * MetricRecord[]。**不落库**(落库由 ingestion.service 负责)。未登录抛 DouyinNotLoggedInError
+ * (调用方提示先扫码登录)。仅在用户机器上跑;CI/测试不调用。
  */
 export async function fetchDouyinMetrics(
   opts: FetchDouyinOptions,
 ): Promise<MetricRecord[]> {
-  // 动态 import,避免把 playwright 拉进不需要它的打包路径。
-  const { chromium } = await import("@playwright/test");
-  const cdpUrl =
-    opts.cdpUrl ?? process.env.CREATOROS_CDP_URL ?? "http://localhost:9222";
   const maxPages = opts.maxPages ?? 10;
-
-  const browser = await chromium.connectOverCDP(cdpUrl);
-  // 我们自己开的页(用完只关这一页,绝不动用户当前标签)。
-  let page: import("@playwright/test").Page | null = null;
+  const ctx = await openContext(opts.authDir, true);
   try {
-    const context = browser.contexts()[0] ?? (await browser.newContext());
-    // 开「新页」抓取 —— 不再劫持用户当前标签页(context.pages()[0]),不打断他正在看的内容。
-    page = await context.newPage();
+    if (!(await isLoggedIn(ctx))) throw new DouyinNotLoggedInError();
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
 
     const workJsons: unknown[] = [];
-    const detailJsons: Array<{ url: string; json: unknown }> = [];
     page.on("response", async (resp) => {
       const url = resp.url();
+      if (!WORK_LIST_HINTS.some((h) => url.includes(h))) return;
       try {
-        if (url.includes(WORK_LIST_HINT)) {
-          workJsons.push(await resp.json());
-        } else if (DETAIL_HINTS.some((h) => url.includes(h))) {
-          detailJsons.push({ url, json: await resp.json() });
-        }
+        workJsons.push(await resp.json());
       } catch {
         /* 非 JSON 响应,忽略 */
       }
     });
 
-    await page.goto(CREATOR_HOME, { waitUntil: "networkidle" });
+    await page.goto(CREATOR_CONTENT, {
+      waitUntil: "domcontentloaded",
+      timeout: 60000,
+    });
     // 礼貌滚动触发懒加载;连续无新响应或到 maxPages 即停。
     let lastCount = -1;
     for (let i = 0; i < maxPages; i++) {
@@ -191,21 +257,11 @@ export async function fetchDouyinMetrics(
     }
 
     const works = workJsons.flatMap((j) => parseWorkList(j));
-    // 去重(同 aweme_id 保留最后一次)。
+    // 去重(同 aweme_id 保留最后一次)。明细(完播/转粉)留后续补;先返回列表级真实指标。
     const byId = new Map<string, DouyinWork>();
     for (const w of works) byId.set(w.awemeId, w);
-    const deduped = [...byId.values()];
-
-    const details = new Map<string, DouyinDetail>();
-    for (const w of deduped) {
-      const hit = detailJsons.find((d) => d.url.includes(w.awemeId));
-      if (hit) details.set(w.awemeId, parseDetail(hit.json, w.awemeId));
-    }
-
-    return toMetricRecords(deduped, details, opts.capturedAt);
+    return toMetricRecords([...byId.values()], new Map(), opts.capturedAt);
   } finally {
-    // 只关我们开的那一页;**绝不** browser.close() —— 对 connectOverCDP 它可能终止用户常驻的
-    // Chrome 进程,打断他的工作。CDP 连接随函数返回被 GC(手动「一键刷新」频率低,可接受)。
-    if (page) await page.close().catch(() => {});
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
   }
 }

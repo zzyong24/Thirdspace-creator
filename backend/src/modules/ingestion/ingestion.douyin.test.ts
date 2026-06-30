@@ -32,6 +32,7 @@ function makeService(db: Db, records: MetricRecord[], cap: Cap) {
       cap.fetchCalls += 1;
       return records;
     },
+    login: async () => true,
   };
   return createIngestionService({
     deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },

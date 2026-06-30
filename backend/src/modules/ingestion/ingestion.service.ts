@@ -90,9 +90,11 @@ export interface IngestionPorts {
   artifacts: IngestionArtifactsPort;
 }
 
-// 抖音抓取端口 —— composition root 注入 fetchDouyinMetrics(真连 CDP);测试注 fake。
+// 抖音抓取端口 —— composition root 注入 fetchDouyinMetrics(自起持久 context 复用扫码登录态);
+// 测试注 fake。`login` 弹窗扫码(headed);`fetch` headless 复刷,未登录抛 DouyinNotLoggedInError。
 export interface DouyinFetchPort {
-  fetch(opts: { capturedAt: string; cdpUrl?: string }): Promise<MetricRecord[]>;
+  fetch(opts: { capturedAt: string }): Promise<MetricRecord[]>;
+  login(): Promise<boolean>;
 }
 
 export interface ServiceDeps {
@@ -129,11 +131,13 @@ export interface IngestionService {
     ctx: RequestContext,
     idempotencyKey: string,
   ): Promise<string>;
-  // 抖音真实指标刷新:校验来源→CDP 抓取→createRun→ingestMetrics→completeRun。
+  // 抖音真实指标刷新:校验来源→抓取(复用扫码登录态)→createRun→ingestMetrics→completeRun。
   refreshDouyin(
     ctx: RequestContext,
     input: { externalSourceId: string; capturedAt?: string },
   ): Promise<IngestionRunRow>;
+  // 抖音扫码登录:弹 Chromium 窗口让用户扫码,落 .auth/ 持久化,返回是否成功(供 refresh 复用)。
+  loginDouyin(ctx: RequestContext): Promise<{ loggedIn: boolean }>;
 }
 
 export function createIngestionService(args: {
@@ -375,6 +379,15 @@ export function createIngestionService(args: {
         records: records as unknown as Array<Record<string, unknown>>,
       });
       return service.completeRun(ctx, { runId: run.id });
+    },
+
+    async loginDouyin() {
+      if (!douyinFetch) {
+        throw new Error("抖音抓取端口未配置(douyinFetch)");
+      }
+      // 弹 Chromium 窗口扫码;成功后登录态落 .auth/,后续 refreshDouyin 直接 headless 复用。
+      const loggedIn = await douyinFetch.login();
+      return { loggedIn };
     },
   };
   return service;

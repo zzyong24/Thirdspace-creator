@@ -1136,17 +1136,21 @@ const DOUYIN_SOURCE_ID = "src-douyin-canonical";
 // ── 一键拉取抖音真实表现(B1 飞轮·真实数据采集)──────────────────────────────────────
 // 调 ingestion.douyin.refresh → 后端经 CDP 连用户**已登录**的 Chrome(:9222)抓创作者中心
 // 指标 → 落库为各作品的真实 analytics 快照。它是把"手填评分"翻成"编导自动评分"的数据前提。
+type RefreshPhase = "idle" | "running" | "need_login" | "logging_in" | "done" | "error";
+
 function RefreshDouyinButton() {
   const router = useRouter();
-  const [phase, setPhase] = React.useState<"idle" | "running" | "done" | "error">(
-    "idle",
-  );
+  const [phase, setPhase] = React.useState<RefreshPhase>("idle");
   const [msg, setMsg] = React.useState("");
 
+  const isNotLoggedIn = (err: unknown): boolean =>
+    err instanceof Error &&
+    (err.message.includes("DouyinNotLoggedIn") || err.message.includes("扫码登录"));
+
   function refresh() {
-    if (phase === "running") return;
+    if (phase === "running" || phase === "logging_in") return;
     setPhase("running");
-    setMsg("正在连你登录的 Chrome 抓取创作者中心…请勿关闭浏览器");
+    setMsg("正在抓取你抖音创作者中心的真实表现…请稍候");
     void (async () => {
       try {
         const run = (await client.refreshDouyin({
@@ -1162,15 +1166,43 @@ function RefreshDouyinButton() {
         );
         router.refresh();
       } catch (err) {
-        setPhase("error");
-        setMsg(
-          err instanceof Error && err.message
-            ? err.message
-            : "拉取失败 —— 请确认 Chrome 已登录抖音创作者中心(:9222)",
-        );
+        if (isNotLoggedIn(err)) {
+          setPhase("need_login");
+          setMsg("还没登录抖音 —— 点「登录抖音」扫码,之后自动拉取");
+        } else {
+          setPhase("error");
+          setMsg(err instanceof Error && err.message ? err.message : "拉取失败,请重试");
+        }
       }
     })();
   }
+
+  function login() {
+    if (phase === "logging_in") return;
+    setPhase("logging_in");
+    setMsg("已弹出 Chromium 窗口,请用抖音 App 扫码登录(最多等 4 分钟)…");
+    void (async () => {
+      try {
+        const res = (await client.loginDouyin({
+          params: undefined,
+          query: undefined,
+          body: {},
+        })) as { loggedIn?: boolean };
+        if (res.loggedIn) {
+          setMsg("登录成功,开始拉取…");
+          refresh(); // 登录成功直接复刷
+        } else {
+          setPhase("need_login");
+          setMsg("没检测到登录(可能超时),请再点「登录抖音」重试");
+        }
+      } catch (err) {
+        setPhase("error");
+        setMsg(err instanceof Error && err.message ? err.message : "登录失败,请重试");
+      }
+    })();
+  }
+
+  const busy = phase === "running" || phase === "logging_in";
 
   return (
     <div className="flex items-center gap-2">
@@ -1185,20 +1217,35 @@ function RefreshDouyinButton() {
           {msg}
         </span>
       ) : null}
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        data-testid="refresh-douyin-button"
-        className="h-8 gap-1.5 px-3 text-xs"
-        disabled={phase === "running"}
-        onClick={refresh}
-      >
-        <RefreshCw
-          className={cn("size-3.5", phase === "running" && "animate-spin")}
-        />
-        {phase === "running" ? "拉取中…" : "拉取抖音真实表现"}
-      </Button>
+      {phase === "need_login" ? (
+        <Button
+          type="button"
+          size="sm"
+          data-testid="login-douyin-button"
+          className="h-8 gap-1.5 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
+          onClick={login}
+        >
+          <RefreshCw className="size-3.5" />
+          登录抖音
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          data-testid="refresh-douyin-button"
+          className="h-8 gap-1.5 px-3 text-xs"
+          disabled={busy}
+          onClick={refresh}
+        >
+          <RefreshCw className={cn("size-3.5", busy && "animate-spin")} />
+          {phase === "running"
+            ? "拉取中…"
+            : phase === "logging_in"
+              ? "登录中…"
+              : "拉取抖音真实表现"}
+        </Button>
+      )}
     </div>
   );
 }

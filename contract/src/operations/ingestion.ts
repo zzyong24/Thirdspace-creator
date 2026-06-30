@@ -20,8 +20,8 @@ export const ingestionOperations = {
     response: ingestionRunResource,
     fr: ["FR-INGESTION-CREATE"],
   }),
-  // 抖音真实指标刷新(线 B):一步完成 createRun→CDP 抓取→ingestMetrics→completeRun。
-  // 真抓在服务端经 chromium.connectOverCDP 连用户常驻已登录 Chrome(见 ingestion/douyin-cdp.ts)。
+  // 抖音真实指标刷新(线 B):一步完成 抓取(复用扫码登录态)→createRun→ingestMetrics→completeRun。
+  // 服务端自起持久化 Chromium(.auth/),headless 复用 cookie 抓创作者中心(见 ingestion/douyin-cdp.ts)。
   refreshDouyin: defineEndpoint({
     id: "ingestion.douyin.refresh",
     method: "POST",
@@ -31,6 +31,15 @@ export const ingestionOperations = {
       capturedAt: iso8601.optional(),
     }),
     response: ingestionRunResource,
+    fr: ["FR-INGESTION-DOUYIN"],
+  }),
+  // 抖音扫码登录(线 B):服务端弹 Chromium 窗口让用户扫码,落 .auth/ 持久化登录态,供 refresh 复用。
+  loginDouyin: defineEndpoint({
+    id: "ingestion.douyin.login",
+    method: "POST",
+    path: "/ingestion/douyin/login",
+    body: z.object({}).optional(),
+    response: z.object({ loggedIn: z.boolean() }),
     fr: ["FR-INGESTION-DOUYIN"],
   }),
   pushMetrics: defineEndpoint({
