@@ -53,7 +53,9 @@ export interface PositioningTask {
   inputData: Record<string, unknown>;
 }
 
-function buildPositioningPrompt(context: CreativeContext): string {
+// 导出供 ChatBox 的 positioning.generate 工具复用(对话里产定位提案候选,与本 runner 同一份
+// prompt + parse,不造影子)。
+export function buildPositioningPrompt(context: CreativeContext): string {
   const current = context.positioningBrief
     ? context.positioningBrief
     : "（创作者尚未设置定位——请基于其抖音账号画像与赛道,给出一份从 0 到 1 的定位提案）";

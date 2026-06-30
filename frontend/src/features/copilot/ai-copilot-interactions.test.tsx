@@ -22,6 +22,9 @@ const createCandidate = vi.fn();
 // under the test renderer (no real app-router provider).
 const routerPush = vi.fn();
 const routerRefresh = vi.fn();
+// slice 2:面板读 ?surface & ?fn 装配 ChatContext + 预调工具。默认 query 无 fn(不自动预调),
+// 个别用例改 mockSearch 注入 fn 断言预调。
+let mockSearch = "copilot=open";
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: routerPush,
@@ -29,14 +32,18 @@ vi.mock("next/navigation", () => ({
     back: vi.fn(),
     refresh: routerRefresh,
   }),
+  useSearchParams: () => new URLSearchParams(mockSearch),
 }));
 
+const createLearning = vi.fn();
 vi.mock("@/lib/contract-client", () => ({
   client: {
     // GAP-COP-feed: the 最近任务 / 继续任务 feeds load from the real op on mount.
     listAITasks: (...args: unknown[]) => listTasks(...args),
     // T-004: in-chat candidate adoption goes through the candidates.create confirm gate.
     createCandidate: (...args: unknown[]) => createCandidate(...args),
+    // slice 2:复盘经验候选采纳 → learnings.create 直采门。
+    createLearning: (...args: unknown[]) => createLearning(...args),
   },
 }));
 
@@ -88,12 +95,15 @@ beforeEach(() => {
   listTasks.mockResolvedValue([]);
   createCandidate.mockReset();
   createCandidate.mockResolvedValue({ id: "cand-1" });
+  createLearning.mockReset();
+  createLearning.mockResolvedValue({ id: "learn-1" });
   routerPush.mockReset();
   routerRefresh.mockReset();
   sendMessage.mockReset();
   stop.mockReset();
   mockMessages = [];
   mockStatus = "ready";
+  mockSearch = "copilot=open";
 });
 
 describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
@@ -186,6 +196,86 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
             contentRole: "traffic",
           }),
         }),
+      );
+    });
+  });
+
+  it("slice 2:渲染 calibration.diagnose 工具结果为维度评分卡(只读展示)", () => {
+    mockMessages = [
+      {
+        id: "a-2",
+        role: "assistant",
+        parts: [
+          { type: "text", text: "诊断如下：" },
+          {
+            type: "tool-calibration.diagnose",
+            toolCallId: "tc-2",
+            state: "output-available",
+            input: { title: "我的视频" },
+            output: {
+              kind: "calibration.diagnosis",
+              diagnosis: {
+                dimensions: [
+                  { key: "hook", score: 4, reason: "开头强", suggestion: "保持" },
+                ],
+                verdict: "可发",
+                mainIssues: ["结尾弱"],
+                priorityFixes: ["加 CTA"],
+              },
+            },
+          },
+        ],
+      },
+    ];
+    render(<AICopilotContent viewModel={VM} />);
+    expect(
+      document.querySelector('[data-slot="chat-diagnosis-card"]'),
+    ).not.toBeNull();
+    expect(screen.getByText("4 / 5")).not.toBeNull();
+    expect(screen.getByText(/综合判断/)).not.toBeNull();
+  });
+
+  it("slice 2:渲染 review.analyze 工具结果为经验卡,采纳 → learnings.create", async () => {
+    const user = userEvent.setup();
+    mockMessages = [
+      {
+        id: "a-3",
+        role: "assistant",
+        parts: [
+          {
+            type: "tool-review.analyze",
+            toolCallId: "tc-3",
+            state: "output-available",
+            input: { subject: "我的视频" },
+            output: {
+              kind: "review.learnings",
+              items: [{ title: "前3秒给结果", insight: "完播更高" }],
+            },
+          },
+        ],
+      },
+    ];
+    render(<AICopilotContent viewModel={VM} />);
+    expect(
+      document.querySelector('[data-slot="chat-learnings-card"]'),
+    ).not.toBeNull();
+    await user.click(screen.getByText("采纳"));
+    await waitFor(() => {
+      expect(createLearning).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: { title: "前3秒给结果", insight: "完播更高" },
+        }),
+      );
+    });
+  });
+
+  it("slice 2:一键岛预调 —— 面板带 ?fn 打开且对话为空 → 自动发预调话术(预调该工具)", async () => {
+    // 模拟从校准「对话诊断」深链进入:?surface=calibration&fn=calibration.diagnose。
+    mockSearch = "copilot=open&surface=calibration&fn=calibration.diagnose";
+    render(<AICopilotContent viewModel={VM} />);
+    await waitFor(() => {
+      expect(sendMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringContaining("诊断") }),
       );
     });
   });

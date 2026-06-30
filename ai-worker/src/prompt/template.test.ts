@@ -142,6 +142,48 @@ describe("registry 三位一体:tools + outputSchema 一等字段(SPEC §4.1)", 
     expect(schema.safeParse({ candidates: [] }).success).toBe(false); // 缺 reply
   });
 
+  it("内置各 surface chatbox skill(校准/定位/复盘):三位齐全 + 工具白名单对齐首波 5 工具", () => {
+    _resetRegistry();
+    registerAllTemplates();
+    // 工具白名单对齐首波 5 工具(SPEC §3.4):各 surface 各挂自己那个专用工具。
+    expect(getTools("chatbox.calibration")).toContain("calibration.diagnose");
+    expect(getTools("chatbox.positioning")).toContain("positioning.generate");
+    expect(getTools("chatbox.review")).toContain("review.analyze");
+    // 每轮输出契约都两段:reply 必填,缺它即不合形状(防退化成 chatbot)。
+    for (const id of [
+      "chatbox.calibration",
+      "chatbox.positioning",
+      "chatbox.review",
+    ]) {
+      expect(hasOutputSchema(id)).toBe(true);
+      const s = resolveOutputSchema(id) as z.ZodType;
+      expect(s.safeParse({ reply: "好的" }).success).toBe(true);
+      expect(s.safeParse({}).success).toBe(false); // 缺 reply
+    }
+    // skill 特定结构按形状校验(校准=逐维度评分;score 卡 1-5)。
+    const cal = resolveOutputSchema("chatbox.calibration") as z.ZodType;
+    expect(
+      cal.safeParse({
+        reply: "诊断如下",
+        diagnoses: [
+          {
+            subjectTitle: "标题",
+            dimensions: [{ key: "hook", score: 4, reason: "强" }],
+            verdict: "可发",
+          },
+        ],
+      }).success,
+    ).toBe(true);
+    expect(
+      cal.safeParse({
+        reply: "x",
+        diagnoses: [
+          { subjectTitle: "t", dimensions: [{ key: "k", score: 9, reason: "" }] },
+        ],
+      }).success,
+    ).toBe(false); // score 越界(>5)
+  });
+
   it("calibration.score 的 outputSchema 收口到 registry(不再靠调用方手传)", () => {
     _resetRegistry();
     registerAllTemplates();

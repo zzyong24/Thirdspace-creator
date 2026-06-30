@@ -33,6 +33,11 @@ import { CALIBRATION_DIAGNOSE_TEMPLATE } from "./templates/calibration-diagnose"
 import { CALIBRATION_SCORE_TEMPLATE } from "./templates/calibration-score";
 import { RESEARCH_GATHER_TEMPLATE } from "./templates/research-gather";
 import { CHATBOX_TOPIC_TEMPLATE } from "./templates/chatbox-turn";
+import {
+  CHATBOX_CALIBRATION_TEMPLATE,
+  CHATBOX_POSITIONING_TEMPLATE,
+  CHATBOX_REVIEW_TEMPLATE,
+} from "./templates/chatbox-surfaces";
 
 const REGISTRY = new Map<string, PromptTemplate>();
 
@@ -56,6 +61,9 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   CALIBRATION_SCORE_TEMPLATE,
   RESEARCH_GATHER_TEMPLATE,
   CHATBOX_TOPIC_TEMPLATE,
+  CHATBOX_CALIBRATION_TEMPLATE,
+  CHATBOX_POSITIONING_TEMPLATE,
+  CHATBOX_REVIEW_TEMPLATE,
 ];
 
 /** 注册(或覆盖)一个 skill(含 tools/outputSchema 随对象入表)。后注册的同 id 覆盖先前的。 */

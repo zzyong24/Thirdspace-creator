@@ -14,11 +14,15 @@ import {
 } from "./creative-context";
 import {
   resolveSkillForSurface,
+  applyFunctionKey,
   assembleChatSystem,
   type ChatContext,
 } from "./chat-context";
 import { buildChatTools, type ChatToolDeps } from "./chat-tools";
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
+import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
+import { parseLearnings } from "./review-runner";
+import { parseDiagnosis } from "./calibration-diagnose-runner";
 
 // 上下文感知 ChatBox 的服务端装配(SPEC §3.3)—— /api/chat 路由的「大脑」,从这里调
 // streamText。把路由薄壳化:路由只管鉴权 + 解析 body + 持久化;真正的「resolve skill →
@@ -35,6 +39,30 @@ export interface AssembleChatDeps extends ContextDeps {
     capability: string,
   ) => Promise<ModelSpec>;
 }
+
+// 各 ChatBox skill 的「主能力档」—— 基础模型按它解析(各 surface 复用对应节点的模型配置,
+// 与一键岛同一引擎)。各工具 exec 内再按自己的 capability 解析(允许不同工具配不同模型)。
+const SKILL_PRIMARY_CAPABILITY: Record<string, string> = {
+  "chatbox.topic": "topic.generate",
+  "chatbox.calibration": "calibration.diagnose",
+  "chatbox.positioning": "positioning.generate",
+  "chatbox.review": "review.insights",
+};
+
+// 通用维度评分标准(对话里没有绑定 rubric reader 时的诚实降级)—— 让 calibration.diagnose 工具
+// 在 free-chat 也能逐维度盲评。一键岛带 subject 时仍走这套通用维度(对话不接库内 rubric reader,
+// 避免跨模块直连 repo;真·按用户 rubric 的诊断在工作台 StartPredictionButton 那条任务链上)。
+const GENERIC_RUBRIC_DIMENSIONS: ReadonlyArray<{
+  key: string;
+  label: string;
+  description: string;
+}> = [
+  { key: "hook", label: "开头钩子", description: "前 3 秒能否抓住注意力" },
+  { key: "value", label: "价值密度", description: "信息/情绪价值是否扎实" },
+  { key: "structure", label: "结构节奏", description: "推进是否清晰不拖沓" },
+  { key: "audience_fit", label: "人群契合", description: "是否打中目标受众的痛点" },
+  { key: "conversion", label: "转化引导", description: "是否自然引导到信任/转化" },
+];
 
 // 解析结果:路由把它交给 streamText 的 stream 喂回前端 + 落库。导出供单测断言「选对 skill /
 // 注入了 facets / 挂对了 tools」而不真跑模型(单测注入 fake streamText 不便,故拆出
@@ -62,14 +90,24 @@ export async function buildChatAssembly(
   const skillId = resolveSkillForSurface(chatContext.surface);
 
   // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
-  const { getTemplate, getTools, modelFor, runTopicNode } = await import(
-    "@creatoros/ai-worker"
-  );
+  const {
+    getTemplate,
+    getTools,
+    modelFor,
+    runTopicNode,
+    runTemplatedNode,
+    REVIEW_INSIGHTS_TEMPLATE,
+    CALIBRATION_DIAGNOSE_TEMPLATE,
+  } = await import("@creatoros/ai-worker");
   const skill = getTemplate(skillId);
-  const toolWhitelist = getTools(skillId);
+  // 工具白名单层(SPEC §3.2 第 1+2 层):surface 选基础 skill 的白名单,再按按钮层 functionKey
+  // 把命中的专用工具置顶(预调)。functionKey 越权(不在白名单)→ 原样,不臆造工具。
+  const toolWhitelist = applyFunctionKey(getTools(skillId), chatContext.functionKey);
 
-  // 3) 解析 model(按 skill 的能力名;chatbox.topic 复用 topic.generate 这档配置)。
-  const modelSpec = await deps.resolveModelSpec(ctx, "topic.generate");
+  // 3) 解析 model。基础档按 skill 主能力解析(chatbox.topic/review/positioning 复用各自
+  //    主工具的配置档);各工具 exec 内按自己的 capability 再解析(不同工具可配不同模型)。
+  const skillCapability = SKILL_PRIMARY_CAPABILITY[skillId] ?? "topic.generate";
+  const modelSpec = await deps.resolveModelSpec(ctx, skillCapability);
   const model = modelFor(modelSpec);
 
   // 4) 数据层:装配 CreativeContext facets(定位 / 飞轮 / 受众信号 / 知识库),注进 system。
@@ -116,6 +154,77 @@ export async function buildChatAssembly(
         maxSteps: 2,
       });
       return parseCard(res.text);
+    },
+    diagnoseContent: async ({ title, script }) => {
+      // 复用 calibration.diagnose 模板 + parseDiagnosis(与 calibration-diagnose-runner 同源)。
+      // 对话里没有库内 rubric reader → 用通用维度评(诚实降级)。产诊断候选(非实体)。
+      const spec = await deps.resolveModelSpec(ctx, "calibration.diagnose");
+      const rubricBlock = GENERIC_RUBRIC_DIMENSIONS.map(
+        (d, i) => `${i + 1}. ${d.label}（key=${d.key}） —— ${d.description}`,
+      ).join("\n");
+      const { text } = await runTemplatedNode({
+        model: modelFor(spec),
+        template: CALIBRATION_DIAGNOSE_TEMPLATE,
+        facets: {
+          positioning: context.positioningBrief
+            ? context.positioningBrief
+            : "（创作者尚未设置定位——按通用爆款逻辑判断）",
+          learnings: context.learningsBrief
+            ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
+            : "",
+          rubricBlock,
+          title,
+          script:
+            script && script.trim()
+              ? script
+              : "（暂无文稿——请基于标题与定位做尽力诊断,拿不准的指标给 null）",
+        },
+      });
+      const parsed = parseDiagnosis(
+        text,
+        new Set(GENERIC_RUBRIC_DIMENSIONS.map((d) => d.key)),
+      );
+      if (!parsed) return null;
+      // 对话卡只用维度评分 + 综合判断三段(performance 留给工作台诊断卡;对话里不渲分数 chips)。
+      return {
+        dimensions: parsed.dimensions,
+        verdict: parsed.verdict,
+        mainIssues: parsed.mainIssues,
+        priorityFixes: parsed.priorityFixes,
+      };
+    },
+    analyzeReview: async ({ subject }) => {
+      // 复用 review.insights 模板 + parseLearnings(与 review-runner 同源)—— 产经验候选(非实体)。
+      const spec = await deps.resolveModelSpec(ctx, "review.insights");
+      const { text } = await runTemplatedNode({
+        model: modelFor(spec),
+        template: REVIEW_INSIGHTS_TEMPLATE,
+        facets: {
+          positioning: context.positioningBrief
+            ? context.positioningBrief
+            : "（未设置定位——按通用内容方法论提炼）",
+          priorLearnings: context.learningsBrief
+            ? `\n【已有经验(避免重复)】\n${context.learningsBrief}`
+            : "",
+          subject:
+            subject && subject.trim()
+              ? subject
+              : "（未指定具体内容,按这个账号的整体表现提炼)",
+        },
+      });
+      return parseLearnings(text);
+    },
+    generatePositioning: async () => {
+      // 复用 positioning-runner 的 prompt + parseSuggestion —— 产定位提案候选(非实体)。
+      const { runAgentNode } = await import("@creatoros/ai-worker");
+      const spec = await deps.resolveModelSpec(ctx, "positioning.generate");
+      const res = await runAgentNode({
+        model: modelFor(spec),
+        system: "你是这位创作者的定位策略 agent。只输出 JSON,不要多余文字。",
+        prompt: buildPositioningPrompt(context),
+        maxSteps: 2,
+      });
+      return parseSuggestion(res.text);
     },
   };
   const tools = buildChatTools(toolWhitelist, toolDeps);

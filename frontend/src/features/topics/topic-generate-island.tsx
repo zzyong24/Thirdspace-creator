@@ -17,6 +17,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Target,
@@ -26,10 +27,12 @@ import {
   Compass,
   Sparkles,
   Inbox,
+  MessagesSquare,
   type LucideIcon,
 } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -475,6 +478,16 @@ export function TopicGenerateBand({
                 {b.label}
               </button>
             ))}
+            {/* 一键岛预调(SPEC §3.4):打开 ChatBox 进选题编导,预调 topic.generate —— 想多轮
+                打磨/边聊边出题走这条;上面 4 个按钮是直接起任务的快路(两条并存)。 */}
+            <Link
+              href={copilotDeepLink("topics", "topic.generate")}
+              data-testid="topics-open-copilot"
+              className="inline-flex h-9 items-center gap-1.5 rounded-control border border-brand/30 bg-surface px-3 text-xs font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft/60"
+            >
+              <MessagesSquare className="size-4" />
+              在对话里出题
+            </Link>
           </div>
 
           {/* 运行中:band 上只放一行极简提示(详情在弹窗),不长高。 */}

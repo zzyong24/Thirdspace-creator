@@ -29,6 +29,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Lock,
@@ -48,10 +49,12 @@ import {
   TrendingDown,
   Minus,
   RefreshCw,
+  MessagesSquare,
   type LucideIcon,
 } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -730,17 +733,35 @@ function StartPredictionButton({
   }
 
   return (
-    <Button
-      type="button"
-      size="sm"
-      data-testid="start-prediction-button"
-      className="h-7 gap-1 bg-brand px-2.5 text-xs text-brand-foreground hover:bg-brand/90"
-      disabled={phase === "running"}
-      onClick={start}
-    >
-      <Sparkles className="size-3.5" />
-      {phase === "running" ? "AI 诊断中…" : phase === "error" ? "重试预测" : "开始预测"}
-    </Button>
+    <div className="flex items-center gap-1.5">
+      <Button
+        type="button"
+        size="sm"
+        data-testid="start-prediction-button"
+        className="h-7 gap-1 bg-brand px-2.5 text-xs text-brand-foreground hover:bg-brand/90"
+        disabled={phase === "running"}
+        onClick={start}
+      >
+        <Sparkles className="size-3.5" />
+        {phase === "running"
+          ? "AI 诊断中…"
+          : phase === "error"
+            ? "重试预测"
+            : "开始预测"}
+      </Button>
+      {/* 一键岛预调(SPEC §3.4):打开 ChatBox 进编导诊断,预调 calibration.diagnose —— 想边聊
+          边逐维度盲评/多轮打磨走这条;左边「开始预测」是直接起任务铸盲预测的快路(两条并存)。 */}
+      <Link
+        href={copilotDeepLink("calibration", "calibration.diagnose")}
+        data-testid="calibration-open-copilot"
+        aria-label="在对话里诊断"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex h-7 items-center gap-1 rounded-control border border-brand/30 bg-surface px-2 text-xs font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft/60"
+      >
+        <MessagesSquare className="size-3.5" />
+        对话诊断
+      </Link>
+    </div>
   );
 }
 

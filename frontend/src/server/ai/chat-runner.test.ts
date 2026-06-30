@@ -103,6 +103,54 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.modelSpec).toEqual(FAKE_SPEC);
   });
 
+  it("surface=calibration → chatbox.calibration skill + 挂 calibration.diagnose 工具", async () => {
+    const { deps, resolveModelSpec } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "calibration" }, deps);
+    expect(a.skillId).toBe("chatbox.calibration");
+    expect(Object.keys(a.tools)).toEqual(["calibration.diagnose"]);
+    // 主能力档按 calibration.diagnose 解析(各 surface 复用对应节点的模型配置)。
+    expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "calibration.diagnose");
+  });
+
+  it("surface=positioning → chatbox.positioning skill + 挂 positioning.generate 工具", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "positioning" }, deps);
+    expect(a.skillId).toBe("chatbox.positioning");
+    expect(Object.keys(a.tools)).toEqual(["positioning.generate"]);
+  });
+
+  it("surface=review → chatbox.review skill + 挂 review.analyze 工具", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
+    expect(a.skillId).toBe("chatbox.review");
+    expect(Object.keys(a.tools)).toEqual(["review.analyze"]);
+  });
+
+  it("functionKey 叠加:把命中的专用工具置顶(按钮层,一键岛预调)", async () => {
+    const { deps } = makeDeps();
+    // 选题编导白名单 [topic.generate, topic.enrich];functionKey=topic.enrich → 置顶。
+    const a = await buildChatAssembly(
+      ctx,
+      { surface: "topics", functionKey: "topic.enrich" },
+      deps,
+    );
+    expect(Object.keys(a.tools)[0]).toBe("topic.enrich");
+  });
+
+  it("functionKey 越权(不在该 skill 白名单)→ 不挂越权工具(防越权)", async () => {
+    const { deps } = makeDeps();
+    // 选题页 functionKey 给了校准工具(越权)→ 白名单不变,只挂选题工具。
+    const a = await buildChatAssembly(
+      ctx,
+      { surface: "topics", functionKey: "calibration.diagnose" },
+      deps,
+    );
+    expect(Object.keys(a.tools).sort()).toEqual([
+      "topic.enrich",
+      "topic.generate",
+    ]);
+  });
+
   it("没配 model key(resolveModelSpec 抛错)→ 装配抛出(路由接住返 4xx,不假成功)", async () => {
     const { deps } = makeDeps({
       resolveModelSpec: vi.fn(async () => {

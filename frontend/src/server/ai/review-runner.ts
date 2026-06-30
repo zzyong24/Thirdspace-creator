@@ -54,8 +54,12 @@ function reviewFacets(
   };
 }
 
+// 导出 facets 映射 + parse 供 ChatBox 的 review.analyze 工具复用(对话里产经验候选,与本 runner
+// 同一份模板 + parse,不造影子)。
+export { reviewFacets };
+
 // Parse the agent's final text into reusable learnings (parse 逻辑原样保留)。
-function parseLearnings(text: string): LearningItem[] {
+export function parseLearnings(text: string): LearningItem[] {
   return parseJsonArray(text)
     .map((raw): LearningItem | null => {
       const o = (raw ?? {}) as Record<string, unknown>;

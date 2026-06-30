@@ -55,7 +55,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
@@ -64,6 +64,14 @@ import {
   type UIMessage,
 } from "ai";
 import { ChatCandidateCard, type ChatTopicCandidate } from "./chat-candidate-card";
+import {
+  ChatDiagnosisCard,
+  ChatLearningsCard,
+  ChatPositioningCard,
+  type ChatDiagnosis,
+  type ChatLearningItem,
+  type ChatPositioningSuggestion,
+} from "./chat-result-cards";
 import {
   ArrowUp,
   BookOpenText,
@@ -392,28 +400,60 @@ const CONTINUING_BADGE: Record<string, { label: string; badge: string; bg: strin
   },
 };
 
-// ChatContext(SPEC §3.2)—— 全局 Copilot 面板本切片驱动「选题编导」(surface=topics)。
-// 路由据 surface 选基础 skill(chatbox.topic)+ 注入数据层 facets;functionKey 叠加留后续切片。
-const COPILOT_CHAT_CONTEXT = { surface: "topics" } as const;
+// 一键岛预调(SPEC §3.4)—— 工作台「出题/诊断/分析」等按钮打开 ChatBox 时,在 URL 上带
+// surface(页面层)+ fn(按钮层 functionKey)。Copilot 面板读它们装配 ChatContext + 预调该工具。
+// functionKey → 一句中文「预调话术」,打开即自动发一轮让模型优先调置顶的专用工具(预调闭环)。
+const FUNCTION_KEY_PREFILL: Record<string, string> = {
+  "topic.generate": "基于我的定位和真实信号,出一批选题候选。",
+  "topic.enrich": "把我刚选的选题补全成完整选题卡。",
+  "calibration.diagnose": "对我这条发布前的内容做编导诊断,逐维度盲评并指出优先修改。",
+  "review.analyze": "帮我复盘,提炼可复用的爆款要素沉淀成经验。",
+  "positioning.generate": "结合我的账号画像,生成/进化一份结构化定位提案。",
+};
+
+// 默认页面层(无 URL 指定时)—— 选题编导是最通用的一面。
+const DEFAULT_SURFACE = "topics";
 
 export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   const vm = viewModel ?? buildCopilotViewModel();
   const router = useRouter();
 
-  // T-004 ChatBox slice 1:useChat 驱动流式对话(替掉旧的 createMessage→轮询 listMessages)。
-  // transport 把请求打到 /api/chat(Vercel AI SDK streamText),body 带 ChatContext(三层注入
-  // 的页面层 + 数据层)。回复 token 级流式;status==="streaming" 时可 stop() 中断。会话/消息
-  // 仍在服务端落 ai_conversations/ai_messages(路由 onFinish),前端这层只管流式呈现 + 采纳。
+  // T-004 ChatBox:useChat 驱动流式对话(替掉旧的 createMessage→轮询 listMessages)。
+  // transport 把请求打到 /api/chat(Vercel AI SDK streamText),body 带 ChatContext(三层注入)。
+  // slice 2:页面层 surface + 按钮层 functionKey 从 URL 读(一键岛打开时带 ?surface=&fn=),
+  // 让同一个全局面板按打开来源装配不同基础 skill + 预调专用工具。回复 token 级流式;可 stop()。
+  const searchParams = useSearchParams();
+  const surface = searchParams?.get("surface") || DEFAULT_SURFACE;
+  const functionKey = searchParams?.get("fn") || undefined;
+  const chatContextBody = React.useMemo(
+    () => ({
+      chatContext: functionKey ? { surface, functionKey } : { surface },
+    }),
+    [surface, functionKey],
+  );
   const transport = React.useMemo(
     () =>
       new DefaultChatTransport<UIMessage>({
         api: "/api/chat",
-        body: { chatContext: COPILOT_CHAT_CONTEXT },
+        body: chatContextBody,
       }),
-    [],
+    [chatContextBody],
   );
   const { messages, sendMessage, status, stop } = useChat({ transport });
   const streaming = status === "streaming" || status === "submitted";
+
+  // 一键岛预调(SPEC §3.4):面板带 fn 打开 且对话尚空 → 自动发一轮「预调话术」,让模型本轮
+  // 优先调被 functionKey 置顶的专用工具(出题/诊断/分析的真实闭环)。只触发一次(对话已有消息
+  // 或没 fn 时不动),避免每次渲染重复发。
+  const prefilledRef = React.useRef(false);
+  React.useEffect(() => {
+    if (prefilledRef.current) return;
+    if (!functionKey || messages.length > 0 || streaming) return;
+    const text = FUNCTION_KEY_PREFILL[functionKey];
+    if (!text) return;
+    prefilledRef.current = true;
+    void sendMessage({ text });
+  }, [functionKey, messages.length, streaming, sendMessage]);
 
   // 受控输入(useChat v7 不再托管 input;自管 + sendMessage({text}))。
   const [prompt, setPrompt] = React.useState<string>(vm.prompt);
@@ -530,21 +570,64 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                         .join("")}
                     </span>
                   ) : null}
-                  {/* generative UI:topic.generate 工具结果 → 对话内候选卡(逐条采纳走 confirm 门) */}
+                  {/* generative UI:首波 5 工具结果 → 对话内候选卡(逐条/整条采纳走 confirm 门)。
+                      工具结果按 kind 分发到对应卡:选题候选 / 选题卡 / 维度诊断 / 复盘经验 / 定位提案。 */}
                   {message.parts.map((part, idx) => {
                     if (!isToolUIPart(part)) return null;
-                    if (getToolName(part) !== "topic.generate") return null;
                     if (part.state !== "output-available") return null;
-                    const out = part.output as
-                      | { kind?: string; items?: ChatTopicCandidate[] }
-                      | undefined;
-                    if (!out || out.kind !== "topic.candidates") return null;
-                    return (
-                      <ChatCandidateCard
-                        key={`${message.id}-tool-${idx}`}
-                        candidates={out.items ?? []}
-                      />
-                    );
+                    const name = getToolName(part);
+                    const out = part.output as { kind?: string } | undefined;
+                    if (!out) return null;
+                    const key = `${message.id}-tool-${idx}`;
+                    // 选题候选(topic.generate)→ 逐条采纳进候选池。
+                    if (
+                      name === "topic.generate" &&
+                      out.kind === "topic.candidates"
+                    ) {
+                      const o = out as { items?: ChatTopicCandidate[] };
+                      return (
+                        <ChatCandidateCard key={key} candidates={o.items ?? []} />
+                      );
+                    }
+                    // 编导诊断(calibration.diagnose)→ 维度评分表(只读展示)。
+                    if (
+                      name === "calibration.diagnose" &&
+                      out.kind === "calibration.diagnosis"
+                    ) {
+                      const o = out as { diagnosis?: ChatDiagnosis | null };
+                      return (
+                        <ChatDiagnosisCard
+                          key={key}
+                          diagnosis={o.diagnosis ?? null}
+                        />
+                      );
+                    }
+                    // 复盘经验(review.analyze)→ 逐条沉淀。
+                    if (
+                      name === "review.analyze" &&
+                      out.kind === "review.learnings"
+                    ) {
+                      const o = out as { items?: ChatLearningItem[] };
+                      return (
+                        <ChatLearningsCard key={key} items={o.items ?? []} />
+                      );
+                    }
+                    // 定位提案(positioning.generate)→ 整条采纳写入定位母版。
+                    if (
+                      name === "positioning.generate" &&
+                      out.kind === "positioning.suggestion"
+                    ) {
+                      const o = out as {
+                        suggestion?: ChatPositioningSuggestion | null;
+                      };
+                      return (
+                        <ChatPositioningCard
+                          key={key}
+                          suggestion={o.suggestion ?? null}
+                        />
+                      );
+                    }
+                    return null;
                   })}
                 </li>
               ))}

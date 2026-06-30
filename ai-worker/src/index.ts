@@ -148,3 +148,15 @@ export {
   chatboxTurnSchema,
   type ChatboxTurnOutput,
 } from "./prompt/templates/chatbox-turn";
+// ChatBox 各 surface(校准/定位/复盘)对话化 skill(T-004 slice 2)—— 同两段 { reply, ...特定结构 }。
+export {
+  CHATBOX_CALIBRATION_TEMPLATE,
+  chatboxCalibrationSchema,
+  type ChatboxCalibrationOutput,
+  CHATBOX_POSITIONING_TEMPLATE,
+  chatboxPositioningSchema,
+  type ChatboxPositioningOutput,
+  CHATBOX_REVIEW_TEMPLATE,
+  chatboxReviewSchema,
+  type ChatboxReviewOutput,
+} from "./prompt/templates/chatbox-surfaces";

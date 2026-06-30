@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   resolveSkillForSurface,
+  applyFunctionKey,
   assembleChatSystem,
   DEFAULT_CHAT_SKILL,
 } from "./chat-context";
@@ -9,14 +10,46 @@ import {
 // 这层是 ChatBox 的心脏:页面层 surface → 基础 skill;数据层 facets → system。
 
 describe("resolveSkillForSurface — 页面层(surface → 基础 skill)", () => {
-  it("topics → chatbox.topic(选题编导)", () => {
+  it("各工作台 surface 选对应对话编导 skill(slice 2 补齐四面)", () => {
     expect(resolveSkillForSurface("topics")).toBe("chatbox.topic");
+    expect(resolveSkillForSurface("calibration")).toBe("chatbox.calibration");
+    expect(resolveSkillForSurface("positioning")).toBe("chatbox.positioning");
+    expect(resolveSkillForSurface("review")).toBe("chatbox.review");
+    // project 先复用选题编导(深化留后续)。
+    expect(resolveSkillForSurface("project")).toBe("chatbox.topic");
   });
 
   it("未知 surface 回落到默认 ChatBox skill(路由不崩)", () => {
-    expect(resolveSkillForSurface("calibration")).toBe(DEFAULT_CHAT_SKILL);
     expect(resolveSkillForSurface("")).toBe(DEFAULT_CHAT_SKILL);
     expect(resolveSkillForSurface("nope")).toBe(DEFAULT_CHAT_SKILL);
+  });
+});
+
+describe("applyFunctionKey — 按钮层(functionKey 叠加 → 专用工具置顶)", () => {
+  const base = ["topic.generate", "topic.enrich"] as const;
+
+  it("functionKey 命中白名单 → 该工具置顶,其余保序", () => {
+    expect(applyFunctionKey(base, "topic.enrich")).toEqual([
+      "topic.enrich",
+      "topic.generate",
+    ]);
+  });
+
+  it("functionKey 已在首位 → 顺序不变(去重不重复)", () => {
+    expect(applyFunctionKey(base, "topic.generate")).toEqual([
+      "topic.generate",
+      "topic.enrich",
+    ]);
+  });
+
+  it("functionKey 为空 → 原样返回", () => {
+    expect(applyFunctionKey(base, undefined)).toEqual(base);
+    expect(applyFunctionKey(base, "")).toEqual(base);
+  });
+
+  it("functionKey 不在白名单(越权)→ 原样返回,不臆造工具", () => {
+    // 校准工具不在选题编导白名单里 → 不挂(防越权)。
+    expect(applyFunctionKey(base, "calibration.diagnose")).toEqual(base);
   });
 });
 

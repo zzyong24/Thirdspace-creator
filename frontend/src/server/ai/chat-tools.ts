@@ -49,6 +49,36 @@ export interface ChatToolDeps {
     materialScore: number | null;
     productionDifficulty: "low" | "mid" | "high" | null;
   } | null>;
+  /**
+   * calibration.diagnose 核心 —— 对一条对话里描述的发布前内容(title + 可选 script)按变现加权
+   * 评分标准逐维度盲评,产**诊断候选**(非实体)。复用 calibration.diagnose 模板 + parseDiagnosis。
+   * 对话里没有绑定的 rubric reader 时,按通用维度评(诚实降级);一键岛带 subject 时用其标题。
+   */
+  diagnoseContent: (input: { title: string; script?: string }) => Promise<{
+    dimensions: Array<{
+      key: string;
+      score: number;
+      reason: string;
+      suggestion: string;
+    }>;
+    verdict: string;
+    mainIssues: string[];
+    priorityFixes: string[];
+  } | null>;
+  /** review.analyze 核心 —— 从一条内容提炼可复用爆款要素候选(复用 review 模板 + parseLearnings)。 */
+  analyzeReview: (input: { subject?: string }) => Promise<
+    Array<{ title: string; insight: string }>
+  >;
+  /** positioning.generate 核心 —— 结合定位 + 账号画像产一份结构化定位提案候选(复用 positioning prompt + parseSuggestion)。 */
+  generatePositioning: () => Promise<{
+    persona: string;
+    field: string;
+    audience: string;
+    differentiation: string;
+    capabilities: string[];
+    oneLiner: string;
+    keywords: string[];
+  } | null>;
 }
 
 // ── 工具结果形状(候选,非实体)──────────────────────────────────────────────────────
@@ -71,6 +101,24 @@ export interface TopicGenerateToolResult {
 export interface TopicEnrichToolResult {
   kind: "topic.card";
   card: Awaited<ReturnType<ChatToolDeps["enrichTopic"]>>;
+}
+
+// calibration.diagnose 工具结果 —— 维度评分诊断候选(渲成维度评分卡)。
+export interface CalibrationDiagnoseToolResult {
+  kind: "calibration.diagnosis";
+  diagnosis: Awaited<ReturnType<ChatToolDeps["diagnoseContent"]>>;
+}
+
+// review.analyze 工具结果 —— 可复用经验候选(渲成经验卡,逐条采纳沉淀)。
+export interface ReviewAnalyzeToolResult {
+  kind: "review.learnings";
+  items: Array<{ title: string; insight: string }>;
+}
+
+// positioning.generate 工具结果 —— 一份定位提案候选(渲成定位卡)。
+export interface PositioningGenerateToolResult {
+  kind: "positioning.suggestion";
+  suggestion: Awaited<ReturnType<ChatToolDeps["generatePositioning"]>>;
 }
 
 // ── 工具入参 JSON Schema(可序列化契约)─────────────────────────────────────────────
@@ -99,6 +147,40 @@ const TOPIC_ENRICH_PARAMS = jsonSchema<{ title: string; angle?: string }>({
   additionalProperties: false,
 });
 
+const CALIBRATION_DIAGNOSE_PARAMS = jsonSchema<{
+  title: string;
+  script?: string;
+}>({
+  type: "object",
+  properties: {
+    title: { type: "string", description: "待诊断内容的标题(必填)。" },
+    script: {
+      type: "string",
+      description: "内容文稿/脚本(可选;没有就让 AI 基于标题与定位尽力诊断)。",
+    },
+  },
+  required: ["title"],
+  additionalProperties: false,
+});
+
+const REVIEW_ANALYZE_PARAMS = jsonSchema<{ subject?: string }>({
+  type: "object",
+  properties: {
+    subject: {
+      type: "string",
+      description: "本次复盘对象(可选;没有就按账号整体表现提炼经验)。",
+    },
+  },
+  additionalProperties: false,
+});
+
+// positioning.generate 不需入参(全部从用户上下文/账号画像派生,与 runner 同)。
+const POSITIONING_GENERATE_PARAMS = jsonSchema<Record<string, never>>({
+  type: "object",
+  properties: {},
+  additionalProperties: false,
+});
+
 /**
  * 工具实现表(全部首波工具)。每个 execute 复用注入的 runner 核心产**候选**(非实体)。
  * 路由用 buildChatTools(skillTools, deps) 按 skill 白名单过滤后挂给 streamText。
@@ -123,6 +205,36 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       execute: async ({ title, angle }): Promise<TopicEnrichToolResult> => {
         const card = await deps.enrichTopic({ title, angle: angle ?? "" });
         return { kind: "topic.card", card };
+      },
+    }),
+    "calibration.diagnose": tool({
+      description:
+        "对一条发布前内容(给标题,可附文稿)按创作者的变现加权评分标准逐维度盲评,估发布前表现并给综合判断/主要问题/优先修改。结果是诊断候选,需人采纳后才落预测——不直接写库。",
+      inputSchema: CALIBRATION_DIAGNOSE_PARAMS,
+      execute: async ({
+        title,
+        script,
+      }): Promise<CalibrationDiagnoseToolResult> => {
+        const diagnosis = await deps.diagnoseContent({ title, script });
+        return { kind: "calibration.diagnosis", diagnosis };
+      },
+    }),
+    "review.analyze": tool({
+      description:
+        "从一条内容(或账号整体表现)提炼 3-6 条可复用、可迁移的爆款要素/方法论。结果是经验候选,需人逐条采纳后才沉淀经验——不直接写库。",
+      inputSchema: REVIEW_ANALYZE_PARAMS,
+      execute: async ({ subject }): Promise<ReviewAnalyzeToolResult> => {
+        const items = await deps.analyzeReview({ subject });
+        return { kind: "review.learnings", items };
+      },
+    }),
+    "positioning.generate": tool({
+      description:
+        "结合创作者当前定位 + 抖音账号画像,生成/进化一份结构化定位提案(人设/领域/人群/差异化/能力/一句话定位/关键词)。结果是定位候选,需人采纳后才写入定位母版——不直接写库。",
+      inputSchema: POSITIONING_GENERATE_PARAMS,
+      execute: async (): Promise<PositioningGenerateToolResult> => {
+        const suggestion = await deps.generatePositioning();
+        return { kind: "positioning.suggestion", suggestion };
       },
     }),
   };

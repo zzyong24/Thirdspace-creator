@@ -11,6 +11,9 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   deps: ChatToolDeps;
   generateTopics: ReturnType<typeof vi.fn>;
   enrichTopic: ReturnType<typeof vi.fn>;
+  diagnoseContent: ReturnType<typeof vi.fn>;
+  analyzeReview: ReturnType<typeof vi.fn>;
+  generatePositioning: ReturnType<typeof vi.fn>;
 } {
   const generateTopics = vi.fn(async () => [
     {
@@ -36,8 +39,40 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     materialScore: 60,
     productionDifficulty: "mid" as const,
   }));
-  const deps: ChatToolDeps = { generateTopics, enrichTopic, ...over };
-  return { deps, generateTopics, enrichTopic };
+  const diagnoseContent = vi.fn(async () => ({
+    dimensions: [{ key: "hook", score: 4, reason: "强", suggestion: "保持" }],
+    verdict: "可发",
+    mainIssues: ["结尾弱"],
+    priorityFixes: ["加 CTA"],
+  }));
+  const analyzeReview = vi.fn(async () => [
+    { title: "前3秒给结果", insight: "完播更高" },
+  ]);
+  const generatePositioning = vi.fn(async () => ({
+    persona: "硬核工程师",
+    field: "AI 工程",
+    audience: "一线开发者",
+    differentiation: "可运行代码",
+    capabilities: ["论文拆解"],
+    oneLiner: "把论文落成代码",
+    keywords: ["代码", "论文", "落地"],
+  }));
+  const deps: ChatToolDeps = {
+    generateTopics,
+    enrichTopic,
+    diagnoseContent,
+    analyzeReview,
+    generatePositioning,
+    ...over,
+  };
+  return {
+    deps,
+    generateTopics,
+    enrichTopic,
+    diagnoseContent,
+    analyzeReview,
+    generatePositioning,
+  };
 }
 
 // chatbox.topic 的真实白名单(与 ai-worker registry 一致)。
@@ -70,10 +105,31 @@ describe("buildChatTools — 白名单过滤(tools 挂载)", () => {
     expect(tools["topic.enrich"]).toBeUndefined();
   });
 
-  it("白名单里但本切片未实现的工具(后续波)被跳过,不报错、不挂空壳", () => {
+  it("首波 5 工具全部可挂(slice 2 补齐 calibration.diagnose / review.analyze / positioning.generate)", () => {
     const { deps } = makeDeps();
     const tools = buildChatTools(
-      ["topic.generate", "calibration.diagnose", "review.analyze"],
+      [
+        "topic.generate",
+        "topic.enrich",
+        "calibration.diagnose",
+        "review.analyze",
+        "positioning.generate",
+      ],
+      deps,
+    );
+    expect(Object.keys(tools).sort()).toEqual([
+      "calibration.diagnose",
+      "positioning.generate",
+      "review.analyze",
+      "topic.enrich",
+      "topic.generate",
+    ]);
+  });
+
+  it("白名单里但仍未实现的工具(二/三波)被跳过,不报错、不挂空壳", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(
+      ["topic.generate", "script.draft", "material.match"],
       deps,
     );
     expect(Object.keys(tools)).toEqual(["topic.generate"]);
@@ -131,5 +187,52 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     })) as { kind: string; card: unknown };
     expect(result.kind).toBe("topic.card");
     expect(result.card).toBeNull();
+  });
+
+  it("calibration.diagnose.execute 调注入的 diagnoseContent,返回诊断候选(kind=calibration.diagnosis)", async () => {
+    const { deps, diagnoseContent } = makeDeps();
+    const tools = buildChatTools(["calibration.diagnose"], deps);
+    const result = (await runExecute(tools["calibration.diagnose"], {
+      title: "标题 X",
+      script: "脚本 Y",
+    })) as { kind: string; diagnosis: { dimensions: unknown[] } | null };
+    expect(diagnoseContent).toHaveBeenCalledWith({
+      title: "标题 X",
+      script: "脚本 Y",
+    });
+    expect(result.kind).toBe("calibration.diagnosis");
+    expect(result.diagnosis?.dimensions).toHaveLength(1);
+  });
+
+  it("calibration.diagnose 返回 null(没产可解析诊断)→ diagnosis 为 null(诚实)", async () => {
+    const { deps } = makeDeps({ diagnoseContent: vi.fn(async () => null) });
+    const tools = buildChatTools(["calibration.diagnose"], deps);
+    const result = (await runExecute(tools["calibration.diagnose"], {
+      title: "X",
+    })) as { diagnosis: unknown };
+    expect(result.diagnosis).toBeNull();
+  });
+
+  it("review.analyze.execute 调注入的 analyzeReview,返回经验候选(kind=review.learnings)", async () => {
+    const { deps, analyzeReview } = makeDeps();
+    const tools = buildChatTools(["review.analyze"], deps);
+    const result = (await runExecute(tools["review.analyze"], {
+      subject: "我的某条视频",
+    })) as { kind: string; items: unknown[] };
+    expect(analyzeReview).toHaveBeenCalledWith({ subject: "我的某条视频" });
+    expect(result.kind).toBe("review.learnings");
+    expect(result.items).toHaveLength(1);
+  });
+
+  it("positioning.generate.execute 调注入的 generatePositioning,返回定位候选(kind=positioning.suggestion)", async () => {
+    const { deps, generatePositioning } = makeDeps();
+    const tools = buildChatTools(["positioning.generate"], deps);
+    const result = (await runExecute(tools["positioning.generate"], {})) as {
+      kind: string;
+      suggestion: { oneLiner: string } | null;
+    };
+    expect(generatePositioning).toHaveBeenCalled();
+    expect(result.kind).toBe("positioning.suggestion");
+    expect(result.suggestion?.oneLiner).toBe("把论文落成代码");
   });
 });

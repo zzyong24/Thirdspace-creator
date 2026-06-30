@@ -7,8 +7,11 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
+import { MessagesSquare } from "lucide-react";
 
 import { AdoptCandidateCard } from "@/components/ai/adopt-candidate-card";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 
 interface LearningItem {
   title: string;
@@ -46,17 +49,28 @@ export function ReviewAnalyzeIsland({
   topic?: string;
 }) {
   return (
-    <AdoptCandidateCard<LearningItem>
-      title="AI 复盘"
-      description="提炼可复用的爆款要素 → 沉淀经验,回喂下一轮选题"
-      startLabel="帮我复盘"
-      runningLabel="复盘 agent 正在提炼爆款要素…"
-      taskType="review.analyze"
-      inputData={{ projectId, topic: topic ?? "" }}
-      parseItems={parseLearnings}
-      renderItem={renderLearning}
-      adoptLabel={(n) => `采纳全部（${n}）入经验沉淀`}
-      doneLabel={(n) => `已沉淀 ${n} 条经验（将回喂选题）。`}
-    />
+    <div className="flex flex-col gap-2">
+      <AdoptCandidateCard<LearningItem>
+        title="AI 复盘"
+        description="提炼可复用的爆款要素 → 沉淀经验,回喂下一轮选题"
+        startLabel="帮我复盘"
+        runningLabel="复盘 agent 正在提炼爆款要素…"
+        taskType="review.analyze"
+        inputData={{ projectId, topic: topic ?? "" }}
+        parseItems={parseLearnings}
+        renderItem={renderLearning}
+        adoptLabel={(n) => `采纳全部（${n}）入经验沉淀`}
+        doneLabel={(n) => `已沉淀 ${n} 条经验（将回喂选题）。`}
+      />
+      {/* 一键岛预调(SPEC §3.4):打开 ChatBox 进复盘编导,预调 review.analyze(边聊边提炼经验)。 */}
+      <Link
+        href={copilotDeepLink("review", "review.analyze")}
+        data-testid="review-open-copilot"
+        className="inline-flex h-8 w-fit items-center gap-1.5 rounded-control border border-brand/30 bg-surface px-3 text-xs font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft/60"
+      >
+        <MessagesSquare className="size-4" />
+        在对话里复盘
+      </Link>
+    </div>
   );
 }

@@ -19,8 +19,11 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
+import { MessagesSquare } from "lucide-react";
 
 import { AdoptCandidateCard } from "@/components/ai/adopt-candidate-card";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 
 /** Mirrors the runner's `PositioningSuggestion` (positioning-runner.ts). */
 interface PositioningSuggestion {
@@ -102,17 +105,28 @@ function renderSuggestion(s: PositioningSuggestion) {
 
 export function GeneratePositioningIsland() {
   return (
-    <AdoptCandidateCard<PositioningSuggestion>
-      title="AI 帮你定位"
-      description="让 agent 读你的账号上下文与历史内容,生成一套结构化定位建议。采纳后写入当前定位母版,并追加一条 AI 版本。"
-      startLabel="AI 生成定位建议"
-      runningLabel="agent 正在分析你的账号与内容,生成定位建议（可能要一两分钟）…"
-      taskType="positioning.generate"
-      inputData={{}}
-      parseItems={parseSuggestion}
-      renderItem={renderSuggestion}
-      adoptLabel={() => "采纳为当前定位"}
-      doneLabel={() => "已采纳为当前定位,并追加了一条 AI 版本。"}
-    />
+    <div className="flex flex-col gap-2">
+      <AdoptCandidateCard<PositioningSuggestion>
+        title="AI 帮你定位"
+        description="让 agent 读你的账号上下文与历史内容,生成一套结构化定位建议。采纳后写入当前定位母版,并追加一条 AI 版本。"
+        startLabel="AI 生成定位建议"
+        runningLabel="agent 正在分析你的账号与内容,生成定位建议（可能要一两分钟）…"
+        taskType="positioning.generate"
+        inputData={{}}
+        parseItems={parseSuggestion}
+        renderItem={renderSuggestion}
+        adoptLabel={() => "采纳为当前定位"}
+        doneLabel={() => "已采纳为当前定位,并追加了一条 AI 版本。"}
+      />
+      {/* 一键岛预调(SPEC §3.4):打开 ChatBox 进定位编导,预调 positioning.generate(边聊边打磨)。 */}
+      <Link
+        href={copilotDeepLink("positioning", "positioning.generate")}
+        data-testid="positioning-open-copilot"
+        className="inline-flex h-8 w-fit items-center gap-1.5 rounded-control border border-brand/30 bg-surface px-3 text-xs font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft/60"
+      >
+        <MessagesSquare className="size-4" />
+        在对话里聊定位
+      </Link>
+    </div>
   );
 }

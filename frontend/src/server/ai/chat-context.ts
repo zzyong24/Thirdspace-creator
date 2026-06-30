@@ -28,20 +28,45 @@ export interface ChatContext {
 }
 
 /**
- * 页面层 surface → 基础 skill id(SPEC §3.2 第 1 层)。本切片只接 `topics` → `chatbox.topic`
- * (选题编导)。其它 surface(calibration/positioning/review/project…)是后续切片的活 —— 未命中
- * 时回落到 `chatbox.topic`(选题编导是当前唯一落地的 ChatBox skill),保证路由不因未知 surface 崩。
+ * 页面层 surface → 基础 skill id(SPEC §3.2 第 1 层)。slice 2 补齐四个工作台 surface:
+ * 选题/校准/定位/复盘 各对应自己的对话编导 skill(三位一体范式,见 ai-worker registry)。
+ * `project`(项目内总控)本切片先回落到选题编导(深化是后续切片);未命中的 surface 同样回落,
+ * 保证路由不因未知 surface 崩。
  */
 const SURFACE_SKILL: Record<string, string> = {
   topics: "chatbox.topic",
+  calibration: "chatbox.calibration",
+  positioning: "chatbox.positioning",
+  review: "chatbox.review",
+  // project surface 先复用选题编导(项目内多为推进选题/脚本);深化留后续切片。
+  project: "chatbox.topic",
 };
 
-/** 当前唯一落地的 ChatBox 基础 skill —— 未知 surface 的回落。 */
+/** 默认 ChatBox 基础 skill —— 未知 surface 的回落(选题编导是最通用的一面)。 */
 export const DEFAULT_CHAT_SKILL = "chatbox.topic";
 
 /** 解析页面层 surface 到基础 skill id(纯函数,SPEC §3.2 第 1 层)。 */
 export function resolveSkillForSurface(surface: string): string {
   return SURFACE_SKILL[surface] ?? DEFAULT_CHAT_SKILL;
+}
+
+/**
+ * 按钮层 functionKey 叠加(SPEC §3.2 第 2 层)—— 一键岛点「出题/诊断/分析」等按钮打开 ChatBox 时,
+ * 把该按钮对应的专用工具**置顶**到基础 skill 的工具白名单最前,让模型本轮优先调它(预调)。
+ *
+ * 设计取舍:不是另换一套 skill,而是在基础 skill 的白名单上做**重排序**(把 functionKey 命中的
+ * 工具提到第 0 位)。这样既尊重 surface 选的基础 skill(system/输出契约不变),又让按钮语义生效。
+ * - functionKey 为空 / 不在该 skill 白名单内(越权)→ 原样返回(不臆造工具,防越权,与铁律一致)。
+ * - functionKey 已在白名单里 → 去重后置顶,其余保序。纯函数,可单测。
+ */
+export function applyFunctionKey(
+  baseWhitelist: readonly string[],
+  functionKey: string | undefined,
+): readonly string[] {
+  if (!functionKey || !baseWhitelist.includes(functionKey)) {
+    return baseWhitelist;
+  }
+  return [functionKey, ...baseWhitelist.filter((t) => t !== functionKey)];
 }
 
 /**
