@@ -279,6 +279,34 @@ describe("calibration service", () => {
     expect(assertRunExists).not.toHaveBeenCalled(); // 手动路径不校验显式 run
   });
 
+  it("recordResult 维度评分:偏差从 predictedConversion.dimensions[] 取预测分(实际−预测)", async () => {
+    const ctx = ctxFor("user-a");
+    const rubric = await service.createRubric(ctx, {
+      name: "r",
+      dimensions: DIMENSIONS,
+    });
+    const pred = await service.createPrediction(ctx, {
+      subjectType: "content_output",
+      subjectId: "o",
+      rubricVersionId: rubric.currentVersion.id,
+      predictedMetrics: {},
+      predictedConversion: {
+        dimensions: [
+          { key: "hook", score: 4 },
+          { key: "pacing", score: 3 },
+        ],
+      },
+      confidence: "high",
+    });
+    await service.lockPrediction(ctx, pred.id);
+    const result = await service.recordResult(ctx, pred.id, {
+      ingestionRunId: "run-1",
+      actualMetrics: { hook: 3, pacing: 5 },
+    });
+    // 摊平前会是 3-0/5-0(错);摊平后 hook=3-4=-1, pacing=5-3=2(对)。
+    expect(result.deviation).toMatchObject({ hook: -1, pacing: 2 });
+  });
+
   // --- 复盘飞轮回流 轨B (Learning→校准) CalibrationRuleSuggestion ---
 
   it("createRuleSuggestion is ownership-gated on the rubric + idempotent on pending", async () => {

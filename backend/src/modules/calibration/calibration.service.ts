@@ -333,6 +333,19 @@ function computeDeviation(
     ...predictedMetrics,
     ...predictedConversion,
   };
+  // 维度评分约定(预测分真正落在 predictedConversion.dimensions[] = [{key, score}]):
+  // 摊平成 {key: score} 当 predicted,否则维度 key 在顶层取不到 → 偏差恒等于"实际分-0"(错)。
+  // 旧扁平 metric(predictedMetrics={views:1000})无 dimensions 数组,行为不变(向后兼容)。
+  const dims = (predictedConversion as {
+    dimensions?: Array<{ key?: unknown; score?: unknown }>;
+  }).dimensions;
+  if (Array.isArray(dims)) {
+    for (const d of dims) {
+      if (d && typeof d.key === "string" && typeof d.score === "number") {
+        predicted[d.key] = d.score;
+      }
+    }
+  }
   const keys = new Set([
     ...Object.keys(predicted),
     ...Object.keys(actualMetrics),
