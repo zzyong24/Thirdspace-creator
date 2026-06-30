@@ -22,6 +22,13 @@ export interface ScriptDataClient {
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
+  // SEAM-02:脚本"大纲"区读策划的结构方案 —— 列项目 artifacts 找 content_outline。
+  // Optional so existing callers / tests that omit it degrade to the script-derived outline.
+  listArtifacts?(input: {
+    params: { projectId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
 }
 
 // Read the 分镜脚本 artifact's CURRENT version content and shape it into the editor's
@@ -223,6 +230,71 @@ export async function loadScriptEditorData(
       .map((s) => ({ id: `script-quote-${s.id}`, text: s.body.trim() }));
 
     return { sections, versions, outline, goldenQuotes };
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// SEAM-02 — 脚本"大纲"区读策划的结构方案 (content_outline artifact)
+// ---------------------------------------------------------------------------
+
+interface OutlineArtifactDto {
+  readonly id: string;
+  readonly artifactType: string;
+}
+
+/**
+ * SEAM-02: read the project's 策划 结构方案 (`content_outline` artifact's CURRENT version
+ * `contentData.sections`) → the Script editor's 大纲 rows. This makes the script page's 大纲
+ * come from 策划's structure plan (the upstream blueprint) rather than being re-derived from
+ * the script's own section headings. Returns:
+ *   - the outline rows (one per 结构方案 段落, label = the beat) when an adopted outline exists,
+ *   - null when there is no project id, no content_outline artifact, no current version, no
+ *     sections, or any read/parse failure → the caller keeps the script-derived outline.
+ *
+ * Degrades gracefully (any failure → null); never crashes the page.
+ */
+export async function loadPlanningOutline(
+  projectId: string | null,
+  client: ScriptDataClient = defaultClient as unknown as ScriptDataClient,
+): Promise<ScriptViewModel["outline"] | null> {
+  if (!projectId || !client.listArtifacts) return null;
+  try {
+    const listed = await client.listArtifacts({
+      params: { projectId },
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    });
+    const artifacts = (Array.isArray(listed) ? listed : []) as OutlineArtifactDto[];
+    const outlineArtifact = artifacts.find(
+      (a) => a.artifactType === "content_outline",
+    );
+    if (!outlineArtifact) return null;
+    const fetched = await fetchVersionsAndCurrent(client, outlineArtifact.id);
+    if (!fetched) return null;
+    const data = fetched.current.contentData as
+      | { sections?: unknown }
+      | undefined;
+    const rawSections = Array.isArray(data?.sections) ? data.sections : [];
+    const rows = rawSections
+      .map((raw, index) => {
+        const o = (raw ?? {}) as Record<string, unknown>;
+        const label = typeof o.label === "string" ? o.label.trim() : "";
+        const intent = typeof o.intent === "string" ? o.intent.trim() : "";
+        const heading = label || intent;
+        if (!heading) return null;
+        return {
+          id: `planning-outline-${outlineArtifact.id}-${index}`,
+          heading,
+          position: index,
+        };
+      })
+      .filter(
+        (r): r is { id: string; heading: string; position: number } =>
+          r !== null,
+      );
+    return rows.length > 0 ? rows : null;
   } catch {
     return null;
   }

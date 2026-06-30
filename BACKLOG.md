@@ -19,7 +19,7 @@
 | T-006 | research.gather_material 迁 Vercel | ✅ | [同上 §6](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 去最后一个 Claude Agent SDK 依赖 + 门卫断言 |
 | T-007 | 任务调度系统 + 调度页面 | 📋 | [data-source-pipeline-design](docs/superpowers/specs/2026-06-30-data-source-pipeline-design.md) | 定时采集 prompt+scheduler → 唤醒 Agent → CDP 采集(**曾被丢的需求**) |
 | T-008 | 横竖屏:平台退回发布层 | ✅ | [project-lifecycle-0to1-spec](docs/superpowers/specs/2026-06-30-project-lifecycle-0to1-spec.md) | `6db68d8` SKL-08 立项不强制平台 + SKL-09 关系表为唯一真值(patch 同步,jsonb 降级镜像)+ §8 发布层手动加平台/标签真增删。契约88+后端85+前端461绿。done |
-| T-009 | SEAM-01/02 策划→脚本上下文 | 📋 | [project-lifecycle-0to1-spec](docs/superpowers/specs/2026-06-30-project-lifecycle-0to1-spec.md) | 阶段交接缝(原 #186) |
+| T-009 | SEAM-01/02/04 策划→脚本上下文 + 章节溯源 | ✅ | [project-lifecycle-0to1-spec](docs/superpowers/specs/2026-06-30-project-lifecycle-0to1-spec.md) | 阶段交接缝(原 #186)。SEAM-01 策划产物(论点树+合同+结构方案)经 OutlineReader/Thesis/Contract 端口注入 script.draft 上下文(模板 v2);SEAM-02 脚本"大纲"区 loadPlanningOutline 读 content_outline;SEAM-04 production_segments.script_section_id 真填(契约+服务+仓库透传,前端按位置对应脚本段)。后端766+契约88+前端528绿。SEAM-03/05 未动。done |
 | T-010 | 误导文案 / 桩字段清扫 | 📋 | [product-workflow-and-triage](docs/superpowers/specs/2026-06-30-product-workflow-and-triage.md) | 含项目概览硬编码"AI Native Browser"假副标题(原 #187) |
 | T-011 | CollabField 候选逐字内联编辑(COLLAB-01) | 📋 | [同 ChatBox §human-in-loop](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 采纳前可改字段(逐条删已完成) |
 

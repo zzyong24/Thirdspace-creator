@@ -43,6 +43,29 @@ describe("runScriptNode", () => {
     expect(steps).toContain(1);
   });
 
+  it("SEAM-01:策划产物(论点树/合同/结构方案)注入 prompt", async () => {
+    let seenPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        // 抓最后一条 user message 的文本,断言策划产物确实进了 prompt。
+        const msgs = (opts as { prompt?: unknown }).prompt;
+        seenPrompt = JSON.stringify(msgs ?? "");
+        return finalText(SHOTS_JSON);
+      },
+    });
+    await runScriptNode({
+      model,
+      positioningBrief: "AI 工程科普,面向开发者",
+      thesisBrief: "【核心论点】KV cache 可压到 1/10",
+      contractBrief: "· 受众定位：后端工程师",
+      outlineBrief: "结构类型：问题-解决\n段落安排：\n  1. 钩子：反差",
+    });
+    expect(seenPrompt).toContain("KV cache 可压到 1/10");
+    expect(seenPrompt).toContain("后端工程师");
+    expect(seenPrompt).toContain("问题-解决");
+    expect(seenPrompt).toContain("策划结构方案");
+  });
+
   it("无可解析分镜 → 抛错(不假成功)", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: async () => finalText("抱歉,我无法完成。"),

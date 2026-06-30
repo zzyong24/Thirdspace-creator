@@ -44,6 +44,12 @@ export interface CreativeContext {
   // must honor. Empty string until the contract reader is wired or when the project has no
   // adopted content contract yet.
   contractBrief: string;
+  // 结构方案 brief — a compact rendering of the project's ADOPTED 结构方案 (结构类型/开头策略/
+  // 段落安排/结尾/CTA), read back from the `content_outline` artifact's current version
+  // `contentData`. The 脚本 stage's script.draft node reads it (SEAM-01) as the blueprint the
+  // storyboard fleshes out, so the script follows 策划's structure rather than re-inventing it.
+  // Empty string until the outline reader is wired or when the project has no adopted outline.
+  outlineBrief: string;
   // 画幅取向 hint — 项目立项 Brief 选的 横屏 / 竖屏(中文 label),喂给 script.draft 让 AI 据此
   // 调钩子与时长(竖屏更短更狠、横屏可铺陈)。空串表示创作者还没选画幅。
   orientationHint: string;
@@ -159,6 +165,24 @@ export interface ContractReader {
   ): Promise<Array<{ title: string; body: string }>>;
 }
 
+// 结构方案 reader (SEAM-01) — the project's ADOPTED 结构方案, read back from the
+// `content_outline` artifact's current ArtifactVersion `contentData`
+// ({ structureType, opening, sections:[{label,intent}], ending, cta }). Optional: only the
+// 脚本 node (script.draft) passes it so the storyboard fleshes out 策划's structure instead of
+// re-inventing one. The composition root binds it to the Artifacts public service.
+export interface OutlineReader {
+  getOutline(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<{
+    structureType: string;
+    opening: string;
+    sections: Array<{ label: string; intent: string }>;
+    ending: string;
+    cta: string;
+  } | null>;
+}
+
 // 立项 Brief reader — reads the project's structured Brief so downstream nodes can ground
 // on the creator's立项 decisions. Today only `orientation`(横/竖屏)is consumed; optional
 // so nodes without a project (或未装配)just skip it. Bound to the projects public service.
@@ -178,6 +202,7 @@ export interface ContextDeps {
   knowledge?: KnowledgeReader;
   thesis?: ThesisReader;
   contract?: ContractReader;
+  outline?: OutlineReader;
   brief?: ProjectBriefReader;
 }
 
@@ -291,6 +316,18 @@ export async function assembleCreativeContext(
     }
   }
 
+  // 结构方案(SEAM-01)—— best-effort,从项目 `content_outline` artifact 当前版本读回;
+  // 渲成紧凑文本供 script.draft 当蓝图(脚本据此铺分镜,不再自己重造结构)。
+  let outlineBrief = "";
+  if (deps.outline && input.projectId) {
+    try {
+      const outline = await deps.outline.getOutline(ctx, input.projectId);
+      outlineBrief = outline ? formatOutline(outline) : "";
+    } catch {
+      outlineBrief = ""; // 结构方案 is best-effort context; never block a node on it
+    }
+  }
+
   // 画幅取向(横/竖屏)—— best-effort,从项目立项 Brief 读;映射中文 label 供 script.draft 用。
   let orientationHint = "";
   if (deps.brief && input.projectId) {
@@ -312,10 +349,37 @@ export async function assembleCreativeContext(
     knowledgeBrief,
     thesisBrief,
     contractBrief,
+    outlineBrief,
     orientationHint,
     topic: { title: input.topic, angle: input.angle ?? "" },
     projectId: input.projectId,
   };
+}
+
+// Render the adopted 结构方案 into a compact brief script.draft reasons against (SEAM-01).
+// Mirrors planning-outline-runner's renderBody but flattened for prompt injection.
+function formatOutline(outline: {
+  structureType: string;
+  opening: string;
+  sections: Array<{ label: string; intent: string }>;
+  ending: string;
+  cta: string;
+}): string {
+  const lines: string[] = [];
+  if (outline.structureType) lines.push(`结构类型：${outline.structureType}`);
+  if (outline.opening) lines.push(`开头策略：${outline.opening}`);
+  if (outline.sections.length > 0) {
+    lines.push("段落安排：");
+    outline.sections.forEach((s, i) => {
+      const label = s.label.trim();
+      const intent = s.intent.trim();
+      if (!label && !intent) return;
+      lines.push(`  ${i + 1}. ${label}${label && intent ? "：" : ""}${intent}`);
+    });
+  }
+  if (outline.ending) lines.push(`结尾：${outline.ending}`);
+  if (outline.cta) lines.push(`行动召唤：${outline.cta}`);
+  return lines.join("\n");
 }
 
 // Render the adopted thesis nodes into a compact brief the downstream 策划 nodes reason

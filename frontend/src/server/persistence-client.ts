@@ -1620,6 +1620,48 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               .filter((c2) => c2.title || c2.body);
           },
         };
+        // 结构方案 reader (SEAM-01, script.draft) — read the project's `content_outline`
+        // artifact's current version `contentData` ({structureType, opening, sections,
+        // ending, cta}) back as the blueprint the script.draft node fleshes out. Same
+        // public-service read path as thesis/contract (no cross-module repo import).
+        const outlineReader = {
+          getOutline: async (c: RequestContext, projectId: string) => {
+            const data = await readArtifactContentData(
+              c,
+              projectId,
+              "content_outline",
+            );
+            if (!data) return null;
+            const rawSections = Array.isArray(data.sections)
+              ? data.sections
+              : [];
+            const sections = rawSections
+              .map((raw) => {
+                const o = (raw ?? {}) as Record<string, unknown>;
+                return {
+                  label: typeof o.label === "string" ? o.label : "",
+                  intent: typeof o.intent === "string" ? o.intent : "",
+                };
+              })
+              .filter((s) => s.label || s.intent);
+            const structureType =
+              typeof data.structureType === "string" ? data.structureType : "";
+            const opening = typeof data.opening === "string" ? data.opening : "";
+            const ending = typeof data.ending === "string" ? data.ending : "";
+            const cta = typeof data.cta === "string" ? data.cta : "";
+            // No adopted outline content at all → null (script.draft degrades to no blueprint).
+            if (
+              sections.length === 0 &&
+              !structureType &&
+              !opening &&
+              !ending &&
+              !cta
+            ) {
+              return null;
+            }
+            return { structureType, opening, sections, ending, cta };
+          },
+        };
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
@@ -1972,6 +2014,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              // SEAM-01:策划→脚本上下文 —— 把本项目策划产物(论点树/内容合同/结构方案)经
+              // reader 端口注入写文案上下文,和 positioning+learnings 并列。脚本据此铺策划的
+              // 结构与论点,不再自己重造蓝图。各 reader 读对应 artifact 当前版本(无则降级空)。
+              thesis: thesisReader,
+              contract: contractReader,
+              outline: outlineReader,
               // 立项画幅(横/竖屏)→ script.draft 据此调钩子与时长(SKL-01/02 下游赋能)。
               brief: {
                 getBriefDetail: async (c, projectId) => {

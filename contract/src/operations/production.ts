@@ -49,6 +49,9 @@ export const productionOperations = {
       position: z.number().int(),
       startMs: z.number().int(),
       endMs: z.number().int(),
+      // SEAM-04:拍摄章节溯源到脚本段。调用方按位置对应(第 N 章 ↔ 脚本第 N 段)填脚本段 id;
+      // 无对应来源时省略 → 落 null(诚实空,不编造溯源)。
+      scriptSectionId: id.optional(),
     }),
     response: productionSegmentResource,
     fr: ["FR-PRODUCTION-SEGMENT-CREATE"],

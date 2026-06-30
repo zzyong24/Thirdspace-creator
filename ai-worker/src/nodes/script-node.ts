@@ -26,6 +26,12 @@ export interface RunScriptNodeInput {
   topicAngle?: string;
   /** 横屏/竖屏(SKL-02,选填):喂 AI 调 hook 与时长。 */
   orientation?: string;
+  /** 策划论点树 brief(SEAM-01,选填):脚本据此把核心/支撑/证据写进口播。 */
+  thesisBrief?: string;
+  /** 内容合同 brief(SEAM-01,选填):脚本须遵守受众定位/价值主张/节奏/CTA。 */
+  contractBrief?: string;
+  /** 策划结构方案 brief(SEAM-01,选填):脚本按结构方案段落顺序铺分镜,不另起结构。 */
+  outlineBrief?: string;
   /** 步骤回调 —— 喂窗口步骤日志。 */
   onStep?: (event: AgentStepEvent) => void | Promise<void>;
 }
@@ -81,6 +87,16 @@ export async function runScriptNode(
       : "",
     orientation: input.orientation
       ? `\n【形式】${input.orientation}（据此调整钩子与时长）`
+      : "",
+    // SEAM-01:策划阶段产物 —— 论点树 / 内容合同 / 结构方案。有则注入,让脚本铺它们的结构与论点。
+    thesis: input.thesisBrief
+      ? `\n【论点树（核心/支撑/证据/反驳）】\n${input.thesisBrief}`
+      : "",
+    contract: input.contractBrief
+      ? `\n【内容合同（受众定位/价值主张/核心节奏/行动召唤）】\n${input.contractBrief}`
+      : "",
+    outline: input.outlineBrief
+      ? `\n【策划结构方案（脚本按此铺分镜）】\n${input.outlineBrief}`
       : "",
   });
   const res = await runAgentNode({

@@ -148,7 +148,11 @@ export function ProductionInteractiveRegion({
         />
         <PreviewPanel preview={viewModel.preview} />
         <SettingsRail settings={viewModel.settings} wiring={wiring} />
-        <TimelinePanel timeline={viewModel.timeline} wiring={wiring} />
+        <TimelinePanel
+          timeline={viewModel.timeline}
+          scriptLines={viewModel.scriptLines}
+          wiring={wiring}
+        />
       </div>
     </>
   );
@@ -924,9 +928,12 @@ interface TimelineSegment {
 
 function TimelinePanel({
   timeline,
+  scriptLines,
   wiring,
 }: {
   timeline: ProductionViewModel["timeline"];
+  // SEAM-04:本项目脚本当前版本的分镜段(有序),用来给新章节按位置对应脚本段做溯源。
+  scriptLines: ProductionViewModel["scriptLines"];
   wiring?: ProductionWiring;
 }) {
   const router = useRouter();
@@ -960,6 +967,10 @@ function TimelinePanel({
     setSegments((prev) => [...prev, newSegment]);
     setSelectedId(newSegment.id);
     if (wiring) {
+      // SEAM-04:拍摄章节溯源到脚本段。最小可行映射 = **位置对应**(第 N 章 ↔ 脚本第 N 段):
+      // 章节按顺序追加,脚本分镜也是有序的(钩子→…→CTA),故新章节序位 = 当前章节数,
+      // 取脚本同序位段的 id 当 scriptSectionId。脚本段不够(序位越界)→ 省略(诚实 null,不编造)。
+      const scriptSectionId = scriptLines[segments.length]?.id;
       startTransition(async () => {
         await client.createProductionSegment({
           params: { productionId: wiring.productionId },
@@ -969,12 +980,13 @@ function TimelinePanel({
             position,
             startMs: startSec * 1000,
             endMs: endSec * 1000,
+            ...(scriptSectionId ? { scriptSectionId } : {}),
           },
         });
         router.refresh();
       });
     }
-  }, [router, segments, wiring]);
+  }, [router, segments, scriptLines, wiring]);
 
   return (
     <div

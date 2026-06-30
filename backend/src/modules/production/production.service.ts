@@ -78,7 +78,14 @@ export interface ProductionService {
   createSegment(
     ctx: RequestContext,
     productionId: string,
-    body: { title: string; position: number; startMs: number; endMs: number },
+    body: {
+      title: string;
+      position: number;
+      startMs: number;
+      endMs: number;
+      // SEAM-04:溯源脚本段 id(可选);透传给仓库,无则落 null。
+      scriptSectionId?: string | null;
+    },
   ): Promise<ProductionSegmentRow>;
   listSegments(
     ctx: RequestContext,

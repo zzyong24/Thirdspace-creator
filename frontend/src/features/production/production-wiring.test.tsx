@@ -186,6 +186,45 @@ describe("Production needs-backend wiring", () => {
     expect(mockRouter.refresh).toHaveBeenCalled();
   });
 
+  // SEAM-04:拍摄章节按位置溯源脚本段。新章节的序位 = 当前章节数;脚本分镜有序,故取脚本同序位段的 id。
+  // 这里 timeline 有 1 段(序位 0 已占),第一个新章节序位 = 1 → 脚本第 1 段(痛点段)的 id,真填 scriptSectionId。
+  it("添加章节 traces to the positionally-corresponding script section (SEAM-04)", async () => {
+    const { ProductionInteractiveRegion } = await import(
+      "./production-interactive-region"
+    );
+    const base = buildProductionViewModel(PROJECT_ID);
+    const vm = {
+      ...base,
+      timeline: [
+        { id: "seg-0", title: "钩子", startLabel: "0:00", endLabel: "0:03" },
+      ],
+      scriptLines: [
+        { id: "section-hook", text: "钩子口播", timestamp: "0:00 – 0:03" },
+        { id: "section-pain", text: "痛点口播", timestamp: "0:03 – 0:20" },
+        { id: "section-value", text: "价值口播", timestamp: "0:20 – 0:45" },
+      ],
+    };
+    const { container } = render(
+      <ProductionInteractiveRegion viewModel={vm} wiring={WIRING} />,
+    );
+    const addButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="timeline-add-segment"]',
+    );
+    expect(addButton).not.toBeNull();
+    fireEvent.click(addButton!);
+    await waitFor(() =>
+      expect(mockClient.createProductionSegment).toHaveBeenCalledTimes(1),
+    );
+    // 当前 1 段 → 新章节序位 1 → 脚本第 1 段(痛点)的 id。
+    expect(mockClient.createProductionSegment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          scriptSectionId: "section-pain",
+        }),
+      }),
+    );
+  });
+
   it("导出视频 calls createProductionExport then completeExport then refresh", async () => {
     const { container } = await renderIsland();
     const exportButton = container.querySelector<HTMLButtonElement>(

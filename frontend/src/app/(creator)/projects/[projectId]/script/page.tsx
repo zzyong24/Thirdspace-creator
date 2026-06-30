@@ -13,6 +13,7 @@ import { ScriptWorkspacePage } from "@/features/script/script-workspace-page";
 import { buildScriptViewModel } from "@/fixtures/selectors";
 import {
   loadScriptEditorData,
+  loadPlanningOutline,
   type ScriptDataClient,
 } from "@/features/script/script-editor-data";
 import { createServerClient } from "@/lib/contract-client.server";
@@ -39,12 +40,17 @@ export default async function ScriptWorkspaceRoute({
   const client = createServerClient(session.ctx) as unknown as ScriptDataClient;
   const vm = buildScriptViewModel(projectId);
   const scriptData = await loadScriptEditorData(vm.scriptArtifactId, client);
+  // SEAM-02:脚本"大纲"区优先读策划的结构方案(content_outline artifact);策划已搭好结构时,
+  // 大纲来自上游蓝图,而非脚本自身段落标题派生。无策划结构方案则回退脚本派生大纲(scriptData.outline)。
+  const planningOutline = await loadPlanningOutline(projectId, client);
+  const outlineOverride =
+    planningOutline ?? (scriptData ? scriptData.outline : null);
   return (
     <ScriptWorkspacePage
       projectId={projectId}
       sectionsOverride={scriptData?.sections ?? null}
       versionsOverride={scriptData ? scriptData.versions : null}
-      outlineOverride={scriptData ? scriptData.outline : null}
+      outlineOverride={outlineOverride}
       goldenQuotesOverride={scriptData ? scriptData.goldenQuotes : null}
       aiSuggestionsGuide={scriptData !== null}
     />

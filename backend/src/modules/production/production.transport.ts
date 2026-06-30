@@ -122,6 +122,8 @@ export function createProductionTransport(
             position: number;
             startMs: number;
             endMs: number;
+            // SEAM-04:溯源脚本段 id(可选)。
+            scriptSectionId?: string | null;
           };
           const row = await service.createSegment(ctx, p.productionId ?? "", b);
           return { data: toSegmentResource(row), meta: { requestId } };

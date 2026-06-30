@@ -1,0 +1,151 @@
+/**
+ * Unit tests for SEAM-02 — 脚本"大纲"区读策划的结构方案 (`loadPlanningOutline`).
+ *
+ * Locks the read-side contract:
+ *   - when the project has a `content_outline` artifact whose current version carries
+ *     `contentData.sections`, the outline rows come from THOSE 段落 (label = heading),
+ *     i.e. the script page's 大纲 comes from 策划's structure plan (SEAM-02),
+ *   - degrades to null (caller keeps the script-derived outline) when there is no project
+ *     id, no content_outline artifact, no current version, or no sections.
+ *
+ * The contract client is injected (hand-rolled fake); the server composition root is
+ * mocked so importing the helper never boots pglite.
+ */
+
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/contract-client.server", () => ({
+  client: {
+    getArtifact: vi.fn(),
+    listArtifactVersions: vi.fn(),
+    listArtifacts: vi.fn(),
+  },
+}));
+
+import { loadPlanningOutline } from "./script-editor-data";
+import type { ScriptDataClient } from "./script-editor-data";
+
+interface FakeData {
+  readonly artifacts?: ReadonlyArray<{ id: string; artifactType: string }>;
+  readonly currentVersionId?: string;
+  readonly versions?: ReadonlyArray<{
+    id: string;
+    versionNumber: number;
+    contentData?: Record<string, unknown>;
+  }>;
+}
+
+// A fake ScriptDataClient: lists artifacts, exposes the outline artifact's
+// currentVersionId, and returns its versions (so loadPlanningOutline can pick current).
+function makeClient(data: FakeData): ScriptDataClient {
+  return {
+    async listArtifacts() {
+      return data.artifacts ?? [];
+    },
+    async getArtifact() {
+      return { currentVersionId: data.currentVersionId };
+    },
+    async listArtifactVersions() {
+      return data.versions ?? [];
+    },
+  };
+}
+
+const OUTLINE_VERSION = {
+  id: "av-outline-1",
+  versionNumber: 1,
+  contentData: {
+    structureType: "问题-解决",
+    opening: "反差开场",
+    sections: [
+      { label: "钩子", intent: "前3秒抓住开发者" },
+      { label: "痛点", intent: "本地栈太难搭" },
+      { label: "价值", intent: "三步搞定" },
+    ],
+    ending: "总结",
+    cta: "点赞关注",
+  },
+};
+
+describe("loadPlanningOutline (SEAM-02)", () => {
+  it("reads outline rows from the content_outline artifact's current version sections", async () => {
+    const client = makeClient({
+      artifacts: [
+        { id: "art-thesis", artifactType: "thesis_tree" },
+        { id: "art-outline", artifactType: "content_outline" },
+      ],
+      currentVersionId: "av-outline-1",
+      versions: [OUTLINE_VERSION],
+    });
+    const outline = await loadPlanningOutline("project-x", client);
+    expect(outline).not.toBeNull();
+    expect(outline).toHaveLength(3);
+    expect(outline![0]).toMatchObject({ heading: "钩子", position: 0 });
+    expect(outline![1]!.heading).toBe("痛点");
+    expect(outline![2]!.heading).toBe("价值");
+    // Stable, outline-scoped ids (not the script-section ids).
+    expect(outline![0]!.id).toContain("planning-outline-art-outline");
+  });
+
+  it("falls back to label-less intent as heading, skips empty 段落", async () => {
+    const client = makeClient({
+      artifacts: [{ id: "art-outline", artifactType: "content_outline" }],
+      currentVersionId: "av-1",
+      versions: [
+        {
+          id: "av-1",
+          versionNumber: 1,
+          contentData: {
+            sections: [
+              { label: "", intent: "只有意图" },
+              { label: "", intent: "" }, // dropped
+              { label: "结尾", intent: "" },
+            ],
+          },
+        },
+      ],
+    });
+    const outline = await loadPlanningOutline("project-x", client);
+    expect(outline).toHaveLength(2);
+    expect(outline![0]!.heading).toBe("只有意图");
+    expect(outline![1]!.heading).toBe("结尾");
+  });
+
+  it("returns null when there is no project id", async () => {
+    const client = makeClient({});
+    expect(await loadPlanningOutline(null, client)).toBeNull();
+  });
+
+  it("returns null when the project has no content_outline artifact", async () => {
+    const client = makeClient({
+      artifacts: [{ id: "art-thesis", artifactType: "thesis_tree" }],
+    });
+    expect(await loadPlanningOutline("project-x", client)).toBeNull();
+  });
+
+  it("returns null when the outline artifact has no sections", async () => {
+    const client = makeClient({
+      artifacts: [{ id: "art-outline", artifactType: "content_outline" }],
+      currentVersionId: "av-1",
+      versions: [
+        { id: "av-1", versionNumber: 1, contentData: { sections: [] } },
+      ],
+    });
+    expect(await loadPlanningOutline("project-x", client)).toBeNull();
+  });
+
+  it("returns null on a read failure (degrades, never throws)", async () => {
+    const client: ScriptDataClient = {
+      async getArtifact() {
+        return {};
+      },
+      async listArtifactVersions() {
+        return [];
+      },
+      async listArtifacts() {
+        throw new Error("boom");
+      },
+    };
+    expect(await loadPlanningOutline("project-x", client)).toBeNull();
+  });
+});

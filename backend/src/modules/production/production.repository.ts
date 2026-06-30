@@ -46,7 +46,14 @@ export interface ProductionRepository {
   ): Promise<ProductionRow>;
   createSegment(
     productionId: string,
-    input: { title: string; position: number; startMs: number; endMs: number },
+    input: {
+      title: string;
+      position: number;
+      startMs: number;
+      endMs: number;
+      // SEAM-04:溯源到的脚本段 id(可选);无则 null(诚实空,不编造)。
+      scriptSectionId?: string | null;
+    },
   ): Promise<ProductionSegmentRow>;
   listSegments(productionId: string): Promise<ProductionSegmentRow[]>;
   createExport(
@@ -180,7 +187,8 @@ export function createProductionRepository(
         id,
         userId,
         productionId,
-        scriptSectionId: null,
+        // SEAM-04:真填脚本段溯源(去掉写死 null);调用方按位置对应给 id,无对应则仍 null。
+        scriptSectionId: input.scriptSectionId ?? null,
         title: input.title,
         position: input.position,
         startMs: input.startMs,

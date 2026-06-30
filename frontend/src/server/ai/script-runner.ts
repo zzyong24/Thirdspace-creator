@@ -112,6 +112,11 @@ export async function runScriptDraft(
       topicTitle: context.topic.title,
       topicAngle: context.topic.angle,
       orientation: context.orientationHint || undefined,
+      // SEAM-01:把策划产物(论点树/内容合同/结构方案)注入写文案上下文,和 positioning+learnings 并列。
+      // 经 reader 端口装配(creative-context),非跨模块直连 repo;脚本据此铺策划的结构与论点。
+      thesisBrief: context.thesisBrief || undefined,
+      contractBrief: context.contractBrief || undefined,
+      outlineBrief: context.outlineBrief || undefined,
       onStep: async (e) => {
         await deps.ai.recordStep(ctx, task.id, {
           stepNo: e.stepNo,
