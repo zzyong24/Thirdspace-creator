@@ -39,6 +39,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import type { TopicsOverviewResource } from "@creatoros/backend/modules/candidate";
 
 type Basis = "positioning" | "comments" | "knowledge" | "trend";
@@ -141,20 +143,39 @@ function BasisPanel({ basis }: { readonly basis: TopicsOverviewResource["basis"]
   );
 }
 
+/** CollabField(COLLAB-01)候选行的内联编辑句柄 —— 改 title/angle 并进本地 edits,采纳前 patch。 */
+interface RowEditor {
+  readonly onEdit: (patch: Partial<TopicItem>) => void;
+  readonly disabled: boolean;
+}
+
 // ── 候选卡(弹窗内复用) ───────────────────────────────────────────────────────────
 function CandidateRow({
   t,
   onRemove,
+  editor,
 }: {
   readonly t: TopicItem;
   readonly onRemove?: () => void;
+  readonly editor?: RowEditor;
 }) {
   return (
     <li className="flex flex-col gap-1 rounded-control border border-border bg-surface px-3 py-2.5 text-sm">
       <div className="flex items-start gap-2">
-        <span className="flex-1 font-medium leading-snug text-foreground">
-          {t.title}
-        </span>
+        {editor ? (
+          // CollabField:标题渲成受控 Input,采纳前可就地改。
+          <Input
+            aria-label="选题标题"
+            value={t.title}
+            disabled={editor.disabled}
+            onChange={(e) => editor.onEdit({ title: e.target.value })}
+            className="h-7 flex-1 font-medium"
+          />
+        ) : (
+          <span className="flex-1 font-medium leading-snug text-foreground">
+            {t.title}
+          </span>
+        )}
         {t.predictedScore !== null ? (
           <span className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand">
             爆款潜力 {t.predictedScore}
@@ -177,7 +198,16 @@ function CandidateRow({
           </button>
         ) : null}
       </div>
-      {t.angle ? (
+      {editor ? (
+        // CollabField:切入角度渲成受控 Textarea。
+        <Textarea
+          aria-label="切入角度"
+          value={t.angle}
+          disabled={editor.disabled}
+          onChange={(e) => editor.onEdit({ angle: e.target.value })}
+          className="min-h-12 text-xs"
+        />
+      ) : t.angle ? (
         <span className="text-xs text-muted-foreground">切入：{t.angle}</span>
       ) : null}
       {t.reason ? (
@@ -203,6 +233,10 @@ export function TopicGenerateBand({
   const [rawItems, setRawItems] = React.useState<unknown[]>([]);
   const [removed, setRemoved] = React.useState<ReadonlySet<number>>(
     () => new Set(),
+  );
+  // CollabField(COLLAB-01):人就地改过的字段补丁(按下标)—— 采纳时和「删」合并进同一条 patch。
+  const [edits, setEdits] = React.useState<ReadonlyMap<number, Partial<TopicItem>>>(
+    () => new Map(),
   );
   const [steps, setSteps] = React.useState<
     { stepNo: number; text: string; kind: string }[]
@@ -263,6 +297,7 @@ export function TopicGenerateBand({
         setItems(parsed);
         setRawItems(raw);
         setRemoved(new Set());
+        setEdits(new Map());
         setPhase("review");
         return;
       }
@@ -331,13 +366,14 @@ export function TopicGenerateBand({
           : [],
       );
       setRemoved(new Set());
+      setEdits(new Map());
       setPhase("review");
     } catch {
       if (!cancelledRef.current) setPhase("error");
     }
   }, [pending]);
 
-  // CollabField:原始 items 与解析后的 items 1:1 对齐时才允许逐条删(否则下标对不上,禁编辑)。
+  // CollabField:原始 items 与解析后的 items 1:1 对齐时才允许逐条删/改(否则下标对不上,禁编辑)。
   const canEdit = rawItems.length === items.length && items.length > 0;
   const keptCount = canEdit ? items.length - removed.size : items.length;
 
@@ -345,9 +381,17 @@ export function TopicGenerateBand({
     if (!taskId) return;
     setConfirming(true);
     try {
-      // 删过候选 → 先把保留项 patch 回最新结果,再 confirm 物化(只入留下的)。
-      if (canEdit && removed.size > 0) {
-        const kept = rawItems.filter((_, i) => !removed.has(i));
+      // 删过候选 或 就地改过字段 → 先把「过滤删除 + merge 编辑」后的保留项 patch 回最新结果,
+      // 再 confirm 物化(只入留下的、且带上人改的值)。删与改同一条 patch 路径。
+      if (canEdit && (removed.size > 0 || edits.size > 0)) {
+        const kept = rawItems
+          .map((raw, i) => {
+            const patch = edits.get(i);
+            return patch
+              ? { ...(raw as Record<string, unknown>), ...patch }
+              : raw;
+          })
+          .filter((_, i) => !removed.has(i));
         await client.patchTaskResultItems({
           params: { taskId },
           query: undefined,
@@ -367,7 +411,7 @@ export function TopicGenerateBand({
     } finally {
       setConfirming(false);
     }
-  }, [taskId, router, canEdit, removed, rawItems]);
+  }, [taskId, router, canEdit, removed, edits, rawItems]);
 
   // 丢弃 = 取消该任务(进 cancelled 终态),待审阅入口随之消失。
   const discard = React.useCallback(async () => {
@@ -522,19 +566,36 @@ export function TopicGenerateBand({
                   data-testid="topics-review-list"
                   className="flex flex-col gap-2"
                 >
-                  {items.map((t, i) =>
-                    removed.has(i) ? null : (
+                  {items.map((t, i) => {
+                    if (removed.has(i)) return null;
+                    // CollabField:把本条编辑态 merge 进展示值(受控);canEdit 才给 editor。
+                    const patch = edits.get(i);
+                    const value = patch ? { ...t, ...patch } : t;
+                    return (
                       <CandidateRow
                         key={i}
-                        t={t}
+                        t={value}
                         onRemove={
                           canEdit
                             ? () => setRemoved((s) => new Set(s).add(i))
                             : undefined
                         }
+                        editor={
+                          canEdit
+                            ? {
+                                onEdit: (p) =>
+                                  setEdits((prev) => {
+                                    const next = new Map(prev);
+                                    next.set(i, { ...(prev.get(i) ?? {}), ...p });
+                                    return next;
+                                  }),
+                                disabled: confirming,
+                              }
+                            : undefined
+                        }
                       />
-                    ),
-                  )}
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground">

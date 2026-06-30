@@ -24,6 +24,10 @@ const mockClient = {
   confirmTask: vi.fn((_i: unknown) =>
     Promise.resolve({ id: "task-1", status: "succeeded" }),
   ),
+  // CollabField: 采纳前把「删 + 改」后的 kept patch 回最新结果(COLLAB-01/02 共用)。
+  patchTaskResultItems: vi.fn((_i: unknown) =>
+    Promise.resolve({ id: "res-1", resultData: {} }),
+  ),
   // P4 hydration: default to "no in-flight task" so the idle→start path is unchanged;
   // individual tests override per-mount to exercise resume.
   listAITasks: vi.fn((_i: unknown) => Promise.resolve([] as unknown[])),
@@ -34,6 +38,7 @@ vi.mock("@/lib/contract-client", () => ({
     getTask: (i: unknown) => mockClient.getTask(i),
     listTaskResults: (i: unknown) => mockClient.listTaskResults(i),
     confirmTask: (i: unknown) => mockClient.confirmTask(i),
+    patchTaskResultItems: (i: unknown) => mockClient.patchTaskResultItems(i),
     listAITasks: (i: unknown) => mockClient.listAITasks(i),
   },
 }));
@@ -60,7 +65,18 @@ async function renderCard() {
       taskType="test.node"
       inputData={{ projectId: "p-1" }}
       parseItems={(rd) => (rd.items as Item[]) ?? []}
-      renderItem={(item) => <span>{item.title}</span>}
+      // CollabField: editor 在时把 title 渲成受控 input,驱动内联编辑测试;否则只读 span。
+      renderItem={(item, i, editor) =>
+        editor ? (
+          <input
+            aria-label={`title-${i}`}
+            value={item.title}
+            onChange={(e) => editor.onEdit({ title: e.target.value })}
+          />
+        ) : (
+          <span>{item.title}</span>
+        )
+      }
       adoptLabel={(n) => `采纳全部（${n}）`}
       doneLabel={(n) => `已采纳 ${n} 条。`}
     />,
@@ -69,7 +85,7 @@ async function renderCard() {
 
 describe("AdoptCandidateCard", () => {
   it("start → poll(awaiting) → review renders candidates → 采纳 → confirmTask + refresh", async () => {
-    const { getByText, queryByText, container } = await renderCard();
+    const { getByText, queryByDisplayValue, container } = await renderCard();
 
     // Advance one poll interval: createAITask resolves → getTask(awaiting) → listTaskResults.
     await act(async () => {
@@ -79,8 +95,9 @@ describe("AdoptCandidateCard", () => {
     expect(mockClient.createAITask).toHaveBeenCalledWith(
       expect.objectContaining({ body: { taskType: "test.node", inputData: { projectId: "p-1" } } }),
     );
-    expect(queryByText("甲")).not.toBeNull();
-    expect(queryByText("乙")).not.toBeNull();
+    // CollabField: 候选标题现渲成受控 input(canEdit) → 用 displayValue 断言其渲染。
+    expect(queryByDisplayValue("甲")).not.toBeNull();
+    expect(queryByDisplayValue("乙")).not.toBeNull();
 
     await act(async () => {
       fireEvent.click(container.querySelector('[data-slot="adopt-confirm"]')!);
@@ -93,6 +110,69 @@ describe("AdoptCandidateCard", () => {
     });
     expect(mockRouter.refresh).toHaveBeenCalled();
     expect(getByText(/已采纳 2 条/)).not.toBeNull();
+  });
+
+  // CollabField(COLLAB-01): 内联编辑 → 采纳时 patch 带上编辑后的值。
+  it("inline-edits a candidate → 采纳 patches the MERGED value before confirm", async () => {
+    const { container, getByLabelText } = await renderCard();
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="adopt-start"]')!);
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+    // 改第 0 条标题 甲 → 甲改
+    await act(async () => {
+      fireEvent.change(getByLabelText("title-0"), { target: { value: "甲改" } });
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="adopt-confirm"]')!);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    // patch 先于 confirm,且 kept 带上编辑后的值(甲改 + 乙原值,两条都在)
+    expect(mockClient.patchTaskResultItems).toHaveBeenCalledWith({
+      params: { taskId: "task-1" },
+      query: undefined,
+      body: { items: [{ title: "甲改" }, { title: "乙" }] },
+    });
+    expect(mockClient.confirmTask).toHaveBeenCalledWith({
+      params: { taskId: "task-1" },
+      query: undefined,
+      body: undefined,
+    });
+    expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  // CollabField: 删 + 改 并存 → 同一条 patch 里既过滤删除项、又 merge 编辑(COLLAB-01 ∧ 02)。
+  it("delete + edit coexist → patch drops removed AND merges edits in one call", async () => {
+    const { container, getByLabelText } = await renderCard();
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="adopt-start"]')!);
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+    // 改第 0 条 甲 → 甲改
+    await act(async () => {
+      fireEvent.change(getByLabelText("title-0"), { target: { value: "甲改" } });
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    // 删第 1 条 乙(点该条的删除按钮)
+    await act(async () => {
+      const removeBtns = container.querySelectorAll(
+        '[data-slot="adopt-item-remove"]',
+      );
+      fireEvent.click(removeBtns[removeBtns.length - 1]!);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="adopt-confirm"]')!);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    // kept = 只剩编辑后的甲(乙被删过滤掉),且下标错位不写脏
+    expect(mockClient.patchTaskResultItems).toHaveBeenCalledWith({
+      params: { taskId: "task-1" },
+      query: undefined,
+      body: { items: [{ title: "甲改" }] },
+    });
+    expect(mockClient.confirmTask).toHaveBeenCalled();
   });
 
   it("a cancelled task surfaces the error state (no infinite poll)", async () => {
@@ -117,15 +197,15 @@ describe("AdoptCandidateCard", () => {
         status: "awaiting_confirmation",
       },
     ]);
-    const { queryByText, container } = await renderCard();
+    const { queryByDisplayValue, container } = await renderCard();
     // Flush the mount hydration effect (listAITasks → listTaskResults → review).
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
     expect(mockClient.createAITask).not.toHaveBeenCalled();
     expect(container.querySelector('[data-slot="adopt-review"]')).not.toBeNull();
-    expect(queryByText("甲")).not.toBeNull();
-    expect(queryByText("乙")).not.toBeNull();
+    expect(queryByDisplayValue("甲")).not.toBeNull();
+    expect(queryByDisplayValue("乙")).not.toBeNull();
     // 采纳 confirms the HYDRATED task id, proving taskId was restored.
     await act(async () => {
       fireEvent.click(container.querySelector('[data-slot="adopt-confirm"]')!);
@@ -142,7 +222,7 @@ describe("AdoptCandidateCard", () => {
     mockClient.listAITasks.mockResolvedValueOnce([
       { id: "task-7", taskType: "test.node", projectId: "p-1", status: "running" },
     ]);
-    const { queryByText, container } = await renderCard();
+    const { queryByDisplayValue, container } = await renderCard();
     // Mount effect resolves → running phase; one poll interval → getTask(awaiting) → review.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
@@ -156,7 +236,7 @@ describe("AdoptCandidateCard", () => {
       query: undefined,
       body: undefined,
     });
-    expect(queryByText("甲")).not.toBeNull();
+    expect(queryByDisplayValue("甲")).not.toBeNull();
   });
 
   it("ignores in-flight tasks of a different node (taskType / projectId mismatch)", async () => {

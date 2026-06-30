@@ -36,6 +36,28 @@ type Phase = "idle" | "running" | "review" | "done" | "error";
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 75; // ~5 min — multi-angle agent work (WebSearch) can run minutes.
 
+/**
+ * 把本条的编辑补丁浅 merge 进解析后的 item,得到「展示用 + 受控值」。无补丁则原样返回。
+ * 纯函数(确定性,无副作用)—— 渲染时调用,保证 Input/Textarea 显示的是编辑后的值。
+ */
+function mergeEdit<T>(item: T, patch: Partial<T> | undefined): T {
+  if (!patch) return item;
+  if (item && typeof item === "object") return { ...item, ...patch };
+  return item;
+}
+
+/**
+ * CollabField(COLLAB-01)内联编辑句柄。`canEdit` 时,card 把它作为 `renderItem` 的第三参
+ * 传入,想支持逐字改的 node 用它把字段渲成受控 `Input`/`Textarea`:`onEdit({ field: v })`
+ * 把改动并进 card 的 `edits`,采纳时和「删」走同一条 patch 落库。不传 = 该 node 只读(降级)。
+ */
+export interface ItemEditor<T> {
+  /** 把一个字段补丁并进本条的本地编辑态(浅合并,确定性,无副作用)。 */
+  onEdit: (patch: Partial<T>) => void;
+  /** 采纳进行中时为 true —— 编辑控件应 disabled,避免改了又被 patch 覆盖。 */
+  disabled: boolean;
+}
+
 export interface AdoptCandidateCardProps<T> {
   title: string;
   description: string;
@@ -44,7 +66,8 @@ export interface AdoptCandidateCardProps<T> {
   taskType: string;
   inputData: Record<string, unknown>;
   parseItems: (resultData: Record<string, unknown>) => T[];
-  renderItem: (item: T, index: number) => React.ReactNode;
+  // CollabField:第三参 editor 仅在 canEdit 时给 —— 传入的 `item` 已 merge 本条编辑态(受控)。
+  renderItem: (item: T, index: number, editor?: ItemEditor<T>) => React.ReactNode;
   adoptLabel: (n: number) => string;
   doneLabel: (n: number) => string;
 }
@@ -68,6 +91,10 @@ export function AdoptCandidateCard<T>({
   const [rawItems, setRawItems] = React.useState<unknown[]>([]);
   const [removed, setRemoved] = React.useState<ReadonlySet<number>>(
     () => new Set(),
+  );
+  // CollabField(COLLAB-01):人就地改过的字段,按下标存补丁 —— 采纳时和「删」合并进同一条 patch。
+  const [edits, setEdits] = React.useState<ReadonlyMap<number, Partial<T>>>(
+    () => new Map(),
   );
   // 步骤日志(AISTD):runner 每步 recordStep,这里轮询拉出来实时显示 —— 不是干转圈。
   const [steps, setSteps] = React.useState<
@@ -105,6 +132,7 @@ export function AdoptCandidateCard<T>({
       setItems(got);
       setRawItems(raw);
       setRemoved(new Set());
+      setEdits(new Map());
       setPhase("review");
     },
     [parseItems],
@@ -224,7 +252,7 @@ export function AdoptCandidateCard<T>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskType, projectId]);
 
-  // 原始 items 与解析后 items 一一对齐时,才允许逐条删(否则下标会错,退回整批采纳)。
+  // 原始 items 与解析后 items 一一对齐时,才允许逐条删/改(否则下标会错,退回整批采纳)。
   const canEdit = rawItems.length === items.length && items.length > 0;
   const keptCount = canEdit ? items.length - removed.size : items.length;
 
@@ -232,9 +260,18 @@ export function AdoptCandidateCard<T>({
     if (!taskId) return;
     setConfirming(true);
     try {
-      // CollabField:人删了候选 → 先 patch 替换成保留的(对齐 1:1 才安全),再 confirm 物化。
-      if (canEdit && removed.size > 0) {
-        const kept = rawItems.filter((_, i) => !removed.has(i));
+      // CollabField:人删了候选 或 就地改了字段 → 先 patch 替换成「过滤删除 + merge 编辑」后的
+      // 结果(对齐 1:1 才安全),再 confirm 物化。删与改同一条 patch 路径,统一落库。
+      if (canEdit && (removed.size > 0 || edits.size > 0)) {
+        const kept = rawItems
+          .map((raw, i) => {
+            const patch = edits.get(i);
+            // 浅 merge:原始条目 + 人改过的字段(原始条目可能不是对象,用 spread 安全兜底)。
+            return patch
+              ? { ...(raw as Record<string, unknown>), ...patch }
+              : raw;
+          })
+          .filter((_, i) => !removed.has(i));
         await client.patchTaskResultItems({
           params: { taskId },
           query: undefined,
@@ -253,7 +290,7 @@ export function AdoptCandidateCard<T>({
     } finally {
       setConfirming(false);
     }
-  }, [taskId, router, canEdit, removed, rawItems]);
+  }, [taskId, router, canEdit, removed, edits, rawItems]);
 
   return (
     <div data-slot="adopt-candidate-card" data-task-type={taskType}>
@@ -303,7 +340,7 @@ export function AdoptCandidateCard<T>({
           {phase === "review" ? (
             <div data-slot="adopt-review" className="flex flex-col gap-2">
               <p className="text-xs text-muted-foreground">
-                AI 给出 {keptCount} 条，审阅后采纳{canEdit ? "（可逐条删）" : ""}：
+                AI 给出 {keptCount} 条，审阅后采纳{canEdit ? "（可逐条改/删）" : ""}：
               </p>
               <ul className="flex flex-col gap-1.5" aria-label="AI 候选">
                 {items.map((item, i) =>
@@ -313,7 +350,27 @@ export function AdoptCandidateCard<T>({
                       data-slot="adopt-item"
                       className={canEdit ? "flex items-start gap-1.5" : undefined}
                     >
-                      <div className="min-w-0 flex-1">{renderItem(item, i)}</div>
+                      <div className="min-w-0 flex-1">
+                        {/* CollabField:渲染时把本条编辑态 merge 进 item(受控);canEdit 才给 editor。 */}
+                        {renderItem(
+                          mergeEdit(item, edits.get(i)),
+                          i,
+                          canEdit
+                            ? {
+                                onEdit: (patch) =>
+                                  setEdits((prev) => {
+                                    const next = new Map(prev);
+                                    next.set(i, {
+                                      ...(prev.get(i) ?? {}),
+                                      ...patch,
+                                    });
+                                    return next;
+                                  }),
+                                disabled: confirming,
+                              }
+                            : undefined,
+                        )}
+                      </div>
                       {canEdit ? (
                         // CollabField:逐条删掉不要的 AI 候选(采纳前 patch 落库)。
                         <button
@@ -351,6 +408,7 @@ export function AdoptCandidateCard<T>({
                     setItems([]);
                     setRawItems([]);
                     setRemoved(new Set());
+                    setEdits(new Map());
                     setPhase("idle");
                   }}
                   className="inline-flex h-8 items-center rounded-control border border-border px-3 text-xs font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"

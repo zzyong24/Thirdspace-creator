@@ -29,6 +29,11 @@ const mockClient = {
   createAITask: vi.fn(
     (_i: unknown): Promise<unknown> => Promise.resolve({ id: "task-1" }),
   ),
+  // CollabField(COLLAB-01/02): 采纳前 patch「删 + 改」后的 kept,再 confirm 物化。
+  patchTaskResultItems: vi.fn(
+    (_i: unknown): Promise<unknown> => Promise.resolve({ id: "res-1" }),
+  ),
+  confirmTask: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve({})),
 };
 const mockListTaskResults = vi.fn(
   (): Promise<Array<{ resultData: Record<string, unknown> }>> =>
@@ -43,7 +48,8 @@ vi.mock("@/lib/contract-client", () => ({
     getTask: () => Promise.resolve({ status: "queued" }),
     listTaskResults: () => mockListTaskResults(),
     listTaskSteps: () => Promise.resolve([]),
-    confirmTask: () => Promise.resolve({}),
+    patchTaskResultItems: (i: unknown) => mockClient.patchTaskResultItems(i),
+    confirmTask: (i: unknown) => mockClient.confirmTask(i),
     cancelTask: () => Promise.resolve({}),
   },
 }));
@@ -381,9 +387,50 @@ describe("topics islands (needs-backend wiring)", () => {
       expect(screen.getByTestId("topics-review-list")).toBeInTheDocument(),
     );
     const list = screen.getByTestId("topics-review-list");
-    expect(within(list).getByText("缓存选题甲")).toBeInTheDocument();
-    expect(within(list).getByText("缓存选题乙")).toBeInTheDocument();
+    // CollabField: 标题/角度现渲成受控 Input/Textarea → 用 displayValue 断言(非纯文本)。
+    expect(within(list).getByDisplayValue("缓存选题甲")).toBeInTheDocument();
+    expect(within(list).getByDisplayValue("缓存选题乙")).toBeInTheDocument();
     expect(mockClient.createAITask).not.toHaveBeenCalled();
+  });
+
+  it("CollabField: 弹窗内内联改标题 → 采纳时 patch 带上编辑后的值再 confirm", async () => {
+    // 打开「待审阅」弹窗进入 review(rawItems↔items 1:1 → canEdit),改标题后采纳。
+    mockListTaskResults.mockResolvedValueOnce([
+      {
+        resultData: {
+          items: [
+            { title: "缓存甲", angle: "切入甲", predictedScore: 88 },
+            { title: "缓存乙", angle: "切入乙", predictedScore: 80 },
+          ],
+        },
+      },
+    ]);
+    render(
+      <TopicGenerateBand
+        basis={overview().basis}
+        pendingReview={{ taskId: "task-x", basis: "trend", count: 2 }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("topics-pending-review"));
+    await waitFor(() =>
+      expect(screen.getByTestId("topics-review-list")).toBeInTheDocument(),
+    );
+    // 第一条标题 Input 改值:缓存甲 → 缓存甲改
+    const titleInputs = screen.getAllByLabelText("选题标题");
+    fireEvent.change(titleInputs[0]!, { target: { value: "缓存甲改" } });
+    // 采纳 → patch 带 merged kept(编辑后的甲 + 原乙),且先于 confirm
+    fireEvent.click(document.querySelector('[data-slot="band-confirm"]')!);
+    await waitFor(() =>
+      expect(mockClient.patchTaskResultItems).toHaveBeenCalledTimes(1),
+    );
+    const arg = mockClient.patchTaskResultItems.mock.calls[0]![0] as {
+      params: { taskId: string };
+      body: { items: Array<{ title: string }> };
+    };
+    expect(arg.params.taskId).toBe("task-x");
+    expect(arg.body.items[0]).toMatchObject({ title: "缓存甲改" });
+    expect(arg.body.items[1]).toMatchObject({ title: "缓存乙" });
+    expect(mockClient.confirmTask).toHaveBeenCalledTimes(1);
   });
 
   it("promote button is disabled for an already-promoted candidate", () => {
