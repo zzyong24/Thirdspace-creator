@@ -267,7 +267,9 @@
 
 ## §13 数据模型 + 契约 op 总览(新增/改)
 
-- **改**:`projects` +`video_type`;`publication_revisions` description/tags 可写;`production_segments.script_section_id` 真填。
+> **⚠️ 基线 reconcile(SPEC 审核 2026-06-30 加)**:本 SPEC 写于实现前,多处「现状/待做」已被代码超越(PROMPT-01/02、8 节点 recordStep、FLY-02、SKL-01/11、COLLAB-02、SEAM-03 均已 commit)。**任务状态以 repo 根 `BACKLOG.md` 为准**;实现前先对账已完成项,勿重做/覆盖。本 SPEC 作设计参考,非待办清单。
+
+- **改**:`projects`:**删/弃 `content_category`(SKL-03;backend/src/schema/projects.ts:22),不引入任何 `video_type`/type 列**(与 §0/§1.1「砍类型」一致;orientation 复用 `content_outputs.aspect_ratio`);`publication_revisions` description/tags 可写;`production_segments.script_section_id` 真填。
 - **新 op**:`productions.segments.list`(PROD-24 读);脚本/策划交接 reader(组合根注入,非新表);`research.background`/`research.competitor` AI 节点(可选);CollabField 复用 `replaceStructuredContent`/`createArtifactVersion`(已有)。
 - **接通已有但无调用方**:`calibration.results.create`、`learnings.evaluate`/`applications.create`、`calibration.suggestions.adopt`。
 - **采集**:见数据源 spec(`metric_snapshots` 真写入)。

@@ -26,7 +26,7 @@
 
 ### 1.2 数据模型(字段级)
 
-`projects` 表新增两列(迁移 `0006_project_source_platformref.sql`):
+`projects` 表新增两列(迁移 `0008_project_source_platformref.sql（落地时取 backend/drizzle 下一个空号；0006/0007 已占用）`):
 
 | 列 | 类型 | 默认 | 说明 |
 |---|---|---|---|
@@ -47,7 +47,7 @@
    - 无 → 建 `project`(`source:"imported"`, `platform_ref={platform,externalId,publishedAt}`, `current_stage` 落"已发布/复盘"态, `title`=真实标题) + 其 `content_output` + `publication`(`external_id=aweme_id`)。
    - 有 → 返回既有 projectId(不重复建)。
 2. 然后 metrics 挂到该 publication(`resolvePublication` 此时命中)→ `metric_snapshots`/`metric_values` 落库成功。
-3. 评论同理:refresh 也抓评论(`fetch_comments_creator` 等价的 TS 实现,§见 [[douyin-collection-approach]] 蓝本)→ 落 `audience_signals`(选题"评论"basis 的真实源)+ 复盘评论。
+3. 评论同理:refresh 也抓评论 → 落 `audience_signals`(选题"评论"basis 的真实源)+ 复盘评论。**蓝本(真实可达)**:cheat-on-content `adapters/perf-data/douyin-session/crawler.py` 的 `fetch_comments_creator`(走创作者中心评论管理页,拦 `/aweme/v1/web/comment/list/`),TS 重写进 `frontend/src/server/ingestion/douyin-cdp.ts`(与作品抓取同文件、复用 `openContext` 持久化登录态)。字段级契约:comment fetch 入参 `{ awemeId, maxPages }`;`audience_signals` 列映射 `{ raw_text=评论文本, source="douyin_comment", demand_tag=null(待 AI 打), external_id=comment_id }`;幂等键 `(userId, external_id)`。
 
 **效果**:`refreshDouyin` 从"刷新已知作品指标"升级为"**导入我的真实抖音作品 + 表现 + 评论**"。一键拉取后,界面直接出你 24 条真实视频的真实数据。
 
@@ -174,7 +174,7 @@ Skill = {
 - (B2)`calibration.score` 节点 taskType + runner(真实指标→维度分→候选 result;采纳走现有 `recordResult` 手动 run 路径)。
 
 **新增/改 schema + 迁移**:
-- `0006_project_source_platformref.sql`:projects 加 `source text default 'manual'` + `platform_ref jsonb default '{}'`。
+- `0008_project_source_platformref.sql（落地时取 backend/drizzle 下一个空号；0006/0007 已占用）`:projects 加 `source text default 'manual'` + `platform_ref jsonb default '{}'`。
 - prompt template 加 `tools` / `outputSchema`(代码层,无 DB)。
 
 **新增 service**:
