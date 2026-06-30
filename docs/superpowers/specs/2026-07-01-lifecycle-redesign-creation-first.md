@@ -1,6 +1,9 @@
 # CreatorOS 生命周期重设计:从「通用空壳」到「编导式短视频生产线」
 
-> 状态:设计稿,**待 spec-review gate**(改阶段语义 + 数据归属/存储架构 → 落地前必须过审,verdict≠FAIL)。
+> ## spec-review gate 裁决(2026-07-01):**CONCERNS → 已逐条补清 → PASS-ready,可开工**
+> 两个核心决策成立(reviewer 对照真实代码/skill 坐实):**本地优先存储** file-PGlite 不迁 SQLite 技术可行、**研究改创作向** 精准合定位。补清 5 findings:① 发布引错 skill(cheat-publish→**cheat-package**,§3.6/§5.4)② 素材生成能力错配(open-design-remotion-video 是成片非素材生成 → 改用 mmx-cli/MiniMax 媒体生成,§3.5/§5.3)③ L7 复盘**依赖 T-007 整套实现**(非仅 SPEC)须排其后(§7)④ file-PGlite 是**新增 runtime 分支**非纯复用(§4.1)⑤ PGlite 单连接并发**必验**(§7-L0/§8)。无 blocker,方向无须推翻。
+>
+> 状态:设计稿,**gate CONCERNS 已处置 → 可开工**(改阶段语义 + 数据归属/存储架构,已过审 verdict≠FAIL 门)。按 L0-L7 切片一片片真做。
 > 对照宪法 `docs/产品定位.md` 判定位。源于 2026-07-01 用户真机走查反馈 + 设计讨论。
 >
 > 决策已定(用户逐轮拍板):
@@ -74,13 +77,14 @@
 - **现状问题**:命名「拍摄」不准;制作页素材/剪辑/导出多为桩。
 - **重设计**:核心 = **凑齐这条内容要的素材**。
   - **素材清单**:AI 据脚本/分镜列「这条需要哪些镜头/图/素材」(复用 material.match 节点 D2 + 用料链 BillOfMaterials A4 —— 料库⇄创作连接实体已建)。
-  - **AI 自己找/生成**:集成用户的 **`open-design-remotion-video` skill**(`/Users/zyongzhu/.skills-manager/skills/open-design-remotion-video`)做截图/文生图/文生视频。作为一个 AI 节点/工具,产出素材 → 落对象存储(local-fs)+ 建 asset + 绑定项目(用料链)。
+  - **AI 自己找/生成**:**⚠️ 审核修正**——原引 `open-design-remotion-video` 错了:它是 16:9 信息稿口播视频的**成片/合成**工作流(Remotion 渲染 + SRT 动画 + PiP),**无文生图/文生视频/找素材能力**,且与宪法§8「不做视频编辑器」有张力。**正解**:AI 素材生成另选**真正的文生图/文生视频能力**(候选 mmx-cli / MiniMax 媒体生成,仓内 skill 列表已有;落地 L5 前先读该 skill 定输入/输出契约)。`open-design-remotion-video` **降级为可选的"成片合成"下游**(本期诚实标「规划中」,斟酌宪法§8 边界后再定要不要做)。产出素材 → 落对象存储(local-fs)+ 建 asset + 绑定项目(用料链)。
   - **用户上传**:**拖拽文件到项目 → 自动进素材区 + 绑定当前项目**。复用已建的对象存储(P3:presigned PUT)+ assets 模块 + 用料链。新增前端拖拽上传 UI + "上传即绑定"接线。
 - **复用**:assets/D1 素材库、对象存储 P3、用料链 A4、material.match D2。**新增**:open-design-remotion-video skill 集成、拖拽上传 UI。
 
-### 3.6 发布 = cheat-on-content publish skill(集成)
-- **重设计**:复用现有 `publish.platform_adapt` 节点(C1 done),但**提示词/逻辑对齐 cheat-on-content 的 publish 子 skill** —— 出**标题 / 简介 / 标签**(各平台适配)。真发布仍 MockPublisher(诚实标"模拟发布",真发适配器后续)。
-- **复用**:publish.platform_adapt、平台退回发布层(T-008 done,publications.platform + 手动加平台)。**对齐**:cheat-on-content publish 子 skill 的提示词/字段。
+### 3.6 发布 = cheat-on-content **cheat-package** skill(集成)
+- **⚠️ 审核修正**:原引 `cheat-publish` 错了——它只做"发布登记"(写 URL/平台 ID/发布时间进 header,**不产文案**)。正解是 **`cheat-package`**(`/Users/zyongzhu/Workbase/cheat-on-content/skills/cheat-package`):为已拍/将发的视频生成**多平台发布物料——标题/简介/标签/封面文案**,且强制过「内容发布审核清单」SOP(第三方品牌词、营销变现词、情绪类、本地模型、标题复用等合规校验)。
+- **重设计**:复用现有 `publish.platform_adapt` 节点(C1 done),**对齐 cheat-package 的字段(标题/简介/标签/封面文案)+ 内置发布审核 SOP**——这套 SOP 正好补 publish.platform_adapt 现在缺的合规校验。真发布仍 MockPublisher(诚实标"模拟发布",真发适配器后续)。
+- **复用**:publish.platform_adapt、平台退回发布层(T-008 done)。**对齐**:cheat-package(非 cheat-publish)的提示词/字段/审核 SOP。落地前先读 cheat-package SKILL.md 定契约。
 
 ### 3.7 复盘 = 调度抓数据 + 时序 snapshot + 只已发布可复盘
 - **现状问题**:复盘对没发布的作品也开放(无意义);数据不是持续回流的。
@@ -95,7 +99,7 @@
 
 ### 4.1 运行时 DB:docker-PG → file-backed PGlite
 - **决策**:本地部署用 **`@electric-sql/pglite` 落盘**(Postgres-in-WASM,嵌进 Node 进程,持久化到本地目录),零 docker。**schema / SQL / 10 个迁移 / Drizzle pg dialect 一行不改**(PGlite 就是 Postgres)。
-- **复用**:`backend/src/db.ts` 已是双 driver(运行时 node-postgres / 测试 pglite,P1-T3);本任务把"运行时"分支加一个 **file-backed PGlite** 选项(env 选 docker-PG / file-PGlite),默认本地优先用 file-PGlite。docker-PG 保留作可选(开发/多用户)。
+- **⚠️ 这是新增 runtime 分支(非纯复用,审核校正)**:`backend/src/db.ts` 的落盘能力虽在(`createDb({dataDir})` → `new PGlite(dataDir)`),但**未接到运行时** —— 现状 `persistence-client.ts` 是 `DATABASE_URL ? createRuntimeDb()(真PG) : createDb()(内存pglite)`,**没有"file-backed PGlite 持久化"这条 runtime 分支**。本任务**新增第三态**:`PGLITE_DATA_DIR`(或 env 选 file-pglite)→ `createDb({dataDir})` 落盘,插到 persistence-client 的 driver 选择最前(默认本地优先)。需验证 `createDb` 的 migrate 在 file-backed PGlite 下与内存态一致。docker-PG 保留作可选(开发/多用户)。
 - **不迁 SQLite**:整套 PG 方言(jsonb、迁移、raw DDL、Drizzle pg)迁 SQLite = 大改 + 风险,为省一点推倒已建资产,不划算。
 - **数据归属**:DB 落盘位置 = 用户本机目录(如 `~/.creatoros/db` 或项目内,env 可配),与 `.auth/`(抖音 cookie)同属本机私有,不入 Git。
 
@@ -113,11 +117,11 @@
 ### 5.2 文件上传(拖拽绑定)
 - 复用对象存储 presigned PUT(P3)+ assets + 用料链;新增前端拖拽区 + "上传即建 asset 即绑定项目"接线。
 
-### 5.3 AI 素材生成
-- 集成用户 `open-design-remotion-video` skill(截图/文生图/文生视频)为 AI 节点/工具;产出落 local-fs + asset + 绑定。
+### 5.3 AI 素材生成(选型纠正)
+- **文生图/文生视频**用真正的媒体生成能力(候选 **mmx-cli / MiniMax 媒体生成**,仓内 skill 列表已有);**先读该 skill 定输入/输出契约**再做 L5 集成面。`open-design-remotion-video`(16:9 成片合成,无素材生成能力)**不当素材生成节点**;若做"成片合成"是后续可选下游(规划中,斟酌宪法§8)。产出落 local-fs + asset + 绑定。
 
-### 5.4 发布稿生成
-- 对齐 cheat-on-content 的 publish 子 skill(标题/简介/标签);复用 publish.platform_adapt。
+### 5.4 发布稿生成(skill 纠正)
+- 对齐 **`cheat-package`**(非 cheat-publish)—— 出标题/简介/标签/封面文案 + 发布审核 SOP;复用 publish.platform_adapt。落地前先读 cheat-package SKILL.md 定契约。
 
 ### 5.5 调度 + 持续数据
 - T-007 调度系统(SPEC PASS-ready,本地优先后 node-cron + file-PGlite)。
@@ -137,18 +141,18 @@
 
 ## 7. 实现切片拆解(全做,无优先级;每片三步验证 + 真链路)
 
-- **L0 存储本地优先**:db.ts 加 file-PGlite 运行时分支 + env 选择;对象存储默认 local-fs;真链路:零 docker 起 app、数据落盘、重启不丢。
+- **L0 存储本地优先**:db.ts 加 file-PGlite 运行时分支(新增第三态,§4.1)+ env 选择;对象存储默认 local-fs;真链路验收:零 docker 起 app、数据落盘、重启不丢,**且加并发落盘测试 —— 后台 drainQueue 持续跑 + 前台并发写/读(PGlite 单连接 WASM 无并发写,须确认串行化不锁竞争/不丢写)**。
 - **L1 立项简化 + 进入下一步修** + 横切 bug(并行子代理已在修)。
 - **L2 研究创作向重写**:research.gather 换模板/schema(钩子/案例/数据点/金句)+ 删竞品表 + 修搜素材卡死。
 - **L3 策划修 Tab + 瘦身**。
 - **L4 脚本文档编辑器**:TipTap 集成 + AI 初稿灌入 + 二次编辑存 artifact。
 - **L5 录制**:素材清单 + 拖拽上传绑定 + open-design-remotion-video 集成。
 - **L6 发布**:对齐 cheat-on-content publish skill。
-- **L7 复盘**:接 T-007 调度 + snapshot 时序图表 + 只已发布可复盘门。
+- **L7 复盘**:**依赖 T-007 整套实现完成(非仅 SPEC PASS-ready;T-007 当前零代码)** —— 须先有 T-007 最小采集闭环(`scheduled_job→ai_task→runTask 确定性非 LLM 分支→ingestMetrics`,含 node-cron 安装)。L7 排在 T-007 实现之后。L7 本体:snapshot 时序图表 + 只已发布(`hasImportedProjects`/imported 判据)可复盘门。
 
 ## 8. 开放问题(实现时遇到再定,默认假设先走)
 
-- file-PGlite 的并发/性能在本地单用户够用(假设够);多用户/云部署回退 docker-PG(env 切)。
+- file-PGlite 并发:**L0 实现时必验**(不是"假设够")—— PGlite 0.2 单连接 WASM 无并发写,而 CreatorOS 有后台 `drainQueue` 异步 worker 与 UI 读写并发,须验证串行化不锁竞争/不丢写(见 §7-L0 验收);多用户/云部署回退 docker-PG(env 切)。
 - TipTap vs Lexical 最终选型由 L4 实现时按集成成本定;默认 TipTap。
 - open-design-remotion-video skill 的输入/输出契约需读该 skill 后定 L5 集成面。
 - cheat-on-content publish 子 skill 的字段/提示词需读该项目后对齐 L6。

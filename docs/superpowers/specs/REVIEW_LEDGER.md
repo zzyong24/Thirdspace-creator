@@ -13,6 +13,7 @@
 | [project-lifecycle-0to1-spec](2026-06-30-project-lifecycle-0to1-spec.md) | 2026-06-30 | ⚠️ CONCERNS | **已处置→可开工** | 逮 video_type 矛盾(→删 content_category)+ 缺基线 reconcile,已修(`d30d6b5`)。T-008/009 据此已落地 |
 | [data-source-pipeline-design](2026-06-30-data-source-pipeline-design.md) | 2026-06-30(审→重写→复审) | ⚠️ CONCERNS | **已处置→PASS-ready,可开工 T-007** | 第一轮 ⛔ FAIL(2 blocker:connectOverCDP 已弃用、self_work 撞 T-001 数据归属)→ 用户拍板砍对标 + 按裁决重写(`502d4b9`)→ re-review CONCERNS(**2 blocker 真消解**,暴露 2 新 major:audience_signals 评论口径撞 C-4、runTask 缺确定性非 LLM 分支)→ 逐条补清(`<本次>`)。**实现是大子系统,按切片真做。** 详见 SPEC 顶部裁决注 |
 | [product-workflow-and-triage](2026-06-30-product-workflow-and-triage.md) | — | ⬜ 未审 | 清理类,未触架构 | T-010 据它做"去误导"清理(纯前端文案/桩,不改架构/数据归属),按铁律不强制过审;若后续要据它改架构再补审 |
+| [lifecycle-redesign-creation-first](2026-07-01-lifecycle-redesign-creation-first.md) | 2026-07-01 | ⚠️ CONCERNS | **已处置→PASS-ready,可开工** | 生命周期重设计(7 阶段创作向 + 本地优先 PGlite 存储 + 新能力)。两核心决策成立;补清 5 findings(发布 skill cheat-publish→cheat-package、素材生成 open-design-remotion-video 错配→mmx-cli/MiniMax、L7 依赖 T-007 实现、file-PGlite 新增 runtime 分支、PGlite 并发必验)。无 blocker。改阶段语义+数据归属/存储 → 已过审门 |
 
 ## 用法
 
