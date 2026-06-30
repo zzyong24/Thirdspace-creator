@@ -64,9 +64,16 @@ export async function runGatherMaterial(
     const { modelFor, runResearchNode, anthropicWebSearchTools } = await import(
       "@creatoros/ai-worker"
     );
-    // Web 搜索只在 anthropic 协议族下走 provider 内置工具;非 anthropic 端点不挂工具(不引第三方)。
-    const tools =
-      spec.apiFormat === "anthropic" ? anthropicWebSearchTools() : undefined;
+    // Web 搜索是 Anthropic **官方端点**的服务端内置工具 —— 只对**真 Anthropic**挂(baseUrl=null
+    // 官方,或 anthropic.com relay)。MiniMax/DeepSeek 等虽走 anthropic **协议**(apiFormat),
+    // 但其 anthropic-兼容端点**不支持** web_search server tool → 挂了会报 "invalid params,
+    // function name or parameters is empty (2013)" 致 gather 失败(用户「帮我搜素材」卡死/失败的根因)。
+    // 非真 Anthropic → 不挂工具,用模型自身知识产钩子/案例/数据点/金句(项目规则:模型用户可配,
+    // 不强依赖某厂商的服务端工具)。
+    const isGenuineAnthropic =
+      spec.apiFormat === "anthropic" &&
+      (spec.baseUrl === null || /(^|\.)anthropic\.com(\/|$)/.test(spec.baseUrl));
+    const tools = isGenuineAnthropic ? anthropicWebSearchTools() : undefined;
     const { items } = await runResearchNode({
       model: modelFor(spec),
       positioningBrief: context.positioningBrief,
