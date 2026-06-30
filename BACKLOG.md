@@ -11,7 +11,7 @@
 |---|---|---|---|---|
 | T-013 | Harness 宪法 + 卡位 | ✅ | [产品定位.md](docs/产品定位.md) | 宪法立(docs/产品定位.md)+ 看板 + SessionStart hook + 执行策略入 CLAUDE.md + 固化进 orchestrator skill。done |
 | T-012 | SPEC 审核 gate | 🔨 | orchestrator `prompts/spec-reviewer.md` | reviewer 角色+findings schema 已定;**剩**:接 MiniMax(spec.review capability)+ "没过审不准开工" enforcement hook。先跑一轮审现有 SPEC |
-| T-001 | 数据底座:已发布作品导入历史项目 | 📋 | [data-foundation-and-director-chatbox §1](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | projects.source+platformRef + 迁移 0006 + ensureImportedProject + refresh 改(治 24 条被 reject) |
+| T-001 | 数据底座:已发布作品导入历史项目 | ✅ | [data-foundation-and-director-chatbox §1](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | `9010166` projects.source+platformRef+迁移0008+ensureImportedProject+refresh改;契约88+后端87+前端31绿。done |
 | T-002 | B2 编导自动评分 | 📋 | [同上 §5](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 真实指标 → 维度分 → 预填录入,人审核 |
 | T-003 | 三方向读侧接真(底座→各模块) | 📋 | [同上 §2](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 校准/选题评论/定位/知识库/首页 读真,mock 让位 |
 | T-004 | ChatBox 进化(上下文感知) | 📋 | [同上 §3](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | Copilot→useChat + ChatContext 三层注入 + 首波 5 工具 + 指挥/画布 |
