@@ -27,6 +27,7 @@
 
 import * as React from "react";
 import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
@@ -187,7 +188,9 @@ describe("PlanningWorkspacePage", () => {
     expect(primaryAction).not.toBeNull();
   });
 
-  it("renders the Planning Tabs in spec order (内容合同/论点树/证据地图/受众洞察/差异化亮点)", async () => {
+  it("renders the slimmed Planning Tabs in spec order (内容合同/论点树)", async () => {
+    // T-018 / SPEC §3.3: slimmed from five tabs (three of them empty shells)
+    // to the two script-skeleton tabs that have a real producer.
     const { container } = await renderWorkspace();
     const tabsSection = container.querySelector(
       '[data-slot="planning-tabs"]',
@@ -196,27 +199,77 @@ describe("PlanningWorkspacePage", () => {
     const tabTriggers = tabsSection.querySelectorAll(
       '[data-slot="page-tabs"] [data-tab-id]',
     );
-    expect(tabTriggers).toHaveLength(5);
+    expect(tabTriggers).toHaveLength(2);
     const tabIds = Array.from(tabTriggers).map((tab) =>
       tab.getAttribute("data-tab-id"),
     );
-    expect(tabIds).toEqual([
-      "content-contract",
-      "thesis-tree",
-      "evidence-map",
-      "audience-insight",
-      "differentiation",
-    ]);
+    expect(tabIds).toEqual(["content-contract", "thesis-tree"]);
     const tabLabels = Array.from(tabTriggers).map(
       (tab) => tab.textContent ?? "",
     );
-    expect(tabLabels).toEqual([
-      "内容合同",
-      "论点树",
-      "证据地图",
-      "受众洞察",
-      "差异化亮点",
-    ]);
+    expect(tabLabels).toEqual(["内容合同", "论点树"]);
+    // The removed shells must NOT come back as tabs.
+    expect(tabLabels).not.toContain("受众洞察");
+    expect(tabLabels).not.toContain("差异化亮点");
+  });
+
+  it("renders REAL tab panels (TabsContent), not a decorative strip", async () => {
+    // The Tab 切不了 bug was caused by a `PageTabs` strip with NO `TabsContent`
+    // and every section laid out flat outside any panel. Assert each tab now
+    // has its own panel keyed by the tab id.
+    const { container } = await renderWorkspace();
+    const panels = container.querySelectorAll('[data-slot="tabs-content"]');
+    expect(panels.length).toBe(2);
+    const panelIds = Array.from(panels).map((p) =>
+      p.getAttribute("data-tab-panel-id"),
+    );
+    expect(panelIds).toEqual(["content-contract", "thesis-tree"]);
+  });
+
+  it("switches the active panel when a tab is clicked (内容合同 ⇄ 论点树)", async () => {
+    // The core T-018 fix: clicking a tab must actually switch which panel is
+    // active. Radix flips the panels' data-state (active ⇄ inactive); the
+    // inactive panel is visually hidden via `data-[state=inactive]:hidden`
+    // (CSS, verified in the live browser e2e — jsdom does not apply Tailwind
+    // CSS, so here we assert the authoritative data-state + tab aria-selected
+    // that drive that hiding). State flipping on click proves the content
+    // really switches, not just an underline moving.
+    const user = userEvent.setup();
+    const { container } = await renderWorkspace();
+
+    const panelState = (id: string) =>
+      container
+        .querySelector(`[data-tab-panel-id="${id}"]`)
+        ?.getAttribute("data-state");
+    const tab = (name: string) => screen.getByRole("tab", { name });
+
+    // Default = 内容合同 active, 论点树 inactive.
+    expect(panelState("content-contract")).toBe("active");
+    expect(panelState("thesis-tree")).toBe("inactive");
+    expect(tab("内容合同")).toHaveAttribute("aria-selected", "true");
+    expect(tab("论点树")).toHaveAttribute("aria-selected", "false");
+
+    // Click 论点树 → active flips to the thesis panel.
+    await user.click(tab("论点树"));
+    expect(panelState("thesis-tree")).toBe("active");
+    expect(panelState("content-contract")).toBe("inactive");
+    expect(tab("论点树")).toHaveAttribute("aria-selected", "true");
+    expect(tab("内容合同")).toHaveAttribute("aria-selected", "false");
+    // The active (论点树) panel owns the thesis tree section; the now-inactive
+    // (内容合同) panel still owns the contract section (forceMount keeps it
+    // mounted — only its data-state/visibility changed).
+    const thesisPanel = container.querySelector(
+      '[data-tab-panel-id="thesis-tree"]',
+    ) as HTMLElement;
+    expect(
+      thesisPanel.querySelector('[data-slot="thesis-tree-section"]'),
+    ).not.toBeNull();
+
+    // Click back to 内容合同 → switches back.
+    await user.click(tab("内容合同"));
+    expect(panelState("content-contract")).toBe("active");
+    expect(panelState("thesis-tree")).toBe("inactive");
+    expect(tab("内容合同")).toHaveAttribute("aria-selected", "true");
   });
 
   it("renders exactly four ContractCards in the ContentContractSection in spec order", async () => {
@@ -351,27 +404,44 @@ describe("PlanningWorkspacePage", () => {
     );
   });
 
-  it("preserves the approved order of Main column blocks (contract → core thesis → thesis tree)", async () => {
+  it("homes the contract section in the 内容合同 panel and core-thesis → thesis-tree (in order) in the 论点树 panel", async () => {
+    // T-018 slimming: the contract section lives in the 内容合同 tab panel; the
+    // core thesis + structured tree live (in this fixed order) in the 论点树
+    // panel's main column. The page-level order is still contract panel first.
     const { container } = await renderWorkspace();
-    const main = container.querySelector(
+
+    const contractPanel = container.querySelector(
+      '[data-tab-panel-id="content-contract"]',
+    ) as HTMLElement;
+    const thesisPanel = container.querySelector(
+      '[data-tab-panel-id="thesis-tree"]',
+    ) as HTMLElement;
+    expect(contractPanel).not.toBeNull();
+    expect(thesisPanel).not.toBeNull();
+
+    // 内容合同 panel owns the contract section (and NOT the thesis tree).
+    expect(
+      contractPanel.querySelector('[data-slot="content-contract-section"]'),
+    ).not.toBeNull();
+    expect(
+      contractPanel.querySelector('[data-slot="thesis-tree-section"]'),
+    ).toBeNull();
+
+    // 论点树 panel's main column keeps core-thesis → thesis-tree order.
+    const thesisMain = thesisPanel.querySelector(
       '[data-slot="planning-main-column"]',
     ) as HTMLElement;
-    expect(main).not.toBeNull();
-    const expectedSlots = [
-      "content-contract-section",
-      "core-thesis-card",
-      "thesis-tree-section",
-    ];
-    const orderedNodes = expectedSlots.map((slot) =>
-      main.querySelector(`[data-slot="${slot}"]`),
-    );
-    expect(orderedNodes.every((node) => node !== null)).toBe(true);
-    for (let i = 1; i < orderedNodes.length; i += 1) {
-      const node = orderedNodes[i] as Element;
-      const previous = orderedNodes[i - 1] as Element;
-      const relation = previous.compareDocumentPosition(node);
-      expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    }
+    expect(thesisMain).not.toBeNull();
+    const core = thesisMain.querySelector('[data-slot="core-thesis-card"]');
+    const tree = thesisMain.querySelector('[data-slot="thesis-tree-section"]');
+    expect(core).not.toBeNull();
+    expect(tree).not.toBeNull();
+    const relation = (core as Element).compareDocumentPosition(tree as Element);
+    expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // Page-level order: 内容合同 panel precedes 论点树 panel.
+    const pageRelation = contractPanel.compareDocumentPosition(thesisPanel);
+    expect(pageRelation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("renders the right rail with EvidenceMapCard and KeyMaterialsCard in order", async () => {

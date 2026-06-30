@@ -1,37 +1,44 @@
 /**
- * Planning Workspace page (Task 14 / page-specs §6).
+ * Planning Workspace page (Task 14 / page-specs §6; T-018 重设计 SPEC §3.3).
  *
- * The `project-workspace` Header mode landing page for the Planning
- * stage. Composes:
- *  - a PlanningTabs strip with five locked tabs
- *    内容合同 / 论点树 / 证据地图 / 受众洞察 / 差异化亮点,
- *  - a Main column with the ContentContractSection (4 ContractCard in
- *    a row: 受众定位 / 价值主张 / 核心节奏 / 行动召唤), the emphasised
- *    CoreThesisCard (separate from the contract row), and the
- *    ThesisTreeSection (central root node with 4 structured columns:
- *    核心论点 / 支持依据 / 证据 / 反驳),
- *  - a right rail with EvidenceMapCard followed by KeyMaterialsCard.
+ * The `project-workspace` Header mode landing page for the Planning stage.
  *
- * Layout invariants (locked by the page spec):
- *  - left-wide / right-narrow two-column grid,
+ * T-018 (修 Tab + 瘦身): the page used to render a decorative `PageTabs` strip
+ * (no `TabsContent`) with every section laid out FLAT underneath — so clicking
+ * a tab moved the underline but never switched content (the "Tab 切不了" bug),
+ * and two of the five tabs (受众洞察 / 差异化亮点) had no rendered region at all
+ * (pure empty shells). It now mounts `PlanningTabsRegion` — a real Radix
+ * tab-panel switcher — and is slimmed (SPEC §3.3) to TWO tabs that each have a
+ * real producer + feed the script (SEAM-01/02):
+ *
+ *  - 内容合同 tab — the ContentContractSection (4 ContractCard:
+ *    受众定位 / 价值主张 / 核心节奏 / 行动召唤) + the planning.contract island.
+ *    受众洞察 / 差异化亮点 are ABSORBED here (受众定位 is the 受众洞察 slot,
+ *    价值主张 is the 差异化 slot) instead of standing as empty shells.
+ *  - 论点树 tab — the emphasised CoreThesisCard + ThesisTreeSection (central
+ *    root + 4 columns 核心论点 / 支持依据 / 证据 / 反驳) + the planning.thesis /
+ *    planning.outline islands, with a side rail of EvidenceMapCard (证据地图,
+ *    absorbed here as the argument's evidence — no real producer, so it is a
+ *    degraded/empty surface for real projects) + KeyMaterialsCard.
+ *
+ * Layout invariants still held:
  *  - exactly four ContractCard in a row,
- *  - Core Thesis is a separate, emphasised card (NOT merged with
- *    the contract row),
+ *  - Core Thesis is a separate, emphasised card (NOT merged with the contract row),
  *  - thesis tree is a structured 4-column layout (NOT a free canvas),
- *  - exactly 5 planning tabs in the locked spec order,
- *  - right rail order EvidenceMap → KeyMaterials.
+ *  - tabs are in spec order with REAL panels (content switches on click).
  *
- * The page is a Server Component. It does not own a Sidebar or a
- * TopHeader — those live in `(creator)/layout.tsx` and are mounted once
- * for the whole route group. The page just provides the content slot.
+ * The page is a Server Component. It does not own a Sidebar or a TopHeader —
+ * those live in `(creator)/layout.tsx`. The page just provides the content slot;
+ * the write-side islands (client) are passed as panel children of the
+ * (client) `PlanningTabsRegion`.
  */
 
 import * as React from "react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
-import { PageTabs } from "@/components/navigation/page-tabs";
 import { buildPlanningViewModel } from "@/fixtures/selectors";
+import { PlanningTabsRegion } from "@/features/planning/planning-tabs-region";
 import { PlanningThesisIsland } from "@/features/planning/planning-thesis-island";
 import { PlanningContractIsland } from "@/features/planning/planning-contract-island";
 import { PlanningOutlineIsland } from "@/features/planning/planning-outline-island";
@@ -97,6 +104,77 @@ export function PlanningWorkspacePage({
   outlineArtifactId,
 }: PlanningWorkspacePageProps) {
   const vm = viewModel ?? buildPlanningViewModel(projectId);
+
+  // 内容合同 tab body: the 4-card contract row (受众/价值/节奏/CTA, with
+  // 受众洞察/差异化亮点 absorbed) + the planning.contract write-side island.
+  const contractPanel = (
+    <div
+      data-slot="planning-contract-panel"
+      className="flex flex-col gap-card-gap"
+    >
+      <ContentContractSection contracts={vm.contracts} />
+      {contractArtifactId ? (
+        <div data-slot="planning-contract-node">
+          <PlanningContractIsland
+            projectId={vm.projectId}
+            artifactId={contractArtifactId}
+            topic={vm.coreThesis.title}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+
+  // 论点树 tab body: core thesis + structured 4-column tree + the
+  // planning.thesis / planning.outline islands (main column), with the
+  // evidence map (absorbed, degraded) + key materials as a side rail.
+  const thesisPanel = (
+    <div
+      data-slot="planning-grid"
+      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_400px]"
+    >
+      <div
+        data-slot="planning-main-column"
+        className="flex flex-col gap-card-gap"
+      >
+        <CoreThesisCard
+          id={vm.coreThesis.id}
+          title={vm.coreThesis.title}
+          body={vm.coreThesis.body}
+        />
+        <ThesisTreeSection
+          nodes={vm.thesisTree}
+          rootLabel={vm.coreThesis.title}
+        />
+        {thesisArtifactId ? (
+          <div data-slot="planning-thesis-node">
+            <PlanningThesisIsland
+              projectId={vm.projectId}
+              artifactId={thesisArtifactId}
+              topic={vm.coreThesis.title}
+            />
+          </div>
+        ) : null}
+        {outlineArtifactId ? (
+          <div data-slot="planning-outline-node">
+            <PlanningOutlineIsland
+              projectId={vm.projectId}
+              artifactId={outlineArtifactId}
+              topic={vm.coreThesis.title}
+            />
+          </div>
+        ) : null}
+      </div>
+      <div
+        data-slot="planning-right-rail"
+        className="flex flex-col gap-card-gap"
+      >
+        <EvidenceMapCard items={vm.evidenceMap} />
+        <KeyMaterialsCard items={vm.keyMaterials} />
+      </div>
+    </div>
+  );
+
   return (
     <main
       data-app="creatoros"
@@ -104,84 +182,12 @@ export function PlanningWorkspacePage({
       data-project-id={vm.projectId}
       className="flex flex-col gap-section-gap"
     >
-      <PlanningTabs tabs={vm.tabs} />
-      <div
-        data-slot="planning-grid"
-        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_400px]"
-      >
-        <div
-          data-slot="planning-main-column"
-          className="flex flex-col gap-card-gap"
-        >
-          <ContentContractSection contracts={vm.contracts} />
-          {contractArtifactId ? (
-            <div data-slot="planning-contract-node">
-              <PlanningContractIsland
-                projectId={vm.projectId}
-                artifactId={contractArtifactId}
-                topic={vm.coreThesis.title}
-              />
-            </div>
-          ) : null}
-          <CoreThesisCard
-            id={vm.coreThesis.id}
-            title={vm.coreThesis.title}
-            body={vm.coreThesis.body}
-          />
-          <ThesisTreeSection
-            nodes={vm.thesisTree}
-            rootLabel={vm.coreThesis.title}
-          />
-          {thesisArtifactId ? (
-            <div data-slot="planning-thesis-node">
-              <PlanningThesisIsland
-                projectId={vm.projectId}
-                artifactId={thesisArtifactId}
-                topic={vm.coreThesis.title}
-              />
-            </div>
-          ) : null}
-          {outlineArtifactId ? (
-            <div data-slot="planning-outline-node">
-              <PlanningOutlineIsland
-                projectId={vm.projectId}
-                artifactId={outlineArtifactId}
-                topic={vm.coreThesis.title}
-              />
-            </div>
-          ) : null}
-        </div>
-        <div
-          data-slot="planning-right-rail"
-          className="flex flex-col gap-card-gap"
-        >
-          <EvidenceMapCard items={vm.evidenceMap} />
-          <KeyMaterialsCard items={vm.keyMaterials} />
-        </div>
-      </div>
+      <PlanningTabsRegion
+        tabs={vm.tabs}
+        contractPanel={contractPanel}
+        thesisPanel={thesisPanel}
+      />
     </main>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// PlanningTabs
-// ---------------------------------------------------------------------------
-
-function PlanningTabs({
-  tabs,
-}: {
-  tabs: PlanningViewModel["tabs"];
-}) {
-  return (
-    <div data-slot="planning-tabs">
-      <div data-slot="page-tabs">
-        <PageTabs
-          tabs={tabs}
-          defaultValue={tabs[0]?.id}
-          ariaLabel="策划阶段子页签"
-        />
-      </div>
-    </div>
   );
 }
 

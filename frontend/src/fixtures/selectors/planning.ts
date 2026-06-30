@@ -41,15 +41,20 @@ function resolveProjectIdSlug(slug: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Locked tab descriptors (page-specs §6: spec order is the source of truth)
+// Tab descriptors — slimmed to the two tabs that have a real producer + feed
+// the script (T-018 / SPEC §3.3). The old five-tab strip (内容合同 / 论点树 /
+// 证据地图 / 受众洞察 / 差异化亮点) had three shells with no real data source:
+//   · 受众洞察 / 差异化亮点 had NO rendered region at all → absorbed into the
+//     内容合同 tab (受众定位 IS 受众洞察; 价值主张 IS 差异化).
+//   · 证据地图 has no producer (empty for real projects) → absorbed into the
+//     论点树 tab's side rail as the argument's evidence.
+// What remains are the two script-skeleton tabs (SEAM-01/02 feed both to the
+// script): 内容合同 (受众/价值/节奏/CTA) and 论点树 (核心/支撑/证据/反驳).
 // ---------------------------------------------------------------------------
 
 const PLANNING_TABS: ReadonlyArray<PlanningViewModel["tabs"][number]> = [
   { id: "content-contract", label: "内容合同" },
   { id: "thesis-tree", label: "论点树" },
-  { id: "evidence-map", label: "证据地图" },
-  { id: "audience-insight", label: "受众洞察" },
-  { id: "differentiation", label: "差异化亮点" },
 ];
 
 // ---------------------------------------------------------------------------
