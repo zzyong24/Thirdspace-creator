@@ -53,6 +53,15 @@ import {
 import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type {
   CalibrationOverviewResource,
@@ -330,6 +339,11 @@ function PendingSubjectRow({
       <div className="pt-0.5">
         {subject.badge === "unpredicted" ? (
           <StartPredictionButton subject={subject} />
+        ) : subject.predictionId ? (
+          <RecordResultButton
+            predictionId={subject.predictionId}
+            title={subject.title}
+          />
         ) : (
           <Badge variant="outline" className="text-[10px] text-text-subtle">
             已锁定 · 等回流校准
@@ -337,6 +351,173 @@ function PendingSubjectRow({
         )}
       </div>
     </li>
+  );
+}
+
+// 录入真实表现(FLY-02 飞轮回流) — 对一条已锁定盲预测,逐维度录入发布后的真实评分(1–5),
+// 提交走 client.createResult(不带 ingestionRunId → 服务端自建一次 source='manual' 的真 run,
+// 满足 §C-4 溯源)。落库后该主体从「待校准」转入「发布后回流对照」,飞轮闭环。
+type DimScore = { key: string; score?: number };
+
+function RecordResultButton({
+  predictionId,
+  title,
+}: {
+  readonly predictionId: string;
+  readonly title: string;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [dims, setDims] = React.useState<DimScore[]>([]);
+  // 维度 key → 用户录入的真实分(字符串,提交时转数字)。
+  const [actuals, setActuals] = React.useState<Record<string, string>>({});
+
+  const openForm = React.useCallback(async () => {
+    setOpen(true);
+    setError(null);
+    setLoading(true);
+    try {
+      const pred = (await client.getPrediction({
+        params: { predictionId },
+        query: undefined,
+        body: undefined,
+      })) as unknown as {
+        predictedConversion?: { dimensions?: DimScore[] };
+      };
+      const list = Array.isArray(pred.predictedConversion?.dimensions)
+        ? pred.predictedConversion!.dimensions!
+        : [];
+      setDims(list);
+      setActuals({});
+    } catch {
+      setError("读取盲预测维度失败,请重试。");
+    } finally {
+      setLoading(false);
+    }
+  }, [predictionId]);
+
+  const submit = React.useCallback(async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      // 仅提交填了真实分的维度(1–5);actualMetrics 扁平 {维度key: 分}(与偏差计算约定一致)。
+      const actualMetrics: Record<string, number> = {};
+      for (const d of dims) {
+        const raw = actuals[d.key];
+        const n = raw === undefined ? NaN : Number(raw);
+        if (Number.isFinite(n)) actualMetrics[d.key] = n;
+      }
+      await client.createResult({
+        params: { predictionId },
+        query: undefined,
+        // 不带 ingestionRunId → 服务端自建 manual run(§C-4 溯源不破)。
+        body: { actualMetrics },
+      });
+      setOpen(false);
+      router.refresh();
+    } catch {
+      setError("录入失败,请重试。");
+    } finally {
+      setSaving(false);
+    }
+  }, [dims, actuals, predictionId, router]);
+
+  const filledCount = dims.filter((d) =>
+    Number.isFinite(Number(actuals[d.key])),
+  ).length;
+
+  return (
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        data-testid="record-result-trigger"
+        className="h-7 gap-1.5 px-2.5 text-[11px]"
+        onClick={openForm}
+      >
+        <ClipboardList className="size-3.5" />
+        录入真实表现
+      </Button>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!saving) setOpen(v);
+        }}
+      >
+        <DialogContent
+          data-testid="record-result-dialog"
+          className="flex max-h-[85vh] flex-col gap-0 p-0 sm:max-w-md"
+        >
+          <DialogHeader className="border-b px-5 py-4">
+            <DialogTitle>录入真实表现</DialogTitle>
+            <DialogDescription className="truncate">
+              {title} —— 逐维度填发布后真实评分(1–5),对照当初盲预测。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
+            {loading ? (
+              <p className="text-sm text-muted-foreground">读取盲预测维度…</p>
+            ) : dims.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                这条盲预测没有维度评分,无法逐维度录入。
+              </p>
+            ) : (
+              dims.map((d) => (
+                <label
+                  key={d.key}
+                  className="flex items-center justify-between gap-3 text-xs"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="font-medium text-foreground">{d.key}</span>
+                    {typeof d.score === "number" ? (
+                      <span className="ml-1.5 text-muted-foreground">
+                        预测 {d.score}
+                      </span>
+                    ) : null}
+                  </span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={5}
+                    step={1}
+                    aria-label={`${d.key} 真实分`}
+                    value={actuals[d.key] ?? ""}
+                    onChange={(e) =>
+                      setActuals((s) => ({ ...s, [d.key]: e.target.value }))
+                    }
+                    className="h-8 w-20 shrink-0"
+                  />
+                </label>
+              ))
+            )}
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          </div>
+          <DialogFooter className="border-t">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={saving}
+              onClick={() => setOpen(false)}
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              data-testid="record-result-submit"
+              disabled={saving || loading || filledCount === 0}
+              onClick={submit}
+              className="bg-brand text-brand-foreground hover:bg-brand/90"
+            >
+              {saving ? "录入中…" : `录入(${filledCount}）`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

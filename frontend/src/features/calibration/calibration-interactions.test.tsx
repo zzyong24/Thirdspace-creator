@@ -32,6 +32,8 @@ const mockClient = {
       Promise.resolve({ status: "awaiting_confirmation" }),
   ),
   confirmTask: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
+  getPrediction: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve(LOCKED)),
+  createResult: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -39,6 +41,8 @@ vi.mock("@/lib/contract-client", () => ({
     createAITask: (i: unknown) => mockClient.createAITask(i),
     getTask: (i: unknown) => mockClient.getTask(i),
     confirmTask: (i: unknown) => mockClient.confirmTask(i),
+    getPrediction: (i: unknown) => mockClient.getPrediction(i),
+    createResult: (i: unknown) => mockClient.createResult(i),
   },
 }));
 
@@ -231,6 +235,39 @@ describe("calibration workbench", () => {
     expect(arg.body.inputData.subjectId).toBe("dy-out-09");
     // no fake parallel prediction write
     expect(mockClient.lockPrediction).not.toHaveBeenCalled();
+  });
+
+  it("录入真实表现(FLY-02)→ getPrediction 取维度 + createResult(actualMetrics,无 ingestionRunId)then refresh", async () => {
+    const overview: CalibrationOverviewResource = {
+      ...OVERVIEW,
+      pendingSubjects: [
+        {
+          subjectType: "content_output",
+          subjectId: "dy-out-00",
+          title: "已锁定的内容",
+          platform: "抖音",
+          badge: "locked",
+          predictionId: "pred-1",
+        },
+      ],
+    };
+    renderWorkbench({ overview });
+    fireEvent.click(screen.getByTestId("record-result-trigger"));
+    // getPrediction 解析 LOCKED → 维度 hook/cta 渲染成可填输入。
+    await waitFor(() => expect(mockClient.getPrediction).toHaveBeenCalled());
+    const hookInput = await screen.findByLabelText("hook 真实分");
+    fireEvent.change(hookInput, { target: { value: "3" } });
+    fireEvent.click(screen.getByTestId("record-result-submit"));
+    await waitFor(() => expect(mockClient.createResult).toHaveBeenCalledTimes(1));
+    const arg = mockClient.createResult.mock.calls[0]![0] as {
+      params: { predictionId: string };
+      body: { actualMetrics: Record<string, number>; ingestionRunId?: string };
+    };
+    expect(arg.params.predictionId).toBe("pred-1");
+    expect(arg.body.actualMetrics).toMatchObject({ hook: 3 });
+    // §C-4:前端不传 run,服务端自建 manual run。
+    expect(arg.body.ingestionRunId).toBeUndefined();
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 
   it("renders the 发布后回流对照 table with 预测/真实/偏差 columns", () => {
