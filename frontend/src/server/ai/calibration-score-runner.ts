@@ -199,14 +199,12 @@ export async function runCalibrationScore(
     );
     // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 结构化模板节点(外置
     // calibration.score 模板 + generateObject 绑 Zod,每轮 schema 约束 + 校验失败自动重试)。
+    // outputSchema **不再手传** —— runStructuredNode 从 registry 取(SPEC §4.2 统一防发散入口,
+    // 还吃 JSON Schema 配置覆盖);此处只用泛型把回来的 object 标成 CalibrationScoreOutput。
     const spec = await deps.resolveModelSpec(ctx, "calibration.score");
-    const {
-      modelFor,
-      runStructuredNode,
-      CALIBRATION_SCORE_TEMPLATE,
-      calibrationScoreSchema,
-    } = await import("@creatoros/ai-worker");
-    const { object } = await runStructuredNode({
+    const { modelFor, runStructuredNode, CALIBRATION_SCORE_TEMPLATE } =
+      await import("@creatoros/ai-worker");
+    const { object } = await runStructuredNode<CalibrationScoreOutput>({
       model: modelFor(spec),
       template: CALIBRATION_SCORE_TEMPLATE,
       facets: scoreFacets(
@@ -215,7 +213,6 @@ export async function runCalibrationScore(
         prediction.dimensions,
         metrics,
       ),
-      outputSchema: calibrationScoreSchema,
     });
     const dimensions = normalizeScore(
       object,

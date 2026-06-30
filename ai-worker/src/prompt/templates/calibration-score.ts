@@ -38,6 +38,13 @@ export type CalibrationScoreOutput = z.infer<typeof calibrationScoreSchema>;
 export const CALIBRATION_SCORE_TEMPLATE: PromptTemplate = {
   id: "calibration.score",
   version: "v1",
+  // 三位一体「输出 Zod schema」位收口到 registry(SPEC §4.2):outputSchema 即本 skill 的每轮
+  // 输出契约,runStructuredNode 从 registry 取它绑 generateObject(不再由调用方手传)。
+  // 本 skill 是后端 B2 评分(预填录入表单,非 ChatBox 对话),候选形状就是 { dimensions };
+  // ChatBox 的两段 { reply, ... } 每轮契约见 chatbox-turn.ts。
+  outputSchema: calibrationScoreSchema,
+  // 工具白名单:本 skill 纯结构化生成,不挂工具。
+  tools: [],
   system:
     "你是这位创作者的「AI 编导」。现在要做的是**发布后复盘评分**:依据作品真实的数据表现,按变现加权评分标准给每个维度打一个**真实评分(1–5)**,并说明依据。只输出维度评分,不要编造数据,真实指标缺失的维度按现有信息保守给分并在理由里说明。",
   template: `你是这位创作者的「AI 编导」。下面是一条**已发布作品**的真实数据表现,请你对照当初的盲预测维度,**依据真实指标**给每个评分维度一个**真实评分(1-5,1=很差 5=极强)**,每个维度写一句**打分依据**(必须落到具体指标,如「完播率仅 18% 偏低」)。

@@ -1,12 +1,21 @@
 import { describe, it, expect } from "vitest";
+import { z } from "zod";
 import { bindPrompt, PromptBindError, type PromptTemplate } from "./template";
 import {
   registerTemplate,
+  registerAllTemplates,
   getTemplate,
   hasTemplate,
+  getTools,
+  resolveOutputSchema,
+  hasOutputSchema,
+  exportSkillSchema,
   overrideTemplates,
+  overrideTemplatesFromConfig,
+  clearSchemaOverride,
   _resetRegistry,
 } from "./registry";
+import { asSchema } from "ai";
 import { TOPIC_GENERATE_TEMPLATE } from "./templates/topic-generate";
 
 const TPL: PromptTemplate = {
@@ -70,5 +79,162 @@ describe("内置模板:topic.generate 可绑定", () => {
     expect(b.prompt).toContain("AI 工程科普");
     expect(b.prompt).toContain("蹭当下热点");
     expect(b.prompt).toContain("JSON 数组");
+  });
+});
+
+// ── 三位一体(SPEC §4.1):registry 带 tools + outputSchema 一等字段 ──────────────────────────
+const SKILL: PromptTemplate = {
+  id: "test.skill",
+  version: "v1",
+  system: "你是测试 skill。",
+  template: "上下文:{{ctx}}",
+  requiredFacets: ["ctx"],
+  tools: ["topic.generate", "topic.enrich"],
+  outputSchema: z.object({
+    reply: z.string(),
+    candidates: z.array(z.object({ title: z.string() })).min(1),
+  }),
+};
+
+describe("registry 三位一体:tools + outputSchema 一等字段(SPEC §4.1)", () => {
+  it("注册即随对象带上 tools + outputSchema,可经 getTools/resolveOutputSchema 取", () => {
+    _resetRegistry();
+    registerTemplate(SKILL);
+    expect(getTools("test.skill")).toEqual([
+      "topic.generate",
+      "topic.enrich",
+    ]);
+    expect(hasOutputSchema("test.skill")).toBe(true);
+    // resolveOutputSchema 返回的就是这份 Zod 契约(safeParse 卡形状)。
+    const schema = resolveOutputSchema("test.skill") as typeof SKILL.outputSchema;
+    expect(schema!.safeParse({ reply: "hi", candidates: [{ title: "t" }] }).success).toBe(
+      true,
+    );
+    expect(schema!.safeParse({ reply: "hi", candidates: [] }).success).toBe(false);
+  });
+
+  it("overrideTemplates(Zod 形式)整组替换 tools + outputSchema 生效", () => {
+    _resetRegistry();
+    registerTemplate(SKILL);
+    overrideTemplates([
+      {
+        ...SKILL,
+        version: "v2",
+        tools: ["calibration.diagnose"],
+        outputSchema: z.object({ reply: z.string() }), // 收窄:不再要 candidates
+      },
+    ]);
+    expect(getTemplate("test.skill").version).toBe("v2");
+    expect(getTools("test.skill")).toEqual(["calibration.diagnose"]);
+    const schema = resolveOutputSchema("test.skill") as z.ZodType;
+    // 新契约:只要 reply 就过(老契约会因缺 candidates 而拒)。
+    expect(schema.safeParse({ reply: "hi" }).success).toBe(true);
+  });
+
+  it("内置 chatbox.topic skill:三位齐全(模板 ⊕ 工具白名单 ⊕ 两段输出契约)", () => {
+    _resetRegistry();
+    registerAllTemplates();
+    expect(getTools("chatbox.topic")).toContain("topic.generate");
+    expect(hasOutputSchema("chatbox.topic")).toBe(true);
+    const schema = resolveOutputSchema("chatbox.topic") as z.ZodType;
+    // 两段 { reply, ... }:reply 必填;candidates/nextActions 默认空数组。
+    expect(schema.safeParse({ reply: "给你 3 条" }).success).toBe(true);
+    expect(schema.safeParse({ candidates: [] }).success).toBe(false); // 缺 reply
+  });
+
+  it("calibration.score 的 outputSchema 收口到 registry(不再靠调用方手传)", () => {
+    _resetRegistry();
+    registerAllTemplates();
+    const schema = resolveOutputSchema("calibration.score") as z.ZodType;
+    expect(
+      schema.safeParse({
+        dimensions: [{ key: "hook", score: 4, reason: "完播率高" }],
+      }).success,
+    ).toBe(true);
+    expect(
+      schema.safeParse({ dimensions: [{ key: "hook", score: 9, reason: "x" }] })
+        .success,
+    ).toBe(false); // 1-5 整数,9 越界
+  });
+
+  it("纯生成 skill(无 outputSchema)→ resolveOutputSchema 抛错(不该走结构化节点)", () => {
+    _resetRegistry();
+    registerTemplate({
+      id: "plain.gen",
+      version: "v1",
+      system: "s",
+      template: "t",
+      requiredFacets: [],
+    });
+    expect(getTools("plain.gen")).toEqual([]);
+    expect(hasOutputSchema("plain.gen")).toBe(false);
+    expect(() => resolveOutputSchema("plain.gen")).toThrow(/未声明 outputSchema/);
+  });
+});
+
+// ── 配置口子(SPEC §4.3):JSON Schema 往返 + override 运行时套用 ──────────────────────────────
+describe("配置口子:JSON Schema 往返(zod → JSON Schema → 校验器)", () => {
+  it("exportSkillSchema 把内置 Zod 契约导成 JSON Schema(properties/required 保真)", () => {
+    _resetRegistry();
+    registerAllTemplates();
+    const js = exportSkillSchema("chatbox.topic");
+    expect(js).not.toBeNull();
+    const props = (js as Record<string, unknown>).properties as Record<
+      string,
+      unknown
+    >;
+    expect(props).toHaveProperty("reply");
+    expect(props).toHaveProperty("candidates");
+    expect((js as Record<string, unknown>).required).toContain("reply");
+  });
+
+  it("overrideTemplatesFromConfig 用 JSON Schema 覆盖 outputSchema → 运行时校验器套用(校验通过/不符拒)", async () => {
+    _resetRegistry();
+    registerAllTemplates();
+    // 后台/服务端「下发」的新契约(JSON Schema 形式,Zod 不可序列化):要求 reply + verdict(枚举)。
+    const downstreamJsonSchema = {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: {
+        reply: { type: "string" },
+        verdict: { type: "string", enum: ["pass", "fail"] },
+      },
+      required: ["reply", "verdict"],
+      additionalProperties: false,
+    } as const;
+    overrideTemplatesFromConfig([
+      {
+        id: "chatbox.topic",
+        system: "覆盖后的系统提示",
+        tools: ["calibration.diagnose"],
+        outputSchema: downstreamJsonSchema as Record<string, unknown>,
+      },
+    ]);
+    // 文本/白名单字段就地覆盖。
+    expect(getTemplate("chatbox.topic").system).toBe("覆盖后的系统提示");
+    expect(getTools("chatbox.topic")).toEqual(["calibration.diagnose"]);
+    // outputSchema 改走 SCHEMA_OVERRIDES:resolveOutputSchema 返回的 SDK schema 用回灌的 ajv 校验器
+    // 卡形状 —— 这正是 generateObject 会消费的同一个 schema 点。
+    const sdkSchema = asSchema(resolveOutputSchema("chatbox.topic"));
+    const ok = await sdkSchema.validate!({ reply: "x", verdict: "pass" });
+    const badEnum = await sdkSchema.validate!({ reply: "x", verdict: "maybe" });
+    const badMissing = await sdkSchema.validate!({ reply: "x" });
+    // 旧 Zod 契约里 candidates/nextActions 此刻不再是约束(已被新 JSON Schema 顶替)。
+    expect(ok.success).toBe(true);
+    expect(badEnum.success).toBe(false); // 枚举不符 → 拒
+    expect(badMissing.success).toBe(false); // 缺 verdict → 拒
+    // 撤掉覆盖 → 回落内置 Zod 契约(两段 { reply, candidates, nextActions })。
+    clearSchemaOverride("chatbox.topic");
+    const back = resolveOutputSchema("chatbox.topic") as z.ZodType;
+    expect(back.safeParse({ reply: "x" }).success).toBe(true);
+    expect(back.safeParse({ reply: "x", verdict: "pass" }).success).toBe(true); // verdict 非约束了
+  });
+
+  it("overrideTemplatesFromConfig 覆盖未注册 id → 抛错(不凭空建 skill)", () => {
+    _resetRegistry();
+    registerAllTemplates();
+    expect(() =>
+      overrideTemplatesFromConfig([{ id: "nope.skill", system: "x" }]),
+    ).toThrow(/未注册/);
   });
 });

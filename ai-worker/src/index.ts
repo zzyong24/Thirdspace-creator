@@ -76,10 +76,26 @@ export {
 } from "./prompt/template";
 export {
   registerTemplate,
+  registerAllTemplates,
   getTemplate,
   hasTemplate,
+  getTools,
+  resolveOutputSchema,
+  hasOutputSchema,
+  exportSkillSchema,
   overrideTemplates,
+  overrideTemplatesFromConfig,
+  clearSchemaOverride,
+  _resetRegistry,
+  type SkillConfigOverride,
 } from "./prompt/registry";
+// Skill 输出契约 ⇄ JSON Schema 配置口子(SPEC §4.3):导出(zod→JSON Schema)+ 回灌(JSON Schema→ajv 校验器)。
+export {
+  exportZodToJsonSchema,
+  applySchemaOverride,
+  type JsonSchema,
+  type SchemaValidator,
+} from "./prompt/schema-bridge";
 export { TOPIC_GENERATE_TEMPLATE } from "./prompt/templates/topic-generate";
 export { SCRIPT_DRAFT_TEMPLATE } from "./prompt/templates/script-draft";
 // 脊柱-1 第二批:6 个 runner 迁 Vercel SDK 共用的外置模板(提示词模板化解耦)。
@@ -126,3 +142,9 @@ export {
   calibrationScoreSchema,
   type CalibrationScoreOutput,
 } from "./prompt/templates/calibration-score";
+// ChatBox 每轮输出契约脊梁(SPEC §4.2)—— 两段 { reply, candidates[], nextActions[] } + 工具白名单。
+export {
+  CHATBOX_TOPIC_TEMPLATE,
+  chatboxTurnSchema,
+  type ChatboxTurnOutput,
+} from "./prompt/templates/chatbox-turn";
