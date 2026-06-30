@@ -94,6 +94,84 @@ export interface ProductionDataClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+  // SEAM-03:读本项目脚本 artifact → 当前版本 → 分镜行,喂拍摄阶段提词。
+  listArtifacts(input: {
+    params: { projectId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  getArtifact(input: {
+    params: { artifactId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<{ currentVersionId?: unknown }>;
+  listArtifactVersions(input: {
+    params: { artifactId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+}
+
+// SEAM-03 助手:读项目的脚本 artifact 当前版本 → 提词行(脚本阶段写的真分镜流进拍摄)。
+// 任何读/解析失败 → 空数组(降级,绝不崩)。
+async function readScriptLines(
+  client: ProductionDataClient,
+  projectId: string,
+): Promise<ProductionViewModel["scriptLines"]> {
+  try {
+    const artifacts = (await client.listArtifacts({
+      params: { projectId },
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as ReadonlyArray<{ id: string; artifactType: string }>;
+    const SCRIPT_TYPES = new Set(["output_script", "master_script", "script"]);
+    const scriptArtifact = (Array.isArray(artifacts) ? artifacts : []).find(
+      (a) => SCRIPT_TYPES.has(a.artifactType),
+    );
+    if (!scriptArtifact) return [];
+    const meta = await client.getArtifact({
+      params: { artifactId: scriptArtifact.id },
+      query: undefined,
+      body: undefined,
+    });
+    const versions = (await client.listArtifactVersions({
+      params: { artifactId: scriptArtifact.id },
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as ReadonlyArray<{
+      id: string;
+      versionNumber: number;
+      contentData?: { sections?: unknown };
+    }>;
+    const rows = Array.isArray(versions) ? versions : [];
+    const current =
+      rows.find((v) => v.id === meta.currentVersionId) ??
+      rows.slice().sort((a, b) => b.versionNumber - a.versionNumber)[0];
+    const sections = Array.isArray(current?.contentData?.sections)
+      ? (current!.contentData!.sections as Array<Record<string, unknown>>)
+      : [];
+    const fmt = (s: unknown) =>
+      typeof s === "number" && Number.isFinite(s)
+        ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`
+        : "";
+    return sections
+      .map((sec, i) => {
+        const id = typeof sec.id === "string" ? sec.id : `script-line-${i}`;
+        const body = typeof sec.body === "string" ? sec.body : "";
+        const heading = typeof sec.heading === "string" ? sec.heading : "";
+        const text = body || heading;
+        if (!text) return null;
+        const start = fmt(sec.startSeconds);
+        const end = fmt(sec.endSeconds);
+        const timestamp = start ? (end ? `${start} – ${end}` : start) : "";
+        return { id, text, timestamp };
+      })
+      .filter((l): l is { id: string; text: string; timestamp: string } =>
+        Boolean(l),
+      );
+  } catch {
+    return [];
+  }
 }
 
 // Slug → canonical project id, resolved against the REAL persisted project list
@@ -264,15 +342,22 @@ export async function buildProductionWorkspaceViewModel(
     }
   }
 
+  // SEAM-03:读脚本阶段写的真分镜当提词。真脚本优先;无则 demo fixture / 真项目空。
+  const realScriptLines = await readScriptLines(client, canonicalProjectId);
+
   return {
     scenario: "default",
     kind: "production",
     projectId: fixtureVm.projectId,
     // REAL: the project's persisted production mode.
     mode: production.productionMode,
-    // No real script-line read path here (the script lives in the Script stage);
-    // fixture content for demo projects, EMPTY for real projects.
-    scriptLines: isFixtureProject ? fixtureVm.scriptLines : [],
+    // SEAM-03:脚本阶段持久化的真分镜 → 拍摄提词。真脚本优先,否则 demo fixture / 真项目空。
+    scriptLines:
+      realScriptLines.length > 0
+        ? realScriptLines
+        : isFixtureProject
+          ? fixtureVm.scriptLines
+          : [],
     // Static taxonomy — always the fixture's category tabs.
     assetCategories: fixtureVm.assetCategories,
     // REAL: matched assets (已配素材) for ALL projects; empty when none matched.
