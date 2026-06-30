@@ -1763,6 +1763,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              // 立项画幅(横/竖屏)→ script.draft 据此调钩子与时长(SKL-01/02 下游赋能)。
+              brief: {
+                getBriefDetail: async (c, projectId) => {
+                  try {
+                    const row = await projectsRepo.get(c, projectId);
+                    const o = (
+                      row.briefDetail as
+                        | { orientation?: "landscape" | "portrait" }
+                        | undefined
+                    )?.orientation;
+                    return o ? { orientation: o } : null;
+                  } catch {
+                    return null; // best-effort;读不到画幅绝不阻塞写文案
+                  }
+                },
+              },
               // Vercel AI SDK 路径(弃 LlmCompleter):写文案节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },

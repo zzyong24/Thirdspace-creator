@@ -44,6 +44,9 @@ export interface CreativeContext {
   // must honor. Empty string until the contract reader is wired or when the project has no
   // adopted content contract yet.
   contractBrief: string;
+  // 画幅取向 hint — 项目立项 Brief 选的 横屏 / 竖屏(中文 label),喂给 script.draft 让 AI 据此
+  // 调钩子与时长(竖屏更短更狠、横屏可铺陈)。空串表示创作者还没选画幅。
+  orientationHint: string;
   topic: { title: string; angle: string };
   projectId: string | null;
 }
@@ -156,6 +159,16 @@ export interface ContractReader {
   ): Promise<Array<{ title: string; body: string }>>;
 }
 
+// 立项 Brief reader — reads the project's structured Brief so downstream nodes can ground
+// on the creator's立项 decisions. Today only `orientation`(横/竖屏)is consumed; optional
+// so nodes without a project (或未装配)just skip it. Bound to the projects public service.
+export interface ProjectBriefReader {
+  getBriefDetail(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<{ orientation?: "landscape" | "portrait" } | null>;
+}
+
 export interface ContextDeps {
   positioning: PositioningReader;
   learnings?: LearningsReader;
@@ -165,6 +178,7 @@ export interface ContextDeps {
   knowledge?: KnowledgeReader;
   thesis?: ThesisReader;
   contract?: ContractReader;
+  brief?: ProjectBriefReader;
 }
 
 export interface AssembleInput {
@@ -277,6 +291,18 @@ export async function assembleCreativeContext(
     }
   }
 
+  // 画幅取向(横/竖屏)—— best-effort,从项目立项 Brief 读;映射中文 label 供 script.draft 用。
+  let orientationHint = "";
+  if (deps.brief && input.projectId) {
+    try {
+      const detail = await deps.brief.getBriefDetail(ctx, input.projectId);
+      if (detail?.orientation === "landscape") orientationHint = "横屏";
+      else if (detail?.orientation === "portrait") orientationHint = "竖屏";
+    } catch {
+      orientationHint = ""; // never block a node on the brief read
+    }
+  }
+
   return {
     positioningBrief,
     learningsBrief,
@@ -286,6 +312,7 @@ export async function assembleCreativeContext(
     knowledgeBrief,
     thesisBrief,
     contractBrief,
+    orientationHint,
     topic: { title: input.topic, angle: input.angle ?? "" },
     projectId: input.projectId,
   };

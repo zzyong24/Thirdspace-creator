@@ -111,6 +111,7 @@ export async function runScriptDraft(
       learningsBrief: context.learningsBrief,
       topicTitle: context.topic.title,
       topicAngle: context.topic.angle,
+      orientation: context.orientationHint || undefined,
       onStep: async (e) => {
         await deps.ai.recordStep(ctx, task.id, {
           stepNo: e.stepNo,
