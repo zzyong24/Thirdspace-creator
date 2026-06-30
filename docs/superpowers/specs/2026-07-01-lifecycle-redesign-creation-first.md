@@ -77,7 +77,7 @@
 - **现状问题**:命名「拍摄」不准;制作页素材/剪辑/导出多为桩。
 - **重设计**:核心 = **凑齐这条内容要的素材**。
   - **素材清单**:AI 据脚本/分镜列「这条需要哪些镜头/图/素材」(复用 material.match 节点 D2 + 用料链 BillOfMaterials A4 —— 料库⇄创作连接实体已建)。
-  - **AI 自己找/生成**:**⚠️ 审核修正**——原引 `open-design-remotion-video` 错了:它是 16:9 信息稿口播视频的**成片/合成**工作流(Remotion 渲染 + SRT 动画 + PiP),**无文生图/文生视频/找素材能力**,且与宪法§8「不做视频编辑器」有张力。**正解**:AI 素材生成另选**真正的文生图/文生视频能力**(候选 mmx-cli / MiniMax 媒体生成,仓内 skill 列表已有;落地 L5 前先读该 skill 定输入/输出契约)。`open-design-remotion-video` **降级为可选的"成片合成"下游**(本期诚实标「规划中」,斟酌宪法§8 边界后再定要不要做)。产出素材 → 落对象存储(local-fs)+ 建 asset + 绑定项目(用料链)。
+  - **AI 自己找/生成**:**正解 skill = `video-asset-kit`**(给视频/内容补素材三件套:① 批量截网页图(公开/已登录页)② MiniMax 文生图 ③ MiniMax 文生视频;**自带「真证据 vs AI 隐喻 vs 数据卡」决策逻辑**,避免 AI 素材喧宾夺主——正好契合本设计「研究找数据点/案例 + 录制配画面」)。这取代原误引的 `open-design-remotion-video`(后者是 16:9 成片/Remotion 合成,无素材生成能力,与宪法§8「不做编辑器」有张力,**不用**)。L5 集成 video-asset-kit 为 AI 节点/工具,产出素材 → 落对象存储(local-fs)+ 建 asset + 绑定项目(用料链)。落地前读 video-asset-kit SKILL.md 定输入/输出契约。
   - **用户上传**:**拖拽文件到项目 → 自动进素材区 + 绑定当前项目**。复用已建的对象存储(P3:presigned PUT)+ assets 模块 + 用料链。新增前端拖拽上传 UI + "上传即绑定"接线。
 - **复用**:assets/D1 素材库、对象存储 P3、用料链 A4、material.match D2。**新增**:open-design-remotion-video skill 集成、拖拽上传 UI。
 
@@ -117,8 +117,8 @@
 ### 5.2 文件上传(拖拽绑定)
 - 复用对象存储 presigned PUT(P3)+ assets + 用料链;新增前端拖拽区 + "上传即建 asset 即绑定项目"接线。
 
-### 5.3 AI 素材生成(选型纠正)
-- **文生图/文生视频**用真正的媒体生成能力(候选 **mmx-cli / MiniMax 媒体生成**,仓内 skill 列表已有);**先读该 skill 定输入/输出契约**再做 L5 集成面。`open-design-remotion-video`(16:9 成片合成,无素材生成能力)**不当素材生成节点**;若做"成片合成"是后续可选下游(规划中,斟酌宪法§8)。产出落 local-fs + asset + 绑定。
+### 5.3 AI 素材生成 = `video-asset-kit` skill
+- **正解 skill = `video-asset-kit`**:批量截网页图(公开/已登录页)+ MiniMax 文生图 + MiniMax 文生视频,自带「真证据 vs AI 隐喻 vs 数据卡」决策逻辑(契合"研究找数据点/案例 + 录制配画面")。L5 集成它为 AI 节点;产出落 local-fs + asset + 绑定。落地前读其 SKILL.md 定契约。`open-design-remotion-video`(16:9 成片合成,无素材生成)**不用**。
 
 ### 5.4 发布稿生成(skill 纠正)
 - 对齐 **`cheat-package`**(非 cheat-publish)—— 出标题/简介/标签/封面文案 + 发布审核 SOP;复用 publish.platform_adapt。落地前先读 cheat-package SKILL.md 定契约。
