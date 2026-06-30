@@ -17,6 +17,7 @@
 5. **读取顺序**:`BACKLOG.md` → 任务引用的 SPEC(`docs/superpowers/specs/`)→ 代码。设计落 SPEC,执行总账落 BACKLOG,二者不混。
 6. **不写 writing-plans 式重计划**:SPEC 已足够落地;真正缺的是任务进队列。别再产出 task 级详细计划文档。
 7. **宪法**:产品定位单一真值在 [docs/产品定位.md](docs/产品定位.md)。所有 SPEC / 实现对照它判"是否合定位"。改方向/架构/数据归属的 SPEC,**过审(spec-review gate,verdict≠FAIL)才准开工**(reviewer 见 orchestrator `prompts/spec-reviewer.md`,预设 MiniMax)。
+8. **SPEC → 拆 Task → 过审 → 开工(不可跳步,hook 强制)**:写完一份 SPEC,**下一步必须立即把它拆成 BACKLOG 任务**(每切片一条,状态 📋,引用该 SPEC)——这一步**不靠记忆**,由 PostToolUse hook(`.claude/hooks/spec-decompose-gate.sh`,写 SPEC 即注入提醒)兜底。**SPEC 不是执行总账**;没拆 Task 进 BACKLOG = 需求没进队列 = 会丢/会直接乱开工。顺序:写 SPEC → 拆 Task 进 BACKLOG → (改架构的)过 gate → 从看板开工。**未拆 Task / 未过审,不准写实现代码。**
 
 ## 执行策略(场景 → 战术;hook 会注入)
 
