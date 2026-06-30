@@ -80,12 +80,25 @@ export function ProjectOverviewPage({
       />
     );
   }
+  // L1 立项简化(SPEC §3.1「无真东西不摆空格子」):刚立项 / 刚导入但还没创作物的项目,
+  // 资产/最近文件/动态/产出/发布/里程碑必为空 —— 在有内容前**不渲染**那些空卡,
+  // 别把一排「0」「暂无」摊给用户。各区按是否有真内容独立判定;主列全空时用一句
+  // 「这步该干嘛」的阶段引导替代,告诉用户该进工作台干嘛。
+  const hasAssetStats = assetStatsHaveContent(vm.assetStats);
+  const hasRecentFiles = vm.recentFiles.length > 0;
+  const hasActivities = vm.activities.length > 0;
+  const hasOutputs = vm.outputs.length > 0;
+  const hasPublishing = vm.publishing.length > 0;
+  const hasMilestones = vm.milestones.length > 0;
+  const mainColumnEmpty = !hasAssetStats && !hasRecentFiles && !hasActivities;
+  const isImported = vm.source === "imported";
+
   return (
     <main
       data-app="creatoros"
       data-page="project-overview"
       data-project-id={vm.projectId}
-      className="flex flex-col gap-section-gap"
+      className="flex min-w-0 flex-col gap-section-gap"
     >
       <ProjectProgressCard
         projectTitle={vm.projectTitle}
@@ -93,6 +106,7 @@ export function ProjectOverviewPage({
         overallProgressPct={vm.progressPct}
         stages={vm.stages}
         projectId={vm.projectId}
+        source={vm.source}
       />
       <div
         data-slot="project-overview-grid"
@@ -100,33 +114,158 @@ export function ProjectOverviewPage({
       >
         <div
           data-slot="project-overview-main-column"
-          className="flex flex-col gap-card-gap lg:col-span-2"
+          className="flex min-w-0 flex-col gap-card-gap lg:col-span-2"
         >
-          <AssetSummaryCard stats={vm.assetStats} />
-          <RecentFilesCard files={vm.recentFiles} />
-          <ProjectActivityCard activities={vm.activities} />
+          {mainColumnEmpty ? (
+            <StageGuidanceCard
+              projectId={vm.projectId}
+              currentStage={vm.stage}
+              isImported={isImported}
+            />
+          ) : (
+            <>
+              {hasAssetStats ? <AssetSummaryCard stats={vm.assetStats} /> : null}
+              {hasRecentFiles ? <RecentFilesCard files={vm.recentFiles} /> : null}
+              {hasActivities ? (
+                <ProjectActivityCard activities={vm.activities} />
+              ) : null}
+            </>
+          )}
         </div>
         <div
           data-slot="project-overview-side-column"
-          className="flex flex-col gap-3 lg:col-span-1"
+          className="flex min-w-0 flex-col gap-3 lg:col-span-1"
         >
           <ProjectInfoCard
             projectId={vm.projectId}
             entries={vm.projectInfo}
           />
-          <OutputPlanCard
-            projectId={vm.projectId}
-            outputs={vm.outputs}
-          />
-          <PublishingStatusCard
-            projectId={vm.projectId}
-            entries={vm.publishing}
-          />
-          <MilestoneCard entries={vm.milestones} />
+          {hasOutputs ? (
+            <OutputPlanCard projectId={vm.projectId} outputs={vm.outputs} />
+          ) : null}
+          {hasPublishing ? (
+            <PublishingStatusCard
+              projectId={vm.projectId}
+              entries={vm.publishing}
+            />
+          ) : null}
+          {hasMilestones ? <MilestoneCard entries={vm.milestones} /> : null}
         </div>
       </div>
     </main>
   );
+}
+
+// ---------------------------------------------------------------------------
+// StageGuidanceCard —— 主列全空时的「这步该干嘛」单卡(替代一排空 0/暂无)
+// ---------------------------------------------------------------------------
+
+/**
+ * 每阶段一句「现在该干嘛」+ 指向工作台的话术。刚立项 / 刚导入还没创作物时,
+ * 主列没有任何真内容可摆 —— 用这张卡告诉用户下一步做什么,而不是摊一排「0/暂无」。
+ * imported(已发布历史作品)突出「复盘」而非「继续创作」。
+ */
+function STAGE_GUIDANCE(stage: ProjectStageName): {
+  title: string;
+  body: string;
+} {
+  switch (stage) {
+    case "brief":
+      return {
+        title: "先把选题立起来",
+        body: "进工作台用一句话描述你的选题，让 AI 帮你补全 brief。",
+      };
+    case "research":
+      return {
+        title: "为这条选题找钩子和素材",
+        body: "进工作台让 AI 找开头钩子、真实案例、可引用的数据点和金句。",
+      };
+    case "planning":
+      return {
+        title: "搭出脚本骨架",
+        body: "进工作台用 AI 出内容合同和论点树，定下这条片子的结构。",
+      };
+    case "script":
+      return {
+        title: "写出脚本初稿",
+        body: "进工作台让 AI 吃定位、选题、论点出初稿，你再二次打磨。",
+      };
+    case "production":
+      return {
+        title: "凑齐这条要的素材",
+        body: "进工作台列素材清单、上传或让 AI 生成镜头与配图。",
+      };
+    case "publishing":
+      return {
+        title: "生成一稿多平台发布物料",
+        body: "进工作台让 AI 出标题、简介、标签和封面文案，过一遍发布审核。",
+      };
+    case "review":
+    default:
+      return {
+        title: "复盘这条内容的真实表现",
+        body: "回收发布后的数据，对照盲预测，沉淀下一条能用的经验。",
+      };
+  }
+}
+
+function StageGuidanceCard({
+  projectId,
+  currentStage,
+  isImported,
+}: {
+  projectId: string;
+  currentStage: ProjectStageName;
+  isImported: boolean;
+}) {
+  // imported 的已发布历史作品:无论 stage,都引导去复盘(它没有"继续创作"的下一步)。
+  const guidance = isImported
+    ? STAGE_GUIDANCE("review")
+    : STAGE_GUIDANCE(currentStage);
+  const href = isImported
+    ? `/projects/${projectRouteSlug(projectId)}/review`
+    : workspaceHrefForProject(projectId, currentStage);
+  const ctaLabel = isImported ? "查看复盘" : "进入工作台";
+  return (
+    <div data-slot="stage-guidance-card">
+      <SectionCard
+        title={guidance.title}
+        description={`当前阶段 · ${STAGE_LABELS[currentStage]}`}
+      >
+        <div className="flex flex-col items-start gap-3">
+          <p
+            data-slot="stage-guidance-body"
+            className="text-sm leading-relaxed text-muted-foreground"
+          >
+            {guidance.body}
+          </p>
+          <Link
+            href={href}
+            className={buttonVariants({ size: "sm" })}
+          >
+            <Wand2 aria-hidden="true" className="size-4" />
+            {ctaLabel}
+          </Link>
+        </div>
+      </SectionCard>
+    </div>
+  );
+}
+
+/**
+ * 资产概览是否有真内容。真实空项目即便 material-links 读成功,也会回 5 个值为「0」/
+ * 「0 份」的 stat —— 这正是 SPEC 要去掉的「一排 0」噪声。判定:任一 stat 的数值部分
+ * 非 0 才算有内容(fixture 项目带真实计数 → 有内容,正常显)。
+ */
+function assetStatsHaveContent(
+  stats: ProjectOverviewViewModel["assetStats"],
+): boolean {
+  if (stats.length === 0) return false;
+  return stats.some((stat) => {
+    const match = String(stat.value).match(/-?\d+(\.\d+)?/);
+    if (!match) return true; // 非数值文案(异常)按"有内容"保守渲染
+    return Number.parseFloat(match[0]) !== 0;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -159,15 +298,27 @@ function ProjectProgressCard({
   overallProgressPct,
   stages,
   projectId,
+  source,
 }: {
   projectTitle: string;
   currentStage: ProjectStageName;
   overallProgressPct: number;
   stages: ProjectOverviewViewModel["stages"];
   projectId: string;
+  source?: ProjectOverviewViewModel["source"];
 }) {
+  // L1 单一主行动(SPEC §3.1):去掉「进入下一步 + 进入工作台」双实心按钮的歧义。
+  // 主按钮(实心 Link)就是这一个;imported 的已发布历史作品突出「查看复盘」(去 review
+  // 工作台复盘,而非"继续创作下一步");其余项目「进入工作台」继续创作。
+  // 「进入下一步」(stage transition)由 ProjectOverviewActions 降为次级 outline 按钮,
+  // 终态 review(含 imported)本就不显示它。
+  const isImported = source === "imported";
+  const primaryHref = isImported
+    ? `/projects/${projectRouteSlug(projectId)}/review`
+    : workspaceHrefForProject(projectId, currentStage);
+  const primaryLabel = isImported ? "查看复盘" : "进入工作台";
   return (
-    <div data-slot="project-progress-card">
+    <div data-slot="project-progress-card" className="min-w-0">
       <SectionCard
         title="项目进度"
         description={`当前阶段 · ${STAGE_LABELS[currentStage]}`}
@@ -177,7 +328,10 @@ function ProjectProgressCard({
             data-slot="project-progress-header"
             className="flex flex-wrap items-center justify-between gap-3"
           >
-            <div className="flex min-w-0 flex-col gap-0.5">
+            {/* min-w-0 + flex-1 让标题列在 flex-wrap 行内吃满剩余宽度并可收缩,
+                truncate 才生效。imported 项目标题是整条文案(60+字),不约束会把
+                整个进度卡撑到 3000+px 宽、右栏被推出视口(L1 自看暴露的真实溢出 bug)。 */}
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <h1
                 data-slot="project-overview-title"
                 className="truncate font-heading text-[15px] font-semibold text-foreground"
@@ -192,23 +346,21 @@ function ProjectProgressCard({
               data-slot="project-progress-actions"
               className="flex flex-wrap items-center gap-2"
             >
-              <Button type="button" variant="outline" size="sm">
-                编辑信息
-              </Button>
-              {/* Mutating header affordances (收藏 / 归档 / 进入下一步) are a
-                  Client island so they can call the mock backend and revalidate
-                  the server tree. The 进入工作台 navigation stays a plain Link. */}
+              {/* 收藏 / 归档 / 进入下一步(次级 outline)是 Client island,可调后端并
+                  revalidate。单一主行动 = 下面这个实心 Link(进入工作台 / imported 显
+                  查看复盘),消除原「进入下一步 + 进入工作台」双实心按钮歧义。 */}
               <ProjectOverviewActions
                 projectId={projectId}
                 currentStage={currentStage}
                 starred={getProjectById(projectId)?.starred ?? false}
               />
               <Link
-                href={workspaceHrefForProject(projectId, currentStage)}
+                href={primaryHref}
                 className={buttonVariants({ size: "sm" })}
+                data-slot="project-primary-action"
               >
                 <Wand2 aria-hidden="true" className="size-4" />
-                进入工作台
+                {primaryLabel}
               </Link>
             </div>
           </div>

@@ -145,8 +145,12 @@ export function AppShell({
           <PageScrollArea>
             <div
               data-slot="app-page-content"
+              // w-full + min-w-0:ScrollArea viewport 不是 flex/grid 容器,其子项默认按
+              // 内容(min-content)宽度撑开 → 任何带 truncate/nowrap 的超长内容(如 imported
+              // 项目标题=整条文案)会把页面撑到数千 px、横向滚、右栏被推出视口。约束为
+              // viewport 宽,下游 Card overflow-hidden + truncate 才能正常裁剪。
               className={cn(
-                "px-page-gutter",
+                "w-full min-w-0 px-page-gutter",
                 headerMode === "global" ? "py-8" : "py-section-gap",
               )}
             >

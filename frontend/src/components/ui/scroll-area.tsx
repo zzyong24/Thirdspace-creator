@@ -18,7 +18,11 @@ function ScrollArea({
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1"
+        // Radix 给 Viewport 内部注入一个 `display:table; min-width:100%` 的 wrapper,
+        // 它会按内容 min-content 撑开 —— 任何带 truncate/nowrap 的超长内容(如 imported
+        // 项目标题=整条文案)会把竖直滚动区横向撑到数千 px、右栏被推出视口。把该 wrapper
+        // 强制成 block + w-full,约束为 Viewport 宽,下游 overflow-hidden + truncate 才生效。
+        className="size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 [&>div]:!block [&>div]:!w-full [&>div]:min-w-0"
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

@@ -40,6 +40,7 @@ export function buildProjectOverviewViewModel(
       kind: "project-overview",
       projectId,
       projectTitle: "未找到项目",
+      source: "manual",
       stage: "research",
       progressPct: 0,
       stages: STAGE_ORDER.map((stage) => ({
@@ -67,6 +68,7 @@ export function buildProjectOverviewViewModel(
     kind: "project-overview",
     projectId: project.id,
     projectTitle: project.title,
+    source: project.source ?? "manual",
     stage: project.currentStage,
     progressPct: project.progressPct,
     stages: buildStages(project),

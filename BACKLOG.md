@@ -31,7 +31,7 @@
 | ID | 任务(切片) | 状态 | 一句话 |
 |---|---|---|---|
 | T-015 | L0 存储本地优先 | ✅ | file-PGlite 第三态落地:`resolveDbDriver` 优先级 `DATABASE_URL`(docker-PG,用户 71 作品不变)> `PGLITE_DATA_DIR`(落盘)> runtime 无配置默认落盘 `<cwd>/.data/pglite`(非内存,重启不丢)> 测试态内存 pglite。新增 `createConfiguredDb`(归一 dispose);persistence-client driver 选择改用它,`persistent` 据 driver kind(file/postgres 用 process-unique id)。对象存储默认 local-fs 已是现状(无 MinIO 依赖,resolveStorageBackend 缺省 'local')。**并发落盘验收过**:100 并发写+100 交错读 → 精确 100 行、无丢写、无死锁、重启仍在(PGlite 单连接内部串行化)。零 docker 起+kill+重启实测 3 条不丢。tsc(backend+frontend)绿,db/persistence/settings/assets 测试 69+12 绿,测试仍走内存 pglite。`.data/` 入 .gitignore。 |
-| T-016 | L1 立项简化 | 📋 | 去刚立项必为 0 的空区折叠 + 单一主行动(去双按钮歧义)。「进入下一步」无反应已修(T-014) |
+| T-016 | L1 立项简化 | 🔨 | 去刚立项必为 0 的空区折叠 + 单一主行动(去双按钮歧义)。「进入下一步」无反应已修(T-014) |
 | T-017 | L2 研究创作向重写 | 📋 | 删竞品表/威胁评估;research.gather 换模板+schema 产「钩子/案例/数据点/金句」喂脚本;**修「帮我搜素材」卡死** |
 | T-018 | L3 策划修 Tab + 瘦身 | 📋 | 修 Tab 切不了/「未找到项目」;保留内容合同+论点树(脚本骨架),无真数据源的降级 |
 | T-019 | L4 脚本文档编辑器 | 📋 | 内置 OSS 文档编辑器(**TipTap** 默认/Lexical 备选)+ script.draft AI 初稿(吃定位/选题/论点/研究钩子)灌入 + 二次编辑存 artifact |

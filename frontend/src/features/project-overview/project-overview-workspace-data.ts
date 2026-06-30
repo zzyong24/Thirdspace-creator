@@ -53,6 +53,8 @@ interface ProjectDto {
   readonly progressPct: number;
   readonly startedAt: string;
   readonly targetCompletedAt: string | null;
+  // 来源(契约 projectResource.source)。imported = 真实导入的已发布作品 → 概览页突出复盘。
+  readonly source?: "manual" | "topic" | "imported";
   // 结构化 Brief —— 立项工作台读它做初值(契约 projectResource.briefDetail)。
   readonly briefDetail?: {
     readonly targetAudience?: string;
@@ -269,6 +271,7 @@ export async function buildProjectOverviewWorkspaceViewModel(
       kind: "project-overview",
       projectId: project.id,
       projectTitle: project.title,
+      source: project.source ?? "manual",
       stage: project.currentStage,
       progressPct: project.progressPct,
       projectInfo: buildProjectInfo(project),
@@ -417,6 +420,7 @@ export async function buildProjectOverviewWorkspaceViewModel(
     projectId: project.id,
     // 项目创意 / 当前阶段 — real `projects.get`.
     projectTitle: project.title,
+    source: project.source ?? "manual",
     stage: project.currentStage,
     progressPct: project.progressPct,
     projectInfo: buildProjectInfo(project),

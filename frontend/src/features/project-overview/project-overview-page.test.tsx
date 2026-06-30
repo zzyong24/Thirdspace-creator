@@ -10,8 +10,10 @@
  *    渠道发布 / 数据复盘 and an overall-progress bar,
  *  - The Main column renders AssetSummaryCard (5 stat items),
  *    RecentFilesCard and ProjectActivityCard in that order,
- *  - The Side column renders ProjectInfoCard, OutputPlanCard,
- *    PublishingStatusCard and MilestoneCard in that order,
+ *  - The Side column renders the PRESENT cards (ProjectInfoCard,
+ *    OutputPlanCard, PublishingStatusCard, MilestoneCard) in that
+ *    relative order — empty-content cards are folded away (L1 立项简化,
+ *    SPEC §3.1「无真东西不摆空格子」),
  *  - The collaboration visuals (if any) never expose team-management
  *    behavior (no "add member" or "manage team" controls),
  *  - The page lives inside exactly one AppShell, with the Sidebar
@@ -194,19 +196,23 @@ describe("ProjectOverviewPage", () => {
     expect(rows.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders the four right-rail cards in the spec order", async () => {
+  it("renders the present right-rail cards in the spec order, folding empty ones", async () => {
+    // L1 立项简化(SPEC §3.1「无真东西不摆空格子」):右栏只渲染有真内容的卡,
+    // 空内容的卡(此处 fixture 的 publishing=0)折叠不渲染。仍渲染的卡保持 spec 相对顺序:
+    // project-info → output-plan → publishing-status → milestone。
     const { container } = await renderOverview();
     const sideColumn = container.querySelector(
       '[data-slot="project-overview-side-column"]',
     ) as HTMLElement;
     expect(sideColumn).not.toBeNull();
-    const expectedSlots = [
+    // project-info 总在;output-plan(2 产物) 与 milestone(3 里程碑) 有内容 → 在;
+    // publishing-status(0 发布) 空 → 折叠不渲染。
+    const presentSlots = [
       "project-info-card",
       "output-plan-card",
-      "publishing-status-card",
       "milestone-card",
     ];
-    const orderedNodes = expectedSlots.map((slot) =>
+    const orderedNodes = presentSlots.map((slot) =>
       sideColumn.querySelector(`[data-slot="${slot}"]`),
     );
     expect(orderedNodes.every((node) => node !== null)).toBe(true);
@@ -216,6 +222,10 @@ describe("ProjectOverviewPage", () => {
       const relation = previous.compareDocumentPosition(node);
       expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
+    // 空发布卡确实没渲染(去掉了「暂无发布记录」噪声)。
+    expect(
+      sideColumn.querySelector('[data-slot="publishing-status-card"]'),
+    ).toBeNull();
   });
 
   it("does not expose any team-management affordances on the page", async () => {

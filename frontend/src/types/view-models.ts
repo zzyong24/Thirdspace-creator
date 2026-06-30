@@ -231,6 +231,9 @@ export interface ProjectOverviewViewModel extends BasePageViewModel {
   readonly kind: "project-overview";
   readonly projectId: Id;
   readonly projectTitle: string;
+  // 项目来源(契约 projectResource.source)。`imported` = 真实导入的已发布历史作品 →
+  // 概览页突出「复盘」而非「继续创作」(L1 立项简化,SPEC §3.1)。缺省按 manual 语义。
+  readonly source?: ProjectSource;
   readonly stage: ProjectStageName;
   readonly progressPct: number;
   readonly stages: ReadonlyArray<{

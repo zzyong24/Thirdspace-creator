@@ -167,8 +167,13 @@ export function ProjectOverviewActions({
         <Archive aria-hidden="true" className="size-4" />
       </Button>
       {nextStage ? (
+        // L1 立项简化(SPEC §3.1 单一主行动):主按钮是「进入工作台」(page 的实心
+        // Link)。「进入下一步」是次级 stage-transition 动作 → 降为 outline,不再与
+        // 主按钮争抢两个实心按钮的歧义。终态 review(含 imported 已发布作品)nextStage
+        // 为 null,本就不渲染。
         <Button
           type="button"
+          variant="outline"
           size="sm"
           disabled={pending}
           onClick={onNextStage}
