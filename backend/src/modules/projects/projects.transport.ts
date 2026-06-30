@@ -70,6 +70,24 @@ function toBriefDetail(raw: unknown): ProjectResource["briefDetail"] {
   };
 }
 
+// jsonb(unknown)→ 契约 platformRef 规范形状(数据底座 / SPEC §1.2)。丢未知键、
+// platform/externalId 兜空串、shareUrl/publishedAt 仅在非空字符串时带上。DTO 由显式
+// mapper 构造(SPEC §9),绝不直接把 Drizzle row 当 wire。
+function toPlatformRef(raw: unknown): ProjectResource["platformRef"] {
+  const c = (raw ?? {}) as Record<string, unknown>;
+  const str = (v: unknown): string | undefined =>
+    typeof v === "string" && v.length > 0 ? v : undefined;
+  const out: ProjectResource["platformRef"] = {
+    platform: typeof c.platform === "string" ? c.platform : "",
+    externalId: typeof c.externalId === "string" ? c.externalId : "",
+  };
+  const su = str(c.shareUrl);
+  if (su) out.shareUrl = su;
+  const pa = str(c.publishedAt);
+  if (pa) out.publishedAt = pa;
+  return out;
+}
+
 function toProject(row: ProjectRow): ProjectResource {
   return {
     id: row.id,
@@ -78,6 +96,9 @@ function toProject(row: ProjectRow): ProjectResource {
     brief: row.brief,
     briefDetail: toBriefDetail((row as { briefDetail?: unknown }).briefDetail),
     contentCategory: row.contentCategory,
+    source: ((row as { source?: unknown }).source ??
+      "manual") as ProjectResource["source"],
+    platformRef: toPlatformRef((row as { platformRef?: unknown }).platformRef),
     creationMode: row.creationMode as ProjectResource["creationMode"],
     status: row.status as ProjectResource["status"],
     currentStage: row.currentStage as ProjectResource["currentStage"],
@@ -191,6 +212,20 @@ export function createProjectsTransport(
             contentType: b.contentType as string | undefined,
             creationMode: b.creationMode as string | undefined,
             targetPlatforms: b.targetPlatforms as string[] | undefined,
+            // 数据底座(SPEC §1.2):透传可选 source/platformRef(service 兜默认 manual)。
+            source: b.source as
+              | "manual"
+              | "topic"
+              | "imported"
+              | undefined,
+            platformRef: b.platformRef as
+              | {
+                  platform: string;
+                  externalId: string;
+                  shareUrl?: string;
+                  publishedAt?: string;
+                }
+              | undefined,
           });
           return { data: toProject(row), meta: singleMeta };
         }

@@ -12,6 +12,23 @@ import {
 // BaseEntity = { id }; Timestamped = { createdAt, updatedAt }.
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
 
+// 数据底座(宪法 §7 / SPEC §1.2):项目来源。`manual`=手动新建,`topic`=选题立项,
+// `imported`=真实采集导入(已发布作品 → 历史项目)。存量行均 manual,行为不变。
+export const projectSource = z.enum(["manual", "topic", "imported"]);
+export type ProjectSource = z.infer<typeof projectSource>;
+
+// 导入项目的平台引用(SPEC §1.2)。装在 projects.platform_ref jsonb。非导入项目为
+// 默认空形状({platform:"",externalId:""})。`shareUrl` 是逐字稿冷启动口子(SPEC
+// §1.2:未来 shareUrl → 导出视频 → 提逐字稿 → 反填 brief/script),本期不实现该流程,
+// 但字段留好,Agent 不得删。`publishedAt` 为真实发布时刻(可空)。
+export const platformRef = z.object({
+  platform: z.string(),
+  externalId: z.string(),
+  shareUrl: z.string().optional(),
+  publishedAt: iso8601.optional(),
+});
+export type PlatformRef = z.infer<typeof platformRef>;
+
 // 结构化 Brief(立项 Brief 地基 / PRD §5.2)—— 装在 projects.brief_detail jsonb
 // (沿用 facets/card 的 jsonb 扩展模式,不新建 project_brief 表)。EVERY field 是
 // optional/default 所以一个裸 `{}` 是合法的空 Brief(刚立项),立项工作台逐字段填,
@@ -43,6 +60,11 @@ export const projectResource = z.object({
   // (zod 的外层 .default 不会再跑内层字段默认,故显式 parse 一次)。create/patch 可写。
   briefDetail: projectBriefDetail.default(() => projectBriefDetail.parse({})),
   contentCategory: z.string(),
+  // 数据底座(宪法 §7 / SPEC §1.2)。source 默认 manual(存量行行为不变);platformRef
+  // 默认空形状(显式 parse 一次取内层默认,与 briefDetail 同套路,保证不带这两字段的
+  // 存量 payload 仍能 parse 且形状一致)。导入项目带 source:imported + 真实 platformRef。
+  source: projectSource.default("manual"),
+  platformRef: platformRef.default(() => platformRef.parse({ platform: "", externalId: "" })),
   creationMode,
   status: projectStatus,
   currentStage: projectStageName,

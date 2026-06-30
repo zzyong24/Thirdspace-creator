@@ -58,6 +58,12 @@ export interface MetricRecord {
   externalId: string;
   capturedAt: string;
   metrics: Rec;
+  // 数据底座(SPEC §1.3):真抓作品携带的真实标题 + 发布时刻(可空)。导入路径
+  // (ensureImportedProject)用它给历史项目起真名 / 落 platform_ref.publishedAt。
+  // 常规 push（非导入）可不带,留空即可。
+  title?: string;
+  publishedAt?: string;
+  shareUrl?: string;
 }
 
 export function parseMetricRecord(
@@ -70,16 +76,18 @@ export function parseMetricRecord(
   if (!isNonEmptyString(record.capturedAt))
     return fail("metric.capturedAt is required");
   const metrics = isRecord(record.metrics) ? record.metrics : {};
-  return {
-    ok: true,
-    value: {
-      recordKey,
-      platform: record.platform,
-      externalId: record.externalId,
-      capturedAt: record.capturedAt,
-      metrics,
-    },
+  const value: MetricRecord = {
+    recordKey,
+    platform: record.platform,
+    externalId: record.externalId,
+    capturedAt: record.capturedAt,
+    metrics,
   };
+  // 数据底座(SPEC §1.3):可选标题/发布时刻/分享链接,仅在非空字符串时带上。
+  if (isNonEmptyString(record.title)) value.title = record.title;
+  if (isNonEmptyString(record.publishedAt)) value.publishedAt = record.publishedAt;
+  if (isNonEmptyString(record.shareUrl)) value.shareUrl = record.shareUrl;
+  return { ok: true, value };
 }
 
 export interface KnowledgeRecord {

@@ -12,6 +12,8 @@ import {
 import {
   projectResource,
   projectBriefDetail,
+  projectSource,
+  platformRef,
   projectStageResource,
   contentOutputResource,
   contentRole,
@@ -54,6 +56,10 @@ export const projectsOperations = {
       contentType: contentType.optional(),
       creationMode: creationMode.optional(),
       targetPlatforms: z.array(platformId).optional(),
+      // 数据底座(SPEC §1.2):可选 source/platformRef。省略 → service 默认 manual +
+      // 空 platformRef(手动新建行为不变)。ingestion 导入路径经 service 传 imported。
+      source: projectSource.optional(),
+      platformRef: platformRef.optional(),
     }),
     response: projectResource,
     fr: ["FR-PROJECTS-CREATE", "FR-002"],

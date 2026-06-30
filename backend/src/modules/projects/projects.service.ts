@@ -130,6 +130,17 @@ export interface BriefDetail {
   successCriteria?: string;
 }
 
+// 数据底座(宪法 §7 / SPEC §1.2)—— 导入项目的平台引用。装在 projects.platform_ref
+// jsonb。`shareUrl` 是逐字稿冷启动口子(本期不实现该流程,字段留好不删)。
+export interface PlatformRef {
+  platform: string;
+  externalId: string;
+  shareUrl?: string;
+  publishedAt?: string;
+}
+
+export type ProjectSource = "manual" | "topic" | "imported";
+
 export interface CreateProjectCommand {
   title: string;
   brief?: string;
@@ -138,6 +149,10 @@ export interface CreateProjectCommand {
   contentType?: string;
   creationMode?: string;
   targetPlatforms?: string[];
+  // 数据底座(SPEC §1.2):来源 + 平台引用。省略 → 默认 manual + 空 platform_ref
+  // (手动新建行为不变)。ingestion 导入路径经此透传 imported + 真实 platformRef。
+  source?: ProjectSource;
+  platformRef?: PlatformRef;
 }
 
 export interface CreateOutputCommand {
@@ -145,8 +160,31 @@ export interface CreateOutputCommand {
   contentRole?: "traffic" | "trust" | "conversion";
 }
 
+// 数据底座(SPEC §1.3):导入一条真实已发布作品为历史项目的结果 —— 新建(或既有)
+// 的 project + 其唯一 content_output 的 id。ingestion 经端口拿到 outputId 后建
+// publication(external_id=aweme_id),metrics 即可命中 resolvePublication。
+export interface EnsureImportedProjectResult {
+  projectId: string;
+  outputId: string;
+  created: boolean;
+}
+
 export interface ProjectsService {
   createProject(ctx: RequestContext, cmd: CreateProjectCommand): Promise<ProjectRow>;
+  // 数据底座(SPEC §1.3):为一条真实已发布作品就地建历史项目 + 其 content_output。
+  //   幂等键 (userId, platform, externalId):命中既有 imported 项目则直接返回其
+  //   (projectId, outputId, created:false),否则新建(created:true)。ingestion 经
+  //   注入端口调本方法(不跨模块直连 repo,守 SPEC §22)。
+  ensureImportedProject(
+    ctx: RequestContext,
+    input: {
+      title: string;
+      platform: string;
+      externalId: string;
+      shareUrl?: string;
+      publishedAt?: string;
+    },
+  ): Promise<EnsureImportedProjectResult>;
   patchProject(
     ctx: RequestContext,
     projectId: string,
@@ -350,6 +388,24 @@ export function normalizeBriefDetail(raw: unknown): BriefDetail {
   return out;
 }
 
+// 数据底座(SPEC §1.2):jsonb(unknown / 旧空值)→ 规范化 PlatformRef。丢未知键、
+// 字符串裁空白、缺 platform/externalId 兜空串。纯函数(无 Date.now/随机),不破坏
+// 服务确定性。空形状 { platform:"", externalId:"" } 即「非导入项目」。
+export function normalizePlatformRef(raw: unknown): PlatformRef {
+  const c = (raw ?? {}) as Record<string, unknown>;
+  const s = (v: unknown): string | undefined =>
+    typeof v === "string" && v.trim().length > 0 ? v.trim() : undefined;
+  const out: PlatformRef = {
+    platform: s(c.platform) ?? "",
+    externalId: s(c.externalId) ?? "",
+  };
+  const su = s(c.shareUrl);
+  if (su) out.shareUrl = su;
+  const pa = s(c.publishedAt);
+  if (pa) out.publishedAt = pa;
+  return out;
+}
+
 export function createProjectsService(
   repo: ProjectRepository,
   deps: ServiceDeps,
@@ -516,13 +572,19 @@ export function createProjectsService(
     };
   }
 
-  return {
+  // 命名 const(非裸 return 对象字面量),让方法间可互调(ensureImportedProject 复用
+  // createProject/createOutput,同 ingestion.service 的 `service.createRun` 自引用套路)。
+  const service: ProjectsService = {
     async createProject(ctx, cmd) {
       const ts = deps.now();
       const projectId = deps.nextId("project");
-      // 1. insert the root project (status active). 立项 Brief 地基:新建项目从
-      //    `brief` 阶段起(填齐结构化 Brief 经 gate 才进 research)。briefDetail 装
-      //    选题立项带来的草稿(手动新建则为空 {})。
+      // 数据底座(SPEC §1.2/§1.3):source 默认 manual;imported 是真实采集导入的历史
+      //   项目(已发布态)。导入项目 current_stage 落「已发布/复盘」态 —— 复用现有
+      //   `review` 枚举(SPEC §9 默认假设:不新增 published 枚举);手动/选题新建仍从
+      //   `brief` 起(立项 Brief 地基)。platformRef 规范化后落库(非导入为空形状)。
+      const source: ProjectSource = cmd.source ?? "manual";
+      const isImported = source === "imported";
+      const startStage = isImported ? "review" : "brief";
       const project = await repo.insertProject(ctx, {
         id: projectId,
         userId: ctx.userId,
@@ -530,9 +592,11 @@ export function createProjectsService(
         brief: cmd.brief ?? "",
         briefDetail: normalizeBriefDetail(cmd.briefDetail),
         contentCategory: "",
+        source,
+        platformRef: normalizePlatformRef(cmd.platformRef),
         creationMode: cmd.creationMode ?? "guided",
         status: "active",
-        currentStage: "brief",
+        currentStage: startStage,
         progressPct: 0,
         starred: false,
         startedAt: ts,
@@ -542,18 +606,30 @@ export function createProjectsService(
         createdAt: ts,
         updatedAt: ts,
       });
-      // 2. seed the fixed stages (first = brief in_progress/started, rest pending).
-      const stageRows: StageRow[] = PROJECT_STAGES.map((stage, idx) => ({
-        id: deps.nextId("stage"),
-        projectId,
-        stage,
-        status: idx === 0 ? "in_progress" : "pending",
-        progressPct: 0,
-        skipped: false,
-        startedAt: idx === 0 ? ts : null,
-        completedAt: null,
-        updatedAt: ts,
-      }));
+      // 2. seed the fixed stages. 手动/选题:首阶段 brief in_progress;导入项目已发布,
+      //    前置阶段全 completed、复盘(review)阶段 in_progress(已发布作品就地等复盘)。
+      const stageRows: StageRow[] = PROJECT_STAGES.map((stage) => {
+        const isCurrent = stage === startStage;
+        const beforeCurrent =
+          isImported &&
+          PROJECT_STAGES.indexOf(stage) < PROJECT_STAGES.indexOf(startStage);
+        const status: StageStatus = isCurrent
+          ? "in_progress"
+          : beforeCurrent
+            ? "completed"
+            : "pending";
+        return {
+          id: deps.nextId("stage"),
+          projectId,
+          stage,
+          status,
+          progressPct: status === "completed" ? 100 : 0,
+          skipped: false,
+          startedAt: isCurrent || beforeCurrent ? ts : null,
+          completedAt: beforeCurrent ? ts : null,
+          updatedAt: ts,
+        };
+      });
       await repo.insertStages(ctx, stageRows);
       // 3. seed the target platforms passed in the command (intent only).
       if (cmd.targetPlatforms && cmd.targetPlatforms.length > 0) {
@@ -574,9 +650,46 @@ export function createProjectsService(
         ctx,
         activity(projectId, "project_created", "project", projectId, {
           title: cmd.title,
+          source,
         }),
       );
       return project;
+    },
+
+    async ensureImportedProject(ctx, input) {
+      // 数据底座(SPEC §1.3):幂等于 (userId, platform, externalId)。先查既有 imported
+      //   项目 + 其 content_output;命中则直接返回(不重复建)。
+      const existing = await repo.findImportedByRef(ctx, {
+        platform: input.platform,
+        externalId: input.externalId,
+      });
+      if (existing) {
+        const outputs = await repo.listOutputs(ctx, existing.id);
+        // 既有 imported 项目正常带 1 个 output;若历史数据缺(防御),补建一个。
+        const outputId = outputs[0]?.id ?? null;
+        if (outputId) {
+          return { projectId: existing.id, outputId, created: false };
+        }
+        const repaired = await service.createOutput(ctx, existing.id, {
+          title: input.title || existing.title,
+        });
+        return { projectId: existing.id, outputId: repaired.id, created: false };
+      }
+      // 无 → 建 project(source:imported, 真实 platformRef, 复盘态)+ 其 content_output。
+      const project = await service.createProject(ctx, {
+        title: input.title,
+        source: "imported",
+        platformRef: {
+          platform: input.platform,
+          externalId: input.externalId,
+          shareUrl: input.shareUrl,
+          publishedAt: input.publishedAt,
+        },
+      });
+      const output = await service.createOutput(ctx, project.id, {
+        title: input.title,
+      });
+      return { projectId: project.id, outputId: output.id, created: true };
     },
 
     async patchProject(ctx, projectId, patch) {
@@ -897,6 +1010,7 @@ export function createProjectsService(
       return { continueCreating, todos };
     },
   };
+  return service;
 }
 
 // The next stage status under the default forward progression. A stage with a

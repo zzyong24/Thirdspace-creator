@@ -29,6 +29,18 @@ export interface CreatePublicationInput {
   accountReference: string;
 }
 
+// 数据底座(SPEC §1.3):导入一条真实已发布作品对应的 publication —— 直接落
+// status='published' 且带 external_id=aweme_id(ingestion 的 resolvePublication
+// 据此命中,metrics 才能挂上去)。区别于常规 createPublication(draft 起、external_id
+// 由 platform publish 回填):导入作品已是平台事实,无需再走 publish 副作用。
+export interface CreateImportedPublicationInput {
+  platform: string;
+  accountReference: string;
+  externalId: string;
+  externalUrl?: string | null;
+  publishedAt?: string | null;
+}
+
 export interface CreateRevisionInput {
   title: string;
   description: string;
@@ -54,6 +66,11 @@ export interface PublishingRepository {
   createPublication(
     outputId: string,
     input: CreatePublicationInput,
+  ): Promise<PublicationRow>;
+  // 数据底座(SPEC §1.3):落一条已发布 publication(external_id 直填),不走 publish 副作用。
+  createImportedPublication(
+    outputId: string,
+    input: CreateImportedPublicationInput,
   ): Promise<PublicationRow>;
   listPublicationsByOutput(
     outputId: string,
@@ -145,6 +162,31 @@ export function createPublishingRepository(
         externalUrl: null,
         scheduledAt: null,
         publishedAt: null,
+        removedAt: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return getPublicationRowById(id);
+    },
+
+    async createImportedPublication(outputId, input) {
+      // 数据底座(SPEC §1.3):直接落 published + external_id=aweme_id。无 revision
+      //   (导入作品的标题挂在 content_output / project,不强造空 revision)。publishedAt
+      //   用真实发布时刻(缺则 now)。
+      const now = deps.now();
+      const id = deps.nextId("pub");
+      await db.insert(publications).values({
+        id,
+        userId,
+        contentOutputId: outputId,
+        platform: input.platform,
+        accountReference: input.accountReference,
+        status: "published",
+        currentRevisionId: null,
+        externalId: input.externalId,
+        externalUrl: input.externalUrl ?? null,
+        scheduledAt: null,
+        publishedAt: input.publishedAt ?? now,
         removedAt: null,
         createdAt: now,
         updatedAt: now,

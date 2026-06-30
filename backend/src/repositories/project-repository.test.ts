@@ -80,6 +80,8 @@ describe("ProjectRepository (pglite-backed real persistence)", () => {
       brief: "",
       briefDetail: {},
       contentCategory: "",
+      source: "manual",
+      platformRef: {},
       creationMode: "guided",
       status: "active",
       currentStage: "script",

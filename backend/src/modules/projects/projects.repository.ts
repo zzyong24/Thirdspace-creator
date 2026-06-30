@@ -1,4 +1,4 @@
-import { and, eq, asc, type Db } from "@creatoros/backend";
+import { and, eq, asc, sql, type Db } from "@creatoros/backend";
 import {
   projects,
   projectActivities,
@@ -41,6 +41,13 @@ export interface ProjectRepository {
   list(ctx: RequestContext): Promise<ProjectRow[]>;
   get(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
   insertProject(ctx: RequestContext, row: ProjectRow): Promise<ProjectRow>;
+  // 数据底座(SPEC §1.3):按平台引用查既有 imported 项目(幂等键
+  // (userId, platform, externalId))。命中返回该 project row,否则 null。匹配
+  // source='imported' 且 platform_ref->>platform / ->>externalId 相等(user-scoped)。
+  findImportedByRef(
+    ctx: RequestContext,
+    ref: { platform: string; externalId: string },
+  ): Promise<ProjectRow | null>;
   updateProjectRow(
     ctx: RequestContext,
     projectId: string,
@@ -207,6 +214,24 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .values({ ...row, userId: ctx.userId })
         .returning();
       return inserted[0]!;
+    },
+
+    async findImportedByRef(ctx, ref) {
+      // 数据底座(SPEC §1.3)幂等键 (userId, platform, externalId)。user-scoped +
+      // source='imported' + platform_ref 的 platform/externalId 字段相等(jsonb ->>)。
+      const rows = await db
+        .select()
+        .from(projects)
+        .where(
+          and(
+            eq(projects.userId, ctx.userId),
+            eq(projects.source, "imported"),
+            sql`${projects.platformRef} ->> 'platform' = ${ref.platform}`,
+            sql`${projects.platformRef} ->> 'externalId' = ${ref.externalId}`,
+          ),
+        )
+        .limit(1);
+      return rows[0] ?? null;
     },
 
     async updateProjectRow(ctx, projectId, set) {

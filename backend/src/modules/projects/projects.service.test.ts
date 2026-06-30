@@ -93,6 +93,68 @@ describe("createProject UoW", () => {
     const project = await service.createProject(ctx, { title: "T" });
     expect(await repo.listTargetPlatforms(ctx, project.id)).toHaveLength(0);
   });
+
+  it("source:imported 项目落复盘态 + 前置阶段 completed(SPEC §1.2/§1.3)", async () => {
+    const project = await service.createProject(ctx, {
+      title: "真实作品",
+      source: "imported",
+      platformRef: {
+        platform: "douyin",
+        externalId: "7400",
+        publishedAt: "2026-06-20T08:00:00.000Z",
+      },
+    });
+    expect(project.source).toBe("imported");
+    expect(project.currentStage).toBe("review");
+    const ref = (project as { platformRef?: Record<string, unknown> })
+      .platformRef!;
+    expect(ref.platform).toBe("douyin");
+    expect(ref.externalId).toBe("7400");
+    const stages = await repo.listStages(ctx, project.id);
+    expect(stages.find((s) => s.stage === "review")!.status).toBe("in_progress");
+    expect(stages.find((s) => s.stage === "brief")!.status).toBe("completed");
+    expect(stages.find((s) => s.stage === "production")!.status).toBe(
+      "completed",
+    );
+  });
+});
+
+describe("ensureImportedProject (数据底座 / SPEC §1.3)", () => {
+  it("建 source:imported 项目 + 1 个 content_output,带真实标题/平台引用", async () => {
+    const res = await service.ensureImportedProject(ctx, {
+      title: "AI 工作流四步法",
+      platform: "douyin",
+      externalId: "7400",
+      publishedAt: "2026-06-20T08:00:00.000Z",
+    });
+    expect(res.created).toBe(true);
+    const project = await repo.get(ctx, res.projectId);
+    expect(project.source).toBe("imported");
+    expect(project.title).toBe("AI 工作流四步法");
+    const outputs = await repo.listOutputs(ctx, res.projectId);
+    expect(outputs).toHaveLength(1);
+    expect(outputs[0]!.id).toBe(res.outputId);
+  });
+
+  it("幂等于 (userId, platform, externalId):二次调用返回既有 id 且不重复建", async () => {
+    const first = await service.ensureImportedProject(ctx, {
+      title: "AI 工作流四步法",
+      platform: "douyin",
+      externalId: "7400",
+    });
+    const second = await service.ensureImportedProject(ctx, {
+      title: "标题变了也不重复建",
+      platform: "douyin",
+      externalId: "7400",
+    });
+    expect(second.created).toBe(false);
+    expect(second.projectId).toBe(first.projectId);
+    expect(second.outputId).toBe(first.outputId);
+    const imported = (await repo.list(ctx)).filter(
+      (p) => p.source === "imported",
+    );
+    expect(imported).toHaveLength(1);
+  });
 });
 
 describe("Stage machine (SPEC §12)", () => {
@@ -259,6 +321,8 @@ describe("getDashboardSummary (GAP-DASH-1)", () => {
       brief: "",
       briefDetail: {},
       contentCategory: "",
+      source: "manual",
+      platformRef: {},
       creationMode: "guided",
       status: "active",
       currentStage: "planning",

@@ -16,10 +16,12 @@ export {
   type IngestionService,
   type IngestionPorts,
   type IngestionPublishingPort,
+  type IngestionProjectsPort,
   type IngestionAnalyticsPort,
   type IngestionKnowledgePort,
   type IngestionAssetsPort,
   type IngestionArtifactsPort,
+  type DouyinFetchPort,
   type ServiceDeps,
 } from "./ingestion.service";
 

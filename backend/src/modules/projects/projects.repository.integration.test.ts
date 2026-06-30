@@ -27,6 +27,8 @@ function projectRow(over: Partial<ProjectRow> & { id: string; userId: string }):
     brief: over.brief ?? "",
     briefDetail: over.briefDetail ?? {},
     contentCategory: over.contentCategory ?? "",
+    source: over.source ?? "manual",
+    platformRef: over.platformRef ?? {},
     creationMode: over.creationMode ?? "guided",
     status: over.status ?? "active",
     currentStage: over.currentStage ?? "research",

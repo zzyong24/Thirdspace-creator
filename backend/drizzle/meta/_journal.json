@@ -57,6 +57,13 @@
       "when": 1782379600000,
       "tag": "0007_ai_task_steps",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782379700000,
+      "tag": "0008_project_source_platformref",
+      "breakpoints": true
     }
   ]
 }

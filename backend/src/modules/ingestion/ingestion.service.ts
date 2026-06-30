@@ -40,6 +40,35 @@ export interface IngestionPublishingPort {
     ctx: RequestContext,
     ref: { platform: string; externalId: string },
   ): Promise<{ id: string } | null>;
+  // 数据底座(SPEC §1.3):为一条真实已发布作品落 publication(直接 published +
+  // external_id=aweme_id)。幂等于 (platform, externalId)。可选(未注入时
+  // ensureImportedProject 退化为仅建项目,不建 publication —— 旧组合根不破)。
+  createImportedPublication?(
+    ctx: RequestContext,
+    outputId: string,
+    input: {
+      platform: string;
+      externalId: string;
+      externalUrl?: string | null;
+      publishedAt?: string | null;
+    },
+  ): Promise<{ id: string }>;
+}
+
+// 数据底座(SPEC §1.3):为一条真实已发布作品就地建历史项目 + content_output 的端口
+// (composition root 适配到 projectsService.ensureImportedProject)。可选 —— 未注入时
+// refreshDouyin 退回旧行为(未知作品 reject),不破坏既有最小组合。
+export interface IngestionProjectsPort {
+  ensureImportedProject(
+    ctx: RequestContext,
+    input: {
+      title: string;
+      platform: string;
+      externalId: string;
+      shareUrl?: string;
+      publishedAt?: string;
+    },
+  ): Promise<{ projectId: string; outputId: string; created: boolean }>;
 }
 
 export interface IngestionAnalyticsPort {
@@ -88,6 +117,9 @@ export interface IngestionPorts {
   knowledge: IngestionKnowledgePort;
   assets: IngestionAssetsPort;
   artifacts: IngestionArtifactsPort;
+  // 数据底座(SPEC §1.3):导入历史项目端口。可选 —— 未注入时 refreshDouyin 退回旧
+  // 行为(未知作品 reject)。composition root 注入 projectsService.ensureImportedProject。
+  projects?: IngestionProjectsPort;
 }
 
 // 抖音抓取端口 —— composition root 注入 fetchDouyinMetrics(自起持久 context 复用扫码登录态);
@@ -131,7 +163,22 @@ export interface IngestionService {
     ctx: RequestContext,
     idempotencyKey: string,
   ): Promise<string>;
-  // 抖音真实指标刷新:校验来源→抓取(复用扫码登录态)→createRun→ingestMetrics→completeRun。
+  // 数据底座(SPEC §1.3):确保一条真实已发布作品就地有历史项目 + content_output +
+  //   publication(external_id=aweme_id)。幂等于 (userId, platform, externalId)。经
+  //   注入端口调 projects/publishing 的 service(不跨模块直连 repo,守 SPEC §22)。
+  //   返回 publicationId(挂 metrics 用);projects 端口未注入时返回 null(调用方据此回退)。
+  ensureImportedProject(
+    ctx: RequestContext,
+    input: {
+      title: string;
+      platform: string;
+      externalId: string;
+      shareUrl?: string;
+      publishedAt?: string;
+    },
+  ): Promise<{ projectId: string; outputId: string; publicationId: string } | null>;
+  // 抖音真实指标刷新:校验来源→抓取(复用扫码登录态)→ensureImportedProject×N(未知作品
+  // 就地建历史项目,治"24 条被 reject")→createRun→ingestMetrics(此时全命中)→completeRun。
   refreshDouyin(
     ctx: RequestContext,
     input: { externalSourceId: string; capturedAt?: string },
@@ -261,6 +308,47 @@ export function createIngestionService(args: {
       return run.id;
     },
 
+    async ensureImportedProject(ctx, input) {
+      // 数据底座(SPEC §1.3)。projects 端口未注入(旧最小组合)→ 返回 null,调用方回退。
+      if (!ports.projects) return null;
+      const ensured = await ports.projects.ensureImportedProject(ctx, {
+        title: input.title,
+        platform: input.platform,
+        externalId: input.externalId,
+        shareUrl: input.shareUrl,
+        publishedAt: input.publishedAt,
+      });
+      // 确保对应 publication 存在(external_id=externalId),metrics 才能命中。先查既有,
+      // 无则经 publishing 端口建(端口未提供 create 时退回 resolve,缺则报错 —— 不静默)。
+      const existing = await ports.publishing.resolvePublication(ctx, {
+        platform: input.platform,
+        externalId: input.externalId,
+      });
+      let publicationId = existing?.id ?? null;
+      if (!publicationId) {
+        if (!ports.publishing.createImportedPublication) {
+          throw new Error(
+            "ensureImportedProject: publishing.createImportedPublication 端口未配置,无法落 publication",
+          );
+        }
+        const pub = await ports.publishing.createImportedPublication(
+          ctx,
+          ensured.outputId,
+          {
+            platform: input.platform,
+            externalId: input.externalId,
+            publishedAt: input.publishedAt ?? null,
+          },
+        );
+        publicationId = pub.id;
+      }
+      return {
+        projectId: ensured.projectId,
+        outputId: ensured.outputId,
+        publicationId,
+      };
+    },
+
     async ingestMetrics(ctx, input) {
       return runPush(
         ctx,
@@ -369,6 +457,28 @@ export function createIngestionService(args: {
       const capturedAt = input.capturedAt ?? deps.now();
       // 真抓(CDP)→ records;失败/无登录态会抛,run 不会被建(快速失败)。
       const records = await douyinFetch.fetch({ capturedAt });
+      // 数据底座(SPEC §1.3):抓到的每条作品先 ensureImportedProject(幂等于
+      //   (userId, platform, externalId))—— 未知作品就地建历史项目 + content_output +
+      //   publication(external_id=aweme_id),治"24 条被 reject"。projects 端口未注入
+      //   (旧最小组合)时 ensureImportedProject 返回 null,退回旧行为(下方 ingestMetrics
+      //   未命中即 reject),不破坏既有最小组合。每条 ensure 失败不应整批挂:吞掉单条错误
+      //   (该条 metrics 后续 resolvePublication 未命中会被正常 reject,计入 partial)。
+      if (ports.projects) {
+        for (const r of records) {
+          try {
+            await service.ensureImportedProject(ctx, {
+              title: r.title ?? `抖音作品 ${r.externalId}`,
+              platform: r.platform,
+              externalId: r.externalId,
+              shareUrl: r.shareUrl,
+              publishedAt: r.publishedAt,
+            });
+          } catch {
+            // 单条导入失败不阻断整批 —— 该条 metrics 将在 ingestMetrics 因
+            // resolvePublication 未命中而 reject(计入 partial),不静默丢真实错误归属。
+          }
+        }
+      }
       const run = await service.createRun(ctx, {
         externalSourceId: input.externalSourceId,
         runType: "douyin_metrics",

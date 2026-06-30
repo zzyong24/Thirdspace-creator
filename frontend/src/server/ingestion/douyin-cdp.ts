@@ -115,6 +115,13 @@ export function toMetricRecords(
     };
     if (det?.finishRate != null) metrics.finish_rate = det.finishRate;
     if (det?.followerGain != null) metrics.follower_gain = det.followerGain;
+    // 数据底座(SPEC §1.3):携带真实标题(desc)+ 发布时刻(create_time 秒 → ISO),
+    //   供 ensureImportedProject 给历史项目起真名 / 落 platform_ref.publishedAt。
+    const title = w.desc.trim() || undefined;
+    const publishedAt =
+      w.createTime > 0
+        ? new Date(w.createTime * 1000).toISOString()
+        : undefined;
     return {
       // 幂等键:同一作品同一抓取时刻唯一(Analytics 落库去重锚)。
       recordKey: `douyin:${w.awemeId}:${capturedAt}`,
@@ -122,6 +129,8 @@ export function toMetricRecords(
       externalId: w.awemeId,
       capturedAt,
       metrics,
+      ...(title ? { title } : {}),
+      ...(publishedAt ? { publishedAt } : {}),
     };
   });
 }

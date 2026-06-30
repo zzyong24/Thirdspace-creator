@@ -149,6 +149,21 @@ export interface PublishingService {
     ctx: RequestContext,
     externalSourceRef: { platform: string; externalId: string },
   ): Promise<PublicationRow | null>;
+  // 数据底座(SPEC §1.3):为一条真实已发布作品落 publication(直接 published +
+  //   external_id=aweme_id)。幂等:同 (platform, external_id) 已存在则返回既有(不重复
+  //   建)—— ingestion 的 ensureImportedProject 也先查,这里是第二道防线(partial-unique
+  //   external key 锚)。ingestion 经注入端口调本方法(不跨模块直连 repo,守 SPEC §22)。
+  createImportedPublication(
+    ctx: RequestContext,
+    outputId: string,
+    input: {
+      platform: string;
+      externalId: string;
+      accountReference?: string;
+      externalUrl?: string | null;
+      publishedAt?: string | null;
+    },
+  ): Promise<PublicationRow>;
   // Cross-module resolver for Analytics (SPEC §11/§22): the user-scoped
   // publication ids belonging to a project. Resolves project→ContentOutput ids
   // via the injected ProjectsService seam (project-ownership gate lives there),
@@ -388,6 +403,30 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         externalSourceRef.platform,
         externalSourceRef.externalId,
       );
+    },
+
+    async createImportedPublication(ctx, outputId, input) {
+      // 数据底座(SPEC §1.3)。平台白名单同 createPublication;幂等于 (platform,
+      //   externalId)——命中既有则直接返回(不重复建)。accountReference 缺省取
+      //   "<platform> 导入"(导入作品无显式账号引用)。
+      if (!PLATFORMS.has(input.platform)) {
+        throw new ValidationError(
+          `ValidationError: unknown platform: ${input.platform}`,
+        );
+      }
+      const repo = repoFor(ctx);
+      const existing = await repo.findByExternalKey(
+        input.platform,
+        input.externalId,
+      );
+      if (existing) return existing;
+      return repo.createImportedPublication(outputId, {
+        platform: input.platform,
+        accountReference: input.accountReference ?? `${input.platform} 导入`,
+        externalId: input.externalId,
+        externalUrl: input.externalUrl ?? null,
+        publishedAt: input.publishedAt ?? null,
+      });
     },
 
     async listPublicationIdsByProject(ctx, projectId) {

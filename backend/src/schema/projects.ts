@@ -20,6 +20,12 @@ export const projects = pgTable("projects", {
   // targetPlatforms[], durationEstimate, coreMessage, successCriteria}。默认空对象。
   briefDetail: jsonb("brief_detail").notNull().default({}),
   contentCategory: text("content_category").notNull().default(""),
+  // 数据底座(宪法 §7 / SPEC §1.2 + migration 0008)。source: manual(手动新建)/
+  // topic(选题立项)/ imported(真实采集导入)。platform_ref: 导入项目的平台引用
+  // { platform, externalId, shareUrl?, publishedAt? };非导入项目为 {}。存量行
+  // source 默认 manual、platform_ref 默认 {},行为不变。
+  source: text("source").notNull().default("manual"),
+  platformRef: jsonb("platform_ref").notNull().default({}),
   creationMode: text("creation_mode").notNull(),
   status: text("status").notNull(),
   currentStage: text("current_stage").notNull(),
@@ -124,6 +130,8 @@ CREATE TABLE IF NOT EXISTS projects (
   brief TEXT NOT NULL DEFAULT '',
   brief_detail JSONB NOT NULL DEFAULT '{}'::jsonb,
   content_category TEXT NOT NULL DEFAULT '',
+  source TEXT NOT NULL DEFAULT 'manual',
+  platform_ref JSONB NOT NULL DEFAULT '{}'::jsonb,
   creation_mode TEXT NOT NULL,
   status TEXT NOT NULL,
   current_stage TEXT NOT NULL,

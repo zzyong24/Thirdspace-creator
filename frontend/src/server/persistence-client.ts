@@ -432,6 +432,10 @@ function toRow(p: CanonicalProject): ProjectRow {
     brief: p.brief ?? "",
     briefDetail: p.briefDetail ?? {},
     contentCategory: p.contentCategory ?? "",
+    // 数据底座(SPEC §1.2):canonical fixture 项目均为手动(无 source/platformRef 字段)
+    //   → 默认 manual + 空 platform_ref(行为不变)。
+    source: (p as { source?: string }).source ?? "manual",
+    platformRef: (p as { platformRef?: Record<string, unknown> }).platformRef ?? {},
     creationMode: p.creationMode,
     status: p.status,
     currentStage: p.currentStage,
@@ -1072,6 +1076,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       publishing: {
         resolvePublication: (ctx, ref) =>
           publishingService.resolvePublication(ctx, ref),
+        // 数据底座(SPEC §1.3):导入作品落 published publication(external_id=aweme_id)。
+        createImportedPublication: (ctx, outputId, input) =>
+          publishingService.createImportedPublication(ctx, outputId, input),
+      },
+      // 数据底座(SPEC §1.3):导入历史项目端口 → projectsService.ensureImportedProject
+      //   (建 project source:imported + content_output,经公共 service,不跨模块直连 repo)。
+      projects: {
+        ensureImportedProject: (ctx, input) =>
+          projectsService.ensureImportedProject(ctx, input),
       },
       analytics: {
         appendSnapshot: (ctx, input) =>
