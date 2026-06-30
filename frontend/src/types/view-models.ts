@@ -256,6 +256,7 @@ export interface ProjectOverviewViewModel extends BasePageViewModel {
     readonly targetAudience?: string;
     readonly contentGoal?: string;
     readonly contentFormat?: string;
+    readonly orientation?: "landscape" | "portrait";
     readonly targetPlatforms: ReadonlyArray<string>;
     readonly durationEstimate?: string;
     readonly coreMessage?: string;

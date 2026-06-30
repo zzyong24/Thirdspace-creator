@@ -16,10 +16,16 @@ const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
 // (沿用 facets/card 的 jsonb 扩展模式,不新建 project_brief 表)。EVERY field 是
 // optional/default 所以一个裸 `{}` 是合法的空 Brief(刚立项),立项工作台逐字段填,
 // brief 阶段 gate 校验核心必填齐(目标受众/内容目标/内容形式/目标平台≥1/核心信息)。
+// 画幅取向(产品定调:不分视频类型,唯一的"类型"区分就是横屏/竖屏)。横屏=16:9(长视频/
+// 横版),竖屏=9:16(短视频/信息流)。下游脚本/拍摄 AI 可据此调节奏(竖屏更短、前 3 秒更狠)。
+export const projectOrientation = z.enum(["landscape", "portrait"]);
+export type ProjectOrientation = z.infer<typeof projectOrientation>;
+
 export const projectBriefDetail = z.object({
   targetAudience: z.string().optional(), // 目标受众
   contentGoal: z.string().optional(), // 内容目标(这条内容要达成什么)
   contentFormat: z.string().optional(), // 内容形式(口播 / 短剧 / 图文…)
+  orientation: projectOrientation.optional(), // 画幅:横屏 / 竖屏
   targetPlatforms: z.array(z.string()).default([]), // 目标平台
   durationEstimate: z.string().optional(), // 预估时长
   coreMessage: z.string().optional(), // 核心信息(一句话主张)

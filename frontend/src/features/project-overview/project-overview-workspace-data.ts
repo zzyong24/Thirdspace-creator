@@ -58,6 +58,7 @@ interface ProjectDto {
     readonly targetAudience?: string;
     readonly contentGoal?: string;
     readonly contentFormat?: string;
+    readonly orientation?: "landscape" | "portrait";
     readonly targetPlatforms?: ReadonlyArray<string>;
     readonly durationEstimate?: string;
     readonly coreMessage?: string;
@@ -74,6 +75,7 @@ function projectBriefDetail(
     targetAudience: b.targetAudience,
     contentGoal: b.contentGoal,
     contentFormat: b.contentFormat,
+    orientation: b.orientation,
     targetPlatforms: b.targetPlatforms ?? [],
     durationEstimate: b.durationEstimate,
     coreMessage: b.coreMessage,

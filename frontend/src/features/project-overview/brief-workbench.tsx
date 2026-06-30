@@ -45,11 +45,14 @@ export interface BriefWorkbenchProps {
   readonly briefDetail?: BriefDetail;
 }
 
+type Orientation = "" | "landscape" | "portrait";
+
 interface FormState {
   title: string;
   targetAudience: string;
   contentGoal: string;
   contentFormat: string;
+  orientation: Orientation;
   targetPlatforms: string[];
   durationEstimate: string;
   coreMessage: string;
@@ -65,12 +68,23 @@ function initialState(
     targetAudience: brief?.targetAudience ?? "",
     contentGoal: brief?.contentGoal ?? "",
     contentFormat: brief?.contentFormat ?? "",
+    orientation: brief?.orientation ?? "",
     targetPlatforms: [...(brief?.targetPlatforms ?? [])],
     durationEstimate: brief?.durationEstimate ?? "",
     coreMessage: brief?.coreMessage ?? "",
     successCriteria: brief?.successCriteria ?? "",
   };
 }
+
+// 画幅取向选项(产品定调:唯一类型区分=横屏/竖屏)。
+const ORIENTATIONS: ReadonlyArray<{
+  value: "landscape" | "portrait";
+  label: string;
+  hint: string;
+}> = [
+  { value: "landscape", label: "横屏", hint: "16:9 · 长视频 / 横版" },
+  { value: "portrait", label: "竖屏", hint: "9:16 · 短视频 / 信息流" },
+];
 
 // 核心必填项(与后端 brief gate 对齐):项目名 / 目标受众 / 内容目标 / 内容形式 /
 // 目标平台≥1 / 核心信息。任一缺失则「进入下一步」拦住,并把缺失项高亮提示。
@@ -147,6 +161,7 @@ export function BriefWorkbench({
             targetAudience: form.targetAudience.trim() || undefined,
             contentGoal: form.contentGoal.trim() || undefined,
             contentFormat: form.contentFormat.trim() || undefined,
+            orientation: form.orientation || undefined,
             targetPlatforms: form.targetPlatforms,
             durationEstimate: form.durationEstimate.trim() || undefined,
             coreMessage: form.coreMessage.trim() || undefined,
@@ -327,6 +342,48 @@ export function BriefWorkbench({
             description="用什么形式、发到哪些平台"
             className="lg:col-span-2"
           >
+            {/* 画幅:产品唯一的"类型"区分 —— 横屏 / 竖屏。整行醒目放最前。 */}
+            <div className="mb-4">
+              <Field label="画幅" hint="横屏或竖屏,影响下游脚本节奏">
+                <div
+                  data-slot="brief-orientation"
+                  className="flex gap-2"
+                >
+                  {ORIENTATIONS.map((o) => {
+                    const active = form.orientation === o.value;
+                    return (
+                      <button
+                        key={o.value}
+                        type="button"
+                        data-testid={`brief-orientation-${o.value}`}
+                        aria-pressed={active}
+                        onClick={() =>
+                          set("orientation", active ? "" : o.value)
+                        }
+                        className={cn(
+                          "flex flex-1 flex-col items-start gap-0.5 rounded-control border px-3 py-2 text-left transition-colors",
+                          active
+                            ? "border-brand/50 bg-brand-soft"
+                            : "border-border bg-surface hover:bg-muted",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "text-sm font-medium",
+                            active ? "text-brand" : "text-foreground",
+                          )}
+                        >
+                          {o.label}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {o.hint}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
+            </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Field
                 label="内容形式"
