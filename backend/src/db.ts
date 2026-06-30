@@ -27,8 +27,9 @@ import { Pool } from "pg";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
 import { migrate as migratePglite } from "drizzle-orm/pglite/migrator";
-import { dirname, resolve } from "node:path";
+import { dirname, resolve, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
 
 // Versioned migrations live in backend/drizzle (baseline 0000_init derived from the
 // per-module *_DDL). The pglite (tests) and node-postgres (runtime) migrators apply this
@@ -112,6 +113,105 @@ export async function createRuntimeDb(
   const db = drizzlePg(pool, { schema });
   await migratePg(db, { migrationsFolder: MIGRATIONS_FOLDER });
   return { db: db as unknown as Db, pool };
+}
+
+// ── L0 本地优先存储:运行时 driver 选择(SPEC §4.1/§7-L0)──────────────────────
+//
+// 三态优先级(从高到低):
+//   1. DATABASE_URL        → docker/远程 真 Postgres(node-postgres)。多用户/云部署。
+//   2. PGLITE_DATA_DIR      → file-backed PGlite 落盘(Postgres-WASM 持久化到本地目录)。
+//   3. 内存 PGlite          → 仅 测试/无配置兜底(重启即丢)。
+//
+// 本地优先默认:runtime(非测试)既无 DATABASE_URL 也无 PGLITE_DATA_DIR 时,
+// **不退内存**(内存重启丢数据),而是落盘到默认目录(CREATOROS_DB_DIR 或
+// <cwd>/.data/pglite),让"零 docker 起 app"开箱即持久。
+// 测试路径(NODE_ENV=test / VITEST)保持内存 PGlite —— 不落盘、不拖慢、可复现。
+export type DbDriverKind = "postgres" | "file-pglite" | "memory-pglite";
+
+export interface ResolvedDbDriver {
+  kind: DbDriverKind;
+  // postgres: 连接串;file-pglite: 落盘目录(已解析为绝对路径);memory: undefined。
+  target?: string;
+}
+
+export interface ResolveDbDriverOptions {
+  // 注入式 env / cwd(默认读真 process.* —— 测试可传桩,避免依赖全局环境)。
+  env?: NodeJS.ProcessEnv;
+  cwd?: string;
+}
+
+// file-PGlite 缺省落盘目录(env 未配时):<cwd>/.data/pglite。与 .auth/ 同属本机私有,
+// 由 .gitignore 兜住(不入库)。
+export function defaultPgliteDataDir(cwd: string): string {
+  return join(cwd, ".data", "pglite");
+}
+
+// 把可能为 `~`/相对 的 PGLITE_DATA_DIR 解析为绝对路径(PGlite 按字面路径建目录)。
+function resolveDataDir(raw: string, cwd: string): string {
+  const v = raw.trim();
+  if (v === "~") return homedir();
+  if (v.startsWith("~/") || v.startsWith("~\\")) {
+    return join(homedir(), v.slice(2));
+  }
+  return isAbsolute(v) ? v : resolve(cwd, v);
+}
+
+// 纯函数:据 env/cwd 决定该用哪条 driver(无副作用,便于单测优先级矩阵)。
+export function resolveDbDriver(
+  options: ResolveDbDriverOptions = {},
+): ResolvedDbDriver {
+  const env = options.env ?? process.env;
+  const cwd = options.cwd ?? process.cwd();
+
+  // 1) 真 Postgres 最高优先 —— 用户当前 dev(docker-PG + 71 作品)走这条,保持不变。
+  const url = env.DATABASE_URL?.trim();
+  if (url) return { kind: "postgres", target: url };
+
+  const isTest = env.NODE_ENV === "test" || Boolean(env.VITEST);
+
+  // 2) 显式配置 file-backed PGlite 落盘目录。
+  const dir = env.PGLITE_DATA_DIR?.trim();
+  if (dir) {
+    return { kind: "file-pglite", target: resolveDataDir(dir, cwd) };
+  }
+
+  // 3a) 测试/vitest:内存 PGlite(不落盘、可复现)。
+  if (isTest) return { kind: "memory-pglite" };
+
+  // 3b) 本地优先默认:runtime 无任何 DB 配置 → 落盘到 CREATOROS_DB_DIR 或默认目录,
+  //     而非内存(重启即丢)。这就是"零 docker 起 app 即持久"。
+  const overrideDir = env.CREATOROS_DB_DIR?.trim();
+  return {
+    kind: "file-pglite",
+    target: overrideDir
+      ? resolveDataDir(overrideDir, cwd)
+      : defaultPgliteDataDir(cwd),
+  };
+}
+
+// 统一的运行时 db 工厂:据 resolveDbDriver 起对应 driver,返回 db + 归一的 dispose
+// + 该次实际选中的 driver 元信息(供 composition root 决定 id/clock 是否要 process-unique,
+// 并打一行可观测日志)。postgres → pool.end();pglite(file/memory)→ client.close()。
+export interface ConfiguredDb {
+  db: Db;
+  driver: ResolvedDbDriver;
+  // 归一释放:让调用方无需关心底层是 pg pool 还是 pglite client。
+  dispose: () => Promise<void>;
+}
+
+export async function createConfiguredDb(
+  options: ResolveDbDriverOptions = {},
+): Promise<ConfiguredDb> {
+  const driver = resolveDbDriver(options);
+  if (driver.kind === "postgres") {
+    const { db, pool } = await createRuntimeDb({
+      connectionString: driver.target,
+    });
+    return { db, driver, dispose: () => pool.end() };
+  }
+  // file-pglite(driver.target 为落盘目录)/ memory-pglite(无 target)。
+  const { db, client } = await createDb({ dataDir: driver.target });
+  return { db, driver, dispose: () => client.close() };
 }
 
 export { schema };

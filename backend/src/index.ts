@@ -1,10 +1,17 @@
 export {
   createDb,
   createRuntimeDb,
+  createConfiguredDb,
+  resolveDbDriver,
+  defaultPgliteDataDir,
   schema,
   type Db,
   type CreateDbOptions,
   type RuntimeDb,
+  type ConfiguredDb,
+  type ResolvedDbDriver,
+  type ResolveDbDriverOptions,
+  type DbDriverKind,
 } from "./db";
 export {
   createProjectRepository,

@@ -1,7 +1,6 @@
 import "server-only";
 import {
-  createDb,
-  createRuntimeDb,
+  createConfiguredDb,
   UnsupportedOperationError,
 } from "@creatoros/backend";
 import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
@@ -833,25 +832,27 @@ const globalForPersistence = globalThis as unknown as {
 };
 
 async function buildPersistence(): Promise<PersistenceBundle> {
-  // Hybrid driver (P1): runtime with DATABASE_URL → real Postgres (persists across
-  // restarts, applies versioned migrations via node-postgres migrator); without it
-  // (vitest / no-DB env) → in-memory pglite. Both apply the SAME drizzle/0000_init
-  // migration, so test and runtime schemas are identical.
-  const { db } = process.env.DATABASE_URL
-    ? await createRuntimeDb()
-    : await createDb();
+  // 本地优先存储 driver(L0,SPEC §4.1/§7-L0)—— 三态优先级,经 backend 的
+  // createConfiguredDb 统一解析:
+  //   1. DATABASE_URL    → 真 Postgres(node-postgres;用户当前 docker-PG + 71 作品走这条,不变)。
+  //   2. PGLITE_DATA_DIR → file-backed PGlite 落盘(Postgres-WASM 持久化到本地目录)。
+  //   3. 内存 PGlite     → 仅 测试/vitest;runtime 无任何配置则本地优先默认落盘(非内存,重启不丢)。
+  // 三条都套同一份 drizzle 迁移(0000…),test/runtime schema 一致。dispose 当前进程不
+  // 主动调(singleton 跟随进程生命周期),保留以备未来显式 teardown。
+  const { db, driver } = await createConfiguredDb();
 
   // Deterministic clock/ids keep the seeded dataset reproducible (visual/test
   // parity); new creates get collision-free ids distinct from the slug seeds.
   // `createSeq` lives at build scope (NOT per-request) so ids stay stable across
   // the many per-ctx repos the factory mints below.
-  // Real persistent DB (P1): the deterministic counter RESETS each process but rows
+  // Real persistent DB: the deterministic counter RESETS each process but rows
   // PERSIST, so generated ids + timestamps must be PROCESS-UNIQUE — otherwise runtime
   // creates (register user / login session / new project / activity…) collide on PK
   // across restarts (the `duplicate key … _pkey` bug). Seeds use explicit slug ids +
-  // fixture timestamps, so seed idempotency is unaffected. Tests / pglite (no
-  // DATABASE_URL) keep the fully-deterministic `p` base + FIXED_NOW for reproducibility.
-  const persistent = Boolean(process.env.DATABASE_URL);
+  // fixture timestamps, so seed idempotency is unaffected. L0:**file-backed PGlite
+  // 也持久**(落盘),所以它和 postgres 同样要 process-unique ids;只有 内存 PGlite
+  // (测试/vitest)保留确定性 `p` base + FIXED_NOW 以复现。
+  const persistent = driver.kind !== "memory-pglite";
   const idBase = persistent ? globalThis.crypto.randomUUID().slice(0, 8) : "p";
   let createSeq = 0;
   const deps = {

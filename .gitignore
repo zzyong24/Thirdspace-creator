@@ -34,3 +34,5 @@ frontend/tests/visual/__artifacts__/
 pnpm-debug.log*
 npm-debug.log*
 .auth/
+# 本地优先存储(L0):file-backed PGlite 落盘目录 + 默认对象存储根,本机私有,不入库。
+.data/
