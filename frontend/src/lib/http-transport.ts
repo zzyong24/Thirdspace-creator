@@ -22,7 +22,18 @@ export function createHttpTransport(baseUrl = "/api/v1"): Transport {
         body: JSON.stringify({ id: endpoint.id, input }),
       });
       if (!res.ok) {
-        throw new Error(`HttpTransport: ${res.status} for ${endpoint.id}`);
+        // 把后端的错误文案带上(dispatch 路由 400 body 形如 {error:"..."})。否则前端只看到
+        // "400",拿不到 DouyinNotLoggedInError 之类的可判定信息 —— 错误处理(如未登录引导)失效。
+        let detail = "";
+        try {
+          const body = (await res.json()) as { error?: unknown };
+          if (typeof body?.error === "string") detail = `: ${body.error}`;
+        } catch {
+          /* 非 JSON body,忽略 */
+        }
+        throw new Error(
+          `HttpTransport: ${res.status} for ${endpoint.id}${detail}`,
+        );
       }
       return res.json();
     },
