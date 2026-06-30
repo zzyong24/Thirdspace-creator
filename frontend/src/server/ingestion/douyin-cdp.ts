@@ -158,9 +158,12 @@ export async function fetchDouyinMetrics(
   const maxPages = opts.maxPages ?? 10;
 
   const browser = await chromium.connectOverCDP(cdpUrl);
+  // 我们自己开的页(用完只关这一页,绝不动用户当前标签)。
+  let page: import("@playwright/test").Page | null = null;
   try {
     const context = browser.contexts()[0] ?? (await browser.newContext());
-    const page = context.pages()[0] ?? (await context.newPage());
+    // 开「新页」抓取 —— 不再劫持用户当前标签页(context.pages()[0]),不打断他正在看的内容。
+    page = await context.newPage();
 
     const workJsons: unknown[] = [];
     const detailJsons: Array<{ url: string; json: unknown }> = [];
@@ -201,6 +204,8 @@ export async function fetchDouyinMetrics(
 
     return toMetricRecords(deduped, details, opts.capturedAt);
   } finally {
-    await browser.close();
+    // 只关我们开的那一页;**绝不** browser.close() —— 对 connectOverCDP 它可能终止用户常驻的
+    // Chrome 进程,打断他的工作。CDP 连接随函数返回被 GC(手动「一键刷新」频率低,可接受)。
+    if (page) await page.close().catch(() => {});
   }
 }

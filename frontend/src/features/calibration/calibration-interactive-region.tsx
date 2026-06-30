@@ -47,6 +47,7 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  RefreshCw,
   type LucideIcon,
 } from "lucide-react";
 
@@ -1128,6 +1129,80 @@ function LearningsPanel({
   );
 }
 
+// 抖音创作者中心(seeded 来源 id)。B1:一键经 CDP 连用户登录态 Chrome 拉真实表现。
+// TODO(B 后续):由用户绑定的抖音账号派生来源 id,而非硬编码 canonical。
+const DOUYIN_SOURCE_ID = "src-douyin-canonical";
+
+// ── 一键拉取抖音真实表现(B1 飞轮·真实数据采集)──────────────────────────────────────
+// 调 ingestion.douyin.refresh → 后端经 CDP 连用户**已登录**的 Chrome(:9222)抓创作者中心
+// 指标 → 落库为各作品的真实 analytics 快照。它是把"手填评分"翻成"编导自动评分"的数据前提。
+function RefreshDouyinButton() {
+  const router = useRouter();
+  const [phase, setPhase] = React.useState<"idle" | "running" | "done" | "error">(
+    "idle",
+  );
+  const [msg, setMsg] = React.useState("");
+
+  function refresh() {
+    if (phase === "running") return;
+    setPhase("running");
+    setMsg("正在连你登录的 Chrome 抓取创作者中心…请勿关闭浏览器");
+    void (async () => {
+      try {
+        const run = (await client.refreshDouyin({
+          params: undefined,
+          query: undefined,
+          body: { externalSourceId: DOUYIN_SOURCE_ID },
+        })) as { recordsIngested?: number };
+        setPhase("done");
+        setMsg(
+          typeof run.recordsIngested === "number"
+            ? `已更新 ${run.recordsIngested} 条作品的真实表现`
+            : "已更新真实表现",
+        );
+        router.refresh();
+      } catch (err) {
+        setPhase("error");
+        setMsg(
+          err instanceof Error && err.message
+            ? err.message
+            : "拉取失败 —— 请确认 Chrome 已登录抖音创作者中心(:9222)",
+        );
+      }
+    })();
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {msg ? (
+        <span
+          className={cn(
+            "max-w-[18rem] truncate text-[11px]",
+            phase === "error" ? "text-destructive" : "text-muted-foreground",
+          )}
+          title={msg}
+        >
+          {msg}
+        </span>
+      ) : null}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        data-testid="refresh-douyin-button"
+        className="h-8 gap-1.5 px-3 text-xs"
+        disabled={phase === "running"}
+        onClick={refresh}
+      >
+        <RefreshCw
+          className={cn("size-3.5", phase === "running" && "animate-spin")}
+        />
+        {phase === "running" ? "拉取中…" : "拉取抖音真实表现"}
+      </Button>
+    </div>
+  );
+}
+
 // ── 顶部工具条：rubric 选择 + 目标 tabs + 新建预测 ──────────────────────────────────
 function WorkbenchToolbar({
   rubric,
@@ -1178,6 +1253,7 @@ function WorkbenchToolbar({
             <span>暂无评分标准</span>
           )}
         </span>
+        <RefreshDouyinButton />
         <Button
           type="button"
           size="sm"
