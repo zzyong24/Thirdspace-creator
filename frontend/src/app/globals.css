@@ -164,4 +164,79 @@
   html {
     @apply font-sans;
   }
+
+  /* TipTap 脚本编辑器(T-019 / L4):让 ProseMirror 富文本块级元素真的「看起来像富文本」。
+     用语义 token,跟随主题。承载脚本正文:标题分级、列表 marker、引用左条、加粗/斜体。 */
+  .tiptap-script {
+    color: var(--foreground);
+    font-size: 0.875rem;
+    line-height: 1.65;
+  }
+  .tiptap-script:focus {
+    outline: none;
+  }
+  .tiptap-script > * + * {
+    margin-top: 0.5rem;
+  }
+  .tiptap-script h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--foreground);
+  }
+  .tiptap-script h2 {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--foreground);
+  }
+  .tiptap-script h3 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  .tiptap-script p {
+    margin: 0;
+  }
+  .tiptap-script strong {
+    font-weight: 700;
+    color: var(--brand, var(--primary));
+  }
+  .tiptap-script em {
+    font-style: italic;
+  }
+  .tiptap-script s {
+    text-decoration: line-through;
+  }
+  .tiptap-script ul,
+  .tiptap-script ol {
+    padding-left: 1.25rem;
+    margin: 0.25rem 0;
+  }
+  .tiptap-script ul {
+    list-style: disc;
+  }
+  .tiptap-script ol {
+    list-style: decimal;
+  }
+  .tiptap-script li {
+    margin: 0.125rem 0;
+  }
+  .tiptap-script li > p {
+    margin: 0;
+  }
+  .tiptap-script blockquote {
+    border-left: 3px solid var(--brand, var(--primary));
+    padding-left: 0.75rem;
+    color: var(--muted-foreground);
+    font-style: italic;
+  }
+  /* 空文档占位提示(Placeholder 扩展产出 data-placeholder 的空段落)。 */
+  .tiptap-script p.is-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--muted-foreground);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
 }

@@ -49,6 +49,9 @@ export default async function ScriptWorkspaceRoute({
     <ScriptWorkspacePage
       projectId={projectId}
       sectionsOverride={scriptData?.sections ?? null}
+      // T-019(L4):TipTap 初值 —— 当前版本的 contentData.html 优先(忠实往返),
+      // 否则从 sections 拼;null 时页面回退 fixture sections 拼接。
+      editorHtmlOverride={scriptData?.editorHtml ?? null}
       versionsOverride={scriptData ? scriptData.versions : null}
       outlineOverride={outlineOverride}
       goldenQuotesOverride={scriptData ? scriptData.goldenQuotes : null}

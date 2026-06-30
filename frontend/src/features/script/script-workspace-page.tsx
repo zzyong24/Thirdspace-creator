@@ -35,7 +35,8 @@ import * as React from "react";
 import { SectionCard } from "@/components/project/section-card";
 import { PageTabs } from "@/components/navigation/page-tabs";
 import { buildScriptViewModel } from "@/fixtures/selectors";
-import { ScriptInteractiveRegion } from "./script-interactive-region";
+import { ScriptRichEditor } from "./script-rich-editor";
+import { sectionsToHtml } from "./script-editor-bridge";
 import { ScriptDraftIsland } from "./script-draft-island";
 import { ScriptVersionRestore } from "./script-version-restore";
 import type {
@@ -58,8 +59,15 @@ export interface ScriptWorkspacePageProps {
    * (contentData.sections, or contentText as a single section). Supplied by the
    * async route (`loadScriptEditorSections`) so a saved / AI-drafted script
    * round-trips into the editor. When omitted, the fixture `vm.sections` render.
+   * T-019(L4):这些 sections 用于拼出 TipTap 的初始 HTML(`editorHtmlOverride` 缺省时)。
    */
   readonly sectionsOverride?: ReadonlyArray<ScriptSectionView> | null;
+  /**
+   * T-019(L4):分镜脚本 artifact 当前版本的 TipTap 初始 HTML(`contentData.html` 优先,
+   * 否则从 sections 拼)。非 null 时直接作编辑器初值(富文本忠实往返);null → 回退到
+   * 从 `sectionsOverride`/fixture sections 拼出的 HTML。由 async route 提供。
+   */
+  readonly editorHtmlOverride?: string | null;
   /**
    * GAP-SCR-1: the REAL version history (artifacts.versions.list). When supplied
    * (non-null), it overrides the fixture `vm.versions`. An empty array is a valid
@@ -94,6 +102,7 @@ export function ScriptWorkspacePage({
   projectId,
   viewModel,
   sectionsOverride,
+  editorHtmlOverride,
   versionsOverride,
   outlineOverride,
   goldenQuotesOverride,
@@ -106,6 +115,10 @@ export function ScriptWorkspacePage({
     sectionsOverride && sectionsOverride.length > 0
       ? sectionsOverride
       : vm.sections;
+  // T-019(L4):TipTap 初始 HTML —— 真实存的富文本 html(editorHtmlOverride)优先,
+  // 否则从 sections(override 或 fixture)拼出。pure(sectionsToHtml 无 DOM,Server 安全)。
+  const initialHtml =
+    editorHtmlOverride ?? sectionsToHtml(editorSections);
   // GAP-SCR-1 per-field overrides: a non-null override (even an empty array) is a
   // REAL read result and wins over the fixture桩; null keeps the fixture field so
   // the demo / unit-test baseline does not regress.
@@ -128,9 +141,8 @@ export function ScriptWorkspacePage({
           data-slot="script-main-column"
           className="flex flex-col gap-card-gap"
         >
-          <ScriptInteractiveRegion
-            sections={editorSections}
-            toolbarState={vm.toolbarState}
+          <ScriptRichEditor
+            initialHtml={initialHtml}
             artifactId={vm.scriptArtifactId}
           />
           <VersionHistoryStrip

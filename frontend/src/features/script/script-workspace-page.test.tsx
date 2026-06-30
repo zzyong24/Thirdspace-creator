@@ -233,7 +233,7 @@ describe("ScriptWorkspacePage", () => {
     ]);
   });
 
-  it("renders the editor toolbar with role=toolbar and buttons with aria-pressed", async () => {
+  it("renders the TipTap editor toolbar with role=toolbar and buttons with aria-pressed", async () => {
     const { container } = await renderWorkspace();
     const toolbar = container.querySelector(
       '[data-slot="editor-toolbar"]',
@@ -242,8 +242,7 @@ describe("ScriptWorkspacePage", () => {
     expect(toolbar.getAttribute("role")).toBe("toolbar");
     // The toolbar exposes its accessible label.
     expect(toolbar.getAttribute("aria-label") ?? "").toMatch(/工具栏|toolbar/i);
-    // Every toolbar control must advertise aria-pressed (D-008:
-    // static toolbar with accessible state).
+    // T-019(L4):TipTap 富文本控件,每个格式按钮带 aria-pressed —— 反映选区真实激活态。
     const buttons = toolbar.querySelectorAll(
       '[data-slot="editor-toolbar-button"]',
     );
@@ -251,53 +250,34 @@ describe("ScriptWorkspacePage", () => {
     buttons.forEach((button) => {
       expect(button.hasAttribute("aria-pressed")).toBe(true);
     });
-    // The bold button starts pressed (B is the canonical "current
-    // emphasis" toggle on the screenshot).
+    // The bold button exists. Unlike the old decorative toolbar (D-008), aria-pressed now
+    // tracks the live TipTap selection — with no mark active at mount it is "false".
     const bold = toolbar.querySelector(
       '[data-slot="editor-toolbar-button"][data-format="bold"]',
     );
     expect(bold).not.toBeNull();
-    expect(bold!.getAttribute("aria-pressed")).toBe("true");
+    expect(bold!.getAttribute("aria-pressed")).toBe("false");
   });
 
-  it("renders the script document with sections, time codes, and purple emphasis text", async () => {
+  it("renders the script body inside a single TipTap rich-text document seeded with the fixture content", async () => {
     const { container } = await renderWorkspace();
-    const document = container.querySelector(
+    const documentSlot = container.querySelector(
       '[data-slot="script-document"]',
     ) as HTMLElement;
-    expect(document).not.toBeNull();
-
-    // At least three section headings (hook + intro + body).
-    const headings = document.querySelectorAll(
-      '[data-slot="script-section-heading"]',
-    );
+    expect(documentSlot).not.toBeNull();
+    // T-019(L4):TipTap 渲染一个连续的 ProseMirror contenteditable(不再是逐段 textarea)。
+    const pm = documentSlot.querySelector(
+      '[data-slot="script-prosemirror"]',
+    ) as HTMLElement;
+    expect(pm).not.toBeNull();
+    expect(pm.getAttribute("contenteditable")).toBe("true");
+    // The fixture sections were piped through sectionsToHtml → the rich text carries the
+    // section headings as real <h2> blocks and at least one golden-quote <strong> emphasis.
+    const headings = pm.querySelectorAll("h1, h2, h3");
     expect(headings.length).toBeGreaterThanOrEqual(3);
-
-    // Each section heading carries a visible time code in [mm:ss]
-    // form. We assert at least three time codes appear in the DOM
-    // and that they match the format.
-    const timeCodes = document.querySelectorAll(
-      '[data-slot="script-section-timecode"]',
-    );
-    expect(timeCodes.length).toBeGreaterThanOrEqual(3);
-    timeCodes.forEach((node) => {
-      expect(node.textContent ?? "").toMatch(/\[\d{2}:\d{2}\]/);
-    });
-
-    // The golden-quote emphasis text is rendered as a purple span
-    // (D-008 / page-specs §7: 正文中的紫色强调文字需保留).
-    const emphasis = document.querySelector(
-      '[data-slot="script-emphasis"]',
-    );
-    expect(emphasis).not.toBeNull();
-    const emphasisClass = emphasis!.className ?? "";
-    expect(emphasisClass).toMatch(/text-(brand|accent)/);
-
-    // The body paragraphs are visible.
-    const bodies = document.querySelectorAll(
-      '[data-slot="script-section-body"]',
-    );
-    expect(bodies.length).toBeGreaterThanOrEqual(3);
+    expect(pm.querySelector("strong")).not.toBeNull();
+    // The seeded body text is visible in the editable document.
+    expect((pm.textContent ?? "").length).toBeGreaterThan(0);
   });
 
   it("renders the editor status bar with word count and save status", async () => {

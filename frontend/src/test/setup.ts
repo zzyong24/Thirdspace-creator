@@ -131,6 +131,68 @@ function installBrowserShims() {
       writable: true,
     },
   });
+
+  // ProseMirror / TipTap (脚本编辑器,T-019) reads geometry off Range and text nodes
+  // (coordsAtPos → getClientRects / getBoundingClientRect) while dispatching transactions.
+  // jsdom implements neither on Range, so typing throws "getClientRects is not a function".
+  // Provide deterministic zero-rects so the editor's selection/scroll bookkeeping no-ops in
+  // tests (we never assert on pixel geometry). Harmless for any contenteditable test.
+  const ZERO_RECT = {
+    bottom: 0,
+    height: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    width: 0,
+    x: 0,
+    y: 0,
+    toJSON() {
+      return {};
+    },
+  } as DOMRect;
+  const emptyRectList = (): DOMRectList => {
+    const list = {
+      length: 0,
+      item: () => null,
+      [Symbol.iterator]: function* () {
+        // no rects
+      },
+    } as unknown as DOMRectList;
+    return list;
+  };
+  if (typeof Range !== "undefined") {
+    Object.defineProperties(Range.prototype, {
+      getClientRects: {
+        configurable: true,
+        value: () => emptyRectList(),
+        writable: true,
+      },
+      getBoundingClientRect: {
+        configurable: true,
+        value: () => ZERO_RECT,
+        writable: true,
+      },
+    });
+  }
+  if (typeof Element.prototype.getClientRects !== "function") {
+    Object.defineProperty(Element.prototype, "getClientRects", {
+      configurable: true,
+      value: () => emptyRectList(),
+      writable: true,
+    });
+  }
+  // ProseMirror's mouse handlers call document.elementFromPoint (caret-from-coord).
+  // jsdom does not implement it; return null so coord-based resolution bails harmlessly.
+  if (
+    typeof document !== "undefined" &&
+    typeof document.elementFromPoint !== "function"
+  ) {
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: () => null,
+      writable: true,
+    });
+  }
 }
 
 installBrowserShims();

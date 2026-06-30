@@ -11,9 +11,9 @@ import { expect, test } from "../helpers/test-environment";
  *    six-stage stepper, with the Script stage active.
  *  - The Script Tabs row exposes exactly four tabs in the locked
  *    spec order 主脚本 / 章节 / 引用 / 摘要.
- *  - The RichTextEditor exposes a single shell that hosts the
- *    toolbar (`role="toolbar"`), the script document (sections,
- *    time codes and a purple emphasis span) and the status bar.
+ *  - The RichTextEditor (TipTap, T-019/L4) exposes a single shell that
+ *    hosts the toolbar (`role="toolbar"`), a ProseMirror contenteditable
+ *    document and the status bar.
  *  - The VersionHistoryStrip is a horizontal strip that lives BELOW
  *    the editor shell.
  *  - The right rail hosts OutlineStructureCard →
@@ -94,20 +94,18 @@ test.describe("Script Workspace page", () => {
       );
     }
 
-    // Script document has section headings, time codes and emphasis.
+    // T-019(L4):the body is one TipTap ProseMirror contenteditable seeded with the
+    // script content (sections piped through sectionsToHtml → real <h2> heading blocks),
+    // not per-section textareas. The seeded document carries the section headings as
+    // rich-text <h2> blocks.
     const document = editorShell.locator('[data-slot="script-document"]');
     await expect(document).toBeVisible();
-    const headings = document.locator(
-      '[data-slot="script-section-heading"]',
-    );
+    const prosemirror = document.locator('[data-slot="script-prosemirror"]');
+    await expect(prosemirror).toHaveAttribute("contenteditable", "true");
+    const headings = prosemirror.locator("h1, h2, h3");
     expect(await headings.count()).toBeGreaterThanOrEqual(3);
-    const timecodes = document.locator(
-      '[data-slot="script-section-timecode"]',
-    );
-    expect(await timecodes.count()).toBeGreaterThanOrEqual(3);
-    await expect(document.locator('[data-slot="script-emphasis"]')).toHaveCount(
-      1,
-    );
+    // The editable document is non-empty (real script body, not an empty shell).
+    expect((await prosemirror.innerText()).trim().length).toBeGreaterThan(0);
 
     // Status bar with word count and save status.
     const statusBar = editorShell.locator(

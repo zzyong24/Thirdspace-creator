@@ -1,6 +1,7 @@
 import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
+import { sectionsToHtml } from "./script-editor-bridge";
 import type {
   ScriptSectionView,
   ScriptViewModel,
@@ -166,6 +167,12 @@ export async function loadScriptEditorSections(
 export interface ScriptEditorData {
   /** CURRENT version's editor sections (same as loadScriptEditorSections). */
   readonly sections: ScriptSectionView[] | null;
+  /**
+   * T-019(L4):TipTap 编辑器的初始 HTML。优先用当前版本的 `contentData.html`(富文本真值,
+   * 忠实往返);无 html 时(历史保存 / script.draft AI 初稿只产 sections)从 sections 拼出
+   * (`<h2>` + `<p>`)。null = 无 artifact / 读失败,页面回退 fixture sections 的拼接。
+   */
+  readonly editorHtml: string | null;
   /** REAL version history (newest-first) from artifacts.versions.list. */
   readonly versions: ScriptViewModel["versions"];
   /** Outline derived from the CURRENT version's section headings. */
@@ -199,6 +206,16 @@ export async function loadScriptEditorData(
 
     const sections = sectionsFromVersion(current);
 
+    // TipTap 初值:当前版本的 contentData.html 优先(富文本忠实往返);否则从 sections 拼。
+    const savedHtml = (current.contentData as { html?: unknown } | undefined)
+      ?.html;
+    const editorHtml =
+      typeof savedHtml === "string" && savedHtml.trim().length > 0
+        ? savedHtml
+        : sections && sections.length > 0
+          ? sectionsToHtml(sections)
+          : null;
+
     const versions = rows
       .slice()
       .sort((a, b) => b.versionNumber - a.versionNumber)
@@ -229,7 +246,7 @@ export async function loadScriptEditorData(
       )
       .map((s) => ({ id: `script-quote-${s.id}`, text: s.body.trim() }));
 
-    return { sections, versions, outline, goldenQuotes };
+    return { sections, editorHtml, versions, outline, goldenQuotes };
   } catch {
     return null;
   }
