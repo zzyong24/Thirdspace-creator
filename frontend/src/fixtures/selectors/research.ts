@@ -10,7 +10,6 @@
 
 import { canonicalDataset, getProjectById } from "../canonical";
 import type {
-  CompetitorRow,
   ResearchSourceRow,
   ResearchSummaryCard,
   ResearchViewModel,
@@ -33,7 +32,6 @@ export function buildResearchViewModel(projectId: string): ResearchViewModel {
       projectId,
       idea: { title: "未找到项目", summary: "" },
       trendCards: [],
-      competitors: [],
       sourceTabs: DEFAULT_SOURCE_TABS,
       sources: [],
       notes: [],
@@ -53,7 +51,6 @@ export function buildResearchViewModel(projectId: string): ResearchViewModel {
       summary: project.brief,
     },
     trendCards: buildTrendCards(project.id),
-    competitors: buildCompetitors(),
     sourceTabs: DEFAULT_SOURCE_TABS,
     sources: buildSources(project.id),
     notes: buildNotes(project.id),
@@ -115,51 +112,6 @@ function buildTrendCards(projectId: string): ReadonlyArray<ResearchSummaryCard> 
       metric: `${evidenceCount} 条证据`,
       description: "覆盖三个核心论点",
       tone: "warning",
-    },
-  ];
-}
-
-function buildCompetitors(): ReadonlyArray<CompetitorRow> {
-  return [
-    {
-      id: "competitor-arc",
-      name: "Arc",
-      platform: "youtube",
-      views: 18_400,
-      threat: "medium",
-      note: "AI 入口与代理任务浏览器",
-    },
-    {
-      id: "competitor-dia",
-      name: "Dia",
-      platform: "bilibili",
-      views: 9_340,
-      threat: "low",
-      note: "面向知识工作者的浏览器",
-    },
-    {
-      id: "competitor-sigma-os",
-      name: "Sigma OS",
-      platform: "youtube",
-      views: 22_100,
-      threat: "high",
-      note: "本地优先代理操作系统",
-    },
-    {
-      id: "competitor-privacy-crusader",
-      name: "Privacy Crusader",
-      platform: "youtube",
-      views: 6_120,
-      threat: "low",
-      note: "以隐私为卖点的轻量浏览器",
-    },
-    {
-      id: "competitor-openai-atlas",
-      name: "Open AI Atlas",
-      platform: "bilibili",
-      views: 41_800,
-      threat: "high",
-      note: "Open AI 推出的 AI Native 浏览器",
     },
   ];
 }

@@ -15,8 +15,8 @@ import type { ResearchViewModel } from "@/types/view-models";
  *
  * Degrades gracefully PER FIELD: a project that resolves but has no gathered
  * material renders empty `sources`/`notes` (the islands own the empty state),
- * and the non-real fields (`trendCards`, `competitors`, `relatedTags`) are kept
- * from the fixture VM only for the canonical demo projects — EMPTY for real /
+ * and the non-real fields (`trendCards`, `relatedTags`) are kept from the
+ * fixture VM only for the canonical demo projects — EMPTY for real /
  * non-fixture projects so cards show their empty state instead of fake data.
  *
  * If the project READ throws/404s, the whole VM falls back to the fixture
@@ -152,8 +152,8 @@ export async function buildResearchWorkspaceViewModel(
     return fixtureVm;
   }
 
-  // A canonical/demo project keeps the fixture's curated trend/competitor/tag
-  // content; a real project shows empty states (no fake data).
+  // A canonical/demo project keeps the fixture's curated trend/tag content; a
+  // real project shows empty states (no fake data).
   const isFixtureProject = fixtureVm.scenario !== "empty";
 
   let sources: ResearchViewModel["sources"] = [];
@@ -233,7 +233,6 @@ export async function buildResearchWorkspaceViewModel(
     // No real source this wave — fixture content for demo projects, EMPTY for
     // real projects so the cards render their empty states.
     trendCards: isFixtureProject ? fixtureVm.trendCards : [],
-    competitors: isFixtureProject ? fixtureVm.competitors : [],
     relatedTags: isFixtureProject ? fixtureVm.relatedTags : [],
     // The type-tab list is a static taxonomy — always the fixture's.
     sourceTabs: fixtureVm.sourceTabs,

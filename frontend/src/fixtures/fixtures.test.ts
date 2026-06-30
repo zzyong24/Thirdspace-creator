@@ -342,8 +342,8 @@ describe("Generic per-page scenario mechanism", () => {
     expect(research.loading).toBe(false);
     expect(research.error).toBeNull();
     // Default keeps the populated collections from the builder.
-    expect(research.competitors.length).toBeGreaterThan(0);
     expect(research.trendCards.length).toBeGreaterThan(0);
+    expect(research.sources.length).toBeGreaterThan(0);
   });
 
   test("empty clears every array-valued field on the ViewModel", () => {
@@ -354,7 +354,6 @@ describe("Generic per-page scenario mechanism", () => {
     expect(research.scenario).toBe("empty");
     expect(research.loading).toBe(false);
     expect(research.error).toBeNull();
-    expect(research.competitors).toEqual([]);
     expect(research.trendCards).toEqual([]);
     expect(research.sources).toEqual([]);
     expect(research.notes).toEqual([]);
@@ -371,7 +370,7 @@ describe("Generic per-page scenario mechanism", () => {
     expect(research.scenario).toBe("loading");
     expect(research.loading).toBe(true);
     expect(research.error).toBeNull();
-    expect(research.competitors).toEqual([]);
+    expect(research.trendCards).toEqual([]);
   });
 
   test("error attaches the fixture error payload with cleared collections", () => {
@@ -382,7 +381,7 @@ describe("Generic per-page scenario mechanism", () => {
     expect(research.scenario).toBe("error");
     expect(research.loading).toBe(false);
     expect(research.error?.code).toBe("FIXTURE_ERROR");
-    expect(research.competitors).toEqual([]);
+    expect(research.trendCards).toEqual([]);
   });
 
   test("works for a non-project-scoped page builder (dashboard)", () => {
@@ -410,12 +409,12 @@ describe("Generic per-page scenario mechanism", () => {
 
   test("the generic mechanism does not mutate the builder output", () => {
     const original = buildResearchViewModel(canonicalProject.id);
-    const originalCompetitorCount = original.competitors.length;
+    const originalTrendCount = original.trendCards.length;
     buildPageScenario(
       () => buildResearchViewModel(canonicalProject.id),
       "empty",
     );
     const after = buildResearchViewModel(canonicalProject.id);
-    expect(after.competitors.length).toBe(originalCompetitorCount);
+    expect(after.trendCards.length).toBe(originalTrendCount);
   });
 });

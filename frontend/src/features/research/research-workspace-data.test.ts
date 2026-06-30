@@ -200,7 +200,6 @@ describe("buildResearchWorkspaceViewModel", () => {
     expect(vm.notes).toEqual([]);
     // Real (non-fixture) project → fake-data fields render empty, not faked.
     expect(vm.trendCards).toEqual([]);
-    expect(vm.competitors).toEqual([]);
     expect(vm.relatedTags).toEqual([]);
     expect(vm.evidence).toEqual([]);
     // The static type-tab taxonomy still renders.

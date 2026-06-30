@@ -213,39 +213,33 @@ describe("ResearchWorkspacePage", () => {
     expect(cards).toHaveLength(3);
   });
 
-  it("renders the CompetitorAnalysisTable with the required columns and threat-level rows", async () => {
+  it("renders the CreativeMaterialGuideCard with the four creation-oriented classes (no competitor table)", async () => {
     const { container } = await renderWorkspace();
-    const table = container.querySelector(
-      '[data-slot="competitor-analysis-table"]',
+    // L2 创作向重写: the 竞品分析表/威胁评估 is GONE — research is creation prep.
+    expect(
+      container.querySelector('[data-slot="competitor-analysis-table"]'),
+    ).toBeNull();
+    expect(container.querySelector('[data-slot="competitor-row"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="competitor-threat"]'),
+    ).toBeNull();
+    // In its place: the four creation-oriented material classes.
+    const guide = container.querySelector(
+      '[data-slot="creative-material-guide"]',
     ) as HTMLElement;
-    expect(table).not.toBeNull();
-    // The locked column set: 竞品名称 / 平台 / 定位 / 优势 / 劣势 / 威胁等级.
-    const headerCells = table.querySelectorAll("thead th");
-    const headerLabels = Array.from(headerCells).map(
-      (cell) => cell.textContent ?? "",
+    expect(guide).not.toBeNull();
+    const classCards = guide.querySelectorAll(
+      '[data-slot="material-class-card"]',
     );
-    expect(headerLabels).toEqual([
-      "竞品名称",
-      "平台",
-      "定位",
-      "优势",
-      "劣势",
-      "威胁等级",
-    ]);
-    // At least one row should expose a threat-level badge; the spec
-    // locks the threat-level enum to low / medium / high.
-    const rows = table.querySelectorAll(
-      '[data-slot="competitor-row"]',
+    const classes = Array.from(classCards).map((c) =>
+      c.getAttribute("data-class"),
     );
-    expect(rows.length).toBeGreaterThanOrEqual(2);
-    const threatBadges = table.querySelectorAll(
-      '[data-slot="competitor-threat"]',
-    );
-    expect(threatBadges.length).toBe(rows.length);
-    const threatLevels = new Set(
-      Array.from(threatBadges).map((badge) => badge.getAttribute("data-threat")),
-    );
-    expect([...threatLevels].sort()).toEqual(["high", "low", "medium"]);
+    expect(classes).toEqual(["hooks", "cases", "dataPoints", "quotes"]);
+    expect(guide.textContent ?? "").toContain("钩子");
+    expect(guide.textContent ?? "").toContain("金句");
+    // The page must NOT mention 竞品 / 威胁 anywhere.
+    expect(container.textContent ?? "").not.toContain("竞品");
+    expect(container.textContent ?? "").not.toContain("威胁");
   });
 
   it("renders the ResearchCollection TypeTabs in spec order (全部/文章/视频/报告/播客)", async () => {
@@ -312,7 +306,7 @@ describe("ResearchWorkspacePage", () => {
     ).toBeGreaterThanOrEqual(1);
   });
 
-  it("preserves the approved order of Main column blocks (idea → trend → competitor → collection)", async () => {
+  it("preserves the approved order of Main column blocks (idea → trend → material-guide → collection)", async () => {
     const { container } = await renderWorkspace();
     const main = container.querySelector(
       '[data-slot="research-main-column"]',
@@ -321,7 +315,7 @@ describe("ResearchWorkspacePage", () => {
     const expectedSlots = [
       "project-idea-card",
       "trend-background-section",
-      "competitor-analysis-table",
+      "creative-material-guide",
       "research-collection-section",
     ];
     const orderedNodes = expectedSlots.map((slot) =>

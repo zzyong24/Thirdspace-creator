@@ -4,19 +4,23 @@
  * The `project-workspace` Header mode landing page for the Research
  * stage. Composes:
  *  - a Main column with the ProjectIdeaCard, the three-card
- *    TrendBackgroundSection, the CompetitorAnalysisTable, and the
- *    ResearchCollectionSection (type tabs + source rows),
- *  - a right rail with ResearchNotesCard, EvidenceCollectionCard and
- *    RelatedTagsCard.
+ *    TrendBackgroundSection, the CreativeMaterialGuideCard (the four
+ *    creation-oriented material classes), and the ResearchCollectionSection
+ *    (type tabs + source rows),
+ *  - a right rail with the GatherMaterialIsland (the live AI 四类素材 adopt
+ *    surface), ResearchNotesCard, EvidenceCollectionCard and RelatedTagsCard.
+ *
+ * L2「创作向重写」: the research stage is for CREATION prep, not market
+ * analysis — the old 竞品分析表/威胁评估 (competitor table) is removed. The
+ * 研究 stage now produces 钩子/案例/数据点/金句 that feed the script, surfaced
+ * by the GatherMaterialIsland on the right rail.
  *
  * Layout invariants (locked by the page spec):
  *  - left-wide / right-narrow two-column grid,
  *  - exactly three ResearchSummaryCard in a row,
- *  - competitor table columns in the locked order
- *    竞品名称 / 平台 / 定位 / 优势 / 劣势 / 威胁等级,
  *  - research collection type tabs in the locked order
  *    全部 / 文章 / 视频 / 报告 / 播客,
- *  - right rail order ResearchNotes → Evidence → RelatedTags.
+ *  - right rail order Gather → ResearchNotes → Evidence → RelatedTags.
  *
  * The page is a Server Component. It does not own a Sidebar or a
  * TopHeader — those live in `(creator)/layout.tsx` and are mounted once
@@ -27,20 +31,10 @@ import * as React from "react";
 import Link from "next/link";
 
 import { SectionCard } from "@/components/project/section-card";
-import { StatusBadge } from "@/components/project/status-badge";
 import { TagChip } from "@/components/content/tag-chip";
 import { PageTabs } from "@/components/navigation/page-tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { buildResearchViewModel } from "@/fixtures/selectors";
 import type {
-  CompetitorRow,
   ResearchSourceRow,
   ResearchSummaryCard,
   ResearchViewModel,
@@ -91,7 +85,7 @@ export function ResearchWorkspacePage({
             projectId={vm.projectId}
           />
           <TrendBackgroundSection cards={vm.trendCards} />
-          <CompetitorAnalysisTable rows={vm.competitors} />
+          <CreativeMaterialGuideCard />
           <ResearchCollectionSection
             tabs={vm.sourceTabs}
             sources={vm.sources}
@@ -199,122 +193,55 @@ function TrendBackgroundSection({
 }
 
 // ---------------------------------------------------------------------------
-// CompetitorAnalysisTable
+// CreativeMaterialGuideCard (L2 创作向重写 — replaces the old 竞品分析表)
 // ---------------------------------------------------------------------------
 
-const COMPETITOR_COLUMNS: ReadonlyArray<{ id: string; label: string }> = [
-  { id: "name", label: "竞品名称" },
-  { id: "platform", label: "平台" },
-  { id: "positioning", label: "定位" },
-  { id: "strength", label: "优势" },
-  { id: "weakness", label: "劣势" },
-  { id: "threat", label: "威胁等级" },
+// The four creation-oriented material classes the 研究 stage produces. This is a
+// static guide explaining what 搜集素材 yields; the LIVE candidates (real AI
+// output, adoptable into the knowledge base) are surfaced by the
+// GatherMaterialIsland on the right rail. No 竞品/威胁评估 here — the research
+// stage is for creation prep, not market analysis.
+const MATERIAL_CLASSES: ReadonlyArray<{
+  id: string;
+  label: string;
+  hint: string;
+}> = [
+  { id: "hooks", label: "钩子", hint: "前 3 秒抓住注意力的开场句" },
+  { id: "cases", label: "案例", hint: "讲出来有说服力的真实案例" },
+  { id: "dataPoints", label: "数据点", hint: "能当论据的统计与事实" },
+  { id: "quotes", label: "金句", hint: "可直接引用的有力句子" },
 ];
 
-const THREAT_LABEL: Record<CompetitorRow["threat"], string> = {
-  low: "低",
-  medium: "中",
-  high: "高",
-};
-
-function CompetitorAnalysisTable({
-  rows,
-}: {
-  rows: ReadonlyArray<CompetitorRow>;
-}) {
+function CreativeMaterialGuideCard() {
   return (
-    <div data-slot="competitor-analysis-table">
+    <div data-slot="creative-material-guide">
       <SectionCard
-        title="竞品分析"
-        description="同类产品对比与威胁评估"
+        title="创作素材方向"
+        description="研究阶段为脚本备料 —— 用右侧「AI 搜集素材」按你的定位生成可采纳的四类素材"
       >
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {COMPETITOR_COLUMNS.map((column) => (
-                <TableHead key={column.id}>{column.label}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-slot="competitor-row"
-                data-competitor-id={row.id}
-              >
-                <TableCell className="font-medium text-foreground">
-                  {row.name}
-                </TableCell>
-                <TableCell>
-                  <TagChip label={row.platform} tone="brand" size="sm" />
-                </TableCell>
-                <TableCell>{row.note}</TableCell>
-                <TableCell>
-                  <CompetitorNote type="strength" threat={row.threat} />
-                </TableCell>
-                <TableCell>
-                  <CompetitorNote type="weakness" threat={row.threat} />
-                </TableCell>
-                <TableCell>
-                  <StatusBadge
-                    status={
-                      row.threat === "high"
-                        ? "blocked"
-                        : row.threat === "medium"
-                          ? "in_progress"
-                          : "done"
-                    }
-                    className="border-transparent"
-                  >
-                    <span
-                      data-slot="competitor-threat"
-                      data-threat={row.threat}
-                    >
-                      {THREAT_LABEL[row.threat]}
-                    </span>
-                  </StatusBadge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <ul
+          data-slot="material-class-list"
+          className="grid grid-cols-1 gap-3 md:grid-cols-2"
+          aria-label="创作素材四类"
+        >
+          {MATERIAL_CLASSES.map((cls) => (
+            <li
+              key={cls.id}
+              data-slot="material-class-card"
+              data-class={cls.id}
+              className="flex items-start gap-2.5 rounded-card border border-border bg-surface-subtle p-3.5"
+            >
+              <TagChip label={cls.label} tone="brand" size="sm" />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {cls.hint}
+              </p>
+            </li>
+          ))}
+        </ul>
       </SectionCard>
     </div>
   );
 }
-
-function CompetitorNote({
-  type,
-  threat,
-}: {
-  type: "strength" | "weakness";
-  threat: CompetitorRow["threat"];
-}) {
-  const pool = COMPETITOR_NOTES[threat] ?? [];
-  const note = pool.find((entry) => entry.type === type);
-  return (
-    <span className="text-sm text-muted-foreground">{note?.text ?? "—"}</span>
-  );
-}
-
-const COMPETITOR_NOTES: Record<
-  CompetitorRow["threat"],
-  ReadonlyArray<{ type: "strength" | "weakness"; text: string }>
-> = {
-  high: [
-    { type: "strength", text: "代理任务覆盖度最广" },
-    { type: "weakness", text: "本地上下文与隐私策略弱" },
-  ],
-  medium: [
-    { type: "strength", text: "渲染性能稳定，扩展生态成熟" },
-    { type: "weakness", text: "AI 入口尚未统一" },
-  ],
-  low: [
-    { type: "strength", text: "专注于生产力场景" },
-    { type: "weakness", text: "用户体量小，代理能力有限" },
-  ],
-};
 
 // ---------------------------------------------------------------------------
 // ResearchCollectionSection (tabs + source rows)
@@ -372,14 +299,14 @@ function ResearchCollectionSection({
 // Right rail
 // ---------------------------------------------------------------------------
 
-// F2c — Research decorative rows are intentionally inert (roadmap §4, wired-local
-// 6 · decorative 6): 资料类型 tabs (client filter, no-op today — GET /knowledge,
-// keep local), 竞品平台 TagChip (Analytics), 威胁等级 StatusBadge (Projects), 资料
-// 来源标签 TagChip (Taxonomy), 相关标签 TagChip (GET /search — Taxonomy; rendered as
-// navigational links to /search?tag=), 趋势卡片 indicator (Analytics), 竞品分析表
-// rows (read-only comparison). These render with NO mutating handlers on purpose.
-// The two needs-backend rows (研究笔记 / 证据收藏) are now islands:
-// ResearchNotesIsland (F2a) + EvidenceCollectionIsland (F2b).
+// F2c — Research decorative rows are intentionally inert (roadmap §4): 资料类型
+// tabs (client filter, no-op today — GET /knowledge, keep local), 资料来源标签
+// TagChip (Taxonomy), 相关标签 TagChip (GET /search — Taxonomy; rendered as
+// navigational links to /search?tag=), 趋势卡片 indicator (Analytics), 创作素材
+// 方向 guide (static explainer). These render with NO mutating handlers on
+// purpose. The real adopt surface is the GatherMaterialIsland (live AI 四类素材);
+// the two needs-backend rows (研究笔记 / 证据收藏) are islands: ResearchNotesIsland
+// (F2a) + EvidenceCollectionIsland (F2b).
 
 function RelatedTagsCard({ tags }: { tags: ResearchViewModel["relatedTags"] }) {
   return (

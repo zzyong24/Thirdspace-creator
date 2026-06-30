@@ -1732,8 +1732,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             {
               ai: aiService,
               positioning: positioningReader,
-              // Vercel AI SDK 路径(弃 Claude Agent SDK):素材搜集节点跑在 ai-worker +
-              // 外置模板 + anthropic 内置 web search。
+              // Vercel AI SDK 路径:素材搜集节点跑在 ai-worker + 外置模板 + generateObject
+              // 绑四类 outputSchema(钩子/案例/数据点/金句),schema 强约束根治不可解析卡死。
               resolveModelSpec,
             },
           );

@@ -4,19 +4,20 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import type { RequestContext } from "@creatoros/contract";
 
-// 素材搜集 runner 迁 Vercel SDK 后:不再 import agent-run 的 runClaudeAgent(Claude Agent SDK),
-// 改 mock ai-worker 的 runResearchNode(动态 import 的目标)。runner 解析 model(resolveModelSpec)
-// → anthropic 时挂 provider 内置 web search → runResearchNode 拿 items → recordCandidate
-// (material_list)。这里验证:capability 被正确解析、anthropic 路径挂上 web search 工具、
-// 非 anthropic 路径不引第三方搜索、无素材时不假成功(cancelTask)。
+// 素材搜集 runner(L2 创作向重写):节点改 generateObject 绑四类 outputSchema(纯结构化生成,
+// 不挂 web search),mock ai-worker 的 runResearchNode(动态 import 的目标)。runner 解析 model
+// (resolveModelSpec)→ runResearchNode 拿 {items, categories} → recordCandidate(material_list,
+// items 喂采纳路径 + categories 供工作台分类展示)。这里验证:capability 被正确解析、不再给节点
+// 传任何 web search 工具(纯结构化)、候选带 items+categories、无素材时不假成功(cancelTask)。
 const runResearchNode = vi.fn(
-  async (_input: { tools?: unknown }) => ({ items: [], steps: [] }),
+  async (_input: { tools?: unknown }) => ({
+    items: [],
+    categories: { hooks: [], cases: [], dataPoints: [], quotes: [] },
+  }),
 );
-const anthropicWebSearchTools = vi.fn(() => ({ web_search: "WEBSEARCH_TOOL" }));
 vi.mock("@creatoros/ai-worker", () => ({
   modelFor: vi.fn(() => ({}) as never),
   runResearchNode,
-  anthropicWebSearchTools,
 }));
 
 import { runGatherMaterial } from "./research-runner";
@@ -31,11 +32,16 @@ interface MaterialItemLike {
   why_relevant: string;
 }
 
+const EMPTY_CATEGORIES = { hooks: [], cases: [], dataPoints: [], quotes: [] };
+
 function makeDeps(
   items: MaterialItemLike[],
   apiFormat: "anthropic" | "openai_chat" = "anthropic",
 ) {
-  runResearchNode.mockResolvedValue({ items, steps: [] } as never);
+  runResearchNode.mockResolvedValue({
+    items,
+    categories: EMPTY_CATEGORIES,
+  } as never);
   const recordCandidate = vi.fn(
     async (
       _ctx: RequestContext,
@@ -72,37 +78,45 @@ function makeDeps(
   };
 }
 
-describe("runGatherMaterial (Vercel SDK + anthropic 内置 web search)", () => {
-  it("解析 research.gather capability,anthropic 路径挂 web search,落 material_list 候选", async () => {
+describe("runGatherMaterial (Vercel SDK + 结构化四类候选)", () => {
+  it("解析 research.gather capability,纯结构化生成(不挂工具),落 material_list 候选(items+categories)", async () => {
     const items: MaterialItemLike[] = [
-      { title: "素材一", url: "u1", source: "s1", why_relevant: "对定位有用" },
+      { title: "钩子：素材一", url: "", source: "", why_relevant: "对定位有用" },
     ];
+    const categories = {
+      hooks: [{ text: "素材一", why: "对定位有用" }],
+      cases: [],
+      dataPoints: [],
+      quotes: [],
+    };
     const { deps, recordCandidate, resolveModelSpec } = makeDeps(items);
+    runResearchNode.mockResolvedValue({ items, categories } as never);
     await runGatherMaterial(
       ctx,
       { id: "t1", projectId: "p1", inputData: { topic: "复现 MLA" } },
       deps,
     );
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "research.gather");
-    // anthropic 路径:web search 工具被构造并传入节点。
-    expect(anthropicWebSearchTools).toHaveBeenCalledTimes(1);
     expect(runResearchNode).toHaveBeenCalledTimes(1);
-    const nodeArg = runResearchNode.mock.calls[0]![0] as {
-      tools?: { web_search?: unknown };
-    };
-    expect(nodeArg.tools?.web_search).toBe("WEBSEARCH_TOOL");
+    // 纯结构化:不给节点传任何 web search 工具。
+    const nodeArg = runResearchNode.mock.calls[0]![0] as { tools?: unknown };
+    expect(nodeArg.tools).toBeUndefined();
     expect(recordCandidate).toHaveBeenCalledTimes(1);
     const input = recordCandidate.mock.calls[0]![2];
     expect(input.resultType).toBe("material_list");
-    const recorded = (input.resultData as { items: unknown[] }).items;
-    expect(Array.isArray(recorded)).toBe(true);
-    expect(recorded.length).toBe(1);
+    const data = input.resultData as {
+      items: unknown[];
+      categories: { hooks: unknown[] };
+    };
+    // items 摊平喂采纳路径 + categories 原样回带供工作台分类展示。
+    expect(Array.isArray(data.items)).toBe(true);
+    expect(data.items.length).toBe(1);
+    expect(data.categories.hooks.length).toBe(1);
   });
 
-  it("非 anthropic 端点:不挂内置 web search(不擅自引第三方搜索)", async () => {
-    anthropicWebSearchTools.mockClear();
+  it("非 anthropic 端点也走纯结构化:不挂工具(模型可配,不强依赖某厂商服务端工具)", async () => {
     const items: MaterialItemLike[] = [
-      { title: "素材", url: "u", source: "s", why_relevant: "w" },
+      { title: "钩子：素材", url: "", source: "", why_relevant: "w" },
     ];
     const { deps } = makeDeps(items, "openai_chat");
     await runGatherMaterial(
@@ -110,7 +124,6 @@ describe("runGatherMaterial (Vercel SDK + anthropic 内置 web search)", () => {
       { id: "t2", projectId: null, inputData: { topic: "x" } },
       deps,
     );
-    expect(anthropicWebSearchTools).not.toHaveBeenCalled();
     const nodeArg = runResearchNode.mock.calls.at(-1)![0] as {
       tools?: unknown;
     };

@@ -112,16 +112,22 @@ export {
   type RunScriptNodeInput,
   type RunScriptNodeResult,
 } from "./nodes/script-node";
-// 素材搜集节点 —— 唯一带工具的迁移节点(anthropic 内置 web search;弃旧 Claude Agent SDK)。
+// 素材搜集节点 —— L2 创作向重写:generateObject 绑四类 outputSchema(钩子/案例/数据点/金句),
+// schema 强约束让任何模型(MiniMax/Claude)都产可解析输出,根治旧版自由文本解析的卡死。
 export {
   runResearchNode,
-  parseMaterials,
+  flattenCategories,
   anthropicWebSearchTools,
   type MaterialItem,
+  type ResearchCategories,
   type RunResearchNodeInput,
   type RunResearchNodeResult,
 } from "./nodes/research-node";
-export { RESEARCH_GATHER_TEMPLATE } from "./prompt/templates/research-gather";
+export {
+  RESEARCH_GATHER_TEMPLATE,
+  researchMaterialSchema,
+  type ResearchMaterialOutput,
+} from "./prompt/templates/research-gather";
 // 通用模板节点 —— 6 个无工具纯生成 runner 共用(bindPrompt → runAgentNode → {text, steps})。
 export {
   runTemplatedNode,

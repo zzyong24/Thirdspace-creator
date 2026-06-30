@@ -298,15 +298,6 @@ export interface ResearchSummaryCard {
   readonly tone: "info" | "positive" | "warning" | "negative";
 }
 
-export interface CompetitorRow {
-  readonly id: Id;
-  readonly name: string;
-  readonly platform: PlatformId;
-  readonly views: number;
-  readonly threat: "low" | "medium" | "high";
-  readonly note: string;
-}
-
 export interface ResearchSourceRow {
   readonly id: Id;
   readonly title: string;
@@ -320,7 +311,6 @@ export interface ResearchViewModel extends BasePageViewModel {
   readonly projectId: Id;
   readonly idea: { readonly title: string; readonly summary: string };
   readonly trendCards: ReadonlyArray<ResearchSummaryCard>;
-  readonly competitors: ReadonlyArray<CompetitorRow>;
   readonly sourceTabs: ReadonlyArray<{ readonly id: string; readonly label: string }>;
   readonly sources: ReadonlyArray<ResearchSourceRow>;
   // `knowledgeId` (Module 06 F2a/F2b): a research note / evidence row is a
