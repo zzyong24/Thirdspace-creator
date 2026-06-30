@@ -64,6 +64,11 @@ export function AdoptCandidateCard<T>({
   const router = useRouter();
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [items, setItems] = React.useState<T[]>([]);
+  // CollabField(COLLAB-02):保留原始 items(用于 patch)+ 人删掉的下标 —— 采纳前可逐条筛掉。
+  const [rawItems, setRawItems] = React.useState<unknown[]>([]);
+  const [removed, setRemoved] = React.useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
   // 步骤日志(AISTD):runner 每步 recordStep,这里轮询拉出来实时显示 —— 不是干转圈。
   const [steps, setSteps] = React.useState<
     { stepNo: number; text: string; kind: string }[]
@@ -93,7 +98,13 @@ export function AdoptCandidateCard<T>({
       })) as unknown as Array<{ resultData: Record<string, unknown> }>;
       const candidate = results[results.length - 1];
       const got = candidate ? parseItems(candidate.resultData) : [];
+      const raw =
+        candidate && Array.isArray(candidate.resultData.items)
+          ? (candidate.resultData.items as unknown[])
+          : [];
       setItems(got);
+      setRawItems(raw);
+      setRemoved(new Set());
       setPhase("review");
     },
     [parseItems],
@@ -213,10 +224,23 @@ export function AdoptCandidateCard<T>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskType, projectId]);
 
+  // 原始 items 与解析后 items 一一对齐时,才允许逐条删(否则下标会错,退回整批采纳)。
+  const canEdit = rawItems.length === items.length && items.length > 0;
+  const keptCount = canEdit ? items.length - removed.size : items.length;
+
   const adopt = React.useCallback(async () => {
     if (!taskId) return;
     setConfirming(true);
     try {
+      // CollabField:人删了候选 → 先 patch 替换成保留的(对齐 1:1 才安全),再 confirm 物化。
+      if (canEdit && removed.size > 0) {
+        const kept = rawItems.filter((_, i) => !removed.has(i));
+        await client.patchTaskResultItems({
+          params: { taskId },
+          query: undefined,
+          body: { items: kept },
+        });
+      }
       await client.confirmTask({
         params: { taskId },
         query: undefined,
@@ -229,7 +253,7 @@ export function AdoptCandidateCard<T>({
     } finally {
       setConfirming(false);
     }
-  }, [taskId, router]);
+  }, [taskId, router, canEdit, removed, rawItems]);
 
   return (
     <div data-slot="adopt-candidate-card" data-task-type={taskType}>
@@ -279,24 +303,45 @@ export function AdoptCandidateCard<T>({
           {phase === "review" ? (
             <div data-slot="adopt-review" className="flex flex-col gap-2">
               <p className="text-xs text-muted-foreground">
-                AI 给出 {items.length} 条，审阅后采纳：
+                AI 给出 {keptCount} 条，审阅后采纳{canEdit ? "（可逐条删）" : ""}：
               </p>
               <ul className="flex flex-col gap-1.5" aria-label="AI 候选">
-                {items.map((item, i) => (
-                  <li key={i} data-slot="adopt-item">
-                    {renderItem(item, i)}
-                  </li>
-                ))}
+                {items.map((item, i) =>
+                  removed.has(i) ? null : (
+                    <li
+                      key={i}
+                      data-slot="adopt-item"
+                      className={canEdit ? "flex items-start gap-1.5" : undefined}
+                    >
+                      <div className="min-w-0 flex-1">{renderItem(item, i)}</div>
+                      {canEdit ? (
+                        // CollabField:逐条删掉不要的 AI 候选(采纳前 patch 落库)。
+                        <button
+                          type="button"
+                          data-slot="adopt-item-remove"
+                          aria-label="删除这条"
+                          disabled={confirming}
+                          onClick={() =>
+                            setRemoved((s) => new Set(s).add(i))
+                          }
+                          className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-control border border-border text-xs text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-50"
+                        >
+                          ×
+                        </button>
+                      ) : null}
+                    </li>
+                  ),
+                )}
               </ul>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   data-slot="adopt-confirm"
-                  disabled={confirming || items.length === 0}
+                  disabled={confirming || keptCount === 0}
                   onClick={adopt}
                   className="inline-flex h-8 items-center rounded-control bg-brand px-3 text-xs font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
                 >
-                  {adoptLabel(items.length)}
+                  {adoptLabel(keptCount)}
                 </button>
                 <button
                   type="button"
@@ -304,6 +349,8 @@ export function AdoptCandidateCard<T>({
                   disabled={confirming}
                   onClick={() => {
                     setItems([]);
+                    setRawItems([]);
+                    setRemoved(new Set());
                     setPhase("idle");
                   }}
                   className="inline-flex h-8 items-center rounded-control border border-border px-3 text-xs font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"
@@ -316,7 +363,7 @@ export function AdoptCandidateCard<T>({
 
           {phase === "done" ? (
             <p data-slot="adopt-done" className="text-sm text-success">
-              ✓ {doneLabel(items.length)}
+              ✓ {doneLabel(keptCount)}
             </p>
           ) : null}
 

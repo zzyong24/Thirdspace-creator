@@ -253,6 +253,12 @@ export interface AiService {
     ctx: RequestContext,
     taskId: string,
   ): Promise<AITaskResultResource[]>;
+  // CollabField:采纳前用人编辑后的 items 替换最新结果(逐条改/删)。
+  patchResultItems(
+    ctx: RequestContext,
+    taskId: string,
+    items: unknown[],
+  ): Promise<AITaskResultResource>;
   listReferences(
     ctx: RequestContext,
     taskId: string,
@@ -889,6 +895,12 @@ export function createAiService(deps: ServiceDeps): AiService {
       await repo.requireTask(taskId); // ownership gate (404 on cross-user)
       const rows = await repo.listResults(taskId);
       return rows.map(toResultDto);
+    },
+
+    async patchResultItems(ctx, taskId, items) {
+      const repo = repoFor(ctx);
+      const row = await repo.patchLatestResultItems(taskId, items);
+      return toResultDto(row);
     },
 
     async recordStep(ctx, taskId, input) {

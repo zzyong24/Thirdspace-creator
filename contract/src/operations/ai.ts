@@ -109,6 +109,17 @@ export const aiOperations = {
     response: aiPendingTopicReviewResource,
     fr: ["FR-AI-TASKS-RESULTS-LIST"],
   }),
+  // CollabField(COLLAB-02):采纳前人可逐条编辑/删候选 —— 替换最新结果的 items,再 confirm 物化。
+  // 让所有 list 类 AI 节点(选题/素材/复盘/发布候选)的 AI 产物"人可改",不再全有或全无。
+  patchTaskResultItems: defineEndpoint({
+    id: "ai.tasks.results.patch",
+    method: "POST",
+    path: "/ai/tasks/:taskId/results/patch",
+    params: taskParams,
+    body: z.object({ items: z.array(z.unknown()) }),
+    response: aiTaskResultResource,
+    fr: ["FR-AI-TASKS-RESULTS-LIST"],
+  }),
   confirmTask: defineEndpoint({
     id: "ai.tasks.confirm",
     method: "POST",

@@ -129,6 +129,8 @@ export interface AiRepository {
   insertResult(rec: InsertResultInput): Promise<ResultRow>;
   getResult(resultId: string): Promise<ResultRow>;
   listResults(taskId: string): Promise<ResultRow[]>;
+  /** CollabField:用人编辑后的 items 替换最新结果的 result_data.items(采纳前可改/删)。 */
+  patchLatestResultItems(taskId: string, items: unknown[]): Promise<ResultRow>;
   insertStep(rec: InsertStepInput): Promise<StepRow>;
   listSteps(taskId: string): Promise<StepRow[]>;
   /** 最近一条待审阅(awaiting_confirmation)的 topic.generate 任务 + 候选数;无则 null。 */
@@ -387,6 +389,27 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .select()
         .from(aiTaskResults)
         .where(eq(aiTaskResults.aiTaskId, taskId));
+    },
+
+    async patchLatestResultItems(taskId, items) {
+      await getTask(taskId); // scoped ownership gate
+      const rows = await db
+        .select()
+        .from(aiTaskResults)
+        .where(eq(aiTaskResults.aiTaskId, taskId));
+      const last = rows[rows.length - 1];
+      if (!last) {
+        throw new OwnershipError(
+          `OwnershipError: no result to patch for task: ${taskId}`,
+        );
+      }
+      const data = (last.resultData ?? {}) as Record<string, unknown>;
+      const updated = await db
+        .update(aiTaskResults)
+        .set({ resultData: { ...data, items } })
+        .where(eq(aiTaskResults.id, last.id))
+        .returning();
+      return updated[0]!;
     },
 
     async insertStep(rec) {

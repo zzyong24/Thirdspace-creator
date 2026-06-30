@@ -29,6 +29,7 @@ export const AI_OP_IDS = [
   "ai.tasks.results.list",
   "ai.tasks.steps.list",
   "ai.tasks.pending_topic_review",
+  "ai.tasks.results.patch",
   "ai.tasks.confirm",
   "ai.tasks.cancel",
 ] as const;
@@ -128,6 +129,15 @@ export function createAiTransport(
         case "ai.tasks.pending_topic_review": {
           const data = await service.getPendingTopicReview(ctx);
           return { data, meta: { requestId } };
+        }
+        case "ai.tasks.results.patch": {
+          const b = (body ?? {}) as { items?: unknown[] };
+          const result = await service.patchResultItems(
+            ctx,
+            p.taskId ?? "",
+            Array.isArray(b.items) ? b.items : [],
+          );
+          return { data: result, meta: { requestId } };
         }
         case "ai.tasks.confirm": {
           const task = await service.confirmTask(ctx, p.taskId ?? "");
