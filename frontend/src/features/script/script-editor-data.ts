@@ -48,6 +48,11 @@ interface SavedSection {
   id?: unknown;
   heading?: unknown;
   body?: unknown;
+  // L4 task-review 修:读回这些(原来写死 → 金句标注/段落类型/分镜时间码首次保存即丢)。
+  type?: unknown;
+  emphasis?: unknown;
+  startSeconds?: unknown;
+  endSeconds?: unknown;
 }
 
 function coerceSavedSections(
@@ -63,14 +68,25 @@ function coerceSavedSections(
     if (!heading && !body) continue;
     const id =
       typeof s.id === "string" && s.id ? s.id : `script-saved-${index()}`;
+    // L4 task-review 修:读回保存时写进的 type/emphasis/时间码(原来全写死 → 金句轨首次保存即空、
+    // 段落类型全塌"正文"、分镜时间码丢)。缺字段才回退默认(向后兼容旧版本)。
+    const emphasis = typeof s.emphasis === "boolean" ? s.emphasis : false;
+    const type =
+      typeof s.type === "string" && s.type
+        ? (s.type as ScriptSectionView["type"])
+        : emphasis
+          ? "golden_quote"
+          : "body";
+    const num = (v: unknown): number | null =>
+      typeof v === "number" && Number.isFinite(v) ? v : null;
     out.push({
       id,
-      type: "body",
+      type,
       heading: heading || "脚本段落",
       body,
-      emphasis: false,
-      startSeconds: null,
-      endSeconds: null,
+      emphasis,
+      startSeconds: num(s.startSeconds),
+      endSeconds: num(s.endSeconds),
     });
   }
   return out.length > 0 ? out : null;
