@@ -66,9 +66,11 @@ export function ProjectOverviewActions({
       setPending(true);
       try {
         await mutate();
-        router.refresh();
       } finally {
+        // 总是 refresh:gate 不过时 service 已把当前阶段落 needs_review 再抛错,
+        // 刷新才能让 stepper 看到"卡待补"(SKL-11)。
         setPending(false);
+        router.refresh();
       }
     },
     [pending, router],
@@ -95,15 +97,17 @@ export function ProjectOverviewActions({
   }, [projectId, run]);
 
   const onNextStage = React.useCallback(() => {
-    if (!nextStage) return;
+    if (!nextStage) return; // 终态 review 不显示按钮
+    // SKL-11:推进**当前**阶段(in_progress→completed,触发交付物 gate),而非直接点亮下一阶段
+    // 绕过 gate。完成后 current_stage 由 service 派生前移到下一未完成阶段。
     void run(() =>
       client.transitionProjectStage({
-        params: { projectId, stage: nextStage },
+        params: { projectId, stage: currentStage },
         query: undefined,
         body: {},
       }),
     );
-  }, [nextStage, projectId, run]);
+  }, [nextStage, currentStage, projectId, run]);
 
   return (
     <div

@@ -3,7 +3,7 @@
  *
  * The island wires the project header's mutating affordances to the mock
  * backend through the typed `client`, then asks the router to revalidate:
- *  - 进入下一步 calls `client.transitionProjectStage` with the next adjacent
+ *  - 进入下一步 calls `client.transitionProjectStage` with the CURRENT stage (SKL-11: advance current
  *    stage, then `router.refresh()`,
  *  - 收藏 toggles `client.patchProject({ starred })`, then `router.refresh()`,
  *  - 归档 calls `client.archiveProject`, then `router.refresh()`.
@@ -81,8 +81,10 @@ describe("ProjectOverviewActions", () => {
     await waitFor(() => {
       expect(mockClient.transitionProjectStage).toHaveBeenCalledTimes(1);
     });
+    // SKL-11:推进的是**当前**阶段(research,in_progress→completed 触发 gate),
+    // 而非直接点亮下一阶段(planning)绕过 gate。
     expect(mockClient.transitionProjectStage.mock.calls[0]![0]).toMatchObject({
-      params: { projectId: "project-ainativebrowser", stage: "planning" },
+      params: { projectId: "project-ainativebrowser", stage: "research" },
     });
     await waitFor(() => {
       expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
