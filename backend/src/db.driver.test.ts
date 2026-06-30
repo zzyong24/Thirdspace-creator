@@ -83,7 +83,9 @@ describe("resolveDbDriver 优先级(L0 三态)", () => {
     const r = resolveDbDriver({ env: {}, cwd: "/repo" });
     expect(r.kind).toBe("file-pglite");
     expect(r.target).toBe(defaultPgliteDataDir("/repo"));
-    expect(r.target).toBe(path.join("/repo", ".data", "pglite"));
+    // 默认落 ~/.creatoros/db(本机私有,SPEC §4.1)—— 验后缀,不依赖具体 home 路径。
+    // kind=file-pglite 时 target 必有值(上方已断言 kind);`!` 收窄类型。
+    expect(r.target!.endsWith(path.join(".creatoros", "db"))).toBe(true);
   });
 
   it("runtime 无 PGLITE_DATA_DIR 但有 CREATOROS_DB_DIR → 用它落盘", () => {
@@ -146,7 +148,7 @@ describe("file-backed PGlite 落盘 + 迁移一致 + 重启不丢(L0 验收)", (
     const gotUsers = await second.db.select().from(users);
     expect(gotUsers.map((u) => u.id)).toContain("u-l0");
     await second.dispose();
-  });
+  }, 30_000); // 跑 2 套迁移 + 落盘,满载并行下 >5s,显式放宽(task-review L0 minor)
 
   it("file-PGlite 与 内存 PGlite 建出的表集合一致(迁移结果同构)", async () => {
     const dir = await freshTmp("creatoros-l0-parity-");
@@ -167,7 +169,7 @@ describe("file-backed PGlite 落盘 + 迁移一致 + 重启不丢(L0 验收)", (
     expect(names(fileTables).length).toBeGreaterThan(20); // 全模块表已建。
     await file.dispose();
     await mem.client.close();
-  });
+  }, 30_000); // 两套 PGlite 各跑迁移,满载 WASM 竞争 >5s,显式放宽(task-review L0 minor)
 });
 
 describe("PGlite 单连接并发落盘(gate 点名:串行化不锁竞争/不丢写)", () => {
@@ -243,5 +245,5 @@ describe("PGlite 单连接并发落盘(gate 点名:串行化不锁竞争/不丢�
     const persisted = await reopened.db.select().from(projects);
     expect(persisted).toHaveLength(N);
     await reopened.dispose();
-  });
+  }, 30_000); // 100 并发写 + 迁移 + 重开,满载放宽(task-review L0 minor)
 });

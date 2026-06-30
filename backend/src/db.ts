@@ -140,10 +140,14 @@ export interface ResolveDbDriverOptions {
   cwd?: string;
 }
 
-// file-PGlite 缺省落盘目录(env 未配时):<cwd>/.data/pglite。与 .auth/ 同属本机私有,
-// 由 .gitignore 兜住(不入库)。
+// file-PGlite 缺省落盘目录(env 未配时):`~/.creatoros/db`(SPEC §4.1)。本机私有数据,
+// 与 .auth/ 同位面、不埋在 frontend 子目录、随仓库移动不丢。`PGLITE_DATA_DIR` 可覆盖。
+// ⚠️ PGlite 单连接独占该目录:同一落盘目录仅单进程开。若未来起独立 worker 进程(如 T-007
+// 调度)直连 file-pglite,须共享同进程,否则回退 docker-PG(env `DATABASE_URL` 一键切)。
+// 入参 cwd 保留以兼容签名 + 作极端无 home 时的兜底。
 export function defaultPgliteDataDir(cwd: string): string {
-  return join(cwd, ".data", "pglite");
+  const home = homedir();
+  return home ? join(home, ".creatoros", "db") : join(cwd, ".data", "pglite");
 }
 
 // 把可能为 `~`/相对 的 PGLITE_DATA_DIR 解析为绝对路径(PGlite 按字面路径建目录)。
