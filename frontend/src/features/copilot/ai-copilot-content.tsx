@@ -90,6 +90,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -165,12 +166,6 @@ const TONE_BG: Record<string, string> = {
   indigo: "bg-indigo-100 text-indigo-600",
 };
 
-// Color-keyed badge classes shared by the real 「继续任务」 status mapping below.
-const STATUS_BADGE_BASE = {
-  violet: "bg-violet-100 text-violet-600",
-  amber: "bg-amber-100 text-amber-700",
-  emerald: "bg-emerald-100 text-emerald-700",
-} as const;
 
 // Quick-entry → real route map. The fixture rows carry a stable `id` (no `href`
 // field in the shared VM), so this island owns the id→route mapping rather than
@@ -342,10 +337,33 @@ const TASK_STATUS_LABEL: Record<WireTask["status"], string> = {
   cancelled: "已取消",
 };
 
-// taskType (e.g. "research.analyze") → a readable title for the feed row. The taskType IS
-// the title surface the copilot shows (spec: {id,title|taskType,...}).
+// bug #6:taskType(如 "calibration.diagnose")是机器枚举,用户看不懂。这里给一张中文 label +
+// 一句简短副文映射,任务卡显中文标题 + 副文。未知 taskType 回退到原串(诚实兜底,不编一个假中文)。
+const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
+  "calibration.diagnose": { label: "编导诊断", sub: "逐维度盲评内容" },
+  "topic.generate": { label: "AI 出题", sub: "生成选题候选" },
+  "topic.enrich": { label: "选题补全", sub: "补全成完整选题卡" },
+  "planning.thesis": { label: "核心论点", sub: "提炼论点树" },
+  "review.analyze": { label: "复盘分析", sub: "提炼可复用爆款要素" },
+  "positioning.generate": { label: "定位策略", sub: "生成结构化定位提案" },
+  "script.draft": { label: "脚本初稿", sub: "起草口播脚本" },
+  "script.rewrite": { label: "脚本改写", sub: "按反馈重写脚本" },
+  "material.match": { label: "素材匹配", sub: "为脚本匹配素材" },
+  "publish.platform_adapt": { label: "发布适配", sub: "适配多平台发布物料" },
+  "research.gather_material": { label: "找素材", sub: "收集研究素材" },
+  "research.gather": { label: "找素材", sub: "收集研究素材" },
+  "research.analyze": { label: "研究分析", sub: "分析研究结论" },
+  "copilot.assist": { label: "AI 助手", sub: "对话式创作建议" },
+};
+
+// taskType → 中文标题(bug #6)。命中映射用中文 label;否则回退到原 taskType 串(诚实,不伪造)。
 function taskTitle(t: WireTask): string {
-  return t.taskType;
+  return TASK_TYPE_LABEL[t.taskType]?.label ?? t.taskType;
+}
+
+// taskType → 中文副文(任务卡第二行)。未命中返回 null(不渲染副文)。
+function taskSubtitle(t: WireTask): string | null {
+  return TASK_TYPE_LABEL[t.taskType]?.sub ?? null;
 }
 
 // In-progress statuses that belong in the 「继续任务」 feed. A user can resume any
@@ -389,15 +407,15 @@ function resumeHref(t: WireTask): string | null {
     : `/projects/${t.projectId}`;
 }
 
-// Status → continuing-card tone/badge (honest mirror of the §12 machine, no fake progress).
-const CONTINUING_BADGE: Record<string, { label: string; badge: string; bg: string }> = {
-  queued: { label: "排队中", badge: STATUS_BADGE_BASE.amber, bg: "bg-amber-50/60" },
-  running: { label: "进行中", badge: STATUS_BADGE_BASE.violet, bg: "bg-violet-50" },
-  awaiting_confirmation: {
-    label: "待确认",
-    badge: STATUS_BADGE_BASE.amber,
-    bg: "bg-amber-50/60",
-  },
+// bug #7:status → 既有 Badge 组件的 variant + 中文 label(honest mirror of the §12 machine,
+// 无假进度)。复用设计 token(default/secondary/outline),与全局徽章一致,不再手搓 inline 颜色类。
+const CONTINUING_STATUS_META: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "outline" }
+> = {
+  queued: { label: "排队中", variant: "outline" },
+  running: { label: "进行中", variant: "default" },
+  awaiting_confirmation: { label: "待确认", variant: "secondary" },
 };
 
 // 一键岛预调(SPEC §3.4)—— 工作台「出题/诊断/分析」等按钮打开 ChatBox 时,在 URL 上带
@@ -505,9 +523,17 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   }, [recentTasks]);
 
   return (
-    <div className="flex flex-col gap-4" data-slot="ai-copilot-content">
+    // bug #5:面板布局重排 —— 整体撑满浮层高度(min-h-0 让内部可正确收缩),对话区做主区(flex-1
+    // 占满、消息流自身滚动),下面的「控制台/快捷入口/智能推荐」收进一个有界、可滚的次区,不再挤占对话。
+    <div
+      className="flex h-full min-h-0 flex-col gap-3"
+      data-slot="ai-copilot-content"
+    >
       {/* CopilotHeader ------------------------------------------------- */}
-      <div data-slot="copilot-header" className="flex items-center gap-2">
+      <div
+        data-slot="copilot-header"
+        className="flex shrink-0 items-center gap-2"
+      >
         <span
           aria-hidden="true"
           className="inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"
@@ -527,14 +553,19 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
         </div>
       </div>
 
-      {/* PromptComposer ------------------------------------------------ */}
-      <Card
-        data-slot="prompt-composer"
+      {/* Conversation region (主区,bug #5)—— 消息流 + 输入框。flex-1 占满浮层主体,消息区
+          自身滚动,输入框 pin 在底部。对话才是 Copilot 的核心,放大、可读、可滚。 */}
+      <div
+        data-slot="copilot-conversation"
         data-region="prompt"
         data-slot-region="copilot-region"
-        className="border border-border bg-surface p-4"
+        className="flex min-h-0 flex-1 flex-col gap-2"
       >
-        <CardContent className="flex flex-col gap-3 p-0">
+        {/* 消息流(可滚)—— 给一个 min-h 下限,保证对话区是视觉主区,不被次区压扁(bug #5)。 */}
+        <div
+          data-slot="copilot-message-scroll"
+          className="min-h-[220px] flex-1 overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
+        >
           {messages.length > 0 ? (
             <ol
               data-slot="copilot-messages"
@@ -642,13 +673,36 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                 </li>
               ) : null}
             </ol>
-          ) : null}
+          ) : (
+            // 空对话态:大对话区不留白,给一句引导。
+            <div
+              data-slot="copilot-empty"
+              className="flex h-full flex-col items-center justify-center gap-1.5 text-center"
+            >
+              <span className="inline-flex size-9 items-center justify-center rounded-full bg-brand-soft text-brand">
+                <Sparkles className="size-4" aria-hidden="true" />
+              </span>
+              <p className="text-[12px] font-medium text-foreground">
+                描述你的目标，我来帮你规划下一步
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                试试「基于最近评论出 5 个选题」，或用下方推荐指令开聊。
+              </p>
+            </div>
+          )}
+        </div>
+        {/* 输入框(pin 底部)—— bug #5:成为对话区的固定主控件,不被次区挤压。 */}
+        <Card
+          data-slot="prompt-composer"
+          className="shrink-0 border border-border bg-surface p-3"
+        >
+          <CardContent className="p-0">
           <form
             onSubmit={(event) => {
               event.preventDefault();
               submit();
             }}
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-2.5"
             data-slot="prompt-form"
           >
             <textarea
@@ -726,16 +780,23 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
               </div>
             </div>
           </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
+      {/* 次区(bug #5)—— 控制台/快捷入口/智能推荐折进一个有界、可滚的区域,不挤占对话主区。
+          给一个较小的上限高度(max-h)并自身滚动,把垂直空间让给上面的对话主区。 */}
+      <div
+        data-slot="copilot-secondary"
+        className="flex max-h-[230px] shrink-0 flex-col gap-3 overflow-y-auto"
+      >
       {/* CopilotDashboard ---------------------------------------------- */}
       <section
         aria-labelledby="ai-copilot-dashboard-title"
         data-slot="copilot-dashboard"
         data-region="dashboard"
         data-slot-region="copilot-region"
-        className="grid h-[300px] grid-cols-1 gap-3 md:grid-cols-3"
+        className="grid shrink-0 grid-cols-1 gap-3 md:grid-cols-3"
       >
         <h3 id="ai-copilot-dashboard-title" className="sr-only">
           Copilot 控制台
@@ -831,10 +892,10 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2 pl-5">
-                    <span className="text-[9.5px] leading-tight text-muted-foreground">
-                      项目：{task.projectId ?? "—"}
+                    <span className="min-w-0 truncate text-[9.5px] leading-tight text-muted-foreground">
+                      {taskSubtitle(task) ?? `项目：${task.projectId ?? "—"}`}
                     </span>
-                    <span className="text-[9.5px] leading-tight text-muted-foreground">
+                    <span className="shrink-0 text-[9.5px] leading-tight text-muted-foreground">
                       {TASK_STATUS_LABEL[task.status]}
                     </span>
                   </div>
@@ -880,32 +941,38 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
               </span>
             ) : (
               continuingTasks.map((task) => {
-                const meta =
-                  CONTINUING_BADGE[task.status] ?? CONTINUING_BADGE.running;
+                // bug #7:状态徽章 + 「继续」按钮改用项目既有 Badge/Button 组件 + 设计 token,
+                // 与全局一致(原为手搓 inline class,灰扑扑、样式怪)。
+                const status = CONTINUING_STATUS_META[task.status] ??
+                  CONTINUING_STATUS_META.running;
+                const sub = taskSubtitle(task);
                 const href = resumeHref(task);
                 return (
                   <div
                     key={task.id}
                     data-slot="continuing-task"
                     data-task-id={task.id}
-                    className={`flex flex-col gap-1 rounded-lg ${meta.bg} px-2.5 py-1.5`}
+                    className="flex flex-col gap-1 rounded-control border border-border bg-surface px-2.5 py-1.5"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-medium text-foreground leading-tight">
+                      <span className="min-w-0 truncate text-[11px] font-medium text-foreground leading-tight">
                         {taskTitle(task)}
                       </span>
                       <Badge
-                        className={`rounded-md border-0 px-1.5 py-0 text-[9px] font-medium ${meta.badge}`}
+                        variant={status.variant}
+                        className="shrink-0 px-1.5 py-0 text-[9px] font-medium"
                       >
-                        {meta.label}
+                        {status.label}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[9.5px] leading-tight text-muted-foreground">
-                        项目：{task.projectId ?? "—"}
+                      <span className="min-w-0 truncate text-[9.5px] leading-tight text-muted-foreground">
+                        {sub ?? `项目：${task.projectId ?? "—"}`}
                       </span>
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="xs"
                         data-slot="continuing-resume"
                         data-task-id={task.id}
                         disabled={href === null}
@@ -917,10 +984,10 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                         onClick={() => {
                           if (href) router.push(href);
                         }}
-                        className="inline-flex h-6 items-center rounded-md border border-brand/30 bg-surface px-2 text-[9.5px] font-medium text-brand transition-colors hover:bg-brand-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="shrink-0"
                       >
                         继续
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );
@@ -982,11 +1049,13 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
               id="ai-copilot-smart-recommendation-title"
               className="text-[11px] font-semibold text-foreground"
             >
-              智能推荐
+              快速开始
             </h3>
           </div>
+          {/* bug #5:原「检测到你最近在研究『AI 浏览器』」是 fixture 假数据 + 推「竞品策略」(对标已砍),
+              误导用户。改成不编造、不涉对标的通用创作起点话术,点了直接填入对话。 */}
           <p className="text-[10px] leading-snug text-muted-foreground">
-            检测到你最近在研究「AI 浏览器」，要我帮你：
+            不知道从哪开始？试试这些：
           </p>
           <div className="flex flex-wrap gap-1.5">
             {vm.smartRecommendations.map((rec) => (
@@ -1003,6 +1072,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
             ))}
           </div>
         </section>
+      </div>
       </div>
     </div>
   );

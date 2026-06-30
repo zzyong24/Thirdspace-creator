@@ -302,8 +302,9 @@ function SidebarContextualCard({ variant, userDisplayName }: SidebarContextualCa
       <p className="text-muted-foreground">
         {`${userDisplayName}，今天想先做点什么？`}
       </p>
+      {/* bug #3:query-only href(以 `?` 开头)= 保持当前页路径,就地开 Copilot 浮层,不跳首页。 */}
       <Link
-        href="/?copilot=open"
+        href="?copilot=open"
         className="text-brand underline-offset-4 hover:underline"
       >
         打开 AI 助手

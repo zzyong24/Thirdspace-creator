@@ -51,6 +51,20 @@ export interface ProjectOverviewActionsProps {
   readonly starred: boolean;
 }
 
+// 把 HttpTransport 抛出的错误转成一句中文。transport 现在把后端错误透传成
+// `HttpTransport: 409 for projects.stage.transition: <后端 message>`(见 http-transport.ts)。
+// 这里抽出冒号后的真实 message(交付物缺失原因);抽不到就按状态码给兜底。
+function describeTransitionError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  // 形如 "HttpTransport: 409 for projects.stage.transition: 阶段「research」核心交付物缺失,…"
+  const m = raw.match(/^HttpTransport: \d+ for [^:]+: ([\s\S]+)$/);
+  if (m?.[1]?.trim()) return m[1].trim();
+  if (raw.includes("409") || /Conflict/i.test(raw)) {
+    return "当前阶段还有核心交付物未完成，无法进入下一步。";
+  }
+  return "进入下一步失败，请稍后重试。";
+}
+
 export function ProjectOverviewActions({
   projectId,
   currentStage,
@@ -58,14 +72,22 @@ export function ProjectOverviewActions({
 }: ProjectOverviewActionsProps) {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
+  // bug #6 修复:进入下一步原来静默吞掉 transition 抛出的 409 gate 拒绝(交付物缺失),
+  // 用户点了"没反应"。这里把拒绝原因捕获并就地展示;成功则清掉提示。
+  const [transitionError, setTransitionError] = React.useState<string | null>(
+    null,
+  );
   const nextStage = nextStageOf(currentStage);
 
   const run = React.useCallback(
-    async (mutate: () => Promise<unknown>) => {
+    async (mutate: () => Promise<unknown>, onError?: (e: unknown) => void) => {
       if (pending) return;
       setPending(true);
       try {
         await mutate();
+      } catch (e) {
+        // 不再静默:把错误交给调用方(进入下一步会把 gate 原因显出来)。
+        onError?.(e);
       } finally {
         // 总是 refresh:gate 不过时 service 已把当前阶段落 needs_review 再抛错,
         // 刷新才能让 stepper 看到"卡待补"(SKL-11)。
@@ -98,22 +120,27 @@ export function ProjectOverviewActions({
 
   const onNextStage = React.useCallback(() => {
     if (!nextStage) return; // 终态 review 不显示按钮
+    setTransitionError(null);
     // SKL-11:推进**当前**阶段(in_progress→completed,触发交付物 gate),而非直接点亮下一阶段
     // 绕过 gate。完成后 current_stage 由 service 派生前移到下一未完成阶段。
-    void run(() =>
-      client.transitionProjectStage({
-        params: { projectId, stage: currentStage },
-        query: undefined,
-        body: {},
-      }),
+    // bug #6:gate 拒绝(409)不再静默 —— 捕获并把"缺什么"显在按钮下方。
+    void run(
+      () =>
+        client.transitionProjectStage({
+          params: { projectId, stage: currentStage },
+          query: undefined,
+          body: {},
+        }),
+      (e) => setTransitionError(describeTransitionError(e)),
     );
   }, [nextStage, currentStage, projectId, run]);
 
   return (
     <div
       data-slot="project-overview-actions"
-      className="flex flex-wrap items-center gap-2"
+      className="flex flex-col items-end gap-1"
     >
+      <div className="flex flex-wrap items-center gap-2">
       <Button
         type="button"
         variant="ghost"
@@ -149,6 +176,17 @@ export function ProjectOverviewActions({
           <Wand2 aria-hidden="true" className="size-4" />
           进入下一步
         </Button>
+      ) : null}
+      </div>
+      {/* bug #6:gate 拒绝原因就地展示(原来静默无反应)。 */}
+      {transitionError ? (
+        <p
+          data-slot="transition-error"
+          role="alert"
+          className="max-w-xs text-right text-[11px] leading-snug text-destructive"
+        >
+          {transitionError}
+        </p>
       ) : null}
     </div>
   );

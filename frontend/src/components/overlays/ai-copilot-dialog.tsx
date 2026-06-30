@@ -41,12 +41,14 @@ export interface AICopilotDialogProps {
 
 export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
   return (
+    // bug #5:对话框做满高 flex 列(min-h-0 允许内部收缩),AICopilotContent 以 flex-1 占满,
+    // 让对话区成为可滚主区、次区折叠在下。
     <div
-      className="flex flex-col gap-3"
+      className="flex h-full min-h-0 flex-col gap-3"
       data-slot="ai-copilot-dialog"
       data-current-path={pathname}
     >
-      <header className="flex items-center justify-between gap-3 border-b border-border pb-3">
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border pb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="size-5 text-brand" aria-hidden="true" />
           <h2
@@ -82,7 +84,9 @@ export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
         </div>
       </header>
 
-      <AICopilotContent />
+      <div className="min-h-0 flex-1">
+        <AICopilotContent />
+      </div>
     </div>
   );
 }

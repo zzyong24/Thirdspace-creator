@@ -124,8 +124,9 @@ function SidebarAssistantCard({ prompt }: { prompt: string }) {
         <span className="text-sm font-medium text-foreground">AI 助手</span>
         <p className="truncate text-xs text-muted-foreground">{prompt}</p>
       </div>
+      {/* bug #3:query-only href(以 `?` 开头)= 保持当前页路径,就地开 Copilot 浮层,不跳首页。 */}
       <Link
-        href="/?copilot=open"
+        href="?copilot=open"
         data-slot="sidebar-assistant-cta"
         className={cn(
           "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-card bg-brand px-3 text-sm font-medium text-brand-foreground",

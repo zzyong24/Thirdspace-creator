@@ -247,7 +247,9 @@ export function OverlayController({
           data-slot="overlay-panel"
           data-overlay-panel="copilot"
           className={cn(
-            "relative z-10 flex h-[716px] max-h-[calc(100vh-72px)] w-full max-w-[860px] flex-col gap-3 overflow-y-auto rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none",
+            // bug #5:面板不再整体 overflow-y-auto(否则对话区无法 flex-1 占满 + 自身滚动)。
+            // 改为 overflow-hidden + flex 列,把滚动职责交给内部各区(对话流 / 次区)。
+            "relative z-10 flex h-[716px] max-h-[calc(100vh-72px)] w-full max-w-[860px] flex-col gap-3 overflow-hidden rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none",
             className,
           )}
         >

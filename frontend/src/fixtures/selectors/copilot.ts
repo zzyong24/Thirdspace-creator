@@ -25,11 +25,11 @@ const SUGGESTED_ACTIONS: CopilotContentViewModel["chips"] = [
 
 const RECOMMENDED_COMMANDS: CopilotContentViewModel["recommendedCommands"] = [
   {
-    id: "market-opportunity",
+    id: "topic-from-positioning",
     icon: "crosshair",
     tone: "pink",
-    title: "分析 AI Browser 市场机会",
-    description: "深度分析市场趋势和机会点",
+    title: "基于我的定位出选题",
+    description: "结合账号画像生成选题候选",
   },
   {
     id: "video-script",
@@ -109,9 +109,12 @@ const QUICK_ENTRIES: CopilotContentViewModel["quickEntries"] = [
   { id: "knowledge", icon: "book", title: "知识库" },
 ];
 
+// bug #5:原为「分析竞品策略 / 寻找最新数据」——「竞品/对标」方向已砍(用户决策),且这块原配的
+// 「检测到你最近在研究『AI 浏览器』」是 fixture 假数据。改成不编造来源、不涉对标的通用创作起点,
+// 点了直接填入对话框,走真实后端。
 const SMART_RECOMMENDATIONS: CopilotContentViewModel["smartRecommendations"] = [
-  { id: "rec-1", title: "分析竞品策略" },
-  { id: "rec-2", title: "寻找最新数据" },
+  { id: "rec-1", title: "基于我的定位出 5 个选题" },
+  { id: "rec-2", title: "帮我复盘最近一条发布" },
 ];
 
 export function buildCopilotViewModel(): CopilotContentViewModel {

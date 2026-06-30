@@ -22,12 +22,25 @@ export function createHttpTransport(baseUrl = "/api/v1"): Transport {
         body: JSON.stringify({ id: endpoint.id, input }),
       });
       if (!res.ok) {
-        // 把后端的错误文案带上(dispatch 路由 400 body 形如 {error:"..."})。否则前端只看到
-        // "400",拿不到 DouyinNotLoggedInError 之类的可判定信息 —— 错误处理(如未登录引导)失效。
+        // 把后端的错误文案带上。否则前端只看到 "400/409",拿不到 DouyinNotLoggedInError /
+        // 阶段交付物缺失 之类的可判定信息 —— 错误处理(未登录引导 / 进入下一步 gate 原因)失效。
+        // dispatch body 有两种形状:① {error:"..."}(纯串);② {error:{code,message,details}}(结构化)。
+        // 两者都抽出可读 message(结构化时优先 .message),供调用方就地展示真实原因。
         let detail = "";
         try {
-          const body = (await res.json()) as { error?: unknown };
-          if (typeof body?.error === "string") detail = `: ${body.error}`;
+          const body = (await res.json()) as {
+            error?: unknown;
+          };
+          const err = body?.error;
+          if (typeof err === "string") {
+            detail = `: ${err}`;
+          } else if (
+            err &&
+            typeof err === "object" &&
+            typeof (err as { message?: unknown }).message === "string"
+          ) {
+            detail = `: ${(err as { message: string }).message}`;
+          }
         } catch {
           /* 非 JSON body,忽略 */
         }
