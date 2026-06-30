@@ -518,11 +518,12 @@ export function CreateCandidateForm() {
       <Button
         type="button"
         size="sm"
-        className="h-8 gap-1.5 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
+        variant="ghost"
+        className="h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
         onClick={() => setOpen(true)}
       >
         <Plus className="size-3.5" />
-        新建选题卡
+        手动详填
       </Button>
       <Dialog
         open={open}
@@ -896,6 +897,125 @@ function CandidateCardDetail({
   );
 }
 
+// ── 编导起草:一句话 → 补全整张选题卡(A1 把"填表"翻成"审稿")────────────────────────
+// 人只打一句意图;编导一气做完 建卡(createCandidate)→ 补全(topic.enrich)→ 物化(confirm),
+// 补全的整卡进池等人审/改(CollabField)。补全失败也让裸卡进池(人可手动详填)。复用 EnrichButton 流。
+export function IdeaDraftForm() {
+  const { run } = useMutation();
+  const [idea, setIdea] = React.useState("");
+  const [phase, setPhase] = React.useState<"idle" | "running" | "error">("idle");
+  const [hint, setHint] = React.useState("");
+  const cancelledRef = React.useRef(false);
+  React.useEffect(
+    () => () => {
+      cancelledRef.current = true;
+    },
+    [],
+  );
+  const valid = idea.trim().length > 0;
+
+  function draft() {
+    if (!valid || phase === "running") return;
+    setPhase("running");
+    setHint("编导起草中:建卡…");
+    void (async () => {
+      try {
+        const created = (await client.createCandidate({
+          params: undefined,
+          query: undefined,
+          body: { title: idea.trim(), angle: "", source: "idea" },
+        })) as { id: string };
+        setHint("编导补全中:读定位 · 找痛点 · 写 Hook…");
+        const task = (await client.createAITask({
+          params: undefined,
+          query: undefined,
+          body: { taskType: "topic.enrich", inputData: { candidateId: created.id } },
+        })) as { id: string };
+        for (let i = 0; i < 75; i++) {
+          if (cancelledRef.current) return;
+          await new Promise((r) => setTimeout(r, 4000));
+          if (cancelledRef.current) return;
+          const status = (await client.getTask({
+            params: { taskId: task.id },
+            query: undefined,
+            body: undefined,
+          })) as { status: string };
+          if (status.status === "awaiting_confirmation") {
+            await client.confirmTask({
+              params: { taskId: task.id },
+              query: undefined,
+              body: undefined,
+            });
+            if (!cancelledRef.current) {
+              setIdea("");
+              setHint("");
+              setPhase("idle");
+              run(() => Promise.resolve()); // router.refresh() — 补全的卡进池
+            }
+            return;
+          }
+          if (status.status === "cancelled" || status.status === "failed") {
+            // 裸卡已建(title 在);补全没成 → 仍刷新让它进池,人可手动详填。
+            if (!cancelledRef.current) {
+              setHint("");
+              setPhase("error");
+              run(() => Promise.resolve());
+            }
+            return;
+          }
+        }
+        if (!cancelledRef.current) {
+          setPhase("error");
+          run(() => Promise.resolve());
+        }
+      } catch {
+        if (!cancelledRef.current) setPhase("error");
+      }
+    })();
+  }
+
+  return (
+    <div
+      data-testid="idea-draft-form"
+      className="shrink-0 rounded-card border border-brand/30 bg-brand-soft/40 p-2.5"
+    >
+      <form
+        className="flex items-center gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          draft();
+        }}
+      >
+        <Sparkles className="size-4 shrink-0 text-brand" />
+        <Input
+          aria-label="一句话起选题"
+          placeholder="说一句你想做的选题,编导补全成整张卡…"
+          value={idea}
+          onChange={(e) => setIdea(e.target.value)}
+          disabled={phase === "running"}
+          className="h-8 flex-1 border-transparent bg-surface text-xs"
+        />
+        <Button
+          type="submit"
+          size="sm"
+          disabled={!valid || phase === "running"}
+          className="h-8 shrink-0 gap-1.5 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
+        >
+          {phase === "running" ? "编导起草中…" : "编导起草"}
+        </Button>
+      </form>
+      {phase === "running" && hint ? (
+        <p className="mt-1.5 pl-6 text-[11px] text-brand">{hint}</p>
+      ) : null}
+      {phase === "error" ? (
+        <p className="mt-1.5 pl-6 text-[11px] text-muted-foreground">
+          补全没成,但裸卡已进池 —— 你可在卡上点「补全选题卡」重试,或手动详填。
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 // ── 中栏：选题候选池 ──────────────────────────────────────────────────────────────
 function PoolColumn({
   pool,
@@ -919,6 +1039,9 @@ function PoolColumn({
         <h3 className="text-sm font-semibold text-foreground">选题候选池</h3>
         <CreateCandidateForm />
       </div>
+
+      {/* A1 主路径:一句话让编导补全(12 字段表单降级成上面的「手动详填」)。 */}
+      <IdeaDraftForm />
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         <span className="relative flex-1">
@@ -944,7 +1067,8 @@ function PoolColumn({
             data-testid="candidate-empty-state"
             className="rounded-card border border-dashed border-border px-3 py-8 text-center text-sm text-muted-foreground"
           >
-            还没有候选选题。开一场 AI 选题会，或手动新建选题卡。
+            还没有候选。<span className="text-brand">用上面一句话让编导起草</span>
+            ，或开一场 AI 选题会 —— 编导基于你的定位 + 评论 + 爆款经验主动出题。
           </li>
         ) : (
           filtered.map((c) => <CandidateCard key={c.id} candidate={c} />)

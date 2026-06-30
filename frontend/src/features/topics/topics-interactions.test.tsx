@@ -50,6 +50,7 @@ vi.mock("@/lib/contract-client", () => ({
 
 import {
   CreateCandidateForm,
+  IdeaDraftForm,
   CandidateCard,
   CandidateSortControl,
   TopicsWorkspace,
@@ -257,8 +258,8 @@ describe("topics three-column selection", () => {
 describe("topics islands (needs-backend wiring)", () => {
   it("新建选题卡 → client.createCandidate(source:'idea') then router.refresh", async () => {
     render(<CreateCandidateForm />);
-    // open the inline form first
-    fireEvent.click(screen.getByText("新建选题卡"));
+    // open the 手动详填 form first (A1 把主 CTA 让给「编导起草」,12 字段表单降级成手动详填)
+    fireEvent.click(screen.getByText("手动详填"));
     fireEvent.change(screen.getByLabelText("选题标题"), {
       target: { value: "新选题" },
     });
@@ -271,6 +272,30 @@ describe("topics islands (needs-backend wiring)", () => {
     };
     expect(arg.body).toMatchObject({ source: "idea", title: "新选题" });
     expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  it("编导起草(IdeaDraftForm)→ createCandidate(idea) 再 createAITask(topic.enrich)", async () => {
+    mockClient.createCandidate.mockResolvedValueOnce({ id: "cand-new" });
+    render(<IdeaDraftForm />);
+    fireEvent.change(screen.getByLabelText("一句话起选题"), {
+      target: { value: "副业避坑指南" },
+    });
+    fireEvent.click(screen.getByText("编导起草"));
+    // 第一步:建裸卡(title=这句话, source=idea)
+    await waitFor(() =>
+      expect(mockClient.createCandidate).toHaveBeenCalledTimes(1),
+    );
+    const cArg = mockClient.createCandidate.mock.calls[0]![0] as {
+      body: { title: string; source: string };
+    };
+    expect(cArg.body).toMatchObject({ title: "副业避坑指南", source: "idea" });
+    // 第二步:编导补全(topic.enrich,挂到刚建的候选)
+    await waitFor(() => expect(mockClient.createAITask).toHaveBeenCalledTimes(1));
+    const tArg = mockClient.createAITask.mock.calls[0]![0] as {
+      body: { taskType: string; inputData: { candidateId: string } };
+    };
+    expect(tArg.body.taskType).toBe("topic.enrich");
+    expect(tArg.body.inputData.candidateId).toBe("cand-new");
   });
 
   it("立项为 Project → client.promoteCandidate then push to the new /projects/:id", async () => {
