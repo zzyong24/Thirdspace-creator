@@ -375,10 +375,27 @@ function RecordResultButton({
   const [dims, setDims] = React.useState<DimScore[]>([]);
   // 维度 key → 用户录入的真实分(字符串,提交时转数字)。
   const [actuals, setActuals] = React.useState<Record<string, string>>({});
+  // 编导自动评分(B2 飞轮回流):AI 据真实指标产维度真实分候选 → 预填上面的录入框,人可改。
+  // scoring=AI 跑分中;scoreReasons[key]=AI 给该维度的一句打分依据(预填后展示,人改分但理由留存)。
+  const [scoring, setScoring] = React.useState(false);
+  const [scoreError, setScoreError] = React.useState<string | null>(null);
+  const [scoreReasons, setScoreReasons] = React.useState<
+    Record<string, string>
+  >({});
+  // 卸载后别再 setState(轮询是长任务)。
+  const cancelledRef = React.useRef(false);
+  React.useEffect(
+    () => () => {
+      cancelledRef.current = true;
+    },
+    [],
+  );
 
   const openForm = React.useCallback(async () => {
     setOpen(true);
     setError(null);
+    setScoreError(null);
+    setScoreReasons({});
     setLoading(true);
     try {
       const pred = (await client.getPrediction({
@@ -399,6 +416,83 @@ function RecordResultButton({
       setLoading(false);
     }
   }, [predictionId]);
+
+  // 编导评分 — fires a calibration.score AI task for THIS locked prediction, polls to
+  // awaiting_confirmation, reads the candidate (resultData.dimensions = 维度真实分候选), and
+  // **prefills** the 录入框 above (人可改). 不调 confirmTask:采纳走下方现有「录入」→ createResult。
+  const runDirectorScore = React.useCallback(async () => {
+    if (scoring) return;
+    setScoring(true);
+    setScoreError(null);
+    try {
+      const task = (await client.createAITask({
+        params: undefined,
+        query: undefined,
+        body: {
+          taskType: "calibration.score",
+          inputData: { predictionId },
+        },
+      })) as { id: string };
+      for (let i = 0; i < 75; i++) {
+        if (cancelledRef.current) return;
+        await new Promise((r) => setTimeout(r, 4000));
+        if (cancelledRef.current) return;
+        const status = (await client.getTask({
+          params: { taskId: task.id },
+          query: undefined,
+          body: undefined,
+        })) as { status: string };
+        if (status.status === "awaiting_confirmation") {
+          const results = (await client.listTaskResults({
+            params: { taskId: task.id },
+            query: undefined,
+            body: undefined,
+          })) as unknown as Array<{ resultData: Record<string, unknown> }>;
+          const last = results[results.length - 1];
+          const scored = Array.isArray(last?.resultData?.dimensions)
+            ? (last!.resultData.dimensions as Array<Record<string, unknown>>)
+            : [];
+          if (cancelledRef.current) return;
+          // 预填:每个维度的 AI 真实分 → 录入框字符串;理由留存展示。人改分不影响理由。
+          const nextActuals: Record<string, string> = {};
+          const nextReasons: Record<string, string> = {};
+          for (const d of scored) {
+            const key = typeof d.key === "string" ? d.key : "";
+            if (!key) continue;
+            if (typeof d.score === "number" && Number.isFinite(d.score)) {
+              nextActuals[key] = String(d.score);
+            }
+            if (typeof d.reason === "string" && d.reason) {
+              nextReasons[key] = d.reason;
+            }
+          }
+          setActuals((s) => ({ ...s, ...nextActuals }));
+          setScoreReasons(nextReasons);
+          if (Object.keys(nextActuals).length === 0) {
+            setScoreError("编导没能据真实指标给分,请手填或重试。");
+          }
+          setScoring(false);
+          return;
+        }
+        if (status.status === "cancelled" || status.status === "failed") {
+          if (!cancelledRef.current) {
+            setScoreError("编导评分失败(可能没配模型或暂无真实指标),请手填或重试。");
+            setScoring(false);
+          }
+          return;
+        }
+      }
+      if (!cancelledRef.current) {
+        setScoreError("编导评分超时,请手填或重试。");
+        setScoring(false);
+      }
+    } catch {
+      if (!cancelledRef.current) {
+        setScoreError("编导评分出错,请手填或重试。");
+        setScoring(false);
+      }
+    }
+  }, [scoring, predictionId]);
 
   const submit = React.useCallback(async () => {
     setSaving(true);
@@ -460,6 +554,35 @@ function RecordResultButton({
             </DialogDescription>
           </DialogHeader>
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
+            {/* 编导评分(B2)— AI 读真实指标自动给维度真实分,预填下面的录入框,人审核可改。 */}
+            {!loading && dims.length > 0 ? (
+              <div className="flex flex-col gap-1.5 rounded-control border border-border bg-surface-subtle/50 px-3 py-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-text-subtle">
+                    <Sparkles className="size-3.5 text-brand" />
+                    编导自动评分
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    data-testid="director-score-button"
+                    className="h-7 gap-1.5 px-2.5 text-[11px]"
+                    disabled={scoring || saving}
+                    onClick={runDirectorScore}
+                  >
+                    <Sparkles className="size-3.5" />
+                    {scoring ? "编导评分中…" : "让编导据真实指标评分"}
+                  </Button>
+                </div>
+                <p className="text-[11px] leading-snug text-muted-foreground">
+                  AI 读这条作品的真实指标(播放/完播/互动…)给每个维度打真实分,自动预填下方录入框 —— 人审核后可改。
+                </p>
+                {scoreError ? (
+                  <p className="text-[11px] text-destructive">{scoreError}</p>
+                ) : null}
+              </div>
+            ) : null}
             {loading ? (
               <p className="text-sm text-muted-foreground">读取盲预测维度…</p>
             ) : dims.length === 0 ? (
@@ -467,33 +590,49 @@ function RecordResultButton({
                 这条盲预测没有维度评分,无法逐维度录入。
               </p>
             ) : (
-              dims.map((d) => (
-                <label
-                  key={d.key}
-                  className="flex items-center justify-between gap-3 text-xs"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="font-medium text-foreground">{d.key}</span>
-                    {typeof d.score === "number" ? (
-                      <span className="ml-1.5 text-muted-foreground">
-                        预测 {d.score}
+              dims.map((d) => {
+                const reason = scoreReasons[d.key];
+                return (
+                  <div key={d.key} className="flex flex-col gap-1">
+                    <label className="flex items-center justify-between gap-3 text-xs">
+                      <span className="min-w-0 flex-1">
+                        <span className="font-medium text-foreground">
+                          {d.key}
+                        </span>
+                        {typeof d.score === "number" ? (
+                          <span className="ml-1.5 text-muted-foreground">
+                            预测 {d.score}
+                          </span>
+                        ) : null}
                       </span>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={5}
+                        step={1}
+                        aria-label={`${d.key} 真实分`}
+                        value={actuals[d.key] ?? ""}
+                        onChange={(e) =>
+                          setActuals((s) => ({ ...s, [d.key]: e.target.value }))
+                        }
+                        className="h-8 w-20 shrink-0"
+                      />
+                    </label>
+                    {reason ? (
+                      <p
+                        data-testid="score-reason"
+                        className="flex items-start gap-1 pl-0.5 text-[11px] leading-snug text-muted-foreground"
+                      >
+                        <Sparkles className="mt-0.5 size-3 shrink-0 text-brand" />
+                        <span>
+                          <span className="text-text-subtle">编导依据 · </span>
+                          {reason}
+                        </span>
+                      </p>
                     ) : null}
-                  </span>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={5}
-                    step={1}
-                    aria-label={`${d.key} 真实分`}
-                    value={actuals[d.key] ?? ""}
-                    onChange={(e) =>
-                      setActuals((s) => ({ ...s, [d.key]: e.target.value }))
-                    }
-                    className="h-8 w-20 shrink-0"
-                  />
-                </label>
-              ))
+                  </div>
+                );
+              })
             )}
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </div>

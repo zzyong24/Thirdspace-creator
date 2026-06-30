@@ -112,3 +112,17 @@ export {
   type RunTemplatedNodeInput,
   type RunTemplatedNodeResult,
 } from "./nodes/templated-node";
+// 结构化模板节点 —— 每轮 schema 约束(generateObject 绑 Zod,校验失败自动重试,防发散)。
+// B2 编导自动评分(calibration.score)用它产「维度真实分」候选。
+export {
+  runStructuredNode,
+  type RunStructuredNodeInput,
+  type RunStructuredNodeResult,
+} from "./nodes/structured-node";
+// B2 编导自动评分(calibration.score)外置模板 + 输出 schema —— 真实指标 → 维度真实分候选。
+// schema 定义在本包(有 zod);frontend runner 引它绑 generateObject,无需直引 zod。
+export {
+  CALIBRATION_SCORE_TEMPLATE,
+  calibrationScoreSchema,
+  type CalibrationScoreOutput,
+} from "./prompt/templates/calibration-score";
