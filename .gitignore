@@ -21,7 +21,12 @@ blob-report/
 frontend/tests/visual/__artifacts__/
 
 .worktrees/
-.claude/
+# .claude/ 默认忽略,但共享的项目框架(任务看板 hook + settings)要进 Git;个人设置仍忽略。
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+.claude/settings.local.json
+.claude/.DS_Store
 .codegraph/
 .stitch-demo/
 
