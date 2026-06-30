@@ -46,7 +46,16 @@ import {
 import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type {
   CandidateResource,
@@ -403,34 +412,109 @@ export function EnrichButton({
   );
 }
 
-// ── 新建选题卡 (manual) ─────────────────────────────────────────────────────────────
+// ── 新建选题卡 (manual·富字段录入弹窗 TOPIC-FORM) ──────────────────────────────────
+// 标题必填;其余整张候选卡字段(一句话/受众/痛点/冲突/Hook/结构/素材/风险/立项)可选。
+// 提交:createCandidate(title/angle) → 若富字段非空再 patchCandidate(card) 落库(评分由 AI/系统补)。
+const EMPTY_CARD = {
+  oneLiner: "",
+  targetAudience: "",
+  audiencePain: "",
+  coreConflict: "",
+  hook: "",
+  contentStructure: "", // 每行一条,提交时 split
+  format: "",
+  materialBasis: "",
+  riskNote: "",
+  proposal: "",
+};
+
+function FieldRow({
+  label,
+  required,
+  children,
+}: {
+  readonly label: string;
+  readonly required?: boolean;
+  readonly children: React.ReactNode;
+}) {
+  return (
+    <label className="flex flex-col gap-1 text-xs">
+      <span className="font-medium text-text-subtle">
+        {label}
+        {required ? <span className="text-destructive"> *</span> : null}
+      </span>
+      {children}
+    </label>
+  );
+}
+
 export function CreateCandidateForm() {
   const { pending, run, router } = useMutation();
   const [open, setOpen] = React.useState(false);
   const [title, setTitle] = React.useState("");
   const [angle, setAngle] = React.useState("");
+  const [card, setCard] = React.useState(EMPTY_CARD);
   const valid = title.trim().length > 0;
+  const setField =
+    (k: keyof typeof EMPTY_CARD) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setCard((c) => ({ ...c, [k]: e.target.value }));
+
+  function reset() {
+    setTitle("");
+    setAngle("");
+    setCard(EMPTY_CARD);
+  }
 
   function submit() {
     if (!valid) return;
     run(
-      () =>
-        client.createCandidate({
+      async () => {
+        const created = (await client.createCandidate({
           params: undefined,
           query: undefined,
           body: { title: title.trim(), angle: angle.trim(), source: "idea" },
-        }),
+        })) as { id: string };
+        // 富字段非空才 patch(数据要真:不写空字段)。
+        const filled: Record<string, unknown> = {};
+        const strFields = [
+          "oneLiner",
+          "targetAudience",
+          "audiencePain",
+          "coreConflict",
+          "hook",
+          "format",
+          "materialBasis",
+          "riskNote",
+          "proposal",
+        ] as const;
+        for (const k of strFields) {
+          const v = card[k].trim();
+          if (v) filled[k] = v;
+        }
+        const structure = card.contentStructure
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        if (structure.length) filled.contentStructure = structure;
+        if (Object.keys(filled).length > 0 && created?.id) {
+          await client.patchCandidate({
+            params: { candidateId: created.id },
+            query: undefined,
+            body: { card: filled },
+          });
+        }
+        return created;
+      },
       () => {
-        setTitle("");
-        setAngle("");
+        reset();
         setOpen(false);
         router.refresh(); // re-read the pool so the new card shows up
       },
     );
   }
 
-  if (!open) {
-    return (
+  return (
+    <>
       <Button
         type="button"
         size="sm"
@@ -440,51 +524,144 @@ export function CreateCandidateForm() {
         <Plus className="size-3.5" />
         新建选题卡
       </Button>
-    );
-  }
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!pending) setOpen(v);
+        }}
+      >
+        <DialogContent
+          data-testid="create-candidate-dialog"
+          className="flex max-h-[85vh] flex-col gap-0 p-0 sm:max-w-2xl"
+        >
+          <DialogHeader className="border-b px-5 py-4">
+            <DialogTitle>新建选题卡</DialogTitle>
+            <DialogDescription>
+              标题必填;其余可选——可只填标题先建,后续在详情栏补全。
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            data-testid="create-candidate-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit();
+            }}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+              <section className="flex flex-col gap-2.5">
+                <h4 className="text-[11px] font-semibold uppercase tracking-wide text-brand">
+                  基本
+                </h4>
+                <FieldRow label="选题标题" required>
+                  <Input
+                    aria-label="选题标题"
+                    placeholder="一句话说清这条拍什么"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    autoFocus
+                  />
+                </FieldRow>
+                <FieldRow label="切入角度">
+                  <Input
+                    aria-label="切入角度"
+                    placeholder="从什么角度切入（可空）"
+                    value={angle}
+                    onChange={(e) => setAngle(e.target.value)}
+                  />
+                </FieldRow>
+              </section>
 
-  return (
-    <form
-      data-testid="create-candidate-form"
-      className="flex w-full flex-wrap items-center gap-2"
-      onSubmit={(e) => {
-        e.preventDefault();
-        submit();
-      }}
-    >
-      <Input
-        aria-label="选题标题"
-        placeholder="选题标题"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="h-8 max-w-[14rem]"
-        autoFocus
-      />
-      <Input
-        aria-label="切入角度"
-        placeholder="切入角度（可空）"
-        value={angle}
-        onChange={(e) => setAngle(e.target.value)}
-        className="h-8 max-w-[12rem]"
-      />
-      <Button
-        type="submit"
-        size="sm"
-        disabled={pending || !valid}
-        className="h-8 bg-brand text-xs text-brand-foreground hover:bg-brand/90"
-      >
-        新增
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="ghost"
-        className="h-8 text-xs"
-        onClick={() => setOpen(false)}
-      >
-        取消
-      </Button>
-    </form>
+              <section className="flex flex-col gap-2.5">
+                <h4 className="text-[11px] font-semibold uppercase tracking-wide text-brand">
+                  核心
+                </h4>
+                <FieldRow label="一句话选题">
+                  <Input value={card.oneLiner} onChange={setField("oneLiner")} />
+                </FieldRow>
+                <FieldRow label="目标观众">
+                  <Input
+                    value={card.targetAudience}
+                    onChange={setField("targetAudience")}
+                  />
+                </FieldRow>
+                <FieldRow label="受众痛点">
+                  <Input
+                    value={card.audiencePain}
+                    onChange={setField("audiencePain")}
+                  />
+                </FieldRow>
+                <FieldRow label="核心冲突">
+                  <Input
+                    value={card.coreConflict}
+                    onChange={setField("coreConflict")}
+                  />
+                </FieldRow>
+                <FieldRow label="推荐 Hook（前 3 秒）">
+                  <Input value={card.hook} onChange={setField("hook")} />
+                </FieldRow>
+              </section>
+
+              <section className="flex flex-col gap-2.5">
+                <h4 className="text-[11px] font-semibold uppercase tracking-wide text-brand">
+                  结构
+                </h4>
+                <FieldRow label="内容结构（每行一条）">
+                  <Textarea
+                    rows={3}
+                    value={card.contentStructure}
+                    onChange={setField("contentStructure")}
+                    placeholder={"钩子\n痛点\n价值\n卡点\nCTA"}
+                  />
+                </FieldRow>
+                <FieldRow label="片长 / 形式">
+                  <Input value={card.format} onChange={setField("format")} />
+                </FieldRow>
+                <FieldRow label="素材依据">
+                  <Input
+                    value={card.materialBasis}
+                    onChange={setField("materialBasis")}
+                  />
+                </FieldRow>
+              </section>
+
+              <section className="flex flex-col gap-2.5">
+                <h4 className="text-[11px] font-semibold uppercase tracking-wide text-brand">
+                  立项
+                </h4>
+                <FieldRow label="风险点">
+                  <Input value={card.riskNote} onChange={setField("riskNote")} />
+                </FieldRow>
+                <FieldRow label="立项建议">
+                  <Textarea
+                    rows={2}
+                    value={card.proposal}
+                    onChange={setField("proposal")}
+                  />
+                </FieldRow>
+              </section>
+            </div>
+            <DialogFooter className="border-t">
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={pending}
+                onClick={() => setOpen(false)}
+              >
+                取消
+              </Button>
+              <Button
+                type="submit"
+                disabled={pending || !valid}
+                className="bg-brand text-brand-foreground hover:bg-brand/90"
+              >
+                {pending ? "保存中…" : "新建选题卡"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
