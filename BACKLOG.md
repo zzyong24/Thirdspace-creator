@@ -24,6 +24,21 @@
 | T-010 | 误导文案 / 桩字段清扫 | ✅ | [product-workflow-and-triage](docs/superpowers/specs/2026-06-30-product-workflow-and-triage.md) | 复核现状后:导出按钮真禁用+标"规划中"(去掉"看着导出成功实没生成视频"的 mock 流程);AI 数字人卡加"规划中·敬请期待"徽标;项目概览假副标题"全面解析 AI Native Browser…"+假元信息(Kevin.Z/2024-05-10/14:30)改读真 projects.brief + 真 stage/updatedAt 派生;复盘页 3 个 decorative 按钮(查看全部/添加发布/生成复盘报告)加"规划中"标注+tooltip。**时间线章节保持(T-009 已真持久化,未误伤)**。前端 756 绿。done |
 | T-011 | CollabField 候选逐字内联编辑(COLLAB-01) | ✅ | [同 ChatBox §human-in-loop](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 采纳前可就地改字段(不只逐条删)。`AdoptCandidateCard` 加 `edits: Map<number, Partial<T>>` + `ItemEditor<T>` 句柄(renderItem 第三参,canEdit 才给);采纳时 `kept = rawItems.map(merge edits).filter(!removed)` 走**同一条** `patchTaskResultItems` 落库再 confirm —— 删与改统一 patch 路径,不互斥。门同 COLLAB-02(rawItems↔items 1:1 才开放,否则只读降级)。gather-material(title/why_relevant)+ 选题会 CandidateRow(title/angle)渲成受控 Input/Textarea。前端 tsc 净 + ai/topics 22 绿。done |
 
+## 🎬 生命周期重设计 L0–L7(SPEC PASS-ready 2026-07-01,按序做)
+
+> SPEC:[lifecycle-redesign-creation-first](docs/superpowers/specs/2026-07-01-lifecycle-redesign-creation-first.md)(gate CONCERNS→补清→PASS-ready,`5bb29c7`)。核心:每阶段 AI 干重活+产具体创作物+无真东西不摆空+创作向非学术;本地优先存储。**全做,无优先级,按 L 序(L0 地基先)。** 横切 Copilot/导航 bug 已修(T-014)。
+
+| ID | 任务(切片) | 状态 | 一句话 |
+|---|---|---|---|
+| T-015 | L0 存储本地优先 | 📋 | db.ts 加 file-PGlite 落盘 runtime 分支(新增第三态 `PGLITE_DATA_DIR`)+ 对象存储默认 local-fs;**并发落盘验收**(后台 drainQueue+前台并发写/读,PGlite 单连接须验串行化不丢)。整条线地基 |
+| T-016 | L1 立项简化 | 📋 | 去刚立项必为 0 的空区折叠 + 单一主行动(去双按钮歧义)。「进入下一步」无反应已修(T-014) |
+| T-017 | L2 研究创作向重写 | 📋 | 删竞品表/威胁评估;research.gather 换模板+schema 产「钩子/案例/数据点/金句」喂脚本;**修「帮我搜素材」卡死** |
+| T-018 | L3 策划修 Tab + 瘦身 | 📋 | 修 Tab 切不了/「未找到项目」;保留内容合同+论点树(脚本骨架),无真数据源的降级 |
+| T-019 | L4 脚本文档编辑器 | 📋 | 内置 OSS 文档编辑器(**TipTap** 默认/Lexical 备选)+ script.draft AI 初稿(吃定位/选题/论点/研究钩子)灌入 + 二次编辑存 artifact |
+| T-020 | L5 录制(素材) | 📋 | 素材清单(material.match+用料链)+ 拖拽上传绑定项目(对象存储+assets)+ 集成 **`video-asset-kit`**(截图/文生图/文生视频)。**多模态模型走 model-config 用户可配,不写死 MiniMax**(扩 model-config 到 image/video capability) |
+| T-021 | L6 发布 | 📋 | 对齐 **`cheat-package`**(非 cheat-publish)出标题/简介/标签/封面 + 审核 SOP;复用 publish.platform_adapt。真发仍 MockPublisher(诚实标模拟) |
+| T-022 | L7 复盘 | 📋 依赖 T-007 | **依赖 T-007 整套实现**:调度抓抖音→snapshot 时序图表 + 只已发布(`hasImportedProjects`)可复盘门。排 T-007 之后 |
+
 ## ✅ 已完成(粗粒度,倒序)
 
 | 任务 | 文档 |

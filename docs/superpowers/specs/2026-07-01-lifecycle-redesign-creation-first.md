@@ -119,6 +119,7 @@
 
 ### 5.3 AI 素材生成 = `video-asset-kit` skill
 - **正解 skill = `video-asset-kit`**:批量截网页图(公开/已登录页)+ MiniMax 文生图 + MiniMax 文生视频,自带「真证据 vs AI 隐喻 vs 数据卡」决策逻辑(契合"研究找数据点/案例 + 录制配画面")。L5 集成它为 AI 节点;产出落 local-fs + asset + 绑定。落地前读其 SKILL.md 定契约。`open-design-remotion-video`(16:9 成片合成,无素材生成)**不用**。
+- **⚠️ 项目规则(跨项目铁律):多模态生图/生视频的模型必须用户可配,不写死。** 像 LLM 那套(model-config T-123-129 + resolveLlmConfig + 库存密钥),**扩展到多模态能力**(如 `image.generate` / `video.generate` capability):MiniMax 是默认/候选之一,但用户可在设置里换成别的图/视频模型 + 配自己的 key。video-asset-kit 集成时,模型经 model-config 解析,**绝不硬编码 MiniMax**。
 
 ### 5.4 发布稿生成(skill 纠正)
 - 对齐 **`cheat-package`**(非 cheat-publish)—— 出标题/简介/标签/封面文案 + 发布审核 SOP;复用 publish.platform_adapt。落地前先读 cheat-package SKILL.md 定契约。
