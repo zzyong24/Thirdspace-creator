@@ -235,18 +235,30 @@ export async function loginDouyin(opts: LoginDouyinOptions): Promise<boolean> {
 export async function fetchDouyinMetrics(
   opts: FetchDouyinOptions,
 ): Promise<MetricRecord[]> {
-  const maxPages = opts.maxPages ?? 10;
+  const maxPages = opts.maxPages ?? 40; // 上限(每页 ~12 条;has_more=false 会提前停,40 覆盖 ~480 作品)
   const ctx = await openContext(opts.authDir, true);
   try {
     if (!(await isLoggedIn(ctx))) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
 
     const workJsons: unknown[] = [];
+    const seenIds = new Set<string>();
+    let hasMore = true; // 直到某页 work_list 明确 has_more=false 才停(比"无新响应"可靠)
+    const readHasMore = (j: unknown): boolean | undefined => {
+      const root = (j ?? {}) as Record<string, unknown>;
+      const data = (root.data ?? root) as Record<string, unknown>;
+      const v = root.has_more ?? data.has_more ?? root.hasMore ?? data.hasMore;
+      return typeof v === "boolean" ? v : v == null ? undefined : Boolean(v);
+    };
     page.on("response", async (resp) => {
       const url = resp.url();
       if (!WORK_LIST_HINTS.some((h) => url.includes(h))) return;
       try {
-        workJsons.push(await resp.json());
+        const j = await resp.json();
+        workJsons.push(j);
+        for (const w of parseWorkList(j)) seenIds.add(w.awemeId);
+        const hm = readHasMore(j);
+        if (hm !== undefined) hasMore = hm;
       } catch {
         /* 非 JSON 响应,忽略 */
       }
@@ -256,13 +268,38 @@ export async function fetchDouyinMetrics(
       waitUntil: "domcontentloaded",
       timeout: 60000,
     });
-    // 礼貌滚动触发懒加载;连续无新响应或到 maxPages 即停。
-    let lastCount = -1;
+    await page.waitForTimeout(3000); // 等首屏 work_list XHR 回来
+
+    // 激进滚动翻页:window 滚到底 + 滚最高可滚容器 + End 键 + 滚轮。单一 mouse.wheel 触不到列表
+    // 容器,是只抓到首页 24 条的根因。停止:某页 has_more=false(可靠),或连续 3 轮无新作品,或到上限。
+    let staleRounds = 0;
     for (let i = 0; i < maxPages; i++) {
-      if (workJsons.length === lastCount) break;
-      lastCount = workJsons.length;
-      await page.mouse.wheel(0, 2400);
-      await page.waitForTimeout(2000);
+      if (!hasMore) break; // 抖音 work_list 明确翻到底
+      const before = seenIds.size;
+      await page
+        .evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+        .catch(() => {});
+      await page
+        .evaluate(() => {
+          const els = Array.from(
+            document.querySelectorAll("*"),
+          ) as HTMLElement[];
+          let best: HTMLElement | null = null;
+          let max = 0;
+          for (const el of els) {
+            if (el.scrollHeight > el.clientHeight + 200 && el.scrollHeight > max) {
+              max = el.scrollHeight;
+              best = el;
+            }
+          }
+          if (best) (best as HTMLElement).scrollTop = (best as HTMLElement).scrollHeight;
+        })
+        .catch(() => {});
+      await page.keyboard.press("End").catch(() => {});
+      await page.mouse.wheel(0, 3000).catch(() => {});
+      await page.waitForTimeout(2500);
+      staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
+      if (staleRounds >= 3) break; // has_more 不返回时的兜底,防死循环
     }
 
     const works = workJsons.flatMap((j) => parseWorkList(j));
