@@ -14,6 +14,7 @@ import type {
   Iso8601,
   OutputStageName,
   PlatformId,
+  ProjectSource,
   ProjectStageName,
   ProjectStatus,
   PublicationStatus,
@@ -164,6 +165,11 @@ export interface ProjectListRow {
   readonly primaryOutputId: Id;
   readonly outputs: ReadonlyArray<ContentOutputSummary>;
   readonly starred: boolean;
+  // 数据底座:项目来源(imported = 真实导入的已发布历史作品)。读侧据此把状态显示为
+  //   「已发布」而非阶段态(导入作品 currentStage='review' 不该渲染成「复盘中/进行中」)。
+  readonly source: ProjectSource;
+  // 真实发布时刻(导入作品 platformRef.publishedAt;非导入无 → null)。列表按它倒序。
+  readonly publishedAt: Iso8601 | null;
 }
 
 export interface ContentOutputSummary {

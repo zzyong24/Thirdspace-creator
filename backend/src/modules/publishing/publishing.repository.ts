@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, type Db } from "@creatoros/backend";
+import { and, desc, eq, inArray, sql, type Db } from "@creatoros/backend";
 import { publications, publicationRevisions } from "./publishing.db-schema";
 import { OwnershipError } from "./publishing.errors";
 
@@ -210,11 +210,17 @@ export function createPublishingRepository(
     },
 
     async listPublicationsForUser(page) {
+      // 真机反馈 #1(时间倒序):最近发布 / 待校准列表必须「最新发布在前」。导入的
+      //   真实作品 published_at 是真实发布时刻(可空仅对未发布草稿),所以按
+      //   COALESCE(published_at, created_at) 倒序 —— 已发布优先用真实发布时刻排序,
+      //   未发布草稿回退建档时刻。原 createdAt 倒序对导入历史作品语义错(导入顺序≠发布顺序)。
       return db
         .select()
         .from(publications)
         .where(eq(publications.userId, userId))
-        .orderBy(desc(publications.createdAt))
+        .orderBy(
+          desc(sql`coalesce(${publications.publishedAt}, ${publications.createdAt})`),
+        )
         .limit(page.limit)
         .offset(page.offset);
     },

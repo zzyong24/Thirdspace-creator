@@ -68,6 +68,19 @@ export interface ProjectBriefDetail {
   readonly successCriteria?: string;
 }
 
+// 数据底座(宪法 §7 / 契约 projectResource.source):项目来源。`imported` = 真实采集
+//   导入的已发布历史作品(读侧据此把状态显示为「已发布」),manual/topic = 站内新建。
+export type ProjectSource = "manual" | "topic" | "imported";
+
+// 导入项目的平台引用(契约 projectResource.platformRef)。`publishedAt` 为真实发布
+//   时刻(可空),作品列表/最近发布按它倒序;非导入项目为默认空形状。
+export interface PlatformRef {
+  readonly platform: string;
+  readonly externalId: string;
+  readonly shareUrl?: string;
+  readonly publishedAt?: Iso8601;
+}
+
 export type ProjectStatus = "active" | "paused" | "archived" | "completed";
 // §16 needs_review:阶段「声称完成」但内容 gate 未过(核心交付物缺失)时的停泊态。
 export type StageStatus =
@@ -92,6 +105,11 @@ export interface Project extends BaseEntity, Timestamped {
   // 结构化 Brief —— optional 于 domain Project(存量/demo 项目不带,读侧默认 {})。
   // 真实 wire 形状由契约 projectResource.briefDetail 保证全字段。
   readonly briefDetail?: ProjectBriefDetail;
+  // 数据底座(契约 projectResource):来源 + 平台引用。optional 于 domain(存量/demo
+  //   项目不带,读侧默认 manual / 空形状);导入历史作品带 imported + 真实 platformRef
+  //   (含 publishedAt),供读侧做「已发布」状态映射与发布时间倒序。
+  readonly source?: ProjectSource;
+  readonly platformRef?: PlatformRef;
   readonly contentCategory: string;
   readonly creationMode: CreationMode;
   readonly status: ProjectStatus;

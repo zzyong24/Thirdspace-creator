@@ -84,7 +84,7 @@ export async function ProjectsPage({
   // Reads flow page -> await client.* -> MockTransport -> store -> DTO. The
   // `viewModel?` prop remains the test-override seam (fixture-driven, sync).
   // Real read: pull the user's projects, drop the canonical demos, sort
-  // newest-first (createdAt desc), then page 10/screen.
+  // newest-published first, then page 10/screen.
   const all =
     viewModel === undefined
       ? ((await client.listProjects({
@@ -93,10 +93,15 @@ export async function ProjectsPage({
           body: undefined,
         })) as unknown as ReadonlyArray<Project>)
       : [];
+  // 真机反馈 #1(时间倒序):按真实发布时刻倒序 —— 导入的已发布历史作品用
+  //   platformRef.publishedAt(真实发布时刻),缺失(站内新建项目)回退 createdAt。
+  //   原 createdAt 倒序对导入历史作品语义错(导入入库顺序 ≠ 实际发布顺序)。
   const realProjects = all
     .filter((project) => !DEMO_PROJECT_IDS.has(project.id))
     .slice()
-    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+    .sort((a, b) =>
+      projectSortKey(b).localeCompare(projectSortKey(a)),
+    );
 
   // Build the VM from the FULL real set so the status-tab counts stay correct,
   // then slice the rows to the current page for display.
@@ -335,7 +340,7 @@ function buildProjectStatusTabs(vm: ProjectsViewModel): ReadonlyArray<StatusTabs
     archived: 0,
   };
   for (const row of vm.rows) {
-    const key = mapProjectStatusToTab(row.status);
+    const key = mapProjectRowToTab(row);
     if (key in counts) {
       counts[key] = (counts[key] ?? 0) + 1;
     }
@@ -350,8 +355,10 @@ function buildProjectStatusTabs(vm: ProjectsViewModel): ReadonlyArray<StatusTabs
   }));
 }
 
-function mapProjectStatusToTab(status: string): string {
-  switch (status) {
+function mapProjectRowToTab(row: ProjectListRow): string {
+  // 真机反馈 #2:导入的已发布历史作品计入「已发布」tab,而非按 status='active' 落「进行中」。
+  if (row.source === "imported") return "published";
+  switch (row.status) {
     case "active":
       return "active";
     case "paused":
@@ -399,13 +406,25 @@ const STAGE_CHIP_TONE: Record<ProjectStageName, { bg: string; fg: string }> = {
   review: { bg: "rgba(14,165,233,0.14)", fg: "#0284c7" },
 };
 
+// 真机反馈 #1(时间倒序)排序键:导入作品用真实发布时刻,缺失回退 createdAt。
+//   注:排序在 Project(raw DTO)层做,故取 platformRef.publishedAt(VM 的 publishedAt
+//   等价镜像)。空键('')排在最后(localeCompare 升序里最小),published 真值在前。
+function projectSortKey(project: Project): string {
+  return project.platformRef?.publishedAt ?? project.createdAt ?? "";
+}
+
 function stageLabel(row: ProjectListRow): string {
+  // 真机反馈 #2(状态):导入的真实作品都是已发布的历史作品(currentStage 落 review
+  //   仅为复盘锚点,不代表"还在进行")。读侧据 source 直接显示「已发布」,不渲染阶段态。
+  //   只对 imported 生效,绝不误伤站内新建项目的真实阶段。
+  if (row.source === "imported") return "已发布";
   if (row.status === "completed") return "已发布";
   if (row.status === "paused") return "已暂停";
   return STAGE_LABELS[row.currentStage] ?? row.currentStage;
 }
 
 function stageDescriptor(row: ProjectListRow): string {
+  if (row.source === "imported") return "历史作品";
   if (row.status === "completed") return "数据复盘中";
   if (row.status === "paused") {
     return row.currentStage === "publishing" ? "等待素材" : "结构大纲";
@@ -414,8 +433,9 @@ function stageDescriptor(row: ProjectListRow): string {
 }
 
 function stageChipStyle(row: ProjectListRow): React.CSSProperties {
+  // imported → 复用「已发布/完成」的绿色调,与标签语义一致。
   const tone =
-    row.status === "completed"
+    row.source === "imported" || row.status === "completed"
       ? { bg: "rgba(16,185,129,0.14)", fg: "#059669" }
       : row.status === "paused"
         ? { bg: "rgba(107,114,128,0.12)", fg: "#64748b" }

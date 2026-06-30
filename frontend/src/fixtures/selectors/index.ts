@@ -125,6 +125,10 @@ export function buildProjectsViewModel(
       primaryOutputId: pickPrimaryOutputId(project.id),
       outputs: pickOutputsForProject(project.id),
       starred: project.starred,
+      // 数据底座:透传来源 + 真实发布时刻(存量/demo 项目不带 → manual / null)。
+      //   读侧据 source 把 imported 渲染成「已发布」,据 publishedAt 做发布时间倒序。
+      source: project.source ?? "manual",
+      publishedAt: project.platformRef?.publishedAt ?? null,
     }));
 
   const tabs: ReadonlyArray<StatusTab> = [
