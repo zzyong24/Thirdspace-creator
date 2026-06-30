@@ -40,7 +40,10 @@ function makeService(db: Db) {
     db,
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${++seq}`,
-    ingestion: { assertRunExists: async () => {} },
+    ingestion: {
+      assertRunExists: async () => {},
+      ensureManualRun: async () => "run-manual",
+    },
     learnings: { adjustConfidence: async () => {} },
   });
 }

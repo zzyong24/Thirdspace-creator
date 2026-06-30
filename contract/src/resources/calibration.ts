@@ -144,6 +144,8 @@ export const calibrationOverviewResource = z.object({
       platform: z.string(), // 平台 ("" when content_output 未发布)
       // 未预测 = no prediction; 已锁定 = locked prediction (no result); 已回流 = result landed.
       badge: z.enum(["unpredicted", "locked", "reflowed"]),
+      // locked 主体的盲预测 id(其余为 null)。前端「录入真实表现」据此 results.create。
+      predictionId: id.nullable(),
     }),
   ),
   // 底「发布后回流对照」— join prediction + result, per-dimension 预测分 vs 真实 + 偏差.

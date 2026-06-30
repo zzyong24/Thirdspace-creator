@@ -2188,6 +2188,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // CalibrationResult references it.
         await ingestionService.getRun(ctx, runId);
       },
+      // 手动回流:无采集 run 时,建一次 source='manual' 的真 run(§C-4 溯源不破)。
+      ensureManualRun: async (ctx, idempotencyKey) =>
+        ingestionService.ensureManualRun(ctx, idempotencyKey),
     },
     learnings: {
       // §6.3 confidence feedback bridge — no public adjust-write on the Learnings

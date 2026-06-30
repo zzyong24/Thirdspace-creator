@@ -46,7 +46,10 @@ function wire(
     db,
     now: () => NOW,
     nextId,
-    ingestion: { assertRunExists: async () => {} },
+    ingestion: {
+      assertRunExists: async () => {},
+      ensureManualRun: async () => "run-manual",
+    },
     learnings: { adjustConfidence: async () => {} },
   });
   const learnings = createLearningsService({

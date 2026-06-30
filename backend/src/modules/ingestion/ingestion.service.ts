@@ -123,6 +123,12 @@ export interface IngestionService {
   ): Promise<IngestionRunRow>;
   getRun(ctx: RequestContext, runId: string): Promise<IngestionRunRow>;
   listErrors(ctx: RequestContext, runId: string): Promise<IngestionErrorRow[]>;
+  // 手动数据源:确保该用户有一个 source='manual' 的 ExternalSource,建并完成一次真 run,
+  // 返回 runId。用于"人作为数据源"的录入(如校准手动回流),满足 §C-4 溯源铁律(真 run)。
+  ensureManualRun(
+    ctx: RequestContext,
+    idempotencyKey: string,
+  ): Promise<string>;
   // 抖音真实指标刷新:校验来源→CDP 抓取→createRun→ingestMetrics→completeRun。
   refreshDouyin(
     ctx: RequestContext,
@@ -220,6 +226,35 @@ export function createIngestionService(args: {
       );
       if (existing) return existing;
       return repo.createRun(input);
+    },
+
+    async ensureManualRun(ctx, idempotencyKey) {
+      const repo = repoFor(ctx);
+      // 1. 确保该用户有一个 source='manual' 的 ExternalSource(确定性 id,幂等 seed)。
+      const sourceId = `extsrc-manual-${ctx.userId}`;
+      const existingSrc = await repo.getExternalSource(sourceId);
+      if (!existingSrc) {
+        await repo.seedExternalSources([
+          {
+            id: sourceId,
+            userId: ctx.userId,
+            sourceType: "manual",
+            name: "手动录入",
+            sourceIdentifier: "",
+            secretReference: "",
+            configuration: {},
+            createdAt: deps.now(),
+          },
+        ]);
+      }
+      // 2. 建一次真 run(幂等 key → 同一录入复用同一 run)并标完成(actuals 可追溯)。
+      const run = await service.createRun(ctx, {
+        externalSourceId: sourceId,
+        runType: "manual",
+        idempotencyKey,
+      });
+      await service.completeRun(ctx, { runId: run.id, status: "completed" });
+      return run.id;
     },
 
     async ingestMetrics(ctx, input) {

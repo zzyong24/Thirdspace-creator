@@ -47,7 +47,7 @@ describe("calibration service", () => {
       async () => {},
     ) as typeof adjustConfidence;
     assertRunExists = vi.fn(async () => {}) as typeof assertRunExists;
-    ingestion = { assertRunExists };
+    ingestion = { assertRunExists, ensureManualRun: async () => "run-manual" };
     learnings = { adjustConfidence };
     service = createCalibrationService({
       db,
@@ -253,6 +253,30 @@ describe("calibration service", () => {
     expect(again.id).toBe(result.id);
     expect(again.deviation).toMatchObject({ views: 200, leads: -2 });
     expect(adjustConfidence).toHaveBeenCalledTimes(1); // not fired again
+  });
+
+  it("recordResult 手动录入(无 ingestionRunId)自建 manual run,不走 assertRunExists(§C-4 不破)", async () => {
+    const ctx = ctxFor("user-a");
+    const rubric = await service.createRubric(ctx, {
+      name: "r",
+      dimensions: DIMENSIONS,
+    });
+    const pred = await service.createPrediction(ctx, {
+      subjectType: "content_output",
+      subjectId: "o",
+      rubricVersionId: rubric.currentVersion.id,
+      predictedMetrics: { views: 1000 },
+      predictedConversion: { leads: 10 },
+      confidence: "high",
+    });
+    await service.lockPrediction(ctx, pred.id);
+    // 省略 ingestionRunId → 服务端经 ensureManualRun 建一次真 run(mock 返回 "run-manual")。
+    const result = await service.recordResult(ctx, pred.id, {
+      actualMetrics: { views: 1200, leads: 8 },
+    });
+    expect(result.ingestionRunId).toBe("run-manual"); // 用了自建的 manual run
+    expect(result.deviation).toMatchObject({ views: 200, leads: -2 });
+    expect(assertRunExists).not.toHaveBeenCalled(); // 手动路径不校验显式 run
   });
 
   // --- 复盘飞轮回流 轨B (Learning→校准) CalibrationRuleSuggestion ---

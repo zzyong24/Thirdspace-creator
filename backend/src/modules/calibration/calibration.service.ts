@@ -95,6 +95,9 @@ function meanAbsDeviationOf(
 export interface CalibrationIngestionPort {
   // Ownership-gated IngestionRun existence check (§C-4 / RISK-005 — reject 悬空 ids).
   assertRunExists(ctx: RequestContext, runId: string): Promise<void>;
+  // 手动回流:无采集 run 时,建一次 source='manual' 的真 run(满足 §C-4,不绕过铁律)。
+  // 幂等 key 用 predictionId,使同一预测的重复录入复用同一 run。返回 runId。
+  ensureManualRun(ctx: RequestContext, idempotencyKey: string): Promise<string>;
 }
 
 export interface CalibrationLearningsPort {
@@ -167,7 +170,8 @@ export interface CreatePredictionInput {
 }
 
 export interface RecordResultInput {
-  ingestionRunId: string;
+  // 省略 = 手动录入 → 服务端自建一次 source='manual' 的真 run(§C-4 溯源不破)。
+  ingestionRunId?: string;
   actualMetrics: Record<string, unknown>;
 }
 
@@ -498,6 +502,8 @@ export function createCalibrationService(
           title: s.title,
           platform: s.platform,
           badge,
+          // locked 主体带其盲预测 id,前端「录入真实表现」据此 results.create(FLY-02)。
+          predictionId: lockedPreds[0]?.id ?? null,
         });
       }
 
@@ -644,9 +650,19 @@ export function createCalibrationService(
           `cannot record a calibration result against an unlocked prediction: ${predictionId}`,
         );
       }
-      // 2. §C-4 / RISK-005 guard: the IngestionRun must be REAL & owned. A 悬空 run id
-      //    throws OwnershipError (bubbles → 404); actuals only trace to a verified run.
-      await ingestion.assertRunExists(ctx, input.ingestionRunId);
+      // 2. §C-4 / RISK-005:actuals 必须追溯一次真实 IngestionRun。采集线显式带 runId →
+      //    校验真实&owned(悬空 → OwnershipError → 404);手动录入省略 runId → 自建一次
+      //    source='manual' 的真 run(幂等于 predictionId,重复录入复用),不绕过铁律。
+      let ingestionRunId: string;
+      if (input.ingestionRunId) {
+        await ingestion.assertRunExists(ctx, input.ingestionRunId);
+        ingestionRunId = input.ingestionRunId;
+      } else {
+        ingestionRunId = await ingestion.ensureManualRun(
+          ctx,
+          `manual-calib:${predictionId}`,
+        );
+      }
       // 3. Compute deviation (the body omits it) — deterministic per-key actual-predicted.
       const deviation = computeDeviation(
         (prediction.predictedMetrics ?? {}) as Record<string, unknown>,
@@ -658,7 +674,7 @@ export function createCalibrationService(
       const existing = await repo.getResultByPrediction(predictionId);
       const row = await repo.createResult({
         predictionId,
-        ingestionRunId: input.ingestionRunId,
+        ingestionRunId,
         actualMetrics: input.actualMetrics,
         deviation,
       });

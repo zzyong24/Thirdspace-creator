@@ -115,11 +115,12 @@ export function createCalibrationTransport(
         }
         case "calibration.results.create": {
           const b = (body ?? {}) as {
-            ingestionRunId: string;
+            ingestionRunId?: string;
             actualMetrics?: Record<string, unknown>;
           };
           const dto = await service.recordResult(ctx, p.predictionId ?? "", {
-            ingestionRunId: b.ingestionRunId,
+            // 省略 → 服务端自建 manual run(§C-4 溯源不破)。空串也视作省略。
+            ingestionRunId: b.ingestionRunId || undefined,
             actualMetrics: b.actualMetrics ?? {},
           });
           return { data: dto, meta: { requestId } };

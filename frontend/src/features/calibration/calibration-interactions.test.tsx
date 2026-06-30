@@ -118,6 +118,7 @@ const OVERVIEW: CalibrationOverviewResource = {
       title: "待校准的内容标题",
       platform: "",
       badge: "unpredicted",
+      predictionId: null,
     },
   ],
   reflowRows: [

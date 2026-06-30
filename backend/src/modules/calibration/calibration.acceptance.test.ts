@@ -50,7 +50,10 @@ function makeService(
     db,
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${tag}-${++seq}`,
-    ingestion: overrides.ingestion ?? { assertRunExists: async () => {} },
+    ingestion: overrides.ingestion ?? {
+      assertRunExists: async () => {},
+      ensureManualRun: async () => "run-manual",
+    },
     learnings: overrides.learnings ?? { adjustConfidence: async () => {} },
   });
 }
@@ -166,6 +169,7 @@ describe("G20 — domain acceptance (SPEC §22 + 七步 §6)", () => {
         assertRunExists: async () => {
           throw new OwnershipError("OwnershipError: run not found");
         },
+        ensureManualRun: async () => "run-manual",
       },
     });
     const { predId } = await seedLocked(svc, ctxA);

@@ -109,7 +109,10 @@ export const calibrationOperations = {
     path: "/calibration/predictions/:predictionId/result",
     params: predictionParams,
     body: z.object({
-      ingestionRunId: id,
+      // §C-4 溯源:actuals 必须追溯一次真实 IngestionRun。采集线(douyin)显式带 runId;
+      // 手动录入省略它 → 服务端自建一次 source='manual' 的真 run(不绕过铁律,只是把"采集"
+      // 换成"人作为数据源"的一次真实记录)。
+      ingestionRunId: id.optional(),
       actualMetrics: z.record(z.string(), z.unknown()).default({}),
     }),
     response: calibrationResultResource,
