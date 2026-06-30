@@ -5,6 +5,7 @@
 
 ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
 BL="$ROOT/BACKLOG.md"
+LEDGER="$ROOT/docs/superpowers/specs/REVIEW_LEDGER.md"
 
 [ -f "$BL" ] || exit 0
 
@@ -13,3 +14,13 @@ echo "读取顺序:本看板 → 任务引用的 SPEC → 代码。规则:需求
 echo "---"
 # 只注入"进行中/待办"段(到「## ✅ 已完成」之前),避免把整张已完成表灌进上下文。
 awk '/^## ✅/{exit} {print}' "$BL"
+
+# SPEC 审核 gate(T-012):注入 ⛔ FAIL 的 SPEC,提醒"没过审不准开工"(铁律)。
+if [ -f "$LEDGER" ]; then
+  FAILED="$(grep '^|' "$LEDGER" | grep '⛔')"
+  if [ -n "$FAILED" ]; then
+    echo "---"
+    echo "【⛔ SPEC 审核 gate —— 以下 SPEC 评 FAIL,对应任务不准开工(改架构/数据归属须过审 verdict≠FAIL)。台账:docs/superpowers/specs/REVIEW_LEDGER.md】"
+    echo "$FAILED"
+  fi
+fi
