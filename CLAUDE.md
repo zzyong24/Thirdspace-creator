@@ -16,3 +16,11 @@
 4. **严禁 P0/P1 分级,严禁多阶段执行(V0.1/V0.2/"第一阶段")。** 任务一旦定义清楚,就**一次从 0 到 1 做完**;需要规模时**直接起 Workflow 或并行 subagent**,不准把范围切成阶段做减法。
 5. **读取顺序**:`BACKLOG.md` → 任务引用的 SPEC(`docs/superpowers/specs/`)→ 代码。设计落 SPEC,执行总账落 BACKLOG,二者不混。
 6. **不写 writing-plans 式重计划**:SPEC 已足够落地;真正缺的是任务进队列。别再产出 task 级详细计划文档。
+7. **宪法**:产品定位单一真值在 [docs/产品定位.md](docs/产品定位.md)。所有 SPEC / 实现对照它判"是否合定位"。改方向/架构/数据归属的 SPEC,**过审(spec-review gate,verdict≠FAIL)才准开工**(reviewer 见 orchestrator `prompts/spec-reviewer.md`,预设 MiniMax)。
+
+## 执行策略(场景 → 战术;hook 会注入)
+
+- **只要结论、不要文件堆 → SubAgent**(它替你扛大上下文 = 天然压缩)。宽搜/调研/多视角审都走子代理。
+- **并行且会改重叠文件 → worktree 隔离**(防冲突);只读并行不用 worktree。
+- **任务边界(做完一个 BACKLOG 项)→ checkpoint 进看板/记忆 + 压缩**,下个任务起步干净。
+- 单线程小改不开子代理/worktree(有成本)。硬门用 hook 强制,战术选择是清晰触发下的判断。
