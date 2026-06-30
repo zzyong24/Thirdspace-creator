@@ -61,7 +61,14 @@ export interface AnalyticsService {
   // metric_snapshots only (no Publishing seam), takes each publication's latest
   // snapshot, sums the count metrics and averages ctr/finish. No snapshots →
   // all-zero rollup, never throws.
-  getDashboardRollup(ctx: RequestContext): Promise<{
+  // 数据底座(SPEC §1.4):可选 publicationIds 把汇总收窄到给定的发布集 —— dashboard
+  //   在"有 imported 真项目"时传入真实导入作品的 publication 集,让 fixture 演示作品的
+  //   播放/指标让位。不传(默认)= 全量 user-scoped 汇总(过渡期行为不变)。空数组 =
+  //   显式限定为"无匹配发布" → all-zero rollup(snapshotCount 0)。
+  getDashboardRollup(
+    ctx: RequestContext,
+    opts?: { publicationIds?: readonly string[] },
+  ): Promise<{
     plays: number;
     likes: number;
     comments: number;
@@ -105,11 +112,12 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
       return repo.listSnapshotsByProject(ctx.userId, ids, page, pageSize);
     },
 
-    async getDashboardRollup(ctx) {
+    async getDashboardRollup(ctx, opts) {
       // No Publishing seam: the rollup is computed from Analytics' own
       // user-scoped metric_snapshots. Empty store → repo returns the all-zero
-      // rollup (snapshotCount 0); we never throw.
-      return repo.getDashboardRollup(ctx.userId);
+      // rollup (snapshotCount 0); we never throw. 数据底座(SPEC §1.4):传入
+      // publicationIds 时把汇总收窄到这批发布(imported 让位);空数组 → all-zero。
+      return repo.getDashboardRollup(ctx.userId, opts?.publicationIds);
     },
   };
 }

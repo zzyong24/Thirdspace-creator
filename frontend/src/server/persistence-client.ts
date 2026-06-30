@@ -1061,6 +1061,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const publishing = createPublishingTransport(() => publishingService);
 
+  // 数据底座(SPEC §1.4)「优先读真」接线 —— composition root 是唯一允许跨模块组合读的层。
+  // 判据单一:projectsService.hasImportedProjects(ctx)(source='imported' 非空)。判据为真时,
+  // 把 dashboard/复盘 的作品级读收窄到"真实导入作品"的 publication 集 —— 让演示 fixture 让位、
+  // 界面直接出真值(治 dy-pub-00 假标题/0 播放);为假时(用户尚未拉真账号)三向回退全量
+  // fixture 演示态(过渡期不破)。解析链:imported 项目 id → 各项目 ContentOutput id →
+  // 各 output 的 publication id,全程经公共 service(projects.listImportedProjectIds /
+  // publishing.listPublicationIdsByProject),不跨模块直连 repo(守 SPEC §22)。定义在
+  // projects/publishing service 之后、各读侧装配之前,供 dashboard/calibration 复用(无前向引用)。
+  const resolveImportedPublicationIds = async (
+    ctx: RequestContext,
+  ): Promise<string[]> => {
+    const projectIds = await projectsService.listImportedProjectIds(ctx);
+    if (projectIds.length === 0) return [];
+    const ids = new Set<string>();
+    for (const projectId of projectIds) {
+      const pubIds = await publishingService.listPublicationIdsByProject(
+        ctx,
+        projectId,
+      );
+      for (const id of pubIds) ids.add(id);
+    }
+    return [...ids];
+  };
+
   // Analytics (module 11): one user-scoped repository over the shared db (the repo
   // takes userId per-call — the metric store is append-only). The service reaches
   // Publishing ONLY through the injected AnalyticsPublishingPort (no cross-module
@@ -2495,8 +2519,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           title: string;
           platform: string;
         }> = [];
-        // content_outputs — iterate the user's projects, then each project's outputs.
-        const projectRows = await projectsRepo.list(ctx);
+        // 数据底座(SPEC §1.4)portfolio 级让位:有 imported 真项目 → 待校准内容只列真实
+        //   导入项目(及其作品/发布),演示 fixture 项目让位;无 imported → 全量(过渡期)。
+        const hasImported = await projectsService.hasImportedProjects(ctx);
+        const allProjects = await projectsRepo.list(ctx);
+        const projectRows = hasImported
+          ? allProjects.filter((p) => p.source === "imported")
+          : allProjects;
+        const allowedPubIds = hasImported
+          ? new Set(await resolveImportedPublicationIds(ctx))
+          : null;
+        // content_outputs — iterate the (已让位的)项目集, then each project's outputs.
         for (const proj of projectRows) {
           const outputs = await projectsRepo.listOutputs(ctx, proj.id);
           for (const o of outputs) {
@@ -2509,15 +2542,27 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           }
         }
         // publications — the user's recent publications with their resolved display title.
+        //   有 imported 时只收真实导入作品对应的发布(allowedPubIds 过滤)。
         const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
           limit: 100,
           offset: 0,
         });
         for (const p of pubs) {
+          if (allowedPubIds && !allowedPubIds.has(p.id)) continue;
+          // imported publication 无 revision → 标题回退到作品(content_output)真实标题。
+          let title = p.title;
+          if (!title) {
+            try {
+              const out = await projectsRepo.getOutput(ctx, p.contentOutputId);
+              title = out.title;
+            } catch {
+              // 防御:保持空,落到下方平台兜底。
+            }
+          }
           subjects.push({
             subjectType: "publication",
             subjectId: p.id,
-            title: p.title || `${p.platform} 发布`,
+            title: title || `${p.platform} 发布`,
             platform: p.platform,
           });
         }
@@ -2684,9 +2729,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getRecentPublications: async (ctx) => {
         // GAP-DASH-3 做真:真标题(来自 revision,publishing 模块内解析)+ 真播放/
         // 互动(facade 层 join analytics 最新快照 rawMetrics,跨模块组合只在此层)。
-        const rows = await publishingService.getRecentPublicationsWithTitle(ctx, {
-          limit: 5,
-        });
+        // 数据底座(SPEC §1.4):有 imported 真项目 → 只取真实导入作品的发布(演示 fixture
+        //   发布让位,治 dy-pub-00 假标题/0 播放);无 imported → 全量(过渡期演示态)。
+        //   先多取一些再按 imported 集过滤,保证过滤后仍能凑满前 5 条真发布。
+        const hasImported = await projectsService.hasImportedProjects(ctx);
+        const importedPubIds = hasImported
+          ? new Set(await resolveImportedPublicationIds(ctx))
+          : null;
+        const fetched = await publishingService.getRecentPublicationsWithTitle(
+          ctx,
+          { limit: importedPubIds ? 100 : 5 },
+        );
+        const rows = (
+          importedPubIds
+            ? fetched.filter((r) => importedPubIds.has(r.id))
+            : fetched
+        ).slice(0, 5);
         const numOf = (raw: Record<string, unknown>, key: string): number => {
           const v = raw[key];
           return typeof v === "number" && Number.isFinite(v) ? v : 0;
@@ -2715,9 +2773,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               // A single publication's analytics read failing degrades to 0 —
               // never crashes the whole dashboard composition.
             }
+            // 数据底座(SPEC §1.4):imported publication 不带 revision(标题挂在
+            //   content_output / project),故 revision 解析的 r.title 为空 → 回退到
+            //   作品(content_output)的真实标题(治"未命名发布",出真实导入标题)。
+            let title = r.title;
+            if (!title) {
+              try {
+                const out = await projectsRepo.getOutput(ctx, r.contentOutputId);
+                title = out.title;
+              } catch {
+                // 输出读失败(防御)→ 保持空,落到下方"未命名发布"兜底。
+              }
+            }
             return {
               id: r.id,
-              title: r.title || "未命名发布",
+              title: title || "未命名发布",
               platform: r.platform as "youtube",
               status: r.status as "published",
               views,
@@ -2733,7 +2803,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // 播放趋势,全来自 analyticsService.getDashboardRollup(本模块 user-scoped 聚合,
       // 每 publication 取最新快照)。无快照 → 空集(composer 判 empty),不造假。
       getDashboardMetrics: async (ctx) => {
-        const r = await analyticsService.getDashboardRollup(ctx);
+        // 数据底座(SPEC §1.4):有 imported 真项目 → 指标卡/趋势只汇总真实导入作品的
+        //   快照(演示 fixture 让位);无 imported → 全量 user-scoped(过渡期演示态)。
+        const hasImported = await projectsService.hasImportedProjects(ctx);
+        const r = hasImported
+          ? await analyticsService.getDashboardRollup(ctx, {
+              publicationIds: await resolveImportedPublicationIds(ctx),
+            })
+          : await analyticsService.getDashboardRollup(ctx);
         if (r.snapshotCount === 0) return { metrics: [], trend: [] };
         const fmt = (v: number) =>
           v >= 10000

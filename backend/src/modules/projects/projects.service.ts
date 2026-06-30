@@ -253,6 +253,16 @@ export interface ProjectsService {
     projectId: string,
   ): Promise<string[]>;
 
+  // 数据底座(SPEC §1.4)「优先读真」判据(单一、明确):该用户是否存在
+  //   source='imported' 的真实采集项目。true → 读侧让演示 fixture 让位、只读真;
+  //   false → 过渡期回退 fixture 演示态(不破)。判据放读层(非 render),由
+  //   composition root 的三向读侧(首页/复盘 listSubjects)据此分流。
+  hasImportedProjects(ctx: RequestContext): Promise<boolean>;
+  // 配套:imported 项目的 id 集(user-scoped)。dashboard 的「最近发布/播放」让位时,
+  //   用它把 publishing/analytics 读收窄到真实导入作品(经 listOutputIdsByProject →
+  //   publishing 解析,不跨模块直连 repo)。
+  listImportedProjectIds(ctx: RequestContext): Promise<string[]>;
+
   // GAP-DASH-1 — dashboard read: the user's "continue creating" project (the
   // most-recently-updated non-archived project) plus its top open tasks. Pure
   // read; returns empty/null on no data (never throws on absence).
@@ -1019,6 +1029,18 @@ export function createProjectsService(
       // only the ids so downstream resolvers never see the full row.
       const outputs = await repo.listOutputs(ctx, projectId);
       return outputs.map((o) => o.id);
+    },
+
+    async hasImportedProjects(ctx) {
+      // 数据底座(SPEC §1.4)单一判据:存在 ≥1 个 source='imported' 项目。repo.listImported
+      //   已 user-scoped + source 过滤,故 length>0 即"该用户拉过真账号"。
+      const imported = await repo.listImported(ctx);
+      return imported.length > 0;
+    },
+
+    async listImportedProjectIds(ctx) {
+      const imported = await repo.listImported(ctx);
+      return imported.map((p) => p.id);
     },
 
     async getDashboardSummary(ctx) {

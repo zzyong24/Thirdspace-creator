@@ -39,6 +39,9 @@ export interface ProjectRepository {
 
   // Project root (user-scoped).
   list(ctx: RequestContext): Promise<ProjectRow[]>;
+  // 数据底座(SPEC §1.4):user-scoped 且 source='imported' 的项目(真实采集导入)。
+  //   "优先读真"判据 hasImportedProjects + 三向 portfolio 让位的物理读源。
+  listImported(ctx: RequestContext): Promise<ProjectRow[]>;
   get(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
   insertProject(ctx: RequestContext, row: ProjectRow): Promise<ProjectRow>;
   // 数据底座(SPEC §1.3):按平台引用查既有 imported 项目(幂等键
@@ -210,6 +213,20 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .select()
         .from(projects)
         .where(eq(projects.userId, ctx.userId))
+        .orderBy(asc(projects.createdAt));
+    },
+
+    async listImported(ctx) {
+      // 数据底座(SPEC §1.4)优先读真判据的物理源:user-scoped 且 source='imported'
+      // 的历史项目(T-001 refresh 落库的真实采集作品)。演示 fixture 行 source='manual',
+      // 故此查询恰好把"真实导入"与"演示态"分开。空 → 用户尚未拉过真账号(过渡期回退
+      // fixture 演示);非空 → 三向读侧让 fixture 让位、只读这批真项目。
+      return db
+        .select()
+        .from(projects)
+        .where(
+          and(eq(projects.userId, ctx.userId), eq(projects.source, "imported")),
+        )
         .orderBy(asc(projects.createdAt));
     },
 

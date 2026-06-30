@@ -97,7 +97,12 @@ export interface AnalyticsRepository {
   // of the user's publications, take the snapshot with the MAX(captured_at), then
   // sum the count rawMetrics and average ctr/finish_rate across those latest
   // snapshots. No snapshots → all-zero rollup, snapshotCount 0 (never throws).
-  getDashboardRollup(userId: string): Promise<DashboardRollup>;
+  // 数据底座(SPEC §1.4):可选 publicationIds 把聚合收窄到给定发布集(imported 让位);
+  //   传空数组 → 显式空集 → all-zero rollup;不传 → 全量 user-scoped(行为不变)。
+  getDashboardRollup(
+    userId: string,
+    publicationIds?: readonly string[],
+  ): Promise<DashboardRollup>;
 }
 
 export function createAnalyticsRepository(
@@ -236,16 +241,39 @@ export function createAnalyticsRepository(
         .orderBy(asc(metricValues.metricKey));
     },
 
-    async getDashboardRollup(userId) {
+    async getDashboardRollup(userId, publicationIds) {
       // Pull ALL of the user's snapshots newest-first, then in JS keep the first
       // (newest) row per publicationId. Data volume per user is small, so the
       // dedup-then-reduce path is correct and simple (the task explicitly allows
       // JS aggregation over a SQL window join). Query touches metric_snapshots
       // ONLY — no cross-module read.
+      // 数据底座(SPEC §1.4):若给定 publicationIds,把汇总收窄到这批发布(imported 让位)。
+      //   空数组 = 显式空集 → 直接返回 all-zero(不触库,避免 inArray([]) 的歧义);
+      //   undefined = 全量 user-scoped(过渡期行为不变)。
+      if (publicationIds && publicationIds.length === 0) {
+        return {
+          plays: 0,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          favorites: 0,
+          followerGain: 0,
+          ctrAvg: 0,
+          finishAvg: 0,
+          snapshotCount: 0,
+        };
+      }
       const rows = await db
         .select()
         .from(metricSnapshots)
-        .where(eq(metricSnapshots.userId, userId))
+        .where(
+          publicationIds
+            ? and(
+                eq(metricSnapshots.userId, userId),
+                inArray(metricSnapshots.publicationId, [...publicationIds]),
+              )
+            : eq(metricSnapshots.userId, userId),
+        )
         .orderBy(desc(metricSnapshots.capturedAt));
 
       const latestByPublication = new Map<string, MetricSnapshotRow>();
