@@ -151,7 +151,9 @@ import {
   buildAiModelConfigs,
   buildAiAgentConfigs,
   AI_OP_IDS,
+  type AiService,
 } from "@creatoros/backend/modules/ai";
+import type { ContextDeps as ChatContextDeps } from "@/server/ai/creative-context";
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerateV2 } from "@/server/ai/topic-task-adapter";
 import * as nodePath from "node:path";
@@ -800,6 +802,30 @@ interface PersistenceBundle {
   // item B — exposed so the blob route (no dispatch endpoint) can resolve the
   // request user's media root, the same root uploads were minted against.
   settingsService: SettingsService;
+  // T-004 ChatBox — exposed so the /api/chat route (no dispatch endpoint; it streams
+  // via the Vercel AI SDK, not the RPC envelope) can assemble + persist a turn against
+  // the SAME pglite store: aiService (persist conversation/messages), resolveModelSpec
+  // (按 capability 解析 model), and the bound CreativeContext readers (定位/飞轮/受众信号/
+  // 知识库 数据层注入). Mirrors how getStorageRootForRequest exposes settingsService.
+  chatRuntime: ChatRuntime;
+}
+
+// T-004 ChatBox runtime — the minimal surface the /api/chat route needs from the
+// composition root: persist (aiService) + resolve model (resolveModelSpec) + the bound
+// context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
+// to the same public services the topic.generate trigger uses (no cross-module repo import).
+export interface ChatRuntime {
+  ai: AiService;
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<{
+    apiFormat: "anthropic" | "openai_chat";
+    baseUrl: string | null;
+    model: string;
+    token: string;
+  }>;
+  context: ChatContextDeps;
 }
 
 const globalForPersistence = globalThis as unknown as {
@@ -3729,6 +3755,46 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     ),
   );
 
+  // T-004 ChatBox runtime — bundle the /api/chat route's needs: persist (aiService),
+  // resolve model (resolveModelSpec), and the bound CreativeContext readers (定位/飞轮/
+  // 受众信号/知识库 数据层注入). The readers reach peer modules ONLY through their public
+  // services (positioning/learnings/candidate/knowledge), mirroring the topic.generate
+  // trigger's bindings — no cross-module repo import (SPEC §22). The /api/chat route reads
+  // these to assemble the system prompt; AI produces candidates (采纳 gate), never entities.
+  const chatRuntime: ChatRuntime = {
+    ai: aiService,
+    resolveModelSpec,
+    context: {
+      positioning: {
+        getPositioningCenter: (c: RequestContext) =>
+          positioningService.getPositioningCenter(c),
+      },
+      learnings: {
+        getSuggestions: (c: RequestContext, opts: { limit?: number }) =>
+          learningsService.getSuggestions(c, opts),
+      },
+      signals: {
+        list: async (c: RequestContext, opts: { limit?: number }) =>
+          (
+            await candidateService.listSignals(c, {
+              limit: opts.limit ?? 30,
+              offset: 0,
+            })
+          ).rows.map((s) => ({
+            source: s.source,
+            rawText: s.rawText,
+            demandTag: s.demandTag,
+          })),
+      },
+      knowledge: {
+        list: async (c: RequestContext, opts: { limit?: number }) =>
+          (await knowledgeService.listKnowledge(c))
+            .slice(0, opts.limit ?? 40)
+            .map((k) => ({ title: k.title, knowledgeType: k.knowledgeType })),
+      },
+    },
+  };
+
   return {
     projects,
     taxonomy,
@@ -3756,6 +3822,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     publishingCenter,
     identity,
     settingsService,
+    chatRuntime,
   };
 }
 
@@ -3890,6 +3957,17 @@ export async function getStorageRootForRequest(
 ): Promise<string> {
   const { settingsService } = await getBundle();
   return settingsService.resolveStorageRoot(ctx);
+}
+
+/**
+ * T-004 ChatBox — the /api/chat route's runtime (aiService + resolveModelSpec + bound
+ * CreativeContext readers), bound to the same pglite store as the composite transport.
+ * The route streams via the Vercel AI SDK (not the RPC envelope), so it resolves ctx from
+ * the session cookie and assembles + persists a turn through this — never the db client
+ * directly (SPEC §22). Mirrors getStorageRootForRequest's escape hatch for endpoint-less routes.
+ */
+export async function getChatRuntime(): Promise<ChatRuntime> {
+  return (await getBundle()).chatRuntime;
 }
 
 // Composite server transport: persistence for project ops, mock for the rest.

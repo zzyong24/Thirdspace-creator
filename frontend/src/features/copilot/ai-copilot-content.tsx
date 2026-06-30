@@ -16,10 +16,16 @@
  *   ├── QuickEntries
  *   └── SmartRecommendation
  *
- * This is a client island. The composer is wired to the REAL backend: a
- * submit ensures a per-session AI conversation, posts the USER message,
- * and polls `listMessages` for the assistant reply — produced async by the
- * positioning-aware copilot runner (Claude on the user's subscription).
+ * This is a client island. T-004 ChatBox slice 1: the composer is now driven by
+ * `useChat` (@ai-sdk/react) streaming against `/api/chat` (Vercel AI SDK streamText) —
+ * NOT the old createMessage→poll-listMessages loop. A submit `sendMessage({text})`,
+ * the reply streams token-by-token, `stop()` aborts mid-stream. The route resolves the
+ * 选题编导 (chatbox.topic) skill, injects CreativeContext facets, and exposes the first-wave
+ * tools (topic.generate / topic.enrich). Tool results arrive as candidate parts → rendered
+ * inline as `ChatCandidateCard` → 人逐条采纳 via the candidates.create confirm gate (AI never
+ * writes entities directly, 铁律②). The thread still persists to ai_conversations/ai_messages
+ * server-side (the route's onFinish). ChatContext is carried in the transport body (surface
+ * layer + data layer wired; functionKey 叠加 left for a later slice).
  *
  * The dashboard chips below the prompt are fixture-driven (via the
  * `buildCopilotViewModel` selector in `@/fixtures/selectors`) but their
@@ -50,6 +56,14 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useChat } from "@ai-sdk/react";
+import {
+  DefaultChatTransport,
+  isToolUIPart,
+  getToolName,
+  type UIMessage,
+} from "ai";
+import { ChatCandidateCard, type ChatTopicCandidate } from "./chat-candidate-card";
 import {
   ArrowUp,
   BookOpenText,
@@ -293,22 +307,9 @@ export interface AICopilotContentProps {
   readonly viewModel?: CopilotContentViewModel;
 }
 
-interface CopilotMessage {
-  readonly id: string;
-  readonly role: "user" | "assistant";
-  readonly text: string;
-}
-
-// The wire shape of an AIMessage as returned by the list op (cast structurally so the
-// island has no contract-package type dependency, mirroring other list call sites).
-interface WireMessage {
-  readonly id: string;
-  readonly role: "user" | "assistant" | "system";
-  readonly content: string;
-}
-
 // The wire shape of an AITask as returned by the global feed op (ai.tasks.list). Cast
-// structurally — same convention as WireMessage.
+// structurally so the island has no contract-package type dependency (mirrors other
+// list call sites). The chat thread itself is now driven by useChat's UIMessage (T-004).
 interface WireTask {
   readonly id: string;
   readonly projectId: string | null;
@@ -391,39 +392,39 @@ const CONTINUING_BADGE: Record<string, { label: string; badge: string; bg: strin
   },
 };
 
-const POLL_INTERVAL_MS = 3000;
-// ~4min — the assistant reply runs a real Claude subprocess (subscription) whose startup
-// + reasoning can take 1–3min; the poll window must comfortably outlast it (verified e2e:
-// a positioning-aware reply landed well past 60s).
-const MAX_POLLS = 80;
+// ChatContext(SPEC §3.2)—— 全局 Copilot 面板本切片驱动「选题编导」(surface=topics)。
+// 路由据 surface 选基础 skill(chatbox.topic)+ 注入数据层 facets;functionKey 叠加留后续切片。
+const COPILOT_CHAT_CONTEXT = { surface: "topics" } as const;
 
 export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   const vm = viewModel ?? buildCopilotViewModel();
   const router = useRouter();
 
-  // Controlled composer wired to the REAL backend. The first submit ensures a
-  // conversation exists (reused for the session); each submit posts the USER message,
-  // optimistically renders the user bubble, then polls listMessages until a real
-  // assistant reply (produced async by the positioning-aware copilot runner) appears.
-  const [prompt, setPrompt] = React.useState<string>(vm.prompt);
-  const [messages, setMessages] = React.useState<ReadonlyArray<CopilotMessage>>(
+  // T-004 ChatBox slice 1:useChat 驱动流式对话(替掉旧的 createMessage→轮询 listMessages)。
+  // transport 把请求打到 /api/chat(Vercel AI SDK streamText),body 带 ChatContext(三层注入
+  // 的页面层 + 数据层)。回复 token 级流式;status==="streaming" 时可 stop() 中断。会话/消息
+  // 仍在服务端落 ai_conversations/ai_messages(路由 onFinish),前端这层只管流式呈现 + 采纳。
+  const transport = React.useMemo(
     () =>
-      vm.prompt.trim().length > 0
-        ? [{ id: "seed-user", role: "user", text: vm.prompt }]
-        : [],
-  );
-  const [thinking, setThinking] = React.useState(false);
-  const [timedOut, setTimedOut] = React.useState(false);
-  const conversationIdRef = React.useRef<string | null>(null);
-  const submissionRef = React.useRef(0);
-  const cancelledRef = React.useRef(false);
-
-  React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
-    },
+      new DefaultChatTransport<UIMessage>({
+        api: "/api/chat",
+        body: { chatContext: COPILOT_CHAT_CONTEXT },
+      }),
     [],
   );
+  const { messages, sendMessage, status, stop } = useChat({ transport });
+  const streaming = status === "streaming" || status === "submitted";
+
+  // 受控输入(useChat v7 不再托管 input;自管 + sendMessage({text}))。
+  const [prompt, setPrompt] = React.useState<string>(vm.prompt);
+  const isEmpty = prompt.trim().length === 0;
+
+  const submit = React.useCallback(() => {
+    const value = prompt.trim();
+    if (value.length === 0 || streaming) return;
+    void sendMessage({ text: value });
+    setPrompt("");
+  }, [prompt, streaming, sendMessage]);
 
   // GAP-COP-feed: 最近任务 is now backed by the REAL global task feed (ai.tasks.list) —
   // the user's cross-project AI tasks, newest first. `recentTasks` is null while loading,
@@ -462,86 +463,6 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
     if (recentTasks === null) return null;
     return recentTasks.filter((t) => CONTINUING_STATUSES.has(t.status));
   }, [recentTasks]);
-
-  const isEmpty = prompt.trim().length === 0;
-
-  // Ensure a single per-session conversation. Created lazily on first submit and reused.
-  const ensureConversation = React.useCallback(async (): Promise<string> => {
-    if (conversationIdRef.current) return conversationIdRef.current;
-    const conversation = (await client.createConversation({
-      params: undefined,
-      query: undefined,
-      body: { title: "AI 助手" },
-    })) as { id: string };
-    conversationIdRef.current = conversation.id;
-    return conversation.id;
-  }, []);
-
-  const handleSubmit = React.useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      const value = prompt.trim();
-      if (value.length === 0 || thinking) return;
-      const seq = (submissionRef.current += 1);
-      // Optimistically render the user bubble + clear the composer.
-      setMessages((prev) => [
-        ...prev,
-        { id: `u-${seq}`, role: "user", text: value },
-      ]);
-      setPrompt("");
-      setTimedOut(false);
-      setThinking(true);
-      try {
-        const conversationId = await ensureConversation();
-        const baseline = (await client.listMessages({
-          params: { conversationId },
-          query: undefined,
-          body: undefined,
-        })) as unknown as ReadonlyArray<WireMessage>;
-        const baselineAssistant = baseline.filter(
-          (m) => m.role === "assistant",
-        ).length;
-        await client.createMessage({
-          params: { conversationId },
-          query: undefined,
-          body: { content: value },
-        });
-        // Poll until a NEW assistant reply (one more than baseline) lands.
-        for (let i = 0; i < MAX_POLLS; i++) {
-          if (cancelledRef.current) return;
-          await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-          if (cancelledRef.current) return;
-          const rows = (await client.listMessages({
-            params: { conversationId },
-            query: undefined,
-            body: undefined,
-          })) as unknown as ReadonlyArray<WireMessage>;
-          const assistantRows = rows.filter((m) => m.role === "assistant");
-          if (assistantRows.length > baselineAssistant) {
-            // Render the real thread from the fetched messages (drop system rows).
-            setMessages(
-              rows
-                .filter((m) => m.role === "user" || m.role === "assistant")
-                .map((m) => ({
-                  id: m.id,
-                  role: m.role as "user" | "assistant",
-                  text: m.content,
-                })),
-            );
-            setThinking(false);
-            return;
-          }
-        }
-        // Budget exhausted — leave the optimistic user bubble + a gentle note.
-        setTimedOut(true);
-        setThinking(false);
-      } catch {
-        setTimedOut(true);
-        setThinking(false);
-      }
-    },
-    [prompt, thinking, ensureConversation],
-  );
 
   return (
     <div className="flex flex-col gap-4" data-slot="ai-copilot-content">
@@ -587,35 +508,63 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                   data-role={message.role}
                   className={
                     message.role === "user"
-                      ? "self-end rounded-lg bg-brand-soft px-2.5 py-1.5 text-[11px] text-foreground"
-                      : "self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] text-muted-foreground"
+                      ? "flex flex-col gap-1 self-end"
+                      : "flex flex-col gap-1 self-start"
                   }
                 >
-                  {message.text}
+                  {/* 文本 part 拼成气泡 */}
+                  {message.parts.some(
+                    (p) => p.type === "text" && p.text.trim().length > 0,
+                  ) ? (
+                    <span
+                      data-slot="copilot-message-text"
+                      className={
+                        message.role === "user"
+                          ? "rounded-lg bg-brand-soft px-2.5 py-1.5 text-[11px] text-foreground"
+                          : "rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] text-muted-foreground"
+                      }
+                    >
+                      {message.parts
+                        .filter((p) => p.type === "text")
+                        .map((p) => p.text)
+                        .join("")}
+                    </span>
+                  ) : null}
+                  {/* generative UI:topic.generate 工具结果 → 对话内候选卡(逐条采纳走 confirm 门) */}
+                  {message.parts.map((part, idx) => {
+                    if (!isToolUIPart(part)) return null;
+                    if (getToolName(part) !== "topic.generate") return null;
+                    if (part.state !== "output-available") return null;
+                    const out = part.output as
+                      | { kind?: string; items?: ChatTopicCandidate[] }
+                      | undefined;
+                    if (!out || out.kind !== "topic.candidates") return null;
+                    return (
+                      <ChatCandidateCard
+                        key={`${message.id}-tool-${idx}`}
+                        candidates={out.items ?? []}
+                      />
+                    );
+                  })}
                 </li>
               ))}
-              {thinking ? (
+              {streaming ? (
                 <li
                   data-slot="copilot-thinking"
                   aria-live="polite"
                   className="flex items-center gap-1.5 self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] text-muted-foreground"
                 >
                   <span className="size-3 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-                  助手思考中…
-                </li>
-              ) : null}
-              {timedOut ? (
-                <li
-                  data-slot="copilot-timeout"
-                  className="self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] text-muted-foreground"
-                >
-                  助手还在思考，稍后刷新查看回复。
+                  编导思考中…
                 </li>
               ) : null}
             </ol>
           ) : null}
           <form
-            onSubmit={handleSubmit}
+            onSubmit={(event) => {
+              event.preventDefault();
+              submit();
+            }}
             className="flex flex-col gap-3"
             data-slot="prompt-form"
           >
@@ -626,7 +575,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
               onChange={(event) => setPrompt(event.target.value)}
               rows={2}
               aria-label="我能帮你做什么"
-              placeholder="我能帮你做什么？"
+              placeholder="我能帮你做什么？（试试「基于最近评论出 5 个选题」）"
               className="min-h-12 w-full resize-none border-0 border-l-2 border-brand/40 bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               data-slot="prompt-input"
             />
@@ -662,17 +611,35 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                 >
                   清空
                 </button>
-                <button
-                  type="submit"
-                  disabled={isEmpty || thinking}
-                  data-slot="submit-button"
-                  data-testid="submit-button"
-                  aria-label="提交提示给 Copilot"
-                  className="flex size-9 items-center justify-center rounded-full bg-brand text-brand-foreground transition-colors hover:bg-brand/90 focus:outline-none focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <ArrowUp className="size-4" aria-hidden="true" />
-                  <span className="sr-only">生成</span>
-                </button>
+                {/* 流式中 → stop()(中断本轮);否则提交 */}
+                {streaming ? (
+                  <button
+                    type="button"
+                    onClick={() => stop()}
+                    data-slot="prompt-stop"
+                    data-testid="stop-button"
+                    aria-label="停止生成"
+                    className="flex size-9 items-center justify-center rounded-full border border-border bg-surface text-foreground transition-colors hover:bg-surface-muted focus:outline-none"
+                  >
+                    <span
+                      className="size-3 rounded-[2px] bg-foreground"
+                      aria-hidden="true"
+                    />
+                    <span className="sr-only">停止</span>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isEmpty}
+                    data-slot="submit-button"
+                    data-testid="submit-button"
+                    aria-label="提交提示给 Copilot"
+                    className="flex size-9 items-center justify-center rounded-full bg-brand text-brand-foreground transition-colors hover:bg-brand/90 focus:outline-none focus:ring-0 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <ArrowUp className="size-4" aria-hidden="true" />
+                    <span className="sr-only">生成</span>
+                  </button>
+                )}
               </div>
             </div>
           </form>

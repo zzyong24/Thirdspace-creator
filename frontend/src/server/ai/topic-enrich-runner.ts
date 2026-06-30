@@ -67,7 +67,10 @@ export interface TopicEnrichTask {
   inputData: Record<string, unknown>;
 }
 
-function buildEnrichPrompt(
+// Exported so the in-chat `topic.enrich` tool (T-004 ChatBox) reuses the EXACT enrich
+// prompt + parseCard rather than forking a second prompt. The tool produces the same
+// 选题卡 candidate shape (no entity write); 采纳 still goes through the confirm gate.
+export function buildEnrichPrompt(
   context: CreativeContext,
   subject: { title: string; angle: string },
 ): string {
