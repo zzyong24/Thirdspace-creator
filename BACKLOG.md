@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-013 | Harness 宪法 + 卡位(**先做**) | 📋 | (待写 harness SPEC) | 指定产品定位主文档为宪法 + 模块 SPEC 索引 + 读取顺序 + **执行策略(场景→压缩/SubAgent/worktree)写进 hook 与 CLAUDE.md** |
+| T-012 | SPEC 审核 gate(**先做**) | 📋 | (待写 harness SPEC) | spec-reviewer skill(产品+架构角色)+ 跑 MiniMax(spec.review capability)+ hook 挡"没审过不准开工" + 结构化 findings(Zod)+ 人裁决协议 + SPEC 模板加「OSS 调研」必填节 |
 | T-001 | 数据底座:已发布作品导入历史项目 | 📋 | [data-foundation-and-director-chatbox §1](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | projects.source+platformRef + 迁移 0006 + ensureImportedProject + refresh 改(治 24 条被 reject) |
 | T-002 | B2 编导自动评分 | 📋 | [同上 §5](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 真实指标 → 维度分 → 预填录入,人审核 |
 | T-003 | 三方向读侧接真(底座→各模块) | 📋 | [同上 §2](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 校准/选题评论/定位/知识库/首页 读真,mock 让位 |
