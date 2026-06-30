@@ -78,6 +78,11 @@ export function registerAllTemplates(): void {
 
 /** 按 id 取 skill;未注册即抛错(调用方应保证能力已注册)。 */
 export function getTemplate(id: string): PromptTemplate {
+  // 惰性 bootstrap:registry 空 → 先注册内置 skill。任何 resolve 前自愈,
+  // 让无显式 registerAllTemplates 的调用方(如 /api/chat 的 chat-runner)也能取到内置 skill
+  // (修真机 bug:对话面发诊断 → 「prompt template 未注册: chatbox.calibration」400)。
+  // 幂等(仅 size===0 时跑),不改"先注册自定义再取"的测试语义。
+  if (REGISTRY.size === 0) registerAllTemplates();
   const tpl = REGISTRY.get(id);
   if (!tpl) {
     throw new Error(`prompt template 未注册: ${id}`);
