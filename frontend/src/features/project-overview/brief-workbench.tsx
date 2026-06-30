@@ -87,13 +87,15 @@ const ORIENTATIONS: ReadonlyArray<{
 ];
 
 // 核心必填项(与后端 brief gate 对齐):项目名 / 目标受众 / 内容目标 / 内容形式 /
-// 目标平台≥1 / 核心信息。任一缺失则「进入下一步」拦住,并把缺失项高亮提示。
+// 核心信息。任一缺失则「进入下一步」拦住,并把缺失项高亮提示。
+//
+// SPEC §1.2 SKL-08(平台退回发布层):**目标平台从必填降级为可选** —— 平台只在发布层选,
+// 立项不强制(宪法 §8)。画幅 orientation 同样非必填(建议)。两者不入 REQUIRED。
 const REQUIRED: ReadonlyArray<{ key: keyof FormState; label: string }> = [
   { key: "title", label: "项目名称" },
   { key: "targetAudience", label: "目标受众" },
   { key: "contentGoal", label: "内容目标" },
   { key: "contentFormat", label: "内容形式" },
-  { key: "targetPlatforms", label: "目标平台" },
   { key: "coreMessage", label: "核心信息" },
 ];
 
@@ -407,9 +409,7 @@ export function BriefWorkbench({
               </Field>
               <Field
                 label="目标平台"
-                required
-                missing={missing.includes("目标平台")}
-                hint="至少选 1 个"
+                hint="可选 —— 平台在发布时再定,这里不强制"
               >
                 <div
                   data-slot="brief-platforms"

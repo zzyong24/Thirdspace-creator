@@ -68,6 +68,7 @@ interface PublicationRevisionDto {
   readonly title: string;
   readonly description: string;
   readonly revisionNumber: number;
+  readonly platformTags: ReadonlyArray<string>;
 }
 
 export interface PublishingDataClient {
@@ -308,7 +309,12 @@ async function resolveProjectId(
 async function resolveRevision(
   client: PublishingDataClient,
   pub: PublicationDto,
-): Promise<{ title: string; description: string } | null> {
+): Promise<{
+  title: string;
+  description: string;
+  // SPEC §8「多平台 标签」做真:标签集从当前 revision.platform_tags 投影到表单。
+  tags: ReadonlyArray<string>;
+} | null> {
   try {
     const revisions = (await client.listPublicationRevisions({
       params: { publicationId: pub.id },
@@ -319,7 +325,11 @@ async function resolveRevision(
     const current =
       revisions.find((r) => r.id === pub.currentRevisionId) ?? revisions[0];
     if (!current) return null;
-    return { title: current.title ?? "", description: current.description ?? "" };
+    return {
+      title: current.title ?? "",
+      description: current.description ?? "",
+      tags: Array.isArray(current.platformTags) ? current.platformTags : [],
+    };
   } catch {
     return null;
   }
@@ -361,9 +371,13 @@ export async function buildPublishingWorkspaceViewModel(
   const isFixtureProject = fixtureVm.scenario !== "empty";
 
   let realCards: ReadonlyArray<PlatformPublishCard> = [];
-  // The REAL 标题/文案 from the first publication's current revision (read via
+  // The REAL 标题/文案/标签 from the first publication's current revision (read via
   // publications.revisions.list). Null until/unless we resolve one.
-  let realForm: { title: string; description: string } | null = null;
+  let realForm: {
+    title: string;
+    description: string;
+    tags: ReadonlyArray<string>;
+  } | null = null;
 
   try {
     const outputs = (await client.listOutputs({
@@ -450,6 +464,9 @@ export async function buildPublishingWorkspaceViewModel(
         description: realForm.description.trim()
           ? realForm.description
           : baseForm.description,
+        // SPEC §8 标签做真:当前 revision 的 platform_tags 投影到表单(空集 → 沿用 baseForm,
+        // 让 demo 项目保留 fixture 标签、真实项目显空)。
+        tags: realForm.tags.length > 0 ? realForm.tags : baseForm.tags,
       }
     : baseForm;
 

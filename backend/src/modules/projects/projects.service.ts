@@ -7,6 +7,7 @@ import type {
   OutputStageRow,
   TaskRow,
   ActivityRow,
+  TargetPlatformRow,
 } from "./projects.repository";
 import {
   StageTransitionError,
@@ -347,6 +348,10 @@ const SCRIPT_ARTIFACT_TYPES = new Set(["master_script", "output_script"]);
 
 // brief 阶段 gate 的核心必填项(立项 Brief 地基 / PRD §5.2 + §7)。每条:从规范化
 // briefDetail 取值的 getter + 缺失时的中文文案。项目名(title)单列(在 project row 上)。
+//
+// SPEC §1.2 SKL-08(平台退回发布层):**目标平台从必填降级为可选** —— 平台只在发布层选,
+// 立项不强制(宪法 §8:平台只在发布层、不在项目层)。横/竖屏 orientation 同样非必填(建议)。
+// 核心必填只留:目标受众 / 内容目标 / 内容形式 / 核心信息。
 const BRIEF_REQUIRED_FIELDS: Array<{
   label: string;
   get: (b: BriefDetail) => unknown;
@@ -354,10 +359,6 @@ const BRIEF_REQUIRED_FIELDS: Array<{
   { label: "目标受众", get: (b) => b.targetAudience },
   { label: "内容目标", get: (b) => b.contentGoal },
   { label: "内容形式", get: (b) => b.contentFormat },
-  {
-    label: "目标平台(至少 1 个)",
-    get: (b) => (b.targetPlatforms && b.targetPlatforms.length > 0 ? "ok" : ""),
-  },
   { label: "核心信息", get: (b) => b.coreMessage },
 ];
 
@@ -386,6 +387,33 @@ export function normalizeBriefDetail(raw: unknown): BriefDetail {
   const sc = s(c.successCriteria);
   if (sc) out.successCriteria = sc;
   return out;
+}
+
+// SPEC §1.2 SKL-09 数据源收敛:从「立项时已知的目标平台集」算出关系表行
+// (project_target_platforms 是唯一写真值)。去重 + 裁空白 + 保序;priority 按出现序
+// 1..n。空集 → 空数组(无平台行,合法 —— 平台已退回发布层,立项不强制)。纯函数。
+function buildTargetPlatformRows(
+  platforms: readonly string[] | undefined,
+  projectId: string,
+  mkId: () => string,
+  ts: string,
+): TargetPlatformRow[] {
+  const seen = new Set<string>();
+  const rows: TargetPlatformRow[] = [];
+  for (const raw of platforms ?? []) {
+    const p = typeof raw === "string" ? raw.trim() : "";
+    if (p === "" || seen.has(p)) continue;
+    seen.add(p);
+    rows.push({
+      id: mkId(),
+      projectId,
+      platform: p,
+      priority: rows.length + 1,
+      planningNote: "",
+      createdAt: ts,
+    });
+  }
+  return rows;
 }
 
 // 数据底座(SPEC §1.2):jsonb(unknown / 旧空值)→ 规范化 PlatformRef。丢未知键、
@@ -585,12 +613,32 @@ export function createProjectsService(
       const source: ProjectSource = cmd.source ?? "manual";
       const isImported = source === "imported";
       const startStage = isImported ? "review" : "brief";
+      // SPEC §1.2 SKL-09 数据源收敛:目标平台的唯一写真值 = project_target_platforms
+      //   关系表。立项时已知的平台集 = 显式 cmd.targetPlatforms(ingestion/旧路径)优先,
+      //   否则取结构化 Brief 草稿里的 targetPlatforms(brief/选题立项走的就是这个)。
+      //   该集既播种关系表(canonical),又镜像进 brief_detail jsonb 保持向后兼容只读。
+      const normalizedBrief = normalizeBriefDetail(cmd.briefDetail);
+      const effectivePlatforms =
+        cmd.targetPlatforms && cmd.targetPlatforms.length > 0
+          ? cmd.targetPlatforms
+          : (normalizedBrief.targetPlatforms ?? []);
+      const platformRows = buildTargetPlatformRows(
+        effectivePlatforms,
+        projectId,
+        () => deps.nextId("platform"),
+        ts,
+      );
+      // jsonb 镜像取关系表归一化后的平台序(去重/裁空白),确保两源永远一致。
+      const briefDetailMirror: BriefDetail = {
+        ...normalizedBrief,
+        targetPlatforms: platformRows.map((r) => r.platform),
+      };
       const project = await repo.insertProject(ctx, {
         id: projectId,
         userId: ctx.userId,
         title: cmd.title,
         brief: cmd.brief ?? "",
-        briefDetail: normalizeBriefDetail(cmd.briefDetail),
+        briefDetail: briefDetailMirror,
         contentCategory: "",
         source,
         platformRef: normalizePlatformRef(cmd.platformRef),
@@ -631,19 +679,10 @@ export function createProjectsService(
         };
       });
       await repo.insertStages(ctx, stageRows);
-      // 3. seed the target platforms passed in the command (intent only).
-      if (cmd.targetPlatforms && cmd.targetPlatforms.length > 0) {
-        await repo.insertTargetPlatforms(
-          ctx,
-          cmd.targetPlatforms.map((platform, idx) => ({
-            id: deps.nextId("platform"),
-            projectId,
-            platform,
-            priority: idx + 1,
-            planningNote: "",
-            createdAt: ts,
-          })),
-        );
+      // 3. seed the target platforms (SPEC §1.2 SKL-09:关系表 = 唯一写真值)。平台集已
+      //    在上面归一化(显式 cmd 优先,否则取 Brief 草稿),jsonb 镜像同源,两处一致。
+      if (platformRows.length > 0) {
+        await repo.insertTargetPlatforms(ctx, platformRows);
       }
       // 4. append the creation activity.
       await repo.appendActivity(
@@ -701,8 +740,27 @@ export function createProjectsService(
       if (patch.title !== undefined) set.title = patch.title;
       if (patch.brief !== undefined) set.brief = patch.brief;
       // 立项工作台保存 —— 结构化 Brief 整体替换 brief_detail(规范化后落库)。
+      //
+      // SPEC §1.2 SKL-09 数据源收敛(关键修):briefDetail.targetPlatforms 不再是独立真值,
+      //   只是 project_target_platforms 关系表的镜像。这里把保存路径收成单一写:平台集
+      //   先整体替换关系表(canonical),再用归一化后的同一序写回 jsonb 镜像 —— 消除旧的
+      //   「patch 只写 jsonb、关系表只在 create 播种」的双写漂移(过去保存平台后关系表恒不变)。
       if (patch.briefDetail !== undefined) {
-        set.briefDetail = normalizeBriefDetail(patch.briefDetail);
+        const normalized = normalizeBriefDetail(patch.briefDetail);
+        const ts = set.updatedAt as string;
+        const platformRows = buildTargetPlatformRows(
+          normalized.targetPlatforms,
+          projectId,
+          () => deps.nextId("platform"),
+          ts,
+        );
+        // 唯一写真值:整体替换关系表(先删后插)。
+        await repo.replaceTargetPlatforms(ctx, projectId, platformRows);
+        // jsonb 镜像同源(归一化后的平台序),保证 DTO 两处显示一致。
+        set.briefDetail = {
+          ...normalized,
+          targetPlatforms: platformRows.map((r) => r.platform),
+        };
       }
       if (patch.starred !== undefined) set.starred = patch.starred;
       return repo.updateProjectRow(ctx, projectId, set);

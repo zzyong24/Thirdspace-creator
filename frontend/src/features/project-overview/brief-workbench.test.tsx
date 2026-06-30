@@ -86,3 +86,44 @@ describe("BriefWorkbench 画幅 orientation", () => {
     expect(landscape.getAttribute("aria-pressed")).toBe("false");
   });
 });
+
+describe("BriefWorkbench 平台退回发布层(SKL-08)", () => {
+  // 核心四项(目标受众/内容目标/内容形式/核心信息)齐 + 项目名 → ready,即使没选任何平台。
+  const FULL_NO_PLATFORM = {
+    targetAudience: "想转型做内容的职场人",
+    contentGoal: "建立专业信任",
+    contentFormat: "口播",
+    coreMessage: "一句话讲清楚定位",
+    targetPlatforms: [],
+  } as const;
+
+  it("核心四项齐、无目标平台 → 「进入选题调研」可点(平台非必填)", () => {
+    render(
+      <BriefWorkbench
+        projectId="p1"
+        projectTitle="完整立项"
+        briefDetail={FULL_NO_PLATFORM}
+      />,
+    );
+    // 平台未选,但 advance 按钮不被禁用(平台已降级为可选)。
+    expect(
+      screen.getByTestId("brief-advance").hasAttribute("disabled"),
+    ).toBe(false);
+  });
+
+  it("缺核心项(如内容形式)仍拦,且缺失提示不含「目标平台」", () => {
+    render(
+      <BriefWorkbench
+        projectId="p1"
+        projectTitle="缺一项"
+        briefDetail={{ ...FULL_NO_PLATFORM, contentFormat: "" }}
+      />,
+    );
+    expect(
+      screen.getByTestId("brief-advance").hasAttribute("disabled"),
+    ).toBe(true);
+    // 缺失文案点名「内容形式」,绝不点名「目标平台」(后者已非必填)。
+    expect(screen.getByText(/还需补全/).textContent).toContain("内容形式");
+    expect(screen.getByText(/还需补全/).textContent).not.toContain("目标平台");
+  });
+});

@@ -81,6 +81,14 @@ export interface ProjectRepository {
     ctx: RequestContext,
     projectId: string,
   ): Promise<TargetPlatformRow[]>;
+  // SPEC §1.2 SKL-09 数据源收敛:project_target_platforms 是目标平台的唯一写真值。
+  // 立项工作台保存(briefDetail.targetPlatforms 投影回来)→ 整体替换该项目的平台行
+  // (先删后插),消除「关系表只在 create 播种、之后两源漂移」。ownership 经父项目校验。
+  replaceTargetPlatforms(
+    ctx: RequestContext,
+    projectId: string,
+    rows: TargetPlatformRow[],
+  ): Promise<void>;
 
   // Outputs (ownership via parent project; getOutput joins output→project).
   insertOutput(
@@ -322,6 +330,21 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .select()
         .from(projectTargetPlatforms)
         .where(eq(projectTargetPlatforms.projectId, projectId));
+    },
+
+    async replaceTargetPlatforms(ctx, projectId, rows) {
+      // SPEC §1.2 SKL-09:关系表是唯一写真值。整体替换 = 先删该项目全部平台行,再插新集。
+      // pglite 同进程同步,删→插背靠背跑;(project, platform) 唯一索引兜底防重。
+      await get(ctx, projectId); // ownership of the parent project
+      await db
+        .delete(projectTargetPlatforms)
+        .where(eq(projectTargetPlatforms.projectId, projectId));
+      if (rows.length > 0) {
+        await db
+          .insert(projectTargetPlatforms)
+          .values(rows)
+          .onConflictDoNothing();
+      }
     },
 
     async insertOutput(ctx, row) {

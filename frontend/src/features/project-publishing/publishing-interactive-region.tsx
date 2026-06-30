@@ -237,6 +237,10 @@ export function PublishingInteractiveRegion({
                 coverLabel={vm.form.coverLabel}
                 gradientIndex={gradientIndexFor(vm.projectId)}
                 tags={vm.form.tags}
+                wiring={wiring}
+                platforms={vm.platforms}
+                title={vm.form.title}
+                description={vm.form.description}
               />
               <CategoryAndSeriesRow
                 category={vm.form.category}
@@ -405,14 +409,37 @@ function DescriptionField({ value }: { value: string }) {
   );
 }
 
+// The active publication for revision edits = the first selected/known platform's
+// publication (mirrors TitleField's resolution). Null when no publication exists yet.
+function activePublicationId(
+  wiring: PublishingWiring | undefined,
+  platforms: PublishingViewModel["platforms"],
+): string | null {
+  if (!wiring) return null;
+  return (
+    platforms
+      .map((p) => wiring.publications[p.platform])
+      .find((id): id is string => Boolean(id)) ?? null
+  );
+}
+
 function CoverAndTagsRow({
   coverLabel,
   gradientIndex,
   tags,
+  wiring,
+  platforms,
+  title,
+  description,
 }: {
   coverLabel: string;
   gradientIndex: number;
   tags: ReadonlyArray<string>;
+  wiring?: PublishingWiring;
+  platforms: PublishingViewModel["platforms"];
+  /** Current revision title/description — preserved when a tag edit appends a revision. */
+  title: string;
+  description: string;
 }) {
   const gradient =
     COVER_GRADIENTS[gradientIndex % COVER_GRADIENTS.length] ??
@@ -464,27 +491,135 @@ function CoverAndTagsRow({
           </div>
         </div>
       </div>
-      <div data-slot="tags-field" className="flex flex-col gap-0.5">
-        <span className="text-[10px] font-medium text-muted-foreground">标签</span>
-        <div
-          data-slot="tags-list"
-          className="flex flex-wrap gap-0.5"
-          aria-label="标签"
-        >
-          {tags.length === 0 ? (
-            <span className="text-[10px] text-muted-foreground">暂无标签。</span>
-          ) : (
-            tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex h-4 items-center rounded-md bg-brand-soft px-1.5 text-[10px] font-medium text-brand"
+      <TagsEditor
+        tags={tags}
+        wiring={wiring}
+        platforms={platforms}
+        title={title}
+        description={description}
+      />
+    </div>
+  );
+}
+
+// SPEC §8「多平台 标签」做真:标签 chip 的 × 可删、可添加(过去 × 是装饰)。任一改动 →
+// append 一个新 revision(`publications.revisions.create` { title, description, platformTags }),
+// 走既有 publishing service/op,不新建影子机制;title/description 原样带上以免被新版本清空。
+// 未接线(默认渲染 / 纯 fixture)或尚无 publication → 仅本地更新做即时反馈,不落库。
+function TagsEditor({
+  tags,
+  wiring,
+  platforms,
+  title,
+  description,
+}: {
+  tags: ReadonlyArray<string>;
+  wiring?: PublishingWiring;
+  platforms: PublishingViewModel["platforms"];
+  title: string;
+  description: string;
+}) {
+  const router = useRouter();
+  const [, startTransition] = React.useTransition();
+  const [list, setList] = React.useState<ReadonlyArray<string>>(tags);
+  const [draft, setDraft] = React.useState("");
+  // Re-sync when the server-resolved tags change (router.refresh after a commit).
+  React.useEffect(() => {
+    setList(tags);
+  }, [tags]);
+
+  const publicationId = activePublicationId(wiring, platforms);
+
+  // Persist the FULL next tag set as a new revision (revisions are append-only —
+  // a tag change = a new version, never a mutate). Title is required by the op
+  // (min(1)); when empty we send a single space so the edit still lands (the
+  // workspace 标题 is edited via its own field). No-op without a publication.
+  const commit = React.useCallback(
+    (next: ReadonlyArray<string>) => {
+      if (!publicationId) return;
+      startTransition(async () => {
+        await client.createPublicationRevision({
+          params: { publicationId },
+          query: undefined,
+          body: {
+            title: title.trim() === "" ? " " : title,
+            description,
+            platformTags: [...next],
+          },
+        });
+        router.refresh();
+      });
+    },
+    [description, publicationId, router, title],
+  );
+
+  const addTag = React.useCallback(() => {
+    const t = draft.trim();
+    if (t === "" || list.includes(t)) {
+      setDraft("");
+      return;
+    }
+    const next = [...list, t];
+    setList(next);
+    setDraft("");
+    commit(next);
+  }, [commit, draft, list]);
+
+  const removeTag = React.useCallback(
+    (tag: string) => {
+      const next = list.filter((t) => t !== tag);
+      setList(next);
+      commit(next);
+    },
+    [commit, list],
+  );
+
+  return (
+    <div data-slot="tags-field" className="flex flex-col gap-0.5">
+      <span className="text-[10px] font-medium text-muted-foreground">标签</span>
+      <div
+        data-slot="tags-list"
+        className="flex flex-wrap items-center gap-0.5"
+        aria-label="标签"
+      >
+        {list.length === 0 ? (
+          <span className="text-[10px] text-muted-foreground">暂无标签。</span>
+        ) : (
+          list.map((tag) => (
+            <span
+              key={tag}
+              data-slot="tag-chip"
+              data-tag={tag}
+              className="inline-flex h-4 items-center rounded-md bg-brand-soft px-1.5 text-[10px] font-medium text-brand"
+            >
+              {tag}
+              <button
+                type="button"
+                data-slot="tag-remove"
+                aria-label={`删除标签 ${tag}`}
+                onClick={() => removeTag(tag)}
+                className="ml-0.5 text-brand/60 hover:text-brand focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40"
               >
-                {tag}
-                <span className="ml-0.5 text-brand/60">×</span>
-              </span>
-            ))
-          )}
-        </div>
+                ×
+              </button>
+            </span>
+          ))
+        )}
+        <input
+          data-slot="tag-add-input"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addTag();
+            }
+          }}
+          onBlur={addTag}
+          placeholder="加标签"
+          aria-label="添加标签"
+          className="h-4 w-16 rounded border border-dashed border-border bg-surface px-1 text-[10px] text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40"
+        />
       </div>
     </div>
   );
@@ -727,11 +862,86 @@ function PlatformPublishingPanel({
             </li>
           ))}
         </ul>
+        <AddPlatformControl platforms={platforms} wiring={wiring} />
       </SectionCard>
       <BatchTimeActions />
       <ConfirmPublishButton state={publishState} onConfirm={handleConfirm} />
       <ContentCalendar days={CALENDAR_DAYS} calendarWiring={calendarWiring} />
       <PrePublishCheck />
+    </div>
+  );
+}
+
+// SPEC §8「平台」行:补「手动加平台」(过去只能 AI 采纳建)。列出尚未建 publication 的
+// 平台,点一个 → `outputs.publications.create` { platform, accountReference } 建一个新的
+// publication 节点(服务自动播种 revision-1),再 router.refresh()。走既有 publishing op,
+// 不新建影子机制。未接线(无 wiring/无 outputId)→ 不渲染(纯 fixture 无可写后端)。
+const ALL_PLATFORMS: ReadonlyArray<PlatformId> = [
+  "douyin",
+  "bilibili",
+  "xiaohongshu",
+  "wechatVideo",
+  "youtube",
+  "x",
+];
+
+function AddPlatformControl({
+  platforms,
+  wiring,
+}: {
+  platforms: PublishingViewModel["platforms"];
+  wiring?: PublishingWiring;
+}) {
+  const router = useRouter();
+  const [, startTransition] = React.useTransition();
+  const [adding, setAdding] = React.useState<string | null>(null);
+
+  // Unwired / no output → no writable backend; hide the control (honest — a pure
+  // fixture page has no publication to attach to).
+  if (!wiring?.outputId) return null;
+
+  const present = new Set(platforms.map((p) => p.platform));
+  const available = ALL_PLATFORMS.filter((p) => !present.has(p));
+  if (available.length === 0) return null;
+
+  const add = (platform: PlatformId) => {
+    setAdding(platform);
+    startTransition(async () => {
+      try {
+        await client.createPublication({
+          params: { outputId: wiring.outputId },
+          query: undefined,
+          body: { platform, accountReference: accountLabel(platform) },
+        });
+        router.refresh();
+      } finally {
+        setAdding(null);
+      }
+    });
+  };
+
+  return (
+    <div
+      data-slot="add-platform-control"
+      className="mt-1 flex flex-wrap items-center gap-1 border-t border-border pt-1.5"
+    >
+      <span className="text-[9px] font-medium text-muted-foreground">
+        手动加平台
+      </span>
+      {available.map((platform) => (
+        <button
+          key={platform}
+          type="button"
+          data-slot="add-platform-button"
+          data-platform={platform}
+          disabled={adding !== null}
+          onClick={() => add(platform)}
+          className="inline-flex h-5 items-center gap-1 rounded-full border border-dashed border-border bg-surface px-1.5 text-[9px] font-medium text-muted-foreground hover:bg-muted disabled:opacity-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40"
+        >
+          <PlatformIcon platform={platform} size="xs" />
+          {adding === platform ? "添加中…" : `+ ${shortLabelFor(platform)}`}
+        </button>
+      ))}
     </div>
   );
 }

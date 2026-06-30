@@ -46,9 +46,13 @@ export const publishingOperations = {
     method: "POST",
     path: "/publications/:publicationId/revisions",
     params: publicationParams,
+    // SPEC §8「多平台 标签」行:platform_tags 由人增删做真(发布工作台 chip ×/添加)。
+    // 标签集是 append-only revision 的一部分(改标签 = append 新版本,守 revision 不可变),
+    // 故走 revision create 的可选 platformTags 入口;省略时服务沿用旧行为(空数组)。
     body: z.object({
       title: z.string().min(1),
       description: z.string().default(""),
+      platformTags: z.array(z.string()).optional(),
     }),
     response: publicationRevisionResource,
     fr: ["FR-PUBLISHING-REVISION-CREATE"],

@@ -137,7 +137,12 @@ export function createPublishingTransport(
           return { data: toPublicationResource(row), meta: { requestId } };
         }
         case "publications.revisions.create": {
-          const b = (body ?? {}) as { title: string; description: string };
+          const b = (body ?? {}) as {
+            title: string;
+            description: string;
+            // SPEC §8「多平台 标签」:可选标签集随新版本一起落库(append 不可变 revision)。
+            platformTags?: string[];
+          };
           const row = await service.createRevision(
             ctx,
             p.publicationId ?? "",

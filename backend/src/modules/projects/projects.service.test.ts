@@ -610,19 +610,40 @@ describe("Brief stage gate (立项 Brief 地基)", () => {
     const p = await service.createProject(ctx, { title: "有名字的项目" });
     const result = await service.validateStageGate(ctx, p.id, "brief");
     expect(result.ok).toBe(false);
-    // 项目名已填(title 非空)→ 不在 missing;其余 5 项核心必填缺。
+    // 项目名已填(title 非空)→ 不在 missing;其余 4 项核心必填缺。
     expect(result.missing).not.toContain("项目名称");
     expect(result.missing).toEqual(
       expect.arrayContaining([
         "目标受众",
         "内容目标",
         "内容形式",
-        "目标平台(至少 1 个)",
         "核心信息",
       ]),
     );
+    // SPEC §1.2 SKL-08:目标平台已降级为可选 —— 绝不出现在 brief gate 缺失项里。
+    expect(result.missing).not.toContain("目标平台(至少 1 个)");
     // brief gate 永远可校验,绝不诚实跳过。
     expect(result.skipped).toEqual([]);
+  });
+
+  it("SKL-08 立项不强制平台:Brief 无目标平台也能完成 brief gate", async () => {
+    // 核心四项齐、targetPlatforms 留空 —— gate 应放行(平台退回发布层,立项不强制)。
+    const p = await service.createProject(ctx, {
+      title: "无平台立项",
+      briefDetail: {
+        targetAudience: "想转型做内容的职场人",
+        contentGoal: "建立专业信任",
+        contentFormat: "口播",
+        coreMessage: "一句话讲清楚定位",
+        targetPlatforms: [],
+      },
+    });
+    const check = await service.validateStageGate(ctx, p.id, "brief");
+    expect(check.ok).toBe(true);
+    expect(check.missing).toEqual([]);
+    // transition 放行 → 推进到 research。
+    const after = await service.transitionProjectStage(ctx, p.id, "brief", {});
+    expect(after.currentStage).toBe("research");
   });
 
   it("transition brief→completed 被拦:缺必填 → 落 needs_review + StageGateError", async () => {
@@ -718,5 +739,43 @@ describe("Brief stage gate (立项 Brief 地基)", () => {
     const rereadDetail = (reread as { briefDetail?: Record<string, unknown> })
       .briefDetail!;
     expect(rereadDetail.coreMessage).toBe("一句话讲清楚定位");
+  });
+
+  it("SKL-09 数据源收敛:patchProject 把目标平台写到 project_target_platforms 关系表(单一写真值)", async () => {
+    // 旧 bug:patch 只写 jsonb、关系表只在 create 播种 → 两源漂移。现在 patch 应整体替换
+    //   关系表,且 jsonb 镜像与关系表同序一致。
+    const p = await service.createProject(ctx, { title: "T" });
+    // 初次保存:bilibili + youtube。
+    await service.patchProject(ctx, p.id, {
+      briefDetail: {
+        ...FULL_BRIEF,
+        targetPlatforms: ["bilibili", "youtube"],
+      },
+    });
+    const rows1 = await repo.listTargetPlatforms(ctx, p.id);
+    expect(rows1.map((r) => r.platform).sort()).toEqual(["bilibili", "youtube"]);
+    const d1 = (await repo.get(ctx, p.id)) as {
+      briefDetail?: { targetPlatforms?: string[] };
+    };
+    // jsonb 镜像与关系表一致(同一来源)。
+    expect(d1.briefDetail?.targetPlatforms).toEqual(["bilibili", "youtube"]);
+
+    // 再次保存改成 douyin 一个:关系表整体替换(去掉 bilibili/youtube,只剩 douyin)。
+    await service.patchProject(ctx, p.id, {
+      briefDetail: { ...FULL_BRIEF, targetPlatforms: ["douyin"] },
+    });
+    const rows2 = await repo.listTargetPlatforms(ctx, p.id);
+    expect(rows2.map((r) => r.platform)).toEqual(["douyin"]);
+  });
+
+  it("SKL-09 数据源收敛:选题/Brief 立项(只带 briefDetail)也播种关系表", async () => {
+    // candidate.service 立项走 createProject({ briefDetail })(不带 cmd.targetPlatforms),
+    //   关系表必须从 Brief 草稿的 targetPlatforms 播种,而非恒空。
+    const p = await service.createProject(ctx, {
+      title: "选题立项",
+      briefDetail: { ...FULL_BRIEF, targetPlatforms: ["xiaohongshu", "douyin"] },
+    });
+    const rows = await repo.listTargetPlatforms(ctx, p.id);
+    expect(rows.map((r) => r.platform).sort()).toEqual(["douyin", "xiaohongshu"]);
   });
 });
