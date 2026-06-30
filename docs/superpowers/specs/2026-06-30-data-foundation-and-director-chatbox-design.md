@@ -47,7 +47,7 @@
    - 无 → 建 `project`(`source:"imported"`, `platform_ref={platform,externalId,publishedAt}`, `current_stage` 落"已发布/复盘"态, `title`=真实标题) + 其 `content_output` + `publication`(`external_id=aweme_id`)。
    - 有 → 返回既有 projectId(不重复建)。
 2. 然后 metrics 挂到该 publication(`resolvePublication` 此时命中)→ `metric_snapshots`/`metric_values` 落库成功。
-3. 评论同理:refresh 也抓评论 → 落 `audience_signals`(选题"评论"basis 的真实源)+ 复盘评论。**蓝本(真实可达)**:cheat-on-content `adapters/perf-data/douyin-session/crawler.py` 的 `fetch_comments_creator`(走创作者中心评论管理页,拦 `/aweme/v1/web/comment/list/`),TS 重写进 `frontend/src/server/ingestion/douyin-cdp.ts`(与作品抓取同文件、复用 `openContext` 持久化登录态)。字段级契约:comment fetch 入参 `{ awemeId, maxPages }`;`audience_signals` 列映射 `{ raw_text=评论文本, source="douyin_comment", demand_tag=null(待 AI 打), external_id=comment_id }`;幂等键 `(userId, external_id)`。
+3. 评论同理:refresh 也抓评论 → 落 `audience_signals`(选题"评论"basis 的真实源)+ 复盘评论。**蓝本(真实可达)**:cheat-on-content `adapters/perf-data/douyin-session/crawler.py` 的 `fetch_comments_creator`(走创作者中心评论管理页,拦 `/aweme/v1/web/comment/list/`),TS 重写进 `frontend/src/server/ingestion/douyin-cdp.ts`(与作品抓取同文件、复用 `openContext` 持久化登录态)。字段级契约:comment fetch 入参 `{ awemeId, maxPages }`;`audience_signals` 列映射 `{ raw_text=评论文本, source="comment"(用既有 audienceSignalSource enum,**不是** `douyin_comment` —— 后者会被 contract/candidate 双层 Zod reject), demand_tag=null(待 AI 打) }`。**幂等走 ingestion(守硬约束 C-4:AudienceSignal 写经 Ingestion、骑 ingestion 幂等)**:评论作业建一条 ingestion run,每条评论 `record_key=comment_id` 经既有 `ux_ingestion_records_run_key` 去重,`audience_signals.ingestion_run_id` 带上。**不自造 `(userId, external_id)` 键、`audience_signals` 表无 external_id 列**(re-review 2026-06-30 修正,与 data-source-pipeline §4 同步)。
 
 **效果**:`refreshDouyin` 从"刷新已知作品指标"升级为"**导入我的真实抖音作品 + 表现 + 评论**"。一键拉取后,界面直接出你 24 条真实视频的真实数据。
 

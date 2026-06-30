@@ -11,7 +11,7 @@
 | [产品定位.md](../产品定位.md)(宪法) | — | — | 单一真值 | 不是待审 SPEC,是审一切 SPEC 的对照基准 |
 | [data-foundation-and-director-chatbox](2026-06-30-data-foundation-and-director-chatbox-design.md) | 2026-06-30 | ⚠️ CONCERNS | **已处置→可开工** | 逮 2 真问题(迁移 0006 撞号→0008、评论抓取悬空 wikilink)已裁决修复(`d30d6b5`)。T-001/002/003/004/005/006 据此已落地 |
 | [project-lifecycle-0to1-spec](2026-06-30-project-lifecycle-0to1-spec.md) | 2026-06-30 | ⚠️ CONCERNS | **已处置→可开工** | 逮 video_type 矛盾(→删 content_category)+ 缺基线 reconcile,已修(`d30d6b5`)。T-008/009 据此已落地 |
-| [data-source-pipeline-design](2026-06-30-data-source-pipeline-design.md) | 2026-06-30 | ⛔ **FAIL** | **重写待审,T-007 不准开工** | 2 blocker:①采集底座押已弃用的 connectOverCDP(应 launchPersistentContext)②新建 self_work/self_metric_snapshot 撞已 ✅ 的 T-001 数据归属(应复用 projects:imported)。+3 major。用户已拍板**对标博主不纳入本期**(砍 benchmark_*)。重写要点见 SPEC 顶部裁决注 |
+| [data-source-pipeline-design](2026-06-30-data-source-pipeline-design.md) | 2026-06-30(审→重写→复审) | ⚠️ CONCERNS | **已处置→PASS-ready,可开工 T-007** | 第一轮 ⛔ FAIL(2 blocker:connectOverCDP 已弃用、self_work 撞 T-001 数据归属)→ 用户拍板砍对标 + 按裁决重写(`502d4b9`)→ re-review CONCERNS(**2 blocker 真消解**,暴露 2 新 major:audience_signals 评论口径撞 C-4、runTask 缺确定性非 LLM 分支)→ 逐条补清(`<本次>`)。**实现是大子系统,按切片真做。** 详见 SPEC 顶部裁决注 |
 | [product-workflow-and-triage](2026-06-30-product-workflow-and-triage.md) | — | ⬜ 未审 | 清理类,未触架构 | T-010 据它做"去误导"清理(纯前端文案/桩,不改架构/数据归属),按铁律不强制过审;若后续要据它改架构再补审 |
 
 ## 用法

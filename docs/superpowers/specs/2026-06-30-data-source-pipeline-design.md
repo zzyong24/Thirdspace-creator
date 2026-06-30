@@ -17,7 +17,9 @@
 >
 > **好的一面(保留)**:核心原语 `prompt+schedule → 唤醒 Agent → recipe 确定性重放` 成立、合飞轮定位(reviewer 认可);node-cron 进程内调度、`/automations` 任务中心 UI 复用基础齐备。本次重写**保留这些核心**,但全部收敛到"自己 + 评论"两源 + 复用现有队列/采集链。
 >
-> 状态:设计稿,**已按裁决重写,待 re-review**。re-review verdict≠FAIL 后方可开工(T-007)。
+> **re-review(2026-06-30):CONCERNS —— 上轮 2 blocker 已真消解(reviewer 对照真实代码逐一坐实),摘掉 FAIL。** 暴露 2 个新 major(已在本次补清):① 评论 `audience_signals` 口径与真实 enum/C-4 冲突 → 改走 ingestion 幂等 + `source="comment"`(§4 + data-foundation §1.3 同步修);② "复用 runTask 不另起 runner" 只对队列层,执行层 `runTask` 须**新增确定性非 LLM 分支**(现状 LLM-agent 硬编码会崩在 candidate 捕获)→ §5 已明写为新增分支、D3 如实标工作量。3 个 minor(ai_tasks 迁移号、scheduled_job.updated_at、node-cron 依赖)已补。
+>
+> 状态:设计稿,**re-review CONCERNS 的 findings 已逐条补清 → PASS-ready,可开工(T-007 实现)**。实现是大子系统(调度器 + /automations + 评论采集 + runTask 确定性分支),按垂直切片真做。
 >
 > 决策已定(用户逐轮拍板,**对标已砍**):
 > - **本期数据源只剩两类**:① 自己主页/作品/指标 ② 评论。**对标博主(benchmark)本期不纳入**(reviewer 标注为"可能让产品扩张成通用爬虫平台"的 fit-positioning 风险点,用户拍板砍掉)。
@@ -92,8 +94,8 @@ interface BrowserDriver {
 |---|---|---|
 | `projects`(`source:imported`, `platform_ref`) | T-001 / data-foundation §1.1 ✅ | 自己作品落这,**不新建作品库实体**。`ensureImportedProject` 幂等于 `(userId, platform, externalId)`。 |
 | `metric_snapshots` / `metric_values` | T-001 ✅ | 自己指标周期快照落这,`ingestMetrics` 经 `resolvePublication` 命中后 `appendSnapshot`。 |
-| `audience_signals` | data-foundation §1.3 | 评论落这:`raw_text`=评论文本、`source="douyin_comment"`、`demand_tag=null`(待 AI 打)、`external_id=comment_id`;幂等键 `(userId, external_id)`。 |
-| `ai_tasks` / `ai_task_steps` | 迁移 0007 ✅ | 调度到点产 `ai_task`(`taskType=scheduled.<source>`)走 `drainQueue`/`runTask`;过程步骤落 `ai_task_steps`(经 `aiTaskId` 关联)。**不另起 runner / 步骤表。** |
+| `audience_signals` | data-foundation §1.3 | 评论落这:`raw_text`=评论文本、`source="comment"`(**用既有 enum**,见下「评论口径修正」)、`demand_tag=null`(待 AI 打)。**幂等走 ingestion**:评论作业建一条 ingestion run,每条评论 `record_key=comment_id` 经既有 `ux_ingestion_records_run_key` 去重,`audience_signals.ingestion_run_id` 带上(守硬约束 C-4:AudienceSignal 写经 Ingestion、骑 ingestion 幂等)。**不自造 `(userId, external_id)` 键、不加 external_id 列。** |
+| `ai_tasks`(0000_init)/ `ai_task_steps`(0007) | ✅ 已存在 | 调度到点产 `ai_task`(`taskType=scheduled.<source>`)走 `drainQueue`/`runTask`;过程步骤落 `ai_task_steps`(经 `aiTaskId` 关联)。**不另起 runner / 步骤表。** |
 
 **真要新建的表(收敛后只剩 2 张,迁移取 `0009`):**
 
@@ -114,6 +116,7 @@ interface BrowserDriver {
 | | `last_run_at` | text | nullable;上次到点触发时刻。 |
 | | `next_run_at` | text | nullable;下次到点时刻(node-cron 算)。 |
 | | `created_at` | text not null | ISO8601。 |
+| | `updated_at` | text not null | ISO8601;`enabled`/`recipe`/`last_run_at`/`next_run_at` 等可变字段改时写戳(沿用 ai_conversations 范式)。 |
 | `job_run` | `id` | text PK | **瘦"调度触发记录"**(owned-root):一次到点触发一行。 |
 | | `user_id` | text not null | ownership boundary。 |
 | | `job_id` | text not null | 关联 `scheduled_job`(经 requireJob ownership gate)。 |
@@ -129,7 +132,7 @@ interface BrowserDriver {
 
 ## 5. 调度器(cron)+ 队列接线
 
-- **调度器**:本机/dev 在 persistence-client 进程内 `node-cron` 轮询 enabled job;到点**不直接跑采集**,而是:
+- **调度器**:本机/dev 在 persistence-client 进程内 `node-cron` 轮询 enabled job(**`node-cron` 当前不在任何 package.json,落地切片需显式加这步依赖**);到点**不直接跑采集**,而是:
   1. 产一条 `ai_task`(`taskType=scheduled.<source_kind>`,`idempotencyKey=(jobId, 自然日)` —— 同 job 同自然日复用同一 task,天然按天幂等,参照 cheat-data-refresh)。
   2. 写一条 `job_run`(`status=running`, `ai_task_id`=刚产的 task id)。
   3. 触发既有 `drainQueue`(或等其轮询)。`claimNextQueued → runTask`:`runTask` 按 `taskType` 选 Skill / 工具集(`scheduled.self.metrics` 走"直接重放 fetchDouyinMetrics"的内建采集分支;`scheduled.comments` 走评论抓取分支);过程步骤经现有 `recordStep` 落 `ai_task_steps`。
@@ -138,7 +141,12 @@ interface BrowserDriver {
 - **「立即运行」** = 手动产同款 `ai_task` + `job_run`(fire-and-forget),UI 轮询 `ai_task_steps`(复用选题弹窗那套步骤轮询)。
 - **幂等**:同 `(job, 自然日)` 经 `ai_tasks_user_idempotency`(`(user_id, idempotency_key)` 唯一)天然去重 —— 同一天重复触发返回既有 task,不重复采(复用既有 `createTask` 幂等语义,**不自造幂等**)。
 
-> **关键:不另起一套 runner / 步骤日志。** 调度只负责"到点 → 产 task + 触发记录";真正的"唤醒 Agent / 重放 / 落步骤"全部落在既有 `drainQueue`/`runTask`/`ai_task_steps` 上。`job_run` 与 `ai_task` 一一对应(`job_run.ai_task_id`)。
+> **关键:队列层复用,执行层需新增确定性分支(re-review 修正,别误读成"零改动")。**
+> - **队列层 = 纯复用**:`ai_tasks` 入队 + `drainQueue`/`claimNextQueued` + `ai_tasks_user_idempotency` 幂等,全部照用,不改、不另起 runner。
+> - **执行层 = runTask 必须新增一个"确定性非 LLM 执行分支"(对 orchestrator 核心控制流的真实改动)**:现状 `runTask`(`ai-worker/src/orchestrator.ts`)是 LLM-agent 单一形态、硬编码 —— 无条件 `runner.run({prompt})` 调模型、必须 agent 调过 `submit_candidate` 否则 `fail`、输出当 candidate 解析、按 formalizes 路由确认门。一条 `scheduled.self.metrics` 确定性重放(不调 LLM、不产 candidate、不过确认门)在现状会**崩在第一步**。所以落地 D3 必须给 `runTask` 加分支:`taskType` 前缀 `scheduled.*` 且 job 有内建采集器/有效 recipe → 走 **deterministic 执行器**(跳 `runner.run`、跳 candidate 捕获、跳确认门:直接 `fetchDouyinMetrics`/`fetchDouyinComments` → ingestion 落库 → **手工合成 `recordStep` 行**写 `ai_task_steps`(确定性采集无 agent step 回调)→ 直接 `succeeded`)。只有"无 recipe 需 Agent 发现"才回落现状 LLM-agent 路径。**这是新增分支,非纯复用——D3 切片如实标注工作量。**
+> - `job_run` 与 `ai_task` 一一对应(`job_run.ai_task_id`)。
+
+> **评论口径修正(re-review 找到的 C-4 冲突,本 SPEC + data-foundation §1.3 同步修)**:原写 `source="douyin_comment"` + `external_id=comment_id` + 幂等 `(userId, external_id)` 是孤儿口径 —— 真实 `audienceSignalSource` enum 只有 `comment|dm|consultation|review`(contract `primitives.ts` + `candidate.schema.ts` 双层 Zod 校验,`douyin_comment` 会被 reject),`audience_signals` 表**无 `external_id` 列、无 UNIQUE 约束**,且硬约束 C-4(`candidate.ts`)写明"AudienceSignal 写经 Ingestion、骑 ingestion 幂等"。**改为**:评论作业建一条 ingestion run,`source` 用既有 `"comment"`,去重锚用 `ingestion_records.record_key=comment_id`(经既有 `ux_ingestion_records_run_key`),`audience_signals.ingestion_run_id` 带上。不扩 enum、不加列、不自造幂等键。
 
 ## 6. 登录态过期(已有机制接线,非开放风险)
 
