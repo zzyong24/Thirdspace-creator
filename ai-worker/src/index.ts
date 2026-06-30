@@ -1,14 +1,14 @@
 export const AI_WORKER_PACKAGE = "@creatoros/ai-worker";
 
 // Public worker surface (Task 11). The host (the Next app's composition root, in dev/seed
-// run mode) imports the runner factory + the run-loop drainer; the SDK lives ONLY in the
-// lazily-imported ClaudeAgentRunner so importing this package never requires
-// @anthropic-ai/claude-agent-sdk. The orchestrator / confirm / state-machine / context
-// tools stay the structural-port substrate the host binds to the shared pglite db.
-export {
-  createAgentRunner,
-  createClaudeAgentRunner,
-} from "./runner/agent-runner-factory";
+// run mode) imports the runner factory + the run-loop drainer. The legacy ClaudeAgentRunner
+// (@anthropic-ai/claude-agent-sdk) is RETIRED — 全程 Vercel AI SDK(产品定位 §9 铁律1):
+// real generation runs on the Vercel AI SDK runtime (runtime/agent-runtime + provider-factory
+// + the templated/script/research nodes), so this package no longer depends on the Agent SDK
+// at all. createAgentRunner now only yields the deterministic FakeAgentRunner. The
+// orchestrator / confirm / state-machine / context tools stay the structural-port substrate
+// the host binds to the shared pglite db.
+export { createAgentRunner } from "./runner/agent-runner-factory";
 export type { AgentRunnerEnv } from "./runner/agent-runner-factory";
 export { createFakeAgentRunner } from "./runner/fake-agent-runner";
 export { drainQueue } from "./run-loop";
@@ -96,6 +96,16 @@ export {
   type RunScriptNodeInput,
   type RunScriptNodeResult,
 } from "./nodes/script-node";
+// 素材搜集节点 —— 唯一带工具的迁移节点(anthropic 内置 web search;弃旧 Claude Agent SDK)。
+export {
+  runResearchNode,
+  parseMaterials,
+  anthropicWebSearchTools,
+  type MaterialItem,
+  type RunResearchNodeInput,
+  type RunResearchNodeResult,
+} from "./nodes/research-node";
+export { RESEARCH_GATHER_TEMPLATE } from "./prompt/templates/research-gather";
 // 通用模板节点 —— 6 个无工具纯生成 runner 共用(bindPrompt → runAgentNode → {text, steps})。
 export {
   runTemplatedNode,

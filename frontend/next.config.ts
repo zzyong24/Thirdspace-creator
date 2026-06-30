@@ -12,12 +12,11 @@ const nextConfig: NextConfig = {
     // node-postgres (P1 runtime driver) — keep external so its native/dynamic deps resolve
     // at server runtime instead of being bundled.
     "pg",
-    // The Claude Agent SDK spawns the Claude Code binary as a subprocess — keep it out
-    // of the bundle so its runtime resolves at server runtime (research-runner.ts).
-    "@anthropic-ai/claude-agent-sdk",
     // Phase 3 Agent Runtime — Vercel AI SDK + providers are lazily imported via
-    // @creatoros/ai-worker (topic-task-adapter). Keep external so the dynamic import
-    // resolves at server runtime instead of being bundled into the Next server output.
+    // @creatoros/ai-worker (topic-task-adapter / research-runner / …). Keep external so the
+    // dynamic import resolves at server runtime instead of being bundled into the Next
+    // server output. (The Claude Agent SDK external was removed when 全程 Vercel AI SDK
+    // landed — 产品定位 §9 铁律1: no Claude Agent SDK anywhere in the frontend.)
     "ai",
     "@ai-sdk/openai",
     "@ai-sdk/anthropic",

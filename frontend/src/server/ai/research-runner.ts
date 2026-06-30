@@ -1,89 +1,42 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
-  type CreativeContext,
 } from "./creative-context";
-import { runClaudeAgent, parseJsonArray } from "./agent-run";
 
-// 机制③④ 素材搜集 runner — the first real AI node wired into the app. It runs in the
-// composition layer (NOT the AI module/service, which must stay deterministic per
-// design-spec §8): assemble CreativeContext → run a real Claude agent with WebSearch →
-// record the gathered materials as a `material_list` CANDIDATE via the AI service's
-// recordCandidate write seam (queued→running→awaiting_confirmation). The user then 采纳s
-// via confirmTask, which materializes each item into a KnowledgeItem.
+// 机制③④ 素材搜集 runner —— 跑在 **Vercel AI SDK** 上(弃旧 Claude Agent SDK + WebSearch)。
+// 提示词走外置模板 research.gather(脊柱-1 解耦)。AI 逻辑在 @creatoros/ai-worker 的
+// runResearchNode(产 MaterialItem[] + 步骤事件,内部用 anthropic 内置 web search 工具联网搜);
+// 本 runner 只负责:装配 CreativeContext(定位 + 选题)/ 解析 model(按 capability)/ 落候选
+// (material_list,复用既有 confirm 分支 → 每条 MaterialItem 物化为 KnowledgeItem)。onStep →
+// recordStep(窗口步骤日志)。
 //
-// The agent runs against the user's Claude Code SUBSCRIPTION (CLAUDE_CODE_OAUTH_TOKEN in
-// the server env) — no API key, no per-token billing. The SDK is imported through a
-// variable specifier so the bundler treats it as a runtime-only dependency.
+// 铁律(产品定位 §9):全程 Vercel AI SDK,不留 Claude Agent SDK。Web 搜索用 @ai-sdk/anthropic
+// 的 provider 内置 web search(服务端执行、随模型计费、不引第三方付费搜索 API)。该内置工具仅
+// **anthropic** 协议族可用;research capability 解析出非 anthropic 端点(DeepSeek/MiniMax 兼容)
+// 时无对等内置搜索 —— 不静默降级、不擅自引第三方:节点拿不到联网工具大概率产不出素材 → 抛错 →
+// 本 runner 的 catch 把任务转终态(cancelTask),UI 显示失败 + 重试。
 
-export interface MaterialItem {
-  title: string;
-  url: string;
-  source: string;
-  why_relevant: string;
-}
+// Re-exported so callers/tests that depended on research-runner's MaterialItem keep working;
+// the canonical definition now lives in @creatoros/ai-worker (the research node owns it).
+export type { MaterialItem } from "@creatoros/ai-worker";
 
 export interface GatherDeps extends ContextDeps {
   ai: AiService;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
 }
 
 export interface GatherTask {
   id: string;
   projectId: string | null;
   inputData: Record<string, unknown>;
-  modelKey: string;
-}
-
-// The 素材搜集 Skill — the agent's procedure + relevance judgement, positioning-aware.
-// Inlined this wave (a versioned .claude/skills/素材搜集/SKILL.md is the follow-on once
-// settingSources wiring lands). Mirrors the proven smoke demo.
-function buildGatherPrompt(context: CreativeContext): string {
-  const positioning = context.positioningBrief
-    ? context.positioningBrief
-    : "（创作者尚未设置定位——按选题本身的价值判断相关性即可）";
-  const angle = context.topic.angle ? `\n切入角度：${context.topic.angle}` : "";
-  return `你是这位创作者的「素材搜集 agent」。
-
-【创作者定位】
-${positioning}
-
-【选题】${context.topic.title}${angle}
-
-【任务】为这个选题主动联网搜集"相关、可信、对这个定位有用"的素材(文章/数据/案例/对标账号)。
-【相关性判据】① 跟选题强相关 ② 跟创作者定位对齐(能支撑信任/转化,不是纯流量噱头) ③ 来源可信。
-【做法】用 WebSearch 多角度搜(趋势/数据/反面/案例/对标),挑 5-8 条最有价值的;拿不准就 WebFetch 看一眼确认。
-【输出】最后只输出一个 JSON 数组,每条 {"title","url","source","why_relevant"}(why_relevant 用一句中文说明为什么对这个定位+选题有用)。不要输出任何多余文字、不要用代码块包裹。`;
-}
-
-// Run the agent and parse its material list. Pure w.r.t. our store — only the SDK call.
-async function gatherMaterials(
-  context: CreativeContext,
-): Promise<MaterialItem[]> {
-  const text = await runClaudeAgent(buildGatherPrompt(context), {
-    allowedTools: ["WebSearch", "WebFetch"],
-  });
-  return parseMaterials(text);
-}
-
-// Parse the agent's final text into material items (tolerant JSON-array extraction).
-export function parseMaterials(text: string): MaterialItem[] {
-  return parseJsonArray(text)
-    .map((raw): MaterialItem | null => {
-      const o = (raw ?? {}) as Record<string, unknown>;
-      const title = typeof o.title === "string" ? o.title.trim() : "";
-      if (!title) return null;
-      return {
-        title,
-        url: typeof o.url === "string" ? o.url : "",
-        source: typeof o.source === "string" ? o.source : "",
-        why_relevant:
-          typeof o.why_relevant === "string" ? o.why_relevant : "",
-      };
-    })
-    .filter((m): m is MaterialItem => m !== null);
 }
 
 // Orchestrate one gather task end to end. Owns its own lifecycle: on any failure it
@@ -105,7 +58,30 @@ export async function runGatherMaterial(
       { projectId: task.projectId, topic, angle },
       deps,
     );
-    const items = await gatherMaterials(context);
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 素材搜集节点(外置 research.gather
+    // 模板 + anthropic 内置 web search),步骤事件落 ai_task_steps(窗口步骤日志)。
+    const spec = await deps.resolveModelSpec(ctx, "research.gather");
+    const { modelFor, runResearchNode, anthropicWebSearchTools } = await import(
+      "@creatoros/ai-worker"
+    );
+    // Web 搜索只在 anthropic 协议族下走 provider 内置工具;非 anthropic 端点不挂工具(不引第三方)。
+    const tools =
+      spec.apiFormat === "anthropic" ? anthropicWebSearchTools() : undefined;
+    const { items } = await runResearchNode({
+      model: modelFor(spec),
+      positioningBrief: context.positioningBrief,
+      topicTitle: context.topic.title,
+      topicAngle: context.topic.angle || undefined,
+      tools,
+      onStep: async (e) => {
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: e.stepNo,
+          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
+          text: e.text,
+          toolCalls: e.toolCalls,
+        });
+      },
+    });
     if (items.length === 0) {
       throw new Error("research-runner: agent returned no parseable materials");
     }
@@ -120,7 +96,6 @@ export async function runGatherMaterial(
     } catch {
       /* task may already be terminal */
     }
-    // eslint-disable-next-line no-console
     console.error(`[research-runner] gather failed for task ${task.id}:`, err);
   }
 }

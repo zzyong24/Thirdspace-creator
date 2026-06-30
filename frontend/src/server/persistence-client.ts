@@ -1482,7 +1482,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // imports the Agent SDK); the non-determinism lives HERE in the composition layer. We
   // wrap the AI transport so that a freshly-queued `research.gather_material` task fires
   // the real-agent runner in the BACKGROUND (Option A: in-process, non-blocking). The
-  // runner assembles CreativeContext (positioning + topic), runs Claude + WebSearch, and
+  // runner assembles CreativeContext (positioning + topic), runs the Vercel AI SDK research
+  // node (@creatoros/ai-worker + 外置 research.gather 模板 + anthropic 内置 web search), and
   // records a `material_list` candidate via aiService.recordCandidate → awaiting_confirmation.
   const ai: Transport = {
     async request(endpoint, input, ctx) {
@@ -1633,9 +1634,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               projectId:
                 typeof task.projectId === "string" ? task.projectId : null,
               inputData: (task.inputData ?? {}) as Record<string, unknown>,
-              modelKey: String(task.modelKey ?? "claude-opus-4-8"),
             },
-            { ai: aiService, positioning: positioningReader },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              // Vercel AI SDK 路径(弃 Claude Agent SDK):素材搜集节点跑在 ai-worker +
+              // 外置模板 + anthropic 内置 web search。
+              resolveModelSpec,
+            },
           );
         } else if (
           task &&
