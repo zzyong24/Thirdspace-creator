@@ -188,16 +188,13 @@ describe("buildChatAssembly — 三层注入装配", () => {
     ]);
   });
 
-  it("surface=review → chatbox.review skill + 挂 review.analyze 工具", async () => {
+  it("surface=review → chatbox.review skill + 只挂 review.analyze(收紧:不挂 context.projects/knowledge/materials,防拉全作品标题凑数)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
     expect(a.skillId).toBe("chatbox.review");
-    expect(Object.keys(a.tools).sort()).toEqual([
-      "context.knowledge",
-      "context.materials",
-      "context.projects",
-      "review.analyze",
-    ]);
+    // T-039a:复盘只聚焦当前这一条作品 → 只挂 review.analyze(它基于注入的这条真材料)。
+    // 刻意去掉 context.projects(列全作品标题)等,防 MiniMax 把其他作品标题当经验凑数。
+    expect(Object.keys(a.tools).sort()).toEqual(["review.analyze"]);
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {

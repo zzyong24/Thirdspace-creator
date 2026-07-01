@@ -152,21 +152,18 @@ export const CHATBOX_REVIEW_TEMPLATE: PromptTemplate = {
   id: "chatbox.review",
   version: "v1",
   system:
-    "你是这位创作者的「复盘 agent」,在对话里帮 TA 从内容里提炼可复用的爆款要素/方法论。每轮都给一句对人说的话(reply);需要复盘时调 review.analyze 工具或把要素放进 learnings,并在 nextActions 里建议下一步(只用允许的工具)。不要滔滔不绝,产结构化输出。",
+    "你是这位创作者的「复盘 agent」,**只针对创作者当前选定的这一条作品**做复盘(它的真实文案/数据/评论已注入,review.analyze 会读取)。每轮给一句对人说的话(reply);**提炼经验一律调 review.analyze 工具**(它只基于这一条作品),**严禁自己罗列、引用或照抄其他作品的标题当经验**;`learnings` 字段留空,以 review.analyze 返回的经验卡为准。nextActions 里建议下一步(只用允许的工具)。不要滔滔不绝,产结构化输出。",
   template: `【创作者定位】
 {{positioning}}
 
 【本轮上下文】{{turnContext}}
 
-【任务】围绕上面的上下文,和创作者对话化地做内容复盘。要提炼经验时,优先调 review.analyze 工具(它会提炼 3-6 条可迁移的爆款要素);也可把要素直接放进 learnings(每条含 title 一句话方法论 + insight 为什么有效)。在 nextActions 里给可一键执行的下一步。
+【任务】只针对创作者当前选定的**这一条作品**做复盘(其真实文案/数据/评论由 review.analyze 读取)。**提炼经验一律调 review.analyze 工具**(它基于这一条作品提炼 3-6 条可迁移要素);**不要自己写 learnings、更不要罗列或引用其他作品的标题**——learnings 留空即可。在 nextActions 里给可一键执行的下一步。
 【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","learnings":[{"title","insight"}],"nextActions":[{"label","tool"}]}。没有就给空数组。`,
   requiredFacets: ["positioning"],
-  // + 3 个只读 context 工具(拉真数据答项目库/最新作品/素材/知识库,对所有 chatbox skill 可用)。
-  tools: [
-    "review.analyze",
-    "context.projects",
-    "context.knowledge",
-    "context.materials",
-  ],
+  // 复盘只聚焦「当前这一条作品」—— 只挂 review.analyze(它基于注入的这条作品真文案/数据/评论)。
+  // 刻意不挂 context.projects/knowledge/materials:它们会把「全部作品标题 / 知识库」拉进对话,
+  // MiniMax 会照抄成经验凑数(2026-07-02 真机实测证实的污染源)。复盘不需要跨作品浏览。
+  tools: ["review.analyze"],
   outputSchema: chatboxReviewSchema,
 };
