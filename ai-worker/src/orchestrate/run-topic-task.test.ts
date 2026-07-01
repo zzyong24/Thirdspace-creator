@@ -43,9 +43,12 @@ function recordingPorts() {
   } };
 }
 
-const TOPICS = JSON.stringify([
-  { title: "复现 MLA 把显存压 1/10", angle: "跑数", contentRole: "traffic", source: "trend", predictedScore: 88, reason: "省显存人人要" },
-]);
+// T-025:topic.generate 改走 generateObject(顶层对象 { topics:[...] })。
+const TOPICS = JSON.stringify({
+  topics: [
+    { title: "复现 MLA 把显存压 1/10", angle: "跑数", contentRole: "traffic", source: "trend", predictedScore: 88, reason: "省显存人人要" },
+  ],
+});
 
 describe("runTopicTask", () => {
   it("成功:markRunning → 逐步 recordStep → recordCandidate(候选含选题)", async () => {

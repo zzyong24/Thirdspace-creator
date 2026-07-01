@@ -1,13 +1,12 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
-import type { ModelSpec } from "@creatoros/ai-worker";
+import type { ModelSpec, PlatformAdaptOutput } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import { parseJsonArray } from "./agent-run";
 
 // 一稿多平台 runner (publish.platform_adapt node, 机制③④). Mirrors topic-runner but ADAPTS
 // one finished script into a per-platform draft (抖音竖屏短 / B站横屏中视频 / 小红书图文 /
@@ -74,25 +73,25 @@ function adaptFacets(
   };
 }
 
-// Parse the agent's final text into per-platform drafts (parse 逻辑原样保留)。
-function parsePlatformDrafts(text: string): PlatformDraft[] {
-  return parseJsonArray(text)
-    .map((raw): PlatformDraft | null => {
-      const o = (raw ?? {}) as Record<string, unknown>;
-      const platform = typeof o.platform === "string" ? o.platform.trim() : "";
-      const title = typeof o.title === "string" ? o.title.trim() : "";
+// Normalize the schema-validated drafts array into per-platform drafts (T-025:结构化后拿的是
+// 已解析对象,归一逻辑原样保留 —— trim、滤掉缺 platform/title 的项、清空标签)。
+function normalizePlatformDrafts(
+  drafts: PlatformAdaptOutput["drafts"],
+): PlatformDraft[] {
+  return (drafts ?? [])
+    .map((o): PlatformDraft | null => {
+      const platform = (o.platform ?? "").trim();
+      const title = (o.title ?? "").trim();
       if (!platform || !title) return null;
-      const tags = Array.isArray(o.tags)
-        ? o.tags
-            .map((t) => (typeof t === "string" ? t.trim() : ""))
-            .filter((t): t is string => t.length > 0)
-        : [];
+      const tags = (o.tags ?? [])
+        .map((t) => (typeof t === "string" ? t.trim() : ""))
+        .filter((t): t is string => t.length > 0);
       return {
         platform,
         title,
-        body: typeof o.body === "string" ? o.body : "",
+        body: o.body ?? "",
         tags,
-        coverIdea: typeof o.coverIdea === "string" ? o.coverIdea : "",
+        coverIdea: o.coverIdea ?? "",
       };
     })
     .filter((d): d is PlatformDraft => d !== null);
@@ -130,30 +129,31 @@ export async function runPlatformAdapt(
       { projectId: task.projectId, topic },
       deps,
     );
-    // Vercel AI SDK 路径:按 "script.rewrite" capability 解析 model + 跑 ai-worker 通用模板节点
-    // (外置 platform.adapt 模板),步骤事件落 ai_task_steps。弃旧 LlmCompleter。
+    // Vercel AI SDK 路径:按 "script.rewrite" capability 解析 model + 跑 ai-worker 结构化节点
+    // (外置 platform.adapt 模板 + outputSchema)。T-025:改 runStructuredNode(generateObject 绑
+    // schema,落空→文本兜底),让用户默认的 MiniMax 也稳定吐可解析多平台草稿(旧 runTemplatedNode
+    // 自由文本路径 MiniMax 下常失败)。顶层是对象,取 object.drafts 再 normalize(归一逻辑原样保留)。
     const spec = await deps.resolveModelSpec(ctx, "script.rewrite");
-    const { modelFor, runTemplatedNode, PLATFORM_ADAPT_TEMPLATE } =
+    const { modelFor, runStructuredNode, PLATFORM_ADAPT_TEMPLATE } =
       await import("@creatoros/ai-worker");
-    const { text } = await runTemplatedNode({
+    const { object } = await runStructuredNode<PlatformAdaptOutput>({
       model: modelFor(spec),
       template: PLATFORM_ADAPT_TEMPLATE,
       facets: adaptFacets(context, scriptText, platforms),
-      onStep: async (e) => {
-        await deps.ai.recordStep(ctx, task.id, {
-          stepNo: e.stepNo,
-          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
-          text: e.text,
-          toolCalls: e.toolCalls,
-        });
-      },
     });
-    const drafts = parsePlatformDrafts(text);
+    const drafts = normalizePlatformDrafts(object.drafts);
     if (drafts.length === 0) {
       throw new Error(
         "platform-adapt-runner: agent returned no parseable drafts",
       );
     }
+    // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
+    await deps.ai.recordStep(ctx, task.id, {
+      stepNo: 1,
+      kind: "step",
+      text: `已生成多平台草稿（${drafts.length} 个平台）`,
+      toolCalls: [],
+    });
     await deps.ai.recordCandidate(ctx, task.id, {
       resultType: "publication_drafts",
       resultData: { drafts, outputId },

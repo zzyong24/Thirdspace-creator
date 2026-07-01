@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { PromptTemplate } from "../template";
 
 /**
@@ -8,10 +9,43 @@ import type { PromptTemplate } from "../template";
  *   rubricBlock(必需:逐维度评分清单,调用方按 dimensions 计算并注入)·
  *   title(必需:待诊断内容标题)· script(必需:文稿,调用方按 scriptText 计算并兜底)。
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。
+ *
+ * T-025 跨模型健壮性:加 outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底),
+ * 让用户默认的 MiniMax 也稳定吐可解析诊断(旧 runTemplatedNode 自由文本路径 MiniMax 下常吐不出
+ * →parseDiagnosis 返回 null→任务 cancelled)。score/performance 用宽容类型(z.number().nullable()),
+ * runner 侧 dimScore/perf/confidence + rubricKeys 交集再归一,保留原容错。字段各给默认值让缺字段也过校验。
  */
+export const diagnosisSchema = z.object({
+  dimensions: z
+    .array(
+      z.object({
+        key: z.string().default(""),
+        score: z.number().nullable().default(null),
+        reason: z.string().default(""),
+        suggestion: z.string().default(""),
+      }),
+    )
+    .default([]),
+  performance: z
+    .object({
+      完播率: z.number().nullable().default(null),
+      收藏率: z.number().nullable().default(null),
+      评论率: z.number().nullable().default(null),
+      转化意向: z.number().nullable().default(null),
+    })
+    .default({ 完播率: null, 收藏率: null, 评论率: null, 转化意向: null }),
+  verdict: z.string().default(""),
+  mainIssues: z.array(z.string()).default([]),
+  priorityFixes: z.array(z.string()).default([]),
+  confidence: z.string().default("med"),
+});
+export type DiagnosisOutput = z.infer<typeof diagnosisSchema>;
+
 export const CALIBRATION_DIAGNOSE_TEMPLATE: PromptTemplate = {
   id: "calibration.diagnose",
-  version: "v1",
+  version: "v2",
+  outputSchema: diagnosisSchema,
+  tools: [],
   system: "你是这位创作者的「AI 编导」,按变现加权评分标准逐维度盲评并给出诊断。",
   template: `你是这位创作者的「AI 编导」。下面是一条**发布前的内容**，请你按创作者的**变现加权评分标准**逐维度盲评，并给出编导诊断。
 

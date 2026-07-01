@@ -120,9 +120,23 @@ export {
   outlineSchema,
   type OutlineOutput,
 } from "./prompt/templates/planning-outline";
-export { PLATFORM_ADAPT_TEMPLATE } from "./prompt/templates/platform-adapt";
-export { REVIEW_INSIGHTS_TEMPLATE } from "./prompt/templates/review-insights";
-export { CALIBRATION_DIAGNOSE_TEMPLATE } from "./prompt/templates/calibration-diagnose";
+// T-025:platform.adapt / review.insights / calibration.diagnose 三节点加 outputSchema 走结构化
+// (跨模型健壮,让用户默认 MiniMax 也稳定吐可解析产物),schema/type 一并导出。
+export {
+  PLATFORM_ADAPT_TEMPLATE,
+  platformAdaptSchema,
+  type PlatformAdaptOutput,
+} from "./prompt/templates/platform-adapt";
+export {
+  REVIEW_INSIGHTS_TEMPLATE,
+  reviewInsightsSchema,
+  type ReviewInsightsOutput,
+} from "./prompt/templates/review-insights";
+export {
+  CALIBRATION_DIAGNOSE_TEMPLATE,
+  diagnosisSchema,
+  type DiagnosisOutput,
+} from "./prompt/templates/calibration-diagnose";
 export {
   runScriptNode,
   parseShots,

@@ -1,7 +1,7 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
-import type { ModelSpec } from "@creatoros/ai-worker";
+import type { ModelSpec, ReviewInsightsOutput } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
@@ -58,16 +58,25 @@ function reviewFacets(
 // 同一份模板 + parse,不造影子)。
 export { reviewFacets };
 
-// Parse the agent's final text into reusable learnings (parse 逻辑原样保留)。
-export function parseLearnings(text: string): LearningItem[] {
-  return parseJsonArray(text)
-    .map((raw): LearningItem | null => {
-      const o = (raw ?? {}) as Record<string, unknown>;
-      const title = typeof o.title === "string" ? o.title.trim() : "";
+// Normalize the schema-validated learnings array into reusable learnings (T-025:结构化后拿的是
+// 已解析对象,归一逻辑原样保留 —— trim、滤掉缺 title 的项)。
+function normalizeLearnings(
+  learnings: ReviewInsightsOutput["learnings"],
+): LearningItem[] {
+  return (learnings ?? [])
+    .map((o): LearningItem | null => {
+      const title = (o.title ?? "").trim();
       if (!title) return null;
-      return { title, insight: typeof o.insight === "string" ? o.insight : "" };
+      return { title, insight: o.insight ?? "" };
     })
     .filter((l): l is LearningItem => l !== null);
+}
+
+// Tolerant text → learnings parse for the CHAT path (chat-runner 的 analyzeReview 工具仍走
+// runTemplatedNode 拿自由文本)。结构化 runner 已改走 normalizeLearnings(拿已校验数组);这里是
+// 文本兜底薄壳:宽容抽 JSON 数组 → 交给同一 normalizeLearnings(容错单点收口)。
+export function parseLearnings(text: string): LearningItem[] {
+  return normalizeLearnings(parseJsonArray(text) as ReviewInsightsOutput["learnings"]);
 }
 
 export async function runReviewAnalyze(
@@ -84,28 +93,29 @@ export async function runReviewAnalyze(
       { projectId: task.projectId, topic },
       deps,
     );
-    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 通用模板节点(外置 review.insights 模板),
-    // 步骤事件落 ai_task_steps。弃旧 LlmCompleter。
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 结构化节点(外置 review.insights 模板
+    // + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),让
+    // 用户默认的 MiniMax 也稳定吐可解析经验列表(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败)。
+    // 顶层是对象,取 object.learnings 再 normalize(归一逻辑原样保留)。
     const spec = await deps.resolveModelSpec(ctx, "review.insights");
-    const { modelFor, runTemplatedNode, REVIEW_INSIGHTS_TEMPLATE } =
+    const { modelFor, runStructuredNode, REVIEW_INSIGHTS_TEMPLATE } =
       await import("@creatoros/ai-worker");
-    const { text } = await runTemplatedNode({
+    const { object } = await runStructuredNode<ReviewInsightsOutput>({
       model: modelFor(spec),
       template: REVIEW_INSIGHTS_TEMPLATE,
       facets: reviewFacets(context),
-      onStep: async (e) => {
-        await deps.ai.recordStep(ctx, task.id, {
-          stepNo: e.stepNo,
-          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
-          text: e.text,
-          toolCalls: e.toolCalls,
-        });
-      },
     });
-    const items = parseLearnings(text);
+    const items = normalizeLearnings(object.learnings);
     if (items.length === 0) {
       throw new Error("review-runner: agent returned no parseable learnings");
     }
+    // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
+    await deps.ai.recordStep(ctx, task.id, {
+      stepNo: 1,
+      kind: "step",
+      text: `已提炼复盘经验（${items.length} 条）`,
+      toolCalls: [],
+    });
     await deps.ai.recordCandidate(ctx, task.id, {
       resultType: "learning_list",
       resultData: { items },

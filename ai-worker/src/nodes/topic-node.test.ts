@@ -15,7 +15,7 @@ function finalText(text: string): LanguageModelV4GenerateResult {
   };
 }
 
-const TOPICS_JSON = JSON.stringify([
+const TOPICS = [
   {
     title: "复现 DeepSeek MLA:把 KV cache 压到 1/10 的那段代码",
     angle: "不讲原理先跑数,单卡对比 KV cache 占用",
@@ -32,12 +32,15 @@ const TOPICS_JSON = JSON.stringify([
     predictedScore: 82,
     reason: "可量化对比天然有信任感",
   },
-]);
+];
+// T-025:runTopicNode 改走 generateObject(顶层对象 { topics:[...] });裸数组仅供 parseTopics 工具测试。
+const TOPICS_OBJECT_JSON = JSON.stringify({ topics: TOPICS });
+const TOPICS_ARRAY_JSON = JSON.stringify(TOPICS);
 
 describe("runTopicNode", () => {
   it("在 Agent Runtime 上产出可解析选题 + 发步骤事件", async () => {
     const model = new MockLanguageModelV4({
-      doGenerate: async () => finalText(TOPICS_JSON),
+      doGenerate: async () => finalText(TOPICS_OBJECT_JSON),
     });
     const steps: number[] = [];
     const res = await runTopicNode({
@@ -56,17 +59,18 @@ describe("runTopicNode", () => {
     expect(steps).toContain(1); // 步骤日志真被喂了
   });
 
-  it("agent 无可解析选题时抛错(让任务进终态,不假成功)", async () => {
+  it("空 topics(模型没产出选题)→ 抛错(让任务进终态,不假成功)", async () => {
+    // 合法但空的结构化输出 → normalizeTopics 产 0 条 → guard 触发(不假成功)。
     const model = new MockLanguageModelV4({
-      doGenerate: async () => finalText("抱歉,我无法完成。"),
+      doGenerate: async () => finalText(JSON.stringify({ topics: [] })),
     });
     await expect(
       runTopicNode({ model, positioningBrief: "x", basis: "positioning" }),
     ).rejects.toThrow(/未产出可解析选题/);
   });
 
-  it("parseTopics 容忍 ``` 代码块包裹", () => {
-    const t = parseTopics("```json\n" + TOPICS_JSON + "\n```");
+  it("parseTopics 容忍 ``` 代码块包裹(纯工具,仍导出)", () => {
+    const t = parseTopics("```json\n" + TOPICS_ARRAY_JSON + "\n```");
     expect(t).toHaveLength(2);
   });
 });

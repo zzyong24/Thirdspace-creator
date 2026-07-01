@@ -78,7 +78,8 @@ describe("内置模板:topic.generate 可绑定", () => {
     });
     expect(b.prompt).toContain("AI 工程科普");
     expect(b.prompt).toContain("蹭当下热点");
-    expect(b.prompt).toContain("JSON 数组");
+    // T-025:topic.generate 输出契约改结构化(顶层对象 { topics:[...] }),不再是裸 JSON 数组。
+    expect(b.prompt).toContain("JSON 对象");
   });
 });
 

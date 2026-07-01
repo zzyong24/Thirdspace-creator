@@ -1,12 +1,19 @@
 import type { LanguageModel } from "ai";
-import { runAgentNode, type AgentStepEvent } from "../runtime/agent-runtime";
-import { bindPrompt } from "../prompt/template";
-import { TOPIC_GENERATE_TEMPLATE } from "../prompt/templates/topic-generate";
+import type { AgentStepEvent } from "../runtime/agent-runtime";
+import { runStructuredNode } from "./structured-node";
+import {
+  TOPIC_GENERATE_TEMPLATE,
+  type TopicArrayOutput,
+} from "../prompt/templates/topic-generate";
 
 // 选题节点(Phase 3 第一个跑在新 Agent Runtime 上的真节点)。一个「节点」= 一个 skill:
 // 系统提示(角色/方法论)+ 用哪个 capability 的模型(由调用方解析后传 model)+ 输出怎么解析。
-// 这版先纯生成(无工具);搜热点/读知识等工具随工具注册表绑到 backend reader 后加进来 ——
-// 加工具不动本文件的结构。最终产物是 TopicItem[],由上层 recordCandidate 成 candidate_list。
+// 最终产物是 TopicItem[],由上层 recordCandidate 成 candidate_list。
+//
+// T-025 跨模型健壮性:改走 runStructuredNode(generateObject 绑 topic.generate 的 outputSchema,
+// 落空→文本兜底抽 JSON 再同 schema 校验),复用 script.draft / research.gather 同一条防发散路。
+// 旧路径(runAgentNode 拿自由文本 + parseTopics 宽容解析)在用户默认的 MiniMax-M3 下常吐不出可解析
+// 数组 → 抛「未产出可解析选题」→ 任务 cancelled(选题会出不来的根因)。parseTopics 仍作纯工具导出。
 
 export interface TopicItem {
   title: string;
@@ -39,20 +46,20 @@ const BASIS_HINT: Record<TopicBasis, string> = {
   trend: "蹭当下热点/对标近期爆款到自己定位上,source 取 trend / benchmark。",
 };
 
-function buildPrompt(
+// 装配 topic.generate 模板的 facets(定位兜底 + 依据提示 + 依据上下文)。runStructuredNode 内部
+// bindPrompt(模板, facets)。换写作方法论 = 换 TOPIC_GENERATE_TEMPLATE,不动本 runner。
+function topicFacets(
   positioningBrief: string,
   basis: TopicBasis,
   basisBrief?: string,
-): { system: string; prompt: string } {
-  // 提示词模板化解耦(脊柱-1):system/正文来自外置模板,这里只装配 facets(定位兜底 + 依据提示 + 依据上下文)。
-  // 换写作方法论 = 换 TOPIC_GENERATE_TEMPLATE,不动本 runner。
-  return bindPrompt(TOPIC_GENERATE_TEMPLATE, {
+): Record<string, string | undefined> {
+  return {
     positioning:
       positioningBrief || "（创作者尚未设置定位——按通用爆款逻辑出题）",
     basisHint: BASIS_HINT[basis],
     // Sfix:把出题依据对应的真实上下文(评论信号 / 知识库)注进去,让各 basis 真的不同。
     basisContext: basisBrief ? `\n\n【依据材料】\n${basisBrief}` : "",
-  });
+  };
 }
 
 /** 从 agent 最终文本里宽容地抽出 JSON 数组(容忍 ``` 包裹 / 前后散文)。 */
@@ -89,30 +96,52 @@ export function parseTopics(text: string): TopicItem[] {
     .filter((t): t is TopicItem => t !== null);
 }
 
+/** 把 schema 校验后的对象归一成 TopicItem[](T-025:结构化后拿的是已解析对象,滤空/兜底原样保留)。 */
+function normalizeTopics(items: TopicArrayOutput["topics"]): TopicItem[] {
+  return (items ?? [])
+    .map((o): TopicItem | null => {
+      const title = (o.title ?? "").trim();
+      if (!title) return null;
+      return {
+        title,
+        angle: o.angle ?? "",
+        contentRole: o.contentRole ?? "",
+        source: o.source ?? "trend",
+        predictedScore:
+          typeof o.predictedScore === "number" ? o.predictedScore : null,
+        reason: o.reason ?? "",
+      };
+    })
+    .filter((t): t is TopicItem => t !== null);
+}
+
 export interface RunTopicNodeResult {
   topics: TopicItem[];
   steps: AgentStepEvent[];
 }
 
-/** 跑一次选题节点 —— 在新 Agent Runtime 上,产出可解析的选题 + 步骤事件。 */
+/**
+ * 跑一次选题节点 —— runStructuredNode(generateObject 绑 topic.generate outputSchema,落空则文本兜底)
+ * 产**被 schema 卡死**的 { topics } + 一条步骤事件。结构化路径单发,合成一条完成步喂窗口日志(诚实:就一步)。
+ */
 export async function runTopicNode(
   input: RunTopicNodeInput,
 ): Promise<RunTopicNodeResult> {
-  const { system, prompt } = buildPrompt(
-    input.positioningBrief,
-    input.basis,
-    input.basisBrief,
-  );
-  const res = await runAgentNode({
+  const { object } = await runStructuredNode<TopicArrayOutput>({
     model: input.model,
-    system,
-    prompt,
-    maxSteps: 4,
-    onStep: input.onStep,
+    template: TOPIC_GENERATE_TEMPLATE,
+    facets: topicFacets(input.positioningBrief, input.basis, input.basisBrief),
   });
-  const topics = parseTopics(res.text);
+  const topics = normalizeTopics(object.topics);
   if (topics.length === 0) {
     throw new Error("topic-node: agent 未产出可解析选题");
   }
-  return { topics, steps: res.steps };
+  const step: AgentStepEvent = {
+    stepNo: 1,
+    text: `已生成 ${topics.length} 条选题`,
+    toolCalls: [],
+    finishReason: "stop",
+  };
+  await input.onStep?.(step);
+  return { topics, steps: [step] };
 }

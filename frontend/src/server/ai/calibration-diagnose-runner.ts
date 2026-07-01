@@ -1,7 +1,7 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
-import type { ModelSpec } from "@creatoros/ai-worker";
+import type { ModelSpec, DiagnosisOutput } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
@@ -146,21 +146,17 @@ function confidence(v: unknown): "high" | "med" | "low" {
   return v === "high" || v === "med" || v === "low" ? v : "med";
 }
 
-// Tolerant parse of the agent's final text into a CalibrationDiagnosis, intersected with
-// the rubric's real dimension keys (the agent must score the actual rubric — a hallucinated
-// key is dropped). Returns null when nothing parseable OR no dimension scored (→ cancel).
-export function parseDiagnosis(
-  text: string,
+// Normalize the schema-validated object into a CalibrationDiagnosis, intersected with the
+// rubric's real dimension keys (the agent must score the actual rubric — a hallucinated key
+// is dropped). Returns null when no dimension scored (→ cancel). T-025:结构化后拿的是已解析
+// 对象,容错逻辑原样保留 —— rubricKeys 交集、dimScore 夹 1-5、perf 夹 0-100、confidence 归一。
+export function normalizeDiagnosis(
+  obj: DiagnosisOutput,
   rubricKeys: Set<string>,
 ): CalibrationDiagnosis | null {
-  const parsed = parseJsonLoose(text);
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
-  const o = parsed as Record<string, unknown>;
-
-  const rawDims = Array.isArray(o.dimensions) ? o.dimensions : [];
+  const rawDims = obj.dimensions ?? [];
   const dimensions: DiagnosisDimensionScore[] = [];
-  for (const raw of rawDims) {
-    const d = (raw ?? {}) as Record<string, unknown>;
+  for (const d of rawDims) {
     const key = str(d.key);
     if (!key || !rubricKeys.has(key)) continue; // only real rubric dimensions
     const score = dimScore(d.score);
@@ -174,7 +170,7 @@ export function parseDiagnosis(
   }
   if (dimensions.length === 0) return null; // no usable score → no diagnosis
 
-  const p = (o.performance ?? {}) as Record<string, unknown>;
+  const p = obj.performance ?? {};
   return {
     dimensions,
     performance: {
@@ -183,11 +179,23 @@ export function parseDiagnosis(
       评论率: perf(p["评论率"]),
       转化意向: perf(p["转化意向"]),
     },
-    verdict: str(o.verdict),
-    mainIssues: strArr(o.mainIssues),
-    priorityFixes: strArr(o.priorityFixes),
-    confidence: confidence(o.confidence),
+    verdict: str(obj.verdict),
+    mainIssues: strArr(obj.mainIssues),
+    priorityFixes: strArr(obj.priorityFixes),
+    confidence: confidence(obj.confidence),
   };
+}
+
+// Tolerant text → 诊断 parse for the CHAT path (chat-runner 的 diagnoseContent 工具仍走
+// runTemplatedNode 拿自由文本)。结构化 runner 已改走 normalizeDiagnosis(拿已校验对象);这里
+// 是文本兜底薄壳:宽容抽 JSON 对象 → 交给同一 normalizeDiagnosis(容错单点收口)。抽不出返回 null。
+export function parseDiagnosis(
+  text: string,
+  rubricKeys: Set<string>,
+): CalibrationDiagnosis | null {
+  const parsed = parseJsonLoose(text);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+  return normalizeDiagnosis(parsed as DiagnosisOutput, rubricKeys);
 }
 
 // Orchestrate one calibration.diagnose task end to end. Owns its lifecycle: on any failure
@@ -227,26 +235,20 @@ export async function runCalibrationDiagnose(
       { projectId: null, topic: subject.title, angle: "" },
       deps,
     );
-    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 通用模板节点(外置 calibration.diagnose
-    // 模板),步骤事件落 ai_task_steps。弃旧 LlmCompleter。parseDiagnosis 原样保留(只换"拿 text"的来源)。
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 结构化节点(外置 calibration.diagnose
+    // 模板 + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),
+    // 让用户默认的 MiniMax 也稳定吐可解析诊断(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败)。
+    // normalizeDiagnosis 原样保留 rubricKeys 交集/夹取容错(只换"拿对象"的来源)。
     const spec = await deps.resolveModelSpec(ctx, "calibration.diagnose");
-    const { modelFor, runTemplatedNode, CALIBRATION_DIAGNOSE_TEMPLATE } =
+    const { modelFor, runStructuredNode, CALIBRATION_DIAGNOSE_TEMPLATE } =
       await import("@creatoros/ai-worker");
-    const { text } = await runTemplatedNode({
+    const { object } = await runStructuredNode<DiagnosisOutput>({
       model: modelFor(spec),
       template: CALIBRATION_DIAGNOSE_TEMPLATE,
       facets: diagnoseFacets(context, subject, rubric.dimensions),
-      onStep: async (e) => {
-        await deps.ai.recordStep(ctx, task.id, {
-          stepNo: e.stepNo,
-          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
-          text: e.text,
-          toolCalls: e.toolCalls,
-        });
-      },
     });
-    const diagnosis = parseDiagnosis(
-      text,
+    const diagnosis = normalizeDiagnosis(
+      object,
       new Set(rubric.dimensions.map((d) => d.key)),
     );
     if (!diagnosis) {
@@ -254,6 +256,13 @@ export async function runCalibrationDiagnose(
         "calibration-diagnose-runner: LLM returned no parseable 诊断",
       );
     }
+    // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
+    await deps.ai.recordStep(ctx, task.id, {
+      stepNo: 1,
+      kind: "step",
+      text: `已生成编导诊断（${diagnosis.dimensions.length} 维度评分）`,
+      toolCalls: [],
+    });
     // Record the diagnosis candidate; 采纳 → createDraftPrediction via the
     // calibration_diagnosis confirm branch. Carry the subject + resolved rubricVersionId so
     // confirm can mint the prediction against the right rubric version.
