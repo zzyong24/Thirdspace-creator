@@ -15,16 +15,19 @@ function finalText(text: string): LanguageModelV4GenerateResult {
   };
 }
 
-const SHOTS_JSON = JSON.stringify([
+const SHOTS = [
   { 口播: "你以为 KV cache 省不了?", 画面: "对比图", 字幕: "省显存", 时长: "0-3s" },
   { 口播: "三步压到 1/10", 画面: "代码滚动", 字幕: "上代码", 时长: "3-30s" },
   { 口播: "点赞收藏,下条讲量化", 画面: "口播", 字幕: "关注", 时长: "30-35s" },
-]);
+];
+// T-023:runScriptNode 改走 generateObject(顶层对象 { shots:[...] });裸数组仅供 parseShots 工具测试。
+const SHOTS_OBJECT_JSON = JSON.stringify({ shots: SHOTS });
+const SHOTS_ARRAY_JSON = JSON.stringify(SHOTS);
 
 describe("runScriptNode", () => {
   it("在 Vercel AI SDK 上产出可解析分镜(4 字段独立)+ 步骤事件", async () => {
     const model = new MockLanguageModelV4({
-      doGenerate: async () => finalText(SHOTS_JSON),
+      doGenerate: async () => finalText(SHOTS_OBJECT_JSON),
     });
     const steps: number[] = [];
     const res = await runScriptNode({
@@ -50,7 +53,7 @@ describe("runScriptNode", () => {
         // 抓最后一条 user message 的文本,断言策划产物确实进了 prompt。
         const msgs = (opts as { prompt?: unknown }).prompt;
         seenPrompt = JSON.stringify(msgs ?? "");
-        return finalText(SHOTS_JSON);
+        return finalText(SHOTS_OBJECT_JSON);
       },
     });
     await runScriptNode({
@@ -66,17 +69,18 @@ describe("runScriptNode", () => {
     expect(seenPrompt).toContain("策划结构方案");
   });
 
-  it("无可解析分镜 → 抛错(不假成功)", async () => {
+  it("空 shots(模型没产出分镜)→ 抛错(不假成功)", async () => {
+    // 合法但空的结构化输出 → runScriptNode 的 empty guard 触发(不摆空格子)。
     const model = new MockLanguageModelV4({
-      doGenerate: async () => finalText("抱歉,我无法完成。"),
+      doGenerate: async () => finalText(JSON.stringify({ shots: [] })),
     });
     await expect(
       runScriptNode({ model, positioningBrief: "x" }),
     ).rejects.toThrow(/未产出可解析分镜/);
   });
 
-  it("parseShots 容忍 ``` 包裹", () => {
-    const s = parseShots("```json\n" + SHOTS_JSON + "\n```");
+  it("parseShots 容忍 ``` 包裹(纯工具,仍导出)", () => {
+    const s = parseShots("```json\n" + SHOTS_ARRAY_JSON + "\n```");
     expect(s).toHaveLength(3);
   });
 });

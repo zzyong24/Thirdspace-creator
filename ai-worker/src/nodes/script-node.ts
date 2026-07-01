@@ -1,11 +1,17 @@
 import type { LanguageModel } from "ai";
-import { runAgentNode, type AgentStepEvent } from "../runtime/agent-runtime";
-import { bindPrompt } from "../prompt/template";
+import type { AgentStepEvent } from "../runtime/agent-runtime";
+import { runStructuredNode } from "./structured-node";
 import { SCRIPT_DRAFT_TEMPLATE } from "../prompt/templates/script-draft";
 
 // 分镜脚本节点(写文案,跑在 Vercel AI SDK 上,弃旧 LlmCompleter)。一个分镜 = 爆款公式的一拍。
 // 产物是结构化 ScriptShot[](口播/画面/字幕/时长 四字段独立,不压扁 —— 配合 CollabField 逐字段可改),
 // 由上层渲染成 artifact_version 候选。提示词走外置模板(script.draft),换方法论不动本文件。
+//
+// T-023 跨模型健壮性:改走 **runStructuredNode**(generateObject 绑 script.draft 的 outputSchema,
+// 落空则文本兜底抽 JSON 再同 schema 校验),复用 research.gather / calibration.score 同一条防发散路。
+// 旧路径(runAgentNode 拿自由文本 + parseShots 宽容解析)在用户默认的 MiniMax-M3 下常吐不出可解析
+// 数组 → 抛「未产出可解析分镜」→ 任务 cancelled(AI 初稿出不来的根因)。结构化 + 兜底后任何模型都产
+// 可解析分镜。parseShots 仍作纯工具导出(采纳卡预览等复用),不再是本节点的解析主路。
 
 export interface ScriptShot {
   口播: string;
@@ -34,6 +40,8 @@ export interface RunScriptNodeInput {
   outlineBrief?: string;
   /** 步骤回调 —— 喂窗口步骤日志。 */
   onStep?: (event: AgentStepEvent) => void | Promise<void>;
+  /** 护栏:结构化校验失败的最大重试次数(默认 2,透传 runStructuredNode)。 */
+  maxRetries?: number;
 }
 
 export interface RunScriptNodeResult {
@@ -70,45 +78,64 @@ export function parseShots(text: string): ScriptShot[] {
     .filter((s): s is ScriptShot => s !== null);
 }
 
-/** 跑一次写文案节点 —— Vercel AI SDK + 外置模板,产可解析分镜 + 步骤事件。 */
+/**
+ * 跑一次写文案节点 —— runStructuredNode(generateObject 绑 script.draft outputSchema,落空则文本兜底)
+ * 产**被 schema 卡死**的 { shots } + 一条步骤事件。facets 装配同旧路径(定位/过往爆款/选题/横竖屏/
+ * 策划产物);SEAM-01 有策划产物就注入,让脚本铺它们的结构与论点。
+ */
 export async function runScriptNode(
   input: RunScriptNodeInput,
 ): Promise<RunScriptNodeResult> {
-  const { system, prompt } = bindPrompt(SCRIPT_DRAFT_TEMPLATE, {
-    positioning:
-      input.positioningBrief || "（创作者尚未设置定位——按通用爆款逻辑写脚本）",
-    learnings: input.learningsBrief
-      ? `\n【过往复盘爆款要素】\n${input.learningsBrief}`
-      : "",
-    topic: input.topicTitle
-      ? `\n【本期选题】${input.topicTitle}${
-          input.topicAngle ? `（切入：${input.topicAngle}）` : ""
-        }`
-      : "",
-    orientation: input.orientation
-      ? `\n【形式】${input.orientation}（据此调整钩子与时长）`
-      : "",
-    // SEAM-01:策划阶段产物 —— 论点树 / 内容合同 / 结构方案。有则注入,让脚本铺它们的结构与论点。
-    thesis: input.thesisBrief
-      ? `\n【论点树（核心/支撑/证据/反驳）】\n${input.thesisBrief}`
-      : "",
-    contract: input.contractBrief
-      ? `\n【内容合同（受众定位/价值主张/核心节奏/行动召唤）】\n${input.contractBrief}`
-      : "",
-    outline: input.outlineBrief
-      ? `\n【策划结构方案（脚本按此铺分镜）】\n${input.outlineBrief}`
-      : "",
-  });
-  const res = await runAgentNode({
+  const { object } = await runStructuredNode<{ shots: ScriptShot[] }>({
     model: input.model,
-    system,
-    prompt,
-    maxSteps: 4,
-    onStep: input.onStep,
+    template: SCRIPT_DRAFT_TEMPLATE,
+    facets: {
+      positioning:
+        input.positioningBrief ||
+        "（创作者尚未设置定位——按通用爆款逻辑写脚本）",
+      learnings: input.learningsBrief
+        ? `\n【过往复盘爆款要素】\n${input.learningsBrief}`
+        : "",
+      topic: input.topicTitle
+        ? `\n【本期选题】${input.topicTitle}${
+            input.topicAngle ? `（切入：${input.topicAngle}）` : ""
+          }`
+        : "",
+      orientation: input.orientation
+        ? `\n【形式】${input.orientation}（据此调整钩子与时长）`
+        : "",
+      // SEAM-01:策划阶段产物 —— 论点树 / 内容合同 / 结构方案。有则注入,让脚本铺它们的结构与论点。
+      thesis: input.thesisBrief
+        ? `\n【论点树（核心/支撑/证据/反驳）】\n${input.thesisBrief}`
+        : "",
+      contract: input.contractBrief
+        ? `\n【内容合同（受众定位/价值主张/核心节奏/行动召唤）】\n${input.contractBrief}`
+        : "",
+      outline: input.outlineBrief
+        ? `\n【策划结构方案（脚本按此铺分镜）】\n${input.outlineBrief}`
+        : "",
+    },
+    maxRetries: input.maxRetries,
   });
-  const shots = parseShots(res.text);
+  // schema 让缺字段落成空串,故这里 trim + 滤掉三主字段全空的空镜(不摆空格子)。
+  const shots: ScriptShot[] = (object.shots ?? [])
+    .map((s) => ({
+      口播: (s.口播 ?? "").trim(),
+      画面: (s.画面 ?? "").trim(),
+      字幕: (s.字幕 ?? "").trim(),
+      时长: (s.时长 ?? "").trim(),
+    }))
+    .filter((s) => s.口播 || s.画面 || s.字幕);
   if (shots.length === 0) {
     throw new Error("script-node: agent 未产出可解析分镜");
   }
-  return { shots, steps: res.steps };
+  // 结构化路径是单发(无多步工具循环),合成一条完成步事件喂窗口步骤日志(诚实:就一步)。
+  const step: AgentStepEvent = {
+    stepNo: 1,
+    text: `已生成 ${shots.length} 个分镜`,
+    toolCalls: [],
+    finishReason: "stop",
+  };
+  await input.onStep?.(step);
+  return { shots, steps: [step] };
 }

@@ -97,7 +97,12 @@ export {
   type SchemaValidator,
 } from "./prompt/schema-bridge";
 export { TOPIC_GENERATE_TEMPLATE } from "./prompt/templates/topic-generate";
-export { SCRIPT_DRAFT_TEMPLATE } from "./prompt/templates/script-draft";
+export {
+  SCRIPT_DRAFT_TEMPLATE,
+  scriptDraftSchema,
+  scriptShotSchema,
+  type ScriptDraftOutput,
+} from "./prompt/templates/script-draft";
 // 脊柱-1 第二批:6 个 runner 迁 Vercel SDK 共用的外置模板(提示词模板化解耦)。
 export { PLANNING_THESIS_TEMPLATE } from "./prompt/templates/planning-thesis";
 export { PLANNING_CONTRACT_TEMPLATE } from "./prompt/templates/planning-contract";

@@ -38,6 +38,8 @@
 | T-020 | L5 录制(素材) | 📋 | 素材清单(material.match+用料链)+ 拖拽上传绑定项目(对象存储+assets)+ 集成 **`video-asset-kit`**(截图/文生图/文生视频)。**多模态模型走 model-config 用户可配,不写死 MiniMax**(扩 model-config 到 image/video capability) |
 | T-021 | L6 发布 | 📋 | 对齐 **`cheat-package`**(非 cheat-publish)出标题/简介/标签/封面 + 审核 SOP;复用 publish.platform_adapt。真发仍 MockPublisher(诚实标模拟) |
 | T-022 | L7 复盘 | 📋 依赖 T-007 | **依赖 T-007 整套实现**:调度抓抖音→snapshot 时序图表 + 只已发布(`hasImportedProjects`)可复盘门。排 T-007 之后 |
+| T-023 | 跨模型 AI 节点结构化(script.draft) | ✅ | `script.draft` 迁 `runStructuredNode`(generateObject 绑 `scriptDraftSchema`=对象包 shots 数组;落空→文本兜底抽 JSON 同 schema 校验)。改 script-draft.ts/script-node.ts/index.ts + 更新单测;`parseShots` 保留为纯工具导出。ai-worker tsc 净 + 77 单测绿;**真链路验:直连用户配的真 MiniMax-M3(anthropic 兼容端点)`runScriptNode` ~50s 真产 7 个可拍分镜**(旧路径此处必抛「未产出可解析分镜」→cancelled)。done(commit `<本次>`) |
+| T-024 | L4 脚本编辑器收尾(task-review 余项) | 📋 | 金句轨退化已修(`a90df5a`)。**剩**:①分镜时间码 UI 待恢复(数据保留在 sections,TipTap 连续富文本丢了 `[mm:ss]` 呈现,编导式分镜需要,别静默)②保存在途再编辑窄竞态丢写(pending 时抑制外部同步)③heading 按钮谎报 `data-format=bold`(改真)④真浏览器选区级交互 e2e 覆盖弱 |
 
 ## ✅ 已完成(粗粒度,倒序)
 
