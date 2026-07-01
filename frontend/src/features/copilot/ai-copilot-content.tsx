@@ -109,6 +109,14 @@ import {
   toUIMessages,
   type WireAIMessage,
 } from "./conversation-persistence";
+import {
+  detectMentionQuery,
+  filterProjectOptions,
+  applyProjectMention,
+  type ProjectOption,
+  type MentionedProject,
+} from "./project-mention";
+import { ProjectMentionMenu } from "./project-mention-menu";
 
 // ---------------------------------------------------------------------------
 // ViewModel — shaped by the `buildCopilotViewModel` selector. The Copilot
@@ -343,6 +351,16 @@ interface WireConversation {
   readonly title: string;
   readonly createdAt: string;
 }
+
+// projects.list 的一行(契约 projectResource 的子集)—— @项目引用下拉只需 id/title。结构化 cast,
+// 与本 island 其它 list 调用一致(不引 contract 类型依赖)。数据源复用现有只读 op client.listProjects。
+interface WireProject {
+  readonly id: string;
+  readonly title: string;
+}
+
+// @项目引用下拉一次展示的最大候选数(过滤后截断,避免长列表)。
+const MENTION_MAX_OPTIONS = 8;
 
 // AI task status → human label for the 最近任务 feed. Honest mirror of the §12 machine.
 const TASK_STATUS_LABEL: Record<WireTask["status"], string> = {
@@ -586,6 +604,12 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
     writeStoredConversationId(surfaceRef.current, id);
   }, []);
 
+  // @项目引用(T-039b):输入框 @ 选中的项目。存在时等价「选中态项目」注入后端(见下 chatContextBody)。
+  // 与 URL 带来的选中态(一键岛)并存时,URL 选中态优先(它是打开来源的强上下文);@ 只在无 URL
+  // 选中态时生效,避免"面板从复盘岛打开、用户又 @ 了别的项目"两者打架。
+  const [mentionedProject, setMentionedProject] =
+    React.useState<MentionedProject | null>(null);
+
   const chatContextBody = React.useMemo(() => {
     const chatContext: {
       surface: string;
@@ -606,9 +630,18 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
       if (selKind === "project") {
         chatContext.projectId = selId;
       }
+    } else if (mentionedProject) {
+      // T-039b @项目引用:无 URL 选中态时,把 @ 选中的项目当「选中态项目」注入 —— 复用 T-039a 机制
+      // (kind=project → selection.label 进 system + projectId 让后端项目 facet 读到这条作品的真材料)。
+      chatContext.selection = {
+        kind: "project",
+        ids: [mentionedProject.id],
+        label: mentionedProject.title,
+      };
+      chatContext.projectId = mentionedProject.id;
     }
     return { chatContext };
-  }, [surface, functionKey, selKind, selId, selTitle]);
+  }, [surface, functionKey, selKind, selId, selTitle, mentionedProject]);
   const transport = React.useMemo(
     () =>
       new DefaultChatTransport<UIMessage>({
@@ -813,6 +846,136 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
     if (recentTasks === null) return null;
     return recentTasks.filter((t) => CONTINUING_STATUSES.has(t.status));
   }, [recentTasks]);
+
+  // ── @项目引用(T-039b)────────────────────────────────────────────────────
+  // 项目列表懒加载:首次输入 `@` 触发一次拉取(复用现有只读 op client.listProjects,不新造 repo
+  // 方法)。null=未加载/加载中,[]=空库(诚实引导先建项目),有值=可补全的候选。
+  const [projectOptions, setProjectOptions] = React.useState<
+    ReadonlyArray<ProjectOption> | null
+  >(null);
+  const projectsRequestedRef = React.useRef(false);
+  const ensureProjectsLoaded = React.useCallback(() => {
+    if (projectsRequestedRef.current) return;
+    projectsRequestedRef.current = true;
+    void (async () => {
+      try {
+        const rows = (await client.listProjects({
+          params: undefined,
+          query: { page: 1, pageSize: 100, sort: "updatedAt" },
+          body: undefined,
+        })) as unknown as ReadonlyArray<WireProject> | null | undefined;
+        setProjectOptions(
+          (rows ?? []).map((p) => ({ id: p.id, title: p.title })),
+        );
+      } catch (err) {
+        // 拉取失败 → 诚实空列表(下拉显示空态引导),不弹错、不摆假行。
+        console.error("[copilot] list projects failed:", err);
+        setProjectOptions([]);
+      }
+    })();
+  }, []);
+
+  // @ 提及态:下拉是否开、当前 @query 的 [start,end) 范围、query 串、键盘高亮下标。
+  const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const [mentionOpen, setMentionOpen] = React.useState(false);
+  const [mentionRange, setMentionRange] = React.useState<{
+    start: number;
+    end: number;
+  } | null>(null);
+  const [mentionQuery, setMentionQuery] = React.useState("");
+  const [mentionIndex, setMentionIndex] = React.useState(0);
+
+  // 过滤后的候选(空库时给空数组;截断到 MENTION_MAX_OPTIONS)。empty 标识用于诚实空态文案。
+  const mentionOptions = React.useMemo<ReadonlyArray<ProjectOption>>(() => {
+    if (!projectOptions) return [];
+    return filterProjectOptions(projectOptions, mentionQuery).slice(
+      0,
+      MENTION_MAX_OPTIONS,
+    );
+  }, [projectOptions, mentionQuery]);
+  const mentionLibraryEmpty = projectOptions !== null && projectOptions.length === 0;
+
+  // textarea 值/光标变化 → 重算是否处在 @提及 token 内(纯函数 detectMentionQuery)。
+  // 命中 → 开下拉 + 记范围/query + 懒加载项目;未命中 → 关下拉。高亮下标复位到 0。
+  const syncMentionState = React.useCallback(
+    (value: string, caret: number) => {
+      const m = detectMentionQuery(value, caret);
+      if (m.active) {
+        ensureProjectsLoaded();
+        setMentionOpen(true);
+        setMentionRange({ start: m.start, end: m.end });
+        setMentionQuery(m.query);
+        setMentionIndex(0);
+      } else {
+        setMentionOpen(false);
+        setMentionRange(null);
+        setMentionQuery("");
+      }
+    },
+    [ensureProjectsLoaded],
+  );
+
+  const handlePromptChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value;
+      setPrompt(value);
+      syncMentionState(value, e.target.selectionStart ?? value.length);
+    },
+    [syncMentionState],
+  );
+
+  // 选中某项目:把「@query」替换成「@项目标题 」+ 落到 chatContext(mentionedProject)。
+  // 用受控值 + setSelectionRange 把光标移到插入 chip 之后(下一 tick,等 DOM 应用新值)。
+  const pickMentionProject = React.useCallback(
+    (project: ProjectOption) => {
+      const range = mentionRange;
+      if (!range) return;
+      const applied = applyProjectMention(prompt, range, project);
+      setPrompt(applied.value);
+      setMentionedProject({ id: project.id, title: project.title });
+      setMentionOpen(false);
+      setMentionRange(null);
+      setMentionQuery("");
+      // 回焦 + 光标定位到插入点后(下一帧,确保受控 value 已提交)。
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        if (el) {
+          el.focus();
+          try {
+            el.setSelectionRange(applied.caret, applied.caret);
+          } catch {
+            /* 某些环境不支持 setSelectionRange —— 不影响已插入的文本/注入 */
+          }
+        }
+      });
+    },
+    [mentionRange, prompt],
+  );
+
+  // 下拉开启时拦截键盘:↑/↓ 移高亮、Enter/Tab 选中当前高亮项、Esc 关闭。未开启则透传(不干扰提交)。
+  const handlePromptKeyDown = React.useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (!mentionOpen || mentionOptions.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMentionIndex((i) => (i + 1) % mentionOptions.length);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMentionIndex(
+          (i) => (i - 1 + mentionOptions.length) % mentionOptions.length,
+        );
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        // 下拉开着时 Enter 选中提及项(而非提交表单)——阻止默认提交。
+        e.preventDefault();
+        const opt = mentionOptions[mentionIndex] ?? mentionOptions[0];
+        if (opt) pickMentionProject(opt);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        setMentionOpen(false);
+      }
+    },
+    [mentionOpen, mentionOptions, mentionIndex, pickMentionProject],
+  );
 
   return (
     // bug #5:面板布局重排 —— 整体撑满浮层高度(min-h-0 让内部可正确收缩),对话区做主区(flex-1
@@ -1072,17 +1235,56 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
             className="flex flex-col gap-2.5"
             data-slot="prompt-form"
           >
-            <textarea
-              id="ai-copilot-prompt"
-              name="prompt"
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              rows={2}
-              aria-label="我能帮你做什么"
-              placeholder="我能帮你做什么？（试试「基于最近评论出 5 个选题」）"
-              className="min-h-12 w-full resize-none border-0 border-l-2 border-brand/40 bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-              data-slot="prompt-input"
-            />
+            {/* @项目引用(T-039b):relative 容器锚定下拉;输入 @ 弹真项目列表,选中插入 chip +
+                注入 chatContext(等价选中态项目)。下拉在 textarea 上方(bottom-full)。 */}
+            <div className="relative" data-slot="prompt-input-wrap">
+              {mentionOpen && (
+                <ProjectMentionMenu
+                  options={mentionOptions}
+                  activeIndex={mentionIndex}
+                  loading={projectOptions === null}
+                  query={mentionQuery}
+                  empty={mentionLibraryEmpty}
+                  onPick={pickMentionProject}
+                  onHover={setMentionIndex}
+                />
+              )}
+              <textarea
+                id="ai-copilot-prompt"
+                name="prompt"
+                ref={textareaRef}
+                value={prompt}
+                onChange={handlePromptChange}
+                onKeyDown={handlePromptKeyDown}
+                rows={2}
+                aria-label="我能帮你做什么"
+                placeholder="我能帮你做什么？（试试「基于最近评论出 5 个选题」，或输入 @ 引用一个项目）"
+                className="min-h-12 w-full resize-none border-0 border-l-2 border-brand/40 bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                data-slot="prompt-input"
+              />
+            </div>
+            {/* @引用命中的项目 chip —— 显式告诉用户「本次对话已带上这个项目」,可一键移除。 */}
+            {mentionedProject && (
+              <div
+                data-slot="mention-chip"
+                data-project-id={mentionedProject.id}
+                className="flex items-center gap-1.5 self-start rounded-md border border-brand/30 bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand"
+              >
+                <FolderOpen className="size-3" aria-hidden="true" />
+                <span className="max-w-[180px] truncate">
+                  {mentionedProject.title}
+                </span>
+                <button
+                  type="button"
+                  aria-label="移除项目引用"
+                  data-slot="mention-chip-remove"
+                  onClick={() => setMentionedProject(null)}
+                  className="ml-0.5 rounded text-brand/70 transition-colors hover:text-brand focus:outline-none"
+                >
+                  ×
+                </button>
+              </div>
+            )}
             <div
               className="flex flex-wrap items-center justify-between gap-2"
               data-slot="suggested-action-chips"

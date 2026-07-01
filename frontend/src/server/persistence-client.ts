@@ -4921,6 +4921,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             .slice(0, opts.limit ?? 40)
             .map((k) => ({ title: k.title, knowledgeType: k.knowledgeType })),
       },
+      // T-039b:抖音账号画像 reader —— 定位对话(chatbox.positioning)据此把「这个人在平台上已经
+      // 是谁」(平台/账号/粉丝量)注进 system,让定位提案立足真实账号身份。复用 platformAccountService
+      // .listAccounts(user-scoped),映射到 runner 的 {platform, accountHandle, followerBaseline} 形状。
+      // 与 positioning.generate 一键岛节点同一份读法,不造影子。空/未连账号 → 空数组(诚实降级)。
+      accounts: {
+        list: async (c: RequestContext) =>
+          (
+            await platformAccountService.listAccounts(c, {
+              limit: 100,
+              offset: 0,
+            })
+          ).rows.map((a) => ({
+            platform: a.platform,
+            accountHandle: a.accountHandle,
+            followerBaseline: a.followerBaseline,
+          })),
+      },
       // T-039a:复盘对象 reader —— ChatBox 对话复盘(review.analyze)路径据此读「这一条作品」的真
       // 文案/标题/数据/评论(前提是前端带了 projectId → 复盘一键岛以 kind=project 打开时已带)。
       // 与后端复盘 task 共用同一份读法(makeReviewSubjectReader),不造影子。

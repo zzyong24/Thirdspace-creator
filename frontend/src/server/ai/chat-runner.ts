@@ -162,7 +162,11 @@ export async function buildChatAssembly(
   );
   // 数据层 + 选中态层(T-027):先拼 CreativeContext facets,再接上"本次对话针对的选中内容"块 ——
   // 让模型一进来就知道用户"这条"指哪条,不再瞎答/反复索要标题。
-  const baseSystem = assembleChatSystem(skill.system, context);
+  // T-039b per-action 注入矩阵:定位对话(chatbox.positioning)额外注入账号画像 accountsBrief
+  // ——定位提案要立足「这个人在平台上已经是谁」;其它 surface 不注(避免账号噪声)。
+  const baseSystem = assembleChatSystem(skill.system, context, {
+    includeAccounts: skillId === "chatbox.positioning",
+  });
   const selectionBlock = assembleSelectionContext(chatContext.selection);
   // T-039a 补:复盘对话「瞎问复盘对象」根因 —— 本项目真材料虽已装进 context(reviewSubject reader)
   // 且进了 review.analyze 工具的 facets,但**没进对话系统提示**,故 LLM 在决定调用工具前不知道复盘哪条,

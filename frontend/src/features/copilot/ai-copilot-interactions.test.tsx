@@ -20,6 +20,8 @@ const createCandidate = vi.fn();
 // 会话持久化(本切片):读回历史 / 历史记录列表 走这两个契约读 op。
 const listMessages = vi.fn();
 const listConversations = vi.fn();
+// T-039b @项目引用:输入 @ 弹项目列表走这个只读 op。
+const listProjects = vi.fn();
 
 // 「继续」 routing uses next/navigation's useRouter; mock it so the island mounts
 // under the test renderer (no real app-router provider).
@@ -50,6 +52,8 @@ vi.mock("@/lib/contract-client", () => ({
     // 会话持久化:二次进入读回 + 历史记录列表。
     listMessages: (...args: unknown[]) => listMessages(...args),
     listConversations: (...args: unknown[]) => listConversations(...args),
+    // T-039b @项目引用:项目补全下拉的数据源。
+    listProjects: (...args: unknown[]) => listProjects(...args),
   },
 }));
 
@@ -114,6 +118,8 @@ beforeEach(() => {
   listMessages.mockResolvedValue([]);
   listConversations.mockReset();
   listConversations.mockResolvedValue([]);
+  listProjects.mockReset();
+  listProjects.mockResolvedValue([]);
   mockMessages = [];
   mockStatus = "ready";
   mockSearch = "copilot=open";
@@ -457,5 +463,105 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     await user.click(screen.getByRole("button", { name: /新对话/ }));
     expect(setMessages).toHaveBeenCalledWith([]);
     expect(window.localStorage.getItem("copilot:conv:topics")).toBeNull();
+  });
+
+  describe("T-039b @项目引用", () => {
+    it("输入 @ → 懒加载真项目列表(client.listProjects)并弹出补全下拉", async () => {
+      const user = userEvent.setup();
+      listProjects.mockResolvedValue([
+        { id: "proj-1", title: "上下文工程" },
+        { id: "proj-2", title: "RAG 检索优化" },
+      ]);
+      render(<AICopilotContent viewModel={VM} />);
+      const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+
+      await user.type(textarea, "帮我基于 @");
+      // 懒加载真项目列表。
+      await waitFor(() => {
+        expect(listProjects).toHaveBeenCalled();
+      });
+      // 下拉出现 + 列出真项目。
+      const menu = await screen.findByRole("listbox", { name: "引用项目" });
+      expect(menu).not.toBeNull();
+      expect(screen.getByText("上下文工程")).not.toBeNull();
+      expect(screen.getByText("RAG 检索优化")).not.toBeNull();
+    });
+
+    it("@ 后接查询串 → 按标题过滤候选", async () => {
+      const user = userEvent.setup();
+      listProjects.mockResolvedValue([
+        { id: "proj-1", title: "上下文工程" },
+        { id: "proj-2", title: "RAG 检索优化" },
+      ]);
+      render(<AICopilotContent viewModel={VM} />);
+      const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+
+      await user.type(textarea, "@RAG");
+      await waitFor(() => expect(listProjects).toHaveBeenCalled());
+      // 只剩匹配「RAG」的项目。
+      await waitFor(() => {
+        expect(screen.getByText("RAG 检索优化")).not.toBeNull();
+      });
+      expect(screen.queryByText("上下文工程")).toBeNull();
+    });
+
+    it("选中某项目 → 插入 @标题 chip + 显式项目引用 chip(注入 chatContext 的可见凭证)", async () => {
+      const user = userEvent.setup();
+      listProjects.mockResolvedValue([{ id: "proj-1", title: "上下文工程" }]);
+      render(<AICopilotContent viewModel={VM} />);
+      const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+
+      await user.type(textarea, "@上下");
+      await waitFor(() => expect(listProjects).toHaveBeenCalled());
+      const option = await screen.findByRole("option", { name: /上下文工程/ });
+      await user.click(option);
+
+      // textarea 里 @上下 被替换成 @上下文工程(+尾空格)。
+      await waitFor(() => {
+        expect(textarea.value).toContain("@上下文工程");
+      });
+      // 显式的项目引用 chip 出现(带 projectId),= 本次对话已注入该项目的可见凭证。
+      const chip = document.querySelector(
+        '[data-slot="mention-chip"][data-project-id="proj-1"]',
+      );
+      expect(chip).not.toBeNull();
+    });
+
+    it("移除项目引用 chip → chip 消失(撤销注入)", async () => {
+      const user = userEvent.setup();
+      listProjects.mockResolvedValue([{ id: "proj-1", title: "上下文工程" }]);
+      render(<AICopilotContent viewModel={VM} />);
+      const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+
+      await user.type(textarea, "@");
+      await waitFor(() => expect(listProjects).toHaveBeenCalled());
+      const option = await screen.findByRole("option", { name: /上下文工程/ });
+      await user.click(option);
+      expect(
+        document.querySelector('[data-slot="mention-chip"]'),
+      ).not.toBeNull();
+
+      await user.click(screen.getByLabelText("移除项目引用"));
+      expect(document.querySelector('[data-slot="mention-chip"]')).toBeNull();
+    });
+
+    it("库里没有项目 → 下拉显示诚实空态(引导先建项目,不摆假行)", async () => {
+      const user = userEvent.setup();
+      listProjects.mockResolvedValue([]);
+      render(<AICopilotContent viewModel={VM} />);
+      const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+
+      await user.type(textarea, "@");
+      await waitFor(() => expect(listProjects).toHaveBeenCalled());
+      await waitFor(() => {
+        expect(
+          document.querySelector('[data-slot="project-mention-empty"]'),
+        ).not.toBeNull();
+      });
+      // 没有任何候选行。
+      expect(
+        document.querySelector('[data-slot="project-mention-option"]'),
+      ).toBeNull();
+    });
   });
 });

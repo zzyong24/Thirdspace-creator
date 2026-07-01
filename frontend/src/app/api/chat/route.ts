@@ -112,10 +112,11 @@ export async function POST(req: Request): Promise<Response> {
       ctx,
       { messages, chatContext },
       {
-        positioning: runtime.context.positioning,
-        learnings: runtime.context.learnings,
-        signals: runtime.context.signals,
-        knowledge: runtime.context.knowledge,
+        // 展开 runtime.context 里所有已绑定的 CreativeContext reader(positioning / learnings /
+        // signals / knowledge / accounts / reviewSubject …)。原来手列 4 个,漏了 reviewSubject
+        // (T-039a 复盘对象)与 accounts(T-039b 账号画像)—— 装配点 assembleCreativeContext 拿不到
+        // 就跳过对应 facet。改为整体展开:composition root 绑什么,装配层就能读什么,不再逐个漏接。
+        ...runtime.context,
         resolveModelSpec: runtime.resolveModelSpec,
         // 只读 context 工具(context.projects/knowledge/materials)的真数据读端口(user-scoped)。
         contextReaders: runtime.contextReaders,

@@ -35,6 +35,10 @@ import { AICopilotDialog } from "@/components/overlays/ai-copilot-dialog";
 import { CopilotOverlayBridge } from "@/components/overlays/copilot-overlay-bridge";
 import { canonicalDataset } from "@/fixtures/canonical";
 import type { NotificationsViewModel } from "@/fixtures/selectors";
+import {
+  useCurrentProjectOverride,
+  type CurrentProjectOverride,
+} from "./current-project-context";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -131,7 +135,13 @@ function resolveWorkspacePrimaryAction(stage: string): string {
   return "进入下一步";
 }
 
-export function resolveRoute(pathname: string): RouteResolution {
+export function resolveRoute(
+  pathname: string,
+  // T-039b item②:真项目 identity override(从 projects/[projectId]/layout.tsx 经 client context
+  // 灌进来)。项目路由下有真 {projectId,title} 时,标题优先用真值(fixture 里查不到真项目 → 原来
+  // 退回中性「当前项目」)。非项目路由 / 无 override → 走原 fixture 逻辑,**不破坏现有 fixture 路由**。
+  override?: CurrentProjectOverride | null,
+): RouteResolution {
   if (pathname === "/") {
     return {
       headerMode: "global",
@@ -212,28 +222,42 @@ export function resolveRoute(pathname: string): RouteResolution {
     const project = canonicalDataset.projects.find(
       (item) => item.id === resolvedProjectId,
     );
-    const identity: TopHeaderProjectIdentity | undefined = project
-      ? {
-          projectId: project.id,
-          title: project.title,
-          stage: project.currentStage,
-          stageProgressPct: project.progressPct,
-          // T-010: 真实「<阶段> · 更新于 …」,派生自 project 真值,无假时间。
-          updatedLabel: [
-            stageLabel(project.currentStage),
-            relativeUpdatedLabel(project.updatedAt),
-          ]
-            .filter(Boolean)
-            .join(" · "),
-          brief: project.brief,
-          starred: project.starred,
-        }
-      : undefined;
+    // T-039b item②:真项目标题优先级 —— override(server 读真值)> fixture project.title > 中性态。
+    // override 仅在 URL 段与它匹配时采信(它就是据本 pathname 的 projectId 在 layout 里解析出来的,
+    // 但多加一道 routeParam 校验,防串味)。有真标题 → header + 左下角指示器都显真名,不再退中性。
+    const overrideTitle =
+      override && override.routeParam === projectId ? override.title.trim() : "";
+    const realTitle = overrideTitle || project?.title || "";
+    const identity: TopHeaderProjectIdentity | undefined =
+      project || realTitle
+        ? {
+            projectId: project?.id ?? resolvedProjectId,
+            title: realTitle || "项目",
+            stage: project?.currentStage ?? "research",
+            stageProgressPct: project?.progressPct ?? 0,
+            // T-010: 真实「<阶段> · 更新于 …」,派生自 fixture project 真值(有则);override 只带
+            // 标题(shell 指示器/header 主要需要它),阶段/时间等仍走 fixture 兜底,无 fixture 则空串
+            // (header 用 `updatedLabel ? … : "最近更新 —"` 兜底,不摆假时间)。
+            updatedLabel: project
+              ? [
+                  stageLabel(project.currentStage),
+                  relativeUpdatedLabel(project.updatedAt),
+                ]
+                  .filter(Boolean)
+                  .join(" · ")
+              : "",
+            ...(project?.brief ? { brief: project.brief } : {}),
+            starred: project?.starred ?? false,
+          }
+        : undefined;
+
+    // 左下角指示器 + header 的标题:真标题优先,否则维持中性「当前项目」/「项目概览」。
+    const sidebarLabel = realTitle || "当前项目";
 
     if (!stage) {
       return {
         headerMode: "project-overview",
-        pageTitle: project?.title ?? "项目概览",
+        pageTitle: realTitle || "项目概览",
         contextualCardVariant: "assistant",
         project: identity,
         primaryActionLabel: "进入工作台",
@@ -243,7 +267,7 @@ export function resolveRoute(pathname: string): RouteResolution {
           items: [
             {
               id: projectId,
-              label: project?.title ?? "当前项目",
+              label: sidebarLabel,
               href: pathname,
               indicator: "active",
             },
@@ -253,7 +277,7 @@ export function resolveRoute(pathname: string): RouteResolution {
     }
     return {
       headerMode: "project-workspace",
-      pageTitle: project?.title,
+      pageTitle: realTitle || undefined,
       contextualCardVariant: "assistant",
       project: identity,
       projectStages: buildProjectStages(stage),
@@ -264,7 +288,7 @@ export function resolveRoute(pathname: string): RouteResolution {
         items: [
           {
             id: projectId,
-            label: project?.title ?? "当前项目",
+            label: sidebarLabel,
             href: `/projects/${projectId}`,
             indicator: "active",
           },
@@ -361,7 +385,10 @@ export function ShellRouter({
   overlayMasked = false,
 }: ShellRouterProps) {
   const pathname = usePathname() ?? "/";
-  const resolution = resolveRoute(pathname);
+  // T-039b item②:项目路由下读真项目 identity(由 projects/[projectId]/layout.tsx 灌进 context)。
+  // 非项目路由无 Provider → null → resolveRoute 走原 fixture 逻辑(向后兼容,不破坏现有路由)。
+  const projectOverride = useCurrentProjectOverride();
+  const resolution = resolveRoute(pathname, projectOverride);
 
   return (
     <AppShell

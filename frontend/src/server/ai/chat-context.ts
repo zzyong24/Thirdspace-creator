@@ -112,16 +112,23 @@ export function applyFunctionKey(
  * 数据层注入(SPEC §3.2 第 3 层)—— 把装配好的 CreativeContext facets 拼成给模型的 system
  * 上下文块,接到 skill 的 system(角色/方法论)后面。只拼**非空** facet(空的不喂噪声)。
  *
- * 本切片接通的 facets:定位(positioning)、过往复盘爆款要素(learnings)、受众信号(signals,
+ * 通用接通的 facets:定位(positioning)、过往复盘爆款要素(learnings)、受众信号(signals,
  * 即数据底座真实评论)、知识库(knowledge)。这正是选题编导出题要立足的真实记忆。
- * (其余 facet 由后续 surface 的 skill 按需接;此处不喂与选题无关的噪声。)
+ *
+ * T-039b per-action 注入矩阵补齐:`accountsBrief`(抖音账号画像)是**定位对话专属**的 facet
+ * ——定位提案要立足「这个人在平台上已经是谁」(平台/账号/粉丝量),而出题/复盘/校准不需要它。
+ * 故它作为**可选 opts** 传入(默认不注,不给其它 surface 塞账号噪声),仅 positioning surface
+ * 的装配点显式传 `{ includeAccounts: true }`(见 chat-runner)。空 accountsBrief 仍不注入(诚实)。
  */
 export function assembleChatSystem(
   skillSystem: string,
+  // accountsBrief 可选(仅 includeAccounts 时读)—— 其它已有调用方(只传 4 个 facet)仍类型通过。
   context: Pick<
     CreativeContext,
     "positioningBrief" | "learningsBrief" | "signalsBrief" | "knowledgeBrief"
-  >,
+  > &
+    Partial<Pick<CreativeContext, "accountsBrief">>,
+  opts?: { includeAccounts?: boolean },
 ): string {
   const blocks: string[] = [skillSystem.trim()];
 
@@ -131,6 +138,10 @@ export function assembleChatSystem(
   };
 
   facet("创作者定位", context.positioningBrief);
+  // 账号画像仅定位对话注入(includeAccounts)—— 定位提案的立足点;其它 surface 不注(避免噪声)。
+  if (opts?.includeAccounts) {
+    facet("抖音账号画像(平台/账号/粉丝量)", context.accountsBrief ?? "");
+  }
   facet("过往复盘爆款要素", context.learningsBrief);
   facet("受众信号(真实评论/咨询)", context.signalsBrief);
   facet("可依托的知识库资料", context.knowledgeBrief);

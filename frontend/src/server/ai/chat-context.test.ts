@@ -95,6 +95,49 @@ describe("assembleChatSystem — 数据层(facets → system)", () => {
     expect(sys).toContain("【可依托的知识库资料】");
     expect(sys).toContain("一条知识");
   });
+
+  it("T-039b:includeAccounts=true 且 accountsBrief 非空 → 注入账号画像块(定位对话专属)", () => {
+    const sys = assembleChatSystem(
+      base,
+      {
+        positioningBrief: "",
+        learningsBrief: "",
+        signalsBrief: "",
+        knowledgeBrief: "",
+        accountsBrief: "· douyin | @硬核老王 | 粉丝 12000",
+      },
+      { includeAccounts: true },
+    );
+    expect(sys).toContain("【抖音账号画像");
+    expect(sys).toContain("@硬核老王");
+  });
+
+  it("T-039b:默认(无 opts)不注入账号画像 —— 其它 surface 不塞账号噪声", () => {
+    const sys = assembleChatSystem(base, {
+      positioningBrief: "",
+      learningsBrief: "",
+      signalsBrief: "",
+      knowledgeBrief: "",
+      accountsBrief: "· douyin | @硬核老王 | 粉丝 12000",
+    });
+    expect(sys).not.toContain("抖音账号画像");
+    expect(sys).not.toContain("@硬核老王");
+  });
+
+  it("T-039b:includeAccounts=true 但 accountsBrief 空 → 不注入(诚实,不摆空块)", () => {
+    const sys = assembleChatSystem(
+      base,
+      {
+        positioningBrief: "",
+        learningsBrief: "",
+        signalsBrief: "",
+        knowledgeBrief: "",
+        accountsBrief: "  ",
+      },
+      { includeAccounts: true },
+    );
+    expect(sys).toBe(base);
+  });
 });
 
 describe("assembleSelectionContext(T-027 选中态注入)", () => {

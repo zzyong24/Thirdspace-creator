@@ -188,6 +188,43 @@ describe("buildChatAssembly — 三层注入装配", () => {
     ]);
   });
 
+  it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {
+    const { deps } = makeDeps({
+      accounts: {
+        list: async () => [
+          {
+            platform: "douyin",
+            accountHandle: "@硬核老王",
+            followerBaseline: 12000,
+          },
+        ],
+      },
+    } as Partial<AssembleChatDeps>);
+    const a = await buildChatAssembly(ctx, { surface: "positioning" }, deps);
+    // 账号画像块 + 真账号数据注入(仅定位对话)。
+    expect(a.system).toContain("抖音账号画像");
+    expect(a.system).toContain("@硬核老王");
+    expect(a.system).toContain("12000");
+  });
+
+  it("T-039b:surface=topics(非定位)→ 不注入账号画像(避免给其它 surface 塞账号噪声)", async () => {
+    const { deps } = makeDeps({
+      accounts: {
+        list: async () => [
+          {
+            platform: "douyin",
+            accountHandle: "@硬核老王",
+            followerBaseline: 12000,
+          },
+        ],
+      },
+    } as Partial<AssembleChatDeps>);
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    // 出题对话不该出现账号画像块(它只属于定位对话)。
+    expect(a.system).not.toContain("抖音账号画像");
+    expect(a.system).not.toContain("@硬核老王");
+  });
+
   it("surface=review → chatbox.review skill + 只挂 review.analyze(收紧:不挂 context.projects/knowledge/materials,防拉全作品标题凑数)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
