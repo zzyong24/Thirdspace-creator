@@ -47,6 +47,9 @@ vi.mock("@/lib/contract-client", () => ({
     putModel: vi.fn().mockResolvedValue({}),
     patchProfile: vi.fn().mockResolvedValue({}),
     putStorage: vi.fn().mockResolvedValue({}),
+    // AccountBindingCard (T-032a) pulls status on mount + calls loginDouyin on click.
+    statusDouyin: vi.fn().mockResolvedValue({ loggedIn: false }),
+    loginDouyin: vi.fn().mockResolvedValue({ loggedIn: true }),
   },
 }));
 
@@ -125,6 +128,7 @@ function buildStubViewModel(): SettingsViewModel {
         hasSecret: false,
       },
     },
+    douyinAccount: { loggedIn: false },
   };
 }
 

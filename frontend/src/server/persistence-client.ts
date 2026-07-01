@@ -161,6 +161,7 @@ import * as nodePath from "node:path";
 import {
   fetchDouyinMetrics,
   loginDouyin,
+  checkDouyinStatus,
   fetchDouyinComments,
   ingestComments,
   DouyinNotLoggedInError,
@@ -1251,6 +1252,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         }),
       login: () =>
         loginDouyin({
+          authDir:
+            process.env.CREATOROS_DOUYIN_AUTH_DIR ??
+            nodePath.join(process.cwd(), ".auth", "douyin"),
+        }),
+      // T-032a:被动状态探针 —— headless 快查登录态(不弹窗),设置页「账号绑定」徽标读它。
+      status: () =>
+        checkDouyinStatus({
           authDir:
             process.env.CREATOROS_DOUYIN_AUTH_DIR ??
             nodePath.join(process.cwd(), ".auth", "douyin"),

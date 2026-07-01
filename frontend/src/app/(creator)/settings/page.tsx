@@ -172,6 +172,12 @@ export default async function SettingsRoutePage() {
     }
   }
 
+  // 抖音登录状态(ingestion.douyin.status)故意**不在 SSR 读**:该被动探针会 headless 起
+  // Chromium 查 cookie(见 douyin-cdp.checkDouyinStatus),放到 SSR 会让每次打开设置页都
+  // spawn 一个浏览器、阻塞 RSC、且在无 Playwright/.auth 的环境直接抛错。改由客户端的
+  // AccountBindingCard 挂载后拉 status(见 settings-interactive-region.tsx),SSR 默认徽标
+  // 走 fixture 的「未连接」(诚实兜底,绝不假装已连接)。故这里不传 douyinAccount。
+
   return (
     <SettingsPage
       identity={identity}

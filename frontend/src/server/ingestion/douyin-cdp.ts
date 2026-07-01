@@ -556,6 +556,23 @@ async function isLoggedIn(
 }
 
 /**
+ * 被动状态探针(T-032a):headless 起 context 快查 .auth/ 里的 sessionid cookie,**不弹窗**、
+ * 不导航抓取。设置页「账号绑定」卡据此显「已连接/未连接」徽标。cookie 失效(登录态过期)即返
+ * false —— .auth/ 目录只是持久 profile,存在≠有效登录,故 false 同时覆盖「未连接」与「已过期」。
+ * 仅在用户机器上跑;测试经 service 层注入 fake 的 `status()` 端口,不连真浏览器。
+ */
+export async function checkDouyinStatus(opts: {
+  authDir: string;
+}): Promise<boolean> {
+  const ctx = await openContext(opts.authDir, true);
+  try {
+    return await isLoggedIn(ctx);
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
+  }
+}
+
+/**
  * 登录:headed 弹 Chromium 窗口让用户扫码;轮询 sessionid cookie,检测到即成功(落 .auth/)。
  * 仅在用户机器上跑(server 弹窗)。返回是否登录成功。
  */

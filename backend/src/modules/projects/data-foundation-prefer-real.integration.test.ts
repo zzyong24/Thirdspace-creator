@@ -68,6 +68,7 @@ function wire(db: Db, records: MetricRecord[]) {
   const douyinFetch: DouyinFetchPort = {
     fetch: async () => records,
     login: async () => true,
+    status: async () => true,
   };
 
   const ingestionService = createIngestionService({

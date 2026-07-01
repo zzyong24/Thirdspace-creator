@@ -42,6 +42,16 @@ export const ingestionOperations = {
     response: z.object({ loggedIn: z.boolean() }),
     fr: ["FR-INGESTION-DOUYIN"],
   }),
+  // 抖音登录态被动探针(T-032a):headless 快查 .auth/ 里 sessionid cookie,不弹窗。
+  // 设置页「账号绑定」卡据此显「已连接/未连接」徽标;loggedIn=false 亦覆盖「登录态已过期」场景
+  // (.auth/ 目录存在≠有效登录 —— cookie 失效即 false,引导重新扫码)。
+  statusDouyin: defineEndpoint({
+    id: "ingestion.douyin.status",
+    method: "GET",
+    path: "/ingestion/douyin/status",
+    response: z.object({ loggedIn: z.boolean() }),
+    fr: ["FR-INGESTION-DOUYIN"],
+  }),
   pushMetrics: defineEndpoint({
     id: "ingestion.runs.metrics",
     method: "POST",

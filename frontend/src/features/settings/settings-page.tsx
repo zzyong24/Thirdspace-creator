@@ -95,6 +95,14 @@ export interface SettingsPageProps {
    * instead of the (unconfigured) fixture default. Omitted in unit tests.
    */
   readonly multimodalModels?: MultimodalModelsState;
+  /**
+   * Real抖音 login status (read by the `(creator)/settings` route via
+   * `ingestion.douyin.status` — a headless cookie probe, no popup). When supplied,
+   * the AccountBindingCard's badge reflects the real connected/expired state instead
+   * of the fixture default (未连接). Omitted in unit tests, which inject the full
+   * `viewModel` directly.
+   */
+  readonly douyinAccount?: DouyinAccountState;
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */
@@ -120,6 +128,19 @@ export interface SettingsViewModel {
    * AI-generate can use the user's own provider/key; unconfigured = honestly disabled.
    */
   readonly multimodalModels: MultimodalModelsState;
+  /**
+   * 抖音账号绑定状态(T-032a)。设置页「账号绑定」卡据此显「已连接/未连接」徽标 + 扫码按钮。
+   * `loggedIn=false` 同时覆盖「未连接」与「登录态已过期」两态(.auth/ profile 目录存在≠有效登录,
+   * cookie 失效即 false → 引导重新扫码)。初始值由 route SSR 读 `ingestion.douyin.status` 得(读失败
+   * 退回未连接);点击「连接抖音(扫码)」走 `client.loginDouyin({})` 后客户端重拉 status 刷新徽标。
+   */
+  readonly douyinAccount: DouyinAccountState;
+}
+
+/** 抖音账号绑定状态段(T-032a)。 */
+export interface DouyinAccountState {
+  /** 被动探针 `ingestion.douyin.status` 的结果:是否有有效登录态(sessionid cookie 存在)。 */
+  readonly loggedIn: boolean;
 }
 
 export interface AccountInformation {
@@ -273,14 +294,18 @@ export function SettingsPage({
   model,
   storage,
   multimodalModels,
+  douyinAccount,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
   const withModel = model ? { ...withIdentity, model } : withIdentity;
   const withStorage = storage ? { ...withModel, storage } : withModel;
-  const vm = multimodalModels
+  const withMultimodal = multimodalModels
     ? { ...withStorage, multimodalModels }
     : withStorage;
+  const vm = douyinAccount
+    ? { ...withMultimodal, douyinAccount }
+    : withMultimodal;
   // 设置改弹窗式:页面本身只留一个 marker (供 shell-router 路由 + 测试定位),
   // 真正的内容是浮在其上的居中大弹窗 (SettingsDialog,Radix Portal 到 body)。
   // 弹窗默认打开,关闭 → router.back() 回上一页。背景仍是 (creator) 的 AppShell

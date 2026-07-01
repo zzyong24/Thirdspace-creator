@@ -23,6 +23,7 @@ export const INGESTION_OP_IDS = [
   "ingestion.runs.create",
   "ingestion.douyin.refresh",
   "ingestion.douyin.login",
+  "ingestion.douyin.status",
   "ingestion.runs.metrics",
   "ingestion.runs.knowledge",
   "ingestion.runs.assets",
@@ -93,6 +94,10 @@ export function createIngestionTransport(
         }
         case "ingestion.douyin.login": {
           const result = await service.loginDouyin(ctx);
+          return { data: result, meta };
+        }
+        case "ingestion.douyin.status": {
+          const result = await service.checkDouyinStatus(ctx);
           return { data: result, meta };
         }
         case "ingestion.runs.metrics": {

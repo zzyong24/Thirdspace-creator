@@ -19,6 +19,15 @@ const mockClient = {
   putModel: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   patchProfile: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   putStorage: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
+  // AccountBindingCard (T-032a): status pull on mount + loginDouyin on click.
+  statusDouyin: vi.fn(
+    (_input: unknown): Promise<{ loggedIn: boolean }> =>
+      Promise.resolve({ loggedIn: false }),
+  ),
+  loginDouyin: vi.fn(
+    (_input: unknown): Promise<{ loggedIn: boolean }> =>
+      Promise.resolve({ loggedIn: true }),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -26,6 +35,8 @@ vi.mock("@/lib/contract-client", () => ({
     putModel: (input: unknown) => mockClient.putModel(input),
     patchProfile: (input: unknown) => mockClient.patchProfile(input),
     putStorage: (input: unknown) => mockClient.putStorage(input),
+    statusDouyin: (input: unknown) => mockClient.statusDouyin(input),
+    loginDouyin: (input: unknown) => mockClient.loginDouyin(input),
   },
 }));
 
@@ -93,6 +104,7 @@ const VM: SettingsViewModel = {
       hasSecret: false,
     },
   },
+  douyinAccount: { loggedIn: false },
 };
 
 beforeEach(() => {
@@ -101,6 +113,10 @@ beforeEach(() => {
   mockClient.putModel.mockClear();
   mockClient.patchProfile.mockClear();
   mockClient.putStorage.mockClear();
+  mockClient.statusDouyin.mockClear();
+  mockClient.statusDouyin.mockResolvedValue({ loggedIn: false });
+  mockClient.loginDouyin.mockClear();
+  mockClient.loginDouyin.mockResolvedValue({ loggedIn: true });
 });
 
 afterEach(() => cleanup());
@@ -478,5 +494,128 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       }),
     );
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AccountBindingCard — 账号绑定 / 抖音扫码登录入口 + 连接状态徽标 (T-032a)
+// ---------------------------------------------------------------------------
+
+describe("AccountBindingCard (T-032a — 抖音扫码登录入口 + 徽标)", () => {
+  it("已连接(status → loggedIn=true): 显「已连接」徽标 + 「重新扫码」按钮", async () => {
+    // 挂载后拉的 status 决定徽标(SSR 默认为 false;探针返 true → 翻已连接)。
+    mockClient.statusDouyin.mockResolvedValue({ loggedIn: true });
+    const doc = renderDialog();
+
+    const badge = doc.querySelector(
+      '[data-slot="douyin-binding-status"]',
+    ) as HTMLElement;
+    const action = doc.querySelector(
+      '[data-slot="douyin-binding-action"]',
+    ) as HTMLButtonElement;
+    expect(badge).not.toBeNull();
+    expect(action).not.toBeNull();
+
+    // 挂载 effect 把徽标翻真(已连接)+ 按钮文案转「重新扫码」。
+    await waitFor(() =>
+      expect(badge.getAttribute("data-connected")).toBe("true"),
+    );
+    expect(badge.textContent).toContain("已连接");
+    expect(action.textContent).toContain("重新扫码");
+  });
+
+  it("未连接(status → loggedIn=false): 显「未连接」徽标 + 「连接抖音(扫码)」按钮", async () => {
+    mockClient.statusDouyin.mockResolvedValue({ loggedIn: false });
+    const doc = renderDialog();
+
+    const badge = doc.querySelector(
+      '[data-slot="douyin-binding-status"]',
+    ) as HTMLElement;
+    const action = doc.querySelector(
+      '[data-slot="douyin-binding-action"]',
+    ) as HTMLButtonElement;
+    // 探针跑完(mount effect 已 resolve),徽标为未连接。
+    await waitFor(() => expect(mockClient.statusDouyin).toHaveBeenCalled());
+    expect(badge.getAttribute("data-connected")).toBe("false");
+    expect(badge.textContent).toContain("未连接");
+    expect(action.textContent).toContain("连接抖音");
+  });
+
+  it("点「连接抖音」→ loginDouyin({}) → 重拉 status → 徽标转已连接(loading 态存在)", async () => {
+    // 初始未连接;点击后 loginDouyin 返 true,随后重拉 status 也返 true → 徽标翻已连接。
+    mockClient.statusDouyin.mockResolvedValue({ loggedIn: false });
+    mockClient.loginDouyin.mockResolvedValue({ loggedIn: true });
+    const doc = renderDialog();
+
+    const badge = doc.querySelector(
+      '[data-slot="douyin-binding-status"]',
+    ) as HTMLElement;
+    const action = doc.querySelector(
+      '[data-slot="douyin-binding-action"]',
+    ) as HTMLButtonElement;
+
+    // 等 mount 探针跑完(未连接),再让重拉 status 返 true(扫码成功后的确认)。
+    await waitFor(() => expect(mockClient.statusDouyin).toHaveBeenCalledTimes(1));
+    mockClient.statusDouyin.mockResolvedValue({ loggedIn: true });
+
+    fireEvent.click(action);
+
+    // loading 态:`setPhase("scanning")` 在点击处理器里同步执行,fireEvent 已 flush,
+    // 故点击后当帧按钮即 disabled + 「扫码中…请在弹出的 Chrome 窗口扫码」引导文案已在(异步
+    // login/status resolve 后相位才推进,故在同步点这一帧断言 scanning 态最稳)。
+    expect(action.disabled).toBe(true);
+    expect(
+      doc.querySelector('[data-slot="douyin-binding-scanning"]'),
+    ).not.toBeNull();
+
+    // 复用现成 loginDouyin(空 body)。
+    await waitFor(() => expect(mockClient.loginDouyin).toHaveBeenCalledTimes(1));
+    expect(mockClient.loginDouyin).toHaveBeenCalledWith(
+      expect.objectContaining({ body: {} }),
+    );
+
+    // 扫码成功 → 重拉 status(第 2 次)确认 → 徽标转已连接 + 成功反馈。
+    await waitFor(() =>
+      expect(mockClient.statusDouyin).toHaveBeenCalledTimes(2),
+    );
+    await waitFor(() =>
+      expect(badge.getAttribute("data-connected")).toBe("true"),
+    );
+    expect(badge.textContent).toContain("已连接");
+    const feedback = doc.querySelector('[data-slot="douyin-binding-feedback"]');
+    expect(feedback?.getAttribute("data-tone")).toBe("success");
+    // loading 态收尾:按钮恢复可点。
+    await waitFor(() => expect(action.disabled).toBe(false));
+  });
+
+  it("扫码超时(loginDouyin → loggedIn=false): 提示重试, 徽标保持未连接", async () => {
+    mockClient.statusDouyin.mockResolvedValue({ loggedIn: false });
+    mockClient.loginDouyin.mockResolvedValue({ loggedIn: false });
+    const doc = renderDialog();
+
+    const badge = doc.querySelector(
+      '[data-slot="douyin-binding-status"]',
+    ) as HTMLElement;
+    const action = doc.querySelector(
+      '[data-slot="douyin-binding-action"]',
+    ) as HTMLButtonElement;
+    await waitFor(() => expect(mockClient.statusDouyin).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(action);
+
+    await waitFor(() => expect(mockClient.loginDouyin).toHaveBeenCalledTimes(1));
+    // 超时 → 不重拉 status(仍只 1 次),徽标保持未连接 + 错误反馈。
+    const feedback = doc.querySelector('[data-slot="douyin-binding-feedback"]');
+    await waitFor(() =>
+      expect(
+        doc
+          .querySelector('[data-slot="douyin-binding-feedback"]')
+          ?.getAttribute("data-tone"),
+      ).toBe("error"),
+    );
+    expect(feedback ?? doc.querySelector('[data-slot="douyin-binding-feedback"]'))
+      .not.toBeNull();
+    expect(badge.getAttribute("data-connected")).toBe("false");
+    expect(mockClient.statusDouyin).toHaveBeenCalledTimes(1);
   });
 });

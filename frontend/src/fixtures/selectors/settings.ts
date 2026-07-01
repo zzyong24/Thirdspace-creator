@@ -91,6 +91,13 @@ export function buildSettingsViewModel(): SettingsViewModel {
         hasSecret: false,
       },
     },
+    // 抖音账号绑定状态 (T-032a). Default unconnected — the real status is read by
+    // the (creator)/settings route via `ingestion.douyin.status` and overlaid onto
+    // this VM. The AccountBindingCard then shows「未连接」+「连接抖音(扫码)」until
+    // the user scans and a valid sessionid cookie exists.
+    douyinAccount: {
+      loggedIn: false,
+    },
   };
 }
 

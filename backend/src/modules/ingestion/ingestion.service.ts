@@ -127,6 +127,8 @@ export interface IngestionPorts {
 export interface DouyinFetchPort {
   fetch(opts: { capturedAt: string }): Promise<MetricRecord[]>;
   login(): Promise<boolean>;
+  // 被动探针(T-032a):headless 快查登录态,不弹窗。设置页「账号绑定」徽标读它。
+  status(): Promise<boolean>;
 }
 
 export interface ServiceDeps {
@@ -185,6 +187,9 @@ export interface IngestionService {
   ): Promise<IngestionRunRow>;
   // 抖音扫码登录:弹 Chromium 窗口让用户扫码,落 .auth/ 持久化,返回是否成功(供 refresh 复用)。
   loginDouyin(ctx: RequestContext): Promise<{ loggedIn: boolean }>;
+  // 抖音登录态被动探针(T-032a):headless 快查 sessionid cookie(不弹窗),返回是否有效登录。
+  // 设置页「账号绑定」徽标读它;false 覆盖「未连接」与「登录态已过期」两态(cookie 失效即 false)。
+  checkDouyinStatus(ctx: RequestContext): Promise<{ loggedIn: boolean }>;
 }
 
 export function createIngestionService(args: {
@@ -497,6 +502,15 @@ export function createIngestionService(args: {
       }
       // 弹 Chromium 窗口扫码;成功后登录态落 .auth/,后续 refreshDouyin 直接 headless 复用。
       const loggedIn = await douyinFetch.login();
+      return { loggedIn };
+    },
+
+    async checkDouyinStatus() {
+      if (!douyinFetch) {
+        throw new Error("抖音抓取端口未配置(douyinFetch)");
+      }
+      // headless 快查 .auth/ 里的 sessionid cookie(不弹窗);cookie 失效即 false(登录态过期)。
+      const loggedIn = await douyinFetch.status();
       return { loggedIn };
     },
   };

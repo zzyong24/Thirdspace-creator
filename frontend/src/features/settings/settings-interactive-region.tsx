@@ -59,10 +59,16 @@ import {
   Palette,
   Cpu,
   HardDrive,
+  Link2,
+  QrCode,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
   type LucideIcon,
 } from "lucide-react";
 
 import type {
+  DouyinAccountState,
   MultimodalModelState,
   SettingsViewModel,
 } from "./settings-page";
@@ -273,6 +279,7 @@ export function SettingsDialog({
             <SettingsPanel tabId="account" active={tab}>
               <div data-slot="main-settings" className="flex flex-col gap-card-gap">
                 <AccountInformationCard viewModel={viewModel} />
+                <AccountBindingCard douyinAccount={viewModel.douyinAccount} />
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="preferences" active={tab}>
@@ -473,6 +480,253 @@ function AccountInformationCard({
             aria-readonly="true"
           />
         </SettingsFormRow>
+      </div>
+    </SectionCard>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// AccountBindingCard — 账号绑定 / 抖音扫码登录入口 + 连接状态徽标 (T-032a)
+// ---------------------------------------------------------------------------
+//
+// 用户真机测的头号缺口:此前唯一的抖音登录入口在 automations 页的 needs_reconnect 行,
+// 没有主动的初次绑定入口。本卡在设置页给一个显式的「连接抖音(扫码)」按钮 + 连接状态徽标。
+//
+// 徽标据被动探针 `ingestion.douyin.status`(headless 查 sessionid cookie,不弹窗)的
+// loggedIn:
+//   - true  → 「已连接」(绿)+ 按钮「重新扫码」
+//   - false → 「未连接」(灰)+ 按钮「连接抖音(扫码)」;.auth/ profile 存在≠有效登录
+//             (cookie 失效即 false),故 false 同时是「登录态已过期,请重新扫码」的载体。
+//
+// 点击扫码 → `client.loginDouyin({})`(复用 automations 现成 headed 扫码链,零新 op):
+//   期间显 loading 态「扫码中…请在弹出的 Chrome 窗口扫码(最多 4 分钟)」(仿 automations
+//   loginPhase);返回 {loggedIn:true} → 重新拉 `ingestion.douyin.status` → 徽标转「已连接」+
+//   成功提示;{loggedIn:false}(超时)→ 提示「未检测到登录,请重试」。
+//
+// 诚实(铁律):headed 扫码是真弹本机 Chromium,前端只发起 + 据结果推进,绝不假装登录过。真扫码
+// 端到端(DATA-2)卡用户;此卡的 UI/dispatch 接线已就绪,单测用 mock client 覆盖点击→拉态闭环。
+
+type BindingPhase = "idle" | "scanning" | "refreshing";
+type BindingFeedback =
+  | { kind: "none" }
+  | { kind: "success"; text: string }
+  | { kind: "error"; text: string };
+
+function AccountBindingCard({
+  douyinAccount,
+}: {
+  douyinAccount: DouyinAccountState;
+}) {
+  const router = useRouter();
+  // 初始徽标取 SSR 默认(未连接);挂载后客户端拉真 status 覆盖。放到客户端而非 SSR 是刻意的:
+  // status 是 headless 起 Chromium 的被动探针,SSR 读会让每次开设置页都 spawn 浏览器 + 阻塞
+  // 渲染,故挪到 useEffect 异步拉,徽标先显 SSR 兜底再翻真。
+  const [loggedIn, setLoggedIn] = React.useState<boolean>(douyinAccount.loggedIn);
+  const [phase, setPhase] = React.useState<BindingPhase>("idle");
+  const [feedback, setFeedback] = React.useState<BindingFeedback>({
+    kind: "none",
+  });
+
+  // SSR 值变化(切账号 / 首次水合)时同步徽标。
+  React.useEffect(() => {
+    setLoggedIn(douyinAccount.loggedIn);
+  }, [douyinAccount.loggedIn]);
+
+  // 挂载后拉一次真 status(不弹窗,headless 探针),把 SSR 兜底徽标翻真。探针失败(无
+  // 浏览器 / transport race)静默保持 SSR 值(未连接),不误显已连接。
+  React.useEffect(() => {
+    let alive = true;
+    void (async () => {
+      try {
+        const status = (await client.statusDouyin({
+          params: undefined,
+          query: undefined,
+          body: undefined,
+        })) as { loggedIn?: boolean };
+        if (alive && typeof status.loggedIn === "boolean") {
+          setLoggedIn(status.loggedIn);
+        }
+      } catch {
+        // 探针失败 → 保持 SSR 兜底(未连接),诚实不误报。
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const busy = phase !== "idle";
+
+  // 点击扫码:弹 headed Chromium 让用户扫码 → 成功后重拉 status 刷新徽标。
+  const connect = React.useCallback(() => {
+    if (busy) return;
+    setPhase("scanning");
+    setFeedback({ kind: "none" });
+    void (async () => {
+      try {
+        const res = (await client.loginDouyin({
+          params: undefined,
+          query: undefined,
+          body: {},
+        })) as { loggedIn?: boolean };
+        if (res.loggedIn) {
+          // 登录成功 → 重新拉被动 status 确认徽标(以探针为准,不盲信 login 返回)。
+          setPhase("refreshing");
+          let confirmed = true;
+          try {
+            const status = (await client.statusDouyin({
+              params: undefined,
+              query: undefined,
+              body: undefined,
+            })) as { loggedIn?: boolean };
+            confirmed = status.loggedIn ?? true;
+          } catch {
+            // status 探针失败(transport race)→ 信任 login 的成功返回。
+            confirmed = true;
+          }
+          setLoggedIn(confirmed);
+          setFeedback({
+            kind: "success",
+            text: confirmed
+              ? "抖音已连接。"
+              : "已扫码,但未检测到有效登录态,请重试。",
+          });
+          router.refresh();
+        } else {
+          // 超时(240s 内未扫)→ 明确提示重试,徽标保持未连接。
+          setFeedback({
+            kind: "error",
+            text: "未检测到登录,请重试(需在弹出的 Chrome 窗口内扫码)。",
+          });
+        }
+      } catch {
+        setFeedback({
+          kind: "error",
+          text: "扫码登录失败,请重试。",
+        });
+      } finally {
+        setPhase("idle");
+      }
+    })();
+  }, [busy, router]);
+
+  const buttonLabel = busy
+    ? phase === "scanning"
+      ? "扫码中…"
+      : "确认登录态…"
+    : loggedIn
+      ? "重新扫码"
+      : "连接抖音(扫码)";
+
+  return (
+    <SectionCard
+      title="账号绑定"
+      description="连接平台账号,供采集作品数据 / 评论使用"
+      action={
+        loggedIn ? (
+          <Badge
+            data-slot="douyin-binding-status"
+            data-connected="true"
+            variant="outline"
+            className="border-success/40 bg-success-soft text-success"
+          >
+            已连接
+          </Badge>
+        ) : (
+          <Badge
+            data-slot="douyin-binding-status"
+            data-connected="false"
+            variant="outline"
+            className="border-border bg-surface-subtle text-muted-foreground"
+          >
+            未连接
+          </Badge>
+        )
+      }
+    >
+      <div
+        data-slot="account-binding-card"
+        className="flex flex-col gap-3"
+      >
+        <div
+          data-slot="douyin-binding-row"
+          className="flex items-center gap-3 rounded-md border border-border bg-surface-subtle p-3"
+        >
+          <div
+            aria-hidden="true"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"
+          >
+            <Link2 className="size-5" />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="text-sm font-medium text-foreground">抖音</span>
+            <span
+              data-slot="douyin-binding-hint"
+              className={cn(
+                "text-xs",
+                loggedIn ? "text-success" : "text-muted-foreground",
+              )}
+            >
+              {loggedIn
+                ? "登录态有效,可采集你的作品数据与评论。"
+                : "登录态已过期或未连接,请扫码登录以采集数据。"}
+            </span>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant={loggedIn ? "outline" : "default"}
+            data-slot="douyin-binding-action"
+            disabled={busy}
+            onClick={connect}
+            title={
+              loggedIn
+                ? "重新扫码登录抖音(弹本机 Chrome 窗口)"
+                : "连接抖音 —— 点此弹本机 Chrome 窗口扫码登录"
+            }
+          >
+            {busy ? (
+              <Loader2
+                aria-hidden="true"
+                className="size-4 shrink-0 animate-spin"
+              />
+            ) : (
+              <QrCode aria-hidden="true" className="size-4 shrink-0" />
+            )}
+            {buttonLabel}
+          </Button>
+        </div>
+
+        {/* 扫码进行中的引导态(仿 automations loginPhase):真弹本机 Chrome,前端不假装。 */}
+        {phase === "scanning" ? (
+          <p
+            data-slot="douyin-binding-scanning"
+            className="text-xs text-muted-foreground"
+          >
+            扫码中…请在弹出的 Chrome 窗口扫码(最多 4 分钟)。
+          </p>
+        ) : null}
+
+        {/* 结果反馈(成功 / 失败),就地显示(本仓无 toast 系统,沿用 automations 内联相位反馈)。 */}
+        {feedback.kind === "success" ? (
+          <p
+            data-slot="douyin-binding-feedback"
+            data-tone="success"
+            className="flex items-center gap-1.5 text-xs text-success"
+          >
+            <CheckCircle2 aria-hidden="true" className="size-3.5 shrink-0" />
+            {feedback.text}
+          </p>
+        ) : feedback.kind === "error" ? (
+          <p
+            data-slot="douyin-binding-feedback"
+            data-tone="error"
+            className="flex items-center gap-1.5 text-xs text-destructive"
+          >
+            <AlertCircle aria-hidden="true" className="size-3.5 shrink-0" />
+            {feedback.text}
+          </p>
+        ) : null}
       </div>
     </SectionCard>
   );

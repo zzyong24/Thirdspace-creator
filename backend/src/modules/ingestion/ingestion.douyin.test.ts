@@ -33,6 +33,7 @@ function makeService(db: Db, records: MetricRecord[], cap: Cap) {
       return records;
     },
     login: async () => true,
+    status: async () => true,
   };
   return createIngestionService({
     deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
@@ -137,5 +138,48 @@ describe("ingestion.refreshDouyin — 抖音真抓落库 (线 B)", () => {
     await expect(
       svc.refreshDouyin(ctx, { externalSourceId: "src-mock" }),
     ).rejects.toThrow();
+  });
+});
+
+// T-032a 被动状态探针 —— checkDouyinStatus 直穿注入端口的 status()(测试注 fake,不连浏览器),
+// 返回 { loggedIn }。设置页「账号绑定」徽标读它;不建 run、不抓取、不需要 externalSource。
+describe("ingestion.checkDouyinStatus — 抖音登录态被动探针 (T-032a)", () => {
+  function statusService(db: Db, loggedIn: boolean) {
+    let seq = 0;
+    const douyinFetch: DouyinFetchPort = {
+      fetch: async () => [],
+      login: async () => true,
+      status: async () => loggedIn,
+    };
+    return createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
+      db,
+      douyinFetch,
+      ports: {
+        publishing: { resolvePublication: () => Promise.resolve({ id: "pub" }) },
+        analytics: { appendSnapshot: () => Promise.resolve({ created: true }) },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+  }
+
+  it("status() → true ⇒ { loggedIn: true }", async () => {
+    const { db } = await createDb();
+    const svc = statusService(db, true);
+    await expect(svc.checkDouyinStatus(ctx)).resolves.toEqual({
+      loggedIn: true,
+    });
+  });
+
+  it("status() → false ⇒ { loggedIn: false }(未连接 / 登录态过期)", async () => {
+    const { db } = await createDb();
+    const svc = statusService(db, false);
+    await expect(svc.checkDouyinStatus(ctx)).resolves.toEqual({
+      loggedIn: false,
+    });
   });
 });
