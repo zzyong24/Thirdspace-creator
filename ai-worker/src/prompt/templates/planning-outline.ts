@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { PromptTemplate } from "../template";
 
 /**
@@ -6,10 +7,32 @@ import type { PromptTemplate } from "../template";
  * facets 由 CreativeContext 映射:
  *   positioning(必需,调用方已兜底)· contract(已确认的内容合同,选填)· thesis(已搭好的论点树,选填)· topic(本期选题,选填)
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。
+ *
+ * T-025 跨模型健壮性:加 outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底),
+ * 让 MiniMax 也稳定吐可解析结构方案(旧自由文本路径 MiniMax 下常吐不出→parseOutline 返回空→cancelled)。
+ * 各字段 .default("")/.default([]) 让缺字段也过校验;runner 侧再 trim/滤空段,保留原容错。
  */
+export const outlineSchema = z.object({
+  structureType: z.string().default(""),
+  opening: z.string().default(""),
+  sections: z
+    .array(
+      z.object({
+        label: z.string().default(""),
+        intent: z.string().default(""),
+      }),
+    )
+    .default([]),
+  ending: z.string().default(""),
+  cta: z.string().default(""),
+});
+export type OutlineOutput = z.infer<typeof outlineSchema>;
+
 export const PLANNING_OUTLINE_TEMPLATE: PromptTemplate = {
   id: "planning.outline",
-  version: "v1",
+  version: "v2",
+  outputSchema: outlineSchema,
+  tools: [],
   system: "你是这位创作者的「策划 agent」,负责把内容合同 + 论点树落成结构方案。",
   template: `你是这位创作者的「策划 agent」，负责把内容合同 + 论点树落成一份**结构方案**——这是脚本阶段的入口票。
 

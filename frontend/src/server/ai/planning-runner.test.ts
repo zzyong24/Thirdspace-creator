@@ -1,14 +1,15 @@
 import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 
-// 论点树 runner 迁 Vercel SDK 后:不再 mock deps.llm,改 mock ai-worker 的 runTemplatedNode
-// (动态 import 的目标)。runner 解析 model(resolveModelSpec)→ runTemplatedNode 拿 text →
-// 前端 parse + recordCandidate。这里把 runTemplatedNode 打桩成返回固定 text,验证:capability
-// 被正确解析、候选被记录、parse 逻辑(论点树 nodes)仍按约定产出。
-const runTemplatedNode = vi.fn(async () => ({ text: "", steps: [] }));
+// 论点树 runner 迁 runStructuredNode(T-025 跨模型健壮)后:mock ai-worker 的 runStructuredNode
+// (动态 import 的目标),它返回 { object }(已被 outputSchema 校验的结构化对象)。runner 解析 model
+// (resolveModelSpec)→ runStructuredNode 拿 object → normalizeThesisTree + recordCandidate。
+// 这里把 runStructuredNode 打桩成返回固定 object,验证:capability 被正确解析、候选被记录、
+// 归一逻辑(论点树 nodes)仍按约定产出。
+const runStructuredNode = vi.fn(async () => ({ object: {} }));
 vi.mock("@creatoros/ai-worker", () => ({
   modelFor: vi.fn(() => ({}) as never),
-  runTemplatedNode,
+  runStructuredNode,
   PLANNING_THESIS_TEMPLATE: { id: "planning.thesis" },
 }));
 
@@ -16,8 +17,8 @@ import { runPlanningThesis } from "./planning-runner";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 
-function makeDeps(llmText: string) {
-  runTemplatedNode.mockResolvedValue({ text: llmText, steps: [] } as never);
+function makeDeps(treeObject: Record<string, unknown>) {
+  runStructuredNode.mockResolvedValue({ object: treeObject } as never);
   const recordCandidate = vi.fn(
     async (
       _ctx: RequestContext,
@@ -60,10 +61,13 @@ function makeDeps(llmText: string) {
   };
 }
 
-describe("runPlanningThesis (Vercel SDK + 外置模板)", () => {
+describe("runPlanningThesis (runStructuredNode + 外置模板)", () => {
   it("resolves the planning.thesis capability and records an artifact_version candidate", async () => {
-    const tree =
-      '{"core":{"title":"核心","summary":"展开"},"branches":[{"column":"support","title":"s","summary":"x"}]}';
+    // 结构化对象(已被 outputSchema 校验):核心论点 + 一个支撑分支。
+    const tree = {
+      core: { title: "核心", summary: "展开" },
+      branches: [{ column: "support", title: "s", summary: "x" }],
+    };
     const { deps, recordCandidate, resolveModelSpec } = makeDeps(tree);
     await runPlanningThesis(
       ctx,
@@ -71,7 +75,7 @@ describe("runPlanningThesis (Vercel SDK + 外置模板)", () => {
       deps,
     );
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "planning.thesis");
-    expect(runTemplatedNode).toHaveBeenCalledTimes(1);
+    expect(runStructuredNode).toHaveBeenCalledTimes(1);
     expect(recordCandidate).toHaveBeenCalledTimes(1);
     const input = recordCandidate.mock.calls[0]![2];
     expect(input.resultType).toBe("artifact_version");
@@ -82,8 +86,12 @@ describe("runPlanningThesis (Vercel SDK + 外置模板)", () => {
     expect(nodes.length).toBe(2);
   });
 
-  it("cancels the task (no candidate) when the agent returns no parseable nodes", async () => {
-    const { deps, recordCandidate } = makeDeps("没有 JSON 的纯文本");
+  it("cancels the task (no candidate) when the object normalizes to no nodes", async () => {
+    // 合法但空的结构化对象 → normalizeThesisTree 产 0 节点 → guard 触发 → cancelTask。
+    const { deps, recordCandidate } = makeDeps({
+      core: { title: "", summary: "" },
+      branches: [],
+    });
     const cancelTask = vi.fn(async () => undefined);
     (deps.ai as { cancelTask: unknown }).cancelTask = cancelTask;
     await runPlanningThesis(

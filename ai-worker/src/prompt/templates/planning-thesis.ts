@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { PromptTemplate } from "../template";
 
 /**
@@ -5,10 +6,36 @@ import type { PromptTemplate } from "../template";
  * 策划阶段:构建一棵论点树(核心论点 + 支撑/证据/反驳 分支)。facets 由 CreativeContext 映射:
  *   positioning(必需,调用方已兜底)· learnings(过往爆款要素,选填)· topic(本期选题,选填)
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。换方法论 = 换本模板,不动 runner。
+ *
+ * T-025 跨模型健壮性:加 outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底),
+ * 让用户默认的 MiniMax 也稳定吐可解析论点树(旧 runTemplatedNode 自由文本路径 MiniMax 下常吐不出
+ * →parseThesisTree 返回空→任务 cancelled)。column 用 z.string()(不锁枚举),runner 侧 normalizeColumn
+ * 再归一(support/evidence/counter 或中文),保留原容错。字段各 .default("") 让缺字段也过校验。
  */
+export const thesisTreeSchema = z.object({
+  core: z
+    .object({
+      title: z.string().default(""),
+      summary: z.string().default(""),
+    })
+    .default({ title: "", summary: "" }),
+  branches: z
+    .array(
+      z.object({
+        column: z.string().default(""),
+        title: z.string().default(""),
+        summary: z.string().default(""),
+      }),
+    )
+    .default([]),
+});
+export type ThesisTreeOutput = z.infer<typeof thesisTreeSchema>;
+
 export const PLANNING_THESIS_TEMPLATE: PromptTemplate = {
   id: "planning.thesis",
-  version: "v1",
+  version: "v2",
+  outputSchema: thesisTreeSchema,
+  tools: [],
   system: "你是这位创作者的「策划 agent」,负责为一期内容搭建论点树。",
   template: `你是这位创作者的「策划 agent」，负责为一期内容搭建**论点树**。
 

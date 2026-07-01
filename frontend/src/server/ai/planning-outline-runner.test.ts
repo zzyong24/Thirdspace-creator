@@ -1,12 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 
-// 结构方案 runner 迁 Vercel SDK 后:mock ai-worker 的 runTemplatedNode(动态 import 目标),
-// 验证 capability 解析、候选记录、parse(structureType + sections)仍按约定产出。
-const runTemplatedNode = vi.fn(async () => ({ text: "", steps: [] }));
+// 结构方案 runner 迁 runStructuredNode(T-025 跨模型健壮)后:mock ai-worker 的 runStructuredNode
+// (动态 import 目标),它返回 { object }(已被 outputSchema 校验的结构化对象)。验证 capability 解析、
+// 候选记录、归一(structureType + sections)仍按约定产出。
+const runStructuredNode = vi.fn(async () => ({ object: {} }));
 vi.mock("@creatoros/ai-worker", () => ({
   modelFor: vi.fn(() => ({}) as never),
-  runTemplatedNode,
+  runStructuredNode,
   PLANNING_OUTLINE_TEMPLATE: { id: "planning.outline" },
 }));
 
@@ -14,8 +15,8 @@ import { runPlanningOutline } from "./planning-outline-runner";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 
-function makeDeps(llmText: string) {
-  runTemplatedNode.mockResolvedValue({ text: llmText, steps: [] } as never);
+function makeDeps(outlineObject: Record<string, unknown>) {
+  runStructuredNode.mockResolvedValue({ object: outlineObject } as never);
   const recordCandidate = vi.fn(
     async (
       _ctx: RequestContext,
@@ -57,10 +58,19 @@ function makeDeps(llmText: string) {
   };
 }
 
-describe("runPlanningOutline (Vercel SDK + 外置模板)", () => {
+describe("runPlanningOutline (runStructuredNode + 外置模板)", () => {
   it("resolves the planning.outline capability and records an artifact_version candidate", async () => {
-    const obj =
-      '{"structureType":"问题-解决","opening":"前3秒抛冲突","sections":[{"label":"钩子","intent":"抓注意"},{"label":"价值","intent":"给干货"}],"ending":"金句收束","cta":"关注追更"}';
+    // 结构化对象(已被 outputSchema 校验):结构类型 + 两段。
+    const obj = {
+      structureType: "问题-解决",
+      opening: "前3秒抛冲突",
+      sections: [
+        { label: "钩子", intent: "抓注意" },
+        { label: "价值", intent: "给干货" },
+      ],
+      ending: "金句收束",
+      cta: "关注追更",
+    };
     const { deps, recordCandidate, resolveModelSpec } = makeDeps(obj);
     await runPlanningOutline(
       ctx,
@@ -68,7 +78,7 @@ describe("runPlanningOutline (Vercel SDK + 外置模板)", () => {
       deps,
     );
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "planning.outline");
-    expect(runTemplatedNode).toHaveBeenCalledTimes(1);
+    expect(runStructuredNode).toHaveBeenCalledTimes(1);
     expect(recordCandidate).toHaveBeenCalledTimes(1);
     const input = recordCandidate.mock.calls[0]![2];
     expect(input.resultType).toBe("artifact_version");
@@ -83,7 +93,7 @@ describe("runPlanningOutline (Vercel SDK + 外置模板)", () => {
   });
 
   it("cancels the task (no candidate) when artifactId is missing", async () => {
-    const { deps, recordCandidate } = makeDeps("{}");
+    const { deps, recordCandidate } = makeDeps({});
     const cancelTask = vi.fn(async () => undefined);
     (deps.ai as { cancelTask: unknown }).cancelTask = cancelTask;
     await runPlanningOutline(
@@ -95,8 +105,9 @@ describe("runPlanningOutline (Vercel SDK + 外置模板)", () => {
     expect(cancelTask).toHaveBeenCalledTimes(1);
   });
 
-  it("cancels the task when the agent returns no parseable outline", async () => {
-    const { deps, recordCandidate } = makeDeps("没有 JSON 的纯文本");
+  it("cancels the task when the object normalizes to no outline", async () => {
+    // 空对象 → structureType 空 + sections 空 → guard 触发 → cancelTask。
+    const { deps, recordCandidate } = makeDeps({});
     const cancelTask = vi.fn(async () => undefined);
     (deps.ai as { cancelTask: unknown }).cancelTask = cancelTask;
     await runPlanningOutline(

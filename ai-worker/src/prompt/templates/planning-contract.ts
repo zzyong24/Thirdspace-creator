@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { PromptTemplate } from "../template";
 
 /**
@@ -6,10 +7,19 @@ import type { PromptTemplate } from "../template";
  * facets 由 CreativeContext 映射:
  *   positioning(必需,调用方已兜底)· learnings(选填)· thesis(已搭好的论点树,选填)· topic(本期选题,选填)
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。
+ *
+ * T-025 跨模型健壮性:加 outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底),
+ * 让 MiniMax 也稳定吐可解析合同。输出是"标题/ id 为键、承诺为值"的对象,故 schema 用
+ * `z.record(string→string)`(宽容任意键);runner 侧 pickBody 按四个固定角度的 title/id 取值,保留原容错。
  */
+export const contractSchema = z.record(z.string(), z.string());
+export type ContractOutput = z.infer<typeof contractSchema>;
+
 export const PLANNING_CONTRACT_TEMPLATE: PromptTemplate = {
   id: "planning.contract",
-  version: "v1",
+  version: "v2",
+  outputSchema: contractSchema,
+  tools: [],
   system: "你是这位创作者的「策划 agent」,负责为一期内容产一份内容合同。",
   template: `你是这位创作者的「策划 agent」，负责为一期内容产一份**内容合同**——也就是这条内容与观众立下的契约。
 

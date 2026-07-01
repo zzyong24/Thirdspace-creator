@@ -1,7 +1,7 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
-import type { ModelSpec } from "@creatoros/ai-worker";
+import type { ModelSpec, OutlineOutput } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
@@ -69,35 +69,15 @@ function outlineFacets(
   };
 }
 
-function parseJsonObject(text: string): Record<string, unknown> | null {
-  if (!text) return null;
-  let body = text.trim();
-  const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(body);
-  if (fence?.[1]) body = fence[1].trim();
-  const start = body.indexOf("{");
-  const end = body.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) return null;
-  try {
-    const parsed = JSON.parse(body.slice(start, end + 1));
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
 }
 
-// Parse the agent's final text into an Outline (parse 逻辑原样保留,只换"拿 text"的来源)。
-function parseOutline(text: string): Outline {
-  const obj = parseJsonObject(text) ?? {};
-  const rawSections = Array.isArray(obj.sections) ? obj.sections : [];
-  const sections = rawSections
-    .map((raw): OutlineSection | null => {
-      const o = (raw ?? {}) as Record<string, unknown>;
+// Normalize the schema-validated object into an Outline (T-025:结构化后拿的是已解析对象,
+// trim + 滤掉空段的容错原样保留)。
+function normalizeOutline(obj: OutlineOutput): Outline {
+  const sections = (obj.sections ?? [])
+    .map((o): OutlineSection | null => {
       const label = str(o.label);
       const intent = str(o.intent);
       if (!label && !intent) return null;
@@ -161,30 +141,30 @@ export async function runPlanningOutline(
       { projectId: task.projectId, topic },
       deps,
     );
-    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 通用模板节点(外置 planning.outline 模板),
-    // 步骤事件落 ai_task_steps。弃旧 LlmCompleter。
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 结构化节点(外置 planning.outline 模板
+    // + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),让 MiniMax
+    // 也稳定吐可解析结构方案(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败→cancelled)。
     const spec = await deps.resolveModelSpec(ctx, "planning.outline");
-    const { modelFor, runTemplatedNode, PLANNING_OUTLINE_TEMPLATE } =
+    const { modelFor, runStructuredNode, PLANNING_OUTLINE_TEMPLATE } =
       await import("@creatoros/ai-worker");
-    const { text } = await runTemplatedNode({
+    const { object } = await runStructuredNode<OutlineOutput>({
       model: modelFor(spec),
       template: PLANNING_OUTLINE_TEMPLATE,
       facets: outlineFacets(context),
-      onStep: async (e) => {
-        await deps.ai.recordStep(ctx, task.id, {
-          stepNo: e.stepNo,
-          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
-          text: e.text,
-          toolCalls: e.toolCalls,
-        });
-      },
     });
-    const outline = parseOutline(text);
+    const outline = normalizeOutline(object);
     if (outline.sections.length === 0 && !outline.structureType) {
       throw new Error(
         "planning-outline-runner: agent returned no parseable outline",
       );
     }
+    // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
+    await deps.ai.recordStep(ctx, task.id, {
+      stepNo: 1,
+      kind: "step",
+      text: `已生成结构方案（${outline.sections.length} 段）`,
+      toolCalls: [],
+    });
     await deps.ai.recordCandidate(ctx, task.id, {
       resultType: "artifact_version",
       artifactId,

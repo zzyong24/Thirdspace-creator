@@ -1,7 +1,7 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
-import type { ModelSpec } from "@creatoros/ai-worker";
+import type { ModelSpec, ThesisTreeOutput } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
@@ -77,26 +77,6 @@ function thesisFacets(
   };
 }
 
-// Robustly pull a single JSON object out of the agent's final text (tolerate ``` fences /
-// leading prose). Returns null when nothing parseable.
-function parseJsonObject(text: string): Record<string, unknown> | null {
-  if (!text) return null;
-  let body = text.trim();
-  const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(body);
-  if (fence?.[1]) body = fence[1].trim();
-  const start = body.indexOf("{");
-  const end = body.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) return null;
-  try {
-    const parsed = JSON.parse(body.slice(start, end + 1));
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 function normalizeColumn(raw: unknown): ThesisColumn | null {
   if (raw === "support" || raw === "evidence" || raw === "counter") return raw;
   if (raw === "支撑" || raw === "支持" || raw === "支持依据") return "support";
@@ -105,21 +85,18 @@ function normalizeColumn(raw: unknown): ThesisColumn | null {
   return null;
 }
 
-// Parse the agent's final text into a ThesisTree (parse 逻辑原样保留,只换"拿 text"的来源)。
-function parseThesisTree(text: string): ThesisTree {
-  const obj = parseJsonObject(text);
-  const coreRaw = (obj?.core ?? {}) as Record<string, unknown>;
+// Normalize the schema-validated object into a ThesisTree (T-025:结构化后拿的是已解析对象,
+// 归一逻辑原样保留 —— normalizeColumn 归一列名、trim、滤掉空分支)。
+function normalizeThesisTree(obj: ThesisTreeOutput): ThesisTree {
   const core = {
-    title: typeof coreRaw.title === "string" ? coreRaw.title.trim() : "",
-    summary: typeof coreRaw.summary === "string" ? coreRaw.summary.trim() : "",
+    title: (obj.core?.title ?? "").trim(),
+    summary: (obj.core?.summary ?? "").trim(),
   };
-  const branchesRaw = Array.isArray(obj?.branches) ? obj!.branches : [];
-  const branches = branchesRaw
-    .map((raw): ThesisBranch | null => {
-      const o = (raw ?? {}) as Record<string, unknown>;
+  const branches = (obj.branches ?? [])
+    .map((o): ThesisBranch | null => {
       const column = normalizeColumn(o.column);
-      const title = typeof o.title === "string" ? o.title.trim() : "";
-      const summary = typeof o.summary === "string" ? o.summary.trim() : "";
+      const title = (o.title ?? "").trim();
+      const summary = (o.summary ?? "").trim();
       if (!column || (!title && !summary)) return null;
       return { column, title, summary };
     })
@@ -195,29 +172,29 @@ export async function runPlanningThesis(
       { projectId: task.projectId, topic },
       deps,
     );
-    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 通用模板节点(外置 planning.thesis 模板),
-    // 步骤事件落 ai_task_steps(窗口步骤日志)。弃旧 LlmCompleter。
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 结构化节点(外置 planning.thesis 模板
+    // + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),
+    // 让用户默认的 MiniMax 也稳定吐可解析论点树(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败)。
     const spec = await deps.resolveModelSpec(ctx, "planning.thesis");
-    const { modelFor, runTemplatedNode, PLANNING_THESIS_TEMPLATE } =
+    const { modelFor, runStructuredNode, PLANNING_THESIS_TEMPLATE } =
       await import("@creatoros/ai-worker");
-    const { text } = await runTemplatedNode({
+    const { object } = await runStructuredNode<ThesisTreeOutput>({
       model: modelFor(spec),
       template: PLANNING_THESIS_TEMPLATE,
       facets: thesisFacets(context),
-      onStep: async (e) => {
-        await deps.ai.recordStep(ctx, task.id, {
-          stepNo: e.stepNo,
-          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
-          text: e.text,
-          toolCalls: e.toolCalls,
-        });
-      },
     });
-    const tree = parseThesisTree(text);
+    const tree = normalizeThesisTree(object);
     const nodes = renderNodes(tree);
     if (nodes.length === 0) {
       throw new Error("planning-runner: agent returned no parseable thesis nodes");
     }
+    // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
+    await deps.ai.recordStep(ctx, task.id, {
+      stepNo: 1,
+      kind: "step",
+      text: `已生成论点树（${nodes.length} 节点）`,
+      toolCalls: [],
+    });
     await deps.ai.recordCandidate(ctx, task.id, {
       resultType: "artifact_version",
       artifactId,

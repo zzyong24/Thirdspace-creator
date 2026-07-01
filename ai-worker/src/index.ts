@@ -104,9 +104,22 @@ export {
   type ScriptDraftOutput,
 } from "./prompt/templates/script-draft";
 // 脊柱-1 第二批:6 个 runner 迁 Vercel SDK 共用的外置模板(提示词模板化解耦)。
-export { PLANNING_THESIS_TEMPLATE } from "./prompt/templates/planning-thesis";
-export { PLANNING_CONTRACT_TEMPLATE } from "./prompt/templates/planning-contract";
-export { PLANNING_OUTLINE_TEMPLATE } from "./prompt/templates/planning-outline";
+// T-025:planning 三节点加 outputSchema 走结构化(跨模型健壮),schema/type 一并导出。
+export {
+  PLANNING_THESIS_TEMPLATE,
+  thesisTreeSchema,
+  type ThesisTreeOutput,
+} from "./prompt/templates/planning-thesis";
+export {
+  PLANNING_CONTRACT_TEMPLATE,
+  contractSchema,
+  type ContractOutput,
+} from "./prompt/templates/planning-contract";
+export {
+  PLANNING_OUTLINE_TEMPLATE,
+  outlineSchema,
+  type OutlineOutput,
+} from "./prompt/templates/planning-outline";
 export { PLATFORM_ADAPT_TEMPLATE } from "./prompt/templates/platform-adapt";
 export { REVIEW_INSIGHTS_TEMPLATE } from "./prompt/templates/review-insights";
 export { CALIBRATION_DIAGNOSE_TEMPLATE } from "./prompt/templates/calibration-diagnose";

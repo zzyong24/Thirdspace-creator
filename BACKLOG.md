@@ -40,6 +40,8 @@
 | T-022 | L7 复盘 | 📋 依赖 T-007 | **依赖 T-007 整套实现**:调度抓抖音→snapshot 时序图表 + 只已发布(`hasImportedProjects`)可复盘门。排 T-007 之后 |
 | T-023 | 跨模型 AI 节点结构化(script.draft) | ✅ | `script.draft` 迁 `runStructuredNode`(generateObject 绑 `scriptDraftSchema`=对象包 shots 数组;落空→文本兜底抽 JSON 同 schema 校验)。改 script-draft.ts/script-node.ts/index.ts + 更新单测;`parseShots` 保留为纯工具导出。ai-worker tsc 净 + 77 单测绿;**真链路验:直连用户配的真 MiniMax-M3(anthropic 兼容端点)`runScriptNode` ~50s 真产 7 个可拍分镜**(旧路径此处必抛「未产出可解析分镜」→cancelled)。done(commit `<本次>`) |
 | T-024 | L4 脚本编辑器收尾(task-review 余项) | 📋 | 金句轨退化已修(`a90df5a`)。**剩**:①分镜时间码 UI 待恢复(数据保留在 sections,TipTap 连续富文本丢了 `[mm:ss]` 呈现,编导式分镜需要,别静默)②保存在途再编辑窄竞态丢写(pending 时抑制外部同步)③heading 按钮谎报 `data-format=bold`(改真)④真浏览器选区级交互 e2e 覆盖弱 |
+| T-025 | 跨模型结构化迁移·剩余 7 个 Vercel-SDK 节点 | 🔨 | **审计(子代理)证实:9 个 AI 节点仍走自由文本 parse,用户 MiniMax 下会像 script.draft 一样崩→任务 cancelled。** 其中 P0 是脊梁:`planning.thesis/contract/outline`(**L3 策划,已标 done 但真模型下坏的**)、`topic.generate`(选题)、`calibration.diagnose`;P1:`platform.adapt`、`review.insights`。**全做,不分阶段**:每个模板加 outputSchema(parse 函数已存,复用其目标形状)+ runner 改走 `runStructuredNode`(参照 `ad5be91` script.draft)。逐组 tsc+单测,至少每类一个真 MiniMax spot-check。**注:script.draft 已在 T-023 做完,本条是剩余 7 个。** |
+| T-026 | LlmCompleter 路径跨模型加固 | 📋 | 审计里 3 个仍走旧 `LlmCompleter`(非 Vercel SDK):`positioning.generate`、`topic-enrich`、`material.match`(**L5 素材清单要用 material.match,MiniMax 下若脆弱则 L5 也坏**)。非 runStructuredNode 范畴 —— 评估 LlmCompleter 本身跨模型鲁棒性(parse 容错 or 迁 Vercel 结构化),按结论修。排 T-025 后。 |
 
 ## ✅ 已完成(粗粒度,倒序)
 

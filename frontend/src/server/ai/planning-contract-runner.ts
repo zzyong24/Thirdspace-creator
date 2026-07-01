@@ -1,7 +1,7 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
-import type { ModelSpec } from "@creatoros/ai-worker";
+import type { ModelSpec, ContractOutput } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
@@ -75,26 +75,6 @@ function contractFacets(
   };
 }
 
-// Robustly pull a single JSON object out of the agent's final text (tolerate ``` fences /
-// leading prose). Returns null when nothing parseable.
-function parseJsonObject(text: string): Record<string, unknown> | null {
-  if (!text) return null;
-  let body = text.trim();
-  const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(body);
-  if (fence?.[1]) body = fence[1].trim();
-  const start = body.indexOf("{");
-  const end = body.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) return null;
-  try {
-    const parsed = JSON.parse(body.slice(start, end + 1));
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 // Map the agent's title-keyed object onto the four locked ContractCard slots. The agent may
 // key by Chinese title (受众定位…) or by id (contract-audience…) — accept either; drop a
 // card only when its body is empty.
@@ -110,9 +90,9 @@ function pickBody(
   return "";
 }
 
-// Parse the agent's final text into the four locked ContractCard slots (parse 逻辑原样保留)。
-function parseContract(text: string): ContractCardDraft[] {
-  const obj = parseJsonObject(text) ?? {};
+// Map the schema-validated object onto the four locked ContractCard slots (T-025:结构化后
+// 拿的是已解析对象,pickBody 按 title/id 取值的容错原样保留)。
+function normalizeContract(obj: ContractOutput): ContractCardDraft[] {
   return CONTRACT_ANGLES.map((angle): ContractCardDraft => ({
     id: angle.id,
     title: angle.title,
@@ -153,30 +133,30 @@ export async function runPlanningContract(
       { projectId: task.projectId, topic },
       deps,
     );
-    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 通用模板节点(外置 planning.contract 模板),
-    // 步骤事件落 ai_task_steps。弃旧 LlmCompleter。
+    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 结构化节点(外置 planning.contract 模板
+    // + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),让 MiniMax
+    // 也稳定吐可解析合同(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败→cancelled)。
     const spec = await deps.resolveModelSpec(ctx, "planning.contract");
-    const { modelFor, runTemplatedNode, PLANNING_CONTRACT_TEMPLATE } =
+    const { modelFor, runStructuredNode, PLANNING_CONTRACT_TEMPLATE } =
       await import("@creatoros/ai-worker");
-    const { text } = await runTemplatedNode({
+    const { object } = await runStructuredNode<ContractOutput>({
       model: modelFor(spec),
       template: PLANNING_CONTRACT_TEMPLATE,
       facets: contractFacets(context),
-      onStep: async (e) => {
-        await deps.ai.recordStep(ctx, task.id, {
-          stepNo: e.stepNo,
-          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
-          text: e.text,
-          toolCalls: e.toolCalls,
-        });
-      },
     });
-    const cards = parseContract(text);
+    const cards = normalizeContract(object);
     if (cards.length === 0) {
       throw new Error(
         "planning-contract-runner: agent returned no parseable contract cards",
       );
     }
+    // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
+    await deps.ai.recordStep(ctx, task.id, {
+      stepNo: 1,
+      kind: "step",
+      text: `已生成内容合同（${cards.length} 条承诺）`,
+      toolCalls: [],
+    });
     await deps.ai.recordCandidate(ctx, task.id, {
       resultType: "artifact_version",
       artifactId,
