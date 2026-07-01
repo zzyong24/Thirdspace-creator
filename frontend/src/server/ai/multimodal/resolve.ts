@@ -12,16 +12,23 @@ import type { ModelConfigInternal } from "@creatoros/backend/modules/settings";
 // **结构对齐的本地声明**(和 frontend `ResolvedLlmConfig` vs ai-worker `ModelSpec` 完全同样的
 // 两处独立声明、结构投影——resolve 层不反向依赖 factory 层的实现)。
 
-/** capability 约定串(SPEC §2.1,复用 model_configurations 表,零 schema 改)。 */
-export type MultimodalCapability = "image.generate" | "video.generate";
+/** capability 约定串(SPEC §2.1 / §5.1,复用 model_configurations 表,零 schema 改)。
+ *  `transcribe.audio`(逐字稿 ASR,T-030-D1)与 image/video 并列——同一张 model_configurations
+ *  表、同一条解析优先级,仅 kind/env 前缀不同。capability 在 contract 全线是自由字符串
+ *  (settings/ai resources 皆 `z.string()`,无枚举校验),故新增此值零 contract 改动。 */
+export type MultimodalCapability =
+  | "image.generate"
+  | "video.generate"
+  | "transcribe.audio";
 
-/** 与 ai-worker multimodal-factory.MultimodalSpec 结构对齐(见上方分层说明)。 */
+/** 与 ai-worker multimodal-factory.MultimodalSpec 结构对齐(见上方分层说明)。
+ *  `kind:"audio"` 走 ASR(transcribeAudio),与 image/video 同结构、仅能力语义不同。 */
 export interface MultimodalSpec {
   provider: string;
   baseUrl: string | null;
   model: string;
   token: string;
-  kind: "image" | "video";
+  kind: "image" | "video" | "audio";
 }
 
 export interface ResolveMultimodalDeps {
@@ -42,16 +49,30 @@ export class MultimodalConfigError extends Error {
   }
 }
 
-const CAP_TO_KIND: Record<MultimodalCapability, "image" | "video"> = {
+/** 未配 / 无凭据的 ASR 专用错误(T-030-D1)—— 与 MultimodalConfigError 平行,但让上层
+ *  (D2 transcribe-runner)能按类型精确接住「逐字稿未配」→ 停任务 + 引导去设置配 ASR,
+ *  区别于图/视频的 MultimodalConfigError。语义同款(诚实禁用,不假装能转写)。 */
+export class TranscribeConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TranscribeConfigError";
+  }
+}
+
+type MultimodalKind = "image" | "video" | "audio";
+
+const CAP_TO_KIND: Record<MultimodalCapability, MultimodalKind> = {
   "image.generate": "image",
   "video.generate": "video",
+  "transcribe.audio": "audio",
 };
 
-// image.generate / video.generate 各自的全局默认回退键(与文本层 "default" 平行,但多模态
-// 图/视频档不能混用一个 default —— 按 kind 分开回退)。
+// 各能力的全局默认回退键(与文本层 "default" 平行,但多模态各档不混用一个 default ——
+// 按 kind 分开回退:image.default / video.default / asr.default)。
 const CAP_DEFAULT: Record<MultimodalCapability, string> = {
   "image.generate": "image.default",
   "video.generate": "video.default",
+  "transcribe.audio": "asr.default",
 };
 
 // "env:FOO" → env.FOO;trim;缺/空 → ""(cc-switch first_non_empty:空串占位必须 SKIP)。
@@ -70,7 +91,7 @@ function resolveSecret(
 // env-ref secretReference —— cc-switch first_non_empty,与文本层 tryDbRow 一致)。
 function tryDbRow(
   row: ModelConfigInternal | null,
-  kind: "image" | "video",
+  kind: MultimodalKind,
   env: Record<string, string | undefined>,
 ): MultimodalSpec | null {
   if (!row) return null;
@@ -103,6 +124,12 @@ const ENV_KEYS: Record<
     provider: "CREATOROS_VIDEO_PROVIDER",
     model: "CREATOROS_VIDEO_MODEL",
   },
+  "transcribe.audio": {
+    secretRef: "CREATOROS_ASR_SECRET_REF",
+    baseUrl: "CREATOROS_ASR_BASE_URL",
+    provider: "CREATOROS_ASR_PROVIDER",
+    model: "CREATOROS_ASR_MODEL",
+  },
 };
 
 // 内置默认(仅当 env 指了 provider/model 才成立 —— 多模态**没有**像文本 anthropic 官方那样的
@@ -110,7 +137,7 @@ const ENV_KEYS: Record<
 // resolveMultimodalSpec 收尾抛 MultimodalConfigError。
 function tryEnvRow(
   cap: MultimodalCapability,
-  kind: "image" | "video",
+  kind: MultimodalKind,
   env: Record<string, string | undefined>,
 ): MultimodalSpec | null {
   const keys = ENV_KEYS[cap];
@@ -161,9 +188,34 @@ export async function resolveMultimodalSpec(
   if (fromEnv) return fromEnv;
 
   // Tier 3 — 未配:诚实抛错(不假装能生成)。
-  const label = kind === "image" ? "生图" : "生视频";
+  const label =
+    kind === "image" ? "生图" : kind === "video" ? "生视频" : "逐字稿转写";
   throw new MultimodalConfigError(
     `capability "${capability}" 未配置${label}模型:请在设置里为 ${capability} 配 provider/model/key,` +
       `或设置 .env.local 的 ${ENV_KEYS[capability].provider}/${ENV_KEYS[capability].model}/${ENV_KEYS[capability].secretRef}`,
   );
+}
+
+/**
+ * ASR 逐字稿模型解析(T-030-D1,SPEC §5.1)—— 与 image/video **完全同款**的三层回退,只是
+ * capability 固定为 `transcribe.audio`、错误类型换成 `TranscribeConfigError`(供 D2
+ * transcribe-runner 按类型精确接住「逐字稿未配」)。
+ *   Tier 1 库存密钥:transcribe.audio 行 → asr.default 行;库存 secretValue > env-ref。
+ *   Tier 2 env 默认:CREATOROS_ASR_*(需 provider+model+key 齐全)。
+ *   Tier 3 未配:抛 TranscribeConfigError(上层 → 停任务 + UI「未配置逐字稿模型,去设置配」)。
+ * 返回的 spec.kind === "audio",喂给 ai-worker `transcribeAudio` 工厂(按 provider 取 ASR adapter)。
+ */
+export async function resolveTranscribeSpec(
+  ctx: RequestContext,
+  deps: ResolveMultimodalDeps,
+): Promise<MultimodalSpec> {
+  try {
+    return await resolveMultimodalSpec(ctx, "transcribe.audio", deps);
+  } catch (err) {
+    // 复用 resolveMultimodalSpec 的三层回退,仅把「未配」错误换成 ASR 专用类型(保留原文)。
+    if (err instanceof MultimodalConfigError) {
+      throw new TranscribeConfigError(err.message);
+    }
+    throw err;
+  }
 }

@@ -117,6 +117,13 @@ function buildStubViewModel(): SettingsViewModel {
         baseUrl: "",
         hasSecret: false,
       },
+      audio: {
+        capability: "transcribe.audio",
+        provider: "",
+        modelName: "",
+        baseUrl: "",
+        hasSecret: false,
+      },
     },
   };
 }

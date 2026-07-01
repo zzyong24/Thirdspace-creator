@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   generateImage,
   generateVideo,
+  transcribeAudio,
   MultimodalConfigError,
+  type GeneratedTranscript,
+  type MultimodalProviderAdapter,
   type MultimodalProviderRegistry,
   type MultimodalSpec,
 } from "./multimodal-factory";
@@ -72,6 +75,52 @@ describe("multimodal provider 工厂 —— 按 provider 分派 + 统一 { asset
     const registry: MultimodalProviderRegistry = {};
     await expect(
       generateImage({ ...imageSpec, provider: "unknown" }, { prompt: "x" }, registry),
+    ).rejects.toBeInstanceOf(MultimodalConfigError);
+  });
+});
+
+// ── ASR transcribeAudio 工厂(T-030-D1)—— 与 generateImage/Video 同构分派,返 { text }。────
+describe("multimodal 工厂 —— transcribeAudio 按 provider 分派 + { text } 契约", () => {
+  const audioSpec: MultimodalSpec = {
+    provider: "fake-asr",
+    baseUrl: null,
+    model: "sensevoice",
+    token: "tok",
+    kind: "audio",
+  };
+  // 内联 fake ASR 适配器(只实现 transcribeAudio)。
+  const fakeAsr: MultimodalProviderAdapter = {
+    transcribeAudio: async (_spec, opts): Promise<GeneratedTranscript> => ({
+      text: `逐字稿(${opts.audioBytes.length} bytes)`,
+    }),
+  };
+
+  it("transcribeAudio 分派到 ASR 适配器,返 { text }", async () => {
+    const registry: MultimodalProviderRegistry = { "fake-asr": fakeAsr };
+    const out = await transcribeAudio(
+      audioSpec,
+      { audioBytes: new Uint8Array([1, 2, 3]) },
+      registry,
+    );
+    expect(out).toEqual({ text: "逐字稿(3 bytes)" });
+  });
+
+  it("provider 不支持转写 → MultimodalConfigError(image-only 适配器调 transcribe)", async () => {
+    const registry: MultimodalProviderRegistry = {
+      "fake-asr": createImageOnlyFakeAdapter(),
+    };
+    await expect(
+      transcribeAudio(audioSpec, { audioBytes: new Uint8Array([1]) }, registry),
+    ).rejects.toBeInstanceOf(MultimodalConfigError);
+  });
+
+  it("未注册的 provider → MultimodalConfigError", async () => {
+    await expect(
+      transcribeAudio(
+        { ...audioSpec, provider: "unknown" },
+        { audioBytes: new Uint8Array([1]) },
+        {},
+      ),
     ).rejects.toBeInstanceOf(MultimodalConfigError);
   });
 });

@@ -130,6 +130,7 @@ export default async function SettingsRoutePage() {
       multimodalModels = {
         image: multimodalRow("image.generate"),
         video: multimodalRow("video.generate"),
+        audio: multimodalRow("transcribe.audio"),
       };
     } catch {
       // listModels unavailable (transport race) → fall back to the fixture.

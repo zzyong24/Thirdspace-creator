@@ -80,6 +80,16 @@ export function buildSettingsViewModel(): SettingsViewModel {
         baseUrl: "",
         hasSecret: false,
       },
+      // 逐字稿 ASR (transcribe.audio, T-030-D1). Unconfigured by default — the
+      // transcribe pipeline (D2) stays honestly disabled until the user binds an
+      // OpenAI-compatible ASR provider/model/key here (SiliconFlow suggested).
+      audio: {
+        capability: "transcribe.audio",
+        provider: "",
+        modelName: "",
+        baseUrl: "",
+        hasSecret: false,
+      },
     },
   };
 }

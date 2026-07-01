@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
-import { resolveMultimodalSpec, MultimodalConfigError } from "./resolve";
+import {
+  resolveMultimodalSpec,
+  resolveTranscribeSpec,
+  MultimodalConfigError,
+  TranscribeConfigError,
+} from "./resolve";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 const noRow = async () => null;
@@ -139,5 +144,88 @@ describe("resolveMultimodalSpec — tier 3 未配抛错(诚实禁用)", () => {
         env: { ANTHROPIC_API_KEY: "k" },
       }),
     ).rejects.toBeInstanceOf(MultimodalConfigError);
+  });
+});
+
+// ── ASR 逐字稿(transcribe.audio,T-030-D1)—— 与 image/video 同款三层回退,只是 capability
+//    固定 transcribe.audio、未配错误类型换成 TranscribeConfigError。────────────────────────
+describe("resolveTranscribeSpec — 3 层回退(kind=audio)", () => {
+  it("tier 1:transcribe.audio 命中 DB 行 → 出 spec(kind=audio),secretValue 优先", async () => {
+    const spec = await resolveTranscribeSpec(ctx, {
+      getModelConfig: async (_c, cap) =>
+        cap === "transcribe.audio"
+          ? {
+              provider: "siliconflow",
+              modelName: "FunAudioLLM/SenseVoiceSmall",
+              baseUrl: "https://api.siliconflow.cn/v1",
+              apiFormat: "openai_chat",
+              secretReference: "env:SILICONFLOW_API_KEY",
+              secretValue: "sk-asr-stored",
+              settings: {},
+            }
+          : null,
+      env: { SILICONFLOW_API_KEY: "env-should-lose" },
+    });
+    expect(spec).toEqual({
+      provider: "siliconflow",
+      baseUrl: "https://api.siliconflow.cn/v1",
+      model: "FunAudioLLM/SenseVoiceSmall",
+      token: "sk-asr-stored",
+      kind: "audio",
+    });
+  });
+
+  it("tier 1 回退:per-capability 未命中 → asr.default 行", async () => {
+    const spec = await resolveTranscribeSpec(ctx, {
+      getModelConfig: async (_c, cap) =>
+        cap === "asr.default"
+          ? {
+              provider: "groq",
+              modelName: "whisper-large-v3",
+              baseUrl: null,
+              apiFormat: "openai_chat",
+              secretReference: "",
+              secretValue: "sk-asr-default",
+              settings: {},
+            }
+          : null,
+      env: {},
+    });
+    expect(spec.provider).toBe("groq");
+    expect(spec.model).toBe("whisper-large-v3");
+    expect(spec.token).toBe("sk-asr-default");
+    expect(spec.kind).toBe("audio");
+  });
+
+  it("tier 2:无 DB 行时用 CREATOROS_ASR_*(需 provider+model+key 齐全)", async () => {
+    const spec = await resolveTranscribeSpec(ctx, {
+      getModelConfig: noRow,
+      env: {
+        CREATOROS_ASR_PROVIDER: "siliconflow",
+        CREATOROS_ASR_MODEL: "FunAudioLLM/SenseVoiceSmall",
+        CREATOROS_ASR_BASE_URL: "https://api.siliconflow.cn/v1",
+        CREATOROS_ASR_SECRET_REF: "env:SILICONFLOW_API_KEY",
+        SILICONFLOW_API_KEY: "tok-env-asr",
+      },
+    });
+    expect(spec).toEqual({
+      provider: "siliconflow",
+      baseUrl: "https://api.siliconflow.cn/v1",
+      model: "FunAudioLLM/SenseVoiceSmall",
+      token: "tok-env-asr",
+      kind: "audio",
+    });
+  });
+
+  it("tier 3:都无 → 抛 TranscribeConfigError(非 MultimodalConfigError,供 D2 精确接住)", async () => {
+    await expect(
+      resolveTranscribeSpec(ctx, { getModelConfig: noRow, env: {} }),
+    ).rejects.toBeInstanceOf(TranscribeConfigError);
+  });
+
+  it("tier 3:错误信息含 capability 名(供 UI 引导去设置配 ASR)", async () => {
+    await expect(
+      resolveTranscribeSpec(ctx, { getModelConfig: noRow, env: {} }),
+    ).rejects.toThrow(/transcribe\.audio/);
   });
 });

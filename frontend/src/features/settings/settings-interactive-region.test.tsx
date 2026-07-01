@@ -85,6 +85,13 @@ const VM: SettingsViewModel = {
       baseUrl: "",
       hasSecret: false,
     },
+    audio: {
+      capability: "transcribe.audio",
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false,
+    },
   },
 };
 
@@ -303,6 +310,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
           hasSecret: true,
         },
         video: VM.multimodalModels.video,
+        audio: VM.multimodalModels.audio,
       },
     };
     const doc = renderDialog(VM_MULTIMODAL);
@@ -335,6 +343,80 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     };
     expect(call.body.secret).toBeUndefined();
     expect(call.body.modelName).toBe("image-01-hd");
+  });
+
+  // --- Transcribe (ASR) model config (SPEC 2026-07-01 §5.1, T-030-D1) --------
+
+  it("renders the 逐字稿(audio) card without regressing the image/video cards", async () => {
+    const doc = renderDialog();
+    // 逐字稿(audio)卡渲出,capability=transcribe.audio。
+    const audioCard = doc.querySelector('[data-slot="multimodal-audio-card"]');
+    expect(audioCard).not.toBeNull();
+    expect(audioCard!.getAttribute("data-capability")).toBe("transcribe.audio");
+    expect(
+      doc.querySelector('[data-slot="multimodal-audio-provider-input"]'),
+    ).not.toBeNull();
+    expect(
+      doc.querySelector('[data-slot="multimodal-audio-model-input"]'),
+    ).not.toBeNull();
+    expect(
+      doc.querySelector('[data-slot="multimodal-audio-save"]'),
+    ).not.toBeNull();
+    // 现有 image / video 卡不回归(仍在 DOM,capability 不变)。
+    expect(
+      doc
+        .querySelector('[data-slot="multimodal-image-card"]')!
+        .getAttribute("data-capability"),
+    ).toBe("image.generate");
+    expect(
+      doc
+        .querySelector('[data-slot="multimodal-video-card"]')!
+        .getAttribute("data-capability"),
+    ).toBe("video.generate");
+  });
+
+  it("saving the 逐字稿 form PUTs the transcribe.audio capability (provider/model/baseUrl/secret)", async () => {
+    const doc = renderDialog();
+    const provider = doc.querySelector(
+      '[data-slot="multimodal-audio-provider-input"]',
+    ) as HTMLInputElement;
+    const modelName = doc.querySelector(
+      '[data-slot="multimodal-audio-model-input"]',
+    ) as HTMLInputElement;
+    const baseUrl = doc.querySelector(
+      '[data-slot="multimodal-audio-base-url-input"]',
+    ) as HTMLInputElement;
+    const save = doc.querySelector(
+      '[data-slot="multimodal-audio-save"]',
+    ) as HTMLButtonElement;
+    // Unconfigured → save disabled until provider + model filled.
+    expect(save.disabled).toBe(true);
+
+    fireEvent.change(provider, { target: { value: "siliconflow" } });
+    fireEvent.change(modelName, {
+      target: { value: "FunAudioLLM/SenseVoiceSmall" },
+    });
+    fireEvent.change(baseUrl, {
+      target: { value: "https://api.siliconflow.cn/v1" },
+    });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1));
+    const call = mockClient.putModel.mock.calls[0]![0] as {
+      params: { capability: string };
+      body: Record<string, unknown>;
+    };
+    expect(call.params).toEqual({ capability: "transcribe.audio" });
+    expect(call.body).toEqual({
+      provider: "siliconflow",
+      modelName: "FunAudioLLM/SenseVoiceSmall",
+      baseUrl: "https://api.siliconflow.cn/v1",
+    });
+    // Multimodal rows carry NO apiFormat / settings (resolver ignores them).
+    expect(call.body.apiFormat).toBeUndefined();
+    expect(call.body.settings).toBeUndefined();
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
   });
 
   it("omits the secret when left blank (a re-save keeps the stored key)", async () => {

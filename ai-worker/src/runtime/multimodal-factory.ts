@@ -34,8 +34,9 @@ export interface MultimodalSpec {
   model: string;
   /** 用户自带 API key(复用 secret 存储)。 */
   token: string;
-  /** 该档位是图还是视频 —— 决定走 generateImage 还是 generateVideo,并校验适配器能力。 */
-  kind: "image" | "video";
+  /** 该档位是图/视频/音频 —— 决定走 generateImage / generateVideo / transcribeAudio,
+   *  并校验适配器能力。audio(T-030-D1)= ASR 逐字稿转写。 */
+  kind: "image" | "video" | "audio";
 }
 
 export interface GenerateImageOptions {
@@ -51,9 +52,25 @@ export interface GenerateVideoOptions {
   firstFrame?: Uint8Array;
 }
 
+/** ASR 逐字稿转写入参(T-030-D1)—— 与 image/video 的生成入参并列,但输入是**音频字节**
+ *  (由 D2 的 ffmpeg 抽音产出),而非文本 prompt。 */
+export interface TranscribeAudioOptions {
+  /** 待转写的音频字节(如 16kHz/单声道/mp3)。 */
+  audioBytes: Uint8Array;
+  /** 可选语言提示(如 "zh"/"en");多数 OpenAI 兼容端点可自动检测,省略即自动。 */
+  language?: string;
+}
+
 /** 统一上层返回契约([gate-F1]):无论 provider、无论同步/异步,只有字节。 */
 export interface GeneratedAsset {
   assetBytes: Uint8Array;
+}
+
+/** ASR 转写返回契约(T-030-D1)—— 与 GeneratedAsset 并列,只是返回形状不同:逐字稿是**文本**
+ *  而非字节。language 为端点回传的识别语言(可选)。 */
+export interface GeneratedTranscript {
+  text: string;
+  language?: string;
 }
 
 /** 一个厂商适配器要实现的形状。image 同步、video 可能异步(轮询在适配器内消化),
@@ -68,6 +85,12 @@ export interface MultimodalProviderAdapter {
     spec: MultimodalSpec,
     opts: GenerateVideoOptions,
   ): Promise<GeneratedAsset>;
+  /** ASR 逐字稿转写(T-030-D1),可选 —— 只做转写的 provider(OpenAI 兼容 ASR)只实现这一个;
+   *  只出图/视频的 provider(如 minimax)不实现(工厂调用时报明确错误)。返回文本而非字节。 */
+  transcribeAudio?(
+    spec: MultimodalSpec,
+    opts: TranscribeAudioOptions,
+  ): Promise<GeneratedTranscript>;
 }
 
 export type MultimodalProviderRegistry = Record<
@@ -158,4 +181,27 @@ export async function generateVideo(
     );
   }
   return adapter.generateVideo(spec, opts);
+}
+
+/** 按 spec.provider 取适配器,调 ASR 转写 → 统一 `{ text, language? }`(T-030-D1)。
+ *  与 generateImage/generateVideo 同构:加 provider = 在工厂注册一个实现 transcribeAudio 的
+ *  适配器,上层不改。未知 provider / provider 不支持转写 → MultimodalConfigError(上层可接住
+ *  → 停任务 + UI「未配置/不支持逐字稿」)。 */
+export async function transcribeAudio(
+  spec: MultimodalSpec,
+  opts: TranscribeAudioOptions,
+  registry: MultimodalProviderRegistry,
+): Promise<GeneratedTranscript> {
+  const adapter = registry[spec.provider];
+  if (!adapter) {
+    throw new MultimodalConfigError(
+      `未知多模态 provider: "${spec.provider}"(未在工厂注册适配器)`,
+    );
+  }
+  if (!adapter.transcribeAudio) {
+    throw new MultimodalConfigError(
+      `provider "${spec.provider}" 不支持逐字稿转写(transcribe.audio)`,
+    );
+  }
+  return adapter.transcribeAudio(spec, opts);
 }

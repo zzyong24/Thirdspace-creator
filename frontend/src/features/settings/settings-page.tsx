@@ -199,11 +199,11 @@ export interface ModelState {
 // provider / baseUrl / model / secret. Keeping the form to just those four fields
 // mirrors exactly what the resolver consumes — no dead controls.
 export interface MultimodalModelState {
-  /** The bound capability ("image.generate" | "video.generate"). */
-  readonly capability: "image.generate" | "video.generate";
-  /** Free-form provider name (the dispatch switch; "minimax" today, extensible). */
+  /** The bound capability ("image.generate" | "video.generate" | "transcribe.audio"). */
+  readonly capability: "image.generate" | "video.generate" | "transcribe.audio";
+  /** Free-form provider name (the dispatch switch; "minimax"/"siliconflow" today, extensible). */
   readonly provider: string;
-  /** Free-form model id (e.g. image-01 / video-01). */
+  /** Free-form model id (e.g. image-01 / video-01 / FunAudioLLM/SenseVoiceSmall). */
   readonly modelName: string;
   /** Custom baseUrl (e.g. https://api.minimaxi.com/v1); "" = provider default. */
   readonly baseUrl: string;
@@ -216,6 +216,14 @@ export interface MultimodalModelsState {
   readonly image: MultimodalModelState;
   /** 文生视频 — capability "video.generate". */
   readonly video: MultimodalModelState;
+  /**
+   * 逐字稿 ASR — capability "transcribe.audio" (SPEC 2026-07-01 §5.1, T-030-D1). Read from the
+   * SAME `settings.models.list` op (capability is a free-form string — zero contract change).
+   * `resolveTranscribeSpec` (server/ai/multimodal/resolve.ts) reads this row so the transcribe
+   * pipeline (D2) can use the user's own OpenAI-compatible ASR provider/key; unconfigured =
+   * honestly disabled.
+   */
+  readonly audio: MultimodalModelState;
 }
 
 // ---------------------------------------------------------------------------

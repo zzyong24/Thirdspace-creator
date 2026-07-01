@@ -292,6 +292,10 @@ export function SettingsDialog({
                   kind="video"
                   state={viewModel.multimodalModels.video}
                 />
+                <MultimodalModelCard
+                  kind="audio"
+                  state={viewModel.multimodalModels.audio}
+                />
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="storage" active={tab}>
@@ -1189,8 +1193,12 @@ const MULTIMODAL_META = {
     description:
       "录制阶段 AI 生成图片素材用;不配则录制页「AI 生成图」禁用。",
     providerSuggestions: ["minimax"] as ReadonlyArray<string>,
+    providerPlaceholder: "minimax",
+    providerHelp: "多模态厂商名,可自定义(当前已适配 minimax)。",
     modelHelp: "文生图模型 id,如 image-01(MiniMax)。",
+    modelPlaceholder: "",
     baseUrlPlaceholder: "https://api.minimaxi.com/v1(留空=provider 默认)",
+    disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
   video: {
     capability: "video.generate" as const,
@@ -1199,8 +1207,29 @@ const MULTIMODAL_META = {
     description:
       "录制阶段 AI 生成视频素材用;不配则录制页「AI 生成视频」禁用。",
     providerSuggestions: ["minimax"] as ReadonlyArray<string>,
+    providerPlaceholder: "minimax",
+    providerHelp: "多模态厂商名,可自定义(当前已适配 minimax)。",
     modelHelp: "文生视频模型 id,如 video-01(MiniMax / Hailuo)。",
+    modelPlaceholder: "",
     baseUrlPlaceholder: "https://api.minimaxi.com/v1(留空=provider 默认)",
+    disabledHint: "未配 → 录制页 AI 生成禁用。",
+  },
+  // 逐字稿 ASR(T-030-D1,SPEC §5.1)—— 与图/视频同款 cc-switch 表单,provider 走 OpenAI 兼容
+  // ASR(SiliconFlow/OpenAI/Groq);建议值给 SiliconFlow(skill 已验)但不锁死。
+  audio: {
+    capability: "transcribe.audio" as const,
+    title: "逐字稿模型",
+    icon: Cpu,
+    description:
+      "抓作品时把音频转成逐字稿用(OpenAI 兼容 ASR);不配则逐字稿功能禁用。",
+    providerSuggestions: ["siliconflow", "openai", "groq"] as ReadonlyArray<string>,
+    providerPlaceholder: "siliconflow",
+    providerHelp:
+      "OpenAI 兼容 ASR 厂商,可自定义(SiliconFlow / OpenAI / Groq 同形状)。",
+    modelHelp: "ASR 模型 id,如 FunAudioLLM/SenseVoiceSmall(SiliconFlow)。",
+    modelPlaceholder: "FunAudioLLM/SenseVoiceSmall",
+    baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
+    disabledHint: "未配 → 逐字稿功能禁用。",
   },
 } as const;
 
@@ -1208,7 +1237,7 @@ function MultimodalModelCard({
   kind,
   state,
 }: {
-  kind: "image" | "video";
+  kind: "image" | "video" | "audio";
   state: MultimodalModelState;
 }) {
   const meta = MULTIMODAL_META[kind];
@@ -1292,7 +1321,7 @@ function MultimodalModelCard({
         <SettingsFormRow
           label="提供商"
           controlId={`multimodal-${kind}-provider`}
-          help="多模态厂商名,可自定义(当前已适配 minimax)。"
+          help={meta.providerHelp}
         >
           <Input
             id={`multimodal-${kind}-provider`}
@@ -1300,7 +1329,7 @@ function MultimodalModelCard({
             list={providerListId}
             value={provider}
             disabled={pending}
-            placeholder="minimax"
+            placeholder={meta.providerPlaceholder}
             onChange={(event) => setProvider(event.target.value)}
             aria-label={`${meta.title}提供商`}
           />
@@ -1320,6 +1349,7 @@ function MultimodalModelCard({
             data-slot={`multimodal-${kind}-model-input`}
             value={modelName}
             disabled={pending}
+            placeholder={meta.modelPlaceholder}
             onChange={(event) => setModelName(event.target.value)}
             aria-label={`${meta.title}名称`}
           />
@@ -1345,7 +1375,7 @@ function MultimodalModelCard({
           help={
             state.hasSecret
               ? "已配置;留空保持不变,填入则覆盖。"
-              : "粘贴 API Key(存于本地库)。未配 → 录制页 AI 生成禁用。"
+              : `粘贴 API Key(存于本地库)。${meta.disabledHint}`
           }
         >
           <div className="flex w-full items-center gap-2">

@@ -71,6 +71,14 @@ export {
   type GenerateImageOptions,
   type GenerateVideoOptions,
 } from "./runtime/multimodal-factory";
+// ASR 逐字稿工厂 + 类型(T-030-D1)—— transcribeAudio 与 generateImage/Video 并列。
+// host(D2 transcribe-runner)解析 MultimodalSpec(resolveTranscribeSpec,kind=audio)+ 注册
+// ASR adapter,调 transcribeAudio 即可,返回 `{ text, language? }`。
+export {
+  transcribeAudio,
+  type GeneratedTranscript,
+  type TranscribeAudioOptions,
+} from "./runtime/multimodal-factory";
 // MiniMax 适配器(M1 的默认真 provider)—— host 注册进 registry(keyed by "minimax")。
 // deps 可注入(fake fetch/sleep)供单测;video 的异步轮询状态机(submit→poll→retrieve、
 // maxPollAttempts 超时抛错)封在这里,M2 runner 把超时 catch 成 cancelTask。
@@ -78,6 +86,13 @@ export {
   createMinimaxAdapter,
   type MinimaxAdapterDeps,
 } from "./runtime/multimodal-minimax";
+// OpenAI 兼容 ASR 适配器(T-030-D1 的默认真 ASR provider)—— host 注册进 registry(keyed by
+// "siliconflow"/"openai"/"groq" 等用户所配 provider 名)。deps 可注入(fake fetch)供单测;
+// 直连 `POST {baseUrl}/v1/audio/transcriptions`(multipart file+model,Bearer)。
+export {
+  createOpenaiAsrAdapter,
+  type OpenaiAsrAdapterDeps,
+} from "./runtime/multimodal-openai-asr";
 // Fake 多模态适配器(测试支持,零成本)—— 与 createFakeAgentRunner 同类的测试用假件,经 index
 // 公开出口给消费方单测用(frontend asset.generate runner 测装配 + 异步轮询)。含 fake 异步
 // video provider(先 taskId、N 次轮询后返 bytes),坐实 [gate-F1]/[gate-F2] 的异步链路覆盖。
