@@ -178,6 +178,13 @@ import {
   toDetailMetricRecords,
   type PublicationCatalogEntry,
 } from "@/server/ingestion/douyin-work-detail";
+// T-038b 抖音采集限流网关(单例接线):所有对外抖音请求经它 acquire/report(SPEC §4.4)。
+import {
+  DouyinRequestGateway,
+  type DouyinChannelGate,
+} from "@/server/ingestion/douyin-request-gateway";
+import { resolveDouyinThrottleConfig } from "@/server/ingestion/douyin-throttle-config";
+import { createPgliteThrottleStatePort } from "@/server/ingestion/douyin-throttle-state-port.pglite";
 import {
   runScheduledCollection,
   type Collector as ScheduledCollector,
@@ -930,6 +937,35 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     nextId: (prefix: string) => `${prefix}-${idBase}-${++createSeq}`,
   };
 
+  // ── T-038b 抖音采集限流网关(单例接线,SPEC §4.1/§4.4)────────────────────────────
+  // 一个 module 单例 DouyinRequestGateway(per-channel 串行 + 最小间隔 + jitter + 指数退避 +
+  // [gate-F3] readyPromise barrier 从 douyin_throttle_state 恢复 cooldown)。所有对外抖音请求
+  // 的插装点(collectors + runTranscribe 的 fetchDouyin*)经它 acquire/report。**注真 PGlite
+  // store(与 scheduled_job / job_run 同一个 db 句柄)做持久层**([gate-F2])。gateway 经 DI
+  // 注入 douyin-cdp 调用点(下方 host 绑定),douyin-cdp 内部不硬 import 单例(否则单测真等 9s)。
+  const douyinGateway: DouyinChannelGate = new DouyinRequestGateway({
+    config: resolveDouyinThrottleConfig(),
+    port: createPgliteThrottleStatePort(db),
+    now: () => Date.now(),
+    // 真 sleep(setTimeout);gateway 用它落 cooldown/间隔等待(测试侧另注假 sleep,此处 runtime 真等)。
+    sleep: (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+  });
+
+  // [gate-F5] 采集 job/进程级串行闸(与 gateway 的请求级节奏正交):一条 module 级 promise 链,
+  // concurrency=1 —— 同时只跑一个采集 job,防两个 Chromium 各打一 channel 并存(gateway 每 channel
+  // 并发=1 拦不住 job-A 抓 creator-center + job-B 抓 iesdouyin 两进程并存)。轻量:一条 promise
+  // 链尾串行,无需 p-queue。fire-and-forget 的 dispatch 把 runScheduledCollection 挂到链尾。
+  let collectionRunTail: Promise<void> = Promise.resolve();
+  const enqueueCollectionRun = (run: () => Promise<void>): void => {
+    // 串到链尾:上一个采集跑完(无论成败)才开始本次;链尾用 catch 吞错防一次失败堵死后续。
+    collectionRunTail = collectionRunTail.then(
+      () => run(),
+      () => run(),
+    );
+    // 兜底:链尾自身的 reject 不外溢(fire-and-forget;每个 run 内部已 try/catch 落终态)。
+    collectionRunTail = collectionRunTail.catch(() => {});
+  };
+
   // Projects (module 05): one user-scoped repository over the shared db (every
   // query filters eq(userId, ctx.userId) / ownership-checks via the parent). The
   // transport mints a per-ctx service so the §12 state machines run under the
@@ -1252,6 +1288,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           authDir:
             process.env.CREATOROS_DOUYIN_AUTH_DIR ??
             nodePath.join(process.cwd(), ".auth", "douyin"),
+          gateway: douyinGateway, // [gate-F7 插装点②] creator-center 翻页限流(注真单例)
         }),
       login: () =>
         loginDouyin({
@@ -2462,7 +2499,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 markFailed: (c, id, err) => aiService.markFailed(c, id, err),
               },
               // 取音频(iesdouyin 无水印直链)—— host 绑真 fetchDouyinVideoUrl(默认真 fetch)。
-              fetchVideoUrl: (_c, awemeId) => fetchDouyinVideoUrl(awemeId),
+              // [gate-F7 插装点①] iesdouyin channel 限流(注真单例;逐字稿全量撞 IP 风控的主战场)。
+              fetchVideoUrl: (_c, awemeId) =>
+                fetchDouyinVideoUrl(awemeId, {
+                  fetch: (...args) => fetch(...args),
+                  gateway: douyinGateway,
+                }),
               // 抽音频 bytes(ffmpeg)—— host 绑真 streamAudioFromVideo(默认 child_process.spawn)。
               streamAudio: (_c, playUrl) => streamAudioFromVideo(playUrl),
               // 解析用户配的 ASR model(transcribe.audio;未配抛 TranscribeConfigError → 整任务停)。
@@ -3177,11 +3219,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           : "";
       if (single) {
         // 单作品仍走单作品抓取路径(fetchDouyinComments 内部 openContext 一次)。
-        const records = await fetchDouyinComments({
-          awemeId: single,
-          authDir: douyinAuthDir,
-          maxPages,
-        });
+        // [gate-F7 插装点③] creator-center 评论翻页限流(注真单例)。
+        const records = await fetchDouyinComments(
+          {
+            awemeId: single,
+            authDir: douyinAuthDir,
+            maxPages,
+          },
+          { gateway: douyinGateway },
+        );
         return {
           itemsNew: await ingestRecordsForWork(single, records),
           itemsUpdated: 0,
@@ -3195,10 +3241,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         .map((p) => p.externalId as string);
       // 复用单 context 一次性抓完所有作品评论(未登录 → 一次性抛 DouyinNotLoggedInError,
       // runner catch → needs_reconnect),再逐作品 ingestComments 落库(落库逻辑不变)。
-      const perWork = await fetchDouyinCommentsForWorks(awemeIds, {
-        authDir: douyinAuthDir,
-        maxPages,
-      });
+      // [gate-F7 插装点③④] creator-center:每作品 acquire 一次 + 作品内翻页每页 acquire(注真单例)。
+      const perWork = await fetchDouyinCommentsForWorks(
+        awemeIds,
+        {
+          authDir: douyinAuthDir,
+          maxPages,
+        },
+        { gateway: douyinGateway },
+      );
       let total = 0;
       for (const { awemeId, records } of perWork) {
         total += await ingestRecordsForWork(awemeId, records);
@@ -3219,7 +3270,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           : "src-douyin-canonical";
       const capturedAt = deps.now();
       // 1) 抓导出 xlsx bytes(headless 复用扫码登录态;未登录/非 xlsx 抛,run 不建 → 快速失败)。
-      const bytes = await fetchDouyinWorkListExport({ authDir: douyinAuthDir });
+      // [gate-F7 插装点⑤] creator-center 导出限流(注真单例)。
+      const bytes = await fetchDouyinWorkListExport(
+        { authDir: douyinAuthDir },
+        { gateway: douyinGateway },
+      );
       // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
       const details = await parseDouyinWorkListXlsx(bytes);
       // 3) 装配作品目录(title + externalId=aweme_id + publishedAt),按 title/pub_date 匹配。
@@ -3278,25 +3333,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
 
-  // dispatchScheduledCollection 实体:装 runner deps 后 `void runScheduledCollection(...)`
-  // (fire-and-forget)。forward-declared 于 ai transport 之上;dispatch 分支 + 调度器共用。
+  // dispatchScheduledCollection 实体:装 runner deps 后经 [gate-F5] 采集串行闸挂到链尾
+  // (fire-and-forget,concurrency=1)。forward-declared 于 ai transport 之上;dispatch 分支 +
+  // 调度器共用。**串行闸让同时只跑一个采集 job**(防两个 Chromium 各打一 channel 并存),与
+  // gateway 的请求级节奏正交(SPEC §4.4 [gate-F5])。runScheduledCollection 内部已 try/catch/
+  // finally 落 job_run 终态,链尾再 catch 兜底,一次失败不堵死后续采集。
   dispatchScheduledCollection = (ctx, task) => {
-    void runScheduledCollection(ctx, task, {
-      ai: {
-        markRunning: (c, id) => aiService.markRunning(c, id),
-        recordStep: (c, id, input) => aiService.recordStep(c, id, input),
-        markSucceeded: (c, id) => aiService.markSucceeded(c, id),
-        markFailed: (c, id, err) => aiService.markFailed(c, id, err),
-      },
-      runs: {
-        updateRun: (c, runId, patch) =>
-          schedulingService.updateRun(c, runId, patch),
-      },
-      collectors: scheduledCollectors,
-      // runner 不 import douyin-cdp:未登录判别经注入(→ needs_reconnect,§6)。
-      isNotLoggedInError: (err) => err instanceof DouyinNotLoggedInError,
-      now: deps.now,
-    });
+    enqueueCollectionRun(() =>
+      runScheduledCollection(ctx, task, {
+        ai: {
+          markRunning: (c, id) => aiService.markRunning(c, id),
+          recordStep: (c, id, input) => aiService.recordStep(c, id, input),
+          markSucceeded: (c, id) => aiService.markSucceeded(c, id),
+          markFailed: (c, id, err) => aiService.markFailed(c, id, err),
+        },
+        runs: {
+          updateRun: (c, runId, patch) =>
+            schedulingService.updateRun(c, runId, patch),
+        },
+        collectors: scheduledCollectors,
+        // runner 不 import douyin-cdp:未登录判别经注入(→ needs_reconnect,§6)。
+        isNotLoggedInError: (err) => err instanceof DouyinNotLoggedInError,
+        now: deps.now,
+      }),
+    );
   };
 
   // 调度器系统 ctx:自发触发(无 HTTP 请求),用 canonical user 身份(本机单用户起步)。

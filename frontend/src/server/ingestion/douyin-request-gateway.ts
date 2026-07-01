@@ -140,6 +140,60 @@ export interface ChannelStatus {
   lastRequestAt: number | null;
 }
 
+// ── DI 端口 + withDouyinChannel(T-038b / SPEC §4.4)────────────────────────────
+//
+// douyin-cdp 的插装点**不**硬编码 import DouyinRequestGateway 单例(否则单测会真等 9s);
+// 只依赖这个**结构化窄端口**(DouyinRequestGateway 天然满足它)。runtime 注真单例;既有
+// 单测传「即时 no-op gateway」(acquire 立即 resolve、report 为 noop)→ 不真等、零回归。
+export interface DouyinChannelGate {
+  acquire(channel: DouyinChannel): Promise<void>;
+  // report 可同步或异步(DouyinRequestGateway.report 返 Promise;no-op 返 void);
+  // withDouyinChannel 不 await 其结果(退避持久化是后台副作用,不阻塞调用方)。
+  report(channel: DouyinChannel, outcome: DouyinOutcome): void | Promise<void>;
+}
+
+// 即时 no-op gate:acquire 立即放行、report 什么都不做。既有 douyin-cdp 单测的默认注入
+// (不传 gateway 时用它)—— 保证不真等、不 flaky(SPEC 本片"既有 40 测零回归"硬约束)。
+export const instantNoopGateway: DouyinChannelGate = {
+  async acquire(): Promise<void> {
+    /* 立即放行,不节流 */
+  },
+  report(): void {
+    /* no-op */
+  },
+};
+
+/**
+ * withDouyinChannel(SPEC §4.4):把一次对外抖音请求包进「acquire → 跑 → report」一条龙:
+ *   acquire(channel) → try { r = await fn(); report(channel,"ok"); return r }
+ *                      catch(e) { report(channel, classify(mapErr(e))); throw e }
+ * **报告后仍抛原错**(不吞)—— report 只更新退避状态,失败照旧向上传播,调用方原逻辑不变。
+ * `mapErr` 把该路径的真实异常/页面状态归一成 classifyDouyinOutcome 的结构化 `kind`
+ * (router-data-missing / export-download-timeout+hasNoDataToast / net-timeout+consecutive…);
+ * 省略 mapErr → 一律按 net-timeout 单次(content-error 不退避,保守但不误封,兜底)。
+ */
+export async function withDouyinChannel<T>(
+  gateway: DouyinChannelGate,
+  channel: DouyinChannel,
+  fn: () => Promise<T>,
+  mapErr?: (err: unknown) => ClassifyInput,
+): Promise<T> {
+  await gateway.acquire(channel);
+  try {
+    const r = await fn();
+    // 成功:清退避(report 可能返 Promise,不 await —— 持久化是后台副作用)。
+    void gateway.report(channel, "ok");
+    return r;
+  } catch (e) {
+    // 失败:据映射分类 → report(throttled/content-error),**报告后仍抛原错**。
+    const input: ClassifyInput = mapErr
+      ? mapErr(e)
+      : { kind: "net-timeout", consecutiveTimeouts: 1 };
+    void gateway.report(channel, classifyDouyinOutcome(input));
+    throw e;
+  }
+}
+
 // 每 channel 的运行时状态(内存镜像 + 串行链尾)。
 interface ChannelState {
   cooldownUntil: number | null;

@@ -1,5 +1,14 @@
 import "server-only";
 import type { MetricRecord } from "@creatoros/backend/modules/ingestion";
+// T-038b 限流网关集成:每个对外抖音请求过 withDouyinChannel(acquire→跑→report)。
+// gateway 走**可注入窄端口**(DouyinChannelGate),默认 instantNoopGateway(不真等)——
+// 既有单测不传 gateway 即用它,零回归;runtime 由 persistence-client 注真单例。
+import {
+  withDouyinChannel,
+  instantNoopGateway,
+  type DouyinChannelGate,
+  type ClassifyInput,
+} from "./douyin-request-gateway";
 
 // 抖音真实指标抓取适配器(线 B)。通过 Chrome CDP 连用户**常驻已登录**的浏览器
 // (chromium.connectOverCDP),拦截创作者中心 XHR 拿 JSON,映射成 ingestion 的
@@ -306,11 +315,25 @@ export function parseDouyinVideoUrl(html: string): DouyinVideoUrl {
 /** fetchDouyinVideoUrl 的可注入依赖(默认真全局 fetch;单测注 fake,不走网络)。 */
 export interface FetchDouyinVideoUrlDeps {
   fetch: typeof fetch;
+  // T-038b [gate-F7 插装点①]:iesdouyin channel 限流网关(无 cookie,封 IP,minInterval 9s)。
+  // 默认 instantNoopGateway(既有单测不传即不真等);runtime 注真单例。
+  gateway?: DouyinChannelGate;
 }
 
 const REAL_FETCH_DEPS: FetchDouyinVideoUrlDeps = {
   fetch: (...args) => fetch(...args),
 };
+
+// iesdouyin 取直链的错误 → classify 输入映射(T-038b):
+//   - 无 _ROUTER_DATA / JSON 解析失败(parseDouyinVideoUrl 抛的两条,风控残页)→ router-data-missing(throttled)。
+//   - item_list 空(图集/已删除,内容性质)→ empty-item-list(content-error 不退避)。
+//   - 其余(网络失败 / HTTP 非 2xx / ffmpeg 等)→ net-timeout 单次(保守,单次不 cooldown)。
+function mapIesdouyinErr(err: unknown): ClassifyInput {
+  const raw = err instanceof Error ? err.message : String(err ?? "");
+  if (raw.includes("_ROUTER_DATA")) return { kind: "router-data-missing" };
+  if (raw.includes("item_list 为空")) return { kind: "empty-item-list" };
+  return { kind: "net-timeout", consecutiveTimeouts: 1 };
+}
 
 /**
  * GET iesdouyin 分享页(手机 UA)→ parseDouyinVideoUrl 抽无水印直链。fetch 可注入(默认真
@@ -321,33 +344,42 @@ export async function fetchDouyinVideoUrl(
   awemeId: string,
   deps: FetchDouyinVideoUrlDeps = REAL_FETCH_DEPS,
 ): Promise<DouyinVideoUrl> {
-  const pageUrl = `https://www.iesdouyin.com/share/video/${encodeURIComponent(
-    awemeId,
-  )}/`;
-  let res: Response;
-  try {
-    res = await deps.fetch(pageUrl, {
-      headers: {
-        "User-Agent": DY_MOBILE_UA,
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-      },
-    });
-  } catch (err) {
-    throw new DouyinAudioFetchError(
-      `fetchDouyinVideoUrl: 请求 iesdouyin 失败 (aweme ${awemeId}): ${
-        err instanceof Error ? err.message : String(err)
-      }`,
-    );
-  }
-  if (!res.ok) {
-    throw new DouyinAudioFetchError(
-      `fetchDouyinVideoUrl: iesdouyin HTTP ${res.status} (aweme ${awemeId})`,
-    );
-  }
-  const html = await res.text();
-  return parseDouyinVideoUrl(html);
+  const gateway = deps.gateway ?? instantNoopGateway;
+  // [gate-F7 插装点①] iesdouyin channel:acquire→取直链→report(classify)。报告后仍抛原错。
+  return withDouyinChannel(
+    gateway,
+    "iesdouyin",
+    async () => {
+      const pageUrl = `https://www.iesdouyin.com/share/video/${encodeURIComponent(
+        awemeId,
+      )}/`;
+      let res: Response;
+      try {
+        res = await deps.fetch(pageUrl, {
+          headers: {
+            "User-Agent": DY_MOBILE_UA,
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "zh-CN,zh;q=0.9",
+          },
+        });
+      } catch (err) {
+        throw new DouyinAudioFetchError(
+          `fetchDouyinVideoUrl: 请求 iesdouyin 失败 (aweme ${awemeId}): ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      }
+      if (!res.ok) {
+        throw new DouyinAudioFetchError(
+          `fetchDouyinVideoUrl: iesdouyin HTTP ${res.status} (aweme ${awemeId})`,
+        );
+      }
+      const html = await res.text();
+      return parseDouyinVideoUrl(html);
+    },
+    mapIesdouyinErr,
+  );
 }
 
 /** streamAudioFromVideo 的可注入依赖(默认 child_process.spawn;单测注 fake,不跑真 ffmpeg)。
@@ -487,6 +519,9 @@ export interface FetchDouyinOptions {
   capturedAt: string;
   /** 最多翻几页(防无限滚动卡死)。 */
   maxPages?: number;
+  // T-038b [gate-F7 插装点②]:creator-center channel 限流网关(带 sessionid,封账号,minInterval 4s)。
+  // **每翻一页 acquire 一次**(把 40 页翻页真正限速)。默认 instantNoopGateway(既有单测不真等)。
+  gateway?: DouyinChannelGate;
 }
 
 export interface LoginDouyinOptions {
@@ -595,18 +630,59 @@ export async function loginDouyin(opts: LoginDouyinOptions): Promise<boolean> {
   }
 }
 
+// fetchDouyinMetrics 只依赖 page/context 的这几个能力(收窄便于 fake page 单测,不起真
+// Chromium)。真实 Playwright Page/BrowserContext 结构上满足(默认注入时向上转型目标)。
+type MetricsResponseHandler = (resp: {
+  url(): string;
+  json(): Promise<unknown>;
+}) => void;
+interface MetricsCapablePage {
+  on(event: "response", cb: MetricsResponseHandler): void;
+  goto(url: string, opts?: unknown): Promise<unknown>;
+  waitForTimeout(ms: number): Promise<void>;
+  evaluate<R>(fn: () => R): Promise<R>;
+  keyboard: { press(key: string): Promise<void> };
+  mouse: { wheel(deltaX: number, deltaY: number): Promise<void> };
+}
+interface MetricsCapableContext {
+  pages(): MetricsCapablePage[];
+  newPage(): Promise<MetricsCapablePage>;
+  cookies(url: string): Promise<Array<{ name: string }>>;
+  close(): Promise<void>;
+}
+
+/** fetchDouyinMetrics 的可注入依赖(默认真 openContext(.auth/, headless);单测注 fake page/ctx
+ *  断言翻页每页 acquire creator-center + 关一次)。 */
+export interface FetchDouyinMetricsDeps {
+  openContext?: (
+    authDir: string,
+    headless: boolean,
+  ) => Promise<MetricsCapableContext>;
+}
+
+const realMetricsOpenContext = (authDir: string, headless: boolean) =>
+  openContext(authDir, headless) as unknown as Promise<MetricsCapableContext>;
+
 /**
  * 真抓:headless 复用 .auth/ 登录态 → 导航创作者中心 → 拦作品列表 XHR → 礼貌滚动翻页 →
  * MetricRecord[]。**不落库**(落库由 ingestion.service 负责)。未登录抛 DouyinNotLoggedInError
- * (调用方提示先扫码登录)。仅在用户机器上跑;CI/测试不调用。
+ * (调用方提示先扫码登录)。openContext 端口注入(默认真 openContext),故翻页限流可确定性单测。
  */
 export async function fetchDouyinMetrics(
   opts: FetchDouyinOptions,
+  deps: FetchDouyinMetricsDeps = {},
 ): Promise<MetricRecord[]> {
   const maxPages = opts.maxPages ?? 40; // 上限(每页 ~12 条;has_more=false 会提前停,40 覆盖 ~480 作品)
-  const ctx = await openContext(opts.authDir, true);
+  const gateway = opts.gateway ?? instantNoopGateway; // [gate-F7 插装点②] creator-center 每页限流
+  const openCtx = deps.openContext ?? realMetricsOpenContext;
+  const ctx = await openCtx(opts.authDir, true);
   try {
-    if (!(await isLoggedIn(ctx))) throw new DouyinNotLoggedInError();
+    // 登录校验(窄接口只用 ctx.cookies;真 BrowserContext 结构满足)。
+    const cookies = await ctx.cookies("https://creator.douyin.com");
+    const loggedIn = cookies.some(
+      (c) => c.name === "sessionid" || c.name === "sessionid_ss",
+    );
+    if (!loggedIn) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
 
     const workJsons: unknown[] = [];
@@ -644,28 +720,37 @@ export async function fetchDouyinMetrics(
     for (let i = 0; i < maxPages; i++) {
       if (!hasMore) break; // 抖音 work_list 明确翻到底
       const before = seenIds.size;
-      await page
-        .evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-        .catch(() => {});
-      await page
-        .evaluate(() => {
-          const els = Array.from(
-            document.querySelectorAll("*"),
-          ) as HTMLElement[];
-          let best: HTMLElement | null = null;
-          let max = 0;
-          for (const el of els) {
-            if (el.scrollHeight > el.clientHeight + 200 && el.scrollHeight > max) {
-              max = el.scrollHeight;
-              best = el;
+      // [gate-F7 插装点②] 每翻一页 acquire 一次 creator-center(把翻页真正限速,防高频撞账号风控)。
+      await withDouyinChannel(gateway, "creator-center", async () => {
+        await page
+          .evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+          .catch(() => {});
+        await page
+          .evaluate(() => {
+            const els = Array.from(
+              document.querySelectorAll("*"),
+            ) as HTMLElement[];
+            let best: HTMLElement | null = null;
+            let max = 0;
+            for (const el of els) {
+              if (
+                el.scrollHeight > el.clientHeight + 200 &&
+                el.scrollHeight > max
+              ) {
+                max = el.scrollHeight;
+                best = el;
+              }
             }
-          }
-          if (best) (best as HTMLElement).scrollTop = (best as HTMLElement).scrollHeight;
-        })
-        .catch(() => {});
-      await page.keyboard.press("End").catch(() => {});
-      await page.mouse.wheel(0, 3000).catch(() => {});
-      await page.waitForTimeout(2500);
+            if (best)
+              (best as HTMLElement).scrollTop = (
+                best as HTMLElement
+              ).scrollHeight;
+          })
+          .catch(() => {});
+        await page.keyboard.press("End").catch(() => {});
+        await page.mouse.wheel(0, 3000).catch(() => {});
+        await page.waitForTimeout(2500);
+      });
       staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
       if (staleRounds >= 3) break; // has_more 不返回时的兜底,防死循环
     }
@@ -723,6 +808,9 @@ export interface FetchDouyinCommentsDeps {
     authDir: string,
     headless: boolean,
   ) => Promise<CommentCapableContext>;
+  // T-038b [gate-F7 插装点③④]:creator-center channel 限流网关。③ 评论翻页**每页 acquire 一次**;
+  // ④ 多作品**每作品 acquire 一次**。默认 instantNoopGateway(既有单测不传即不真等)。
+  gateway?: DouyinChannelGate;
 }
 
 const DEFAULT_COMMENT_MAX_PAGES = 40;
@@ -744,6 +832,8 @@ async function scrapeCommentsForWork(
   page: CommentCapablePage,
   awemeId: string,
   maxPages: number,
+  // [gate-F7 插装点③] 评论翻页限流网关(每页 acquire 一次 creator-center)。默认 no-op(单测不真等)。
+  gateway: DouyinChannelGate = instantNoopGateway,
 ): Promise<CommentRecord[]> {
   const commentJsons: unknown[] = [];
   const seenIds = new Set<string>();
@@ -775,11 +865,14 @@ async function scrapeCommentsForWork(
     let staleRounds = 0;
     for (let i = 0; i < maxPages; i++) {
       const before = seenIds.size;
-      await page
-        .evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-        .catch(() => {});
-      await page.mouse.wheel(0, 2000).catch(() => {});
-      await page.waitForTimeout(2000);
+      // [gate-F7 插装点③] 每翻一页 acquire 一次 creator-center(评论翻页真正限速)。
+      await withDouyinChannel(gateway, "creator-center", async () => {
+        await page
+          .evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+          .catch(() => {});
+        await page.mouse.wheel(0, 2000).catch(() => {});
+        await page.waitForTimeout(2000);
+      });
       staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
       if (staleRounds >= 3) break;
     }
@@ -815,11 +908,13 @@ export async function fetchDouyinComments(
 ): Promise<CommentRecord[]> {
   const maxPages = target.maxPages ?? DEFAULT_COMMENT_MAX_PAGES;
   const openCtx = deps.openContext ?? realCommentOpenContext;
+  const gateway = deps.gateway ?? instantNoopGateway;
   const ctx = await openCtx(target.authDir, true);
   try {
     if (!(await isCommentContextLoggedIn(ctx))) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
-    return await scrapeCommentsForWork(page, target.awemeId, maxPages);
+    // 单作品:翻页限流由 scrapeCommentsForWork 内部 acquire(插装点③);不额外套作品级 acquire。
+    return await scrapeCommentsForWork(page, target.awemeId, maxPages, gateway);
   } finally {
     await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
   }
@@ -853,6 +948,7 @@ export async function fetchDouyinCommentsForWorks(
 ): Promise<FetchCommentsForWorksResult[]> {
   const maxPages = opts.maxPages ?? DEFAULT_COMMENT_MAX_PAGES;
   const openCtx = deps.openContext ?? realCommentOpenContext;
+  const gateway = deps.gateway ?? instantNoopGateway;
   // openContext 开一次(整批复用);空作品列表也开一次做登录校验,保持行为一致(校验优先)。
   const ctx = await openCtx(opts.authDir, true);
   try {
@@ -861,8 +957,12 @@ export async function fetchDouyinCommentsForWorks(
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     const out: FetchCommentsForWorksResult[] = [];
     for (const awemeId of awemeIds) {
-      // 同一 context / 同一 page 逐作品导航抓取(评论管理页每作品 item_id 过滤,goto 会换页)。
-      const records = await scrapeCommentsForWork(page, awemeId, maxPages);
+      // [gate-F7 插装点④] **每作品 acquire 一次** creator-center(把 72 作品逐个导航真正限速);
+      // 作品内翻页再由 scrapeCommentsForWork 内部 acquire(插装点③),两层正交、均串行到 creator-center。
+      const records = await withDouyinChannel(gateway, "creator-center", () =>
+        // 同一 context / 同一 page 逐作品导航抓取(评论管理页每作品 item_id 过滤,goto 会换页)。
+        scrapeCommentsForWork(page, awemeId, maxPages, gateway),
+      );
       out.push({ awemeId, records });
     }
     return out;
@@ -956,7 +1056,16 @@ export interface FetchWorkListExportDeps {
   readFile?: (path: string) => Promise<Uint8Array>;
   /** 等按钮/下载超时(ms;默认 40s 下载 / 每步等待照 TzFilm 节奏)。 */
   downloadTimeoutMs?: number;
+  // T-038b [gate-F7 插装点⑤]:creator-center channel 限流网关(整个导出一次 acquire)。
+  // 默认 instantNoopGateway(既有单测不传即不真等)。
+  gateway?: DouyinChannelGate;
 }
+
+// 「当前暂无数据可导出」toast 的 charCode 序([gate-F6]:有此 toast = 内容空,非频控 →
+// download 超时归 content-error 不退避,防图集导出被误判风控;charCode 避字面量编码坑,同文件惯例)。
+const TOAST_NO_DATA_CODES = [
+  24403, 21069, 26242, 26080, 25968, 25454, 21487, 23548, 20986,
+];
 
 export interface FetchWorkListExportOptions {
   authDir: string;
@@ -1166,9 +1275,51 @@ export async function fetchDouyinWorkListExport(
       return new Uint8Array(await rf(p));
     });
   const downloadTimeoutMs = deps.downloadTimeoutMs ?? 40_000;
+  const gateway = deps.gateway ?? instantNoopGateway; // [gate-F7 插装点⑤] creator-center 整个导出一次限流
 
   const ctx = await openCtx(opts.authDir, true);
+  // [gate-F6] download 超时时探到的「当前暂无数据可导出」toast 结果(true=内容空非频控)。
+  // 由下方 download 失败分支填,mapExportErr 读它决定 export-download-timeout 的最终分类。
+  let sawNoDataToast = false;
+  // 导出错误 → classify 输入映射:
+  //   - DouyinNotLoggedInError / DouyinExportError(登录/版式/PK 头)= 内容/环境错,非频控 → content-error(不退避)。
+  //   - download 超时:按 [gate-F6] 先看 no-data toast:有 → content-error(图集/无数据);无 → export-download-timeout(→throttled)。
+  const mapExportErr = (err: unknown): ClassifyInput => {
+    if (err instanceof DouyinNotLoggedInError || err instanceof DouyinExportError) {
+      return { kind: "empty-item-list" }; // content-error 家族:不动退避
+    }
+    const raw = err instanceof Error ? err.message : String(err ?? "");
+    // waitForEvent download 超时:交由 hasNoDataToast 定分类([gate-F6] 顺序写死)。
+    if (raw.includes("download") || raw.toLowerCase().includes("timeout")) {
+      return { kind: "export-download-timeout", hasNoDataToast: sawNoDataToast };
+    }
+    return { kind: "net-timeout", consecutiveTimeouts: 1 }; // 兜底保守单次
+  };
+
   try {
+    return await withDouyinChannel(
+      gateway,
+      "creator-center",
+      () => runExportOnce(ctx, { downloadTimeoutMs, readFile, onDownloadTimeout: (v) => { sawNoDataToast = v; } }),
+      mapExportErr,
+    );
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
+  }
+}
+
+/** fetchDouyinWorkListExport 的核心步骤(已开 ctx),抽出以便被 withDouyinChannel 包一次 acquire。
+ *  download 超时时探「当前暂无数据可导出」toast 并经 onDownloadTimeout 回传([gate-F6] 分类依据)。 */
+async function runExportOnce(
+  ctx: ExportCapableContext,
+  args: {
+    downloadTimeoutMs: number;
+    readFile: (path: string) => Promise<Uint8Array>;
+    onDownloadTimeout: (hasNoDataToast: boolean) => void;
+  },
+): Promise<Uint8Array> {
+  const { downloadTimeoutMs, readFile, onDownloadTimeout } = args;
+  {
     if (!(await isLoggedInExport(ctx))) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
 
@@ -1273,20 +1424,31 @@ export async function fetchDouyinWorkListExport(
       );
     }
 
-    // 7) 截下载文件 bytes(TzFilm:点击后只等下载,绝不重试点击)。
-    const download = await downloadPromise;
+    // 7) 截下载文件 bytes(TzFilm:点击后只等下载,绝不重试点击)。download 超时时([gate-F6]:
+    //    「当前暂无数据可导出」的图集/无数据号永不触发 download → 必然超时)先探 no-data toast:
+    //    有 toast = 内容空非频控(content-error 不退避);无 toast = 疑似频控(export-download-timeout
+    //    → throttled)。探测结果经 onDownloadTimeout 回传给 mapExportErr 定分类,原超时错照旧抛出。
+    let download: { path(): Promise<string> };
+    try {
+      download = await downloadPromise;
+    } catch (timeoutErr) {
+      const hasNoDataToast = await page
+        .evaluate(hasVisibleByCharCodesInPage, TOAST_NO_DATA_CODES)
+        .catch(() => false);
+      onDownloadTimeout(hasNoDataToast);
+      await debugShot(page, "03-download-timeout.png");
+      throw timeoutErr; // 原超时错向上传(withDouyinChannel 据 mapExportErr 分类后仍抛)
+    }
     const path = await download.path();
     const bytes = await readFile(path);
 
-    // 5) 校验 PK 头(登录态过期时抖音返 JSON / HTML,非真 xlsx —— TzFilm Pitfall)。
+    // 8) 校验 PK 头(登录态过期时抖音返 JSON / HTML,非真 xlsx —— TzFilm Pitfall)。
     if (!isXlsxBytes(bytes)) {
       throw new DouyinExportError(
         "fetchDouyinWorkListExport: 下载内容非 xlsx(PK 头缺失 —— 登录态可能过期,返回了 JSON/HTML)",
       );
     }
     return bytes;
-  } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
   }
 }
 
