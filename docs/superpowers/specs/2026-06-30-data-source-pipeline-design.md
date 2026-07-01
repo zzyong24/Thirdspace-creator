@@ -38,12 +38,12 @@
 
 ## 1. 核心洞察
 
-把"定时任务"做成一个**通用原语**:一个作业 = 一段提示词 + 一个调度。调度器到点产出一条 `ai_task`,既有队列(`drainQueue`)claim 后唤醒 Agent(`runTask`),Agent 用授权的浏览器工具去执行(抓自己主页数据 / 评论),产出结构化数据,**经 ingestion 已有链路**落到 `projects(source:imported)` / `metric_snapshots` / `audience_signals`。
+把"定时任务"做成一个**通用原语**:一个作业 = 一段提示词 + 一个调度。调度器到点产出一条 `ai_task`,persistence-client live dispatch 唤起 `runScheduledCollection`(确定性 runner,**不调 LLM**),用采集函数去执行(抓自己主页数据 / 评论),产出结构化数据,**经 ingestion 已有链路**落到 `projects(source:imported)` / `metric_snapshots` / `audience_signals`。
 
 - **通用**:加新自动化 = 写提示词 + 配调度,不写新采集器代码。
 - **复用现成(三处)**:
   - **采集** = 已跑通的 `fetchDouyinMetrics`(`launchPersistentContext`)+ 待补的评论抓取,**同文件、同持久化登录态**。
-  - **唤醒 Agent** = 既有队列 `ai_tasks → drainQueue → runTask`(`runAgentNode` + `tool-registry`),**不另起 runner**。
+  - **执行** = persistence-client live dispatch 按 taskType `void runScheduledCollection`(仿现有 15 个 runner、确定性不调 LLM),**不碰死链 `drainQueue`/`runTask`**(见顶部🔧)。
   - **落库** = 既有 `refreshDouyin → ensureImportedProject → ingestMetrics`(作品/指标)+ 评论 → `audience_signals`,**不另建源表**。
 - **绕开鉴权**:自起 Chromium + 持久化 `.auth/` 复用你**扫码登录过**的会话抓"自己的"数据 —— 不碰抖音签名/反爬;cookie 只活在 `.auth/`,绝不落库、绝不入 Git(最符合 secrets 规则)。
 
@@ -103,7 +103,7 @@ interface BrowserDriver {
 | `projects`(`source:imported`, `platform_ref`) | T-001 / data-foundation §1.1 ✅ | 自己作品落这,**不新建作品库实体**。`ensureImportedProject` 幂等于 `(userId, platform, externalId)`。 |
 | `metric_snapshots` / `metric_values` | T-001 ✅ | 自己指标周期快照落这,`ingestMetrics` 经 `resolvePublication` 命中后 `appendSnapshot`。 |
 | `audience_signals` | data-foundation §1.3 | 评论落这:`raw_text`=评论文本、`source="comment"`(**用既有 enum**,见下「评论口径修正」)、`demand_tag=null`(待 AI 打)。**幂等走 ingestion**:评论作业建一条 ingestion run,每条评论 `record_key=comment_id` 经既有 `ux_ingestion_records_run_key` 去重,`audience_signals.ingestion_run_id` 带上(守硬约束 C-4:AudienceSignal 写经 Ingestion、骑 ingestion 幂等)。**不自造 `(userId, external_id)` 键、不加 external_id 列。** |
-| `ai_tasks`(0000_init)/ `ai_task_steps`(0007) | ✅ 已存在 | 调度到点产 `ai_task`(`taskType=scheduled.<source>`)走 `drainQueue`/`runTask`;过程步骤落 `ai_task_steps`(经 `aiTaskId` 关联)。**不另起 runner / 步骤表。** |
+| `ai_tasks`(0000_init)/ `ai_task_steps`(0007) | ✅ 已存在 | 调度到点产 `ai_task`(`taskType=scheduled.<source>`)走 persistence-client live dispatch → `runScheduledCollection`;过程步骤落 `ai_task_steps`(经 `aiTaskId` 关联,现有 insertStep)。**不另起步骤表;不碰死链 drainQueue/runTask(见顶部🔧)。** |
 
 **真要新建的表(收敛后只剩 2 张,迁移取 `0009`):**
 
@@ -152,7 +152,7 @@ interface BrowserDriver {
 > **关键:执行走 live dispatch,新增确定性 runner(2026-07-01 实现期修正,原"runTask 加分支"作废——见顶部🔧)。**
 > - **幂等层 = 纯复用**:`ai_tasks` + `ai_tasks_user_idempotency`(`(user_id, idempotency_key)` 唯一)天然按天去重,照用不改。
 > - **执行层 = 新增 `runScheduledCollection` 确定性 runner(不碰 orchestrator 死链)**:`drainQueue`/`runTask`(`ai-worker/src/orchestrator.ts`)是 Claude Agent SDK 遗留、**零生产驱动**(T-006 迁 Vercel 后);真实执行是 persistence-client 按 taskType `void runXxxTask` 后台跑(15 个 runner 用 `runStructuredNode`)。故调度采集**当作又一个 runner**:`runScheduledCollection` 仿 runAssetGenerate(markRunning→…→succeeded)但**不调 LLM、不产 candidate、不过确认门** —— 直接 `fetchDouyinMetrics`/`fetchDouyinComments` → ingestion 落库 → 合成 step 写 `ai_task_steps`(经现有 insertStep)→ `succeeded` → 回填 `job_run`。dispatch 加 `scheduled.*` 分支。**比原稿更简、去风险:不复活死链。**
-> - `job_run` 与 `ai_task` 一一对应(`job_run.ai_task_id`),回填在 runner 终态。
+> - `job_run` 与 `ai_task` 一一对应(`job_run.ai_task_id`),回填在 runner 终态。**fire-and-forget 兜底(gate finding 3)**:runner 用 try/catch/finally,终态 + `finished_at` 在 `finally` 落,任何异常(采集失败 / 落库后 crash)`job_run` 都不悬挂 `running`;启动时扫超时仍 `running` 的 → 标 `failed`。
 
 > **评论口径修正(re-review 找到的 C-4 冲突,本 SPEC + data-foundation §1.3 同步修)**:原写 `source="douyin_comment"` + `external_id=comment_id` + 幂等 `(userId, external_id)` 是孤儿口径 —— 真实 `audienceSignalSource` enum 只有 `comment|dm|consultation|review`(contract `primitives.ts` + `candidate.schema.ts` 双层 Zod 校验,`douyin_comment` 会被 reject),`audience_signals` 表**无 `external_id` 列、无 UNIQUE 约束**,且硬约束 C-4(`candidate.ts`)写明"AudienceSignal 写经 Ingestion、骑 ingestion 幂等"。**改为**:评论作业建一条 ingestion run,`source` 用既有 `"comment"`,去重锚用 `ingestion_records.record_key=comment_id`(经既有 `ux_ingestion_records_run_key`),`audience_signals.ingestion_run_id` 带上。不扩 enum、不加列、不自造幂等键。
 
@@ -160,7 +160,7 @@ interface BrowserDriver {
 
 headless 复刷遇未登录 → 已实现的 `fetchDouyinMetrics` 抛 `DouyinNotLoggedInError`(`douyin-cdp.ts:241`)。接线:
 
-1. `runTask` 的采集分支 catch 到 `DouyinNotLoggedInError` → 不当作普通失败,标 `job_run.status='needs_reconnect'`、`error='需重连 Chrome:登录态过期,请在任务中心点「登录抖音」扫码'`。
+1. `runScheduledCollection` catch 到 `DouyinNotLoggedInError` → 不当作普通失败,标 `job_run.status='needs_reconnect'`、`error='需重连 Chrome:登录态过期,请在任务中心点「登录抖音」扫码'`(在 `finally` 里落终态,见 §5 fire-and-forget 兜底)。
 2. 该 job **暂停后续到点触发**(`enabled` 不变,但调度器见最近一次 `needs_reconnect` 跳过自动跑),等用户处理。
 3. 任务中心该作业卡**红标"需重连 Chrome"**;点「登录抖音」→ 调既有 `loginDouyin`(headed 弹 Chromium 扫码,落 `.auth/`)→ 成功后恢复自动跑。
 
@@ -170,7 +170,7 @@ headless 复刷遇未登录 → 已实现的 `fetchDouyinMetrics` 抛 `DouyinNot
 
 - **~~Sfix basis 装配 bug~~**(已删):`runTopicGenerateV2`(`topic-task-adapter.ts:66-73`)**早已**按 basis 装配 `signalsBrief`(评论)/`knowledgeBrief`(知识),非本 SPEC 的活。对标既已砍,原 `trend`/`benchmark` 一路也移出本期(现 `trend` basis 装配空 brief,留作未来扩展,不在本期接 benchmark)。
 - **S0(独立快赢):富录入弹窗** —— 「新增选题卡」2 字段 → 居中 Dialog 分组录入整张候选卡(沿用审阅弹窗范式)。与调度系统无依赖,可独立做。
-- **评论依据真喂选题**:评论作业 → `audience_signals`(`source="douyin_comment"`)→ 选题 `basis=comments` 读真评论装配 `signalsBrief`(`topic-task-adapter.ts` 已接 `context.signalsBrief`,只待评论真采集落地)。**这是本期"评论源"的下游闭环**。
+- **评论依据真喂选题**:评论作业 → `audience_signals`(`source="comment"`)→ 选题 `basis=comments` 读真评论装配 `signalsBrief`(`topic-task-adapter.ts` 已接 `context.signalsBrief`,只待评论真采集落地)。**这是本期"评论源"的下游闭环**。
 - 自己数据周期刷新后:Dashboard / 复盘读真表(T-001 / data-foundation §1.4 的 `hasImportedProjects` 让位机制已就绪,周期刷新只是让真表持续新鲜)。
 
 > **行业热点 / 对标依据本期不做**:原稿"`basis=trend` 读 `benchmark_snapshot` 按 diggDelta TOP"整条随对标砍掉;`benchmarkBrief` 装配、historicalPerformers/trend 从 benchmark 真表取数,均移出本期。
@@ -204,7 +204,8 @@ headless 复刷遇未登录 → 已实现的 `fetchDouyinMetrics` 抛 `DouyinNot
 ## 10. 验收
 
 - 任务中心每个数字都能追到真实 `job_run` / `ai_task_steps`(无写死);抓来的播放/赞数 == 页面实际值(程序化抽取,非 LLM 读)。
-- 配一个"每天抓我主页"作业(`source_kind=self.metrics`)→ 到点自动产 `ai_task` 走 `drainQueue` / 点「立即运行」→ `metric_snapshots` 有真快照、`projects(source:imported)` 是真作品 → Dashboard 数据新鲜。
-- 配一个"每天抓我评论"作业(`source_kind=comments`)→ `audience_signals`(`source="douyin_comment"`)出真评论 → 选题 `basis=comments` 依据变活。
+- 配一个"每天抓我主页"作业(`source_kind=self.metrics`)→ 到点自动产 `ai_task` 走 live dispatch(`runScheduledCollection`)/ 点「立即运行」→ `metric_snapshots` 有真快照、`projects(source:imported)` 是真作品 → Dashboard 数据新鲜。
+- 配一个"每天抓我评论"作业(`source_kind=comments`)→ `audience_signals`(`source="comment"`)出真评论 → 选题 `basis=comments` 依据变活。
+- **fire-and-forget 兜底(gate finding 3)**:`runScheduledCollection` 任一异常路径(采集失败 / 落库后 crash / 进程重启)→ `job_run` 不悬挂在 `running` —— 终态 + `finished_at` 在 `finally` 回填;启动时扫超时仍 `running` 的 `job_run` → 标 `failed`。
 - recipe 失效(页面结构变)时自动重新发现;Chrome 登录态过期时如实标 `needs_reconnect`(红标"需重连 Chrome"),不假装有数据;点「登录抖音」扫码后恢复。
 - 同 `(job, 自然日)` 重复触发不重复采(`ai_tasks_user_idempotency` 命中返回既有 task)。
