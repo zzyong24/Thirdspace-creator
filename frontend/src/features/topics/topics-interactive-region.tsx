@@ -428,6 +428,21 @@ const EMPTY_CARD = {
   proposal: "",
 };
 
+// 评分/可行性 —— schema 里是 number(0–100)|null 与 3 档枚举,与上面全字符串的 EMPTY_CARD
+// 结构不同,单独用字符串态承接输入(空串 = 留空 = 不 patch,保持「不写空字段」的诚实)。
+const EMPTY_SCORES = {
+  audiencePainScore: "", // 受众痛感 0–100
+  materialScore: "", // 素材充足 0–100
+  productionDifficulty: "", // "" | low | mid | high
+};
+
+const DIFFICULTY_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "", label: "未评估" },
+  { value: "low", label: "低" },
+  { value: "mid", label: "中" },
+  { value: "high", label: "高" },
+];
+
 function FieldRow({
   label,
   required,
@@ -454,15 +469,21 @@ export function CreateCandidateForm() {
   const [title, setTitle] = React.useState("");
   const [angle, setAngle] = React.useState("");
   const [card, setCard] = React.useState(EMPTY_CARD);
+  const [scores, setScores] = React.useState(EMPTY_SCORES);
   const valid = title.trim().length > 0;
   const setField =
     (k: keyof typeof EMPTY_CARD) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setCard((c) => ({ ...c, [k]: e.target.value }));
+  const setScore =
+    (k: keyof typeof EMPTY_SCORES) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setScores((s) => ({ ...s, [k]: e.target.value }));
 
   function reset() {
     setTitle("");
     setAngle("");
     setCard(EMPTY_CARD);
+    setScores(EMPTY_SCORES);
   }
 
   function submit() {
@@ -496,6 +517,16 @@ export function CreateCandidateForm() {
           .map((s) => s.trim())
           .filter(Boolean);
         if (structure.length) filled.contentStructure = structure;
+        // 评分/可行性:数字 0–100 越界或非数跳过;难度只收白名单枚举 —— 数据要真,不塞脏值。
+        for (const k of ["audiencePainScore", "materialScore"] as const) {
+          const raw = scores[k].trim();
+          if (!raw) continue;
+          const n = Number(raw);
+          if (Number.isInteger(n) && n >= 0 && n <= 100) filled[k] = n;
+        }
+        if (["low", "mid", "high"].includes(scores.productionDifficulty)) {
+          filled.productionDifficulty = scores.productionDifficulty;
+        }
         if (Object.keys(filled).length > 0 && created?.id) {
           await client.patchCandidate({
             params: { candidateId: created.id },
@@ -624,6 +655,53 @@ export function CreateCandidateForm() {
                     onChange={setField("materialBasis")}
                   />
                 </FieldRow>
+              </section>
+
+              <section className="flex flex-col gap-2.5">
+                <h4 className="text-[11px] font-semibold uppercase tracking-wide text-brand">
+                  评分 / 可行性
+                </h4>
+                <p className="-mt-1 text-[11px] text-text-subtle">
+                  可留空(由 AI 评估补);手填则记你的判断。0–100 分,越界不收。
+                </p>
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                  <FieldRow label="受众痛感(0–100)">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      inputMode="numeric"
+                      aria-label="受众痛感评分"
+                      value={scores.audiencePainScore}
+                      onChange={setScore("audiencePainScore")}
+                    />
+                  </FieldRow>
+                  <FieldRow label="素材充足(0–100)">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      inputMode="numeric"
+                      aria-label="素材充足评分"
+                      value={scores.materialScore}
+                      onChange={setScore("materialScore")}
+                    />
+                  </FieldRow>
+                  <FieldRow label="制作难度">
+                    <select
+                      aria-label="制作难度"
+                      value={scores.productionDifficulty}
+                      onChange={setScore("productionDifficulty")}
+                      className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      {DIFFICULTY_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </FieldRow>
+                </div>
               </section>
 
               <section className="flex flex-col gap-2.5">

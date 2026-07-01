@@ -280,6 +280,38 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(mockRouter.refresh).toHaveBeenCalled();
   });
 
+  it("新建选题卡·评分/可行性 → patchCandidate 带上数字评分 + 难度枚举(越界不收)", async () => {
+    mockClient.createCandidate.mockResolvedValueOnce({ id: "cand-scored" });
+    render(<CreateCandidateForm />);
+    fireEvent.click(screen.getByText("手动详填"));
+    fireEvent.change(screen.getByLabelText("选题标题"), {
+      target: { value: "带评分的选题" },
+    });
+    fireEvent.change(screen.getByLabelText("受众痛感评分"), {
+      target: { value: "88" },
+    });
+    // 越界值应被丢弃(不 patch)。
+    fireEvent.change(screen.getByLabelText("素材充足评分"), {
+      target: { value: "120" },
+    });
+    fireEvent.change(screen.getByLabelText("制作难度"), {
+      target: { value: "mid" },
+    });
+    fireEvent.submit(screen.getByTestId("create-candidate-form"));
+    await waitFor(() =>
+      expect(mockClient.patchCandidate).toHaveBeenCalledTimes(1),
+    );
+    const patchArg = mockClient.patchCandidate.mock.calls[0]![0] as {
+      body: { card: Record<string, unknown> };
+    };
+    expect(patchArg.body.card).toMatchObject({
+      audiencePainScore: 88,
+      productionDifficulty: "mid",
+    });
+    // 越界的 materialScore 不应出现在 card 里。
+    expect(patchArg.body.card).not.toHaveProperty("materialScore");
+  });
+
   it("编导起草(IdeaDraftForm)→ createCandidate(idea) 再 createAITask(topic.enrich)", async () => {
     mockClient.createCandidate.mockResolvedValueOnce({ id: "cand-new" });
     render(<IdeaDraftForm />);
