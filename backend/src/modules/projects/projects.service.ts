@@ -676,12 +676,16 @@ export function createProjectsService(
           : beforeCurrent
             ? "completed"
             : "pending";
+        // imported 项目已发布 → 全 7 阶段(含 currentStage=review)progressPct 均置 100,
+        //   使 recomputeProgress(均值)= 100(SPEC §9/F4:修正 review=0 致 ~86% 的回归)。
+        //   review 阶段状态仍保持 in_progress、currentStage 仍是 review(用户就地落在复盘),
+        //   只把进度提满。手动/选题项目照旧:仅 completed 阶段 100、其余 0。
         return {
           id: deps.nextId("stage"),
           projectId,
           stage,
           status,
-          progressPct: status === "completed" ? 100 : 0,
+          progressPct: isImported ? 100 : status === "completed" ? 100 : 0,
           skipped: false,
           startedAt: isCurrent || beforeCurrent ? ts : null,
           completedAt: beforeCurrent ? ts : null,
@@ -737,6 +741,14 @@ export function createProjectsService(
       });
       const output = await service.createOutput(ctx, project.id, {
         title: input.title,
+      });
+      // SPEC §9/F4:createProject 播种 project row 时 progressPct=0(缓存字段不在建项目
+      //   路径重算)。imported 全 7 阶段 stageRows 已置 100,这里返回前显式刷新一次进度缓存,
+      //   使 project.progressPct = recomputeProgress(stages) = 100(否则列表仍显示 0/86)。
+      const stages = await repo.listStages(ctx, project.id);
+      await repo.updateProjectRow(ctx, project.id, {
+        progressPct: recomputeProgress(stages),
+        updatedAt: deps.now(),
       });
       return { projectId: project.id, outputId: output.id, created: true };
     },
@@ -814,7 +826,11 @@ export function createProjectsService(
       // 看得到「卡在待补」),写一条 gate_blocked activity,再抛 StageGateError(带
       // missing 列表)。补齐交付物后再次 transition(needs_review→completed)会重跑 gate
       // 并放行。
-      if (target === "completed") {
+      // SPEC §9/F4:imported(已发布采集导入)项目免 gate —— 允许在各阶段间自由跳转
+      //   (编辑/重建历史产物,不要求补齐交付物)。gate 仅拦新建/manual 项目。安全前提:
+      //   validateStageGate 及其 reader 全为纯查询,无副作用初始化,跳过不漏任何持久化。
+      const isImported = project.source === "imported";
+      if (!isImported && target === "completed") {
         const gate = await validateStageGate(ctx, projectId, stage);
         if (!gate.ok) {
           if (row.status !== "needs_review") {

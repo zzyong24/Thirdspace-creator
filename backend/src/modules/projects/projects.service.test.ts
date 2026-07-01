@@ -155,6 +155,27 @@ describe("ensureImportedProject (数据底座 / SPEC §1.3)", () => {
     );
     expect(imported).toHaveLength(1);
   });
+
+  // SPEC §9/F4(T-030-D5):imported 已发布项目进度必须 = 100%(含 review 阶段)。
+  //   回归防线:曾因 review 阶段 progressPct=0 → recomputeProgress 均值 ~86%(6×100/7)。
+  it("imported 项目进度 = 100%(全 7 阶段含 review 置满,防回归到 86)", async () => {
+    const res = await service.ensureImportedProject(ctx, {
+      title: "已发布作品",
+      platform: "douyin",
+      externalId: "7401",
+      publishedAt: "2026-06-20T08:00:00.000Z",
+    });
+    const project = await repo.get(ctx, res.projectId);
+    expect(project.progressPct).toBe(100);
+    // review 阶段 progressPct 也置满(状态仍 in_progress、currentStage 仍是 review)。
+    const stages = await repo.listStages(ctx, res.projectId);
+    const review = stages.find((s) => s.stage === "review")!;
+    expect(review.progressPct).toBe(100);
+    expect(review.status).toBe("in_progress");
+    expect(project.currentStage).toBe("review");
+    // 每个阶段的 progressPct 都应为 100(均值才可能 = 100)。
+    for (const s of stages) expect(s.progressPct).toBe(100);
+  });
 });
 
 describe("Stage machine (SPEC §12)", () => {
@@ -463,6 +484,45 @@ describe("Stage gate (§15/§16 content gate)", () => {
     expect(
       (blocked!.eventData as { missing: string[] }).missing.length,
     ).toBeGreaterThan(0);
+  });
+
+  // ---- T-030-D5(SPEC §9/F4):imported 免 gate 自由跳阶段;manual 仍受 gate ----
+
+  it("imported 项目 transitionProjectStage→completed 免 gate:交付物缺失也放行、不落 needs_review", async () => {
+    const { gated } = makeGatedService();
+    // imported 项目:review 阶段天然 in_progress,且无 completed review 交付物
+    //   (hasCompletedReview 默认 false)。manual 项目此场景会被 gate 拒,imported 应放行。
+    const p = await gated.createProject(ctx, {
+      title: "已发布作品",
+      source: "imported",
+      platformRef: { platform: "douyin", externalId: "7402" },
+    });
+    // review(in_progress)→ completed:不抛 StageGateError。
+    const after = await gated.transitionProjectStage(ctx, p.id, "review", {});
+    // 阶段真的落到 completed(未被拦成 needs_review)。
+    const review = (await repo.listStages(ctx, p.id)).find(
+      (s) => s.stage === "review",
+    )!;
+    expect(review.status).toBe("completed");
+    // 没有写 gate_blocked 活动(免 gate 全程未触发拦截)。
+    const acts = await repo.listActivity(ctx, p.id);
+    expect(acts.find((a) => a.eventType === "stage_gate_blocked")).toBeUndefined();
+    // 进度缓存正常重算(全阶段 completed/满 → 100)。
+    expect(after.progressPct).toBe(100);
+  });
+
+  it("manual/新建项目仍受 gate:同为交付物缺失 → transition→completed 被 StageGateError 拒(证明只对 imported 放行)", async () => {
+    const { gated, createPastBrief } = makeGatedService();
+    // manual 项目推到 research(in_progress),无任何研究 artifact → gate 必须拦。
+    const pid = await createPastBrief();
+    await expect(
+      gated.transitionProjectStage(ctx, pid, "research", {}),
+    ).rejects.toBeInstanceOf(StageGateError);
+    // 被持久化为 needs_review(与 imported 放行形成对照)。
+    const research = (await repo.listStages(ctx, pid)).find(
+      (s) => s.stage === "research",
+    )!;
+    expect(research.status).toBe("needs_review");
   });
 
   it("StageGateError 携带 stage + 中文 missing 列表(供前端 stepper 透传)", async () => {
