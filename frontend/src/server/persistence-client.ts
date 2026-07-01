@@ -3223,15 +3223,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
       const details = await parseDouyinWorkListXlsx(bytes);
       // 3) 装配作品目录(title + externalId=aweme_id + publishedAt),按 title/pub_date 匹配。
+      //    T-034 断裂修复:导入作品(external_id=aweme_id)故意无 revision(见 publishing.repository
+      //    createImportedPublication),故 getRecentPublicationsWithTitle 回来的 title 为空 —— 与
+      //    L3004 dossier 装配同款回退:revision title 空时取 content_output 真实标题(导入时落在
+      //    projects/content_output 上)。不回退 → 72 条采集作品 catalog title 恒空 → xlsx 明细
+      //    永远匹配不上 → items_new 恒 0(断裂根因)。
       const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
         limit: 500,
       });
-      const catalog: PublicationCatalogEntry[] = pubs.map((p) => ({
-        id: p.id,
-        platform: p.platform,
-        title: p.title,
-        publishedAt: p.publishedAt,
-      }));
+      const catalog: PublicationCatalogEntry[] = [];
+      for (const p of pubs) {
+        let title = p.title;
+        if (!title) {
+          try {
+            const out = await projectsRepo.getOutput(ctx, p.contentOutputId);
+            title = out.title;
+          } catch {
+            // 防御:取不到作品标题就保持空(该条明细自然匹配不上,诚实跳过)。
+          }
+        }
+        catalog.push({
+          id: p.id,
+          platform: p.platform,
+          title,
+          publishedAt: p.publishedAt,
+        });
+      }
       const externalIdById = new Map<string, string>();
       for (const p of pubs) {
         if (p.externalId) externalIdById.set(p.id, p.externalId);

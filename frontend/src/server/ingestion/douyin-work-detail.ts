@@ -277,6 +277,20 @@ function normTitle(s: string): string {
   return s.replace(/\s+/g, "").trim();
 }
 
+/**
+ * 「作品名称」归一(比 normTitle 更宽) —— 应对抖音后台 xlsx 的截断/首行口径:
+ *   - 只取**首行**(caption 是多行时,后台「作品名称」列常只落第一行);
+ *   - 去掉尾部省略号(截断标记 "…" / "..." / 全角 "。。。");
+ *   - 再走 normTitle 去空白。
+ * 我们导入的作品 title 是**完整 desc**(多行),而 xlsx「作品名称」是 desc 首行(可能被截),
+ * 故精确匹配失败时用「首行+去省略号」再比一次(prefix 双向兜底见 matchDetailsToPublications)。
+ */
+function normTitleFirstLine(s: string): string {
+  const firstLine = s.split(/[\r\n]/)[0] ?? s;
+  const noEllipsis = firstLine.replace(/(\.{3}|…+|。{3,})\s*$/u, "");
+  return normTitle(noEllipsis);
+}
+
 /** pubDate 归一到 YYYY-MM-DD(明细 "2026-06-21 08:15" / publishedAt ISO 都取日期前缀)。 */
 function normDay(s: string | null | undefined): string {
   if (!s) return "";
@@ -299,26 +313,65 @@ export function matchDetailsToPublications(
 ): DetailMatch[] {
   // 只在 douyin 平台作品里匹配(明细来自抖音后台)。
   const dyPubs = catalog.filter((p) => p.platform === "douyin");
-  // title → 候选 publications(同名可能多条,留待 pub_date 消歧)。
+  // title → 候选 publications(同名可能多条,留待 pub_date 消歧)。第一层:完整归一 title。
   const byTitle = new Map<string, PublicationCatalogEntry[]>();
+  // 第二层:「首行 + 去省略号」归一(应对 xlsx「作品名称」只落 caption 首行/被截断的口径)。
+  const byFirstLine = new Map<string, PublicationCatalogEntry[]>();
   for (const p of dyPubs) {
     const key = normTitle(p.title);
-    if (!key) continue;
-    const arr = byTitle.get(key) ?? [];
-    arr.push(p);
-    byTitle.set(key, arr);
+    if (key) {
+      const arr = byTitle.get(key) ?? [];
+      arr.push(p);
+      byTitle.set(key, arr);
+    }
+    const flKey = normTitleFirstLine(p.title);
+    if (flKey) {
+      const arr = byFirstLine.get(flKey) ?? [];
+      arr.push(p);
+      byFirstLine.set(flKey, arr);
+    }
   }
 
-  return details.map((detail): DetailMatch => {
-    const candidates = byTitle.get(normTitle(detail.title)) ?? [];
-    if (candidates.length === 0) return { detail, publicationId: null };
-    if (candidates.length === 1) {
-      return { detail, publicationId: candidates[0]!.id };
-    }
-    // 同名多条 → 用发布日消歧(明细 pubDate 与 publishedAt 同日)。
+  // 同一批候选里用发布日消歧(明细 pubDate 与 publishedAt 同日);单条直接命中。
+  const pick = (
+    candidates: readonly PublicationCatalogEntry[],
+    detail: DouyinWorkDetail,
+  ): string | null => {
+    if (candidates.length === 0) return null;
+    if (candidates.length === 1) return candidates[0]!.id;
     const day = normDay(detail.pubDate);
-    const hit = candidates.find((c) => normDay(c.publishedAt) === day && day !== "");
-    return { detail, publicationId: hit ? hit.id : null };
+    const hit = candidates.find(
+      (c) => normDay(c.publishedAt) === day && day !== "",
+    );
+    return hit ? hit.id : null;
+  };
+
+  return details.map((detail): DetailMatch => {
+    // ① 完整归一 title 精确匹配(最强,原行为)。
+    const exact = pick(byTitle.get(normTitle(detail.title)) ?? [], detail);
+    if (exact) return { detail, publicationId: exact };
+    // ② 首行归一匹配(xlsx「作品名称」=多行 caption 首行时;两侧都取首行再比)。
+    const dFirst = normTitleFirstLine(detail.title);
+    const fl = pick(byFirstLine.get(dFirst) ?? [], detail);
+    if (fl) return { detail, publicationId: fl };
+    // ③ 前缀双向兜底(截断:一侧是另一侧前缀)。仅当明细首行足够长(≥8 归一字符),避免
+    //    短标题误伤;唯一命中才认(多义则弃,交给 pub_date 也无法消歧的情况诚实跳过)。
+    if (dFirst.length >= 8) {
+      const prefixHits = dyPubs.filter((p) => {
+        const pFirst = normTitleFirstLine(p.title);
+        if (!pFirst) return false;
+        return pFirst.startsWith(dFirst) || dFirst.startsWith(pFirst);
+      });
+      const day = normDay(detail.pubDate);
+      // 先按发布日收窄(有同日候选优先),再要求唯一。
+      const sameDay = prefixHits.filter(
+        (p) => normDay(p.publishedAt) === day && day !== "",
+      );
+      const pool = sameDay.length > 0 ? sameDay : prefixHits;
+      if (pool.length === 1) return { detail, publicationId: pool[0]!.id };
+    }
+    // 仍无唯一匹配 → 诚实跳过(不硬造)。
+    return { detail, publicationId: null };
   });
 }
 

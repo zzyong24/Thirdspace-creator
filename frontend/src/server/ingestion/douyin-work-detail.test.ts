@@ -260,6 +260,63 @@ describe("matchDetailsToPublications — 按 title/pub_date 匹配作品(无 awe
     const matches = matchDetailsToPublications([detail("作品甲", "2026-06-21")], catalog);
     expect(matches[0]!.publicationId).toBe("pub-a");
   });
+
+  // T-034 断裂修复:导入作品 title 是完整多行 caption,xlsx「作品名称」是首行(可能被截)。
+  it("catalog 是多行完整 caption、xlsx 是首行 → 首行归一命中", () => {
+    const multiline: PublicationCatalogEntry[] = [
+      {
+        id: "pub-ml",
+        platform: "douyin",
+        title:
+          "越喂越笨:我给 AI 配了 80 个工具\n给 AI 配的工具越多、喂的资料越多,它反而越笨。\n#AI新星计划",
+        publishedAt: "2026-07-01T00:12:00.000Z",
+      },
+    ];
+    const matches = matchDetailsToPublications(
+      [detail("越喂越笨:我给 AI 配了 80 个工具", "2026-07-01 08:12")],
+      multiline,
+    );
+    expect(matches[0]!.publicationId).toBe("pub-ml");
+  });
+
+  it("xlsx 首行带截断省略号 → 去省略号后前缀命中(唯一)", () => {
+    const cat: PublicationCatalogEntry[] = [
+      {
+        id: "pub-trunc",
+        platform: "douyin",
+        title: "口播视频自动剪辑工具:12分钟剪到5分钟的完整实操教程",
+        publishedAt: "2026-06-20T00:00:00.000Z",
+      },
+    ];
+    // 抖音后台把长标题截成「…前缀…」
+    const matches = matchDetailsToPublications(
+      [detail("口播视频自动剪辑工具:12分钟剪到5分钟…", "2026-06-20 10:00")],
+      cat,
+    );
+    expect(matches[0]!.publicationId).toBe("pub-trunc");
+  });
+
+  it("前缀兜底要求唯一:多条前缀命中且无法用发布日消歧 → 诚实跳过", () => {
+    const cat: PublicationCatalogEntry[] = [
+      { id: "p1", platform: "douyin", title: "知识库一站式方案演示 A 版", publishedAt: null },
+      { id: "p2", platform: "douyin", title: "知识库一站式方案演示 B 版", publishedAt: null },
+    ];
+    // "知识库一站式方案演示" 是两条的公共前缀,无发布日消歧 → 不硬猜
+    const matches = matchDetailsToPublications(
+      [detail("知识库一站式方案演示", "2026-06-01 10:00")],
+      cat,
+    );
+    expect(matches[0]!.publicationId).toBeNull();
+  });
+
+  it("短标题不走前缀兜底(避免误伤):<8 归一字符前缀不命中", () => {
+    const cat: PublicationCatalogEntry[] = [
+      { id: "ps", platform: "douyin", title: "关于AI的一些长标题内容延展", publishedAt: null },
+    ];
+    // 明细 "关于AI" 归一后 <8 字符 → 不启用前缀兜底,精确/首行都不中 → null
+    const matches = matchDetailsToPublications([detail("关于AI", "2026-06-01")], cat);
+    expect(matches[0]!.publicationId).toBeNull();
+  });
 });
 
 describe("toDetailMetricRecords — 匹配上的明细 → MetricRecord[](未匹配跳过)", () => {
