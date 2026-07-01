@@ -232,6 +232,11 @@ import {
   MATERIAL_LINKS_OP_IDS,
 } from "@creatoros/backend/modules/material-links";
 import {
+  createSchedulingService,
+  createSchedulingTransport,
+  SCHEDULING_OP_IDS,
+} from "@creatoros/backend/modules/scheduling";
+import {
   createDashboardQueryService,
   createProjectOverviewQueryService,
   createGlobalSearchQueryService,
@@ -347,6 +352,11 @@ const PERSISTED_OPS = new Set<string>([
   // cross-module repo import); delete is ownership-gated (cross-user → OwnershipError →
   // 404).
   ...MATERIAL_LINKS_OP_IDS,
+  // Scheduling (module 23, T-007) — scheduled_job CRUD (create/list/get/update/setEnabled)
+  // + job_run reads (listByJob/get). owned-root, transport 按 ctx.userId 收窄, job_run 经
+  // requireJob ownership gate。D1 建了 backend module 却没接 dispatch;这条接线让 /automations
+  // 的 client island 走 HTTP → dispatch → REAL SQL(pglite 迁移 0009 已建两表),读/管才真跑通。
+  ...SCHEDULING_OP_IDS,
 ]);
 
 // The set of op ids owned by the taxonomy module's transport (module 04).
@@ -427,6 +437,9 @@ const CONTENT_CALENDAR_OPS = new Set<string>(CONTENT_CALENDAR_OP_IDS);
 
 // The set of op ids owned by the material-links module's transport (Plan A4).
 const MATERIAL_LINKS_OPS = new Set<string>(MATERIAL_LINKS_OP_IDS);
+
+// The set of op ids owned by the scheduling module's transport (module 23, T-007).
+const SCHEDULING_OPS = new Set<string>(SCHEDULING_OP_IDS);
 
 // The shared canonical 变现加权 Rubric id seeded below (the calibration page + the 复盘飞轮回流
 // 轨B Learning→校准 reflow both target it). Kept as one const so the seed + the reflow seam
@@ -799,6 +812,7 @@ interface PersistenceBundle {
   candidate: Transport;
   calibration: Transport;
   platformAccount: Transport;
+  scheduling: Transport;
   contentCalendar: Transport;
   materialLinks: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
@@ -2664,6 +2678,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     () => platformAccountService,
   );
 
+  // Scheduling (module 23, T-007 / data-source-pipeline §4): the service builds a
+  // per-ctx user-scoped repo over the shared db (repo bakes userId in). No external
+  // port + no peer fan-out — scheduled_job/job_run are pure local owned-root records
+  // (the scheduler D3 / 「立即运行」 D5 drive createRun/updateRun; the wire only reads
+  // runs). Clock/ids share the deterministic `deps`. D6 UI reads/manages jobs through
+  // this transport over the SAME pglite store.
+  const schedulingService = createSchedulingService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+  });
+  const scheduling = createSchedulingTransport(() => schedulingService);
+
   // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
   // repo over the shared db; peer modules are reached ONLY through narrow injected
   // ports bound here to the REAL public services (no cross-module repo import,
@@ -4052,6 +4079,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     candidate,
     calibration,
     platformAccount,
+    scheduling,
     contentCalendar,
     materialLinks,
     queryServices,
@@ -4147,6 +4175,10 @@ async function getCalibration(): Promise<Transport> {
 
 async function getPlatformAccount(): Promise<Transport> {
   return (await getBundle()).platformAccount;
+}
+
+async function getScheduling(): Promise<Transport> {
+  return (await getBundle()).scheduling;
 }
 
 async function getContentCalendar(): Promise<Transport> {
@@ -4377,6 +4409,14 @@ export const compositeTransport: Transport = {
     if (PLATFORM_ACCOUNT_OPS.has(endpoint.id)) {
       const platformAccount = await getPlatformAccount();
       return platformAccount.request(endpoint, input, ctx);
+    }
+    // Scheduling ops (module 23, T-007) — scheduledJobs.create/list/get/update/setEnabled
+    // + jobRuns.listByJob/get served by the module's own user-scoped transport over the
+    // SAME pglite store (foundation §1 registry). owned-root, job_run 经 requireJob
+    // ownership gate;pure local records, no peer fan-out. No ctx ⇒ AuthenticationError.
+    if (SCHEDULING_OPS.has(endpoint.id)) {
+      const scheduling = await getScheduling();
+      return scheduling.request(endpoint, input, ctx);
     }
     // ContentCalendar ops (module 22, Wave 5–7) — accounts.calendar.list/.entries.create
     // + calendar.entries.update/transition/delete + accounts.cadence.get/upsert/

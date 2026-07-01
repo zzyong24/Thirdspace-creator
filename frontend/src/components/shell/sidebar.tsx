@@ -76,6 +76,9 @@ const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   { id: "knowledge", label: "知识库", href: "/knowledge", icon: creatorIcons.knowledge, match: matchExact("/knowledge") },
   { id: "assets", label: "素材中心", href: "/assets", icon: creatorIcons.assets, match: matchExact("/assets") },
   { id: "publishing", label: "发布中心", href: "/publishing", icon: creatorIcons.publishing, match: matchExact("/publishing") },
+  // 任务中心 — 七步下游数据采集(T-007, data-source-pipeline §9 D6): 周期抓「自己作品指标/评论」
+  // 的调度作业, 数据落库供 Dashboard/选题消费. 归在运营/采集类, 紧跟发布中心.
+  { id: "automations", label: "任务中心", href: "/automations", icon: creatorIcons.automations, match: matchPrefix("/automations") },
   // MONE-01:变现中心移除/隐藏(太难且不影响飞轮,见 lifecycle spec §4)。路由保留但无入口。
   { id: "experience", label: "经验沉淀", href: "/experience", icon: creatorIcons.experience, match: matchExact("/experience") },
   { id: "settings", label: "设置", href: "/settings", icon: creatorIcons.settings, match: matchExact("/settings") },

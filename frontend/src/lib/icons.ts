@@ -2,6 +2,7 @@ import {
   ArrowUpDown,
   Bell,
   BookOpen,
+  CalendarClock,
   Check,
   ChevronRight,
   Crosshair,
@@ -31,6 +32,7 @@ export type CreatorIconKey =
   | "knowledge"
   | "assets"
   | "publishing"
+  | "automations"
   | "monetization"
   | "experience"
   | "settings"
@@ -55,6 +57,7 @@ export const creatorIcons = Object.freeze({
   knowledge: BookOpen,
   assets: Images,
   publishing: Send,
+  automations: CalendarClock,
   monetization: Funnel,
   experience: Lightbulb,
   settings: Settings,
