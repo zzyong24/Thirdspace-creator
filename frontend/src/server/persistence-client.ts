@@ -163,8 +163,10 @@ import {
   loginDouyin,
   checkDouyinStatus,
   fetchDouyinComments,
+  fetchDouyinCommentsForWorks,
   ingestComments,
   type CommentIngestPorts,
+  type CommentRecord,
   DouyinNotLoggedInError,
   fetchDouyinVideoUrl,
   streamAudioFromVideo,
@@ -3151,14 +3153,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           await ingestionService.completeRun(ctx, { runId });
         },
       };
-      // 单作品 fetch+ingest(每作品前 100 条由 fetchDouyinComments 的 maxPages 控)。
-      const ingestOne = async (awemeId: string): Promise<number> => {
+      // 单作品评论落库(纯 ingest 部分,抓取已由调用方完成;每作品前 100 条由抓取层 maxPages 控)。
+      // commentPorts 复用(整批共用一套),ingest 逻辑不变。
+      const ingestRecordsForWork = async (
+        awemeId: string,
+        records: CommentRecord[],
+      ): Promise<number> => {
         const capturedAt = deps.now();
-        const records = await fetchDouyinComments({
-          awemeId,
-          authDir: douyinAuthDir,
-          maxPages,
-        });
         const result = await ingestComments(awemeId, records, {
           externalSourceId,
           capturedAt,
@@ -3167,13 +3168,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         return result.written;
       };
       // ① 指定 target.awemeId → 只抓该作品;② 未指定 → 抓「我所有作品」评论:遍历用户所有
-      //    douyin publications(external_id=aweme_id)逐个抓(修真机 bug「target.awemeId 缺失」)。
+      //    douyin publications(external_id=aweme_id),**复用单 browser context 跨作品**
+      //    (fetchDouyinCommentsForWorks:openContext 开一次 → 循环内逐作品抓 → close 一次),
+      //    取代旧「N 作品 × 各开一个 headless 浏览器」路径。
       const single =
         typeof target.awemeId === "string" && target.awemeId
           ? target.awemeId
           : "";
       if (single) {
-        return { itemsNew: await ingestOne(single), itemsUpdated: 0 };
+        // 单作品仍走单作品抓取路径(fetchDouyinComments 内部 openContext 一次)。
+        const records = await fetchDouyinComments({
+          awemeId: single,
+          authDir: douyinAuthDir,
+          maxPages,
+        });
+        return {
+          itemsNew: await ingestRecordsForWork(single, records),
+          itemsUpdated: 0,
+        };
       }
       const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
         limit: 500,
@@ -3181,9 +3193,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const awemeIds = pubs
         .filter((p) => p.platform === "douyin" && p.externalId)
         .map((p) => p.externalId as string);
+      // 复用单 context 一次性抓完所有作品评论(未登录 → 一次性抛 DouyinNotLoggedInError,
+      // runner catch → needs_reconnect),再逐作品 ingestComments 落库(落库逻辑不变)。
+      const perWork = await fetchDouyinCommentsForWorks(awemeIds, {
+        authDir: douyinAuthDir,
+        maxPages,
+      });
       let total = 0;
-      for (const awemeId of awemeIds) {
-        total += await ingestOne(awemeId);
+      for (const { awemeId, records } of perWork) {
+        total += await ingestRecordsForWork(awemeId, records);
       }
       return { itemsNew: total, itemsUpdated: 0 };
     },

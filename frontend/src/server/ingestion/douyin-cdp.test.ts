@@ -5,6 +5,9 @@ import {
   toMetricRecords,
   parseCommentList,
   ingestComments,
+  fetchDouyinComments,
+  fetchDouyinCommentsForWorks,
+  DouyinNotLoggedInError,
   parseDouyinVideoUrl,
   DouyinAudioFetchError,
   type DouyinDetail,
@@ -438,5 +441,175 @@ describe("parseDouyinVideoUrl 纯函数(iesdouyin 取直链,T-030-D2)", () => {
       loaderData: { "video_(id)/page": { videoInfoRes: { item_list: [] } } },
     });
     expect(() => parseDouyinVideoUrl(emptyHtml)).toThrow(DouyinAudioFetchError);
+  });
+});
+
+// —— 多作品复用单 context 抓评论(T-033b:72作品×独立浏览器 → 单 context 循环)——
+// fake context/page:openContext 只应被调 1 次、close 1 次,循环内逐 awemeId 在同一 page 上
+// 导航(goto)并触发一次评论 list XHR(response handler),parseCommentList 解析。断言不碰真抖音。
+
+type FakeResponse = { url(): string; json(): Promise<unknown> };
+type FakeResponseHandler = (resp: FakeResponse) => void;
+
+/**
+ * 建 fake context 工厂 + page:
+ *  - 记录 openContext / close 调用次数(断言开一次、关一次);
+ *  - page.goto 从 url 的 item_id 取出当前 awemeId → 触发一次评论 list XHR(命中
+ *    COMMENT_LIST_HINTS 的 `/aweme/v1/web/comment/list/`),payload 每作品一条评论(cid/text
+ *    按 aweme 派生),供 scrapeCommentsForWork 的 response handler 解析;
+ *  - page.off 摘监听(模拟真 Page.off,验证逐作品清理监听不复用旧 handler);
+ *  - loggedIn=false 时 cookies 返空 → 触发 DouyinNotLoggedInError。
+ */
+function makeFakeCommentContext(loggedIn: boolean) {
+  const calls = { openContext: 0, close: 0, goto: 0 };
+  const gotoUrls: string[] = [];
+  let handlers: FakeResponseHandler[] = [];
+
+  const page = {
+    on(_event: "response", cb: FakeResponseHandler) {
+      handlers.push(cb);
+    },
+    off(_event: "response", cb: FakeResponseHandler) {
+      handlers = handlers.filter((h) => h !== cb);
+    },
+    async goto(url: string) {
+      calls.goto += 1;
+      gotoUrls.push(url);
+      // 从 ?item_id=<aweme> 取当前作品 id(评论管理页每作品 item_id 过滤)。
+      const m = /item_id=([^&]+)/.exec(url);
+      const aweme = m ? decodeURIComponent(m[1]!) : "";
+      // 触发一次评论 list XHR(命中 hint),payload 每作品一条评论(cid/text 按 aweme 派生)。
+      const payload = {
+        comments: [
+          {
+            cid: `cmt-${aweme}`,
+            aweme_id: aweme,
+            text: `评论-${aweme}`,
+            digg_count: 1,
+          },
+        ],
+      };
+      const resp: FakeResponse = {
+        url: () => "https://x/aweme/v1/web/comment/list/?count=20",
+        json: () => Promise.resolve(payload),
+      };
+      // 只喂给当前注册的 handler(off 后旧 handler 不在册 → 不会被重复喂)。
+      for (const h of handlers) h(resp);
+      return undefined;
+    },
+    async waitForTimeout() {
+      // 立即 resolve;让 response handler 里的 async 解析(microtask)在此 await 时结算。
+      return undefined;
+    },
+    async evaluate() {
+      return undefined as unknown;
+    },
+    mouse: {
+      async wheel() {
+        return undefined;
+      },
+    },
+  };
+
+  const ctx = {
+    pages() {
+      return [page];
+    },
+    async newPage() {
+      return page;
+    },
+    async cookies(_url: string) {
+      return loggedIn ? [{ name: "sessionid" }] : [];
+    },
+    async close() {
+      calls.close += 1;
+    },
+  };
+
+  // 注入的 openContext 签名(从 fetchDouyinCommentsForWorks 第 3 参数 deps 提取,含内部
+  // CommentCapableContext 返回类型;内部类型不导出,故经此提取拿到精确形状)。
+  type InjectedOpenContext = NonNullable<
+    Parameters<typeof fetchDouyinCommentsForWorks>[2]
+  >["openContext"];
+  type InjectedContext = Awaited<ReturnType<NonNullable<InjectedOpenContext>>>;
+
+  const openContext: NonNullable<InjectedOpenContext> = async (
+    _authDir,
+    _headless,
+  ) => {
+    calls.openContext += 1;
+    return ctx as unknown as InjectedContext;
+  };
+
+  return { calls, gotoUrls, openContext };
+}
+
+describe("fetchDouyinCommentsForWorks 复用单 context 跨作品(T-033b)", () => {
+  it("openContext 开一次 → 循环 N 作品各 parse → close 一次", async () => {
+    const { calls, gotoUrls, openContext } = makeFakeCommentContext(true);
+    const awemeIds = ["7401", "7402", "7403"];
+    const results = await fetchDouyinCommentsForWorks(
+      awemeIds,
+      { authDir: "/fake/.auth", maxPages: 1 },
+      { openContext },
+    );
+    // 核心断言:整批只开一次浏览器、只关一次(取代 N 作品 × 独立浏览器)。
+    expect(calls.openContext).toBe(1);
+    expect(calls.close).toBe(1);
+    // 每作品各导航一次(同一 context/page,goto 换页)。
+    expect(calls.goto).toBe(awemeIds.length);
+    expect(gotoUrls.every((u) => u.includes("comment-manage"))).toBe(true);
+    // 逐作品 parse 出各自评论(按 aweme 派生的 cid/text,证明用对了每作品的 item_id)。
+    expect(results).toHaveLength(3);
+    expect(results.map((r) => r.awemeId)).toEqual(awemeIds);
+    for (const { awemeId, records } of results) {
+      expect(records).toHaveLength(1);
+      expect(records[0].commentId).toBe(`cmt-${awemeId}`);
+      expect(records[0].awemeId).toBe(awemeId);
+      expect(records[0].text).toBe(`评论-${awemeId}`);
+    }
+  });
+
+  it("空作品列表 → 仍开一次做登录校验、关一次,返回空", async () => {
+    const { calls, openContext } = makeFakeCommentContext(true);
+    const results = await fetchDouyinCommentsForWorks(
+      [],
+      { authDir: "/fake/.auth" },
+      { openContext },
+    );
+    expect(results).toEqual([]);
+    expect(calls.openContext).toBe(1);
+    expect(calls.close).toBe(1);
+    expect(calls.goto).toBe(0); // 无作品 → 不导航
+  });
+
+  it("未登录 → 一次性抛 DouyinNotLoggedInError(不是每作品抛),仍 close 一次", async () => {
+    const { calls, openContext } = makeFakeCommentContext(false);
+    await expect(
+      fetchDouyinCommentsForWorks(
+        ["7401", "7402"],
+        { authDir: "/fake/.auth" },
+        { openContext },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+    expect(calls.openContext).toBe(1);
+    expect(calls.close).toBe(1); // finally 仍关一次
+    expect(calls.goto).toBe(0); // 登录校验先于任何作品导航 → 未抓任何作品
+  });
+});
+
+describe("fetchDouyinComments 单作品复用注入 openContext(T-033b)", () => {
+  it("单作品:openContext 一次 + goto 一次 + close 一次,parse 出该作品评论", async () => {
+    const { calls, gotoUrls, openContext } = makeFakeCommentContext(true);
+    const records = await fetchDouyinComments(
+      { awemeId: "7409", authDir: "/fake/.auth", maxPages: 1 },
+      { openContext },
+    );
+    expect(calls.openContext).toBe(1);
+    expect(calls.close).toBe(1);
+    expect(calls.goto).toBe(1);
+    expect(gotoUrls[0]).toContain("item_id=7409");
+    expect(records).toHaveLength(1);
+    expect(records[0].commentId).toBe("cmt-7409");
   });
 });

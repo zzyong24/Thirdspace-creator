@@ -688,40 +688,84 @@ export interface FetchCommentsTarget {
   maxPages?: number;
 }
 
-/**
- * 真抓评论:headless 复用 .auth/ 登录态 → 导航创作者中心评论管理页(item_id 过滤) →
- * 拦 `/aweme/v1/web/comment/list/` XHR → 礼貌滚动翻页 → 去重 CommentRecord[]。
- * **不落库**(落库由 ingestComments 负责)。未登录抛 DouyinNotLoggedInError(调用方提示
- * 先扫码登录,D4 接状态机)。仅在用户机器上跑;CI/测试不调用(需真扫码登录态)。
- */
-export async function fetchDouyinComments(
-  target: FetchCommentsTarget,
-): Promise<CommentRecord[]> {
-  const maxPages = target.maxPages ?? 40;
-  const ctx = await openContext(target.authDir, true);
-  try {
-    if (!(await isLoggedIn(ctx))) throw new DouyinNotLoggedInError();
-    const page = ctx.pages()[0] ?? (await ctx.newPage());
+// scrapeCommentsForWork / fetchDouyinCommentsForWorks 只依赖 page/context 的这几个能力
+// (收窄便于 fake page/context 单测,不起真 Chromium)。真实 Playwright Page/BrowserContext
+// 结构上满足这两个接口(用作默认注入时的向上转型目标)。
+type CommentResponseHandler = (resp: {
+  url(): string;
+  json(): Promise<unknown>;
+}) => void;
 
-    const commentJsons: unknown[] = [];
-    const seenIds = new Set<string>();
-    page.on("response", async (resp) => {
-      const url = resp.url();
-      if (!COMMENT_LIST_HINTS.some((h) => url.includes(h))) return;
+interface CommentCapablePage {
+  on(event: "response", cb: CommentResponseHandler): void;
+  // 多作品复用同一 page 时,每作品抓完必须摘掉本作品的 response 监听(否则监听在 page 上累积,
+  // 后续作品的 XHR 会被历史 handler 重复解析,且泄漏监听器)。真实 Playwright Page 有 off。
+  off(event: "response", cb: CommentResponseHandler): void;
+  goto(url: string, opts?: unknown): Promise<unknown>;
+  waitForTimeout(ms: number): Promise<void>;
+  evaluate<R>(fn: () => R): Promise<R>;
+  mouse: { wheel(deltaX: number, deltaY: number): Promise<void> };
+}
+
+interface CommentCapableContext {
+  pages(): CommentCapablePage[];
+  newPage(): Promise<CommentCapablePage>;
+  cookies(url: string): Promise<Array<{ name: string }>>;
+  close(): Promise<void>;
+}
+
+/** fetchDouyinComments / fetchDouyinCommentsForWorks 的可注入依赖(默认真 openContext(.auth/,
+ *  headless);单测注 fake context 断言「开一次」+ 逐作品 parse + 关一次)。 */
+export interface FetchDouyinCommentsDeps {
+  /** 打开(或复用)一个带登录态的 headless context(默认 openContext(authDir, headless))。 */
+  openContext?: (
+    authDir: string,
+    headless: boolean,
+  ) => Promise<CommentCapableContext>;
+}
+
+const DEFAULT_COMMENT_MAX_PAGES = 40;
+
+async function isCommentContextLoggedIn(
+  ctx: CommentCapableContext,
+): Promise<boolean> {
+  const cookies = await ctx.cookies("https://creator.douyin.com");
+  return cookies.some((c) => c.name === "sessionid" || c.name === "sessionid_ss");
+}
+
+/**
+ * 单作品评论抓取核心(内部 helper,给单/多两用):在**已开好的 page**上导航评论管理页
+ * (item_id 过滤) → 拦 `/aweme/v1/web/comment/list/` XHR → 礼貌滚动翻页 → 去重 CommentRecord[]。
+ * 不开/不关 context(context 生命周期由调用方管:单作品走 fetchDouyinComments,多作品走
+ * fetchDouyinCommentsForWorks 复用同一 context 逐作品调本 helper)。
+ */
+async function scrapeCommentsForWork(
+  page: CommentCapablePage,
+  awemeId: string,
+  maxPages: number,
+): Promise<CommentRecord[]> {
+  const commentJsons: unknown[] = [];
+  const seenIds = new Set<string>();
+  const onResponse: CommentResponseHandler = (resp) => {
+    const url = resp.url();
+    if (!COMMENT_LIST_HINTS.some((h) => url.includes(h))) return;
+    void (async () => {
       try {
         const j = await resp.json();
         commentJsons.push(j);
-        for (const c of parseCommentList(j, target.awemeId)) {
+        for (const c of parseCommentList(j, awemeId)) {
           seenIds.add(c.commentId);
         }
       } catch {
         /* 非 JSON 响应,忽略 */
       }
-    });
-
+    })();
+  };
+  page.on("response", onResponse);
+  try {
     // item_id 过滤 → 评论管理页只显示该作品的评论(对齐 crawler.py urls_to_try)。
     await page.goto(
-      `${CREATOR_COMMENT_MANAGE}?item_id=${encodeURIComponent(target.awemeId)}`,
+      `${CREATOR_COMMENT_MANAGE}?item_id=${encodeURIComponent(awemeId)}`,
       { waitUntil: "domcontentloaded", timeout: 60000 },
     );
     await page.waitForTimeout(3000); // 等首屏 comment/list XHR 回来
@@ -742,13 +786,87 @@ export async function fetchDouyinComments(
     // 去重(同 commentId 保留最后一次;跨页重复评论合一)。
     const byId = new Map<string, CommentRecord>();
     for (const j of commentJsons) {
-      for (const c of parseCommentList(j, target.awemeId)) {
+      for (const c of parseCommentList(j, awemeId)) {
         byId.set(c.commentId, c);
       }
     }
     return [...byId.values()];
   } finally {
+    // 多作品复用 page 时,摘掉本作品监听,避免监听在 page 上累积/后续作品 XHR 被重复解析。
+    page.off("response", onResponse);
+  }
+}
+
+const realCommentOpenContext = (authDir: string, headless: boolean) =>
+  openContext(authDir, headless) as unknown as Promise<CommentCapableContext>;
+
+/**
+ * 真抓评论(单作品):headless 复用 .auth/ 登录态 → 导航创作者中心评论管理页(item_id 过滤) →
+ * 拦 `/aweme/v1/web/comment/list/` XHR → 礼貌滚动翻页 → 去重 CommentRecord[]。
+ * **不落库**(落库由 ingestComments 负责)。未登录抛 DouyinNotLoggedInError(调用方提示
+ * 先扫码登录,D4 接状态机)。openContext 端口注入(默认真 openContext),故结构上可测。
+ * 实现复用 scrapeCommentsForWork(与多作品路径同一核心);多作品请走 fetchDouyinCommentsForWorks
+ * 以复用单个 context(避免每作品开一个浏览器)。
+ */
+export async function fetchDouyinComments(
+  target: FetchCommentsTarget,
+  deps: FetchDouyinCommentsDeps = {},
+): Promise<CommentRecord[]> {
+  const maxPages = target.maxPages ?? DEFAULT_COMMENT_MAX_PAGES;
+  const openCtx = deps.openContext ?? realCommentOpenContext;
+  const ctx = await openCtx(target.authDir, true);
+  try {
+    if (!(await isCommentContextLoggedIn(ctx))) throw new DouyinNotLoggedInError();
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+    return await scrapeCommentsForWork(page, target.awemeId, maxPages);
+  } finally {
     await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
+  }
+}
+
+export interface FetchCommentsForWorksResult {
+  awemeId: string;
+  records: CommentRecord[];
+}
+
+export interface FetchDouyinCommentsForWorksOptions {
+  /** 持久化 profile 目录(复用 .auth/ 扫码登录态)。 */
+  authDir: string;
+  /** 每个作品最多滚动翻几页(防无限加载卡死;默认 40,同单作品口径)。 */
+  maxPages?: number;
+}
+
+/**
+ * 真抓评论(多作品,复用单 context):**openContext 开一次** → isLoggedIn 检查一次(未登录一次性
+ * 抛 DouyinNotLoggedInError,不是每作品抛)→ 在**同一 context 的同一 page** 上逐 awemeId 调
+ * scrapeCommentsForWork(导航评论管理页 + 拦 XHR + parseCommentList) → finally **close 一次**。
+ * 取代「遍历 N 作品每个 openContext 开一个 headless 浏览器」的旧路径(N 作品 × 独立浏览器 →
+ * 单 context 循环)。**不落库**(落库由调用方逐作品 ingestComments 负责,ingest 逻辑不变)。
+ * openContext 端口注入(默认真 openContext),故可确定性单测:断言 openContext 被调 1 次、
+ * 循环 N 个 awemeId 各 parse、close 一次,不碰真抖音。
+ */
+export async function fetchDouyinCommentsForWorks(
+  awemeIds: string[],
+  opts: FetchDouyinCommentsForWorksOptions,
+  deps: FetchDouyinCommentsDeps = {},
+): Promise<FetchCommentsForWorksResult[]> {
+  const maxPages = opts.maxPages ?? DEFAULT_COMMENT_MAX_PAGES;
+  const openCtx = deps.openContext ?? realCommentOpenContext;
+  // openContext 开一次(整批复用);空作品列表也开一次做登录校验,保持行为一致(校验优先)。
+  const ctx = await openCtx(opts.authDir, true);
+  try {
+    // isLoggedIn 检查一次(未登录一次性抛,不是每作品抛)。
+    if (!(await isCommentContextLoggedIn(ctx))) throw new DouyinNotLoggedInError();
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+    const out: FetchCommentsForWorksResult[] = [];
+    for (const awemeId of awemeIds) {
+      // 同一 context / 同一 page 逐作品导航抓取(评论管理页每作品 item_id 过滤,goto 会换页)。
+      const records = await scrapeCommentsForWork(page, awemeId, maxPages);
+      out.push({ awemeId, records });
+    }
+    return out;
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)一次
   }
 }
 
