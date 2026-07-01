@@ -13,8 +13,19 @@ import type { CreativeContext } from "./creative-context";
 // 白名单 / 输出契约都在 registry(@creatoros/ai-worker),运行时由路由取(别内联,SPEC §3.2)。
 
 /**
- * 会话上下文(SPEC §3.2)。`surface` 必填(页面层),其余可选。本切片接通 surface 层 + 数据层;
- * `functionKey`(按钮层叠加)留字段 + 解析口子,完整叠加是后续切片的活。
+ * 会话选中态(T-027)—— 从工作台一键岛打开 Copilot 时携带的「当前对话针对哪条内容」。
+ * `kind` = 内容类型(subjectType,如 project/publication);`ids` = 目标 id(一般单个);
+ * `label` = 展示标题(经 deeplink query 带进来,注入 system 让模型知道"这条"是啥)。
+ */
+export interface ChatSelection {
+  kind: string;
+  ids: string[];
+  label?: string;
+}
+
+/**
+ * 会话上下文(SPEC §3.2)。`surface` 必填(页面层),其余可选。接通 surface 层 + 数据层 + 选中态层。
+ * `functionKey`(按钮层叠加)。`selection`(T-027):工作台选中内容,注入 system + 作工具入参兜底。
  */
 export interface ChatContext {
   /** 页面层 —— 选基础 skill(选题页 = topics → chatbox.topic)。 */
@@ -23,8 +34,36 @@ export interface ChatContext {
   functionKey?: string;
   /** 当前项目(数据层装配 项目相关 facets 用)。 */
   projectId?: string | null;
-  /** 选中的候选/作品(后续切片 selection-aware 用,本切片留字段)。 */
-  selection?: { kind: string; ids: string[] };
+  /** 选中的候选/作品(T-027 selection-aware:注入 system + 工具入参兜底)。 */
+  selection?: ChatSelection;
+}
+
+/** 选中态 kind → 中文标签(注入 system 用)。未命中回落"内容"。 */
+const SELECTION_KIND_LABEL: Record<string, string> = {
+  project: "作品/项目",
+  publication: "已发布内容",
+  artifact: "创作产出",
+  candidate: "候选",
+  topic: "选题",
+};
+
+/**
+ * 选中态注入(T-027)—— 把工作台选中的内容(标题)拼成 system 上下文块,接到 skill system 后。
+ * 这是修「Copilot 瞎答/反复索要标题」的核心:模型一进来就知道用户"这条"指的是哪条内容,
+ * 直接展开诊断/讨论,而不是问"你的标题是什么"。无选中态 / 无标题 → 返回空串(不喂噪声)。
+ */
+export function assembleSelectionContext(
+  selection: ChatSelection | undefined,
+): string {
+  const label = selection?.label?.trim();
+  if (!selection || !label) return "";
+  const kindLabel = SELECTION_KIND_LABEL[selection.kind] ?? "内容";
+  return [
+    `【本次对话针对创作者选中的${kindLabel}】`,
+    `标题:《${label}》`,
+    `用户就是要你针对这条内容展开(诊断 / 讨论 / 优化);对话里的"这条""这个""它"默认都指它。` +
+      `不要再问"你的标题是什么"——标题已在上方。若需要文稿/数据细节而用户尚未提供,可礼貌请用户补充,但绝不重复索要标题。`,
+  ].join("\n");
 }
 
 /**

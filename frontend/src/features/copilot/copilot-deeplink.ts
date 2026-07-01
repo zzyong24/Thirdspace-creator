@@ -23,11 +23,22 @@ import {
  *
  * @param surface 页面层(topics/calibration/positioning/review/project)。
  * @param functionKey 按钮层专用工具 id(topic.generate / calibration.diagnose / …);省略=只切 surface。
+ * @param selection 选中内容(T-027):`{ kind(subjectType), id, title }` —— 让 Copilot 一进来就知道
+ *   用户"这条"指哪条,注入 system + 作工具入参兜底,修「瞎答/反复索要标题」。标题经 URL 带(短、编码安全)。
  */
-export function copilotDeepLink(surface: string, functionKey?: string): string {
+export function copilotDeepLink(
+  surface: string,
+  functionKey?: string,
+  selection?: { kind: string; id: string; title?: string },
+): string {
   const params = new URLSearchParams();
   params.set(OVERLAY_QUERY_KEY, OVERLAY_OPEN_VALUE);
   params.set("surface", surface);
   if (functionKey) params.set("fn", functionKey);
+  if (selection?.kind && selection.id) {
+    params.set("selKind", selection.kind);
+    params.set("selId", selection.id);
+    if (selection.title) params.set("selTitle", selection.title);
+  }
   return `?${params.toString()}`;
 }

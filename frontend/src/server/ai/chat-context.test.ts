@@ -3,6 +3,7 @@ import {
   resolveSkillForSurface,
   applyFunctionKey,
   assembleChatSystem,
+  assembleSelectionContext,
   DEFAULT_CHAT_SKILL,
 } from "./chat-context";
 
@@ -93,5 +94,36 @@ describe("assembleChatSystem — 数据层(facets → system)", () => {
     expect(sys).not.toContain("【过往复盘爆款要素】");
     expect(sys).toContain("【可依托的知识库资料】");
     expect(sys).toContain("一条知识");
+  });
+});
+
+describe("assembleSelectionContext(T-027 选中态注入)", () => {
+  it("有 label → 注入选中内容块(标题 + 别再问标题)", () => {
+    const block = assembleSelectionContext({
+      kind: "publication",
+      ids: ["pub-1"],
+      label: "为什么你的 RAG 检索总召回废话",
+    });
+    expect(block).toContain("已发布内容");
+    expect(block).toContain("《为什么你的 RAG 检索总召回废话》");
+    expect(block).toContain("不要再问");
+  });
+
+  it("未知 kind → 回落到通用「内容」标签", () => {
+    const block = assembleSelectionContext({
+      kind: "whatever",
+      ids: ["x"],
+      label: "某条内容",
+    });
+    expect(block).toContain("选中的内容");
+    expect(block).toContain("《某条内容》");
+  });
+
+  it("无选中态 / 无标题 → 空串(不喂噪声)", () => {
+    expect(assembleSelectionContext(undefined)).toBe("");
+    expect(assembleSelectionContext({ kind: "project", ids: ["p"] })).toBe("");
+    expect(
+      assembleSelectionContext({ kind: "project", ids: ["p"], label: "  " }),
+    ).toBe("");
   });
 });

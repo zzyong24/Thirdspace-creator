@@ -752,7 +752,11 @@ function StartPredictionButton({
       {/* 一键岛预调(SPEC §3.4):打开 ChatBox 进编导诊断,预调 calibration.diagnose —— 想边聊
           边逐维度盲评/多轮打磨走这条;左边「开始预测」是直接起任务铸盲预测的快路(两条并存)。 */}
       <Link
-        href={copilotDeepLink("calibration", "calibration.diagnose")}
+        href={copilotDeepLink("calibration", "calibration.diagnose", {
+          kind: subject.subjectType,
+          id: subject.subjectId,
+          title: subject.title,
+        })}
         data-testid="calibration-open-copilot"
         aria-label="在对话里诊断"
         onClick={(e) => e.stopPropagation()}

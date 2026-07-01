@@ -16,6 +16,7 @@ import {
   resolveSkillForSurface,
   applyFunctionKey,
   assembleChatSystem,
+  assembleSelectionContext,
   type ChatContext,
 } from "./chat-context";
 import { buildChatTools, type ChatToolDeps } from "./chat-tools";
@@ -116,7 +117,13 @@ export async function buildChatAssembly(
     { projectId: chatContext.projectId ?? null, topic: "" },
     deps,
   );
-  const system = assembleChatSystem(skill.system, context);
+  // 数据层 + 选中态层(T-027):先拼 CreativeContext facets,再接上"本次对话针对的选中内容"块 ——
+  // 让模型一进来就知道用户"这条"指哪条,不再瞎答/反复索要标题。
+  const baseSystem = assembleChatSystem(skill.system, context);
+  const selectionBlock = assembleSelectionContext(chatContext.selection);
+  const system = selectionBlock ? `${baseSystem}\n\n${selectionBlock}` : baseSystem;
+  // 选中态标题 —— 工具入参兜底(模型没显式传 title/subject 时用它,避免拿空标题去诊断)。
+  const selectionTitle = chatContext.selection?.label?.trim() || "";
 
   // 5) 工具白名单层:按 skill 白名单挂工具,execute 复用现有 runner 核心产**候选**(非实体)。
   const toolDeps: ChatToolDeps = {
@@ -158,6 +165,8 @@ export async function buildChatAssembly(
     diagnoseContent: async ({ title, script }) => {
       // 复用 calibration.diagnose 模板 + parseDiagnosis(与 calibration-diagnose-runner 同源)。
       // 对话里没有库内 rubric reader → 用通用维度评(诚实降级)。产诊断候选(非实体)。
+      // T-027:模型没显式传 title 时用工作台选中内容的标题兜底(不拿空标题去诊断)。
+      const effTitle = title?.trim() ? title : selectionTitle;
       const spec = await deps.resolveModelSpec(ctx, "calibration.diagnose");
       const rubricBlock = GENERIC_RUBRIC_DIMENSIONS.map(
         (d, i) => `${i + 1}. ${d.label}（key=${d.key}） —— ${d.description}`,
@@ -173,7 +182,7 @@ export async function buildChatAssembly(
             ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
             : "",
           rubricBlock,
-          title,
+          title: effTitle || "（未提供标题）",
           script:
             script && script.trim()
               ? script
@@ -195,6 +204,8 @@ export async function buildChatAssembly(
     },
     analyzeReview: async ({ subject }) => {
       // 复用 review.insights 模板 + parseLearnings(与 review-runner 同源)—— 产经验候选(非实体)。
+      // T-027:模型没显式传 subject 时用工作台选中内容的标题兜底。
+      const effSubject = subject?.trim() ? subject : selectionTitle;
       const spec = await deps.resolveModelSpec(ctx, "review.insights");
       const { text } = await runTemplatedNode({
         model: modelFor(spec),
@@ -206,10 +217,9 @@ export async function buildChatAssembly(
           priorLearnings: context.learningsBrief
             ? `\n【已有经验(避免重复)】\n${context.learningsBrief}`
             : "",
-          subject:
-            subject && subject.trim()
-              ? subject
-              : "（未指定具体内容,按这个账号的整体表现提炼)",
+          subject: effSubject
+            ? effSubject
+            : "（未指定具体内容,按这个账号的整体表现提炼)",
         },
       });
       return parseLearnings(text);

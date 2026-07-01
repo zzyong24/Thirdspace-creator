@@ -443,12 +443,27 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   const searchParams = useSearchParams();
   const surface = searchParams?.get("surface") || DEFAULT_SURFACE;
   const functionKey = searchParams?.get("fn") || undefined;
-  const chatContextBody = React.useMemo(
-    () => ({
-      chatContext: functionKey ? { surface, functionKey } : { surface },
-    }),
-    [surface, functionKey],
-  );
+  // T-027:选中态从 URL 读(一键岛带 ?selKind=&selId=&selTitle=),装进 ChatContext.selection →
+  // 后端注入 system + 工具入参兜底,让 Copilot 知道用户"这条"指哪条,不再瞎答/反复索要标题。
+  const selKind = searchParams?.get("selKind") || undefined;
+  const selId = searchParams?.get("selId") || undefined;
+  const selTitle = searchParams?.get("selTitle") || undefined;
+  const chatContextBody = React.useMemo(() => {
+    const chatContext: {
+      surface: string;
+      functionKey?: string;
+      selection?: { kind: string; ids: string[]; label?: string };
+    } = { surface };
+    if (functionKey) chatContext.functionKey = functionKey;
+    if (selKind && selId) {
+      chatContext.selection = {
+        kind: selKind,
+        ids: [selId],
+        ...(selTitle ? { label: selTitle } : {}),
+      };
+    }
+    return { chatContext };
+  }, [surface, functionKey, selKind, selId, selTitle]);
   const transport = React.useMemo(
     () =>
       new DefaultChatTransport<UIMessage>({
