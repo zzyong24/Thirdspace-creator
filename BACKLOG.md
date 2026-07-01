@@ -34,9 +34,9 @@
 |---|---|---|---|
 | T-030-D1 | ASR capability(model-config) | 📋 可开工 | `transcribe.audio` + `resolveTranscribeSpec` + `transcribeAudio` 工厂 + OpenAI 兼容 adapter(`/v1/audio/transcriptions`)+ 设置页 `TranscribeConfigCard`(F6 capability 枚举点落实) |
 | T-030-D2 | 逐字稿管线 | 📋 可开工 | `fetchDouyinVideoUrl`(去水印 playwm→play)+ `streamAudioFromVideo`(ffmpeg spawn,F7 失败分类+ffmpeg 预探)+ `transcribe-runner` + transcript artifact 幂等(F8)+ dispatch `transcribe.douyin` |
-| T-030-D3 | 存量回填 | 📋 可开工 | 读 `月明水清深/*.md` → 按 aweme_id 建 transcript artifact 一次性入口(不卡扫码/ASR,确定性可验) |
+| T-030-D3 | 存量回填 | ✅ `d5815c6` | `ensureTranscriptArtifact`(`transcript-artifact.ts`,5 窄端口注入,D2 复用)+ `extractTranscriptBody`(frontmatter 解析)+ 幂等(project+output_script→JSON awemeId)+ `backfill-transcripts.ts`(tsx,`backfill:transcripts` 别名,未跑=DATA-3 留用户)。复用 `findImportedByRef`+`artifactsService.createArtifact/createVersion`(走 service),artifactType=output_script/stage=script。6 测绿·backend 812 passed |
 | T-030-D4 | 作品 auto-fill 分析 | 📋 可开工 | 迁移 0010 `artifacts.origin`(F1)+ `reconstruct.project` runner(schema,写 origin=reconstructed)+ **消费侧隔离**(F2:creative-context/ChatBox/candidate/SEAM 遇 reconstructed 不当已确认)+ 仅 imported;断言 manual 不触发 |
-| T-030-D5 | 已发布 100% + 自由跳阶段 | 🔨 开工中 | `ensureImportedProject` 全 7 阶段置 100(F4 含 review)+ `transitionProjectStage` imported 免 gate;断言 imported=100% 可跳、manual 受 gate |
+| T-030-D5 | 已发布 100% + 自由跳阶段 | ✅ `ce0138b` | `createProject` stageRows imported 全 7 阶段 progressPct=100(含 review)+ `ensureImportedProject` 返回前显式 recompute(治 createProject 播种 0)+ `transitionProjectStage` `!isImported` 才走 gate。核实 `validateStageGate` 纯读无副作用(跳过安全)。3 测绿(imported=100/免gate/manual受gate)·backend tsc 净·806 passed |
 | T-030-D6 | 复盘评论 | 📋 可开工 | `audience_signals.publication_id` 迁移 0010 + `publications.comments.list` op + ingest 按 aweme_id 回填(F3:仅新采集能带,存量无锚需重采)+ 复盘页评论区(前 100) |
 | T-030-D7 | 采集指令化 UX | 📋 可开工 | 友好频率编译 cron(不露 crontab)+ 自然语言 prompt + 模板卡 + intent schema 分类(D-f:模板+NL 都做) |
 | T-030-D8a | 明细数据导出采集 | 📋 可开工 | Playwright 移植 TzFilm 导出列表流程(16 字段:播放/完播/CTR/2s跳出/主页访问/粉丝增量…)+ 落库 + 喂复盘核心指标/漏斗(不搬 AppleScript,复用字段映射+踩坑知识) |
