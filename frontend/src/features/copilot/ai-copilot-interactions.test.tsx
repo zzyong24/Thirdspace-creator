@@ -17,6 +17,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const listTasks = vi.fn();
 const createCandidate = vi.fn();
+// 会话持久化(本切片):读回历史 / 历史记录列表 走这两个契约读 op。
+const listMessages = vi.fn();
+const listConversations = vi.fn();
 
 // 「继续」 routing uses next/navigation's useRouter; mock it so the island mounts
 // under the test renderer (no real app-router provider).
@@ -44,6 +47,9 @@ vi.mock("@/lib/contract-client", () => ({
     createCandidate: (...args: unknown[]) => createCandidate(...args),
     // slice 2:复盘经验候选采纳 → learnings.create 直采门。
     createLearning: (...args: unknown[]) => createLearning(...args),
+    // 会话持久化:二次进入读回 + 历史记录列表。
+    listMessages: (...args: unknown[]) => listMessages(...args),
+    listConversations: (...args: unknown[]) => listConversations(...args),
   },
 }));
 
@@ -51,6 +57,7 @@ vi.mock("@/lib/contract-client", () => ({
 // `sendMessage` is captured; `messages` / `status` are injected per-test via the controls.
 const sendMessage = vi.fn();
 const stop = vi.fn();
+const setMessages = vi.fn();
 let mockMessages: Array<{
   id: string;
   role: "user" | "assistant";
@@ -63,7 +70,8 @@ vi.mock("@ai-sdk/react", () => ({
     sendMessage: (...args: unknown[]) => sendMessage(...args),
     stop: (...args: unknown[]) => stop(...args),
     status: mockStatus,
-    setMessages: vi.fn(),
+    // 读回把历史喂 setMessages —— 捕获它断言二次进入读回。
+    setMessages: (...args: unknown[]) => setMessages(...args),
     regenerate: vi.fn(),
   }),
 }));
@@ -101,9 +109,20 @@ beforeEach(() => {
   routerRefresh.mockReset();
   sendMessage.mockReset();
   stop.mockReset();
+  setMessages.mockReset();
+  listMessages.mockReset();
+  listMessages.mockResolvedValue([]);
+  listConversations.mockReset();
+  listConversations.mockResolvedValue([]);
   mockMessages = [];
   mockStatus = "ready";
   mockSearch = "copilot=open";
+  // 每个用例从干净的会话存档起步(前一个用例可能写过 localStorage)。
+  try {
+    window.localStorage.clear();
+  } catch {
+    /* noop */
+  }
 });
 
 describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
@@ -345,5 +364,98 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     await user.click(screen.getByText("帮我写脚本开场"));
     expect(textarea.value).toBe("帮我写脚本开场");
     expect(screen.getByLabelText("提交提示给 Copilot")).not.toBeDisabled();
+  });
+
+  it("会话持久化:该 surface 存过 conversationId → 挂载读回历史(listMessages → setMessages 映射)", async () => {
+    // 预置该 surface(默认 topics)的存档 + 后端返回两条历史消息。
+    window.localStorage.setItem("copilot:conv:topics", "conv-restore");
+    listMessages.mockResolvedValueOnce([
+      { id: "m1", role: "user", content: "上次问的" },
+      { id: "m2", role: "assistant", content: "上次答的" },
+    ]);
+    render(<AICopilotContent viewModel={VM} />);
+
+    await waitFor(() => {
+      expect(listMessages).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: { conversationId: "conv-restore" },
+        }),
+      );
+    });
+    // 映射后的 UIMessage[] 喂给 setMessages(读回填充对话)。
+    await waitFor(() => {
+      expect(setMessages).toHaveBeenCalledWith([
+        expect.objectContaining({
+          id: "m1",
+          role: "user",
+          parts: [{ type: "text", text: "上次问的" }],
+        }),
+        expect.objectContaining({
+          id: "m2",
+          role: "assistant",
+          parts: [{ type: "text", text: "上次答的" }],
+        }),
+      ]);
+    });
+  });
+
+  it("会话持久化:读回失败(会话被删)→ 清失效存档 + 静默降级为空会话(不抛)", async () => {
+    window.localStorage.setItem("copilot:conv:topics", "conv-gone");
+    listMessages.mockRejectedValueOnce(new Error("404 conversation not found"));
+    render(<AICopilotContent viewModel={VM} />);
+
+    await waitFor(() => {
+      expect(listMessages).toHaveBeenCalled();
+    });
+    // 失效存档被清除,降级为干净空会话。
+    await waitFor(() => {
+      expect(window.localStorage.getItem("copilot:conv:topics")).toBeNull();
+    });
+  });
+
+  it("历史记录按钮做实:点开 → listConversations 列出会话;点某条 → 读回该会话消息", async () => {
+    const user = userEvent.setup();
+    listConversations.mockResolvedValueOnce([
+      { id: "conv-a", title: "选题：AI 浏览器", createdAt: "2026-06-20T08:30:00.000Z" },
+      { id: "conv-b", title: "选题：短视频留存", createdAt: "2026-06-21T09:00:00.000Z" },
+    ]);
+    listMessages.mockResolvedValueOnce([
+      { id: "x1", role: "assistant", content: "会话 A 的历史" },
+    ]);
+    render(<AICopilotContent viewModel={VM} />);
+
+    // 点「历史记录」→ 懒加载列表。
+    await user.click(screen.getByRole("button", { name: /历史记录/ }));
+    await waitFor(() => {
+      expect(listConversations).toHaveBeenCalled();
+    });
+    const item = await screen.findByText("选题：AI 浏览器");
+    expect(item).not.toBeNull();
+
+    // 点某条 → 读回该会话消息(listMessages 带其 id + setMessages 填充)。
+    await user.click(item);
+    await waitFor(() => {
+      expect(listMessages).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { conversationId: "conv-a" } }),
+      );
+    });
+    await waitFor(() => {
+      expect(setMessages).toHaveBeenCalledWith([
+        expect.objectContaining({
+          id: "x1",
+          parts: [{ type: "text", text: "会话 A 的历史" }],
+        }),
+      ]);
+    });
+  });
+
+  it("新对话:点「新对话」→ 清空会话 + 清该 surface 存档", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem("copilot:conv:topics", "conv-existing");
+    render(<AICopilotContent viewModel={VM} />);
+
+    await user.click(screen.getByRole("button", { name: /新对话/ }));
+    expect(setMessages).toHaveBeenCalledWith([]);
+    expect(window.localStorage.getItem("copilot:conv:topics")).toBeNull();
   });
 });

@@ -31,7 +31,7 @@
  */
 
 import * as React from "react";
-import { Clock3, Sparkles, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 
 import { AICopilotContent } from "@/features/copilot/ai-copilot-content";
 
@@ -62,15 +62,8 @@ export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            data-slot="ai-copilot-history"
-            className="inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-0 focus-visible:ring-0"
-          >
-            <Clock3 className="size-3.5" aria-hidden="true" />
-            历史记录
-          </button>
-          <span className="h-5 w-px bg-border" aria-hidden="true" />
+          {/* 「历史记录」按钮已下沉到 AICopilotContent 的头部并做实(它持有 conversationId +
+              setMessages,历史读回逻辑与之同处一地);这里只留关闭按钮。 */}
           <button
             type="button"
             aria-label="关闭 AI 助手"

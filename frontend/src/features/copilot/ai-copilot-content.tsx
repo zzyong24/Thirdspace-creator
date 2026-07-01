@@ -57,6 +57,8 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
+import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   DefaultChatTransport,
   isToolUIPart,
@@ -76,6 +78,7 @@ import {
   ArrowUp,
   BookOpenText,
   ChartLine,
+  Clock3,
   Crosshair,
   FileSearch,
   FileText,
@@ -100,6 +103,12 @@ import {
 import { buildCopilotViewModel } from "@/fixtures/selectors";
 import { client } from "@/lib/contract-client";
 import type { BasePageViewModel } from "@/types/view-models";
+import {
+  readStoredConversationId,
+  writeStoredConversationId,
+  toUIMessages,
+  type WireAIMessage,
+} from "./conversation-persistence";
 
 // ---------------------------------------------------------------------------
 // ViewModel — shaped by the `buildCopilotViewModel` selector. The Copilot
@@ -327,6 +336,14 @@ interface WireTask {
   readonly requestedAt: string;
 }
 
+// ai_conversations 的一行(契约 aiConversationResource 的子集)—— 历史记录面板只需
+// id/title/createdAt。结构化 cast,与本 island 其它 list 调用一致(不引 contract 类型依赖)。
+interface WireConversation {
+  readonly id: string;
+  readonly title: string;
+  readonly createdAt: string;
+}
+
 // AI task status → human label for the 最近任务 feed. Honest mirror of the §12 machine.
 const TASK_STATUS_LABEL: Record<WireTask["status"], string> = {
   queued: "排队中",
@@ -364,6 +381,17 @@ function taskTitle(t: WireTask): string {
 // taskType → 中文副文(任务卡第二行)。未命中返回 null(不渲染副文)。
 function taskSubtitle(t: WireTask): string | null {
   return TASK_TYPE_LABEL[t.taskType]?.sub ?? null;
+}
+
+// 历史会话的时间戳 → 简洁本地时间(YYYY-MM-DD HH:mm)。非法/空串回退原串,不抛。
+function formatConvTime(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
+    d.getHours(),
+  )}:${pad(d.getMinutes())}`;
 }
 
 // In-progress statuses that belong in the 「继续任务」 feed. A user can resume any
@@ -432,6 +460,89 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
 // 默认页面层(无 URL 指定时)—— 选题编导是最通用的一面。
 const DEFAULT_SURFACE = "topics";
 
+// T-029:AI 文本回复用 markdown 富呈现(标题/列表/表格/代码/加粗/引用),替掉纯文本直出。
+// 紧凑样式适配对话气泡(text-[11px]);GFM 表格/删除线走 remark-gfm。用户消息仍纯文本(自己打的)。
+const MD_COMPONENTS: Components = {
+  p: ({ children }) => (
+    <p className="mb-1.5 leading-relaxed last:mb-0">{children}</p>
+  ),
+  strong: ({ children }) => (
+    <strong className="font-semibold text-foreground">{children}</strong>
+  ),
+  em: ({ children }) => <em className="italic">{children}</em>,
+  ul: ({ children }) => (
+    <ul className="my-1 ml-3.5 list-disc space-y-0.5">{children}</ul>
+  ),
+  ol: ({ children }) => (
+    <ol className="my-1 ml-3.5 list-decimal space-y-0.5">{children}</ol>
+  ),
+  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+  h1: ({ children }) => (
+    <h1 className="mb-1 mt-2 text-xs font-semibold text-foreground first:mt-0">
+      {children}
+    </h1>
+  ),
+  h2: ({ children }) => (
+    <h2 className="mb-1 mt-2 text-xs font-semibold text-foreground first:mt-0">
+      {children}
+    </h2>
+  ),
+  h3: ({ children }) => (
+    <h3 className="mb-0.5 mt-1.5 text-[11px] font-semibold text-foreground first:mt-0">
+      {children}
+    </h3>
+  ),
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="text-brand underline underline-offset-2"
+    >
+      {children}
+    </a>
+  ),
+  code: ({ children }) => (
+    <code className="rounded bg-surface px-1 py-0.5 font-mono text-[10px] text-foreground">
+      {children}
+    </code>
+  ),
+  pre: ({ children }) => (
+    <pre className="my-1 overflow-x-auto rounded-md bg-surface p-2 font-mono text-[10px] text-foreground">
+      {children}
+    </pre>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="my-1 border-l-2 border-border pl-2 text-muted-foreground">
+      {children}
+    </blockquote>
+  ),
+  table: ({ children }) => (
+    <div className="my-1 overflow-x-auto">
+      <table className="w-full border-collapse text-[10px]">{children}</table>
+    </div>
+  ),
+  th: ({ children }) => (
+    <th className="border border-border bg-surface-muted px-1.5 py-0.5 text-left font-semibold">
+      {children}
+    </th>
+  ),
+  td: ({ children }) => (
+    <td className="border border-border px-1.5 py-0.5">{children}</td>
+  ),
+  hr: () => <hr className="my-2 border-border" />,
+};
+
+function ChatMarkdown({ text }: { text: string }) {
+  return (
+    <div data-slot="copilot-markdown" className="text-[11px] text-muted-foreground">
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+        {text}
+      </ReactMarkdown>
+    </div>
+  );
+}
+
 export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   const vm = viewModel ?? buildCopilotViewModel();
   const router = useRouter();
@@ -453,6 +564,28 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   // Copilot 聚焦当前任务,不展示次区(真机反馈:非右下角/全局唤醒不需要下面的推荐指令和全局入口)。
   const showSecondary =
     surface === DEFAULT_SURFACE && !functionKey && !selKind;
+  // 会话持久化(本切片):前端持一个 conversationId,放进 transport body(和 chatContext 并列)
+  // 让后端续接同一会话;并从 /api/chat 的响应头 `x-conversation-id` 捕获后端 lazy 建/复用的
+  // 会话 id 存起来。conversationId 随 surface 切换重置(不同页面各自独立会话)。
+  const [conversationId, setConversationId] = React.useState<string | null>(
+    null,
+  );
+  // conversationId 放 ref 供 transport 的 body(Resolvable 函数)读最新值,避免因 body 变化
+  // 重建 transport(重建会打断进行中的流)。fetch 包装层用 ref 里的 setter 回写捕获到的 id。
+  const conversationIdRef = React.useRef<string | null>(null);
+  conversationIdRef.current = conversationId;
+  // 捕获到 x-conversation-id 时:更新 state + 按 surface 持久化。surface 用 ref 读最新值,
+  // 让 fetch 包装闭包不随 surface 变(同样避免重建 transport)。
+  const surfaceRef = React.useRef(surface);
+  surfaceRef.current = surface;
+  const captureConversationId = React.useCallback((id: string) => {
+    if (!id) return;
+    if (conversationIdRef.current === id) return;
+    conversationIdRef.current = id;
+    setConversationId(id);
+    writeStoredConversationId(surfaceRef.current, id);
+  }, []);
+
   const chatContextBody = React.useMemo(() => {
     const chatContext: {
       surface: string;
@@ -473,11 +606,32 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
     () =>
       new DefaultChatTransport<UIMessage>({
         api: "/api/chat",
-        body: chatContextBody,
+        // body 是 Resolvable(每次发请求求值):把当前 conversationId(ref 读最新)和 chatContext
+        // 一起带上。首轮 conversationId 为 null → 不带,后端 lazy 建;拿到响应头后续轮带上续接。
+        body: () => ({
+          ...chatContextBody,
+          ...(conversationIdRef.current
+            ? { conversationId: conversationIdRef.current }
+            : {}),
+        }),
+        // useChat 不直接暴露响应头 → 在 transport 的 fetch 层包一层,读 `x-conversation-id`
+        // 后原样把 Response 交回给 SDK(不改流)。这是本 SDK 版本捕获会话 id 最稳的办法。
+        fetch: async (input, init) => {
+          const res = await fetch(input as RequestInfo, init);
+          try {
+            const cid = res.headers.get("x-conversation-id");
+            if (cid) captureConversationId(cid);
+          } catch {
+            /* 读头失败不影响流式 */
+          }
+          return res;
+        },
       }),
-    [chatContextBody],
+    [chatContextBody, captureConversationId],
   );
-  const { messages, sendMessage, status, stop } = useChat({ transport });
+  const { messages, sendMessage, status, stop, setMessages } = useChat({
+    transport,
+  });
   const streaming = status === "streaming" || status === "submitted";
 
   // 一键岛预调(SPEC §3.4):面板带 fn 打开 且对话尚空 → 自动发一轮「预调话术」,让模型本轮
@@ -503,6 +657,117 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
     void sendMessage({ text: value });
     setPrompt("");
   }, [prompt, streaming, sendMessage]);
+
+  // 切到某个会话:拉它的历史消息 → 映射成 UIMessage → 喂 setMessages(读回);同时把
+  // conversationId 设为它 + 按 surface 持久化(后续发言续接这个会话)。读回失败(会话被删/
+  // 网络错)→ 静默降级(不清空当前对话、不弹错),只在控制台留日志。既服务「二次进入读回」,
+  // 也服务「历史记录点某条切过去」。
+  const loadConversation = React.useCallback(
+    async (id: string): Promise<boolean> => {
+      if (!id) return false;
+      try {
+        // 注意:契约 listMessages 只声明 params(conversationId),未声明分页 query(与 listConversations
+        // 不同)—— 故 query 传 undefined,拿该会话全部消息(读回历史)。
+        const rows = (await client.listMessages({
+          params: { conversationId: id },
+          query: undefined,
+          body: undefined,
+        })) as unknown as ReadonlyArray<WireAIMessage> | null | undefined;
+        const mapped = toUIMessages(rows ?? []);
+        setMessages(mapped);
+        conversationIdRef.current = id;
+        setConversationId(id);
+        writeStoredConversationId(surfaceRef.current, id);
+        return true;
+      } catch (err) {
+        console.error("[copilot] load conversation failed:", err);
+        return false;
+      }
+    },
+    [setMessages],
+  );
+
+  // 二次进入读回(SPEC 本切片):组件挂载 / surface 切换时,若该 surface 存过 conversationId
+  // → 读回其消息填充对话。仅客户端读 localStorage(SSR 安全)。切 surface 会重置对话:先清空,
+  // 再按新 surface 的存档读回(没有则保持空会话)。prefilledRef 一并复位,让新 surface 的
+  // 一键岛预调仍可触发一次。
+  const hydratedForSurfaceRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (hydratedForSurfaceRef.current === surface) return;
+    hydratedForSurfaceRef.current = surface;
+    const stored = readStoredConversationId(surface);
+    // surface 变了:重置会话态(清 id + ref)。有存档则读回,否则留空会话。
+    conversationIdRef.current = stored;
+    setConversationId(stored);
+    if (stored) {
+      // 有存档 → 抑制一键岛预调(prefilledRef=true):读回是「续上次」,不该再自动发预调话术,
+      // 否则每次带 ?fn 二次进入都会往历史里追加一条重复的预调。
+      prefilledRef.current = true;
+      void (async () => {
+        const ok = await loadConversation(stored);
+        // 读回失败(会话被删)→ 清掉这条失效存档,降级为干净空会话,并放开预调(可重新起一轮)。
+        if (!ok) {
+          writeStoredConversationId(surface, null);
+          conversationIdRef.current = null;
+          setConversationId(null);
+          setMessages([]);
+          prefilledRef.current = false;
+        }
+      })();
+    } else {
+      // 无存档 → 干净空会话,放开一键岛预调(新 surface 首次进入可自动预调一次)。
+      prefilledRef.current = false;
+      setMessages([]);
+    }
+    // loadConversation 依赖稳定;surface 变化触发读回。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [surface]);
+
+  // 历史记录(SPEC 本切片,做实占位按钮):点「历史记录」→ 拉过往会话列表(标题+时间),
+  // 点某条 → 切到该会话 + 读回消息。open 时懒加载一次(避免每次挂载都打请求)。
+  const [historyOpen, setHistoryOpen] = React.useState(false);
+  const [historyRows, setHistoryRows] = React.useState<
+    ReadonlyArray<WireConversation> | null
+  >(null);
+  const toggleHistory = React.useCallback(() => {
+    setHistoryOpen((prev) => {
+      const next = !prev;
+      if (next && historyRows === null) {
+        void (async () => {
+          try {
+            const rows = (await client.listConversations({
+              params: undefined,
+              query: { page: 1, pageSize: 20 },
+              body: undefined,
+            })) as unknown as ReadonlyArray<WireConversation> | null | undefined;
+            setHistoryRows(rows ?? []);
+          } catch (err) {
+            // 列表拉取失败 → 诚实空列表(不弹错)。
+            console.error("[copilot] list conversations failed:", err);
+            setHistoryRows([]);
+          }
+        })();
+      }
+      return next;
+    });
+  }, [historyRows]);
+  const pickHistory = React.useCallback(
+    (id: string) => {
+      setHistoryOpen(false);
+      void loadConversation(id);
+    },
+    [loadConversation],
+  );
+  // 新对话:清当前会话 id + 清消息 + 清该 surface 的存档,下次发言由后端 lazy 建新会话。
+  // prefilledRef 复位,让「新对话」后一键岛预调仍可触发一次。
+  const startNewConversation = React.useCallback(() => {
+    setHistoryOpen(false);
+    conversationIdRef.current = null;
+    setConversationId(null);
+    writeStoredConversationId(surfaceRef.current, null);
+    setMessages([]);
+    prefilledRef.current = false;
+  }, [setMessages]);
 
   // GAP-COP-feed: 最近任务 is now backed by the REAL global task feed (ai.tasks.list) —
   // the user's cross-project AI tasks, newest first. `recentTasks` is null while loading,
@@ -552,7 +817,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
       {/* CopilotHeader ------------------------------------------------- */}
       <div
         data-slot="copilot-header"
-        className="flex shrink-0 items-center gap-2"
+        className="relative flex shrink-0 items-center gap-2"
       >
         <span
           aria-hidden="true"
@@ -571,6 +836,75 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
             描述你的目标，我来帮你规划下一步
           </p>
         </div>
+        {/* 历史记录 + 新对话(SPEC 本切片:占位按钮做实)。历史记录 → 拉过往会话列表,点某条
+            切过去 + 读回;新对话 → 清空当前会话(下次发言后端 lazy 建新会话)。 */}
+        <div className="ml-auto flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={startNewConversation}
+            data-slot="ai-copilot-new"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            <Plus className="size-3.5" aria-hidden="true" />
+            新对话
+          </button>
+          <button
+            type="button"
+            onClick={toggleHistory}
+            data-slot="ai-copilot-history"
+            aria-haspopup="menu"
+            aria-expanded={historyOpen}
+            className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            <Clock3 className="size-3.5" aria-hidden="true" />
+            历史记录
+          </button>
+        </div>
+        {/* 历史会话下拉面板 —— 简洁列表(标题 + 时间),点某条加载。空/加载各有诚实态。 */}
+        {historyOpen && (
+          <div
+            data-slot="copilot-history-panel"
+            role="menu"
+            aria-label="历史会话"
+            className="absolute right-0 top-full z-20 mt-1 max-h-64 w-64 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg"
+          >
+            {historyRows === null ? (
+              <p
+                data-slot="copilot-history-loading"
+                className="px-2 py-2 text-[11px] text-muted-foreground"
+              >
+                加载中…
+              </p>
+            ) : historyRows.length === 0 ? (
+              <p
+                data-slot="copilot-history-empty"
+                className="px-2 py-2 text-[11px] text-muted-foreground"
+              >
+                暂无历史会话。
+              </p>
+            ) : (
+              historyRows.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => pickHistory(c.id)}
+                  data-slot="copilot-history-item"
+                  data-conversation-id={c.id}
+                  data-active={c.id === conversationId ? "true" : undefined}
+                  className="flex w-full flex-col items-start gap-0.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-surface-muted focus:outline-none focus-visible:bg-surface-muted data-[active=true]:bg-brand-soft"
+                >
+                  <span className="w-full truncate text-[11px] font-medium text-foreground">
+                    {c.title || "未命名会话"}
+                  </span>
+                  <span className="text-[9.5px] text-muted-foreground">
+                    {formatConvTime(c.createdAt)}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Conversation region (主区,bug #5)—— 消息流 + 输入框。flex-1 占满浮层主体,消息区
@@ -603,24 +937,30 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                       : "flex flex-col gap-1 self-start"
                   }
                 >
-                  {/* 文本 part 拼成气泡 */}
-                  {message.parts.some(
-                    (p) => p.type === "text" && p.text.trim().length > 0,
-                  ) ? (
-                    <span
-                      data-slot="copilot-message-text"
-                      className={
-                        message.role === "user"
-                          ? "rounded-lg bg-brand-soft px-2.5 py-1.5 text-[11px] text-foreground"
-                          : "rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] text-muted-foreground"
-                      }
-                    >
-                      {message.parts
-                        .filter((p) => p.type === "text")
-                        .map((p) => p.text)
-                        .join("")}
-                    </span>
-                  ) : null}
+                  {/* 文本 part:用户消息纯文本气泡;AI 回复走 markdown 富呈现(T-029:标题/列表/
+                      表格/代码/加粗,替掉纯文本直出)。 */}
+                  {(() => {
+                    const text = message.parts
+                      .filter((p) => p.type === "text")
+                      .map((p) => p.text)
+                      .join("");
+                    if (!text.trim()) return null;
+                    return message.role === "user" ? (
+                      <span
+                        data-slot="copilot-message-text"
+                        className="rounded-lg bg-brand-soft px-2.5 py-1.5 text-[11px] text-foreground"
+                      >
+                        {text}
+                      </span>
+                    ) : (
+                      <div
+                        data-slot="copilot-message-text"
+                        className="rounded-lg bg-surface-muted px-2.5 py-1.5"
+                      >
+                        <ChatMarkdown text={text} />
+                      </div>
+                    );
+                  })()}
                   {/* generative UI:首波 5 工具结果 → 对话内候选卡(逐条/整条采纳走 confirm 门)。
                       工具结果按 kind 分发到对应卡:选题候选 / 选题卡 / 维度诊断 / 复盘经验 / 定位提案。 */}
                   {message.parts.map((part, idx) => {
