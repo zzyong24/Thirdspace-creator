@@ -102,8 +102,65 @@ describe("AnalyticsReviewPage derived metrics (R1-4)", () => {
     const views = aggregateMetric(PROJECT_ID, "views");
     const vm = buildAnalyticsReviewViewModel(PROJECT_ID, "all");
     const trendTotal = vm.viewsTrend.reduce((acc, row) => acc + row.value, 0);
-    // Allow a small rounding tolerance from the per-day weight rounding.
-    expect(Math.abs(trendTotal - views)).toBeLessThanOrEqual(5);
+    // T-035b: the trend is now a REAL per-capture-date series (no fabricated
+    // weekday curve). The canonical demo captures on a single date → a single
+    // point whose value equals the aggregated views exactly.
+    expect(trendTotal).toBe(views);
+  });
+
+  // T-035b — 播放趋势诚实化:真日级序列 + 单快照标记,绝不用假 weekday 权重铺假曲线。
+  it("单采集日 → viewsTrendMode single + 单点(不铺假曲线)", () => {
+    const vm = buildAnalyticsReviewViewModel(PROJECT_ID, "all");
+    // Canonical demo snapshots all share one capture date → single mode.
+    expect(vm.viewsTrendMode).toBe("single");
+    expect(vm.viewsTrend).toHaveLength(1);
+  });
+
+  it("op 路径:多采集日快照 → viewsTrendMode daily + 每日一点(真日级)", () => {
+    // Two capture dates for the SAME publication → a real 2-point daily series.
+    const snapshots = [
+      {
+        id: "s1",
+        publicationId: "pub-x",
+        capturedAt: "2026-06-10T10:00:00.000Z",
+        source: "platform_api",
+        rawMetrics: { views: 1000 },
+      },
+      {
+        id: "s2",
+        publicationId: "pub-x",
+        capturedAt: "2026-06-12T10:00:00.000Z",
+        source: "platform_api",
+        rawMetrics: { views: 2600 },
+      },
+    ];
+    const vm = buildAnalyticsReviewViewModelFromOp("real-project-xyz", snapshots);
+    expect(vm.viewsTrendMode).toBe("daily");
+    expect(vm.viewsTrend.map((p) => p.label)).toEqual(["06-10", "06-12"]);
+    expect(vm.viewsTrend.map((p) => p.value)).toEqual([1000, 2600]);
+  });
+
+  it("op 路径:单采集日多发布 → single(当天各发布 views 求和,不编日曲线)", () => {
+    const snapshots = [
+      {
+        id: "s1",
+        publicationId: "pub-a",
+        capturedAt: "2026-06-12T10:00:00.000Z",
+        source: "platform_api",
+        rawMetrics: { views: 1000 },
+      },
+      {
+        id: "s2",
+        publicationId: "pub-b",
+        capturedAt: "2026-06-12T11:00:00.000Z",
+        source: "platform_api",
+        rawMetrics: { views: 500 },
+      },
+    ];
+    const vm = buildAnalyticsReviewViewModelFromOp("real-project-xyz", snapshots);
+    expect(vm.viewsTrendMode).toBe("single");
+    expect(vm.viewsTrend).toHaveLength(1);
+    expect(vm.viewsTrend[0]).toEqual({ label: "06-12", value: 1500 });
   });
 });
 

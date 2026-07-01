@@ -517,6 +517,10 @@ export interface AnalyticsViewModel extends BasePageViewModel {
   readonly tabs: ReadonlyArray<{ readonly id: string; readonly label: string }>;
   readonly metrics: ReadonlyArray<MetricCard>;
   readonly viewsTrend: ReadonlyArray<{ readonly label: string; readonly value: number }>;
+  // 播放趋势数据形态 (T-035b, 诚实标注): "daily" = ≥2 个采集日 → 真日级折线;
+  // "single" = 仅 1 个采集快照 → 单点 + 「需多次采集」提示 (绝不用假 weekday 权重铺假曲线);
+  // "empty" = 无数据 → 页面走空态。缺省视为 "single" (单快照最常见, 见 view-model)。
+  readonly viewsTrendMode?: "daily" | "single" | "empty";
   readonly conversionFunnel: ReadonlyArray<{ readonly label: string; readonly value: number }>;
   readonly audienceProfile: ReadonlyArray<{ readonly label: string; readonly value: number }>;
   readonly audienceSource: ReadonlyArray<{ readonly label: string; readonly value: number }>;

@@ -46,13 +46,64 @@ function formatCount(value: number): string {
   return value.toLocaleString("zh-CN");
 }
 
-// Deterministic rising weekday shape (sums to 1) — distributes a real cumulative
-// view total across the 7-day trend chart. An explicit approximation of daily
-// shape (the seed carries one cumulative snapshot, not a per-day series); the
-// series TOTAL equals the real aggregated play count, so it is not fabricated.
-const TREND_WEIGHTS: ReadonlyArray<number> = [
-  0.097, 0.116, 0.104, 0.144, 0.164, 0.156, 0.219,
-];
+// 播放趋势(真日级序列) — T-035b 诚实化。
+//
+// 之前用固定 weekday 权重把「一个累计快照」摊成一条假的 7 天曲线(总和=真播放,
+// 但每天的形状是编的)。宪法 §8 不摆假:这里改为按快照的真实采集日 (`capturedAt`
+// 的日历天) 分组,每天对当天各发布最新一帧的 views 求和 —— 这是真实采集事件产生的
+// 日级序列。
+//  - ≥2 个采集日 → mode "daily",画真折线(标签 MM-DD)。
+//  - 仅 1 个采集日 → mode "single",单点 + 「需多次采集」提示(不铺假曲线)。
+//  - 无快照 → mode "empty"(上游走空态)。
+function dayKey(iso: string): string {
+  // 取 ISO 时间戳的日历天 (UTC 切分即可,趋势只需稳定分桶,不做时区精修)。
+  return iso.slice(0, 10);
+}
+
+function shortDayLabel(dayKeyStr: string): string {
+  // "2026-06-12" → "06-12"
+  const parts = dayKeyStr.split("-");
+  return parts.length === 3 ? `${parts[1]}-${parts[2]}` : dayKeyStr;
+}
+
+/**
+ * 从真实快照推导播放趋势(真日级)。按 `capturedAt` 的日历天分组,每天对「当天每个
+ * 发布的最新一帧」的 views 求和,产出按日升序的序列 + 数据形态标记。
+ */
+function buildRealViewsTrend(
+  snapshots: ReadonlyArray<MetricSnapshotDto>,
+): {
+  trend: ReadonlyArray<{ label: string; value: number }>;
+  mode: "daily" | "single" | "empty";
+} {
+  const playsOfRaw = (r: Record<string, unknown>): number =>
+    num(r, "views") || num(r, "plays");
+
+  // day → (publicationId → latest snapshot that day),避免当天多帧对同一发布重复计数。
+  const byDay = new Map<string, Map<string, MetricSnapshotDto>>();
+  for (const s of snapshots) {
+    if (!s.publicationId || !s.capturedAt) continue;
+    const key = dayKey(s.capturedAt);
+    let pubMap = byDay.get(key);
+    if (!pubMap) {
+      pubMap = new Map();
+      byDay.set(key, pubMap);
+    }
+    const prev = pubMap.get(s.publicationId);
+    if (!prev || s.capturedAt > prev.capturedAt) pubMap.set(s.publicationId, s);
+  }
+
+  const days = [...byDay.keys()].sort();
+  if (days.length === 0) return { trend: [], mode: "empty" };
+
+  const trend = days.map((day) => {
+    let sum = 0;
+    for (const s of byDay.get(day)!.values()) sum += playsOfRaw(s.rawMetrics ?? {});
+    return { label: shortDayLabel(day), value: sum };
+  });
+
+  return { trend, mode: days.length >= 2 ? "daily" : "single" };
+}
 
 /**
  * REV-2 对比分析 — build the per-publication horizontal comparison from the SAME
@@ -145,6 +196,7 @@ export function buildAnalyticsReviewViewModelFromOp(
       scenario: "empty",
       metrics: [],
       viewsTrend: [],
+      viewsTrendMode: "empty",
       conversionFunnel: [],
       audienceProfile: [],
       audienceSource: [],
@@ -239,12 +291,9 @@ export function buildAnalyticsReviewViewModelFromOp(
     { label: "转化", value: favorites },
   ];
 
-  // Views trend: distribute the REAL cumulative total across the weekday shape
-  // (series total === real plays). Keep base labels (周一…周日).
-  const viewsTrend = base.viewsTrend.map((point, i) => ({
-    label: point.label,
-    value: Math.round(views * (TREND_WEIGHTS[i] ?? 1 / base.viewsTrend.length)),
-  }));
+  // Views trend: REAL day-level series grouped by capture date (T-035b). 单快照
+  // 项目 → 单点 + mode "single"(页面显「需多次采集」),绝不用假 weekday 权重铺假曲线。
+  const { trend: viewsTrend, mode: viewsTrendMode } = buildRealViewsTrend(snapshots);
 
   return {
     ...base,
@@ -252,6 +301,7 @@ export function buildAnalyticsReviewViewModelFromOp(
     metrics,
     conversionFunnel,
     viewsTrend,
+    viewsTrendMode,
     // REV-2: per-publication comparison over the SAME snapshots (empty <2 pubs).
     comparison: buildComparisonViewModel(snapshots, labels),
   };

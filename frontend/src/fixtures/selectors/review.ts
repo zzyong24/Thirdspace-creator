@@ -176,35 +176,62 @@ function buildCoreMetrics(projectId: string): ReadonlyArray<MetricCardVm> {
 // total equals the aggregated `views` metric rather than fixed literals.
 // ---------------------------------------------------------------------------
 
-const TREND_WEEKDAY_LABELS: ReadonlyArray<string> = [
-  "周一",
-  "周二",
-  "周三",
-  "周四",
-  "周五",
-  "周六",
-  "周日",
-];
+// 播放趋势(真日级) — T-035b 诚实化。之前把总播放摊成固定 weekday 权重的假曲线,
+// 宪法 §8 不摆假 → 改为按快照真实采集日 (`capturedAt` 的日历天) 分组求 views 和。
+// canonical demo 的快照多为单一采集日(单快照)→ mode "single",页面显单点 + 「需
+// 多次采集」提示,不再铺假 7 天曲线。真项目多次采集(多日)才画真折线。
+function dayKeyOf(iso: string): string {
+  return iso.slice(0, 10);
+}
 
-// Deterministic weight per weekday (sums to 1) so the derived daily
-// values reproduce the previously-rendered shape (rising toward 周日).
-const TREND_WEIGHTS: ReadonlyArray<number> = [
-  0.097, 0.116, 0.104, 0.144, 0.164, 0.156, 0.219,
-];
+function shortDayLabelOf(dayKeyStr: string): string {
+  const parts = dayKeyStr.split("-");
+  return parts.length === 3 ? `${parts[1]}-${parts[2]}` : dayKeyStr;
+}
+
+/** Views recorded on a single snapshot (sum of that snapshot's `views` metric values). */
+function viewsForSnapshot(snapshotId: string): number {
+  return canonicalDataset.metricValues
+    .filter((row) => row.metricSnapshotId === snapshotId && row.metricKey === "views")
+    .reduce((acc, row) => acc + row.numericValue, 0);
+}
 
 function buildViewsTrend(
   projectId: string,
   window: AnalyticsWindow,
-): ReadonlyArray<{ readonly label: string; readonly value: number }> {
+): {
+  trend: ReadonlyArray<{ readonly label: string; readonly value: number }>;
+  mode: "daily" | "single" | "empty";
+} {
   const publicationIds = publicationIdsForProject(projectId);
-  const totalViews = sumMetricForPublications(publicationIds, "views");
-  const series = TREND_WEEKDAY_LABELS.map((label, index) => ({
-    label,
-    value: Math.round(totalViews * (TREND_WEIGHTS[index] ?? 0)),
-  }));
-  // The window narrows the visible series (trailing N points).
+  const snaps = canonicalDataset.metricSnapshots.filter((s) =>
+    publicationIds.includes(s.publicationId),
+  );
+  // day → (publicationId → latest snapshot that day) so 当天多帧不对同一发布重复计数。
+  const byDay = new Map<string, Map<string, (typeof snaps)[number]>>();
+  for (const s of snaps) {
+    const key = dayKeyOf(s.capturedAt);
+    let pubMap = byDay.get(key);
+    if (!pubMap) {
+      pubMap = new Map();
+      byDay.set(key, pubMap);
+    }
+    const prev = pubMap.get(s.publicationId);
+    if (!prev || s.capturedAt > prev.capturedAt) pubMap.set(s.publicationId, s);
+  }
+
+  const days = [...byDay.keys()].sort();
+  if (days.length === 0) return { trend: [], mode: "empty" };
+
+  const full = days.map((day) => {
+    let sum = 0;
+    for (const s of byDay.get(day)!.values()) sum += viewsForSnapshot(s.id);
+    return { label: shortDayLabelOf(day), value: sum };
+  });
+  // 多采集日:窗口取尾部 N 天(单点则窗口无意义,原样返回)。
   const count = WINDOW_POINTS[window];
-  return series.slice(Math.max(0, series.length - count));
+  const trend = full.length >= 2 ? full.slice(Math.max(0, full.length - count)) : full;
+  return { trend, mode: full.length >= 2 ? "daily" : "single" };
 }
 
 // ---------------------------------------------------------------------------
@@ -280,13 +307,18 @@ export function buildAnalyticsReviewViewModel(
   window: AnalyticsWindow = "all",
 ): AnalyticsViewModel {
   const resolvedProjectId = resolveProjectIdSlug(projectId);
+  const { trend: viewsTrend, mode: viewsTrendMode } = buildViewsTrend(
+    resolvedProjectId,
+    window,
+  );
   return {
     scenario: "default",
     kind: "analytics-review",
     projectId: resolvedProjectId,
     tabs: ANALYTICS_TABS,
     metrics: buildCoreMetrics(resolvedProjectId),
-    viewsTrend: buildViewsTrend(resolvedProjectId, window),
+    viewsTrend,
+    viewsTrendMode,
     conversionFunnel: buildConversionFunnel(resolvedProjectId),
     audienceProfile: pickAudienceProfile(resolvedProjectId),
     audienceSource: pickAudienceSource(resolvedProjectId),

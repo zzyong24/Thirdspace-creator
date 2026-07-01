@@ -466,3 +466,133 @@ describe("AnalyticsReviewPage", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// T-035b — 复盘图集成 ECharts(转化漏斗 / 播放趋势)+ 趋势单快照诚实处理。
+//
+// `EChart` is globally mocked (src/test/setup.ts) to a DOM stub carrying the
+// serialized option in `data-option`, so we assert the charts get the REAL data
+// without booting a canvas. The trend's honesty rule (single snapshot → single
+// point + note, never a fabricated multi-point curve) is asserted directly.
+// ---------------------------------------------------------------------------
+describe("AnalyticsReviewPage ECharts (T-035b)", () => {
+  afterEach(() => cleanup());
+
+  function readOption(el: Element | null): unknown {
+    const raw = el?.getAttribute("data-option");
+    return raw ? JSON.parse(raw) : null;
+  }
+
+  async function baseVm(): Promise<AnalyticsViewModelType> {
+    const { buildAnalyticsReviewViewModel } = await import("@/fixtures/selectors");
+    return buildAnalyticsReviewViewModel("project-podcast-launch");
+  }
+
+  it("播放趋势 renders via ECharts (data-shape=line) inside the primary charts", async () => {
+    const { container } = await renderWorkspace();
+    const trend = container.querySelector(
+      '[data-slot="views-trend-chart"]',
+    ) as HTMLElement;
+    expect(trend).not.toBeNull();
+    expect(trend.getAttribute("data-shape")).toBe("line");
+    // The chart canvas is the mocked ECharts stub (not an inline <svg> path).
+    expect(trend.querySelector('[data-echart-mock="true"]')).not.toBeNull();
+    // sr-only summary still present (D-007).
+    const summary = trend.querySelector('[data-slot="chart-summary"]');
+    expect(summary).not.toBeNull();
+    expect(summary!.classList.contains("sr-only")).toBe(true);
+  });
+
+  it("单快照 → 趋势诚实(单点 + 「需多次采集」提示,不铺假曲线)", async () => {
+    // The canonical demo carries snapshots on a single capture date → single mode.
+    const vm: AnalyticsViewModelType = {
+      ...(await baseVm()),
+      viewsTrend: [{ label: "06-12", value: 27760 }],
+      viewsTrendMode: "single",
+    };
+    const { container } = await renderWorkspace("project-podcast-launch", {
+      viewModel: vm,
+    });
+    const trend = container.querySelector(
+      '[data-slot="views-trend-chart"]',
+    ) as HTMLElement;
+    expect(trend.getAttribute("data-trend-mode")).toBe("single");
+    // Honest note is shown; the option carries exactly ONE data point (no fake curve).
+    expect(
+      container.querySelector('[data-slot="views-trend-single-note"]'),
+    ).not.toBeNull();
+    const option = readOption(
+      trend.querySelector('[data-echart-mock="true"]'),
+    ) as { series: Array<{ data: number[] }> };
+    expect(option.series[0].data).toHaveLength(1);
+    expect(option.series[0].data[0]).toBe(27760);
+  });
+
+  it("多采集日 → 趋势画真折线(daily,多点,无提示)", async () => {
+    const vm: AnalyticsViewModelType = {
+      ...(await baseVm()),
+      viewsTrend: [
+        { label: "06-10", value: 1000 },
+        { label: "06-11", value: 1800 },
+        { label: "06-12", value: 2600 },
+      ],
+      viewsTrendMode: "daily",
+    };
+    const { container } = await renderWorkspace("project-podcast-launch", {
+      viewModel: vm,
+    });
+    const trend = container.querySelector(
+      '[data-slot="views-trend-chart"]',
+    ) as HTMLElement;
+    expect(trend.getAttribute("data-trend-mode")).toBe("daily");
+    // No single-snapshot note when there is a real daily series.
+    expect(
+      container.querySelector('[data-slot="views-trend-single-note"]'),
+    ).toBeNull();
+    const option = readOption(
+      trend.querySelector('[data-echart-mock="true"]'),
+    ) as { series: Array<{ data: number[] }> };
+    expect(option.series[0].data).toEqual([1000, 1800, 2600]);
+  });
+
+  it("转化漏斗 renders via ECharts funnel series with the REAL 5 stages", async () => {
+    const vm: AnalyticsViewModelType = {
+      ...(await baseVm()),
+      conversionFunnel: [
+        { label: "曝光", value: 50000 },
+        { label: "点击", value: 27760 },
+        { label: "播放", value: 27760 },
+        { label: "互动", value: 3200 },
+        { label: "转化", value: 480 },
+      ],
+    };
+    const { container } = await renderWorkspace("project-podcast-launch", {
+      viewModel: vm,
+    });
+    const funnel = container.querySelector(
+      '[data-slot="conversion-funnel"]',
+    ) as HTMLElement;
+    expect(funnel.getAttribute("data-shape")).toBe("funnel");
+    // The ECharts funnel canvas replaces the old inline <svg> polygon.
+    const chart = funnel.querySelector('[data-echart-mock="true"]');
+    expect(chart).not.toBeNull();
+    const option = readOption(chart) as {
+      series: Array<{ type: string; data: Array<{ name: string; value: number }> }>;
+    };
+    expect(option.series[0].type).toBe("funnel");
+    expect(option.series[0].data.map((d) => d.name)).toEqual([
+      "曝光",
+      "点击",
+      "播放",
+      "互动",
+      "转化",
+    ]);
+    expect(option.series[0].data.map((d) => d.value)).toEqual([
+      50000, 27760, 27760, 3200, 480,
+    ]);
+    // The stage list (accessible fallback) still lists 5 rows.
+    expect(
+      funnel.querySelectorAll('[data-slot="conversion-funnel-row"]'),
+    ).toHaveLength(5);
+  });
+});

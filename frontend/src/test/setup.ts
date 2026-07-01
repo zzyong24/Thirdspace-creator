@@ -2,6 +2,58 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 
+// ECharts (T-035b) renders on a real <canvas> via zrender. jsdom's canvas is a
+// stub (getContext → null) so booting the real chart throws async
+// `clearRect of null` inside requestAnimationFrame, which bleeds into unrelated
+// tests. Per test guidance (只断言容器渲染 + props 传对) we globally mock the
+// client-only ECharts base: `EChart` renders a deterministic DOM stub that
+// preserves the container markers + serializes the option (so tests can assert
+// the chart got the right data), and `useChartTokens` returns a fixed palette.
+// The concrete chart components (ViewsTrendChart / ConversionFunnelChart) render
+// normally on top of this stub, so their wrappers / data lists / sr-only
+// summaries are still asserted for real.
+vi.mock("@/components/analytics/echarts-base", async () => {
+  const React = await import("react");
+  return {
+    EChart: ({
+      option,
+      className,
+      style,
+      testId,
+    }: {
+      option: unknown;
+      className?: string;
+      style?: React.CSSProperties;
+      testId?: string;
+    }) =>
+      React.createElement("div", {
+        "data-slot": "echart",
+        "data-testid": testId,
+        "data-echart-mock": "true",
+        "data-option": (() => {
+          try {
+            return JSON.stringify(option, (_k, v) =>
+              typeof v === "function" ? undefined : v,
+            );
+          } catch {
+            return "";
+          }
+        })(),
+        className,
+        style,
+      }),
+    useChartTokens: () => ({
+      brand: "#6d4aff",
+      brandSoft: "#f2efff",
+      chart: ["#6d4aff", "#4f7cff", "#12b76a", "#f79009", "#c840d8"],
+      border: "#e6e6ef",
+      foreground: "#1a1a24",
+      mutedForeground: "#6b7280",
+      surface: "#ffffff",
+    }),
+  };
+});
+
 class ResizeObserverMock implements ResizeObserver {
   disconnect = vi.fn();
   observe = vi.fn();

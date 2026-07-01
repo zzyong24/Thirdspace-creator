@@ -29,7 +29,8 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
-import { ChartFrame } from "@/components/analytics/chart-frame";
+import { ViewsTrendChart } from "@/components/analytics/views-trend-chart";
+import { ConversionFunnelChart } from "@/components/analytics/conversion-funnel-chart";
 import { AudienceBreakdown } from "@/components/analytics/audience-breakdown";
 import { HorizontalBarsChart } from "@/components/analytics/horizontal-bars-chart";
 import { RetentionChart } from "@/components/analytics/retention-chart";
@@ -181,6 +182,7 @@ export function AnalyticsReviewInteractiveRegion({
           <CoreMetricsRow metrics={scoped.metrics} />
           <PrimaryCharts
             viewsTrend={scoped.viewsTrend}
+            viewsTrendMode={scoped.viewsTrendMode ?? (scoped.viewsTrend.length > 1 ? "daily" : "single")}
             conversionFunnel={scoped.conversionFunnel}
             chartTab={chartTab}
             onChartTabChange={setChartTab}
@@ -292,11 +294,13 @@ function CoreMetricsRow({ metrics }: { metrics: ReadonlyArray<MetricCardVm> }) {
 
 function PrimaryCharts({
   viewsTrend,
+  viewsTrendMode,
   conversionFunnel,
   chartTab,
   onChartTabChange,
 }: {
   viewsTrend: ReadonlyArray<{ readonly label: string; readonly value: number }>;
+  viewsTrendMode: "daily" | "single" | "empty";
   conversionFunnel: ReadonlyArray<{ readonly label: string; readonly value: number }>;
   chartTab: "trend" | "funnel";
   onChartTabChange: (tab: "trend" | "funnel") => void;
@@ -335,15 +339,19 @@ function PrimaryCharts({
         </button>
       </div>
       <div className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <ChartFrame
+        <SectionCard
           title="播放趋势"
-          description="每日播放量"
-          summary={`播放趋势：${viewsTrend[0]?.label ?? ""} ${viewsTrend[0]?.value.toLocaleString() ?? ""}，${viewsTrend[viewsTrend.length - 1]?.label ?? ""} ${viewsTrend[viewsTrend.length - 1]?.value.toLocaleString() ?? ""}，整体上升。`}
-          trend={viewsTrend}
-          slot="views-trend-chart"
-          shape="line"
-          testId="views-trend-chart"
-        />
+          description={viewsTrendMode === "single" ? "单次采集快照" : "按采集日"}
+          className="[--card-spacing:--spacing(3)]"
+        >
+          <ViewsTrendChart
+            data={viewsTrend}
+            mode={viewsTrendMode}
+            summary={buildTrendSummary(viewsTrend, viewsTrendMode)}
+            slot="views-trend-chart"
+            testId="views-trend-chart-echarts"
+          />
+        </SectionCard>
         <article
           data-slot="conversion-funnel"
           data-shape="funnel"
@@ -354,7 +362,7 @@ function PrimaryCharts({
             <h3 className="text-md font-semibold text-foreground">转化漏斗</h3>
             <p className="text-xs text-muted-foreground">从曝光到转化的逐级流失</p>
           </header>
-          <FunnelChart data={conversionFunnel} />
+          <ConversionFunnelChart data={conversionFunnel} />
           <ul
             data-slot="conversion-funnel-list"
             className="flex flex-col gap-0.5"
@@ -383,37 +391,21 @@ function PrimaryCharts({
   );
 }
 
-function FunnelChart({
-  data,
-}: {
-  data: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-}) {
-  const max = Math.max(...data.map((row) => row.value), 1);
-  return (
-    <svg
-      data-slot="funnel-svg"
-      viewBox="0 0 200 100"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-      className="h-16 w-full"
-    >
-      {data.map((row, index) => {
-        const ratio = row.value / max;
-        const width = 40 + ratio * 160;
-        const x = (200 - width) / 2;
-        const y = index * 13;
-        return (
-          <polygon
-            key={row.label}
-            points={`${x},${y} ${x + width},${y} ${x + width - 6},${y + 11} ${x + 6},${y + 11}`}
-            fill="var(--color-brand-soft)"
-            stroke="var(--color-brand)"
-            strokeWidth={0.6}
-          />
-        );
-      })}
-    </svg>
-  );
+// 播放趋势 sr-only 摘要 (D-007): 诚实反映数据形态 —— 单快照说单点,多日说日级折线,
+// 绝不在文案里编造「整体上升」这类不存在的趋势结论。
+function buildTrendSummary(
+  data: ReadonlyArray<{ readonly label: string; readonly value: number }>,
+  mode: "daily" | "single" | "empty",
+): string {
+  if (mode === "empty" || data.length === 0) return "播放趋势：暂无采集数据。";
+  if (mode === "single" || data.length === 1) {
+    const p = data[data.length - 1]!;
+    return `播放趋势：仅 1 次采集(${p.label}），播放量 ${p.value.toLocaleString()}。需多次采集积累日趋势。`;
+  }
+  const first = data[0]!;
+  const last = data[data.length - 1]!;
+  const rising = last.value >= first.value;
+  return `播放趋势(按采集日）：${first.label} ${first.value.toLocaleString()} 到 ${last.label} ${last.value.toLocaleString()}，${rising ? "整体上升" : "整体回落"}。`;
 }
 
 function funnelConversionRate(
