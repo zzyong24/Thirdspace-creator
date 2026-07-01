@@ -131,7 +131,11 @@ describe("scheduling contract", () => {
   });
 
   it("enumerates the two new enums exactly", () => {
-    expect(scheduledJobSourceKind.options).toEqual(["self.metrics", "comments"]);
+    expect(scheduledJobSourceKind.options).toEqual([
+      "self.metrics",
+      "comments",
+      "self.detail",
+    ]);
     expect(jobRunStatus.options).toEqual([
       "running",
       "succeeded",

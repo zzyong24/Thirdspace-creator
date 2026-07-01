@@ -16,9 +16,12 @@ describe("artifacts contract", () => {
       archivedAt: null,
       createdAt: "2026-01-01T02:00:00.000Z",
       updatedAt: "2026-06-01T10:00:00.000Z",
+      // T-030 F1:artifacts.origin(user | reconstructed | null)—— 用户创建的立意=user。
+      origin: "user",
     });
     expect(a.artifactType).toBe("project_idea");
     expect(a.status).toBe("approved");
+    expect(a.origin).toBe("user");
   });
 
   it("rejects an unknown artifact status", () => {
