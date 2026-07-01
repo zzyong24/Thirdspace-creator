@@ -81,6 +81,69 @@ export function parseWorkList(json: unknown): DouyinWork[] {
     .filter((w): w is DouyinWork => w !== null);
 }
 
+// ---------------------------------------------------------------------------
+// 评论(T-007 D2)—— 落 audience_signals。source 用既有 enum "comment"(不扩 enum),
+// record_key=`douyin:comment:${commentId}` 经 ux_ingestion_records_run_key 去重。
+// 字段口径对齐 cheat-on-content crawler.py `_normalize_comment_creator`:
+//   拦截 XHR = /aweme/v1/web/comment/list/ (创作者中心评论管理页);
+//   评论字段 = cid|comment_id|id / text|content / digg_count|like_count /
+//              create_time / user.nickname / aweme_id|item_id。
+// ---------------------------------------------------------------------------
+
+export interface CommentRecord {
+  commentId: string;
+  awemeId: string;
+  text: string;
+  likeCount: number;
+  replyCount: number;
+  createTime: number; // 秒;缺失记 0
+  userId: string; // 评论者 user id(缺失空串)
+  userName: string; // 评论者昵称(缺失空串)
+  ipLabel: string; // ip 归属(缺失空串)
+}
+
+/**
+ * 解析创作者中心评论 list XHR(`/aweme/v1/web/comment/list/`)—— 纯函数,字段兜底。
+ * 对齐 cheat-on-content `_normalize_comment_creator` 的字段口径(cid/text/digg_count/
+ * create_time/user.nickname/aweme_id 多键兜底)。评论列表键宽松匹配 comments /
+ * comment_list / data.comments。无 commentId 或无正文的脏数据丢弃。
+ */
+export function parseCommentList(
+  json: unknown,
+  defaultAwemeId = "",
+): CommentRecord[] {
+  const root = (json ?? {}) as Record<string, unknown>;
+  const data = (root.data ?? {}) as Record<string, unknown>;
+  const list =
+    (Array.isArray(root.comments) && root.comments) ||
+    (Array.isArray(root.comment_list) && root.comment_list) ||
+    (Array.isArray(data.comments) && data.comments) ||
+    (Array.isArray(data.comment_list) && data.comment_list) ||
+    [];
+  return (list as unknown[])
+    .map((raw): CommentRecord | null => {
+      const c = (raw ?? {}) as Record<string, unknown>;
+      const commentId = str(c.cid) || str(c.comment_id) || str(c.id);
+      const text = str(c.text) || str(c.content);
+      // 无 id 或无正文 → 脏数据,丢弃(audience_signal.rawText 不能空)。
+      if (!commentId || !text.trim()) return null;
+      const user = (c.user ?? c.user_info ?? {}) as Record<string, unknown>;
+      return {
+        commentId,
+        awemeId: str(c.aweme_id) || str(c.item_id) || defaultAwemeId,
+        text,
+        likeCount: num(c.digg_count ?? c.like_count),
+        replyCount: num(c.reply_comment_total ?? c.reply_count),
+        createTime: num(c.create_time),
+        userId: str(user.uid) || str(user.user_id) || str(c.user_id),
+        userName:
+          str(user.nickname) || str(user.name) || str(c.user_name),
+        ipLabel: str(c.ip_label) || str(c.ip_location),
+      };
+    })
+    .filter((c): c is CommentRecord => c !== null);
+}
+
 /** 解析数据中心明细 XHR(完播率/转粉等),按 aweme_id 归集;缺字段记 null。 */
 export function parseDetail(json: unknown, awemeId: string): DouyinDetail {
   const root = (json ?? {}) as Record<string, unknown>;
@@ -170,6 +233,11 @@ const WORK_LIST_HINTS = [
   "/creator/pc/work_list",
   "/web/aweme/post",
 ];
+// 评论列表 XHR —— cheat-on-content crawler.py 验证过的创作者中心评论端点。
+const COMMENT_LIST_HINTS = ["/aweme/v1/web/comment/list/"];
+// 创作者中心评论管理页(带 item_id 过滤 → 只显示该作品评论)。
+const CREATOR_COMMENT_MANAGE =
+  "https://creator.douyin.com/creator-micro/content/comment-manage";
 
 // launchPersistentContext 前清掉上次异常退出残留的单例锁,否则 relaunch 报
 // "SingletonLock: File exists" 直接 abort。
@@ -310,4 +378,159 @@ export async function fetchDouyinMetrics(
   } finally {
     await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
   }
+}
+
+export interface FetchCommentsTarget {
+  /** 目标作品 aweme_id(评论管理页 item_id 过滤 → 只抓这条作品的评论)。 */
+  awemeId: string;
+  /** 持久化 profile 目录(复用 .auth/ 扫码登录态)。 */
+  authDir: string;
+  /** 最多滚动翻几页(防无限加载卡死;默认 40)。 */
+  maxPages?: number;
+}
+
+/**
+ * 真抓评论:headless 复用 .auth/ 登录态 → 导航创作者中心评论管理页(item_id 过滤) →
+ * 拦 `/aweme/v1/web/comment/list/` XHR → 礼貌滚动翻页 → 去重 CommentRecord[]。
+ * **不落库**(落库由 ingestComments 负责)。未登录抛 DouyinNotLoggedInError(调用方提示
+ * 先扫码登录,D4 接状态机)。仅在用户机器上跑;CI/测试不调用(需真扫码登录态)。
+ */
+export async function fetchDouyinComments(
+  target: FetchCommentsTarget,
+): Promise<CommentRecord[]> {
+  const maxPages = target.maxPages ?? 40;
+  const ctx = await openContext(target.authDir, true);
+  try {
+    if (!(await isLoggedIn(ctx))) throw new DouyinNotLoggedInError();
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+
+    const commentJsons: unknown[] = [];
+    const seenIds = new Set<string>();
+    page.on("response", async (resp) => {
+      const url = resp.url();
+      if (!COMMENT_LIST_HINTS.some((h) => url.includes(h))) return;
+      try {
+        const j = await resp.json();
+        commentJsons.push(j);
+        for (const c of parseCommentList(j, target.awemeId)) {
+          seenIds.add(c.commentId);
+        }
+      } catch {
+        /* 非 JSON 响应,忽略 */
+      }
+    });
+
+    // item_id 过滤 → 评论管理页只显示该作品的评论(对齐 crawler.py urls_to_try)。
+    await page.goto(
+      `${CREATOR_COMMENT_MANAGE}?item_id=${encodeURIComponent(target.awemeId)}`,
+      { waitUntil: "domcontentloaded", timeout: 60000 },
+    );
+    await page.waitForTimeout(3000); // 等首屏 comment/list XHR 回来
+
+    // 礼貌滚动翻页:滚到底触发下一页加载;连续 3 轮无新评论即停(评论无 has_more 可靠信号)。
+    let staleRounds = 0;
+    for (let i = 0; i < maxPages; i++) {
+      const before = seenIds.size;
+      await page
+        .evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+        .catch(() => {});
+      await page.mouse.wheel(0, 2000).catch(() => {});
+      await page.waitForTimeout(2000);
+      staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
+      if (staleRounds >= 3) break;
+    }
+
+    // 去重(同 commentId 保留最后一次;跨页重复评论合一)。
+    const byId = new Map<string, CommentRecord>();
+    for (const j of commentJsons) {
+      for (const c of parseCommentList(j, target.awemeId)) {
+        byId.set(c.commentId, c);
+      }
+    }
+    return [...byId.values()];
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 落库 helper(T-007 D2)—— 建 ingestion run → 逐条评论经 ux_ingestion_records_run_key
+// 去重 → ingestAudienceSignal(source="comment")。ports 抽象化以便 fake 单测;真实装配
+// (接 ingestion.service / candidate.service 的真 port)是 D3 的活,D2 不碰 persistence-client。
+// ---------------------------------------------------------------------------
+
+// 一次评论抓取落库需要的下游能力(D3 装配时接真 service/repository;测试注 fake)。
+export interface CommentIngestPorts {
+  /** 建/取一条 ingestion run(externalSourceId+idempotencyKey 幂等),返回 runId。 */
+  createRun(input: {
+    externalSourceId: string;
+    runType: string;
+    idempotencyKey: string;
+  }): Promise<{ id: string }>;
+  /** record_key 是否已在该 run 落过(ux_ingestion_records_run_key 预检 → 已写跳过)。 */
+  recordExists(runId: string, recordKey: string): Promise<boolean>;
+  /** 落 ingestion_records ledger(幂等锚);标记该 record_key 已写。 */
+  markRecordWritten(runId: string, recordKey: string): Promise<void>;
+  /** 写一条 audience_signal(C-4:ingestionRunId 必带,见 ingestAudienceSignal)。 */
+  ingestSignal(input: {
+    source: string;
+    rawText: string;
+    demandTag: string | null;
+    ingestionRunId: string;
+  }): Promise<void>;
+  /** 完成该 run(status→completed)。 */
+  completeRun(runId: string): Promise<void>;
+}
+
+export interface IngestCommentsResult {
+  runId: string;
+  received: number; // 收到评论条数
+  written: number; // 实际新写入信号条数
+  skipped: number; // record_key 命中已写 → 跳过条数
+}
+
+/**
+ * 把一批评论落成 audience_signals(线 B 评论口径,SPEC §5 C-4)。
+ * 流程照现有 metrics 落库范式:建 run → loop 评论 → record_key=`douyin:comment:${commentId}`
+ * 经 ux_ingestion_records_run_key 去重(已写跳过)→ ingestAudienceSignal({source:"comment",
+ * rawText:text, demandTag:null, ingestionRunId}) → 标记 record 已写 → completeRun。
+ * **幂等**:同评论(同 commentId,同 run idempotencyKey)跑两次只写一次(record_key 去重锚)。
+ * 导出为纯 ports 函数,可用 fake ports 单测,不依赖真浏览器/真 db。
+ */
+export async function ingestComments(
+  awemeId: string,
+  records: CommentRecord[],
+  deps: {
+    ports: CommentIngestPorts;
+    externalSourceId: string;
+    capturedAt: string;
+  },
+): Promise<IngestCommentsResult> {
+  const { ports, externalSourceId, capturedAt } = deps;
+  // 幂等键形如 `${sourceId}:comments:${capturedAt}`(同源同刻复跑取回同一 run)。
+  const run = await ports.createRun({
+    externalSourceId,
+    runType: "douyin_comments",
+    idempotencyKey: `${externalSourceId}:comments:${capturedAt}`,
+  });
+  let written = 0;
+  let skipped = 0;
+  for (const c of records) {
+    const recordKey = `douyin:comment:${c.commentId}`;
+    // 去重锚:record_key 已在该 run 落过 → 跳过(不重复写信号)。
+    if (await ports.recordExists(run.id, recordKey)) {
+      skipped += 1;
+      continue;
+    }
+    await ports.ingestSignal({
+      source: "comment", // 既有 enum(不扩 douyin_comment)
+      rawText: c.text,
+      demandTag: null,
+      ingestionRunId: run.id, // C-4 铁律:信号写必带真 run id
+    });
+    await ports.markRecordWritten(run.id, recordKey);
+    written += 1;
+  }
+  await ports.completeRun(run.id);
+  return { runId: run.id, received: records.length, written, skipped };
 }
