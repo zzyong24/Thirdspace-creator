@@ -534,6 +534,18 @@ export interface AnalyticsViewModel extends BasePageViewModel {
   // render these tabs ignore them; absence means "no real data" → empty state.
   readonly comparison?: ComparisonTab;
   readonly revenue?: RevenueTab;
+  // 复盘每作品评论 (T-030 §10 / D6) — the current 作品 的真实评论 (前 100 条), read from
+  // `publications.comments.list`. Optional + additive: absent / empty → 复盘页评论区渲染
+  // 诚实空态(去任务中心配「抓我作品评论」采集),绝不摆假评论 (宪法 §8 / T-010)。
+  readonly comments?: ReadonlyArray<ReviewCommentItem>;
+}
+
+// 复盘每作品评论条目 (T-030 D6) — 一条真实评论文本 (+ 需求标签 demand_tag 若有)。
+export interface ReviewCommentItem {
+  readonly id: Id;
+  readonly text: string;
+  readonly demandTag: string | null;
+  readonly createdAt: Iso8601;
 }
 
 // ---------------------------------------------------------------------------

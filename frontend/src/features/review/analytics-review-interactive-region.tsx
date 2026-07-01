@@ -52,6 +52,8 @@ import type {
 type KeyMoment = AnalyticsViewModel["keyMoments"][number];
 type TopPublished = TopPublishedCard;
 type ReviewHistoryItem = AnalyticsViewModel["reviewHistory"][number];
+// 复盘每作品评论 (T-030 D6) — 一条真实评论 (文本 + demand_tag 若有)。
+type CommentItem = NonNullable<AnalyticsViewModel["comments"]>[number];
 
 // ---------------------------------------------------------------------------
 // Reviews wiring (module 13 Step 5). Present only when the server shell resolves
@@ -181,6 +183,7 @@ export function AnalyticsReviewInteractiveRegion({
             onSelect={setActiveMomentId}
           />
           <TopPublishedList items={viewModel.topPublished} />
+          <CommentsSection comments={viewModel.comments ?? []} />
         </div>
         <div
           data-slot="analytics-right-rail"
@@ -680,6 +683,79 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CommentsSection — 复盘每作品评论 (T-030 §10 / D6)
+//
+// 当前作品的真实评论 (前 100 条, 文本 + demand_tag 若有), 读自 publications.comments.list。
+// 空态诚实 (宪法 §8 / T-010): 无评论 → 引导「去任务中心配『抓我作品评论』采集」, 绝不摆假评论。
+// F3 边界: 存量评论无 aweme_id 锚未回填 publication_id → 查不到 → 走空态 (需重采)。
+// ---------------------------------------------------------------------------
+
+function CommentsSection({
+  comments,
+}: {
+  comments: ReadonlyArray<CommentItem>;
+}) {
+  const isEmpty = comments.length === 0;
+  return (
+    <section
+      data-slot="review-comments-section"
+      data-empty={isEmpty ? "true" : "false"}
+      aria-label="作品评论"
+      className="flex flex-col gap-1.5 rounded-xl border border-border bg-surface p-3 shadow-card"
+    >
+      <header className="flex items-center justify-between px-1">
+        <h3 className="text-[13px] font-semibold text-foreground">作品评论</h3>
+        {isEmpty ? null : (
+          <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+            前 {comments.length} 条
+          </span>
+        )}
+      </header>
+      {isEmpty ? (
+        <div
+          data-slot="review-comments-empty"
+          className="flex flex-col items-start gap-1 rounded-lg border border-dashed border-border bg-surface-subtle px-3 py-4"
+        >
+          <p className="text-[12px] font-medium text-foreground">
+            未采集该作品评论
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            去任务中心配「抓我作品评论」采集，评论回收后会显示在这里。
+          </p>
+        </div>
+      ) : (
+        <ul
+          data-slot="review-comments-list"
+          className="flex flex-col gap-1.5"
+          aria-label="评论列表"
+        >
+          {comments.map((comment) => (
+            <li
+              key={comment.id}
+              data-slot="review-comment-item"
+              data-comment-id={comment.id}
+              className="flex flex-col gap-1 rounded-lg border border-border bg-surface px-3 py-2"
+            >
+              <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground">
+                {comment.text}
+              </p>
+              {comment.demandTag ? (
+                <span
+                  data-slot="review-comment-demand-tag"
+                  className="inline-flex w-fit items-center rounded-full border border-brand/40 bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand"
+                >
+                  {comment.demandTag}
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

@@ -65,6 +65,10 @@ export const audienceSignalResource = z.object({
   payingIntent: z.string().nullable(),
   linkedCandidateId: id.nullable(),
   ingestionRunId: id.nullable(),
+  // 评论按作品可读 (T-030 §4.2 / D6, 迁移 0011) — the imported publication this signal is
+  // tied to, backfilled at ingest from the capture's aweme_id. NULLABLE: 存量评论无 aweme_id
+  // 锚,无法回填 (F3);非评论信号也留空。
+  publicationId: id.nullable(),
   createdAt: iso8601,
 });
 export type AudienceSignalResource = z.infer<typeof audienceSignalResource>;

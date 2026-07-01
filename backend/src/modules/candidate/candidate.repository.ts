@@ -71,6 +71,8 @@ export interface CreateSignalInput {
   payingIntent: string | null;
   linkedCandidateId: string | null;
   ingestionRunId: string | null;
+  // 评论按作品可读 (T-030 D6) — 回填自采集 aweme_id→publication;无匹配则 null。
+  publicationId?: string | null;
 }
 
 export interface ListSignalsQuery {
@@ -111,6 +113,12 @@ export interface CandidateRepository {
     query: ListSignalsQuery,
   ): Promise<{ rows: AudienceSignalRow[]; total: number }>;
   listSignalsForCandidate(candidateId: string): Promise<AudienceSignalRow[]>;
+  // 复盘每作品评论 (T-030 D6) — user-scoped comment signals for one publication
+  // (source='comment' AND publication_id=?), newest first, capped at `limit`.
+  listCommentsForPublication(
+    publicationId: string,
+    limit: number,
+  ): Promise<AudienceSignalRow[]>;
   findSignalByRunRecord(
     ingestionRunId: string,
     rawText: string,
@@ -319,6 +327,7 @@ export function createCandidateRepository(
           payingIntent: input.payingIntent,
           linkedCandidateId: input.linkedCandidateId,
           ingestionRunId: input.ingestionRunId,
+          publicationId: input.publicationId ?? null,
           createdAt: deps.now(),
         })
         .returning();
@@ -382,6 +391,23 @@ export function createCandidateRepository(
           ),
         )
         .orderBy(desc(audienceSignals.createdAt));
+    },
+
+    async listCommentsForPublication(publicationId, limit) {
+      // 复盘每作品评论 (T-030 D6) — user-scoped, source='comment' 且绑定该作品的信号,
+      // 按 created_at 倒序封顶 limit 条 (ix_audience_signals_pub 支撑作品维度过滤)。
+      return db
+        .select()
+        .from(audienceSignals)
+        .where(
+          and(
+            eq(audienceSignals.userId, deps.userId),
+            eq(audienceSignals.source, "comment"),
+            eq(audienceSignals.publicationId, publicationId),
+          ),
+        )
+        .orderBy(desc(audienceSignals.createdAt))
+        .limit(limit);
     },
 
     async findSignalByRunRecord(ingestionRunId, rawText) {

@@ -349,3 +349,117 @@ describe("candidate service", () => {
     expect(ov.basis.positioningLabel).toBe("");
   });
 });
+
+// 复盘每作品评论 (T-030 §4.2/§10, D6) — listCommentsForPublication service/repo.
+// 种几条 source='comment' + publication_id=P 的信号 + 别的 publication / 别的 source 的 →
+// 只返 P 的评论、≤100、按 created_at 倒序。用递增时钟制造确定性顺序。
+describe("listCommentsForPublication (T-030 D6)", () => {
+  let db: Db;
+  let ports: ReturnType<typeof makePorts>;
+  let svc: CandidateService;
+  // 递增时钟:每次 now() 前进 1 秒 → 每条信号 created_at 唯一,排序确定。
+  let clock: number;
+  const runCtx = (runId: string): RequestContext => ({
+    userId: "user-a",
+    requestId: "r",
+    source: "ingestion",
+    ingestionRunId: runId,
+  });
+
+  beforeEach(async () => {
+    ({ db } = await createDb());
+    ports = makePorts();
+    clock = Date.parse("2026-06-21T00:00:00.000Z");
+    let seq = 0;
+    svc = createCandidateService({
+      db,
+      now: () => new Date((clock += 1000)).toISOString(),
+      nextId: (prefix: string) => `${prefix}-d6-${++seq}`,
+      projects: ports.projects,
+      positioning: ports.positioning,
+      ingestion: ports.ingestion,
+    });
+  });
+
+  it("只返该 publication 的 comment 信号,按 created_at 倒序", async () => {
+    // P 的三条评论(递增时钟 → c1<c2<c3),外加别 publication / 别 source 的干扰行。
+    await svc.ingestAudienceSignal(runCtx("run-1"), {
+      source: "comment",
+      rawText: "P 评论一",
+      publicationId: "pub-P",
+    });
+    await svc.ingestAudienceSignal(runCtx("run-1"), {
+      source: "comment",
+      rawText: "P 评论二",
+      publicationId: "pub-P",
+    });
+    await svc.ingestAudienceSignal(runCtx("run-1"), {
+      source: "comment",
+      rawText: "P 评论三",
+      publicationId: "pub-P",
+    });
+    // 干扰:别的 publication 的评论。
+    await svc.ingestAudienceSignal(runCtx("run-1"), {
+      source: "comment",
+      rawText: "Q 的评论(不该出现)",
+      publicationId: "pub-Q",
+    });
+    // 干扰:同 publication 但 source=dm(非评论,不该出现)。
+    await svc.ingestAudienceSignal(runCtx("run-1"), {
+      source: "dm",
+      rawText: "P 的私信(不该出现)",
+      publicationId: "pub-P",
+    });
+    // 干扰:comment 但无 publication_id(存量口径,查不到)。
+    await svc.ingestAudienceSignal(runCtx("run-1"), {
+      source: "comment",
+      rawText: "无绑定评论(不该出现)",
+    });
+
+    const rows = await svc.listCommentsForPublication(ctx, "pub-P", 100);
+    expect(rows).toHaveLength(3); // 只有 P 的 3 条 comment
+    expect(rows.every((r) => r.source === "comment")).toBe(true);
+    expect(rows.every((r) => r.publicationId === "pub-P")).toBe(true);
+    // 倒序:最新(评论三)在最前。
+    expect(rows.map((r) => r.rawText)).toEqual([
+      "P 评论三",
+      "P 评论二",
+      "P 评论一",
+    ]);
+  });
+
+  it("limit 封顶(≤ limit)", async () => {
+    for (let i = 0; i < 5; i++) {
+      await svc.ingestAudienceSignal(runCtx("run-1"), {
+        source: "comment",
+        rawText: `评论 ${i}`,
+        publicationId: "pub-P",
+      });
+    }
+    const rows = await svc.listCommentsForPublication(ctx, "pub-P", 3);
+    expect(rows).toHaveLength(3); // 5 条中只取前 3(最新的)
+    expect(rows[0]!.rawText).toBe("评论 4"); // 最新在最前
+  });
+
+  it("无评论 → 空数组(诚实空态源)", async () => {
+    const rows = await svc.listCommentsForPublication(ctx, "pub-none", 100);
+    expect(rows).toEqual([]);
+  });
+
+  it("user-scoped:不跨用户(别人的 publication 评论查不到)", async () => {
+    // user-a 在 pub-P 落一条评论。
+    await svc.ingestAudienceSignal(runCtx("run-1"), {
+      source: "comment",
+      rawText: "user-a 的评论",
+      publicationId: "pub-P",
+    });
+    // user-b 查同一 publicationId → 空(user_id 作用域隔离)。
+    const otherCtx: RequestContext = {
+      userId: "user-b",
+      requestId: "r",
+      source: "user",
+    };
+    const rows = await svc.listCommentsForPublication(otherCtx, "pub-P", 100);
+    expect(rows).toEqual([]);
+  });
+});

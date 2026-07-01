@@ -154,6 +154,8 @@ export function toAudienceSignalDto(
     payingIntent: row.payingIntent ?? null,
     linkedCandidateId: row.linkedCandidateId ?? null,
     ingestionRunId: row.ingestionRunId ?? null,
+    // 评论按作品可读 (T-030 D6) — null 存量/非评论信号 (F3 边界)。
+    publicationId: row.publicationId ?? null,
     createdAt: row.createdAt,
   };
 }

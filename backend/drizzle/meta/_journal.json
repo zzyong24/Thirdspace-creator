@@ -78,6 +78,13 @@
       "when": 1782379900000,
       "tag": "0010_artifacts_origin",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1782380000000,
+      "tag": "0011_audience_signals_publication",
+      "breakpoints": true
     }
   ]
 }

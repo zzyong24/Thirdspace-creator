@@ -59,6 +59,12 @@ export const audienceSignals = pgTable("audience_signals", {
   payingIntent: text("paying_intent"), // 付费意向 (nullable)
   linkedCandidateId: text("linked_candidate_id"), // nullable — links to a Candidate
   ingestionRunId: text("ingestion_run_id"), // set when via Ingestion (C-4 provenance)
+  // 评论按作品可读 (T-030 §4.2 / D6, 迁移 0011) — the imported publication this signal
+  // belongs to. Backfilled at ingest time from the capture's aweme_id (→ publications
+  // where externalId=aweme_id). NULLABLE: 表无 aweme_id 锚,存量已入库评论无法回填
+  // (F3 诚实边界),只有本次改动后的新采集能带 publication_id;非评论信号 (dm/consultation)
+  // 也留空。
+  publicationId: text("publication_id"),
   createdAt: text("created_at").notNull(),
 });
 
@@ -72,6 +78,7 @@ export const topicPromotions = pgTable("topic_promotions", {
 
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 //   - ix_audience_signals_candidate: powers the demand_count aggregation.
+//   - ix_audience_signals_pub: backs 评论按作品可读 (publications.comments.list, 迁移 0011).
 //   - ix_candidates_user_status: backs the user-scoped pool listing/sort.
 //   - uq_topic_promotions_candidate: at most one promotion per Candidate (the
 //     promote op guards a double-promote; the unique index is the backstop).
@@ -103,6 +110,7 @@ CREATE TABLE IF NOT EXISTS audience_signals (
   paying_intent TEXT,
   linked_candidate_id TEXT,
   ingestion_run_id TEXT,
+  publication_id TEXT,
   created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS topic_promotions (
@@ -113,6 +121,7 @@ CREATE TABLE IF NOT EXISTS topic_promotions (
   promoted_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS ix_audience_signals_candidate ON audience_signals (linked_candidate_id);
+CREATE INDEX IF NOT EXISTS ix_audience_signals_pub ON audience_signals (user_id, publication_id);
 CREATE INDEX IF NOT EXISTS ix_candidates_user_status ON candidates (user_id, status);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_topic_promotions_candidate ON topic_promotions (candidate_id);
 `;

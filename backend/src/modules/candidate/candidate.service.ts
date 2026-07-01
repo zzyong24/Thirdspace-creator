@@ -172,6 +172,10 @@ export interface IngestSignalInput {
   demandTag?: string | null;
   payingIntent?: string | null;
   linkedCandidateRef?: string | null;
+  // 评论按作品可读 (T-030 D6) — the imported publication this comment belongs to,
+  // resolved at the ingest edge from the capture's aweme_id (→ publications where
+  // externalId=aweme_id). 无匹配作品 → 留空,不报错 (F3 边界)。
+  publicationId?: string | null;
 }
 
 export interface CandidateService {
@@ -230,6 +234,14 @@ export interface CandidateService {
     ctx: RequestContext,
     query: ListSignalsQuery,
   ): Promise<{ rows: AudienceSignalResource[]; total: number }>;
+  // 复盘每作品评论 (T-030 §4.2/§10, D6) — user-scoped comment signals for one publication
+  // (source='comment' AND publication_id=?), newest first, capped at `limit` (默认 100).
+  // The 复盘页评论区 read; write side rides Ingestion (C-4) which backfills publication_id.
+  listCommentsForPublication(
+    ctx: RequestContext,
+    publicationId: string,
+    limit: number,
+  ): Promise<AudienceSignalResource[]>;
   // "评论/客户问题一键转 Candidate" (spec §5.5). Omit candidateId → spawn a new
   // demand Candidate from the signal, then link; bumps demandCount.
   linkSignalToCandidate(
@@ -410,6 +422,9 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         payingIntent: record.payingIntent ?? null,
         linkedCandidateId: record.linkedCandidateRef ?? null,
         ingestionRunId: runId,
+        // 评论按作品可读 (T-030 D6) — 回填作品绑定 (来自采集 aweme_id→publication);
+        // 无匹配作品则 null,不报错 (F3)。
+        publicationId: record.publicationId ?? null,
       });
       if (record.linkedCandidateRef) {
         // bump the linked Candidate's demand_count (recompute keeps it honest).
@@ -491,6 +506,14 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     async listSignals(ctx, query) {
       const { rows, total } = await repoFor(ctx).listSignals(query);
       return { rows: rows.map(toAudienceSignalDto), total };
+    },
+
+    async listCommentsForPublication(ctx, publicationId, limit) {
+      const rows = await repoFor(ctx).listCommentsForPublication(
+        publicationId,
+        limit,
+      );
+      return rows.map(toAudienceSignalDto);
     },
 
     async linkSignalToCandidate(ctx, signalId, candidateId) {

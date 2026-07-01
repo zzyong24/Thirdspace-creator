@@ -755,9 +755,22 @@ export interface CommentIngestPorts {
     rawText: string;
     demandTag: string | null;
     ingestionRunId: string;
+    // 评论按作品可读 (T-030 D6) — 回填该评论所属作品 (来自 aweme_id→publication);
+    // 无匹配作品 → null,不报错 (F3 边界)。
+    publicationId: string | null;
   }): Promise<void>;
   /** 完成该 run(status→completed)。 */
   completeRun(runId: string): Promise<void>;
+  /**
+   * 按 aweme_id 查对应 imported 作品的 publication_id(T-030 D6 回填 F3)。
+   * 命中(publications.externalId=aweme_id)返回 publicationId,否则 null(作品未导入/
+   * 未发布 → 评论仍落库,只是 publication_id 留空)。**OPTIONAL**:省略该 port 则全部评论
+   * publication_id 留空(向后兼容 D2 的纯落库 fake 测试)。
+   *
+   * F3 诚实边界:audience_signals 表**无 aweme_id 锚**,故只有本次采集(ingest 上下文持有
+   * aweme_id)能回填;**存量已入库评论无法回填**,需重采。
+   */
+  resolvePublicationId?(awemeId: string): Promise<string | null>;
 }
 
 export interface IngestCommentsResult {
@@ -791,6 +804,12 @@ export async function ingestComments(
     runType: "douyin_comments",
     idempotencyKey: `${externalSourceId}:comments:${capturedAt}`,
   });
+  // 评论按作品可读 (T-030 D6, F3):按本次采集的 aweme_id 查对应 publication(一次解析,
+  // 复用给整批评论)。无匹配作品(未导入/未发布)→ null,评论仍落库,publication_id 留空。
+  // 省略 resolvePublicationId port(D2 fake 测试)→ 全部留空。
+  const publicationId = ports.resolvePublicationId
+    ? await ports.resolvePublicationId(awemeId)
+    : null;
   let written = 0;
   let skipped = 0;
   for (const c of records) {
@@ -805,6 +824,7 @@ export async function ingestComments(
       rawText: c.text,
       demandTag: null,
       ingestionRunId: run.id, // C-4 铁律:信号写必带真 run id
+      publicationId, // 回填作品绑定(F3:仅本次采集能带,存量无锚)
     });
     await ports.markRecordWritten(run.id, recordKey);
     written += 1;

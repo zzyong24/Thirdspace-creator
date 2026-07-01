@@ -27,6 +27,7 @@ export const CANDIDATE_OP_IDS = [
   "candidates.patch",
   "candidates.promote",
   "audienceSignals.list",
+  "publications.comments.list",
   "audienceSignals.linkToCandidate",
   "topics.overview",
 ] as const;
@@ -45,6 +46,7 @@ export function createCandidateTransport(
       const p = (params ?? {}) as {
         candidateId?: string;
         signalId?: string;
+        publicationId?: string;
       };
 
       switch (endpoint.id) {
@@ -128,6 +130,20 @@ export function createCandidateTransport(
             offset: (page - 1) * pageSize,
           });
           return { data: rows, meta: { requestId, page, pageSize, total } };
+        }
+        case "publications.comments.list": {
+          // 复盘每作品评论 (T-030 D6) — 前 limit 条 (默认 100), user-scoped list envelope.
+          const q = (query ?? {}) as { limit?: number };
+          const limit = q.limit ?? 100;
+          const rows = await service.listCommentsForPublication(
+            ctx,
+            p.publicationId ?? "",
+            limit,
+          );
+          return {
+            data: rows,
+            meta: { requestId, page: 1, pageSize: limit, total: rows.length },
+          };
         }
         case "audienceSignals.linkToCandidate": {
           const b = (body ?? {}) as { candidateId?: string };

@@ -4,6 +4,7 @@ import { client as defaultClient } from "@/lib/contract-client.server";
 import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
 import type {
   AnalyticsViewModel,
+  ReviewCommentItem,
   RevenueProductRow,
   RevenueTab,
 } from "@/types/view-models";
@@ -133,6 +134,20 @@ export interface ReviewDataClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+  // 复盘每作品评论 (T-030 D6) — a publication's comment signals (前 100 条, user-scoped).
+  listPublicationComments(input: {
+    params: { publicationId: string };
+    query: { limit: number };
+    body: undefined;
+  }): Promise<unknown>;
+}
+
+// Subset of `audienceSignalResource` (publications.comments.list) — 复盘每作品评论读侧。
+interface CommentSignalDto {
+  readonly id: string;
+  readonly rawText: string;
+  readonly demandTag: string | null;
+  readonly createdAt: string;
 }
 
 /** Maps a persisted learning to an `aiAnalysis` insight card item. */
@@ -213,8 +228,11 @@ export async function buildReviewWorkspaceViewModel(
   // back to the deterministic fixture selector on failure so the page never
   // crashes / never shows "未找到项目" for a real project.
   let base: AnalyticsViewModel;
+  // Retain the real snapshots — they carry the project's publicationId(s), which the
+  // 复盘每作品评论 read (T-030 D6) needs to scope comments to the current 作品.
+  let snapshots: ReadonlyArray<MetricSnapshotDto> = [];
   try {
-    const snapshots = (await client.getProjectAnalytics({
+    snapshots = (await client.getProjectAnalytics({
       params: { projectId },
       query: { page: 1, pageSize: 100 },
       body: undefined,
@@ -332,11 +350,73 @@ export async function buildReviewWorkspaceViewModel(
     revenue = null;
   }
 
+  // --- 复盘每作品评论 region (REAL via publications.comments.list, T-030 D6) --------
+  // The current 作品 的真实评论 (前 100 条). Scope to the project's publication(s), read
+  // from the analytics snapshots' publicationId. F3 边界:存量评论无 aweme_id 锚未回填,
+  // publication_id 空 → 查不到 → 诚实空态(去任务中心配「抓我作品评论」重采)。绝不摆假评论。
+  const comments = await fetchReviewComments(client, snapshots);
+
   return {
     ...base,
     aiAnalysis,
     // REV-1: omit the field entirely when there is no real revenue data so the
     // page renders the honest empty state (optional, additive field).
     ...(revenue ? { revenue } : {}),
+    // 复盘每作品评论 (T-030 D6) — 前 100 条真实评论;空 → 页面渲染诚实空态。
+    comments,
   };
+}
+
+/** Distinct publicationIds carried by the project's analytics snapshots (one row per
+ *  publication). An imported project's 作品 = its publication; this is the作品 scope for
+ *  the 复盘评论 read. */
+function publicationIdsFromSnapshots(
+  snapshots: ReadonlyArray<MetricSnapshotDto>,
+): ReadonlyArray<string> {
+  const seen = new Set<string>();
+  for (const s of snapshots) {
+    if (s.publicationId) seen.add(s.publicationId);
+  }
+  return Array.from(seen);
+}
+
+/**
+ * 复盘每作品评论 (T-030 D6) — fetch the current 作品 的评论 (前 100 条, newest first).
+ * Reads `publications.comments.list` for each of the project's publications and merges,
+ * capped at 100. Each read is isolated: one failing publication never sinks the region.
+ * Returns `[]` on no publications / no comments (honest empty state — the page shows the
+ * "去任务中心配采集" guidance, never fake comments).
+ */
+export async function fetchReviewComments(
+  client: ReviewDataClient,
+  snapshots: ReadonlyArray<MetricSnapshotDto>,
+): Promise<ReadonlyArray<ReviewCommentItem>> {
+  const publicationIds = publicationIdsFromSnapshots(snapshots);
+  if (publicationIds.length === 0) return [];
+  const merged: CommentSignalDto[] = [];
+  for (const publicationId of publicationIds) {
+    if (merged.length >= 100) break;
+    try {
+      const rows = (await client.listPublicationComments({
+        params: { publicationId },
+        query: { limit: 100 },
+        body: undefined,
+      })) as ReadonlyArray<CommentSignalDto>;
+      merged.push(...rows);
+    } catch {
+      // One publication's read failed — skip it, keep the rest (honest partial).
+      continue;
+    }
+  }
+  // Newest first across publications, capped at 前 100 条 (SPEC §10).
+  return merged
+    .slice()
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0))
+    .slice(0, 100)
+    .map((c) => ({
+      id: c.id,
+      text: c.rawText,
+      demandTag: c.demandTag ?? null,
+      createdAt: c.createdAt,
+    }));
 }

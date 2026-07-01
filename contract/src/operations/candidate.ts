@@ -100,6 +100,25 @@ export const candidateOperations = {
     isList: true,
     fr: ["FR-CAND-SIGNAL-LIST"],
   }),
+  // 复盘每作品评论 (T-030 §4.2/§10, D6) — user-scoped list of a publication's comment
+  // signals (audience_signals where source='comment' AND publication_id=:publicationId),
+  // newest first, capped at `limit` (默认 100). Read-only; the write side rides Ingestion
+  // (C-4) which backfills publication_id from the capture's aweme_id. Owned by the
+  // candidate module transport (audience_signals is a candidate-module table).
+  listPublicationComments: defineEndpoint({
+    id: "publications.comments.list",
+    method: "GET",
+    path: "/publications/:publicationId/comments",
+    params: z.object({ publicationId: id }),
+    query: z.object({
+      // 前 N 条 (默认 100, SPEC 前 100). paginationQuery 的 page/pageSize 不合此口径 —
+      // 复盘评论区一次拉封顶 100 条,故用显式 limit。
+      limit: z.coerce.number().int().min(1).max(100).default(100),
+    }),
+    response: audienceSignalResource,
+    isList: true,
+    fr: ["FR-CAND-SIGNAL-LIST"],
+  }),
   linkSignalToCandidate: defineEndpoint({
     id: "audienceSignals.linkToCandidate",
     method: "POST",

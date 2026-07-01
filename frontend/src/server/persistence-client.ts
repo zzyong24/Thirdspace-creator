@@ -3132,7 +3132,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               source: input.source,
               rawText: input.rawText,
               demandTag: input.demandTag,
+              // 评论按作品可读 (T-030 D6) — 回填作品绑定(ingestComments 已按 aweme_id 解析)。
+              publicationId: input.publicationId,
             });
+          },
+          // 按 aweme_id 查对应作品的 publication_id(T-030 D6 回填,F3):命中 published +
+          // external_id=aweme_id 的 publication → id,否则 null(评论仍落库,只是不绑作品)。
+          resolvePublicationId: async (aweme) => {
+            const pub = await publishingService.resolvePublication(ctx, {
+              platform: "douyin",
+              externalId: aweme,
+            });
+            return pub?.id ?? null;
           },
           completeRun: async (runId) => {
             await ingestionService.completeRun(ctx, { runId });

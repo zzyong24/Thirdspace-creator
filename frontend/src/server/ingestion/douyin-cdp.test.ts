@@ -176,12 +176,24 @@ describe("parseCommentList 纯函数(评论解析,T-007 D2)", () => {
 });
 
 // fake CommentIngestPorts:内存模拟 run + ux_ingestion_records_run_key 去重 + 信号写。
-function makeFakePorts() {
-  const signals: Array<{ source: string; rawText: string; runId: string }> = [];
+// resolveMap(可选):aweme_id → publicationId(命中回填,未命中 null)。省略则不装
+// resolvePublicationId port(D2 纯落库口径,publication_id 全留空)。
+function makeFakePorts(resolveMap?: Record<string, string | null>) {
+  const signals: Array<{
+    source: string;
+    rawText: string;
+    runId: string;
+    publicationId: string | null;
+  }> = [];
   const ledger = new Set<string>(); // `${runId}::${recordKey}` = ux 去重锚
   const runs = new Map<string, string>(); // idempotencyKey → runId(建 run 幂等)
   let runSeq = 0;
-  const calls = { createRun: 0, ingestSignal: 0, completeRun: 0 };
+  const calls = {
+    createRun: 0,
+    ingestSignal: 0,
+    completeRun: 0,
+    resolvePublicationId: 0,
+  };
   const ports: CommentIngestPorts = {
     async createRun(input) {
       calls.createRun += 1;
@@ -203,11 +215,21 @@ function makeFakePorts() {
         source: input.source,
         rawText: input.rawText,
         runId: input.ingestionRunId,
+        publicationId: input.publicationId,
       });
     },
     async completeRun() {
       calls.completeRun += 1;
     },
+    // 只有传入 resolveMap 时才装该 port(否则保持 D2 纯落库口径)。
+    ...(resolveMap
+      ? {
+          async resolvePublicationId(awemeId: string) {
+            calls.resolvePublicationId += 1;
+            return resolveMap[awemeId] ?? null;
+          },
+        }
+      : {}),
   };
   return { ports, signals, calls };
 }
@@ -290,6 +312,49 @@ describe("ingestComments 落库 helper(fake ports,T-007 D2)", () => {
     expect(res.skipped).toBe(2); // c-1 / c-2 命中已写
     expect(signals).toHaveLength(3); // 累计 3 条(2 原 + 1 新)
     expect(signals[2].rawText).toBe("全新评论");
+  });
+});
+
+describe("ingestComments 按 aweme_id 回填 publication_id(T-030 D6,F3)", () => {
+  it("命中 imported 作品 publication → 每条信号带 publication_id(一次解析复用整批)", async () => {
+    // aweme_id=7400 → publication pub-P(模拟 publications.externalId=aweme_id 命中)。
+    const { ports, signals, calls } = makeFakePorts({ "7400": "pub-P" });
+    const res = await ingestComments("7400", CMT_FIXTURE, {
+      ports,
+      externalSourceId: "src-douyin",
+      capturedAt: "2026-06-30T00:00:00.000Z",
+    });
+    expect(res.written).toBe(2);
+    expect(signals).toHaveLength(2);
+    // 两条评论都回填同一 publication_id。
+    expect(signals.every((s) => s.publicationId === "pub-P")).toBe(true);
+    // 一次解析复用整批(按 aweme 而非按评论 resolve)。
+    expect(calls.resolvePublicationId).toBe(1);
+  });
+
+  it("无匹配作品(未导入/未发布)→ publication_id 空,评论仍落库,不报错(F3)", async () => {
+    // resolveMap 无该 aweme → 返回 null。评论照常写,只是不绑作品。
+    const { ports, signals, calls } = makeFakePorts({ "9999": "pub-Q" });
+    const res = await ingestComments("7400", CMT_FIXTURE, {
+      ports,
+      externalSourceId: "src-douyin",
+      capturedAt: "2026-06-30T00:00:00.000Z",
+    });
+    expect(res.written).toBe(2); // 落库不受影响
+    expect(signals.every((s) => s.publicationId === null)).toBe(true);
+    expect(calls.resolvePublicationId).toBe(1);
+  });
+
+  it("未装 resolvePublicationId port(D2 纯落库口径)→ publication_id 全空,向后兼容", async () => {
+    const { ports, signals, calls } = makeFakePorts(); // 不传 resolveMap
+    const res = await ingestComments("7400", CMT_FIXTURE, {
+      ports,
+      externalSourceId: "src-douyin",
+      capturedAt: "2026-06-30T00:00:00.000Z",
+    });
+    expect(res.written).toBe(2);
+    expect(signals.every((s) => s.publicationId === null)).toBe(true);
+    expect(calls.resolvePublicationId).toBe(0); // port 未装 → 不调用
   });
 });
 

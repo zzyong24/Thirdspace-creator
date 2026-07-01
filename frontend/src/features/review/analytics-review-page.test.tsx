@@ -34,6 +34,7 @@ import * as React from "react";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
+import type { AnalyticsViewModel as AnalyticsViewModelType } from "@/types/view-models";
 
 // Stub `next/navigation` — the review-authoring island (module 13 Step 5) mounts
 // `useRouter()`. The page renders WITHOUT reviewsWiring here, so the controls are
@@ -389,5 +390,79 @@ describe("AnalyticsReviewPage", () => {
     const active = within(nav).getByRole("link", { current: "page" });
     expect(active).toHaveAttribute("href", "/projects");
     expect(active.textContent?.trim()).toBe("项目");
+  });
+
+  // 复盘每作品评论 (T-030 §10 / D6) — 评论区渲染 + 空态诚实。
+  describe("作品评论区 (T-030 D6)", () => {
+    async function vmWith(
+      comments: AnalyticsViewModelType["comments"],
+    ): Promise<AnalyticsViewModelType> {
+      const { buildAnalyticsReviewViewModel } = await import(
+        "@/fixtures/selectors"
+      );
+      return {
+        ...buildAnalyticsReviewViewModel("project-podcast-launch"),
+        comments,
+      };
+    }
+
+    it("有评论 → 列出评论文本(+ demand_tag)", async () => {
+      const viewModel = await vmWith([
+        {
+          id: "sig-1",
+          text: "求 RAG 落地教程",
+          demandTag: "教程需求",
+          createdAt: "2026-06-30T02:00:00.000Z",
+        },
+        {
+          id: "sig-2",
+          text: "这条能变现吗",
+          demandTag: null,
+          createdAt: "2026-06-30T01:00:00.000Z",
+        },
+      ]);
+      const { container } = await renderWorkspace("project-podcast-launch", {
+        viewModel,
+      });
+      const section = container.querySelector(
+        '[data-slot="review-comments-section"]',
+      );
+      expect(section).not.toBeNull();
+      expect(section!.getAttribute("data-empty")).toBe("false");
+      const items = container.querySelectorAll(
+        '[data-slot="review-comment-item"]',
+      );
+      expect(items).toHaveLength(2);
+      expect(section!.textContent ?? "").toContain("求 RAG 落地教程");
+      expect(section!.textContent ?? "").toContain("这条能变现吗");
+      // demand_tag 若有则展示;无则不摆。
+      const tags = container.querySelectorAll(
+        '[data-slot="review-comment-demand-tag"]',
+      );
+      expect(tags).toHaveLength(1);
+      expect(tags[0].textContent ?? "").toContain("教程需求");
+    });
+
+    it("无评论 → 诚实空态文案(不摆假评论,引导去任务中心采集)", async () => {
+      const viewModel = await vmWith([]);
+      const { container } = await renderWorkspace("project-podcast-launch", {
+        viewModel,
+      });
+      const section = container.querySelector(
+        '[data-slot="review-comments-section"]',
+      );
+      expect(section).not.toBeNull();
+      expect(section!.getAttribute("data-empty")).toBe("true");
+      const empty = container.querySelector(
+        '[data-slot="review-comments-empty"]',
+      );
+      expect(empty).not.toBeNull();
+      expect(empty!.textContent ?? "").toContain("未采集该作品评论");
+      expect(empty!.textContent ?? "").toContain("抓我作品评论");
+      // 没有任何评论条目(不摆假)。
+      expect(
+        container.querySelectorAll('[data-slot="review-comment-item"]'),
+      ).toHaveLength(0);
+    });
   });
 });
