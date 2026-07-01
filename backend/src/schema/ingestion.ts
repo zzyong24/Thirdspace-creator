@@ -62,6 +62,19 @@ export const ingestionErrors = pgTable("ingestion_errors", {
   rejectedPayload: jsonb("rejected_payload").notNull().default({}),
 });
 
+// 抖音采集限流/退避的持久状态(T-038 / SPEC §4.3)。每 channel(creator-center /
+// iesdouyin)一行,由 DouyinRequestGateway 跨进程重启恢复 cooldown/consecutive,防重启
+// 后 thundering herd 撞风控([gate-F3] readyPromise barrier 的持久面)。**非 user-scoped**
+// —— 采集是账号级全局,单用户本地部署,不带 user_id(SPEC §4.3 [gate-F2])。时间戳用
+// ISO-8601 TEXT,与 scheduled_job / job_run 全仓惯例一致(不引入 timestamptz 列型)。
+export const douyinThrottleState = pgTable("douyin_throttle_state", {
+  channel: text("channel").primaryKey(), // "creator-center" | "iesdouyin"
+  cooldownUntil: text("cooldown_until"), // nullable — 退避到期 ISO;null = 无 cooldown
+  consecutiveThrottles: integer("consecutive_throttles").notNull().default(0),
+  lastRequestAt: text("last_request_at"), // nullable — 该 channel 上次放行时刻 ISO
+  updatedAt: text("updated_at").notNull(),
+});
+
 // Internal per-record ledger (NOT a contract entity) — enforces SPEC §17.2 via the
 // UNIQUE (ingestion_run_id, record_key) index and records whether each record was
 // written or rejected so a re-push is a no-op.
@@ -124,4 +137,17 @@ CREATE TABLE IF NOT EXISTS ingestion_records (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_ingestion_records_run_key ON ingestion_records (ingestion_run_id, record_key);
 CREATE INDEX IF NOT EXISTS idx_ingestion_records_run ON ingestion_records (user_id, ingestion_run_id);
+`;
+
+// Raw DDL for 抖音限流状态表(T-038 / SPEC §4.3),与 backend/drizzle/0012_douyin_throttle_state.sql
+// 逐字对齐(迁移才是真正在 createConfiguredDb() 建表的那份;此 const 供 seed/doc 有处可读,
+// 沿用 INGESTION_DDL 惯例)。全部 idempotent (CREATE … IF NOT EXISTS)。
+export const DOUYIN_THROTTLE_STATE_DDL = `
+CREATE TABLE IF NOT EXISTS douyin_throttle_state (
+  channel TEXT PRIMARY KEY,
+  cooldown_until TEXT,
+  consecutive_throttles INTEGER NOT NULL DEFAULT 0,
+  last_request_at TEXT,
+  updated_at TEXT NOT NULL
+);
 `;

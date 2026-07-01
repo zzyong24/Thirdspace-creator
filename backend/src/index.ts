@@ -90,7 +90,9 @@ export {
   ingestionRuns,
   ingestionErrors,
   ingestionRecords,
+  douyinThrottleState,
   INGESTION_DDL,
+  DOUYIN_THROTTLE_STATE_DDL,
 } from "./schema/ingestion";
 export {
   reviews,
