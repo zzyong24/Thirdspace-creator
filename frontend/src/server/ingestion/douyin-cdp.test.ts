@@ -10,6 +10,9 @@ import {
   DouyinNotLoggedInError,
   parseDouyinVideoUrl,
   DouyinAudioFetchError,
+  fetchDouyinWorkListExport,
+  isXlsxBytes,
+  DouyinExportError,
   type DouyinDetail,
   type CommentRecord,
   type CommentIngestPorts,
@@ -611,5 +614,245 @@ describe("fetchDouyinComments 单作品复用注入 openContext(T-033b)", () => 
     expect(gotoUrls[0]).toContain("item_id=7409");
     expect(records).toHaveLength(1);
     expect(records[0].commentId).toBe("cmt-7409");
+  });
+});
+
+describe("isXlsxBytes(PK 头校验,T-030-D8a)", () => {
+  it("PK\\x03\\x04 开头 → true;JSON/HTML → false", () => {
+    expect(isXlsxBytes(new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x00]))).toBe(
+      true,
+    );
+    // 登录态过期返 JSON `{` → 头不符。
+    expect(isXlsxBytes(new Uint8Array([0x7b, 0x22, 0x6f, 0x6b]))).toBe(false);
+    expect(isXlsxBytes(new Uint8Array([0x50, 0x4b]))).toBe(false); // 太短
+  });
+});
+
+// fetchDouyinWorkListExport 的 fake page/context —— 建模 DATA-2 真机流程:导出**只有在**已切到
+// 「投稿列表」子tab 后点「导出数据」才触发 download(默认落在直播场次 tab → 那的导出永不下载,
+// 正是旧超时真因)。charCode marking → locator 可信点击的装配也一并覆盖。
+const CODE_TAB_POSTS = [25237, 31295, 20316, 21697].join(",");
+const CODE_SUBTAB_LIST = [25237, 31295, 21015, 34920].join(",");
+const CODE_BTN_EXPORT = [23548, 20986, 25968, 25454].join(",");
+
+function makeFakeExportContext(config: {
+  loggedIn: boolean;
+  // 页面上"存在"的 charCode 目标(缺失的 evaluate 返回 0 命中,模拟"没这个控件/tab")。
+  present: Set<string>;
+  // xlsx 下载内容(默认真 PK 头 xlsx bytes)。
+  downloadBytes?: Uint8Array;
+}) {
+  const calls = {
+    goto: [] as string[],
+    marked: [] as string[], // 每次 evaluate 命中并标记的 charCode key
+    clicked: [] as string[], // 每次 locator click 点掉的 charCode key
+    close: 0,
+    waitForEventDownload: 0,
+  };
+  const state = {
+    onPostsTab: false, // 点了投稿作品 tab 后,投稿列表子tab 才"出现"(真机:子tab 随视图渲染)
+    onListSubtab: false,
+    exportClicked: false,
+  };
+  let lastMarkedKey: string | null = null;
+  // download 事件的"信箱":waitForEvent 先挂 pending promise,导出点击时若在列表子tab 则 resolve;
+  // 否则由 downloadTimeoutMs 触发 reject(真机:落错 tab → 永不下载 → 超时,正是旧 bug)。
+  let fireDownload: (() => void) | null = null;
+
+  // 某 charCode 集当前是否"可见"(建模真机:投稿列表子tab 只有点了投稿作品 tab 才渲染出来)。
+  const isPresent = (key: string): boolean => {
+    if (!config.present.has(key)) return false;
+    if (key === CODE_SUBTAB_LIST && !state.onPostsTab) return false;
+    return true;
+  };
+
+  const page = {
+    async goto(url: string) {
+      calls.goto.push(url);
+      return undefined;
+    },
+    async waitForTimeout() {
+      return undefined;
+    },
+    // 建模三种页内函数(按 arg 形状分派):
+    //   ① number[]  → markElementByCharCodesInPage / hasVisibleByCharCodesInPage(靠调用位置区分不了,
+    //      统一:present 里有 → 命中;mark 语义额外记 lastMarkedKey;hasVisible 语义只读)。为区分 mark
+    //      与 hasVisible,用返回类型:生产 waitForVisible 只读 boolean、markAndClick 读 number —— 两者
+    //      都靠 present 判定,这里 mark 时才置 lastMarkedKey(hasVisible 不置)。用 fn.name 区分。
+    //   ② {exportCodes,refreshCodes} → markExportNearRefreshInPage(锚定投稿列表导出)。
+    async evaluate(
+      fn: ((codes: number[]) => number | boolean) | ((a: unknown) => number),
+      arg: number[] | { exportCodes: number[]; refreshCodes: number[] },
+    ): Promise<number | boolean> {
+      // 导出就近锚点:{exportCodes,refreshCodes}
+      if (arg && !Array.isArray(arg)) {
+        const key = arg.exportCodes.join(",");
+        // 只有在投稿列表视图(点了子tab)才认为锚到刷新旁的导出。
+        if (state.onListSubtab && isPresent(key)) {
+          lastMarkedKey = key;
+          calls.marked.push(key);
+          return 1;
+        }
+        lastMarkedKey = null;
+        return 0;
+      }
+      const codes = arg as number[];
+      const key = codes.join(",");
+      const present = isPresent(key);
+      // hasVisibleByCharCodesInPage(只读探针,不标记):靠函数名判定。
+      if (fn.name === "hasVisibleByCharCodesInPage") {
+        return present;
+      }
+      // markElementByCharCodesInPage(标记):present → 记 lastMarkedKey 返回 1。
+      if (!present) {
+        lastMarkedKey = null;
+        return 0;
+      }
+      lastMarkedKey = key;
+      calls.marked.push(key);
+      return 1;
+    },
+    // 建模 locator('[data-cos-export-target]').click():点掉"上次被标记"的目标。
+    locator(_selector: string) {
+      const keyAtBind = lastMarkedKey;
+      return {
+        async count() {
+          return keyAtBind ? 1 : 0;
+        },
+        async click() {
+          if (!keyAtBind) throw new Error("no marked element to click");
+          calls.clicked.push(keyAtBind);
+          if (keyAtBind === CODE_TAB_POSTS) state.onPostsTab = true;
+          if (keyAtBind === CODE_SUBTAB_LIST) state.onListSubtab = true;
+          if (keyAtBind === CODE_BTN_EXPORT) {
+            state.exportClicked = true;
+            // 真机:在投稿列表子tab 点导出才真触发 download 事件 → resolve 之前挂的 waitForEvent。
+            if (state.onListSubtab && fireDownload) fireDownload();
+          }
+        },
+      };
+    },
+    async waitForEvent(
+      _event: "download",
+      opts?: { timeout?: number },
+    ): Promise<{ path(): Promise<string> }> {
+      calls.waitForEventDownload += 1;
+      // 挂 pending:导出点击(在列表子tab)时才 resolve;否则超时 reject。
+      return await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(
+            new Error(
+              'page.waitForEvent: Timeout exceeded while waiting for event "download"',
+            ),
+          );
+        }, opts?.timeout ?? 1000);
+        fireDownload = () => {
+          clearTimeout(timer);
+          resolve({ async path() { return "/tmp/fake/作品列表.xlsx"; } });
+        };
+      });
+    },
+    // 真 page 有 screenshot;这里也给一个(不影响,debugShot 受 env 门控默认不落图)。
+    async screenshot() {
+      return undefined;
+    },
+  };
+
+  const ctx = {
+    pages() {
+      return [page];
+    },
+    async newPage() {
+      return page;
+    },
+    async cookies(_url: string) {
+      return config.loggedIn ? [{ name: "sessionid" }] : [];
+    },
+    async close() {
+      calls.close += 1;
+    },
+  };
+
+  type InjectedOpenCtx = NonNullable<
+    Parameters<typeof fetchDouyinWorkListExport>[1]
+  >["openContext"];
+  type InjectedCtx = Awaited<ReturnType<NonNullable<InjectedOpenCtx>>>;
+  const openContext: NonNullable<InjectedOpenCtx> = async () => {
+    return ctx as unknown as InjectedCtx;
+  };
+  const readFile = async () =>
+    config.downloadBytes ?? new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x01, 0x02]);
+
+  return { calls, state, openContext, readFile };
+}
+
+describe("fetchDouyinWorkListExport 导航到投稿列表再导出(T-033a,DATA-2 真机流程)", () => {
+  it("完整流程:切投稿作品 tab → 投稿列表子tab → 可信点导出 → 截 xlsx bytes(PK 头过)", async () => {
+    const { calls, openContext, readFile } = makeFakeExportContext({
+      loggedIn: true,
+      present: new Set([CODE_TAB_POSTS, CODE_SUBTAB_LIST, CODE_BTN_EXPORT]),
+    });
+    const bytes = await fetchDouyinWorkListExport(
+      { authDir: "/fake/.auth" },
+      { openContext, readFile, downloadTimeoutMs: 1000 },
+    );
+    expect(isXlsxBytes(bytes)).toBe(true);
+    // 关键:导出前必须先点了投稿列表子tab(不然导出永不下载 —— 旧 bug)。
+    expect(calls.clicked).toContain(CODE_SUBTAB_LIST);
+    expect(calls.clicked).toContain(CODE_BTN_EXPORT);
+    // 顺序:投稿列表子tab 的点击在导出点击之前。
+    expect(calls.clicked.indexOf(CODE_SUBTAB_LIST)).toBeLessThan(
+      calls.clicked.indexOf(CODE_BTN_EXPORT),
+    );
+    // 导航到旧版数据中心 URL(Garfish)。
+    expect(calls.goto[0]).toContain("data-center/content");
+    expect(calls.close).toBe(1);
+  });
+
+  it("找不到「投稿列表」子tab → 抛 DouyinExportError(不会盲点直播场次导出干等超时),仍 close 一次", async () => {
+    const { calls, openContext, readFile } = makeFakeExportContext({
+      loggedIn: true,
+      // 缺投稿列表子tab(present 无 CODE_SUBTAB_LIST)。
+      present: new Set([CODE_TAB_POSTS, CODE_BTN_EXPORT]),
+    });
+    await expect(
+      fetchDouyinWorkListExport(
+        { authDir: "/fake/.auth" },
+        { openContext, readFile, downloadTimeoutMs: 1000 },
+      ),
+    ).rejects.toBeInstanceOf(DouyinExportError);
+    expect(calls.close).toBe(1);
+    // 未进列表视图 → 绝不点导出干等 download 超时。
+    expect(calls.clicked).not.toContain(CODE_BTN_EXPORT);
+  });
+
+  it("下载内容非 xlsx(PK 头缺失,登录态过期返 JSON/HTML)→ 抛 DouyinExportError", async () => {
+    const { openContext } = makeFakeExportContext({
+      loggedIn: true,
+      present: new Set([CODE_TAB_POSTS, CODE_SUBTAB_LIST, CODE_BTN_EXPORT]),
+    });
+    // readFile 返 JSON `{` 头 → isXlsxBytes false。
+    const readFile = async () => new Uint8Array([0x7b, 0x22, 0x6f, 0x6b]);
+    await expect(
+      fetchDouyinWorkListExport(
+        { authDir: "/fake/.auth" },
+        { openContext, readFile, downloadTimeoutMs: 1000 },
+      ),
+    ).rejects.toBeInstanceOf(DouyinExportError);
+  });
+
+  it("未登录 → 抛 DouyinNotLoggedInError(runner catch → needs_reconnect),仍 close 一次", async () => {
+    const { calls, openContext, readFile } = makeFakeExportContext({
+      loggedIn: false,
+      present: new Set([CODE_TAB_POSTS, CODE_SUBTAB_LIST, CODE_BTN_EXPORT]),
+    });
+    await expect(
+      fetchDouyinWorkListExport(
+        { authDir: "/fake/.auth" },
+        { openContext, readFile },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+    expect(calls.close).toBe(1);
+    expect(calls.goto).toHaveLength(0); // 登录校验先于任何导航
   });
 });

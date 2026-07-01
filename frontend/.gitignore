@@ -1,1 +1,3 @@
 .auth/
+# 抖音明细导出调试截图(仅 DOUYIN_EXPORT_DEBUG=1 时落图,不入库)
+docs/douyin-export-debug/

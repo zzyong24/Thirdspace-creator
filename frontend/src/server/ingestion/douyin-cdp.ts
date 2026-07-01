@@ -541,6 +541,7 @@ async function openContext(authDir: string, headless: boolean) {
   return chromium.launchPersistentContext(authDir, {
     headless,
     viewport: { width: 1440, height: 900 },
+    acceptDownloads: true, // 明细导出走 download 事件截 xlsx;现代 Playwright 默认 true,显式设上保险
     args: [
       "--disable-blink-features=AutomationControlled",
       "--no-proxy-server", // 抖音国内站直连,跳过系统代理避免 Clash 端口变化报错
@@ -872,17 +873,29 @@ export async function fetchDouyinCommentsForWorks(
 
 // ---------------------------------------------------------------------------
 // 创作者后台「作品列表」明细导出抓取(T-030-D8a,SPEC §9b)—— 移植 TzFilm step1_download.py 的
-// 导出流程(导航数据中心→作品分析→投稿列表→点「刷新数据」+「导出数据」→截 xlsx 下载),但**不搬**
-// 其 AppleScript / 用户真 Chrome 运行时:我们复用 openContext(.auth/) 无头 + Playwright download
-// 事件截 bytes。中文按钮用 charCode 匹配(仿 TzFilm,避开 AppleScript 中文编码坑,页内 JS 无此坑但
-// charCode 匹配同样稳,且照抄 TzFilm 已验证的字符序)。**真选择器未经真创作者中心验证 → DATA-2 待
-// 扫码验**;page/context 端口注入,故装配/失败分类可先建可测。
+// 导出流程,复用 openContext(.auth/) 无头 + Playwright download 事件截 bytes。
+//
+// DATA-2 真机验证(2026-07-02,已扫码 headless 真跑,证据见
+// frontend/docs/douyin-export-debug/)踩出的真流程 —— 与最初"直接点导出"的假设不同:
+//   ① data-center/content 默认落在 **直播场次** tab,其「导出数据」对无直播的号返回
+//      「当前暂无数据可导出」toast → **永不触发 download 事件**(旧代码 waitForEvent 超时的真因;
+//      不是没找到按钮,而是找到并点了"直播场次"的导出、但那个 tab 没数据)。
+//   ② 页面首屏弹「新增直播复盘能力」引导 modal 盖住交互 → 必须先关(点「我知道了」)。
+//   ③ 「刷新数据」按钮 + 出 `作品列表.xlsx` 的「导出数据」只在 **投稿作品 → 投稿列表** 子视图里,
+//      故必须先点「投稿作品」tab 再点「投稿列表」子tab,才能拿到 TzFilm 那份 16 字段 per-work xlsx。
+// 中文控件仍用 charCode 匹配(避字面量编码坑 + 页面重名"导出数据"有多个);但点击改用 Playwright
+// **可信 locator click**(charCode 在页内标记目标元素 → locator 点被标记元素),派发真 input 事件,
+// 兼顾"精确定位"与"避免脚本点击被 Chromium 拦下载"两件事。page/context 端口注入,故装配/失败分类可测。
 // ---------------------------------------------------------------------------
 
-// 中文按钮 charCode 序列(移植 TzFilm,避字面量编码坑):
-//   刷新数据 = 21047,26032,25968,25454 ; 导出数据 = 23548,20986,25968,25454
+// 中文控件 charCode 序列(避字面量编码坑;charCode 序 = 逐字 String.charCodeAt):
+//   投稿作品 = 25237,31295,20316,21697 ; 投稿列表 = 25237,31295,21015,34920
+//   刷新数据 = 21047,26032,25968,25454 ; 导出数据 = 23548,20986,25968,25454 ; 我知道了 = 25105,30693,36947,20102
+const TAB_POSTS_CODES = [25237, 31295, 20316, 21697];
+const SUBTAB_LIST_CODES = [25237, 31295, 21015, 34920];
 const BTN_REFRESH_CODES = [21047, 26032, 25968, 25454];
 const BTN_EXPORT_CODES = [23548, 20986, 25968, 25454];
+const MODAL_GOTIT_CODES = [25105, 30693, 36947, 20102];
 
 /** 导出得到的不是 xlsx(登录态过期时抖音返 JSON / HTML,TzFilm 踩过)—— 校验 PK 头失败时抛。 */
 export class DouyinExportError extends Error {
@@ -903,17 +916,29 @@ export function isXlsxBytes(bytes: Uint8Array): boolean {
   );
 }
 
+// 一个可被 locator().click() 可信点击的目标句柄(真 Playwright Locator 的收窄子集)。
+interface ExportLocator {
+  click(opts?: { timeout?: number }): Promise<void>;
+  count(): Promise<number>;
+}
+
 // fetchDouyinWorkListExport 只依赖 page 的这几个能力(收窄便于 fake page 单测,不起真 Chromium)。
 interface ExportCapablePage {
   goto(url: string, opts?: unknown): Promise<unknown>;
   waitForTimeout(ms: number): Promise<void>;
-  // 页内跑 charCode 匹配点按钮,返回是否命中。
-  evaluate<R>(fn: (codes: number[]) => R, arg: number[]): Promise<R>;
+  // 页内跑 charCode 匹配 → 给命中元素打 data 属性标记,返回是否命中(marking,不在页内 click:
+  // 页内 element.click() 是脚本点击,Chromium 会拦其触发的 download;改由下面 locator 可信点击)。
+  // arg 泛型化:多数步骤传 number[](charCode 序);导出就近锚点传 {exportCodes,refreshCodes} 对象。
+  evaluate<R, A>(fn: (arg: A) => R, arg: A): Promise<R>;
+  // 对被标记元素做 Playwright 可信点击(派发真 input 事件,不被拦下载)。
+  locator(selector: string): ExportLocator;
   // 等一次 download 事件,拿到临时文件路径读 bytes。
   waitForEvent(
     event: "download",
     opts?: { timeout?: number },
   ): Promise<{ path(): Promise<string> }>;
+  // 真 Playwright Page 有 screenshot;fake page 没有 → 可选,仅调试落图用(可选链调用,不破坏 fake)。
+  screenshot?(opts: { path: string }): Promise<unknown>;
 }
 
 interface ExportCapableContext {
@@ -937,12 +962,21 @@ export interface FetchWorkListExportOptions {
   authDir: string;
 }
 
-// 页内 charCode 匹配点击(仿 TzFilm click_refresh/click_export 的字符序比对)。返回命中数。
-function clickButtonByCharCodesInPage(codes: number[]): number {
-  const btns = Array.from(document.querySelectorAll("button"));
-  let clicked = 0;
-  for (const b of btns) {
-    const t = (b.textContent || "").trim();
+// 页内 charCode 匹配 → 给**命中的最深可见元素**打 `data-cos-export-target="1"` 标记(供 locator
+// 可信点击),返回命中数。不在页内 click(脚本点击触发的 download 会被 Chromium 拦)。要点:
+//   ① charCode 序比对仿 TzFilm(避字面量编码坑);② 只认可见(rect 有面积);③ 取**最深**匹配元素
+//   (tab 文本常被 span 包一层 → 纯 leaf 判定可能落到非可点的文本壳;最深匹配 = 最具体、点击必冒泡到
+//   真正的 tab/button,比 leaf-only 稳)。调用前先清旧标记。
+function markElementByCharCodesInPage(codes: number[]): number {
+  const ATTR = "data-cos-export-target";
+  document
+    .querySelectorAll(`[${ATTR}]`)
+    .forEach((el) => el.removeAttribute(ATTR));
+  const all = Array.from(document.querySelectorAll("*"));
+  let best: Element | null = null;
+  let bestDepth = -1;
+  for (const el of all) {
+    const t = (el.textContent || "").trim();
     if (t.length !== codes.length) continue;
     let match = true;
     for (let k = 0; k < codes.length; k++) {
@@ -951,14 +985,156 @@ function clickButtonByCharCodesInPage(codes: number[]): number {
         break;
       }
     }
-    if (match) {
-      (b as HTMLElement).scrollIntoView({ block: "center" });
-      (b as HTMLElement).click();
-      clicked += 1;
-      break; // 只点第一个命中的(TzFilm:导出绝不重复点,防死循环)
+    if (!match) continue;
+    const rect = el.getBoundingClientRect
+      ? el.getBoundingClientRect()
+      : null;
+    if (!rect || rect.width === 0 || rect.height === 0) continue;
+    // 取最深(DOM 深度最大)的匹配元素 —— 最具体、点击冒泡到 tab/button。
+    let depth = 0;
+    for (let p = el.parentElement; p; p = p.parentElement) depth += 1;
+    if (depth > bestDepth) {
+      bestDepth = depth;
+      best = el;
     }
   }
-  return clicked;
+  if (!best) return 0;
+  (best as HTMLElement).scrollIntoView({ block: "center" });
+  best.setAttribute(ATTR, "1");
+  return 1;
+}
+
+// 页内查某 charCode 集是否存在可见匹配元素(不点、不标记)—— 供"轮询等某 tab/子tab 渲染出来"。
+function hasVisibleByCharCodesInPage(codes: number[]): boolean {
+  for (const el of Array.from(document.querySelectorAll("*"))) {
+    const t = (el.textContent || "").trim();
+    if (t.length !== codes.length) continue;
+    let match = true;
+    for (let k = 0; k < codes.length; k++) {
+      if (t.charCodeAt(k) !== codes[k]) {
+        match = false;
+        break;
+      }
+    }
+    if (!match) continue;
+    const rect = el.getBoundingClientRect
+      ? el.getBoundingClientRect()
+      : null;
+    if (rect && rect.width > 0 && rect.height > 0) return true;
+  }
+  return false;
+}
+
+// 专标「投稿列表」视图的「导出数据」按钮:页面有多个"导出数据"(直播场次/投稿概览/投稿表现/投稿列表),
+// 必须点投稿列表那个。锚点 = 与「刷新数据」按钮同 toolbar(刷新数据仅存在于投稿列表视图工具条)。
+// 策略:找到「刷新数据」按钮,向上找公共容器,在容器内找 charCode=导出数据 的按钮并标记;找不到锚点则
+// 返 0(交由调用方兜底到通用 markElementByCharCodesInPage)。
+function markExportNearRefreshInPage(args: {
+  exportCodes: number[];
+  refreshCodes: number[];
+}): number {
+  const { exportCodes, refreshCodes } = args;
+  const ATTR = "data-cos-export-target";
+  document
+    .querySelectorAll(`[${ATTR}]`)
+    .forEach((el) => el.removeAttribute(ATTR));
+  const matches = (el: Element, codes: number[]): boolean => {
+    const t = (el.textContent || "").trim();
+    if (t.length !== codes.length) return false;
+    for (let k = 0; k < codes.length; k++) {
+      if (t.charCodeAt(k) !== codes[k]) return false;
+    }
+    const rect = el.getBoundingClientRect
+      ? el.getBoundingClientRect()
+      : null;
+    return !!rect && rect.width > 0 && rect.height > 0;
+  };
+  // 找「刷新数据」按钮(取最深匹配 = 具体按钮)。
+  let refreshEl: Element | null = null;
+  let refreshDepth = -1;
+  for (const el of Array.from(document.querySelectorAll("button, [role='button']"))) {
+    if (!matches(el, refreshCodes)) continue;
+    let depth = 0;
+    for (let p = el.parentElement; p; p = p.parentElement) depth += 1;
+    if (depth > refreshDepth) {
+      refreshDepth = depth;
+      refreshEl = el;
+    }
+  }
+  if (!refreshEl) return 0;
+  // 从刷新按钮逐级向上,在每级容器里找同级的「导出数据」按钮(就近 = 同工具条)。
+  for (let container = refreshEl.parentElement; container; container = container.parentElement) {
+    const candidates = Array.from(
+      container.querySelectorAll("button, [role='button']"),
+    ).filter((el) => matches(el, exportCodes));
+    if (candidates.length > 0) {
+      const target = candidates[0]!;
+      (target as HTMLElement).scrollIntoView({ block: "center" });
+      target.setAttribute(ATTR, "1");
+      return 1;
+    }
+    // 容器已到达含「导出数据」的层级即停;否则继续向上(但别一路到 body 太宽 —— 3 级足够同工具条)。
+    if (container === refreshEl.parentElement?.parentElement?.parentElement) break;
+  }
+  return 0;
+}
+
+// charCode 标记 + locator 可信点击一条龙:命中则可信点被标记元素,返回是否点了。silent=true 时点击
+// 失败也吞掉(投稿作品 tab/刷新数据 等"点不到不致命"的步骤)。
+async function markAndClick(
+  page: ExportCapablePage,
+  codes: number[],
+  opts: { silent?: boolean; timeout?: number } = {},
+): Promise<boolean> {
+  const hit = await page
+    .evaluate(markElementByCharCodesInPage, codes)
+    .catch(() => 0);
+  if (!hit) return false;
+  try {
+    await page
+      .locator('[data-cos-export-target="1"]')
+      .click({ timeout: opts.timeout ?? 5_000 });
+    return true;
+  } catch (err) {
+    if (opts.silent) return false;
+    throw err;
+  }
+}
+
+// 轮询等某 charCode 控件在页面可见(最多 tries 次,每次 intervalMs)。用于等 tab 切换后子视图渲染。
+async function waitForVisibleByCharCodes(
+  page: ExportCapablePage,
+  codes: number[],
+  opts: { tries?: number; intervalMs?: number } = {},
+): Promise<boolean> {
+  const tries = opts.tries ?? 10;
+  const intervalMs = opts.intervalMs ?? 1_000;
+  for (let i = 0; i < tries; i++) {
+    const ok = await page
+      .evaluate(hasVisibleByCharCodesInPage, codes)
+      .catch(() => false);
+    if (ok) return true;
+    await page.waitForTimeout(intervalMs);
+  }
+  return false;
+}
+
+// 调试落图(真 page 有 screenshot;fake 没有 → 可选链,不破坏 fake 单测)。失败静默,绝不干扰主流程。
+async function debugShot(
+  page: ExportCapablePage,
+  name: string,
+): Promise<void> {
+  if (!page.screenshot) return;
+  if (process.env.DOUYIN_EXPORT_DEBUG !== "1") return;
+  try {
+    const { join } = await import("node:path");
+    const { mkdir } = await import("node:fs/promises");
+    const dir = join(process.cwd(), "docs/douyin-export-debug");
+    await mkdir(dir, { recursive: true }).catch(() => {});
+    await page.screenshot({ path: join(dir, name) });
+  } catch {
+    /* 调试落图失败绝不影响主流程 */
+  }
 }
 
 async function isLoggedInExport(ctx: ExportCapableContext): Promise<boolean> {
@@ -1001,30 +1177,103 @@ export async function fetchDouyinWorkListExport(
       waitUntil: "domcontentloaded",
       timeout: 60_000,
     });
-    // 等 Garfish 微前端初始化(TzFilm 建议 ~15s;真机时机 DATA-2 待验)。
+    // 等 Garfish 微前端初始化(真机 ~15s;DATA-2 已验)。
     await page.waitForTimeout(15_000);
+    await debugShot(page, "01-after-garfish.png");
 
-    // 2) 点「刷新数据」确保数据最新(找不到不致命,可能页面已最新)。
-    await page
-      .evaluate(clickButtonByCharCodesInPage, BTN_REFRESH_CODES)
-      .catch(() => 0);
-    await page.waitForTimeout(4_000);
+    // 2) 关首屏引导 modal(「新增直播复盘能力」)—— 盖住交互,不关点不到 tab。找不到不致命,
+    //    但 modal 存在时会拦截 tab 点击(真机踩坑:未关 modal → 点投稿作品无效 → 停在直播场次 →
+    //    找不到投稿列表 → 旧修复失败)。故点完再确认它消失(轮询「我知道了」不再可见)。
+    if (await markAndClick(page, MODAL_GOTIT_CODES, { silent: true, timeout: 3_000 })) {
+      await page.waitForTimeout(800);
+    }
+    // 二次兜底:若引导 modal 仍在(多页引导 / 变体),再点一次并等其消失(最多 ~4s)。
+    for (let i = 0; i < 4; i++) {
+      const stillThere = await page
+        .evaluate(hasVisibleByCharCodesInPage, MODAL_GOTIT_CODES)
+        .catch(() => false);
+      if (!stillThere) break;
+      await markAndClick(page, MODAL_GOTIT_CODES, { silent: true, timeout: 2_000 });
+      await page.waitForTimeout(1_000);
+    }
 
-    // 3) 点「导出数据」并同时监听 download 事件(先挂监听再点击,避免竞态漏掉快下载)。
-    const downloadPromise = page.waitForEvent("download", {
-      timeout: downloadTimeoutMs,
-    });
-    const clicked = await page.evaluate(
-      clickButtonByCharCodesInPage,
-      BTN_EXPORT_CODES,
-    );
-    if (clicked === 0) {
+    // 3) 切到「投稿作品」tab(真机默认落在**直播场次** tab,其导出无数据 → 永不下载,是旧超时真因)。
+    //    点后**轮询等**「投稿列表」子tab 渲染出来(而非固定 sleep;真机 tab 切换 + 子视图渲染有延迟)。
+    //    tab 点击可能需要重试(modal 刚关 / 渲染未稳)—— 最多试 3 轮,每轮点投稿作品 + 等子tab 出现。
+    let listVisible = false;
+    for (let attempt = 0; attempt < 3 && !listVisible; attempt++) {
+      await markAndClick(page, TAB_POSTS_CODES, { silent: true });
+      listVisible = await waitForVisibleByCharCodes(page, SUBTAB_LIST_CODES, {
+        tries: 6,
+        intervalMs: 1_000,
+      });
+    }
+    if (!listVisible) {
+      await debugShot(page, "02-posts-tab-failed.png");
       throw new DouyinExportError(
-        "fetchDouyinWorkListExport: 未找到「导出数据」按钮(页面未加载完 / 登录态过期 / 选择器变化 —— DATA-2 待验)",
+        "fetchDouyinWorkListExport: 切到「投稿作品」tab 后未见「投稿列表」子tab(页面未加载完 / 登录态过期 / 版式变化)—— 无法进入出 xlsx 的视图",
       );
     }
 
-    // 4) 截下载文件 bytes(TzFilm:点击后只等下载,绝不重试点击)。
+    // 4) 切到「投稿列表」子tab —— 「刷新数据」+ 出 `作品列表.xlsx` 的「导出数据」只在此视图。
+    const listOk = await markAndClick(page, SUBTAB_LIST_CODES, {
+      silent: true,
+    });
+    if (!listOk) {
+      throw new DouyinExportError(
+        "fetchDouyinWorkListExport: 点击「投稿列表」子tab 失败(版式变化)—— 无法进入出 xlsx 的视图",
+      );
+    }
+    // 等投稿列表视图渲染出「导出数据」(该视图特有的导出;轮询而非固定 sleep)。
+    await waitForVisibleByCharCodes(page, BTN_EXPORT_CODES, {
+      tries: 6,
+      intervalMs: 1_000,
+    });
+    await page.waitForTimeout(1_500);
+    await debugShot(page, "02-after-list-subtab.png");
+
+    // 5) 点「刷新数据」确保数据最新(找不到不致命,可能页面已最新)。
+    await markAndClick(page, BTN_REFRESH_CODES, { silent: true });
+    await page.waitForTimeout(4_000);
+
+    // 6) 先挂 download 监听再可信点「导出数据」(避免竞态漏掉快下载;可信 locator click 派发真 input
+    //    事件,不被 Chromium 当脚本点击拦下载)。页面此时有多个"导出数据"(直播场次/投稿概览/投稿表现/
+    //    投稿列表)—— 必须点**投稿列表视图**那个,故就近锚定「刷新数据」(仅存于投稿列表工具条)同容器的
+    //    导出;锚定失败(版式变化)兜底用最深匹配的通用标记。
+    const downloadPromise = page.waitForEvent("download", {
+      timeout: downloadTimeoutMs,
+    });
+    let exportMarked = await page
+      .evaluate(markExportNearRefreshInPage, {
+        exportCodes: BTN_EXPORT_CODES,
+        refreshCodes: BTN_REFRESH_CODES,
+      })
+      .catch(() => 0);
+    if (!exportMarked) {
+      // 兜底:没锚到刷新按钮(投稿列表工具条可能无刷新)→ 退回通用最深匹配。
+      exportMarked = await page
+        .evaluate(markElementByCharCodesInPage, BTN_EXPORT_CODES)
+        .catch(() => 0);
+    }
+    let clicked = false;
+    if (exportMarked) {
+      try {
+        await page
+          .locator('[data-cos-export-target="1"]')
+          .click({ timeout: 5_000 });
+        clicked = true;
+      } catch {
+        clicked = false;
+      }
+    }
+    await debugShot(page, "03-after-export-click.png");
+    if (!clicked) {
+      throw new DouyinExportError(
+        "fetchDouyinWorkListExport: 未找到 / 点不到投稿列表视图的「导出数据」按钮(页面未加载完 / 登录态过期 / 选择器变化)",
+      );
+    }
+
+    // 7) 截下载文件 bytes(TzFilm:点击后只等下载,绝不重试点击)。
     const download = await downloadPromise;
     const path = await download.path();
     const bytes = await readFile(path);
