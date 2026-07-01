@@ -516,6 +516,10 @@ const COMMENT_LIST_HINTS = ["/aweme/v1/web/comment/list/"];
 // 创作者中心评论管理页(带 item_id 过滤 → 只显示该作品评论)。
 const CREATOR_COMMENT_MANAGE =
   "https://creator.douyin.com/creator-micro/content/comment-manage";
+// 数据中心「作品分析」旧版 URL(T-030-D8a 明细导出入口)。TzFilm 踩坑:必须强制导航到旧版
+// data-center/content,否则 Garfish 微前端不加载,「投稿列表」/「导出数据」都找不到。
+const CREATOR_DATA_CENTER_CONTENT =
+  "https://creator.douyin.com/creator-micro/data-center/content";
 
 // launchPersistentContext 前清掉上次异常退出残留的单例锁,否则 relaunch 报
 // "SingletonLock: File exists" 直接 abort。
@@ -726,6 +730,177 @@ export async function fetchDouyinComments(
       }
     }
     return [...byId.values()];
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 创作者后台「作品列表」明细导出抓取(T-030-D8a,SPEC §9b)—— 移植 TzFilm step1_download.py 的
+// 导出流程(导航数据中心→作品分析→投稿列表→点「刷新数据」+「导出数据」→截 xlsx 下载),但**不搬**
+// 其 AppleScript / 用户真 Chrome 运行时:我们复用 openContext(.auth/) 无头 + Playwright download
+// 事件截 bytes。中文按钮用 charCode 匹配(仿 TzFilm,避开 AppleScript 中文编码坑,页内 JS 无此坑但
+// charCode 匹配同样稳,且照抄 TzFilm 已验证的字符序)。**真选择器未经真创作者中心验证 → DATA-2 待
+// 扫码验**;page/context 端口注入,故装配/失败分类可先建可测。
+// ---------------------------------------------------------------------------
+
+// 中文按钮 charCode 序列(移植 TzFilm,避字面量编码坑):
+//   刷新数据 = 21047,26032,25968,25454 ; 导出数据 = 23548,20986,25968,25454
+const BTN_REFRESH_CODES = [21047, 26032, 25968, 25454];
+const BTN_EXPORT_CODES = [23548, 20986, 25968, 25454];
+
+/** 导出得到的不是 xlsx(登录态过期时抖音返 JSON / HTML,TzFilm 踩过)—— 校验 PK 头失败时抛。 */
+export class DouyinExportError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DouyinExportError";
+  }
+}
+
+/** xlsx 是 zip → 头 4 字节必是 PK\x03\x04(`50 4B 03 04`)。登录态过期返 JSON/HTML → 头不符。 */
+export function isXlsxBytes(bytes: Uint8Array): boolean {
+  return (
+    bytes.length >= 4 &&
+    bytes[0] === 0x50 &&
+    bytes[1] === 0x4b &&
+    bytes[2] === 0x03 &&
+    bytes[3] === 0x04
+  );
+}
+
+// fetchDouyinWorkListExport 只依赖 page 的这几个能力(收窄便于 fake page 单测,不起真 Chromium)。
+interface ExportCapablePage {
+  goto(url: string, opts?: unknown): Promise<unknown>;
+  waitForTimeout(ms: number): Promise<void>;
+  // 页内跑 charCode 匹配点按钮,返回是否命中。
+  evaluate<R>(fn: (codes: number[]) => R, arg: number[]): Promise<R>;
+  // 等一次 download 事件,拿到临时文件路径读 bytes。
+  waitForEvent(
+    event: "download",
+    opts?: { timeout?: number },
+  ): Promise<{ path(): Promise<string> }>;
+}
+
+interface ExportCapableContext {
+  pages(): ExportCapablePage[];
+  newPage(): Promise<ExportCapablePage>;
+  cookies(url: string): Promise<Array<{ name: string }>>;
+  close(): Promise<void>;
+}
+
+/** fetchDouyinWorkListExport 的可注入依赖(默认真 openContext + fs 读;单测注 fake page/fs)。 */
+export interface FetchWorkListExportDeps {
+  /** 打开(或复用)一个带登录态的 headless context(默认 openContext(.auth/, headless))。 */
+  openContext?: (authDir: string, headless: boolean) => Promise<ExportCapableContext>;
+  /** 读下载文件 bytes(默认 fs.readFile;单测注 fake 返 canned bytes)。 */
+  readFile?: (path: string) => Promise<Uint8Array>;
+  /** 等按钮/下载超时(ms;默认 40s 下载 / 每步等待照 TzFilm 节奏)。 */
+  downloadTimeoutMs?: number;
+}
+
+export interface FetchWorkListExportOptions {
+  authDir: string;
+}
+
+// 页内 charCode 匹配点击(仿 TzFilm click_refresh/click_export 的字符序比对)。返回命中数。
+function clickButtonByCharCodesInPage(codes: number[]): number {
+  const btns = Array.from(document.querySelectorAll("button"));
+  let clicked = 0;
+  for (const b of btns) {
+    const t = (b.textContent || "").trim();
+    if (t.length !== codes.length) continue;
+    let match = true;
+    for (let k = 0; k < codes.length; k++) {
+      if (t.charCodeAt(k) !== codes[k]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) {
+      (b as HTMLElement).scrollIntoView({ block: "center" });
+      (b as HTMLElement).click();
+      clicked += 1;
+      break; // 只点第一个命中的(TzFilm:导出绝不重复点,防死循环)
+    }
+  }
+  return clicked;
+}
+
+async function isLoggedInExport(ctx: ExportCapableContext): Promise<boolean> {
+  const cookies = await ctx.cookies("https://creator.douyin.com");
+  return cookies.some((c) => c.name === "sessionid" || c.name === "sessionid_ss");
+}
+
+/**
+ * 抓创作者后台「作品列表」明细导出 xlsx bytes(T-030-D8a)。移植 TzFilm step1 导出流程到无头链路:
+ *   openContext(.auth/) headless → 导航数据中心作品分析旧版 URL(强制,否则 Garfish 不加载)→
+ *   等微前端就绪 → 页内 charCode 匹配点「刷新数据」→ 点「导出数据」(只点一次)→ Playwright
+ *   download 事件截 xlsx 临时文件 → 读 bytes → **校验 PK 头**(登录态过期返 JSON/HTML → 抛
+ *   DouyinExportError,TzFilm 踩过)。未登录 → DouyinNotLoggedInError(runner catch → needs_reconnect)。
+ * 端口注入(openContext/readFile),故装配 + 失败分类可确定性单测,不碰真抖音/真 Chromium。
+ * **真选择器(charCode 按钮 / 微前端就绪时机)未经真创作者中心验证 → DATA-2 待扫码验。**
+ */
+export async function fetchDouyinWorkListExport(
+  opts: FetchWorkListExportOptions,
+  deps: FetchWorkListExportDeps = {},
+): Promise<Uint8Array> {
+  const openCtx =
+    deps.openContext ??
+    ((authDir, headless) =>
+      openContext(authDir, headless) as unknown as Promise<ExportCapableContext>);
+  const readFile =
+    deps.readFile ??
+    (async (p: string) => {
+      const { readFile: rf } = await import("node:fs/promises");
+      return new Uint8Array(await rf(p));
+    });
+  const downloadTimeoutMs = deps.downloadTimeoutMs ?? 40_000;
+
+  const ctx = await openCtx(opts.authDir, true);
+  try {
+    if (!(await isLoggedInExport(ctx))) throw new DouyinNotLoggedInError();
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+
+    // 1) 强制导航旧版数据中心作品分析(TzFilm 坑:不设旧版 URL → Garfish 不加载,按钮找不到)。
+    await page.goto(CREATOR_DATA_CENTER_CONTENT, {
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
+    });
+    // 等 Garfish 微前端初始化(TzFilm 建议 ~15s;真机时机 DATA-2 待验)。
+    await page.waitForTimeout(15_000);
+
+    // 2) 点「刷新数据」确保数据最新(找不到不致命,可能页面已最新)。
+    await page
+      .evaluate(clickButtonByCharCodesInPage, BTN_REFRESH_CODES)
+      .catch(() => 0);
+    await page.waitForTimeout(4_000);
+
+    // 3) 点「导出数据」并同时监听 download 事件(先挂监听再点击,避免竞态漏掉快下载)。
+    const downloadPromise = page.waitForEvent("download", {
+      timeout: downloadTimeoutMs,
+    });
+    const clicked = await page.evaluate(
+      clickButtonByCharCodesInPage,
+      BTN_EXPORT_CODES,
+    );
+    if (clicked === 0) {
+      throw new DouyinExportError(
+        "fetchDouyinWorkListExport: 未找到「导出数据」按钮(页面未加载完 / 登录态过期 / 选择器变化 —— DATA-2 待验)",
+      );
+    }
+
+    // 4) 截下载文件 bytes(TzFilm:点击后只等下载,绝不重试点击)。
+    const download = await downloadPromise;
+    const path = await download.path();
+    const bytes = await readFile(path);
+
+    // 5) 校验 PK 头(登录态过期时抖音返 JSON / HTML,非真 xlsx —— TzFilm Pitfall)。
+    if (!isXlsxBytes(bytes)) {
+      throw new DouyinExportError(
+        "fetchDouyinWorkListExport: 下载内容非 xlsx(PK 头缺失 —— 登录态可能过期,返回了 JSON/HTML)",
+      );
+    }
+    return bytes;
   } finally {
     await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
   }

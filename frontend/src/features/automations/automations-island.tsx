@@ -44,6 +44,7 @@ import {
   RefreshCw,
   MessageSquare,
   BarChart3,
+  Gauge,
   Inbox,
   Sparkles,
   type LucideIcon,
@@ -105,6 +106,14 @@ const SOURCE_META: Record<
     targetLabel: "作品 awemeId",
     targetKey: "awemeId",
     targetPlaceholder: "awemeId(要抓评论的作品 id)",
+  },
+  // 作品明细导出(T-030-D8a):全量列表导出,无 per-作品 id;来源标识同 self.metrics。
+  "self.detail": {
+    label: "作品明细",
+    icon: Gauge,
+    targetLabel: "作品来源标识",
+    targetKey: "externalSourceId",
+    targetPlaceholder: "externalSourceId(留空=导出主页全部作品明细)",
   },
 };
 
@@ -786,6 +795,9 @@ export function CreateJobDialog({
               <SelectContent>
                 <SelectItem value="self.metrics">自己作品(指标快照)</SelectItem>
                 <SelectItem value="comments">评论</SelectItem>
+                <SelectItem value="self.detail">
+                  作品明细(完播/封面点击/留存)
+                </SelectItem>
               </SelectContent>
             </Select>
             {intentHint ? (

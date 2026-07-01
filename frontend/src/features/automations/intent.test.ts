@@ -59,10 +59,27 @@ describe("classifyIntent — freeform prompt → sourceKind", () => {
       "self.metrics",
     );
   });
+
+  it("「拉我作品的后台明细数据」→ self.detail(明细优先,T-030-D8a)", () => {
+    const c = classifyIntent("每天拉我作品的后台明细数据");
+    expect(c.sourceKind).toBe("self.detail");
+    expect(c.confidence).toBe("high");
+  });
+
+  it("明细优先于评论/作品:「作品的明细完播和评论」→ self.detail", () => {
+    // 同时含「作品」「明细」「完播」「评论」→ self.detail(最具体的意图落在明细导出)
+    expect(classifyIntent("把我作品的明细完播率和评论都拉一下").sourceKind).toBe(
+      "self.detail",
+    );
+  });
+
+  it("「完播率/留存」等明细独有词命中 self.detail", () => {
+    expect(classifyIntent("我想看完播率和留存").sourceKind).toBe("self.detail");
+  });
 });
 
 describe("COLLECTION_TEMPLATES — 模板定义", () => {
-  it("前两张模板真做(非灰置),明细模板灰置", () => {
+  it("三张模板均真做(明细模板 D8a 已落地,翻真)", () => {
     const metrics = COLLECTION_TEMPLATES.find(
       (t) => t.id === "daily-self-metrics",
     );
@@ -77,8 +94,10 @@ describe("COLLECTION_TEMPLATES — 模板定义", () => {
     expect(comments?.disabled).toBeFalsy();
     expect(comments?.prompt.length).toBeGreaterThan(0);
 
-    // 明细模板(D8a 后补)灰置占位
-    expect(detail?.disabled).toBe(true);
+    // 明细模板(T-030-D8a)已接通复盘核心指标 → 真做(去灰置),sourceKind=self.detail
+    expect(detail?.sourceKind).toBe("self.detail");
+    expect(detail?.disabled).toBeFalsy();
+    expect(detail?.prompt.length).toBeGreaterThan(0);
   });
 
   it("每个模板都带默认频率 cadence(每天)", () => {

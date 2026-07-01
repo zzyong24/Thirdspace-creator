@@ -166,7 +166,14 @@ import {
   DouyinNotLoggedInError,
   fetchDouyinVideoUrl,
   streamAudioFromVideo,
+  fetchDouyinWorkListExport,
 } from "@/server/ingestion/douyin-cdp";
+import {
+  parseDouyinWorkListXlsx,
+  matchDetailsToPublications,
+  toDetailMetricRecords,
+  type PublicationCatalogEntry,
+} from "@/server/ingestion/douyin-work-detail";
 import {
   runScheduledCollection,
   type Collector as ScheduledCollector,
@@ -3151,6 +3158,60 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         },
       });
       return { itemsNew: result.written, itemsUpdated: 0 };
+    },
+    // 作品明细导出(T-030-D8a,SPEC §9b):fetchDouyinWorkListExport(headless 复用 .auth/ →
+    // 导航数据中心作品分析 → 点「刷新数据」+「导出数据」→ 截 xlsx 校验 PK 头)→ parseDouyin
+    // WorkListXlsx(16 字段容错解析)→ 按 title/pub_date 匹配 publication(无 aweme_id 维度,
+    // 匹配不上跳过)→ toDetailMetricRecords → ingestMetrics(resolvePublication→appendSnapshot,
+    // rawMetrics 带完播/封面CTR/5s完播/2s跳出/主页访问 → 复盘核心指标从 0/fixture 变真)。
+    // 未登录 → DouyinNotLoggedInError(runner catch → needs_reconnect,§6);导出非 xlsx →
+    // DouyinExportError(普通失败)。itemsNew=真写入快照数;明细快照 append-only → itemsUpdated 0。
+    "self.detail": async (ctx, target) => {
+      const externalSourceId =
+        typeof target.externalSourceId === "string" && target.externalSourceId
+          ? target.externalSourceId
+          : "src-douyin-canonical";
+      const capturedAt = deps.now();
+      // 1) 抓导出 xlsx bytes(headless 复用扫码登录态;未登录/非 xlsx 抛,run 不建 → 快速失败)。
+      const bytes = await fetchDouyinWorkListExport({ authDir: douyinAuthDir });
+      // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
+      const details = await parseDouyinWorkListXlsx(bytes);
+      // 3) 装配作品目录(title + externalId=aweme_id + publishedAt),按 title/pub_date 匹配。
+      const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
+        limit: 500,
+      });
+      const catalog: PublicationCatalogEntry[] = pubs.map((p) => ({
+        id: p.id,
+        platform: p.platform,
+        title: p.title,
+        publishedAt: p.publishedAt,
+      }));
+      const externalIdById = new Map<string, string>();
+      for (const p of pubs) {
+        if (p.externalId) externalIdById.set(p.id, p.externalId);
+      }
+      const matches = matchDetailsToPublications(details, catalog);
+      // 4) 匹配上的明细 → MetricRecord[](未匹配 / 无 externalId 锚 → 跳过,诚实)。
+      const records = toDetailMetricRecords(
+        matches,
+        (pubId) => externalIdById.get(pubId) ?? null,
+        capturedAt,
+      );
+      if (records.length === 0) {
+        // 一条都没匹配上(作品未导入 / title 对不上)—— 不建空 run,诚实返 0(F3 边界)。
+        return { itemsNew: 0, itemsUpdated: 0 };
+      }
+      const run = await ingestionService.createRun(ctx, {
+        externalSourceId,
+        runType: "douyin_detail",
+        idempotencyKey: `${externalSourceId}:detail:${capturedAt}`,
+      });
+      const result = await ingestionService.ingestMetrics(ctx, {
+        runId: run.id,
+        records: records as unknown as Array<Record<string, unknown>>,
+      });
+      await ingestionService.completeRun(ctx, { runId: run.id });
+      return { itemsNew: result.recordsWritten, itemsUpdated: 0 };
     },
   };
 

@@ -340,13 +340,18 @@ describe("TemplateCards — 从模板入手", () => {
     expect(tpl.sourceKind).toBe("comments");
   });
 
-  it("灰置模板(D8a 明细)disabled,点不动", () => {
+  it("明细模板(T-030-D8a)已翻真:可点,pick 带 self.detail", () => {
     const onPick = vi.fn();
     render(<TemplateCards onPick={onPick} />);
     const detailCard = document.querySelector(
       '[data-template-id="daily-detail"]',
     ) as HTMLButtonElement;
-    expect(detailCard).toBeDisabled();
+    expect(detailCard).not.toBeDisabled();
+    fireEvent.click(detailCard);
+    expect(onPick).toHaveBeenCalledTimes(1);
+    const tpl = onPick.mock.calls[0]![0] as { sourceKind: string; id: string };
+    expect(tpl.id).toBe("daily-detail");
+    expect(tpl.sourceKind).toBe("self.detail");
   });
 });
 

@@ -95,6 +95,7 @@ function sourceKindOf(taskType: string): string {
 const SOURCE_LABEL: Record<string, string> = {
   "self.metrics": "抖音主页作品",
   comments: "抖音评论",
+  "self.detail": "抖音作品明细数据",
 };
 
 /**

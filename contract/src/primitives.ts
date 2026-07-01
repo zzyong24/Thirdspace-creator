@@ -155,9 +155,15 @@ export const cadenceFrequency = z.enum([
 
 // T-007 调度 Agent 作业(data-source-pipeline-design §4)。ScheduledJob 的数据源类别:
 // `self.metrics`=周期性刷自己主页作品+指标(复用 fetchDouyinMetrics),`comments`=周期性
-// 抓评论落 audience_signals(D2)。本期只这两源(对标已砍)。contract Zod 是唯一真值,
-// backend 表 source_kind 存 text、由这个 enum 校验。
-export const scheduledJobSourceKind = z.enum(["self.metrics", "comments"]);
+// 抓评论落 audience_signals(D2),`self.detail`=周期性拉创作者后台作品明细导出(16 字段:完播/
+// 封面CTR/5s完播/2s跳出/平均时长/主页访问/粉丝增量…)喂复盘核心指标(T-030-D8a,SPEC §9b)。
+// 对标(他人作品)已砍(T-031)。contract Zod 是唯一真值,backend 表 source_kind 存 text、
+// 由这个 enum 校验。
+export const scheduledJobSourceKind = z.enum([
+  "self.metrics",
+  "comments",
+  "self.detail",
+]);
 
 // JobRun 的调度触发记录状态(§4)。running=进行中;succeeded/failed=终态;
 // needs_reconnect=headless 复刷遇登录态过期(DouyinNotLoggedInError,§6),停跑等用户

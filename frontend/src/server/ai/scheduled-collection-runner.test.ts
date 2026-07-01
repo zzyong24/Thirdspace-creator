@@ -137,6 +137,42 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     );
   });
 
+  it("self.detail 源(T-030-D8a):taskType 路由到明细采集 collector,fake fetch+parse→ingest 被调", async () => {
+    // fake detail collector 模拟 fetchDouyinWorkListExport→parseDouyinWorkListXlsx→ingest 被调
+    // (返回真写入统计);测试只关心 runner 按 taskType 把明细路由到它,不碰真下载/解析。
+    const detailCollector = vi.fn(async () => ({ itemsNew: 7, itemsUpdated: 0 }));
+    const deps = makeDeps({
+      collectors: { "self.detail": detailCollector },
+    });
+    await runScheduledCollection(
+      ctx,
+      {
+        ...baseTask,
+        taskType: "scheduled.self.detail",
+        inputData: {
+          jobId: "job1",
+          jobRunId: "run1",
+          target: { externalSourceId: "src1" },
+        },
+      },
+      deps,
+    );
+    // 明细 collector 被调(带 target);其它 collector 不被调
+    expect(detailCollector).toHaveBeenCalledTimes(1);
+    expect(detailCollector).toHaveBeenCalledWith(ctx, { externalSourceId: "src1" });
+    // 合成 step 文案含明细源标签 + 新增条数
+    const stepArg = (deps.ai.recordStep as ReturnType<typeof vi.fn>).mock.calls[0][2];
+    expect(stepArg.text).toContain("抖音作品明细数据");
+    expect(stepArg.text).toContain("7");
+    // job_run 回填 succeeded + itemsNew=7
+    expect(deps.ai.markSucceeded).toHaveBeenCalledWith(ctx, "task1");
+    expect(deps.runs.updateRun).toHaveBeenCalledWith(
+      ctx,
+      "run1",
+      expect.objectContaining({ status: "succeeded", itemsNew: 7 }),
+    );
+  });
+
   it("未知 sourceKind(无 collector)→ 落 failed,不崩服务(finding-3 兜住)", async () => {
     const deps = makeDeps({ collectors: {} });
     await expect(
