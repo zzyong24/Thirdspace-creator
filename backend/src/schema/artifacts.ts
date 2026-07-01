@@ -33,6 +33,11 @@ export const artifacts = pgTable("artifacts", {
   title: text("title").notNull(),
   status: text("status").notNull().default("drafting"),
   archivedAt: text("archived_at"), // nullable → contract iso8601|null
+  // T-030-D4 (F1, SPEC §4.5): provenance of the CURRENT content. nullable —
+  // legacy rows are null ≡ treated as 'user'. 'reconstructed' marks an AI
+  // history-back-inference (auto-fill) that has NOT been user-confirmed; the
+  // §5 原则3/§9 铁律2 audit tag. Flips to 'user' once the user edits/confirms.
+  origin: text("origin"), // nullable → 'user' | 'reconstructed' | null
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -121,6 +126,7 @@ CREATE TABLE IF NOT EXISTS artifacts (
   title TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'drafting',
   archived_at TEXT,
+  origin TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

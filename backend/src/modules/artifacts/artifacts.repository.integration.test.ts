@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import {
   createArtifactRepository,
+  resolveNextOrigin,
   type ArtifactRepository,
 } from "./artifacts.repository";
 import { OwnershipError } from "./artifacts.errors";
@@ -212,5 +213,86 @@ describe("artifacts.repository — structured content (Step 2)", () => {
     const nodes = await repoA.getThesisNodes(versionId);
     expect(nodes).toHaveLength(1);
     expect(nodes[0]!.nodeType).toBe("root");
+  });
+});
+
+// F1 (T-030-D4, SPEC §4.5) — `artifacts.origin` provenance + lifecycle.
+// Test 5 (migration): the `origin` column exists after createDb() applies
+// migration 0010 (a round-trip write/read of origin proves the column).
+// Test 4 (lifecycle): a user edit (createdByType !== 'ai') flips a
+// 'reconstructed' artifact back to 'user'; an AI edit does NOT.
+describe("artifacts.repository — origin provenance (F1)", () => {
+  it("migration 0010: origin column round-trips (create with origin='reconstructed')", async () => {
+    const artifact = await repoA.create({
+      projectId: "p-recon",
+      title: "AI 反推研究",
+      artifactType: "research_note",
+      stage: "research",
+      origin: "reconstructed",
+    });
+    // Column exists + persisted (would throw on a missing column at migrate/insert).
+    expect(artifact.origin).toBe("reconstructed");
+    const reread = await repoA.requireArtifact(artifact.id);
+    expect(reread.origin).toBe("reconstructed");
+  });
+
+  it("create without origin defaults to null (≡ user-authored / legacy)", async () => {
+    const artifact = await makeArtifact(repoA);
+    expect(artifact.origin).toBeNull();
+  });
+
+  it("user edit flips a 'reconstructed' artifact's origin to 'user'", async () => {
+    const artifact = await repoA.create({
+      projectId: "p-recon",
+      title: "AI 反推策划",
+      artifactType: "content_contract",
+      stage: "planning",
+      origin: "reconstructed",
+    });
+    expect(artifact.origin).toBe("reconstructed");
+
+    // User edits it (new version, createdByType defaults to 'user') → confirmed.
+    await repoA.createVersion(artifact.id, {
+      contentText: "用户改过的策划",
+      changeSummary: "用户编辑",
+    });
+    const afterUserEdit = await repoA.requireArtifact(artifact.id);
+    expect(afterUserEdit.origin).toBe("user");
+  });
+
+  it("AI edit does NOT flip a 'reconstructed' artifact (only a user edit confirms)", async () => {
+    const artifact = await repoA.create({
+      projectId: "p-recon",
+      title: "AI 反推研究",
+      artifactType: "trend_analysis",
+      stage: "research",
+      origin: "reconstructed",
+    });
+    // An AI-authored version leaves origin as 'reconstructed' (AI never confirms).
+    await repoA.createVersion(artifact.id, {
+      contentText: "AI 又改了一版",
+      changeSummary: "ai",
+      createdByType: "ai",
+      aiTaskId: "ai-task-x",
+    });
+    const afterAiEdit = await repoA.requireArtifact(artifact.id);
+    expect(afterAiEdit.origin).toBe("reconstructed");
+  });
+
+  it("resolveNextOrigin: pure lifecycle table", () => {
+    // explicit request always wins
+    expect(resolveNextOrigin(null, "reconstructed", "ai")).toBe("reconstructed");
+    expect(resolveNextOrigin("reconstructed", "user", "ai")).toBe("user");
+    // user edit flips reconstructed → user
+    expect(resolveNextOrigin("reconstructed", undefined, "user")).toBe("user");
+    expect(resolveNextOrigin("reconstructed", undefined, undefined)).toBe("user");
+    // AI edit leaves reconstructed untouched
+    expect(resolveNextOrigin("reconstructed", undefined, "ai")).toBe(
+      "reconstructed",
+    );
+    // non-reconstructed origins are left as-is
+    expect(resolveNextOrigin("user", undefined, "user")).toBe("user");
+    expect(resolveNextOrigin(null, undefined, "user")).toBeNull();
+    expect(resolveNextOrigin(null, undefined, "ai")).toBeNull();
   });
 });

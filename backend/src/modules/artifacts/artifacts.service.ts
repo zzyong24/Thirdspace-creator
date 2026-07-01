@@ -69,6 +69,9 @@ export interface ArtifactsService {
       artifactType: string;
       stage: string;
       contentOutputId?: string | null;
+      // F1 (T-030-D4, SPEC §4.5): provenance. Default 'user' (null); auto-fill
+      // (reconstruct.project) MUST pass 'reconstructed'.
+      origin?: "user" | "reconstructed";
     },
   ): Promise<ArtifactRow>;
   createVersion(
@@ -80,6 +83,11 @@ export interface ArtifactsService {
       contentData?: Record<string, unknown>;
       createdByType?: string;
       aiTaskId?: string | null;
+      // F1 (T-030-D4): explicit provenance for this version's content. When
+      // omitted, createVersion applies the origin lifecycle (§4.5): a
+      // user-authored version (createdByType !== 'ai') flips a 'reconstructed'
+      // artifact back to 'user'; an AI version leaves origin untouched.
+      origin?: "user" | "reconstructed";
     },
   ): Promise<ArtifactVersionRow>;
   listVersions(
@@ -132,10 +140,14 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
     },
 
     async createArtifact(ctx, input) {
+      // origin threads straight to the repo (default null ≡ 'user'; auto-fill
+      // passes 'reconstructed' — F1, SPEC §4.5).
       return repoFor(ctx).create(input);
     },
 
     async createVersion(ctx, artifactId, input) {
+      // origin lifecycle (flip 'reconstructed'→'user' on user edit) is applied in
+      // the repo's createVersion (F1, SPEC §4.5); input.origin passes through.
       const version = await repoFor(ctx).createVersion(artifactId, input);
       // Post-commit (SPEC §11): re-index best-effort. A failure never rolls back
       // the version write — the index is derived data.

@@ -50,6 +50,9 @@ function toArtifactResource(row: ArtifactRow): ArtifactResource {
     title: row.title,
     status: row.status as ArtifactResource["status"],
     archivedAt: row.archivedAt ?? null,
+    // F1 (T-030-D4): surface provenance so consumers (F2) can distinguish an
+    // AI-reconstructed artifact from a user-confirmed one. Legacy null → null.
+    origin: (row.origin ?? null) as ArtifactResource["origin"],
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

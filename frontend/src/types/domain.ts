@@ -263,6 +263,9 @@ export interface Artifact extends BaseEntity, Timestamped {
   readonly title: string;
   readonly status: ArtifactStatus;
   readonly archivedAt: Iso8601 | null;
+  // T-030-D4 (F1): provenance of current content. null ≡ user-authored/legacy;
+  // "reconstructed" = AI history-back-inference (auto-fill), NOT user-confirmed.
+  readonly origin: "user" | "reconstructed" | null;
 }
 
 export interface ArtifactVersion extends BaseEntity {

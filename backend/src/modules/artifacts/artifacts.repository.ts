@@ -91,6 +91,7 @@ export interface ArtifactRepository {
     artifactType: string;
     stage: string;
     contentOutputId?: string | null;
+    origin?: "user" | "reconstructed";
   }): Promise<ArtifactRow>;
   createVersion(
     artifactId: string,
@@ -100,6 +101,7 @@ export interface ArtifactRepository {
       contentData?: Record<string, unknown>;
       createdByType?: string;
       aiTaskId?: string | null;
+      origin?: "user" | "reconstructed";
     },
   ): Promise<ArtifactVersionRow>;
   listVersions(artifactId: string): Promise<ArtifactVersionRow[]>;
@@ -115,6 +117,24 @@ export interface ArtifactRepository {
   ): Promise<void>;
   getScriptSections(artifactVersionId: string): Promise<ScriptSectionRow[]>;
   getThesisNodes(artifactVersionId: string): Promise<ThesisNodeRow[]>;
+}
+
+// F1 origin lifecycle resolver (T-030-D4, SPEC §4.5). Pure — decides the parent
+// artifact's `origin` when a NEW current version is minted.
+//   - explicit `requested` (auto-fill passes 'reconstructed') wins.
+//   - otherwise a user-authored version (createdByType !== 'ai') flips a
+//     'reconstructed' artifact back to 'user' (the user edited/confirmed the AI
+//     reconstruction → §7 边界② "方视为确认"). Non-reconstructed origins are left
+//     as-is; an AI-authored version never confirms, so origin is untouched.
+export function resolveNextOrigin(
+  current: string | null,
+  requested: "user" | "reconstructed" | undefined,
+  createdByType: string | undefined,
+): string | null {
+  if (requested !== undefined) return requested;
+  const isUserAuthored = (createdByType ?? "user") !== "ai";
+  if (isUserAuthored && current === "reconstructed") return "user";
+  return current;
 }
 
 export function createArtifactRepository(
@@ -219,6 +239,10 @@ export function createArtifactRepository(
         title: input.title,
         status: "drafting",
         archivedAt: null,
+        // F1 (T-030-D4, SPEC §4.5): provenance. Default null ≡ 'user'; auto-fill
+        // (reconstruct.project) passes 'reconstructed' as the §5 原则3/§9 铁律2
+        // audit tag for AI-history-reconstructed artifacts.
+        origin: input.origin ?? null,
         createdAt: now,
         updatedAt: now,
       });
@@ -235,14 +259,32 @@ export function createArtifactRepository(
 
     async createVersion(artifactId, input) {
       // Ownership gate: a cross-user / unknown id throws before any write.
-      await requireArtifact(artifactId);
+      const artifact = await requireArtifact(artifactId);
       const versionNumber = await nextVersionNumber(artifactId);
       const version = await insertVersion(artifactId, versionNumber, input);
       // Promotion is a parent-row pointer move; the version itself is never
       // mutated (append-only, data-model §9 rule 6).
+      //
+      // F1 origin lifecycle (T-030-D4, SPEC §4.5): the version carries content,
+      // the ROOT row carries `origin` (provenance of the CURRENT content). On a
+      // new current version we resolve the parent's origin:
+      //   - explicit `input.origin` → set it (auto-fill passes 'reconstructed').
+      //   - omitted + user-authored version (createdByType !== 'ai') that lands
+      //     on a 'reconstructed' artifact → FLIP to 'user' (the user edited/
+      //     confirmed the AI reconstruction; §7 边界② "方视为确认").
+      //   - omitted + AI version → leave origin untouched (AI edits don't confirm).
+      const nextOrigin = resolveNextOrigin(
+        artifact.origin,
+        input.origin,
+        input.createdByType,
+      );
       await db
         .update(artifacts)
-        .set({ currentVersionId: version.id, updatedAt: deps.now() })
+        .set({
+          currentVersionId: version.id,
+          origin: nextOrigin,
+          updatedAt: deps.now(),
+        })
         .where(and(eq(artifacts.id, artifactId), eq(artifacts.userId, userId)));
       return version;
     },

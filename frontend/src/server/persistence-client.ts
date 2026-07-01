@@ -192,6 +192,7 @@ import { runPositioningGenerate } from "@/server/ai/positioning-runner";
 import { runCopilotAssist } from "@/server/ai/copilot-runner";
 import { runAssetGenerate } from "@/server/ai/asset-generate-runner";
 import { runTranscribe } from "@/server/ai/transcribe-runner";
+import { runReconstruct } from "@/server/ai/reconstruct-runner";
 import { createLlmCompleter } from "@/server/ai/llm/provider";
 import { resolveLlmConfig } from "@/server/ai/llm/resolve";
 import {
@@ -723,6 +724,8 @@ function toArtifactRow(a: CanonicalArtifact, userId: string): ArtifactRow {
     title: a.title,
     status: a.status,
     archivedAt: a.archivedAt ?? null,
+    // F1 (T-030-D4): fixture artifacts predate `origin`; seed them null ≡ user.
+    origin: (a as { origin?: string | null }).origin ?? null,
     createdAt: a.createdAt,
     updatedAt: a.updatedAt,
   };
@@ -1780,6 +1783,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             return { structureType, opening, sections, ending, cta };
           },
         };
+        // F2 消费侧隔离 reader (T-030-D4, SPEC §7 边界②) — reports the origin of the
+        // project's current artifact of a given type so assembleCreativeContext can mark a
+        // reconstructed thesis/contract/outline brief "未经确认" before it rides downstream
+        // as a 已确认前提. Reuses the SAME public-service read (listProjectArtifacts →
+        // ArtifactRow.origin) the content readers use — no extra content fetch, no repo import.
+        const artifactOriginReader = {
+          getArtifactOrigin: async (
+            c: RequestContext,
+            projectId: string,
+            artifactType: string,
+          ): Promise<"user" | "reconstructed" | null> => {
+            const artifacts = await artifactsService.listProjectArtifacts(
+              c,
+              projectId,
+            );
+            const target = artifacts.find(
+              (a) => a.artifactType === artifactType,
+            );
+            const origin = target?.origin ?? null;
+            return origin === "reconstructed" || origin === "user"
+              ? origin
+              : null;
+          },
+        };
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
@@ -2140,6 +2167,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               thesis: thesisReader,
               contract: contractReader,
               outline: outlineReader,
+              // F2 (T-030-D4):策划产物若是 AI 历史反推(origin='reconstructed'),把注入 script.draft
+              // 的论点树/合同/结构方案 brief 显式标「未经确认」,脚本不静默当已确认蓝图。
+              artifactOrigin: artifactOriginReader,
               // 立项画幅(横/竖屏)→ script.draft 据此调钩子与时长(SKL-01/02 下游赋能)。
               brief: {
                 getBriefDetail: async (c, projectId) => {
@@ -2210,6 +2240,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               positioning: positioningReader,
               learnings: learningsReader,
               thesis: thesisReader,
+              // F2:反推论点树注入内容合同上下文时标「未经确认」。
+              artifactOrigin: artifactOriginReader,
               // Vercel AI SDK 路径(弃 LlmCompleter):内容合同节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },
@@ -2238,6 +2270,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               learnings: learningsReader,
               thesis: thesisReader,
               contract: contractReader,
+              // F2:反推论点树/合同注入结构方案上下文时标「未经确认」。
+              artifactOrigin: artifactOriginReader,
               // Vercel AI SDK 路径(弃 LlmCompleter):结构方案节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },
@@ -2495,6 +2529,159 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   createArtifactVersion: (cc, artifactId, versionInput) =>
                     artifactsService.createVersion(cc, artifactId, versionInput),
                 }),
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "reconstruct.project" &&
+          task.status === "queued"
+        ) {
+          // 作品初始化 auto-fill 重建 node(reconstruct.project, T-030-D4, SPEC §4.5/§6/§7)——
+          // 仅 source='imported' 的已发布作品:逐字稿(D3)+ 真实指标 + 定位 → runStructuredNode
+          // 产 { research, planning } → 物化 research(trend_analysis)+ planning(thesis_tree),
+          // **均 origin='reconstructed'**(F1)。§5 守卫:runner 断言仅 imported,manual/topic 不触发。
+          // 确定性终态 runner(不产候选、不过采纳门,§6.1 明确不走 candidate 确认路径)。端口全注入。
+          void runReconstruct(
+            ctx,
+            {
+              id: String(task.id),
+              taskType: task.taskType,
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: {
+                markRunning: (c, id) => aiService.markRunning(c, id),
+                recordStep: (c, id, stepInput) =>
+                  aiService.recordStep(c, id, stepInput),
+                markSucceeded: (c, id) => aiService.markSucceeded(c, id),
+                markFailed: (c, id, err) => aiService.markFailed(c, id, err),
+              },
+              positioning: positioningReader,
+              learnings: learningsReader,
+              resolveModelSpec,
+              // §5 守卫(边界①):读该项目 source,断言仅 imported(非 imported → runner markFailed 不写)。
+              getProjectSource: async (c, projectId) => {
+                try {
+                  const row = await projectsRepo.get(c, projectId);
+                  return row.source ?? null;
+                } catch {
+                  return null; // 读不到 → runner 视为非 imported → 失败,不误触发
+                }
+              },
+              // 读该作品逐字稿(D3 绑的 output_script transcript artifact 当前版本 contentText/
+              // contentData.transcript)。走公开 service(listProjectArtifacts)+ per-ctx repo getVersion。
+              getTranscript: async (c, projectId) => {
+                const rows = await artifactsService.listProjectArtifacts(
+                  c,
+                  projectId,
+                );
+                const repo = createArtifactRepository(db, {
+                  ...deps,
+                  userId: c.userId,
+                });
+                for (const r of rows) {
+                  if (r.artifactType !== "output_script") continue;
+                  if (!r.currentVersionId) continue;
+                  const version = await repo.getVersion(r.currentVersionId);
+                  const data = version.contentData as
+                    | Record<string, unknown>
+                    | null
+                    | undefined;
+                  const t =
+                    data && typeof data.transcript === "string"
+                      ? data.transcript
+                      : version.contentText;
+                  if (t && t.trim()) return t;
+                }
+                return null;
+              },
+              // 读该作品真实指标摘要(digg/comment/play 等)——解析项目 publications → 最新 snapshot
+              // 的 rawMetrics(views/likes/comments/...)→ 人类可读串喂给模型(数据是真实值,模型不改)。
+              getMetricsSummary: async (c, projectId) => {
+                try {
+                  const outputIds =
+                    await projectsService.listOutputIdsByProject(c, projectId);
+                  const merged = new Map<string, number>();
+                  for (const outputId of outputIds) {
+                    let pubs: Array<{ id: string }> = [];
+                    try {
+                      pubs = await publishingService.listPublications(
+                        c,
+                        outputId,
+                        { limit: 20, offset: 0 },
+                      );
+                    } catch {
+                      pubs = [];
+                    }
+                    for (const pub of pubs) {
+                      try {
+                        const page =
+                          await analyticsService.getPublicationAnalytics(
+                            c,
+                            pub.id,
+                            1,
+                            10,
+                          );
+                        const latest = page.rows
+                          .slice()
+                          .sort((a, b) =>
+                            b.capturedAt.localeCompare(a.capturedAt),
+                          )[0];
+                        const raw = (latest?.rawMetrics ?? {}) as Record<
+                          string,
+                          unknown
+                        >;
+                        for (const [k, v] of Object.entries(raw)) {
+                          if (typeof v === "number" && Number.isFinite(v)) {
+                            merged.set(k, v);
+                          }
+                        }
+                      } catch {
+                        /* single publication read failing → skip, never crash */
+                      }
+                    }
+                  }
+                  if (merged.size === 0) return "";
+                  const LABELS: Record<string, string> = {
+                    views: "播放",
+                    plays: "播放",
+                    likes: "点赞",
+                    digg: "点赞",
+                    comments: "评论",
+                    shares: "分享",
+                    favorites: "收藏",
+                    finish_rate: "完播率",
+                  };
+                  return Array.from(merged.entries())
+                    .map(([k, v]) => `${LABELS[k] ?? k}：${v}`)
+                    .join(" · ");
+                } catch {
+                  return "";
+                }
+              },
+              // 物化重建产物 —— createArtifact(origin='reconstructed')+ createVersion 写内容
+              // (createdByType='ai' + 显式 origin='reconstructed';F1 强制,消费侧靠 origin 隔离)。
+              artifacts: {
+                materializeReconstructed: async (c, matInput) => {
+                  const artifact = await artifactsService.createArtifact(c, {
+                    projectId: matInput.projectId,
+                    title: matInput.title,
+                    artifactType: matInput.artifactType,
+                    stage: matInput.stage,
+                    origin: "reconstructed",
+                  });
+                  await artifactsService.createVersion(c, artifact.id, {
+                    contentText: matInput.contentText,
+                    contentData: matInput.contentData,
+                    changeSummary: "AI 历史反推重建",
+                    createdByType: "ai",
+                    origin: "reconstructed",
+                  });
+                  return { id: artifact.id };
+                },
+              },
             },
           );
         } else if (

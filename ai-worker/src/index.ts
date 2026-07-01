@@ -223,6 +223,13 @@ export {
   researchMaterialSchema,
   type ResearchMaterialOutput,
 } from "./prompt/templates/research-gather";
+// T-030-D4:作品初始化 auto-fill 重建 skill —— imported 作品逐字稿 + 真实指标 → { research, planning }
+// 重建包(标 origin='reconstructed')。schema 定义在本包(有 zod);frontend runner 引它绑 generateObject。
+export {
+  RECONSTRUCT_PROJECT_TEMPLATE,
+  reconstructProjectSchema,
+  type ReconstructProjectOutput,
+} from "./prompt/templates/reconstruct-project";
 // 通用模板节点 —— 6 个无工具纯生成 runner 共用(bindPrompt → runAgentNode → {text, steps})。
 export {
   runTemplatedNode,

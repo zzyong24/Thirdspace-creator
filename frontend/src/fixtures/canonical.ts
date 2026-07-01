@@ -959,7 +959,10 @@ const artifactVersions: ArtifactVersion[] = [
   },
 ];
 
-const artifacts: Artifact[] = [
+// T-030-D4 (F1): fixtures predate `artifacts.origin`; they are all user-authored
+// canonical seed → default `origin: null` (≡ user). Declared without `origin` on each
+// literal (Omit) then filled here, so the 12 rows stay terse.
+const artifactSeeds: Array<Omit<Artifact, "origin">> = [
   {
     id: "artifact-ainativebrowser-project-idea",
     projectId: "project-ainativebrowser",
@@ -1117,6 +1120,8 @@ const artifacts: Artifact[] = [
     archivedAt: null,
   },
 ];
+// Fill the F1 default (origin: null ≡ user) onto every seed → real Artifact[].
+const artifacts: Artifact[] = artifactSeeds.map((a) => ({ ...a, origin: null }));
 
 const artifactRelations: ArtifactRelation[] = [
   {

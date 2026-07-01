@@ -193,6 +193,22 @@ export interface ProjectBriefReader {
   ): Promise<{ orientation?: "landscape" | "portrait" } | null>;
 }
 
+// F2 消费侧隔离 reader (T-030-D4, SPEC §7 边界②) — reports the `origin` of a project's
+// current artifact of a given type. The thesis/contract/outline briefs above are injected
+// downstream as "用户已确认的前提" (已搭好的论点树 / 已确认的内容合同 / 结构方案蓝图). When the
+// backing artifact is AI-history-reconstructed (origin='reconstructed'), we MUST NOT let a
+// downstream node silently treat it as confirmed — the brief is prefixed with an explicit
+// "AI 历史反推、未经确认" marker (see markReconstructedBrief). Optional: bound to the Artifacts
+// public service (reuses listProjectArtifacts → ArtifactRow.origin, no extra content fetch);
+// nodes without it degrade to the legacy (unmarked) behavior.
+export interface ArtifactOriginReader {
+  getArtifactOrigin(
+    ctx: RequestContext,
+    projectId: string,
+    artifactType: string,
+  ): Promise<"user" | "reconstructed" | null>;
+}
+
 export interface ContextDeps {
   positioning: PositioningReader;
   learnings?: LearningsReader;
@@ -204,6 +220,30 @@ export interface ContextDeps {
   contract?: ContractReader;
   outline?: OutlineReader;
   brief?: ProjectBriefReader;
+  // F2 (T-030-D4): reports origin of the thesis_tree / content_contract /
+  // content_outline artifacts so reconstructed briefs get an explicit "未经确认"
+  // marker before they ride downstream as confirmed premises. Optional.
+  artifactOrigin?: ArtifactOriginReader;
+}
+
+// F2 (SPEC §7 边界②): the artifactType each 已确认前提 brief is read back from. Used to
+// look up origin and mark a reconstructed brief. Kept next to the readers so the mapping
+// (brief → backing artifact) is explicit and testable.
+export const THESIS_ARTIFACT_TYPE = "thesis_tree";
+export const CONTRACT_ARTIFACT_TYPE = "content_contract";
+export const OUTLINE_ARTIFACT_TYPE = "content_outline";
+
+// F2: prefix a non-empty brief with an explicit "AI 历史反推、未经确认" marker when its
+// backing artifact is origin='reconstructed'. Empty briefs stay empty (nothing to mark).
+// This is the消费侧 guard: a downstream node still SEES the reconstructed context (it is
+// useful), but can never mistake it for a user-confirmed premise. Pure/deterministic.
+export function markReconstructedBrief(
+  brief: string,
+  origin: "user" | "reconstructed" | null | undefined,
+): string {
+  if (!brief) return brief;
+  if (origin !== "reconstructed") return brief;
+  return `⚠️ 以下内容为 AI 依据这条历史作品反推、**未经你确认**，仅供参考，不要当作已敲定的前提：\n${brief}`;
 }
 
 export interface AssembleInput {
@@ -293,11 +333,31 @@ export async function assembleCreativeContext(
     }
   }
 
+  // F2 (SPEC §7 边界②): resolve the origin of each 已确认前提 artifact so a reconstructed
+  // brief is explicitly marked "未经确认" below. Best-effort — a missing/failed origin read
+  // degrades to unmarked (legacy) rather than blocking the node. Reused across the three
+  // briefs so we look up origin at most once per artifactType.
+  const originOf = async (artifactType: string) => {
+    if (!deps.artifactOrigin || !input.projectId) return null;
+    try {
+      return await deps.artifactOrigin.getArtifactOrigin(
+        ctx,
+        input.projectId,
+        artifactType,
+      );
+    } catch {
+      return null;
+    }
+  };
+
   let thesisBrief = "";
   if (deps.thesis && input.projectId) {
     try {
       const nodes = await deps.thesis.getThesisNodes(ctx, input.projectId);
-      thesisBrief = formatThesisNodes(nodes);
+      thesisBrief = markReconstructedBrief(
+        formatThesisNodes(nodes),
+        await originOf(THESIS_ARTIFACT_TYPE),
+      );
     } catch {
       thesisBrief = ""; // 论点树 is best-effort context; never block a node on it
     }
@@ -307,10 +367,13 @@ export async function assembleCreativeContext(
   if (deps.contract && input.projectId) {
     try {
       const cards = await deps.contract.getContractCards(ctx, input.projectId);
-      contractBrief = cards
-        .map((c) => `· ${c.title.trim()}：${c.body.trim()}`)
-        .filter((line) => line.length > 3)
-        .join("\n");
+      contractBrief = markReconstructedBrief(
+        cards
+          .map((c) => `· ${c.title.trim()}：${c.body.trim()}`)
+          .filter((line) => line.length > 3)
+          .join("\n"),
+        await originOf(CONTRACT_ARTIFACT_TYPE),
+      );
     } catch {
       contractBrief = ""; // 内容合同 is best-effort context; never block a node on it
     }
@@ -322,7 +385,12 @@ export async function assembleCreativeContext(
   if (deps.outline && input.projectId) {
     try {
       const outline = await deps.outline.getOutline(ctx, input.projectId);
-      outlineBrief = outline ? formatOutline(outline) : "";
+      outlineBrief = outline
+        ? markReconstructedBrief(
+            formatOutline(outline),
+            await originOf(OUTLINE_ARTIFACT_TYPE),
+          )
+        : "";
     } catch {
       outlineBrief = ""; // 结构方案 is best-effort context; never block a node on it
     }

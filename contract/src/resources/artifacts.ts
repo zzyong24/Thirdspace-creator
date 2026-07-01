@@ -59,6 +59,12 @@ export const artifactResource = z.object({
   title: z.string(),
   status: artifactStatus,
   archivedAt: iso8601.nullable(),
+  // T-030-D4 (F1, SPEC §4.5): provenance of the CURRENT content. null ≡ legacy /
+  // user-authored; "reconstructed" = AI history-back-inference (auto-fill) NOT yet
+  // user-confirmed — the §5 原则3/§9 铁律2 audit tag. Consumers that treat an
+  // artifact as a "user-confirmed premise" (F2, §7) MUST NOT silently consume a
+  // "reconstructed" artifact as confirmed.
+  origin: z.enum(["user", "reconstructed"]).nullable(),
   ...timestamps,
 });
 export type ArtifactResource = z.infer<typeof artifactResource>;
