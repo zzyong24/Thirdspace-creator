@@ -82,8 +82,44 @@ export interface ScheduledCollectionTask {
   inputData: Record<string, unknown>; // { jobId, jobRunId, target }
 }
 
+// 未登录/登录过期的人话引导(T-032b ②):明确指去「设置 → 账户」扫码登录,别留空/泛化。
+// 「登录抖音」按钮在任务中心 needs_reconnect 行也在(D4),两处入口都提;主动初次绑定入口在设置。
 const NEEDS_RECONNECT_ERROR =
-  "需重连 Chrome:登录态过期,请在任务中心点「登录抖音」扫码";
+  "抖音登录态未连接或已过期,请去「设置 → 账户」扫码登录(或点本行「登录抖音」)后再采集。";
+
+/** 把采集器抛的原始异常转成人话 run.error(T-032b ②:别把裸英文 stack/技术串塞给用户)。
+ *  未登录已在 catch 分支单独走 NEEDS_RECONNECT_ERROR,这里只管其它失败:取音频/网络/解析等,
+ *  尽量给可读原因 + 提示。识别不出的具体类型 → 保留原始 message(仍比空好),前缀点明"采集失败"。 */
+function humanizeCollectError(err: unknown, label: string): string {
+  const raw = err instanceof Error ? err.message : String(err ?? "");
+  const lower = raw.toLowerCase();
+  // 网络/超时类:抓取时最常见的非登录失败。
+  if (
+    lower.includes("timeout") ||
+    lower.includes("timed out") ||
+    lower.includes("net::") ||
+    lower.includes("econnrefused") ||
+    lower.includes("enotfound") ||
+    lower.includes("socket hang up") ||
+    lower.includes("navigation")
+  ) {
+    return `采集${label}失败:网络或页面加载超时,请检查网络后重试(原始信息:${raw})。`;
+  }
+  // 取音频/转写失败(逐字稿链路 ffmpeg / 直链)。
+  if (
+    lower.includes("ffmpeg") ||
+    lower.includes("audio") ||
+    lower.includes("stream") ||
+    lower.includes("transcribe")
+  ) {
+    return `采集${label}失败:取音频/转写环节出错(原始信息:${raw})。`;
+  }
+  // 导出非 xlsx(登录态过期时抖音返 JSON/HTML)——虽多半也是登录问题,但归类为普通失败时给引导。
+  if (lower.includes("export") || lower.includes("xlsx") || lower.includes("pk")) {
+    return `采集${label}失败:导出数据异常,可能是登录态过期,建议去「设置 → 账户」重新扫码登录后重试(原始信息:${raw})。`;
+  }
+  return `采集${label}失败:${raw || "未知错误"}。`;
+}
 
 /** taskType `scheduled.self.metrics` → sourceKind `self.metrics`。 */
 function sourceKindOf(taskType: string): string {
@@ -165,8 +201,8 @@ export async function runScheduledCollection(
         /* task may already be terminal */
       }
     } else {
-      const message =
-        err instanceof Error ? err.message : String(err ?? "unknown error");
+      // 人话文案(T-032b ②):取音频/网络/导出等具体归类 + 保留原始信息,别塞裸 stack。
+      const message = humanizeCollectError(err, label);
       runStatus = "failed";
       runError = message;
       try {

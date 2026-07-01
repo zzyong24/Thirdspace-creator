@@ -129,10 +129,11 @@ const RUN_STATUS_META: Record<
   { label: string; icon: LucideIcon; tone: string }
 > = {
   running: { label: "运行中", icon: Loader2, tone: "text-brand" },
-  succeeded: { label: "正常", icon: CheckCircle2, tone: "text-emerald-600" },
+  succeeded: { label: "完成", icon: CheckCircle2, tone: "text-emerald-600" },
   failed: { label: "失败", icon: AlertTriangle, tone: "text-destructive" },
+  // needs_reconnect 醒目:琥珀强调 + 边框底色(T-032b ③),让用户一眼知道要去扫码,别当普通失败略过。
   needs_reconnect: {
-    label: "需重连 Chrome",
+    label: "需重连抖音",
     icon: RefreshCw,
     tone: "text-amber-600",
   },
@@ -146,6 +147,31 @@ function runStatusMeta(status: string) {
       tone: "text-muted-foreground",
     }
   );
+}
+
+// 一次运行的结果文案(T-032b ③):按 status + itemsNew 分档,替死板的「新增 N · 更新 M」。
+// 核心是区分 succeeded-0(已完成·无新数据,别显得像失败)vs needs_reconnect(去扫码)vs failed(显真因)。
+function runResultText(run: {
+  status: string;
+  itemsNew: number;
+  itemsUpdated: number;
+  error: string | null;
+}): string {
+  switch (run.status) {
+    case "running":
+      return "采集进行中…";
+    case "succeeded":
+      // 已登录、跑完:有新数据报新增;0 条是正常结果(作品本就可能没新增/无新评论),不显得像失败。
+      return run.itemsNew > 0
+        ? `✅ 新增 ${run.itemsNew} 条${run.itemsUpdated > 0 ? ` · 更新 ${run.itemsUpdated} 条` : ""}`
+        : "✅ 已完成 · 无新数据";
+    case "needs_reconnect":
+      return "⚠️ 需重连抖音 —— 去扫码登录";
+    case "failed":
+      return run.error ? `❌ 失败:${run.error}` : "❌ 失败";
+    default:
+      return `新增 ${run.itemsNew} · 更新 ${run.itemsUpdated}`;
+  }
 }
 
 // ── 时间格式(与项目列表页一致的紧凑相对时刻,但这里给绝对更适合"下次运行")──────
@@ -241,7 +267,7 @@ export function JobRow({
               className="inline-flex w-fit items-center gap-1 text-[11px] font-medium text-amber-600"
             >
               <AlertTriangle className="size-3" />
-              需重连 Chrome
+              需重连抖音 —— 去扫码登录
             </span>
           ) : (
             <span className="truncate text-[11px] text-muted-foreground">
@@ -1031,8 +1057,18 @@ export function RunDetailDialog({
                       <span className="text-xs text-muted-foreground tabular-nums">
                         {formatDateTime(run.startedAt)}
                       </span>
-                      <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">
-                        新增 {run.itemsNew} · 更新 {run.itemsUpdated}
+                      <span
+                        data-slot="automation-run-result"
+                        className={cn(
+                          "ml-auto text-[11px] tabular-nums",
+                          run.status === "needs_reconnect"
+                            ? "font-medium text-amber-600"
+                            : run.status === "failed"
+                              ? "text-destructive"
+                              : "text-muted-foreground",
+                        )}
+                      >
+                        {runResultText(run)}
                       </span>
                     </button>
 
@@ -1040,7 +1076,17 @@ export function RunDetailDialog({
                     {isSelected ? (
                       <div className="border-t border-border px-3 py-3">
                         {run.error ? (
-                          <p className="mb-2 rounded bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive">
+                          // needs_reconnect 用琥珀(引导去扫码,别当失败),其它失败用红。文案由 runner
+                          // 写人话(T-032b ②:未登录含「设置 → 账户」扫码引导;取音频/网络给具体原因)。
+                          <p
+                            data-slot="automation-run-error"
+                            className={cn(
+                              "mb-2 rounded px-2 py-1.5 text-[11px]",
+                              run.status === "needs_reconnect"
+                                ? "bg-amber-500/10 text-amber-700"
+                                : "bg-destructive/10 text-destructive",
+                            )}
+                          >
                             {run.error}
                           </p>
                         ) : null}

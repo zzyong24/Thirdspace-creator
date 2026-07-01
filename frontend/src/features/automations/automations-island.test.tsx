@@ -420,14 +420,14 @@ describe("AutomationsIsland — 新建接线", () => {
 });
 
 describe("D4 — needs_reconnect 行:红标 + 登录抖音恢复", () => {
-  it("最近 run 是 needs_reconnect → 行显「需重连 Chrome」+「登录抖音」(非「立即运行」)", async () => {
+  it("最近 run 是 needs_reconnect → 行显「需重连抖音」+「登录抖音」(非「立即运行」)", async () => {
     // island 挂载批量拉 latestRuns(每 job limit 1)→ 返回 needs_reconnect。
     mockClient.listJobRunsByJob.mockResolvedValue([
-      makeRun({ status: "needs_reconnect", aiTaskId: null, error: "需重连 Chrome:登录态过期" }),
+      makeRun({ status: "needs_reconnect", aiTaskId: null, error: "抖音登录态未连接或已过期,请去「设置 → 账户」扫码登录" }),
     ]);
     render(<AutomationsIsland jobs={[makeJob({ id: "job-nr", enabled: true })]} />);
     await waitFor(() =>
-      expect(screen.getByText("需重连 Chrome")).toBeInTheDocument(),
+      expect(screen.getByText(/需重连抖音/)).toBeInTheDocument(),
     );
     // 该行换成「登录抖音」,没有「立即运行」
     expect(screen.getByTestId("automation-login-douyin")).toBeInTheDocument();
@@ -481,14 +481,14 @@ describe("RunDetailDialog — 运行详情读 runs + steps", () => {
     await waitFor(() =>
       expect(mockClient.listJobRunsByJob).toHaveBeenCalledTimes(1),
     );
-    // run 行渲染(状态中文 + 新增/更新计数)
+    // run 行渲染(状态中文 + 结果文案:succeeded 有新数据 → ✅ 新增 N 条)
     await waitFor(() =>
-      expect(screen.getByText("正常")).toBeInTheDocument(),
+      expect(screen.getByText("完成")).toBeInTheDocument(),
     );
-    expect(screen.getByText(/新增 3 · 更新 2/)).toBeInTheDocument();
+    expect(screen.getByText(/✅ 新增 3 条 · 更新 2 条/)).toBeInTheDocument();
 
     // 点 run → 读 steps
-    fireEvent.click(screen.getByText("正常"));
+    fireEvent.click(screen.getByText("完成"));
     await waitFor(() =>
       expect(mockClient.listTaskSteps).toHaveBeenCalledTimes(1),
     );
@@ -512,13 +512,84 @@ describe("RunDetailDialog — 运行详情读 runs + steps", () => {
     );
   });
 
-  it("needs_reconnect 状态映射为「需重连 Chrome」", async () => {
+  it("needs_reconnect 状态映射为「需重连抖音」", async () => {
     mockClient.listJobRunsByJob.mockResolvedValueOnce([
-      makeRun({ status: "needs_reconnect", aiTaskId: null, error: "需重连 Chrome:登录态过期" }),
+      makeRun({ status: "needs_reconnect", aiTaskId: null, error: "抖音登录态未连接或已过期,请去「设置 → 账户」扫码登录" }),
     ]);
     render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
     await waitFor(() =>
-      expect(screen.getByText("需重连 Chrome")).toBeInTheDocument(),
+      expect(screen.getByText("需重连抖音")).toBeInTheDocument(),
     );
   });
 });
+
+// T-032b ③:采集反馈 UX 做真 —— 结果文案按 status + itemsNew 分档(测 4)。
+describe("T-032b — 采集反馈结果文案分档", () => {
+  it("succeeded 且 itemsNew=0 → 「✅ 已完成 · 无新数据」(不显得像失败)", async () => {
+    mockClient.listJobRunsByJob.mockResolvedValueOnce([
+      makeRun({ status: "succeeded", itemsNew: 0, itemsUpdated: 0 }),
+    ]);
+    render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
+    await waitFor(() =>
+      expect(screen.getByText(/已完成 · 无新数据/)).toBeInTheDocument(),
+    );
+    // 诚实:状态徽标是「完成」,不是失败/需重连
+    expect(screen.getByText("完成")).toBeInTheDocument();
+    expect(screen.queryByText("失败")).not.toBeInTheDocument();
+    expect(screen.queryByText("需重连抖音")).not.toBeInTheDocument();
+  });
+
+  it("succeeded 且 itemsNew>0 → 「✅ 新增 N 条」", async () => {
+    mockClient.listJobRunsByJob.mockResolvedValueOnce([
+      makeRun({ status: "succeeded", itemsNew: 5, itemsUpdated: 0 }),
+    ]);
+    render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
+    await waitFor(() =>
+      expect(screen.getByText(/✅ 新增 5 条/)).toBeInTheDocument(),
+    );
+    // 无更新时不缀「· 更新 0 条」
+    expect(screen.queryByText(/更新 0 条/)).not.toBeInTheDocument();
+  });
+
+  it("needs_reconnect → 行显「⚠️ 需重连抖音 —— 去扫码登录」+ error 用琥珀(非红失败色)", async () => {
+    mockClient.listJobRunsByJob.mockResolvedValueOnce([
+      makeRun({
+        status: "needs_reconnect",
+        aiTaskId: null,
+        error: "抖音登录态未连接或已过期,请去「设置 → 账户」扫码登录(或点本行「登录抖音」)后再采集。",
+      }),
+    ]);
+    render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
+    await waitFor(() =>
+      expect(screen.getByText(/需重连抖音 —— 去扫码登录/)).toBeInTheDocument(),
+    );
+    // 选中该 run → error 文案用琥珀底(data-slot=automation-run-error),不是红失败色
+    fireEvent.click(screen.getByText("需重连抖音"));
+    await waitFor(() => {
+      const errEl = document.querySelector(
+        '[data-slot="automation-run-error"]',
+      ) as HTMLElement;
+      expect(errEl).not.toBeNull();
+      expect(errEl.className).toContain("amber");
+      expect(errEl.textContent).toContain("设置 → 账户");
+    });
+  });
+
+  it("failed → 行显「❌ 失败:{error}」(显真因)", async () => {
+    mockClient.listJobRunsByJob.mockResolvedValueOnce([
+      makeRun({
+        status: "failed",
+        itemsNew: 0,
+        itemsUpdated: 0,
+        error: "采集抖音评论失败:网络或页面加载超时,请检查网络后重试。",
+      }),
+    ]);
+    render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
+    await waitFor(() =>
+      expect(screen.getByText(/❌ 失败:采集抖音评论失败/)).toBeInTheDocument(),
+    );
+  });
+});
+
+// D4 needs_reconnect 行的「登录抖音」按钮已在上面「D4」describe 覆盖(latestRun=needs_reconnect
+// → 换按钮),这里的结果文案测与之互补。

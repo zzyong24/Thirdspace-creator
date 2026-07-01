@@ -90,17 +90,21 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     await runScheduledCollection(ctx, baseTask, deps);
 
     expect(deps.ai.markSucceeded).not.toHaveBeenCalled();
-    expect(deps.ai.markFailed).toHaveBeenCalledWith(ctx, "task1", "boom");
+    // T-032b ②:error 走人话包装(前缀「采集{label}失败」+ 保留原始信息「boom」),不再是裸串
+    const failedArg = (deps.ai.markFailed as ReturnType<typeof vi.fn>).mock
+      .calls[0][2] as string;
+    expect(failedArg).toContain("boom");
+    expect(failedArg).toContain("采集抖音主页作品失败");
     // 关键:job_run 落终态 failed + finished_at,不悬挂在 running
     expect(deps.runs.updateRun).toHaveBeenCalledTimes(1);
     const patch = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock
       .calls[0][2];
     expect(patch.status).toBe("failed");
-    expect(patch.error).toBe("boom");
+    expect(patch.error).toContain("boom");
     expect(patch.finishedAt).toBe("2026-07-01T00:00:00.000Z");
   });
 
-  it("§6:未登录异常 → job_run 落 needs_reconnect(非普通 failed)", async () => {
+  it("§6:未登录异常 → job_run 落 needs_reconnect(非普通 failed)+ error 含「设置 → 账户」扫码引导", async () => {
     class NotLoggedIn extends Error {}
     const deps = makeDeps({
       collectors: {
@@ -115,8 +119,85 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     const patch = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock
       .calls[0][2];
     expect(patch.status).toBe("needs_reconnect");
-    expect(patch.error).toContain("需重连 Chrome");
+    // T-032b ②:人话引导(去「设置 → 账户」扫码),不留空/泛化
+    expect(patch.error).toContain("设置 → 账户");
+    expect(patch.error).toContain("扫码登录");
     expect(deps.ai.markFailed).toHaveBeenCalled(); // task 也落诚实终态
+  });
+
+  // T-032b 测 1:评论无登录 → runner 置 needs_reconnect(核查①的守卫,链路完好的确定性证明)。
+  // fake comments collector 抛「未登录」(host 里就是 fetchDouyinComments 开头的 DouyinNotLoggedInError)。
+  it("测1·评论无登录:comments collector 抛 DouyinNotLoggedInError → needs_reconnect + 扫码引导", async () => {
+    class DouyinNotLoggedInError extends Error {
+      constructor() {
+        super("未检测到抖音创作者中心登录态,请先扫码登录");
+        this.name = "DouyinNotLoggedInError";
+      }
+    }
+    const deps = makeDeps({
+      collectors: {
+        comments: vi.fn(async () => {
+          throw new DouyinNotLoggedInError();
+        }),
+      },
+      isNotLoggedInError: (e) => e instanceof DouyinNotLoggedInError,
+    });
+    await runScheduledCollection(
+      ctx,
+      { ...baseTask, taskType: "scheduled.comments" },
+      deps,
+    );
+    const patch = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock
+      .calls[0][2];
+    expect(patch.status).toBe("needs_reconnect");
+    expect(patch.error).toContain("设置 → 账户");
+    // 关键:未登录不是普通 failed,itemsNew 保持 0(没抓到任何东西)
+    expect(patch.itemsNew).toBe(0);
+  });
+
+  // T-032b 测 2:评论已登录但 0 条 → succeeded itemsNew=0(**不是 needs_reconnect**,防误报「需重连」)。
+  // 红线:作品本就可能 0 评论,绝不能因「抓到 0 条」就当未登录。
+  it("测2·评论已登录 0 条:comments collector 返 {itemsNew:0}(不抛)→ succeeded itemsNew=0(非 needs_reconnect)", async () => {
+    const deps = makeDeps({
+      collectors: {
+        comments: vi.fn(async () => ({ itemsNew: 0, itemsUpdated: 0 })),
+      },
+      // 关键:isNotLoggedInError 永远 false(collector 没抛,已登录)
+      isNotLoggedInError: () => false,
+    });
+    await runScheduledCollection(
+      ctx,
+      { ...baseTask, taskType: "scheduled.comments" },
+      deps,
+    );
+    const patch = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock
+      .calls[0][2];
+    expect(patch.status).toBe("succeeded"); // 不是 needs_reconnect!
+    expect(patch.itemsNew).toBe(0);
+    expect(deps.ai.markSucceeded).toHaveBeenCalled();
+    expect(deps.ai.markFailed).not.toHaveBeenCalled();
+  });
+
+  // T-032b 测 3(runner 侧):普通失败(取音频/网络)→ error 是人话,不塞裸 stack。
+  it("测3·普通失败人话:网络超时 → error 归类为「网络或页面加载超时」并保留原始信息", async () => {
+    const deps = makeDeps({
+      collectors: {
+        comments: vi.fn(async () => {
+          throw new Error("net::ERR_CONNECTION_TIMED_OUT at goto");
+        }),
+      },
+      isNotLoggedInError: () => false,
+    });
+    await runScheduledCollection(
+      ctx,
+      { ...baseTask, taskType: "scheduled.comments" },
+      deps,
+    );
+    const patch = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock
+      .calls[0][2];
+    expect(patch.status).toBe("failed");
+    expect(patch.error).toContain("网络或页面加载超时");
+    expect(patch.error).toContain("抖音评论"); // 源标签
   });
 
   it("comments 源:按 taskType 选对 collector", async () => {
