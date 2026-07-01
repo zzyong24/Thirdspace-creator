@@ -51,9 +51,35 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
     knowledge: {
       list: async () => [{ title: "RAG 实战", knowledgeType: "note" }],
     },
+    contextReaders: {
+      listProjects: async () => [
+        {
+          id: "proj-1",
+          title: "上下文工程",
+          stage: "planning",
+          status: "active",
+          publishedAt: null,
+        },
+      ],
+      searchKnowledge: async () => [
+        { id: "kn-1", title: "RAG 实战", snippet: "检索增强要点" },
+      ],
+      searchMaterials: async () => [
+        { id: "as-1", title: "封面图 A", kind: "image" },
+      ],
+    },
     ...over,
   };
   return { deps, resolveModelSpec };
+}
+
+// 调一个工具的 execute(绕开 SDK execute 的严格泛型,断言行为而非类型)。
+async function runToolExecute(
+  tool: { execute?: unknown },
+  input: unknown,
+): Promise<unknown> {
+  const exec = tool.execute as (i: unknown, o: unknown) => Promise<unknown>;
+  return exec(input, { toolCallId: "tc", messages: [], context: {} });
 }
 
 beforeAll(() => {
@@ -87,10 +113,13 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).toContain("RAG 实战"); // 知识库
   });
 
-  it("工具白名单层:挂上 chatbox.topic 的白名单工具(topic.generate + topic.enrich)", async () => {
+  it("工具白名单层:挂上 chatbox.topic 的白名单工具(topic.* + 3 个只读 context 工具)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(Object.keys(a.tools).sort()).toEqual([
+      "context.knowledge",
+      "context.materials",
+      "context.projects",
       "topic.enrich",
       "topic.generate",
     ]);
@@ -107,7 +136,12 @@ describe("buildChatAssembly — 三层注入装配", () => {
     const { deps, resolveModelSpec } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "calibration" }, deps);
     expect(a.skillId).toBe("chatbox.calibration");
-    expect(Object.keys(a.tools)).toEqual(["calibration.diagnose"]);
+    expect(Object.keys(a.tools).sort()).toEqual([
+      "calibration.diagnose",
+      "context.knowledge",
+      "context.materials",
+      "context.projects",
+    ]);
     // 主能力档按 calibration.diagnose 解析(各 surface 复用对应节点的模型配置)。
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "calibration.diagnose");
   });
@@ -116,14 +150,24 @@ describe("buildChatAssembly — 三层注入装配", () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "positioning" }, deps);
     expect(a.skillId).toBe("chatbox.positioning");
-    expect(Object.keys(a.tools)).toEqual(["positioning.generate"]);
+    expect(Object.keys(a.tools).sort()).toEqual([
+      "context.knowledge",
+      "context.materials",
+      "context.projects",
+      "positioning.generate",
+    ]);
   });
 
   it("surface=review → chatbox.review skill + 挂 review.analyze 工具", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
     expect(a.skillId).toBe("chatbox.review");
-    expect(Object.keys(a.tools)).toEqual(["review.analyze"]);
+    expect(Object.keys(a.tools).sort()).toEqual([
+      "context.knowledge",
+      "context.materials",
+      "context.projects",
+      "review.analyze",
+    ]);
   });
 
   it("functionKey 叠加:把命中的专用工具置顶(按钮层,一键岛预调)", async () => {
@@ -139,13 +183,16 @@ describe("buildChatAssembly — 三层注入装配", () => {
 
   it("functionKey 越权(不在该 skill 白名单)→ 不挂越权工具(防越权)", async () => {
     const { deps } = makeDeps();
-    // 选题页 functionKey 给了校准工具(越权)→ 白名单不变,只挂选题工具。
+    // 选题页 functionKey 给了校准工具(越权)→ 白名单不变,只挂选题工具 + 只读 context 工具。
     const a = await buildChatAssembly(
       ctx,
       { surface: "topics", functionKey: "calibration.diagnose" },
       deps,
     );
     expect(Object.keys(a.tools).sort()).toEqual([
+      "context.knowledge",
+      "context.materials",
+      "context.projects",
       "topic.enrich",
       "topic.generate",
     ]);
@@ -175,5 +222,42 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).toContain("选题编导");
     expect(a.system).not.toContain("把论文落成代码");
     expect(a.system).toContain("反直觉开头");
+  });
+
+  it("只读 context 工具 execute → 经 ctx 调注入的 user-scoped 读端口(拉真数据)", async () => {
+    const listProjects = vi.fn(async () => [
+      {
+        id: "proj-1",
+        title: "上下文工程",
+        stage: "planning",
+        status: "active",
+        publishedAt: null,
+      },
+    ]);
+    const { deps } = makeDeps({
+      contextReaders: {
+        listProjects,
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const result = (await runToolExecute(a.tools["context.projects"], {
+      limit: 5,
+    })) as { kind: string; items: unknown[] };
+    // 读端口收到本请求 ctx(user-scoping 由端口内部据 ctx.userId 收窄)。
+    expect(listProjects).toHaveBeenCalledWith(ctx, { limit: 5 });
+    expect(result.kind).toBe("context.projects");
+    expect(result.items).toHaveLength(1);
+  });
+
+  it("contextReaders 未装配 → context 工具读到空(诚实降级,不报错、不塞假数据)", async () => {
+    const { deps } = makeDeps({ contextReaders: undefined });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const result = (await runToolExecute(a.tools["context.knowledge"], {
+      query: "x",
+    })) as { kind: string; items: unknown[] };
+    expect(result.kind).toBe("context.knowledge");
+    expect(result.items).toEqual([]);
   });
 });

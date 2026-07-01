@@ -64,7 +64,11 @@ export function ReviewAnalyzeIsland({
       />
       {/* 一键岛预调(SPEC §3.4):打开 ChatBox 进复盘编导,预调 review.analyze(边聊边提炼经验)。 */}
       <Link
-        href={copilotDeepLink("review", "review.analyze")}
+        href={copilotDeepLink("review", "review.analyze", {
+          kind: "project",
+          id: projectId,
+          ...(topic ? { title: topic } : {}),
+        })}
         data-testid="review-open-copilot"
         className="inline-flex h-8 w-fit items-center gap-1.5 rounded-control border border-brand/30 bg-surface px-3 text-xs font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft/60"
       >

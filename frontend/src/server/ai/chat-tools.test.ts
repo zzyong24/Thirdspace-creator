@@ -14,6 +14,9 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   diagnoseContent: ReturnType<typeof vi.fn>;
   analyzeReview: ReturnType<typeof vi.fn>;
   generatePositioning: ReturnType<typeof vi.fn>;
+  listProjects: ReturnType<typeof vi.fn>;
+  searchKnowledge: ReturnType<typeof vi.fn>;
+  searchMaterials: ReturnType<typeof vi.fn>;
 } {
   const generateTopics = vi.fn(async () => [
     {
@@ -57,12 +60,30 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     oneLiner: "把论文落成代码",
     keywords: ["代码", "论文", "落地"],
   }));
+  const listProjects = vi.fn(async () => [
+    {
+      id: "proj-1",
+      title: "上下文工程",
+      stage: "planning",
+      status: "active",
+      publishedAt: null,
+    },
+  ]);
+  const searchKnowledge = vi.fn(async () => [
+    { id: "kn-1", title: "RAG 实战", snippet: "检索增强要点" },
+  ]);
+  const searchMaterials = vi.fn(async () => [
+    { id: "as-1", title: "封面图 A", kind: "image" },
+  ]);
   const deps: ChatToolDeps = {
     generateTopics,
     enrichTopic,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
+    listProjects,
+    searchKnowledge,
+    searchMaterials,
     ...over,
   };
   return {
@@ -72,6 +93,9 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     diagnoseContent,
     analyzeReview,
     generatePositioning,
+    listProjects,
+    searchKnowledge,
+    searchMaterials,
   };
 }
 
@@ -234,5 +258,79 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     expect(generatePositioning).toHaveBeenCalled();
     expect(result.kind).toBe("positioning.suggestion");
     expect(result.suggestion?.oneLiner).toBe("把论文落成代码");
+  });
+});
+
+describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", () => {
+  const CONTEXT_WHITELIST = [
+    "context.projects",
+    "context.knowledge",
+    "context.materials",
+  ] as const;
+
+  it("三个 context 工具全部可挂", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
+    expect(Object.keys(tools).sort()).toEqual([
+      "context.knowledge",
+      "context.materials",
+      "context.projects",
+    ]);
+  });
+
+  it("context.projects.execute 调 listProjects,返回真数据(kind=context.projects)", async () => {
+    const { deps, listProjects } = makeDeps();
+    const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.projects"], {
+      limit: 3,
+    })) as { kind: string; items: unknown[] };
+    expect(listProjects).toHaveBeenCalledWith({ limit: 3 });
+    expect(result.kind).toBe("context.projects");
+    expect(result.items).toHaveLength(1);
+  });
+
+  it("context.projects limit 缺省 5、非法/超界被兜(封顶 10)", async () => {
+    const { deps, listProjects } = makeDeps();
+    const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
+    await runExecute(tools["context.projects"], {}); // 缺省 → 5
+    expect(listProjects).toHaveBeenLastCalledWith({ limit: 5 });
+    await runExecute(tools["context.projects"], { limit: 999 }); // 超界 → 10
+    expect(listProjects).toHaveBeenLastCalledWith({ limit: 10 });
+    await runExecute(tools["context.projects"], { limit: 0 }); // ≤0 → 5
+    expect(listProjects).toHaveBeenLastCalledWith({ limit: 5 });
+  });
+
+  it("context.knowledge.execute 调 searchKnowledge(query 缺省空串)", async () => {
+    const { deps, searchKnowledge } = makeDeps();
+    const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.knowledge"], {
+      query: "RAG",
+    })) as { kind: string; items: unknown[] };
+    expect(searchKnowledge).toHaveBeenCalledWith({ query: "RAG", limit: 5 });
+    expect(result.kind).toBe("context.knowledge");
+    expect(result.items).toHaveLength(1);
+    await runExecute(tools["context.knowledge"], {});
+    expect(searchKnowledge).toHaveBeenLastCalledWith({ query: "", limit: 5 });
+  });
+
+  it("context.materials.execute 调 searchMaterials(query 缺省空串)", async () => {
+    const { deps, searchMaterials } = makeDeps();
+    const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.materials"], {
+      query: "封面",
+      limit: 2,
+    })) as { kind: string; items: unknown[] };
+    expect(searchMaterials).toHaveBeenCalledWith({ query: "封面", limit: 2 });
+    expect(result.kind).toBe("context.materials");
+    expect(result.items).toHaveLength(1);
+  });
+
+  it("context 工具返回空(端口无数据)→ items 为空数组(诚实,不塞假数据)", async () => {
+    const { deps } = makeDeps({ listProjects: vi.fn(async () => []) });
+    const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.projects"], {})) as {
+      items: unknown[];
+    };
+    expect(result.items).toEqual([]);
   });
 });

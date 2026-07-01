@@ -62,7 +62,15 @@ export const CHATBOX_TOPIC_TEMPLATE: PromptTemplate = {
 【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","candidates":[{"title","angle","reason"}],"nextActions":[{"label","tool"}]}。candidates / nextActions 没有就给空数组。`,
   requiredFacets: ["positioning"],
   // 首波工具白名单(SPEC §3.4):选题编导能调的工具。ChatBox 据此过滤暴露给模型的 tools。
-  tools: ["topic.generate", "topic.enrich"],
+  // 追加 3 个只读 context 工具(对所有 chatbox skill 可用):用户问项目库/最新作品/素材/知识库时
+  // 实时拉真数据来回答(纯读、不产候选)。
+  tools: [
+    "topic.generate",
+    "topic.enrich",
+    "context.projects",
+    "context.knowledge",
+    "context.materials",
+  ],
   // 每轮输出契约(两段脊梁)收口到 registry。
   outputSchema: chatboxTurnSchema,
 };

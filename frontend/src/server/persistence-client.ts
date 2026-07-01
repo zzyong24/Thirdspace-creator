@@ -153,6 +153,7 @@ import {
   type AiService,
 } from "@creatoros/backend/modules/ai";
 import type { ContextDeps as ChatContextDeps } from "@/server/ai/creative-context";
+import type { ContextReaders as ChatContextReaders } from "@/server/ai/chat-runner";
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerateV2 } from "@/server/ai/topic-task-adapter";
 import * as nodePath from "node:path";
@@ -825,6 +826,11 @@ export interface ChatRuntime {
     token: string;
   }>;
   context: ChatContextDeps;
+  // 只读 context 工具(context.projects / context.knowledge / context.materials)的真数据读端口。
+  // 与 `context`(CreativeContext facet reader,进 system 的记忆)不同:这些是「用户问才实时拉」的
+  // 按需读,由 chat-runner 的对应工具 execute 调用。全部 user-scoped(绑到 projects repo / knowledge
+  // service / assets service 的 ctx.userId 读)。
+  contextReaders: ChatContextReaders;
 }
 
 const globalForPersistence = globalThis as unknown as {
@@ -3872,6 +3878,80 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           (await knowledgeService.listKnowledge(c))
             .slice(0, opts.limit ?? 40)
             .map((k) => ({ title: k.title, knowledgeType: k.knowledgeType })),
+      },
+    },
+    // 只读 context 工具的真数据读端口 —— 全部 user-scoped(经各自 service/repo 用 ctx.userId 收窄),
+    // 只读、不写实体。找不到现成的「带 query 搜」读方法时,在此对现成 list 端口做内存过滤(优先复用
+    // 现成读端口,不新造 repo 方法)。诚实说明:knowledge/materials 的 query 是内存 contains 过滤
+    // (list 本身不带全文检索);projects 无真实 publishedAt(那在 publication 上)→ 不塞、留空。
+    contextReaders: {
+      // context.projects —— 复用 projectsRepo.list(user-scoped: WHERE user_id = ctx.userId)。
+      // repo.list 按 createdAt asc 返回 → 这里按 updatedAt(缺则 createdAt)desc 取「最近」再截断。
+      listProjects: async (c: RequestContext, opts: { limit: number }) => {
+        const rows = await projectsRepo.list(c);
+        return [...rows]
+          .sort((a, b) =>
+            (b.updatedAt ?? b.createdAt ?? "").localeCompare(
+              a.updatedAt ?? a.createdAt ?? "",
+            ),
+          )
+          .slice(0, opts.limit)
+          .map((p) => ({
+            id: p.id,
+            title: p.title,
+            stage: p.currentStage,
+            status: p.status,
+            // 项目实体无 publishedAt(发布时间在 publication 上)→ 诚实置 null,不臆造。
+            publishedAt: null,
+          }));
+      },
+      // context.knowledge —— 复用 knowledgeService.listKnowledge(user-scoped: repo.list(ctx.userId))。
+      // query 空 → 回最近若干条;非空 → 标题内存 contains 过滤(listKnowledge 不带全文检索)。
+      // snippet:知识库 item row 不含正文(正文在 revision 上,逐条再读代价高)→ 用来源类型/摘要
+      // 元数据兜出一句短描述;真拿不到就给空串(诚实,不编内容)。
+      searchKnowledge: async (
+        c: RequestContext,
+        opts: { query: string; limit: number },
+      ) => {
+        const rows = await knowledgeService.listKnowledge(c);
+        const q = opts.query.trim().toLowerCase();
+        const filtered = q
+          ? rows.filter((k) => k.title.toLowerCase().includes(q))
+          : rows;
+        return filtered.slice(0, opts.limit).map((k) => {
+          const meta = (k.sourceMetadata ?? {}) as {
+            summary?: unknown;
+            description?: unknown;
+          };
+          const snippet =
+            typeof meta.summary === "string"
+              ? meta.summary
+              : typeof meta.description === "string"
+                ? meta.description
+                : "";
+          return { id: k.id, title: k.title, snippet };
+        });
+      },
+      // context.materials —— 复用 assetsService.listAssets(user-scoped: repo.listAssets(ctx.userId))。
+      // ListAssetsQuery 只有 { limit, cursor }(无 query 文本)→ 取一批后做名称内存 contains 过滤。
+      // 拉多一点(query 时最多 100)再截断,避免过滤后不足 limit;title=name,kind=assetType。
+      searchMaterials: async (
+        c: RequestContext,
+        opts: { query: string; limit: number },
+      ) => {
+        const q = opts.query.trim().toLowerCase();
+        const rows = await assetsService.listAssets(c, {
+          limit: q ? 100 : opts.limit,
+          cursor: null,
+        });
+        const filtered = q
+          ? rows.filter((a) => a.name.toLowerCase().includes(q))
+          : rows;
+        return filtered.slice(0, opts.limit).map((a) => ({
+          id: a.id,
+          title: a.name,
+          kind: a.assetType,
+        }));
       },
     },
   };

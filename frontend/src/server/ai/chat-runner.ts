@@ -39,6 +39,43 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     capability: string,
   ) => Promise<ModelSpec>;
+  /**
+   * 只读 context 读端口(供 context.projects / context.knowledge / context.materials 工具)。
+   * **只读、按 ctx.userId 过滤**,由 composition root(persistence-client)绑到 user-scoped 读源
+   * (projects repo / knowledge service / assets service)。可选:未装配时对应工具读到空(诚实降级,
+   * 不塞假数据)。与 CreativeContext 的 facet reader 不同 —— 这些是「用户问才实时拉」的按需读。
+   */
+  contextReaders?: ContextReaders;
+}
+
+/**
+ * 只读 context 读端口集 —— 三个工具各自的真数据源。composition root 绑真实 user-scoped 读方法;
+ * 单测注入 fake。全部按当前用户过滤(由绑定处的 service/repo 用 ctx.userId 收窄)。
+ */
+export interface ContextReaders {
+  /** 列该用户最近的项目/作品(用于 context.projects)。 */
+  listProjects: (
+    ctx: RequestContext,
+    opts: { limit: number },
+  ) => Promise<
+    Array<{
+      id: string;
+      title: string;
+      stage: string;
+      status: string;
+      publishedAt?: string | null;
+    }>
+  >;
+  /** 搜该用户知识库(用于 context.knowledge)。query 空 → 回最近若干条。 */
+  searchKnowledge: (
+    ctx: RequestContext,
+    opts: { query: string; limit: number },
+  ) => Promise<Array<{ id: string; title: string; snippet: string }>>;
+  /** 搜该用户素材库 assets(用于 context.materials)。query 空 → 回最近若干条。 */
+  searchMaterials: (
+    ctx: RequestContext,
+    opts: { query: string; limit: number },
+  ) => Promise<Array<{ id: string; title: string; kind: string }>>;
 }
 
 // 各 ChatBox skill 的「主能力档」—— 基础模型按它解析(各 surface 复用对应节点的模型配置,
@@ -235,6 +272,20 @@ export async function buildChatAssembly(
         maxSteps: 2,
       });
       return parseSuggestion(res.text);
+    },
+    // 只读 context 工具 —— execute 直接调注入的 user-scoped 读端口(不跑模型、不产候选、不写实体)。
+    // 端口未装配(contextReaders 缺省)→ 回空数组(诚实降级,绝不塞假数据),模型据此如实作答。
+    listProjects: async ({ limit }) => {
+      if (!deps.contextReaders) return [];
+      return deps.contextReaders.listProjects(ctx, { limit });
+    },
+    searchKnowledge: async ({ query, limit }) => {
+      if (!deps.contextReaders) return [];
+      return deps.contextReaders.searchKnowledge(ctx, { query, limit });
+    },
+    searchMaterials: async ({ query, limit }) => {
+      if (!deps.contextReaders) return [];
+      return deps.contextReaders.searchMaterials(ctx, { query, limit });
     },
   };
   const tools = buildChatTools(toolWhitelist, toolDeps);

@@ -79,6 +79,34 @@ export interface ChatToolDeps {
     oneLiner: string;
     keywords: string[];
   } | null>;
+  /**
+   * context.projects 只读端口 —— 列该用户最近的项目/作品(项目库 / 「最新一条」)。
+   * **纯读上下文**(与上面的候选工具不同):不产候选、不写实体,只把真数据回给模型读进去用文字回答。
+   * 按当前用户过滤(端口在 composition root 绑到 user-scoped 读源);limit 由 execute 兜(默认 5,封顶 10)。
+   */
+  listProjects: (input: { limit: number }) => Promise<
+    Array<{
+      id: string;
+      title: string;
+      stage: string;
+      status: string;
+      publishedAt?: string | null;
+    }>
+  >;
+  /**
+   * context.knowledge 只读端口 —— 按 query 搜该用户的知识库(命中标题/摘要)。**纯读上下文**。
+   * query 缺省则回最近若干条;limit 由 execute 兜。按当前用户过滤。
+   */
+  searchKnowledge: (input: { query: string; limit: number }) => Promise<
+    Array<{ id: string; title: string; snippet: string }>
+  >;
+  /**
+   * context.materials 只读端口 —— 按 query 搜该用户的素材库(assets)。**纯读上下文**。
+   * query 缺省则回最近若干条;limit 由 execute 兜。按当前用户过滤。
+   */
+  searchMaterials: (input: { query: string; limit: number }) => Promise<
+    Array<{ id: string; title: string; kind: string }>
+  >;
 }
 
 // ── 工具结果形状(候选,非实体)──────────────────────────────────────────────────────
@@ -119,6 +147,31 @@ export interface ReviewAnalyzeToolResult {
 export interface PositioningGenerateToolResult {
   kind: "positioning.suggestion";
   suggestion: Awaited<ReturnType<ChatToolDeps["generatePositioning"]>>;
+}
+
+// ── 只读 context 工具结果(真数据,给模型读 —— 非候选、不渲卡)────────────────────────────
+// 这三个的 kind(context.*)不在前端 dispatch 的已知分支里,会被安全跳过(不报错):模型把
+// 数据读进上下文后用文字回答即可。形状刻意精简(只带答问所需字段)。
+
+export interface ContextProjectsToolResult {
+  kind: "context.projects";
+  items: Array<{
+    id: string;
+    title: string;
+    stage: string;
+    status: string;
+    publishedAt?: string | null;
+  }>;
+}
+
+export interface ContextKnowledgeToolResult {
+  kind: "context.knowledge";
+  items: Array<{ id: string; title: string; snippet: string }>;
+}
+
+export interface ContextMaterialsToolResult {
+  kind: "context.materials";
+  items: Array<{ id: string; title: string; kind: string }>;
 }
 
 // ── 工具入参 JSON Schema(可序列化契约)─────────────────────────────────────────────
@@ -181,6 +234,56 @@ const POSITIONING_GENERATE_PARAMS = jsonSchema<Record<string, never>>({
   additionalProperties: false,
 });
 
+// ── 只读 context 工具入参 —— limit 可选(execute 兜默认 + 封顶),query 可选(缺省回最近)──────
+const CONTEXT_PROJECTS_PARAMS = jsonSchema<{ limit?: number }>({
+  type: "object",
+  properties: {
+    limit: {
+      type: "number",
+      description: "返回条数(可选;默认 5,封顶 10)。",
+    },
+  },
+  additionalProperties: false,
+});
+
+const CONTEXT_KNOWLEDGE_PARAMS = jsonSchema<{ query?: string; limit?: number }>({
+  type: "object",
+  properties: {
+    query: {
+      type: "string",
+      description: "搜索关键词(可选;缺省回最近若干条)。",
+    },
+    limit: {
+      type: "number",
+      description: "返回条数(可选;默认 5,封顶 10)。",
+    },
+  },
+  additionalProperties: false,
+});
+
+const CONTEXT_MATERIALS_PARAMS = jsonSchema<{ query?: string; limit?: number }>({
+  type: "object",
+  properties: {
+    query: {
+      type: "string",
+      description: "搜索关键词(可选;缺省回最近若干条)。",
+    },
+    limit: {
+      type: "number",
+      description: "返回条数(可选;默认 5,封顶 10)。",
+    },
+  },
+  additionalProperties: false,
+});
+
+// 只读 context 工具的 limit 兜底:缺省 5,封顶 10(与 SPEC 约束一致)。
+function clampContextLimit(limit: number | undefined): number {
+  if (typeof limit !== "number" || !Number.isFinite(limit) || limit <= 0) {
+    return 5;
+  }
+  return Math.min(Math.floor(limit), 10);
+}
+
 /**
  * 工具实现表(全部首波工具)。每个 execute 复用注入的 runner 核心产**候选**(非实体)。
  * 路由用 buildChatTools(skillTools, deps) 按 skill 白名单过滤后挂给 streamText。
@@ -235,6 +338,43 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       execute: async (): Promise<PositioningGenerateToolResult> => {
         const suggestion = await deps.generatePositioning();
         return { kind: "positioning.suggestion", suggestion };
+      },
+    }),
+    // ── 只读 context 工具 —— 用于当用户问「项目库 / 最新一条作品 / 素材(库)/ 知识库」时,
+    //    实时拉**真实数据**给模型读进上下文再用文字回答(纯读,不产候选、不写任何实体)。
+    "context.projects": tool({
+      description:
+        "只读:拉取创作者最近的项目/作品列表(id/标题/阶段/状态)。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目」时调它拿真实数据来回答,不要瞎答或反问。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_PROJECTS_PARAMS,
+      execute: async ({ limit }): Promise<ContextProjectsToolResult> => {
+        const items = await deps.listProjects({
+          limit: clampContextLimit(limit),
+        });
+        return { kind: "context.projects", items };
+      },
+    }),
+    "context.knowledge": tool({
+      description:
+        "只读:搜索创作者的知识库(命中标题/摘要,返回 id/标题/片段)。当用户问「知识库里有没有 X / 我存过什么关于 X / 查一下我的资料」时调它拿真实数据来回答,不要瞎答。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_KNOWLEDGE_PARAMS,
+      execute: async ({ query, limit }): Promise<ContextKnowledgeToolResult> => {
+        const items = await deps.searchKnowledge({
+          query: query ?? "",
+          limit: clampContextLimit(limit),
+        });
+        return { kind: "context.knowledge", items };
+      },
+    }),
+    "context.materials": tool({
+      description:
+        "只读:搜索创作者的素材库(assets,返回 id/名称/类型)。当用户问「我有哪些素材 / 素材库里有没有 X / 找一下我的图/视频/文件」时调它拿真实数据来回答,不要瞎答。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_MATERIALS_PARAMS,
+      execute: async ({ query, limit }): Promise<ContextMaterialsToolResult> => {
+        const items = await deps.searchMaterials({
+          query: query ?? "",
+          limit: clampContextLimit(limit),
+        });
+        return { kind: "context.materials", items };
       },
     }),
   };

@@ -117,6 +117,8 @@ export async function POST(req: Request): Promise<Response> {
         signals: runtime.context.signals,
         knowledge: runtime.context.knowledge,
         resolveModelSpec: runtime.resolveModelSpec,
+        // 只读 context 工具(context.projects/knowledge/materials)的真数据读端口(user-scoped)。
+        contextReaders: runtime.contextReaders,
       },
       async (finalText) => {
         // assistant 回复落库(best-effort,失败不影响已流给前端的内容)。

@@ -66,7 +66,13 @@ export const CHATBOX_CALIBRATION_TEMPLATE: PromptTemplate = {
 【任务】围绕上面的上下文,和创作者对话化地推进发布前诊断/校准。要诊断一条内容时,优先调 calibration.diagnose 工具(它会按变现加权评分标准逐维度盲评);也可把诊断直接放进 diagnoses(每条含 subjectTitle + dimensions[{key,score,reason,suggestion}] + verdict + mainIssues + priorityFixes)。在 nextActions 里给可一键执行的下一步(tool 取允许的工具 id)。
 【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","diagnoses":[...],"nextActions":[{"label","tool"}]}。没有就给空数组。`,
   requiredFacets: ["positioning"],
-  tools: ["calibration.diagnose"],
+  // + 3 个只读 context 工具(拉真数据答项目库/最新作品/素材/知识库,对所有 chatbox skill 可用)。
+  tools: [
+    "calibration.diagnose",
+    "context.projects",
+    "context.knowledge",
+    "context.materials",
+  ],
   outputSchema: chatboxCalibrationSchema,
 };
 
@@ -110,7 +116,13 @@ export const CHATBOX_POSITIONING_TEMPLATE: PromptTemplate = {
 【任务】围绕上面的上下文,和创作者对话化地打磨账号定位。要产定位提案时,优先调 positioning.generate 工具(它会结合定位 + 账号画像产一份结构化提案);也可把提案直接放进 proposals(每条含 persona/field/audience/differentiation/capabilities/oneLiner/keywords,keywords 给 3 个)。在 nextActions 里给可一键执行的下一步。
 【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","proposals":[...],"nextActions":[{"label","tool"}]}。没有就给空数组。`,
   requiredFacets: ["positioning"],
-  tools: ["positioning.generate"],
+  // + 3 个只读 context 工具(拉真数据答项目库/最新作品/素材/知识库,对所有 chatbox skill 可用)。
+  tools: [
+    "positioning.generate",
+    "context.projects",
+    "context.knowledge",
+    "context.materials",
+  ],
   outputSchema: chatboxPositioningSchema,
 };
 
@@ -149,6 +161,12 @@ export const CHATBOX_REVIEW_TEMPLATE: PromptTemplate = {
 【任务】围绕上面的上下文,和创作者对话化地做内容复盘。要提炼经验时,优先调 review.analyze 工具(它会提炼 3-6 条可迁移的爆款要素);也可把要素直接放进 learnings(每条含 title 一句话方法论 + insight 为什么有效)。在 nextActions 里给可一键执行的下一步。
 【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","learnings":[{"title","insight"}],"nextActions":[{"label","tool"}]}。没有就给空数组。`,
   requiredFacets: ["positioning"],
-  tools: ["review.analyze"],
+  // + 3 个只读 context 工具(拉真数据答项目库/最新作品/素材/知识库,对所有 chatbox skill 可用)。
+  tools: [
+    "review.analyze",
+    "context.projects",
+    "context.knowledge",
+    "context.materials",
+  ],
   outputSchema: chatboxReviewSchema,
 };
