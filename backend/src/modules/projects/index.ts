@@ -43,6 +43,24 @@ export {
 
 export { PROJECTS_DDL } from "./projects.db-schema";
 
+// T-030-D3(SPEC §4.3 + §5.4):逐字稿按 aweme_id 绑 imported 作品的可复用 helper +
+// .md 正文解析。D2 直连 ASR 时复用同一签名。
+export {
+  ensureTranscriptArtifact,
+  extractTranscriptBody,
+  type EnsureTranscriptArtifactInput,
+  type EnsureTranscriptArtifactResult,
+  type TranscriptContentData,
+  type TranscriptArtifactPorts,
+  type TranscriptArtifactSummary,
+  type FindImportedProjectByAwemeId,
+  type ListProjectArtifacts,
+  type GetVersionContentData,
+  type CreateScriptArtifact,
+  type CreateArtifactVersion,
+  type WarnFn,
+} from "./transcript-artifact";
+
 export {
   OwnershipError,
   StageTransitionError,
