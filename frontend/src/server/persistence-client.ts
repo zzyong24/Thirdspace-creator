@@ -164,6 +164,7 @@ import {
   checkDouyinStatus,
   fetchDouyinComments,
   ingestComments,
+  type CommentIngestPorts,
   DouyinNotLoggedInError,
   fetchDouyinVideoUrl,
   streamAudioFromVideo,
@@ -3095,77 +3096,96 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // "comment",带 ingestionRunId,C-4)→ completeRun)。itemsNew=written(新写信号数);
     // 评论只新写不更新 → itemsUpdated 恒 0。
     comments: async (ctx, target) => {
-      const awemeId =
-        typeof target.awemeId === "string" ? target.awemeId : "";
-      if (!awemeId) {
-        throw new Error("scheduled comments: target.awemeId 缺失");
-      }
       const externalSourceId =
         typeof target.externalSourceId === "string" && target.externalSourceId
           ? target.externalSourceId
           : "src-douyin-canonical";
       const maxPages =
         typeof target.maxPages === "number" ? target.maxPages : undefined;
-      const capturedAt = deps.now();
-      const records = await fetchDouyinComments({
-        awemeId,
-        authDir: douyinAuthDir,
-        maxPages,
-      });
-      // CommentIngestPorts 真实装配:ingestion repo(去重 ledger)+ candidate service(信号写,
-      // C-4 骑 ingestion run)+ ingestion service(run 生命周期)。ctx.userId 作用域一路透传。
+      // CommentIngestPorts 真实装配(所有作品共用一套 ports):ingestion repo(去重 ledger)+
+      // candidate service(信号写,C-4 骑 ingestion run)+ ingestion service(run 生命周期)。
       const ingestionRepo = createIngestionRepository(db, {
         now: deps.now,
         nextId: deps.nextId,
         userId: ctx.userId,
       });
-      const result = await ingestComments(awemeId, records, {
-        externalSourceId,
-        capturedAt,
-        ports: {
-          createRun: async (input) => {
-            const run = await ingestionService.createRun(ctx, {
-              externalSourceId: input.externalSourceId,
-              runType: input.runType,
-              idempotencyKey: input.idempotencyKey,
-            });
-            return { id: run.id };
-          },
-          recordExists: (runId, recordKey) =>
-            ingestionRepo.recordExists(runId, recordKey),
-          markRecordWritten: (runId, recordKey) =>
-            ingestionRepo.markRecordResult(runId, recordKey, "written"),
-          ingestSignal: async (input) => {
-            // C-4:AudienceSignal 写必带 ctx.ingestionRunId(source="ingestion")。
-            const signalCtx: RequestContext = {
-              userId: ctx.userId,
-              requestId: ctx.requestId,
-              source: "ingestion",
-              ingestionRunId: input.ingestionRunId,
-            };
-            await candidateService.ingestAudienceSignal(signalCtx, {
-              source: input.source,
-              rawText: input.rawText,
-              demandTag: input.demandTag,
-              // 评论按作品可读 (T-030 D6) — 回填作品绑定(ingestComments 已按 aweme_id 解析)。
-              publicationId: input.publicationId,
-            });
-          },
-          // 按 aweme_id 查对应作品的 publication_id(T-030 D6 回填,F3):命中 published +
-          // external_id=aweme_id 的 publication → id,否则 null(评论仍落库,只是不绑作品)。
-          resolvePublicationId: async (aweme) => {
-            const pub = await publishingService.resolvePublication(ctx, {
-              platform: "douyin",
-              externalId: aweme,
-            });
-            return pub?.id ?? null;
-          },
-          completeRun: async (runId) => {
-            await ingestionService.completeRun(ctx, { runId });
-          },
+      const commentPorts: CommentIngestPorts = {
+        createRun: async (input) => {
+          const run = await ingestionService.createRun(ctx, {
+            externalSourceId: input.externalSourceId,
+            runType: input.runType,
+            idempotencyKey: input.idempotencyKey,
+          });
+          return { id: run.id };
         },
+        recordExists: (runId, recordKey) =>
+          ingestionRepo.recordExists(runId, recordKey),
+        markRecordWritten: (runId, recordKey) =>
+          ingestionRepo.markRecordResult(runId, recordKey, "written"),
+        ingestSignal: async (input) => {
+          // C-4:AudienceSignal 写必带 ctx.ingestionRunId(source="ingestion")。
+          const signalCtx: RequestContext = {
+            userId: ctx.userId,
+            requestId: ctx.requestId,
+            source: "ingestion",
+            ingestionRunId: input.ingestionRunId,
+          };
+          await candidateService.ingestAudienceSignal(signalCtx, {
+            source: input.source,
+            rawText: input.rawText,
+            demandTag: input.demandTag,
+            // 评论按作品可读 (T-030 D6) — 回填作品绑定(ingestComments 已按 aweme_id 解析)。
+            publicationId: input.publicationId,
+          });
+        },
+        // 按 aweme_id 查对应作品的 publication_id(T-030 D6 回填,F3):命中 published +
+        // external_id=aweme_id 的 publication → id,否则 null(评论仍落库,只是不绑作品)。
+        resolvePublicationId: async (aweme: string) => {
+          const pub = await publishingService.resolvePublication(ctx, {
+            platform: "douyin",
+            externalId: aweme,
+          });
+          return pub?.id ?? null;
+        },
+        completeRun: async (runId: string) => {
+          await ingestionService.completeRun(ctx, { runId });
+        },
+      };
+      // 单作品 fetch+ingest(每作品前 100 条由 fetchDouyinComments 的 maxPages 控)。
+      const ingestOne = async (awemeId: string): Promise<number> => {
+        const capturedAt = deps.now();
+        const records = await fetchDouyinComments({
+          awemeId,
+          authDir: douyinAuthDir,
+          maxPages,
+        });
+        const result = await ingestComments(awemeId, records, {
+          externalSourceId,
+          capturedAt,
+          ports: commentPorts,
+        });
+        return result.written;
+      };
+      // ① 指定 target.awemeId → 只抓该作品;② 未指定 → 抓「我所有作品」评论:遍历用户所有
+      //    douyin publications(external_id=aweme_id)逐个抓(修真机 bug「target.awemeId 缺失」)。
+      const single =
+        typeof target.awemeId === "string" && target.awemeId
+          ? target.awemeId
+          : "";
+      if (single) {
+        return { itemsNew: await ingestOne(single), itemsUpdated: 0 };
+      }
+      const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
+        limit: 500,
       });
-      return { itemsNew: result.written, itemsUpdated: 0 };
+      const awemeIds = pubs
+        .filter((p) => p.platform === "douyin" && p.externalId)
+        .map((p) => p.externalId as string);
+      let total = 0;
+      for (const awemeId of awemeIds) {
+        total += await ingestOne(awemeId);
+      }
+      return { itemsNew: total, itemsUpdated: 0 };
     },
     // 作品明细导出(T-030-D8a,SPEC §9b):fetchDouyinWorkListExport(headless 复用 .auth/ →
     // 导航数据中心作品分析 → 点「刷新数据」+「导出数据」→ 截 xlsx 校验 PK 头)→ parseDouyin
