@@ -1,27 +1,33 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec, TopicCardOutput } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
 import { parseJsonLoose } from "@/server/ai/llm/parse";
-import type {
-  LlmCompleteOptions,
-  LlmCompleter,
-} from "@/server/ai/llm/provider";
 
 // 选题补全 runner (topic.enrich node, 选题中心大改). Takes ONE existing 选题候选 (待评估)
 // and fills its 选题卡 — the 10 详情字段 + 3 指标 the 选题卡详情 surface renders. Records a
 // `topic_card` CANDIDATE; on 采纳, the AI service's topic_card confirm branch calls
 // candidateService.enrichCard to upsert the card onto that candidate.
 //
-// Mirrors positioning-runner (deps.llm → real configurable LLM) but the result is a card
-// for a SPECIFIC candidate (inputData.candidateId), so the runner reads that candidate's
-// title/angle through a narrow injected reader (no cross-module repo import). The context
-// it reasons against is the full CreativeContext (定位 + 飞轮 + 受众信号 + 知识库) so the
-// card's 素材依据/观众痛点 are grounded in the creator's real situation.
+// The result is a card for a SPECIFIC candidate (inputData.candidateId), so the runner reads
+// that candidate's title/angle through a narrow injected reader (no cross-module repo import).
+// The context it reasons against is the full CreativeContext (定位 + 飞轮 + 受众信号 + 知识库)
+// so the card's 素材依据/观众痛点 are grounded in the creator's real situation.
+//
+// 跑在 **Vercel AI SDK** 上(弃旧 LlmCompleter):resolveModelSpec 按 capability 解析用户配的
+// model,提示词走外置模板 topic.enrich(脊柱-1 模板化解耦)。T-025b:改 runStructuredNode
+// (generateObject 绑 topic.enrich 的 outputSchema,落空→文本兜底抽 JSON 再同 schema 校验),
+// 让用户默认的 MiniMax-M3 也稳定吐可解析选题卡(旧路径:单发 messages.create + parseCard,
+// MiniMax 下常吐不出规整 JSON → parseCard 返回 null → 任务 cancelled,和刚修的 8 个节点同类
+// bug)。normalizeCard 复用 str/strArr/score/difficulty 保留原容错。
+//
+// 注:buildEnrichPrompt + parseCard 仍导出且行为不变 —— chat-runner 的 enrichTopic 工具(对话面
+// 产选题卡候选,走 runAgentNode 拿自由文本)复用它们,不能改签名/语义。
 
 // The 选题卡 the agent returns (writer ↔ confirm contract). Exactly the contract
 // candidateCard shape: 10 详情字段 + 3 指标. All optional — the confirm seam cleans it.
@@ -53,14 +59,13 @@ export interface CandidateReader {
 
 export interface TopicEnrichDeps extends ContextDeps {
   ai: AiService;
-  llm: LlmCompleter;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
   candidate: CandidateReader;
 }
-
-type Complete = (
-  prompt: string,
-  opts?: LlmCompleteOptions,
-) => Promise<{ text: string }>;
 
 export interface TopicEnrichTask {
   id: string;
@@ -70,6 +75,7 @@ export interface TopicEnrichTask {
 // Exported so the in-chat `topic.enrich` tool (T-004 ChatBox) reuses the EXACT enrich
 // prompt + parseCard rather than forking a second prompt. The tool produces the same
 // 选题卡 candidate shape (no entity write); 采纳 still goes through the confirm gate.
+// chat-runner 用 runAgentNode 拿自由文本再 parseCard。
 export function buildEnrichPrompt(
   context: CreativeContext,
   subject: { title: string; angle: string },
@@ -113,6 +119,30 @@ ${positioning}${learnings}${signals}${knowledge}
  "productionDifficulty":"low|mid|high 或 null"}`;
 }
 
+// 把 CreativeContext + subject 映射成 topic.enrich 模板的 facets(占位化原 buildEnrichPrompt 的
+// 上下文块）。positioning/title/angle 是必需 facet,angle 沿用原 prompt 的兜底文案。
+function enrichFacets(
+  context: CreativeContext,
+  subject: { title: string; angle: string },
+): Record<string, string | undefined> {
+  return {
+    positioning: context.positioningBrief
+      ? context.positioningBrief
+      : "（创作者尚未设置定位——按通用爆款逻辑补全）",
+    learnings: context.learningsBrief
+      ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
+      : "",
+    signals: context.signalsBrief
+      ? `\n【受众信号(评论/咨询)】\n${context.signalsBrief}`
+      : "",
+    knowledge: context.knowledgeBrief
+      ? `\n【可依托的知识库资料】\n${context.knowledgeBrief}`
+      : "",
+    title: subject.title,
+    angle: subject.angle || "（未给出,请你补一个最锋利的角度)",
+  };
+}
+
 function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
 }
@@ -130,13 +160,10 @@ function difficulty(v: unknown): "low" | "mid" | "high" | null {
   return v === "low" || v === "mid" || v === "high" ? v : null;
 }
 
-// Tolerant parse of the agent's final text into a TopicCard. Returns null when nothing
-// parseable OR when the card is empty (no oneLiner and no audiencePain) — the runner
-// treats null as "no usable card" and cancels.
-export function parseCard(text: string): TopicCard | null {
-  const parsed = parseJsonLoose(text);
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
-  const o = parsed as Record<string, unknown>;
+// Normalize the schema-validated card object into a TopicCard (T-025:结构化后拿的是已解析对象,
+// 容错逻辑原样保留 —— trim、score 夹 0-100、difficulty 枚举归一)。Returns null when the card is
+// empty (no oneLiner and no audiencePain) — the runner treats null as "no usable card" and cancels.
+function normalizeCard(o: TopicCardOutput): TopicCard | null {
   const card: TopicCard = {
     oneLiner: str(o.oneLiner),
     targetAudience: str(o.targetAudience),
@@ -156,15 +183,13 @@ export function parseCard(text: string): TopicCard | null {
   return card;
 }
 
-async function generateCard(
-  context: CreativeContext,
-  subject: { title: string; angle: string },
-  complete: Complete,
-): Promise<TopicCard | null> {
-  const { text } = await complete(buildEnrichPrompt(context, subject), {
-    schema: true,
-  });
-  return parseCard(text);
+// Tolerant parse of the agent's final text into a TopicCard — used by the CHAT path
+// (chat-runner 的 enrichTopic 工具走 runAgentNode 拿自由文本)。结构化 runner 已改走 normalizeCard
+// (拿已校验对象);这里是文本兜底薄壳:宽容抽 JSON 对象 → 交给同一 normalizeCard(容错单点收口)。
+export function parseCard(text: string): TopicCard | null {
+  const parsed = parseJsonLoose(text);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+  return normalizeCard(parsed as TopicCardOutput);
 }
 
 // Orchestrate one topic.enrich task end to end. Owns its lifecycle: on any failure
@@ -192,9 +217,18 @@ export async function runTopicEnrich(
       { projectId: null, topic: subject.title, angle: subject.angle },
       deps,
     );
-    const card = await generateCard(context, subject, (prompt, opts) =>
-      deps.llm(ctx, "topic.enrich", prompt, opts),
-    );
+    // Vercel AI SDK 路径:按 "topic.enrich" capability 解析 model + 跑 ai-worker 结构化节点(外置
+    // topic.enrich 模板 + outputSchema)。T-025b:runStructuredNode 绑 generateObject,落空→文本
+    // 兜底,让用户默认的 MiniMax 也稳定吐可解析选题卡。顶层是对象,取 object 再 normalize。
+    const spec = await deps.resolveModelSpec(ctx, "topic.enrich");
+    const { modelFor, runStructuredNode, TOPIC_ENRICH_TEMPLATE } =
+      await import("@creatoros/ai-worker");
+    const { object } = await runStructuredNode<TopicCardOutput>({
+      model: modelFor(spec),
+      template: TOPIC_ENRICH_TEMPLATE,
+      facets: enrichFacets(context, subject),
+    });
+    const card = normalizeCard(object);
     if (!card) {
       throw new Error("topic-enrich-runner: LLM returned no parseable 选题卡");
     }

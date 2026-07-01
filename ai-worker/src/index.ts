@@ -137,6 +137,23 @@ export {
   diagnosisSchema,
   type DiagnosisOutput,
 } from "./prompt/templates/calibration-diagnose";
+// T-025b:positioning.generate / topic.enrich / material.match 三个 frontend runner 迁 runStructuredNode
+// (跨模型健壮,让用户默认 MiniMax 也稳定吐可解析产物)所需的外置模板 + outputSchema,schema/type 一并导出。
+export {
+  POSITIONING_GENERATE_TEMPLATE,
+  positioningSuggestionSchema,
+  type PositioningSuggestionOutput,
+} from "./prompt/templates/positioning-generate";
+export {
+  TOPIC_ENRICH_TEMPLATE,
+  topicCardSchema,
+  type TopicCardOutput,
+} from "./prompt/templates/topic-enrich";
+export {
+  MATERIAL_MATCH_TEMPLATE,
+  materialMatchSchema,
+  type MaterialMatchOutput,
+} from "./prompt/templates/material-match";
 export {
   runScriptNode,
   parseShots,

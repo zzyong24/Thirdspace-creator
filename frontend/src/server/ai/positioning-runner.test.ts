@@ -1,18 +1,35 @@
 import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
+
+// 定位生成 runner 迁 runStructuredNode(T-025b 跨模型健壮)后:mock ai-worker 的 runStructuredNode
+// (动态 import 的目标),它返回 { object }(已被 outputSchema 校验的结构化对象,9 字段定位提案)。
+// runner 解析 model(resolveModelSpec)→ runStructuredNode 拿 object → normalizeSuggestion +
+// recordCandidate。这里把 runStructuredNode 打桩成返回固定 object,验证:capability 被正确解析、
+// 候选被记录、归一逻辑(keywords 夹 3 / capabilities 清洗)仍按约定产出;退化对象 → 不记录 + cancel。
+const runStructuredNode = vi.fn(
+  async (_input: {
+    model: unknown;
+    template: { id: string };
+    facets: Record<string, string | undefined>;
+  }) => ({ object: {} as Record<string, unknown> }),
+);
+vi.mock("@creatoros/ai-worker", () => ({
+  modelFor: vi.fn(() => ({}) as never),
+  runStructuredNode,
+  POSITIONING_GENERATE_TEMPLATE: { id: "positioning.generate" },
+}));
+
 import {
   runPositioningGenerate,
   parseSuggestion,
   type PositioningSuggestion,
 } from "./positioning-runner";
-import { LlmCredentialError } from "@/server/ai/llm/provider";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 
-// A complete, valid suggestion the fake LLM returns. Mirrors the structured shape the
-// runner records: {persona, field, audience, differentiation, capabilities[], oneLiner,
-// keywords[3]}.
-const VALID_JSON = JSON.stringify({
+// A complete, valid suggestion (as a structured object). Mirrors the shape the runner
+// records: {persona, field, audience, differentiation, capabilities[], oneLiner, keywords[3]}.
+const VALID_OBJECT = {
   persona: "硬核 AI 科普人",
   field: "AI 工程",
   audience: "一线后端/算法开发者",
@@ -20,15 +37,11 @@ const VALID_JSON = JSON.stringify({
   capabilities: ["论文拆解", "工程化演示", "踩坑复盘"],
   oneLiner: "把最新 AI 论文翻译成你今晚就能跑的代码",
   keywords: ["论文", "代码", "工程化"],
-});
+};
+const VALID_JSON = JSON.stringify(VALID_OBJECT);
 
-function makeDeps(
-  llmImpl: () => Promise<{ text: string }>,
-  context?: {
-    positioning?: { profile: unknown; currentStatement: unknown };
-    accounts?: Array<{ platform: string; accountHandle: string; followerBaseline: number }>;
-  },
-) {
+function makeDeps(object: Record<string, unknown>) {
+  runStructuredNode.mockResolvedValue({ object } as never);
   const markRunning = vi.fn(async () => undefined);
   const recordCandidate = vi.fn(
     async (
@@ -41,7 +54,12 @@ function makeDeps(
     ) => undefined,
   );
   const cancelTask = vi.fn(async () => undefined);
-  const llm = vi.fn(llmImpl);
+  const resolveModelSpec = vi.fn(async () => ({
+    apiFormat: "anthropic" as const,
+    baseUrl: null,
+    model: "claude-opus-4-8",
+    token: "k",
+  }));
   return {
     deps: {
       ai: { markRunning, recordCandidate, cancelTask } as never,
@@ -49,34 +67,39 @@ function makeDeps(
       // list (AccountsReader); both degrade to "" on throw. These stubs feed the real
       // shapes so the brief assembles with positioning + 抖音账号 context.
       positioning: {
-        getPositioningCenter: async () =>
-          context?.positioning ?? {
-            profile: {
-              persona: "现有人设",
-              field: "现有领域",
-              audience: "现有人群",
-              differentiation: "现有差异化",
-              capabilities: ["A", "B"],
-            },
-            currentStatement: { oneLiner: "现有一句话定位", keywords: ["关键A", "关键B", "关键C"] },
+        getPositioningCenter: async () => ({
+          profile: {
+            persona: "现有人设",
+            field: "现有领域",
+            audience: "现有人群",
+            differentiation: "现有差异化",
+            capabilities: ["A", "B"],
           },
+          currentStatement: {
+            oneLiner: "现有一句话定位",
+            keywords: ["关键A", "关键B", "关键C"],
+          },
+        }),
       } as never,
       accounts: {
-        list: async () =>
-          context?.accounts ?? [
-            { platform: "douyin", accountHandle: "@老黄说AI", followerBaseline: 128000 },
-          ],
+        list: async () => [
+          {
+            platform: "douyin",
+            accountHandle: "@老黄说AI",
+            followerBaseline: 128000,
+          },
+        ],
       } as never,
-      llm,
+      resolveModelSpec,
     },
     markRunning,
     recordCandidate,
     cancelTask,
-    llm,
+    resolveModelSpec,
   };
 }
 
-describe("parseSuggestion (tolerant JSON object parse)", () => {
+describe("parseSuggestion (tolerant JSON object parse — chat 文本兜底路径)", () => {
   it("parses a clean JSON object", () => {
     const s = parseSuggestion(VALID_JSON);
     expect(s).not.toBeNull();
@@ -94,7 +117,7 @@ describe("parseSuggestion (tolerant JSON object parse)", () => {
 
   it("clamps keywords to exactly 3 (drops extras / pads when short)", () => {
     const s = parseSuggestion(
-      JSON.stringify({ ...JSON.parse(VALID_JSON), keywords: ["a", "b", "c", "d", "e"] }),
+      JSON.stringify({ ...VALID_OBJECT, keywords: ["a", "b", "c", "d", "e"] }),
     );
     expect(s!.keywords).toHaveLength(3);
     expect(s!.keywords).toEqual(["a", "b", "c"]);
@@ -111,20 +134,23 @@ describe("parseSuggestion (tolerant JSON object parse)", () => {
   });
 });
 
-describe("runPositioningGenerate", () => {
-  it("calls deps.llm with the positioning.generate capability + schema, and records a positioning_profile candidate", async () => {
-    const { deps, llm, recordCandidate, markRunning } = makeDeps(async () => ({
-      text: VALID_JSON,
-    }));
+describe("runPositioningGenerate (runStructuredNode + 外置模板)", () => {
+  it("resolves positioning.generate and records a positioning_profile candidate", async () => {
+    const { deps, recordCandidate, markRunning, resolveModelSpec } =
+      makeDeps(VALID_OBJECT);
     await runPositioningGenerate(ctx, { id: "t1", inputData: {} }, deps);
 
     expect(markRunning).toHaveBeenCalledWith(ctx, "t1");
-    expect(llm).toHaveBeenCalledWith(
-      ctx,
-      "positioning.generate",
-      expect.any(String),
-      expect.objectContaining({ schema: true }),
-    );
+    expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "positioning.generate");
+    expect(runStructuredNode).toHaveBeenCalledTimes(1);
+    // runStructuredNode 被喂进 positioning.generate 模板 + 装配好的 facets(current 兜底非空)。
+    const call = runStructuredNode.mock.calls[0]![0];
+    expect(call.template.id).toBe("positioning.generate");
+    // 定位现状 + 抖音账号画像都进了 facets(current / accounts)。
+    expect(call.facets.current).toContain("现有一句话定位");
+    expect(call.facets.accounts).toContain("douyin");
+    expect(call.facets.accounts).toContain("@老黄说AI");
+
     expect(recordCandidate).toHaveBeenCalledTimes(1);
     const [, taskId, payload] = recordCandidate.mock.calls[0]!;
     expect(taskId).toBe("t1");
@@ -133,54 +159,34 @@ describe("runPositioningGenerate", () => {
     expect(payload.resultData.suggestion.keywords).toEqual(["论文", "代码", "工程化"]);
   });
 
-  it("the prompt carries the creator's current positioning AND their 抖音账号 profile as material", async () => {
-    let capturedPrompt = "";
-    const { deps } = makeDeps(async () => ({ text: VALID_JSON }));
-    deps.llm = vi.fn(async (_c: unknown, _cap: unknown, prompt: string) => {
-      capturedPrompt = prompt;
-      return { text: VALID_JSON };
-    }) as never;
-
-    await runPositioningGenerate(ctx, { id: "t2", inputData: {} }, deps);
-
-    // 定位现状 fed in (existing one-liner / persona)
-    expect(capturedPrompt).toContain("现有一句话定位");
-    expect(capturedPrompt).toContain("现有人设");
-    // 抖音账号画像 fed in (platform / handle / follower count)
-    expect(capturedPrompt).toContain("douyin");
-    expect(capturedPrompt).toContain("@老黄说AI");
-    expect(capturedPrompt).toContain("128000");
-  });
-
-  it("degrades gracefully when the creator has NO positioning yet (empty profile/statement)", async () => {
-    let capturedPrompt = "";
-    const { deps, recordCandidate } = makeDeps(
-      async () => ({ text: VALID_JSON }),
-      { positioning: { profile: null, currentStatement: null } },
-    );
-    deps.llm = vi.fn(async (_c: unknown, _cap: unknown, prompt: string) => {
-      capturedPrompt = prompt;
-      return { text: VALID_JSON };
-    }) as never;
+  it("degrades gracefully when the creator has NO positioning yet (current facet 兜底)", async () => {
+    const { deps, recordCandidate } = makeDeps(VALID_OBJECT);
+    // 覆盖 positioning reader 成空 → assembleCreativeContext 产空 brief → current 走兜底文案。
+    (deps as { positioning: unknown }).positioning = {
+      getPositioningCenter: async () => ({ profile: null, currentStatement: null }),
+    } as never;
 
     await runPositioningGenerate(ctx, { id: "t3", inputData: {} }, deps);
-    expect(capturedPrompt).toContain("尚未设置定位");
+    const call = runStructuredNode.mock.calls.at(-1)![0];
+    expect(call.facets.current).toContain("尚未设置定位");
     expect(recordCandidate).toHaveBeenCalledTimes(1);
   });
 
-  it("cancels the task (no candidate) when the LLM returns unparseable text", async () => {
-    const { deps, recordCandidate, cancelTask } = makeDeps(async () => ({
-      text: "抱歉我帮不了你",
-    }));
+  it("cancels the task (no candidate) when the object normalizes to no usable suggestion", async () => {
+    // 合法但退化的结构化对象(persona + oneLiner 均空)→ normalizeSuggestion 返回 null → guard → cancel。
+    const { deps, recordCandidate, cancelTask } = makeDeps({
+      persona: "",
+      oneLiner: "",
+      keywords: [],
+    });
     await runPositioningGenerate(ctx, { id: "t4", inputData: {} }, deps);
     expect(recordCandidate).not.toHaveBeenCalled();
     expect(cancelTask).toHaveBeenCalledWith(ctx, "t4");
   });
 
-  it("cancels the task gracefully (no throw) when the LLM has no credentials (LlmCredentialError)", async () => {
-    const { deps, recordCandidate, cancelTask } = makeDeps(async () => {
-      throw new LlmCredentialError("无可用 LLM 凭据");
-    });
+  it("cancels the task gracefully (no throw) when runStructuredNode throws", async () => {
+    const { deps, recordCandidate, cancelTask } = makeDeps(VALID_OBJECT);
+    runStructuredNode.mockRejectedValueOnce(new Error("结构化节点:未得到合 schema 的对象"));
     // Must not throw out of the background runner — it swallows + cancels.
     await expect(
       runPositioningGenerate(ctx, { id: "t5", inputData: {} }, deps),

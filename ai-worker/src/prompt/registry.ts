@@ -32,6 +32,9 @@ import { REVIEW_INSIGHTS_TEMPLATE } from "./templates/review-insights";
 import { CALIBRATION_DIAGNOSE_TEMPLATE } from "./templates/calibration-diagnose";
 import { CALIBRATION_SCORE_TEMPLATE } from "./templates/calibration-score";
 import { RESEARCH_GATHER_TEMPLATE } from "./templates/research-gather";
+import { POSITIONING_GENERATE_TEMPLATE } from "./templates/positioning-generate";
+import { TOPIC_ENRICH_TEMPLATE } from "./templates/topic-enrich";
+import { MATERIAL_MATCH_TEMPLATE } from "./templates/material-match";
 import { CHATBOX_TOPIC_TEMPLATE } from "./templates/chatbox-turn";
 import {
   CHATBOX_CALIBRATION_TEMPLATE,
@@ -60,6 +63,9 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   CALIBRATION_DIAGNOSE_TEMPLATE,
   CALIBRATION_SCORE_TEMPLATE,
   RESEARCH_GATHER_TEMPLATE,
+  POSITIONING_GENERATE_TEMPLATE,
+  TOPIC_ENRICH_TEMPLATE,
+  MATERIAL_MATCH_TEMPLATE,
   CHATBOX_TOPIC_TEMPLATE,
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,

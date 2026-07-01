@@ -1,22 +1,25 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec, MaterialMatchOutput } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
-import { parseJsonArray } from "./agent-run";
-import type {
-  LlmCompleteOptions,
-  LlmCompleter,
-} from "@/server/ai/llm/provider";
 
 // 素材匹配 runner (material.match node, 制作 stage). It scans the creator's asset library
 // (assetsBrief) and proposes which REAL assets fit this content + how (role + reason). It
 // records a `material_link_list` CANDIDATE; on 采纳, each match becomes a material-link
 // (entityType:"asset", stage:"production") — making the 素材库⇄制作 edge a live record.
-// Runs the real subscription agent (no web tools — it reasons over the supplied library).
+//
+// 跑在 **Vercel AI SDK** 上(弃旧 LlmCompleter):resolveModelSpec 按 capability 解析用户配的
+// model,提示词走外置模板 material.match(脊柱-1 模板化解耦)。T-025b:改 runStructuredNode
+// (generateObject 绑 material.match 的 outputSchema,落空→文本兜底抽 JSON 再同 schema 校验),
+// 让用户默认的 MiniMax-M3 也稳定吐可解析匹配(旧路径:单发 messages.create + parseJsonArray,
+// MiniMax 下常吐不出规整 JSON → parseJsonArray 返回 [] → 抛「no parseable matches」→ 任务
+// cancelled,和刚修的 8 个节点同类 bug)。normalizeMatches 保留原「assetId 必须真实、缺则滤掉」
+// 的容错语义(只换"拿数组"的来源)。
 
 export interface MaterialMatchItem {
   assetId: string;
@@ -26,13 +29,12 @@ export interface MaterialMatchItem {
 
 export interface MaterialMatchDeps extends ContextDeps {
   ai: AiService;
-  llm: LlmCompleter;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
 }
-
-type Complete = (
-  prompt: string,
-  opts?: LlmCompleteOptions,
-) => Promise<{ text: string }>;
 
 export interface MaterialMatchTask {
   id: string;
@@ -40,48 +42,36 @@ export interface MaterialMatchTask {
   inputData: Record<string, unknown>;
 }
 
-function buildMatchPrompt(context: CreativeContext, topic: string): string {
-  const positioning = context.positioningBrief
-    ? context.positioningBrief
-    : "（创作者尚未设置定位）";
-  const library = context.assetsBrief
-    ? context.assetsBrief
-    : "（素材库为空——没有可用素材）";
-  return `你是这位创作者的「素材匹配 agent」。要为下面这条内容,从他**已有的素材库**里挑出最合适的素材。
-
-【创作者定位】
-${positioning}
-
-【本条内容主题】
-${topic || "（未提供主题——按定位通用匹配）"}
-
-【可用素材库】(每行: id | 名称 (类型))
-${library}
-
-【任务】判断素材库里哪些素材适合用在这条内容里,以及怎么用。
-【硬约束】assetId **必须**是上面素材库列表里出现过的真实 id,绝对不要编造不存在的 id。素材库为空时返回空数组 []。
-【输出】最后只输出一个 JSON 数组,每条:
-{"assetId"(必须来自上面列表的真实 id),"role"(broll空镜/clip片段/cover封面 三选一),"reason"(为什么用它、用在哪里,一句中文)}。
-不要输出多余文字、不要代码块包裹。`;
-}
-
-async function matchMaterials(
+// 把 CreativeContext + 主题映射成 material.match 模板的 facets(占位化原 buildMatchPrompt 的上下文块)。
+// library(可用素材库)是必需 facet,沿用原 prompt 的兜底文案(素材库为空时的提示)。
+function matchFacets(
   context: CreativeContext,
   topic: string,
-  complete: Complete,
-): Promise<MaterialMatchItem[]> {
-  const { text } = await complete(buildMatchPrompt(context, topic), {
-    schema: true,
-  });
-  return parseJsonArray(text)
-    .map((raw): MaterialMatchItem | null => {
-      const o = (raw ?? {}) as Record<string, unknown>;
-      const assetId = typeof o.assetId === "string" ? o.assetId.trim() : "";
+): Record<string, string | undefined> {
+  return {
+    positioning: context.positioningBrief
+      ? context.positioningBrief
+      : "（创作者尚未设置定位）",
+    topic: topic || "（未提供主题——按定位通用匹配）",
+    library: context.assetsBrief
+      ? context.assetsBrief
+      : "（素材库为空——没有可用素材）",
+  };
+}
+
+// Normalize the schema-validated matches array into asset matches (T-025:结构化后拿的是已解析
+// 对象,归一逻辑原样保留 —— trim、滤掉缺 assetId 的项,保持"assetId 必须真实"的容错语义)。
+function normalizeMatches(
+  matches: MaterialMatchOutput["matches"],
+): MaterialMatchItem[] {
+  return (matches ?? [])
+    .map((o): MaterialMatchItem | null => {
+      const assetId = (o.assetId ?? "").trim();
       if (!assetId) return null;
       return {
         assetId,
-        role: typeof o.role === "string" ? o.role : "",
-        reason: typeof o.reason === "string" ? o.reason : "",
+        role: o.role ?? "",
+        reason: o.reason ?? "",
       };
     })
     .filter((m): m is MaterialMatchItem => m !== null);
@@ -103,9 +93,20 @@ export async function runMaterialMatch(
       { projectId: task.projectId, topic },
       deps,
     );
-    const matches = await matchMaterials(context, topic, (prompt, opts) =>
-      deps.llm(ctx, "copy.generate", prompt, opts),
-    );
+    // Vercel AI SDK 路径:按 "material.match" capability 解析 model + 跑 ai-worker 结构化节点(外置
+    // material.match 模板 + outputSchema)。T-026:runStructuredNode 绑 generateObject,落空→文本
+    // 兜底,让用户默认的 MiniMax 也稳定吐可解析匹配。顶层是对象,取 object.matches 再 normalize。
+    // (原为 "copy.generate" —— 迁移前 LlmCompleter 的 copy-paste 遗留;改回本节点自己的 capability,
+    //  未配则回退 default(行为中性),且让用户可单独为素材匹配配模型。)
+    const spec = await deps.resolveModelSpec(ctx, "material.match");
+    const { modelFor, runStructuredNode, MATERIAL_MATCH_TEMPLATE } =
+      await import("@creatoros/ai-worker");
+    const { object } = await runStructuredNode<MaterialMatchOutput>({
+      model: modelFor(spec),
+      template: MATERIAL_MATCH_TEMPLATE,
+      facets: matchFacets(context, topic),
+    });
+    const matches = normalizeMatches(object.matches);
     if (matches.length === 0) {
       throw new Error(
         "material-match-runner: agent returned no parseable matches",

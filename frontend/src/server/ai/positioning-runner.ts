@@ -1,30 +1,35 @@
 import "server-only";
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
+import type { ModelSpec, PositioningSuggestionOutput } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
 import { parseJsonLoose } from "@/server/ai/llm/parse";
-import type {
-  LlmCompleteOptions,
-  LlmCompleter,
-} from "@/server/ai/llm/provider";
 
 // 定位生成 runner (positioning.generate node, 机制③④ — Plan Phase A). The audit's level-1
 // gap: the 定位中心 could only *use* positioning, never *generate* one. This runner is
 // the source for createdByType:"ai" statements.
 //
-// Mirrors script-/planning-runner (deps.llm → real configurable LLM, item A) but instead
-// of an artifact_version it records a NEW `positioning_profile` CANDIDATE. On 采纳, the
-// AI service's positioning_profile confirm branch formalizes it into the creator's
-// CreatorProfile (upsertProfile) + a new PositioningStatement version
+// On 采纳, the AI service's positioning_profile confirm branch formalizes it into the
+// creator's CreatorProfile (upsertProfile) + a new PositioningStatement version
 // (createStatementVersion, createdByType:"ai", aiTaskId) — closing the OQ2 loop.
 //
 // Context the agent reasons against: the creator's CURRENT positioning (so a suggestion
 // is an *evolution*, not a from-scratch guess) + their 抖音账号画像 (platform/handle/
 // follower count) as material for who they already are on-platform. No web tools.
+//
+// 跑在 **Vercel AI SDK** 上(弃旧 LlmCompleter):resolveModelSpec 按 capability 解析用户配的
+// model,提示词走外置模板 positioning.generate(脊柱-1 模板化解耦)。T-025b:改 runStructuredNode
+// (generateObject 绑 positioning.generate 的 outputSchema,落空→文本兜底抽 JSON 再同 schema 校验),
+// 让用户默认的 MiniMax-M3 也稳定吐可解析定位提案(旧路径:单发 messages.create + parseSuggestion,
+// MiniMax 下常吐不出规整 JSON → parseSuggestion 返回 null → 任务 cancelled,和刚修的 8 个节点同类
+// bug)。normalizeSuggestion 复用 clampKeywords/asStrings 保留原容错(keywords 恰好 3 个等)。
+//
+// 注:buildPositioningPrompt + parseSuggestion 仍导出且行为不变 —— chat-runner 的 generatePositioning
+// 工具(对话面产定位提案候选,走 runAgentNode 拿自由文本)复用它们,不能改签名/语义。
 
 // The structured suggestion the agent returns (writer ↔ confirm contract). Exactly the
 // 9-field 定位 shape the 定位中心 reads: 5 profile facets + oneLiner + 3 keywords.
@@ -40,13 +45,12 @@ export interface PositioningSuggestion {
 
 export interface PositioningDeps extends ContextDeps {
   ai: AiService;
-  llm: LlmCompleter;
+  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
+  resolveModelSpec: (
+    ctx: RequestContext,
+    capability: string,
+  ) => Promise<ModelSpec>;
 }
-
-type Complete = (
-  prompt: string,
-  opts?: LlmCompleteOptions,
-) => Promise<{ text: string }>;
 
 export interface PositioningTask {
   id: string;
@@ -54,7 +58,7 @@ export interface PositioningTask {
 }
 
 // 导出供 ChatBox 的 positioning.generate 工具复用(对话里产定位提案候选,与本 runner 同一份
-// prompt + parse,不造影子)。
+// prompt + parse,不造影子)。chat-runner 用 runAgentNode 拿自由文本再 parseSuggestion。
 export function buildPositioningPrompt(context: CreativeContext): string {
   const current = context.positioningBrief
     ? context.positioningBrief
@@ -82,6 +86,22 @@ ${current}${accounts}
 keywords 必须正好 3 个。capabilities 给 2-5 个。`;
 }
 
+// Assemble the positioning.generate 模板 facets from the CreativeContext (占位化原
+// buildPositioningPrompt 的上下文块). current(当前定位)是必需 facet,兜底与原 prompt 一致;
+// accounts(抖音账号画像块)选填。
+function positioningFacets(
+  context: CreativeContext,
+): Record<string, string | undefined> {
+  return {
+    current: context.positioningBrief
+      ? context.positioningBrief
+      : "（创作者尚未设置定位——请基于其抖音账号画像与赛道,给出一份从 0 到 1 的定位提案）",
+    accounts: context.accountsBrief
+      ? `\n【创作者抖音账号画像】\n${context.accountsBrief}`
+      : "\n（创作者尚未连接平台账号——按通用赛道判断即可）",
+  };
+}
+
 // Clamp keywords to EXACTLY 3 — the createStatementVersion invariant
 // (StatementValidationError when != 3). Drop extras; pad with "" when short so the
 // downstream confirm can still surface a usable draft (the user edits before adopting).
@@ -103,13 +123,13 @@ function asStrings(raw: unknown): string[] {
     : [];
 }
 
-// Tolerant parse of the agent's final text into a PositioningSuggestion. Returns null
-// when nothing parseable OR when the suggestion is empty (no persona and no oneLiner) —
-// the runner treats null as "no usable candidate" and cancels.
-export function parseSuggestion(text: string): PositioningSuggestion | null {
-  const parsed = parseJsonLoose(text);
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
-  const o = parsed as Record<string, unknown>;
+// Normalize the schema-validated suggestion object into a PositioningSuggestion (T-025:结构化
+// 后拿的是已解析对象,容错逻辑原样保留 —— trim、clampKeywords 夹 3、asStrings 清 capabilities)。
+// Returns null when the suggestion is empty (no persona and no oneLiner) — the runner treats
+// null as "no usable candidate" and cancels.
+function normalizeSuggestion(
+  o: PositioningSuggestionOutput,
+): PositioningSuggestion | null {
   const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
   const suggestion: PositioningSuggestion = {
     persona: str(o.persona),
@@ -125,14 +145,15 @@ export function parseSuggestion(text: string): PositioningSuggestion | null {
   return suggestion;
 }
 
-async function generateSuggestion(
-  context: CreativeContext,
-  complete: Complete,
-): Promise<PositioningSuggestion | null> {
-  const { text } = await complete(buildPositioningPrompt(context), {
-    schema: true,
-  });
-  return parseSuggestion(text);
+// Tolerant parse of the agent's final text into a PositioningSuggestion. Returns null
+// when nothing parseable OR when the suggestion is empty (no persona and no oneLiner) —
+// used by the CHAT path (chat-runner 的 generatePositioning 工具走 runAgentNode 拿自由文本)。
+// 结构化 runner 已改走 normalizeSuggestion(拿已校验对象);这里是文本兜底薄壳:宽容抽 JSON 对象
+// → 交给同一 normalizeSuggestion(容错单点收口)。
+export function parseSuggestion(text: string): PositioningSuggestion | null {
+  const parsed = parseJsonLoose(text);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+  return normalizeSuggestion(parsed as PositioningSuggestionOutput);
 }
 
 // Orchestrate one positioning.generate task end to end. Owns its lifecycle: on any
@@ -152,9 +173,18 @@ export async function runPositioningGenerate(
       { projectId: null, topic: "" },
       deps,
     );
-    const suggestion = await generateSuggestion(context, (prompt, opts) =>
-      deps.llm(ctx, "positioning.generate", prompt, opts),
-    );
+    // Vercel AI SDK 路径:按 "positioning.generate" capability 解析 model + 跑 ai-worker 结构化节点
+    // (外置 positioning.generate 模板 + outputSchema)。T-025b:runStructuredNode 绑 generateObject,
+    // 落空→文本兜底,让用户默认的 MiniMax 也稳定吐可解析定位提案。顶层是对象,取 object 再 normalize。
+    const spec = await deps.resolveModelSpec(ctx, "positioning.generate");
+    const { modelFor, runStructuredNode, POSITIONING_GENERATE_TEMPLATE } =
+      await import("@creatoros/ai-worker");
+    const { object } = await runStructuredNode<PositioningSuggestionOutput>({
+      model: modelFor(spec),
+      template: POSITIONING_GENERATE_TEMPLATE,
+      facets: positioningFacets(context),
+    });
+    const suggestion = normalizeSuggestion(object);
     if (!suggestion) {
       throw new Error(
         "positioning-runner: LLM returned no parseable positioning suggestion",

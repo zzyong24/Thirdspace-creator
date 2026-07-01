@@ -1797,7 +1797,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   return { title: cand.title, angle: cand.angle };
                 },
               },
-              llm: llmCompleter,
+              // Vercel AI SDK 路径:选题补全跑在 ai-worker 结构化节点(外置 topic.enrich 模板
+              // + generateObject 绑 outputSchema,落空→文本兜底),跨模型健壮(MiniMax 也稳出)。
+              resolveModelSpec,
             },
           );
         } else if (
@@ -2248,7 +2250,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               positioning: positioningReader,
               learnings: learningsReader,
               assets: assetsReader,
-              llm: llmCompleter,
+              // Vercel AI SDK 路径:素材匹配跑在 ai-worker 结构化节点(外置 material.match 模板
+              // + generateObject 绑 outputSchema,落空→文本兜底),跨模型健壮(MiniMax 也稳出)。
+              resolveModelSpec,
             },
           );
         } else if (
@@ -2273,7 +2277,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               accounts: accountsReader,
-              llm: llmCompleter,
+              // Vercel AI SDK 路径:定位生成跑在 ai-worker 结构化节点(外置 positioning.generate
+              // 模板 + generateObject 绑 outputSchema,落空→文本兜底),跨模型健壮(MiniMax 也稳出)。
+              resolveModelSpec,
             },
           );
         }
