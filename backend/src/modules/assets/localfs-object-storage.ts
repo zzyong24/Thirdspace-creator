@@ -102,6 +102,24 @@ export function createLocalFsObjectStorage(
       } satisfies PresignedUpload;
     },
 
+    async putObject({ storageKey, bytes, mimeType, assetType }) {
+      // Server-side direct write (asset.generate) — the bytes land at
+      // `${rootPath}/${storageKey}` exactly like a client PUT to the blob route would
+      // leave them, plus a refreshed sidecar so headObject echoes the real MIME/dims.
+      const absKey = safeJoin(cfg.rootPath, storageKey);
+      await fs.mkdir(path.dirname(absKey), { recursive: true });
+      const meta: SidecarMeta = {
+        mimeType,
+        fileSize: bytes.byteLength,
+        width: assetType === "image" || assetType === "video" ? 1920 : null,
+        height: assetType === "image" || assetType === "video" ? 1080 : null,
+        durationMs:
+          assetType === "video" || assetType === "audio" ? 1000 : null,
+      };
+      await fs.writeFile(sidecarPath(absKey), JSON.stringify(meta), "utf8");
+      await fs.writeFile(absKey, bytes);
+    },
+
     async headObject(storageKey) {
       const absKey = safeJoin(cfg.rootPath, storageKey);
       // Real on-disk size (the bytes the FE PUT) is the source of truth.

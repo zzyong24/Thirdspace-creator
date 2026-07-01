@@ -294,6 +294,71 @@ describe("ai service", () => {
     );
   });
 
+  it("confirmTask on a generated_asset binds the already-created asset to the project via 用料链 (L5 asset.generate, [gate-F6])", async () => {
+    const { service, materialLinks } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "asset.generate",
+      inputData: { projectId: "p-1", prompt: "扁平隐喻图", kind: "image" },
+    });
+    // The runner already materialized the asset (bytes → storage → asset row) and stamps
+    // its real id on both the assetId column and resultData.assetId.
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "generated_asset",
+      assetId: "asset-gen-7",
+      resultData: {
+        assetId: "asset-gen-7",
+        assetType: "image",
+        name: "扁平隐喻图 · 生成图",
+      },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    // 采纳 ties the generated asset into the project's 用料链 (entityType asset, stage production)
+    // — reusing the SAME materialLinks port the material_link_list branch uses.
+    expect(materialLinks.link).toHaveBeenCalledTimes(1);
+    expect(materialLinks.link).toHaveBeenNthCalledWith(
+      1,
+      ctx,
+      expect.objectContaining({
+        projectId: "p-1",
+        entityType: "asset",
+        entityId: "asset-gen-7",
+        role: "clip",
+        stage: "production",
+      }),
+    );
+  });
+
+  it("confirmTask on a generated_asset with NO project succeeds without a 用料链 bind (asset still exists)", async () => {
+    const { service, materialLinks } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "asset.generate",
+      inputData: { prompt: "x", kind: "image" }, // no projectId
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "generated_asset",
+      assetId: "asset-gen-8",
+      resultData: { assetId: "asset-gen-8", assetType: "image", name: "n" },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    // No project → no bind; the generated asset remains in the library (born active).
+    expect(materialLinks.link).not.toHaveBeenCalled();
+  });
+
+  it("confirmTask on a generated_asset missing assetId throws (honest — nothing to bind)", async () => {
+    const { service } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "asset.generate",
+      inputData: { projectId: "p-1", prompt: "x", kind: "image" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "generated_asset",
+      resultData: { assetType: "image", name: "n" }, // no assetId anywhere
+    });
+    await expect(service.confirmTask(ctx, task.id)).rejects.toThrow();
+  });
+
   it("confirmTask on a learning_list materializes each 爆款要素 via learnings.createLearning", async () => {
     const { service, learnings } = makeService(db);
     const task = await service.createTask(ctx, {

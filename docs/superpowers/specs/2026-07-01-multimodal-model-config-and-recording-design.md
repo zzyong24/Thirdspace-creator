@@ -62,9 +62,10 @@ interface MultimodalSpec {
 一个生成素材的 AI 任务(dispatch 同 script.draft 那样经 persistence-client):
 - **入**:`{ projectId, prompt, kind: "image"|"video", aspectRatio? }`(prompt 由用户在录制页填,或从分镜"画面"字段带)。
 - **跑**:`resolveMultimodalSpec(ctx, kind==="image"?"image.generate":"video.generate")` → `generateImage/Video(spec, …)` → 拿 bytes。
-- **落**:bytes → 对象存储(P3 local-fs,presigned PUT 或直写) → 建 `asset`(assets 模块)→ 记为**候选**(`resultType: "generated_asset"` 或复用 asset 采纳门)。
-- **采纳**:人在录制页确认候选 → 绑定项目 + 入用料链(A4)。未采纳不占用/不污染料库。
-- **失败**(无 key / provider 报错 / 内容审核)→ cancelTask + UI 显失败+原因,不假成功。
+- **落**:bytes → 对象存储(P3 local-fs,**直写**:M2 给 `ObjectStoragePort` 加了服务端 `putObject(storageKey, bytes)`,三适配器 mock/local-fs/s3 全实现——后台 runner 已持有字节,不走 client presigned PUT 的 HTTP 回环;AssetsService 仍是唯一存储调用方 SPEC §15) → 建 `asset`(assets 模块新增 `createGeneratedAsset`:mint key → putObject → insertAsset+insertAssetFile,asset 生下来 active 但**未绑项目**;字节此刻已持久化,不管采纳与否都在) → 记为**候选**(`resultType: "generated_asset"`,assetId 走 recordCandidate 的 assetId 列 + resultData)。
+- **采纳门(`[gate-F6]` 定论)**:**新增 `generated_asset` resultType**,其 confirm 分支**复用现有 asset 绑定门的端口/动作**(与 `material_link_list` 同一个 `AiMaterialLinksPort.link`),把已建的 asset 绑到当前项目 + 入用料链 A4(`entityType:"asset", role:"clip", stage:"production"`)。**依据**:探查确证现有唯一的 asset 采纳门 `material_link_list` 绑定的是**素材库里已存在**的 asset(assetId 已在库);asset.generate 的 asset 是从 AI 字节**新生**的,是 create-then-bind 语义——asset 在生成期就建好(与 research-runner 产出具体候选同构),故必须有一条自己的薄 resultType,但**绑定动作/端口复用**、不新造 link 逻辑。未采纳不绑项目/不污染料库(asset 仍在素材库可见)。
+- **采纳**:人在录制页确认候选 → 绑定项目 + 入用料链(A4)。项目缺失时 confirm 成功但不绑(asset 仍在素材库)。
+- **失败**(无 key `MultimodalConfigError` / provider 报错 / 内容审核 / **video 轮询超时**)→ cancelTask + UI 显失败+原因,不假成功。
 
 ## 4. L5 录制页(UI,复用为主)
 
@@ -106,5 +107,5 @@ interface MultimodalSpec {
 
 - Vercel AI SDK `experimental_generateImage` 对 MiniMax/用户 provider 的支持边界 —— M1 落地时先探,支持就用 SDK 抽象、不支持走自建 REST。
 - MiniMax image/video REST API 的鉴权/入参/异步 taskId 轮询细节 —— M1 读 MiniMax 官方文档定(video 是异步任务,需轮询下载,和文本同步不同)。
-- 生成 asset 的候选采纳走哪条门:复用 material_list/asset 采纳,还是新 `generated_asset` resultType —— M2 看现有 assets 采纳链定,优先复用。
+- ~~生成 asset 的候选采纳走哪条门:复用 material_list/asset 采纳,还是新 `generated_asset` resultType~~ **[gate-F6 M2 已定]**:**新增 `generated_asset` resultType**,confirm 分支**复用现有 asset 绑定门的端口/动作**(`AiMaterialLinksPort.link`,与 `material_link_list` 同)。理由:现有唯一 asset 采纳门 `material_link_list` 绑的是**库里已存在**的 asset;asset.generate 是 create-then-bind(runner 生成期就建好 asset,字节先落盘、候选带真 assetId),confirm 只做「绑项目 + 入用料链」。绑定逻辑零重造,仅加一条薄 resultType 承载「先建后绑」语义。见 §3。
 - aspectRatio 默认:抖音竖屏 9:16(文生图直接配;文生视频 MiniMax 默认 16:9 需后期裁,先只标注不自动裁)。

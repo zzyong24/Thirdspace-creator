@@ -55,6 +55,37 @@ export {
   type ModelSpec,
   type ApiFormat,
 } from "./runtime/provider-factory";
+// 多模态 provider 工厂(SPEC 2026-07-01 §2.2 / §8 M1/M2)—— 生图/生视频用户可配 provider
+// 抽象,与文本 modelFor 并列。host(persistence-client)解析 MultimodalSpec(resolveMultimodalSpec)
+// + 注册 provider 适配器,调 generateImage/generateVideo 即可。上层统一 `{ assetBytes }` 契约
+// ([gate-F1]),异步 video 轮询封在适配器内。asset.generate runner (M2) 消费这些。
+export {
+  generateImage,
+  generateVideo,
+  MultimodalConfigError,
+  MultimodalGenerationError,
+  type MultimodalSpec,
+  type MultimodalProviderAdapter,
+  type MultimodalProviderRegistry,
+  type GeneratedAsset,
+  type GenerateImageOptions,
+  type GenerateVideoOptions,
+} from "./runtime/multimodal-factory";
+// MiniMax 适配器(M1 的默认真 provider)—— host 注册进 registry(keyed by "minimax")。
+// deps 可注入(fake fetch/sleep)供单测;video 的异步轮询状态机(submit→poll→retrieve、
+// maxPollAttempts 超时抛错)封在这里,M2 runner 把超时 catch 成 cancelTask。
+export {
+  createMinimaxAdapter,
+  type MinimaxAdapterDeps,
+} from "./runtime/multimodal-minimax";
+// Fake 多模态适配器(测试支持,零成本)—— 与 createFakeAgentRunner 同类的测试用假件,经 index
+// 公开出口给消费方单测用(frontend asset.generate runner 测装配 + 异步轮询)。含 fake 异步
+// video provider(先 taskId、N 次轮询后返 bytes),坐实 [gate-F1]/[gate-F2] 的异步链路覆盖。
+export {
+  createFakeAdapter,
+  createImageOnlyFakeAdapter,
+  createFakeAsyncVideoAdapter,
+} from "./runtime/multimodal-factory.fake";
 export { toToolSet, type ToolDef } from "./runtime/tool-registry";
 export {
   runTopicNode,

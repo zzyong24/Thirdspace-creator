@@ -137,6 +137,52 @@ describe("assets.service — completeUpload (C4)", () => {
   });
 });
 
+describe("assets.service — createGeneratedAsset (L5 asset.generate)", () => {
+  it("direct-writes server bytes + materializes asset (active) with a first file, listable", async () => {
+    const bytes = new Uint8Array([1, 2, 3, 4]);
+    const asset = await service.createGeneratedAsset(ctxA, {
+      assetType: "image",
+      name: "AI 生成图",
+      bytes,
+      mimeType: "image/png",
+    });
+    expect(asset.status).toBe("active");
+    expect(asset.assetType).toBe("image");
+    expect(asset.name).toBe("AI 生成图");
+    expect(asset.currentFileId).toBeTruthy();
+    // The generated asset is listable for its owner (born in the library).
+    const list = await service.listAssets(ctxA, { limit: 50, cursor: null });
+    expect(list.some((a) => a.id === asset.id)).toBe(true);
+  });
+
+  it("rejects empty bytes / bad assetType / empty mimeType (UploadValidationError)", async () => {
+    await expect(
+      service.createGeneratedAsset(ctxA, {
+        assetType: "image",
+        name: "n",
+        bytes: new Uint8Array([]),
+        mimeType: "image/png",
+      }),
+    ).rejects.toBeInstanceOf(UploadValidationError);
+    await expect(
+      service.createGeneratedAsset(ctxA, {
+        assetType: "nope",
+        name: "n",
+        bytes: new Uint8Array([1]),
+        mimeType: "image/png",
+      }),
+    ).rejects.toBeInstanceOf(UploadValidationError);
+    await expect(
+      service.createGeneratedAsset(ctxA, {
+        assetType: "video",
+        name: "n",
+        bytes: new Uint8Array([1]),
+        mimeType: "",
+      }),
+    ).rejects.toBeInstanceOf(UploadValidationError);
+  });
+});
+
 describe("assets.service — getAsset / listAssets (C1/C2)", () => {
   it("getAsset(foreign id) → OwnershipError", async () => {
     const asset = await upload(ctxA);

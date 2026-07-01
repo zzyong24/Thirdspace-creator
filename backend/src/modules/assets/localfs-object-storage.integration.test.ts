@@ -72,6 +72,33 @@ describe("localfs-object-storage", () => {
     expect(head.checksum).toMatch(/^[0-9a-f]{64}$/);
   });
 
+  it("putObject direct-writes server bytes to disk; headObject reads them back (asset.generate)", async () => {
+    const storage = makeStorage();
+    const up = await storage.createPresignedUpload({
+      assetType: "video",
+      mimeType: "video/mp4",
+      fileSize: 4,
+    });
+    // Server-side direct write (no HTTP blob-route PUT) — the runner already holds bytes.
+    const bytes = new Uint8Array([1, 2, 3, 4, 5, 6]);
+    await storage.putObject({
+      storageKey: up.storageKey,
+      bytes,
+      mimeType: "video/mp4",
+      assetType: "video",
+    });
+    // Bytes really landed on disk under the key.
+    const onDisk = await fs.readFile(path.join(root, up.storageKey));
+    expect(Array.from(onDisk)).toEqual([1, 2, 3, 4, 5, 6]);
+    // headObject echoes the real size + refreshed MIME/dims + a real sha256.
+    const head = await storage.headObject(up.storageKey);
+    expect(head.fileSize).toBe(6);
+    expect(head.mimeType).toBe("video/mp4");
+    expect(head.width).toBe(1920);
+    expect(head.durationMs).toBe(1000);
+    expect(head.checksum).toMatch(/^[0-9a-f]{64}$/);
+  });
+
   it("getSignedUrl mints a GET-bound token URL", async () => {
     const storage = makeStorage();
     const url = await storage.getSignedUrl("image/uploads/objkey-1");

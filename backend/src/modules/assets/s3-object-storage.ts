@@ -65,6 +65,19 @@ export function createS3ObjectStorage(
       return { storageKey, uploadUrl } satisfies PresignedUpload;
     },
 
+    async putObject({ storageKey, bytes, mimeType }) {
+      // Server-side direct write (asset.generate) — PUT the in-process bytes straight
+      // into the bucket (no presigned round-trip; the runner already holds them).
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: cfg.bucket,
+          Key: storageKey,
+          Body: bytes,
+          ContentType: mimeType,
+        }),
+      );
+    },
+
     async headObject(storageKey) {
       const h = await s3.send(
         new HeadObjectCommand({ Bucket: cfg.bucket, Key: storageKey }),

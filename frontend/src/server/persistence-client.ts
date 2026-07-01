@@ -170,8 +170,16 @@ import { runPlatformAdapt } from "@/server/ai/platform-adapt-runner";
 import { runMaterialMatch } from "@/server/ai/material-match-runner";
 import { runPositioningGenerate } from "@/server/ai/positioning-runner";
 import { runCopilotAssist } from "@/server/ai/copilot-runner";
+import { runAssetGenerate } from "@/server/ai/asset-generate-runner";
 import { createLlmCompleter } from "@/server/ai/llm/provider";
 import { resolveLlmConfig } from "@/server/ai/llm/resolve";
+import { resolveMultimodalSpec as resolveMultimodalSpecFn } from "@/server/ai/multimodal/resolve";
+// 多模态 provider 适配器(L5 asset.generate)。createMinimaxAdapter 是纯自建 REST(image
+// 同步 / video 异步轮询),不碰 Agent SDK —— 不违 determinism 边界,可在 host 组合层直接注册。
+import {
+  createMinimaxAdapter,
+  type MultimodalProviderRegistry,
+} from "@creatoros/ai-worker";
 import {
   createPositioningService,
   createPositioningTransport,
@@ -2282,6 +2290,47 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               resolveModelSpec,
             },
           );
+        } else if (
+          task &&
+          task.taskType === "asset.generate" &&
+          task.status === "queued"
+        ) {
+          // 生成素材 node (asset.generate, L5 录制, SPEC 2026-07-01 §3 / M2) — AI 生图/生视频
+          // (用户可配 provider,铁律:绝不写死 MiniMax)→ 落对象存储(P3 直写 putObject)→ 建
+          // asset(候选态)→ records a `generated_asset` candidate; 采纳 ties the generated asset
+          // into the 用料链 for the project (entityType:"asset", stage:"production") via the
+          // materialLinks port wired above. video 的异步轮询(submit→poll→retrieve + 超时)封在
+          // M1 minimax 适配器内;超时/失败 → runner catch → cancelTask(UI 失败态,绝不卡 running)。
+          // 未配 image.generate/video.generate model → MultimodalConfigError → cancelTask(诚实禁用)。
+          void runAssetGenerate(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              // 多模态解析(按 image.generate/video.generate capability 解析用户配的 provider/
+              // model/key),与文本层 resolveModelSpec 并列。
+              resolveMultimodalSpec,
+              // provider 适配器注册表(真 MiniMax;加 provider = 注册一个适配器,不改 runner)。
+              registry: multimodalRegistry,
+              // 建 asset 的窄端口 —— 落字节到对象存储 + 建 asset 行(候选态,未绑项目)。绑到
+              // AssetsService 的服务端直写方法(SOLE object-storage caller,SPEC §15)。
+              assets: {
+                createGeneratedAsset: async (c, input) => {
+                  const row = await assetsService.createGeneratedAsset(c, input);
+                  return {
+                    id: row.id,
+                    name: row.name,
+                    assetType: row.assetType,
+                  };
+                },
+              },
+            },
+          );
         }
       }
       // 全局 AI 助手 (copilot.assist) — a USER message create fires the positioning-aware
@@ -3202,6 +3251,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       model: cfg.model,
       token: cfg.token,
     };
+  };
+
+  // resolveMultimodalSpec — L5 asset.generate 的多模态解析(SPEC 2026-07-01 §2.2 / M2),与文本
+  // 层 resolveModelSpec 并列:复用同一套 getModelConfig(settings 拥有 model_configurations)+
+  // env,投影成 MultimodalSpec(provider/model/baseUrl/token/kind)。image.generate/video.generate
+  // 未配 → 抛 MultimodalConfigError(runner 接住 → cancelTask + 录制页「未配置生图/生视频模型」)。
+  const resolveMultimodalSpec = (
+    ctx: RequestContext,
+    capability: "image.generate" | "video.generate",
+  ) =>
+    resolveMultimodalSpecFn(ctx, capability, {
+      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      env: process.env,
+    });
+  // 多模态 provider 适配器注册表(keyed by provider)。真链路注册 MiniMax(M1 适配器,含 video
+  // 异步轮询状态机 submit→poll→retrieve + 超时);加 provider = 在此注册一个适配器,不改 runner
+  // 与业务代码([gate-F1])。真出图/视频要真 image.generate/video.generate key(本环境无 →
+  // 未配抛错、诚实禁用);单测装配用 M1 的 fake provider 注入,不碰这个真 registry。
+  const multimodalRegistry: MultimodalProviderRegistry = {
+    minimax: createMinimaxAdapter(),
   };
 
   // Seed the canonical user's Settings rows (plan Step 6 seed parity) so the

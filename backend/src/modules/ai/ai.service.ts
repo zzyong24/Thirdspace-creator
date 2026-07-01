@@ -529,6 +529,46 @@ export function createAiService(deps: ServiceDeps): AiService {
         return toTaskDto(updated);
       }
 
+      // generated_asset (asset.generate node, L5 录制, SPEC 2026-07-01 §3 [gate-F6]) — the
+      // asset itself was ALREADY materialized by the runner at generation time (bytes → object
+      // storage → asset row, born 'active' but UNBOUND). 采纳 only ties that generated asset
+      // into the 用料链 for the task's project via the SAME MaterialLinks port the
+      // material_link_list branch uses (entityType:"asset", stage:"production") — AI never
+      // writes the link table directly. The candidate carries `resultData.assetId` (also
+      // stamped on the result row's assetId column). This is a create-then-bind flow: unlike
+      // material_link_list (which binds a pre-existing library asset), the asset is born from
+      // AI bytes, so the confirm门 reuses material_link_list's binding ACTION but needs its own
+      // thin resultType. Only fires when the task carries a project; a generated asset on a
+      // project-less task 采纳s to a no-op bind (the asset still exists in the library).
+      if (candidate.resultType === "generated_asset") {
+        const data = (candidate.resultData ?? {}) as { assetId?: unknown };
+        const assetId =
+          typeof data.assetId === "string" && data.assetId
+            ? data.assetId
+            : typeof candidate.assetId === "string"
+              ? candidate.assetId
+              : "";
+        if (!assetId) {
+          throw new ConflictError(
+            `AI task ${taskId} generated_asset candidate is missing assetId`,
+          );
+        }
+        if (typeof task.projectId === "string" && task.projectId.length > 0) {
+          await deps.materialLinks.link(ctx, {
+            projectId: task.projectId,
+            entityType: "asset",
+            entityId: assetId,
+            role: "clip",
+            stage: "production",
+          });
+        }
+        const updated = await repo.updateTaskStatus(taskId, {
+          status: "succeeded",
+          completedAt: deps.now(),
+        });
+        return toTaskDto(updated);
+      }
+
       // material_link_list (material.match node, 制作 stage, Plan D2) — formalize each
       // matched asset into a material-link (entityType:"asset", stage:"production") via the
       // MaterialLinks module (AI never writes the link table directly). The candidate carries

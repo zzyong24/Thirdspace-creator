@@ -59,6 +59,22 @@ export interface AssetsService {
     uploadId: string,
     input: { name: string },
   ): Promise<AssetRow>;
+  // L5 asset.generate (SPEC 2026-07-01 §3) — the SERVER-SIDE counterpart to the two-phase
+  // client upload: an AI-generated image/video whose bytes the runner already holds. Mints
+  // a storage key, direct-writes the bytes (storage.putObject — NOT the presigned client
+  // flow), then materializes the Asset + first AssetFile in ONE call (no separate uploadId
+  // session). The asset is born 'active' but UNBOUND to any project — the AI confirm门 ties
+  // it into the 用料链 on 采纳 (铁律②:AI 只产候选、人采纳). Keeps AssetsService the SOLE
+  // object-storage caller (SPEC §15).
+  createGeneratedAsset(
+    ctx: RequestContext,
+    input: {
+      assetType: string;
+      name: string;
+      bytes: Uint8Array;
+      mimeType: string;
+    },
+  ): Promise<AssetRow>;
   addAssetFile(
     ctx: RequestContext,
     assetId: string,
@@ -175,6 +191,58 @@ export function createAssetsService(
         currentFileId: file.id,
       });
       await repo.markUploadCompleted(ctx.userId, uploadId);
+      return updated ?? asset;
+    },
+
+    async createGeneratedAsset(ctx, input) {
+      // SPEC §20 input validation (mirror createUpload phase 1).
+      if (!ASSET_TYPES.has(input.assetType)) {
+        throw new UploadValidationError(`Invalid assetType: ${input.assetType}`);
+      }
+      if (!input.mimeType || input.mimeType.trim() === "") {
+        throw new UploadValidationError("mimeType is required");
+      }
+      if (!(input.bytes.byteLength > 0)) {
+        throw new UploadValidationError("generated asset has no bytes");
+      }
+      const storage = await objectStorageForCtx(ctx);
+      // Mint a key exactly like the presigned path would (assetType-prefixed) so the
+      // on-disk / bucket layout is identical to a client upload.
+      const { storageKey } = await storage.createPresignedUpload({
+        assetType: input.assetType,
+        mimeType: input.mimeType,
+        fileSize: input.bytes.byteLength,
+      });
+      // Direct-write the in-process bytes (the runner already generated them) — no HTTP
+      // blob-route round-trip. Then head the object to get the authoritative size/checksum.
+      await storage.putObject({
+        storageKey,
+        bytes: input.bytes,
+        mimeType: input.mimeType,
+        assetType: input.assetType,
+      });
+      const head = await storage.headObject(storageKey);
+      // Materialize: asset (active) → first file (v1) → re-point currentFileId (mirror
+      // completeUpload). The repo stamps userId + status='active'.
+      const asset = await repo.insertAsset(ctx.userId, {
+        assetType: input.assetType,
+        name: input.name,
+        currentFileId: null,
+      });
+      const file = await repo.insertAssetFile(ctx.userId, {
+        assetId: asset.id,
+        storageKey,
+        mimeType: head.mimeType || input.mimeType,
+        fileSize: head.fileSize || input.bytes.byteLength,
+        checksum: head.checksum,
+        width: head.width,
+        height: head.height,
+        durationMs: head.durationMs,
+        mediaMetadata: head.mediaMetadata,
+      });
+      const updated = await repo.updateAssetStatus(ctx.userId, asset.id, {
+        currentFileId: file.id,
+      });
       return updated ?? asset;
     },
 

@@ -36,6 +36,19 @@ export interface ObjectStoragePort {
     mimeType: string;
     fileSize: number;
   }): Promise<PresignedUpload>;
+  // SERVER-SIDE direct write (L5 asset.generate / SPEC 2026-07-01 §3「直写」): store
+  // bytes the SERVER already holds (an AI-generated image/video), under a key minted by
+  // createPresignedUpload. The two-phase presigned flow is for CLIENT uploads (the browser
+  // PUTs its own bytes); a background runner has the bytes in-process and must NOT round-
+  // trip through the token-gated HTTP blob route. This keeps AssetsService the SOLE storage
+  // caller (SPEC §15) — no leaky `fs.writeFile` in the runner. Records/refreshes the sidecar
+  // metadata so a subsequent headObject echoes the real MIME + on-disk byte size.
+  putObject(input: {
+    storageKey: string;
+    bytes: Uint8Array;
+    mimeType: string;
+    assetType: string;
+  }): Promise<void>;
   // Inspect a stored object's metadata (phase-2 validation source).
   headObject(storageKey: string): Promise<HeadObjectResult>;
   // A short-lived, read-only signed URL for download / copy-link. Never logged
@@ -77,6 +90,21 @@ export function createMockObjectStorage(
         storageKey,
         uploadUrl: `mock://object-storage/upload/${storageKey}`,
       };
+    },
+
+    async putObject({ storageKey, bytes, mimeType, assetType }) {
+      // Server-side direct write — record the real byte length + declared MIME so a
+      // later headObject echoes them (stands in for the backend having received bytes).
+      objects.set(storageKey, {
+        mimeType,
+        fileSize: bytes.byteLength,
+        checksum: `mock-checksum-${storageKey}`,
+        width: assetType === "image" || assetType === "video" ? 1920 : null,
+        height: assetType === "image" || assetType === "video" ? 1080 : null,
+        durationMs:
+          assetType === "video" || assetType === "audio" ? 1000 : null,
+        mediaMetadata: {},
+      });
     },
 
     async headObject(storageKey) {
