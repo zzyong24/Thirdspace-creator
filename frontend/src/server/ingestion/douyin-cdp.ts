@@ -199,6 +199,284 @@ export function toMetricRecords(
 }
 
 // ---------------------------------------------------------------------------
+// 逐字稿取音频通路(T-030-D2,SPEC §5.2)—— 移植 Python skill douyin_transcribe.py 的
+// iesdouyin 通路(**无需 Cookie / 无需登录**,与上面的创作者中心 CDP 抓取是两条独立链路):
+//   ① parseDouyinVideoUrl(html)  纯函数:从 iesdouyin 分享页 HTML 抽 window._ROUTER_DATA →
+//      play_addr.url_list[0] → `playwm`→`play` 去水印。可喂 canned HTML 单测。
+//   ② fetchDouyinVideoUrl(aweme) 注入 fetch:GET iesdouyin 手机 UA 页 → parseDouyinVideoUrl。
+//   ③ streamAudioFromVideo(url)  注入 spawn:ffmpeg 从直链流式抽 16kHz/单声道/mp3 stdout bytes。
+// 这三者是 D2 transcribe-runner 的取音频端口(端口注入,故 runner 可确定性单测,不碰真抖音/真 ffmpeg)。
+// ---------------------------------------------------------------------------
+
+// 手机 UA —— iesdouyin 分享页仅对移动端 UA 返回带 _ROUTER_DATA 的 HTML(对齐 skill PAGE_HEADERS)。
+const DY_MOBILE_UA =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) " +
+  "AppleWebKit/605.1.15 (KHTML, like Gecko) " +
+  "EdgiOS/121.0.2277.107 Version/17.0 Mobile/15E148 Safari/604.1";
+
+// ffmpeg 从直链抽音需带 Referer(抖音 CDN 校验来源),否则 403。对齐 skill DL_HEADERS。
+const DY_VIDEO_REFERER = "https://www.douyin.com/";
+
+/** iesdouyin 分享页解析结果:无水印播放直链 + 可选封面。 */
+export interface DouyinVideoUrl {
+  playUrl: string;
+  coverUrl?: string;
+}
+
+/** 取音频失败(直链解析失败 / ffmpeg 抽音失败)—— D2 runner 据此把**该条 aweme** 标失败、
+ *  其余继续(F7:别一条视频拖垮整批),区别于 ASR 未配的 TranscribeConfigError(整任务停)。 */
+export class DouyinAudioFetchError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DouyinAudioFetchError";
+  }
+}
+
+/**
+ * 从 iesdouyin 分享页 HTML 抽无水印播放直链(纯函数,可喂 canned HTML 单测)。
+ * 逻辑忠实移植 skill `fetch_metadata`:
+ *   正则抽 `window._ROUTER_DATA = {...}</script>` → JSON.parse →
+ *   `loaderData["video_(id)/page" | "note_(id)/page"].videoInfoRes.item_list[0]` →
+ *   `video.play_addr.url_list[0]`(拿不到用 `download_addr.url_list[0]`)→ `playwm`→`play` 去水印。
+ * 任一环节缺失 → 抛 DouyinAudioFetchError(取音频失败,runner 标该 aweme 失败)。
+ */
+export function parseDouyinVideoUrl(html: string): DouyinVideoUrl {
+  // `[\s\S]*?` 代替 `.*?` + `s` 标志(dotAll 仅 es2018+;本仓 tsc target 更低,避免 TS1501)。
+  const m = /window\._ROUTER_DATA\s*=\s*([\s\S]*?)<\/script>/.exec(html);
+  if (!m) {
+    throw new DouyinAudioFetchError(
+      "parseDouyinVideoUrl: 未在页面中找到 window._ROUTER_DATA(页面结构变化或被风控)",
+    );
+  }
+  let data: unknown;
+  try {
+    data = JSON.parse(m[1]!.trim());
+  } catch {
+    throw new DouyinAudioFetchError(
+      "parseDouyinVideoUrl: _ROUTER_DATA JSON 解析失败",
+    );
+  }
+  const root = (data ?? {}) as Record<string, unknown>;
+  const loader = (root.loaderData ?? root) as Record<string, unknown>;
+
+  let item: Record<string, unknown> | null = null;
+  for (const key of ["video_(id)/page", "note_(id)/page"]) {
+    const node = loader[key] as Record<string, unknown> | undefined;
+    if (!node) continue;
+    const videoInfoRes = (node.videoInfoRes ?? {}) as Record<string, unknown>;
+    const items = videoInfoRes.item_list;
+    if (Array.isArray(items) && items.length > 0) {
+      item = (items[0] ?? {}) as Record<string, unknown>;
+      break;
+    }
+  }
+  if (!item) {
+    throw new DouyinAudioFetchError(
+      "parseDouyinVideoUrl: 无法从 _ROUTER_DATA 中解析视频信息(item_list 为空)",
+    );
+  }
+
+  const video = (item.video ?? {}) as Record<string, unknown>;
+  const playAddr = (video.play_addr ?? {}) as Record<string, unknown>;
+  const downloadAddr = (video.download_addr ?? {}) as Record<string, unknown>;
+  const playList = Array.isArray(playAddr.url_list) ? playAddr.url_list : [];
+  const downloadList = Array.isArray(downloadAddr.url_list)
+    ? downloadAddr.url_list
+    : [];
+  const rawUrl =
+    (typeof playList[0] === "string" && playList[0]) ||
+    (typeof downloadList[0] === "string" && downloadList[0]) ||
+    "";
+  if (!rawUrl) {
+    throw new DouyinAudioFetchError(
+      "parseDouyinVideoUrl: 未找到视频播放地址(play_addr/download_addr 皆空)",
+    );
+  }
+  // 去水印:playwm → play(skill 同款一次替换)。
+  const playUrl = rawUrl.replace("playwm", "play");
+
+  const cover = (video.cover ?? {}) as Record<string, unknown>;
+  const coverList = Array.isArray(cover.url_list) ? cover.url_list : [];
+  const coverUrl =
+    typeof coverList[0] === "string" ? coverList[0] : undefined;
+
+  return coverUrl ? { playUrl, coverUrl } : { playUrl };
+}
+
+/** fetchDouyinVideoUrl 的可注入依赖(默认真全局 fetch;单测注 fake,不走网络)。 */
+export interface FetchDouyinVideoUrlDeps {
+  fetch: typeof fetch;
+}
+
+const REAL_FETCH_DEPS: FetchDouyinVideoUrlDeps = {
+  fetch: (...args) => fetch(...args),
+};
+
+/**
+ * GET iesdouyin 分享页(手机 UA)→ parseDouyinVideoUrl 抽无水印直链。fetch 可注入(默认真
+ * 全局 fetch),故 D2 runner 里这层由 host 装配真 fetch,单测注 fake(返 canned HTML)。
+ * 非 2xx / 无 _ROUTER_DATA → 抛 DouyinAudioFetchError(runner 标该 aweme 失败,其余继续)。
+ */
+export async function fetchDouyinVideoUrl(
+  awemeId: string,
+  deps: FetchDouyinVideoUrlDeps = REAL_FETCH_DEPS,
+): Promise<DouyinVideoUrl> {
+  const pageUrl = `https://www.iesdouyin.com/share/video/${encodeURIComponent(
+    awemeId,
+  )}/`;
+  let res: Response;
+  try {
+    res = await deps.fetch(pageUrl, {
+      headers: {
+        "User-Agent": DY_MOBILE_UA,
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+      },
+    });
+  } catch (err) {
+    throw new DouyinAudioFetchError(
+      `fetchDouyinVideoUrl: 请求 iesdouyin 失败 (aweme ${awemeId}): ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    );
+  }
+  if (!res.ok) {
+    throw new DouyinAudioFetchError(
+      `fetchDouyinVideoUrl: iesdouyin HTTP ${res.status} (aweme ${awemeId})`,
+    );
+  }
+  const html = await res.text();
+  return parseDouyinVideoUrl(html);
+}
+
+/** streamAudioFromVideo 的可注入依赖(默认 child_process.spawn;单测注 fake,不跑真 ffmpeg)。
+ *  只收窄到 stdout/stderr/exit 这三件事,便于 fake。 */
+export interface SpawnedProcess {
+  stdout: {
+    on(event: "data", cb: (chunk: Uint8Array) => void): void;
+  };
+  stderr: {
+    on(event: "data", cb: (chunk: Uint8Array) => void): void;
+  };
+  on(event: "error", cb: (err: Error) => void): void;
+  on(event: "close", cb: (code: number | null) => void): void;
+}
+
+export interface StreamAudioDeps {
+  spawn: (command: string, args: string[]) => SpawnedProcess;
+  /** ffmpeg 可执行路径(默认 /opt/homebrew/bin/ffmpeg,已确认存在;可注入覆盖)。 */
+  ffmpegPath?: string;
+}
+
+const REAL_SPAWN_DEPS: StreamAudioDeps = {
+  spawn: (command, args) => {
+    // 动态引入 child_process(server-only;避免打进客户端 bundle)。
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { spawn } = require("node:child_process") as typeof import("node:child_process");
+    return spawn(command, args) as unknown as SpawnedProcess;
+  },
+  ffmpegPath: "/opt/homebrew/bin/ffmpeg",
+};
+
+/**
+ * ffmpeg 从无水印直链**流式**抽音频(16kHz / 单声道 / 64k mp3),收 stdout mp3 bytes(不落盘)。
+ * 忠实移植 skill `ffmpeg_stream_to_audio` 的命令(带 Referer 头 → pipe:1 stdout):
+ *   ffmpeg -headers "Referer: https://www.douyin.com/\r\n" -i {url} -vn -ar 16000 -ac 1 -b:a 64k -f mp3 pipe:1
+ * spawn 可注入(默认 child_process.spawn),故 D2 runner 里这层单测注 fake(返固定 bytes / 模拟非 0 退出)。
+ * 非 0 退出 / spawn error / 无 bytes → 抛 DouyinAudioFetchError(runner 标该 aweme 失败,其余继续)。
+ */
+export async function streamAudioFromVideo(
+  playUrl: string,
+  deps: StreamAudioDeps = REAL_SPAWN_DEPS,
+): Promise<Uint8Array> {
+  const ffmpegPath = deps.ffmpegPath ?? "ffmpeg";
+  // -headers 需以 \r\n 结尾(ffmpeg HTTP header 注入格式,对齐 skill headers_str)。
+  const args = [
+    "-y",
+    "-hide_banner",
+    "-loglevel",
+    "error",
+    "-headers",
+    `Referer: ${DY_VIDEO_REFERER}\r\n`,
+    "-i",
+    playUrl,
+    "-vn",
+    "-ar",
+    "16000",
+    "-ac",
+    "1",
+    "-b:a",
+    "64k",
+    "-f",
+    "mp3",
+    "pipe:1",
+  ];
+
+  return await new Promise<Uint8Array>((resolve, reject) => {
+    let child: SpawnedProcess;
+    try {
+      child = deps.spawn(ffmpegPath, args);
+    } catch (err) {
+      reject(
+        new DouyinAudioFetchError(
+          `streamAudioFromVideo: 无法启动 ffmpeg(${ffmpegPath}): ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        ),
+      );
+      return;
+    }
+
+    const chunks: Uint8Array[] = [];
+    let stderrTail = "";
+    child.stdout.on("data", (chunk) => {
+      chunks.push(chunk);
+    });
+    child.stderr.on("data", (chunk) => {
+      // 只留尾部一小段供报错(ffmpeg 错误信息在 stderr)。
+      stderrTail = (stderrTail + Buffer.from(chunk).toString("utf8")).slice(-500);
+    });
+    child.on("error", (err) => {
+      reject(
+        new DouyinAudioFetchError(
+          `streamAudioFromVideo: ffmpeg 进程错误: ${err.message}`,
+        ),
+      );
+    });
+    child.on("close", (code) => {
+      if (code !== 0) {
+        reject(
+          new DouyinAudioFetchError(
+            `streamAudioFromVideo: ffmpeg 非 0 退出 (code=${code}): ${
+              stderrTail || "<no stderr>"
+            }`,
+          ),
+        );
+        return;
+      }
+      // 拼接 stdout mp3 bytes。
+      const total = chunks.reduce((n, c) => n + c.byteLength, 0);
+      if (total === 0) {
+        reject(
+          new DouyinAudioFetchError(
+            "streamAudioFromVideo: ffmpeg 退出 0 但未产出音频字节(直链失效/去水印无效?)",
+          ),
+        );
+        return;
+      }
+      const out = new Uint8Array(total);
+      let off = 0;
+      for (const c of chunks) {
+        out.set(c, off);
+        off += c.byteLength;
+      }
+      resolve(out);
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
 // 真连浏览器(测试不跑;需用户常驻 CDP + 已登录抖音创作者中心)
 // ---------------------------------------------------------------------------
 

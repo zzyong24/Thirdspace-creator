@@ -5,6 +5,8 @@ import {
   toMetricRecords,
   parseCommentList,
   ingestComments,
+  parseDouyinVideoUrl,
+  DouyinAudioFetchError,
   type DouyinDetail,
   type CommentRecord,
   type CommentIngestPorts,
@@ -288,5 +290,88 @@ describe("ingestComments 落库 helper(fake ports,T-007 D2)", () => {
     expect(res.skipped).toBe(2); // c-1 / c-2 命中已写
     expect(signals).toHaveLength(3); // 累计 3 条(2 原 + 1 新)
     expect(signals[2].rawText).toBe("全新评论");
+  });
+});
+
+// —— 逐字稿取音频通路(T-030-D2,SPEC §5.2)——
+// 真实 iesdouyin 分享页把视频信息挂在 `window._ROUTER_DATA = {...}</script>`。这里喂一段
+// canned HTML(结构对齐 skill fetch_metadata 抽取的 loaderData → item_list[0] → play_addr),
+// 断言 parseDouyinVideoUrl 抽出 playUrl 且已 playwm→play 去水印。纯函数,不走网络/不跑 ffmpeg。
+
+function routerDataHtml(inner: unknown): string {
+  return (
+    "<!doctype html><html><head></head><body>" +
+    `<script>window._ROUTER_DATA = ${JSON.stringify(inner)}</script>` +
+    "</body></html>"
+  );
+}
+
+describe("parseDouyinVideoUrl 纯函数(iesdouyin 取直链,T-030-D2)", () => {
+  it("抽 play_addr 直链并 playwm→play 去水印 + 带封面", () => {
+    const html = routerDataHtml({
+      loaderData: {
+        "video_(id)/page": {
+          videoInfoRes: {
+            item_list: [
+              {
+                aweme_id: "7400000000000000001",
+                desc: "上下文工程",
+                video: {
+                  play_addr: {
+                    url_list: [
+                      "https://v3.douyinvod.com/xxx/?a=1&playwm=1&ratio=720p",
+                    ],
+                  },
+                  cover: {
+                    url_list: ["https://p3.douyinpic.com/cover.jpeg"],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    });
+    const out = parseDouyinVideoUrl(html);
+    // 去水印:playwm → play(不留 playwm 子串)。
+    expect(out.playUrl).toContain("play=1"); // "playwm=1" → "play=1"
+    expect(out.playUrl).not.toContain("playwm");
+    expect(out.playUrl.startsWith("https://")).toBe(true);
+    expect(out.coverUrl).toBe("https://p3.douyinpic.com/cover.jpeg");
+  });
+
+  it("play_addr 为空时回退 download_addr", () => {
+    const html = routerDataHtml({
+      loaderData: {
+        "video_(id)/page": {
+          videoInfoRes: {
+            item_list: [
+              {
+                video: {
+                  play_addr: { url_list: [] },
+                  download_addr: {
+                    url_list: ["https://v3.douyinvod.com/dl/?playwm=2"],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    });
+    const out = parseDouyinVideoUrl(html);
+    expect(out.playUrl).toContain("play=2");
+    expect(out.playUrl).not.toContain("playwm");
+    expect(out.coverUrl).toBeUndefined();
+  });
+
+  it("无 _ROUTER_DATA / item_list 空 → 抛 DouyinAudioFetchError", () => {
+    expect(() => parseDouyinVideoUrl("<html>no router data</html>")).toThrow(
+      DouyinAudioFetchError,
+    );
+    const emptyHtml = routerDataHtml({
+      loaderData: { "video_(id)/page": { videoInfoRes: { item_list: [] } } },
+    });
+    expect(() => parseDouyinVideoUrl(emptyHtml)).toThrow(DouyinAudioFetchError);
   });
 });

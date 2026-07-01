@@ -65,6 +65,7 @@ import {
   createProjectRepository,
   createProjectsService,
   createProjectsTransport,
+  ensureTranscriptArtifact,
   PROJECT_OP_IDS,
   type StageGateReadersRef,
   type ProjectRow,
@@ -163,6 +164,8 @@ import {
   fetchDouyinComments,
   ingestComments,
   DouyinNotLoggedInError,
+  fetchDouyinVideoUrl,
+  streamAudioFromVideo,
 } from "@/server/ingestion/douyin-cdp";
 import {
   runScheduledCollection,
@@ -188,13 +191,21 @@ import { runMaterialMatch } from "@/server/ai/material-match-runner";
 import { runPositioningGenerate } from "@/server/ai/positioning-runner";
 import { runCopilotAssist } from "@/server/ai/copilot-runner";
 import { runAssetGenerate } from "@/server/ai/asset-generate-runner";
+import { runTranscribe } from "@/server/ai/transcribe-runner";
 import { createLlmCompleter } from "@/server/ai/llm/provider";
 import { resolveLlmConfig } from "@/server/ai/llm/resolve";
-import { resolveMultimodalSpec as resolveMultimodalSpecFn } from "@/server/ai/multimodal/resolve";
+import {
+  resolveMultimodalSpec as resolveMultimodalSpecFn,
+  resolveTranscribeSpec as resolveTranscribeSpecFn,
+} from "@/server/ai/multimodal/resolve";
 // 多模态 provider 适配器(L5 asset.generate)。createMinimaxAdapter 是纯自建 REST(image
 // 同步 / video 异步轮询),不碰 Agent SDK —— 不违 determinism 边界,可在 host 组合层直接注册。
+// createOpenaiAsrAdapter(T-030-D2)= OpenAI 兼容 ASR(SiliconFlow/OpenAI/Groq),逐字稿转写用。
+// transcribeAudio = ASR 工厂(按 provider 取适配器 → { text })。
 import {
   createMinimaxAdapter,
+  createOpenaiAsrAdapter,
+  transcribeAudio as transcribeAudioFn,
   type MultimodalProviderRegistry,
 } from "@creatoros/ai-worker";
 import {
@@ -2375,6 +2386,119 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           );
         } else if (
           task &&
+          task.taskType === "transcribe.douyin" &&
+          task.status === "queued"
+        ) {
+          // 抖音逐字稿采集 node(transcribe.douyin, T-030-D2, SPEC §5.2/§5.3)—— 取音频(iesdouyin
+          // 无水印直链 + ffmpeg 抽 mp3)→ 云端 ASR(用户可配 provider,铁律:绝不写死)→ 按 aweme_id
+          // 绑 imported 作品的 script transcript artifact(幂等,已有则跳过 fetch/ASR 省流)。F7 失败
+          // 分类:ASR 未配(TranscribeConfigError)→ 整任务停 markFailed + 引导;取音频失败 → 标该
+          // aweme 失败其余继续。端口全注入真依赖(下方装配),runner 本身可确定性单测(见 test)。
+          void runTranscribe(
+            ctx,
+            {
+              id: String(task.id),
+              taskType: task.taskType,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: {
+                markRunning: (c, id) => aiService.markRunning(c, id),
+                recordStep: (c, id, stepInput) =>
+                  aiService.recordStep(c, id, stepInput),
+                markSucceeded: (c, id) => aiService.markSucceeded(c, id),
+                markFailed: (c, id, err) => aiService.markFailed(c, id, err),
+              },
+              // 取音频(iesdouyin 无水印直链)—— host 绑真 fetchDouyinVideoUrl(默认真 fetch)。
+              fetchVideoUrl: (_c, awemeId) => fetchDouyinVideoUrl(awemeId),
+              // 抽音频 bytes(ffmpeg)—— host 绑真 streamAudioFromVideo(默认 child_process.spawn)。
+              streamAudio: (_c, playUrl) => streamAudioFromVideo(playUrl),
+              // 解析用户配的 ASR model(transcribe.audio;未配抛 TranscribeConfigError → 整任务停)。
+              resolveTranscribeSpec: (c) =>
+                resolveTranscribeSpecFn(c, {
+                  getModelConfig: (cc, cap) =>
+                    settingsService.getModelConfig(cc, cap),
+                  env: process.env,
+                }),
+              // 云端 ASR 转写(ai-worker 工厂,按 spec.provider 取 ASR 适配器)。
+              transcribeAudio: (spec, opts, registry) =>
+                transcribeAudioFn(spec, opts, registry),
+              // ASR provider 适配器注册表 —— OpenAI 兼容 adapter 一件覆盖 SiliconFlow/OpenAI/Groq
+              // (同形状转写端点);按用户所配 provider 名归一到同一适配器,加 provider 只需在此注册。
+              registry: asrRegistry,
+              // 幂等**只读**探测:该 aweme 是否已有 output_script transcript artifact(content_data.awemeId
+              // 命中)。只读组合 findImportedByRef + listProjectArtifacts + getVersion,不写(不像 ensure
+              // 那样「不存在则建」),故可安全当省流探针(已有 → 跳过 fetch/ASR)。
+              hasTranscriptArtifact: async (c, awemeId) => {
+                const p = await projectsRepo.findImportedByRef(c, {
+                  platform: "douyin",
+                  externalId: awemeId,
+                });
+                if (!p) return false;
+                const rows = await artifactsService.listProjectArtifacts(
+                  c,
+                  p.id,
+                );
+                const repo = createArtifactRepository(db, {
+                  ...deps,
+                  userId: c.userId,
+                });
+                for (const r of rows) {
+                  if (r.artifactType !== "output_script") continue;
+                  if (!r.currentVersionId) continue;
+                  const version = await repo.getVersion(r.currentVersionId);
+                  const data = version.contentData as
+                    | Record<string, unknown>
+                    | null
+                    | undefined;
+                  if (data && data.awemeId === awemeId) return true;
+                }
+                return false;
+              },
+              // 幂等绑作品:ensureTranscriptArtifact + 其 5 端口(projectsRepo/artifactsService 现成实例)。
+              ensureTranscriptArtifact: (c, ensureInput) =>
+                ensureTranscriptArtifact(c, ensureInput, {
+                  findImportedProjectByAwemeId: async (cc, awemeId) => {
+                    const p = await projectsRepo.findImportedByRef(cc, {
+                      platform: "douyin",
+                      externalId: awemeId,
+                    });
+                    return p?.id ?? null;
+                  },
+                  listProjectArtifacts: async (cc, projectId) => {
+                    const rows = await artifactsService.listProjectArtifacts(
+                      cc,
+                      projectId,
+                    );
+                    return rows.map((r) => ({
+                      id: r.id,
+                      artifactType: r.artifactType,
+                      currentVersionId: r.currentVersionId,
+                    }));
+                  },
+                  getVersionContentData: async (cc, versionId) => {
+                    // service 无 by-versionId 读 → per-ctx 现取 artifacts repo 的 getVersion。
+                    const repo = createArtifactRepository(db, {
+                      ...deps,
+                      userId: cc.userId,
+                    });
+                    const version = await repo.getVersion(versionId);
+                    const data = version.contentData;
+                    return data &&
+                      typeof data === "object" &&
+                      !Array.isArray(data)
+                      ? (data as Record<string, unknown>)
+                      : null;
+                  },
+                  createScriptArtifact: (cc, artifactInput) =>
+                    artifactsService.createArtifact(cc, artifactInput),
+                  createArtifactVersion: (cc, artifactId, versionInput) =>
+                    artifactsService.createVersion(cc, artifactId, versionInput),
+                }),
+            },
+          );
+        } else if (
+          task &&
           typeof task.taskType === "string" &&
           task.taskType.startsWith("scheduled.") &&
           task.status === "queued"
@@ -3589,6 +3713,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 未配抛错、诚实禁用);单测装配用 M1 的 fake provider 注入,不碰这个真 registry。
   const multimodalRegistry: MultimodalProviderRegistry = {
     minimax: createMinimaxAdapter(),
+  };
+  // ASR provider 注册表(T-030-D2 逐字稿转写)—— 一个 OpenAI 兼容 adapter 覆盖 SiliconFlow/
+  // OpenAI/Groq(转写端点同形状,SPEC D-d)。按用户可能所配的 provider 名各挂同一适配器实例
+  // (归一);加 provider = 在此注册。真跑要真 transcribe.audio key(未配 → resolveTranscribeSpec
+  // 抛 TranscribeConfigError,整任务停 + 引导);单测装配注 fake,不碰这个真 registry。
+  const openaiAsrAdapter = createOpenaiAsrAdapter();
+  const asrRegistry: MultimodalProviderRegistry = {
+    siliconflow: openaiAsrAdapter,
+    openai: openaiAsrAdapter,
+    groq: openaiAsrAdapter,
   };
 
   // Seed the canonical user's Settings rows (plan Step 6 seed parity) so the
