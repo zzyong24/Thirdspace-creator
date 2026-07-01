@@ -110,6 +110,9 @@ export interface SchedulingService {
     jobId: string,
     query: ListRunsQuery,
   ): Promise<{ rows: JobRunResource[]; total: number }>;
+  // Cross-job scan of this user's runs in a status (default 'running'). The scheduler's
+  // startup 扫超时 (T-007 D3) drives it: 进程重启后仍 running 的 run → 标 failed。
+  listRunningRuns(ctx: RequestContext): Promise<JobRunResource[]>;
   updateRun(
     ctx: RequestContext,
     runId: string,
@@ -180,6 +183,11 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     async listRunsByJob(ctx, jobId, query) {
       const { rows, total } = await repoFor(ctx).listRunsByJob(jobId, query);
       return { rows: rows.map(toJobRunDto), total };
+    },
+
+    async listRunningRuns(ctx) {
+      const rows = await repoFor(ctx).listRunsByStatus("running");
+      return rows.map(toJobRunDto);
     },
 
     async updateRun(ctx, runId, patch) {

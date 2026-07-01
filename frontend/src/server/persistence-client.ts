@@ -157,7 +157,23 @@ import type { ContextReaders as ChatContextReaders } from "@/server/ai/chat-runn
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerateV2 } from "@/server/ai/topic-task-adapter";
 import * as nodePath from "node:path";
-import { fetchDouyinMetrics, loginDouyin } from "@/server/ingestion/douyin-cdp";
+import {
+  fetchDouyinMetrics,
+  loginDouyin,
+  fetchDouyinComments,
+  ingestComments,
+  DouyinNotLoggedInError,
+} from "@/server/ingestion/douyin-cdp";
+import {
+  runScheduledCollection,
+  type Collector as ScheduledCollector,
+} from "@/server/ai/scheduled-collection-runner";
+import {
+  triggerScheduledJob,
+  startScheduler,
+  sweepStaleRuns,
+  type CronJob as SchedulableCronJob,
+} from "@/server/ai/scheduled-collection-scheduler";
 import { runTopicEnrich } from "@/server/ai/topic-enrich-runner";
 import { runCalibrationDiagnose } from "@/server/ai/calibration-diagnose-runner";
 import { runCalibrationScore } from "@/server/ai/calibration-score-runner";
@@ -1530,6 +1546,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const aiBase = createAiTransport(() => aiService);
 
+  // 调度采集 dispatch 触发点(T-007 D3):forward-declared,实体在下方(candidateService/
+  // schedulingService 构造后)赋值。dispatch 分支(ai transport 内)与调度器 triggerScheduledJob
+  // 共用它触发 `void runScheduledCollection(...)` —— 触发点单一。运行时才调(闭包延迟执行),
+  // 赋值前的 dispatch(不会发生:transport 请求晚于 build)容错为 no-op。
+  let dispatchScheduledCollection:
+    | ((
+        ctx: RequestContext,
+        task: { id: string; taskType: string; inputData: Record<string, unknown> },
+      ) => void)
+    | undefined;
+
   // Positioning (module 17, Wave 5): the service builds a per-ctx user-scoped repo
   // over the shared db (the repo bakes userId in; the service mints one per request).
   // The transport returns this ONE shared service. The PositioningGate's project
@@ -2345,6 +2372,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               },
             },
           );
+        } else if (
+          task &&
+          typeof task.taskType === "string" &&
+          task.taskType.startsWith("scheduled.") &&
+          task.status === "queued"
+        ) {
+          // 调度采集 node (scheduled.self.metrics | scheduled.comments, T-007 D3, SPEC
+          // 2026-06-30 §3/§5) — 确定性、不调 LLM 的又一个 live dispatch runner。区别于上面
+          // 15 个 LLM runner:不产候选、不过采纳门,直接调注入的 collector 抓真数据(fetchDouyin
+          // Metrics/Comments,数值程序化抽取)→ ingestion 落库 → 合成 step 写 ai_task_steps →
+          // task succeeded → 回填 job_run。未登录 → job_run needs_reconnect(§6);任一异常 →
+          // task failed + job_run failed(finally 兜底,绝不悬挂 running)。**不碰死链
+          // drainQueue/runTask(见 SPEC 顶部🔧)。** 触发经 dispatchScheduledCollection(与调度器
+          // triggerScheduledJob 共用的单一触发点,下方装配)。
+          dispatchScheduledCollection?.(ctx, {
+            id: String(task.id),
+            taskType: task.taskType,
+            inputData: (task.inputData ?? {}) as Record<string, unknown>,
+          });
         }
       }
       // 全局 AI 助手 (copilot.assist) — a USER message create fires the positioning-aware
@@ -2690,6 +2736,208 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     nextId: deps.nextId,
   });
   const scheduling = createSchedulingTransport(() => schedulingService);
+
+  // ── 调度采集接线 (T-007 D3, SPEC 2026-06-30 §3/§5/§6) ─────────────────────────────
+  // collectors:每个 sourceKind 一个确定性采集器(抓真数据 → ingestion 落库 → 返回新鲜度
+  // 统计)。runner 靠注入调它,不 import fetchDouyin*(保持可测)。
+  //
+  // 抖音 authDir:与 ingestion 的 douyinFetch 端口同源(.auth/douyin,cookie 只在本机、不入
+  // Git),env 可配。
+  const douyinAuthDir =
+    process.env.CREATOROS_DOUYIN_AUTH_DIR ??
+    nodePath.join(process.cwd(), ".auth", "douyin");
+
+  const scheduledCollectors: Record<string, ScheduledCollector> = {
+    // 自己主页作品+指标:直接复用 ingestionService.refreshDouyin(内部:校验源 → fetchDouyin
+    // Metrics(launchPersistentContext 复用扫码登录态)→ ensureImportedProject×N →
+    // ingestMetrics → completeRun)。未登录 → refreshDouyin 抛 DouyinNotLoggedInError(runner
+    // catch → needs_reconnect)。itemsNew=本次真写入快照数(recordsWritten);metric_snapshots
+    // 是 append-only 时间序列(同 capturedAt 幂等),无"更新"语义 → itemsUpdated 恒 0(诚实)。
+    "self.metrics": async (ctx, target) => {
+      const externalSourceId =
+        typeof target.externalSourceId === "string" && target.externalSourceId
+          ? target.externalSourceId
+          : "src-douyin-canonical";
+      const run = await ingestionService.refreshDouyin(ctx, {
+        externalSourceId,
+      });
+      return { itemsNew: run.recordsWritten, itemsUpdated: 0 };
+    },
+    // 评论:fetchDouyinComments(target)→ ingestComments(D2 的纯 ports 落库:建 run → 逐条经
+    // ux_ingestion_records_run_key 去重 → candidateService.ingestAudienceSignal(source=
+    // "comment",带 ingestionRunId,C-4)→ completeRun)。itemsNew=written(新写信号数);
+    // 评论只新写不更新 → itemsUpdated 恒 0。
+    comments: async (ctx, target) => {
+      const awemeId =
+        typeof target.awemeId === "string" ? target.awemeId : "";
+      if (!awemeId) {
+        throw new Error("scheduled comments: target.awemeId 缺失");
+      }
+      const externalSourceId =
+        typeof target.externalSourceId === "string" && target.externalSourceId
+          ? target.externalSourceId
+          : "src-douyin-canonical";
+      const maxPages =
+        typeof target.maxPages === "number" ? target.maxPages : undefined;
+      const capturedAt = deps.now();
+      const records = await fetchDouyinComments({
+        awemeId,
+        authDir: douyinAuthDir,
+        maxPages,
+      });
+      // CommentIngestPorts 真实装配:ingestion repo(去重 ledger)+ candidate service(信号写,
+      // C-4 骑 ingestion run)+ ingestion service(run 生命周期)。ctx.userId 作用域一路透传。
+      const ingestionRepo = createIngestionRepository(db, {
+        now: deps.now,
+        nextId: deps.nextId,
+        userId: ctx.userId,
+      });
+      const result = await ingestComments(awemeId, records, {
+        externalSourceId,
+        capturedAt,
+        ports: {
+          createRun: async (input) => {
+            const run = await ingestionService.createRun(ctx, {
+              externalSourceId: input.externalSourceId,
+              runType: input.runType,
+              idempotencyKey: input.idempotencyKey,
+            });
+            return { id: run.id };
+          },
+          recordExists: (runId, recordKey) =>
+            ingestionRepo.recordExists(runId, recordKey),
+          markRecordWritten: (runId, recordKey) =>
+            ingestionRepo.markRecordResult(runId, recordKey, "written"),
+          ingestSignal: async (input) => {
+            // C-4:AudienceSignal 写必带 ctx.ingestionRunId(source="ingestion")。
+            const signalCtx: RequestContext = {
+              userId: ctx.userId,
+              requestId: ctx.requestId,
+              source: "ingestion",
+              ingestionRunId: input.ingestionRunId,
+            };
+            await candidateService.ingestAudienceSignal(signalCtx, {
+              source: input.source,
+              rawText: input.rawText,
+              demandTag: input.demandTag,
+            });
+          },
+          completeRun: async (runId) => {
+            await ingestionService.completeRun(ctx, { runId });
+          },
+        },
+      });
+      return { itemsNew: result.written, itemsUpdated: 0 };
+    },
+  };
+
+  // dispatchScheduledCollection 实体:装 runner deps 后 `void runScheduledCollection(...)`
+  // (fire-and-forget)。forward-declared 于 ai transport 之上;dispatch 分支 + 调度器共用。
+  dispatchScheduledCollection = (ctx, task) => {
+    void runScheduledCollection(ctx, task, {
+      ai: {
+        markRunning: (c, id) => aiService.markRunning(c, id),
+        recordStep: (c, id, input) => aiService.recordStep(c, id, input),
+        markSucceeded: (c, id) => aiService.markSucceeded(c, id),
+        markFailed: (c, id, err) => aiService.markFailed(c, id, err),
+      },
+      runs: {
+        updateRun: (c, runId, patch) =>
+          schedulingService.updateRun(c, runId, patch),
+      },
+      collectors: scheduledCollectors,
+      // runner 不 import douyin-cdp:未登录判别经注入(→ needs_reconnect,§6)。
+      isNotLoggedInError: (err) => err instanceof DouyinNotLoggedInError,
+      now: deps.now,
+    });
+  };
+
+  // 调度器系统 ctx:自发触发(无 HTTP 请求),用 canonical user 身份(本机单用户起步)。
+  // source="ingestion":调度器本质是数据采集 pipeline 触发(与 L2816 采集 ctx 一致;
+  // RequestContext.source 枚举无 "system",ingestion 是诚实 provenance)。
+  const schedulerCtx: RequestContext = {
+    userId: canonicalDataset.user.id,
+    requestId: "scheduler",
+    source: "ingestion",
+  };
+
+  // 启动扫超时(gate finding 3):进程(重)启动时,扫上一进程留下仍 running 且 started_at
+  // 超时(>30min)的 job_run → 标 failed,兜"进程崩在 running"的残留。best-effort:失败不
+  // 阻断 build。
+  void sweepStaleRuns({
+    runs: {
+      // sweep 只用 updateRun;createRun/listRunsByJob 此路径不触达,给 no-op 满足端口形状。
+      createRun: async () => ({ id: "" }),
+      listRunsByJob: async () => ({ rows: [], total: 0 }),
+      updateRun: (c, runId, patch) => schedulingService.updateRun(c, runId, patch),
+    },
+    listRunningRuns: async (c) => {
+      const rows = await schedulingService.listRunningRuns(c);
+      return rows.map((r) => ({ id: r.id, startedAt: r.startedAt }));
+    },
+    ctx: schedulerCtx,
+    now: deps.now,
+  }).catch((e) => console.error("[scheduler] 启动扫超时失败:", e));
+
+  // node-cron 进程内调度:每分钟轮询 enabled 且"最近一次 run 非 needs_reconnect"的 job(§6:
+  // 登录态过期停跑),cron 到点 → triggerScheduledJob。测试/build 环境不启动(startScheduler
+  // 内环境守卫 + 单例守卫)。listRunnableJobs 经 listJobs + 每 job 查最近 run 过滤。
+  void startScheduler({
+    ai: {
+      createTask: async (c, body) => {
+        const t = await aiService.createTask(c, body);
+        return { id: t.id, status: t.status };
+      },
+    },
+    runs: {
+      createRun: (c, input) => schedulingService.createRun(c, input),
+      listRunsByJob: async (c, jobId, query) => {
+        const { rows, total } = await schedulingService.listRunsByJob(
+          c,
+          jobId,
+          query,
+        );
+        return {
+          rows: rows.map((r) => ({
+            id: r.id,
+            status: r.status,
+            startedAt: r.startedAt,
+            aiTaskId: r.aiTaskId ?? null,
+          })),
+          total,
+        };
+      },
+      updateRun: (c, runId, patch) => schedulingService.updateRun(c, runId, patch),
+    },
+    dispatch: (ctx, task) => dispatchScheduledCollection?.(ctx, task),
+    now: deps.now,
+    ctx: schedulerCtx,
+    listRunnableJobs: async (c) => {
+      // enabled job 全取,再逐个用最近一次 run 过滤掉"最近 needs_reconnect"的(§6 停跑)。
+      const { rows } = await schedulingService.listJobs(c, {
+        enabled: true,
+        limit: 200,
+        offset: 0,
+      });
+      const runnable: SchedulableCronJob[] = [];
+      for (const job of rows) {
+        const recent = await schedulingService.listRunsByJob(c, job.id, {
+          limit: 1,
+          offset: 0,
+        });
+        const last = recent.rows[0];
+        if (last && last.status === "needs_reconnect") continue; // 登录态过期,停跑等重连
+        runnable.push({
+          id: job.id,
+          sourceKind: job.sourceKind,
+          target: (job.target ?? {}) as Record<string, unknown>,
+          schedule: job.schedule,
+          enabled: job.enabled,
+        });
+      }
+      return runnable;
+    },
+  }).catch((e) => console.error("[scheduler] 启动失败:", e));
 
   // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
   // repo over the shared db; peer modules are reached ONLY through narrow injected

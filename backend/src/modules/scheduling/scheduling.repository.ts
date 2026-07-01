@@ -100,6 +100,10 @@ export interface SchedulingRepository {
     jobId: string,
     query: ListRunsQuery,
   ): Promise<{ rows: JobRunRow[]; total: number }>;
+  // Cross-job scan of this user's runs in a given status (default 'running'). Powers the
+  // scheduler's startup 扫超时 (T-007 D3 / gate finding 3): 进程重启后仍悬挂 running 的 run
+  // → 标 failed。No requireJob gate (it's a user-wide sweep, still user_id-scoped).
+  listRunsByStatus(status: string): Promise<JobRunRow[]>;
   updateRun(id: string, patch: UpdateRunInput): Promise<JobRunRow>;
 }
 
@@ -246,6 +250,15 @@ export function createSchedulingRepository(
         .offset(offset);
       const all = await db.select({ id: jobRuns.id }).from(jobRuns).where(where);
       return { rows, total: all.length };
+    },
+
+    async listRunsByStatus(status) {
+      // User-wide (no requireJob) but user_id-scoped: sweep this user's runs in `status`.
+      return db
+        .select()
+        .from(jobRuns)
+        .where(and(eq(jobRuns.userId, deps.userId), eq(jobRuns.status, status)))
+        .orderBy(desc(jobRuns.startedAt));
     },
 
     async updateRun(id, patch) {

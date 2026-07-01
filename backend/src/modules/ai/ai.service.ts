@@ -247,6 +247,18 @@ export interface AiService {
   // status is honest while the agent works), before recordCandidate flips it to
   // awaiting_confirmation. No-op if already past queued. (机制④ async exec.)
   markRunning(ctx: RequestContext, taskId: string): Promise<void>;
+  // Deterministic terminal seams (T-007 D3): a NON-LLM runner (调度采集) produces NO
+  // candidate / has NO 采纳 gate, so it needs to drive the task straight to a terminal.
+  // markSucceeded (running→succeeded) 收尾一次确定性采集;markFailed (running→failed,
+  // 带 errorMessage) 收尾采集/落库异常。区别于 recordCandidate(awaiting_confirmation,
+  // 需采纳)与 cancelTask(cancelled,LLM runner 的失败态)。No-op-safe:已终态则吞掉冲突
+  // (与 cancelTask 的 best-effort 语义一致,避免 finally 二次落终态时抛)。
+  markSucceeded(ctx: RequestContext, taskId: string): Promise<void>;
+  markFailed(
+    ctx: RequestContext,
+    taskId: string,
+    errorMessage?: string,
+  ): Promise<void>;
   // Read the candidate result(s) of a task so the UI can render the 采纳 surface
   // (机制③). The latest result is the candidate awaiting confirmation.
   listResults(
@@ -928,6 +940,31 @@ export function createAiService(deps: ServiceDeps): AiService {
           startedAt: deps.now(),
         });
       }
+    },
+
+    async markSucceeded(ctx, taskId) {
+      // Deterministic runner (T-007 D3) terminal — running→succeeded, stamps completedAt.
+      // best-effort: swallow if already terminal (finally 可能二次落态)。
+      const repo = repoFor(ctx);
+      const task = await repo.requireTask(taskId);
+      if (!canTransition(task.status, "succeeded")) return;
+      await repo.updateTaskStatus(taskId, {
+        status: "succeeded",
+        completedAt: deps.now(),
+      });
+    },
+
+    async markFailed(ctx, taskId, errorMessage) {
+      // Deterministic runner (T-007 D3) terminal — running→failed, stamps completedAt +
+      // errorMessage. best-effort: swallow if already terminal。
+      const repo = repoFor(ctx);
+      const task = await repo.requireTask(taskId);
+      if (!canTransition(task.status, "failed")) return;
+      await repo.updateTaskStatus(taskId, {
+        status: "failed",
+        completedAt: deps.now(),
+        errorMessage: errorMessage ?? null,
+      });
     },
 
     async listResults(ctx, taskId) {
