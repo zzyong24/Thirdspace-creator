@@ -45,6 +45,7 @@ import {
   MessageSquare,
   BarChart3,
   Inbox,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -52,6 +53,7 @@ import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -71,10 +73,20 @@ import type {
   ScheduledJobResource,
   JobRunResource,
 } from "@creatoros/backend/modules/scheduling";
-
-// ── 源类型 / 状态 中文映射 ────────────────────────────────────────────────────
-
-type SourceKind = "self.metrics" | "comments";
+import {
+  type Cadence,
+  DEFAULT_CADENCE,
+  WEEKDAY_LABELS,
+  compileCadenceToCron,
+  compileCronToCadence,
+  describeCadence,
+} from "./cadence";
+import {
+  type CollectionTemplate,
+  type SourceKind,
+  COLLECTION_TEMPLATES,
+  classifyIntent,
+} from "./intent";
 
 const SOURCE_META: Record<
   SourceKind,
@@ -139,6 +151,12 @@ function formatDateTime(iso: string | null): string {
   const hh = String(d.getHours()).padStart(2, "0");
   const mi = String(d.getMinutes()).padStart(2, "0");
   return `${mm}-${dd} ${hh}:${mi}`;
+}
+
+// 列表页把 cron 反解成友好中文(SPEC §8.1「cron 绝不显示给用户」)。不可解则降级显示原 cron。
+function formatScheduleFriendly(cron: string): string {
+  const cadence = compileCronToCadence(cron);
+  return cadence ? describeCadence(cadence) : cron;
 }
 
 // ── ai_task_steps 行(复用选题弹窗步骤渲染范式)────────────────────────────────
@@ -232,14 +250,14 @@ export function JobRow({
         {sourceLabel(job.sourceKind)}
       </span>
 
-      {/* schedule(cron) */}
-      <code
+      {/* schedule(友好频率,不露 cron;title 保留原 cron 供 hover 调试) */}
+      <span
         data-slot="automation-schedule"
-        className="truncate rounded bg-surface-subtle px-2 py-1 text-[11px] text-foreground tabular-nums"
+        className="truncate rounded bg-surface-subtle px-2 py-1 text-[11px] text-foreground"
         title={job.schedule}
       >
-        {job.schedule}
-      </code>
+        {formatScheduleFriendly(job.schedule)}
+      </span>
 
       {/* last_run_at */}
       <span
@@ -319,12 +337,305 @@ export function JobRow({
   );
 }
 
-// ── 新建作业 Dialog ───────────────────────────────────────────────────────────
+// ── 友好频率编辑器(去裸 crontab,SPEC §8.1)──────────────────────────────────
+//
+// 三段:周期 / 按间隔 / 单次。绝不暴露 cron —— cron 由 compileCadenceToCron 在提交时算出。
+// 受控组件:父组件持 Cadence 状态,本组件只渲染控件 + 回调 setCadence。
+
+const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0–23
+const MINUTES = [0, 5, 10, 15, 20, 30, 45]; // 常用分钟档(避免 60 项长列表)
+
+function CadenceEditor({
+  cadence,
+  onChange,
+}: {
+  readonly cadence: Cadence;
+  readonly onChange: (next: Cadence) => void;
+}) {
+  const hh = cadence.mode === "interval" ? 9 : cadence.hour;
+  const mi = cadence.mode === "interval" ? 0 : cadence.minute;
+
+  // 切频率类型:给每种模式一个合理缺省,避免跨模式脏值。
+  const switchMode = (mode: Cadence["mode"]) => {
+    if (mode === "period") {
+      onChange({ ...DEFAULT_CADENCE });
+    } else if (mode === "interval") {
+      onChange({ mode: "interval", unit: "hours", every: 3 });
+    } else {
+      onChange({ mode: "once", month: 1, day: 1, hour: 9, minute: 0 });
+    }
+  };
+
+  return (
+    <div
+      data-slot="automation-cadence-editor"
+      className="flex flex-col gap-3 rounded-control border border-border bg-surface-subtle/50 p-3"
+    >
+      {/* 频率类型三选一 */}
+      <div
+        role="radiogroup"
+        aria-label="频率类型"
+        className="grid grid-cols-3 gap-1.5"
+      >
+        {(
+          [
+            ["period", "周期"],
+            ["interval", "按间隔"],
+            ["once", "单次"],
+          ] as const
+        ).map(([value, label]) => {
+          const active = cadence.mode === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              data-slot="automation-cadence-mode"
+              data-mode={value}
+              data-active={active}
+              onClick={() => switchMode(value)}
+              className={cn(
+                "h-8 rounded-control border text-xs font-medium transition-colors",
+                active
+                  ? "border-brand bg-brand text-brand-foreground"
+                  : "border-border bg-surface text-foreground hover:bg-surface-subtle",
+              )}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 周期:每天/每周 + (周几) + 时间 */}
+      {cadence.mode === "period" ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            value={cadence.unit}
+            onValueChange={(v) =>
+              onChange({ ...cadence, unit: v as "daily" | "weekly" })
+            }
+          >
+            <SelectTrigger
+              data-slot="automation-cadence-period-unit"
+              size="sm"
+              className="w-[110px]"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="daily">每天</SelectItem>
+              <SelectItem value="weekly">每周</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {cadence.unit === "weekly" ? (
+            <Select
+              value={String(cadence.weekday)}
+              onValueChange={(v) =>
+                onChange({ ...cadence, weekday: Number(v) })
+              }
+            >
+              <SelectTrigger
+                data-slot="automation-cadence-weekday"
+                size="sm"
+                className="w-[90px]"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {WEEKDAY_LABELS.map((label, i) => (
+                  <SelectItem key={i} value={String(i)}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
+
+          <TimePicker
+            hour={hh}
+            minute={mi}
+            onChange={(hour, minute) => onChange({ ...cadence, hour, minute })}
+          />
+        </div>
+      ) : null}
+
+      {/* 按间隔:每 N 小时 / 每 N 分钟 */}
+      {cadence.mode === "interval" ? (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">每</span>
+          <Input
+            data-slot="automation-cadence-interval-every"
+            type="number"
+            min={1}
+            max={cadence.unit === "hours" ? 23 : 59}
+            value={cadence.every}
+            onChange={(e) =>
+              onChange({
+                ...cadence,
+                every: Math.max(1, Math.trunc(Number(e.target.value) || 1)),
+              })
+            }
+            className="w-20 text-sm"
+          />
+          <Select
+            value={cadence.unit}
+            onValueChange={(v) =>
+              onChange({ ...cadence, unit: v as "hours" | "minutes" })
+            }
+          >
+            <SelectTrigger
+              data-slot="automation-cadence-interval-unit"
+              size="sm"
+              className="w-[90px]"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="hours">小时</SelectItem>
+              <SelectItem value="minutes">分钟</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
+
+      {/* 单次:月/日 + 时间(cron 近似,标注) */}
+      {cadence.mode === "once" ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              data-slot="automation-cadence-once-month"
+              type="number"
+              min={1}
+              max={12}
+              value={cadence.month}
+              onChange={(e) =>
+                onChange({
+                  ...cadence,
+                  month: clampField(Number(e.target.value), 1, 12),
+                })
+              }
+              className="w-16 text-sm"
+              aria-label="月"
+            />
+            <span className="text-xs text-muted-foreground">月</span>
+            <Input
+              data-slot="automation-cadence-once-day"
+              type="number"
+              min={1}
+              max={31}
+              value={cadence.day}
+              onChange={(e) =>
+                onChange({
+                  ...cadence,
+                  day: clampField(Number(e.target.value), 1, 31),
+                })
+              }
+              className="w-16 text-sm"
+              aria-label="日"
+            />
+            <span className="text-xs text-muted-foreground">日</span>
+            <TimePicker
+              hour={cadence.hour}
+              minute={cadence.minute}
+              onChange={(hour, minute) => onChange({ ...cadence, hour, minute })}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            单次为近似:调度按「每年这天这时」触发一次(cron 无「仅一次」语义)。
+          </p>
+        </div>
+      ) : null}
+
+      {/* 即时中文预览(不露 cron) */}
+      <p
+        data-slot="automation-cadence-summary"
+        className="text-[11px] font-medium text-brand"
+      >
+        {describeCadence(cadence)}
+      </p>
+    </div>
+  );
+}
+
+function clampField(v: number, lo: number, hi: number): number {
+  const n = Math.trunc(Number.isFinite(v) ? v : lo);
+  return Math.min(hi, Math.max(lo, n));
+}
+
+// 时间选择器(HH:mm)—— 两个下拉,不露原始 cron 数字。
+function TimePicker({
+  hour,
+  minute,
+  onChange,
+}: {
+  readonly hour: number;
+  readonly minute: number;
+  readonly onChange: (hour: number, minute: number) => void;
+}) {
+  const safeMinute = MINUTES.includes(minute) ? minute : 0;
+  return (
+    <div className="flex items-center gap-1" data-slot="automation-time-picker">
+      <Select value={String(hour)} onValueChange={(v) => onChange(Number(v), minute)}>
+        <SelectTrigger
+          data-slot="automation-time-hour"
+          size="sm"
+          className="w-[72px]"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {HOURS.map((h) => (
+            <SelectItem key={h} value={String(h)}>
+              {String(h).padStart(2, "0")} 时
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <span className="text-xs text-muted-foreground">:</span>
+      <Select
+        value={String(safeMinute)}
+        onValueChange={(v) => onChange(hour, Number(v))}
+      >
+        <SelectTrigger
+          data-slot="automation-time-minute"
+          size="sm"
+          className="w-[72px]"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {MINUTES.map((m) => (
+            <SelectItem key={m} value={String(m)}>
+              {String(m).padStart(2, "0")} 分
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+// ── 新建作业 Dialog(WorkBuddy 式:自然语言 prompt + 友好频率 + 模板预填)──────
+//
+// 预填缝 `prefill`:列表页模板卡点击时传入 {name, prompt, sourceKind, cadence},弹窗打开即带值。
+// 提交时:cadence → compileCadenceToCron 存 schedule(不露 cron);prompt 承接 scheduled_job.prompt。
+// sourceKind 主路径由下拉/模板显式给;若用户改了 prompt 但没动下拉,以显式下拉为准(下拉即用户意图)。
+
+export interface CreateJobPrefill {
+  readonly name?: string;
+  readonly prompt?: string;
+  readonly sourceKind?: SourceKind;
+  readonly cadence?: Cadence;
+}
 
 export function CreateJobDialog({
   open,
   onOpenChange,
   onCreate,
+  prefill,
 }: {
   readonly open: boolean;
   readonly onOpenChange: (v: boolean) => void;
@@ -332,29 +643,54 @@ export function CreateJobDialog({
     name: string;
     sourceKind: SourceKind;
     schedule: string;
+    prompt: string;
     target: Record<string, unknown>;
   }) => Promise<void>;
+  /** 模板卡预填(打开弹窗时应用一次)。 */
+  readonly prefill?: CreateJobPrefill | null;
 }) {
   const [name, setName] = React.useState("");
+  const [prompt, setPrompt] = React.useState("");
   const [sourceKind, setSourceKind] = React.useState<SourceKind>("self.metrics");
-  const [schedule, setSchedule] = React.useState("0 9 * * *");
+  const [cadence, setCadence] = React.useState<Cadence>({ ...DEFAULT_CADENCE });
   const [targetValue, setTargetValue] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
 
   const meta = SOURCE_META[sourceKind];
-  const canSubmit = name.trim().length > 0 && schedule.trim().length > 0 && !submitting;
+  const canSubmit = name.trim().length > 0 && !submitting;
 
-  const reset = React.useCallback(() => {
-    setName("");
-    setSourceKind("self.metrics");
-    setSchedule("0 9 * * *");
-    setTargetValue("");
-  }, []);
+  // 打开弹窗时应用一次预填(模板卡 / 空白新建)。open 由 false→true 触发。
+  const prevOpenRef = React.useRef(false);
+  React.useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      // 刚打开:按 prefill 初始化(无 prefill = 空白)。
+      setName(prefill?.name ?? "");
+      setPrompt(prefill?.prompt ?? "");
+      setSourceKind(prefill?.sourceKind ?? "self.metrics");
+      setCadence(prefill?.cadence ?? { ...DEFAULT_CADENCE });
+      setTargetValue("");
+    }
+    prevOpenRef.current = open;
+  }, [open, prefill]);
+
+  // freeform prompt 无模板显式意图时的辅助分类(确定性,仅当用户改了 prompt 后给弱提示)。
+  // 主路径仍是下拉(显式即用户意图);这里只在下拉与 prompt 语义明显不符时提示。
+  const intentHint = React.useMemo(() => {
+    const p = prompt.trim();
+    if (p.length === 0) return null;
+    const c = classifyIntent(p);
+    if (c.confidence === "high" && c.sourceKind !== sourceKind) {
+      return c.sourceKind;
+    }
+    return null;
+  }, [prompt, sourceKind]);
 
   const submit = React.useCallback(async () => {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
+      // 友好频率 → cron(内部实现,不露用户)。
+      const schedule = compileCadenceToCron(cadence);
       // target 按源装配:self.metrics → {externalSourceId?}, comments → {awemeId}。
       // 空值不塞 key(service default {}),让"抓主页全部"这类无参源保持干净。
       const target: Record<string, unknown> = {};
@@ -363,15 +699,25 @@ export function CreateJobDialog({
       await onCreate({
         name: name.trim(),
         sourceKind,
-        schedule: schedule.trim(),
+        schedule,
+        prompt: prompt.trim(),
         target,
       });
-      reset();
       onOpenChange(false);
     } finally {
       setSubmitting(false);
     }
-  }, [canSubmit, targetValue, meta, onCreate, name, sourceKind, schedule, reset, onOpenChange]);
+  }, [
+    canSubmit,
+    cadence,
+    targetValue,
+    meta,
+    onCreate,
+    name,
+    prompt,
+    sourceKind,
+    onOpenChange,
+  ]);
 
   return (
     <Dialog
@@ -387,17 +733,17 @@ export function CreateJobDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="size-4 text-brand" />
-            新建调度作业
+            新建采集任务
           </DialogTitle>
           <DialogDescription>
-            配一个周期性采集作业:选源 + 定 cron。到点自动产 ai_task 走队列采集、落库(执行由 D3 接线)。
+            用大白话说你想定时抓什么,选个频率就行 —— 到点自动跑、数据落库,供 Dashboard 与选题消费。
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
           {/* name */}
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-foreground">作业名称</span>
+            <span className="text-xs font-medium text-foreground">任务名称</span>
             <Input
               data-slot="automation-field-name"
               value={name}
@@ -406,9 +752,23 @@ export function CreateJobDialog({
             />
           </label>
 
-          {/* source_kind 下拉 */}
+          {/* 自然语言提示词(承接 scheduled_job.prompt)*/}
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-foreground">数据源</span>
+            <span className="text-xs font-medium text-foreground">
+              想抓什么(用大白话描述)
+            </span>
+            <Textarea
+              data-slot="automation-field-prompt"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="例:每天抓我主页的新作品 / 每天抓我所有作品的最新评论"
+              rows={2}
+            />
+          </label>
+
+          {/* source_kind 下拉(主路径:显式意图,0 LLM)*/}
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-foreground">抓取内容</span>
             <Select
               value={sourceKind}
               onValueChange={(v) => {
@@ -421,36 +781,39 @@ export function CreateJobDialog({
                 size="sm"
                 className="w-full"
               >
-                <SelectValue placeholder="选择数据源" />
+                <SelectValue placeholder="选择抓取内容" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="self.metrics">自己作品(指标快照)</SelectItem>
                 <SelectItem value="comments">评论</SelectItem>
               </SelectContent>
             </Select>
+            {intentHint ? (
+              <button
+                type="button"
+                data-slot="automation-intent-hint"
+                onClick={() => {
+                  setSourceKind(intentHint);
+                  setTargetValue("");
+                }}
+                className="w-fit text-[11px] text-amber-600 hover:underline"
+              >
+                你的描述像是要抓「{sourceLabel(intentHint)}」—— 点此切换
+              </button>
+            ) : null}
           </label>
 
-          {/* schedule(cron) */}
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-foreground">
-              调度(cron 表达式)
-            </span>
-            <Input
-              data-slot="automation-field-schedule"
-              value={schedule}
-              onChange={(e) => setSchedule(e.target.value)}
-              placeholder="0 9 * * *(每天 9 点)"
-              className="font-mono text-sm"
-            />
-            <span className="text-[11px] text-muted-foreground">
-              5 段 cron:分 时 日 月 周。例 `0 9 * * *` = 每天 09:00。
-            </span>
-          </label>
+          {/* 友好频率(去裸 cron)*/}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-foreground">频率</span>
+            <CadenceEditor cadence={cadence} onChange={setCadence} />
+          </div>
 
           {/* target(按源) */}
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">
               {meta.targetLabel}
+              <span className="ml-1 font-normal text-muted-foreground">(选填)</span>
             </span>
             <Input
               data-slot="automation-field-target"
@@ -477,7 +840,7 @@ export function CreateJobDialog({
             onClick={submit}
             className="inline-flex h-9 items-center rounded-control bg-brand px-4 text-xs font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
           >
-            {submitting ? "创建中…" : "创建作业"}
+            {submitting ? "创建中…" : "创建任务"}
           </button>
         </DialogFooter>
       </DialogContent>
@@ -709,6 +1072,81 @@ export function RunDetailDialog({
   );
 }
 
+// ── 从模板入手(WorkBuddy 式模板卡区,SPEC §8.1)────────────────────────────────
+//
+// 列表页顶部的模板卡:点一张 → 打开新建弹窗并预填 {name, prompt, sourceKind, cadence}。
+// 灰置模板(如 D8a 明细数据未落地)点不动,诚实标「敬请期待」。
+
+export function TemplateCards({
+  onPick,
+}: {
+  readonly onPick: (tpl: CollectionTemplate) => void;
+}) {
+  return (
+    <section
+      data-slot="automation-templates"
+      aria-label="从模板入手"
+      className="flex flex-col gap-3"
+    >
+      <div className="flex items-center gap-2">
+        <Sparkles className="size-4 text-brand" />
+        <h2 className="text-sm font-semibold text-foreground">从模板入手</h2>
+        <span className="text-xs text-muted-foreground">
+          选一个常用采集任务,一键预填
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {COLLECTION_TEMPLATES.map((tpl) => {
+          const Icon = SOURCE_META[tpl.sourceKind]?.icon ?? BarChart3;
+          const disabled = !!tpl.disabled;
+          return (
+            <button
+              key={tpl.id}
+              type="button"
+              data-slot="automation-template-card"
+              data-template-id={tpl.id}
+              data-disabled={disabled}
+              disabled={disabled}
+              onClick={() => onPick(tpl)}
+              className={cn(
+                "flex flex-col items-start gap-2 rounded-card border p-4 text-left transition-colors",
+                disabled
+                  ? "cursor-not-allowed border-dashed border-border bg-surface-subtle/40 opacity-70"
+                  : "border-border bg-surface hover:border-brand hover:bg-brand-soft/40",
+              )}
+            >
+              <span className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand"
+                >
+                  <Icon className="size-4" />
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  {tpl.title}
+                </span>
+              </span>
+              <span className="text-xs leading-snug text-muted-foreground">
+                {tpl.description}
+              </span>
+              {disabled ? (
+                <span className="mt-1 inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
+                  规划中 · D8a 后开放
+                </span>
+              ) : (
+                <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-brand">
+                  <Plus className="size-3" />
+                  用此模板新建
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 // ── 主 island ─────────────────────────────────────────────────────────────────
 
 export function AutomationsIsland({
@@ -718,6 +1156,8 @@ export function AutomationsIsland({
 }) {
   const router = useRouter();
   const [createOpen, setCreateOpen] = React.useState(false);
+  // 模板卡预填(点模板 → 装配 → 打开弹窗带值);null = 空白新建。
+  const [prefill, setPrefill] = React.useState<CreateJobPrefill | null>(null);
   const [detailJob, setDetailJob] = React.useState<ScheduledJobResource | null>(
     null,
   );
@@ -785,6 +1225,7 @@ export function AutomationsIsland({
       name: string;
       sourceKind: SourceKind;
       schedule: string;
+      prompt: string;
       target: Record<string, unknown>;
     }) => {
       await client.createScheduledJob({
@@ -792,10 +1233,12 @@ export function AutomationsIsland({
         query: undefined,
         body: {
           name: input.name,
-          prompt: "", // 内建采集器源(self.metrics/comments)无需 Agent 发现提示词
+          // 自然语言指令(SPEC §8.2):承接 scheduled_job.prompt。sourceKind 是主路径意图,
+          // prompt 是人类可读描述(未来可升级为 schema 约束 LLM 分类的输入)。
+          prompt: input.prompt,
           sourceKind: input.sourceKind,
           target: input.target,
-          schedule: input.schedule,
+          schedule: input.schedule, // 已由 CadenceEditor 编译成 cron(不露用户)
           toolGrants: [], // 偏只读 + 落库,首版空;工具授权由执行层(D3)约束
         },
       });
@@ -803,6 +1246,23 @@ export function AutomationsIsland({
     },
     [router],
   );
+
+  // 从模板入手(SPEC §8.1):点模板卡 → 装配预填 → 打开新建弹窗。
+  const openFromTemplate = React.useCallback((tpl: CollectionTemplate) => {
+    setPrefill({
+      name: tpl.title,
+      prompt: tpl.prompt,
+      sourceKind: tpl.sourceKind,
+      cadence: tpl.cadence,
+    });
+    setCreateOpen(true);
+  }, []);
+
+  // 空白新建:清预填后打开。
+  const openBlank = React.useCallback(() => {
+    setPrefill(null);
+    setCreateOpen(true);
+  }, []);
 
   const openDetail = React.useCallback((job: ScheduledJobResource) => {
     setDetailJob(job);
@@ -862,20 +1322,23 @@ export function AutomationsIsland({
   );
 
   return (
-    <section data-testid="automations-region" className="flex flex-col gap-4">
+    <section data-testid="automations-region" className="flex flex-col gap-6">
+      {/* 从模板入手(WorkBuddy 式) */}
+      <TemplateCards onPick={openFromTemplate} />
+
       {/* 顶部操作条 */}
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
-          共 {jobs.length} 个作业
+          共 {jobs.length} 个任务
         </span>
         <button
           type="button"
           data-slot="automation-new"
-          onClick={() => setCreateOpen(true)}
+          onClick={openBlank}
           className="inline-flex h-9 items-center gap-1.5 rounded-control bg-brand px-4 text-sm font-medium text-brand-foreground hover:bg-brand/90"
         >
           <Plus className="size-4" />
-          新建作业
+          新建任务
         </button>
       </div>
 
@@ -887,18 +1350,18 @@ export function AutomationsIsland({
         >
           <Inbox className="size-10 text-muted-foreground/50" />
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-foreground">还没有调度作业</p>
+            <p className="text-sm font-medium text-foreground">还没有采集任务</p>
             <p className="max-w-md text-xs text-muted-foreground">
-              新建一个作业来周期性抓取「自己作品指标」或「评论」。到点自动跑、数据落库,供 Dashboard 与选题消费。
+              从上方模板一键新建,或自定义一个任务来周期性抓取「自己作品指标」或「评论」。到点自动跑、数据落库,供 Dashboard 与选题消费。
             </p>
           </div>
           <button
             type="button"
-            onClick={() => setCreateOpen(true)}
+            onClick={openBlank}
             className="inline-flex h-9 items-center gap-1.5 rounded-control bg-brand px-4 text-sm font-medium text-brand-foreground hover:bg-brand/90"
           >
             <Plus className="size-4" />
-            新建作业
+            新建任务
           </button>
         </div>
       ) : (
@@ -940,6 +1403,7 @@ export function AutomationsIsland({
         open={createOpen}
         onOpenChange={setCreateOpen}
         onCreate={create}
+        prefill={prefill}
       />
       <RunDetailDialog
         job={detailJob}

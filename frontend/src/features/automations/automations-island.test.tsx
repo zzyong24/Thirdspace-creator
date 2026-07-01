@@ -48,6 +48,7 @@ import {
   JobRow,
   CreateJobDialog,
   RunDetailDialog,
+  TemplateCards,
 } from "./automations-island";
 import type {
   ScheduledJobResource,
@@ -100,25 +101,26 @@ afterEach(() => {
 describe("AutomationsIsland — 列表渲染", () => {
   it("空态:无作业时渲染引导空态 + 新建入口", () => {
     render(<AutomationsIsland jobs={[]} />);
-    expect(screen.getByText("还没有调度作业")).toBeInTheDocument();
-    // 两个「新建作业」按钮(顶部 + 空态)
-    expect(screen.getAllByText("新建作业").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("还没有采集任务")).toBeInTheDocument();
+    // 「新建任务」按钮(顶部 + 空态)
+    expect(screen.getAllByText("新建任务").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("有作业:渲染 name / source 中文 / cron / 上次·下次", () => {
+  it("有作业:渲染 name / source 中文 / 友好频率(非裸 cron)/ 上次·下次", () => {
     render(
       <AutomationsIsland
         jobs={[makeJob(), makeJob({ id: "job-2", sourceKind: "comments", name: "抓评论" })]}
       />,
     );
-    expect(screen.getByText("共 2 个作业")).toBeInTheDocument();
+    expect(screen.getByText("共 2 个任务")).toBeInTheDocument();
     expect(screen.getByText("每天抓我的主页指标")).toBeInTheDocument();
     expect(screen.getByText("抓评论")).toBeInTheDocument();
     // source_kind 中文映射
     expect(screen.getAllByText("自己作品").length).toBeGreaterThan(0);
     expect(screen.getAllByText("评论").length).toBeGreaterThan(0);
-    // cron 原文
-    expect(screen.getAllByText("0 9 * * *").length).toBeGreaterThan(0);
+    // 列表页把 `0 9 * * *` 反解成友好中文「每天 09:00」—— 不露裸 cron
+    expect(screen.getAllByText("每天 09:00").length).toBeGreaterThan(0);
+    expect(screen.queryByText("0 9 * * *")).not.toBeInTheDocument();
   });
 
   it("D5:「立即运行」enabled(作业启用时)", () => {
@@ -193,8 +195,8 @@ describe("AutomationsIsland — 启用开关接线", () => {
   });
 });
 
-describe("CreateJobDialog — 新建表单组装", () => {
-  it("填名 + 选评论源 + 填 awemeId → onCreate 带装配好的 target", async () => {
+describe("CreateJobDialog — 新建表单组装(友好频率 + 自然语言 prompt)", () => {
+  it("填名 + 填 target + 写 prompt → onCreate 带装配好的 target + 编译后的 cron + prompt", async () => {
     const onCreate = vi.fn((_i: unknown): Promise<void> => Promise.resolve());
     render(
       <CreateJobDialog open onOpenChange={vi.fn()} onCreate={onCreate} />,
@@ -204,53 +206,211 @@ describe("CreateJobDialog — 新建表单组装", () => {
       screen.getByPlaceholderText("例:每天抓我的主页指标"),
       { target: { value: "抓某作品评论" } },
     );
+    // 自然语言 prompt(承接 scheduled_job.prompt)
+    fireEvent.change(
+      screen.getByPlaceholderText(/每天抓我主页的新作品/),
+      { target: { value: "每天抓我主页的新作品指标" } },
+    );
     // target(默认源 self.metrics → externalSourceId 输入)
     fireEvent.change(
       screen.getByPlaceholderText(/externalSourceId/),
       { target: { value: "ext-99" } },
     );
-    fireEvent.click(screen.getByText("创建作业"));
+    fireEvent.click(screen.getByText("创建任务"));
     await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
     const arg = onCreate.mock.calls[0]![0] as unknown as {
       name: string;
       sourceKind: string;
       schedule: string;
+      prompt: string;
       target: Record<string, unknown>;
     };
     expect(arg.name).toBe("抓某作品评论");
     expect(arg.sourceKind).toBe("self.metrics");
+    // 默认频率(每天 09:00)编译成 cron —— UI 从不出现裸 cron,提交时才编译。
     expect(arg.schedule).toBe("0 9 * * *");
+    expect(arg.prompt).toBe("每天抓我主页的新作品指标");
     expect(arg.target).toEqual({ externalSourceId: "ext-99" });
+  });
+
+  it("弹窗不出现裸 cron 输入框,而是友好频率控件", () => {
+    render(<CreateJobDialog open onOpenChange={vi.fn()} onCreate={vi.fn()} />);
+    // 旧的裸 cron 文本框(data-slot=automation-field-schedule + cron placeholder)已移除
+    expect(
+      document.querySelector('[data-slot="automation-field-schedule"]'),
+    ).toBeNull();
+    expect(screen.queryByPlaceholderText(/0 9 \* \* \*/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/cron/i)).not.toBeInTheDocument();
+    // 改为友好频率编辑器 + 三段模式
+    expect(
+      document.querySelector('[data-slot="automation-cadence-editor"]'),
+    ).not.toBeNull();
+    expect(screen.getByText("周期")).toBeInTheDocument();
+    expect(screen.getByText("按间隔")).toBeInTheDocument();
+    expect(screen.getByText("单次")).toBeInTheDocument();
+  });
+
+  it("切到「按间隔 · 每 6 小时」→ onCreate 收到 `0 */6 * * *`", async () => {
+    const onCreate = vi.fn((_i: unknown): Promise<void> => Promise.resolve());
+    render(<CreateJobDialog open onOpenChange={vi.fn()} onCreate={onCreate} />);
+    fireEvent.change(screen.getByPlaceholderText("例:每天抓我的主页指标"), {
+      target: { value: "间隔作业" },
+    });
+    // 切到「按间隔」模式
+    fireEvent.click(screen.getByText("按间隔"));
+    // 改间隔步长为 6（默认 3）
+    const everyInput = document.querySelector(
+      '[data-slot="automation-cadence-interval-every"]',
+    ) as HTMLInputElement;
+    fireEvent.change(everyInput, { target: { value: "6" } });
+    fireEvent.click(screen.getByText("创建任务"));
+    await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
+    const arg = onCreate.mock.calls[0]![0] as unknown as { schedule: string };
+    expect(arg.schedule).toBe("0 */6 * * *");
+  });
+
+  it("prefill(模板卡)预填 name/prompt/sourceKind/频率", async () => {
+    const onCreate = vi.fn((_i: unknown): Promise<void> => Promise.resolve());
+    render(
+      <CreateJobDialog
+        open
+        onOpenChange={vi.fn()}
+        onCreate={onCreate}
+        prefill={{
+          name: "每天抓我作品的最新评论",
+          prompt: "每天抓我所有作品的最新评论",
+          sourceKind: "comments",
+          cadence: {
+            mode: "period",
+            unit: "daily",
+            weekday: 1,
+            hour: 9,
+            minute: 0,
+          },
+        }}
+      />,
+    );
+    // 预填带入 name + prompt
+    expect(
+      (screen.getByPlaceholderText("例:每天抓我的主页指标") as HTMLInputElement)
+        .value,
+    ).toBe("每天抓我作品的最新评论");
+    expect(
+      (screen.getByPlaceholderText(/每天抓我主页的新作品/) as HTMLTextAreaElement)
+        .value,
+    ).toBe("每天抓我所有作品的最新评论");
+    // 直接提交 → sourceKind=comments,cron=每天 09:00
+    fireEvent.click(screen.getByText("创建任务"));
+    await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
+    const arg = onCreate.mock.calls[0]![0] as unknown as {
+      sourceKind: string;
+      schedule: string;
+      prompt: string;
+    };
+    expect(arg.sourceKind).toBe("comments");
+    expect(arg.schedule).toBe("0 9 * * *");
+    expect(arg.prompt).toBe("每天抓我所有作品的最新评论");
   });
 
   it("名称为空时创建按钮 disabled", () => {
     render(<CreateJobDialog open onOpenChange={vi.fn()} onCreate={vi.fn()} />);
     const submit = screen
-      .getByText("创建作业")
+      .getByText("创建任务")
       .closest("button") as HTMLButtonElement;
     expect(submit).toBeDisabled();
   });
 });
 
+describe("TemplateCards — 从模板入手", () => {
+  it("渲染模板卡;点非灰置模板 → onPick 带该模板", () => {
+    const onPick = vi.fn();
+    render(<TemplateCards onPick={onPick} />);
+    expect(screen.getByText("从模板入手")).toBeInTheDocument();
+    expect(screen.getByText("每天抓我的新作品指标")).toBeInTheDocument();
+    expect(screen.getByText("每天抓我作品的最新评论")).toBeInTheDocument();
+    // 点「每天抓我作品的最新评论」模板卡
+    fireEvent.click(
+      screen
+        .getByText("每天抓我作品的最新评论")
+        .closest("button") as HTMLButtonElement,
+    );
+    expect(onPick).toHaveBeenCalledTimes(1);
+    const tpl = onPick.mock.calls[0]![0] as { sourceKind: string; id: string };
+    expect(tpl.id).toBe("daily-comments");
+    expect(tpl.sourceKind).toBe("comments");
+  });
+
+  it("灰置模板(D8a 明细)disabled,点不动", () => {
+    const onPick = vi.fn();
+    render(<TemplateCards onPick={onPick} />);
+    const detailCard = document.querySelector(
+      '[data-template-id="daily-detail"]',
+    ) as HTMLButtonElement;
+    expect(detailCard).toBeDisabled();
+  });
+});
+
 describe("AutomationsIsland — 新建接线", () => {
-  it("island.create → createScheduledJob(body) + router.refresh", async () => {
+  it("island.create → createScheduledJob(body 带编译 cron + prompt) + router.refresh", async () => {
     render(<AutomationsIsland jobs={[]} />);
     // 打开新建弹窗(顶部按钮)
-    fireEvent.click(screen.getAllByText("新建作业")[0]!);
+    fireEvent.click(screen.getAllByText("新建任务")[0]!);
     fireEvent.change(
       screen.getByPlaceholderText("例:每天抓我的主页指标"),
       { target: { value: "新作业" } },
     );
-    fireEvent.click(screen.getByText("创建作业"));
+    fireEvent.change(
+      screen.getByPlaceholderText(/每天抓我主页的新作品/),
+      { target: { value: "每天抓我主页的新作品" } },
+    );
+    fireEvent.click(screen.getByText("创建任务"));
     await waitFor(() =>
       expect(mockClient.createScheduledJob).toHaveBeenCalledTimes(1),
     );
     const arg = mockClient.createScheduledJob.mock.calls[0]![0] as unknown as {
-      body: { name: string; sourceKind: string; schedule: string };
+      body: {
+        name: string;
+        sourceKind: string;
+        schedule: string;
+        prompt: string;
+      };
     };
     expect(arg.body.name).toBe("新作业");
     expect(arg.body.sourceKind).toBe("self.metrics");
+    // schedule 是编译出的 cron(默认每天 09:00),prompt 承接自然语言
+    expect(arg.body.schedule).toBe("0 9 * * *");
+    expect(arg.body.prompt).toBe("每天抓我主页的新作品");
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
+  it("点模板卡「每天抓我作品的最新评论」→ 弹窗预填并可直接创建(sourceKind=comments)", async () => {
+    render(<AutomationsIsland jobs={[]} />);
+    // 点模板卡(TemplateCards 在列表页顶部)
+    fireEvent.click(
+      screen
+        .getByText("每天抓我作品的最新评论")
+        .closest("button") as HTMLButtonElement,
+    );
+    // 弹窗预填了 name/prompt
+    await waitFor(() =>
+      expect(
+        (
+          screen.getByPlaceholderText(
+            "例:每天抓我的主页指标",
+          ) as HTMLInputElement
+        ).value,
+      ).toBe("每天抓我作品的最新评论"),
+    );
+    fireEvent.click(screen.getByText("创建任务"));
+    await waitFor(() =>
+      expect(mockClient.createScheduledJob).toHaveBeenCalledTimes(1),
+    );
+    const arg = mockClient.createScheduledJob.mock.calls[0]![0] as unknown as {
+      body: { sourceKind: string; schedule: string; prompt: string };
+    };
+    expect(arg.body.sourceKind).toBe("comments");
+    expect(arg.body.schedule).toBe("0 9 * * *");
+    expect(arg.body.prompt.length).toBeGreaterThan(0);
   });
 });
 
