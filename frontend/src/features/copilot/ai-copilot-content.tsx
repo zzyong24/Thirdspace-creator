@@ -448,6 +448,11 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   const selKind = searchParams?.get("selKind") || undefined;
   const selId = searchParams?.get("selId") || undefined;
   const selTitle = searchParams?.get("selTitle") || undefined;
+  // T-029:次区(推荐指令 / 最近任务 / 继续任务 / 快捷入口)只在「全局助手」模式展示 —— 即右下角
+  // 浮标 / ⌘K 全局唤醒(落到默认 surface、无 functionKey、无选中态)。从工作台上下文打开的 surface
+  // Copilot 聚焦当前任务,不展示次区(真机反馈:非右下角/全局唤醒不需要下面的推荐指令和全局入口)。
+  const showSecondary =
+    surface === DEFAULT_SURFACE && !functionKey && !selKind;
   const chatContextBody = React.useMemo(() => {
     const chatContext: {
       surface: string;
@@ -800,7 +805,9 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
       </div>
 
       {/* 次区(bug #5)—— 控制台/快捷入口/智能推荐折进一个有界、可滚的区域,不挤占对话主区。
-          给一个较小的上限高度(max-h)并自身滚动,把垂直空间让给上面的对话主区。 */}
+          给一个较小的上限高度(max-h)并自身滚动,把垂直空间让给上面的对话主区。
+          T-029:仅「全局助手」模式(右下角/⌘K)展示;surface Copilot 聚焦任务、不展示次区。 */}
+      {showSecondary && (
       <div
         data-slot="copilot-secondary"
         className="flex max-h-[230px] shrink-0 flex-col gap-3 overflow-y-auto"
@@ -1089,6 +1096,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
         </section>
       </div>
       </div>
+      )}
     </div>
   );
 }
