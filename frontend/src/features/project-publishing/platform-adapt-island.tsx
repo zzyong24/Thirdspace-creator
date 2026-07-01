@@ -18,6 +18,14 @@ interface PlatformDraft {
   body: string;
   tags: string[];
   coverIdea: string;
+  // L6 对齐 cheat-package:该条草稿过发布审核 SOP 的结论(命中了什么 + 怎么改的)。
+  // 硬规则已在 draft 本体改成合规版,这里展示给用户看审核做了什么。
+  auditFlags: string[];
+}
+
+// auditFlags 里以 ✅/✓ 开头的是「无命中/合规」类(绿),其余是命中并改动/建议(琥珀)。
+function isCleanFlag(flag: string): boolean {
+  return /^[✅✔☑√\s]*(✅|✔|☑|√|无命中|合规|通过)/.test(flag.trim());
 }
 
 const PLATFORM_LABEL: Record<string, string> = {
@@ -46,6 +54,9 @@ function parseDrafts(resultData: Record<string, unknown>): PlatformDraft[] {
           ? o.tags.filter((t): t is string => typeof t === "string")
           : [],
         coverIdea: typeof o.coverIdea === "string" ? o.coverIdea : "",
+        auditFlags: Array.isArray(o.auditFlags)
+          ? o.auditFlags.filter((f): f is string => typeof f === "string")
+          : [],
       };
     })
     .filter((d): d is PlatformDraft => d !== null);
@@ -73,6 +84,25 @@ function renderDraft(d: PlatformDraft) {
               className="inline-flex h-4 items-center rounded-md bg-brand-soft px-1.5 text-[10px] font-medium text-brand"
             >
               #{tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      {d.auditFlags.length > 0 ? (
+        <div className="mt-0.5 flex flex-col gap-0.5 border-t border-border/60 pt-1">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            发布审核
+          </span>
+          {d.auditFlags.map((flag, i) => (
+            <span
+              key={`${i}-${flag}`}
+              className={
+                isCleanFlag(flag)
+                  ? "text-[11px] leading-snug text-emerald-600 dark:text-emerald-400"
+                  : "text-[11px] leading-snug text-amber-600 dark:text-amber-400"
+              }
+            >
+              {isCleanFlag(flag) ? flag : `⚠ ${flag}`}
             </span>
           ))}
         </div>

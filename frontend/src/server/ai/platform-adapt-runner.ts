@@ -21,6 +21,9 @@ export interface PlatformDraft {
   body: string;
   tags: string[];
   coverIdea: string;
+  // L6 对齐 cheat-package:该条草稿过发布审核 SOP 的结论(命中了什么 + 怎么改的)。
+  // 硬规则已在 draft 本体改成合规版,这里只记改动;经验项记建议。前端发布页据此显审核结论。
+  auditFlags: string[];
 }
 
 export interface PlatformAdaptDeps extends ContextDeps {
@@ -75,6 +78,7 @@ function adaptFacets(
 
 // Normalize the schema-validated drafts array into per-platform drafts (T-025:结构化后拿的是
 // 已解析对象,归一逻辑原样保留 —— trim、滤掉缺 platform/title 的项、清空标签)。
+// L6:透传 auditFlags(发布审核 SOP 结论)——同 tags 的清洗(trim + 滤空),只加不改既有字段。
 function normalizePlatformDrafts(
   drafts: PlatformAdaptOutput["drafts"],
 ): PlatformDraft[] {
@@ -86,12 +90,16 @@ function normalizePlatformDrafts(
       const tags = (o.tags ?? [])
         .map((t) => (typeof t === "string" ? t.trim() : ""))
         .filter((t): t is string => t.length > 0);
+      const auditFlags = (o.auditFlags ?? [])
+        .map((f) => (typeof f === "string" ? f.trim() : ""))
+        .filter((f): f is string => f.length > 0);
       return {
         platform,
         title,
         body: o.body ?? "",
         tags,
         coverIdea: o.coverIdea ?? "",
+        auditFlags,
       };
     })
     .filter((d): d is PlatformDraft => d !== null);

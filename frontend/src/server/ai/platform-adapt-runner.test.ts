@@ -61,7 +61,8 @@ function makeDeps(object: Record<string, unknown>) {
 
 describe("runPlatformAdapt (runStructuredNode + 外置模板)", () => {
   it("resolves script.rewrite and records a publication_drafts candidate", async () => {
-    // 结构化对象(已被 outputSchema 校验):两个平台草稿。
+    // 结构化对象(已被 outputSchema 校验):两个平台草稿,各带发布审核 SOP 的 auditFlags
+    // (L6:硬规则改动记录 + 经验建议;含需 trim/滤空的脏项验证归一透传)。
     const object = {
       drafts: [
         {
@@ -70,6 +71,7 @@ describe("runPlatformAdapt (runStructuredNode + 外置模板)", () => {
           body: "正文",
           tags: ["a", "b"],
           coverIdea: "封面",
+          auditFlags: ["  标签去掉品牌词→泛称  ", "", "营销词『变现』→『跑通』"],
         },
         {
           platform: "bilibili",
@@ -77,6 +79,7 @@ describe("runPlatformAdapt (runStructuredNode + 外置模板)", () => {
           body: "正文2",
           tags: [],
           coverIdea: "",
+          auditFlags: ["✅ 无命中,合规"],
         },
       ],
     };
@@ -92,9 +95,43 @@ describe("runPlatformAdapt (runStructuredNode + 外置模板)", () => {
     const input = recordCandidate.mock.calls[0]![2];
     expect(input.resultType).toBe("publication_drafts");
     expect(input.resultData.outputId).toBe("o1");
-    const drafts = input.resultData.drafts as unknown[];
+    const drafts = input.resultData.drafts as Array<{
+      platform: string;
+      auditFlags: string[];
+    }>;
     expect(Array.isArray(drafts)).toBe(true);
     expect(drafts.length).toBe(2);
+    // L6:auditFlags 透传到 recordCandidate 的 resultData.drafts(既有字段不动,只加这一项)。
+    // 脏项被 trim + 滤空:第一条剩 2 条,第二条是 ✅ 类。
+    expect(drafts[0]!.auditFlags).toEqual([
+      "标签去掉品牌词→泛称",
+      "营销词『变现』→『跑通』",
+    ]);
+    expect(drafts[1]!.auditFlags).toEqual(["✅ 无命中,合规"]);
+  });
+
+  it("透传缺省:草稿不带 auditFlags 时归一为空数组(向后兼容)", async () => {
+    // 老 provider / 文本兜底可能不吐 auditFlags —— schema default([]) + 归一滤空,应得 []。
+    const { deps, recordCandidate } = makeDeps({
+      drafts: [
+        {
+          platform: "douyin",
+          title: "抖音标题",
+          body: "正文",
+          tags: ["a"],
+          coverIdea: "封面",
+          // 无 auditFlags 字段
+        },
+      ],
+    });
+    await runPlatformAdapt(
+      ctx,
+      { id: "t1", projectId: "p1", inputData: { outputId: "o1" } },
+      deps,
+    );
+    const input = recordCandidate.mock.calls[0]![2];
+    const drafts = input.resultData.drafts as Array<{ auditFlags: string[] }>;
+    expect(drafts[0]!.auditFlags).toEqual([]);
   });
 
   it("cancels the task (no candidate) when the object normalizes to no drafts", async () => {
