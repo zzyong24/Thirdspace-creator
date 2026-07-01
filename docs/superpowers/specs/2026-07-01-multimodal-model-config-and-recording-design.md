@@ -1,8 +1,10 @@
 # 多模态 model-config + L5 录制阶段设计
 
-> 状态:草案(待 spec-review gate)。属**改架构**(新增多模态模型解析层 + 数据归属:生成素材落本地对象存储),按 CLAUDE.md 铁律须**过审(verdict≠FAIL)才准开工**。
+> 状态:**已过审(spec-review gate:CONCERNS→可开工,findings 已处置进本 SPEC)**。属**改架构**(新增多模态模型解析层 + 数据归属:生成素材落本地对象存储)。
 > 关联:[生命周期重设计 §3.5/§5.3](2026-07-01-lifecycle-redesign-creation-first.md)、[产品定位](../../产品定位.md)、记忆 `multimodal-models-user-configurable`。
 > 引用任务:BACKLOG **T-020(L5 录制)**。
+>
+> **⚖️ spec-review gate 裁决(独立跨上下文 reviewer + 2 探查子代理核实复用声明):verdict = CONCERNS,无 blocker → 可开工。** 合宪(多模态可配铁律真守住、AI 只产候选、不做成片合成)+ 抽象合理(MultimodalSpec 与文本 ModelSpec 并列、复用 resolveLlmConfig 优先级)+ 复用声明经探查全证实(ModelSpec/modelFor/resolveLlmConfig/model_configurations 自由 capability/secret_value 全存在)。3 major + 3 minor 已处置进下文(§2.2/§3/§6/§8/§9 内联「[gate-Fx]」标记):**F1** provider 工厂统一 image/video 上层返回契约(不 `bytes|taskId` union)+ 用假想非-MiniMax provider 签名证伪"上层不改";**F2** video 异步轮询状态机从开放问题**提升为 M2 必做**(+ fake 异步 provider 验轮询);**F3** 视频 aspectRatio **默认跟随项目横竖屏、竖屏优先**(合宪§8,不默认 16:9);F4 M1 先查死 `ai@7` `experimental_generateImage` 边界;F5 secret 明文存是继承债显式标注;F6 采纳门 §3/§9 二义 M2 回填收敛。
 
 ## 0. 背景 + 核心问题
 
@@ -45,8 +47,9 @@ interface MultimodalSpec {
 ```
 
 - **解析**:`resolveMultimodalSpec(ctx, capability)` —— 复用 T-126 的 `resolveLlmConfig` 同款优先级(库存密钥 > env > default 回退),投影成 MultimodalSpec。
-- **provider 工厂**:`generateImage(spec, {prompt, aspectRatio}) → bytes` / `generateVideo(spec, {prompt, firstFrame?}) → bytes|taskId`。按 `provider` 分派到各厂商适配器(先实现 `minimax` 适配器:调 MiniMax image/video REST API;结构留口子,加 provider = 加适配器不改上层)。
-  - **优先探 Vercel AI SDK 的 `experimental_generateImage`**:若它已支持某 provider 的 image model,图这条直接用 SDK 抽象(与文本同栈);SDK 不支持的(video、MiniMax 专有)走自建 REST 适配器。落地时先验 SDK 能力边界再定。
+- **provider 工厂(统一上层契约,`[gate-F1]`)**:`generateImage(spec, {prompt, aspectRatio}) → { assetBytes }` / `generateVideo(spec, {prompt, aspectRatio, firstFrame?}) → { assetBytes }`。**两者上层都只返 `{ assetBytes }`——异步 video 的「提交→轮询 taskId→下载」由 minimax 适配器内部消化**(上层不感知 taskId;不用 `bytes|taskId` union)。按 `provider` 分派到各厂商适配器。
+  - **`[gate-F1]` 抽象须被证伪**:M1 不止实现 `minimax` 适配器,还要用**一个假想的非-MiniMax provider 签名**(如 OpenAI images / Runway video)反推、确认「加 provider = 加适配器不改上层」这个承诺真成立(上层契约 `{assetBytes}` 能容纳异步 provider);否则接口只是照 MiniMax 长出来的空头支票。
+  - **`[gate-F4]` SDK 边界 M1 开头先查死**:项目用 `ai@^7.0.4`(探查证实)。M1 第一步先核 `ai@7` 是否导出 `experimental_generateImage` 及支持的 provider 列表 → **就此定死「图走 SDK 抽象 还是 自建 REST」再往下**,不并存两条路径到落地。video 无 SDK 标准抽象,走自建 REST。
 
 ### 2.3 与 video-asset-kit 的关系(方法论,非运行时依赖)
 不 shell 出 `mmx`/`capture.py`。**移植其决策逻辑**为本产品的 UX/prompt 约束:
@@ -93,10 +96,10 @@ interface MultimodalSpec {
 
 ## 8. 实现切片拆解(过审后拆进 BACKLOG,全做无阶段)
 
-- **M1 多模态解析层**:MultimodalSpec + resolveMultimodalSpec(复用 resolve 优先级)+ provider 工厂 + minimax image/video 适配器(先探 Vercel SDK `experimental_generateImage` 边界)。单测优先级/投影/适配器。
-- **M2 asset.generate 节点**:runner + dispatch(persistence-client)+ 落对象存储 + 建 asset + 候选/采纳绑定用料链。fake 生成器注入验装配+落盘。
+- **M1 多模态解析层**:MultimodalSpec + resolveMultimodalSpec(复用 resolve 优先级)+ provider 工厂 + minimax image/video 适配器。**`[gate-F4]` 第一步先核 `ai@7` `experimental_generateImage` 边界,定死图走 SDK 还是自建 REST 再往下。`[gate-F1]` 上层契约统一 `{assetBytes}`(异步 video 轮询在适配器内消化,不 union);用一个假想非-MiniMax provider 签名反推证伪"上层不改"。** 单测优先级/投影/适配器。
+- **M2 asset.generate 节点**:runner + dispatch(persistence-client)+ 落对象存储 + 建 asset + 候选/采纳绑定用料链。**`[gate-F2]` video 异步轮询状态机是 M2 必做子任务(非开放问题)**:定义 task 态(submitted/polling/succeeded/failed/timeout)+ 轮询间隔与上限 + 超时即 cancelTask+UI 失败态;**fake 生成器除注入已知 bytes 外,加一个 fake 异步 provider(先返 taskId、N 次轮询后返 bytes)验轮询装配**,否则异步链路零覆盖。`[gate-F6]` 采纳门定论后回填 §3/§9 二义(优先复用现有 asset 采纳门)。
 - **M3 设置页多模态配置**:image.generate/video.generate 两 capability 的 model-config 表单(复用 T-128 cc-switch);未配诚实态。
-- **M4 录制页 UI**:素材清单(material.match)+ 拖拽上传绑定(P3)+ AI 生成区(asset.generate + video-asset-kit 决策提示 + 未配引导)。
+- **M4 录制页 UI**:素材清单(material.match)+ 拖拽上传绑定(P3)+ AI 生成区(asset.generate + video-asset-kit 决策提示 + 未配引导)。**`[gate-F3]` 生成区 aspectRatio 默认跟随项目横竖屏、竖屏优先**(合宪§8):能配竖屏(如 MiniMax 支持 9:16)就直接生成竖屏,别默认 16:9;provider 只出横屏时**显式提示"该 provider 仅出 16:9,需你自行裁 9:16"**,不静默产横屏低质候选。
 - **M5 验收**:各片三步验证 + 真链路(有 key 则真出图/视频;无则 fake 注入 + 诚实标注)。
 
 ## 9. 开放问题(实现时定,默认假设先走)
