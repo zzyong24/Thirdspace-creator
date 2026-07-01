@@ -40,6 +40,7 @@ import type { ProductionViewModel } from "@/types/view-models";
 import {
   ProductionInteractiveRegion,
   type ProductionWiring,
+  type ProductionMultimodalConfig,
 } from "./production-interactive-region";
 
 // ---------------------------------------------------------------------------
@@ -66,6 +67,16 @@ export interface ProductionWorkspacePageProps {
    * the island degrades to the matched-asset count, never a made-up number.
    */
   readonly assetLibraryTotal?: number;
+  /**
+   * 项目主 output 的 aspectRatio(路由从 `projects.outputs.list` 读)—— 驱动 L5 录制页
+   * AI 生成区的 `[gate-F3]` 默认横竖屏(竖屏优先)。Optional:absent → AI 生成区默认竖屏。
+   */
+  readonly outputAspectRatio?: string;
+  /**
+   * 多模态(文生图/文生视频)模型是否已配 —— 路由读 `settings.models.list` 的 hasSecret 判。
+   * 驱动 AI 生成区「未配禁用 + 引导去设置」。Optional:absent(测试/fixture)→ 视为未配。
+   */
+  readonly multimodalConfig?: ProductionMultimodalConfig;
 }
 
 // ---------------------------------------------------------------------------
@@ -77,6 +88,8 @@ export function ProductionWorkspacePage({
   viewModel,
   wiring,
   assetLibraryTotal,
+  outputAspectRatio,
+  multimodalConfig,
 }: ProductionWorkspacePageProps) {
   const vm = viewModel ?? buildProductionViewModel(projectId);
   const isEmpty =
@@ -106,6 +119,8 @@ export function ProductionWorkspacePage({
           viewModel={vm}
           wiring={wiring}
           assetLibraryTotal={assetLibraryTotal}
+          outputAspectRatio={outputAspectRatio}
+          multimodalConfig={multimodalConfig}
         />
       )}
     </main>

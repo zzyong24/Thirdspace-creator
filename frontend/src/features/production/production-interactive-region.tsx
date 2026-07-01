@@ -31,6 +31,8 @@ import type { LucideIcon } from "lucide-react";
 import { SectionCard } from "@/components/project/section-card";
 import { client } from "@/lib/contract-client";
 import { MaterialMatchIsland } from "./material-match-island";
+import { UploadDropzone } from "./upload-dropzone";
+import { AssetGenerateIsland } from "./asset-generate-island";
 import type {
   ProductionAsset,
   ProductionViewModel,
@@ -107,10 +109,19 @@ const PRODUCTION_MODE_CARDS: ReadonlyArray<ProductionModeCardDescriptor> = [
 // ProductionInteractiveRegion
 // ---------------------------------------------------------------------------
 
+export interface ProductionMultimodalConfig {
+  /** 文生图模型已配(路由读 listModels + hasSecret);未配 → AI 生成区禁用 image + 引导去设置。 */
+  readonly imageConfigured: boolean;
+  /** 文生视频模型已配;未配 → AI 生成区禁用 video + 引导去设置。 */
+  readonly videoConfigured: boolean;
+}
+
 export function ProductionInteractiveRegion({
   viewModel,
   wiring,
   assetLibraryTotal,
+  outputAspectRatio,
+  multimodalConfig,
 }: {
   readonly viewModel: ProductionViewModel;
   readonly wiring?: ProductionWiring;
@@ -119,19 +130,48 @@ export function ProductionInteractiveRegion({
    * 素材库「全部」stat. Optional — degrades to the matched-asset count.
    */
   readonly assetLibraryTotal?: number;
+  /**
+   * 项目主 output 的 aspectRatio(路由从 `projects.outputs.list` 读)—— 驱动 L5 AI 生成区的
+   * `[gate-F3]` 默认横竖屏(竖屏优先)。缺失 → AI 生成区默认竖屏(抖音场景)。
+   */
+  readonly outputAspectRatio?: string;
+  /**
+   * 多模态模型是否已配(路由读 listModels hasSecret)—— 驱动 AI 生成区「未配禁用 + 引导去设置」。
+   * 缺失(纯 fixture 渲染)→ 视为未配(诚实禁用,不假装能生成)。
+   */
+  readonly multimodalConfig?: ProductionMultimodalConfig;
 }) {
+  // L5 录制页 AI 生成区的初始 prompt:从分镜第一段「画面」带(scriptLines 首段文本);无则空。
+  const initialPrompt = viewModel.scriptLines[0]?.text;
   return (
     <>
       <ProductionModeSelector wiring={wiring} />
+      {/* L5 录制工作台(SPEC §4 三区):①素材清单(material.match)②上传绑定(P3)③AI 生成
+          (asset.generate)。只在 wiring 解析(有真 output/项目)时接真;素材清单/上传要真
+          projectId 才有意义,AI 生成区未配模型会诚实禁用。 */}
       {wiring ? (
-        // 素材匹配 node (Plan D2) — only when the project's output is resolved (wiring
-        // present) can we tie matches to a real project/output. The project id comes from
-        // the view-model; the topic falls back to the project title for the agent.
-        <MaterialMatchIsland
-          projectId={viewModel.projectId}
-          outputId={wiring.outputId}
-          topic={viewModel.preview.posterLabel}
-        />
+        <section
+          data-slot="recording-workbench"
+          aria-label="录制工作台"
+          className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3"
+        >
+          {/* ① 素材清单 —— AI 据脚本/分镜列这条要哪些素材(复用 material.match 采纳门)。 */}
+          <MaterialMatchIsland
+            projectId={viewModel.projectId}
+            outputId={wiring.outputId}
+            topic={viewModel.preview.posterLabel}
+          />
+          {/* ② 上传区 —— 拖拽 → presigned PUT → 建 asset → 绑定当前项目(用料链)。 */}
+          <UploadDropzone projectId={viewModel.projectId} canBind={true} />
+          {/* ③ AI 生成区 —— asset.generate + video-asset-kit 决策 + [gate-F3] 竖屏优先 + 未配禁用。 */}
+          <AssetGenerateIsland
+            projectId={viewModel.projectId}
+            outputAspectRatio={outputAspectRatio}
+            initialPrompt={initialPrompt}
+            imageConfigured={multimodalConfig?.imageConfigured ?? false}
+            videoConfigured={multimodalConfig?.videoConfigured ?? false}
+          />
+        </section>
       ) : null}
       <div
         data-slot="production-grid"

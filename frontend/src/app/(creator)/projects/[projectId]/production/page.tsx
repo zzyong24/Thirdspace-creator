@@ -32,7 +32,10 @@ import {
   countAssetLibrary,
   type ProductionDataClient,
 } from "@/features/production/production-workspace-data";
-import type { ProductionWiring } from "@/features/production/production-interactive-region";
+import type {
+  ProductionWiring,
+  ProductionMultimodalConfig,
+} from "@/features/production/production-interactive-region";
 
 interface ProductionWorkspaceRouteProps {
   readonly params: Promise<{ readonly projectId: string }>;
@@ -63,20 +66,23 @@ async function resolveProjectId(
 
 // The project's primary ContentOutput — prefer a `*-main` output, else the first
 // output owned by the project — read via the REAL `projects.outputs.list` op.
-// Returns null when the project has no output.
-async function resolvePrimaryOutputId(
+// Returns null when the project has no output. Carries `aspectRatio` (the
+// contentOutputResource field) so the recording page's AI-generate region can
+// default its画幅 to the project's横竖屏 (`[gate-F3]` 竖屏优先).
+async function resolvePrimaryOutput(
   client: ProductionDataClient,
   projectId: string,
-): Promise<string | null> {
+): Promise<{ id: string; aspectRatio?: string } | null> {
   try {
     const outputs = (await client.listOutputs({
       params: { projectId },
       query: undefined,
       body: undefined,
-    })) as unknown as ReadonlyArray<{ id: string }>;
+    })) as unknown as ReadonlyArray<{ id: string; aspectRatio?: string }>;
     if (outputs.length === 0) return null;
     const main = outputs.find((o) => o.id.endsWith("-main"));
-    return (main ?? outputs[0]!).id;
+    const output = main ?? outputs[0]!;
+    return { id: output.id, aspectRatio: output.aspectRatio };
   } catch {
     return null;
   }
@@ -85,19 +91,45 @@ async function resolvePrimaryOutputId(
 async function resolveWiring(
   client: ProductionDataClient,
   slug: string,
-): Promise<ProductionWiring | undefined> {
+): Promise<{ wiring: ProductionWiring; outputAspectRatio?: string } | undefined> {
   const projectId = await resolveProjectId(client, slug);
-  const outputId = await resolvePrimaryOutputId(client, projectId);
-  if (outputId === null) return undefined;
+  const output = await resolvePrimaryOutput(client, projectId);
+  if (output === null) return undefined;
   try {
     const production = (await client.getOutputProduction({
-      params: { outputId },
+      params: { outputId: output.id },
       query: undefined,
       body: undefined,
     })) as { id: string; contentOutputId: string };
-    return { outputId, productionId: production.id };
+    return {
+      wiring: { outputId: output.id, productionId: production.id },
+      outputAspectRatio: output.aspectRatio,
+    };
   } catch {
     // Production unresolved (e.g. unseeded project) — degrade to local-only.
+    return undefined;
+  }
+}
+
+// 多模态模型是否已配 —— 读 REAL `settings.models.list`(与设置页同一 op),按 capability
+// 找 image.generate / video.generate 行,`hasSecret` 判是否已配 key。任何读失败 → 视为未配
+// (诚实禁用,AI 生成区引导去设置),绝不假装能生成。返回 undefined 让页面按未配渲染。
+async function resolveMultimodalConfig(
+  ctx: Parameters<typeof createServerClient>[0],
+): Promise<ProductionMultimodalConfig | undefined> {
+  try {
+    const models = await createServerClient(ctx).listModels({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    });
+    const has = (capability: string): boolean =>
+      models.some((m) => m.capability === capability && m.hasSecret);
+    return {
+      imageConfigured: has("image.generate"),
+      videoConfigured: has("video.generate"),
+    };
+  } catch {
     return undefined;
   }
 }
@@ -115,17 +147,21 @@ export default async function ProductionWorkspaceRoute({
   const client = createServerClient(
     session.ctx,
   ) as unknown as ProductionDataClient;
-  const [wiring, viewModel, assetLibraryTotal] = await Promise.all([
-    resolveWiring(client, projectId),
-    buildProductionWorkspaceViewModel(projectId, client),
-    countAssetLibrary(client),
-  ]);
+  const [wiringResult, viewModel, assetLibraryTotal, multimodalConfig] =
+    await Promise.all([
+      resolveWiring(client, projectId),
+      buildProductionWorkspaceViewModel(projectId, client),
+      countAssetLibrary(client),
+      resolveMultimodalConfig(session.ctx),
+    ]);
   return (
     <ProductionWorkspacePage
       projectId={projectId}
       viewModel={viewModel}
-      wiring={wiring}
+      wiring={wiringResult?.wiring}
       assetLibraryTotal={assetLibraryTotal}
+      outputAspectRatio={wiringResult?.outputAspectRatio}
+      multimodalConfig={multimodalConfig}
     />
   );
 }
