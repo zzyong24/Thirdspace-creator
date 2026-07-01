@@ -53,6 +53,18 @@ export interface CreativeContext {
   // 画幅取向 hint — 项目立项 Brief 选的 横屏 / 竖屏(中文 label),喂给 script.draft 让 AI 据此
   // 调钩子与时长(竖屏更短更狠、横屏可铺陈)。空串表示创作者还没选画幅。
   orientationHint: string;
+  // ── 复盘专用字段(review.analyze)—— 只在有 projectId + 装配了 reviewSubject reader 时才填。
+  //    复盘要「就这一条作品」提炼经验,而非账号级泛论,故把本作品的真实文案/标题/数据/评论读进来
+  //    分别喂给 review prompt 的对应占位符(有则注入、空则该块在 prompt 里省略)。全部诚实空兜底:
+  //    读不到就是空串,绝不塞假数据。字段拆开(而非合成一块 brief)让 prompt 能逐块条件注入。
+  // 本次复盘作品的真标题(项目/publication 真值)。空 = 读不到/未装配。
+  reviewTitle: string;
+  // 本次复盘作品的真文案正文(output_script transcript / 逐字稿)。空 = 无脚本产物。
+  reviewScript: string;
+  // 本次复盘作品的真实数据摘要(最新 metric_snapshots:播放/点赞/评论/分享…,人类可读串)。空 = 无快照。
+  reviewMetrics: string;
+  // 本次复盘作品的观众评论(audience_signals 里 source 含 comment 的前 N 条,拼成列表)。空 = 无评论。
+  reviewComments: string;
   topic: { title: string; angle: string };
   projectId: string | null;
 }
@@ -193,6 +205,27 @@ export interface ProjectBriefReader {
   ): Promise<{ orientation?: "landscape" | "portrait" } | null>;
 }
 
+// 复盘对象 reader (T-039a) — 读「本次复盘的这一条作品」的真实材料,喂给 review.analyze,让复盘
+// 就这一条内容(文案/标题/数据/评论)提炼可复用经验,而不是账号级泛论。四个只读方法各自 best-effort
+// (读不到 → 空,绝不塞假);composition root 绑到已有公开读源(projects repo 取标题、artifacts
+// service 取 output_script 逐字稿、analytics service 取最新 snapshot、candidate service 取评论信号),
+// **复用**数据底座既有读法(如 dashboard 的 views??plays + 最新帧口径),不新造 repo 方法。Optional:
+// 只有 review 路径装配它;其它节点省略,assembleCreativeContext 就跳过这几个字段(留空)。
+export interface ReviewSubjectReader {
+  /** 本作品真标题(项目/publication 真值)。读不到 → 空串。 */
+  getTitle(ctx: RequestContext, projectId: string): Promise<string>;
+  /** 本作品真文案正文(output_script transcript / 逐字稿)。无脚本 → 空串。 */
+  getScript(ctx: RequestContext, projectId: string): Promise<string>;
+  /** 本作品真实数据摘要(最新 metric_snapshots → 人类可读串,播放优先 views 回退 plays)。无 → 空串。 */
+  getMetricsSummary(ctx: RequestContext, projectId: string): Promise<string>;
+  /** 本作品观众评论(audience_signals 里 source 含 comment 的前 N 条 rawText)。无 → 空数组。 */
+  getComments(
+    ctx: RequestContext,
+    projectId: string,
+    opts: { limit: number },
+  ): Promise<string[]>;
+}
+
 // F2 消费侧隔离 reader (T-030-D4, SPEC §7 边界②) — reports the `origin` of a project's
 // current artifact of a given type. The thesis/contract/outline briefs above are injected
 // downstream as "用户已确认的前提" (已搭好的论点树 / 已确认的内容合同 / 结构方案蓝图). When the
@@ -220,6 +253,8 @@ export interface ContextDeps {
   contract?: ContractReader;
   outline?: OutlineReader;
   brief?: ProjectBriefReader;
+  // 复盘对象 (T-039a): 只有 review.analyze 路径装配,读本次复盘作品的真文案/标题/数据/评论。Optional。
+  reviewSubject?: ReviewSubjectReader;
   // F2 (T-030-D4): reports origin of the thesis_tree / content_contract /
   // content_outline artifacts so reconstructed briefs get an explicit "未经确认"
   // marker before they ride downstream as confirmed premises. Optional.
@@ -408,6 +443,44 @@ export async function assembleCreativeContext(
     }
   }
 
+  // 复盘对象(T-039a)—— 只有 review.analyze 路径装配 reviewSubject reader + 有 projectId 时,读
+  // 「这一条作品」的真文案/标题/数据/评论。每个独立 best-effort(单点读失败只让该字段空,不牵连其它、
+  // 不阻断节点)。全部诚实空兜底:读不到就空串/空,绝不塞假。四字段拆开(而非合成一块)让 review
+  // prompt 能逐块条件注入(有则注、空则该块在 prompt 省略)。
+  let reviewTitle = "";
+  let reviewScript = "";
+  let reviewMetrics = "";
+  let reviewComments = "";
+  if (deps.reviewSubject && input.projectId) {
+    const rs = deps.reviewSubject;
+    const pid = input.projectId;
+    try {
+      reviewTitle = (await rs.getTitle(ctx, pid))?.trim() ?? "";
+    } catch {
+      reviewTitle = "";
+    }
+    try {
+      reviewScript = (await rs.getScript(ctx, pid))?.trim() ?? "";
+    } catch {
+      reviewScript = "";
+    }
+    try {
+      reviewMetrics = (await rs.getMetricsSummary(ctx, pid))?.trim() ?? "";
+    } catch {
+      reviewMetrics = "";
+    }
+    try {
+      const comments = await rs.getComments(ctx, pid, { limit: 20 });
+      reviewComments = (comments ?? [])
+        .map((c) => (typeof c === "string" ? c.trim() : ""))
+        .filter((c) => c.length > 0)
+        .map((c) => `· ${c}`)
+        .join("\n");
+    } catch {
+      reviewComments = "";
+    }
+  }
+
   return {
     positioningBrief,
     learningsBrief,
@@ -419,6 +492,10 @@ export async function assembleCreativeContext(
     contractBrief,
     outlineBrief,
     orientationHint,
+    reviewTitle,
+    reviewScript,
+    reviewMetrics,
+    reviewComments,
     topic: { title: input.topic, angle: input.angle ?? "" },
     projectId: input.projectId,
   };

@@ -170,6 +170,48 @@ describe("buildChatAssembly — 三层注入装配", () => {
     ]);
   });
 
+  it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
+    // 注入一个记录入参的 reviewSubject reader:证明 chatContext.projectId 真的流到 assembleCreativeContext
+    // (原来 chat-runner 写死 projectId=null → 复盘永远读不到本项目)。有 projectId → reader 被以它调用。
+    const seen: string[] = [];
+    const reviewSubject = {
+      getTitle: async (_c: unknown, projectId: string) => {
+        seen.push(projectId);
+        return "作品真标题";
+      },
+      getScript: async (_c: unknown, projectId: string) => {
+        seen.push(projectId);
+        return "逐字稿正文";
+      },
+      getMetricsSummary: async () => "播放：1000",
+      getComments: async () => ["评论一"],
+    };
+    const { deps } = makeDeps({ reviewSubject } as Partial<AssembleChatDeps>);
+    await buildChatAssembly(
+      ctx,
+      { surface: "review", projectId: "proj-real-1" },
+      deps,
+    );
+    // reader 被以真实 projectId 调用(证明 projectId 打通到数据层)。
+    expect(seen).toContain("proj-real-1");
+    expect(seen.every((p) => p === "proj-real-1")).toBe(true);
+  });
+
+  it("T-039a:surface=review 但缺 projectId → 不调 reviewSubject reader(诚实兜底,不崩)", async () => {
+    const getTitle = vi.fn(async () => "不该被调");
+    const reviewSubject = {
+      getTitle,
+      getScript: vi.fn(async () => ""),
+      getMetricsSummary: vi.fn(async () => ""),
+      getComments: vi.fn(async () => []),
+    };
+    const { deps } = makeDeps({ reviewSubject } as Partial<AssembleChatDeps>);
+    const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
+    expect(getTitle).not.toHaveBeenCalled();
+    // 装配仍成功(skill + 工具照常)。
+    expect(a.skillId).toBe("chatbox.review");
+  });
+
   it("functionKey 叠加:把命中的专用工具置顶(按钮层,一键岛预调)", async () => {
     const { deps } = makeDeps();
     // 选题编导白名单 [topic.generate, topic.enrich];functionKey=topic.enrich → 置顶。

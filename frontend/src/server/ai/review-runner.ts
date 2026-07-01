@@ -37,10 +37,21 @@ export interface ReviewTask {
 }
 
 // 把 CreativeContext 映射成 review.insights 模板的 facets(占位化原 buildReviewPrompt 的上下文块）。
-// subject(本次复盘对象)是必需 facet,沿用原 prompt 的兜底文案(未指定内容时按账号整体表现提炼)。
+// subject(本次复盘对象)是必需 facet。
+// T-039a:复盘要「就这一条作品」提炼经验而非账号级泛论 —— subject 优先用作品真标题(reviewTitle),
+// 并把本作品的真文案/数据/评论各拼成一个整块注入(有内容才带标题行,读不到就空串 → prompt 里该块省略,
+// 不硬塞空占位、不喂噪声)。三个块与 subject 真标题一起让模型扣住真实材料归因,而不是空谈。
+// `overrideSubject`:chat 路径模型可能显式传了 subject(用户在对话里指定的复盘对象),优先于 reviewTitle。
 function reviewFacets(
   context: CreativeContext,
+  overrideSubject?: string,
 ): Record<string, string | undefined> {
+  // subject 真值优先级:对话里显式指定 > 作品真标题 > 旧 topic.title > 账号级兜底。
+  const subject =
+    overrideSubject?.trim() ||
+    context.reviewTitle?.trim() ||
+    context.topic.title?.trim() ||
+    "";
   return {
     positioning: context.positioningBrief
       ? context.positioningBrief
@@ -48,14 +59,24 @@ function reviewFacets(
     priorLearnings: context.learningsBrief
       ? `\n【已有经验(避免重复)】\n${context.learningsBrief}`
       : "",
-    subject: context.topic.title
-      ? context.topic.title
+    subject: subject
+      ? subject
       : "（未指定具体内容,按这个账号的整体表现提炼)",
+    // 三个整块:有真内容才拼「标题行 + 内容」,空则空串(bindPrompt 把空占位替换掉 → 该块消失)。
+    reviewScriptBlock: context.reviewScript
+      ? `\n【本次复盘作品·文案】\n${context.reviewScript}\n`
+      : "",
+    reviewMetricsBlock: context.reviewMetrics
+      ? `\n【本次复盘作品·真实数据】${context.reviewMetrics}\n`
+      : "",
+    reviewCommentsBlock: context.reviewComments
+      ? `\n【本次复盘作品·观众评论】\n${context.reviewComments}\n`
+      : "",
   };
 }
 
 // 导出 facets 映射 + parse 供 ChatBox 的 review.analyze 工具复用(对话里产经验候选,与本 runner
-// 同一份模板 + parse,不造影子)。
+// 同一份模板 + parse + 同一份真数据注入,不造影子)。
 export { reviewFacets };
 
 // Normalize the schema-validated learnings array into reusable learnings (T-025:结构化后拿的是

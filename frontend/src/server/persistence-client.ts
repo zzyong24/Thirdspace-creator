@@ -153,8 +153,12 @@ import {
   AI_OP_IDS,
   type AiService,
 } from "@creatoros/backend/modules/ai";
-import type { ContextDeps as ChatContextDeps } from "@/server/ai/creative-context";
+import type {
+  ContextDeps as ChatContextDeps,
+  ReviewSubjectReader,
+} from "@/server/ai/creative-context";
 import type { ContextReaders as ChatContextReaders } from "@/server/ai/chat-runner";
+import { knowledgeRelevanceScore } from "@/server/ai/chat-tools";
 import { runGatherMaterial } from "@/server/ai/research-runner";
 import { runTopicGenerateV2 } from "@/server/ai/topic-task-adapter";
 import * as nodePath from "node:path";
@@ -1655,6 +1659,132 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const positioning = createPositioningTransport(() => positioningService);
 
+  // 复盘对象 reader 工厂 (T-039a) —— 读「本次复盘的这一条作品」的真材料(标题/文案/数据/评论),
+  // 供 review.analyze 路径(后端 task runner + ChatBox 对话复盘)注入 review.insights prompt,让复盘
+  // 扣住真实内容归因而不是账号级泛论。全部 best-effort、诚实空兜底(读不到 → 空,绝不塞假),且**复用
+  // 数据底座既有读法**:标题走 projectsRepo.get(带 ownership 门),文案走 output_script transcript
+  // artifact(与 reconstruct-runner 的 getTranscript 同法),数据走 analytics 最新 snapshot rawMetrics
+  // (播放优先 views 回退 plays,与 dashboard 同口径),评论走 candidateService.listSignals 里 source
+  // 含 comment 的信号。绑到 creative-context 的 ReviewSubjectReader 端口。
+  const makeReviewSubjectReader = (): ReviewSubjectReader => ({
+    // 本作品真标题 —— projectsRepo.get 顺带做 ownership 门(跨用户/未知 → OwnershipError)。
+    getTitle: async (c, projectId) => {
+      try {
+        const row = await projectsRepo.get(c, projectId);
+        return row.title ?? "";
+      } catch {
+        return "";
+      }
+    },
+    // 本作品真文案 —— output_script transcript artifact 当前版本(contentData.transcript 优先,
+    // 回退 contentText)。与 reconstruct task 的 getTranscript 同一读法(公开 service + per-ctx repo)。
+    getScript: async (c, projectId) => {
+      try {
+        const rows = await artifactsService.listProjectArtifacts(c, projectId);
+        const repo = createArtifactRepository(db, {
+          ...deps,
+          userId: c.userId,
+        });
+        for (const r of rows) {
+          if (r.artifactType !== "output_script") continue;
+          if (!r.currentVersionId) continue;
+          const version = await repo.getVersion(r.currentVersionId);
+          const data = version.contentData as
+            | Record<string, unknown>
+            | null
+            | undefined;
+          const t =
+            data && typeof data.transcript === "string"
+              ? data.transcript
+              : version.contentText;
+          if (t && t.trim()) return t;
+        }
+        return "";
+      } catch {
+        return "";
+      }
+    },
+    // 本作品真实数据摘要 —— 解析项目 outputs → publications → 最新 snapshot rawMetrics,合并成
+    // 人类可读串(播放优先 views 回退 plays,与 dashboard/getMetricsSummary 同口径)。数据是真实值。
+    getMetricsSummary: async (c, projectId) => {
+      try {
+        const outputIds = await projectsService.listOutputIdsByProject(
+          c,
+          projectId,
+        );
+        const merged = new Map<string, number>();
+        for (const outputId of outputIds) {
+          let pubs: Array<{ id: string }> = [];
+          try {
+            pubs = await publishingService.listPublications(c, outputId, {
+              limit: 20,
+              offset: 0,
+            });
+          } catch {
+            pubs = [];
+          }
+          for (const pub of pubs) {
+            try {
+              const page = await analyticsService.getPublicationAnalytics(
+                c,
+                pub.id,
+                1,
+                10,
+              );
+              const latest = page.rows
+                .slice()
+                .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
+              const raw = (latest?.rawMetrics ?? {}) as Record<string, unknown>;
+              for (const [k, v] of Object.entries(raw)) {
+                if (typeof v === "number" && Number.isFinite(v)) {
+                  merged.set(k, v);
+                }
+              }
+            } catch {
+              /* single publication read failing → skip, never crash */
+            }
+          }
+        }
+        if (merged.size === 0) return "";
+        // 播放量归一(views/plays 同义合并,只呈现一次;views 真采集优先)。
+        if (merged.has("views") && merged.has("plays")) merged.delete("plays");
+        const LABELS: Record<string, string> = {
+          views: "播放",
+          plays: "播放",
+          likes: "点赞",
+          digg: "点赞",
+          comments: "评论",
+          shares: "分享",
+          favorites: "收藏",
+          finish_rate: "完播率",
+        };
+        return Array.from(merged.entries())
+          .map(([k, v]) => `${LABELS[k] ?? k}：${v}`)
+          .join(" · ");
+      } catch {
+        return "";
+      }
+    },
+    // 本作品观众评论 —— audience_signals 里 source 含 "comment"(如 douyin_comment)的信号 rawText。
+    // 多拉一些再按 comment 过滤 + 截前 limit 条(listSignals 不带 source 过滤,内存筛;诚实空兜底)。
+    getComments: async (c, projectId, opts) => {
+      try {
+        void projectId; // 现阶段受众信号按账号维度存(无 per-project 外键)→ 取账号级评论作复盘参考。
+        const res = await candidateService.listSignals(c, {
+          limit: Math.max(opts.limit * 3, 60),
+          offset: 0,
+        });
+        return res.rows
+          .filter((s) => (s.source ?? "").toLowerCase().includes("comment"))
+          .map((s) => s.rawText)
+          .filter((t): t is string => typeof t === "string" && t.trim() !== "")
+          .slice(0, opts.limit);
+      } catch {
+        return [];
+      }
+    },
+  });
+
   // 机制③④ — the gather-trigger seam. The AI module/service stays deterministic (never
   // imports the Agent SDK); the non-determinism lives HERE in the composition layer. We
   // wrap the AI transport so that a freshly-queued `research.gather_material` task fires
@@ -2348,6 +2478,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              // T-039a:复盘对象 reader —— 让后端复盘 task 也吃到「这一条作品」的真文案/标题/数据/评论
+              // (原来只有 positioning + learnings + topic.title → subject 空即账号级泛论)。
+              reviewSubject: makeReviewSubjectReader(),
               // Vercel AI SDK 路径(弃 LlmCompleter):复盘节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },
@@ -4788,6 +4921,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             .slice(0, opts.limit ?? 40)
             .map((k) => ({ title: k.title, knowledgeType: k.knowledgeType })),
       },
+      // T-039a:复盘对象 reader —— ChatBox 对话复盘(review.analyze)路径据此读「这一条作品」的真
+      // 文案/标题/数据/评论(前提是前端带了 projectId → 复盘一键岛以 kind=project 打开时已带)。
+      // 与后端复盘 task 共用同一份读法(makeReviewSubjectReader),不造影子。
+      reviewSubject: makeReviewSubjectReader(),
     },
     // 只读 context 工具的真数据读端口 —— 全部 user-scoped(经各自 service/repo 用 ctx.userId 收窄),
     // 只读、不写实体。找不到现成的「带 query 搜」读方法时,在此对现成 list 端口做内存过滤(优先复用
@@ -4815,31 +4952,50 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           }));
       },
       // context.knowledge —— 复用 knowledgeService.listKnowledge(user-scoped: repo.list(ctx.userId))。
-      // query 空 → 回最近若干条;非空 → 标题内存 contains 过滤(listKnowledge 不带全文检索)。
-      // snippet:知识库 item row 不含正文(正文在 revision 上,逐条再读代价高)→ 用来源类型/摘要
-      // 元数据兜出一句短描述;真拿不到就给空串(诚实,不编内容)。
+      // query 空 → 回最近若干条;非空 → **分词 OR 模糊匹配**(T-039a 放宽:原来是「整串 title.includes」
+      // 精确子串,复盘拿主题/标题搜时命中率极低 → 用户反馈「匹配太死」)。用 knowledgeRelevanceScore 对
+      // 标题+摘要计相关度(命中的 query 词数),命中(>0)才留,按相关度降序 + 原序稳定排。**诚实**:
+      // 全不命中就空(不塞无关资料),不是全返回。snippet:item row 不含正文 → 用摘要/描述元数据兜一句,
+      // 真拿不到给空串(不编内容)。
       searchKnowledge: async (
         c: RequestContext,
         opts: { query: string; limit: number },
       ) => {
         const rows = await knowledgeService.listKnowledge(c);
-        const q = opts.query.trim().toLowerCase();
-        const filtered = q
-          ? rows.filter((k) => k.title.toLowerCase().includes(q))
-          : rows;
-        return filtered.slice(0, opts.limit).map((k) => {
+        const snippetOf = (k: (typeof rows)[number]): string => {
           const meta = (k.sourceMetadata ?? {}) as {
             summary?: unknown;
             description?: unknown;
           };
-          const snippet =
-            typeof meta.summary === "string"
-              ? meta.summary
-              : typeof meta.description === "string"
-                ? meta.description
-                : "";
-          return { id: k.id, title: k.title, snippet };
-        });
+          return typeof meta.summary === "string"
+            ? meta.summary
+            : typeof meta.description === "string"
+              ? meta.description
+              : "";
+        };
+        const q = opts.query.trim();
+        if (!q) {
+          return rows.slice(0, opts.limit).map((k) => ({
+            id: k.id,
+            title: k.title,
+            snippet: snippetOf(k),
+          }));
+        }
+        // 标题 + 摘要一起当 haystack 做模糊匹配(放宽命中面,但仍以真实内容为准)。
+        const scored = rows
+          .map((k, idx) => ({
+            k,
+            idx,
+            score: knowledgeRelevanceScore(`${k.title}\n${snippetOf(k)}`, q),
+          }))
+          .filter((r) => r.score > 0)
+          // 相关度降序;同分保持原顺序(listKnowledge 的近→远)稳定。
+          .sort((a, b) => b.score - a.score || a.idx - b.idx);
+        return scored.slice(0, opts.limit).map(({ k }) => ({
+          id: k.id,
+          title: k.title,
+          snippet: snippetOf(k),
+        }));
       },
       // context.materials —— 复用 assetsService.listAssets(user-scoped: repo.listAssets(ctx.userId))。
       // ListAssetsQuery 只有 { limit, cursor }(无 query 文本)→ 取一批后做名称内存 contains 过滤。

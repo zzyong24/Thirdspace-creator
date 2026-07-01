@@ -22,7 +22,7 @@ import {
 import { buildChatTools, type ChatToolDeps } from "./chat-tools";
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
 import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
-import { parseLearnings } from "./review-runner";
+import { parseLearnings, reviewFacets } from "./review-runner";
 import { parseDiagnosis } from "./calibration-diagnose-runner";
 
 // 上下文感知 ChatBox 的服务端装配(SPEC §3.3)—— /api/chat 路由的「大脑」,从这里调
@@ -148,10 +148,16 @@ export async function buildChatAssembly(
   const modelSpec = await deps.resolveModelSpec(ctx, skillCapability);
   const model = modelFor(modelSpec);
 
-  // 4) 数据层:装配 CreativeContext facets(定位 / 飞轮 / 受众信号 / 知识库),注进 system。
+  // 4) 数据层:装配 CreativeContext facets(定位 / 飞轮 / 受众信号 / 知识库 / 复盘作品真材料),
+  //    注进 system。T-039a:把 chatContext.projectId 真正传下去(原写死 null → 复盘/项目相关
+  //    facet 永远读不到本项目),让复盘路径能拿到这条作品的真文案/标题/数据/评论;topic 从选中态
+  //    标题(工作台一键岛带进来的作品标题)派生(不再恒 ""),让账号级兜底也有真主题可用。
   const context = await assembleCreativeContext(
     ctx,
-    { projectId: chatContext.projectId ?? null, topic: "" },
+    {
+      projectId: chatContext.projectId ?? null,
+      topic: chatContext.selection?.label?.trim() ?? "",
+    },
     deps,
   );
   // 数据层 + 选中态层(T-027):先拼 CreativeContext facets,再接上"本次对话针对的选中内容"块 ——
@@ -240,24 +246,16 @@ export async function buildChatAssembly(
       };
     },
     analyzeReview: async ({ subject }) => {
-      // 复用 review.insights 模板 + parseLearnings(与 review-runner 同源)—— 产经验候选(非实体)。
-      // T-027:模型没显式传 subject 时用工作台选中内容的标题兜底。
+      // 复用 review.insights 模板 + reviewFacets + parseLearnings(与 review-runner 同源、同一份
+      // 真数据注入,不造影子)。T-039a:facets 走共用 reviewFacets —— 它把本项目的真文案/数据/评论
+      // 拼成整块注入(前提是上面 assembleCreativeContext 拿到了 projectId → reviewSubject reader 读齐)。
+      // subject 优先级:模型显式传 > 工作台选中标题 > 作品真标题(reviewFacets 内兜底)。
       const effSubject = subject?.trim() ? subject : selectionTitle;
       const spec = await deps.resolveModelSpec(ctx, "review.insights");
       const { text } = await runTemplatedNode({
         model: modelFor(spec),
         template: REVIEW_INSIGHTS_TEMPLATE,
-        facets: {
-          positioning: context.positioningBrief
-            ? context.positioningBrief
-            : "（未设置定位——按通用内容方法论提炼）",
-          priorLearnings: context.learningsBrief
-            ? `\n【已有经验(避免重复)】\n${context.learningsBrief}`
-            : "",
-          subject: effSubject
-            ? effSubject
-            : "（未指定具体内容,按这个账号的整体表现提炼)",
-        },
+        facets: reviewFacets(context, effSubject),
       });
       return parseLearnings(text);
     },

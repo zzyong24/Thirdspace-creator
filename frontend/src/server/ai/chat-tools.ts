@@ -284,6 +284,38 @@ function clampContextLimit(limit: number | undefined): number {
   return Math.min(Math.floor(limit), 10);
 }
 
+// T-039a 知识库匹配放宽 —— 原 context.knowledge 只做「整串 title.includes(query)」精确子串匹配,
+// 复盘时模型常拿作品标题/主题当 query 去搜,与知识库条目标题很难整串包含 → 命中率极低(用户反馈
+// 「知识库这次没命中,可能关键词匹配太死」)。改成**分词 OR 模糊**:把 query 切成词(中英文 + 常见
+// 分隔),任一词命中 haystack(标题 + 摘要)即算相关,命中词数越多越相关(用于排序)。
+// **诚实**:完全没命中就返回 0(调用方据此空,不塞无关资料);不是「全返回」。纯函数,可单测。
+// 返回值:该条与 query 的相关度(命中的 query 词数;0 = 不相关)。query 为空视为「不过滤」由调用方处理。
+export function knowledgeRelevanceScore(haystack: string, query: string): number {
+  const hay = haystack.toLowerCase();
+  // 分词:按空白 + 常见中英标点/分隔切,滤掉过短的噪声词(单字符英文/纯符号)。中文词保留(含单字,
+  // 中文单字也可能是有效检索词)。去重避免同词重复计分。
+  const terms = Array.from(
+    new Set(
+      query
+        .toLowerCase()
+        .split(/[\s,，、。.;；:：/\\|()（）【】\[\]"'`~!?？!—\-]+/)
+        .map((t) => t.trim())
+        .filter((t) => {
+          if (!t) return false;
+          // 纯 ASCII 且长度 1 的词(如 "a"/"的"以外的单字母)当噪声滤掉;含非 ASCII(中文)保留。
+          if (/^[a-z0-9]$/.test(t)) return false;
+          return true;
+        }),
+    ),
+  );
+  if (terms.length === 0) return 0;
+  let hits = 0;
+  for (const t of terms) {
+    if (hay.includes(t)) hits += 1;
+  }
+  return hits;
+}
+
 /**
  * 工具实现表(全部首波工具)。每个 execute 复用注入的 runner 核心产**候选**(非实体)。
  * 路由用 buildChatTools(skillTools, deps) 按 skill 白名单过滤后挂给 streamText。

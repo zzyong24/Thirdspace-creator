@@ -590,6 +590,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
     const chatContext: {
       surface: string;
       functionKey?: string;
+      projectId?: string;
       selection?: { kind: string; ids: string[]; label?: string };
     } = { surface };
     if (functionKey) chatContext.functionKey = functionKey;
@@ -599,6 +600,12 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
         ids: [selId],
         ...(selTitle ? { label: selTitle } : {}),
       };
+      // T-039a:选中态 kind=project 时,selId 就是当前项目 id —— 顺带装进 chatContext.projectId,
+      // 让后端复盘/项目相关 facet 能读到「这一条作品」的真文案/标题/数据/评论(原来没带 projectId →
+      // 后端恒 null → 复盘只能账号级泛论)。复盘一键岛(review-analyze-island)正是以 kind=project 打开。
+      if (selKind === "project") {
+        chatContext.projectId = selId;
+      }
     }
     return { chatContext };
   }, [surface, functionKey, selKind, selId, selTitle]);

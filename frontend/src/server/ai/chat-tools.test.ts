@@ -1,6 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import type { Tool } from "ai";
-import { buildChatTools, type ChatToolDeps } from "./chat-tools";
+import {
+  buildChatTools,
+  knowledgeRelevanceScore,
+  type ChatToolDeps,
+} from "./chat-tools";
 
 // 首波工具单测(SPEC §3.4 / §7「工具 execute 复用 runner 产候选」+「tools 挂载」)。
 // 不真跑模型:注入 fake 的 generateTopics / enrichTopic,断言
@@ -332,5 +336,44 @@ describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", (
       items: unknown[];
     };
     expect(result.items).toEqual([]);
+  });
+});
+
+// ── T-039a:知识库匹配放宽(knowledgeRelevanceScore 分词 OR 模糊)──────────────────────
+// 原 context.knowledge 只做整串 title.includes(query),复盘拿主题/标题当 query 时命中率极低
+// (用户反馈「匹配太死」)。改成分词 OR:任一 query 词命中 haystack 即算相关,命中词数即相关度。
+// 诚实:完全不相关 → 0(调用方据此空,不塞无关)。
+describe("knowledgeRelevanceScore — 分词 OR 模糊匹配(T-039a 放宽)", () => {
+  it("整串不子串包含,但分词后有词命中 → 判为相关(放宽的关键)", () => {
+    // query「上下文工程 复盘」整串不在标题里,但「上下文工程」这个词命中 → 相关。
+    expect(
+      knowledgeRelevanceScore("上下文工程实战手册", "上下文工程 复盘方法"),
+    ).toBeGreaterThan(0);
+  });
+
+  it("命中词越多相关度越高(用于排序)", () => {
+    const many = knowledgeRelevanceScore("RAG 检索增强 与 上下文工程", "RAG 上下文工程");
+    const few = knowledgeRelevanceScore("RAG 检索增强", "RAG 上下文工程");
+    expect(many).toBeGreaterThan(few);
+  });
+
+  it("摘要参与匹配:词只在摘要里也算命中", () => {
+    // haystack 拼了标题 + 摘要;query 词只在摘要段命中。
+    expect(
+      knowledgeRelevanceScore("随手记\n关于 Agent 记忆架构的笔记", "记忆架构"),
+    ).toBeGreaterThan(0);
+  });
+
+  it("完全不相关 → 0(诚实空,不塞无关资料)", () => {
+    expect(knowledgeRelevanceScore("烘焙面包的十个技巧", "分布式数据库一致性")).toBe(0);
+  });
+
+  it("query 为空 / 全是噪声分隔符 → 0(交调用方走「不过滤」分支)", () => {
+    expect(knowledgeRelevanceScore("任意内容", "")).toBe(0);
+    expect(knowledgeRelevanceScore("任意内容", "  ,、/  ")).toBe(0);
+  });
+
+  it("大小写不敏感", () => {
+    expect(knowledgeRelevanceScore("React 性能优化", "react")).toBeGreaterThan(0);
   });
 });

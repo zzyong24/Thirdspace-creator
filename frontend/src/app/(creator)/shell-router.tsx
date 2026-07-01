@@ -243,7 +243,7 @@ export function resolveRoute(pathname: string): RouteResolution {
           items: [
             {
               id: projectId,
-              label: project?.title ?? "AI Native Browser 深度解析",
+              label: project?.title ?? "当前项目",
               href: pathname,
               indicator: "active",
             },
@@ -264,7 +264,7 @@ export function resolveRoute(pathname: string): RouteResolution {
         items: [
           {
             id: projectId,
-            label: project?.title ?? "AI Native Browser 深度解析",
+            label: project?.title ?? "当前项目",
             href: `/projects/${projectId}`,
             indicator: "active",
           },

@@ -6,7 +6,11 @@ import type { PromptTemplate } from "../template";
  * 从一条内容(对照定位)提炼可复用的爆款要素/方法论作为经验沉淀(机制⑤飞轮回流)。
  * facets 由 CreativeContext 映射:
  *   positioning(必需,调用方已兜底)· priorLearnings(已有经验,避免重复,选填)·
- *   subject(必需:本次复盘对象,调用方按 topic 计算并兜底)。
+ *   subject(必需:本次复盘对象=作品真标题,调用方按真项目标题/topic 计算并兜底)。
+ * T-039a 复盘注入真数据:再加三个**整块占位**(选填)——
+ *   reviewScriptBlock(本次复盘作品·文案)· reviewMetricsBlock(本次复盘作品·真实数据)·
+ *   reviewCommentsBlock(本次复盘作品·观众评论)。调用方把「标题行 + 真内容」拼成整块传入;读不到
+ *   就传空串,占位替换为空 → 该块在 prompt 里自然省略(不硬塞空占位、不喂噪声,数据要真)。
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。
  * 注:resolveModelSpec 按 "review.insights" capability 解析模型(触发器 taskType=review.analyze)。
  *
@@ -37,8 +41,8 @@ export const REVIEW_INSIGHTS_TEMPLATE: PromptTemplate = {
 {{positioning}}{{priorLearnings}}
 
 【本次复盘对象】{{subject}}
-
-【任务】像专业编导做数据复盘那样,提炼 3-6 条**可复用的爆款要素/方法论**作为经验沉淀(钩子、节奏、选题角度、CTA、踩坑等),要具体、可迁移到下一条内容,且与已有经验不重复。
+{{reviewScriptBlock}}{{reviewMetricsBlock}}{{reviewCommentsBlock}}
+【任务】像专业编导做数据复盘那样,提炼 3-6 条**可复用的爆款要素/方法论**作为经验沉淀(钩子、节奏、选题角度、CTA、踩坑等),要具体、可迁移到下一条内容,且与已有经验不重复。**优先扣住上面这一条作品的真实文案、数据表现与观众评论来归因**(哪里做对了/哪里踩坑、数据反映出什么、评论暴露了哪些真实反馈),不要泛泛而谈。
 【输出】只输出一个 JSON 对象 {"learnings": [...]},learnings 是数组,每条:{"title"(一句话方法论,如"前3秒用具体数字承诺收益"),"insight"(为什么有效/适用场景,一两句中文)}。不要多余文字、不要代码块包裹。`,
   requiredFacets: ["positioning", "subject"],
 };
