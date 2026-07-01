@@ -2,6 +2,7 @@ import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
 import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
+import { isFixtureAnalyticsProject } from "@/fixtures/selectors/review";
 import type {
   AnalyticsViewModel,
   ReviewCommentItem,
@@ -244,8 +245,10 @@ export async function buildReviewWorkspaceViewModel(
 
   // A canonical/demo project keeps the fixture's curated insight content as the
   // fallback; a real project shows an empty insight card (no fake data) when it
-  // has no learnings.
-  const isFixtureProject = base.scenario !== "empty";
+  // has no learnings. NB: use真正的 fixture-membership 判定 —— 真项目的 op 路径也返
+  // scenario "default"(非 "empty"),旧的 `scenario !== "empty"` 判定会让真项目误吃
+  // DEFAULT_AI_ANALYSIS 假洞察。真项目 → false → 无 learnings 时空态,不摆假。
+  const isFixtureProject = isFixtureAnalyticsProject(projectId);
 
   // --- AI 洞察 / 经验 region (REAL via learnings.list) ---------------------
   let aiAnalysis: AnalyticsViewModel["aiAnalysis"] = isFixtureProject

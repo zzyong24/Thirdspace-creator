@@ -37,7 +37,10 @@ import { InsightCard } from "@/components/analytics/insight-card";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
-import type { AnalyticsWindow } from "@/fixtures/selectors/review";
+import {
+  isFixtureAnalyticsProject,
+  type AnalyticsWindow,
+} from "@/fixtures/selectors/review";
 import type {
   AnalyticsViewModel,
   MetricCard as MetricCardVm,
@@ -147,11 +150,21 @@ export function AnalyticsReviewInteractiveRegion({
   // base `viewModel` (server-rendered, window = "all") is used for the
   // default tab so the default DOM is unchanged; switching a tab calls
   // the pure selector with the mapped window.
+  //
+  // GATE: only a canonical fixture/demo project may re-derive by window — for a
+  // REAL imported project the fixture selector has NO data, so re-deriving would
+  // WIPE the server's真值(真播放/点赞…)to 0 on tab switch. Real projects keep
+  // their op-derived VM across tabs (the time-window re-scope is a demo-only
+  // affordance until a client-side re-scope over the fetched snapshots exists).
   const window = TAB_WINDOW[activeTab] ?? "all";
+  const canRederive = React.useMemo(
+    () => isFixtureAnalyticsProject(viewModel.projectId),
+    [viewModel.projectId],
+  );
   const scoped = React.useMemo<AnalyticsViewModel>(() => {
-    if (window === "all") return viewModel;
+    if (window === "all" || !canRederive) return viewModel;
     return buildAnalyticsReviewViewModel(viewModel.projectId, window);
-  }, [viewModel, window]);
+  }, [viewModel, window, canRederive]);
 
   return (
     <>
@@ -437,31 +450,40 @@ function SecondaryCharts({
         contentClassName="flex flex-col gap-1.5"
         className="[--card-spacing:--spacing(3)]"
       >
-        <AudienceBreakdown
-          slot="audience-profile"
-          shape="donut"
-          data={audienceProfile}
-          summary={summariseDistribution("观众画像", audienceProfile)}
-        />
-        <ul
-          data-slot="audience-profile-list"
-          className="mt-2 flex flex-col gap-0.5"
-          aria-label="观众画像数据"
-        >
-          {audienceProfile.map((row) => (
-            <li
-              key={row.label}
-              data-slot="audience-profile-row"
-              data-profile-label={row.label}
-              className="flex items-center justify-between text-[11px]"
+        {audienceProfile.length === 0 ? (
+          <PlannedRegion
+            slot="audience-profile"
+            hint="观众画像需单视频分析页采集，接入后在此显示年龄段分布。"
+          />
+        ) : (
+          <>
+            <AudienceBreakdown
+              slot="audience-profile"
+              shape="donut"
+              data={audienceProfile}
+              summary={summariseDistribution("观众画像", audienceProfile)}
+            />
+            <ul
+              data-slot="audience-profile-list"
+              className="mt-2 flex flex-col gap-0.5"
+              aria-label="观众画像数据"
             >
-              <span className="text-muted-foreground">{row.label}</span>
-              <span className="font-medium tabular-nums text-foreground">
-                {(row.value * 100).toFixed(0)}%
-              </span>
-            </li>
-          ))}
-        </ul>
+              {audienceProfile.map((row) => (
+                <li
+                  key={row.label}
+                  data-slot="audience-profile-row"
+                  data-profile-label={row.label}
+                  className="flex items-center justify-between text-[11px]"
+                >
+                  <span className="text-muted-foreground">{row.label}</span>
+                  <span className="font-medium tabular-nums text-foreground">
+                    {(row.value * 100).toFixed(0)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </SectionCard>
 
       <SectionCard
@@ -470,31 +492,40 @@ function SecondaryCharts({
         contentClassName="flex flex-col gap-1.5"
         className="[--card-spacing:--spacing(3)]"
       >
-        <HorizontalBarsChart
-          slot="audience-source"
-          shape="horizontal-bars"
-          data={audienceSource}
-          summary={summariseDistribution("观众来源", audienceSource)}
-        />
-        <ul
-          data-slot="audience-source-list"
-          className="mt-2 flex flex-col gap-0.5"
-          aria-label="观众来源数据"
-        >
-          {audienceSource.map((row) => (
-            <li
-              key={row.label}
-              data-slot="audience-source-row"
-              data-source-label={row.label}
-              className="flex items-center justify-between text-[11px]"
+        {audienceSource.length === 0 ? (
+          <PlannedRegion
+            slot="audience-source"
+            hint="观众来源需单视频分析页采集，接入后在此按渠道拆分。"
+          />
+        ) : (
+          <>
+            <HorizontalBarsChart
+              slot="audience-source"
+              shape="horizontal-bars"
+              data={audienceSource}
+              summary={summariseDistribution("观众来源", audienceSource)}
+            />
+            <ul
+              data-slot="audience-source-list"
+              className="mt-2 flex flex-col gap-0.5"
+              aria-label="观众来源数据"
             >
-              <span className="text-muted-foreground">{row.label}</span>
-              <span className="font-medium tabular-nums text-foreground">
-                {(row.value * 100).toFixed(0)}%
-              </span>
-            </li>
-          ))}
-        </ul>
+              {audienceSource.map((row) => (
+                <li
+                  key={row.label}
+                  data-slot="audience-source-row"
+                  data-source-label={row.label}
+                  className="flex items-center justify-between text-[11px]"
+                >
+                  <span className="text-muted-foreground">{row.label}</span>
+                  <span className="font-medium tabular-nums text-foreground">
+                    {(row.value * 100).toFixed(0)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </SectionCard>
 
       <SectionCard
@@ -503,32 +534,69 @@ function SecondaryCharts({
         contentClassName="flex flex-col gap-1.5"
         className="[--card-spacing:--spacing(3)]"
       >
-        <RetentionChart
-          slot="retention-curve"
-          shape="retention-curve"
-          data={retentionCurve}
-          summary={summariseRetention(retentionCurve)}
-        />
-        <ul
-          data-slot="retention-curve-list"
-          className="mt-2 flex flex-col gap-0.5"
-          aria-label="留存曲线数据"
-        >
-          {retentionCurve.map((row) => (
-            <li
-              key={row.label}
-              data-slot="retention-curve-row"
-              data-position-label={row.label}
-              className="flex items-center justify-between text-[11px]"
+        {retentionCurve.length === 0 ? (
+          <PlannedRegion
+            slot="retention-curve"
+            hint="留存曲线需单视频分析页采集，接入后在此显示完播随时间变化。"
+          />
+        ) : (
+          <>
+            <RetentionChart
+              slot="retention-curve"
+              shape="retention-curve"
+              data={retentionCurve}
+              summary={summariseRetention(retentionCurve)}
+            />
+            <ul
+              data-slot="retention-curve-list"
+              className="mt-2 flex flex-col gap-0.5"
+              aria-label="留存曲线数据"
             >
-              <span className="text-muted-foreground">{row.label}</span>
-              <span className="font-medium tabular-nums text-foreground">
-                {(row.value * 100).toFixed(0)}%
-              </span>
-            </li>
-          ))}
-        </ul>
+              {retentionCurve.map((row) => (
+                <li
+                  key={row.label}
+                  data-slot="retention-curve-row"
+                  data-position-label={row.label}
+                  className="flex items-center justify-between text-[11px]"
+                >
+                  <span className="text-muted-foreground">{row.label}</span>
+                  <span className="font-medium tabular-nums text-foreground">
+                    {(row.value * 100).toFixed(0)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </SectionCard>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PlannedRegion — honest「规划中」placeholder for a chart region that has NO
+// reachable data source (观众画像/来源/留存/关键时刻)。绝不画假图 / 假分布(宪法 §8)。
+// 复用 T-010 的「规划中」标注模式(dashed 边框 + badge + 说明)。
+// ---------------------------------------------------------------------------
+
+function PlannedRegion({
+  slot,
+  hint,
+}: {
+  slot: string;
+  hint: string;
+}) {
+  return (
+    <div
+      data-slot={slot}
+      data-planned="true"
+      data-empty="true"
+      className="flex flex-col items-start gap-1 rounded-lg border border-dashed border-border bg-surface-subtle px-3 py-4"
+    >
+      <span className="inline-flex items-center rounded-full border border-border bg-surface px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+        规划中
+      </span>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">{hint}</p>
     </div>
   );
 }
@@ -580,33 +648,40 @@ function KeyMomentsSection({
             </h3>
           </div>
         </div>
-        <ul
-          data-slot="key-moments-list"
-          className="flex flex-col gap-0.5"
-          aria-label="关键时刻列表"
-        >
-          {moments.map((moment) => {
-            const selected = moment.id === activeId;
-            return (
-              <li
-                key={moment.id}
-                data-slot="key-moment-row"
-                data-moment-id={moment.id}
-                data-selected={selected ? "true" : "false"}
-                onClick={() => onSelect(moment.id)}
-                className={
-                  "flex cursor-pointer items-center justify-between rounded-md border border-border px-2.5 py-0.5 text-[11px] " +
-                  (selected ? "bg-brand-soft/50" : "bg-surface-subtle")
-                }
-              >
-                <span className="font-medium text-foreground">{moment.label}</span>
-                <span className="font-mono tabular-nums text-muted-foreground">
-                  {moment.value}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+        {moments.length === 0 ? (
+          <PlannedRegion
+            slot="key-moments-list"
+            hint="关键时刻(完播高峰/互动峰值/流失节点)需单视频分析页采集，接入后在此显示。"
+          />
+        ) : (
+          <ul
+            data-slot="key-moments-list"
+            className="flex flex-col gap-0.5"
+            aria-label="关键时刻列表"
+          >
+            {moments.map((moment) => {
+              const selected = moment.id === activeId;
+              return (
+                <li
+                  key={moment.id}
+                  data-slot="key-moment-row"
+                  data-moment-id={moment.id}
+                  data-selected={selected ? "true" : "false"}
+                  onClick={() => onSelect(moment.id)}
+                  className={
+                    "flex cursor-pointer items-center justify-between rounded-md border border-border px-2.5 py-0.5 text-[11px] " +
+                    (selected ? "bg-brand-soft/50" : "bg-surface-subtle")
+                  }
+                >
+                  <span className="font-medium text-foreground">{moment.label}</span>
+                  <span className="font-mono tabular-nums text-muted-foreground">
+                    {moment.value}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </section>
   );
@@ -647,6 +722,18 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
           </span>
         </button>
       </header>
+      {list.length === 0 ? (
+        <div
+          data-slot="top-published-empty"
+          data-empty="true"
+          className="flex flex-col items-start gap-1 rounded-lg border border-dashed border-border bg-surface-subtle px-3 py-4"
+        >
+          <p className="text-[12px] font-medium text-foreground">暂无作品</p>
+          <p className="text-[11px] text-muted-foreground">
+            该项目还没有导入 / 发布的作品，作品发布后会显示在这里。
+          </p>
+        </div>
+      ) : (
       <ul
         data-slot="top-published-list"
         className="grid grid-cols-1 gap-1.5 md:grid-cols-2 lg:grid-cols-4"
@@ -683,6 +770,7 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
           </li>
         ))}
       </ul>
+      )}
     </section>
   );
 }

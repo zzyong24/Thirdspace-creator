@@ -100,8 +100,8 @@ export function AnalyticsReviewPage({
         <ErrorState error={vm.error} />
       ) : state === "empty" ? (
         <EmptyState
-          title="暂无复盘数据"
-          description="发布内容并积累数据后即可在此查看复盘分析。"
+          title="该作品暂无明细数据"
+          description="还没有拉到这个作品的播放/互动明细。去任务中心跑「拉明细」采集，数据回收后即可在此查看复盘分析。"
         />
       ) : (
         <>

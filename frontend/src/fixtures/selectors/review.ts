@@ -108,61 +108,63 @@ function buildCoreMetrics(projectId: string): ReadonlyArray<MetricCardVm> {
   const newFollowers = Math.round(views * 0.0175);
   const ctr = views > 0 ? likes / views : 0;
   const shares = Math.round(comments + likes / 20);
+  // delta "" + trend "flat":单快照无环比来源,绝不显编造的「+12%」(宪法 §8)。
+  // 环比要真算需多次采集的历史序列(下一片/趋势工作)。
   return [
     {
       id: "m-views",
       label: "总播放量",
       value: formatCount(views),
-      delta: "+12%",
-      trend: "up",
+      delta: "",
+      trend: "flat",
       tone: "positive",
     },
     {
       id: "m-likes",
       label: "点赞数",
       value: formatCount(likes),
-      delta: "+8%",
-      trend: "up",
+      delta: "",
+      trend: "flat",
       tone: "positive",
     },
     {
       id: "m-comments",
       label: "评论数",
       value: formatCount(comments),
-      delta: "+4%",
-      trend: "up",
+      delta: "",
+      trend: "flat",
       tone: "neutral",
     },
     {
       id: "m-followers",
       label: "新增粉丝",
       value: formatCount(newFollowers),
-      delta: "+22",
-      trend: "up",
+      delta: "",
+      trend: "flat",
       tone: "positive",
     },
     {
       id: "m-completion",
       label: "完播率",
       value: `${Math.round(completion * 100)}%`,
-      delta: "-3%",
-      trend: "down",
-      tone: "negative",
+      delta: "",
+      trend: "flat",
+      tone: "info",
     },
     {
       id: "m-ctr",
       label: "封面点击率",
       value: `${(ctr * 100).toFixed(1)}%`,
-      delta: "+0.4%",
-      trend: "up",
+      delta: "",
+      trend: "flat",
       tone: "info",
     },
     {
       id: "m-shares",
       label: "分享数",
       value: formatCount(shares),
-      delta: "+12%",
-      trend: "up",
+      delta: "",
+      trend: "flat",
       tone: "positive",
     },
   ];
@@ -234,50 +236,14 @@ function buildConversionFunnel(
 }
 
 // ---------------------------------------------------------------------------
-// Locked default audience profile / source (fallback when the project
-// has no canonical audience snapshots — keeps the secondary charts
-// non-empty per the test invariant).
-// ---------------------------------------------------------------------------
-
-const DEFAULT_AUDIENCE_PROFILE: ReadonlyArray<{
-  readonly label: string;
-  readonly value: number;
-}> = [
-  { label: "18-24", value: 0.22 },
-  { label: "25-34", value: 0.41 },
-  { label: "35-44", value: 0.25 },
-  { label: "45+", value: 0.12 },
-];
-
-const DEFAULT_AUDIENCE_SOURCE: ReadonlyArray<{
-  readonly label: string;
-  readonly value: number;
-}> = [
-  { label: "推荐流", value: 0.55 },
-  { label: "搜索", value: 0.2 },
-  { label: "关注更新", value: 0.25 },
-];
-
-// ---------------------------------------------------------------------------
-// Locked default retention curve (fallback when the project has no
-// canonical retention points — keeps the chart non-empty).
-// ---------------------------------------------------------------------------
-
-const DEFAULT_RETENTION_CURVE: ReadonlyArray<{
-  readonly label: string;
-  readonly value: number;
-}> = [
-  { label: "0s", value: 1 },
-  { label: "30s", value: 0.82 },
-  { label: "1m", value: 0.78 },
-  { label: "3m", value: 0.6 },
-  { label: "5m", value: 0.55 },
-  { label: "10m", value: 0.42 },
-];
-
-// ---------------------------------------------------------------------------
-// Locked default key moments (fallback when no canonical review
-// insights exist for the project).
+// 观众画像 / 观众来源 / 留存曲线 / 关键时刻 — NO fabricated fallback.
+//
+// These four regions have NO contract read op (no reachable data source outside
+// the canonical demo dataset's `audienceSnapshots` / `retentionPoints` /
+// `reviewInsights`). Per constitution §8: a project without a real source must
+// render an honest empty state ("规划中 / 需单视频分析页采集"), NEVER a fixture
+// distribution. So the pickers return `[]` when the project carries no canonical
+// rows, and the page标注「规划中」instead of drawing a fake donut / curve.
 // ---------------------------------------------------------------------------
 
 interface KeyMoment {
@@ -286,55 +252,11 @@ interface KeyMoment {
   readonly value: string;
 }
 
-const DEFAULT_KEY_MOMENTS: ReadonlyArray<KeyMoment> = [
-  { id: "km-1", label: "完播高峰", value: "00:30 — 01:30" },
-  { id: "km-2", label: "互动峰值", value: "评论集中在 04:00" },
-  { id: "km-3", label: "流失节点", value: "10:00 后留存下降 18%" },
-];
-
-// ---------------------------------------------------------------------------
-// Locked default top published list (matches the 4-card band shown in
-// the Analytics & Review reference PNG). Falls back when the project
-// has no canonical publications (most page-spec projects are still in
-// the publishing → review transition).
-// ---------------------------------------------------------------------------
-
 type TopPublished = TopPublishedCard;
 
-const DEFAULT_TOP_PUBLISHED: ReadonlyArray<TopPublished> = [
-  {
-    id: "tp-1",
-    title: "AI Native Browser 时代：原生 AI 体验如何重构入口",
-    platform: "抖音",
-    views: "12.4 万播放",
-    tone: "primary",
-  },
-  {
-    id: "tp-2",
-    title: "浏览器 = AI 助理入口：从插件到原生",
-    platform: "小红书",
-    views: "8.2 万曝光",
-    tone: "compact",
-  },
-  {
-    id: "tp-3",
-    title: "深度评测：Atlas 与 Comet 谁更强",
-    platform: "B 站",
-    views: "5.6 万播放",
-    tone: "compact",
-  },
-  {
-    id: "tp-4",
-    title: "从 Chrome 插件到原生 AI 体验",
-    platform: "YouTube",
-    views: "4.3 万播放",
-    tone: "compact",
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Locked default AI analysis + review history (fallback)
-// ---------------------------------------------------------------------------
+// AI 洞察 / 复盘记录条目 —— 真实数据分别由 learnings.list / reviews 真实读侧回填
+// (见 review-workspace-data)。fixture 侧只对 canonical demo 项目从 canonical
+// reviewInsights / reviews 派生;真项目 → 空,绝不摆假(无 DEFAULT_* fixture)。
 
 interface AiAnalysisItem {
   readonly id: string;
@@ -342,40 +264,12 @@ interface AiAnalysisItem {
   readonly body: string;
 }
 
-const DEFAULT_AI_ANALYSIS: ReadonlyArray<AiAnalysisItem> = [
-  {
-    id: "ai-1",
-    title: "内容表现",
-    body: "首期完播率高于平均 12 个百分点，开场钩子表现稳定。",
-  },
-  {
-    id: "ai-2",
-    title: "建议动作",
-    body: "建议在小红书复盘封面方案，并将音频电平提升至 -16 LUFS。",
-  },
-];
-
 interface ReviewHistoryItem {
   readonly id: string;
   readonly title: string;
   readonly completedAt: string;
   readonly tone: "positive" | "warning" | "neutral";
 }
-
-const DEFAULT_REVIEW_HISTORY: ReadonlyArray<ReviewHistoryItem> = [
-  {
-    id: "rh-1",
-    title: "首期发布复盘",
-    completedAt: "2026-04-28",
-    tone: "positive",
-  },
-  {
-    id: "rh-2",
-    title: "脚本阶段复盘",
-    completedAt: "2026-04-10",
-    tone: "neutral",
-  },
-];
 
 // ---------------------------------------------------------------------------
 // Builder — assembles the full AnalyticsViewModel for the project.
@@ -406,6 +300,20 @@ export function buildAnalyticsReviewViewModel(
   };
 }
 
+/**
+ * Whether `projectId` maps to a canonical fixture/demo project (i.e. the
+ * deterministic selector has real data for it). REAL imported projects (their
+ * data lives in the DB, surfaced via the op path) return `false`.
+ *
+ * The client时间窗切换(tab → window)re-derives metrics/trend from the fixture
+ * selector; for a REAL project the fixture has NO data, so re-deriving would
+ * WIPE the server's真值 to 0. Callers gate the re-derivation on this so real
+ * projects keep their op-derived metrics across tab switches.
+ */
+export function isFixtureAnalyticsProject(projectId: string): boolean {
+  return getProjectById(resolveProjectIdSlug(projectId)) !== undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Selectors — pull data from the canonical dataset for the project
 // ---------------------------------------------------------------------------
@@ -418,7 +326,8 @@ function pickAudienceProfile(
     publicationIds.includes(row.publicationId),
   );
   const ageRows = rows.filter((row) => row.dimensionType === "age");
-  if (ageRows.length === 0) return DEFAULT_AUDIENCE_PROFILE;
+  // No real audience snapshots → honest empty (page标注「规划中」), not a fixture.
+  if (ageRows.length === 0) return [];
   return ageRows.map((row) => ({ label: row.dimensionValue, value: row.percentage }));
 }
 
@@ -430,7 +339,8 @@ function pickAudienceSource(
     publicationIds.includes(row.publicationId),
   );
   const sourceRows = rows.filter((row) => row.dimensionType === "source");
-  if (sourceRows.length === 0) return DEFAULT_AUDIENCE_SOURCE;
+  // No real source snapshots → honest empty (page标注「规划中」), not a fixture.
+  if (sourceRows.length === 0) return [];
   return sourceRows.map((row) => ({
     label: row.dimensionValue,
     value: row.percentage,
@@ -444,7 +354,8 @@ function pickRetentionCurve(
   const rows = canonicalDataset.retentionPoints
     .filter((row) => publicationIds.includes(row.publicationId))
     .sort((a, b) => a.positionMs - b.positionMs);
-  if (rows.length === 0) return DEFAULT_RETENTION_CURVE;
+  // No real retention points → honest empty (page标注「规划中」), not a fixture curve.
+  if (rows.length === 0) return [];
   return rows.map((row) => ({
     label: formatPosition(row.positionMs),
     value: row.retentionRate,
@@ -453,15 +364,16 @@ function pickRetentionCurve(
 
 function pickKeyMoments(projectId: string): ReadonlyArray<KeyMoment> {
   const project = getProjectById(projectId);
-  if (!project) return DEFAULT_KEY_MOMENTS;
+  // No canonical review insights → honest empty (page标注「规划中」), never a fixture.
+  if (!project) return [];
   const review = canonicalDataset.reviews.find(
     (row) => row.projectId === project.id,
   );
-  if (!review) return DEFAULT_KEY_MOMENTS;
+  if (!review) return [];
   const insights = canonicalDataset.reviewInsights
     .filter((row) => row.reviewId === review.id)
     .sort((a, b) => a.priority - b.priority);
-  if (insights.length === 0) return DEFAULT_KEY_MOMENTS;
+  if (insights.length === 0) return [];
   return insights.map<KeyMoment>((row, index) => ({
     id: `km-${row.id}-${index}`,
     label: row.title,
@@ -471,15 +383,17 @@ function pickKeyMoments(projectId: string): ReadonlyArray<KeyMoment> {
 
 function pickAiAnalysis(projectId: string): ReadonlyArray<AiAnalysisItem> {
   const project = getProjectById(projectId);
-  if (!project) return DEFAULT_AI_ANALYSIS;
+  // Non-fixture (real) project → honest empty (真项目的 AI 洞察由 learnings.list 真实
+  // 回填,见 review-workspace-data);无 canonical review → 空,不摆假洞察。
+  if (!project) return [];
   const review = canonicalDataset.reviews.find(
     (row) => row.projectId === project.id,
   );
-  if (!review) return DEFAULT_AI_ANALYSIS;
+  if (!review) return [];
   const insights = canonicalDataset.reviewInsights
     .filter((row) => row.reviewId === review.id)
     .sort((a, b) => a.priority - b.priority);
-  if (insights.length === 0) return DEFAULT_AI_ANALYSIS;
+  if (insights.length === 0) return [];
   return insights.map<AiAnalysisItem>((row, index) => ({
     id: `ai-${row.id}-${index}`,
     title: insightTitle(row.insightType),
@@ -489,11 +403,13 @@ function pickAiAnalysis(projectId: string): ReadonlyArray<AiAnalysisItem> {
 
 function pickReviewHistory(projectId: string): ReadonlyArray<ReviewHistoryItem> {
   const project = getProjectById(projectId);
-  if (!project) return DEFAULT_REVIEW_HISTORY;
+  // Non-fixture (real) project → honest empty history (页面显空列表),不摆假「首期发布
+  // 复盘」。真项目的复盘由 reviews.create 真实产生后经真实读侧回填。
+  if (!project) return [];
   const review = canonicalDataset.reviews.find(
     (row) => row.projectId === project.id,
   );
-  if (!review) return DEFAULT_REVIEW_HISTORY;
+  if (!review) return [];
   const completedAt = review.completedAt ?? review.createdAt;
   return [
     {
@@ -572,47 +488,35 @@ function resolveProjectIdSlug(slug: string): string {
 }
 
 function pickTopPublished(projectId: string): ReadonlyArray<TopPublished> {
-  // The reference PNG always shows four cards; the canonical dataset
-  // rarely has four live publications for a given project (most are
-  // still in publishing). We synthesise the band from the project's
-  // content outputs + a fallback so the slot is never empty.
+  // 热门作品只显项目真实的 contentOutputs(真作品标题)—— 绝不补 DEFAULT 假作品
+  // (如「AI Native Browser」)。不足就显实际几张 / 空态(宪法 §8)。play/平台的真值
+  // 由 op 路径(analytics.projects.get)叠加;fixture 侧无真采集数,标「待采集数据」。
   const project = getProjectById(projectId);
-  if (!project) return DEFAULT_TOP_PUBLISHED;
+  if (!project) return [];
   const outputs = canonicalDataset.contentOutputs
     .filter((output) => output.projectId === project.id)
     .slice(0, 4);
-  if (outputs.length === 0) return DEFAULT_TOP_PUBLISHED;
-  const rows: TopPublished[] = outputs.map((output, index) => ({
+  if (outputs.length === 0) return [];
+  return outputs.map<TopPublished>((output, index) => ({
     id: `tp-${output.id}`,
     title: output.title,
-    platform: platformLabelForContentType(output.contentType, index),
-    views: viewsLabel(index),
+    platform: platformLabelForContentType(output.contentType),
+    views: "待采集数据",
     tone: index === 0 ? "primary" : "compact",
   }));
-  // Pad to four cards with the canonical defaults so the band is
-  // visually full even for projects with a single content output.
-  while (rows.length < 4) {
-    const filler = DEFAULT_TOP_PUBLISHED[rows.length];
-    if (!filler) break;
-    rows.push(filler);
-  }
-  return rows;
 }
 
-function platformLabelForContentType(
-  contentType: string,
-  index: number,
-): string {
-  // Pick a deterministic platform label per content type so the band
-  // is plausible even when the project has no live publications.
-  const labels: ReadonlyArray<string> = ["抖音", "小红书", "B 站", "YouTube"];
-  if (contentType === "video" || contentType === "short") {
-    return labels[index % labels.length] ?? "抖音";
+function platformLabelForContentType(contentType: string): string {
+  // A neutral 内容类型 label (NOT a fabricated platform) — the fixture selector
+  // does not know which platform a未发布 output will ship to.
+  switch (contentType) {
+    case "video":
+      return "视频";
+    case "short":
+      return "短视频";
+    case "article":
+      return "图文";
+    default:
+      return "作品";
   }
-  return labels[index % labels.length] ?? "抖音";
-}
-
-function viewsLabel(index: number): string {
-  const buckets = ["12.4 万播放", "8.2 万曝光", "5.6 万播放", "4.3 万播放"];
-  return buckets[index % buckets.length] ?? "1.0 万播放";
 }

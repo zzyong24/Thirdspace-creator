@@ -18,6 +18,7 @@
  */
 
 import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
+import { isFixtureAnalyticsProject } from "@/fixtures/selectors/review";
 import type {
   AnalyticsViewModel,
   ComparisonRow,
@@ -132,13 +133,48 @@ export function buildAnalyticsReviewViewModelFromOp(
   labels: Readonly<Record<string, { title: string; platform: string }>> = {},
 ): AnalyticsViewModel {
   const base = buildAnalyticsReviewViewModel(projectId);
-  // Zero owned snapshots → reflect real persistence (the empty state), not the
-  // fixture fallback.
-  if (snapshots.length === 0) return base;
+  // Zero owned snapshots → reflect real persistence.
+  //  - REAL (non-fixture) project: 该作品还没拉到任何明细快照 → 诚实空态。清空
+  //    metrics/趋势/漏斗(页面据此渲染「暂无复盘数据」引导去任务中心跑「拉明细」),
+  //    绝不显 fixture 的 7 张 0 卡 + 假 delta(宪法 §8 / 任务 ②)。
+  //  - Canonical demo project: 保留 fixture 演示基座(有 canonical 快照演示用)。
+  if (snapshots.length === 0) {
+    if (isFixtureAnalyticsProject(projectId)) return base;
+    return {
+      ...base,
+      scenario: "empty",
+      metrics: [],
+      viewsTrend: [],
+      conversionFunnel: [],
+      audienceProfile: [],
+      audienceSource: [],
+      retentionCurve: [],
+      keyMoments: [],
+      topPublished: [],
+    };
+  }
 
-  // Aggregate the REAL rawMetrics across the project's snapshots (one per
-  // publication). plays/likes/comments/shares/favorites/follower_gain sum;
-  // ctr/finish_rate average.
+  // Dedup to ONE snapshot per publication (the latest by capturedAt) BEFORE
+  // aggregating. A publication carries a time-series of snapshots (每次采集一条);
+  // summing them all would 6–8x over-count播放量. This mirrors the proven
+  // dashboard rollup (analytics.repository getDashboardRollup): 取每发布最新一条,
+  // 再对计数求和 / 对 ctr·finish_rate 求均。
+  const latestByPub = new Map<string, MetricSnapshotDto>();
+  for (const s of snapshots) {
+    if (!s.publicationId) continue;
+    const prev = latestByPub.get(s.publicationId);
+    if (!prev || s.capturedAt > prev.capturedAt) latestByPub.set(s.publicationId, s);
+  }
+  const latest = [...latestByPub.values()];
+
+  // 播放量键名归一(数据底座 §1.4):真实抖音 ingestion 与演示 fixture 键名不同 ——
+  // 一侧写 `views`,另一侧写 `plays`,二者本不并存。读侧优先 `views`,缺失回退 `plays`。
+  const playsOf = (r: Record<string, unknown>): number => num(r, "views") || num(r, "plays");
+
+  // Aggregate the REAL rawMetrics across the project's LATEST-per-publication
+  // snapshots. plays/likes/comments/shares/favorites/follower_gain sum;
+  // ctr/finish_rate average across the snapshots that actually carry them
+  // (views-keyed 采集帧无 ctr/finish_rate — 用其求均会把真值稀释为 0)。
   let views = 0,
     likes = 0,
     comments = 0,
@@ -146,22 +182,28 @@ export function buildAnalyticsReviewViewModelFromOp(
     favorites = 0,
     follower = 0,
     ctrSum = 0,
+    ctrN = 0,
     finSum = 0,
-    n = 0;
-  for (const s of snapshots) {
+    finN = 0;
+  for (const s of latest) {
     const r = s.rawMetrics ?? {};
-    views += num(r, "plays");
+    views += playsOf(r);
     likes += num(r, "likes");
     comments += num(r, "comments");
     shares += num(r, "shares");
     favorites += num(r, "favorites");
     follower += num(r, "follower_gain");
-    ctrSum += num(r, "ctr");
-    finSum += num(r, "finish_rate");
-    n += 1;
+    if ("ctr" in r) {
+      ctrSum += num(r, "ctr");
+      ctrN += 1;
+    }
+    if ("finish_rate" in r) {
+      finSum += num(r, "finish_rate");
+      finN += 1;
+    }
   }
-  const ctr = n > 0 ? ctrSum / n : 0; // percent (0–100)
-  const finish = n > 0 ? finSum / n : 0; // percent
+  const ctr = ctrN > 0 ? ctrSum / ctrN : 0; // percent (0–100); 0 = 无采集帧携带
+  const finish = finN > 0 ? finSum / finN : 0; // percent; 0 = 无采集帧携带
   const interactions = likes + comments + shares + favorites;
 
   // 7 core metric cards from REAL values. delta "" + trend "flat": no
@@ -172,13 +214,16 @@ export function buildAnalyticsReviewViewModelFromOp(
     value: string,
     tone: MetricCard["tone"],
   ): MetricCard => ({ id, label, value, delta: "", trend: "flat", tone });
+  // 完播率 / 封面点击率:仅当最新采集帧真的携带该字段才显真值;否则「暂无」——
+  // 该作品的最新采集是 views-only 帧(无 ctr/finish_rate),不编「0.0%」(读起来像
+  // 「0% 完播」的假值)。诚实标暂无 → 去任务中心跑「拉明细」采集。
   const metrics: ReadonlyArray<MetricCard> = [
     card("m-views", "总播放量", formatCount(views), "positive"),
     card("m-likes", "点赞数", formatCount(likes), "positive"),
     card("m-comments", "评论数", formatCount(comments), "neutral"),
     card("m-followers", "新增粉丝", formatCount(follower), "positive"),
-    card("m-completion", "完播率", `${finish.toFixed(1)}%`, "info"),
-    card("m-ctr", "封面点击率", `${ctr.toFixed(1)}%`, "info"),
+    card("m-completion", "完播率", finN > 0 ? `${finish.toFixed(1)}%` : "暂无", "info"),
+    card("m-ctr", "封面点击率", ctrN > 0 ? `${ctr.toFixed(1)}%` : "暂无", "info"),
     card("m-shares", "分享数", formatCount(shares), "positive"),
   ];
 
