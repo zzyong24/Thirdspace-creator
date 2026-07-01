@@ -169,10 +169,11 @@ import {
   type Collector as ScheduledCollector,
 } from "@/server/ai/scheduled-collection-runner";
 import {
-  triggerScheduledJob,
+  runJobNow,
   startScheduler,
   sweepStaleRuns,
   type CronJob as SchedulableCronJob,
+  type TriggerDeps,
 } from "@/server/ai/scheduled-collection-scheduler";
 import { runTopicEnrich } from "@/server/ai/topic-enrich-runner";
 import { runCalibrationDiagnose } from "@/server/ai/calibration-diagnose-runner";
@@ -2861,28 +2862,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     source: "ingestion",
   };
 
-  // 启动扫超时(gate finding 3):进程(重)启动时,扫上一进程留下仍 running 且 started_at
-  // 超时(>30min)的 job_run → 标 failed,兜"进程崩在 running"的残留。best-effort:失败不
-  // 阻断 build。
-  void sweepStaleRuns({
-    runs: {
-      // sweep 只用 updateRun;createRun/listRunsByJob 此路径不触达,给 no-op 满足端口形状。
-      createRun: async () => ({ id: "" }),
-      listRunsByJob: async () => ({ rows: [], total: 0 }),
-      updateRun: (c, runId, patch) => schedulingService.updateRun(c, runId, patch),
-    },
-    listRunningRuns: async (c) => {
-      const rows = await schedulingService.listRunningRuns(c);
-      return rows.map((r) => ({ id: r.id, startedAt: r.startedAt }));
-    },
-    ctx: schedulerCtx,
-    now: deps.now,
-  }).catch((e) => console.error("[scheduler] 启动扫超时失败:", e));
-
-  // node-cron 进程内调度:每分钟轮询 enabled 且"最近一次 run 非 needs_reconnect"的 job(§6:
-  // 登录态过期停跑),cron 到点 → triggerScheduledJob。测试/build 环境不启动(startScheduler
-  // 内环境守卫 + 单例守卫)。listRunnableJobs 经 listJobs + 每 job 查最近 run 过滤。
-  void startScheduler({
+  // triggerScheduledJob 的共用 deps(TriggerDeps):cron 到点(startScheduler)与「立即运行」
+  // (D5,scheduledJobs.runNow)共用同一份端口 —— 触发点单一(SPEC §5),幂等双闸只此一处。
+  // ai.createTask/runs.*/dispatch 绑工厂内可见的 aiService/schedulingService/
+  // dispatchScheduledCollection。
+  const triggerDeps: TriggerDeps = {
     ai: {
       createTask: async (c, body) => {
         const t = await aiService.createTask(c, body);
@@ -2907,10 +2891,69 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           total,
         };
       },
-      updateRun: (c, runId, patch) => schedulingService.updateRun(c, runId, patch),
+      updateRun: (c, runId, patch) =>
+        schedulingService.updateRun(c, runId, patch),
     },
     dispatch: (ctx, task) => dispatchScheduledCollection?.(ctx, task),
     now: deps.now,
+  };
+
+  // 「立即运行」(D5):wrap scheduling transport,拦 scheduledJobs.runNow(composition-only
+  // op —— module transport 不认它,因触发后台动作要 dispatchScheduledCollection,在此 composition
+  // 层才可见)。命中 → 用**请求 ctx**(真实 userId,手动触发归当前用户)查 job → triggerScheduledJob
+  // (幂等双闸 + fire-and-forget)→ 返回 { jobRunId, aiTaskId, deduped }。其余 op 透传 module
+  // transport(scheduling)。
+  const schedulingWithRunNow: Transport = {
+    async request(endpoint, input, ctx) {
+      if (endpoint.id === "scheduledJobs.runNow") {
+        if (!ctx) throw new Error("AuthenticationError: runNow requires ctx");
+        const { params } = (input ?? {}) as { params?: { jobId?: string } };
+        const jobId = params?.jobId ?? "";
+        const result = await runJobNow(ctx, jobId, {
+          ...triggerDeps,
+          job: {
+            getJob: async (c, id) => {
+              const j = await schedulingService.getJob(c, id);
+              return { id: j.id, sourceKind: j.sourceKind, target: j.target };
+            },
+          },
+        });
+        return {
+          data: {
+            jobRunId: result.jobRunId,
+            aiTaskId: result.aiTaskId,
+            deduped: result.deduped,
+          },
+          meta: { requestId: ctx.requestId },
+        };
+      }
+      return scheduling.request(endpoint, input, ctx);
+    },
+  };
+
+  // 启动扫超时(gate finding 3):进程(重)启动时,扫上一进程留下仍 running 且 started_at
+  // 超时(>30min)的 job_run → 标 failed,兜"进程崩在 running"的残留。best-effort:失败不
+  // 阻断 build。
+  void sweepStaleRuns({
+    runs: {
+      // sweep 只用 updateRun;createRun/listRunsByJob 此路径不触达,给 no-op 满足端口形状。
+      createRun: async () => ({ id: "" }),
+      listRunsByJob: async () => ({ rows: [], total: 0 }),
+      updateRun: (c, runId, patch) => schedulingService.updateRun(c, runId, patch),
+    },
+    listRunningRuns: async (c) => {
+      const rows = await schedulingService.listRunningRuns(c);
+      return rows.map((r) => ({ id: r.id, startedAt: r.startedAt }));
+    },
+    ctx: schedulerCtx,
+    now: deps.now,
+  }).catch((e) => console.error("[scheduler] 启动扫超时失败:", e));
+
+  // node-cron 进程内调度:每分钟轮询 enabled 且"最近一次 run 非 needs_reconnect"的 job(§6:
+  // 登录态过期停跑),cron 到点 → triggerScheduledJob。测试/build 环境不启动(startScheduler
+  // 内环境守卫 + 单例守卫)。listRunnableJobs 经 listJobs + 每 job 查最近 run 过滤。
+  void startScheduler({
+    ...triggerDeps, // ai/runs/dispatch/now —— 与「立即运行」(D5)共用同一份触发端口
     ctx: schedulerCtx,
     listRunnableJobs: async (c) => {
       // enabled job 全取,再逐个用最近一次 run 过滤掉"最近 needs_reconnect"的(§6 停跑)。
@@ -4327,7 +4370,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     candidate,
     calibration,
     platformAccount,
-    scheduling,
+    scheduling: schedulingWithRunNow, // wrap:透传 CRUD + 拦 scheduledJobs.runNow(D5)
     contentCalendar,
     materialLinks,
     queryServices,

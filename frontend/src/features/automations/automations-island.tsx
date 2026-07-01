@@ -13,12 +13,23 @@
  *  4. 运行详情抽屉:点某作业 → 读 jobRuns.listByJob 列历史 run(startedAt/status/itemsNew/
  *     itemsUpdated)+ 选中某 run → 读其 ai_task_id 对应 ai_task_steps(复用 listTaskSteps
  *     渲染范式;run 未产 ai_task 或步骤为空时诚实空态)。
- *  5. 「立即运行」:渲染但 disabled + 标注「待接线(D5)」—— 手动触发属 D5,本片不接。
+ *  5. 「立即运行」(D5):点击 → scheduledJobs.runNow(手动产 ai_task + job_run,fire-and-forget,
+ *     走 triggerScheduledJob 幂等双闸)→ 自动打开运行详情抽屉轮询 ai_task_steps。
+ *  6. 「登录抖音」恢复(D4,SPEC §6):某作业最近一次 run 是 needs_reconnect(登录态过期,调度器
+ *     停跑)→ 该行红标「需重连 Chrome」+「登录抖音」按钮 → 点击调 ingestion.douyin.login(headed
+ *     弹 Chromium 扫码,复用 calibration 的现成登录链)→ 登录成功后调 scheduledJobs.runNow 触发
+ *     一次恢复(下次到点调度器见最近 run 非 needs_reconnect 自动恢复自动跑)。
+ *
+ * 最近 run 状态:island 挂载时批量拉每个 job 的最近一次 run(jobRuns.listByJob limit 1)→
+ * 每行据此判 needs_reconnect(红标 + 登录抖音)/ 正常(立即运行)。
  *
  * 诚实空态:D3 采集器尚未落地前,list 可为空(引导空态)、job_run 可为空(抽屉空态)。
  * 不写死、不假装有数据 —— 每个数字都追得到真实 job_run / ai_task_steps。
  *
- * Determinism:唯一非确定来源是用户显式交互;开关/新建后 router.refresh() 重读列表。
+ * 诚实缺口:「登录抖音」是 headed 扫码(开本地 Chromium),真恢复卡用户扫码 —— dev 本机可跑,
+ * 真扫码恢复待用户。绝不假装登录过。
+ *
+ * Determinism:唯一非确定来源是用户显式交互;开关/新建/立即运行后 router.refresh() 重读列表。
  */
 
 import * as React from "react";
@@ -140,26 +151,45 @@ interface TaskStep {
 
 // ── 单个作业行 ────────────────────────────────────────────────────────────────
 
+// D4「登录抖音」恢复的按钮相位(某行 needs_reconnect 时)。
+export type LoginPhase = "idle" | "logging_in" | "recovering";
+
 export function JobRow({
   job,
+  latestRun,
   onToggle,
   onOpenDetail,
+  onRunNow,
+  onLogin,
   pendingToggle,
+  pendingRunNow,
+  loginPhase,
 }: {
   readonly job: ScheduledJobResource;
+  readonly latestRun: JobRunResource | null;
   readonly onToggle: (enabled: boolean) => void;
   readonly onOpenDetail: () => void;
+  readonly onRunNow: () => void;
+  readonly onLogin: () => void;
   readonly pendingToggle: boolean;
+  readonly pendingRunNow: boolean;
+  readonly loginPhase: LoginPhase;
 }) {
   const meta = SOURCE_META[job.sourceKind as SourceKind];
   const SourceIcon = meta?.icon ?? BarChart3;
+  // D4:最近一次 run 是 needs_reconnect → 登录态过期(调度器停跑),该行红标 + 换「登录抖音」。
+  const needsReconnect = latestRun?.status === "needs_reconnect";
   return (
     <article
       data-slot="automation-row"
       data-job-id={job.id}
       data-source-kind={job.sourceKind}
       data-enabled={job.enabled}
-      className="grid grid-cols-[minmax(0,1.4fr)_120px_140px_140px_140px_96px_auto] items-center gap-4 px-5 py-5"
+      data-needs-reconnect={needsReconnect}
+      className={cn(
+        "grid grid-cols-[minmax(0,1.4fr)_120px_140px_140px_140px_96px_auto] items-center gap-4 px-5 py-5",
+        needsReconnect && "bg-amber-50/60",
+      )}
     >
       {/* name + source */}
       <div className="flex min-w-0 items-center gap-3">
@@ -178,9 +208,19 @@ export function JobRow({
           >
             {job.name}
           </button>
-          <span className="truncate text-[11px] text-muted-foreground">
-            {sourceLabel(job.sourceKind)}
-          </span>
+          {needsReconnect ? (
+            <span
+              data-slot="automation-reconnect-badge"
+              className="inline-flex w-fit items-center gap-1 text-[11px] font-medium text-amber-600"
+            >
+              <AlertTriangle className="size-3" />
+              需重连 Chrome
+            </span>
+          ) : (
+            <span className="truncate text-[11px] text-muted-foreground">
+              {sourceLabel(job.sourceKind)}
+            </span>
+          )}
         </div>
       </div>
 
@@ -228,21 +268,52 @@ export function JobRow({
         />
       </div>
 
-      {/* 操作:立即运行(禁用·待 D5) */}
+      {/* 操作:needs_reconnect → 登录抖音(D4);否则 立即运行(D5) */}
       <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          data-slot="automation-run-now"
-          disabled
-          title="待接线(D5)—— 手动触发将在「立即运行」切片接线"
-          className="inline-flex h-8 cursor-not-allowed items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-medium text-muted-foreground opacity-60"
-        >
-          <PlayCircle className="size-3.5" />
-          立即运行
-          <span className="rounded bg-surface-subtle px-1 text-[10px] text-muted-foreground">
-            待 D5
-          </span>
-        </button>
+        {needsReconnect ? (
+          <button
+            type="button"
+            data-slot="automation-login-douyin"
+            data-testid="automation-login-douyin"
+            disabled={loginPhase !== "idle"}
+            onClick={onLogin}
+            title="登录态过期 —— 点此弹 Chromium 扫码登录抖音,成功后自动恢复采集"
+            className="inline-flex h-8 items-center gap-1.5 rounded-control bg-amber-500 px-3 text-xs font-medium text-white hover:bg-amber-500/90 disabled:opacity-60"
+          >
+            <RefreshCw
+              className={cn(
+                "size-3.5",
+                loginPhase !== "idle" && "animate-spin",
+              )}
+            />
+            {loginPhase === "logging_in"
+              ? "扫码登录中…"
+              : loginPhase === "recovering"
+                ? "恢复中…"
+                : "登录抖音"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            data-slot="automation-run-now"
+            data-testid="automation-run-now"
+            disabled={pendingRunNow || !job.enabled}
+            onClick={onRunNow}
+            title={
+              job.enabled
+                ? "立即手动触发一次采集(不等 cron 到点)"
+                : "作业已停用 —— 先启用才能立即运行"
+            }
+            className="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-medium text-foreground hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {pendingRunNow ? (
+              <Loader2 className="size-3.5 animate-spin text-brand" />
+            ) : (
+              <PlayCircle className="size-3.5" />
+            )}
+            立即运行
+          </button>
+        )}
       </div>
     </article>
   );
@@ -439,48 +510,88 @@ export function RunDetailDialog({
     };
   }, []);
 
-  // 打开或换作业 → 读该作业历史 run(jobRuns.listByJob)。
-  React.useEffect(() => {
-    if (!open || !job) return;
-    setLoading(true);
-    setRuns([]);
-    setSelectedRunId(null);
-    setSteps([]);
-    void (async () => {
+  // 读该作业历史 run(jobRuns.listByJob);showSpinner=false 用于轮询静默重拉。
+  const loadRuns = React.useCallback(
+    async (jobId: string, showSpinner: boolean) => {
+      if (showSpinner) setLoading(true);
       try {
         const rows = (await client.listJobRunsByJob({
-          params: { jobId: job.id },
+          params: { jobId },
           query: { page: 1, pageSize: 50 },
           body: undefined,
         })) as unknown as JobRunResource[];
         if (!cancelledRef.current) setRuns(Array.isArray(rows) ? rows : []);
       } catch {
-        if (!cancelledRef.current) setRuns([]);
+        if (showSpinner && !cancelledRef.current) setRuns([]);
       } finally {
-        if (!cancelledRef.current) setLoading(false);
+        if (showSpinner && !cancelledRef.current) setLoading(false);
       }
-    })();
-  }, [open, job]);
+    },
+    [],
+  );
+
+  // 打开或换作业 → 首读历史 run。
+  React.useEffect(() => {
+    if (!open || !job) return;
+    setRuns([]);
+    setSelectedRunId(null);
+    setSteps([]);
+    void loadRuns(job.id, true);
+  }, [open, job, loadRuns]);
+
+  // D5 轮询:抽屉打开且存在 running run(立即运行刚触发)→ 每 2s 静默重拉 runs,让状态
+  // (running→succeeded/needs_reconnect)+ 新鲜度计数实时翻篇。无 running run 即停(省轮询)。
+  const hasRunning = runs.some((r) => r.status === "running");
+  React.useEffect(() => {
+    if (!open || !job || !hasRunning) return;
+    const t = setInterval(() => {
+      void loadRuns(job.id, false);
+    }, 2000);
+    return () => clearInterval(t);
+  }, [open, job, hasRunning, loadRuns]);
+
+  // 读某 ai_task 的步骤(showSpinner=false 用于轮询静默重拉)。
+  const loadSteps = React.useCallback(
+    async (aiTaskId: string, showSpinner: boolean) => {
+      if (showSpinner) setStepsLoading(true);
+      try {
+        const rows = (await client.listTaskSteps({
+          params: { taskId: aiTaskId },
+          query: undefined,
+          body: undefined,
+        })) as unknown as TaskStep[];
+        if (!cancelledRef.current) setSteps(Array.isArray(rows) ? rows : []);
+      } catch {
+        if (showSpinner && !cancelledRef.current) setSteps([]);
+      } finally {
+        if (showSpinner && !cancelledRef.current) setStepsLoading(false);
+      }
+    },
+    [],
+  );
 
   // 选中某 run → 读其 ai_task_id 对应 ai_task_steps(复用 listTaskSteps 范式)。
-  const selectRun = React.useCallback(async (run: JobRunResource) => {
-    setSelectedRunId(run.id);
-    setSteps([]);
-    if (!run.aiTaskId) return; // 该 run 未产 ai_task(理论不该,诚实兜空)
-    setStepsLoading(true);
-    try {
-      const rows = (await client.listTaskSteps({
-        params: { taskId: run.aiTaskId },
-        query: undefined,
-        body: undefined,
-      })) as unknown as TaskStep[];
-      if (!cancelledRef.current) setSteps(Array.isArray(rows) ? rows : []);
-    } catch {
-      if (!cancelledRef.current) setSteps([]);
-    } finally {
-      if (!cancelledRef.current) setStepsLoading(false);
-    }
-  }, []);
+  const selectRun = React.useCallback(
+    async (run: JobRunResource) => {
+      setSelectedRunId(run.id);
+      setSteps([]);
+      if (!run.aiTaskId) return; // 该 run 未产 ai_task(理论不该,诚实兜空)
+      await loadSteps(run.aiTaskId, true);
+    },
+    [loadSteps],
+  );
+
+  // D5 轮询:选中的 run 仍 running → 每 2s 静默重拉其步骤(步骤逐条落地实时可见)。
+  const selectedRun = runs.find((r) => r.id === selectedRunId) ?? null;
+  const selectedRunning =
+    selectedRun?.status === "running" && !!selectedRun.aiTaskId;
+  React.useEffect(() => {
+    if (!open || !selectedRunning || !selectedRun?.aiTaskId) return;
+    const t = setInterval(() => {
+      void loadSteps(selectedRun.aiTaskId!, false);
+    }, 2000);
+    return () => clearInterval(t);
+  }, [open, selectedRunning, selectedRun, loadSteps]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -614,6 +725,43 @@ export function AutomationsIsland({
   const [pendingToggleId, setPendingToggleId] = React.useState<string | null>(
     null,
   );
+  // D5:立即运行进行中的 jobId(按钮 spinner);D4:登录抖音相位(按 jobId)。
+  const [pendingRunNowId, setPendingRunNowId] = React.useState<string | null>(
+    null,
+  );
+  const [loginPhaseById, setLoginPhaseById] = React.useState<
+    Record<string, LoginPhase>
+  >({});
+  // D4:每个 job 最近一次 run(判 needs_reconnect 红标 + 登录抖音)。挂载/刷新时批量拉。
+  const [latestRuns, setLatestRuns] = React.useState<
+    Record<string, JobRunResource | null>
+  >({});
+
+  // 批量拉每个 job 的最近一次 run(jobRuns.listByJob limit 1)。jobs 变化(router.refresh
+  // 重传)即重拉,保证登录恢复/立即运行后行状态刷新。
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const entries = await Promise.all(
+        jobs.map(async (job) => {
+          try {
+            const rows = (await client.listJobRunsByJob({
+              params: { jobId: job.id },
+              query: { page: 1, pageSize: 1 },
+              body: undefined,
+            })) as unknown as JobRunResource[];
+            return [job.id, Array.isArray(rows) && rows[0] ? rows[0] : null] as const;
+          } catch {
+            return [job.id, null] as const;
+          }
+        }),
+      );
+      if (!cancelled) setLatestRuns(Object.fromEntries(entries));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [jobs]);
 
   const toggle = React.useCallback(
     async (job: ScheduledJobResource, enabled: boolean) => {
@@ -660,6 +808,58 @@ export function AutomationsIsland({
     setDetailJob(job);
     setDetailOpen(true);
   }, []);
+
+  // D5「立即运行」:手动触发 scheduledJobs.runNow(产 ai_task + job_run,fire-and-forget)→
+  // 打开该作业运行详情抽屉(轮询 ai_task_steps)→ refresh 让行状态/上次运行刷新。
+  const runNow = React.useCallback(
+    async (job: ScheduledJobResource) => {
+      setPendingRunNowId(job.id);
+      try {
+        await client.runScheduledJobNow({
+          params: { jobId: job.id },
+          query: undefined,
+          body: {},
+        });
+        setDetailJob(job);
+        setDetailOpen(true); // 抽屉轮询 job_run + ai_task_steps
+        router.refresh();
+      } finally {
+        setPendingRunNowId(null);
+      }
+    },
+    [router],
+  );
+
+  // D4「登录抖音」恢复(SPEC §6):某 job 最近 run 是 needs_reconnect → 弹 Chromium 扫码
+  // (ingestion.douyin.login,复用 calibration 现成登录链)→ 成功后 runNow 触发一次恢复。
+  // 诚实:headed 扫码卡用户,前端只发起 + 据结果推进,不假装登录过。
+  const login = React.useCallback(
+    async (job: ScheduledJobResource) => {
+      setLoginPhaseById((m) => ({ ...m, [job.id]: "logging_in" }));
+      try {
+        const res = (await client.loginDouyin({
+          params: undefined,
+          query: undefined,
+          body: {},
+        })) as { loggedIn?: boolean };
+        if (res.loggedIn) {
+          // 登录成功 → 立刻触发一次采集恢复(job_run 从 needs_reconnect 翻篇)。
+          setLoginPhaseById((m) => ({ ...m, [job.id]: "recovering" }));
+          await client.runScheduledJobNow({
+            params: { jobId: job.id },
+            query: undefined,
+            body: {},
+          });
+          setDetailJob(job);
+          setDetailOpen(true);
+        }
+        router.refresh();
+      } finally {
+        setLoginPhaseById((m) => ({ ...m, [job.id]: "idle" }));
+      }
+    },
+    [router],
+  );
 
   return (
     <section data-testid="automations-region" className="flex flex-col gap-4">
@@ -721,9 +921,14 @@ export function AutomationsIsland({
               <li key={job.id} className="list-none">
                 <JobRow
                   job={job}
+                  latestRun={latestRuns[job.id] ?? null}
                   pendingToggle={pendingToggleId === job.id}
+                  pendingRunNow={pendingRunNowId === job.id}
+                  loginPhase={loginPhaseById[job.id] ?? "idle"}
                   onToggle={(v) => toggle(job, v)}
                   onOpenDetail={() => openDetail(job)}
+                  onRunNow={() => runNow(job)}
+                  onLogin={() => login(job)}
                 />
               </li>
             ))}

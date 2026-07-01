@@ -25,6 +25,7 @@ export const SCHEDULING_OP_IDS = [
   "scheduledJobs.get",
   "scheduledJobs.update",
   "scheduledJobs.setEnabled",
+  "scheduledJobs.runNow",
   "jobRuns.listByJob",
   "jobRuns.get",
 ] as const;

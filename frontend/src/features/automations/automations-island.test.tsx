@@ -24,6 +24,13 @@ const mockClient = {
   createScheduledJob: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   listJobRunsByJob: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve([])),
   listTaskSteps: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve([])),
+  runScheduledJobNow: vi.fn(
+    (_i: unknown): Promise<unknown> =>
+      Promise.resolve({ jobRunId: "run-new", aiTaskId: "task-new", deduped: false }),
+  ),
+  loginDouyin: vi.fn(
+    (_i: unknown): Promise<unknown> => Promise.resolve({ loggedIn: true }),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -31,6 +38,8 @@ vi.mock("@/lib/contract-client", () => ({
     createScheduledJob: (i: unknown) => mockClient.createScheduledJob(i),
     listJobRunsByJob: (i: unknown) => mockClient.listJobRunsByJob(i),
     listTaskSteps: (i: unknown) => mockClient.listTaskSteps(i),
+    runScheduledJobNow: (i: unknown) => mockClient.runScheduledJobNow(i),
+    loginDouyin: (i: unknown) => mockClient.loginDouyin(i),
   },
 }));
 
@@ -112,12 +121,27 @@ describe("AutomationsIsland — 列表渲染", () => {
     expect(screen.getAllByText("0 9 * * *").length).toBeGreaterThan(0);
   });
 
-  it("「立即运行」渲染但 disabled(待 D5)", () => {
-    render(<AutomationsIsland jobs={[makeJob()]} />);
+  it("D5:「立即运行」enabled(作业启用时)", () => {
+    render(<AutomationsIsland jobs={[makeJob({ enabled: true })]} />);
     const runNow = screen
       .getByText("立即运行")
       .closest("button") as HTMLButtonElement;
-    expect(runNow).toBeDisabled();
+    expect(runNow).not.toBeDisabled();
+  });
+
+  it("D5:立即运行点击 → runScheduledJobNow(jobId) + router.refresh", async () => {
+    render(<AutomationsIsland jobs={[makeJob({ id: "job-9", enabled: true })]} />);
+    fireEvent.click(
+      screen.getByText("立即运行").closest("button") as HTMLButtonElement,
+    );
+    await waitFor(() =>
+      expect(mockClient.runScheduledJobNow).toHaveBeenCalledTimes(1),
+    );
+    const arg = mockClient.runScheduledJobNow.mock.calls[0]![0] as {
+      params: { jobId: string };
+    };
+    expect(arg.params.jobId).toBe("job-9");
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 });
 
@@ -131,9 +155,14 @@ describe("JobRow — 启用开关", () => {
             <td>
               <JobRow
                 job={makeJob({ enabled: true })}
+                latestRun={null}
                 onToggle={onToggle}
                 onOpenDetail={vi.fn()}
+                onRunNow={vi.fn()}
+                onLogin={vi.fn()}
                 pendingToggle={false}
+                pendingRunNow={false}
+                loginPhase="idle"
               />
             </td>
           </tr>
@@ -222,6 +251,56 @@ describe("AutomationsIsland — 新建接线", () => {
     expect(arg.body.name).toBe("新作业");
     expect(arg.body.sourceKind).toBe("self.metrics");
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+});
+
+describe("D4 — needs_reconnect 行:红标 + 登录抖音恢复", () => {
+  it("最近 run 是 needs_reconnect → 行显「需重连 Chrome」+「登录抖音」(非「立即运行」)", async () => {
+    // island 挂载批量拉 latestRuns(每 job limit 1)→ 返回 needs_reconnect。
+    mockClient.listJobRunsByJob.mockResolvedValue([
+      makeRun({ status: "needs_reconnect", aiTaskId: null, error: "需重连 Chrome:登录态过期" }),
+    ]);
+    render(<AutomationsIsland jobs={[makeJob({ id: "job-nr", enabled: true })]} />);
+    await waitFor(() =>
+      expect(screen.getByText("需重连 Chrome")).toBeInTheDocument(),
+    );
+    // 该行换成「登录抖音」,没有「立即运行」
+    expect(screen.getByTestId("automation-login-douyin")).toBeInTheDocument();
+    expect(screen.queryByTestId("automation-run-now")).not.toBeInTheDocument();
+  });
+
+  it("点「登录抖音」→ loginDouyin;成功后 runScheduledJobNow 恢复 + refresh", async () => {
+    mockClient.listJobRunsByJob.mockResolvedValue([
+      makeRun({ status: "needs_reconnect", aiTaskId: null }),
+    ]);
+    mockClient.loginDouyin.mockResolvedValueOnce({ loggedIn: true });
+    render(<AutomationsIsland jobs={[makeJob({ id: "job-nr", enabled: true })]} />);
+    const btn = await screen.findByTestId("automation-login-douyin");
+    fireEvent.click(btn);
+    await waitFor(() => expect(mockClient.loginDouyin).toHaveBeenCalledTimes(1));
+    // 登录成功 → 触发一次 runNow 恢复该 job
+    await waitFor(() =>
+      expect(mockClient.runScheduledJobNow).toHaveBeenCalledTimes(1),
+    );
+    const arg = mockClient.runScheduledJobNow.mock.calls[0]![0] as {
+      params: { jobId: string };
+    };
+    expect(arg.params.jobId).toBe("job-nr");
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
+  it("登录未成功(loggedIn=false)→ 不触发 runNow(不假装恢复)", async () => {
+    mockClient.listJobRunsByJob.mockResolvedValue([
+      makeRun({ status: "needs_reconnect", aiTaskId: null }),
+    ]);
+    mockClient.loginDouyin.mockResolvedValueOnce({ loggedIn: false });
+    render(<AutomationsIsland jobs={[makeJob({ id: "job-nr", enabled: true })]} />);
+    const btn = await screen.findByTestId("automation-login-douyin");
+    fireEvent.click(btn);
+    await waitFor(() => expect(mockClient.loginDouyin).toHaveBeenCalledTimes(1));
+    // 给微任务队列一拍,确认没有 runNow(诚实:未登录不恢复)
+    await Promise.resolve();
+    expect(mockClient.runScheduledJobNow).not.toHaveBeenCalled();
   });
 });
 

@@ -152,6 +152,32 @@ export async function triggerScheduledJob(
   return { jobRunId: run.id, aiTaskId: task.id, deduped: false };
 }
 
+/** 「立即运行」(D5)需要的 job 读端口(host 绑 schedulingService.getJob;requireJob ownership gate)。 */
+export interface RunNowJobPort {
+  getJob(
+    ctx: RequestContext,
+    jobId: string,
+  ): Promise<{ id: string; sourceKind: string; target: Record<string, unknown> }>;
+}
+
+/**
+ * 「立即运行」手动触发(D5,SPEC §5/§9)。绕过 cron:查 job(ownership gate)→ triggerScheduledJob
+ * (同一条幂等双闸 + fire-and-forget,与调度器共用 deps)。返回触发结果 { jobRunId, aiTaskId, deduped }。
+ * 纯逻辑(IO 经注入),可直接单测。触发编排单一——不自造触发,复用 triggerScheduledJob。
+ */
+export async function runJobNow(
+  ctx: RequestContext,
+  jobId: string,
+  deps: TriggerDeps & { job: RunNowJobPort },
+): Promise<TriggerResult> {
+  const job = await deps.job.getJob(ctx, jobId); // requireJob ownership gate（越权 → 抛）
+  return triggerScheduledJob(
+    ctx,
+    { id: job.id, sourceKind: job.sourceKind, target: job.target },
+    deps,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // node-cron 进程内调度 + 启动扫超时(host 在 persistence-client 初始化时装配)
 // ---------------------------------------------------------------------------

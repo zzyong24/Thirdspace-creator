@@ -76,6 +76,24 @@ export const schedulingOperations = {
     response: scheduledJobResource,
     fr: ["FR-SCHED-JOB-SET-ENABLED"],
   }),
+  // 「立即运行」手动触发(data-source-pipeline-design §5/§9 切片 D5)——绕过 cron,即刻产一条
+  // ai_task + job_run(fire-and-forget)走同一条确定性采集 runner。走 triggerScheduledJob 的
+  // 幂等双闸(同 (job, 自然日) 已有 in-flight run → deduped=true 返回既有,不重复采)。response
+  // 是触发结果(非 resource):jobRunId(本次或命中的 run)+ aiTaskId + deduped(是否幂等短路)。
+  // 触发编排在 composition 层(persistence-client),不在 module transport —— 后台动作需 dispatch。
+  runScheduledJobNow: defineEndpoint({
+    id: "scheduledJobs.runNow",
+    method: "POST",
+    path: "/scheduled-jobs/:jobId/run-now",
+    params: jobParams,
+    body: z.object({}).optional(),
+    response: z.object({
+      jobRunId: id,
+      aiTaskId: z.string(),
+      deduped: z.boolean(),
+    }),
+    fr: ["FR-SCHED-JOB-RUN-NOW"],
+  }),
   listJobRunsByJob: defineEndpoint({
     id: "jobRuns.listByJob",
     method: "GET",

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   triggerScheduledJob,
+  runJobNow,
   dayKeyOf,
   cronMatchesMinute,
   sweepStaleRuns,
@@ -89,6 +90,57 @@ describe("triggerScheduledJob(幂等双闸)", () => {
     const res = await triggerScheduledJob(ctx, job, deps);
     expect(res.deduped).toBe(false);
     expect(deps._createTask).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("runJobNow(D5「立即运行」手动触发)", () => {
+  it("查 job(ownership gate)→ triggerScheduledJob 产 task+run+dispatch(不碰真抖音)", async () => {
+    const base = makeTriggerDeps([]);
+    const getJob = vi.fn(async () => ({
+      id: "job1",
+      sourceKind: "self.metrics",
+      target: { externalSourceId: "src1" },
+    }));
+    const res = await runJobNow(ctx, "job1", { ...base, job: { getJob } });
+
+    // getJob 命中(ownership gate 经 service),再走 triggerScheduledJob 幂等双闸。
+    expect(getJob).toHaveBeenCalledWith(ctx, "job1");
+    expect(base._createTask).toHaveBeenCalledTimes(1);
+    expect(base._createTask).toHaveBeenCalledWith(ctx, {
+      taskType: "scheduled.self.metrics",
+      inputData: expect.objectContaining({ jobId: "job1" }),
+    });
+    expect(base._createRun).toHaveBeenCalledTimes(1);
+    // fire-and-forget:dispatch 收到带 jobRunId 的 task(runner 后台采集,不在此跑真抖音)。
+    expect(base._dispatch).toHaveBeenCalledTimes(1);
+    expect(res).toMatchObject({ deduped: false, aiTaskId: "task1", jobRunId: "run1" });
+  });
+
+  it("同 job 当天已有 in-flight run → deduped=true,不重复产(复用 triggerScheduledJob 幂等)", async () => {
+    const base = makeTriggerDeps([
+      { id: "run-x", status: "running", startedAt: "2026-07-01T08:00:00.000Z", aiTaskId: "task-x" },
+    ]);
+    const getJob = vi.fn(async () => ({
+      id: "job1",
+      sourceKind: "self.metrics",
+      target: {},
+    }));
+    const res = await runJobNow(ctx, "job1", { ...base, job: { getJob } });
+    expect(res).toMatchObject({ deduped: true, jobRunId: "run-x" });
+    expect(base._createTask).not.toHaveBeenCalled();
+    expect(base._dispatch).not.toHaveBeenCalled();
+  });
+
+  it("getJob 越权/不存在抛错 → 传播(不静默产 run)", async () => {
+    const base = makeTriggerDeps([]);
+    const getJob = vi.fn(async () => {
+      throw new Error("OwnershipError");
+    });
+    await expect(
+      runJobNow(ctx, "foreign-job", { ...base, job: { getJob } }),
+    ).rejects.toThrow("OwnershipError");
+    expect(base._createTask).not.toHaveBeenCalled();
+    expect(base._createRun).not.toHaveBeenCalled();
   });
 });
 
