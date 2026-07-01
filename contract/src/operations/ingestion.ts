@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
 import { id, iso8601 } from "../primitives";
-import { ingestionRunResource } from "../resources/ingestion";
+import {
+  ingestionRunResource,
+  douyinThrottleStatusResource,
+} from "../resources/ingestion";
 
 const runParams = z.object({ runId: id });
 
@@ -50,6 +53,17 @@ export const ingestionOperations = {
     method: "GET",
     path: "/ingestion/douyin/status",
     response: z.object({ loggedIn: z.boolean() }),
+    fr: ["FR-INGESTION-DOUYIN"],
+  }),
+  // 抖音采集限流可观测(T-038c / SPEC §4.5 [gate-F4]):只读快照两个 channel 的当前退避态,
+  // 让任务中心在 cooldown 时诚实显「⏳ 限流保护中,下次约 N 分钟(已退避 K 次)」而非装死。
+  // 读 DouyinRequestGateway.getChannelStatus 的内存镜像(重启由 douyin_throttle_state 恢复);
+  // 不落新表、纯实时。未配 gateway(测试/退化)返空 channels 数组(前端诚实不显限流)。
+  throttleStatusDouyin: defineEndpoint({
+    id: "ingestion.douyin.throttleStatus",
+    method: "GET",
+    path: "/ingestion/douyin/throttle-status",
+    response: douyinThrottleStatusResource,
     fr: ["FR-INGESTION-DOUYIN"],
   }),
   pushMetrics: defineEndpoint({

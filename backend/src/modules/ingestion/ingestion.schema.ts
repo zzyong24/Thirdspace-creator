@@ -18,6 +18,15 @@ export const ingestionRunResource = ENDPOINTS.createRun.response;
 // direct dependency, so we read the output type structurally.
 export type IngestionRunResource = (typeof ingestionRunResource)["_output"];
 
+// T-038c 采集限流可观测:从 throttle-status 只读 op 的 response schema 结构化反推类型
+// (同 IngestionRunResource,不引 zod、不依赖 contract 导出 resource)。
+export const douyinThrottleStatusResource =
+  ENDPOINTS.throttleStatusDouyin.response;
+export type DouyinThrottleStatusResource =
+  (typeof douyinThrottleStatusResource)["_output"];
+export type DouyinChannelThrottleStatus =
+  DouyinThrottleStatusResource["channels"][number];
+
 // ---------------------------------------------------------------------------
 // Internal per-record payload validators (Task 4). The contract validates only
 // `records: Record<string,unknown>[]` (opaque), so the TYPED per-record shape that

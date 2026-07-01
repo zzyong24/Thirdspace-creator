@@ -14,6 +14,7 @@ import {
   parseArtifactRecord,
   type ValidationResult,
   type MetricRecord,
+  type DouyinThrottleStatusResource,
 } from "./ingestion.schema";
 
 // Ingestion service (foundation §5.3) — RequestContext-taking methods that thread
@@ -131,6 +132,14 @@ export interface DouyinFetchPort {
   status(): Promise<boolean>;
 }
 
+// T-038c 采集限流可观测端口 —— composition root 绑到 DouyinRequestGateway 单例的
+// getChannelStatus(读内存镜像,同步、无副作用)。测试注 fake。**与 DouyinFetchPort
+// 分离**:抓取(Chromium)与限流态(gateway 内存)语义正交,不揉一个端口。返回两个
+// channel 的当前退避快照;未注入时 service 返空 channels(前端诚实不显限流)。
+export interface DouyinThrottleStatusPort {
+  read(): DouyinThrottleStatusResource;
+}
+
 export interface ServiceDeps {
   now: () => string;
   nextId: (prefix: string) => string;
@@ -190,6 +199,12 @@ export interface IngestionService {
   // 抖音登录态被动探针(T-032a):headless 快查 sessionid cookie(不弹窗),返回是否有效登录。
   // 设置页「账号绑定」徽标读它;false 覆盖「未连接」与「登录态已过期」两态(cookie 失效即 false)。
   checkDouyinStatus(ctx: RequestContext): Promise<{ loggedIn: boolean }>;
+  // 抖音采集限流可观测(T-038c / SPEC §4.5 [gate-F4]):读 gateway 两个 channel 的当前退避
+  // 快照(cooldown 是否激活、剩多久、连续退避几次),供任务中心 cooldown 时诚实显限流文案。
+  // 纯读内存镜像(不落新表);未注入 throttleStatus 端口时返空 channels。
+  getDouyinThrottleStatus(
+    ctx: RequestContext,
+  ): Promise<DouyinThrottleStatusResource>;
 }
 
 export function createIngestionService(args: {
@@ -197,8 +212,9 @@ export function createIngestionService(args: {
   ports: IngestionPorts;
   db: Db;
   douyinFetch?: DouyinFetchPort;
+  throttleStatus?: DouyinThrottleStatusPort;
 }): IngestionService {
-  const { deps, ports, db, douyinFetch } = args;
+  const { deps, ports, db, douyinFetch, throttleStatus } = args;
 
   function repoFor(ctx: RequestContext): IngestionRepository {
     return createIngestionRepository(db, {
@@ -512,6 +528,13 @@ export function createIngestionService(args: {
       // headless 快查 .auth/ 里的 sessionid cookie(不弹窗);cookie 失效即 false(登录态过期)。
       const loggedIn = await douyinFetch.status();
       return { loggedIn };
+    },
+
+    async getDouyinThrottleStatus() {
+      // 端口未注入(测试/退化)→ 空 channels(前端诚实不显限流,不 throw 阻断任务中心)。
+      if (!throttleStatus) return { channels: [] };
+      // 读 gateway 内存镜像(同步、无 IO);包成 Promise 满足接口(与其余 async 一致)。
+      return throttleStatus.read();
     },
   };
   return service;

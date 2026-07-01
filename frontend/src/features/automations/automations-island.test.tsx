@@ -31,6 +31,10 @@ const mockClient = {
   loginDouyin: vi.fn(
     (_i: unknown): Promise<unknown> => Promise.resolve({ loggedIn: true }),
   ),
+  // T-038c:限流可观测只读 op。默认返空 channels(无 cooldown → 不显限流,既有测试不受扰)。
+  throttleStatusDouyin: vi.fn(
+    (_i: unknown): Promise<unknown> => Promise.resolve({ channels: [] }),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -40,6 +44,7 @@ vi.mock("@/lib/contract-client", () => ({
     listTaskSteps: (i: unknown) => mockClient.listTaskSteps(i),
     runScheduledJobNow: (i: unknown) => mockClient.runScheduledJobNow(i),
     loginDouyin: (i: unknown) => mockClient.loginDouyin(i),
+    throttleStatusDouyin: (i: unknown) => mockClient.throttleStatusDouyin(i),
   },
 }));
 
@@ -158,6 +163,7 @@ describe("JobRow — 启用开关", () => {
               <JobRow
                 job={makeJob({ enabled: true })}
                 latestRun={null}
+                channelThrottle={null}
                 onToggle={onToggle}
                 onOpenDetail={vi.fn()}
                 onRunNow={vi.fn()}
@@ -466,6 +472,141 @@ describe("D4 — needs_reconnect 行:红标 + 登录抖音恢复", () => {
     // 给微任务队列一拍,确认没有 runNow(诚实:未登录不恢复)
     await Promise.resolve();
     expect(mockClient.runScheduledJobNow).not.toHaveBeenCalled();
+  });
+});
+
+// T-038c 采集限流可观测:cooldown 时任务中心诚实显限流保护横幅(不装死)。
+describe("T-038c — 采集限流可观测(cooldown 显限流保护横幅)", () => {
+  it("JobRow:channelThrottle cooldownActive → 显「⏳ 限流保护中,下次约 N 分钟(已退避 K 次)」", () => {
+    render(
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <JobRow
+                job={makeJob({ enabled: true })}
+                latestRun={null}
+                channelThrottle={{
+                  cooldownActive: true,
+                  cooldownEtaMs: 5 * 60_000, // 5 分钟
+                  consecutiveThrottles: 3,
+                  lastRequestAt: 1_700_000_000_000,
+                }}
+                onToggle={vi.fn()}
+                onOpenDetail={vi.fn()}
+                onRunNow={vi.fn()}
+                onLogin={vi.fn()}
+                pendingToggle={false}
+                pendingRunNow={false}
+                loginPhase="idle"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>,
+    );
+    const badge = screen.getByTestId("automation-throttle-badge");
+    expect(badge).toBeInTheDocument();
+    expect(badge.textContent).toContain("限流保护中");
+    expect(badge.textContent).toContain("约 5 分钟");
+    expect(badge.textContent).toContain("已连续退避 3 次");
+  });
+
+  it("JobRow:非 cooldown(channelThrottle=null 或 inactive)→ 不显限流横幅", () => {
+    const { rerender } = render(
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <JobRow
+                job={makeJob({ enabled: true })}
+                latestRun={null}
+                channelThrottle={null}
+                onToggle={vi.fn()}
+                onOpenDetail={vi.fn()}
+                onRunNow={vi.fn()}
+                onLogin={vi.fn()}
+                pendingToggle={false}
+                pendingRunNow={false}
+                loginPhase="idle"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>,
+    );
+    expect(
+      screen.queryByTestId("automation-throttle-badge"),
+    ).not.toBeInTheDocument();
+    // inactive 快照(cooldownActive=false)同样不显。
+    rerender(
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <JobRow
+                job={makeJob({ enabled: true })}
+                latestRun={null}
+                channelThrottle={{
+                  cooldownActive: false,
+                  cooldownEtaMs: 0,
+                  consecutiveThrottles: 0,
+                  lastRequestAt: null,
+                }}
+                onToggle={vi.fn()}
+                onOpenDetail={vi.fn()}
+                onRunNow={vi.fn()}
+                onLogin={vi.fn()}
+                pendingToggle={false}
+                pendingRunNow={false}
+                loginPhase="idle"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>,
+    );
+    expect(
+      screen.queryByTestId("automation-throttle-badge"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("island:throttleStatus 返 creator-center cooldown → self.metrics 行显限流,comments 行(iesdouyin 无 cooldown)不显", async () => {
+    mockClient.throttleStatusDouyin.mockResolvedValueOnce({
+      channels: [
+        {
+          channel: "creator-center",
+          cooldownActive: true,
+          cooldownEtaMs: 2 * 60_000,
+          consecutiveThrottles: 1,
+          lastRequestAt: 1_700_000_000_000,
+        },
+        {
+          channel: "iesdouyin",
+          cooldownActive: false,
+          cooldownEtaMs: 0,
+          consecutiveThrottles: 0,
+          lastRequestAt: null,
+        },
+      ],
+    });
+    render(
+      <AutomationsIsland
+        jobs={[
+          makeJob({ id: "job-metrics", sourceKind: "self.metrics", name: "抓指标" }),
+          makeJob({ id: "job-comments", sourceKind: "comments", name: "抓评论" }),
+        ]}
+      />,
+    );
+    // creator-center cooldown → self.metrics 行显限流横幅(挂载后异步拉到)。
+    await waitFor(() =>
+      expect(screen.getByTestId("automation-throttle-badge")).toBeInTheDocument(),
+    );
+    // 只有一条(self.metrics),comments 行走 iesdouyin 无 cooldown 不显。
+    expect(screen.getAllByTestId("automation-throttle-badge")).toHaveLength(1);
+    expect(
+      screen.getByText(/限流保护中,下次约 2 分钟后重试/),
+    ).toBeInTheDocument();
   });
 });
 

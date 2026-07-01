@@ -185,7 +185,7 @@ import {
 // T-038b 抖音采集限流网关(单例接线):所有对外抖音请求经它 acquire/report(SPEC §4.4)。
 import {
   DouyinRequestGateway,
-  type DouyinChannelGate,
+  type DouyinChannel,
 } from "@/server/ingestion/douyin-request-gateway";
 import { resolveDouyinThrottleConfig } from "@/server/ingestion/douyin-throttle-config";
 import { createPgliteThrottleStatePort } from "@/server/ingestion/douyin-throttle-state-port.pglite";
@@ -947,12 +947,31 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 的插装点(collectors + runTranscribe 的 fetchDouyin*)经它 acquire/report。**注真 PGlite
   // store(与 scheduled_job / job_run 同一个 db 句柄)做持久层**([gate-F2])。gateway 经 DI
   // 注入 douyin-cdp 调用点(下方 host 绑定),douyin-cdp 内部不硬 import 单例(否则单测真等 9s)。
-  const douyinGateway: DouyinChannelGate = new DouyinRequestGateway({
+  // 具体类(非窄接口 DouyinChannelGate)—— 下游注入点仍只吃窄接口(acquire/report),但
+  // T-038c 可观测要读它的 getChannelStatus,故此处持具体类型。
+  const douyinGateway: DouyinRequestGateway = new DouyinRequestGateway({
     config: resolveDouyinThrottleConfig(),
     port: createPgliteThrottleStatePort(db),
     now: () => Date.now(),
     // 真 sleep(setTimeout);gateway 用它落 cooldown/间隔等待(测试侧另注假 sleep,此处 runtime 真等)。
     sleep: (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+  });
+
+  // T-038c 采集限流可观测读端口:绑到 gateway 单例的 getChannelStatus(读内存镜像,同步)。
+  // 遍历两个 channel 组装 contract 的 throttle-status 快照,供 ingestion.douyin.throttleStatus
+  // 只读 op 返给任务中心。纯读、无副作用、不落表。
+  const DOUYIN_CHANNELS: DouyinChannel[] = ["creator-center", "iesdouyin"];
+  const readDouyinThrottleStatus = () => ({
+    channels: DOUYIN_CHANNELS.map((channel) => {
+      const s = douyinGateway.getChannelStatus(channel);
+      return {
+        channel,
+        cooldownActive: s.cooldownActive,
+        cooldownEtaMs: s.cooldownEtaMs,
+        consecutiveThrottles: s.consecutiveThrottles,
+        lastRequestAt: s.lastRequestAt,
+      };
+    }),
   });
 
   // [gate-F5] 采集 job/进程级串行闸(与 gateway 的请求级节奏正交):一条 module 级 promise 链,
@@ -1308,6 +1327,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             nodePath.join(process.cwd(), ".auth", "douyin"),
         }),
     },
+    // T-038c:限流可观测读端口 —— 绑 gateway 单例 getChannelStatus(内存镜像,同步无 IO)。
+    throttleStatus: { read: readDouyinThrottleStatus },
   });
   const ingestion = createIngestionTransport(() => ingestionService);
 

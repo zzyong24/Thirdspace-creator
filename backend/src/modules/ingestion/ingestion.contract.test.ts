@@ -8,7 +8,10 @@ import {
   INGESTION_OP_IDS,
 } from "./ingestion.transport";
 import { createIngestionRepository } from "./ingestion.repository";
-import { ingestionRunResource } from "./ingestion.schema";
+import {
+  ingestionRunResource,
+  douyinThrottleStatusResource,
+} from "./ingestion.schema";
 import { UnsupportedOperationError } from "./ingestion.errors";
 import { makeFakePorts } from "./ingestion.test-helpers";
 
@@ -63,13 +66,14 @@ describe("ingestion contract conformance", () => {
     transport = createIngestionTransport(() => service);
   });
 
-  it("exposes exactly the 10 ingestion op ids (7 run + 抖音刷新 + 抖音扫码登录 + 抖音状态探针)", () => {
+  it("exposes exactly the 11 ingestion op ids (7 run + 抖音刷新 + 抖音扫码登录 + 抖音状态探针 + 抖音限流可观测)", () => {
     expect([...INGESTION_OP_IDS].sort()).toEqual(
       [
         "ingestion.runs.create",
         "ingestion.douyin.refresh",
         "ingestion.douyin.login",
         "ingestion.douyin.status",
+        "ingestion.douyin.throttleStatus",
         "ingestion.runs.metrics",
         "ingestion.runs.knowledge",
         "ingestion.runs.assets",
@@ -163,6 +167,64 @@ describe("ingestion contract conformance", () => {
     expect(() =>
       ingestionRunResource.parse((got as { data: unknown }).data),
     ).not.toThrow();
+  });
+
+  // T-038c 读侧:限流快照 op 走 transport。端口未注入(本 describe 的默认 service)→ 空 channels。
+  it("ingestion.douyin.throttleStatus → 端口未注入返空 channels(诚实退化)", async () => {
+    const env = await transport.request(
+      ep("throttleStatusDouyin"),
+      {} as never,
+      ctx,
+    );
+    const { data, meta } = env as {
+      data: unknown;
+      meta: Record<string, unknown>;
+    };
+    const parsed = douyinThrottleStatusResource.parse(data);
+    expect(parsed.channels).toEqual([]);
+    expect(meta.requestId).toBe("req-1");
+  });
+
+  // 注入 fake 端口(某 channel 正 cooldown)→ 快照返 cooldownActive+eta;另一 channel inactive。
+  it("ingestion.douyin.throttleStatus → cooldown 时返 cooldownActive+eta,非 cooldown 返 inactive", async () => {
+    let seq = 0;
+    const service = createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
+      ports: makeFakePorts(),
+      db,
+      throttleStatus: {
+        read: () => ({
+          channels: [
+            {
+              channel: "creator-center",
+              cooldownActive: true,
+              cooldownEtaMs: 90_000,
+              consecutiveThrottles: 2,
+              lastRequestAt: 1_700_000_000_000,
+            },
+            {
+              channel: "iesdouyin",
+              cooldownActive: false,
+              cooldownEtaMs: 0,
+              consecutiveThrottles: 0,
+              lastRequestAt: null,
+            },
+          ],
+        }),
+      },
+    });
+    const t = createIngestionTransport(() => service);
+    const env = await t.request(ep("throttleStatusDouyin"), {} as never, ctx);
+    const parsed = douyinThrottleStatusResource.parse(
+      (env as { data: unknown }).data,
+    );
+    const cc = parsed.channels.find((c) => c.channel === "creator-center")!;
+    const ies = parsed.channels.find((c) => c.channel === "iesdouyin")!;
+    expect(cc.cooldownActive).toBe(true);
+    expect(cc.cooldownEtaMs).toBe(90_000);
+    expect(cc.consecutiveThrottles).toBe(2);
+    expect(ies.cooldownActive).toBe(false);
+    expect(ies.cooldownEtaMs).toBe(0);
   });
 
   it("unknown op id → UnsupportedOperationError", async () => {

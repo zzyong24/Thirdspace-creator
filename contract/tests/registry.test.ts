@@ -69,6 +69,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/publications/:publicationId/revisions"],
   ["GET", "/publications/:publicationId/revisions"],
   ["POST", "/publications/:publicationId/transition"],
+  ["GET", "/publications/:publicationId/comments"],
   // 分析、复盘和经验
   ["GET", "/analytics/publications/:publicationId"],
   ["GET", "/analytics/projects/:projectId"],
@@ -115,6 +116,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/ingestion/runs"],
   ["POST", "/ingestion/douyin/refresh"],
   ["POST", "/ingestion/douyin/login"],
+  ["GET", "/ingestion/douyin/status"],
+  ["GET", "/ingestion/douyin/throttle-status"],
   ["POST", "/ingestion/runs/:runId/metrics"],
   ["POST", "/ingestion/runs/:runId/knowledge"],
   ["POST", "/ingestion/runs/:runId/assets"],
@@ -195,6 +198,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/scheduled-jobs/:jobId"],
   ["PATCH", "/scheduled-jobs/:jobId"],
   ["POST", "/scheduled-jobs/:jobId/enabled"],
+  ["POST", "/scheduled-jobs/:jobId/run-now"],
   ["GET", "/scheduled-jobs/:jobId/runs"],
   ["GET", "/job-runs/:runId"],
 ];

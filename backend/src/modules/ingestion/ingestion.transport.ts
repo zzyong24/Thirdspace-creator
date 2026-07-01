@@ -24,6 +24,7 @@ export const INGESTION_OP_IDS = [
   "ingestion.douyin.refresh",
   "ingestion.douyin.login",
   "ingestion.douyin.status",
+  "ingestion.douyin.throttleStatus",
   "ingestion.runs.metrics",
   "ingestion.runs.knowledge",
   "ingestion.runs.assets",
@@ -98,6 +99,11 @@ export function createIngestionTransport(
         }
         case "ingestion.douyin.status": {
           const result = await service.checkDouyinStatus(ctx);
+          return { data: result, meta };
+        }
+        case "ingestion.douyin.throttleStatus": {
+          // T-038c:只读限流快照(非 run 资源,不走 toRunResource)。
+          const result = await service.getDouyinThrottleStatus(ctx);
           return { data: result, meta };
         }
         case "ingestion.runs.metrics": {

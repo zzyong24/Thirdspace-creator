@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { ingestionRunResource } from "../../src/resources/ingestion";
+import {
+  ingestionRunResource,
+  douyinThrottleStatusResource,
+} from "../../src/resources/ingestion";
 import { ingestionOperations } from "../../src/operations/ingestion";
 
 describe("ingestion contract", () => {
@@ -44,5 +47,46 @@ describe("ingestion contract", () => {
       "/ingestion/runs/:runId/metrics",
     );
     expect(ingestionOperations.createRun.fr.length).toBeGreaterThan(0);
+  });
+
+  // T-038c 采集限流可观测:只读 GET op + channel 快照 resource。
+  it("registers the douyin throttle-status read op (GET, no body)", () => {
+    const op = ingestionOperations.throttleStatusDouyin;
+    expect(op.id).toBe("ingestion.douyin.throttleStatus");
+    expect(op.method).toBe("GET");
+    expect(op.path).toBe("/ingestion/douyin/throttle-status");
+    // 只读探针:无请求 body(照 statusDouyin)。
+    expect(op.body).toBeUndefined();
+    expect(op.fr.length).toBeGreaterThan(0);
+  });
+
+  it("parses a douyin throttle-status snapshot (cooldown active)", () => {
+    const snap = douyinThrottleStatusResource.parse({
+      channels: [
+        {
+          channel: "creator-center",
+          cooldownActive: true,
+          cooldownEtaMs: 42_000,
+          consecutiveThrottles: 3,
+          lastRequestAt: 1_700_000_000_000,
+        },
+        {
+          channel: "iesdouyin",
+          cooldownActive: false,
+          cooldownEtaMs: 0,
+          consecutiveThrottles: 0,
+          lastRequestAt: null,
+        },
+      ],
+    });
+    expect(snap.channels).toHaveLength(2);
+    expect(snap.channels[0]!.cooldownActive).toBe(true);
+    expect(snap.channels[0]!.cooldownEtaMs).toBe(42_000);
+    expect(snap.channels[1]!.lastRequestAt).toBeNull();
+  });
+
+  it("accepts an empty channels array (gateway 未配/退化态)", () => {
+    const snap = douyinThrottleStatusResource.parse({ channels: [] });
+    expect(snap.channels).toEqual([]);
   });
 });

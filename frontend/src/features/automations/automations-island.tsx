@@ -174,6 +174,46 @@ function runResultText(run: {
   }
 }
 
+// ── T-038c 采集限流可观测(SPEC §4.5 [gate-F4])────────────────────────────────
+//
+// 抖音采集经统一限流网关(DouyinRequestGateway),连续撞风控信号会进 cooldown 退避。
+// cooldown 期间采集 job 看似「卡住/静默」——这里把网关的实时退避态透传到任务中心,
+// 让用户诚实看到「限流保护中,约 N 分钟后重试」,而不是以为死了。数据走只读 op
+// ingestion.douyin.throttleStatus(读网关内存镜像,不落表),挂载时拉一次。
+
+// 网关的两个 channel(与 contract douyinChannelThrottleStatus.channel 枚举一致)。
+type DouyinChannel = "creator-center" | "iesdouyin";
+
+// 单 channel 的退避快照(前端消费的结构,对齐 contract 的 DouyinChannelThrottleStatus)。
+interface ChannelThrottle {
+  cooldownActive: boolean;
+  cooldownEtaMs: number;
+  consecutiveThrottles: number;
+  lastRequestAt: number | null;
+}
+
+// job 的 sourceKind → 采集实际走的网关 channel。
+//   self.metrics / self.detail → creator-center(抓创作者中心指标 / 明细导出)。
+//   comments                   → iesdouyin(评论采集走 iesdouyin 页面)。
+function channelForSourceKind(sourceKind: string): DouyinChannel {
+  return sourceKind === "comments" ? "iesdouyin" : "creator-center";
+}
+
+// cooldown 剩余毫秒 → 人话「约 N 分钟」。不足 1 分钟显「不到 1 分钟」(不显 0 分钟误导)。
+function formatEtaMinutes(etaMs: number): string {
+  if (etaMs <= 0) return "即将恢复";
+  const mins = Math.ceil(etaMs / 60_000);
+  return mins <= 1 ? "不到 1 分钟" : `约 ${mins} 分钟`;
+}
+
+// 限流横幅文案(诚实、人话)。仅在对应 channel cooldownActive 时显示。
+function throttleBannerText(t: ChannelThrottle): string {
+  const eta = formatEtaMinutes(t.cooldownEtaMs);
+  const times =
+    t.consecutiveThrottles > 0 ? `(已连续退避 ${t.consecutiveThrottles} 次)` : "";
+  return `⏳ 限流保护中,下次${eta}后重试${times}`;
+}
+
 // ── 时间格式(与项目列表页一致的紧凑相对时刻,但这里给绝对更适合"下次运行")──────
 
 function formatDateTime(iso: string | null): string {
@@ -210,6 +250,7 @@ export type LoginPhase = "idle" | "logging_in" | "recovering";
 export function JobRow({
   job,
   latestRun,
+  channelThrottle,
   onToggle,
   onOpenDetail,
   onRunNow,
@@ -220,6 +261,8 @@ export function JobRow({
 }: {
   readonly job: ScheduledJobResource;
   readonly latestRun: JobRunResource | null;
+  // T-038c:该 job 对应网关 channel 的实时退避快照(cooldown 时显限流横幅);null = 未知/未拉到。
+  readonly channelThrottle: ChannelThrottle | null;
   readonly onToggle: (enabled: boolean) => void;
   readonly onOpenDetail: () => void;
   readonly onRunNow: () => void;
@@ -232,6 +275,8 @@ export function JobRow({
   const SourceIcon = meta?.icon ?? BarChart3;
   // D4:最近一次 run 是 needs_reconnect → 登录态过期(调度器停跑),该行红标 + 换「登录抖音」。
   const needsReconnect = latestRun?.status === "needs_reconnect";
+  // T-038c:对应 channel 正 cooldown → 行内显限流保护横幅(诚实告知,别当卡死)。
+  const throttled = channelThrottle?.cooldownActive === true;
   return (
     <article
       data-slot="automation-row"
@@ -274,6 +319,19 @@ export function JobRow({
               {sourceLabel(job.sourceKind)}
             </span>
           )}
+          {/* T-038c:限流保护中(该 channel 正 cooldown)—— 诚实告知,别看着像卡死。
+              与 needs_reconnect 可并存(登录过期 + 恰好也在退避),独立成条显示。 */}
+          {throttled && channelThrottle ? (
+            <span
+              data-slot="automation-throttle-badge"
+              data-testid="automation-throttle-badge"
+              className="inline-flex w-fit items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700"
+              title="抖音采集限流保护:连续触发风控信号后自动退避,到点自动恢复,无需操作"
+            >
+              <Clock className="size-3" />
+              {throttleBannerText(channelThrottle)}
+            </span>
+          ) : null}
         </div>
       </div>
 
@@ -1234,6 +1292,11 @@ export function AutomationsIsland({
   const [latestRuns, setLatestRuns] = React.useState<
     Record<string, JobRunResource | null>
   >({});
+  // T-038c:两个网关 channel 的实时退避快照(读 ingestion.douyin.throttleStatus)。
+  // 挂载时拉一次;某 channel cooldownActive → 对应 sourceKind 的行显限流保护横幅。
+  const [throttleByChannel, setThrottleByChannel] = React.useState<
+    Partial<Record<DouyinChannel, ChannelThrottle>>
+  >({});
 
   // 批量拉每个 job 的最近一次 run(jobRuns.listByJob limit 1)。jobs 变化(router.refresh
   // 重传)即重拉,保证登录恢复/立即运行后行状态刷新。
@@ -1255,6 +1318,39 @@ export function AutomationsIsland({
         }),
       );
       if (!cancelled) setLatestRuns(Object.fromEntries(entries));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [jobs]);
+
+  // T-038c:挂载时拉一次两个 channel 的限流退避快照(只读 op,读网关内存镜像)。jobs 变化
+  // (router.refresh 重传)即重拉,让登录恢复/立即运行后限流态也刷新。失败/未配网关 → 静默空
+  // (诚实不显限流,不打断任务中心)。这是实时态快照:cooldown 回看历史 run 的限流事件待后续
+  // (SPEC §4.5 标注可选,本片先只做实时 channel 态)。
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = (await client.throttleStatusDouyin({
+          params: undefined,
+          query: undefined,
+          body: undefined,
+        })) as { channels?: Array<ChannelThrottle & { channel: DouyinChannel }> };
+        if (cancelled) return;
+        const next: Partial<Record<DouyinChannel, ChannelThrottle>> = {};
+        for (const c of res.channels ?? []) {
+          next[c.channel] = {
+            cooldownActive: c.cooldownActive,
+            cooldownEtaMs: c.cooldownEtaMs,
+            consecutiveThrottles: c.consecutiveThrottles,
+            lastRequestAt: c.lastRequestAt,
+          };
+        }
+        setThrottleByChannel(next);
+      } catch {
+        // 网关未配 / 读失败 → 保持空(诚实不显限流)。
+      }
     })();
     return () => {
       cancelled = true;
@@ -1443,6 +1539,11 @@ export function AutomationsIsland({
                 <JobRow
                   job={job}
                   latestRun={latestRuns[job.id] ?? null}
+                  channelThrottle={
+                    throttleByChannel[
+                      channelForSourceKind(job.sourceKind)
+                    ] ?? null
+                  }
                   pendingToggle={pendingToggleId === job.id}
                   pendingRunNow={pendingRunNowId === job.id}
                   loginPhase={loginPhaseById[job.id] ?? "idle"}
