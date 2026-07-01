@@ -164,7 +164,26 @@ export async function buildChatAssembly(
   // 让模型一进来就知道用户"这条"指哪条,不再瞎答/反复索要标题。
   const baseSystem = assembleChatSystem(skill.system, context);
   const selectionBlock = assembleSelectionContext(chatContext.selection);
-  const system = selectionBlock ? `${baseSystem}\n\n${selectionBlock}` : baseSystem;
+  // T-039a 补:复盘对话「瞎问复盘对象」根因 —— 本项目真材料虽已装进 context(reviewSubject reader)
+  // 且进了 review.analyze 工具的 facets,但**没进对话系统提示**,故 LLM 在决定调用工具前不知道复盘哪条,
+  // 于是反复问「复盘对象是什么」并退回账号级泛论。这里把「本次复盘对象(真标题+文案+数据+评论)」直接
+  // 注进对话 system + 强指令「别再问、直接基于它复盘」,让模型一进来就扣住这条作品。有 projectId 才注入
+  // (reviewTitle/reviewScript 非空);读不到(无脚本/数据)则该行省略,不喂空噪声。
+  const reviewSubjectBlock =
+    context.reviewTitle || context.reviewScript || context.reviewMetrics
+      ? [
+          "【本次复盘对象 —— 创作者已在工作台选定这一条作品,请直接基于它提炼可复用要素,不要再问用户「复盘对象是什么」、也不要退回账号整体泛论】",
+          context.reviewTitle ? `标题:《${context.reviewTitle}》` : "",
+          context.reviewScript ? `文案/逐字稿:\n${context.reviewScript}` : "",
+          context.reviewMetrics ? `真实数据:${context.reviewMetrics}` : "",
+          context.reviewComments ? `观众评论(真实):\n${context.reviewComments}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : "";
+  const system = [baseSystem, reviewSubjectBlock, selectionBlock]
+    .filter(Boolean)
+    .join("\n\n");
   // 选中态标题 —— 工具入参兜底(模型没显式传 title/subject 时用它,避免拿空标题去诊断)。
   const selectionTitle = chatContext.selection?.label?.trim() || "";
 

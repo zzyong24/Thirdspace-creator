@@ -113,6 +113,36 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).toContain("RAG 实战"); // 知识库
   });
 
+  it("surface=review + projectId → 把「本次复盘对象」(真标题/文案/数据/评论)注进对话 system(修「瞎问复盘对象」)", async () => {
+    const { deps } = makeDeps({
+      reviewSubject: {
+        getTitle: async () => "22个没法看的逐字稿",
+        getScript: async () => "大家好,今天讲怎么把逐字稿批量跑通",
+        getMetricsSummary: async () => "播放 8.5万 · 完播 4.0%",
+        getComments: async () => ["求教程", "太强了"],
+      },
+    });
+    const a = await buildChatAssembly(
+      ctx,
+      { surface: "review", projectId: "proj-x" },
+      deps,
+    );
+    // 对话系统提示里直接带上「本次复盘对象」+ 强指令 + 真材料 —— LLM 一进来就知道复盘哪条,
+    // 不再问用户、不退回账号级泛论。
+    expect(a.system).toContain("本次复盘对象");
+    expect(a.system).toContain("不要再问");
+    expect(a.system).toContain("22个没法看的逐字稿"); // 真标题
+    expect(a.system).toContain("大家好,今天讲怎么把逐字稿批量跑通"); // 真文案
+    expect(a.system).toContain("播放 8.5万"); // 真数据
+    expect(a.system).toContain("求教程"); // 真评论
+  });
+
+  it("surface=review 但无 projectId(无真材料)→ 不注入复盘对象块(§8 不摆假)", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
+    expect(a.system).not.toContain("本次复盘对象");
+  });
+
   it("工具白名单层:挂上 chatbox.topic 的白名单工具(topic.* + 3 个只读 context 工具)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
