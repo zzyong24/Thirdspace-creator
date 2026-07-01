@@ -28,6 +28,51 @@ export function escapeHtml(value: string): string {
     .replace(/>/g, "&gt;");
 }
 
+// ---------------------------------------------------------------------------
+// 分镜时间码(T-024 ①):sections 有 startSeconds/endSeconds,把它渲成 `[mm:ss-mm:ss]`
+// 前缀挂到分镜标题上(只读展示;编导式分镜需要在正文里看见每段的时间码)。
+// 说明:目前是**只读展示**——时间码从 sections 数据渲进 heading 前缀,用户能看见但
+// 不能在 TipTap 里就地改(改要自定义 TipTap node/mark 承载 start/end 属性,大改,不硬啃)。
+// 保存往返安全:htmlToSections 读 heading 时**剥掉**这个前缀(stripTimecodePrefix),
+// 故前缀不会被误写回 sections[].heading,也不会随每次保存累积。
+// ---------------------------------------------------------------------------
+
+/** 秒 → `mm:ss`(负数/非有限值当 0)。纯函数。 */
+export function formatTimecode(seconds: number): string {
+  const total = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+  const mm = Math.floor(total / 60);
+  const ss = total % 60;
+  return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+}
+
+/**
+ * 从 start/end 秒拼一个可见的时间码标签:
+ *   - start+end 都有 → `[mm:ss-mm:ss]`
+ *   - 只有 start   → `[mm:ss]`
+ *   - 都没有       → ""(不加前缀)
+ */
+export function timecodeLabel(
+  startSeconds: number | null,
+  endSeconds: number | null,
+): string {
+  const hasStart = typeof startSeconds === "number" && Number.isFinite(startSeconds);
+  const hasEnd = typeof endSeconds === "number" && Number.isFinite(endSeconds);
+  if (hasStart && hasEnd) {
+    return `[${formatTimecode(startSeconds!)}-${formatTimecode(endSeconds!)}]`;
+  }
+  if (hasStart) return `[${formatTimecode(startSeconds!)}]`;
+  return "";
+}
+
+// 匹配挂在 heading 最前的时间码前缀(`[mm:ss]` 或 `[mm:ss-mm:ss]` + 其后空格)。
+// 保存往返时剥掉它,避免污染 sections[].heading。
+const TIMECODE_PREFIX_RE = /^\[\d{1,2}:\d{2}(?:-\d{1,2}:\d{2})?\]\s*/;
+
+/** 剥掉 heading 前缀里的只读时间码标签(见 timecodeLabel);无前缀原样返回。 */
+export function stripTimecodePrefix(heading: string): string {
+  return heading.replace(TIMECODE_PREFIX_RE, "");
+}
+
 /**
  * `ScriptSectionView[]` → 编辑器初始 HTML。
  * 每段 = 一个 `<h2>` 标题 + body 按换行拆成多个 `<p>`(空行跳过)。emphasis/金句段
@@ -40,7 +85,18 @@ export function sectionsToHtml(
   const parts: string[] = [];
   for (const section of sections) {
     const heading = section.heading.trim();
-    if (heading) parts.push(`<h2>${escapeHtml(heading)}</h2>`);
+    // T-024 ①:分镜时间码只读展示 —— 有 start/end 就把 `[mm:ss-mm:ss]` 前缀挂到标题里,
+    // 让编导在富文本里看得见每段的时间码。保存往返由 htmlToSections 剥掉前缀(不污染 heading)。
+    const timecode = timecodeLabel(section.startSeconds, section.endSeconds);
+    const headingWithTimecode = heading
+      ? timecode
+        ? `${timecode} ${heading}`
+        : heading
+      : // 无标题但有时间码的分镜:也用一个 `<h2>` 只承载时间码,别让它丢。
+        timecode || "";
+    if (headingWithTimecode) {
+      parts.push(`<h2>${escapeHtml(headingWithTimecode)}</h2>`);
+    }
     const emphasize = section.emphasis || section.type === "golden_quote";
     const lines = section.body.split(/\r?\n/);
     let pushedBody = false;
@@ -53,8 +109,8 @@ export function sectionsToHtml(
       parts.push(`<p>${inner}</p>`);
       pushedBody = true;
     }
-    // 段落既无标题也无正文时,留一个空段,避免 TipTap 把相邻块吞并。
-    if (!heading && !pushedBody) parts.push("<p></p>");
+    // 段落既无标题(含时间码)也无正文时,留一个空段,避免 TipTap 把相邻块吞并。
+    if (!headingWithTimecode && !pushedBody) parts.push("<p></p>");
   }
   return parts.length > 0 ? parts.join("") : "<p></p>";
 }
@@ -83,7 +139,13 @@ export function htmlToSections(
   let current: ParsedSection | null = null;
   for (const block of blocks) {
     if (BLOCK_HEADINGS.has(block.tag)) {
-      current = { heading: block.text, bodyLines: [], emphasis: false };
+      // T-024 ①:剥掉只读时间码前缀,避免 `[mm:ss-mm:ss]` 被误写回 sections[].heading
+      // (那会在每次保存往返时累积/污染标题)。时间码真值仍留在 sections 的 start/endSeconds。
+      current = {
+        heading: stripTimecodePrefix(block.text),
+        bodyLines: [],
+        emphasis: false,
+      };
       sections.push(current);
       continue;
     }

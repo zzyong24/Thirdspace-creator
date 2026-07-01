@@ -11,8 +11,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   escapeHtml,
+  formatTimecode,
   htmlToSections,
   sectionsToHtml,
+  stripTimecodePrefix,
+  timecodeLabel,
 } from "./script-editor-bridge";
 import type { ScriptSectionView } from "@/types/view-models";
 
@@ -113,6 +116,116 @@ describe("htmlToSections", () => {
     );
     expect(sections).toHaveLength(1);
     expect(sections[0]!.body).toBe("第一项\n第二项");
+  });
+});
+
+// T-024 ①:分镜时间码只读展示。
+describe("formatTimecode", () => {
+  it("formats seconds as mm:ss with zero padding", () => {
+    expect(formatTimecode(0)).toBe("00:00");
+    expect(formatTimecode(5)).toBe("00:05");
+    expect(formatTimecode(65)).toBe("01:05");
+    expect(formatTimecode(600)).toBe("10:00");
+  });
+
+  it("floors fractional seconds and clamps negatives to 00:00", () => {
+    expect(formatTimecode(12.9)).toBe("00:12");
+    expect(formatTimecode(-3)).toBe("00:00");
+    expect(formatTimecode(Number.NaN)).toBe("00:00");
+  });
+});
+
+describe("timecodeLabel", () => {
+  it("builds [mm:ss-mm:ss] when both bounds present", () => {
+    expect(timecodeLabel(0, 15)).toBe("[00:00-00:15]");
+    expect(timecodeLabel(75, 90)).toBe("[01:15-01:30]");
+  });
+
+  it("builds [mm:ss] with only start, and empty when neither", () => {
+    expect(timecodeLabel(15, null)).toBe("[00:15]");
+    expect(timecodeLabel(null, null)).toBe("");
+    expect(timecodeLabel(null, 30)).toBe("");
+  });
+});
+
+describe("stripTimecodePrefix", () => {
+  it("removes a leading [mm:ss] / [mm:ss-mm:ss] prefix (with trailing space)", () => {
+    expect(stripTimecodePrefix("[00:00-00:15] 开场钩子")).toBe("开场钩子");
+    expect(stripTimecodePrefix("[01:15] 金句")).toBe("金句");
+  });
+
+  it("leaves headings without a timecode prefix untouched", () => {
+    expect(stripTimecodePrefix("开场钩子")).toBe("开场钩子");
+    // Bracketed content that is not a timecode is preserved.
+    expect(stripTimecodePrefix("[重点] 段落")).toBe("[重点] 段落");
+  });
+});
+
+describe("sectionsToHtml — timecode (T-024 ①)", () => {
+  it("prepends [mm:ss-mm:ss] to the heading when start/end present", () => {
+    const html = sectionsToHtml([
+      section({
+        heading: "开场钩子",
+        body: "前3秒抓人",
+        startSeconds: 0,
+        endSeconds: 15,
+      }),
+    ]);
+    expect(html).toContain("<h2>[00:00-00:15] 开场钩子</h2>");
+  });
+
+  it("prepends [mm:ss] when only start is present", () => {
+    const html = sectionsToHtml([
+      section({ heading: "转场", body: "过渡", startSeconds: 30, endSeconds: null }),
+    ]);
+    expect(html).toContain("<h2>[00:30] 转场</h2>");
+  });
+
+  it("omits the timecode when both bounds are null", () => {
+    const html = sectionsToHtml([
+      section({ heading: "无时间码段", body: "正文" }),
+    ]);
+    expect(html).toContain("<h2>无时间码段</h2>");
+    expect(html).not.toContain("[");
+  });
+
+  it("renders a heading carrying only the timecode when the section has no heading text", () => {
+    const html = sectionsToHtml([
+      section({ heading: "", body: "口播", startSeconds: 0, endSeconds: 10 }),
+    ]);
+    expect(html).toContain("<h2>[00:00-00:10]</h2>");
+  });
+});
+
+describe("htmlToSections — timecode round-trip (T-024 ①)", () => {
+  it("strips the read-only timecode prefix back off the heading on save", () => {
+    // The editor shows the timecode prefix; saving must NOT fold it into heading text.
+    const sections = htmlToSections(
+      "<h2>[00:00-00:15] 开场钩子</h2><p>前3秒抓人</p>",
+    );
+    expect(sections).toHaveLength(1);
+    expect(sections[0]!.heading).toBe("开场钩子");
+    expect(sections[0]!.body).toBe("前3秒抓人");
+  });
+
+  it("timecode does not accumulate across a sections→html→sections round-trip", () => {
+    const input = [
+      section({
+        heading: "开场",
+        body: "抓人",
+        startSeconds: 0,
+        endSeconds: 15,
+      }),
+    ];
+    // First round-trip.
+    const heading = htmlToSections(sectionsToHtml(input))[0]!.heading;
+    expect(heading).toBe("开场");
+    // Simulate a second save of the same rendered html — prefix must not double up.
+    const again = htmlToSections(
+      sectionsToHtml([{ ...input[0]!, heading }]),
+    )[0]!.heading;
+    expect(again).toBe("开场");
+    expect(again).not.toContain("[");
   });
 });
 

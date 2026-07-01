@@ -86,8 +86,9 @@ const MARK_BUTTONS: ReadonlyArray<MarkButton> = [
 
 interface BlockButton {
   readonly id: string;
-  // 复用 mark 的 data-format 契约位(测试只断言存在 aria-pressed + 至少一个 bold)。
-  readonly format: "bold";
+  // T-024 ③:data-format 反映按钮真实功能 —— heading 按钮 toggle 的是标题块,不是加粗,
+  // 故如实标 "heading"(原先写死 "bold" 是迁就测试的假契约,已改真 + 同步改测试断言)。
+  readonly format: "heading";
   readonly label: string;
   readonly isActive: (editor: Editor) => boolean;
   readonly run: (editor: Editor) => void;
@@ -96,21 +97,21 @@ interface BlockButton {
 const HEADING_BUTTONS: ReadonlyArray<BlockButton> = [
   {
     id: "fmt-h1",
-    format: "bold",
+    format: "heading",
     label: "标题 1",
     isActive: (e) => e.isActive("heading", { level: 1 }),
     run: (e) => e.chain().focus().toggleHeading({ level: 1 }).run(),
   },
   {
     id: "fmt-h2",
-    format: "bold",
+    format: "heading",
     label: "标题 2",
     isActive: (e) => e.isActive("heading", { level: 2 }),
     run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(),
   },
   {
     id: "fmt-h3",
-    format: "bold",
+    format: "heading",
     label: "标题 3",
     isActive: (e) => e.isActive("heading", { level: 3 }),
     run: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(),
@@ -186,6 +187,17 @@ export function ScriptRichEditor({
     onTransaction: () => forceTick(),
   });
 
+  // T-024 ②:保存在途窄竞态 —— 保存(patch artifact + router.refresh)在途时,外部 props
+  // (refresh 后重读的 initialHtml)会同步进来。若此刻用户还在打字,setContent 会**覆盖正在打的字**
+  // (refresh 带回的是刚存的旧内容,不含用户在途新键入)。抑制机制两道信号:
+  //   ① savePendingRef —— 保存事务在途期间,吞掉外部 echo(不 setContent)。
+  //   ② lastSavedHtmlRef —— 记刚存的 html;router.refresh 的 props 回流是**异步**的,常晚于
+  //      事务的 finally(pending 已解除),故仅靠 ① 会漏掉这次 echo。此 ref 让「回流值 == 刚存值」
+  //      的 echo 即便在 pending 解除后也被识别并吞掉,不覆盖用户在途新键入(timing 无关)。
+  // 注意:只抑制这两类在途/回声覆盖,**不抑制首次 initialHtml 加载**(首帧两者皆空/false)。
+  const savePendingRef = React.useRef(false);
+  const lastSavedHtmlRef = React.useRef<string | null>(null);
+
   // 把外部 initialHtml(router.refresh 后读到的新版本)同步进 TipTap —— editor 是命令式外部
   // 系统,这正是 effect 该做的「向外部系统推最新 state」。用 ref 记住已应用的值,仅在真正变化时
   // setContent + 重置派生 UI(回「已保存」、刷字数),避免每次渲染都跑、也避免打断本地编辑。
@@ -194,10 +206,21 @@ export function ScriptRichEditor({
     if (!editor) return;
     const next = initialHtml || "<p></p>";
     if (appliedHtmlRef.current === next) return;
+    // 保存在途,或这是刚存内容的 refresh echo:吞掉(标记已消费但不 setContent),防丢在途键入。
+    // 仅当编辑器当前内容已与 echo 不同(用户在途改过)才需保护;相同则放行照常应用。
+    const isSaveEcho =
+      lastSavedHtmlRef.current === next && editor.getHTML() !== next;
+    if (savePendingRef.current || isSaveEcho) {
+      appliedHtmlRef.current = next;
+      return;
+    }
     appliedHtmlRef.current = next;
     if (editor.getHTML() !== next) {
       editor.commands.setContent(next, { emitUpdate: false });
     }
+    // 已应用一个新的外部值 → 清掉 echo 守卫,让「保存后又被外部合法带回同一内容」(如版本回滚
+    // 到刚存的版本)不被误吞;echo 守卫只覆盖紧邻保存的那次回流窗口。
+    lastSavedHtmlRef.current = null;
     // setContent(emitUpdate:false) 不触发 onUpdate,故在此显式同步派生态(刚载入 = 已保存)。
     setSaveStatus("saved");
     setWordCount(editor.getText().length);
@@ -220,6 +243,10 @@ export function ScriptRichEditor({
     }
     const sections = htmlToSections(html);
     setSaveStatus("saving");
+    // T-024 ②:进入保存在途态 + 记刚存 html —— 抑制此期间(及之后异步回流的)refresh echo
+    // 覆盖用户在途键入。lastSavedHtmlRef 让 timing 无关:回流值 == 刚存 html 即认作 echo。
+    savePendingRef.current = true;
+    lastSavedHtmlRef.current = html;
     startTransition(async () => {
       try {
         await client.createArtifactVersion({
@@ -237,6 +264,12 @@ export function ScriptRichEditor({
       } catch {
         // 失败保留 dirty,用户可重试。
         setSaveStatus("dirty");
+      } finally {
+        // 保存动作结束(成功/失败)→ 解除在途抑制。router.refresh 的 props 回流是下一轮
+        // effect,此时 pending 已解除;若回流值与当前编辑器不同(用户在途改过 → getHTML 已变),
+        // 那正是「刚存的旧值」,会与用户在途新值不一致 —— 但 appliedHtmlRef 在途已被标记消费,
+        // 故不会再 setContent 覆盖,保住在途编辑。之后真正的新外部值(如版本回滚)仍能正常应用。
+        savePendingRef.current = false;
       }
     });
   }, [artifactId, editor, router]);
@@ -384,7 +417,8 @@ function ToolbarCommandButton({
 }: {
   editor: Editor | null;
   id: string;
-  format: "bold" | "italic" | "strike";
+  // mark 按钮(bold/italic/strike)+ heading 按钮(T-024 ③:如实标 "heading")共用此壳。
+  format: "bold" | "italic" | "strike" | "heading";
   label: string;
   active: boolean;
   onRun: () => void;

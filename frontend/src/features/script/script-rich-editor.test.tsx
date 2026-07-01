@@ -80,12 +80,27 @@ describe("ScriptRichEditor (TipTap)", () => {
     );
     expect(buttons.length).toBeGreaterThanOrEqual(3);
     buttons.forEach((b) => expect(b.hasAttribute("aria-pressed")).toBe(true));
-    // The bold button exists (data-format="bold").
+    // The bold button exists (data-format="bold" — the mark button, truthfully bold).
     expect(
       toolbar.querySelector(
         '[data-slot="editor-toolbar-button"][data-format="bold"]',
       ),
     ).not.toBeNull();
+    // T-024 ③:heading 按钮如实标 data-format="heading"(不再谎报 "bold"),
+    // 且没有任何 heading 按钮伪装成 bold(H1/H2/H3 三个都在 heading 契约位下)。
+    const headingButtons = toolbar.querySelectorAll(
+      '[data-slot="editor-toolbar-button"][data-format="heading"]',
+    );
+    expect(headingButtons.length).toBe(3);
+    headingButtons.forEach((b) =>
+      expect(b.hasAttribute("aria-pressed")).toBe(true),
+    );
+    // Exactly one truthful bold button, not four (the 3 headings no longer lie as bold).
+    expect(
+      toolbar.querySelectorAll(
+        '[data-slot="editor-toolbar-button"][data-format="bold"]',
+      ).length,
+    ).toBe(1);
   });
 
   it("exposes the editor shell, document slot and status bar (word count + save status)", async () => {
@@ -202,6 +217,86 @@ describe("ScriptRichEditor (TipTap)", () => {
     await waitFor(() =>
       expect(status.getAttribute("data-save-status")).toBe("saved"),
     );
+  });
+
+  it("suppresses a stale external re-sync that lands after the user has kept editing (T-024 ②)", async () => {
+    // Simulate the save race: user edits, then an external initialHtml (the router.refresh
+    // echo of the PREVIOUS content) arrives while the user has kept typing. The in-flight
+    // keystrokes must NOT be clobbered by the stale re-sync.
+    const user = userEvent.setup();
+    let editor: Editor | null = null;
+    const seeded = "<p>开场白</p>";
+    const { rerender } = render(
+      <ScriptRichEditor
+        initialHtml={seeded}
+        artifactId="artifact-race"
+        onEditorReady={(e) => (editor = e)}
+      />,
+    );
+    const pm = await findProseMirror();
+    await waitFor(() => expect(editor).not.toBeNull());
+
+    // User types more, then triggers a save (marks last-saved html + pending window).
+    editor!.chain().focus("end").insertContent("第一次改动").run();
+    await user.click(screen.getByRole("button", { name: "保存" }));
+    await waitFor(() =>
+      expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(1),
+    );
+    const savedHtml = (
+      mockCreateArtifactVersion.mock.calls[0]![0] as {
+        body: { contentData: { html: string } };
+      }
+    ).body.contentData.html;
+
+    // User keeps typing AFTER the save fired (post-save in-flight edit).
+    editor!.chain().focus("end").insertContent("在途继续打字").run();
+    await waitFor(() =>
+      expect(pm.textContent ?? "").toContain("在途继续打字"),
+    );
+
+    // Now the stale echo lands: the parent re-renders with the html we just saved
+    // (which does NOT contain the newest keystrokes). This must be swallowed.
+    rerender(
+      <ScriptRichEditor
+        initialHtml={savedHtml}
+        artifactId="artifact-race"
+        onEditorReady={(e) => (editor = e)}
+      />,
+    );
+
+    // The in-flight keystrokes survive — the echo did not reset the editor.
+    await waitFor(() =>
+      expect(pm.textContent ?? "").toContain("在途继续打字"),
+    );
+    expect(pm.textContent ?? "").toContain("第一次改动");
+  });
+
+  it("still applies a genuinely different external initialHtml (not the save echo) (T-024 ②)", async () => {
+    // The suppression must be narrow: a real, different external value (e.g. a version
+    // restore) still flows into the editor.
+    let editor: Editor | null = null;
+    const { rerender } = render(
+      <ScriptRichEditor
+        initialHtml="<p>原始</p>"
+        artifactId="artifact-ext"
+        onEditorReady={(e) => (editor = e)}
+      />,
+    );
+    const pm = await findProseMirror();
+    await waitFor(() => expect(editor).not.toBeNull());
+    await waitFor(() => expect(pm.textContent ?? "").toContain("原始"));
+
+    // A different external value arrives (no save in flight) → applied.
+    rerender(
+      <ScriptRichEditor
+        initialHtml="<h2>回滚到的版本</h2><p>新内容</p>"
+        artifactId="artifact-ext"
+        onEditorReady={(e) => (editor = e)}
+      />,
+    );
+    await waitFor(() => expect(pm.textContent ?? "").toContain("回滚到的版本"));
+    expect(pm.textContent ?? "").toContain("新内容");
+    expect(pm.textContent ?? "").not.toContain("原始");
   });
 
   it("local-only Save (no artifactId) does NOT call the contract client", async () => {
