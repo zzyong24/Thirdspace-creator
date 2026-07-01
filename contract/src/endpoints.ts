@@ -22,6 +22,7 @@ import { calibrationOperations } from "./operations/calibration";
 import { platformAccountOperations } from "./operations/platform-accounts";
 import { contentCalendarOperations } from "./operations/content-calendar";
 import { materialLinksOperations } from "./operations/material-links";
+import { schedulingOperations } from "./operations/scheduling";
 import { pagesOperations } from "./operations/pages";
 import { authOperations } from "./operations/auth";
 
@@ -99,6 +100,9 @@ export const ENDPOINTS = {
   ...platformAccountOperations,
   ...contentCalendarOperations,
   ...materialLinksOperations,
+  // T-007 调度 Agent 作业(data-source-pipeline-design §9 D1)。scheduled_job CRUD +
+  // job_run 只读。owned-root,transport 按 ctx.userId 收窄。
+  ...schedulingOperations,
   ...pagesOperations,
   // Identity / auth (P2 — 用户注册真账号). register is the first auth action
   // lifted into the contract dispatch surface; login/logout/me remain bare routes.

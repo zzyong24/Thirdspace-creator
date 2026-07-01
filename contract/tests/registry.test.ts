@@ -189,6 +189,14 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/material-links"],
   ["POST", "/material-links"],
   ["POST", "/material-links/:linkId/delete"],
+  // 调度作业 (scheduling / T-007 data-source-pipeline-design §9 D1)
+  ["POST", "/scheduled-jobs"],
+  ["GET", "/scheduled-jobs"],
+  ["GET", "/scheduled-jobs/:jobId"],
+  ["PATCH", "/scheduled-jobs/:jobId"],
+  ["POST", "/scheduled-jobs/:jobId/enabled"],
+  ["GET", "/scheduled-jobs/:jobId/runs"],
+  ["GET", "/job-runs/:runId"],
 ];
 
 describe("endpoint registry", () => {

@@ -23,6 +23,7 @@ import * as calibrationSchema from "./schema/calibration";
 import * as platformAccountSchema from "./schema/platform-account";
 import * as contentCalendarSchema from "./schema/content-calendar";
 import * as materialLinksSchema from "./schema/material-links";
+import * as schedulingSchema from "./schema/scheduling";
 import { Pool } from "pg";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
@@ -65,6 +66,7 @@ const schema = {
   ...platformAccountSchema,
   ...contentCalendarSchema,
   ...materialLinksSchema,
+  ...schedulingSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;

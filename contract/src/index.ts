@@ -88,6 +88,12 @@ export {
   materialLinkResource,
   type MaterialLinkResource,
 } from "./resources/material-links";
+export {
+  scheduledJobResource,
+  jobRunResource,
+  type ScheduledJobResource,
+  type JobRunResource,
+} from "./resources/scheduling";
 
 // PAGE composition DTOs (SPEC §19). The dashboard / projectOverview / globalSearch
 // DTOs are reachable via `ENDPOINTS.<op>.response`; `publishingCenterPage` has NO
