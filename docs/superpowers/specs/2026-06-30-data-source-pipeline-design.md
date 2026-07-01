@@ -28,6 +28,14 @@
 > - **浏览器:`launchPersistentContext(.auth/)` 自起 Chromium + 持久化登录态起步**,工具接口抽象成 `BrowserDriver`,后续可 swap 服务端 headless Playwright(storageState)。
 > - **调度作业到点产一条 `ai_task` 走现有队列**(`drainQueue`/`runTask`),不另起一套 runner / 步骤日志。
 
+> ## 🔧 实现期架构修正(2026-07-01,D3 开工实地勘探 + trust-but-verify 6 条独立 grep 坐实)
+>
+> **发现**:原 §3/§5 假设"调度作业产 `ai_task` → 走现有队列 `drainQueue`/`claimNextQueued`/`runTask`(`ai-worker/src/orchestrator.ts`)执行"。**实地:这套队列是 Claude Agent SDK 时代的遗留死链** —— `drainQueue` 零生产调用者、`runTask` 只被同样零调用的 `run-loop.ts` 调、ai-worker 无常驻进程(package.json 仅 typecheck/test)。**T-006「去最后一个 Claude Agent SDK 依赖」后,真实 AI 执行走 `frontend/src/server/persistence-client.ts` 的 dispatch 链**:transport 拦新建 `ai_task` → 按 `taskType` `void runXxxTask(...)` 后台 fire-and-forget(现有 ~15 个 runner:runTopicGenerateV2 / runScriptDraft / runAssetGenerate…,各自 markRunning→step→recordCandidate/succeeded,用 Vercel `runStructuredNode`)。
+>
+> **修正**(不改方向/数据归属,只把执行机制对齐 live 代码,反而更简、去风险):调度采集**当作又一个 runner** 走同一条 live dispatch —— node-cron → `triggerScheduledJob`(createTask `taskType=scheduled.<source>` + 写 `job_run`)→ persistence-client dispatch 链见 `scheduled.*` → `void runScheduledCollection(...)`(**新增确定性 runner,不调 LLM**:直接 `fetchDouyinMetrics`/`fetchDouyinComments` → ingest → 合成 step 写 `ai_task_steps` → `succeeded` → 回填 `job_run`)。**不碰、不复活死掉的 orchestrator/drainQueue/runTask。** §3 图、§5、§9 D3 据此更新;原稿"给 runTask 加确定性分支"**作废**,换"新增 runScheduledCollection 走现有 dispatch"。
+>
+> **数据模型(scheduled_job/job_run/迁移0009)、数据归属(projects:imported / audience_signals 经 ingestion C-4)、幂等(ai_tasks_user_idempotency)、方向(仅自己+评论、飞轮)全不变。** 此修正触发 re-gate(§5 执行层变);verdict 见 REVIEW_LEDGER。
+
 ## 1. 核心洞察
 
 把"定时任务"做成一个**通用原语**:一个作业 = 一段提示词 + 一个调度。调度器到点产出一条 `ai_task`,既有队列(`drainQueue`)claim 后唤醒 Agent(`runTask`),Agent 用授权的浏览器工具去执行(抓自己主页数据 / 评论),产出结构化数据,**经 ingestion 已有链路**落到 `projects(source:imported)` / `metric_snapshots` / `audience_signals`。
@@ -52,16 +60,16 @@
 ```
 ScheduledJob(用户配:名称 + 提示词 + 调度 + 目标源 ∈ {自己作品, 评论})
         ↓ 调度器到点(node-cron) → 产一条 ai_task(taskType=scheduled.<source>, idempotencyKey=(jobId,自然日))
-既有队列(drainQueue → claimNextQueued → runTask)  ← 不另起 runner
-   ├─ 有效 recipe / 内建采集器 → 确定性重放(不调 LLM):
+persistence-client dispatch 链(live·同现有 15 个 void runXxxTask)见 scheduled.* → void runScheduledCollection(...)  ← 新增确定性 runner;不碰死掉的 drainQueue/runTask(见顶部🔧)
+   ├─ 内建采集器 → 确定性执行(不调 LLM):
    │     · self.metrics → 直接调已实现 fetchDouyinMetrics(launchPersistentContext)
-   │     · comments     → 调待补的 fetchDouyinComments(同文件、同 .auth/)
-   └─ 无 recipe / 抓取为空结构变 → 唤醒 Agent(runAgentNode + tool-registry 授权 BrowserDriver 工具)发现 → 更新 recipe
+   │     · comments     → 调 fetchDouyinComments(同文件、同 .auth/)
+   └─ (未来 D7)recipe 失效/结构变 → 唤醒 Agent 发现 → 更新 recipe
         ↓ 程序化抽值(DOM evaluate / 拦 XHR JSON)→ MetricRecord[] / CommentRecord[]
         ↓ 经 ingestion 已有链路落库(不新建源表):
 源(复用):作品+指标 → refreshDouyin → ensureImportedProject → ingestMetrics
                        → projects(source:imported) / metric_snapshots / metric_values   (T-001 ✅)
-          评论       → audience_signals(source="douyin_comment", external_id=comment_id) (data-foundation §1.3)
+          评论       → audience_signals(source="comment",经 ingestion 幂等 record_key=comment_id) (data-foundation §1.3,C-4)
         ↓ 每到点触发记一条 job_run(瘦:startedAt/finishedAt/status/itemsNew/itemsUpdated/aiTaskId)
         ↓ 过程步骤日志复用 ai_task_steps(经 aiTaskId 关联,不另起步骤表)
 任务中心(新·页面 /automations)  作业列表 + 上次/下次运行 + 状态 +「立即运行」+ 启用开关 + 运行详情(读 ai_task_steps)
@@ -135,16 +143,16 @@ interface BrowserDriver {
 - **调度器**:本机/dev 在 persistence-client 进程内 `node-cron` 轮询 enabled job(**`node-cron` 当前不在任何 package.json,落地切片需显式加这步依赖**);到点**不直接跑采集**,而是:
   1. 产一条 `ai_task`(`taskType=scheduled.<source_kind>`,`idempotencyKey=(jobId, 自然日)` —— 同 job 同自然日复用同一 task,天然按天幂等,参照 cheat-data-refresh)。
   2. 写一条 `job_run`(`status=running`, `ai_task_id`=刚产的 task id)。
-  3. 触发既有 `drainQueue`(或等其轮询)。`claimNextQueued → runTask`:`runTask` 按 `taskType` 选 Skill / 工具集(`scheduled.self.metrics` 走"直接重放 fetchDouyinMetrics"的内建采集分支;`scheduled.comments` 走评论抓取分支);过程步骤经现有 `recordStep` 落 `ai_task_steps`。
+  3. 走 **live dispatch**(persistence-client 现有 transport 拦新建 ai_task → 按 taskType `void runXxxTask` 的同一条链):`scheduled.*` → `void runScheduledCollection(...)`(新增确定性 runner,仿 runAssetGenerate/runGatherMaterial 但**不调 LLM**);`scheduled.self.metrics` 直接重放 fetchDouyinMetrics、`scheduled.comments` 走 fetchDouyinComments;过程步骤经现有 runner 用的 step 记录(insertStep)落 `ai_task_steps`。**不经 drainQueue/runTask(死链)。**
   4. 采集完 → 经 ingestion 链路落库 → 回填 `job_run`(`status`, `items_new/updated`, `finished_at`)。
 - **部署后**:换平台 cron 打内部端点(密钥保护)产 `ai_task`,队列侧不变。
 - **「立即运行」** = 手动产同款 `ai_task` + `job_run`(fire-and-forget),UI 轮询 `ai_task_steps`(复用选题弹窗那套步骤轮询)。
 - **幂等**:同 `(job, 自然日)` 经 `ai_tasks_user_idempotency`(`(user_id, idempotency_key)` 唯一)天然去重 —— 同一天重复触发返回既有 task,不重复采(复用既有 `createTask` 幂等语义,**不自造幂等**)。
 
-> **关键:队列层复用,执行层需新增确定性分支(re-review 修正,别误读成"零改动")。**
-> - **队列层 = 纯复用**:`ai_tasks` 入队 + `drainQueue`/`claimNextQueued` + `ai_tasks_user_idempotency` 幂等,全部照用,不改、不另起 runner。
-> - **执行层 = runTask 必须新增一个"确定性非 LLM 执行分支"(对 orchestrator 核心控制流的真实改动)**:现状 `runTask`(`ai-worker/src/orchestrator.ts`)是 LLM-agent 单一形态、硬编码 —— 无条件 `runner.run({prompt})` 调模型、必须 agent 调过 `submit_candidate` 否则 `fail`、输出当 candidate 解析、按 formalizes 路由确认门。一条 `scheduled.self.metrics` 确定性重放(不调 LLM、不产 candidate、不过确认门)在现状会**崩在第一步**。所以落地 D3 必须给 `runTask` 加分支:`taskType` 前缀 `scheduled.*` 且 job 有内建采集器/有效 recipe → 走 **deterministic 执行器**(跳 `runner.run`、跳 candidate 捕获、跳确认门:直接 `fetchDouyinMetrics`/`fetchDouyinComments` → ingestion 落库 → **手工合成 `recordStep` 行**写 `ai_task_steps`(确定性采集无 agent step 回调)→ 直接 `succeeded`)。只有"无 recipe 需 Agent 发现"才回落现状 LLM-agent 路径。**这是新增分支,非纯复用——D3 切片如实标注工作量。**
-> - `job_run` 与 `ai_task` 一一对应(`job_run.ai_task_id`)。
+> **关键:执行走 live dispatch,新增确定性 runner(2026-07-01 实现期修正,原"runTask 加分支"作废——见顶部🔧)。**
+> - **幂等层 = 纯复用**:`ai_tasks` + `ai_tasks_user_idempotency`(`(user_id, idempotency_key)` 唯一)天然按天去重,照用不改。
+> - **执行层 = 新增 `runScheduledCollection` 确定性 runner(不碰 orchestrator 死链)**:`drainQueue`/`runTask`(`ai-worker/src/orchestrator.ts`)是 Claude Agent SDK 遗留、**零生产驱动**(T-006 迁 Vercel 后);真实执行是 persistence-client 按 taskType `void runXxxTask` 后台跑(15 个 runner 用 `runStructuredNode`)。故调度采集**当作又一个 runner**:`runScheduledCollection` 仿 runAssetGenerate(markRunning→…→succeeded)但**不调 LLM、不产 candidate、不过确认门** —— 直接 `fetchDouyinMetrics`/`fetchDouyinComments` → ingestion 落库 → 合成 step 写 `ai_task_steps`(经现有 insertStep)→ `succeeded` → 回填 `job_run`。dispatch 加 `scheduled.*` 分支。**比原稿更简、去风险:不复活死链。**
+> - `job_run` 与 `ai_task` 一一对应(`job_run.ai_task_id`),回填在 runner 终态。
 
 > **评论口径修正(re-review 找到的 C-4 冲突,本 SPEC + data-foundation §1.3 同步修)**:原写 `source="douyin_comment"` + `external_id=comment_id` + 幂等 `(userId, external_id)` 是孤儿口径 —— 真实 `audienceSignalSource` enum 只有 `comment|dm|consultation|review`(contract `primitives.ts` + `candidate.schema.ts` 双层 Zod 校验,`douyin_comment` 会被 reject),`audience_signals` 表**无 `external_id` 列、无 UNIQUE 约束**,且硬约束 C-4(`candidate.ts`)写明"AudienceSignal 写经 Ingestion、骑 ingestion 幂等"。**改为**:评论作业建一条 ingestion run,`source` 用既有 `"comment"`,去重锚用 `ingestion_records.record_key=comment_id`(经既有 `ux_ingestion_records_run_key`),`audience_signals.ingestion_run_id` 带上。不扩 enum、不加列、不自造幂等键。
 
@@ -185,7 +193,7 @@ headless 复刷遇未登录 → 已实现的 `fetchDouyinMetrics` 抛 `DouyinNot
 **调度 Agent 作业系统(re-review verdict≠FAIL 后按序):**
 - `D1` 数据模型(`scheduled_job` + `job_run`,迁移 0009)+ contract(jobResource / runResource)+ `scheduled_job`/`job_run` service(经端口,不跨模块直连 repo)。
 - `D2` 评论抓取 `fetchDouyinComments`(同 `douyin-cdp.ts`、复用 `openContext` 持久化登录态;蓝本 cheat-on-content `fetch_comments_creator` 拦 `/aweme/v1/web/comment/list/`)+ 纯函数 `parseCommentList` 单测;落 `audience_signals`(经 ingestion 端口)。
-- `D3` 调度器(node-cron 到点 → 产 `ai_task`(`taskType=scheduled.<source>`)+ 写 `job_run`)+ `runTask` 的两个采集分支(self.metrics 直接重放 `fetchDouyinMetrics` / comments 走 `fetchDouyinComments`)+ 落库回填 `job_run`。
+- `D3` 调度器(node-cron `triggerScheduledJob` → createTask `taskType=scheduled.<source>` + 写 `job_run`)+ **新增 `runScheduledCollection` 确定性 runner**(走 persistence-client live dispatch,不碰死链;self.metrics 重放 `fetchDouyinMetrics` / comments 走 `fetchDouyinComments`)+ dispatch 加 `scheduled.*` 分支 + 落库回填 `job_run`。**(2026-07-01 修正:原"runTask 加分支"作废,见顶部🔧)**
 - `D4` 登录态接线(§6):`DouyinNotLoggedInError` → `job_run.needs_reconnect` + 停跑 + 「登录抖音」恢复。
 - `D5` 「立即运行」手动触发(产同款 `ai_task` + `job_run`,fire-and-forget)。
 - `D6` 任务中心 UI `/automations`(作业列表 + 上次/下次 + 状态(正常/需重连 Chrome/失败)+「立即运行」+ 启用开关 + 运行详情读 `ai_task_steps`)= 数据链路可视化。
