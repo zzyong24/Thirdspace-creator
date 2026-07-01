@@ -177,6 +177,9 @@ describe("SettingsPage", () => {
       "system-settings-card",
       "storage-usage-card",
       "model-configuration-card",
+      // Multimodal (image / video) model cards — SPEC 2026-07-01 M3.
+      "multimodal-image-card",
+      "multimodal-video-card",
     ];
     for (const slot of expectedSlots) {
       expect(

@@ -87,6 +87,14 @@ export interface SettingsPageProps {
    * of the fixture default. Omitted in unit tests.
    */
   readonly storage?: StorageState;
+  /**
+   * Real DB-backed multimodal model config for the `image.generate` /
+   * `video.generate` capabilities (read by the `(creator)/settings` route via the
+   * SAME `settings.models.list` call as `model`). When supplied, the two
+   * multimodal cards reflect the stored provider / model / baseUrl / hasSecret
+   * instead of the (unconfigured) fixture default. Omitted in unit tests.
+   */
+  readonly multimodalModels?: MultimodalModelsState;
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */
@@ -103,6 +111,15 @@ export interface SettingsViewModel {
   readonly system: SystemState;
   readonly storage: StorageState;
   readonly model: ModelState;
+  /**
+   * Multimodal (image / video) generation model config — the two extra
+   * capabilities `image.generate` / `video.generate` (SPEC 2026-07-01 §2.1, M3).
+   * Read from the SAME `settings.models.list` op as the text `model` above
+   * (`capability` is a free-form string — zero contract change). `resolveMultimodalSpec`
+   * (server/ai/multimodal/resolve.ts) reads these rows so the recording page's
+   * AI-generate can use the user's own provider/key; unconfigured = honestly disabled.
+   */
+  readonly multimodalModels: MultimodalModelsState;
 }
 
 export interface AccountInformation {
@@ -173,6 +190,35 @@ export interface ModelState {
 }
 
 // ---------------------------------------------------------------------------
+// Multimodal (image / video) model config — SPEC 2026-07-01 §2.1 / M3
+// ---------------------------------------------------------------------------
+//
+// A multimodal capability's binding. Unlike the text `ModelState`, there is NO
+// `apiFormat` / `temperature`: `resolveMultimodalSpec` (server/ai/multimodal/
+// resolve.ts) dispatches purely on `provider` (the vendor switch) and reads only
+// provider / baseUrl / model / secret. Keeping the form to just those four fields
+// mirrors exactly what the resolver consumes — no dead controls.
+export interface MultimodalModelState {
+  /** The bound capability ("image.generate" | "video.generate"). */
+  readonly capability: "image.generate" | "video.generate";
+  /** Free-form provider name (the dispatch switch; "minimax" today, extensible). */
+  readonly provider: string;
+  /** Free-form model id (e.g. image-01 / video-01). */
+  readonly modelName: string;
+  /** Custom baseUrl (e.g. https://api.minimaxi.com/v1); "" = provider default. */
+  readonly baseUrl: string;
+  /** Masked: a secret is configured (raw value never sent to the client). */
+  readonly hasSecret: boolean;
+}
+
+export interface MultimodalModelsState {
+  /** 文生图 — capability "image.generate". */
+  readonly image: MultimodalModelState;
+  /** 文生视频 — capability "video.generate". */
+  readonly video: MultimodalModelState;
+}
+
+// ---------------------------------------------------------------------------
 // Identity overlay (Module 00, Task 12)
 // ---------------------------------------------------------------------------
 
@@ -218,11 +264,15 @@ export function SettingsPage({
   identity,
   model,
   storage,
+  multimodalModels,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
   const withModel = model ? { ...withIdentity, model } : withIdentity;
-  const vm = storage ? { ...withModel, storage } : withModel;
+  const withStorage = storage ? { ...withModel, storage } : withModel;
+  const vm = multimodalModels
+    ? { ...withStorage, multimodalModels }
+    : withStorage;
   // 设置改弹窗式:页面本身只留一个 marker (供 shell-router 路由 + 测试定位),
   // 真正的内容是浮在其上的居中大弹窗 (SettingsDialog,Radix Portal 到 body)。
   // 弹窗默认打开,关闭 → router.back() 回上一页。背景仍是 (creator) 的 AppShell

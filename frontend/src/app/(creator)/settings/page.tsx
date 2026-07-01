@@ -21,6 +21,8 @@
 import {
   SettingsPage,
   type ModelState,
+  type MultimodalModelState,
+  type MultimodalModelsState,
   type StorageState,
 } from "@/features/settings/settings-page";
 import { createServerClient } from "@/lib/contract-client.server";
@@ -79,11 +81,13 @@ export default async function SettingsRoutePage() {
     }
   }
 
-  // Read the real DB-backed "default" model config (settings.models.list) so the
-  // model card reflects the stored provider / model / baseUrl / format /
-  // hasSecret. A read failure leaves it undefined → the card shows the fixture
-  // default (deterministic SSR fallback).
+  // Read the real DB-backed model configs (settings.models.list) so the cards
+  // reflect the stored provider / model / baseUrl / format / hasSecret. A read
+  // failure leaves them undefined → the cards show the fixture default
+  // (deterministic SSR fallback). A single list call feeds BOTH the text "default"
+  // card AND the two multimodal (image.generate / video.generate) cards.
   let model: ModelState | undefined;
+  let multimodalModels: MultimodalModelsState | undefined;
   if (session) {
     try {
       const models = await createServerClient(session.ctx).listModels({
@@ -106,6 +110,27 @@ export default async function SettingsRoutePage() {
           temperature: typeof temp === "number" ? temp : 0.6,
         };
       }
+
+      // Project the two multimodal capability rows (if configured). No apiFormat/
+      // temperature — resolveMultimodalSpec dispatches on provider alone. An absent
+      // row yields an unconfigured card (empty provider/model, hasSecret=false),
+      // which the card renders as the honest "未配置" state.
+      const multimodalRow = (
+        capability: MultimodalModelState["capability"],
+      ): MultimodalModelState => {
+        const found = models.find((m) => m.capability === capability);
+        return {
+          capability,
+          provider: found?.provider ?? "",
+          modelName: found?.modelName ?? "",
+          baseUrl: found?.baseUrl ?? "",
+          hasSecret: found?.hasSecret ?? false,
+        };
+      };
+      multimodalModels = {
+        image: multimodalRow("image.generate"),
+        video: multimodalRow("video.generate"),
+      };
     } catch {
       // listModels unavailable (transport race) → fall back to the fixture.
     }
@@ -146,5 +171,12 @@ export default async function SettingsRoutePage() {
     }
   }
 
-  return <SettingsPage identity={identity} model={model} storage={storage} />;
+  return (
+    <SettingsPage
+      identity={identity}
+      model={model}
+      storage={storage}
+      multimodalModels={multimodalModels}
+    />
+  );
 }

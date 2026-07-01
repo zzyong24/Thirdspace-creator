@@ -60,6 +60,27 @@ export function buildSettingsViewModel(): SettingsViewModel {
       hasSecret: false,
       temperature: 0.6,
     },
+    // Multimodal (image / video) generation model config (SPEC 2026-07-01 M3).
+    // Unconfigured by default — the recording page's AI-generate stays honestly
+    // disabled until the user binds a provider/model/key here. minimax is the
+    // suggested provider today (M1 shipped a minimax adapter) but the field is
+    // free-form (extensible to other vendors).
+    multimodalModels: {
+      image: {
+        capability: "image.generate",
+        provider: "",
+        modelName: "",
+        baseUrl: "",
+        hasSecret: false,
+      },
+      video: {
+        capability: "video.generate",
+        provider: "",
+        modelName: "",
+        baseUrl: "",
+        hasSecret: false,
+      },
+    },
   };
 }
 

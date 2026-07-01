@@ -70,6 +70,22 @@ const VM: SettingsViewModel = {
     hasSecret: false,
     temperature: 0.6,
   },
+  multimodalModels: {
+    image: {
+      capability: "image.generate",
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false,
+    },
+    video: {
+      capability: "video.generate",
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false,
+    },
+  },
 };
 
 beforeEach(() => {
@@ -193,6 +209,132 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       }),
     );
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  // --- Multimodal model config (SPEC 2026-07-01 M3) -------------------------
+
+  it("saving the 文生图 form PUTs the image.generate capability (provider/model/baseUrl/secret, no apiFormat/temperature)", async () => {
+    const doc = renderDialog();
+    const provider = doc.querySelector(
+      '[data-slot="multimodal-image-provider-input"]',
+    ) as HTMLInputElement;
+    const modelName = doc.querySelector(
+      '[data-slot="multimodal-image-model-input"]',
+    ) as HTMLInputElement;
+    const baseUrl = doc.querySelector(
+      '[data-slot="multimodal-image-base-url-input"]',
+    ) as HTMLInputElement;
+    const secret = doc.querySelector(
+      '[data-slot="multimodal-image-secret-input"]',
+    ) as HTMLInputElement;
+    const save = doc.querySelector(
+      '[data-slot="multimodal-image-save"]',
+    ) as HTMLButtonElement;
+    expect(provider).not.toBeNull();
+    expect(save).not.toBeNull();
+    // Unconfigured (blank provider/model) → save disabled until both are filled.
+    expect(save.disabled).toBe(true);
+
+    fireEvent.change(provider, { target: { value: "minimax" } });
+    fireEvent.change(modelName, { target: { value: "image-01" } });
+    fireEvent.change(baseUrl, {
+      target: { value: "https://api.minimaxi.com/v1" },
+    });
+    fireEvent.change(secret, { target: { value: "sk-image-key" } });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1));
+    const call = mockClient.putModel.mock.calls[0]![0] as {
+      params: { capability: string };
+      body: Record<string, unknown>;
+    };
+    expect(call.params).toEqual({ capability: "image.generate" });
+    expect(call.body).toEqual({
+      provider: "minimax",
+      modelName: "image-01",
+      baseUrl: "https://api.minimaxi.com/v1",
+      secret: "sk-image-key",
+    });
+    // Multimodal rows carry NO apiFormat / settings (resolver ignores them).
+    expect(call.body.apiFormat).toBeUndefined();
+    expect(call.body.settings).toBeUndefined();
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("saving the 文生视频 form PUTs the video.generate capability", async () => {
+    const doc = renderDialog();
+    const provider = doc.querySelector(
+      '[data-slot="multimodal-video-provider-input"]',
+    ) as HTMLInputElement;
+    const modelName = doc.querySelector(
+      '[data-slot="multimodal-video-model-input"]',
+    ) as HTMLInputElement;
+    const save = doc.querySelector(
+      '[data-slot="multimodal-video-save"]',
+    ) as HTMLButtonElement;
+    expect(provider).not.toBeNull();
+
+    fireEvent.change(provider, { target: { value: "minimax" } });
+    fireEvent.change(modelName, { target: { value: "video-01" } });
+    fireEvent.click(save);
+
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1));
+    expect(mockClient.putModel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: { capability: "video.generate" },
+        body: expect.objectContaining({
+          provider: "minimax",
+          modelName: "video-01",
+        }),
+      }),
+    );
+  });
+
+  it("reads back a configured multimodal row + masks the secret (hasSecret badge, blank secret omitted on re-save)", async () => {
+    const VM_MULTIMODAL: SettingsViewModel = {
+      ...VM,
+      multimodalModels: {
+        image: {
+          capability: "image.generate",
+          provider: "minimax",
+          modelName: "image-01",
+          baseUrl: "https://api.minimaxi.com/v1",
+          hasSecret: true,
+        },
+        video: VM.multimodalModels.video,
+      },
+    };
+    const doc = renderDialog(VM_MULTIMODAL);
+    // Read-back: the stored provider/model/baseUrl render into the inputs.
+    const provider = doc.querySelector(
+      '[data-slot="multimodal-image-provider-input"]',
+    ) as HTMLInputElement;
+    const modelName = doc.querySelector(
+      '[data-slot="multimodal-image-model-input"]',
+    ) as HTMLInputElement;
+    expect(provider.value).toBe("minimax");
+    expect(modelName.value).toBe("image-01");
+    // Masked: hasSecret badge shown; raw key never rendered.
+    const badge = doc.querySelector('[data-slot="multimodal-image-secret-status"]');
+    expect(badge).not.toBeNull();
+    const secret = doc.querySelector(
+      '[data-slot="multimodal-image-secret-input"]',
+    ) as HTMLInputElement;
+    expect(secret.value).toBe("");
+
+    // Re-save with a blank secret → the secret key is omitted (stored key kept).
+    fireEvent.change(modelName, { target: { value: "image-01-hd" } });
+    const save = doc.querySelector(
+      '[data-slot="multimodal-image-save"]',
+    ) as HTMLButtonElement;
+    fireEvent.click(save);
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1));
+    const call = mockClient.putModel.mock.calls[0]![0] as {
+      body: Record<string, unknown>;
+    };
+    expect(call.body.secret).toBeUndefined();
+    expect(call.body.modelName).toBe("image-01-hd");
   });
 
   it("omits the secret when left blank (a re-save keeps the stored key)", async () => {

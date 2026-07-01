@@ -62,7 +62,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import type { SettingsViewModel } from "./settings-page";
+import type {
+  MultimodalModelState,
+  SettingsViewModel,
+} from "./settings-page";
 
 // ---------------------------------------------------------------------------
 // useSettingsMutation — the shared island mutation seam (plan Step 5)
@@ -281,6 +284,14 @@ export function SettingsDialog({
             <SettingsPanel tabId="models" active={tab}>
               <div data-slot="settings-rail" className="flex flex-col gap-card-gap">
                 <ModelConfigurationCard model={viewModel.model} />
+                <MultimodalModelCard
+                  kind="image"
+                  state={viewModel.multimodalModels.image}
+                />
+                <MultimodalModelCard
+                  kind="video"
+                  state={viewModel.multimodalModels.video}
+                />
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="storage" active={tab}>
@@ -1142,6 +1153,233 @@ function ModelConfigurationCard({
             onClick={save}
           >
             保存模型配置
+          </Button>
+        </div>
+      </div>
+    </SectionCard>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// MultimodalModelCard — 文生图 / 文生视频 (SPEC 2026-07-01 §2.1 / M3)
+// ---------------------------------------------------------------------------
+//
+// Two extra capabilities — `image.generate` (文生图) and `video.generate`
+// (文生视频) — bound with the SAME cc-switch form + `settings.models.put` op as
+// the text ModelConfigurationCard above. `capability` is a free-form contract
+// string, so these reuse `putModel`/`listModels` with ZERO contract change.
+//
+// Difference vs the text card: NO apiFormat / temperature. `resolveMultimodalSpec`
+// (server/ai/multimodal/resolve.ts) dispatches purely on `provider` and reads only
+// provider / baseUrl / model / secret — so the form surfaces exactly those four
+// fields (no dead controls). The API key is stored in the LOCAL db and masked to
+// `hasSecret` on read (raw key never echoed back). minimax is the only provider
+// with a shipped adapter today (M1), but the provider input is free-form and
+// extensible — it is NOT locked to minimax.
+//
+// Honesty (铁律): an unconfigured capability leaves provider/model/key blank and
+// hasSecret=false. The card says so ("未配置 → 录制页 AI 生成禁用"); it never
+// pretends generation works before a key is bound.
+
+const MULTIMODAL_META = {
+  image: {
+    capability: "image.generate" as const,
+    title: "文生图模型",
+    icon: Palette,
+    description:
+      "录制阶段 AI 生成图片素材用;不配则录制页「AI 生成图」禁用。",
+    providerSuggestions: ["minimax"] as ReadonlyArray<string>,
+    modelHelp: "文生图模型 id,如 image-01(MiniMax)。",
+    baseUrlPlaceholder: "https://api.minimaxi.com/v1(留空=provider 默认)",
+  },
+  video: {
+    capability: "video.generate" as const,
+    title: "文生视频模型",
+    icon: Cpu,
+    description:
+      "录制阶段 AI 生成视频素材用;不配则录制页「AI 生成视频」禁用。",
+    providerSuggestions: ["minimax"] as ReadonlyArray<string>,
+    modelHelp: "文生视频模型 id,如 video-01(MiniMax / Hailuo)。",
+    baseUrlPlaceholder: "https://api.minimaxi.com/v1(留空=provider 默认)",
+  },
+} as const;
+
+function MultimodalModelCard({
+  kind,
+  state,
+}: {
+  kind: "image" | "video";
+  state: MultimodalModelState;
+}) {
+  const meta = MULTIMODAL_META[kind];
+  const [provider, setProvider] = React.useState<string>(state.provider);
+  const [modelName, setModelName] = React.useState<string>(state.modelName);
+  const [baseUrl, setBaseUrl] = React.useState<string>(state.baseUrl);
+  // Blank = keep the existing stored key (the read never returns the raw value).
+  const [secret, setSecret] = React.useState<string>("");
+  const { pending, run } = useSettingsMutation();
+
+  // Re-sync drafts when a server refresh changes the stored config.
+  React.useEffect(() => {
+    setProvider(state.provider);
+    setModelName(state.modelName);
+    setBaseUrl(state.baseUrl);
+    setSecret("");
+  }, [state]);
+
+  const configured = provider.trim().length > 0 && modelName.trim().length > 0;
+  const canSave = configured && !pending;
+
+  // One PUT upserts the whole capability row; an empty secret is omitted so a
+  // re-save without re-typing the key preserves the stored one. NO apiFormat /
+  // settings — the multimodal resolver ignores them.
+  const save = React.useCallback(() => {
+    if (!canSave) return;
+    run(() =>
+      client
+        .putModel({
+          params: { capability: meta.capability },
+          query: undefined,
+          body: {
+            provider: provider.trim(),
+            modelName: modelName.trim(),
+            baseUrl: baseUrl.trim() || undefined,
+            secret: secret.length > 0 ? secret : undefined,
+          },
+        })
+        .then(() => setSecret("")),
+    );
+  }, [canSave, run, meta.capability, provider, modelName, baseUrl, secret]);
+
+  const Icon = meta.icon;
+  const providerListId = `multimodal-${kind}-provider-suggestions`;
+
+  return (
+    <SectionCard
+      title={meta.title}
+      description={meta.description}
+      action={
+        state.hasSecret ? (
+          <Badge
+            data-slot={`multimodal-${kind}-status`}
+            variant="outline"
+            className="border-success/40 bg-success-soft text-success"
+          >
+            已配置
+          </Badge>
+        ) : (
+          <Badge
+            data-slot={`multimodal-${kind}-status`}
+            variant="outline"
+            className="border-border bg-surface-subtle text-muted-foreground"
+          >
+            未配置
+          </Badge>
+        )
+      }
+    >
+      <div
+        data-slot={`multimodal-${kind}-card`}
+        data-capability={meta.capability}
+        className="flex flex-col gap-3"
+      >
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Icon aria-hidden="true" className="size-4 shrink-0" />
+          <span>
+            provider / model / 接口地址 / 密钥(与文本模型同款配置;密钥存本地库)
+          </span>
+        </div>
+        <SettingsFormRow
+          label="提供商"
+          controlId={`multimodal-${kind}-provider`}
+          help="多模态厂商名,可自定义(当前已适配 minimax)。"
+        >
+          <Input
+            id={`multimodal-${kind}-provider`}
+            data-slot={`multimodal-${kind}-provider-input`}
+            list={providerListId}
+            value={provider}
+            disabled={pending}
+            placeholder="minimax"
+            onChange={(event) => setProvider(event.target.value)}
+            aria-label={`${meta.title}提供商`}
+          />
+          <datalist id={providerListId}>
+            {meta.providerSuggestions.map((p) => (
+              <option key={p} value={p} />
+            ))}
+          </datalist>
+        </SettingsFormRow>
+        <SettingsFormRow
+          label="模型"
+          controlId={`multimodal-${kind}-model`}
+          help={meta.modelHelp}
+        >
+          <Input
+            id={`multimodal-${kind}-model`}
+            data-slot={`multimodal-${kind}-model-input`}
+            value={modelName}
+            disabled={pending}
+            onChange={(event) => setModelName(event.target.value)}
+            aria-label={`${meta.title}名称`}
+          />
+        </SettingsFormRow>
+        <SettingsFormRow
+          label="接口地址"
+          controlId={`multimodal-${kind}-base-url`}
+          help="自定义 baseUrl;留空走 provider 默认。"
+        >
+          <Input
+            id={`multimodal-${kind}-base-url`}
+            data-slot={`multimodal-${kind}-base-url-input`}
+            value={baseUrl}
+            disabled={pending}
+            placeholder={meta.baseUrlPlaceholder}
+            onChange={(event) => setBaseUrl(event.target.value)}
+            aria-label={`${meta.title}接口地址`}
+          />
+        </SettingsFormRow>
+        <SettingsFormRow
+          label="密钥"
+          controlId={`multimodal-${kind}-secret`}
+          help={
+            state.hasSecret
+              ? "已配置;留空保持不变,填入则覆盖。"
+              : "粘贴 API Key(存于本地库)。未配 → 录制页 AI 生成禁用。"
+          }
+        >
+          <div className="flex w-full items-center gap-2">
+            <Input
+              id={`multimodal-${kind}-secret`}
+              type="password"
+              data-slot={`multimodal-${kind}-secret-input`}
+              value={secret}
+              disabled={pending}
+              placeholder={state.hasSecret ? "已配置(留空不变)" : "粘贴 API Key"}
+              onChange={(event) => setSecret(event.target.value)}
+              aria-label={`${meta.title}密钥`}
+            />
+            {state.hasSecret ? (
+              <Badge
+                data-slot={`multimodal-${kind}-secret-status`}
+                variant="outline"
+                className="border-success/40 bg-success-soft text-success"
+              >
+                已配置
+              </Badge>
+            ) : null}
+          </div>
+        </SettingsFormRow>
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            data-slot={`multimodal-${kind}-save`}
+            variant="outline"
+            size="sm"
+            disabled={!canSave}
+            onClick={save}
+          >
+            保存{meta.title}配置
           </Button>
         </div>
       </div>

@@ -102,6 +102,22 @@ function buildStubViewModel(): SettingsViewModel {
       hasSecret: false,
       temperature: 0.6,
     },
+    multimodalModels: {
+      image: {
+        capability: "image.generate",
+        provider: "",
+        modelName: "",
+        baseUrl: "",
+        hasSecret: false,
+      },
+      video: {
+        capability: "video.generate",
+        provider: "",
+        modelName: "",
+        baseUrl: "",
+        hasSecret: false,
+      },
+    },
   };
 }
 
