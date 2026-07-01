@@ -279,13 +279,15 @@ export function buildAnalyticsReviewViewModelFromOp(
     card("m-shares", "分享数", formatCount(shares), "positive"),
   ];
 
-  // Conversion funnel derived from real numbers: 曝光 = plays / (ctr%), then
-  // 点击/播放 = plays (Douyin's play is the click-through into the video),
-  // 互动 = sum of engagements, 转化 = favorites (收藏 as the conversion proxy).
-  const impressions = ctr > 0 ? Math.round(views / (ctr / 100)) : views;
+  // Conversion funnel from REAL numbers ONLY (§8 不摆假). 抖音 exposes 播放(plays)
+  // as the entry event — 播放即点进,没有独立的「点击」,所以不设冗余的「点击」段。
+  // 「曝光」(impressions)只有在最新采集帧真的带「封面点击率」(ctr) 时才由 曝光=播放/ctr
+  // 推导出来;没有 ctr 就不摆一个 = 播放数的假「曝光」段(那等于假装我们有曝光数据)。
+  // 互动 = 点赞+评论+分享+收藏之和;转化 = 收藏(favorites,作为转化代理)。
   const conversionFunnel = [
-    { label: "曝光", value: impressions },
-    { label: "点击", value: views },
+    ...(ctr > 0
+      ? [{ label: "曝光", value: Math.round(views / (ctr / 100)) }]
+      : []),
     { label: "播放", value: views },
     { label: "互动", value: interactions },
     { label: "转化", value: favorites },

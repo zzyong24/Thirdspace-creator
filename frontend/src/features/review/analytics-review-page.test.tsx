@@ -555,12 +555,14 @@ describe("AnalyticsReviewPage ECharts (T-035b)", () => {
     expect(option.series[0].data).toEqual([1000, 1800, 2600]);
   });
 
-  it("转化漏斗 renders via ECharts funnel series with the REAL 5 stages", async () => {
+  it("转化漏斗 renders via ECharts funnel series with the REAL (ctr-derived) stages", async () => {
+    // Honest funnel shape (§8): 曝光 present only when ctr is real (曝光=播放/ctr);
+    // 抖音 has no separate 点击 event (播放即点进) → no 点击 stage. Here ctr is real,
+    // so the fuller 4-stage shape 曝光→播放→互动→转化 is exercised.
     const vm: AnalyticsViewModelType = {
       ...(await baseVm()),
       conversionFunnel: [
         { label: "曝光", value: 50000 },
-        { label: "点击", value: 27760 },
         { label: "播放", value: 27760 },
         { label: "互动", value: 3200 },
         { label: "转化", value: 480 },
@@ -582,17 +584,19 @@ describe("AnalyticsReviewPage ECharts (T-035b)", () => {
     expect(option.series[0].type).toBe("funnel");
     expect(option.series[0].data.map((d) => d.name)).toEqual([
       "曝光",
-      "点击",
       "播放",
       "互动",
       "转化",
     ]);
     expect(option.series[0].data.map((d) => d.value)).toEqual([
-      50000, 27760, 27760, 3200, 480,
+      50000, 27760, 3200, 480,
     ]);
-    // The stage list (accessible fallback) still lists 5 rows.
+    // The stage list (accessible fallback) lists exactly the passed stages —
+    // never a fabricated 点击 row.
+    const rows = funnel.querySelectorAll('[data-slot="conversion-funnel-row"]');
+    expect(rows).toHaveLength(4);
     expect(
-      funnel.querySelectorAll('[data-slot="conversion-funnel-row"]'),
-    ).toHaveLength(5);
+      Array.from(rows).some((r) => (r.textContent ?? "").includes("点击")),
+    ).toBe(false);
   });
 });

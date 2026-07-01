@@ -5,10 +5,12 @@
  * rendered with an ECharts `funnel` series (T-035b, replacing the inline-SVG
  * polygon funnel).
  *
- * The data is REAL (task §2): 曝光 → 点击 → 播放 → 互动 → 转化, derived in the
- * view-model from the project's真 plays / interactions / favorites. This
- * component is purely presentational — it renders the funnel from the passed
- * stages and does not fabricate any value.
+ * The data is REAL (task §2), derived in the view-model from the project's 真
+ * plays / interactions / favorites: 播放 → 互动 → 转化, with a leading 曝光 stage
+ * ONLY when a real 封面点击率(ctr) is present to derive it (曝光 = 播放/ctr). 抖音
+ * 没有独立「点击」事件(播放即点进),故不设「点击」段;无 ctr 时也不摆假「曝光」。
+ * The stage count is therefore variable (3–4). This component is purely
+ * presentational — it renders whatever stages are passed and fabricates nothing.
  *
  * Each stage takes a distinct chart token so the descending funnel is legible;
  * a tooltip shows the raw count. The wrapping `<article data-slot="conversion-

@@ -92,9 +92,13 @@ describe("AnalyticsReviewPage derived metrics (R1-4)", () => {
     expect(commentsCard?.value).toBe(comments.toLocaleString());
   });
 
-  it("derives the conversion funnel top stage from total views", () => {
+  it("derives an honest funnel (no fabricated 曝光/点击/转化 fractions)", () => {
     const views = aggregateMetric(PROJECT_ID, "views");
     const vm = buildAnalyticsReviewViewModel(PROJECT_ID);
+    // The canonical dataset only has views/likes/comments — no favorites/ctr —
+    // so the honest fixture funnel is exactly 播放 → 互动 (no invented 曝光/点击/
+    // 转化 stages). 播放 = total views on top.
+    expect(vm.conversionFunnel.map((s) => s.label)).toEqual(["播放", "互动"]);
     expect(vm.conversionFunnel[0]?.value).toBe(views);
   });
 
@@ -170,7 +174,8 @@ describe("AnalyticsReviewPage interactions", () => {
     const beforeRows = container.querySelectorAll(
       '[data-slot="conversion-funnel-row"]',
     ).length;
-    expect(beforeRows).toBe(5);
+    // Honest fixture funnel = 播放 → 互动 (2 stages; no fabricated 曝光/点击/转化).
+    expect(beforeRows).toBe(2);
     // The 观众分析 tab maps to the 7d window — the views-trend list grows
     // from the default to the trailing 7 points.
     const audienceTab = container.querySelector<HTMLButtonElement>(
@@ -193,9 +198,10 @@ describe("AnalyticsReviewPage interactions", () => {
     );
     fireEvent.click(platformTab!);
     expect(platformTab!.getAttribute("data-pressed")).toBe("true");
+    // Funnel stays populated after the window switch (honest fixture = 2 stages).
     expect(
       container.querySelectorAll('[data-slot="conversion-funnel-row"]').length,
-    ).toBe(5);
+    ).toBeGreaterThan(0);
   });
 
   it("toggles the primary chart tab", () => {

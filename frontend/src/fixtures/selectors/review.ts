@@ -235,10 +235,13 @@ function buildViewsTrend(
 }
 
 // ---------------------------------------------------------------------------
-// Conversion funnel (5 stages, monotonically decreasing) — derived from
-// the project's aggregated metrics. The top of the funnel (曝光) is the
-// total views; each subsequent stage is a deterministic fraction so the
-// stages stay monotonically decreasing and end at the engagement count.
+// Conversion funnel — REAL stages ONLY (§8 不摆假). The canonical dataset carries
+// exactly three metric keys (views / likes / comments), so the only honest funnel
+// is 播放(views) → 互动(likes+comments). We do NOT fabricate 曝光/点击/转化 stages
+// via invented fractions (the old 0.55/0.34/0.18 conversion rates were made up).
+// 抖音 has no separate 点击 event either (播放即点进). Real projects go through the
+// op path (buildAnalyticsReviewViewModelFromOp), which adds a 转化 stage from real
+// favorites and a 曝光 stage when a real 封面点击率 is present.
 // ---------------------------------------------------------------------------
 
 function buildConversionFunnel(
@@ -248,17 +251,9 @@ function buildConversionFunnel(
   const views = sumMetricForPublications(publicationIds, "views");
   const likes = sumMetricForPublications(publicationIds, "likes");
   const comments = sumMetricForPublications(publicationIds, "comments");
-  const exposure = views;
-  const clicks = Math.round(views * 0.55);
-  const plays = Math.round(views * 0.34);
-  const interactions = likes + comments;
-  const conversions = Math.round(interactions * 0.18);
   return [
-    { label: "曝光", value: exposure },
-    { label: "点击", value: clicks },
-    { label: "播放", value: plays },
-    { label: "互动", value: interactions },
-    { label: "转化", value: conversions },
+    { label: "播放", value: views },
+    { label: "互动", value: likes + comments },
   ];
 }
 
