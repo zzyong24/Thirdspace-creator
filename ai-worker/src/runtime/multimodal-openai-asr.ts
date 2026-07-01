@@ -28,12 +28,18 @@ const REAL_DEPS: OpenaiAsrAdapterDeps = {
 };
 
 /**
- * 拼出转写端点 URL。用户配的 baseUrl 可能是裸域名(`https://api.siliconflow.cn`)也可能已带
- * `/v1`(SPEC §5.1 建议值 `https://api.siliconflow.cn/v1`)——两者都归一到
- * `{origin}/v1/audio/transcriptions`,不重复 `/v1`。null → 走 provider 默认端点。
+ * 拼出转写端点 URL。用户配的 baseUrl 三种都要 robust 归一,不重复路径:
+ *   ① 裸域名 `https://api.siliconflow.cn` → `{origin}/v1/audio/transcriptions`
+ *   ② 带 `/v1` `https://api.siliconflow.cn/v1` → `{origin}/v1/audio/transcriptions`(不重复 /v1)
+ *   ③ **已是完整端点** `https://api.siliconflow.cn/v1/audio/transcriptions` → **原样用**
+ *      (否则再拼一次 `/v1/audio/transcriptions` → 双路径 404,真机踩过)
+ * null → 走 provider 默认端点。
  */
 function transcriptionsUrl(spec: MultimodalSpec): string {
   const trimmed = (spec.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
+  // ③ baseUrl 已指向转写端点(含 /audio/transcriptions)→ 直接用,别再拼。
+  if (trimmed.endsWith("/audio/transcriptions")) return trimmed;
+  // ① / ② 归一:去掉尾部 /v1 再补全,避免重复 /v1。
   const root = trimmed.endsWith("/v1") ? trimmed.slice(0, -"/v1".length) : trimmed;
   return `${root}/v1/audio/transcriptions`;
 }
