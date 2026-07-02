@@ -76,6 +76,99 @@ export interface ResearchDataClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+  // [T-053 断点④] 读 T-030 重建管线落的 trend_analysis artifact → 趋势与背景卡。
+  listArtifacts?(input: {
+    params: { projectId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  listArtifactVersions?(input: {
+    params: { artifactId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+}
+
+// trend_analysis artifact 当前版本 contentData 的结构(reconstruct-runner renderResearch
+// 落库形状:{ coreTopic, keyPoints[], cases[], dataPoints[{stat,note}], reconstructed })。
+interface TrendAnalysisData {
+  readonly coreTopic?: string;
+  readonly keyPoints?: ReadonlyArray<string>;
+  readonly dataPoints?: ReadonlyArray<{ stat?: string; note?: string }>;
+}
+
+/**
+ * [T-053 断点④] 研究页读重建产物:项目的 trend_analysis artifact(T-030 auto-fill
+ * 管线物化的研究重建包)→ 「趋势与背景」卡片。planning 页早已读同管线的 thesis_tree,
+ * 研究页此前读不到(同管线两页待遇不同,审计主题 7)。取最高 versionNumber 版本的
+ * contentData;无 artifact / 无版本 / 读失败 → [](诚实空)。
+ */
+async function readTrendCards(
+  client: ResearchDataClient,
+  projectId: string,
+): Promise<ResearchViewModel["trendCards"]> {
+  if (!client.listArtifacts || !client.listArtifactVersions) return [];
+  try {
+    const listed = await client.listArtifacts({
+      params: { projectId },
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    });
+    const artifacts = (Array.isArray(listed) ? listed : []) as Array<{
+      id: string;
+      artifactType: string;
+    }>;
+    const trend = artifacts.find((a) => a.artifactType === "trend_analysis");
+    if (!trend) return [];
+    const versionsRaw = await client.listArtifactVersions({
+      params: { artifactId: trend.id },
+      query: { page: 1, pageSize: 50 },
+      body: undefined,
+    });
+    const versions = (Array.isArray(versionsRaw) ? versionsRaw : []) as Array<{
+      versionNumber: number;
+      contentData?: Record<string, unknown> | null;
+    }>;
+    if (versions.length === 0) return [];
+    const head = versions.reduce((a, b) =>
+      b.versionNumber > a.versionNumber ? b : a,
+    );
+    const data = (head.contentData ?? {}) as TrendAnalysisData;
+    const cards: Array<ResearchViewModel["trendCards"][number]> = [];
+    if (typeof data.coreTopic === "string" && data.coreTopic.trim()) {
+      cards.push({
+        id: `trend-${trend.id}-core`,
+        title: "核心主题 · AI 重建",
+        metric: "",
+        description: data.coreTopic.trim(),
+        tone: "info",
+      });
+    }
+    for (const [i, d] of (data.dataPoints ?? []).entries()) {
+      const stat = typeof d.stat === "string" ? d.stat.trim() : "";
+      if (!stat) continue;
+      cards.push({
+        id: `trend-${trend.id}-dp-${i}`,
+        title: "数据点 · AI 重建",
+        metric: stat,
+        description: typeof d.note === "string" ? d.note : "",
+        tone: "positive",
+      });
+    }
+    for (const [i, p] of (data.keyPoints ?? []).entries()) {
+      if (typeof p !== "string" || !p.trim()) continue;
+      cards.push({
+        id: `trend-${trend.id}-kp-${i}`,
+        title: "要点 · AI 重建",
+        metric: "",
+        description: p.trim(),
+        tone: "info",
+      });
+    }
+    return cards;
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -234,9 +327,9 @@ export async function buildResearchWorkspaceViewModel(
       title: project.title,
       summary: project.brief || NO_BRIEF_PLACEHOLDER,
     },
-    // [T-050] 无真实来源的区块诚实置空(趋势卡/相关标签/证据链此波无真源),
-    // demo 内容不再注入任何项目。
-    trendCards: [],
+    // [T-053 断点④] 趋势卡接 T-030 重建的 trend_analysis 真产物;无重建包 → 空。
+    // 相关标签/证据链此波仍无真源,诚实置空([T-050] demo 注入退役)。
+    trendCards: await readTrendCards(client, projectId),
     relatedTags: [],
     // The type-tab list is a static taxonomy — always the fixture's.
     sourceTabs: fixtureShell.sourceTabs,

@@ -137,6 +137,51 @@ export interface ReviewDataClient {
     query: { limit: number };
     body: undefined;
   }): Promise<unknown>;
+  // [T-053 断点③] 项目复盘记录(reviews.list)—— 复盘页「复盘记录」区读真。
+  listReviews?(input: {
+    params: { projectId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+}
+
+// Subset of `reviewResource` (reviews.list).
+interface ReviewRowDto {
+  readonly id: string;
+  readonly reviewType: "project" | "output";
+  readonly status: string;
+  readonly periodStart: string;
+  readonly periodEnd: string;
+  readonly createdAt: string;
+  readonly completedAt: string | null;
+}
+
+/**
+ * [T-053 断点③] 项目的真实复盘记录 → 「复盘记录」条目。此前该区 fixture-only
+ * (契约没有按项目列 reviews 的读 op),用户完成的复盘永远显示不出来。
+ * completed → positive;进行中 → neutral。读失败 → [](诚实空)。
+ */
+async function readReviewHistory(
+  client: ReviewDataClient,
+  projectId: string,
+): Promise<AnalyticsViewModel["reviewHistory"]> {
+  if (!client.listReviews) return [];
+  try {
+    const listed = await client.listReviews({
+      params: { projectId },
+      query: undefined,
+      body: undefined,
+    });
+    const rows = (Array.isArray(listed) ? listed : []) as ReviewRowDto[];
+    return rows.map((r) => ({
+      id: r.id,
+      title: `${r.reviewType === "project" ? "项目复盘" : "作品复盘"} · ${r.periodStart.slice(0, 10)} ~ ${r.periodEnd.slice(0, 10)}`,
+      completedAt: r.completedAt ?? r.createdAt,
+      tone: r.status === "completed" ? ("positive" as const) : ("neutral" as const),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 // Subset of `audienceSignalResource` (publications.comments.list) — 复盘每作品评论读侧。
@@ -348,9 +393,13 @@ export async function buildReviewWorkspaceViewModel(
   // publication_id 空 → 查不到 → 诚实空态(去任务中心配「抓我作品评论」重采)。绝不摆假评论。
   const comments = await fetchReviewComments(client, snapshots);
 
+  // [T-053 断点③] 复盘记录接真(reviews.list):完成/进行中的真 review 都列出;空就空。
+  const reviewHistory = await readReviewHistory(client, projectId);
+
   return {
     ...base,
     aiAnalysis,
+    reviewHistory,
     // REV-1: omit the field entirely when there is no real revenue data so the
     // page renders the honest empty state (optional, additive field).
     ...(revenue ? { revenue } : {}),

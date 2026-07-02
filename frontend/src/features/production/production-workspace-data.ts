@@ -74,6 +74,12 @@ export interface ProductionDataClient {
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
+  // [T-053 断点②] 「开始制作」CTA 用项目标题当产出题。
+  getProject(input: {
+    params: { projectId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
   listOutputs(input: {
     params: { projectId: string };
     query: undefined;

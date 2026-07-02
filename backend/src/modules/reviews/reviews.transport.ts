@@ -21,6 +21,7 @@ import type { ReviewsService } from "./reviews.service";
 
 export const REVIEWS_OP_IDS = [
   "reviews.create",
+  "reviews.list",
   "reviews.get",
   "reviews.insights.create",
   "reviews.complete",
@@ -52,6 +53,10 @@ export function createReviewsTransport(
           };
           const review = await service.createReview(ctx, p.projectId ?? "", b);
           return { data: review, meta: { requestId } };
+        }
+        case "reviews.list": {
+          const reviews = await service.listReviews(ctx, p.projectId ?? "");
+          return { data: reviews, meta: { requestId } };
         }
         case "reviews.get": {
           const review = await service.getReview(ctx, p.reviewId ?? "");

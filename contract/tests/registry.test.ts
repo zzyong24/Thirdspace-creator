@@ -75,6 +75,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/analytics/projects/:projectId"],
   ["GET", "/analytics/dashboard"],
   ["POST", "/projects/:projectId/reviews"],
+  // [T-053 断点③] 复盘记录列表读(复盘页「复盘记录」区)。
+  ["GET", "/projects/:projectId/reviews"],
   ["GET", "/reviews/:reviewId"],
   ["POST", "/reviews/:reviewId/insights"],
   ["POST", "/reviews/:reviewId/complete"],

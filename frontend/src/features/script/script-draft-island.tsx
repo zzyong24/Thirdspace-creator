@@ -14,6 +14,7 @@
 import * as React from "react";
 
 import { AdoptCandidateCard } from "@/components/ai/adopt-candidate-card";
+import { ensureScriptArtifact } from "./ensure-script-artifact";
 
 interface ScriptShot {
   口播: string;
@@ -71,7 +72,9 @@ export function ScriptDraftIsland({
   topic,
 }: {
   projectId: string;
-  artifactId: string;
+  // [T-053 断点①] null = 项目还没有脚本 artifact —— 岛照常渲染,点「帮我写分镜脚本」
+  // 时经 prepareInput getOrCreate(ensureScriptArtifact),不再整岛消失。
+  artifactId: string | null;
   topic: string;
 }) {
   return (
@@ -81,7 +84,8 @@ export function ScriptDraftIsland({
       startLabel="帮我写分镜脚本"
       runningLabel="分镜 agent 正在按爆款公式编排脚本（可能要一两分钟）…"
       taskType="script.draft"
-      inputData={{ projectId, artifactId, topic }}
+      inputData={{ projectId, topic }}
+      prepareInput={() => ensureScriptArtifact(projectId, artifactId)}
       parseItems={parseShots}
       renderItem={renderShot}
       adoptLabel={(n) => `采纳为新版本（${n} 镜）`}

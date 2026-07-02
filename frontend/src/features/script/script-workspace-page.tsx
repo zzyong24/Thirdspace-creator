@@ -67,7 +67,8 @@ export interface ScriptWorkspacePageProps {
   /**
    * [T-050] The DB-resolved script artifact id (output_script 优先,回退 master_script)。
    * 传了(含 null)就接管 vm.scriptArtifactId —— fixture 查表旁路退役;null = 项目还没有
-   * 脚本 artifact,AI 起草岛暂不渲染(延迟建 artifact 的 ensure 归 T-053)。缺省(测试)保持 vm。
+   * 脚本 artifact([T-053] AI 起草岛照常渲染,点开始时 ensureScriptArtifact getOrCreate)。
+   * 缺省(测试)保持 vm。
    */
   readonly scriptArtifactIdOverride?: string | null;
   /**
@@ -155,6 +156,7 @@ export function ScriptWorkspacePage({
           <ScriptRichEditor
             initialHtml={initialHtml}
             artifactId={scriptArtifactId}
+            projectId={vm.projectId}
           />
           <VersionHistoryStrip
             versions={versions}
@@ -165,13 +167,11 @@ export function ScriptWorkspacePage({
           data-slot="script-right-rail"
           className="flex flex-col gap-card-gap"
         >
-          {scriptArtifactId ? (
-            <ScriptDraftIsland
-              projectId={vm.projectId}
-              artifactId={scriptArtifactId}
-              topic={vm.topic}
-            />
-          ) : null}
+          <ScriptDraftIsland
+            projectId={vm.projectId}
+            artifactId={scriptArtifactId}
+            topic={vm.topic}
+          />
           <OutlineStructureCard items={outline} />
           <AIWritingSuggestionsCard
             items={vm.aiSuggestions}

@@ -83,6 +83,8 @@ export interface ReviewsService {
     body: { reviewType: string; contentOutputId?: string | null },
   ): Promise<ReviewResource>;
   getReview(ctx: RequestContext, reviewId: string): Promise<ReviewResource>;
+  // [T-053 断点③] 项目复盘记录列表(复盘页「复盘记录」区读真)。
+  listReviews(ctx: RequestContext, projectId: string): Promise<ReviewResource[]>;
   createInsight(
     ctx: RequestContext,
     reviewId: string,
@@ -181,6 +183,13 @@ export function createReviewsService(deps: ServiceDeps): ReviewsService {
     async getReview(ctx, reviewId) {
       const row = await repoFor(ctx).getReview(reviewId);
       return toReviewDto(row);
+    },
+
+    async listReviews(ctx, projectId) {
+      // Ownership gate first (cross-user / unknown project → OwnershipError 404).
+      await projects.verifyProjectOwned(ctx, projectId);
+      const rows = await repoFor(ctx).listReviewsByProject(projectId);
+      return rows.map(toReviewDto);
     },
 
     async createInsight(ctx, reviewId, body) {

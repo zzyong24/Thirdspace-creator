@@ -77,6 +77,12 @@ export interface ProductionWorkspacePageProps {
    * 驱动 AI 生成区「未配禁用 + 引导去设置」。Optional:absent(测试/fixture)→ 视为未配。
    */
   readonly multimodalConfig?: ProductionMultimodalConfig;
+  /**
+   * [T-053 断点②] 项目还没有 ContentOutput(wiring 解析不出)时,route 传入的
+   * 「开始制作」CTA(StartProductionIsland)。空态从死文案变成可行动入口 ——
+   * 产出创建后 refresh,wiring 就位,工作台接通。
+   */
+  readonly startProductionSlot?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -90,6 +96,7 @@ export function ProductionWorkspacePage({
   assetLibraryTotal,
   outputAspectRatio,
   multimodalConfig,
+  startProductionSlot,
 }: ProductionWorkspacePageProps) {
   const vm = viewModel ?? buildProductionViewModel(projectId);
   const isEmpty =
@@ -97,23 +104,30 @@ export function ProductionWorkspacePage({
     vm.assets.length === 0 &&
     vm.timeline.length === 0;
   const state = resolvePageState(vm, isEmpty);
+  // [T-053 断点②] 空态门只挡「还没有产出」的项目(wiring 缺失):有产出/production
+  // 就渲染工作台,由各区自己的空态引导(旧逻辑 vm 数据空 = 整页 EmptyState,把刚建完
+  // 产出的项目也挡在录制工作台外 —— 建了产出仍进不去,死锁第二层)。
+  const showEmptyGate = state === "empty" && !wiring;
   return (
     <main
       data-app="creatoros"
       data-page="production"
       data-project-id={vm.projectId}
-      data-page-state={state}
+      data-page-state={showEmptyGate ? "empty" : state === "empty" ? "default" : state}
       className="flex flex-col gap-3"
     >
       {state === "loading" ? (
         <LoadingState label="正在加载制作工作台…" rows={5} />
       ) : state === "error" ? (
         <ErrorState error={vm.error} />
-      ) : state === "empty" ? (
-        <EmptyState
-          title="暂无制作内容"
-          description="该项目尚未进入制作阶段或没有可用素材。"
-        />
+      ) : showEmptyGate ? (
+        <>
+          <EmptyState
+            title="暂无制作内容"
+            description="该项目还没有产出内容。"
+          />
+          {startProductionSlot}
+        </>
       ) : (
         <ProductionInteractiveRegion
           viewModel={vm}

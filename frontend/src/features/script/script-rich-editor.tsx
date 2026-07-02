@@ -28,6 +28,7 @@ import StarterKit from "@tiptap/starter-kit";
 
 import { SectionCard } from "@/components/project/section-card";
 import { client } from "@/lib/contract-client";
+import { ensureScriptArtifact } from "./ensure-script-artifact";
 import { htmlToSections } from "./script-editor-bridge";
 
 type SaveStatus = "saved" | "saving" | "dirty";
@@ -37,9 +38,16 @@ export interface ScriptRichEditorProps {
   readonly initialHtml: string;
   /**
    * 分镜脚本 artifact id。保存按钮把 `getHTML()` 派生的 contentText + contentData
-   * append 成新 ArtifactVersion。null(fixture-only 渲染 / 结构测试)→ 保存只走本地态。
+   * append 成新 ArtifactVersion。
+   * [T-053 断点①] null + 有 projectId → 保存时 ensureScriptArtifact getOrCreate 再落库
+   * (真项目首存不再假成功);null + 无 projectId(结构测试)→ 保存只走本地态。
    */
   readonly artifactId?: string | null;
+  /**
+   * [T-053 断点①] 项目 id —— artifactId 为 null 时保存路径用它 getOrCreate 脚本
+   * artifact(消掉「显示已保存但什么都没存」的假保存)。缺省(测试)保持旧本地态行为。
+   */
+  readonly projectId?: string | null;
   /**
    * 编辑器实例就绪回调(选填)。TipTap 在 jsdom 下不能靠鼠标坐标定位光标(无 layout),
    * 测试用它拿到 editor 句柄,直接走 `editor.commands` 驱动编辑(TipTap 官方推荐的测试方式)。
@@ -153,6 +161,7 @@ const INSERT_BUTTONS: ReadonlyArray<InsertButton> = [
 export function ScriptRichEditor({
   initialHtml,
   artifactId = null,
+  projectId = null,
   onEditorReady,
 }: ScriptRichEditorProps) {
   const router = useRouter();
@@ -236,8 +245,8 @@ export function ScriptRichEditor({
     if (!editor) return;
     const html = editor.getHTML();
     const contentText = editor.getText();
-    if (!artifactId) {
-      // fixture-only 渲染(无 artifactId,结构测试)→ 不打契约,仅本地翻「已保存」。
+    if (!artifactId && !projectId) {
+      // fixture-only 渲染(无 artifactId 也无 projectId,结构测试)→ 不打契约,仅本地翻「已保存」。
       setSaveStatus("saved");
       return;
     }
@@ -249,8 +258,16 @@ export function ScriptRichEditor({
     lastSavedHtmlRef.current = html;
     startTransition(async () => {
       try {
+        // [T-053 断点①] 真项目还没有脚本 artifact → 首存时 getOrCreate 再落库
+        // (消掉「显示已保存但什么都没存」的假保存)。
+        let targetId = artifactId;
+        if (!targetId && projectId) {
+          const ensured = await ensureScriptArtifact(projectId, null);
+          targetId = ensured.artifactId as string;
+        }
+        if (!targetId) throw new Error("no script artifact target");
         await client.createArtifactVersion({
-          params: { artifactId },
+          params: { artifactId: targetId },
           query: undefined,
           body: {
             contentText,
@@ -272,7 +289,7 @@ export function ScriptRichEditor({
         savePendingRef.current = false;
       }
     });
-  }, [artifactId, editor, router]);
+  }, [artifactId, projectId, editor, router]);
 
   return (
     <div data-slot="rich-text-editor">

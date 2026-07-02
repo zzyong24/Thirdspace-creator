@@ -27,6 +27,7 @@
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
 import { ProductionWorkspacePage } from "@/features/production/production-workspace-page";
+import { StartProductionIsland } from "@/features/production/start-production-island";
 import {
   buildProductionWorkspaceViewModel,
   countAssetLibrary,
@@ -154,6 +155,15 @@ export default async function ProductionWorkspaceRoute({
       countAssetLibrary(client),
       resolveMultimodalConfig(session.ctx),
     ]);
+  // [T-053 断点②] 没有产出(wiring 解析不出)→ 传「开始制作」CTA:用户点击建
+  // ContentOutput(write-on-intent),refresh 后 production getOrCreate 就位。
+  const startProductionSlot =
+    wiringResult === undefined ? (
+      <StartProductionIsland
+        projectId={projectId}
+        projectTitle={await resolveProjectTitle(client, projectId)}
+      />
+    ) : undefined;
   return (
     <ProductionWorkspacePage
       projectId={projectId}
@@ -162,6 +172,25 @@ export default async function ProductionWorkspaceRoute({
       assetLibraryTotal={assetLibraryTotal}
       outputAspectRatio={wiringResult?.outputAspectRatio}
       multimodalConfig={multimodalConfig}
+      startProductionSlot={startProductionSlot}
     />
   );
+}
+
+// [T-053 断点②] 「开始制作」建产出时用项目标题当产出题(一稿一产出的主内容)。
+// 读失败退中性题,不挡创建。
+async function resolveProjectTitle(
+  client: ProductionDataClient,
+  projectId: string,
+): Promise<string> {
+  try {
+    const project = (await client.getProject({
+      params: { projectId },
+      query: undefined,
+      body: undefined,
+    })) as { title?: string };
+    return project.title?.trim() || "主内容";
+  } catch {
+    return "主内容";
+  }
 }
