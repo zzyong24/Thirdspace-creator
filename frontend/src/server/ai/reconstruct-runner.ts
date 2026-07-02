@@ -73,7 +73,7 @@ export interface ReconstructRunnerDeps extends ContextDeps {
   /** 物化重建产物(强制 origin='reconstructed')。 */
   artifacts: ReconstructArtifactsPort;
   /**
-   * 结构化节点执行口(默认动态 import ai-worker 的 runStructuredNode + RECONSTRUCT_PROJECT_TEMPLATE)。
+   * 结构化节点执行口(默认动态 import ai-worker 的 runStructuredNode + 运行时 getTemplate("reconstruct.project"))。
    * 抽成注入口是为**确定性单测**(测试传 fake,产固定重建包,不碰真模型)。host 不传即用真节点。
    */
   runNode?: (
@@ -135,11 +135,13 @@ async function defaultRunNode(
   spec: ModelSpec,
   facets: Record<string, string | undefined>,
 ): Promise<ReconstructProjectOutput> {
-  const { modelFor, runStructuredNode, RECONSTRUCT_PROJECT_TEMPLATE } =
+  // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
+  // 让 reconstruct.project 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
+  const { modelFor, runStructuredNode, getTemplate } =
     await import("@creatoros/ai-worker");
   const { object } = await runStructuredNode<ReconstructProjectOutput>({
     model: modelFor(spec),
-    template: RECONSTRUCT_PROJECT_TEMPLATE,
+    template: getTemplate("reconstruct.project"),
     facets,
   });
   return object;

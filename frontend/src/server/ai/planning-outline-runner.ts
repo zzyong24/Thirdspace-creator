@@ -145,11 +145,13 @@ export async function runPlanningOutline(
     // + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),让 MiniMax
     // 也稳定吐可解析结构方案(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败→cancelled)。
     const spec = await deps.resolveModelSpec(ctx, "planning.outline");
-    const { modelFor, runStructuredNode, PLANNING_OUTLINE_TEMPLATE } =
+    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
+    // 让 planning.outline 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
+    const { modelFor, runStructuredNode, getTemplate } =
       await import("@creatoros/ai-worker");
     const { object } = await runStructuredNode<OutlineOutput>({
       model: modelFor(spec),
-      template: PLANNING_OUTLINE_TEMPLATE,
+      template: getTemplate("planning.outline"),
       facets: outlineFacets(context),
     });
     const outline = normalizeOutline(object);

@@ -221,11 +221,13 @@ export async function runTopicEnrich(
     // topic.enrich 模板 + outputSchema)。T-025b:runStructuredNode 绑 generateObject,落空→文本
     // 兜底,让用户默认的 MiniMax 也稳定吐可解析选题卡。顶层是对象,取 object 再 normalize。
     const spec = await deps.resolveModelSpec(ctx, "topic.enrich");
-    const { modelFor, runStructuredNode, TOPIC_ENRICH_TEMPLATE } =
+    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
+    // 让 topic.enrich 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
+    const { modelFor, runStructuredNode, getTemplate } =
       await import("@creatoros/ai-worker");
     const { object } = await runStructuredNode<TopicCardOutput>({
       model: modelFor(spec),
-      template: TOPIC_ENRICH_TEMPLATE,
+      template: getTemplate("topic.enrich"),
       facets: enrichFacets(context, subject),
     });
     const card = normalizeCard(object);

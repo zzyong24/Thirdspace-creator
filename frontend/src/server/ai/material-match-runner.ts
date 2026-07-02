@@ -99,11 +99,13 @@ export async function runMaterialMatch(
     // (原为 "copy.generate" —— 迁移前 LlmCompleter 的 copy-paste 遗留;改回本节点自己的 capability,
     //  未配则回退 default(行为中性),且让用户可单独为素材匹配配模型。)
     const spec = await deps.resolveModelSpec(ctx, "material.match");
-    const { modelFor, runStructuredNode, MATERIAL_MATCH_TEMPLATE } =
+    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
+    // 让 material.match 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
+    const { modelFor, runStructuredNode, getTemplate } =
       await import("@creatoros/ai-worker");
     const { object } = await runStructuredNode<MaterialMatchOutput>({
       model: modelFor(spec),
-      template: MATERIAL_MATCH_TEMPLATE,
+      template: getTemplate("material.match"),
       facets: matchFacets(context, topic),
     });
     const matches = normalizeMatches(object.matches);

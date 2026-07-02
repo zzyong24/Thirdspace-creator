@@ -240,11 +240,13 @@ export async function runCalibrationDiagnose(
     // 让用户默认的 MiniMax 也稳定吐可解析诊断(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败)。
     // normalizeDiagnosis 原样保留 rubricKeys 交集/夹取容错(只换"拿对象"的来源)。
     const spec = await deps.resolveModelSpec(ctx, "calibration.diagnose");
-    const { modelFor, runStructuredNode, CALIBRATION_DIAGNOSE_TEMPLATE } =
+    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
+    // 让 calibration.diagnose 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
+    const { modelFor, runStructuredNode, getTemplate } =
       await import("@creatoros/ai-worker");
     const { object } = await runStructuredNode<DiagnosisOutput>({
       model: modelFor(spec),
-      template: CALIBRATION_DIAGNOSE_TEMPLATE,
+      template: getTemplate("calibration.diagnose"),
       facets: diagnoseFacets(context, subject, rubric.dimensions),
     });
     const diagnosis = normalizeDiagnosis(

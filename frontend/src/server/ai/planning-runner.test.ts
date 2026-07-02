@@ -10,7 +10,8 @@ const runStructuredNode = vi.fn(async () => ({ object: {} }));
 vi.mock("@creatoros/ai-worker", () => ({
   modelFor: vi.fn(() => ({}) as never),
   runStructuredNode,
-  PLANNING_THESIS_TEMPLATE: { id: "planning.thesis" },
+  // T-040b:runner 改运行时 getTemplate(id) 取被覆盖后的 REGISTRY 对象;mock 回传带该 id 的对象。
+  getTemplate: (id: string) => ({ id }),
 }));
 
 import { runPlanningThesis } from "./planning-runner";

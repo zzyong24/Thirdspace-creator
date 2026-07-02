@@ -134,8 +134,6 @@ export async function buildChatAssembly(
     modelFor,
     runTopicNode,
     runTemplatedNode,
-    REVIEW_INSIGHTS_TEMPLATE,
-    CALIBRATION_DIAGNOSE_TEMPLATE,
   } = await import("@creatoros/ai-worker");
   const skill = getTemplate(skillId);
   // 工具白名单层(SPEC §3.2 第 1+2 层):surface 选基础 skill 的白名单,再按按钮层 functionKey
@@ -239,7 +237,8 @@ export async function buildChatAssembly(
       ).join("\n");
       const { text } = await runTemplatedNode({
         model: modelFor(spec),
-        template: CALIBRATION_DIAGNOSE_TEMPLATE,
+        // T-040b:运行时 getTemplate 取被覆盖后的 REGISTRY 对象(非 import 快照),吃服务端覆盖。
+        template: getTemplate("calibration.diagnose"),
         facets: {
           positioning: context.positioningBrief
             ? context.positioningBrief
@@ -277,7 +276,8 @@ export async function buildChatAssembly(
       const spec = await deps.resolveModelSpec(ctx, "review.insights");
       const { text } = await runTemplatedNode({
         model: modelFor(spec),
-        template: REVIEW_INSIGHTS_TEMPLATE,
+        // T-040b:运行时 getTemplate 取被覆盖后的 REGISTRY 对象(非 import 快照),吃服务端覆盖。
+        template: getTemplate("review.insights"),
         facets: reviewFacets(context, effSubject),
       });
       return parseLearnings(text);

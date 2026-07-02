@@ -176,11 +176,13 @@ export async function runPlanningThesis(
     // + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),
     // 让用户默认的 MiniMax 也稳定吐可解析论点树(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败)。
     const spec = await deps.resolveModelSpec(ctx, "planning.thesis");
-    const { modelFor, runStructuredNode, PLANNING_THESIS_TEMPLATE } =
+    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
+    // 让 planning.thesis 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
+    const { modelFor, runStructuredNode, getTemplate } =
       await import("@creatoros/ai-worker");
     const { object } = await runStructuredNode<ThesisTreeOutput>({
       model: modelFor(spec),
-      template: PLANNING_THESIS_TEMPLATE,
+      template: getTemplate("planning.thesis"),
       facets: thesisFacets(context),
     });
     const tree = normalizeThesisTree(object);

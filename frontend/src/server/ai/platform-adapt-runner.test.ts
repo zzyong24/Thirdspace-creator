@@ -10,7 +10,8 @@ const runStructuredNode = vi.fn(async () => ({ object: { drafts: [] } }));
 vi.mock("@creatoros/ai-worker", () => ({
   modelFor: vi.fn(() => ({}) as never),
   runStructuredNode,
-  PLATFORM_ADAPT_TEMPLATE: { id: "platform.adapt" },
+  // T-040b:runner 改运行时 getTemplate(id) 取被覆盖后的 REGISTRY 对象;mock 回传带该 id 的对象。
+  getTemplate: (id: string) => ({ id }),
 }));
 
 import { runPlatformAdapt } from "./platform-adapt-runner";

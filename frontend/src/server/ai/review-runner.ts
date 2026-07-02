@@ -119,11 +119,13 @@ export async function runReviewAnalyze(
     // 用户默认的 MiniMax 也稳定吐可解析经验列表(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败)。
     // 顶层是对象,取 object.learnings 再 normalize(归一逻辑原样保留)。
     const spec = await deps.resolveModelSpec(ctx, "review.insights");
-    const { modelFor, runStructuredNode, REVIEW_INSIGHTS_TEMPLATE } =
+    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
+    // 让 review.insights 的 system/template/tools 也能吃到 skill_config_overrides 的下发覆盖。
+    const { modelFor, runStructuredNode, getTemplate } =
       await import("@creatoros/ai-worker");
     const { object } = await runStructuredNode<ReviewInsightsOutput>({
       model: modelFor(spec),
-      template: REVIEW_INSIGHTS_TEMPLATE,
+      template: getTemplate("review.insights"),
       facets: reviewFacets(context),
     });
     const items = normalizeLearnings(object.learnings);

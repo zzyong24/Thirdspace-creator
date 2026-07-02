@@ -202,11 +202,13 @@ export async function runCalibrationScore(
     // outputSchema **不再手传** —— runStructuredNode 从 registry 取(SPEC §4.2 统一防发散入口,
     // 还吃 JSON Schema 配置覆盖);此处只用泛型把回来的 object 标成 CalibrationScoreOutput。
     const spec = await deps.resolveModelSpec(ctx, "calibration.score");
-    const { modelFor, runStructuredNode, CALIBRATION_SCORE_TEMPLATE } =
+    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
+    // 让 calibration.score 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
+    const { modelFor, runStructuredNode, getTemplate } =
       await import("@creatoros/ai-worker");
     const { object } = await runStructuredNode<CalibrationScoreOutput>({
       model: modelFor(spec),
-      template: CALIBRATION_SCORE_TEMPLATE,
+      template: getTemplate("calibration.score"),
       facets: scoreFacets(
         context,
         prediction.title,

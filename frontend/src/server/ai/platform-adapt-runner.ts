@@ -142,11 +142,13 @@ export async function runPlatformAdapt(
     // schema,落空→文本兜底),让用户默认的 MiniMax 也稳定吐可解析多平台草稿(旧 runTemplatedNode
     // 自由文本路径 MiniMax 下常失败)。顶层是对象,取 object.drafts 再 normalize(归一逻辑原样保留)。
     const spec = await deps.resolveModelSpec(ctx, "script.rewrite");
-    const { modelFor, runStructuredNode, PLATFORM_ADAPT_TEMPLATE } =
+    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
+    // 让 platform.adapt 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
+    const { modelFor, runStructuredNode, getTemplate } =
       await import("@creatoros/ai-worker");
     const { object } = await runStructuredNode<PlatformAdaptOutput>({
       model: modelFor(spec),
-      template: PLATFORM_ADAPT_TEMPLATE,
+      template: getTemplate("platform.adapt"),
       facets: adaptFacets(context, scriptText, platforms),
     });
     const drafts = normalizePlatformDrafts(object.drafts);

@@ -177,11 +177,13 @@ export async function runPositioningGenerate(
     // (外置 positioning.generate 模板 + outputSchema)。T-025b:runStructuredNode 绑 generateObject,
     // 落空→文本兜底,让用户默认的 MiniMax 也稳定吐可解析定位提案。顶层是对象,取 object 再 normalize。
     const spec = await deps.resolveModelSpec(ctx, "positioning.generate");
-    const { modelFor, runStructuredNode, POSITIONING_GENERATE_TEMPLATE } =
+    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
+    // 让 positioning.generate 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
+    const { modelFor, runStructuredNode, getTemplate } =
       await import("@creatoros/ai-worker");
     const { object } = await runStructuredNode<PositioningSuggestionOutput>({
       model: modelFor(spec),
-      template: POSITIONING_GENERATE_TEMPLATE,
+      template: getTemplate("positioning.generate"),
       facets: positioningFacets(context),
     });
     const suggestion = normalizeSuggestion(object);
