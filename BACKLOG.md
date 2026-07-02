@@ -9,7 +9,11 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
-| T-048 | 产品全面审计(逐页/逐钮/逐数据源 + 统一对齐) | 🔨 | docs/product-audit/ | **用户 2026-07-02:「产品怪怪的」**——逐页梳理功能/数据来源/数据流向/交互清单/不合理处成文档,全部完成后统一对齐不一致处,过程排 bug。14 组并行子代理审 22 页 → 每页一档 + 对齐总报告 |
+| T-049 | 审计修复 Wave A:止血(数据破坏+核心路径 bug) | 📋 | [ALIGNMENT §五](docs/product-audit/ALIGNMENT.md) | B1 剥前缀身份丢失+B2 brief 404(统一 href builder)、B3 定位采纳清空 facets(upsert 改 partial-merge+数据恢复)、B4 标题清简介、B10/B12 write-on-read 竞态、B7 NULLS FIRST+B8 热度×100、B17 经验页垃圾清理+富录入、B5 素材上传断链 |
+| T-050 | 审计修复 Wave B:数据清算(治「怪」根源) | 📋 待用户裁决①② | [ALIGNMENT §五/§六](docs/product-audit/ALIGNMENT.md) | dy-proj 66 条双代清算(裁决①删/并)、canonical demo fixture 跨项目泄漏全量隔离(裁决②)、fixture 查表旁路改读 DB(脚本 artifactId/素材元数据/starred)、fixture 兜底全站改 ErrorState、搜索索引接真作品 |
+| T-051 | 审计修复 Wave C:假交互清算 | 📋 | [ALIGNMENT §五](docs/product-audit/ALIGNMENT.md) | 死 tabs×7 接真或砍、项目列表筛选/排序/视图三件套、写真读假环×6(偏好/制作模式/开关/章节/日历/收藏)、死按钮清单(/copilot 404/⌘K/查看全部)、搜索页交互倒置 |
+| T-052 | 审计修复 Wave D:术语对齐+违宪处置 | 📋 待用户裁决③④⑤ | [ALIGNMENT §三/§四/§六](docs/product-audit/ALIGNMENT.md) | monetization 处置(裁决③)、新建项目表单 §8 裁字段(裁决④)、孤儿页 /calendar /accounts(裁决⑤)、STAGE_LABELS 单一词表/动词/数字 formatter/三个「现在」统一、悬空接口盘点(接 UI 或删 op)、确认门模式明文分级 |
+| T-048 | 产品全面审计(逐页/逐钮/逐数据源 + 统一对齐) | ✅ | [ALIGNMENT](docs/product-audit/ALIGNMENT.md) + [pages/](docs/product-audit/pages/) | 14 组代理审 22 页(885 tool calls,curl 真机验证):394 原始发现(147 设计/117 bug/130 对齐)→ 聚类为 7 大主题+30 条 high bug+13 组术语分裂+5 违宪项;根源诊断=数据三代并存+假交互流行+写真读假;修复拆 T-049~052,5 个裁决点待用户拍板 |
 | T-047 | CodeGraph 纳入硬流程(检索先行+任务边界重建索引) | ✅ | orchestrator `rules/code-retrieval-rules.md` + CLAUDE.md 执行策略 | 诚实盘点:此前找代码全 grep、索引从不更新(sync 谎报最新+混 9200 非源码文件)。固化:检索 query/callers/impact 先行(grep 只兜字面量)、任务 ✅ 时 `index --force`+新符号验证;已重建(947 纯源码文件) |
 | T-046 | 去登录门槛:本机单用户直通(打开即用) | ✅ | — | 无/失效 session 一律以本机主用户(最早创建)直通:identity +findLocalUser/resolveLocalContext、resolveSession+resolveRequestContext fallback(页面单点+dispatch/chat/blob/me 四 route)、/login /register 307 回首页;8 旧 401/redirect 断言改守新语义,全测+tsc 绿;真机验清 cookie 直进首页 |
 | T-045 | 激活码授权 + 本机单用户模式(完整方案) | ⏸️ 用户暂缓·gate CONCERNS 已落档 | [activation-single-user](docs/superpowers/specs/2026-07-02-activation-single-user-design.md) + [REVIEW_LEDGER](docs/superpowers/specs/REVIEW_LEDGER.md) | 用户暂缓。reviewer CONCERNS(3 major:middleware 现状描述错/seed 用户交互未定义/activate-setup 时序矛盾,详见 SPEC 顶部裁决注);恢复时先处置再在 T-046 直通层上叠激活码/向导 |
