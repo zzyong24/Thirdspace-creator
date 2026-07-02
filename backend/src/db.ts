@@ -17,7 +17,8 @@ import * as reviewsSchema from "./schema/reviews";
 import * as learningsSchema from "./schema/learnings";
 import * as aiSchema from "./schema/ai";
 import * as positioningSchema from "./schema/positioning";
-import * as monetizationSchema from "./schema/monetization";
+// [T-052 裁决③] monetizationSchema 已随变现中心物理删除(宪法 §8);
+// 迁移基线里的 products 等表留存无害,schema 联合不再覆盖它们。
 import * as candidateSchema from "./schema/candidate";
 import * as calibrationSchema from "./schema/calibration";
 import * as platformAccountSchema from "./schema/platform-account";
@@ -60,7 +61,6 @@ const schema = {
   ...learningsSchema,
   ...aiSchema,
   ...positioningSchema,
-  ...monetizationSchema,
   ...candidateSchema,
   ...calibrationSchema,
   ...platformAccountSchema,

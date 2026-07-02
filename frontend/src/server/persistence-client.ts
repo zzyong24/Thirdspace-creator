@@ -233,13 +233,6 @@ import {
   type PositioningStatementRow,
 } from "@creatoros/backend/modules/positioning";
 import {
-  createMonetizationService,
-  createMonetizationTransport,
-  createMonetizationRepository,
-  MONETIZATION_OP_IDS,
-  type ProductRow as MonetizationProductRow,
-} from "@creatoros/backend/modules/monetization";
-import {
   createCandidateService,
   createCandidateTransport,
   createCandidateRepository,
@@ -349,13 +342,7 @@ const PERSISTED_OPS = new Set<string>([
   // 回流 formalizes through createStatementVersion (createdByType:'ai') — no parallel
   // candidate machine (C-3).
   ...POSITIONING_OP_IDS,
-  // Monetization (module 18, Wave 5+) — 七步⑦ 变现/漏斗中心. products.* /
-  // products.offers.* / outputs.products.* / leads.* / leads.conversions.* /
-  // monetization.funnel.*, all user-scoped. Price decoupled from Product (offer
-  // append-only); funnel ALWAYS surfaces an honest unattributed bucket (§4.5, never
-  // force-allocated). The conversion → §4.6 MetricValue fan-out + notify + index reach
-  // peers via injected ports (no cross-module repo import).
-  ...MONETIZATION_OP_IDS,
+  // [T-052 裁决③] Monetization(module 18)已随变现中心物理删除(宪法 §8)。
   // Candidate (module 19, Wave 5) — 七步③ 选题情报层. candidates.list/create/get/
   // patch/promote + audienceSignals.list/linkToCandidate, all user-scoped. AI-sourced
   // candidates arrive via the service's createFromAIResult (C-3 formalize — no
@@ -461,9 +448,6 @@ const AI_OPS = new Set<string>(AI_OP_IDS);
 
 // The set of op ids owned by the positioning module's transport (module 17).
 const POSITIONING_OPS = new Set<string>(POSITIONING_OP_IDS);
-
-// The set of op ids owned by the monetization module's transport (module 18).
-const MONETIZATION_OPS = new Set<string>(MONETIZATION_OP_IDS);
 
 // The set of op ids owned by the candidate module's transport (module 19).
 const CANDIDATE_OPS = new Set<string>(CANDIDATE_OP_IDS);
@@ -662,7 +646,6 @@ interface PersistenceBundle {
   learnings: Transport;
   ai: Transport;
   positioning: Transport;
-  monetization: Transport;
   candidate: Transport;
   calibration: Transport;
   platformAccount: Transport;
@@ -2763,73 +2746,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
 
-  // Monetization (module 18, Wave 5+): the service builds a per-ctx user-scoped repo
-  // over the shared db (the repo bakes userId in; the service mints one per request).
-  // The transport returns this ONE shared service. It reaches peer modules ONLY through
-  // injected narrow ports (no cross-module repo import, SPEC §22), satisfied here by
-  // the peers' public services / the shared projects repo (the composition root, not
-  // the module, owns these adapters):
-  //   - projects.assertOutputOwned → projectsRepo.getOutput (output-ownership gate;
-  //     a cross-user / unknown outputId throws OwnershipError → 404 before any link /
-  //     lead row references it),
-  //   - ingestion.assertRunExists → ingestionService.getRun (RISK-005 — the run must
-  //     be a REAL IngestionRun; cross-user / unknown → OwnershipError),
-  //   - analytics.recordConversionMetric → BEST-EFFORT no-op this wave: Analytics has
-  //     not yet shipped the §4.6 conversion metric_key write (OQ3). The seam exists so
-  //     the fan-out lands in ONE place the moment Analytics exposes it; swallow until
-  //     then (the ConversionEvent is the source of truth either way),
-  //   - search.indexProduct → searchService.upsertDocument (best-effort post-commit),
-  //   - notifications.notifyConversion → BEST-EFFORT no-op this wave: Notifications
-  //     exposes no public notify-write yet; the seam is wired for when it lands.
-  // Clock/ids share the deterministic `deps` (createSeq keeps product/offer/lead/
-  // conversion/cop ids collision-free across requests).
-  const monetizationService = createMonetizationService({
-    db,
-    now: deps.now,
-    nextId: deps.nextId,
-    projects: {
-      assertOutputOwned: async (ctx, outputId) => {
-        // getOutput joins output→project and gates ownership (→ OwnershipError → 404).
-        await projectsRepo.getOutput(ctx, outputId);
-      },
-    },
-    ingestion: {
-      assertRunExists: async (ctx, runId) => {
-        // getRun is the ownership-gated IngestionRun read (cross-user / unknown →
-        // OwnershipError). RISK-005: reject 悬空 ingestionRunId before any survey
-        // Lead/ConversionEvent references it.
-        await ingestionService.getRun(ctx, runId);
-      },
-    },
-    analytics: {
-      // §4.6 conversion metric_key write not yet on the Analytics public surface
-      // (OQ3) — swallow until it lands; the ConversionEvent remains the source of
-      // truth, so this is non-destructive (best-effort fan-out, SPEC §11).
-      recordConversionMetric: async () => {},
-    },
-    search: {
-      indexProduct: async (ctx, product) => {
-        // Best-effort post-commit index (SPEC §11) — a failure must not roll back the
-        // product write, so swallow.
-        try {
-          await searchService.upsertDocument(ctx, {
-            entityType: "product",
-            entityId: product.id,
-            title: product.name,
-            body: `${product.kind} ${product.targetPersona ?? ""}`.trim(),
-          });
-        } catch {
-          // intentionally swallowed — search index is best-effort.
-        }
-      },
-    },
-    notifications: {
-      // No public notify-write on the Notifications surface this wave — best-effort
-      // no-op seam (wired when Notifications exposes notify).
-      notifyConversion: async () => {},
-    },
-  });
-  const monetization = createMonetizationTransport(() => monetizationService);
+  // [T-052 裁决③] Monetization service/transport 装配段已随变现中心物理删除(宪法 §8)。
 
   // Candidate (module 19, Wave 5): the service builds a per-ctx user-scoped repo over
   // the shared db (the repo bakes userId in; the service mints one per request). The
@@ -4124,48 +4041,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   await positioningSeedRepo.seedProfiles([canonicalProfile]);
   await positioningSeedRepo.seedStatements(canonicalStatements);
 
-  // Seed the canonical monetization products (module 18): two 柔性产品 owned by the
-  // canonical user so the /monetization 变现中心 page resolves real product rows under
-  // the seeded login (foundation §2). The funnel + leads start empty (honest漏损 — the
-  // unattributed bucket is 0/0 until登记/ingest). seedProducts is onConflictDoNothing
-  // → a re-built singleton never double-seeds. A user-scoped seed repo is minted.
-  const monetizationSeedRepo = createMonetizationRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-  });
-  const canonicalProducts: MonetizationProductRow[] = [
-    {
-      id: "product-canonical-1",
-      userId: canonicalDataset.user.id,
-      name: "AI 工程训练营",
-      kind: "训练营",
-      tier: "核心",
-      deliveryWeight: "重",
-      targetPersona: "想系统落地 AI 的一线开发者",
-      status: "active",
-      createdAt: FIXED_NOW_ISO,
-      updatedAt: FIXED_NOW_ISO,
-    },
-    {
-      id: "product-canonical-2",
-      userId: canonicalDataset.user.id,
-      name: "论文精读陪跑（1v1）",
-      kind: "咨询",
-      tier: "高端",
-      deliveryWeight: "重",
-      targetPersona: "需要深度指导的研究者",
-      status: "active",
-      createdAt: FIXED_NOW_ISO,
-      updatedAt: FIXED_NOW_ISO,
-    },
-  ];
-  await monetizationSeedRepo.seedProducts(canonicalProducts);
+  // [T-052 裁决③] canonical monetization products 种子(module 18)已随变现中心物理删除。
 
   // Seed the canonical candidates (module 19): three 选题候选 owned by the canonical
   // user so the /topics 选题候选池 page resolves real rows under the seeded login
   // (foundation §2) — one idea, one trend (AI-sourced provenance), one demand, with
-  // varied predicted/positioning/demand scores so the monetization-weighted sort is
-  // observable. Deterministic ids/clock (FIXED_NOW_ISO). seedCandidates is
+  // varied predicted/positioning/demand scores so the composite-score sort is
+  // observable. [T-052 裁决③] 排序措辞随变现中心移除改为「综合评分」。 Deterministic ids/clock (FIXED_NOW_ISO). seedCandidates is
   // onConflictDoNothing → a re-built singleton never double-seeds.
   const candidateSeedRepo = createCandidateRepository(db, {
     ...deps,
@@ -4665,7 +4547,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     learnings,
     ai,
     positioning,
-    monetization,
     candidate,
     calibration,
     platformAccount,
@@ -4749,10 +4630,6 @@ async function getAi(): Promise<Transport> {
 
 async function getPositioning(): Promise<Transport> {
   return (await getBundle()).positioning;
-}
-
-async function getMonetization(): Promise<Transport> {
-  return (await getBundle()).monetization;
 }
 
 async function getCandidate(): Promise<Transport> {
@@ -4969,16 +4846,7 @@ export const compositeTransport: Transport = {
       const positioning = await getPositioning();
       return positioning.request(endpoint, input, ctx);
     }
-    // Monetization ops (module 18, Wave 5+) — products.* / products.offers.* /
-    // outputs.products.* / leads.* / leads.conversions.* / monetization.funnel.*
-    // served by the module's own user-scoped transport over the SAME pglite store
-    // (foundation §1 registry). Price decoupling + honest funnel run inside the
-    // service; peer fan-out (Projects/Ingestion/Analytics/Search/Notifications)
-    // reaches modules via injected ports. No ctx ⇒ AuthenticationError.
-    if (MONETIZATION_OPS.has(endpoint.id)) {
-      const monetization = await getMonetization();
-      return monetization.request(endpoint, input, ctx);
-    }
+    // [T-052 裁决③] Monetization ops 分发分支已随变现中心物理删除(宪法 §8)。
     // Candidate ops (module 19, Wave 5) — candidates.list/create/get/patch/promote +
     // audienceSignals.list/linkToCandidate served by the module's own user-scoped
     // transport over the SAME pglite store (foundation §1 registry). The lightweight

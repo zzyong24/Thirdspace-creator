@@ -96,12 +96,12 @@ interface ReviewDto {
 // + views trend; the remaining tabs reuse the default ("all") window.
 // ---------------------------------------------------------------------------
 
+// [T-052 裁决③] revenue(收益分析)tab 随变现中心物理删除。
 const TAB_WINDOW: Readonly<Record<string, AnalyticsWindow>> = {
   overview: "all",
   platform: "30d",
   audience: "7d",
   content: "30d",
-  revenue: "all",
   comparison: "all",
   experience: "all",
 };

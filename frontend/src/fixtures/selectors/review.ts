@@ -35,12 +35,12 @@ const WINDOW_POINTS: Readonly<Record<AnalyticsWindow, number>> = {
 // Locked tab descriptors (page-specs §10)
 // ---------------------------------------------------------------------------
 
+// [T-052 裁决③] 「收益分析」tab 随变现中心物理删除(宪法 §8)。
 const ANALYTICS_TABS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
   { id: "overview", label: "整体表现" },
   { id: "platform", label: "平台表现" },
   { id: "audience", label: "观众分析" },
   { id: "content", label: "内容分析" },
-  { id: "revenue", label: "收益分析" },
   { id: "comparison", label: "对比分析" },
   { id: "experience", label: "经验沉淀" },
 ];

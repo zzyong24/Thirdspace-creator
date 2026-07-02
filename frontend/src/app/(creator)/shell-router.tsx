@@ -186,7 +186,8 @@ export function resolveRoute(
     return {
       headerMode: "global",
       pageTitle: "选题候选池",
-      pageDescription: "AI / 受众信号 → 按变现潜力排序的待选选题 · 一键晋升为 Project（七步③）",
+      // [T-052 裁决③] 「按变现潜力排序」随变现中心移除改为「按综合评分排序」。
+      pageDescription: "AI / 受众信号 → 按综合评分排序的待选选题 · 一键晋升为 Project（七步③）",
       contextualCardVariant: "assistant",
     };
   }

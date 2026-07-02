@@ -34,22 +34,8 @@ export {
   type PositioningGateResultResource,
   type PositioningCenterResource,
 } from "./resources/positioning";
-export {
-  productResource,
-  offerResource,
-  leadResource,
-  conversionEventResource,
-  contentOutputProductResource,
-  funnelStageResource,
-  monetizationFunnelResource,
-  type ProductResource,
-  type OfferResource,
-  type LeadResource,
-  type ConversionEventResource,
-  type ContentOutputProductResource,
-  type FunnelStageResource,
-  type MonetizationFunnelResource,
-} from "./resources/monetization";
+// [T-052 裁决③] monetization resource 导出(product/offer/lead/conversionEvent/
+// contentOutputProduct/funnelStage/monetizationFunnel)已随变现中心物理删除(宪法 §8)。
 export {
   candidateResource,
   candidateCard,

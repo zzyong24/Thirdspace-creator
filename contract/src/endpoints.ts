@@ -16,7 +16,7 @@ import { notificationsOperations } from "./operations/notifications";
 import { settingsOperations } from "./operations/settings";
 import { ingestionOperations } from "./operations/ingestion";
 import { positioningOperations } from "./operations/positioning";
-import { monetizationOperations } from "./operations/monetization";
+// [T-052 裁决③] monetizationOperations 已随变现中心物理删除(宪法 §8「变现中心移除」)。
 import { candidateOperations } from "./operations/candidate";
 import { calibrationOperations } from "./operations/calibration";
 import { platformAccountOperations } from "./operations/platform-accounts";
@@ -94,7 +94,6 @@ export const ENDPOINTS = {
   ...ingestionOperations,
   // contract v0.4 — 七步 (seven-step) module groups.
   ...positioningOperations,
-  ...monetizationOperations,
   ...candidateOperations,
   ...calibrationOperations,
   ...platformAccountOperations,

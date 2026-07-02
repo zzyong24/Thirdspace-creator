@@ -121,14 +121,9 @@ export {
   positioningStatements,
   POSITIONING_DDL,
 } from "./schema/positioning";
-export {
-  products,
-  offers,
-  leads,
-  conversionEvents,
-  contentOutputProducts,
-  MONETIZATION_DDL,
-} from "./schema/monetization";
+// [T-052 裁决③] monetization schema 导出(products/offers/leads/conversionEvents/
+// contentOutputProducts/MONETIZATION_DDL)已随变现中心物理删除(宪法 §8)。
+// 数据库中已建的表留存无害(迁移基线不回滚),仅代码层不再引用。
 export {
   candidates,
   audienceSignals,

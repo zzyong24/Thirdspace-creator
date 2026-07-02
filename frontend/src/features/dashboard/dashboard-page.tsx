@@ -20,6 +20,7 @@
  */
 
 import * as React from "react";
+import { STAGE_LABELS as CANONICAL_STAGE_LABELS } from "@/lib/stage-labels";
 import Link from "next/link";
 
 import { SectionCard } from "@/components/project/section-card";
@@ -567,14 +568,10 @@ function suggestionCta(
   return { href: "/projects/new", label: "立即创作" };
 }
 
+// [T-052] 阶段名迁单一词表(lib/stage-labels);recording/editing/ready 是
+// dashboard 特有的任务态扩展键,保留在本地扩展。
 const STAGE_LABELS: Record<ProjectStageName | string, string> = {
-  brief: "立项",
-  research: "研究",
-  planning: "策划",
-  script: "脚本",
-  production: "拍摄",
-  publishing: "发布",
-  review: "复盘",
+  ...CANONICAL_STAGE_LABELS,
   recording: "录制",
   editing: "剪辑",
   ready: "已就绪",

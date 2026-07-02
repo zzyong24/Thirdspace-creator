@@ -489,27 +489,8 @@ export interface ComparisonTab {
   readonly rows: ReadonlyArray<ComparisonRow>;
 }
 
-// REV-1 收益分析 tab — the project's monetization funnel (曝光→线索→成交→金额)
-// + the products its outputs are linked to. Empty (no leads/conversions /
-// products) renders the honest empty state.
-export interface RevenueFunnelStage {
-  readonly label: string;
-  readonly value: number;
-}
-
-export interface RevenueProductRow {
-  readonly id: Id;
-  readonly name: string;
-  readonly tier: string;
-  readonly contentRole: string;
-}
-
-export interface RevenueTab {
-  readonly funnel: ReadonlyArray<RevenueFunnelStage>;
-  readonly revenueAttributed: number;
-  readonly unattributedRatio: number;
-  readonly products: ReadonlyArray<RevenueProductRow>;
-}
+// [T-052 裁决③] RevenueTab/RevenueProductRow/RevenueFunnelStage(REV-1 收益分析)
+// 随变现中心物理删除(宪法 §8「变现中心移除」)。
 
 export interface AnalyticsViewModel extends BasePageViewModel {
   readonly kind: "analytics-review";
@@ -534,10 +515,10 @@ export interface AnalyticsViewModel extends BasePageViewModel {
     readonly completedAt: Iso8601;
     readonly tone: "positive" | "warning" | "neutral";
   }>;
-  // REV-2 对比分析 / REV-1 收益分析 tabs. Optional + additive: pages that don't
-  // render these tabs ignore them; absence means "no real data" → empty state.
+  // REV-2 对比分析 tab. Optional + additive: pages that don't render this tab
+  // ignore it; absence means "no real data" → empty state.
+  // [T-052 裁决③] REV-1 收益分析(revenue 字段)随变现中心物理删除。
   readonly comparison?: ComparisonTab;
-  readonly revenue?: RevenueTab;
   // 复盘每作品评论 (T-030 §10 / D6) — the current 作品 的真实评论 (前 100 条), read from
   // `publications.comments.list`. Optional + additive: absent / empty → 复盘页评论区渲染
   // 诚实空态(去任务中心配「抓我作品评论」采集),绝不摆假评论 (宪法 §8 / T-010)。
