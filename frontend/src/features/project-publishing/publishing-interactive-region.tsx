@@ -229,6 +229,7 @@ export function PublishingInteractiveRegion({
             <div className="flex flex-col gap-1.5">
               <TitleField
                 value={vm.form.title}
+                description={vm.form.description}
                 wiring={wiring}
                 platforms={vm.platforms}
               />
@@ -312,10 +313,13 @@ function PublishingTabs({ tabs }: { tabs: PublishingViewModel["tabs"] }) {
 
 function TitleField({
   value,
+  description,
   wiring,
   platforms,
 }: {
   value: string;
+  /** [T-049 B4] 当前简介 —— revision 是整行 append,不带上它就等于把简介清空。 */
+  description: string;
   wiring?: PublishingWiring;
   platforms: PublishingViewModel["platforms"];
 }) {
@@ -343,11 +347,13 @@ function TitleField({
       await client.createPublicationRevision({
         params: { publicationId },
         query: undefined,
-        body: { title: trimmed, description: "" },
+        // [T-049 B4] revision 整行替换语义:description 原样带上,否则提交标题会把
+        // 真简介清成空串(TagsEditor 同文件早已用正确写法,这里补齐)。
+        body: { title: trimmed, description },
       });
       router.refresh();
     });
-  }, [platforms, router, title, wiring]);
+  }, [description, platforms, router, title, wiring]);
 
   return (
     <div data-slot="title-field" className="flex flex-col gap-0.5">

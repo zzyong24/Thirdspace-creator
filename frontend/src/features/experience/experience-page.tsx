@@ -275,6 +275,7 @@ function ExperienceLayout({
         applicationEffect={applicationEffect}
         popularExperiences={popularExperiences}
         quickActions={quickActions}
+        applyTargets={applyTargets}
       />
     </div>
   );
@@ -464,11 +465,13 @@ function RightRail({
   applicationEffect,
   popularExperiences,
   quickActions,
+  applyTargets,
 }: {
   valueOverview: ValueOverviewVm;
   applicationEffect: ReadonlyArray<{ readonly label: string; readonly value: number }>;
   popularExperiences: ReadonlyArray<PopularExperience>;
   quickActions: ReadonlyArray<QuickAction>;
+  applyTargets: ReadonlyArray<ApplyTarget>;
 }) {
   return (
     <aside
@@ -481,7 +484,7 @@ function RightRail({
       <PopularExperienceList items={popularExperiences} />
       {/* Wired island (Module 14 Step 5): each quick-record button →
           learnings.create. Replaces the inert server-only QuickRecordActions. */}
-      <QuickRecordActionsIsland actions={quickActions} />
+      <QuickRecordActionsIsland actions={quickActions} applyTargets={applyTargets} />
     </aside>
   );
 }

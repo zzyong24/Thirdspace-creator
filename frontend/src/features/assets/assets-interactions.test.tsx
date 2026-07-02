@@ -28,7 +28,14 @@ vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 
 const mockClient = {
   createUpload: vi.fn((_input: unknown): Promise<unknown> =>
-    Promise.resolve({ uploadId: "upload-1", storageKey: "k", uploadUrl: "u", expiresAt: "t" }),
+    Promise.resolve({
+      uploadId: "upload-1",
+      storageKey: "k",
+      // [T-049 B5] local-fs 真形态是相对路径 URL —— 旧实现的 ^https?:// 判断会跳过
+      // 它的字节 PUT(整链静默失败),测试用真形态守住「相对路径也 PUT」。
+      uploadUrl: "/api/v1/blob/k?exp=1&token=t",
+      expiresAt: "t",
+    }),
   ),
   completeUpload: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "asset-new", status: "active" }),
@@ -109,9 +116,17 @@ describe("Assets needs-backend wiring", () => {
 
     // A real File: name/type/size are read off the File object.
     const file = new File(["hello-bytes"], "clip.png", { type: "image/png" });
+    // [T-049 B5] 相对路径 uploadUrl 必须发生字节 PUT(旧实现跳过它 → ENOENT 静默失败)。
+    const fetchSpy = vi.fn(() => Promise.resolve(new Response(null, { status: 200 })));
+    vi.stubGlobal("fetch", fetchSpy);
     fireEvent.change(input!, { target: { files: [file] } });
 
     await waitFor(() => expect(mockClient.completeUpload).toHaveBeenCalledTimes(1));
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "/api/v1/blob/k?exp=1&token=t",
+      expect.objectContaining({ method: "PUT" }),
+    );
+    vi.unstubAllGlobals();
     expect(mockClient.createUpload).toHaveBeenCalledTimes(1);
     // createUpload carries the file's REAL type + size, mapped to assetType.
     expect(mockClient.createUpload).toHaveBeenCalledWith(

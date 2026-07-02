@@ -156,10 +156,11 @@ describe("Publishing needs-backend wiring", () => {
     await waitFor(() =>
       expect(mockClient.createPublicationRevision).toHaveBeenCalledTimes(1),
     );
+    // [T-049 B4] revision 整行替换语义:标题提交必须原样带上现有简介,否则真简介被清空。
     expect(mockClient.createPublicationRevision).toHaveBeenCalledWith(
       expect.objectContaining({
         params: { publicationId: "pub-existing" },
-        body: { title: "新的发布标题", description: "" },
+        body: { title: "新的发布标题", description: vm.form.description },
       }),
     );
     expect(mockRouter.refresh).toHaveBeenCalled();

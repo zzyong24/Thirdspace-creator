@@ -84,7 +84,6 @@ export function ExperienceInteractiveRegion({
 }: ExperienceInteractiveRegionProps) {
   const { pending, run } = useLearningMutations();
   const [activeTab, setActiveTab] = React.useState("all");
-  const defaultProjectId = applyTargets[0]?.id ?? null;
 
   const applyLearning = React.useCallback(
     (learningId: string, projectId: string) => {
@@ -233,16 +232,13 @@ export function ExperienceInteractiveRegion({
                   </td>
                   <td className="py-2">
                     <div className="flex items-center justify-end gap-1.5">
-                      {defaultProjectId !== null ? (
-                        <button
-                          type="button"
-                          data-slot="record-apply"
-                          disabled={pending}
-                          onClick={() => applyLearning(learningId, defaultProjectId)}
-                          className="rounded-control border border-border bg-surface px-2 py-1 text-xs font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"
-                        >
-                          应用经验
-                        </button>
+                      {applyTargets.length > 0 ? (
+                        <ApplyControl
+                          learningId={learningId}
+                          targets={applyTargets}
+                          pending={pending}
+                          onApply={applyLearning}
+                        />
                       ) : null}
                       {isCandidate ? (
                         <>
@@ -311,27 +307,129 @@ export function ExperienceInteractiveRegion({
 // Right rail: 快速记录 quick-record buttons → learnings.create
 // ---------------------------------------------------------------------------
 
-export interface QuickRecordActionsIslandProps {
-  readonly actions: ReadonlyArray<QuickAction>;
+// [T-049 B17] 行内「应用经验」的项目选择器 —— 旧实现恒应用到 applyTargets[0]
+// (实测=演示项目),复用计数持续灌进假实体。现在由用户显式选目标项目再应用。
+function ApplyControl({
+  learningId,
+  targets,
+  pending,
+  onApply,
+}: {
+  learningId: string;
+  targets: ReadonlyArray<ApplyTarget>;
+  pending: boolean;
+  onApply: (learningId: string, projectId: string) => void;
+}) {
+  const [projectId, setProjectId] = React.useState<string>("");
+  return (
+    <span className="inline-flex items-center gap-1">
+      <select
+        data-slot="record-apply-target"
+        value={projectId}
+        disabled={pending}
+        onChange={(e) => setProjectId(e.target.value)}
+        className="max-w-32 rounded-control border border-border bg-surface px-1.5 py-1 text-xs text-foreground disabled:opacity-50"
+      >
+        <option value="">选项目…</option>
+        {targets.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.title}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        data-slot="record-apply"
+        disabled={pending || projectId === ""}
+        onClick={() => onApply(learningId, projectId)}
+        className="rounded-control border border-border bg-surface px-2 py-1 text-xs font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"
+      >
+        应用
+      </button>
+    </span>
+  );
 }
 
+const LEARNING_TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "strategy", label: "选题策划" },
+  { value: "hook", label: "开头钩子" },
+  { value: "structure", label: "结构节奏" },
+  { value: "failure", label: "失败案例" },
+  { value: "process", label: "流程方法" },
+  { value: "editing", label: "后期剪辑" },
+  { value: "conversion_pattern", label: "转化模式" },
+  { value: "offer_insight", label: "产品洞察" },
+];
+
+export interface QuickRecordActionsIslandProps {
+  readonly actions: ReadonlyArray<QuickAction>;
+  /** [T-049 B17] 「从项目导入」的项目候选(与主列应用经验同源)。 */
+  readonly applyTargets?: ReadonlyArray<ApplyTarget>;
+}
+
+// [T-049 B17] 快速记录改富录入:旧实现一键把按钮文案当标题落库(insight 空、类型
+// 恒 strategy),真库已被 6 条空记录污染。现在点按钮 = 展开表单(标题/洞察必填、
+// 类型可选;「从项目导入」必选来源项目,创建后自动建应用关联),空字段禁提交。
 export function QuickRecordActionsIsland({
   actions,
+  applyTargets = [],
 }: QuickRecordActionsIslandProps) {
   const { pending, run } = useLearningMutations();
+  const [activeAction, setActiveAction] = React.useState<string | null>(null);
+  const [title, setTitle] = React.useState("");
+  const [insight, setInsight] = React.useState("");
+  const [learningType, setLearningType] = React.useState("strategy");
+  const [sourceProjectId, setSourceProjectId] = React.useState("");
 
-  const createLearning = React.useCallback(
-    (title: string) => {
-      run(() =>
-        client.createLearning({
-          params: undefined,
+  const openForm = React.useCallback((actionId: string) => {
+    setActiveAction(actionId);
+    setTitle("");
+    setInsight("");
+    setLearningType(actionId === "qa-failure" ? "failure" : "strategy");
+    setSourceProjectId("");
+  }, []);
+
+  const isImport = activeAction === "qa-import";
+  const canSubmit =
+    title.trim() !== "" &&
+    insight.trim() !== "" &&
+    (!isImport || sourceProjectId !== "") &&
+    !pending;
+
+  const submit = React.useCallback(() => {
+    if (!canSubmit) return;
+    const trimmedTitle = title.trim();
+    const trimmedInsight = insight.trim();
+    const projectId = isImport ? sourceProjectId : "";
+    run(async () => {
+      const created = (await client.createLearning({
+        params: undefined,
+        query: undefined,
+        body: {
+          title: trimmedTitle,
+          insight: trimmedInsight,
+          learningType: learningType as
+            | "strategy"
+            | "hook"
+            | "structure"
+            | "failure"
+            | "process"
+            | "editing"
+            | "conversion_pattern"
+            | "offer_insight",
+        },
+      })) as { id: string };
+      // 从项目导入 = 创建后立刻建立与来源项目的应用关联(经验↔项目可追溯)。
+      if (projectId && created?.id) {
+        await client.createLearningApplication({
+          params: { learningId: created.id },
           query: undefined,
-          body: { title, insight: "" },
-        }),
-      );
-    },
-    [run],
-  );
+          body: { projectId, applicationNote: "从项目导入" },
+        });
+      }
+    });
+    setActiveAction(null);
+  }, [canSubmit, insight, isImport, learningType, run, sourceProjectId, title]);
 
   return (
     <SectionCard title="快速记录" description="把这次的复盘沉淀下来">
@@ -347,7 +445,12 @@ export function QuickRecordActionsIsland({
             data-slot="quick-record-action"
             data-action-id={action.id}
             disabled={pending}
-            onClick={() => createLearning(action.label)}
+            aria-expanded={activeAction === action.id}
+            onClick={() =>
+              activeAction === action.id
+                ? setActiveAction(null)
+                : openForm(action.id)
+            }
             className="flex items-center justify-between gap-3 rounded-card bg-surface-subtle px-3.5 py-2.5 text-left text-sm hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
           >
             <span className="flex flex-col gap-0.5">
@@ -355,10 +458,80 @@ export function QuickRecordActionsIsland({
               <span className="text-xs text-muted-foreground">{action.hint}</span>
             </span>
             <span aria-hidden="true" className="text-muted-foreground">
-              +
+              {activeAction === action.id ? "−" : "+"}
             </span>
           </button>
         ))}
+
+        {activeAction !== null ? (
+          <div
+            data-slot="quick-record-form"
+            className="flex flex-col gap-2 rounded-card border border-border bg-surface p-3"
+          >
+            {isImport ? (
+              <select
+                data-slot="quick-record-project"
+                value={sourceProjectId}
+                onChange={(e) => setSourceProjectId(e.target.value)}
+                className="rounded-control border border-border bg-surface px-2 py-1.5 text-sm text-foreground"
+              >
+                <option value="">选择来源项目…</option>
+                {applyTargets.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title}
+                  </option>
+                ))}
+              </select>
+            ) : null}
+            <input
+              data-slot="quick-record-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="经验标题（必填）"
+              className="rounded-control border border-border bg-surface px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground"
+            />
+            <textarea
+              data-slot="quick-record-insight"
+              value={insight}
+              onChange={(e) => setInsight(e.target.value)}
+              placeholder="这次学到了什么？（必填）"
+              rows={3}
+              className="rounded-control border border-border bg-surface px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground"
+            />
+            <select
+              data-slot="quick-record-type"
+              value={learningType}
+              onChange={(e) => setLearningType(e.target.value)}
+              className="rounded-control border border-border bg-surface px-2 py-1.5 text-sm text-foreground"
+            >
+              {LEARNING_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                data-slot="quick-record-cancel"
+                onClick={() => setActiveAction(null)}
+                className="rounded-control px-2.5 py-1 text-xs text-muted-foreground hover:bg-surface-subtle"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                data-slot="quick-record-submit"
+                disabled={!canSubmit}
+                onClick={submit}
+                className="rounded-control bg-brand px-2.5 py-1 text-xs font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+              >
+                保存经验
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </SectionCard>
   );

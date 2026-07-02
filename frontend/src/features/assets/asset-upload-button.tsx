@@ -51,38 +51,47 @@ export function AssetUploadButton() {
       // real storage) the PUT's Content-Type header — they MUST match the signed value.
       const mimeType = file.type || "application/octet-stream";
       startTransition(async () => {
-        const upload = (await client.createUpload({
-          params: undefined,
-          query: undefined,
-          body: {
-            assetType: assetTypeForFile(file),
-            mimeType,
-            // `fileSize.positive()` — clamp 0-byte files to 1.
-            fileSize: Math.max(1, file.size),
-          },
-        })) as unknown as { uploadId: string; uploadUrl: string };
-        // Phase 1: PUT the real bytes to the presigned URL (real S3/MinIO). The in-memory
-        // mock returns a `mock://` URL that records metadata at create-time and needs no
-        // byte PUT — so only http(s) presigned URLs get the upload.
-        if (/^https?:\/\//.test(upload.uploadUrl)) {
-          const put = await fetch(upload.uploadUrl, {
-            method: "PUT",
-            headers: { "content-type": mimeType },
-            body: file,
-          });
-          if (!put.ok) {
-            setUploadStatus(`上传失败「${file.name}」(${put.status})。`);
-            return;
+        try {
+          const upload = (await client.createUpload({
+            params: undefined,
+            query: undefined,
+            body: {
+              assetType: assetTypeForFile(file),
+              mimeType,
+              // `fileSize.positive()` — clamp 0-byte files to 1.
+              fileSize: Math.max(1, file.size),
+            },
+          })) as unknown as { uploadId: string; uploadUrl: string };
+          // Phase 1: PUT the real bytes to the upload URL。[T-049 B5] 旧判断只对
+          // ^https?:// 才 PUT —— 默认 local-fs 后端签发的是**相对路径**(/api/v1/blob/…),
+          // 被跳过 → 字节从没落盘 → completeUpload headObject ENOENT 整链静默失败。
+          // 唯一不需要字节 PUT 的是 in-memory mock 的 mock:// URL。
+          if (!upload.uploadUrl.startsWith("mock://")) {
+            const put = await fetch(upload.uploadUrl, {
+              method: "PUT",
+              headers: { "content-type": mimeType },
+              body: file,
+            });
+            if (!put.ok) {
+              setUploadStatus(`上传失败「${file.name}」(${put.status})。`);
+              return;
+            }
           }
+          // Phase 2: finalize — the service headObjects the stored bytes and creates the asset.
+          await client.completeUpload({
+            params: { uploadId: upload.uploadId },
+            query: undefined,
+            body: { name: file.name },
+          });
+          setUploadStatus(`已上传素材「${file.name}」。`);
+          router.refresh();
+        } catch (err) {
+          // [T-049 B5] 全链兜底:任一步抛错都给用户可见反馈,不再静默吞掉。
+          const detail = err instanceof Error ? err.message : "";
+          setUploadStatus(
+            `上传失败「${file.name}」${detail ? `:${detail.slice(0, 80)}` : "。"}`,
+          );
         }
-        // Phase 2: finalize — the service headObjects the stored bytes and creates the asset.
-        await client.completeUpload({
-          params: { uploadId: upload.uploadId },
-          query: undefined,
-          body: { name: file.name },
-        });
-        setUploadStatus(`已上传素材「${file.name}」。`);
-        router.refresh();
       });
     },
     [router],

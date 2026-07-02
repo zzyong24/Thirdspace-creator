@@ -213,8 +213,16 @@ export function createPositioningService(
     async upsertProfile(ctx, input) {
       const repo = repoFor(ctx);
       const existing = await repo.getProfile();
-      // Normalize the partial facets/rules to the full key set ("" defaults) so the
-      // repo always writes a complete jsonb object (the DTO round-trips cleanly).
+      // [T-049 B3] 缺省 = **保留现值**(partial merge),不再清空。旧语义「缺省=空串」
+      // 是真事故根因:采纳 AI 定位建议(ai.service confirm / Copilot 聊天卡都只传 5 个
+      // 基础字段)把用户全部 6 facets + 5 条下游规则整体抹空,17 个 AI 节点随即失去
+      // 规则约束(真库已发生过)。字段级回退:调用方显式传值(含显式空串)则写入,
+      // 缺省(undefined)则保留库中现值;无现值兜 ""。
+      const prevFacets = (existing?.facets ?? {}) as Record<string, string>;
+      const prevRules = (existing?.downstreamRules ?? {}) as Record<
+        string,
+        string
+      >;
       const normalized = {
         persona: input.persona,
         field: input.field,
@@ -222,19 +230,27 @@ export function createPositioningService(
         differentiation: input.differentiation,
         capabilities: input.capabilities,
         facets: {
-          contentScope: input.facets?.contentScope ?? "",
-          avoid: input.facets?.avoid ?? "",
-          corePain: input.facets?.corePain ?? "",
-          coreValue: input.facets?.coreValue ?? "",
-          tone: input.facets?.tone ?? "",
-          statusNote: input.facets?.statusNote ?? "",
+          contentScope:
+            input.facets?.contentScope ?? prevFacets.contentScope ?? "",
+          avoid: input.facets?.avoid ?? prevFacets.avoid ?? "",
+          corePain: input.facets?.corePain ?? prevFacets.corePain ?? "",
+          coreValue: input.facets?.coreValue ?? prevFacets.coreValue ?? "",
+          tone: input.facets?.tone ?? prevFacets.tone ?? "",
+          statusNote: input.facets?.statusNote ?? prevFacets.statusNote ?? "",
         },
         downstreamRules: {
-          topicRule: input.downstreamRules?.topicRule ?? "",
-          scriptRule: input.downstreamRules?.scriptRule ?? "",
-          projectRule: input.downstreamRules?.projectRule ?? "",
-          forbidRule: input.downstreamRules?.forbidRule ?? "",
-          expressionRule: input.downstreamRules?.expressionRule ?? "",
+          topicRule:
+            input.downstreamRules?.topicRule ?? prevRules.topicRule ?? "",
+          scriptRule:
+            input.downstreamRules?.scriptRule ?? prevRules.scriptRule ?? "",
+          projectRule:
+            input.downstreamRules?.projectRule ?? prevRules.projectRule ?? "",
+          forbidRule:
+            input.downstreamRules?.forbidRule ?? prevRules.forbidRule ?? "",
+          expressionRule:
+            input.downstreamRules?.expressionRule ??
+            prevRules.expressionRule ??
+            "",
         },
       };
       const row = existing

@@ -175,7 +175,9 @@ export function createCandidateRepository(
         .select()
         .from(candidates)
         .where(where)
-        .orderBy(desc(sortColumn(sort)))
+        // [T-049 B7] Postgres 的 DESC 默认 NULLS FIRST —— 未评分候选(predictedScore
+        // null)会排在最高分之前(首页热门选题/选题池排序都被顶乱)。显式 NULLS LAST。
+        .orderBy(sql`${sortColumn(sort)} DESC NULLS LAST`)
         .limit(limit)
         .offset(offset);
       const all = await db

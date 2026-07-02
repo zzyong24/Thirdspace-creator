@@ -19,6 +19,7 @@ import * as React from "react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
+import { projectWorkspaceHref } from "@/features/projects/project-href";
 
 export interface ProjectStageStepperStage {
   readonly id: string;
@@ -103,7 +104,9 @@ export function ProjectStageStepper({
           const reachable =
             alreadyReached ||
             (currentIndex === -1 ? false : index <= currentIndex + 1);
-          const navigable = reachable && Boolean(projectId);
+          // [T-049 B1] 局部窄化:navigable 为真时 projectId 必非空(下方 Link 用它拼 href)。
+          const navigableProjectId = reachable ? projectId : undefined;
+          const navigable = Boolean(navigableProjectId);
           const segmentClassName = cn(
             "flex h-full w-full items-center justify-center gap-1 border-y border-r border-border bg-surface px-3 text-xs text-muted-foreground",
             index === 0 && "border-l",
@@ -134,7 +137,7 @@ export function ProjectStageStepper({
             >
               {navigable ? (
                 <Link
-                  href={`/projects/${projectId}/${stage.id}`}
+                  href={projectWorkspaceHref(navigableProjectId!, stage.id as import("@/types/domain").ProjectStageName)}
                   data-slot="header-stage-link"
                   data-testid={`stage-segment-${stage.id}`}
                   aria-current={isCurrent ? "step" : undefined}

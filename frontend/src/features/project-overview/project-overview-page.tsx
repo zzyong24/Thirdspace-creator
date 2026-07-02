@@ -46,6 +46,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { getProjectById } from "@/fixtures/canonical";
 import { buildProjectOverviewViewModel } from "@/fixtures/selectors";
+import { projectWorkspaceHref } from "@/features/projects/project-href";
 import type { ProjectStageName } from "@/types/domain";
 import type { ProjectOverviewViewModel } from "@/types/view-models";
 
@@ -223,7 +224,7 @@ function StageGuidanceCard({
     ? STAGE_GUIDANCE("review")
     : STAGE_GUIDANCE(currentStage);
   const href = isImported
-    ? `/projects/${projectRouteSlug(projectId)}/review`
+    ? projectWorkspaceHref(projectId, "review")
     : workspaceHrefForProject(projectId, currentStage);
   const ctaLabel = isImported ? "查看复盘" : "进入工作台";
   return (
@@ -314,7 +315,7 @@ function ProjectProgressCard({
   // 终态 review(含 imported)本就不显示它。
   const isImported = source === "imported";
   const primaryHref = isImported
-    ? `/projects/${projectRouteSlug(projectId)}/review`
+    ? projectWorkspaceHref(projectId, "review")
     : workspaceHrefForProject(projectId, currentStage);
   const primaryLabel = isImported ? "查看复盘" : "进入工作台";
   return (
@@ -396,12 +397,7 @@ function workspaceHrefForProject(
   projectId: string,
   currentStage: ProjectStageName,
 ): string {
-  return `/projects/${projectRouteSlug(projectId)}/${currentStage}`;
-}
-
-function projectRouteSlug(projectId: string): string {
-  if (projectId === "project-ainativebrowser") return "ai-native-browser";
-  return projectId.replace(/^project-/, "");
+  return projectWorkspaceHref(projectId, currentStage);
 }
 
 // ---------------------------------------------------------------------------

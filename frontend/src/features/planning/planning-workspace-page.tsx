@@ -113,15 +113,15 @@ export function PlanningWorkspacePage({
       className="flex flex-col gap-card-gap"
     >
       <ContentContractSection contracts={vm.contracts} />
-      {contractArtifactId ? (
-        <div data-slot="planning-contract-node">
-          <PlanningContractIsland
-            projectId={vm.projectId}
-            artifactId={contractArtifactId}
-            topic={vm.coreThesis.title}
-          />
-        </div>
-      ) : null}
+      {/* [T-049 B12] 无条件渲染:artifact 创建已延迟到 island 首次起草(prepareInput),
+          SSR 不再 write-on-read;新项目也有 AI 起草入口。 */}
+      <div data-slot="planning-contract-node">
+        <PlanningContractIsland
+          projectId={vm.projectId}
+          artifactId={contractArtifactId ?? null}
+          topic={vm.coreThesis.title}
+        />
+      </div>
     </div>
   );
 
@@ -146,24 +146,20 @@ export function PlanningWorkspacePage({
           nodes={vm.thesisTree}
           rootLabel={vm.coreThesis.title}
         />
-        {thesisArtifactId ? (
-          <div data-slot="planning-thesis-node">
-            <PlanningThesisIsland
-              projectId={vm.projectId}
-              artifactId={thesisArtifactId}
-              topic={vm.coreThesis.title}
-            />
-          </div>
-        ) : null}
-        {outlineArtifactId ? (
-          <div data-slot="planning-outline-node">
-            <PlanningOutlineIsland
-              projectId={vm.projectId}
-              artifactId={outlineArtifactId}
-              topic={vm.coreThesis.title}
-            />
-          </div>
-        ) : null}
+        <div data-slot="planning-thesis-node">
+          <PlanningThesisIsland
+            projectId={vm.projectId}
+            artifactId={thesisArtifactId ?? null}
+            topic={vm.coreThesis.title}
+          />
+        </div>
+        <div data-slot="planning-outline-node">
+          <PlanningOutlineIsland
+            projectId={vm.projectId}
+            artifactId={outlineArtifactId ?? null}
+            topic={vm.coreThesis.title}
+          />
+        </div>
       </div>
       <div
         data-slot="planning-right-rail"

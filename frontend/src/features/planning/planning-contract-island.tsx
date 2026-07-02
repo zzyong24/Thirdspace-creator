@@ -17,6 +17,7 @@
 import * as React from "react";
 
 import { AdoptCandidateCard } from "@/components/ai/adopt-candidate-card";
+import { ensurePlanningArtifact } from "@/features/planning/ensure-planning-artifact";
 
 interface ContractCardItem {
   id: string;
@@ -61,7 +62,8 @@ export function PlanningContractIsland({
   topic,
 }: {
   projectId: string;
-  artifactId: string;
+  /** [T-049 B12] 可空:SSR 只查不建,无 artifact 时由 prepareInput 在首次起草时创建。 */
+  artifactId: string | null;
   topic: string;
 }) {
   return (
@@ -71,7 +73,10 @@ export function PlanningContractIsland({
       startLabel="帮我生成内容合同"
       runningLabel="策划 agent 正在拟内容合同（可能要一两分钟）…"
       taskType="planning.contract"
-      inputData={{ projectId, artifactId, topic }}
+      inputData={{ projectId, topic }}
+      prepareInput={() =>
+        ensurePlanningArtifact(projectId, "content_contract", "内容合同", artifactId)
+      }
       parseItems={parseCards}
       renderItem={renderCard}
       adoptLabel={(n) => `采纳为新版本（${n} 项承诺）`}

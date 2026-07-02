@@ -29,6 +29,7 @@ import { ProgressBar } from "@/components/project/progress-bar";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { StatusTabsBar, type StatusTabsBarTab } from "@/features/projects/status-tabs-bar";
 import { ViewAndSortControls } from "@/features/projects/view-and-sort-controls";
+import { projectWorkspaceHref } from "@/features/projects/project-href";
 import { ProjectRowMenu } from "@/features/projects/project-row-menu";
 import { Pagination } from "@/components/navigation/pagination";
 import { buildProjectsViewModel } from "@/fixtures/selectors";
@@ -474,12 +475,7 @@ function thumbnailLabel(row: ProjectListRow): string {
 }
 
 function workspaceHrefForRow(row: ProjectListRow): string {
-  return `/projects/${projectRouteSlug(row.id)}/${row.currentStage}`;
-}
-
-function projectRouteSlug(projectId: string): string {
-  if (projectId === "project-ainativebrowser") return "ai-native-browser";
-  return projectId.replace(/^project-/, "");
+  return projectWorkspaceHref(row.id, row.currentStage);
 }
 
 const FIXED_NOW = new Date("2026-06-13T14:30:00+08:00").getTime();

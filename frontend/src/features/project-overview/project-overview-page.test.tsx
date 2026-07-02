@@ -108,9 +108,10 @@ describe("ProjectOverviewPage", () => {
     const enterAction = within(progressCard).getByRole("link", {
       name: /进入工作台/,
     });
+    // [T-049 B1] href 用完整项目 id(剥前缀 slug 是真实项目身份丢失的根因)。
     expect(enterAction).toHaveAttribute(
       "href",
-      "/projects/ai-native-browser/script",
+      "/projects/project-ainativebrowser/script",
     );
   });
 

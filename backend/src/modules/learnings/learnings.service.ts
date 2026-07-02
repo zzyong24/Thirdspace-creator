@@ -124,7 +124,7 @@ export interface LearningsService {
   ): Promise<LearningResource>;
   createLearning(
     ctx: RequestContext,
-    body: { title: string; insight?: string },
+    body: { title: string; insight?: string; learningType?: string },
   ): Promise<LearningResource>;
   // The Reviews→Learnings bridge (roadmap §4 G13/G14). Called by ReviewsService via
   // this module's index.ts public interface only (no Reviews repo import here, no
@@ -277,12 +277,11 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     },
 
     async createLearning(ctx, body) {
-      // The contract body has only title + insight. Fill the non-input DTO fields
-      // deterministically (richer typing comes from the Reviews bridge / later edit).
+      // [T-049 B17] learningType 透传(富录入表单用户可选);缺省 strategy 向后兼容。
       const row = await repoFor(ctx).createLearning({
         title: body.title,
         insight: body.insight ?? "",
-        learningType: "strategy",
+        learningType: body.learningType ?? "strategy",
         recommendation: "",
         reviewId: null,
         confidenceScore: 0,

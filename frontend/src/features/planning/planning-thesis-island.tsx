@@ -17,6 +17,7 @@
 import * as React from "react";
 
 import { AdoptCandidateCard } from "@/components/ai/adopt-candidate-card";
+import { ensurePlanningArtifact } from "@/features/planning/ensure-planning-artifact";
 
 type ThesisColumn = "core" | "support" | "evidence" | "counter";
 
@@ -91,7 +92,8 @@ export function PlanningThesisIsland({
   topic,
 }: {
   projectId: string;
-  artifactId: string;
+  /** [T-049 B12] 可空:SSR 只查不建,无 artifact 时由 prepareInput 在首次起草时创建。 */
+  artifactId: string | null;
   topic: string;
 }) {
   return (
@@ -101,7 +103,10 @@ export function PlanningThesisIsland({
       startLabel="帮我搭论点树"
       runningLabel="策划 agent 正在构建论点树（可能要一两分钟）…"
       taskType="planning.thesis"
-      inputData={{ projectId, artifactId, topic }}
+      inputData={{ projectId, topic }}
+      prepareInput={() =>
+        ensurePlanningArtifact(projectId, "thesis_tree", "论点树", artifactId)
+      }
       parseItems={parseNodes}
       renderItem={renderNode}
       adoptLabel={(n) => `采纳为新版本（${n} 个论点）`}

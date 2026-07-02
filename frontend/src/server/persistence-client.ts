@@ -3917,8 +3917,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     knowledge: {
       // GAP-DASH-4 做真:热门选题 = 用户选题池(candidate)按预测分排序的前几条。
-      // 选题策划阶段的候选即"在追的热门方向";heat 用 predictedScore(0–1→0–100),
-      // 无分用排名兜底。读失败降级为空集,不崩面板。
+      // [T-049 B8] heat 直接用 predictedScore —— rubric 全链就是 0–100 分,旧代码误当
+      // 0–1 再 ×100 → UI 显「热度 8800」;无分候选诚实置 0(不再编 50-i*5 假数)。
+      // 读失败降级为空集,不崩面板。
       getTrendingTopics: async (ctx) => {
         try {
           const { rows } = await candidateService.listCandidates(ctx, {
@@ -3926,13 +3927,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             limit: 5,
             offset: 0,
           });
-          return rows.map((c, i) => ({
+          return rows.map((c) => ({
             id: c.id,
             title: c.title,
             heat:
               typeof c.predictedScore === "number" && c.predictedScore > 0
-                ? Math.round(c.predictedScore * 100)
-                : 50 - i * 5,
+                ? Math.round(c.predictedScore)
+                : 0,
             trend: "up" as const,
           }));
         } catch {

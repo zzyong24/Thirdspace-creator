@@ -119,15 +119,14 @@ const THESIS_ARTIFACT_TYPE = "thesis_tree";
 const CONTRACT_ARTIFACT_TYPE = "content_contract";
 const OUTLINE_ARTIFACT_TYPE = "content_outline";
 
-// Read the project's artifact id for `artifactType`, creating one on demand when a real
-// project has none yet (so the matching planning AI node always has a write target).
-// Returns null only when the artifact cannot be resolved or created (the island then hides
-// the 采纳 surface). Generalized over artifactType so the 论点树/内容合同/结构方案 nodes all
-// share one getOrCreate path.
+// [T-049 B12] Read the project's artifact id for `artifactType` — **纯查,绝不创建**。
+// 旧实现是 getOrCreate:浏览策划页(甚至 Link prefetch)就为项目铸 3 个 artifact,
+// 46 个历史项目逐个点开会被动批量造实体(write-on-read,审计 B12)。创建职责已挪到
+// island 的 prepareInput(用户点「开始起草」那一刻才 getOrCreate)。无 artifact → null,
+// 页面照常渲染,island 首次启动时自建。
 async function resolveArtifactId(
   projectId: string,
   artifactType: string,
-  title: string,
   client: PlanningDataClient,
 ): Promise<string | null> {
   if (!client.listArtifacts) return null;
@@ -139,15 +138,7 @@ async function resolveArtifactId(
     });
     const rows = (Array.isArray(listed) ? listed : []) as ArtifactDto[];
     const existing = rows.find((a) => a.artifactType === artifactType);
-    if (existing) return existing.id;
-    // No artifact of this type yet — create one so the AI node can append a version onto it.
-    if (!client.createArtifact) return null;
-    const created = (await client.createArtifact({
-      params: { projectId },
-      query: undefined,
-      body: { title, artifactType, stage: "planning" },
-    })) as ArtifactDto;
-    return typeof created?.id === "string" ? created.id : null;
+    return existing ? existing.id : null;
   } catch {
     return null;
   }
@@ -367,29 +358,25 @@ export async function buildPlanningWorkspaceViewModel(
       ? project.brief
       : "（暂无核心论点——用 AI 起草论点树后回填）";
 
-  // Resolve the thesis_tree artifact (create on demand) + read its current 论点树.
+  // Resolve the thesis_tree artifact (pure read — island 首启才创建) + read its current 论点树.
   const thesisArtifactId = await resolveArtifactId(
     projectId,
     THESIS_ARTIFACT_TYPE,
-    "论点树",
     client,
   );
   const realThesisTree = await loadThesisTree(thesisArtifactId, client);
 
-  // Resolve the content_contract + content_outline artifacts (create on demand) so the
-  // planning.contract / planning.outline nodes always have a write target. Read the
-  // contract's current cards back so an adopted 内容合同 surfaces real承诺 (overriding the
-  // fixture scaffolding cards).
+  // Resolve the content_contract + content_outline artifacts (pure read;创建延迟到
+  // island 首次起草)。Read the contract's current cards back so an adopted 内容合同
+  // surfaces real承诺 (overriding the fixture scaffolding cards).
   const contractArtifactId = await resolveArtifactId(
     projectId,
     CONTRACT_ARTIFACT_TYPE,
-    "内容合同",
     client,
   );
   const outlineArtifactId = await resolveArtifactId(
     projectId,
     OUTLINE_ARTIFACT_TYPE,
-    "结构方案",
     client,
   );
   const realContractCards = await loadContractCards(contractArtifactId, client);

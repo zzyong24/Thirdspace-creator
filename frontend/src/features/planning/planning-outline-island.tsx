@@ -20,6 +20,7 @@
 import * as React from "react";
 
 import { AdoptCandidateCard } from "@/components/ai/adopt-candidate-card";
+import { ensurePlanningArtifact } from "@/features/planning/ensure-planning-artifact";
 
 interface OutlineSection {
   label: string;
@@ -113,7 +114,8 @@ export function PlanningOutlineIsland({
   topic,
 }: {
   projectId: string;
-  artifactId: string;
+  /** [T-049 B12] 可空:SSR 只查不建,无 artifact 时由 prepareInput 在首次起草时创建。 */
+  artifactId: string | null;
   topic: string;
 }) {
   return (
@@ -123,7 +125,10 @@ export function PlanningOutlineIsland({
       startLabel="帮我生成结构方案"
       runningLabel="策划 agent 正在编排结构方案（可能要一两分钟）…"
       taskType="planning.outline"
-      inputData={{ projectId, artifactId, topic }}
+      inputData={{ projectId, topic }}
+      prepareInput={() =>
+        ensurePlanningArtifact(projectId, "content_outline", "结构方案", artifactId)
+      }
       parseItems={parseOutline}
       renderItem={renderOutline}
       adoptLabel={() => "采纳为新版本"}

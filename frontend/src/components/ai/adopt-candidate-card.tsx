@@ -65,6 +65,10 @@ export interface AdoptCandidateCardProps<T> {
   runningLabel: string;
   taskType: string;
   inputData: Record<string, unknown>;
+  /** [T-049 B12] 启动时的惰性补参:点「开始」才执行,返回值 merge 进 inputData 再建任务。
+   *  用于「首次起草才创建 artifact」类场景 —— 页面 SSR 保持纯读,写副作用挪到用户动作。
+   *  抛错 → 直接进 error 相位(不建任务)。 */
+  prepareInput?: () => Promise<Record<string, unknown>>;
   parseItems: (resultData: Record<string, unknown>) => T[];
   // CollabField:第三参 editor 仅在 canEdit 时给 —— 传入的 `item` 已 merge 本条编辑态(受控)。
   renderItem: (item: T, index: number, editor?: ItemEditor<T>) => React.ReactNode;
@@ -79,6 +83,7 @@ export function AdoptCandidateCard<T>({
   runningLabel,
   taskType,
   inputData,
+  prepareInput,
   parseItems,
   renderItem,
   adoptLabel,
@@ -187,17 +192,20 @@ export function AdoptCandidateCard<T>({
     setItems([]);
     setSteps([]);
     try {
+      // [T-049 B12] prepareInput 惰性补参:此刻(用户点了开始)才允许产生写副作用
+      // (如 getOrCreate artifact),SSR 渲染路径保持纯读。
+      const extra = prepareInput ? await prepareInput() : undefined;
       const task = (await client.createAITask({
         params: undefined,
         query: undefined,
-        body: { taskType, inputData },
+        body: { taskType, inputData: extra ? { ...inputData, ...extra } : inputData },
       })) as { id: string };
       setTaskId(task.id);
       await pollUntilDone(task.id);
     } catch {
       setPhase("error");
     }
-  }, [taskType, inputData, pollUntilDone]);
+  }, [taskType, inputData, prepareInput, pollUntilDone]);
 
   // P4 hydration (切页不丢): on mount, reconcile against the server so an in-flight task
   // survives navigating away and back. Only hydrates from idle (never clobbers a task the

@@ -142,19 +142,27 @@ export function createProductionRepository(
 
       const now = deps.now();
       const id = deps.nextId("production");
-      await db.insert(productions).values({
-        id,
-        userId,
-        contentOutputId: outputId,
-        productionMode: "remote_recording",
-        status: "drafting",
-        recordingConfig: {},
-        subtitleConfig: {},
-        startedAt: null,
-        completedAt: null,
-        updatedAt: now,
-      });
-      return getProductionRowById(id);
+      // [T-049 B10] SELECT-then-INSERT 有并发竞态:页面首载时 wiring 与 VM 两路并发
+      // 各自 ensure,后插者撞 content_output_id 唯一索引直接炸 → wiring=undefined →
+      // 录制工作台随机消失(刷新才出现,真机复现过)。onConflictDoNothing 让后到者
+      // 安静落败,随后按 outputId 重查赢家行返回 —— 两路拿到同一行。
+      await db
+        .insert(productions)
+        .values({
+          id,
+          userId,
+          contentOutputId: outputId,
+          productionMode: "remote_recording",
+          status: "drafting",
+          recordingConfig: {},
+          subtitleConfig: {},
+          startedAt: null,
+          completedAt: null,
+          updatedAt: now,
+        })
+        .onConflictDoNothing();
+      const winner = await getProductionByOutput(outputId);
+      return winner;
     },
 
     async updateProduction(productionId, patch) {

@@ -195,9 +195,10 @@ describe("ProjectsPage", () => {
     expect(firstRow).not.toBeNull();
 
     const openAction = within(firstRow).getByRole("link", { name: "打开" });
+    // [T-049 B1] href 用完整项目 id(旧断言的剥前缀 slug 正是真实项目身份丢失的根因)。
     expect(openAction).toHaveAttribute(
       "href",
-      "/projects/ai-native-browser/script",
+      "/projects/project-ainativebrowser/script",
     );
   });
 

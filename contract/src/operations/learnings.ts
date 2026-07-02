@@ -35,6 +35,20 @@ export const learningsOperations = {
     body: z.object({
       title: z.string().min(1),
       insight: z.string().default(""),
+      // [T-049 B17] 富录入:类型由用户选(旧版无此字段,后端写死 strategy 把「记录失败
+      // 案例」也归进选题策划桶)。可选保持向后兼容,缺省仍 strategy。
+      learningType: z
+        .enum([
+          "strategy",
+          "hook",
+          "structure",
+          "failure",
+          "process",
+          "editing",
+          "conversion_pattern",
+          "offer_insight",
+        ])
+        .optional(),
     }),
     response: learningResource,
     fr: ["FR-LEARNINGS-CREATE"],

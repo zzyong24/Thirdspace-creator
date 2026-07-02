@@ -114,24 +114,60 @@ describe("Experience island wiring (Module 14)", () => {
     ).not.toBeNull();
   });
 
-  it("quick-record button → createLearning with the action label as title", async () => {
+  // [T-049 B17] 快速记录改富录入:点按钮只开表单(绝不直接落库空记录);
+  // 标题+洞察必填,保存才 createLearning(带 learningType)。
+  it("quick-record button opens the form; submit → createLearning with typed fields", async () => {
     const { container } = await renderQuickActions();
     fireEvent.click(
       container.querySelector<HTMLButtonElement>(
         '[data-slot="quick-record-action"]',
       )!,
     );
+    // 只开表单,不落库。
+    expect(mockClient.createLearning).not.toHaveBeenCalled();
+    const form = container.querySelector('[data-slot="quick-record-form"]');
+    expect(form).not.toBeNull();
+    // 空必填时提交按钮禁用。
+    const submit = container.querySelector<HTMLButtonElement>(
+      '[data-slot="quick-record-submit"]',
+    )!;
+    expect(submit.disabled).toBe(true);
+    fireEvent.change(
+      container.querySelector<HTMLInputElement>(
+        '[data-slot="quick-record-title"]',
+      )!,
+      { target: { value: "开头 3 秒必须有钩子" } },
+    );
+    fireEvent.change(
+      container.querySelector<HTMLTextAreaElement>(
+        '[data-slot="quick-record-insight"]',
+      )!,
+      { target: { value: "前 3 秒没有冲突/悬念,完播率掉一半。" } },
+    );
+    expect(submit.disabled).toBe(false);
+    fireEvent.click(submit);
     await waitFor(() =>
       expect(mockClient.createLearning).toHaveBeenCalledTimes(1),
     );
     expect(mockClient.createLearning).toHaveBeenCalledWith(
-      expect.objectContaining({ body: { title: "新建经验", insight: "" } }),
+      expect.objectContaining({
+        body: {
+          title: "开头 3 秒必须有钩子",
+          insight: "前 3 秒没有冲突/悬念,完播率掉一半。",
+          learningType: "strategy",
+        },
+      }),
     );
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 
   it("apply control → createLearningApplication with learningId + selected project", async () => {
     const { container } = await renderRegion();
+    // [T-049 B17] 应用前必须显式选目标项目(旧行为恒灌 applyTargets[0]=演示项目)。
+    const select = container.querySelector<HTMLSelectElement>(
+      '[data-record-id="rec-1"] [data-slot="record-apply-target"]',
+    );
+    fireEvent.change(select!, { target: { value: "project-1" } });
     const applyButton = container.querySelector<HTMLButtonElement>(
       '[data-record-id="rec-1"] [data-slot="record-apply"]',
     );
