@@ -215,6 +215,11 @@ import { runCopilotAssist } from "@/server/ai/copilot-runner";
 import { runAssetGenerate } from "@/server/ai/asset-generate-runner";
 import { runTranscribe } from "@/server/ai/transcribe-runner";
 import { runReconstruct } from "@/server/ai/reconstruct-runner";
+// T-040a 提示词/skill 服务端可配 —— 装配期读 skill_config_overrides 全表 → 套进常驻 REGISTRY。
+import {
+  applySkillConfigOverridesFromDb,
+  createPgliteSkillConfigOverrideReadPort,
+} from "@/server/ai/skill-config-overrides";
 import { createLlmCompleter } from "@/server/ai/llm/provider";
 import { resolveLlmConfig } from "@/server/ai/llm/resolve";
 import {
@@ -5058,6 +5063,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
   };
+
+  // ── T-040a 提示词/skill 服务端可配(装配接线,SPEC 2026-07-02 §4.2)──────────────
+  // db 句柄可用后调一次:读 skill_config_overrides 全表 → 归一空串→undefined → 调既有
+  // overrideTemplatesFromConfig 套进常驻 REGISTRY([gate-F1] 内部首行先 registerAllTemplates
+  // 保证 18 个 id 就位)。表空/未配 → 归一后逐字段 undefined → getTemplate 仍返内置(零风险回退)。
+  // 覆盖 chat 三面 skill(chat-runner 走 getTemplate,本片即可配);结构化 runner 走 import 常量,
+  // 待 T-040b 改 getTemplate 后才吃到覆盖(诚实标注,不越界)。fire-and-forget 内部逐条 try/catch,
+  // 坏 id 只记日志跳过、不阻塞装配。
+  await applySkillConfigOverridesFromDb({
+    readPort: createPgliteSkillConfigOverrideReadPort(db),
+  });
 
   return {
     projects,

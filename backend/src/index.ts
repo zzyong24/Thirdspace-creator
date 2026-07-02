@@ -42,8 +42,10 @@ export {
   modelConfigurations,
   agentConfigurations,
   storageConfigs,
+  skillConfigOverrides,
   SETTINGS_DDL,
 } from "./schema/settings";
+export type { SkillConfigOverrideRow } from "./schema/settings";
 export {
   knowledgeItems,
   knowledgeRevisions,
