@@ -264,6 +264,24 @@ function TodoCard({ todos }: { todos: ReadonlyArray<TodoRow> }) {
   return (
     <div data-slot="todo-card">
     <SectionCard title="待办事项" description={`${todos.length} 项待处理任务`}>
+      {/* [T-054] 空态引导:0 待办时原先整卡空白(基线截图的「大片留白」),
+          改为把人送去下一步(选题池)。 */}
+      {todos.length === 0 ? (
+        <div
+          data-slot="todo-empty"
+          className="flex flex-col items-start gap-2 rounded-card border border-dashed border-border bg-surface-subtle px-3.5 py-4"
+        >
+          <p className="text-sm text-muted-foreground">
+            没有待处理任务。从选题池挑一条,开启下一条内容。
+          </p>
+          <Link
+            href="/topics"
+            className="text-sm font-medium text-brand hover:underline"
+          >
+            去选题池挑一条 →
+          </Link>
+        </div>
+      ) : null}
       <ul
         data-slot="todo-list"
         className="flex flex-col gap-2"
@@ -421,24 +439,9 @@ function DataOverviewCard({ vm }: { vm: DashboardViewModel }) {
       description="本周累计播放与转化趋势"
       className="md:col-span-2 lg:col-span-1"
     >
-      <div
-        data-slot="data-overview-compact-metrics"
-        className="grid grid-cols-2 gap-1.5"
-      >
-        {vm.dataOverview.metrics.map((metric) => (
-          <MetricCard
-            key={metric.id}
-            id={metric.id}
-            label={metric.label}
-            value={metric.value}
-            delta={metric.delta}
-            trend={metric.trend}
-            tone={metric.tone}
-            className="bg-surface-subtle"
-          />
-        ))}
-      </div>
-      <div className="mt-2">
+      {/* [T-054] 删重复 KPI 瓷砖:同 5 个指标顶部一排已展示,本区再铺一遍是
+          信息冗余(审计「怪」感来源之一)。数据概览聚焦趋势图。 */}
+      <div className="mt-1">
         <ChartFrame
           title="本周播放趋势"
           summary={buildTrendSummary(vm.dataOverview.trend)}

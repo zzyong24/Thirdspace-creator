@@ -67,15 +67,19 @@ export function MetricCard({
         <span className="text-[22px] font-semibold leading-tight tabular-nums text-foreground">
           {value}
         </span>
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 text-xs font-medium",
-            TONE_TEXT[tone],
-          )}
-        >
-          <span aria-hidden="true">{TREND_GLYPH[trend]}</span>
-          <span>{delta}</span>
-        </span>
+        {/* [T-054] 无真环比(空/「—」占位)时不渲染 delta 徽标 —— 灰色小横杠
+            全站到处挂着是「有数据但没意义」的视觉噪音。 */}
+        {delta && delta !== "—" ? (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-xs font-medium",
+              TONE_TEXT[tone],
+            )}
+          >
+            <span aria-hidden="true">{TREND_GLYPH[trend]}</span>
+            <span>{delta}</span>
+          </span>
+        ) : null}
       </div>
     </article>
   );
