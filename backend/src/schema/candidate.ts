@@ -65,6 +65,9 @@ export const audienceSignals = pgTable("audience_signals", {
   // (F3 诚实边界),只有本次改动后的新采集能带 publication_id;非评论信号 (dm/consultation)
   // 也留空。
   publicationId: text("publication_id"),
+  // 评论点赞数 —— 热榜排序依据 (T-042, 迁移 0014). 采集时抓 digg_count 带进来;NULLABLE:
+  // 存量评论(0014 之前入库)无点赞值,非评论信号 (dm/consultation/review) 也留空。
+  likeCount: integer("like_count"),
   createdAt: text("created_at").notNull(),
 });
 
@@ -111,6 +114,7 @@ CREATE TABLE IF NOT EXISTS audience_signals (
   linked_candidate_id TEXT,
   ingestion_run_id TEXT,
   publication_id TEXT,
+  like_count INTEGER,
   created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS topic_promotions (

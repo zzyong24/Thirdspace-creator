@@ -549,6 +549,8 @@ export interface ReviewCommentItem {
   readonly id: Id;
   readonly text: string;
   readonly demandTag: string | null;
+  // 评论点赞数 (T-042 热榜排序依据) — null 存量(0014 前采集)/无值。
+  readonly likeCount: number | null;
   readonly createdAt: Iso8601;
 }
 

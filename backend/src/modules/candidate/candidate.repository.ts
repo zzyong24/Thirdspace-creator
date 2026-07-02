@@ -1,4 +1,4 @@
-import { and, desc, eq, type Db } from "@creatoros/backend";
+import { and, desc, eq, sql, type Db } from "@creatoros/backend";
 import {
   candidates,
   audienceSignals,
@@ -73,6 +73,8 @@ export interface CreateSignalInput {
   ingestionRunId: string | null;
   // 评论按作品可读 (T-030 D6) — 回填自采集 aweme_id→publication;无匹配则 null。
   publicationId?: string | null;
+  // 评论点赞数 (T-042 热榜排序依据) — 采集带的 digg_count;无值 → null。
+  likeCount?: number | null;
 }
 
 export interface ListSignalsQuery {
@@ -328,6 +330,7 @@ export function createCandidateRepository(
           linkedCandidateId: input.linkedCandidateId,
           ingestionRunId: input.ingestionRunId,
           publicationId: input.publicationId ?? null,
+          likeCount: input.likeCount ?? null,
           createdAt: deps.now(),
         })
         .returning();
@@ -394,8 +397,10 @@ export function createCandidateRepository(
     },
 
     async listCommentsForPublication(publicationId, limit) {
-      // 复盘每作品评论 (T-030 D6) — user-scoped, source='comment' 且绑定该作品的信号,
-      // 按 created_at 倒序封顶 limit 条 (ix_audience_signals_pub 支撑作品维度过滤)。
+      // 复盘每作品评论 (T-030 D6 + T-042 热榜) — user-scoped, source='comment' 且绑定该作品的
+      // 信号,**按点赞数倒序(热榜)**封顶 limit 条,同赞数再按 created_at 倒序兜底
+      // (ix_audience_signals_pub 支撑作品维度过滤)。coalesce(like_count,-1) 让存量无点赞
+      // (0014 前入库)沉到底,不抢占热榜前列。
       return db
         .select()
         .from(audienceSignals)
@@ -406,7 +411,10 @@ export function createCandidateRepository(
             eq(audienceSignals.publicationId, publicationId),
           ),
         )
-        .orderBy(desc(audienceSignals.createdAt))
+        .orderBy(
+          desc(sql`coalesce(${audienceSignals.likeCount}, -1)`),
+          desc(audienceSignals.createdAt),
+        )
         .limit(limit);
     },
 

@@ -789,10 +789,10 @@ function CommentsSection({
       className="flex flex-col gap-1.5 rounded-xl border border-border bg-surface p-3 shadow-card"
     >
       <header className="flex items-center justify-between px-1">
-        <h3 className="text-[13px] font-semibold text-foreground">作品评论</h3>
+        <h3 className="text-[13px] font-semibold text-foreground">热门评论</h3>
         {isEmpty ? null : (
           <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
-            前 {comments.length} 条
+            热榜前 {comments.length} 条
           </span>
         )}
       </header>
@@ -824,13 +824,27 @@ function CommentsSection({
               <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground">
                 {comment.text}
               </p>
-              {comment.demandTag ? (
-                <span
-                  data-slot="review-comment-demand-tag"
-                  className="inline-flex w-fit items-center rounded-full border border-brand/40 bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand"
-                >
-                  {comment.demandTag}
-                </span>
+              {comment.demandTag || comment.likeCount != null ? (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {comment.likeCount != null ? (
+                    <span
+                      data-slot="review-comment-likes"
+                      data-like-count={comment.likeCount}
+                      className="inline-flex w-fit items-center gap-0.5 rounded-full bg-surface-subtle px-2 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground"
+                      title="评论点赞数(热榜排序依据)"
+                    >
+                      🔥 {comment.likeCount.toLocaleString()}
+                    </span>
+                  ) : null}
+                  {comment.demandTag ? (
+                    <span
+                      data-slot="review-comment-demand-tag"
+                      className="inline-flex w-fit items-center rounded-full border border-brand/40 bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand"
+                    >
+                      {comment.demandTag}
+                    </span>
+                  ) : null}
+                </div>
               ) : null}
             </li>
           ))}

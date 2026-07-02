@@ -406,18 +406,20 @@ describe("AnalyticsReviewPage", () => {
       };
     }
 
-    it("有评论 → 列出评论文本(+ demand_tag)", async () => {
+    it("有评论 → 列出评论文本(+ demand_tag + 热榜点赞数)", async () => {
       const viewModel = await vmWith([
         {
           id: "sig-1",
           text: "求 RAG 落地教程",
           demandTag: "教程需求",
+          likeCount: 512, // T-042 热榜点赞数
           createdAt: "2026-06-30T02:00:00.000Z",
         },
         {
           id: "sig-2",
           text: "这条能变现吗",
           demandTag: null,
+          likeCount: null, // 存量无点赞值 → 不显 🔥
           createdAt: "2026-06-30T01:00:00.000Z",
         },
       ]);
@@ -441,6 +443,16 @@ describe("AnalyticsReviewPage", () => {
       );
       expect(tags).toHaveLength(1);
       expect(tags[0].textContent ?? "").toContain("教程需求");
+      // T-042 热榜点赞数:有值才显 🔥(sig-1 512);null(sig-2)不显 → 只 1 个 likes 徽标。
+      const likes = container.querySelectorAll(
+        '[data-slot="review-comment-likes"]',
+      );
+      expect(likes).toHaveLength(1);
+      expect(likes[0].getAttribute("data-like-count")).toBe("512");
+      expect(likes[0].textContent ?? "").toContain("512");
+      // header 反映热榜语义。
+      expect(section!.textContent ?? "").toContain("热门评论");
+      expect(section!.textContent ?? "").toContain("热榜前 2 条");
     });
 
     it("无评论 → 诚实空态文案(不摆假评论,引导去任务中心采集)", async () => {

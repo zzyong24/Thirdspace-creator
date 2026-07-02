@@ -176,6 +176,8 @@ export interface IngestSignalInput {
   // resolved at the ingest edge from the capture's aweme_id (→ publications where
   // externalId=aweme_id). 无匹配作品 → 留空,不报错 (F3 边界)。
   publicationId?: string | null;
+  // 评论点赞数 —— 热榜排序依据 (T-042). 采集时从 digg_count 带进来;非评论/无值 → null。
+  likeCount?: number | null;
 }
 
 export interface CandidateService {
@@ -425,6 +427,8 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         // 评论按作品可读 (T-030 D6) — 回填作品绑定 (来自采集 aweme_id→publication);
         // 无匹配作品则 null,不报错 (F3)。
         publicationId: record.publicationId ?? null,
+        // 评论点赞数 (T-042 热榜排序依据) — 采集带的 digg_count;无值 → null。
+        likeCount: record.likeCount ?? null,
       });
       if (record.linkedCandidateRef) {
         // bump the linked Candidate's demand_count (recompute keeps it honest).

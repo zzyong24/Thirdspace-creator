@@ -3341,6 +3341,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             demandTag: input.demandTag,
             // 评论按作品可读 (T-030 D6) — 回填作品绑定(ingestComments 已按 aweme_id 解析)。
             publicationId: input.publicationId,
+            // 评论点赞数 (T-042 热榜排序依据) — 采集抓的 digg_count。
+            likeCount: input.likeCount,
           });
         },
         // 按 aweme_id 查对应作品的 publication_id(T-030 D6 回填,F3):命中 published +

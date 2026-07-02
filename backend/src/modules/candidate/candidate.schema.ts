@@ -156,6 +156,8 @@ export function toAudienceSignalDto(
     ingestionRunId: row.ingestionRunId ?? null,
     // 评论按作品可读 (T-030 D6) — null 存量/非评论信号 (F3 边界)。
     publicationId: row.publicationId ?? null,
+    // 评论点赞数 (T-042 热榜排序依据) — null 存量/非评论信号。
+    likeCount: row.likeCount ?? null,
     createdAt: row.createdAt,
   };
 }

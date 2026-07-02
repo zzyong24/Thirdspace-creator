@@ -148,6 +148,7 @@ interface CommentSignalDto {
   readonly id: string;
   readonly rawText: string;
   readonly demandTag: string | null;
+  readonly likeCount: number | null; // T-042 热榜排序依据
   readonly createdAt: string;
 }
 
@@ -411,15 +412,23 @@ export async function fetchReviewComments(
       continue;
     }
   }
-  // Newest first across publications, capped at 前 100 条 (SPEC §10).
+  // 热榜排序 (T-042):跨作品合并后按点赞数降序,同赞数再按 created_at 降序兜底,封顶前 100 条
+  // (SPEC §10「热榜100」)。后端每作品已按点赞排,但多作品合并需在此重排出全局热榜。
+  // likeCount null(存量 0014 前采集)按 -1 计,沉到榜尾不抢前列。
+  const rank = (c: CommentSignalDto) => c.likeCount ?? -1;
   return merged
     .slice()
-    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0))
+    .sort((a, b) => {
+      const byLike = rank(b) - rank(a);
+      if (byLike !== 0) return byLike;
+      return a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0;
+    })
     .slice(0, 100)
     .map((c) => ({
       id: c.id,
       text: c.rawText,
       demandTag: c.demandTag ?? null,
+      likeCount: c.likeCount ?? null,
       createdAt: c.createdAt,
     }));
 }

@@ -1483,6 +1483,8 @@ export interface CommentIngestPorts {
     // 评论按作品可读 (T-030 D6) — 回填该评论所属作品 (来自 aweme_id→publication);
     // 无匹配作品 → null,不报错 (F3 边界)。
     publicationId: string | null;
+    // 评论点赞数 (T-042 热榜排序依据) — 采集抓的 digg_count;无值 → null。
+    likeCount: number | null;
   }): Promise<void>;
   /** 完成该 run(status→completed)。 */
   completeRun(runId: string): Promise<void>;
@@ -1550,6 +1552,7 @@ export async function ingestComments(
       demandTag: null,
       ingestionRunId: run.id, // C-4 铁律:信号写必带真 run id
       publicationId, // 回填作品绑定(F3:仅本次采集能带,存量无锚)
+      likeCount: c.likeCount ?? null, // T-042 热榜排序依据(采集抓的 digg_count)
     });
     await ports.markRecordWritten(run.id, recordKey);
     written += 1;

@@ -69,6 +69,9 @@ export const audienceSignalResource = z.object({
   // tied to, backfilled at ingest from the capture's aweme_id. NULLABLE: 存量评论无 aweme_id
   // 锚,无法回填 (F3);非评论信号也留空。
   publicationId: id.nullable(),
+  // 评论点赞数 —— 热榜排序依据 (T-042, 迁移 0014). 采集时抓 digg_count 带进来;NULLABLE:
+  // 存量评论(0014 前入库)无点赞值,非评论信号(dm/consultation/review)也留空。
+  likeCount: z.number().int().nullable(),
   createdAt: iso8601,
 });
 export type AudienceSignalResource = z.infer<typeof audienceSignalResource>;
