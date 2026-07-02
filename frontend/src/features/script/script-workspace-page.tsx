@@ -58,10 +58,18 @@ export interface ScriptWorkspacePageProps {
    * Editor sections derived from the 分镜脚本 artifact's CURRENT version
    * (contentData.sections, or contentText as a single section). Supplied by the
    * async route (`loadScriptEditorSections`) so a saved / AI-drafted script
-   * round-trips into the editor. When omitted, the fixture `vm.sections` render.
+   * round-trips into the editor.
+   * [T-050] 非 null(含空数组)= 真实读结果,直接渲染 —— 空数组显真实空编辑器,
+   * 不再回落 fixture demo sections。null/缺省(测试路径)才用 vm.sections。
    * T-019(L4):这些 sections 用于拼出 TipTap 的初始 HTML(`editorHtmlOverride` 缺省时)。
    */
   readonly sectionsOverride?: ReadonlyArray<ScriptSectionView> | null;
+  /**
+   * [T-050] The DB-resolved script artifact id (output_script 优先,回退 master_script)。
+   * 传了(含 null)就接管 vm.scriptArtifactId —— fixture 查表旁路退役;null = 项目还没有
+   * 脚本 artifact,AI 起草岛暂不渲染(延迟建 artifact 的 ensure 归 T-053)。缺省(测试)保持 vm。
+   */
+  readonly scriptArtifactIdOverride?: string | null;
   /**
    * T-019(L4):分镜脚本 artifact 当前版本的 TipTap 初始 HTML(`contentData.html` 优先,
    * 否则从 sections 拼)。非 null 时直接作编辑器初值(富文本忠实往返);null → 回退到
@@ -106,15 +114,18 @@ export function ScriptWorkspacePage({
   versionsOverride,
   outlineOverride,
   goldenQuotesOverride,
+  scriptArtifactIdOverride,
   aiSuggestionsGuide = false,
 }: ScriptWorkspacePageProps) {
   const vm = viewModel ?? buildScriptViewModel(projectId);
-  // Prefer the saved / AI-drafted version's sections (round-trip) when the route
-  // resolved a non-empty override; otherwise the fixture sections.
-  const editorSections =
-    sectionsOverride && sectionsOverride.length > 0
-      ? sectionsOverride
-      : vm.sections;
+  // [T-050] 非 null override(含空数组)= 真实读结果直接渲染;只有 null/缺省(测试
+  // 基线)才落 vm.sections —— demo sections 不再注入真项目。
+  const editorSections = sectionsOverride ?? vm.sections;
+  // [T-050] artifactId:route 传入 DB 解析值(含 null)即接管;缺省保持 vm(测试)。
+  const scriptArtifactId =
+    scriptArtifactIdOverride !== undefined
+      ? scriptArtifactIdOverride
+      : vm.scriptArtifactId;
   // T-019(L4):TipTap 初始 HTML —— 真实存的富文本 html(editorHtmlOverride)优先,
   // 否则从 sections(override 或 fixture)拼出。pure(sectionsToHtml 无 DOM,Server 安全)。
   const initialHtml =
@@ -143,21 +154,21 @@ export function ScriptWorkspacePage({
         >
           <ScriptRichEditor
             initialHtml={initialHtml}
-            artifactId={vm.scriptArtifactId}
+            artifactId={scriptArtifactId}
           />
           <VersionHistoryStrip
             versions={versions}
-            artifactId={vm.scriptArtifactId}
+            artifactId={scriptArtifactId}
           />
         </div>
         <div
           data-slot="script-right-rail"
           className="flex flex-col gap-card-gap"
         >
-          {vm.scriptArtifactId ? (
+          {scriptArtifactId ? (
             <ScriptDraftIsland
               projectId={vm.projectId}
-              artifactId={vm.scriptArtifactId}
+              artifactId={scriptArtifactId}
               topic={vm.topic}
             />
           ) : null}

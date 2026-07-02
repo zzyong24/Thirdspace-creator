@@ -158,28 +158,17 @@ export function buildPublishingViewModel(
   const cards: ReadonlyArray<PlatformPublishCardWithHint> =
     fixtureCards.length > 0 ? fixtureCards : DEFAULT_PLATFORM_CARDS;
 
-  // Pull the form data from the first revision (or fall back to a
-  // blank slate).
+  // Pull the form data from the first revision (or fall back to a blank
+  // slate). [T-050] demo 硬编码文案(ainativebrowser 特判/假标签/假分类/假系列)
+  // 退役:无 revision 时从项目真值(title/brief)带入,其余诚实置空。
   const firstRevision = revisions[0];
   const form = {
-    title:
-      firstRevision?.title ??
-      (project.id === "project-ainativebrowser"
-        ? "AI Native Browser 深度解析:下一代浏览器的机会与未来"
-        : project.title),
-    description:
-      firstRevision?.description ??
-      (project.id === "project-ainativebrowser"
-        ? "AI Native Browser 不只是浏览器的升级,而是通往 AI Agent 时代的入口。本视频将深度解析它的核心价值、市场机会、关键功能和未来趋势,帮你看懂下一代浏览器的真正潜力。"
-        : project.brief),
-    coverLabel: firstRevision?.coverAssetId ?? "封面 · AI Native Browser",
-    tags:
-      firstRevision?.platformTags ??
-      (project.id === "project-ainativebrowser"
-        ? ["AI", "浏览器", "生产力工具", "AI Agent", "未来趋势", "科技"]
-        : ["独立创作者", "工作流", "AI"]),
-    category: firstRevision?.category ?? "科技 · 互联网",
-    series: firstRevision?.series ?? "AI 工具深度解析系列",
+    title: firstRevision?.title ?? project.title,
+    description: firstRevision?.description ?? project.brief,
+    coverLabel: firstRevision?.coverAssetId ?? "",
+    tags: firstRevision?.platformTags ?? [],
+    category: firstRevision?.category ?? "",
+    series: firstRevision?.series ?? "",
   };
 
   const preview = {

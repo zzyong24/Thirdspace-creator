@@ -260,20 +260,21 @@ describe("GAP-PUBC-1 rail 接真 + 诚实空态", () => {
     expect(vm.metrics.find((m) => m.id === "pubc-published-count")?.value).toBe("1");
   });
 
-  it("demo-project publications never enter the rail aggregation", async () => {
+  it("every listed project's publications enter the aggregation (demo 过滤集退役)", async () => {
+    // [T-050] demo 项目已从 DB 物理删除,读侧不再维护 id 黑名单 —— projects.list
+    // 返回什么就聚合什么(全是真项目)。
     const client = makeClient([
       {
-        // A canonical demo project id — filtered out of the publishing table.
-        id: "project-secondbrain",
-        title: "Demo",
+        id: "project-real-b",
+        title: "真实项目 B",
         pubs: [
           {
-            id: "pub-demo",
-            outputId: "out-demo",
+            id: "pub-b1",
+            outputId: "out-b1",
             platform: "bilibili",
             status: "published",
-            title: "Demo 作品",
-            snapshot: { capturedAt: "2026-06-21T00:00:00.000Z", plays: 999999, likes: 9999 },
+            title: "B 作品",
+            snapshot: { capturedAt: "2026-06-21T00:00:00.000Z", plays: 2000, likes: 100 },
           },
         ],
       },
@@ -295,11 +296,12 @@ describe("GAP-PUBC-1 rail 接真 + 诚实空态", () => {
 
     const vm = await buildPublishingCenterViewModelReal(client);
 
-    // Only the real project's pub contributes.
-    expect(vm.publications.length).toBe(1);
-    expect(vm.platformComparison.map((p) => p.platform)).toEqual(["youtube"]);
-    expect(vm.platformComparison[0]?.share).toBe(1000);
-    // The demo pub's 999999 plays are NOT in the total.
-    expect(vm.metrics.find((m) => m.id === "pubc-total-plays")?.value).toBe("1,000");
+    // Both projects' pubs contribute (no id-based filtering).
+    expect(vm.publications.length).toBe(2);
+    expect(vm.platformComparison.map((p) => p.platform).sort()).toEqual([
+      "bilibili",
+      "youtube",
+    ]);
+    expect(vm.metrics.find((m) => m.id === "pubc-total-plays")?.value).toBe("3,000");
   });
 });

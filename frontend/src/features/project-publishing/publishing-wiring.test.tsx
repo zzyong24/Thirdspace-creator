@@ -246,7 +246,13 @@ describe("Publishing needs-backend wiring", () => {
 
   // SPEC §8「多平台 标签」行:标签 × 删除 / 添加 → append 新 revision 带 platformTags。
   it("删除标签 appends a revision with the remaining platformTags, then refresh", async () => {
-    const vm = buildPublishingViewModel(PROJECT_ID);
+    // [T-050] selector 不再给假标签兜底(无 revision → tags 空);删除交互测试
+    // 自带初始标签集。
+    const base = buildPublishingViewModel(PROJECT_ID);
+    const vm = {
+      ...base,
+      form: { ...base.form, tags: ["AI", "工作流", "创作者"] },
+    };
     const first = vm.platforms[0]!;
     const wiring = {
       outputId: OUTPUT_ID,

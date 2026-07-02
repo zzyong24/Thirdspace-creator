@@ -267,17 +267,32 @@ export async function buildProductionWorkspaceViewModel(
   projectId: string,
   client: ProductionDataClient = defaultClient as unknown as ProductionDataClient,
 ): Promise<ProductionViewModel> {
-  // The fixture VM is the per-field fallback source for everything that has no
-  // real read path this wave, and the WHOLE fallback if production is unresolved.
-  const fixtureVm = buildProductionViewModel(projectId);
+  // [T-050] fixture VM 只剩静态结构来源(素材分类 tabs/设置描述符);demo 数据分支
+  // (isFixtureProject 的 scriptLines/assets/preview/timeline 注入)与整 VM 回退全部
+  // 退役 —— demo 项目已从 DB 删除,制作未开始/读失败渲染诚实空,不再演示内容凑数。
+  const fixtureShell = buildProductionViewModel(projectId);
+  const emptyVm = (): ProductionViewModel => ({
+    scenario: "default",
+    kind: "production",
+    projectId,
+    mode: "remote_recording",
+    scriptLines: [],
+    assetCategories: fixtureShell.assetCategories,
+    assets: [],
+    preview: { posterLabel: "暂无预览", durationLabel: "00:00" },
+    settings: fixtureShell.settings,
+    timeline: [],
+    loading: false,
+    error: null,
+  });
 
   // Resolve the project's production record (mode/status). Without a resolvable
-  // output → production, there is no real production state to show, so keep the
-  // old fixture behavior (which renders the empty/demo production as before).
+  // output → production, there is no real production state to show → honest
+  // empty production (制作尚未开始).
   const canonicalProjectId = await resolveProjectId(client, projectId);
   const outputId = await resolvePrimaryOutputId(client, canonicalProjectId);
   if (outputId === null) {
-    return fixtureVm;
+    return emptyVm();
   }
 
   let production: ProductionDto;
@@ -288,15 +303,9 @@ export async function buildProductionWorkspaceViewModel(
       body: undefined,
     })) as ProductionDto;
   } catch {
-    // Production unresolved (e.g. unseeded project) → fixture fallback. A real
-    // project still won't render "未找到项目" — the fixture's empty production
-    // state is the honest degraded render.
-    return fixtureVm;
+    // Production unresolved → honest empty production state.
+    return emptyVm();
   }
-
-  // A canonical/demo project keeps the fixture's curated script/preview/timeline
-  // content; a real project shows empty states (no fake NLE data).
-  const isFixtureProject = fixtureVm.scenario !== "empty";
 
   // 已配素材 — the asset-type material links the AI 素材匹配 (material.match) node
   // created for this project, resolved into the asset library grid. Real for
@@ -335,44 +344,33 @@ export async function buildProductionWorkspaceViewModel(
         durationLabel: null,
       }));
   } catch {
-    // Material-links read failed — keep assets empty (real project) or fall back
-    // to the fixture library (canonical demo project) so the grid still renders.
-    if (isFixtureProject) {
-      assets = fixtureVm.assets;
-    }
+    // Material-links read failed — assets stay empty (the grid owns the empty
+    // state). [T-050] demo 素材库兜底注入已退役。
   }
 
-  // SEAM-03:读脚本阶段写的真分镜当提词。真脚本优先;无则 demo fixture / 真项目空。
+  // SEAM-03:读脚本阶段写的真分镜当提词。真脚本优先;无则诚实空。
   const realScriptLines = await readScriptLines(client, canonicalProjectId);
 
   return {
     scenario: "default",
     kind: "production",
-    projectId: fixtureVm.projectId,
+    projectId,
     // REAL: the project's persisted production mode.
     mode: production.productionMode,
-    // SEAM-03:脚本阶段持久化的真分镜 → 拍摄提词。真脚本优先,否则 demo fixture / 真项目空。
-    scriptLines:
-      realScriptLines.length > 0
-        ? realScriptLines
-        : isFixtureProject
-          ? fixtureVm.scriptLines
-          : [],
+    // SEAM-03:脚本阶段持久化的真分镜 → 拍摄提词;无则空([T-050] demo 提词退役)。
+    scriptLines: realScriptLines,
     // Static taxonomy — always the fixture's category tabs.
-    assetCategories: fixtureVm.assetCategories,
+    assetCategories: fixtureShell.assetCategories,
     // REAL: matched assets (已配素材) for ALL projects; empty when none matched.
     assets,
-    // No real preview render this wave — fixture for demo, neutral empty label
-    // for real projects (the PreviewPanel renders the placeholder either way).
-    preview: isFixtureProject
-      ? fixtureVm.preview
-      : { posterLabel: "暂无预览", durationLabel: "00:00" },
+    // No real preview render this wave — neutral empty label (the PreviewPanel
+    // renders the placeholder).
+    preview: { posterLabel: "暂无预览", durationLabel: "00:00" },
     // Recording/subtitle/export settings have no real per-project read path —
     // keep the static fixture descriptors so the SettingsRail renders.
-    settings: fixtureVm.settings,
-    // No real timeline landing (NLE not implemented) — fixture for demo,
-    // EMPTY for real projects so the strip shows its empty state.
-    timeline: isFixtureProject ? fixtureVm.timeline : [],
+    settings: fixtureShell.settings,
+    // No real timeline landing (NLE not implemented) — honest empty strip.
+    timeline: [],
     loading: false,
     error: null,
   };

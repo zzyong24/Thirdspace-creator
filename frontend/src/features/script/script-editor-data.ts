@@ -275,6 +275,35 @@ export async function loadScriptEditorData(
 interface OutlineArtifactDto {
   readonly id: string;
   readonly artifactType: string;
+  readonly stage?: string;
+}
+
+/**
+ * [T-050] Resolve the script artifact id from the DB (was: fixture 查表旁路 —— selector
+ * 查 canonicalDataset.artifacts,真项目永远 null → 页面渲染 demo sections)。语义与旧
+ * selector 一致:优先 分镜脚本(output_script),回退 主脚本(master_script),都没有 → null
+ * (真实空:项目还没进脚本阶段)。任何读失败 → null,不炸页面。
+ */
+export async function resolveScriptArtifactIdFromDb(
+  projectId: string | null,
+  client: ScriptDataClient = defaultClient as unknown as ScriptDataClient,
+): Promise<string | null> {
+  if (!projectId || !client.listArtifacts) return null;
+  try {
+    const listed = await client.listArtifacts({
+      params: { projectId },
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    });
+    const artifacts = (Array.isArray(listed) ? listed : []) as OutlineArtifactDto[];
+    const scriptArtifacts = artifacts.filter((a) => a.stage === "script");
+    const output = scriptArtifacts.find((a) => a.artifactType === "output_script");
+    if (output) return output.id;
+    const master = scriptArtifacts.find((a) => a.artifactType === "master_script");
+    return master?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /**

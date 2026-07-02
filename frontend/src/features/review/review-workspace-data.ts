@@ -1,8 +1,6 @@
 import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
-import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
-import { isFixtureAnalyticsProject } from "@/fixtures/selectors/review";
 import type {
   AnalyticsViewModel,
   ReviewCommentItem,
@@ -35,18 +33,16 @@ import {
  *           unattributed ratio) + this project's outputs → linked products
  *           (`projects.outputs.list` → `outputs.products.list` → `products.get`).
  *           Omitted entirely when there is no real data → honest empty state.
- *   MOCK  → metrics / viewsTrend / conversionFunnel / audience* / retentionCurve
- *           / keyMoments / topPublished / reviewHistory — kept from the fixture
- *           builder (canonical demo projects) or EMPTY for real / non-fixture
- *           projects, so the cards render their empty state instead of fake data.
+ *   EMPTY → metrics / viewsTrend / conversionFunnel / audience* / retentionCurve
+ *           / keyMoments / topPublished / reviewHistory — no owned read path →
+ *           honest empty ([T-050] demo fixture 兜底退役)。
  *
  * Degrades gracefully:
  *   - The metrics/chart base is built via `buildAnalyticsReviewViewModelFromOp`
- *     over the real `analytics.projects.get` payload (preserving the route's
- *     prior behavior). A failure there falls back to the deterministic fixture
- *     selector — a real project NEVER renders "未找到项目".
- *   - The learnings read is independent: if it throws, `aiAnalysis` keeps its
- *     fixture/empty value. A real learning set OVERWRITES the fixture insights.
+ *     over the real `analytics.projects.get` payload; a failure runs the SAME
+ *     builder over an empty snapshot list (honest empty metrics, never demo).
+ *   - The learnings read is independent: if it throws, `aiAnalysis` stays empty.
+ *     A real learning set fills the insight card.
  *
  * The contract client is injected so this helper is unit-testable without the
  * real in-process backend.
@@ -225,10 +221,9 @@ export async function buildReviewWorkspaceViewModel(
   projectId: string,
   client: ReviewDataClient = defaultClient as unknown as ReviewDataClient,
 ): Promise<AnalyticsViewModel> {
-  // --- Metrics / charts base (mock, honest) -------------------------------
-  // Preserve the route's prior behavior: build over the real analytics op, fall
-  // back to the deterministic fixture selector on failure so the page never
-  // crashes / never shows "未找到项目" for a real project.
+  // --- Metrics / charts base (real op) -------------------------------------
+  // [T-050] snapshots 读失败不再回退 fixture 聚合(canonicalDataset demo 指标已
+  // 退役)——用空快照走同一个 op 版构造,渲染诚实空指标,页面不炸。
   let base: AnalyticsViewModel;
   // Retain the real snapshots — they carry the project's publicationId(s), which the
   // 复盘每作品评论 read (T-030 D6) needs to scope comments to the current 作品.
@@ -241,20 +236,13 @@ export async function buildReviewWorkspaceViewModel(
     })) as ReadonlyArray<MetricSnapshotDto>;
     base = buildAnalyticsReviewViewModelFromOp(projectId, snapshots);
   } catch {
-    base = buildAnalyticsReviewViewModel(projectId);
+    base = buildAnalyticsReviewViewModelFromOp(projectId, []);
   }
 
-  // A canonical/demo project keeps the fixture's curated insight content as the
-  // fallback; a real project shows an empty insight card (no fake data) when it
-  // has no learnings. NB: use真正的 fixture-membership 判定 —— 真项目的 op 路径也返
-  // scenario "default"(非 "empty"),旧的 `scenario !== "empty"` 判定会让真项目误吃
-  // DEFAULT_AI_ANALYSIS 假洞察。真项目 → false → 无 learnings 时空态,不摆假。
-  const isFixtureProject = isFixtureAnalyticsProject(projectId);
-
   // --- AI 洞察 / 经验 region (REAL via learnings.list) ---------------------
-  let aiAnalysis: AnalyticsViewModel["aiAnalysis"] = isFixtureProject
-    ? base.aiAnalysis
-    : [];
+  // [T-050] demo 洞察兜底(isFixtureAnalyticsProject 分支)退役:无 learnings 就是
+  // 空洞察卡,不摆演示内容。
+  let aiAnalysis: AnalyticsViewModel["aiAnalysis"] = [];
   try {
     const learnings = (await client.listLearnings({
       params: undefined,
@@ -277,7 +265,7 @@ export async function buildReviewWorkspaceViewModel(
       // Real learnings OVERWRITE the fixture insight content.
       aiAnalysis = surfaced.map(learningToInsight);
     }
-    // No learnings → keep the fixture value (demo) / empty (real project).
+    // No learnings → 保持空(诚实空态)。
   } catch {
     // Learnings read failed — keep the fixture/empty value already assigned.
   }

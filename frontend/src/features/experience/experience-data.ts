@@ -280,8 +280,8 @@ export async function buildExperienceWorkspaceViewModel(
       body: undefined,
     })) as ReadonlyArray<LearningDto>;
   } catch {
-    // Read failed → preserve the old fixture render entirely.
-    return fixtureVm;
+    // [T-050] Read failed → 诚实空(计数 0/表空),不再整套回退 fixture demo 渲染。
+    learnings = [];
   }
 
   // The records table maps EVERY real learning (incl. discarded — the table is

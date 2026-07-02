@@ -33,7 +33,6 @@ import {
   createNotificationsService,
   createNotificationsTransport,
   NOTIFICATION_OP_IDS,
-  type NotificationRow,
 } from "@creatoros/backend/modules/notifications";
 import {
   createSearchRepository,
@@ -489,26 +488,6 @@ const SCHEDULING_OPS = new Set<string>(SCHEDULING_OP_IDS);
 // agree on the same key.
 const CANONICAL_RUBRIC_ID = "rubric-canonical";
 
-type CanonicalNotification = (typeof canonicalDataset.notifications)[number];
-
-function toNotificationRow(n: CanonicalNotification): NotificationRow {
-  return {
-    id: n.id,
-    userId: n.userId,
-    notificationType: n.notificationType,
-    title: n.title,
-    body: n.body,
-    entityType: n.entityType,
-    entityId: n.entityId,
-    readAt: n.readAt ?? null,
-    createdAt: n.createdAt,
-  };
-}
-
-// Knowledge (module 06) canonical mappers. The fixture item/revision shapes match
-// the DB rows (ISO text timestamps, jsonb metadata); the relation fixture carries
-// a NUMERIC `strength` which the DB stores as a decimal string (the repo
-// Number()-parses on read), so stringify here.
 type CanonicalKnowledge = (typeof canonicalDataset.knowledgeItems)[number];
 type CanonicalRevision = (typeof canonicalDataset.knowledgeRevisions)[number];
 type CanonicalRelation = (typeof canonicalDataset.knowledgeRelations)[number];
@@ -3872,12 +3851,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 删除,不再重种)。项目/产出/任务全部来自真实导入(T-030 管线)与用户运行时创建。
   await seedCanonicalUser(identityRepo, deps);
 
-  // Seed the canonical notifications ledger (notif-1 unread, notif-2 read), owned
-  // by the seeded login so the Shell bell resolves under a real ctx (foundation
-  // §2). seed() is onConflictDoNothing → a re-built singleton never double-seeds.
-  await notificationsRepo.seed(
-    canonicalDataset.notifications.map(toNotificationRow),
-  );
+  // [T-050] canonical 通知种子已退役(demo 文案指向已删除的演示项目);通知全部
+  // 来自运行时真实事件。
 
   // Seed the canonical knowledge graph (items + revisions + relations), all owned
   // by the canonical user, so the /knowledge page + Research workspace resolve the

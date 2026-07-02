@@ -14,14 +14,12 @@ import type { ResearchViewModel } from "@/types/view-models";
  *                             its KnowledgeItem (title + knowledgeType).
  *
  * Degrades gracefully PER FIELD: a project that resolves but has no gathered
- * material renders empty `sources`/`notes` (the islands own the empty state),
- * and the non-real fields (`trendCards`, `relatedTags`) are kept from the
- * fixture VM only for the canonical demo projects — EMPTY for real /
- * non-fixture projects so cards show their empty state instead of fake data.
+ * material renders empty `sources`/`notes` (the islands own the empty state);
+ * the non-real fields (`trendCards`, `relatedTags`, `evidence`) are ALWAYS
+ * empty ([T-050] demo 注入退役 —— 无真源就空态,不用演示内容凑数)。
  *
- * If the project READ throws/404s, the whole VM falls back to the fixture
- * builder (preserving the old behavior for unknown ids). A REAL project must
- * NEVER render "未找到项目".
+ * If the project READ throws/404s, the VM is an honest not-found shell
+ * (empty data + error copy) — never the fixture demo content.
  *
  * The contract client is injected so this helper is unit-testable without the
  * real in-process backend.
@@ -135,9 +133,10 @@ export async function buildResearchWorkspaceViewModel(
   projectId: string,
   client: ResearchDataClient = defaultClient as unknown as ResearchDataClient,
 ): Promise<ResearchViewModel> {
-  // The fixture VM is the per-field fallback source for everything that has no
-  // real read path this wave, and the WHOLE fallback if the project read fails.
-  const fixtureVm = buildResearchViewModel(projectId);
+  // [T-050] fixture VM 只剩两种用途:静态 sourceTabs 结构 + 读失败时的「未找到」壳。
+  // demo 数据分支(isFixtureProject 的 trend/tag/evidence/sources/notes 注入)全部
+  // 退役 —— demo 项目已从 DB 删除,真项目无数据就是空态,不再用演示内容凑数。
+  const fixtureShell = buildResearchViewModel(projectId);
 
   let project: ProjectDto;
   try {
@@ -147,14 +146,23 @@ export async function buildResearchWorkspaceViewModel(
       body: undefined,
     })) as ProjectDto;
   } catch {
-    // Unknown / unreadable project → preserve old behavior (fixture VM, which
-    // renders "未找到项目" for ids absent from the canonical dataset).
-    return fixtureVm;
+    // Unknown / unreadable project → 诚实错误态(空数据 + error 文案),不再返回
+    // fixture VM(手输 demo id 会泄漏一整套演示内容)。
+    return {
+      scenario: "empty",
+      kind: "research",
+      projectId,
+      idea: { title: "未找到项目", summary: "" },
+      trendCards: [],
+      relatedTags: [],
+      sourceTabs: fixtureShell.sourceTabs,
+      sources: [],
+      notes: [],
+      evidence: [],
+      loading: false,
+      error: { code: "not_found", message: "项目不存在或不可访问" },
+    };
   }
-
-  // A canonical/demo project keeps the fixture's curated trend/tag content; a
-  // real project shows empty states (no fake data).
-  const isFixtureProject = fixtureVm.scenario !== "empty";
 
   let sources: ResearchViewModel["sources"] = [];
   let notes: ResearchViewModel["notes"] = [];
@@ -214,12 +222,8 @@ export async function buildResearchWorkspaceViewModel(
       }),
     );
   } catch {
-    // Material-links read failed — keep sources/notes empty (real project) or
-    // fall back to fixture content (canonical demo project).
-    if (isFixtureProject) {
-      sources = fixtureVm.sources;
-      notes = fixtureVm.notes;
-    }
+    // Material-links read failed — sources/notes stay empty (islands own the
+    // empty state). [T-050] demo 兜底注入已退役。
   }
 
   return {
@@ -230,17 +234,15 @@ export async function buildResearchWorkspaceViewModel(
       title: project.title,
       summary: project.brief || NO_BRIEF_PLACEHOLDER,
     },
-    // No real source this wave — fixture content for demo projects, EMPTY for
-    // real projects so the cards render their empty states.
-    trendCards: isFixtureProject ? fixtureVm.trendCards : [],
-    relatedTags: isFixtureProject ? fixtureVm.relatedTags : [],
+    // [T-050] 无真实来源的区块诚实置空(趋势卡/相关标签/证据链此波无真源),
+    // demo 内容不再注入任何项目。
+    trendCards: [],
+    relatedTags: [],
     // The type-tab list is a static taxonomy — always the fixture's.
-    sourceTabs: fixtureVm.sourceTabs,
+    sourceTabs: fixtureShell.sourceTabs,
     sources,
     notes,
-    // Evidence has no real source/role link this wave — keep it honest: fixture
-    // content for demo projects, empty for real projects.
-    evidence: isFixtureProject ? fixtureVm.evidence : [],
+    evidence: [],
     loading: false,
     error: null,
   };

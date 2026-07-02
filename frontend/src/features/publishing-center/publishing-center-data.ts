@@ -115,15 +115,6 @@ export interface PublishingCenterDataClient {
   }): Promise<unknown>;
 }
 
-// Canonical demo projects — still seeded (tests assert their ids) but hidden
-// from the user-facing publishing table so only REAL publications show.
-const DEMO_PROJECT_IDS = new Set<string>([
-  "project-ainativebrowser",
-  "project-secondbrain",
-  "project-promptcraft",
-  "project-podcast-launch",
-]);
-
 const PLATFORM_LABELS: Record<string, string> = {
   youtube: "YouTube",
   bilibili: "哔哩哔哩",
@@ -326,10 +317,7 @@ async function assembleRealRows(
   } catch {
     return null;
   }
-  // Drop the canonical demo projects so the publishing table shows only the
-  // user's REAL publications (mirrors the Projects list demo filter).
-  projects = projects.filter((p) => !DEMO_PROJECT_IDS.has(p.id));
-
+  // [T-050] demo 项目过滤集退役:demo 行已从 DB 物理删除,list 返回的全是真项目。
   const projectTitleById = new Map<string, string>();
   for (const project of projects) {
     projectTitleById.set(project.id, project.title);
@@ -586,22 +574,39 @@ function buildRailFromSnapshots(railInputs: ReadonlyArray<RailInput>): RailBlock
 export async function buildPublishingCenterViewModelReal(
   client: PublishingCenterDataClient = defaultClient as unknown as PublishingCenterDataClient,
 ): Promise<PublishingCenterViewModel> {
-  // The fixture VM is the WHOLE fallback ONLY when the projects read outright
-  // fails (null) — never to mask a successful-but-empty result.
+  // [T-050] fixture VM 只剩 tab 结构(锁定顺序/文案)来源;读失败不再整套回退
+  // demo 数据,改渲染诚实错误态(空表 + error 文案)。
   const fixtureVm = buildPublishingCenterViewModel();
+  const errorVm = (): PublishingCenterViewModel => ({
+    scenario: "default",
+    kind: "publishing-center",
+    loading: false,
+    error: { code: "read_failed", message: "发布数据读取失败,请刷新重试" },
+    contentTypeTabs: fixtureVm.contentTypeTabs.map((tab) => ({
+      id: tab.id,
+      label: tab.label,
+      count: 0,
+    })),
+    publications: [],
+    metrics: buildRailFromSnapshots([]).metrics,
+    platformComparison: [],
+    trend: buildRailFromSnapshots([]).trend,
+    topContent: [],
+    pagination: { currentPage: 1, totalPages: 1 },
+  });
 
   let assembled: AssembledRows | null;
   try {
     assembled = await assembleRealRows(client);
   } catch {
-    return fixtureVm;
+    return errorVm();
   }
 
-  // Projects read failed (threw) → keep the fixture baseline (a read failure,
-  // not an empty result). A successful empty read falls through to the honest
-  // empty VM below.
+  // Projects read failed (threw) → honest error VM (a read failure, not an
+  // empty result). A successful empty read falls through to the honest empty
+  // VM below.
   if (assembled === null) {
-    return fixtureVm;
+    return errorVm();
   }
 
   const realRows = assembled.rows;

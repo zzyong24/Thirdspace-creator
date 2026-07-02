@@ -422,7 +422,16 @@ describe("PublishingWorkspacePage", () => {
   });
 
   it("renders a cover thumbnail tile with tag overlay", async () => {
-    const { container } = await renderWorkspace();
+    // [T-050] selector 不再兜底假标签(无 revision → tags 空);overlay 渲染能力
+    // 用带标签的 viewModel 验证。
+    const { buildPublishingViewModel } = await import("@/fixtures/selectors");
+    const base = buildPublishingViewModel("project-ainativebrowser");
+    const { container } = await renderWorkspace("project-ainativebrowser", {
+      viewModel: {
+        ...base,
+        form: { ...base.form, tags: ["AI", "工作流"] },
+      },
+    });
     const form = container.querySelector(
       '[data-slot="basic-information-form"]',
     ) as HTMLElement;
