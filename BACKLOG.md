@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-045 | 去登录 → 激活码授权 + 本机单用户模式 | 📋 SPEC 已写·待过 gate(改认证架构,FAIL 不准开工) | [activation-single-user](docs/superpowers/specs/2026-07-02-activation-single-user-design.md) | **用户 2026-07-02:不要登录;激活码授权→装客户本机→自设用户名/邮箱→抖音扫码。** 设计:Ed25519 离线验签激活码+app_activation 单行表+auto-session(下游零动)+/activate+/setup 向导+登录下线+dev-bypass。拆:**a** activation 后端纵切(验签/迁移0015/op/签发脚本) **b** middleware 守卫+auto-session+两页 **c** 登录下线+e2e 走查+宪法补注 |
 | T-044 | 登录按钮 autofill 死灰修复 | ✅ | — | 密码管理器 autofill 不触发 React onChange→按钮死灰;改 FormData 从 DOM 读凭据+按钮仅提交中置灰+空值内联提示,8 测绿真机验可点 |
 | T-043 | BACKLOG 瘦身 + 台账规范/踩坑经验回流 orchestrator | ✅ | `~/.claude/skills/product-to-code-orchestrator/rules/`(项目外·全局 skill) | 看板 58KB→13KB(-78%,31 行零丢失,done 状态列同步);台账规范落 `task-ledger-rules.md`、54 条实战教训落 `field-lessons.md`、SKILL.md Startup 挂引用 |
 | T-012 | SPEC 审核 gate | 🔨 | orchestrator `prompts/spec-reviewer.md` + [REVIEW_LEDGER](docs/superpowers/specs/REVIEW_LEDGER.md) | SPEC 过审机制已实战验证(reviewer+REVIEW_LEDGER+SessionStart 注入)。剩:① reviewer 走 MiniMax spec.review 自动化 ② PreToolUse 硬 hook 自动拦未过审实现 |
