@@ -62,18 +62,19 @@ beforeEach(() => {
 });
 
 describe("数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜底", () => {
-  it("兜底:无 imported 真项目时,最近发布 + 复盘待校准出 fixture 演示作品(过渡期不破)", async () => {
+  it("诚实空:无真数据时,最近发布 + 复盘待校准为空(fixture 演示种子已退役,T-050)", async () => {
+    // [T-050 用户裁决] douyin/canonical 演示发布不再 seed:没有真数据就是空态,
+    // 绝不再用 fixture 演示作品凑数(「过渡期不破」的过渡期结束)。
     const dash = await getDashboard();
-    // 过渡期演示态:fixture 作品在最近发布里(按发布时间倒序,dy-pub-00 是最近的)。
     const titles = dash.recentPublications.map((p) => p.title);
-    expect(titles).toContain(FIXTURE_TITLE);
+    expect(titles).not.toContain(FIXTURE_TITLE);
+    expect(dash.recentPublications).toHaveLength(0);
 
-    // 复盘待校准内容(listSubjects)同样回退全量:fixture 演示作品/发布在列。
     const overview = await getCalibrationOverview();
-    expect(overview.pendingSubjects.length).toBeGreaterThan(0);
     expect(
       overview.pendingSubjects.some((s) => s.title === FIXTURE_TITLE),
-    ).toBe(true);
+    ).toBe(false);
+    expect(overview.pendingSubjects).toHaveLength(0);
   });
 
   it("优先读真:种入 imported 真项目后,最近发布让 fixture 让位、只出真实导入作品", async () => {

@@ -32,6 +32,16 @@ beforeEach(() => {
 
 describe("compositeTransport ctx threading (Task 8)", () => {
   it("returns the ctx-owner's rows for a persisted op called with a ctx", async () => {
+    // [T-050] demo 项目种子已退役 → 测试自建一行再断言(不再依赖 seed 数据)。
+    await compositeTransport.request(
+      ep("projects.create"),
+      {
+        params: undefined,
+        query: undefined,
+        body: { title: "ctx 穿线测试项目", brief: "" },
+      } as never,
+      ctx(canonicalDataset.user.id),
+    );
     const res = (await compositeTransport.request(
       ep("projects.list", true),
       { params: undefined, query: { page: 1, pageSize: 20 }, body: undefined } as never,

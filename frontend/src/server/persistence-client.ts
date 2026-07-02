@@ -7,18 +7,9 @@ import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
+// [T-050] 抖音真实数据里只保留金句知识库 + 账号粉丝真值 seed;项目/发布/指标图谱
+// 已由用户裁决全删(旧种子当垃圾清算),对应 import 一并移除。
 import {
-  douyinProjects,
-  douyinProjectStages,
-  douyinContentOutputs,
-  douyinOutputStages,
-  douyinPublications,
-  douyinPublicationRevisions,
-  douyinMetricSnapshots,
-  douyinMetricValues,
-  douyinAudienceSnapshots,
-  douyinArtifacts,
-  douyinArtifactVersions,
   douyinKnowledgeItems,
   douyinKnowledgeRevisions,
   DOUYIN_FAN_TOTAL,
@@ -51,6 +42,15 @@ import {
   SEARCH_OP_IDS,
 } from "@creatoros/backend/modules/search";
 import { buildCanonicalSearchDocuments } from "@creatoros/backend/modules/search";
+// [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
+import {
+  projects as projectsTable,
+  knowledgeItems as knowledgeItemsTable,
+  knowledgeRevisions as knowledgeRevisionsTable,
+  assets as assetsTable,
+  publications as publicationsTable,
+  publicationRevisions as publicationRevisionsTable,
+} from "@creatoros/backend";
 import {
   createSettingsRepository,
   createSettingsService,
@@ -68,13 +68,6 @@ import {
   ensureTranscriptArtifact,
   PROJECT_OP_IDS,
   type StageGateReadersRef,
-  type ProjectRow,
-  type StageRow,
-  type TargetPlatformRow,
-  type ContentOutputRow,
-  type OutputStageRow,
-  type TaskRow,
-  type ActivityRow,
 } from "@creatoros/backend/modules/projects";
 import {
   createKnowledgeRepository,
@@ -102,8 +95,6 @@ import {
   createArtifactsService,
   createArtifactsTransport,
   ARTIFACT_OP_IDS,
-  type ArtifactRow,
-  type ArtifactVersionRow,
   type ArtifactRelationRow,
 } from "@creatoros/backend/modules/artifacts";
 import {
@@ -114,10 +105,8 @@ import {
 import {
   createPublishingService,
   createPublishingTransport,
-  createPublishingRepository,
   createMockPublisher,
   PUBLISHING_OP_IDS,
-  type PublicationRow,
 } from "@creatoros/backend/modules/publishing";
 import {
   createAnalyticsRepository,
@@ -265,8 +254,6 @@ import {
   CALIBRATION_OP_IDS,
   type RubricRow as CalibrationRubricRow,
   type RubricVersionRow as CalibrationRubricVersionRow,
-  type PredictionRow as CalibrationPredictionRow,
-  type CalibrationResultRow,
   type RuleSuggestionRow as CalibrationRuleSuggestionRow,
 } from "@creatoros/backend/modules/calibration";
 import {
@@ -502,127 +489,6 @@ const SCHEDULING_OPS = new Set<string>(SCHEDULING_OP_IDS);
 // agree on the same key.
 const CANONICAL_RUBRIC_ID = "rubric-canonical";
 
-type CanonicalProject = (typeof canonicalDataset.projects)[number];
-
-function toRow(p: CanonicalProject): ProjectRow {
-  return {
-    id: p.id,
-    userId: p.userId,
-    title: p.title,
-    brief: p.brief ?? "",
-    briefDetail: p.briefDetail ?? {},
-    contentCategory: p.contentCategory ?? "",
-    // 数据底座(SPEC §1.2):canonical fixture 项目均为手动(无 source/platformRef 字段)
-    //   → 默认 manual + 空 platform_ref(行为不变)。
-    source: (p as { source?: string }).source ?? "manual",
-    platformRef: (p as { platformRef?: Record<string, unknown> }).platformRef ?? {},
-    creationMode: p.creationMode,
-    status: p.status,
-    currentStage: p.currentStage,
-    progressPct: p.progressPct,
-    starred: p.starred,
-    startedAt: p.startedAt,
-    targetCompletedAt: p.targetCompletedAt ?? null,
-    completedAt: p.completedAt ?? null,
-    archivedAt: p.archivedAt ?? null,
-    createdAt: p.createdAt,
-    updatedAt: p.updatedAt,
-  };
-}
-
-// Mappers for the Wave-2 Projects child entities (stages/platforms/outputs/
-// output-stages/tasks/activities). The canonical fixture shapes match the DB
-// rows; `contentRole` is absent on the fixture outputs → default null.
-type CanonicalStage = (typeof canonicalDataset.projectStages)[number];
-type CanonicalPlatform = (typeof canonicalDataset.projectTargetPlatforms)[number];
-type CanonicalOutput = (typeof canonicalDataset.contentOutputs)[number];
-type CanonicalOutputStage = (typeof canonicalDataset.outputStages)[number];
-type CanonicalTask = (typeof canonicalDataset.tasks)[number];
-type CanonicalActivity = (typeof canonicalDataset.projectActivities)[number];
-
-function toStageRow(s: CanonicalStage): StageRow {
-  return {
-    id: s.id,
-    projectId: s.projectId,
-    stage: s.stage,
-    status: s.status,
-    progressPct: s.progressPct,
-    skipped: s.skipped,
-    startedAt: s.startedAt ?? null,
-    completedAt: s.completedAt ?? null,
-    updatedAt: s.updatedAt,
-  };
-}
-
-function toPlatformRow(p: CanonicalPlatform): TargetPlatformRow {
-  return {
-    id: p.id,
-    projectId: p.projectId,
-    platform: p.platform,
-    priority: p.priority,
-    planningNote: p.planningNote ?? "",
-    createdAt: p.createdAt,
-  };
-}
-
-function toOutputRow(o: CanonicalOutput): ContentOutputRow {
-  return {
-    id: o.id,
-    projectId: o.projectId,
-    title: o.title,
-    contentType: o.contentType,
-    format: o.format ?? "",
-    aspectRatio: o.aspectRatio ?? "",
-    targetDurationSeconds: o.targetDurationSeconds ?? 0,
-    status: o.status,
-    contentRole: (o as { contentRole?: string | null }).contentRole ?? null,
-    primaryAssetId: o.primaryAssetId ?? null,
-    createdAt: o.createdAt,
-    updatedAt: o.updatedAt,
-  };
-}
-
-function toOutputStageRow(s: CanonicalOutputStage): OutputStageRow {
-  return {
-    id: s.id,
-    contentOutputId: s.contentOutputId,
-    stage: s.stage,
-    status: s.status,
-    progressPct: s.progressPct,
-    skipped: s.skipped,
-    startedAt: s.startedAt ?? null,
-    completedAt: s.completedAt ?? null,
-    updatedAt: s.updatedAt,
-  };
-}
-
-function toTaskRow(t: CanonicalTask): TaskRow {
-  return {
-    id: t.id,
-    projectId: t.projectId,
-    contentOutputId: t.contentOutputId ?? null,
-    stage: t.stage,
-    title: t.title,
-    description: t.description ?? "",
-    status: t.status,
-    priority: t.priority,
-    dueAt: t.dueAt ?? null,
-    completedAt: t.completedAt ?? null,
-  };
-}
-
-function toActivityRow(a: CanonicalActivity): ActivityRow {
-  return {
-    id: a.id,
-    projectId: a.projectId,
-    eventType: a.eventType,
-    entityType: a.entityType,
-    entityId: a.entityId,
-    eventData: a.eventData as Record<string, unknown>,
-    occurredAt: a.occurredAt,
-  };
-}
-
 type CanonicalNotification = (typeof canonicalDataset.notifications)[number];
 
 function toNotificationRow(n: CanonicalNotification): NotificationRow {
@@ -735,57 +601,6 @@ function toAssetFileRow(f: CanonicalAssetFile): AssetFileRow {
 // `userId` (they hang off projects owned by the canonical user), so the owner is
 // injected at seed time. Version rows match the DB shape (immutable, no updatedAt);
 // relations match directly.
-type CanonicalArtifact = (typeof canonicalDataset.artifacts)[number];
-type CanonicalArtifactVersion = (typeof canonicalDataset.artifactVersions)[number];
-type CanonicalArtifactRelation = (typeof canonicalDataset.artifactRelations)[number];
-
-function toArtifactRow(a: CanonicalArtifact, userId: string): ArtifactRow {
-  return {
-    id: a.id,
-    userId,
-    projectId: a.projectId,
-    contentOutputId: a.contentOutputId ?? null,
-    currentVersionId: a.currentVersionId ?? null,
-    stage: a.stage,
-    artifactType: a.artifactType,
-    title: a.title,
-    status: a.status,
-    archivedAt: a.archivedAt ?? null,
-    // F1 (T-030-D4): fixture artifacts predate `origin`; seed them null ≡ user.
-    origin: (a as { origin?: string | null }).origin ?? null,
-    createdAt: a.createdAt,
-    updatedAt: a.updatedAt,
-  };
-}
-
-function toArtifactVersionRow(
-  v: CanonicalArtifactVersion,
-): ArtifactVersionRow {
-  return {
-    id: v.id,
-    artifactId: v.artifactId,
-    versionNumber: v.versionNumber,
-    contentText: v.contentText,
-    contentData: v.contentData as Record<string, unknown>,
-    changeSummary: v.changeSummary,
-    createdByType: v.createdByType,
-    aiTaskId: v.aiTaskId ?? null,
-    createdAt: v.createdAt,
-  };
-}
-
-function toArtifactRelationRow(
-  r: CanonicalArtifactRelation,
-): ArtifactRelationRow {
-  return {
-    id: r.id,
-    sourceArtifactId: r.sourceArtifactId,
-    targetArtifactId: r.targetArtifactId,
-    relationType: r.relationType,
-    createdAt: r.createdAt,
-  };
-}
-
 type CanonicalPreference = (typeof canonicalDataset.userPreferences)[number];
 type CanonicalModel = (typeof canonicalDataset.modelConfigurations)[number];
 type CanonicalAgent = (typeof canonicalDataset.agentConfigurations)[number];
@@ -4053,24 +3868,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // (foundation §2). seedCanonicalUser is idempotent (onConflictDoNothing), so a
   // re-built singleton never double-seeds. IDENTITY_DDL was applied in createDb().
   const identityRepo = createIdentityRepository(db, deps);
-  // Seed the full Projects graph (projects + stages + platforms + outputs +
-  // output-stages + tasks + activities), all owned by the canonical user. seed*
-  // are onConflictDoNothing → a re-built singleton never double-seeds.
-  await projectsRepo.seedProjects(canonicalDataset.projects.map(toRow));
-  await projectsRepo.seedStages(canonicalDataset.projectStages.map(toStageRow));
-  await projectsRepo.seedPlatforms(
-    canonicalDataset.projectTargetPlatforms.map(toPlatformRow),
-  );
-  await projectsRepo.seedOutputs(
-    canonicalDataset.contentOutputs.map(toOutputRow),
-  );
-  await projectsRepo.seedOutputStages(
-    canonicalDataset.outputStages.map(toOutputStageRow),
-  );
-  await projectsRepo.seedTasks(canonicalDataset.tasks.map(toTaskRow));
-  await projectsRepo.seedActivities(
-    canonicalDataset.projectActivities.map(toActivityRow),
-  );
+  // [T-050] canonical demo 项目图种子已退役(用户裁决 2026-07-02:4 个演示项目彻底
+  // 删除,不再重种)。项目/产出/任务全部来自真实导入(T-030 管线)与用户运行时创建。
   await seedCanonicalUser(identityRepo, deps);
 
   // Seed the canonical notifications ledger (notif-1 unread, notif-2 read), owned
@@ -4104,95 +3903,68 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
   await assetsRepo.seedAssets(canonicalDataset.assets.map(toAssetRow));
 
-  // Seed the canonical artifacts graph (artifacts + their versions + relations),
-  // all owned by the canonical user, so the Script/Planning workspaces resolve the
-  // real rows under the seeded login (foundation §2). The fixture artifact rows
-  // carry no userId — inject the canonical owner here. Versions are seeded before
-  // artifacts so currentVersionId references resolve. seed* are onConflictDoNothing
-  // → a re-built singleton never double-seeds. A user-scoped seed repo is minted
-  // for the canonical owner.
-  const artifactsSeedRepo = createArtifactRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-  });
-  await artifactsSeedRepo.seedVersions(
-    canonicalDataset.artifactVersions.map(toArtifactVersionRow),
-  );
-  await artifactsSeedRepo.seedArtifacts(
-    canonicalDataset.artifacts.map((a) =>
-      toArtifactRow(a, canonicalDataset.user.id),
-    ),
-  );
-  await artifactsSeedRepo.seedRelations(
-    canonicalDataset.artifactRelations.map(toArtifactRelationRow),
-  );
+  // [T-050] canonical artifacts 种子已退役(挂在已删除的 demo 项目上)。
+  // 真实项目的 artifact 由 AI 节点首次起草时创建(见 AdoptCandidateCard.prepareInput)。
+  // [T-050 ⑦] 搜索索引投影**真实数据**:旧实现投影 canonical mock 数据集 → 用户自己
+  // 的真实作品一条都搜不到(审计 B19)。现在启动时从 DB 读真 projects/knowledge/assets/
+  // publications(+revision 真标题)拼成同形状喂 buildCanonicalSearchDocuments。
+  // seedDocuments 幂等(onConflictDoNothing);id 以 entityId 定名,重启不重复。
+  {
+    const [dbProjects, dbKnowledge, dbKRevisions, dbAssets, dbPubs, dbPubRevs] =
+      await Promise.all([
+        db.select().from(projectsTable),
+        db.select().from(knowledgeItemsTable),
+        db.select().from(knowledgeRevisionsTable),
+        db.select().from(assetsTable),
+        db.select().from(publicationsTable),
+        db.select().from(publicationRevisionsTable),
+      ]);
+    await createSearchRepository(db, {
+      ...deps,
+      userId: canonicalDataset.user.id,
+    }).seedDocuments(
+      buildCanonicalSearchDocuments(
+        {
+          user: { id: canonicalDataset.user.id },
+          projects: dbProjects.map((p) => ({
+            id: p.id,
+            title: p.title,
+            brief: p.brief ?? "",
+            currentStage: p.currentStage,
+            progressPct: p.progressPct ?? 0,
+          })),
+          knowledgeItems: dbKnowledge.map((k) => ({
+            id: k.id,
+            title: k.title,
+            currentRevisionId: k.currentRevisionId ?? "",
+          })),
+          knowledgeRevisions: dbKRevisions.map((r) => ({
+            id: r.id,
+            knowledgeItemId: r.knowledgeItemId,
+            content: r.content ?? "",
+          })),
+          assets: dbAssets.map((a) => ({
+            id: a.id,
+            name: a.name,
+            assetType: a.assetType,
+          })),
+          publications: dbPubs.map((pub) => ({
+            id: pub.id,
+            platform: pub.platform,
+            currentRevisionId: pub.currentRevisionId ?? null,
+          })),
+          publicationRevisions: dbPubRevs.map((r) => ({
+            id: r.id,
+            title: r.title ?? "",
+          })),
+        },
+        FIXED_NOW_ISO,
+      ),
+    );
+  }
 
-  // Seed the canonical user's search index (module 02, Wave-1 seed approach —
-  // plan open-question #4): derive SearchDocuments from the owned projects /
-  // knowledge / assets / publications so `/search` returns results before the
-  // Wave-2 producer wiring lands. seedDocuments is onConflictDoNothing → a
-  // re-built singleton never double-seeds. Owned by the canonical user.
-  await createSearchRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-  }).seedDocuments(buildCanonicalSearchDocuments(canonicalDataset, FIXED_NOW_ISO));
-
-  // Seed the canonical analytics graph (metric snapshots + values + retention +
-  // audience), all owned by the canonical user, so the Analytics & Review page
-  // resolves real metric rows under the seeded login (foundation §2). The fixture
-  // rows carry no userId — inject the canonical owner here. seed* are
-  // onConflictDoNothing → a re-built singleton never double-seeds. Publications
-  // (parents of the snapshots) are NOT seeded into the DB this wave (Publishing's
-  // canonical seed is empty), so analytics.projects.get resolves an empty
-  // publication-id set for live projects; the seeded snapshots are reachable via
-  // analytics.publications.get for the fixture publication ids.
-  const canonicalOwner = canonicalDataset.user.id;
-  await analyticsRepo.seedSnapshots(
-    canonicalDataset.metricSnapshots.map((s) => ({
-      id: s.id,
-      userId: canonicalOwner,
-      publicationId: s.publicationId,
-      ingestionRunId: s.ingestionRunId ?? null,
-      capturedAt: s.capturedAt,
-      source: s.source,
-      rawMetrics: s.rawMetrics as Record<string, unknown>,
-      createdAt: s.createdAt,
-    })),
-  );
-  await analyticsRepo.seedValues(
-    canonicalDataset.metricValues.map((v) => ({
-      id: v.id,
-      userId: canonicalOwner,
-      metricSnapshotId: v.metricSnapshotId,
-      metricKey: v.metricKey,
-      numericValue: v.numericValue,
-      unit: v.unit,
-      dimensions: v.dimensions as Record<string, string>,
-    })),
-  );
-  await analyticsRepo.seedRetentionPoints(
-    canonicalDataset.retentionPoints.map((r) => ({
-      id: r.id,
-      userId: canonicalOwner,
-      publicationId: r.publicationId,
-      capturedAt: r.capturedAt,
-      positionMs: r.positionMs,
-      retentionRate: r.retentionRate,
-      viewerCount: r.viewerCount,
-    })),
-  );
-  await analyticsRepo.seedAudienceSnapshots(
-    canonicalDataset.audienceSnapshots.map((a) => ({
-      id: a.id,
-      userId: canonicalOwner,
-      publicationId: a.publicationId,
-      capturedAt: a.capturedAt,
-      dimensionType: a.dimensionType,
-      dimensionValue: a.dimensionValue,
-      percentage: a.percentage,
-      audienceCount: a.audienceCount,
-    })),
-  );
+  // [T-050] canonical analytics 种子已退役(快照/留存/观众全挂在已删除的 demo 发布上)。
+  // 真实指标由采集管线写入(self.metrics/self.detail,T-030/T-036)。
 
   // The identity service shares the SAME db (and the same seeded canonical user)
   // as the persistence transport, so a ctx resolved from the session cookie owns
@@ -4633,111 +4405,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     diagnosis: { verdict, mainIssues, priorityFixes },
   });
-  const canonicalPredictions: CalibrationPredictionRow[] = [
-    {
-      id: "pred-canonical-1",
-      userId: calUser,
-      subjectType: "content_output",
-      subjectId: "dy-out-00", // 「AI 产出差不是工具的锅」
-      rubricVersionId: calRubricVer,
-      predictedConversion: predDimensions([
-        ["hook", 4, "反直觉断言「不是工具的锅」前3秒能抓人", "把锅甩给谁说得更具体"],
-        ["emotion", 4, "戳中「我也产出差」的自我识别", "加一句更扎心的共鸣"],
-        ["product_path", 3, "隐约指向方法论但没落到产品", "结尾接一个可下一步的钩子"],
-        ["social", 3, "AI 焦虑是公共话题但角度不新", "命名一个没人说破的结构性原因"],
-        ["cta", 2, "几乎没有明确 CTA", "结尾加一句自然的行动召唤"],
-        ["quotable", 4, "「不是工具的锅」本身就是金句", "中段再埋一句可截图的"],
-      ]),
-      predictedMetrics: predMetrics(
-        [68, 22, 8, 30],
-        "传播力强但转化弱：钩子和金句到位，缺 CTA 与产品落点",
-        ["几乎无 CTA", "产品铺路不足"],
-        ["结尾补一句行动召唤", "中段埋一个产品价值锚"],
-      ),
-      predictedScore: "0",
-      confidence: "high",
-      status: "locked",
-      lockedAt: FIXED_NOW_ISO,
-      createdAt: FIXED_NOW_ISO,
-    },
-    {
-      id: "pred-canonical-2",
-      userId: calUser,
-      subjectType: "content_output",
-      subjectId: "dy-out-01", // 「装了5个AI工具还是不会用？四步跑通你的第一条工作流」
-      rubricVersionId: calRubricVer,
-      predictedConversion: predDimensions([
-        ["hook", 5, "「装了5个还是不会用」精准戳痛点", "保持"],
-        ["emotion", 3, "共鸣一般，偏功能", "加一个具体翻车场景"],
-        ["product_path", 4, "四步工作流天然为产品/课程铺路", "把第四步和产品更紧绑定"],
-        ["social", 2, "纯个人效率话题", "可不强求社会共振"],
-        ["cta", 4, "四步结构自带行动指引", "结尾再明确一句"],
-        ["quotable", 3, "「四步跑通第一条工作流」可记", "提炼一句更狠的"],
-      ]),
-      predictedMetrics: predMetrics(
-        [72, 35, 10, 48],
-        "转化型选题：痛点+方法论+产品路径齐全，预期收藏高",
-        ["社会共振弱（可接受）"],
-        ["第四步与产品强绑定"],
-      ),
-      predictedScore: "0",
-      confidence: "med",
-      status: "locked",
-      lockedAt: FIXED_NOW_ISO,
-      createdAt: FIXED_NOW_ISO,
-    },
-    {
-      id: "pred-canonical-3",
-      userId: calUser,
-      subjectType: "content_output",
-      subjectId: "dy-out-03", // 「开源我的 Agent-native 知识操作系统」
-      rubricVersionId: calRubricVer,
-      predictedConversion: predDimensions([
-        ["hook", 3, "「开源我的…」对泛人群钩子一般", "前3秒加一个反差或数字"],
-        ["emotion", 2, "偏展示，情感弱", "加入做这件事的个人动机"],
-        ["product_path", 5, "开源项目本身就是最强信任锚", "保持"],
-        ["social", 4, "Agent-native 是当下结构性议题", "点明它改变了什么"],
-        ["cta", 3, "可引导去看仓库但不够明确", "结尾直给一句「去主页拿」"],
-        ["quotable", 2, "缺独立可传播的金句", "提炼一句关于知识操作系统的断言"],
-      ]),
-      predictedMetrics: predMetrics(
-        [55, 18, 6, 25],
-        "信任型内容：产品铺路极强但钩子/情感偏弱，泛流量有限",
-        ["钩子弱", "缺金句", "情感共鸣不足"],
-        ["前3秒加反差", "提炼一句金句", "补个人动机"],
-      ),
-      predictedScore: "0",
-      confidence: "med",
-      status: "locked",
-      lockedAt: FIXED_NOW_ISO,
-      createdAt: FIXED_NOW_ISO,
-    },
-  ];
-  // 2 calibration_results — 真实维度子分 (actualMetrics keyed by dimension key) + 服务端口径
-  // 的 deviation (actual - predicted)。pred-canonical-1 偏差小（预测准），pred-canonical-3
-  // 偏差大（钩子实际更差），让 KPI 档位 + 回流对照 + latestFinding 有真信号。
-  const canonicalResults: CalibrationResultRow[] = [
-    {
-      id: "calibres-canonical-1",
-      userId: calUser,
-      predictionId: "pred-canonical-1",
-      ingestionRunId: "seed-run-calibration-1",
-      actualMetrics: { hook: 4, emotion: 4, product_path: 3, social: 2, cta: 2, quotable: 5 },
-      deviation: { hook: 0, emotion: 0, product_path: 0, social: -1, cta: 0, quotable: 1 },
-      createdAt: FIXED_NOW_ISO,
-    },
-    {
-      id: "calibres-canonical-3",
-      userId: calUser,
-      predictionId: "pred-canonical-3",
-      ingestionRunId: "seed-run-calibration-3",
-      actualMetrics: { hook: 1, emotion: 2, product_path: 5, social: 4, cta: 2, quotable: 2 },
-      deviation: { hook: -2, emotion: 0, product_path: 0, social: 0, cta: -1, quotable: 0 },
-      createdAt: FIXED_NOW_ISO,
-    },
-  ];
-  await calibrationSeedRepo.seedPredictions(canonicalPredictions);
-  await calibrationSeedRepo.seedResults(canonicalResults);
+  // [T-050] canonical 盲预测/回流结果种子已退役(主体 dy-out-* 已随 demo 数据删除;
+  // 审计 B30:seed 预测把校准页撕成两个数据世界)。真实预测由用户在校准中心创建。
 
   // Seed two canonical platform accounts (module 21): a douyin + a bilibili 矩阵号 owned
   // by the canonical user so the 账号管理 surface resolves real rows under the seeded
@@ -4775,21 +4444,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   ];
   await platformAccountSeedRepo.seedAccounts(canonicalAccounts);
 
-  // Publishing (module 10) + Learnings (module 14) — seed the canonical rows into the
-  // persisted store so the 发布中心 / 经验沉淀 surfaces' action ops (publications.transition
-  // 「批量下架」, learnings.applications.create「应用经验」) resolve real, owned rows. Without
-  // this the pages render fixtures whose ids have no persisted row → the write op throws
-  // OwnershipError (404) on click. Ids match the fixtures (canonicalDataset), so a
-  // displayed row's id always finds its persisted twin. seed* is onConflictDoNothing
-  // (idempotent across a re-built singleton). User-scoped seed repos are minted.
-  const publishingSeedRepo = createPublishingRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-  });
-  const canonicalPublications: PublicationRow[] = canonicalDataset.publications.map(
-    (pub) => ({ ...pub, userId: canonicalDataset.user.id }),
-  );
-  await publishingSeedRepo.seedPublications(canonicalPublications);
+  // Learnings (module 14) — 经验沉淀 seed 仍保留(方法论示例,不挂 demo 项目)。
+  // [T-050] canonical 发布种子已退役(挂在已删除的 demo 产出上);发布行全部来自
+  // 真实导入(T-030)与发布工作台真实创建。
 
   const learningsSeedRepo = createLearningsRepository(db, {
     ...deps,
@@ -4829,23 +4486,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // seed* is onConflictDoNothing, so this is idempotent across a re-built
   // singleton and never collides with the canonical (project-*/pub-*) ids — the
   // Douyin rows are namespaced `dy-*`. All rows are owned by the canonical login.
+  // [T-050] douyin-real 冻结种子(dy-proj-* 58 项目全链)已退役(用户裁决:直接全删,
+  // 与 T-030 真采集大面积重复导致列表重复/指标翻倍)。仅保留其金句知识种子(真实内容,
+  // 挂 user 不挂已删项目)。
   const DY_OWNER = canonicalDataset.user.id;
-  await projectsRepo.seedProjects(
-    douyinProjects.map((p) =>
-      toRow({ ...p, userId: DY_OWNER } as unknown as CanonicalProject),
-    ),
-  );
-  await projectsRepo.seedStages(
-    douyinProjectStages.map((s) => toStageRow(s as unknown as CanonicalStage)),
-  );
-  await projectsRepo.seedOutputs(
-    douyinContentOutputs.map((o) => toOutputRow(o as unknown as CanonicalOutput)),
-  );
-  await projectsRepo.seedOutputStages(
-    douyinOutputStages.map((s) =>
-      toOutputStageRow(s as unknown as CanonicalOutputStage),
-    ),
-  );
   await knowledgeRepo.seedKnowledge(
     douyinKnowledgeItems.map((k) =>
       toKnowledgeRow({ ...k, userId: DY_OWNER } as unknown as CanonicalKnowledge),
@@ -4854,67 +4498,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   await knowledgeRepo.seedRevisions(
     douyinKnowledgeRevisions.map((r) =>
       toRevisionRow(r as unknown as CanonicalRevision),
-    ),
-  );
-  await artifactsSeedRepo.seedVersions(
-    douyinArtifactVersions.map((v) =>
-      toArtifactVersionRow(v as unknown as CanonicalArtifactVersion),
-    ),
-  );
-  await artifactsSeedRepo.seedArtifacts(
-    douyinArtifacts.map((a) =>
-      toArtifactRow(a as unknown as CanonicalArtifact, DY_OWNER),
-    ),
-  );
-  await analyticsRepo.seedSnapshots(
-    douyinMetricSnapshots.map((s) => ({
-      id: s.id,
-      userId: DY_OWNER,
-      publicationId: s.publicationId,
-      ingestionRunId: s.ingestionRunId ?? null,
-      capturedAt: s.capturedAt,
-      source: s.source,
-      rawMetrics: s.rawMetrics as Record<string, unknown>,
-      createdAt: s.createdAt,
-    })),
-  );
-  await analyticsRepo.seedValues(
-    douyinMetricValues.map((v) => ({
-      id: v.id,
-      userId: DY_OWNER,
-      metricSnapshotId: v.metricSnapshotId,
-      metricKey: v.metricKey,
-      numericValue: v.numericValue,
-      unit: v.unit,
-      dimensions: v.dimensions as Record<string, string>,
-    })),
-  );
-  await analyticsRepo.seedAudienceSnapshots(
-    douyinAudienceSnapshots.map((a) => ({
-      id: a.id,
-      userId: DY_OWNER,
-      publicationId: a.publicationId,
-      capturedAt: a.capturedAt,
-      dimensionType: a.dimensionType,
-      dimensionValue: a.dimensionValue,
-      percentage: a.percentage,
-      audienceCount: a.audienceCount,
-    })),
-  );
-  await publishingSeedRepo.seedPublications(
-    douyinPublications.map(
-      (pub) => ({ ...pub, userId: DY_OWNER }) as unknown as PublicationRow,
-    ),
-  );
-  // Seed the dy publication revisions so the REAL video title (it lives on the
-  // revision, not the publication row) resolves on the Dashboard「最近发布」+
-  // 发布中心 title column. userId injected (the fixture rows carry none).
-  await publishingSeedRepo.seedRevisions(
-    douyinPublicationRevisions.map(
-      (rev) =>
-        ({ ...rev, userId: DY_OWNER }) as unknown as Parameters<
-          typeof publishingSeedRepo.seedRevisions
-        >[0][number],
     ),
   );
 

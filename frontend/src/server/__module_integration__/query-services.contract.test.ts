@@ -28,10 +28,21 @@ const ctx = (userId: string): RequestContext => ({
 
 const OWNER = canonicalDataset.user.id; // user-zyongzhu (seeded)
 const OTHER = "user-b"; // no seeded data
-const PROJECT_ID = canonicalDataset.projects[0]!.id;
+// [T-050] demo 项目种子已退役 → 每个用例前自建一个 OWNER 项目当被读对象。
+let PROJECT_ID = "";
 
-beforeEach(() => {
+beforeEach(async () => {
   __resetPersistenceForTests();
+  const created = (await compositeTransport.request(
+    ep("projects.create"),
+    {
+      params: undefined,
+      query: undefined,
+      body: { title: "query-services 集成测试项目", brief: "" },
+    } as never,
+    ctx(OWNER),
+  )) as { data: { id: string } };
+  PROJECT_ID = created.data.id;
 });
 
 describe("query-services ops registered in the composite transport", () => {

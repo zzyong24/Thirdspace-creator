@@ -20,13 +20,45 @@ const ctx = (userId: string): RequestContext => ({
   source: "user",
 });
 
-beforeEach(() => {
-  __resetPersistenceForTests();
-});
+// [T-050] canonical demo 项目/artifact 种子已退役 → 每个用例前自建
+// project + master_script artifact(走真实 create ops,与 FE 保存路径同链)。
+let PROJECT_ID = "";
+let SCRIPT_ARTIFACT_ID = "";
 
-// The canonical project + a seeded master_script artifact owned by the user.
-const PROJECT_ID = "project-ainativebrowser";
-const SCRIPT_ARTIFACT_ID = "artifact-ainativebrowser-master-script";
+beforeEach(async () => {
+  __resetPersistenceForTests();
+  const owner = ctx(canonicalDataset.user.id);
+  const project = (await compositeTransport.request(
+    ep("projects.create"),
+    {
+      params: undefined,
+      query: undefined,
+      body: { title: "artifacts 集成测试项目", brief: "" },
+    } as never,
+    owner,
+  )) as { data: { id: string } };
+  PROJECT_ID = project.data.id;
+  const artifact = (await compositeTransport.request(
+    ep("artifacts.create"),
+    {
+      params: { projectId: PROJECT_ID },
+      query: undefined,
+      body: { title: "口播稿", artifactType: "master_script", stage: "script" },
+    } as never,
+    owner,
+  )) as { data: { id: string } };
+  SCRIPT_ARTIFACT_ID = artifact.data.id;
+  // 铸初始版本:createArtifact 不自动建版,restore 用例需要非空 currentVersionId。
+  await compositeTransport.request(
+    ep("artifacts.versions.create"),
+    {
+      params: { artifactId: SCRIPT_ARTIFACT_ID },
+      query: undefined,
+      body: { contentText: "初稿正文", changeSummary: "初稿" },
+    } as never,
+    owner,
+  );
+});
 
 describe("artifacts ops registered in the composite transport", () => {
   it("the 7 artifacts op ids are persistence-backed (not the mock)", async () => {

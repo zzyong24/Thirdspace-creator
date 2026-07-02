@@ -57,9 +57,16 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     await authenticate(); // mint a real session; dispatch carries its cookie
   });
 
-  it("serves a project read from the persistence (seeded) store", async () => {
+  it("serves a project read from the persistence store", async () => {
+    // [T-050] demo 种子已退役:先经 dispatch 建一条,读侧应看到它(同一 pglite)。
+    const created = await dispatch("projects.create", {
+      params: undefined,
+      query: undefined,
+      body: { title: "读侧冒烟项目", brief: "" },
+    });
+    expect(created.status).toBe(200);
     const ids = await listProjectIds();
-    expect(ids.length).toBeGreaterThan(0); // canonical seed
+    expect(ids.length).toBeGreaterThan(0);
   });
 
   it("persists a create in SQL so the next read reflects it (the 联调 round-trip)", async () => {
@@ -135,6 +142,12 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
   });
 
   it("serves a persisted op WITH a valid session cookie (ctx threaded → 200)", async () => {
+    // [T-050] 先建一条(种子已退役),再验证带 session 的 list 能读回 ctx 归属行。
+    await dispatch("projects.create", {
+      params: undefined,
+      query: undefined,
+      body: { title: "ctx 穿线项目", brief: "" },
+    });
     const res = await dispatch("projects.list", {
       params: undefined,
       query: { page: 1, pageSize: 50 },
