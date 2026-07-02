@@ -158,18 +158,10 @@ export function resolveRoute(
       contextualCardVariant: "assistant",
     };
   }
-  if (pathname === "/monetization") {
-    return {
-      headerMode: "global",
-      pageTitle: "变现中心",
-      pageDescription: "产品 / Offer / 线索 / 成交漏斗 · 诚实归因（§4.5 不强行 100% 分配）",
-      contextualCardVariant: "assistant",
-    };
-  }
   if (pathname === "/accounts") {
     return {
       headerMode: "global",
-      pageTitle: "账号管理",
+      pageTitle: "账号管理(设置)",
       pageDescription: "多账号矩阵 · 每个发布/指标归到真实账号，而不是一个字符串（七步⑤）",
       contextualCardVariant: "assistant",
     };
@@ -177,7 +169,7 @@ export function resolveRoute(
   if (pathname === "/calendar") {
     return {
       headerMode: "global",
-      pageTitle: "内容日历",
+      pageTitle: "内容日历(发布中心)",
       pageDescription: "发布节奏 · 这周该发什么、哪个账号断更了（七步⑦ · §7.2）",
       contextualCardVariant: "assistant",
     };

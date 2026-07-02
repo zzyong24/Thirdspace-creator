@@ -697,6 +697,15 @@ function AccountBindingCard({
           </Button>
         </div>
 
+        {/* [T-052 裁决⑤] 账号管理并入设置:多账号矩阵页此前全站无入口(孤儿页)。 */}
+        <a
+          href="/accounts"
+          data-slot="accounts-manager-link"
+          className="text-xs font-medium text-brand hover:underline"
+        >
+          管理多账号矩阵 →
+        </a>
+
         {/* 扫码进行中的引导态(仿 automations loginPhase):真弹本机 Chrome,前端不假装。 */}
         {phase === "scanning" ? (
           <p

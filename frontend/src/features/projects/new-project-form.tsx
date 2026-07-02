@@ -36,7 +36,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { ContentType, CreationMode, PlatformId } from "@/types/domain";
+import type { CreationMode } from "@/types/domain";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -45,8 +45,9 @@ import type { ContentType, CreationMode, PlatformId } from "@/types/domain";
 export interface NewProjectFormValues {
   readonly name: string;
   readonly brief: string;
-  readonly platforms: ReadonlyArray<PlatformId>;
-  readonly contentType: ContentType;
+  // [T-052 裁决④] 宪法 §8:项目创建唯一的形态区分 = 横竖屏。contentType(视频/
+  // 图文/音频)与项目层目标平台按宪法裁掉(平台归属发布层)。
+  readonly orientation: "portrait" | "landscape";
   readonly creationMode: CreationMode;
   readonly enterAfterCreate: boolean;
 }
@@ -72,12 +73,6 @@ export interface NewProjectFormProps {
 // Option catalogues
 // ---------------------------------------------------------------------------
 
-interface PlatformOption {
-  readonly id: PlatformId;
-  readonly label: string;
-  readonly hint: string;
-}
-
 interface RadioOption<TValue extends string> {
   readonly value: TValue;
   readonly label: string;
@@ -85,32 +80,10 @@ interface RadioOption<TValue extends string> {
   readonly badge?: string;
 }
 
-type ContentTemplateId =
-  | "deep-dive"
-  | "tutorial"
-  | "opinion"
-  | "review"
-  | "story"
-  | "other";
-
-const PLATFORM_OPTIONS: ReadonlyArray<PlatformOption> = [
-  { id: "bilibili", label: "B站", hint: "中长视频" },
-  { id: "douyin", label: "抖音", hint: "竖屏短视频" },
-  { id: "wechatVideo", label: "视频号", hint: "微信生态" },
-  { id: "xiaohongshu", label: "小红书", hint: "图文 / 短视频" },
-  { id: "youtube", label: "YouTube", hint: "海外长视频" },
-  { id: "x", label: "自定义", hint: "其他渠道" },
-];
-
-const CONTENT_TEMPLATE_OPTIONS: ReadonlyArray<
-  RadioOption<ContentTemplateId> & { readonly contentType: ContentType }
-> = [
-  { value: "deep-dive", contentType: "video", label: "深度解析", description: "对某个主题进行系统性分析和洞察" },
-  { value: "tutorial", contentType: "video", label: "教程干货", description: "提供实用方法、技巧和步骤" },
-  { value: "opinion", contentType: "article", label: "观点表达", description: "分享观点、看法或个人见解" },
-  { value: "review", contentType: "video", label: "评测对比", description: "产品、工具或方案对比评测" },
-  { value: "story", contentType: "audio", label: "故事叙事", description: "讲述故事、案例或经历" },
-  { value: "other", contentType: "image", label: "其他", description: "不确定，先创建再说" },
+// [T-052 裁决④] 画幅是宪法允许的唯一形态区分:竖屏(抖音优先)默认。
+const ORIENTATION_OPTIONS: ReadonlyArray<RadioOption<"portrait" | "landscape">> = [
+  { value: "portrait", label: "竖屏 9:16", description: "抖音 / 短视频优先" },
+  { value: "landscape", label: "横屏 16:9", description: "B 站 / 长视频" },
 ];
 
 const CREATION_MODE_OPTIONS: ReadonlyArray<RadioOption<CreationMode>> = [
@@ -141,25 +114,10 @@ const CREATION_MODE_OPTIONS: ReadonlyArray<RadioOption<CreationMode>> = [
 const EMPTY_DEFAULTS: NewProjectFormValues = {
   name: "",
   brief: "",
-  platforms: [],
-  contentType: "video",
+  orientation: "portrait",
   creationMode: "guided",
   enterAfterCreate: true,
 };
-
-function contentTypeFromTemplate(template: ContentTemplateId): ContentType {
-  return (
-    CONTENT_TEMPLATE_OPTIONS.find((option) => option.value === template)
-      ?.contentType ?? "video"
-  );
-}
-
-function templateFromContentType(contentType: ContentType): ContentTemplateId {
-  return (
-    CONTENT_TEMPLATE_OPTIONS.find((option) => option.contentType === contentType)
-      ?.value ?? "deep-dive"
-  );
-}
 
 export function NewProjectForm({
   defaultValues,
@@ -178,10 +136,6 @@ export function NewProjectForm({
   );
 
   const [values, setValues] = React.useState<NewProjectFormValues>(initial);
-  const [contentTemplate, setContentTemplate] =
-    React.useState<ContentTemplateId>(() =>
-      templateFromContentType(initial.contentType),
-    );
   // Submission lifecycle: idle -> submitting -> (idle on success | error on
   // reject). `errorMsg` carries the inline alert text; values are never reset
   // on error so the user keeps their input.
@@ -209,14 +163,10 @@ export function NewProjectForm({
         await onCreateRef.current({
           ...values,
           name: trimmedName,
-          contentType: contentTypeFromTemplate(contentTemplate),
         });
         // Local success transition: reset the form so the next mount starts
         // clean. The parent is expected to close the dialog/navigate.
         setValues(EMPTY_DEFAULTS);
-        setContentTemplate(
-          templateFromContentType(EMPTY_DEFAULTS.contentType),
-        );
         setStatus("idle");
       } catch (error) {
         // Surface the failure inline and PRESERVE the user's input — never
@@ -229,7 +179,7 @@ export function NewProjectForm({
         );
       }
     },
-    [contentTemplate, submitting, trimmedName, values],
+    [submitting, trimmedName, values],
   );
 
   const handleCancel = React.useCallback(() => {
@@ -237,7 +187,6 @@ export function NewProjectForm({
     // Reset to the last `defaultValues` snapshot so a re-open shows a
     // fresh form without leaking previous input.
     setValues(initial);
-    setContentTemplate(templateFromContentType(initial.contentType));
     setStatus("idle");
     setErrorMsg(null);
     onCancel();
@@ -259,15 +208,12 @@ export function NewProjectForm({
         brief={values.brief}
         onChange={(brief) => setValues((prev) => ({ ...prev, brief }))}
       />
-      <TargetPlatformSelector
-        value={values.platforms}
-        onChange={(platforms) =>
-          setValues((prev) => ({ ...prev, platforms }))
+      {/* [T-052 裁决④] 内容模板与项目层目标平台按宪法 §8 裁掉;画幅是唯一形态区分。 */}
+      <OrientationSelector
+        value={values.orientation}
+        onChange={(orientation) =>
+          setValues((prev) => ({ ...prev, orientation }))
         }
-      />
-      <ContentTypeSelector
-        value={contentTemplate}
-        onChange={setContentTemplate}
       />
       <CreationModeSelector
         value={values.creationMode}
@@ -499,70 +445,27 @@ const RadioCard = React.forwardRef<HTMLInputElement, RadioCardProps>(
 // Concrete selectors
 // ---------------------------------------------------------------------------
 
-interface TargetPlatformSelectorProps {
-  readonly value: ReadonlyArray<PlatformId>;
-  readonly onChange: (next: ReadonlyArray<PlatformId>) => void;
-}
-
-function TargetPlatformSelector({
+// [T-052 裁决④] 画幅选择器 —— 宪法 §8 允许的唯一形态区分(竖屏默认)。
+function OrientationSelector({
   value,
   onChange,
-}: TargetPlatformSelectorProps) {
-  // The selector is a horizontal radio card grid in the UI, but the
-  // underlying domain is `ReadonlyArray<PlatformId>` so a project can
-  // target multiple platforms. The selector is therefore rendered as
-  // toggle cards (one selection at a time) for the initial creation step
-  // — the multi-platform management lives in the project workspace.
-  //
-  // For this dialog we model the field as a single-selection radio group
-  // whose value is stored in a one-element array. This keeps the
-  // keyboard semantics clean (radio, not checkbox) and matches the
-  // screenshot's "select one to start" affordance.
-  const current = value[0] ?? "bilibili";
+}: {
+  readonly value: "portrait" | "landscape";
+  readonly onChange: (next: "portrait" | "landscape") => void;
+}) {
   return (
     <RadioCardGroup
-      testId="new-project-platform"
-      name="target-platform"
-      section="platform"
-      legend="目标平台"
-      value={current}
-      onChange={(next) => onChange([next])}
-      options={PLATFORM_OPTIONS.map((p) => ({
-        value: p.id,
-        label: p.label,
-        description: p.hint,
-      }))}
-      renderOption={(option) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[13px] font-medium text-foreground">
-            {option.label}
-          </span>
-          {option.description ? (
-            <span className="text-[11px] text-muted-foreground">
-              {option.description}
-            </span>
-          ) : null}
-        </div>
-      )}
-    />
-  );
-}
-
-interface ContentTypeSelectorProps {
-  readonly value: ContentTemplateId;
-  readonly onChange: (next: ContentTemplateId) => void;
-}
-
-function ContentTypeSelector({ value, onChange }: ContentTypeSelectorProps) {
-  return (
-    <RadioCardGroup
-      testId="new-project-content-type"
-      name="content-type"
-      section="content-type"
-      legend="内容类型"
+      testId="new-project-orientation"
+      name="orientation"
+      section="orientation"
+      legend="画幅"
       value={value}
       onChange={onChange}
-      options={CONTENT_TEMPLATE_OPTIONS}
+      options={ORIENTATION_OPTIONS.map((o) => ({
+        value: o.value,
+        label: o.label,
+        description: o.description,
+      }))}
       renderOption={(option) => (
         <div className="flex flex-col gap-0.5">
           <span className="text-[13px] font-medium text-foreground">

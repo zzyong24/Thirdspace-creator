@@ -44,6 +44,7 @@
  * once for the whole route group.
  */
 
+import Link from "next/link";
 import * as React from "react";
 
 import {
@@ -152,6 +153,22 @@ export function PublishingCenterPage({
       data-page-state={state}
       className="flex flex-col gap-card-gap"
     >
+      {/* [T-052 裁决⑤] 内容日历并入发布中心:此前 /calendar 全站无入口(孤儿页,
+          只能手敲 URL)。发布节奏/排期属发布中心域,入口挂这里。 */}
+      <div
+        data-slot="publishing-center-calendar-entry"
+        className="flex items-center justify-between rounded-card border border-border bg-surface-subtle px-3.5 py-2.5"
+      >
+        <span className="text-sm text-muted-foreground">
+          内容日历 · 发布节奏与达成率
+        </span>
+        <Link
+          href="/calendar"
+          className="text-sm font-medium text-brand hover:underline"
+        >
+          打开日历 →
+        </Link>
+      </div>
       {state === "loading" ? (
         <LoadingState label="正在加载发布中心…" rows={6} />
       ) : state === "error" ? (

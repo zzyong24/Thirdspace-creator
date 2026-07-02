@@ -174,15 +174,14 @@ export function NewProjectDialog() {
             const created = await client.createProject({
               params: undefined,
               query: undefined,
-              // contract v0.2/v0.4: contentType/creationMode/targetPlatforms are
-              // optional capture-fields the create UoW seeds (target platforms →
-              // project_target_platforms intent rows). title/brief stay required.
+              // [T-052 裁决④] 宪法 §8:不再提交 contentType/targetPlatforms
+              // (project_target_platforms 停写,平台归属发布层);画幅(横竖屏)
+              // 作为唯一形态区分落 briefDetail.orientation。
               body: {
                 title: values.name,
                 brief: values.brief,
-                contentType: values.contentType,
+                briefDetail: { orientation: values.orientation, targetPlatforms: [] },
                 creationMode: values.creationMode,
-                targetPlatforms: [...values.platforms],
               },
             });
             // Invalidate the App Router cache so /projects re-reads from SQL on

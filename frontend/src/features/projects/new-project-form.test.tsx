@@ -88,7 +88,7 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe("NewProjectForm — field order", () => {
-  it("exposes the five approved form sections in reference order", () => {
+  it("[T-052 裁决④] 四个合宪表单区按序(画幅替代模板/平台)", () => {
     renderForm();
 
     expect(
@@ -97,8 +97,7 @@ describe("NewProjectForm — field order", () => {
     ).toEqual([
       "name",
       "brief",
-      "platform",
-      "content-type",
+      "orientation",
       "creation-mode",
     ]);
   });
@@ -113,14 +112,14 @@ describe("NewProjectForm — field order", () => {
 
     const dialog = screen.getByRole("dialog", { name: /新建项目/i });
     const fieldOrder = within(dialog)
-      .getAllByTestId(/^new-project-(name|brief|platform|content-type|creation-mode)$/)
+      .getAllByTestId(/^new-project-(name|brief|orientation|creation-mode)$/)
       .map((el) => el.getAttribute("data-testid"));
 
+    // [T-052 裁决④] 宪法 §8:内容模板/项目层平台已裁,画幅是唯一形态区分。
     expect(fieldOrder).toEqual([
       "new-project-name",
       "new-project-brief",
-      "new-project-platform",
-      "new-project-content-type",
+      "new-project-orientation",
       "new-project-creation-mode",
     ]);
   });
@@ -214,34 +213,19 @@ describe("NewProjectForm — selection cards", () => {
         <NewProjectForm onCreate={vi.fn()} onCancel={vi.fn()} />
       </div>,
     );
-    const platformField = screen.getByTestId("new-project-platform");
-    const bilibili = within(platformField).getByRole("radio", {
-      name: /B站|bilibili/i,
+    const orientationField = screen.getByTestId("new-project-orientation");
+    const landscape = within(orientationField).getByRole("radio", {
+      name: /横屏/i,
     });
-    expect(bilibili).toBeInTheDocument();
-    bilibili.focus();
+    expect(landscape).toBeInTheDocument();
+    landscape.focus();
     await user.keyboard("{Enter}");
-    expect(bilibili).toBeChecked();
-    bilibili.focus();
+    expect(landscape).toBeChecked();
+    landscape.focus();
     await user.keyboard(" ");
     // The card stays checked after Space — Space must not toggle it off
     // once it is the active selection.
-    expect(bilibili).toBeChecked();
-  });
-
-  it("renders content type cards as keyboard-selectable radios", async () => {
-    const { NewProjectForm } = await importForm();
-    const user = userEvent.setup();
-    render(
-      <div role="dialog" aria-label="新建项目">
-        <NewProjectForm onCreate={vi.fn()} onCancel={vi.fn()} />
-      </div>,
-    );
-    const typeField = screen.getByTestId("new-project-content-type");
-    const story = within(typeField).getByRole("radio", { name: /故事叙事/i });
-    story.focus();
-    await user.keyboard("{Enter}");
-    expect(story).toBeChecked();
+    expect(landscape).toBeChecked();
   });
 
   it("renders creation mode cards as keyboard-selectable radios", async () => {
@@ -267,8 +251,8 @@ describe("NewProjectForm — selection cards", () => {
         <NewProjectForm onCreate={vi.fn()} onCancel={vi.fn()} />
       </div>,
     );
-    const platformField = screen.getByTestId("new-project-platform");
-    const radios = within(platformField).getAllByRole("radio");
+    const orientationField = screen.getByTestId("new-project-orientation");
+    const radios = within(orientationField).getAllByRole("radio");
     expect(radios.length).toBeGreaterThanOrEqual(2);
     // Activate two different options; only the latest should remain
     // checked.
@@ -355,25 +339,12 @@ describe("NewProjectForm — footer actions", () => {
     );
     await user.type(screen.getByLabelText(/项目名称/i), "AI Native Browser");
     await user.type(screen.getByLabelText(/一句话描述/i), "深度拆解浏览器趋势");
-    // The platform default is `bilibili`, so to exercise the radio path
-    // we first move to a different option and confirm the value lands.
-    const youtube = within(screen.getByTestId("new-project-platform")).getByRole(
+    // 画幅默认竖屏,切到横屏验证 radio 路径与提交值。
+    const landscape = within(screen.getByTestId("new-project-orientation")).getByRole(
       "radio",
-      { name: /YouTube|youtube/i },
+      { name: /横屏/i },
     );
-    youtube.focus();
-    await user.keyboard("{Enter}");
-    const bilibili = within(screen.getByTestId("new-project-platform")).getByRole(
-      "radio",
-      { name: /B站|bilibili/i },
-    );
-    bilibili.focus();
-    await user.keyboard("{Enter}");
-    const deepDive = within(screen.getByTestId("new-project-content-type")).getByRole(
-      "radio",
-      { name: /深度解析/i },
-    );
-    deepDive.focus();
+    landscape.focus();
     await user.keyboard("{Enter}");
     const guided = within(
       screen.getByTestId("new-project-creation-mode"),
@@ -388,8 +359,8 @@ describe("NewProjectForm — footer actions", () => {
     const payload = createSpy.mock.calls[0]?.[0] as NewProjectFormValues;
     expect(payload.name).toBe("AI Native Browser");
     expect(payload.brief).toBe("深度拆解浏览器趋势");
-    expect(payload.platforms).toContain("bilibili");
-    expect(payload.contentType).toBe("video");
+    // [T-052 裁决④] 画幅是唯一形态字段;不再有 platforms/contentType。
+    expect(payload.orientation).toBe("landscape");
     expect(payload.creationMode).toBe("flexible");
 
     // Local success transition: the form resets, the next mount behaves
@@ -426,8 +397,7 @@ describe("NewProjectForm — default values", () => {
           defaultValues={{
             name: "AI Native Browser",
             brief: "深度拆解",
-            platforms: ["bilibili"],
-            contentType: "video",
+            orientation: "landscape",
             creationMode: "guided",
             enterAfterCreate: true,
           }}
@@ -436,10 +406,9 @@ describe("NewProjectForm — default values", () => {
     );
     expect(screen.getByLabelText(/项目名称/i)).toHaveValue("AI Native Browser");
     expect(screen.getByLabelText(/一句话描述/i)).toHaveValue("深度拆解");
-    const bilibili = within(screen.getByTestId("new-project-platform")).getByRole(
-      "radio",
-      { name: /B站|bilibili/i },
-    );
-    expect(bilibili).toBeChecked();
+    const landscapeDefault = within(
+      screen.getByTestId("new-project-orientation"),
+    ).getByRole("radio", { name: /横屏/i });
+    expect(landscapeDefault).toBeChecked();
   });
 });
