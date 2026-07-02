@@ -1,6 +1,6 @@
 # 提示词/skill 服务端可配可更新 设计 v2(T-040)
 
-> 状态:v1 被 spec-review gate 判 FAIL(造轮子)→ 本 v2 按 findings 重写为「接线已有通道」,待 re-gate。
+> **裁决注:v1 FAIL(造轮子)→ v2 重写 → re-gate ⚠️ CONCERNS → 已处置 [gate-F1..F3] → 可开工 T-040a/b/c。** re-gate 坐实 v1 全 3 blocker 真消解(接线既有 `overrideTemplatesFromConfig`、删 resolveModelSpec 错误立论、runner 改 getTemplate + 18 模板已注册全属实)、合宪、无 blocker。3 处已内联处置:[gate-F1](major)apply 前无条件先 `registerAllTemplates()`(frontend 无显式注册、全靠惰性 bootstrap,否则 override 撞未注册被吞→静默丢失)、[gate-F2] file:line 标 `frontend/src/server/ai/` 包前缀、[gate-F3] outputSchema 经 `resolveOutputSchema(id)` 已生效、改 runner 主救文本字段。
 > 引用铁律:CLAUDE.md「任务流程铁律」§7/§8;宪法 [docs/产品定位.md](../../产品定位.md)。
 > **v1→v2 关键更正(gate 逮的):** 仓内**已有** `overrideTemplatesFromConfig`(`ai-worker/src/prompt/registry.ts:208`)整套「服务端下发覆盖模板」通道 —— 覆盖 system/template/tools/requiredFacets/**outputSchema(JSON Schema)**、`ov.x ?? base.x` 逐字段回退(undefined=未配)、已导出(index.ts:133)已测(template.test.ts:234/276),**只差接一张表 + 一次装配调用**。v2 = 接线它,**不新造** `prompt_configurations`/`resolveTemplate`(§9.5 不造轮子)。
 
@@ -53,7 +53,8 @@ updated_at     TEXT NOT NULL  -- ISO(照 storage_configs 惯例,非 timestamptz)
 
 ### 4.2 装配:读表 → 归一 → 套用(核心接线)
 
-新增 `applySkillConfigOverridesFromDb(store)`(persistence-client 装配期,`registerAllTemplates()` **之后**调):
+新增 `applySkillConfigOverridesFromDb(store)`(persistence-client 装配期调):
+0. **[gate-F1 关键] 函数体首行无条件先 `registerAllTemplates()`(幂等,仅 `size===0` 时真跑)**——**不能**依赖「某处已注册」:实测 frontend 全仓**无任何显式 `registerAllTemplates()` 调用**,全靠 `getTemplate`/`runStructuredNode` 里的惰性 bootstrap(registry.ts:93)。若 apply 早于任何 getTemplate 触发,REGISTRY 为空 → `overrideTemplatesFromConfig` 逐条撞「id 未注册」抛错(registry.ts:213)→ 被 catch 吞掉 → **覆盖静默丢失、退回内置(不 crash 但功能失效)**。故 apply 前必须自己先 `registerAllTemplates()` 保证 18 个 id 就位。
 1. 读 `skill_config_overrides` 全表。
 2. **[gate 修]归一空串→undefined**:每个文本字段 `row.system?.trim() ? row.system : undefined`(空串=未配=回退,不当显式空值覆盖);jsonb 字段 null→undefined。
 3. 组装 `SkillConfigOverride[]` → 调 `overrideTemplatesFromConfig(overrides)`(既有函数,套进 REGISTRY + SCHEMA_OVERRIDES)。
@@ -65,7 +66,8 @@ updated_at     TEXT NOT NULL  -- ISO(照 storage_configs 惯例,非 timestamptz)
 11 个 runner(planning-thesis/contract/outline、review-insights、topic-generate/enrich、platform-adapt、calibration-diagnose/score、material-match、reconstruct、research-gather、positioning、script-draft 等——**逐个列进 T-040b 验收 checklist**)当前 `import { X_TEMPLATE }; template: X_TEMPLATE`。改为运行时取:`template: getTemplate("<id>")`(REGISTRY 已注册全 18 个,getTemplate 惰性 bootstrap 保底;拿到的是被 override 覆盖后的对象)。
 - **不改 registration**(18 个已在 BUILTIN_TEMPLATES);只改 runner 的「拿模板」从编译期常量 → 运行时 getTemplate。
 - **保留 getTemplate 惰性 bootstrap**(registry.ts:93 `size===0` 自愈),不破坏「无显式 registerAllTemplates 也能取内置」。
-- outputSchema:结构化输出走 `resolveOutputSchema(id)`(已优先 SCHEMA_OVERRIDES),runner 侧确认按 id 取 schema(而非 import 的 zod 常量)才吃得到覆盖——逐 runner 核。
+- **[gate-F3] outputSchema 覆盖当前就已生效、无需改 runner**:`runStructuredNode` 内部走 `resolveOutputSchema(input.template.id)`(structured-node.ts:88,按 **id 字符串**取,已优先 `SCHEMA_OVERRIDES`)——所以 outputSchema 的 override 透过 id 已经吃得到。**本片改 runner(import 常量→getTemplate)主要是为救 `system/template/tools/requiredFacets` 这几个走 `bindPrompt(input.template,…)` 的文本字段**(它们读的是模板对象内容、不是 id)。T-040b 别误以为「不改 runner 就漏 outputSchema」。
+- **[gate-F2] 包边界**:11 runner + chat-runner 在 `frontend/src/server/ai/`(如 `frontend/src/server/ai/planning-runner.ts:183`、`frontend/src/server/ai/chat-runner.ts:140`);registry/template/schema-bridge 在 `ai-worker/src/prompt/`。T-040b checklist 用全路径。
 
 ### 4.4 更新路径 + 热更机制([gate 修·major])
 
