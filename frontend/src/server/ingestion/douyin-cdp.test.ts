@@ -561,7 +561,8 @@ describe("fetchDouyinCommentsForWorks 复用单 context 跨作品(T-033b)", () =
     expect(calls.close).toBe(1);
     // 每作品各导航一次(同一 context/page,goto 换页)。
     expect(calls.goto).toBe(awemeIds.length);
-    expect(gotoUrls.every((u) => u.includes("comment-manage"))).toBe(true);
+    // T-041:评论页 URL 从旧 content/comment-manage 改到 interactive/comment(旧的被重定向到 upload)。
+    expect(gotoUrls.every((u) => u.includes("interactive/comment"))).toBe(true);
     // 逐作品 parse 出各自评论(按 aweme 派生的 cid/text,证明用对了每作品的 item_id)。
     expect(results).toHaveLength(3);
     expect(results.map((r) => r.awemeId)).toEqual(awemeIds);

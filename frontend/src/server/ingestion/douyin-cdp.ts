@@ -549,8 +549,12 @@ const WORK_LIST_HINTS = [
 // 评论列表 XHR —— cheat-on-content crawler.py 验证过的创作者中心评论端点。
 const COMMENT_LIST_HINTS = ["/aweme/v1/web/comment/list/"];
 // 创作者中心评论管理页(带 item_id 过滤 → 只显示该作品评论)。
+// T-041(2026-07-02 headed 实测):抖音把评论页从旧 `content/comment-manage` 挪到了
+// `interactive/comment`——旧 URL 导航过去被重定向到 content/upload(发布页),评论 XHR
+// (/aweme/v1/web/comment/list/)一次不触发 → 采集 succeeded 却 0 条。新 URL 带 ?item_id=
+// 过滤停在本页且真触发评论 XHR(headed 复现:解析到该作品评论)。
 const CREATOR_COMMENT_MANAGE =
-  "https://creator.douyin.com/creator-micro/content/comment-manage";
+  "https://creator.douyin.com/creator-micro/interactive/comment";
 // 数据中心「作品分析」旧版 URL(T-030-D8a 明细导出入口)。TzFilm 踩坑:必须强制导航到旧版
 // data-center/content,否则 Garfish 微前端不加载,「投稿列表」/「导出数据」都找不到。
 const CREATOR_DATA_CENTER_CONTENT =
