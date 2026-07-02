@@ -27,6 +27,7 @@ export const PRODUCTION_OP_IDS = [
   "outputs.production.get",
   "outputs.production.put",
   "productions.segments.create",
+  "productions.segments.list",
   "productions.exports.create",
   "exports.complete",
 ] as const;
@@ -127,6 +128,10 @@ export function createProductionTransport(
           };
           const row = await service.createSegment(ctx, p.productionId ?? "", b);
           return { data: toSegmentResource(row), meta: { requestId } };
+        }
+        case "productions.segments.list": {
+          const rows = await service.listSegments(ctx, p.productionId ?? "");
+          return { data: rows.map(toSegmentResource), meta: { requestId } };
         }
         case "productions.exports.create": {
           const b = (body ?? {}) as {

@@ -61,6 +61,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/outputs/:outputId/production"],
   ["PUT", "/outputs/:outputId/production"],
   ["POST", "/productions/:productionId/segments"],
+  // [T-051 2e] 章节列表读(时间线读真)。
+  ["GET", "/productions/:productionId/segments"],
   ["POST", "/productions/:productionId/exports"],
   ["POST", "/exports/:exportId/complete"],
   ["GET", "/outputs/:outputId/publications"],

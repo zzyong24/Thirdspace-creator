@@ -56,6 +56,16 @@ export const productionOperations = {
     response: productionSegmentResource,
     fr: ["FR-PRODUCTION-SEGMENT-CREATE"],
   }),
+  // [T-051 2e] 章节列表读 op —— create 写了但此前无读回,时间线永远空(写真读假)。
+  listSegments: defineEndpoint({
+    id: "productions.segments.list",
+    method: "GET",
+    path: "/productions/:productionId/segments",
+    params: productionParams,
+    response: productionSegmentResource,
+    isList: true,
+    fr: ["FR-PRODUCTION-SEGMENTS-LIST"],
+  }),
   createProductionExport: defineEndpoint({
     id: "productions.exports.create",
     method: "POST",

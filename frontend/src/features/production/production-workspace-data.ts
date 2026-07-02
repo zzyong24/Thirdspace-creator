@@ -47,6 +47,37 @@ interface ProductionDto {
   readonly id: string;
   readonly productionMode: "remote_recording" | "screen_capture" | "studio";
   readonly status: "drafting" | "recording" | "editing" | "rendering" | "ready";
+  // [T-051 2e] 录制/字幕开关的持久化配置(outputs.production.put 写入)。
+  readonly recordingConfig?: Record<string, unknown>;
+  readonly subtitleConfig?: Record<string, unknown>;
+}
+
+// [T-051 2e] 录制/字幕开关读真:fixture settings 描述符只当骨架(分组/文案),
+// 开关 value 用 production 行的持久化 config 覆盖 —— 此前 toggle 落库但读侧
+// 永远渲染 fixture 默认「开启」,用户操作刷新即被吃掉(写真读假)。config 里
+// 没记录过的开关保持 fixture 默认(用户从没动过 = 默认态,诚实)。
+function overlaySettingsFromProduction(
+  settings: ProductionViewModel["settings"],
+  production: ProductionDto,
+): ProductionViewModel["settings"] {
+  const rec = production.recordingConfig ?? {};
+  const sub = production.subtitleConfig ?? {};
+  const valueFor = (id: string, current: string): string => {
+    if (id === "rec-overlay" && typeof rec.overlay === "boolean") {
+      return rec.overlay ? "开启" : "关闭";
+    }
+    if (id === "sub-ai-generate" && typeof sub.aiGenerate === "boolean") {
+      return sub.aiGenerate ? "开启" : "关闭";
+    }
+    return current;
+  };
+  return settings.map((group) => ({
+    ...group,
+    items: group.items.map((item) => ({
+      ...item,
+      value: valueFor(item.id, item.value),
+    })),
+  }));
 }
 
 interface MaterialLinkDto {
@@ -87,6 +118,12 @@ export interface ProductionDataClient {
   }): Promise<unknown>;
   getOutputProduction(input: {
     params: { outputId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+  // [T-051 2e] 章节(时间线)读真 —— create 落库后能读回。
+  listProductionSegments?(input: {
+    params: { productionId: string };
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
@@ -357,6 +394,37 @@ export async function buildProductionWorkspaceViewModel(
   // SEAM-03:读脚本阶段写的真分镜当提词。真脚本优先;无则诚实空。
   const realScriptLines = await readScriptLines(client, canonicalProjectId);
 
+  // [T-051 2e] 时间线章节读真(productions.segments.list):add-segment 落库的
+  // 章节刷新后能读回 —— 此前无读 op,时间线永远空(写真读假)。
+  let timeline: ProductionViewModel["timeline"] = [];
+  if (client.listProductionSegments) {
+    try {
+      const segRaw = await client.listProductionSegments({
+        params: { productionId: production.id },
+        query: undefined,
+        body: undefined,
+      });
+      const segs = (Array.isArray(segRaw) ? segRaw : []) as Array<{
+        id: string;
+        title: string;
+        startMs: number;
+        endMs: number;
+      }>;
+      const fmt = (ms: number) => {
+        const sec = Math.max(0, Math.floor(ms / 1000));
+        return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+      };
+      timeline = segs.map((seg) => ({
+        id: seg.id,
+        title: seg.title,
+        startLabel: fmt(seg.startMs),
+        endLabel: fmt(seg.endMs),
+      }));
+    } catch {
+      timeline = [];
+    }
+  }
+
   return {
     scenario: "default",
     kind: "production",
@@ -372,11 +440,11 @@ export async function buildProductionWorkspaceViewModel(
     // No real preview render this wave — neutral empty label (the PreviewPanel
     // renders the placeholder).
     preview: { posterLabel: "暂无预览", durationLabel: "00:00" },
-    // Recording/subtitle/export settings have no real per-project read path —
-    // keep the static fixture descriptors so the SettingsRail renders.
-    settings: fixtureShell.settings,
-    // No real timeline landing (NLE not implemented) — honest empty strip.
-    timeline: [],
+    // [T-051 2e] 开关 value 读真(production.recordingConfig/subtitleConfig 覆盖
+    // fixture 骨架);没动过的开关保持默认文案。
+    settings: overlaySettingsFromProduction(fixtureShell.settings, production),
+    // [T-051 2e] 时间线 = 持久化章节(空 = 还没加过章节,诚实空)。
+    timeline,
     loading: false,
     error: null,
   };
