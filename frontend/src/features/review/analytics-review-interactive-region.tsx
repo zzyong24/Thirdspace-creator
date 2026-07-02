@@ -824,16 +824,16 @@ function CommentsSection({
               <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground">
                 {comment.text}
               </p>
-              {comment.demandTag || comment.likeCount != null ? (
+              {comment.demandTag || (comment.likeCount ?? 0) > 0 ? (
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {comment.likeCount != null ? (
+                  {(comment.likeCount ?? 0) > 0 ? (
                     <span
                       data-slot="review-comment-likes"
-                      data-like-count={comment.likeCount}
+                      data-like-count={comment.likeCount ?? 0}
                       className="inline-flex w-fit items-center gap-0.5 rounded-full bg-surface-subtle px-2 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground"
                       title="评论点赞数(热榜排序依据)"
                     >
-                      🔥 {comment.likeCount.toLocaleString()}
+                      🔥 {(comment.likeCount ?? 0).toLocaleString()}
                     </span>
                   ) : null}
                   {comment.demandTag ? (

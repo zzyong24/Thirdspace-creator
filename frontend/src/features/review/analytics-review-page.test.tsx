@@ -419,7 +419,7 @@ describe("AnalyticsReviewPage", () => {
           id: "sig-2",
           text: "这条能变现吗",
           demandTag: null,
-          likeCount: null, // 存量无点赞值 → 不显 🔥
+          likeCount: 0, // 真实创作者场景:0 赞 → 不显 🔥(避免满屏「🔥 0」)
           createdAt: "2026-06-30T01:00:00.000Z",
         },
       ]);
@@ -443,7 +443,7 @@ describe("AnalyticsReviewPage", () => {
       );
       expect(tags).toHaveLength(1);
       expect(tags[0].textContent ?? "").toContain("教程需求");
-      // T-042 热榜点赞数:有值才显 🔥(sig-1 512);null(sig-2)不显 → 只 1 个 likes 徽标。
+      // T-042 热榜点赞数:>0 才显 🔥(sig-1 512);0/null(sig-2)不显 → 只 1 个 likes 徽标。
       const likes = container.querySelectorAll(
         '[data-slot="review-comment-likes"]',
       );
