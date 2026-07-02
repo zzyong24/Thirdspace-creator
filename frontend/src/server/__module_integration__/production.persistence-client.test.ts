@@ -29,7 +29,7 @@ beforeEach(() => {
 const OUTPUT_ID = "output-ainativebrowser-main";
 
 describe("production ops registered in the composite transport", () => {
-  it("the 5 production op ids are persistence-backed (not the mock)", async () => {
+  it("the 6 production op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of PRODUCTION_OP_IDS) {
@@ -37,7 +37,7 @@ describe("production ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(PRODUCTION_OP_IDS).toHaveLength(5);
+    expect(PRODUCTION_OP_IDS).toHaveLength(6);
   });
 
   it("get → put → segment → export → complete round-trips over the shared store", async () => {
