@@ -49,12 +49,6 @@ export function ProjectToolbar({
           onChange={(event) => setValue(event.target.value)}
           className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
-        <kbd
-          aria-hidden="true"
-          className="hidden h-6 items-center rounded border border-border bg-surface-subtle px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex"
-        >
-          ⌘ K
-        </kbd>
       </div>
       <div className="flex items-center gap-2">
         <button

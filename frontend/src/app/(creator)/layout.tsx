@@ -30,6 +30,7 @@ import * as React from "react";
 import { redirect } from "next/navigation";
 
 import { ShellRouter, type ShellUser } from "./shell-router";
+import { GlobalSearchHotkey } from "@/components/shell/global-search-hotkey";
 import { resolveSession, currentPathname } from "@/lib/session.server";
 import { createServerClient } from "@/lib/contract-client.server";
 import type { NotificationsViewModel } from "@/fixtures/selectors";
@@ -107,6 +108,8 @@ export default async function CreatorLayout({
 
   return (
     <>
+      {/* [T-051 2c] ⌘K 全局热键 → /search(让 TopHeader 的 kbd 提示言行一致)。 */}
+      <GlobalSearchHotkey />
       <ShellRouter user={user} notifications={notifications}>
         {children}
       </ShellRouter>

@@ -125,6 +125,8 @@ export interface SettingsService {
     ctx: RequestContext,
     patch: PreferencePatch,
   ): Promise<UserPreferenceResource>;
+  // [T-051 2e] 偏好读(设置页初值);无行时返回默认值(与 patch 的 upsert 默认一致)。
+  getPreferences(ctx: RequestContext): Promise<UserPreferenceResource>;
   setModelConfiguration(
     ctx: RequestContext,
     capability: string,
@@ -303,6 +305,22 @@ export function createSettingsService(
     async updatePreferences(ctx, patch) {
       const row = await repoForCtx(ctx).patchPreferences(ctx, patch);
       return toPreferenceResource(ctx, row);
+    },
+
+    async getPreferences(ctx) {
+      const row = await repoForCtx(ctx).getPreferences(ctx);
+      if (row) return toPreferenceResource(ctx, row);
+      // 用户还没改过任何偏好 → 返回默认值(不落库;首次 patch 才 upsert)。
+      return {
+        id: `pref-${ctx.userId}`,
+        userId: ctx.userId,
+        defaultHome: "dashboard",
+        defaultCreationMode: "guided",
+        defaultVisibility: "private",
+        autosaveEnabled: true,
+        fileNamingRule: "{date}-{title}",
+        analyticsEnabled: true,
+      };
     },
 
     async setModelConfiguration(ctx, capability, body) {

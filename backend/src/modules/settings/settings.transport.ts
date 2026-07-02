@@ -33,6 +33,7 @@ export const SETTINGS_OP_IDS = [
   // so it proxies the account WRITE the same way (→ accountWriter). The op id
   // keeps the `identity.*` namespace because Identity owns the `users` table.
   "identity.profile.patch",
+  "settings.preferences.get",
   "settings.preferences.patch",
   "settings.models.put",
   "settings.models.list",
@@ -71,6 +72,10 @@ export function createSettingsTransport(
             (body ?? {}) as AccountProfilePatch,
           );
           return { data, meta: { requestId: ctx.requestId } };
+        }
+        case "settings.preferences.get": {
+          const pref = await service.getPreferences(ctx);
+          return { data: pref, meta: { requestId: ctx.requestId } };
         }
         case "settings.preferences.patch": {
           const data = await service.updatePreferences(

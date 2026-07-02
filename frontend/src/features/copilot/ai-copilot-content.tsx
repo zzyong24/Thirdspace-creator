@@ -1421,13 +1421,6 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
               <div className="flex items-center gap-1.5">
                 <CardTitle className="text-[12px] font-semibold">最近任务</CardTitle>
               </div>
-              <Link
-                href="/copilot"
-                data-slot="recent-view-all"
-                className="text-[10px] font-medium text-muted-foreground hover:text-foreground"
-              >
-                查看全部
-              </Link>
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 px-3 pb-2.5 pt-0">
@@ -1486,13 +1479,6 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
               <div className="flex items-center gap-1.5">
                 <CardTitle className="text-[12px] font-semibold">继续任务</CardTitle>
               </div>
-              <Link
-                href="/copilot"
-                data-slot="continuing-view-all"
-                className="text-[10px] font-medium text-muted-foreground hover:text-foreground"
-              >
-                查看全部
-              </Link>
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-1.5 px-3 pb-2.5 pt-0">

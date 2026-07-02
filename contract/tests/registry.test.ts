@@ -105,6 +105,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/notifications"],
   ["POST", "/notifications/:notificationId/read"],
   ["GET", "/settings"],
+  // [T-051 2e] 偏好读 op(设置页初值读真)。
+  ["GET", "/settings/preferences"],
   ["PATCH", "/settings/preferences"],
   ["GET", "/settings/models"],
   ["PUT", "/settings/models/:capability"],

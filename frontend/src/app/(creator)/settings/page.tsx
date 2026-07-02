@@ -20,6 +20,7 @@
  */
 import {
   SettingsPage,
+  type PreferencesState,
   type ModelState,
   type MultimodalModelState,
   type MultimodalModelsState,
@@ -178,12 +179,35 @@ export default async function SettingsRoutePage() {
   // AccountBindingCard 挂载后拉 status(见 settings-interactive-region.tsx),SSR 默认徽标
   // 走 fixture 的「未连接」(诚实兜底,绝不假装已连接)。故这里不传 douyinAccount。
 
+  // [T-051 2e] 偏好读真(settings.preferences.get):patch 落库的值刷新后能读回,
+  // 不再永远渲染 fixture 默认(写真读假环闭合)。读失败 → undefined(fixture 默认)。
+  let preferences: PreferencesState | undefined;
+  if (session) {
+    try {
+      const pref = await createServerClient(session.ctx).getPreferences({
+        params: undefined,
+        query: undefined,
+        body: undefined,
+      });
+      preferences = {
+        defaultHome: pref.defaultHome,
+        defaultCreationMode: pref.defaultCreationMode,
+        defaultVisibility: pref.defaultVisibility,
+        autosaveEnabled: pref.autosaveEnabled,
+        analyticsEnabled: pref.analyticsEnabled,
+      };
+    } catch {
+      preferences = undefined;
+    }
+  }
+
   return (
     <SettingsPage
       identity={identity}
       model={model}
       storage={storage}
       multimodalModels={multimodalModels}
+      preferences={preferences}
     />
   );
 }

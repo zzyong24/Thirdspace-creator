@@ -23,25 +23,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import {
-  MessageSquare,
-  Headphones,
-  BookOpen,
-  Flame,
-  TrendingUp,
-  RotateCcw,
-  Lightbulb,
-  ChevronRight,
-  Eye,
-  Plus,
-  Sparkles,
-  HeartPulse,
-  FileText,
-  Rocket,
-  Trash2,
-  Search,
-  type LucideIcon,
-} from "lucide-react";
+import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, type LucideIcon } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
@@ -792,7 +774,9 @@ function SourcesColumn({
             <li
               key={s.key}
               data-testid="topics-source-row"
-              className="flex items-center gap-2.5 rounded-control px-2 py-2 text-sm transition-colors hover:bg-surface-subtle"
+              // [T-051 2c] 纯信息行:去掉 hover 高亮与右箭头 —— 原样式暗示可点但
+              // 无任何 onClick(假可点)。按来源筛选候选是未实现的功能,不做假承诺。
+              className="flex items-center gap-2.5 rounded-control px-2 py-2 text-sm"
             >
               <span className="flex size-7 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand">
                 <Icon className="size-4" strokeWidth={2} />
@@ -801,7 +785,6 @@ function SourcesColumn({
               <Badge variant="secondary" className="text-[10px] tabular-nums">
                 {s.count}
               </Badge>
-              <ChevronRight className="size-3.5 shrink-0 text-text-subtle" />
             </li>
           );
         })}

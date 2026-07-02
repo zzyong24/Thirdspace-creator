@@ -20,6 +20,15 @@ export const settingsOperations = {
     response: userResource,
     fr: ["FR-SETTINGS-GET"],
   }),
+  // [T-051 2e] 偏好读 op —— patch 写了 user_preferences 但此前无读 op,设置页
+  // 永远渲染 fixture 默认值(写真读假)。
+  getPreferences: defineEndpoint({
+    id: "settings.preferences.get",
+    method: "GET",
+    path: "/settings/preferences",
+    response: userPreferenceResource,
+    fr: ["FR-SETTINGS-PREFERENCES-GET"],
+  }),
   patchPreferences: defineEndpoint({
     id: "settings.preferences.patch",
     method: "PATCH",

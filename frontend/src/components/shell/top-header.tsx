@@ -463,8 +463,8 @@ function DashboardHeaderActions({
       >
         <SearchIcon className="size-4" aria-hidden="true" />
         <span className="flex-1">搜索项目、内容、素材...</span>
-        {/* §348 ⌘K kbd hint — decorative per roadmap §4 (intentionally inert:
-            no keydown listener; the Link itself navigates to /search). */}
+        {/* [T-051 2c] ⌘K 已接真:GlobalSearchHotkey(layout 挂载)监听 ⌘K/Ctrl+K
+            → /search,与此提示言行一致。 */}
         <kbd className="rounded bg-surface-subtle px-1.5 py-0.5 text-[10px]">
           ⌘ K
         </kbd>

@@ -103,6 +103,12 @@ export interface SettingsPageProps {
    * `viewModel` directly.
    */
   readonly douyinAccount?: DouyinAccountState;
+  /**
+   * [T-051 2e] Real DB-backed 偏好(route 经 settings.preferences.get 读)。
+   * 此前 patch 写库但无读回,设置页永远渲染 fixture 默认(写真读假)。
+   * When supplied, 偏好卡初值 = 用户真值。Omitted in unit tests.
+   */
+  readonly preferences?: PreferencesState;
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */
@@ -295,10 +301,14 @@ export function SettingsPage({
   storage,
   multimodalModels,
   douyinAccount,
+  preferences,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
-  const withModel = model ? { ...withIdentity, model } : withIdentity;
+  const withPreferences = preferences
+    ? { ...withIdentity, preferences }
+    : withIdentity;
+  const withModel = model ? { ...withPreferences, model } : withPreferences;
   const withStorage = storage ? { ...withModel, storage } : withModel;
   const withMultimodal = multimodalModels
     ? { ...withStorage, multimodalModels }

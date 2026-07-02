@@ -326,7 +326,7 @@ function RelatedTagsCard({ tags }: { tags: ResearchViewModel["relatedTags"] }) {
               <Link
                 key={tag}
                 data-slot="related-tag"
-                href={`/search?tag=${encodeURIComponent(tag)}`}
+                href={`/search?q=${encodeURIComponent(tag)}`}
                 className="inline-flex rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               >
                 <TagChip label={tag} tone="info" size="sm" />

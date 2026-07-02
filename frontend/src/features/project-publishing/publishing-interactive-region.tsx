@@ -1581,13 +1581,6 @@ function PublishTips({ tips }: { tips: ReadonlyArray<string> }) {
           </li>
         ))}
       </ul>
-      <a
-        href="#"
-        data-slot="publish-tips-more"
-        className="mt-0.5 inline-block text-[10px] font-medium text-brand"
-      >
-        查看更多提议 →
-      </a>
     </div>
   );
 }
