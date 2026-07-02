@@ -15,7 +15,7 @@
  *    `(creator)/layout),
  *  - StatusTabs in the canonical order 全部项目 / 进行中 / 写稿中 /
  *    制作中 / 已发布 / 复盘中 / 已归档 (7 tabs matching design),
- *  - ViewAndSortControls exposing list/grid + sort accessible state,
+ *  - ProjectsToolbar(状态 tab + 排序,URL 驱动真筛真排;视图切换已砍 [T-051]),
  *  - ProjectList rendering one ProjectListRow per canonical project,
  *    each row carrying cover, title, summary, owner, status, stage,
  *    progress, platforms and update time,
@@ -27,8 +27,8 @@ import Link from "next/link";
 
 import { ProgressBar } from "@/components/project/progress-bar";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
-import { StatusTabsBar, type StatusTabsBarTab } from "@/features/projects/status-tabs-bar";
-import { ViewAndSortControls } from "@/features/projects/view-and-sort-controls";
+import { type StatusTabsBarTab } from "@/features/projects/status-tabs-bar";
+import { ProjectsToolbar } from "@/features/projects/projects-toolbar";
 import { projectWorkspaceHref } from "@/features/projects/project-href";
 import { ProjectRowMenu } from "@/features/projects/project-row-menu";
 import { Pagination } from "@/components/navigation/pagination";
@@ -55,6 +55,12 @@ export interface ProjectsPageProps {
   /** 1-based page number (from the route's ?page= search param). */
   readonly page?: number;
   /**
+   * [T-051 2b] 状态筛选(?status=,tab id;"all" = 不筛)与排序(?sort=)。
+   * 三件套接真:server 端据此筛行 + 排序,tab 计数仍取全量。
+   */
+  readonly status?: string;
+  readonly sort?: string;
+  /**
    * Session-scoped contract client for the production read path. The route
    * passes `createServerClient(session.ctx)`; defaults to the singleton seam.
    */
@@ -80,6 +86,8 @@ const PROJECTS_PAGE_SIZE = 10;
 export async function ProjectsPage({
   viewModel,
   page = 1,
+  status = "all",
+  sort = "updated",
   client = defaultClient,
 }: ProjectsPageProps = {}) {
   // Reads flow page -> await client.* -> MockTransport -> store -> DTO. The
@@ -105,24 +113,44 @@ export async function ProjectsPage({
     );
 
   // Build the VM from the FULL real set so the status-tab counts stay correct,
-  // then slice the rows to the current page for display.
+  // then filter (status tab) + sort + slice the rows to the current page.
   const vm = viewModel ?? buildProjectsViewModel(realProjects);
   const tabs = buildProjectStatusTabs(vm);
+
+  // [T-051 2b] 状态 tab 真筛选:tab 计数看全量(上面),行集按选中 tab 过滤。
+  const filteredRows =
+    status === "all"
+      ? vm.rows
+      : vm.rows.filter((row) => mapProjectRowToTab(row) === status);
+  // [T-051 2b] 排序真接线:updated(默认,保持真实发布时刻倒序的原序)之外按选项排。
+  const sortedRows = sortProjectRows(filteredRows, sort);
 
   // Pagination only applies to the real-read path; the test-override VM renders
   // its rows verbatim (totalPages 1) so existing page tests stay green.
   const paginate = viewModel === undefined;
   const totalPages = paginate
-    ? Math.max(1, Math.ceil(vm.rows.length / PROJECTS_PAGE_SIZE))
+    ? Math.max(1, Math.ceil(sortedRows.length / PROJECTS_PAGE_SIZE))
     : 1;
   const currentPage = Math.min(Math.max(1, page), totalPages);
   const rows = paginate
-    ? vm.rows.slice(
+    ? sortedRows.slice(
         (currentPage - 1) * PROJECTS_PAGE_SIZE,
         currentPage * PROJECTS_PAGE_SIZE,
       )
-    : vm.rows;
-  const totalLabel = `共 ${vm.rows.length} 个项目`;
+    : sortedRows;
+  const totalLabel =
+    status === "all"
+      ? `共 ${vm.rows.length} 个项目`
+      : `筛选 ${sortedRows.length} / ${vm.rows.length} 个项目`;
+  // 分页链接保留当前筛选/排序(否则翻页丢筛选)。
+  const hrefForPage = (p: number) => {
+    const params = new URLSearchParams();
+    if (p > 1) params.set("page", String(p));
+    if (status !== "all") params.set("status", status);
+    if (sort !== "updated") params.set("sort", sort);
+    const qs = params.toString();
+    return qs ? `/projects?${qs}` : "/projects";
+  };
   return (
     <main
       data-app="creatoros"
@@ -144,13 +172,7 @@ export async function ProjectsPage({
         </p>
       </header>
 
-      <div
-        data-slot="projects-controls-row"
-        className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
-      >
-        <StatusTabsBar tabs={tabs} />
-        <ViewAndSortControls />
-      </div>
+      <ProjectsToolbar tabs={tabs} status={status} sort={sort} />
 
       <ProjectList rows={rows} />
 
@@ -159,7 +181,7 @@ export async function ProjectsPage({
         totalPages={totalPages}
         totalLabel={totalLabel}
         perPageLabel={`每页显示 ${PROJECTS_PAGE_SIZE} 条`}
-        hrefForPage={paginate ? (p) => `/projects?page=${p}` : undefined}
+        hrefForPage={paginate ? hrefForPage : undefined}
       />
     </main>
   );
@@ -329,6 +351,39 @@ const PROJECT_TAB_ORDER = [
   { id: "review", label: "复盘中" },
   { id: "archived", label: "已归档" },
 ] as const;
+
+// [T-051 2b] 排序真接线:updated 保持传入原序(真实发布时刻倒序,projectSortKey 已排),
+// 其余按选项排;未知 sort 值按 updated 处理。
+function sortProjectRows(
+  rows: ReadonlyArray<ProjectListRow>,
+  sort: string,
+): ReadonlyArray<ProjectListRow> {
+  const STAGE_ORDER = [
+    "brief",
+    "research",
+    "planning",
+    "script",
+    "production",
+    "publishing",
+    "review",
+  ];
+  switch (sort) {
+    case "progress":
+      return rows.slice().sort((a, b) => b.progressPct - a.progressPct);
+    case "stage":
+      return rows
+        .slice()
+        .sort(
+          (a, b) =>
+            STAGE_ORDER.indexOf(a.currentStage) -
+            STAGE_ORDER.indexOf(b.currentStage),
+        );
+    case "title":
+      return rows.slice().sort((a, b) => a.title.localeCompare(b.title, "zh"));
+    default:
+      return rows;
+  }
+}
 
 function buildProjectStatusTabs(vm: ProjectsViewModel): ReadonlyArray<StatusTabsBarTab> {
   const counts: Record<string, number> = {

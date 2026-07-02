@@ -27,10 +27,25 @@ export default async function Page({
   const raw = Array.isArray(params.page) ? params.page[0] : params.page;
   const parsed = Number(raw);
   const page = Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
+  // [T-051 2b] 状态筛选 + 排序从 URL 读(三件套接真;非法值回默认)。
+  const rawStatus = Array.isArray(params.status) ? params.status[0] : params.status;
+  const status = rawStatus && /^[a-z]+$/.test(rawStatus) ? rawStatus : "all";
+  const rawSort = Array.isArray(params.sort) ? params.sort[0] : params.sort;
+  const sort =
+    rawSort && ["updated", "progress", "stage", "title"].includes(rawSort)
+      ? rawSort
+      : "updated";
 
   const session = await resolveSession();
   if (!session) {
-    return <ProjectsPage page={page} />;
+    return <ProjectsPage page={page} status={status} sort={sort} />;
   }
-  return <ProjectsPage page={page} client={createServerClient(session.ctx)} />;
+  return (
+    <ProjectsPage
+      page={page}
+      status={status}
+      sort={sort}
+      client={createServerClient(session.ctx)}
+    />
+  );
 }

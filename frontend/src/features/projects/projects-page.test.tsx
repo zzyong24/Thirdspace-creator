@@ -133,16 +133,9 @@ describe("ProjectsPage", () => {
     expect(link).toHaveAttribute("href", "/projects/new");
   });
 
-  it("exposes a view toggle with grid/list accessible state", async () => {
+  it("[T-051] 视图切换已砍(无 grid 实现,假承诺撤下)——不再渲染 view-toggle", async () => {
     const { container } = await renderProjects();
-    const toggle = container.querySelector('[data-slot="view-toggle"]');
-    expect(toggle).not.toBeNull();
-    const listOption = toggle!.querySelector('[data-slot="view-option"][data-view="list"]');
-    const gridOption = toggle!.querySelector('[data-slot="view-option"][data-view="grid"]');
-    expect(listOption).not.toBeNull();
-    expect(gridOption).not.toBeNull();
-    expect(gridOption!.getAttribute("aria-pressed")).toBe("true");
-    expect(listOption!.getAttribute("aria-pressed")).toBe("false");
+    expect(container.querySelector('[data-slot="view-toggle"]')).toBeNull();
   });
 
   it("exposes a sort control with accessible state", async () => {
