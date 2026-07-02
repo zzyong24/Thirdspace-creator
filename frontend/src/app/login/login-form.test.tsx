@@ -159,6 +159,56 @@ describe("LoginForm — submit", () => {
     expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
   });
 
+  it("autofill(不触发 React onChange)后仍可提交 —— 凭据从表单 DOM 读,不信 state", async () => {
+    // 真机坑:浏览器密码管理器填充只改 DOM value、不派发 React 感知的 change,
+    // state 恒空。旧实现按钮死灰 + body 发空。这里用原生 setter 模拟 autofill。
+    const fetchSpy = stubFetch(() =>
+      Promise.resolve(jsonResponse(200, { data: { id: "user-zyongzhu" } })),
+    );
+    const { LoginForm } = await importForm();
+    const { fireEvent } = await import("@testing-library/react");
+    render(<LoginForm />);
+
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!;
+    nativeSetter.call(
+      screen.getByLabelText(/邮箱|email/i),
+      "zyongzhu@creatoros.local",
+    );
+    nativeSetter.call(screen.getByLabelText(/密码|password/i), "creatoros-dev");
+
+    // 按钮不因 state 为空而置灰。
+    expect(screen.getByRole("button", { name: /^登录$/ })).toBeEnabled();
+    fireEvent.submit(screen.getByTestId("login-form"));
+
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+    const [, init] = fetchSpy.mock.calls[0]!;
+    expect(JSON.parse(String(init?.body))).toEqual({
+      email: "zyongzhu@creatoros.local",
+      password: "creatoros-dev",
+    });
+  });
+
+  it("空表单提交 → 内联提示「请输入邮箱和密码」,不发请求", async () => {
+    const fetchSpy = stubFetch(() =>
+      Promise.resolve(jsonResponse(200, { data: {} })),
+    );
+    const user = userEvent.setup();
+    const { LoginForm } = await importForm();
+    render(<LoginForm />);
+
+    await user.click(screen.getByRole("button", { name: /^登录$/ }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain(
+        "请输入邮箱和密码",
+      );
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("renders an inline error and does not navigate on 401", async () => {
     stubFetch(() =>
       Promise.resolve(

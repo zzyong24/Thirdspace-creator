@@ -27,6 +27,7 @@ const LOGIN_ENDPOINT = "/api/v1/auth/login";
 // Generic copy — intentionally identical for unknown-email and wrong-password
 // so the surface leaks no account-existence signal (SPEC §20).
 const GENERIC_ERROR = "邮箱或密码不正确，请重试。";
+const EMPTY_FIELDS_ERROR = "请输入邮箱和密码。";
 
 export function LoginForm(): React.JSX.Element {
   const router = useRouter();
@@ -37,12 +38,20 @@ export function LoginForm(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
-  const canSubmit =
-    email.trim().length > 0 && password.length > 0 && !submitting;
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting) return;
+
+    // 凭据从表单 DOM 读(FormData),不信 React state:浏览器密码管理器 autofill
+    // 不触发 onChange,state 恒空 —— 依赖 state 会把 autofill 用户永远锁在灰按钮外
+    // (真机踩过)。同理按钮不做"非空才可点"的前置置灰,空值在这里内联提示。
+    const form = new FormData(event.currentTarget);
+    const emailValue = String(form.get("email") ?? "").trim();
+    const passwordValue = String(form.get("password") ?? "");
+    if (!emailValue || !passwordValue) {
+      setError(EMPTY_FIELDS_ERROR);
+      return;
+    }
 
     setError(null);
     setSubmitting(true);
@@ -50,7 +59,7 @@ export function LoginForm(): React.JSX.Element {
       const res = await fetch(LOGIN_ENDPOINT, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: emailValue, password: passwordValue }),
       });
 
       if (!res.ok) {
@@ -122,7 +131,7 @@ export function LoginForm(): React.JSX.Element {
         </p>
       ) : null}
 
-      <Button type="submit" disabled={!canSubmit} className="w-full">
+      <Button type="submit" disabled={submitting} className="w-full">
         登录
       </Button>
 
