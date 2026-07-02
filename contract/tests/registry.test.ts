@@ -109,6 +109,10 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/settings/agents"],
   ["GET", "/settings/storage"],
   ["PUT", "/settings/storage"],
+  // 提示词/skill 服务端可配 (T-040c) — list全表 / get单个 / put upsert(热更)
+  ["GET", "/settings/prompts"],
+  ["GET", "/settings/prompts/:id"],
+  ["PUT", "/settings/prompts/:id"],
   // 身份/认证(register 是首个进 dispatch 表的 auth op;login/logout 仍是 bare route)
   ["POST", "/auth/register"],
   ["PATCH", "/me"],

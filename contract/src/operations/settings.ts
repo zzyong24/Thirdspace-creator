@@ -6,6 +6,7 @@ import {
   modelConfigurationResource,
   agentConfigurationResource,
   storageConfigResource,
+  skillConfigOverrideResource,
 } from "../resources/settings";
 
 // SPEC §13 "设置" group. `GET /settings` is the singleton settings view for the
@@ -94,5 +95,45 @@ export const settingsOperations = {
     }),
     response: storageConfigResource,
     fr: ["FR-SETTINGS-STORAGE-UPDATE"],
+  }),
+  // T-040 提示词/skill 服务端可配 (SPEC 2026-07-02 §4.4). `list` 读全表 (供管理端总览),
+  // `get` 读单个 skill 的覆盖 (未配 → 该 op 由 service 返回 404 via OwnershipError),
+  // `put` upsert 一条覆盖 (id ∈ 已注册 18 个模板 — 非法 id 由 service 拒 →
+  // ValidationError → 400; put 成功后 persistence-client 重套 override 进常驻 REGISTRY,
+  // 热更, 不重启). Mirrors the listModels / putModel id/path/schema style.
+  listPrompts: defineEndpoint({
+    id: "settings.prompts.list",
+    method: "GET",
+    path: "/settings/prompts",
+    response: z.array(skillConfigOverrideResource),
+    fr: ["FR-SETTINGS-PROMPT-LIST"],
+  }),
+  getPrompt: defineEndpoint({
+    id: "settings.prompts.get",
+    method: "GET",
+    path: "/settings/prompts/:id",
+    params: z.object({ id: z.string().min(1) }),
+    response: skillConfigOverrideResource,
+    fr: ["FR-SETTINGS-PROMPT-GET"],
+  }),
+  putPrompt: defineEndpoint({
+    id: "settings.prompts.put",
+    method: "PUT",
+    path: "/settings/prompts/:id",
+    params: z.object({ id: z.string().min(1) }),
+    body: z.object({
+      // Every override field optional — absent = leave that column as-is (partial
+      // put never clobbers untouched columns). Text fields override system/template
+      // 正文; tools/requiredFacets are string whitelists; outputSchema is a JSON
+      // Schema object (转回 ajv 校验器 at assembly).
+      system: z.string().optional(),
+      template: z.string().optional(),
+      tools: z.array(z.string()).optional(),
+      requiredFacets: z.array(z.string()).optional(),
+      outputSchema: z.record(z.string(), z.unknown()).optional(),
+      version: z.string().optional(),
+    }),
+    response: skillConfigOverrideResource,
+    fr: ["FR-SETTINGS-PROMPT-UPSERT"],
   }),
 } as const;

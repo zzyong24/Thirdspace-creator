@@ -5,6 +5,7 @@ import {
   modelConfigurations,
   agentConfigurations,
   storageConfigs,
+  skillConfigOverrides,
 } from "./settings.db-schema";
 
 // Settings repository (foundation §5.2) — user-scoped queries ONLY. Every method
@@ -26,6 +27,11 @@ export type UserPreferenceRow = typeof userPreferences.$inferSelect;
 export type ModelConfigurationRow = typeof modelConfigurations.$inferSelect;
 export type AgentConfigurationRow = typeof agentConfigurations.$inferSelect;
 export type StorageConfigRow = typeof storageConfigs.$inferSelect;
+// T-040c — skill_config_overrides row (提示词/skill 服务端可配的持久层, SPEC 2026-07-02
+// §4.1). Non user-scoped (提示词是产品级系统配置, SPEC §7 Open Q1 默认全局) — id 即 PK,
+// so these ops are NOT ctx-filtered (unlike every other repo method here). Each column
+// is nullable = 未配 → 装配期归一 undefined → `?? base` 回退内置模板.
+export type SkillConfigOverrideRow = typeof skillConfigOverrides.$inferSelect;
 
 // item B — the editable storage-config fields (every key optional; only provided
 // keys are written on the user_id-PK upsert).
@@ -69,6 +75,25 @@ export interface AgentCreateInput {
   agentType: string;
 }
 
+// T-040c — the skill_config_overrides upsert body. Only `id` is required; every
+// override field is optional (absent = leave that column as-is on update, NULL on a
+// first insert). Text fields override system/template正文; jsonb fields carry
+// string[] whitelists / a JSON Schema object. version is a plain audit marker
+// (the repo bumps it deterministically on each write; see putSkillConfigOverride).
+export interface SkillConfigOverridePutBody {
+  id: string;
+  system?: string;
+  template?: string;
+  tools?: readonly string[];
+  requiredFacets?: readonly string[];
+  outputSchema?: Record<string, unknown>;
+  // Explicit version marker. Absent → the repo auto-increments (prev+1, or "1" on a
+  // first write). Provided → written verbatim (an管理端 can pin a version label).
+  version?: string;
+  // Who performed the write (user id / "system"). Absent → ctx.userId, else "system".
+  updatedBy?: string;
+}
+
 export interface SettingsRepository {
   getPreferences(ctx: RequestContext): Promise<UserPreferenceRow | null>;
   patchPreferences(
@@ -97,6 +122,16 @@ export interface SettingsRepository {
     ctx: RequestContext,
     input: AgentCreateInput,
   ): Promise<AgentConfigurationRow>;
+  // T-040c — skill_config_overrides read/write. NOT ctx-scoped (global product
+  // config, PK=id): list全表, get by id, put = upsert ON CONFLICT(id) DO UPDATE
+  // with version++ + updated_at/by. ctx is threaded only for the updated_by
+  // default (ctx.userId) — the rows themselves carry no user_id.
+  listSkillConfigOverrides(): Promise<SkillConfigOverrideRow[]>;
+  getSkillConfigOverride(id: string): Promise<SkillConfigOverrideRow | null>;
+  putSkillConfigOverride(
+    ctx: RequestContext,
+    body: SkillConfigOverridePutBody,
+  ): Promise<SkillConfigOverrideRow>;
   seedPreferences(rows: UserPreferenceRow[]): Promise<void>;
   seedModels(rows: ModelConfigurationRow[]): Promise<void>;
   seedAgents(rows: AgentConfigurationRow[]): Promise<void>;
@@ -303,6 +338,79 @@ export function createSettingsRepository(
           secretReference: "",
           createdAt: now,
           updatedAt: now,
+        })
+        .returning();
+      return inserted[0]!;
+    },
+
+    async listSkillConfigOverrides() {
+      // NOT ctx-scoped: global product config (id is the PK, no user_id column).
+      return db.select().from(skillConfigOverrides);
+    },
+
+    async getSkillConfigOverride(id) {
+      const rows = await db
+        .select()
+        .from(skillConfigOverrides)
+        .where(eq(skillConfigOverrides.id, id))
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
+    async putSkillConfigOverride(ctx, body) {
+      const now = deps.now();
+      const updatedBy = body.updatedBy ?? ctx.userId ?? "system";
+      // Compute the next version deterministically from the current row (若无 → "1",
+      // else parse-and-increment; 非数字 version → 从 1 重开). This is a plain audit
+      // marker, not an optimistic-lock token — a single-writer local db.
+      const existing = await db
+        .select({ version: skillConfigOverrides.version })
+        .from(skillConfigOverrides)
+        .where(eq(skillConfigOverrides.id, body.id))
+        .limit(1);
+      const prevVersion = existing[0]?.version;
+      const prevNum = prevVersion ? Number.parseInt(prevVersion, 10) : 0;
+      // Provided version wins (explicit label); else auto-increment prev+1.
+      const nextVersion =
+        body.version !== undefined && body.version.trim()
+          ? body.version
+          : String((Number.isFinite(prevNum) && prevNum > 0 ? prevNum : 0) + 1);
+
+      // Only provided override fields are written; absent ones become NULL on a
+      // first insert and are excluded from the UPDATE `set` (so a partial put never
+      // clobbers a column the caller didn't touch). jsonb columns take the object /
+      // string[] directly (undefined → not written).
+      const tools = body.tools !== undefined ? [...body.tools] : undefined;
+      const requiredFacets =
+        body.requiredFacets !== undefined ? [...body.requiredFacets] : undefined;
+      const updateSet: Record<string, unknown> = {
+        version: nextVersion,
+        updatedBy,
+        updatedAt: now,
+      };
+      if (body.system !== undefined) updateSet.system = body.system;
+      if (body.template !== undefined) updateSet.template = body.template;
+      if (tools !== undefined) updateSet.tools = tools;
+      if (requiredFacets !== undefined) updateSet.requiredFacets = requiredFacets;
+      if (body.outputSchema !== undefined)
+        updateSet.outputSchema = body.outputSchema;
+
+      const inserted = await db
+        .insert(skillConfigOverrides)
+        .values({
+          id: body.id,
+          version: nextVersion,
+          system: body.system ?? null,
+          template: body.template ?? null,
+          tools: tools ?? null,
+          requiredFacets: requiredFacets ?? null,
+          outputSchema: body.outputSchema ?? null,
+          updatedBy,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: skillConfigOverrides.id,
+          set: updateSet,
         })
         .returning();
       return inserted[0]!;

@@ -27,10 +27,12 @@ export {
   type ModelConfigurationRow,
   type AgentConfigurationRow,
   type StorageConfigRow,
+  type SkillConfigOverrideRow,
   type PreferencePatch,
   type ModelPutBody,
   type AgentCreateInput,
   type StorageConfigPatch,
+  type SkillConfigOverridePutBody,
 } from "./settings.repository";
 
 export {
@@ -40,7 +42,11 @@ export {
 
 export { SETTINGS_DDL } from "./settings.db-schema";
 
-export { OwnershipError, StorageValidationError } from "./settings.errors";
+export {
+  OwnershipError,
+  StorageValidationError,
+  PromptValidationError,
+} from "./settings.errors";
 
 export {
   userResource,
@@ -48,9 +54,11 @@ export {
   modelConfigurationResource,
   agentConfigurationResource,
   storageConfigResource,
+  skillConfigOverrideResource,
   type UserResource,
   type UserPreferenceResource,
   type ModelConfigurationResource,
   type AgentConfigurationResource,
   type StorageConfigResource,
+  type SkillConfigOverrideResource,
 } from "./settings.schema";

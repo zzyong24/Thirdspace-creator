@@ -16,6 +16,7 @@ import {
   userPreferenceResource,
   modelConfigurationResource,
   agentConfigurationResource,
+  skillConfigOverrideResource,
 } from "./settings.schema";
 
 // Settings contract conformance (plan Step 4). Drive each of the 4 ops through an
@@ -192,6 +193,59 @@ describe("settings.transport (contract conformance)", () => {
     const parsed = successEnvelope(agentConfigurationResource).parse(raw);
     expect(parsed.data.status).toBe("active");
     expect(parsed.data.createdAt).toBe(parsed.data.updatedAt);
+  });
+
+  it("settings.prompts.put → skillConfigOverrideResource single envelope", async () => {
+    const client = createClient(ENDPOINTS, transport, ctx);
+    const put = await client.putPrompt({
+      params: { id: "review.insights" },
+      query: undefined,
+      body: { system: "覆盖 system", tools: ["read"] },
+    });
+    expect(() => skillConfigOverrideResource.parse(put)).not.toThrow();
+    expect(put.id).toBe("review.insights");
+    expect(put.system).toBe("覆盖 system");
+
+    const raw = await transport.request(
+      ep("settings.prompts.put"),
+      { params: { id: "chatbox.review" }, body: { template: "改 template" } } as never,
+      ctx,
+    );
+    const parsed = successEnvelope(skillConfigOverrideResource).parse(raw);
+    expect(parsed.data.id).toBe("chatbox.review");
+    expect(parsed.data.version).toBe("1");
+  });
+
+  it("settings.prompts.list → array of skillConfigOverrideResource", async () => {
+    const client = createClient(ENDPOINTS, transport, ctx);
+    await client.putPrompt({
+      params: { id: "topic.generate" },
+      query: undefined,
+      body: { system: "s" },
+    });
+    const list = await client.listPrompts({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    });
+    expect(Array.isArray(list)).toBe(true);
+    expect(list.find((p) => p.id === "topic.generate")).toBeTruthy();
+  });
+
+  it("settings.prompts.get → skillConfigOverrideResource single envelope", async () => {
+    const client = createClient(ENDPOINTS, transport, ctx);
+    await client.putPrompt({
+      params: { id: "planning.thesis" },
+      query: undefined,
+      body: { system: "s" },
+    });
+    const got = await client.getPrompt({
+      params: { id: "planning.thesis" },
+      query: undefined,
+      body: undefined,
+    });
+    expect(() => skillConfigOverrideResource.parse(got)).not.toThrow();
+    expect(got.id).toBe("planning.thesis");
   });
 
   it("unknown op id → UnsupportedOperationError", async () => {

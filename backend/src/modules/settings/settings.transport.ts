@@ -11,6 +11,7 @@ import type {
   PreferencePatch,
   ModelPutBody,
   StorageConfigPatch,
+  SkillConfigOverridePutBody,
 } from "./settings.repository";
 
 // Settings transport (foundation §5.4) — the module's four contract ops served
@@ -38,6 +39,11 @@ export const SETTINGS_OP_IDS = [
   "settings.agents.create",
   "settings.storage.get",
   "settings.storage.put",
+  // T-040c 提示词/skill 服务端可配 — list全表 / get单个 / put upsert. put 后的热更
+  // (重套 override 进常驻 REGISTRY) 由 persistence-client 在装配处拦截, 不在此 transport.
+  "settings.prompts.list",
+  "settings.prompts.get",
+  "settings.prompts.put",
 ] as const;
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
@@ -103,6 +109,26 @@ export function createSettingsTransport(
             ctx,
             (body ?? {}) as StorageConfigPatch,
           );
+          return { data, meta: { requestId: ctx.requestId } };
+        }
+        case "settings.prompts.list": {
+          const data = await service.listSkillConfigOverrides(ctx);
+          return { data, meta: { requestId: ctx.requestId } };
+        }
+        case "settings.prompts.get": {
+          const p = (params ?? {}) as { id?: string };
+          const data = await service.getSkillConfigOverride(ctx, p.id ?? "");
+          return { data, meta: { requestId: ctx.requestId } };
+        }
+        case "settings.prompts.put": {
+          const p = (params ?? {}) as { id?: string };
+          const b = (body ?? {}) as Omit<SkillConfigOverridePutBody, "id">;
+          // id comes from the path param (the resource identity); the body carries
+          // only the override fields. Merge into the repo put body shape.
+          const data = await service.putSkillConfigOverride(ctx, {
+            id: p.id ?? "",
+            ...b,
+          });
           return { data, meta: { requestId: ctx.requestId } };
         }
         default:

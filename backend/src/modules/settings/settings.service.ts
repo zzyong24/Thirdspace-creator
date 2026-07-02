@@ -6,10 +6,12 @@ import type {
   ModelConfigurationRow,
   AgentConfigurationRow,
   StorageConfigRow,
+  SkillConfigOverrideRow,
   PreferencePatch,
   ModelPutBody,
   AgentCreateInput,
   StorageConfigPatch,
+  SkillConfigOverridePutBody,
 } from "./settings.repository";
 import type {
   UserResource,
@@ -17,10 +19,43 @@ import type {
   ModelConfigurationResource,
   AgentConfigurationResource,
   StorageConfigResource,
+  SkillConfigOverrideResource,
 } from "./settings.schema";
 import { resolveRootPath } from "@creatoros/backend/modules/assets";
 import { rootPathLegalityReason } from "@creatoros/backend/modules/assets";
-import { StorageValidationError } from "./settings.errors";
+import {
+  StorageValidationError,
+  PromptValidationError,
+  OwnershipError,
+} from "./settings.errors";
+
+// T-040c — the 18 registered skill ids (SPEC 2026-07-02, ai-worker BUILTIN_TEMPLATES).
+// putPrompt validates its target id against the registered set (非法 id → 400). The
+// AUTHORITATIVE source is ai-worker's registry (`hasTemplate`), injected into the
+// service at composition time (persistence-client) so backend does NOT take a new
+// dependency on ai-worker. This inline set is the FALLBACK used when no validator is
+// injected (unit/contract tests run without the ai-worker wiring) — kept in sync with
+// registry.ts:56 BUILTIN_TEMPLATES so the two agree on the legal id space.
+const REGISTERED_SKILL_IDS: ReadonlySet<string> = new Set([
+  "topic.generate",
+  "script.draft",
+  "planning.thesis",
+  "planning.contract",
+  "planning.outline",
+  "platform.adapt",
+  "review.insights",
+  "calibration.diagnose",
+  "calibration.score",
+  "research.gather",
+  "reconstruct.project",
+  "positioning.generate",
+  "topic.enrich",
+  "material.match",
+  "chatbox.topic",
+  "chatbox.calibration",
+  "chatbox.positioning",
+  "chatbox.review",
+]);
 
 // SettingsService (foundation §5.3) — RequestContext-taking methods. Settings has
 // NO §12 business state machine (plan §11: preferences/model/agent are mutable
@@ -110,6 +145,21 @@ export interface SettingsService {
     ctx: RequestContext,
     input: AgentCreateInput,
   ): Promise<AgentConfigurationResource>;
+  // T-040c 提示词/skill 服务端可配 —— list全表 / get单个 / put upsert (SPEC §4.4).
+  // 全局配置 (非 user-scoped): 提示词是产品级系统配置. put 校验 id ∈ 已注册 18 个模板
+  // (非法 → PromptValidationError → 400). get 未命中 → OwnershipError → 404. 热更接线
+  // (put 成功后重套 override 进常驻 REGISTRY) 在 persistence-client 装配处做, 不在 service.
+  listSkillConfigOverrides(
+    ctx: RequestContext,
+  ): Promise<SkillConfigOverrideResource[]>;
+  getSkillConfigOverride(
+    ctx: RequestContext,
+    id: string,
+  ): Promise<SkillConfigOverrideResource>;
+  putSkillConfigOverride(
+    ctx: RequestContext,
+    body: SkillConfigOverridePutBody,
+  ): Promise<SkillConfigOverrideResource>;
   // item B — read the resolved storage config + real usage.
   getStorage(ctx: RequestContext): Promise<StorageConfigResource>;
   // item B — update the backend choice / media root (validated: an illegal /
@@ -200,11 +250,44 @@ function toAgentResource(
   };
 }
 
+// T-040c — DB row → SkillConfigOverride DTO. jsonb columns come back as unknown;
+// narrow tools/requiredFacets to string[] (non-string items dropped) and
+// outputSchema to an object (else null). Every override field is nullable = 未配.
+function toSkillConfigOverrideResource(
+  row: SkillConfigOverrideRow,
+): SkillConfigOverrideResource {
+  const toStringArray = (v: unknown): string[] | null => {
+    if (!Array.isArray(v)) return null;
+    return v.filter((x): x is string => typeof x === "string");
+  };
+  const toObject = (v: unknown): Record<string, unknown> | null =>
+    v !== null && typeof v === "object" && !Array.isArray(v)
+      ? (v as Record<string, unknown>)
+      : null;
+  return {
+    id: row.id,
+    version: row.version ?? null,
+    system: row.system ?? null,
+    template: row.template ?? null,
+    tools: toStringArray(row.tools),
+    requiredFacets: toStringArray(row.requiredFacets),
+    outputSchema: toObject(row.outputSchema),
+    updatedBy: row.updatedBy ?? null,
+    updatedAt: row.updatedAt,
+  };
+}
+
 export function createSettingsService(
   repoForCtx: (ctx: RequestContext) => SettingsRepository,
   accountReader: AccountReader,
   accountWriter: AccountWriter,
+  // T-040c — skill id validator for putPrompt. The AUTHORITATIVE source is
+  // ai-worker's registry (hasTemplate), injected here at composition time so backend
+  // takes no dependency on ai-worker. When absent (unit/contract tests), fall back to
+  // the inline REGISTERED_SKILL_IDS set (kept in sync with BUILTIN_TEMPLATES).
+  isValidSkillId?: (id: string) => boolean,
 ): SettingsService {
+  const skillIdValid = isValidSkillId ?? ((id: string) => REGISTERED_SKILL_IDS.has(id));
   return {
     async getAccount(ctx) {
       // Delegated to Identity (injected). Settings does not own `users`.
@@ -255,6 +338,35 @@ export function createSettingsService(
     async createAgentConfiguration(ctx, input) {
       const row = await repoForCtx(ctx).createAgent(ctx, input);
       return toAgentResource(row);
+    },
+
+    async listSkillConfigOverrides(ctx) {
+      const rows = await repoForCtx(ctx).listSkillConfigOverrides();
+      return rows.map(toSkillConfigOverrideResource);
+    },
+
+    async getSkillConfigOverride(ctx, id) {
+      const row = await repoForCtx(ctx).getSkillConfigOverride(id);
+      // Not-configured → 404 (OwnershipError maps to 404; there is no separate
+      // NotFound class here, and a missing override is honestly "no such row").
+      if (!row) {
+        throw new OwnershipError(`skill config override 未配置: ${id}`);
+      }
+      return toSkillConfigOverrideResource(row);
+    },
+
+    async putSkillConfigOverride(ctx, body) {
+      // Validate the target id BEFORE writing: an id outside the 18 registered
+      // templates is a bad request (→400), NOT silently persisted (SPEC §4.4). The
+      // validator is the injected ai-worker registry (authoritative) or the inline
+      // fallback set.
+      if (!skillIdValid(body.id)) {
+        throw new PromptValidationError(
+          `未知 skill id "${body.id}" — 只能覆盖已注册的 18 个模板之一`,
+        );
+      }
+      const row = await repoForCtx(ctx).putSkillConfigOverride(ctx, body);
+      return toSkillConfigOverrideResource(row);
     },
 
     async resolveStorageRoot(ctx) {

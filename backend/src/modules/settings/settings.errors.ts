@@ -20,3 +20,15 @@ export class StorageValidationError extends Error {
     this.name = "StorageValidationError";
   }
 }
+
+// T-040c — putPrompt id validation. A `prompts.put` targeting a skill id NOT in the
+// registered template set is rejected, NOT silently written (SPEC §4.4: 非法 id 返
+// 4xx 明确报错, 别静默). Carries `ErrorCode.ValidationError` so the dispatch route
+// maps it to HTTP 400 (an unknown skill id is a bad request, not a not-found).
+export class PromptValidationError extends Error {
+  readonly code = ErrorCode.ValidationError;
+  constructor(message: string) {
+    super(message);
+    this.name = "PromptValidationError";
+  }
+}

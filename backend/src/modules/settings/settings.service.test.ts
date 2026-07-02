@@ -1,7 +1,11 @@
 import { describe, it, expect } from "vitest";
 import type { RequestContext } from "@creatoros/backend";
 import { createSettingsService } from "./settings.service";
-import { StorageValidationError } from "./settings.errors";
+import {
+  StorageValidationError,
+  PromptValidationError,
+  OwnershipError,
+} from "./settings.errors";
 import * as os from "node:os";
 import * as path from "node:path";
 import type {
@@ -10,10 +14,12 @@ import type {
   ModelConfigurationRow,
   AgentConfigurationRow,
   StorageConfigRow,
+  SkillConfigOverrideRow,
   PreferencePatch,
   ModelPutBody,
   AgentCreateInput,
   StorageConfigPatch,
+  SkillConfigOverridePutBody,
   AssetTypeUsage,
 } from "./settings.repository";
 
@@ -42,6 +48,7 @@ function makeFakeRepo(
     _models: [] as ModelConfigurationRow[],
     _agents: [] as AgentConfigurationRow[],
     _storage: undefined as StorageConfigRow | undefined,
+    _prompts: [] as SkillConfigOverrideRow[],
   };
   return {
     ...state,
@@ -136,6 +143,40 @@ function makeFakeRepo(
     },
     async sumUsageByAssetType() {
       return opts.usage ?? [];
+    },
+    async listSkillConfigOverrides() {
+      return state._prompts;
+    },
+    async getSkillConfigOverride(id: string) {
+      return state._prompts.find((p) => p.id === id) ?? null;
+    },
+    async putSkillConfigOverride(
+      _c: RequestContext,
+      body: SkillConfigOverridePutBody,
+    ) {
+      const prev = state._prompts.find((p) => p.id === body.id);
+      const prevNum = prev?.version ? Number.parseInt(prev.version, 10) : 0;
+      const version =
+        body.version && body.version.trim()
+          ? body.version
+          : String((Number.isFinite(prevNum) && prevNum > 0 ? prevNum : 0) + 1);
+      const row: SkillConfigOverrideRow = {
+        id: body.id,
+        version,
+        system: body.system ?? prev?.system ?? null,
+        template: body.template ?? prev?.template ?? null,
+        tools: body.tools ? [...body.tools] : (prev?.tools ?? null),
+        requiredFacets: body.requiredFacets
+          ? [...body.requiredFacets]
+          : (prev?.requiredFacets ?? null),
+        outputSchema: body.outputSchema ?? prev?.outputSchema ?? null,
+        updatedBy: body.updatedBy ?? ctx.userId,
+        updatedAt: NOW,
+      };
+      const i = state._prompts.findIndex((p) => p.id === body.id);
+      if (i >= 0) state._prompts[i] = row;
+      else state._prompts.push(row);
+      return row;
     },
     async seedPreferences() {},
     async seedModels() {},
@@ -346,5 +387,87 @@ describe("settings.service", () => {
     await svc.updateStorage(ctx, { backend: "local", rootPath: tmpRoot });
     expect(await svc.resolveStorageRoot(ctx)).toBe(path.resolve(tmpRoot));
     expect(await svc.resolveStorageBackend(ctx)).toBe("local");
+  });
+
+  // T-040c — 提示词/skill 服务端可配 (prompts.list/get/put).
+  it("putSkillConfigOverride upserts a registered id; version starts at '1'", async () => {
+    const repo = makeFakeRepo();
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    const dto = await svc.putSkillConfigOverride(ctx, {
+      id: "review.insights",
+      system: "覆盖后的 system",
+      tools: ["read", "write"],
+    });
+    expect(dto.id).toBe("review.insights");
+    expect(dto.version).toBe("1");
+    expect(dto.system).toBe("覆盖后的 system");
+    expect(dto.tools).toEqual(["read", "write"]);
+    // updatedBy defaults to ctx.userId.
+    expect(dto.updatedBy).toBe("user-z");
+  });
+
+  it("putSkillConfigOverride is an upsert: a second put on the same id bumps version", async () => {
+    const repo = makeFakeRepo();
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    const v1 = await svc.putSkillConfigOverride(ctx, {
+      id: "chatbox.review",
+      system: "v1",
+    });
+    expect(v1.version).toBe("1");
+    const v2 = await svc.putSkillConfigOverride(ctx, {
+      id: "chatbox.review",
+      template: "改 template",
+    });
+    expect(v2.version).toBe("2");
+    // A partial put keeps the untouched column (system from v1).
+    expect(v2.system).toBe("v1");
+    expect(v2.template).toBe("改 template");
+    // list reflects the single upserted row (not two).
+    const list = await svc.listSkillConfigOverrides(ctx);
+    expect(list).toHaveLength(1);
+    expect(list[0]!.id).toBe("chatbox.review");
+  });
+
+  it("putSkillConfigOverride rejects an unregistered skill id (→ PromptValidationError)", async () => {
+    const repo = makeFakeRepo();
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    await expect(
+      svc.putSkillConfigOverride(ctx, { id: "not.a.real.skill", system: "x" }),
+    ).rejects.toBeInstanceOf(PromptValidationError);
+    // Nothing was written.
+    expect(await svc.listSkillConfigOverrides(ctx)).toHaveLength(0);
+  });
+
+  it("putSkillConfigOverride honors an injected validator (ai-worker registry seam)", async () => {
+    const repo = makeFakeRepo();
+    // Injected validator accepts ONLY a custom id, rejects an otherwise-registered one.
+    const svc = createSettingsService(
+      () => repo,
+      accountReader,
+      accountWriter,
+      (id) => id === "custom.only",
+    );
+    await expect(
+      svc.putSkillConfigOverride(ctx, { id: "review.insights", system: "x" }),
+    ).rejects.toBeInstanceOf(PromptValidationError);
+    const ok = await svc.putSkillConfigOverride(ctx, {
+      id: "custom.only",
+      system: "ok",
+    });
+    expect(ok.id).toBe("custom.only");
+  });
+
+  it("getSkillConfigOverride returns the row; a missing id → OwnershipError (404)", async () => {
+    const repo = makeFakeRepo();
+    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    await svc.putSkillConfigOverride(ctx, {
+      id: "topic.generate",
+      system: "s",
+    });
+    const got = await svc.getSkillConfigOverride(ctx, "topic.generate");
+    expect(got.system).toBe("s");
+    await expect(
+      svc.getSkillConfigOverride(ctx, "planning.thesis"),
+    ).rejects.toBeInstanceOf(OwnershipError);
   });
 });

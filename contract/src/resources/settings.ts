@@ -74,6 +74,29 @@ export const storageConfigResource = z.object({
 });
 export type StorageConfigResource = z.infer<typeof storageConfigResource>;
 
+// SkillConfigOverride (T-040 / SPEC 2026-07-02 §4.1) — one server-side override of
+// a registered skill's prompt config (id ∈ the 18 registered templates). Every
+// override field is nullable = 未配 → 装配期归一 undefined → `?? base` 回退内置模板.
+// `id` is the skill id (the PK — NOT user-scoped; 提示词是产品级系统配置). `version`
+// is a plain audit marker bumped on each write. `tools`/`requiredFacets` are string
+// whitelists; `outputSchema` is a JSON Schema object (Zod is not serializable —
+// the override channel转回 ajv 校验器 at assembly). The raw secret is never part of
+// this DTO (prompts carry no secret).
+export const skillConfigOverrideResource = z.object({
+  id: z.string(),
+  version: z.string().nullable(),
+  system: z.string().nullable(),
+  template: z.string().nullable(),
+  tools: z.array(z.string()).nullable(),
+  requiredFacets: z.array(z.string()).nullable(),
+  outputSchema: z.record(z.string(), z.unknown()).nullable(),
+  updatedBy: z.string().nullable(),
+  updatedAt: z.string(),
+});
+export type SkillConfigOverrideResource = z.infer<
+  typeof skillConfigOverrideResource
+>;
+
 // AgentConfiguration extends BaseEntity only; carries explicit createdAt/updatedAt.
 export const agentConfigurationResource = z.object({
   id,

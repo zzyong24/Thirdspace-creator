@@ -31,3 +31,9 @@ export type AgentConfigurationResource =
 export const storageConfigResource = ENDPOINTS.getStorage.response;
 export type StorageConfigResource =
   (typeof storageConfigResource)["_output"];
+
+// settings.prompts.get / put → skillConfigOverrideResource (T-040c). list returns
+// an array of the same DTO (ENDPOINTS.listPrompts.response is z.array(...)).
+export const skillConfigOverrideResource = ENDPOINTS.getPrompt.response;
+export type SkillConfigOverrideResource =
+  (typeof skillConfigOverrideResource)["_output"];
