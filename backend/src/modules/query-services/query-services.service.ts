@@ -265,8 +265,16 @@ export interface GlobalSearchDeps {
     search(
       ctx: RequestContext,
       query: string,
-      opts?: { entityType?: string },
+      opts?: { entityType?: string; limit?: number },
     ): Promise<ReadonlyArray<SearchDocLike>>;
+    /**
+     * 全量分面计数(与 search() 同一 FTS 谓词、无 limit)。tab 计数的唯一真值
+     * 来源 —— 不被 per-type top-N 截断,?type= 窄化时其它 tab 仍是真实命中数。
+     */
+    facets(
+      ctx: RequestContext,
+      query: string,
+    ): Promise<{ entityType: ReadonlyArray<{ value: string; count: number }> }>;
     recordSearch(
       ctx: RequestContext,
       input: {
@@ -297,6 +305,17 @@ const TAB_DEFS = [
   { id: "asset", label: "素材", entityType: "asset" },
   { id: "video", label: "视频", entityType: "video" },
 ] as const;
+
+// [T-051 2d] 每个结果类型各取 top N。旧实现一次混查 limit-50 再分组,索引里
+// artifact 等非 tab 类型的文档会挤占 50 条共享上限,导致有命中的项目/作品在
+// 页面上显示 0 结果;分组查询后每类配额独立,挤占不复存在。
+const PER_TYPE_LIMIT = 20;
+
+// ?type= 分面白名单:只认 4 个 tab 的 entityType,非法值(如 artifact / 任意
+// 字符串)按「未窄化」处理,而不是查出一个永远为空的页面。
+function normalizeTypeFilter(type: string | undefined): string | undefined {
+  return TAB_DEFS.some((t) => t.entityType === type) ? type : undefined;
+}
 
 const STATIC_FILTERS: GlobalSearchPage["filters"] = [
   { id: "f-type", label: "类型", options: ["项目", "知识", "素材", "视频"] },
@@ -380,38 +399,72 @@ export function createGlobalSearchQueryService(
   return {
     async getGlobalSearch(ctx, q, type) {
       const rawQuery = typeof q === "string" ? q : "";
-      const typeFilter = typeof type === "string" && type ? type : undefined;
+      const typeFilter = normalizeTypeFilter(
+        typeof type === "string" && type ? type : undefined,
+      );
+      const hasQuery = rawQuery.trim() !== "";
 
-      const docs = await deps.search.search(ctx, rawQuery, {
-        entityType: typeFilter,
-      });
+      // [T-051 2d] 按 entityType 分组各查 top N(?type= 窄化时只查该类的卡片),
+      // 与全量分面计数并行读。空查询短路:repo 对空串本来就返回 [],不发无谓查询。
+      const tabsToFetch = typeFilter
+        ? TAB_DEFS.filter((t) => t.entityType === typeFilter)
+        : [...TAB_DEFS];
+      let docsByType = new Map<string, ReadonlyArray<SearchDocLike>>();
+      let facetEntityType: ReadonlyArray<{ value: string; count: number }> = [];
+      if (hasQuery) {
+        const [groups, facets] = await Promise.all([
+          Promise.all(
+            tabsToFetch.map(
+              async (t) =>
+                [
+                  t.entityType,
+                  await deps.search.search(ctx, rawQuery, {
+                    entityType: t.entityType,
+                    limit: PER_TYPE_LIMIT,
+                  }),
+                ] as const,
+            ),
+          ),
+          deps.search.facets(ctx, rawQuery),
+        ]);
+        docsByType = new Map(groups);
+        facetEntityType = facets.entityType;
+      }
 
-      const byType = (et: string) => docs.filter((d) => d.entityType === et);
-      const projects = byType("project").map(toProjectCard);
-      const knowledge = byType("knowledge").map(toKnowledgeCard);
-      const assets = byType("asset").map(toAssetCard);
-      const videos = byType("video").map(toVideoCard);
+      // 防御性再过滤一次 entityType:分组正确性不依赖上游是否已按类型过滤。
+      const docsOf = (et: string) =>
+        (docsByType.get(et) ?? []).filter((d) => d.entityType === et);
+      const projects = docsOf("project").map(toProjectCard);
+      const knowledge = docsOf("knowledge").map(toKnowledgeCard);
+      const assets = docsOf("asset").map(toAssetCard);
+      const videos = docsOf("video").map(toVideoCard);
 
-      const countByType: Record<string, number> = {
-        project: projects.length,
-        knowledge: knowledge.length,
-        asset: assets.length,
-        video: videos.length,
-      };
+      // tab 计数 = 全量分面计数(artifact 等非 tab 类型的桶被忽略)。这让计数
+      // 不受 PER_TYPE_LIMIT 截断,且窄化到某一类时其它 tab 仍显示真实命中数。
+      const fullCount = new Map(
+        facetEntityType.map((b) => [b.value, b.count] as const),
+      );
       const resultTabs = TAB_DEFS.map((t) => ({
         id: t.id,
         label: t.label,
-        count: countByType[t.entityType] ?? 0,
+        count: fullCount.get(t.entityType) ?? 0,
       }));
 
       // History is written server-side as a post-commit side-effect of the read
       // (the Search spec-gap resolution — no invented mutation endpoint). Skip
       // empty queries; never let a history failure fail the page render.
-      if (rawQuery.trim() !== "") {
+      if (hasQuery) {
+        // resultCount 记全量命中数(窄化时记该类的全量),与 tab 计数同源。
+        const resultCount = typeFilter
+          ? (fullCount.get(typeFilter) ?? 0)
+          : TAB_DEFS.reduce(
+              (acc, t) => acc + (fullCount.get(t.entityType) ?? 0),
+              0,
+            );
         await deps.search.recordSearch(ctx, {
           query: rawQuery,
           filters: typeFilter ? { type: typeFilter } : {},
-          resultCount: docs.length,
+          resultCount,
         });
       }
 
@@ -422,7 +475,7 @@ export function createGlobalSearchQueryService(
       }));
 
       return {
-        scenario: rawQuery.trim() !== "" ? "default" : "empty",
+        scenario: hasQuery ? "default" : "empty",
         kind: "search",
         loading: false,
         error: null,
