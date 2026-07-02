@@ -268,8 +268,12 @@ export interface PublicationCatalogEntry {
   id: string;
   platform: string;
   title: string;
-  /** 发布时刻 ISO(可空;明细 pubDate 与之做「日」级前缀匹配)。 */
+  /** 发布时刻 ISO/UTC(可空;与明细 pubDate 比较时先转北京时间 —— xlsx 的发布时间是北京时间,
+   *  北京 0-8 点发布的作品 UTC 日期是前一天,直接比 UTC 日会 miss,T-036 真机踩过 6 例)。 */
   publishedAt?: string | null;
+  /** aweme_id(imported 采集轨有;fixture/演示 pub 无)。同名同刻多候选时优先有它的轨 ——
+   *  落库锚就是 externalId,匹到无它的轨整条明细会被 toDetailMetricRecords 丢弃(T-036)。 */
+  externalId?: string | null;
 }
 
 /** title 归一:去空白、去首尾引号 —— 导出标题可能带装饰,匹配时放宽。 */
@@ -291,7 +295,7 @@ function normTitleFirstLine(s: string): string {
   return normTitle(noEllipsis);
 }
 
-/** pubDate 归一到 YYYY-MM-DD(明细 "2026-06-21 08:15" / publishedAt ISO 都取日期前缀)。 */
+/** pubDate 归一到 YYYY-MM-DD(明细 "2026-06-21 08:15" 直接取日期前缀 —— xlsx 已是北京时间)。 */
 function normDay(s: string | null | undefined): string {
   if (!s) return "";
   const m = /(\d{4})[-/](\d{1,2})[-/](\d{1,2})/.exec(s);
@@ -300,6 +304,69 @@ function normDay(s: string | null | undefined): string {
   const mo = m[2]!.padStart(2, "0");
   const d = m[3]!.padStart(2, "0");
   return `${y}-${mo}-${d}`;
+}
+
+// 北京时区偏移(抖音后台 xlsx 的发布时间是北京时间;publishedAt 存的是 UTC ISO)。
+const CN_OFFSET_MS = 8 * 3_600_000;
+
+/** publishedAt(ISO/UTC)→ 北京日 YYYY-MM-DD。非 ISO(解析失败)回退 normDay 正则(容错)。 */
+function cnDayFromIso(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return normDay(iso);
+  return new Date(t + CN_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/** publishedAt(ISO/UTC)→ 北京时刻 HH:mm:ss(同题同日多发的最后消歧维度)。 */
+function cnClockFromIso(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "";
+  return new Date(t + CN_OFFSET_MS).toISOString().slice(11, 19);
+}
+
+/** 明细 pubDate("2026-04-19 16:47:38" / "…16:47")→ HH:mm:ss(缺秒补 00;无时刻返 "")。 */
+function clockFromDetail(pubDate: string | null | undefined): string {
+  if (!pubDate) return "";
+  const m = /(\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(pubDate);
+  if (!m) return "";
+  return `${m[1]!.padStart(2, "0")}:${m[2]!}:${m[3] ?? "00"}`;
+}
+
+// xlsx「作品名称」的无标题字面值(desc 为空的作品) + catalog 占位标题(auto-fill 前的
+// 「抖音作品 {aweme_id}」)—— 两侧都无真标题可比,走无题池按日+时刻锚定(T-036)。
+const UNTITLED_TITLE = "无标题";
+function isPlaceholderTitle(title: string): boolean {
+  const n = normTitle(title);
+  return n === UNTITLED_TITLE || /^抖音作品\d+$/.test(n);
+}
+
+/**
+ * 多候选消歧(T-036 重构):北京日同日收窄 → 北京时刻(HH:mm:ss)精确消歧(同题同日多发,
+ * 真机「Hermes似乎真是个半成品!」4-19 发两遍)→ 仍多义(双轨 fixture+imported published_at
+ * 完全相同)时优先有 externalId 的轨(匹到无 externalId 的轨,明细会被落库丢弃)→ 还分不出
+ * 就诚实 null。单候选直接命中(信 title,不苛求日期)。
+ */
+function disambiguate(
+  pool: readonly PublicationCatalogEntry[],
+  detail: DouyinWorkDetail,
+): string | null {
+  if (pool.length === 0) return null;
+  if (pool.length === 1) return pool[0]!.id;
+  const day = normDay(detail.pubDate);
+  if (!day) return null;
+  let p = pool.filter((c) => cnDayFromIso(c.publishedAt) === day);
+  if (p.length === 0) return null;
+  if (p.length === 1) return p[0]!.id;
+  const clock = clockFromDetail(detail.pubDate);
+  if (clock) {
+    const hits = p.filter((c) => cnClockFromIso(c.publishedAt) === clock);
+    if (hits.length > 0) p = hits;
+  }
+  if (p.length === 1) return p[0]!.id;
+  const withExt = p.filter((c) => c.externalId);
+  if (withExt.length === 1) return withExt[0]!.id;
+  return null;
 }
 
 /**
@@ -332,43 +399,31 @@ export function matchDetailsToPublications(
     }
   }
 
-  // 同一批候选里用发布日消歧(明细 pubDate 与 publishedAt 同日);单条直接命中。
-  const pick = (
-    candidates: readonly PublicationCatalogEntry[],
-    detail: DouyinWorkDetail,
-  ): string | null => {
-    if (candidates.length === 0) return null;
-    if (candidates.length === 1) return candidates[0]!.id;
-    const day = normDay(detail.pubDate);
-    const hit = candidates.find(
-      (c) => normDay(c.publishedAt) === day && day !== "",
-    );
-    return hit ? hit.id : null;
-  };
-
   return details.map((detail): DetailMatch => {
+    // ⓪ [T-036] 「无标题」行(desc 为空的作品):与 catalog 占位标题(「抖音作品 {id}」)两侧都
+    //    无真标题可比 → 在无题池里按北京日+时刻唯一锚定(真机 5 例全是这种)。
+    if (normTitle(detail.title) === UNTITLED_TITLE) {
+      const pool = dyPubs.filter((p) => isPlaceholderTitle(p.title));
+      return { detail, publicationId: disambiguate(pool, detail) };
+    }
     // ① 完整归一 title 精确匹配(最强,原行为)。
-    const exact = pick(byTitle.get(normTitle(detail.title)) ?? [], detail);
+    const exact = disambiguate(byTitle.get(normTitle(detail.title)) ?? [], detail);
     if (exact) return { detail, publicationId: exact };
     // ② 首行归一匹配(xlsx「作品名称」=多行 caption 首行时;两侧都取首行再比)。
     const dFirst = normTitleFirstLine(detail.title);
-    const fl = pick(byFirstLine.get(dFirst) ?? [], detail);
+    const fl = disambiguate(byFirstLine.get(dFirst) ?? [], detail);
     if (fl) return { detail, publicationId: fl };
     // ③ 前缀双向兜底(截断:一侧是另一侧前缀)。仅当明细首行足够长(≥8 归一字符),避免
-    //    短标题误伤;唯一命中才认(多义则弃,交给 pub_date 也无法消歧的情况诚实跳过)。
+    //    短标题误伤;唯一命中才认(多义走 disambiguate 的日/时刻/externalId 收窄,仍分不出
+    //    则诚实跳过)。
     if (dFirst.length >= 8) {
       const prefixHits = dyPubs.filter((p) => {
         const pFirst = normTitleFirstLine(p.title);
         if (!pFirst) return false;
         return pFirst.startsWith(dFirst) || dFirst.startsWith(pFirst);
       });
-      const day = normDay(detail.pubDate);
-      // 先按发布日收窄(有同日候选优先),再要求唯一。
-      const sameDay = prefixHits.filter(
-        (p) => normDay(p.publishedAt) === day && day !== "",
-      );
-      const pool = sameDay.length > 0 ? sameDay : prefixHits;
-      if (pool.length === 1) return { detail, publicationId: pool[0]!.id };
+      const pf = disambiguate(prefixHits, detail);
+      if (pf) return { detail, publicationId: pf };
     }
     // 仍无唯一匹配 → 诚实跳过(不硬造)。
     return { detail, publicationId: null };

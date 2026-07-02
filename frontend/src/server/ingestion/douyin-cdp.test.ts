@@ -635,6 +635,9 @@ describe("isXlsxBytes(PK 头校验,T-030-D8a)", () => {
 const CODE_TAB_POSTS = [25237, 31295, 20316, 21697].join(",");
 const CODE_SUBTAB_LIST = [25237, 31295, 21015, 34920].join(",");
 const CODE_BTN_EXPORT = [23548, 20986, 25968, 25454].join(",");
+// [T-036] 发布时间 range picker(present key "datepicker")+ 快捷选择「全部」preset。
+const CODE_QUICK_ALL = [20840, 37096].join(",");
+const KEY_DATEPICKER = "datepicker";
 
 function makeFakeExportContext(config: {
   loggedIn: boolean;
@@ -654,6 +657,9 @@ function makeFakeExportContext(config: {
     onPostsTab: false, // 点了投稿作品 tab 后,投稿列表子tab 才"出现"(真机:子tab 随视图渲染)
     onListSubtab: false,
     exportClicked: false,
+    // [T-036] 发布时间 picker:点开容器 → 快捷选择面板可交互;点「全部」→ 范围全量并收面板。
+    pickerOpen: false,
+    rangeAll: false,
   };
   let lastMarkedKey: string | null = null;
   // download 事件的"信箱":waitForEvent 先挂 pending promise,导出点击时若在列表子tab 则 resolve;
@@ -683,8 +689,30 @@ function makeFakeExportContext(config: {
     //   ② {exportCodes,refreshCodes} → markExportNearRefreshInPage(锚定投稿列表导出)。
     async evaluate(
       fn: ((codes: number[]) => number | boolean) | ((a: unknown) => number),
-      arg: number[] | { exportCodes: number[]; refreshCodes: number[] },
+      arg: number[] | { exportCodes: number[]; refreshCodes: number[] } | null,
     ): Promise<number | boolean> {
+      // [T-036] 发布时间 picker 语义(fn.name 分派,先于 arg 形状判断 —— markDatePickerInPage
+      // 的 arg 是 null,落到 number[] 分支会炸)。
+      if (fn.name === "markDatePickerInPage") {
+        if (isPresent(KEY_DATEPICKER)) {
+          lastMarkedKey = KEY_DATEPICKER;
+          calls.marked.push(KEY_DATEPICKER);
+          return 1;
+        }
+        lastMarkedKey = null;
+        return 0;
+      }
+      if (fn.name === "markQuickPresetInPage") {
+        const key = (arg as number[]).join(",");
+        // 真机:快捷选择面板只有点开 picker 后才存在。
+        if (state.pickerOpen && isPresent(key)) {
+          lastMarkedKey = key;
+          calls.marked.push(key);
+          return 1;
+        }
+        lastMarkedKey = null;
+        return 0;
+      }
       // 导出就近锚点:{exportCodes,refreshCodes}
       if (arg && !Array.isArray(arg)) {
         const key = arg.exportCodes.join(",");
@@ -725,6 +753,12 @@ function makeFakeExportContext(config: {
           calls.clicked.push(keyAtBind);
           if (keyAtBind === CODE_TAB_POSTS) state.onPostsTab = true;
           if (keyAtBind === CODE_SUBTAB_LIST) state.onListSubtab = true;
+          // [T-036] 点 picker 容器开面板;点「全部」应用全量范围并收面板(真机行为)。
+          if (keyAtBind === KEY_DATEPICKER) state.pickerOpen = true;
+          if (keyAtBind === CODE_QUICK_ALL) {
+            state.rangeAll = true;
+            state.pickerOpen = false;
+          }
           if (keyAtBind === CODE_BTN_EXPORT) {
             state.exportClicked = true;
             // 真机:在投稿列表子tab 点导出才真触发 download 事件 → resolve 之前挂的 waitForEvent。
@@ -808,6 +842,48 @@ describe("fetchDouyinWorkListExport 导航到投稿列表再导出(T-033a,DATA-2
     // 导航到旧版数据中心 URL(Garfish)。
     expect(calls.goto[0]).toContain("data-center/content");
     expect(calls.close).toBe(1);
+  });
+
+  it("[T-036] 带发布时间 picker 时:点开 → 快捷选择「全部」→ 才点导出(默认近90天只导 ~38/73)", async () => {
+    const { calls, state, openContext, readFile } = makeFakeExportContext({
+      loggedIn: true,
+      present: new Set([
+        CODE_TAB_POSTS,
+        CODE_SUBTAB_LIST,
+        CODE_BTN_EXPORT,
+        KEY_DATEPICKER,
+        CODE_QUICK_ALL,
+      ]),
+    });
+    const bytes = await fetchDouyinWorkListExport(
+      { authDir: "/fake/.auth" },
+      { openContext, readFile, downloadTimeoutMs: 1000 },
+    );
+    expect(isXlsxBytes(bytes)).toBe(true);
+    // 范围设成了全量(点了快捷选择「全部」)。
+    expect(state.rangeAll).toBe(true);
+    // 顺序:先设范围(picker → 全部)再点导出 —— 反了导的还是默认近90天。
+    expect(calls.clicked.indexOf(KEY_DATEPICKER)).toBeLessThan(
+      calls.clicked.indexOf(CODE_QUICK_ALL),
+    );
+    expect(calls.clicked.indexOf(CODE_QUICK_ALL)).toBeLessThan(
+      calls.clicked.indexOf(CODE_BTN_EXPORT),
+    );
+  });
+
+  it("[T-036] 页面没有发布时间 picker(版式变化)→ silent 跳过设范围,仍按默认范围导出成功", async () => {
+    const { calls, state, openContext, readFile } = makeFakeExportContext({
+      loggedIn: true,
+      // 无 KEY_DATEPICKER / CODE_QUICK_ALL —— 设范围整段跳过,导出不受影响。
+      present: new Set([CODE_TAB_POSTS, CODE_SUBTAB_LIST, CODE_BTN_EXPORT]),
+    });
+    const bytes = await fetchDouyinWorkListExport(
+      { authDir: "/fake/.auth" },
+      { openContext, readFile, downloadTimeoutMs: 1000 },
+    );
+    expect(isXlsxBytes(bytes)).toBe(true);
+    expect(state.rangeAll).toBe(false);
+    expect(calls.clicked).toContain(CODE_BTN_EXPORT);
   });
 
   it("找不到「投稿列表」子tab → 抛 DouyinExportError(不会盲点直播场次导出干等超时),仍 close 一次", async () => {

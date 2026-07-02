@@ -317,6 +317,54 @@ describe("matchDetailsToPublications — 按 title/pub_date 匹配作品(无 awe
     const matches = matchDetailsToPublications([detail("关于AI", "2026-06-01")], cat);
     expect(matches[0]!.publicationId).toBeNull();
   });
+
+  // ── [T-036] 全量导出后真机 15 miss 的三类根因回归(时区跨日/同题多发时刻/双轨 extId/无标题) ──
+
+  it("[T-036] 北京 0-8 点发布(UTC 前一日)→ 北京日归一命中(时区跨日,真机 6 例)", () => {
+    // 真机:「奇点已至」xlsx 2026-03-28 00:54:02(北京) vs published_at 2026-03-27T16:54:02Z。
+    // 双轨同名同刻 → 还需 externalId 优先(fixture 轨匹到也会被落库丢弃)。
+    const cat: PublicationCatalogEntry[] = [
+      { id: "dy-pub-36", platform: "douyin", title: "奇点已至", publishedAt: "2026-03-27T16:54:02.000Z" },
+      { id: "pub-f0ea420f-274", platform: "douyin", title: "奇点已至", publishedAt: "2026-03-27T16:54:02.000Z", externalId: "aweme-274" },
+    ];
+    const matches = matchDetailsToPublications([detail("奇点已至", "2026-03-28 00:54:02")], cat);
+    expect(matches[0]!.publicationId).toBe("pub-f0ea420f-274");
+  });
+
+  it("[T-036] 同题同日发两遍 → 北京时刻(HH:mm:ss)消歧到各自 publication(真机 Hermes 半成品两连发)", () => {
+    const cat: PublicationCatalogEntry[] = [
+      { id: "pub-1717", platform: "douyin", title: "Hermes似乎真是个半成品！", publishedAt: "2026-04-19T09:17:31.000Z", externalId: "a-1717" },
+      { id: "pub-1647", platform: "douyin", title: "Hermes似乎真是个半成品！", publishedAt: "2026-04-19T08:47:38.000Z", externalId: "a-1647" },
+    ];
+    const matches = matchDetailsToPublications(
+      [
+        detail("Hermes似乎真是个半成品！", "2026-04-19 16:47:38"),
+        detail("Hermes似乎真是个半成品！", "2026-04-19 17:17:31"),
+      ],
+      cat,
+    );
+    expect(matches[0]!.publicationId).toBe("pub-1647");
+    expect(matches[1]!.publicationId).toBe("pub-1717");
+  });
+
+  it("[T-036] xlsx「无标题」↔ catalog 占位「抖音作品 {id}」→ 无题池按北京时刻唯一锚定(真机 5 例)", () => {
+    const cat: PublicationCatalogEntry[] = [
+      // published_at 2026-05-06T04:55:51Z = 北京 12:55:51,与 xlsx 秒级全等。
+      { id: "pub-656", platform: "douyin", title: "抖音作品 7636638044263183281", publishedAt: "2026-05-06T04:55:51.000Z", externalId: "7636638044263183281" },
+      { id: "pub-normal", platform: "douyin", title: "同日正常标题作品", publishedAt: "2026-05-06T05:00:00.000Z", externalId: "x-1" },
+    ];
+    const matches = matchDetailsToPublications([detail("无标题", "2026-05-06 12:55:51")], cat);
+    expect(matches[0]!.publicationId).toBe("pub-656");
+  });
+
+  it("[T-036] 「无标题」多候选同刻分不出 → 诚实跳过(不硬猜)", () => {
+    const cat: PublicationCatalogEntry[] = [
+      { id: "u1", platform: "douyin", title: "抖音作品 111", publishedAt: "2026-05-06T04:55:51.000Z" },
+      { id: "u2", platform: "douyin", title: "抖音作品 222", publishedAt: "2026-05-06T04:55:51.000Z" },
+    ];
+    const matches = matchDetailsToPublications([detail("无标题", "2026-05-06 12:55:51")], cat);
+    expect(matches[0]!.publicationId).toBeNull();
+  });
 });
 
 describe("toDetailMetricRecords — 匹配上的明细 → MetricRecord[](未匹配跳过)", () => {

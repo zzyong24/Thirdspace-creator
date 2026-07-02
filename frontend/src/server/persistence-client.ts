@@ -3465,6 +3465,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           platform: p.platform,
           title,
           publishedAt: p.publishedAt,
+          // [T-036] 同名同刻双轨(fixture 无 externalId / imported 有)消歧优先 imported ——
+          // 落库锚就是 externalId,匹到 fixture 轨整条明细会被 toDetailMetricRecords 丢弃。
+          externalId: p.externalId ?? null,
         });
       }
       const externalIdById = new Map<string, string>();

@@ -1000,6 +1000,8 @@ const SUBTAB_LIST_CODES = [25237, 31295, 21015, 34920];
 const BTN_REFRESH_CODES = [21047, 26032, 25968, 25454];
 const BTN_EXPORT_CODES = [23548, 20986, 25968, 25454];
 const MODAL_GOTIT_CODES = [25105, 30693, 36947, 20102];
+// 全部 = 20840,37096(发布时间日历面板·快捷选择 preset;T-036 全量导出的钥匙)
+const QUICK_ALL_CODES = [20840, 37096];
 
 /** 导出得到的不是 xlsx(登录态过期时抖音返 JSON / HTML,TzFilm 踩过)—— 校验 PK 头失败时抛。 */
 export class DouyinExportError extends Error {
@@ -1192,6 +1194,69 @@ function markExportNearRefreshInPage(args: {
   return 0;
 }
 
+// [T-036] 标记工具条「发布时间」range picker 容器(点开它才有快捷选择面板)。锚定 = class 含
+// datepicker 且内含 input(开始/结束日期框)的首个可见元素 —— 投稿列表工具条唯一;此时 portal
+// 面板未开,不会误中面板自身。arg 占位 null(evaluate 接口要求单参)。
+function markDatePickerInPage(_arg: null): number {
+  const ATTR = "data-cos-export-target";
+  document
+    .querySelectorAll(`[${ATTR}]`)
+    .forEach((el) => el.removeAttribute(ATTR));
+  for (const el of Array.from(document.querySelectorAll('[class*="datepicker"]'))) {
+    const rect = el.getBoundingClientRect
+      ? el.getBoundingClientRect()
+      : null;
+    if (!rect || rect.width === 0 || rect.height === 0) continue;
+    if (!el.querySelector("input")) continue;
+    el.setAttribute(ATTR, "1");
+    return 1;
+  }
+  return 0;
+}
+
+// [T-036] 在点开的日历面板「快捷选择」侧栏内标记 preset(charCode 传入,如「全部」)。
+// 必须锚定 datepicker-quick-control 容器 —— 页面上「全部」还出现在体裁筛选的当前值里,
+// 全 document 扫会误中(探针 v1 踩过)。
+function markQuickPresetInPage(codes: number[]): number {
+  const ATTR = "data-cos-export-target";
+  document
+    .querySelectorAll(`[${ATTR}]`)
+    .forEach((el) => el.removeAttribute(ATTR));
+  const panels = document.querySelectorAll('[class*="datepicker-quick-control"]');
+  for (const panel of Array.from(panels)) {
+    let best: Element | null = null;
+    let bestDepth = -1;
+    for (const el of Array.from(panel.querySelectorAll("*"))) {
+      const t = (el.textContent || "").trim();
+      if (t.length !== codes.length) continue;
+      let match = true;
+      for (let k = 0; k < codes.length; k++) {
+        if (t.charCodeAt(k) !== codes[k]) {
+          match = false;
+          break;
+        }
+      }
+      if (!match) continue;
+      const rect = el.getBoundingClientRect
+        ? el.getBoundingClientRect()
+        : null;
+      if (!rect || rect.width === 0 || rect.height === 0) continue;
+      let depth = 0;
+      for (let p = el.parentElement; p; p = p.parentElement) depth += 1;
+      if (depth > bestDepth) {
+        bestDepth = depth;
+        best = el;
+      }
+    }
+    if (best) {
+      (best as HTMLElement).scrollIntoView({ block: "center" });
+      best.setAttribute(ATTR, "1");
+      return 1;
+    }
+  }
+  return 0;
+}
+
 // charCode 标记 + locator 可信点击一条龙:命中则可信点被标记元素,返回是否点了。silent=true 时点击
 // 失败也吞掉(投稿作品 tab/刷新数据 等"点不到不致命"的步骤)。
 async function markAndClick(
@@ -1258,11 +1323,13 @@ async function isLoggedInExport(ctx: ExportCapableContext): Promise<boolean> {
 /**
  * 抓创作者后台「作品列表」明细导出 xlsx bytes(T-030-D8a)。移植 TzFilm step1 导出流程到无头链路:
  *   openContext(.auth/) headless → 导航数据中心作品分析旧版 URL(强制,否则 Garfish 不加载)→
- *   等微前端就绪 → 页内 charCode 匹配点「刷新数据」→ 点「导出数据」(只点一次)→ Playwright
- *   download 事件截 xlsx 临时文件 → 读 bytes → **校验 PK 头**(登录态过期返 JSON/HTML → 抛
- *   DouyinExportError,TzFilm 踩过)。未登录 → DouyinNotLoggedInError(runner catch → needs_reconnect)。
+ *   等微前端就绪 → 切投稿作品/投稿列表 → **发布时间设「全部」**(T-036:默认筛选近90天 → 导出只
+ *   ~38/73 行;点开 range picker 快捷选择「全部」→ 全量)→ 页内 charCode 匹配点「刷新数据」→
+ *   点「导出数据」(只点一次)→ Playwright download 事件截 xlsx 临时文件 → 读 bytes →
+ *   **校验 PK 头**(登录态过期返 JSON/HTML → 抛 DouyinExportError,TzFilm 踩过)。
+ *   未登录 → DouyinNotLoggedInError(runner catch → needs_reconnect)。
  * 端口注入(openContext/readFile),故装配 + 失败分类可确定性单测,不碰真抖音/真 Chromium。
- * **真选择器(charCode 按钮 / 微前端就绪时机)未经真创作者中心验证 → DATA-2 待扫码验。**
+ * 真选择器已经真创作者中心验证(DATA-2 扫码验导航;T-036 headed 探针验日期面板:39 行 → 74 行)。
  */
 export async function fetchDouyinWorkListExport(
   opts: FetchWorkListExportOptions,
@@ -1386,6 +1453,53 @@ async function runExportOnce(
     });
     await page.waitForTimeout(1_500);
     await debugShot(page, "02-after-list-subtab.png");
+
+    // 4.5) [T-036] 发布时间筛选默认近90天 → 导出只覆盖近期作品(真机:38/73 行)。点开工具条
+    //      range picker → 日历面板「快捷选择」点「全部」→ 范围清空 = 全部时间 → 导出全量
+    //      (真机验:39 行 → 74 行)。整段 silent:任一步失败仍可按默认范围导出,只是覆盖少,
+    //      绝不因此挡导出。「全部」点击即应用并收面板;若面板开了却没点到 preset,再点一次
+    //      「投稿列表」子tab 收面板,防悬浮层遮住后面的刷新/导出按钮。
+    const pickerMarked = await page
+      .evaluate(markDatePickerInPage, null)
+      .catch(() => 0);
+    if (pickerMarked) {
+      let pickerOpened = false;
+      try {
+        await page
+          .locator('[data-cos-export-target="1"]')
+          .click({ timeout: 4_000 });
+        pickerOpened = true;
+      } catch {
+        /* silent:点不开 picker → 按默认范围导出 */
+      }
+      if (pickerOpened) {
+        let allClicked = false;
+        // portal 面板渲染有延迟 → 轮询标「全部」,标到即可信点击。
+        for (let i = 0; i < 5 && !allClicked; i++) {
+          await page.waitForTimeout(1_000);
+          const allMarked = await page
+            .evaluate(markQuickPresetInPage, QUICK_ALL_CODES)
+            .catch(() => 0);
+          if (!allMarked) continue;
+          try {
+            await page
+              .locator('[data-cos-export-target="1"]')
+              .click({ timeout: 4_000 });
+            allClicked = true;
+          } catch {
+            /* silent:重试下一轮 */
+          }
+        }
+        if (allClicked) {
+          await page.waitForTimeout(4_000); // 等列表按全量范围重拉
+        } else {
+          // 面板可能还悬浮着 → 点一次当前子tab 收面板(无副作用),防遮挡后续按钮。
+          await markAndClick(page, SUBTAB_LIST_CODES, { silent: true });
+          await page.waitForTimeout(1_000);
+        }
+        await debugShot(page, "02b-after-daterange-all.png");
+      }
+    }
 
     // 5) 点「刷新数据」确保数据最新(找不到不致命,可能页面已最新)。
     await markAndClick(page, BTN_REFRESH_CODES, { silent: true });
