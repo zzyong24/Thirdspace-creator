@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-048 | 产品全面审计(逐页/逐钮/逐数据源 + 统一对齐) | 🔨 | docs/product-audit/ | **用户 2026-07-02:「产品怪怪的」**——逐页梳理功能/数据来源/数据流向/交互清单/不合理处成文档,全部完成后统一对齐不一致处,过程排 bug。14 组并行子代理审 22 页 → 每页一档 + 对齐总报告 |
 | T-047 | CodeGraph 纳入硬流程(检索先行+任务边界重建索引) | ✅ | orchestrator `rules/code-retrieval-rules.md` + CLAUDE.md 执行策略 | 诚实盘点:此前找代码全 grep、索引从不更新(sync 谎报最新+混 9200 非源码文件)。固化:检索 query/callers/impact 先行(grep 只兜字面量)、任务 ✅ 时 `index --force`+新符号验证;已重建(947 纯源码文件) |
 | T-046 | 去登录门槛:本机单用户直通(打开即用) | ✅ | — | 无/失效 session 一律以本机主用户(最早创建)直通:identity +findLocalUser/resolveLocalContext、resolveSession+resolveRequestContext fallback(页面单点+dispatch/chat/blob/me 四 route)、/login /register 307 回首页;8 旧 401/redirect 断言改守新语义,全测+tsc 绿;真机验清 cookie 直进首页 |
 | T-045 | 激活码授权 + 本机单用户模式(完整方案) | ⏸️ 用户暂缓·gate CONCERNS 已落档 | [activation-single-user](docs/superpowers/specs/2026-07-02-activation-single-user-design.md) + [REVIEW_LEDGER](docs/superpowers/specs/REVIEW_LEDGER.md) | 用户暂缓。reviewer CONCERNS(3 major:middleware 现状描述错/seed 用户交互未定义/activate-setup 时序矛盾,详见 SPEC 顶部裁决注);恢复时先处置再在 T-046 直通层上叠激活码/向导 |
