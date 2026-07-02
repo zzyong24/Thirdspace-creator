@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
-| T-054 | UI 视觉质量提升(全站去丑:样板间→设计规范→推平) | 📋 排修复批后(先真后美) | visual-convergence 打法 | **用户 2026-07-02:「UI 上有很多设计很丑的地方」。** ①样板间:挑 1-2 核心页(首页/复盘),用户给目标图/参考产品或 AI 出 2-3 套方案供挑 ②提炼设计 token 规范(间距/字阶/卡片/色彩/空态) ③全站分页面组并行推平 ④每页 design-shot 截图闭环,用户看图验收。在真数据上打磨(故排 T-049~053 后) |
+| T-054 | UI 视觉质量提升(全站去丑:样板间→设计规范→推平) | 🔨 样板间首刀已落 | [对比图](frontend/docs/t054-ui/) | 样板间首页三刀落地(bb6fe6a):MetricCard 空 delta 灰杠全站消除、数据概览删重复 KPI 瓷砖、待办空态引导卡;前后对比图落 docs/t054-ui/(baseline + after)。**下一步待用户看图拍板**:①对首页改进方向给反馈(或给目标图/参考产品) ②复盘页样板 ③提炼 token 规范(globals.css 已有 130 变量底子)→ 全站分组推平 ④每页 design-shot 闭环 |
 | T-053 | 七步主线贯通(业务流做真·端到端走查验收) | ✅ | [ALIGNMENT](docs/product-audit/ALIGNMENT.md) + [走查截图](frontend/docs/t053-walkthrough/) | 四断点全通:①脚本 ensureScriptArtifact(AI 岛/首存 write-on-intent 建 artifact,假保存修真) ②制作死锁双层拆(StartProductionIsland 全前端首个 outputs.create 入口+有 wiring 即渲染工作台) ③reviews.list 全链新增(复盘记录读真)+校准旧预测残留清零(录入回流可达)+评论 basis 出题在选题会可达 ④研究页读 trend_analysis 重建产物;真机走查 10 截图落档,「开始制作」点击→工作台贯通实证(e657721+47f39e7) |
 | T-049 | 审计修复 Wave A:止血(数据破坏+核心路径 bug) | ✅ | [ALIGNMENT §五](docs/product-audit/ALIGNMENT.md) | 9 bug 全修:B1/B2 projectWorkspaceHref 统一(完整 id+brief 落总览)、B3 partial-merge+定位数据恢复、B4 带简介、B7 NULLS LAST、B8 热度直读、B10 onConflict、B12 prepareInput 延迟建 artifact、B17 富录入+项目选择器+清 6 垃圾、B5 相对路径 PUT+catch;1169 测绿,真机验 5 项通过 |
 | T-050 | 审计修复 Wave B:数据清算(治「怪」根源) | ✅ | [ALIGNMENT §五/§六](docs/product-audit/ALIGNMENT.md) | 按裁决全删:DB 级联删 62 旧项目(139→77 全真建)+seed 8 块手术(项目图/artifacts/analytics/publications/校准预测/douyin/通知全退役)+搜索索引接真六表+读侧 7 注入路径清算(script artifactId 走 DB,research/production/review/experience/publishing-center 诚实空);1169 测绿+真机零泄漏+重启不复活(16c0f54+1e69386) |
