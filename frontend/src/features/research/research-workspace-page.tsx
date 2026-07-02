@@ -32,7 +32,7 @@ import Link from "next/link";
 
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
-import { PageTabs } from "@/components/navigation/page-tabs";
+import { ResearchCollectionSection } from "./research-collection-section";
 import { buildResearchViewModel } from "@/fixtures/selectors";
 import type {
   ResearchSourceRow,
@@ -246,54 +246,6 @@ function CreativeMaterialGuideCard() {
 // ---------------------------------------------------------------------------
 // ResearchCollectionSection (tabs + source rows)
 // ---------------------------------------------------------------------------
-
-function ResearchCollectionSection({
-  tabs,
-  sources,
-}: {
-  tabs: ResearchViewModel["sourceTabs"];
-  sources: ReadonlyArray<ResearchSourceRow>;
-}) {
-  return (
-    <div data-slot="research-collection-section">
-      <SectionCard
-        title="资料收集"
-        description="已收集的文章、视频、报告与播客"
-      >
-        <div data-slot="page-tabs">
-          <PageTabs tabs={tabs} defaultValue={tabs[0]?.id} ariaLabel="资料类型" />
-        </div>
-        <ul
-          data-slot="research-source-list"
-          className="mt-3 flex flex-col gap-2"
-          aria-label="资料列表"
-        >
-          {sources.map((source) => (
-            <li
-              key={source.id}
-              data-slot="research-source-row"
-              className="flex flex-col gap-2 rounded-card border border-border bg-surface p-3"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="truncate text-sm font-medium text-foreground">
-                  {source.title}
-                </span>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {source.source}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                {source.tags.map((tag) => (
-                  <TagChip key={tag} label={tag} tone="neutral" size="sm" />
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Right rail

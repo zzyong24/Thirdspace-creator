@@ -142,6 +142,8 @@ export interface AssetSummary {
   readonly tags: ReadonlyArray<string>;
   readonly thumbnailToken: string;
   readonly updatedAt: string;
+  // [T-051 2e] 收藏痕迹(assets.favorite.toggle 写库的 isFavorite 读回)。
+  readonly isFavorite?: boolean;
 }
 
 export interface AssetTypeCount {

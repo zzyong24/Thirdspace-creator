@@ -37,8 +37,18 @@ export function AssetCard({ asset, selected, onSelect }: AssetCardProps) {
       >
         <MediaPreview asset={asset} />
         <div className="flex flex-col gap-0.5 px-0.5">
-          <span className="truncate text-[13px] font-medium leading-tight text-foreground">
-            {asset.name}
+          <span className="flex items-center gap-1 text-[13px] font-medium leading-tight text-foreground">
+            {/* [T-051 2e] 收藏痕迹:isFavorite 落库值读回后显星标(此前写库无任何 UI 痕迹)。 */}
+            {asset.isFavorite ? (
+              <span
+                data-slot="asset-favorite-mark"
+                aria-label="已收藏"
+                className="shrink-0 text-[11px] text-amber-500"
+              >
+                ★
+              </span>
+            ) : null}
+            <span className="truncate">{asset.name}</span>
           </span>
           <span className="truncate text-[11px] leading-tight text-muted-foreground">
             {cardSubtitle(asset)}

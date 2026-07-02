@@ -31,8 +31,8 @@
  */
 
 import * as React from "react";
-import { cleanup, render } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Stub `next/link` so we can assert href values without the Next.js
 // runtime mounting a router.
@@ -51,21 +51,26 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-// `useSearchParams` is consumed by the SearchInteractiveRegion client
-// island to drive URL state. The publish-time flow goes through
-// `next/navigation` — the test stubs it so the client island can
-// mount under jsdom.
+// `useSearchParams` / `useRouter` are consumed by the HeaderGlobalSearch
+// (TopHeader 的可见搜索框岛) and ResultTypeTabs client islands to drive URL
+// state. `vi.hoisted` shares the spies so individual tests can assert the
+// router.push URLs and inject a per-test `?q=` / `?type=` state.
+const { routerPush, searchParamsRef } = vi.hoisted(() => ({
+  routerPush: vi.fn(),
+  searchParamsRef: { current: new URLSearchParams("") },
+}));
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/search",
   useRouter: () => ({
-    push: vi.fn(),
+    push: routerPush,
     replace: vi.fn(),
     back: vi.fn(),
     forward: vi.fn(),
     refresh: vi.fn(),
     prefetch: vi.fn(),
   }),
-  useSearchParams: () => new URLSearchParams(""),
+  useSearchParams: () => searchParamsRef.current,
 }));
 
 type SearchPageProps = React.ComponentProps<
@@ -91,6 +96,10 @@ async function renderSearchPage(overrides: Partial<SearchPageProps> = {}) {
 }
 
 describe("SearchPage", () => {
+  beforeEach(() => {
+    routerPush.mockClear();
+    searchParamsRef.current = new URLSearchParams("");
+  });
   afterEach(() => {
     cleanup();
   });
@@ -222,16 +231,73 @@ describe("SearchPage", () => {
     }
   });
 
-  it("reflects URL ?q=... state into the search input value", async () => {
-    // Render the page with an initialQuery to exercise the
-    // server-driven URL state flow without depending on the
-    // client island's `useSearchParams` hook.
+  it("reflects URL ?q=... state into the VISIBLE header search input value", async () => {
+    // [T-051 2d] 交互倒置修复后,唯一的搜索框是 TopHeader 的可见框
+    // (HeaderGlobalSearch);URL ?q= 必须回显在它身上,而不是某个 sr-only 复制品。
+    searchParamsRef.current = new URLSearchParams("q=AI");
     const { container } = await renderSearchPage({ initialQuery: "AI" });
     const searchInput = container.querySelector(
-      '[data-slot="search-page-input"]',
+      "#app-header-search",
     ) as HTMLInputElement | null;
     expect(searchInput).not.toBeNull();
     expect(searchInput!.value).toBe("AI");
+    // sr-only 的隐藏搜索框已删除 —— 页面里不允许再出现第二个搜索输入。
+    const searchInputs = container.querySelectorAll('input[type="search"]');
+    expect(searchInputs).toHaveLength(1);
+  });
+
+  it("submitting the visible header search pushes /search?q=… (server re-query)", async () => {
+    const { container } = await renderSearchPage();
+    const searchInput = container.querySelector(
+      "#app-header-search",
+    ) as HTMLInputElement;
+    const form = container.querySelector(
+      '[data-slot="header-search"]',
+    ) as HTMLFormElement;
+    fireEvent.change(searchInput, { target: { value: "AI Agent" } });
+    fireEvent.submit(form);
+    // URLSearchParams 把空格编码为 +;push(非 replace)让搜索进浏览器历史。
+    expect(routerPush).toHaveBeenCalledWith("/search?q=AI+Agent", {
+      scroll: false,
+    });
+  });
+
+  it("clicking a result-type tab pushes ?type=… (URL-driven facet, server consumes)", async () => {
+    searchParamsRef.current = new URLSearchParams("q=AI");
+    const { container } = await renderSearchPage({ initialQuery: "AI" });
+    const knowledgeTab = container.querySelector(
+      '[data-slot="result-type-tab"][data-tab-id="knowledge"]',
+    ) as HTMLButtonElement;
+    expect(knowledgeTab).not.toBeNull();
+    fireEvent.click(knowledgeTab);
+    expect(routerPush).toHaveBeenCalledWith("/search?q=AI&type=knowledge", {
+      scroll: false,
+    });
+  });
+
+  it("activeType narrows the rendered groups and highlights the tab from the URL", async () => {
+    searchParamsRef.current = new URLSearchParams("q=AI&type=knowledge");
+    const { container } = await renderSearchPage({
+      initialQuery: "AI",
+      activeType: "knowledge",
+    });
+    // 只渲染选中的组;其它组不再以空壳 SectionCard 出现。
+    expect(
+      container.querySelector('[data-result-group="knowledge"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-result-group="project"]'),
+    ).toBeNull();
+    expect(container.querySelector('[data-result-group="asset"]')).toBeNull();
+    expect(container.querySelector('[data-result-group="video"]')).toBeNull();
+    // tab 高亮来自 URL(经 route 的 activeType prop),不是本地 state。
+    const knowledgeTab = container.querySelector(
+      '[data-slot="result-type-tab"][data-tab-id="knowledge"]',
+    ) as HTMLButtonElement;
+    expect(knowledgeTab.getAttribute("data-pressed")).toBe("true");
+    // 再点已激活的 tab → push 清除 ?type=(回到全部)。
+    fireEvent.click(knowledgeTab);
+    expect(routerPush).toHaveBeenCalledWith("/search?q=AI", { scroll: false });
   });
 
   it("keeps the page inside the single AppShell — no second Sidebar/TopHeader", async () => {

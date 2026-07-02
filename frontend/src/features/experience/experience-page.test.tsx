@@ -125,10 +125,12 @@ describe("ExperiencePage", () => {
     expect(storage).toBeNull();
   });
 
-  it("renders ExperienceTabs in the approved 7-tab order from the screenshot", async () => {
+  it("[T-051] 顶部装饰性 tabs 已删,7-tab 真筛选组在主列(interactive region)", async () => {
     const { container } = await renderExperience();
+    // 死 tab 条不再渲染;可交互 tab 组(role=tablist)承担七步筛选。
+    expect(container.querySelector('[data-slot="experience-tabs"]')).toBeNull();
     const tabs = container.querySelector(
-      '[data-slot="experience-tabs"]',
+      '[data-slot="experience-interactive-tabs"]',
     ) as HTMLElement;
     expect(tabs).not.toBeNull();
     const labels = Array.from(

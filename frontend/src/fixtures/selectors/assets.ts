@@ -71,6 +71,8 @@ export interface AssetListRow {
   readonly name: string;
   readonly description: string;
   readonly updatedAt: string;
+  // [T-051 2e] 收藏 flag(契约 assetResource.isFavorite)。
+  readonly isFavorite?: boolean;
 }
 
 export function buildAssetSummariesFromResources(
@@ -98,6 +100,8 @@ export function buildAssetSummariesFromResources(
       tags: tagsForAsset,
       thumbnailToken: thumbnailTokenFor(asset.assetType, asset.id),
       updatedAt: asset.updatedAt,
+      // [T-051 2e] 收藏读回:此前 toggle 落库但投影不带,全 UI 无痕迹。
+      isFavorite: asset.isFavorite ?? false,
     };
   });
 }

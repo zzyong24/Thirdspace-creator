@@ -7,10 +7,9 @@
  *
  * Composes, in the spec order:
  *   SearchPage
- *   ├── GlobalSearchHeader (hosted by the shared TopHeader; the page
- *   │                        renders only the duplicate page-level
- *   │                        input for redundancy / accessibility —
- *   │                        see SearchInteractiveRegion)
+ *   ├── (search input lives in the shared TopHeader — the REAL, wired
+ *   │    `HeaderGlobalSearch` client island; [T-051 2d] the former
+ *   │    sr-only duplicate page-level input has been removed)
  *   ├── ResultTypeTabs
  *   ├── SearchResults
  *   │   ├── ProjectResultSection    (3 cards horizontally)
@@ -38,17 +37,16 @@
  *    in a horizontal layout.
  *  - SearchSideRail order is exactly:
  *      SearchFilters → QuickActions → SearchHistory → SearchTips.
- *  - The page exposes a single `?q=...` URL state which is
- *    reflected in the page-level input value and in the result
- *    filtering (declarative two-way data flow through the
- *    SearchInteractiveRegion client island).
+ *  - The page exposes `?q=...` + `?type=...` URL state: the query is
+ *    reflected in the TopHeader's `HeaderGlobalSearch` island and the
+ *    type facet narrows which result group renders ([T-051 2d] the
+ *    route threads both params into `pages.search.get`).
  *  - No new dependencies, no fixture mutation, no `Date.now` /
  *    `Math.random` / network access.
  *
- * The page is a Server Component. The `?q=...` URL sync is
- * delegated to a small client island
- * (`search-interactive-region.tsx`) so the page itself stays
- * server-rendered.
+ * The page is a Server Component. URL state is written by the
+ * TopHeader search island (`?q=`) and the ResultTypeTabs island
+ * (`?type=`) so the page itself stays server-rendered.
  */
 
 import * as React from "react";
@@ -59,7 +57,6 @@ import { TagChip } from "@/components/content/tag-chip";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { buildSearchViewModel } from "@/fixtures/selectors";
 
-import { SearchInteractiveRegion } from "./search-interactive-region";
 import { ResultTypeTabs } from "./result-type-tabs";
 import { SearchFacetsPanel } from "./search-facets-panel";
 
@@ -81,6 +78,11 @@ export interface SearchPageProps {
    * as a prop from its route entrypoint.
    */
   readonly initialQuery?: string;
+  /**
+   * [T-051 2d] 当前激活的结果类型分面(URL ?type=,route 白名单校验后传入)。
+   * 存在时只渲染对应的结果组(server 已按该类窄化数据),tab 高亮据此绘制。
+   */
+  readonly activeType?: string;
 }
 
 export interface SearchViewModel {
@@ -212,6 +214,7 @@ function applyQuery(
 export function SearchPage({
   viewModel,
   initialQuery = "",
+  activeType,
 }: SearchPageProps = {}) {
   // When an op-backed `viewModel` is supplied, the server already executed the
   // query (`pages.search.get` → SearchService.search), so the groups are ALREADY
@@ -221,23 +224,24 @@ export function SearchPage({
   const opBacked = viewModel !== undefined;
   const baseVm = viewModel ?? buildSearchViewModel();
   const vm = opBacked ? baseVm : applyQuery(baseVm, initialQuery);
-  // The result-type tab counts must reflect the ACTUAL rendered result groups,
-  // not a frozen decorative number. The fixture VM ships hardcoded counts
-  // (12/38/84/19) that never match the few cards it renders, and on the
-  // fixture-fallback path `applyQuery` further filters the groups while leaving
-  // those counts stale. Recompute every tab's count from the real group length
-  // (keyed by tab id) so the badge and the "找到 N 个结果" total are honest for
-  // both the op-backed and fixture paths.
+  // [T-051 2d] tab 计数的两条路径:
+  //  - op-backed:信任后端计数。pages.search.get 现在用全量分面计数(不受
+  //    per-type top-N 截断),且 ?type= 窄化时其它 tab 仍是真实命中数 ——
+  //    此时组长度(被窄化清空)反而是错误来源,不能覆盖。
+  //  - fixture 回退:fixture VM 带的是装饰性硬编码计数(12/38/84/19),用实际
+  //    渲染组长度覆盖,徽标才诚实。
   const groupLengthByTab: Record<string, number> = {
     project: vm.projectResults.length,
     knowledge: vm.knowledgeResults.length,
     asset: vm.assetResults.length,
     video: vm.videoResults.length,
   };
-  const resultTypeTabs = vm.resultTypeTabs.map((tab) => ({
-    ...tab,
-    count: groupLengthByTab[tab.id] ?? tab.count,
-  }));
+  const resultTypeTabs = opBacked
+    ? vm.resultTypeTabs
+    : vm.resultTypeTabs.map((tab) => ({
+        ...tab,
+        count: groupLengthByTab[tab.id] ?? tab.count,
+      }));
   const totalCount = resultTypeTabs.reduce((acc, t) => acc + t.count, 0);
   return (
     <main
@@ -246,23 +250,21 @@ export function SearchPage({
       data-search-id="search-root"
       className="flex flex-col gap-3"
     >
-      {/* The TopHeader already renders the global search input in
-          `search` mode; we keep a hidden mirror here so URL `?q=`
-          state stays in sync and screen-reader / programmatic users
-          can still drive the query. Visually it collapses to zero
-          height so the result-type tabs sit directly under the
-          header — matching the design rhythm. */}
-      <SearchInteractiveRegion
-        initialQuery={initialQuery}
-        placeholder="搜索项目、素材、知识或视频"
-        className="sr-only"
+      {/* [T-051 2d] 全局搜索输入框只有一个真身:TopHeader `search` 模式渲染的
+          `HeaderGlobalSearch` client 岛(提交 → push /search?q= → server 重查)。
+          原来藏在这里的 sr-only 复制品(可见框是死的、活框被藏起来的交互倒置)
+          已删除。 */}
+      <ResultTypeTabs
+        tabs={resultTypeTabs}
+        totalCount={totalCount}
+        activeType={activeType}
       />
-      <ResultTypeTabs tabs={resultTypeTabs} totalCount={totalCount} />
       <div
         data-slot="search-layout"
         className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_320px]"
       >
         <SearchResults
+          activeType={activeType}
           projects={vm.projectResults}
           knowledge={vm.knowledgeResults}
           assets={vm.assetResults}
@@ -280,11 +282,11 @@ export function SearchPage({
 }
 
 // ---------------------------------------------------------------------------
-// ResultTypeTabs is now a client island (`./result-type-tabs.tsx`). It makes the
-// four type tabs a REAL client-side facet over the already-grouped results
-// (§290). The former decorative topic chips (§291 AI/教程/…) had NO data backing
-// in the VM (the adapter drops per-entity tags) and have been removed rather
-// than left as silent inert buttons (GAP-SRCH-1, D-SRCH-a).
+// ResultTypeTabs is a client island (`./result-type-tabs.tsx`). [T-051 2d] the
+// four type tabs are now a URL-driven facet: clicking pushes `?type=` which the
+// route threads into `pages.search.get` (server-side narrowing) — no more
+// local-state DOM `hidden` toggling. The former decorative topic chips (§291
+// AI/教程/…) had NO data backing in the VM and remain removed (GAP-SRCH-1).
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
@@ -292,16 +294,21 @@ export function SearchPage({
 // ---------------------------------------------------------------------------
 
 function SearchResults({
+  activeType,
   projects,
   knowledge,
   assets,
   videos,
 }: {
+  readonly activeType?: string;
   readonly projects: ReadonlyArray<ProjectResult>;
   readonly knowledge: ReadonlyArray<KnowledgeResult>;
   readonly assets: ReadonlyArray<AssetResult>;
   readonly videos: ReadonlyArray<VideoResult>;
 }) {
+  // [T-051 2d] ?type= 窄化时只渲染选中的组:server 只返回了该类的卡片数据,
+  // 其它组若照渲会是一排空壳 SectionCard。无窄化时 4 组全渲。
+  const visible = (group: string) => !activeType || activeType === group;
   return (
     // §293 Project/knowledge/asset/video result cards. Each card is a real
     // next/link: projects deep-link to /projects/<id>; knowledge/asset/video
@@ -311,23 +318,28 @@ function SearchResults({
       data-slot="search-results"
       className="flex flex-col gap-3"
     >
-      {/* Each group carries `data-result-group` so the ResultTypeTabs client
-          island can filter the visible groups by entity type (§290) by toggling
-          the wrapper's `hidden` attribute. Plain block wrappers (not
-          `display:contents`) so the UA `[hidden] { display:none }` rule actually
-          removes the group when filtered. */}
-      <div data-result-group="project">
-        <ProjectResultSection projects={projects} />
-      </div>
-      <div data-result-group="knowledge">
-        <KnowledgeResultSection rows={knowledge} />
-      </div>
-      <div data-result-group="asset">
-        <AssetResultSection items={assets} />
-      </div>
-      <div data-result-group="video">
-        <VideoResultSection items={videos} />
-      </div>
+      {/* `data-result-group` 是各组的稳定选择器(e2e / 测试用)。组的显隐由
+          server 数据 + activeType 决定,不再有客户端 hidden 戏法。 */}
+      {visible("project") ? (
+        <div data-result-group="project">
+          <ProjectResultSection projects={projects} />
+        </div>
+      ) : null}
+      {visible("knowledge") ? (
+        <div data-result-group="knowledge">
+          <KnowledgeResultSection rows={knowledge} />
+        </div>
+      ) : null}
+      {visible("asset") ? (
+        <div data-result-group="asset">
+          <AssetResultSection items={assets} />
+        </div>
+      ) : null}
+      {visible("video") ? (
+        <div data-result-group="video">
+          <VideoResultSection items={videos} />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -19,7 +19,7 @@ import Link from "next/link";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
-import { SearchField } from "@/components/navigation/search-field";
+import { HeaderGlobalSearch } from "./header-global-search";
 import { NotificationPopover } from "./notification-popover";
 import { WorkspacePrimaryAction } from "./workspace-primary-action";
 import { creatorIcons } from "@/lib/icons";
@@ -135,12 +135,11 @@ export function TopHeader({
       )}
     >
       {resolvedMode === "search" ? (
-        <SearchField
-          id="app-header-search"
-          label="全局搜索"
-          dataSlot="header-search"
+        // [T-051 2d] 可见搜索框接真:client 岛提交 → router.push(/search?q=…)
+        // server 重查。旧的 SearchField 无 onSubmit(默认 preventDefault)是死路。
+        <HeaderGlobalSearch
           placeholder={searchPlaceholder}
-          value={searchValue}
+          initialValue={searchValue}
         />
       ) : resolvedMode === "project-overview" || resolvedMode === "project-workspace" ? (
         <ProjectIdentityBlock

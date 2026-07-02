@@ -5,12 +5,14 @@
  * global Header is configured for `/search` with header mode `search` and the
  * approved `assistant` contextual-card variant in `shell-router.tsx`.
  *
- * This is a Server Component. It reads the `?q=` URL state from the route's
- * `searchParams`, fetches the composed `pages.search.get` op server-side under the
- * request's session ctx, maps the `globalSearchPage` DTO into the page's
- * `SearchViewModel`, and renders `SearchPage` with that `viewModel`. The
- * `viewModel?` seam is preserved: when there is no session ctx (SSR fallback /
- * tests), `SearchPage` falls back to `buildSearchViewModel()`.
+ * This is a Server Component. It reads the `?q=` AND `?type=` URL state from the
+ * route's `searchParams`, fetches the composed `pages.search.get` op server-side
+ * under the request's session ctx (threading the type facet so the backend
+ * narrows the card groups — [T-051 2d] the route used to DROP `?type=`), maps
+ * the `globalSearchPage` DTO into the page's `SearchViewModel`, and renders
+ * `SearchPage` with that `viewModel`. The `viewModel?` seam is preserved: when
+ * there is no session ctx (SSR fallback / tests), `SearchPage` falls back to
+ * `buildSearchViewModel()`.
  *
  * History rows re-run a prior query by navigating `/search?q=<row.query>` (a
  * link), which re-reads `pages.search.get` and re-appends a SearchHistory row
@@ -28,26 +30,38 @@ interface SearchRoutePageProps {
   readonly searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
+// ?type= 分面白名单 —— 与 4 个结果 tab 一一对应;非法值按「未窄化」处理。
+const RESULT_TYPE_IDS = new Set(["project", "knowledge", "asset", "video"]);
+
+function firstParam(
+  value: string | string[] | undefined,
+): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export default async function SearchRoutePage({
   searchParams,
 }: SearchRoutePageProps) {
   const params = (await searchParams) ?? {};
-  const rawQ = params.q;
-  const q = Array.isArray(rawQ) ? (rawQ[0] ?? "") : (rawQ ?? "");
+  const q = firstParam(params.q) ?? "";
+  const rawType = firstParam(params.type);
+  // [T-051 2d] ?type= 不再被丢弃:白名单校验后传给 pages.search.get(契约
+  // query 本就声明了可选 type 字段),后端据此窄化卡片组并保留全量 tab 计数。
+  const type = rawType && RESULT_TYPE_IDS.has(rawType) ? rawType : undefined;
 
   const session = await resolveSession();
   if (!session) {
     // No session (the (creator) layout guard will already have redirected on a
     // real request). Render the fixture-composed fallback so SSR never crashes.
-    return <SearchPage initialQuery={q} />;
+    return <SearchPage initialQuery={q} activeType={type} />;
   }
 
   const page = (await createServerClient(session.ctx).getGlobalSearch({
     params: undefined,
-    query: { q },
+    query: { q, type },
     body: undefined,
   })) as unknown as Parameters<typeof globalSearchPageToViewModel>[0];
 
   const viewModel = globalSearchPageToViewModel(page);
-  return <SearchPage viewModel={viewModel} initialQuery={q} />;
+  return <SearchPage viewModel={viewModel} initialQuery={q} activeType={type} />;
 }

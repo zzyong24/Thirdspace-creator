@@ -52,8 +52,10 @@ const OP_PAGE = {
   loading: false,
   error: null,
   query: "钩子",
+  // [T-051 2d] project 的 count(7)故意大于组内卡片数(1):后端的 tab 计数是
+  // 全量分面计数(列表只取每类 top N),FE 必须信任它,不得用组长度覆盖。
   resultTabs: [
-    { id: "project", label: "项目", count: 1 },
+    { id: "project", label: "项目", count: 7 },
     { id: "knowledge", label: "知识", count: 1 },
     { id: "asset", label: "素材", count: 1 },
     { id: "video", label: "视频", count: 1 },
@@ -130,5 +132,18 @@ describe("SearchPage (op-backed)", () => {
     expect(videoThumb).not.toBeNull();
     // The op-unique title text is present (proves it is NOT the fixture VM).
     expect(container.textContent).toContain("OP 项目标题 ZZZ");
+  });
+
+  it("op-backed tab counts trust the backend FULL counts (not the group lengths)", async () => {
+    // [T-051 2d] 后端计数是全量分面计数(7),组内只有 top-N 的 1 张卡 ——
+    // 徽标必须显示 7。若 FE 仍用组长度覆盖,这里会退化成 1。
+    const { container } = await renderOpBacked();
+    const projectTabCount = container.querySelector(
+      '[data-slot="result-type-tab"][data-tab-id="project"] [data-slot="result-type-tab-count"]',
+    );
+    expect(projectTabCount?.textContent).toBe("7");
+    // 「找到 N 个结果」的总数与 tab 计数同源(7+1+1+1)。
+    const meta = container.querySelector('[data-slot="result-type-count"]');
+    expect(meta?.textContent).toContain("10");
   });
 });

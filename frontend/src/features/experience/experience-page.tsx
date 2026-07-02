@@ -45,7 +45,6 @@
 import * as React from "react";
 
 import { ChartFrame } from "@/components/analytics/chart-frame";
-import { PageTabs } from "@/components/navigation/page-tabs";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
@@ -175,7 +174,8 @@ export function ExperiencePage({
       data-experience-id="experience-root"
       className="flex flex-col gap-3.5"
     >
-      <ExperienceTabs tabs={vm.tabs} />
+      {/* [T-051 2a] 顶部装饰性 ExperienceTabs 已删:与主列可交互 tab 组(真筛选)
+          重复且不可点(死 tab)。 */}
       <ExperienceLayout
         tabs={vm.tabs}
         summaryCards={vm.summaryCards}
@@ -189,31 +189,6 @@ export function ExperiencePage({
         applyTargets={applyTargets}
       />
     </main>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// ExperienceTabs — page-tabs in the spec order
-// ---------------------------------------------------------------------------
-
-function ExperienceTabs({
-  tabs,
-}: {
-  tabs: ReadonlyArray<ExperienceTabDescriptor>;
-}) {
-  // Wrap PageTabs so the page-level slot name stays stable for tests
-  // and the rail order assertions.
-  return (
-    <div
-      data-slot="experience-tabs"
-      aria-label="经验沉淀二级导航"
-      className="border-b border-border pb-2"
-    >
-      <PageTabs
-        tabs={tabs.map((tab) => ({ id: tab.id, label: tab.label }))}
-        ariaLabel="经验分类"
-      />
-    </div>
   );
 }
 

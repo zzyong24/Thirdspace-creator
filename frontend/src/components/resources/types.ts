@@ -20,6 +20,8 @@ export interface ResourceAsset {
   readonly tags: ReadonlyArray<string>;
   readonly thumbnailToken: string;
   readonly updatedAt: string;
+  // [T-051 2e] 收藏痕迹:assets.favorite.toggle 落库的 isFavorite 读回,卡片显 ★。
+  readonly isFavorite?: boolean;
 }
 
 export interface ResourceAssetUsage {

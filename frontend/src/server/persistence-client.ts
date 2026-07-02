@@ -3770,6 +3770,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const searchQuery = createGlobalSearchQueryService({
     search: {
       search: (ctx, query, opts) => searchService.search(ctx, query, opts),
+      // [T-051 2d] tab 计数走全量分面(不受 per-type top-N 截断)。
+      facets: (ctx, query) => searchService.facets(ctx, query),
       recordSearch: (ctx, input) => searchService.recordSearch(ctx, input),
       listHistory: (ctx, limit) => searchService.listHistory(ctx, limit),
     },
