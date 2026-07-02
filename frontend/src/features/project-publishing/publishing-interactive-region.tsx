@@ -9,7 +9,6 @@
  * pattern (assets / settings / search / production).
  *
  * Wired interactions (client-only, fixture data, no network):
- *  - PublishingTabs: selectable (one active tab at a time),
  *  - TitleField: controlled editable input (with live char count),
  *  - PublishingOptions: controlled toggles,
  *  - platform cards: selectable (toggle a platform's "selected" flag),
@@ -112,15 +111,6 @@ export interface PublishingRightRail {
 // Locked descriptors (mirrors the previous server render verbatim)
 // ---------------------------------------------------------------------------
 
-const PUBLISHING_TABS: ReadonlyArray<{
-  readonly id: string;
-  readonly label: string;
-}> = [
-  { id: "publishing", label: "发布设置" },
-  { id: "history", label: "发布记录" },
-  { id: "platforms", label: "平台管理" },
-  { id: "batch", label: "批量发布" },
-];
 
 interface PublishingOptionDescriptor {
   readonly id: string;
@@ -215,7 +205,8 @@ export function PublishingInteractiveRegion({
   const vm = viewModel;
   return (
     <>
-      <PublishingTabs tabs={vm.tabs} />
+      {/* [T-051 2a] PublishingTabs 已砍:发布记录/平台管理/批量发布无对应视图
+          (点了高亮但内容不切),页面只有发布设置一个真实视图,无需 tab 导航。 */}
       <div
         data-slot="publishing-grid"
         className="grid grid-cols-1 gap-2 xl:grid-cols-[1fr_1fr_0.85fr] xl:items-start"
@@ -269,41 +260,6 @@ export function PublishingInteractiveRegion({
         </div>
       </div>
     </>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// PublishingTabs — selectable
-// ---------------------------------------------------------------------------
-
-function PublishingTabs({ tabs }: { tabs: PublishingViewModel["tabs"] }) {
-  const list = tabs.length > 0 ? tabs : PUBLISHING_TABS;
-  const [activeTab, setActiveTab] = React.useState<string>(list[0]?.id ?? "");
-  return (
-    <nav
-      data-slot="publishing-tabs"
-      aria-label="发布阶段"
-      className="flex flex-wrap items-center gap-1.5 border-b border-border pb-1.5"
-    >
-      {list.map((tab) => {
-        const pressed = tab.id === activeTab;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            data-slot="publishing-tab"
-            data-tab-id={tab.id}
-            data-pressed={pressed}
-            aria-selected={pressed}
-            onClick={() => setActiveTab(tab.id)}
-            className="inline-flex h-6 items-center rounded-md border border-transparent px-2 text-[11px] font-medium text-muted-foreground data-[pressed=true]:border-brand/40 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-          >
-            {tab.label}
-          </button>
-        );
-      })}
-    </nav>
   );
 }
 

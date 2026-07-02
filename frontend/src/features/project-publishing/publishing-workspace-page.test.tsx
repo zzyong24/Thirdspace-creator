@@ -197,31 +197,11 @@ describe("PublishingWorkspacePage", () => {
     expect(primaryAction).not.toBeNull();
   });
 
-  it("renders the PublishingTabs row", async () => {
+  it("[T-051] PublishingTabs 已砍(无对应视图的死导航)——不再渲染", async () => {
     const { container } = await renderWorkspace();
-    const tabs = container.querySelector(
-      '[data-slot="publishing-tabs"]',
-    ) as HTMLElement;
-    expect(tabs).not.toBeNull();
-    const triggers = tabs.querySelectorAll('[data-tab-id]');
-    expect(triggers.length).toBeGreaterThanOrEqual(1);
+    expect(container.querySelector('[data-slot="publishing-tabs"]')).toBeNull();
   });
 
-  it("renders the four reference publishing tabs in order", async () => {
-    const { container } = await renderWorkspace();
-    const tabs = Array.from(
-      container.querySelectorAll(
-        '[data-slot="publishing-tabs"] [data-tab-id]',
-      ),
-    );
-
-    expect(tabs.map((tab) => tab.textContent?.trim())).toEqual([
-      "发布设置",
-      "发布记录",
-      "平台管理",
-      "批量发布",
-    ]);
-  });
 
   it("renders a three-column PublishingGrid (basic/platform/preview) in spec order", async () => {
     const { container } = await renderWorkspace();

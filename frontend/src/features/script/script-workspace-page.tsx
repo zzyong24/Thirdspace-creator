@@ -33,7 +33,6 @@
 import * as React from "react";
 
 import { SectionCard } from "@/components/project/section-card";
-import { PageTabs } from "@/components/navigation/page-tabs";
 import { buildScriptViewModel } from "@/fixtures/selectors";
 import { ScriptRichEditor } from "./script-rich-editor";
 import { sectionsToHtml } from "./script-editor-bridge";
@@ -144,7 +143,8 @@ export function ScriptWorkspacePage({
       data-project-id={vm.projectId}
       className="flex flex-col gap-section-gap"
     >
-      <ScriptTabs tabs={vm.tabs} />
+      {/* [T-051 2a] ScriptTabs 已砍:tab 声称的分页视图不存在,内容本就同屏
+          分卡片渲染 —— 无 onValueChange 的死导航。 */}
       <div
         data-slot="script-grid"
         className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_400px]"
@@ -181,28 +181,6 @@ export function ScriptWorkspacePage({
         </div>
       </div>
     </main>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// ScriptTabs
-// ---------------------------------------------------------------------------
-
-function ScriptTabs({
-  tabs,
-}: {
-  tabs: ScriptViewModel["tabs"];
-}) {
-  return (
-    <div data-slot="script-tabs">
-      <div data-slot="page-tabs">
-        <PageTabs
-          tabs={tabs}
-          defaultValue={tabs[0]?.id}
-          ariaLabel="脚本子页签"
-        />
-      </div>
-    </div>
   );
 }
 

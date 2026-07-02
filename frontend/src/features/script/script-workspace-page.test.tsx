@@ -199,38 +199,9 @@ describe("ScriptWorkspacePage", () => {
     expect(primaryAction).not.toBeNull();
   });
 
-  it("renders the six reference Script Tabs in order", async () => {
+  it("[T-051] ScriptTabs 已砍(分页视图不存在的死导航)——不再渲染", async () => {
     const { container } = await renderWorkspace();
-    const tabsSection = container.querySelector(
-      '[data-slot="script-tabs"]',
-    ) as HTMLElement;
-    expect(tabsSection).not.toBeNull();
-    const tabTriggers = tabsSection.querySelectorAll(
-      '[data-slot="page-tabs"] [data-tab-id]',
-    );
-    expect(tabTriggers).toHaveLength(6);
-    const tabIds = Array.from(tabTriggers).map((tab) =>
-      tab.getAttribute("data-tab-id"),
-    );
-    expect(tabIds).toEqual([
-      "outline",
-      "master-script",
-      "quotes",
-      "mode",
-      "ai-rewrite",
-      "versions",
-    ]);
-    const tabLabels = Array.from(tabTriggers).map(
-      (tab) => tab.textContent ?? "",
-    );
-    expect(tabLabels).toEqual([
-      "大纲",
-      "正文",
-      "金句卡片",
-      "脚本模式",
-      "AI 改写",
-      "版本记录",
-    ]);
+    expect(container.querySelector('[data-slot="script-tabs"]')).toBeNull();
   });
 
   it("renders the TipTap editor toolbar with role=toolbar and buttons with aria-pressed", async () => {

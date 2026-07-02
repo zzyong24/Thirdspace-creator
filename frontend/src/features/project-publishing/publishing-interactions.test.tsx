@@ -82,22 +82,6 @@ describe("PublishingWorkspacePage interactions", () => {
     expect(input!.value).toBe("新的发布标题");
   });
 
-  it("switches the active publishing tab on click", () => {
-    const { container } = render(
-      <PublishingWorkspacePage projectId={PROJECT_ID} />,
-    );
-    const tabs = Array.from(
-      container.querySelectorAll<HTMLButtonElement>(
-        '[data-slot="publishing-tab"]',
-      ),
-    );
-    expect(tabs.length).toBeGreaterThanOrEqual(2);
-    expect(tabs[0]!.getAttribute("data-pressed")).toBe("true");
-    fireEvent.click(tabs[1]!);
-    expect(tabs[0]!.getAttribute("data-pressed")).toBe("false");
-    expect(tabs[1]!.getAttribute("data-pressed")).toBe("true");
-  });
-
   it("toggles a platform card selection", () => {
     const { container } = render(
       <PublishingWorkspacePage projectId={PROJECT_ID} />,
