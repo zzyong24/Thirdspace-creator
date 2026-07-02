@@ -35,6 +35,7 @@ import { Pagination } from "@/components/navigation/pagination";
 import { buildProjectsViewModel } from "@/fixtures/selectors";
 import { client as defaultClient } from "@/lib/contract-client.server";
 import { cn } from "@/lib/utils";
+import { STAGE_LABELS_ACTIVE, STAGE_DESCRIPTORS } from "@/lib/stage-labels";
 import type { ProjectsViewModel, ProjectListRow } from "@/types/view-models";
 import type { Project, ProjectStageName } from "@/types/domain";
 
@@ -432,25 +433,9 @@ function mapProjectRowToTab(row: ProjectListRow): string {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const STAGE_LABELS: Record<ProjectStageName, string> = {
-  brief: "立项中",
-  research: "复盘中",
-  planning: "策划中",
-  script: "写稿中",
-  production: "制作中",
-  publishing: "已发布",
-  review: "复盘中",
-};
-
-const STAGE_DESCRIPTORS: Record<ProjectStageName, string> = {
-  brief: "立项准备",
-  research: "调研与洞察",
-  planning: "结构大纲",
-  script: "完善录制稿",
-  production: "剪辑中",
-  publishing: "等待素材",
-  review: "数据复盘",
-};
+// [T-052] 阶段名迁单一词表(lib/stage-labels):修「research=复盘中」bug,
+// 全站阶段中文名不再各页自写字典。
+const STAGE_LABELS = STAGE_LABELS_ACTIVE;
 
 const STAGE_CHIP_TONE: Record<ProjectStageName, { bg: string; fg: string }> = {
   brief: { bg: "rgba(148,163,184,0.16)", fg: "#475569" },
@@ -533,12 +518,12 @@ function workspaceHrefForRow(row: ProjectListRow): string {
   return projectWorkspaceHref(row.id, row.currentStage);
 }
 
-const FIXED_NOW = new Date("2026-06-13T14:30:00+08:00").getTime();
-
 function formatCompactUpdatedAt(iso: string): string {
   const target = new Date(iso).getTime();
   if (Number.isNaN(target)) return "—";
-  const diffMs = FIXED_NOW - target;
+  // [T-052] 相对时间锚改真时钟:旧写死 2026-06-13 假「现在」让真项目的
+  // 「x 天前」全部失真(审计:三个互相矛盾的「现在」之一)。SSR 每请求取真值。
+  const diffMs = Date.now() - target;
   if (diffMs <= 0) return "刚刚";
   const minutes = Math.round(diffMs / 60_000);
   if (minutes < 60) return `${minutes} 分钟前`;
