@@ -7,11 +7,9 @@ import {
   PathTraversalError,
   type BlobMethod,
 } from "@creatoros/backend/modules/assets";
-import {
-  getStorageRootForRequest,
-  getIdentityService,
-} from "@/server/persistence-client";
+import { getStorageRootForRequest } from "@/server/persistence-client";
 import { readSessionCookie } from "../../auth/_session";
+import { resolveRequestContext } from "@/lib/request-context.server";
 
 // Local-fs blob route (item B). The local-fs object-storage adapter mints
 // token-gated URLs at `/api/v1/blob/<key>?exp=&token=`; this route is where the
@@ -36,13 +34,11 @@ function decodeKey(segments: string[]): string {
 }
 
 async function resolveRoot(req: Request): Promise<string | null> {
-  // Same-origin fetch carries the session cookie → resolve the user's ctx and
-  // their configured media root. No session → null (the caller 403s).
+  // [T-046 单机免登录] 有 session cookie 验 token,无/失效 cookie 以本机主用户直通,
+  // 解析其配置的 media root。HMAC token + path-traversal 两道硬门不变(仍是唯一真门)。
   const rawToken = readSessionCookie(req);
-  if (!rawToken) return null;
   try {
-    const identity = await getIdentityService();
-    const ctx = await identity.resolveContextFromToken(rawToken);
+    const ctx = await resolveRequestContext(rawToken);
     return await getStorageRootForRequest(ctx);
   } catch {
     return null;

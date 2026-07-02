@@ -102,16 +102,17 @@ describe("GET /api/v1/auth/me", () => {
     expect(json.data.email).toBe(CANONICAL_EMAIL);
   });
 
-  it("without a cookie → 401", async () => {
+  // [T-046 单机免登录] 无/坏 cookie 不再 401,以本机主用户(最早创建 = canonical seed)直通。
+  it("without a cookie → 200 直通本机主用户(T-046 单机免登录)", async () => {
     const res = await meGET(
       withCookie("http://localhost/api/v1/auth/me", "GET"),
     );
-    expect(res.status).toBe(401);
-    const json = (await res.json()) as { error: { code: string } };
-    expect(json.error.code).toBe("AuthenticationError");
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { data: { id: string } };
+    expect(json.data.id).toBe(CANONICAL_USER_ID);
   });
 
-  it("with a garbage cookie → 401", async () => {
+  it("with a garbage cookie → 200 直通本机主用户(失效 token 与无 token 同路径)", async () => {
     const res = await meGET(
       withCookie(
         "http://localhost/api/v1/auth/me",
@@ -119,12 +120,14 @@ describe("GET /api/v1/auth/me", () => {
         "creatoros_session=not-a-real-token",
       ),
     );
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { data: { id: string } };
+    expect(json.data.id).toBe(CANONICAL_USER_ID);
   });
 });
 
 describe("POST /api/v1/auth/logout", () => {
-  it("clears the cookie and revokes the session (a later /me with the old cookie → 401)", async () => {
+  it("clears the cookie and revokes the session(撤销后旧 cookie 走单机直通,不再 401)", async () => {
     const login = await loginPOST(
       loginReq({ email: CANONICAL_EMAIL, password: DEV_PASSWORD }),
     );
@@ -142,11 +145,13 @@ describe("POST /api/v1/auth/logout", () => {
     const outJson = (await out.json()) as { data: { ok: boolean } };
     expect(outJson.data.ok).toBe(true);
 
-    // The revoked token is now rejected.
+    // [T-046] 撤销的 token 不再换来 401 —— 失效 token 与无 token 同路径,直通本机主用户。
     const me = await meGET(
       withCookie("http://localhost/api/v1/auth/me", "GET", cookie),
     );
-    expect(me.status).toBe(401);
+    expect(me.status).toBe(200);
+    const meJson = (await me.json()) as { data: { id: string } };
+    expect(meJson.data.id).toBe(CANONICAL_USER_ID);
   });
 
   it("is idempotent — logout with no cookie → 200", async () => {

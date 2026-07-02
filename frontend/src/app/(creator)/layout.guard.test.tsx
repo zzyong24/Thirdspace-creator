@@ -68,10 +68,12 @@ const CANONICAL_USER = {
 };
 
 const resolveContextFromToken = vi.fn();
+const resolveLocalContext = vi.fn();
 const getCurrentUser = vi.fn();
 vi.mock("@/server/persistence-client", () => ({
   getIdentityService: async () => ({
     resolveContextFromToken,
+    resolveLocalContext,
     getCurrentUser,
   }),
 }));
@@ -99,6 +101,7 @@ async function importAuthenticationError() {
 beforeEach(() => {
   redirect.mockClear();
   resolveContextFromToken.mockReset();
+  resolveLocalContext.mockReset();
   getCurrentUser.mockReset();
   listNotifications.mockClear();
   cookieValue = undefined;
@@ -111,29 +114,51 @@ afterEach(() => {
 });
 
 describe("(creator) layout — session guard", () => {
-  it("redirects to /login with the current pathname when no cookie is present", async () => {
+  // [T-046 单机免登录] 无/坏 cookie 不再弹 /login —— resolveSession 以本机主用户直通,
+  // shell 正常渲染。redirect 仅剩「库中无任何用户」的异常态兜底(seed 保证不发生)。
+  it("no cookie → 直通本机主用户渲染 shell(T-046,不再弹 /login)", async () => {
     cookieValue = undefined;
+    resolveLocalContext.mockResolvedValue({
+      userId: "user-zyongzhu",
+      requestId: "req-local-1",
+      source: "user",
+    });
+    getCurrentUser.mockResolvedValue(CANONICAL_USER);
     const Layout = await importLayout();
 
-    await expect(
-      Layout({ children: <div>child</div>, modal: null }),
-    ).rejects.toMatchObject({ target: "/login?from=%2Fsettings" });
+    const tree = await Layout({
+      children: <div data-testid="guarded-child">guarded</div>,
+      modal: null,
+    });
+    render(tree);
 
-    expect(redirect).toHaveBeenCalledWith("/login?from=%2Fsettings");
+    expect(redirect).not.toHaveBeenCalled();
     expect(resolveContextFromToken).not.toHaveBeenCalled();
+    expect(resolveLocalContext).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("guarded-child")).toBeInTheDocument();
   });
 
-  it("redirects to /login when the cookie is invalid (resolve throws AuthenticationError)", async () => {
+  it("invalid cookie(resolve throws AuthenticationError)→ fallback 本机主用户,不弹 /login", async () => {
     cookieValue = "garbage-token";
     const AuthenticationError = await importAuthenticationError();
     resolveContextFromToken.mockRejectedValue(new AuthenticationError());
+    resolveLocalContext.mockResolvedValue({
+      userId: "user-zyongzhu",
+      requestId: "req-local-2",
+      source: "user",
+    });
+    getCurrentUser.mockResolvedValue(CANONICAL_USER);
     const Layout = await importLayout();
 
-    await expect(
-      Layout({ children: <div>child</div>, modal: null }),
-    ).rejects.toMatchObject({ target: "/login?from=%2Fsettings" });
+    const tree = await Layout({
+      children: <div data-testid="guarded-child">guarded</div>,
+      modal: null,
+    });
+    render(tree);
 
-    expect(redirect).toHaveBeenCalledWith("/login?from=%2Fsettings");
+    expect(redirect).not.toHaveBeenCalled();
+    expect(resolveLocalContext).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("guarded-child")).toBeInTheDocument();
   });
 
   it("renders children + the user card bound to the canonical user on a valid session", async () => {

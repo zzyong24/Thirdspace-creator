@@ -113,24 +113,25 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     expect(res.status).toBe(404);
   });
 
-  it("returns 401 for a persisted op WITHOUT a session cookie (ctx required)", async () => {
+  // [T-046 单机免登录] 无/坏 cookie 不再 401 —— 以本机主用户直通,persisted op 照常执行。
+  it("serves a persisted op WITHOUT a session cookie(T-046 直通本机主用户)", async () => {
     const res = await dispatch(
       "projects.list",
       { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined },
       "", // no cookie
     );
-    expect(res.status).toBe(401);
-    const json = (await res.json()) as { error: { code: string } };
-    expect(json.error.code).toBe("AuthenticationError");
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { data: unknown };
+    expect(json.data).toBeDefined();
   });
 
-  it("returns 401 for a persisted op WITH an invalid session cookie", async () => {
+  it("serves a persisted op WITH an invalid session cookie(失效 token 同直通)", async () => {
     const res = await dispatch(
       "projects.list",
       { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined },
       "creatoros_session=garbage",
     );
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
   });
 
   it("serves a persisted op WITH a valid session cookie (ctx threaded → 200)", async () => {

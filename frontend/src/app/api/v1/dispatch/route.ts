@@ -5,12 +5,13 @@ import {
   ERROR_HTTP,
   type Endpoint,
 } from "@creatoros/contract";
-import { compositeTransport, getIdentityService } from "@/server/persistence-client";
+import { compositeTransport } from "@/server/persistence-client";
 import {
   AuthenticationError,
   OwnershipError,
 } from "@creatoros/backend/modules/identity";
 import { readSessionCookie } from "../auth/_session";
+import { resolveRequestContext } from "@/lib/request-context.server";
 
 // RPC dispatch over HTTP. The browser's HttpTransport POSTs { id, input };
 // this runs the matching contract operation against the SERVER store and
@@ -51,18 +52,12 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: `unknown operation: ${id}` }, { status: 404 });
   }
 
-  // Derive RequestContext from the session cookie. No/invalid cookie → 401
-  // (foundation §2 "Unauthenticated → 401"). The composite transport also
-  // enforces this for persisted ops, but deriving here keeps every dispatch
-  // request user-scoped and lets the ctx reach the transport.
+  // Derive RequestContext. [T-046 单机免登录] 有 session cookie 照旧验 token;无/失效
+  // cookie 以本机主用户直通(登录页已下线)。401 仅剩「库中无任何用户」的异常态兜底。
   const rawToken = readSessionCookie(req);
-  if (!rawToken) {
-    return errorEnvelope(ErrorCode.AuthenticationError, "Not authenticated");
-  }
-  const identity = await getIdentityService();
   let ctx;
   try {
-    ctx = await identity.resolveContextFromToken(rawToken);
+    ctx = await resolveRequestContext(rawToken);
   } catch (err) {
     if (err instanceof AuthenticationError) {
       return errorEnvelope(ErrorCode.AuthenticationError, err.message);

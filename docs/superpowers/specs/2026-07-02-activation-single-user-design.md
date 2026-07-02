@@ -1,6 +1,10 @@
 # 激活码授权 + 本机单用户模式（去登录）设计
 
-> 状态：待审（spec-review gate）。改认证架构 —— 过审（verdict≠FAIL）才准开工。
+> 状态：**⏸️ 用户暂缓（2026-07-02）** + gate 已评审 **CONCERNS**（独立 reviewer，恢复实施前须先处置以下三点再动代码）：
+> ① §5 现状描述错误 —— 项目无守卫型 middleware（`proxy.ts` 只转发 x-pathname），真守卫在 `(creator)/layout` RSC + `session.server.ts`；auto-session 落点应为 bootstrap route（RSC 不能 Set-Cookie）。
+> ② `buildPersistence` 无条件 seed `user-zyongzhu` + 示例数据 —— 客户全新装机库里已有 fixture 用户，/setup 的绑定/新建语义与 seed 去留必须先定义。
+> ③ activate→setup 用户绑定时序自相矛盾（bound_user_id NOT NULL vs 用户后填信息），需 placeholder 规则 + setup_completed_at 字段支撑 needsSetup。
+> 短期去登录已由 **T-046** 以「无 session 直通本机主用户」落地（resolveSession/resolveRequestContext fallback,与本 SPEC 的 auto-session 同语义、不同刀法),恢复本 SPEC 时在其上叠加激活码/向导层即可。
 > 需求原文（用户 2026-07-02）：「这个项目不需要登录的功能。这项目是激活码去验证的。只要授权了，就安装到客户的本机上，然后他自己去设置他用户名、设置他邮箱、设置他的抖音的那个二维码去扫码。登录了可以去掉。」
 
 ## 1. 背景与目标

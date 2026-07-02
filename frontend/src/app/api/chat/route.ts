@@ -5,10 +5,11 @@ import {
   AuthenticationError,
   OwnershipError,
 } from "@creatoros/backend/modules/identity";
-import { getChatRuntime, getIdentityService } from "@/server/persistence-client";
+import { getChatRuntime } from "@/server/persistence-client";
 import { runChatStream } from "@/server/ai/chat-runner";
 import type { ChatContext } from "@/server/ai/chat-context";
 import { readSessionCookie } from "../v1/auth/_session";
+import { resolveRequestContext } from "@/lib/request-context.server";
 
 // 上下文感知 ChatBox 的流式入口(SPEC §3.3)—— 全程 Vercel AI SDK,**不走 RPC envelope**:
 // useChat 客户端 POST { messages, chatContext } 到这里 → 鉴权(同 dispatch:session cookie →
@@ -51,15 +52,12 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
   }
 
-  // 鉴权:同 dispatch —— 无/非法 cookie → 401(foundation §2)。
+  // 鉴权:同 dispatch —— [T-046 单机免登录] 有 cookie 验 token,无/失效 cookie 以本机
+  // 主用户直通;401 仅剩「库中无任何用户」的异常态兜底。
   const rawToken = readSessionCookie(req);
-  if (!rawToken) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-  const identity = await getIdentityService();
   let ctx: RequestContext;
   try {
-    ctx = await identity.resolveContextFromToken(rawToken);
+    ctx = await resolveRequestContext(rawToken);
   } catch (err) {
     if (err instanceof AuthenticationError) {
       return NextResponse.json({ error: err.message }, { status: 401 });

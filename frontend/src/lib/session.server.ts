@@ -21,23 +21,32 @@ export interface ResolvedSession {
 }
 
 /**
- * Resolve the current request's session from the cookie. Returns the ctx + the
- * current user, or `null` when there is no/invalid session (the caller — the
- * layout guard — redirects to /login in that case). Throws only on unexpected
- * (non-auth) errors so genuine failures still surface.
+ * Resolve the current request's session. [T-046 单机免登录] 有 session cookie 就照旧
+ * 解析;无/失效 session 不再返回 null,而是以**本机主用户**直通(单机产品打开即用,
+ * 登录页已下线)。返回 null 的路径仅剩「库里一个用户都没有」的异常态(启动 seed 兜底,
+ * 正常不发生);既有调用方的 null→redirect 分支保留为该异常态的兜底。
  */
 export async function resolveSession(): Promise<ResolvedSession | null> {
   const cookieStore = await cookies();
   const rawToken = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!rawToken) return null;
-
   const identity = await getIdentityService();
+
+  if (rawToken) {
+    try {
+      const ctx = await identity.resolveContextFromToken(rawToken);
+      const user = await identity.getCurrentUser(ctx);
+      return { ctx, user };
+    } catch (err) {
+      // 失效 token → 落到下方本机用户直通(与无 cookie 同路径)。
+      if (!(err instanceof AuthenticationError)) throw err;
+    }
+  }
+
   try {
-    const ctx = await identity.resolveContextFromToken(rawToken);
+    const ctx = await identity.resolveLocalContext();
     const user = await identity.getCurrentUser(ctx);
     return { ctx, user };
   } catch (err) {
-    // Missing / revoked / expired session → treat as unauthenticated.
     if (err instanceof AuthenticationError) return null;
     throw err;
   }

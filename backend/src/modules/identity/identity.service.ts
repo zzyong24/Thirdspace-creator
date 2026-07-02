@@ -91,6 +91,9 @@ export interface IdentityService {
   login(input: LoginInput): Promise<LoginResult>;
   register(input: RegisterInput): Promise<RegisterResult>;
   resolveContextFromToken(rawToken: string): Promise<RequestContext>;
+  /** [T-046 单机免登录] 以本机主用户(最早创建)构造 ctx —— 无 session 请求的直通通道。
+   *  库里没有任何用户(不该发生:启动 seed 兜底)时抛 AuthenticationError。 */
+  resolveLocalContext(): Promise<RequestContext>;
   getCurrentUser(ctx: RequestContext): Promise<UserDTO>;
   updateProfile(ctx: RequestContext, patch: ProfilePatch): Promise<UserDTO>;
   logout(ctx: RequestContext, rawToken: string): Promise<void>;
@@ -177,6 +180,18 @@ export function createIdentityService(
       if (!session) throw new AuthenticationError();
       return {
         userId: session.userId,
+        requestId: deps.nextId("req"),
+        source: "user",
+      };
+    },
+
+    async resolveLocalContext() {
+      // [T-046] 单机免登录:本机主用户 = 最早创建的用户(seed 场景即 canonical user)。
+      // 库里一个用户都没有(启动 seed 兜底,正常不发生)→ 与坏 token 同响应,不泄露状态。
+      const user = await repo.findLocalUser();
+      if (!user) throw new AuthenticationError();
+      return {
+        userId: user.id,
         requestId: deps.nextId("req"),
         source: "user",
       };

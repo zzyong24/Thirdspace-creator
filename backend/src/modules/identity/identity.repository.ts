@@ -37,6 +37,8 @@ export interface IdentityRepository {
   seedUser(row: UserRow): Promise<void>;
   createUser(row: UserRow): Promise<UserRow>;
   findUserByEmail(email: string): Promise<UserRow | undefined>;
+  /** 本机主用户 = 最早创建的用户(T-046 单机免登录;seed 场景即 canonical user)。 */
+  findLocalUser(): Promise<UserRow | undefined>;
   getUserById(userId: string): Promise<UserRow>;
   updateUser(userId: string, patch: UserProfilePatch): Promise<UserRow>;
   createSession(input: {
@@ -75,6 +77,16 @@ export function createIdentityRepository(
         .select()
         .from(users)
         .where(eq(users.email, email));
+      return rows[0];
+    },
+
+    async findLocalUser() {
+      // 最早创建的用户 = 本机主用户(单机一人;created_at 是 ISO 文本,字典序即时间序)。
+      const rows = await db
+        .select()
+        .from(users)
+        .orderBy(users.createdAt)
+        .limit(1);
       return rows[0];
     },
 

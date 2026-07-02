@@ -6,13 +6,17 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 // 持久化(ai_conversations/ai_messages)、把流式响应透传(toUIMessageStreamResponse)。
 
 const resolveContextFromToken = vi.fn();
+const resolveLocalContext = vi.fn();
 const createConversation = vi.fn();
 const createMessage = vi.fn();
 const appendAssistantMessage = vi.fn();
 const runChatStream = vi.fn();
 
 vi.mock("@/server/persistence-client", () => ({
-  getIdentityService: async () => ({ resolveContextFromToken }),
+  getIdentityService: async () => ({
+    resolveContextFromToken,
+    resolveLocalContext,
+  }),
   getChatRuntime: async () => ({
     ai: { createConversation, createMessage, appendAssistantMessage },
     resolveModelSpec: vi.fn(),
@@ -51,6 +55,8 @@ function userMessage(text: string) {
 beforeEach(() => {
   resolveContextFromToken.mockReset();
   resolveContextFromToken.mockResolvedValue({ userId: "u-1" });
+  resolveLocalContext.mockReset();
+  resolveLocalContext.mockResolvedValue({ userId: "u-1" });
   createConversation.mockReset();
   createConversation.mockResolvedValue({ id: "conv-1" });
   createMessage.mockReset();
@@ -66,10 +72,12 @@ beforeEach(() => {
 });
 
 describe("POST /api/chat — 鉴权门", () => {
-  it("无 session cookie → 401(不触达装配)", async () => {
+  // [T-046 单机免登录] 无 cookie 不再 401 —— 以本机主用户直通,装配照常触达。
+  it("无 session cookie → 200 直通本机主用户(T-046,装配照常)", async () => {
     const res = await POST(chatReq({ messages: [userMessage("hi")] }));
-    expect(res.status).toBe(401);
-    expect(runChatStream).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(resolveLocalContext).toHaveBeenCalledTimes(1);
+    expect(runChatStream).toHaveBeenCalledTimes(1);
   });
 
   it("非法 JSON body → 400", async () => {
