@@ -10,7 +10,7 @@
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
 | T-044 | 登录按钮 autofill 死灰修复 | ✅ | — | 密码管理器 autofill 不触发 React onChange→按钮死灰;改 FormData 从 DOM 读凭据+按钮仅提交中置灰+空值内联提示,8 测绿真机验可点 |
-| T-043 | BACKLOG 瘦身 + 台账规范/踩坑经验回流 orchestrator | ✅ | orchestrator `rules/` | 看板 58KB→13KB(-78%,31 行零丢失,done 状态列同步);台账规范落 `rules/task-ledger-rules.md`、54 条实战教训落 `rules/field-lessons.md`、SKILL.md Startup 挂引用 |
+| T-043 | BACKLOG 瘦身 + 台账规范/踩坑经验回流 orchestrator | ✅ | `~/.claude/skills/product-to-code-orchestrator/rules/`(项目外·全局 skill) | 看板 58KB→13KB(-78%,31 行零丢失,done 状态列同步);台账规范落 `task-ledger-rules.md`、54 条实战教训落 `field-lessons.md`、SKILL.md Startup 挂引用 |
 | T-012 | SPEC 审核 gate | 🔨 | orchestrator `prompts/spec-reviewer.md` + [REVIEW_LEDGER](docs/superpowers/specs/REVIEW_LEDGER.md) | SPEC 过审机制已实战验证(reviewer+REVIEW_LEDGER+SessionStart 注入)。剩:① reviewer 走 MiniMax spec.review 自动化 ② PreToolUse 硬 hook 自动拦未过审实现 |
 | T-003 | 三方向读侧接真(底座→各模块) | 📋 数据卡 | [同上 §2](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | 三方向读侧接真、mock 让位。已完成:§1.4 hasImportedProjects 单一判据+首页/复盘读真让位+修 2 真 bug(指标 key views??plays 归一;标题回退实为缺 DATABASE_URL 环境态),集成测绿。剩:①选题评论 basis ②知识库过往脚本导入 ③定位 portfolio 接真(净增 feature,非 fixture 让位) |
 | T-004 | ChatBox 进化(上下文感知) | 🔨 | [同上 §3](docs/superpowers/specs/2026-06-30-data-foundation-and-director-chatbox-design.md) | Copilot→useChat+ChatContext 三层注入。slice1+2 done:首波 5 工具+4 surface skill+functionKey 置顶+一键岛深链预调+generative UI,前端 813 测绿。剩:二/三波工具(planning 三件套/script.draft/material.match/publish.platform_adapt)+project surface 深化 |
