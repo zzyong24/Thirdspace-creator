@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-053 | 七步主线贯通(业务流做真·端到端走查验收) | 📋 排 T-049/050 后 | [ALIGNMENT](docs/product-audit/ALIGNMENT.md) | **用户 2026-07-02:「功能与业务流怎么办」。** 四个硬断点接通:①脚本工作台做真(artifactId 走 DB+保存落库+AI 岛对真实项目渲染) ②制作空态门死锁+写真读假环 ③飞轮回流最后一公里(校准录入可达+复盘记录显示+评论 basis 消费=T-007 D7 吸收) ④研究页读重建产物。**验收=亲自真机把一条内容从选题走到复盘回流,每步截图,走不通即任务** |
 | T-049 | 审计修复 Wave A:止血(数据破坏+核心路径 bug) | 📋 | [ALIGNMENT §五](docs/product-audit/ALIGNMENT.md) | B1 剥前缀身份丢失+B2 brief 404(统一 href builder)、B3 定位采纳清空 facets(upsert 改 partial-merge+数据恢复)、B4 标题清简介、B10/B12 write-on-read 竞态、B7 NULLS FIRST+B8 热度×100、B17 经验页垃圾清理+富录入、B5 素材上传断链 |
 | T-050 | 审计修复 Wave B:数据清算(治「怪」根源) | 📋 裁决已定:全删 | [ALIGNMENT §五/§六](docs/product-audit/ALIGNMENT.md) | **用户裁决(2026-07-02):①dy-proj 66 条直接全删 ②canonical demo 4 项目彻底删除(含全部 fixture 注入路径)。** 另:fixture 查表旁路改读 DB(脚本 artifactId/素材元数据/starred)、fixture 兜底全站改 ErrorState、搜索索引接真作品 |
 | T-051 | 审计修复 Wave C:假交互清算 | 📋 | [ALIGNMENT §五](docs/product-audit/ALIGNMENT.md) | 死 tabs×7 接真或砍、项目列表筛选/排序/视图三件套、写真读假环×6(偏好/制作模式/开关/章节/日历/收藏)、死按钮清单(/copilot 404/⌘K/查看全部)、搜索页交互倒置 |
