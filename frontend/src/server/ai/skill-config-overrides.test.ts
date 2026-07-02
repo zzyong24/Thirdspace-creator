@@ -4,6 +4,7 @@ import {
   getTemplate,
   hasTemplate,
   resolveOutputSchema,
+  hasOutputSchema,
   clearSchemaOverride,
 } from "@creatoros/ai-worker";
 import { createDb, type Db } from "@creatoros/backend";
@@ -89,6 +90,37 @@ describe("applySkillConfigOverridesFromDb(确定性,fake store)", () => {
     expect(resolved.jsonSchema).toEqual(overrideSchema);
 
     clearSchemaOverride(SKILL_ID);
+  });
+
+  it("①b [T-040c 热更] reapply 撤掉某行 outputSchema → schema 覆盖被清、resolveOutputSchema 回落内置 Zod(不粘旧覆盖)", async () => {
+    const overrideSchema = {
+      type: "object",
+      properties: { verdict: { type: "string" } },
+      required: ["verdict"],
+      additionalProperties: false,
+    };
+    // 第一次 apply:带 outputSchema 覆盖 → resolveOutputSchema 返 SDK jsonSchema 包(有 .jsonSchema)。
+    await applySkillConfigOverridesFromDb({
+      readPort: fakeReadPort([
+        row({ id: SKILL_ID, outputSchema: overrideSchema }),
+      ]),
+    });
+    expect(
+      (resolveOutputSchema(SKILL_ID) as { jsonSchema?: unknown }).jsonSchema,
+    ).toEqual(overrideSchema);
+
+    // 第二次 apply(热态,**不** _resetRegistry —— 模拟 prompts.put 后 reapplySkillOverrides):
+    // 同一行去掉 outputSchema(null)。clearAllSchemaOverrides 先清空 SCHEMA_OVERRIDES,故旧覆盖不粘住,
+    // resolveOutputSchema 回落内置 Zod(裸 Zod 无 .jsonSchema 属性)。
+    await applySkillConfigOverridesFromDb({
+      readPort: fakeReadPort([row({ id: SKILL_ID })]),
+    });
+    const resolvedAfter = resolveOutputSchema(SKILL_ID) as {
+      jsonSchema?: unknown;
+    };
+    expect(resolvedAfter.jsonSchema).toBeUndefined();
+    // 内置 Zod 契约仍在(chatbox.topic 本就带 outputSchema)。
+    expect(hasOutputSchema(SKILL_ID)).toBe(true);
   });
 
   it("② 库空 → getTemplate 返内置(不被套用改动)", async () => {

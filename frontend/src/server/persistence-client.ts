@@ -850,6 +850,8 @@ function toAgentRow(a: CanonicalAgent): AgentConfigurationRow {
 // cookie via `getIdentityService()`, so the ctx they thread into the transport
 // reads/writes the same store the persistence transport serves.
 interface PersistenceBundle {
+  /** T-040c:重读 skill_config_overrides + 重套进常驻 REGISTRY(prompts.put 热更用)。 */
+  reapplySkillOverrides: () => Promise<unknown>;
   projects: Transport;
   taxonomy: Transport;
   notifications: Transport;
@@ -5071,11 +5073,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 覆盖 chat 三面 skill(chat-runner 走 getTemplate,本片即可配);结构化 runner 走 import 常量,
   // 待 T-040b 改 getTemplate 后才吃到覆盖(诚实标注,不越界)。fire-and-forget 内部逐条 try/catch,
   // 坏 id 只记日志跳过、不阻塞装配。
-  await applySkillConfigOverridesFromDb({
-    readPort: createPgliteSkillConfigOverrideReadPort(db),
-  });
+  // T-040c:把「重读表+重套覆盖」闭包在 db 可见处,启动装配调一次;prompts.put 后经 bundle
+  // 再调一次做热更(compositeTransport 那层没有 db,故经 bundle 暴露)。
+  const reapplySkillOverrides = () =>
+    applySkillConfigOverridesFromDb({
+      readPort: createPgliteSkillConfigOverrideReadPort(db),
+    });
+  await reapplySkillOverrides();
 
   return {
+    reapplySkillOverrides,
     projects,
     taxonomy,
     notifications,
@@ -5289,8 +5296,16 @@ export const compositeTransport: Transport = {
     // served by the module's own transport over the SAME pglite store (foundation
     // §1 registry).
     if (SETTINGS_OPS.has(endpoint.id)) {
-      const settings = await getSettings();
-      return settings.request(endpoint, input, ctx);
+      const bundle = await getBundle();
+      const result = await bundle.settings.request(endpoint, input, ctx);
+      // T-040c 热更:提示词/skill 覆盖 put 成功后,**重读表 + 重套进常驻 REGISTRY**
+      // (overrideTemplatesFromConfig 是「套一次进内存」,非每次 getTemplate 查库)——
+      // 于是下一次 getTemplate/装配即读到新值,**不必重启**。fire-and-forget catch,
+      // 失败只吞、不影响 put 本身的返回。
+      if (endpoint.id === "settings.prompts.put") {
+        await bundle.reapplySkillOverrides().catch(() => {});
+      }
+      return result;
     }
     // Knowledge ops (module 06) — list/create/get + revisions.create +
     // relations.create served by the module's own user-scoped transport over the

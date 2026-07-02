@@ -238,6 +238,18 @@ export function clearSchemaOverride(id: string): void {
   SCHEMA_OVERRIDES.delete(id);
 }
 
+/**
+ * 清空**所有** config 通路下发的 JSON Schema 输出契约覆盖(全部回落到内置 Zod)。
+ *
+ * T-040c 热更用:SCHEMA_OVERRIDES 只由 `overrideTemplatesFromConfig` 写入,故它整体 = 配置面
+ * 下发的 schema 状态。`applySkillConfigOverridesFromDb` 读全表当单一真值,重套前先调本函数清空,
+ * 再逐行按当前表内容重建 —— 于是「撤掉某行的 outputSchema」能真正热更生效(不清则旧 schema 粘住)。
+ * 注意:`registerAllTemplates()` 只重置 REGISTRY 的文本/模板字段,**不碰** SCHEMA_OVERRIDES,故需本函数。
+ */
+export function clearAllSchemaOverrides(): void {
+  SCHEMA_OVERRIDES.clear();
+}
+
 /** 测试/重置用:清空注册表 + schema 覆盖。 */
 export function _resetRegistry(): void {
   REGISTRY.clear();

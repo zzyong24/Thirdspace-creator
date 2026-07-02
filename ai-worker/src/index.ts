@@ -132,6 +132,7 @@ export {
   overrideTemplates,
   overrideTemplatesFromConfig,
   clearSchemaOverride,
+  clearAllSchemaOverrides,
   _resetRegistry,
   type SkillConfigOverride,
 } from "./prompt/registry";

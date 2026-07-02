@@ -17,6 +17,7 @@ import "server-only";
 
 import {
   registerAllTemplates,
+  clearAllSchemaOverrides,
   overrideTemplatesFromConfig,
   type SkillConfigOverride,
 } from "@creatoros/ai-worker";
@@ -120,6 +121,10 @@ export async function applySkillConfigOverridesFromDb(
 ): Promise<ApplySkillConfigOverridesResult> {
   // [gate-F1] 无条件先注册内置(幂等)。不依赖某处已注册。
   registerAllTemplates();
+  // T-040c 热更正确性:本函数读全表 = schema 覆盖的单一真值。registerAllTemplates 只重置 REGISTRY
+  // 的文本/模板字段,**不碰** SCHEMA_OVERRIDES;若不先清,已撤掉 outputSchema 的行会让旧 schema 粘住、
+  // 无法热更撤销。故重套前先清空全部 config 通路 schema 覆盖,再按当前表逐行重建(幂等真值)。
+  clearAllSchemaOverrides();
 
   const log = deps.logger ?? ((m: string) => console.warn(m));
   const rows = await deps.readPort.loadAll();
