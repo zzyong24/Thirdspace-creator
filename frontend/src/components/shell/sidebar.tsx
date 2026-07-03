@@ -305,9 +305,11 @@ function SidebarContextualCard({ variant, userDisplayName }: SidebarContextualCa
       <p className="text-muted-foreground">
         {`${userDisplayName}，今天想先做点什么？`}
       </p>
-      {/* bug #3:query-only href(以 `?` 开头)= 保持当前页路径,就地开 Copilot 浮层,不跳首页。 */}
+      {/* bug #3:query-only href(以 `?` 开头)= 保持当前页路径,就地开 Copilot 浮层,不跳首页。
+          [T-096 #1] 显式 scope=global:全局入口有自己的会话桶(不再借 topics 桶),
+          延续全局会话 + 历史只列全局(修「左下角每次新建对话」根因)。 */}
       <Link
-        href="?copilot=open"
+        href="?copilot=open&scope=global"
         className="text-brand underline-offset-4 hover:underline"
       >
         打开 AI 助手

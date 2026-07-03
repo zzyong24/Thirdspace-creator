@@ -38,6 +38,8 @@ export function toConversationDto(row: ConversationRow): AIConversationResource 
     id: row.id,
     userId: row.userId,
     projectId: row.projectId ?? null,
+    // T-096 会话作用域(入口级隔离)。老行经迁移 backfill 后必有值;'global' 兜底防御。
+    scope: row.scope ?? "global",
     title: row.title,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

@@ -48,6 +48,8 @@ export interface RepoDeps {
 export interface CreateConversationInput {
   title: string;
   projectId: string | null;
+  // T-096 会话作用域(SPEC 2026-07-03 §1.3)。缺省 'global'(与列 DEFAULT 一致)。
+  scope?: string;
 }
 
 export interface CreateMessageInput {
@@ -104,9 +106,11 @@ export interface AiRepository {
   seedAgentConfigs(rows: AgentConfigRow[]): Promise<void>;
   seedModelConfigs(rows: ModelConfigRow[]): Promise<void>;
 
+  // T-096:scope 传了按作用域过滤(入口级历史隔离,内层于 user ownership 门);不传全量(旧调用不破)。
   listConversations(page: {
     limit: number;
     offset: number;
+    scope?: string;
   }): Promise<{ rows: ConversationRow[]; total: number }>;
   createConversation(input: CreateConversationInput): Promise<ConversationRow>;
   requireConversation(conversationId: string): Promise<ConversationRow>;
@@ -186,18 +190,26 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       await db.insert(modelConfigurations).values(rows).onConflictDoNothing();
     },
 
-    async listConversations({ limit, offset }) {
+    async listConversations({ limit, offset, scope }) {
+      // T-096:scope 过滤是 user ownership 门的内层 —— 跨 scope 的会话在列表里**不出现**
+      // (隔离语义:不可见,不是置灰)。不传 scope 维持全量(旧调用不破)。
+      const where = scope
+        ? and(
+            eq(aiConversations.userId, deps.userId),
+            eq(aiConversations.scope, scope),
+          )
+        : eq(aiConversations.userId, deps.userId);
       const rows = await db
         .select()
         .from(aiConversations)
-        .where(eq(aiConversations.userId, deps.userId))
+        .where(where)
         .orderBy(desc(aiConversations.updatedAt))
         .limit(limit)
         .offset(offset);
       const all = await db
         .select({ id: aiConversations.id })
         .from(aiConversations)
-        .where(eq(aiConversations.userId, deps.userId));
+        .where(where);
       return { rows, total: all.length };
     },
 
@@ -208,6 +220,8 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
           id: deps.nextId("ai-conv"),
           userId: deps.userId,
           projectId: input.projectId ?? null,
+          // T-096:落作用域(缺省 global,与列 DEFAULT / 迁移 backfill 语义一致)。
+          scope: input.scope && input.scope.length > 0 ? input.scope : "global",
           title: input.title,
           createdAt: deps.now(),
           updatedAt: deps.now(),

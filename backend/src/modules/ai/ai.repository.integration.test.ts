@@ -207,4 +207,72 @@ describe("ai repository (pglite)", () => {
     const agent = await repo.getAgentConfig("script.rewrite");
     expect(agent?.agentType).toBe("script.rewrite");
   });
+
+  // ── [T-096] 会话作用域(scope)—— SPEC 2026-07-03 §1.3 + §3 防泄漏矩阵 #1/#9 ──
+  it("[T-096] createConversation 落 scope;缺省 'global'(与列 DEFAULT 一致)", async () => {
+    const repo = repoFor(db, "user-a");
+    const global = await repo.createConversation({
+      title: "全局闲聊",
+      projectId: null,
+    });
+    expect(global.scope).toBe("global");
+    const distill = await repo.createConversation({
+      title: "蒸馏",
+      projectId: null,
+      scope: "surface:knowledge-distill",
+    });
+    expect(distill.scope).toBe("surface:knowledge-distill");
+  });
+
+  it("[T-096 矩阵#1/#9] listConversations 按 scope 过滤:跨 scope 会话在列表中不出现;计数与 DB 按 scope 一致", async () => {
+    const repo = repoFor(db, "user-a");
+    await repo.createConversation({
+      title: "蒸馏 A",
+      projectId: null,
+      scope: "surface:knowledge-distill",
+    });
+    await repo.createConversation({
+      title: "选题 B",
+      projectId: null,
+      scope: "surface:topics",
+    });
+    await repo.createConversation({ title: "全局 C", projectId: null });
+
+    // scope B(surface:topics)拉历史 → 不含 A(蒸馏)的会话(硬约束②)。
+    const topics = await repo.listConversations({
+      limit: 20,
+      offset: 0,
+      scope: "surface:topics",
+    });
+    expect(topics.total).toBe(1);
+    expect(topics.rows.map((r) => r.title)).toEqual(["选题 B"]);
+
+    const distill = await repo.listConversations({
+      limit: 20,
+      offset: 0,
+      scope: "surface:knowledge-distill",
+    });
+    expect(distill.total).toBe(1);
+    expect(distill.rows[0]!.title).toBe("蒸馏 A");
+
+    // 不传 scope 维持全量(契约 additive,旧调用零破坏)。
+    const all = await repo.listConversations({ limit: 20, offset: 0 });
+    expect(all.total).toBe(3);
+  });
+
+  it("[T-096] scope 过滤是 user ownership 门的内层:同 scope 跨用户仍不可见", async () => {
+    const repoA = repoFor(db, "user-a");
+    const repoB = repoFor(db, "user-b");
+    await repoA.createConversation({
+      title: "A 的全局",
+      projectId: null,
+      scope: "global",
+    });
+    const listB = await repoB.listConversations({
+      limit: 20,
+      offset: 0,
+      scope: "global",
+    });
+    expect(listB.total).toBe(0);
+  });
 });

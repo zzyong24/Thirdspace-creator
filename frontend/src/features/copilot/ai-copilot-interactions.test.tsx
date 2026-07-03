@@ -376,9 +376,9 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(screen.getByLabelText("提交提示给 Copilot")).not.toBeDisabled();
   });
 
-  it("会话持久化:该 surface 存过 conversationId → 挂载读回历史(listMessages → setMessages 映射)", async () => {
-    // 预置该 surface(默认 topics)的存档 + 后端返回两条历史消息。
-    window.localStorage.setItem("copilot:conv:topics", "conv-restore");
+  it("[T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话)", async () => {
+    // 预置该 scope(裸打开 = global,不再借 topics 桶)的指针 + 后端返回两条历史消息。
+    window.localStorage.setItem("copilot:conv:global", "conv-restore");
     listMessages.mockResolvedValueOnce([
       { id: "m1", role: "user", content: "上次问的" },
       { id: "m2", role: "assistant", content: "上次答的" },
@@ -409,22 +409,80 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     });
   });
 
-  it("会话持久化:读回失败(会话被删)→ 清失效存档 + 静默降级为空会话(不抛)", async () => {
-    window.localStorage.setItem("copilot:conv:topics", "conv-gone");
+  it("[T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档", async () => {
+    window.localStorage.setItem("copilot:conv:global", "conv-gone");
     listMessages.mockRejectedValueOnce(new Error("404 conversation not found"));
     render(<AICopilotContent viewModel={VM} />);
 
     await waitFor(() => {
       expect(listMessages).toHaveBeenCalled();
     });
-    // 失效存档被清除,降级为干净空会话。
+    // 失效指针被清除;随即走服务端兜底(listConversations?scope=global,mock 空 → 诚实空会话)。
     await waitFor(() => {
-      expect(window.localStorage.getItem("copilot:conv:topics")).toBeNull();
+      expect(window.localStorage.getItem("copilot:conv:global")).toBeNull();
+    });
+    await waitFor(() => {
+      expect(listConversations).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: expect.objectContaining({ scope: "global" }),
+        }),
+      );
     });
   });
 
-  it("历史记录按钮做实:点开 → listConversations 列出会话;点某条 → 读回该会话消息", async () => {
+  it("[T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治)", async () => {
+    // 无任何本地指针;服务端该 scope 有一条最近会话 → 自动恢复它的消息。
+    listConversations.mockResolvedValueOnce([
+      { id: "conv-latest", title: "上次的全局对话", createdAt: "2026-07-01T08:00:00.000Z" },
+    ]);
+    listMessages.mockResolvedValueOnce([
+      { id: "m1", role: "assistant", content: "我们上次聊到这里" },
+    ]);
+    render(<AICopilotContent viewModel={VM} />);
+
+    // 兜底查询限定当前 scope(global),只取最近一条。
+    await waitFor(() => {
+      expect(listConversations).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: expect.objectContaining({ page: 1, pageSize: 1, scope: "global" }),
+        }),
+      );
+    });
+    // 恢复该会话:读回消息 + 指针重建。
+    await waitFor(() => {
+      expect(listMessages).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { conversationId: "conv-latest" } }),
+      );
+    });
+    await waitFor(() => {
+      expect(window.localStorage.getItem("copilot:conv:global")).toBe(
+        "conv-latest",
+      );
+    });
+  });
+
+  it("[T-096 矩阵#5] 选题岛「新对话」只清 surface:topics 指针,global 指针纹丝不动(不同桶互不覆盖)", async () => {
     const user = userEvent.setup();
+    // 左下角(global)已有延续中的会话指针;当前面板从选题岛打开(surface=topics)。
+    window.localStorage.setItem("copilot:conv:global", "conv-global-keep");
+    window.localStorage.setItem("copilot:conv:surface:topics", "conv-topics");
+    mockSearch = "copilot=open&surface=topics";
+    render(<AICopilotContent viewModel={VM} />);
+
+    await user.click(screen.getByRole("button", { name: /新对话/ }));
+    // 选题岛自己的桶被清;global 桶不受影响。
+    expect(
+      window.localStorage.getItem("copilot:conv:surface:topics"),
+    ).toBeNull();
+    expect(window.localStorage.getItem("copilot:conv:global")).toBe(
+      "conv-global-keep",
+    );
+  });
+
+  it("[T-096 矩阵#9] 历史记录:点开 → listConversations 只列当前 scope;点某条 → 读回该会话消息", async () => {
+    const user = userEvent.setup();
+    // 第一次调用是挂载时的服务端兜底(该 scope 无历史);第二次才是「历史记录」面板。
+    listConversations.mockResolvedValueOnce([]);
     listConversations.mockResolvedValueOnce([
       { id: "conv-a", title: "选题：AI 浏览器", createdAt: "2026-06-20T08:30:00.000Z" },
       { id: "conv-b", title: "选题：短视频留存", createdAt: "2026-06-21T09:00:00.000Z" },
@@ -433,12 +491,22 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       { id: "x1", role: "assistant", content: "会话 A 的历史" },
     ]);
     render(<AICopilotContent viewModel={VM} />);
+    // 等挂载兜底完成,避免与面板懒加载竞争 mock 队列。
+    await waitFor(() => expect(listConversations).toHaveBeenCalledTimes(1));
 
-    // 点「历史记录」→ 懒加载列表。
+    // 点「历史记录」→ 懒加载列表(限定当前 scope=global —— 跨 scope 会话不出现)。
     await user.click(screen.getByRole("button", { name: /历史记录/ }));
     await waitFor(() => {
-      expect(listConversations).toHaveBeenCalled();
+      expect(listConversations).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          query: expect.objectContaining({ scope: "global" }),
+        }),
+      );
     });
+    // 面板标注范围(诚实提示只列本入口)。
+    expect(
+      document.querySelector('[data-slot="copilot-history-scope"]'),
+    ).not.toBeNull();
     const item = await screen.findByText("选题：AI 浏览器");
     expect(item).not.toBeNull();
 
@@ -459,14 +527,14 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     });
   });
 
-  it("新对话:点「新对话」→ 清空会话 + 清该 surface 存档", async () => {
+  it("新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条)", async () => {
     const user = userEvent.setup();
-    window.localStorage.setItem("copilot:conv:topics", "conv-existing");
+    window.localStorage.setItem("copilot:conv:global", "conv-existing");
     render(<AICopilotContent viewModel={VM} />);
 
     await user.click(screen.getByRole("button", { name: /新对话/ }));
     expect(setMessages).toHaveBeenCalledWith([]);
-    expect(window.localStorage.getItem("copilot:conv:topics")).toBeNull();
+    expect(window.localStorage.getItem("copilot:conv:global")).toBeNull();
   });
 
   describe("T-039b @项目引用", () => {

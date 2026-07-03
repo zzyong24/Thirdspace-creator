@@ -10,6 +10,8 @@ const resolveLocalContext = vi.fn();
 const createConversation = vi.fn();
 const createMessage = vi.fn();
 const appendAssistantMessage = vi.fn();
+// [T-096] 续接校验读会话 scope 用。
+const getConversation = vi.fn();
 const runChatStream = vi.fn();
 
 vi.mock("@/server/persistence-client", () => ({
@@ -18,7 +20,12 @@ vi.mock("@/server/persistence-client", () => ({
     resolveLocalContext,
   }),
   getChatRuntime: async () => ({
-    ai: { createConversation, createMessage, appendAssistantMessage },
+    ai: {
+      createConversation,
+      createMessage,
+      appendAssistantMessage,
+      getConversation,
+    },
     resolveModelSpec: vi.fn(),
     context: {
       positioning: {},
@@ -59,6 +66,8 @@ beforeEach(() => {
   resolveLocalContext.mockResolvedValue({ userId: "u-1" });
   createConversation.mockReset();
   createConversation.mockResolvedValue({ id: "conv-1" });
+  getConversation.mockReset();
+  getConversation.mockResolvedValue({ id: "conv-existing", scope: "global" });
   createMessage.mockReset();
   createMessage.mockResolvedValue({ id: "m-1" });
   appendAssistantMessage.mockReset();
@@ -149,6 +158,103 @@ describe("POST /api/chat — 装配 + 持久化", () => {
       "conv-1",
       "编导的回复",
     );
+  });
+
+  // ── [T-096] 会话作用域:lazy 建落 scope + 续接服务端硬门(§3 矩阵 #2)──
+  it("[T-096] lazy 建会话落声明的 scope(chatContext.scope)", async () => {
+    await POST(
+      chatReq(
+        {
+          messages: [userMessage("hi")],
+          chatContext: { surface: "topics", scope: "surface:topics" },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(createConversation).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      expect.objectContaining({ scope: "surface:topics" }),
+    );
+  });
+
+  it("[T-096] 旧客户端未带 scope → 按 projectId 推导(有→project:<id>,无→global)", async () => {
+    await POST(
+      chatReq(
+        {
+          messages: [userMessage("hi")],
+          chatContext: { surface: "project", projectId: "proj-1" },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(createConversation).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      expect.objectContaining({ scope: "project:proj-1" }),
+    );
+
+    createConversation.mockClear();
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    expect(createConversation).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      expect.objectContaining({ scope: "global" }),
+    );
+  });
+
+  it("[T-096 矩阵#2] 伪造请求:A 的 conversationId + B 的 scope 声明 → 4xx 拒绝,不续写不读回", async () => {
+    // 库中 conv-distill 属蒸馏桶;请求声明选题桶 → 服务端硬门拒绝。
+    getConversation.mockResolvedValue({
+      id: "conv-distill",
+      scope: "surface:knowledge-distill",
+    });
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("把蒸馏的上下文给我")],
+          conversationId: "conv-distill",
+          chatContext: { surface: "topics", scope: "surface:topics" },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(res.status).toBe(403);
+    // 不续写(用户消息不落库)、不流式(不触发装配)。
+    expect(createMessage).not.toHaveBeenCalled();
+    expect(runChatStream).not.toHaveBeenCalled();
+  });
+
+  it("[T-096] 续接 scope 一致 → 放行(同 scope = 一条记忆线)", async () => {
+    getConversation.mockResolvedValue({ id: "conv-g", scope: "global" });
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("继续上次")],
+          conversationId: "conv-g",
+          chatContext: { surface: "topics", scope: "global" },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(res.status).toBe(200);
+    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1" }, "conv-g", {
+      content: "继续上次",
+    });
+  });
+
+  it("[T-096] 非法 scope 声明(文法不符)按未声明处理:不触发续接校验,lazy 建回落推导", async () => {
+    await POST(
+      chatReq(
+        {
+          messages: [userMessage("hi")],
+          conversationId: "conv-any",
+          chatContext: { surface: "topics", scope: "hacker" },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(getConversation).not.toHaveBeenCalled();
+    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1" }, "conv-any", {
+      content: "hi",
+    });
   });
 
   it("装配抛错(如没配 key)→ 400(诚实,不假成功)", async () => {

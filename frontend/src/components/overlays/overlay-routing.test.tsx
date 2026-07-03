@@ -222,6 +222,33 @@ describe("OverlayController", () => {
     expect(opts).toMatchObject({ scroll: false });
   });
 
+  it("[T-096 矩阵#6 / T-080 回归] 关闭清掉全部深链伴生参数(surface/fn/prefill/selKind/selId/scope),无残参", async () => {
+    // 模拟从复盘一键岛深链打开(带 surface/fn/selection),外加 T-096 的 scope 声明与
+    // 一个无关的白名单参数 filter —— 关闭后只有 filter 幸存:残留的 scope/selKind 会让
+    // 下一个入口误落上一入口的会话桶/带旧上下文(泄漏路径)。
+    const params = new URLSearchParams(
+      "copilot=open&surface=review&fn=review.analyze&prefill=x&selKind=project&selId=proj-9&scope=global&filter=active",
+    );
+    resetNext({ pathname: "/projects", searchParams: params });
+    const { OverlayController } = await importOverlayController();
+    render(
+      <RoutedOverlayController>
+        <OverlayController>
+          <div>
+            <button type="button" data-testid="copilot-close-deep" data-overlay-close>
+              Close
+            </button>
+          </div>
+        </OverlayController>
+      </RoutedOverlayController>,
+    );
+
+    await userEvent.click(screen.getByTestId("copilot-close-deep"));
+
+    const [target] = mockNext.state.replace.mock.calls[0] ?? [];
+    expect(target).toBe("/projects?filter=active");
+  });
+
   it("closes to just the pathname when no other search params are present", async () => {
     const params = new URLSearchParams("copilot=open");
     resetNext({ pathname: "/projects", searchParams: params });

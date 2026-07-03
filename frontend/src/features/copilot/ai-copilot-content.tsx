@@ -130,6 +130,8 @@ import {
   toUIMessages,
   type WireAIMessage,
 } from "./conversation-persistence";
+// [T-096] 会话作用域:入口参数 → scope(纯函数),历史/恢复/新对话全按它分桶。
+import { resolveChatScope, scopeHistoryLabel } from "./chat-scope";
 import {
   detectMentionQuery,
   filterProjectOptions,
@@ -641,9 +643,26 @@ export function AICopilotContent({
   const selId = embed?.selection?.id ?? (searchParams?.get("selId") || undefined);
   const selTitle =
     embed?.selection?.title ?? (searchParams?.get("selTitle") || undefined);
-  // [T-055b] 会话持久化 key:内嵌模式按宿主给的 persistKey 隔离(如 project:<id>),
-  // 否则按 surface(浮层原行为)。
-  const persistKey = embed?.persistKey ?? surface;
+  // [T-096] 会话作用域(scope)—— 历史列表/恢复/新对话的归属桶,与 surface(技能装配)解耦。
+  // 入口 → scope 总表见 chat-scope.ts:内嵌右栏 = project:<id>;深链选中项目(复盘岛/选题卡
+  // brief.fill)归并 project:<id>;一键岛 = surface:<name>;左下角/首页显式 ?scope=global;
+  // 裸 ?copilot=open(旧深链)回落 global —— 全局入口不再借 topics 桶(根因链断点 1 根治)。
+  const scope = resolveChatScope({
+    scopeParam: embed ? null : searchParams?.get("scope") || null,
+    // 注意传 URL 原始值(可能为 null),不传回落默认的 `surface` —— 裸打开必须判成 global。
+    urlSurface: embed ? null : searchParams?.get("surface") || null,
+    selKind: embed ? null : searchParams?.get("selKind") || null,
+    selId: embed ? null : searchParams?.get("selId") || null,
+    embed: embed
+      ? {
+          surface: embed.surface,
+          persistKey: embed.persistKey,
+          selection: embed.selection
+            ? { kind: embed.selection.kind, id: embed.selection.id }
+            : undefined,
+        }
+      : null,
+  });
   // [T-055b] 上下文可摘:用户点掉 chip 后,本面板实例不再注入这份选中态(会话继续,
   // 只是后续轮次不带 selection/projectId)。
   const [selectionDismissed, setSelectionDismissed] = React.useState(false);
@@ -654,7 +673,7 @@ export function AICopilotContent({
     !embed && surface === DEFAULT_SURFACE && !functionKey && !selKind;
   // 会话持久化(本切片):前端持一个 conversationId,放进 transport body(和 chatContext 并列)
   // 让后端续接同一会话;并从 /api/chat 的响应头 `x-conversation-id` 捕获后端 lazy 建/复用的
-  // 会话 id 存起来。conversationId 随 surface 切换重置(不同页面各自独立会话)。
+  // 会话 id 存起来。conversationId 随 scope 切换重置(不同入口各自独立会话)。
   const [conversationId, setConversationId] = React.useState<string | null>(
     null,
   );
@@ -662,17 +681,17 @@ export function AICopilotContent({
   // 重建 transport(重建会打断进行中的流)。fetch 包装层用 ref 里的 setter 回写捕获到的 id。
   const conversationIdRef = React.useRef<string | null>(null);
   conversationIdRef.current = conversationId;
-  // 捕获到 x-conversation-id 时:更新 state + 持久化。[T-055b] 持久化桶用 persistKey
-  // (内嵌按项目隔离;浮层 = surface,原行为);ref 读最新值,让 fetch 包装闭包不随
+  // 捕获到 x-conversation-id 时:更新 state + 持久化。[T-096] 持久化桶 = scope(global /
+  // project:<id> / surface:<name>,入口级隔离);ref 读最新值,让 fetch 包装闭包不随
   // key 变(避免重建 transport 打断流)。
-  const persistKeyRef = React.useRef(persistKey);
-  persistKeyRef.current = persistKey;
+  const scopeRef = React.useRef(scope);
+  scopeRef.current = scope;
   const captureConversationId = React.useCallback((id: string) => {
     if (!id) return;
     if (conversationIdRef.current === id) return;
     conversationIdRef.current = id;
     setConversationId(id);
-    writeStoredConversationId(persistKeyRef.current, id);
+    writeStoredConversationId(scopeRef.current, id);
   }, []);
 
   // @项目引用(T-039b):输入框 @ 选中的项目。存在时等价「选中态项目」注入后端(见下 chatContextBody)。
@@ -684,10 +703,13 @@ export function AICopilotContent({
   const chatContextBody = React.useMemo(() => {
     const chatContext: {
       surface: string;
+      // [T-096] 作用域声明(必带):服务端据它落 lazy 建会话的归属,并在续接时与库中会话
+      // 的 scope 比对(不一致 4xx)—— 隔离锁在服务端。
+      scope: string;
       functionKey?: string;
       projectId?: string;
       selection?: { kind: string; ids: string[]; label?: string };
-    } = { surface };
+    } = { surface, scope };
     if (functionKey) chatContext.functionKey = functionKey;
     if (!selectionDismissed && selKind && selId) {
       chatContext.selection = {
@@ -714,6 +736,7 @@ export function AICopilotContent({
     return { chatContext };
   }, [
     surface,
+    scope,
     functionKey,
     selKind,
     selId,
@@ -800,7 +823,7 @@ export function AICopilotContent({
         setMessages(mapped);
         conversationIdRef.current = id;
         setConversationId(id);
-        writeStoredConversationId(persistKeyRef.current, id);
+        writeStoredConversationId(scopeRef.current, id);
         return true;
       } catch (err) {
         console.error("[copilot] load conversation failed:", err);
@@ -810,47 +833,73 @@ export function AICopilotContent({
     [setMessages],
   );
 
-  // 二次进入读回(SPEC 本切片):组件挂载 / surface 切换时,若该 surface 存过 conversationId
-  // → 读回其消息填充对话。仅客户端读 localStorage(SSR 安全)。切 surface 会重置对话:先清空,
-  // 再按新 surface 的存档读回(没有则保持空会话)。prefilledRef 一并复位,让新 surface 的
-  // 一键岛预调仍可触发一次。
-  const hydratedForKeyRef = React.useRef<string | null>(null);
-  React.useEffect(() => {
-    if (hydratedForKeyRef.current === persistKey) return;
-    hydratedForKeyRef.current = persistKey;
-    const stored = readStoredConversationId(persistKey);
-    // 持久化桶变了(surface 或内嵌项目切换):重置会话态。有存档则读回,否则留空会话。
-    conversationIdRef.current = stored;
-    setConversationId(stored);
-    if (stored) {
-      // 有存档 → 抑制一键岛预填(prefilledRef=true):读回是「续上次」,输入框不再叠预填话术。
-      prefilledRef.current = true;
-      void (async () => {
-        const ok = await loadConversation(stored);
-        // 读回失败(会话被删)→ 清掉这条失效存档,降级为干净空会话,并放开预填(可重新填一次)。
-        if (!ok) {
-          writeStoredConversationId(persistKey, null);
-          conversationIdRef.current = null;
-          setConversationId(null);
-          setMessages([]);
-          prefilledRef.current = false;
-        }
-      })();
-    } else {
-      // 无存档 → 干净空会话,放开一键岛预填(首次进入可预填一次)。
-      prefilledRef.current = false;
-      setMessages([]);
-    }
-    // loadConversation 依赖稳定;persistKey 变化触发读回。
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [persistKey]);
-
-  // 历史记录(SPEC 本切片,做实占位按钮):点「历史记录」→ 拉过往会话列表(标题+时间),
-  // 点某条 → 切到该会话 + 读回消息。open 时懒加载一次(避免每次挂载都打请求)。
+  // 历史记录面板状态(声明提前:下方 scope 恢复 effect 在 scope 切换时要重置它)。
+  // [T-096] 历史只列**当前 scope**(listConversations 带 scope);scope 变化清缓存重拉。
   const [historyOpen, setHistoryOpen] = React.useState(false);
   const [historyRows, setHistoryRows] = React.useState<
     ReadonlyArray<WireConversation> | null
   >(null);
+
+  // [T-096] 二次进入恢复(双路,SPEC §1.4):组件挂载 / scope 切换时恢复该入口的最近会话。
+  //   路 1(快路):localStorage 指针 `copilot:conv:<scope>` → 读回其消息;
+  //   路 2(服务端兜底):指针缺失/读回失败 → listConversations?scope= 第一条(updatedAt 最新)
+  //     即「该入口最近会话」—— 清缓存/换浏览器/指针毁档都不再失忆(根因链断点 3/4 根治);
+  //   两路皆空 → 诚实空会话(该入口真的从没聊过)。
+  // 读回失败自愈不毁档:失效指针只清指针本身,随即走服务端兜底,不再「一错清档、永远新建」。
+  const hydratedForKeyRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (hydratedForKeyRef.current === scope) return;
+    hydratedForKeyRef.current = scope;
+    // scope 变了(入口/内嵌项目切换):重置会话态 + 历史面板缓存(历史只列当前 scope)。
+    setHistoryRows(null);
+    setHistoryOpen(false);
+    const stored = readStoredConversationId(scope);
+    conversationIdRef.current = stored;
+    setConversationId(stored);
+    if (stored) {
+      // 有指针 → 先抑制一键岛预填(读回是「续上次」,输入框不再叠预填话术)。
+      prefilledRef.current = true;
+    }
+    void (async () => {
+      // 路 1:指针快路。失败(会话被删/网络错)→ 清失效指针,落入路 2。
+      if (stored) {
+        const ok = await loadConversation(stored);
+        if (ok) return;
+        writeStoredConversationId(scope, null);
+      }
+      // 路 2:服务端兜底 —— 该 scope 最近一条会话(只查本 scope,跨 scope 会话绝不流入)。
+      try {
+        const rows = (await client.listConversations({
+          params: undefined,
+          query: { page: 1, pageSize: 1, scope },
+          body: undefined,
+        })) as unknown as ReadonlyArray<WireConversation> | null | undefined;
+        const latest = rows?.[0];
+        if (latest?.id) {
+          const ok = await loadConversation(latest.id);
+          if (ok) {
+            // 服务端恢复成功 = 「续上次」,同样抑制预填。
+            prefilledRef.current = true;
+            return;
+          }
+        }
+      } catch (err) {
+        // 兜底失败(离线等)→ 诚实空会话,不弹错;下次进入再试。
+        console.error("[copilot] scope fallback recovery failed:", err);
+      }
+      // 两路皆空 → 干净空会话,放开一键岛预填(首次进入可预填一次)。
+      conversationIdRef.current = null;
+      setConversationId(null);
+      setMessages([]);
+      prefilledRef.current = false;
+    })();
+    // loadConversation 依赖稳定;scope 变化触发恢复。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scope]);
+
+  // 历史记录(SPEC 本切片,做实占位按钮):点「历史记录」→ 拉过往会话列表(标题+时间),
+  // 点某条 → 切到该会话 + 读回消息。open 时懒加载一次(scope 切换时缓存已被上方 effect 清掉)。
+  // [T-096] 隔离语义:仅列当前 scope 的会话 —— 跨 scope 会话在列表中**不出现**(不是置灰)。
   const toggleHistory = React.useCallback(() => {
     setHistoryOpen((prev) => {
       const next = !prev;
@@ -859,7 +908,7 @@ export function AICopilotContent({
           try {
             const rows = (await client.listConversations({
               params: undefined,
-              query: { page: 1, pageSize: 20 },
+              query: { page: 1, pageSize: 20, scope: scopeRef.current },
               body: undefined,
             })) as unknown as ReadonlyArray<WireConversation> | null | undefined;
             setHistoryRows(rows ?? []);
@@ -880,13 +929,15 @@ export function AICopilotContent({
     },
     [loadConversation],
   );
-  // 新对话:清当前会话 id + 清消息 + 清该 surface 的存档,下次发言由后端 lazy 建新会话。
+  // 新对话([T-096] 同 scope 内新开一条):清当前会话 id + 清消息 + 清**当前 scope**的指针,
+  // 下轮发言由后端 lazy 建新会话(仍落当前 scope)。绝不跨 scope、绝不影响其它 scope 的指针
+  // (选题岛「新对话」动的是 surface:topics 桶,global 的指针纹丝不动)。
   // prefilledRef 复位,让「新对话」后一键岛预调仍可触发一次。
   const startNewConversation = React.useCallback(() => {
     setHistoryOpen(false);
     conversationIdRef.current = null;
     setConversationId(null);
-    writeStoredConversationId(persistKeyRef.current, null);
+    writeStoredConversationId(scopeRef.current, null);
     setMessages([]);
     prefilledRef.current = false;
   }, [setMessages]);
@@ -1158,6 +1209,14 @@ export function AICopilotContent({
             aria-label="历史会话"
             className="absolute right-0 top-full z-20 mt-1 max-h-64 w-64 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg"
           >
+            {/* [T-096] 范围提示:诚实标注只列当前入口(scope)的会话,不再假装全局列表。 */}
+            <p
+              data-slot="copilot-history-scope"
+              data-scope={scope}
+              className="border-b border-border/60 px-2 pb-1 pt-0.5 text-[10px] font-medium text-text-subtle"
+            >
+              {scopeHistoryLabel(scope)}
+            </p>
             {historyRows === null ? (
               <p
                 data-slot="copilot-history-loading"

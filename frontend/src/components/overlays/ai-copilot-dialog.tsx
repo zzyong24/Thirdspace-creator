@@ -57,9 +57,8 @@ export function AICopilotDialog({ pathname }: AICopilotDialogProps) {
           >
             Creator Copilot
           </h2>
-          <span className="rounded-md bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand">
-            ⌘ K　全局唤醒
-          </span>
+          {/* [T-096 #3] 「⌘K 全局唤醒」假徽标已摘:⌘K 实际绑定 /search(T-051 裁决),
+              浮层从无该监听 —— 死入口不再假承诺(T-048 审计实锤)。 */}
         </div>
         <div className="flex items-center gap-3">
           {/* 「历史记录」按钮已下沉到 AICopilotContent 的头部并做实(它持有 conversationId +

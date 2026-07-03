@@ -207,13 +207,20 @@ export interface RecordCandidateInput {
 }
 
 export interface AiService {
+  // T-096:page.scope 传了只列该作用域(入口级历史隔离);不传全量(旧调用不破)。
   listConversations(
     ctx: RequestContext,
-    page: { limit: number; offset: number },
+    page: { limit: number; offset: number; scope?: string },
   ): Promise<{ rows: AIConversationResource[]; total: number }>;
   createConversation(
     ctx: RequestContext,
-    body: { title: string; projectId?: string | null },
+    body: { title: string; projectId?: string | null; scope?: string },
+  ): Promise<AIConversationResource>;
+  // T-096:/api/chat 续接校验用 —— 读单条会话(ownership 门,跨用户/未知 id → OwnershipError)。
+  // 路由据其 scope 与请求声明比对,不一致按 OwnershipError 语义 4xx 拒绝(隔离锁在服务端)。
+  getConversation(
+    ctx: RequestContext,
+    conversationId: string,
   ): Promise<AIConversationResource>;
   createMessage(
     ctx: RequestContext,
@@ -389,7 +396,15 @@ export function createAiService(deps: ServiceDeps): AiService {
       const row = await repoFor(ctx).createConversation({
         title: body.title,
         projectId: body.projectId ?? null,
+        scope: body.scope,
       });
+      return toConversationDto(row);
+    },
+
+    async getConversation(ctx, conversationId) {
+      // T-096:ownership 门复用 requireConversation(跨用户/未知 id → OwnershipError → 404,
+      // 不泄漏存在性)。路由用它做续接的 scope 一致性校验。
+      const row = await repoFor(ctx).requireConversation(conversationId);
       return toConversationDto(row);
     },
 

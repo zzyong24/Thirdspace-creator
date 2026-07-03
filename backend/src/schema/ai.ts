@@ -32,6 +32,10 @@ export const aiConversations = pgTable("ai_conversations", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
   projectId: text("project_id"), // nullable
+  // T-096 会话作用域(SPEC 2026-07-03 chat-session-scope-contract §1.1)—— 入口级隔离与延续的
+  // 一等公民字段。文法:'global' | 'project:<id>' | 'surface:<name>'(<name>:<entityId> 扩展位
+  // 本期只定文法不启用)。历史列表按它过滤、恢复按它取最近、/api/chat 续接按它校验。
+  scope: text("scope").notNull().default("global"),
   title: text("title").notNull(),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
@@ -109,11 +113,13 @@ CREATE TABLE IF NOT EXISTS ai_conversations (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   project_id TEXT,
+  scope TEXT NOT NULL DEFAULT 'global',
   title TEXT NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_ai_conversations_user ON ai_conversations (user_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ai_conversations_user_scope ON ai_conversations (user_id, scope, updated_at);
 CREATE TABLE IF NOT EXISTS ai_messages (
   id TEXT PRIMARY KEY,
   conversation_id TEXT NOT NULL,

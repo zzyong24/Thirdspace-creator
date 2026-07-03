@@ -133,7 +133,8 @@ export function OverlayController({
     params.delete(OVERLAY_QUERY_KEY);
     // [T-080] 深链伴生参数(surface/fn/prefill/selKind/selId)随关闭一并清掉——
     // 残留会让下次打开意外带旧预填/旧上下文,也是「关了像没关」困惑的来源。
-    for (const k of ["surface", "fn", "prefill", "selKind", "selId"]) {
+    // [T-096] scope 同列:残留的 scope 声明会让下一个入口误落上一入口的会话桶(泄漏路径)。
+    for (const k of ["surface", "fn", "prefill", "selKind", "selId", "scope"]) {
       params.delete(k);
     }
     const query = params.toString();

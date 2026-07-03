@@ -24,10 +24,23 @@ export const dynamic = "force-dynamic";
 
 // useChat(@ai-sdk/react)发来的请求体。messages 是 UIMessage[];chatContext 是会话三层注入的
 // 上下文(surface 必填)。conversationId 可选(首轮缺省由路由 lazy 建一个会话复用)。
+// [T-096] chatContext.scope = 会话作用域声明(前端 resolveChatScope 保证必带):
+//   'global' | 'project:<id>' | 'surface:<name>'。lazy 建会话落它;续接时与库中会话的
+//   scope 比对,不一致按 OwnershipError 语义 4xx 拒绝 —— 隔离锁在服务端,前端 bug/手工
+//   请求都穿不透(SPEC 2026-07-03 §1.3-3)。
 interface ChatRequestBody {
   messages?: UIMessage[];
-  chatContext?: Partial<ChatContext>;
+  chatContext?: Partial<ChatContext> & { scope?: string };
   conversationId?: string;
+}
+
+// scope 文法校验(宽松:三段式前缀;非法声明视为未声明,回落推导)。
+function isValidScope(v: unknown): v is string {
+  if (typeof v !== "string" || v.length === 0) return false;
+  if (v === "global") return true;
+  if (v.startsWith("project:") && v.length > "project:".length) return true;
+  if (v.startsWith("surface:") && v.length > "surface:".length) return true;
+  return false;
 }
 
 // 从 UIMessage 里抽纯文本(useChat v7 的消息是 parts 数组)。只取 text part 拼起来 —— 落库
@@ -88,13 +101,47 @@ export async function POST(req: Request): Promise<Response> {
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   const userText = textOf(lastUser);
 
+  // [T-096] 会话作用域:显式声明(前端 resolver 保证)优先;旧客户端未带时按迁移同款语义推导
+  // (有 projectId → project:<id>,否则 global),保证 lazy 建的会话永远有归属。
+  const rawScope = body.chatContext?.scope;
+  const declaredScope = isValidScope(rawScope) ? rawScope : null;
+  const scope =
+    declaredScope ??
+    (chatContext.projectId ? `project:${chatContext.projectId}` : "global");
+
   let conversationId = body.conversationId ?? "";
+
+  // [T-096] 续接校验(服务端硬门,SPEC §1.3-3):带 conversationId 且显式声明了 scope 时,
+  // 核对库中会话的 scope 与声明一致。不一致 = 跨作用域续接(泄漏路径)→ 4xx 拒绝,不续写、
+  // 不读回。校验在持久化/流式之前 —— 该门失败绝不算 best-effort。
+  if (conversationId && declaredScope) {
+    try {
+      const conv = await runtime.ai.getConversation(ctx, conversationId);
+      if (conv.scope !== declaredScope) {
+        return NextResponse.json(
+          {
+            error: `conversation scope mismatch: conversation belongs to "${conv.scope}", request declared "${declaredScope}"`,
+          },
+          { status: 403 },
+        );
+      }
+    } catch (err) {
+      // 跨用户/未知 conversationId(OwnershipError)→ 404(不泄漏存在性,原语义)。
+      if (err instanceof OwnershipError) {
+        return NextResponse.json({ error: err.message }, { status: 404 });
+      }
+      throw err;
+    }
+  }
+
   try {
     if (!conversationId) {
       const title = userText.slice(0, 24) || "AI 助手";
       const conv = await runtime.ai.createConversation(ctx, {
         title,
         projectId: chatContext.projectId ?? null,
+        // [T-096] lazy 建会话落作用域 —— 会话从出生起就有归属桶。
+        scope,
       });
       conversationId = conv.id;
     }

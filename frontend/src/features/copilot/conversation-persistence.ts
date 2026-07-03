@@ -4,7 +4,11 @@
  * 后端已具备:/api/chat 会 lazy 建会话、落 ai_conversations/ai_messages、响应头返
  * `x-conversation-id`,且接受请求体里的 conversationId 续接;契约读 op
  * (ai.conversations.list / ai.conversations.messages.list)也已存在。这里只做前端消费:
- *   1. 按 surface 键把「当前 conversationId」记到 localStorage(校准/复盘/topics 各自独立)。
+ *   1. [T-096] 按 **scope**(会话作用域,chat-scope.ts 的 resolveChatScope 产出)把「当前
+ *      conversationId」记到 localStorage —— global / project:<id> / surface:<name> 各桶独立。
+ *      这只是恢复的**快路**;指针缺失/毁档时由服务端兜底(listConversations?scope= 最近一条),
+ *      见 ai-copilot-content 的双路恢复。旧 persistKey 键(copilot:conv:topics 等)不迁移、
+ *      自然废弃(服务端兜底让旧指针丢失无感)。
  *   2. 把 ai_messages 的 {role, content} 映射成 useChat 的 UIMessage(parts:[{type:"text"}])。
  *
  * localStorage 读写全部 try/catch —— 隐私模式 / 禁用 storage 时降级为「不持久」,绝不抛。
@@ -12,23 +16,23 @@
 
 import type { UIMessage } from "ai";
 
-// 按 surface 分桶的 localStorage 键前缀。校准(calibration)/复盘(review)/选题(topics)等
-// 页面各自持有独立的当前会话,互不覆盖。
+// [T-096] 按 scope 分桶的 localStorage 键前缀。global / project:<id> / surface:<name>
+// 各自持有独立的当前会话,互不覆盖(左下角闲聊不再与选题岛互抢指针)。
 const CONV_KEY_PREFIX = "copilot:conv:";
 
-/** 该 surface 的「当前 conversationId」localStorage 键。 */
-export function convKey(surface: string): string {
-  return `${CONV_KEY_PREFIX}${surface}`;
+/** 该 scope 的「当前 conversationId」localStorage 键。 */
+export function convKey(scope: string): string {
+  return `${CONV_KEY_PREFIX}${scope}`;
 }
 
 /**
- * 读该 surface 存的 conversationId(客户端专用,SSR 环境返回 null)。任何异常(禁用
- * storage / JSON 无关)静默降级为 null —— 视作「无历史」,走空会话。
+ * 读该 scope 存的 conversationId(客户端专用,SSR 环境返回 null)。任何异常(禁用
+ * storage / JSON 无关)静默降级为 null —— 视作「无快路指针」,走服务端兜底/空会话。
  */
-export function readStoredConversationId(surface: string): string | null {
+export function readStoredConversationId(scope: string): string | null {
   if (typeof window === "undefined") return null;
   try {
-    const v = window.localStorage.getItem(convKey(surface));
+    const v = window.localStorage.getItem(convKey(scope));
     return v && v.length > 0 ? v : null;
   } catch {
     return null;
@@ -36,19 +40,19 @@ export function readStoredConversationId(surface: string): string | null {
 }
 
 /**
- * 把该 surface 的当前 conversationId 写入 localStorage(客户端专用)。传空串/undefined
- * 视为清除。写失败(隐私模式)静默降级 —— 不持久但不崩。
+ * 把该 scope 的当前 conversationId 写入 localStorage(客户端专用)。传空串/undefined
+ * 视为清除。写失败(隐私模式)静默降级 —— 不持久但不崩(服务端兜底仍能恢复)。
  */
 export function writeStoredConversationId(
-  surface: string,
+  scope: string,
   conversationId: string | null | undefined,
 ): void {
   if (typeof window === "undefined") return;
   try {
     if (!conversationId) {
-      window.localStorage.removeItem(convKey(surface));
+      window.localStorage.removeItem(convKey(scope));
     } else {
-      window.localStorage.setItem(convKey(surface), conversationId);
+      window.localStorage.setItem(convKey(scope), conversationId);
     }
   } catch {
     /* storage 不可用 → 降级为不持久,吞掉异常 */

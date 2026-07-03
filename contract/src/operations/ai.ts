@@ -19,7 +19,9 @@ export const aiOperations = {
     id: "ai.conversations.list",
     method: "GET",
     path: "/ai/conversations",
-    query: paginationQuery,
+    // T-096(additive,gate-F3 契约零删除):scope 可选过滤 —— 传了只列该作用域的会话
+    // (入口级历史隔离),不传维持全量(旧调用零破坏)。
+    query: paginationQuery.extend({ scope: z.string().optional() }),
     response: aiConversationResource,
     isList: true,
     fr: ["FR-AI-CONVERSATIONS-LIST"],
@@ -31,6 +33,8 @@ export const aiOperations = {
     body: z.object({
       title: z.string().min(1),
       projectId: id.nullable().optional(),
+      // T-096(additive):会话作用域,缺省服务端落 'global'。
+      scope: z.string().optional(),
     }),
     response: aiConversationResource,
     fr: ["FR-AI-CONVERSATIONS-CREATE"],

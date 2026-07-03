@@ -599,4 +599,57 @@ describe("ai service", () => {
     const onlyB = await service.listConversations(ctxB, { limit: 20, offset: 0 });
     expect(onlyB.total).toBe(0);
   });
+
+  // ── [T-096] 会话作用域 —— SPEC 2026-07-03 §1.3 / §3 矩阵 #1 的 service 层 ──
+  it("[T-096] createConversation 落 scope(DTO 带 scope);缺省 global", async () => {
+    const { service } = makeService(db);
+    const global = await service.createConversation(ctx, {
+      title: "全局",
+      projectId: null,
+    });
+    expect(global.scope).toBe("global");
+    const proj = await service.createConversation(ctx, {
+      title: "项目会话",
+      projectId: "proj-1",
+      scope: "project:proj-1",
+    });
+    expect(proj.scope).toBe("project:proj-1");
+  });
+
+  it("[T-096 矩阵#1] scope A(蒸馏)建会话后,scope B(选题)拉历史不含 A 的会话", async () => {
+    const { service } = makeService(db);
+    await service.createConversation(ctx, {
+      title: "蒸馏会话",
+      projectId: null,
+      scope: "surface:knowledge-distill",
+    });
+    await service.createConversation(ctx, {
+      title: "选题会话",
+      projectId: null,
+      scope: "surface:topics",
+    });
+    const topics = await service.listConversations(ctx, {
+      limit: 20,
+      offset: 0,
+      scope: "surface:topics",
+    });
+    expect(topics.total).toBe(1);
+    expect(topics.rows[0]!.title).toBe("选题会话");
+    expect(topics.rows.some((r) => r.title === "蒸馏会话")).toBe(false);
+  });
+
+  it("[T-096] getConversation 走 ownership 门(跨用户 OwnershipError → 404 语义),供 /api/chat 续接校验读 scope", async () => {
+    const { service } = makeService(db);
+    const conv = await service.createConversation(ctx, {
+      title: "我的",
+      projectId: null,
+      scope: "global",
+    });
+    const got = await service.getConversation(ctx, conv.id);
+    expect(got.scope).toBe("global");
+    const ctxB: RequestContext = { userId: "user-b", requestId: "r2", source: "user" };
+    await expect(service.getConversation(ctxB, conv.id)).rejects.toThrow(
+      /OwnershipError/,
+    );
+  });
 });

@@ -133,6 +133,22 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).toContain("RAG 实战"); // 知识库
   });
 
+  it("[T-096 矩阵#10] 系统注入不受 scope 隔离影响:任意 scope 声明下 system 仍含账号级 facets(不过度隔离)", async () => {
+    // scope 是会话归属(历史/恢复分桶),不是装配参数 —— chatContext 带任何 scope 声明,
+    // 定位 brief 等账号级事实底座照常注入(SPEC §1.5:账号级共享不算泄漏)。
+    const { deps } = makeDeps();
+    for (const scope of ["global", "surface:knowledge-distill", "project:p1"]) {
+      const a = await buildChatAssembly(
+        ctx,
+        // /api/chat 透传的 chatContext 可能带 scope 字段(额外键,装配层不读它)。
+        { surface: "topics", scope } as unknown as ChatContext,
+        deps,
+      );
+      expect(a.system).toContain("把论文落成代码"); // 定位 brief(账号级,全 scope 共享)
+      expect(a.system).toContain("反直觉开头"); // 飞轮经验(账号级,全 scope 共享)
+    }
+  });
+
   it("surface=review + projectId → 把「本次复盘对象」(真标题/文案/数据/评论)注进对话 system(修「瞎问复盘对象」)", async () => {
     const { deps } = makeDeps({
       reviewSubject: {

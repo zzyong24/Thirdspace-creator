@@ -8,12 +8,36 @@ describe("ai contract", () => {
       id: "ai-conv-script-help",
       userId: "user-zyongzhu",
       projectId: "project-ainativebrowser",
+      // [T-096] 会话作用域(入口级隔离):项目会话归 project:<id> 桶。
+      scope: "project:project-ainativebrowser",
       title: "脚本润色助手",
       createdAt: "2026-06-06T01:00:00.000Z",
       updatedAt: "2026-06-13T02:00:00.000Z",
     });
     expect(c.title).toBe("脚本润色助手");
     expect(c.projectId).toBe("project-ainativebrowser");
+    expect(c.scope).toBe("project:project-ainativebrowser");
+  });
+
+  it("[T-096] list query 接受可选 scope 过滤;create body 接受可选 scope(additive,旧调用零破坏)", () => {
+    const q = aiOperations.listConversations.query!.parse({
+      page: 1,
+      pageSize: 20,
+      scope: "surface:topics",
+    });
+    expect((q as { scope?: string }).scope).toBe("surface:topics");
+    // 不传 scope 仍合法(旧调用不破)。
+    expect(() =>
+      aiOperations.listConversations.query!.parse({ page: 1, pageSize: 20 }),
+    ).not.toThrow();
+    const b = aiOperations.createConversation.body!.parse({
+      title: "蒸馏",
+      scope: "surface:knowledge-distill",
+    });
+    expect((b as { scope?: string }).scope).toBe("surface:knowledge-distill");
+    expect(() =>
+      aiOperations.createConversation.body!.parse({ title: "旧调用" }),
+    ).not.toThrow();
   });
 
   it("registers the conversation list + task confirm endpoints", () => {

@@ -53,17 +53,27 @@ export function createAiTransport(
         case "ai.conversations.list": {
           // The contract query is paginationQuery (page/pageSize, 1-based). Convert to
           // the repo's limit/offset (mirrors the other list transports).
-          const q = (query ?? {}) as { page?: number; pageSize?: number };
+          // T-096:scope 可选过滤(传了只列该作用域 —— 入口级历史隔离;不传全量)。
+          const q = (query ?? {}) as {
+            page?: number;
+            pageSize?: number;
+            scope?: string;
+          };
           const page = q.page ?? 1;
           const pageSize = q.pageSize ?? 20;
           const { rows, total } = await service.listConversations(ctx, {
             limit: pageSize,
             offset: (page - 1) * pageSize,
+            ...(q.scope ? { scope: q.scope } : {}),
           });
           return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "ai.conversations.create": {
-          const b = (body ?? {}) as { title: string; projectId?: string | null };
+          const b = (body ?? {}) as {
+            title: string;
+            projectId?: string | null;
+            scope?: string;
+          };
           const conversation = await service.createConversation(ctx, b);
           return { data: conversation, meta: { requestId } };
         }

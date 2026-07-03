@@ -23,11 +23,20 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("conversation-persistence: localStorage 按 surface 分桶", () => {
-  it("键按 surface 派生(校准/复盘/topics 互相独立)", () => {
-    expect(convKey("topics")).toBe("copilot:conv:topics");
-    expect(convKey("calibration")).toBe("copilot:conv:calibration");
-    expect(convKey("topics")).not.toBe(convKey("calibration"));
+describe("conversation-persistence: localStorage 按 scope 分桶(T-096)", () => {
+  it("键按 scope 派生(global/project:<id>/surface:<name> 互相独立)", () => {
+    expect(convKey("global")).toBe("copilot:conv:global");
+    expect(convKey("project:proj-1")).toBe("copilot:conv:project:proj-1");
+    expect(convKey("surface:topics")).toBe("copilot:conv:surface:topics");
+    expect(convKey("global")).not.toBe(convKey("surface:topics"));
+  });
+
+  it("[T-096 矩阵#5 纯逻辑面] 清 surface:topics 的指针不动 global 的指针(不同桶互不覆盖)", () => {
+    writeStoredConversationId("global", "conv-global");
+    writeStoredConversationId("surface:topics", "conv-topics");
+    writeStoredConversationId("surface:topics", null);
+    expect(readStoredConversationId("surface:topics")).toBeNull();
+    expect(readStoredConversationId("global")).toBe("conv-global");
   });
 
   it("写入后读回同 surface 的 conversationId;不同 surface 不串", () => {

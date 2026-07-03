@@ -6,10 +6,13 @@ import { id, iso8601, aiTaskStatus } from "../primitives";
 // explicitly — mapped one-to-one below.
 
 // AIConversation extends BaseEntity (declares createdAt/updatedAt explicitly).
+// T-096:scope = 会话作用域(入口级隔离与延续的归属命名,SPEC 2026-07-03 §1.1)。
+// 文法:'global' | 'project:<id>' | 'surface:<name>'(<name>:<entityId> 扩展位本期只定文法)。
 export const aiConversationResource = z.object({
   id,
   userId: id,
   projectId: id.nullable(),
+  scope: z.string(),
   title: z.string(),
   createdAt: iso8601,
   updatedAt: iso8601,
