@@ -19,6 +19,14 @@ export const assetResource = z.object({
   // 收藏 (favorite) flag — toggled by assets.favorite.toggle. Persisted on the
   // asset row so the gallery 收藏 affordance survives reloads (not a client hack).
   isFavorite: z.boolean(),
+  // [T-061] 当前文件派生字段(current asset_file 投影)。此前 list 不带文件元数据,
+  // 前端只能从 fixture 兜底 → 真上传素材显示 octet-stream/0B 且渲不出真缩略图。
+  // 无文件的 headless row → null(诚实,不编)。
+  mimeType: z.string().nullable(),
+  fileSize: z.number().int().nullable(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+  durationMs: z.number().int().nullable(),
   deletedAt: iso8601.nullable(),
   ...timestamps,
 });

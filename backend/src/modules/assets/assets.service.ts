@@ -49,6 +49,8 @@ export interface AssetUploadDto {
 
 export interface AssetsService {
   listAssets(ctx: RequestContext, query: ListAssetsQuery): Promise<AssetRow[]>;
+  /** [T-061] Batch-read current files for the list/get 投影(ids 来自 user-scoped rows)。 */
+  listFilesByIds(ctx: RequestContext, fileIds: string[]): Promise<AssetFileRow[]>;
   getAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
   createUpload(
     ctx: RequestContext,
@@ -151,6 +153,10 @@ export function createAssetsService(
   return {
     async listAssets(ctx, query) {
       return repo.listAssets(ctx.userId, query);
+    },
+
+    async listFilesByIds(_ctx, fileIds) {
+      return repo.listFilesByIds(fileIds);
     },
 
     async getAsset(ctx, assetId) {

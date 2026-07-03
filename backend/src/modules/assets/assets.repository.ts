@@ -1,4 +1,4 @@
-import { and, asc, eq, desc, type Db } from "@creatoros/backend";
+import { and, asc, eq, desc, inArray, type Db } from "@creatoros/backend";
 import { materialLinks } from "@creatoros/backend";
 import { assets, assetFiles, assetUploads } from "./assets.db-schema";
 import { OwnershipError } from "./assets.errors";
@@ -86,6 +86,12 @@ export interface AssetRepository {
   // SERVICE asserts asset ownership first (requireAsset) before calling this.
   listAssetUsage(userId: string, assetId: string): Promise<MaterialLinkRow[]>;
   listAssetFiles(userId: string, assetId: string): Promise<AssetFileRow[]>;
+  /**
+   * [T-061] Batch-read asset_files by id — the list/get 投影 join(current file
+   * 元数据进 assetResource)。IDs must come from already user-scoped asset rows
+   * (currentFileId), so no extra ownership filter here.
+   */
+  listFilesByIds(fileIds: string[]): Promise<AssetFileRow[]>;
   // [T-055h asset.classify] 把 AI 归类结果(一句话描述等)合并进某 asset 当前文件的
   // mediaMetadata(jsonb merge,不动其他键)。文件不存在 → no-op(诚实静默,分类是增强)。
   mergeFileMetadata(
@@ -225,6 +231,11 @@ export function createAssetRepository(
         )
         .orderBy(desc(materialLinks.createdAt));
       return rows;
+    },
+
+    async listFilesByIds(fileIds) {
+      if (fileIds.length === 0) return [];
+      return db.select().from(assetFiles).where(inArray(assetFiles.id, fileIds));
     },
 
     async listAssetFiles(userId, assetId) {

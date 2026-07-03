@@ -1,13 +1,13 @@
 /**
  * `AssetCard` (SPEC §7, 内容与资源) renders a selectable asset tile with a
- * `MediaPreview` thumbnail, name and metadata subtitle. Selection is
+ * real `AssetThumbnail` (T-061: 图/视频渲签名 URL 真内容,其余 glyph), name and metadata subtitle. Selection is
  * caller-controlled via `onSelect`; the card carries deterministic
  * data-slots for tests.
  */
 
 import * as React from "react";
 
-import { MediaPreview } from "@/components/resources/media-preview";
+import { AssetThumbnail } from "@/components/resources/asset-thumbnail";
 import { formatFileSize } from "@/components/resources/asset-format";
 import type { ResourceAsset } from "@/components/resources/types";
 
@@ -35,7 +35,7 @@ export function AssetCard({ asset, selected, onSelect }: AssetCardProps) {
         onClick={() => onSelect(asset.id)}
         className="flex w-full flex-col gap-1.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
-        <MediaPreview asset={asset} />
+        <AssetThumbnail asset={asset} />
         <div className="flex flex-col gap-0.5 px-0.5">
           <span className="flex items-center gap-1 text-[13px] font-medium leading-tight text-foreground">
             {/* [T-051 2e] 收藏痕迹:isFavorite 落库值读回后显星标(此前写库无任何 UI 痕迹)。 */}

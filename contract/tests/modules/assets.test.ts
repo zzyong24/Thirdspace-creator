@@ -13,6 +13,12 @@ describe("assets contract", () => {
       description: "主视频封面图",
       status: "active",
       isFavorite: false,
+      // [T-061] file 派生字段(current asset_file 投影;headless row → null)。
+      mimeType: "image/png",
+      fileSize: 245760,
+      width: 1920,
+      height: 1080,
+      durationMs: null,
       deletedAt: null,
       createdAt: "2026-06-06T02:00:00.000Z",
       updatedAt: "2026-06-06T02:00:00.000Z",

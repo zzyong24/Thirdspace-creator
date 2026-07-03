@@ -40,7 +40,10 @@ export const ASSET_OP_IDS = [
   "assets.usage.list",
 ] as const;
 
-function toAssetResource(row: AssetRow): AssetResource {
+// [T-061] file: the asset's CURRENT asset_file row (投影 mimeType/fileSize/尺寸/时长
+// 进 assetResource;此前 list 不带 → 前端 fixture 兜底显示 octet-stream/0B)。null =
+// headless row(无文件)→ 字段落 null,诚实不编。
+function toAssetResource(row: AssetRow, file: AssetFileRow | null): AssetResource {
   return {
     id: row.id,
     userId: row.userId,
@@ -54,6 +57,11 @@ function toAssetResource(row: AssetRow): AssetResource {
     description: row.description,
     status: row.status as AssetResource["status"],
     isFavorite: row.isFavorite ?? false,
+    mimeType: file?.mimeType ?? null,
+    fileSize: file?.fileSize ?? null,
+    width: file?.width ?? null,
+    height: file?.height ?? null,
+    durationMs: file?.durationMs ?? null,
     deletedAt: row.deletedAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -106,6 +114,13 @@ export function createAssetsTransport(
       // reject before touching the store.
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory(ctx);
+      // [T-061] Resolve one asset row's current file for the 投影(单行 case 共用)。
+      const withFile = async (row: AssetRow): Promise<AssetResource> => {
+        const files = row.currentFileId
+          ? await service.listFilesByIds(ctx, [row.currentFileId])
+          : [];
+        return toAssetResource(row, files[0] ?? null);
+      };
 
       const { params, query, body } = (input ?? {}) as Input;
       const p = (params ?? {}) as { assetId?: string; uploadId?: string };
@@ -119,8 +134,18 @@ export function createAssetsTransport(
             limit: pageSize,
             cursor: null,
           });
+          const fileIds = rows
+            .map((r) => r.currentFileId)
+            .filter((v): v is string => Boolean(v));
+          const filesById = new Map(
+            (await service.listFilesByIds(ctx, fileIds)).map(
+              (f) => [f.id, f] as const,
+            ),
+          );
           return {
-            data: rows.map(toAssetResource),
+            data: rows.map((r) =>
+              toAssetResource(r, r.currentFileId ? filesById.get(r.currentFileId) ?? null : null),
+            ),
             meta: {
               requestId: ctx.requestId,
               page,
@@ -142,7 +167,7 @@ export function createAssetsTransport(
           const b = (body ?? {}) as { name: string };
           const row = await service.completeUpload(ctx, p.uploadId ?? "", b);
           return {
-            data: toAssetResource(row),
+            data: await withFile(row),
             meta: { requestId: ctx.requestId },
           };
         }
@@ -154,7 +179,7 @@ export function createAssetsTransport(
         case "assets.get": {
           const row = await service.getAsset(ctx, p.assetId ?? "");
           return {
-            data: toAssetResource(row),
+            data: await withFile(row),
             meta: { requestId: ctx.requestId },
           };
         }
@@ -169,21 +194,21 @@ export function createAssetsTransport(
         case "assets.trash": {
           const row = await service.trashAsset(ctx, p.assetId ?? "");
           return {
-            data: toAssetResource(row),
+            data: await withFile(row),
             meta: { requestId: ctx.requestId },
           };
         }
         case "assets.restore": {
           const row = await service.restoreAsset(ctx, p.assetId ?? "");
           return {
-            data: toAssetResource(row),
+            data: await withFile(row),
             meta: { requestId: ctx.requestId },
           };
         }
         case "assets.favorite.toggle": {
           const row = await service.toggleFavorite(ctx, p.assetId ?? "");
           return {
-            data: toAssetResource(row),
+            data: await withFile(row),
             meta: { requestId: ctx.requestId },
           };
         }

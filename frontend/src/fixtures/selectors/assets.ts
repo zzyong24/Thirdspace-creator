@@ -73,6 +73,13 @@ export interface AssetListRow {
   readonly updatedAt: string;
   // [T-051 2e] 收藏 flag(契约 assetResource.isFavorite)。
   readonly isFavorite?: boolean;
+  // [T-061] file 派生字段(op 现随行带真值;此前只能 canonical 兜底 → 真上传素材
+  // 显示 octet-stream/0B)。
+  readonly mimeType?: string | null;
+  readonly fileSize?: number | null;
+  readonly width?: number | null;
+  readonly height?: number | null;
+  readonly durationMs?: number | null;
 }
 
 export function buildAssetSummariesFromResources(
@@ -92,11 +99,12 @@ export function buildAssetSummariesFromResources(
       name: asset.name,
       description: asset.description,
       type: asset.assetType,
-      mimeType: file?.mimeType ?? "application/octet-stream",
-      fileSizeBytes: file?.fileSize ?? 0,
-      width: file?.width ?? null,
-      height: file?.height ?? null,
-      durationMs: file?.durationMs ?? null,
+      // [T-061] op 真值优先;canonical 仅兜 seed 行(其 currentFileId 在 fixture 里)。
+      mimeType: asset.mimeType ?? file?.mimeType ?? "application/octet-stream",
+      fileSizeBytes: asset.fileSize ?? file?.fileSize ?? 0,
+      width: asset.width ?? file?.width ?? null,
+      height: asset.height ?? file?.height ?? null,
+      durationMs: asset.durationMs ?? file?.durationMs ?? null,
       tags: tagsForAsset,
       thumbnailToken: thumbnailTokenFor(asset.assetType, asset.id),
       updatedAt: asset.updatedAt,

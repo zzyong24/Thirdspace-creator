@@ -12,7 +12,7 @@
 
 import * as React from "react";
 
-import { client } from "@/lib/contract-client";
+import { resolveAssetPreviewUrl } from "@/components/resources/asset-preview-url";
 import { MediaPreview } from "@/components/resources/media-preview";
 import type { ResourceAsset } from "@/components/resources/types";
 
@@ -24,21 +24,12 @@ export function AssetLivePreview({ asset }: { asset: ResourceAsset }) {
     let cancelled = false;
     setUrl(null);
     setFailed(false);
-    void (async () => {
-      try {
-        const dto = (await client.getDownloadUrl({
-          params: { assetId: asset.id },
-          query: undefined,
-          body: undefined,
-        })) as unknown as { url?: string };
-        if (!cancelled) {
-          if (dto.url) setUrl(dto.url);
-          else setFailed(true);
-        }
-      } catch {
-        if (!cancelled) setFailed(true);
-      }
-    })();
+    // [T-061] 共享缓存:与网格缩略图同一素材只换一次签名 URL。
+    void resolveAssetPreviewUrl(asset.id).then((u) => {
+      if (cancelled) return;
+      if (u) setUrl(u);
+      else setFailed(true);
+    });
     return () => {
       cancelled = true;
     };
