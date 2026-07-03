@@ -129,10 +129,45 @@ export function TopicsView({
   embedded = false,
 }: {
   readonly viewModel: TopicsViewModel;
-  /** [T-063a] true = 被作品页「候选」tab 内嵌,隐藏自己的页头(避免双头)。 */
+  /**
+   * [T-063a] true = 被作品页「候选」tab 内嵌,隐藏自己的页头(避免双头)。
+   * [T-063c] 深度融合:内嵌形态下候选卡是主角 —— 三栏收敛为「候选池 + 详情」
+   * 两栏,左侧来源大栏与底部漏斗条压成页头一行摘要(SourceFunnelSummary)。
+   * 独立形态(三栏 + 漏斗)原样保留,删壳不删肉。
+   */
   readonly embedded?: boolean;
 }) {
   const { candidates, overview, sort, pendingReview } = viewModel;
+
+  if (embedded) {
+    return (
+      <div
+        data-slot="topics"
+        data-testid="topics"
+        data-embedded="true"
+        className="flex h-full min-h-0 flex-col gap-3"
+      >
+        {/* 1. AI 选题会带(4 深链,保留) */}
+        <div className="shrink-0">
+          <TopicGenerateBand basis={overview.basis} pendingReview={pendingReview} />
+        </div>
+
+        {/* 2. 来源/漏斗一行摘要(7 来源计数 + 6 漏斗阶段,纯信息行) */}
+        <SourceFunnelSummary
+          sources={overview.sources}
+          funnel={overview.funnel}
+        />
+
+        {/* 3. 两栏主体:候选池(编导起草行在列表头)+ 详情 */}
+        <TopicsWorkspace
+          candidates={candidates}
+          sources={overview.sources}
+          sort={sort}
+          embedded
+        />
+      </div>
+    );
+  }
 
   return (
     // 固定高度填满：页头 + AI 选题会带 + 漏斗 shrink-0 钉住,中间三栏 flex-1 占满剩余
@@ -142,14 +177,12 @@ export function TopicsView({
       data-testid="topics"
       className="flex h-full min-h-0 flex-col gap-4"
     >
-      {embedded ? null : (
-        <header className="flex shrink-0 flex-col gap-1">
-          <h1 className="text-xl font-semibold text-foreground">选题中心</h1>
-          <p className="text-sm text-muted-foreground">
-            从真实信号出题、补全选题卡、择优立项——一条选题从灵感到立项的全流程。
-          </p>
-        </header>
-      )}
+      <header className="flex shrink-0 flex-col gap-1">
+        <h1 className="text-xl font-semibold text-foreground">选题中心</h1>
+        <p className="text-sm text-muted-foreground">
+          从真实信号出题、补全选题卡、择优立项——一条选题从灵感到立项的全流程。
+        </p>
+      </header>
 
       {/* 1. AI 选题会 带 (钉住·固定高度,候选/步骤进弹窗) */}
       <div className="shrink-0">
@@ -167,6 +200,55 @@ export function TopicsView({
       <div className="shrink-0">
         <FunnelStrip funnel={overview.funnel} />
       </div>
+    </div>
+  );
+}
+
+// ── 来源/漏斗一行摘要([T-063c] 内嵌形态专用) ────────────────────────────────────
+// 候选 tab 的主角是候选卡:原左栏 7 来源 + 底部 6 态漏斗压成一条横向摘要(纯信息,
+// 不可点 —— 按来源筛选仍是未实现功能,不做假承诺,同 [T-051 2c])。计数全部来自
+// overview 真数据;横向溢出框内滚。
+function SourceFunnelSummary({
+  sources,
+  funnel,
+}: {
+  readonly sources: TopicsOverviewResource["sources"];
+  readonly funnel: TopicsOverviewResource["funnel"];
+}) {
+  return (
+    <div
+      data-testid="topics-source-funnel-summary"
+      className="flex shrink-0 items-center gap-2 overflow-x-auto rounded-card border border-border bg-surface px-3 py-2 text-[11px]"
+    >
+      <span className="shrink-0 font-medium text-text-subtle">流转</span>
+      {funnel.map((stage) => (
+        <span
+          key={stage.key}
+          data-testid="summary-funnel-stage"
+          data-stage={stage.key}
+          className="flex shrink-0 items-center gap-1 rounded-full bg-surface-subtle px-2 py-0.5"
+        >
+          <span className="text-muted-foreground">{stage.label}</span>
+          <span className="font-semibold tabular-nums text-foreground">
+            {stage.count}
+          </span>
+        </span>
+      ))}
+      <span aria-hidden="true" className="mx-1 h-4 w-px shrink-0 bg-border" />
+      <span className="shrink-0 font-medium text-text-subtle">来源</span>
+      {sources.map((s) => (
+        <span
+          key={s.key}
+          data-testid="summary-source"
+          data-source={s.key}
+          className="flex shrink-0 items-center gap-1 rounded-full bg-brand-soft/50 px-2 py-0.5"
+        >
+          <span className="text-muted-foreground">{s.label}</span>
+          <span className="font-semibold tabular-nums text-foreground">
+            {s.count}
+          </span>
+        </span>
+      ))}
     </div>
   );
 }

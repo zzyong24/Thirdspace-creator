@@ -67,6 +67,27 @@ export const publishingOperations = {
     isList: true,
     fr: ["FR-PUBLISHING-REVISION-LIST"],
   }),
+  // [T-055h③ / T-063c] 登记已发布:用户把平台链接粘进来(稿面发布包区/排期条目),
+  // 解析出 external_id 后走这里直接落一条 published publication(status=published +
+  // external_id/external_url/published_at)。语义与数据底座导入同源 —— backend 复用
+  // publishingService.createImportedPublication(幂等于 (platform, externalId),重复
+  // 登记返回既有行)。可选 title 给 revision 起个真名(缺省空 revision,只为满足
+  // currentRevisionId 非空的 DTO 约束)。
+  registerPublishedPublication: defineEndpoint({
+    id: "outputs.publications.register",
+    method: "POST",
+    path: "/outputs/:outputId/publications/register",
+    params: outputParams,
+    body: z.object({
+      platform: z.string().min(1),
+      externalId: z.string().min(1),
+      externalUrl: z.string().nullable().optional(),
+      publishedAt: z.string().nullable().optional(),
+      title: z.string().optional(),
+    }),
+    response: publicationResource,
+    fr: ["FR-PUBLISHING-REGISTER-PUBLISHED"],
+  }),
   transitionPublication: defineEndpoint({
     id: "publications.transition",
     method: "POST",

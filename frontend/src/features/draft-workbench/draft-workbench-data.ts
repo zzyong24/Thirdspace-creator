@@ -162,6 +162,11 @@ export interface DraftWorkbenchVm {
     readonly sections: ReadonlyArray<ScriptSectionView>;
     readonly versionCount: number;
   };
+  /**
+   * [T-055h③] 项目的第一个 ContentOutput id(登记已发布的挂点);null = 还没有
+   * (登记表单提交时先 createOutput 铸一个)。
+   */
+  readonly outputId: string | null;
   /** 发布包:null = 还没有发布行(锁定态用引导文案)。 */
   readonly publishPack: {
     readonly publicationId: string;
@@ -191,7 +196,10 @@ export interface DraftWorkbenchVm {
 async function readPublishPack(
   client: DraftWorkbenchClient,
   projectId: string,
-): Promise<DraftWorkbenchVm["publishPack"]> {
+): Promise<{
+  outputId: string | null;
+  publishPack: DraftWorkbenchVm["publishPack"];
+}> {
   try {
     const outputsRaw = await client.listOutputs({
       params: { projectId },
@@ -199,15 +207,17 @@ async function readPublishPack(
       body: undefined,
     });
     const outputs = (Array.isArray(outputsRaw) ? outputsRaw : []) as OutputDto[];
-    if (outputs.length === 0) return null;
+    // [T-055h③] outputId 单独浮出:没有发布行时登记表单也要知道挂点在哪。
+    const outputId = outputs[0]?.id ?? null;
+    if (!outputId) return { outputId: null, publishPack: null };
     const pubsRaw = await client.listPublications({
-      params: { outputId: outputs[0]!.id },
+      params: { outputId },
       query: { page: 1, pageSize: 10 },
       body: undefined,
     });
     const pubs = (Array.isArray(pubsRaw) ? pubsRaw : []) as PublicationDto[];
     const pub = pubs[0];
-    if (!pub) return null;
+    if (!pub) return { outputId, publishPack: null };
     let revision: RevisionDto | null = null;
     try {
       const revsRaw = await client.listPublicationRevisions({
@@ -221,16 +231,19 @@ async function readPublishPack(
       revision = null;
     }
     return {
-      publicationId: pub.id,
-      platform: pub.platform,
-      status: pub.status,
-      publishedAt: pub.publishedAt,
-      title: revision?.title?.trim() || "",
-      tags: revision?.platformTags ?? [],
-      hasCover: Boolean(revision?.coverAssetId),
+      outputId,
+      publishPack: {
+        publicationId: pub.id,
+        platform: pub.platform,
+        status: pub.status,
+        publishedAt: pub.publishedAt,
+        title: revision?.title?.trim() || "",
+        tags: revision?.platformTags ?? [],
+        hasCover: Boolean(revision?.coverAssetId),
+      },
     };
   } catch {
-    return null;
+    return { outputId: null, publishPack: null };
   }
 }
 
@@ -320,7 +333,7 @@ export async function buildDraftWorkbenchVm(
   );
   const scriptData = await loadScriptEditorData(scriptArtifactId, client);
 
-  const [publishPack, ammo] = await Promise.all([
+  const [{ outputId, publishPack }, ammo] = await Promise.all([
     readPublishPack(client, project.id),
     readAmmo(client, project.id),
   ]);
@@ -335,6 +348,7 @@ export async function buildDraftWorkbenchVm(
       briefDetail: project.briefDetail ?? null,
     },
     scriptArtifactId,
+    outputId,
     script: {
       editorHtml: scriptData?.editorHtml ?? null,
       sections: scriptData?.sections ?? [],

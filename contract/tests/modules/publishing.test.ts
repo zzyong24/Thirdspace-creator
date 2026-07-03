@@ -35,4 +35,17 @@ describe("publishing contract", () => {
     );
     expect(publishingOperations.listPublications.fr.length).toBeGreaterThan(0);
   });
+
+  it("registers the 登记已发布 endpoint ([T-055h③/T-063c] register-published)", () => {
+    const op = publishingOperations.registerPublishedPublication;
+    expect(op.method).toBe("POST");
+    expect(op.path).toBe("/outputs/:outputId/publications/register");
+    expect(op.id).toBe("outputs.publications.register");
+    // body:platform + externalId 必填;externalUrl/publishedAt/title 可选。
+    expect(() =>
+      op.body!.parse({ platform: "douyin", externalId: "7423000000000000000" }),
+    ).not.toThrow();
+    expect(() => op.body!.parse({ platform: "douyin" })).toThrow();
+    expect(op.fr).toContain("FR-PUBLISHING-REGISTER-PUBLISHED");
+  });
 });

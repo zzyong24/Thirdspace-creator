@@ -71,6 +71,11 @@ export interface PublishingCenterPageProps {
    * from the fixed fixtures (D-010) so SSR output is deterministic.
    */
   readonly viewModel?: PublishingCenterViewModel;
+  /**
+   * [T-063c] 内嵌模式:被 /projects「已发布」tab 内嵌时隐藏「打开日历」入口条 ——
+   * 「排期」tab 就在旁边,再挂一条跳转即双头。独立形态原样保留。
+   */
+  readonly embedded?: boolean;
 }
 
 export interface PublishingCenterViewModel extends BasePageViewModel {
@@ -141,6 +146,7 @@ export interface TopContentRow {
 
 export function PublishingCenterPage({
   viewModel,
+  embedded = false,
 }: PublishingCenterPageProps = {}) {
   const vm = viewModel ?? buildPublishingCenterViewModel();
   const isEmpty = vm.publications.length === 0;
@@ -154,7 +160,9 @@ export function PublishingCenterPage({
       className="flex flex-col gap-card-gap"
     >
       {/* [T-052 裁决⑤] 内容日历并入发布中心:此前 /calendar 全站无入口(孤儿页,
-          只能手敲 URL)。发布节奏/排期属发布中心域,入口挂这里。 */}
+          只能手敲 URL)。发布节奏/排期属发布中心域,入口挂这里。
+          [T-063c] 内嵌进作品页「已发布」tab 时隐藏 —— 「排期」tab 就在旁边。 */}
+      {embedded ? null : (
       <div
         data-slot="publishing-center-calendar-entry"
         className="flex items-center justify-between rounded-card border border-border bg-surface-subtle px-3.5 py-2.5"
@@ -170,6 +178,7 @@ export function PublishingCenterPage({
           打开日历 →
         </Link>
       </div>
+      )}
       {state === "loading" ? (
         <LoadingState label="正在加载发布中心…" rows={6} />
       ) : state === "error" ? (

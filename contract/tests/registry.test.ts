@@ -69,6 +69,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/exports/:exportId/complete"],
   ["GET", "/outputs/:outputId/publications"],
   ["POST", "/outputs/:outputId/publications"],
+  // [T-055h③/T-063c] 登记已发布(粘链接 → published publication 落库)
+  ["POST", "/outputs/:outputId/publications/register"],
   ["GET", "/publications/:publicationId"],
   ["POST", "/publications/:publicationId/revisions"],
   ["GET", "/publications/:publicationId/revisions"],

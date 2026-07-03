@@ -13,7 +13,7 @@ import type {
   PublicationRevisionResource,
 } from "./publishing.schema";
 
-// Publishing transport (foundation §5.4) — the module's 5 contract ops served over
+// Publishing transport (foundation §5.4) — the module's contract ops served over
 // REAL SQL behind the same /api/v1/dispatch route. Mirrors the realized
 // production/artifacts transports: a `Transport` whose request(endpoint,input,ctx)
 // switches on endpoint.id, threads ctx into the service, and returns the SPEC §14
@@ -27,6 +27,7 @@ import type {
 export const PUBLISHING_OP_IDS = [
   "outputs.publications.list",
   "outputs.publications.create",
+  "outputs.publications.register",
   "publications.get",
   "publications.revisions.create",
   "publications.revisions.list",
@@ -98,7 +99,7 @@ export function createPublishingTransport(
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
-      // All 5 ops are persisted (owned). No ctx ⇒ unauthenticated dispatch ⇒
+      // All owned ops are persisted. No ctx ⇒ unauthenticated dispatch ⇒
       // reject before touching the store.
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory();
@@ -130,6 +131,38 @@ export function createPublishingTransport(
             accountReference: string;
           };
           const row = await service.createPublication(ctx, p.outputId ?? "", b);
+          return { data: toPublicationResource(row), meta: { requestId } };
+        }
+        case "outputs.publications.register": {
+          // [T-055h③/T-063c] 登记已发布:粘链接解析出的 external_id 直接落一条
+          // published publication —— 复用数据底座的 createImportedPublication
+          // (幂等于 (platform, externalId),重复登记返回既有行)。contract 的
+          // currentRevisionId 非空,故行上没有 revision 时补铸一条(title 取 body.title,
+          // 缺省空)再回读 —— 与 createPublication 的 OQ4 auto-mint 同语义。
+          const b = (body ?? {}) as {
+            platform: string;
+            externalId: string;
+            externalUrl?: string | null;
+            publishedAt?: string | null;
+            title?: string;
+          };
+          let row = await service.createImportedPublication(
+            ctx,
+            p.outputId ?? "",
+            {
+              platform: b.platform,
+              externalId: b.externalId,
+              externalUrl: b.externalUrl ?? null,
+              publishedAt: b.publishedAt ?? null,
+            },
+          );
+          if (!row.currentRevisionId) {
+            await service.createRevision(ctx, row.id, {
+              title: b.title ?? "",
+              description: "",
+            });
+            row = await service.getPublication(ctx, row.id);
+          }
           return { data: toPublicationResource(row), meta: { requestId } };
         }
         case "publications.get": {

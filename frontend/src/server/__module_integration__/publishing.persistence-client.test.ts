@@ -38,7 +38,8 @@ describe("publishing ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(PUBLISHING_OP_IDS).toHaveLength(6);
+    // [T-055h③/T-063c] +1:outputs.publications.register(登记已发布)。
+    expect(PUBLISHING_OP_IDS).toHaveLength(7);
   });
 
   it("create → list → revise → transition(published) round-trips over the shared store", async () => {
@@ -121,5 +122,48 @@ describe("publishing ops registered in the composite transport", () => {
       owner,
     )) as { data: { externalId: string | null } };
     expect(again.data.externalId).toBe(published.data.externalId);
+  });
+
+  // [T-055h③/T-063c] 登记已发布:粘链接解析出的 aweme_id 经 composite 直接落一条
+  // published publication(revision 补铸,幂等)—— 稿面/排期「登记已发布」的服务端链路。
+  it("outputs.publications.register 落 published+external_id 且幂等(同 external key 返回既有行)", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    const registered = (await compositeTransport.request(
+      ep("outputs.publications.register"),
+      {
+        params: { outputId: OUTPUT_ID },
+        query: undefined,
+        body: {
+          platform: "douyin",
+          externalId: "7423000000000000009",
+          externalUrl: "https://www.douyin.com/video/7423000000000000009",
+          title: "真机登记的作品",
+        },
+      } as never,
+      owner,
+    )) as {
+      data: {
+        id: string;
+        status: string;
+        externalId: string | null;
+        currentRevisionId: string;
+        publishedAt: string | null;
+      };
+    };
+    expect(registered.data.status).toBe("published");
+    expect(registered.data.externalId).toBe("7423000000000000009");
+    expect(registered.data.currentRevisionId).not.toBe("");
+    expect(registered.data.publishedAt).not.toBeNull();
+
+    const again = (await compositeTransport.request(
+      ep("outputs.publications.register"),
+      {
+        params: { outputId: OUTPUT_ID },
+        query: undefined,
+        body: { platform: "douyin", externalId: "7423000000000000009" },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+    expect(again.data.id).toBe(registered.data.id);
   });
 });

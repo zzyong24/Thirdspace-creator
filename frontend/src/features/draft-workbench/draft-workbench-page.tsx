@@ -21,11 +21,12 @@ import { RevealProjectButton } from "./reveal-project-button";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
 import { MaturityBar, DraftPrimaryAction } from "./maturity-bar";
+import { RegisterPublishedForm } from "./register-published-form";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
 
 export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
-  const { project, script, scriptArtifactId, publishPack, publishUnlocked, ammo } = vm;
+  const { project, script, scriptArtifactId, outputId, publishPack, publishUnlocked, ammo } = vm;
   const initialHtml = script.editorHtml ?? sectionsToHtml(script.sections);
 
   return (
@@ -121,6 +122,9 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           <PublishPackSection
             publishPack={publishPack}
             unlocked={publishUnlocked}
+            projectId={project.id}
+            projectTitle={project.title}
+            outputId={outputId}
           />
 
           {/* ── 弹药抽屉 ── */}
@@ -146,10 +150,19 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
 function PublishPackSection({
   publishPack,
   unlocked,
+  projectId,
+  projectTitle,
+  outputId,
 }: {
   publishPack: DraftWorkbenchVm["publishPack"];
   unlocked: boolean;
+  projectId: string;
+  projectTitle: string;
+  outputId: string | null;
 }) {
+  // [T-055h③] 登记入口:解锁后、还没有已发布行时展示(已发布的不重复登记 ——
+  //   幂等虽兜底,但界面不做多余承诺)。
+  const showRegister = unlocked && publishPack?.status !== "published";
   return (
     <section
       id="publish"
@@ -210,6 +223,14 @@ function PublishPackSection({
           )}
         </div>
       </div>
+      {/* [T-055h③] 站外发完 → 粘链接登记为已发布(落 publication + 触发采集)。 */}
+      {showRegister ? (
+        <RegisterPublishedForm
+          projectId={projectId}
+          projectTitle={projectTitle}
+          outputId={outputId}
+        />
+      ) : null}
     </section>
   );
 }

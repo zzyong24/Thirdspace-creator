@@ -49,8 +49,10 @@ export default async function Page({
     <div data-page="projects-hub" className="flex flex-col gap-4">
       <ProjectsHubTabBar active={tab} />
       {tab === "candidates" ? (
-        // 原 /topics 是 contentFill 路由(三栏各自框内滚);内嵌进整页滚动的作品页后,
+        // 原 /topics 是 contentFill 路由(各栏框内滚);内嵌进整页滚动的作品页后,
         // 由这个定高容器给它可分配的高度,内部滚动行为原样保留。
+        // [T-063c] 深度融合:embedded 形态 = AI 选题会带 + 来源/漏斗一行摘要 +
+        // 「候选池 + 详情」两栏(TopicsView 内分支)。
         <div className="flex h-[calc(100vh-15rem)] min-h-[560px] flex-col">
           <TopicsPage
             embedded
@@ -91,6 +93,7 @@ async function ActiveTab({
       : "updated";
   return (
     <ProjectsPage
+      embedded
       page={page}
       status={status}
       sort={sort}
@@ -106,8 +109,8 @@ async function PublishedTab({
   readonly client: PublishingCenterDataClient | undefined;
 }) {
   if (!client) {
-    return <PublishingCenterPage />;
+    return <PublishingCenterPage embedded />;
   }
   const viewModel = await buildPublishingCenterViewModelReal(client);
-  return <PublishingCenterPage viewModel={viewModel} />;
+  return <PublishingCenterPage embedded viewModel={viewModel} />;
 }

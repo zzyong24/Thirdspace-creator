@@ -114,4 +114,34 @@ describe("publishing.transport — 5-op contract conformance", () => {
     expect(parsed.data.externalUrl).not.toBeNull();
     expect(parsed.data.publishedAt).not.toBeNull();
   });
+
+  // [T-055h③/T-063c] 登记已发布:粘链接 → published publication 直接落库。
+  it("outputs.publications.register → published DTO(external_id 落库 + revision 补铸 + 幂等)", async () => {
+    const res = await call("outputs.publications.register", {
+      params: { outputId: "output-1" },
+      body: {
+        platform: "douyin",
+        externalId: "7423000000000000001",
+        externalUrl: "https://www.douyin.com/video/7423000000000000001",
+        title: "真机登记的作品",
+      },
+    });
+    const parsed = successEnvelope(publicationResource).parse(res);
+    expect(parsed.data.status).toBe("published");
+    expect(parsed.data.externalId).toBe("7423000000000000001");
+    expect(parsed.data.externalUrl).toBe(
+      "https://www.douyin.com/video/7423000000000000001",
+    );
+    expect(parsed.data.publishedAt).not.toBeNull();
+    // currentRevisionId 非空(补铸 revision,守 contract id min(1))。
+    expect(parsed.data.currentRevisionId).not.toBe("");
+
+    // 幂等:同 (platform, externalId) 重复登记返回既有行,不重复建。
+    const again = await call("outputs.publications.register", {
+      params: { outputId: "output-1" },
+      body: { platform: "douyin", externalId: "7423000000000000001" },
+    });
+    const parsedAgain = successEnvelope(publicationResource).parse(again);
+    expect(parsedAgain.data.id).toBe(parsed.data.id);
+  });
 });
