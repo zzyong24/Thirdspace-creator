@@ -1,8 +1,13 @@
 /**
  * 库 route([T-063a] IA 收敛底座 · 北极星 SPEC §1「库」新路由)。
  *
+ * [T-063d] 深度融合:统一头部 = 三 tab 条 + 跨类搜索行(跳 /search)+ 统一倾倒场
+ * (LibraryDumpZone,所有 tab 常驻;文件→素材流、文本→知识流、记经验→Copilot 深链)。
+ * 三 tab 以 embedded 模式内嵌(去双头:知识 tab 收掉自己的 KnowledgeDumpZone、
+ * 经验 tab 收掉页头;筛选/分页链接改指 /library?tab=,避免旧路由 301 丢 query)。
+ *
  * `?tab=` 驱动三 tab,各 tab 内嵌现有 feature 页核心区与其 server 数据装配
- * (删壳不删肉,feature 组件零删除;深度融合在 T-063d):
+ * (删壳不删肉,feature 组件零删除):
  *   - assets(默认):原 /assets 的 AssetsPage + buildAssetsViewModelReal
  *     (?type/?q/?page/?pageSize 原样生效);
  *   - knowledge:原 /knowledge 的 KnowledgePage + buildKnowledgeDashboardViewModel
@@ -28,6 +33,8 @@ import {
   buildExperienceWorkspaceViewModel,
   type ExperienceDataClient,
 } from "@/features/experience/experience-data";
+import { LibraryDumpZone } from "@/features/library/library-dump-zone";
+import { LibrarySearch } from "@/features/library/library-search";
 import {
   LibraryTabBar,
   normalizeLibraryTab,
@@ -54,7 +61,13 @@ export default async function LibraryRoutePage({
 
   return (
     <div data-page="library" className="flex flex-col gap-4">
-      <LibraryTabBar active={tab} />
+      {/* [T-063d] 统一头部:三 tab 切换 + 跨类搜索(跳 /search,复用全局搜索的
+          knowledge/asset facet)+ 统一倾倒场(所有 tab 常驻,倒任意东西自动分流)。 */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <LibraryTabBar active={tab} />
+        <LibrarySearch />
+      </div>
+      <LibraryDumpZone />
       {tab === "knowledge" ? (
         <KnowledgeTab client={client} tag={firstParam(params.tag)} />
       ) : tab === "experience" ? (
@@ -81,7 +94,7 @@ async function AssetsTab({
     pageSize: firstParam(params.pageSize),
   };
   if (!client) {
-    return <AssetsPage {...search} />;
+    return <AssetsPage {...search} embedded />;
   }
   const real = await buildAssetsViewModelReal(
     client as unknown as AssetsDataClient,
@@ -93,6 +106,7 @@ async function AssetsTab({
       projects={real.projects.map((p) => ({ id: p.id, title: p.title }))}
       state={real.state}
       error={real.error}
+      embedded
     />
   );
 }
@@ -106,13 +120,13 @@ async function KnowledgeTab({
   readonly tag: string | undefined;
 }) {
   if (!client) {
-    return <KnowledgePage />;
+    return <KnowledgePage embedded />;
   }
   const viewModel = await buildKnowledgeDashboardViewModel(
     client as unknown as KnowledgeDataClient,
     { tag: (tag ?? "").trim() || null },
   );
-  return <KnowledgePage viewModel={viewModel} />;
+  return <KnowledgePage viewModel={viewModel} embedded />;
 }
 
 /** 经验 tab = 原 /experience 装配(裁决队列 + 应用目标候选)。 */
@@ -126,7 +140,9 @@ async function ExperienceTab({
     resolveApplyTargets(c),
     buildExperienceWorkspaceViewModel(c as unknown as ExperienceDataClient),
   ]);
-  return <ExperiencePage viewModel={viewModel} applyTargets={applyTargets} />;
+  return (
+    <ExperiencePage viewModel={viewModel} applyTargets={applyTargets} embedded />
+  );
 }
 
 interface ProjectListItemDto {

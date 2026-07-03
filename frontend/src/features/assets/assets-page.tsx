@@ -64,6 +64,7 @@ import {
   type ProjectOption,
 } from "./assets-interactive-region";
 import { AssetUploadButton } from "./asset-upload-button";
+import { assetsHref } from "./assets-href";
 import { AssetsToolbarSearch } from "./assets-toolbar-search";
 import { buildAssetsViewModelReal } from "./assets-data";
 
@@ -120,6 +121,12 @@ export interface AssetsPageProps {
   readonly page?: string;
   /** `?pageSize=` — gallery page size (real `assets.list` paging). */
   readonly pageSize?: string;
+  /**
+   * [T-063d] 内嵌模式:被 /library「素材」tab 内嵌时,筛选/搜索/分页链接改指
+   * `/library?tab=assets&…`(旧路由 301 丢 query,内嵌下 `/assets?…` 会断筛选)。
+   * 上传按钮保留(与库页统一倾倒场并存不冲突,SPEC §3 T-063d)。
+   */
+  readonly embedded?: boolean;
 }
 
 export interface AssetsViewModel {
@@ -269,6 +276,7 @@ export async function AssetsPage({
   q,
   page,
   pageSize,
+  embedded = false,
 }: AssetsPageProps = {}) {
   // GAP-AST-tristate: the route (server component) resolves the session, builds
   // the REAL VM with a session-scoped client via `buildAssetsViewModelReal`, and
@@ -302,7 +310,11 @@ export async function AssetsPage({
         data-page-state="error"
         className="flex flex-col gap-3"
       >
-        <AssetToolbar query={(q ?? "").trim()} activeType={normalizeType(type)} />
+        <AssetToolbar
+          query={(q ?? "").trim()}
+          activeType={normalizeType(type)}
+          embedded={embedded}
+        />
         <ErrorState error={resolvedError ?? null} />
       </main>
     );
@@ -323,7 +335,11 @@ export async function AssetsPage({
       data-page-state={vm.assets.length === 0 ? "empty" : "default"}
       className="flex flex-col gap-3"
     >
-      <AssetToolbar query={gallery.query} activeType={gallery.activeType} />
+      <AssetToolbar
+        query={gallery.query}
+        activeType={gallery.activeType}
+        embedded={embedded}
+      />
       <div
         data-slot="assets-page-body"
         className="grid grid-cols-1 gap-card-gap lg:grid-cols-[216px_minmax(0,1fr)]"
@@ -337,10 +353,14 @@ export async function AssetsPage({
             totalCount={vm.assets.length}
             activeType={gallery.activeType}
             query={gallery.query}
+            embedded={embedded}
           />
           <StorageUsageCard storage={vm.storage} />
         </div>
-        <AssetsInteractiveRegion viewModel={vm} gallery={gallery} />
+        <AssetsInteractiveRegion
+          viewModel={vm}
+          gallery={{ ...gallery, embedded }}
+        />
       </div>
     </main>
   );
@@ -358,9 +378,11 @@ export async function AssetsPage({
 function AssetToolbar({
   query,
   activeType,
+  embedded = false,
 }: {
   readonly query: string;
   readonly activeType: AssetType | null;
+  readonly embedded?: boolean;
 }) {
   return (
     <div
@@ -375,6 +397,7 @@ function AssetToolbar({
         <AssetsToolbarSearch
           query={query}
           activeType={activeType}
+          embedded={embedded}
         />
       </div>
       <div
@@ -421,6 +444,8 @@ interface AssetTypeSidebarProps {
   readonly totalCount: number;
   readonly activeType: AssetType | null;
   readonly query: string;
+  /** [T-063d] 内嵌时类型筛选链接指 /library?tab=assets&type=(301 会丢 query)。 */
+  readonly embedded?: boolean;
 }
 
 // Plan D1: the type rows are REAL filter links. Each navigates `?type=<type>`
@@ -433,14 +458,14 @@ function AssetTypeSidebar({
   totalCount,
   activeType,
   query,
+  embedded = false,
 }: AssetTypeSidebarProps) {
   const q = query.trim();
   const hrefFor = (type: AssetType | null): string => {
     const params = new URLSearchParams();
     if (type !== null) params.set("type", type);
     if (q.length > 0) params.set("q", q);
-    const qs = params.toString();
-    return qs.length > 0 ? `/assets?${qs}` : "/assets";
+    return assetsHref(params, embedded);
   };
   const entries: ReadonlyArray<{
     readonly id: string;

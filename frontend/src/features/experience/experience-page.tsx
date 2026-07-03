@@ -45,29 +45,39 @@ export interface ExperiencePageProps {
    * 「应用到项目」的目标项目(projects.list)。空 ⇒ 应用控件隐藏。
    */
   readonly applyTargets?: ReadonlyArray<ApplyTarget>;
+  /**
+   * [T-063d] 内嵌模式:被 /library「经验」tab 内嵌时隐藏自己的页头(h1「经验裁决台」
+   * + 「记一条经验」深链)——库页统一倾倒场自带「记经验」深链入口,避免双头。
+   * 汇总卡 + 裁决工作台原样保留(删壳不删肉)。
+   */
+  readonly embedded?: boolean;
 }
 
 export function ExperiencePage({
   viewModel,
   applyTargets = [],
+  embedded = false,
 }: ExperiencePageProps) {
   return (
     <main
       data-app="creatoros"
       data-page="experience"
       data-experience-id="experience-root"
+      data-embedded={embedded ? "true" : undefined}
       className="flex h-full min-h-0 flex-col gap-4"
     >
-      <header className="flex shrink-0 items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold text-foreground">经验裁决台</h1>
-          <p className="text-sm text-muted-foreground">
-            复盘产出的经验候选在这里裁决——采纳沉淀为约束规则，回流校准评分标准。
-          </p>
-        </div>
-        {/* §2.4:旧 RightRail「快速记录」表单退役 → Copilot 深链预填(只预填不发送)。 */}
-        <ExperienceCaptureLink />
-      </header>
+      {embedded ? null : (
+        <header className="flex shrink-0 items-start justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-xl font-semibold text-foreground">经验裁决台</h1>
+            <p className="text-sm text-muted-foreground">
+              复盘产出的经验候选在这里裁决——采纳沉淀为约束规则，回流校准评分标准。
+            </p>
+          </div>
+          {/* §2.4:旧 RightRail「快速记录」表单退役 → Copilot 深链预填(只预填不发送)。 */}
+          <ExperienceCaptureLink />
+        </header>
+      )}
 
       <SummaryCards summary={viewModel.summary} loadError={viewModel.loadError} />
 

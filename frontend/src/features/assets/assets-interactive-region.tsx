@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import { client } from "@/lib/contract-client";
 import { AssetCard } from "@/components/resources/asset-card";
 import { AssetDetailPanel } from "@/components/resources/asset-detail-panel";
+import { assetsHref } from "./assets-href";
 import type { AssetSummary, AssetsViewModel } from "./assets-page";
 
 // A project the user can attach an asset to (用料链 consumption from the library).
@@ -45,6 +46,8 @@ export interface GalleryProps {
   readonly activeType: string | null;
   readonly query: string;
   readonly projects: ReadonlyArray<ProjectOption>;
+  /** [T-063d] 内嵌 /library 时分页链接指 /library?tab=assets&…(301 会丢 query)。 */
+  readonly embedded?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -353,6 +356,7 @@ export function AssetsInteractiveRegion({
             pageSize={gallery.pageSize}
             activeType={gallery.activeType}
             query={gallery.query}
+            embedded={gallery.embedded}
           />
         ) : null}
       </div>
@@ -464,14 +468,14 @@ function buildAssetsHref(params: {
   pageSize: number;
   activeType: string | null;
   query: string;
+  embedded: boolean;
 }): string {
   const sp = new URLSearchParams();
   if (params.activeType !== null) sp.set("type", params.activeType);
   if (params.query.trim().length > 0) sp.set("q", params.query.trim());
   if (params.page > 1) sp.set("page", String(params.page));
   sp.set("pageSize", String(params.pageSize));
-  const qs = sp.toString();
-  return qs.length > 0 ? `/assets?${qs}` : "/assets";
+  return assetsHref(sp, params.embedded);
 }
 
 const PAGE_SIZE_OPTIONS = [12, 24, 48, 60, 100] as const;
@@ -482,12 +486,14 @@ function Pagination({
   pageSize,
   activeType,
   query,
+  embedded = false,
 }: {
   readonly currentPage: number;
   readonly totalPages: number;
   readonly pageSize: number;
   readonly activeType: string | null;
   readonly query: string;
+  readonly embedded?: boolean;
 }) {
   const router = useRouter();
   const go = React.useCallback(
@@ -499,10 +505,11 @@ function Pagination({
           pageSize: nextPageSize,
           activeType,
           query,
+          embedded,
         }),
       );
     },
-    [router, totalPages, activeType, query],
+    [router, totalPages, activeType, query, embedded],
   );
 
   // Render the first 4 pages, an ellipsis, and the last page so the nav stays

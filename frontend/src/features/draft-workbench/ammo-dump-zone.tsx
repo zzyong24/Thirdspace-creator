@@ -25,7 +25,9 @@ interface PendingFile {
   readonly tags: readonly string[];
 }
 
-async function assignTagsBestEffort(
+// [T-063d] 导出给库页统一倾倒场(features/library/library-dump-zone)复用 ——
+// 通用素材上传同样要打确定性归类标签;标签是增强,失败不阻断入库。
+export async function assignTagsBestEffort(
   assetId: string,
   tagNames: readonly string[],
 ): Promise<void> {
