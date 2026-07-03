@@ -163,15 +163,29 @@ describe("content-calendar island wiring", () => {
   });
 
   it("renders entries by their real server status (no client-invented state, C-2)", () => {
+    // T-083a 月历格:entries 落在各自的日格里,chip 的 data-status 仍是服务端真状态。
     render(
       <ContentCalendarView
         viewModel={{
           accountId: ACC,
           accounts: [],
+          month: "2026-07",
+          referenceDateKey: "2026-07-03",
+          publications: [],
           entries: [
             PLANNED,
-            { ...PLANNED, id: "cal-2", status: "missed" },
-            { ...PLANNED, id: "cal-3", status: "published" },
+            {
+              ...PLANNED,
+              id: "cal-2",
+              status: "missed",
+              plannedAt: "2026-07-22T09:00:00.000Z",
+            },
+            {
+              ...PLANNED,
+              id: "cal-3",
+              status: "published",
+              plannedAt: "2026-07-23T09:00:00.000Z",
+            },
           ],
           cadence: null,
           attainment: LAGGING_ATTAINMENT,

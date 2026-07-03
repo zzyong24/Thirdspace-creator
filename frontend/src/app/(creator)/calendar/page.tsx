@@ -21,10 +21,22 @@ import { ContentCalendarPage } from "@/features/content-calendar/content-calenda
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
 
-export default async function CalendarRoutePage() {
+export default async function CalendarRoutePage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  // 月份切换是静态跳转:`?month=YYYY-MM`(非法/缺省 → 参考月,feature 内校验)。
+  const params = (await searchParams) ?? {};
+  const month = typeof params.month === "string" ? params.month : undefined;
   const session = await resolveSession();
   if (!session) {
-    return <ContentCalendarPage />;
+    return <ContentCalendarPage month={month} />;
   }
-  return <ContentCalendarPage client={createServerClient(session.ctx)} />;
+  return (
+    <ContentCalendarPage
+      month={month}
+      client={createServerClient(session.ctx)}
+    />
+  );
 }
