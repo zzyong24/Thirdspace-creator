@@ -106,6 +106,9 @@ export interface PublicationRow {
   readonly publishedAtLabel: string;
   readonly status: "published" | "scheduled" | "draft" | "removed";
   readonly statusLabel: string;
+  // [T-073] 平台侧已隐藏(抖音端「仅自己可见/已隐藏」,publication.hiddenAt 非空)。
+  //   列表默认过滤 hidden 行,可切「显示已隐藏」;显示时行上带「已隐藏」徽标。
+  readonly hidden: boolean;
   readonly views: string;
   readonly engagementLabel: string;
   readonly engagementTone: "positive" | "neutral" | "warning";

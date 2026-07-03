@@ -156,6 +156,8 @@ export function PublishingCenterInteractiveRegion({
     viewModel.contentTypeTabs[0]?.id ?? "all",
   );
   const [chip, setChip] = React.useState<DateFilterChip["id"]>("all");
+  // [T-073] 显示已隐藏(抖音端「仅自己可见/已隐藏」的发布行,hidden=true)。默认过滤。
+  const [showHidden, setShowHidden] = React.useState(false);
   const [query, setQuery] = React.useState<string>(() => readUrlQuery());
   const [page, setPage] = React.useState<number>(1);
   const [selectedIds, setSelectedIds] = React.useState<ReadonlySet<string>>(
@@ -183,10 +185,22 @@ export function PublishingCenterInteractiveRegion({
     setPage(1);
   }, []);
 
+  // [T-073] 已隐藏行数(开关徽标计数;为 0 且未开时开关不渲染)。
+  const hiddenCount = React.useMemo(
+    () => viewModel.publications.filter((row) => row.hidden).length,
+    [viewModel.publications],
+  );
+  const handleToggleHidden = React.useCallback(() => {
+    setShowHidden((prev) => !prev);
+    setPage(1);
+  }, []);
+
   // Filter the publication list by the active tab + date chip + query.
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     return viewModel.publications.filter((row) => {
+      // [T-073] 平台侧已隐藏默认过滤,开关打开才显示(行上带「已隐藏」徽标)。
+      if (!showHidden && row.hidden) return false;
       const tabOk = activeTab === "all" || row.contentType === activeTab;
       if (!tabOk) return false;
       if (!matchesDateChip(row, chip)) return false;
@@ -195,7 +209,7 @@ export function PublishingCenterInteractiveRegion({
         `${row.contentTitle} ${row.projectTitle} ${row.platformLabel}`.toLowerCase();
       return haystack.includes(q);
     });
-  }, [viewModel.publications, activeTab, chip, query]);
+  }, [viewModel.publications, activeTab, chip, query, showHidden]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -317,6 +331,9 @@ export function PublishingCenterInteractiveRegion({
             onQueryChange={handleSearchChange}
             chip={chip}
             onChipChange={handleChipChange}
+            showHidden={showHidden}
+            hiddenCount={hiddenCount}
+            onToggleHidden={handleToggleHidden}
           />
           <BatchOperationBar
             selectedCount={selectedIds.size}
@@ -403,11 +420,18 @@ function PublishingToolbar({
   onQueryChange,
   chip,
   onChipChange,
+  showHidden,
+  hiddenCount,
+  onToggleHidden,
 }: {
   query: string;
   onQueryChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   chip: DateFilterChip["id"];
   onChipChange: (id: DateFilterChip["id"]) => void;
+  /** [T-073] 显示已隐藏开关状态 + 已隐藏行数(为 0 且未开时不渲染开关)。 */
+  showHidden: boolean;
+  hiddenCount: number;
+  onToggleHidden: () => void;
 }) {
   return (
     <div
@@ -447,6 +471,27 @@ function PublishingToolbar({
             onClick={() => onChipChange(entry.id)}
           />
         ))}
+        {/* [T-073] 显示已隐藏开关(抖音端「仅自己可见/已隐藏」默认过滤)。 */}
+        {hiddenCount > 0 || showHidden ? (
+          <button
+            type="button"
+            data-slot="publishing-show-hidden-toggle"
+            aria-pressed={showHidden}
+            onClick={onToggleHidden}
+            className={
+              showHidden
+                ? "inline-flex h-7 items-center gap-1 rounded-full border border-brand/60 bg-brand-soft px-2.5 text-xs font-medium text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                : "inline-flex h-7 items-center gap-1 rounded-full border border-border bg-surface px-2.5 text-xs text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            }
+          >
+            <span>{showHidden ? "隐藏已隐藏" : "显示已隐藏"}</span>
+            {hiddenCount > 0 ? (
+              <span className="font-mono text-[10px] tabular-nums">
+                {hiddenCount}
+              </span>
+            ) : null}
+          </button>
+        ) : null}
       </div>
     </div>
   );
@@ -670,6 +715,7 @@ function PublicationPerformanceRow({
       data-slot="publication-performance-row"
       data-publication-id={row.id}
       data-status={row.status}
+      data-hidden={row.hidden ? "true" : "false"}
       data-selected={selected ? "true" : "false"}
       data-active={active ? "true" : "false"}
       className={
@@ -706,7 +752,18 @@ function PublicationPerformanceRow({
         {row.publishedAtLabel}
       </td>
       <td className="px-3 py-2.5">
-        <StatusBadge status={row.status} label={row.statusLabel} />
+        <div className="flex items-center gap-1">
+          <StatusBadge status={row.status} label={row.statusLabel} />
+          {/* [T-073] 平台侧已隐藏徽标(「显示已隐藏」开关打开时该行才可见)。 */}
+          {row.hidden ? (
+            <span
+              data-slot="publication-hidden-badge"
+              className="inline-flex h-5 items-center rounded-md bg-surface-subtle px-1.5 text-[11px] font-medium text-muted-foreground"
+            >
+              已隐藏
+            </span>
+          ) : null}
+        </div>
       </td>
       <td className="px-3 py-2.5">
         <div className="flex flex-col gap-0.5">

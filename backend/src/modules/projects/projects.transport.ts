@@ -85,6 +85,8 @@ function toPlatformRef(raw: unknown): ProjectResource["platformRef"] {
   if (su) out.shareUrl = su;
   const pa = str(c.publishedAt);
   if (pa) out.publishedAt = pa;
+  // [T-073] 平台侧可见性:仅在明确为 true 时带上(未同步/可见不带键,不瞎标)。
+  if (c.hidden === true) out.hidden = true;
   return out;
 }
 

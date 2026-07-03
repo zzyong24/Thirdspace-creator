@@ -11,13 +11,11 @@ export function projectWorkspaceHref(
   projectId: string,
   stage: ProjectStageName,
 ): string {
-  // [T-068] 用户看图裁决:项目回**阶段式展示**(顶部 研究/策划/脚本/拍摄/发布/复盘
-  // 横向导航),打开项目按 currentStage 进对应阶段工作台;稿面(总览 `/projects/[id]`)
-  // 承载 brief/选题/脚本。撤 T-057①「一律进稿面」——但保留其修复本意:brief 与
-  // topic/script 类阶段仍落稿面(它们的工作台就是稿面),只有有独立页的阶段跳阶段页。
-  if (stage === "research" || stage === "planning" || stage === "production"
-      || stage === "publishing" || stage === "review") {
-    return `/projects/${projectId}/${stage}`;
+  // [T-076] 项目两阶段化(SPEC 2026-07-03):review → 复盘页;其余一律 → 稿面
+  // (选题/脚本/素材/发布动作全部发生在稿面;research/planning/production 不再有
+  // 独立工作台,遗留路由 301 落稿面)。
+  if (stage === "review") {
+    return `/projects/${projectId}/review`;
   }
   return `/projects/${projectId}`;
 }

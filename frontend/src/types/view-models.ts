@@ -72,7 +72,6 @@ export type PageKind =
   | "research"
   | "planning"
   | "script"
-  | "production"
   | "publishing"
   | "analytics-review"
   | "knowledge"
@@ -170,6 +169,9 @@ export interface ProjectListRow {
   readonly source: ProjectSource;
   // 真实发布时刻(导入作品 platformRef.publishedAt;非导入无 → null)。列表按它倒序。
   readonly publishedAt: Iso8601 | null;
+  // [T-073] 平台侧已隐藏(抖音端「仅自己可见/已隐藏」,platformRef.hidden 同步)。
+  //   列表默认过滤 hidden 行,可切「显示已隐藏」;显示时行上带「已隐藏」徽标。
+  readonly hidden: boolean;
 }
 
 export interface ContentOutputSummary {
@@ -396,31 +398,8 @@ export interface ScriptViewModel extends BasePageViewModel {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Production workspace
-// ---------------------------------------------------------------------------
-
-export interface ProductionAsset {
-  readonly id: Id;
-  readonly name: string;
-  readonly type: "image" | "video" | "audio" | "document" | "subtitle";
-  readonly durationLabel: string | null;
-}
-
-export interface ProductionViewModel extends BasePageViewModel {
-  readonly kind: "production";
-  readonly projectId: Id;
-  readonly mode: "remote_recording" | "screen_capture" | "studio";
-  readonly scriptLines: ReadonlyArray<{ readonly id: Id; readonly text: string; readonly timestamp: string }>;
-  readonly assetCategories: ReadonlyArray<{ readonly id: string; readonly label: string }>;
-  readonly assets: ReadonlyArray<ProductionAsset>;
-  readonly preview: { readonly posterLabel: string; readonly durationLabel: string };
-  readonly settings: ReadonlyArray<{
-    readonly group: "recording" | "subtitle" | "export";
-    readonly items: ReadonlyArray<{ readonly id: Id; readonly label: string; readonly value: string }>;
-  }>;
-  readonly timeline: ReadonlyArray<{ readonly id: Id; readonly title: string; readonly startLabel: string; readonly endLabel: string }>;
-}
+// [T-076] Production workspace ViewModel 已随 production 前端全删退役
+// (后端 production/segments 模块与 ops 保留,将来「拍摄/生成」阶段回归时复用)。
 
 // ---------------------------------------------------------------------------
 // Publishing workspace

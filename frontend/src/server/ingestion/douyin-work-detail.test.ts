@@ -5,6 +5,7 @@ import {
   detailToRawMetrics,
   matchDetailsToPublications,
   toDetailMetricRecords,
+  visibilityFromDetailStatus,
   type DouyinWorkDetail,
   type PublicationCatalogEntry,
 } from "./douyin-work-detail";
@@ -408,5 +409,28 @@ describe("toDetailMetricRecords — 匹配上的明细 → MetricRecord[](未匹
     expect(r.metrics.plays).toBe(100);
     expect(r.metrics.ctr).toBe(20);
     expect(r.metrics.finish_rate).toBe(10);
+  });
+});
+
+// [T-073] 可见性判定:明细「审核状态」列 → hidden / visible / unknown(诚实不瞎标)。
+describe("visibilityFromDetailStatus ([T-073] 审核状态 → 可见性)", () => {
+  it("「仅自己可见」及各隐藏口径 → hidden", () => {
+    expect(visibilityFromDetailStatus("仅自己可见")).toBe("hidden");
+    expect(visibilityFromDetailStatus("仅我可见")).toBe("hidden");
+    expect(visibilityFromDetailStatus("已隐藏")).toBe("hidden");
+    expect(visibilityFromDetailStatus("私密")).toBe("hidden");
+    // 带前后缀/空白仍命中(findCol 同款子串容错口径)
+    expect(visibilityFromDetailStatus(" 已通过(仅自己可见) ")).toBe("hidden");
+  });
+
+  it("「已通过」→ visible", () => {
+    expect(visibilityFromDetailStatus("已通过")).toBe("visible");
+  });
+
+  it("判定不了(审核中/未通过/空)→ unknown,消费侧不动既有标记", () => {
+    expect(visibilityFromDetailStatus("审核中")).toBe("unknown");
+    expect(visibilityFromDetailStatus("未通过")).toBe("unknown");
+    expect(visibilityFromDetailStatus("")).toBe("unknown");
+    expect(visibilityFromDetailStatus("  ")).toBe("unknown");
   });
 });

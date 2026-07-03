@@ -30,6 +30,7 @@ import { ProgressBar } from "@/components/project/progress-bar";
 import { TagChip } from "@/components/content/tag-chip";
 import { ChartFrame } from "@/components/analytics/chart-frame";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
+import { projectWorkspaceHref } from "@/features/projects/project-href";
 import { client } from "@/lib/contract-client.server";
 import {
   canonicalDataset,
@@ -205,9 +206,12 @@ function ContinueCreatingCard({
   continueCreating: ContinueCreating;
   projectPlatforms: ReadonlyArray<string>;
 }) {
-  // Deep-link the project row to its current-stage workspace (D3): the project's
-  // current stage IS the workspace the creator should resume in.
-  const projectHref = `/projects/${continueCreating.projectId}/${continueCreating.stage}`;
+  // Deep-link the project row to its workspace (D3)。[T-076] 两阶段化:统一走
+  // projectWorkspaceHref(review → 复盘页,其余 → 稿面),不再拼阶段子路由。
+  const projectHref = projectWorkspaceHref(
+    continueCreating.projectId,
+    continueCreating.stage,
+  );
   return (
     <div data-slot="continue-creating-card">
     <SectionCard
@@ -524,35 +528,21 @@ function CreationSuggestionsCard({
 // Helpers
 // ---------------------------------------------------------------------------
 
-// The six project stages that map to a real `/projects/<id>/<stage>` route.
-// A `TodoRow.stage` may instead be an OutputStageName (recording/editing/…),
-// which has no stage route — those fall back to the project overview.
-const PROJECT_STAGE_ROUTES: ReadonlySet<ProjectStageName> = new Set([
-  "research",
-  "planning",
-  "script",
-  "production",
-  "publishing",
-  "review",
-]);
-
-function isProjectStageRoute(stage: string): stage is ProjectStageName {
-  return PROJECT_STAGE_ROUTES.has(stage as ProjectStageName);
-}
-
 /**
- * Deep-link target for a todo row: the stage workspace when `stage` is a real
- * project stage, otherwise the project overview.
+ * [T-076] 项目两阶段化后的深链:review → 复盘页;其余任何 stage(含遗留
+ * research/planning/production/publishing 与 OutputStageName 的 recording/editing/…)
+ * 一律落稿面(`/projects/<id>`)——可执行入口都在稿面内。
  */
 function todoHref(todo: TodoRow): string {
-  return isProjectStageRoute(todo.stage)
-    ? `/projects/${todo.projectId}/${todo.stage}`
+  return todo.stage === "review"
+    ? `/projects/${todo.projectId}/review`
     : `/projects/${todo.projectId}`;
 }
 
 /**
- * Category-aware CTA for a creation suggestion. Stage categories resume the
- * active project in that stage; the 选题/研究 category routes to the topic pool;
+ * Category-aware CTA for a creation suggestion. 选题/研究/策划 category routes to
+ * the topic pool; review resumes the active project's 复盘页; other stage
+ * categories resume its 稿面 ([T-076] production 工作台已删,深链一律落稿面);
  * anything else falls back to starting a new project.
  */
 function suggestionCta(
@@ -562,9 +552,15 @@ function suggestionCta(
   if (category === "research" || category === "topic" || category === "planning") {
     return { href: "/topics", label: "去选题池" };
   }
-  if (isProjectStageRoute(category)) {
+  if (category === "review") {
     return {
-      href: `/projects/${continueCreating.projectId}/${category}`,
+      href: `/projects/${continueCreating.projectId}/review`,
+      label: "立即创作",
+    };
+  }
+  if (category === "script" || category === "production" || category === "publishing") {
+    return {
+      href: `/projects/${continueCreating.projectId}`,
       label: "立即创作",
     };
   }

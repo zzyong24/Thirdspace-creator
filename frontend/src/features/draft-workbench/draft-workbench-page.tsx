@@ -21,7 +21,7 @@ import { DraftChatRail } from "./draft-chat-rail";
 import { RevealProjectButton } from "./reveal-project-button";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
-import { DraftPrimaryAction } from "./maturity-bar";
+import { DraftPrimaryAction } from "./draft-primary-action";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
@@ -38,8 +38,8 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
       data-project-id={project.id}
       className="flex h-full min-h-0 flex-col"
     >
-      {/* ── 顶条(T-075 收窄:标题与阶段条由 shell project-workspace header 统一提供,
-          稿面自带的 5 点成熟度条退役 —— 与阶段页只剩同一套 6 项阶段导航)。 ── */}
+      {/* ── 顶条(T-075 收窄:标题与阶段条由 shell project-workspace header 统一提供;
+          [T-076] 阶段条两段化「脚本|复盘」,主行动按发布态收敛)。 ── */}
       <header
         data-slot="draft-topbar"
         className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2"
@@ -54,10 +54,10 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
               真实导入作品
             </span>
           ) : null}
+          {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
           <DraftPrimaryAction
             projectId={project.id}
-            currentStage={project.currentStage}
-            scriptHasVersion={script.versionCount > 0}
+            published={publishPack?.status === "published"}
           />
         </div>
       </header>

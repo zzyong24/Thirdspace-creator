@@ -26,6 +26,10 @@ export const platformRef = z.object({
   externalId: z.string(),
   shareUrl: z.string().optional(),
   publishedAt: iso8601.optional(),
+  // [T-073] 平台侧可见性:该导入作品在抖音端「仅自己可见/已隐藏」时为 true(采集
+  // 明细导出的「审核状态」列同步)。作品列表默认过滤 hidden 项目,可切「显示已隐藏」。
+  // optional:非导入/未同步的项目不带该键(不瞎标)。
+  hidden: z.boolean().optional(),
 });
 export type PlatformRef = z.infer<typeof platformRef>;
 

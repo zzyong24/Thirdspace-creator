@@ -7,7 +7,8 @@ import { ROUTES } from "../../tests/fixtures/routes";
 
 describe("visual reference baselines", () => {
   it("contains one immutable reference PNG per approved route", () => {
-    expect(ROUTES).toHaveLength(17);
+    // [T-076] production-workspace 路由随项目两阶段化删除:17 → 16。
+    expect(ROUTES).toHaveLength(16);
 
     for (const route of ROUTES) {
       const path = resolve(

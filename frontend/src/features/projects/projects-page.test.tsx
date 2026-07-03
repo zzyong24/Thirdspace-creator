@@ -225,4 +225,40 @@ describe("ProjectsPage", () => {
     expect(active).toHaveAttribute("href", "/projects");
     expect(active.textContent?.trim()).toBe("项目");
   });
+
+  // [T-073] 平台侧已隐藏(抖音端「仅自己可见/已隐藏」)默认过滤;?hidden=1 显示 + 徽标。
+  it("filters platform-hidden works by default and shows them with showHidden", async () => {
+    const { buildProjectsViewModel } = await import("@/fixtures/selectors");
+    const base = buildProjectsViewModel();
+    const hiddenId = base.rows[0]!.id;
+    const vm = {
+      ...base,
+      rows: base.rows.map((row) =>
+        row.id === hiddenId ? { ...row, hidden: true } : row,
+      ),
+    };
+
+    // 默认(showHidden 缺省 false):隐藏行不渲染,开关渲染且带计数。
+    const first = await renderProjects({ viewModel: vm });
+    expect(
+      first.container.querySelector(`[data-project-id="${hiddenId}"]`),
+    ).toBeNull();
+    const toggle = first.container.querySelector(
+      '[data-slot="projects-show-hidden-toggle"]',
+    );
+    expect(toggle).not.toBeNull();
+    expect(toggle!.getAttribute("aria-pressed")).toBe("false");
+    cleanup();
+
+    // showHidden=true(?hidden=1):行显示,带「已隐藏」徽标 + data-project-hidden。
+    const second = await renderProjects({ viewModel: vm, showHidden: true });
+    const row = second.container.querySelector(
+      `[data-project-id="${hiddenId}"]`,
+    );
+    expect(row).not.toBeNull();
+    expect(row!.getAttribute("data-project-hidden")).toBe("true");
+    expect(
+      row!.querySelector('[data-slot="project-hidden-badge"]')?.textContent,
+    ).toBe("已隐藏");
+  });
 });

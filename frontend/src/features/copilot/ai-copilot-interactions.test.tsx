@@ -361,7 +361,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       '[data-slot="continuing-resume"][data-task-id="t-running"]',
     ) as HTMLButtonElement;
     await user.click(resume);
-    expect(routerPush).toHaveBeenCalledWith("/projects/proj-1/script");
+    // [T-076] 两阶段化:script.* 任务的「继续」落稿面(/projects/<id>),不再拼阶段子路由。
+    expect(routerPush).toHaveBeenCalledWith("/projects/proj-1");
   });
 
   it("clicking a suggested-action chip fills the composer with its label", async () => {

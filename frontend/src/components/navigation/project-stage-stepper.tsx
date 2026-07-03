@@ -1,6 +1,7 @@
 /**
- * `ProjectStageStepper` is the canonical six-stage project progress
- * indicator (SPEC §5, §7). A single component serves both surfaces:
+ * `ProjectStageStepper` is the canonical project progress indicator
+ * (SPEC §5, §7;[T-076] 数据驱动——阶段项由调用方传入,两阶段化后为
+ * 脚本 | 复盘 两项)。A single component serves both surfaces:
  *
  *  - `variant="compact"` (default): the dot + label + connector strip used
  *    by the Project Overview progress card.
@@ -79,7 +80,7 @@ export function ProjectStageStepper({
     return (
       <ol
         role="list"
-        aria-label="项目六阶段"
+        aria-label="项目阶段"
         data-slot="header-stage-stepper"
         data-current={currentStage}
         className={cn(
@@ -165,7 +166,7 @@ export function ProjectStageStepper({
   return (
     <ol
       role="list"
-      aria-label="项目六阶段"
+      aria-label="项目阶段"
       data-slot="project-stage-stepper"
       data-current={currentStage}
       className={cn(

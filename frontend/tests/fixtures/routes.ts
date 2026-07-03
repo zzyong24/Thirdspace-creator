@@ -97,15 +97,7 @@ export const ROUTES: ReadonlyArray<RouteSpec> = [
     imageSha256:
       "5f3ba4c96a1ced43a250b5ed2c5e9611aafb0ad079864d34238d1887173aa5df",
   },
-  {
-    id: "production-workspace",
-    pathname: "/projects/ai-native-browser/production",
-    pageTitle: "AI Native Browser 深度解析",
-    sidebarActiveId: "projects",
-    headerMode: "project-workspace",
-    imageSha256:
-      "f73dff930936ab4eba1024c3f9dea0a96f6336c7901e39858589255aae9edf21",
-  },
+  // [T-076] production-workspace 路由已删(项目两阶段化):/projects/<id>/production 不再存在。
   {
     id: "publishing-workspace",
     pathname: "/projects/ai-native-browser/publishing",

@@ -106,6 +106,9 @@ export function publishingCenterPageToViewModel(
       publishedAtLabel: formatDate(r.publishedAt),
       status,
       statusLabel: STATUS_LABELS[status],
+      // [T-073] lean 页面 DTO 不携带可见性 → 诚实缺省 false(真值链路在
+      // publishing-center-data.ts 的 hiddenAt 映射)。
+      hidden: false,
       views: formatNumber(r.views),
       engagementLabel: `${r.engagement.toLocaleString()} 互动 · ${formatNumber(r.views)} 播放`,
       engagementTone,

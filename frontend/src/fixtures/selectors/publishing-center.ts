@@ -208,6 +208,7 @@ export function buildPublishingCenterViewModel(): PublishingCenterViewModel {
         publishedAtLabel: formatDate(publishedAt),
         status: mapPublicationStatus(pub.status),
         statusLabel: statusLabel(mapPublicationStatus(pub.status)),
+        hidden: false, // [T-073] fixture 行默认可见
         views: formatNumber(views),
         engagementLabel: `${likes.toLocaleString()} 赞 · ${formatNumber(views)} 播放`,
         engagementTone,
@@ -381,6 +382,7 @@ function padPublicationRows(
       publishedAtLabel: "2026-05-28",
       status: "published",
       statusLabel: "已发布",
+      hidden: false, // [T-073] fixture 行默认可见
       views: "1.4 万",
       engagementLabel: "624 赞 · 1.4 万 播放",
       engagementTone: "positive",
@@ -397,6 +399,7 @@ function padPublicationRows(
       publishedAtLabel: "2026-05-22",
       status: "published",
       statusLabel: "已发布",
+      hidden: false, // [T-073] fixture 行默认可见
       views: "4,820",
       engagementLabel: "286 赞 · 4,820 播放",
       engagementTone: "neutral",
@@ -413,6 +416,7 @@ function padPublicationRows(
       publishedAtLabel: "2026-05-15",
       status: "published",
       statusLabel: "已发布",
+      hidden: false, // [T-073] fixture 行默认可见
       views: "6,420",
       engagementLabel: "412 赞 · 6,420 播放",
       engagementTone: "positive",
@@ -429,6 +433,7 @@ function padPublicationRows(
       publishedAtLabel: "2026-05-08",
       status: "scheduled",
       statusLabel: "排期中",
+      hidden: false, // [T-073] fixture 行默认可见
       views: "2,180",
       engagementLabel: "118 赞 · 2,180 播放",
       engagementTone: "neutral",
@@ -445,6 +450,7 @@ function padPublicationRows(
       publishedAtLabel: "2026-04-17",
       status: "published",
       statusLabel: "已发布",
+      hidden: false, // [T-073] fixture 行默认可见
       views: "3,860",
       engagementLabel: "182 赞 · 3,860 播放",
       engagementTone: "positive",

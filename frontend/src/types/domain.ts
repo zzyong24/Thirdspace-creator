@@ -79,6 +79,9 @@ export interface PlatformRef {
   readonly externalId: string;
   readonly shareUrl?: string;
   readonly publishedAt?: Iso8601;
+  // [T-073] 平台侧可见性:抖音端「仅自己可见/已隐藏」→ true(采集明细「审核状态」列
+  //   同步)。作品列表默认过滤 hidden 项目;未同步/非导入项目不带该键。
+  readonly hidden?: boolean;
 }
 
 export type ProjectStatus = "active" | "paused" | "archived" | "completed";

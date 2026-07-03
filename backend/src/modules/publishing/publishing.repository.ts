@@ -108,6 +108,12 @@ export interface PublishingRepository {
     platform: string,
     externalId: string,
   ): Promise<PublicationRow | null>;
+  // [T-073] 平台侧可见性:置/清 hidden_at(非空 = 抖音端「仅自己可见/已隐藏」)。
+  // 只动 hidden_at + updated_at,不碰 status 状态机(hidden 与生命周期正交)。
+  setHiddenAt(
+    publicationId: string,
+    hiddenAt: string | null,
+  ): Promise<PublicationRow>;
 }
 
 export function createPublishingRepository(
@@ -343,6 +349,20 @@ export function createPublishingRepository(
       await db
         .update(publications)
         .set(set)
+        .where(
+          and(
+            eq(publications.id, publicationId),
+            eq(publications.userId, userId),
+          ),
+        );
+      return getPublicationRowById(publicationId);
+    },
+
+    async setHiddenAt(publicationId, hiddenAt) {
+      await getPublicationRowById(publicationId); // ownership gate
+      await db
+        .update(publications)
+        .set({ hiddenAt, updatedAt: deps.now() })
         .where(
           and(
             eq(publications.id, publicationId),

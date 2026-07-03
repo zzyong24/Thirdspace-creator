@@ -1,8 +1,8 @@
 /**
  * `projects/[projectId]` segment layout (T-039b item②) —— the ONE place in the project
  * route subtree that can read the `[projectId]` param on the server AND wraps every
- * project page (overview + all stage subpages: research/planning/script/production/
- * publishing/review). It reads the REAL project identity ({id, title}) and lifts it to a
+ * project page (稿面 + review 复盘页;[T-076] 其余阶段子路由为 301 遗留壳)。It reads
+ * the REAL project identity ({id, title}) and lifts it to a
  * client context (CurrentProjectProvider) so the shell's ShellRouter (a client island whose
  * `resolveRoute` only knows the fixture dataset) can show the REAL project title in the top
  * header + the left-bottom sidebar indicator instead of the neutral「当前项目」.

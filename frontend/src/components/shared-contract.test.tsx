@@ -138,25 +138,22 @@ describe("shared business components contract", () => {
   });
 
   describe("ProjectStageStepper", () => {
-    it("renders the six approved stages with a current marker", () => {
+    // [T-076] 项目两阶段化:阶段条 6 项 → 2 项(脚本 | 复盘)。
+    it("renders the two approved stages with a current marker", () => {
       render(
         <ProjectStageStepper
           currentStage="script"
           stages={[
-            { id: "research", label: "研究", status: "completed" },
-            { id: "planning", label: "策划", status: "completed" },
             { id: "script", label: "脚本", status: "in_progress" },
-            { id: "production", label: "拍摄", status: "pending" },
-            { id: "publishing", label: "发布", status: "pending" },
             { id: "review", label: "复盘", status: "pending" },
           ]}
         />,
       );
 
-      const list = screen.getByRole("list", { name: /项目六阶段/i });
+      const list = screen.getByRole("list", { name: /项目阶段/i });
       expect(list).toBeInTheDocument();
       const items = list.querySelectorAll("li");
-      expect(items).toHaveLength(6);
+      expect(items).toHaveLength(2);
     });
 
     it("renders navigable segments for reached + immediate-next stages (segmented)", () => {
@@ -166,29 +163,22 @@ describe("shared business components contract", () => {
           projectId="project-ainativebrowser"
           currentStage="script"
           stages={[
-            { id: "research", label: "研究", status: "completed" },
-            { id: "planning", label: "策划", status: "completed" },
             { id: "script", label: "脚本", status: "in_progress" },
-            { id: "production", label: "拍摄", status: "pending" },
-            { id: "publishing", label: "发布", status: "pending" },
             { id: "review", label: "复盘", status: "pending" },
           ]}
         />,
       );
 
-      const list = screen.getByRole("list", { name: /项目六阶段/i });
-      // Six <li> wrappers preserved (existing selector contract).
-      expect(list.querySelectorAll("li")).toHaveLength(6);
+      const list = screen.getByRole("list", { name: /项目阶段/i });
+      // Two <li> wrappers ([T-076] 两段化后的 selector contract)。
+      expect(list.querySelectorAll("li")).toHaveLength(2);
 
-      // Reached stages + current + immediate next (research..production) are links.
-      // [T-068] 阶段式展示恢复:有独立页的阶段指向阶段路由,script 类落稿面(总览)。
+      // [T-076] href 走 projectWorkspaceHref:script 落稿面(总览),review 落复盘页。
       const expectedHref: Record<string, string> = {
-        research: "/projects/project-ainativebrowser/research",
-        planning: "/projects/project-ainativebrowser/planning",
         script: "/projects/project-ainativebrowser",
-        production: "/projects/project-ainativebrowser/production",
+        review: "/projects/project-ainativebrowser/review",
       };
-      for (const stage of ["research", "planning", "script", "production"]) {
+      for (const stage of ["script", "review"]) {
         const seg = screen.getByTestId(`stage-segment-${stage}`);
         expect(seg.tagName).toBe("A");
         expect(seg).toHaveAttribute("href", expectedHref[stage]!);
@@ -198,26 +188,20 @@ describe("shared business components contract", () => {
         "aria-current",
         "step",
       );
-      // Stages further ahead than current+1 stay gated (not links).
-      for (const stage of ["publishing", "review"]) {
-        const seg = screen.getByTestId(`stage-segment-${stage}`);
-        expect(seg.tagName).not.toBe("A");
-        expect(seg).toHaveAttribute("aria-disabled", "true");
-      }
     });
 
     it("keeps segments non-navigable when no projectId is supplied (segmented)", () => {
       render(
         <ProjectStageStepper
           variant="segmented"
-          currentStage="research"
+          currentStage="script"
           stages={[
-            { id: "research", label: "研究", status: "in_progress" },
-            { id: "planning", label: "策划", status: "pending" },
+            { id: "script", label: "脚本", status: "in_progress" },
+            { id: "review", label: "复盘", status: "pending" },
           ]}
         />,
       );
-      expect(screen.getByTestId("stage-segment-research").tagName).not.toBe("A");
+      expect(screen.getByTestId("stage-segment-script").tagName).not.toBe("A");
     });
   });
 

@@ -173,6 +173,14 @@ export interface PublishingService {
     ctx: RequestContext,
     projectId: string,
   ): Promise<string[]>;
+  // [T-073] 平台侧可见性同步:按 (platform, externalId) 找到 publication,把抖音端
+  // 「仅自己可见/已隐藏」同步为 hidden_at 非空(hidden=true 置 now,false 清 null)。
+  // 幂等(已是目标态不再写);找不到该作品(未导入)诚实返 null,不硬造。
+  // 只动 hidden_at,不碰 status 状态机(隐藏≠下架:removed 是平台已删,hidden 可恢复)。
+  setVisibilityByExternalKey(
+    ctx: RequestContext,
+    input: { platform: string; externalId: string; hidden: boolean },
+  ): Promise<PublicationRow | null>;
 }
 
 export function createPublishingService(deps: ServiceDeps): PublishingService {
@@ -438,6 +446,16 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       const outputIds = await deps.listOutputIdsByProject(ctx, projectId);
       if (outputIds.length === 0) return [];
       return repoFor(ctx).listPublicationIdsByOutputs(outputIds);
+    },
+
+    async setVisibilityByExternalKey(ctx, input) {
+      // [T-073] 采集侧可见性同步。找不到(该作品未导入)→ null(诚实跳过,不硬造)。
+      const repo = repoFor(ctx);
+      const pub = await repo.findByExternalKey(input.platform, input.externalId);
+      if (!pub) return null;
+      const currentlyHidden = pub.hiddenAt != null;
+      if (currentlyHidden === input.hidden) return pub; // 幂等:已是目标态不再写
+      return repo.setHiddenAt(pub.id, input.hidden ? deps.now() : null);
     },
   };
 }

@@ -71,6 +71,8 @@ interface PublicationDto {
   readonly scheduledAt: string | null;
   readonly publishedAt: string | null;
   readonly removedAt: string | null;
+  // [T-073] 平台侧可见性(非空 = 抖音端「仅自己可见/已隐藏」;列表默认过滤)。
+  readonly hiddenAt: string | null;
   readonly createdAt: string;
 }
 
@@ -395,6 +397,8 @@ async function assembleRealRows(
             publishedAtLabel: formatDate(when),
             status,
             statusLabel: STATUS_LABELS[status],
+            // [T-073] 平台侧已隐藏:列表默认过滤,可切「显示已隐藏」(徽标标注)。
+            hidden: pub.hiddenAt != null,
             // 表现: REAL play count + engagement from the publication's latest
             // analytics snapshot. No snapshot → the honest "暂无数据" cell.
             views: performance.views,

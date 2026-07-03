@@ -86,19 +86,33 @@ export function isContentFillRoute(pathname: string): boolean {
   return Boolean(m && m[1] !== "new");
 }
 
+// [T-076] 项目两阶段化(SPEC 2026-07-03 §1):阶段条 6 项 → 2 项(脚本 | 复盘)。
+// 研究/策划/拍摄不再是独立阶段(职能由稿面的选题卡/弹药区承载),发布是稿面上的动作。
 const PROJECT_STAGES = [
-  { id: "research", label: "研究" },
-  { id: "planning", label: "策划" },
   { id: "script", label: "脚本" },
-  { id: "production", label: "拍摄" },
-  { id: "publishing", label: "发布" },
   { id: "review", label: "复盘" },
 ] as const;
 
-// T-010: 项目概览头部元信息读真值。阶段标签取自真实 currentStage,「更新于」由
-// 真实 updatedAt 派生为粗粒度相对时间(不再写死「今天 14:30」)。
+// [T-076] 旧 stage 枚举 → 两段映射(展示层映射,枚举与 DB 存量 currentStage 不迁移):
+// brief/research/planning/script/production/publishing → 「脚本」段;review → 「复盘」段。
+// 未知值不映射(→ 全 pending 诚实,不硬凑)。
+const LEGACY_STAGE_SEGMENT: Record<string, string> = {
+  brief: "script",
+  research: "script",
+  planning: "script",
+  script: "script",
+  production: "script",
+  publishing: "script",
+  review: "review",
+};
+
+// T-010: 项目概览头部元信息读真值。阶段标签取自真实 currentStage(经两段映射),
+// 「更新于」由真实 updatedAt 派生为粗粒度相对时间(不再写死「今天 14:30」)。
 function stageLabel(stageId: string): string {
-  return PROJECT_STAGES.find((stage) => stage.id === stageId)?.label ?? stageId;
+  const segment = LEGACY_STAGE_SEGMENT[stageId];
+  return (
+    PROJECT_STAGES.find((stage) => stage.id === segment)?.label ?? stageId
+  );
 }
 
 function relativeUpdatedLabel(updatedAt: string): string {
@@ -114,8 +128,10 @@ function relativeUpdatedLabel(updatedAt: string): string {
 }
 
 function buildProjectStages(currentStage: string): ReadonlyArray<TopHeaderStage> {
+  // [T-076] 先把旧枚举/旧路由段映射进两段,再定位;未知值 → -1 → 全 pending(诚实)。
+  const segment = LEGACY_STAGE_SEGMENT[currentStage] ?? "";
   const currentIndex = PROJECT_STAGES.findIndex(
-    (stage) => stage.id === currentStage,
+    (stage) => stage.id === segment,
   );
   return PROJECT_STAGES.map((stage, index) => ({
     ...stage,
@@ -128,14 +144,12 @@ function buildProjectStages(currentStage: string): ReadonlyArray<TopHeaderStage>
   }));
 }
 
+// [T-076] 主行动收敛:复盘页保留「导出报告」(现状);脚本段不渲阶段跳转主行动
+// (可执行入口都在稿面内:脚本编辑、发布包区「先盲预测」「登记已发布」)→ 返回空串,
+// 消费点按空串不传 label(header 不渲按钮)。
 function resolveWorkspacePrimaryAction(stage: string): string {
-  if (stage === "research") return "进入下一步:策划构思";
-  if (stage === "planning") return "进入下一步:脚本撰写";
-  if (stage === "script") return "进入下一步:拍摄制作";
-  if (stage === "production") return "完成制作";
-  if (stage === "publishing") return "查看数据";
   if (stage === "review") return "导出报告";
-  return "进入下一步";
+  return "";
 }
 
 export function resolveRoute(
@@ -251,10 +265,9 @@ export function resolveRoute(
     const sidebarLabel = realTitle || "当前项目";
 
     if (!stage) {
-      // [T-075] 双导航真因修复:稿面此前自带 5 点成熟度条,与阶段页顶部的 6 项阶段条
-      // 并存(名称/数量都不同 = 用户三次反馈的「两种导航」)。统一为一套:稿面也走
-      // project-workspace header(同一 6 项阶段条,brief 等未映射段 = 全 pending 诚实);
-      // 稿面自带 MaturityBar 已退役。主行动仍在稿面行内(真按钮),header 不再叠 label。
+      // [T-075] 双导航真因修复:稿面与阶段页统一走 project-workspace header 的同一套
+      // 阶段条;稿面自带 MaturityBar 已退役。主行动仍在稿面行内(真按钮),header 不叠 label。
+      // [T-076] 阶段条收敛为 2 项(脚本|复盘),旧 stage 值经 LEGACY_STAGE_SEGMENT 映射。
       return {
         headerMode: "project-workspace",
         pageTitle: realTitle || undefined,
@@ -274,13 +287,15 @@ export function resolveRoute(
         },
       };
     }
+    // [T-076] 主行动:仅复盘页有(「导出报告」);其余阶段段空串 → 不传 label,header 不渲按钮。
+    const primaryActionLabel = resolveWorkspacePrimaryAction(stage);
     return {
       headerMode: "project-workspace",
       pageTitle: realTitle || undefined,
       contextualCardVariant: "assistant",
       project: identity,
       projectStages: buildProjectStages(stage),
-      primaryActionLabel: resolveWorkspacePrimaryAction(stage),
+      ...(primaryActionLabel ? { primaryActionLabel } : {}),
       secondaryActionLabel: "分享",
       sidebarContext: {
         heading: "当前项目",

@@ -30,7 +30,7 @@ export {
 } from "./project-overview";
 export { buildScriptViewModel } from "./script";
 export { buildPlanningViewModel } from "./planning";
-export { buildProductionViewModel } from "./production";
+// [T-076] production 前端全删:buildProductionViewModel 随 selectors/production 退役。
 export { buildAnalyticsReviewViewModel } from "./review";
 export { buildPublishingViewModel } from "./project-publishing";
 export {
@@ -130,6 +130,8 @@ export function buildProjectsViewModel(
       //   读侧据 source 把 imported 渲染成「已发布」,据 publishedAt 做发布时间倒序。
       source: project.source ?? "manual",
       publishedAt: project.platformRef?.publishedAt ?? null,
+      // [T-073] 平台侧已隐藏(仅明确 true 才标;未同步/非导入 → false)。
+      hidden: project.platformRef?.hidden === true,
     }));
 
   const tabs: ReadonlyArray<StatusTab> = [

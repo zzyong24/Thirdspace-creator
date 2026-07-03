@@ -20,21 +20,31 @@ describe("isContentFillRoute", () => {
 
 describe("resolveRoute", () => {
   it("uses project workspace header mode for project stage routes", () => {
+    // [T-076] research 段(遗留路由,301 落稿面)映射进「脚本」段;脚本段无阶段跳转主行动。
     const resolution = resolveRoute(
       "/projects/ai-native-browser/research",
     );
 
     expect(resolution.headerMode).toBe("project-workspace");
-    expect(resolution.primaryActionLabel).toBe("进入下一步:策划构思");
+    expect(resolution.primaryActionLabel).toBeUndefined();
     expect(resolution.sidebarContext?.heading).toBe("当前项目");
     expect(resolution.projectStages?.[0]?.status).toBe("in_progress");
     expect(resolution.projectStages?.[1]?.status).toBe("pending");
   });
 
+  it("[T-076] 阶段条两段化:脚本|复盘,复盘页主行动为「导出报告」", () => {
+    const res = resolveRoute("/projects/ai-native-browser/review");
+    expect(res.projectStages?.map((s) => s.label)).toEqual(["脚本", "复盘"]);
+    expect(res.projectStages?.[0]?.status).toBe("completed");
+    expect(res.projectStages?.[1]?.status).toBe("in_progress");
+    expect(res.primaryActionLabel).toBe("导出报告");
+  });
+
   it("[T-075] 项目根路由(稿面)与阶段页同一套 project-workspace 阶段条(双导航收敛)", () => {
     const res = resolveRoute("/projects/ai-native-browser");
     expect(res.headerMode).toBe("project-workspace");
-    expect(res.projectStages?.length).toBe(6);
+    // [T-076] 6 项 → 2 项(脚本 | 复盘)。
+    expect(res.projectStages?.length).toBe(2);
   });
 
   // T-039b item②:真项目 identity override —— fixture 里查不到的真项目,标题优先用 override 真值。

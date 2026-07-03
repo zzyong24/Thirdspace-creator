@@ -21,6 +21,28 @@ describe("publishing contract", () => {
     });
     expect(p.platform).toBe("bilibili");
     expect(p.status).toBe("published");
+    // [T-073] hiddenAt:存量 payload 不带该键 → default(null)(可见);带值可 parse。
+    expect(p.hiddenAt).toBeNull();
+  });
+
+  it("parses hiddenAt when supplied ([T-073] 平台侧已隐藏承载位)", () => {
+    const p = publicationResource.parse({
+      id: "pub-x",
+      contentOutputId: "output-x",
+      platform: "douyin",
+      accountReference: "acc",
+      status: "published",
+      currentRevisionId: "rev-x",
+      externalId: "7423000000000000001",
+      externalUrl: null,
+      scheduledAt: null,
+      publishedAt: "2026-04-15T02:00:00.000Z",
+      removedAt: null,
+      hiddenAt: "2026-07-01T02:00:00.000Z",
+      createdAt: "2026-04-02T02:00:00.000Z",
+      updatedAt: "2026-07-01T02:00:00.000Z",
+    });
+    expect(p.hiddenAt).toBe("2026-07-01T02:00:00.000Z");
   });
 
   it("registers the publication list + transition endpoints with FR ids", () => {

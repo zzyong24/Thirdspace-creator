@@ -236,3 +236,58 @@ describe("getRecentPublications", () => {
     expect(recent.length).toBe(2);
   });
 });
+
+// [T-073] 平台侧可见性同步:抖音端「仅自己可见/已隐藏」→ hidden_at 非空(不碰 status)。
+describe("setVisibilityByExternalKey ([T-073] 平台侧可见性)", () => {
+  it("按 (platform, externalId) 置 hidden_at,再次同步 hidden=false 清空", async () => {
+    const pub = await service.createImportedPublication(ctx, "output-1", {
+      platform: "douyin",
+      externalId: "aweme-1",
+    });
+    expect(pub.hiddenAt).toBeNull();
+
+    const hidden = await service.setVisibilityByExternalKey(ctx, {
+      platform: "douyin",
+      externalId: "aweme-1",
+      hidden: true,
+    });
+    expect(hidden?.hiddenAt).toBe(NOW);
+    // status 状态机不受影响(隐藏 ≠ 下架)。
+    expect(hidden?.status).toBe("published");
+
+    const visible = await service.setVisibilityByExternalKey(ctx, {
+      platform: "douyin",
+      externalId: "aweme-1",
+      hidden: false,
+    });
+    expect(visible?.hiddenAt).toBeNull();
+  });
+
+  it("幂等:已是目标态不再写(updatedAt 不变)", async () => {
+    await service.createImportedPublication(ctx, "output-1", {
+      platform: "douyin",
+      externalId: "aweme-2",
+    });
+    const first = await service.setVisibilityByExternalKey(ctx, {
+      platform: "douyin",
+      externalId: "aweme-2",
+      hidden: true,
+    });
+    const second = await service.setVisibilityByExternalKey(ctx, {
+      platform: "douyin",
+      externalId: "aweme-2",
+      hidden: true,
+    });
+    expect(second?.hiddenAt).toBe(first?.hiddenAt);
+    expect(second?.updatedAt).toBe(first?.updatedAt);
+  });
+
+  it("找不到该 (platform, externalId)(作品未导入)→ 诚实返 null", async () => {
+    const out = await service.setVisibilityByExternalKey(ctx, {
+      platform: "douyin",
+      externalId: "aweme-missing",
+      hidden: true,
+    });
+    expect(out).toBeNull();
+  });
+});

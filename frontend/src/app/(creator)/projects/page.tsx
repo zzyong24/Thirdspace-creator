@@ -35,16 +35,27 @@ export default async function Page({
     rawSort && ["updated", "progress", "stage", "title"].includes(rawSort)
       ? rawSort
       : "updated";
+  // [T-073] 显示已隐藏(抖音端「仅自己可见/已隐藏」的作品):?hidden=1 才显,默认过滤。
+  const rawHidden = Array.isArray(params.hidden) ? params.hidden[0] : params.hidden;
+  const showHidden = rawHidden === "1";
 
   const session = await resolveSession();
   if (!session) {
-    return <ProjectsPage page={page} status={status} sort={sort} />;
+    return (
+      <ProjectsPage
+        page={page}
+        status={status}
+        sort={sort}
+        showHidden={showHidden}
+      />
+    );
   }
   return (
     <ProjectsPage
       page={page}
       status={status}
       sort={sort}
+      showHidden={showHidden}
       client={createServerClient(session.ctx)}
     />
   );

@@ -176,6 +176,44 @@ describe("ensureImportedProject (数据底座 / SPEC §1.3)", () => {
     // 每个阶段的 progressPct 都应为 100(均值才可能 = 100)。
     for (const s of stages) expect(s.progressPct).toBe(100);
   });
+
+  // [T-073] 平台侧可见性同步:抖音端「仅自己可见/已隐藏」→ platform_ref.hidden。
+  it("setImportedProjectHidden:置/清 platform_ref.hidden 且不丢既有键;未导入返 null", async () => {
+    const res = await service.ensureImportedProject(ctx, {
+      title: "会被隐藏的作品",
+      platform: "douyin",
+      externalId: "7402",
+      publishedAt: "2026-06-20T08:00:00.000Z",
+    });
+    // 置 hidden:merge jsonb,externalId/publishedAt 不丢。
+    const hidden = await service.setImportedProjectHidden(ctx, {
+      platform: "douyin",
+      externalId: "7402",
+      hidden: true,
+    });
+    const refAfter = (hidden as { platformRef?: Record<string, unknown> })
+      .platformRef!;
+    expect(refAfter.hidden).toBe(true);
+    expect(refAfter.externalId).toBe("7402");
+    expect(refAfter.publishedAt).toBe("2026-06-20T08:00:00.000Z");
+    expect(hidden!.id).toBe(res.projectId);
+    // 清 hidden(平台侧恢复可见)。
+    const visible = await service.setImportedProjectHidden(ctx, {
+      platform: "douyin",
+      externalId: "7402",
+      hidden: false,
+    });
+    expect(
+      (visible as { platformRef?: Record<string, unknown> }).platformRef!.hidden,
+    ).toBe(false);
+    // 未导入(找不到 externalId)→ 诚实 null,不硬造。
+    const missing = await service.setImportedProjectHidden(ctx, {
+      platform: "douyin",
+      externalId: "no-such",
+      hidden: true,
+    });
+    expect(missing).toBeNull();
+  });
 });
 
 describe("Stage machine (SPEC §12)", () => {

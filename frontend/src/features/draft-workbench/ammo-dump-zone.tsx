@@ -4,7 +4,7 @@
  * 稿面弹药区·拖放倾倒场(T-057②,用户原话:「把素材都拖进去…比如截图啊、录屏啊,
  * 它就能自动给我归类,放到合适的位置」)。
  *
- * 与制作页 UploadDropzone 同一条链(T-055d/e):
+ * 上传链(T-055d/e;[T-076] 制作页 UploadDropzone 已随 production 前端退役,本区是唯一倾倒场):
  *   拖入/点选/⌘V → presign(项目目录+原名保真)→ PUT 字节 → complete →
  *   materialLinks 挂本项目 → 确定性归类标签(classifyFile → taxonomy)→
  *   fire-and-forget asset.classify(配了视觉模型则 AI 增强)→ refresh 出现在弹药卡。
@@ -15,7 +15,8 @@ import { useRouter } from "next/navigation";
 import { UploadCloud } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
-import { classifyFile } from "@/features/production/classify-asset";
+// [T-076] classify-asset 随 production 前端退役迁入稿面(弹药区是它的消费点)。
+import { classifyFile } from "./classify-asset";
 import { cn } from "@/lib/utils";
 
 interface PendingFile {

@@ -225,6 +225,30 @@ function firstNonNeg(idx: number, fallback: number): number {
 }
 
 // ---------------------------------------------------------------------------
+// ①b 可见性判定(T-073)—— 明细「审核状态」列 → 平台侧可见性
+// ---------------------------------------------------------------------------
+
+/**
+ * 从明细「审核状态」列判定作品在抖音端的可见性(纯函数,可单测):
+ *   - "hidden":状态含 仅自己可见 / 仅我可见 / 已隐藏 / 私密(平台侧不对外展示);
+ *   - "visible":状态为「已通过」(审核通过 = 公开可见);
+ *   - "unknown":其余(审核中 / 未通过 / 空串等)—— 诚实不判定,消费侧不动既有标记。
+ * 落库侧据此同步 publication.hidden_at + project.platform_ref.hidden(见
+ * persistence-client self.detail);列表读侧默认过滤 hidden,可切「显示已隐藏」。
+ */
+export type DetailVisibility = "hidden" | "visible" | "unknown";
+
+const HIDDEN_STATUS_HINTS = ["仅自己可见", "仅我可见", "已隐藏", "私密"] as const;
+
+export function visibilityFromDetailStatus(status: string): DetailVisibility {
+  const s = (status ?? "").trim();
+  if (!s) return "unknown";
+  if (HIDDEN_STATUS_HINTS.some((h) => s.includes(h))) return "hidden";
+  if (s.includes("已通过")) return "visible";
+  return "unknown";
+}
+
+// ---------------------------------------------------------------------------
 // ② 映射 DouyinWorkDetail[] → MetricRecord[](喂复盘,SPEC §10)
 // ---------------------------------------------------------------------------
 

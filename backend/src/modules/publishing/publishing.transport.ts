@@ -51,6 +51,8 @@ function toPublicationResource(row: PublicationRow): PublicationResource {
     scheduledAt: row.scheduledAt ?? null,
     publishedAt: row.publishedAt ?? null,
     removedAt: row.removedAt ?? null,
+    // [T-073] 平台侧可见性(非空 = 抖音端「仅自己可见/已隐藏」;列表读侧默认过滤)。
+    hiddenAt: row.hiddenAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };

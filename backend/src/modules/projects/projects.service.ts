@@ -138,6 +138,9 @@ export interface PlatformRef {
   externalId: string;
   shareUrl?: string;
   publishedAt?: string;
+  // [T-073] 平台侧可见性:抖音端「仅自己可见/已隐藏」→ true(采集明细「审核状态」列同步)。
+  // 作品列表默认过滤 hidden 项目;未同步/非导入项目不带该键(不瞎标)。
+  hidden?: boolean;
 }
 
 export type ProjectSource = "manual" | "topic" | "imported";
@@ -186,6 +189,13 @@ export interface ProjectsService {
       publishedAt?: string;
     },
   ): Promise<EnsureImportedProjectResult>;
+  // [T-073] 平台侧可见性同步:按 (platform, externalId) 找 imported 项目,把抖音端
+  // 「仅自己可见/已隐藏」写进 platform_ref.hidden(jsonb,merge 不丢既有键)。幂等;
+  // 找不到(该作品未导入)诚实返 null。采集 self.detail 落库路径经此同步。
+  setImportedProjectHidden(
+    ctx: RequestContext,
+    input: { platform: string; externalId: string; hidden: boolean },
+  ): Promise<ProjectRow | null>;
   patchProject(
     ctx: RequestContext,
     projectId: string,
@@ -751,6 +761,25 @@ export function createProjectsService(
         updatedAt: deps.now(),
       });
       return { projectId: project.id, outputId: output.id, created: true };
+    },
+
+    async setImportedProjectHidden(ctx, input) {
+      // [T-073] 幂等可见性同步:merge platform_ref jsonb(保留 externalId/publishedAt
+      //   等既有键),只翻 hidden。未导入 → null(诚实跳过,不硬造)。
+      const existing = await repo.findImportedByRef(ctx, {
+        platform: input.platform,
+        externalId: input.externalId,
+      });
+      if (!existing) return null;
+      const ref = ((existing as { platformRef?: unknown }).platformRef ??
+        {}) as Record<string, unknown>;
+      const currentlyHidden = ref.hidden === true;
+      if (currentlyHidden === input.hidden) return existing; // 已是目标态,不再写
+      await repo.updateProjectRow(ctx, existing.id, {
+        platformRef: { ...ref, hidden: input.hidden },
+        updatedAt: deps.now(),
+      } as Partial<ProjectRow>);
+      return repo.get(ctx, existing.id);
     },
 
     async patchProject(ctx, projectId, patch) {

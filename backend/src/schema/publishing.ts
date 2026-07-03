@@ -42,6 +42,9 @@ export const publications = pgTable("publications", {
   scheduledAt: text("scheduled_at"), // nullable → contract iso8601|null
   publishedAt: text("published_at"), // nullable → contract iso8601|null
   removedAt: text("removed_at"), // nullable → contract iso8601|null
+  // [T-073] 平台侧可见性:非空 = 该作品在抖音端「仅自己可见/已隐藏」的同步时刻
+  // (采集明细导出「审核状态」列驱动);null = 可见。与 removed_at(平台已删)正交。
+  hiddenAt: text("hidden_at"), // nullable → contract iso8601|null
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -85,9 +88,13 @@ CREATE TABLE IF NOT EXISTS publications (
   scheduled_at TEXT,
   published_at TEXT,
   removed_at TEXT,
+  hidden_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+-- [T-073] 存量库补列(CREATE TABLE IF NOT EXISTS 不会给既有表加列;与 platform-account
+-- 的 account_id 同款 ALTER 兜底,幂等)。
+ALTER TABLE publications ADD COLUMN IF NOT EXISTS hidden_at TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS publications_external_ux ON publications(platform, external_id) WHERE external_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS publications_user_ix ON publications(user_id);
 CREATE INDEX IF NOT EXISTS publications_output_ix ON publications(content_output_id);
