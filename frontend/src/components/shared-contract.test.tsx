@@ -181,14 +181,17 @@ describe("shared business components contract", () => {
       expect(list.querySelectorAll("li")).toHaveLength(6);
 
       // Reached stages + current + immediate next (research..production) are links.
+      // [T-068] 阶段式展示恢复:有独立页的阶段指向阶段路由,script 类落稿面(总览)。
+      const expectedHref: Record<string, string> = {
+        research: "/projects/project-ainativebrowser/research",
+        planning: "/projects/project-ainativebrowser/planning",
+        script: "/projects/project-ainativebrowser",
+        production: "/projects/project-ainativebrowser/production",
+      };
       for (const stage of ["research", "planning", "script", "production"]) {
         const seg = screen.getByTestId(`stage-segment-${stage}`);
         expect(seg.tagName).toBe("A");
-        // [T-057①] projectWorkspaceHref 一律指向稿面(阶段路由已 301/收敛)。
-        expect(seg).toHaveAttribute(
-          "href",
-          "/projects/project-ainativebrowser",
-        );
+        expect(seg).toHaveAttribute("href", expectedHref[stage]!);
       }
       // The current stage marks aria-current="step".
       expect(screen.getByTestId("stage-segment-script")).toHaveAttribute(
