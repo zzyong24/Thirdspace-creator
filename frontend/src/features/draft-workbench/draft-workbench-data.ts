@@ -65,6 +65,32 @@ interface KnowledgeDto {
   readonly title: string;
   readonly knowledgeType: string;
   readonly source?: string;
+  readonly sourceType?: string;
+  readonly sourceUrl?: string | null;
+  readonly sourceMetadata?: Record<string, unknown> | null;
+}
+
+/**
+ * [T-055g SPEC §8.1] 知识弹药的来源链 label:
+ *   sourceMetadata.projectTitle → 「来自你的作品《…》」(采集链路写入的作品指向);
+ *   sourceUrl → 域名;sourceType=manual → 「手记」;都没有 → 「来源未记录」(诚实)。
+ */
+export function knowledgeSourceLabel(k: KnowledgeDto): string {
+  const meta = k.sourceMetadata ?? {};
+  const projectTitle =
+    typeof meta.projectTitle === "string" ? meta.projectTitle.trim() : "";
+  if (projectTitle) return `来自你的作品《${projectTitle.slice(0, 18)}》`;
+  if (k.sourceUrl) {
+    try {
+      return `来源:${new URL(k.sourceUrl).hostname}`;
+    } catch {
+      return `来源:${k.sourceUrl.slice(0, 30)}`;
+    }
+  }
+  if (k.sourceType === "manual") return "手记";
+  if (k.sourceType) return `来源:${k.sourceType}`;
+  if (k.source) return `来源:${k.source}`;
+  return "来源未记录";
 }
 
 interface AssetDto {
@@ -225,8 +251,8 @@ async function readAmmo(
               id: k.id,
               kind: "knowledge" as const,
               title: k.title,
-              // sourceRef 来源链是 T-055g;此波用 source 列的粗粒度值,空则诚实。
-              sourceLabel: k.source ? `来源:${k.source}` : "来源未记录",
+              // [T-055g] 来源链:sourceMetadata 作品指向 > sourceUrl > 手记 > 未记录。
+              sourceLabel: knowledgeSourceLabel(k),
             };
           }
           const a = (await client.getAsset({

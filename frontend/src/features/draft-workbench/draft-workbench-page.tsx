@@ -18,6 +18,7 @@ import { sectionsToHtml } from "@/features/script/script-editor-bridge";
 import { TopicCard } from "./topic-card";
 import { DraftChatRail } from "./draft-chat-rail";
 import { RevealProjectButton } from "./reveal-project-button";
+import { AmmoNoteForm } from "./ammo-note-form";
 import { MaturityBar, DraftPrimaryAction } from "./maturity-bar";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
@@ -110,7 +111,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           />
 
           {/* ── 弹药抽屉 ── */}
-          <AmmoDrawer ammo={ammo} />
+          <AmmoDrawer ammo={ammo} projectId={project.id} />
         </div>
 
         {/* 右栏:编导对话(T-055b)—— 全局 ChatBox 内嵌常驻,上下文 chip = 当前项目。 */}
@@ -204,11 +205,19 @@ function PublishPackSection({
 // 弹药抽屉(读侧;来源链完整版在 T-055g)
 // ---------------------------------------------------------------------------
 
-function AmmoDrawer({ ammo }: { ammo: DraftWorkbenchVm["ammo"] }) {
+function AmmoDrawer({
+  ammo,
+  projectId,
+}: {
+  ammo: DraftWorkbenchVm["ammo"];
+  projectId: string;
+}) {
   return (
     <section data-slot="draft-ammo-drawer" className="pb-2">
       <div className="mb-1.5 flex items-baseline gap-2 px-0.5">
         <h2 className="text-[13.5px] font-semibold text-foreground">这条内容的弹药</h2>
+        {/* [T-055g SPEC §8.1] 知识库可写:稿面就地记一条,存入即挂本项目。 */}
+        <AmmoNoteForm projectId={projectId} />
         <span className="text-xs text-text-subtle">
           {ammo.length > 0
             ? `知识与素材 ${ammo.length} 件 · 来自研究与制作`
