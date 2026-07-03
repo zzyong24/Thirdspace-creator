@@ -1136,7 +1136,13 @@ function TopContentList({
             data-top-content-id={item.id}
             className="flex items-center gap-3 rounded-md border border-border bg-surface-subtle px-3 py-2 text-sm"
           >
-            <ContentThumbnail platform={item.platform} token={item.id} />
+            {/* [T-082] 真封面接 CoverThumb 链(ContentThumbnail 内部处理回退占位)。 */}
+            <ContentThumbnail
+              platform={item.platform}
+              token={item.id}
+              coverAssetId={item.coverAssetId}
+              alt={item.title}
+            />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="truncate text-foreground">{item.title}</span>
               <span className="text-xs text-muted-foreground">

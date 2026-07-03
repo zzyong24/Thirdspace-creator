@@ -28,10 +28,14 @@ interface FakePub {
   readonly platform: string;
   readonly status: string;
   readonly title: string;
+  /** [T-082] 真封面 asset id — revisions read returns it when present. */
+  readonly coverAssetId?: string | null;
   /** When present, getPublicationAnalytics returns one snapshot from it. */
   readonly snapshot?: {
     readonly capturedAt: string;
     readonly plays: number;
+    /** [T-082] 真采集键名(douyin-cdp ingestion 写 `views` 不写 `plays`)。 */
+    readonly viewsKey?: boolean;
     readonly likes?: number;
     readonly comments?: number;
     readonly shares?: number;
@@ -97,7 +101,12 @@ function makeClient(
     listPublicationRevisions: ({ params }) => {
       const pub = pubById.get(params.publicationId);
       return Promise.resolve([
-        { id: `rev-${params.publicationId}`, title: pub?.title ?? "", revisionNumber: 1 },
+        {
+          id: `rev-${params.publicationId}`,
+          title: pub?.title ?? "",
+          revisionNumber: 1,
+          coverAssetId: pub?.coverAssetId ?? null,
+        },
       ]);
     },
     getPublicationAnalytics: ({ params }) => {
@@ -111,7 +120,8 @@ function makeClient(
           publicationId: params.publicationId,
           capturedAt: s.capturedAt,
           rawMetrics: {
-            plays: s.plays,
+            // [T-082] viewsKey=true 模拟真采集 payload(键名 `views`,无 `plays`)。
+            ...(s.viewsKey ? { views: s.plays } : { plays: s.plays }),
             likes: s.likes ?? 0,
             comments: s.comments ?? 0,
             shares: s.shares ?? 0,
@@ -258,6 +268,64 @@ describe("GAP-PUBC-1 rail 接真 + 诚实空态", () => {
     expect(vm.metrics.find((m) => m.id === "pubc-total-plays")?.value).toBe("—");
     // 已发布 count is still real (derived from row status, not snapshots).
     expect(vm.metrics.find((m) => m.id === "pubc-published-count")?.value).toBe("1");
+  });
+
+  it("[T-082] 真采集 `views` 键名读得出播放数(不再全 0)+ 封面透传到热门内容", async () => {
+    // 真实 ingestion(douyin-cdp)写 rawMetrics.views(不写 plays)。修复前
+    // resolveLatestSnapshot 只读 `plays` → 页面播放数全 0;修复后与 backend
+    // analytics.repository playsOf 同口径(views 优先,回退 plays)。
+    const client = makeClient([
+      {
+        id: "project-real-d",
+        title: "真实项目 D",
+        pubs: [
+          {
+            id: "pub-d1",
+            outputId: "out-d1",
+            platform: "douyin",
+            status: "published",
+            title: "真采集作品",
+            coverAssetId: "asset-cover-d1",
+            snapshot: {
+              capturedAt: "2026-07-03T00:00:00.000Z",
+              plays: 6610,
+              viewsKey: true,
+              likes: 155,
+              comments: 6,
+              shares: 17,
+              favorites: 119,
+            },
+          },
+          {
+            id: "pub-d2",
+            outputId: "out-d2",
+            platform: "douyin",
+            status: "published",
+            title: "无封面作品",
+            snapshot: {
+              capturedAt: "2026-07-03T00:00:00.000Z",
+              plays: 560,
+              viewsKey: true,
+              likes: 18,
+            },
+          },
+        ],
+      },
+    ]);
+
+    const vm = await buildPublishingCenterViewModelReal(client);
+
+    // 播放数从 `views` 键读出(6610 + 560 = 7170),不是 0/"—"。
+    expect(vm.metrics.find((m) => m.id === "pubc-total-plays")?.value).toBe("7,170");
+    // 表现 cell 同样吃到真值。
+    const row = vm.publications.find((r) => r.id === "pub-d1");
+    expect(row?.views).toBe("6,610 播放");
+
+    // 热门内容按播放降序,且封面 coverAssetId 透传(无封面 → null 走占位)。
+    expect(vm.topContent[0]?.id).toBe("pub-d1");
+    expect(vm.topContent[0]?.coverAssetId).toBe("asset-cover-d1");
+    expect(vm.topContent[1]?.id).toBe("pub-d2");
+    expect(vm.topContent[1]?.coverAssetId).toBeNull();
   });
 
   it("every listed project's publications enter the aggregation (demo 过滤集退役)", async () => {

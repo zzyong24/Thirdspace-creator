@@ -129,6 +129,8 @@ export interface TopContentRow {
   readonly title: string;
   readonly platform: string;
   readonly platformLabel: string;
+  // [T-082] 真封面(revision.coverAssetId,T-078 同款渲染链);null/缺省 → 渐变占位。
+  readonly coverAssetId?: string | null;
   readonly views: string;
   readonly engagement: string;
 }

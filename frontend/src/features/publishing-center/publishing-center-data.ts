@@ -249,7 +249,10 @@ async function resolveLatestSnapshot(
       .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0]!;
     const raw = latest.rawMetrics ?? {};
     return {
-      plays: numOf(raw, "plays"),
+      // [T-082] 键名归一:真采集(douyin-cdp ingestion)写 `views`,演示/fixture 写
+      // `plays`。与 backend analytics.repository playsOf 同口径——优先 `views`,
+      // 缺失再回退 `plays`,否则真数据全显 0。
+      plays: numOf(raw, "views") || numOf(raw, "plays"),
       interactions:
         numOf(raw, "likes") +
         numOf(raw, "comments") +
@@ -299,6 +302,8 @@ interface RailInput {
   readonly title: string;
   readonly status: PublicationRow["status"];
   readonly snapshot: LatestSnapshot | null;
+  // [T-082] 真封面透传:热门内容行复用 revision.coverAssetId(T-078 同款渲染链)。
+  readonly coverAssetId: string | null;
 }
 
 interface AssembledRows {
@@ -421,6 +426,8 @@ async function assembleRealRows(
             title: railTitle,
             status,
             snapshot,
+            // [T-082] 封面随行透传到热门内容(此前收集了却在映射时丢弃)。
+            coverAssetId: revisionMeta.coverAssetId,
           },
         };
         }),
@@ -564,6 +571,8 @@ function buildRailFromSnapshots(railInputs: ReadonlyArray<RailInput>): RailBlock
       title: r.title,
       platform: r.platform,
       platformLabel: platformLabel(r.platform),
+      // [T-082] 真封面(revision.coverAssetId);null → 渐变占位。
+      coverAssetId: r.coverAssetId,
       views: `${formatCount(r.snapshot.plays)} 播放`,
       engagement:
         r.snapshot.interactions > 0
