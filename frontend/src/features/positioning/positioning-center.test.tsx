@@ -148,10 +148,13 @@ describe("PositioningCenterView", () => {
     expect(screen.getAllByTestId("positioning-facet").length).toBe(5);
   });
 
-  it("renders the AI 赋能带 with the single real 生成定位建议 button", () => {
+  it("[T-055b] AI 赋能带唯一入口 =「在对话里聊定位」深链(任务流按钮已退役)", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
     expect(screen.getByTestId("positioning-ai-band")).toBeTruthy();
-    expect(screen.getByText(/AI 生成定位建议/)).toBeTruthy();
+    const link = screen.getByTestId("positioning-open-copilot");
+    expect(link.textContent).toContain("在对话里聊定位");
+    // 旧 createAITask 任务流按钮不复存在(用户裁决:双 AI 入口合一)。
+    expect(screen.queryByText(/AI 生成定位建议/)).toBeNull();
   });
 
   it("renders the right-rail 定位规则 with the 5 rule cards (downstream constraints)", () => {

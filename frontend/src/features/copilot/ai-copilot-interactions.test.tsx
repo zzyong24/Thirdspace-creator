@@ -294,15 +294,18 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     });
   });
 
-  it("slice 2:一键岛预调 —— 面板带 ?fn 打开且对话为空 → 自动发预调话术(预调该工具)", async () => {
+  it("[T-055b] 一键岛预填 —— 面板带 ?fn 打开且对话为空 → 话术写进输入框,绝不自动发送", async () => {
     // 模拟从校准「对话诊断」深链进入:?surface=calibration&fn=calibration.diagnose。
+    // SPEC §5.1:预填只写 input value,用户回车才发(治「点击后内容重复两遍」)。
     mockSearch = "copilot=open&surface=calibration&fn=calibration.diagnose";
     render(<AICopilotContent viewModel={VM} />);
     await waitFor(() => {
-      expect(sendMessage).toHaveBeenCalledWith(
-        expect.objectContaining({ text: expect.stringContaining("诊断") }),
-      );
+      const input = screen.getByLabelText(
+        "我能帮你做什么",
+      ) as HTMLTextAreaElement;
+      expect(input.value).toContain("诊断");
     });
+    expect(sendMessage).not.toHaveBeenCalled();
   });
 
   it("renders the REAL continuing-task feed (in-progress only) and 「继续」 routes to the task's project/stage", async () => {
@@ -522,9 +525,39 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       });
       // 显式的项目引用 chip 出现(带 projectId),= 本次对话已注入该项目的可见凭证。
       const chip = document.querySelector(
-        '[data-slot="mention-chip"][data-project-id="proj-1"]',
+        '[data-slot="context-chip"][data-kind="project"][data-project-id="proj-1"]',
       );
       expect(chip).not.toBeNull();
+    });
+
+    it("[T-055b gate-F2] URL 选中态 → 头部常驻 @项目 chip;点 × 摘除后不再注入", async () => {
+      const user = userEvent.setup();
+      // 模拟一键岛带项目选中态打开(kind=project)。
+      mockSearch =
+        "copilot=open&surface=review&selKind=project&selId=proj-9&selTitle=" +
+        encodeURIComponent("22个没法看的复盘");
+      render(<AICopilotContent viewModel={VM} />);
+      const chip = document.querySelector(
+        '[data-slot="context-chip"][data-kind="project"][data-project-id="proj-9"]',
+      );
+      expect(chip).not.toBeNull();
+      expect(chip!.textContent).toContain("22个没法看的复盘");
+
+      await user.click(screen.getByLabelText("移除项目上下文"));
+      expect(
+        document.querySelector('[data-slot="context-chip"][data-kind="project"]'),
+      ).toBeNull();
+      // 摘除后显式回落「未关联项目」空态(gate-F2:缺失不静默)。
+      expect(
+        document.querySelector('[data-slot="context-chip-empty"]'),
+      ).not.toBeNull();
+    });
+
+    it("[T-055b gate-F2] 无任何上下文 → 显式「未关联项目」空 chip,不静默", () => {
+      render(<AICopilotContent viewModel={VM} />);
+      const empty = document.querySelector('[data-slot="context-chip-empty"]');
+      expect(empty).not.toBeNull();
+      expect(empty!.textContent).toContain("未关联项目");
     });
 
     it("移除项目引用 chip → chip 消失(撤销注入)", async () => {
@@ -538,11 +571,13 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       const option = await screen.findByRole("option", { name: /上下文工程/ });
       await user.click(option);
       expect(
-        document.querySelector('[data-slot="mention-chip"]'),
+        document.querySelector('[data-slot="context-chip"][data-kind="project"]'),
       ).not.toBeNull();
 
-      await user.click(screen.getByLabelText("移除项目引用"));
-      expect(document.querySelector('[data-slot="mention-chip"]')).toBeNull();
+      await user.click(screen.getByLabelText("移除项目上下文"));
+      expect(
+        document.querySelector('[data-slot="context-chip"][data-kind="project"]'),
+      ).toBeNull();
     });
 
     it("库里没有项目 → 下拉显示诚实空态(引导先建项目,不摆假行)", async () => {

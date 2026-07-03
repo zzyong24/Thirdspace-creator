@@ -325,6 +325,22 @@ function QuickIcon({
 export interface AICopilotContentProps {
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: CopilotContentViewModel;
+  /**
+   * [T-055b] 内嵌模式(稿面右栏常驻):上下文由宿主注入而非 URL —— surface/selection
+   * 直接给值,会话持久化按 persistKey 隔离(如 `project:<id>`,各项目独立会话)。
+   * 内嵌时隐藏全局次区(推荐指令/最近任务/快捷入口),头部标题可换文案。
+   */
+  readonly embed?: {
+    readonly surface: string;
+    readonly selection?: {
+      readonly kind: string;
+      readonly id: string;
+      readonly title?: string;
+    };
+    readonly persistKey?: string;
+    readonly title?: string;
+    readonly subtitle?: string;
+  };
 }
 
 // The wire shape of an AITask as returned by the global feed op (ai.tasks.list). Cast
@@ -496,17 +512,17 @@ const MD_COMPONENTS: Components = {
   ),
   li: ({ children }) => <li className="leading-relaxed">{children}</li>,
   h1: ({ children }) => (
-    <h1 className="mb-1 mt-2 text-xs font-semibold text-foreground first:mt-0">
+    <h1 className="mb-1 mt-2 text-sm font-semibold text-foreground first:mt-0">
       {children}
     </h1>
   ),
   h2: ({ children }) => (
-    <h2 className="mb-1 mt-2 text-xs font-semibold text-foreground first:mt-0">
+    <h2 className="mb-1 mt-2 text-sm font-semibold text-foreground first:mt-0">
       {children}
     </h2>
   ),
   h3: ({ children }) => (
-    <h3 className="mb-0.5 mt-1.5 text-[11px] font-semibold text-foreground first:mt-0">
+    <h3 className="mb-0.5 mt-1.5 text-[13px] font-semibold text-foreground first:mt-0">
       {children}
     </h3>
   ),
@@ -521,12 +537,12 @@ const MD_COMPONENTS: Components = {
     </a>
   ),
   code: ({ children }) => (
-    <code className="rounded bg-surface px-1 py-0.5 font-mono text-[10px] text-foreground">
+    <code className="rounded bg-surface px-1 py-0.5 font-mono text-xs text-foreground">
       {children}
     </code>
   ),
   pre: ({ children }) => (
-    <pre className="my-1 overflow-x-auto rounded-md bg-surface p-2 font-mono text-[10px] text-foreground">
+    <pre className="my-1 overflow-x-auto rounded-md bg-surface p-2 font-mono text-xs text-foreground">
       {children}
     </pre>
   ),
@@ -537,7 +553,7 @@ const MD_COMPONENTS: Components = {
   ),
   table: ({ children }) => (
     <div className="my-1 overflow-x-auto">
-      <table className="w-full border-collapse text-[10px]">{children}</table>
+      <table className="w-full border-collapse text-xs">{children}</table>
     </div>
   ),
   th: ({ children }) => (
@@ -552,8 +568,9 @@ const MD_COMPONENTS: Components = {
 };
 
 function ChatMarkdown({ text }: { text: string }) {
+  // [T-055b SPEC §5.3] 对话正文 14px、行高 1.7(原 11px 用户反馈「字体太小看的累」)。
   return (
-    <div data-slot="copilot-markdown" className="text-[11px] text-muted-foreground">
+    <div data-slot="copilot-markdown" className="text-sm leading-[1.7] text-muted-foreground">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
         {text}
       </ReactMarkdown>
@@ -561,7 +578,10 @@ function ChatMarkdown({ text }: { text: string }) {
   );
 }
 
-export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
+export function AICopilotContent({
+  viewModel,
+  embed,
+}: AICopilotContentProps = {}) {
   const vm = viewModel ?? buildCopilotViewModel();
   const router = useRouter();
 
@@ -570,18 +590,28 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   // slice 2:页面层 surface + 按钮层 functionKey 从 URL 读(一键岛打开时带 ?surface=&fn=),
   // 让同一个全局面板按打开来源装配不同基础 skill + 预调专用工具。回复 token 级流式;可 stop()。
   const searchParams = useSearchParams();
-  const surface = searchParams?.get("surface") || DEFAULT_SURFACE;
+  // [T-055b] 内嵌模式:surface/selection 由宿主 props 注入,URL 只保留 fn(预填话术仍可
+  // 从稿面内深链触发);浮层模式维持全 URL 驱动。
+  const surface =
+    embed?.surface ?? (searchParams?.get("surface") || DEFAULT_SURFACE);
   const functionKey = searchParams?.get("fn") || undefined;
   // T-027:选中态从 URL 读(一键岛带 ?selKind=&selId=&selTitle=),装进 ChatContext.selection →
   // 后端注入 system + 工具入参兜底,让 Copilot 知道用户"这条"指哪条,不再瞎答/反复索要标题。
-  const selKind = searchParams?.get("selKind") || undefined;
-  const selId = searchParams?.get("selId") || undefined;
-  const selTitle = searchParams?.get("selTitle") || undefined;
+  const selKind = embed?.selection?.kind ?? (searchParams?.get("selKind") || undefined);
+  const selId = embed?.selection?.id ?? (searchParams?.get("selId") || undefined);
+  const selTitle =
+    embed?.selection?.title ?? (searchParams?.get("selTitle") || undefined);
+  // [T-055b] 会话持久化 key:内嵌模式按宿主给的 persistKey 隔离(如 project:<id>),
+  // 否则按 surface(浮层原行为)。
+  const persistKey = embed?.persistKey ?? surface;
+  // [T-055b] 上下文可摘:用户点掉 chip 后,本面板实例不再注入这份选中态(会话继续,
+  // 只是后续轮次不带 selection/projectId)。
+  const [selectionDismissed, setSelectionDismissed] = React.useState(false);
   // T-029:次区(推荐指令 / 最近任务 / 继续任务 / 快捷入口)只在「全局助手」模式展示 —— 即右下角
   // 浮标 / ⌘K 全局唤醒(落到默认 surface、无 functionKey、无选中态)。从工作台上下文打开的 surface
   // Copilot 聚焦当前任务,不展示次区(真机反馈:非右下角/全局唤醒不需要下面的推荐指令和全局入口)。
   const showSecondary =
-    surface === DEFAULT_SURFACE && !functionKey && !selKind;
+    !embed && surface === DEFAULT_SURFACE && !functionKey && !selKind;
   // 会话持久化(本切片):前端持一个 conversationId,放进 transport body(和 chatContext 并列)
   // 让后端续接同一会话;并从 /api/chat 的响应头 `x-conversation-id` 捕获后端 lazy 建/复用的
   // 会话 id 存起来。conversationId 随 surface 切换重置(不同页面各自独立会话)。
@@ -592,16 +622,17 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   // 重建 transport(重建会打断进行中的流)。fetch 包装层用 ref 里的 setter 回写捕获到的 id。
   const conversationIdRef = React.useRef<string | null>(null);
   conversationIdRef.current = conversationId;
-  // 捕获到 x-conversation-id 时:更新 state + 按 surface 持久化。surface 用 ref 读最新值,
-  // 让 fetch 包装闭包不随 surface 变(同样避免重建 transport)。
-  const surfaceRef = React.useRef(surface);
-  surfaceRef.current = surface;
+  // 捕获到 x-conversation-id 时:更新 state + 持久化。[T-055b] 持久化桶用 persistKey
+  // (内嵌按项目隔离;浮层 = surface,原行为);ref 读最新值,让 fetch 包装闭包不随
+  // key 变(避免重建 transport 打断流)。
+  const persistKeyRef = React.useRef(persistKey);
+  persistKeyRef.current = persistKey;
   const captureConversationId = React.useCallback((id: string) => {
     if (!id) return;
     if (conversationIdRef.current === id) return;
     conversationIdRef.current = id;
     setConversationId(id);
-    writeStoredConversationId(surfaceRef.current, id);
+    writeStoredConversationId(persistKeyRef.current, id);
   }, []);
 
   // @项目引用(T-039b):输入框 @ 选中的项目。存在时等价「选中态项目」注入后端(见下 chatContextBody)。
@@ -618,7 +649,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
       selection?: { kind: string; ids: string[]; label?: string };
     } = { surface };
     if (functionKey) chatContext.functionKey = functionKey;
-    if (selKind && selId) {
+    if (!selectionDismissed && selKind && selId) {
       chatContext.selection = {
         kind: selKind,
         ids: [selId],
@@ -641,7 +672,15 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
       chatContext.projectId = mentionedProject.id;
     }
     return { chatContext };
-  }, [surface, functionKey, selKind, selId, selTitle, mentionedProject]);
+  }, [
+    surface,
+    functionKey,
+    selKind,
+    selId,
+    selTitle,
+    mentionedProject,
+    selectionDismissed,
+  ]);
   const transport = React.useMemo(
     () =>
       new DefaultChatTransport<UIMessage>({
@@ -674,9 +713,14 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   });
   const streaming = status === "streaming" || status === "submitted";
 
-  // 一键岛预调(SPEC §3.4):面板带 fn 打开 且对话尚空 → 自动发一轮「预调话术」,让模型本轮
-  // 优先调被 functionKey 置顶的专用工具(出题/诊断/分析的真实闭环)。只触发一次(对话已有消息
-  // 或没 fn 时不动),避免每次渲染重复发。
+  // 受控输入(useChat v7 不再托管 input;自管 + sendMessage({text}))。
+  const [prompt, setPrompt] = React.useState<string>(vm.prompt);
+  const isEmpty = prompt.trim().length === 0;
+
+  // [T-055b SPEC §5.1] 一键岛预填 —— 面板带 fn 打开且对话尚空 → 把「预填话术」写进**输入框**,
+  // 用户回车才发,**绝不自动发送**(治「点击后内容重复两遍」:旧预调自动 sendMessage 在带 ?fn
+  // 重进/重渲时会重复入历史;预填只写 input value,机制上不可能重复发)。functionKey 置顶工具
+  // 的白名单重排(applyFunctionKey)不受影响 —— 用户发出这条时仍优先调专用工具。
   const prefilledRef = React.useRef(false);
   React.useEffect(() => {
     if (prefilledRef.current) return;
@@ -684,12 +728,9 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
     const text = FUNCTION_KEY_PREFILL[functionKey];
     if (!text) return;
     prefilledRef.current = true;
-    void sendMessage({ text });
-  }, [functionKey, messages.length, streaming, sendMessage]);
-
-  // 受控输入(useChat v7 不再托管 input;自管 + sendMessage({text}))。
-  const [prompt, setPrompt] = React.useState<string>(vm.prompt);
-  const isEmpty = prompt.trim().length === 0;
+    // 不覆盖用户已敲的字(预填只填空输入框)。
+    setPrompt((prev) => (prev.trim().length > 0 ? prev : text));
+  }, [functionKey, messages.length, streaming]);
 
   const submit = React.useCallback(() => {
     const value = prompt.trim();
@@ -717,7 +758,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
         setMessages(mapped);
         conversationIdRef.current = id;
         setConversationId(id);
-        writeStoredConversationId(surfaceRef.current, id);
+        writeStoredConversationId(persistKeyRef.current, id);
         return true;
       } catch (err) {
         console.error("[copilot] load conversation failed:", err);
@@ -731,23 +772,22 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
   // → 读回其消息填充对话。仅客户端读 localStorage(SSR 安全)。切 surface 会重置对话:先清空,
   // 再按新 surface 的存档读回(没有则保持空会话)。prefilledRef 一并复位,让新 surface 的
   // 一键岛预调仍可触发一次。
-  const hydratedForSurfaceRef = React.useRef<string | null>(null);
+  const hydratedForKeyRef = React.useRef<string | null>(null);
   React.useEffect(() => {
-    if (hydratedForSurfaceRef.current === surface) return;
-    hydratedForSurfaceRef.current = surface;
-    const stored = readStoredConversationId(surface);
-    // surface 变了:重置会话态(清 id + ref)。有存档则读回,否则留空会话。
+    if (hydratedForKeyRef.current === persistKey) return;
+    hydratedForKeyRef.current = persistKey;
+    const stored = readStoredConversationId(persistKey);
+    // 持久化桶变了(surface 或内嵌项目切换):重置会话态。有存档则读回,否则留空会话。
     conversationIdRef.current = stored;
     setConversationId(stored);
     if (stored) {
-      // 有存档 → 抑制一键岛预调(prefilledRef=true):读回是「续上次」,不该再自动发预调话术,
-      // 否则每次带 ?fn 二次进入都会往历史里追加一条重复的预调。
+      // 有存档 → 抑制一键岛预填(prefilledRef=true):读回是「续上次」,输入框不再叠预填话术。
       prefilledRef.current = true;
       void (async () => {
         const ok = await loadConversation(stored);
-        // 读回失败(会话被删)→ 清掉这条失效存档,降级为干净空会话,并放开预调(可重新起一轮)。
+        // 读回失败(会话被删)→ 清掉这条失效存档,降级为干净空会话,并放开预填(可重新填一次)。
         if (!ok) {
-          writeStoredConversationId(surface, null);
+          writeStoredConversationId(persistKey, null);
           conversationIdRef.current = null;
           setConversationId(null);
           setMessages([]);
@@ -755,13 +795,13 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
         }
       })();
     } else {
-      // 无存档 → 干净空会话,放开一键岛预调(新 surface 首次进入可自动预调一次)。
+      // 无存档 → 干净空会话,放开一键岛预填(首次进入可预填一次)。
       prefilledRef.current = false;
       setMessages([]);
     }
-    // loadConversation 依赖稳定;surface 变化触发读回。
+    // loadConversation 依赖稳定;persistKey 变化触发读回。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [surface]);
+  }, [persistKey]);
 
   // 历史记录(SPEC 本切片,做实占位按钮):点「历史记录」→ 拉过往会话列表(标题+时间),
   // 点某条 → 切到该会话 + 读回消息。open 时懒加载一次(避免每次挂载都打请求)。
@@ -804,7 +844,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
     setHistoryOpen(false);
     conversationIdRef.current = null;
     setConversationId(null);
-    writeStoredConversationId(surfaceRef.current, null);
+    writeStoredConversationId(persistKeyRef.current, null);
     setMessages([]);
     prefilledRef.current = false;
   }, [setMessages]);
@@ -977,6 +1017,30 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
     [mentionOpen, mentionOptions, mentionIndex, pickMentionProject],
   );
 
+  // [T-055b] 上下文 chips 派生:生效的项目上下文(URL/embed 选中态优先,@ 引用次之,
+  // 与 chatContextBody 的注入优先级一字不差),以及非项目对象 chip(脚本/候选等)。
+  const urlProjectSelection =
+    !selectionDismissed && selKind === "project" && selId
+      ? { id: selId, title: selTitle || "当前项目" }
+      : null;
+  const activeProjectChip = urlProjectSelection
+    ? {
+        id: urlProjectSelection.id,
+        title: urlProjectSelection.title,
+        dismiss: () => setSelectionDismissed(true),
+      }
+    : mentionedProject
+      ? {
+          id: mentionedProject.id,
+          title: mentionedProject.title,
+          dismiss: () => setMentionedProject(null),
+        }
+      : null;
+  const objectChip =
+    !selectionDismissed && selKind && selKind !== "project" && selId
+      ? { kind: selKind, label: selTitle || selKind }
+      : null;
+
   return (
     // bug #5:面板布局重排 —— 整体撑满浮层高度(min-h-0 让内部可正确收缩),对话区做主区(flex-1
     // 占满、消息流自身滚动),下面的「控制台/快捷入口/智能推荐」收进一个有界、可滚的次区,不再挤占对话。
@@ -1000,15 +1064,15 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
             data-slot="copilot-header-title"
             className="text-sm font-semibold text-foreground"
           >
-            AI 助手
+            {embed?.title ?? "AI 助手"}
           </h2>
           <p className="text-[11px] text-muted-foreground">
-            描述你的目标，我来帮你规划下一步
+            {embed?.subtitle ?? "描述你的目标，我来帮你规划下一步"}
           </p>
         </div>
         {/* 历史记录 + 新对话(SPEC 本切片:占位按钮做实)。历史记录 → 拉过往会话列表,点某条
             切过去 + 读回;新对话 → 清空当前会话(下次发言后端 lazy 建新会话)。 */}
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap">
           <button
             type="button"
             onClick={startNewConversation}
@@ -1077,6 +1141,61 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
         )}
       </div>
 
+      {/* [T-055b SPEC §5.1] 上下文 chips —— 常驻显示本会话注入的上下文(@项目名 + 对象),
+          可一键摘除;什么都没带时显式「未关联项目」空态提示(gate-F2:缺失不静默)。 */}
+      <div
+        data-slot="copilot-context-chips"
+        className="flex shrink-0 flex-wrap items-center gap-1.5"
+      >
+        {activeProjectChip ? (
+          <span
+            data-slot="context-chip"
+            data-kind="project"
+            data-project-id={activeProjectChip.id}
+            className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand-soft px-2.5 py-1 text-xs font-medium text-brand"
+          >
+            <FolderOpen className="size-3" aria-hidden="true" />
+            <span className="max-w-[200px] truncate">
+              @{activeProjectChip.title}
+            </span>
+            <button
+              type="button"
+              aria-label="移除项目上下文"
+              data-slot="context-chip-remove"
+              onClick={activeProjectChip.dismiss}
+              className="ml-0.5 rounded text-brand/70 transition-colors hover:text-brand focus:outline-none"
+            >
+              ×
+            </button>
+          </span>
+        ) : (
+          <span
+            data-slot="context-chip-empty"
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-text-subtle"
+          >
+            未关联项目 · 输入 @ 引用一个项目
+          </span>
+        )}
+        {objectChip ? (
+          <span
+            data-slot="context-chip"
+            data-kind={objectChip.kind}
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-subtle px-2.5 py-1 text-xs text-muted-foreground"
+          >
+            <span className="max-w-[200px] truncate">{objectChip.label}</span>
+            <button
+              type="button"
+              aria-label="移除选中内容上下文"
+              data-slot="context-chip-remove"
+              onClick={() => setSelectionDismissed(true)}
+              className="ml-0.5 rounded text-muted-foreground/70 transition-colors hover:text-foreground focus:outline-none"
+            >
+              ×
+            </button>
+          </span>
+        ) : null}
+      </div>
+
       {/* Conversation region (主区,bug #5)—— 消息流 + 输入框。flex-1 占满浮层主体,消息区
           自身滚动,输入框 pin 在底部。对话才是 Copilot 的核心,放大、可读、可滚。 */}
       <div
@@ -1118,7 +1237,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                     return message.role === "user" ? (
                       <span
                         data-slot="copilot-message-text"
-                        className="rounded-lg bg-brand-soft px-2.5 py-1.5 text-[11px] text-foreground"
+                        className="rounded-lg bg-brand-soft px-3 py-2 text-sm leading-[1.7] text-foreground"
                       >
                         {text}
                       </span>
@@ -1196,7 +1315,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                 <li
                   data-slot="copilot-thinking"
                   aria-live="polite"
-                  className="flex items-center gap-1.5 self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-[11px] text-muted-foreground"
+                  className="flex items-center gap-1.5 self-start rounded-lg bg-surface-muted px-2.5 py-1.5 text-xs text-muted-foreground"
                 >
                   <span className="size-3 animate-spin rounded-full border-2 border-brand border-t-transparent" />
                   编导思考中…
@@ -1212,10 +1331,10 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
               <span className="inline-flex size-9 items-center justify-center rounded-full bg-brand-soft text-brand">
                 <Sparkles className="size-4" aria-hidden="true" />
               </span>
-              <p className="text-[12px] font-medium text-foreground">
+              <p className="text-[13px] font-medium text-foreground">
                 描述你的目标，我来帮你规划下一步
               </p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 试试「基于最近评论出 5 个选题」，或用下方推荐指令开聊。
               </p>
             </div>
@@ -1263,28 +1382,7 @@ export function AICopilotContent({ viewModel }: AICopilotContentProps = {}) {
                 data-slot="prompt-input"
               />
             </div>
-            {/* @引用命中的项目 chip —— 显式告诉用户「本次对话已带上这个项目」,可一键移除。 */}
-            {mentionedProject && (
-              <div
-                data-slot="mention-chip"
-                data-project-id={mentionedProject.id}
-                className="flex items-center gap-1.5 self-start rounded-md border border-brand/30 bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand"
-              >
-                <FolderOpen className="size-3" aria-hidden="true" />
-                <span className="max-w-[180px] truncate">
-                  {mentionedProject.title}
-                </span>
-                <button
-                  type="button"
-                  aria-label="移除项目引用"
-                  data-slot="mention-chip-remove"
-                  onClick={() => setMentionedProject(null)}
-                  className="ml-0.5 rounded text-brand/70 transition-colors hover:text-brand focus:outline-none"
-                >
-                  ×
-                </button>
-              </div>
-            )}
+            {/* [T-055b] @引用命中的项目 chip 收编到头部常驻 context-chips(避免双 chip)。 */}
             <div
               className="flex flex-wrap items-center justify-between gap-2"
               data-slot="suggested-action-chips"

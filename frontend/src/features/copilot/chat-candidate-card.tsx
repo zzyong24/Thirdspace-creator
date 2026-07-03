@@ -106,7 +106,7 @@ export function ChatCandidateCard({
               className="flex flex-col gap-1 rounded-control border border-border bg-surface px-2.5 py-1.5"
             >
               <div className="flex items-start gap-2">
-                <span className="min-w-0 flex-1 text-[12px] font-medium leading-snug text-foreground">
+                <span className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-foreground">
                   {c.title}
                 </span>
                 {c.predictedScore !== null ? (
@@ -115,18 +115,18 @@ export function ChatCandidateCard({
                   </span>
                 ) : null}
                 {ROLE_LABEL[c.contentRole] ? (
-                  <span className="shrink-0 rounded-full border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  <span className="shrink-0 rounded-full border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground">
                     {ROLE_LABEL[c.contentRole]}
                   </span>
                 ) : null}
               </div>
               {c.angle ? (
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[13px] text-muted-foreground">
                   切入：{c.angle}
                 </span>
               ) : null}
               {c.reason ? (
-                <span className="text-[10px] text-text-subtle">{c.reason}</span>
+                <span className="text-[11px] text-text-subtle">{c.reason}</span>
               ) : null}
               <div className="flex items-center gap-2">
                 {s === "adopted" ? (

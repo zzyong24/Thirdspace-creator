@@ -56,7 +56,7 @@ export function ChatDiagnosisCard({
             className="flex flex-col gap-0.5 rounded-control border border-border bg-surface px-2.5 py-1.5"
           >
             <div className="flex items-center gap-2">
-              <span className="min-w-0 flex-1 text-[12px] font-medium text-foreground">
+              <span className="min-w-0 flex-1 text-[13px] font-medium text-foreground">
                 {d.key}
               </span>
               <span className="shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand">
@@ -64,10 +64,10 @@ export function ChatDiagnosisCard({
               </span>
             </div>
             {d.reason ? (
-              <span className="text-[10px] text-text-subtle">{d.reason}</span>
+              <span className="text-[11px] text-text-subtle">{d.reason}</span>
             ) : null}
             {d.suggestion ? (
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[11px] text-muted-foreground">
                 建议：{d.suggestion}
               </span>
             ) : null}
@@ -75,12 +75,12 @@ export function ChatDiagnosisCard({
         ))}
       </ul>
       {diagnosis.verdict ? (
-        <p className="text-[11px] font-medium text-foreground">
+        <p className="text-[13px] font-medium text-foreground">
           综合判断：{diagnosis.verdict}
         </p>
       ) : null}
       {diagnosis.priorityFixes.length > 0 ? (
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-[11px] text-muted-foreground">
           优先修改：{diagnosis.priorityFixes.join("；")}
         </p>
       ) : null}
@@ -147,11 +147,11 @@ export function ChatLearningsCard({
               data-slot="chat-learning-item"
               className="flex flex-col gap-1 rounded-control border border-border bg-surface px-2.5 py-1.5"
             >
-              <span className="text-[12px] font-medium leading-snug text-foreground">
+              <span className="text-[13px] font-medium leading-snug text-foreground">
                 {l.title}
               </span>
               {l.insight ? (
-                <span className="text-[10px] text-text-subtle">{l.insight}</span>
+                <span className="text-[11px] text-text-subtle">{l.insight}</span>
               ) : null}
               <div className="flex items-center gap-2">
                 {s === "adopted" ? (
@@ -264,7 +264,7 @@ export function ChatPositioningCard({
       </span>
       <div className="flex flex-col gap-1 rounded-control border border-border bg-surface px-2.5 py-2">
         {suggestion.oneLiner ? (
-          <p className="text-[12px] font-medium leading-snug text-foreground">
+          <p className="text-[13px] font-medium leading-snug text-foreground">
             {suggestion.oneLiner}
           </p>
         ) : null}

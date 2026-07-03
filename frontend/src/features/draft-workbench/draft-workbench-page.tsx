@@ -16,6 +16,7 @@ import Link from "next/link";
 import { ScriptRichEditor } from "@/features/script/script-rich-editor";
 import { sectionsToHtml } from "@/features/script/script-editor-bridge";
 import { TopicCard } from "./topic-card";
+import { DraftChatRail } from "./draft-chat-rail";
 import { MaturityBar, DraftPrimaryAction } from "./maturity-bar";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
@@ -108,30 +109,12 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           <AmmoDrawer ammo={ammo} />
         </div>
 
-        {/* 右栏:编导对话(T-055b 装 ChatBox;本切片只渲染去往全局助手的真实入口,
-            不摆假输入框——铁律「真实有效或删除」) */}
+        {/* 右栏:编导对话(T-055b)—— 全局 ChatBox 内嵌常驻,上下文 chip = 当前项目。 */}
         <aside
           data-slot="draft-chat-rail"
           className="hidden w-[380px] shrink-0 flex-col border-l border-border bg-surface xl:flex"
         >
-          <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-semibold text-foreground">编导对话</p>
-            <p className="mt-0.5 text-xs text-text-subtle">
-              聊定位、改 hook、搜素材都在这里(下一切片接入)
-            </p>
-          </div>
-          <div className="flex flex-1 items-center justify-center p-6">
-            <Link
-              href={`/projects/${project.id}`}
-              aria-disabled="true"
-              tabIndex={-1}
-              className="pointer-events-none select-none rounded-card border border-dashed border-border px-4 py-6 text-center text-xs leading-relaxed text-text-subtle"
-            >
-              编导对话将常驻此栏
-              <br />
-              (T-055b:上下文 chip + 预填 + 产物卡片)
-            </Link>
-          </div>
+          <DraftChatRail projectId={project.id} projectTitle={project.title} />
         </aside>
       </div>
     </main>
