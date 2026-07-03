@@ -251,13 +251,16 @@ export function resolveRoute(
     const sidebarLabel = realTitle || "当前项目";
 
     if (!stage) {
-      // [T-055a] 稿面工作台:页面自带顶条(标题/成熟度/主行动),shell 不再叠
-      // 「项目概览」大标题头(双头冗余);走 contentFill 全高布局。
+      // [T-075] 双导航真因修复:稿面此前自带 5 点成熟度条,与阶段页顶部的 6 项阶段条
+      // 并存(名称/数量都不同 = 用户三次反馈的「两种导航」)。统一为一套:稿面也走
+      // project-workspace header(同一 6 项阶段条,brief 等未映射段 = 全 pending 诚实);
+      // 稿面自带 MaturityBar 已退役。主行动仍在稿面行内(真按钮),header 不再叠 label。
       return {
-        headerMode: "global",
-        pageTitle: "",
+        headerMode: "project-workspace",
+        pageTitle: realTitle || undefined,
         contextualCardVariant: "assistant",
         project: identity,
+        projectStages: buildProjectStages(identity?.stage ?? ""),
         sidebarContext: {
           heading: "当前项目",
           items: [

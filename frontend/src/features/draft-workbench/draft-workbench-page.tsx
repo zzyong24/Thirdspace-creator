@@ -21,7 +21,7 @@ import { DraftChatRail } from "./draft-chat-rail";
 import { RevealProjectButton } from "./reveal-project-button";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
-import { MaturityBar, DraftPrimaryAction } from "./maturity-bar";
+import { DraftPrimaryAction } from "./maturity-bar";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
@@ -38,33 +38,12 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
       data-project-id={project.id}
       className="flex h-full min-h-0 flex-col"
     >
-      {/* ── 顶条 ── */}
+      {/* ── 顶条(T-075 收窄:标题与阶段条由 shell project-workspace header 统一提供,
+          稿面自带的 5 点成熟度条退役 —— 与阶段页只剩同一套 6 项阶段导航)。 ── */}
       <header
         data-slot="draft-topbar"
-        className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2.5"
+        className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2"
       >
-        <Link
-          href="/projects"
-          className="shrink-0 text-[13px] text-muted-foreground hover:text-foreground"
-        >
-          ← 项目
-        </Link>
-        <h1 className="min-w-0 max-w-[340px] truncate text-[15px] font-semibold text-foreground">
-          {project.title}
-        </h1>
-        <MaturityBar
-          projectId={project.id}
-          currentStage={project.currentStage}
-          signals={{
-            topicSettled: Boolean(
-              project.briefDetail?.targetAudience?.trim() &&
-                project.briefDetail?.contentGoal?.trim() &&
-                project.briefDetail?.coreMessage?.trim(),
-            ),
-            scriptHasVersion: script.versionCount > 0,
-            hasPublication: publishPack !== null,
-          }}
-        />
         <div className="ml-auto flex shrink-0 items-center gap-2.5">
           <RevealProjectButton projectId={project.id} />
           {project.imported ? (
