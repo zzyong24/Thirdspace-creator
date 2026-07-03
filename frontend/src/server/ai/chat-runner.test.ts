@@ -165,6 +165,40 @@ describe("buildChatAssembly — 三层注入装配", () => {
     ]);
   });
 
+  it("[T-077c] 技能自感知:skillsBrief 注入 system(每白名单工具一行「中文名(工具名):用途」,行数=白名单数、≤20)", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    // 清单块头(与 honestyBlock 并列注入)。
+    expect(a.system).toContain("你的技能清单");
+    // 每个白名单工具一行,格式「中文名(工具名):一句话用途」(gate-F1)。
+    const whitelist = Object.keys(a.tools);
+    for (const id of whitelist) {
+      // 行内含「(工具名):」—— 中文名和用途由词表给,这里锚定格式骨架。
+      expect(a.system).toContain(`(${id}):`);
+    }
+    // 抽查中文名 + 用途同源词表(lib/chat-tool-labels)。
+    expect(a.system).toContain("AI 出题(topic.generate):");
+    expect(a.system).toContain("记录经验(learning.capture):");
+    // 行数 = 白名单工具数(≤20,gate-F1 截断上限)。
+    const brief = a.system
+      .split("【你的技能清单")[1]!
+      .split("\n\n")[0]!
+      .split("\n")
+      .filter((l) => /\(.+\):/.test(l));
+    expect(brief).toHaveLength(whitelist.length);
+    expect(brief.length).toBeLessThanOrEqual(20);
+  });
+
+  it("[T-077c] skillsBrief 按 surface 白名单收窄:review 面只列 review.analyze + learning.capture,不编造别面能力", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
+    expect(a.system).toContain("复盘提炼(review.analyze):");
+    expect(a.system).toContain("记录经验(learning.capture):");
+    // 不在复盘白名单的工具绝不出现在清单里(自感知与真实能力一致)。
+    expect(a.system).not.toContain("(topic.generate):");
+    expect(a.system).not.toContain("(context.projects):");
+  });
+
   it("按 skill 能力解析 model(resolveModelSpec 被以 topic.generate 调用)", async () => {
     const { deps, resolveModelSpec } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);

@@ -115,6 +115,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { buildCopilotViewModel } from "@/fixtures/selectors";
+import { CHAT_TOOL_LABELS } from "@/lib/chat-tool-labels";
 import { client } from "@/lib/contract-client";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
@@ -452,21 +453,10 @@ const CONTINUING_STATUSES: ReadonlySet<WireTask["status"]> = new Set([
 ]);
 
 // taskType prefix (the segment before the first ".") → the creator project STAGE
-// route segment that owns that node. Anchored to where each AI node island lives:
-//   research.* → research workbench   (research.gather / research.analyze)
-//   topic.*    → planning             (topic.generate)
-//   script.*   → script editor        (script.draft / script.rewrite)
-//   material.* → production           (material.match)
-//   publish.*  → publishing           (publish.platform_adapt)
-//   review.*   → review               (review.analyze)
-// Unknown prefixes degrade to the project root (the stepper lets the user pick up
-// from there) rather than guessing a wrong stage.
+// route segment that owns that node. [T-076] 两阶段化:review.* 落复盘页,其余全部
+// 落稿面(research/topic/script/material/publish 的可执行入口都在稿面内;
+// production/research/planning 工作台已删)。
 const TASK_TYPE_STAGE: Record<string, string> = {
-  research: "research",
-  topic: "planning",
-  script: "script",
-  material: "production",
-  publish: "publishing",
   review: "review",
 };
 
@@ -507,22 +497,8 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   "material.gather": "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
 };
 
-// [T-060②] 工具 trace 的中文名(对话内「正在调用/已调用」行;未知工具回落原名)。
-const TOOL_TRACE_LABELS: Record<string, string> = {
-  "topic.generate": "AI 出题",
-  "topic.enrich": "补全选题卡",
-  "script.hooks": "生成 HOOK 候选",
-  "script.draft": "起草整稿脚本",
-  "material.gather": "搜集素材",
-  "learning.capture": "记录经验",
-  "calibration.diagnose": "编导诊断",
-  "review.analyze": "复盘提炼",
-  "positioning.generate": "生成定位提案",
-  "context.projects": "读取项目库",
-  "context.knowledge": "检索知识库",
-  "context.materials": "检索素材库",
-  "context.comments": "读取观众评论",
-};
+// [T-060②→T-077c] 工具 trace 的中文名(对话内「正在调用/已调用」行;未知工具回落原名)。
+// 词表抽到 lib/chat-tool-labels(纯常量)与服务端 skillsBrief 同源 —— 单一词表,防两处漂移。
 
 // 默认页面层(无 URL 指定时)—— 选题编导是最通用的一面。
 const DEFAULT_SURFACE = "topics";
@@ -1302,7 +1278,7 @@ export function AICopilotContent({
                   {message.parts.map((part, idx) => {
                     if (!isToolUIPart(part)) return null;
                     const name = getToolName(part);
-                    const traceLabel = TOOL_TRACE_LABELS[name] ?? name;
+                    const traceLabel = CHAT_TOOL_LABELS[name]?.name ?? name;
                     // [T-060②] 调用中 → 进行态 trace 行(WorkBuddy 式过程可见)。
                     if (part.state !== "output-available") {
                       return (

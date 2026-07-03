@@ -20,6 +20,7 @@ import {
   type ChatContext,
 } from "./chat-context";
 import { buildChatTools, type ChatToolDeps } from "./chat-tools";
+import { buildSkillsBrief } from "@/lib/chat-tool-labels";
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
 import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
 import { parseLearnings, reviewFacets } from "./review-runner";
@@ -188,6 +189,14 @@ export async function buildChatAssembly(
     "3. 用户要新定位 → 必须调 positioning.generate 工具(产带采纳按钮的卡),不要只在文本里写定位 —— 文本无法被采纳。",
     "4. 工具有分页/条数上限时,如实告知拿到了多少、还有没有更多,不要谎称已看全部。",
   ].join("\n");
+  // [T-077c] 技能自感知(SPEC §1.3 [gate-F1]):把当前 surface 白名单的技能清单注进 system
+  // (每工具一行「中文名(工具名):一句话用途」,行数=白名单工具数、上限 20 超出截断)——
+  // 让模型能如实回答「你能干什么」,并在对话中主动建议(「这个我可以用『记录经验』帮你存下来」)。
+  // 词表与前端工具 trace 行同源(lib/chat-tool-labels 单一真值),不编造白名单外的能力。
+  const skillsBriefBlock = [
+    "【你的技能清单 —— 本对话你能调用的全部工具,回答「你能干什么」时以此为准,不要编造清单外的能力】",
+    buildSkillsBrief(toolWhitelist),
+  ].join("\n");
   const selectionBlock = assembleSelectionContext(chatContext.selection);
   // T-039a 补:复盘对话「瞎问复盘对象」根因 —— 本项目真材料虽已装进 context(reviewSubject reader)
   // 且进了 review.analyze 工具的 facets,但**没进对话系统提示**,故 LLM 在决定调用工具前不知道复盘哪条,
@@ -206,7 +215,13 @@ export async function buildChatAssembly(
           .filter(Boolean)
           .join("\n")
       : "";
-  const system = [baseSystem, honestyBlock, reviewSubjectBlock, selectionBlock]
+  const system = [
+    baseSystem,
+    honestyBlock,
+    skillsBriefBlock,
+    reviewSubjectBlock,
+    selectionBlock,
+  ]
     .filter(Boolean)
     .join("\n\n");
   // 选中态标题 —— 工具入参兜底(模型没显式传 title/subject 时用它,避免拿空标题去诊断)。
