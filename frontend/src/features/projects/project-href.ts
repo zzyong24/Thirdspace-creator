@@ -9,8 +9,10 @@ import type { ProjectStageName } from "@/types/domain";
 // 全部「进入工作台/查看复盘」类 href 一律走这里,不许再各自拼串。
 export function projectWorkspaceHref(
   projectId: string,
-  stage: ProjectStageName,
+  _stage: ProjectStageName,
 ): string {
-  if (stage === "brief") return `/projects/${projectId}`;
-  return `/projects/${projectId}/${stage}`;
+  // [T-057①] 打开项目一律进稿面工作台(T-055 稿面 = 项目的单一主视图)。
+  // 旧行为按 currentStage 跳阶段页 —— review/production 是保留独立页,导入作品
+  // (全是 review)点开直落老复盘壳,绕过了稿面;复盘/制作改从稿面顶条进。
+  return `/projects/${projectId}`;
 }

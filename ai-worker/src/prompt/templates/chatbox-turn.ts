@@ -69,6 +69,10 @@ export const CHATBOX_TOPIC_TEMPLATE: PromptTemplate = {
     "topic.enrich",
     // [T-055c] 稿面对话的脚本产物工具:开场 hook 候选组(逐条「写入稿面」走 artifacts 版本门)。
     "script.hooks",
+    // [T-057⑤] 整稿生成:分镜口播脚本候选(整稿「写入稿面」,替代已退役的 ScriptDraftIsland)。
+    "script.draft",
+    // [T-057④] 搜素材:research.gather 引擎进对话(替代已退役的 GatherMaterialIsland)。
+    "material.gather",
     "context.projects",
     "context.knowledge",
     "context.materials",

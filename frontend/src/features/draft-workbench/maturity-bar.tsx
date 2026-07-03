@@ -45,12 +45,31 @@ function scrollToAnchor(anchor: string) {
 export function MaturityBar({
   projectId,
   currentStage,
+  signals,
 }: {
   projectId: string;
   currentStage: ProjectStageName;
+  /**
+   * [T-057③] 真实数据信号 —— 成熟度点不只看 currentStage(它要人点「定稿」才推进,
+   * 用户干了活点却不亮 = 「进度条不更新」):数据到位即点亮对应点。
+   */
+  signals?: {
+    topicSettled?: boolean;
+    scriptHasVersion?: boolean;
+    hasPublication?: boolean;
+  };
 }) {
   const router = useRouter();
-  const nowIndex = stepIndexOf(currentStage);
+  const stageIndex = stepIndexOf(currentStage);
+  // 每个点的「done」= 阶段已越过 OR 该点的真实数据已到位。
+  const dataDone: Record<string, boolean> = {
+    topic: signals?.topicSettled ?? false,
+    script: signals?.scriptHasVersion ?? false,
+    production: false, // 制作产物信号在制作页,此处只看阶段推进。
+    publish: signals?.hasPublication ?? false,
+    review: false,
+  };
+  const nowIndex = stageIndex;
 
   const onStep = React.useCallback(
     (step: (typeof MATURITY_STEPS)[number]) => {
@@ -75,8 +94,8 @@ export function MaturityBar({
       className="flex items-center"
     >
       {MATURITY_STEPS.map((step, i) => {
-        const done = i < nowIndex;
-        const now = i === nowIndex;
+        const done = i < nowIndex || dataDone[step.id] === true;
+        const now = i === nowIndex && !done;
         return (
           <React.Fragment key={step.id}>
             {i > 0 ? (

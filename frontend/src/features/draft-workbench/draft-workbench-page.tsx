@@ -19,6 +19,7 @@ import { TopicCard } from "./topic-card";
 import { DraftChatRail } from "./draft-chat-rail";
 import { RevealProjectButton } from "./reveal-project-button";
 import { AmmoNoteForm } from "./ammo-note-form";
+import { AmmoDumpZone } from "./ammo-dump-zone";
 import { MaturityBar, DraftPrimaryAction } from "./maturity-bar";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
@@ -48,7 +49,19 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
         <h1 className="min-w-0 max-w-[340px] truncate text-[15px] font-semibold text-foreground">
           {project.title}
         </h1>
-        <MaturityBar projectId={project.id} currentStage={project.currentStage} />
+        <MaturityBar
+          projectId={project.id}
+          currentStage={project.currentStage}
+          signals={{
+            topicSettled: Boolean(
+              project.briefDetail?.targetAudience?.trim() &&
+                project.briefDetail?.contentGoal?.trim() &&
+                project.briefDetail?.coreMessage?.trim(),
+            ),
+            scriptHasVersion: script.versionCount > 0,
+            hasPublication: publishPack !== null,
+          }}
+        />
         <div className="ml-auto flex shrink-0 items-center gap-2.5">
           <RevealProjectButton projectId={project.id} />
           {project.imported ? (
@@ -224,6 +237,11 @@ function AmmoDrawer({
             : "研究搜到的资料、制作倒入的素材会出现在这里"}
         </span>
       </div>
+      {/* [T-057②] 弹药区主交互 = 拖放倾倒场:截图/录屏丢进来 → 原名落盘项目文件夹 +
+          自动归类 + 挂本项目;「记一条」降级为头部次入口。 */}
+      <div className="mb-2">
+        <AmmoDumpZone projectId={projectId} />
+      </div>
       {ammo.length > 0 ? (
         <div className="flex gap-2.5 overflow-x-auto pb-1">
           {ammo.map((item) => (
@@ -250,11 +268,7 @@ function AmmoDrawer({
             </div>
           ))}
         </div>
-      ) : (
-        <div className="rounded-card border border-dashed border-border px-3.5 py-3 text-xs text-text-subtle">
-          暂无弹药 —— 去制作工作台倒素材,或在对话里让编导搜资料。
-        </div>
-      )}
+      ) : null}
     </section>
   );
 }

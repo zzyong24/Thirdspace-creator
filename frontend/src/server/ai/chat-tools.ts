@@ -58,6 +58,21 @@ export interface ChatToolDeps {
     direction?: string;
   }) => Promise<Array<{ text: string; angle: string }>>;
   /**
+   * [T-057⑤] script.draft 核心 —— 整稿分镜口播脚本候选(复用 runScriptNode,与旧
+   * ScriptDraftIsland 同引擎)。产 sections 经 ChatScriptDraftCard「写入稿面」物化。
+   */
+  draftScript: (input: {
+    topic?: string;
+    angle?: string;
+  }) => Promise<Array<{ heading: string; body: string }>>;
+  /**
+   * [T-057④] material.gather 核心 —— 搜素材候选(复用 runResearchNode 四类结构化输出)。
+   * 产物经 ChatGatherCard 逐条「存入弹药」(knowledge.create+materialLink,人采纳)。
+   */
+  gatherMaterials: (input: { query?: string }) => Promise<
+    Array<{ title: string; url: string; source: string; whyRelevant: string; category: string }>
+  >;
+  /**
    * calibration.diagnose 核心 —— 对一条对话里描述的发布前内容(title + 可选 script)按变现加权
    * 评分标准逐维度盲评,产**诊断候选**(非实体)。复用 calibration.diagnose 模板 + parseDiagnosis。
    * 对话里没有绑定的 rubric reader 时,按通用维度评(诚实降级);一键岛带 subject 时用其标题。
@@ -145,6 +160,16 @@ export interface ScriptHooksToolResult {
   items: Array<{ text: string; angle: string }>;
 }
 
+export interface ScriptDraftToolResult {
+  kind: "script.draft";
+  sections: Array<{ heading: string; body: string }>;
+}
+
+export interface MaterialGatherToolResult {
+  kind: "material.gather";
+  items: Array<{ title: string; url: string; source: string; whyRelevant: string; category: string }>;
+}
+
 export interface CalibrationDiagnoseToolResult {
   kind: "calibration.diagnosis";
   diagnosis: Awaited<ReturnType<ChatToolDeps["diagnoseContent"]>>;
@@ -227,6 +252,23 @@ const SCRIPT_HOOKS_PARAMS = jsonSchema<{
       type: "string",
       description: "hook 的方向要求(如「冲突感强一点」「用数据开场」),可选",
     },
+  },
+  additionalProperties: false,
+});
+
+const SCRIPT_DRAFT_PARAMS = jsonSchema<{ topic?: string; angle?: string }>({
+  type: "object",
+  properties: {
+    topic: { type: "string", description: "内容主题/标题(缺省用当前项目标题)" },
+    angle: { type: "string", description: "切入角度/风格要求,可选" },
+  },
+  additionalProperties: false,
+});
+
+const MATERIAL_GATHER_PARAMS = jsonSchema<{ query?: string }>({
+  type: "object",
+  properties: {
+    query: { type: "string", description: "搜什么素材(缺省围绕当前项目主题)" },
   },
   additionalProperties: false,
 });
@@ -380,6 +422,24 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       execute: async ({ topic, direction }): Promise<ScriptHooksToolResult> => {
         const items = await deps.generateHooks({ topic, direction });
         return { kind: "script.hooks", items };
+      },
+    }),
+    "script.draft": tool({
+      description:
+        "为当前项目生成一版完整的分镜口播脚本(整稿,多段分镜:口播/画面/字幕)。创作者会整稿「写入稿面」。当用户要写脚本/起草整稿/重写脚本时调用。",
+      inputSchema: SCRIPT_DRAFT_PARAMS,
+      execute: async ({ topic, angle }): Promise<ScriptDraftToolResult> => {
+        const sections = await deps.draftScript({ topic, angle });
+        return { kind: "script.draft", sections };
+      },
+    }),
+    "material.gather": tool({
+      description:
+        "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类,带来源)。创作者会逐条挑选存入这条内容的弹药。当用户要找素材/搜资料/要案例数据时调用。",
+      inputSchema: MATERIAL_GATHER_PARAMS,
+      execute: async ({ query }): Promise<MaterialGatherToolResult> => {
+        const items = await deps.gatherMaterials({ query });
+        return { kind: "material.gather", items };
       },
     }),
     "calibration.diagnose": tool({

@@ -253,6 +253,51 @@ ${context.positioningBrief}`
       });
       return parseHookItems(res.text);
     },
+    draftScript: async ({ topic, angle }) => {
+      // [T-057⑤] 复用 runScriptNode(与旧 ScriptDraftIsland/任务链同引擎,script.draft
+      // capability 的用户配模型);shots → 编辑器 sections(与 script-runner renderSections 同形)。
+      const effTopic = topic?.trim() || selectionTitle || "";
+      const spec = await deps.resolveModelSpec(ctx, "script.draft");
+      const { runScriptNode } = await import("@creatoros/ai-worker");
+      const { shots } = await runScriptNode({
+        model: modelFor(spec),
+        positioningBrief: context.positioningBrief,
+        learningsBrief: context.learningsBrief,
+        topicTitle: effTopic,
+        topicAngle: angle ?? "",
+      });
+      return shots.map((shot, i) => {
+        const label = shot.口播 ? shot.口播.slice(0, 16) : `分镜 ${i + 1}`;
+        const heading = shot.时长
+          ? `${i + 1}. ${label}（${shot.时长}）`
+          : `${i + 1}. ${label}`;
+        const body = [
+          shot.口播 && `口播：${shot.口播}`,
+          shot.画面 && `画面：${shot.画面}`,
+          shot.字幕 && `字幕：${shot.字幕}`,
+        ]
+          .filter((l): l is string => Boolean(l))
+          .join("\n");
+        return { heading, body };
+      });
+    },
+    gatherMaterials: async ({ query }) => {
+      // [T-057④] 复用 runResearchNode(research.gather capability,四类结构化素材)。
+      const spec = await deps.resolveModelSpec(ctx, "research.gather");
+      const { runResearchNode } = await import("@creatoros/ai-worker");
+      const { items } = await runResearchNode({
+        model: modelFor(spec),
+        positioningBrief: context.positioningBrief,
+        topicTitle: query?.trim() || selectionTitle || "",
+      });
+      return items.map((it) => ({
+        title: it.title,
+        url: it.url,
+        source: it.source,
+        whyRelevant: it.why_relevant,
+        category: it.source || "素材",
+      }));
+    },
     diagnoseContent: async ({ title, script }) => {
       // 复用 calibration.diagnose 模板 + parseDiagnosis(与 calibration-diagnose-runner 同源)。
       // 对话里没有库内 rubric reader → 用通用维度评(诚实降级)。产诊断候选(非实体)。

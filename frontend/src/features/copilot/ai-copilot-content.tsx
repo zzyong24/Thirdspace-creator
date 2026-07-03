@@ -68,6 +68,11 @@ import {
 import { ChatCandidateCard, type ChatTopicCandidate } from "./chat-candidate-card";
 import { ChatHookCard, type ChatHookItem } from "./chat-hook-card";
 import {
+  ChatScriptDraftCard,
+  type ChatScriptSection,
+} from "./chat-script-draft-card";
+import { ChatGatherCard, type ChatGatherItem } from "./chat-gather-card";
+import {
   ChatMaterialListCard,
   type ChatMaterialItem,
 } from "./chat-material-list-card";
@@ -494,6 +499,8 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   "calibration.diagnose": "对我这条发布前的内容做编导诊断,逐维度盲评并指出优先修改。",
   "review.analyze": "帮我复盘,提炼可复用的爆款要素沉淀成经验。",
   "positioning.generate": "结合我的账号画像,生成/进化一份结构化定位提案。",
+  "script.draft": "帮我为这条内容起草一版完整的分镜口播脚本。",
+  "material.gather": "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
 };
 
 // 默认页面层(无 URL 指定时)—— 选题编导是最通用的一面。
@@ -1291,6 +1298,31 @@ export function AICopilotContent({
                       const o = out as { items?: ChatHookItem[] };
                       return (
                         <ChatHookCard
+                          key={key}
+                          items={o.items ?? []}
+                          projectId={activeProjectChip?.id ?? null}
+                        />
+                      );
+                    }
+                    // [T-057⑤] 整稿分镜脚本(script.draft)→ 整稿「写入稿面」。
+                    if (name === "script.draft" && out.kind === "script.draft") {
+                      const o = out as { sections?: ChatScriptSection[] };
+                      return (
+                        <ChatScriptDraftCard
+                          key={key}
+                          sections={o.sections ?? []}
+                          projectId={activeProjectChip?.id ?? null}
+                        />
+                      );
+                    }
+                    // [T-057④] 搜素材(material.gather)→ 逐条「存入弹药」(knowledge+materialLink)。
+                    if (
+                      name === "material.gather" &&
+                      out.kind === "material.gather"
+                    ) {
+                      const o = out as { items?: ChatGatherItem[] };
+                      return (
+                        <ChatGatherCard
                           key={key}
                           items={o.items ?? []}
                           projectId={activeProjectChip?.id ?? null}

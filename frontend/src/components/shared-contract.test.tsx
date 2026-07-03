@@ -184,9 +184,10 @@ describe("shared business components contract", () => {
       for (const stage of ["research", "planning", "script", "production"]) {
         const seg = screen.getByTestId(`stage-segment-${stage}`);
         expect(seg.tagName).toBe("A");
+        // [T-057①] projectWorkspaceHref 一律指向稿面(阶段路由已 301/收敛)。
         expect(seg).toHaveAttribute(
           "href",
-          `/projects/project-ainativebrowser/${stage}`,
+          "/projects/project-ainativebrowser",
         );
       }
       // The current stage marks aria-current="step".

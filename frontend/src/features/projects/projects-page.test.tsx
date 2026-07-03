@@ -191,7 +191,8 @@ describe("ProjectsPage", () => {
     // [T-049 B1] href 用完整项目 id(旧断言的剥前缀 slug 正是真实项目身份丢失的根因)。
     expect(openAction).toHaveAttribute(
       "href",
-      "/projects/project-ainativebrowser/script",
+      // [T-057①] 打开项目一律进稿面工作台(复盘/制作从稿面顶条跳)。
+      "/projects/project-ainativebrowser",
     );
   });
 

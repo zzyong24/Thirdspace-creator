@@ -79,6 +79,18 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   const searchMaterials = vi.fn(async () => [
     { id: "as-1", title: "封面图 A", kind: "image" },
   ]);
+  const draftScript = vi.fn(async () => [
+    { heading: "1. 开场", body: "口播：90% 文档没人看" },
+  ]);
+  const gatherMaterials = vi.fn(async () => [
+    {
+      title: "RAG 落地案例",
+      url: "https://example.com",
+      source: "案例",
+      whyRelevant: "同赛道",
+      category: "案例",
+    },
+  ]);
   const generateHooks = vi.fn(async () => [
     { text: "你们公司那堆文档,90% 没人看", angle: "反常识断言" },
   ]);
@@ -86,6 +98,8 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     generateTopics,
     enrichTopic,
     generateHooks,
+    draftScript,
+    gatherMaterials,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -158,10 +172,11 @@ describe("buildChatTools — 白名单过滤(tools 挂载)", () => {
     ]);
   });
 
-  it("白名单里但仍未实现的工具(二/三波)被跳过,不报错、不挂空壳", () => {
+  it("白名单里但仍未实现的工具(如 material.match)被跳过,不报错、不挂空壳", () => {
+    // [T-057④⑤] script.draft/material.gather 已实现进对话;material.match 仍是任务链专属。
     const { deps } = makeDeps();
     const tools = buildChatTools(
-      ["topic.generate", "script.draft", "material.match"],
+      ["topic.generate", "material.match"],
       deps,
     );
     expect(Object.keys(tools)).toEqual(["topic.generate"]);
