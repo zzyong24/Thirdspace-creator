@@ -106,4 +106,71 @@ describe("runTopicNode", () => {
     const t = parseTopics("```json\n" + TOPICS_ARRAY_JSON + "\n```");
     expect(t).toHaveLength(2);
   });
+
+  it("[T-066] sourceComments 缺字段 → 默认 [](schema default,旧模型输出不炸)", async () => {
+    // TOPICS 固定数据不带 sourceComments —— 走完整链路后每条都兜成空数组。
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => finalText(TOPICS_OBJECT_JSON),
+    });
+    const res = await runTopicNode({
+      model,
+      positioningBrief: "x",
+      basis: "positioning",
+    });
+    expect(res.topics[0]?.sourceComments).toEqual([]);
+    expect(res.topics[1]?.sourceComments).toEqual([]);
+  });
+
+  it("[T-066] sourceComments 逐字透传(结构化路径 normalizeTopics)", async () => {
+    const withComments = {
+      topics: [
+        {
+          ...TOPICS[0],
+          sourceComments: [
+            "博主,KV cache 到底怎么压?求实测",
+            "MLA 有没有单卡能跑的复现代码?",
+          ],
+        },
+      ],
+    };
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => finalText(JSON.stringify(withComments)),
+    });
+    const res = await runTopicNode({
+      model,
+      positioningBrief: "x",
+      basis: "comments",
+    });
+    expect(res.topics[0]?.sourceComments).toEqual([
+      "博主,KV cache 到底怎么压?求实测",
+      "MLA 有没有单卡能跑的复现代码?",
+    ]);
+  });
+
+  it("[T-066] parseTopics(文本兜底工具)asStrings 容错:滤非字符串/空串+去重,缺字段兜 []", () => {
+    const raw = JSON.stringify([
+      {
+        title: "选题 A",
+        // 混入非字符串/空串/重复(MiniMax 真机实测会把同一条评论贴 3 次)。
+        sourceComments: ["原始评论一", 42, "  ", "原始评论二", "原始评论一"],
+      },
+      { title: "选题 B" }, // 无 sourceComments 字段
+    ]);
+    const t = parseTopics(raw);
+    expect(t[0]?.sourceComments).toEqual(["原始评论一", "原始评论二"]);
+    expect(t[1]?.sourceComments).toEqual([]);
+  });
+
+  it("[T-066] prompt 里带「逐字贴出原始评论」输出约束(模板层保证)", async () => {
+    let captured = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        captured = JSON.stringify(opts.prompt);
+        return finalText(TOPICS_OBJECT_JSON);
+      },
+    });
+    await runTopicNode({ model, positioningBrief: "x", basis: "comments" });
+    expect(captured).toContain("sourceComments");
+    expect(captured).toContain("逐字贴出");
+  });
 });

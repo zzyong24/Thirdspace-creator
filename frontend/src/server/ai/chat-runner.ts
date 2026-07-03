@@ -239,6 +239,8 @@ export async function buildChatAssembly(
         contentRole: t.contentRole,
         predictedScore: t.predictedScore,
         reason: t.reason,
+        // [T-066] 原始评论引用透传到工具结果 → 候选卡渲「依据评论」。
+        sourceComments: t.sourceComments,
       }));
     },
     enrichTopic: async ({ title, angle }) => {

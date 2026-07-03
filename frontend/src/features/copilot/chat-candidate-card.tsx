@@ -21,6 +21,11 @@ export interface ChatTopicCandidate {
   contentRole: string;
   predictedScore: number | null;
   reason: string;
+  /**
+   * [T-066] 基于评论出题必须贴原始评论 —— 该选题依据的原始评论(逐字引用)。
+   * 可选:旧工具结果/非评论依据没有此字段,渲染侧兜 []。
+   */
+  sourceComments?: readonly string[];
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -127,6 +132,30 @@ export function ChatCandidateCard({
               ) : null}
               {c.reason ? (
                 <span className="text-[11px] text-text-subtle">{c.reason}</span>
+              ) : null}
+              {/* [T-066] 依据评论折叠区:基于评论出题时逐字贴原始评论(用户宪法:推荐选题
+                  必须把原始评论贴出来)。注:candidates.create 契约不收 card,采纳时评论
+                  引用不落库,只在对话卡上展示。 */}
+              {(c.sourceComments?.length ?? 0) > 0 ? (
+                <details
+                  data-slot="topic-source-comments"
+                  className="rounded-control border border-border/70 bg-surface-subtle/60 px-2 py-1"
+                >
+                  <summary className="cursor-pointer select-none text-[11px] font-medium text-muted-foreground">
+                    依据评论（{c.sourceComments!.length} 条原文）
+                  </summary>
+                  <ul className="mt-1 flex flex-col gap-1">
+                    {c.sourceComments!.map((sc, j) => (
+                      <li
+                        key={j}
+                        data-slot="topic-source-comment-item"
+                        className="border-l-2 border-brand/40 pl-2 text-[11px] italic leading-snug text-text-subtle"
+                      >
+                        “{sc}”
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               ) : null}
               <div className="flex items-center gap-2">
                 {s === "adopted" ? (

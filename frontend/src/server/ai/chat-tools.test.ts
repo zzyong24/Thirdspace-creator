@@ -30,6 +30,8 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
       contentRole: "traffic",
       predictedScore: 80,
       reason: "评论反复问",
+      // [T-066] 基于评论出题贴原始评论 —— 工具结果透传给候选卡渲「依据评论」。
+      sourceComments: ["博主,反直觉的开头到底怎么写?求教"],
     },
   ]);
   const enrichTopic = vi.fn(async () => ({
@@ -215,7 +217,13 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     expect(generateTopics).toHaveBeenCalledWith({ basis: "comments" });
     expect(result).toMatchObject({
       kind: "topic.candidates",
-      items: [expect.objectContaining({ title: "反直觉开头" })],
+      items: [
+        expect.objectContaining({
+          title: "反直觉开头",
+          // [T-066] 原始评论引用原样透传进工具结果(候选卡「依据评论」的数据源)。
+          sourceComments: ["博主,反直觉的开头到底怎么写?求教"],
+        }),
+      ],
     });
   });
 

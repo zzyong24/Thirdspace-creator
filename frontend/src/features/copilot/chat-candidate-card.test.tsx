@@ -96,6 +96,44 @@ describe("ChatCandidateCard", () => {
     expect(body.source).toBe("idea");
   });
 
+  it("[T-066] sourceComments 非空 → 渲「依据评论」折叠区,逐条贴原文", () => {
+    const { container } = render(
+      <ChatCandidateCard
+        candidates={[
+          {
+            ...CANDIDATES[0],
+            sourceComments: ["博主,反直觉开头到底怎么写?", "求一期开头教学"],
+          },
+        ]}
+      />,
+    );
+    const details = container.querySelector(
+      '[data-slot="topic-source-comments"]',
+    );
+    expect(details).not.toBeNull();
+    expect(screen.getByText("依据评论（2 条原文）")).not.toBeNull();
+    const items = container.querySelectorAll(
+      '[data-slot="topic-source-comment-item"]',
+    );
+    expect(items).toHaveLength(2);
+    expect(items[0].textContent).toContain("博主,反直觉开头到底怎么写?");
+    expect(items[1].textContent).toContain("求一期开头教学");
+  });
+
+  it("[T-066] sourceComments 空/缺省 → 不渲「依据评论」区(旧结果兼容)", () => {
+    const { container } = render(
+      <ChatCandidateCard
+        candidates={[
+          { ...CANDIDATES[0], sourceComments: [] },
+          CANDIDATES[1], // 无 sourceComments 字段
+        ]}
+      />,
+    );
+    expect(
+      container.querySelector('[data-slot="topic-source-comments"]'),
+    ).toBeNull();
+  });
+
   it("create 失败 → 显示采纳失败(诚实,不假成功)", async () => {
     createCandidate.mockRejectedValue(new Error("boom"));
     const user = userEvent.setup();

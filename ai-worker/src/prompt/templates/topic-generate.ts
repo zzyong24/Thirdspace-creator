@@ -19,6 +19,9 @@ export const topicItemSchema = z.object({
   source: z.string().default("trend"),
   predictedScore: z.number().nullable().default(null),
   reason: z.string().default(""),
+  // [T-066] 基于评论出题必须贴原始评论:该选题依据的原始评论文本(逐字引用,不许改写)。
+  // basis=comments 时每条 1-3 条;非评论依据可为空数组(default 兜底,缺字段也过校验)。
+  sourceComments: z.array(z.string()).default([]),
 });
 export const topicArraySchema = z.object({
   topics: z.array(topicItemSchema).default([]),
@@ -38,6 +41,6 @@ export const TOPIC_GENERATE_TEMPLATE: PromptTemplate = {
 【出题依据】{{basisHint}}{{basisContext}}{{knowledgeRef}}{{learningsConstraint}}
 
 【任务】产 6-8 条高潜力选题。每条按 钩子强度/定位契合/变现潜力 衡量。
-【输出】只输出一个 JSON 对象 {"topics": [...]},topics 是选题数组,每条:{"title","angle"(切入一句),"contentRole"(traffic|trust|conversion),"source"(trend|benchmark|demand),"predictedScore"(0-100 数字),"reason"(一句中文)}。不要多余文字、不要代码块包裹。`,
+【输出】只输出一个 JSON 对象 {"topics": [...]},topics 是选题数组,每条:{"title","angle"(切入一句),"contentRole"(traffic|trust|conversion),"source"(trend|benchmark|demand),"predictedScore"(0-100 数字),"reason"(一句中文),"sourceComments"(字符串数组)}。出题依据是评论(basis=comments)时,每条选题必须在 sourceComments 里逐字贴出它依据的 1-3 条原始评论——原文照抄,不许改写、不许概括;非评论依据时 sourceComments 给空数组 []。不要多余文字、不要代码块包裹。`,
   requiredFacets: ["positioning", "basisHint"],
 };

@@ -22,6 +22,8 @@ export interface TopicItem {
   source: string; // trend | benchmark | demand
   predictedScore: number | null;
   reason: string;
+  /** [T-066] 该选题依据的原始评论(逐字引用);非评论依据为空数组。 */
+  sourceComments: string[];
 }
 
 export type TopicBasis = "positioning" | "comments" | "knowledge" | "trend";
@@ -71,6 +73,17 @@ function topicFacets(
   };
 }
 
+// [T-066] sourceComments 容错归一:模型可能吐非数组/混入非字符串项/把同一条评论重复贴多次
+// (MiniMax 真机实测),只留非空字符串(逐字评论)并按原文去重。
+function asStrings(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const out = value
+    .filter((v): v is string => typeof v === "string")
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+  return [...new Set(out)];
+}
+
 /** 从 agent 最终文本里宽容地抽出 JSON 数组(容忍 ``` 包裹 / 前后散文)。 */
 export function parseTopics(text: string): TopicItem[] {
   if (!text) return [];
@@ -100,6 +113,7 @@ export function parseTopics(text: string): TopicItem[] {
         predictedScore:
           typeof o.predictedScore === "number" ? o.predictedScore : null,
         reason: typeof o.reason === "string" ? o.reason : "",
+        sourceComments: asStrings(o.sourceComments),
       };
     })
     .filter((t): t is TopicItem => t !== null);
@@ -119,6 +133,8 @@ function normalizeTopics(items: TopicArrayOutput["topics"]): TopicItem[] {
         predictedScore:
           typeof o.predictedScore === "number" ? o.predictedScore : null,
         reason: o.reason ?? "",
+        // [T-066] 透传原始评论引用(schema 已 default [];再过 asStrings 滤掉空串项)。
+        sourceComments: asStrings(o.sourceComments),
       };
     })
     .filter((t): t is TopicItem => t !== null);
