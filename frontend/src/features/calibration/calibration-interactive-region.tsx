@@ -1061,15 +1061,17 @@ function NewPredictionRail({
           没有待预测的内容。去稿面的发布包区对新稿先盲预测,发布后回到这里看回流对照。
         </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        // T-088 右栏过长收敛:待预测可能上百条(标题还是整段长文)→ 列表限高框内滚
+        // + 标题两行截断,右栏不再把整页拉长;核心主线(左列)保持第一屏。
+        <ul className="flex max-h-[420px] flex-col gap-2 overflow-y-auto pr-1">
           {unpredicted.map((s) => (
             <li
               key={`${s.subjectType}:${s.subjectId}`}
               data-testid="pending-subject-row"
               data-subject-id={s.subjectId}
-              className="flex flex-col gap-2 rounded-control border border-border/70 bg-surface-subtle/40 px-3 py-2.5"
+              className="flex shrink-0 flex-col gap-2 rounded-control border border-border/70 bg-surface-subtle/40 px-3 py-2.5"
             >
-              <span className="min-w-0 text-sm font-medium leading-snug text-foreground">
+              <span className="line-clamp-2 min-w-0 text-sm font-medium leading-snug text-foreground">
                 {s.title}
               </span>
               <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">

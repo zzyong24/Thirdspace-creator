@@ -171,7 +171,9 @@ export function PositioningCenterView({
       ) : (
         // 两栏：左主 (英雄区 + AI 区 + 历史表) + 右规则栏 (定位规则). flex-1 占满,每列各自
         // 框内滚动 (列内裁切而非整页滚)。窄屏 (无 lg) 退回单列。
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-section-gap lg:grid-cols-[minmax(0,1fr)_380px]">
+          {/* 左列子卡片必须 shrink-0:否则 flex 会把卡片压缩适应列高,卡片自身
+              overflow-hidden 无声裁掉内容 → 列 scrollHeight==clientHeight 永不滚 (T-090)。 */}
           <div className="flex min-h-0 min-w-0 flex-col gap-section-gap overflow-y-auto pr-1">
             <HeroMaster
               profile={profile}
@@ -180,7 +182,7 @@ export function PositioningCenterView({
               productAnchors={productAnchors}
             />
 
-            <div data-testid="positioning-ai-band">
+            <div data-testid="positioning-ai-band" className="shrink-0">
               <GeneratePositioningIsland />
             </div>
 
@@ -269,6 +271,7 @@ function HeroMaster({
 
   return (
     <SectionCard
+      className="shrink-0"
       title="当前定位母版"
       action={
         <div className="flex items-center gap-2">
@@ -432,20 +435,22 @@ function DownstreamRules({
       {shown.length > 0 ? (
         <div
           data-testid="positioning-downstream-fields"
-          className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pr-1"
+          className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto pr-1"
         >
+          {/* 规则卡「一眼可读不挤」(T-090):卡间距 3.5、卡内 padding 拉开、
+              标题 13px 半粗 / 正文 12.5px 行高 1.6 形成字号层次。 */}
           {shown.map((rule) => (
             <div
               key={rule.label}
               data-testid="positioning-rule-card"
-              className="flex items-start gap-2.5 rounded-control border border-border bg-surface px-3 py-2.5"
+              className="flex items-start gap-3 rounded-control border border-border bg-surface px-3.5 py-3"
             >
               <IconChip icon={rule.icon} tone={rule.tone} className="size-7" />
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-[12px] font-medium text-foreground">
+              <div className="flex min-w-0 flex-col gap-1">
+                <span className="text-[13px] font-semibold text-foreground">
                   {rule.label}
                 </span>
-                <span className="text-[12px] leading-snug text-muted-foreground">
+                <span className="text-[12.5px] leading-[1.6] text-muted-foreground">
                   {rule.value}
                 </span>
               </div>
@@ -470,7 +475,11 @@ function HistoryTable({
   readonly profile: CreatorProfileResource | null;
 }) {
   return (
-    <SectionCard title="版本历史" description="定位陈述是不可变版本链，最新在前。">
+    <SectionCard
+      className="shrink-0"
+      title="版本历史"
+      description="定位陈述是不可变版本链，最新在前。"
+    >
       <ol
         data-testid="positioning-history"
         className="flex flex-col gap-2 py-1"
