@@ -1,0 +1,264 @@
+/**
+ * 稿面工作台(T-055a,SPEC §3)。
+ *
+ * 一个项目 = 一张不断成熟的稿子:
+ *   顶条  = ←项目 / 标题 / 成熟度点×5 / 主行动;
+ *   左稿面 = 选题卡(折叠/展开 BriefWorkbench)→ 口播脚本(TipTap 迁入)→
+ *           发布包(锁定/解锁)→ 弹药抽屉,左缘成熟度轨;
+ *   右栏  = 编导对话(T-055b 装入;本切片先渲染结构占位,不做假交互)。
+ *
+ * Server Component。数据装配见 draft-workbench-data.ts(零新实体,SPEC §4)。
+ */
+
+import * as React from "react";
+import Link from "next/link";
+
+import { ScriptRichEditor } from "@/features/script/script-rich-editor";
+import { sectionsToHtml } from "@/features/script/script-editor-bridge";
+import { TopicCard } from "./topic-card";
+import { MaturityBar, DraftPrimaryAction } from "./maturity-bar";
+import type { DraftWorkbenchVm } from "./draft-workbench-data";
+import { cn } from "@/lib/utils";
+
+export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
+  const { project, script, scriptArtifactId, publishPack, publishUnlocked, ammo } = vm;
+  const initialHtml = script.editorHtml ?? sectionsToHtml(script.sections);
+
+  return (
+    <main
+      data-app="creatoros"
+      data-page="draft-workbench"
+      data-project-id={project.id}
+      className="flex h-full min-h-0 flex-col"
+    >
+      {/* ── 顶条 ── */}
+      <header
+        data-slot="draft-topbar"
+        className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2.5"
+      >
+        <Link
+          href="/projects"
+          className="shrink-0 text-[13px] text-muted-foreground hover:text-foreground"
+        >
+          ← 项目
+        </Link>
+        <h1 className="min-w-0 max-w-[340px] truncate text-[15px] font-semibold text-foreground">
+          {project.title}
+        </h1>
+        <MaturityBar projectId={project.id} currentStage={project.currentStage} />
+        <div className="ml-auto flex shrink-0 items-center gap-2.5">
+          {project.imported ? (
+            <span
+              data-slot="draft-imported-badge"
+              className="rounded-full border border-border bg-surface-subtle px-2.5 py-1 text-[11px] text-muted-foreground"
+            >
+              真实导入作品
+            </span>
+          ) : null}
+          <DraftPrimaryAction
+            projectId={project.id}
+            currentStage={project.currentStage}
+            scriptHasVersion={script.versionCount > 0}
+          />
+        </div>
+      </header>
+
+      {/* ── 主体:左稿面 + 右对话位 ── */}
+      <div className="flex min-h-0 flex-1">
+        <div
+          data-slot="draft-pane"
+          className="relative flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto px-6 py-4"
+        >
+          {/* 成熟度轨(装饰,随区块态着色由各区块节点体现) */}
+          <TopicCard
+            projectId={project.id}
+            title={project.title}
+            brief={project.brief}
+            briefDetail={project.briefDetail}
+          />
+
+          {/* ── 脚本区(活跃) ── */}
+          <section
+            id="script"
+            data-slot="draft-script-section"
+            className="scroll-mt-20"
+          >
+            <div className="mb-1.5 flex items-baseline gap-2 px-0.5">
+              <h2 className="text-[13.5px] font-semibold text-foreground">口播脚本</h2>
+              <span className="text-xs text-text-subtle">
+                {script.versionCount > 0
+                  ? `v${script.versionCount} · 保存即新版本,可回滚`
+                  : "还没有版本 —— 直接写,或在右侧让编导起草"}
+              </span>
+            </div>
+            <ScriptRichEditor
+              initialHtml={initialHtml}
+              artifactId={scriptArtifactId}
+              projectId={project.id}
+            />
+          </section>
+
+          {/* ── 发布包区 ── */}
+          <PublishPackSection
+            publishPack={publishPack}
+            unlocked={publishUnlocked}
+          />
+
+          {/* ── 弹药抽屉 ── */}
+          <AmmoDrawer ammo={ammo} />
+        </div>
+
+        {/* 右栏:编导对话(T-055b 装 ChatBox;本切片只渲染去往全局助手的真实入口,
+            不摆假输入框——铁律「真实有效或删除」) */}
+        <aside
+          data-slot="draft-chat-rail"
+          className="hidden w-[380px] shrink-0 flex-col border-l border-border bg-surface xl:flex"
+        >
+          <div className="border-b border-border px-4 py-3">
+            <p className="text-sm font-semibold text-foreground">编导对话</p>
+            <p className="mt-0.5 text-xs text-text-subtle">
+              聊定位、改 hook、搜素材都在这里(下一切片接入)
+            </p>
+          </div>
+          <div className="flex flex-1 items-center justify-center p-6">
+            <Link
+              href={`/projects/${project.id}`}
+              aria-disabled="true"
+              tabIndex={-1}
+              className="pointer-events-none select-none rounded-card border border-dashed border-border px-4 py-6 text-center text-xs leading-relaxed text-text-subtle"
+            >
+              编导对话将常驻此栏
+              <br />
+              (T-055b:上下文 chip + 预填 + 产物卡片)
+            </Link>
+          </div>
+        </aside>
+      </div>
+    </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 发布包区(SPEC §4.3:脚本有版本即解锁;无发布行 = 引导文案)
+// ---------------------------------------------------------------------------
+
+function PublishPackSection({
+  publishPack,
+  unlocked,
+}: {
+  publishPack: DraftWorkbenchVm["publishPack"];
+  unlocked: boolean;
+}) {
+  return (
+    <section
+      id="publish"
+      data-slot="draft-publish-pack"
+      data-unlocked={unlocked}
+      className={cn(
+        "scroll-mt-20 rounded-card border bg-surface px-4 py-3",
+        unlocked ? "border-border" : "border-dashed border-border opacity-70",
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          aria-hidden="true"
+          className="flex h-10 w-16 shrink-0 items-center justify-center rounded-md border border-border bg-surface-subtle text-[10px] text-text-subtle"
+        >
+          {publishPack?.hasCover ? "封面已选" : "封面待生成"}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold text-foreground">
+            {publishPack?.title || "标题草稿:定稿后从脚本 HOOK 生成"}
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            {publishPack && publishPack.tags.length > 0 ? (
+              publishPack.tags.slice(0, 5).map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-md bg-surface-subtle px-2 py-0.5 text-[11px] text-text-subtle"
+                >
+                  # {tag}
+                </span>
+              ))
+            ) : (
+              <span className="text-[11px] text-text-subtle">
+                {publishPack ? "暂无标签" : "标签、平台在发布时选"}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          {publishPack ? (
+            <span
+              data-slot="publish-pack-status"
+              className={cn(
+                "rounded-full px-2.5 py-1 text-[11px] font-medium",
+                publishPack.status === "published"
+                  ? "bg-success-soft text-success"
+                  : "bg-surface-subtle text-muted-foreground",
+              )}
+            >
+              {publishPack.status === "published"
+                ? `已发布${publishPack.publishedAt ? ` · ${publishPack.publishedAt.slice(0, 10)}` : ""}`
+                : publishPack.status}
+            </span>
+          ) : unlocked ? (
+            <span className="text-xs text-text-subtle">发布时创建发布行</span>
+          ) : (
+            <span className="text-xs text-text-subtle">🔒 脚本保存一版后解锁</span>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 弹药抽屉(读侧;来源链完整版在 T-055g)
+// ---------------------------------------------------------------------------
+
+function AmmoDrawer({ ammo }: { ammo: DraftWorkbenchVm["ammo"] }) {
+  return (
+    <section data-slot="draft-ammo-drawer" className="pb-2">
+      <div className="mb-1.5 flex items-baseline gap-2 px-0.5">
+        <h2 className="text-[13.5px] font-semibold text-foreground">这条内容的弹药</h2>
+        <span className="text-xs text-text-subtle">
+          {ammo.length > 0
+            ? `知识与素材 ${ammo.length} 件 · 来自研究与制作`
+            : "研究搜到的资料、制作倒入的素材会出现在这里"}
+        </span>
+      </div>
+      {ammo.length > 0 ? (
+        <div className="flex gap-2.5 overflow-x-auto pb-1">
+          {ammo.map((item) => (
+            <div
+              key={`${item.kind}-${item.id}`}
+              data-slot="draft-ammo-card"
+              data-kind={item.kind}
+              className="w-[220px] shrink-0 rounded-[10px] border border-border bg-surface px-3 py-2.5"
+            >
+              <p
+                className={cn(
+                  "mb-1 text-[10.5px] font-bold tracking-wide",
+                  item.kind === "knowledge" ? "text-warning" : "text-info",
+                )}
+              >
+                {item.kind === "knowledge" ? "知识" : "素材"}
+              </p>
+              <p className="line-clamp-2 text-xs leading-relaxed text-foreground">
+                {item.title}
+              </p>
+              <p className="mt-1.5 truncate text-[11px] text-text-subtle">
+                ↳ {item.sourceLabel}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-card border border-dashed border-border px-3.5 py-3 text-xs text-text-subtle">
+          暂无弹药 —— 去制作工作台倒素材,或在对话里让编导搜资料。
+        </div>
+      )}
+    </section>
+  );
+}

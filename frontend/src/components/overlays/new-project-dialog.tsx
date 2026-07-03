@@ -142,7 +142,8 @@ export function NewProjectDialog() {
         data-slot="overlay-panel"
         data-overlay-panel="new-project"
         className={cn(
-          "relative z-10 flex h-[860px] max-h-[calc(100vh-72px)] w-full max-w-[700px] flex-col gap-3.5 overflow-y-auto rounded-2xl bg-popover px-6 py-5 text-[13px] text-popover-foreground shadow-2xl ring-1 ring-foreground/10 focus:outline-none",
+          // [T-056④] 高度随内容:固定 860px 是裁宪前 5 字段的尺寸,字段减少后留白过多。
+          "relative z-10 flex max-h-[calc(100vh-72px)] w-full max-w-[640px] flex-col gap-3.5 overflow-y-auto rounded-2xl bg-popover px-6 py-5 text-[13px] text-popover-foreground shadow-2xl ring-1 ring-foreground/10 focus:outline-none",
         )}
       >
         <header className="flex items-start justify-between gap-3">
@@ -188,7 +189,8 @@ export function NewProjectDialog() {
             // return (otherwise the cached pre-create list hides the new row).
             router.refresh();
             if (values.enterAfterCreate) {
-              router.replace(`/projects/${created.id}/research`, {
+              // [T-055a] 阶段路由已退役,创建后直达稿面工作台。
+              router.replace(`/projects/${created.id}`, {
                 scroll: false,
               });
               return;

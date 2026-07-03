@@ -381,12 +381,12 @@ describe("NewProjectDialog (intercepting route shell)", () => {
     expect(mockClient.createProject.mock.calls[0]![0]).toMatchObject({
       body: { title: "新选题" },
     });
-    // Navigation lands on the *returned* project id's research workspace, not
-    // a slug guess derived from the name.
+    // [T-055a] Navigation lands on the *returned* project id's draft
+    // workbench (stage routes retired), not a slug guess derived from the name.
     await waitFor(() => {
       expect(mockNext.state.replace).toHaveBeenCalledTimes(1);
     });
     const [target] = mockNext.state.replace.mock.calls[0] ?? [];
-    expect(target).toBe("/projects/project-mock-1/research");
+    expect(target).toBe("/projects/project-mock-1");
   });
 });

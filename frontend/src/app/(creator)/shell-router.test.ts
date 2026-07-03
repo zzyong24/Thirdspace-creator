@@ -31,10 +31,10 @@ describe("resolveRoute", () => {
     expect(resolution.projectStages?.[1]?.status).toBe("pending");
   });
 
-  it("uses project overview header mode for a project root route", () => {
-    expect(resolveRoute("/projects/ai-native-browser").headerMode).toBe(
-      "project-overview",
-    );
+  it("[T-055a] 项目根路由 = 稿面工作台:shell 不再叠大标题头(global + 空 pageTitle)", () => {
+    const res = resolveRoute("/projects/ai-native-browser");
+    expect(res.headerMode).toBe("global");
+    expect(res.pageTitle).toBe("");
   });
 
   // T-039b item②:真项目 identity override —— fixture 里查不到的真项目,标题优先用 override 真值。
@@ -60,8 +60,8 @@ describe("resolveRoute", () => {
       title: "上下文工程",
     };
     const res = resolveRoute("/projects/proj-real-xyz", override);
-    expect(res.headerMode).toBe("project-overview");
-    expect(res.pageTitle).toBe("上下文工程");
+    // [T-055a] 稿面页自带顶条标题;shell pageTitle 收敛为空,指示器仍显真标题。
+    expect(res.headerMode).toBe("global");
     expect(res.sidebarContext?.items?.[0]?.label).toBe("上下文工程");
   });
 

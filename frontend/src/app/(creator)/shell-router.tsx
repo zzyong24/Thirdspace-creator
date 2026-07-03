@@ -78,9 +78,12 @@ const CONTENT_FILL_ROUTES: ReadonlySet<string> = new Set([
   "/positioning",
 ]);
 
-/** 该路由是否走固定高度填满模式。仅这几条工作台路由开启 (精确匹配,不含子路由)。 */
+/** 该路由是否走固定高度填满模式。工作台路由 + [T-055a] 稿面工作台(/projects/<id>,
+ * 无 stage 子段;new 除外——那是新建弹窗拦截路由)。 */
 export function isContentFillRoute(pathname: string): boolean {
-  return CONTENT_FILL_ROUTES.has(pathname);
+  if (CONTENT_FILL_ROUTES.has(pathname)) return true;
+  const m = pathname.match(/^\/projects\/([^/]+)$/);
+  return Boolean(m && m[1] !== "new");
 }
 
 const PROJECT_STAGES = [
@@ -248,13 +251,13 @@ export function resolveRoute(
     const sidebarLabel = realTitle || "当前项目";
 
     if (!stage) {
+      // [T-055a] 稿面工作台:页面自带顶条(标题/成熟度/主行动),shell 不再叠
+      // 「项目概览」大标题头(双头冗余);走 contentFill 全高布局。
       return {
-        headerMode: "project-overview",
-        pageTitle: realTitle || "项目概览",
+        headerMode: "global",
+        pageTitle: "",
         contextualCardVariant: "assistant",
         project: identity,
-        primaryActionLabel: "进入工作台",
-        secondaryActionLabel: "分享",
         sidebarContext: {
           heading: "当前项目",
           items: [
