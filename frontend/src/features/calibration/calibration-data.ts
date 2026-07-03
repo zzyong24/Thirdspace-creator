@@ -1,6 +1,6 @@
 /**
- * `calibration-data.ts` — server-side read aggregator for the 校准中心 workbench
- * (校准中心大改 · Slice 2, three-column rebuild).
+ * `calibration-data.ts` — server-side read aggregator for the 校准中心 主线布局
+ * (T-067 布局重做:预测 → 采集回流 → 对照).
  *
  * The 校准中心 route is a Server Component; it must NOT touch the repository (FE reads go
  * through the typed contract `client` → `/api/v1` dispatch → user-scoped pglite). This
@@ -8,13 +8,14 @@
  * `CalibrationWorkbenchData` the page passes straight to the client island:
  *
  *  - `client.overview()`        → `calibration.overview` (GET /calibration/overview):
- *      { kpis, pendingSubjects, reflowRows, learnings } — the KPI band, 左待校准内容,
- *      底回流对照表, 经验沉淀. Every value is DERIVED server-side from real rows.
+ *      { kpis, pendingSubjects, reflowRows, learnings } — the KPI band, 发起新预测侧栏,
+ *      回流对照表. Every value is DERIVED server-side from real rows. (`learnings` 仍在
+ *      契约里返回,但页面不再展示 —— 经验归经验模块,用户裁决 T-067;不改契约。)
  *  - `client.listPredictions()` → `calibration.predictions.list`: the user's locked /
- *      draft predictions, each carrying the 维度评分约定 jsonb (predictedConversion.dimensions
- *      + predictedMetrics.{performance,diagnosis}) the 中栏评分表 + 右栏诊断 render.
+ *      draft predictions, each carrying the 维度评分约定 jsonb (predictedConversion.dimensions)
+ *      —— 「进行中的预测」行 + 展开的盲预测评分表 render.
  *  - `client.getRubric()`       → `calibration.rubrics.get`: the current 变现加权 RubricVersion
- *      (dimension labels + weights) for the 维度行 labels + the rubric selector.
+ *      (dimension labels + weights) for the 维度行 labels + the rubric badge.
  *
  * Subject titles: a Prediction carries only `subjectId` (the content_output id), not its
  * title. We resolve a title map from the overview's pendingSubjects (already titled) plus a

@@ -1,15 +1,17 @@
 /**
- * 校准中心 route entrypoint (七步⑤⑥ · §6.5) — the 发布前盲预测 + 发布后回流校准 workbench
- * (校准中心大改 · Slice 2). The single-column 盲预测 form is replaced by a full three-column
- * 校准工作台: a KPI band + rubric/目标 tabs on top, 左待校准内容 / 中发布前预测评分表 /
- * 右AI编导诊断 in the middle, and a 发布后回流对照表 + 经验沉淀 at the bottom.
+ * 校准中心 route entrypoint (七步⑤⑥ · §6.5) — 发布前盲预测 + 发布后回流校准。
+ * T-067 布局重做:围绕单一主线「预测一个视频 → 定时任务拉数据回收 → 对照预测准不准」
+ * 纵向重排 —— 顶部 3 张真值指标卡,上段「进行中的预测」(每条预测的主线状态机),
+ * 中段「发布后回流对照」,右侧栏「发起新预测」补充入口(主入口在稿面发布包区)。
+ * 经验沉淀 / AI 编导诊断常驻栏按用户裁决删除(经验归经验模块;诊断是产预测的过程)。
  *
  * Server Component: reads ALL data through the typed contract `client` (no repo access).
  * `loadCalibrationWorkbench` composes the three real reads — `calibration.overview`
- * (KPI / 待校准内容 / 回流对照 / 经验沉淀), `calibration.predictions.list` (评分表 + 诊断
- * jsonb), `calibration.rubrics.get` (维度 labels/weights) — and resolves subject titles. The
- * client island (`CalibrationWorkbench`) owns the 选中态 + every needs-backend control
- * (开始预测 → ai.tasks.create calibration.diagnose; 锁定预测 → predictions.lock).
+ * (KPI / 待校准内容 / 回流对照), `calibration.predictions.list` (评分表 jsonb),
+ * `calibration.rubrics.get` (维度 labels/weights) — and resolves subject titles. The
+ * client island (`CalibrationWorkbench`) owns every needs-backend control
+ * (开始预测 → ai.tasks.create calibration.diagnose; 锁定预测 → predictions.lock;
+ * 录入真实表现 → results.create; 拉取抖音真实表现 → ingestion.douyin.refresh).
  *
  * Session-scoped read: the route resolves the request's session and constructs
  * `createServerClient(session.ctx)` so the workbench is scoped to the logged-in user (a

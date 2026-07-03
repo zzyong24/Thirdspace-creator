@@ -1,31 +1,31 @@
 "use client";
 
 /**
- * `calibration-interactive-region.tsx` — Client island for the 校准中心 workbench (校准中心
- * 大改 · Slice 2, three-column rebuild). The 校准中心 is a full 校准工作台: a KPI band +
- * rubric/目标 tabs on top, three columns in the middle (待校准内容 ⇄ 发布前预测评分表 ⇄ AI
- * 编导诊断), a 发布后回流对照表 + 经验沉淀 at the bottom. The middle + right columns share ONE
- * piece of state — the selected prediction — so the whole interactive body lives in a single
- * `CalibrationWorkbench` island that owns the selection.
+ * `calibration-interactive-region.tsx` — 校准中心 client island(T-067 布局重做)。
  *
- * needs-backend controls, each → its mapped contract op then `router.refresh()`:
- *  - `StartPredictionButton` (开始预测) → `ai.tasks.create { taskType:"calibration.diagnose",
- *    inputData:{ subjectType, subjectId } }` → poll `getTask` → `confirmTask` (mints a draft
- *    Prediction via the calibration_diagnosis confirm branch) → refresh. Mirrors the topics
- *    EnrichButton AI poll/confirm island.
- *  - `LockPredictionButton` (锁定预测版本) → `client.lockPrediction` (`draft → locked`,
- *    irreversible — 盲预测不可改, §6.2).
- *  - `NewPredictionButton` (新建预测) → selects the first 未预测 subject + scrolls the 待校准
- *    list into view (the prediction itself is minted by 开始预测; no parallel candidate
- *    machine, so this is navigation, not a fake write).
+ * 用户裁决:校准中心的核心工作流是「预测一个视频 → 它跑得怎么样 → 定时任务拉数据回收
+ * 预测准不准」。页面布局围绕这条单一主线纵向重排,不再是三栏工作台:
  *
- * Read-only surfaces (零造假): the 评分表 / 诊断 / 回流对照 / 经验沉淀 all render REAL jsonb
- * from the server reads (predictedConversion.dimensions, predictedMetrics.{performance,
- * diagnosis}, overview.{reflowRows,learnings}). A missing field renders 「—」/ an empty state,
- * never a fabricated value.
+ *  - 顶部指标带(3 张真值卡):已锁定预测 / 已完成回流 / 平均偏差。
+ *  - 上段「进行中的预测」:每条预测一行 —— 作品名 + 预测分 + 锁定时间 + 状态
+ *    (草稿可锁定 / 已锁定等待数据回流 / 已回流显示偏差档)。行可展开看逐维度盲预测评分表。
+ *    这是核心工作流的可视化主体。
+ *  - 中段「发布后回流对照」:已回流的 预测 vs 实际 逐维度对照表(ReflowTable 复用)。
+ *  - 侧栏「发起新预测」:从待校准内容选一条 → 盲预测(补充入口;主入口在稿面发布包区,
+ *    所以这里不占 C 位)。
  *
- * Determinism (C-5): every visible value comes from props or controlled local state seeded
- * from props; no Date.now / Math.random / fetch in render.
+ * 删除项(用户裁决):经验沉淀区(经验归经验模块)、AI 编导诊断常驻栏(诊断是产预测的
+ *  过程,不是页面常驻栏)、目标 tabs / 预测切换带(为三栏选中态服务,主线式布局不需要)。
+ *
+ * needs-backend 交互全部复用现有 ops(不新增契约):
+ *  - `StartPredictionButton` → ai.tasks.create { calibration.diagnose } → poll → confirm。
+ *  - `LockPredictionButton` → client.lockPrediction(draft → locked,盲预测不可改)。
+ *  - `RecordResultButton` → getPrediction 取维度 + createResult(可先让编导 calibration.score
+ *    据真实指标预填)。
+ *  - `RefreshDouyinButton` → ingestion.douyin.refresh(核心工作流的「采集回收」一步,保留)。
+ *
+ * 零造假:所有可见值来自 props 的真实 jsonb;缺字段渲染「—」/诚实空态,绝不编造。
+ * 确定性(C-5):render 无 Date.now / Math.random / fetch;时间展示只做 ISO 字符串切片。
  */
 
 import * as React from "react";
@@ -34,15 +34,8 @@ import { useRouter } from "next/navigation";
 import {
   Lock,
   Sparkles,
-  Plus,
-  Target,
   Gauge,
   CheckCircle2,
-  Activity,
-  Lightbulb,
-  FileText,
-  AlertTriangle,
-  ListChecks,
   ArrowRight,
   ClipboardList,
   TrendingUp,
@@ -50,6 +43,8 @@ import {
   Minus,
   RefreshCw,
   MessagesSquare,
+  ChevronDown,
+  Hourglass,
   type LucideIcon,
 } from "lucide-react";
 
@@ -96,23 +91,12 @@ function useMutation() {
   return { pending, run, router };
 }
 
-// ── typed views over the prediction's FREE jsonb (维度评分约定) ──────────────────────
+// ── typed views over the prediction's FREE jsonb(维度评分约定) ─────────────────────
 interface DimensionScore {
   key: string;
   score: number; // 1–5
   reason: string;
   suggestion: string;
-}
-interface Performance {
-  完播率: number | null;
-  收藏率: number | null;
-  评论率: number | null;
-  转化意向: number | null;
-}
-interface Diagnosis {
-  verdict: string;
-  mainIssues: string[];
-  priorityFixes: string[];
 }
 
 function readDimensions(p: PredictionResource): DimensionScore[] {
@@ -129,40 +113,22 @@ function readDimensions(p: PredictionResource): DimensionScore[] {
     }))
     .filter((d) => d.key !== "");
 }
-function readPerformance(p: PredictionResource): Performance | null {
-  const m = (p.predictedMetrics ?? {}) as { performance?: Record<string, unknown> };
-  const perf = m.performance;
-  if (!perf || typeof perf !== "object") return null;
-  const num = (v: unknown): number | null =>
-    typeof v === "number" && Number.isFinite(v) ? v : null;
-  return {
-    完播率: num(perf["完播率"]),
-    收藏率: num(perf["收藏率"]),
-    评论率: num(perf["评论率"]),
-    转化意向: num(perf["转化意向"]),
-  };
+
+// 预测分 = 维度盲评均分(1 位小数)。无维度 → null(展示「—」,不编分)。
+function predictionScore(p: PredictionResource): string | null {
+  const dims = readDimensions(p);
+  if (dims.length === 0) return null;
+  const avg = dims.reduce((s, d) => s + d.score, 0) / dims.length;
+  return avg.toFixed(1);
 }
-function readDiagnosis(p: PredictionResource): Diagnosis | null {
-  const m = (p.predictedMetrics ?? {}) as { diagnosis?: Record<string, unknown> };
-  const d = m.diagnosis;
-  if (!d || typeof d !== "object") return null;
-  return {
-    verdict: typeof d.verdict === "string" ? d.verdict : "",
-    mainIssues: Array.isArray(d.mainIssues)
-      ? (d.mainIssues.filter((x) => typeof x === "string") as string[])
-      : [],
-    priorityFixes: Array.isArray(d.priorityFixes)
-      ? (d.priorityFixes.filter((x) => typeof x === "string") as string[])
-      : [],
-  };
+
+// ISO → YYYY-MM-DD(确定性:纯字符串切片,不走时区)。
+function isoDate(iso: string | null | undefined): string | null {
+  if (typeof iso !== "string" || iso.length < 10) return null;
+  return iso.slice(0, 10);
 }
 
 // ── label maps ────────────────────────────────────────────────────────────────────
-const BADGE_LABELS: Record<string, string> = {
-  unpredicted: "未预测",
-  locked: "已锁定",
-  reflowed: "已回流",
-};
 const DEVIATION_BAND_LABELS: Record<string, string> = {
   low: "低偏差",
   mid: "中偏差",
@@ -175,18 +141,8 @@ const DEVIATION_KPI_LABELS: Record<string, string> = {
   high: "高（偏差大）",
   none: "—",
 };
-// 校准中心大改的 4 个「目标类型」tab — a presentation grouping only (the rubric is shared);
-// 全部 shows every subject, the others are honest filters when the data carries no role tag.
-const GOAL_TABS = [
-  { key: "all", label: "全部" },
-  { key: "传播", label: "传播型" },
-  { key: "涨粉", label: "涨粉型" },
-  { key: "信任", label: "信任型" },
-  { key: "转化", label: "转化型" },
-] as const;
-type GoalKey = (typeof GOAL_TABS)[number]["key"];
 
-// ── KPI band ────────────────────────────────────────────────────────────────────
+// ── 顶部指标带(收窄为 3 张真值卡) ────────────────────────────────────────────────
 function KpiCard({
   icon: Icon,
   label,
@@ -219,9 +175,7 @@ function KpiCard({
         <span className="line-clamp-1 text-[11px] text-muted-foreground">
           {hint}
         </span>
-      ) : (
-        <span className="text-[11px] text-text-subtle">—</span>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -234,7 +188,7 @@ function KpiBand({
   return (
     <div
       data-testid="calibration-kpi-band"
-      className="grid grid-cols-2 gap-3 lg:grid-cols-4"
+      className="grid grid-cols-1 gap-3 sm:grid-cols-3"
     >
       <KpiCard
         icon={Lock}
@@ -254,41 +208,11 @@ function KpiBand({
         value={DEVIATION_KPI_LABELS[kpis.avgDeviationBand] ?? "—"}
         hint="预测 vs 真实的平均差距"
       />
-      <KpiCard
-        icon={Activity}
-        label="最近发现"
-        value={kpis.latestFinding ? "1" : "—"}
-        hint={kpis.latestFinding || "暂无回流发现"}
-      />
     </div>
   );
 }
 
-// ── 评分 chip ────────────────────────────────────────────────────────────────────
-function PerfChip({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: number | null;
-}) {
-  const has = value !== null;
-  return (
-    <span className="flex items-center gap-1 rounded-full bg-surface-subtle px-2.5 py-1 text-[11px]">
-      <span className="text-text-subtle">{label}</span>
-      <span
-        className={cn(
-          "font-semibold tabular-nums",
-          has ? "text-foreground" : "text-text-subtle",
-        )}
-      >
-        {has ? `${value}%` : "—"}
-      </span>
-    </span>
-  );
-}
-
-// 5-段评分条 (1–5) — fills `score` of 5 cells. Read-only (盲预测已锁,不可改).
+// 5-段评分条(1–5)— fills `score` of 5 cells。只读(盲预测已锁,不可改)。
 function ScoreBar({ score }: { readonly score: number }) {
   const filled = Math.max(0, Math.min(5, Math.round(score)));
   return (
@@ -309,58 +233,10 @@ function ScoreBar({ score }: { readonly score: number }) {
   );
 }
 
-// ── 左栏：待校准内容 ──────────────────────────────────────────────────────────────
-function PendingSubjectRow({
-  subject,
-}: {
-  readonly subject: CalibrationOverviewResource["pendingSubjects"][number];
-}) {
-  return (
-    <li
-      data-testid="pending-subject-row"
-      data-subject-id={subject.subjectId}
-      data-badge={subject.badge}
-      className="flex flex-col gap-2 rounded-card border border-border bg-surface px-3.5 py-3"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <span className="min-w-0 text-sm font-medium leading-snug text-foreground">
-          {subject.title}
-        </span>
-        <Badge
-          variant={subject.badge === "locked" ? "secondary" : "outline"}
-          className="shrink-0 text-[10px]"
-        >
-          {BADGE_LABELS[subject.badge] ?? subject.badge}
-        </Badge>
-      </div>
-      <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <span>{subject.platform || "未发布"}</span>
-        <span className="text-text-subtle">·</span>
-        <span>
-          {subject.subjectType === "publication" ? "已发布作品" : "内容产出"}
-        </span>
-      </span>
-      <div className="pt-0.5">
-        {subject.badge === "unpredicted" ? (
-          <StartPredictionButton subject={subject} />
-        ) : subject.predictionId ? (
-          <RecordResultButton
-            predictionId={subject.predictionId}
-            title={subject.title}
-          />
-        ) : (
-          <Badge variant="outline" className="text-[10px] text-text-subtle">
-            已锁定 · 等回流校准
-          </Badge>
-        )}
-      </div>
-    </li>
-  );
-}
-
-// 录入真实表现(FLY-02 飞轮回流) — 对一条已锁定盲预测,逐维度录入发布后的真实评分(1–5),
-// 提交走 client.createResult(不带 ingestionRunId → 服务端自建一次 source='manual' 的真 run,
-// 满足 §C-4 溯源)。落库后该主体从「待校准」转入「发布后回流对照」,飞轮闭环。
+// ── 录入真实表现(FLY-02 飞轮回流) ─────────────────────────────────────────────────
+// 对一条已锁定盲预测,逐维度录入发布后的真实评分(1–5),提交走 client.createResult
+// (不带 ingestionRunId → 服务端自建一次 source='manual' 的真 run,满足 §C-4 溯源)。
+// 落库后该预测在「进行中的预测」里转为已回流,并出现在下方对照区。
 type DimScore = { key: string; score?: number };
 
 function RecordResultButton({
@@ -378,8 +254,7 @@ function RecordResultButton({
   const [dims, setDims] = React.useState<DimScore[]>([]);
   // 维度 key → 用户录入的真实分(字符串,提交时转数字)。
   const [actuals, setActuals] = React.useState<Record<string, string>>({});
-  // 编导自动评分(B2 飞轮回流):AI 据真实指标产维度真实分候选 → 预填上面的录入框,人可改。
-  // scoring=AI 跑分中;scoreReasons[key]=AI 给该维度的一句打分依据(预填后展示,人改分但理由留存)。
+  // 编导自动评分(B2 飞轮回流):AI 据真实指标产维度真实分候选 → 预填录入框,人可改。
   const [scoring, setScoring] = React.useState(false);
   const [scoreError, setScoreError] = React.useState<string | null>(null);
   const [scoreReasons, setScoreReasons] = React.useState<
@@ -420,9 +295,9 @@ function RecordResultButton({
     }
   }, [predictionId]);
 
-  // 编导评分 — fires a calibration.score AI task for THIS locked prediction, polls to
-  // awaiting_confirmation, reads the candidate (resultData.dimensions = 维度真实分候选), and
-  // **prefills** the 录入框 above (人可改). 不调 confirmTask:采纳走下方现有「录入」→ createResult。
+  // 编导评分 — 起 calibration.score AI 任务,轮询到 awaiting_confirmation 读候选
+  // (resultData.dimensions = 维度真实分候选)并**预填**录入框(人可改)。不 confirmTask:
+  // 采纳走下方「录入」→ createResult。
   const runDirectorScore = React.useCallback(async () => {
     if (scoring) return;
     setScoring(true);
@@ -535,7 +410,10 @@ function RecordResultButton({
         variant="outline"
         data-testid="record-result-trigger"
         className="h-7 gap-1.5 px-2.5 text-[11px]"
-        onClick={openForm}
+        onClick={(e) => {
+          e.stopPropagation();
+          void openForm();
+        }}
       >
         <ClipboardList className="size-3.5" />
         录入真实表现
@@ -664,147 +542,7 @@ function RecordResultButton({
   );
 }
 
-// 开始预测 — fires a calibration.diagnose AI task for THIS subject, polls to
-// awaiting_confirmation, confirms (mints a draft Prediction), then refreshes so the new
-// 评分表 lands. Mirrors the topics EnrichButton poll/confirm island.
-function StartPredictionButton({
-  subject,
-}: {
-  readonly subject: CalibrationOverviewResource["pendingSubjects"][number];
-}) {
-  const { run } = useMutation();
-  const [phase, setPhase] = React.useState<"idle" | "running" | "error">("idle");
-  const cancelledRef = React.useRef(false);
-  React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
-    },
-    [],
-  );
-
-  function start(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (phase === "running") return;
-    setPhase("running");
-    void (async () => {
-      try {
-        const task = (await client.createAITask({
-          params: undefined,
-          query: undefined,
-          body: {
-            taskType: "calibration.diagnose",
-            inputData: {
-              subjectType: subject.subjectType,
-              subjectId: subject.subjectId,
-            },
-          },
-        })) as { id: string };
-        for (let i = 0; i < 75; i++) {
-          if (cancelledRef.current) return;
-          await new Promise((r) => setTimeout(r, 4000));
-          if (cancelledRef.current) return;
-          const status = (await client.getTask({
-            params: { taskId: task.id },
-            query: undefined,
-            body: undefined,
-          })) as { status: string };
-          if (status.status === "awaiting_confirmation") {
-            await client.confirmTask({
-              params: { taskId: task.id },
-              query: undefined,
-              body: undefined,
-            });
-            if (!cancelledRef.current) {
-              setPhase("idle");
-              run(() => Promise.resolve()); // router.refresh()
-            }
-            return;
-          }
-          if (status.status === "cancelled" || status.status === "failed") {
-            if (!cancelledRef.current) setPhase("error");
-            return;
-          }
-        }
-        if (!cancelledRef.current) setPhase("error");
-      } catch {
-        if (!cancelledRef.current) setPhase("error");
-      }
-    })();
-  }
-
-  return (
-    <div className="flex items-center gap-1.5">
-      <Button
-        type="button"
-        size="sm"
-        data-testid="start-prediction-button"
-        className="h-7 gap-1 bg-brand px-2.5 text-xs text-brand-foreground hover:bg-brand/90"
-        disabled={phase === "running"}
-        onClick={start}
-      >
-        <Sparkles className="size-3.5" />
-        {phase === "running"
-          ? "AI 诊断中…"
-          : phase === "error"
-            ? "重试预测"
-            : "开始预测"}
-      </Button>
-      {/* 一键岛预调(SPEC §3.4):打开 ChatBox 进编导诊断,预调 calibration.diagnose —— 想边聊
-          边逐维度盲评/多轮打磨走这条;左边「开始预测」是直接起任务铸盲预测的快路(两条并存)。 */}
-      <Link
-        href={copilotDeepLink("calibration", "calibration.diagnose", {
-          kind: subject.subjectType,
-          id: subject.subjectId,
-          title: subject.title,
-        })}
-        data-testid="calibration-open-copilot"
-        aria-label="在对话里诊断"
-        onClick={(e) => e.stopPropagation()}
-        className="inline-flex h-7 items-center gap-1 rounded-control border border-brand/30 bg-surface px-2 text-xs font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft/60"
-      >
-        <MessagesSquare className="size-3.5" />
-        对话诊断
-      </Link>
-    </div>
-  );
-}
-
-function PendingColumn({
-  subjects,
-}: {
-  readonly subjects: CalibrationOverviewResource["pendingSubjects"];
-}) {
-  return (
-    <section
-      data-testid="calibration-pending"
-      className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface-subtle/40 p-4"
-    >
-      <div className="flex shrink-0 items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">待校准内容</h3>
-        <Badge variant="secondary" className="text-[10px] tabular-nums">
-          {subjects.length}
-        </Badge>
-      </div>
-      {subjects.length === 0 ? (
-        <p
-          data-testid="pending-empty"
-          className="rounded-card border border-dashed border-border px-3 py-8 text-center text-sm text-muted-foreground"
-        >
-          没有待校准内容。所有内容都已有盲预测，发布后回流即可校准。
-        </p>
-      ) : (
-        // flex 真高度替代之前的 max-h-[640px] 硬高 → 列内独立滚动。
-        <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
-          {subjects.map((s) => (
-            <PendingSubjectRow key={`${s.subjectType}:${s.subjectId}`} subject={s} />
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-// ── 中栏：发布前预测（内容预览 + 评分表） ────────────────────────────────────────────
+// ── 锁定预测(draft → locked,不可逆 —— 盲预测不可改,§6.2) ─────────────────────────
 function LockPredictionButton({
   prediction,
 }: {
@@ -812,7 +550,8 @@ function LockPredictionButton({
 }) {
   const { pending, run } = useMutation();
   const locked = prediction.status === "locked";
-  function lock() {
+  function lock(e: React.MouseEvent) {
+    e.stopPropagation();
     if (locked) return;
     run(() =>
       client.lockPrediction({
@@ -830,7 +569,7 @@ function LockPredictionButton({
         className="gap-1 text-[11px]"
       >
         <Lock className="size-3" />
-        已锁定预测版本
+        已锁定
       </Badge>
     );
   }
@@ -839,7 +578,7 @@ function LockPredictionButton({
       type="button"
       size="sm"
       data-testid="lock-prediction-button"
-      className="h-8 gap-1.5 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
+      className="h-7 gap-1.5 bg-brand px-2.5 text-[11px] text-brand-foreground hover:bg-brand/90"
       disabled={pending}
       onClick={lock}
     >
@@ -848,6 +587,10 @@ function LockPredictionButton({
     </Button>
   );
 }
+
+// ── 上段:进行中的预测(核心工作流可视化) ───────────────────────────────────────────
+// 每行 = 一条预测的主线状态机:草稿(可锁定)→ 已锁定「等待数据回流」→ 已回流(显示偏差档)。
+// 行可展开看逐维度盲预测评分表(诊断产出的过程性内容折叠在这里,不再占页面常驻栏)。
 
 function ScoreTableRow({
   dim,
@@ -889,15 +632,28 @@ function ScoreTableRow({
   );
 }
 
-function PredictionColumn({
+// 一条回流对照行的摘要(deviationBand)供预测行显示偏差档。
+type ReflowRow = CalibrationOverviewResource["reflowRows"][number];
+
+function PredictionRow({
   prediction,
   title,
+  reflow,
   rubric,
+  expanded,
+  onToggle,
 }: {
-  readonly prediction: PredictionResource | null;
-  readonly title: string | null;
+  readonly prediction: PredictionResource;
+  readonly title: string;
+  readonly reflow: ReflowRow | null;
   readonly rubric: RubricResource | null;
+  readonly expanded: boolean;
+  readonly onToggle: () => void;
 }) {
+  const score = predictionScore(prediction);
+  const lockedDate = isoDate(prediction.lockedAt);
+  const isDraft = prediction.status !== "locked";
+
   const weightByKey = React.useMemo(() => {
     const m = new Map<string, string>();
     for (const d of rubric?.currentVersion.dimensions ?? []) {
@@ -912,77 +668,83 @@ function PredictionColumn({
     }
     return m;
   }, [rubric]);
-
-  if (!prediction) {
-    return (
-      <section
-        data-testid="calibration-prediction"
-        className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4"
-      >
-        <h3 className="shrink-0 text-sm font-semibold text-foreground">发布前预测</h3>
-        <div
-          data-testid="prediction-no-selection"
-          className="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center"
-        >
-          <span className="flex size-10 items-center justify-center rounded-full bg-surface-subtle text-text-subtle">
-            <ClipboardList className="size-5" />
-          </span>
-          <p className="text-sm text-muted-foreground">
-            从左边选一条待校准内容「开始预测」，或从下方已锁定预测里选一条查看评分表。
-          </p>
-        </div>
-      </section>
-    );
-  }
-
   const dims = readDimensions(prediction).map((d) => ({
     ...d,
     label: labelByKey.get(d.key) ?? d.key,
   }));
 
   return (
-    <section
-      data-testid="calibration-prediction"
-      className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4"
+    <li
+      data-testid="prediction-row"
+      data-prediction-id={prediction.id}
+      data-state={isDraft ? "draft" : reflow ? "reflowed" : "awaiting"}
+      className="rounded-card border border-border bg-surface"
     >
-      <div className="flex shrink-0 items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">发布前预测</h3>
-        <Badge
-          variant={prediction.status === "locked" ? "secondary" : "outline"}
-          className="text-[10px]"
+      {/* 行头:作品名 + 预测分 + 锁定时间 + 主线状态。展开是独立 toggle 按钮,
+          动作按钮(锁定/录入)是同级兄弟 —— 不做 button 嵌套。 */}
+      <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+        <button
+          type="button"
+          data-testid="prediction-row-toggle"
+          onClick={onToggle}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
         >
-          {prediction.status === "locked" ? "已锁定" : "草稿"} · 信心{" "}
-          {prediction.confidence === "high"
-            ? "高"
-            : prediction.confidence === "low"
-              ? "低"
-              : "中"}
-        </Badge>
+          <ChevronDown
+            className={cn(
+              "size-4 shrink-0 text-text-subtle transition-transform",
+              expanded && "rotate-180",
+            )}
+          />
+          <span className="min-w-0 truncate text-sm font-medium text-foreground">
+            {title}
+          </span>
+        </button>
+        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="text-text-subtle">预测分</span>
+          <span
+            className={cn(
+              "font-heading text-base font-semibold tabular-nums",
+              score ? "text-foreground" : "text-text-subtle",
+            )}
+          >
+            {score ?? "—"}
+          </span>
+        </span>
+        <span className="hidden items-center gap-1 text-[11px] text-muted-foreground sm:flex">
+          <span className="text-text-subtle">锁定于</span>
+          <span className="tabular-nums">{lockedDate ?? "—"}</span>
+        </span>
+        {/* 主线状态:草稿 / 等待数据回流 / 已回流偏差档 */}
+        {isDraft ? (
+          <LockPredictionButton prediction={prediction} />
+        ) : reflow ? (
+          <Badge
+            variant={reflow.deviationBand === "low" ? "secondary" : "outline"}
+            data-testid="prediction-deviation-badge"
+            className="gap-1 text-[10px]"
+          >
+            <CheckCircle2 className="size-3" />
+            已回流 · {DEVIATION_BAND_LABELS[reflow.deviationBand] ?? reflow.deviationBand}
+          </Badge>
+        ) : (
+          <span className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              data-testid="prediction-awaiting-badge"
+              className="gap-1 text-[10px] text-muted-foreground"
+            >
+              <Hourglass className="size-3" />
+              等待数据回流
+            </Badge>
+            <RecordResultButton predictionId={prediction.id} title={title} />
+          </span>
+        )}
       </div>
 
-      {/* 内容预览 + 评分表可能较长 → 框内独立滚动;header 与底部动作钉住。 */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto pr-1">
-        {/* 内容预览 */}
-        <div className="flex flex-col gap-1 rounded-control bg-surface-subtle px-3 py-2.5">
-          <span className="flex items-center gap-1.5 text-[11px] font-medium text-text-subtle">
-            <FileText className="size-3.5 text-brand" />
-            预测对象
-          </span>
-          <span className="text-sm font-medium leading-snug text-foreground">
-            {title ?? prediction.subjectId}
-          </span>
-          <span className="text-[11px] text-muted-foreground">
-            {prediction.subjectType === "publication" ? "已发布作品" : "内容产出"} ·{" "}
-            {prediction.subjectId}
-          </span>
-        </div>
-
-        {/* 评估维度评分表 */}
-        {dims.length > 0 ? (
-          <div className="flex flex-col">
-            <span className="mb-1 text-[11px] font-medium text-text-subtle">
-              评估维度评分（变现加权 · 1–5）
-            </span>
+      {/* 展开体:逐维度盲预测评分表(变现加权 · 1–5)。 */}
+      {expanded ? (
+        <div className="border-t border-border/60 px-4 pb-3 pt-2">
+          {dims.length > 0 ? (
             <ul data-testid="score-table" className="flex flex-col">
               {dims.map((d) => (
                 <ScoreTableRow
@@ -992,154 +754,74 @@ function PredictionColumn({
                 />
               ))}
             </ul>
-          </div>
-        ) : (
-          <p className="rounded-control border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
-            这条预测还没有维度评分。
-          </p>
-        )}
-      </div>
+          ) : (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              这条预测还没有维度评分。
+            </p>
+          )}
+          {isDraft ? (
+            <p className="pt-2 text-[11px] text-text-subtle">
+              锁定后盲预测不可改,发布后用真实数据校准。
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </li>
+  );
+}
 
-      {/* 底部动作 (钉住) */}
-      <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border pt-3">
-        <span className="text-[11px] text-text-subtle">
-          锁定后盲预测不可改，发布后用真实数据校准
-        </span>
-        <LockPredictionButton prediction={prediction} />
+function ActivePredictionsSection({
+  predictions,
+  reflowByPredictionId,
+  subjectTitles,
+  rubric,
+}: {
+  readonly predictions: readonly PredictionResource[];
+  readonly reflowByPredictionId: ReadonlyMap<string, ReflowRow>;
+  readonly subjectTitles: Readonly<Record<string, string>>;
+  readonly rubric: RubricResource | null;
+}) {
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+  return (
+    <section
+      data-testid="calibration-active-predictions"
+      className="flex flex-col gap-3 rounded-card border border-border bg-surface-subtle/40 p-4"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-foreground">进行中的预测</h3>
+        <Badge variant="secondary" className="text-[10px] tabular-nums">
+          {predictions.length}
+        </Badge>
       </div>
+      {predictions.length === 0 ? (
+        <p
+          data-testid="predictions-empty"
+          className="rounded-card border border-dashed border-border px-3 py-8 text-center text-sm text-muted-foreground"
+        >
+          还没有进行中的预测。去稿面的发布包区对新稿盲预测,或从右侧「发起新预测」选一条待校准内容开始。
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {predictions.map((p) => (
+            <PredictionRow
+              key={p.id}
+              prediction={p}
+              title={subjectTitles[p.subjectId] ?? p.subjectId}
+              reflow={reflowByPredictionId.get(p.id) ?? null}
+              rubric={rubric}
+              expanded={expandedId === p.id}
+              onToggle={() =>
+                setExpandedId((cur) => (cur === p.id ? null : p.id))
+              }
+            />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
 
-// ── 右栏：AI 编导诊断 ─────────────────────────────────────────────────────────────
-function DiagnosisColumn({
-  prediction,
-}: {
-  readonly prediction: PredictionResource | null;
-}) {
-  const diagnosis = prediction ? readDiagnosis(prediction) : null;
-  const performance = prediction ? readPerformance(prediction) : null;
-  const hasDiagnosis =
-    diagnosis !== null &&
-    (diagnosis.verdict !== "" ||
-      diagnosis.mainIssues.length > 0 ||
-      diagnosis.priorityFixes.length > 0);
-
-  return (
-    <aside
-      data-testid="calibration-diagnosis"
-      className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4"
-    >
-      <h3 className="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-foreground">
-        <Sparkles className="size-4 text-brand" />
-        AI 编导诊断
-      </h3>
-
-      {/* 诊断体可能较长 → 框内独立滚动。 */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto pr-1">
-      {!prediction ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center">
-          <span className="flex size-10 items-center justify-center rounded-full bg-surface-subtle text-text-subtle">
-            <Sparkles className="size-5" />
-          </span>
-          <p className="text-sm text-muted-foreground">
-            选一条预测，查看 AI 编导对它的综合判断与优先修改。
-          </p>
-        </div>
-      ) : !hasDiagnosis ? (
-        <div
-          data-testid="diagnosis-empty"
-          className="flex flex-1 flex-col items-start gap-2 py-6"
-        >
-          <p className="text-sm text-muted-foreground">
-            这条预测还没有 AI 编导诊断。对它「开始预测」即可生成综合判断、主要问题与优先修改。
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* 综合判断 */}
-          {diagnosis!.verdict ? (
-            <div className="flex flex-col gap-1 rounded-control bg-brand-soft/60 px-3 py-2.5">
-              <span className="text-[11px] font-medium text-brand">综合判断</span>
-              <span className="text-sm leading-relaxed text-foreground">
-                {diagnosis!.verdict}
-              </span>
-            </div>
-          ) : null}
-
-          {/* 主要问题 */}
-          {diagnosis!.mainIssues.length > 0 ? (
-            <div className="flex flex-col gap-1.5">
-              <span className="flex items-center gap-1.5 text-[11px] font-medium text-text-subtle">
-                <AlertTriangle className="size-3.5 text-warning" />
-                主要问题
-              </span>
-              <ul className="flex flex-col gap-1">
-                {diagnosis!.mainIssues.map((issue, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-1.5 text-[13px] leading-snug text-foreground"
-                  >
-                    <span className="mt-1.5 size-1 shrink-0 rounded-full bg-warning" />
-                    {issue}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {/* 优先修改 */}
-          {diagnosis!.priorityFixes.length > 0 ? (
-            <div className="flex flex-col gap-1.5">
-              <span className="flex items-center gap-1.5 text-[11px] font-medium text-text-subtle">
-                <ListChecks className="size-3.5 text-brand" />
-                优先修改
-              </span>
-              <ol className="flex flex-col gap-1.5">
-                {diagnosis!.priorityFixes.map((fix, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2 text-[13px] leading-snug text-foreground"
-                  >
-                    <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-brand-soft text-[10px] font-semibold text-brand">
-                      {i + 1}
-                    </span>
-                    {fix}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          ) : null}
-
-          {/* 预测表现 chips */}
-          {performance ? (
-            <div className="flex flex-col gap-1.5 border-t border-border pt-3">
-              <span className="text-[11px] font-medium text-text-subtle">
-                发布前预测表现
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                <PerfChip label="完播率" value={performance.完播率} />
-                <PerfChip label="收藏率" value={performance.收藏率} />
-                <PerfChip label="评论率" value={performance.评论率} />
-                <PerfChip label="转化意向" value={performance.转化意向} />
-              </div>
-            </div>
-          ) : null}
-
-          {prediction.status === "locked" ? (
-            <p className="flex items-center gap-1.5 rounded-control bg-surface-subtle px-3 py-2 text-[11px] text-muted-foreground">
-              <Activity className="size-3.5 text-brand" />
-              已锁定 · 发布后回流真实数据即可在下方对照表看到偏差
-            </p>
-          ) : null}
-        </>
-      )}
-      </div>
-    </aside>
-  );
-}
-
-// ── 底部：发布后回流对照表 ────────────────────────────────────────────────────────
+// ── 中段:发布后回流对照(预测 vs 实际,逐维度偏差) ─────────────────────────────────
 function DeviationCell({ value }: { readonly value: number | null }) {
   if (value === null)
     return <span className="text-text-subtle">—</span>;
@@ -1244,52 +926,165 @@ function ReflowTable({
   );
 }
 
-// ── 底部：经验沉淀 ────────────────────────────────────────────────────────────────
-function LearningsPanel({
-  learnings,
+// ── 侧栏:发起新预测(补充入口;主入口在稿面发布包区) ─────────────────────────────────
+// 开始预测 — 起 calibration.diagnose AI 任务,轮询到 awaiting_confirmation 后 confirm
+// (铸一条 draft Prediction),再 refresh 落新评分表。诊断是产预测的过程,产物折叠在
+// 预测行里,不再占页面常驻栏。
+function StartPredictionButton({
+  subject,
 }: {
-  readonly learnings: CalibrationOverviewResource["learnings"];
+  readonly subject: CalibrationOverviewResource["pendingSubjects"][number];
 }) {
+  const { run } = useMutation();
+  const [phase, setPhase] = React.useState<"idle" | "running" | "error">("idle");
+  const cancelledRef = React.useRef(false);
+  React.useEffect(
+    () => () => {
+      cancelledRef.current = true;
+    },
+    [],
+  );
+
+  function start(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (phase === "running") return;
+    setPhase("running");
+    void (async () => {
+      try {
+        const task = (await client.createAITask({
+          params: undefined,
+          query: undefined,
+          body: {
+            taskType: "calibration.diagnose",
+            inputData: {
+              subjectType: subject.subjectType,
+              subjectId: subject.subjectId,
+            },
+          },
+        })) as { id: string };
+        for (let i = 0; i < 75; i++) {
+          if (cancelledRef.current) return;
+          await new Promise((r) => setTimeout(r, 4000));
+          if (cancelledRef.current) return;
+          const status = (await client.getTask({
+            params: { taskId: task.id },
+            query: undefined,
+            body: undefined,
+          })) as { status: string };
+          if (status.status === "awaiting_confirmation") {
+            await client.confirmTask({
+              params: { taskId: task.id },
+              query: undefined,
+              body: undefined,
+            });
+            if (!cancelledRef.current) {
+              setPhase("idle");
+              run(() => Promise.resolve()); // router.refresh()
+            }
+            return;
+          }
+          if (status.status === "cancelled" || status.status === "failed") {
+            if (!cancelledRef.current) setPhase("error");
+            return;
+          }
+        }
+        if (!cancelledRef.current) setPhase("error");
+      } catch {
+        if (!cancelledRef.current) setPhase("error");
+      }
+    })();
+  }
+
   return (
-    <section
-      data-testid="calibration-learnings"
+    <div className="flex items-center gap-1.5">
+      <Button
+        type="button"
+        size="sm"
+        data-testid="start-prediction-button"
+        className="h-7 gap-1 bg-brand px-2.5 text-xs text-brand-foreground hover:bg-brand/90"
+        disabled={phase === "running"}
+        onClick={start}
+      >
+        <Sparkles className="size-3.5" />
+        {phase === "running"
+          ? "AI 诊断中…"
+          : phase === "error"
+            ? "重试预测"
+            : "开始预测"}
+      </Button>
+      {/* 一键岛预调(SPEC §3.4):打开 ChatBox 进编导诊断,预调 calibration.diagnose —— 想边聊
+          边逐维度盲评/多轮打磨走这条;左边「开始预测」是直接起任务铸盲预测的快路(两条并存)。 */}
+      <Link
+        href={copilotDeepLink("calibration", "calibration.diagnose", {
+          kind: subject.subjectType,
+          id: subject.subjectId,
+          title: subject.title,
+        })}
+        data-testid="calibration-open-copilot"
+        aria-label="在对话里诊断"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex h-7 items-center gap-1 rounded-control border border-brand/30 bg-surface px-2 text-xs font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft/60"
+      >
+        <MessagesSquare className="size-3.5" />
+        对话诊断
+      </Link>
+    </div>
+  );
+}
+
+function NewPredictionRail({
+  subjects,
+}: {
+  readonly subjects: CalibrationOverviewResource["pendingSubjects"];
+}) {
+  // 只列还没盲预测的内容;已锁定/已回流的都在左侧主线「进行中的预测」里,不重复展示。
+  const unpredicted = subjects.filter((s) => s.badge === "unpredicted");
+  return (
+    <aside
+      data-testid="calibration-new-prediction"
       className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4"
     >
-      <h3 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-        <Lightbulb className="size-4 text-brand" />
-        经验沉淀
-      </h3>
-      {learnings.length === 0 ? (
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-foreground">发起新预测</h3>
+        <Badge variant="secondary" className="text-[10px] tabular-nums">
+          {unpredicted.length}
+        </Badge>
+      </div>
+      <p className="text-[11px] leading-snug text-muted-foreground">
+        盲预测的主入口在稿面的发布包区;这里是补充入口 —— 对还没预测的内容直接发起。
+      </p>
+      {unpredicted.length === 0 ? (
         <p
-          data-testid="learnings-empty"
+          data-testid="pending-empty"
           className="rounded-card border border-dashed border-border px-3 py-8 text-center text-sm text-muted-foreground"
         >
-          还没有沉淀经验。每次回流校准后，把验证过的规律记到这里，喂回后续的选题与脚本。
+          没有待预测的内容。去稿面的发布包区对新稿先盲预测,发布后回到这里看回流对照。
         </p>
       ) : (
-        <ul className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
-          {learnings.map((l) => (
+        <ul className="flex flex-col gap-2">
+          {unpredicted.map((s) => (
             <li
-              key={l.id}
-              data-testid="learning-card"
-              className="flex flex-col gap-1.5 rounded-control border border-border/70 bg-surface-subtle/40 p-3"
+              key={`${s.subjectType}:${s.subjectId}`}
+              data-testid="pending-subject-row"
+              data-subject-id={s.subjectId}
+              className="flex flex-col gap-2 rounded-control border border-border/70 bg-surface-subtle/40 px-3 py-2.5"
             >
-              <span className="flex items-start gap-1.5">
-                <Target className="mt-0.5 size-3.5 shrink-0 text-brand" />
-                <span className="text-sm font-medium leading-snug text-foreground">
-                  {l.title}
+              <span className="min-w-0 text-sm font-medium leading-snug text-foreground">
+                {s.title}
+              </span>
+              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span>{s.platform || "未发布"}</span>
+                <span className="text-text-subtle">·</span>
+                <span>
+                  {s.subjectType === "publication" ? "已发布作品" : "内容产出"}
                 </span>
               </span>
-              {l.insight ? (
-                <p className="text-[12px] leading-snug text-muted-foreground">
-                  {l.insight}
-                </p>
-              ) : null}
+              <StartPredictionButton subject={s} />
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </aside>
   );
 }
 
@@ -1297,7 +1092,7 @@ function LearningsPanel({
 // TODO(B 后续):由用户绑定的抖音账号派生来源 id,而非硬编码 canonical。
 const DOUYIN_SOURCE_ID = "src-douyin-canonical";
 
-// ── 一键拉取抖音真实表现(B1 飞轮·真实数据采集)──────────────────────────────────────
+// ── 一键拉取抖音真实表现(核心工作流的「采集回收」一步,保留)────────────────────────────
 // 调 ingestion.douyin.refresh → 后端经 CDP 连用户**已登录**的 Chrome(:9222)抓创作者中心
 // 指标 → 落库为各作品的真实 analytics 快照。它是把"手填评分"翻成"编导自动评分"的数据前提。
 type RefreshPhase = "idle" | "running" | "need_login" | "logging_in" | "done" | "error";
@@ -1414,68 +1209,28 @@ function RefreshDouyinButton() {
   );
 }
 
-// ── 顶部工具条：rubric 选择 + 目标 tabs + 新建预测 ──────────────────────────────────
+// ── 顶部工具条:rubric 版本 + 拉取抖音真实表现 ───────────────────────────────────────
 function WorkbenchToolbar({
   rubric,
-  goal,
-  setGoal,
-  onNewPrediction,
 }: {
   readonly rubric: RubricResource | null;
-  readonly goal: GoalKey;
-  readonly setGoal: (g: GoalKey) => void;
-  readonly onNewPrediction: () => void;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div
-        data-testid="goal-tabs"
-        className="flex flex-wrap items-center gap-1 rounded-control bg-surface-subtle p-1"
-      >
-        {GOAL_TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            data-testid={`goal-tab-${t.key}`}
-            data-active={goal === t.key ? "true" : undefined}
-            onClick={() => setGoal(t.key)}
-            className={cn(
-              "rounded-control px-3 py-1.5 text-xs font-medium transition-colors",
-              goal === t.key
-                ? "bg-surface text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-2.5 py-1.5 text-xs text-muted-foreground">
-          <Gauge className="size-3.5 text-brand" />
-          {rubric ? (
-            <>
-              <span className="font-medium text-foreground">{rubric.name}</span>
-              <Badge variant="secondary" className="text-[10px]">
-                v{rubric.currentVersion.versionNumber}
-              </Badge>
-            </>
-          ) : (
-            <span>暂无评分标准</span>
-          )}
-        </span>
-        <RefreshDouyinButton />
-        <Button
-          type="button"
-          size="sm"
-          data-testid="new-prediction-button"
-          className="h-8 gap-1.5 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
-          onClick={onNewPrediction}
-        >
-          <Plus className="size-3.5" />
-          新建预测
-        </Button>
-      </div>
+      <span className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-2.5 py-1.5 text-xs text-muted-foreground">
+        <Gauge className="size-3.5 text-brand" />
+        {rubric ? (
+          <>
+            <span className="font-medium text-foreground">{rubric.name}</span>
+            <Badge variant="secondary" className="text-[10px]">
+              v{rubric.currentVersion.versionNumber}
+            </Badge>
+          </>
+        ) : (
+          <span>暂无评分标准</span>
+        )}
+      </span>
+      <RefreshDouyinButton />
     </div>
   );
 }
@@ -1492,113 +1247,44 @@ export function CalibrationWorkbench({
   readonly rubric: RubricResource | null;
   readonly subjectTitles: Readonly<Record<string, string>>;
 }) {
-  const [goal, setGoal] = React.useState<GoalKey>("all");
-
-  // EFFECTIVE selection: the user's pick, else the first prediction. Self-heals when the
-  // picked row leaves the list (refresh), so we never setState in an effect.
-  const [pickedId, setPickedId] = React.useState<string | null>(null);
-  const selectedId =
-    pickedId && predictions.some((p) => p.id === pickedId)
-      ? pickedId
-      : (predictions[0]?.id ?? null);
-  const selected = predictions.find((p) => p.id === selectedId) ?? null;
-
-  // 目标 tab is a presentation filter over 待校准内容. The seed carries no per-subject role
-  // tag, so non-「全部」tabs honestly show an empty/narrowed list rather than fabricating.
-  const filteredPending = React.useMemo(() => {
-    if (goal === "all") return overview.pendingSubjects;
-    return overview.pendingSubjects.filter((s) => s.title.includes(goal));
-  }, [goal, overview.pendingSubjects]);
-
-  // 新建预测 → focus the first 未预测 subject so the user can 开始预测 (the draft itself is
-  // minted by the diagnose flow; this is navigation, not a fake write).
-  function onNewPrediction() {
-    setGoal("all");
-    const el = document.querySelector('[data-testid="calibration-pending"]');
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  // Title for the selected prediction's subject.
-  const selectedTitle = selected
-    ? (subjectTitles[selected.subjectId] ?? null)
-    : null;
+  // predictionId → 回流对照行:预测行据此显示「已回流 · 偏差档」。
+  const reflowByPredictionId = React.useMemo(() => {
+    const m = new Map<string, ReflowRow>();
+    for (const r of overview.reflowRows) m.set(r.predictionId, r);
+    return m;
+  }, [overview.reflowRows]);
 
   return (
-    // 固定高度填满：KPI 带 / 工具条 / 预测选择带 shrink-0 钉在顶部,三栏 flex-1 占满中段、
-    // 每列各自框内滚,底部回流对照 + 经验沉淀作一个高度受限 (≤40%) 的 shrink-0 自滚区
-    // (而非把整页拉长成长滚动)。
+    // 主线式纵向布局:指标带 / 工具条钉顶,主体单列纵滚 —— 左主列(进行中的预测 → 回流对照)
+    // + 右侧栏(发起新预测,补充入口不占 C 位)。
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="shrink-0">
         <KpiBand kpis={overview.kpis} />
       </div>
 
       <div className="shrink-0">
-        <WorkbenchToolbar
-          rubric={rubric}
-          goal={goal}
-          setGoal={setGoal}
-          onNewPrediction={onNewPrediction}
-        />
+        <WorkbenchToolbar rubric={rubric} />
       </div>
 
-      {/* 已锁定预测选择带 (钉住) — quick-switch the middle/right columns across all predictions. */}
-      {predictions.length > 0 ? (
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         <div
-          data-testid="prediction-switcher"
-          className="flex shrink-0 flex-wrap items-center gap-2 rounded-card border border-border bg-surface px-3 py-2.5"
+          data-testid="calibration-mainline"
+          className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]"
         >
-          <span className="text-[11px] font-medium text-text-subtle">
-            已锁定预测
-          </span>
-          {predictions.map((p) => {
-            const active = p.id === selectedId;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                data-testid="prediction-chip"
-                data-prediction-id={p.id}
-                data-active={active ? "true" : undefined}
-                onClick={() => setPickedId(p.id)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-control border px-2.5 py-1 text-xs transition-colors",
-                  active
-                    ? "border-brand bg-brand-soft text-brand"
-                    : "border-border text-muted-foreground hover:border-brand/40",
-                )}
-              >
-                {p.status === "locked" ? (
-                  <Lock className="size-3" />
-                ) : (
-                  <FileText className="size-3" />
-                )}
-                <span className="max-w-[180px] truncate">
-                  {subjectTitles[p.subjectId] ?? p.subjectId}
-                </span>
-              </button>
-            );
-          })}
+          {/* 左主列:预测 → 采集回流 → 对照 的主线 */}
+          <div className="flex min-w-0 flex-col gap-4">
+            <ActivePredictionsSection
+              predictions={predictions}
+              reflowByPredictionId={reflowByPredictionId}
+              subjectTitles={subjectTitles}
+              rubric={rubric}
+            />
+            <ReflowTable rows={overview.reflowRows} subjectTitles={subjectTitles} />
+          </div>
+
+          {/* 右侧栏:发起新预测(补充入口) */}
+          <NewPredictionRail subjects={overview.pendingSubjects} />
         </div>
-      ) : null}
-
-      {/* 三栏 (flex-1 占满中段,每列各自框内滚) */}
-      <div
-        data-testid="calibration-three-column"
-        className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[300px_minmax(0,1fr)_340px]"
-      >
-        <PendingColumn subjects={filteredPending} />
-        <PredictionColumn
-          prediction={selected}
-          title={selectedTitle}
-          rubric={rubric}
-        />
-        <DiagnosisColumn prediction={selected} />
-      </div>
-
-      {/* 底部回流对照 + 经验沉淀：高度受限的自滚区 (≤40% 视高),不把整页拉成长滚动。 */}
-      <div className="flex max-h-[40%] shrink-0 flex-col gap-4 overflow-y-auto pr-1">
-        <ReflowTable rows={overview.reflowRows} subjectTitles={subjectTitles} />
-        <LearningsPanel learnings={overview.learnings} />
       </div>
     </div>
   );
