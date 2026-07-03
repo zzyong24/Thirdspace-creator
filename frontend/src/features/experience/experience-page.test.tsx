@@ -143,10 +143,8 @@ describe("ExperiencePage(经验裁决台)", () => {
     await renderExperience();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const active = within(nav).getByRole("link", { current: "page" });
-    // [T-063a] IA 收敛:/experience 已无一级导航项(301 → /library?tab=experience);
-    // 旧 pathname 一瞬渲染时激活项回退「今日台」。
-    expect(active).toHaveAttribute("href", "/");
-    expect(active.textContent?.trim()).toBe("今日台");
+    expect(active).toHaveAttribute("href", "/experience");
+    expect(active.textContent?.trim()).toBe("经验沉淀");
   });
 
   it("contextual card variant = assistant(非 storage)", async () => {

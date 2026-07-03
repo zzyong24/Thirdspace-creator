@@ -3,7 +3,7 @@
  *
  * These tests lock the AppShell invariants:
  *  - exactly one Sidebar and one TopHeader per page,
- *  - the primary nav lists the four converged entries ([T-063a] 今日台/作品/库/设置),
+ *  - the primary nav lists all seven approved entries,
  *  - the active nav item is derived from the current pathname,
  *  - the lower contextual card supports both `assistant` and `storage`
  *    variants on a single component (D-003),
@@ -81,21 +81,34 @@ describe("AppShell", () => {
     expect(headers).toHaveLength(1);
   });
 
-  it("[T-063a] renders the four converged primary nav items in order (今日台/作品/库/设置)", async () => {
+  it("renders the approved primary nav items in order (定位中心 inserted as 2nd, 七步①②)", async () => {
     await renderShell();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const items = within(nav).getAllByRole("link");
     const labels = items.map((item) => item.textContent?.trim() ?? "");
-    // 北极星 SPEC §1:一级导航固定四项 + 全局编导对话;旧部门式路由 301 到对应 tab。
-    expect(labels).toEqual(["今日台", "作品", "库", "设置"]);
+    // SPEC §3.4: 定位中心 is the upstream constraint source — pinned 2nd. 选题 sits right
+    // under it (定位→选题→项目 upstream order: 定位约束选题, 选题落地为项目).
+    expect(labels).toEqual([
+      "首页",
+      "定位中心",
+      "选题",
+      "校准",
+      "项目",
+      "知识库",
+      "素材中心",
+      "发布中心",
+      "任务中心",
+      "经验沉淀",
+      "设置",
+    ]);
   });
 
   it("derives the active nav item from the pathname", async () => {
-    await renderShell({ pathname: "/library" });
+    await renderShell({ pathname: "/knowledge" });
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const active = within(nav).getByRole("link", { current: "page" });
-    expect(active).toHaveAttribute("href", "/library");
-    expect(active.textContent?.trim()).toBe("库");
+    expect(active).toHaveAttribute("href", "/knowledge");
+    expect(active.textContent?.trim()).toBe("知识库");
   });
 
   it("falls back to the dashboard nav item for the root pathname", async () => {
@@ -103,7 +116,7 @@ describe("AppShell", () => {
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const active = within(nav).getByRole("link", { current: "page" });
     expect(active).toHaveAttribute("href", "/");
-    expect(active.textContent?.trim()).toBe("今日台");
+    expect(active.textContent?.trim()).toBe("首页");
   });
 
   it("uses the assistant variant by default and exposes the storage variant on the same component", async () => {
@@ -251,13 +264,12 @@ describe("AppShell", () => {
     expect(px).toBeLessThanOrEqual(24);
   });
 
-  it("[T-063a] sidebar renders 4 nav items, active one carries aria-current=page", async () => {
+  it("sidebar renders 7 nav items, active one carries aria-current=page", async () => {
     await renderShell({ pathname: "/projects" });
     const sidebar = screen.getByRole("complementary", { name: /主侧栏/ });
-    const nav = within(sidebar).getByRole("navigation", { name: "主要导航" });
-    const links = within(nav).getAllByRole("link");
-    // 4 converged nav items (北极星 SPEC §1).
-    expect(links).toHaveLength(4);
+    const links = within(sidebar).getAllByRole("link");
+    // 7 nav items (no extra context section for the root).
+    expect(links.length).toBeGreaterThanOrEqual(7);
     const current = within(sidebar).getByRole("link", { current: "page" });
     expect(current).toHaveAttribute("href", "/projects");
   });

@@ -65,12 +65,6 @@ export interface KnowledgePageProps {
    * deterministic.
    */
   readonly viewModel?: KnowledgeViewModel;
-  /**
-   * [T-063d] 内嵌模式:被 /library「知识」tab 内嵌时,页顶 KnowledgeDumpZone 收掉
-   * (库页统一倾倒场接管录入,避免双倾倒场;其归类/手动补录能力已并入统一场),
-   * 标签链接改指 /library?tab=knowledge&tag=(旧路由 301 丢 query)。
-   */
-  readonly embedded?: boolean;
 }
 
 export interface KnowledgeViewModel extends BasePageViewModel {
@@ -135,10 +129,7 @@ export interface KnowledgeSnippet {
 // Page
 // ---------------------------------------------------------------------------
 
-export async function KnowledgePage({
-  viewModel,
-  embedded = false,
-}: KnowledgePageProps = {}) {
+export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
   // READ-side made real ("知识库读侧做真"): the VM now derives `recent`, the
   // `metrics` row (知识条目 total / 本周新增 / 复用片段 / 知识关联 are REAL counts;
   // 记忆命中率 has no read op → 「规划中」 placeholder, not a fixture number),
@@ -168,11 +159,8 @@ export async function KnowledgePage({
       className="flex flex-col gap-section-gap"
     >
       {/* T-062c 知识倾倒场:录入主入口(AI 归类确认门 + 手动补录),页面顶部常驻。
-          空库也要能倒(否则空账号无录入口),仅 loading/error 不渲。
-          [T-063d] 内嵌库页时收掉 —— 库页头的统一倾倒场接管(避免双倾倒场)。 */}
-      {!embedded && (state === "default" || state === "empty") ? (
-        <KnowledgeDumpZone />
-      ) : null}
+          空库也要能倒(否则空账号无录入口),仅 loading/error 不渲。 */}
+      {state === "default" || state === "empty" ? <KnowledgeDumpZone /> : null}
       {state === "loading" ? (
         <LoadingState label="正在加载知识库…" rows={5} />
       ) : state === "error" ? (
@@ -184,7 +172,7 @@ export async function KnowledgePage({
         />
       ) : (
         <>
-          <KnowledgeInteractiveRegion viewModel={vm} embedded={embedded} />
+          <KnowledgeInteractiveRegion viewModel={vm} />
           <KnowledgeGraph series={vm.graphSeries} />
         </>
       )}

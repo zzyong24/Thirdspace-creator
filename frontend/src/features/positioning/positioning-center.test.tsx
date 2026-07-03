@@ -195,40 +195,4 @@ describe("PositioningCenterView", () => {
     // statements are append-only — there is no real 设为当前 op, so no such button.
     expect(screen.queryByRole("button", { name: "设为当前" })).toBeNull();
   });
-
-  // [T-063e] 设置「定位」页签的内嵌形态(embedded prop 双头收敛)。
-  describe("embedded(设置页签形态,T-063e)", () => {
-    it("竖排设置形态:无页级大标题;保留 9-facet 英雄区 + 版本链 + 下游规则(堆叠)", () => {
-      render(<PositioningCenterView viewModel={POPULATED} embedded />);
-      const root = screen.getByTestId("positioning-center");
-      expect(root.getAttribute("data-embedded")).toBe("true");
-      // 设置弹窗自带宿主标题 → 内嵌不再渲「定位中心」页头。
-      expect(screen.queryByText("定位中心")).toBeNull();
-      // 9-facet 查看/手改(编辑抽屉复用)照渲。
-      expect(screen.getAllByTestId("positioning-facet").length).toBe(9);
-      expect(screen.getByRole("button", { name: /编辑/ })).toBeTruthy();
-      // 版本链 + 下游规则堆叠保留(功能不回退)。
-      expect(screen.getAllByTestId("positioning-history-row").length).toBe(2);
-      expect(screen.getAllByTestId("positioning-rule-card").length).toBe(5);
-    });
-
-    it("「生成/进化定位」= Copilot 深链预填「结合我的发布数据,进化一版定位」", () => {
-      render(<PositioningCenterView viewModel={POPULATED} embedded />);
-      const link = screen.getByTestId("positioning-open-copilot");
-      expect(link.textContent).toContain("结合我的发布数据,进化一版定位");
-      const href = link.getAttribute("href") ?? "";
-      expect(href).toContain("copilot=open");
-      expect(href).toContain("surface=positioning");
-      expect(href).toContain("fn=positioning.generate");
-      expect(decodeURIComponent(href)).toContain(
-        "prefill=结合我的发布数据,进化一版定位",
-      );
-    });
-
-    it("空态(无 profile)与整页版共用同一「创建定位」CTA", () => {
-      render(<PositioningCenterView viewModel={EMPTY} embedded />);
-      expect(screen.getByTestId("positioning-empty-state")).toBeTruthy();
-      expect(screen.getByRole("button", { name: "创建定位" })).toBeTruthy();
-    });
-  });
 });

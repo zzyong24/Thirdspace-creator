@@ -66,12 +66,6 @@ export interface ProjectsPageProps {
    * passes `createServerClient(session.ctx)`; defaults to the singleton seam.
    */
   readonly client?: ProjectsReadClient;
-  /**
-   * [T-063c] 内嵌模式:被 /projects「进行中」tab 内嵌时隐藏自带页头(「项目」h1),
-   * 避免与作品页 shell/tab 条双头(照 TopicsPage embedded 的做法)。列表/筛选/
-   * 分页原样保留 —— 删壳不删肉。
-   */
-  readonly embedded?: boolean;
 }
 
 // Demo/seed projects from the canonical baseline dataset. They stay seeded (the
@@ -96,7 +90,6 @@ export async function ProjectsPage({
   status = "all",
   sort = "updated",
   client = defaultClient,
-  embedded = false,
 }: ProjectsPageProps = {}) {
   // Reads flow page -> await client.* -> MockTransport -> store -> DTO. The
   // `viewModel?` prop remains the test-override seam (fixture-driven, sync).
@@ -165,23 +158,20 @@ export async function ProjectsPage({
       data-page="projects"
       className="flex flex-col gap-section-gap"
     >
-      {/* [T-063c] 内嵌进作品页「进行中」tab 时隐藏自带页头,避免双头(T-063a 留尾)。 */}
-      {embedded ? null : (
-        <header className="flex flex-col gap-1">
-          <h1
-            data-slot="projects-page-heading"
-            className="font-heading text-2xl font-semibold text-foreground"
-          >
-            项目
-          </h1>
-          <p
-            data-slot="projects-subtitle"
-            className="text-sm text-muted-foreground"
-          >
-            所有创作项目的管理与进度跟踪
-          </p>
-        </header>
-      )}
+      <header className="flex flex-col gap-1">
+        <h1
+          data-slot="projects-page-heading"
+          className="font-heading text-2xl font-semibold text-foreground"
+        >
+          项目
+        </h1>
+        <p
+          data-slot="projects-subtitle"
+          className="text-sm text-muted-foreground"
+        >
+          所有创作项目的管理与进度跟踪
+        </p>
+      </header>
 
       <ProjectsToolbar tabs={tabs} status={status} sort={sort} />
 

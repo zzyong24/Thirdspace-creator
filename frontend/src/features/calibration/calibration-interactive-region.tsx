@@ -363,8 +363,7 @@ function PendingSubjectRow({
 // 满足 §C-4 溯源)。落库后该主体从「待校准」转入「发布后回流对照」,飞轮闭环。
 type DimScore = { key: string; score?: number };
 
-// [T-063e] export:设置「校准」页签的校准历史区复用(已锁定盲预测的回流录入入口)。
-export function RecordResultButton({
+function RecordResultButton({
   predictionId,
   title,
 }: {
@@ -1155,8 +1154,7 @@ function DeviationCell({ value }: { readonly value: number | null }) {
   );
 }
 
-// [T-063e] export:设置「校准」页签的校准历史区复用(盲预测 vs 真实的对照记录列表)。
-export function ReflowTable({
+function ReflowTable({
   rows,
   subjectTitles,
 }: {

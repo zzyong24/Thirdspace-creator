@@ -182,45 +182,6 @@ describe("topics view (pure render, deterministic)", () => {
     expect(screen.getAllByTestId("funnel-stage")).toHaveLength(6);
   });
 
-  it("[T-063c] embedded 收敛为两栏:无来源大栏/无底部漏斗,来源+漏斗压成一行摘要,AI 带保留", () => {
-    render(
-      <TopicsView
-        embedded
-        viewModel={{
-          candidates: [candidate({ card: filledCard() })],
-          overview: overview(),
-          sort: "predictedScore",
-          pendingReview: null,
-        }}
-      />,
-    );
-    // 两栏主体(候选池 + 详情),三栏与来源大栏不再渲染
-    expect(screen.getByTestId("topics-two-column")).toBeInTheDocument();
-    expect(screen.queryByTestId("topics-three-column")).toBeNull();
-    expect(screen.queryByTestId("topics-sources")).toBeNull();
-    expect(screen.getByTestId("topics-detail")).toBeInTheDocument();
-    // 底部漏斗条撤下,压成一行摘要:6 漏斗阶段 + 7 来源计数
-    expect(screen.queryByTestId("topics-funnel")).toBeNull();
-    const summary = screen.getByTestId("topics-source-funnel-summary");
-    expect(within(summary).getAllByTestId("summary-funnel-stage")).toHaveLength(6);
-    expect(within(summary).getAllByTestId("summary-source")).toHaveLength(7);
-    // AI 选题会带(4 深链)保留;编导起草行仍在列表头
-    expect(
-      within(screen.getByTestId("topics-generate-actions")).getAllByRole("link"),
-    ).toHaveLength(4);
-    expect(screen.getByTestId("idea-draft-form")).toBeInTheDocument();
-  });
-
-  it("[T-063c] embedded 排序导航保持在 /projects?tab=candidates", () => {
-    render(<CandidateSortControl sort="predictedScore" embedded />);
-    fireEvent.change(screen.getByTestId("candidate-sort-control"), {
-      target: { value: "demandCount" },
-    });
-    expect(mockRouter.push).toHaveBeenCalledWith(
-      "/projects?tab=candidates&sort=demandCount",
-    );
-  });
-
   it("hides dropped candidates from the pool board", () => {
     render(
       <TopicsView

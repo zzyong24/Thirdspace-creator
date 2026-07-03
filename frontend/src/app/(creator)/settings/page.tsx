@@ -17,17 +17,6 @@
  * the island ops and a `router.refresh()` re-runs this read. Falls back to
  * the session identity when the op read is unavailable (race / direct
  * render), then to the fixture default.
- *
- * [T-063a] IA 收敛:/positioning /calibration /automations /accounts 降级为设置
- * 页签(301 落 ?tab=)。它们的核心区在这里 server 装配(原页面的读逻辑照搬),
- * 以 ReactNode 传给客户端弹窗的对应 panel —— 弹窗内切页签不回 server,故四块
- * 一并装配(全是 in-process pglite 读,代价可忽略)。
- *
- * [T-063e] 定位/校准页签深度化(后台化):
- *  - 定位 = PositioningCenterPage 的 embedded 形态(9-facet 查看/手改 + 版本链 +
- *    「生成/进化定位」Copilot 深链),不再整页两栏工作台内嵌;
- *  - 校准 = CalibrationSettingsPanel(rubric 规则库 + 待采纳规则建议(T-062a 回流
- *    消费端)+ 校准历史);盲预测发起入口移稿面发布包区,对照视图并入项目复盘页。
  */
 import {
   SettingsPage,
@@ -37,15 +26,7 @@ import {
   type MultimodalModelsState,
   type StorageState,
 } from "@/features/settings/settings-page";
-import { PositioningCenterPage } from "@/features/positioning/positioning-center";
-import { CalibrationSettingsPanel } from "@/features/calibration/calibration-settings-panel";
-import { loadCalibrationSettings } from "@/features/calibration/calibration-data";
-import { AutomationsPage } from "@/features/automations/automations-page";
-import { AccountManagerPage } from "@/features/platform-account/account-manager-page";
-import {
-  client as defaultClient,
-  createServerClient,
-} from "@/lib/contract-client.server";
+import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
 
 // item B — localized labels + tones for the StorageUsageCard breakdown rows.
@@ -60,15 +41,7 @@ const STORAGE_TYPE_LABELS: Record<
   subtitle: { label: "字幕文件", tone: "neutral" },
 };
 
-export default async function SettingsRoutePage({
-  searchParams,
-}: {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  // [T-063a] ?tab= → 初始页签(301 深链:positioning/calibration/automations/account)。
-  const params = (await searchParams) ?? {};
-  const rawTab = Array.isArray(params.tab) ? params.tab[0] : params.tab;
-
+export default async function SettingsRoutePage() {
   // Resolve the request's session → ctx (the (creator) layout already guarded
   // it). Read the account card from the real `settings.get` op under that ctx
   // (user-scoped). Fall back to the session user DTO, then to the fixture, so
@@ -229,33 +202,6 @@ export default async function SettingsRoutePage({
     }
   }
 
-  // [T-063e] 深度化页签装配(session-scoped client,无 session 走 singleton seam):
-  //  - 定位:embedded 竖排设置形态(9-facet 手改 + 版本链 + 进化深链),随弹窗内容区自然滚动;
-  //  - 校准:规则库 + 待采纳建议 + 校准历史(loadCalibrationSettings 在工作台三读上加建议列表)。
-  const scopedClient = session ? createServerClient(session.ctx) : defaultClient;
-  const calibration = await loadCalibrationSettings(scopedClient);
-
-  const positioningPanel = (
-    <PositioningCenterPage
-      embedded
-      {...(session ? { client: scopedClient } : {})}
-    />
-  );
-  const calibrationPanel = (
-    <CalibrationSettingsPanel
-      rubric={calibration.rubric}
-      suggestions={calibration.suggestions}
-      overview={calibration.overview}
-      subjectTitles={calibration.subjectTitles}
-    />
-  );
-  const automationsPanel = (
-    <AutomationsPage {...(session ? { client: scopedClient } : {})} />
-  );
-  const accountsPanel = (
-    <AccountManagerPage {...(session ? { client: scopedClient } : {})} />
-  );
-
   return (
     <SettingsPage
       identity={identity}
@@ -263,11 +209,6 @@ export default async function SettingsRoutePage({
       storage={storage}
       multimodalModels={multimodalModels}
       preferences={preferences}
-      initialTab={rawTab}
-      positioningPanel={positioningPanel}
-      calibrationPanel={calibrationPanel}
-      automationsPanel={automationsPanel}
-      accountsPanel={accountsPanel}
     />
   );
 }

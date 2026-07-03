@@ -3,7 +3,7 @@
  *
  * Structure (D-002, D-003, D-004, D-005):
  *  - Brand
- *  - PrimaryNav ([T-063a] four approved items in fixed order: 今日台/作品/库/设置)
+ *  - PrimaryNav (seven approved items in fixed order)
  *  - ContextSection (current project / quick access, when present)
  *  - AssistantPromoCard with two content variants: `assistant` (default)
  *    and `storage` (used by the Assets Center per D-003)
@@ -63,19 +63,25 @@ interface NavEntry {
   readonly match: (pathname: string) => boolean;
 }
 
-// [T-063a] IA 收敛(北极星 SPEC §1):11 项部门式导航 → 4 面。
-//  - 今日台 `/`     — 今天干什么(行动队列,T-063b 重构);
-//  - 作品 `/projects` — 东西在哪做(候选/进行中/已发布/排期 全生命周期 tab);
-//  - 库 `/library`   — 攒下了什么(素材/知识/经验三 tab);
-//  - 设置 `/settings` — 系统怎么配(吸收 定位/校准/任务/账号 页签)。
-// 旧一级路由(/topics /publishing /calendar /assets /knowledge /experience
-// /positioning /calibration /automations /accounts)已 301 到对应 tab,
-// feature 组件零删除(删壳不删肉,SPEC §4)。
 const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
-  { id: "dashboard", label: "今日台", href: "/", icon: creatorIcons.dashboard, match: matchExact("/") },
-  { id: "projects", label: "作品", href: "/projects", icon: creatorIcons.projects, match: matchPrefix("/projects") },
-  { id: "library", label: "库", href: "/library", icon: creatorIcons.library, match: matchPrefix("/library") },
-  { id: "settings", label: "设置", href: "/settings", icon: creatorIcons.settings, match: matchPrefix("/settings") },
+  { id: "dashboard", label: "首页", href: "/", icon: creatorIcons.dashboard, match: matchExact("/") },
+  // 定位中心 — the upstream constraint source (七步①②, SPEC §3.4): 排在「项目」前.
+  { id: "positioning", label: "定位中心", href: "/positioning", icon: creatorIcons.positioning, match: matchExact("/positioning") },
+  // 选题候选池 — 七步③, SPEC §5.5: AI/受众信号 → 按综合评分排序的待选选题. 紧跟定位中心
+  // (定位→选题→项目 的上游顺序): 定位约束选题, 选题落地为项目. [T-052 裁决③] 排序措辞去变现化。
+  { id: "topics", label: "选题", href: "/topics", icon: creatorIcons.topics, match: matchExact("/topics") },
+  // 校准闭环 — 七步⑤⑥, §6.5: 发布前盲预测 + 回流校准评分维度. 紧跟选题.
+  { id: "calibration", label: "校准", href: "/calibration", icon: creatorIcons.check, match: matchExact("/calibration") },
+  { id: "projects", label: "项目", href: "/projects", icon: creatorIcons.projects, match: matchPrefix("/projects") },
+  { id: "knowledge", label: "知识库", href: "/knowledge", icon: creatorIcons.knowledge, match: matchExact("/knowledge") },
+  { id: "assets", label: "素材中心", href: "/assets", icon: creatorIcons.assets, match: matchExact("/assets") },
+  { id: "publishing", label: "发布中心", href: "/publishing", icon: creatorIcons.publishing, match: matchExact("/publishing") },
+  // 任务中心 — 七步下游数据采集(T-007, data-source-pipeline §9 D6): 周期抓「自己作品指标/评论」
+  // 的调度作业, 数据落库供 Dashboard/选题消费. 归在运营/采集类, 紧跟发布中心.
+  { id: "automations", label: "任务中心", href: "/automations", icon: creatorIcons.automations, match: matchPrefix("/automations") },
+  // MONE-01:变现中心移除/隐藏(太难且不影响飞轮,见 lifecycle spec §4)。路由保留但无入口。
+  { id: "experience", label: "经验沉淀", href: "/experience", icon: creatorIcons.experience, match: matchExact("/experience") },
+  { id: "settings", label: "设置", href: "/settings", icon: creatorIcons.settings, match: matchExact("/settings") },
 ];
 
 // ---------------------------------------------------------------------------

@@ -104,10 +104,8 @@ describe("KnowledgePage", () => {
     await renderKnowledge();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const active = within(nav).getByRole("link", { current: "page" });
-    // [T-063a] IA 收敛:/knowledge 已无一级导航项(301 → /library?tab=knowledge);
-    // 旧 pathname 一瞬渲染时激活项回退「今日台」。
-    expect(active).toHaveAttribute("href", "/");
-    expect(active.textContent?.trim()).toBe("今日台");
+    expect(active).toHaveAttribute("href", "/knowledge");
+    expect(active.textContent?.trim()).toBe("知识库");
   });
 
   it("renders the KnowledgeToolbar with search and filter affordances", async () => {

@@ -99,14 +99,8 @@ function writeUrlQuery(next: string): void {
 
 export function KnowledgeInteractiveRegion({
   viewModel,
-  embedded = false,
 }: {
   readonly viewModel: KnowledgeViewModel;
-  /**
-   * [T-063d] 内嵌 /library「知识」tab 时,标签筛选链接改指
-   * /library?tab=knowledge&tag=(旧 /knowledge 路由 301 会丢 query,筛选会断)。
-   */
-  readonly embedded?: boolean;
 }) {
   // Initialise the query from the URL `?q=` when one is present. We read
   // the URL directly (not via `useRouter`/`useSearchParams`) so the
@@ -192,7 +186,7 @@ export function KnowledgeInteractiveRegion({
             </span>
           </span>
           <Link
-            href={embedded ? "/library?tab=knowledge" : "/knowledge"}
+            href="/knowledge"
             data-slot="knowledge-tag-filter-clear"
             className="text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           >
@@ -209,7 +203,6 @@ export function KnowledgeInteractiveRegion({
         snippets={viewModel.snippets}
         selectedId={selectedId}
         onSelectRow={setSelectedId}
-        embedded={embedded}
       />
 
       {/* F1c — inline 添加笔记/修订 affordance, revealed when a recent row is
@@ -367,7 +360,6 @@ function KnowledgeGrid({
   snippets,
   selectedId,
   onSelectRow,
-  embedded = false,
 }: {
   readonly categories: ReadonlyArray<KnowledgeCategory>;
   readonly recent: ReadonlyArray<KnowledgeRow>;
@@ -377,7 +369,6 @@ function KnowledgeGrid({
   readonly snippets: ReadonlyArray<KnowledgeSnippet>;
   readonly selectedId: string | null;
   readonly onSelectRow: (id: string) => void;
-  readonly embedded?: boolean;
 }) {
   return (
     <div
@@ -395,7 +386,6 @@ function KnowledgeGrid({
         memoryInsights={memoryInsights}
         unsorted={unsorted}
         snippets={snippets}
-        embedded={embedded}
       />
     </div>
   );
@@ -552,13 +542,11 @@ function InsightRail({
   memoryInsights,
   unsorted,
   snippets,
-  embedded = false,
 }: {
   readonly popularTags: ReadonlyArray<KnowledgeTag>;
   readonly memoryInsights: ReadonlyArray<KnowledgeInsight>;
   readonly unsorted: ReadonlyArray<KnowledgeUnsorted>;
   readonly snippets: ReadonlyArray<KnowledgeSnippet>;
-  readonly embedded?: boolean;
 }) {
   return (
     <div
@@ -566,7 +554,7 @@ function InsightRail({
       aria-label="知识洞察"
       className="flex flex-col gap-card-gap"
     >
-      <PopularTags tags={popularTags} embedded={embedded} />
+      <PopularTags tags={popularTags} />
       <MemoryInsights items={memoryInsights} />
       <UnsortedItems items={unsorted} />
       <ReusableSnippets items={snippets} />
@@ -574,13 +562,7 @@ function InsightRail({
   );
 }
 
-function PopularTags({
-  tags,
-  embedded = false,
-}: {
-  tags: ReadonlyArray<KnowledgeTag>;
-  embedded?: boolean;
-}) {
+function PopularTags({ tags }: { tags: ReadonlyArray<KnowledgeTag> }) {
   return (
     <SectionCard title="热门标签" description="使用频率最高的标签">
       <ul
@@ -605,11 +587,7 @@ function PopularTags({
             {/* KNOW-13:`?tag=` 已被读侧真消费(route page → knowledge-data 用
                 taxonomy.entityTags 过滤 recent 列表),chip 链回 `?tag=`。 */}
             <Link
-              href={
-                embedded
-                  ? `/library?tab=knowledge&tag=${encodeURIComponent(tag.name)}`
-                  : `/knowledge?tag=${encodeURIComponent(tag.name)}`
-              }
+              href={`/knowledge?tag=${encodeURIComponent(tag.name)}`}
               className="inline-flex rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               <TagChip label={tag.name} tone={tag.tone} size="sm" />

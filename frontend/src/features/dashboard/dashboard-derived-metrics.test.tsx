@@ -1,24 +1,36 @@
 /**
- * Derived-metric tests for the dashboard selector (Increment 4 / R1-4).
+ * Derived-metric tests for the Dashboard (Increment 4 / R1-4 + R1-7).
  *
- * `buildDashboardViewModel()` 仍是今日台读侧的组成口径(getDashboard DTO 同形),
- * 其聚合必须从 canonical dataset 派生而非散落字面量:
+ * The summary metrics must be DERIVED from the canonical dataset rather
+ * than carried as disconnected literals, so each card reconciles with a
+ * fixture aggregation:
  *  - 累计播放 == sum of the `views` MetricValue rows,
  *  - 进行中项目 == count of projects with status "active",
- *  - 素材库 == asset count。
- *
- * [T-063b] 今日台重构后 5 指标行不再上屏(指标收窄为一条趋势行),但 selector
- * 口径继续被 dataOverview/趋势行消费,聚合正确性仍在此锁定。原
- * SidebarAssistantCard 渲染断言随卡片移除删除(Copilot 入口在队列空态深链)。
+ *  - 素材库 == asset count.
+ * The dashboard also renders the spec-required SidebarAssistantCard.
  *
  * Determinism: every aggregation is a pure reduction over the canonical
  * dataset — no Date.now / Math.random / network.
  */
 
-import { describe, expect, it } from "vitest";
+import * as React from "react";
+import { cleanup, render } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
+
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...rest }: { children: ReactNode; href: string }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
 
 import { buildDashboardViewModel } from "@/fixtures/selectors";
 import { canonicalDataset } from "@/fixtures/canonical";
+import { DashboardPage } from "./dashboard-page";
+
+afterEach(() => cleanup());
 
 function sumViews(): number {
   return canonicalDataset.metricValues
@@ -68,5 +80,16 @@ describe("Dashboard derived metrics", () => {
     const vm = buildDashboardViewModel();
     const total = vm.recentPublications.reduce((s, r) => s + r.engagement, 0);
     expect(total).toBeGreaterThan(0);
+  });
+
+  it("renders the spec-required SidebarAssistantCard", async () => {
+    // `DashboardPage` is an async Server Component; drive it through the
+    // `viewModel?` override seam with the fixture-composed view model and
+    // resolve it to a concrete element so the render stays synchronous.
+    const element = await DashboardPage({ viewModel: buildDashboardViewModel() });
+    const { container } = render(element);
+    const card = container.querySelector('[data-slot="sidebar-assistant-card"]');
+    expect(card).not.toBeNull();
+    expect(card!.textContent ?? "").toContain("AI 助手");
   });
 });

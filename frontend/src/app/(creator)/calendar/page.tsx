@@ -1,12 +1,30 @@
 /**
- * [T-063a] IA 收敛:旧一级路由 `/calendar` 永久重定向(301/308)→ `/projects?tab=schedule`。
+ * 内容日历 / 发布节奏 route entrypoint (七步⑦ · §7.2).
  *
- * 北极星 SPEC §1:排期是作品的时间视图,并入作品页「排期」tab。原页面的 feature 组件文件全部保留(删壳不删肉),
- * 由新宿主 tab 内嵌复用;此处只改 app 路由层。带参深链(如 ?sort=)不随迁,
- * 落到目标 tab 即可(SPEC §3 T-063a)。书签/深链永久可用(SPEC §4-3)。
+ * The (creator) layout supplies the shared AppShell (Sidebar + TopHeader) and the
+ * global Header is configured for `/calendar` in `shell-router.tsx`. The page itself is
+ * a Server Component that renders the content-calendar feature shell, which reads
+ * `accounts.list` + `accounts.calendar.list` + `accounts.cadence.get` +
+ * `accounts.cadence.attainment` (real SQL via the composite transport) for the
+ * active account.
+ *
+ * Session-scoped read (lane center-pages): the route resolves the request's
+ * session and constructs `createServerClient(session.ctx)` so the active account
+ * + its calendar/cadence/attainment stay scoped to the logged-in user — a
+ * brand-new empty account reads empty, not the user-zyongzhu seed. With no
+ * session the singleton seam (the feature's own default client) renders so
+ * SSR/tests never crash.
+ *
+ * Visual baseline: `/calendar` is "暂不纳入视觉门禁" until the stage-12 re-baseline (C-5).
  */
-import { permanentRedirect } from "next/navigation";
+import { ContentCalendarPage } from "@/features/content-calendar/content-calendar-page";
+import { createServerClient } from "@/lib/contract-client.server";
+import { resolveSession } from "@/lib/session.server";
 
-export default function Page(): never {
-  permanentRedirect("/projects?tab=schedule");
+export default async function CalendarRoutePage() {
+  const session = await resolveSession();
+  if (!session) {
+    return <ContentCalendarPage />;
+  }
+  return <ContentCalendarPage client={createServerClient(session.ctx)} />;
 }

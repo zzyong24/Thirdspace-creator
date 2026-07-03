@@ -12,8 +12,6 @@ const requiredCreatorIconKeys = [
   "topics",
   "projects",
   "knowledge",
-  // [T-063a] 「库」一级导航图标。
-  "library",
   "assets",
   "publishing",
   "automations",

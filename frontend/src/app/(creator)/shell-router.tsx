@@ -36,7 +36,7 @@ import { CopilotOverlayBridge } from "@/components/overlays/copilot-overlay-brid
 import { canonicalDataset } from "@/fixtures/canonical";
 import type { NotificationsViewModel } from "@/fixtures/selectors";
 import {
-  CurrentProjectSetterProvider,
+  useCurrentProjectOverride,
   type CurrentProjectOverride,
 } from "./current-project-context";
 
@@ -148,23 +148,11 @@ export function resolveRoute(
   if (pathname === "/") {
     return {
       headerMode: "global",
-      // [T-063a] 首页 → 今日台(北极星 IA:回答「今天干什么」;行动队列在 T-063b 落地)。
-      pageTitle: "今日台",
-      pageDescription: "今天干什么——行动队列与真值趋势",
+      pageTitle: "首页",
+      pageDescription: "个人创作工作台总览",
       contextualCardVariant: "assistant",
     };
   }
-  // [T-063a] 库:素材 + 知识 + 经验 三 tab 的统一资产面(回答「攒下了什么」)。
-  if (pathname === "/library") {
-    return {
-      headerMode: "global",
-      pageTitle: "库",
-      pageDescription: "素材、知识与经验——你攒下的一切",
-      contextualCardVariant: "assistant",
-    };
-  }
-  // [T-063a] 以下旧一级路由已在 app 路由层 301(→ /projects·/library·/settings 对应
-  // tab);resolveRoute 条目保留,作为跳转前一瞬间渲染的标题兜底(书签/深链不断)。
   if (pathname === "/positioning") {
     return {
       headerMode: "global",
@@ -192,9 +180,8 @@ export function resolveRoute(
   if (pathname === "/projects") {
     return {
       headerMode: "global",
-      // [T-063a] 项目 → 作品:候选/进行中/已发布/排期 全生命周期 tab(北极星 IA §1)。
-      pageTitle: "作品",
-      pageDescription: "候选 → 进行中 → 已发布 → 排期,一条作品的全生命周期",
+      pageTitle: "项目",
+      pageDescription: "所有项目及其当前阶段",
       contextualCardVariant: "assistant",
     };
   }
@@ -263,23 +250,6 @@ export function resolveRoute(
     // 左下角指示器 + header 的标题:真标题优先,否则维持中性「当前项目」/「项目概览」。
     const sidebarLabel = realTitle || "当前项目";
 
-    // [T-054 组B] 侧栏「当前项目」区只在拿到真标题时渲染 —— 没有真标题时,item 会退成与
-    // section 标题一模一样的「当前项目」,形成截图里的两行重复占位(规范 §4 明令收敛)。
-    // 诚实兜底 = 整个区不显示,而不是显示一行重复的中性占位。
-    const sidebarContext: SidebarContextSection | undefined = realTitle
-      ? {
-          heading: "当前项目",
-          items: [
-            {
-              id: projectId,
-              label: sidebarLabel,
-              href: `/projects/${projectId}`,
-              indicator: "active",
-            },
-          ],
-        }
-      : undefined;
-
     if (!stage) {
       // [T-055a] 稿面工作台:页面自带顶条(标题/成熟度/主行动),shell 不再叠
       // 「项目概览」大标题头(双头冗余);走 contentFill 全高布局。
@@ -288,7 +258,17 @@ export function resolveRoute(
         pageTitle: "",
         contextualCardVariant: "assistant",
         project: identity,
-        sidebarContext,
+        sidebarContext: {
+          heading: "当前项目",
+          items: [
+            {
+              id: projectId,
+              label: sidebarLabel,
+              href: pathname,
+              indicator: "active",
+            },
+          ],
+        },
       };
     }
     return {
@@ -299,7 +279,17 @@ export function resolveRoute(
       projectStages: buildProjectStages(stage),
       primaryActionLabel: resolveWorkspacePrimaryAction(stage),
       secondaryActionLabel: "分享",
-      sidebarContext,
+      sidebarContext: {
+        heading: "当前项目",
+        items: [
+          {
+            id: projectId,
+            label: sidebarLabel,
+            href: `/projects/${projectId}`,
+            indicator: "active",
+          },
+        ],
+      },
     };
   }
   if (pathname === "/knowledge") {
@@ -391,11 +381,9 @@ export function ShellRouter({
   overlayMasked = false,
 }: ShellRouterProps) {
   const pathname = usePathname() ?? "/";
-  // T-039b item② / [T-054 组B]:项目路由下的真项目 identity 由 projects/[projectId]/layout.tsx
-  // 的 CurrentProjectProvider **上报**进来(它在本组件之下,context 只向下流,直接读永远 null ——
-  // 这正是侧栏「当前项目/当前项目」重复的根因)。本组件持有 state + 向下发 setter。
-  const [projectOverride, setProjectOverride] =
-    React.useState<CurrentProjectOverride | null>(null);
+  // T-039b item②:项目路由下读真项目 identity(由 projects/[projectId]/layout.tsx 灌进 context)。
+  // 非项目路由无 Provider → null → resolveRoute 走原 fixture 逻辑(向后兼容,不破坏现有路由)。
+  const projectOverride = useCurrentProjectOverride();
   const resolution = resolveRoute(pathname, projectOverride);
 
   return (
@@ -415,9 +403,7 @@ export function ShellRouter({
       contentFill={isContentFillRoute(pathname)}
       overlayMasked={hasInterceptingModal || overlayMasked}
     >
-      <CurrentProjectSetterProvider onChange={setProjectOverride}>
-        {children}
-      </CurrentProjectSetterProvider>
+      {children}
       {/* The Copilot overlay controller is wrapped in a Suspense boundary
           because it consumes `useSearchParams()`, which Next.js requires
           during prerender. The fallback is `null` so the panel only

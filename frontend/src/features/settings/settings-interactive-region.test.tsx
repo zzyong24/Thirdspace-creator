@@ -40,7 +40,7 @@ vi.mock("@/lib/contract-client", () => ({
   },
 }));
 
-import { SettingsRegion } from "./settings-interactive-region";
+import { SettingsDialog } from "./settings-interactive-region";
 import type { SettingsViewModel } from "./settings-page";
 
 const VM: SettingsViewModel = {
@@ -128,17 +128,18 @@ beforeEach(() => {
 
 afterEach(() => cleanup());
 
-// [T-054 组 A] SettingsRegion 是整页布局(Dialog 壳已退役),渲在 render 容器内;
-// 沿用 document 查询(容器就在 document 里)。每个 tab panel 都挂载(非活跃 hidden),
-// 所以无论当前页签是哪个,所有控件都在 DOM 里。
-function renderRegion(vm: SettingsViewModel = VM) {
-  render(<SettingsRegion viewModel={vm} />);
+// SettingsDialog renders through a Radix Portal (mounted on document.body), so
+// queries go through `document` rather than the render container. The dialog is
+// open by default and every tab panel is force-mounted, so all controls are in
+// the DOM regardless of the active tab.
+function renderDialog(vm: SettingsViewModel = VM) {
+  render(<SettingsDialog viewModel={vm} />);
   return document;
 }
 
 describe("Settings island wiring (needs-backend → op + refresh)", () => {
   it("toggling 自动保存 calls patchPreferences({ autosaveEnabled }) then router.refresh()", async () => {
-    const doc = renderRegion();
+    const doc = renderDialog();
     const sw = doc.querySelector(
       '[data-slot="pref-autosave-switch"]',
     ) as HTMLElement;
@@ -155,7 +156,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("saving an edited 昵称 calls patchProfile({ displayName }) then router.refresh()", async () => {
-    const doc = renderRegion();
+    const doc = renderDialog();
     const input = doc.querySelector(
       '[data-slot="account-nickname-input"]',
     ) as HTMLInputElement;
@@ -179,7 +180,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("toggling 使用情况分析 PATCHes only its own key", async () => {
-    const doc = renderRegion();
+    const doc = renderDialog();
     const sw = doc.querySelector(
       '[data-slot="pref-analytics-switch"]',
     ) as HTMLElement;
@@ -192,7 +193,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("saving the model form PUTs the whole default config (provider/model/baseUrl/format/secret/temperature)", async () => {
-    const doc = renderRegion();
+    const doc = renderDialog();
     const provider = doc.querySelector(
       '[data-slot="model-provider-input"]',
     ) as HTMLInputElement;
@@ -243,7 +244,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   // --- Multimodal model config (SPEC 2026-07-01 M3) -------------------------
 
   it("saving the 文生图 form PUTs the image.generate capability (provider/model/baseUrl/secret, no apiFormat/temperature)", async () => {
-    const doc = renderRegion();
+    const doc = renderDialog();
     const provider = doc.querySelector(
       '[data-slot="multimodal-image-provider-input"]',
     ) as HTMLInputElement;
@@ -292,7 +293,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("saving the 文生视频 form PUTs the video.generate capability", async () => {
-    const doc = renderRegion();
+    const doc = renderDialog();
     const provider = doc.querySelector(
       '[data-slot="multimodal-video-provider-input"]',
     ) as HTMLInputElement;
@@ -336,7 +337,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         vision: VM.multimodalModels.vision,
       },
     };
-    const doc = renderRegion(VM_MULTIMODAL);
+    const doc = renderDialog(VM_MULTIMODAL);
     // Read-back: the stored provider/model/baseUrl render into the inputs.
     const provider = doc.querySelector(
       '[data-slot="multimodal-image-provider-input"]',
@@ -371,7 +372,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   // --- Transcribe (ASR) model config (SPEC 2026-07-01 §5.1, T-030-D1) --------
 
   it("renders the 逐字稿(audio) card without regressing the image/video cards", async () => {
-    const doc = renderRegion();
+    const doc = renderDialog();
     // 逐字稿(audio)卡渲出,capability=transcribe.audio。
     const audioCard = doc.querySelector('[data-slot="multimodal-audio-card"]');
     expect(audioCard).not.toBeNull();
@@ -399,7 +400,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
   });
 
   it("saving the 逐字稿 form PUTs the transcribe.audio capability (provider/model/baseUrl/secret)", async () => {
-    const doc = renderRegion();
+    const doc = renderDialog();
     const provider = doc.querySelector(
       '[data-slot="multimodal-audio-provider-input"]',
     ) as HTMLInputElement;
@@ -447,7 +448,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       ...VM,
       model: { ...VM.model, hasSecret: true },
     };
-    const doc = renderRegion(VM_WITH_SECRET);
+    const doc = renderDialog(VM_WITH_SECRET);
     const modelName = doc.querySelector(
       '[data-slot="model-name-input"]',
     ) as HTMLInputElement;
@@ -478,7 +479,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         ],
       },
     };
-    const doc = renderRegion(VM_STORAGE);
+    const doc = renderDialog(VM_STORAGE);
     const input = doc.querySelector(
       '[data-slot="storage-root-path-input"]',
     ) as HTMLInputElement;
@@ -512,7 +513,7 @@ describe("AccountBindingCard (T-032a — 抖音扫码登录入口 + 徽标)", ()
   it("已连接(status → loggedIn=true): 显「已连接」徽标 + 「重新扫码」按钮", async () => {
     // 挂载后拉的 status 决定徽标(SSR 默认为 false;探针返 true → 翻已连接)。
     mockClient.statusDouyin.mockResolvedValue({ loggedIn: true });
-    const doc = renderRegion();
+    const doc = renderDialog();
 
     const badge = doc.querySelector(
       '[data-slot="douyin-binding-status"]',
@@ -533,7 +534,7 @@ describe("AccountBindingCard (T-032a — 抖音扫码登录入口 + 徽标)", ()
 
   it("未连接(status → loggedIn=false): 显「未连接」徽标 + 「连接抖音(扫码)」按钮", async () => {
     mockClient.statusDouyin.mockResolvedValue({ loggedIn: false });
-    const doc = renderRegion();
+    const doc = renderDialog();
 
     const badge = doc.querySelector(
       '[data-slot="douyin-binding-status"]',
@@ -552,7 +553,7 @@ describe("AccountBindingCard (T-032a — 抖音扫码登录入口 + 徽标)", ()
     // 初始未连接;点击后 loginDouyin 返 true,随后重拉 status 也返 true → 徽标翻已连接。
     mockClient.statusDouyin.mockResolvedValue({ loggedIn: false });
     mockClient.loginDouyin.mockResolvedValue({ loggedIn: true });
-    const doc = renderRegion();
+    const doc = renderDialog();
 
     const badge = doc.querySelector(
       '[data-slot="douyin-binding-status"]',
@@ -598,7 +599,7 @@ describe("AccountBindingCard (T-032a — 抖音扫码登录入口 + 徽标)", ()
   it("扫码超时(loginDouyin → loggedIn=false): 提示重试, 徽标保持未连接", async () => {
     mockClient.statusDouyin.mockResolvedValue({ loggedIn: false });
     mockClient.loginDouyin.mockResolvedValue({ loggedIn: false });
-    const doc = renderRegion();
+    const doc = renderDialog();
 
     const badge = doc.querySelector(
       '[data-slot="douyin-binding-status"]',

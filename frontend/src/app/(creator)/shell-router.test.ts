@@ -13,38 +13,8 @@ describe("isContentFillRoute", () => {
     expect(isContentFillRoute("/")).toBe(false);
     expect(isContentFillRoute("/projects")).toBe(false);
     expect(isContentFillRoute("/settings")).toBe(false);
-    // [T-063a] /library 与原 /knowledge 一样整页滚动(tab 内嵌区自管内部滚动)。
-    expect(isContentFillRoute("/library")).toBe(false);
     // 仅精确匹配,不波及子路由 (项目工作台另有自己的布局)。
     expect(isContentFillRoute("/topics/anything")).toBe(false);
-  });
-});
-
-// [T-063a] IA 收敛:4 面标题/描述 + /library 新条目;旧路由条目保留(301 前兜底)。
-describe("resolveRoute — 4 面 IA(T-063a)", () => {
-  it("/ → 今日台", () => {
-    const res = resolveRoute("/");
-    expect(res.pageTitle).toBe("今日台");
-  });
-
-  it("/projects → 作品(全生命周期语义)", () => {
-    const res = resolveRoute("/projects");
-    expect(res.pageTitle).toBe("作品");
-    expect(res.pageDescription).toContain("全生命周期");
-  });
-
-  it("/library → 库(素材/知识/经验)", () => {
-    const res = resolveRoute("/library");
-    expect(res.pageTitle).toBe("库");
-    expect(res.pageDescription).toContain("素材");
-    expect(res.contextualCardVariant).toBe("assistant");
-  });
-
-  it("旧路由 resolveRoute 条目保留(301 落地前的瞬间渲染兜底)", () => {
-    expect(resolveRoute("/topics").pageTitle).toBe("选题候选池");
-    expect(resolveRoute("/publishing").pageTitle).toBe("发布中心");
-    expect(resolveRoute("/knowledge").pageTitle).toBe("知识库");
-    expect(resolveRoute("/positioning").pageTitle).toBe("定位中心");
   });
 });
 
@@ -95,22 +65,20 @@ describe("resolveRoute", () => {
     expect(res.sidebarContext?.items?.[0]?.label).toBe("上下文工程");
   });
 
-  // [T-054 组B] 无真标题时整个「当前项目」区不渲染 —— 原来的中性占位 item 与 section
-  // 标题一字不差,在侧栏形成「当前项目/当前项目」两行重复(规范 §4 明令收敛)。
-  it("无 override(真项目不在 fixture)→ 不渲染侧栏「当前项目」区(不留重复占位)", () => {
+  it("无 override(真项目不在 fixture)→ 退回中性「当前项目」(诚实兜底,不硬凑)", () => {
     const res = resolveRoute("/projects/proj-real-xyz/research");
-    // fixture 查不到 → 不编造标题,也不显示与 heading 重复的占位行。
-    expect(res.sidebarContext).toBeUndefined();
+    // fixture 查不到 → 指示器退回中性态,不编造标题。
+    expect(res.sidebarContext?.items?.[0]?.label).toBe("当前项目");
   });
 
-  it("override 的 routeParam 与 URL 段不匹配 → 不采信 override(防串味),不留重复占位", () => {
+  it("override 的 routeParam 与 URL 段不匹配 → 不采信 override(防串味),退回 fixture/中性", () => {
     const stale = {
       routeParam: "other-project",
       projectId: "other-project",
       title: "串味的标题",
     };
     const res = resolveRoute("/projects/proj-real-xyz/research", stale);
-    expect(res.sidebarContext).toBeUndefined();
+    expect(res.sidebarContext?.items?.[0]?.label).toBe("当前项目");
     expect(res.project?.title).not.toBe("串味的标题");
   });
 

@@ -728,20 +728,13 @@ export function CreateCandidateForm() {
 
 export function CandidateSortControl({
   sort,
-  embedded = false,
 }: {
   readonly sort: CandidateSortKey;
-  /** [T-063c] true = 在作品页「候选」tab 内嵌,排序导航保持在 /projects?tab=candidates。 */
-  readonly embedded?: boolean;
 }) {
   const { router } = useMutation();
   function onChange(next: string) {
     if (next === sort) return;
-    router.push(
-      embedded
-        ? `/projects?tab=candidates&sort=${next}`
-        : `/topics?sort=${next}`,
-    );
+    router.push(`/topics?sort=${next}`);
   }
   return (
     <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -1088,11 +1081,9 @@ export function IdeaDraftForm() {
 function PoolColumn({
   pool,
   sort,
-  embedded = false,
 }: {
   readonly pool: CandidateResource[];
   readonly sort: CandidateSortKey;
-  readonly embedded?: boolean;
 }) {
   const [q, setQ] = React.useState("");
   const filtered = q.trim()
@@ -1124,7 +1115,7 @@ function PoolColumn({
             className="h-8 pl-8 text-xs"
           />
         </span>
-        <CandidateSortControl sort={sort} embedded={embedded} />
+        <CandidateSortControl sort={sort} />
       </div>
 
       <ul
@@ -1153,17 +1144,10 @@ export function TopicsWorkspace({
   candidates,
   sources,
   sort,
-  embedded = false,
 }: {
   readonly candidates: CandidateResource[];
   readonly sources: TopicsOverviewResource["sources"];
   readonly sort: CandidateSortKey;
-  /**
-   * [T-063c] 内嵌模式(作品页「候选」tab):候选卡是主角 —— 去掉左侧来源大栏,
-   * 收敛为「候选池 + 详情」两栏(来源/漏斗计数由页头摘要行承接);排序导航保持
-   * 在 /projects?tab=candidates。独立 /topics 形态(三栏)原样保留 —— 删壳不删肉。
-   */
-  readonly embedded?: boolean;
 }) {
   const pool = candidates.filter((c) => c.status !== "dropped");
   // The user's explicit pick (null until they click). Derived during render — the
@@ -1186,16 +1170,11 @@ export function TopicsWorkspace({
       {/* flex-1 min-h-0 → 三栏占满中间剩余高度;每列各自框内滚动 (列内裁切而非整页滚)。
           窄屏 (无 lg) 退回单列纵向、由外层页面统一处理高度。 */}
       <div
-        data-testid={embedded ? "topics-two-column" : "topics-three-column"}
-        className={cn(
-          "grid min-h-0 flex-1 grid-cols-1 gap-4",
-          embedded
-            ? "lg:grid-cols-[minmax(0,1fr)_360px]"
-            : "lg:grid-cols-[240px_minmax(0,1fr)_360px]",
-        )}
+        data-testid="topics-three-column"
+        className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)_360px]"
       >
-        {embedded ? null : <SourcesColumn sources={sources} />}
-        <PoolColumn pool={pool} sort={sort} embedded={embedded} />
+        <SourcesColumn sources={sources} />
+        <PoolColumn pool={pool} sort={sort} />
         <CandidateDetailPanel candidate={selected} />
       </div>
     </SelectionCtx.Provider>

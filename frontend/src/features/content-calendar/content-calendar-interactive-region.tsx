@@ -28,7 +28,6 @@ import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { parseDouyinAwemeId, douyinVideoUrl } from "@/lib/douyin-link";
 import type {
   ContentCalendarEntryResource,
   PublishingCadenceResource,
@@ -140,11 +139,6 @@ export function EntryRow({
   const { pending, run } = useMutation();
   const [note, setNote] = React.useState(entry.note);
   const [plannedAt, setPlannedAt] = React.useState(entry.plannedAt);
-  // [T-055h③/T-063c] 标记已发布可带链接:条目挂着 ContentOutput 时,粘抖音链接
-  // 一并登记 publication(published + external_id 落库,幂等)。链接留空 = 只改
-  // 日历状态(原行为);解析不出编号则不动状态、就地提示(不做假登记)。
-  const [publishLink, setPublishLink] = React.useState("");
-  const [linkError, setLinkError] = React.useState(false);
 
   function saveEdits() {
     const body: { plannedAt?: string; note?: string } = {};
@@ -163,35 +157,6 @@ export function EntryRow({
   }
 
   function markPublished() {
-    const link = publishLink.trim();
-    const outputId = entry.contentOutputId;
-    // 带链接 + 挂着 output → 先登记 publication 再改日历状态;链接解析失败就地
-    // 提示并中止(状态不改,守「数据要真」)。
-    if (link && outputId) {
-      const awemeId = parseDouyinAwemeId(link);
-      if (!awemeId) {
-        setLinkError(true);
-        return;
-      }
-      setLinkError(false);
-      run(async () => {
-        await client.registerPublishedPublication({
-          params: { outputId },
-          query: undefined,
-          body: {
-            platform: "douyin",
-            externalId: awemeId,
-            externalUrl: douyinVideoUrl(awemeId, link),
-          },
-        });
-        return client.transitionEntry({
-          params: { entryId: entry.id },
-          query: undefined,
-          body: { status: "published" },
-        });
-      });
-      return;
-    }
     run(() =>
       client.transitionEntry({
         params: { entryId: entry.id },
@@ -249,29 +214,6 @@ export function EntryRow({
           </Button>
         </span>
       </div>
-      {/* [T-055h③] 挂着 ContentOutput 的排期条目:标记已发布可带抖音链接,一并登记 publication。 */}
-      {entry.contentOutputId && entry.status !== "published" ? (
-        <div className="flex flex-col gap-1">
-          <Input
-            aria-label={`发布链接 ${entry.id}`}
-            placeholder="抖音链接(可选)—— 填了会一并登记为已发布作品"
-            value={publishLink}
-            onChange={(e) => {
-              setPublishLink(e.target.value);
-              setLinkError(false);
-            }}
-            className="max-w-[36rem] text-xs"
-          />
-          {linkError ? (
-            <p
-              data-testid="calendar-publish-link-error"
-              className="text-[11px] text-destructive"
-            >
-              没解析出视频编号 —— 短链请先打开复制完整地址(含 /video/编号),或直接粘视频编号。
-            </p>
-          ) : null}
-        </div>
-      ) : null}
       <div className="flex flex-wrap items-center gap-2">
         <Input
           aria-label={`改期 ${entry.id}`}

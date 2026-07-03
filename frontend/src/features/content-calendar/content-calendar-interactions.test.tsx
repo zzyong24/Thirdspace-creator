@@ -24,10 +24,6 @@ const mockClient = {
   transitionEntry: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   deleteEntry: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   upsertCadence: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
-  // [T-055h③/T-063c] 标记已发布可带链接 → 一并登记 publication。
-  registerPublishedPublication: vi.fn(
-    (i: unknown): Promise<unknown> => Promise.resolve(i),
-  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -36,8 +32,6 @@ vi.mock("@/lib/contract-client", () => ({
     transitionEntry: (i: unknown) => mockClient.transitionEntry(i),
     deleteEntry: (i: unknown) => mockClient.deleteEntry(i),
     upsertCadence: (i: unknown) => mockClient.upsertCadence(i),
-    registerPublishedPublication: (i: unknown) =>
-      mockClient.registerPublishedPublication(i),
   },
 }));
 
@@ -131,49 +125,6 @@ describe("content-calendar island wiring", () => {
     };
     expect(arg.params.entryId).toBe("cal-1");
     expect(arg.body.status).toBe("published");
-  });
-
-  it("[T-055h③] 挂 output 的条目带链接标记 → 先 registerPublishedPublication 再 transitionEntry", async () => {
-    const entry = { ...PLANNED, contentOutputId: "output-1" };
-    render(<EntryRow entry={entry} />);
-    fireEvent.change(screen.getByLabelText(`发布链接 ${entry.id}`), {
-      target: {
-        value: "https://www.douyin.com/video/7423000000000000001",
-      },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "标记已发布" }));
-    await waitFor(() =>
-      expect(mockClient.registerPublishedPublication).toHaveBeenCalledTimes(1),
-    );
-    const reg = mockClient.registerPublishedPublication.mock.calls[0]![0] as {
-      params: { outputId: string };
-      body: { platform: string; externalId: string };
-    };
-    expect(reg.params.outputId).toBe("output-1");
-    expect(reg.body.platform).toBe("douyin");
-    expect(reg.body.externalId).toBe("7423000000000000001");
-    await waitFor(() =>
-      expect(mockClient.transitionEntry).toHaveBeenCalledTimes(1),
-    );
-  });
-
-  it("[T-055h③] 链接解析不出编号 → 就地提示,状态不改、不发写 op(不做假登记)", async () => {
-    const entry = { ...PLANNED, contentOutputId: "output-1" };
-    render(<EntryRow entry={entry} />);
-    fireEvent.change(screen.getByLabelText(`发布链接 ${entry.id}`), {
-      target: { value: "https://v.douyin.com/iAbCdEf/" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "标记已发布" }));
-    expect(
-      screen.getByTestId("calendar-publish-link-error"),
-    ).toBeInTheDocument();
-    expect(mockClient.registerPublishedPublication).not.toHaveBeenCalled();
-    expect(mockClient.transitionEntry).not.toHaveBeenCalled();
-  });
-
-  it("[T-055h③] 无 output 的条目不渲染链接输入,标记走原 transitionEntry", async () => {
-    render(<EntryRow entry={PLANNED} />);
-    expect(screen.queryByLabelText(`发布链接 ${PLANNED.id}`)).toBeNull();
   });
 
   it("删除 issues client.deleteEntry then router.refresh", async () => {

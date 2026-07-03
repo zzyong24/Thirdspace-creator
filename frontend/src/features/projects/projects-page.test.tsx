@@ -78,16 +78,6 @@ describe("ProjectsPage", () => {
     expect(heading.textContent ?? "").toMatch(/项目/);
   });
 
-  it("[T-063c] embedded 隐藏自带页头(作品页 tab 内嵌不双头),列表原样保留", async () => {
-    const { container } = await renderProjects({ embedded: true });
-    expect(
-      container.querySelector('[data-slot="projects-page-heading"]'),
-    ).toBeNull();
-    // 删壳不删肉:状态 tab 与项目列表仍在。
-    expect(container.querySelector('[data-slot="status-tabs"]')).not.toBeNull();
-    expect(container.querySelector('[data-slot="project-list"]')).not.toBeNull();
-  });
-
   it("renders the seven status tabs in the locked order", async () => {
     const { container } = await renderProjects();
     const tabsRegion = container.querySelector('[data-slot="status-tabs"]');
@@ -233,7 +223,6 @@ describe("ProjectsPage", () => {
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const active = within(nav).getByRole("link", { current: "page" });
     expect(active).toHaveAttribute("href", "/projects");
-    // [T-063a] IA 收敛:导航项「项目」→「作品」。
-    expect(active.textContent?.trim()).toBe("作品");
+    expect(active.textContent?.trim()).toBe("项目");
   });
 });

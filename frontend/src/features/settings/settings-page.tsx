@@ -1,12 +1,17 @@
 /**
  * Settings page (Task 25 / page-specs §17).
  *
- * The `/settings` global resource-center landing page. Composes:
+ * The `/settings` global resource-center landing page. Composes, in
+ * the spec order:
  *
  *   SettingsPage
- *   └── SettingsRegion               ([T-054 组 A] 整页:左竖排页签导航 +
- *       ├── settings-tabs             右内容区自然流;8 页签 = 账户/偏好/
- *       └── settings-panels           外观/模型配置/存储/定位/校准/任务)
+ *   ├── SettingsTabs                  (5 tabs in approved order)
+ *   └── SettingsGrid
+ *       ├── MainSettings              (AccountInformationCard →
+ *       │                               PreferenceSettingsCard →
+ *       │                               SystemSettingsCard)
+ *       └── SettingsRail              (StorageUsageCard →
+ *                                       ModelConfigurationCard)
  *
  * Layout invariants (page-specs §17, D-003, D-005):
  *  - The route is a global resource-center route. The Header region
@@ -15,10 +20,14 @@
  *  - The shared Sidebar uses the approved `assistant` contextual-card
  *    variant (D-003). The page itself does NOT render the global
  *    Sidebar — that lives in `(creator)/layout.tsx`.
- *  - The vertical tab nav renders 8 tabs in the approved order
- *    (账户/偏好/外观/模型配置/存储/定位/校准/任务,[T-063a] 收敛后)。
- *  - The content area is natural flow (文档类页签整页滚,design-standard
- *    §1);每个页签的卡纵向排列。
+ *  - The SettingsTabs strip renders 5 tabs in the approved order
+ *    (account / preferences / appearance / integrations / storage).
+ *  - The SettingsGrid is a two-column grid (left wide / right narrow).
+ *  - The MainSettings column stacks Account → Preference → System
+ *    vertically (page-specs §17 "账户信息、偏好设置、系统设置
+ *    纵向排列").
+ *  - The SettingsRail column stacks Storage → Model vertically
+ *    (page-specs §17 "存储空间、模型配置位于右栏").
  *  - Form rows follow the "label + control" compact pattern.
  *  - No team / permission / collaboration settings are added
  *    (D-001 + page-specs §17 "禁止改变": "不新增团队或权限设置").
@@ -39,7 +48,7 @@ import * as React from "react";
 
 import { buildSettingsViewModel } from "@/fixtures/selectors";
 
-import { SettingsRegion } from "./settings-interactive-region";
+import { SettingsDialog } from "./settings-interactive-region";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -100,19 +109,6 @@ export interface SettingsPageProps {
    * When supplied, 偏好卡初值 = 用户真值。Omitted in unit tests.
    */
   readonly preferences?: PreferencesState;
-  /**
-   * [T-063a] 初始页签(route 从 ?tab= 解析;/positioning /calibration /automations
-   * /accounts 301 落到对应页签)。非法/缺省落「账户」。
-   */
-  readonly initialTab?: string;
-  /**
-   * [T-063a] 三个降级页签 + 账户页签的内嵌核心区(route server 装配后传入;
-   * 删壳不删肉——原 feature 组件原样复用)。
-   */
-  readonly positioningPanel?: React.ReactNode;
-  readonly calibrationPanel?: React.ReactNode;
-  readonly automationsPanel?: React.ReactNode;
-  readonly accountsPanel?: React.ReactNode;
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */
@@ -312,11 +308,6 @@ export function SettingsPage({
   multimodalModels,
   douyinAccount,
   preferences,
-  initialTab,
-  positioningPanel,
-  calibrationPanel,
-  automationsPanel,
-  accountsPanel,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
@@ -331,11 +322,10 @@ export function SettingsPage({
   const vm = douyinAccount
     ? { ...withMultimodal, douyinAccount }
     : withMultimodal;
-  // [T-054 组 A] 设置为整页布局(design-standard §4 第一条):左侧竖排页签导航 +
-  // 右侧内容区自然流(SettingsRegion,随 shell 的 PageScrollArea 整页滚)。页头
-  // 走今日台 embedded 范式:global 模式的 shell TopHeader 是透明 overlay(标题
-  // sr-only、/settings 无 actions),可见的「设置 + 账号、偏好与系统」由页内渲
-  // 且只渲一次(§1 绝不双头)。Dialog 壳已退役。
+  // 设置改弹窗式:页面本身只留一个 marker (供 shell-router 路由 + 测试定位),
+  // 真正的内容是浮在其上的居中大弹窗 (SettingsDialog,Radix Portal 到 body)。
+  // 弹窗默认打开,关闭 → router.back() 回上一页。背景仍是 (creator) 的 AppShell
+  // (sidebar/header 真实数据读取不变)。
   return (
     <main
       data-app="creatoros"
@@ -343,23 +333,7 @@ export function SettingsPage({
       data-settings-id="settings-root"
       className="flex flex-col gap-section-gap"
     >
-      <header className="flex flex-col gap-0.5">
-        <h1
-          data-slot="settings-page-heading"
-          className="font-heading text-xl font-semibold text-foreground"
-        >
-          设置
-        </h1>
-        <p className="text-sm text-muted-foreground">账号、偏好与系统</p>
-      </header>
-      <SettingsRegion
-        viewModel={vm}
-        initialTab={initialTab}
-        positioningPanel={positioningPanel}
-        calibrationPanel={calibrationPanel}
-        automationsPanel={automationsPanel}
-        accountsPanel={accountsPanel}
-      />
+      <SettingsDialog viewModel={vm} />
     </main>
   );
 }

@@ -17,17 +17,12 @@ import { useRouter } from "next/navigation";
 
 import type { AssetType } from "@/types/domain";
 
-import { assetsHref } from "./assets-href";
-
 export function AssetsToolbarSearch({
   query,
   activeType,
-  embedded = false,
 }: {
   readonly query: string;
   readonly activeType: AssetType | null;
-  /** [T-063d] 内嵌时搜索导航到 /library?tab=assets&q=(301 会丢 query)。 */
-  readonly embedded?: boolean;
 }) {
   const router = useRouter();
   const [value, setValue] = React.useState(query);
@@ -44,9 +39,10 @@ export function AssetsToolbarSearch({
       if (activeType !== null) params.set("type", activeType);
       const trimmed = next.trim();
       if (trimmed.length > 0) params.set("q", trimmed);
-      router.push(assetsHref(params, embedded));
+      const qs = params.toString();
+      router.push(qs.length > 0 ? `/assets?${qs}` : "/assets");
     },
-    [router, activeType, embedded],
+    [router, activeType],
   );
 
   return (

@@ -11,12 +11,6 @@
 // 现有只读 op 拉真 {id,title}),用本 Provider 把真 identity 灌进 client;ShellRouter 用
 // `useCurrentProjectOverride()` 读它,`resolveRoute` 有真值时优先用真标题、fixture 仅兜底其余字段。
 // 非项目路由(无此 Provider 包裹)→ hook 返回 null → resolveRoute 走原 fixture 逻辑(不破坏现有路由)。
-//
-// [T-054 组B] 修「当前项目/当前项目」重复:CurrentProjectProvider 挂在 ShellRouter **之下**
-// (嵌套 layout 的 children 里),而 React context 只向下流 —— ShellRouter 直接 useContext
-// 永远读到 null,真标题从未到过侧栏。改为「上报」模式:ShellRouter 持有 override state 并向下
-// 提供一个 setter context;CurrentProjectProvider 除了照旧向下提供值,还用 effect 把值**上报**
-// 给 ShellRouter(卸载时清空),真项目标题这才真正流进侧栏指示器与顶部 header。
 
 import * as React from "react";
 
@@ -33,30 +27,6 @@ export interface CurrentProjectOverride {
 const CurrentProjectContext = React.createContext<CurrentProjectOverride | null>(
   null,
 );
-
-/**
- * 上报通道:ShellRouter 在 shell 顶层提供 setter,项目路由子树里的 CurrentProjectProvider
- * 通过它把真项目 identity 推**上**去(context 本身只向下流,值靠 effect 上报)。
- * 默认 no-op:测试/无 shell 场景下 Provider 照常工作,只是没人接收上报。
- */
-const CurrentProjectSetterContext = React.createContext<
-  (value: CurrentProjectOverride | null) => void
->(() => {});
-
-/** ShellRouter 用:向 children 提供上报 setter。 */
-export function CurrentProjectSetterProvider({
-  onChange,
-  children,
-}: {
-  readonly onChange: (value: CurrentProjectOverride | null) => void;
-  readonly children: React.ReactNode;
-}) {
-  return (
-    <CurrentProjectSetterContext.Provider value={onChange}>
-      {children}
-    </CurrentProjectSetterContext.Provider>
-  );
-}
 
 /**
  * 读当前项目 override —— ShellRouter 在项目路由下拿到真 {id,title},其它路由拿 null(走 fixture)。
@@ -78,20 +48,6 @@ export function CurrentProjectProvider({
   readonly value: CurrentProjectOverride | null;
   readonly children: React.ReactNode;
 }) {
-  // [T-054 组B] 把真项目 identity 上报给 ShellRouter(它在本 Provider 之上,直接
-  // useContext 读不到)。路由切换/卸载时清空,离开项目路由后侧栏不残留旧项目。
-  const report = React.useContext(CurrentProjectSetterContext);
-  const routeParam = value?.routeParam ?? null;
-  const projectId = value?.projectId ?? null;
-  const title = value?.title ?? null;
-  React.useEffect(() => {
-    if (routeParam && projectId && title !== null) {
-      report({ routeParam, projectId, title });
-    } else {
-      report(null);
-    }
-    return () => report(null);
-  }, [report, routeParam, projectId, title]);
   return (
     <CurrentProjectContext.Provider value={value}>
       {children}

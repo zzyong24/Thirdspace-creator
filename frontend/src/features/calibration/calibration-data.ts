@@ -29,7 +29,6 @@
 import { client as defaultClient } from "@/lib/contract-client.server";
 import type {
   CalibrationOverviewResource,
-  CalibrationRuleSuggestionResource,
   PredictionResource,
   RubricResource,
 } from "@creatoros/backend/modules/calibration";
@@ -43,10 +42,6 @@ export type CalibrationReadClient = Pick<
   typeof defaultClient,
   "overview" | "listPredictions" | "getRubric" | "getOutput"
 >;
-
-// [T-063e] 设置「校准」页签的读 seam:工作台三读之上再加待采纳规则建议列表。
-export type CalibrationSettingsReadClient = CalibrationReadClient &
-  Pick<typeof defaultClient, "listRuleSuggestions">;
 
 export interface CalibrationWorkbenchData {
   readonly overview: CalibrationOverviewResource;
@@ -157,37 +152,4 @@ export async function loadCalibrationWorkbench(
     predictions,
   );
   return { overview, predictions, rubric, subjectTitles };
-}
-
-// ---------------------------------------------------------------------------
-// [T-063e] 设置「校准」页签读侧:rubric 规则库 + 待采纳规则建议 + 校准历史
-// ---------------------------------------------------------------------------
-
-export interface CalibrationSettingsData extends CalibrationWorkbenchData {
-  /** T-062a 回流落下的 pending 规则建议(读失败 → [],诚实空态)。 */
-  readonly suggestions: readonly CalibrationRuleSuggestionResource[];
-}
-
-async function loadRuleSuggestions(
-  client: CalibrationSettingsReadClient,
-): Promise<CalibrationRuleSuggestionResource[]> {
-  try {
-    return (await client.listRuleSuggestions({
-      params: undefined,
-      query: { page: 1, pageSize: 50 },
-      body: undefined,
-    })) as unknown as CalibrationRuleSuggestionResource[];
-  } catch {
-    return [];
-  }
-}
-
-export async function loadCalibrationSettings(
-  client: CalibrationSettingsReadClient = defaultClient,
-): Promise<CalibrationSettingsData> {
-  const [workbench, suggestions] = await Promise.all([
-    loadCalibrationWorkbench(client),
-    loadRuleSuggestions(client),
-  ]);
-  return { ...workbench, suggestions };
 }

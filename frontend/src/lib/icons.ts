@@ -11,7 +11,6 @@ import {
   Funnel,
   Images,
   LayoutDashboard,
-  Library,
   Lightbulb,
   ListTodo,
   Pencil,
@@ -31,8 +30,6 @@ export type CreatorIconKey =
   | "topics"
   | "projects"
   | "knowledge"
-  // [T-063a] 「库」一级导航(素材+知识+经验三 tab 的资产库)。
-  | "library"
   | "assets"
   | "publishing"
   | "automations"
@@ -57,7 +54,6 @@ export const creatorIcons = Object.freeze({
   topics: ListTodo,
   projects: FolderKanban,
   knowledge: BookOpen,
-  library: Library,
   assets: Images,
   publishing: Send,
   automations: CalendarClock,
