@@ -9,10 +9,15 @@ import type { ProjectStageName } from "@/types/domain";
 // 全部「进入工作台/查看复盘」类 href 一律走这里,不许再各自拼串。
 export function projectWorkspaceHref(
   projectId: string,
-  _stage: ProjectStageName,
+  stage: ProjectStageName,
 ): string {
-  // [T-057①] 打开项目一律进稿面工作台(T-055 稿面 = 项目的单一主视图)。
-  // 旧行为按 currentStage 跳阶段页 —— review/production 是保留独立页,导入作品
-  // (全是 review)点开直落老复盘壳,绕过了稿面;复盘/制作改从稿面顶条进。
+  // [T-068] 用户看图裁决:项目回**阶段式展示**(顶部 研究/策划/脚本/拍摄/发布/复盘
+  // 横向导航),打开项目按 currentStage 进对应阶段工作台;稿面(总览 `/projects/[id]`)
+  // 承载 brief/选题/脚本。撤 T-057①「一律进稿面」——但保留其修复本意:brief 与
+  // topic/script 类阶段仍落稿面(它们的工作台就是稿面),只有有独立页的阶段跳阶段页。
+  if (stage === "research" || stage === "planning" || stage === "production"
+      || stage === "publishing" || stage === "review") {
+    return `/projects/${projectId}/${stage}`;
+  }
   return `/projects/${projectId}`;
 }

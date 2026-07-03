@@ -23,6 +23,7 @@
 import * as React from "react";
 
 import { CurrentProjectProvider } from "../../current-project-context";
+import { StageChatWrapper } from "./stage-chat-wrapper";
 import { resolveSession } from "@/lib/session.server";
 import { createServerClient } from "@/lib/contract-client.server";
 
@@ -82,7 +83,13 @@ export default async function ProjectIdLayout({
           : null
       }
     >
-      {children}
+      {/* [T-068] 阶段子页常驻编导对话右栏(稿面自带,wrapper 按路径跳过)。 */}
+      <StageChatWrapper
+        projectId={real?.id ?? null}
+        projectTitle={real?.title ?? null}
+      >
+        {children}
+      </StageChatWrapper>
     </CurrentProjectProvider>
   );
 }
