@@ -1,149 +1,207 @@
 "use client";
 
 /**
- * `UploadDropzone` — L5 录制页「用户上传」区(SPEC 2026-07-01 §4 区②)。
+ * `UploadDropzone` — 制作工作台「素材倾倒场」(T-055e,SPEC §6;前身 L5 单文件上传区)。
  *
- * 拖拽(或点选)文件 → presigned PUT(P3)→ 建 asset → **绑定当前项目**(用料链 A4)。
- * 纯前端接线,复用现成件、不改后端/契约:
- *   1. `assets.uploads.create` → { uploadId, uploadUrl }(与 D1 `AssetUploadButton` 同款两阶段)。
- *   1b. PUT 真字节到 presigned URL(mock:// 跳过 PUT,只 http(s) 才传)。
- *   2. `assets.uploads.complete { name }` → 建 asset,返回 { id }。
- *   3. **上传即绑定**:`materialLinks.create { projectId, entityType:"asset", entityId, role:"clip",
- *      stage:"production" }`(与 Assets 中心「附到项目」同一条绑定门),把新 asset 挂进本项目用料链。
- *   4. `router.refresh()` — 素材库(已配素材)重读,新素材出现在当前项目下。
+ * 用户拍板②:「把所有素材全部丢进去…帮我好好存储并保存这些原始素材,同时帮我归类」。
+ *   - **拖放一切,多文件批量**:drop/点选/粘贴(⌘V 截图)全收,逐个顺序上传(每文件独立态);
+ *   - **上传即三件事**:①保真落盘(T-055d 目录规则:projects/<safe>-<id6>/素材/原名)
+ *     ②确定性归类(classify-asset 规则表 → assetType + 用途标签落 taxonomy)
+ *     ③挂当前项目(material_links)+ 进全局素材库;
+ *   - 每张已倒入卡:原文件名 + 归类标签 + 「在 Finder 显示」(T-055d reveal route)。
  *
- * 没 wiring(项目未解析)时 dropzone 仍渲染但禁用(诚实:无 projectId 无法绑定)。
- * Determinism:无 Date.now/Math.random;文件字节走真 fetch(与 D1 一致,已是既有真上传路径)。
+ * 归类是 DB 标签、不移动文件(SPEC §6.2);标签写入 best-effort(taxonomy 失败不影响
+ * 上传成败,卡片诚实显示「标签未写入」)。AI 增强层(asset.classify)是 T-055h。
  */
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { UploadCloud } from "lucide-react";
+import { FolderOpen, UploadCloud } from "lucide-react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { client } from "@/lib/contract-client";
-import type { AssetType } from "@/types/domain";
+import { classifyFile } from "./classify-asset";
 
-// Map a File's MIME → contract assetType enum(与 D1 AssetUploadButton 同一映射)。
-function assetTypeForFile(file: File): AssetType {
-  const mime = file.type.toLowerCase();
-  if (mime.startsWith("image/")) return "image";
-  if (mime.startsWith("video/")) return "video";
-  if (mime.startsWith("audio/")) return "audio";
-  if (mime === "application/x-subrip" || /\.(srt|vtt|ass)$/i.test(file.name)) {
-    return "subtitle";
-  }
-  return "document";
+interface DumpedItem {
+  readonly key: string;
+  readonly name: string;
+  readonly phase: "queued" | "uploading" | "done" | "error";
+  readonly tags: readonly string[];
+  readonly tagsWritten: boolean;
+  readonly assetId?: string;
+  readonly reason?: string;
 }
-
-type UploadState =
-  | { readonly phase: "idle" }
-  | { readonly phase: "uploading"; readonly name: string }
-  | { readonly phase: "done"; readonly name: string; readonly bound: boolean }
-  | { readonly phase: "error"; readonly name: string; readonly reason: string };
 
 export interface UploadDropzoneProps {
   /** 当前项目 id — 上传成功后把新 asset 绑定到它(用料链)。 */
   readonly projectId: string;
-  /**
-   * 项目已解析(有真 output/production)才允许绑定。缺失(纯 fixture / 未 seed)→ dropzone
-   * 禁用并显式说明,不假装能上传绑定(诚实)。
-   */
+  /** 项目已解析才允许绑定;缺失 → 禁用并显式说明(诚实)。 */
   readonly canBind: boolean;
+}
+
+/** 确保标签存在并绑到 asset(list 查同名 → 缺则 create → assign)。best-effort。 */
+async function assignTagsToAsset(
+  assetId: string,
+  tagNames: readonly string[],
+): Promise<boolean> {
+  if (tagNames.length === 0) return true;
+  try {
+    const listed = (await client.listTags({
+      params: undefined,
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ id: string; name: string }>;
+    const existing = new Map(
+      (Array.isArray(listed) ? listed : []).map((t) => [t.name, t.id]),
+    );
+    const tagIds: string[] = [];
+    for (const name of tagNames) {
+      const hit = existing.get(name);
+      if (hit) {
+        tagIds.push(hit);
+        continue;
+      }
+      const created = (await client.createTag({
+        params: undefined,
+        query: undefined,
+        body: { name, kind: "asset-usage" },
+      })) as unknown as { id: string };
+      tagIds.push(created.id);
+    }
+    await client.assignTags({
+      params: undefined,
+      query: undefined,
+      body: { entityType: "asset", entityId: assetId, tagIds },
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function UploadDropzone({ projectId, canBind }: UploadDropzoneProps) {
   const router = useRouter();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = React.useState(false);
-  const [state, setState] = React.useState<UploadState>({ phase: "idle" });
-  const busy = state.phase === "uploading";
+  const [items, setItems] = React.useState<ReadonlyArray<DumpedItem>>([]);
+  const busyRef = React.useRef(false);
+  const [busy, setBusy] = React.useState(false);
+  const seqRef = React.useRef(0);
 
-  const handleFile = React.useCallback(
-    (file: File) => {
-      // The File may have an empty `type`; this same value goes to createUpload AND the
-      // PUT Content-Type — they MUST match the signed value(与 D1 一致)。
+  const patchItem = React.useCallback(
+    (key: string, patch: Partial<DumpedItem>) => {
+      setItems((prev) =>
+        prev.map((it) => (it.key === key ? { ...it, ...patch } : it)),
+      );
+    },
+    [],
+  );
+
+  /** 单文件全链:presign(带项目目录+原名)→ PUT 字节 → complete → 挂项目 → 打标签。 */
+  const uploadOne = React.useCallback(
+    async (key: string, file: File) => {
       const mimeType = file.type || "application/octet-stream";
-      setState({ phase: "uploading", name: file.name });
-      void (async () => {
-        try {
-          const upload = (await client.createUpload({
+      const { assetType, tags } = classifyFile(file.name, mimeType);
+      patchItem(key, { phase: "uploading" });
+      try {
+        const upload = (await client.createUpload({
+          params: undefined,
+          query: undefined,
+          body: {
+            assetType,
+            mimeType,
+            fileSize: Math.max(1, file.size),
+            // [T-055d SPEC §7.1] 落项目目录 projects/<safe>-<id6>/素材/,原名保真。
+            projectId,
+            fileName: file.name,
+          },
+        })) as unknown as { uploadId: string; uploadUrl: string };
+
+        // [T-049 B5 同款修复] local-fs 的 uploadUrl 是**相对路径**(/api/v1/blob/…)——
+        // 只要不是 mock:// 就必须真 PUT 字节,否则 complete 时 stat ENOENT。
+        if (!upload.uploadUrl.startsWith("mock://")) {
+          const put = await fetch(upload.uploadUrl, {
+            method: "PUT",
+            headers: { "content-type": mimeType },
+            body: file,
+          });
+          if (!put.ok) {
+            patchItem(key, { phase: "error", reason: `上传失败（${put.status}）` });
+            return;
+          }
+        }
+
+        const asset = (await client.completeUpload({
+          params: { uploadId: upload.uploadId },
+          query: undefined,
+          body: { name: file.name },
+        })) as unknown as { id: string };
+
+        // 挂当前项目(用料链;与 Assets「附到项目」同一门)。
+        if (canBind && asset?.id) {
+          await client.createMaterialLink({
             params: undefined,
             query: undefined,
             body: {
-              assetType: assetTypeForFile(file),
-              mimeType,
-              fileSize: Math.max(1, file.size), // fileSize.positive() — clamp 0-byte to 1
-              // [T-055d SPEC §7.1] 制作台上传落项目目录 projects/<safe>-<id6>/素材/,原名保真。
               projectId,
-              fileName: file.name,
+              entityType: "asset",
+              entityId: asset.id,
+              role: "clip",
+              stage: "production",
             },
-          })) as unknown as { uploadId: string; uploadUrl: string };
-
-          // Phase 1: PUT real bytes to the presigned URL(只 http(s);mock:// 记录于 create,跳过)。
-          if (/^https?:\/\//.test(upload.uploadUrl)) {
-            const put = await fetch(upload.uploadUrl, {
-              method: "PUT",
-              headers: { "content-type": mimeType },
-              body: file,
-            });
-            if (!put.ok) {
-              setState({
-                phase: "error",
-                name: file.name,
-                reason: `上传失败（${put.status}）`,
-              });
-              return;
-            }
-          }
-
-          // Phase 2: finalize — service headObjects the stored bytes and creates the asset.
-          const asset = (await client.completeUpload({
-            params: { uploadId: upload.uploadId },
-            query: undefined,
-            body: { name: file.name },
-          })) as unknown as { id: string };
-
-          // Phase 3: 上传即绑定 — 把新 asset 挂进当前项目用料链(与 Assets「附到项目」同一门)。
-          let bound = false;
-          if (canBind && asset?.id) {
-            await client.createMaterialLink({
-              params: undefined,
-              query: undefined,
-              body: {
-                projectId,
-                entityType: "asset",
-                entityId: asset.id,
-                role: "clip",
-                stage: "production",
-              },
-            });
-            bound = true;
-          }
-          setState({ phase: "done", name: file.name, bound });
-          router.refresh();
-        } catch {
-          setState({
-            phase: "error",
-            name: file.name,
-            reason: "上传或绑定出错",
           });
         }
-      })();
+        // 确定性归类标签(best-effort:失败不影响上传成败,卡片诚实标注)。
+        const tagsWritten = asset?.id
+          ? await assignTagsToAsset(asset.id, tags)
+          : false;
+        patchItem(key, {
+          phase: "done",
+          assetId: asset?.id,
+          tagsWritten,
+        });
+      } catch {
+        patchItem(key, { phase: "error", reason: "上传或绑定出错" });
+      }
     },
-    [projectId, canBind, router],
+    [projectId, canBind, patchItem],
   );
 
-  const onDrop = React.useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      setDragActive(false);
-      if (!canBind || busy) return;
-      const file = e.dataTransfer.files?.[0];
-      if (file) handleFile(file);
+  /** 批量入队,逐个顺序跑(不并发压 blob route);全部完成后 refresh 一次。 */
+  const enqueueFiles = React.useCallback(
+    (files: ReadonlyArray<File>) => {
+      if (files.length === 0 || busyRef.current) return;
+      const queued = files.map((file) => {
+        const key = `dump-${seqRef.current++}-${file.name}`;
+        const { tags } = classifyFile(file.name, file.type || "");
+        return { file, item: { key, name: file.name, phase: "queued" as const, tags, tagsWritten: false } };
+      });
+      setItems((prev) => [...prev, ...queued.map((q) => q.item)]);
+      busyRef.current = true;
+      setBusy(true);
+      void (async () => {
+        for (const q of queued) {
+          await uploadOne(q.item.key, q.file);
+        }
+        busyRef.current = false;
+        setBusy(false);
+        router.refresh();
+      })();
     },
-    [canBind, busy, handleFile],
+    [uploadOne, router],
   );
+
+  const revealAsset = React.useCallback(async (assetId: string) => {
+    try {
+      await fetch("/api/v1/local/reveal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assetId }),
+      });
+    } catch {
+      /* Finder 定位失败不阻断(卡片仍在) */
+    }
+  }, []);
 
   return (
     <div
@@ -152,19 +210,20 @@ export function UploadDropzone({ projectId, canBind }: UploadDropzoneProps) {
       data-region="upload"
     >
       <SectionCard
-        title="上传素材"
-        description="拖拽文件到这里,上传后自动绑定当前项目(用料链)"
+        title="素材倾倒场"
+        description="图片、录屏、封面…全部丢进来:保真落盘到项目文件夹 + 自动归类 + 挂进本项目"
       >
         <input
           ref={inputRef}
           type="file"
+          multiple
           data-slot="upload-dropzone-input"
           aria-hidden="true"
           className="hidden"
           onChange={(e) => {
-            const file = e.target.files?.[0];
+            const files = Array.from(e.target.files ?? []);
             e.target.value = ""; // reset so re-selecting the same file fires change again
-            if (file) handleFile(file);
+            enqueueFiles(files);
           }}
         />
         <div
@@ -174,13 +233,27 @@ export function UploadDropzone({ projectId, canBind }: UploadDropzoneProps) {
           role="button"
           tabIndex={canBind && !busy ? 0 : -1}
           aria-disabled={!canBind}
-          aria-label="拖拽或点击上传素材"
+          aria-label="拖拽、点击或粘贴上传素材(支持多文件)"
           onDragOver={(e) => {
             e.preventDefault();
             if (canBind && !busy) setDragActive(true);
           }}
           onDragLeave={() => setDragActive(false)}
-          onDrop={onDrop}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragActive(false);
+            if (!canBind || busy) return;
+            enqueueFiles(Array.from(e.dataTransfer.files ?? []));
+          }}
+          onPaste={(e) => {
+            // [T-055e SPEC §6.1] 粘贴倒入(⌘V 截图)。
+            if (!canBind || busy) return;
+            const files = Array.from(e.clipboardData?.files ?? []);
+            if (files.length > 0) {
+              e.preventDefault();
+              enqueueFiles(files);
+            }
+          }}
           onClick={() => {
             if (canBind && !busy) inputRef.current?.click();
           }}
@@ -208,15 +281,15 @@ export function UploadDropzone({ projectId, canBind }: UploadDropzoneProps) {
           {busy ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="size-3.5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-              正在上传「{state.name}」…
+              正在倒入 {items.filter((i) => i.phase !== "done" && i.phase !== "error").length} 个文件…
             </p>
           ) : (
             <>
               <p className="text-sm font-medium text-foreground">
-                拖拽文件到此处,或点击选择
+                把素材全部丢进来 —— 拖拽 / 点击选择 / ⌘V 粘贴,支持多文件
               </p>
               <p className="text-[11px] text-muted-foreground">
-                支持图片 / 视频 / 音频 / 字幕 / 文档
+                原始文件原名保存到本项目文件夹;图片/视频/音频/字幕/设计源文件都收
               </p>
             </>
           )}
@@ -231,26 +304,67 @@ export function UploadDropzone({ projectId, canBind }: UploadDropzoneProps) {
           </p>
         ) : null}
 
-        {state.phase === "done" ? (
-          <p
-            data-slot="upload-dropzone-status"
-            role="status"
-            aria-live="polite"
-            className="mt-2 text-[11px] text-success"
+        {items.length > 0 ? (
+          <ul
+            data-slot="dumped-items"
+            aria-label="已倒入素材"
+            className="mt-3 flex flex-col gap-1.5"
           >
-            ✓ 已上传「{state.name}」
-            {state.bound ? "并绑定到当前项目(用料链)。" : "。"}
-          </p>
-        ) : null}
-        {state.phase === "error" ? (
-          <p
-            data-slot="upload-dropzone-status"
-            role="status"
-            aria-live="polite"
-            className="mt-2 text-[11px] text-destructive"
-          >
-            「{state.name}」{state.reason}。
-          </p>
+            {items.map((it) => (
+              <li
+                key={it.key}
+                data-slot="dumped-item"
+                data-phase={it.phase}
+                className="flex items-center gap-2 rounded-control border border-border bg-surface px-2.5 py-1.5"
+              >
+                <span className="min-w-0 flex-1 truncate text-xs text-foreground">
+                  {it.name}
+                </span>
+                {it.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    data-slot="dumped-item-tag"
+                    className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-medium text-brand"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {it.phase === "done" && !it.tagsWritten && it.tags.length > 0 ? (
+                  <span className="shrink-0 text-[10px] text-warning">
+                    标签未写入
+                  </span>
+                ) : null}
+                {it.phase === "uploading" ? (
+                  <span className="size-3 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                ) : it.phase === "error" ? (
+                  <span className="shrink-0 text-[10px] text-destructive">
+                    {it.reason}
+                  </span>
+                ) : it.phase === "done" ? (
+                  <>
+                    <span className="shrink-0 text-[10px] font-medium text-success">
+                      已入库
+                    </span>
+                    {it.assetId ? (
+                      <button
+                        type="button"
+                        data-slot="dumped-item-reveal"
+                        aria-label={`在 Finder 显示 ${it.name}`}
+                        onClick={() => void revealAsset(it.assetId!)}
+                        className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground"
+                      >
+                        <FolderOpen className="size-3.5" aria-hidden="true" />
+                      </button>
+                    ) : null}
+                  </>
+                ) : (
+                  <span className="shrink-0 text-[10px] text-text-subtle">
+                    排队中
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
         ) : null}
       </SectionCard>
     </div>

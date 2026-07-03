@@ -124,7 +124,8 @@ describe("UploadDropzone", () => {
       }),
     );
     expect(mockRouter.refresh).toHaveBeenCalled();
-    expect(await findByText(/绑定到当前项目/)).not.toBeNull();
+    // [T-055e] 倾倒场卡片列表:文件级「已入库」态取代旧的整体文案。
+    expect(await findByText("已入库")).not.toBeNull();
   });
 
   it("mock:// presigned URL → 跳过字节 PUT,仍建 asset + 绑定", async () => {

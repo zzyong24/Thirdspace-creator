@@ -155,14 +155,14 @@ export function ProductionInteractiveRegion({
           aria-label="录制工作台"
           className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {/* ① 素材清单 —— AI 据脚本/分镜列这条要哪些素材(复用 material.match 采纳门)。 */}
+          {/* ① 素材倾倒场(T-055e,SPEC §6:页面第一区)—— 批量倒入 + 保真落盘 + 归类 + 挂项目。 */}
+          <UploadDropzone projectId={viewModel.projectId} canBind={true} />
+          {/* ② 素材清单 —— AI 据脚本/分镜列这条要哪些素材(复用 material.match 采纳门)。 */}
           <MaterialMatchIsland
             projectId={viewModel.projectId}
             outputId={wiring.outputId}
             topic={viewModel.preview.posterLabel}
           />
-          {/* ② 上传区 —— 拖拽 → presigned PUT → 建 asset → 绑定当前项目(用料链)。 */}
-          <UploadDropzone projectId={viewModel.projectId} canBind={true} />
           {/* ③ AI 生成区 —— asset.generate + video-asset-kit 决策 + [gate-F3] 竖屏优先 + 未配禁用。 */}
           <AssetGenerateIsland
             projectId={viewModel.projectId}
