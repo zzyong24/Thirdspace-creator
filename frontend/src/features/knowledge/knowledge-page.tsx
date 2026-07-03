@@ -50,6 +50,7 @@ import type {
   MetricCard as MetricCardVm,
 } from "@/types/view-models";
 import { buildKnowledgeDashboardViewModel } from "./knowledge-data";
+import { KnowledgeDumpZone } from "./knowledge-dump-zone";
 import { KnowledgeInteractiveRegion } from "./knowledge-interactive-region";
 
 // ---------------------------------------------------------------------------
@@ -76,6 +77,12 @@ export interface KnowledgeViewModel extends BasePageViewModel {
   readonly unsorted: ReadonlyArray<KnowledgeUnsorted>;
   readonly snippets: ReadonlyArray<KnowledgeSnippet>;
   readonly graphSeries: ReadonlyArray<{ readonly label: string; readonly value: number }>;
+  /**
+   * KNOW-13:当前生效的 `?tag=` 标签筛选(标签名)。非空时 `recent` 已在读侧
+   * 装配层按该标签过滤,页面渲染「清除筛选」返回全量列表。可选:fixture 构建
+   * 器不设置(等价 null,无筛选)。
+   */
+  readonly activeTag?: string | null;
 }
 
 export interface KnowledgeCategory {
@@ -151,6 +158,9 @@ export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
       data-page-state={state}
       className="flex flex-col gap-section-gap"
     >
+      {/* T-062c 知识倾倒场:录入主入口(AI 归类确认门 + 手动补录),页面顶部常驻。
+          空库也要能倒(否则空账号无录入口),仅 loading/error 不渲。 */}
+      {state === "default" || state === "empty" ? <KnowledgeDumpZone /> : null}
       {state === "loading" ? (
         <LoadingState label="正在加载知识库…" rows={5} />
       ) : state === "error" ? (
@@ -158,7 +168,7 @@ export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
       ) : state === "empty" ? (
         <EmptyState
           title="知识库暂无内容"
-          description="开始记录笔记、收藏参考或导入资料以填充知识库。"
+          description="把笔记、金句、逐字稿倒进上方的倾倒场,AI 自动归类后确认入库。"
         />
       ) : (
         <>

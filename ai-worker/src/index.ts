@@ -204,6 +204,13 @@ export {
   materialMatchSchema,
   type MaterialMatchOutput,
 } from "./prompt/templates/material-match";
+// T-062c 知识倾倒场:倒入原文 → 结构化归类候选 {knowledgeType,title,tags,summary}(确认门
+// 采纳才 knowledge.create)。schema/type 一并导出给 frontend knowledge-classify-runner。
+export {
+  KNOWLEDGE_CLASSIFY_TEMPLATE,
+  knowledgeClassifySchema,
+  type KnowledgeClassifyOutput,
+} from "./prompt/templates/knowledge-classify";
 export {
   runScriptNode,
   parseShots,

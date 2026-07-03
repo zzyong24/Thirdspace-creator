@@ -21,7 +21,25 @@ import { buildKnowledgeDashboardViewModel } from "@/features/knowledge/knowledge
 import { resolveSession } from "@/lib/session.server";
 import { createServerClient } from "@/lib/contract-client.server";
 
-export default async function KnowledgeRoutePage() {
+interface KnowledgeRoutePageProps {
+  readonly searchParams?: Promise<
+    Record<string, string | string[] | undefined>
+  >;
+}
+
+// 取 searchParams 单值(重复参数取第一个),空白视为未提供。
+function firstParam(value: string | string[] | undefined): string | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const trimmed = (raw ?? "").trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+export default async function KnowledgeRoutePage({
+  searchParams,
+}: KnowledgeRoutePageProps = {}) {
+  // KNOW-13:热门标签 chip 链到 /knowledge?tag=<name>;读侧真消费该参数,
+  // recent 列表只保留挂该标签的条目(过滤逻辑见 knowledge-data.ts)。
+  const tag = firstParam(((await searchParams) ?? {}).tag);
   const session = await resolveSession();
   if (!session) {
     // No session (the (creator) layout guard redirects on a real request). Keep
@@ -36,6 +54,6 @@ export default async function KnowledgeRoutePage() {
   const client = createServerClient(
     session.ctx,
   ) as unknown as KnowledgeDataClient;
-  const viewModel = await buildKnowledgeDashboardViewModel(client);
+  const viewModel = await buildKnowledgeDashboardViewModel(client, { tag });
   return <KnowledgePage viewModel={viewModel} />;
 }

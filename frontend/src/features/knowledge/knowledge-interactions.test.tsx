@@ -31,12 +31,32 @@ const mockClient = {
   createKnowledgeRevision: vi.fn((input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "rev-new", input }),
   ),
+  // T-062c 内容预览:选中行会读 knowledge.get + knowledge.revisions.list。
+  getKnowledge: vi.fn(
+    (input: { params: { knowledgeId: string } }): Promise<unknown> =>
+      Promise.resolve({
+        id: input.params.knowledgeId,
+        title: "选中的条目",
+        sourceType: "web",
+        sourceUrl: "https://example.com/article",
+        currentRevisionId: "rev-1",
+      }),
+  ),
+  listKnowledgeRevisions: vi.fn((_input: unknown): Promise<unknown> =>
+    Promise.resolve([
+      { id: "rev-1", revisionNumber: 1, content: "# 标题\n\n正文**加粗**内容" },
+    ]),
+  ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createKnowledge: (input: unknown) => mockClient.createKnowledge(input),
     createKnowledgeRevision: (input: unknown) =>
       mockClient.createKnowledgeRevision(input),
+    getKnowledge: (input: { params: { knowledgeId: string } }) =>
+      mockClient.getKnowledge(input),
+    listKnowledgeRevisions: (input: unknown) =>
+      mockClient.listKnowledgeRevisions(input as never),
   },
 }));
 
@@ -48,6 +68,8 @@ beforeEach(() => {
   mockRouter.refresh.mockClear();
   mockClient.createKnowledge.mockClear();
   mockClient.createKnowledgeRevision.mockClear();
+  mockClient.getKnowledge.mockClear();
+  mockClient.listKnowledgeRevisions.mockClear();
 });
 
 // Resolve the async page through the override seam, then render its element.
@@ -112,30 +134,57 @@ describe("KnowledgePage interactions (wired-local filters)", () => {
   });
 });
 
-describe("KnowledgePage writes (F1e)", () => {
-  it("新建知识 → opens the form, submit calls client.createKnowledge with the typed body", async () => {
+describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
+  it("旧「新建知识」独立表单已退役,录入主入口是页面顶部的知识倾倒场", async () => {
     const { container } = await renderKnowledge();
-    const createButton = container.querySelector<HTMLButtonElement>(
-      '[data-slot="knowledge-create-button"]',
-    );
-    expect(createButton).not.toBeNull();
-    fireEvent.click(createButton!);
+    // 退役:独立新建按钮/表单不再渲染
+    expect(
+      container.querySelector('[data-slot="knowledge-create-button"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="knowledge-create-form"]'),
+    ).toBeNull();
+    // 倾倒场常驻页面顶部(归类 + 手动补录两个入口都在)
+    expect(
+      container.querySelector('[data-slot="knowledge-dump-zone"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="knowledge-classify"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="knowledge-manual-entry"]'),
+    ).not.toBeNull();
+  });
 
-    const title = container.querySelector<HTMLInputElement>(
-      '[data-slot="knowledge-create-title"]',
+  it("倾倒场手动补录 → client.createKnowledge with the typed body(旧表单能力承接)", async () => {
+    const { container } = await renderKnowledge();
+    const dumpInput = container.querySelector<HTMLTextAreaElement>(
+      '[data-slot="knowledge-dump-input"]',
     );
-    const typeSelect = container.querySelector<HTMLSelectElement>(
-      '[data-slot="knowledge-create-type"]',
+    expect(dumpInput).not.toBeNull();
+    fireEvent.change(dumpInput!, { target: { value: "正文内容" } });
+    fireEvent.click(
+      container.querySelector<HTMLButtonElement>(
+        '[data-slot="knowledge-manual-entry"]',
+      )!,
     );
-    expect(title).not.toBeNull();
-    expect(typeSelect).not.toBeNull();
-    fireEvent.change(title!, { target: { value: "新条目" } });
-    fireEvent.change(typeSelect!, { target: { value: "reference" } });
-
-    const form = container.querySelector<HTMLFormElement>(
-      '[data-slot="knowledge-create-form"]',
+    fireEvent.change(
+      container.querySelector<HTMLInputElement>(
+        '[data-slot="knowledge-manual-title"]',
+      )!,
+      { target: { value: "新条目" } },
     );
-    fireEvent.submit(form!);
+    fireEvent.change(
+      container.querySelector<HTMLSelectElement>(
+        '[data-slot="knowledge-manual-type"]',
+      )!,
+      { target: { value: "reference" } },
+    );
+    fireEvent.submit(
+      container.querySelector<HTMLFormElement>(
+        '[data-slot="knowledge-manual-form"]',
+      )!,
+    );
 
     await waitFor(() =>
       expect(mockClient.createKnowledge).toHaveBeenCalledTimes(1),
@@ -149,6 +198,39 @@ describe("KnowledgePage writes (F1e)", () => {
       }),
     );
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
+  it("选中一行 → 内容预览:markdown 渲染最新修订正文 + web 型来源链接(T-062c)", async () => {
+    const { container } = await renderKnowledge();
+    const row = container.querySelector<HTMLTableRowElement>(
+      '[data-slot="recent-knowledge-row"]',
+    );
+    const knowledgeId = row!.getAttribute("data-knowledge-id");
+    fireEvent.click(row!);
+
+    await waitFor(() =>
+      expect(
+        container.querySelector(
+          '[data-slot="knowledge-detail-preview"][data-phase="ready"]',
+        ),
+      ).not.toBeNull(),
+    );
+    expect(mockClient.getKnowledge).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { knowledgeId } }),
+    );
+    // markdown 已渲染(# → h1,** ** → strong)
+    const content = container.querySelector(
+      '[data-slot="knowledge-detail-content"]',
+    );
+    expect(content).not.toBeNull();
+    expect(content!.querySelector("h1")?.textContent).toBe("标题");
+    expect(content!.querySelector("strong")?.textContent).toBe("加粗");
+    // source=web 型显来源链接
+    const source = container.querySelector<HTMLAnchorElement>(
+      '[data-slot="knowledge-detail-source"]',
+    );
+    expect(source).not.toBeNull();
+    expect(source!.getAttribute("href")).toBe("https://example.com/article");
   });
 
   it("selecting a row + 保存修订 calls client.createKnowledgeRevision with the knowledgeId", async () => {

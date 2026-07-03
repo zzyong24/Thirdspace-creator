@@ -94,6 +94,15 @@ interface TagDto {
   readonly usageCount: number;
 }
 
+// `taxonomy.entityTags.listEntitiesForTag` returns EntityTagResource rows —
+// the polymorphic tag↔entity join; we only need the knowledge-typed entity ids.
+interface EntityTagDto {
+  readonly id: string;
+  readonly tagId: string;
+  readonly entityType: string;
+  readonly entityId: string;
+}
+
 // A collected graph edge (one per knowledge.relations row).
 interface GraphEdge {
   readonly source: string;
@@ -115,6 +124,15 @@ export interface KnowledgeDataClient {
   // taxonomy.tags.list — paginated tag list; ranked client-side by usageCount.
   listTags(input: {
     params: undefined;
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  // taxonomy.entityTags.listEntitiesForTag — KNOW-13:`?tag=` 真过滤用。
+  // knowledge.list 的契约 query 只有分页(paginationQuery,无 tag 参数),所以
+  // 标签过滤走这条现成契约 op(tagId → 挂该标签的实体行),再在装配层对已读回
+  // 的列表求交集(页内过滤,注释见 filterItemsByTag)。
+  listEntitiesForTag(input: {
+    params: { tagId: string };
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
@@ -142,13 +160,19 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 /**
- * Build the REAL Knowledge ViewModel, degrading to the fixture VM on failure.
+ * Build the REAL Knowledge ViewModel (honest tri-state; no fixture fallback).
  *
  * @param client  the contract client (server-bound). Injected for tests.
+ * @param options.tag  KNOW-13:`?tag=` 的标签名(来自路由 searchParams)。给出
+ *                     时,`recent` 列表只保留挂该标签的条目(其余块/指标仍按
+ *                     全量统计),并在 VM 上回传 `activeTag` 供页面渲染
+ *                     「清除筛选」。
  */
 export async function buildKnowledgeDashboardViewModel(
   client: KnowledgeDataClient = defaultClient as unknown as KnowledgeDataClient,
+  options: { readonly tag?: string | null } = {},
 ): Promise<KnowledgeViewModel> {
+  const activeTag = normalizeTagParam(options.tag);
   // `base` supplies ONLY the VM shell + the five metric-card identities/order
   // (the five-card row is a test invariant). It is NOT used as a content
   // fallback: an empty account must read EMPTY blocks, not seed fixtures.
@@ -179,6 +203,7 @@ export async function buildKnowledgeDashboardViewModel(
       graphSeries: [],
       memoryInsights: [],
       popularTags: [],
+      activeTag,
     };
   }
 
@@ -190,9 +215,18 @@ export async function buildKnowledgeDashboardViewModel(
   // EMPTY (honest), never seed fixtures.
   const relations = await collectRelations(client, items);
 
-  // REAL popular tags via taxonomy.tags.list — independently guarded; a read
-  // failure or no taxonomy data reads EMPTY (honest), not seed fixtures.
-  const popularTags = await buildPopularTags(client);
+  // REAL tag rows via taxonomy.tags.list — read once, serve both 热门标签 and
+  // the KNOW-13 tag filter (name → tagId resolution). Independently guarded:
+  // `null` = read failed (honest EMPTY downstream, not seed fixtures).
+  const tags = await fetchTags(client);
+  const popularTags = buildPopularTags(tags);
+
+  // KNOW-13:`?tag=` 真消费 —— 列表(recent)只保留挂该标签的条目;其余块与
+  // 指标仍按全量统计(过滤的是"看哪些",不是"有多少")。
+  const recentItems =
+    activeTag === null
+      ? items
+      : await filterItemsByTag(client, tags, activeTag, items);
 
   return {
     ...base,
@@ -200,28 +234,74 @@ export async function buildKnowledgeDashboardViewModel(
     error: null,
     metrics: buildMetrics(items, base.metrics, relations?.count ?? null),
     categories: buildCategories(items),
-    recent: buildRecentRowsFromItems(items),
+    recent: buildRecentRowsFromItems(recentItems),
     snippets: buildSnippets(items),
     unsorted: buildUnsorted(items, relations?.edges ?? null),
     graphSeries: buildGraphSeries(items, relations?.edges ?? null),
     memoryInsights: buildMemoryInsights(items, relations?.edges ?? null),
     popularTags,
+    activeTag,
   };
+}
+
+// Normalize the raw `?tag=` value: trim; empty/undefined → null (no filter).
+function normalizeTagParam(tag: string | null | undefined): string | null {
+  const trimmed = (tag ?? "").trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
+
+/**
+ * KNOW-13 页内过滤:knowledge.list 的契约 query 不支持 tag 参数(仅分页),
+ * 所以先用已读回的 tags 把标签名解析成 tagId,再走现成契约 op
+ * `taxonomy.entityTags.listEntitiesForTag` 拿挂该标签的实体行,最后对已读回的
+ * 列表求交集(entityType === "knowledge")。诚实降级:
+ *   - tags 读失败(null)或 entityTags 读失败 → `[]`(空态,不假装未过滤,
+ *     也不回退 fixture);
+ *   - 标签名不存在 → `[]`(真:没有条目挂这个标签)。
+ */
+async function filterItemsByTag(
+  client: KnowledgeDataClient,
+  tags: ReadonlyArray<TagDto> | null,
+  tagName: string,
+  items: ReadonlyArray<KnowledgeListDto>,
+): Promise<ReadonlyArray<KnowledgeListDto>> {
+  if (tags === null) return [];
+  const tag = tags.find((row) => row.name === tagName);
+  if (tag === undefined) return [];
+  let assignments: ReadonlyArray<EntityTagDto>;
+  try {
+    assignments = (await client.listEntitiesForTag({
+      params: { tagId: tag.id },
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    })) as ReadonlyArray<EntityTagDto>;
+  } catch {
+    return [];
+  }
+  const taggedIds = new Set(
+    assignments
+      .filter((row) => row.entityType === "knowledge")
+      .map((row) => row.entityId),
+  );
+  return items.filter((item) => taggedIds.has(item.id));
 }
 
 /**
  * Fan out `knowledge.relations.list` across every item and COLLECT both the
  * edge total and the edge list (source/target/type). Each per-item read is
  * independently try/caught so one failure does not zero the whole result.
- * Returns `null` ONLY if the list was empty or EVERY per-item read failed (no
- * real signal → keep fixtures); otherwise `{ count, edges }` where `count` may
- * legitimately be 0 (real, with `edges: []`).
+ *
+ * KNOW-08 语义(读成功=真值,读失败=降级,绝不 fixture):
+ *   - 空账号(items 为空)→ `{ count: 0, edges: [] }`:没有条目就真的没有
+ *     关联,这是"读成功的真 0",指标显 0;
+ *   - items 非空但每条 relations 读都失败 → `null`:没有任何真实信号,这是
+ *     "读失败",指标降级显「—」(不是 0,更不是 fixture 386)。
  */
 async function collectRelations(
   client: KnowledgeDataClient,
   items: ReadonlyArray<KnowledgeListDto>,
 ): Promise<{ count: number; edges: ReadonlyArray<GraphEdge> } | null> {
-  if (items.length === 0) return null;
+  if (items.length === 0) return { count: 0, edges: [] };
   const edges: GraphEdge[] = [];
   let anyOk = false;
   await Promise.all(
@@ -251,8 +331,8 @@ async function collectRelations(
 /**
  * 5 metric cards. Total / this-week / snippets / relations are REAL counts;
  * total/this-week/snippets derive from the live list, 知识关联 from the
- * aggregated relations.list edge count (`relationCount`; `null` ⇒ no real
- * signal ⇒ keep the fixture card). 记忆命中率 (memory hit rate) has no read op,
+ * aggregated relations.list edge count (`relationCount`; `null` ⇒ 读失败 ⇒
+ * 「—」错误降级,见 KNOW-08). 记忆命中率 (memory hit rate) has no read op,
  * so its fixture card passes through unchanged. Card identity + order are
  * preserved so the row stays exactly five cards (test invariant).
  */
@@ -295,10 +375,20 @@ function buildMetrics(
           trend: "flat" as const,
         };
       case "km-relations":
-        // KNOW-08:真边数;无信号(空账号/读失败)显真 0,绝不回退 fixture 386(数据要真)。
+        // KNOW-08:真边数。读成功显真值(空账号=真 0);`null`(relations 读全部
+        // 失败,无任何真实信号)→ 错误降级显「—」。任何分支都不回退 fixture 386。
+        if (relationCount === null) {
+          return {
+            ...card,
+            value: "—",
+            delta: "读取失败",
+            trend: "flat" as const,
+            tone: "neutral" as const,
+          };
+        }
         return {
           ...card,
-          value: formatCount(relationCount ?? 0),
+          value: formatCount(relationCount),
           delta: "",
           trend: "flat" as const,
         };
@@ -399,7 +489,7 @@ function buildUnsorted(
 /**
  * REAL knowledge graph: one series bucket per `knowledgeType`, valued by the
  * number of relation edges incident to items of that type. `edges === null`
- * (no relations signal, e.g. empty account) → `[]` (honest empty, NOT seed).
+ * (relations 读全部失败,无真实信号) → `[]` (honest empty, NOT seed).
  * Real-but-no-edges → `[]` → the KnowledgeGraph "暂无数据" summary (handled by
  * the page).
  */
@@ -460,25 +550,34 @@ function buildMemoryInsights(
 }
 
 /**
- * REAL 热门标签 via `taxonomy.tags.list`, ranked by the server-derived
- * `usageCount` (descending). The read is independently guarded: any failure or
- * an empty tag set reads EMPTY (`[]`, honest), NOT seed fixtures — the rail
- * block renders its own empty state. A failure here never blocks the rest.
+ * REAL tag rows via `taxonomy.tags.list`. Independently guarded: `null` means
+ * the read FAILED (callers degrade to EMPTY, honest, not seed fixtures); an
+ * empty array is a real "no tags yet". Read once, shared by 热门标签 and the
+ * KNOW-13 tag filter.
  */
-async function buildPopularTags(
+async function fetchTags(
   client: KnowledgeDataClient,
-): Promise<ReadonlyArray<KnowledgeTagVm>> {
-  let tags: ReadonlyArray<TagDto>;
+): Promise<ReadonlyArray<TagDto> | null> {
   try {
-    tags = (await client.listTags({
+    return (await client.listTags({
       params: undefined,
       query: { page: 1, pageSize: 200 },
       body: undefined,
     })) as ReadonlyArray<TagDto>;
   } catch {
-    return [];
+    return null;
   }
-  if (tags.length === 0) return [];
+}
+
+/**
+ * REAL 热门标签, ranked by the server-derived `usageCount` (descending). Read
+ * failure (`null`) or an empty tag set reads EMPTY (`[]`, honest), NOT seed
+ * fixtures — the rail block renders its own empty state.
+ */
+function buildPopularTags(
+  tags: ReadonlyArray<TagDto> | null,
+): ReadonlyArray<KnowledgeTagVm> {
+  if (tags === null || tags.length === 0) return [];
   return tags
     .slice()
     .sort((a, b) => b.usageCount - a.usageCount)

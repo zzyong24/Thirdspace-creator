@@ -37,6 +37,7 @@ import { POSITIONING_GENERATE_TEMPLATE } from "./templates/positioning-generate"
 import { TOPIC_ENRICH_TEMPLATE } from "./templates/topic-enrich";
 import { MATERIAL_MATCH_TEMPLATE } from "./templates/material-match";
 import { CHATBOX_TOPIC_TEMPLATE } from "./templates/chatbox-turn";
+import { KNOWLEDGE_CLASSIFY_TEMPLATE } from "./templates/knowledge-classify";
 import {
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
@@ -69,6 +70,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   TOPIC_ENRICH_TEMPLATE,
   MATERIAL_MATCH_TEMPLATE,
   CHATBOX_TOPIC_TEMPLATE,
+  // T-062c 知识倾倒场:倒入原文 → 判 {knowledgeType,title,tags,summary} 候选(确认门采纳才落库)。
+  KNOWLEDGE_CLASSIFY_TEMPLATE,
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,
