@@ -92,8 +92,13 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
                   : "写你的口播稿——直接开写,或在右侧让编导起草"}
               </span>
             </div>
-            {/* [T-070] 编辑|结构 双视图:结构 = 只读分段卡(contentData.sections)。 */}
-            <ScriptStructureToggle sections={script.sections}>
+            {/* [T-070→T-072] 编辑|结构 双视图:结构 = **可编辑**分段卡(段型徽章内联,
+                保存产新 ArtifactVersion);有分段时默认进结构编辑(用户目标形态)。 */}
+            <ScriptStructureToggle
+              sections={script.sections}
+              artifactId={scriptArtifactId}
+              projectId={project.id}
+            >
               {/* [T-055c] key=版本数:对话「写入稿面/撤销」refresh 后强制重挂,编辑器吃到新版本。 */}
               <ScriptRichEditor
                 key={`v${script.versionCount}`}
