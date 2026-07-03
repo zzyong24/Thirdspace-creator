@@ -283,9 +283,11 @@ export interface BriefFillToolResult {
   current: BriefCurrentDetail | null;
 }
 
-// ── 只读 context 工具结果(真数据,给模型读 —— 非候选、不渲卡)────────────────────────────
-// 这三个的 kind(context.*)不在前端 dispatch 的已知分支里,会被安全跳过(不报错):模型把
-// 数据读进上下文后用文字回答即可。形状刻意精简(只带答问所需字段)。
+// ── 只读 context 工具结果(真数据,人机同源双消费)──────────────────────────────────────
+// [T-098] 每个 context.* kind 都在前端 CONTEXT_CARD_REGISTRY(features/copilot/
+// context-card-registry.tsx)有渲染卡:同一份结果 JSON,模型读进上下文归纳,前端直渲成
+// 数据卡给用户看 —— 模型只有指针权、无转录权(honestyBlock 第 6 条)。新增 context 工具
+// 必须同步配卡,覆盖锁测(context-card-registry.test.tsx)会红。形状刻意精简(只带答问所需字段)。
 
 export interface ContextProjectsToolResult {
   kind: "context.projects";
@@ -644,8 +646,10 @@ export function knowledgeRelevanceScore(haystack: string, query: string): number
 /**
  * 工具实现表(全部首波工具)。每个 execute 复用注入的 runner 核心产**候选**(非实体)。
  * 路由用 buildChatTools(skillTools, deps) 按 skill 白名单过滤后挂给 streamText。
+ * [T-098] 导出:覆盖锁测(context-card-registry.test.tsx)遍历本表全部 context.* 工具,
+ * 断言每个 kind 在前端 CONTEXT_CARD_REGISTRY 有渲染卡 —— 新增 context 工具不配卡 = 测试红。
  */
-function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
+export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
   return {
     "topic.generate": tool({
       description:

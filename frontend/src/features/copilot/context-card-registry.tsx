@@ -1,0 +1,90 @@
+"use client";
+
+/**
+ * [T-098] CONTEXT_CARD_REGISTRY —— context.* 工具结果 kind → 渲染卡的全覆盖注册表
+ * (SPEC 2026-07-03 context-layer-redesign §2.2)。
+ *
+ * 铁律:chat-tools 里每个 context.* 工具的结果 kind 必须在这里有卡 —— 覆盖锁测
+ * (context-card-registry.test.tsx)遍历 allChatTools 的 context.* 工具断言全覆盖,
+ * 新增 context 工具不配卡 = 测试红。「前端安全跳过」(旧 chat-tools.ts:286-288 注释)永久失效。
+ *
+ * 运行时兜底:未知 kind → ChatContextGenericCard(通用键值表格,真数据直渲),
+ * 替换原 800 字 JSON trace 裸兜底 —— 即使注册漏网,用户看到的也是数据表格,不是模型转述。
+ */
+
+import * as React from "react";
+
+import type {
+  ContextCommentsToolResult,
+  ContextKnowledgeToolResult,
+  ContextMaterialsToolResult,
+  ContextProjectsToolResult,
+} from "@/server/ai/chat-tools";
+
+import {
+  ChatCommentListCard,
+  ChatContextGenericCard,
+  ChatKnowledgeListCard,
+  ChatProjectListCard,
+} from "./chat-context-cards";
+import { ChatMaterialListCard } from "./chat-material-list-card";
+
+/** 卡渲染上下文:当前对话关联的项目(素材卡「加入弹药」需要)。 */
+export interface ContextCardCtx {
+  readonly projectId: string | null;
+}
+
+export type ContextCardRenderer = (
+  out: Record<string, unknown>,
+  ctx: ContextCardCtx,
+) => React.ReactNode;
+
+/**
+ * kind → 卡组件。out 由调用侧保证是对应工具的 output(与既有 dispatch 的结构化 cast
+ * 惯例一致 —— 本文件内 cast 成各工具结果类型,字段缺失时组件按空值诚实降级)。
+ */
+export const CONTEXT_CARD_REGISTRY: Readonly<Record<string, ContextCardRenderer>> = {
+  "context.projects": (out) => {
+    const o = out as unknown as Partial<ContextProjectsToolResult>;
+    return (
+      <ChatProjectListCard
+        items={o.items ?? []}
+        total={o.total ?? (o.items?.length ?? 0)}
+        hasMore={o.hasMore ?? false}
+      />
+    );
+  },
+  "context.comments": (out) => {
+    const o = out as unknown as Partial<ContextCommentsToolResult>;
+    return (
+      <ChatCommentListCard
+        items={o.items ?? []}
+        total={o.total ?? (o.items?.length ?? 0)}
+        hasMore={o.hasMore ?? false}
+      />
+    );
+  },
+  "context.knowledge": (out) => {
+    const o = out as unknown as Partial<ContextKnowledgeToolResult>;
+    return <ChatKnowledgeListCard items={o.items ?? []} />;
+  },
+  // T-055c 活范式原卡,归入注册表统一分发(行为不变:逐条「加入弹药」)。
+  "context.materials": (out, ctx) => {
+    const o = out as unknown as Partial<ContextMaterialsToolResult>;
+    return <ChatMaterialListCard items={o.items ?? []} projectId={ctx.projectId} />;
+  },
+};
+
+/**
+ * 按 kind 渲 context 数据卡;未注册 kind 走通用表格兜底(永不返回 null ——
+ * context.* 的数据必须以卡形态到达用户)。
+ */
+export function renderContextCard(
+  kind: string,
+  out: Record<string, unknown>,
+  ctx: ContextCardCtx,
+): React.ReactNode {
+  const renderer = CONTEXT_CARD_REGISTRY[kind];
+  if (renderer) return renderer(out, ctx);
+  return <ChatContextGenericCard kind={kind} out={out} />;
+}

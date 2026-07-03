@@ -81,10 +81,8 @@ import type {
   BriefFillSuggestion,
   BriefCurrentDetail,
 } from "@/server/ai/chat-tools";
-import {
-  ChatMaterialListCard,
-  type ChatMaterialItem,
-} from "./chat-material-list-card";
+// [T-098] context.* 数据卡统一走注册表分发(素材卡也归入,行为不变)。
+import { renderContextCard } from "./context-card-registry";
 import {
   ChatDiagnosisCard,
   ChatLearningsCard,
@@ -120,7 +118,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { buildCopilotViewModel } from "@/fixtures/selectors";
-import { CHAT_TOOL_LABELS } from "@/lib/chat-tool-labels";
+import {
+  CHAT_TOOL_LABELS,
+  SCHEDULED_TASK_TYPE_LABELS,
+} from "@/lib/chat-tool-labels";
 import { client } from "@/lib/contract-client";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
@@ -428,13 +429,38 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
 };
 
 // taskType → 中文标题(bug #6)。命中映射用中文 label;否则回退到原 taskType 串(诚实,不伪造)。
+// [T-095] 调度采集任务(scheduled.*)走统一词表 SCHEDULED_TASK_TYPE_LABELS(lib/chat-tool-labels),
+// 不再满屏渲内部 op id。
 function taskTitle(t: WireTask): string {
-  return TASK_TYPE_LABEL[t.taskType]?.label ?? t.taskType;
+  return (
+    TASK_TYPE_LABEL[t.taskType]?.label ??
+    SCHEDULED_TASK_TYPE_LABELS[t.taskType]?.label ??
+    t.taskType
+  );
 }
 
 // taskType → 中文副文(任务卡第二行)。未命中返回 null(不渲染副文)。
 function taskSubtitle(t: WireTask): string | null {
-  return TASK_TYPE_LABEL[t.taskType]?.sub ?? null;
+  return (
+    TASK_TYPE_LABEL[t.taskType]?.sub ??
+    SCHEDULED_TASK_TYPE_LABELS[t.taskType]?.sub ??
+    null
+  );
+}
+
+// [T-095] 任务卡第二行:有副文显副文;没副文但挂了项目显「项目:<id>」;两者皆无返回 null
+// (调用侧整行不渲)—— 替换原「项目:—」无意义占位(采集类/全局任务本就不挂单项目)。
+function taskSecondLine(t: WireTask): string | null {
+  const sub = taskSubtitle(t);
+  if (sub) return sub;
+  return t.projectId ? `项目：${t.projectId}` : null;
+}
+
+// [T-095③] Copilot 首屏「最近任务/继续任务」只显与创作直接相关的 AI 任务 —— 调度采集任务
+// (scheduled.*)是后台巡航噪音,已有任务中心/自动化页承载,这里过滤掉,避免首屏被
+// 「作品明细采集 ×N」刷屏、真正的创作任务(出题/诊断/复盘…)被挤出视野。
+function isCreativeTask(t: WireTask): boolean {
+  return !t.taskType.startsWith("scheduled.");
 }
 
 // 历史会话的时间戳 → 简洁本地时间(YYYY-MM-DD HH:mm)。非法/空串回退原串,不抛。
@@ -875,14 +901,16 @@ export function AICopilotContent({
     let active = true;
     void (async () => {
       try {
+        // [T-095③] 多拉一页(24)再过滤+截 6:调度采集任务高频刷屏,只拉 6 条会被它占满,
+        // 过滤后创作任务反而显示不出来。
         const rows = (await client.listAITasks({
           params: undefined,
-          query: { page: 1, pageSize: 6 },
+          query: { page: 1, pageSize: 24 },
           body: undefined,
         })) as unknown as ReadonlyArray<WireTask> | null | undefined;
         // null→[] 收敛:若 op 成功 resolve 但返回 null/undefined(空 DB 的某些 transport
         // 路径),仍要把状态推进到空数组,否则 spinner 会一直转。empty array 触发诚实空态。
-        if (active) setRecentTasks(rows ?? []);
+        if (active) setRecentTasks((rows ?? []).filter(isCreativeTask).slice(0, 6));
       } catch {
         // Feed unavailable (e.g. unauthenticated dispatch) — fall back to an empty,
         // honest feed rather than fixture rows.
@@ -1225,12 +1253,15 @@ export function AICopilotContent({
       </div>
 
       {/* Conversation region (主区,bug #5)—— 消息流 + 输入框。flex-1 占满浮层主体,消息区
-          自身滚动,输入框 pin 在底部。对话才是 Copilot 的核心,放大、可读、可滚。 */}
+          自身滚动,输入框 pin 在底部。对话才是 Copilot 的核心,放大、可读、可滚。
+          [T-095] 板块重合修复:原 min-h-0 允许主区被压到小于最小内容(消息区 220 下限 + 输入框),
+          子元素溢出画到下方次区上。改 min-h-min(下限 = 自身最小内容),空间不足时由可收缩的
+          次区让位(见 copilot-secondary),主区永不溢出重叠。 */}
       <div
         data-slot="copilot-conversation"
         data-region="prompt"
         data-slot-region="copilot-region"
-        className="flex min-h-0 flex-1 flex-col gap-2"
+        className="flex min-h-min flex-1 flex-col gap-2"
       >
         {/* 消息流(可滚)—— 给一个 min-h 下限,保证对话区是视觉主区,不被次区压扁(bug #5)。 */}
         <div
@@ -1400,18 +1431,28 @@ export function AICopilotContent({
                         />
                       );
                     }
-                    // [T-055c] 素材列表(context.materials)→ 可逐条「加入弹药」(material_links)。
+                    // [T-098] context.* 只读工具 → CONTEXT_CARD_REGISTRY 分发数据卡
+                    // (SPEC context-layer-redesign §2:真数据 UI 直渲,模型只归纳不转录;
+                    // 未注册 kind 走通用表格兜底,不再裸 JSON trace)。素材卡(T-055c)
+                    // 也归入注册表,行为不变。
                     if (
-                      name === "context.materials" &&
-                      out.kind === "context.materials"
+                      name.startsWith("context.") ||
+                      (typeof out.kind === "string" &&
+                        out.kind.startsWith("context."))
                     ) {
-                      const o = out as { items?: ChatMaterialItem[] };
+                      const kind =
+                        typeof out.kind === "string" && out.kind
+                          ? out.kind
+                          : name;
                       return (
-                        <ChatMaterialListCard
-                          key={key}
-                          items={o.items ?? []}
-                          projectId={activeProjectChip?.id ?? null}
-                        />
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          {renderContextCard(
+                            kind,
+                            out as Record<string, unknown>,
+                            { projectId: activeProjectChip?.id ?? null },
+                          )}
+                        </React.Fragment>
                       );
                     }
                     // 编导诊断(calibration.diagnose)→ 维度评分表(只读展示)。
@@ -1452,7 +1493,8 @@ export function AICopilotContent({
                         />
                       );
                     }
-                    // 无专属卡的工具(纯读 context.* 等)→ 只渲 trace 行。
+                    // 无专属卡的非 context 工具 → 只渲 trace 行(context.* 已在上方
+                    // 全量走注册表渲数据卡,不再落到这里)。
                     return traceRow;
                   })}
                 </li>
@@ -1599,11 +1641,14 @@ export function AICopilotContent({
 
       {/* 次区(bug #5)—— 控制台/快捷入口/智能推荐折进一个有界、可滚的区域,不挤占对话主区。
           给一个较小的上限高度(max-h)并自身滚动,把垂直空间让给上面的对话主区。
-          T-029:仅「全局助手」模式(右下角/⌘K)展示;surface Copilot 聚焦任务、不展示次区。 */}
+          T-029:仅「全局助手」模式(右下角/⌘K)展示;surface Copilot 聚焦任务、不展示次区。
+          [T-095] 板块重合修复:原 shrink-0 让次区在空间不足时拒绝收缩,对话主区(min-h-0)反被
+          压到小于其最小内容 → 输入框直接画在三卡上(重叠实锤)。改成可收缩(去 shrink-0),
+          flex 在空间不足时压缩次区自身(内部继续滚动),永不与主区重叠。 */}
       {showSecondary && (
       <div
         data-slot="copilot-secondary"
-        className="flex max-h-[230px] shrink-0 flex-col gap-3 overflow-y-auto"
+        className="@container flex max-h-[230px] min-h-0 flex-col gap-3 overflow-y-auto"
       >
       {/* CopilotDashboard ---------------------------------------------- */}
       <section
@@ -1611,7 +1656,7 @@ export function AICopilotContent({
         data-slot="copilot-dashboard"
         data-region="dashboard"
         data-slot-region="copilot-region"
-        className="grid shrink-0 grid-cols-1 gap-3 md:grid-cols-3"
+        className="grid shrink-0 grid-cols-1 gap-3 @[640px]:grid-cols-3"
       >
         <h3 id="ai-copilot-dashboard-title" className="sr-only">
           Copilot 控制台
@@ -1700,8 +1745,9 @@ export function AICopilotContent({
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2 pl-5">
+                    {/* [T-095②] 副文:有词表副文/项目关联才渲,不再渲无意义的「项目:—」。 */}
                     <span className="min-w-0 truncate text-[9.5px] leading-tight text-muted-foreground">
-                      {taskSubtitle(task) ?? `项目：${task.projectId ?? "—"}`}
+                      {taskSecondLine(task) ?? ""}
                     </span>
                     <span className="shrink-0 text-[9.5px] leading-tight text-muted-foreground">
                       {TASK_STATUS_LABEL[task.status]}
@@ -1746,7 +1792,8 @@ export function AICopilotContent({
                 // 与全局一致(原为手搓 inline class,灰扑扑、样式怪)。
                 const status = CONTINUING_STATUS_META[task.status] ??
                   CONTINUING_STATUS_META.running;
-                const sub = taskSubtitle(task);
+                // [T-095②] 第二行说人话:词表副文 > 项目关联 > 不渲(不再显「项目:—」)。
+                const sub = taskSecondLine(task);
                 const href = resumeHref(task);
                 return (
                   <div
@@ -1768,7 +1815,7 @@ export function AICopilotContent({
                     </div>
                     <div className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate text-[9.5px] leading-tight text-muted-foreground">
-                        {sub ?? `项目：${task.projectId ?? "—"}`}
+                        {sub ?? ""}
                       </span>
                       <Button
                         type="button"

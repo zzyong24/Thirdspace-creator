@@ -496,6 +496,15 @@ describe("[T-081⑤] honestyBlock — 工具边界诚实", () => {
     );
     expect(a.system).toContain("说明当前工具边界");
   });
+
+  // [T-098] 第 6 条:context.* 数据卡直渲后,模型只有指针权、无转录权 —— 禁逐字口播清单。
+  it("[T-098] system 注入「指针权/禁逐字复述清单」规则", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).toContain("只有指针权");
+    expect(a.system).toContain("禁止逐字复述清单内容");
+    expect(a.system).toContain("已展示在卡片中");
+  });
 });
 
 // [T-081②] positioning.generate 的真实作品画像 —— formatWorksBrief 纯函数。

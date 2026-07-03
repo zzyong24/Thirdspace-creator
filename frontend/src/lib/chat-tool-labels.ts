@@ -77,6 +77,27 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
   },
 };
 
+// [T-095] 调度采集任务类型的中文词表 —— 「最近任务/继续任务」等任务 feed 渲 taskType 时用,
+// 与 AI 创作任务词表(features/copilot 的 TASK_TYPE_LABEL)互补:这里只收 scheduled.* 采集类。
+// sub 描述账号/范围(采集类任务不挂单项目,任务卡副文显示它而不是无意义的「项目:—」)。
+// 落统一词表文件(与 CHAT_TOOL_LABELS 同库),防止各 surface 再各自硬编码 op id。
+export const SCHEDULED_TASK_TYPE_LABELS: Readonly<
+  Record<string, { label: string; sub: string }>
+> = {
+  "scheduled.self.detail": {
+    label: "作品明细采集",
+    sub: "定时采集本账号作品明细",
+  },
+  "scheduled.comments": {
+    label: "评论采集",
+    sub: "定时采集本账号作品评论",
+  },
+  "scheduled.self.metrics": {
+    label: "作品数据采集",
+    sub: "定时采集本账号作品数据",
+  },
+};
+
 /** skillsBrief 每工具行数上限(SPEC §1.3 [gate-F1]:超出截断)。 */
 export const SKILLS_BRIEF_MAX_LINES = 20;
 
