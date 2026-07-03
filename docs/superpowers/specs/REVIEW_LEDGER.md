@@ -31,3 +31,4 @@
 | [first-principles-redesign](2026-07-03-first-principles-redesign.md) | 2026-07-03 | ✅ PASS | **可开工 T-063a~f** | 第一性重构北极星:11 导航→4(今日台/作品/库/设置)+对话主干+宪法修正案 §11。MiniMax 审:0 blocker/0 major/3 minor(裁决引用列/T-063b 验收断言化/零删除保障)全部内联 [gate-F1~F3] |
 | [two-stage-project](2026-07-03-two-stage-project-design.md) | 2026-07-03 | ✅ PASS | **可开工 T-076** | 项目两阶段化(脚本→复盘,拍摄前端全删,宪法 §4 修正案,用户直接裁决)。MiniMax 审 2 minor(主行动分支明确化/验收行为链化)已内联 |
 | [copilot-skill-native](2026-07-03-copilot-skill-native-design.md) | 2026-07-03 | ✅ PASS | **可开工 T-077a/b/c** | Copilot Skill 化(技能管理页签/brief.fill/技能自感知)。零新契约(复用 T-040 prompts ops)。2 minor 内联 |
+| [knowledge-asset-redesign](2026-07-03-knowledge-asset-redesign.md) | 2026-07-03 | ⚠️ CONCERNS | **已处置→可开工 T-079a/b/c** | 知识库第一性重做(四原子 claim/evidence/quote/qa+蒸馏管线+战绩回流+观点地图)。major=缺不造轮子节→补 §0.5(零新表,复用四件套;Zettelkasten 原子性/弃双链,Roam 引用思想/用现成用料链,Notion 类型化/弃通用字段) |
