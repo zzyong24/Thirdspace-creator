@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-055 | AI 交互范式收敛 + 项目板块重做(SPEC 先行) | 📋 写 SPEC→过审→开工 | 待写 docs/superpowers/specs/ | **用户 2026-07-02 反馈批(方向级)**:①全站 AI 按钮收敛为对话形式(聊定位/聊素材/聊脚本统一,AdoptCandidateCard 按钮任务流退役为「打开对话+预填消息」,产物 generative UI 卡片在对话里采纳) ②对话须带上下文 chip(@项目名/对象,治「不知道在聊哪个项目」) ③项目板块重做:内容合同/论点树等方法论实体退役,围绕「一条内容的稿面演进」做单一工作台,阶段=成熟度标记非分离页面 ④知识库重设计:可写+来源链+可被创作引用 ⑤素材:制作阶段产物自动入库为主源头 ⑥本地文件存储规则:用户可见文件夹+Finder 打开+真下载 ⑦经验沉淀回流进创作流、发布中心改排期-登记-回流操作流。**改方向必须过 spec-review gate** |
+| T-056 | 用户反馈批快修(不动方向的 7 个体验 bug) | 📋 | 本反馈 | ①定位页双 AI 入口合一(留「在对话里聊定位」,任务按钮退) ②聊定位点开内容重复两遍+无 @项目 chip(查 copilotDeepLink 预调双发根因) ③对话区字体过小 ④创建项目弹窗留白过多(裁宪后字段少了布局没收) ⑤brief(立项)进项目导航/stepper 可达 ⑥素材「更多」按钮改真实语义(删除要明示+确认,不许叫更多) ⑦素材下载在 local-fs 下做真(复制到用户位置/Finder 显示) |
 | T-054 | UI 视觉质量提升(全站去丑:样板间→设计规范→推平) | 🔨 样板间首刀已落 | [对比图](frontend/docs/t054-ui/) | 样板间首页三刀落地(bb6fe6a):MetricCard 空 delta 灰杠全站消除、数据概览删重复 KPI 瓷砖、待办空态引导卡;前后对比图落 docs/t054-ui/(baseline + after)。**下一步待用户看图拍板**:①对首页改进方向给反馈(或给目标图/参考产品) ②复盘页样板 ③提炼 token 规范(globals.css 已有 130 变量底子)→ 全站分组推平 ④每页 design-shot 闭环 |
 | T-053 | 七步主线贯通(业务流做真·端到端走查验收) | ✅ | [ALIGNMENT](docs/product-audit/ALIGNMENT.md) + [走查截图](frontend/docs/t053-walkthrough/) | 四断点全通:①脚本 ensureScriptArtifact(AI 岛/首存 write-on-intent 建 artifact,假保存修真) ②制作死锁双层拆(StartProductionIsland 全前端首个 outputs.create 入口+有 wiring 即渲染工作台) ③reviews.list 全链新增(复盘记录读真)+校准旧预测残留清零(录入回流可达)+评论 basis 出题在选题会可达 ④研究页读 trend_analysis 重建产物;真机走查 10 截图落档,「开始制作」点击→工作台贯通实证(e657721+47f39e7) |
 | T-049 | 审计修复 Wave A:止血(数据破坏+核心路径 bug) | ✅ | [ALIGNMENT §五](docs/product-audit/ALIGNMENT.md) | 9 bug 全修:B1/B2 projectWorkspaceHref 统一(完整 id+brief 落总览)、B3 partial-merge+定位数据恢复、B4 带简介、B7 NULLS LAST、B8 热度直读、B10 onConflict、B12 prepareInput 延迟建 artifact、B17 富录入+项目选择器+清 6 垃圾、B5 相对路径 PUT+catch;1169 测绿,真机验 5 项通过 |
