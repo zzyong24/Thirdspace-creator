@@ -31,6 +31,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { KnowledgeAtlas } from "./knowledge-atlas";
 import { KnowledgeDetailPreview } from "./knowledge-detail-preview";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
@@ -112,6 +113,17 @@ export function KnowledgeInteractiveRegion({
   const [activeFilter, setActiveFilter] = React.useState<string>("all");
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
+  // T-079c 「观点地图|全部」视图切换(SPEC §3):默认视图 = 观点地图(按 tag
+  // 主题聚类的分组卡墙),原时间流列表保留为「全部」。两个回落:
+  //   - 旧 fixture VM / 测试 override 不带 atlas → 「全部」(既有结构性契约
+  //     测试不受影响;真实装配层 knowledge-data 始终提供 atlas);
+  //   - `?tag=` 生效(KNOW-13 标签筛选)→ 「全部」:标签过滤作用在时间流列表
+  //     上,用户点 tag chip 进来要看的就是过滤后的列表,不是地图。
+  const atlas = viewModel.atlas ?? null;
+  const [view, setView] = React.useState<"atlas" | "all">(
+    atlas !== null && !viewModel.activeTag ? "atlas" : "all",
+  );
+
   // F1c write affordance(修订)。The island owns no global store: after a write it
   // asks the App Router to revalidate the server tree so the real `knowledge.list`
   // re-runs and the refreshed rows flow back through the page (island → client.*
@@ -164,17 +176,32 @@ export function KnowledgeInteractiveRegion({
 
   return (
     <>
-      <KnowledgeToolbar
-        query={query}
-        onQueryChange={handleSearchChange}
-        chips={FILTER_CHIPS}
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-      />
+      {/* T-079c 视图切换:atlas VM 在场才渲切换器(旧 VM 无地图可切)。 */}
+      {atlas !== null ? (
+        <KnowledgeViewSwitch view={view} onViewChange={setView} />
+      ) : null}
+      {view === "all" ? (
+        <KnowledgeToolbar
+          query={query}
+          onQueryChange={handleSearchChange}
+          chips={FILTER_CHIPS}
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
+      ) : null}
       <KnowledgeMetrics metrics={viewModel.metrics} />
+      {/* T-079c 默认视图 = 观点地图(按 tag 主题聚类分组卡墙;未归类固定底部
+          默认折叠 [gate-F3])。选中卡片复用下方 T-062c 详情预览。 */}
+      {view === "atlas" && atlas !== null ? (
+        <KnowledgeAtlas
+          atlas={atlas}
+          selectedId={selectedId}
+          onSelectCard={setSelectedId}
+        />
+      ) : null}
       {/* KNOW-13:`?tag=` 生效时(recent 已在服务端装配层按标签过滤)显示当前
           筛选 + 「清除筛选」返回全量列表(去掉 URL 参数即可)。 */}
-      {viewModel.activeTag ? (
+      {view === "all" && viewModel.activeTag ? (
         <div
           data-slot="knowledge-tag-filter"
           className="flex items-center gap-2 rounded-md border border-border bg-surface-subtle px-2.5 py-1.5 text-[12px] text-muted-foreground"
@@ -194,16 +221,18 @@ export function KnowledgeInteractiveRegion({
           </Link>
         </div>
       ) : null}
-      <KnowledgeGrid
-        categories={viewModel.categories}
-        recent={filteredRecent}
-        popularTags={viewModel.popularTags}
-        memoryInsights={viewModel.memoryInsights}
-        unsorted={viewModel.unsorted}
-        snippets={viewModel.snippets}
-        selectedId={selectedId}
-        onSelectRow={setSelectedId}
-      />
+      {view === "all" ? (
+        <KnowledgeGrid
+          categories={viewModel.categories}
+          recent={filteredRecent}
+          popularTags={viewModel.popularTags}
+          memoryInsights={viewModel.memoryInsights}
+          unsorted={viewModel.unsorted}
+          snippets={viewModel.snippets}
+          selectedId={selectedId}
+          onSelectRow={setSelectedId}
+        />
+      ) : null}
 
       {/* F1c — inline 添加笔记/修订 affordance, revealed when a recent row is
           selected. Submit calls knowledge.revisions.create (POST
@@ -249,6 +278,55 @@ export function KnowledgeInteractiveRegion({
         </form>
       ) : null}
     </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// KnowledgeViewSwitch — 「观点地图|全部」视图切换(T-079c,SPEC §3)
+// ---------------------------------------------------------------------------
+
+function KnowledgeViewSwitch({
+  view,
+  onViewChange,
+}: {
+  readonly view: "atlas" | "all";
+  readonly onViewChange: (view: "atlas" | "all") => void;
+}) {
+  const options = [
+    { id: "atlas" as const, label: "观点地图" },
+    { id: "all" as const, label: "全部" },
+  ];
+  return (
+    <div
+      data-slot="knowledge-view-switch"
+      role="tablist"
+      aria-label="知识库视图切换"
+      className="flex w-fit items-center gap-0.5 rounded-md border border-border bg-surface-subtle p-0.5"
+    >
+      {options.map((option) => {
+        const active = option.id === view;
+        return (
+          <button
+            key={option.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            data-slot="knowledge-view-switch-option"
+            data-view-id={option.id}
+            data-active={active ? "true" : "false"}
+            onClick={() => onViewChange(option.id)}
+            className={
+              "rounded px-2.5 py-1 text-[12px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
+              (active
+                ? "bg-surface text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground")
+            }
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

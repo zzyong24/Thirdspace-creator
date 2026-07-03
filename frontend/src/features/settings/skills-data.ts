@@ -139,6 +139,11 @@ export const SKILL_LABELS: Readonly<Record<string, SkillLabel>> = {
     name: "知识归类",
     purpose: "把倒入的原文判成知识卡候选(类型/标题/标签/摘要)。",
   },
+  // T-079b 蒸馏管线:知识流入口由它替代 classify(classify 保留供他用)。
+  "knowledge.distill": {
+    name: "蒸馏知识",
+    purpose: "把倒入的原文蒸馏成一批可独立引用的知识原子(观点/证据/金句/问题)候选。",
+  },
 };
 
 /** 取某 skill 的中文词条;缺词表回退用 id 本身(诚实显示,不编)。 */

@@ -1,19 +1,25 @@
 "use client";
 
 /**
- * 知识倾倒场(T-062c SPEC §4)—— /knowledge 录入重做,复用稿面弹药区(ammo-dump-zone)的
- * 「倒进去自动归类」交互骨架,但对象是**文本知识**而非文件素材:
+ * 知识倾倒场(T-062c 骨架 → T-079b 蒸馏管线升级)—— /knowledge 录入内核:
  *
- *   粘贴文本/URL、拖入 .md/.txt(FileReader 读文本)→ 点「归类」→ POST /api/knowledge/classify
- *   (knowledge.classify AI 节点,capability 走 model-config)→ **确认门卡片**(AI 判的
- *   type/title/tags/summary,type/title 可改)→ 点「存入知识库」→ contract knowledge.create
- *   → router.refresh。
+ *   粘贴文本/URL、拖入 .md/.txt(FileReader 读文本)→ 点「蒸馏」→ POST /api/knowledge/distill
+ *   (knowledge.distill AI 节点,capability 走 model-config)→ **蒸馏批量确认门**:一批知识
+ *   原子行卡(每条 checkbox 默认全选 + type 四原子下拉 + title 可编辑 + sourceNote 可改)→
+ *   点「采纳选中 N 条」→ 逐条 contract knowledge.create(title/knowledgeType/content=note/
+ *   sourceNote)+ suggestedTags 挂 tag(taxonomy assignTags,best-effort)→ router.refresh。
+ *
+ * T-079b 变更(SPEC §2):
+ *   - 知识流「归类单卡」退役,由蒸馏批量确认门全面替代(classify 模板/runner/路由保留供他用);
+ *   - 「原文同时存档」checkbox 默认勾选 → 采纳时多存一条 type=reference(title=原文首行
+ *     ≤60 字,content=全文),出处存档不丢;
+ *   - 手动补录 type 下拉换四原子 + reference。
  *
  * 铁律与 [gate-F2]:
- *   - AI 只产候选,人点「存入知识库」才物化(确认门);
- *   - 分类失败 → **内联错误提示**(非 toast 即逝),原始输入保留供修改重试,或走「手动补录」
+ *   - AI 只产候选,人点「采纳选中 N 条」才物化(确认门);
+ *   - 蒸馏失败 → **内联错误提示**(非 toast 即逝),原始输入保留供修改重试,或走「手动补录」
  *     (自己填 title/type 直接存),绝不静默兜底;
- *   - 旧「新建知识」独立表单退役,手动补录是倾倒场内的次入口(最小字段 title+正文)。
+ *   - tag 挂载是增强:失败不阻断原子入库(与弹药区 assignTagsBestEffort 同款取舍)。
  */
 
 import * as React from "react";
@@ -23,22 +29,35 @@ import { Inbox } from "lucide-react";
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 
-type KnowledgeType = "note" | "reference" | "inspiration" | "snippet" | "transcript";
+// 四原子(T-079a 契约新增)—— 录入侧主动产的类型;reference 保留给原文存档/外部参考。
+type AtomType = "claim" | "evidence" | "quote" | "qa";
+type ManualType = AtomType | "reference";
 
-interface Classification {
-  knowledgeType: KnowledgeType;
+/** 蒸馏路由返回的单个原子(/api/knowledge/distill)。 */
+interface DistilledAtom {
+  type: AtomType;
   title: string;
-  tags: string[];
-  summary: string;
+  note: string;
+  sourceNote: string;
 }
 
-// 类型下拉选项 —— 5 枚举同 contract knowledge.create 的 body(中文名同筛选 chip)。
-const TYPE_OPTIONS: ReadonlyArray<{ value: KnowledgeType; label: string }> = [
-  { value: "note", label: "笔记" },
+/** 确认门里的一行原子(候选 + 勾选态;type/title/sourceNote 可改)。 */
+interface AtomRow extends DistilledAtom {
+  selected: boolean;
+}
+
+// 四原子中文词表(确认门 type 下拉;同 §3 知识卡徽章语义)。
+const ATOM_TYPE_OPTIONS: ReadonlyArray<{ value: AtomType; label: string }> = [
+  { value: "claim", label: "观点" },
+  { value: "evidence", label: "证据" },
+  { value: "quote", label: "金句" },
+  { value: "qa", label: "观众问题" },
+];
+
+// 手动补录 type 下拉 = 四原子 + reference(参考/存档)。旧五枚举录入侧退役(存量兼容仍在契约)。
+const MANUAL_TYPE_OPTIONS: ReadonlyArray<{ value: ManualType; label: string }> = [
+  ...ATOM_TYPE_OPTIONS,
   { value: "reference", label: "参考" },
-  { value: "inspiration", label: "灵感" },
-  { value: "snippet", label: "片段" },
-  { value: "transcript", label: "记录" },
 ];
 
 // 可读入的文本文件后缀(SPEC §4:拖入 .md/.txt)。
@@ -54,32 +73,92 @@ function readTextFile(file: File): Promise<string> {
   });
 }
 
+/** 原文存档标题:首个非空行截 60 字(SPEC §2:title=原文标题或首行)。 */
+export function archiveTitleOf(raw: string): string {
+  const firstLine =
+    raw
+      .split("\n")
+      .map((l) => l.trim())
+      .find(Boolean) ?? "";
+  return firstLine.slice(0, 60);
+}
+
+/**
+ * 把 suggestedTags 挂到知识条目(现有 taxonomy 路径:listTags 找同名 → 缺的 createTag →
+ * assignTags entityType=knowledge)。与弹药区 assignTagsBestEffort 同款 best-effort 取舍:
+ * 标签是增强,失败不阻断入库(原子已物化,tag 丢了可后补)。
+ */
+export async function assignKnowledgeTagsBestEffort(
+  knowledgeId: string,
+  tagNames: readonly string[],
+): Promise<void> {
+  if (tagNames.length === 0) return;
+  try {
+    const listed = (await client.listTags({
+      params: undefined,
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ id: string; name: string }>;
+    const byName = new Map(
+      (Array.isArray(listed) ? listed : []).map((t) => [t.name, t.id]),
+    );
+    const tagIds: string[] = [];
+    for (const name of tagNames) {
+      const hit = byName.get(name);
+      if (hit) {
+        tagIds.push(hit);
+        continue;
+      }
+      const created = (await client.createTag({
+        params: undefined,
+        query: undefined,
+        body: { name, kind: "knowledge-topic" },
+      })) as unknown as { id: string };
+      tagIds.push(created.id);
+    }
+    await client.assignTags({
+      params: undefined,
+      query: undefined,
+      body: { entityType: "knowledge", entityId: knowledgeId, tagIds },
+    });
+  } catch {
+    /* 标签是增强,失败不阻断入库 */
+  }
+}
+
 const inputCls =
   "rounded-md border border-border bg-surface px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 const buttonCls =
   "inline-flex h-8 items-center rounded-md px-3 text-[13px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50";
+const selectCls =
+  "h-8 rounded-md border border-border bg-surface px-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
 export function KnowledgeDumpZone() {
   const router = useRouter();
   const [content, setContent] = React.useState("");
   const [dragActive, setDragActive] = React.useState(false);
-  const [busy, setBusy] = React.useState<"idle" | "classifying" | "saving">("idle");
-  // 内联错误(分类/保存失败都落这;非 toast 即逝,原始输入保留 [gate-F2])。
+  const [busy, setBusy] = React.useState<"idle" | "distilling" | "saving">("idle");
+  // 内联错误(蒸馏/采纳失败都落这;非 toast 即逝,原始输入保留 [gate-F2])。
   const [error, setError] = React.useState<string | null>(null);
-  // 确认门卡片:AI 判的归类候选(type/title 可改)。null = 未归类。
-  const [card, setCard] = React.useState<Classification | null>(null);
+  // 蒸馏批量确认门:AI 产的原子候选行(勾选/type/title/sourceNote 可改)。null = 未蒸馏。
+  const [atoms, setAtoms] = React.useState<AtomRow[] | null>(null);
+  const [suggestedTags, setSuggestedTags] = React.useState<string[]>([]);
+  // 「原文同时存档」开关(默认勾选)→ 采纳时多存一条 type=reference 的全文存档。
+  const [archiveOriginal, setArchiveOriginal] = React.useState(true);
   // 手动补录次入口(最小字段 title + 正文;正文复用倾倒场输入框)。
   const [manualOpen, setManualOpen] = React.useState(false);
   const [manualTitle, setManualTitle] = React.useState("");
-  const [manualType, setManualType] = React.useState<KnowledgeType>("note");
+  const [manualType, setManualType] = React.useState<ManualType>("claim");
 
   const reset = React.useCallback(() => {
     setContent("");
-    setCard(null);
+    setAtoms(null);
+    setSuggestedTags([]);
+    setArchiveOriginal(true);
     setError(null);
     setManualOpen(false);
     setManualTitle("");
-    setManualType("note");
+    setManualType("claim");
   }, []);
 
   // 拖入 .md/.txt → 读文本追加进输入区(非文本文件内联提示,不静默吞)。
@@ -109,55 +188,95 @@ export function KnowledgeDumpZone() {
     [],
   );
 
-  // 「归类」→ POST /api/knowledge/classify → 确认门卡片。失败内联展示,输入保留。
-  const handleClassify = React.useCallback(async () => {
+  // 「蒸馏」→ POST /api/knowledge/distill → 批量确认门。失败内联展示,输入保留 [gate-F2]。
+  const handleDistill = React.useCallback(async () => {
     const text = content.trim();
     if (!text || busy !== "idle") return;
-    setBusy("classifying");
+    setBusy("distilling");
     setError(null);
     try {
-      const res = await fetch("/api/knowledge/classify", {
+      const res = await fetch("/api/knowledge/distill", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ content: text }),
       });
       const json = (await res.json().catch(() => null)) as
-        | { classification?: Classification; error?: string }
+        | { atoms?: DistilledAtom[]; suggestedTags?: string[]; error?: string }
         | null;
-      if (!res.ok || !json?.classification) {
-        throw new Error(json?.error || `归类失败(HTTP ${res.status})`);
+      if (!res.ok || !Array.isArray(json?.atoms) || json.atoms.length === 0) {
+        throw new Error(json?.error || `蒸馏失败(HTTP ${res.status})`);
       }
-      setCard(json.classification);
+      // 默认全选(SPEC §2:每条 checkbox 默认勾上,人只做减法与微调)。
+      setAtoms(json.atoms.map((a) => ({ ...a, selected: true })));
+      setSuggestedTags(Array.isArray(json.suggestedTags) ? json.suggestedTags : []);
+      setArchiveOriginal(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "归类失败,请重试或手动补录。");
+      setError(err instanceof Error ? err.message : "蒸馏失败,请重试或手动补录。");
     } finally {
       setBusy("idle");
     }
   }, [content, busy]);
 
-  // 确认门「存入知识库」→ knowledge.create(人采纳才物化)→ refresh。
-  const handleSave = React.useCallback(async () => {
-    if (!card || busy !== "idle") return;
-    const title = card.title.trim();
-    if (!title) return;
+  /** 就地改一行原子(勾选/type/title/sourceNote)。 */
+  const patchAtom = React.useCallback((index: number, patch: Partial<AtomRow>) => {
+    setAtoms((prev) =>
+      prev ? prev.map((a, i) => (i === index ? { ...a, ...patch } : a)) : prev,
+    );
+  }, []);
+
+  const selectedCount = (atoms ?? []).filter(
+    (a) => a.selected && a.title.trim().length > 0,
+  ).length;
+
+  // 确认门「采纳选中 N 条」→ 逐条 knowledge.create + tags 挂载(+ 可选原文 reference 存档)。
+  const handleAdopt = React.useCallback(async () => {
+    if (!atoms || busy !== "idle") return;
+    const picked = atoms.filter((a) => a.selected && a.title.trim().length > 0);
+    if (picked.length === 0) return;
     setBusy("saving");
     setError(null);
     try {
-      await client.createKnowledge({
-        params: undefined,
-        query: undefined,
-        body: { title, knowledgeType: card.knowledgeType, content: content.trim() },
-      });
+      const fullText = content.trim();
+      for (const atom of picked) {
+        const created = (await client.createKnowledge({
+          params: undefined,
+          query: undefined,
+          body: {
+            title: atom.title.trim(),
+            knowledgeType: atom.type,
+            // 原子本体在 title;note 是评注/上下文,落 content(可空)。
+            content: atom.note.trim(),
+            ...(atom.sourceNote.trim()
+              ? { sourceNote: atom.sourceNote.trim() }
+              : {}),
+          },
+        })) as unknown as { id: string };
+        // AI 馆长(轻):suggestedTags 即主题挂载(best-effort,失败不阻断)。
+        await assignKnowledgeTagsBestEffort(created.id, suggestedTags);
+      }
+      // 「原文同时存档」:多存一条 reference(title=首行≤60 字,content=全文),出处不丢。
+      if (archiveOriginal && fullText) {
+        await client.createKnowledge({
+          params: undefined,
+          query: undefined,
+          body: {
+            title: archiveTitleOf(fullText) || "原文存档",
+            knowledgeType: "reference",
+            content: fullText,
+          },
+        });
+      }
       reset();
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "存入知识库失败,请重试。");
+      // 失败内联保留输入(已成条目不回滚 —— 诚实呈现,refresh 后可见已入库的部分)。
+      setError(err instanceof Error ? err.message : "采纳入库失败,请重试。");
     } finally {
       setBusy("idle");
     }
-  }, [card, busy, content, reset, router]);
+  }, [atoms, busy, content, suggestedTags, archiveOriginal, reset, router]);
 
-  // 手动补录(分类失败/不想走 AI 的兜底次入口):title + type + 正文直接存。
+  // 手动补录(蒸馏失败/不想走 AI 的兜底次入口):title + type + 正文直接存。
   const handleManualSave = React.useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -190,7 +309,7 @@ export function KnowledgeDumpZone() {
     >
       <div className="flex items-center gap-2 text-xs text-text-subtle">
         <Inbox className="size-4 shrink-0" aria-hidden="true" />
-        把笔记、金句、逐字稿、参考链接整段倒进来 —— AI 自动归类,确认后进知识库
+        把笔记、金句、逐字稿、参考链接整段倒进来 —— AI 蒸馏成知识原子,采纳后进知识库
       </div>
       <textarea
         data-slot="knowledge-dump-input"
@@ -215,7 +334,7 @@ export function KnowledgeDumpZone() {
         )}
       />
 
-      {/* 内联错误(非 toast):分类/保存失败都落这,输入保留供重试或手动补录 [gate-F2]。 */}
+      {/* 内联错误(非 toast):蒸馏/采纳失败都落这,输入保留供重试或手动补录 [gate-F2]。 */}
       {error ? (
         <p
           data-slot="knowledge-dump-error"
@@ -229,12 +348,12 @@ export function KnowledgeDumpZone() {
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          data-slot="knowledge-classify"
+          data-slot="knowledge-distill"
           disabled={busy !== "idle" || content.trim().length === 0}
-          onClick={() => void handleClassify()}
+          onClick={() => void handleDistill()}
           className={cn(buttonCls, "bg-brand text-brand-foreground hover:bg-brand/90")}
         >
-          {busy === "classifying" ? "归类中…" : "归类"}
+          {busy === "distilling" ? "蒸馏中…" : "蒸馏"}
         </button>
         <button
           type="button"
@@ -251,57 +370,92 @@ export function KnowledgeDumpZone() {
         </button>
       </div>
 
-      {/* 确认门卡片:AI 判的归类候选,type/title 可改;人点「存入知识库」才落库。 */}
-      {card ? (
+      {/* 蒸馏批量确认门:原子候选行卡,勾选/type/title/sourceNote 可改;人点「采纳」才落库。 */}
+      {atoms ? (
         <div
-          data-slot="knowledge-classify-card"
+          data-slot="knowledge-distill-batch"
           className="flex flex-col gap-2 rounded-md border border-border bg-surface p-2.5"
         >
           <p className="text-[11px] text-muted-foreground">
-            AI 归类结果(类型/标题可改,确认后存入知识库)
+            蒸馏出 {atoms.length} 个知识原子(勾选要留的,类型/标题/出处可改;采纳后进知识库)
           </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="sr-only" htmlFor="knowledge-classify-type">
-              类型
-            </label>
-            <select
-              id="knowledge-classify-type"
-              data-slot="knowledge-classify-type"
-              value={card.knowledgeType}
-              onChange={(e) =>
-                setCard({ ...card, knowledgeType: e.target.value as KnowledgeType })
-              }
-              className="h-8 rounded-md border border-border bg-surface px-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-            >
-              {TYPE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <label className="sr-only" htmlFor="knowledge-classify-title">
-              标题
-            </label>
-            <input
-              id="knowledge-classify-title"
-              data-slot="knowledge-classify-title"
-              type="text"
-              value={card.title}
-              onChange={(e) => setCard({ ...card, title: e.target.value })}
-              className={cn(inputCls, "h-8 min-w-0 flex-1 py-0")}
-            />
-          </div>
-          {card.summary ? (
-            <p
-              data-slot="knowledge-classify-summary"
-              className="text-[12px] text-muted-foreground"
-            >
-              {card.summary}
-            </p>
-          ) : null}
-          {card.tags.length > 0 ? (
-            <div data-slot="knowledge-classify-tags" className="flex flex-wrap gap-1">
-              {card.tags.map((tag) => (
+          <ul className="flex flex-col gap-2">
+            {atoms.map((atom, index) => (
+              <li
+                key={index}
+                data-slot="knowledge-atom-row"
+                className="flex flex-col gap-1.5 rounded-md border border-border/70 bg-surface-subtle/40 p-2"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="checkbox"
+                    data-slot="knowledge-atom-select"
+                    aria-label={`采纳第 ${index + 1} 条`}
+                    checked={atom.selected}
+                    onChange={(e) => patchAtom(index, { selected: e.target.checked })}
+                    className="size-4 accent-brand"
+                  />
+                  <label className="sr-only" htmlFor={`knowledge-atom-type-${index}`}>
+                    类型
+                  </label>
+                  <select
+                    id={`knowledge-atom-type-${index}`}
+                    data-slot="knowledge-atom-type"
+                    value={atom.type}
+                    onChange={(e) =>
+                      patchAtom(index, { type: e.target.value as AtomType })
+                    }
+                    className={selectCls}
+                  >
+                    {ATOM_TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <label className="sr-only" htmlFor={`knowledge-atom-title-${index}`}>
+                    标题
+                  </label>
+                  <input
+                    id={`knowledge-atom-title-${index}`}
+                    data-slot="knowledge-atom-title"
+                    type="text"
+                    value={atom.title}
+                    onChange={(e) => patchAtom(index, { title: e.target.value })}
+                    className={cn(inputCls, "h-8 min-w-0 flex-1 py-0")}
+                  />
+                </div>
+                {atom.note ? (
+                  <p
+                    data-slot="knowledge-atom-note"
+                    className="pl-6 text-[12px] text-muted-foreground"
+                  >
+                    {atom.note}
+                  </p>
+                ) : null}
+                <div className="flex items-center gap-2 pl-6">
+                  <label
+                    className="shrink-0 text-[11px] text-muted-foreground"
+                    htmlFor={`knowledge-atom-source-${index}`}
+                  >
+                    出处
+                  </label>
+                  <input
+                    id={`knowledge-atom-source-${index}`}
+                    data-slot="knowledge-atom-source"
+                    type="text"
+                    placeholder="出处/可信度(可空)"
+                    value={atom.sourceNote}
+                    onChange={(e) => patchAtom(index, { sourceNote: e.target.value })}
+                    className={cn(inputCls, "h-7 min-w-0 flex-1 py-0 text-[12px]")}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+          {suggestedTags.length > 0 ? (
+            <div data-slot="knowledge-distill-tags" className="flex flex-wrap gap-1">
+              {suggestedTags.map((tag) => (
                 <span
                   key={tag}
                   className="rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] text-brand"
@@ -311,21 +465,31 @@ export function KnowledgeDumpZone() {
               ))}
             </div>
           ) : null}
+          <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
+            <input
+              type="checkbox"
+              data-slot="knowledge-distill-archive"
+              checked={archiveOriginal}
+              onChange={(e) => setArchiveOriginal(e.target.checked)}
+              className="size-4 accent-brand"
+            />
+            原文同时存档(存一条「参考」,标题取首行)
+          </label>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              data-slot="knowledge-classify-save"
-              disabled={busy !== "idle" || card.title.trim().length === 0}
-              onClick={() => void handleSave()}
+              data-slot="knowledge-distill-adopt"
+              disabled={busy !== "idle" || selectedCount === 0}
+              onClick={() => void handleAdopt()}
               className={cn(buttonCls, "bg-brand text-brand-foreground hover:bg-brand/90")}
             >
-              {busy === "saving" ? "存入中…" : "存入知识库"}
+              {busy === "saving" ? "入库中…" : `采纳选中 ${selectedCount} 条`}
             </button>
             <button
               type="button"
-              data-slot="knowledge-classify-cancel"
+              data-slot="knowledge-distill-cancel"
               disabled={busy !== "idle"}
-              onClick={() => setCard(null)}
+              onClick={() => setAtoms(null)}
               className={cn(
                 buttonCls,
                 "border border-border bg-surface text-foreground hover:bg-surface-subtle",
@@ -363,10 +527,10 @@ export function KnowledgeDumpZone() {
             id="knowledge-manual-type"
             data-slot="knowledge-manual-type"
             value={manualType}
-            onChange={(e) => setManualType(e.target.value as KnowledgeType)}
-            className="h-8 rounded-md border border-border bg-surface px-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            onChange={(e) => setManualType(e.target.value as ManualType)}
+            className={selectCls}
           >
-            {TYPE_OPTIONS.map((opt) => (
+            {MANUAL_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>

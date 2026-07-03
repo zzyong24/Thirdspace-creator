@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 import {
   assembleCreativeContext,
+  formatKnowledgeBrief,
   markReconstructedBrief,
   type ContextDeps,
 } from "./creative-context";
@@ -193,6 +194,105 @@ describe("creative-context T-039a — 复盘作品真材料注入", () => {
       }),
     );
     expect(context.reviewComments).toBe("· 真评论一条");
+  });
+});
+
+// ── T-079c:knowledgeBrief 分段(SPEC 2026-07-03-knowledge-asset-redesign §3)────────
+// 喂料从扁平 title 列表升级为按四原子分段 + 战绩排序:【我的观点】claim top5 /
+// 【证据】evidence top5(带出处)/【金句】quote top5;各段空则「(暂无)」;
+// qa/reference/旧类型不进 brief;title 截 80。
+describe("creative-context T-079c — formatKnowledgeBrief 分段纯函数", () => {
+  it("三段头齐全;claim 带「被 N 条内容用过」;evidence 带出处;quote 只列本体", () => {
+    const brief = formatKnowledgeBrief([
+      { title: "上下文工程是第一性问题", knowledgeType: "claim", usedCount: 3 },
+      {
+        title: "截断策略提升成功率 18%",
+        knowledgeType: "evidence",
+        usedCount: 1,
+        sourceNote: "本账号 6/30 复盘",
+      },
+      { title: "别喂模型垃圾,它会照单全收", knowledgeType: "quote" },
+    ]);
+    expect(brief).toContain("【我的观点】");
+    expect(brief).toContain("【证据】");
+    expect(brief).toContain("【金句】");
+    expect(brief).toContain("· 上下文工程是第一性问题（被 3 条内容用过）");
+    expect(brief).toContain(
+      "· 截断策略提升成功率 18%（出处：本账号 6/30 复盘）（被 1 条内容用过）",
+    );
+    expect(brief).toContain("· 别喂模型垃圾,它会照单全收");
+  });
+
+  it("战绩排序:usedInPublished 优先于 usedCount;每段截 top5", () => {
+    const claims = [
+      { title: "引用 9 次未发布", knowledgeType: "claim", usedCount: 9 },
+      {
+        title: "引用 1 次但已发布",
+        knowledgeType: "claim",
+        usedCount: 1,
+        usedInPublished: true,
+      },
+      ...Array.from({ length: 6 }, (_, i) => ({
+        title: `无战绩观点 ${i}`,
+        knowledgeType: "claim",
+      })),
+    ];
+    const brief = formatKnowledgeBrief(claims);
+    const claimSection = brief.split("【证据】")[0]!;
+    const lines = claimSection.split("\n").filter((l) => l.startsWith("· "));
+    expect(lines).toHaveLength(5); // top5 截断
+    expect(lines[0]).toContain("引用 1 次但已发布"); // 最硬战绩排最前
+    expect(lines[1]).toContain("引用 9 次未发布");
+  });
+
+  it("某段无内容 → 该段落「(暂无)」;qa/reference/旧类型不进 brief", () => {
+    const brief = formatKnowledgeBrief([
+      { title: "只有一条观点", knowledgeType: "claim" },
+      { title: "评论区问题", knowledgeType: "qa" },
+      { title: "原文存档", knowledgeType: "reference" },
+      { title: "旧笔记", knowledgeType: "note" },
+    ]);
+    expect(brief).toContain("· 只有一条观点");
+    expect(brief).toContain("【证据】\n（暂无）");
+    expect(brief).toContain("【金句】\n（暂无）");
+    expect(brief).not.toContain("评论区问题"); // qa 走评论信号消费
+    expect(brief).not.toContain("原文存档"); // reference 是存档
+    expect(brief).not.toContain("旧笔记");
+  });
+
+  it("库全空 → 空串(下游 facet 整段省略,不注(暂无)空壳)", () => {
+    expect(formatKnowledgeBrief([])).toBe("");
+  });
+
+  it("title 超 80 字截断防爆", () => {
+    const long = "长".repeat(120);
+    const brief = formatKnowledgeBrief([
+      { title: long, knowledgeType: "claim" },
+    ]);
+    expect(brief).toContain(`· ${"长".repeat(80)}…`);
+    expect(brief).not.toContain("长".repeat(81));
+  });
+
+  it("assembleCreativeContext:knowledgeBrief 走分段组装(集成缝)", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: null, topic: "" },
+      {
+        positioning: {
+          getPositioningCenter: async () => ({
+            profile: null,
+            currentStatement: null,
+          }),
+        },
+        knowledge: {
+          list: async () => [
+            { title: "观点甲", knowledgeType: "claim", usedCount: 2 },
+          ],
+        },
+      },
+    );
+    expect(context.knowledgeBrief).toContain("【我的观点】");
+    expect(context.knowledgeBrief).toContain("· 观点甲（被 2 条内容用过）");
   });
 });
 

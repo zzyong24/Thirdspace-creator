@@ -1,0 +1,66 @@
+import { NextResponse } from "next/server";
+import type { RequestContext } from "@creatoros/contract";
+import { AuthenticationError } from "@creatoros/backend/modules/identity";
+import { getChatRuntime } from "@/server/persistence-client";
+import { runKnowledgeDistill } from "@/server/ai/knowledge-distill-runner";
+import { readSessionCookie } from "../../v1/auth/_session";
+import { resolveRequestContext } from "@/lib/request-context.server";
+
+// 知识倾倒场蒸馏入口(T-079b SPEC §2)—— 同步轻路由(/api/knowledge/classify 同款 escape
+// hatch:AI 交互不走 RPC envelope):倾倒场 POST { content } → 鉴权(session cookie →
+// RequestContext,T-046 单机免登录直通)→ runKnowledgeDistill(capability
+// "knowledge.distill" 经 model-config 解析,不写死)→ 返回一批知识原子候选
+// { atoms: [{type,title,note,sourceNote}], suggestedTags }。
+//
+// 铁律:AI 只产候选 —— 本路由**不写任何实体**;前端蒸馏批量确认门人点「采纳选中 N 条」才
+// 逐条走 contract knowledge.create。失败诚实 4xx(无凭据/模型不可用/产出不可用),倾倒场
+// 内联展示,原始输入保留供重试或手动补录 [gate-F2]。
+
+export const dynamic = "force-dynamic";
+
+interface DistillRequestBody {
+  content?: string;
+}
+
+export async function POST(req: Request): Promise<Response> {
+  let body: DistillRequestBody;
+  try {
+    body = (await req.json()) as DistillRequestBody;
+  } catch {
+    return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
+  }
+  const content = typeof body.content === "string" ? body.content.trim() : "";
+  if (!content) {
+    return NextResponse.json(
+      { error: "content 不能为空:请先倒入要蒸馏的文本" },
+      { status: 400 },
+    );
+  }
+
+  // 鉴权:同 /api/knowledge/classify —— 有 cookie 验 token,无/失效 cookie 以本机主用户直通(T-046)。
+  const rawToken = readSessionCookie(req);
+  let ctx: RequestContext;
+  try {
+    ctx = await resolveRequestContext(rawToken);
+  } catch (err) {
+    if (err instanceof AuthenticationError) {
+      return NextResponse.json({ error: err.message }, { status: 401 });
+    }
+    throw err;
+  }
+
+  const runtime = await getChatRuntime();
+  try {
+    const distillation = await runKnowledgeDistill(
+      ctx,
+      { content },
+      { resolveModelSpec: runtime.resolveModelSpec },
+    );
+    return NextResponse.json(distillation);
+  } catch (err) {
+    // 没配 model key(LlmCredentialError)/模型产出不可用等 → 诚实 4xx(不假绿、不静默)。
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[api/knowledge/distill] failed:", err);
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}

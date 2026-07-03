@@ -146,14 +146,26 @@ export interface SignalsReader {
   ): Promise<Array<{ source: string; rawText: string; demandTag: string | null }>>;
 }
 
-// 知识库 reader — the creator's KnowledgeItems (title + type). Optional: only the
+// 知识库 reader — the creator's KnowledgeItems. Optional: only the
 // topic.generate node (knowledge basis) passes it. The composition root binds it to the
 // knowledge public service's listKnowledge method.
+// [T-079c] 战绩/出处透传:usedCount(被用料链引用次数)驱动 brief 的战绩排序,
+// sourceNote 给证据段带出处,usedInPublished 是最硬的战绩信号(排序优先)。三个
+// 字段 optional —— 旧绑定/测试 fake 只给 {title, knowledgeType} 也能跑(缺省按
+// 0/false/null 兜底,brief 退化为无战绩排序)。
 export interface KnowledgeReader {
   list(
     ctx: RequestContext,
     opts: { limit?: number },
-  ): Promise<Array<{ title: string; knowledgeType: string }>>;
+  ): Promise<
+    Array<{
+      title: string;
+      knowledgeType: string;
+      usedCount?: number;
+      usedInPublished?: boolean;
+      sourceNote?: string | null;
+    }>
+  >;
 }
 
 // 论点树 reader — the project's ADOPTED thesis tree (核心论点 + 支撑/证据/反驳 分支), read
@@ -360,10 +372,10 @@ export async function assembleCreativeContext(
   let knowledgeBrief = "";
   if (deps.knowledge) {
     try {
+      // [T-079c] 喂料升级(SPEC §3):brief 按四原子分段(观点/证据/金句 各取战绩
+      // top5),替代旧的扁平 title 列表 —— 组装逻辑在纯函数 formatKnowledgeBrief。
       const rows = await deps.knowledge.list(ctx, { limit: 40 });
-      knowledgeBrief = rows
-        .map((k) => `· ${k.title}${k.knowledgeType ? ` (${k.knowledgeType})` : ""}`)
-        .join("\n");
+      knowledgeBrief = formatKnowledgeBrief(rows);
     } catch {
       knowledgeBrief = ""; // 知识库 is best-effort context; never block a node on it
     }
@@ -500,6 +512,80 @@ export async function assembleCreativeContext(
     topic: { title: input.topic, angle: input.angle ?? "" },
     projectId: input.projectId,
   };
+}
+
+// ── [T-079c] knowledgeBrief 分段组装(SPEC 2026-07-03-knowledge-asset-redesign §3)──
+// 知识库喂料从「扁平 title 列表」升级为按四原子分段的战绩排序 brief:
+//   【我的观点】claim 战绩 top5 →「· title(被 N 条内容用过)」
+//   【证据】evidence 战绩 top5(带 sourceNote 出处)
+//   【金句】quote 战绩 top5
+// 排序:usedInPublished(用于已发布,最硬战绩)优先 → usedCount desc;各段空则
+// 该段落「(暂无)」。qa 不进 brief(观众问题走评论信号 signalsBrief 消费),
+// reference 及旧类型(note/snippet/…)是存档/原文,不进创作喂料。每条 title 截
+// 80 字防爆(总长可控:3 段 × 5 条 × ≤80 字)。库全空 → 空串(下游 facet 按
+// 惯例整段省略,不注一个只有(暂无)的空壳)。
+// 纯函数导出,供单测直接断言分段头与战绩排序。
+const KNOWLEDGE_BRIEF_TOP_N = 5;
+const KNOWLEDGE_TITLE_MAX = 80;
+
+export function formatKnowledgeBrief(
+  rows: Array<{
+    title: string;
+    knowledgeType: string;
+    usedCount?: number;
+    usedInPublished?: boolean;
+    sourceNote?: string | null;
+  }>,
+): string {
+  if (rows.length === 0) return "";
+
+  const truncate = (text: string) =>
+    text.length > KNOWLEDGE_TITLE_MAX
+      ? `${text.slice(0, KNOWLEDGE_TITLE_MAX)}…`
+      : text;
+
+  // 战绩排序:用于已发布优先 → 引用次数 desc(缺省 0/false = 无战绩,排后)。
+  const byRecord = (
+    a: { usedCount?: number; usedInPublished?: boolean },
+    b: { usedCount?: number; usedInPublished?: boolean },
+  ) => {
+    const aPub = a.usedInPublished ? 1 : 0;
+    const bPub = b.usedInPublished ? 1 : 0;
+    if (aPub !== bPub) return bPub - aPub;
+    return (b.usedCount ?? 0) - (a.usedCount ?? 0);
+  };
+
+  const topOf = (type: string) =>
+    rows
+      .filter((k) => k.knowledgeType === type)
+      .sort(byRecord)
+      .slice(0, KNOWLEDGE_BRIEF_TOP_N);
+
+  const usedSuffix = (k: { usedCount?: number }) =>
+    (k.usedCount ?? 0) > 0 ? `（被 ${k.usedCount} 条内容用过）` : "";
+
+  const section = (header: string, lines: string[]) =>
+    `【${header}】\n${lines.length > 0 ? lines.join("\n") : "（暂无）"}`;
+
+  return [
+    section(
+      "我的观点",
+      topOf("claim").map((k) => `· ${truncate(k.title)}${usedSuffix(k)}`),
+    ),
+    section(
+      "证据",
+      topOf("evidence").map(
+        (k) =>
+          `· ${truncate(k.title)}${
+            k.sourceNote ? `（出处：${truncate(k.sourceNote)}）` : ""
+          }${usedSuffix(k)}`,
+      ),
+    ),
+    section(
+      "金句",
+      topOf("quote").map((k) => `· ${truncate(k.title)}${usedSuffix(k)}`),
+    ),
+  ].join("\n");
 }
 
 // Render the adopted 结构方案 into a compact brief script.draft reasons against (SEAM-01).

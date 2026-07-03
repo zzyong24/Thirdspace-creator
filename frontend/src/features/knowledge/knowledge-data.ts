@@ -13,6 +13,12 @@ import type {
   KnowledgeSnippet as KnowledgeSnippetVm,
 } from "./knowledge-page";
 import type { MetricCard as MetricCardVm } from "@/types/view-models";
+import {
+  buildKnowledgeAtlas,
+  type AtlasSourceItem,
+  type AtlasTagAssignment,
+  type KnowledgeAtlasVm,
+} from "./knowledge-atlas-vm";
 
 /**
  * Knowledge & Memory READ-side data assembly ("知识库读侧做真").
@@ -66,7 +72,9 @@ import type { MetricCard as MetricCardVm } from "@/types/view-models";
 // Minimal structural DTO — `knowledge.list` returns KnowledgeItemResource rows;
 // we only read the fields we map. NOTE: the contract resource `status` enum is
 // `active | archived` (no "draft"); we keep the wider union only to stay
-// assignable from the fixture row type.
+// assignable from the fixture row type. [T-079c] sourceNote/usedCount/
+// usedInPublished 是 T-079a 数据层加的契约字段(出处 + 战绩投影),观点地图
+// 消费;标 optional 是为了兼容旧 fixture 行(缺省按 null/0/false 兜底)。
 interface KnowledgeListDto {
   readonly id: string;
   readonly title: string;
@@ -74,6 +82,9 @@ interface KnowledgeListDto {
   readonly status: "active" | "archived" | "draft";
   readonly createdAt: string;
   readonly updatedAt: string;
+  readonly sourceNote?: string | null;
+  readonly usedCount?: number;
+  readonly usedInPublished?: boolean;
 }
 
 // `knowledge.relations.list` returns KnowledgeRelationResource rows for ONE
@@ -204,6 +215,8 @@ export async function buildKnowledgeDashboardViewModel(
       memoryInsights: [],
       popularTags: [],
       activeTag,
+      // 读失败没有地图可组;null 让交互岛不渲观点地图(错误态本来也不渲内容区)。
+      atlas: null,
     };
   }
 
@@ -228,6 +241,10 @@ export async function buildKnowledgeDashboardViewModel(
       ? items
       : await filterItemsByTag(client, tags, activeTag, items);
 
+  // T-079c 观点地图:tag → 知识挂载走现成契约 op(entityTags fan-out,与
+  // KNOW-13 过滤同一读法),分组/排序交给纯函数 buildKnowledgeAtlas。
+  const atlas = await assembleAtlas(client, tags, items);
+
   return {
     ...base,
     scenario: "default",
@@ -241,7 +258,64 @@ export async function buildKnowledgeDashboardViewModel(
     memoryInsights: buildMemoryInsights(items, relations?.edges ?? null),
     popularTags,
     activeTag,
+    atlas,
   };
+}
+
+/**
+ * T-079c 观点地图装配:
+ *   1. tags 按 usageCount desc 排(= AtlasTagAssignment 的分配优先级:多 tag
+ *      知识归「最热的那个主题」,见 knowledge-atlas.ts 头注);
+ *   2. 每个 tag fan-out 一次 `taxonomy.entityTags.listEntitiesForTag`(现成契约
+ *      op,与 KNOW-13 过滤同读法),单 tag 读失败只丢该 tag 的挂载(其挂载知识
+ *      落「未归类」),不牵连整墙;
+ *   3. 分组/计数/排序全交纯函数 buildKnowledgeAtlas(单测覆盖)。
+ * tags 读失败(null)→ 全部知识进「未归类」组(诚实降级:没有主题信号,
+ * 不假装分好类)。
+ */
+async function assembleAtlas(
+  client: KnowledgeDataClient,
+  tags: ReadonlyArray<TagDto> | null,
+  items: ReadonlyArray<KnowledgeListDto>,
+): Promise<KnowledgeAtlasVm> {
+  const sourceItems: AtlasSourceItem[] = items.map((item) => ({
+    id: item.id,
+    title: item.title,
+    knowledgeType: item.knowledgeType,
+    sourceNote: item.sourceNote ?? null,
+    usedCount: item.usedCount ?? 0,
+    usedInPublished: item.usedInPublished ?? false,
+    createdAt: item.createdAt,
+  }));
+
+  const rankedTags = (tags ?? [])
+    .slice()
+    .sort((a, b) => b.usageCount - a.usageCount);
+
+  const assignments = (
+    await Promise.all(
+      rankedTags.map(async (tag): Promise<AtlasTagAssignment | null> => {
+        try {
+          const rows = (await client.listEntitiesForTag({
+            params: { tagId: tag.id },
+            query: { page: 1, pageSize: 200 },
+            body: undefined,
+          })) as ReadonlyArray<EntityTagDto>;
+          return {
+            name: tag.name,
+            itemIds: rows
+              .filter((row) => row.entityType === "knowledge")
+              .map((row) => row.entityId),
+          };
+        } catch {
+          // 该 tag 的挂载读失败 → 丢这个主题(其知识落未归类),不阻断整墙。
+          return null;
+        }
+      }),
+    )
+  ).filter((row): row is AtlasTagAssignment => row !== null);
+
+  return buildKnowledgeAtlas(sourceItems, assignments);
 }
 
 // Normalize the raw `?tag=` value: trim; empty/undefined → null (no filter).

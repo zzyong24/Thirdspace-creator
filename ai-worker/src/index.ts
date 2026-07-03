@@ -212,6 +212,16 @@ export {
   knowledgeClassifySchema,
   type KnowledgeClassifyOutput,
 } from "./prompt/templates/knowledge-classify";
+// T-079b 知识蒸馏:倒入原文 → 一批可独立引用的四原子知识候选 {atoms,suggestedTags}
+// (蒸馏批量确认门采纳才逐条 knowledge.create)。schema/type 一并导出给 frontend
+// knowledge-distill-runner。
+export {
+  KNOWLEDGE_DISTILL_TEMPLATE,
+  knowledgeDistillSchema,
+  knowledgeAtomSchema,
+  type KnowledgeDistillOutput,
+  type KnowledgeAtom,
+} from "./prompt/templates/knowledge-distill";
 export {
   runScriptNode,
   parseShots,

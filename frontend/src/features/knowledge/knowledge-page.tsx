@@ -83,6 +83,13 @@ export interface KnowledgeViewModel extends BasePageViewModel {
    * 器不设置(等价 null,无筛选)。
    */
   readonly activeTag?: string | null;
+  /**
+   * T-079c 观点地图 VM(按 tag 主题聚类的分组卡墙,SPEC §3)。真实装配层
+   * (knowledge-data)始终提供 → 页面默认视图 = 观点地图;可选是兼容缝:
+   * fixture 构建器/旧测试 VM 不设置时,交互岛回落「全部」列表视图,
+   * 既有结构性契约测试(toolbar/grid 三列)不受影响。
+   */
+  readonly atlas?: import("./knowledge-atlas-vm").KnowledgeAtlasVm | null;
 }
 
 export interface KnowledgeCategory {

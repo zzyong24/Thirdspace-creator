@@ -38,6 +38,7 @@ import { TOPIC_ENRICH_TEMPLATE } from "./templates/topic-enrich";
 import { MATERIAL_MATCH_TEMPLATE } from "./templates/material-match";
 import { CHATBOX_TOPIC_TEMPLATE } from "./templates/chatbox-turn";
 import { KNOWLEDGE_CLASSIFY_TEMPLATE } from "./templates/knowledge-classify";
+import { KNOWLEDGE_DISTILL_TEMPLATE } from "./templates/knowledge-distill";
 import {
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
@@ -72,6 +73,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   CHATBOX_TOPIC_TEMPLATE,
   // T-062c 知识倾倒场:倒入原文 → 判 {knowledgeType,title,tags,summary} 候选(确认门采纳才落库)。
   KNOWLEDGE_CLASSIFY_TEMPLATE,
+  // T-079b 知识蒸馏:倒入原文 → 一批四原子知识候选 {atoms,suggestedTags}(批量确认门采纳才落库)。
+  KNOWLEDGE_DISTILL_TEMPLATE,
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,

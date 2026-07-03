@@ -49,7 +49,11 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
       ],
     },
     knowledge: {
-      list: async () => [{ title: "RAG 实战", knowledgeType: "note" }],
+      // [T-079c] brief 按四原子分段后只有 claim/evidence/quote 进喂料(note 等
+      // 旧类型是存档,不进 brief)→ fake 用 claim 才会出现在 system 注入里。
+      list: async () => [
+        { title: "RAG 实战", knowledgeType: "claim", usedCount: 2 },
+      ],
     },
     contextReaders: {
       // [T-077b] brief.fill 的现状读端口(fake:proj-1 已填目标观众,其余未填)。

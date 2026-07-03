@@ -149,7 +149,7 @@ describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
       container.querySelector('[data-slot="knowledge-dump-zone"]'),
     ).not.toBeNull();
     expect(
-      container.querySelector('[data-slot="knowledge-classify"]'),
+      container.querySelector('[data-slot="knowledge-distill"]'), // [T-079b] 归类→蒸馏
     ).not.toBeNull();
     expect(
       container.querySelector('[data-slot="knowledge-manual-entry"]'),

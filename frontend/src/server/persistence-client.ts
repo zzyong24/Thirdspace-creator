@@ -1721,13 +1721,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             })),
         };
         // 知识库 reader (topic.generate knowledge basis + topic.enrich 素材依据) — the
-        // creator's KnowledgeItems feed the agent's context so选题 has 素材依据. Maps the
-        // KnowledgeItem row onto the runner's {title, knowledgeType} shape.
+        // creator's KnowledgeItems feed the agent's context so选题 has 素材依据.
+        // [T-079c] 投影补战绩/出处字段(usedCount/usedInPublished/sourceNote,
+        // T-079a listKnowledge 已一次算齐)→ knowledgeBrief 按四原子分段 + 战绩排序。
         const knowledgeReader = {
           list: async (c: RequestContext, opts: { limit?: number }) =>
             (await knowledgeService.listKnowledge(c))
               .slice(0, opts.limit ?? 40)
-              .map((k) => ({ title: k.title, knowledgeType: k.knowledgeType })),
+              .map((k) => ({
+                title: k.title,
+                knowledgeType: k.knowledgeType,
+                usedCount: k.usedCount,
+                usedInPublished: k.usedInPublished,
+                sourceNote: k.sourceNote ?? null,
+              })),
         };
         // 论点树 reader (策划 downstream nodes) — read the project's `thesis_tree` artifact's
         // current version's `contentData.nodes` back as the upstream 编导判断 that
@@ -4638,10 +4645,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           })),
       },
       knowledge: {
+        // [T-079c] 与 dispatch 路径的 knowledgeReader 同投影:补战绩/出处字段
+        // (usedCount/usedInPublished/sourceNote)→ knowledgeBrief 分段+战绩排序。
         list: async (c: RequestContext, opts: { limit?: number }) =>
           (await knowledgeService.listKnowledge(c))
             .slice(0, opts.limit ?? 40)
-            .map((k) => ({ title: k.title, knowledgeType: k.knowledgeType })),
+            .map((k) => ({
+              title: k.title,
+              knowledgeType: k.knowledgeType,
+              usedCount: k.usedCount,
+              usedInPublished: k.usedInPublished,
+              sourceNote: k.sourceNote ?? null,
+            })),
       },
       // T-039b:抖音账号画像 reader —— 定位对话(chatbox.positioning)据此把「这个人在平台上已经
       // 是谁」(平台/账号/粉丝量)注进 system,让定位提案立足真实账号身份。复用 platformAccountService
