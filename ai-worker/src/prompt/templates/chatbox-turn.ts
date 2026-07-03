@@ -73,6 +73,9 @@ export const CHATBOX_TOPIC_TEMPLATE: PromptTemplate = {
     "script.draft",
     // [T-057④] 搜素材:research.gather 引擎进对话(替代已退役的 GatherMaterialIsland)。
     "material.gather",
+    // [T-062a] 对话手录经验:「记一条经验:…」→ 模型直接填参产结构化候选卡,
+    // 人点「存为经验」才 createLearning 落库(铁律②确认门)。project surface 复用本白名单。
+    "learning.capture",
     // [T-058①C] 稿面/选题对话里聊定位 → 产可采纳的定位卡(此前 project surface 无此工具,
     // 模型只能文本写定位 → 无法采纳 → 假承诺温床)。
     "positioning.generate",

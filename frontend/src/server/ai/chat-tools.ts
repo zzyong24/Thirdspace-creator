@@ -204,6 +204,28 @@ export interface PositioningGenerateToolResult {
   suggestion: Awaited<ReturnType<ChatToolDeps["generatePositioning"]>>;
 }
 
+// [T-062a] learning.capture 的 8 类经验(与 learnings.create 契约 enum 同源)。
+export type LearningCaptureType =
+  | "strategy"
+  | "hook"
+  | "structure"
+  | "failure"
+  | "process"
+  | "editing"
+  | "conversion_pattern"
+  | "offer_insight";
+
+// [T-062a] learning.capture 工具结果 —— 一条结构化经验候选(渲成 ChatLearningCard,
+// 人点「存为经验」才 createLearning 落裁决队列;execute 纯回显,不跑二次 LLM、不写库)。
+export interface LearningCaptureToolResult {
+  kind: "learning.capture";
+  suggestion: {
+    title: string;
+    insight: string;
+    learningType: LearningCaptureType;
+  };
+}
+
 // ── 只读 context 工具结果(真数据,给模型读 —— 非候选、不渲卡)────────────────────────────
 // 这三个的 kind(context.*)不在前端 dispatch 的已知分支里,会被安全跳过(不报错):模型把
 // 数据读进上下文后用文字回答即可。形状刻意精简(只带答问所需字段)。
@@ -331,6 +353,43 @@ const REVIEW_ANALYZE_PARAMS = jsonSchema<{ subject?: string }>({
       description: "本次复盘对象(可选;没有就按账号整体表现提炼经验)。",
     },
   },
+  additionalProperties: false,
+});
+
+// [T-062a] learning.capture 入参 —— 模型直接把对话里的经验整理成结构化三字段填参
+// (不再二次跑 LLM);execute 原样回显成候选,人点卡上按钮才物化(铁律②)。
+const LEARNING_CAPTURE_PARAMS = jsonSchema<{
+  title: string;
+  insight: string;
+  learningType: LearningCaptureType;
+}>({
+  type: "object",
+  properties: {
+    title: {
+      type: "string",
+      description: "一句话经验标题(可复用的方法论/教训,如「前 3 秒放结论完播率高」)。",
+    },
+    insight: {
+      type: "string",
+      description: "为什么有效/适用场景/来龙去脉(从对话里提炼,保留用户原意)。",
+    },
+    learningType: {
+      type: "string",
+      enum: [
+        "strategy",
+        "hook",
+        "structure",
+        "failure",
+        "process",
+        "editing",
+        "conversion_pattern",
+        "offer_insight",
+      ],
+      description:
+        "经验类型:strategy=选题策略 / hook=钩子 / structure=结构 / failure=失败教训 / process=流程 / editing=剪辑 / conversion_pattern=转化模式 / offer_insight=变现洞察。",
+    },
+  },
+  required: ["title", "insight", "learningType"],
   additionalProperties: false,
 });
 
@@ -509,6 +568,23 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       execute: async ({ subject }): Promise<ReviewAnalyzeToolResult> => {
         const items = await deps.analyzeReview({ subject });
         return { kind: "review.learnings", items };
+      },
+    }),
+    // [T-062a] 对话手录经验:「记一条经验:…」→ 模型填参 → 候选卡。execute 纯回显
+    // (不读库不写库、不跑二次 LLM),故不占 ChatToolDeps —— 落库动作在前端卡上由人触发。
+    "learning.capture": tool({
+      description:
+        "把对话中的经验教训整理成一条结构化经验候选(title + insight + learningType)。当用户说「记一条经验/这条教训记下来/沉淀一下」时调用,从 TA 的话里提炼填参。不会直接写库:结果渲成候选卡,用户点卡上「存为经验」按钮才落入裁决队列。",
+      inputSchema: LEARNING_CAPTURE_PARAMS,
+      execute: async ({
+        title,
+        insight,
+        learningType,
+      }): Promise<LearningCaptureToolResult> => {
+        return {
+          kind: "learning.capture",
+          suggestion: { title, insight, learningType },
+        };
       },
     }),
     "positioning.generate": tool({

@@ -23,6 +23,7 @@ export const LEARNINGS_OP_IDS = [
   "learnings.list",
   "learnings.get",
   "learnings.create",
+  "learnings.patch",
   "learnings.applications.create",
   "learnings.evaluate",
   // 复盘飞轮回流 轨B (Learning→校准): promote a Learning into a CalibrationRuleSuggestion.
@@ -56,6 +57,15 @@ export function createLearningsTransport(
             offset: (page - 1) * pageSize,
           });
           return { data: rows, meta: { requestId, page, pageSize, total } };
+        }
+        case "learnings.patch": {
+          const b = (body ?? {}) as {
+            title?: string;
+            insight?: string;
+            learningType?: string;
+          };
+          const dto = await service.patchLearning(ctx, p.learningId ?? "", b);
+          return { data: dto, meta: { requestId } };
         }
         case "learnings.get": {
           const learning = await service.getLearning(ctx, p.learningId ?? "");

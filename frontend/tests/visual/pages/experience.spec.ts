@@ -1,8 +1,7 @@
 import { expect, test } from "../../helpers/test-environment";
 
 /**
- * Visual / structural smoke test for the Experience Center page
- * (Task 22).
+ * Visual / structural smoke test for the 经验裁决台 page (T-062a).
  *
  * The page is unit-tested in
  * `src/features/experience/experience-page.test.tsx`. This spec
@@ -14,8 +13,8 @@ import { expect, test } from "../../helpers/test-environment";
  *   pnpm test:visual -- experience
  */
 
-test.describe("Experience Center page", () => {
-  test("renders the experience center structure on the /experience route", async ({
+test.describe("经验裁决台 page", () => {
+  test("renders the adjudication workbench on the /experience route", async ({
     page,
   }) => {
     await page.goto("/experience");
@@ -25,12 +24,9 @@ test.describe("Experience Center page", () => {
     await expect(header).toHaveAttribute("data-mode", "global");
     const heading = page.locator('[data-slot="header-page-heading"]');
     await expect(heading).toContainText("经验沉淀");
-    await expect(heading).toContainText("被验证的创作经验与失败案例");
 
-    // The page must live inside exactly one AppShell — no second
-    // Sidebar/TopHeader is created.
-    const shells = page.locator('[data-slot="app-shell"]');
-    await expect(shells).toHaveCount(1);
+    // Exactly one AppShell — no second Sidebar/TopHeader.
+    await expect(page.locator('[data-slot="app-shell"]')).toHaveCount(1);
     await expect(page.locator('[data-slot="app-sidebar"]')).toHaveCount(1);
     await expect(page.locator('[data-slot="app-top-header"]')).toHaveCount(1);
 
@@ -49,65 +45,33 @@ test.describe("Experience Center page", () => {
     const main = page.locator('main[data-page="experience"]');
     await expect(main).toHaveCount(1);
 
-    // ExperienceTabs visible with 7 tabs in spec order.
-    const tabs = main.locator('[data-slot="experience-tabs"]');
-    await expect(tabs).toBeVisible();
-    const tabLabels = await tabs.locator('[role="tab"]').allTextContents();
-    expect(tabLabels.map((label) => label.trim())).toEqual([
-      "全部",
-      "选题策划",
-      "脚本结构",
-      "拍摄执行",
-      "后期剪辑",
-      "互动运营",
-      "复盘沉淀",
-    ]);
-
-    // AISummarySection with 4 cards.
-    const summary = main.locator('[data-slot="ai-summary-section"]');
+    // 3 truth summary cards.
+    const summary = main.locator('[data-slot="experience-summary-cards"]');
     await expect(summary).toBeVisible();
-    await expect(summary.locator('[data-slot="summary-card"]')).toHaveCount(4);
+    await expect(summary.locator('[data-slot="summary-card"]')).toHaveCount(3);
 
-    // RecentDiscoveries + effect data column.
-    const discoveries = main.locator('[data-slot="recent-discoveries"]');
-    await expect(discoveries).toBeVisible();
-    expect(
-      await discoveries.locator('[data-slot="discovery-row"]').count(),
-    ).toBeGreaterThanOrEqual(1);
+    // Two-column workbench with both columns and the discarded fold
+    // (layout order asserted by DOM x-position on desktop).
+    const workbench = main.locator('[data-slot="experience-workbench"]');
+    await expect(workbench).toBeVisible();
+    const queue = workbench.locator('[data-slot="learning-queue"]');
+    const library = workbench.locator('[data-slot="validated-library"]');
+    await expect(queue).toBeVisible();
+    await expect(library).toBeVisible();
     await expect(
-      discoveries
-        .locator('[data-slot="discovery-row"] [data-slot="discovery-effect-data"]')
-        .first(),
+      workbench.locator('[data-slot="discarded-section"]'),
     ).toBeVisible();
+    const xQueue = (await queue.boundingBox())?.x ?? Number.POSITIVE_INFINITY;
+    const xLibrary =
+      (await library.boundingBox())?.x ?? Number.NEGATIVE_INFINITY;
+    expect(xQueue < xLibrary).toBe(true);
 
-    // ExperienceCategories: 6 cards incl. failures.
-    const categories = main.locator('[data-slot="experience-categories"]');
-    await expect(categories).toBeVisible();
+    // Copilot capture deep-link replaces the retired 快速记录 form.
     await expect(
-      categories.locator('[data-slot="experience-category-card"]'),
-    ).toHaveCount(6);
-    await expect(
-      categories.locator(
-        '[data-slot="experience-category-card"][data-category-id="experience-failures"]',
-      ),
+      main.locator('[data-slot="experience-capture-link"]'),
     ).toBeVisible();
-
-    // RightRail order (asserted by DOM y-position).
-    const rail = main.locator('[data-slot="experience-right-rail"]');
-    await expect(rail).toBeVisible();
-    const value = rail.locator('[data-slot="value-overview"]');
-    const effect = rail.locator('[data-slot="application-effect-chart"]');
-    const popular = rail.locator('[data-slot="popular-experience-list"]');
-    const quick = rail.locator('[data-slot="quick-record-actions"]');
-    for (const block of [value, effect, popular, quick]) {
-      await expect(block).toBeVisible();
-    }
-    const yValue = (await value.boundingBox())?.y ?? Number.POSITIVE_INFINITY;
-    const yEffect = (await effect.boundingBox())?.y ?? Number.POSITIVE_INFINITY;
-    const yPopular = (await popular.boundingBox())?.y ?? Number.POSITIVE_INFINITY;
-    const yQuick = (await quick.boundingBox())?.y ?? Number.POSITIVE_INFINITY;
-    expect(yValue <= yEffect && yEffect <= yPopular && yPopular <= yQuick).toBe(
-      true,
-    );
+    await expect(
+      main.locator('[data-slot="quick-record-actions"]'),
+    ).toHaveCount(0);
   });
 });

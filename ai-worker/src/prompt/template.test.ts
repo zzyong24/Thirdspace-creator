@@ -136,6 +136,8 @@ describe("registry 三位一体:tools + outputSchema 一等字段(SPEC §4.1)", 
     _resetRegistry();
     registerAllTemplates();
     expect(getTools("chatbox.topic")).toContain("topic.generate");
+    // [T-062a] 对话手录经验工具进选题/项目 surface 白名单(project surface 复用 chatbox.topic)。
+    expect(getTools("chatbox.topic")).toContain("learning.capture");
     expect(hasOutputSchema("chatbox.topic")).toBe(true);
     const schema = resolveOutputSchema("chatbox.topic") as z.ZodType;
     // 两段 { reply, ... }:reply 必填;candidates/nextActions 默认空数组。
@@ -150,6 +152,8 @@ describe("registry 三位一体:tools + outputSchema 一等字段(SPEC §4.1)", 
     expect(getTools("chatbox.calibration")).toContain("calibration.diagnose");
     expect(getTools("chatbox.positioning")).toContain("positioning.generate");
     expect(getTools("chatbox.review")).toContain("review.analyze");
+    // [T-062a] 复盘对话可手录经验(「记一条经验:…」→ 候选卡 → 人点才落库)。
+    expect(getTools("chatbox.review")).toContain("learning.capture");
     // 每轮输出契约都两段:reply 必填,缺它即不合形状(防退化成 chatbot)。
     for (const id of [
       "chatbox.calibration",

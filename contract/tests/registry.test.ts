@@ -87,6 +87,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/learnings"],
   ["GET", "/learnings/:learningId"],
   ["POST", "/learnings"],
+  ["PATCH", "/learnings/:learningId"],
   ["POST", "/learnings/:learningId/applications"],
   ["POST", "/learnings/:learningId/evaluate"],
   ["POST", "/learnings/:learningId/calibration-suggestions"],

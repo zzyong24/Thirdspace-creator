@@ -53,6 +53,31 @@ export const learningsOperations = {
     response: learningResource,
     fr: ["FR-LEARNINGS-CREATE"],
   }),
+  // [T-062a gate-F1] 裁决台 inline 编辑:与 create 的 schema 差异仅在字段全可选。
+  patchLearning: defineEndpoint({
+    id: "learnings.patch",
+    method: "PATCH",
+    path: "/learnings/:learningId",
+    params: learningParams,
+    body: z.object({
+      title: z.string().min(1).optional(),
+      insight: z.string().optional(),
+      learningType: z
+        .enum([
+          "strategy",
+          "hook",
+          "structure",
+          "failure",
+          "process",
+          "editing",
+          "conversion_pattern",
+          "offer_insight",
+        ])
+        .optional(),
+    }),
+    response: learningResource,
+    fr: ["FR-LEARNINGS-PATCH"],
+  }),
   createLearningApplication: defineEndpoint({
     id: "learnings.applications.create",
     method: "POST",

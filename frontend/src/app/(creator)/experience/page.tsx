@@ -1,28 +1,17 @@
 /**
- * Experience Center route entry. Delegates rendering to the page
- * implementation in `@/features/experience/experience-page.tsx`. The
- * shared `AppShell`, `Sidebar` and `TopHeader` are mounted by
- * `(creator)/layout.tsx` once for the whole route group — this file
- * does NOT render its own shell.
+ * 经验裁决台 route entry(T-062a)。渲染委托给
+ * `@/features/experience/experience-page.tsx`;共享 `AppShell` / `Sidebar` /
+ * `TopHeader` 由 `(creator)/layout.tsx` 为整个路由组挂载一次,这里不渲染壳。
  *
- * Module 14 Step 5 server read: the route fetches the user's owned projects via the
- * REAL `projects.list` op (user-scoped pglite) so the records' 应用经验 control has a
- * real apply target; a resolution failure degrades to an empty target list (apply
- * control hidden) so the page never crashes.
+ * 读侧(session-scoped):
+ *   - `learnings.list` + `calibration.suggestions.list` →
+ *     `buildExperienceWorkspaceViewModel`(裁决队列 / 已验证库 / discarded /
+ *     3 张真值汇总卡);learnings 读失败 → VM 带 loadError,页面渲染错误态,
+ *     禁 fixture 兜底;
+ *   - `projects.list` → 「应用到项目」的目标候选,失败降级为空(控件隐藏)。
  *
- * 读侧做真: the experience ViewModel is now assembled from the REAL `learnings.list`
- * op (`buildExperienceWorkspaceViewModel`) so the 记录表 / 最近发现 rows map to real
- * Learnings (carrying the real `learningId` + `validationStatus`, so 应用经验 / 验证 /
- * 废弃 hit a real Learning) and the 4 summary cards count real learnings. The helper
- * degrades to the fixture VM on any read failure, and renders an honest empty state
- * (not fixture rows) when the read succeeds with zero learnings.
- *
- * Session-scoped read (lane center-pages): the route resolves the request's
- * session and constructs `createServerClient(session.ctx)` so BOTH reads
- * (projects.list apply targets + learnings.list ViewModel) are scoped to the
- * logged-in user — a brand-new empty account reads its own empty learnings /
- * projects, not the user-zyongzhu seed. With no session both reads run through the
- * singleton seam (fixture fallback) so SSR/tests never crash.
+ * 有 session 时构造 `createServerClient(session.ctx)` 让读写 user-scoped;
+ * 无 session 走 singleton seam(canonical ctx),SSR/测试不崩。
  */
 
 import { ExperiencePage } from "@/features/experience/experience-page";
@@ -61,8 +50,6 @@ async function resolveApplyTargets(
 
 export default async function ExperienceRoute() {
   const session = await resolveSession();
-  // Session-scoped client on the production path; singleton seam (canonical ctx)
-  // when there is no session so SSR/tests keep resolving against the fixture seed.
   const client = session ? createServerClient(session.ctx) : defaultClient;
 
   const [applyTargets, viewModel] = await Promise.all([

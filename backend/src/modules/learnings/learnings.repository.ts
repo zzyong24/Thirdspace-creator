@@ -52,6 +52,11 @@ export interface LearningsRepository {
     learningId: string,
     input: UpdateLearningStatusInput,
   ): Promise<LearningRow>;
+  // [T-062a gate-F1] 裁决台 inline 编辑:title/insight/learningType 局部改写。
+  patchLearning(
+    learningId: string,
+    input: { title?: string; insight?: string; learningType?: string },
+  ): Promise<LearningRow>;
   createApplication(
     learningId: string,
     input: CreateApplicationInput,
@@ -141,6 +146,22 @@ export function createLearningsRepository(
           confidenceScore: input.confidenceScore,
           updatedAt: deps.now(),
         })
+        .where(
+          and(eq(learnings.userId, deps.userId), eq(learnings.id, learningId)),
+        )
+        .returning();
+      return updated[0]!;
+    },
+
+    async patchLearning(learningId, input) {
+      await getRow(learningId); // scoped ownership gate
+      const set: Record<string, unknown> = { updatedAt: deps.now() };
+      if (input.title !== undefined) set.title = input.title;
+      if (input.insight !== undefined) set.insight = input.insight;
+      if (input.learningType !== undefined) set.learningType = input.learningType;
+      const updated = await db
+        .update(learnings)
+        .set(set)
         .where(
           and(eq(learnings.userId, deps.userId), eq(learnings.id, learningId)),
         )

@@ -73,6 +73,10 @@ import {
 } from "./chat-script-draft-card";
 import { ChatGatherCard, type ChatGatherItem } from "./chat-gather-card";
 import {
+  ChatLearningCard,
+  type ChatLearningSuggestion,
+} from "./chat-learning-card";
+import {
   ChatMaterialListCard,
   type ChatMaterialItem,
 } from "./chat-material-list-card";
@@ -510,6 +514,7 @@ const TOOL_TRACE_LABELS: Record<string, string> = {
   "script.hooks": "生成 HOOK 候选",
   "script.draft": "起草整稿脚本",
   "material.gather": "搜集素材",
+  "learning.capture": "记录经验",
   "calibration.diagnose": "编导诊断",
   "review.analyze": "复盘提炼",
   "positioning.generate": "生成定位提案",
@@ -1379,6 +1384,22 @@ export function AICopilotContent({
                           key={key}
                           items={o.items ?? []}
                           projectId={activeProjectChip?.id ?? null}
+                        />
+                      );
+                    }
+                    // [T-062a] 手录经验(learning.capture)→ 候选卡「存为经验」(createLearning
+                    // → candidate 进裁决队列;铁律②人点才物化)。
+                    if (
+                      name === "learning.capture" &&
+                      out.kind === "learning.capture"
+                    ) {
+                      const o = out as {
+                        suggestion?: ChatLearningSuggestion | null;
+                      };
+                      return (
+                        <ChatLearningCard
+                          key={key}
+                          suggestion={o.suggestion ?? null}
                         />
                       );
                     }

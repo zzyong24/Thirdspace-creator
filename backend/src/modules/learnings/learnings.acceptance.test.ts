@@ -138,6 +138,7 @@ describe("learnings acceptance (SPEC §22)", () => {
       "learnings.evaluate",
       "learnings.get",
       "learnings.list",
+      "learnings.patch",
     ]);
   });
 });

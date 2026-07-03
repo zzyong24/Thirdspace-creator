@@ -155,6 +155,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "context.knowledge",
       "context.materials",
       "context.projects",
+      "learning.capture",
       "material.gather",
       "positioning.generate",
       "script.draft",
@@ -242,7 +243,11 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.review");
     // T-039a:复盘只聚焦当前这一条作品 → 只挂 review.analyze(它基于注入的这条真材料)。
     // 刻意去掉 context.projects(列全作品标题)等,防 MiniMax 把其他作品标题当经验凑数。
-    expect(Object.keys(a.tools).sort()).toEqual(["review.analyze"]);
+    // [T-062a] + learning.capture:复盘对话可手录经验(候选卡,人点才落库)。
+    expect(Object.keys(a.tools).sort()).toEqual([
+      "learning.capture",
+      "review.analyze",
+    ]);
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -311,6 +316,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "context.knowledge",
       "context.materials",
       "context.projects",
+      "learning.capture",
       "material.gather",
       "positioning.generate",
       "script.draft",

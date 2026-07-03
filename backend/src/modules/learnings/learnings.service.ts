@@ -138,6 +138,13 @@ export interface LearningsService {
     learningId: string,
     body: { projectId: string; applicationNote?: string },
   ): Promise<LearningApplicationResource>;
+  // [T-062a gate-F1] 裁决台 inline 编辑(contract op learnings.patch):不动状态机,
+  // 只改文本/类型;评估仍走 evaluateLearning。
+  patchLearning(
+    ctx: RequestContext,
+    learningId: string,
+    body: { title?: string; insight?: string; learningType?: string },
+  ): Promise<LearningResource>;
   evaluateLearning(
     ctx: RequestContext,
     learningId: string,
@@ -321,6 +328,18 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
         refId: learningId,
       });
       return toLearningApplicationDto(row);
+    },
+
+    async patchLearning(ctx, learningId, body) {
+      const repo = repoFor(ctx);
+      const row = await repo.patchLearning(learningId, body); // ownership gate inside
+      let reuseCount = 0;
+      try {
+        reuseCount = await repo.countApplications(learningId);
+      } catch {
+        reuseCount = 0;
+      }
+      return toLearningDto(row, reuseCount);
     },
 
     async evaluateLearning(ctx, learningId, body) {

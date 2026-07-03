@@ -166,6 +166,7 @@ export const CHATBOX_REVIEW_TEMPLATE: PromptTemplate = {
   // 复盘只聚焦「当前这一条作品」—— 只挂 review.analyze(它基于注入的这条作品真文案/数据/评论)。
   // 刻意不挂 context.projects/knowledge/materials:它们会把「全部作品标题 / 知识库」拉进对话,
   // MiniMax 会照抄成经验凑数(2026-07-02 真机实测证实的污染源)。复盘不需要跨作品浏览。
-  tools: ["review.analyze"],
+  // [T-062a] learning.capture:复盘对话里用户口述「记一条经验:…」→ 结构化候选卡,人点才落库。
+  tools: ["review.analyze", "learning.capture"],
   outputSchema: chatboxReviewSchema,
 };

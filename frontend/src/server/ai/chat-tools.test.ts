@@ -301,6 +301,26 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     expect(result.items).toHaveLength(1);
   });
 
+  it("[T-062a] learning.capture 可挂 + execute 纯回显候选(kind=learning.capture,模型填参、不跑二次 LLM)", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(["learning.capture"], deps);
+    expect(Object.keys(tools)).toEqual(["learning.capture"]);
+    const result = await runExecute(tools["learning.capture"]!, {
+      title: "完播率高的都在前 3 秒放结论",
+      insight: "观众耐心极短,开头给答案再展开论证,留存曲线明显更平。",
+      learningType: "structure",
+    });
+    // 纯回显:入参原样进 suggestion(不写库 —— 落库由人点卡上「存为经验」触发)。
+    expect(result).toEqual({
+      kind: "learning.capture",
+      suggestion: {
+        title: "完播率高的都在前 3 秒放结论",
+        insight: "观众耐心极短,开头给答案再展开论证,留存曲线明显更平。",
+        learningType: "structure",
+      },
+    });
+  });
+
   it("positioning.generate.execute 调注入的 generatePositioning,返回定位候选(kind=positioning.suggestion)", async () => {
     const { deps, generatePositioning } = makeDeps();
     const tools = buildChatTools(["positioning.generate"], deps);

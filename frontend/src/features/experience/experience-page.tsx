@@ -1,555 +1,206 @@
 /**
- * Experience Center page (Task 22 / page-specs §14).
+ * 经验裁决台 page(T-062a · SPEC 2026-07-03-knowledge-learnings-redesign §2)。
  *
- * The `/experience` global resource-center landing page. Composes, in
- * the spec order:
+ * `/experience` 从「7 标签分类浏览」重构为**待裁决队列优先**的两栏工作台
+ * (沿用 topics-page 的固定高度独立框滚范式):
  *
  *   ExperiencePage
- *   ├── ExperienceTabs                  (7 tabs in approved order)
- *   ├── MainColumn
- *   │   ├── AISummarySection            (4 cards horizontally)
- *   │   ├── RecentDiscoveries           (list with effect data column)
- *   │   ├── ExperienceCategories        (6 cards incl. failures)
- *   │   └── RecentRecordsTable
- *   └── RightRail
- *       ├── ValueOverview
- *       ├── ApplicationEffectChart
- *       ├── PopularExperienceList
- *       └── QuickRecordActions
+ *   ├── Header(标题 + Copilot 深链「记一条经验」,旧快速记录表单退役 §2.4)
+ *   ├── SummaryCards(3 张真值卡:待裁决 / 已验证 / 已回流校准)
+ *   └── Workbench(flex-1,两栏各自框内滚)
+ *       ├── 左 = AdjudicationQueue(candidate 倒序,采纳/不采/inline 编辑)
+ *       └── 右 = ValidatedLibrary(validated 按 learningType 分组折叠 +
+ *                回流校准内联表单 + 底部 discarded 折叠区带「翻案」)
  *
- * Layout invariants (page-specs §14, D-003):
- *  - The page is a global resource-center route — distinct from
- *    knowledge base, publishing center, etc.
- *  - Header is in `global` mode with page title "经验沉淀" and
- *    description "被验证的创作经验与失败案例" (configured by
- *    `(creator)/shell-router.tsx`).
- *  - The shared Sidebar uses the approved `assistant` contextual-card
- *    variant (D-003). The page itself does NOT render the global
- *    Sidebar — that lives in `(creator)/layout.tsx`.
- *  - 顶部二级导航保持七项（按截图顺序固定）。
- *  - AI 洞察总结四张卡横排。
- *  - 最近发现保持列表和效果数据列。
- *  - 经验库分类为六张紧凑卡（含失败案例）。
- *  - RightRail 顺序固定：
- *      ValueOverview → ApplicationEffectChart → PopularExperienceList
- *      → QuickRecordActions.
- *  - No community / template market is added (page-specs §14 "禁止改变").
- *  - No new product structure, no fixture mutation, no Date.now /
- *    Math.random / network access.
+ * 诚实规范(§6.2):learnings.list 读失败 → 错误态(不渲染工作台,禁 fixture
+ * 兜底);空 candidate 队列 → 空态文案;「已回流校准」读侧只有 pending 建议,
+ * 第三张卡计「待采纳」真值,读失败显「—」。
  *
- * The page is a Server Component. It does not own a Sidebar or a
- * TopHeader — those live in `(creator)/layout.tsx` and are mounted
- * once for the whole route group.
+ * 页面是 Server Component;交互全部在 client 岛
+ * (experience-interactive-region.tsx)。Shell(Sidebar/TopHeader)由
+ * `(creator)/layout.tsx` 挂载,这里不渲染。
  */
 
 import * as React from "react";
 
-import { ChartFrame } from "@/components/analytics/chart-frame";
-import { ProgressBar } from "@/components/project/progress-bar";
-import { SectionCard } from "@/components/project/section-card";
-import { TagChip } from "@/components/content/tag-chip";
-import { buildExperienceViewModel } from "@/fixtures/selectors";
+import type { ExperienceViewModel } from "./experience-data";
 import {
-  ExperienceInteractiveRegion,
-  QuickRecordActionsIsland,
+  AdjudicationQueue,
+  ExperienceCaptureLink,
+  ValidatedLibrary,
+  type ApplyTarget,
 } from "./experience-interactive-region";
 
-// ---------------------------------------------------------------------------
-// Public types
-// ---------------------------------------------------------------------------
-
-export interface ExperiencePageProps {
-  /**
-   * Override hook for tests; defaults to the canonical dataset.
-   * The page does not consume network or runtime data — it pulls
-   * everything from deterministic defaults (D-010) so SSR output is
-   * stable.
-   */
-  readonly viewModel?: ExperienceViewModel;
-  /**
-   * Owned projects the records' 应用经验 control targets (sourced from
-   * `projects.list`). Defaults to empty — the apply control is hidden when no
-   * project is available. The server page passes the real owned list.
-   */
-  readonly applyTargets?: ReadonlyArray<ApplyTarget>;
-}
-
-export interface ExperienceViewModel {
-  readonly tabs: ReadonlyArray<ExperienceTabDescriptor>;
-  readonly summaryCards: ReadonlyArray<SummaryCardVm>;
-  readonly discoveries: ReadonlyArray<DiscoveryRow>;
-  readonly categories: ReadonlyArray<ExperienceCategory>;
-  readonly records: ReadonlyArray<ExperienceRecord>;
-  readonly valueOverview: ValueOverviewVm;
-  readonly applicationEffect: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-  readonly popularExperiences: ReadonlyArray<PopularExperience>;
-  readonly quickActions: ReadonlyArray<QuickAction>;
-}
-
-export interface ExperienceTabDescriptor {
-  readonly id: string;
-  readonly label: string;
-}
-
-export interface SummaryCardVm {
-  readonly id: string;
-  readonly label: string;
-  readonly value: string;
-  readonly delta: string;
-  readonly trend: "up" | "down" | "flat";
-  readonly tone: "neutral" | "positive" | "negative" | "warning" | "info";
-}
-
-export interface DiscoveryRow {
-  readonly id: string;
-  readonly title: string;
-  readonly source: string;
-  readonly type: string;
-  readonly effectLabel: string;
-}
-
-export interface ExperienceCategory {
-  readonly id: string;
-  readonly name: string;
-  readonly count: number;
-  readonly tone: "neutral" | "brand" | "success" | "warning" | "info";
-}
-
-export interface ExperienceRecord {
-  readonly id: string;
-  readonly title: string;
-  readonly category: string;
-  readonly updatedAt: string;
-  readonly reuseCount: number;
-  /**
-   * The backing Learning's id + status, present when the record is sourced from a
-   * real `learnings.list` row (Module 14 wiring). When absent the apply / evaluate
-   * affordances fall back to the record `id` so the fixture-only render still wires.
-   * `tabId` is the derived client-side filter category (see EXPERIENCE_TAB filter).
-   */
-  readonly learningId?: string;
-  readonly validationStatus?: "candidate" | "validated" | "discarded";
-  readonly tabId?: string;
-}
-
-/** An owned project the apply control can target (sourced from `projects.list`). */
-export interface ApplyTarget {
-  readonly id: string;
-  readonly title: string;
-}
-
-export interface ValueOverviewVm {
-  readonly totalLabel: string;
-  readonly verifiedLabel: string;
-  readonly reuseRate: number;
-  readonly improvementLabel: string;
-}
-
-export interface PopularExperience {
-  readonly id: string;
-  readonly title: string;
-  readonly category: string;
-  readonly usage: string;
-}
-
-export interface QuickAction {
-  readonly id: string;
-  readonly label: string;
-  readonly hint: string;
-}
+export type { ExperienceViewModel } from "./experience-data";
+export type { ApplyTarget } from "./experience-interactive-region";
 
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
+export interface ExperiencePageProps {
+  /** 读侧装配的真值 VM(buildExperienceWorkspaceViewModel);测试可直接注入。 */
+  readonly viewModel: ExperienceViewModel;
+  /**
+   * 「应用到项目」的目标项目(projects.list)。空 ⇒ 应用控件隐藏。
+   */
+  readonly applyTargets?: ReadonlyArray<ApplyTarget>;
+}
+
 export function ExperiencePage({
   viewModel,
   applyTargets = [],
-}: ExperiencePageProps = {}) {
-  const vm = viewModel ?? buildExperienceViewModel();
+}: ExperiencePageProps) {
   return (
     <main
       data-app="creatoros"
       data-page="experience"
       data-experience-id="experience-root"
-      className="flex flex-col gap-3.5"
+      className="flex h-full min-h-0 flex-col gap-4"
     >
-      {/* [T-051 2a] 顶部装饰性 ExperienceTabs 已删:与主列可交互 tab 组(真筛选)
-          重复且不可点(死 tab)。 */}
-      <ExperienceLayout
-        tabs={vm.tabs}
-        summaryCards={vm.summaryCards}
-        discoveries={vm.discoveries}
-        categories={vm.categories}
-        records={vm.records}
-        valueOverview={vm.valueOverview}
-        applicationEffect={vm.applicationEffect}
-        popularExperiences={vm.popularExperiences}
-        quickActions={vm.quickActions}
-        applyTargets={applyTargets}
-      />
+      <header className="flex shrink-0 items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold text-foreground">经验裁决台</h1>
+          <p className="text-sm text-muted-foreground">
+            复盘产出的经验候选在这里裁决——采纳沉淀为约束规则，回流校准评分标准。
+          </p>
+        </div>
+        {/* §2.4:旧 RightRail「快速记录」表单退役 → Copilot 深链预填(只预填不发送)。 */}
+        <ExperienceCaptureLink />
+      </header>
+
+      <SummaryCards summary={viewModel.summary} loadError={viewModel.loadError} />
+
+      {viewModel.loadError ? (
+        <div
+          data-slot="experience-load-error"
+          role="alert"
+          className="rounded-card border border-danger/30 bg-danger/5 px-4 py-6 text-center text-sm text-danger"
+        >
+          经验数据读取失败，请刷新重试。
+        </div>
+      ) : (
+        <div
+          data-slot="experience-workbench"
+          className="grid min-h-0 flex-1 grid-cols-1 gap-card-gap lg:grid-cols-2"
+        >
+          <WorkbenchColumn
+            title="裁决队列"
+            hint="待裁决的经验候选，按产生时间倒序"
+            count={viewModel.candidates.length}
+          >
+            <AdjudicationQueue candidates={viewModel.candidates} />
+          </WorkbenchColumn>
+          <WorkbenchColumn
+            title="已验证经验库"
+            hint="按类型分组的已验证规则；不采的收在底部可翻案"
+            count={viewModel.validated.length}
+          >
+            <ValidatedLibrary
+              validated={viewModel.validated}
+              discarded={viewModel.discarded}
+              reflowedLearningIds={viewModel.reflowedLearningIds}
+              applyTargets={applyTargets}
+            />
+          </WorkbenchColumn>
+        </div>
+      )}
     </main>
   );
 }
 
 // ---------------------------------------------------------------------------
-// ExperienceLayout — MainColumn + RightRail
+// 顶部 3 张真值汇总卡(§2.1)
 // ---------------------------------------------------------------------------
 
-interface ExperienceLayoutProps {
-  readonly tabs: ReadonlyArray<ExperienceTabDescriptor>;
-  readonly summaryCards: ReadonlyArray<SummaryCardVm>;
-  readonly discoveries: ReadonlyArray<DiscoveryRow>;
-  readonly categories: ReadonlyArray<ExperienceCategory>;
-  readonly records: ReadonlyArray<ExperienceRecord>;
-  readonly valueOverview: ValueOverviewVm;
-  readonly applicationEffect: ReadonlyArray<{
-    readonly label: string;
-    readonly value: number;
-  }>;
-  readonly popularExperiences: ReadonlyArray<PopularExperience>;
-  readonly quickActions: ReadonlyArray<QuickAction>;
-  readonly applyTargets: ReadonlyArray<ApplyTarget>;
-}
-
-function ExperienceLayout({
-  tabs,
-  summaryCards,
-  discoveries,
-  categories,
-  records,
-  valueOverview,
-  applicationEffect,
-  popularExperiences,
-  quickActions,
-  applyTargets,
-}: ExperienceLayoutProps) {
-  return (
-    <div
-      data-slot="experience-layout"
-      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_320px]"
-    >
-      <div
-        data-slot="experience-main-column"
-        className="flex flex-col gap-4"
-      >
-        <AISummarySection cards={summaryCards} />
-        <RecentDiscoveries rows={discoveries} />
-        <ExperienceCategories categories={categories} />
-        {/* Wired island (Module 14 Step 5): the records table gains the 应用经验 /
-            验证 / 废弃 controls + the client-side category filter. Replaces the inert
-            server-only RecentRecordsTable. */}
-        <ExperienceInteractiveRegion
-          tabs={tabs}
-          records={records}
-          applyTargets={applyTargets}
-        />
-      </div>
-      <RightRail
-        valueOverview={valueOverview}
-        applicationEffect={applicationEffect}
-        popularExperiences={popularExperiences}
-        quickActions={quickActions}
-        applyTargets={applyTargets}
-      />
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// AISummarySection — 4 cards horizontally
-// ---------------------------------------------------------------------------
-
-function AISummarySection({
-  cards,
+function SummaryCards({
+  summary,
+  loadError,
 }: {
-  cards: ReadonlyArray<SummaryCardVm>;
+  summary: ExperienceViewModel["summary"];
+  loadError: boolean;
 }) {
+  // 读失败时计数不可信 → 全部「—」(诚实,不显 0 装作空库)。
+  const cards = [
+    {
+      id: "exp-candidates",
+      label: "待裁决",
+      value: loadError ? "—" : String(summary.candidateCount),
+    },
+    {
+      id: "exp-validated",
+      label: "已验证",
+      value: loadError ? "—" : String(summary.validatedCount),
+    },
+    {
+      // 读侧只有 PENDING 回流建议(采纳后从 list 消失),这里计的是
+      // 「已回流·待校准中心采纳」的真值;calibration.suggestions.list 不可用
+      // 时为 null → 诚实显「—」。
+      id: "exp-reflowed",
+      label: "已回流校准（待采纳）",
+      value:
+        loadError || summary.reflowPendingCount === null
+          ? "—"
+          : String(summary.reflowPendingCount),
+    },
+  ];
   return (
     <section
-      data-slot="ai-summary-section"
-      aria-label="AI 洞察总结"
-      className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 md:grid-cols-4"
+      data-slot="experience-summary-cards"
+      aria-label="经验裁决汇总"
+      className="grid shrink-0 grid-cols-1 gap-card-gap sm:grid-cols-3"
     >
       {cards.map((card) => (
-        <SummaryCard key={card.id} card={card} />
+        <article
+          key={card.id}
+          data-slot="summary-card"
+          data-summary-id={card.id}
+          aria-label={card.label}
+          className="flex flex-col gap-1.5 rounded-xl bg-surface-subtle px-4 py-3"
+        >
+          <span className="text-xs font-medium text-muted-foreground">
+            {card.label}
+          </span>
+          <span className="text-[22px] font-semibold leading-tight tabular-nums text-foreground">
+            {card.value}
+          </span>
+        </article>
       ))}
     </section>
   );
 }
 
-function SummaryCard({ card }: { card: SummaryCardVm }) {
+// ---------------------------------------------------------------------------
+// 工作台栏框(固定高度,框内滚 —— topics-page 范式)
+// ---------------------------------------------------------------------------
+
+function WorkbenchColumn({
+  title,
+  hint,
+  count,
+  children,
+}: {
+  title: string;
+  hint: string;
+  count: number;
+  children: React.ReactNode;
+}) {
   return (
-    <article
-      data-slot="summary-card"
-      data-summary-id={card.id}
-      aria-label={card.label}
-      className="flex flex-col gap-1.5 rounded-xl bg-surface-subtle px-4 py-3"
+    <section
+      data-slot="workbench-column"
+      aria-label={title}
+      className="flex min-h-0 flex-col gap-2 rounded-card border border-border bg-surface p-3"
     >
-      <span className="text-xs font-medium text-muted-foreground">
-        {card.label}
-      </span>
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-[22px] font-semibold leading-tight tabular-nums text-foreground">
-          {card.value}
+      <div className="flex shrink-0 items-center justify-between gap-2">
+        <div className="flex flex-col">
+          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+          <p className="text-xs text-muted-foreground">{hint}</p>
+        </div>
+        <span className="font-mono text-xs tabular-nums text-muted-foreground">
+          {count} 条
         </span>
-        <SummaryTrend trend={card.trend} tone={card.tone} delta={card.delta} />
       </div>
-    </article>
+      {children}
+    </section>
   );
 }
-
-function SummaryTrend({
-  trend,
-  tone,
-  delta,
-}: {
-  trend: SummaryCardVm["trend"];
-  tone: SummaryCardVm["tone"];
-  delta: string;
-}) {
-  const glyph = trend === "up" ? "▲" : trend === "down" ? "▼" : "—";
-  const toneText =
-    tone === "positive"
-      ? "text-success"
-      : tone === "warning"
-        ? "text-warning"
-        : tone === "info"
-          ? "text-info"
-          : tone === "negative"
-            ? "text-danger"
-            : "text-foreground";
-  return (
-    <span
-      data-slot="summary-trend"
-      data-trend={trend}
-      data-tone={tone}
-      className={`inline-flex items-center gap-1 text-xs font-medium ${toneText}`}
-    >
-      <span aria-hidden="true">{glyph}</span>
-      <span>{delta}</span>
-    </span>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// RecentDiscoveries — list with effect data column
-// ---------------------------------------------------------------------------
-
-function RecentDiscoveries({
-  rows,
-}: {
-  rows: ReadonlyArray<DiscoveryRow>;
-}) {
-  return (
-    <SectionCard
-      title="最近发现"
-      description="系统从经验库提炼的关键洞察"
-    >
-      <ul
-        data-slot="recent-discoveries"
-        aria-label="最近发现列表"
-        className="flex flex-col gap-2"
-      >
-        {rows.map((row) => (
-          <li
-            key={row.id}
-            data-slot="discovery-row"
-            data-discovery-id={row.id}
-            className="flex items-center justify-between gap-3 rounded-lg bg-surface-subtle px-3 py-2 text-sm"
-          >
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="truncate text-foreground">{row.title}</span>
-              <span className="text-xs text-muted-foreground">
-                来源 {row.source} · {row.type}
-              </span>
-            </div>
-            <span
-              data-slot="discovery-effect-data"
-              data-effect={row.effectLabel}
-              className="shrink-0 rounded-md bg-brand-soft px-2 py-0.5 font-mono text-[11px] font-medium text-brand tabular-nums"
-            >
-              {row.effectLabel}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </SectionCard>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// ExperienceCategories — 6 compact cards including failures
-// ---------------------------------------------------------------------------
-
-function ExperienceCategories({
-  categories,
-}: {
-  categories: ReadonlyArray<ExperienceCategory>;
-}) {
-  return (
-    <SectionCard
-      title="经验库分类"
-      description="六类经验沉淀（含失败案例）"
-    >
-      <div
-        data-slot="experience-categories"
-        aria-label="经验库分类"
-        className="grid grid-cols-2 gap-card-gap sm:grid-cols-3 md:grid-cols-6"
-      >
-        {categories.map((category) => (
-          <article
-            key={category.id}
-            data-slot="experience-category-card"
-            data-category-id={category.id}
-            className="flex flex-col gap-1.5 rounded-xl bg-surface-subtle px-4 py-3 text-sm"
-          >
-            <span
-              aria-hidden="true"
-              className={
-                category.tone === "brand"
-                  ? "size-1.5 rounded-full bg-brand"
-                  : category.tone === "success"
-                    ? "size-1.5 rounded-full bg-success"
-                    : category.tone === "warning"
-                      ? "size-1.5 rounded-full bg-warning"
-                      : category.tone === "info"
-                        ? "size-1.5 rounded-full bg-info"
-                        : "size-1.5 rounded-full bg-border-strong"
-              }
-            />
-            <span className="font-medium text-foreground">{category.name}</span>
-            <span className="font-mono text-xs tabular-nums text-muted-foreground">
-              {category.count} 条
-            </span>
-          </article>
-        ))}
-      </div>
-    </SectionCard>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// RightRail — locked order:
-//   ValueOverview → ApplicationEffectChart → PopularExperienceList →
-//   QuickRecordActions
-// ---------------------------------------------------------------------------
-
-function RightRail({
-  valueOverview,
-  applicationEffect,
-  popularExperiences,
-  quickActions,
-  applyTargets,
-}: {
-  valueOverview: ValueOverviewVm;
-  applicationEffect: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-  popularExperiences: ReadonlyArray<PopularExperience>;
-  quickActions: ReadonlyArray<QuickAction>;
-  applyTargets: ReadonlyArray<ApplyTarget>;
-}) {
-  return (
-    <aside
-      data-slot="experience-right-rail"
-      aria-label="经验沉淀侧栏"
-      className="flex flex-col gap-card-gap"
-    >
-      <ValueOverview vm={valueOverview} />
-      <ApplicationEffectChart trend={applicationEffect} />
-      <PopularExperienceList items={popularExperiences} />
-      {/* Wired island (Module 14 Step 5): each quick-record button →
-          learnings.create. Replaces the inert server-only QuickRecordActions. */}
-      <QuickRecordActionsIsland actions={quickActions} applyTargets={applyTargets} />
-    </aside>
-  );
-}
-
-function ValueOverview({ vm }: { vm: ValueOverviewVm }) {
-  return (
-    <SectionCard title="价值概览" description="经验沉淀的整体价值">
-      <div
-        data-slot="value-overview"
-        className="flex flex-col gap-2.5 text-sm"
-      >
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{vm.totalLabel}</span>
-          <span>{vm.verifiedLabel}</span>
-        </div>
-        <ProgressBar
-          value={vm.reuseRate}
-          tone="brand"
-          label="平均复用率"
-          showValue
-        />
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{vm.improvementLabel}</span>
-        </div>
-      </div>
-    </SectionCard>
-  );
-}
-
-function ApplicationEffectChart({
-  trend,
-}: {
-  trend: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-}) {
-  const summary = `应用效果：最近 5 月经验被引用 ${
-    trend.reduce((acc, row) => acc + row.value, 0)
-  } 次，整体上升。`;
-  return (
-    <ChartFrame
-      title="应用效果"
-      description="近 5 月经验被引用次数"
-      summary={summary}
-      trend={trend}
-      slot="application-effect-chart"
-      shape="line"
-      testId="application-effect-chart"
-    />
-  );
-}
-
-function PopularExperienceList({
-  items,
-}: {
-  items: ReadonlyArray<PopularExperience>;
-}) {
-  return (
-    <SectionCard title="热门经验" description="被引用最多的经验">
-      <ul
-        data-slot="popular-experience-list"
-        aria-label="热门经验列表"
-        className="flex flex-col gap-2"
-      >
-        {items.length === 0 ? (
-          <li
-            data-slot="popular-experience-empty"
-            className="rounded-lg bg-surface-subtle px-3 py-2 text-sm text-muted-foreground"
-          >
-            暂无热门经验
-          </li>
-        ) : null}
-        {items.map((item) => (
-          <li
-            key={item.id}
-            data-slot="popular-experience-row"
-            data-popular-id={item.id}
-            className="flex items-center justify-between gap-3 rounded-lg bg-surface-subtle px-3 py-2 text-sm"
-          >
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="truncate text-foreground">{item.title}</span>
-              <span className="text-xs text-muted-foreground">
-                {item.category}
-              </span>
-            </div>
-            <span className="shrink-0 font-mono text-[11px] text-foreground tabular-nums">
-              {item.usage}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </SectionCard>
-  );
-}
-
