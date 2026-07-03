@@ -65,6 +65,11 @@ export interface AnalyticsService {
   //   在"有 imported 真项目"时传入真实导入作品的 publication 集,让 fixture 演示作品的
   //   播放/指标让位。不传(默认)= 全量 user-scoped 汇总(过渡期行为不变)。空数组 =
   //   显式限定为"无匹配发布" → all-zero rollup(snapshotCount 0)。
+  /** [T-071] 真逐日播放趋势(见 repo 同名方法)。 */
+  getDailyPlayTrend(
+    ctx: RequestContext,
+    opts?: { publicationIds?: readonly string[]; days?: number },
+  ): Promise<Array<{ day: string; plays: number }>>;
   getDashboardRollup(
     ctx: RequestContext,
     opts?: { publicationIds?: readonly string[] },
@@ -77,6 +82,7 @@ export interface AnalyticsService {
     followerGain: number;
     ctrAvg: number;
     finishAvg: number;
+    finishCount: number;
     snapshotCount: number;
   }>;
 }
@@ -110,6 +116,14 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
       const ids = await publishing.listPublicationIdsByProject(ctx, projectId);
       if (ids.length === 0) return { rows: [], total: 0 };
       return repo.listSnapshotsByProject(ctx.userId, ids, page, pageSize);
+    },
+
+    async getDailyPlayTrend(ctx, opts) {
+      return repo.getDailyPlayTrend(
+        ctx.userId,
+        opts?.publicationIds,
+        opts?.days ?? 7,
+      );
     },
 
     async getDashboardRollup(ctx, opts) {

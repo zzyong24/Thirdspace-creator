@@ -3717,21 +3717,52 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           trend: "flat",
           tone: "positive",
         });
+        // [T-071] 总粉丝(用户裁决:算不了增量就算总数)—— platform_accounts 基线求和,
+        // 读失败诚实「—」。
+        let followerTotal: string = "—";
+        try {
+          const { rows: accounts } = await platformAccountService.listAccounts(
+            ctx,
+            { limit: 100, offset: 0 },
+          );
+          const sum = accounts
+            .filter((a) => a.status === "active")
+            .reduce((acc, a) => acc + (a.followerBaseline ?? 0), 0);
+          if (sum > 0) followerTotal = fmt(sum);
+        } catch {
+          /* 显「—」 */
+        }
         const metrics: MetricCard[] = [
           card("d-views", "总播放量", fmt(r.plays)),
           card("d-likes", "总点赞", fmt(r.likes)),
-          card("d-followers", "新增粉丝", fmt(r.followerGain)),
-          { ...card("d-finish", "平均完播率", `${r.finishAvg.toFixed(1)}%`), tone: "info" },
+          card("d-followers", "总粉丝", followerTotal),
+          // [T-071] 完播率只在有明细快照(finish_rate 字段,拉明细采集产)时显真均值;
+          // 没有 → 「—」,绝不显假 0.0%。
+          {
+            ...card(
+              "d-finish",
+              "平均完播率",
+              r.finishCount > 0 ? `${r.finishAvg.toFixed(1)}%` : "—",
+            ),
+            tone: "info",
+          },
           card("d-shares", "总分享", fmt(r.shares)),
         ];
-        // 本周趋势:真实累计播放按固定周形状分摊(series 总和 == 真实播放),与复盘
-        // 趋势同法、诚实标注为形状分摊而非逐日真值。
-        const WEIGHTS = [0.097, 0.116, 0.104, 0.144, 0.164, 0.156, 0.219];
-        const days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
-        const trend = days.map((label, i) => ({
-          label,
-          value: Math.round(r.plays * WEIGHTS[i]),
-        }));
+        // [T-071] 本周趋势改真逐日:快照按日聚合差分(替换旧「总量按固定形状分摊」的
+        // 假曲线)。有效点 < 2 天 → 空 trend(composer 显引导),不编形状。
+        const daily = hasImported
+          ? await analyticsService.getDailyPlayTrend(ctx, {
+              publicationIds: await resolveImportedPublicationIds(ctx),
+              days: 7,
+            })
+          : await analyticsService.getDailyPlayTrend(ctx, { days: 7 });
+        const trend =
+          daily.length >= 2
+            ? daily.map((d) => ({
+                label: d.day.slice(5).replace("-", "/"),
+                value: d.plays,
+              }))
+            : [];
         return { metrics, trend };
       },
     },

@@ -205,6 +205,7 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
       followerGain: 0,
       ctrAvg: 0,
       finishAvg: 0,
+      finishCount: 0,
       snapshotCount: 0,
     });
   });

@@ -57,6 +57,8 @@ export interface Page<T> {
 // is the number of latest-per-publication snapshots that fed the rollup (0 when the
 // user has no snapshots at all).
 export interface DashboardRollup {
+  /** [T-071] 带明细字段(finish_rate/follower_gain)的发布数 —— 0 = 上层显「—」。 */
+  finishCount: number;
   plays: number;
   likes: number;
   comments: number;
@@ -99,6 +101,17 @@ export interface AnalyticsRepository {
   // snapshots. No snapshots → all-zero rollup, snapshotCount 0 (never throws).
   // 数据底座(SPEC §1.4):可选 publicationIds 把聚合收窄到给定发布集(imported 让位);
   //   传空数组 → 显式空集 → all-zero rollup;不传 → 全量 user-scoped(行为不变)。
+  /**
+   * [T-071] 真逐日播放趋势:近 days 天,每 publication 每日取当日最新快照的累计
+   * 播放,按日求和后与前一日差分 = 当日新增播放。第一天无前日基线不产点;有效
+   * 天数 < 2 → 空数组(上层显引导,不编固定形状假曲线)。
+   */
+  getDailyPlayTrend(
+    userId: string,
+    publicationIds: readonly string[] | undefined,
+    days: number,
+  ): Promise<Array<{ day: string; plays: number }>>;
+
   getDashboardRollup(
     userId: string,
     publicationIds?: readonly string[],
@@ -241,6 +254,65 @@ export function createAnalyticsRepository(
         .orderBy(asc(metricValues.metricKey));
     },
 
+    async getDailyPlayTrend(userId, publicationIds, days) {
+      // [T-071] 真逐日趋势:替换掉「总量按固定周形状分摊」的假曲线(用户实锤)。
+      // 每 (publication, 日) 取当日最新快照的累计播放 → 按日求和 → 与前一日差分 =
+      // 当日新增播放。第一天没有前日基线,不产点;有效点 < 2 → 空(上层显引导)。
+      if (publicationIds && publicationIds.length === 0) return [];
+      const rows = await db
+        .select()
+        .from(metricSnapshots)
+        .where(
+          publicationIds
+            ? and(
+                eq(metricSnapshots.userId, userId),
+                inArray(metricSnapshots.publicationId, [...publicationIds]),
+              )
+            : eq(metricSnapshots.userId, userId),
+        )
+        .orderBy(desc(metricSnapshots.capturedAt));
+      const numOf = (m: Record<string, unknown>, key: string): number => {
+        const v = m[key];
+        const n = typeof v === "number" ? v : Number(v);
+        return Number.isFinite(n) ? n : 0;
+      };
+      // (publicationId, day) → 当日最新累计播放(rows DESC,首见即最新)。
+      const byPubDay = new Map<string, number>();
+      const daysSeen = new Set<string>();
+      for (const row of rows) {
+        const day = row.capturedAt.slice(0, 10);
+        const key = `${row.publicationId}|${day}`;
+        if (byPubDay.has(key)) continue;
+        const m = (row.rawMetrics ?? {}) as Record<string, unknown>;
+        byPubDay.set(key, numOf(m, "views") || numOf(m, "plays"));
+        daysSeen.add(day);
+      }
+      const sorted = [...daysSeen].sort().slice(-days - 1); // 多取一天做差分基线
+      // 每日总累计 = Σ 各 publication 当日值;某作品当日没采,沿用其最近一次已知值
+      // (否则日总量会因漏采作品而假跌)。
+      const perPubLast = new Map<string, number>();
+      const dailyTotals: Array<{ day: string; total: number }> = [];
+      const pubIds = new Set([...byPubDay.keys()].map((k) => k.split("|")[0]!));
+      for (const day of sorted) {
+        for (const pid of pubIds) {
+          const v = byPubDay.get(`${pid}|${day}`);
+          if (v !== undefined) perPubLast.set(pid, v);
+        }
+        let total = 0;
+        for (const v of perPubLast.values()) total += v;
+        dailyTotals.push({ day, total });
+      }
+      const trend: Array<{ day: string; plays: number }> = [];
+      for (let i = 1; i < dailyTotals.length; i += 1) {
+        trend.push({
+          day: dailyTotals[i]!.day,
+          // 累计理论上单调增;采集口径波动出现负值时如实夹 0,不显负播放。
+          plays: Math.max(0, dailyTotals[i]!.total - dailyTotals[i - 1]!.total),
+        });
+      }
+      return trend.slice(-days);
+    },
+
     async getDashboardRollup(userId, publicationIds) {
       // Pull ALL of the user's snapshots newest-first, then in JS keep the first
       // (newest) row per publicationId. Data volume per user is small, so the
@@ -260,6 +332,7 @@ export function createAnalyticsRepository(
           followerGain: 0,
           ctrAvg: 0,
           finishAvg: 0,
+          finishCount: 0,
           snapshotCount: 0,
         };
       }
@@ -277,10 +350,22 @@ export function createAnalyticsRepository(
         .orderBy(desc(metricSnapshots.capturedAt));
 
       const latestByPublication = new Map<string, MetricSnapshotRow>();
+      // [T-071] 明细字段(finish_rate/follower_gain/ctr)只在 self.detail 明细采集的
+      // 快照里有;基础采集(views/likes/…)没有。每 publication 另记「最新一条带明细
+      // 字段的快照」,防止最新恰为基础快照时把完播率稀释成 0(用户实锤的假 0.0%)。
+      const latestDetailByPublication = new Map<string, MetricSnapshotRow>();
       for (const row of rows) {
         // First occurrence wins = newest captured_at (rows are DESC-ordered).
         if (!latestByPublication.has(row.publicationId)) {
           latestByPublication.set(row.publicationId, row);
+        }
+        const m = (row.rawMetrics ?? {}) as Record<string, unknown>;
+        if (
+          !latestDetailByPublication.has(row.publicationId) &&
+          (typeof m["finish_rate"] === "number" ||
+            typeof m["follower_gain"] === "number")
+        ) {
+          latestDetailByPublication.set(row.publicationId, row);
         }
       }
 
@@ -294,6 +379,7 @@ export function createAnalyticsRepository(
         followerGain: 0,
         ctrAvg: 0,
         finishAvg: 0,
+        finishCount: 0,
         snapshotCount: latest.length,
       };
       if (latest.length === 0) return rollup;
@@ -311,8 +397,6 @@ export function createAnalyticsRepository(
       const playsOf = (m: Record<string, unknown>): number =>
         num(m, "views") || num(m, "plays");
 
-      let ctrSum = 0;
-      let finishSum = 0;
       for (const snap of latest) {
         const m = (snap.rawMetrics ?? {}) as Record<string, unknown>;
         rollup.plays += playsOf(m);
@@ -320,12 +404,22 @@ export function createAnalyticsRepository(
         rollup.comments += num(m, "comments");
         rollup.shares += num(m, "shares");
         rollup.favorites += num(m, "favorites");
+      }
+      // [T-071] 均值/增量只在「带明细字段的快照」上算,分母 = 有值的发布数;一个都
+      // 没有 → finishCount 0,上层据此显「—」而不是假 0.0%。
+      let ctrSum = 0;
+      let finishSum = 0;
+      const detailRows = [...latestDetailByPublication.values()];
+      for (const snap of detailRows) {
+        const m = (snap.rawMetrics ?? {}) as Record<string, unknown>;
         rollup.followerGain += num(m, "follower_gain");
         ctrSum += num(m, "ctr");
         finishSum += num(m, "finish_rate");
       }
-      rollup.ctrAvg = ctrSum / latest.length;
-      rollup.finishAvg = finishSum / latest.length;
+      rollup.finishCount = detailRows.length;
+      rollup.ctrAvg = detailRows.length > 0 ? ctrSum / detailRows.length : 0;
+      rollup.finishAvg =
+        detailRows.length > 0 ? finishSum / detailRows.length : 0;
       return rollup;
     },
   };
