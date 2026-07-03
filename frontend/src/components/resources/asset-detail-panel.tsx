@@ -43,6 +43,8 @@ export interface AssetDetailPanelProps {
   readonly onCopyLink?: (assetId: string) => void;
   readonly onFavorite?: (assetId: string) => void;
   readonly onTrash?: (assetId: string) => void;
+  // [T-055d SPEC §7.2] 在 Finder 显示(open -R 定位文件;单机产品 server 与用户同机)。
+  readonly onReveal?: (assetId: string) => void;
   // Plan D1 附到项目 (用料链): the user's projects + the attach handler. When
   // provided the panel renders the project picker; the handler fires
   // materialLinks.create. Optional so the panel stays render-only without them.
@@ -58,6 +60,7 @@ export function AssetDetailPanel({
   onCopyLink,
   onFavorite,
   onTrash,
+  onReveal,
   projects = [],
   onAttach,
   actionsPending = false,
@@ -127,20 +130,33 @@ export function AssetDetailPanel({
                 </svg>
                 <span>收藏</span>
               </button>
+              {/* [T-055d SPEC §7.2] local-fs 单机:在 Finder 定位这份原始文件。 */}
               <button
                 type="button"
-                data-slot="asset-action-rename"
-                aria-label="更多操作（移入回收站）"
+                data-slot="asset-action-reveal"
+                aria-label="在 Finder 显示"
                 disabled={actionsPending}
-                onClick={onTrash ? () => onTrash(asset.id) : undefined}
+                onClick={onReveal ? () => onReveal(asset.id) : undefined}
                 className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
               >
                 <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
-                  <circle cx={8} cy={8} r={1.2} fill="currentColor" />
-                  <circle cx={3.5} cy={8} r={1.2} fill="currentColor" />
-                  <circle cx={12.5} cy={8} r={1.2} fill="currentColor" />
+                  <path d="M2 5 H6 L7.5 6.5 H14 V12.5 H2 Z" />
                 </svg>
-                <span>更多</span>
+                <span>Finder</span>
+              </button>
+              {/* [T-055d/T-056⑥] 危险操作显式命名(原「更多」实为删除,误导);确认在 handler。 */}
+              <button
+                type="button"
+                data-slot="asset-action-trash"
+                aria-label="移入回收站"
+                disabled={actionsPending}
+                onClick={onTrash ? () => onTrash(asset.id) : undefined}
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
+              >
+                <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
+                  <path d="M3 4.5 H13 M6.5 4.5 V3 H9.5 V4.5 M4.5 4.5 L5.2 13 H10.8 L11.5 4.5 M6.8 7 V11 M9.2 7 V11" />
+                </svg>
+                <span>移入回收站</span>
               </button>
             </div>
             <AssetAttachToProject

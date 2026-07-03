@@ -52,6 +52,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/assets/uploads"],
   ["POST", "/assets/uploads/:uploadId/complete"],
   ["GET", "/assets/:assetId"],
+  // [T-055d SPEC §7.2] 下载 = 复制:换当前文件的签名 GET URL。
+  ["GET", "/assets/:assetId/download-url"],
   ["POST", "/assets/:assetId/files"],
   ["POST", "/assets/:assetId/trash"],
   ["POST", "/assets/:assetId/restore"],

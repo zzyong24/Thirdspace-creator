@@ -26,6 +26,16 @@ export const assetsOperations = {
     isList: true,
     fr: ["FR-ASSETS-LIST"],
   }),
+  // [T-055d SPEC §7.2] 下载 = 复制:换取当前文件的带签名 GET URL(local-fs = token 门
+  // blob route;s3 = presigned GET)。前端 <a download> 触发系统保存对话框。
+  getDownloadUrl: defineEndpoint({
+    id: "assets.downloadUrl",
+    method: "GET",
+    path: "/assets/:assetId/download-url",
+    params: z.object({ assetId: id }),
+    response: z.object({ url: z.string(), fileName: z.string() }),
+    fr: ["FR-ASSETS-DOWNLOAD-URL"],
+  }),
   createUpload: defineEndpoint({
     id: "assets.uploads.create",
     method: "POST",
@@ -34,6 +44,10 @@ export const assetsOperations = {
       assetType,
       mimeType: z.string().min(1),
       fileSize: z.number().int().positive(),
+      // [T-055d SPEC §7.1] 目录规则:带 projectId → 落 projects/<safe-title>-<id6>/素材/;
+      // 不带 → inbox/。fileName 原名保真(local-fs 落盘名);均可选,旧调用不变。
+      projectId: id.optional(),
+      fileName: z.string().min(1).optional(),
     }),
     response: assetUpload,
     fr: ["FR-ASSETS-UPLOAD-INIT"],

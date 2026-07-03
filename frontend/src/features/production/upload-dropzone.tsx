@@ -74,6 +74,9 @@ export function UploadDropzone({ projectId, canBind }: UploadDropzoneProps) {
               assetType: assetTypeForFile(file),
               mimeType,
               fileSize: Math.max(1, file.size), // fileSize.positive() — clamp 0-byte to 1
+              // [T-055d SPEC §7.1] 制作台上传落项目目录 projects/<safe>-<id6>/素材/,原名保真。
+              projectId,
+              fileName: file.name,
             },
           })) as unknown as { uploadId: string; uploadUrl: string };
 

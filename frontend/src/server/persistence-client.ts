@@ -667,6 +667,17 @@ interface PersistenceBundle {
   // (按 capability 解析 model), and the bound CreativeContext readers (定位/飞轮/受众信号/
   // 知识库 数据层注入). Mirrors how getStorageRootForRequest exposes settingsService.
   chatRuntime: ChatRuntime;
+  // [T-055d] Finder「在 Finder 打开/显示」route(无 dispatch endpoint)的最小面。
+  localFileRuntime: {
+    assetStorageKey: (
+      ctx: RequestContext,
+      assetId: string,
+    ) => Promise<string | null>;
+    projectFolder: (
+      ctx: RequestContext,
+      projectId: string,
+    ) => Promise<string | null>;
+  };
 }
 
 // T-004 ChatBox runtime — the minimal surface the /api/chat route needs from the
@@ -903,7 +914,51 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     return mockStorage;
   };
 
-  const assetsService = createAssetsService(assetsRepo, objectStorageForCtx, deps);
+  // [T-055d SPEC §7.1] 项目目录名:projects/<safe-title>-<id 后 6 位>。safe-title = 去
+  // 文件系统非法字符 + 截 24 字;目录名以创建时标题为准(改名不追改,storageKey 即映射)。
+  // getProject 走 projects public service(含归属校验;未知/越权 → null 落 inbox)。
+  const safeProjectDirTitle = (title: string): string => {
+    const cleaned = title
+      .replace(/[\/\\:*?"<>|\x00-\x1f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 24)
+      .trim();
+    return cleaned || "untitled";
+  };
+  const resolveProjectFolder = async (
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<string | null> => {
+    try {
+      const project = await projectsRepo.get(ctx, projectId);
+      const suffix = projectId.slice(-6);
+      return `projects/${safeProjectDirTitle(project.title)}-${suffix}`;
+    } catch {
+      return null;
+    }
+  };
+  const assetsService = createAssetsService(assetsRepo, objectStorageForCtx, {
+    ...deps,
+    resolveProjectFolder,
+  });
+  // [T-055d SPEC §7.2] Finder/下载 route 的最小运行时面:assetId → 归属校验 + 当前
+  // file 的 storageKey(相对 media root);projectId → 项目目录相对路径。
+  const localFileRuntime = {
+    assetStorageKey: async (
+      ctx: RequestContext,
+      assetId: string,
+    ): Promise<string | null> => {
+      const asset = await assetsService.getAsset(ctx, assetId); // OwnershipError → 上抛
+      const files = await assetsRepo.listAssetFiles(ctx.userId, assetId);
+      const current =
+        files.find((f) => f.id === (asset as { currentFileId?: string | null }).currentFileId) ??
+        files[files.length - 1] ??
+        null;
+      return current?.storageKey ?? null;
+    },
+    projectFolder: resolveProjectFolder,
+  };
   const assets = createAssetsTransport(() => assetsService);
 
   // Artifacts (module 08): the service builds a per-ctx user-scoped repo over the
@@ -4558,6 +4613,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     identity,
     settingsService,
     chatRuntime,
+    localFileRuntime,
   };
 }
 
@@ -4703,6 +4759,16 @@ export async function getStorageRootForRequest(
  */
 export async function getChatRuntime(): Promise<ChatRuntime> {
   return (await getBundle()).chatRuntime;
+}
+
+/**
+ * [T-055d] Finder / 本地文件 route 的运行时(assetId→storageKey / projectId→目录),
+ * 与 getStorageRootForRequest 同款 escape hatch 模式。
+ */
+export async function getLocalFileRuntime(): Promise<
+  PersistenceBundle["localFileRuntime"]
+> {
+  return (await getBundle()).localFileRuntime;
 }
 
 // Composite server transport: persistence for project ops, mock for the rest.

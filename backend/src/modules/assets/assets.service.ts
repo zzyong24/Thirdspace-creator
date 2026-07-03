@@ -52,13 +52,26 @@ export interface AssetsService {
   getAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
   createUpload(
     ctx: RequestContext,
-    input: { assetType: string; mimeType: string; fileSize: number },
+    input: {
+      assetType: string;
+      mimeType: string;
+      fileSize: number;
+      // [T-055d SPEC §7.1] 目录规则:projectId → projects/<safe>-<id6>/素材;缺省 → inbox。
+      projectId?: string;
+      fileName?: string;
+    },
   ): Promise<AssetUploadDto>;
   completeUpload(
     ctx: RequestContext,
     uploadId: string,
     input: { name: string },
   ): Promise<AssetRow>;
+  // [T-055d SPEC §7.2] 下载 = 复制:当前文件的签名 GET URL(local-fs = token 门 blob
+  // route;s3 = presigned GET)+ 建议保存名(原名保真:storageKey 末段)。
+  getDownloadUrl(
+    ctx: RequestContext,
+    assetId: string,
+  ): Promise<{ url: string; fileName: string }>;
   // L5 asset.generate (SPEC 2026-07-01 §3) — the SERVER-SIDE counterpart to the two-phase
   // client upload: an AI-generated image/video whose bytes the runner already holds. Mints
   // a storage key, direct-writes the bytes (storage.putObject — NOT the presigned client
@@ -104,7 +117,15 @@ export type ObjectStorageForCtx = (
 export function createAssetsService(
   repo: AssetRepository,
   objectStorageForCtx: ObjectStorageForCtx,
-  deps: RepoDeps,
+  deps: RepoDeps & {
+    // [T-055d SPEC §7.1] 项目目录名解析端口(composition root 绑 projects public service,
+    // 含归属校验):projectId → "projects/<safe-title>-<id6>";未知/越权项目 → null(落 inbox)。
+    // 可选:旧装配缺省 → 全部走旧 key 规则(assetType/nextKey),行为不变。
+    resolveProjectFolder?: (
+      ctx: RequestContext,
+      projectId: string,
+    ) => Promise<string | null>;
+  },
 ): AssetsService {
   // Load an owned asset or raise OwnershipError (404, no existence leak).
   async function requireAsset(
@@ -125,6 +146,22 @@ export function createAssetsService(
       return requireAsset(ctx, assetId);
     },
 
+    async getDownloadUrl(ctx, assetId) {
+      const asset = await requireAsset(ctx, assetId);
+      const files = await repo.listAssetFiles(ctx.userId, assetId);
+      const current =
+        files.find((f) => f.id === asset.currentFileId) ??
+        files[files.length - 1];
+      if (!current) {
+        throw new OwnershipError("Asset has no file");
+      }
+      const storage = await objectStorageForCtx(ctx);
+      const url = await storage.getSignedUrl(current.storageKey);
+      // 保存名:storageKey 末段(local-fs 目录规则下含原名);剥 nextKey 前缀。
+      const base = current.storageKey.split("/").pop() ?? "download";
+      const fileName = base.replace(/^asset-key-\d+-/, "");
+      return { url, fileName };
+    },
     async createUpload(ctx, input) {
       // SPEC §20 input validation (phase 1).
       if (!ASSET_TYPES.has(input.assetType)) {
@@ -137,10 +174,21 @@ export function createAssetsService(
         throw new UploadValidationError("fileSize must be positive");
       }
       const storage = await objectStorageForCtx(ctx);
+      // [T-055d SPEC §7.1] 目录规则:带 projectId → projects/<safe>-<id6>/素材(经
+      // resolveProjectFolder 端口,含归属校验);不带 → inbox。端口缺省(旧装配)→ 旧 key 规则。
+      const folder = input.projectId
+        ? await deps.resolveProjectFolder?.(ctx, input.projectId).then(
+            (dir) => (dir ? `${dir}/素材` : undefined),
+          )
+        : deps.resolveProjectFolder
+          ? "inbox"
+          : undefined;
       const { storageKey, uploadUrl } = await storage.createPresignedUpload({
         assetType: input.assetType,
         mimeType: input.mimeType,
         fileSize: input.fileSize,
+        folder: folder ?? undefined,
+        fileName: input.fileName,
       });
       const expiresAt = deps.now();
       const session = await repo.createUploadSession(ctx.userId, {

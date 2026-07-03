@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 describe("assets ops registered in the composite transport", () => {
-  it("the 9 assets op ids are persistence-backed (not the mock)", async () => {
+  it("the 10 assets op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of ASSET_OP_IDS) {
@@ -34,7 +34,8 @@ describe("assets ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(ASSET_OP_IDS).toHaveLength(9);
+    // [T-055d] +assets.downloadUrl(下载做真)。
+    expect(ASSET_OP_IDS).toHaveLength(10);
   });
 
   it("assets.list returns the seeded canonical assets for the owner", async () => {

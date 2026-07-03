@@ -78,8 +78,17 @@ export function createLocalFsObjectStorage(
   }
 
   return {
-    async createPresignedUpload({ assetType, mimeType, fileSize }) {
-      const storageKey = `${assetType}/${deps.nextKey()}`;
+    async createPresignedUpload({ assetType, mimeType, fileSize, folder, fileName }) {
+      // [T-055d SPEC §7.1] 带 folder+fileName → 用户可见目录 + 原名保真(nextKey 前缀防
+      // 重名覆盖,原名仍在末尾完整保留);否则旧规则 assetType/nextKey。fileName 只取
+      // basename(路径分隔符剥掉,防注入;blob-security 在 PUT 时还有整链校验)。
+      const safeName = fileName
+        ? fileName.replace(/[/\\]/g, "_").replace(/^\.+/, "_").slice(0, 120)
+        : null;
+      const storageKey =
+        folder && safeName
+          ? `${folder}/${deps.nextKey()}-${safeName}`
+          : `${assetType}/${deps.nextKey()}`;
       // Validate + resolve the on-disk path (mkdir its parent so the later PUT
       // lands cleanly) and write the sidecar with the declared metadata.
       const absKey = safeJoin(cfg.rootPath, storageKey);

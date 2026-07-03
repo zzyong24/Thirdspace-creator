@@ -60,6 +60,8 @@ export function AssetUploadButton() {
               mimeType,
               // `fileSize.positive()` — clamp 0-byte files to 1.
               fileSize: Math.max(1, file.size),
+              // [T-055d SPEC §7.1] 原名保真;全局上传不带 projectId → 落 inbox/。
+              fileName: file.name,
             },
           })) as unknown as { uploadId: string; uploadUrl: string };
           // Phase 1: PUT the real bytes to the upload URL。[T-049 B5] 旧判断只对

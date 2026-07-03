@@ -35,6 +35,11 @@ export interface ObjectStoragePort {
     assetType: string;
     mimeType: string;
     fileSize: number;
+    // [T-055d SPEC §7.1] 目录规则(local-fs):folder 形如 "projects/<safe>-<id6>/素材"
+    // 或 "inbox";fileName 原名保真。二者可选 —— 缺省回退旧 key 规则(assetType/nextKey),
+    // mock/s3 后端可忽略。
+    folder?: string;
+    fileName?: string;
   }): Promise<PresignedUpload>;
   // SERVER-SIDE direct write (L5 asset.generate / SPEC 2026-07-01 §3「直写」): store
   // bytes the SERVER already holds (an AI-generated image/video), under a key minted by

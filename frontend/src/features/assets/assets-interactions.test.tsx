@@ -27,6 +27,10 @@ const mockRouter = {
 vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 
 const mockClient = {
+  getDownloadUrl: vi.fn(
+    (_input: unknown): Promise<unknown> =>
+      Promise.resolve({ url: "/api/v1/blob/k?token=t", fileName: "clip.png" }),
+  ),
   createUpload: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({
       uploadId: "upload-1",
@@ -61,6 +65,7 @@ vi.mock("@/lib/contract-client", () => ({
     createUpload: (i: unknown) => mockClient.createUpload(i),
     completeUpload: (i: unknown) => mockClient.completeUpload(i),
     getAsset: (i: unknown) => mockClient.getAsset(i),
+    getDownloadUrl: (i: unknown) => mockClient.getDownloadUrl(i),
     addAssetFile: (i: unknown) => mockClient.addAssetFile(i),
     trashAsset: (i: unknown) => mockClient.trashAsset(i),
     toggleFavorite: (i: unknown) => mockClient.toggleFavorite(i),
@@ -135,6 +140,8 @@ describe("Assets needs-backend wiring", () => {
           assetType: "image",
           mimeType: "image/png",
           fileSize: file.size,
+          // [T-055d SPEC §7.1] 原名保真进 createUpload(local-fs 落盘名)。
+          fileName: "clip.png",
         },
       }),
     );
@@ -148,13 +155,20 @@ describe("Assets needs-backend wiring", () => {
     expect(mockRouter.refresh).toHaveBeenCalled();
   });
 
-  it("E3 下载 calls assets.get for the selected asset", async () => {
+  it("[T-055d] E3 下载做真:assets.downloadUrl 换签名 URL → <a download> 触发保存", async () => {
     const { container } = await renderIsland();
     const btn = container.querySelector<HTMLButtonElement>(
       '[data-slot="asset-action-download"]',
     );
     fireEvent.click(btn!);
-    await waitFor(() => expect(mockClient.getAsset).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(mockClient.getDownloadUrl).toHaveBeenCalledTimes(1),
+    );
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="asset-action-status"]')?.textContent,
+      ).toContain("已开始下载"),
+    );
   });
 
   it("E4 复制链接 calls assets.get for the selected asset", async () => {
@@ -186,12 +200,17 @@ describe("Assets needs-backend wiring", () => {
     expect(mockClient.addAssetFile).not.toHaveBeenCalled();
   });
 
-  it("E6 更多(移入回收站) calls assets.trash then refresh", async () => {
+  it("[T-055d/T-056⑥] 移入回收站:显式命名 + confirm 确认后 assets.trash + refresh", async () => {
     const { container } = await renderIsland();
     const btn = container.querySelector<HTMLButtonElement>(
-      '[data-slot="asset-action-rename"]',
+      '[data-slot="asset-action-trash"]',
     );
+    expect(btn?.textContent).toContain("移入回收站");
+    const confirmSpy = vi
+      .spyOn(window, "confirm")
+      .mockImplementation(() => true);
     fireEvent.click(btn!);
+    confirmSpy.mockRestore();
     await waitFor(() => expect(mockClient.trashAsset).toHaveBeenCalledTimes(1));
     expect(mockClient.trashAsset).toHaveBeenCalledWith(
       expect.objectContaining({ params: { assetId: expect.any(String) } }),

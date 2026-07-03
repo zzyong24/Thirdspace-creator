@@ -17,6 +17,7 @@ import { ScriptRichEditor } from "@/features/script/script-rich-editor";
 import { sectionsToHtml } from "@/features/script/script-editor-bridge";
 import { TopicCard } from "./topic-card";
 import { DraftChatRail } from "./draft-chat-rail";
+import { RevealProjectButton } from "./reveal-project-button";
 import { MaturityBar, DraftPrimaryAction } from "./maturity-bar";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
         </h1>
         <MaturityBar projectId={project.id} currentStage={project.currentStage} />
         <div className="ml-auto flex shrink-0 items-center gap-2.5">
+          <RevealProjectButton projectId={project.id} />
           {project.imported ? (
             <span
               data-slot="draft-imported-badge"
@@ -92,7 +94,9 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
                   : "还没有版本 —— 直接写,或在右侧让编导起草"}
               </span>
             </div>
+            {/* [T-055c] key=版本数:对话「写入稿面/撤销」refresh 后强制重挂,编辑器吃到新版本。 */}
             <ScriptRichEditor
+              key={`v${script.versionCount}`}
               initialHtml={initialHtml}
               artifactId={scriptArtifactId}
               projectId={project.id}

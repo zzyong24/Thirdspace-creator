@@ -28,6 +28,7 @@ import type { MaterialLinkResource } from "@creatoros/contract";
 // PERSISTED_OPS from ASSET_OP_IDS (adding the module = registering it).
 
 export const ASSET_OP_IDS = [
+  "assets.downloadUrl",
   "assets.list",
   "assets.uploads.create",
   "assets.uploads.complete",
@@ -144,6 +145,11 @@ export function createAssetsTransport(
             data: toAssetResource(row),
             meta: { requestId: ctx.requestId },
           };
+        }
+        case "assets.downloadUrl": {
+          // [T-055d SPEC §7.2] 下载 = 复制:签名 GET URL + 建议保存名。
+          const dto = await service.getDownloadUrl(ctx, p.assetId ?? "");
+          return { data: dto, meta: { requestId: ctx.requestId } };
         }
         case "assets.get": {
           const row = await service.getAsset(ctx, p.assetId ?? "");

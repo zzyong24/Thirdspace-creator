@@ -92,15 +92,54 @@ export function AssetsInteractiveRegion({
   // signed URL points at `mock://object-storage` (no byte store this wave). We
   // do NOT fabricate a download — the op call is the wired part, and the status
   // line is honest that byte download is 规划中.
+  // [T-055d SPEC §7.2] 下载做真:assets.downloadUrl 换签名 GET URL(local-fs = token 门
+  // blob route)→ <a download> 触发浏览器保存对话框(下载 = 复制到用户选的位置)。
   const handleDownload = React.useCallback(
     (assetId: string) => {
       startTransition(async () => {
-        await client.getAsset({
-          params: { assetId },
-          query: undefined,
-          body: undefined,
-        });
-        setActionStatus("文件字节下载规划中：已登记素材信息，暂未连接真实对象存储。");
+        try {
+          const dto = (await client.getDownloadUrl({
+            params: { assetId },
+            query: undefined,
+            body: undefined,
+          })) as unknown as { url: string; fileName: string };
+          const a = document.createElement("a");
+          a.href = dto.url;
+          a.download = dto.fileName || "download";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setActionStatus(`已开始下载「${dto.fileName}」。`);
+        } catch {
+          setActionStatus("下载失败：文件缺失或存储不可用。");
+        }
+      });
+    },
+    [],
+  );
+
+  // [T-055d SPEC §7.2] 在 Finder 显示:本地 route 对安全解析后的真实文件执行 open -R
+  // (gate-F1 三重路径防护在 route 侧)。
+  const handleReveal = React.useCallback(
+    (assetId: string) => {
+      startTransition(async () => {
+        try {
+          const res = await fetch("/api/v1/local/reveal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ assetId }),
+          });
+          if (!res.ok) {
+            const data = (await res.json().catch(() => null)) as
+              | { error?: string }
+              | null;
+            setActionStatus(`Finder 定位失败：${data?.error ?? res.status}`);
+            return;
+          }
+          setActionStatus("已在 Finder 中显示。");
+        } catch {
+          setActionStatus("Finder 定位失败：本地服务不可达。");
+        }
       });
     },
     [],
@@ -153,6 +192,13 @@ export function AssetsInteractiveRegion({
   // the trashed asset drops out of the active gallery.
   const handleTrash = React.useCallback(
     (assetId: string) => {
+      // [T-056⑥] 危险操作确认 —— 显式告知是删除语义。
+      if (
+        typeof window !== "undefined" &&
+        !window.confirm("确定把这份素材移入回收站?(可在回收站恢复)")
+      ) {
+        return;
+      }
       startTransition(async () => {
         await client.trashAsset({
           params: { assetId },
@@ -224,6 +270,7 @@ export function AssetsInteractiveRegion({
           onCopyLink={handleCopyLink}
           onFavorite={handleFavorite}
           onTrash={handleTrash}
+          onReveal={handleReveal}
           projects={gallery?.projects ?? []}
           onAttach={handleAttach}
           actionsPending={pending}
