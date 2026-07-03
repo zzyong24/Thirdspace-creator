@@ -33,6 +33,10 @@ export interface RunTopicNodeInput {
   positioningBrief: string;
   /** 按出题依据装配的额外上下文(评论信号 / 知识库…),让各 basis 真的不同。 */
   basisBrief?: string;
+  // [T-062b gate-F3] 知识库参考 + 已验证经验约束(全 basis 注入;basis=knowledge 时
+  // knowledgeBrief 已进 basisBrief,调用方置空防重复)。
+  knowledgeBrief?: string;
+  learningsBrief?: string;
   /** 出题依据。 */
   basis: TopicBasis;
   /** 步骤回调 —— 喂窗口步骤日志。 */
@@ -52,6 +56,8 @@ function topicFacets(
   positioningBrief: string,
   basis: TopicBasis,
   basisBrief?: string,
+  knowledgeBrief?: string,
+  learningsBrief?: string,
 ): Record<string, string | undefined> {
   return {
     positioning:
@@ -59,6 +65,9 @@ function topicFacets(
     basisHint: BASIS_HINT[basis],
     // Sfix:把出题依据对应的真实上下文(评论信号 / 知识库)注进去,让各 basis 真的不同。
     basisContext: basisBrief ? `\n\n【依据材料】\n${basisBrief}` : "",
+    // [T-062b gate-F3] KNOW-X 修真:知识库参考 + 已验证经验约束,空库诚实标注不编。
+    knowledgeRef: `\n\n--- 知识库参考 ---\n${knowledgeBrief || "（暂无沉淀）"}`,
+    learningsConstraint: `\n\n--- 已验证经验约束 ---\n${learningsBrief || "（暂无沉淀）"}`,
   };
 }
 
@@ -130,7 +139,13 @@ export async function runTopicNode(
   const { object } = await runStructuredNode<TopicArrayOutput>({
     model: input.model,
     template: TOPIC_GENERATE_TEMPLATE,
-    facets: topicFacets(input.positioningBrief, input.basis, input.basisBrief),
+    facets: topicFacets(
+      input.positioningBrief,
+      input.basis,
+      input.basisBrief,
+      input.knowledgeBrief,
+      input.learningsBrief,
+    ),
   });
   const topics = normalizeTopics(object.topics);
   if (topics.length === 0) {

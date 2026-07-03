@@ -77,6 +77,10 @@ export async function runTopicGenerateV2(
       model: modelFor(spec),
       positioningBrief: context.positioningBrief,
       basisBrief,
+      // [T-062b gate-F3] KNOW-X 修真:知识库参考 + 已验证经验约束全 basis 注入;
+      // basis=knowledge 时知识已进 basisBrief,置空防重复。
+      knowledgeBrief: basis === "knowledge" ? undefined : context.knowledgeBrief || undefined,
+      learningsBrief: context.learningsBrief || undefined,
       basis,
       ports: {
         markRunning: (id: string) => deps.ai.markRunning(ctx, id),

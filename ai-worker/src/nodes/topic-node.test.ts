@@ -69,6 +69,39 @@ describe("runTopicNode", () => {
     ).rejects.toThrow(/未产出可解析选题/);
   });
 
+  it("[T-062b gate-F3] KNOW-X 修真:知识库参考 + 已验证经验约束真进 prompt;空库诚实标注", async () => {
+    // 捕获发给模型的 prompt,断言两个 facet 段真被注入(SPEC §7-3 的单测形式)。
+    let captured = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        captured = JSON.stringify(opts.prompt);
+        return finalText(TOPICS_OBJECT_JSON);
+      },
+    });
+    await runTopicNode({
+      model,
+      positioningBrief: "定位X",
+      basis: "positioning",
+      knowledgeBrief: "· 俩小时做小程序逐字稿 (transcript)",
+      learningsBrief: "· 完播率高的都在前 3 秒放结论",
+    });
+    expect(captured).toContain("--- 知识库参考 ---");
+    expect(captured).toContain("俩小时做小程序逐字稿");
+    expect(captured).toContain("--- 已验证经验约束 ---");
+    expect(captured).toContain("前 3 秒放结论");
+
+    // 空库 → 「(暂无沉淀)」诚实标注,不编内容。
+    let captured2 = "";
+    const model2 = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        captured2 = JSON.stringify(opts.prompt);
+        return finalText(TOPICS_OBJECT_JSON);
+      },
+    });
+    await runTopicNode({ model: model2, positioningBrief: "x", basis: "trend" });
+    expect(captured2).toContain("（暂无沉淀）");
+  });
+
   it("parseTopics 容忍 ``` 代码块包裹(纯工具,仍导出)", () => {
     const t = parseTopics("```json\n" + TOPICS_ARRAY_JSON + "\n```");
     expect(t).toHaveLength(2);

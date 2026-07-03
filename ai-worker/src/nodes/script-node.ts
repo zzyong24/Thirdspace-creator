@@ -27,6 +27,8 @@ export interface RunScriptNodeInput {
   positioningBrief: string;
   /** 过往复盘爆款要素(选填)。 */
   learningsBrief?: string;
+  // [T-062b gate-F3] 知识库参考(选填,creative-context 装配)。
+  knowledgeBrief?: string;
   /** 本期选题标题/切入(选填)。 */
   topicTitle?: string;
   topicAngle?: string;
@@ -95,6 +97,10 @@ export async function runScriptNode(
         "（创作者尚未设置定位——按通用爆款逻辑写脚本）",
       learnings: input.learningsBrief
         ? `\n【过往复盘爆款要素】\n${input.learningsBrief}`
+        : "",
+      // [T-062b gate-F3] 知识库参考 —— 让脚本能引用创作者沉淀的素材/金句/逐字稿。
+      knowledge: input.knowledgeBrief
+        ? `\n--- 知识库参考 ---\n${input.knowledgeBrief}`
         : "",
       topic: input.topicTitle
         ? `\n【本期选题】${input.topicTitle}${

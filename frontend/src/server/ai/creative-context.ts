@@ -305,7 +305,8 @@ export async function assembleCreativeContext(
   let learningsBrief = "";
   if (deps.learnings) {
     try {
-      const rows = await deps.learnings.getSuggestions(ctx, { limit: 5 });
+      // [T-062b] validated 经验全量当约束(SPEC §3:candidate 不进 prompt);20 上限防爆。
+      const rows = await deps.learnings.getSuggestions(ctx, { limit: 20 });
       learningsBrief = rows
         .map((l) => `· ${l.title}${l.insight ? `：${l.insight}` : ""}`)
         .join("\n");
