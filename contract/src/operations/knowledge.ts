@@ -26,10 +26,24 @@ export const knowledgeOperations = {
     path: "/knowledge",
     body: z.object({
       title: z.string().min(1),
+      // [T-079a] 与 resources/knowledge.ts 的 knowledgeType 枚举同步(additive
+      // 加四原子 claim/evidence/quote/qa,gate-F3 零删除)。
       knowledgeType: z
-        .enum(["note", "reference", "inspiration", "snippet", "transcript"])
+        .enum([
+          "note",
+          "reference",
+          "inspiration",
+          "snippet",
+          "transcript",
+          "claim",
+          "evidence",
+          "quote",
+          "qa",
+        ])
         .default("note"),
       content: z.string().default(""),
+      // [T-079a] 可选出处(缺省落库为 NULL)。
+      sourceNote: z.string().optional(),
     }),
     response: knowledgeItemResource,
     fr: ["FR-KNOWLEDGE-CREATE"],

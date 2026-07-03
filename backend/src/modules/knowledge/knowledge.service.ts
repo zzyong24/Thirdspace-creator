@@ -1,7 +1,7 @@
 import type { RequestContext } from "@creatoros/contract";
 import type {
   KnowledgeRepository,
-  KnowledgeItemRow,
+  KnowledgeItemWithStats,
   KnowledgeRevisionRow,
   KnowledgeRelationRow,
 } from "./knowledge.repository";
@@ -21,11 +21,12 @@ import { InvalidTransitionError } from "./knowledge.errors";
 // No cross-module repo import.
 
 export interface KnowledgeService {
-  listKnowledge(ctx: RequestContext): Promise<KnowledgeItemRow[]>;
+  // [T-079a] 读路径带战绩投影(usedCount/usedInPublished,repo 一次算齐)。
+  listKnowledge(ctx: RequestContext): Promise<KnowledgeItemWithStats[]>;
   getKnowledge(
     ctx: RequestContext,
     knowledgeId: string,
-  ): Promise<KnowledgeItemRow>;
+  ): Promise<KnowledgeItemWithStats>;
   listRevisions(
     ctx: RequestContext,
     knowledgeId: string,
@@ -36,8 +37,14 @@ export interface KnowledgeService {
   ): Promise<KnowledgeRelationRow[]>;
   createKnowledge(
     ctx: RequestContext,
-    input: { title: string; knowledgeType?: string; content?: string },
-  ): Promise<KnowledgeItemRow>;
+    input: {
+      title: string;
+      knowledgeType?: string;
+      content?: string;
+      // [T-079a] 可选出处(SPEC §1)。
+      sourceNote?: string | null;
+    },
+  ): Promise<KnowledgeItemWithStats>;
   createRevision(
     ctx: RequestContext,
     knowledgeId: string,
@@ -51,7 +58,7 @@ export interface KnowledgeService {
   archiveKnowledge(
     ctx: RequestContext,
     knowledgeId: string,
-  ): Promise<KnowledgeItemRow>;
+  ): Promise<KnowledgeItemWithStats>;
   removeRelation(
     ctx: RequestContext,
     knowledgeId: string,

@@ -23,14 +23,15 @@ describe("knowledge db-schema (KNOWLEDGE_DDL round-trip)", () => {
     const res = await client.query(`
       INSERT INTO knowledge_items
         (id, user_id, current_revision_id, knowledge_type, title, source_type,
-         source_url, source_metadata, status, archived_at, created_at, updated_at)
+         source_url, source_metadata, status, archived_at, source_note,
+         created_at, updated_at)
       VALUES
         ('k-1', 'user-a', 'rev-1', 'note', '标题', 'manual',
-         NULL, '{"sampleSize":120}', 'active', NULL,
+         NULL, '{"sampleSize":120}', 'active', NULL, '来源:人工整理',
          '2026-06-21T00:00:00.000Z', '2026-06-21T00:00:00.000Z')
       RETURNING id, user_id, current_revision_id, knowledge_type, title,
                 source_type, source_url, source_metadata, status, archived_at,
-                created_at, updated_at;
+                source_note, created_at, updated_at;
     `);
     expect(res.rows).toHaveLength(1);
     const row = res.rows[0] as Record<string, unknown>;
@@ -41,6 +42,8 @@ describe("knowledge db-schema (KNOWLEDGE_DDL round-trip)", () => {
     expect(row.source_url).toBeNull();
     expect(row.archived_at).toBeNull();
     expect(row.source_metadata).toEqual({ sampleSize: 120 });
+    // [T-079a] 迁移 0018:source_note 列存在且往返。
+    expect(row.source_note).toBe("来源:人工整理");
     expect(row.created_at).toBe("2026-06-21T00:00:00.000Z");
   });
 

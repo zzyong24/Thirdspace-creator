@@ -26,6 +26,8 @@ export const knowledgeItems = pgTable("knowledge_items", {
   sourceMetadata: jsonb("source_metadata").notNull().default({}),
   status: text("status").notNull().default("active"),
   archivedAt: text("archived_at"), // nullable → contract iso8601|null
+  // [T-079a] 出处与可信度(迁移 0018)。nullable → contract string|null。
+  sourceNote: text("source_note"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -68,6 +70,7 @@ CREATE TABLE IF NOT EXISTS knowledge_items (
   source_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   status TEXT NOT NULL DEFAULT 'active',
   archived_at TEXT,
+  source_note TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

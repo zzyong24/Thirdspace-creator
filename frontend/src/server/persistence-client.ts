@@ -496,6 +496,8 @@ function toKnowledgeRow(k: CanonicalKnowledge): KnowledgeItemRow {
     sourceMetadata: k.sourceMetadata as Record<string, unknown>,
     status: k.status,
     archivedAt: k.archivedAt ?? null,
+    // [T-079a] 种子数据无出处标注,落 NULL(source_note 列见迁移 0018)。
+    sourceNote: null,
     createdAt: k.createdAt,
     updatedAt: k.updatedAt,
   };

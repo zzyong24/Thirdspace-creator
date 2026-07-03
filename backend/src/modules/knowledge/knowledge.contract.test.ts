@@ -75,6 +75,27 @@ describe("knowledge.transport — 7-op contract conformance", () => {
 
     const got = await call("knowledge.get", { params: { knowledgeId } });
     expect(() => successEnvelope(knowledgeItemResource).parse(got)).not.toThrow();
+    // [T-079a] 战绩投影缺省真值:未被用料链引用 → 0/false;sourceNote 缺省 null。
+    expect(parsedList.data[0]!.sourceNote).toBeNull();
+    expect(parsedList.data[0]!.usedCount).toBe(0);
+    expect(parsedList.data[0]!.usedInPublished).toBe(false);
+  });
+
+  // [T-079a] 四原子 create + sourceNote 透传(SPEC 2026-07-03 §1)。
+  it("knowledge.create with atom type + sourceNote → 契约往返", async () => {
+    const created = await call("knowledge.create", {
+      body: {
+        title: "92% 的开发者在工作中会用到 AI 编码工具",
+        knowledgeType: "evidence",
+        content: "",
+        sourceNote: "Stack Overflow Developer Survey 2024",
+      },
+    });
+    const parsed = successEnvelope(knowledgeItemResource).parse(created);
+    expect(parsed.data.knowledgeType).toBe("evidence");
+    expect(parsed.data.sourceNote).toBe("Stack Overflow Developer Survey 2024");
+    expect(parsed.data.usedCount).toBe(0);
+    expect(parsed.data.usedInPublished).toBe(false);
   });
 
   it("knowledge.revisions.create → KnowledgeRevisionResource", async () => {

@@ -5,7 +5,7 @@ import {
 } from "@creatoros/backend";
 import type { KnowledgeService } from "./knowledge.service";
 import type {
-  KnowledgeItemRow,
+  KnowledgeItemWithStats,
   KnowledgeRevisionRow,
   KnowledgeRelationRow,
 } from "./knowledge.repository";
@@ -38,7 +38,7 @@ export const KNOWLEDGE_OP_IDS = [
   "knowledge.relations.delete",
 ] as const;
 
-function toItemResource(row: KnowledgeItemRow): KnowledgeItemResource {
+function toItemResource(row: KnowledgeItemWithStats): KnowledgeItemResource {
   return {
     id: row.id,
     userId: row.userId,
@@ -50,6 +50,10 @@ function toItemResource(row: KnowledgeItemRow): KnowledgeItemResource {
     sourceMetadata: (row.sourceMetadata ?? {}) as Record<string, unknown>,
     status: row.status as KnowledgeItemResource["status"],
     archivedAt: row.archivedAt ?? null,
+    // [T-079a] 出处 + 战绩投影(SPEC §1)。
+    sourceNote: row.sourceNote ?? null,
+    usedCount: row.usedCount,
+    usedInPublished: row.usedInPublished,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -112,6 +116,8 @@ export function createKnowledgeTransport(
             title: string;
             knowledgeType?: string;
             content?: string;
+            // [T-079a] 可选出处透传(SPEC §1)。
+            sourceNote?: string;
           };
           const row = await service.createKnowledge(ctx, b);
           return {

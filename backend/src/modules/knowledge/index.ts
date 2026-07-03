@@ -15,6 +15,8 @@ export {
   type KnowledgeRepository,
   type RepoDeps,
   type KnowledgeItemRow,
+  // [T-079a] 带战绩投影的读路径行(usedCount/usedInPublished)。
+  type KnowledgeItemWithStats,
   type KnowledgeRevisionRow,
   type KnowledgeRelationRow,
 } from "./knowledge.repository";
