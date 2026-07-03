@@ -36,7 +36,7 @@ export interface CreateMaterialLinkInput {
 }
 
 export interface ListMaterialLinksQuery {
-  projectId: string;
+  projectId?: string;
   page: number;
   pageSize: number;
 }
@@ -79,7 +79,7 @@ export function createMaterialLinksService(
 
   return {
     async list(ctx, query) {
-      const { rows, total } = await repoFor(ctx).list(query.projectId, {
+      const { rows, total } = await repoFor(ctx).list(query.projectId ?? null, {
         limit: query.pageSize,
         offset: (query.page - 1) * query.pageSize,
       });

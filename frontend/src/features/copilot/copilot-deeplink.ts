@@ -30,6 +30,11 @@ export function copilotDeepLink(
   surface: string,
   functionKey?: string,
   selection?: { kind: string; id: string; title?: string },
+  /**
+   * [T-060①] 自定义预填话术(覆盖 FUNCTION_KEY_PREFILL 的默认词条)—— 按钮语义更细时
+   * (如 4 种出题依据各一句)用它;仍然只预填不发送(T-055b 机制)。
+   */
+  prefillText?: string,
 ): string {
   const params = new URLSearchParams();
   params.set(OVERLAY_QUERY_KEY, OVERLAY_OPEN_VALUE);
@@ -40,5 +45,6 @@ export function copilotDeepLink(
     params.set("selId", selection.id);
     if (selection.title) params.set("selTitle", selection.title);
   }
+  if (prefillText) params.set("prefill", prefillText);
   return `?${params.toString()}`;
 }

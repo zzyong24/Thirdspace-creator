@@ -185,6 +185,7 @@ async function assembleUsageHistory(
       return links.map<AssetUsageRow>((link) => ({
         id: link.id,
         assetId: link.entityId,
+        projectId: link.projectId,
         projectTitle: projectTitleById.get(link.projectId) ?? link.projectId,
         // 用料链 role/stage as the human note (e.g. "clip · production").
         note: [link.role, link.stage].filter(Boolean).join(" · "),

@@ -185,6 +185,7 @@ export function buildAssetsViewModel(): AssetsViewModel {
       return {
         id: row.id,
         assetId: row.assetId,
+        projectId: output.projectId,
         projectTitle: project?.title ?? "未关联项目",
         note: usageLabel[row.usageType] ?? row.usageType,
         dateLabel: production.updatedAt.slice(0, 10),

@@ -156,6 +156,8 @@ export interface AssetTypeCount {
 export interface AssetUsageRow {
   readonly id: string;
   readonly assetId: string;
+  /** [T-060③b] 按项目分组用(文件夹视图的分组键)。 */
+  readonly projectId: string;
   readonly projectTitle: string;
   readonly note: string;
   readonly dateLabel: string;

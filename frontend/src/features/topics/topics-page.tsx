@@ -43,7 +43,6 @@ import {
 } from "./topics-interactive-region";
 import {
   TopicGenerateBand,
-  type PendingTopicReview,
 } from "./topic-generate-island";
 
 /**
@@ -61,7 +60,7 @@ export interface TopicsViewModel {
   readonly overview: TopicsOverviewResource;
   readonly sort: CandidateSortKey;
   /** 最近一条待审阅的 topic.generate 任务(跨刷新缓存);无则 null。 */
-  readonly pendingReview: PendingTopicReview | null;
+  readonly pendingReview: null;
 }
 
 export interface TopicsPageProps {
@@ -112,21 +111,9 @@ async function loadViewModel(
     query: undefined,
     body: undefined,
   })) as unknown as TopicsOverviewResource;
-  const pending = (await client.pendingTopicReview({
-    params: undefined,
-    query: undefined,
-    body: undefined,
-  })) as unknown as {
-    review: { taskId: string; basis: string; count: number } | null;
-  };
-  const pendingReview: PendingTopicReview | null = pending.review
-    ? {
-        taskId: pending.review.taskId,
-        basis: pending.review.basis,
-        count: pending.review.count,
-      }
-    : null;
-  return { candidates, overview, sort, pendingReview };
+  // [T-060①] TopicReviewDialog 弹窗任务流退役 —— pendingTopicReview 不再消费
+  // (对话内 ChatCandidateCard 即出即采,没有「待审阅弹窗」概念)。
+  return { candidates, overview, sort, pendingReview: null };
 }
 
 // Pure render — split out so tests can drive it synchronously with a fixed VM.

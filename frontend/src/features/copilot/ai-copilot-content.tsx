@@ -503,6 +503,22 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   "material.gather": "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
 };
 
+// [T-060②] 工具 trace 的中文名(对话内「正在调用/已调用」行;未知工具回落原名)。
+const TOOL_TRACE_LABELS: Record<string, string> = {
+  "topic.generate": "AI 出题",
+  "topic.enrich": "补全选题卡",
+  "script.hooks": "生成 HOOK 候选",
+  "script.draft": "起草整稿脚本",
+  "material.gather": "搜集素材",
+  "calibration.diagnose": "编导诊断",
+  "review.analyze": "复盘提炼",
+  "positioning.generate": "生成定位提案",
+  "context.projects": "读取项目库",
+  "context.knowledge": "检索知识库",
+  "context.materials": "检索素材库",
+  "context.comments": "读取观众评论",
+};
+
 // 默认页面层(无 URL 指定时)—— 选题编导是最通用的一面。
 const DEFAULT_SURFACE = "topics";
 
@@ -736,8 +752,10 @@ export function AICopilotContent({
   const prefilledRef = React.useRef(false);
   React.useEffect(() => {
     if (prefilledRef.current) return;
-    if (!functionKey || messages.length > 0 || streaming) return;
-    const text = FUNCTION_KEY_PREFILL[functionKey];
+    if (messages.length > 0 || streaming) return;
+    // [T-060①] URL ?prefill= 自定义话术优先(按钮语义更细);否则按 fn 查默认词条。
+    const custom = searchParams?.get("prefill") || "";
+    const text = custom || (functionKey ? FUNCTION_KEY_PREFILL[functionKey] : "");
     if (!text) return;
     prefilledRef.current = true;
     // 不覆盖用户已敲的字(预填只填空输入框)。
@@ -1278,11 +1296,43 @@ export function AICopilotContent({
                       工具结果按 kind 分发到对应卡:选题候选 / 选题卡 / 维度诊断 / 复盘经验 / 定位提案。 */}
                   {message.parts.map((part, idx) => {
                     if (!isToolUIPart(part)) return null;
-                    if (part.state !== "output-available") return null;
                     const name = getToolName(part);
+                    const traceLabel = TOOL_TRACE_LABELS[name] ?? name;
+                    // [T-060②] 调用中 → 进行态 trace 行(WorkBuddy 式过程可见)。
+                    if (part.state !== "output-available") {
+                      return (
+                        <div
+                          key={`${message.id}-trace-${idx}`}
+                          data-slot="copilot-tool-running"
+                          className="mt-1 flex items-center gap-1.5 rounded-md border border-border/60 bg-surface-subtle/40 px-2.5 py-1.5 text-xs text-muted-foreground"
+                        >
+                          <span className="size-3 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+                          正在调用 {traceLabel}…
+                        </div>
+                      );
+                    }
                     const out = part.output as { kind?: string } | undefined;
                     if (!out) return null;
                     const key = `${message.id}-tool-${idx}`;
+                    // [T-060②] 已完成 trace 行:可折叠展开看入参/结果摘要;后面若有产物卡
+                    // 则卡随其后。纯读工具(context.*)也留痕 —— 用户能看见 AI 读了什么。
+                    const traceRow = (
+                      <details
+                        key={`${key}-trace`}
+                        data-slot="copilot-tool-trace"
+                        className="mt-1 rounded-md border border-border/60 bg-surface-subtle/40 px-2.5 py-1.5"
+                      >
+                        <summary className="cursor-pointer select-none text-xs text-muted-foreground">
+                          <span className="text-success">✓</span> 已调用 {traceLabel}
+                          {typeof (out as { total?: number }).total === "number"
+                            ? `（共 ${(out as { total?: number }).total} 条）`
+                            : ""}
+                        </summary>
+                        <pre className="mt-1.5 max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-[10px] leading-relaxed text-text-subtle">
+                          {`入参 ${JSON.stringify(part.input ?? {}, null, 1).slice(0, 400)}\n结果 ${JSON.stringify(out, null, 1).slice(0, 800)}`}
+                        </pre>
+                      </details>
+                    );
                     // 选题候选(topic.generate)→ 逐条采纳进候选池。
                     if (
                       name === "topic.generate" &&
@@ -1290,7 +1340,10 @@ export function AICopilotContent({
                     ) {
                       const o = out as { items?: ChatTopicCandidate[] };
                       return (
-                        <ChatCandidateCard key={key} candidates={o.items ?? []} />
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatCandidateCard candidates={o.items ?? []} />
+                        </React.Fragment>
                       );
                     }
                     // [T-055c] HOOK 候选组(script.hooks)→ 逐条「写入稿面」(artifacts 版本门)。
@@ -1381,7 +1434,8 @@ export function AICopilotContent({
                         />
                       );
                     }
-                    return null;
+                    // 无专属卡的工具(纯读 context.* 等)→ 只渲 trace 行。
+                    return traceRow;
                   })}
                 </li>
               ))}

@@ -64,7 +64,47 @@ export function AssetsInteractiveRegion({
 }: AssetsInteractiveRegionProps) {
   // When the page supplies a derived gallery, render its filtered+paged rows;
   // otherwise (tests) fall back to the whole view-model list.
-  const galleryAssets = gallery?.assets ?? viewModel.assets;
+  const allAssets = gallery?.assets ?? viewModel.assets;
+  // [T-060③b] 视图切换:全部 | 按项目(项目=文件夹,点进去看该项目素材)。
+  // 分组键来自 usageHistory(material_links 反查):asset ∈ 其挂过的每个项目;
+  // 没挂任何项目的进「通用素材」组(素材中心直传的那批)。
+  const [view, setView] = React.useState<"all" | "byProject">("all");
+  const [openProjectId, setOpenProjectId] = React.useState<string | null>(null);
+  const projectGroups = React.useMemo(() => {
+    const byProject = new Map<
+      string,
+      { title: string; assetIds: Set<string> }
+    >();
+    for (const row of viewModel.usageHistory) {
+      const g = byProject.get(row.projectId) ?? {
+        title: row.projectTitle,
+        assetIds: new Set<string>(),
+      };
+      g.assetIds.add(row.assetId);
+      byProject.set(row.projectId, g);
+    }
+    const linked = new Set(
+      viewModel.usageHistory.map((r) => r.assetId),
+    );
+    const general = allAssets.filter((a) => !linked.has(a.id));
+    const groups = [...byProject.entries()].map(([projectId, g]) => ({
+      projectId,
+      title: g.title,
+      count: [...g.assetIds].filter((id) =>
+        allAssets.some((a) => a.id === id),
+      ).length,
+      assetIds: g.assetIds,
+    }));
+    return { groups, generalCount: general.length, linked };
+  }, [viewModel.usageHistory, allAssets]);
+  const galleryAssets = React.useMemo(() => {
+    if (view !== "byProject" || !openProjectId) return allAssets;
+    if (openProjectId === "__general__") {
+      return allAssets.filter((a) => !projectGroups.linked.has(a.id));
+    }
+    const g = projectGroups.groups.find((x) => x.projectId === openProjectId);
+    return g ? allAssets.filter((a) => g.assetIds.has(a.id)) : allAssets;
+  }, [view, openProjectId, allAssets, projectGroups]);
   const [selectedId, setSelectedId] = React.useState<string | null>(
     galleryAssets[0]?.id ?? null,
   );
@@ -211,28 +251,7 @@ export function AssetsInteractiveRegion({
     [router],
   );
 
-  // Plan D1 附到项目: the 用料链 consumption from the library side. POST
-  // materialLinks.create { projectId, entityType:"asset", entityId, role, stage }
-  // then refresh so any usage-derived rows reflect the new link.
-  const handleAttach = React.useCallback(
-    (assetId: string, projectId: string) => {
-      startTransition(async () => {
-        await client.createMaterialLink({
-          params: undefined,
-          query: undefined,
-          body: {
-            projectId,
-            entityType: "asset",
-            entityId: assetId,
-            role: "clip",
-            stage: "production",
-          },
-        });
-        router.refresh();
-      });
-    },
-    [router],
-  );
+  // [T-060③a] 「附到项目」退役 —— 素材只两条来路(素材中心=通用,项目内上传=项目素材)。
 
   return (
     <div
@@ -245,13 +264,88 @@ export function AssetsInteractiveRegion({
         className="flex flex-col gap-3"
       >
         <GalleryHeader
-          totalCount={gallery?.totalCount ?? galleryAssets.length}
+          totalCount={gallery?.totalCount ?? allAssets.length}
         />
-        <AssetCardGrid
-          assets={galleryAssets}
-          selectedId={selected?.id ?? null}
-          onSelect={setSelectedId}
-        />
+        {/* [T-060③b] 视图切换:全部 | 按项目(文件夹)。 */}
+        <div data-slot="assets-view-switch" className="flex items-center gap-1.5">
+          {(
+            [
+              { key: "all", label: "全部" },
+              { key: "byProject", label: "按项目" },
+            ] as const
+          ).map((v) => (
+            <button
+              key={v.key}
+              type="button"
+              data-slot={`assets-view-${v.key}`}
+              data-active={view === v.key}
+              onClick={() => {
+                setView(v.key);
+                setOpenProjectId(null);
+              }}
+              className={
+                "h-7 rounded-control px-2.5 text-xs transition-colors " +
+                (view === v.key
+                  ? "bg-brand text-brand-foreground"
+                  : "border border-border text-muted-foreground hover:text-foreground")
+              }
+            >
+              {v.label}
+            </button>
+          ))}
+          {view === "byProject" && openProjectId ? (
+            <button
+              type="button"
+              data-slot="assets-folder-back"
+              onClick={() => setOpenProjectId(null)}
+              className="ml-1 text-xs text-brand underline underline-offset-2"
+            >
+              ← 全部项目
+            </button>
+          ) : null}
+        </div>
+        {view === "byProject" && !openProjectId ? (
+          <div
+            data-slot="assets-folder-grid"
+            className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4"
+          >
+            {projectGroups.groups.map((g) => (
+              <button
+                key={g.projectId}
+                type="button"
+                data-slot="assets-folder"
+                data-project-id={g.projectId}
+                onClick={() => setOpenProjectId(g.projectId)}
+                className="flex flex-col items-start gap-1 rounded-card border border-border bg-surface px-3 py-3 text-left transition-colors hover:border-brand/50"
+              >
+                <span aria-hidden="true" className="text-lg">📁</span>
+                <span className="w-full truncate text-xs font-medium text-foreground">
+                  {g.title}
+                </span>
+                <span className="text-[11px] text-text-subtle">{g.count} 件</span>
+              </button>
+            ))}
+            <button
+              type="button"
+              data-slot="assets-folder"
+              data-project-id="__general__"
+              onClick={() => setOpenProjectId("__general__")}
+              className="flex flex-col items-start gap-1 rounded-card border border-dashed border-border bg-surface-subtle/50 px-3 py-3 text-left transition-colors hover:border-brand/50"
+            >
+              <span aria-hidden="true" className="text-lg">🗂</span>
+              <span className="text-xs font-medium text-foreground">通用素材</span>
+              <span className="text-[11px] text-text-subtle">
+                {projectGroups.generalCount} 件 · 未挂项目
+              </span>
+            </button>
+          </div>
+        ) : (
+          <AssetCardGrid
+            assets={galleryAssets}
+            selectedId={selected?.id ?? null}
+            onSelect={setSelectedId}
+          />
+        )}
         {gallery ? (
           <Pagination
             currentPage={gallery.currentPage}
@@ -271,8 +365,6 @@ export function AssetsInteractiveRegion({
           onFavorite={handleFavorite}
           onTrash={handleTrash}
           onReveal={handleReveal}
-          projects={gallery?.projects ?? []}
-          onAttach={handleAttach}
           actionsPending={pending}
         />
         {/* GAP-AST-1: honest status line. 收藏 is REAL (persisted toggle);

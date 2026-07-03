@@ -45,7 +45,8 @@ export function createMaterialLinksTransport(
           const page = q.page ?? 1;
           const pageSize = q.pageSize ?? 100;
           const { rows, total } = await service.list(ctx, {
-            projectId: q.projectId ?? "",
+            // [T-060③b] 缺省 = 全量(按项目分组反查);空串同缺省。
+            projectId: q.projectId?.trim() ? q.projectId : undefined,
             page,
             pageSize,
           });

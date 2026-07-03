@@ -13,7 +13,8 @@ export const materialLinksOperations = {
     id: "materialLinks.list",
     method: "GET",
     path: "/material-links",
-    query: paginationQuery.extend({ projectId: id }),
+    // [T-060③b] projectId 可选:缺省 = 该用户全量 links(素材中心「按项目分组」的反查读)。
+    query: paginationQuery.extend({ projectId: id.optional() }),
     response: materialLinkResource,
     isList: true,
     fr: ["FR-MATERIAL-LINK-LIST"],

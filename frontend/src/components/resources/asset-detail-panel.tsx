@@ -9,15 +9,12 @@ import * as React from "react";
 
 import { TagChip } from "@/components/content/tag-chip";
 import { SectionCard } from "@/components/project/section-card";
-import { MediaPreview } from "@/components/resources/media-preview";
+// [T-060③c] 详情面板换真预览(图可看/视频可播/音频可听/文档可开);网格卡仍用轻量 glyph。
+import { AssetLivePreview } from "@/components/resources/asset-live-preview";
 import {
   formatDuration,
   formatFileSize,
 } from "@/components/resources/asset-format";
-import {
-  AssetAttachToProject,
-  type AttachProjectOption,
-} from "@/components/resources/asset-attach-to-project";
 import type {
   ResourceAsset,
   ResourceAssetUsage,
@@ -45,11 +42,7 @@ export interface AssetDetailPanelProps {
   readonly onTrash?: (assetId: string) => void;
   // [T-055d SPEC §7.2] 在 Finder 显示(open -R 定位文件;单机产品 server 与用户同机)。
   readonly onReveal?: (assetId: string) => void;
-  // Plan D1 附到项目 (用料链): the user's projects + the attach handler. When
-  // provided the panel renders the project picker; the handler fires
-  // materialLinks.create. Optional so the panel stays render-only without them.
-  readonly projects?: ReadonlyArray<AttachProjectOption>;
-  readonly onAttach?: (assetId: string, projectId: string) => void;
+  // [T-060③a] 「附到项目」已退役:素材只两条来路(素材中心=通用,项目内上传=项目素材)。
   readonly actionsPending?: boolean;
 }
 
@@ -61,8 +54,6 @@ export function AssetDetailPanel({
   onFavorite,
   onTrash,
   onReveal,
-  projects = [],
-  onAttach,
   actionsPending = false,
 }: AssetDetailPanelProps) {
   const usageForAsset = asset
@@ -83,7 +74,7 @@ export function AssetDetailPanel({
             contentClassName="p-0"
             className="gap-1.5"
           >
-            <MediaPreview asset={asset} />
+            <AssetLivePreview asset={asset} />
           </SectionCard>
           <SectionCard
             title="操作"
@@ -159,12 +150,6 @@ export function AssetDetailPanel({
                 <span>移入回收站</span>
               </button>
             </div>
-            <AssetAttachToProject
-              assetId={asset.id}
-              projects={projects}
-              onAttach={onAttach}
-              pending={actionsPending}
-            />
           </SectionCard>
           <SectionCard
             title="元数据"

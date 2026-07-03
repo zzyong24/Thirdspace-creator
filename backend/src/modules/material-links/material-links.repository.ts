@@ -36,8 +36,9 @@ export interface MaterialLinkRepository {
   // Fixture hydration (insert with explicit user_id already on the row).
   seedLinks(rows: MaterialLinkRow[]): Promise<void>;
 
+  // [T-060③b] projectId 传 null = 该用户全量 links(素材中心按项目分组的反查读)。
   list(
-    projectId: string,
+    projectId: string | null,
     query: ListMaterialLinksQuery,
   ): Promise<{ rows: MaterialLinkRow[]; total: number }>;
   create(input: CreateMaterialLinkInput): Promise<MaterialLinkRow>;
@@ -55,10 +56,12 @@ export function createMaterialLinkRepository(
     },
 
     async list(projectId, { limit = 100, offset = 0 }) {
-      const where = and(
-        eq(materialLinks.userId, deps.userId),
-        eq(materialLinks.projectId, projectId),
-      );
+      const where = projectId
+        ? and(
+            eq(materialLinks.userId, deps.userId),
+            eq(materialLinks.projectId, projectId),
+          )
+        : eq(materialLinks.userId, deps.userId);
       const rows = await db
         .select()
         .from(materialLinks)

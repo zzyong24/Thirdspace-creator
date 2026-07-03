@@ -161,9 +161,8 @@ describe("Assets needs-backend wiring", () => {
       '[data-slot="asset-action-download"]',
     );
     fireEvent.click(btn!);
-    await waitFor(() =>
-      expect(mockClient.getDownloadUrl).toHaveBeenCalledTimes(1),
-    );
+    // [T-060③c] AssetLivePreview 挂载时也换签名 URL 做真预览 → 不限次数,只断言发生过。
+    await waitFor(() => expect(mockClient.getDownloadUrl).toHaveBeenCalled());
     await waitFor(() =>
       expect(
         container.querySelector('[data-slot="asset-action-status"]')?.textContent,
@@ -218,39 +217,13 @@ describe("Assets needs-backend wiring", () => {
     expect(mockRouter.refresh).toHaveBeenCalled();
   });
 
-  it("D1 附到项目 creates a material link (用料链) for the selected asset + project then refresh", async () => {
+  it("[T-060③a] 附到项目已退役:素材只两条来路(素材中心直传 / 项目内上传)", async () => {
     const { container } = await renderIsland();
-    const select = container.querySelector<HTMLSelectElement>(
-      '[data-slot="asset-attach-project-select"]',
-    );
-    const attachBtn = container.querySelector<HTMLButtonElement>(
-      '[data-slot="asset-attach-button"]',
-    );
-    expect(select).not.toBeNull();
-    expect(attachBtn).not.toBeNull();
-
-    // Pick the second project, then attach.
-    fireEvent.change(select!, { target: { value: "proj-2" } });
-    fireEvent.click(attachBtn!);
-
-    await waitFor(() =>
-      expect(mockClient.createMaterialLink).toHaveBeenCalledTimes(1),
-    );
-    expect(mockClient.createMaterialLink).toHaveBeenCalledWith(
-      expect.objectContaining({
-        body: {
-          projectId: "proj-2",
-          entityType: "asset",
-          entityId: expect.any(String),
-          role: "clip",
-          stage: "production",
-        },
-      }),
-    );
-    expect(mockRouter.refresh).toHaveBeenCalled();
-    // A success affordance appears.
     expect(
-      container.querySelector('[data-slot="asset-attach-success"]'),
-    ).not.toBeNull();
+      container.querySelector('[data-slot="asset-attach-project-select"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="asset-attach-button"]'),
+    ).toBeNull();
   });
 });

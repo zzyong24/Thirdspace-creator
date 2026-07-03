@@ -168,10 +168,10 @@ describe("topics view (pure render, deterministic)", () => {
     expect(screen.getByTestId("topics-three-column")).toBeInTheDocument();
     expect(screen.getByTestId("topics-sources")).toBeInTheDocument();
     expect(screen.getByTestId("topics-detail")).toBeInTheDocument();
-    // AI band: 4 出题按钮 + 当前依据 panel
+    // AI band: 4 出题深链(T-060① 弹窗退役 → Copilot 预填)+ 当前依据 panel
     expect(
-      within(screen.getByTestId("topics-generate-buttons")).getAllByRole(
-        "button",
+      within(screen.getByTestId("topics-generate-actions")).getAllByRole(
+        "link",
       ),
     ).toHaveLength(4);
     const basis = screen.getByTestId("topics-basis-panel");
@@ -379,90 +379,28 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(mockRouter.push).toHaveBeenCalledWith("/topics?sort=demandCount");
   });
 
-  it("基于定位出题 → client.createAITask(topic.generate, basis:positioning)", async () => {
+  it("[T-060①] 基于定位出题 → Copilot 深链预填(不再 createAITask 弹窗)", () => {
     render(<TopicGenerateBand basis={overview().basis} />);
-    fireEvent.click(screen.getByText("基于定位出题"));
-    await waitFor(() =>
-      expect(mockClient.createAITask).toHaveBeenCalledTimes(1),
-    );
-    const arg = mockClient.createAITask.mock.calls[0]![0] as {
-      body: { taskType: string; inputData: { basis: string } };
-    };
-    expect(arg.body.taskType).toBe("topic.generate");
-    expect(arg.body.inputData.basis).toBe("positioning");
-  });
-
-  it("待审阅 pill renders the cached count + opens the dialog by re-reading results (NO re-generate)", async () => {
-    // SSR 给了一条「上次待审阅」指针 → band 显示 pill。点开应只读已存候选,绝不再调 createAITask。
-    mockListTaskResults.mockResolvedValueOnce([
-      {
-        resultData: {
-          items: [
-            { title: "缓存选题甲", angle: "切入甲", predictedScore: 88 },
-            { title: "缓存选题乙", angle: "切入乙", predictedScore: 80 },
-          ],
-        },
-      },
-    ]);
-    render(
-      <TopicGenerateBand
-        basis={overview().basis}
-        pendingReview={{ taskId: "task-x", basis: "trend", count: 2 }}
-      />,
-    );
-    // pill 显示真实缓存条数
-    const pill = screen.getByTestId("topics-pending-review");
-    expect(pill).toHaveTextContent("上次生成 2 条选题待审阅");
-    // 点开 → 弹窗读回候选(listTaskResults 被调),createAITask 绝不被调
-    fireEvent.click(pill);
-    await waitFor(() =>
-      expect(screen.getByTestId("topics-review-list")).toBeInTheDocument(),
-    );
-    const list = screen.getByTestId("topics-review-list");
-    // CollabField: 标题/角度现渲成受控 Input/Textarea → 用 displayValue 断言(非纯文本)。
-    expect(within(list).getByDisplayValue("缓存选题甲")).toBeInTheDocument();
-    expect(within(list).getByDisplayValue("缓存选题乙")).toBeInTheDocument();
+    const link = screen.getByTestId("topics-generate-positioning");
+    const href = link.getAttribute("href") ?? "";
+    expect(href).toContain("copilot=open");
+    expect(href).toContain("surface=topics");
+    expect(href).toContain("fn=topic.generate");
+    expect(href).toContain("prefill=");
+    // 任何出题动作都不直接起任务 —— 全部进对话由确认门物化。
     expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
-  it("CollabField: 弹窗内内联改标题 → 采纳时 patch 带上编辑后的值再 confirm", async () => {
-    // 打开「待审阅」弹窗进入 review(rawItems↔items 1:1 → canEdit),改标题后采纳。
-    mockListTaskResults.mockResolvedValueOnce([
-      {
-        resultData: {
-          items: [
-            { title: "缓存甲", angle: "切入甲", predictedScore: 88 },
-            { title: "缓存乙", angle: "切入乙", predictedScore: 80 },
-          ],
-        },
-      },
-    ]);
+  it("[T-060①] 弹窗任务流退役:无待审阅 pill、无审阅弹窗", () => {
     render(
       <TopicGenerateBand
         basis={overview().basis}
         pendingReview={{ taskId: "task-x", basis: "trend", count: 2 }}
       />,
     );
-    fireEvent.click(screen.getByTestId("topics-pending-review"));
-    await waitFor(() =>
-      expect(screen.getByTestId("topics-review-list")).toBeInTheDocument(),
-    );
-    // 第一条标题 Input 改值:缓存甲 → 缓存甲改
-    const titleInputs = screen.getAllByLabelText("选题标题");
-    fireEvent.change(titleInputs[0]!, { target: { value: "缓存甲改" } });
-    // 采纳 → patch 带 merged kept(编辑后的甲 + 原乙),且先于 confirm
-    fireEvent.click(document.querySelector('[data-slot="band-confirm"]')!);
-    await waitFor(() =>
-      expect(mockClient.patchTaskResultItems).toHaveBeenCalledTimes(1),
-    );
-    const arg = mockClient.patchTaskResultItems.mock.calls[0]![0] as {
-      params: { taskId: string };
-      body: { items: Array<{ title: string }> };
-    };
-    expect(arg.params.taskId).toBe("task-x");
-    expect(arg.body.items[0]).toMatchObject({ title: "缓存甲改" });
-    expect(arg.body.items[1]).toMatchObject({ title: "缓存乙" });
-    expect(mockClient.confirmTask).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("topics-pending-review")).toBeNull();
+    expect(screen.queryByTestId("topics-review-list")).toBeNull();
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
   it("promote button is disabled for an already-promoted candidate", () => {
