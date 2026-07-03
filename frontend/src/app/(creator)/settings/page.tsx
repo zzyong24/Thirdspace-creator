@@ -26,8 +26,20 @@ import {
   type MultimodalModelsState,
   type StorageState,
 } from "@/features/settings/settings-page";
+import {
+  buildSkillItems,
+  type BuiltinSkillShape,
+  type SkillItem,
+} from "@/features/settings/skills-data";
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
+// T-077a 技能页签:server 侧读 ai-worker REGISTRY(listTemplates 惰性 bootstrap 内置 18+)
+// + exportSkillSchema(Zod → JSON Schema,只读展示)。仅只读,不在此写 REGISTRY。
+import {
+  listTemplates,
+  exportSkillSchema,
+} from "@creatoros/ai-worker";
+import type { SkillConfigOverrideResource } from "@creatoros/contract";
 
 // item B — localized labels + tones for the StorageUsageCard breakdown rows.
 const STORAGE_TYPE_LABELS: Record<
@@ -202,6 +214,49 @@ export default async function SettingsRoutePage() {
     }
   }
 
+  // [T-077a] 技能清单:内置模板(listTemplates,不依赖 db)× override 行(settings.prompts.list)
+  // → 可序列化 SkillItem[](当前生效值 = override 归一后 ?? 内置;徽章 = 有效 override)。
+  // override 读失败 → 只显内置(诚实降级,列表仍可看);模板读失败 → undefined(页签渲空态)。
+  let skills: readonly SkillItem[] | undefined;
+  try {
+    const builtins: BuiltinSkillShape[] = listTemplates().map((tpl) => {
+      // outputSchema(Zod)→ pretty JSON Schema 字符串;导出失败给 null(只读展示,尽力)。
+      let outputSchemaJson: string | null = null;
+      try {
+        const schema = exportSkillSchema(tpl.id);
+        outputSchemaJson = schema ? JSON.stringify(schema, null, 2) : null;
+      } catch {
+        outputSchemaJson = null;
+      }
+      return {
+        id: tpl.id,
+        version: tpl.version,
+        system: tpl.system,
+        template: tpl.template,
+        requiredFacets: tpl.requiredFacets,
+        tools: tpl.tools ?? [],
+        outputSchemaJson,
+      };
+    });
+    let overrides: readonly SkillConfigOverrideResource[] = [];
+    if (session) {
+      try {
+        overrides = await createServerClient(session.ctx).listPrompts({
+          params: undefined,
+          query: undefined,
+          body: undefined,
+        });
+      } catch {
+        // override 表读失败 → 按纯内置显示(不假装有定制)。
+        overrides = [];
+      }
+    }
+    skills = buildSkillItems(builtins, overrides);
+  } catch {
+    // REGISTRY 读取失败(极端装配态)→ 页签显诚实空态。
+    skills = undefined;
+  }
+
   return (
     <SettingsPage
       identity={identity}
@@ -209,6 +264,7 @@ export default async function SettingsRoutePage() {
       storage={storage}
       multimodalModels={multimodalModels}
       preferences={preferences}
+      skills={skills}
     />
   );
 }

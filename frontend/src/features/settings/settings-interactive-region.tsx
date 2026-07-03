@@ -64,6 +64,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -72,6 +73,9 @@ import type {
   MultimodalModelState,
   SettingsViewModel,
 } from "./settings-page";
+// T-077a 技能页签:列表/详情组件 + 可序列化条目类型(route server 侧投影传入)。
+import { SkillsSection } from "./skills-section";
+import type { SkillItem } from "./skills-data";
 
 // ---------------------------------------------------------------------------
 // useSettingsMutation — the shared island mutation seam (plan Step 5)
@@ -197,13 +201,22 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
   { id: "preferences", label: "偏好", icon: SlidersHorizontal },
   { id: "appearance", label: "外观", icon: Palette },
   { id: "models", label: "模型配置", icon: Cpu },
+  // T-077a:技能管理页签(SPEC 2026-07-03 §1.1)—— 列出 REGISTRY 全部 Skill,查看/定制
+  // system/template(settings.prompts.put 热生效)。
+  { id: "skills", label: "技能", icon: Sparkles },
   { id: "storage", label: "存储", icon: HardDrive },
 ];
 
 export function SettingsDialog({
   viewModel,
+  skills = [],
 }: {
   viewModel: SettingsViewModel;
+  /**
+   * T-077a:技能清单(route server 侧经 ai-worker listTemplates + settings.prompts.list
+   * 投影)。单测/无 server 数据时缺省空数组 → SkillsSection 渲诚实空态。
+   */
+  skills?: readonly SkillItem[];
 }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(true);
@@ -304,6 +317,9 @@ export function SettingsDialog({
                   state={viewModel.multimodalModels.audio}
                 />
               </div>
+            </SettingsPanel>
+            <SettingsPanel tabId="skills" active={tab}>
+              <SkillsSection skills={skills} />
             </SettingsPanel>
             <SettingsPanel tabId="storage" active={tab}>
               <StorageUsageCard storage={viewModel.storage} />

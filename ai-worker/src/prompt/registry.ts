@@ -107,6 +107,18 @@ export function hasTemplate(id: string): boolean {
 }
 
 /**
+ * 列出当前 registry 内**全部**已注册 skill(T-077a 技能管理面只读入口)。
+ * - 惰性 bootstrap 与 getTemplate 同款:registry 空 → 先注册内置,保证「设置 → 技能」页
+ *   在任何装配顺序下都能列出 18+ 个内置 skill。
+ * - 返回值反映当前生效态(含 overrideTemplates / overrideTemplatesFromConfig 套用后的文本),
+ *   按注册插入序稳定输出;返回浅拷贝数组,调用方改数组不影响 registry 本体。
+ */
+export function listTemplates(): PromptTemplate[] {
+  if (REGISTRY.size === 0) registerAllTemplates();
+  return [...REGISTRY.values()];
+}
+
+/**
  * 取某 skill 的工具白名单(三位一体「工具集」位)。未声明 → 空数组(该 skill 不挂工具)。
  * ChatBox 按 ChatContext 解析 skill 后,据此过滤可暴露给模型的 tools(SPEC §3.2/§4.1)。
  */

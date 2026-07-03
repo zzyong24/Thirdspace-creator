@@ -128,6 +128,7 @@ export {
   registerAllTemplates,
   getTemplate,
   hasTemplate,
+  listTemplates,
   getTools,
   resolveOutputSchema,
   hasOutputSchema,

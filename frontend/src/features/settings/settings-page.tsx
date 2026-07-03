@@ -49,6 +49,7 @@ import * as React from "react";
 import { buildSettingsViewModel } from "@/fixtures/selectors";
 
 import { SettingsDialog } from "./settings-interactive-region";
+import type { SkillItem } from "./skills-data";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -109,6 +110,11 @@ export interface SettingsPageProps {
    * When supplied, 偏好卡初值 = 用户真值。Omitted in unit tests.
    */
   readonly preferences?: PreferencesState;
+  /**
+   * [T-077a] 技能清单(route 经 ai-worker `listTemplates()` + `settings.prompts.list`
+   * 投影成可序列化条目)。设置弹窗「技能」页签据此渲列表/详情;缺省(单测)→ 诚实空态。
+   */
+  readonly skills?: readonly SkillItem[];
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */
@@ -308,6 +314,7 @@ export function SettingsPage({
   multimodalModels,
   douyinAccount,
   preferences,
+  skills,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
@@ -333,7 +340,7 @@ export function SettingsPage({
       data-settings-id="settings-root"
       className="flex flex-col gap-section-gap"
     >
-      <SettingsDialog viewModel={vm} />
+      <SettingsDialog viewModel={vm} skills={skills} />
     </main>
   );
 }

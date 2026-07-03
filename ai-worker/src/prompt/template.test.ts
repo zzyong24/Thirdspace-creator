@@ -6,6 +6,7 @@ import {
   registerAllTemplates,
   getTemplate,
   hasTemplate,
+  listTemplates,
   getTools,
   resolveOutputSchema,
   hasOutputSchema,
@@ -67,6 +68,37 @@ describe("registry", () => {
   it("未注册 → 抛错", () => {
     _resetRegistry();
     expect(() => getTemplate("nope")).toThrow(/未注册/);
+  });
+
+  // T-077a 技能管理面:listTemplates 只读列表入口。
+  it("listTemplates:空表惰性 bootstrap 内置全量;含内置 id 且反映覆盖后的生效值", () => {
+    _resetRegistry();
+    const all = listTemplates();
+    // 内置 18+ 个 skill 全量注册(数量随内置模板增长,下限断言防退化)。
+    expect(all.length).toBeGreaterThanOrEqual(18);
+    const ids = all.map((t) => t.id);
+    expect(ids).toContain("topic.generate");
+    expect(ids).toContain("script.draft");
+    expect(ids).toContain("chatbox.topic");
+    expect(ids).toContain("knowledge.classify");
+    // 覆盖后再列 → 反映当前生效文本(管理面「当前生效值」语义)。
+    overrideTemplatesFromConfig([
+      { id: "script.draft", template: "自定义结构:{{positioning}}" },
+    ]);
+    const after = listTemplates();
+    expect(
+      after.find((t) => t.id === "script.draft")?.template,
+    ).toBe("自定义结构:{{positioning}}");
+    // 数量不因覆盖而变(覆盖是同 id 替换,不是新增)。
+    expect(after.length).toBe(all.length);
+  });
+
+  it("listTemplates:返回浅拷贝数组,调用方改动不影响 registry", () => {
+    _resetRegistry();
+    const all = listTemplates();
+    const n = all.length;
+    all.pop();
+    expect(listTemplates().length).toBe(n);
   });
 });
 

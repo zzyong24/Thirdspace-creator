@@ -104,3 +104,11 @@ export {
   publishingCenterPage,
   type PublishingCenterPage,
 } from "./pages/publishing-center";
+
+// Settings skill 覆盖行 DTO(T-040/T-077a)—— 设置「技能」页签(frontend route/纯数据层)
+// 需要按 override 行判「已定制」与生效值投影,与上面各模块 resource 同约定从根出口复用
+// 单一真值(additive re-export,契约零删除)。
+export {
+  skillConfigOverrideResource,
+  type SkillConfigOverrideResource,
+} from "./resources/settings";
