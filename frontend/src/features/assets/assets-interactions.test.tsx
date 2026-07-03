@@ -199,22 +199,45 @@ describe("Assets needs-backend wiring", () => {
     expect(mockClient.addAssetFile).not.toHaveBeenCalled();
   });
 
-  it("[T-055d/T-056⑥] 移入回收站:显式命名 + confirm 确认后 assets.trash + refresh", async () => {
+  it("[T-055d/T-056⑥/T-097] 移入回收站:Dialog 确认后 assets.trash + refresh(非原生 confirm)", async () => {
     const { container } = await renderIsland();
     const btn = container.querySelector<HTMLButtonElement>(
       '[data-slot="asset-action-trash"]',
     );
     expect(btn?.textContent).toContain("移入回收站");
-    const confirmSpy = vi
-      .spyOn(window, "confirm")
-      .mockImplementation(() => true);
     fireEvent.click(btn!);
-    confirmSpy.mockRestore();
+    // [T-097] 点击只弹系统级 Dialog,不直接删。Radix Dialog 走 portal,查 document。
+    expect(mockClient.trashAsset).not.toHaveBeenCalled();
+    const confirmBtn = document.querySelector<HTMLButtonElement>(
+      '[data-slot="asset-trash-confirm-button"]',
+    );
+    expect(confirmBtn).not.toBeNull();
+    fireEvent.click(confirmBtn!);
     await waitFor(() => expect(mockClient.trashAsset).toHaveBeenCalledTimes(1));
     expect(mockClient.trashAsset).toHaveBeenCalledWith(
       expect.objectContaining({ params: { assetId: expect.any(String) } }),
     );
     expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  it("[T-097] 移入回收站:Dialog 取消 → 关框且不调 assets.trash", async () => {
+    const { container } = await renderIsland();
+    const btn = container.querySelector<HTMLButtonElement>(
+      '[data-slot="asset-action-trash"]',
+    );
+    fireEvent.click(btn!);
+    const cancelBtn = document.querySelector<HTMLButtonElement>(
+      '[data-slot="asset-trash-cancel"]',
+    );
+    expect(cancelBtn).not.toBeNull();
+    fireEvent.click(cancelBtn!);
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-slot="asset-trash-confirm-button"]'),
+      ).toBeNull(),
+    );
+    expect(mockClient.trashAsset).not.toHaveBeenCalled();
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
   });
 
   it("[T-060③a] 附到项目已退役:素材只两条来路(素材中心直传 / 项目内上传)", async () => {

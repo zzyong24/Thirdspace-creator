@@ -24,6 +24,15 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { AssetCard } from "@/components/resources/asset-card";
 import { AssetDetailPanel } from "@/components/resources/asset-detail-panel";
 import type { AssetSummary, AssetsViewModel } from "./assets-page";
@@ -230,26 +239,28 @@ export function AssetsInteractiveRegion({
 
   // E6 更多 → 移入回收站: POST assets.trash (active → deleted), then refresh so
   // the trashed asset drops out of the active gallery.
-  const handleTrash = React.useCallback(
-    (assetId: string) => {
-      // [T-056⑥] 危险操作确认 —— 显式告知是删除语义。
-      if (
-        typeof window !== "undefined" &&
-        !window.confirm("确定把这份素材移入回收站?(可在回收站恢复)")
-      ) {
-        return;
-      }
-      startTransition(async () => {
-        await client.trashAsset({
-          params: { assetId },
-          query: undefined,
-          body: undefined,
-        });
-        router.refresh();
-      });
-    },
-    [router],
+  // [T-056⑥][T-097] 危险操作确认 —— 系统级 Dialog 双按钮取代浏览器原生
+  // window.confirm(全站禁原生弹窗):点「移入回收站」先记下候选 id 弹确认框,
+  // 确认才执行 assets.trash,取消只关框不动数据。
+  const [trashCandidateId, setTrashCandidateId] = React.useState<string | null>(
+    null,
   );
+  const handleTrash = React.useCallback((assetId: string) => {
+    setTrashCandidateId(assetId);
+  }, []);
+  const handleTrashConfirm = React.useCallback(() => {
+    const assetId = trashCandidateId;
+    if (!assetId) return;
+    setTrashCandidateId(null);
+    startTransition(async () => {
+      await client.trashAsset({
+        params: { assetId },
+        query: undefined,
+        body: undefined,
+      });
+      router.refresh();
+    });
+  }, [router, trashCandidateId]);
 
   // [T-060③a] 「附到项目」退役 —— 素材只两条来路(素材中心=通用,项目内上传=项目素材)。
 
@@ -382,6 +393,41 @@ export function AssetsInteractiveRegion({
           {actionStatus}
         </p>
       </div>
+      {/* [T-097] 移入回收站确认框 —— Dialog 双按钮(确认执行/取消关闭),替代原生 confirm。 */}
+      <Dialog
+        open={trashCandidateId !== null}
+        onOpenChange={(open) => {
+          if (!open) setTrashCandidateId(null);
+        }}
+      >
+        <DialogContent data-slot="asset-trash-confirm" className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>移入回收站?</DialogTitle>
+            <DialogDescription>
+              确定把这份素材移入回收站?可在回收站恢复。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              data-slot="asset-trash-cancel"
+              onClick={() => setTrashCandidateId(null)}
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              data-slot="asset-trash-confirm-button"
+              disabled={pending}
+              onClick={handleTrashConfirm}
+            >
+              移入回收站
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

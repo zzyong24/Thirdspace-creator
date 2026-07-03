@@ -26,6 +26,15 @@ const eslintConfig = defineConfig([
   // Level is `warn` for now because pages are still migrating off the singleton
   // (a hard error would turn the whole tree red). Once `src/features/**` and
   // `src/app/**` route modules no longer import `client`, bump this to `error`.
+  // [T-097] 全站禁浏览器原生弹窗:alert/confirm/prompt 一律用系统级组件
+  // (Dialog 双按钮确认 / 内联错误条)替代。无豁免——测试里 spy window.confirm
+  // 属 mock 不触发本规则(规则只查直接调用)。
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-alert": "error",
+    },
+  },
   {
     files: ["src/features/**/*.{ts,tsx}", "src/app/**/*.{ts,tsx}"],
     ignores: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
