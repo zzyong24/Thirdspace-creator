@@ -42,9 +42,12 @@ export interface ReviewTask {
 // 并把本作品的真文案/数据/评论各拼成一个整块注入(有内容才带标题行,读不到就空串 → prompt 里该块省略,
 // 不硬塞空占位、不喂噪声)。三个块与 subject 真标题一起让模型扣住真实材料归因,而不是空谈。
 // `overrideSubject`:chat 路径模型可能显式传了 subject(用户在对话里指定的复盘对象),优先于 reviewTitle。
+// [T-081①] `extraBrief`(选填第三参,签名 additive):对话中获得的补充指令/洞察,注入模板
+// {{extraBrief}} 占位(优先级高于既有档案);空则整段省略,后台 task 路径不传、行为不变。
 function reviewFacets(
   context: CreativeContext,
   overrideSubject?: string,
+  extraBrief?: string,
 ): Record<string, string | undefined> {
   // subject 真值优先级:对话里显式指定 > 作品真标题 > 旧 topic.title > 账号级兜底。
   const subject =
@@ -71,6 +74,10 @@ function reviewFacets(
       : "",
     reviewCommentsBlock: context.reviewComments
       ? `\n【本次复盘作品·观众评论】\n${context.reviewComments}\n`
+      : "",
+    // [T-081①] 对话洞察/补充指令(模板 {{extraBrief}} 占位,空则整段省略)。
+    extraBrief: extraBrief?.trim()
+      ? `\n【本次生成指令(来自对话,优先遵循)】\n${extraBrief.trim()}\n`
       : "",
   };
 }

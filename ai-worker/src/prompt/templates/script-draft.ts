@@ -39,8 +39,10 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   // 纯结构化生成,不挂工具。
   tools: [],
   system: "你是这位创作者的「分镜脚本 agent」,像专业短视频编导那样写可拍的分镜脚本。",
+  // [T-081] {{extraBrief}}:对话中获得的补充指令/洞察(选填 facet,调用方拼「本次生成指令」
+  // 整块传入;空则占位替换为空串、整段省略)。
   template: `【创作者定位】
-{{positioning}}{{learnings}}{{knowledge}}{{topic}}{{orientation}}{{thesis}}{{contract}}{{outline}}
+{{positioning}}{{learnings}}{{knowledge}}{{topic}}{{orientation}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
 
 【任务】基于定位(+过往爆款要素)+选题,写一条**分镜脚本**。严格按爆款公式编排:
 钩子(前3秒抓人)→痛点(戳中人群)→价值(干货/反差)→卡点(信息密度/节奏)→CTA(行动召唤)。

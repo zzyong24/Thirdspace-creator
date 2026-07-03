@@ -1,0 +1,40 @@
+import { describe, it, expect } from "vitest";
+import { bindPrompt } from "../template";
+import { POSITIONING_GENERATE_TEMPLATE } from "./positioning-generate";
+
+// [T-081②] positioning.generate 模板的 {{works}} 选填占位 —— 真实作品画像块(调用方经
+// formatWorksBrief 拼整块传入)。断言:传入 → 整块落进最终 prompt;不传/空 → 整段省略且无
+// 占位残留;requiredFacets 仍只有 current(works 保持选填,老调用路径不崩)。
+
+const CURRENT = "定位一句话：把论文落成代码";
+
+describe("positioning.generate 模板 — {{works}} 真实作品画像占位 (T-081②)", () => {
+  it("works facet 传入 → 注入【我的真实作品(定位必须扎根于此)】整块", () => {
+    const { prompt } = bindPrompt(POSITIONING_GENERATE_TEMPLATE, {
+      current: CURRENT,
+      accounts: "\n【创作者抖音账号画像】\n· douyin | @硬核老王 | 粉丝 12000",
+      works:
+        "\n\n【我的真实作品（定位必须扎根于此）】\n· 上下文工程实战（已发布）\n· AI 编导流程（planning）WORKS_MARKER",
+    });
+    expect(prompt).toContain("【我的真实作品（定位必须扎根于此）】");
+    expect(prompt).toContain("上下文工程实战（已发布）");
+    expect(prompt).toContain("WORKS_MARKER");
+    // 任务段提示模型结合真实作品列表。
+    expect(prompt).toContain("真实作品列表");
+  });
+
+  it("works 不传 → 整段省略、无未替换占位(老调用路径行为不变)", () => {
+    const { prompt } = bindPrompt(POSITIONING_GENERATE_TEMPLATE, {
+      current: CURRENT,
+      accounts: "\n（创作者尚未连接平台账号——按通用赛道判断即可）",
+    });
+    expect(prompt).not.toContain("我的真实作品");
+    expect(prompt).not.toMatch(/\{\{[a-zA-Z]/);
+    // 原有 facet 仍在。
+    expect(prompt).toContain(CURRENT);
+  });
+
+  it("requiredFacets 只有 current(works/accounts 保持选填)", () => {
+    expect(POSITIONING_GENERATE_TEMPLATE.requiredFacets).toEqual(["current"]);
+  });
+});

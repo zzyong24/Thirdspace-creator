@@ -69,6 +69,27 @@ describe("runScriptNode", () => {
     expect(seenPrompt).toContain("策划结构方案");
   });
 
+  it("[T-081] extraBrief(对话洞察/补充指令)注入 prompt;不传则该段省略", async () => {
+    let seenPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        seenPrompt = JSON.stringify((opts as { prompt?: unknown }).prompt ?? "");
+        return finalText(SHOTS_OBJECT_JSON);
+      },
+    });
+    await runScriptNode({
+      model,
+      positioningBrief: "AI 工程科普,面向开发者",
+      extraBrief: "按刚聊定的三段式结构写 EXTRA_MARKER",
+    });
+    expect(seenPrompt).toContain("本次生成指令");
+    expect(seenPrompt).toContain("EXTRA_MARKER");
+
+    await runScriptNode({ model, positioningBrief: "AI 工程科普" });
+    expect(seenPrompt).not.toContain("本次生成指令");
+    expect(seenPrompt).not.toContain("EXTRA_MARKER");
+  });
+
   it("空 shots(模型没产出分镜)→ 抛错(不假成功)", async () => {
     // 合法但空的结构化输出 → runScriptNode 的 empty guard 触发(不摆空格子)。
     const model = new MockLanguageModelV4({

@@ -84,4 +84,26 @@ describe("review.insights prompt — 本项目真数据注入(T-039a)", () => {
     expect(prompt).toContain("按这个账号的整体表现");
     expect(prompt).not.toContain("本次复盘作品·");
   });
+
+  // [T-081①] extraBrief 第三参 → 模板 {{extraBrief}} 占位:对话洞察真的进最终 prompt;
+  // 不传/空则整段省略(后台 task 路径行为不变)。
+  it("extraBrief 传入 → 注入【本次生成指令(来自对话,优先遵循)】段;不传则省略", () => {
+    const withBrief = bindPrompt(
+      REVIEW_INSIGHTS_TEMPLATE,
+      reviewFacets(
+        makeContext({ reviewTitle: "某作品" }),
+        undefined,
+        "聚焦评论区负反馈 EXTRA_MARKER",
+      ),
+    ).prompt;
+    expect(withBrief).toContain("【本次生成指令(来自对话,优先遵循)】");
+    expect(withBrief).toContain("EXTRA_MARKER");
+
+    const without = bindPrompt(
+      REVIEW_INSIGHTS_TEMPLATE,
+      reviewFacets(makeContext({ reviewTitle: "某作品" })),
+    ).prompt;
+    expect(without).not.toContain("本次生成指令");
+    expect(without).not.toMatch(/\{\{[a-zA-Z]/);
+  });
 });

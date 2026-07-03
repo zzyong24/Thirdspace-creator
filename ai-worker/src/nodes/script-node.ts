@@ -40,6 +40,8 @@ export interface RunScriptNodeInput {
   contractBrief?: string;
   /** 策划结构方案 brief(SEAM-01,选填):脚本按结构方案段落顺序铺分镜,不另起结构。 */
   outlineBrief?: string;
+  /** [T-081] 对话中获得的补充指令/洞察(选填):原样注入 prompt,优先级高于既有档案。 */
+  extraBrief?: string;
   /** 步骤回调 —— 喂窗口步骤日志。 */
   onStep?: (event: AgentStepEvent) => void | Promise<void>;
   /** 护栏:结构化校验失败的最大重试次数(默认 2,透传 runStructuredNode)。 */
@@ -119,6 +121,10 @@ export async function runScriptNode(
         : "",
       outline: input.outlineBrief
         ? `\n【策划结构方案（脚本按此铺分镜）】\n${input.outlineBrief}`
+        : "",
+      // [T-081] 对话洞察/补充指令 —— ChatBox 对话里聊出的生成方向经此进 prompt(空则整段省略)。
+      extraBrief: input.extraBrief
+        ? `\n【本次生成指令（来自对话，优先遵循）】\n${input.extraBrief}`
         : "",
     },
     maxRetries: input.maxRetries,

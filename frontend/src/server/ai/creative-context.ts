@@ -588,6 +588,34 @@ export function formatKnowledgeBrief(
   ].join("\n");
 }
 
+// ── [T-081②] 真实作品画像 brief —— 全部作品标题压缩列表(每条截 40 字、上限 100 条、带发布
+// 状态标记),喂 positioning.generate(对话工具 + 后台 task 两条路径共用,单一真值)。title 可能
+// 是整篇文案(数百字)故必须截断;total > 已列条数时如实标注剩余。纯函数,导出供单测。
+// 落在本模块:与 formatKnowledgeBrief 同类(brief 组装纯函数),且 chat-runner / positioning-runner
+// 都已依赖本模块,不造循环依赖。
+export const WORKS_BRIEF_MAX_ROWS = 100;
+export function formatWorksBrief(
+  rows: Array<{
+    title: string;
+    stage: string;
+    status: string;
+    publishedAt?: string | null;
+  }>,
+  total: number,
+): string {
+  const listed = rows.slice(0, WORKS_BRIEF_MAX_ROWS);
+  const lines = listed.map((r) => {
+    const t = r.title.trim();
+    const short = t.length > 40 ? `${t.slice(0, 40)}…` : t;
+    const published = Boolean(r.publishedAt) || r.status === "published";
+    const mark = published ? "已发布" : r.stage || r.status || "进行中";
+    return `· ${short}（${mark}）`;
+  });
+  const rest = total - listed.length;
+  if (rest > 0) lines.push(`（另有 ${rest} 条未列出）`);
+  return lines.join("\n");
+}
+
 // Render the adopted 结构方案 into a compact brief script.draft reasons against (SEAM-01).
 // Mirrors planning-outline-runner's renderBody but flattened for prompt injection.
 function formatOutline(outline: {

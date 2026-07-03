@@ -2,6 +2,9 @@ import { describe, it, expect, vi } from "vitest";
 import type { Tool } from "ai";
 import {
   buildChatTools,
+  clampContextLimit,
+  clampExtraBrief,
+  compactTitle,
   knowledgeRelevanceScore,
   type ChatToolDeps,
 } from "./chat-tools";
@@ -503,5 +506,178 @@ describe("knowledgeRelevanceScore — 分词 OR 模糊匹配(T-039a 放宽)", ()
 
   it("大小写不敏感", () => {
     expect(knowledgeRelevanceScore("React 性能优化", "react")).toBeGreaterThan(0);
+  });
+});
+
+// [T-081①] 产内容工具统一 extraBrief 入参 —— 对话洞察经工具入参透传到 deps(修「模型有洞察、
+// 工具零入参无通道」的上下文断裂)。逐工具断言 execute 把 extraBrief 传给注入的 runner 核心。
+describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道", () => {
+  const ALL = [
+    "topic.generate",
+    "script.hooks",
+    "script.draft",
+    "calibration.diagnose",
+    "review.analyze",
+    "positioning.generate",
+  ] as const;
+
+  it("positioning.generate:extraBrief 透传到 deps.generatePositioning(原零入参 → 洞察永远进不去)", async () => {
+    const { deps, generatePositioning } = makeDeps();
+    const tools = buildChatTools([...ALL], deps);
+    await runExecute(tools["positioning.generate"], {
+      extraBrief: "定位应转向 AI 工程实战,粉丝评论都在问落地",
+    });
+    expect(generatePositioning).toHaveBeenCalledWith({
+      extraBrief: "定位应转向 AI 工程实战,粉丝评论都在问落地",
+    });
+  });
+
+  it("topic.generate:extraBrief 透传到 deps.generateTopics(原 schema 未暴露该参)", async () => {
+    const { deps, generateTopics } = makeDeps();
+    const tools = buildChatTools([...ALL], deps);
+    await runExecute(tools["topic.generate"], {
+      basis: "comments",
+      extraBrief: "围绕「上下文工程」出题",
+    });
+    expect(generateTopics).toHaveBeenCalledWith({
+      basis: "comments",
+      extraBrief: "围绕「上下文工程」出题",
+    });
+  });
+
+  it("script.hooks / script.draft:extraBrief 透传到 generateHooks / draftScript", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools([...ALL], deps);
+    await runExecute(tools["script.hooks"], {
+      topic: "RAG",
+      extraBrief: "hook 要带真实数据",
+    });
+    expect(deps.generateHooks).toHaveBeenCalledWith({
+      topic: "RAG",
+      direction: undefined,
+      extraBrief: "hook 要带真实数据",
+    });
+    await runExecute(tools["script.draft"], {
+      topic: "RAG",
+      extraBrief: "按我们刚聊的三段式结构写",
+    });
+    expect(deps.draftScript).toHaveBeenCalledWith({
+      topic: "RAG",
+      angle: undefined,
+      extraBrief: "按我们刚聊的三段式结构写",
+    });
+  });
+
+  it("calibration.diagnose / review.analyze:extraBrief 透传到 diagnoseContent / analyzeReview", async () => {
+    const { deps, diagnoseContent, analyzeReview } = makeDeps();
+    const tools = buildChatTools([...ALL], deps);
+    await runExecute(tools["calibration.diagnose"], {
+      title: "标题",
+      extraBrief: "重点看转化引导",
+    });
+    expect(diagnoseContent).toHaveBeenCalledWith({
+      title: "标题",
+      script: undefined,
+      extraBrief: "重点看转化引导",
+    });
+    await runExecute(tools["review.analyze"], {
+      subject: "某条作品",
+      extraBrief: "聚焦评论区的负反馈",
+    });
+    expect(analyzeReview).toHaveBeenCalledWith({
+      subject: "某条作品",
+      extraBrief: "聚焦评论区的负反馈",
+    });
+  });
+
+  it("extraBrief 缺省 → 透传 undefined(行为与旧零入参一致,不注空噪声)", async () => {
+    const { deps, generatePositioning } = makeDeps();
+    const tools = buildChatTools([...ALL], deps);
+    await runExecute(tools["positioning.generate"], {});
+    expect(generatePositioning).toHaveBeenCalledWith({ extraBrief: undefined });
+  });
+});
+
+// [T-081] extraBrief 清洗纯函数。
+describe("clampExtraBrief", () => {
+  it("trim + 原样保留", () => {
+    expect(clampExtraBrief("  洞察内容  ")).toBe("洞察内容");
+  });
+  it("超 2000 字截断(schema maxLength 的运行时兜底)", () => {
+    const long = "长".repeat(2500);
+    expect(clampExtraBrief(long)).toHaveLength(2000);
+  });
+  it("空串/空白/非串 → undefined(prompt 整段省略)", () => {
+    expect(clampExtraBrief("")).toBeUndefined();
+    expect(clampExtraBrief("   ")).toBeUndefined();
+    expect(clampExtraBrief(42)).toBeUndefined();
+    expect(clampExtraBrief(undefined)).toBeUndefined();
+  });
+});
+
+// [T-081③] context.projects compact 模式 —— 盘点全量:标题截 40 字、单页上限 200。
+describe("[T-081③] context.projects compact 模式", () => {
+  const CONTEXT_WHITELIST = ["context.projects"] as const;
+
+  it("compact=true:limit 缺省与封顶放宽到 200", async () => {
+    const { deps, listProjects } = makeDeps();
+    const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
+    await runExecute(tools["context.projects"], { compact: true }); // 缺省 → 200
+    expect(listProjects).toHaveBeenLastCalledWith({ limit: 200, offset: 0 });
+    await runExecute(tools["context.projects"], { compact: true, limit: 999 });
+    expect(listProjects).toHaveBeenLastCalledWith({ limit: 200, offset: 0 });
+    await runExecute(tools["context.projects"], { compact: true, limit: 80 });
+    expect(listProjects).toHaveBeenLastCalledWith({ limit: 80, offset: 0 });
+  });
+
+  it("compact=true:超 40 字标题截断加 …(title 可能是整篇文案)", async () => {
+    const longTitle = "这是一条特别长的作品标题,长到像把整篇口播文案都塞进了标题字段里,远超四十个字的展示上限,必须被截断";
+    const listProjects = vi.fn(async () => ({
+      total: 1,
+      rows: [
+        {
+          id: "p1",
+          title: longTitle,
+          stage: "publishing",
+          status: "published",
+          publishedAt: "2026-06-01",
+        },
+      ],
+    }));
+    const { deps } = makeDeps({ listProjects });
+    const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.projects"], {
+      compact: true,
+    })) as { items: Array<{ title: string }> };
+    expect(result.items[0]!.title).toHaveLength(41); // 40 字 + …
+    expect(result.items[0]!.title.endsWith("…")).toBe(true);
+    expect(result.items[0]!.title.startsWith("这是一条特别长的作品标题")).toBe(true);
+  });
+
+  it("默认(不带 compact)行为不变:limit 20/封顶 50、标题不截", async () => {
+    const longTitle = "又".repeat(60);
+    const listProjects = vi.fn(async () => ({
+      total: 1,
+      rows: [
+        { id: "p1", title: longTitle, stage: "planning", status: "active", publishedAt: null },
+      ],
+    }));
+    const { deps } = makeDeps({ listProjects });
+    const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.projects"], {})) as {
+      items: Array<{ title: string }>;
+    };
+    expect(listProjects).toHaveBeenLastCalledWith({ limit: 20, offset: 0 });
+    expect(result.items[0]!.title).toBe(longTitle); // 不截断
+  });
+
+  it("clampContextLimit / compactTitle 纯函数口径", () => {
+    expect(clampContextLimit(undefined)).toBe(20);
+    expect(clampContextLimit(999)).toBe(50);
+    expect(clampContextLimit(undefined, true)).toBe(200);
+    expect(clampContextLimit(999, true)).toBe(200);
+    expect(clampContextLimit(30, true)).toBe(30);
+    expect(compactTitle("短标题")).toBe("短标题");
+    expect(compactTitle("超".repeat(41))).toBe(`${"超".repeat(40)}…`);
   });
 });

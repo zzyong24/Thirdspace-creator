@@ -23,8 +23,12 @@ vi.mock("@creatoros/ai-worker", () => ({
 import {
   runPositioningGenerate,
   parseSuggestion,
+  buildPositioningPrompt,
+  positioningFacets,
   type PositioningSuggestion,
+  type WorksReader,
 } from "./positioning-runner";
+import type { CreativeContext } from "./creative-context";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 
@@ -41,7 +45,7 @@ const VALID_OBJECT = {
 };
 const VALID_JSON = JSON.stringify(VALID_OBJECT);
 
-function makeDeps(object: Record<string, unknown>) {
+function makeDeps(object: Record<string, unknown>, works?: WorksReader) {
   runStructuredNode.mockResolvedValue({ object } as never);
   const markRunning = vi.fn(async () => undefined);
   const recordCandidate = vi.fn(
@@ -91,6 +95,8 @@ function makeDeps(object: Record<string, unknown>) {
           },
         ],
       } as never,
+      // [T-081②] 真实作品读端口(选填)—— 传入才注入 {{works}} facet。
+      works,
       resolveModelSpec,
     },
     markRunning,
@@ -194,5 +200,139 @@ describe("runPositioningGenerate (runStructuredNode + 外置模板)", () => {
     ).resolves.toBeUndefined();
     expect(recordCandidate).not.toHaveBeenCalled();
     expect(cancelTask).toHaveBeenCalledWith(ctx, "t5");
+  });
+});
+
+// [T-081①②] buildPositioningPrompt 可选第二参:extraBrief(对话洞察,优先遵循)+ worksBrief
+// (真实作品画像)—— chat 路径经此注入;零参调用行为不变(签名 additive)。
+describe("buildPositioningPrompt — extraBrief / worksBrief 注入 (T-081)", () => {
+  const makeContext = (over: Partial<CreativeContext> = {}): CreativeContext => ({
+    positioningBrief: "定位一句话：把论文落成代码",
+    learningsBrief: "",
+    assetsBrief: "",
+    accountsBrief: "· douyin | @硬核老王 | 粉丝 12000",
+    signalsBrief: "",
+    knowledgeBrief: "",
+    thesisBrief: "",
+    contractBrief: "",
+    outlineBrief: "",
+    orientationHint: "",
+    reviewTitle: "",
+    reviewScript: "",
+    reviewMetrics: "",
+    reviewComments: "",
+    topic: { title: "", angle: "" },
+    projectId: null,
+    ...over,
+  });
+
+  it("worksBrief 非空 → 注入【我的真实作品(定位必须扎根于此)】段", () => {
+    const prompt = buildPositioningPrompt(makeContext(), {
+      worksBrief: "· 上下文工程实战（已发布）\n· AI 编导流程（planning）",
+    });
+    expect(prompt).toContain("【我的真实作品（定位必须扎根于此）】");
+    expect(prompt).toContain("上下文工程实战（已发布）");
+    expect(prompt).toContain("真实作品列表");
+  });
+
+  it("extraBrief 非空 → 注入【本次生成指令(来自对话,优先遵循)】段", () => {
+    const prompt = buildPositioningPrompt(makeContext(), {
+      extraBrief: "结合我实际发布的内容:观众要的是落地教程,定位收窄到 AI 落地",
+    });
+    expect(prompt).toContain("【本次生成指令（来自对话，优先遵循）】");
+    expect(prompt).toContain("定位收窄到 AI 落地");
+    expect(prompt).toContain("优先遵循上方本次生成指令");
+  });
+
+  it("零参调用行为不变:无新段落(空则整段省略)", () => {
+    const prompt = buildPositioningPrompt(makeContext());
+    expect(prompt).not.toContain("我的真实作品");
+    expect(prompt).not.toContain("本次生成指令");
+    // 原有 facet 仍在。
+    expect(prompt).toContain("把论文落成代码");
+    expect(prompt).toContain("@硬核老王");
+  });
+
+  it("空串/空白的 opts → 同零参(不注空噪声)", () => {
+    const prompt = buildPositioningPrompt(makeContext(), {
+      extraBrief: "  ",
+      worksBrief: "",
+    });
+    expect(prompt).not.toContain("我的真实作品");
+    expect(prompt).not.toContain("本次生成指令");
+  });
+});
+
+// [T-081②] 后台 task 路径的真实作品画像注入 —— runPositioningGenerate 经 deps.works 读作品,
+// formatWorksBrief 压缩后进模板 {{works}} facet(与对话链路同一口径);未装配/读失败 → 空 facet
+// (诚实降级,不阻断生成)。runStructuredNode 已 mock,直接断言它收到的 facets。
+describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
+  const lastFacets = () =>
+    (
+      runStructuredNode.mock.calls.at(-1)![0] as {
+        facets: Record<string, string | undefined>;
+      }
+    ).facets;
+
+  it("deps.works 装配 → facets.works 带【我的真实作品】段(截 40 字 + 发布状态标记)", async () => {
+    const longTitle =
+      "这条标题其实是整篇口播文案,长到远超四十个字的展示上限,必须被截断后才能进定位提示词不然会爆";
+    const works: WorksReader = {
+      listProjects: async () => ({
+        total: 2,
+        rows: [
+          {
+            title: longTitle,
+            stage: "publishing",
+            status: "published",
+            publishedAt: "2026-06-01",
+          },
+          { title: "AI 编导流程", stage: "planning", status: "active", publishedAt: null },
+        ],
+      }),
+    };
+    const { deps, recordCandidate } = makeDeps(VALID_OBJECT, works);
+    await runPositioningGenerate(ctx, { id: "tw1", inputData: {} }, deps);
+    const facets = lastFacets();
+    expect(facets.works).toContain("【我的真实作品（定位必须扎根于此）】");
+    expect(facets.works).toContain(`${longTitle.slice(0, 40)}…`);
+    expect(facets.works).toContain("（已发布）");
+    expect(facets.works).toContain("AI 编导流程（planning）");
+    expect(recordCandidate).toHaveBeenCalled();
+  });
+
+  it("deps.works 未装配 → facets.works 空串(facet 整段省略,老路径行为不变)", async () => {
+    const { deps } = makeDeps(VALID_OBJECT);
+    await runPositioningGenerate(ctx, { id: "tw2", inputData: {} }, deps);
+    expect(lastFacets().works).toBe("");
+  });
+
+  it("works 读端口抛错 → facets.works 空串且生成不受阻(best-effort,候选照记)", async () => {
+    const works: WorksReader = {
+      listProjects: async () => {
+        throw new Error("projects repo down");
+      },
+    };
+    const { deps, recordCandidate, cancelTask } = makeDeps(VALID_OBJECT, works);
+    await runPositioningGenerate(ctx, { id: "tw3", inputData: {} }, deps);
+    expect(lastFacets().works).toBe("");
+    expect(recordCandidate).toHaveBeenCalled();
+    expect(cancelTask).not.toHaveBeenCalled();
+  });
+});
+
+// [T-081②] positioningFacets 纯函数 —— works 段拼装口径(与对话链路 buildPositioningPrompt 同措辞)。
+describe("positioningFacets — works 段拼装", () => {
+  const context = {
+    positioningBrief: "定位一句话:X",
+    accountsBrief: "",
+  } as CreativeContext;
+
+  it("worksBrief 非空 → 拼段头整块;空/空白 → 空串", () => {
+    expect(positioningFacets(context, "· 作品A（已发布）").works).toBe(
+      "\n\n【我的真实作品（定位必须扎根于此）】\n· 作品A（已发布）",
+    );
+    expect(positioningFacets(context).works).toBe("");
+    expect(positioningFacets(context, "  ").works).toBe("");
   });
 });

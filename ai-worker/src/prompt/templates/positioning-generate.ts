@@ -5,7 +5,11 @@ import type { PromptTemplate } from "../template";
  * 定位生成 skill 模板(positioning.generate)—— 从 positioning-runner 的内联 buildPositioningPrompt
  * 提取而来。结合「当前定位 + 抖音账号画像」产一份结构化定位提案(5 profile facets + oneLiner + 3 关键词)。
  * facets 由 CreativeContext 映射:
- *   current(必需:创作者当前定位简报,调用方已默认兜底)· accounts(选填:抖音账号画像块,调用方按 accountsBrief 计算)。
+ *   current(必需:创作者当前定位简报,调用方已默认兜底)· accounts(选填:抖音账号画像块,调用方按 accountsBrief 计算)·
+ *   works([T-081②] 选填:真实作品画像块 —— 全部作品标题压缩列表,调用方经 formatWorksBrief 拼
+ *   【我的真实作品(定位必须扎根于此)】整块传入;空则占位替换为空串、整段省略。与 ChatBox 对话链路
+ *   buildPositioningPrompt 的注入段同一措辞,两条定位生成路径口径一致。requiredFacets 不加 works,
+ *   保持选填,老调用路径不崩)。
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。
  *
  * T-025 跨模型健壮性:加 outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底),让用户
@@ -56,9 +60,9 @@ export const POSITIONING_GENERATE_TEMPLATE: PromptTemplate = {
   template: `你是这位创作者的「定位策略 agent」，负责帮 TA 生成/进化一份**账号定位**。
 
 【创作者当前定位】
-{{current}}{{accounts}}
+{{current}}{{accounts}}{{works}}
 
-【任务】像一个专业的 MCN 定位策划那样，结合「当前定位 + 抖音账号画像（粉丝量/赛道）」，产出一份**清晰、差异化、能支撑信任与转化**的定位提案。
+【任务】像一个专业的 MCN 定位策划那样，结合「当前定位 + 抖音账号画像（粉丝量/赛道）+ 真实作品列表（若有）」，产出一份**清晰、差异化、能支撑信任与转化**的定位提案。
 - 若已有定位，做**进化**：保留有效内核，补差异化/收窄人群/强化变现锚点；不要推翻重来。
 - 若没有定位，做**从 0 到 1**：基于账号画像与赛道给出可立得住的定位。
 

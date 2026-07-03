@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeAll } from "vitest";
 import { registerAllTemplates } from "@creatoros/ai-worker";
-import { buildChatAssembly, type AssembleChatDeps, parseHookItems } from "./chat-runner";
+import {
+  buildChatAssembly,
+  buildHooksPrompt,
+  formatWorksBrief,
+  EXTRA_BRIEF_HEADING,
+  type AssembleChatDeps,
+  parseHookItems,
+} from "./chat-runner";
 import type { ChatContext } from "./chat-context";
 
 // /api/chat 装配单测(SPEC §7「/api/chat 装配:resolve skill + 注入 context + tools 挂载」+
@@ -476,6 +483,88 @@ describe("buildChatAssembly — 三层注入装配", () => {
     })) as { kind: string; items: unknown[] };
     expect(result.kind).toBe("context.knowledge");
     expect(result.items).toEqual([]);
+  });
+});
+
+// [T-081⑤] honestyBlock 补边界规则:不摆工具做不到的操作选项。
+describe("[T-081⑤] honestyBlock — 工具边界诚实", () => {
+  it("system 注入「绝不提供工具不具备的操作选项」规则", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).toContain(
+      "绝不向用户提供你的工具不具备的操作选项",
+    );
+    expect(a.system).toContain("说明当前工具边界");
+  });
+});
+
+// [T-081②] positioning.generate 的真实作品画像 —— formatWorksBrief 纯函数。
+describe("[T-081②] formatWorksBrief — 全部作品标题压缩列表", () => {
+  const row = (over: Partial<Parameters<typeof formatWorksBrief>[0][number]> = {}) => ({
+    title: "普通标题",
+    stage: "planning",
+    status: "active",
+    publishedAt: null,
+    ...over,
+  });
+
+  it("每条截 40 字加 …,带发布状态标记", () => {
+    const long = "这条标题其实是整篇口播文案,几百字都塞在 title 字段里,必须截断到四十个字以内才能进定位提示词";
+    const brief = formatWorksBrief(
+      [
+        row({ title: long, publishedAt: "2026-06-01" }),
+        row({ title: "短标题", status: "published" }),
+        row({ title: "进行中的一条", stage: "scripting" }),
+      ],
+      3,
+    );
+    const lines = brief.split("\n");
+    expect(lines).toHaveLength(3);
+    // 截 40 字 + …(「· 」前缀 + 40 字 + … + 状态括注)。
+    expect(lines[0]).toContain(`${long.slice(0, 40)}…`);
+    expect(lines[0]).not.toContain(long.slice(0, 60));
+    // 发布状态标记:publishedAt 或 status=published → 已发布;否则 stage。
+    expect(lines[0]).toContain("（已发布）");
+    expect(lines[1]).toContain("（已发布）");
+    expect(lines[2]).toContain("（scripting）");
+  });
+
+  it("上限 100 条;total 更大时如实标注剩余", () => {
+    const rows = Array.from({ length: 120 }, (_, i) => row({ title: `作品 ${i}` }));
+    const brief = formatWorksBrief(rows, 150);
+    const lines = brief.split("\n");
+    expect(lines).toHaveLength(101); // 100 条 + 剩余标注
+    expect(lines[100]).toBe("（另有 50 条未列出）");
+  });
+
+  it("空列表 → 空串(调用方整段省略,不注空噪声)", () => {
+    expect(formatWorksBrief([], 0)).toBe("");
+  });
+});
+
+// [T-081①] buildHooksPrompt —— script.hooks 的 prompt 拼装(从 execute 内联提出的纯函数)。
+describe("[T-081①] buildHooksPrompt — extraBrief 注入", () => {
+  it("extraBrief 非空 → 注入「本次生成指令」段(优先遵循)", () => {
+    const prompt = buildHooksPrompt({
+      topic: "RAG 实战",
+      direction: "冲突感强",
+      extraBrief: "用户要求 hook 带真实数据",
+      positioningBrief: "AI 工程科普",
+    });
+    expect(prompt).toContain(EXTRA_BRIEF_HEADING);
+    expect(prompt).toContain("用户要求 hook 带真实数据");
+    // 原有段落不变。
+    expect(prompt).toContain("《RAG 实战》");
+    expect(prompt).toContain("方向要求:冲突感强");
+    expect(prompt).toContain("AI 工程科普");
+  });
+
+  it("extraBrief 空 → 不注入该段(行为与旧 prompt 一致)", () => {
+    const prompt = buildHooksPrompt({
+      topic: "RAG 实战",
+      positioningBrief: "AI 工程科普",
+    });
+    expect(prompt).not.toContain(EXTRA_BRIEF_HEADING);
   });
 });
 

@@ -20,7 +20,10 @@ import { tool, jsonSchema, type Tool, type ToolSet } from "ai";
 // 路由在请求期解析(resolveModelSpec + assembleCreativeContext)后注入,故工具本身无副作用、
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
-  /** topic.generate 核心 —— 复用 ai-worker.runTopicNode,产选题候选(TopicItem[])。 */
+  /**
+   * topic.generate 核心 —— 复用 ai-worker.runTopicNode,产选题候选(TopicItem[])。
+   * [T-081] extraBrief:对话中获得的补充指令/洞察,原样进生成 prompt(优先级高于既有档案)。
+   */
   generateTopics: (input: {
     basis: "positioning" | "comments" | "knowledge" | "trend";
     extraBrief?: string;
@@ -58,6 +61,8 @@ export interface ChatToolDeps {
   generateHooks: (input: {
     topic?: string;
     direction?: string;
+    /** [T-081] 对话中获得的补充指令/洞察,原样进生成 prompt(优先级高于既有档案)。 */
+    extraBrief?: string;
   }) => Promise<Array<{ text: string; angle: string }>>;
   /**
    * [T-057⑤] script.draft 核心 —— 整稿分镜口播脚本候选(复用 runScriptNode,与旧
@@ -66,6 +71,8 @@ export interface ChatToolDeps {
   draftScript: (input: {
     topic?: string;
     angle?: string;
+    /** [T-081] 对话中获得的补充指令/洞察,原样进生成 prompt(优先级高于既有档案)。 */
+    extraBrief?: string;
   }) => Promise<Array<{ heading: string; body: string }>>;
   /**
    * [T-057④] material.gather 核心 —— 搜素材候选(复用 runResearchNode 四类结构化输出)。
@@ -79,7 +86,12 @@ export interface ChatToolDeps {
    * 评分标准逐维度盲评,产**诊断候选**(非实体)。复用 calibration.diagnose 模板 + parseDiagnosis。
    * 对话里没有绑定的 rubric reader 时,按通用维度评(诚实降级);一键岛带 subject 时用其标题。
    */
-  diagnoseContent: (input: { title: string; script?: string }) => Promise<{
+  diagnoseContent: (input: {
+    title: string;
+    script?: string;
+    /** [T-081] 对话中获得的补充指令/洞察,原样进诊断 prompt(优先级高于既有档案)。 */
+    extraBrief?: string;
+  }) => Promise<{
     dimensions: Array<{
       key: string;
       score: number;
@@ -90,12 +102,21 @@ export interface ChatToolDeps {
     mainIssues: string[];
     priorityFixes: string[];
   } | null>;
-  /** review.analyze 核心 —— 从一条内容提炼可复用爆款要素候选(复用 review 模板 + parseLearnings)。 */
-  analyzeReview: (input: { subject?: string }) => Promise<
+  /**
+   * review.analyze 核心 —— 从一条内容提炼可复用爆款要素候选(复用 review 模板 + parseLearnings)。
+   * [T-081] extraBrief:对话中获得的补充指令/洞察,原样进复盘 prompt(优先级高于既有档案)。
+   */
+  analyzeReview: (input: { subject?: string; extraBrief?: string }) => Promise<
     Array<{ title: string; insight: string }>
   >;
-  /** positioning.generate 核心 —— 结合定位 + 账号画像产一份结构化定位提案候选(复用 positioning prompt + parseSuggestion)。 */
-  generatePositioning: () => Promise<{
+  /**
+   * positioning.generate 核心 —— 结合定位 + 账号画像 + 真实作品画像产一份结构化定位提案候选
+   * (复用 positioning prompt + parseSuggestion)。
+   * [T-081] extraBrief:对话中获得的补充指令/洞察(如模型翻完作品后的定位洞察),原样进生成
+   * prompt(优先级高于既有档案)—— 修「模型翻完 80 条作品得出洞察却无通道传入,工具永远复读
+   * 旧定位」的上下文断裂。
+   */
+  generatePositioning: (input: { extraBrief?: string }) => Promise<{
     persona: string;
     field: string;
     audience: string;
@@ -305,8 +326,28 @@ export interface ContextMaterialsToolResult {
 }
 
 // ── 工具入参 JSON Schema(可序列化契约)─────────────────────────────────────────────
+
+// [T-081] 产内容工具统一的 extraBrief 入参(对齐 topic.generate deps 先例):对话里翻真数据/
+// 讨论得出的洞察经它进入生成 prompt —— 修「模型有洞察、工具零入参无通道」的上下文断裂。
+const EXTRA_BRIEF_PROPERTY = {
+  type: "string",
+  maxLength: 2000,
+  description:
+    "对话中获得的补充指令/洞察(如刚翻过的真实作品/评论提炼的结论、用户的具体要求),原样传入生成 prompt,优先级高于既有档案。对话里有生成方向共识时必须填,不要丢弃已聊出的洞察。",
+} as const;
+
+// [T-081] extraBrief 统一清洗:trim + 截 2000 字(与 schema maxLength 同值兜底,部分模型不吃
+// maxLength 约束);空/非串 → undefined(prompt 侧整段省略,不注空噪声)。导出供单测。
+export function clampExtraBrief(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const v = raw.trim();
+  if (!v) return undefined;
+  return v.length > 2000 ? v.slice(0, 2000) : v;
+}
+
 const TOPIC_GENERATE_PARAMS = jsonSchema<{
   basis?: "positioning" | "comments" | "knowledge" | "trend";
+  extraBrief?: string;
 }>({
   type: "object",
   properties: {
@@ -316,6 +357,7 @@ const TOPIC_GENERATE_PARAMS = jsonSchema<{
       description:
         "出题依据:positioning=按定位 / comments=按真实评论需求 / knowledge=按知识库 / trend=按热点。缺省 positioning。",
     },
+    extraBrief: EXTRA_BRIEF_PROPERTY,
   },
   additionalProperties: false,
 });
@@ -333,6 +375,7 @@ const TOPIC_ENRICH_PARAMS = jsonSchema<{ title: string; angle?: string }>({
 const SCRIPT_HOOKS_PARAMS = jsonSchema<{
   topic?: string;
   direction?: string;
+  extraBrief?: string;
 }>({
   type: "object",
   properties: {
@@ -344,15 +387,21 @@ const SCRIPT_HOOKS_PARAMS = jsonSchema<{
       type: "string",
       description: "hook 的方向要求(如「冲突感强一点」「用数据开场」),可选",
     },
+    extraBrief: EXTRA_BRIEF_PROPERTY,
   },
   additionalProperties: false,
 });
 
-const SCRIPT_DRAFT_PARAMS = jsonSchema<{ topic?: string; angle?: string }>({
+const SCRIPT_DRAFT_PARAMS = jsonSchema<{
+  topic?: string;
+  angle?: string;
+  extraBrief?: string;
+}>({
   type: "object",
   properties: {
     topic: { type: "string", description: "内容主题/标题(缺省用当前项目标题)" },
     angle: { type: "string", description: "切入角度/风格要求,可选" },
+    extraBrief: EXTRA_BRIEF_PROPERTY,
   },
   additionalProperties: false,
 });
@@ -368,6 +417,7 @@ const MATERIAL_GATHER_PARAMS = jsonSchema<{ query?: string }>({
 const CALIBRATION_DIAGNOSE_PARAMS = jsonSchema<{
   title: string;
   script?: string;
+  extraBrief?: string;
 }>({
   type: "object",
   properties: {
@@ -376,18 +426,23 @@ const CALIBRATION_DIAGNOSE_PARAMS = jsonSchema<{
       type: "string",
       description: "内容文稿/脚本(可选;没有就让 AI 基于标题与定位尽力诊断)。",
     },
+    extraBrief: EXTRA_BRIEF_PROPERTY,
   },
   required: ["title"],
   additionalProperties: false,
 });
 
-const REVIEW_ANALYZE_PARAMS = jsonSchema<{ subject?: string }>({
+const REVIEW_ANALYZE_PARAMS = jsonSchema<{
+  subject?: string;
+  extraBrief?: string;
+}>({
   type: "object",
   properties: {
     subject: {
       type: "string",
       description: "本次复盘对象(可选;没有就按账号整体表现提炼经验)。",
     },
+    extraBrief: EXTRA_BRIEF_PROPERTY,
   },
   additionalProperties: false,
 });
@@ -462,10 +517,13 @@ const BRIEF_FILL_PARAMS = jsonSchema<BriefFillSuggestion>({
   additionalProperties: false,
 });
 
-// positioning.generate 不需入参(全部从用户上下文/账号画像派生,与 runner 同)。
-const POSITIONING_GENERATE_PARAMS = jsonSchema<Record<string, never>>({
+// [T-081] positioning.generate 原为零入参(洞察无通道传入 → 工具内部只吃旧定位母版+账号画像,
+// 永远复读旧卡)。现加 extraBrief:对话里翻真数据得出的定位洞察经它进 prompt。
+const POSITIONING_GENERATE_PARAMS = jsonSchema<{ extraBrief?: string }>({
   type: "object",
-  properties: {},
+  properties: {
+    extraBrief: EXTRA_BRIEF_PROPERTY,
+  },
   additionalProperties: false,
 });
 
@@ -473,11 +531,17 @@ const POSITIONING_GENERATE_PARAMS = jsonSchema<Record<string, never>>({
 const CONTEXT_PROJECTS_PARAMS = jsonSchema<{
   limit?: number;
   offset?: number;
+  compact?: boolean;
 }>({
   type: "object",
   properties: {
-    limit: { type: "number", description: "本页条数(默认 20,最大 50)" },
+    limit: { type: "number", description: "本页条数(默认 20,最大 50;compact=true 时默认与上限 200)" },
     offset: { type: "number", description: "翻页偏移(默认 0;结果带 total/hasMore,可继续翻)" },
+    compact: {
+      type: "boolean",
+      description:
+        "[T-081] 盘点/浏览全量时置 true:标题截 40 字、单页上限放宽到 200,一次拿全,不用反复翻页。",
+    },
   },
   additionalProperties: false,
 });
@@ -524,13 +588,25 @@ const CONTEXT_MATERIALS_PARAMS = jsonSchema<{ query?: string; limit?: number }>(
   additionalProperties: false,
 });
 
-// 只读 context 工具的 limit 兜底:缺省 5,封顶 10(与 SPEC 约束一致)。
-function clampContextLimit(limit: number | undefined): number {
-  // [T-058②] 默认 20、封顶 50(原 10 太小,「看全部项目」要翻太多页)。
+// 只读 context 工具的 limit 兜底。[T-058②] 默认 20、封顶 50(原 10 太小,「看全部项目」要翻
+// 太多页)。[T-081] compact 模式(context.projects 盘点全量):默认与封顶放宽到 200,配合标题
+// 截 40 字让「一次拿全」不炸上下文。导出供单测。
+export function clampContextLimit(
+  limit: number | undefined,
+  compact = false,
+): number {
+  const cap = compact ? 200 : 50;
+  const fallback = compact ? 200 : 20;
   if (typeof limit !== "number" || !Number.isFinite(limit) || limit <= 0) {
-    return 20;
+    return fallback;
   }
-  return Math.min(Math.floor(limit), 50);
+  return Math.min(Math.floor(limit), cap);
+}
+
+// [T-081] compact 模式的标题截断:超 40 字截断加 …(title 可能是整篇文案数百字)。导出供单测。
+export function compactTitle(title: string): string {
+  const t = title.trim();
+  return t.length > 40 ? `${t.slice(0, 40)}…` : t;
 }
 
 // T-039a 知识库匹配放宽 —— 原 context.knowledge 只做「整串 title.includes(query)」精确子串匹配,
@@ -575,9 +651,10 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       description:
         "围绕创作者定位 + 真实信号生成一批选题候选(每条含 title/angle/理由)。结果是候选,需人逐条采纳后才入候选池——不直接写库。",
       inputSchema: TOPIC_GENERATE_PARAMS,
-      execute: async ({ basis }): Promise<TopicGenerateToolResult> => {
+      execute: async ({ basis, extraBrief }): Promise<TopicGenerateToolResult> => {
         const items = await deps.generateTopics({
           basis: basis ?? "positioning",
+          extraBrief: clampExtraBrief(extraBrief),
         });
         return { kind: "topic.candidates", items };
       },
@@ -595,8 +672,16 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       description:
         "为当前项目生成一组口播开场 hook 候选(3~5 条,不同切角)。创作者会逐条挑选「写入稿面」。当用户想改开头/要 hook/开场不抓人时调用。",
       inputSchema: SCRIPT_HOOKS_PARAMS,
-      execute: async ({ topic, direction }): Promise<ScriptHooksToolResult> => {
-        const items = await deps.generateHooks({ topic, direction });
+      execute: async ({
+        topic,
+        direction,
+        extraBrief,
+      }): Promise<ScriptHooksToolResult> => {
+        const items = await deps.generateHooks({
+          topic,
+          direction,
+          extraBrief: clampExtraBrief(extraBrief),
+        });
         return { kind: "script.hooks", items };
       },
     }),
@@ -604,8 +689,16 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       description:
         "为当前项目生成一版完整的分镜口播脚本(整稿,多段分镜:口播/画面/字幕)。创作者会整稿「写入稿面」。当用户要写脚本/起草整稿/重写脚本时调用。",
       inputSchema: SCRIPT_DRAFT_PARAMS,
-      execute: async ({ topic, angle }): Promise<ScriptDraftToolResult> => {
-        const sections = await deps.draftScript({ topic, angle });
+      execute: async ({
+        topic,
+        angle,
+        extraBrief,
+      }): Promise<ScriptDraftToolResult> => {
+        const sections = await deps.draftScript({
+          topic,
+          angle,
+          extraBrief: clampExtraBrief(extraBrief),
+        });
         return { kind: "script.draft", sections };
       },
     }),
@@ -625,8 +718,13 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       execute: async ({
         title,
         script,
+        extraBrief,
       }): Promise<CalibrationDiagnoseToolResult> => {
-        const diagnosis = await deps.diagnoseContent({ title, script });
+        const diagnosis = await deps.diagnoseContent({
+          title,
+          script,
+          extraBrief: clampExtraBrief(extraBrief),
+        });
         return { kind: "calibration.diagnosis", diagnosis };
       },
     }),
@@ -634,8 +732,14 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       description:
         "从一条内容(或账号整体表现)提炼 3-6 条可复用、可迁移的爆款要素/方法论。结果是经验候选,需人逐条采纳后才沉淀经验——不直接写库。",
       inputSchema: REVIEW_ANALYZE_PARAMS,
-      execute: async ({ subject }): Promise<ReviewAnalyzeToolResult> => {
-        const items = await deps.analyzeReview({ subject });
+      execute: async ({
+        subject,
+        extraBrief,
+      }): Promise<ReviewAnalyzeToolResult> => {
+        const items = await deps.analyzeReview({
+          subject,
+          extraBrief: clampExtraBrief(extraBrief),
+        });
         return { kind: "review.learnings", items };
       },
     }),
@@ -684,10 +788,12 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }),
     "positioning.generate": tool({
       description:
-        "结合创作者当前定位 + 抖音账号画像,生成/进化一份结构化定位提案(人设/领域/人群/差异化/能力/一句话定位/关键词)。结果是定位候选,需人采纳后才写入定位母版——不直接写库。",
+        "结合创作者当前定位 + 抖音账号画像 + 真实作品画像,生成/进化一份结构化定位提案(人设/领域/人群/差异化/能力/一句话定位/关键词)。对话里已翻过真数据/聊出定位洞察时,把结论整理进 extraBrief 一并传入(否则洞察会丢)。结果是定位候选,需人采纳后才写入定位母版——不直接写库。",
       inputSchema: POSITIONING_GENERATE_PARAMS,
-      execute: async (): Promise<PositioningGenerateToolResult> => {
-        const suggestion = await deps.generatePositioning();
+      execute: async ({ extraBrief }): Promise<PositioningGenerateToolResult> => {
+        const suggestion = await deps.generatePositioning({
+          extraBrief: clampExtraBrief(extraBrief),
+        });
         return { kind: "positioning.suggestion", suggestion };
       },
     }),
@@ -695,18 +801,27 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     //    实时拉**真实数据**给模型读进上下文再用文字回答(纯读,不产候选、不写任何实体)。
     "context.projects": tool({
       description:
-        "只读:拉取创作者的项目/作品列表(id/标题/阶段/状态),带 total/hasMore 可翻页(offset)。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目 / 全部项目」时调它拿真实数据回答;hasMore=true 时继续带 offset 翻页直到看全,或如实告知还剩多少。",
+        "只读:拉取创作者的项目/作品列表(id/标题/阶段/状态),带 total/hasMore 可翻页(offset)。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目 / 全部项目」时调它拿真实数据回答。[T-081] 要盘点/浏览**全量**作品(如「结合我全部内容…」)时置 compact=true:标题截 40 字、单页上限 200,一次拿全,不用逐页翻;只看少量条目/需要完整标题时不置。hasMore=true 时继续带 offset 翻页直到看全,或如实告知还剩多少。",
       inputSchema: CONTEXT_PROJECTS_PARAMS,
-      execute: async ({ limit, offset }): Promise<ContextProjectsToolResult> => {
-        const eff = clampContextLimit(limit);
+      execute: async ({
+        limit,
+        offset,
+        compact,
+      }): Promise<ContextProjectsToolResult> => {
+        const isCompact = compact === true;
+        const eff = clampContextLimit(limit, isCompact);
         const effOffset = Math.max(0, offset ?? 0);
         const { rows, total } = await deps.listProjects({
           limit: eff,
           offset: effOffset,
         });
+        // [T-081] compact:标题可能是整篇文案(数百字)—— 截 40 字防一页 200 条炸上下文。
+        const items = isCompact
+          ? rows.map((r) => ({ ...r, title: compactTitle(r.title) }))
+          : rows;
         return {
           kind: "context.projects",
-          items: rows,
+          items,
           total,
           offset: effOffset,
           hasMore: effOffset + rows.length < total,

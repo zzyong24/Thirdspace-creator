@@ -10,6 +10,7 @@ import type { RequestContext } from "@creatoros/contract";
 import type { ModelSpec } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
+  formatWorksBrief,
   type ContextDeps,
 } from "./creative-context";
 import {
@@ -134,6 +135,40 @@ const GENERIC_RUBRIC_DIMENSIONS: ReadonlyArray<{
   { key: "conversion", label: "转化引导", description: "是否自然引导到信任/转化" },
 ];
 
+// [T-081①] 产内容工具的 extraBrief 统一注入段头 —— 对话中获得的补充指令/洞察进生成 prompt 的
+// 段标题(各工具/facet 同一措辞,单一真值)。导出供各 runner facet 拼装与单测锚定。
+export const EXTRA_BRIEF_HEADING = "【本次生成指令(来自对话,优先遵循)】";
+
+// [T-081②] positioning.generate 的真实作品画像 —— formatWorksBrief 已移到 creative-context
+// (对话工具 + 后台 task 两条定位生成路径共用,单一真值);此处再导出保持既有 import 面不变。
+export { formatWorksBrief, WORKS_BRIEF_MAX_ROWS } from "./creative-context";
+
+// [T-081①] script.hooks 的 prompt 拼装 —— 从 generateHooks 内联提出为纯函数(可单测):
+// 原文案不变,新增 extraBrief 段(空则整段省略,不注空噪声)。
+export function buildHooksPrompt(input: {
+  topic: string;
+  direction?: string;
+  extraBrief?: string;
+  positioningBrief: string;
+}): string {
+  return [
+    "为这条短视频内容生成 4 条口播开场 hook 候选(前 3 秒抓注意力的第一句话)。",
+    input.topic
+      ? `内容主题:《${input.topic}》`
+      : "内容主题:见下方创作者定位,选最有张力的切入。",
+    input.positioningBrief
+      ? `创作者定位:
+${input.positioningBrief}`
+      : "",
+    input.direction ? `方向要求:${input.direction}` : "",
+    input.extraBrief ? `${EXTRA_BRIEF_HEADING}\n${input.extraBrief}` : "",
+    '4 条彼此切角不同(如:反常识断言 / 数据冲击 / 场景代入 / 利益承诺)。每条 ≤40 字,口语化,不要书面腔。',
+    '只输出 JSON 数组,形如 [{"text":"hook 文案","angle":"切角名"}],不要多余文字。',
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 // 解析结果:路由把它交给 streamText 的 stream 喂回前端 + 落库。导出供单测断言「选对 skill /
 // 注入了 facets / 挂对了 tools」而不真跑模型(单测注入 fake streamText 不便,故拆出
 // buildChatAssembly 只做装配、不调网络,由它单测;runChatStream 串起 streamText)。
@@ -205,6 +240,9 @@ export async function buildChatAssembly(
     "2. 绝不口头宣称「已写入/已采纳/已保存」—— 除非你看到用户明确说 TA 已点过采纳按钮。用户想落库时,引导 TA:先让你调工具产卡,再点卡上的按钮。",
     "3. 用户要新定位 → 必须调 positioning.generate 工具(产带采纳按钮的卡),不要只在文本里写定位 —— 文本无法被采纳。",
     "4. 工具有分页/条数上限时,如实告知拿到了多少、还有没有更多,不要谎称已看全部。",
+    // [T-081⑤] 边界诚实:不许把「工具做不到的操作」包装成可选项摆给用户(实录:模型给用户
+    // 列了不存在的操作选项 → 用户点了 = 死路)。
+    "5. 绝不向用户提供你的工具不具备的操作选项;做不到就直说做不到,并说明当前工具边界。",
   ].join("\n");
   // [T-077c] 技能自感知(SPEC §1.3 [gate-F1]):把当前 surface 白名单的技能清单注进 system
   // (每工具一行「中文名(工具名):一句话用途」,行数=白名单工具数、上限 20 超出截断)——
@@ -248,12 +286,22 @@ export async function buildChatAssembly(
   const toolDeps: ChatToolDeps = {
     generateTopics: async ({ basis, extraBrief }) => {
       // 复用 ai-worker.runTopicNode —— 产 TopicItem[] 候选(与一键岛同一引擎)。
-      const basisBrief =
+      // [T-081] extraBrief 对任意 basis 都生效:comments/knowledge 依据块后追加「本次生成指令」段
+      // (原实现只在 positioning/trend 分支吃 extraBrief,评论/知识出题时对话洞察被静默丢弃)。
+      const basisSource =
         basis === "comments"
           ? context.signalsBrief
           : basis === "knowledge"
             ? context.knowledgeBrief
-            : (extraBrief ?? "");
+            : "";
+      const basisBrief = [
+        basisSource,
+        extraBrief
+          ? `${EXTRA_BRIEF_HEADING}\n${extraBrief}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
       const { topics } = await runTopicNode({
         model,
         positioningBrief: context.positioningBrief,
@@ -288,24 +336,17 @@ export async function buildChatAssembly(
       });
       return parseCard(res.text);
     },
-    generateHooks: async ({ topic, direction }) => {
+    generateHooks: async ({ topic, direction, extraBrief }) => {
       // [T-055c] 复用 runAgentNode 一次调用产 hook 候选组(非实体)。主题兜底:模型没传
       // topic 时用选中项目标题(稿面右栏常驻 = 当前项目)。产出走 ChatHookCard 逐条写入稿面。
       const effTopic = topic?.trim() || selectionTitle || "";
       const { runAgentNode } = await import("@creatoros/ai-worker");
-      const prompt = [
-        "为这条短视频内容生成 4 条口播开场 hook 候选(前 3 秒抓注意力的第一句话)。",
-        effTopic ? `内容主题:《${effTopic}》` : "内容主题:见下方创作者定位,选最有张力的切入。",
-        context.positioningBrief
-          ? `创作者定位:
-${context.positioningBrief}`
-          : "",
-        direction ? `方向要求:${direction}` : "",
-        '4 条彼此切角不同(如:反常识断言 / 数据冲击 / 场景代入 / 利益承诺)。每条 ≤40 字,口语化,不要书面腔。',
-        '只输出 JSON 数组,形如 [{"text":"hook 文案","angle":"切角名"}],不要多余文字。',
-      ]
-        .filter(Boolean)
-        .join("\n");
+      const prompt = buildHooksPrompt({
+        topic: effTopic,
+        direction,
+        extraBrief,
+        positioningBrief: context.positioningBrief,
+      });
       const res = await runAgentNode({
         model,
         system:
@@ -315,7 +356,7 @@ ${context.positioningBrief}`
       });
       return parseHookItems(res.text);
     },
-    draftScript: async ({ topic, angle }) => {
+    draftScript: async ({ topic, angle, extraBrief }) => {
       // [T-057⑤] 复用 runScriptNode(与旧 ScriptDraftIsland/任务链同引擎,script.draft
       // capability 的用户配模型);shots → 编辑器 sections(与 script-runner renderSections 同形)。
       const effTopic = topic?.trim() || selectionTitle || "";
@@ -327,6 +368,8 @@ ${context.positioningBrief}`
         learningsBrief: context.learningsBrief,
         topicTitle: effTopic,
         topicAngle: angle ?? "",
+        // [T-081①] 对话洞察/补充指令进整稿 prompt(script-node 空则整段省略)。
+        extraBrief,
       });
       return shots.map((shot, i) => {
         const label = shot.口播 ? shot.口播.slice(0, 16) : `分镜 ${i + 1}`;
@@ -360,7 +403,7 @@ ${context.positioningBrief}`
         category: it.source || "素材",
       }));
     },
-    diagnoseContent: async ({ title, script }) => {
+    diagnoseContent: async ({ title, script, extraBrief }) => {
       // 复用 calibration.diagnose 模板 + parseDiagnosis(与 calibration-diagnose-runner 同源)。
       // 对话里没有库内 rubric reader → 用通用维度评(诚实降级)。产诊断候选(非实体)。
       // T-027:模型没显式传 title 时用工作台选中内容的标题兜底(不拿空标题去诊断)。
@@ -379,6 +422,10 @@ ${context.positioningBrief}`
             : "（创作者尚未设置定位——按通用爆款逻辑判断）",
           learnings: context.learningsBrief
             ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
+            : "",
+          // [T-081①] 对话洞察/补充指令(模板 {{extraBrief}} 占位,空则整段省略)。
+          extraBrief: extraBrief
+            ? `\n${EXTRA_BRIEF_HEADING}\n${extraBrief}`
             : "",
           rubricBlock,
           title: effTitle || "（未提供标题）",
@@ -401,7 +448,7 @@ ${context.positioningBrief}`
         priorityFixes: parsed.priorityFixes,
       };
     },
-    analyzeReview: async ({ subject }) => {
+    analyzeReview: async ({ subject, extraBrief }) => {
       // 复用 review.insights 模板 + reviewFacets + parseLearnings(与 review-runner 同源、同一份
       // 真数据注入,不造影子)。T-039a:facets 走共用 reviewFacets —— 它把本项目的真文案/数据/评论
       // 拼成整块注入(前提是上面 assembleCreativeContext 拿到了 projectId → reviewSubject reader 读齐)。
@@ -412,18 +459,34 @@ ${context.positioningBrief}`
         model: modelFor(spec),
         // T-040b:运行时 getTemplate 取被覆盖后的 REGISTRY 对象(非 import 快照),吃服务端覆盖。
         template: getTemplate("review.insights"),
-        facets: reviewFacets(context, effSubject),
+        // [T-081①] extraBrief 第三参 → 模板 {{extraBrief}} 占位(空则整段省略)。
+        facets: reviewFacets(context, effSubject, extraBrief),
       });
       return parseLearnings(text);
     },
-    generatePositioning: async () => {
+    generatePositioning: async ({ extraBrief }) => {
       // 复用 positioning-runner 的 prompt + parseSuggestion —— 产定位提案候选(非实体)。
+      // [T-081②] 真实作品画像:读全部作品标题(压缩列表,截 40 字/上限 100 条/带发布状态)注入
+      // prompt,让「结合我的内容生成定位」不依赖模型翻页;读端口未装配/读失败 → 空(诚实降级,
+      // 不阻断生成)。[T-081①] extraBrief:对话洞察经新 facet 段进 prompt(优先级高于既有档案)。
+      let worksBrief = "";
+      if (deps.contextReaders) {
+        try {
+          const { rows, total } = await deps.contextReaders.listProjects(ctx, {
+            limit: 100,
+            offset: 0,
+          });
+          worksBrief = formatWorksBrief(rows, total);
+        } catch {
+          worksBrief = ""; // 作品画像 best-effort,读失败不阻断定位生成
+        }
+      }
       const { runAgentNode } = await import("@creatoros/ai-worker");
       const spec = await deps.resolveModelSpec(ctx, "positioning.generate");
       const res = await runAgentNode({
         model: modelFor(spec),
         system: "你是这位创作者的定位策略 agent。只输出 JSON,不要多余文字。",
-        prompt: buildPositioningPrompt(context),
+        prompt: buildPositioningPrompt(context, { extraBrief, worksBrief }),
         maxSteps: 2,
       });
       return parseSuggestion(res.text);

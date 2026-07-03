@@ -1529,6 +1529,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const positioning = createPositioningTransport(() => positioningService);
 
+  // [T-081②] 最近作品分页读(user-scoped)—— repo 全量拉(用户级列表,量级百条内)按
+  // updatedAt(缺则 createdAt)desc 排序后切片,带 total。**单一真值**:context.projects 只读
+  // 工具(contextReaders.listProjects)与 positioning.generate 后台 task 的 works 读端口共用,
+  // 两处不各自造排序口径。注:projects 上无真实 publishedAt(在 publication 上)→ 诚实留 null。
+  const listRecentProjects = async (
+    c: RequestContext,
+    opts: { limit: number; offset: number },
+  ) => {
+    const rows = await projectsRepo.list(c);
+    const sorted = [...rows].sort((a, b) =>
+      (b.updatedAt ?? b.createdAt ?? "").localeCompare(
+        a.updatedAt ?? a.createdAt ?? "",
+      ),
+    );
+    return {
+      total: sorted.length,
+      rows: sorted.slice(opts.offset, opts.offset + opts.limit).map((p) => ({
+        id: p.id,
+        title: p.title,
+        stage: p.currentStage,
+        status: p.status,
+        publishedAt: null,
+      })),
+    };
+  };
+
   // 复盘对象 reader 工厂 (T-039a) —— 读「本次复盘的这一条作品」的真材料(标题/文案/数据/评论),
   // 供 review.analyze 路径(后端 task runner + ChatBox 对话复盘)注入 review.insights prompt,让复盘
   // 扣住真实内容归因而不是账号级泛论。全部 best-effort、诚实空兜底(读不到 → 空,绝不塞假),且**复用
@@ -2437,6 +2463,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               accounts: accountsReader,
+              // [T-081②] 真实作品读端口 —— 与 ChatBox 的 context.projects 同一份读法
+              // (listRecentProjects),注入定位模板 {{works}} facet,让定位中心一键生成
+              // 与对话定位生成两条路径都扎根真实作品画像。
+              works: { listProjects: listRecentProjects },
               // Vercel AI SDK 路径:定位生成跑在 ai-worker 结构化节点(外置 positioning.generate
               // 模板 + generateObject 绑 outputSchema,落空→文本兜底),跨模型健壮(MiniMax 也稳出)。
               resolveModelSpec,
@@ -4686,32 +4716,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // (list 本身不带全文检索);projects 无真实 publishedAt(那在 publication 上)→ 不塞、留空。
     contextReaders: {
       // context.projects —— 复用 projectsRepo.list(user-scoped: WHERE user_id = ctx.userId)。
-      // repo.list 按 createdAt asc 返回 → 这里按 updatedAt(缺则 createdAt)desc 取「最近」再截断。
-      listProjects: async (
-        c: RequestContext,
-        opts: { limit: number; offset: number },
-      ) => {
-        // [T-058②] 分页 + 总数:repo 全量拉(用户级列表,量级百条内),排序后按
-        // offset/limit 切片,带 total —— 模型据此如实告知「还有 N 条」并可翻页看全。
-        const rows = await projectsRepo.list(c);
-        const sorted = [...rows].sort((a, b) =>
-          (b.updatedAt ?? b.createdAt ?? "").localeCompare(
-            a.updatedAt ?? a.createdAt ?? "",
-          ),
-        );
-        return {
-          total: sorted.length,
-          rows: sorted
-            .slice(opts.offset, opts.offset + opts.limit)
-            .map((p) => ({
-              id: p.id,
-              title: p.title,
-              stage: p.currentStage,
-              status: p.status,
-              publishedAt: null,
-            })),
-        };
-      },
+      // [T-058②] 分页 + 总数;[T-081②] 排序/切片口径收口到 listRecentProjects(与
+      // positioning.generate task 的 works 读端口同一份读法,不造影子)。
+      listProjects: listRecentProjects,
       // [T-077b] brief.fill 的现状读 —— 复用 projectsRepo.get(user-scoped)取当前项目的
       // brief_detail jsonb 原样返回(契约 projectBriefDetail 形状)。读不到(项目不存在/越权)
       // → null(工具结果 current=null,前端卡现值显「未填」),绝不抛崩对话流。

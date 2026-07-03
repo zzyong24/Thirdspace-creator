@@ -7,7 +7,8 @@ import type { PromptTemplate } from "../template";
  * facets 由 CreativeContext + rubric + subject 映射:
  *   positioning(必需,调用方已兜底)· learnings(过往爆款要素,选填)·
  *   rubricBlock(必需:逐维度评分清单,调用方按 dimensions 计算并注入)·
- *   title(必需:待诊断内容标题)· script(必需:文稿,调用方按 scriptText 计算并兜底)。
+ *   title(必需:待诊断内容标题)· script(必需:文稿,调用方按 scriptText 计算并兜底)·
+ *   extraBrief([T-081] 选填:对话中获得的补充指令/洞察整块,空则整段省略)。
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。
  *
  * T-025 跨模型健壮性:加 outputSchema(runStructuredNode 绑 generateObject,落空→文本兜底),
@@ -50,7 +51,7 @@ export const CALIBRATION_DIAGNOSE_TEMPLATE: PromptTemplate = {
   template: `你是这位创作者的「AI 编导」。下面是一条**发布前的内容**，请你按创作者的**变现加权评分标准**逐维度盲评，并给出编导诊断。
 
 【创作者定位】
-{{positioning}}{{learnings}}
+{{positioning}}{{learnings}}{{extraBrief}}
 
 【评分维度（必须逐条打分，key 原样回填）】
 {{rubricBlock}}

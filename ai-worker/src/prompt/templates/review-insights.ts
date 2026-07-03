@@ -11,6 +11,8 @@ import type { PromptTemplate } from "../template";
  *   reviewScriptBlock(本次复盘作品·文案)· reviewMetricsBlock(本次复盘作品·真实数据)·
  *   reviewCommentsBlock(本次复盘作品·观众评论)。调用方把「标题行 + 真内容」拼成整块传入;读不到
  *   就传空串,占位替换为空 → 该块在 prompt 里自然省略(不硬塞空占位、不喂噪声,数据要真)。
+ * [T-081] 再加 extraBrief(选填):对话中获得的补充指令/洞察整块(调用方拼「本次生成指令」标题行),
+ *   空则整段省略 —— ChatBox 对话里聊出的复盘方向经此进 prompt,不再被零通道丢弃。
  * 保持原 prompt 文字与输出 JSON 约定不变,只把上下文占位化。
  * 注:resolveModelSpec 按 "review.insights" capability 解析模型(触发器 taskType=review.analyze)。
  *
@@ -41,7 +43,7 @@ export const REVIEW_INSIGHTS_TEMPLATE: PromptTemplate = {
 {{positioning}}{{priorLearnings}}
 
 【本次复盘对象】{{subject}}
-{{reviewScriptBlock}}{{reviewMetricsBlock}}{{reviewCommentsBlock}}
+{{reviewScriptBlock}}{{reviewMetricsBlock}}{{reviewCommentsBlock}}{{extraBrief}}
 【任务】像专业编导那样,**只针对上面这一条作品**(它的文案 / 数据 / 评论)提炼 3-6 条可复用方法论。**硬性要求(违反即算错):**
 ① 每条都必须从**这一条作品**的真实文案或数据里找到依据(引用它的钩子/结构/数据点来归因),**严禁引用其他作品、严禁把知识库或账号里其他内容的标题拿来当经验**;
 ② title 必须是**一句话方法论**(如「前 3 秒用具体数字承诺收益」),**绝不能是作品标题、视频描述或话题标签(#…)**——把别的标题/简介照抄进 title 一律算错;
