@@ -41,7 +41,8 @@ describe("platform-account ops registered in the composite transport", () => {
       { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined } as never,
       ctx(canonicalDataset.user.id),
     )) as { data: Array<{ id: string; userId: string; secretReference: string | null }> };
-    expect(res.data.length).toBeGreaterThanOrEqual(2);
+    // [T-074] bilibili 假 seed 已删,canonical 只剩真实抖音账号。
+    expect(res.data.length).toBeGreaterThanOrEqual(1);
     for (const row of res.data) {
       expect(row.userId).toBe(canonicalDataset.user.id);
     }

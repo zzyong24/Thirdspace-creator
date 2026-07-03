@@ -3725,8 +3725,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             ctx,
             { limit: 100, offset: 0 },
           );
+          // [T-074 用户裁决] 总粉丝只统计抖音(B站 8400 系 seed 幻觉数据已清,
+          // 用户:「不要统计B站」);未来接别的平台前不并入总数。
           const sum = accounts
-            .filter((a) => a.status === "active")
+            .filter((a) => a.status === "active" && a.platform === "douyin")
             .reduce((acc, a) => acc + (a.followerBaseline ?? 0), 0);
           if (sum > 0) followerTotal = fmt(sum);
         } catch {
@@ -4443,17 +4445,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       createdAt: FIXED_NOW_ISO,
       updatedAt: FIXED_NOW_ISO,
     },
-    {
-      id: "acct-canonical-bilibili",
-      userId: canonicalDataset.user.id,
-      platform: "bilibili",
-      accountHandle: "@AI工程实录",
-      secretReference: null,
-      followerBaseline: 8400,
-      status: "active",
-      createdAt: FIXED_NOW_ISO,
-      updatedAt: FIXED_NOW_ISO,
-    },
+    // [T-074] bilibili「@AI工程实录 8400 粉」系编造的 seed(用户实锤:「B站我也没有
+    // 8400 粉丝,你这又是哪来的幻觉?」)—— 已连根删除,DB 存量行同日清理。
   ];
   await platformAccountSeedRepo.seedAccounts(canonicalAccounts);
 
