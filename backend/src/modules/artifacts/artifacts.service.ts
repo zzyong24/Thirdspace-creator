@@ -190,16 +190,7 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
           "Structured content may only be written to the artifact's current version",
         );
       }
-      // Validate evidence targets before writing (MODULE-ARCH §4.3). Knowledge /
-      // Assets never depend back on Artifacts; we call their public guards.
-      for (const e of payload.evidenceLinks ?? []) {
-        if (e.knowledgeItemId && deps.assertKnowledgeOwned) {
-          await deps.assertKnowledgeOwned(ctx, e.knowledgeItemId);
-        }
-        if (e.assetId && deps.assertAssetOwned) {
-          await deps.assertAssetOwned(ctx, e.assetId);
-        }
-      }
+      // [T-055f] evidence_links 退役(用户拍板③;校验段随表删除)。
       await repo.replaceStructuredContent(artifactVersionId, payload);
     },
 

@@ -3,9 +3,7 @@ import {
   artifacts,
   artifactVersions,
   artifactRelations,
-  thesisNodes,
   scriptSections,
-  evidenceLinks,
   timelineSegments,
 } from "./artifacts.db-schema";
 import { OwnershipError } from "./artifacts.errors";
@@ -32,9 +30,7 @@ import { OwnershipError } from "./artifacts.errors";
 export type ArtifactRow = typeof artifacts.$inferSelect;
 export type ArtifactVersionRow = typeof artifactVersions.$inferSelect;
 export type ArtifactRelationRow = typeof artifactRelations.$inferSelect;
-export type ThesisNodeRow = typeof thesisNodes.$inferSelect;
 export type ScriptSectionRow = typeof scriptSections.$inferSelect;
-export type EvidenceLinkRow = typeof evidenceLinks.$inferSelect;
 export type TimelineSegmentRow = typeof timelineSegments.$inferSelect;
 
 export interface RepoDeps {
@@ -44,13 +40,6 @@ export interface RepoDeps {
 }
 
 export interface StructuredContent {
-  thesisNodes?: Array<{
-    parentNodeId?: string | null;
-    nodeType: string;
-    title?: string;
-    content?: string;
-    position?: number;
-  }>;
   scriptSections?: Array<{
     parentSectionId?: string | null;
     sectionType: string;
@@ -59,15 +48,6 @@ export interface StructuredContent {
     position?: number;
     startSeconds?: number | null;
     endSeconds?: number | null;
-  }>;
-  evidenceLinks?: Array<{
-    thesisNodeId?: string | null;
-    knowledgeItemId?: string | null;
-    assetId?: string | null;
-    excerpt?: string;
-    relationType?: string;
-    confidence?: number;
-    position?: number;
   }>;
   timelineSegments?: Array<{
     scriptSectionId?: string | null;
@@ -116,7 +96,6 @@ export interface ArtifactRepository {
     payload: StructuredContent,
   ): Promise<void>;
   getScriptSections(artifactVersionId: string): Promise<ScriptSectionRow[]>;
-  getThesisNodes(artifactVersionId: string): Promise<ThesisNodeRow[]>;
 }
 
 // F1 origin lifecycle resolver (T-030-D4, SPEC §4.5). Pure — decides the parent
@@ -362,24 +341,7 @@ export function createArtifactRepository(
       // guards that). Delete-then-insert the structured rows for this version id;
       // version-scoped, so the immutable-plan rule holds (we mutate the just-made
       // version's structured children, never a prior live one).
-      if (payload.thesisNodes) {
-        await db
-          .delete(thesisNodes)
-          .where(eq(thesisNodes.artifactVersionId, artifactVersionId));
-        if (payload.thesisNodes.length > 0) {
-          await db.insert(thesisNodes).values(
-            payload.thesisNodes.map((n) => ({
-              id: deps.nextId("thesisnode"),
-              artifactVersionId,
-              parentNodeId: n.parentNodeId ?? null,
-              nodeType: n.nodeType,
-              title: n.title ?? "",
-              content: n.content ?? "",
-              position: n.position ?? 0,
-            })),
-          );
-        }
-      }
+      // [T-055f] thesis_nodes 退役(迁移 0015 DROP;宪法 §4 修正案)。
       if (payload.scriptSections) {
         await db
           .delete(scriptSections)
@@ -400,26 +362,7 @@ export function createArtifactRepository(
           );
         }
       }
-      if (payload.evidenceLinks) {
-        await db
-          .delete(evidenceLinks)
-          .where(eq(evidenceLinks.artifactVersionId, artifactVersionId));
-        if (payload.evidenceLinks.length > 0) {
-          await db.insert(evidenceLinks).values(
-            payload.evidenceLinks.map((e) => ({
-              id: deps.nextId("evidencelink"),
-              artifactVersionId,
-              thesisNodeId: e.thesisNodeId ?? null,
-              knowledgeItemId: e.knowledgeItemId ?? null,
-              assetId: e.assetId ?? null,
-              excerpt: e.excerpt ?? "",
-              relationType: e.relationType ?? "",
-              confidence: e.confidence ?? 1,
-              position: e.position ?? 0,
-            })),
-          );
-        }
-      }
+      // [T-055f] evidence_links 退役(迁移 0015 DROP)。
       if (payload.timelineSegments) {
         await db
           .delete(timelineSegments)
@@ -449,12 +392,5 @@ export function createArtifactRepository(
         .orderBy(asc(scriptSections.position));
     },
 
-    async getThesisNodes(artifactVersionId) {
-      return db
-        .select()
-        .from(thesisNodes)
-        .where(eq(thesisNodes.artifactVersionId, artifactVersionId))
-        .orderBy(asc(thesisNodes.position));
-    },
   };
 }

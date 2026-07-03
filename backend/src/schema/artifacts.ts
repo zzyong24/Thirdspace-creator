@@ -64,15 +64,7 @@ export const artifactRelations = pgTable("artifact_relations", {
   createdAt: text("created_at").notNull(),
 });
 
-export const thesisNodes = pgTable("thesis_nodes", {
-  id: text("id").primaryKey(),
-  artifactVersionId: text("artifact_version_id").notNull(),
-  parentNodeId: text("parent_node_id"),
-  nodeType: text("node_type").notNull(),
-  title: text("title").notNull().default(""),
-  content: text("content").notNull().default(""),
-  position: integer("position").notNull().default(0),
-});
+// [T-055f SPEC §9] thesis_nodes 表退役(用户拍板③,迁移 0015 DROP)。
 
 export const scriptSections = pgTable("script_sections", {
   id: text("id").primaryKey(),
@@ -86,17 +78,7 @@ export const scriptSections = pgTable("script_sections", {
   endSeconds: real("end_seconds"),
 });
 
-export const evidenceLinks = pgTable("evidence_links", {
-  id: text("id").primaryKey(),
-  artifactVersionId: text("artifact_version_id").notNull(),
-  thesisNodeId: text("thesis_node_id"),
-  knowledgeItemId: text("knowledge_item_id"),
-  assetId: text("asset_id"),
-  excerpt: text("excerpt").notNull().default(""),
-  relationType: text("relation_type").notNull().default(""),
-  confidence: real("confidence").notNull().default(1),
-  position: integer("position").notNull().default(0),
-});
+// [T-055f SPEC §9] evidence_links 表退役(用户拍板③,迁移 0015 DROP)。
 
 export const timelineSegments = pgTable("timeline_segments", {
   id: text("id").primaryKey(),
@@ -151,16 +133,6 @@ CREATE TABLE IF NOT EXISTS artifact_relations (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS artifact_relations_source_ix ON artifact_relations(source_artifact_id);
-CREATE TABLE IF NOT EXISTS thesis_nodes (
-  id TEXT PRIMARY KEY,
-  artifact_version_id TEXT NOT NULL,
-  parent_node_id TEXT,
-  node_type TEXT NOT NULL,
-  title TEXT NOT NULL DEFAULT '',
-  content TEXT NOT NULL DEFAULT '',
-  position INTEGER NOT NULL DEFAULT 0
-);
-CREATE INDEX IF NOT EXISTS thesis_nodes_version_ix ON thesis_nodes(artifact_version_id, position);
 CREATE TABLE IF NOT EXISTS script_sections (
   id TEXT PRIMARY KEY,
   artifact_version_id TEXT NOT NULL,
@@ -173,18 +145,6 @@ CREATE TABLE IF NOT EXISTS script_sections (
   end_seconds REAL
 );
 CREATE INDEX IF NOT EXISTS script_sections_version_ix ON script_sections(artifact_version_id, position);
-CREATE TABLE IF NOT EXISTS evidence_links (
-  id TEXT PRIMARY KEY,
-  artifact_version_id TEXT NOT NULL,
-  thesis_node_id TEXT,
-  knowledge_item_id TEXT,
-  asset_id TEXT,
-  excerpt TEXT NOT NULL DEFAULT '',
-  relation_type TEXT NOT NULL DEFAULT '',
-  confidence REAL NOT NULL DEFAULT 1,
-  position INTEGER NOT NULL DEFAULT 0
-);
-CREATE INDEX IF NOT EXISTS evidence_links_version_ix ON evidence_links(artifact_version_id, position);
 CREATE TABLE IF NOT EXISTS timeline_segments (
   id TEXT PRIMARY KEY,
   artifact_version_id TEXT NOT NULL,

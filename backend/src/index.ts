@@ -62,9 +62,7 @@ export {
   artifacts,
   artifactVersions,
   artifactRelations,
-  thesisNodes,
   scriptSections,
-  evidenceLinks,
   timelineSegments,
   ARTIFACTS_DDL,
 } from "./schema/artifacts";

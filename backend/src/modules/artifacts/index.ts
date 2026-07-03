@@ -22,7 +22,6 @@ export {
   type ArtifactVersionRow,
   type ArtifactRelationRow,
   type ScriptSectionRow,
-  type ThesisNodeRow,
   type StructuredContent,
 } from "./artifacts.repository";
 

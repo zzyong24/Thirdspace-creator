@@ -196,24 +196,7 @@ describe("artifacts.repository — structured content (Step 2)", () => {
     expect(sections[0]!.sectionType).toBe("outro");
   });
 
-  it("replaceStructuredContent writes thesis nodes for a version", async () => {
-    const artifact = await makeArtifact(repoA, { artifactType: "thesis_tree" });
-    const versionId = artifact.currentVersionId!;
-    await repoA.replaceStructuredContent(versionId, {
-      thesisNodes: [
-        {
-          nodeType: "root",
-          parentNodeId: null,
-          title: "核心论点",
-          content: "...",
-          position: 0,
-        },
-      ],
-    });
-    const nodes = await repoA.getThesisNodes(versionId);
-    expect(nodes).toHaveLength(1);
-    expect(nodes[0]!.nodeType).toBe("root");
-  });
+  // [T-055f] thesis_nodes 表退役(用户拍板③,迁移 0015)—— 写入用例随之删除。
 });
 
 // F1 (T-030-D4, SPEC §4.5) — `artifacts.origin` provenance + lifecycle.
