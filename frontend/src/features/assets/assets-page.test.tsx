@@ -115,8 +115,10 @@ describe("AssetsPage", () => {
     await renderAssets();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const active = within(nav).getByRole("link", { current: "page" });
-    expect(active).toHaveAttribute("href", "/assets");
-    expect(active.textContent?.trim()).toBe("素材中心");
+    // [T-063a] IA 收敛:/assets 已无一级导航项(301 → /library?tab=assets);
+    // 旧 pathname 一瞬渲染时激活项回退「今日台」。
+    expect(active).toHaveAttribute("href", "/");
+    expect(active.textContent?.trim()).toBe("今日台");
   });
 
   it("renders an AssetToolbar at the top of the page", async () => {

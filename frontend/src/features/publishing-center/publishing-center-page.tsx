@@ -162,8 +162,9 @@ export function PublishingCenterPage({
         <span className="text-sm text-muted-foreground">
           内容日历 · 发布节奏与达成率
         </span>
+        {/* [T-063a] /calendar 已 301 → 作品页「排期」tab;直链新地址省一跳。 */}
         <Link
-          href="/calendar"
+          href="/projects?tab=schedule"
           className="text-sm font-medium text-brand hover:underline"
         >
           打开日历 →

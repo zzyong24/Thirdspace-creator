@@ -1,59 +1,12 @@
 /**
- * Knowledge & Memory route entrypoint.
+ * [T-063a] IA 收敛:旧一级路由 `/knowledge` 永久重定向(301/308)→ `/library?tab=knowledge`。
  *
- * The (creator) layout supplies the shared AppShell (Sidebar + TopHeader)
- * and the global Header is configured for `/knowledge` in
- * `shell-router.tsx`. The page itself is a Server Component
- * (page-specs §11, D-002) and just provides the page slot.
- *
- * Tri-state (GAP-KM-tristate): the route resolves the request session and builds
- * the REAL VM with a session-SCOPED contract client, so a logged-in user reads
- * THEIR OWN `ctx.userId` knowledge — a fresh empty account reads empty (honest
- * 空态), NOT the canonical user-zyongzhu seed. A primary `knowledge.list` read
- * failure surfaces as an error state (no fabricated fixture VM). The no-session
- * branch keeps the fixture seam (`<KnowledgePage />` builds via the singleton)
- * for SSR/tests; the (creator) layout guard already redirects unauthenticated
- * real requests.
+ * 北极星 SPEC §1:知识属「资产」,并入库页「知识」tab。原页面的 feature 组件文件全部保留(删壳不删肉),
+ * 由新宿主 tab 内嵌复用;此处只改 app 路由层。带参深链(如 ?sort=)不随迁,
+ * 落到目标 tab 即可(SPEC §3 T-063a)。书签/深链永久可用(SPEC §4-3)。
  */
-import { KnowledgePage } from "@/features/knowledge/knowledge-page";
-import type { KnowledgeDataClient } from "@/features/knowledge/knowledge-data";
-import { buildKnowledgeDashboardViewModel } from "@/features/knowledge/knowledge-data";
-import { resolveSession } from "@/lib/session.server";
-import { createServerClient } from "@/lib/contract-client.server";
+import { permanentRedirect } from "next/navigation";
 
-interface KnowledgeRoutePageProps {
-  readonly searchParams?: Promise<
-    Record<string, string | string[] | undefined>
-  >;
-}
-
-// 取 searchParams 单值(重复参数取第一个),空白视为未提供。
-function firstParam(value: string | string[] | undefined): string | null {
-  const raw = Array.isArray(value) ? value[0] : value;
-  const trimmed = (raw ?? "").trim();
-  return trimmed.length === 0 ? null : trimmed;
-}
-
-export default async function KnowledgeRoutePage({
-  searchParams,
-}: KnowledgeRoutePageProps = {}) {
-  // KNOW-13:热门标签 chip 链到 /knowledge?tag=<name>;读侧真消费该参数,
-  // recent 列表只保留挂该标签的条目(过滤逻辑见 knowledge-data.ts)。
-  const tag = firstParam(((await searchParams) ?? {}).tag);
-  const session = await resolveSession();
-  if (!session) {
-    // No session (the (creator) layout guard redirects on a real request). Keep
-    // the fixture seam: the page builds via the singleton client for SSR/tests.
-    return <KnowledgePage />;
-  }
-
-  // Bind the read to the request's session ctx so knowledge.list /
-  // knowledge.relations.list / taxonomy.tags.list stay user-scoped (ctx.userId).
-  // The helper returns scenario "error" on a primary read failure and an honest
-  // empty VM when the account simply has no knowledge yet.
-  const client = createServerClient(
-    session.ctx,
-  ) as unknown as KnowledgeDataClient;
-  const viewModel = await buildKnowledgeDashboardViewModel(client, { tag });
-  return <KnowledgePage viewModel={viewModel} />;
+export default function Page(): never {
+  permanentRedirect("/library?tab=knowledge");
 }

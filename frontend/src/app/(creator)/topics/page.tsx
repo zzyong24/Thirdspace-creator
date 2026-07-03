@@ -1,40 +1,12 @@
 /**
- * 选题候选池 route entrypoint (七步③ · SPEC §5.5).
+ * [T-063a] IA 收敛:旧一级路由 `/topics` 永久重定向(301/308)→ `/projects?tab=candidates`。
  *
- * The (creator) layout supplies the shared AppShell (Sidebar + TopHeader) and the
- * global Header is configured for `/topics` in `shell-router.tsx`. The page itself is
- * a Server Component that renders the 选题中心 feature shell (选题中心大改 · Slice 2 三栏),
- * which reads candidates.list (sorted) + topics.overview (出题依据 + 7 来源 + 6 态漏斗, real
- * SQL via the composite transport). The `?sort=` URL state selects the candidate sort.
- *
- * Session-scoped read (lane center-pages): the route resolves the request's
- * session and constructs `createServerClient(session.ctx)` so candidates / audience
- * signals are scoped to the logged-in user — a brand-new empty account reads empty,
- * not the user-zyongzhu seed. With no session the fixture-composed fallback (the
- * feature's singleton seam) renders so SSR/tests never crash.
+ * 北极星 SPEC §1:选题是作品的胚胎,并入作品页「候选」tab。原页面的 feature 组件文件全部保留(删壳不删肉),
+ * 由新宿主 tab 内嵌复用;此处只改 app 路由层。带参深链(如 ?sort=)不随迁,
+ * 落到目标 tab 即可(SPEC §3 T-063a)。书签/深链永久可用(SPEC §4-3)。
  */
-import { TopicsPage } from "@/features/topics/topics-page";
-import type { CandidateSortKey } from "@/features/topics/topics-interactive-region";
-import { createServerClient } from "@/lib/contract-client.server";
-import { resolveSession } from "@/lib/session.server";
+import { permanentRedirect } from "next/navigation";
 
-interface TopicsRoutePageProps {
-  readonly searchParams?: Promise<Record<string, string | string[] | undefined>>;
-}
-
-export default async function TopicsRoutePage({
-  searchParams,
-}: TopicsRoutePageProps) {
-  const params = (await searchParams) ?? {};
-  const rawSort = params.sort;
-  const sort = Array.isArray(rawSort) ? rawSort[0] : rawSort;
-  const sortKey = sort as CandidateSortKey | undefined;
-
-  const session = await resolveSession();
-  if (!session) {
-    return <TopicsPage sort={sortKey} />;
-  }
-  return (
-    <TopicsPage sort={sortKey} client={createServerClient(session.ctx)} />
-  );
+export default function Page(): never {
+  permanentRedirect("/projects?tab=candidates");
 }

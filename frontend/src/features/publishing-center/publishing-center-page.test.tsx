@@ -108,8 +108,10 @@ describe("PublishingCenterPage", () => {
     await renderPublishingCenter();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const active = within(nav).getByRole("link", { current: "page" });
-    expect(active).toHaveAttribute("href", "/publishing");
-    expect(active.textContent?.trim()).toBe("发布中心");
+    // [T-063a] IA 收敛:/publishing 已无一级导航项(301 → /projects?tab=published);
+    // 旧 pathname 一瞬渲染时激活项回退「今日台」。
+    expect(active).toHaveAttribute("href", "/");
+    expect(active.textContent?.trim()).toBe("今日台");
   });
 
   it("uses the assistant contextual-card variant (NOT storage)", async () => {

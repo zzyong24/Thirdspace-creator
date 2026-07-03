@@ -1,41 +1,12 @@
 /**
- * Publishing Center route entrypoint.
+ * [T-063a] IA 收敛:旧一级路由 `/publishing` 永久重定向(301/308)→ `/projects?tab=published`。
  *
- * The (creator) layout supplies the shared AppShell (Sidebar + TopHeader) and the
- * global Header is configured for `/publishing` with title "发布中心", description
- * "已发布内容、表现与排期" and the approved `assistant` contextual-card variant in
- * `shell-router.tsx` (D-003, page-specs §13). The page is a Server Component.
- *
- * READ side made real ("发布中心读侧做真"): the publication table is assembled from
- * the user's REAL publications by walking `projects.list` → `projects.outputs.list`
- * → `outputs.publications.list` (see `publishing-center-data.ts`). A 一稿多平台
- * fan-out — one output published to N platforms — surfaces N rows here. The
- * analytics rail (PublishingMetrics / PlatformComparisonChart / TrendChart /
- * TopContentList) has no real read path this wave and stays fixture-sourced.
- *
- * The assembly is bound to the request session's `ctx` so reads stay user-scoped.
- * When there are no real publications yet (the canonical seed is empty), the helper
- * falls back to the fixture baseline so the page does not regress to an empty table.
+ * 北极星 SPEC §1:发布中心的表现列表就是「已发布的作品列表」,并入作品页「已发布」tab。原页面的 feature 组件文件全部保留(删壳不删肉),
+ * 由新宿主 tab 内嵌复用;此处只改 app 路由层。带参深链(如 ?sort=)不随迁,
+ * 落到目标 tab 即可(SPEC §3 T-063a)。书签/深链永久可用(SPEC §4-3)。
  */
-import { PublishingCenterPage } from "@/features/publishing-center/publishing-center-page";
-import type { PublishingCenterDataClient } from "@/features/publishing-center/publishing-center-data";
-import { buildPublishingCenterViewModelReal } from "@/features/publishing-center/publishing-center-data";
-import { resolveSession } from "@/lib/session.server";
-import { createServerClient } from "@/lib/contract-client.server";
+import { permanentRedirect } from "next/navigation";
 
-export default async function PublishingCenterRoutePage() {
-  const session = await resolveSession();
-  if (!session) {
-    // No session (the (creator) layout guard redirects on a real request).
-    return <PublishingCenterPage />;
-  }
-
-  // Bind the read assembly to the request's session ctx so the projects /
-  // outputs / publications reads stay user-scoped. Any read failure degrades
-  // inside the helper to the fixture baseline (the page never throws).
-  const client = createServerClient(
-    session.ctx,
-  ) as unknown as PublishingCenterDataClient;
-  const viewModel = await buildPublishingCenterViewModelReal(client);
-  return <PublishingCenterPage viewModel={viewModel} />;
+export default function Page(): never {
+  permanentRedirect("/projects?tab=published");
 }

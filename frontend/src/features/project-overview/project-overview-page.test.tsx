@@ -263,7 +263,8 @@ describe("ProjectOverviewPage", () => {
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const active = within(nav).getByRole("link", { current: "page" });
     expect(active).toHaveAttribute("href", "/projects");
-    expect(active.textContent?.trim()).toBe("项目");
+    // [T-063a] IA 收敛:导航项「项目」→「作品」。
+    expect(active.textContent?.trim()).toBe("作品");
   });
 
   it("exposes a left-wide / right-narrow two-column grid for main + side content", async () => {

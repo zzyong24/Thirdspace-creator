@@ -143,19 +143,23 @@ describe("SettingsPage", () => {
   // The settings content now lives in a centered Dialog (Radix Portal → body),
   // so dialog-internal queries go through `document` rather than the render
   // container. The dialog opens by default.
-  it("renders the settings dialog with 5 vertical tabs in the approved order", async () => {
+  it("[T-063a] renders the settings dialog with 8 vertical tabs in the approved order", async () => {
     await renderSettings();
     const tabs = document.querySelector('[data-slot="settings-tabs"]');
     expect(tabs).not.toBeNull();
     const triggers = Array.from(
       tabs!.querySelectorAll('[role="tab"]'),
     ).map((node) => node.textContent?.trim() ?? "");
+    // 原 5 页签保持不回退;[T-063a] IA 收敛追加 定位/校准/任务(原一级页降级为页签)。
     expect(triggers).toEqual([
       "账户",
       "偏好",
       "外观",
       "模型配置",
       "存储",
+      "定位",
+      "校准",
+      "任务",
     ]);
   });
 

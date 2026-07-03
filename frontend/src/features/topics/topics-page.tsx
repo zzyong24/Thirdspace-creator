@@ -73,6 +73,12 @@ export interface TopicsPageProps {
    * `createServerClient(session.ctx)`; defaults to the singleton seam.
    */
   readonly client?: TopicsReadClient;
+  /**
+   * [T-063a] 内嵌模式:被 /projects「候选」tab 内嵌时隐藏自己的页头(「选题中心」h1),
+   * 避免与作品页 shell 标题双头。核心区(TopicGenerateBand + TopicsWorkspace +
+   * FunnelStrip)原样保留 —— 删壳不删肉。
+   */
+  readonly embedded?: boolean;
 }
 
 const SORT_KEYS: readonly CandidateSortKey[] = [
@@ -91,10 +97,11 @@ export async function TopicsPage({
   viewModel,
   sort,
   client = defaultClient,
+  embedded = false,
 }: TopicsPageProps) {
   const activeSort = normalizeSort(sort);
   const vm = viewModel ?? (await loadViewModel(activeSort, client));
-  return <TopicsView viewModel={vm} />;
+  return <TopicsView viewModel={vm} embedded={embedded} />;
 }
 
 async function loadViewModel(
@@ -119,8 +126,11 @@ async function loadViewModel(
 // Pure render — split out so tests can drive it synchronously with a fixed VM.
 export function TopicsView({
   viewModel,
+  embedded = false,
 }: {
   readonly viewModel: TopicsViewModel;
+  /** [T-063a] true = 被作品页「候选」tab 内嵌,隐藏自己的页头(避免双头)。 */
+  readonly embedded?: boolean;
 }) {
   const { candidates, overview, sort, pendingReview } = viewModel;
 
@@ -132,12 +142,14 @@ export function TopicsView({
       data-testid="topics"
       className="flex h-full min-h-0 flex-col gap-4"
     >
-      <header className="flex shrink-0 flex-col gap-1">
-        <h1 className="text-xl font-semibold text-foreground">选题中心</h1>
-        <p className="text-sm text-muted-foreground">
-          从真实信号出题、补全选题卡、择优立项——一条选题从灵感到立项的全流程。
-        </p>
-      </header>
+      {embedded ? null : (
+        <header className="flex shrink-0 flex-col gap-1">
+          <h1 className="text-xl font-semibold text-foreground">选题中心</h1>
+          <p className="text-sm text-muted-foreground">
+            从真实信号出题、补全选题卡、择优立项——一条选题从灵感到立项的全流程。
+          </p>
+        </header>
+      )}
 
       {/* 1. AI 选题会 带 (钉住·固定高度,候选/步骤进弹窗) */}
       <div className="shrink-0">

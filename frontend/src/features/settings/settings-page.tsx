@@ -109,6 +109,19 @@ export interface SettingsPageProps {
    * When supplied, 偏好卡初值 = 用户真值。Omitted in unit tests.
    */
   readonly preferences?: PreferencesState;
+  /**
+   * [T-063a] 初始页签(route 从 ?tab= 解析;/positioning /calibration /automations
+   * /accounts 301 落到对应页签)。非法/缺省落「账户」。
+   */
+  readonly initialTab?: string;
+  /**
+   * [T-063a] 三个降级页签 + 账户页签的内嵌核心区(route server 装配后传入;
+   * 删壳不删肉——原 feature 组件原样复用)。
+   */
+  readonly positioningPanel?: React.ReactNode;
+  readonly calibrationPanel?: React.ReactNode;
+  readonly automationsPanel?: React.ReactNode;
+  readonly accountsPanel?: React.ReactNode;
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */
@@ -308,6 +321,11 @@ export function SettingsPage({
   multimodalModels,
   douyinAccount,
   preferences,
+  initialTab,
+  positioningPanel,
+  calibrationPanel,
+  automationsPanel,
+  accountsPanel,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
@@ -333,7 +351,14 @@ export function SettingsPage({
       data-settings-id="settings-root"
       className="flex flex-col gap-section-gap"
     >
-      <SettingsDialog viewModel={vm} />
+      <SettingsDialog
+        viewModel={vm}
+        initialTab={initialTab}
+        positioningPanel={positioningPanel}
+        calibrationPanel={calibrationPanel}
+        automationsPanel={automationsPanel}
+        accountsPanel={accountsPanel}
+      />
     </main>
   );
 }

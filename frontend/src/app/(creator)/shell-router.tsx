@@ -148,11 +148,23 @@ export function resolveRoute(
   if (pathname === "/") {
     return {
       headerMode: "global",
-      pageTitle: "首页",
-      pageDescription: "个人创作工作台总览",
+      // [T-063a] 首页 → 今日台(北极星 IA:回答「今天干什么」;行动队列在 T-063b 落地)。
+      pageTitle: "今日台",
+      pageDescription: "今天干什么——行动队列与真值趋势",
       contextualCardVariant: "assistant",
     };
   }
+  // [T-063a] 库:素材 + 知识 + 经验 三 tab 的统一资产面(回答「攒下了什么」)。
+  if (pathname === "/library") {
+    return {
+      headerMode: "global",
+      pageTitle: "库",
+      pageDescription: "素材、知识与经验——你攒下的一切",
+      contextualCardVariant: "assistant",
+    };
+  }
+  // [T-063a] 以下旧一级路由已在 app 路由层 301(→ /projects·/library·/settings 对应
+  // tab);resolveRoute 条目保留,作为跳转前一瞬间渲染的标题兜底(书签/深链不断)。
   if (pathname === "/positioning") {
     return {
       headerMode: "global",
@@ -180,8 +192,9 @@ export function resolveRoute(
   if (pathname === "/projects") {
     return {
       headerMode: "global",
-      pageTitle: "项目",
-      pageDescription: "所有项目及其当前阶段",
+      // [T-063a] 项目 → 作品:候选/进行中/已发布/排期 全生命周期 tab(北极星 IA §1)。
+      pageTitle: "作品",
+      pageDescription: "候选 → 进行中 → 已发布 → 排期,一条作品的全生命周期",
       contextualCardVariant: "assistant",
     };
   }

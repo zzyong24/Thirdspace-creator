@@ -64,6 +64,9 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Crosshair,
+  Target,
+  CalendarClock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -198,16 +201,41 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
   { id: "appearance", label: "外观", icon: Palette },
   { id: "models", label: "模型配置", icon: Cpu },
   { id: "storage", label: "存储", icon: HardDrive },
+  // [T-063a] IA 收敛(北极星 SPEC §1):定位/校准/任务从一级导航降级为设置页签
+  // (纯配置形态)。原页面核心区由 route 层 server 装配后经 *Panel props 内嵌
+  // (删壳不删肉);深度融合在 T-063e。
+  { id: "positioning", label: "定位", icon: Crosshair },
+  { id: "calibration", label: "校准", icon: Target },
+  { id: "automations", label: "任务", icon: CalendarClock },
 ];
 
 export function SettingsDialog({
   viewModel,
+  initialTab,
+  positioningPanel,
+  calibrationPanel,
+  automationsPanel,
+  accountsPanel,
 }: {
   viewModel: SettingsViewModel;
+  /** [T-063a] 初始页签(route 从 ?tab= 解析;非法/缺省落第一个页签「账户」)。 */
+  initialTab?: string;
+  /** [T-063a] 内嵌的原 /positioning 核心区(route server 装配;undefined 渲提示)。 */
+  positioningPanel?: React.ReactNode;
+  /** [T-063a] 内嵌的原 /calibration 核心区。 */
+  calibrationPanel?: React.ReactNode;
+  /** [T-063a] 内嵌的原 /automations 核心区。 */
+  automationsPanel?: React.ReactNode;
+  /** [T-063a] 内嵌的原 /accounts 核心区(矩阵号管理,挂在「账户」页签)。 */
+  accountsPanel?: React.ReactNode;
 }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(true);
-  const [tab, setTab] = React.useState<string>(SETTINGS_DIALOG_TABS[0]!.id);
+  const [tab, setTab] = React.useState<string>(
+    SETTINGS_DIALOG_TABS.some((t) => t.id === initialTab)
+      ? (initialTab as string)
+      : SETTINGS_DIALOG_TABS[0]!.id,
+  );
 
   // 关闭弹窗:回上一页(回到打开设置之前的位置),没有历史时兜底回首页。
   const handleOpenChange = React.useCallback(
@@ -280,6 +308,9 @@ export function SettingsDialog({
               <div data-slot="main-settings" className="flex flex-col gap-card-gap">
                 <AccountInformationCard viewModel={viewModel} />
                 <AccountBindingCard douyinAccount={viewModel.douyinAccount} />
+                {/* [T-063a] 原 /accounts 页(矩阵号 CreateAccountForm + AccountList)
+                    吸收进账户页签,与绑定卡并列(route server 装配后传入)。 */}
+                {accountsPanel ?? null}
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="preferences" active={tab}>
@@ -308,10 +339,33 @@ export function SettingsDialog({
             <SettingsPanel tabId="storage" active={tab}>
               <StorageUsageCard storage={viewModel.storage} />
             </SettingsPanel>
+            {/* [T-063a] 三个降级页签:内嵌原页核心区(route server 装配传入)。
+                无 panel(单测直渲 SettingsDialog)时渲诚实提示,不编内容。 */}
+            <SettingsPanel tabId="positioning" active={tab}>
+              {positioningPanel ?? <EmbeddedPanelFallback label="定位" />}
+            </SettingsPanel>
+            <SettingsPanel tabId="calibration" active={tab}>
+              {calibrationPanel ?? <EmbeddedPanelFallback label="校准" />}
+            </SettingsPanel>
+            <SettingsPanel tabId="automations" active={tab}>
+              {automationsPanel ?? <EmbeddedPanelFallback label="任务" />}
+            </SettingsPanel>
           </div>
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// [T-063a] 内嵌页签缺 server 装配内容时的诚实兜底(仅出现在测试直渲/异常路径)。
+function EmbeddedPanelFallback({ label }: { label: string }) {
+  return (
+    <p
+      data-slot="settings-embedded-fallback"
+      className="text-sm text-muted-foreground"
+    >
+      {label}内容加载失败——请从设置页重新打开。
+    </p>
   );
 }
 

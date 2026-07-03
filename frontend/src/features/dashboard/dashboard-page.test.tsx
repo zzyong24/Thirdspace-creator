@@ -242,6 +242,7 @@ describe("DashboardPage", () => {
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const active = within(nav).getByRole("link", { current: "page" });
     expect(active).toHaveAttribute("href", "/");
-    expect(active.textContent?.trim()).toBe("首页");
+    // [T-063a] IA 收敛:首页 →「今日台」。
+    expect(active.textContent?.trim()).toBe("今日台");
   });
 });

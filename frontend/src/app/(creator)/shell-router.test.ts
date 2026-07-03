@@ -13,8 +13,38 @@ describe("isContentFillRoute", () => {
     expect(isContentFillRoute("/")).toBe(false);
     expect(isContentFillRoute("/projects")).toBe(false);
     expect(isContentFillRoute("/settings")).toBe(false);
+    // [T-063a] /library 与原 /knowledge 一样整页滚动(tab 内嵌区自管内部滚动)。
+    expect(isContentFillRoute("/library")).toBe(false);
     // 仅精确匹配,不波及子路由 (项目工作台另有自己的布局)。
     expect(isContentFillRoute("/topics/anything")).toBe(false);
+  });
+});
+
+// [T-063a] IA 收敛:4 面标题/描述 + /library 新条目;旧路由条目保留(301 前兜底)。
+describe("resolveRoute — 4 面 IA(T-063a)", () => {
+  it("/ → 今日台", () => {
+    const res = resolveRoute("/");
+    expect(res.pageTitle).toBe("今日台");
+  });
+
+  it("/projects → 作品(全生命周期语义)", () => {
+    const res = resolveRoute("/projects");
+    expect(res.pageTitle).toBe("作品");
+    expect(res.pageDescription).toContain("全生命周期");
+  });
+
+  it("/library → 库(素材/知识/经验)", () => {
+    const res = resolveRoute("/library");
+    expect(res.pageTitle).toBe("库");
+    expect(res.pageDescription).toContain("素材");
+    expect(res.contextualCardVariant).toBe("assistant");
+  });
+
+  it("旧路由 resolveRoute 条目保留(301 落地前的瞬间渲染兜底)", () => {
+    expect(resolveRoute("/topics").pageTitle).toBe("选题候选池");
+    expect(resolveRoute("/publishing").pageTitle).toBe("发布中心");
+    expect(resolveRoute("/knowledge").pageTitle).toBe("知识库");
+    expect(resolveRoute("/positioning").pageTitle).toBe("定位中心");
   });
 });
 

@@ -1,9 +1,28 @@
 import type { NextConfig } from "next";
 import { resolve } from "node:path";
 
+// [T-063a] IA 收敛:旧一级路由 → 新宿主 tab 的永久重定向(HTTP 308,浏览器/爬虫
+// 拿到真 3xx;app 层各 page 的 permanentRedirect 保留作 client 导航兜底)。
+// SPEC §4-3:301 永久保留,书签/深链不断。带参深链(?sort= 等)不随迁,落 tab 即可。
+const LEGACY_ROUTE_REDIRECTS = [
+  { source: "/topics", destination: "/projects?tab=candidates" },
+  { source: "/publishing", destination: "/projects?tab=published" },
+  { source: "/calendar", destination: "/projects?tab=schedule" },
+  { source: "/assets", destination: "/library?tab=assets" },
+  { source: "/knowledge", destination: "/library?tab=knowledge" },
+  { source: "/experience", destination: "/library?tab=experience" },
+  { source: "/positioning", destination: "/settings?tab=positioning" },
+  { source: "/calibration", destination: "/settings?tab=calibration" },
+  { source: "/automations", destination: "/settings?tab=automations" },
+  { source: "/accounts", destination: "/settings?tab=account" },
+] as const;
+
 const nextConfig: NextConfig = {
   turbopack: {
     root: resolve(import.meta.dirname, ".."),
+  },
+  async redirects() {
+    return LEGACY_ROUTE_REDIRECTS.map((r) => ({ ...r, permanent: true }));
   },
   // pglite ships WASM; keep it external so the server bundler requires it at
   // runtime instead of trying to bundle the WASM asset.
