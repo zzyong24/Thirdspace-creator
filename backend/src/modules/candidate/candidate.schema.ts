@@ -158,6 +158,8 @@ export function toAudienceSignalDto(
     publicationId: row.publicationId ?? null,
     // 评论点赞数 (T-042 热榜排序依据) — null 存量/非评论信号。
     likeCount: row.likeCount ?? null,
+    // 评论粒度幂等锚 (T-065 采集层建, T-092 回流层读) — null 存量/非评论信号。
+    externalId: row.externalId ?? null,
     createdAt: row.createdAt,
   };
 }

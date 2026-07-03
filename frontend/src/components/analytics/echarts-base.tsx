@@ -43,15 +43,25 @@ const ReactEChartsCore = dynamic(
       charts.LineChart,
       charts.FunnelChart,
       charts.BarChart,
+      // [T-091] 知识图谱 force 布局 + 图例过滤(series-graph)。
+      charts.GraphChart,
       components.TooltipComponent,
       components.GridComponent,
+      components.LegendComponent,
       renderers.CanvasRenderer,
     ]);
     // Bind the assembled core into the wrapper via a closure component so the
     // caller never has to pass `echarts` itself.
     const Bound = React.forwardRef<
       unknown,
-      { option: EChartsOption; style?: React.CSSProperties; className?: string; notMerge?: boolean }
+      {
+        option: EChartsOption;
+        style?: React.CSSProperties;
+        className?: string;
+        notMerge?: boolean;
+        // [T-091] 事件透传(图谱节点/边点击);echarts-for-react 原生支持。
+        onEvents?: Record<string, (params: unknown) => void>;
+      }
     >(function BoundECharts(props, ref) {
       return (
         <ReactEChartsCoreImpl
@@ -62,6 +72,7 @@ const ReactEChartsCore = dynamic(
           option={props.option}
           style={props.style}
           className={props.className}
+          onEvents={props.onEvents}
         />
       );
     });
@@ -189,9 +200,11 @@ export interface EChartProps {
   readonly style?: React.CSSProperties;
   /** Test / styling hook; forwarded to the wrapping element. */
   readonly testId?: string;
+  /** [T-091] echarts 事件映射(如 { click: handler });图谱节点/边交互用。 */
+  readonly onEvents?: Record<string, (params: unknown) => void>;
 }
 
-export function EChart({ option, className, style, testId }: EChartProps) {
+export function EChart({ option, className, style, testId, onEvents }: EChartProps) {
   return (
     <div
       data-slot="echart"
@@ -199,7 +212,11 @@ export function EChart({ option, className, style, testId }: EChartProps) {
       className={className}
       style={style}
     >
-      <ReactEChartsCore option={option} style={{ height: "100%", width: "100%" }} />
+      <ReactEChartsCore
+        option={option}
+        style={{ height: "100%", width: "100%" }}
+        onEvents={onEvents}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import type { LanguageModel } from "ai";
+import type { EmbeddingModel, LanguageModel } from "ai";
 
 // Provider 工厂(Phase 3)—— 把「一次运行解析出来的模型配置」变成一个 AI SDK LanguageModel。
 // 这是「模型中立层」的落点:换厂商 = 换 apiFormat/baseUrl/token,不动 AgentRuntime,也不绑
@@ -59,4 +59,31 @@ export function modelFor(spec: ModelSpec): LanguageModel {
   }
   const provider = createOpenAI({ apiKey: spec.token });
   return provider(spec.model);
+}
+
+/**
+ * [T-093] 把 ModelSpec 解析成一个 AI SDK EmbeddingModel(与文本 `modelFor` 并列,
+ * 供 `embed`/`embedMany` 直用)。协议族开关同 modelFor:
+ *   - openai_chat + baseUrl → openai-compatible 的 textEmbeddingModel(SiliconFlow/
+ *     DeepSeek/任意 OpenAI 兼容 embedding 端点);
+ *   - openai_chat 无 baseUrl → 官方 OpenAI textEmbeddingModel;
+ *   - anthropic → 诚实抛错(Anthropic Messages 协议不提供 embedding 端点;调用方
+ *     应引导用户为该 capability 配 OpenAI 兼容 embedding 模型,不静默降级成聊天模型)。
+ */
+export function embeddingModelFor(spec: ModelSpec): EmbeddingModel {
+  if (spec.apiFormat === "anthropic") {
+    throw new Error(
+      "anthropic 协议不提供 embedding 端点:请为该 capability 配置 openai_chat 协议的 embedding 模型(如 SiliconFlow BAAI/bge-m3)",
+    );
+  }
+  if (spec.baseUrl) {
+    const provider = createOpenAICompatible({
+      name: "creatoros-custom-embedding",
+      apiKey: spec.token,
+      baseURL: spec.baseUrl,
+    });
+    return provider.textEmbeddingModel(spec.model);
+  }
+  const provider = createOpenAI({ apiKey: spec.token });
+  return provider.textEmbeddingModel(spec.model);
 }

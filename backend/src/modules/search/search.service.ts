@@ -67,10 +67,66 @@ export interface ServiceDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
 }
 
+// [T-093] hybrid 检索结果:真实索引文档 + 命中来源标注(exact=ILIKE 精确子串,
+// semantic=embedding 余弦)。score 仅语义命中携带(0~1 余弦相似度)。
+export interface HybridSearchHit {
+  document: SearchDocumentResource;
+  matchType: "exact" | "semantic";
+  score: number | null;
+}
+
+export interface HybridSearchOpts {
+  entityType?: string;
+  limit?: number;
+  /**
+   * 查询向量(调用方经可配 embedding capability 算好注入;null/缺省 = 未配置模型,
+   * 纯关键词路径——诚实降级,不静默装 AI)。
+   */
+  queryEmbedding?: number[] | null;
+}
+
+// [T-093] 语义命中阈值:余弦低于它的候选直接截断(不足额不硬凑,SPEC §3.1)。
+export const SEMANTIC_MIN_SCORE = 0.35;
+
+/** 余弦相似度(维度不符/零向量 → null,视为不可比,不凑分)。 */
+export function cosineSimilarity(
+  a: ReadonlyArray<number>,
+  b: ReadonlyArray<number>,
+): number | null {
+  if (a.length === 0 || a.length !== b.length) return null;
+  let dot = 0;
+  let na = 0;
+  let nb = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i]! * b[i]!;
+    na += a[i]! * a[i]!;
+    nb += b[i]! * b[i]!;
+  }
+  if (na === 0 || nb === 0) return null;
+  return dot / (Math.sqrt(na) * Math.sqrt(nb));
+}
+
 export interface SearchService {
   upsertDocument(ctx: RequestContext, input: UpsertInput): Promise<SearchDocumentResource>;
   removeDocument(ctx: RequestContext, entityType: string, entityId: string): Promise<void>;
   search(ctx: RequestContext, query: string, opts?: SearchOpts): Promise<SearchDocumentResource[]>;
+  /**
+   * [T-093] hybrid 检索(SPEC §3.1 方案 B 为核 + A 兜底):ILIKE 精确命中排最前,
+   * 其余按 queryEmbedding 与文档 embedding 的余弦分数补位(阈值截断,不足额不硬凑);
+   * queryEmbedding 缺省/null = 纯关键词(诚实降级)。只读,不产实体。
+   */
+  hybridSearch(
+    ctx: RequestContext,
+    query: string,
+    opts?: HybridSearchOpts,
+  ): Promise<HybridSearchHit[]>;
+  /**
+   * [T-093] 某 entityType 的全部索引文档(embedding 回填挑无向量行用)。
+   */
+  listDocumentsByEntityType(
+    ctx: RequestContext,
+    entityType: string,
+  ): Promise<SearchDocumentResource[]>;
   /**
    * Aggregate the documents matching `query` into per-dimension facet buckets
    * (entityType / tag) with hit counts. DERIVED read over the same user-scoped
@@ -158,6 +214,55 @@ export function createSearchService(
 
     async search(ctx, query, opts) {
       const rows = await repoForCtx(ctx).search(query, opts);
+      return rows.map(toResource);
+    },
+
+    async hybridSearch(ctx, query, opts) {
+      const trimmed = query.trim();
+      if (trimmed === "") return [];
+      const repo = repoForCtx(ctx);
+      const limit = opts?.limit ?? 20;
+      const entityType = opts?.entityType;
+
+      // 精确层(方案 A 兜底 + 融合时排最前):既有 ILIKE 路径原样复用。
+      const exactRows = await repo.search(trimmed, { entityType, limit });
+      const hits: HybridSearchHit[] = exactRows.map((row) => ({
+        document: toResource(row),
+        matchType: "exact" as const,
+        score: null,
+      }));
+
+      // 语义层(方案 B 核心):调用方注入 queryEmbedding(可配 capability 算出);
+      // 未注入 = 未配置模型 → 纯关键词返回(诚实降级,调用方渲提示条)。
+      const queryEmbedding = opts?.queryEmbedding ?? null;
+      if (queryEmbedding && queryEmbedding.length > 0 && entityType) {
+        const seen = new Set(exactRows.map((r) => r.id));
+        const all = await repo.listByEntityType(entityType);
+        const scored: Array<{ row: SearchDocumentRow; score: number }> = [];
+        for (const row of all) {
+          if (seen.has(row.id)) continue;
+          const emb = row.embedding as number[] | null;
+          if (!Array.isArray(emb) || emb.length === 0) continue;
+          const score = cosineSimilarity(queryEmbedding, emb);
+          // 阈值截断:低分不进结果(不足额不硬凑)。
+          if (score === null || score < SEMANTIC_MIN_SCORE) continue;
+          scored.push({ row, score });
+        }
+        scored.sort((a, b) => b.score - a.score);
+        for (const { row, score } of scored) {
+          if (hits.length >= limit) break;
+          hits.push({
+            document: toResource(row),
+            matchType: "semantic",
+            score,
+          });
+        }
+      }
+      return hits.slice(0, limit);
+    },
+
+    async listDocumentsByEntityType(ctx, entityType) {
+      const rows = await repoForCtx(ctx).listByEntityType(entityType);
       return rows.map(toResource);
     },
 

@@ -781,6 +781,61 @@ function CommentsSection({
   comments: ReadonlyArray<CommentItem>;
 }) {
   const isEmpty = comments.length === 0;
+  // [T-092] 单条评论「入知识库」:点击展开预填确认门(title=评论原文,人改成问题式)
+  // → 采纳走 knowledge.create(type='qa' + sourceMetadata 双料锚)。一次只开一条。
+  const [backflowFor, setBackflowFor] = React.useState<string | null>(null);
+  const [backflowTitle, setBackflowTitle] = React.useState("");
+  const [backflowBusy, setBackflowBusy] = React.useState(false);
+  const [backflowMessage, setBackflowMessage] = React.useState<string | null>(
+    null,
+  );
+  const [backflowedIds, setBackflowedIds] = React.useState<Set<string>>(
+    () => new Set(),
+  );
+
+  const openBackflow = React.useCallback((comment: CommentItem) => {
+    setBackflowFor(comment.id);
+    setBackflowTitle(comment.text.slice(0, 80));
+    setBackflowMessage(null);
+  }, []);
+
+  const adoptBackflow = React.useCallback(
+    async (comment: CommentItem) => {
+      const title = backflowTitle.trim();
+      if (!title || backflowBusy) return;
+      setBackflowBusy(true);
+      setBackflowMessage(null);
+      try {
+        await client.createKnowledge({
+          params: undefined,
+          query: undefined,
+          body: {
+            title,
+            knowledgeType: "qa",
+            content: "",
+            sourceType: "import",
+            sourceNote: `抖音评论,赞 ${comment.likeCount ?? 0}`,
+            sourceMetadata: {
+              origin: "comment_backflow",
+              signalIds: [comment.id],
+              signalExternalIds: comment.externalId ? [comment.externalId] : [],
+            },
+          },
+        });
+        setBackflowedIds((prev) => new Set(prev).add(comment.id));
+        setBackflowFor(null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        // service 幂等兜底(锚已入库)→ 诚实标注,不重复入库。
+        setBackflowMessage(
+          message.includes("已回流") ? "该评论已回流过知识库。" : message,
+        );
+      } finally {
+        setBackflowBusy(false);
+      }
+    },
+    [backflowTitle, backflowBusy],
+  );
   return (
     <section
       data-slot="review-comments-section"
@@ -824,6 +879,75 @@ function CommentsSection({
               <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-foreground">
                 {comment.text}
               </p>
+              {/* [T-092] 单条「入知识库」轻动作:高价值疑问不必等批处理。 */}
+              <div className="flex items-center gap-1.5">
+                {backflowedIds.has(comment.id) ? (
+                  <span
+                    data-slot="review-comment-backflowed"
+                    className="text-[10px] text-muted-foreground"
+                  >
+                    已入知识库
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    data-slot="review-comment-to-knowledge"
+                    onClick={() => openBackflow(comment)}
+                    className="text-[10px] text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  >
+                    入知识库
+                  </button>
+                )}
+              </div>
+              {backflowFor === comment.id ? (
+                <div
+                  data-slot="review-comment-backflow-gate"
+                  className="flex flex-col gap-1.5 rounded-md border border-border bg-surface-subtle/50 p-2"
+                >
+                  <label
+                    className="text-[10px] text-muted-foreground"
+                    htmlFor={`review-comment-backflow-title-${comment.id}`}
+                  >
+                    归一成问题(采纳后进知识库为「观众问题」原子)
+                  </label>
+                  <input
+                    id={`review-comment-backflow-title-${comment.id}`}
+                    data-slot="review-comment-backflow-title"
+                    type="text"
+                    value={backflowTitle}
+                    onChange={(e) => setBackflowTitle(e.target.value)}
+                    className="h-7 rounded-md border border-border bg-surface px-2 text-[12px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  />
+                  {backflowMessage ? (
+                    <p
+                      data-slot="review-comment-backflow-message"
+                      className="text-[10px] text-destructive"
+                    >
+                      {backflowMessage}
+                    </p>
+                  ) : null}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      data-slot="review-comment-backflow-adopt"
+                      disabled={backflowBusy || backflowTitle.trim().length === 0}
+                      onClick={() => void adoptBackflow(comment)}
+                      className="inline-flex h-6 items-center rounded-md bg-brand px-2 text-[11px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+                    >
+                      {backflowBusy ? "入库中…" : "采纳入库"}
+                    </button>
+                    <button
+                      type="button"
+                      data-slot="review-comment-backflow-cancel"
+                      disabled={backflowBusy}
+                      onClick={() => setBackflowFor(null)}
+                      className="inline-flex h-6 items-center rounded-md border border-border bg-surface px-2 text-[11px] text-foreground hover:bg-surface-subtle"
+                    >
+                      取消
+                    </button>
+                  </div>
+                </div>
+              ) : null}
               {comment.demandTag || (comment.likeCount ?? 0) > 0 ? (
                 <div className="flex flex-wrap items-center gap-1.5">
                   {(comment.likeCount ?? 0) > 0 ? (

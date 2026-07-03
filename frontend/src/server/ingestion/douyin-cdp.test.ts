@@ -3,6 +3,7 @@ import {
   parseWorkList,
   parseDetail,
   toMetricRecords,
+  deriveWorkTitle,
   parseCommentList,
   ingestComments,
   fetchDouyinComments,
@@ -104,6 +105,46 @@ describe("douyin-cdp 纯函数", () => {
     // 第二条无 detail → 不含 finish_rate/follower_gain 键。
     expect(records[1].metrics.finish_rate).toBeUndefined();
     expect(records[1].metrics.views).toBe(86000);
+  });
+
+  // [T-089] title 取真:官方 title 优先;空则 desc 首行截 40 字;desc 全文另存
+  // (→ 项目 brief 存证)。整篇文案不再当标题(旧 bug:desc||title 混用)。
+  it("deriveWorkTitle 官方 title 优先,空则 desc 首行截 40(按码点)", () => {
+    expect(deriveWorkTitle("RAG 最小实现", "整篇文案\n第二行")).toBe(
+      "RAG 最小实现",
+    );
+    const longFirstLine = "一".repeat(50);
+    expect(deriveWorkTitle("", `${longFirstLine}\n第二行`)).toBe(
+      "一".repeat(40),
+    );
+    // emoji(代理对)不被劈半:39 个汉字 + 🎯 = 40 码点整。
+    expect(deriveWorkTitle("", `${"字".repeat(39)}🎯多余`)).toBe(
+      `${"字".repeat(39)}🎯`,
+    );
+    expect(deriveWorkTitle("  ", "")).toBe("");
+  });
+
+  it("toMetricRecords [T-089] title=短标题、desc=文案全文分离携带", () => {
+    const works = parseWorkList({
+      aweme_list: [
+        {
+          aweme_id: "740003",
+          // 无官方 title,desc 多行超 40 字 → title 取首行截 40,desc 带全文。
+          desc: `${"超长首行".repeat(15)}\n第二行文案`,
+          create_time: 1717000000,
+        },
+        {
+          aweme_id: "740004",
+          title: "官方短标题",
+          desc: "整篇文案全文",
+        },
+      ],
+    });
+    const records = toMetricRecords(works, new Map(), "2026-07-03T00:00:00.000Z");
+    expect(records[0].title).toBe("超长首行".repeat(10)); // 60 字首行 → 40 字
+    expect(records[0].desc).toBe(`${"超长首行".repeat(15)}\n第二行文案`);
+    expect(records[1].title).toBe("官方短标题");
+    expect(records[1].desc).toBe("整篇文案全文");
   });
 });
 

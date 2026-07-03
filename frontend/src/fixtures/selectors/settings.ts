@@ -97,6 +97,15 @@ export function buildSettingsViewModel(): SettingsViewModel {
       baseUrl: "",
       hasSecret: false as const,
     },
+    // [T-093] 知识库语义搜索 embedding。Unconfigured by default — AI 搜索诚实降级
+    // 纯关键词,直到用户在此绑 OpenAI 兼容 embedding provider/model/key。
+    embed: {
+      capability: "knowledge.search.embed" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
     },
     // 抖音账号绑定状态 (T-032a). Default unconnected — the real status is read by
     // the (creator)/settings route via `ingestion.douyin.status` and overlaid onto

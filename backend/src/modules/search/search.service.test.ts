@@ -101,6 +101,7 @@ describe("SearchService", () => {
       removeDocument: async () => {},
       search: async () => [],
       facetMatches: async () => [],
+      listByEntityType: async () => [],
       appendHistory: async () => { throw new Error("history write failed"); },
       listHistory: async () => [],
       deleteAllDocuments: async () => {},
@@ -220,5 +221,157 @@ describe("SearchService", () => {
     const facets = await svc.facets(ctxA, "ai");
     expect(facets.entityType).toEqual([{ value: "asset", count: 1 }]);
     expect(facets.tag).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// [T-093] hybrid 检索:exact 优先 + 语义余弦补位 + 诚实降级/空态
+// ---------------------------------------------------------------------------
+
+import { cosineSimilarity, SEMANTIC_MIN_SCORE } from "./search.service";
+
+describe("SearchService — T-093 hybridSearch", () => {
+  let db: Db;
+
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("cosineSimilarity: identical=1, orthogonal=0, mismatched/zero → null", () => {
+    expect(cosineSimilarity([1, 0], [1, 0])).toBeCloseTo(1);
+    expect(cosineSimilarity([1, 0], [0, 1])).toBeCloseTo(0);
+    expect(cosineSimilarity([1, 0], [1, 0, 0])).toBeNull();
+    expect(cosineSimilarity([], [])).toBeNull();
+    expect(cosineSimilarity([0, 0], [1, 0])).toBeNull();
+  });
+
+  it("exact (ILIKE) hits rank before semantic hits; semantic sorted by cosine desc", async () => {
+    const svc = realService(db);
+    // 精确命中(标题含查询词)。
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-exact",
+      title: "本地记忆趋势",
+      body: "",
+      embedding: [1, 0, 0],
+    });
+    // 语义命中(标题无查询词,但向量接近查询向量)。
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-sem-hi",
+      title: "local memory trend",
+      body: "",
+      embedding: [0.9, 0.1, 0],
+    });
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-sem-lo",
+      title: "another semantic doc",
+      body: "",
+      embedding: [0.6, 0.8, 0],
+    });
+    const hits = await svc.hybridSearch(ctxA, "本地记忆", {
+      entityType: "knowledge",
+      queryEmbedding: [1, 0, 0],
+    });
+    expect(hits.map((h) => h.document.entityId)).toEqual([
+      "k-exact",
+      "k-sem-hi",
+      "k-sem-lo",
+    ]);
+    expect(hits[0]!.matchType).toBe("exact");
+    expect(hits[1]!.matchType).toBe("semantic");
+    expect(hits[1]!.score).toBeGreaterThan(hits[2]!.score!);
+  });
+
+  it("semantic candidates below the threshold are cut (不足额不硬凑)", async () => {
+    const svc = realService(db);
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-far",
+      title: "irrelevant doc",
+      body: "",
+      // 与查询向量近正交 → 余弦 ~0 < SEMANTIC_MIN_SCORE。
+      embedding: [0, 1, 0],
+    });
+    const hits = await svc.hybridSearch(ctxA, "毫无交集的查询", {
+      entityType: "knowledge",
+      queryEmbedding: [1, 0, 0],
+    });
+    expect(hits).toEqual([]);
+    expect(SEMANTIC_MIN_SCORE).toBeGreaterThan(0);
+  });
+
+  it("no queryEmbedding (未配置模型) → keyword-only honest degradation", async () => {
+    const svc = realService(db);
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-1",
+      title: "Hook 公式",
+      body: "",
+      embedding: [1, 0],
+    });
+    const hits = await svc.hybridSearch(ctxA, "hook", {
+      entityType: "knowledge",
+    });
+    expect(hits).toHaveLength(1);
+    expect(hits[0]!.matchType).toBe("exact");
+    // 语义面完全关闭:无 embedding 查询不产生 semantic 命中。
+    const miss = await svc.hybridSearch(ctxA, "公式以外的词", {
+      entityType: "knowledge",
+    });
+    expect(miss).toEqual([]);
+  });
+
+  it("docs without embeddings are skipped by the semantic path (no fabricated hits)", async () => {
+    const svc = realService(db);
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-no-emb",
+      title: "no embedding doc",
+      body: "",
+    });
+    const hits = await svc.hybridSearch(ctxA, "别的词", {
+      entityType: "knowledge",
+      queryEmbedding: [1, 0],
+    });
+    expect(hits).toEqual([]);
+  });
+
+  it("empty/whitespace query → [] and results stay user-scoped", async () => {
+    const svc = realService(db);
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-a",
+      title: "mine",
+      body: "",
+      embedding: [1, 0],
+    });
+    expect(await svc.hybridSearch(ctxA, "   ", { entityType: "knowledge" })).toEqual([]);
+    const other = await svc.hybridSearch(ctxB, "mine", {
+      entityType: "knowledge",
+      queryEmbedding: [1, 0],
+    });
+    expect(other).toEqual([]);
+  });
+
+  it("listDocumentsByEntityType returns the user's docs of that type only", async () => {
+    const svc = realService(db);
+    await svc.upsertDocument(ctxA, {
+      entityType: "knowledge",
+      entityId: "k-a",
+      title: "a",
+      body: "",
+    });
+    await svc.upsertDocument(ctxA, {
+      entityType: "project",
+      entityId: "p-a",
+      title: "p",
+      body: "",
+    });
+    const docs = await svc.listDocumentsByEntityType(ctxA, "knowledge");
+    expect(docs).toHaveLength(1);
+    expect(docs[0]!.entityId).toBe("k-a");
+    expect(await svc.listDocumentsByEntityType(ctxB, "knowledge")).toEqual([]);
   });
 });

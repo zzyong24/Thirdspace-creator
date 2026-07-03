@@ -7,6 +7,8 @@
 
 export {
   createSearchService,
+  cosineSimilarity,
+  SEMANTIC_MIN_SCORE,
   type SearchService,
   type ServiceDeps,
   type SearchIndexOutcome,
@@ -14,6 +16,9 @@ export {
   type SearchFacetValue,
   type UpsertInput,
   type RebuildDoc,
+  // [T-093] hybrid 检索(exact 优先 + 语义余弦补位)。
+  type HybridSearchHit,
+  type HybridSearchOpts,
 } from "./search.service";
 
 export {

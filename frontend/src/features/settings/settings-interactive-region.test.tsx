@@ -110,6 +110,14 @@ const VM: SettingsViewModel = {
       baseUrl: "",
       hasSecret: false as const,
     },
+    // [T-093] 知识库语义搜索 embedding(测试 fixture 默认未配置)。
+    embed: {
+      capability: "knowledge.search.embed" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
   },
   douyinAccount: { loggedIn: false },
 };
@@ -335,6 +343,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         video: VM.multimodalModels.video,
         audio: VM.multimodalModels.audio,
         vision: VM.multimodalModels.vision,
+        embed: VM.multimodalModels.embed,
       },
     };
     const doc = renderDialog(VM_MULTIMODAL);

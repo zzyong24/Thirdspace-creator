@@ -144,6 +144,16 @@ export const SKILL_LABELS: Readonly<Record<string, SkillLabel>> = {
     name: "蒸馏知识",
     purpose: "把倒入的原文蒸馏成一批可独立引用的知识原子(观点/证据/金句/问题)候选。",
   },
+  // T-091 知识图谱 AI 建边(候选边确认门,采纳才落库)。
+  "knowledge.relate": {
+    name: "知识找关联",
+    purpose: "在知识原子间提议语义关联边(支撑/矛盾/引用/延伸)候选,人采纳才建边。",
+  },
+  // T-092 评论回流蒸馏筛(三级去噪门的 AI 层)。
+  "comment.qa-sift": {
+    name: "评论蒸馏",
+    purpose: "从采集的观众评论里只捞真实疑问并同义合并,产出「观众问题」原子候选。",
+  },
 };
 
 /** 取某 skill 的中文词条;缺词表回退用 id 本身(诚实显示,不编)。 */
@@ -189,6 +199,9 @@ export const FACET_LABELS: Readonly<Record<string, string>> = {
   reviewCommentsBlock: "复盘作品的观众评论块",
   transcript: "作品逐字稿",
   content: "待分类的原文内容",
+  // T-091/T-092 知识库二期。
+  atoms: "知识原子清单(id/类型/标题/出处,供提议关联边)",
+  comments: "预筛后的观众评论批(signalId/点赞数/原文)",
 };
 
 /** 取某占位符的中文含义;缺词表诚实回退「(暂无说明)」。 */

@@ -145,6 +145,8 @@ export default async function SettingsRoutePage() {
         video: multimodalRow("video.generate"),
         audio: multimodalRow("transcribe.audio"),
         vision: multimodalRow("asset.classify"),
+        // [T-093] 知识库语义搜索 embedding(未配 = AI 搜索诚实降级关键词)。
+        embed: multimodalRow("knowledge.search.embed"),
       };
     } catch {
       // listModels unavailable (transport race) → fall back to the fixture.

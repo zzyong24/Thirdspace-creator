@@ -25,7 +25,7 @@ beforeEach(() => {
 });
 
 describe("knowledge ops registered in the composite transport", () => {
-  it("the 9 knowledge op ids are persistence-backed (not the mock)", async () => {
+  it("the 10 knowledge op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of KNOWLEDGE_OP_IDS) {
@@ -33,10 +33,12 @@ describe("knowledge ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(KNOWLEDGE_OP_IDS).toHaveLength(9);
+    // [T-091] +1:knowledge.relations.listAll(图谱全量边读)。
+    expect(KNOWLEDGE_OP_IDS).toHaveLength(10);
     // The two GAP-RES-1 soft-delete ops are in the owned set.
     expect(KNOWLEDGE_OP_IDS).toContain("knowledge.archive");
     expect(KNOWLEDGE_OP_IDS).toContain("knowledge.relations.delete");
+    expect(KNOWLEDGE_OP_IDS).toContain("knowledge.relations.listAll");
   });
 
   it("knowledge.list returns the seeded canonical items for the owner", async () => {

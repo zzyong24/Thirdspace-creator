@@ -39,6 +39,8 @@ import { MATERIAL_MATCH_TEMPLATE } from "./templates/material-match";
 import { CHATBOX_TOPIC_TEMPLATE } from "./templates/chatbox-turn";
 import { KNOWLEDGE_CLASSIFY_TEMPLATE } from "./templates/knowledge-classify";
 import { KNOWLEDGE_DISTILL_TEMPLATE } from "./templates/knowledge-distill";
+import { KNOWLEDGE_RELATE_TEMPLATE } from "./templates/knowledge-relate";
+import { COMMENT_QA_SIFT_TEMPLATE } from "./templates/comment-qa-sift";
 import {
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
@@ -75,6 +77,10 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   KNOWLEDGE_CLASSIFY_TEMPLATE,
   // T-079b 知识蒸馏:倒入原文 → 一批四原子知识候选 {atoms,suggestedTags}(批量确认门采纳才落库)。
   KNOWLEDGE_DISTILL_TEMPLATE,
+  // T-091 图谱 AI 建边:原子清单 → 候选语义边 {candidates}(确认门采纳才 relations.create,createdByType='ai')。
+  KNOWLEDGE_RELATE_TEMPLATE,
+  // T-092 评论回流蒸馏筛:评论批 → qa 原子候选 {candidates}(只留真疑问+同义合并;确认门采纳才落库)。
+  COMMENT_QA_SIFT_TEMPLATE,
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,

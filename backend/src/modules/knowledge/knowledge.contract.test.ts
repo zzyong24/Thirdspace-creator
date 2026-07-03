@@ -190,3 +190,69 @@ describe("knowledge.transport — 7-op contract conformance", () => {
     ).rejects.toBeInstanceOf(UnsupportedOperationError);
   });
 });
+
+// ---------------------------------------------------------------------------
+// [T-091/T-092] additive ops/fields 契约一致性
+// ---------------------------------------------------------------------------
+
+describe("knowledge.transport — T-091/T-092 additive surface", () => {
+  it("knowledge.relations.listAll → KnowledgeRelationResource[] over the list envelope", async () => {
+    const a = await call("knowledge.create", { body: { title: "A" } });
+    const b = await call("knowledge.create", { body: { title: "B" } });
+    const c = await call("knowledge.create", { body: { title: "C" } });
+    const aId = (a as { data: { id: string } }).data.id;
+    const bId = (b as { data: { id: string } }).data.id;
+    const cId = (c as { data: { id: string } }).data.id;
+    await call("knowledge.relations.create", {
+      params: { knowledgeId: aId },
+      body: { targetKnowledgeId: bId, relationType: "supports" },
+    });
+    await call("knowledge.relations.create", {
+      params: { knowledgeId: bId },
+      body: { targetKnowledgeId: cId, relationType: "references", createdByType: "ai" },
+    });
+
+    const list = await call("knowledge.relations.listAll", {}, true);
+    const parsed = listEnvelope(knowledgeRelationResource).parse(list);
+    expect(parsed.data).toHaveLength(2);
+    const aiEdge = parsed.data.find((r) => r.relationType === "references");
+    expect(aiEdge?.createdByType).toBe("ai");
+    expect(parsed.meta.total).toBe(2);
+  });
+
+  it("empty relations.listAll still satisfies the list envelope (pageSize ≥ 1)", async () => {
+    const list = await call("knowledge.relations.listAll", {}, true);
+    const parsed = listEnvelope(knowledgeRelationResource).parse(list);
+    expect(parsed.data).toEqual([]);
+    expect(parsed.meta.total).toBe(0);
+  });
+
+  it("knowledge.create carries sourceType/sourceMetadata through the item resource", async () => {
+    const created = await call("knowledge.create", {
+      body: {
+        title: "怎么配置本地模型?",
+        knowledgeType: "qa",
+        sourceType: "import",
+        sourceNote: "抖音评论 ×3,最高赞 57",
+        sourceMetadata: {
+          origin: "comment_backflow",
+          signalIds: ["sig-1"],
+          signalExternalIds: ["douyin:comment:c1"],
+        },
+      },
+    });
+    const parsed = successEnvelope(knowledgeItemResource).parse(created);
+    expect(parsed.data.sourceType).toBe("import");
+    expect(parsed.data.sourceMetadata).toMatchObject({
+      origin: "comment_backflow",
+      signalExternalIds: ["douyin:comment:c1"],
+    });
+  });
+
+  it("registry knows the new op id (10 ops total for this module)", () => {
+    const ids = Object.values(ENDPOINTS)
+      .filter((e) => e.id.startsWith("knowledge."))
+      .map((e) => e.id);
+    expect(ids).toContain("knowledge.relations.listAll");
+  });
+});

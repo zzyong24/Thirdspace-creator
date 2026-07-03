@@ -44,6 +44,12 @@ export const knowledgeOperations = {
       content: z.string().default(""),
       // [T-079a] 可选出处(缺省落库为 NULL)。
       sourceNote: z.string().optional(),
+      // [T-092] 评论回流(qa 原子)additive:sourceType 允许调用方声明来源
+      // (评论经采集导入 = 'import',语义吻合既有枚举,不扩);sourceMetadata 携
+      // 溯源与幂等双料锚 { origin: 'comment_backflow', signalIds, signalExternalIds }。
+      // 均可选,缺省行为与旧契约完全一致(manual + {})——gate-F3 零删除。
+      sourceType: z.enum(["manual", "web", "import", "ai"]).optional(),
+      sourceMetadata: z.record(z.string(), z.unknown()).optional(),
     }),
     response: knowledgeItemResource,
     fr: ["FR-KNOWLEDGE-CREATE"],
@@ -91,9 +97,24 @@ export const knowledgeOperations = {
     body: z.object({
       targetKnowledgeId: id,
       relationType: z.string().min(1),
+      // [T-091] AI 建边确认门:采纳 AI 候选边时以 createdByType='ai' 落 provenance
+      // (resource 枚举早已支持)。可选,缺省 'user'(旧调用方行为不变,additive)。
+      createdByType: z.enum(["user", "ai"]).optional(),
     }),
     response: knowledgeRelationResource,
     fr: ["FR-KNOWLEDGE-RELATION-CREATE"],
+  }),
+  // [T-091] 知识图谱全量语义边读(user-scoped)。既有 relations.list 是 per-source
+  // (单源查询),画全图会 N+1;本 op 一次返回该用户全部 knowledge_relations 行。
+  // additive 新 op,路径避开 /knowledge/:knowledgeId 的参数段。
+  listAllKnowledgeRelations: defineEndpoint({
+    id: "knowledge.relations.listAll",
+    method: "GET",
+    path: "/knowledge-relations",
+    query: paginationQuery,
+    response: knowledgeRelationResource,
+    isList: true,
+    fr: ["FR-KNOWLEDGE-RELATION-LIST"],
   }),
   // Soft-delete the item (status 'active' → 'archived', stamps archivedAt).
   // Mirrors assets.trash: a status transition, returns the updated item.

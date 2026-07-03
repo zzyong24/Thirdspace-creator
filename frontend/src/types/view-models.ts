@@ -515,6 +515,9 @@ export interface ReviewCommentItem {
   // 评论点赞数 (T-042 热榜排序依据) — null 存量(0014 前采集)/无值。
   readonly likeCount: number | null;
   readonly createdAt: Iso8601;
+  // [T-092] 评论粒度幂等锚(T-065,`douyin:comment:<cid>`)——单条「入知识库」采纳时
+  // 写进 qa 原子 sourceMetadata.signalExternalIds。可选 additive:存量/无锚评论为 null。
+  readonly externalId?: string | null;
 }
 
 // ---------------------------------------------------------------------------

@@ -19,6 +19,10 @@ import {
   type AtlasTagAssignment,
   type KnowledgeAtlasVm,
 } from "./knowledge-atlas-vm";
+import {
+  buildKnowledgeGraphVm,
+  type KnowledgeGraphVm,
+} from "./knowledge-graph-vm";
 
 /**
  * Knowledge & Memory READ-side data assembly ("知识库读侧做真").
@@ -147,6 +151,24 @@ export interface KnowledgeDataClient {
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
+  // [T-091] 知识图谱三份真值:全量语义边 + 用料链引用边 + 项目标题。标 optional
+  // 是兼容缝(旧测试 fake client 不带这三个读);真实契约 client 三个都有,缺任一
+  // → graph 诚实置 null(交互岛不渲图谱 tab)。
+  listAllKnowledgeRelations?(input: {
+    params: undefined;
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  listMaterialLinks?(input: {
+    params: undefined;
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  listProjects?(input: {
+    params: undefined;
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
 }
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -217,6 +239,7 @@ export async function buildKnowledgeDashboardViewModel(
       activeTag,
       // 读失败没有地图可组;null 让交互岛不渲观点地图(错误态本来也不渲内容区)。
       atlas: null,
+      graph: null,
     };
   }
 
@@ -245,6 +268,10 @@ export async function buildKnowledgeDashboardViewModel(
   // KNOW-13 过滤同一读法),分组/排序交给纯函数 buildKnowledgeAtlas。
   const atlas = await assembleAtlas(client, tags, items);
 
+  // [T-091] 知识图谱:三份真值(全量语义边 + materialLinks 引用边 + 项目标题)
+  // server 侧一次装配成 GraphVm;任一读失败 → null(诚实降级,交互岛不渲图谱 tab)。
+  const graph = await assembleGraph(client, items);
+
   return {
     ...base,
     scenario: "default",
@@ -259,7 +286,91 @@ export async function buildKnowledgeDashboardViewModel(
     popularTags,
     activeTag,
     atlas,
+    graph,
   };
+}
+
+// [T-091] materialLinks / projects 的最小结构投影。
+interface MaterialLinkDto {
+  readonly projectId: string;
+  readonly entityType: string;
+  readonly entityId: string;
+  readonly role: string;
+  readonly stage: string;
+  readonly createdAt: string;
+}
+
+interface ProjectDto {
+  readonly id: string;
+  readonly title: string;
+}
+
+interface RelationRowDto {
+  readonly sourceKnowledgeId: string;
+  readonly targetKnowledgeId: string;
+  readonly relationType: string;
+  readonly strength: number;
+  readonly createdByType: string;
+}
+
+/**
+ * [T-091] 图谱装配:knowledge.list(节点,已读回)+ relations.listAll(语义边)
+ * + materialLinks.list(引用边)+ projects.list(战绩锚标题)→ 纯函数
+ * buildKnowledgeGraphVm。语义边/引用边任一读失败 → null(诚实降级,不画残图);
+ * projects 读失败只降级标题(以 projectId 兜底显示,不阻断)。
+ */
+async function assembleGraph(
+  client: KnowledgeDataClient,
+  items: ReadonlyArray<KnowledgeListDto>,
+): Promise<KnowledgeGraphVm | null> {
+  if (
+    !client.listAllKnowledgeRelations ||
+    !client.listMaterialLinks ||
+    !client.listProjects
+  ) {
+    return null;
+  }
+  let relations: ReadonlyArray<RelationRowDto>;
+  let links: ReadonlyArray<MaterialLinkDto>;
+  try {
+    [relations, links] = (await Promise.all([
+      client.listAllKnowledgeRelations({
+        params: undefined,
+        query: { page: 1, pageSize: 200 },
+        body: undefined,
+      }),
+      client.listMaterialLinks({
+        params: undefined,
+        query: { page: 1, pageSize: 200 },
+        body: undefined,
+      }),
+    ])) as [ReadonlyArray<RelationRowDto>, ReadonlyArray<MaterialLinkDto>];
+  } catch {
+    return null;
+  }
+  let projects: ReadonlyArray<ProjectDto> = [];
+  try {
+    projects = (await client.listProjects({
+      params: undefined,
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    })) as ReadonlyArray<ProjectDto>;
+  } catch {
+    projects = []; // 标题降级为 projectId 兜底(buildKnowledgeGraphVm 内诚实处理)。
+  }
+  return buildKnowledgeGraphVm(
+    items.map((i) => ({
+      id: i.id,
+      title: i.title,
+      knowledgeType: i.knowledgeType,
+      status: i.status,
+      usedCount: i.usedCount ?? 0,
+      usedInPublished: i.usedInPublished ?? false,
+    })),
+    Array.isArray(relations) ? relations : [],
+    Array.isArray(links) ? links : [],
+    Array.isArray(projects) ? projects : [],
+  );
 }
 
 /**

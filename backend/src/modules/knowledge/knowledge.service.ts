@@ -5,7 +5,19 @@ import type {
   KnowledgeRevisionRow,
   KnowledgeRelationRow,
 } from "./knowledge.repository";
-import { InvalidTransitionError } from "./knowledge.errors";
+import { InvalidTransitionError, ConflictError } from "./knowledge.errors";
+
+// [T-092] 从 sourceMetadata 提取评论幂等锚(signalExternalIds 字符串数组;
+// 缺失/形状不符 → [],创建按普通路径走)。
+function extractSignalExternalIds(
+  sourceMetadata: Record<string, unknown> | undefined,
+): string[] {
+  const raw = sourceMetadata?.signalExternalIds;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (v): v is string => typeof v === "string" && v.trim() !== "",
+  );
+}
 
 // Knowledge service (foundation §5.3) — RequestContext-taking methods that thread
 // `ctx.userId` into the user-scoped repository (foundation §2). It applies the
@@ -35,6 +47,8 @@ export interface KnowledgeService {
     ctx: RequestContext,
     knowledgeId: string,
   ): Promise<KnowledgeRelationRow[]>;
+  // [T-091] 图谱全量语义边(user-scoped 单查询,画全图不 N+1)。
+  listAllRelations(ctx: RequestContext): Promise<KnowledgeRelationRow[]>;
   createKnowledge(
     ctx: RequestContext,
     input: {
@@ -43,6 +57,9 @@ export interface KnowledgeService {
       content?: string;
       // [T-079a] 可选出处(SPEC §1)。
       sourceNote?: string | null;
+      // [T-092] 评论回流来源声明 + 溯源/幂等锚。
+      sourceType?: string;
+      sourceMetadata?: Record<string, unknown>;
     },
   ): Promise<KnowledgeItemWithStats>;
   createRevision(
@@ -53,7 +70,12 @@ export interface KnowledgeService {
   createRelation(
     ctx: RequestContext,
     knowledgeId: string,
-    input: { targetKnowledgeId: string; relationType: string },
+    input: {
+      targetKnowledgeId: string;
+      relationType: string;
+      // [T-091] AI 建边 provenance(确认门采纳传 'ai');缺省 'user'。
+      createdByType?: "user" | "ai";
+    },
   ): Promise<KnowledgeRelationRow>;
   archiveKnowledge(
     ctx: RequestContext,
@@ -90,7 +112,27 @@ export function createKnowledgeService(
       return repo.listRelations(ctx.userId, knowledgeId);
     },
 
+    async listAllRelations(ctx) {
+      // [T-091] 全量边读:所有权由 repo 的 source 端 join 收窄。
+      return repo.listAllRelations(ctx.userId);
+    },
+
     async createKnowledge(ctx, input) {
+      // [T-092] 回流层幂等(并发兜底):携 signalExternalIds 的 qa 创建,采纳前
+      // 再校验一次已回流锚集合——任一锚已入库即拒(同义合并组任一评论已回流 =
+      // 整组视为已回流,SPEC §2.3),ConflictError → 409,确认门标注「已入库」跳过。
+      const anchors = extractSignalExternalIds(input.sourceMetadata);
+      if (anchors.length > 0) {
+        const backflowed = await repo.listBackflowedSignalExternalIds(
+          ctx.userId,
+        );
+        const hit = anchors.find((anchor) => backflowed.has(anchor));
+        if (hit) {
+          throw new ConflictError(
+            `评论已回流过知识库(锚 ${hit}),不重复入库`,
+          );
+        }
+      }
       // Items are born active with revision #1 (repo owns the UoW + stamps).
       return repo.create(ctx.userId, input);
     },

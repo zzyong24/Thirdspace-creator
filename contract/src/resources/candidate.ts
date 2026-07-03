@@ -72,6 +72,11 @@ export const audienceSignalResource = z.object({
   // 评论点赞数 —— 热榜排序依据 (T-042, 迁移 0014). 采集时抓 digg_count 带进来;NULLABLE:
   // 存量评论(0014 前入库)无点赞值,非评论信号(dm/consultation/review)也留空。
   likeCount: z.number().int().nullable(),
+  // 评论粒度幂等锚 (T-065 采集层建, T-092 回流层读) —— 形如 `douyin:comment:<cid>`。
+  // 回流知识库时写进 qa 原子的 sourceMetadata.signalExternalIds 作双料锚(溯源+幂等)。
+  // additive:default(null) 让旧 transport/测试构造的行照常过 parse;NULLABLE:存量
+  // 评论与非评论信号无锚。
+  externalId: z.string().nullable().default(null),
   createdAt: iso8601,
 });
 export type AudienceSignalResource = z.infer<typeof audienceSignalResource>;

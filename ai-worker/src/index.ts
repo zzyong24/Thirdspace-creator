@@ -52,6 +52,8 @@ export {
 } from "./runtime/agent-runtime";
 export {
   modelFor,
+  // [T-093] 语义检索 embedding 模型工厂(与文本 modelFor 并列;anthropic 协议诚实抛错)。
+  embeddingModelFor,
   type ModelSpec,
   type ApiFormat,
 } from "./runtime/provider-factory";
@@ -222,6 +224,24 @@ export {
   type KnowledgeDistillOutput,
   type KnowledgeAtom,
 } from "./prompt/templates/knowledge-distill";
+// T-091 图谱 AI 建边:原子清单 → 候选语义边(确认门采纳才 relations.create,
+// createdByType='ai')。schema/type 导出给 frontend knowledge-relate-runner。
+export {
+  KNOWLEDGE_RELATE_TEMPLATE,
+  knowledgeRelateSchema,
+  knowledgeRelateCandidateSchema,
+  type KnowledgeRelateOutput,
+  type KnowledgeRelateCandidate,
+} from "./prompt/templates/knowledge-relate";
+// T-092 评论回流蒸馏筛:评论批 → qa 原子候选(只留真疑问+同义合并;确认门采纳才落库)。
+// schema/type 导出给 frontend comment-qa-sift-runner。
+export {
+  COMMENT_QA_SIFT_TEMPLATE,
+  commentQaSiftSchema,
+  commentQaCandidateSchema,
+  type CommentQaSiftOutput,
+  type CommentQaCandidate,
+} from "./prompt/templates/comment-qa-sift";
 export {
   runScriptNode,
   parseShots,

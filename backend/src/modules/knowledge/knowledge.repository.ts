@@ -81,6 +81,12 @@ export interface KnowledgeRepository {
     userId: string,
     knowledgeId: string,
   ): Promise<KnowledgeRelationRow[]>;
+  // [T-091] 全量语义边(user-scoped):经 source 端 knowledge_items 的 user_id 收窄
+  // (relations 子表无 user_id 列,所有权经父行 join 保证)。单查询,无 N+1。
+  listAllRelations(userId: string): Promise<KnowledgeRelationRow[]>;
+  // [T-092] 已回流评论锚集合:active 且 sourceMetadata.origin='comment_backflow'
+  // 的知识行,聚合其 signalExternalIds(幂等反查;库量级几百行,内存 diff)。
+  listBackflowedSignalExternalIds(userId: string): Promise<Set<string>>;
   create(
     userId: string,
     input: {
@@ -89,6 +95,9 @@ export interface KnowledgeRepository {
       content?: string;
       // [T-079a] 可选出处(SPEC §1),缺省落库 NULL。
       sourceNote?: string | null;
+      // [T-092] 评论回流:来源枚举(缺省 manual)+ 溯源/幂等锚 metadata(缺省 {})。
+      sourceType?: string;
+      sourceMetadata?: Record<string, unknown>;
     },
   ): Promise<KnowledgeItemWithStats>;
   createRevision(
@@ -99,7 +108,12 @@ export interface KnowledgeRepository {
   createRelation(
     userId: string,
     sourceKnowledgeId: string,
-    input: { targetKnowledgeId: string; relationType: string },
+    input: {
+      targetKnowledgeId: string;
+      relationType: string;
+      // [T-091] AI 建边 provenance;缺省 'user'。
+      createdByType?: "user" | "ai";
+    },
   ): Promise<KnowledgeRelationRow>;
   archive(userId: string, knowledgeId: string): Promise<KnowledgeItemWithStats>;
   removeRelation(
@@ -256,6 +270,45 @@ export function createKnowledgeRepository(
       return rows.map(parseRelation);
     },
 
+    async listAllRelations(userId) {
+      // [T-091] 全量边:relations 无 user_id 列 → join source 端 knowledge_items
+      // 以 user_id 收窄(createRelation 已保证两端同 owner,source 端过滤即够)。
+      const rows = await db
+        .select({ relation: knowledgeRelations })
+        .from(knowledgeRelations)
+        .innerJoin(
+          knowledgeItems,
+          eq(knowledgeItems.id, knowledgeRelations.sourceKnowledgeId),
+        )
+        .where(eq(knowledgeItems.userId, userId));
+      return rows.map((r) => parseRelation(r.relation));
+    },
+
+    async listBackflowedSignalExternalIds(userId) {
+      // [T-092] 幂等反查:active + origin='comment_backflow' 的行,聚合
+      // sourceMetadata.signalExternalIds(jsonb 内数组;行数量级几百,内存收集)。
+      const rows = await db
+        .select({ sourceMetadata: knowledgeItems.sourceMetadata })
+        .from(knowledgeItems)
+        .where(
+          and(
+            eq(knowledgeItems.userId, userId),
+            eq(knowledgeItems.status, "active"),
+            sql`${knowledgeItems.sourceMetadata} ->> 'origin' = 'comment_backflow'`,
+          ),
+        );
+      const set = new Set<string>();
+      for (const row of rows) {
+        const meta = (row.sourceMetadata ?? {}) as Record<string, unknown>;
+        const ids = meta.signalExternalIds;
+        if (!Array.isArray(ids)) continue;
+        for (const id of ids) {
+          if (typeof id === "string" && id.trim() !== "") set.add(id);
+        }
+      }
+      return set;
+    },
+
     async create(userId, input) {
       const now = deps.now();
       const itemId = deps.nextId("knowledge");
@@ -269,9 +322,11 @@ export function createKnowledgeRepository(
         currentRevisionId: revId,
         knowledgeType: input.knowledgeType ?? "note",
         title: input.title,
-        sourceType: "manual",
+        // [T-092] 评论回流可声明 sourceType='import' + 溯源/幂等锚 metadata;
+        // 缺省与旧行为一致(manual + {})。
+        sourceType: input.sourceType ?? "manual",
         sourceUrl: null,
-        sourceMetadata: {},
+        sourceMetadata: input.sourceMetadata ?? {},
         status: "active",
         archivedAt: null,
         // [T-079a] 出处一等公民:create 透传,缺省 NULL。
@@ -340,6 +395,20 @@ export function createKnowledgeRepository(
       await getRow(userId, sourceKnowledgeId);
       await getRow(userId, input.targetKnowledgeId);
 
+      // [T-091] 幂等兜底:同向同类型边已存在 → 返回既有边,不重插(AI 候选门
+      // 重复采纳同一对不产生重复行,SPEC §1.3)。
+      const existing = await db
+        .select()
+        .from(knowledgeRelations)
+        .where(
+          and(
+            eq(knowledgeRelations.sourceKnowledgeId, sourceKnowledgeId),
+            eq(knowledgeRelations.targetKnowledgeId, input.targetKnowledgeId),
+            eq(knowledgeRelations.relationType, input.relationType),
+          ),
+        );
+      if (existing[0]) return parseRelation(existing[0]);
+
       const relId = deps.nextId("relation");
       await db.insert(knowledgeRelations).values({
         id: relId,
@@ -347,7 +416,8 @@ export function createKnowledgeRepository(
         targetKnowledgeId: input.targetKnowledgeId,
         relationType: input.relationType,
         strength: "1",
-        createdByType: "user",
+        // [T-091] AI 建边 provenance(确认门采纳时 'ai');缺省 'user'。
+        createdByType: input.createdByType ?? "user",
       });
       const rows = await db
         .select()

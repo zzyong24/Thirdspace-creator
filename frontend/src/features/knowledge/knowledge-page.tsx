@@ -50,6 +50,7 @@ import type {
   MetricCard as MetricCardVm,
 } from "@/types/view-models";
 import { buildKnowledgeDashboardViewModel } from "./knowledge-data";
+import { KnowledgeCommentBackflow } from "./knowledge-comment-backflow";
 import { KnowledgeDumpZone } from "./knowledge-dump-zone";
 import { KnowledgeInteractiveRegion } from "./knowledge-interactive-region";
 
@@ -90,6 +91,12 @@ export interface KnowledgeViewModel extends BasePageViewModel {
    * 既有结构性契约测试(toolbar/grid 三列)不受影响。
    */
   readonly atlas?: import("./knowledge-atlas-vm").KnowledgeAtlasVm | null;
+  /**
+   * T-091 知识图谱 VM(节点=知识全类型+project 战绩锚,边=knowledge_relations
+   * 语义边+materialLinks 引用边,server 侧全真值装配)。可选是兼容缝:旧 fixture
+   * VM / 读失败 → null,交互岛不渲「知识图谱」tab(诚实降级)。
+   */
+  readonly graph?: import("./knowledge-graph-vm").KnowledgeGraphVm | null;
 }
 
 export interface KnowledgeCategory {
@@ -168,6 +175,10 @@ export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
       {/* T-062c 知识倾倒场:录入主入口(AI 归类确认门 + 手动补录),页面顶部常驻。
           空库也要能倒(否则空账号无录入口),仅 loading/error 不渲。 */}
       {state === "default" || state === "empty" ? <KnowledgeDumpZone /> : null}
+      {/* T-092 评论回流:倾倒场旁常驻入口(三级去噪门;signals 0 行诚实空态引导采集)。 */}
+      {state === "default" || state === "empty" ? (
+        <KnowledgeCommentBackflow />
+      ) : null}
       {state === "loading" ? (
         <LoadingState label="正在加载知识库…" rows={5} />
       ) : state === "error" ? (

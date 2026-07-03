@@ -33,6 +33,7 @@ import { useRouter } from "next/navigation";
 import { client } from "@/lib/contract-client";
 import { KnowledgeAtlas } from "./knowledge-atlas";
 import { KnowledgeDetailPreview } from "./knowledge-detail-preview";
+import { KnowledgeGraphView } from "./knowledge-graph-view";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
@@ -64,6 +65,27 @@ const FILTER_CHIPS: ReadonlyArray<FilterChip> = [
   { id: "片段", label: "片段", tone: "success" },
   { id: "记录", label: "记录", tone: "warning" },
 ];
+
+// ---------------------------------------------------------------------------
+// [T-093] AI 搜索状态(/api/knowledge/search 的 wire DTO + 面板态)
+// ---------------------------------------------------------------------------
+
+interface AiSearchResult {
+  readonly knowledgeId: string;
+  readonly title: string;
+  readonly excerpt: string;
+  readonly matchType: "exact" | "semantic";
+  readonly score: number | null;
+}
+
+interface AiSearchState {
+  readonly phase: "loading" | "ready" | "error";
+  readonly q: string;
+  readonly semanticEnabled: boolean;
+  readonly semanticError: string | null;
+  readonly results: AiSearchResult[];
+  readonly error: string | null;
+}
 
 // ---------------------------------------------------------------------------
 // URL `?q=` helpers (router-independent so the island works in tests too)
@@ -113,16 +135,70 @@ export function KnowledgeInteractiveRegion({
   const [activeFilter, setActiveFilter] = React.useState<string>("all");
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
-  // T-079c 「观点地图|全部」视图切换(SPEC §3):默认视图 = 观点地图(按 tag
-  // 主题聚类的分组卡墙),原时间流列表保留为「全部」。两个回落:
+  // T-079c 「观点地图|全部」→ [T-091] 扩三态「观点地图|知识图谱|全部」(graph 居中,
+  // 用户指定:观点地图与全部之间);默认视图仍 = 观点地图(T-079c 裁决不动)。回落:
   //   - 旧 fixture VM / 测试 override 不带 atlas → 「全部」(既有结构性契约
   //     测试不受影响;真实装配层 knowledge-data 始终提供 atlas);
+  //   - 不带 graph(旧 VM / 图谱装配读失败)→ 不渲「知识图谱」选项(诚实降级);
   //   - `?tag=` 生效(KNOW-13 标签筛选)→ 「全部」:标签过滤作用在时间流列表
   //     上,用户点 tag chip 进来要看的就是过滤后的列表,不是地图。
   const atlas = viewModel.atlas ?? null;
-  const [view, setView] = React.useState<"atlas" | "all">(
+  const graph = viewModel.graph ?? null;
+  const [view, setView] = React.useState<"atlas" | "graph" | "all">(
     atlas !== null && !viewModel.activeTag ? "atlas" : "all",
   );
+
+  // [T-093] AI 搜索(回车触发 hybrid;输入即时过滤手感不动):
+  // null = 未搜;phase 区分加载/结果/错误;结果卡点开走 selectedId 详情预览。
+  const [aiSearch, setAiSearch] = React.useState<AiSearchState | null>(null);
+
+  const runAiSearch = React.useCallback(async (q: string) => {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    setAiSearch({
+      phase: "loading",
+      q: trimmed,
+      semanticEnabled: false,
+      semanticError: null,
+      results: [],
+      error: null,
+    });
+    try {
+      const res = await fetch("/api/knowledge/search", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ q: trimmed }),
+      });
+      const json = (await res.json().catch(() => null)) as
+        | {
+            semanticEnabled?: boolean;
+            semanticError?: string | null;
+            results?: AiSearchResult[];
+            error?: string;
+          }
+        | null;
+      if (!res.ok || !Array.isArray(json?.results)) {
+        throw new Error(json?.error || `搜索失败(HTTP ${res.status})`);
+      }
+      setAiSearch({
+        phase: "ready",
+        q: trimmed,
+        semanticEnabled: Boolean(json.semanticEnabled),
+        semanticError: json.semanticError ?? null,
+        results: json.results,
+        error: null,
+      });
+    } catch (err) {
+      setAiSearch({
+        phase: "error",
+        q: trimmed,
+        semanticEnabled: false,
+        semanticError: null,
+        results: [],
+        error: err instanceof Error ? err.message : "搜索失败,请重试。",
+      });
+    }
+  }, []);
 
   // F1c write affordance(修订)。The island owns no global store: after a write it
   // asks the App Router to revalidate the server tree so the real `knowledge.list`
@@ -176,17 +252,31 @@ export function KnowledgeInteractiveRegion({
 
   return (
     <>
-      {/* T-079c 视图切换:atlas VM 在场才渲切换器(旧 VM 无地图可切)。 */}
+      {/* T-079c/T-091 视图切换:atlas VM 在场才渲切换器(旧 VM 无地图可切);
+          graph VM 在场才渲「知识图谱」态。 */}
       {atlas !== null ? (
-        <KnowledgeViewSwitch view={view} onViewChange={setView} />
+        <KnowledgeViewSwitch
+          view={view}
+          onViewChange={setView}
+          hasGraph={graph !== null}
+        />
       ) : null}
-      {view === "all" ? (
-        <KnowledgeToolbar
-          query={query}
-          onQueryChange={handleSearchChange}
-          chips={FILTER_CHIPS}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
+      {/* [T-093] 搜索入口醒目化:工具栏在三视图常驻(输入即时=客户端过滤不动;
+          回车=服务端 hybrid AI 搜索);类型 chips 只作用于「全部」列表。 */}
+      <KnowledgeToolbar
+        query={query}
+        onQueryChange={handleSearchChange}
+        onSubmit={() => void runAiSearch(query)}
+        chips={FILTER_CHIPS}
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        showChips={view === "all"}
+      />
+      {aiSearch !== null ? (
+        <KnowledgeAiSearchResults
+          state={aiSearch}
+          onSelect={(id) => setSelectedId(id)}
+          onClose={() => setAiSearch(null)}
         />
       ) : null}
       <KnowledgeMetrics metrics={viewModel.metrics} />
@@ -198,6 +288,11 @@ export function KnowledgeInteractiveRegion({
           selectedId={selectedId}
           onSelectCard={setSelectedId}
         />
+      ) : null}
+      {/* [T-091] 知识图谱 tab:真实节点/边 force 图 + AI 建边确认门。点 knowledge
+          节点复用下方 T-062c 详情预览(setSelectedId)。 */}
+      {view === "graph" && graph !== null ? (
+        <KnowledgeGraphView graph={graph} onSelectKnowledge={setSelectedId} />
       ) : null}
       {/* KNOW-13:`?tag=` 生效时(recent 已在服务端装配层按标签过滤)显示当前
           筛选 + 「清除筛选」返回全量列表(去掉 URL 参数即可)。 */}
@@ -288,12 +383,17 @@ export function KnowledgeInteractiveRegion({
 function KnowledgeViewSwitch({
   view,
   onViewChange,
+  hasGraph,
 }: {
-  readonly view: "atlas" | "all";
-  readonly onViewChange: (view: "atlas" | "all") => void;
+  readonly view: "atlas" | "graph" | "all";
+  readonly onViewChange: (view: "atlas" | "graph" | "all") => void;
+  readonly hasGraph: boolean;
 }) {
+  // [T-091] 三态:graph 居中(用户裁决:观点地图与「全部」之间);graph VM 缺失
+  // (旧 VM / 装配读失败)不渲该选项 —— 诚实降级回二态。
   const options = [
     { id: "atlas" as const, label: "观点地图" },
+    ...(hasGraph ? [{ id: "graph" as const, label: "知识图谱" }] : []),
     { id: "all" as const, label: "全部" },
   ];
   return (
@@ -337,15 +437,20 @@ function KnowledgeViewSwitch({
 function KnowledgeToolbar({
   query,
   onQueryChange,
+  onSubmit,
   chips,
   activeFilter,
   onFilterChange,
+  showChips,
 }: {
   readonly query: string;
   readonly onQueryChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  /** [T-093] 回车 = 服务端 hybrid AI 搜索(输入即时过滤手感不动)。 */
+  readonly onSubmit: () => void;
   readonly chips: ReadonlyArray<FilterChip>;
   readonly activeFilter: string;
   readonly onFilterChange: (id: string) => void;
+  readonly showChips: boolean;
 }) {
   return (
     <div
@@ -359,15 +464,22 @@ function KnowledgeToolbar({
       <input
         id="knowledge-search"
         type="search"
-        placeholder="搜索条目、标签或关联项目"
+        placeholder="搜索知识原子,回车用 AI 语义搜索"
         data-slot="knowledge-search-input"
         value={query}
         onChange={onQueryChange}
-        className="h-8 w-64 rounded-md border border-border bg-surface px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onSubmit();
+          }
+        }}
+        className="h-8 w-72 rounded-md border border-border bg-surface px-3 text-[13px] text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       />
       <div
         data-slot="knowledge-filter-chips"
         className="flex flex-wrap items-center gap-0.5"
+        hidden={!showChips}
       >
         {chips.map((chip) => {
           const active = chip.id === activeFilter;
@@ -392,6 +504,110 @@ function KnowledgeToolbar({
         })}
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// KnowledgeAiSearchResults — [T-093] hybrid 搜索结果面板
+//   结果卡:type 来源标注(精确/语义)+ title + 摘要;点卡进详情预览。
+//   诚实降级:semanticEnabled=false → 「AI 语义搜索未启用」提示条;
+//   零命中 → 「没有匹配的知识原子」,不凑数。
+// ---------------------------------------------------------------------------
+
+function KnowledgeAiSearchResults({
+  state,
+  onSelect,
+  onClose,
+}: {
+  readonly state: AiSearchState;
+  readonly onSelect: (knowledgeId: string) => void;
+  readonly onClose: () => void;
+}) {
+  return (
+    <section
+      data-slot="knowledge-ai-search-results"
+      data-phase={state.phase}
+      aria-label="AI 搜索结果"
+      className="flex flex-col gap-1.5 rounded-md border border-border bg-surface p-2.5"
+    >
+      <div className="flex items-center gap-2">
+        <p className="text-[11px] font-medium text-muted-foreground">
+          搜索「{state.q}」
+          {state.phase === "ready" ? ` · ${state.results.length} 条结果` : ""}
+        </p>
+        <button
+          type="button"
+          data-slot="knowledge-ai-search-close"
+          onClick={onClose}
+          className="ml-auto text-[11px] text-muted-foreground hover:text-foreground"
+        >
+          关闭
+        </button>
+      </div>
+      {state.phase === "ready" && !state.semanticEnabled ? (
+        <p
+          data-slot="knowledge-ai-search-degraded"
+          className="rounded-md border border-warning/40 bg-warning/5 px-2 py-1 text-[11px] text-muted-foreground"
+        >
+          AI 语义搜索未启用:请在 设置 → 模型 里为 knowledge.search.embed 配置 embedding
+          模型;当前结果为纯关键词匹配。
+          {state.semanticError ? `(原因:${state.semanticError})` : ""}
+        </p>
+      ) : null}
+      {state.phase === "loading" ? (
+        <p className="text-[12px] text-muted-foreground">正在搜索…</p>
+      ) : state.phase === "error" ? (
+        <p
+          data-slot="knowledge-ai-search-error"
+          role="alert"
+          className="text-[12px] text-destructive"
+        >
+          {state.error}
+        </p>
+      ) : state.results.length === 0 ? (
+        <p
+          data-slot="knowledge-ai-search-empty"
+          className="text-[12px] text-muted-foreground"
+        >
+          没有匹配的知识原子。
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-1" aria-label="搜索结果列表">
+          {state.results.map((r) => (
+            <li key={r.knowledgeId}>
+              <button
+                type="button"
+                data-slot="knowledge-ai-search-result"
+                data-knowledge-id={r.knowledgeId}
+                data-match-type={r.matchType}
+                onClick={() => onSelect(r.knowledgeId)}
+                className="flex w-full flex-col items-start gap-0.5 rounded-md border border-border/70 bg-surface-subtle/40 px-2.5 py-1.5 text-left hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                <span className="flex items-center gap-1.5">
+                  <span
+                    className={
+                      r.matchType === "semantic"
+                        ? "rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] text-brand"
+                        : "rounded-full bg-surface-subtle px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                    }
+                  >
+                    {r.matchType === "semantic" ? "语义" : "精确"}
+                  </span>
+                  <span className="text-[13px] font-medium text-foreground">
+                    {r.title}
+                  </span>
+                </span>
+                {r.excerpt ? (
+                  <span className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                    {r.excerpt}
+                  </span>
+                ) : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

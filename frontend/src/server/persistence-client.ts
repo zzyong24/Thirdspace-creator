@@ -39,6 +39,8 @@ import {
   createSearchService,
   createSearchTransport,
   SEARCH_OP_IDS,
+  // [T-093] hybrid 检索(exact 优先 + 语义余弦补位)。
+  type HybridSearchHit,
 } from "@creatoros/backend/modules/search";
 import { buildCanonicalSearchDocuments } from "@creatoros/backend/modules/search";
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
@@ -677,6 +679,18 @@ interface PersistenceBundle {
   // (按 capability 解析 model), and the bound CreativeContext readers (定位/飞轮/受众信号/
   // 知识库 数据层注入). Mirrors how getStorageRootForRequest exposes settingsService.
   chatRuntime: ChatRuntime;
+  // [T-093] 知识库 AI 搜索 route(/api/knowledge/search,无 dispatch endpoint)的运行时:
+  // 可配 embedding(capability knowledge.search.embed,只认专配行)+ 存量回填 + hybrid 检索。
+  knowledgeSearchRuntime: {
+    hybridSearch: (
+      ctx: RequestContext,
+      query: string,
+    ) => Promise<{
+      semanticEnabled: boolean;
+      semanticError: string | null;
+      hits: HybridSearchHit[];
+    }>;
+  };
   // [T-055d] Finder「在 Finder 打开/显示」route(无 dispatch endpoint)的最小面。
   localFileRuntime: {
     assetStorageKey: (
@@ -858,7 +872,34 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // collision-free across requests).
   const knowledgeRepo = createKnowledgeRepository(db, deps);
   const knowledgeService = createKnowledgeService(knowledgeRepo);
-  const knowledge = createKnowledgeTransport(() => knowledgeService);
+  const knowledgeBaseTransport = createKnowledgeTransport(() => knowledgeService);
+  // [T-093] 知识写路径的搜索索引 fan-out(composition root 组合,knowledge 模块不反向
+  // 依赖 search):create / revisions.create 成功后 best-effort 重建该条的 search_document
+  // (含可配 embedding;失败绝不回滚业务真值——SPEC §16 派生索引纪律)。
+  // `indexKnowledgeDocumentBestEffort` 定义在下方 settingsService/resolveModelSpec 之后,
+  // 此回调在请求期才执行,闭包引用无 TDZ 问题(与 llmCompleter 同款)。
+  const knowledge: Transport = {
+    async request(endpoint, input, ctx) {
+      const result = await knowledgeBaseTransport.request(endpoint, input, ctx);
+      if (
+        ctx &&
+        (endpoint.id === "knowledge.create" ||
+          endpoint.id === "knowledge.revisions.create")
+      ) {
+        const data = (result as { data?: unknown }).data as
+          | { id?: string; knowledgeItemId?: string }
+          | undefined;
+        const knowledgeId =
+          endpoint.id === "knowledge.create" ? data?.id : data?.knowledgeItemId;
+        if (knowledgeId) {
+          void indexKnowledgeDocumentBestEffort(ctx, knowledgeId).catch(
+            () => {},
+          );
+        }
+      }
+      return result;
+    },
+  };
 
   // Assets (module 07): one user-scoped repository over the shared db (the repo
   // takes ctx per-call, not at construction). The service is the SOLE
@@ -4202,6 +4243,160 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     };
   };
 
+  // ── [T-093] 知识库 AI 搜索:可配 embedding 管线 ─────────────────────────────
+  // capability "knowledge.search.embed" **只认专配行,不回退 default 聊天模型**
+  // (把 chat LLM 当 embedding 用是错的;未配 = 诚实降级纯关键词,前端渲提示条)。
+  const resolveEnvSecretRef = (secretRef: string | undefined): string => {
+    if (!secretRef) return "";
+    const m = /^env:(.+)$/.exec(secretRef.trim());
+    if (!m) return "";
+    return (process.env[m[1]!] ?? "").trim();
+  };
+  const resolveEmbedSpec = async (
+    ctx: RequestContext,
+  ): Promise<{
+    apiFormat: "anthropic" | "openai_chat";
+    baseUrl: string | null;
+    model: string;
+    token: string;
+  } | null> => {
+    const row = await settingsService.getModelConfig(
+      ctx,
+      "knowledge.search.embed",
+    );
+    if (!row) return null;
+    const token =
+      row.secretValue?.trim() || resolveEnvSecretRef(row.secretReference);
+    if (!token) return null;
+    return {
+      apiFormat: row.apiFormat,
+      baseUrl: row.baseUrl ?? null,
+      model: row.modelName,
+      token,
+    };
+  };
+
+  // 批量算 embedding(Vercel AI SDK embedMany;provider 经 ai-worker embeddingModelFor
+  // 解析,anthropic 协议诚实抛错)。
+  const embedTexts = async (
+    spec: NonNullable<Awaited<ReturnType<typeof resolveEmbedSpec>>>,
+    texts: string[],
+  ): Promise<number[][]> => {
+    const { embeddingModelFor } = await import("@creatoros/ai-worker");
+    const { embedMany } = await import("ai");
+    const { embeddings } = await embedMany({
+      model: embeddingModelFor(spec),
+      values: texts,
+    });
+    return embeddings;
+  };
+
+  // 单条知识 → search_document 重建(标题+正文摘要;embedding 可配则同步算)。
+  // best-effort:任何失败只丢索引增益,业务真值不回滚。
+  const indexKnowledgeDocumentBestEffort = async (
+    ctx: RequestContext,
+    knowledgeId: string,
+  ): Promise<void> => {
+    try {
+      const item = await knowledgeService.getKnowledge(ctx, knowledgeId);
+      const revisions = await knowledgeService.listRevisions(ctx, knowledgeId);
+      const head =
+        revisions.find((r) => r.id === item.currentRevisionId) ?? revisions[0];
+      const content = head?.content ?? "";
+      let embedding: number[] | undefined;
+      try {
+        const spec = await resolveEmbedSpec(ctx);
+        if (spec) {
+          const [vec] = await embedTexts(spec, [
+            `${item.title}\n${content}`.trim(),
+          ]);
+          embedding = vec;
+        }
+      } catch (err) {
+        // embedding 失败 → 只落关键词索引(诚实降级,不假装有向量)。
+        console.warn("[knowledge-index] embedding 计算失败:", err);
+      }
+      await searchService.upsertDocument(ctx, {
+        entityType: "knowledge",
+        entityId: item.id,
+        title: item.title,
+        body: JSON.stringify({ excerpt: content.slice(0, 120), tags: [] }),
+        searchText: `${item.title}\n${content}`.toLowerCase().trim(),
+        ...(embedding ? { embedding } : {}),
+      });
+    } catch (err) {
+      console.warn("[knowledge-index] 索引失败(业务真值不受影响):", err);
+    }
+  };
+
+  // 知识库 hybrid 搜索运行时(/api/knowledge/search 消费):
+  //   1. 存量回填:embedding 为空的 knowledge 文档批量补算(幂等,一次 embedMany);
+  //   2. 查询向量:query 单条 embed;
+  //   3. searchService.hybridSearch(exact 优先 + 余弦补位,阈值截断);
+  //   4. search_history 落真实记录(失败不抛,SPEC §16)。
+  // 未配 capability → 纯关键词 + semanticEnabled:false(诚实降级,不静默装 AI)。
+  const knowledgeSearchRuntime = {
+    hybridSearch: async (
+      ctx: RequestContext,
+      query: string,
+    ): Promise<{
+      semanticEnabled: boolean;
+      semanticError: string | null;
+      hits: HybridSearchHit[];
+    }> => {
+      let semanticEnabled = false;
+      let semanticError: string | null = null;
+      let queryEmbedding: number[] | null = null;
+      const spec = await resolveEmbedSpec(ctx);
+      if (spec) {
+        try {
+          // 存量回填(embedding 空的 knowledge 文档;<5000 条量级,一次批量)。
+          const docs = await searchService.listDocumentsByEntityType(
+            ctx,
+            "knowledge",
+          );
+          const missing = docs.filter((d) => (d.embedding ?? []).length === 0);
+          if (missing.length > 0) {
+            const vectors = await embedTexts(
+              spec,
+              missing.map((d) => d.searchText),
+            );
+            for (let i = 0; i < missing.length; i++) {
+              const doc = missing[i]!;
+              await searchService.upsertDocument(ctx, {
+                entityType: doc.entityType,
+                entityId: doc.entityId,
+                title: doc.title,
+                body: doc.body,
+                searchText: doc.searchText,
+                embedding: vectors[i],
+              });
+            }
+          }
+          const [qVec] = await embedTexts(spec, [query]);
+          queryEmbedding = qVec ?? null;
+          semanticEnabled = queryEmbedding !== null;
+        } catch (err) {
+          // 配置了但跑不通(key 失效/anthropic 协议/网络)→ 诚实降级 + 带原因。
+          semanticError = err instanceof Error ? err.message : String(err);
+          queryEmbedding = null;
+          semanticEnabled = false;
+        }
+      }
+      const hits = await searchService.hybridSearch(ctx, query, {
+        entityType: "knowledge",
+        limit: 20,
+        queryEmbedding,
+      });
+      await searchService.recordSearch(ctx, {
+        query,
+        filters: { entityType: "knowledge", semantic: semanticEnabled },
+        resultCount: hits.length,
+      });
+      return { semanticEnabled, semanticError, hits };
+    },
+  };
+
   // resolveMultimodalSpec — L5 asset.generate 的多模态解析(SPEC 2026-07-01 §2.2 / M2),与文本
   // 层 resolveModelSpec 并列:复用同一套 getModelConfig(settings 拥有 model_configurations)+
   // env,投影成 MultimodalSpec(provider/model/baseUrl/token/kind)。image.generate/video.generate
@@ -4877,6 +5072,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     settingsService,
     chatRuntime,
     localFileRuntime,
+    knowledgeSearchRuntime,
   };
 }
 
@@ -5032,6 +5228,17 @@ export async function getLocalFileRuntime(): Promise<
   PersistenceBundle["localFileRuntime"]
 > {
   return (await getBundle()).localFileRuntime;
+}
+
+/**
+ * [T-093] 知识库 AI 搜索运行时(/api/knowledge/search 消费),与 getChatRuntime 同款
+ * escape hatch:embedding 走 model-config capability "knowledge.search.embed"(用户可配,
+ * 只认专配行,不回退 default 聊天模型);未配 → 纯关键词诚实降级。
+ */
+export async function getKnowledgeSearchRuntime(): Promise<
+  PersistenceBundle["knowledgeSearchRuntime"]
+> {
+  return (await getBundle()).knowledgeSearchRuntime;
 }
 
 // Composite server transport: persistence for project ops, mock for the rest.

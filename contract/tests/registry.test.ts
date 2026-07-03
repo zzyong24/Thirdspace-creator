@@ -39,6 +39,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/knowledge/:knowledgeId/relations"],
   ["POST", "/knowledge/:knowledgeId/archive"],
   ["POST", "/knowledge/:knowledgeId/relations/remove"],
+  // [T-091] 图谱全量语义边读(user-scoped,additive)。
+  ["GET", "/knowledge-relations"],
   // 知识与素材 — Taxonomy (Tag / EntityTag) sub-group (v0.2)
   ["GET", "/tags"],
   ["POST", "/tags"],

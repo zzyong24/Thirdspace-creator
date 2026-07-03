@@ -36,6 +36,8 @@ export const KNOWLEDGE_OP_IDS = [
   "knowledge.relations.list",
   "knowledge.archive",
   "knowledge.relations.delete",
+  // [T-091] 图谱全量语义边读(additive)。
+  "knowledge.relations.listAll",
 ] as const;
 
 function toItemResource(row: KnowledgeItemWithStats): KnowledgeItemResource {
@@ -92,7 +94,7 @@ export function createKnowledgeTransport(
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
-      // All 9 ops are persisted (owned). No ctx ⇒ unauthenticated dispatch ⇒
+      // All 10 ops are persisted (owned). No ctx ⇒ unauthenticated dispatch ⇒
       // reject before touching the store.
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory(ctx);
@@ -118,6 +120,9 @@ export function createKnowledgeTransport(
             content?: string;
             // [T-079a] 可选出处透传(SPEC §1)。
             sourceNote?: string;
+            // [T-092] 评论回流:来源声明 + 溯源/幂等锚(可选,additive)。
+            sourceType?: string;
+            sourceMetadata?: Record<string, unknown>;
           };
           const row = await service.createKnowledge(ctx, b);
           return {
@@ -170,11 +175,26 @@ export function createKnowledgeTransport(
           const b = (body ?? {}) as {
             targetKnowledgeId: string;
             relationType: string;
+            // [T-091] AI 建边 provenance(可选,缺省 'user')。
+            createdByType?: "user" | "ai";
           };
           const row = await service.createRelation(ctx, p.knowledgeId ?? "", b);
           return {
             data: toRelationResource(row),
             meta: { requestId: ctx.requestId },
+          };
+        }
+        case "knowledge.relations.listAll": {
+          // [T-091] 全量语义边(user-scoped);list 信封与 relations.list 同款。
+          const rows = await service.listAllRelations(ctx);
+          return {
+            data: rows.map(toRelationResource),
+            meta: {
+              requestId: ctx.requestId,
+              page: 1,
+              pageSize: Math.max(rows.length, 1),
+              total: rows.length,
+            },
           };
         }
         case "knowledge.archive": {

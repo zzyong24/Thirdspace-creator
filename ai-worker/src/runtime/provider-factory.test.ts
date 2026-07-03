@@ -55,3 +55,42 @@ describe("normalizeAnthropicBaseUrl", () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// [T-093] embeddingModelFor —— 语义检索 embedding 工厂(可配,不写死 provider)
+// ---------------------------------------------------------------------------
+
+import { embeddingModelFor } from "./provider-factory";
+
+describe("embeddingModelFor", () => {
+  it("openai_chat + baseUrl → openai-compatible textEmbeddingModel(SiliconFlow 等)", () => {
+    const m = embeddingModelFor({
+      apiFormat: "openai_chat",
+      baseUrl: "https://api.siliconflow.cn/v1",
+      model: "BAAI/bge-m3",
+      token: "sk-test",
+    });
+    expect(typeof m).toBe("object");
+  });
+
+  it("openai_chat 官方 → OpenAI textEmbeddingModel", () => {
+    const m = embeddingModelFor({
+      apiFormat: "openai_chat",
+      baseUrl: null,
+      model: "text-embedding-3-small",
+      token: "sk-test",
+    });
+    expect(typeof m).toBe("object");
+  });
+
+  it("anthropic 协议 → 诚实抛错(不静默把聊天模型当 embedding 用)", () => {
+    expect(() =>
+      embeddingModelFor({
+        apiFormat: "anthropic",
+        baseUrl: null,
+        model: "claude-opus-4-8",
+        token: "sk-test",
+      }),
+    ).toThrow(/embedding/);
+  });
+});

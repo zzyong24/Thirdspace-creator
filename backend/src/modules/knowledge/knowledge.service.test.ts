@@ -170,3 +170,142 @@ describe("knowledge.service — soft-delete (GAP-RES-1)", () => {
     ).rejects.toBeInstanceOf(OwnershipError);
   });
 });
+
+// ---------------------------------------------------------------------------
+// [T-091/T-092] 知识库二期:全量边读 / AI 建边 provenance+幂等 / 评论回流锚
+// ---------------------------------------------------------------------------
+
+describe("knowledge.service — T-091 graph data ops", () => {
+  it("listAllRelations returns every edge of the ctx user only (user-scoped)", async () => {
+    const a = await service.createKnowledge(ctxA, { title: "A" });
+    const b = await service.createKnowledge(ctxA, { title: "B" });
+    const c = await service.createKnowledge(ctxA, { title: "C" });
+    await service.createRelation(ctxA, a.id, {
+      targetKnowledgeId: b.id,
+      relationType: "supports",
+    });
+    await service.createRelation(ctxA, b.id, {
+      targetKnowledgeId: c.id,
+      relationType: "references",
+    });
+    // 另一租户的边不可见。
+    const x = await service.createKnowledge(ctxB, { title: "X" });
+    const y = await service.createKnowledge(ctxB, { title: "Y" });
+    await service.createRelation(ctxB, x.id, {
+      targetKnowledgeId: y.id,
+      relationType: "supports",
+    });
+
+    const mine = await service.listAllRelations(ctxA);
+    expect(mine).toHaveLength(2);
+    expect(new Set(mine.map((r) => r.relationType))).toEqual(
+      new Set(["supports", "references"]),
+    );
+    const theirs = await service.listAllRelations(ctxB);
+    expect(theirs).toHaveLength(1);
+  });
+
+  it("createRelation stamps createdByType:'ai' when the confirm gate adopts an AI candidate", async () => {
+    const a = await service.createKnowledge(ctxA, { title: "A" });
+    const b = await service.createKnowledge(ctxA, { title: "B" });
+    const rel = await service.createRelation(ctxA, a.id, {
+      targetKnowledgeId: b.id,
+      relationType: "supports",
+      createdByType: "ai",
+    });
+    expect(rel.createdByType).toBe("ai");
+  });
+
+  it("createRelation is idempotent per (source,target,relationType) — duplicate adopt returns the existing edge", async () => {
+    const a = await service.createKnowledge(ctxA, { title: "A" });
+    const b = await service.createKnowledge(ctxA, { title: "B" });
+    const first = await service.createRelation(ctxA, a.id, {
+      targetKnowledgeId: b.id,
+      relationType: "supports",
+      createdByType: "ai",
+    });
+    const dup = await service.createRelation(ctxA, a.id, {
+      targetKnowledgeId: b.id,
+      relationType: "supports",
+      createdByType: "ai",
+    });
+    expect(dup.id).toBe(first.id);
+    const all = await service.listAllRelations(ctxA);
+    expect(all).toHaveLength(1);
+  });
+});
+
+describe("knowledge.service — T-092 comment backflow anchors", () => {
+  it("createKnowledge passes through sourceType:'import' + sourceMetadata anchors", async () => {
+    const item = await service.createKnowledge(ctxA, {
+      title: "怎么配置本地模型?",
+      knowledgeType: "qa",
+      sourceType: "import",
+      sourceNote: "抖音评论 ×2,最高赞 57",
+      sourceMetadata: {
+        origin: "comment_backflow",
+        signalIds: ["sig-1", "sig-2"],
+        signalExternalIds: ["douyin:comment:c1", "douyin:comment:c2"],
+      },
+    });
+    expect(item.sourceType).toBe("import");
+    expect(item.knowledgeType).toBe("qa");
+    expect(
+      (item.sourceMetadata as { origin?: string }).origin,
+    ).toBe("comment_backflow");
+  });
+
+  it("re-adopting any already-backflowed anchor throws ConflictError (回流层幂等,整组视为已回流)", async () => {
+    await service.createKnowledge(ctxA, {
+      title: "怎么配置本地模型?",
+      knowledgeType: "qa",
+      sourceType: "import",
+      sourceMetadata: {
+        origin: "comment_backflow",
+        signalExternalIds: ["douyin:comment:c1", "douyin:comment:c2"],
+      },
+    });
+    await expect(
+      service.createKnowledge(ctxA, {
+        title: "本地模型怎么装?",
+        knowledgeType: "qa",
+        sourceType: "import",
+        sourceMetadata: {
+          origin: "comment_backflow",
+          // 同义合并组任一锚已回流 → 整组拒。
+          signalExternalIds: ["douyin:comment:c2", "douyin:comment:c9"],
+        },
+      }),
+    ).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("backflow anchors are tenant-scoped — another user can adopt the same cid", async () => {
+    await service.createKnowledge(ctxA, {
+      title: "Q",
+      knowledgeType: "qa",
+      sourceType: "import",
+      sourceMetadata: {
+        origin: "comment_backflow",
+        signalExternalIds: ["douyin:comment:shared"],
+      },
+    });
+    const other = await service.createKnowledge(ctxB, {
+      title: "Q",
+      knowledgeType: "qa",
+      sourceType: "import",
+      sourceMetadata: {
+        origin: "comment_backflow",
+        signalExternalIds: ["douyin:comment:shared"],
+      },
+    });
+    expect(other.userId).toBe("user-b");
+  });
+
+  it("plain creates (no anchors) are unaffected by the backflow guard", async () => {
+    const item = await service.createKnowledge(ctxA, {
+      title: "普通笔记",
+      sourceMetadata: { origin: "somewhere-else" },
+    });
+    expect(item.sourceType).toBe("manual");
+  });
+});

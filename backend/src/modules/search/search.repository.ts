@@ -60,6 +60,12 @@ export interface SearchRepository {
    * must reflect the whole match set, not the first page.
    */
   facetMatches(query: string): Promise<SearchDocumentRow[]>;
+  /**
+   * [T-093] 该用户某 entityType 的全部索引文档(user-scoped 全量读)——语义检索的
+   * 进程内余弦扫描原料(库量级几百条,<10ms;>5000 条再上 pgvector,seam 不变)。
+   * 也用于 embedding 回填(挑出 embedding 为空的行补算)。
+   */
+  listByEntityType(entityType: string): Promise<SearchDocumentRow[]>;
   appendHistory(input: AppendHistoryInput): Promise<SearchHistoryRow>;
   listHistory(limit?: number): Promise<SearchHistoryRow[]>;
   deleteAllDocuments(): Promise<void>;
@@ -155,6 +161,15 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
         .select()
         .from(searchDocuments)
         .where(and(scopedDoc, ilike(searchDocuments.searchText, pattern)))
+        .orderBy(desc(searchDocuments.indexedAt));
+    },
+
+    async listByEntityType(entityType) {
+      // [T-093] user-scoped 全量读(语义扫描/回填用);ordered 保证确定性。
+      return db
+        .select()
+        .from(searchDocuments)
+        .where(and(scopedDoc, eq(searchDocuments.entityType, entityType)))
         .orderBy(desc(searchDocuments.indexedAt));
     },
 

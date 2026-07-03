@@ -128,6 +128,7 @@ interface CommentSignalDto {
   readonly rawText: string;
   readonly demandTag: string | null;
   readonly likeCount: number | null; // T-042 热榜排序依据
+  readonly externalId: string | null; // T-092 幂等锚(单条入知识库用)
   readonly createdAt: string;
 }
 
@@ -463,6 +464,8 @@ export async function fetchReviewComments(
       text: c.rawText,
       demandTag: c.demandTag ?? null,
       likeCount: c.likeCount ?? null,
+      // [T-092] 幂等锚透传(单条「入知识库」写 sourceMetadata 双料锚)。
+      externalId: c.externalId ?? null,
       createdAt: c.createdAt,
     }));
 }

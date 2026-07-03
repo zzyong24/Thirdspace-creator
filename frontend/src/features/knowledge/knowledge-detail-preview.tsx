@@ -11,6 +11,7 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -136,8 +137,151 @@ export function KnowledgeDetailPreview({ knowledgeId }: { knowledgeId: string })
               </ReactMarkdown>
             </div>
           )}
+          {/* [T-091] 手动建边入口:「关联到…」→ 同一 create op(createdByType='user')。 */}
+          <KnowledgeRelateEntry knowledgeId={knowledgeId} />
         </>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// KnowledgeRelateEntry — [T-091] 详情预览内的手动关联入口
+//   展开时拉一次 knowledge.list(排除自身)供选目标;关联走既有
+//   knowledge.relations.create(缺省 createdByType='user');幂等由 service 兜底
+//   (重复同向同类型边返回既有边,不重插)。
+// ---------------------------------------------------------------------------
+
+const MANUAL_RELATION_TYPES: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "supports", label: "支撑(supports)" },
+  { value: "contradicts", label: "矛盾(contradicts)" },
+  { value: "references", label: "引用(references)" },
+  { value: "extends", label: "延伸(extends)" },
+];
+
+function KnowledgeRelateEntry({ knowledgeId }: { knowledgeId: string }) {
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const [targets, setTargets] = React.useState<
+    ReadonlyArray<{ id: string; title: string }> | null
+  >(null);
+  const [targetId, setTargetId] = React.useState("");
+  const [relationType, setRelationType] = React.useState("references");
+  const [busy, setBusy] = React.useState(false);
+  const [message, setMessage] = React.useState<string | null>(null);
+
+  const handleToggle = React.useCallback(async () => {
+    const next = !open;
+    setOpen(next);
+    setMessage(null);
+    if (next && targets === null) {
+      try {
+        const rows = (await client.listKnowledge({
+          params: undefined,
+          query: { page: 1, pageSize: 200 },
+          body: undefined,
+        })) as unknown as ReadonlyArray<{
+          id: string;
+          title: string;
+          status: string;
+        }>;
+        setTargets(
+          (Array.isArray(rows) ? rows : [])
+            .filter((r) => r.status === "active" && r.id !== knowledgeId)
+            .map((r) => ({ id: r.id, title: r.title })),
+        );
+      } catch {
+        setTargets([]);
+        setMessage("知识列表读取失败,稍后重试。");
+      }
+    }
+  }, [open, targets, knowledgeId]);
+
+  const handleRelate = React.useCallback(async () => {
+    if (!targetId || busy) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      await client.createKnowledgeRelation({
+        params: { knowledgeId },
+        query: undefined,
+        body: { targetKnowledgeId: targetId, relationType },
+      });
+      setMessage("已关联。");
+      setTargetId("");
+      router.refresh();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "关联失败,请重试。");
+    } finally {
+      setBusy(false);
+    }
+  }, [targetId, busy, knowledgeId, relationType, router]);
+
+  return (
+    <div data-slot="knowledge-relate-entry" className="flex flex-col gap-1.5">
+      <button
+        type="button"
+        data-slot="knowledge-relate-toggle"
+        aria-expanded={open}
+        onClick={() => void handleToggle()}
+        className="w-fit text-[11px] text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      >
+        {open ? "收起关联" : "关联到…"}
+      </button>
+      {open ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <label className="sr-only" htmlFor="knowledge-relate-target">
+            目标知识
+          </label>
+          <select
+            id="knowledge-relate-target"
+            data-slot="knowledge-relate-target"
+            value={targetId}
+            onChange={(e) => setTargetId(e.target.value)}
+            className="h-7 max-w-56 rounded-md border border-border bg-surface px-1.5 text-[12px] text-foreground"
+          >
+            <option value="">选择要关联的知识…</option>
+            {(targets ?? []).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.title.slice(0, 30)}
+              </option>
+            ))}
+          </select>
+          <label className="sr-only" htmlFor="knowledge-relate-manual-type">
+            关联类型
+          </label>
+          <select
+            id="knowledge-relate-manual-type"
+            data-slot="knowledge-relate-manual-type"
+            value={relationType}
+            onChange={(e) => setRelationType(e.target.value)}
+            className="h-7 rounded-md border border-border bg-surface px-1.5 text-[12px] text-foreground"
+          >
+            {MANUAL_RELATION_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            data-slot="knowledge-relate-submit"
+            disabled={busy || !targetId}
+            onClick={() => void handleRelate()}
+            className="inline-flex h-7 items-center rounded-md bg-brand px-2 text-[12px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+          >
+            {busy ? "关联中…" : "关联"}
+          </button>
+          {message ? (
+            <span
+              data-slot="knowledge-relate-message"
+              className="text-[11px] text-muted-foreground"
+            >
+              {message}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

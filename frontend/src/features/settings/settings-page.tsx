@@ -237,7 +237,9 @@ export interface MultimodalModelState {
     | "image.generate"
     | "video.generate"
     | "transcribe.audio"
-    | "asset.classify";
+    | "asset.classify"
+    // [T-093] 知识库语义搜索 embedding(OpenAI 兼容 embedding 端点;未配诚实降级关键词)。
+    | "knowledge.search.embed";
   /** Free-form provider name (the dispatch switch; "minimax"/"siliconflow" today, extensible). */
   readonly provider: string;
   /** Free-form model id (e.g. image-01 / video-01 / FunAudioLLM/SenseVoiceSmall). */
@@ -263,6 +265,12 @@ export interface MultimodalModelsState {
   readonly audio: MultimodalModelState;
   /** [T-055h] 素材 AI 归类(视觉理解)— capability "asset.classify"。 */
   readonly vision: MultimodalModelState;
+  /**
+   * [T-093] 知识库语义搜索 embedding — capability "knowledge.search.embed"。同一
+   * `settings.models.list` op 读回(capability 自由字符串,零契约改动)。未配置 =
+   * 知识库 AI 搜索诚实降级为纯关键词(结果区渲「AI 语义搜索未启用」提示条)。
+   */
+  readonly embed: MultimodalModelState;
 }
 
 // ---------------------------------------------------------------------------

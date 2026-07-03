@@ -316,6 +316,11 @@ export function SettingsDialog({
                   kind="audio"
                   state={viewModel.multimodalModels.audio}
                 />
+                {/* [T-093] 知识库语义搜索 embedding(未配 → AI 搜索诚实降级关键词)。 */}
+                <MultimodalModelCard
+                  kind="embed"
+                  state={viewModel.multimodalModels.embed}
+                />
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="skills" active={tab}>
@@ -1510,6 +1515,24 @@ const MULTIMODAL_META = {
     baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
     disabledHint: "未配 → 逐字稿功能禁用。",
   },
+  // [T-093] 知识库语义搜索 embedding —— OpenAI 兼容 embedding 端点(SiliconFlow/OpenAI
+  // 同形状);未配 → 知识库 AI 搜索诚实降级纯关键词。apiFormat 显式存 openai_chat
+  // (embedding 无 anthropic 协议;resolveEmbedSpec 只认专配行)。
+  embed: {
+    capability: "knowledge.search.embed" as const,
+    title: "语义搜索模型",
+    icon: Cpu,
+    description:
+      "知识库 AI 搜索用(embedding 语义召回);不配则搜索为纯关键词匹配。",
+    providerSuggestions: ["siliconflow", "openai"] as ReadonlyArray<string>,
+    providerPlaceholder: "siliconflow",
+    providerHelp:
+      "OpenAI 兼容 embedding 厂商,可自定义(SiliconFlow / OpenAI 同形状)。",
+    modelHelp: "embedding 模型 id,如 BAAI/bge-m3(SiliconFlow)。",
+    modelPlaceholder: "BAAI/bge-m3",
+    baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
+    disabledHint: "未配 → 知识库搜索为纯关键词。",
+  },
   // [T-055h SPEC §6.2 第二层] 素材 AI 归类 —— VLM 看图打用途标签+一句话描述(倾倒场
   // 上传后异步跑;未配置只跑确定性第一层,诚实不假装)。OpenAI 兼容 chat vision。
   vision: {
@@ -1532,7 +1555,7 @@ function MultimodalModelCard({
   kind,
   state,
 }: {
-  kind: "image" | "video" | "audio";
+  kind: "image" | "video" | "audio" | "embed";
   state: MultimodalModelState;
 }) {
   const meta = MULTIMODAL_META[kind];
@@ -1569,6 +1592,11 @@ function MultimodalModelCard({
             modelName: modelName.trim(),
             baseUrl: baseUrl.trim() || undefined,
             secret: secret.length > 0 ? secret : undefined,
+            // [T-093] embedding 卡显式存 openai_chat(缺省会被落成 anthropic,
+            // 而 embedding 无 anthropic 协议;其余多模态卡不带 apiFormat 不变)。
+            ...(kind === "embed"
+              ? { apiFormat: "openai_chat" as const }
+              : {}),
           },
         })
         .then(() => setSecret("")),
