@@ -67,6 +67,8 @@ export const CHATBOX_TOPIC_TEMPLATE: PromptTemplate = {
   tools: [
     "topic.generate",
     "topic.enrich",
+    // [T-055c] 稿面对话的脚本产物工具:开场 hook 候选组(逐条「写入稿面」走 artifacts 版本门)。
+    "script.hooks",
     "context.projects",
     "context.knowledge",
     "context.materials",

@@ -50,6 +50,14 @@ export interface ChatToolDeps {
     productionDifficulty: "low" | "mid" | "high" | null;
   } | null>;
   /**
+   * [T-055c] script.hooks 核心 —— 为当前项目产一组开场 hook 候选(3~5 条,非实体)。
+   * 产物经 ChatHookCard 逐条「写入稿面」(client 走 artifacts 版本门物化,铁律②不破)。
+   */
+  generateHooks: (input: {
+    topic?: string;
+    direction?: string;
+  }) => Promise<Array<{ text: string; angle: string }>>;
+  /**
    * calibration.diagnose 核心 —— 对一条对话里描述的发布前内容(title + 可选 script)按变现加权
    * 评分标准逐维度盲评,产**诊断候选**(非实体)。复用 calibration.diagnose 模板 + parseDiagnosis。
    * 对话里没有绑定的 rubric reader 时,按通用维度评(诚实降级);一键岛带 subject 时用其标题。
@@ -132,6 +140,11 @@ export interface TopicEnrichToolResult {
 }
 
 // calibration.diagnose 工具结果 —— 维度评分诊断候选(渲成维度评分卡)。
+export interface ScriptHooksToolResult {
+  kind: "script.hooks";
+  items: Array<{ text: string; angle: string }>;
+}
+
 export interface CalibrationDiagnoseToolResult {
   kind: "calibration.diagnosis";
   diagnosis: Awaited<ReturnType<ChatToolDeps["diagnoseContent"]>>;
@@ -197,6 +210,24 @@ const TOPIC_ENRICH_PARAMS = jsonSchema<{ title: string; angle?: string }>({
     angle: { type: "string", description: "切入角度(可选,没有就留空让 AI 补)。" },
   },
   required: ["title"],
+  additionalProperties: false,
+});
+
+const SCRIPT_HOOKS_PARAMS = jsonSchema<{
+  topic?: string;
+  direction?: string;
+}>({
+  type: "object",
+  properties: {
+    topic: {
+      type: "string",
+      description: "这条内容的主题/标题(缺省用当前项目标题)",
+    },
+    direction: {
+      type: "string",
+      description: "hook 的方向要求(如「冲突感强一点」「用数据开场」),可选",
+    },
+  },
   additionalProperties: false,
 });
 
@@ -340,6 +371,15 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       execute: async ({ title, angle }): Promise<TopicEnrichToolResult> => {
         const card = await deps.enrichTopic({ title, angle: angle ?? "" });
         return { kind: "topic.card", card };
+      },
+    }),
+    "script.hooks": tool({
+      description:
+        "为当前项目生成一组口播开场 hook 候选(3~5 条,不同切角)。创作者会逐条挑选「写入稿面」。当用户想改开头/要 hook/开场不抓人时调用。",
+      inputSchema: SCRIPT_HOOKS_PARAMS,
+      execute: async ({ topic, direction }): Promise<ScriptHooksToolResult> => {
+        const items = await deps.generateHooks({ topic, direction });
+        return { kind: "script.hooks", items };
       },
     }),
     "calibration.diagnose": tool({

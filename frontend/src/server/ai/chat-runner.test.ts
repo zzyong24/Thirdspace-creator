@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll } from "vitest";
 import { registerAllTemplates } from "@creatoros/ai-worker";
-import { buildChatAssembly, type AssembleChatDeps } from "./chat-runner";
+import { buildChatAssembly, type AssembleChatDeps, parseHookItems } from "./chat-runner";
 import type { ChatContext } from "./chat-context";
 
 // /api/chat 装配单测(SPEC §7「/api/chat 装配:resolve skill + 注入 context + tools 挂载」+
@@ -150,6 +150,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "context.knowledge",
       "context.materials",
       "context.projects",
+      "script.hooks",
       "topic.enrich",
       "topic.generate",
     ]);
@@ -299,6 +300,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "context.knowledge",
       "context.materials",
       "context.projects",
+      "script.hooks",
       "topic.enrich",
       "topic.generate",
     ]);
@@ -365,5 +367,21 @@ describe("buildChatAssembly — 三层注入装配", () => {
     })) as { kind: string; items: unknown[] };
     expect(result.kind).toBe("context.knowledge");
     expect(result.items).toEqual([]);
+  });
+});
+
+// [T-055c] script.hooks 的宽容 JSON 解析。
+describe("parseHookItems", () => {
+  it("剥围栏 + 提取数组 + 收窄字段", () => {
+    const raw = '```json\n[{"text":"90% 文档没人看","angle":"反常识"},{"text":"","angle":"空的丢弃"},{"text":"两小时做出小程序"}]\n```';
+    expect(parseHookItems(raw)).toEqual([
+      { text: "90% 文档没人看", angle: "反常识" },
+      { text: "两小时做出小程序", angle: "hook" },
+    ]);
+  });
+
+  it("不合形输出 → 诚实空数组", () => {
+    expect(parseHookItems("抱歉,我无法生成。")).toEqual([]);
+    expect(parseHookItems('{"not":"array"}')).toEqual([]);
   });
 });

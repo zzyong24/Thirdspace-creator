@@ -79,9 +79,13 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   const searchMaterials = vi.fn(async () => [
     { id: "as-1", title: "封面图 A", kind: "image" },
   ]);
+  const generateHooks = vi.fn(async () => [
+    { text: "你们公司那堆文档,90% 没人看", angle: "反常识断言" },
+  ]);
   const deps: ChatToolDeps = {
     generateTopics,
     enrichTopic,
+    generateHooks,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -215,6 +219,19 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     })) as { kind: string; card: unknown };
     expect(result.kind).toBe("topic.card");
     expect(result.card).toBeNull();
+  });
+
+  it("[T-055c] script.hooks execute → deps.generateHooks,返回 kind=script.hooks 候选组", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(["script.hooks"], deps);
+    const result = await runExecute(tools["script.hooks"]!, {
+      topic: "AI 文档",
+      direction: "冲突感强一点",
+    });
+    expect(result).toEqual({
+      kind: "script.hooks",
+      items: [{ text: "你们公司那堆文档,90% 没人看", angle: "反常识断言" }],
+    });
   });
 
   it("calibration.diagnose.execute 调注入的 diagnoseContent,返回诊断候选(kind=calibration.diagnosis)", async () => {

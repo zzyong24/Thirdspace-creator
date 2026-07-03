@@ -66,6 +66,11 @@ import {
   type UIMessage,
 } from "ai";
 import { ChatCandidateCard, type ChatTopicCandidate } from "./chat-candidate-card";
+import { ChatHookCard, type ChatHookItem } from "./chat-hook-card";
+import {
+  ChatMaterialListCard,
+  type ChatMaterialItem,
+} from "./chat-material-list-card";
 import {
   ChatDiagnosisCard,
   ChatLearningsCard,
@@ -995,7 +1000,19 @@ export function AICopilotContent({
   // 下拉开启时拦截键盘:↑/↓ 移高亮、Enter/Tab 选中当前高亮项、Esc 关闭。未开启则透传(不干扰提交)。
   const handlePromptKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (!mentionOpen || mentionOptions.length === 0) return;
+      if (!mentionOpen || mentionOptions.length === 0) {
+        // [T-055c] 聊天惯例:Enter 发送、Shift+Enter 换行(原来 Enter 恒为换行,
+        // 只能点按钮提交)。isComposing 时是输入法确认候选词,不发送。
+        if (
+          e.key === "Enter" &&
+          !e.shiftKey &&
+          !e.nativeEvent.isComposing
+        ) {
+          e.preventDefault();
+          submit();
+        }
+        return;
+      }
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setMentionIndex((i) => (i + 1) % mentionOptions.length);
@@ -1014,7 +1031,7 @@ export function AICopilotContent({
         setMentionOpen(false);
       }
     },
-    [mentionOpen, mentionOptions, mentionIndex, pickMentionProject],
+    [mentionOpen, mentionOptions, mentionIndex, pickMentionProject, submit],
   );
 
   // [T-055b] 上下文 chips 派生:生效的项目上下文(URL/embed 选中态优先,@ 引用次之,
@@ -1267,6 +1284,31 @@ export function AICopilotContent({
                       const o = out as { items?: ChatTopicCandidate[] };
                       return (
                         <ChatCandidateCard key={key} candidates={o.items ?? []} />
+                      );
+                    }
+                    // [T-055c] HOOK 候选组(script.hooks)→ 逐条「写入稿面」(artifacts 版本门)。
+                    if (name === "script.hooks" && out.kind === "script.hooks") {
+                      const o = out as { items?: ChatHookItem[] };
+                      return (
+                        <ChatHookCard
+                          key={key}
+                          items={o.items ?? []}
+                          projectId={activeProjectChip?.id ?? null}
+                        />
+                      );
+                    }
+                    // [T-055c] 素材列表(context.materials)→ 可逐条「加入弹药」(material_links)。
+                    if (
+                      name === "context.materials" &&
+                      out.kind === "context.materials"
+                    ) {
+                      const o = out as { items?: ChatMaterialItem[] };
+                      return (
+                        <ChatMaterialListCard
+                          key={key}
+                          items={o.items ?? []}
+                          projectId={activeProjectChip?.id ?? null}
+                        />
                       );
                     }
                     // 编导诊断(calibration.diagnose)→ 维度评分表(只读展示)。

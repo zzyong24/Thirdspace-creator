@@ -226,6 +226,33 @@ export async function buildChatAssembly(
       });
       return parseCard(res.text);
     },
+    generateHooks: async ({ topic, direction }) => {
+      // [T-055c] 复用 runAgentNode 一次调用产 hook 候选组(非实体)。主题兜底:模型没传
+      // topic 时用选中项目标题(稿面右栏常驻 = 当前项目)。产出走 ChatHookCard 逐条写入稿面。
+      const effTopic = topic?.trim() || selectionTitle || "";
+      const { runAgentNode } = await import("@creatoros/ai-worker");
+      const prompt = [
+        "为这条短视频内容生成 4 条口播开场 hook 候选(前 3 秒抓注意力的第一句话)。",
+        effTopic ? `内容主题:《${effTopic}》` : "内容主题:见下方创作者定位,选最有张力的切入。",
+        context.positioningBrief
+          ? `创作者定位:
+${context.positioningBrief}`
+          : "",
+        direction ? `方向要求:${direction}` : "",
+        '4 条彼此切角不同(如:反常识断言 / 数据冲击 / 场景代入 / 利益承诺)。每条 ≤40 字,口语化,不要书面腔。',
+        '只输出 JSON 数组,形如 [{"text":"hook 文案","angle":"切角名"}],不要多余文字。',
+      ]
+        .filter(Boolean)
+        .join("\n");
+      const res = await runAgentNode({
+        model,
+        system:
+          "你是这位创作者的口播编导,专门打磨前 3 秒开场 hook。只输出 JSON,不要多余文字。",
+        prompt,
+        maxSteps: 2,
+      });
+      return parseHookItems(res.text);
+    },
     diagnoseContent: async ({ title, script }) => {
       // 复用 calibration.diagnose 模板 + parseDiagnosis(与 calibration-diagnose-runner 同源)。
       // 对话里没有库内 rubric reader → 用通用维度评(诚实降级)。产诊断候选(非实体)。
@@ -342,4 +369,29 @@ export async function runChatStream(
       : undefined,
   });
   return result;
+}
+
+// [T-055c] script.hooks 的宽容 JSON 解析:剥围栏 → 找首个 [...] → 逐条收窄。
+// 模型输出不合形 → 返回 []（诚实空,前端渲「没生成出来」而非崩)。
+export function parseHookItems(
+  raw: string,
+): Array<{ text: string; angle: string }> {
+  const text = raw.replace(/```(?:json)?/g, "").trim();
+  const m = text.match(/\[[\s\S]*\]/);
+  if (!m) return [];
+  try {
+    const arr = JSON.parse(m[0]) as unknown;
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .map((it) => {
+        const o = it as { text?: unknown; angle?: unknown };
+        const t = typeof o.text === "string" ? o.text.trim() : "";
+        const a = typeof o.angle === "string" ? o.angle.trim() : "";
+        return t ? { text: t, angle: a || "hook" } : null;
+      })
+      .filter((x): x is { text: string; angle: string } => x !== null)
+      .slice(0, 6);
+  } catch {
+    return [];
+  }
 }
