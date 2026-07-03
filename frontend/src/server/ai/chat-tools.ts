@@ -105,6 +105,12 @@ export interface ChatToolDeps {
     keywords: string[];
   } | null>;
   /**
+   * [T-077b] brief.fill 的只读现状端口 —— 读**当前项目**的 briefDetail(选题卡现状),
+   * 供工具结果带 `current`(前端卡渲「现值 → 建议值」字段对照)。chat-runner 用
+   * chatContext.projectId 收窄(项目对话才有);无项目上下文 / 读不到 → null(诚实降级)。
+   */
+  getProjectBrief: () => Promise<BriefCurrentDetail | null>;
+  /**
    * context.projects 只读端口 —— 列该用户最近的项目/作品(项目库 / 「最新一条」)。
    * **纯读上下文**(与上面的候选工具不同):不产候选、不写实体,只把真数据回给模型读进去用文字回答。
    * 按当前用户过滤(端口在 composition root 绑到 user-scoped 读源);limit 由 execute 兜(默认 5,封顶 10)。
@@ -228,6 +234,32 @@ export interface LearningCaptureToolResult {
     insight: string;
     learningType: LearningCaptureType;
   };
+}
+
+// [T-077b] brief.fill 的建议字段(与契约 projectBriefDetail 的文本字段对齐,模型直接填参)。
+// 全部可选:模型只填对话里真聊到的字段,没聊到的不编(诚实,不生成占位文案)。
+export interface BriefFillSuggestion {
+  targetAudience?: string;
+  contentGoal?: string;
+  contentFormat?: string;
+  coreMessage?: string;
+  durationEstimate?: string;
+  successCriteria?: string;
+}
+
+// [T-077b] 当前项目选题卡现状(契约 projectBriefDetail 全形状)—— 工具结果的 `current`,
+// 前端卡据此渲「现值(空显未填)→ 建议值」对照,写入时以它为底 merge(不丢 orientation/平台)。
+export interface BriefCurrentDetail extends BriefFillSuggestion {
+  orientation?: "landscape" | "portrait";
+  targetPlatforms?: string[];
+}
+
+// [T-077b] brief.fill 工具结果 —— 一份选题卡填充候选(渲成 ChatBriefCard 字段对照,
+// 人点「写入选题卡」才 patchProject 落 brief_detail;execute 纯回显建议 + 读现状,不写库)。
+export interface BriefFillToolResult {
+  kind: "brief.fill";
+  suggestion: BriefFillSuggestion;
+  current: BriefCurrentDetail | null;
 }
 
 // ── 只读 context 工具结果(真数据,给模型读 —— 非候选、不渲卡)────────────────────────────
@@ -394,6 +426,39 @@ const LEARNING_CAPTURE_PARAMS = jsonSchema<{
     },
   },
   required: ["title", "insight", "learningType"],
+  additionalProperties: false,
+});
+
+// [T-077b] brief.fill 入参 —— 模型把对话里聊到的选题卡信息整理成结构化字段直接填参
+// (不跑二次 LLM);execute 回显成候选 + 附当前项目现状,人点卡上「写入选题卡」才 patch(铁律②)。
+const BRIEF_FILL_PARAMS = jsonSchema<BriefFillSuggestion>({
+  type: "object",
+  properties: {
+    targetAudience: {
+      type: "string",
+      description: "目标观众(对话里聊到的这条内容给谁看,如「AI 新手」)。",
+    },
+    contentGoal: {
+      type: "string",
+      description: "内容目标(这条内容要达成什么,如「涨粉」「引流到私域」)。",
+    },
+    contentFormat: {
+      type: "string",
+      description: "内容形式(口播 / 短剧 / 图文…),对话里聊到才填。",
+    },
+    coreMessage: {
+      type: "string",
+      description: "核心信息(一句话主张,观众看完要记住什么)。",
+    },
+    durationEstimate: {
+      type: "string",
+      description: "预估时长(如「60 秒内」),对话里聊到才填。",
+    },
+    successCriteria: {
+      type: "string",
+      description: "成功标准(如「播放破 5 万」),对话里聊到才填。",
+    },
+  },
   additionalProperties: false,
 });
 
@@ -589,6 +654,32 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           kind: "learning.capture",
           suggestion: { title, insight, learningType },
         };
+      },
+    }),
+    // [T-077b] 对话填策划:「帮我把选题卡填了,观众是 AI 新手,目标是涨粉」→ 模型从对话里
+    // 提炼字段填参 → execute 回显建议 + 读当前项目 briefDetail 现状(前端卡渲「现值 → 建议值」
+    // 对照)。不写库:人点卡上「写入选题卡」才 patchProject 落 brief_detail(铁律②确认门)。
+    "brief.fill": tool({
+      description:
+        "把对话中聊到的选题信息(目标观众/内容目标/核心信息等)整理成当前项目的选题卡填充候选。当用户说「帮我把选题卡填了/把策划补上/根据我们聊的填一下立项信息」时调用,从对话里提炼填参——只填真聊到的字段,没聊到的不编。不会直接写库:结果渲成字段对照卡(现值 vs 建议值),用户点「写入选题卡」才落库。",
+      inputSchema: BRIEF_FILL_PARAMS,
+      execute: async (input): Promise<BriefFillToolResult> => {
+        // 清洗:只保留非空建议字段(模型偶发填空串 → 不进对照表,不摆假建议)。
+        const suggestion: BriefFillSuggestion = {};
+        for (const key of [
+          "targetAudience",
+          "contentGoal",
+          "contentFormat",
+          "coreMessage",
+          "durationEstimate",
+          "successCriteria",
+        ] as const) {
+          const v = input[key];
+          if (typeof v === "string" && v.trim()) suggestion[key] = v.trim();
+        }
+        // 现状:读当前项目 briefDetail(项目对话才有;读不到 → null,卡上现值显「未填」)。
+        const current = await deps.getProjectBrief();
+        return { kind: "brief.fill", suggestion, current };
       },
     }),
     "positioning.generate": tool({

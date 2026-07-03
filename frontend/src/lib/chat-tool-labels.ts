@@ -43,6 +43,10 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "记录经验",
     purpose: "把对话里口述的经验整理成结构化经验卡,采纳后沉淀进飞轮",
   },
+  "brief.fill": {
+    name: "填选题卡",
+    purpose: "把对话里聊的观众/目标/核心信息整理进选题卡候选",
+  },
   "calibration.diagnose": {
     name: "编导诊断",
     purpose: "发布前逐维度盲评内容并给出优先修改建议",

@@ -76,6 +76,10 @@ export const CHATBOX_TOPIC_TEMPLATE: PromptTemplate = {
     // [T-062a] 对话手录经验:「记一条经验:…」→ 模型直接填参产结构化候选卡,
     // 人点「存为经验」才 createLearning 落库(铁律②确认门)。project surface 复用本白名单。
     "learning.capture",
+    // [T-077b] 对话填策划:「帮我把选题卡填了」→ 模型把对话里聊的观众/目标/核心信息填参
+    // 产字段对照候选卡(现值 vs 建议值),人点「写入选题卡」才 patchProject 落 brief_detail
+    // (铁律②确认门)。project surface(新建项目后直接在对话框聊完让 AI 填)复用本白名单。
+    "brief.fill",
     // [T-058①C] 稿面/选题对话里聊定位 → 产可采纳的定位卡(此前 project surface 无此工具,
     // 模型只能文本写定位 → 无法采纳 → 假承诺温床)。
     "positioning.generate",

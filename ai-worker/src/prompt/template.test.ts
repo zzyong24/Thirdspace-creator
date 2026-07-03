@@ -170,6 +170,8 @@ describe("registry 三位一体:tools + outputSchema 一等字段(SPEC §4.1)", 
     expect(getTools("chatbox.topic")).toContain("topic.generate");
     // [T-062a] 对话手录经验工具进选题/项目 surface 白名单(project surface 复用 chatbox.topic)。
     expect(getTools("chatbox.topic")).toContain("learning.capture");
+    // [T-077b] 对话填策划工具(「帮我把选题卡填了」→ 字段对照候选卡,人点才 patch)。
+    expect(getTools("chatbox.topic")).toContain("brief.fill");
     expect(hasOutputSchema("chatbox.topic")).toBe(true);
     const schema = resolveOutputSchema("chatbox.topic") as z.ZodType;
     // 两段 { reply, ... }:reply 必填;candidates/nextActions 默认空数组。

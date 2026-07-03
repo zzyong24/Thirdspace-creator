@@ -9,8 +9,10 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 
 import { BriefWorkbench } from "@/features/project-overview/brief-workbench";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import type { ProjectBriefDetail } from "@/types/domain";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +88,28 @@ export function TopicCard({
           {open ? "收起 ▴" : "展开 ▾"}
         </span>
       </button>
+      {/* [T-077b] 「选题待补」态引导:让编导在对话里把选题卡填了(brief.fill 工具)。
+          深链打开 Copilot(surface=project + 选中本项目 + 预填话术),用户回车 → 模型调
+          brief.fill 产字段对照卡 → 人点「写入选题卡」落库(铁律②确认门,不自动发送)。 */}
+      {!settled ? (
+        <div
+          data-slot="draft-topic-fill-hint"
+          className="border-t border-border/60 px-4 py-2"
+        >
+          <Link
+            href={copilotDeepLink(
+              "project",
+              "brief.fill",
+              { kind: "project", id: projectId, title },
+              "根据我们聊的,帮我把选题卡填了",
+            )}
+            data-slot="draft-topic-fill-link"
+            className="text-xs font-medium text-brand underline-offset-2 hover:underline"
+          >
+            让编导帮你填 →
+          </Link>
+        </div>
+      ) : null}
       {open ? (
         <div
           data-slot="draft-topic-expanded"

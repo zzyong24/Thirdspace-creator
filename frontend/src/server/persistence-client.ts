@@ -4629,6 +4629,29 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             })),
         };
       },
+      // [T-077b] brief.fill 的现状读 —— 复用 projectsRepo.get(user-scoped)取当前项目的
+      // brief_detail jsonb 原样返回(契约 projectBriefDetail 形状)。读不到(项目不存在/越权)
+      // → null(工具结果 current=null,前端卡现值显「未填」),绝不抛崩对话流。
+      getProjectBrief: async (
+        c: RequestContext,
+        opts: { projectId: string },
+      ) => {
+        try {
+          const row = await projectsRepo.get(c, opts.projectId);
+          return (row.briefDetail ?? null) as {
+            targetAudience?: string;
+            contentGoal?: string;
+            contentFormat?: string;
+            orientation?: "landscape" | "portrait";
+            targetPlatforms?: string[];
+            durationEstimate?: string;
+            coreMessage?: string;
+            successCriteria?: string;
+          } | null;
+        } catch {
+          return null;
+        }
+      },
       // [T-058③] 观众评论只读(audience_signals source='comment',最新在前,带 total)。
       listComments: async (
         c: RequestContext,

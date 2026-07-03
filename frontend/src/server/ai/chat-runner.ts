@@ -81,6 +81,23 @@ export interface ContextReaders {
     }>;
     total: number;
   }>;
+  /**
+   * [T-077b] 读某项目的选题卡现状 briefDetail(用于 brief.fill 工具结果的 `current`)。
+   * 复用 projects 读 op(user-scoped);读不到(项目不存在/越权)→ null,不抛(诚实降级)。
+   */
+  getProjectBrief: (
+    ctx: RequestContext,
+    opts: { projectId: string },
+  ) => Promise<{
+    targetAudience?: string;
+    contentGoal?: string;
+    contentFormat?: string;
+    orientation?: "landscape" | "portrait";
+    targetPlatforms?: string[];
+    durationEstimate?: string;
+    coreMessage?: string;
+    successCriteria?: string;
+  } | null>;
   /** 搜该用户知识库(用于 context.knowledge)。query 空 → 回最近若干条。 */
   searchKnowledge: (
     ctx: RequestContext,
@@ -410,6 +427,14 @@ ${context.positioningBrief}`
         maxSteps: 2,
       });
       return parseSuggestion(res.text);
+    },
+    // [T-077b] brief.fill 的现状读:当前项目对话(chatContext.projectId,project surface 的
+    // selection kind=project 已装进来)才读得到;无项目上下文 / 端口未装配 → null(卡上现值显「未填」)。
+    getProjectBrief: async () => {
+      if (!deps.contextReaders || !chatContext.projectId) return null;
+      return deps.contextReaders.getProjectBrief(ctx, {
+        projectId: chatContext.projectId,
+      });
     },
     // 只读 context 工具 —— execute 直接调注入的 user-scoped 读端口(不跑模型、不产候选、不写实体)。
     // 端口未装配(contextReaders 缺省)→ 回空数组(诚实降级,绝不塞假数据),模型据此如实作答。

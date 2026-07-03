@@ -52,6 +52,11 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
       list: async () => [{ title: "RAG 实战", knowledgeType: "note" }],
     },
     contextReaders: {
+      // [T-077b] brief.fill 的现状读端口(fake:proj-1 已填目标观众,其余未填)。
+      getProjectBrief: async () => ({
+        targetAudience: "一线开发者",
+        targetPlatforms: ["douyin"],
+      }),
       listComments: async () => ({ rows: [], total: 0 }),
       listProjects: async () => ({
         total: 1,
@@ -151,6 +156,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(Object.keys(a.tools).sort()).toEqual([
+      "brief.fill",
       "context.comments",
       "context.knowledge",
       "context.materials",
@@ -346,6 +352,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     expect(Object.keys(a.tools).sort()).toEqual([
+      "brief.fill",
       "context.comments",
       "context.knowledge",
       "context.materials",
@@ -401,6 +408,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     }));
     const { deps } = makeDeps({
       contextReaders: {
+        getProjectBrief: async () => null,
         listProjects,
         listComments: async () => ({ rows: [], total: 0 }),
         searchKnowledge: async () => [],
@@ -415,6 +423,45 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(listProjects).toHaveBeenCalledWith(ctx, { limit: 5, offset: 0 });
     expect(result.kind).toBe("context.projects");
     expect(result.items).toHaveLength(1);
+  });
+
+  it("[T-077b] brief.fill execute:项目对话(projectId)→ 经读端口取现状 current;建议字段纯回显", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(
+      ctx,
+      // project surface(稿面右栏)带 kind=project 选中态 → chatContext.projectId 已装。
+      { surface: "project", projectId: "proj-1" },
+      deps,
+    );
+    const result = (await runToolExecute(a.tools["brief.fill"], {
+      targetAudience: "AI 新手",
+      contentGoal: "涨粉",
+      coreMessage: "", // 空串 → 清洗掉,不进建议
+    })) as {
+      kind: string;
+      suggestion: Record<string, string>;
+      current: Record<string, unknown> | null;
+    };
+    expect(result.kind).toBe("brief.fill");
+    // 建议 = 模型填参纯回显(只留非空字段;不写库 —— 落库由人点卡上「写入选题卡」触发)。
+    expect(result.suggestion).toEqual({
+      targetAudience: "AI 新手",
+      contentGoal: "涨粉",
+    });
+    // 现状 = makeDeps 里 fake 读端口给的 briefDetail(前端卡渲「现值 → 建议值」对照)。
+    expect(result.current).toEqual({
+      targetAudience: "一线开发者",
+      targetPlatforms: ["douyin"],
+    });
+  });
+
+  it("[T-077b] brief.fill execute:无项目上下文(无 projectId)→ current=null(诚实降级,不编现状)", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "project" }, deps);
+    const result = (await runToolExecute(a.tools["brief.fill"], {
+      targetAudience: "AI 新手",
+    })) as { current: unknown };
+    expect(result.current).toBeNull();
   });
 
   it("contextReaders 未装配 → context 工具读到空(诚实降级,不报错、不塞假数据)", async () => {

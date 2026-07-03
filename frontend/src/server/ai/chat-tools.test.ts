@@ -18,6 +18,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   diagnoseContent: ReturnType<typeof vi.fn>;
   analyzeReview: ReturnType<typeof vi.fn>;
   generatePositioning: ReturnType<typeof vi.fn>;
+  getProjectBrief: ReturnType<typeof vi.fn>;
   listProjects: ReturnType<typeof vi.fn>;
   listComments: ReturnType<typeof vi.fn>;
   searchKnowledge: ReturnType<typeof vi.fn>;
@@ -111,6 +112,11 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   const generateHooks = vi.fn(async () => [
     { text: "你们公司那堆文档,90% 没人看", angle: "反常识断言" },
   ]);
+  // [T-077b] brief.fill 的现状读端口(fake:现有选题卡只填了目标观众)。
+  const getProjectBrief = vi.fn(async () => ({
+    targetAudience: "一线开发者",
+    targetPlatforms: ["douyin"],
+  }));
   const deps: ChatToolDeps = {
     generateTopics,
     enrichTopic,
@@ -120,6 +126,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     diagnoseContent,
     analyzeReview,
     generatePositioning,
+    getProjectBrief,
     listProjects,
     listComments,
     searchKnowledge,
@@ -133,6 +140,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     diagnoseContent,
     analyzeReview,
     generatePositioning,
+    getProjectBrief,
     listProjects,
     listComments,
     searchKnowledge,
@@ -327,6 +335,34 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
         learningType: "structure",
       },
     });
+  });
+
+  it("[T-077b] brief.fill 可挂 + execute 回显建议(清洗空字段)+ 读现状 current(不写库)", async () => {
+    const { deps, getProjectBrief } = makeDeps();
+    const tools = buildChatTools(["brief.fill"], deps);
+    expect(Object.keys(tools)).toEqual(["brief.fill"]);
+    const result = await runExecute(tools["brief.fill"]!, {
+      targetAudience: " AI 新手 ",
+      contentGoal: "涨粉",
+      coreMessage: "   ", // 空白 → 清洗掉(不摆假建议)
+    });
+    // 建议 = 模型填参回显(trim + 只留非空);现状 = 注入的读端口给的 briefDetail。
+    // 不写库:落库由人点卡上「写入选题卡」触发(铁律②)。
+    expect(getProjectBrief).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({
+      kind: "brief.fill",
+      suggestion: { targetAudience: "AI 新手", contentGoal: "涨粉" },
+      current: { targetAudience: "一线开发者", targetPlatforms: ["douyin"] },
+    });
+  });
+
+  it("[T-077b] brief.fill:现状读端口回 null(无项目上下文)→ current=null(诚实,不编现状)", async () => {
+    const { deps } = makeDeps({ getProjectBrief: async () => null });
+    const tools = buildChatTools(["brief.fill"], deps);
+    const result = (await runExecute(tools["brief.fill"]!, {
+      contentGoal: "涨粉",
+    })) as { current: unknown };
+    expect(result.current).toBeNull();
   });
 
   it("positioning.generate.execute 调注入的 generatePositioning,返回定位候选(kind=positioning.suggestion)", async () => {

@@ -76,6 +76,11 @@ import {
   ChatLearningCard,
   type ChatLearningSuggestion,
 } from "./chat-learning-card";
+import { ChatBriefCard } from "./chat-brief-card";
+import type {
+  BriefFillSuggestion,
+  BriefCurrentDetail,
+} from "@/server/ai/chat-tools";
 import {
   ChatMaterialListCard,
   type ChatMaterialItem,
@@ -1376,6 +1381,22 @@ export function AICopilotContent({
                         <ChatLearningCard
                           key={key}
                           suggestion={o.suggestion ?? null}
+                        />
+                      );
+                    }
+                    // [T-077b] 对话填策划(brief.fill)→ 字段对照卡「写入选题卡」(patchProject
+                    // 落 brief_detail;铁律②人点才物化)。projectId 取当前项目 chip(项目对话/@项目)。
+                    if (name === "brief.fill" && out.kind === "brief.fill") {
+                      const o = out as {
+                        suggestion?: BriefFillSuggestion | null;
+                        current?: BriefCurrentDetail | null;
+                      };
+                      return (
+                        <ChatBriefCard
+                          key={key}
+                          suggestion={o.suggestion ?? null}
+                          current={o.current ?? null}
+                          projectId={activeProjectChip?.id ?? null}
                         />
                       );
                     }
