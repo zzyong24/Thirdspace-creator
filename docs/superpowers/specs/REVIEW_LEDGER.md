@@ -30,3 +30,4 @@
 | [knowledge-learnings-redesign](2026-07-03-knowledge-learnings-redesign.md) | 2026-07-03 | ✅ PASS | **可开工 T-062a~d** | 裁决台+回流+倾倒场+假数据清理。MiniMax cross-family 审:0 blocker/0 major/3 minor(patch schema 概要、classify 失败 UI 行为、模板注入格式)全部接受内联 [gate-F1~F3]。唯一契约增量 learnings.patch |
 | [first-principles-redesign](2026-07-03-first-principles-redesign.md) | 2026-07-03 | ✅ PASS | **可开工 T-063a~f** | 第一性重构北极星:11 导航→4(今日台/作品/库/设置)+对话主干+宪法修正案 §11。MiniMax 审:0 blocker/0 major/3 minor(裁决引用列/T-063b 验收断言化/零删除保障)全部内联 [gate-F1~F3] |
 | [two-stage-project](2026-07-03-two-stage-project-design.md) | 2026-07-03 | ✅ PASS | **可开工 T-076** | 项目两阶段化(脚本→复盘,拍摄前端全删,宪法 §4 修正案,用户直接裁决)。MiniMax 审 2 minor(主行动分支明确化/验收行为链化)已内联 |
+| [copilot-skill-native](2026-07-03-copilot-skill-native-design.md) | 2026-07-03 | ✅ PASS | **可开工 T-077a/b/c** | Copilot Skill 化(技能管理页签/brief.fill/技能自感知)。零新契约(复用 T-040 prompts ops)。2 minor 内联 |
