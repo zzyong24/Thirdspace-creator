@@ -3,3 +3,4 @@ packages:
   - backend
   - contract
   - ai-worker
+  - mcp-server
