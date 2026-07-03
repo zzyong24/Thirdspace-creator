@@ -73,9 +73,14 @@ export const CHATBOX_TOPIC_TEMPLATE: PromptTemplate = {
     "script.draft",
     // [T-057④] 搜素材:research.gather 引擎进对话(替代已退役的 GatherMaterialIsland)。
     "material.gather",
+    // [T-058①C] 稿面/选题对话里聊定位 → 产可采纳的定位卡(此前 project surface 无此工具,
+    // 模型只能文本写定位 → 无法采纳 → 假承诺温床)。
+    "positioning.generate",
     "context.projects",
     "context.knowledge",
     "context.materials",
+    // [T-058③] 观众评论只读(「我最新视频的评论是啥」类问题的真数据源)。
+    "context.comments",
   ],
   // 每轮输出契约(两段脊梁)收口到 registry。
   outputSchema: chatboxTurnSchema,

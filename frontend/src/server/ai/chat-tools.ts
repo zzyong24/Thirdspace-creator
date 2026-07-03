@@ -107,15 +107,32 @@ export interface ChatToolDeps {
    * **纯读上下文**(与上面的候选工具不同):不产候选、不写实体,只把真数据回给模型读进去用文字回答。
    * 按当前用户过滤(端口在 composition root 绑到 user-scoped 读源);limit 由 execute 兜(默认 5,封顶 10)。
    */
-  listProjects: (input: { limit: number }) => Promise<
-    Array<{
+  listProjects: (input: { limit: number; offset: number }) => Promise<{
+    rows: Array<{
       id: string;
       title: string;
       stage: string;
       status: string;
       publishedAt?: string | null;
-    }>
-  >;
+    }>;
+    total: number;
+  }>;
+  /**
+   * [T-058③] context.comments 只读端口 —— 该用户的观众评论(audience_signals,
+   * source='comment'),最新在前;可选按 publicationId 聚焦某条作品。**纯读上下文**。
+   */
+  listComments: (input: {
+    limit: number;
+    offset: number;
+  }) => Promise<{
+    rows: Array<{
+      text: string;
+      likeCount: number | null;
+      source: string;
+      createdAt: string;
+    }>;
+    total: number;
+  }>;
   /**
    * context.knowledge 只读端口 —— 按 query 搜该用户的知识库(命中标题/摘要)。**纯读上下文**。
    * query 缺省则回最近若干条;limit 由 execute 兜。按当前用户过滤。
@@ -200,6 +217,23 @@ export interface ContextProjectsToolResult {
     status: string;
     publishedAt?: string | null;
   }>;
+  // [T-058②] 分页真相:总量 + 本页范围 —— 模型据此如实告知「还有 N 条没看」。
+  total: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+export interface ContextCommentsToolResult {
+  kind: "context.comments";
+  items: Array<{
+    text: string;
+    likeCount: number | null;
+    source: string;
+    createdAt: string;
+  }>;
+  total: number;
+  offset: number;
+  hasMore: boolean;
 }
 
 export interface ContextKnowledgeToolResult {
@@ -308,13 +342,26 @@ const POSITIONING_GENERATE_PARAMS = jsonSchema<Record<string, never>>({
 });
 
 // ── 只读 context 工具入参 —— limit 可选(execute 兜默认 + 封顶),query 可选(缺省回最近)──────
-const CONTEXT_PROJECTS_PARAMS = jsonSchema<{ limit?: number }>({
+const CONTEXT_PROJECTS_PARAMS = jsonSchema<{
+  limit?: number;
+  offset?: number;
+}>({
   type: "object",
   properties: {
-    limit: {
-      type: "number",
-      description: "返回条数(可选;默认 5,封顶 10)。",
-    },
+    limit: { type: "number", description: "本页条数(默认 20,最大 50)" },
+    offset: { type: "number", description: "翻页偏移(默认 0;结果带 total/hasMore,可继续翻)" },
+  },
+  additionalProperties: false,
+});
+
+const CONTEXT_COMMENTS_PARAMS = jsonSchema<{
+  limit?: number;
+  offset?: number;
+}>({
+  type: "object",
+  properties: {
+    limit: { type: "number", description: "本页条数(默认 20,最大 50)" },
+    offset: { type: "number", description: "翻页偏移(默认 0)" },
   },
   additionalProperties: false,
 });
@@ -351,10 +398,11 @@ const CONTEXT_MATERIALS_PARAMS = jsonSchema<{ query?: string; limit?: number }>(
 
 // 只读 context 工具的 limit 兜底:缺省 5,封顶 10(与 SPEC 约束一致)。
 function clampContextLimit(limit: number | undefined): number {
+  // [T-058②] 默认 20、封顶 50(原 10 太小,「看全部项目」要翻太多页)。
   if (typeof limit !== "number" || !Number.isFinite(limit) || limit <= 0) {
-    return 5;
+    return 20;
   }
-  return Math.min(Math.floor(limit), 10);
+  return Math.min(Math.floor(limit), 50);
 }
 
 // T-039a 知识库匹配放宽 —— 原 context.knowledge 只做「整串 title.includes(query)」精确子串匹配,
@@ -476,13 +524,42 @@ function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     //    实时拉**真实数据**给模型读进上下文再用文字回答(纯读,不产候选、不写任何实体)。
     "context.projects": tool({
       description:
-        "只读:拉取创作者最近的项目/作品列表(id/标题/阶段/状态)。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目」时调它拿真实数据来回答,不要瞎答或反问。纯读取上下文,不产候选、不写库。",
+        "只读:拉取创作者的项目/作品列表(id/标题/阶段/状态),带 total/hasMore 可翻页(offset)。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目 / 全部项目」时调它拿真实数据回答;hasMore=true 时继续带 offset 翻页直到看全,或如实告知还剩多少。",
       inputSchema: CONTEXT_PROJECTS_PARAMS,
-      execute: async ({ limit }): Promise<ContextProjectsToolResult> => {
-        const items = await deps.listProjects({
-          limit: clampContextLimit(limit),
+      execute: async ({ limit, offset }): Promise<ContextProjectsToolResult> => {
+        const eff = clampContextLimit(limit);
+        const effOffset = Math.max(0, offset ?? 0);
+        const { rows, total } = await deps.listProjects({
+          limit: eff,
+          offset: effOffset,
         });
-        return { kind: "context.projects", items };
+        return {
+          kind: "context.projects",
+          items: rows,
+          total,
+          offset: effOffset,
+          hasMore: effOffset + rows.length < total,
+        };
+      },
+    }),
+    "context.comments": tool({
+      description:
+        "只读:拉取创作者作品的观众评论(最新在前,带点赞数),带 total/hasMore 可翻页。当用户问「我最新视频的评论 / 观众在说什么 / 评论区反馈」时调它拿真实评论回答,不要瞎答。",
+      inputSchema: CONTEXT_COMMENTS_PARAMS,
+      execute: async ({ limit, offset }): Promise<ContextCommentsToolResult> => {
+        const eff = clampContextLimit(limit);
+        const effOffset = Math.max(0, offset ?? 0);
+        const { rows, total } = await deps.listComments({
+          limit: eff,
+          offset: effOffset,
+        });
+        return {
+          kind: "context.comments",
+          items: rows,
+          total,
+          offset: effOffset,
+          hasMore: effOffset + rows.length < total,
+        };
       },
     }),
     "context.knowledge": tool({

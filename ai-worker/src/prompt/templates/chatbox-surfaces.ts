@@ -72,6 +72,7 @@ export const CHATBOX_CALIBRATION_TEMPLATE: PromptTemplate = {
     "context.projects",
     "context.knowledge",
     "context.materials",
+    "context.comments",
   ],
   outputSchema: chatboxCalibrationSchema,
 };
@@ -122,6 +123,7 @@ export const CHATBOX_POSITIONING_TEMPLATE: PromptTemplate = {
     "context.projects",
     "context.knowledge",
     "context.materials",
+    "context.comments",
   ],
   outputSchema: chatboxPositioningSchema,
 };

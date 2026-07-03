@@ -193,6 +193,16 @@ export interface ChatPositioningSuggestion {
   capabilities: string[];
   oneLiner: string;
   keywords: string[];
+  // [T-058①] 富 facets(不做什么/核心痛点/核心价值/表达风格等)—— 采纳全量写入,
+  // 否则用户看到的完整母版落库即丢一半(实录复盘的核心 bug)。
+  facets?: {
+    contentScope?: string;
+    avoid?: string;
+    corePain?: string;
+    coreValue?: string;
+    tone?: string;
+    statusNote?: string;
+  };
 }
 
 // keywords 须正好 3 个(createStatement 不变量)。截断/补空,与 positioning-runner 的 clamp 同义。
@@ -224,6 +234,19 @@ export function ChatPositioningCard({
           audience: suggestion.audience,
           differentiation: suggestion.differentiation,
           capabilities: suggestion.capabilities,
+          // [T-058①] 富 facets 全量随采纳落库(契约本就支持,此前漏传)。
+          ...(suggestion.facets
+            ? {
+                facets: {
+                  contentScope: suggestion.facets.contentScope ?? "",
+                  avoid: suggestion.facets.avoid ?? "",
+                  corePain: suggestion.facets.corePain ?? "",
+                  coreValue: suggestion.facets.coreValue ?? "",
+                  tone: suggestion.facets.tone ?? "",
+                  statusNote: suggestion.facets.statusNote ?? "",
+                },
+              }
+            : {}),
         },
       });
       // 追加一条定位陈述版本(oneLiner + 3 关键词)—— 仅在 oneLiner 非空时(createStatement 要求)。
@@ -252,6 +275,11 @@ export function ChatPositioningCard({
     ["领域", suggestion.field],
     ["人群", suggestion.audience],
     ["差异化", suggestion.differentiation],
+    ["内容范围", suggestion.facets?.contentScope ?? ""],
+    ["不做什么", suggestion.facets?.avoid ?? ""],
+    ["核心痛点", suggestion.facets?.corePain ?? ""],
+    ["核心价值", suggestion.facets?.coreValue ?? ""],
+    ["表达风格", suggestion.facets?.tone ?? ""],
   ];
 
   return (

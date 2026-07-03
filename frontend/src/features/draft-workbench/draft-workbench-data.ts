@@ -135,6 +135,11 @@ export interface DraftWorkbenchClient extends ScriptDataClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+  getDownloadUrl(input: {
+    params: { assetId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
 }
 
 // ---------------------------------------------------------------------------
@@ -174,6 +179,8 @@ export interface DraftWorkbenchVm {
     readonly kind: "knowledge" | "asset";
     readonly title: string;
     readonly sourceLabel: string;
+    /** [T-058④] 图片素材的签名预览 URL(非图片/取不到 → null,卡片退回类型徽标)。 */
+    readonly previewUrl: string | null;
   }>;
 }
 
@@ -253,6 +260,7 @@ async function readAmmo(
               title: k.title,
               // [T-055g] 来源链:sourceMetadata 作品指向 > sourceUrl > 手记 > 未记录。
               sourceLabel: knowledgeSourceLabel(k),
+              previewUrl: null,
             };
           }
           const a = (await client.getAsset({
@@ -260,11 +268,26 @@ async function readAmmo(
             query: undefined,
             body: undefined,
           })) as AssetDto;
+          // [T-058④] 图片素材带签名预览 URL(用户反馈:上传的素材要能看到)。
+          let previewUrl: string | null = null;
+          if (a.assetType === "image") {
+            try {
+              const dl = (await client.getDownloadUrl({
+                params: { assetId: a.id },
+                query: undefined,
+                body: undefined,
+              })) as { url?: string };
+              previewUrl = dl.url ?? null;
+            } catch {
+              previewUrl = null; // 文件缺失/存储不可用 → 退回类型徽标,不摆坏图。
+            }
+          }
           return {
             id: a.id,
             kind: "asset" as const,
             title: a.name,
             sourceLabel: `素材 · ${a.assetType}`,
+            previewUrl,
           };
         } catch {
           return null;

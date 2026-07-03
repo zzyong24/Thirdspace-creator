@@ -4549,23 +4549,50 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     contextReaders: {
       // context.projects —— 复用 projectsRepo.list(user-scoped: WHERE user_id = ctx.userId)。
       // repo.list 按 createdAt asc 返回 → 这里按 updatedAt(缺则 createdAt)desc 取「最近」再截断。
-      listProjects: async (c: RequestContext, opts: { limit: number }) => {
+      listProjects: async (
+        c: RequestContext,
+        opts: { limit: number; offset: number },
+      ) => {
+        // [T-058②] 分页 + 总数:repo 全量拉(用户级列表,量级百条内),排序后按
+        // offset/limit 切片,带 total —— 模型据此如实告知「还有 N 条」并可翻页看全。
         const rows = await projectsRepo.list(c);
-        return [...rows]
-          .sort((a, b) =>
-            (b.updatedAt ?? b.createdAt ?? "").localeCompare(
-              a.updatedAt ?? a.createdAt ?? "",
-            ),
-          )
-          .slice(0, opts.limit)
-          .map((p) => ({
-            id: p.id,
-            title: p.title,
-            stage: p.currentStage,
-            status: p.status,
-            // 项目实体无 publishedAt(发布时间在 publication 上)→ 诚实置 null,不臆造。
-            publishedAt: null,
-          }));
+        const sorted = [...rows].sort((a, b) =>
+          (b.updatedAt ?? b.createdAt ?? "").localeCompare(
+            a.updatedAt ?? a.createdAt ?? "",
+          ),
+        );
+        return {
+          total: sorted.length,
+          rows: sorted
+            .slice(opts.offset, opts.offset + opts.limit)
+            .map((p) => ({
+              id: p.id,
+              title: p.title,
+              stage: p.currentStage,
+              status: p.status,
+              publishedAt: null,
+            })),
+        };
+      },
+      // [T-058③] 观众评论只读(audience_signals source='comment',最新在前,带 total)。
+      listComments: async (
+        c: RequestContext,
+        opts: { limit: number; offset: number },
+      ) => {
+        const { rows, total } = await candidateService.listSignals(c, {
+          source: "comment",
+          limit: opts.limit,
+          offset: opts.offset,
+        });
+        return {
+          total,
+          rows: rows.map((r) => ({
+            text: r.rawText,
+            likeCount: r.likeCount ?? null,
+            source: r.source,
+            createdAt: r.createdAt,
+          })),
+        };
       },
       // context.knowledge —— 复用 knowledgeService.listKnowledge(user-scoped: repo.list(ctx.userId))。
       // query 空 → 回最近若干条;非空 → **分词 OR 模糊匹配**(T-039a 放宽:原来是「整串 title.includes」

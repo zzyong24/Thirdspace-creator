@@ -251,6 +251,16 @@ function AmmoDrawer({
               data-kind={item.kind}
               className="w-[220px] shrink-0 rounded-[10px] border border-border bg-surface px-3 py-2.5"
             >
+              {/* [T-058④] 图片素材直接给缩略图预览;非图片退回类型徽标。 */}
+              {item.previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={item.previewUrl}
+                  alt={item.title}
+                  data-slot="ammo-preview"
+                  className="mb-1.5 h-20 w-full rounded-md border border-border object-cover"
+                />
+              ) : null}
               <p
                 className={cn(
                   "mb-1 text-[10.5px] font-bold tracking-wide",

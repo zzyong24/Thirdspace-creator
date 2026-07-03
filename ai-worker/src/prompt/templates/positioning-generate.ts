@@ -22,6 +22,25 @@ export const positioningSuggestionSchema = z.object({
   capabilities: z.array(z.string()).default([]),
   oneLiner: z.string().default(""),
   keywords: z.array(z.string()).default([]),
+  // [T-058①] 定位中心的富 facets(内容范围/不做什么/核心痛点/核心价值/表达风格/当前状态)。
+  // 采纳时随 5-facet 一起 upsert —— 否则用户在对话里看到的完整母版落库即丢一半。
+  facets: z
+    .object({
+      contentScope: z.string().default(""),
+      avoid: z.string().default(""),
+      corePain: z.string().default(""),
+      coreValue: z.string().default(""),
+      tone: z.string().default(""),
+      statusNote: z.string().default(""),
+    })
+    .default({
+      contentScope: "",
+      avoid: "",
+      corePain: "",
+      coreValue: "",
+      tone: "",
+      statusNote: "",
+    }),
 });
 export type PositioningSuggestionOutput = z.infer<
   typeof positioningSuggestionSchema
@@ -50,7 +69,13 @@ export const POSITIONING_GENERATE_TEMPLATE: PromptTemplate = {
  "differentiation":"差异化（与同赛道竞品的不同）",
  "capabilities":["支撑这个定位的能力1","能力2","能力3"],
  "oneLiner":"一句话定位（放大到首屏的那句，钩子+承诺）",
- "keywords":["关键词1","关键词2","关键词3"]}
-keywords 必须正好 3 个。capabilities 给 2-5 个。`,
+ "keywords":["关键词1","关键词2","关键词3"],
+ "facets":{"contentScope":"内容范围（会讲什么/选题边界）",
+  "avoid":"不做什么（明确排除，2-4 条并成一句）",
+  "corePain":"核心痛点（受众最痛的问题）",
+  "coreValue":"核心价值（给受众的根本回报）",
+  "tone":"表达风格（语气/调性）",
+  "statusNote":"当前状态（账号此刻所处阶段）"}}
+keywords 必须正好 3 个。capabilities 给 2-5 个。facets 六项都要填,不许留空。`,
   requiredFacets: ["current"],
 };

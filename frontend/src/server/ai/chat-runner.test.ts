@@ -52,15 +52,19 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
       list: async () => [{ title: "RAG 实战", knowledgeType: "note" }],
     },
     contextReaders: {
-      listProjects: async () => [
-        {
-          id: "proj-1",
-          title: "上下文工程",
-          stage: "planning",
-          status: "active",
-          publishedAt: null,
-        },
-      ],
+      listComments: async () => ({ rows: [], total: 0 }),
+      listProjects: async () => ({
+        total: 1,
+        rows: [
+          {
+            id: "proj-1",
+            title: "上下文工程",
+            stage: "planning",
+            status: "active",
+            publishedAt: null,
+          },
+        ],
+      }),
       searchKnowledge: async () => [
         { id: "kn-1", title: "RAG 实战", snippet: "检索增强要点" },
       ],
@@ -147,10 +151,12 @@ describe("buildChatAssembly — 三层注入装配", () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(Object.keys(a.tools).sort()).toEqual([
+      "context.comments",
       "context.knowledge",
       "context.materials",
       "context.projects",
       "material.gather",
+      "positioning.generate",
       "script.draft",
       "script.hooks",
       "topic.enrich",
@@ -171,6 +177,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.calibration");
     expect(Object.keys(a.tools).sort()).toEqual([
       "calibration.diagnose",
+      "context.comments",
       "context.knowledge",
       "context.materials",
       "context.projects",
@@ -184,6 +191,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     const a = await buildChatAssembly(ctx, { surface: "positioning" }, deps);
     expect(a.skillId).toBe("chatbox.positioning");
     expect(Object.keys(a.tools).sort()).toEqual([
+      "context.comments",
       "context.knowledge",
       "context.materials",
       "context.projects",
@@ -299,10 +307,12 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     expect(Object.keys(a.tools).sort()).toEqual([
+      "context.comments",
       "context.knowledge",
       "context.materials",
       "context.projects",
       "material.gather",
+      "positioning.generate",
       "script.draft",
       "script.hooks",
       "topic.enrich",
@@ -337,18 +347,22 @@ describe("buildChatAssembly — 三层注入装配", () => {
   });
 
   it("只读 context 工具 execute → 经 ctx 调注入的 user-scoped 读端口(拉真数据)", async () => {
-    const listProjects = vi.fn(async () => [
-      {
-        id: "proj-1",
-        title: "上下文工程",
-        stage: "planning",
-        status: "active",
-        publishedAt: null,
-      },
-    ]);
+    const listProjects = vi.fn(async () => ({
+      total: 1,
+      rows: [
+        {
+          id: "proj-1",
+          title: "上下文工程",
+          stage: "planning",
+          status: "active",
+          publishedAt: null,
+        },
+      ],
+    }));
     const { deps } = makeDeps({
       contextReaders: {
         listProjects,
+        listComments: async () => ({ rows: [], total: 0 }),
         searchKnowledge: async () => [],
         searchMaterials: async () => [],
       },
@@ -358,7 +372,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       limit: 5,
     })) as { kind: string; items: unknown[] };
     // 读端口收到本请求 ctx(user-scoping 由端口内部据 ctx.userId 收窄)。
-    expect(listProjects).toHaveBeenCalledWith(ctx, { limit: 5 });
+    expect(listProjects).toHaveBeenCalledWith(ctx, { limit: 5, offset: 0 });
     expect(result.kind).toBe("context.projects");
     expect(result.items).toHaveLength(1);
   });

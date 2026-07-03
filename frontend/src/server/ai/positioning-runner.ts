@@ -41,6 +41,15 @@ export interface PositioningSuggestion {
   capabilities: string[];
   oneLiner: string;
   keywords: string[]; // exactly 3 (clamped at parse)
+  // [T-058①] 定位中心富 facets —— 采纳时随 5-facet 一起 upsert(缺则空串,诚实不编)。
+  facets: {
+    contentScope: string;
+    avoid: string;
+    corePain: string;
+    coreValue: string;
+    tone: string;
+    statusNote: string;
+  };
 }
 
 export interface PositioningDeps extends ContextDeps {
@@ -82,8 +91,14 @@ ${current}${accounts}
  "differentiation":"差异化（与同赛道竞品的不同）",
  "capabilities":["支撑这个定位的能力1","能力2","能力3"],
  "oneLiner":"一句话定位（放大到首屏的那句，钩子+承诺）",
- "keywords":["关键词1","关键词2","关键词3"]}
-keywords 必须正好 3 个。capabilities 给 2-5 个。`;
+ "keywords":["关键词1","关键词2","关键词3"],
+ "facets":{"contentScope":"内容范围（会讲什么/选题边界）",
+  "avoid":"不做什么（明确排除，2-4 条并成一句）",
+  "corePain":"核心痛点（受众最痛的问题）",
+  "coreValue":"核心价值（给受众的根本回报）",
+  "tone":"表达风格（语气/调性）",
+  "statusNote":"当前状态（账号此刻所处阶段）"}}
+keywords 必须正好 3 个。capabilities 给 2-5 个。facets 六项都要填,不许留空。`;
 }
 
 // Assemble the positioning.generate 模板 facets from the CreativeContext (占位化原
@@ -139,6 +154,14 @@ function normalizeSuggestion(
     capabilities: asStrings(o.capabilities),
     oneLiner: str(o.oneLiner),
     keywords: clampKeywords(o.keywords),
+    facets: {
+      contentScope: str(o.facets?.contentScope),
+      avoid: str(o.facets?.avoid),
+      corePain: str(o.facets?.corePain),
+      coreValue: str(o.facets?.coreValue),
+      tone: str(o.facets?.tone),
+      statusNote: str(o.facets?.statusNote),
+    },
   };
   // A suggestion with neither a persona nor a one-liner is not usable.
   if (!suggestion.persona && !suggestion.oneLiner) return null;

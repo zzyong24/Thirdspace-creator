@@ -56,16 +56,30 @@ export interface ContextReaders {
   /** 列该用户最近的项目/作品(用于 context.projects)。 */
   listProjects: (
     ctx: RequestContext,
-    opts: { limit: number },
-  ) => Promise<
-    Array<{
+    opts: { limit: number; offset: number },
+  ) => Promise<{
+    rows: Array<{
       id: string;
       title: string;
       stage: string;
       status: string;
       publishedAt?: string | null;
-    }>
-  >;
+    }>;
+    total: number;
+  }>;
+  /** [T-058③] 观众评论只读(audience_signals source='comment',最新在前)。 */
+  listComments: (
+    ctx: RequestContext,
+    opts: { limit: number; offset: number },
+  ) => Promise<{
+    rows: Array<{
+      text: string;
+      likeCount: number | null;
+      source: string;
+      createdAt: string;
+    }>;
+    total: number;
+  }>;
   /** 搜该用户知识库(用于 context.knowledge)。query 空 → 回最近若干条。 */
   searchKnowledge: (
     ctx: RequestContext,
@@ -165,6 +179,15 @@ export async function buildChatAssembly(
   const baseSystem = assembleChatSystem(skill.system, context, {
     includeAccounts: skillId === "chatbox.positioning",
   });
+  // [T-058①B] 能力边界诚实(实录复盘:模型口头宣称「已采纳写入定位母版」但 DB 未动):
+  // 写库只经工具产卡+用户点采纳;禁止假承诺;工具带分页限制时如实说明。
+  const honestyBlock = [
+    "【能力边界 —— 必须遵守】",
+    "1. 你对任何数据的写入都只有一条路径:调用对应工具产出候选卡,由用户点卡上的「采纳/写入」按钮完成。你自己没有直接写库能力。",
+    "2. 绝不口头宣称「已写入/已采纳/已保存」—— 除非你看到用户明确说 TA 已点过采纳按钮。用户想落库时,引导 TA:先让你调工具产卡,再点卡上的按钮。",
+    "3. 用户要新定位 → 必须调 positioning.generate 工具(产带采纳按钮的卡),不要只在文本里写定位 —— 文本无法被采纳。",
+    "4. 工具有分页/条数上限时,如实告知拿到了多少、还有没有更多,不要谎称已看全部。",
+  ].join("\n");
   const selectionBlock = assembleSelectionContext(chatContext.selection);
   // T-039a 补:复盘对话「瞎问复盘对象」根因 —— 本项目真材料虽已装进 context(reviewSubject reader)
   // 且进了 review.analyze 工具的 facets,但**没进对话系统提示**,故 LLM 在决定调用工具前不知道复盘哪条,
@@ -183,7 +206,7 @@ export async function buildChatAssembly(
           .filter(Boolean)
           .join("\n")
       : "";
-  const system = [baseSystem, reviewSubjectBlock, selectionBlock]
+  const system = [baseSystem, honestyBlock, reviewSubjectBlock, selectionBlock]
     .filter(Boolean)
     .join("\n\n");
   // 选中态标题 —— 工具入参兜底(模型没显式传 title/subject 时用它,避免拿空标题去诊断)。
@@ -368,9 +391,13 @@ ${context.positioningBrief}`
     },
     // 只读 context 工具 —— execute 直接调注入的 user-scoped 读端口(不跑模型、不产候选、不写实体)。
     // 端口未装配(contextReaders 缺省)→ 回空数组(诚实降级,绝不塞假数据),模型据此如实作答。
-    listProjects: async ({ limit }) => {
-      if (!deps.contextReaders) return [];
-      return deps.contextReaders.listProjects(ctx, { limit });
+    listProjects: async ({ limit, offset }) => {
+      if (!deps.contextReaders) return { rows: [], total: 0 };
+      return deps.contextReaders.listProjects(ctx, { limit, offset });
+    },
+    listComments: async ({ limit, offset }) => {
+      if (!deps.contextReaders) return { rows: [], total: 0 };
+      return deps.contextReaders.listComments(ctx, { limit, offset });
     },
     searchKnowledge: async ({ query, limit }) => {
       if (!deps.contextReaders) return [];
