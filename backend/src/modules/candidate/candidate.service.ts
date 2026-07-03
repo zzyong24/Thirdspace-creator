@@ -178,6 +178,9 @@ export interface IngestSignalInput {
   publicationId?: string | null;
   // 评论点赞数 —— 热榜排序依据 (T-042). 采集时从 digg_count 带进来;非评论/无值 → null。
   likeCount?: number | null;
+  // 评论粒度幂等锚 (T-065) — `douyin:comment:<cid>`。带锚重复写命中唯一索引 → 跳过
+  // (返回已存在信号,inserted=false),同一评论跨采集 run 不再重复入库。
+  externalId?: string | null;
 }
 
 export interface CandidateService {
@@ -222,10 +225,11 @@ export interface CandidateService {
 
   // C-4 intake seam — called by the Ingestion module per record. NOT a contract op.
   // Requires ctx.ingestionRunId; rejects 悬空 runId (RISK-005); bumps demandCount.
+  // 返回信号资源 + inserted(false=命中评论幂等锚 external_id,未新写行,T-065)。
   ingestAudienceSignal(
     ctx: RequestContext,
     record: IngestSignalInput,
-  ): Promise<AudienceSignalResource>;
+  ): Promise<AudienceSignalResource & { inserted: boolean }>;
 
   // 选题中心总览 (topics.overview) — 出题依据 + 7 来源 + 6 态漏斗, every count DERIVED
   // from real rows at read time (candidate-module counts + the SOFT overview port for
@@ -417,7 +421,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // OwnershipError) BEFORE any signal row references it.
       await ingestion.assertRunExists(ctx, runId);
       const repo = repoFor(ctx);
-      const signal = await repo.createSignal({
+      const { row: signal, inserted } = await repo.createSignal({
         source: record.source,
         rawText: record.rawText,
         demandTag: record.demandTag ?? null,
@@ -429,12 +433,15 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         publicationId: record.publicationId ?? null,
         // 评论点赞数 (T-042 热榜排序依据) — 采集带的 digg_count;无值 → null。
         likeCount: record.likeCount ?? null,
+        // 评论粒度幂等锚 (T-065) — 重复采集命中唯一索引 → inserted=false,不重复入库。
+        externalId: record.externalId ?? null,
       });
-      if (record.linkedCandidateRef) {
-        // bump the linked Candidate's demand_count (recompute keeps it honest).
+      if (inserted && record.linkedCandidateRef) {
+        // bump the linked Candidate's demand_count (recompute keeps it honest;
+        // 幂等跳过的写不重复计数,T-065)。
         await repo.recomputeDemandCount(record.linkedCandidateRef);
       }
-      return toAudienceSignalDto(signal);
+      return { ...toAudienceSignalDto(signal), inserted };
     },
 
     async getTopicsOverview(ctx) {

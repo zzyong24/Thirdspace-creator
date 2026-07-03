@@ -47,7 +47,7 @@ describe("candidate repository (integration)", () => {
     expect(cand.demandCount).toBe(0);
     expect(cand.createdAt).toBe(NOW);
 
-    const signal = await repo.createSignal({
+    const { row: signal, inserted } = await repo.createSignal({
       source: "comment",
       rawText: "怎么入门？",
       demandTag: "入门",
@@ -55,6 +55,7 @@ describe("candidate repository (integration)", () => {
       linkedCandidateId: cand.id,
       ingestionRunId: "run-1",
     });
+    expect(inserted).toBe(true);
     expect(signal.linkedCandidateId).toBe(cand.id);
     expect(signal.ingestionRunId).toBe("run-1");
     expect(signal.createdAt).toBe(NOW);
@@ -127,6 +128,38 @@ describe("candidate repository (integration)", () => {
     expect(count).toBe(2);
     const refreshed = await repo.getCandidate(cand.id);
     expect(refreshed.demandCount).toBe(2);
+  });
+
+  it("createSignal 带 external_id 幂等:同 cid 二次插入不重复(T-065)", async () => {
+    const repo = repoFor(db, "user-a");
+    const base = {
+      source: "comment",
+      rawText: "大佬求带",
+      demandTag: null,
+      payingIntent: null,
+      linkedCandidateId: null,
+      ingestionRunId: "run-1",
+      externalId: "douyin:comment:7657740645872599859",
+    };
+    const first = await repo.createSignal(base);
+    expect(first.inserted).toBe(true);
+    // 第二次同 external_id(哪怕换 run / 换 publication)→ 命中唯一锚,返回原行,不新写。
+    const second = await repo.createSignal({
+      ...base,
+      ingestionRunId: "run-2",
+      publicationId: "pub-其他作品",
+    });
+    expect(second.inserted).toBe(false);
+    expect(second.row.id).toBe(first.row.id);
+    const { total } = await repo.listSignals({});
+    expect(total).toBe(1);
+    // 无锚写入(dm 等)不受约束,照常直插。
+    const dm = await repo.createSignal({
+      ...base,
+      source: "dm",
+      externalId: null,
+    });
+    expect(dm.inserted).toBe(true);
   });
 
   it("rejects a free patch that sets promoted or demandCount (derived-field guard)", async () => {

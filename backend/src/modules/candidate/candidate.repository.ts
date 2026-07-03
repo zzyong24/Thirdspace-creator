@@ -75,6 +75,15 @@ export interface CreateSignalInput {
   publicationId?: string | null;
   // 评论点赞数 (T-042 热榜排序依据) — 采集带的 digg_count;无值 → null。
   likeCount?: number | null;
+  // 评论粒度幂等锚 (T-065) — 形如 `douyin:comment:<cid>`。带锚时 createSignal 走
+  // onConflictDoNothing(user+source+external_id 部分唯一索引),重复采集不重复入库。
+  externalId?: string | null;
+}
+
+// createSignal 的结果:row + 是否真新插入(inserted=false 表示命中幂等锚、返回已存在行)。
+export interface CreateSignalResult {
+  row: AudienceSignalRow;
+  inserted: boolean;
 }
 
 export interface ListSignalsQuery {
@@ -109,7 +118,7 @@ export interface CandidateRepository {
   }): Promise<TopicPromotionRow>;
 
   // Signals.
-  createSignal(input: CreateSignalInput): Promise<AudienceSignalRow>;
+  createSignal(input: CreateSignalInput): Promise<CreateSignalResult>;
   getSignal(id: string): Promise<AudienceSignalRow>;
   listSignals(
     query: ListSignalsQuery,
@@ -320,23 +329,55 @@ export function createCandidateRepository(
     },
 
     async createSignal(input) {
+      const values = {
+        id: deps.nextId("sig"),
+        userId: deps.userId,
+        source: input.source,
+        rawText: input.rawText,
+        demandTag: input.demandTag,
+        payingIntent: input.payingIntent,
+        linkedCandidateId: input.linkedCandidateId,
+        ingestionRunId: input.ingestionRunId,
+        publicationId: input.publicationId ?? null,
+        likeCount: input.likeCount ?? null,
+        externalId: input.externalId ?? null,
+        createdAt: deps.now(),
+      };
+      // T-065 评论粒度幂等:带 external_id 的写入撞 ux_audience_signals_user_source_external
+      // (user+source+external_id 部分唯一索引)即跳过,返回已存在行 + inserted=false。
+      // 无锚(external_id 空,dm/consultation 等)保持原样直插。
+      if (input.externalId) {
+        const inserted = await db
+          .insert(audienceSignals)
+          .values(values)
+          .onConflictDoNothing({
+            target: [
+              audienceSignals.userId,
+              audienceSignals.source,
+              audienceSignals.externalId,
+            ],
+            // 部分唯一索引的谓词(ON CONFLICT ... WHERE external_id IS NOT NULL)。
+            where: sql`${audienceSignals.externalId} IS NOT NULL`,
+          })
+          .returning();
+        if (inserted[0]) return { row: inserted[0], inserted: true };
+        const existing = await db
+          .select()
+          .from(audienceSignals)
+          .where(
+            and(
+              eq(audienceSignals.userId, deps.userId),
+              eq(audienceSignals.source, input.source),
+              eq(audienceSignals.externalId, input.externalId),
+            ),
+          );
+        return { row: existing[0]!, inserted: false };
+      }
       const inserted = await db
         .insert(audienceSignals)
-        .values({
-          id: deps.nextId("sig"),
-          userId: deps.userId,
-          source: input.source,
-          rawText: input.rawText,
-          demandTag: input.demandTag,
-          payingIntent: input.payingIntent,
-          linkedCandidateId: input.linkedCandidateId,
-          ingestionRunId: input.ingestionRunId,
-          publicationId: input.publicationId ?? null,
-          likeCount: input.likeCount ?? null,
-          createdAt: deps.now(),
-        })
+        .values(values)
         .returning();
-      return inserted[0]!;
+      return { row: inserted[0]!, inserted: true };
     },
 
     async getSignal(id) {

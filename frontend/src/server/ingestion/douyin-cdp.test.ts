@@ -190,8 +190,10 @@ function makeFakePorts(resolveMap?: Record<string, string | null>) {
     rawText: string;
     runId: string;
     publicationId: string | null;
+    externalId: string | null;
   }> = [];
   const ledger = new Set<string>(); // `${runId}::${recordKey}` = ux 去重锚
+  const uniqueByExternal = new Set<string>(); // 模拟 ux_audience_signals_user_source_external(T-065)
   const runs = new Map<string, string>(); // idempotencyKey → runId(建 run 幂等)
   let runSeq = 0;
   const calls = {
@@ -217,12 +219,21 @@ function makeFakePorts(resolveMap?: Record<string, string | null>) {
     },
     async ingestSignal(input) {
       calls.ingestSignal += 1;
+      // 模拟跨 run 唯一锚(user+source+external_id 部分唯一索引,T-065):
+      // 已存在 → onConflictDoNothing,不新写,inserted=false。
+      if (input.externalId) {
+        const key = `${input.source}::${input.externalId}`;
+        if (uniqueByExternal.has(key)) return { inserted: false };
+        uniqueByExternal.add(key);
+      }
       signals.push({
         source: input.source,
         rawText: input.rawText,
         runId: input.ingestionRunId,
         publicationId: input.publicationId,
+        externalId: input.externalId,
       });
+      return { inserted: true };
     },
     async completeRun() {
       calls.completeRun += 1;
@@ -321,6 +332,50 @@ describe("ingestComments 落库 helper(fake ports,T-007 D2)", () => {
   });
 });
 
+describe("ingestComments 跨 run 幂等(external_id 锚,T-065)", () => {
+  it("换 capturedAt(新 run)重采同 cid → 第二次全 skipped,信号不翻倍", async () => {
+    const { ports, signals } = makeFakePorts();
+    const first = await ingestComments("7400", CMT_FIXTURE, {
+      ports,
+      externalSourceId: "src-douyin",
+      capturedAt: "2026-06-30T00:00:00.000Z",
+    });
+    expect(first.written).toBe(2);
+    // 旧 bug 复现路径:每次采集 capturedAt 变 → 新 run → run 内 record_key 锚失效。
+    // 现在 external_id 跨 run 唯一 → 第二次 inserted=false 全跳过。
+    const second = await ingestComments("7400", CMT_FIXTURE, {
+      ports,
+      externalSourceId: "src-douyin",
+      capturedAt: "2026-07-01T00:00:00.000Z",
+    });
+    expect(second.runId).not.toBe(first.runId); // 确实是新 run
+    expect(second.written).toBe(0);
+    expect(second.skipped).toBe(2);
+    expect(signals).toHaveLength(2); // 库内仍 2 条,未翻倍
+    // 信号带评论粒度幂等锚(cid 路径)。
+    expect(signals[0].externalId).toBe("douyin:comment:c-1");
+  });
+
+  it("同一全局评论列表被多个作品导航重复拦到(item_id 过滤失效)→ 只落一次", async () => {
+    const { ports, signals } = makeFakePorts({ "7400": "pub-A", "7500": "pub-B" });
+    // 作品 A 采到全局列表(含 c-1/c-2)。
+    await ingestComments("7400", CMT_FIXTURE, {
+      ports,
+      externalSourceId: "src-douyin",
+      capturedAt: "2026-06-30T00:00:00.000Z",
+    });
+    // 作品 B 导航同一评论管理页,又拦到同一份列表 → 全部 skipped,不产生 B 归属的重复行。
+    const res = await ingestComments("7500", CMT_FIXTURE, {
+      ports,
+      externalSourceId: "src-douyin",
+      capturedAt: "2026-06-30T00:00:01.000Z",
+    });
+    expect(res.written).toBe(0);
+    expect(res.skipped).toBe(2);
+    expect(signals).toHaveLength(2);
+  });
+});
+
 describe("ingestComments 按 aweme_id 回填 publication_id(T-030 D6,F3)", () => {
   it("命中 imported 作品 publication → 每条信号带 publication_id(一次解析复用整批)", async () => {
     // aweme_id=7400 → publication pub-P(模拟 publications.externalId=aweme_id 命中)。
@@ -336,6 +391,27 @@ describe("ingestComments 按 aweme_id 回填 publication_id(T-030 D6,F3)", () =>
     expect(signals.every((s) => s.publicationId === "pub-P")).toBe(true);
     // 一次解析复用整批(按 aweme 而非按评论 resolve)。
     expect(calls.resolvePublicationId).toBe(1);
+  });
+
+  it("评论带自己的 aweme_id(≠目标作品)→ 按评论自身 aweme 归属(T-065 修 73 作品误归属)", async () => {
+    // 目标作品 7400,但列表混入别的作品(7500)的评论(item_id 过滤失效的真实形态)。
+    const mixed: CommentRecord[] = [
+      CMT_FIXTURE[0], // awemeId=7400
+      { ...CMT_FIXTURE[1], commentId: "c-9", awemeId: "7500" },
+    ];
+    const { ports, signals, calls } = makeFakePorts({
+      "7400": "pub-A",
+      "7500": "pub-B",
+    });
+    await ingestComments("7400", mixed, {
+      ports,
+      externalSourceId: "src-douyin",
+      capturedAt: "2026-06-30T00:00:00.000Z",
+    });
+    // 各归各的 publication,不再整批按目标 awemeId 一刀切。
+    expect(signals.map((s) => s.publicationId)).toEqual(["pub-A", "pub-B"]);
+    // 按 aweme 缓存解析(2 个不同 aweme → 2 次)。
+    expect(calls.resolvePublicationId).toBe(2);
   });
 
   it("无匹配作品(未导入/未发布)→ publication_id 空,评论仍落库,不报错(F3)", async () => {

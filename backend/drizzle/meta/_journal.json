@@ -113,6 +113,20 @@
       "when": 1782380300001,
       "tag": "0015_retire_thesis_contract",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1782380400000,
+      "tag": "0016_audience_signals_external_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1782380400001,
+      "tag": "0017_publication_hidden_at",
+      "breakpoints": true
     }
   ]
 }

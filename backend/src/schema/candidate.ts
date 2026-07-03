@@ -68,6 +68,10 @@ export const audienceSignals = pgTable("audience_signals", {
   // 评论点赞数 —— 热榜排序依据 (T-042, 迁移 0014). 采集时抓 digg_count 带进来;NULLABLE:
   // 存量评论(0014 之前入库)无点赞值,非评论信号 (dm/consultation/review) 也留空。
   likeCount: integer("like_count"),
+  // 评论粒度幂等锚 (T-065, 迁移 0016) —— 形如 `douyin:comment:<cid>`。跨 run 唯一
+  // (ux_audience_signals_user_source_external 部分唯一索引),重复采集 onConflict 跳过。
+  // NULLABLE:存量行与非评论信号无锚,留空(NULL 不受唯一约束)。
+  externalId: text("external_id"),
   createdAt: text("created_at").notNull(),
 });
 
@@ -115,6 +119,7 @@ CREATE TABLE IF NOT EXISTS audience_signals (
   ingestion_run_id TEXT,
   publication_id TEXT,
   like_count INTEGER,
+  external_id TEXT,
   created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS topic_promotions (
@@ -126,6 +131,7 @@ CREATE TABLE IF NOT EXISTS topic_promotions (
 );
 CREATE INDEX IF NOT EXISTS ix_audience_signals_candidate ON audience_signals (linked_candidate_id);
 CREATE INDEX IF NOT EXISTS ix_audience_signals_pub ON audience_signals (user_id, publication_id);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_audience_signals_user_source_external ON audience_signals (user_id, source, external_id) WHERE external_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS ix_candidates_user_status ON candidates (user_id, status);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_topic_promotions_candidate ON topic_promotions (candidate_id);
 `;

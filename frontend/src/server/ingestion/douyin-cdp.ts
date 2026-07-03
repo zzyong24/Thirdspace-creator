@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import type { MetricRecord } from "@creatoros/backend/modules/ingestion";
 // T-038b 限流网关集成:每个对外抖音请求过 withDouyinChannel(acquire→跑→report)。
 // gateway 走**可注入窄端口**(DouyinChannelGate),默认 instantNoopGateway(不真等)——
@@ -872,7 +873,17 @@ async function scrapeCommentsForWork(
       // [gate-F7 插装点③] 每翻一页 acquire 一次 creator-center(评论翻页真正限速)。
       await withDouyinChannel(gateway, "creator-center", async () => {
         await page
-          .evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+          .evaluate(() => {
+            // 窗口滚 + 内层可滚容器全滚到底(T-065 拉全:评论管理页列表是内层滚动容器,
+            // 只滚 window 触发不了下一页加载 → 之前每作品只拿到首屏)。
+            window.scrollTo(0, document.body.scrollHeight);
+            for (const el of Array.from(document.querySelectorAll("*"))) {
+              const e = el as HTMLElement;
+              if (e.scrollHeight > e.clientHeight + 100) {
+                e.scrollTop = e.scrollHeight;
+              }
+            }
+          })
           .catch(() => {});
         await page.mouse.wheel(0, 2000).catch(() => {});
         await page.waitForTimeout(2000);
@@ -1588,7 +1599,9 @@ export interface CommentIngestPorts {
   recordExists(runId: string, recordKey: string): Promise<boolean>;
   /** 落 ingestion_records ledger(幂等锚);标记该 record_key 已写。 */
   markRecordWritten(runId: string, recordKey: string): Promise<void>;
-  /** 写一条 audience_signal(C-4:ingestionRunId 必带,见 ingestAudienceSignal)。 */
+  /** 写一条 audience_signal(C-4:ingestionRunId 必带,见 ingestAudienceSignal)。
+   *  T-065:带 externalId(评论粒度幂等锚);返回 inserted=false 表示命中跨 run 唯一锚
+   *  (user+source+external_id)、库里已有该评论,本次未新写。 */
   ingestSignal(input: {
     source: string;
     rawText: string;
@@ -1599,7 +1612,9 @@ export interface CommentIngestPorts {
     publicationId: string | null;
     // 评论点赞数 (T-042 热榜排序依据) — 采集抓的 digg_count;无值 → null。
     likeCount: number | null;
-  }): Promise<void>;
+    // 评论粒度幂等锚 (T-065) — `douyin:comment:<cid>`;cid 拿不到时退化为内容 hash 锚。
+    externalId: string | null;
+  }): Promise<{ inserted: boolean }>;
   /** 完成该 run(status→completed)。 */
   completeRun(runId: string): Promise<void>;
   /**
@@ -1618,7 +1633,22 @@ export interface IngestCommentsResult {
   runId: string;
   received: number; // 收到评论条数
   written: number; // 实际新写入信号条数
-  skipped: number; // record_key 命中已写 → 跳过条数
+  skipped: number; // 命中去重锚跳过条数(run 内 record_key 或跨 run external_id,T-065)
+}
+
+/**
+ * 评论粒度幂等锚 (T-065):首选 `douyin:comment:<cid>`(抖音评论接口的稳定 cid,
+ * parseCommentList 已多键兜底 cid|comment_id|id 且丢弃无 cid 脏数据 —— 实际链路必有);
+ * 极端退化(手工构造/未来源无 cid)用内容 hash 锚 `douyin:comment:h:<sha256-16>`
+ * (source+aweme+作者+文本,同一评论重采可复现)。
+ */
+export function commentExternalId(c: CommentRecord): string {
+  if (c.commentId) return `douyin:comment:${c.commentId}`;
+  const h = createHash("sha256")
+    .update(`comment|${c.awemeId}|${c.userId}|${c.userName}|${c.text}`)
+    .digest("hex")
+    .slice(0, 16);
+  return `douyin:comment:h:${h}`;
 }
 
 /**
@@ -1645,31 +1675,44 @@ export async function ingestComments(
     runType: "douyin_comments",
     idempotencyKey: `${externalSourceId}:comments:${capturedAt}`,
   });
-  // 评论按作品可读 (T-030 D6, F3):按本次采集的 aweme_id 查对应 publication(一次解析,
-  // 复用给整批评论)。无匹配作品(未导入/未发布)→ null,评论仍落库,publication_id 留空。
+  // 评论按作品可读 (T-030 D6, F3) + 误归属修复 (T-065):按**评论自身的 aweme_id**(XHR
+  // payload 携带)解析 publication,退化用本次采集的目标 awemeId。T-065 真机实锤:创作者
+  // 中心评论管理页的 `item_id` 过滤不生效(每个作品导航拦到同一份全局评论列表),旧实现
+  // 「整批按目标 awemeId 解析一次」把同一条评论归到 73 个不同 publication —— 现改为逐评论
+  // 按其真实 aweme_id 归属(按 aweme 缓存,避免重复解析)。无匹配作品 → null,评论仍落库。
   // 省略 resolvePublicationId port(D2 fake 测试)→ 全部留空。
-  const publicationId = ports.resolvePublicationId
-    ? await ports.resolvePublicationId(awemeId)
-    : null;
+  const pubCache = new Map<string, string | null>();
+  const resolvePub = async (aweme: string): Promise<string | null> => {
+    if (!ports.resolvePublicationId) return null;
+    if (!pubCache.has(aweme)) {
+      pubCache.set(aweme, await ports.resolvePublicationId(aweme));
+    }
+    return pubCache.get(aweme) ?? null;
+  };
   let written = 0;
   let skipped = 0;
   for (const c of records) {
-    const recordKey = `douyin:comment:${c.commentId}`;
-    // 去重锚:record_key 已在该 run 落过 → 跳过(不重复写信号)。
+    const externalId = commentExternalId(c); // 评论粒度幂等锚(cid 首选,T-065)
+    const recordKey = externalId; // run 内 ledger 锚沿用同一 key(cid 路径与旧值一致)
+    // 去重锚①:record_key 已在该 run 落过 → 跳过(不重复写信号)。
     if (await ports.recordExists(run.id, recordKey)) {
       skipped += 1;
       continue;
     }
-    await ports.ingestSignal({
+    const { inserted } = await ports.ingestSignal({
       source: "comment", // 既有 enum(不扩 douyin_comment)
       rawText: c.text,
       demandTag: null,
       ingestionRunId: run.id, // C-4 铁律:信号写必带真 run id
-      publicationId, // 回填作品绑定(F3:仅本次采集能带,存量无锚)
+      // 按评论自身 aweme_id 归属(payload 无 aweme_id 时 parseCommentList 已回填目标 awemeId)。
+      publicationId: await resolvePub(c.awemeId || awemeId),
       likeCount: c.likeCount ?? null, // T-042 热榜排序依据(采集抓的 digg_count)
+      externalId, // 去重锚②:跨 run 唯一(user+source+external_id,T-065)
     });
     await ports.markRecordWritten(run.id, recordKey);
-    written += 1;
+    // 去重锚②命中(库里已有该 cid,前次采集写的)→ 计 skipped,不算新写。
+    if (inserted) written += 1;
+    else skipped += 1;
   }
   await ports.completeRun(run.id);
   return { runId: run.id, received: records.length, written, skipped };

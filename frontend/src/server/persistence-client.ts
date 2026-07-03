@@ -168,6 +168,7 @@ import {
   parseDouyinWorkListXlsx,
   matchDetailsToPublications,
   toDetailMetricRecords,
+  visibilityFromDetailStatus,
   type PublicationCatalogEntry,
 } from "@/server/ingestion/douyin-work-detail";
 // T-038b 抖音采集限流网关(单例接线):所有对外抖音请求经它 acquire/report(SPEC §4.4)。
@@ -3169,15 +3170,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             source: "ingestion",
             ingestionRunId: input.ingestionRunId,
           };
-          await candidateService.ingestAudienceSignal(signalCtx, {
+          const res = await candidateService.ingestAudienceSignal(signalCtx, {
             source: input.source,
             rawText: input.rawText,
             demandTag: input.demandTag,
-            // 评论按作品可读 (T-030 D6) — 回填作品绑定(ingestComments 已按 aweme_id 解析)。
+            // 评论按作品可读 (T-030 D6) — 回填作品绑定(ingestComments 已按评论自身 aweme_id 解析)。
             publicationId: input.publicationId,
             // 评论点赞数 (T-042 热榜排序依据) — 采集抓的 digg_count。
             likeCount: input.likeCount,
+            // 评论粒度幂等锚 (T-065) — `douyin:comment:<cid>`;跨 run 唯一,重采不重复入库。
+            externalId: input.externalId,
           });
+          // inserted=false → 命中跨 run 幂等锚(库里已有该评论),ingestComments 计 skipped。
+          return { inserted: res.inserted };
         },
         // 按 aweme_id 查对应作品的 publication_id(T-030 D6 回填,F3):命中 published +
         // external_id=aweme_id 的 publication → id,否则 null(评论仍落库,只是不绑作品)。
@@ -3309,6 +3314,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         if (p.externalId) externalIdById.set(p.id, p.externalId);
       }
       const matches = matchDetailsToPublications(details, catalog);
+      // 3b) [T-073] 平台侧可见性同步:明细「审核状态」列(如「仅自己可见」/「已通过」)
+      //     → publication.hidden_at + 导入项目 platform_ref.hidden。判定不了(审核中/
+      //     未通过/空)诚实跳过,不动既有标记;找不到承载行也跳过(不硬造)。放在指标
+      //     落库之前、且不受 records.length===0 早退影响(隐藏作品也可能产不出 record)。
+      for (const m of matches) {
+        if (!m.publicationId) continue;
+        const vis = visibilityFromDetailStatus(m.detail.status);
+        if (vis === "unknown") continue;
+        const extId = externalIdById.get(m.publicationId);
+        if (!extId) continue; // 无 externalId 锚(fixture 轨)→ 跳过
+        const hidden = vis === "hidden";
+        try {
+          await publishingService.setVisibilityByExternalKey(ctx, {
+            platform: "douyin",
+            externalId: extId,
+            hidden,
+          });
+          await projectsService.setImportedProjectHidden(ctx, {
+            platform: "douyin",
+            externalId: extId,
+            hidden,
+          });
+        } catch {
+          // 可见性同步失败不拖垮整批指标落库(best-effort;下轮采集会再同步)。
+        }
+      }
       // 4) 匹配上的明细 → MetricRecord[](未匹配 / 无 externalId 锚 → 跳过,诚实)。
       const records = toDetailMetricRecords(
         matches,
