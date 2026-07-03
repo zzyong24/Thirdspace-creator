@@ -39,6 +39,10 @@ function str(v: unknown): string {
 
 export interface DouyinWork {
   awemeId: string;
+  // [T-089] 官方标题(o.title,创作者填的短标题;老作品/未填时空串)与整篇文案
+  // (o.desc,多行 caption)分离 —— 不再混用。title 空时由 desc 首行派生短标题
+  // (deriveWorkTitle),desc 全文另存(创作资产不丢)。
+  title: string;
   desc: string;
   createTime: number;
   durationSec: number;
@@ -76,7 +80,10 @@ export function parseWorkList(json: unknown): DouyinWork[] {
       const video = (o.video ?? {}) as Record<string, unknown>;
       return {
         awemeId,
-        desc: str(o.desc) || str(o.title),
+        // [T-089] 区分官方 title 与 desc(旧代码 `desc: str(o.desc) || str(o.title)`
+        // 把两者混成一个字段 → 建项目 title 变整篇文案的根因)。
+        title: str(o.title),
+        desc: str(o.desc),
         createTime: num(o.create_time),
         durationSec: Math.round(num(video.duration) / 1000) || num(video.duration),
         stats: {
@@ -167,6 +174,17 @@ export function parseDetail(json: unknown, awemeId: string): DouyinDetail {
   };
 }
 
+// [T-089] 短标题派生规则(单一真源,存量修正脚本同规则):官方 title 非空 → 原样用;
+// 空 → desc 首行(去首尾空白)截 40 字。整篇文案不再当标题。
+export const DERIVED_TITLE_MAX = 40;
+export function deriveWorkTitle(title: string, desc: string): string {
+  const official = title.trim();
+  if (official) return official;
+  const firstLine = (desc.split(/[\r\n]/)[0] ?? "").trim();
+  // 按码点截(Array.from),别把 emoji 代理对劈成半个字符。
+  return [...firstLine].slice(0, DERIVED_TITLE_MAX).join("");
+}
+
 /**
  * 把 work + detail 映射成 ingestion 的 MetricRecord[](落库目标:metric_snapshots /
  * metric_values)。metric 键名对齐现有 douyin seed(views/likes/comments/shares/
@@ -188,9 +206,12 @@ export function toMetricRecords(
     };
     if (det?.finishRate != null) metrics.finish_rate = det.finishRate;
     if (det?.followerGain != null) metrics.follower_gain = det.followerGain;
-    // 数据底座(SPEC §1.3):携带真实标题(desc)+ 发布时刻(create_time 秒 → ISO),
+    // 数据底座(SPEC §1.3):携带真实标题 + 发布时刻(create_time 秒 → ISO),
     //   供 ensureImportedProject 给历史项目起真名 / 落 platform_ref.publishedAt。
-    const title = w.desc.trim() || undefined;
+    // [T-089] title 不再是整篇 desc:官方 title 优先,空则 desc 首行截 40 字;
+    //   desc 全文另存(→ 项目 brief,文案是创作资产不丢)。
+    const title = deriveWorkTitle(w.title, w.desc) || undefined;
+    const desc = w.desc.trim() || undefined;
     const publishedAt =
       w.createTime > 0
         ? new Date(w.createTime * 1000).toISOString()
@@ -203,6 +224,7 @@ export function toMetricRecords(
       capturedAt,
       metrics,
       ...(title ? { title } : {}),
+      ...(desc ? { desc } : {}),
       ...(publishedAt ? { publishedAt } : {}),
     };
   });

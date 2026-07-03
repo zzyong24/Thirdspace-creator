@@ -183,6 +183,8 @@ export interface ProjectsService {
     ctx: RequestContext,
     input: {
       title: string;
+      // [T-089] 文案全文(抖音 desc;title 已收敛为短标题)→ 新建项目落 brief 存证。
+      brief?: string;
       platform: string;
       externalId: string;
       shareUrl?: string;
@@ -741,6 +743,8 @@ export function createProjectsService(
       // 无 → 建 project(source:imported, 真实 platformRef, 复盘态)+ 其 content_output。
       const project = await service.createProject(ctx, {
         title: input.title,
+        // [T-089] 文案全文落 brief(title 只留短标题;创作资产不丢)。
+        brief: input.brief,
         source: "imported",
         platformRef: {
           platform: input.platform,

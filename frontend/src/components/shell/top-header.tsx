@@ -236,7 +236,10 @@ function ProjectIdentityBlock({
           <span className="text-xs text-muted-foreground">
             项目　›　{project?.title ?? "项目概览"}
           </span>
-          <span className="truncate text-2xl font-semibold text-foreground">
+          <span
+            className="truncate text-2xl font-semibold text-foreground"
+            title={project?.title}
+          >
             {project?.title ?? "项目概览"}
             {project?.starred ? (
               <>
@@ -259,7 +262,11 @@ function ProjectIdentityBlock({
         </div>
       ) : (
         <div className="flex w-64 min-w-0 shrink-0 flex-col">
-          <span className="truncate text-sm font-medium text-foreground">
+          {/* [T-089④] 超长标题(导入作品曾把整篇文案当 title)truncate + title 悬停看全名。 */}
+          <span
+            className="truncate text-sm font-medium text-foreground"
+            title={project?.title}
+          >
             {project?.title ?? "项目"}
           </span>
           <span className="truncate text-xs text-muted-foreground">

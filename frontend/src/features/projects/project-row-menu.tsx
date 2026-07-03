@@ -39,24 +39,42 @@ export interface ProjectRowMenuProps {
   readonly projectTitle: string;
   /** Workspace href for the 打开 action (same target as the inline link). */
   readonly openHref: string;
+  // [T-085] 状态感知:已归档行(「已归档」tab)不再放出必 409 的归档动作,
+  // 换禁用态「已归档」。缺省按 active 渲染(兼容旧挂载点)。
+  readonly projectStatus?: string;
 }
 
 export function ProjectRowMenu({
   projectId,
   projectTitle,
   openHref,
+  projectStatus = "active",
 }: ProjectRowMenuProps) {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
+  // [T-085] 归档失败(如并发下已归档 → 409)不再是 unhandled rejection,
+  // 内联展示在菜单里(禁浏览器 alert)。
+  const [archiveError, setArchiveError] = React.useState<string | null>(null);
+  const archived = projectStatus === "archived";
 
   const onArchive = React.useCallback(() => {
     if (pending) return;
+    setArchiveError(null);
     startTransition(async () => {
-      await client.archiveProject({
-        params: { projectId },
-        query: undefined,
-        body: undefined,
-      });
+      try {
+        await client.archiveProject({
+          params: { projectId },
+          query: undefined,
+          body: undefined,
+        });
+      } catch (e) {
+        const raw = e instanceof Error ? e.message : String(e);
+        setArchiveError(
+          raw.includes("409") || /archived/i.test(raw)
+            ? "该项目已归档，无需重复归档。"
+            : "归档失败，请稍后重试。",
+        );
+      }
       // Revalidate the server tree so the archived row leaves the list and
       // the 已归档 tab count reflects the real distribution.
       router.refresh();
@@ -84,20 +102,37 @@ export function ProjectRowMenu({
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          data-slot="project-row-archive"
-          variant="destructive"
-          disabled={pending}
-          onSelect={(event) => {
-            // Keep the menu's selection from closing before the transition
-            // starts; we drive the refresh ourselves.
-            event.preventDefault();
-            onArchive();
-          }}
-        >
-          <Archive aria-hidden="true" className="size-4" />
-          {pending ? "归档中…" : "归档"}
-        </DropdownMenuItem>
+        {archived ? (
+          // [T-085] 已归档行 → 禁用态,不再放出必 409 的归档动作(契约无 unarchive op)。
+          <DropdownMenuItem data-slot="project-row-archive" disabled>
+            <Archive aria-hidden="true" className="size-4" />
+            已归档
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            data-slot="project-row-archive"
+            variant="destructive"
+            disabled={pending}
+            onSelect={(event) => {
+              // Keep the menu's selection from closing before the transition
+              // starts; we drive the refresh ourselves.
+              event.preventDefault();
+              onArchive();
+            }}
+          >
+            <Archive aria-hidden="true" className="size-4" />
+            {pending ? "归档中…" : "归档"}
+          </DropdownMenuItem>
+        )}
+        {archiveError ? (
+          <p
+            data-slot="project-row-archive-error"
+            role="alert"
+            className="max-w-[14rem] px-2 py-1.5 text-[11px] leading-snug text-destructive"
+          >
+            {archiveError}
+          </p>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

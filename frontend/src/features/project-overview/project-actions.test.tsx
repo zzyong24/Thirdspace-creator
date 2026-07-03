@@ -145,4 +145,46 @@ describe("ProjectOverviewActions", () => {
       expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
     });
   });
+
+  // [T-085] 已归档项目:归档按钮换禁用态「已归档」,点不动 → 不再产生必 409 的重复归档。
+  it("renders a disabled 已归档 state instead of the archive action when archived", async () => {
+    const { ProjectOverviewActions } = await importIsland();
+    render(
+      <ProjectOverviewActions
+        projectId="project-ainativebrowser"
+        currentStage="review"
+        starred={false}
+        projectStatus="archived"
+      />,
+    );
+    const archivedBtn = screen.getByRole("button", { name: "已归档" });
+    expect((archivedBtn as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByRole("button", { name: "归档" })).toBeNull();
+    expect(mockClient.archiveProject).not.toHaveBeenCalled();
+  });
+
+  // [T-085] 归档 409(已归档竞态)不再静默 —— 转人话内联错误条(role=alert),禁浏览器 alert。
+  it("surfaces an inline human-readable error when archive returns 409", async () => {
+    mockClient.archiveProject.mockRejectedValueOnce(
+      new Error(
+        "HttpTransport: 409 for projects.archive: Project already archived",
+      ),
+    );
+    const { ProjectOverviewActions } = await importIsland();
+    render(
+      <ProjectOverviewActions
+        projectId="project-ainativebrowser"
+        currentStage="research"
+        starred={false}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /归档/ }));
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain("已归档");
+    });
+    // 失败后仍 refresh(拿到最新 status,按钮下一帧变禁用态)。
+    await waitFor(() => {
+      expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+    });
+  });
 });

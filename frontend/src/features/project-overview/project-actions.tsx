@@ -25,7 +25,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { client } from "@/lib/contract-client";
-import type { ProjectStageName } from "@/types/domain";
+import type { ProjectStageName, ProjectStatus } from "@/types/domain";
 
 // The project pipeline order. The next stage is the adjacent forward step;
 // `review` is terminal. Mirrors STAGE_ORDER in the transition handler.
@@ -49,6 +49,10 @@ export interface ProjectOverviewActionsProps {
   readonly projectId: string;
   readonly currentStage: ProjectStageName;
   readonly starred: boolean;
+  // [T-085] 项目状态感知:已归档项目再点「归档」后端必 409(projects.service
+  // archiveProject 的 already-archived 守卫)。传入 status,archived 时按钮换
+  // 「已归档」禁用态(契约无 unarchive op,不新增)。缺省按 active 渲染(兼容旧挂载点)。
+  readonly projectStatus?: ProjectStatus;
 }
 
 // 把 HttpTransport 抛出的错误转成一句中文。transport 现在把后端错误透传成
@@ -65,23 +69,40 @@ function describeTransitionError(err: unknown): string {
   return "进入下一步失败，请稍后重试。";
 }
 
+// [T-085] 归档 409 转人话:后端 already-archived 守卫抛 ProjectStateError(409),
+// transport 透传成 "HttpTransport: 409 for projects.archive: …"。禁浏览器 alert,
+// 内联错误条展示。
+function describeArchiveError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  if (raw.includes("409") || /Conflict|archived/i.test(raw)) {
+    return "该项目已归档，无需重复归档。";
+  }
+  return "归档失败，请稍后重试。";
+}
+
 export function ProjectOverviewActions({
   projectId,
   currentStage,
   starred,
+  projectStatus = "active",
 }: ProjectOverviewActionsProps) {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
+  // [T-085] 双发防重:pending state 更新是异步的,同一 tick 内连点两次都读到
+  // pending=false(React 批处理)→ 两个请求都发出。用 ref 做同步互斥,state 只管 UI 禁用态。
+  const pendingRef = React.useRef(false);
   // bug #6 修复:进入下一步原来静默吞掉 transition 抛出的 409 gate 拒绝(交付物缺失),
   // 用户点了"没反应"。这里把拒绝原因捕获并就地展示;成功则清掉提示。
   const [transitionError, setTransitionError] = React.useState<string | null>(
     null,
   );
   const nextStage = nextStageOf(currentStage);
+  const archived = projectStatus === "archived";
 
   const run = React.useCallback(
     async (mutate: () => Promise<unknown>, onError?: (e: unknown) => void) => {
-      if (pending) return;
+      if (pendingRef.current) return;
+      pendingRef.current = true;
       setPending(true);
       try {
         await mutate();
@@ -91,11 +112,12 @@ export function ProjectOverviewActions({
       } finally {
         // 总是 refresh:gate 不过时 service 已把当前阶段落 needs_review 再抛错,
         // 刷新才能让 stepper 看到"卡待补"(SKL-11)。
+        pendingRef.current = false;
         setPending(false);
         router.refresh();
       }
     },
-    [pending, router],
+    [router],
   );
 
   const onFavorite = React.useCallback(() => {
@@ -109,12 +131,16 @@ export function ProjectOverviewActions({
   }, [projectId, run, starred]);
 
   const onArchive = React.useCallback(() => {
-    void run(() =>
-      client.archiveProject({
-        params: { projectId },
-        query: undefined,
-        body: undefined,
-      }),
+    setTransitionError(null);
+    // [T-085] 409(已归档)不再静默 —— 转人话内联展示,复用同一错误条槽位。
+    void run(
+      () =>
+        client.archiveProject({
+          params: { projectId },
+          query: undefined,
+          body: undefined,
+        }),
+      (e) => setTransitionError(describeArchiveError(e)),
     );
   }, [projectId, run]);
 
@@ -156,17 +182,32 @@ export function ProjectOverviewActions({
           fill={starred ? "currentColor" : "none"}
         />
       </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label="归档"
-        disabled={pending}
-        onClick={onArchive}
-      >
-        <Archive aria-hidden="true" className="size-4" />
-      </Button>
-      {nextStage ? (
+      {archived ? (
+        // [T-085] 已归档 → 禁用态「已归档」(契约无 unarchive op,只做状态感知禁用,
+        // 不再放出必 409 的归档按钮)。
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label="已归档"
+          disabled
+        >
+          <Archive aria-hidden="true" className="size-4" />
+          已归档
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="归档"
+          disabled={pending}
+          onClick={onArchive}
+        >
+          <Archive aria-hidden="true" className="size-4" />
+        </Button>
+      )}
+      {nextStage && !archived ? (
         // L1 立项简化(SPEC §3.1 单一主行动):主按钮是「进入工作台」(page 的实心
         // Link)。「进入下一步」是次级 stage-transition 动作 → 降为 outline,不再与
         // 主按钮争抢两个实心按钮的歧义。终态 review(含 imported 已发布作品)nextStage

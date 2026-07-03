@@ -1,16 +1,19 @@
 "use client";
 
-// 当前项目 identity 的客户端 context(T-039b item②)—— 把「真项目标题」从 server component
-// 跨到 client 的 ShellRouter。
+// 当前项目 identity 的客户端桥(T-039b item② / T-089④ 修真)—— 把「真项目标题」从
+// `projects/[projectId]/layout.tsx`(server,能读 param)跨到 shell 的 ShellRouter(client)。
 //
-// 根因(见任务②):`(creator)/layout.tsx` 是 server component 但 Next 嵌套布局拿不到子路由的
-// `[projectId]` param;而 ShellRouter 的 `resolveRoute` 只读 fixture(canonicalDataset),真项目
-// id 在 fixture 里查不到 → 顶部 header + 左下角指示器都退回中性「当前项目」。
+// [T-089④ 根因] 旧实现用 React Context:Provider 由**嵌套** layout 渲染,而消费者
+// ShellRouter 挂在 `(creator)/layout.tsx`(Provider 的**祖先**)。React context 只向下
+// 流,祖先永远读到 null → 项目页左上角标题恒退中性「项目 / 最近更新 —」(用户见空白/
+// 占位)。真机复现:/projects/<真id> header 只显「项目」。
 //
-// 解法:新建 `projects/[projectId]/layout.tsx`(server component,**能**读 projectId param + 用
-// 现有只读 op 拉真 {id,title}),用本 Provider 把真 identity 灌进 client;ShellRouter 用
-// `useCurrentProjectOverride()` 读它,`resolveRoute` 有真值时优先用真标题、fixture 仅兜底其余字段。
-// 非项目路由(无此 Provider 包裹)→ hook 返回 null → resolveRoute 走原 fixture 逻辑(不破坏现有路由)。
+// 修法:module 级微型 store(useSyncExternalStore)。嵌套 layout 渲染的
+// CurrentProjectProvider 在 effect 里把值**发布**进 store(卸载/换项目时清空),
+// ShellRouter 经 useCurrentProjectOverride() **订阅** store —— 不依赖树形位置,
+// 祖先也能读到。API(两个导出名)与旧版完全一致,调用方零改动。
+//
+// 诚实性不变:值为 null(读失败/未解析/非项目路由)→ shell 退回 fixture / 中性态。
 
 import * as React from "react";
 
@@ -24,22 +27,46 @@ export interface CurrentProjectOverride {
   readonly title: string;
 }
 
-const CurrentProjectContext = React.createContext<CurrentProjectOverride | null>(
-  null,
-);
+// ---------------------------------------------------------------------------
+// module 级 store(单值 + 订阅者集合)。一个路由树同时只有一个项目 layout 实例,
+// 单值足够;并发导航时后挂载者覆盖(与路由语义一致)。
+// ---------------------------------------------------------------------------
 
-/**
- * 读当前项目 override —— ShellRouter 在项目路由下拿到真 {id,title},其它路由拿 null(走 fixture)。
- * 挂在 Provider 之下(项目路由)才有值;shell 顶层无 Provider 时天然返回 null(向后兼容)。
- */
-export function useCurrentProjectOverride(): CurrentProjectOverride | null {
-  return React.useContext(CurrentProjectContext);
+let currentValue: CurrentProjectOverride | null = null;
+const listeners = new Set<() => void>();
+
+function publish(value: CurrentProjectOverride | null): void {
+  if (currentValue === value) return;
+  currentValue = value;
+  for (const l of listeners) l();
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getSnapshot(): CurrentProjectOverride | null {
+  return currentValue;
+}
+
+// SSR/预渲染快照:恒 null(server 端没有"当前客户端路由"概念;首帧后 effect 发布真值)。
+function getServerSnapshot(): CurrentProjectOverride | null {
+  return null;
 }
 
 /**
- * Provider —— 由 `projects/[projectId]/layout.tsx`(server)渲染,把 server 读到的真项目 identity
- * 灌给其下所有 client 消费者(含 shell 里的 ShellRouter)。`value` 为 null(读失败/未解析)时
- * 等价「无 override」,shell 退回 fixture / 中性态(诚实,不硬凑)。
+ * 读当前项目 override —— ShellRouter(以及任意组件,无论树形位置)拿到真 {id,title},
+ * 非项目路由 / 未发布时为 null(走 fixture / 中性态,向后兼容)。
+ */
+export function useCurrentProjectOverride(): CurrentProjectOverride | null {
+  return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+/**
+ * 发布器 —— 由 `projects/[projectId]/layout.tsx`(server)渲染,把 server 读到的真项目
+ * identity 发布进 module store,供 shell(树上任意位置)订阅。`value` 为 null(读失败/
+ * 未解析)时等价「无 override」;卸载(离开项目路由)时清空,shell 退回中性态。
  */
 export function CurrentProjectProvider({
   value,
@@ -48,9 +75,12 @@ export function CurrentProjectProvider({
   readonly value: CurrentProjectOverride | null;
   readonly children: React.ReactNode;
 }) {
-  return (
-    <CurrentProjectContext.Provider value={value}>
-      {children}
-    </CurrentProjectContext.Provider>
-  );
+  React.useEffect(() => {
+    publish(value);
+    return () => {
+      // 只清掉自己发布的值(快速导航下另一实例可能已覆盖,别误清新值)。
+      if (currentValue === value) publish(null);
+    };
+  }, [value]);
+  return <>{children}</>;
 }

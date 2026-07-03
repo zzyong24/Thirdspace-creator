@@ -64,6 +64,8 @@ export interface IngestionProjectsPort {
     ctx: RequestContext,
     input: {
       title: string;
+      // [T-089] 整篇文案全文(title 已收敛为短标题)→ 新建项目时落 brief(创作资产存证)。
+      brief?: string;
       platform: string;
       externalId: string;
       shareUrl?: string;
@@ -182,6 +184,8 @@ export interface IngestionService {
     ctx: RequestContext,
     input: {
       title: string;
+      // [T-089] 文案全文(可选)→ 新建项目落 brief。
+      brief?: string;
       platform: string;
       externalId: string;
       shareUrl?: string;
@@ -334,6 +338,7 @@ export function createIngestionService(args: {
       if (!ports.projects) return null;
       const ensured = await ports.projects.ensureImportedProject(ctx, {
         title: input.title,
+        brief: input.brief, // [T-089] 文案全文透传(新建项目落 brief)
         platform: input.platform,
         externalId: input.externalId,
         shareUrl: input.shareUrl,
@@ -488,7 +493,10 @@ export function createIngestionService(args: {
         for (const r of records) {
           try {
             await service.ensureImportedProject(ctx, {
+              // [T-089] title 已是短标题语义(官方 title / desc 首行截 40,见
+              // douyin-cdp deriveWorkTitle);兜底占位名不变。desc 全文 → brief。
               title: r.title ?? `抖音作品 ${r.externalId}`,
+              brief: r.desc,
               platform: r.platform,
               externalId: r.externalId,
               shareUrl: r.shareUrl,

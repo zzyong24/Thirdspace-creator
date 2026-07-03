@@ -123,6 +123,8 @@ describe("ensureImportedProject (数据底座 / SPEC §1.3)", () => {
   it("建 source:imported 项目 + 1 个 content_output,带真实标题/平台引用", async () => {
     const res = await service.ensureImportedProject(ctx, {
       title: "AI 工作流四步法",
+      // [T-089] 文案全文随导入落 brief(title 只留短标题,创作资产存证)。
+      brief: "AI 工作流四步法\n第二行整篇文案……",
       platform: "douyin",
       externalId: "7400",
       publishedAt: "2026-06-20T08:00:00.000Z",
@@ -131,6 +133,7 @@ describe("ensureImportedProject (数据底座 / SPEC §1.3)", () => {
     const project = await repo.get(ctx, res.projectId);
     expect(project.source).toBe("imported");
     expect(project.title).toBe("AI 工作流四步法");
+    expect(project.brief).toBe("AI 工作流四步法\n第二行整篇文案……");
     const outputs = await repo.listOutputs(ctx, res.projectId);
     expect(outputs).toHaveLength(1);
     expect(outputs[0]!.id).toBe(res.outputId);
