@@ -86,6 +86,13 @@ export interface AssetRepository {
   // SERVICE asserts asset ownership first (requireAsset) before calling this.
   listAssetUsage(userId: string, assetId: string): Promise<MaterialLinkRow[]>;
   listAssetFiles(userId: string, assetId: string): Promise<AssetFileRow[]>;
+  // [T-055h asset.classify] 把 AI 归类结果(一句话描述等)合并进某 asset 当前文件的
+  // mediaMetadata(jsonb merge,不动其他键)。文件不存在 → no-op(诚实静默,分类是增强)。
+  mergeFileMetadata(
+    userId: string,
+    assetId: string,
+    patch: Record<string, unknown>,
+  ): Promise<void>;
   insertAssetFile(
     userId: string,
     input: InsertAssetFileInput,
@@ -228,6 +235,21 @@ export function createAssetRepository(
         .where(eq(assetFiles.assetId, assetId))
         .orderBy(asc(assetFiles.versionNumber));
       return rows.map(parseFile);
+    },
+
+    async mergeFileMetadata(userId, assetId, patch) {
+      const files = await this.listAssetFiles(userId, assetId);
+      const current = files[files.length - 1];
+      if (!current) return;
+      await db
+        .update(assetFiles)
+        .set({
+          mediaMetadata: {
+            ...((current.mediaMetadata as Record<string, unknown>) ?? {}),
+            ...patch,
+          },
+        })
+        .where(eq(assetFiles.id, current.id));
     },
 
     async insertAssetFile(userId, input) {

@@ -90,6 +90,13 @@ export function buildSettingsViewModel(): SettingsViewModel {
         baseUrl: "",
         hasSecret: false,
       },
+    vision: {
+      capability: "asset.classify" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
     },
     // 抖音账号绑定状态 (T-032a). Default unconnected — the real status is read by
     // the (creator)/settings route via `ingestion.douyin.status` and overlaid onto

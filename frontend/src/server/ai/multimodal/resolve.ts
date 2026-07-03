@@ -19,7 +19,9 @@ import type { ModelConfigInternal } from "@creatoros/backend/modules/settings";
 export type MultimodalCapability =
   | "image.generate"
   | "video.generate"
-  | "transcribe.audio";
+  | "transcribe.audio"
+  // [T-055h SPEC §6.2 第二层] 素材 AI 归类:视觉模型看图打标签+一句话描述。
+  | "asset.classify";
 
 /** 与 ai-worker multimodal-factory.MultimodalSpec 结构对齐(见上方分层说明)。
  *  `kind:"audio"` 走 ASR(transcribeAudio),与 image/video 同结构、仅能力语义不同。 */
@@ -28,7 +30,7 @@ export interface MultimodalSpec {
   baseUrl: string | null;
   model: string;
   token: string;
-  kind: "image" | "video" | "audio";
+  kind: "image" | "video" | "audio" | "vision";
 }
 
 export interface ResolveMultimodalDeps {
@@ -59,12 +61,13 @@ export class TranscribeConfigError extends Error {
   }
 }
 
-type MultimodalKind = "image" | "video" | "audio";
+type MultimodalKind = "image" | "video" | "audio" | "vision";
 
 const CAP_TO_KIND: Record<MultimodalCapability, MultimodalKind> = {
   "image.generate": "image",
   "video.generate": "video",
   "transcribe.audio": "audio",
+  "asset.classify": "vision",
 };
 
 // 各能力的全局默认回退键(与文本层 "default" 平行,但多模态各档不混用一个 default ——
@@ -73,6 +76,7 @@ const CAP_DEFAULT: Record<MultimodalCapability, string> = {
   "image.generate": "image.default",
   "video.generate": "video.default",
   "transcribe.audio": "asr.default",
+  "asset.classify": "vision.default",
 };
 
 // "env:FOO" → env.FOO;trim;缺/空 → ""(cc-switch first_non_empty:空串占位必须 SKIP)。
@@ -129,6 +133,12 @@ const ENV_KEYS: Record<
     baseUrl: "CREATOROS_ASR_BASE_URL",
     provider: "CREATOROS_ASR_PROVIDER",
     model: "CREATOROS_ASR_MODEL",
+  },
+  "asset.classify": {
+    secretRef: "CREATOROS_VISION_SECRET_REF",
+    baseUrl: "CREATOROS_VISION_BASE_URL",
+    provider: "CREATOROS_VISION_PROVIDER",
+    model: "CREATOROS_VISION_MODEL",
   },
 };
 

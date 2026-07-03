@@ -202,6 +202,7 @@ import { runPositioningGenerate } from "@/server/ai/positioning-runner";
 import { runCopilotAssist } from "@/server/ai/copilot-runner";
 import { runAssetGenerate } from "@/server/ai/asset-generate-runner";
 import { runTranscribe } from "@/server/ai/transcribe-runner";
+import { runAssetClassify } from "@/server/ai/asset-classify-runner";
 import { runReconstruct } from "@/server/ai/reconstruct-runner";
 // T-040a 提示词/skill 服务端可配 —— 装配期读 skill_config_overrides 全表 → 套进常驻 REGISTRY。
 import {
@@ -2463,6 +2464,73 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     assetType: row.assetType,
                   };
                 },
+              },
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "asset.classify" &&
+          task.status === "queued"
+        ) {
+          // [T-055h SPEC §6.2 第二层] 素材 AI 归类 —— 倾倒场上传完成后 fire-and-forget:
+          // VLM(用户可配 asset.classify capability)看图打标签+一句话描述;未配置诚实跳过
+          // (只跑确定性第一层),绝不阻塞上传主链。
+          void runAssetClassify(
+            ctx,
+            {
+              id: String(task.id),
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: {
+                markRunning: (c, id) => aiService.markRunning(c, id),
+                recordStep: (c, id, stepInput) =>
+                  aiService.recordStep(c, id, stepInput),
+                markSucceeded: (c, id) => aiService.markSucceeded(c, id),
+                markFailed: (c, id, err) => aiService.markFailed(c, id, err),
+              },
+              resolveVisionSpec: (c) =>
+                resolveMultimodalSpecFn(c, "asset.classify", {
+                  getModelConfig: (cc: RequestContext, cap: string) =>
+                    settingsService.getModelConfig(cc, cap),
+                  env: process.env,
+                }),
+              assets: {
+                getAssetBytes: (c, id) => assetsService.getAssetBytes(c, id),
+                mergeAiAnnotation: (c, id, patch) =>
+                  assetsService.mergeAiAnnotation(c, id, patch),
+              },
+              // taxonomy 落标签:同名 tag 幂等(list 命中复用,缺则 create),再 assign。
+              assignTags: async (c, assetId, tags) => {
+                const taxonomySvc = createTaxonomyService(taxonomyRepo);
+                const listed = await taxonomySvc.listTags(c, { limit: 200 });
+                const byName = new Map(
+                  listed.map((t: { name: string; id: string }) => [t.name, t.id]),
+                );
+                const tagIds: string[] = [];
+                for (const name of tags) {
+                  const hit = byName.get(name);
+                  if (hit) {
+                    tagIds.push(hit);
+                    continue;
+                  }
+                  const created = await taxonomySvc.createTag(c, {
+                    name,
+                    kind: "asset-usage",
+                  });
+                  tagIds.push(created.id);
+                }
+                await taxonomySvc.assignTags(c, {
+                  entityType: "asset",
+                  entityId: assetId,
+                  tagIds,
+                });
+              },
+              describeImage: async (spec, input) => {
+                const { describeImageOpenAICompatible } = await import(
+                  "@creatoros/ai-worker"
+                );
+                return describeImageOpenAICompatible(spec, input);
               },
             },
           );

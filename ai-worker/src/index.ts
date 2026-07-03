@@ -101,6 +101,9 @@ export {
   createImageOnlyFakeAdapter,
   createFakeAsyncVideoAdapter,
 } from "./runtime/multimodal-factory.fake";
+
+// [T-055h asset.classify] 视觉理解(OpenAI 兼容 chat vision,VLM 看图打标签)。
+export { describeImageOpenAICompatible } from "./runtime/vision";
 export { toToolSet, type ToolDef } from "./runtime/tool-registry";
 export {
   runTopicNode,

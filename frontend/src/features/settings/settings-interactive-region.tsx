@@ -1494,6 +1494,22 @@ const MULTIMODAL_META = {
     baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
     disabledHint: "未配 → 逐字稿功能禁用。",
   },
+  // [T-055h SPEC §6.2 第二层] 素材 AI 归类 —— VLM 看图打用途标签+一句话描述(倾倒场
+  // 上传后异步跑;未配置只跑确定性第一层,诚实不假装)。OpenAI 兼容 chat vision。
+  vision: {
+    capability: "asset.classify" as const,
+    title: "素材归类模型",
+    icon: Cpu,
+    description:
+      "倾倒场素材 AI 归类用(视觉模型看图打标签+描述);不配则只按文件名/类型归类。",
+    providerSuggestions: ["siliconflow", "openai", "minimax"] as ReadonlyArray<string>,
+    providerPlaceholder: "siliconflow",
+    providerHelp: "OpenAI 兼容视觉模型厂商,可自定义。",
+    modelHelp: "视觉模型 id,如 Qwen/Qwen2.5-VL-72B-Instruct(SiliconFlow)。",
+    modelPlaceholder: "",
+    baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
+    disabledHint: "未配 → 素材归类只跑确定性第一层。",
+  },
 } as const;
 
 function MultimodalModelCard({

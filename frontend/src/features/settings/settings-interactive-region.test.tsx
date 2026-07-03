@@ -103,6 +103,13 @@ const VM: SettingsViewModel = {
       baseUrl: "",
       hasSecret: false,
     },
+    vision: {
+      capability: "asset.classify" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
   },
   douyinAccount: { loggedIn: false },
 };
@@ -327,6 +334,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         },
         video: VM.multimodalModels.video,
         audio: VM.multimodalModels.audio,
+        vision: VM.multimodalModels.vision,
       },
     };
     const doc = renderDialog(VM_MULTIMODAL);

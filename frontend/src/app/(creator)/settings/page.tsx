@@ -132,6 +132,7 @@ export default async function SettingsRoutePage() {
         image: multimodalRow("image.generate"),
         video: multimodalRow("video.generate"),
         audio: multimodalRow("transcribe.audio"),
+        vision: multimodalRow("asset.classify"),
       };
     } catch {
       // listModels unavailable (transport race) → fall back to the fixture.

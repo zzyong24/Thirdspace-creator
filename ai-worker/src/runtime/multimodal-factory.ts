@@ -36,7 +36,7 @@ export interface MultimodalSpec {
   token: string;
   /** 该档位是图/视频/音频 —— 决定走 generateImage / generateVideo / transcribeAudio,
    *  并校验适配器能力。audio(T-030-D1)= ASR 逐字稿转写。 */
-  kind: "image" | "video" | "audio";
+  kind: "image" | "video" | "audio" | "vision";
 }
 
 export interface GenerateImageOptions {

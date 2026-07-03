@@ -129,6 +129,13 @@ export function createLocalFsObjectStorage(
       await fs.writeFile(absKey, bytes);
     },
 
+    async getObject(storageKey) {
+      // [T-055h] Server-side read for asset.classify(VLM 看图)。safeJoin 防穿越。
+      const absKey = safeJoin(cfg.rootPath, storageKey);
+      const buf = await fs.readFile(absKey);
+      return new Uint8Array(buf);
+    },
+
     async headObject(storageKey) {
       const absKey = safeJoin(cfg.rootPath, storageKey);
       // Real on-disk size (the bytes the FE PUT) is the source of truth.

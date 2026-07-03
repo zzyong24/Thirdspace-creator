@@ -155,6 +155,20 @@ export function UploadDropzone({ projectId, canBind }: UploadDropzoneProps) {
         const tagsWritten = asset?.id
           ? await assignTagsToAsset(asset.id, tags)
           : false;
+        // [T-055h SPEC §6.2 第二层] AI 归类排队慢跑(fire-and-forget):VLM 看图打
+        // 标签+描述;未配置视觉模型 → runner 诚实跳过,只留确定性第一层。
+        if (asset?.id) {
+          void client
+            .createAITask({
+              params: undefined,
+              query: undefined,
+              body: {
+                taskType: "asset.classify",
+                inputData: { assetId: asset.id },
+              },
+            })
+            .catch(() => undefined);
+        }
         patchItem(key, {
           phase: "done",
           assetId: asset?.id,

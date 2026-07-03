@@ -127,6 +127,13 @@ function buildStubViewModel(): SettingsViewModel {
         baseUrl: "",
         hasSecret: false,
       },
+    vision: {
+      capability: "asset.classify" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
     },
     douyinAccount: { loggedIn: false },
   };

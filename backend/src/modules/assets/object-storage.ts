@@ -56,6 +56,10 @@ export interface ObjectStoragePort {
   }): Promise<void>;
   // Inspect a stored object's metadata (phase-2 validation source).
   headObject(storageKey: string): Promise<HeadObjectResult>;
+  // [T-055h asset.classify] SERVER-SIDE read: fetch the stored bytes for a key the
+  // service already owns (VLM 归类要看图)。与 putObject 对称;keeps AssetsService
+  // the SOLE storage caller —— runner 经 service 端口拿字节,不直接 fs.readFile。
+  getObject(storageKey: string): Promise<Uint8Array>;
   // A short-lived, read-only signed URL for download / copy-link. Never logged
   // (SPEC §20). Deterministic in the mock so download/copy-link tests are stable.
   getSignedUrl(storageKey: string): Promise<string>;
@@ -110,6 +114,11 @@ export function createMockObjectStorage(
           assetType === "video" || assetType === "audio" ? 1000 : null,
         mediaMetadata: {},
       });
+    },
+
+    async getObject() {
+      // Mock:无真字节(测试里 asset.classify 用 fake registry,不读真图)。
+      return new Uint8Array(0);
     },
 
     async headObject(storageKey) {

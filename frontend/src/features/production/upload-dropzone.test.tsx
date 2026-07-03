@@ -37,6 +37,11 @@ vi.mock("@/lib/contract-client", () => ({
     createUpload: (i: unknown) => mockClient.createUpload(i),
     completeUpload: (i: unknown) => mockClient.completeUpload(i),
     createMaterialLink: (i: unknown) => mockClient.createMaterialLink(i),
+    // [T-055h] AI 归类任务(fire-and-forget)+ 标签写入(best-effort)。
+    createAITask: () => Promise.resolve({ id: "task-1" }),
+    listTags: () => Promise.resolve([]),
+    createTag: () => Promise.resolve({ id: "tag-1" }),
+    assignTags: () => Promise.resolve([]),
   },
 }));
 

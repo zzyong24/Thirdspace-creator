@@ -72,6 +72,17 @@ export interface AssetsService {
     ctx: RequestContext,
     assetId: string,
   ): Promise<{ url: string; fileName: string }>;
+  // [T-055h asset.classify] VLM 归类的两个端口:读当前文件字节(看图)+ 回写 AI 注解
+  // (一句话描述进 mediaMetadata.aiDescription)。runner 经这里,service 仍是唯一 storage 调用方。
+  getAssetBytes(
+    ctx: RequestContext,
+    assetId: string,
+  ): Promise<{ bytes: Uint8Array; mimeType: string } | null>;
+  mergeAiAnnotation(
+    ctx: RequestContext,
+    assetId: string,
+    patch: Record<string, unknown>,
+  ): Promise<void>;
   // L5 asset.generate (SPEC 2026-07-01 §3) — the SERVER-SIDE counterpart to the two-phase
   // client upload: an AI-generated image/video whose bytes the runner already holds. Mints
   // a storage key, direct-writes the bytes (storage.putObject — NOT the presigned client
@@ -162,6 +173,22 @@ export function createAssetsService(
       const fileName = base.replace(/^asset-key-\d+-/, "");
       return { url, fileName };
     },
+    async getAssetBytes(ctx, assetId) {
+      await requireAsset(ctx, assetId);
+      const files = await repo.listAssetFiles(ctx.userId, assetId);
+      const current = files[files.length - 1];
+      if (!current) return null;
+      const storage = await objectStorageForCtx(ctx);
+      const bytes = await storage.getObject(current.storageKey);
+      if (!bytes || bytes.byteLength === 0) return null;
+      return { bytes, mimeType: current.mimeType };
+    },
+
+    async mergeAiAnnotation(ctx, assetId, patch) {
+      await requireAsset(ctx, assetId);
+      await repo.mergeFileMetadata(ctx.userId, assetId, patch);
+    },
+
     async createUpload(ctx, input) {
       // SPEC §20 input validation (phase 1).
       if (!ASSET_TYPES.has(input.assetType)) {

@@ -227,7 +227,11 @@ export interface ModelState {
 // mirrors exactly what the resolver consumes — no dead controls.
 export interface MultimodalModelState {
   /** The bound capability ("image.generate" | "video.generate" | "transcribe.audio"). */
-  readonly capability: "image.generate" | "video.generate" | "transcribe.audio";
+  readonly capability:
+    | "image.generate"
+    | "video.generate"
+    | "transcribe.audio"
+    | "asset.classify";
   /** Free-form provider name (the dispatch switch; "minimax"/"siliconflow" today, extensible). */
   readonly provider: string;
   /** Free-form model id (e.g. image-01 / video-01 / FunAudioLLM/SenseVoiceSmall). */
@@ -251,6 +255,8 @@ export interface MultimodalModelsState {
    * honestly disabled.
    */
   readonly audio: MultimodalModelState;
+  /** [T-055h] 素材 AI 归类(视觉理解)— capability "asset.classify"。 */
+  readonly vision: MultimodalModelState;
 }
 
 // ---------------------------------------------------------------------------
