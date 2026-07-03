@@ -31,6 +31,8 @@ export const CALIBRATION_OP_IDS = [
   // 复盘飞轮回流 轨B (Learning→校准): list pending reflowed rule-suggestions + 采纳 one.
   "calibration.suggestions.list",
   "calibration.suggestions.adopt",
+  // [T-063e] 忽略一条回流建议(终态 dismissed,不 bump rubric)。
+  "calibration.suggestions.dismiss",
 ] as const;
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
@@ -145,6 +147,14 @@ export function createCalibrationTransport(
         case "calibration.suggestions.adopt": {
           // 采纳 → a NEW RubricVersion (single-resource envelope).
           const dto = await service.adoptRuleSuggestion(
+            ctx,
+            p.suggestionId ?? "",
+          );
+          return { data: dto, meta: { requestId } };
+        }
+        case "calibration.suggestions.dismiss": {
+          // [T-063e] 忽略 → the suggestion itself, now terminal dismissed (NO rubric bump).
+          const dto = await service.dismissRuleSuggestion(
             ctx,
             p.suggestionId ?? "",
           );

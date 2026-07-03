@@ -23,7 +23,9 @@
 
 import { AnalyticsReviewPage } from "@/features/review/analytics-review-page";
 import {
+  buildPredictionComparison,
   buildReviewWorkspaceViewModel,
+  type PredictionComparisonClient,
   type ReviewDataClient,
 } from "@/features/review/review-workspace-data";
 import { createServerClient } from "@/lib/contract-client.server";
@@ -62,6 +64,11 @@ export default async function AnalyticsReviewRoute({
     resolvedId,
     scoped as unknown as ReviewDataClient,
   );
+  // [T-063e] 预测 vs 实际 对照(校准飞轮对照步并入复盘;null = 本项目未做盲预测)。
+  const predictionComparison = await buildPredictionComparison(
+    resolvedId,
+    scoped as unknown as PredictionComparisonClient,
+  );
   // Module 13 Step 5 — supply the Reviews wiring so the authoring panel + history
   // drill call the real ops (reviews.create/insights.create/complete/get) over the
   // dispatch route, then router.refresh().
@@ -70,6 +77,7 @@ export default async function AnalyticsReviewRoute({
       projectId={resolvedId}
       viewModel={viewModel}
       reviewsWiring={{ projectId: resolvedId }}
+      predictionComparison={predictionComparison}
     />
   );
 }

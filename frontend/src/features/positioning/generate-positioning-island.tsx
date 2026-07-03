@@ -16,21 +16,37 @@ import { MessagesSquare } from "lucide-react";
 
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 
-export function GeneratePositioningIsland() {
+export function GeneratePositioningIsland({
+  title = "AI 帮你定位",
+  description = "和编导聊你的账号与内容方向,生成结构化定位提案;在对话里逐条打磨,采纳后写入当前定位母版并追加一条 AI 版本。",
+  label = "在对话里聊定位",
+  prefillText,
+}: {
+  /** [T-063e] 设置「定位」页签的进化形态可自定义文案(默认保持原生成入口)。 */
+  readonly title?: string;
+  readonly description?: string;
+  readonly label?: string;
+  /** 预填进 ChatBox 输入框的话术(只预填不发送,T-055b 机制);省略走 fn 默认词条。 */
+  readonly prefillText?: string;
+}) {
   return (
     <div className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-3.5">
-      <p className="text-sm font-semibold text-foreground">AI 帮你定位</p>
+      <p className="text-sm font-semibold text-foreground">{title}</p>
       <p className="text-xs leading-relaxed text-muted-foreground">
-        和编导聊你的账号与内容方向,生成结构化定位提案;在对话里逐条打磨,
-        采纳后写入当前定位母版并追加一条 AI 版本。
+        {description}
       </p>
       <Link
-        href={copilotDeepLink("positioning", "positioning.generate")}
+        href={copilotDeepLink(
+          "positioning",
+          "positioning.generate",
+          undefined,
+          prefillText,
+        )}
         data-testid="positioning-open-copilot"
         className="inline-flex h-9 w-fit items-center gap-1.5 rounded-control bg-brand px-3.5 text-[13px] font-medium text-brand-foreground transition-colors hover:bg-brand/90"
       >
         <MessagesSquare className="size-4" />
-        在对话里聊定位
+        {label}
       </Link>
     </div>
   );

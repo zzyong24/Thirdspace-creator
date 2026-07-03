@@ -228,6 +228,183 @@ export async function buildReviewWorkspaceViewModel(
   };
 }
 
+// ---------------------------------------------------------------------------
+// [T-063e] 预测 vs 实际 对照(校准对照视图并入项目复盘页)
+// ---------------------------------------------------------------------------
+//
+// 飞轮第四步「对照」发生在复盘:本项目的盲预测分 vs 发布后真实表现。读侧全部复用
+// 现有 calibration op(零新契约):
+//   listOutputs(projectId) + listPublications(outputId) → 本项目的 subject 集合
+//   calibration.predictions.list → 命中 subject 的盲预测(预测分/状态)
+//   calibration.overview.reflowRows → 已回流预测的逐维度 预测/真实/偏差
+// 无盲预测 → null(页面渲诚实空态「本项目未做盲预测」);任一读失败按区降级。
+
+export interface PredictionComparisonRow {
+  readonly predictionId: string;
+  readonly status: "draft" | "locked";
+  readonly predictedScore: number;
+  readonly lockedAt: string | null;
+  /** 已回流 → 逐维度对照;未回流 → null(显「等待发布数据回流」)。 */
+  readonly reflow: {
+    readonly deviationBand: "low" | "mid" | "high" | "none";
+    readonly reason: string;
+    readonly dimensions: ReadonlyArray<{
+      readonly key: string;
+      readonly label: string;
+      readonly predicted: number | null;
+      readonly actual: number | null;
+      readonly deviation: number | null;
+    }>;
+  } | null;
+}
+
+export interface PredictionComparisonVm {
+  readonly rows: ReadonlyArray<PredictionComparisonRow>;
+}
+
+// 对照读侧的窄 client 形状(route 传 session-scoped 契约 client 的结构子集)。
+export interface PredictionComparisonClient {
+  listOutputs(input: {
+    params: { projectId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+  listPublications(input: {
+    params: { outputId: string };
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  listPredictions(input: {
+    params: undefined;
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  overview(input: {
+    params: undefined;
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+}
+
+interface PredictionRowDto {
+  readonly id: string;
+  readonly subjectType: string;
+  readonly subjectId: string;
+  readonly status: string;
+  readonly predictedScore: number;
+  readonly lockedAt: string | null;
+  readonly createdAt: string;
+}
+
+interface OverviewReflowDto {
+  readonly reflowRows: ReadonlyArray<{
+    readonly predictionId: string;
+    readonly subjectId: string;
+    readonly deviationBand: "low" | "mid" | "high" | "none";
+    readonly reason: string;
+    readonly dimensions: ReadonlyArray<{
+      readonly key: string;
+      readonly label: string;
+      readonly predicted: number | null;
+      readonly actual: number | null;
+      readonly deviation: number | null;
+    }>;
+  }>;
+}
+
+/**
+ * [T-063e] 装配本项目的「预测 vs 实际」对照。返回 null = 本项目没有任何盲预测
+ * (页面渲诚实空态);返回行按 createdAt desc(最新预测在前)。
+ */
+export async function buildPredictionComparison(
+  projectId: string,
+  client: PredictionComparisonClient,
+): Promise<PredictionComparisonVm | null> {
+  // 1. 本项目的 subject 集合:content_output ids + 其下 publication ids。
+  const subjectIds = new Set<string>();
+  try {
+    const outputsRaw = await client.listOutputs({
+      params: { projectId },
+      query: undefined,
+      body: undefined,
+    });
+    const outputs = (Array.isArray(outputsRaw) ? outputsRaw : []) as Array<{
+      id: string;
+    }>;
+    for (const o of outputs) {
+      subjectIds.add(o.id);
+      try {
+        const pubsRaw = await client.listPublications({
+          params: { outputId: o.id },
+          query: { page: 1, pageSize: 20 },
+          body: undefined,
+        });
+        for (const p of (Array.isArray(pubsRaw) ? pubsRaw : []) as Array<{
+          id: string;
+        }>) {
+          subjectIds.add(p.id);
+        }
+      } catch {
+        // 单产出的发布读失败 → 跳过它,不沉整个对照区。
+      }
+    }
+  } catch {
+    return null; // 产出都读不到 → 无从对照,诚实空。
+  }
+  if (subjectIds.size === 0) return null;
+
+  // 2. 命中本项目 subject 的盲预测。
+  let predictions: PredictionRowDto[] = [];
+  try {
+    const raw = await client.listPredictions({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    });
+    predictions = ((Array.isArray(raw) ? raw : []) as PredictionRowDto[]).filter(
+      (p) => subjectIds.has(p.subjectId),
+    );
+  } catch {
+    return null;
+  }
+  if (predictions.length === 0) return null;
+
+  // 3. 已回流预测的逐维度对照(overview.reflowRows;读失败 → 全部按未回流渲染)。
+  let reflowByPrediction = new Map<
+    string,
+    NonNullable<PredictionComparisonRow["reflow"]>
+  >();
+  try {
+    const overview = (await client.overview({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    })) as OverviewReflowDto;
+    reflowByPrediction = new Map(
+      (overview.reflowRows ?? []).map((r) => [
+        r.predictionId,
+        {
+          deviationBand: r.deviationBand,
+          reason: r.reason,
+          dimensions: r.dimensions,
+        },
+      ]),
+    );
+  } catch {
+    // 回流读失败 → 对照行仍渲预测分,逐维度区显「等待回流」。
+  }
+
+  return {
+    rows: predictions.map((p) => ({
+      predictionId: p.id,
+      status: p.status === "locked" ? "locked" : "draft",
+      predictedScore: p.predictedScore,
+      lockedAt: p.lockedAt,
+      reflow: reflowByPrediction.get(p.id) ?? null,
+    })),
+  };
+}
+
 /** Distinct publicationIds carried by the project's analytics snapshots (one row per
  *  publication). An imported project's 作品 = its publication; this is the作品 scope for
  *  the 复盘评论 read. */

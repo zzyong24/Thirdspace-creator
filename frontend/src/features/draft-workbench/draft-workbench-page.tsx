@@ -22,11 +22,12 @@ import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
 import { MaturityBar, DraftPrimaryAction } from "./maturity-bar";
 import { RegisterPublishedForm } from "./register-published-form";
+import { BlindPredictRow } from "./blind-predict-row";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
 
 export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
-  const { project, script, scriptArtifactId, outputId, publishPack, publishUnlocked, ammo } = vm;
+  const { project, script, scriptArtifactId, outputId, publishPack, publishUnlocked, blindPrediction, ammo } = vm;
   const initialHtml = script.editorHtml ?? sectionsToHtml(script.sections);
 
   return (
@@ -125,6 +126,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             projectId={project.id}
             projectTitle={project.title}
             outputId={outputId}
+            blindPrediction={blindPrediction}
           />
 
           {/* ── 弹药抽屉 ── */}
@@ -153,12 +155,14 @@ function PublishPackSection({
   projectId,
   projectTitle,
   outputId,
+  blindPrediction,
 }: {
   publishPack: DraftWorkbenchVm["publishPack"];
   unlocked: boolean;
   projectId: string;
   projectTitle: string;
   outputId: string | null;
+  blindPrediction: DraftWorkbenchVm["blindPrediction"];
 }) {
   // [T-055h③] 登记入口:解锁后、还没有已发布行时展示(已发布的不重复登记 ——
   //   幂等虽兜底,但界面不做多余承诺)。
@@ -223,6 +227,15 @@ function PublishPackSection({
           )}
         </div>
       </div>
+      {/* [T-063e] 飞轮第一步:发布前先盲预测(解锁后常驻;已预测显预测分/锁定态)。 */}
+      {unlocked ? (
+        <BlindPredictRow
+          projectId={projectId}
+          projectTitle={projectTitle}
+          outputId={outputId}
+          prediction={blindPrediction}
+        />
+      ) : null}
       {/* [T-055h③] 站外发完 → 粘链接登记为已发布(落 publication + 触发采集)。 */}
       {showRegister ? (
         <RegisterPublishedForm

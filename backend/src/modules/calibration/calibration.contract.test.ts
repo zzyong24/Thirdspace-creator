@@ -290,4 +290,46 @@ describe("calibration contract (each of 7 ops validates against its DTO)", () =>
     });
     expect(list.data as unknown[]).toHaveLength(0);
   });
+
+  // [T-063e] 忽略:终态 dismissed,不 bump rubric(版本链不动、adoptedVersionId 留 null)。
+  it("calibration.suggestions.dismiss → calibrationRuleSuggestionResource (terminal, NO rubric bump)", async () => {
+    const t = makeTransport(db);
+    const svc = makeService(db);
+    const { rubricId } = await seedRubric(t);
+    const sug = await svc.createRuleSuggestion(ctx, {
+      learningId: "learning-1",
+      rubricId,
+      proposedDimension: {
+        key: "altruism",
+        label: "利他性",
+        weight: 0.2,
+        description: "复盘回流维度",
+      },
+      rationale: "复盘结论回流",
+    });
+    const r = await call(t, "calibration.suggestions.dismiss", {
+      params: { suggestionId: sug.id },
+    });
+    const dto = calibrationRuleSuggestionResource.parse(r.data);
+    expect(dto.status).toBe("dismissed");
+    expect(dto.adoptedVersionId).toBeNull();
+    // rubric 版本链未动:current version 仍是 v1(没有因忽略被 bump)。
+    const rub = await call(t, "calibration.rubrics.get", {
+      params: { rubricId },
+    });
+    expect(
+      (rub.data as { currentVersion: { versionNumber: number } }).currentVersion
+        .versionNumber,
+    ).toBe(1);
+    // pending 列表清空;重复忽略 → ConflictError(终态守卫)。
+    const list = await call(t, "calibration.suggestions.list", {
+      query: { page: 1, pageSize: 20 },
+    });
+    expect(list.data as unknown[]).toHaveLength(0);
+    await expect(
+      call(t, "calibration.suggestions.dismiss", {
+        params: { suggestionId: sug.id },
+      }),
+    ).rejects.toThrow(/already dismissed/);
+  });
 });

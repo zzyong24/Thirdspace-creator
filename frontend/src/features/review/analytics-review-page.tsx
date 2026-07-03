@@ -45,6 +45,8 @@ import {
   type ReviewsWiring,
 } from "./analytics-review-interactive-region";
 import { ReviewAnalyzeIsland } from "./review-analyze-island";
+import { PredictionComparisonSection } from "./prediction-comparison-section";
+import type { PredictionComparisonVm } from "./review-workspace-data";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -61,6 +63,13 @@ export interface AnalyticsReviewPageProps {
    * page tests render without a network call). The real route supplies it.
    */
   readonly reviewsWiring?: ReviewsWiring;
+  /**
+   * [T-063e] 预测 vs 实际 对照(校准飞轮的对照步并入复盘页)。route server 装配
+   * (buildPredictionComparison);undefined = 不渲染该区(fixture-only 单测),
+   * null = 本项目未做盲预测(诚实空态)。空指标态也照渲 —— 已锁定盲预测、
+   * 数据还没回流,正是「等待回流」该被看见的时刻。
+   */
+  readonly predictionComparison?: PredictionComparisonVm | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +88,7 @@ export function AnalyticsReviewPage({
   projectId,
   viewModel,
   reviewsWiring,
+  predictionComparison,
 }: AnalyticsReviewPageProps) {
   const vm = viewModel ?? buildAnalyticsReviewViewModel(projectId);
   const isEmpty =
@@ -99,13 +109,23 @@ export function AnalyticsReviewPage({
       ) : state === "error" ? (
         <ErrorState error={vm.error} />
       ) : state === "empty" ? (
-        <EmptyState
-          title="该作品暂无明细数据"
-          description="还没有拉到这个作品的播放/互动明细。去任务中心跑「拉明细」采集，数据回收后即可在此查看复盘分析。"
-        />
+        <>
+          <EmptyState
+            title="该作品暂无明细数据"
+            description="还没有拉到这个作品的播放/互动明细。去任务中心跑「拉明细」采集，数据回收后即可在此查看复盘分析。"
+          />
+          {/* [T-063e] 已锁定盲预测但数据未回流,正是空指标态 —— 对照区照渲(等待回流)。 */}
+          {predictionComparison !== undefined ? (
+            <PredictionComparisonSection vm={predictionComparison} />
+          ) : null}
+        </>
       ) : (
         <>
           <ReviewAnalyzeIsland projectId={vm.projectId} />
+          {/* [T-063e] 预测 vs 实际 对照(校准飞轮对照步并入复盘)。 */}
+          {predictionComparison !== undefined ? (
+            <PredictionComparisonSection vm={predictionComparison} />
+          ) : null}
           <AnalyticsReviewInteractiveRegion
             viewModel={vm}
             reviewsWiring={reviewsWiring}

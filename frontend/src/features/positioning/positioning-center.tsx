@@ -73,11 +73,20 @@ export interface PositioningCenterPageProps {
    * passes `createServerClient(session.ctx)`; defaults to the singleton seam.
    */
   readonly client?: PositioningReadClient;
+  /**
+   * [T-063e] 设置「定位」页签的内嵌形态(双头收敛于同一组件):
+   *  - 竖排单列(9-facet 查看/手改 → 生成/进化深链 → 版本链 → 下游规则),
+   *    信息密度收敛为设置形态,不再是整页两栏工作台;
+   *  - 去掉页级大标题(设置弹窗自带宿主标题),保留「新建定位版本」抽屉入口;
+   *  - 「生成/进化定位」= Copilot 深链预填「结合我的发布数据,进化一版定位」。
+   */
+  readonly embedded?: boolean;
 }
 
 export async function PositioningCenterPage({
   viewModel,
   client = defaultClient,
+  embedded = false,
 }: PositioningCenterPageProps) {
   const vm =
     viewModel ??
@@ -86,7 +95,7 @@ export async function PositioningCenterPage({
       query: undefined,
       body: undefined,
     })) as PositioningCenterViewModel);
-  return <PositioningCenterView viewModel={vm} />;
+  return <PositioningCenterView viewModel={vm} embedded={embedded} />;
 }
 
 // ── Colored icon chip ─────────────────────────────────────────────────────────
@@ -130,12 +139,70 @@ function IconChip({
 
 export function PositioningCenterView({
   viewModel,
+  embedded = false,
 }: {
   readonly viewModel: PositioningCenterViewModel;
+  /** [T-063e] 设置页签内嵌形态(见 PositioningCenterPageProps.embedded)。 */
+  readonly embedded?: boolean;
 }) {
   const { profile, currentStatement, keywords, productAnchors, history } =
     viewModel;
   const isEmpty = profile === null;
+
+  // [T-063e] 内嵌形态:竖排单列的设置形态 —— 当前定位 9-facet 查看/手改(编辑抽屉复用)
+  // → 「生成/进化定位」Copilot 深链 → 版本链 → 下游规则(堆叠区,不再是固定侧栏)。
+  // 空态与整页版共用同一 CTA(创建定位抽屉)。
+  if (embedded) {
+    return (
+      <div
+        data-slot="positioning-center"
+        data-testid="positioning-center"
+        data-embedded="true"
+        className="flex flex-col gap-card-gap"
+      >
+        {isEmpty ? (
+          <SectionCard title="账号定位">
+            <div
+              data-testid="positioning-empty-state"
+              className="flex flex-col items-start gap-3 py-4"
+            >
+              <p className="text-sm text-muted-foreground">
+                还没有账号定位。先创建你的账号画像与第一条定位陈述，下游的选题、评分与变现都会以它为约束源。
+              </p>
+              <PositioningDraftDrawer
+                profile={null}
+                triggerLabel="创建定位"
+                triggerIcon="plus"
+                title="创建定位"
+                description="填写账号画像与第一条定位陈述。"
+              />
+            </div>
+          </SectionCard>
+        ) : (
+          <>
+            <HeroMaster
+              profile={profile}
+              currentStatement={currentStatement}
+              keywords={keywords}
+              productAnchors={productAnchors}
+            />
+            {/* 生成/进化定位:唯一 AI 入口 = Copilot 深链预填(任务流按钮/岛已在 T-058 退役)。 */}
+            <div data-testid="positioning-ai-band">
+              <GeneratePositioningIsland
+                title="生成 / 进化定位"
+                description="把你的发布数据与复盘经验带进对话,让编导进化一版定位;在对话里逐条打磨,采纳后追加一条 AI 版本。"
+                label="结合我的发布数据,进化一版定位"
+                prefillText="结合我的发布数据,进化一版定位"
+              />
+            </div>
+            <HistoryTable history={history} profile={profile} />
+            {/* 下游规则从固定侧栏收敛为堆叠区(内容与编辑入口不变,规则仍是下游硬约束)。 */}
+            <DownstreamRules profile={profile} />
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     // 固定高度填满：页头 shrink-0 钉住,两栏 flex-1 占满剩余高度、每列各自框内滚。

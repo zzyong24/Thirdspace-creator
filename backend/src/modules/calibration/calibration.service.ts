@@ -277,6 +277,12 @@ export interface CalibrationService {
     ctx: RequestContext,
     suggestionId: string,
   ): Promise<RubricVersionResource>;
+  // [T-063e] dismissRuleSuggestion: 忽略 → mark the suggestion dismissed (terminal, NO rubric
+  // bump, adoptedVersionId stays null). Same pending guard as 采纳 (non-pending → ConflictError).
+  dismissRuleSuggestion(
+    ctx: RequestContext,
+    suggestionId: string,
+  ): Promise<CalibrationRuleSuggestionResource>;
 }
 
 // Validate the 变现加权维度 (§6.2 / §2.0). Non-empty; weights sum to the normalizer;
@@ -767,6 +773,23 @@ export function createCalibrationService(
         adoptedVersionId: version.id,
       });
       return toRubricVersionDto(version);
+    },
+
+    // [T-063e] 忽略一条回流建议:pending 守卫后标记 dismissed(终态),不碰 rubric 版本链。
+    // adoptedVersionId 留 null(没有采纳产物),adoptedAt 记录裁决时间(终态时间戳复用同列)。
+    async dismissRuleSuggestion(ctx, suggestionId) {
+      const repo = repoFor(ctx);
+      const suggestion = await repo.getRuleSuggestion(suggestionId); // ownership gate
+      if (suggestion.status !== "pending") {
+        throw new ConflictError(
+          `calibration rule suggestion is already ${suggestion.status}: ${suggestionId}`,
+        );
+      }
+      const row = await repo.markRuleSuggestionAdopted(suggestionId, {
+        status: "dismissed",
+        adoptedVersionId: null,
+      });
+      return toRuleSuggestionDto(row);
     },
   };
 }

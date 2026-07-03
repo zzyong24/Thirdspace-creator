@@ -140,6 +140,13 @@ export interface DraftWorkbenchClient extends ScriptDataClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+  // [T-063e] 盲预测入口移稿面:读本项目产出上的盲预测(calibration.predictions.list)。
+  // optional —— 旧测试桩不带它时该区诚实降级为 null(不渲染预测分,入口照常给)。
+  listPredictions?(input: {
+    params: undefined;
+    query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
 }
 
 // ---------------------------------------------------------------------------
@@ -179,6 +186,16 @@ export interface DraftWorkbenchVm {
   } | null;
   /** 发布包解锁:脚本已有版本(SPEC §4.3;transition 门在主行动按钮上)。 */
   readonly publishUnlocked: boolean;
+  /**
+   * [T-063e] 本项目产出(content_output = outputId)上最新的盲预测;null = 还没有
+   * (稿面发布包区显「先盲预测」入口)。predictedScore 由服务端派生(变现加权)。
+   */
+  readonly blindPrediction: {
+    readonly predictionId: string;
+    readonly status: "draft" | "locked";
+    readonly predictedScore: number;
+    readonly lockedAt: string | null;
+  } | null;
   readonly ammo: ReadonlyArray<{
     readonly id: string;
     readonly kind: "knowledge" | "asset";
@@ -244,6 +261,42 @@ async function readPublishPack(
     };
   } catch {
     return { outputId: null, publishPack: null };
+  }
+}
+
+// [T-063e] 读本项目产出上最新的盲预测(subjectType=content_output, subjectId=outputId)。
+// 列表 createdAt desc → 第一条命中即最新。读失败 / 无 outputId / 桩不带 op → null(诚实)。
+async function readBlindPrediction(
+  client: DraftWorkbenchClient,
+  outputId: string | null,
+): Promise<DraftWorkbenchVm["blindPrediction"]> {
+  if (!outputId || !client.listPredictions) return null;
+  try {
+    const raw = await client.listPredictions({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    });
+    const rows = (Array.isArray(raw) ? raw : []) as Array<{
+      id: string;
+      subjectType: string;
+      subjectId: string;
+      status: string;
+      predictedScore: number;
+      lockedAt: string | null;
+    }>;
+    const hit = rows.find(
+      (p) => p.subjectType === "content_output" && p.subjectId === outputId,
+    );
+    if (!hit) return null;
+    return {
+      predictionId: hit.id,
+      status: hit.status === "locked" ? "locked" : "draft",
+      predictedScore: hit.predictedScore,
+      lockedAt: hit.lockedAt,
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -338,6 +391,9 @@ export async function buildDraftWorkbenchVm(
     readAmmo(client, project.id),
   ]);
 
+  // [T-063e] 盲预测读依赖 outputId,故在发布包读之后串行。
+  const blindPrediction = await readBlindPrediction(client, outputId);
+
   return {
     project: {
       id: project.id,
@@ -356,6 +412,7 @@ export async function buildDraftWorkbenchVm(
     },
     publishPack,
     publishUnlocked: (scriptData?.versions.length ?? 0) > 0,
+    blindPrediction,
     ammo,
   };
 }

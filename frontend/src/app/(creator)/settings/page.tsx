@@ -21,7 +21,13 @@
  * [T-063a] IA 收敛:/positioning /calibration /automations /accounts 降级为设置
  * 页签(301 落 ?tab=)。它们的核心区在这里 server 装配(原页面的读逻辑照搬),
  * 以 ReactNode 传给客户端弹窗的对应 panel —— 弹窗内切页签不回 server,故四块
- * 一并装配(全是 in-process pglite 读,代价可忽略;深度融合在 T-063e)。
+ * 一并装配(全是 in-process pglite 读,代价可忽略)。
+ *
+ * [T-063e] 定位/校准页签深度化(后台化):
+ *  - 定位 = PositioningCenterPage 的 embedded 形态(9-facet 查看/手改 + 版本链 +
+ *    「生成/进化定位」Copilot 深链),不再整页两栏工作台内嵌;
+ *  - 校准 = CalibrationSettingsPanel(rubric 规则库 + 待采纳规则建议(T-062a 回流
+ *    消费端)+ 校准历史);盲预测发起入口移稿面发布包区,对照视图并入项目复盘页。
  */
 import {
   SettingsPage,
@@ -32,8 +38,8 @@ import {
   type StorageState,
 } from "@/features/settings/settings-page";
 import { PositioningCenterPage } from "@/features/positioning/positioning-center";
-import { CalibrationWorkbench } from "@/features/calibration/calibration-interactive-region";
-import { loadCalibrationWorkbench } from "@/features/calibration/calibration-data";
+import { CalibrationSettingsPanel } from "@/features/calibration/calibration-settings-panel";
+import { loadCalibrationSettings } from "@/features/calibration/calibration-data";
 import { AutomationsPage } from "@/features/automations/automations-page";
 import { AccountManagerPage } from "@/features/platform-account/account-manager-page";
 import {
@@ -223,27 +229,25 @@ export default async function SettingsRoutePage({
     }
   }
 
-  // [T-063a] 降级页签的核心区装配(原 /positioning /calibration /automations
-  // /accounts 各 route 的读逻辑照搬;session-scoped client,无 session 走
-  // singleton seam)。校准工作台沿用原 route 的定高填满布局,在弹窗 panel 里
-  // 由定高容器供高、内部自滚。
+  // [T-063e] 深度化页签装配(session-scoped client,无 session 走 singleton seam):
+  //  - 定位:embedded 竖排设置形态(9-facet 手改 + 版本链 + 进化深链),随弹窗内容区自然滚动;
+  //  - 校准:规则库 + 待采纳建议 + 校准历史(loadCalibrationSettings 在工作台三读上加建议列表)。
   const scopedClient = session ? createServerClient(session.ctx) : defaultClient;
-  const calibration = await loadCalibrationWorkbench(scopedClient);
+  const calibration = await loadCalibrationSettings(scopedClient);
 
   const positioningPanel = (
-    <div className="flex h-full min-h-[60vh] flex-col">
-      <PositioningCenterPage {...(session ? { client: scopedClient } : {})} />
-    </div>
+    <PositioningCenterPage
+      embedded
+      {...(session ? { client: scopedClient } : {})}
+    />
   );
   const calibrationPanel = (
-    <div className="flex h-[65vh] min-h-0 flex-col">
-      <CalibrationWorkbench
-        overview={calibration.overview}
-        predictions={calibration.predictions}
-        rubric={calibration.rubric}
-        subjectTitles={calibration.subjectTitles}
-      />
-    </div>
+    <CalibrationSettingsPanel
+      rubric={calibration.rubric}
+      suggestions={calibration.suggestions}
+      overview={calibration.overview}
+      subjectTitles={calibration.subjectTitles}
+    />
   );
   const automationsPanel = (
     <AutomationsPage {...(session ? { client: scopedClient } : {})} />

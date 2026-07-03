@@ -170,6 +170,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/calibration/overview"],
   ["GET", "/calibration/suggestions"],
   ["POST", "/calibration/suggestions/:suggestionId/adopt"],
+  ["POST", "/calibration/suggestions/:suggestionId/dismiss"],
   // 平台账号 (platform-account)
   ["GET", "/accounts"],
   ["POST", "/accounts"],

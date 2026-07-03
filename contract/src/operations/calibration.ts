@@ -149,4 +149,14 @@ export const calibrationOperations = {
     response: rubricVersionResource,
     fr: ["FR-CALIB-REFLOW-ADOPT"],
   }),
+  // [T-063e] 忽略 a pending suggestion → mark it dismissed (terminal, NO rubric bump,
+  // adoptedVersionId stays null). 设置「校准」页签的待采纳列表由此清得掉不想要的回流建议。
+  dismissRuleSuggestion: defineEndpoint({
+    id: "calibration.suggestions.dismiss",
+    method: "POST",
+    path: "/calibration/suggestions/:suggestionId/dismiss",
+    params: suggestionParams,
+    response: calibrationRuleSuggestionResource,
+    fr: ["FR-CALIB-REFLOW-DISMISS"],
+  }),
 } as const;
