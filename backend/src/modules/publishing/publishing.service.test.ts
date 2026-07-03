@@ -291,3 +291,106 @@ describe("setVisibilityByExternalKey ([T-073] 平台侧可见性)", () => {
     expect(out).toBeNull();
   });
 });
+
+// [T-078] 封面回填的读侧(缺封面候选集)与落账(setCover append-only 幂等)。
+describe("listPublicationsMissingCover / setCover ([T-078] 作品封面)", () => {
+  it("导入作品(无 revision)进候选集;setCover 后离开候选集(幂等的根)", async () => {
+    const pub = await service.createImportedPublication(ctx, "output-1", {
+      platform: "douyin",
+      externalId: "aweme-c1",
+    });
+    let missing = await service.listPublicationsMissingCover(ctx, {
+      platform: "douyin",
+    });
+    expect(missing.map((p) => p.id)).toEqual([pub.id]);
+
+    const rev = await service.setCover(ctx, pub.id, "asset-cover-1");
+    expect(rev.coverAssetId).toBe("asset-cover-1");
+    // 新 revision 已置 current。
+    const after = await service.getPublication(ctx, pub.id);
+    expect(after.currentRevisionId).toBe(rev.id);
+
+    missing = await service.listPublicationsMissingCover(ctx, {
+      platform: "douyin",
+    });
+    expect(missing).toEqual([]);
+  });
+
+  it("setCover 幂等:当前 revision 已有封面 → 原样返回,不覆盖(用户手选优先)", async () => {
+    const pub = await service.createImportedPublication(ctx, "output-1", {
+      platform: "douyin",
+      externalId: "aweme-c2",
+    });
+    const first = await service.setCover(ctx, pub.id, "asset-user-picked");
+    const second = await service.setCover(ctx, pub.id, "asset-collector");
+    expect(second.id).toBe(first.id);
+    expect(second.coverAssetId).toBe("asset-user-picked");
+  });
+
+  it("setCover 复制当前 revision 字段追加新版(append-only,标题/标签不丢)", async () => {
+    const pub = await service.createPublication(ctx, "output-1", {
+      platform: "douyin",
+      accountReference: "@a",
+    });
+    await service.createRevision(ctx, pub.id, {
+      title: "真标题",
+      description: "desc",
+      platformTags: ["tag1"],
+    });
+    const rev = await service.setCover(ctx, pub.id, "asset-cover-2");
+    expect(rev.title).toBe("真标题");
+    expect(rev.platformTags).toEqual(["tag1"]);
+    expect(rev.coverAssetId).toBe("asset-cover-2");
+    expect(rev.revisionNumber).toBe(3); // v1 空版 + v2 真标题 + v3 带封面
+  });
+
+  it("候选集过滤:无 externalId(草稿)/ 已隐藏 / 其他平台 都不进", async () => {
+    // 站内草稿(published=false 且无 externalId)。
+    await service.createPublication(ctx, "output-1", {
+      platform: "douyin",
+      accountReference: "@a",
+    });
+    // 其他平台的导入作品。
+    await service.createImportedPublication(ctx, "output-2", {
+      platform: "bilibili",
+      externalId: "bv-1",
+    });
+    // 已隐藏的抖音作品。
+    await service.createImportedPublication(ctx, "output-3", {
+      platform: "douyin",
+      externalId: "aweme-hidden",
+    });
+    await service.setVisibilityByExternalKey(ctx, {
+      platform: "douyin",
+      externalId: "aweme-hidden",
+      hidden: true,
+    });
+    const missing = await service.listPublicationsMissingCover(ctx, {
+      platform: "douyin",
+    });
+    expect(missing).toEqual([]);
+  });
+
+  it("setCover 走 assertCoverOwned 校验:非本用户 asset → ValidationError", async () => {
+    // 重建 service,接一个只认 asset-mine 的 cover 校验 seam。
+    let seq = 100;
+    const guarded = createPublishingService({
+      db,
+      now: () => NOW,
+      nextId: (p: string) => `${p}-${++seq}`,
+      publisher,
+      assertCoverOwned: async (_c, assetId) => {
+        if (assetId !== "asset-mine") throw new Error("not yours");
+      },
+    });
+    const pub = await guarded.createImportedPublication(ctx, "output-1", {
+      platform: "douyin",
+      externalId: "aweme-c3",
+    });
+    await expect(
+      guarded.setCover(ctx, pub.id, "asset-theirs"),
+    ).rejects.toBeInstanceOf(ValidationError);
+    const ok = await guarded.setCover(ctx, pub.id, "asset-mine");
+    expect(ok.coverAssetId).toBe("asset-mine");
+  });
+});

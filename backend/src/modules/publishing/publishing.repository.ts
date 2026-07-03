@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql, type Db } from "@creatoros/backend";
+import { and, desc, eq, inArray, isNull, or, sql, type Db } from "@creatoros/backend";
 import { publications, publicationRevisions } from "./publishing.db-schema";
 import { OwnershipError } from "./publishing.errors";
 
@@ -114,6 +114,14 @@ export interface PublishingRepository {
     publicationId: string,
     hiddenAt: string | null,
   ): Promise<PublicationRow>;
+  // [T-078] 封面回填候选:该平台已发布、带 external_id(可拼 iesdouyin 分享页)、
+  // 未隐藏(隐藏作品分享页多半 404,别每轮浪费限流预算)、且**当前 revision 没有
+  // coverAssetId**(或压根没有 revision —— 导入作品故意无 revision)的 publications。
+  // 按真实发布时刻倒序(新作品优先补)。幂等的根:已有封面的不再回来。
+  listMissingCoverPublications(
+    platform: string,
+    limit: number,
+  ): Promise<PublicationRow[]>;
 }
 
 export function createPublishingRepository(
@@ -370,6 +378,39 @@ export function createPublishingRepository(
           ),
         );
       return getPublicationRowById(publicationId);
+    },
+
+    async listMissingCoverPublications(platform, limit) {
+      // [T-078] left join 当前 revision:currentRevisionId 为 null(导入作品)或
+      // 该 revision 的 cover_asset_id 为 null 都算「缺封面」。join 键是本用户行上的
+      // currentRevisionId,天然 user-scoped(revision 表不需再过滤 userId)。
+      const rows = await db
+        .select({ pub: publications })
+        .from(publications)
+        .leftJoin(
+          publicationRevisions,
+          eq(publications.currentRevisionId, publicationRevisions.id),
+        )
+        .where(
+          and(
+            eq(publications.userId, userId),
+            eq(publications.platform, platform),
+            eq(publications.status, "published"),
+            isNull(publications.hiddenAt),
+            sql`${publications.externalId} is not null`,
+            or(
+              isNull(publications.currentRevisionId),
+              isNull(publicationRevisions.coverAssetId),
+            ),
+          ),
+        )
+        .orderBy(
+          desc(
+            sql`coalesce(${publications.publishedAt}, ${publications.createdAt})`,
+          ),
+        )
+        .limit(limit);
+      return rows.map((r) => r.pub);
     },
 
     async findByExternalKey(platform, externalId) {

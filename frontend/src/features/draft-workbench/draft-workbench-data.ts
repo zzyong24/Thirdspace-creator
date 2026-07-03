@@ -183,6 +183,8 @@ export interface DraftWorkbenchVm {
     readonly title: string;
     readonly tags: ReadonlyArray<string>;
     readonly hasCover: boolean;
+    /** [T-078] 真封面 asset id(采集回填/手选);null → 「封面待生成」占位。 */
+    readonly coverAssetId: string | null;
   } | null;
   /** 发布包解锁:脚本已有版本(SPEC §4.3;transition 门在主行动按钮上)。 */
   readonly publishUnlocked: boolean;
@@ -257,6 +259,7 @@ async function readPublishPack(
         title: revision?.title?.trim() || "",
         tags: revision?.platformTags ?? [],
         hasCover: Boolean(revision?.coverAssetId),
+        coverAssetId: revision?.coverAssetId ?? null,
       },
     };
   } catch {

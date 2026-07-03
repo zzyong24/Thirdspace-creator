@@ -113,6 +113,8 @@ export interface PublicationRow {
   readonly engagementLabel: string;
   readonly engagementTone: "positive" | "neutral" | "warning";
   readonly thumbnailToken: string;
+  // [T-078] 真封面(revision.coverAssetId,采集回填/用户手选);null/缺省 → 渐变占位。
+  readonly coverAssetId?: string | null;
 }
 
 export interface PlatformShare {

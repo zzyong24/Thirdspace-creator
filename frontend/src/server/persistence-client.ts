@@ -171,6 +171,12 @@ import {
   visibilityFromDetailStatus,
   type PublicationCatalogEntry,
 } from "@/server/ingestion/douyin-work-detail";
+// [T-078] 作品封面回填:iesdouyin 分享页 coverUrl → 下载字节 → asset → revision.coverAssetId。
+import {
+  backfillDouyinCovers,
+  downloadDouyinImage,
+  DEFAULT_COVER_BACKFILL_LIMIT,
+} from "@/server/ingestion/douyin-cover-backfill";
 // T-038b 抖音采集限流网关(单例接线):所有对外抖音请求经它 acquire/report(SPEC §4.4)。
 import {
   DouyinRequestGateway,
@@ -3115,12 +3121,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     process.env.CREATOROS_DOUYIN_AUTH_DIR ??
     nodePath.join(process.cwd(), ".auth", "douyin");
 
+  // [T-078] 每轮封面回填上限(env 可调,验证/降载用;非法值回默认)。
+  const resolveCoverBackfillLimit = (): number => {
+    const raw = Number(process.env.CREATOROS_COVER_BACKFILL_LIMIT);
+    return Number.isFinite(raw) && raw > 0
+      ? Math.floor(raw)
+      : DEFAULT_COVER_BACKFILL_LIMIT;
+  };
+
   const scheduledCollectors: Record<string, ScheduledCollector> = {
     // 自己主页作品+指标:直接复用 ingestionService.refreshDouyin(内部:校验源 → fetchDouyin
     // Metrics(launchPersistentContext 复用扫码登录态)→ ensureImportedProject×N →
     // ingestMetrics → completeRun)。未登录 → refreshDouyin 抛 DouyinNotLoggedInError(runner
     // catch → needs_reconnect)。itemsNew=本次真写入快照数(recordsWritten);metric_snapshots
-    // 是 append-only 时间序列(同 capturedAt 幂等),无"更新"语义 → itemsUpdated 恒 0(诚实)。
+    // 是 append-only 时间序列(同 capturedAt 幂等),无"更新"语义。
+    // [T-078] 指标落库后追加封面回填(best-effort):对尚无 coverAssetId 的已发布抖音
+    // publication,iesdouyin 分享页(经限流网关)抽 coverUrl → 下载(带 Referer)→
+    // createGeneratedAsset 直落字节 → setCover 写 revision.coverAssetId。幂等(已有
+    // 封面不进候选集)、单作品降级(runner 内 catch 继续)、整批失败不影响指标主流程
+    // (此处再 catch 一层)。itemsUpdated = 本轮真回填的封面数(publication 确被更新,诚实)。
     "self.metrics": async (ctx, target) => {
       const externalSourceId =
         typeof target.externalSourceId === "string" && target.externalSourceId
@@ -3129,7 +3148,54 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const run = await ingestionService.refreshDouyin(ctx, {
         externalSourceId,
       });
-      return { itemsNew: run.recordsWritten, itemsUpdated: 0 };
+      // [T-078] 封面回填(拉指标跑一轮即回填存量,无需独立入口)。
+      let coversFilled = 0;
+      try {
+        const backfill = await backfillDouyinCovers(
+          {
+            listMissingCover: async (limit) =>
+              (
+                await publishingService.listPublicationsMissingCover(ctx, {
+                  platform: "douyin",
+                  limit,
+                })
+              )
+                .filter((p) => typeof p.externalId === "string" && p.externalId)
+                .map((p) => ({
+                  publicationId: p.id,
+                  externalId: p.externalId as string,
+                })),
+            // [gate-F7] iesdouyin channel 限流:注真网关单例(与逐字稿取直链同一 channel)。
+            fetchVideoUrl: (awemeId) =>
+              fetchDouyinVideoUrl(awemeId, {
+                fetch: (...args) => fetch(...args),
+                gateway: douyinGateway,
+              }),
+            downloadImage: (url) => downloadDouyinImage(url),
+            createImageAsset: (input) =>
+              assetsService.createGeneratedAsset(ctx, {
+                assetType: "image",
+                name: input.name,
+                bytes: input.bytes,
+                mimeType: input.mimeType,
+              }),
+            setCover: async (publicationId, coverAssetId) => {
+              await publishingService.setCover(ctx, publicationId, coverAssetId);
+            },
+          },
+          { limit: resolveCoverBackfillLimit() },
+        );
+        coversFilled = backfill.filled;
+        if (backfill.attempted > 0) {
+          console.log(
+            `[douyin-cover-backfill] 候选 ${backfill.attempted},回填 ${backfill.filled},跳过 ${backfill.skipped},失败 ${backfill.failed}`,
+          );
+        }
+      } catch (err) {
+        // 封面是锦上添花:回填整批失败绝不拖垮指标采集(run 仍 succeeded)。
+        console.error("[douyin-cover-backfill] 封面回填整批失败(指标不受影响):", err);
+      }
+      return { itemsNew: run.recordsWritten, itemsUpdated: coversFilled };
     },
     // 评论:fetchDouyinComments(target)→ ingestComments(D2 的纯 ports 落库:建 run → 逐条经
     // ux_ingestion_records_run_key 去重 → candidateService.ingestAudienceSignal(source=

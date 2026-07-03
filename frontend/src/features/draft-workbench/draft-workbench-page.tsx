@@ -13,6 +13,7 @@
 import * as React from "react";
 import Link from "next/link";
 
+import { CoverThumb } from "@/components/resources/cover-thumb";
 import { ScriptRichEditor } from "@/features/script/script-rich-editor";
 import { ScriptStructureToggle } from "@/features/script/script-structure-view";
 import { sectionsToHtml } from "@/features/script/script-editor-bridge";
@@ -168,12 +169,20 @@ function PublishPackSection({
       )}
     >
       <div className="flex items-center gap-3">
-        <div
-          aria-hidden="true"
-          className="flex h-10 w-16 shrink-0 items-center justify-center rounded-md border border-border bg-surface-subtle text-[10px] text-text-subtle"
-        >
-          {publishPack?.hasCover ? "封面已选" : "封面待生成"}
-        </div>
+        {/* [T-078] 有真封面(采集回填/手选)渲真图;无则保留「封面待生成」占位。 */}
+        <CoverThumb
+          assetId={publishPack?.coverAssetId ?? null}
+          alt={publishPack?.title || "作品封面"}
+          className="h-10 w-16 shrink-0 rounded-md border border-border object-cover bg-surface-subtle"
+          fallback={
+            <div
+              aria-hidden="true"
+              className="flex h-10 w-16 shrink-0 items-center justify-center rounded-md border border-border bg-surface-subtle text-[10px] text-text-subtle"
+            >
+              {publishPack?.hasCover ? "封面已选" : "封面待生成"}
+            </div>
+          }
+        />
         <div className="min-w-0 flex-1">
           {/* [T-054 组B] 规范 §2:无发布行时不再摆「标题草稿:定稿后从脚本 HOOK 生成 /
               标签、平台在发布时选」这类机制注记,收敛为用户视角一句话。 */}

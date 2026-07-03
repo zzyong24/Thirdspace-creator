@@ -34,6 +34,7 @@ import { ChartFrame } from "@/components/analytics/chart-frame";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
+import { CoverThumb } from "@/components/resources/cover-thumb";
 import { client } from "@/lib/contract-client";
 import type { MetricCard as MetricCardVm } from "@/types/view-models";
 import type {
@@ -733,7 +734,12 @@ function PublicationPerformanceRow({
             onChange={() => onToggleRow(row.id)}
             className="size-3.5 shrink-0 rounded border-border text-brand focus:ring-ring/40"
           />
-          <ContentThumbnail platform={row.platform} token={row.thumbnailToken} />
+          <ContentThumbnail
+            platform={row.platform}
+            token={row.thumbnailToken}
+            coverAssetId={row.coverAssetId ?? null}
+            alt={row.contentTitle}
+          />
           <span className="line-clamp-2 max-w-[200px] text-[13px] leading-snug text-foreground">
             {row.contentTitle}
           </span>
@@ -809,16 +815,21 @@ function PublicationPerformanceRow({
 function ContentThumbnail({
   platform,
   token,
+  coverAssetId = null,
+  alt = "",
 }: {
   platform: string;
   token: string;
+  /** [T-078] 真封面 asset id;有则渲真图,无/取不到回渐变占位。 */
+  coverAssetId?: string | null;
+  alt?: string;
 }) {
   // Deterministic 16:9 thumbnail with a token-derived hue so the
   // grid of cards remains stable across renders (no Math.random).
   const hue = (hashToken(token) ?? "0").slice(0, 2);
   const hueValue = parseInt(hue, 16) * 12;
   const safeHue = Number.isFinite(hueValue) ? hueValue % 360 : 220;
-  return (
+  const placeholder = (
     <span
       data-slot="content-thumbnail"
       data-platform={platform}
@@ -829,6 +840,15 @@ function ContentThumbnail({
     >
       16:9
     </span>
+  );
+  // [T-078] 有封面 → 签名 URL 渲真图(共享 resolveAssetPreviewUrl 缓存);失败回占位。
+  return (
+    <CoverThumb
+      assetId={coverAssetId}
+      alt={alt}
+      className="h-9 w-16 shrink-0 rounded-md border border-border object-cover bg-surface-subtle"
+      fallback={placeholder}
+    />
   );
 }
 

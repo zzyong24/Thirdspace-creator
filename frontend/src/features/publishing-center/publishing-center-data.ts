@@ -80,6 +80,8 @@ interface PublicationRevisionDto {
   readonly id: string;
   readonly title: string;
   readonly revisionNumber: number;
+  // [T-078] 作品封面(采集回填 / 用户手选);null = 无封面 → 渐变占位。
+  readonly coverAssetId?: string | null;
 }
 
 interface MetricSnapshotDto {
@@ -170,29 +172,33 @@ function formatDate(iso: string): string {
 
 /**
  * Resolve a publication's REAL current-revision title (the 真标题 stored in
- * `publicationRevisions`). Reads the publication's revisions (newest-first),
- * prefers the row matching `currentRevisionId`, else the newest. A non-empty
- * title wins; anything missing/blank → `null` so the caller falls back to the
- * owning output title placeholder. Try/catch → `null` (never throws into the
- * row build). N+1 over a small publication set — acceptable this wave.
+ * `publicationRevisions`) AND its cover ([T-078] coverAssetId — 采集回填/手选).
+ * Reads the publication's revisions (newest-first), prefers the row matching
+ * `currentRevisionId`, else the newest. A non-empty title wins; anything
+ * missing/blank → `null` so the caller falls back to the owning output title
+ * placeholder. Try/catch → nulls (never throws into the row build). N+1 over a
+ * small publication set — acceptable this wave (one read feeds title + cover).
  */
-async function resolveRevisionTitle(
+async function resolveRevisionMeta(
   client: PublishingCenterDataClient,
   pub: PublicationDto,
-): Promise<string | null> {
+): Promise<{ title: string | null; coverAssetId: string | null }> {
   try {
     const revisions = (await client.listPublicationRevisions({
       params: { publicationId: pub.id },
       query: { page: 1, pageSize: 20 },
       body: undefined,
     })) as ReadonlyArray<PublicationRevisionDto>;
-    if (revisions.length === 0) return null;
+    if (revisions.length === 0) return { title: null, coverAssetId: null };
     const current =
       revisions.find((r) => r.id === pub.currentRevisionId) ?? revisions[0];
     const title = current?.title?.trim();
-    return title ? title : null;
+    return {
+      title: title ? title : null,
+      coverAssetId: current?.coverAssetId ?? null,
+    };
   } catch {
-    return null;
+    return { title: null, coverAssetId: null };
   }
 }
 
@@ -369,12 +375,13 @@ async function assembleRealRows(
         // Falls back to the owning output's title placeholder when the revision
         // read yields nothing (empty title / read fails). A platform suffix
         // disambiguates a 一稿多平台 fan-out where one output has N rows.
-        const [revisionTitle, snapshot] = await Promise.all([
-          resolveRevisionTitle(client, pub),
+        const [revisionMeta, snapshot] = await Promise.all([
+          resolveRevisionMeta(client, pub),
           // Read the publication's latest snapshot ONCE — it feeds both the
           // table 表现 cell and the rail aggregation, so no double N+1.
           resolveLatestSnapshot(client, pub.id),
         ]);
+        const revisionTitle = revisionMeta.title;
         const performance = formatPerformance(snapshot);
         const fallbackTitle = output
           ? `${output.title} · ${platformLabel(pub.platform)}`
@@ -405,6 +412,8 @@ async function assembleRealRows(
             engagementLabel: performance.engagementLabel,
             engagementTone: performance.engagementTone,
             thumbnailToken: `pub-${pub.id}`,
+            // [T-078] 真封面(采集回填/手选的 revision.coverAssetId);null → 渐变占位。
+            coverAssetId: revisionMeta.coverAssetId,
           },
           railInput: {
             publicationId: pub.id,

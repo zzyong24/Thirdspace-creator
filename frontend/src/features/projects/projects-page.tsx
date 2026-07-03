@@ -26,6 +26,7 @@ import * as React from "react";
 import Link from "next/link";
 
 import { ProgressBar } from "@/components/project/progress-bar";
+import { CoverThumb } from "@/components/resources/cover-thumb";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { type StatusTabsBarTab } from "@/features/projects/status-tabs-bar";
 import { ProjectsToolbar } from "@/features/projects/projects-toolbar";
@@ -47,8 +48,15 @@ import type { Project, ProjectStageName } from "@/types/domain";
  * Structural seam for the server read. The route passes a session-scoped
  * `createServerClient(ctx)` so the projects list stays user-scoped; the default
  * keeps the singleton (canonical ctx) as the SSR/test fallback seam.
+ * [T-078] 封面解析 ops 可选:窄桩(只有 listProjects)照常工作,行回渐变占位。
  */
-export type ProjectsReadClient = Pick<typeof defaultClient, "listProjects">;
+export type ProjectsReadClient = Pick<typeof defaultClient, "listProjects"> &
+  Partial<
+    Pick<
+      typeof defaultClient,
+      "listOutputs" | "listPublications" | "listPublicationRevisions"
+    >
+  >;
 
 export interface ProjectsPageProps {
   /** Override hook for tests; defaults to the production selector. */
@@ -143,12 +151,24 @@ export async function ProjectsPage({
     ? Math.max(1, Math.ceil(sortedRows.length / PROJECTS_PAGE_SIZE))
     : 1;
   const currentPage = Math.min(Math.max(1, page), totalPages);
-  const rows = paginate
+  const pagedRows = paginate
     ? sortedRows.slice(
         (currentPage - 1) * PROJECTS_PAGE_SIZE,
         currentPage * PROJECTS_PAGE_SIZE,
       )
     : sortedRows;
+  // [T-078] 只给当前页的行解析真封面(每页 10 行,N+1 可控):项目 → outputs →
+  // publications → 当前 revision.coverAssetId。测试 viewModel 覆写路径 / 窄桩
+  // client 不解析(coverAssetId 缺省 → 渐变占位,现状不回退)。
+  const rows =
+    paginate && canResolveCovers(client)
+      ? await Promise.all(
+          pagedRows.map(async (row) => ({
+            ...row,
+            coverAssetId: await resolveProjectCoverAssetId(client, row.id),
+          })),
+        )
+      : pagedRows;
   const totalLabel =
     status === "all"
       ? `共 ${baseRows.length} 个项目`
@@ -249,16 +269,24 @@ function ProjectListItem({ row }: { row: ProjectListRow }) {
       className="grid grid-cols-[minmax(0,1fr)_140px_140px_190px_120px_100px] items-center gap-4 px-5 py-6"
     >
       <div className="flex min-w-0 items-center gap-4">
-        <div
-          data-slot="project-thumbnail"
-          aria-hidden="true"
-          className={cn(
-            "flex h-[70px] w-[84px] shrink-0 items-center justify-center overflow-hidden whitespace-pre-line rounded-control px-2 text-center text-[10px] font-bold leading-tight tracking-wide text-white shadow-sm",
-            coverBgClass(row.id),
-          )}
-        >
-          {thumbnailLabel(row)}
-        </div>
+        {/* [T-078] 有真封面(采集回填的 revision.coverAssetId)渲真图;无则渐变占位。 */}
+        <CoverThumb
+          assetId={row.coverAssetId ?? null}
+          alt={row.title}
+          className="h-[70px] w-[84px] shrink-0 rounded-control object-cover shadow-sm bg-surface-subtle"
+          fallback={
+            <div
+              data-slot="project-thumbnail"
+              aria-hidden="true"
+              className={cn(
+                "flex h-[70px] w-[84px] shrink-0 items-center justify-center overflow-hidden whitespace-pre-line rounded-control px-2 text-center text-[10px] font-bold leading-tight tracking-wide text-white shadow-sm",
+                coverBgClass(row.id),
+              )}
+            >
+              {thumbnailLabel(row)}
+            </div>
+          }
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <div className="flex min-w-0 items-center gap-2">
             <h3
@@ -514,6 +542,78 @@ function stageChipStyle(row: ProjectListRow): React.CSSProperties {
         ? { bg: "rgba(107,114,128,0.12)", fg: "#64748b" }
         : STAGE_CHIP_TONE[row.currentStage] ?? STAGE_CHIP_TONE.script;
   return { backgroundColor: tone.bg, color: tone.fg };
+}
+
+// ---------------------------------------------------------------------------
+// [T-078] 项目行真封面解析(server 侧,只跑当前页 10 行)
+// ---------------------------------------------------------------------------
+
+function canResolveCovers(
+  client: ProjectsReadClient,
+): client is ProjectsReadClient &
+  Required<
+    Pick<
+      typeof defaultClient,
+      "listOutputs" | "listPublications" | "listPublicationRevisions"
+    >
+  > {
+  return (
+    typeof client.listOutputs === "function" &&
+    typeof client.listPublications === "function" &&
+    typeof client.listPublicationRevisions === "function"
+  );
+}
+
+/**
+ * 项目 → outputs → publications → 当前 revision.coverAssetId。命中第一个有封面的
+ * publication 即返回(一个项目通常一条发布链)。任一读失败 → null(渐变占位,
+ * 绝不把封面故障放大成列表故障)。
+ */
+async function resolveProjectCoverAssetId(
+  client: ProjectsReadClient &
+    Required<
+      Pick<
+        typeof defaultClient,
+        "listOutputs" | "listPublications" | "listPublicationRevisions"
+      >
+    >,
+  projectId: string,
+): Promise<string | null> {
+  try {
+    // contract client 的类型标的是单资源,运行时 list op 返回数组 —— 与
+    // publishing-center-data 同款窄化(经 unknown 转数组结构)。
+    const outputs = (await client.listOutputs({
+      params: { projectId },
+      query: undefined,
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ id: string }>;
+    for (const output of outputs.slice(0, 3)) {
+      const pubs = (await client.listPublications({
+        params: { outputId: output.id },
+        query: { page: 1, pageSize: 10 },
+        body: undefined,
+      })) as unknown as ReadonlyArray<{
+        id: string;
+        currentRevisionId: string | null;
+      }>;
+      for (const pub of pubs) {
+        const revs = (await client.listPublicationRevisions({
+          params: { publicationId: pub.id },
+          query: { page: 1, pageSize: 20 },
+          body: undefined,
+        })) as unknown as ReadonlyArray<{
+          id: string;
+          coverAssetId?: string | null;
+        }>;
+        const current =
+          revs.find((r) => r.id === pub.currentRevisionId) ?? revs[0];
+        if (current?.coverAssetId) return current.coverAssetId;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 const COVER_BG_CLASSES = [

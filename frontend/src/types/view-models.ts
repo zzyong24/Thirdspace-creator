@@ -172,6 +172,9 @@ export interface ProjectListRow {
   // [T-073] 平台侧已隐藏(抖音端「仅自己可见/已隐藏」,platformRef.hidden 同步)。
   //   列表默认过滤 hidden 行,可切「显示已隐藏」;显示时行上带「已隐藏」徽标。
   readonly hidden: boolean;
+  // [T-078] 真封面(publication 当前 revision.coverAssetId,采集回填/手选)。
+  //   页级 server 解析只补当前页 10 行;缺省/null → 渐变占位。
+  readonly coverAssetId?: string | null;
 }
 
 export interface ContentOutputSummary {

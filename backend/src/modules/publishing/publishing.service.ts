@@ -181,6 +181,22 @@ export interface PublishingService {
     ctx: RequestContext,
     input: { platform: string; externalId: string; hidden: boolean },
   ): Promise<PublicationRow | null>;
+  // [T-078] 封面回填读侧:该平台已发布、带 external_id、未隐藏、当前 revision 缺
+  // coverAssetId(或无 revision)的 publications —— 采集侧据此逐条抓 iesdouyin 封面。
+  listPublicationsMissingCover(
+    ctx: RequestContext,
+    input: { platform: string; limit?: number },
+  ): Promise<PublicationRow[]>;
+  // [T-078] 封面落账:给 publication 的当前 revision 补 coverAssetId。revision 是
+  // append-only(绝不 UPDATE 旧行)—— 复制当前 revision 字段追加一版带 cover 的新
+  // revision 并置 current;导入作品(无 revision)铸一版空标题 revision 只带 cover
+  // (标题继续由 content_output 兜底,既有回退链不变)。幂等:当前 revision 已有
+  // 封面 → 原样返回不再写(用户手选的封面绝不被采集覆盖)。
+  setCover(
+    ctx: RequestContext,
+    publicationId: string,
+    coverAssetId: string,
+  ): Promise<PublicationRevisionRow>;
 }
 
 export function createPublishingService(deps: ServiceDeps): PublishingService {
@@ -446,6 +462,47 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       const outputIds = await deps.listOutputIdsByProject(ctx, projectId);
       if (outputIds.length === 0) return [];
       return repoFor(ctx).listPublicationIdsByOutputs(outputIds);
+    },
+
+    async listPublicationsMissingCover(ctx, input) {
+      return repoFor(ctx).listMissingCoverPublications(
+        input.platform,
+        input.limit ?? 100,
+      );
+    },
+
+    async setCover(ctx, publicationId, coverAssetId) {
+      const repo = repoFor(ctx);
+      await repo.getPublication(publicationId); // ownership gate(cross-user → 404)
+      const current = await repo.getCurrentRevision(publicationId);
+      // 幂等:已有封面(用户手选或上一轮回填)→ 不动,原样返回。
+      if (current?.coverAssetId) return current;
+      // 封面归属校验(SPEC §15 同 createRevision):cover 必须是本用户的 asset。
+      if (deps.assertCoverOwned) {
+        try {
+          await deps.assertCoverOwned(ctx, coverAssetId);
+        } catch {
+          throw new ValidationError(
+            `ValidationError: cover asset not found or invalid: ${coverAssetId}`,
+          );
+        }
+      }
+      // append-only:复制当前 revision 内容 + cover 追加新版(导入作品无 revision →
+      // 空标题起一版,标题回退链走 content_output,行为不变)。
+      const rev = await repo.createRevision(publicationId, {
+        title: current?.title ?? "",
+        description: current?.description ?? "",
+        coverAssetId,
+        category: current?.category ?? "",
+        series: current?.series ?? "",
+        platformTags: (current?.platformTags ?? []) as string[],
+        platformSettings: (current?.platformSettings ?? {}) as Record<
+          string,
+          unknown
+        >,
+      });
+      await repo.setCurrentRevision(publicationId, rev.id);
+      return rev;
     },
 
     async setVisibilityByExternalKey(ctx, input) {
