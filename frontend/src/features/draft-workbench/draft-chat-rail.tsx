@@ -31,7 +31,8 @@ export function DraftChatRail({
             selection: { kind: "project", id: projectId, title: projectTitle },
             persistKey: `project:${projectId}`,
             title: "编导对话",
-            subtitle: "聊定位、改 hook、搜素材都在这里",
+            // [T-054 组B] 规范 §2:可见文案不夹生英文机制词,「hook」改「钩子」。
+            subtitle: "聊定位、改钩子、搜素材都在这里",
           }}
         />
       </React.Suspense>

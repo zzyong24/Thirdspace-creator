@@ -95,20 +95,22 @@ describe("resolveRoute", () => {
     expect(res.sidebarContext?.items?.[0]?.label).toBe("上下文工程");
   });
 
-  it("无 override(真项目不在 fixture)→ 退回中性「当前项目」(诚实兜底,不硬凑)", () => {
+  // [T-054 组B] 无真标题时整个「当前项目」区不渲染 —— 原来的中性占位 item 与 section
+  // 标题一字不差,在侧栏形成「当前项目/当前项目」两行重复(规范 §4 明令收敛)。
+  it("无 override(真项目不在 fixture)→ 不渲染侧栏「当前项目」区(不留重复占位)", () => {
     const res = resolveRoute("/projects/proj-real-xyz/research");
-    // fixture 查不到 → 指示器退回中性态,不编造标题。
-    expect(res.sidebarContext?.items?.[0]?.label).toBe("当前项目");
+    // fixture 查不到 → 不编造标题,也不显示与 heading 重复的占位行。
+    expect(res.sidebarContext).toBeUndefined();
   });
 
-  it("override 的 routeParam 与 URL 段不匹配 → 不采信 override(防串味),退回 fixture/中性", () => {
+  it("override 的 routeParam 与 URL 段不匹配 → 不采信 override(防串味),不留重复占位", () => {
     const stale = {
       routeParam: "other-project",
       projectId: "other-project",
       title: "串味的标题",
     };
     const res = resolveRoute("/projects/proj-real-xyz/research", stale);
-    expect(res.sidebarContext?.items?.[0]?.label).toBe("当前项目");
+    expect(res.sidebarContext).toBeUndefined();
     expect(res.project?.title).not.toBe("串味的标题");
   });
 

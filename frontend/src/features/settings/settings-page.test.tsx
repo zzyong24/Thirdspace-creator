@@ -116,9 +116,6 @@ describe("SettingsPage", () => {
   });
 
   it("marks the Settings nav item as the active page in the sidebar", async () => {
-    // 设置弹窗 modal 打开后,Radix 给背景 AppShell(含 sidebar)加 aria-hidden,
-    // getByRole(走可访问树)便够不到 nav。sidebar 仍在 DOM 里、仍把 /settings 标为
-    // 当前页 —— 直接用 DOM 查询断言。
     const { container } = await renderSettings();
     const nav = container.querySelector('nav[aria-label="主要导航"]');
     expect(nav).not.toBeNull();
@@ -140,10 +137,9 @@ describe("SettingsPage", () => {
     expect(storage).toBeNull();
   });
 
-  // The settings content now lives in a centered Dialog (Radix Portal → body),
-  // so dialog-internal queries go through `document` rather than the render
-  // container. The dialog opens by default.
-  it("[T-063a] renders the settings dialog with 8 vertical tabs in the approved order", async () => {
+  // [T-054 组 A] The settings content is a full-page region (left vertical tab
+  // nav + right natural-flow content) — the Dialog shell is retired.
+  it("[T-063a] renders the settings region with 8 vertical tabs in the approved order", async () => {
     await renderSettings();
     const tabs = document.querySelector('[data-slot="settings-tabs"]');
     expect(tabs).not.toBeNull();
@@ -163,21 +159,32 @@ describe("SettingsPage", () => {
     ]);
   });
 
-  it("opens as a centered dialog (not a full-page flood layout)", async () => {
-    await renderSettings();
-    const dialog = document.querySelector('[data-slot="settings-dialog"]');
-    expect(dialog).not.toBeNull();
-    // Left vertical tab nav + right scrollable panels area both exist.
-    expect(dialog!.querySelector('[data-slot="settings-tabs"]')).not.toBeNull();
+  it("[T-054 组 A] renders as a full page (left tab nav + content area, NO dialog shell)", async () => {
+    const { container } = await renderSettings();
+    // 整页 region 在页面 main 内(不再 Portal 到 body 的弹窗)。
+    const region = container.querySelector('[data-slot="settings-region"]');
+    expect(region).not.toBeNull();
+    // 左竖排页签导航 + 右内容区都在 region 内。
+    expect(region!.querySelector('[data-slot="settings-tabs"]')).not.toBeNull();
     expect(
-      dialog!.querySelector('[data-slot="settings-panels"]'),
+      region!.querySelector('[data-slot="settings-panels"]'),
     ).not.toBeNull();
+    // Dialog 壳退役:无遮罩弹窗、无 role="dialog"。
+    expect(document.querySelector('[data-slot="settings-dialog"]')).toBeNull();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    // 页内可见页头「设置 + 副描述」恰好一次(今日台 embedded 范式,§1 无双头;
+    // shell 的 header-page-heading 在 global overlay 下是 sr-only,不算视觉双头)。
+    const headings = container.querySelectorAll(
+      '[data-slot="settings-page-heading"]',
+    );
+    expect(headings).toHaveLength(1);
+    expect(headings[0]!.textContent).toBe("设置");
   });
 
   it("mounts every settings card (account/preference/system/storage/model)", async () => {
     await renderSettings();
-    // All panels are force-mounted so the full inventory is present regardless
-    // of the active tab.
+    // All panels stay mounted (inactive ones hidden) so the full inventory is
+    // present regardless of the active tab.
     const expectedSlots = [
       "account-information-card",
       "preference-settings-card",
@@ -200,7 +207,7 @@ describe("SettingsPage", () => {
     const main = document.querySelector('[data-slot="main-settings"]');
     expect(main).not.toBeNull();
     // Account panel + preference panel together have the form rows; assert the
-    // label/control pattern across the whole dialog.
+    // label/control pattern across the whole region.
     const rows = document.querySelectorAll('[data-slot="settings-form-row"]');
     expect(rows.length).toBeGreaterThanOrEqual(3);
     for (const row of Array.from(rows)) {

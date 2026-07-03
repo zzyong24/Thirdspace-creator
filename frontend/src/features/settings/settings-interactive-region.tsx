@@ -11,18 +11,15 @@
  * server persistence affordances are added (D-001 + page-specs §17
  * "禁止改变").
  *
- * The island exports two column components:
- *  - `SettingsMainColumn` (the left column of SettingsGrid) — host
- *    AccountInformationCard → PreferenceSettingsCard →
- *    SystemSettingsCard, each with `SettingsFormRow` rows that
- *    hold local Switch / Select / Input controls.
- *  - `SettingsRailColumn` (the right column of SettingsGrid) — host
- *    StorageUsageCard → ModelConfigurationCard.
+ * The island exports `SettingsRegion` — the full-page settings body
+ * (T-054 组 A):left vertical tab nav + right natural-flow content
+ * area hosting every settings card (account / preference / appearance /
+ * models / storage) plus the [T-063a] embedded panels (positioning /
+ * calibration / automations / accounts).
  *
- * The page-level `SettingsPage` Server Component is responsible for
- * laying out the columns inside `SettingsGrid`. This island keeps
- * the page itself as a Server Component while only the interactive
- * form controls run on the client.
+ * The page-level `SettingsPage` Server Component renders this island
+ * inside the page slot. This keeps the page itself a Server Component
+ * while only the interactive form controls run on the client.
  *
  * Determinism: every visible value comes from the canonical fixture
  * or a hard-coded default. No `Date.now`/`Math.random`/network.
@@ -43,12 +40,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
@@ -177,17 +168,23 @@ function applyDensity(density: Density): void {
 }
 
 // ---------------------------------------------------------------------------
-// SettingsDialog — 居中大弹窗 + 左竖 Tab 栏 + 右框内滚动
+// SettingsRegion — 整页左竖页签导航 + 右内容区自然流(T-054 组 A)
 // ---------------------------------------------------------------------------
 //
-// 设置从「一屏全部铺满的整页」改为弹窗式:打开 /settings 即弹出一个居中大弹窗
-// (max-w-4xl / h-[85vh] 固定高度),左侧竖向 Tab 栏分组(账户 / 偏好 / 外观 /
-// 模型配置 / 存储),右侧内容区按选中的 Tab 各自 `overflow-y-auto` 框内滚动——
-// 不再一屏塞满。关闭(点 X / Esc / 点遮罩)→ router.back() 回上一页。
+// [T-054 组 A] 设置从居中 Dialog 改回整页(design-standard §4 第一条):/settings
+// 是一级导航,内容(定位母版 9-facet / 校准规则库 / 任务中心)是富文档,~900px
+// 弹窗装不下——改为整页布局:左侧竖排页签导航(sticky,随 PageScrollArea 滚动时
+// 钉住),右侧内容区自然流(文档类页签整页滚,§1「文档类自然流」)。页头「设置 +
+// 账号、偏好与系统」由 shell TopHeader 提供(shell-router /settings 分支),页内
+// 不再渲第二个标题(§1 绝不双头)。Dialog 壳退役——不再有遮罩/X/Esc 关闭语义,
+// 离开设置 = 正常导航走。
 //
-// 每个 Tab panel 用 forceMount + data-[state=inactive]:hidden 全部挂载:这样
-// 各卡里的本地草稿/受控态在切 Tab 时不丢,同时结构测试也能一次看到所有卡的
-// data-slot(account-information-card / model-configuration-card 等)。
+// ?tab= 驱动保持(侵入最小):初始页签仍由 route 从 ?tab= 解析传入(旧一级路由
+// 301 深链不变);客户端切页签只改本地 state + history.replaceState 同步地址栏
+// (可分享/可刷新,不回 server)。
+//
+// 每个 Tab panel 全部挂载、非活跃 hidden:各卡里的本地草稿/受控态切页签不丢,
+// 结构测试也能一次看到所有卡的 data-slot。
 
 interface SettingsTabDef {
   readonly id: string;
@@ -195,7 +192,7 @@ interface SettingsTabDef {
   readonly icon: LucideIcon;
 }
 
-const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
+const SETTINGS_TABS: ReadonlyArray<SettingsTabDef> = [
   { id: "account", label: "账户", icon: UserRound },
   { id: "preferences", label: "偏好", icon: SlidersHorizontal },
   { id: "appearance", label: "外观", icon: Palette },
@@ -209,7 +206,7 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
   { id: "automations", label: "任务", icon: CalendarClock },
 ];
 
-export function SettingsDialog({
+export function SettingsRegion({
   viewModel,
   initialTab,
   positioningPanel,
@@ -229,82 +226,71 @@ export function SettingsDialog({
   /** [T-063a] 内嵌的原 /accounts 核心区(矩阵号管理,挂在「账户」页签)。 */
   accountsPanel?: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [open, setOpen] = React.useState(true);
-  const [tab, setTab] = React.useState<string>(
-    SETTINGS_DIALOG_TABS.some((t) => t.id === initialTab)
-      ? (initialTab as string)
-      : SETTINGS_DIALOG_TABS[0]!.id,
-  );
+  // 归一化:非法/缺省的 ?tab= 落第一个页签「账户」。
+  const resolveTab = (raw: string | undefined): string =>
+    SETTINGS_TABS.some((t) => t.id === raw)
+      ? (raw as string)
+      : SETTINGS_TABS[0]!.id;
 
-  // 关闭弹窗:回上一页(回到打开设置之前的位置),没有历史时兜底回首页。
-  const handleOpenChange = React.useCallback(
-    (next: boolean) => {
-      setOpen(next);
-      if (!next) {
-        if (typeof window !== "undefined" && window.history.length > 1) {
-          router.back();
-        } else {
-          router.push("/");
-        }
-      }
-    },
-    [router],
-  );
+  const [tab, setTab] = React.useState<string>(() => resolveTab(initialTab));
+
+  // 已在 /settings 时又收到新的 ?tab= 深链(如 301 落地 /settings?tab=calibration)
+  // → 跟随 server 传下来的新初值,不让旧本地 state 盖住深链。
+  React.useEffect(() => {
+    if (initialTab && SETTINGS_TABS.some((t) => t.id === initialTab)) {
+      setTab(initialTab);
+    }
+  }, [initialTab]);
+
+  // 切页签:本地 state 切换(不回 server,各卡草稿不丢)+ replaceState 同步地址栏,
+  // 让当前页签可刷新/可分享(?tab= 驱动保持,侵入最小)。
+  const selectTab = React.useCallback((id: string) => {
+    setTab(id);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(window.history.state, "", `/settings?tab=${id}`);
+    }
+  }, []);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        showCloseButton
-        data-slot="settings-dialog"
-        className="flex h-[85vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl"
+    <div
+      data-slot="settings-region"
+      className="flex items-start gap-6"
+    >
+      {/* 左侧竖排页签导航:sticky 钉在滚动容器顶部,长内容页签滚动时导航不走. */}
+      <nav
+        data-slot="settings-tabs"
+        aria-label="设置分类导航"
+        className="sticky top-0 flex w-48 shrink-0 flex-col gap-1"
       >
-        {/* sticky header — 标题 + 描述 (关闭按钮由 DialogContent 自带的 X 提供). */}
-        <div className="flex shrink-0 flex-col gap-1 border-b border-border/70 px-6 py-4">
-          <DialogTitle className="text-lg">设置</DialogTitle>
-          <DialogDescription>账号、偏好与系统</DialogDescription>
-        </div>
+        {SETTINGS_TABS.map((t) => {
+          const TabIcon = t.icon;
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              data-tab-id={t.id}
+              data-active={active}
+              onClick={() => selectTab(t.id)}
+              className={cn(
+                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                active
+                  ? "bg-brand-soft text-brand"
+                  : "text-muted-foreground hover:bg-surface-subtle hover:text-foreground",
+              )}
+            >
+              <TabIcon className="size-4 shrink-0" />
+              {t.label}
+            </button>
+          );
+        })}
+      </nav>
 
-        {/* 主体:左竖 Tab 栏 + 右内容区 (各自框内滚动). */}
-        <div className="flex min-h-0 flex-1">
-          {/* 左侧竖向 Tab 栏. */}
-          <nav
-            data-slot="settings-tabs"
-            aria-label="设置分类导航"
-            className="flex w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border/70 bg-surface-subtle/40 p-2"
-          >
-            {SETTINGS_DIALOG_TABS.map((t) => {
-              const TabIcon = t.icon;
-              const active = tab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  data-tab-id={t.id}
-                  data-active={active}
-                  onClick={() => setTab(t.id)}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
-                    active
-                      ? "bg-brand-soft text-brand"
-                      : "text-muted-foreground hover:bg-surface-subtle hover:text-foreground",
-                  )}
-                >
-                  <TabIcon className="size-4 shrink-0" />
-                  {t.label}
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* 右侧内容区:每个 Tab panel 各自框内滚动 (不是一屏铺满). */}
-          <div
-            data-slot="settings-panels"
-            className="min-w-0 flex-1 overflow-y-auto px-6 py-5"
-          >
-            <SettingsPanel tabId="account" active={tab}>
+      {/* 右侧内容区:自然流(随 PageScrollArea 整页滚,宽内容如定位母版有呼吸空间). */}
+      <div data-slot="settings-panels" className="min-w-0 flex-1">
+        <SettingsPanel tabId="account" active={tab}>
               <div data-slot="main-settings" className="flex flex-col gap-card-gap">
                 <AccountInformationCard viewModel={viewModel} />
                 <AccountBindingCard douyinAccount={viewModel.douyinAccount} />
@@ -340,20 +326,18 @@ export function SettingsDialog({
               <StorageUsageCard storage={viewModel.storage} />
             </SettingsPanel>
             {/* [T-063a] 三个降级页签:内嵌原页核心区(route server 装配传入)。
-                无 panel(单测直渲 SettingsDialog)时渲诚实提示,不编内容。 */}
+                无 panel(单测直渲 SettingsRegion)时渲诚实提示,不编内容。 */}
             <SettingsPanel tabId="positioning" active={tab}>
               {positioningPanel ?? <EmbeddedPanelFallback label="定位" />}
             </SettingsPanel>
             <SettingsPanel tabId="calibration" active={tab}>
               {calibrationPanel ?? <EmbeddedPanelFallback label="校准" />}
             </SettingsPanel>
-            <SettingsPanel tabId="automations" active={tab}>
-              {automationsPanel ?? <EmbeddedPanelFallback label="任务" />}
-            </SettingsPanel>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        <SettingsPanel tabId="automations" active={tab}>
+          {automationsPanel ?? <EmbeddedPanelFallback label="任务" />}
+        </SettingsPanel>
+      </div>
+    </div>
   );
 }
 

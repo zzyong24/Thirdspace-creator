@@ -102,12 +102,14 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             data-slot="draft-script-section"
             className="scroll-mt-20"
           >
+            {/* [T-054 组B] 区头 = 编辑器唯一的用户视角标题(编辑器卡内不再叠「主脚本/
+                实现描述」双头);副行合并版本提示,一句话说清「写-存-回滚」。 */}
             <div className="mb-1.5 flex items-baseline gap-2 px-0.5">
               <h2 className="text-[13.5px] font-semibold text-foreground">口播脚本</h2>
               <span className="text-xs text-text-subtle">
                 {script.versionCount > 0
-                  ? `v${script.versionCount} · 保存即新版本,可回滚`
-                  : "还没有版本 —— 直接写,或在右侧让编导起草"}
+                  ? `v${script.versionCount} · 写你的口播稿——保存即新版本,可回滚`
+                  : "写你的口播稿——直接开写,或在右侧让编导起草"}
               </span>
             </div>
             {/* [T-055c] key=版本数:对话「写入稿面/撤销」refresh 后强制重挂,编辑器吃到新版本。 */}
@@ -185,25 +187,27 @@ function PublishPackSection({
           {publishPack?.hasCover ? "封面已选" : "封面待生成"}
         </div>
         <div className="min-w-0 flex-1">
+          {/* [T-054 组B] 规范 §2:无发布行时不再摆「标题草稿:定稿后从脚本 HOOK 生成 /
+              标签、平台在发布时选」这类机制注记,收敛为用户视角一句话。 */}
           <p className="truncate text-[13px] font-semibold text-foreground">
-            {publishPack?.title || "标题草稿:定稿后从脚本 HOOK 生成"}
+            {publishPack?.title || "发布时会从脚本钩子生成标题草稿、选封面与标签"}
           </p>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            {publishPack && publishPack.tags.length > 0 ? (
-              publishPack.tags.slice(0, 5).map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-md bg-surface-subtle px-2 py-0.5 text-[11px] text-text-subtle"
-                >
-                  # {tag}
-                </span>
-              ))
-            ) : (
-              <span className="text-[11px] text-text-subtle">
-                {publishPack ? "暂无标签" : "标签、平台在发布时选"}
-              </span>
-            )}
-          </div>
+          {publishPack ? (
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              {publishPack.tags.length > 0 ? (
+                publishPack.tags.slice(0, 5).map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-md bg-surface-subtle px-2 py-0.5 text-[11px] text-text-subtle"
+                  >
+                    # {tag}
+                  </span>
+                ))
+              ) : (
+                <span className="text-[11px] text-text-subtle">暂无标签</span>
+              )}
+            </div>
+          ) : null}
         </div>
         <div className="shrink-0 text-right">
           {publishPack ? (

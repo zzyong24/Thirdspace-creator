@@ -25,8 +25,19 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import {
+  Bold,
+  Heading1,
+  Heading2,
+  Heading3,
+  Italic,
+  List,
+  ListOrdered,
+  Quote,
+  Strikethrough,
+  type LucideIcon,
+} from "lucide-react";
 
-import { SectionCard } from "@/components/project/section-card";
 import { client } from "@/lib/contract-client";
 import { ensureScriptArtifact } from "./ensure-script-artifact";
 import { htmlToSections } from "./script-editor-bridge";
@@ -64,6 +75,8 @@ interface MarkButton {
   readonly id: string;
   readonly format: "bold" | "italic" | "strike";
   readonly label: string;
+  // [T-054 组B] 规范 §3:工具栏按钮用 lucide 图标 + tooltip,不用文字按钮。
+  readonly icon: LucideIcon;
   readonly isActive: (editor: Editor) => boolean;
   readonly run: (editor: Editor) => void;
 }
@@ -73,6 +86,7 @@ const MARK_BUTTONS: ReadonlyArray<MarkButton> = [
     id: "fmt-bold",
     format: "bold",
     label: "加粗",
+    icon: Bold,
     isActive: (e) => e.isActive("bold"),
     run: (e) => e.chain().focus().toggleBold().run(),
   },
@@ -80,6 +94,7 @@ const MARK_BUTTONS: ReadonlyArray<MarkButton> = [
     id: "fmt-italic",
     format: "italic",
     label: "斜体",
+    icon: Italic,
     isActive: (e) => e.isActive("italic"),
     run: (e) => e.chain().focus().toggleItalic().run(),
   },
@@ -87,6 +102,7 @@ const MARK_BUTTONS: ReadonlyArray<MarkButton> = [
     id: "fmt-strike",
     format: "strike",
     label: "删除线",
+    icon: Strikethrough,
     isActive: (e) => e.isActive("strike"),
     run: (e) => e.chain().focus().toggleStrike().run(),
   },
@@ -98,6 +114,7 @@ interface BlockButton {
   // 故如实标 "heading"(原先写死 "bold" 是迁就测试的假契约,已改真 + 同步改测试断言)。
   readonly format: "heading";
   readonly label: string;
+  readonly icon: LucideIcon;
   readonly isActive: (editor: Editor) => boolean;
   readonly run: (editor: Editor) => void;
 }
@@ -107,6 +124,7 @@ const HEADING_BUTTONS: ReadonlyArray<BlockButton> = [
     id: "fmt-h1",
     format: "heading",
     label: "标题 1",
+    icon: Heading1,
     isActive: (e) => e.isActive("heading", { level: 1 }),
     run: (e) => e.chain().focus().toggleHeading({ level: 1 }).run(),
   },
@@ -114,6 +132,7 @@ const HEADING_BUTTONS: ReadonlyArray<BlockButton> = [
     id: "fmt-h2",
     format: "heading",
     label: "标题 2",
+    icon: Heading2,
     isActive: (e) => e.isActive("heading", { level: 2 }),
     run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(),
   },
@@ -121,6 +140,7 @@ const HEADING_BUTTONS: ReadonlyArray<BlockButton> = [
     id: "fmt-h3",
     format: "heading",
     label: "标题 3",
+    icon: Heading3,
     isActive: (e) => e.isActive("heading", { level: 3 }),
     run: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(),
   },
@@ -129,6 +149,7 @@ const HEADING_BUTTONS: ReadonlyArray<BlockButton> = [
 interface InsertButton {
   readonly id: string;
   readonly label: string;
+  readonly icon: LucideIcon;
   readonly isActive: (editor: Editor) => boolean;
   readonly run: (editor: Editor) => void;
 }
@@ -136,19 +157,22 @@ interface InsertButton {
 const INSERT_BUTTONS: ReadonlyArray<InsertButton> = [
   {
     id: "tool-list-bullet",
-    label: "•",
+    label: "无序列表",
+    icon: List,
     isActive: (e) => e.isActive("bulletList"),
     run: (e) => e.chain().focus().toggleBulletList().run(),
   },
   {
     id: "tool-list-ordered",
-    label: "1.",
+    label: "有序列表",
+    icon: ListOrdered,
     isActive: (e) => e.isActive("orderedList"),
     run: (e) => e.chain().focus().toggleOrderedList().run(),
   },
   {
     id: "tool-quote",
-    label: "“",
+    label: "引用",
+    icon: Quote,
     isActive: (e) => e.isActive("blockquote"),
     run: (e) => e.chain().focus().toggleBlockquote().run(),
   },
@@ -291,30 +315,31 @@ export function ScriptRichEditor({
     });
   }, [artifactId, projectId, editor, router]);
 
+  // [T-054 组B] 卡头去掉「主脚本 / TipTap 富文本编辑器…」的实现描述文案(规范 §2:库名/
+  // 机制名出现在可见文案 = 泄漏)。用户视角的小标题「口播脚本 + 副行」由稿面页区头统一承载
+  // (见 draft-workbench-page),编辑器自身只保留工具栏/正文/状态栏,不再双头。
   return (
-    <div data-slot="rich-text-editor">
-      <SectionCard
-        title="主脚本"
-        description="TipTap 富文本编辑器:可改标题/加粗/列表，承载脚本正文"
+    <div
+      data-slot="rich-text-editor"
+      className="rounded-card border border-border bg-surface p-4"
+    >
+      <EditorToolbar
+        editor={editor}
+        onSave={handleSave}
+        saveStatus={saveStatus}
+        saving={pending}
+      />
+      <div
+        data-slot="script-document"
+        className="tiptap-script-document mt-3 rounded-control border border-border bg-surface p-3.5"
       >
-        <EditorToolbar
-          editor={editor}
-          onSave={handleSave}
-          saveStatus={saveStatus}
-          saving={pending}
-        />
-        <div
-          data-slot="script-document"
-          className="tiptap-script-document mt-3 rounded-control border border-border bg-surface p-3.5"
-        >
-          {editor ? (
-            <EditorContent editor={editor} />
-          ) : (
-            <p className="text-sm text-muted-foreground">编辑器加载中…</p>
-          )}
-        </div>
-        <EditorStatusBar wordCount={wordCount} saveStatus={saveStatus} />
-      </SectionCard>
+        {editor ? (
+          <EditorContent editor={editor} />
+        ) : (
+          <p className="text-sm text-muted-foreground">编辑器加载中…</p>
+        )}
+      </div>
+      <EditorStatusBar wordCount={wordCount} saveStatus={saveStatus} />
     </div>
   );
 }
@@ -349,6 +374,7 @@ function EditorToolbar({
             id={button.id}
             format={button.format}
             label={button.label}
+            icon={button.icon}
             active={editor ? button.isActive(editor) : false}
             onRun={() => editor && button.run(editor)}
           />
@@ -363,6 +389,7 @@ function EditorToolbar({
             id={button.id}
             format={button.format}
             label={button.label}
+            icon={button.icon}
             active={editor ? button.isActive(editor) : false}
             onRun={() => editor && button.run(editor)}
           />
@@ -375,6 +402,7 @@ function EditorToolbar({
             key={button.id}
             id={button.id}
             label={button.label}
+            icon={button.icon}
             active={editor ? button.isActive(editor) : false}
             onRun={() => editor && button.run(editor)}
           />
@@ -424,11 +452,14 @@ function ToolbarDivider() {
 }
 
 // 真富文本命令按钮:aria-pressed = TipTap isActive(选区真实态);点击跑 toggle 命令。
+// [T-054 组B] 规范 §3:文字按钮 → lucide 图标 + title tooltip(aria-label 保住可访问名),
+// 激活态 brand 底色,尺寸紧凑(size-7 方块)。
 function ToolbarCommandButton({
   editor,
   id,
   format,
   label,
+  icon: Icon,
   active,
   onRun,
 }: {
@@ -437,6 +468,7 @@ function ToolbarCommandButton({
   // mark 按钮(bold/italic/strike)+ heading 按钮(T-024 ③:如实标 "heading")共用此壳。
   format: "bold" | "italic" | "strike" | "heading";
   label: string;
+  icon: LucideIcon;
   active: boolean;
   onRun: () => void;
 }) {
@@ -447,16 +479,18 @@ function ToolbarCommandButton({
       data-format={format}
       data-button-id={id}
       aria-pressed={active}
+      aria-label={label}
+      title={label}
       disabled={!editor}
       onMouseDown={(e) => {
         // 防止按钮抢焦点导致选区丢失(富文本工具栏常规处理)。
         e.preventDefault();
       }}
       onClick={onRun}
-      className="inline-flex h-7 min-w-7 items-center justify-center rounded-md border border-transparent bg-surface px-2 text-xs font-medium text-foreground transition-colors hover:bg-muted data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand disabled:opacity-40"
+      className="inline-flex size-7 items-center justify-center rounded-md border border-transparent bg-surface text-foreground transition-colors hover:bg-muted data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand disabled:opacity-40"
       data-pressed={active}
     >
-      {label}
+      <Icon className="size-4" aria-hidden="true" />
     </button>
   );
 }
@@ -464,11 +498,13 @@ function ToolbarCommandButton({
 function ToolbarGlyphButton({
   id,
   label,
+  icon: Icon,
   active,
   onRun,
 }: {
   id: string;
   label: string;
+  icon: LucideIcon;
   active: boolean;
   onRun: () => void;
 }) {
@@ -478,12 +514,14 @@ function ToolbarGlyphButton({
       data-slot="editor-toolbar-glyph"
       data-glyph-id={id}
       aria-pressed={active}
+      aria-label={label}
+      title={label}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onRun}
-      className="inline-flex h-7 min-w-7 items-center justify-center rounded-md border border-transparent bg-surface px-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
+      className="inline-flex size-7 items-center justify-center rounded-md border border-transparent bg-surface text-foreground transition-colors hover:bg-muted data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
       data-pressed={active}
     >
-      <span aria-hidden="true">{label}</span>
+      <Icon className="size-4" aria-hidden="true" />
     </button>
   );
 }

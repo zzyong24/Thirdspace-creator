@@ -96,7 +96,7 @@ describe("RegisterPublishedForm", () => {
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
     expect(
       screen.getByTestId("register-published-message").textContent,
-    ).toMatch(/已触发一次指标采集/);
+    ).toMatch(/已开始抓取这条作品的数据/);
   });
 
   it("项目还没有 ContentOutput → 先 createOutput 再登记到新 output", async () => {
@@ -147,7 +147,7 @@ describe("RegisterPublishedForm", () => {
     await waitFor(() =>
       expect(
         screen.getByTestId("register-published-message").textContent,
-      ).toMatch(/下次任务采集将覆盖此作品/),
+      ).toMatch(/下次自动采集会带回这条作品的数据/),
     );
   });
 

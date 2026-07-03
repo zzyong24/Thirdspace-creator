@@ -40,16 +40,17 @@ async function triggerMetricsCollection(): Promise<string> {
       body: undefined,
     });
     const jobs = (Array.isArray(jobsRaw) ? jobsRaw : []) as ScheduledJobDto[];
+    // [T-054 组B] 规范 §2:「落库/任务采集」是实现说法,提示改用户视角。
     const job = jobs.find((j) => j.enabled);
-    if (!job) return "已登记落库;下次任务采集将覆盖此作品。";
+    if (!job) return "已登记;下次自动采集会带回这条作品的数据。";
     await client.runScheduledJobNow({
       params: { jobId: job.id },
       query: undefined,
       body: {},
     });
-    return "已登记落库,并已触发一次指标采集。";
+    return "已登记,并已开始抓取这条作品的数据。";
   } catch {
-    return "已登记落库;下次任务采集将覆盖此作品。";
+    return "已登记;下次自动采集会带回这条作品的数据。";
   }
 }
 
