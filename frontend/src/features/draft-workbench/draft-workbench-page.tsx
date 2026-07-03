@@ -14,6 +14,7 @@ import * as React from "react";
 import Link from "next/link";
 
 import { ScriptRichEditor } from "@/features/script/script-rich-editor";
+import { ScriptStructureToggle } from "@/features/script/script-structure-view";
 import { sectionsToHtml } from "@/features/script/script-editor-bridge";
 import { TopicCard } from "./topic-card";
 import { DraftChatRail } from "./draft-chat-rail";
@@ -112,13 +113,16 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
                   : "写你的口播稿——直接开写,或在右侧让编导起草"}
               </span>
             </div>
-            {/* [T-055c] key=版本数:对话「写入稿面/撤销」refresh 后强制重挂,编辑器吃到新版本。 */}
-            <ScriptRichEditor
-              key={`v${script.versionCount}`}
-              initialHtml={initialHtml}
-              artifactId={scriptArtifactId}
-              projectId={project.id}
-            />
+            {/* [T-070] 编辑|结构 双视图:结构 = 只读分段卡(contentData.sections)。 */}
+            <ScriptStructureToggle sections={script.sections}>
+              {/* [T-055c] key=版本数:对话「写入稿面/撤销」refresh 后强制重挂,编辑器吃到新版本。 */}
+              <ScriptRichEditor
+                key={`v${script.versionCount}`}
+                initialHtml={initialHtml}
+                artifactId={scriptArtifactId}
+                projectId={project.id}
+              />
+            </ScriptStructureToggle>
           </section>
 
           {/* ── 发布包区 ── */}
