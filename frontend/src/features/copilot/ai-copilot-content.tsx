@@ -779,6 +779,26 @@ export function AICopilotContent({
     transport,
   });
   const streaming = status === "streaming" || status === "submitted";
+
+  // [T-105] 自动滚到最新:发消息/回复开始(条数增)强制跟随到底;流式增长按「跟随态」滚;
+  // 用户手动上滚离底则暂停跟随(读历史不被打断),滚回接近底部恢复。免得每次发消息还得手动滚。
+  const messagesScrollRef = React.useRef<HTMLDivElement | null>(null);
+  const autoFollowRef = React.useRef(true);
+  const prevMsgCountRef = React.useRef(0);
+  const handleMessagesScroll = React.useCallback(() => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    autoFollowRef.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  }, []);
+  React.useEffect(() => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    if (messages.length > prevMsgCountRef.current) autoFollowRef.current = true;
+    prevMsgCountRef.current = messages.length;
+    if (autoFollowRef.current) el.scrollTop = el.scrollHeight;
+  }, [messages, streaming]);
+
   // [T-094] 本轮流式错误 → 人话气泡:服务端 onError 已转人话;若客户端拿到的仍是原始机器码
   // (装配期 4xx 等路径),这里再过一次共享映射兜底。命中「换模型可解」类附「去设置」链接。
   const chatError = React.useMemo(() => {
@@ -1341,6 +1361,8 @@ export function AICopilotContent({
       >
         {/* 消息流(可滚)—— 给一个 min-h 下限,保证对话区是视觉主区,不被次区压扁(bug #5)。 */}
         <div
+          ref={messagesScrollRef}
+          onScroll={handleMessagesScroll}
           data-slot="copilot-message-scroll"
           className="min-h-[220px] flex-1 overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
         >
