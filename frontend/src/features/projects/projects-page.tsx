@@ -137,9 +137,10 @@ export async function ProjectsPage({
   const tabs = buildProjectStatusTabs(baseRows);
 
   // [T-051 2b] 状态 tab 真筛选:tab 计数看全量(上面),行集按选中 tab 过滤。
+  // [T-102] 「全部」视图排除已归档项目(只在「已归档」tab 显示);其余 tab 精确匹配。
   const filteredRows =
     status === "all"
-      ? baseRows
+      ? baseRows.filter((row) => mapProjectRowToTab(row) !== "archived")
       : baseRows.filter((row) => mapProjectRowToTab(row) === status);
   // [T-051 2b] 排序真接线:updated(默认,保持真实发布时刻倒序的原序)之外按选项排。
   const sortedRows = sortProjectRows(filteredRows, sort);
@@ -171,7 +172,7 @@ export async function ProjectsPage({
       : pagedRows;
   const totalLabel =
     status === "all"
-      ? `共 ${baseRows.length} 个项目`
+      ? `共 ${filteredRows.length} 个项目` // [T-102] 不含已归档
       : `筛选 ${sortedRows.length} / ${baseRows.length} 个项目`;
   // 分页链接保留当前筛选/排序(否则翻页丢筛选)。
   const hrefForPage = (p: number) => {
@@ -464,9 +465,10 @@ function buildProjectStatusTabs(
       counts[key] = (counts[key] ?? 0) + 1;
     }
   }
-  // Tab counts are the REAL project distribution (D-PRJ-b): no fixture
-  // `targetTotals` override. `all` is the full list length; per-status
-  // buckets come from `mapProjectStatusToTab` over the live rows.
+  // Tab counts are the REAL project distribution (D-PRJ-b): no fixture override.
+  // [T-102] 「全部」不含已归档:归档项目只在「已归档」tab 出现(用户裁决),
+  //   故 all 计数 = 总数 - 归档数;per-status 桶来自 mapProjectRowToTab。
+  counts.all = rows.length - (counts.archived ?? 0);
   return PROJECT_TAB_ORDER.map((descriptor) => ({
     id: descriptor.id,
     label: descriptor.label,
