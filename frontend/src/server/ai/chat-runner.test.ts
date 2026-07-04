@@ -212,7 +212,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).not.toContain("本次复盘对象");
   });
 
-  it("[T-104] 工具全放开:任一 surface 暴露全部 15 工具(surface 白名单只决定置顶顺序)", async () => {
+  it("[T-104] 工具全放开:任一 surface 暴露全部 17 工具(surface 白名单只决定置顶顺序)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(Object.keys(a.tools).sort()).toEqual([
@@ -225,6 +225,10 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "knowledge.distill",
       "learning.capture",
       "material.gather",
+      // [T-084c] AI 生成素材(dispatch asset.generate)。
+      "material.generate",
+      // [T-084b] 网页截图(公开页真截图落 asset)。
+      "material.screenshot",
       "positioning.generate",
       "review.analyze",
       "script.draft",
@@ -281,7 +285,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.calibration");
     // [T-104] 工具全放开:preferred 含 calibration.diagnose,但可调工具集 = 全 15。
     expect(Object.keys(a.tools)).toContain("calibration.diagnose");
-    expect(Object.keys(a.tools).length).toBe(15);
+    expect(Object.keys(a.tools).length).toBe(17);
     // 主能力档按 calibration.diagnose 解析(各 surface 复用对应节点的模型配置)。
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "calibration.diagnose");
   });
@@ -292,7 +296,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.positioning");
     // [T-104] 工具全放开:preferred 含 positioning.generate,但可调工具集 = 全 15。
     expect(Object.keys(a.tools)).toContain("positioning.generate");
-    expect(Object.keys(a.tools).length).toBe(15);
+    expect(Object.keys(a.tools).length).toBe(17);
   });
 
   it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {
@@ -343,7 +347,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).toContain("review.analyze");
     expect(names).toContain("learning.capture");
     expect(names).toContain("context.projects"); // 放开后可调
-    expect(names.length).toBe(15); // 全部工具暴露
+    expect(names.length).toBe(17); // 全部工具暴露
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -409,7 +413,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(15); // 全放开
+    expect(names.length).toBe(17); // 全放开
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });

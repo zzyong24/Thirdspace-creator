@@ -164,6 +164,35 @@ export interface ChatToolDeps {
     suggestedTags: string[];
   }>;
   /**
+   * [T-084b] material.screenshot 核心 —— 真开无头浏览器给公开 URL 截图,落 asset(带 sourceUrl
+   * 存证),返回落库后的 asset 摘要。失败**抛错**(逐类诚实:打不开 / HTTP 码 / 登录墙),由工具
+   * execute 接住转人话随结果卡渲错误态。截图字节已真实产生,落 asset 是存储动作(与上传同性质,
+   * 非 AI 写领域实体);「挂进用料链」才留给人点(SPEC §2.2 注)。
+   */
+  captureScreenshot: (input: {
+    url: string;
+    fullPage?: boolean;
+  }) => Promise<{
+    assetId: string;
+    name: string;
+    /** 落库后的签名预览 URL(前端卡直接 <img>;拿不到则 null,卡渲占位)。 */
+    previewUrl: string | null;
+    /** 截图来源 URL(存证 —— 卡上可点回原页查证)。 */
+    sourceUrl: string;
+  }>;
+  /**
+   * [T-084c] material.generate 核心 —— **不直接生成**(视频异步分钟级不能阻塞对话回合):dispatch
+   * 既有 asset.generate task(persistence-client dispatch → void runAssetGenerate 范式),立即返回
+   * taskId。前端 ChatGenerateCard 据 taskId 轮询 task/candidate → 完成渲缩略图 + 采纳(复用既有
+   * AdoptCandidateCard confirm 流);未配生图/生视频模型时 task cancelled,卡内诚实「去设置」。
+   * 生成素材落库固定标 origin:generated(asset-generate-runner 既有,AI 素材不冒充真证据)。
+   */
+  dispatchGenerateAsset: (input: {
+    kind: "image" | "video";
+    prompt: string;
+    style?: string;
+  }) => Promise<{ taskId: string }>;
+  /**
    * context.projects 只读端口 —— 列该用户最近的项目/作品(项目库 / 「最新一条」)。
    * **纯读上下文**(与上面的候选工具不同):不产候选、不写实体,只把真数据回给模型读进去用文字回答。
    * 按当前用户过滤(端口在 composition root 绑到 user-scoped 读源);limit 由 execute 兜(默认 5,封顶 10)。
@@ -258,6 +287,32 @@ export interface MaterialGatherToolResult {
     /** [T-084a] 该条引用的检索真实 URL(有则前端渲可点域名链接;无则渲「需核实」徽标)。 */
     sourceUrl?: string;
   }>;
+}
+
+// [T-084b] material.screenshot 工具结果 —— 一张已落库的截图 asset(前端 ChatScreenshotCard
+// 渲缩略图 + 来源 URL + 「加入弹药」)。error 非 null 时卡渲错误态(逐类诚实:打不开/HTTP/登录墙)。
+export interface MaterialScreenshotToolResult {
+  kind: "material.screenshot";
+  asset: {
+    id: string;
+    name: string;
+    previewUrl: string | null;
+    sourceUrl: string;
+  } | null;
+  /** 失败时的诚实错误(成功为 null);模型如实转述、卡渲错误态,绝不假装截到图。 */
+  error: string | null;
+}
+
+// [T-084c] material.generate 工具结果 —— dispatch 了一个 asset.generate task(立即返回,不阻塞
+// 对话回合)。前端 ChatGenerateCard 据 taskId 轮询 → 完成渲缩略图 + 采纳;未配模型 → task
+// cancelled → 卡内「去设置」。dispatch 本身失败(极少)→ error 非 null。
+export interface MaterialGenerateToolResult {
+  kind: "material.generate";
+  taskId: string | null;
+  kindOf: "image" | "video";
+  status: "queued";
+  /** dispatch 失败时的诚实错误(成功为 null)。 */
+  error: string | null;
 }
 
 export interface CalibrationDiagnoseToolResult {
@@ -476,6 +531,51 @@ const MATERIAL_GATHER_PARAMS = jsonSchema<{ query?: string }>({
   properties: {
     query: { type: "string", description: "搜什么素材(缺省围绕当前项目主题)" },
   },
+  additionalProperties: false,
+});
+
+// [T-084b] material.screenshot 入参 —— 公开 URL(必填)+ 是否全页截图(缺省视口)。
+const MATERIAL_SCREENSHOT_PARAMS = jsonSchema<{ url: string; fullPage?: boolean }>({
+  type: "object",
+  properties: {
+    url: {
+      type: "string",
+      description:
+        "要截图的**公开**网页 URL(http/https)。当前只支持公开页面 —— 登录墙/需登录的页面会诚实报错,别拿它截私有页。",
+    },
+    fullPage: {
+      type: "boolean",
+      description: "true=截整页(长图);缺省/false=只截首屏视口。",
+    },
+  },
+  required: ["url"],
+  additionalProperties: false,
+});
+
+// [T-084c] material.generate 入参 —— 生成 kind(图/视频)+ prompt(必填)+ 可选风格。
+const MATERIAL_GENERATE_PARAMS = jsonSchema<{
+  kind: "image" | "video";
+  prompt: string;
+  style?: string;
+}>({
+  type: "object",
+  properties: {
+    kind: {
+      type: "string",
+      enum: ["image", "video"],
+      description: "生成图(image)还是视频(video)。视频异步分钟级,提交后后台跑,不阻塞对话。",
+    },
+    prompt: {
+      type: "string",
+      description:
+        "生成描述(画面内容/主体/氛围)。生成的是 AI 素材、非真实拍摄,尽量具体让画面可用。",
+    },
+    style: {
+      type: "string",
+      description: "可选风格/画风(如「扁平插画」「写实摄影」「赛博朋克」),会拼进生成 prompt。",
+    },
+  },
+  required: ["kind", "prompt"],
   additionalProperties: false,
 });
 
@@ -808,6 +908,87 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         return { kind: "material.gather", grounding, items };
       },
     }),
+    // [T-084b] 自动化截图:给公开 URL,服务端真开无头浏览器截图 → 落素材中心(带 sourceUrl
+    // 存证)。截图 = 不可抵赖的真证据(区别于 material.gather 的模型记忆素材)。execute 接住
+    // 逐类报错(打不开/HTTP/登录墙)转人话随结果卡渲错误态,不抛给 SDK(避免裸机器码/spinner)。
+    "material.screenshot": tool({
+      description:
+        "给一个**公开**网页 URL,服务端真开浏览器截图并存进素材中心(带来源 URL 存证)。截图是不可抵赖的真证据(不同于搜集/生成的素材)。当用户要「截个图/把这个页面截下来/存这个网页的样子」时调用。当前只支持公开页面——登录墙/需登录页会诚实报错,不产垃圾图。截好的图渲成卡片,用户点「加入弹药」才挂进这条内容的用料链。",
+      inputSchema: MATERIAL_SCREENSHOT_PARAMS,
+      execute: async ({ url, fullPage }): Promise<MaterialScreenshotToolResult> => {
+        const target = typeof url === "string" ? url.trim() : "";
+        if (!target) {
+          return {
+            kind: "material.screenshot",
+            asset: null,
+            error: "没有收到要截图的 URL —— 请给一个公开可访问的网页链接。",
+          };
+        }
+        try {
+          const asset = await deps.captureScreenshot({ url: target, fullPage });
+          return {
+            kind: "material.screenshot",
+            asset: {
+              id: asset.assetId,
+              name: asset.name,
+              previewUrl: asset.previewUrl,
+              sourceUrl: asset.sourceUrl,
+            },
+            error: null,
+          };
+        } catch (err) {
+          // 逐类诚实报错(WebCaptureError:打不开 / HTTP 码 / 登录墙)原样转述,模型如实告知。
+          return {
+            kind: "material.screenshot",
+            asset: null,
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
+      },
+    }),
+    // [T-084c] AI 生成素材:文生图/文生视频。execute **不直接生成**(视频异步分钟级不能阻塞
+    // 对话回合)—— dispatch 既有 asset.generate task,立即返回 taskId;前端 ChatGenerateCard
+    // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
+    "material.generate": tool({
+      description:
+        "用 AI 生成图片或视频素材(文生图/文生视频)。生成的是 AI 图/视频素材(非真实拍摄/截图);创作者采纳后才进素材中心。当用户要「生成一张配图/做个 B-roll/AI 出个画面」时调用。视频异步、分钟级——提交后后台跑,卡片会显示进度。若未配置生图/生视频模型,任务会失败并在卡上提示去设置(不假装能生成)。",
+      inputSchema: MATERIAL_GENERATE_PARAMS,
+      execute: async ({ kind, prompt, style }): Promise<MaterialGenerateToolResult> => {
+        const effKind: "image" | "video" = kind === "video" ? "video" : "image";
+        const effPrompt = typeof prompt === "string" ? prompt.trim() : "";
+        if (!effPrompt) {
+          return {
+            kind: "material.generate",
+            taskId: null,
+            kindOf: effKind,
+            status: "queued",
+            error: "没有收到生成描述 —— 请说清楚要生成什么画面。",
+          };
+        }
+        try {
+          const { taskId } = await deps.dispatchGenerateAsset({
+            kind: effKind,
+            prompt: effPrompt,
+            style: typeof style === "string" && style.trim() ? style.trim() : undefined,
+          });
+          return {
+            kind: "material.generate",
+            taskId,
+            kindOf: effKind,
+            status: "queued",
+            error: null,
+          };
+        } catch (err) {
+          return {
+            kind: "material.generate",
+            taskId: null,
+            kindOf: effKind,
+            status: "queued",
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
+      },
+    }),
     "calibration.diagnose": tool({
       description:
         "对一条发布前内容(给标题,可附文稿)按创作者的变现加权评分标准逐维度盲评,估发布前表现并给综合判断/主要问题/优先修改。结果是诊断候选,需人采纳后才落预测——不直接写库。",
@@ -1032,6 +1213,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "script.hooks",
   "script.draft",
   "material.gather",
+  "material.screenshot",
+  "material.generate",
   "calibration.diagnose",
   "review.analyze",
   "learning.capture",

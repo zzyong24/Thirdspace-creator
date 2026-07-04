@@ -22,6 +22,8 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   deps: ChatToolDeps;
   generateTopics: ReturnType<typeof vi.fn>;
   enrichTopic: ReturnType<typeof vi.fn>;
+  captureScreenshot: ReturnType<typeof vi.fn>;
+  dispatchGenerateAsset: ReturnType<typeof vi.fn>;
   diagnoseContent: ReturnType<typeof vi.fn>;
   analyzeReview: ReturnType<typeof vi.fn>;
   generatePositioning: ReturnType<typeof vi.fn>;
@@ -146,12 +148,23 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     ],
     suggestedTags: ["上下文工程"],
   }));
+  // [T-084b] material.screenshot 核心(fake:真开浏览器截图 → 落 asset,返回摘要)。
+  const captureScreenshot = vi.fn(async () => ({
+    assetId: "as-shot-1",
+    name: "截图·示例页",
+    previewUrl: "/api/v1/blob/k?token=t",
+    sourceUrl: "https://example.com/post",
+  }));
+  // [T-084c] material.generate 核心(fake:dispatch asset.generate task → 返回 taskId)。
+  const dispatchGenerateAsset = vi.fn(async () => ({ taskId: "task-gen-1" }));
   const deps: ChatToolDeps = {
     generateTopics,
     enrichTopic,
     generateHooks,
     draftScript,
     gatherMaterials,
+    captureScreenshot,
+    dispatchGenerateAsset,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -167,6 +180,8 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     deps,
     generateTopics,
     enrichTopic,
+    captureScreenshot,
+    dispatchGenerateAsset,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -413,6 +428,134 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     expect(generatePositioning).toHaveBeenCalled();
     expect(result.kind).toBe("positioning.suggestion");
     expect(result.suggestion?.oneLiner).toBe("把论文落成代码");
+  });
+});
+
+// [T-084b] material.screenshot 工具:真截图落 asset(成功);逐类报错(打不开/HTTP/登录墙)
+// 不抛给 SDK,转 error 随结果卡返回;空 URL 诚实报错不调端口。
+describe("[T-084b] material.screenshot 工具 — 自动化截图", () => {
+  const WHITELIST = ["material.screenshot"] as const;
+
+  it("execute 调注入的 captureScreenshot,返回落库 asset + sourceUrl(kind=material.screenshot)", async () => {
+    const { deps, captureScreenshot } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.screenshot"]!, {
+      url: "https://example.com/post",
+      fullPage: true,
+    })) as {
+      kind: string;
+      asset: { id: string; sourceUrl: string; previewUrl: string | null } | null;
+      error: string | null;
+    };
+    expect(captureScreenshot).toHaveBeenCalledWith({
+      url: "https://example.com/post",
+      fullPage: true,
+    });
+    expect(result.kind).toBe("material.screenshot");
+    expect(result.error).toBeNull();
+    expect(result.asset?.id).toBe("as-shot-1");
+    expect(result.asset?.sourceUrl).toBe("https://example.com/post");
+  });
+
+  it("截图抛错(登录墙/打不开)→ 不抛,asset=null + error 人话(诚实,不假截到图)", async () => {
+    const { deps } = makeDeps({
+      captureScreenshot: async () => {
+        throw new Error("该页面需要登录 / 有反爬验证,当前只支持公开页面");
+      },
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.screenshot"]!, {
+      url: "https://paywalled.example.com",
+    })) as { asset: unknown; error: string | null };
+    expect(result.asset).toBeNull();
+    expect(result.error).toContain("需要登录");
+  });
+
+  it("空 URL → 诚实报错,不调截图端口", async () => {
+    const { deps, captureScreenshot } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.screenshot"]!, {
+      url: "   ",
+    })) as { asset: unknown; error: string | null };
+    expect(captureScreenshot).not.toHaveBeenCalled();
+    expect(result.asset).toBeNull();
+    expect(result.error).toContain("URL");
+  });
+});
+
+// [T-084c] material.generate 工具:dispatch 既有 asset.generate task(不直接生成),立即返回
+// taskId + status=queued;空 prompt 诚实报错;dispatch 失败转 error。
+describe("[T-084c] material.generate 工具 — AI 生成素材对话化", () => {
+  const WHITELIST = ["material.generate"] as const;
+
+  it("execute 调注入的 dispatchGenerateAsset,返回 taskId + queued(kind=material.generate)", async () => {
+    const { deps, dispatchGenerateAsset } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.generate"]!, {
+      kind: "image",
+      prompt: "  一张赛博朋克风格的城市夜景  ",
+      style: "赛博朋克",
+    })) as {
+      kind: string;
+      taskId: string | null;
+      kindOf: string;
+      status: string;
+      error: string | null;
+    };
+    // prompt trim + style 透传(折进 prompt 由 chat-runner 端口做,工具层只透传原参)。
+    expect(dispatchGenerateAsset).toHaveBeenCalledWith({
+      kind: "image",
+      prompt: "一张赛博朋克风格的城市夜景",
+      style: "赛博朋克",
+    });
+    expect(result.kind).toBe("material.generate");
+    expect(result.taskId).toBe("task-gen-1");
+    expect(result.kindOf).toBe("image");
+    expect(result.status).toBe("queued");
+    expect(result.error).toBeNull();
+  });
+
+  it("kind=video 透传(视频异步不阻塞);无 style 时不传该键", async () => {
+    const { deps, dispatchGenerateAsset } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.generate"]!, {
+      kind: "video",
+      prompt: "海边日落的空镜",
+    })) as { kindOf: string; taskId: string | null };
+    expect(dispatchGenerateAsset).toHaveBeenCalledWith({
+      kind: "video",
+      prompt: "海边日落的空镜",
+      style: undefined,
+    });
+    expect(result.kindOf).toBe("video");
+    expect(result.taskId).toBe("task-gen-1");
+  });
+
+  it("空 prompt → 诚实报错,不 dispatch", async () => {
+    const { deps, dispatchGenerateAsset } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.generate"]!, {
+      kind: "image",
+      prompt: "   ",
+    })) as { taskId: string | null; error: string | null };
+    expect(dispatchGenerateAsset).not.toHaveBeenCalled();
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("生成");
+  });
+
+  it("dispatch 抛错(端口未接入)→ 不抛,taskId=null + error(诚实降级)", async () => {
+    const { deps } = makeDeps({
+      dispatchGenerateAsset: async () => {
+        throw new Error("AI 生成能力当前未接入");
+      },
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.generate"]!, {
+      kind: "image",
+      prompt: "一张配图",
+    })) as { taskId: string | null; error: string | null };
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("未接入");
   });
 });
 

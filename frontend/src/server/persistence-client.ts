@@ -4,6 +4,9 @@ import {
   UnsupportedOperationError,
 } from "@creatoros/backend";
 import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
+// [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
+// 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
+import { ENDPOINTS } from "@creatoros/contract";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
@@ -195,6 +198,8 @@ import {
 } from "@/server/ingestion/douyin-request-gateway";
 import { resolveDouyinThrottleConfig } from "@/server/ingestion/douyin-throttle-config";
 import { createPgliteThrottleStatePort } from "@/server/ingestion/douyin-throttle-state-port.pglite";
+// [T-084b] 通用网页截图(公开页无头 Chromium)—— material.screenshot 端口用。
+import { captureUrl } from "@/server/ingestion/web-capture";
 import {
   runScheduledCollection,
   type Collector as ScheduledCollector,
@@ -768,6 +773,24 @@ export interface ChatRuntime {
       siteName?: string;
     }>
   >;
+  // [T-084b] material.screenshot 端口 —— captureUrl(真无头浏览器截图公开页)→
+  // assetsService.createGeneratedAsset(落字节 + 建 asset,带 sourceUrl 存证)→ 换签名预览 URL。
+  // 失败(打不开/HTTP/登录墙)抛错,chat-runner 工具 execute 接住转人话。
+  captureScreenshot: (
+    ctx: RequestContext,
+    input: { url: string; fullPage?: boolean },
+  ) => Promise<{
+    assetId: string;
+    name: string;
+    previewUrl: string | null;
+    sourceUrl: string;
+  }>;
+  // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport 的
+  // ai.tasks.create,复用既有分派链 void runAssetGenerate),立即返回 taskId(不阻塞对话回合)。
+  dispatchGenerateAsset: (
+    ctx: RequestContext,
+    input: { kind: "image" | "video"; prompt: string; projectId?: string | null },
+  ) => Promise<{ taskId: string }>;
 }
 
 const globalForPersistence = globalThis as unknown as {
@@ -5249,6 +5272,67 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // [T-084a] 联网检索端口 —— gatherMaterials 前置检索 + honestyBlock/工具动态描述探测。
     probeSearchConfigured,
     searchWeb: searchWebPort,
+    // [T-084b] material.screenshot 端口 —— 真无头浏览器截公开页 → createGeneratedAsset 落库
+    // (sourceUrl 存证进 mediaMetadata,复用 mergeAiAnnotation 不改 schema)→ 换签名预览 URL。
+    // captureUrl 逐类抛错(打不开/HTTP/登录墙),原样上抛给工具 execute 转人话渲错误态。
+    captureScreenshot: async (
+      ctx: RequestContext,
+      input: { url: string; fullPage?: boolean },
+    ) => {
+      const shot = await captureUrl(input.url, { fullPage: input.fullPage });
+      const name = `截图·${(shot.title || shot.finalUrl).slice(0, 40)}`;
+      const asset = await assetsService.createGeneratedAsset(ctx, {
+        assetType: "image",
+        name,
+        bytes: shot.bytes,
+        mimeType: shot.contentType,
+      });
+      // sourceUrl 存证:merge 进 asset 文件 mediaMetadata(与 asset-classify 的 aiDescription
+      // 同一条 merge 路径,jsonb additive,不改 DB schema —— SPEC §2.2 来源存证)。best-effort:
+      // 存证失败不回滚已落的截图字节(截图本身已是真产物)。
+      await assetsService
+        .mergeAiAnnotation(ctx, asset.id, { sourceUrl: input.url })
+        .catch(() => {});
+      let previewUrl: string | null = null;
+      try {
+        const dl = await assetsService.getDownloadUrl(ctx, asset.id);
+        previewUrl = dl.url ?? null;
+      } catch {
+        previewUrl = null; // 换签名 URL 失败 → 卡渲占位,不阻断(asset 已落库)
+      }
+      return { assetId: asset.id, name: asset.name, previewUrl, sourceUrl: input.url };
+    },
+    // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport
+    // 的 ai.tasks.create,复用既有分派链 void runAssetGenerate;projectId 走 inputData,service
+    // createTask 据它归属项目)。立即返回 taskId,不阻塞对话回合(视频异步分钟级)。
+    dispatchGenerateAsset: async (
+      ctx: RequestContext,
+      input: { kind: "image" | "video"; prompt: string; projectId?: string | null },
+    ) => {
+      const res = await ai.request(
+        // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
+        ENDPOINTS.createAITask,
+        {
+          params: undefined,
+          query: undefined,
+          body: {
+            taskType: "asset.generate",
+            inputData: {
+              kind: input.kind,
+              prompt: input.prompt,
+              ...(input.projectId ? { projectId: input.projectId } : {}),
+            },
+          },
+        },
+        ctx,
+      );
+      const task = (res as { data?: { id?: unknown } }).data;
+      const taskId = task && typeof task.id === "string" ? task.id : "";
+      if (!taskId) {
+        throw new Error("dispatchGenerateAsset: 起 asset.generate task 失败(无 taskId)");
+      }
+      return { taskId };
+    },
   };
 
   // ── T-040a 提示词/skill 服务端可配(装配接线,SPEC 2026-07-02 §4.2)──────────────

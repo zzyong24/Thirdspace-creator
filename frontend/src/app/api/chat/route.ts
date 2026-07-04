@@ -169,6 +169,10 @@ export async function POST(req: Request): Promise<Response> {
         // [T-084a] 联网检索端口 —— gatherMaterials 先真搜索、honestyBlock 探测未配诚实降级。
         probeSearchConfigured: runtime.probeSearchConfigured,
         searchWeb: runtime.searchWeb,
+        // [T-084b] material.screenshot 端口 —— 真无头浏览器截公开页 → 落 asset(带 sourceUrl)。
+        captureScreenshotPort: runtime.captureScreenshot,
+        // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(立即返回 taskId)。
+        dispatchGenerateAssetPort: runtime.dispatchGenerateAsset,
       },
       async (finalText) => {
         // assistant 回复落库(best-effort,失败不影响已流给前端的内容)。

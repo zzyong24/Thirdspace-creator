@@ -72,6 +72,12 @@ import {
   type ChatScriptSection,
 } from "./chat-script-draft-card";
 import { ChatGatherCard, type ChatGatherItem } from "./chat-gather-card";
+// [T-084b/c] 截图卡(公开页真截图 → 加入弹药)+ 生成卡(dispatch asset.generate → 轮询采纳)。
+import {
+  ChatScreenshotCard,
+  type ChatScreenshotAsset,
+} from "./chat-screenshot-card";
+import { ChatGenerateCard } from "./chat-generate-card";
 import {
   ChatLearningCard,
   type ChatLearningSuggestion,
@@ -1499,6 +1505,45 @@ export function AICopilotContent({
                           items={o.items ?? []}
                           projectId={activeProjectChip?.id ?? null}
                           grounding={o.grounding ?? "model_memory"}
+                        />
+                      );
+                    }
+                    // [T-084b] 网页截图(material.screenshot)→ 缩略图 + 来源 URL +「加入弹药」
+                    // (createMaterialLink 挂当前项目);失败(打不开/HTTP/登录墙)→ 卡渲错误态。
+                    if (
+                      name === "material.screenshot" &&
+                      out.kind === "material.screenshot"
+                    ) {
+                      const o = out as {
+                        asset?: ChatScreenshotAsset | null;
+                        error?: string | null;
+                      };
+                      return (
+                        <ChatScreenshotCard
+                          key={key}
+                          asset={o.asset ?? null}
+                          error={o.error ?? null}
+                          projectId={activeProjectChip?.id ?? null}
+                        />
+                      );
+                    }
+                    // [T-084c] AI 生成素材(material.generate)→ 据 taskId 轮询 → 完成渲缩略图 +
+                    // 「采纳进素材库」(confirmTask);未配模型 → 卡内「去设置」。
+                    if (
+                      name === "material.generate" &&
+                      out.kind === "material.generate"
+                    ) {
+                      const o = out as {
+                        taskId?: string | null;
+                        kindOf?: "image" | "video";
+                        error?: string | null;
+                      };
+                      return (
+                        <ChatGenerateCard
+                          key={key}
+                          taskId={o.taskId ?? null}
+                          kindOf={o.kindOf ?? "image"}
+                          error={o.error ?? null}
                         />
                       );
                     }

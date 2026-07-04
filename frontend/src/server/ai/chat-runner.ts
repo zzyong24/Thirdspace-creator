@@ -75,6 +75,31 @@ export interface AssembleChatDeps extends ContextDeps {
    * 不塞假数据)。与 CreativeContext 的 facet reader 不同 —— 这些是「用户问才实时拉」的按需读。
    */
   contextReaders?: ContextReaders;
+  /**
+   * [T-084b] material.screenshot 端口 —— 真开无头浏览器给公开 URL 截图 → createGeneratedAsset
+   * 落库(带 sourceUrl 存证)→ 返回落库 asset 摘要 + 签名预览 URL。由 composition root 绑
+   * (captureUrl + assetsService.createGeneratedAsset + downloadUrl)。截图/落库失败**抛错**,
+   * 由工具 execute 接住转人话。可选:未装配 → 工具报「截图能力未接入」(诚实降级)。
+   */
+  captureScreenshotPort?: (
+    ctx: RequestContext,
+    input: { url: string; fullPage?: boolean },
+  ) => Promise<{
+    assetId: string;
+    name: string;
+    previewUrl: string | null;
+    sourceUrl: string;
+  }>;
+  /**
+   * [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(persistence-client
+   * dispatch → void runAssetGenerate 范式),立即返回 taskId(不阻塞对话回合)。由 composition
+   * root 绑(ai transport 的 ai.tasks.create,复用既有 asset.generate 分派链)。可选:未装配 →
+   * 工具报「生成能力未接入」(诚实降级)。
+   */
+  dispatchGenerateAssetPort?: (
+    ctx: RequestContext,
+    input: { kind: "image" | "video"; prompt: string; projectId?: string | null },
+  ) => Promise<{ taskId: string }>;
 }
 
 /**
@@ -491,6 +516,33 @@ export async function buildChatAssembly(
           ...(it.sourceUrl ? { sourceUrl: it.sourceUrl } : {}),
         })),
       };
+    },
+    // [T-084b] material.screenshot:端口未装配 → 诚实抛错(工具 execute 接住转人话渲错误态,
+    // 「截图能力未接入」);装配了则真截图 → createGeneratedAsset → 返回 asset + 预览 URL。
+    captureScreenshot: async ({ url, fullPage }) => {
+      if (!deps.captureScreenshotPort) {
+        throw new Error(
+          "截图能力当前未接入(服务端未装配无头浏览器) —— 暂时无法截图。",
+        );
+      }
+      return deps.captureScreenshotPort(ctx, { url, fullPage });
+    },
+    // [T-084c] material.generate:端口未装配 → 诚实抛错;装配了则 dispatch 既有 asset.generate
+    // task(不直接生成,视频异步分钟级不阻塞对话回合),立即返回 taskId 供前端卡轮询。
+    dispatchGenerateAsset: async ({ kind, prompt, style }) => {
+      if (!deps.dispatchGenerateAssetPort) {
+        throw new Error(
+          "AI 生成能力当前未接入(服务端未装配生成分派) —— 暂时无法生成素材。",
+        );
+      }
+      // style 折进 prompt(asset.generate task 的 inputData 只吃 prompt;不改既有 task 契约)。
+      const effPrompt = style ? `${prompt}\n风格:${style}` : prompt;
+      return deps.dispatchGenerateAssetPort(ctx, {
+        kind,
+        prompt: effPrompt,
+        // 项目对话(chatContext.projectId)时把生成 task 挂到当前项目(采纳可绑用料链)。
+        projectId: chatContext.projectId ?? null,
+      });
     },
     diagnoseContent: async ({ title, script, extraBrief }) => {
       // 复用 calibration.diagnose 模板 + parseDiagnosis(与 calibration-diagnose-runner 同源)。

@@ -39,6 +39,14 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "搜集素材",
     purpose: "围绕主题搜一批可用素材(案例/数据/金句)",
   },
+  "material.screenshot": {
+    name: "网页截图",
+    purpose: "给公开 URL 真开浏览器截图,存进素材中心(真证据)",
+  },
+  "material.generate": {
+    name: "AI 生成素材",
+    purpose: "文生图/文生视频,生成 AI 素材候选,采纳后进素材中心",
+  },
   "learning.capture": {
     name: "记录经验",
     purpose: "把对话里口述的经验整理成结构化经验卡,采纳后沉淀进飞轮",
