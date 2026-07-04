@@ -77,6 +77,8 @@ import {
   type ChatLearningSuggestion,
 } from "./chat-learning-card";
 import { ChatBriefCard } from "./chat-brief-card";
+// [T-094] 蒸馏工具卡:知识原子候选 → 批量确认门(共享 KnowledgeAtomGate),错误人话化渲错误卡。
+import { ChatDistillCard, type ChatDistillResult } from "./chat-distill-card";
 import type {
   BriefFillSuggestion,
   BriefCurrentDetail,
@@ -122,6 +124,8 @@ import {
   CHAT_TOOL_LABELS,
   SCHEDULED_TASK_TYPE_LABELS,
 } from "@/lib/chat-tool-labels";
+// [T-094] AI 链路错误 → 人话共享映射(与服务端同一张表;客户端兜底二次转译)。
+import { humanizeAiErrorMessage } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
@@ -771,10 +775,21 @@ export function AICopilotContent({
       }),
     [chatContextBody, captureConversationId],
   );
-  const { messages, sendMessage, status, stop, setMessages } = useChat({
+  const { messages, sendMessage, status, stop, setMessages, error } = useChat({
     transport,
   });
   const streaming = status === "streaming" || status === "submitted";
+  // [T-094] 本轮流式错误 → 人话气泡:服务端 onError 已转人话;若客户端拿到的仍是原始机器码
+  // (装配期 4xx 等路径),这里再过一次共享映射兜底。命中「换模型可解」类附「去设置」链接。
+  const chatError = React.useMemo(() => {
+    if (!error) return null;
+    const raw = error.message || String(error);
+    const human = humanizeAiErrorMessage(raw);
+    return {
+      message: human?.message ?? raw,
+      suggestSwitchModel: human?.suggestSwitchModel ?? /在设置里换一个模型/.test(raw),
+    };
+  }, [error]);
 
   // 受控输入(useChat v7 不再托管 input;自管 + sendMessage({text}))。
   const [prompt, setPrompt] = React.useState<string>(vm.prompt);
@@ -1514,6 +1529,27 @@ export function AICopilotContent({
                         </React.Fragment>
                       );
                     }
+                    // [T-094] 知识蒸馏(knowledge.distill)→ 批量确认门卡(勾选/改 type/改
+                    // title,「采纳选中 N 条」逐条 knowledge.create;铁律②人点才物化)。
+                    // 失败(如 MiniMax 内容安全拦截)已在服务端转人话 → 错误卡 + 可选「去设置」。
+                    if (
+                      name === "knowledge.distill" &&
+                      out.kind === "knowledge.distill"
+                    ) {
+                      const o = out as unknown as Partial<ChatDistillResult>;
+                      return (
+                        <ChatDistillCard
+                          key={key}
+                          result={{
+                            atoms: o.atoms ?? [],
+                            suggestedTags: o.suggestedTags ?? [],
+                            originalText: o.originalText ?? "",
+                            error: o.error ?? null,
+                            suggestSwitchModel: o.suggestSwitchModel ?? false,
+                          }}
+                        />
+                      );
+                    }
                     // 编导诊断(calibration.diagnose)→ 维度评分表(只读展示)。
                     if (
                       name === "calibration.diagnose" &&
@@ -1558,6 +1594,28 @@ export function AICopilotContent({
                   })}
                 </li>
               ))}
+              {/* [T-094] 流式错误气泡(人话):如 MiniMax 内容安全拦截整轮输入 —— 不再静默/
+                  裸机器码;「换模型可解」类附「去设置」深链(不自动切换,确认门原则)。 */}
+              {chatError && !streaming ? (
+                <li
+                  data-slot="copilot-error"
+                  role="alert"
+                  className="flex max-w-[420px] flex-col gap-1 self-start rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2"
+                >
+                  <span className="text-[12px] leading-relaxed text-destructive">
+                    {chatError.message}
+                  </span>
+                  {chatError.suggestSwitchModel ? (
+                    <Link
+                      href="/settings"
+                      data-slot="copilot-error-settings-link"
+                      className="self-start text-[11px] font-medium text-brand underline underline-offset-2"
+                    >
+                      去设置换一个模型 →
+                    </Link>
+                  ) : null}
+                </li>
+              ) : null}
               {streaming ? (
                 <li
                   data-slot="copilot-thinking"

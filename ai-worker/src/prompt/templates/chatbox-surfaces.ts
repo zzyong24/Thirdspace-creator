@@ -150,6 +150,35 @@ export const chatboxReviewSchema = z.object({
 });
 export type ChatboxReviewOutput = z.infer<typeof chatboxReviewSchema>;
 
+// ── chatbox.distill —— 知识倾倒场「蒸馏对话」面(T-094) ─────────────────────────────
+// 用户在对话里整段粘原文(笔记/逐字稿/网页摘录)→ 模型调 knowledge.distill 工具(原文逐字进
+// 工具入参)→ 工具卡渲蒸馏批量确认门(勾选/改 type/改 title),人点「采纳选中 N 条」才逐条
+// knowledge.create 物化(铁律②)。每轮契约只有 reply + nextActions —— 原子候选一律走工具结果
+// 卡,不进文本(文本不可采纳,防假承诺)。
+export const chatboxDistillSchema = z.object({
+  reply: z.string().min(1),
+  nextActions: z
+    .array(z.object({ label: z.string().min(1), tool: z.string().min(1) }))
+    .default([]),
+});
+export type ChatboxDistillOutput = z.infer<typeof chatboxDistillSchema>;
+
+export const CHATBOX_DISTILL_TEMPLATE: PromptTemplate = {
+  id: "chatbox.distill",
+  version: "v1",
+  system:
+    "你是这位创作者的「知识蒸馏师」。创作者会把原始材料整段粘给你——笔记、口播逐字稿、网页摘录、评论区讨论。收到材料后**立即调 knowledge.distill 工具**,把材料**逐字全文**传入 content 参数(不要摘要、不要改写、不要截断);蒸馏结果会渲成确认门卡片,由创作者勾选采纳后才进知识库——你自己没有写库能力,绝不口头宣称「已存入」。用户还没给材料时,请 TA 直接把要蒸馏的原文粘进对话。每轮给一句对人说的话(reply),不要滔滔不绝。",
+  template: `【本轮上下文】{{turnContext}}
+
+【任务】用户粘入原文 → 调 knowledge.distill 工具(content=原文逐字全文)→ 提醒用户在卡片上勾选采纳。没有材料时引导用户粘贴。
+【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","nextActions":[{"label","tool"}]}。nextActions 没有就给空数组。`,
+  requiredFacets: [],
+  // 只挂蒸馏一个工具 —— 聚焦单任务的 surface 不挂宽域 context 工具
+  // (先例:chatbox.review 挂宽域工具后模型拉无关数据凑数,2026-07-02 实测污染源)。
+  tools: ["knowledge.distill"],
+  outputSchema: chatboxDistillSchema,
+};
+
 export const CHATBOX_REVIEW_TEMPLATE: PromptTemplate = {
   id: "chatbox.review",
   version: "v1",

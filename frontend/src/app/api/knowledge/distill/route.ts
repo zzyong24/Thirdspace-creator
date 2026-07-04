@@ -5,6 +5,7 @@ import { getChatRuntime } from "@/server/persistence-client";
 import { runKnowledgeDistill } from "@/server/ai/knowledge-distill-runner";
 import { readSessionCookie } from "../../v1/auth/_session";
 import { resolveRequestContext } from "@/lib/request-context.server";
+import { humanizeAiError } from "@/lib/ai-error-humanize";
 
 // 知识倾倒场蒸馏入口(T-079b SPEC §2)—— 同步轻路由(/api/knowledge/classify 同款 escape
 // hatch:AI 交互不走 RPC envelope):倾倒场 POST { content } → 鉴权(session cookie →
@@ -59,7 +60,10 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json(distillation);
   } catch (err) {
     // 没配 model key(LlmCredentialError)/模型产出不可用等 → 诚实 4xx(不假绿、不静默)。
-    const message = err instanceof Error ? err.message : String(err);
+    // [T-094] 平台类错误(如 MiniMax new_sensitive/1026 内容安全拦截)先过人话映射
+    // (lib/ai-error-humanize 单一真值,与对话蒸馏工具卡同一套),不再裸吐机器码。
+    const raw = err instanceof Error ? err.message : String(err);
+    const message = humanizeAiError(err)?.message ?? raw;
     console.error("[api/knowledge/distill] failed:", err);
     return NextResponse.json({ error: message }, { status: 400 });
   }

@@ -10,6 +10,7 @@ import { runChatStream } from "@/server/ai/chat-runner";
 import type { ChatContext } from "@/server/ai/chat-context";
 import { readSessionCookie } from "../v1/auth/_session";
 import { resolveRequestContext } from "@/lib/request-context.server";
+import { humanizeAiError } from "@/lib/ai-error-humanize";
 
 // 上下文感知 ChatBox 的流式入口(SPEC §3.3)—— 全程 Vercel AI SDK,**不走 RPC envelope**:
 // useChat 客户端 POST { messages, chatContext } 到这里 → 鉴权(同 dispatch:session cookie →
@@ -178,15 +179,27 @@ export async function POST(req: Request): Promise<Response> {
       },
     );
     // 流式回前端(useChat 消费 UIMessage stream);回带 conversationId 头供客户端复用会话。
+    // [T-094] onError:流中错误(如 MiniMax 内容安全审核拦截整轮输入 new_sensitive/1026)
+    // 转人话再进 error part —— 不用 SDK 默认掩码("An error occurred"),也不裸吐机器码;
+    // 人话规则未命中时回落原始 message(诚实)。前端错误气泡直接渲这段文案。
     return result.toUIMessageStreamResponse({
       headers: { "x-conversation-id": conversationId },
+      onError: (error) => {
+        console.error("[api/chat] stream errored:", error);
+        const human = humanizeAiError(error);
+        if (human) return human.message;
+        return error instanceof Error ? error.message : String(error);
+      },
     });
   } catch (err) {
     if (err instanceof OwnershipError) {
       return NextResponse.json({ error: err.message }, { status: 404 });
     }
     // 没配 model key(LlmCredentialError)等装配期错误 → 诚实 4xx(不假绿、不静默)。
-    const message = err instanceof Error ? err.message : String(err);
+    // [T-094] 平台类错误(内容审核/限流/配额)先过人话映射,用户拿到能行动的说明。
+    const message =
+      humanizeAiError(err)?.message ??
+      (err instanceof Error ? err.message : String(err));
     console.error("[api/chat] stream failed:", err);
     return NextResponse.json({ error: message }, { status: 400 });
   }

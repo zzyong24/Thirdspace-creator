@@ -1,62 +1,41 @@
 "use client";
 
 /**
- * 知识倾倒场(T-062c 骨架 → T-079b 蒸馏管线升级)—— /knowledge 录入内核:
+ * 知识倾倒场(T-062c 骨架 → T-079b 蒸馏管线 → T-094 蒸馏入口 Copilot 化)—— /knowledge 录入内核。
  *
- *   粘贴文本/URL、拖入 .md/.txt(FileReader 读文本)→ 点「蒸馏」→ POST /api/knowledge/distill
- *   (knowledge.distill AI 节点,capability 走 model-config)→ **蒸馏批量确认门**:一批知识
- *   原子行卡(每条 checkbox 默认全选 + type 四原子下拉 + title 可编辑 + sourceNote 可改)→
- *   点「采纳选中 N 条」→ 逐条 contract knowledge.create(title/knowledgeType/content=note/
- *   sourceNote)+ suggestedTags 挂 tag(taxonomy assignTags,best-effort)→ router.refresh。
+ * T-094 变更(用户裁决:蒸馏走 Copilot 对话,不用传统输入框):
+ *   - 「蒸馏」入口改为**深链打开 Copilot**(?copilot=open&surface=knowledge-distill&
+ *     scope=surface:knowledge-distill,T-096 预留的隔离桶):对话里粘原文 → knowledge.distill
+ *     工具 → 蒸馏批量确认门卡(共享 KnowledgeAtomGate)勾选采纳。输入区已有内容且不长时,
+ *     深链 prefill 直接带上原文(打开即回车可蒸);太长则带引导话术,用户在对话里粘。
+ *   - 旧表单蒸馏流(POST /api/knowledge/distill + 内联确认门)**移除** —— 确认门已抽成共享
+ *     组件(knowledge-atom-gate)由对话卡完整复用,倾倒场不再养第二条重复管线;
+ *     /api/knowledge/distill 路由保留(错误已人话化)。
+ *   - 「手动补录」保留为**降级路径**(不想走 AI / AI 不可用时:title + type + 正文直接存)。
  *
- * T-079b 变更(SPEC §2):
- *   - 知识流「归类单卡」退役,由蒸馏批量确认门全面替代(classify 模板/runner/路由保留供他用);
- *   - 「原文同时存档」checkbox 默认勾选 → 采纳时多存一条 type=reference(title=原文首行
- *     ≤60 字,content=全文),出处存档不丢;
- *   - 手动补录 type 下拉换四原子 + reference。
- *
- * 铁律与 [gate-F2]:
- *   - AI 只产候选,人点「采纳选中 N 条」才物化(确认门);
- *   - 蒸馏失败 → **内联错误提示**(非 toast 即逝),原始输入保留供修改重试,或走「手动补录」
- *     (自己填 title/type 直接存),绝不静默兜底;
- *   - tag 挂载是增强:失败不阻断原子入库(与弹药区 assignTagsBestEffort 同款取舍)。
+ * 铁律:AI 只产候选,人在确认门采纳才物化(现在这道门在对话卡上);错误内联、不静默 [gate-F2]。
  */
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Inbox } from "lucide-react";
+import { Inbox, Sparkles } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
+import { KNOWLEDGE_DISTILL_SCOPE } from "@/features/copilot/chat-scope";
+import { type AtomType } from "./knowledge-atom-gate";
 
-// 四原子(T-079a 契约新增)—— 录入侧主动产的类型;reference 保留给原文存档/外部参考。
-type AtomType = "claim" | "evidence" | "quote" | "qa";
+// 兼容既有 import 面:确认门与两个纯函数已抽到 knowledge-atom-gate(T-094),原路径再导出。
+export { archiveTitleOf, assignKnowledgeTagsBestEffort } from "./knowledge-atom-gate";
+
+// 手动补录 type 下拉 = 四原子 + reference(参考/存档)。旧五枚举录入侧退役(存量兼容仍在契约)。
 type ManualType = AtomType | "reference";
-
-/** 蒸馏路由返回的单个原子(/api/knowledge/distill)。 */
-interface DistilledAtom {
-  type: AtomType;
-  title: string;
-  note: string;
-  sourceNote: string;
-}
-
-/** 确认门里的一行原子(候选 + 勾选态;type/title/sourceNote 可改)。 */
-interface AtomRow extends DistilledAtom {
-  selected: boolean;
-}
-
-// 四原子中文词表(确认门 type 下拉;同 §3 知识卡徽章语义)。
-const ATOM_TYPE_OPTIONS: ReadonlyArray<{ value: AtomType; label: string }> = [
+const MANUAL_TYPE_OPTIONS: ReadonlyArray<{ value: ManualType; label: string }> = [
   { value: "claim", label: "观点" },
   { value: "evidence", label: "证据" },
   { value: "quote", label: "金句" },
   { value: "qa", label: "观众问题" },
-];
-
-// 手动补录 type 下拉 = 四原子 + reference(参考/存档)。旧五枚举录入侧退役(存量兼容仍在契约)。
-const MANUAL_TYPE_OPTIONS: ReadonlyArray<{ value: ManualType; label: string }> = [
-  ...ATOM_TYPE_OPTIONS,
   { value: "reference", label: "参考" },
 ];
 
@@ -73,57 +52,30 @@ function readTextFile(file: File): Promise<string> {
   });
 }
 
-/** 原文存档标题:首个非空行截 60 字(SPEC §2:title=原文标题或首行)。 */
-export function archiveTitleOf(raw: string): string {
-  const firstLine =
-    raw
-      .split("\n")
-      .map((l) => l.trim())
-      .find(Boolean) ?? "";
-  return firstLine.slice(0, 60);
-}
+// [T-094] 深链 prefill 能带的原文上限(URL 承载;超限改带引导话术,用户在对话里粘全文)。
+export const DISTILL_PREFILL_MAX_CHARS = 1500;
+
+/** 蒸馏对话的引导话术(输入区为空/原文过长时的 prefill)。 */
+export const DISTILL_GUIDE_PREFILL =
+  "我有一段材料要蒸馏进知识库,下面整段粘给你,请提炼成知识原子:";
 
 /**
- * 把 suggestedTags 挂到知识条目(现有 taxonomy 路径:listTags 找同名 → 缺的 createTag →
- * assignTags entityType=knowledge)。与弹药区 assignTagsBestEffort 同款 best-effort 取舍:
- * 标签是增强,失败不阻断入库(原子已物化,tag 丢了可后补)。
+ * [T-094] 构造蒸馏 Copilot 深链(纯函数,可单测):
+ *   - 输入区有内容且 ≤1500 字 → prefill 直接带原文(打开即回车可蒸);
+ *   - 为空或过长 → prefill 带引导话术(用户在对话里粘全文)。
+ * scope 显式钉死 surface:knowledge-distill(T-096 预留隔离桶,蒸馏历史与其它入口互不可见)。
  */
-export async function assignKnowledgeTagsBestEffort(
-  knowledgeId: string,
-  tagNames: readonly string[],
-): Promise<void> {
-  if (tagNames.length === 0) return;
-  try {
-    const listed = (await client.listTags({
-      params: undefined,
-      query: { page: 1, pageSize: 200 },
-      body: undefined,
-    })) as unknown as ReadonlyArray<{ id: string; name: string }>;
-    const byName = new Map(
-      (Array.isArray(listed) ? listed : []).map((t) => [t.name, t.id]),
-    );
-    const tagIds: string[] = [];
-    for (const name of tagNames) {
-      const hit = byName.get(name);
-      if (hit) {
-        tagIds.push(hit);
-        continue;
-      }
-      const created = (await client.createTag({
-        params: undefined,
-        query: undefined,
-        body: { name, kind: "knowledge-topic" },
-      })) as unknown as { id: string };
-      tagIds.push(created.id);
-    }
-    await client.assignTags({
-      params: undefined,
-      query: undefined,
-      body: { entityType: "knowledge", entityId: knowledgeId, tagIds },
-    });
-  } catch {
-    /* 标签是增强,失败不阻断入库 */
-  }
+export function distillCopilotHref(content: string): string {
+  const text = content.trim();
+  const prefill =
+    text && text.length <= DISTILL_PREFILL_MAX_CHARS ? text : DISTILL_GUIDE_PREFILL;
+  return copilotDeepLink(
+    "knowledge-distill",
+    undefined,
+    undefined,
+    prefill,
+    KNOWLEDGE_DISTILL_SCOPE,
+  );
 }
 
 const inputCls =
@@ -137,24 +89,16 @@ export function KnowledgeDumpZone() {
   const router = useRouter();
   const [content, setContent] = React.useState("");
   const [dragActive, setDragActive] = React.useState(false);
-  const [busy, setBusy] = React.useState<"idle" | "distilling" | "saving">("idle");
-  // 内联错误(蒸馏/采纳失败都落这;非 toast 即逝,原始输入保留 [gate-F2])。
+  const [busy, setBusy] = React.useState<"idle" | "saving">("idle");
+  // 内联错误(手动补录/读文件失败落这;非 toast 即逝,原始输入保留 [gate-F2])。
   const [error, setError] = React.useState<string | null>(null);
-  // 蒸馏批量确认门:AI 产的原子候选行(勾选/type/title/sourceNote 可改)。null = 未蒸馏。
-  const [atoms, setAtoms] = React.useState<AtomRow[] | null>(null);
-  const [suggestedTags, setSuggestedTags] = React.useState<string[]>([]);
-  // 「原文同时存档」开关(默认勾选)→ 采纳时多存一条 type=reference 的全文存档。
-  const [archiveOriginal, setArchiveOriginal] = React.useState(true);
-  // 手动补录次入口(最小字段 title + 正文;正文复用倾倒场输入框)。
+  // 手动补录降级入口(最小字段 title + 正文;正文复用倾倒场输入框)。
   const [manualOpen, setManualOpen] = React.useState(false);
   const [manualTitle, setManualTitle] = React.useState("");
   const [manualType, setManualType] = React.useState<ManualType>("claim");
 
   const reset = React.useCallback(() => {
     setContent("");
-    setAtoms(null);
-    setSuggestedTags([]);
-    setArchiveOriginal(true);
     setError(null);
     setManualOpen(false);
     setManualTitle("");
@@ -188,95 +132,13 @@ export function KnowledgeDumpZone() {
     [],
   );
 
-  // 「蒸馏」→ POST /api/knowledge/distill → 批量确认门。失败内联展示,输入保留 [gate-F2]。
-  const handleDistill = React.useCallback(async () => {
-    const text = content.trim();
-    if (!text || busy !== "idle") return;
-    setBusy("distilling");
-    setError(null);
-    try {
-      const res = await fetch("/api/knowledge/distill", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ content: text }),
-      });
-      const json = (await res.json().catch(() => null)) as
-        | { atoms?: DistilledAtom[]; suggestedTags?: string[]; error?: string }
-        | null;
-      if (!res.ok || !Array.isArray(json?.atoms) || json.atoms.length === 0) {
-        throw new Error(json?.error || `蒸馏失败(HTTP ${res.status})`);
-      }
-      // 默认全选(SPEC §2:每条 checkbox 默认勾上,人只做减法与微调)。
-      setAtoms(json.atoms.map((a) => ({ ...a, selected: true })));
-      setSuggestedTags(Array.isArray(json.suggestedTags) ? json.suggestedTags : []);
-      setArchiveOriginal(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "蒸馏失败,请重试或手动补录。");
-    } finally {
-      setBusy("idle");
-    }
-  }, [content, busy]);
+  // [T-094] 「AI 蒸馏」→ 深链打开 Copilot(knowledge-distill 隔离桶):原文短则 prefill 带上,
+  // 长则带引导话术在对话里粘。query-only href 用 router.push 就地开浮层(不跳页,bug #3 语义)。
+  const handleDistill = React.useCallback(() => {
+    router.push(distillCopilotHref(content));
+  }, [router, content]);
 
-  /** 就地改一行原子(勾选/type/title/sourceNote)。 */
-  const patchAtom = React.useCallback((index: number, patch: Partial<AtomRow>) => {
-    setAtoms((prev) =>
-      prev ? prev.map((a, i) => (i === index ? { ...a, ...patch } : a)) : prev,
-    );
-  }, []);
-
-  const selectedCount = (atoms ?? []).filter(
-    (a) => a.selected && a.title.trim().length > 0,
-  ).length;
-
-  // 确认门「采纳选中 N 条」→ 逐条 knowledge.create + tags 挂载(+ 可选原文 reference 存档)。
-  const handleAdopt = React.useCallback(async () => {
-    if (!atoms || busy !== "idle") return;
-    const picked = atoms.filter((a) => a.selected && a.title.trim().length > 0);
-    if (picked.length === 0) return;
-    setBusy("saving");
-    setError(null);
-    try {
-      const fullText = content.trim();
-      for (const atom of picked) {
-        const created = (await client.createKnowledge({
-          params: undefined,
-          query: undefined,
-          body: {
-            title: atom.title.trim(),
-            knowledgeType: atom.type,
-            // 原子本体在 title;note 是评注/上下文,落 content(可空)。
-            content: atom.note.trim(),
-            ...(atom.sourceNote.trim()
-              ? { sourceNote: atom.sourceNote.trim() }
-              : {}),
-          },
-        })) as unknown as { id: string };
-        // AI 馆长(轻):suggestedTags 即主题挂载(best-effort,失败不阻断)。
-        await assignKnowledgeTagsBestEffort(created.id, suggestedTags);
-      }
-      // 「原文同时存档」:多存一条 reference(title=首行≤60 字,content=全文),出处不丢。
-      if (archiveOriginal && fullText) {
-        await client.createKnowledge({
-          params: undefined,
-          query: undefined,
-          body: {
-            title: archiveTitleOf(fullText) || "原文存档",
-            knowledgeType: "reference",
-            content: fullText,
-          },
-        });
-      }
-      reset();
-      router.refresh();
-    } catch (err) {
-      // 失败内联保留输入(已成条目不回滚 —— 诚实呈现,refresh 后可见已入库的部分)。
-      setError(err instanceof Error ? err.message : "采纳入库失败,请重试。");
-    } finally {
-      setBusy("idle");
-    }
-  }, [atoms, busy, content, suggestedTags, archiveOriginal, reset, router]);
-
-  // 手动补录(蒸馏失败/不想走 AI 的兜底次入口):title + type + 正文直接存。
+  // 手动补录(不想走 AI / AI 不可用的降级路径):title + type + 正文直接存。
   const handleManualSave = React.useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -309,12 +171,12 @@ export function KnowledgeDumpZone() {
     >
       <div className="flex items-center gap-2 text-xs text-text-subtle">
         <Inbox className="size-4 shrink-0" aria-hidden="true" />
-        把笔记、金句、逐字稿、参考链接整段倒进来 —— AI 蒸馏成知识原子,采纳后进知识库
+        把笔记、金句、逐字稿整段交给 AI 蒸馏成知识原子 —— 点「AI 蒸馏」在对话里粘原文,采纳后进知识库
       </div>
       <textarea
         data-slot="knowledge-dump-input"
         aria-label="倒入文本、URL,或拖入 .md/.txt 文件"
-        placeholder="粘贴文本 / URL,或把 .md / .txt 文件拖进来…"
+        placeholder="粘贴文本 / URL,或把 .md / .txt 文件拖进来…(点「AI 蒸馏」带着它开聊,或走「手动补录」直接存)"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         onDragOver={(e) => {
@@ -334,7 +196,7 @@ export function KnowledgeDumpZone() {
         )}
       />
 
-      {/* 内联错误(非 toast):蒸馏/采纳失败都落这,输入保留供重试或手动补录 [gate-F2]。 */}
+      {/* 内联错误(非 toast):读文件/手动补录失败落这,输入保留供重试 [gate-F2]。 */}
       {error ? (
         <p
           data-slot="knowledge-dump-error"
@@ -349,11 +211,12 @@ export function KnowledgeDumpZone() {
         <button
           type="button"
           data-slot="knowledge-distill"
-          disabled={busy !== "idle" || content.trim().length === 0}
-          onClick={() => void handleDistill()}
-          className={cn(buttonCls, "bg-brand text-brand-foreground hover:bg-brand/90")}
+          disabled={busy !== "idle"}
+          onClick={handleDistill}
+          className={cn(buttonCls, "gap-1.5 bg-brand text-brand-foreground hover:bg-brand/90")}
         >
-          {busy === "distilling" ? "蒸馏中…" : "蒸馏"}
+          <Sparkles className="size-3.5" aria-hidden="true" />
+          AI 蒸馏(打开对话)
         </button>
         <button
           type="button"
@@ -370,138 +233,7 @@ export function KnowledgeDumpZone() {
         </button>
       </div>
 
-      {/* 蒸馏批量确认门:原子候选行卡,勾选/type/title/sourceNote 可改;人点「采纳」才落库。 */}
-      {atoms ? (
-        <div
-          data-slot="knowledge-distill-batch"
-          className="flex flex-col gap-2 rounded-md border border-border bg-surface p-2.5"
-        >
-          <p className="text-[11px] text-muted-foreground">
-            蒸馏出 {atoms.length} 个知识原子(勾选要留的,类型/标题/出处可改;采纳后进知识库)
-          </p>
-          <ul className="flex flex-col gap-2">
-            {atoms.map((atom, index) => (
-              <li
-                key={index}
-                data-slot="knowledge-atom-row"
-                className="flex flex-col gap-1.5 rounded-md border border-border/70 bg-surface-subtle/40 p-2"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <input
-                    type="checkbox"
-                    data-slot="knowledge-atom-select"
-                    aria-label={`采纳第 ${index + 1} 条`}
-                    checked={atom.selected}
-                    onChange={(e) => patchAtom(index, { selected: e.target.checked })}
-                    className="size-4 accent-brand"
-                  />
-                  <label className="sr-only" htmlFor={`knowledge-atom-type-${index}`}>
-                    类型
-                  </label>
-                  <select
-                    id={`knowledge-atom-type-${index}`}
-                    data-slot="knowledge-atom-type"
-                    value={atom.type}
-                    onChange={(e) =>
-                      patchAtom(index, { type: e.target.value as AtomType })
-                    }
-                    className={selectCls}
-                  >
-                    {ATOM_TYPE_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <label className="sr-only" htmlFor={`knowledge-atom-title-${index}`}>
-                    标题
-                  </label>
-                  <input
-                    id={`knowledge-atom-title-${index}`}
-                    data-slot="knowledge-atom-title"
-                    type="text"
-                    value={atom.title}
-                    onChange={(e) => patchAtom(index, { title: e.target.value })}
-                    className={cn(inputCls, "h-8 min-w-0 flex-1 py-0")}
-                  />
-                </div>
-                {atom.note ? (
-                  <p
-                    data-slot="knowledge-atom-note"
-                    className="pl-6 text-[12px] text-muted-foreground"
-                  >
-                    {atom.note}
-                  </p>
-                ) : null}
-                <div className="flex items-center gap-2 pl-6">
-                  <label
-                    className="shrink-0 text-[11px] text-muted-foreground"
-                    htmlFor={`knowledge-atom-source-${index}`}
-                  >
-                    出处
-                  </label>
-                  <input
-                    id={`knowledge-atom-source-${index}`}
-                    data-slot="knowledge-atom-source"
-                    type="text"
-                    placeholder="出处/可信度(可空)"
-                    value={atom.sourceNote}
-                    onChange={(e) => patchAtom(index, { sourceNote: e.target.value })}
-                    className={cn(inputCls, "h-7 min-w-0 flex-1 py-0 text-[12px]")}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-          {suggestedTags.length > 0 ? (
-            <div data-slot="knowledge-distill-tags" className="flex flex-wrap gap-1">
-              {suggestedTags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] text-brand"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          ) : null}
-          <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
-            <input
-              type="checkbox"
-              data-slot="knowledge-distill-archive"
-              checked={archiveOriginal}
-              onChange={(e) => setArchiveOriginal(e.target.checked)}
-              className="size-4 accent-brand"
-            />
-            原文同时存档(存一条「参考」,标题取首行)
-          </label>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              data-slot="knowledge-distill-adopt"
-              disabled={busy !== "idle" || selectedCount === 0}
-              onClick={() => void handleAdopt()}
-              className={cn(buttonCls, "bg-brand text-brand-foreground hover:bg-brand/90")}
-            >
-              {busy === "saving" ? "入库中…" : `采纳选中 ${selectedCount} 条`}
-            </button>
-            <button
-              type="button"
-              data-slot="knowledge-distill-cancel"
-              disabled={busy !== "idle"}
-              onClick={() => setAtoms(null)}
-              className={cn(
-                buttonCls,
-                "border border-border bg-surface text-foreground hover:bg-surface-subtle",
-              )}
-            >
-              返回修改
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {/* 手动补录次入口(旧「新建知识」表单退役至此):最小字段 title + type,正文用倾倒场输入。 */}
+      {/* 手动补录降级入口:最小字段 title + type,正文用倾倒场输入。 */}
       {manualOpen ? (
         <form
           data-slot="knowledge-manual-form"

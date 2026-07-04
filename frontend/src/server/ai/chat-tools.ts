@@ -1,5 +1,6 @@
 import "server-only";
 import { tool, jsonSchema, type Tool, type ToolSet } from "ai";
+import { humanizeAiError } from "@/lib/ai-error-humanize";
 
 // 首波工具(本切片 2 个):topic.generate + topic.enrich,注册为 Vercel AI SDK tool
 // (SPEC §3.4)。每个工具 = { description, parameters(JSON Schema), execute → 复用现有
@@ -131,6 +132,20 @@ export interface ChatToolDeps {
    * chatContext.projectId 收窄(项目对话才有);无项目上下文 / 读不到 → null(诚实降级)。
    */
   getProjectBrief: () => Promise<BriefCurrentDetail | null>;
+  /**
+   * [T-094] knowledge.distill 核心 —— 复用倾倒场同一蒸馏引擎(runKnowledgeDistill:
+   * knowledge.distill 模板 + capability 走 model-config),把对话里粘的原文蒸成知识原子候选。
+   * 失败**抛错**(与 runner 语义一致),由工具 execute 接住转人话随结果卡渲染。
+   */
+  distillKnowledge: (input: { content: string }) => Promise<{
+    atoms: Array<{
+      type: "claim" | "evidence" | "quote" | "qa";
+      title: string;
+      note: string;
+      sourceNote: string;
+    }>;
+    suggestedTags: string[];
+  }>;
   /**
    * context.projects 只读端口 —— 列该用户最近的项目/作品(项目库 / 「最新一条」)。
    * **纯读上下文**(与上面的候选工具不同):不产候选、不写实体,只把真数据回给模型读进去用文字回答。
@@ -273,6 +288,27 @@ export interface BriefFillSuggestion {
 export interface BriefCurrentDetail extends BriefFillSuggestion {
   orientation?: "landscape" | "portrait";
   targetPlatforms?: string[];
+}
+
+// [T-094] knowledge.distill 工具结果 —— 一批知识原子候选(渲成蒸馏批量确认门卡,人勾选
+// 「采纳选中 N 条」才逐条 knowledge.create 落库,与倾倒场旧确认门同语义)。error 字段:
+// 蒸馏失败(如 MiniMax 内容安全审核拦截输入)时带**人话**错误(ai-error-humanize 转译),
+// 卡渲错误态而非裸机器码;suggestSwitchModel=true 时卡上附「去设置」链接(不自动切换,确认门原则)。
+export interface KnowledgeDistillToolResult {
+  kind: "knowledge.distill";
+  atoms: Array<{
+    type: "claim" | "evidence" | "quote" | "qa";
+    title: string;
+    note: string;
+    sourceNote: string;
+  }>;
+  suggestedTags: string[];
+  /** 送蒸的原文(clamp 后)—— 卡上「原文同时存档」reference 条目的数据源。 */
+  originalText: string;
+  /** 失败时的人话错误(成功为 null);未命中人话规则时回落原始 message(诚实,不装懂)。 */
+  error: string | null;
+  /** true = 错误属「换模型可解」类(卡附「去设置」深链)。 */
+  suggestSwitchModel: boolean;
 }
 
 // [T-077b] brief.fill 工具结果 —— 一份选题卡填充候选(渲成 ChatBriefCard 字段对照,
@@ -518,6 +554,33 @@ const BRIEF_FILL_PARAMS = jsonSchema<BriefFillSuggestion>({
   },
   additionalProperties: false,
 });
+
+// [T-094] knowledge.distill 入参 —— 对话里粘的原文**逐字全文**(模板/描述都强调不摘要不改写)。
+// maxLength 与 clamp 同值兜底(部分模型不吃 maxLength 约束);runner 侧另有 8000 字符送模截断。
+const KNOWLEDGE_DISTILL_PARAMS = jsonSchema<{ content: string }>({
+  type: "object",
+  properties: {
+    content: {
+      type: "string",
+      maxLength: 12000,
+      description:
+        "要蒸馏的原文全文(用户在对话里粘的笔记/逐字稿/网页摘录),逐字传入 —— 不要摘要、不要改写、不要截断。",
+    },
+  },
+  required: ["content"],
+  additionalProperties: false,
+});
+
+// [T-094] 蒸馏原文清洗:trim + 截 12000 字(与 schema maxLength 同值;runner 送模再截 8000,
+// 这里的余量保住「原文存档」尽量全)。空/非串 → 空串(execute 按空原文诚实报错)。导出供单测。
+export const MAX_DISTILL_TOOL_CONTENT_CHARS = 12000;
+export function clampDistillContent(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  const v = raw.trim();
+  return v.length > MAX_DISTILL_TOOL_CONTENT_CHARS
+    ? v.slice(0, MAX_DISTILL_TOOL_CONTENT_CHARS)
+    : v;
+}
 
 // [T-081] positioning.generate 原为零入参(洞察无通道传入 → 工具内部只吃旧定位母版+账号画像,
 // 永远复读旧卡)。现加 extraBrief:对话里翻真数据得出的定位洞察经它进 prompt。
@@ -799,6 +862,53 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           extraBrief: clampExtraBrief(extraBrief),
         });
         return { kind: "positioning.suggestion", suggestion };
+      },
+    }),
+    // [T-094] 知识蒸馏(倾倒场 Copilot 化):用户在对话里粘原文 → 本工具走既有 knowledge.distill
+    // 引擎产一批知识原子候选 → 前端渲蒸馏批量确认门卡(勾选/改 type/改 title),人点「采纳选中
+    // N 条」才逐条 knowledge.create(铁律②)。失败不抛给 SDK(避免裸机器码/无限 spinner):
+    // 接住转人话(ai-error-humanize,如 MiniMax new_sensitive/1026 内容安全拦截)随结果卡渲错误态。
+    "knowledge.distill": tool({
+      description:
+        "把用户粘贴的原始材料(笔记/口播逐字稿/网页摘录/评论讨论)蒸馏成一批可独立引用的知识原子候选(观点/证据/金句/观众问题)。用户在对话里倒入要存进知识库的原文时调用,content 必须是原文逐字全文(不要摘要改写)。结果是候选,渲成确认门卡由用户勾选采纳后才入知识库——不直接写库。",
+      inputSchema: KNOWLEDGE_DISTILL_PARAMS,
+      execute: async ({ content }): Promise<KnowledgeDistillToolResult> => {
+        const text = clampDistillContent(content);
+        if (!text) {
+          return {
+            kind: "knowledge.distill",
+            atoms: [],
+            suggestedTags: [],
+            originalText: "",
+            error: "没有收到要蒸馏的原文 —— 请把材料整段粘进对话再试。",
+            suggestSwitchModel: false,
+          };
+        }
+        try {
+          const { atoms, suggestedTags } = await deps.distillKnowledge({
+            content: text,
+          });
+          return {
+            kind: "knowledge.distill",
+            atoms,
+            suggestedTags,
+            originalText: text,
+            error: null,
+            suggestSwitchModel: false,
+          };
+        } catch (err) {
+          const human = humanizeAiError(err);
+          return {
+            kind: "knowledge.distill",
+            atoms: [],
+            suggestedTags: [],
+            originalText: text,
+            error:
+              human?.message ??
+              (err instanceof Error ? err.message : String(err)),
+            suggestSwitchModel: human?.suggestSwitchModel ?? false,
+          };
+        }
       },
     }),
     // ── 只读 context 工具 —— 用于当用户问「项目库 / 最新一条作品 / 素材(库)/ 知识库」时,

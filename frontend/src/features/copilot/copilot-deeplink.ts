@@ -35,6 +35,12 @@ export function copilotDeepLink(
    * (如 4 种出题依据各一句)用它;仍然只预填不发送(T-055b 机制)。
    */
   prefillText?: string,
+  /**
+   * [T-094] 显式会话作用域(chat-scope 文法,如 `surface:knowledge-distill`)—— 走
+   * resolveChatScope 规则 0(最高优先)。省略时按 surface/selection 推导(规则 1/2),
+   * 结果通常相同;需要把入口钉死在某个隔离桶时显式带上。
+   */
+  scope?: string,
 ): string {
   const params = new URLSearchParams();
   params.set(OVERLAY_QUERY_KEY, OVERLAY_OPEN_VALUE);
@@ -46,5 +52,6 @@ export function copilotDeepLink(
     if (selection.title) params.set("selTitle", selection.title);
   }
   if (prefillText) params.set("prefill", prefillText);
+  if (scope) params.set("scope", scope);
   return `?${params.toString()}`;
 }

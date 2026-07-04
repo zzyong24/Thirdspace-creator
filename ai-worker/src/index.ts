@@ -309,4 +309,8 @@ export {
   CHATBOX_REVIEW_TEMPLATE,
   chatboxReviewSchema,
   type ChatboxReviewOutput,
+  // T-094 蒸馏对话面(倾倒场 Copilot 化):reply + nextActions,原子候选走 knowledge.distill 工具卡。
+  CHATBOX_DISTILL_TEMPLATE,
+  chatboxDistillSchema,
+  type ChatboxDistillOutput,
 } from "./prompt/templates/chatbox-surfaces";

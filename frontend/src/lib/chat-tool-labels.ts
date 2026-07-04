@@ -59,6 +59,10 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "生成定位提案",
     purpose: "结合账号画像产结构化定位提案卡,采纳可写入定位母版",
   },
+  "knowledge.distill": {
+    name: "知识蒸馏",
+    purpose: "把粘贴的原文蒸馏成知识原子候选(观点/证据/金句/问题),采纳后进知识库",
+  },
   "context.projects": {
     name: "读取项目库",
     purpose: "实时拉取你最近的项目/作品清单",

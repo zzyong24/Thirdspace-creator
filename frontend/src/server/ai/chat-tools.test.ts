@@ -4,6 +4,8 @@ import {
   buildChatTools,
   clampContextLimit,
   clampExtraBrief,
+  clampDistillContent,
+  MAX_DISTILL_TOOL_CONTENT_CHARS,
   compactTitle,
   knowledgeRelevanceScore,
   type ChatToolDeps,
@@ -21,6 +23,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   diagnoseContent: ReturnType<typeof vi.fn>;
   analyzeReview: ReturnType<typeof vi.fn>;
   generatePositioning: ReturnType<typeof vi.fn>;
+  distillKnowledge: ReturnType<typeof vi.fn>;
   getProjectBrief: ReturnType<typeof vi.fn>;
   listProjects: ReturnType<typeof vi.fn>;
   listComments: ReturnType<typeof vi.fn>;
@@ -120,6 +123,24 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     targetAudience: "一线开发者",
     targetPlatforms: ["douyin"],
   }));
+  // [T-094] 对话蒸馏核心(fake:两个原子 + 标签)。
+  const distillKnowledge = vi.fn(async () => ({
+    atoms: [
+      {
+        type: "claim" as const,
+        title: "上下文工程是新的护城河",
+        note: "",
+        sourceNote: "",
+      },
+      {
+        type: "quote" as const,
+        title: "「模型不缺聪明,缺的是你的上下文」",
+        note: "",
+        sourceNote: "作者原话",
+      },
+    ],
+    suggestedTags: ["上下文工程"],
+  }));
   const deps: ChatToolDeps = {
     generateTopics,
     enrichTopic,
@@ -129,6 +150,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     diagnoseContent,
     analyzeReview,
     generatePositioning,
+    distillKnowledge,
     getProjectBrief,
     listProjects,
     listComments,
@@ -143,6 +165,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     diagnoseContent,
     analyzeReview,
     generatePositioning,
+    distillKnowledge,
     getProjectBrief,
     listProjects,
     listComments,
@@ -679,5 +702,89 @@ describe("[T-081③] context.projects compact 模式", () => {
     expect(clampContextLimit(30, true)).toBe(30);
     expect(compactTitle("短标题")).toBe("短标题");
     expect(compactTitle("超".repeat(41))).toBe(`${"超".repeat(40)}…`);
+  });
+});
+
+// [T-094] knowledge.distill 工具:蒸馏走 Copilot 对话 —— execute 成功产原子候选;
+// 失败(如 MiniMax 内容安全拦截)不抛给 SDK,转人话随结果卡返回(error + suggestSwitchModel)。
+describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
+  const WHITELIST = ["knowledge.distill"] as const;
+
+  it("execute 调注入的 distillKnowledge,返回原子候选 + 原文(kind=knowledge.distill)", async () => {
+    const { deps, distillKnowledge } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = await runExecute(tools["knowledge.distill"], {
+      content: "  上下文工程是新的护城河。模型不缺聪明,缺的是你的上下文。  ",
+    });
+    expect(distillKnowledge).toHaveBeenCalledWith({
+      content: "上下文工程是新的护城河。模型不缺聪明,缺的是你的上下文。",
+    });
+    expect(result).toMatchObject({
+      kind: "knowledge.distill",
+      error: null,
+      suggestSwitchModel: false,
+      suggestedTags: ["上下文工程"],
+      originalText: "上下文工程是新的护城河。模型不缺聪明,缺的是你的上下文。",
+      atoms: [
+        expect.objectContaining({ type: "claim" }),
+        expect.objectContaining({ type: "quote", sourceNote: "作者原话" }),
+      ],
+    });
+  });
+
+  it("蒸馏失败(MiniMax new_sensitive/1026)→ 不抛,error 转人话 + suggestSwitchModel", async () => {
+    const { deps } = makeDeps();
+    deps.distillKnowledge = async () => {
+      throw new Error(
+        "Failed after 3 attempts. AI_APICallError: input new_sensitive (1026)",
+      );
+    };
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["knowledge.distill"], {
+      content: "一段被平台审核拦截的原文",
+    })) as {
+      kind: string;
+      atoms: unknown[];
+      error: string | null;
+      suggestSwitchModel: boolean;
+      originalText: string;
+    };
+    expect(result.kind).toBe("knowledge.distill");
+    expect(result.atoms).toEqual([]);
+    expect(result.error).toContain("内容安全审核");
+    expect(result.error).toContain("换一个模型");
+    expect(result.suggestSwitchModel).toBe(true);
+    // 原文随结果保留(卡上提示「原文还在对话里」语义的数据面)。
+    expect(result.originalText).toBe("一段被平台审核拦截的原文");
+  });
+
+  it("未知错误 → error 回落原始 message(诚实,不装懂),不建议换模型", async () => {
+    const { deps } = makeDeps();
+    deps.distillKnowledge = async () => {
+      throw new Error("ECONNREFUSED 127.0.0.1:11434");
+    };
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["knowledge.distill"], {
+      content: "原文",
+    })) as { error: string | null; suggestSwitchModel: boolean };
+    expect(result.error).toBe("ECONNREFUSED 127.0.0.1:11434");
+    expect(result.suggestSwitchModel).toBe(false);
+  });
+
+  it("空原文 → 诚实报错引导粘贴,不调蒸馏引擎", async () => {
+    const { deps, distillKnowledge } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["knowledge.distill"], {
+      content: "   ",
+    })) as { error: string | null };
+    expect(distillKnowledge).not.toHaveBeenCalled();
+    expect(result.error).toContain("粘进对话");
+  });
+
+  it("clampDistillContent:trim + 截 12000 字;非串 → 空串", () => {
+    expect(clampDistillContent("  x  ")).toBe("x");
+    expect(clampDistillContent(42)).toBe("");
+    const long = "长".repeat(MAX_DISTILL_TOOL_CONTENT_CHARS + 10);
+    expect(clampDistillContent(long).length).toBe(MAX_DISTILL_TOOL_CONTENT_CHARS);
   });
 });

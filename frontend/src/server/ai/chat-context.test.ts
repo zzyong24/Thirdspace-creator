@@ -18,6 +18,8 @@ describe("resolveSkillForSurface — 页面层(surface → 基础 skill)", () =>
     expect(resolveSkillForSurface("review")).toBe("chatbox.review");
     // project 先复用选题编导(深化留后续)。
     expect(resolveSkillForSurface("project")).toBe("chatbox.topic");
+    // [T-094] 倾倒场蒸馏对话面(Copilot 化入口)。
+    expect(resolveSkillForSurface("knowledge-distill")).toBe("chatbox.distill");
   });
 
   it("未知 surface 回落到默认 ChatBox skill(路由不崩)", () => {

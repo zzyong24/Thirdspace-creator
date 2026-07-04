@@ -45,6 +45,7 @@ import {
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,
+  CHATBOX_DISTILL_TEMPLATE,
 } from "./templates/chatbox-surfaces";
 
 const REGISTRY = new Map<string, PromptTemplate>();
@@ -84,6 +85,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,
+  // T-094 蒸馏对话面:粘原文 → knowledge.distill 工具 → 确认门卡采纳(倾倒场入口 Copilot 化)。
+  CHATBOX_DISTILL_TEMPLATE,
 ];
 
 /** 注册(或覆盖)一个 skill(含 tools/outputSchema 随对象入表)。后注册的同 id 覆盖先前的。 */

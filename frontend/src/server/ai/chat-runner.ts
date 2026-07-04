@@ -118,6 +118,8 @@ const SKILL_PRIMARY_CAPABILITY: Record<string, string> = {
   "chatbox.calibration": "calibration.diagnose",
   "chatbox.positioning": "positioning.generate",
   "chatbox.review": "review.insights",
+  // [T-094] 蒸馏对话面:基础档 + 工具都走 knowledge.distill capability(与倾倒场旧管线同档)。
+  "chatbox.distill": "knowledge.distill",
 };
 
 // 通用维度评分标准(对话里没有绑定 rubric reader 时的诚实降级)—— 让 calibration.diagnose 工具
@@ -494,6 +496,16 @@ export async function buildChatAssembly(
         maxSteps: 2,
       });
       return parseSuggestion(res.text);
+    },
+    // [T-094] 对话蒸馏:复用倾倒场同一引擎 runKnowledgeDistill(knowledge.distill 模板 +
+    // capability 走 model-config,多模态可配铁律)。失败抛错由工具 execute 接住转人话渲卡。
+    distillKnowledge: async ({ content }) => {
+      const { runKnowledgeDistill } = await import("./knowledge-distill-runner");
+      return runKnowledgeDistill(
+        ctx,
+        { content },
+        { resolveModelSpec: deps.resolveModelSpec },
+      );
     },
     // [T-077b] brief.fill 的现状读:当前项目对话(chatContext.projectId,project surface 的
     // selection kind=project 已装进来)才读得到;无项目上下文 / 端口未装配 → null(卡上现值显「未填」)。
