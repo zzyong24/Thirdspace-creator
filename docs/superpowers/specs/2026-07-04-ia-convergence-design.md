@@ -1,6 +1,8 @@
 # IA 收敛设计(校准集成 + 知识库/经验合并 + 任务中心改名)
 
-> 状态:草稿(待 spec-review gate)。作者:Claude(Opus 4.8)。日期:2026-07-04。
+> 状态:✅ **PASS**(MiniMax spec-review gate,2026-07-04;0 blocker / 0 major / 4 minor,全部内联 [gate-F1..F4]);**可开工 T-114 → T-112 → T-113**。作者:Claude(Opus 4.8)。日期:2026-07-04。
+>
+> **裁决注(2026-07-04,MiniMax reviewer)**:总评「符合宪法定位,三处岔口均经用户明确授权,变更范围清晰(纯前端 IA/UI),数据模型不变,方案合理,零 schema 变更有保障」。4 minor 均为验收精度补强,已内联:[gate-F1] 死链清扫补精确 grep 模式 + 运行时 301/404 检查;[gate-F2] calibration.overview 退役后须检查测试调用方;[gate-F3] §B 补双 VM 并行装配伪代码 + page.tsx 扩展点;[gate-F4] §C 加「全局搜索无『任务中心』可见残留」验收断言。
 > 触发:用户 2026-07-04 三条 IA 指令 —— 「把校准集成到项目流程,不需要单独加模块」「把知识库和经验沉淀合并」「把任务中心改成自动化」。
 > 对应 BACKLOG:T-112(校准集成)/ T-113(知识库+经验合并)/ T-114(任务中心改名)。
 > 关联真值:[产品定位](../../产品定位.md)、[稿面工作台重做 SPEC](2026-07-02-draft-workbench-redesign.md)、[AI 进 Copilot 收敛 SPEC](2026-07-04-ai-into-copilot-convergence.md)。
@@ -49,7 +51,9 @@
 **退役后遗留处置**:
 - `calibration.overview` op(仅校准中心页消费)→ 前端消费点删除后该 op 变为无前端调用;**后端 op 保留不删**(降低回滚成本,零 schema 动),仅前端停止调用。
 - **rubric 查看**:校准中心页曾展示维度 rubric;rubric 为固定 `rubric-canonical`,盲预测/诊断 runner 仍读它,**无需 UI 编辑入口**(现状即固定),退役中心页不丢能力。
-- **死链清扫**:全仓 grep `"/calibration"`,凡指向该路由的 `href`/`Link`/深链跳转,改指向稿面盲预测入口或直接移除(**gate 项:退役后不得残留指向 `/calibration` 的可点入口**)。
+- **死链清扫**:凡指向该路由的 `href`/`Link`/深链跳转,改指向稿面盲预测入口或直接移除(**gate 项:退役后不得残留指向 `/calibration` 的可点入口**)。
+  - **[gate-F1]** 精确扫描:`rg -n "['\"]/calibration['\"]" frontend/src -g '*.ts' -g '*.tsx'` 输出为空(含动态 `href={...}`/字符串拼接;copilot-deeplink 表面里的 `calibration.diagnose` functionKey 是 Copilot 深链**保留**,不是 `/calibration` 路由,别误删)。切片 2 验收:此 grep 空 + 运行时访问旧 `/calibration` 返回 **301 或 404,不得 500**(若保留路由则 301→稿面/知识库,若删则 Next 404)。
+- **[gate-F2]** `calibration.overview` op 退役:前端消费点删除后,**须 grep 测试**(`rg -n "\.overview\(|calibration.overview" frontend/src`),凡断言该 op 有前端消费的测试改注释/删除或确认另有合法调用方;后端 op 保留不删(零 schema 动),仅前端停调。切片 2 验收纳入此测试检查。
 
 ### §B 知识库 + 经验沉淀合并(Tabs)· T-113
 
@@ -59,6 +63,7 @@
 
 **实现方式(改动最小)**:
 - `/knowledge` 路由页改为:server 端并行装配 `buildKnowledgeDashboardViewModel()` + `buildExperienceWorkspaceViewModel()`,把两个 VM 传给一个新的 Tabs 外壳组件(client);Tab 内容分别渲染既有的知识库岛与经验岛。**两岛内部逻辑、数据源 op(knowledge.* / learnings.* / calibration.suggestions.*)、交互(evaluate/patch/回流/应用到项目)全部不动**。
+  - **[gate-F3]** 装配伪代码(切片 3 落点):现 `/knowledge/page.tsx`(server)已调 `buildKnowledgeDashboardViewModel`;扩展为 `const [knowledgeVM, experienceVM] = await Promise.all([buildKnowledgeDashboardViewModel(...), buildExperienceWorkspaceViewModel(...)])`(两装配函数各自内部已建自己的 client + 读 op,签名照 `experience/page.tsx` 现有调用复制),再 `<KnowledgeTabsShell knowledgeVM={knowledgeVM} experienceVM={experienceVM} defaultTab={searchParams.tab ?? "knowledge"} />`。Tabs 外壳是新增 client 件,内部直接挂既有 `KnowledgeInteractiveRegion` / `ExperienceInteractiveRegion` 两岛,不改岛内部。
 - Tab 状态用 URL query `?tab=knowledge|experience` 承载(可深链、SSR 友好、刷新保持),默认 `knowledge`。
 - **删除**侧栏 nav 项 `experience`(`sidebar.tsx:84`)。
 - **保留** `/experience` 路由但改为 **301/重定向** 到 `/knowledge?tab=experience`(防旧链接/书签/复盘页引导失效;复盘页对经验的**数据**读取走 `learnings.list`,不受影响,但其中若有指向 `/experience` 的**跳转链接**需改指向 `/knowledge?tab=experience`)。
@@ -78,7 +83,7 @@
 
 过 gate 后按此拆条(每切片一条 BACKLOG,状态 📋 引用本 SPEC):
 
-- **切片 1 · T-114 任务中心→自动化(纯改名)**:改 nav label + 页标题 + 可见引导文案;更新受影响测试(断言「任务中心」的地方改「自动化」);typecheck + 相关 vitest 绿。**无依赖,可先做(风险最低)**。
+- **切片 1 · T-114 任务中心→自动化(纯改名)**:改 nav label + 页标题 + 可见引导文案;更新受影响测试(断言「任务中心」的地方改「自动化」);typecheck + 相关 vitest 绿。**[gate-F4]** 验收断言:`rg -n "任务中心" frontend/src -g '!*.test.*'` 剩余命中仅允许在**代码注释**里(面向用户的可见 JSX 文案/nav label/页标题**零残留**),测试文件里的旧断言同步改「自动化」。**无依赖,可先做(风险最低)**。
 - **切片 2 · T-112 校准退役**:删 nav 项 + `/calibration` 路由 + calibration-data/interactive-region + shell-router 条目;全仓清 `/calibration` 死链;保留盲预测/诊断链路;更新/删除受影响测试;typecheck + vitest 绿。
 - **切片 3 · T-113 知识库+经验合并**:`/knowledge` 加 Tabs 外壳(server 双 VM 装配 + client Tabs + query 承载);删 experience nav 项;`/experience` → 301;清指向 `/experience` 的跳转链接;更新受影响测试(新增 Tab 切换断言 + 深链断言);typecheck + vitest 绿。
 
