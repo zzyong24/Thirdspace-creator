@@ -75,7 +75,14 @@ export const aiOperations = {
     id: "ai.tasks.list",
     method: "GET",
     path: "/ai/tasks",
-    query: paginationQuery,
+    // [T-116c] additive 读过滤(纯读、不改数据归属/schema、无需过 gate):可选
+    // projectId + taskType —— 复盘页 AI 分析卡据此取「本条视频的 review.analyze
+    // 最近一次结果」而非全站 learnings。都不传 → 维持全量任务馈(copilot「最近任务」),
+    // 旧调用零破坏。
+    query: paginationQuery.extend({
+      projectId: id.optional(),
+      taskType: z.string().optional(),
+    }),
     response: aiTaskResource,
     isList: true,
     fr: ["FR-AI-TASKS-LIST"],

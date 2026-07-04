@@ -7,8 +7,8 @@
  *   - 完成复盘 (complete) → reviews.complete (+ refresh)
  *   - Review-history row select → reviews.get (read-only drill, NO refresh)
  *
- * Decorative controls (查看全部, Top-published cards, 添加发布, 生成复盘报告) issue NO
- * network call.
+ * [T-116b] 装饰按钮(查看全部 / 添加发布 / 生成复盘报告)已删除;残留的 top-published
+ * card(纯展示)issue NO network call。
  *
  * Determinism: the client is mocked; no Date.now/Math.random/network. The island is
  * rendered with a fixed wiring descriptor so the op params are known.
@@ -181,17 +181,19 @@ describe("Reviews authoring wiring (module 13 Step 5)", () => {
     );
   });
 
-  it("decorative controls (添加发布 / 生成复盘报告 / 查看全部 / top-published) issue NO network call", async () => {
+  // [T-116b] 纯装饰按钮「添加发布 / 生成复盘报告 / 查看全部」已删除;断言它们不再渲染,
+  // 且残留的 top-published card(纯展示)点击不触发任何 Reviews op。
+  it("removes 添加发布 / 生成复盘报告 / 查看全部; top-published card issues NO network call", async () => {
     const { container } = await renderIsland(WIRING);
-    container
-      .querySelector<HTMLButtonElement>('[data-slot="attach-publication-button"]')
-      ?.click();
-    container
-      .querySelector<HTMLButtonElement>('[data-slot="generate-report-button"]')
-      ?.click();
-    container
-      .querySelector<HTMLButtonElement>('[data-slot="top-published-view-all"]')
-      ?.click();
+    expect(
+      container.querySelector('[data-slot="attach-publication-button"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="generate-report-button"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="top-published-view-all"]'),
+    ).toBeNull();
     container
       .querySelector<HTMLLIElement>('[data-slot="top-published-card"]')
       ?.click();

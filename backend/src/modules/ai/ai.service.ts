@@ -242,9 +242,16 @@ export interface AiService {
   ): Promise<AIMessageResource[]>;
   // Global cross-project AI-task feed (copilot 「最近任务/继续任务」). Scoped to the
   // user, newest-requested first; mirrors listConversations' pagination envelope.
+  // [T-116c] additive 读过滤:可选 projectId + taskType 窄化(复盘页 AI 分析卡取本条
+  // 视频的 review.analyze 结果);都不传维持全量馈。
   listTasks(
     ctx: RequestContext,
-    page: { limit: number; offset: number },
+    page: {
+      limit: number;
+      offset: number;
+      projectId?: string;
+      taskType?: string;
+    },
   ): Promise<{ rows: AITaskResource[]; total: number }>;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
   confirmTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;

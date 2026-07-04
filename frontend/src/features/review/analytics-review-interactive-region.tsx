@@ -8,21 +8,20 @@
  * the interactive content lives here following the existing islands
  * pattern (assets / settings / search / knowledge / publishing-center).
  *
- * Wired interactions (client state over fixture data, no network):
- *  - AnalyticsTabs: switching a tab selects an analytics time-window
- *    (整体表现 → all, 平台表现 → 30d, 观众分析 → 7d, …). The selected window
- *    re-derives the CoreMetricsRow + ViewsTrendChart numbers from the
- *    fixture entities via `buildAnalyticsReviewViewModel(projectId,
- *    window)` so the displayed numbers change with the selection.
+ * [T-116a] 单一诚实视图(去假维度 tab):此前顶部 6 个「维度 tab」实为时间窗切换
+ * (TAB_WINDOW),重派生只对 demo 假项目生效、真项目零反馈,对比/经验沉淀两 tab 无渲染逻辑
+ * —— 名不副实的假交互,已整体移除(AnalyticsTabs / activeTab / TAB_WINDOW / scoped 重派生)。
+ * 复盘页现为单一滚动视图,只渲真数据区。
+ *
+ * Wired interactions:
  *  - Chart tab toggle (趋势 / 漏斗): toggles which primary chart is
  *    emphasised; both stay mounted (no chart type change — page-specs
- *    §10 invariant).
- *  - Key-moment / review selection: selectable rows (one active at a
- *    time) in the Key Moments + Review History lists.
+ *    §10 invariant)。这是真的、切不同数据,保留。
+ *  - Review-history 行选中(拉 reviews.get 详情)。
  *
- * Determinism: the re-derivation is a pure selector call; no `Date.now`
- * / `Math.random` / `fetch`. The selector is pure and deterministic so
- * importing it into a Client component is safe.
+ * [T-116b] 移除规划中占位:观众画像 / 观众来源 / 留存曲线三个无数据源 op 的 PlannedRegion
+ * 区、关键时刻区(真项目恒空)、3 个纯装饰按钮(查看全部 / 添加发布 / 生成复盘报告)一并删除。
+ * 观众细分/留存 待单视频采集 T-100 做了再加回(见各删除处注释)。
  */
 
 import * as React from "react";
@@ -31,17 +30,9 @@ import { useRouter } from "next/navigation";
 import { client } from "@/lib/contract-client";
 import { ViewsTrendChart } from "@/components/analytics/views-trend-chart";
 import { ConversionFunnelChart } from "@/components/analytics/conversion-funnel-chart";
-import { AudienceBreakdown } from "@/components/analytics/audience-breakdown";
-import { HorizontalBarsChart } from "@/components/analytics/horizontal-bars-chart";
-import { RetentionChart } from "@/components/analytics/retention-chart";
 import { InsightCard } from "@/components/analytics/insight-card";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
-import { buildAnalyticsReviewViewModel } from "@/fixtures/selectors";
-import {
-  isFixtureAnalyticsProject,
-  type AnalyticsWindow,
-} from "@/fixtures/selectors/review";
 import type {
   AnalyticsViewModel,
   MetricCard as MetricCardVm,
@@ -53,7 +44,6 @@ import type {
 // AnalyticsViewModel fields).
 // ---------------------------------------------------------------------------
 
-type KeyMoment = AnalyticsViewModel["keyMoments"][number];
 type TopPublished = TopPublishedCard;
 type ReviewHistoryItem = AnalyticsViewModel["reviewHistory"][number];
 // 复盘每作品评论 (T-030 D6) — 一条真实评论 (文本 + demand_tag 若有)。
@@ -92,21 +82,6 @@ interface ReviewDto {
 }
 
 // ---------------------------------------------------------------------------
-// Tab → time-window mapping. Each analytics tab re-scopes the metric set
-// + views trend; the remaining tabs reuse the default ("all") window.
-// ---------------------------------------------------------------------------
-
-// [T-052 裁决③] revenue(收益分析)tab 随变现中心物理删除。
-const TAB_WINDOW: Readonly<Record<string, AnalyticsWindow>> = {
-  overview: "all",
-  platform: "30d",
-  audience: "7d",
-  content: "30d",
-  comparison: "all",
-  experience: "all",
-};
-
-// ---------------------------------------------------------------------------
 // AnalyticsReviewInteractiveRegion
 // ---------------------------------------------------------------------------
 
@@ -117,13 +92,7 @@ export function AnalyticsReviewInteractiveRegion({
   readonly viewModel: AnalyticsViewModel;
   readonly reviewsWiring?: ReviewsWiring;
 }) {
-  const [activeTab, setActiveTab] = React.useState<string>(
-    viewModel.tabs[0]?.id ?? "overview",
-  );
   const [chartTab, setChartTab] = React.useState<"trend" | "funnel">("trend");
-  const [activeMomentId, setActiveMomentId] = React.useState<string | null>(
-    null,
-  );
   const [activeReviewId, setActiveReviewId] = React.useState<string | null>(
     null,
   );
@@ -147,118 +116,50 @@ export function AnalyticsReviewInteractiveRegion({
     [reviewsWiring],
   );
 
-  // Re-derive the metric set + views trend for the selected window. The
-  // base `viewModel` (server-rendered, window = "all") is used for the
-  // default tab so the default DOM is unchanged; switching a tab calls
-  // the pure selector with the mapped window.
-  //
-  // GATE: only a canonical fixture/demo project may re-derive by window — for a
-  // REAL imported project the fixture selector has NO data, so re-deriving would
-  // WIPE the server's真值(真播放/点赞…)to 0 on tab switch. Real projects keep
-  // their op-derived VM across tabs (the time-window re-scope is a demo-only
-  // affordance until a client-side re-scope over the fetched snapshots exists).
-  const window = TAB_WINDOW[activeTab] ?? "all";
-  const canRederive = React.useMemo(
-    () => isFixtureAnalyticsProject(viewModel.projectId),
-    [viewModel.projectId],
-  );
-  const scoped = React.useMemo<AnalyticsViewModel>(() => {
-    if (window === "all" || !canRederive) return viewModel;
-    return buildAnalyticsReviewViewModel(viewModel.projectId, window);
-  }, [viewModel, window, canRederive]);
-
+  // [T-116a] 单一诚实视图:直接渲 server 装配的真 viewModel(去掉按 tab 的时间窗重派生 —— 那
+  // 只对 demo 假项目生效、真项目零反馈)。viewsTrendMode 缺省时按点数推断(单点 single / 多点 daily)。
   return (
-    <>
-      <AnalyticsTabs
-        tabs={viewModel.tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      <div
-        data-slot="analytics-grid"
-        className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_350px]"
-      >
-        <div data-slot="analytics-main-column" className="flex flex-col gap-3">
-          <CoreMetricsRow metrics={scoped.metrics} />
-          <PrimaryCharts
-            viewsTrend={scoped.viewsTrend}
-            viewsTrendMode={scoped.viewsTrendMode ?? (scoped.viewsTrend.length > 1 ? "daily" : "single")}
-            conversionFunnel={scoped.conversionFunnel}
-            chartTab={chartTab}
-            onChartTabChange={setChartTab}
-          />
-          <SecondaryCharts
-            audienceProfile={viewModel.audienceProfile}
-            audienceSource={viewModel.audienceSource}
-            retentionCurve={viewModel.retentionCurve}
-          />
-          <KeyMomentsSection
-            moments={viewModel.keyMoments}
-            activeId={activeMomentId}
-            onSelect={setActiveMomentId}
-          />
-          <TopPublishedList items={viewModel.topPublished} />
-          <CommentsSection comments={viewModel.comments ?? []} />
-        </div>
-        <div
-          data-slot="analytics-right-rail"
-          className="flex flex-col gap-card-gap"
-        >
-          <InsightCard items={viewModel.aiAnalysis} />
-          <ReviewAuthoringPanel
-            projectId={viewModel.projectId}
-            wiring={reviewsWiring}
-          />
-          <ReviewHistoryCard
-            items={viewModel.reviewHistory}
-            activeId={activeReviewId}
-            onSelect={onSelectReview}
-            detail={reviewDetail}
-          />
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// AnalyticsTabs — top of page (wired)
-// ---------------------------------------------------------------------------
-
-function AnalyticsTabs({
-  tabs,
-  activeTab,
-  onTabChange,
-}: {
-  tabs: ReadonlyArray<{ readonly id: string; readonly label: string }>;
-  activeTab: string;
-  onTabChange: (id: string) => void;
-}) {
-  return (
-    <nav
-      data-slot="analytics-tabs"
-      aria-label="数据复盘阶段"
-      className="flex flex-wrap items-center gap-2 border-b border-border pb-2"
+    <div
+      data-slot="analytics-grid"
+      className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_350px]"
     >
-      {tabs.map((tab) => {
-        const pressed = tab.id === activeTab;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            data-slot="page-tabs"
-            data-tab-id={tab.id}
-            data-pressed={pressed}
-            aria-selected={pressed}
-            onClick={() => onTabChange(tab.id)}
-            className="inline-flex h-8 items-center rounded-full border border-border bg-surface px-3 text-xs font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 data-[pressed=true]:border-brand/60 data-[pressed=true]:bg-brand-soft data-[pressed=true]:text-brand"
-          >
-            {tab.label}
-          </button>
-        );
-      })}
-    </nav>
+      <div data-slot="analytics-main-column" className="flex flex-col gap-3">
+        <CoreMetricsRow metrics={viewModel.metrics} />
+        <PrimaryCharts
+          viewsTrend={viewModel.viewsTrend}
+          viewsTrendMode={
+            viewModel.viewsTrendMode ??
+            (viewModel.viewsTrend.length > 1 ? "daily" : "single")
+          }
+          conversionFunnel={viewModel.conversionFunnel}
+          chartTab={chartTab}
+          onChartTabChange={setChartTab}
+        />
+        {/* [T-116b] 观众画像 / 观众来源 / 留存曲线(SecondaryCharts)+ 关键时刻区已移除:
+            均无数据源 op(需单视频采集 T-100),真项目恒空占位。待 T-100 做了再加回。 */}
+        <TopPublishedList items={viewModel.topPublished} />
+        <CommentsSection comments={viewModel.comments ?? []} />
+      </div>
+      <div
+        data-slot="analytics-right-rail"
+        className="flex flex-col gap-card-gap"
+      >
+        <InsightCard
+          items={viewModel.aiAnalysis}
+          projectId={viewModel.projectId}
+        />
+        <ReviewAuthoringPanel
+          projectId={viewModel.projectId}
+          wiring={reviewsWiring}
+        />
+        <ReviewHistoryCard
+          items={viewModel.reviewHistory}
+          activeId={activeReviewId}
+          onSelect={onSelectReview}
+          detail={reviewDetail}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -418,268 +319,6 @@ function funnelConversionRate(
 }
 
 // ---------------------------------------------------------------------------
-// SecondaryCharts — AudienceProfile (donut) + AudienceSource
-// (horizontal bars) + RetentionCurve
-// ---------------------------------------------------------------------------
-
-function SecondaryCharts({
-  audienceProfile,
-  audienceSource,
-  retentionCurve,
-}: {
-  audienceProfile: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-  audienceSource: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-  retentionCurve: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-}) {
-  return (
-    <div
-      data-slot="secondary-charts"
-      className="grid grid-cols-1 gap-card-gap md:grid-cols-3"
-    >
-      <SectionCard
-        title="观众画像"
-        description="年龄段分布"
-        contentClassName="flex flex-col gap-1.5"
-        className="[--card-spacing:--spacing(3)]"
-      >
-        {audienceProfile.length === 0 ? (
-          <PlannedRegion
-            slot="audience-profile"
-            hint="观众画像需单视频分析页采集，接入后在此显示年龄段分布。"
-          />
-        ) : (
-          <>
-            <AudienceBreakdown
-              slot="audience-profile"
-              shape="donut"
-              data={audienceProfile}
-              summary={summariseDistribution("观众画像", audienceProfile)}
-            />
-            <ul
-              data-slot="audience-profile-list"
-              className="mt-2 flex flex-col gap-0.5"
-              aria-label="观众画像数据"
-            >
-              {audienceProfile.map((row) => (
-                <li
-                  key={row.label}
-                  data-slot="audience-profile-row"
-                  data-profile-label={row.label}
-                  className="flex items-center justify-between text-[11px]"
-                >
-                  <span className="text-muted-foreground">{row.label}</span>
-                  <span className="font-medium tabular-nums text-foreground">
-                    {(row.value * 100).toFixed(0)}%
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </SectionCard>
-
-      <SectionCard
-        title="观众来源"
-        description="按渠道拆分"
-        contentClassName="flex flex-col gap-1.5"
-        className="[--card-spacing:--spacing(3)]"
-      >
-        {audienceSource.length === 0 ? (
-          <PlannedRegion
-            slot="audience-source"
-            hint="观众来源需单视频分析页采集，接入后在此按渠道拆分。"
-          />
-        ) : (
-          <>
-            <HorizontalBarsChart
-              slot="audience-source"
-              shape="horizontal-bars"
-              data={audienceSource}
-              summary={summariseDistribution("观众来源", audienceSource)}
-            />
-            <ul
-              data-slot="audience-source-list"
-              className="mt-2 flex flex-col gap-0.5"
-              aria-label="观众来源数据"
-            >
-              {audienceSource.map((row) => (
-                <li
-                  key={row.label}
-                  data-slot="audience-source-row"
-                  data-source-label={row.label}
-                  className="flex items-center justify-between text-[11px]"
-                >
-                  <span className="text-muted-foreground">{row.label}</span>
-                  <span className="font-medium tabular-nums text-foreground">
-                    {(row.value * 100).toFixed(0)}%
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </SectionCard>
-
-      <SectionCard
-        title="留存曲线"
-        description="完播随时间变化"
-        contentClassName="flex flex-col gap-1.5"
-        className="[--card-spacing:--spacing(3)]"
-      >
-        {retentionCurve.length === 0 ? (
-          <PlannedRegion
-            slot="retention-curve"
-            hint="留存曲线需单视频分析页采集，接入后在此显示完播随时间变化。"
-          />
-        ) : (
-          <>
-            <RetentionChart
-              slot="retention-curve"
-              shape="retention-curve"
-              data={retentionCurve}
-              summary={summariseRetention(retentionCurve)}
-            />
-            <ul
-              data-slot="retention-curve-list"
-              className="mt-2 flex flex-col gap-0.5"
-              aria-label="留存曲线数据"
-            >
-              {retentionCurve.map((row) => (
-                <li
-                  key={row.label}
-                  data-slot="retention-curve-row"
-                  data-position-label={row.label}
-                  className="flex items-center justify-between text-[11px]"
-                >
-                  <span className="text-muted-foreground">{row.label}</span>
-                  <span className="font-medium tabular-nums text-foreground">
-                    {(row.value * 100).toFixed(0)}%
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </SectionCard>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// PlannedRegion — honest「规划中」placeholder for a chart region that has NO
-// reachable data source (观众画像/来源/留存/关键时刻)。绝不画假图 / 假分布(宪法 §8)。
-// 复用 T-010 的「规划中」标注模式(dashed 边框 + badge + 说明)。
-// ---------------------------------------------------------------------------
-
-function PlannedRegion({
-  slot,
-  hint,
-}: {
-  slot: string;
-  hint: string;
-}) {
-  return (
-    <div
-      data-slot={slot}
-      data-planned="true"
-      data-empty="true"
-      className="flex flex-col items-start gap-1 rounded-lg border border-dashed border-border bg-surface-subtle px-3 py-4"
-    >
-      <span className="inline-flex items-center rounded-full border border-border bg-surface px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
-        规划中
-      </span>
-      <p className="text-[11px] leading-relaxed text-muted-foreground">{hint}</p>
-    </div>
-  );
-}
-
-function summariseDistribution(
-  name: string,
-  data: ReadonlyArray<{ readonly label: string; readonly value: number }>,
-): string {
-  if (data.length === 0) return `${name}：暂无数据。`;
-  const top = data.reduce(
-    (acc, row) => (row.value > acc.value ? row : acc),
-    data[0]!,
-  );
-  return `${name}：最高 ${top.label} 占 ${(top.value * 100).toFixed(0)}%。`;
-}
-
-function summariseRetention(
-  data: ReadonlyArray<{ readonly label: string; readonly value: number }>,
-): string {
-  if (data.length === 0) return "留存曲线：暂无数据。";
-  const first = data[0]?.value ?? 0;
-  const last = data[data.length - 1]?.value ?? 0;
-  return `留存曲线：从 ${(first * 100).toFixed(0)}% 降至 ${(last * 100).toFixed(0)}%。`;
-}
-
-// ---------------------------------------------------------------------------
-// KeyMomentsSection — bottom of main column (selectable rows)
-// ---------------------------------------------------------------------------
-
-function KeyMomentsSection({
-  moments,
-  activeId,
-  onSelect,
-}: {
-  moments: ReadonlyArray<KeyMoment>;
-  activeId: string | null;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <section data-slot="key-moments-section" aria-label="关键时刻">
-      <div
-        data-slot="key-moments-card"
-        className="flex flex-col gap-1 rounded-xl border border-border bg-surface p-3 shadow-card"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-0">
-            <h3 className="text-[13px] font-semibold text-foreground">
-              关键时刻表现
-            </h3>
-          </div>
-        </div>
-        {moments.length === 0 ? (
-          <PlannedRegion
-            slot="key-moments-list"
-            hint="关键时刻(完播高峰/互动峰值/流失节点)需单视频分析页采集，接入后在此显示。"
-          />
-        ) : (
-          <ul
-            data-slot="key-moments-list"
-            className="flex flex-col gap-0.5"
-            aria-label="关键时刻列表"
-          >
-            {moments.map((moment) => {
-              const selected = moment.id === activeId;
-              return (
-                <li
-                  key={moment.id}
-                  data-slot="key-moment-row"
-                  data-moment-id={moment.id}
-                  data-selected={selected ? "true" : "false"}
-                  onClick={() => onSelect(moment.id)}
-                  className={
-                    "flex cursor-pointer items-center justify-between rounded-md border border-border px-2.5 py-0.5 text-[11px] " +
-                    (selected ? "bg-brand-soft/50" : "bg-surface-subtle")
-                  }
-                >
-                  <span className="font-medium text-foreground">{moment.label}</span>
-                  <span className="font-mono tabular-nums text-muted-foreground">
-                    {moment.value}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // TopPublishedList — band of 4 publication cards at the bottom of the
 // main column.
 // ---------------------------------------------------------------------------
@@ -698,21 +337,7 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
             热门作品发布列表
           </h3>
         </div>
-        {/* T-010: 装饰按钮无后端,加显式「规划中」标注 + tooltip,不让用户白点。 */}
-        <button
-          type="button"
-          data-slot="top-published-view-all"
-          data-inert="decorative"
-          data-planned="true"
-          aria-disabled="true"
-          title="规划中,敬请期待"
-          className="inline-flex h-6 cursor-not-allowed items-center gap-1 rounded-md px-2 text-[11px] font-medium text-muted-foreground"
-        >
-          查看全部
-          <span className="rounded-full border border-border bg-surface-subtle px-1.5 py-0.5 text-[9px] font-medium">
-            规划中
-          </span>
-        </button>
+        {/* [T-116b] 纯装饰「查看全部」按钮(无后端)已删除。 */}
       </header>
       {list.length === 0 ? (
         <div
@@ -1125,9 +750,8 @@ function ReviewHistoryCard({
 // ReviewAuthoringPanel — the greenfield review-authoring surface (roadmap §4
 // Gap / G13). Each control maps to exactly one Reviews op; mutations call the op
 // then router.refresh(). Without `wiring` the panel renders inert (no client
-// call) so the fixture-only page render + visual baseline hold. The decorative
-// controls (添加发布 / 生成复盘报告) carry data-inert="decorative" and issue NO call —
-// they belong to a future wave (attach has no contract op; AI report is G15).
+// call) so the fixture-only page render + visual baseline hold.
+// [T-116b] 未接通的装饰控件(添加发布 / 生成复盘报告)已删除;只保留有真 op 的控件。
 // ---------------------------------------------------------------------------
 
 function ReviewAuthoringPanel({
@@ -1262,40 +886,7 @@ function ReviewAuthoringPanel({
         完成复盘
       </button>
 
-      {/* T-010: 添加发布 / 生成复盘报告 属经验沉淀飞轮(SPEC §2)未接通的能力,
-          真禁用 + 显式「规划中」标注 + tooltip,不假装可点。 */}
-      <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          data-slot="attach-publication-button"
-          data-inert="decorative"
-          data-planned="true"
-          aria-disabled="true"
-          disabled
-          title="规划中,敬请期待"
-          className="inline-flex h-7 cursor-not-allowed items-center gap-1 rounded-md px-2 text-[11px] font-medium text-muted-foreground"
-        >
-          添加发布
-          <span className="rounded-full border border-border bg-surface-subtle px-1.5 py-0.5 text-[9px] font-medium">
-            规划中
-          </span>
-        </button>
-        <button
-          type="button"
-          data-slot="generate-report-button"
-          data-inert="decorative"
-          data-planned="true"
-          aria-disabled="true"
-          disabled
-          title="规划中,敬请期待"
-          className="inline-flex h-7 cursor-not-allowed items-center gap-1 rounded-md px-2 text-[11px] font-medium text-muted-foreground"
-        >
-          生成复盘报告
-          <span className="rounded-full border border-border bg-surface-subtle px-1.5 py-0.5 text-[9px] font-medium">
-            规划中
-          </span>
-        </button>
-      </div>
+      {/* [T-116b] 纯装饰按钮「添加发布 / 生成复盘报告」(经验沉淀飞轮未接通)已删除。 */}
     </article>
   );
 }

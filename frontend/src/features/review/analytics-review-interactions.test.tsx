@@ -3,10 +3,9 @@
  * page (Increment 4 functional remediation / R1-4).
  *
  * Covers:
- *  - a wired action: switching an analytics tab re-derives the displayed
- *    metric set / views trend over the selected time-window,
+ *  - [T-116a] 去假维度 tab 后:断言那排「维度 tab」已移除(单一诚实视图),
  *  - the chart tab toggle (趋势 / 漏斗),
- *  - key-moment + review-history row selection,
+ *  - review-history row selection([T-116b] 关键时刻区已移除,不再断言其选中),
  *  - the LOADING / ERROR / EMPTY state rendering driven by the ViewModel
  *    envelope (via `buildPageScenario`),
  *  - R1-4: a CoreMetricsRow value is DERIVED from an aggregation of the
@@ -169,39 +168,17 @@ describe("AnalyticsReviewPage derived metrics (R1-4)", () => {
 });
 
 describe("AnalyticsReviewPage interactions", () => {
-  it("re-derives the views trend when switching the time-window tab", () => {
+  // [T-116a] 去假维度 tab:复盘页改单一诚实视图。断言那排「维度 tab」已彻底移除
+  // (无 page-tabs / data-tab-id 残骸),核心指标仍是 7 卡。
+  it("does NOT render the removed 维度-tab row; keeps the 7 core metric cards", () => {
     const { container } = render(<AnalyticsReviewPage projectId={PROJECT_ID} />);
-    const beforeRows = container.querySelectorAll(
-      '[data-slot="conversion-funnel-row"]',
-    ).length;
-    // Honest fixture funnel = 播放 → 互动 (2 stages; no fabricated 曝光/点击/转化).
-    expect(beforeRows).toBe(2);
-    // The 观众分析 tab maps to the 7d window — the views-trend list grows
-    // from the default to the trailing 7 points.
-    const audienceTab = container.querySelector<HTMLButtonElement>(
-      '[data-slot="page-tabs"][data-tab-id="audience"]',
-    );
-    expect(audienceTab).not.toBeNull();
-    fireEvent.click(audienceTab!);
-    expect(audienceTab!.getAttribute("data-pressed")).toBe("true");
-    // The metric cards stay at 7 after re-derivation.
+    expect(container.querySelector('[data-slot="analytics-tabs"]')).toBeNull();
+    expect(container.querySelector('[data-slot="page-tabs"]')).toBeNull();
+    expect(container.querySelector('[data-tab-id]')).toBeNull();
     const cards = container.querySelectorAll(
       '[data-slot="core-metrics-row"] [data-slot="metric-card"]',
     );
     expect(cards).toHaveLength(7);
-  });
-
-  it("changes the platform tab (30d window) and keeps the funnel populated", () => {
-    const { container } = render(<AnalyticsReviewPage projectId={PROJECT_ID} />);
-    const platformTab = container.querySelector<HTMLButtonElement>(
-      '[data-slot="page-tabs"][data-tab-id="platform"]',
-    );
-    fireEvent.click(platformTab!);
-    expect(platformTab!.getAttribute("data-pressed")).toBe("true");
-    // Funnel stays populated after the window switch (honest fixture = 2 stages).
-    expect(
-      container.querySelectorAll('[data-slot="conversion-funnel-row"]').length,
-    ).toBeGreaterThan(0);
   });
 
   it("toggles the primary chart tab", () => {
@@ -215,14 +192,13 @@ describe("AnalyticsReviewPage interactions", () => {
     expect(funnelTab!.getAttribute("data-pressed")).toBe("true");
   });
 
-  it("selects a key-moment row", () => {
+  // [T-116b] 关键时刻区已移除(无真数据源 op)—— 断言它不再渲染。
+  it("does NOT render the removed 关键时刻 region", () => {
     const { container } = render(<AnalyticsReviewPage projectId={PROJECT_ID} />);
-    const row = container.querySelector<HTMLLIElement>(
-      '[data-slot="key-moment-row"]',
-    );
-    expect(row!.getAttribute("data-selected")).toBe("false");
-    fireEvent.click(row!);
-    expect(row!.getAttribute("data-selected")).toBe("true");
+    expect(
+      container.querySelector('[data-slot="key-moments-section"]'),
+    ).toBeNull();
+    expect(container.querySelector('[data-slot="key-moment-row"]')).toBeNull();
   });
 
   it("selects a review-history row", () => {
@@ -284,9 +260,8 @@ describe("AnalyticsReviewPage states", () => {
 });
 
 // Module 11 Task 5/6 — the server read switch builds the page ViewModel from the
-// real `analytics.projects.get` payload (a MetricSnapshot[]); the two decorative
-// cards (查看全部 + top-published cards) carry data-inert="decorative" and fire no
-// navigation.
+// real `analytics.projects.get` payload (a MetricSnapshot[]). [T-116b] 装饰按钮
+// 「查看全部」已删除;top-published cards 仍 data-inert="decorative"(纯展示,无导航)。
 describe("AnalyticsReviewPage analytics.projects.get-backed ViewModel", () => {
   it("renders from a ViewModel derived from an analytics.projects.get-shaped payload", () => {
     const canonicalId = resolveCanonicalId(PROJECT_ID);
@@ -325,14 +300,12 @@ describe("AnalyticsReviewPage analytics.projects.get-backed ViewModel", () => {
     ).toHaveLength(7);
   });
 
-  it("marks the 查看全部 + top-published cards intentionally inert (decorative)", () => {
+  it("removes the 查看全部 decorative button; keeps top-published cards inert (decorative)", () => {
     const { container } = render(<AnalyticsReviewPage projectId={PROJECT_ID} />);
-    const viewAll = container.querySelector<HTMLButtonElement>(
-      '[data-slot="top-published-view-all"]',
-    );
-    expect(viewAll).not.toBeNull();
-    expect(viewAll!.getAttribute("data-inert")).toBe("decorative");
-    expect(viewAll!.onclick).toBeNull();
+    // [T-116b] 纯装饰「查看全部」按钮已删除。
+    expect(
+      container.querySelector('[data-slot="top-published-view-all"]'),
+    ).toBeNull();
 
     const cards = container.querySelectorAll<HTMLLIElement>(
       '[data-slot="top-published-card"]',
@@ -342,5 +315,57 @@ describe("AnalyticsReviewPage analytics.projects.get-backed ViewModel", () => {
       expect(card.getAttribute("data-inert")).toBe("decorative");
       expect(card.onclick).toBeNull();
     });
+  });
+});
+
+// [T-116c] AI 分析卡:真本期渲染 + 诚实标题 + 诚实空态 + CTA。
+describe("AnalyticsReviewPage AI 分析卡 (T-116c)", () => {
+  it("标题诚实(基于本条视频),有要点 → 逐条渲染", () => {
+    const base = buildAnalyticsReviewViewModel(PROJECT_ID);
+    const vm = {
+      ...base,
+      aiAnalysis: [
+        { id: "ri-1", title: "开头钩子扎实", body: "前 3 秒抛冲突" },
+        { id: "ri-2", title: "结尾 CTA 明确", body: "" },
+      ],
+    };
+    const { container } = render(
+      <AnalyticsReviewPage projectId={PROJECT_ID} viewModel={vm} />,
+    );
+    const card = container.querySelector('[data-slot="ai-analysis-card"]')!;
+    expect(card.getAttribute("data-empty")).toBe("false");
+    // 诚实标题:不再写「本期复盘数据」这种在全站数据上撒谎的话。
+    expect(card.textContent ?? "").toContain("基于本条视频的复盘分析");
+    expect(card.textContent ?? "").not.toContain("本期复盘数据");
+    expect(
+      card.querySelectorAll('[data-slot="ai-analysis-item"]'),
+    ).toHaveLength(2);
+    // 空 body 项不摆空段。
+    expect(card.textContent ?? "").toContain("前 3 秒抛冲突");
+  });
+
+  it("本视频没跑过复盘 → 诚实空态 + 「帮我复盘」CTA(不摆假要点)", () => {
+    const base = buildAnalyticsReviewViewModel(PROJECT_ID);
+    const vm = { ...base, aiAnalysis: [] };
+    const { container } = render(
+      <AnalyticsReviewPage projectId={PROJECT_ID} viewModel={vm} />,
+    );
+    const card = container.querySelector('[data-slot="ai-analysis-card"]')!;
+    expect(card.getAttribute("data-empty")).toBe("true");
+    // 没有任何要点条目(不摆假)。
+    expect(
+      card.querySelectorAll('[data-slot="ai-analysis-item"]'),
+    ).toHaveLength(0);
+    const empty = card.querySelector('[data-slot="ai-analysis-empty"]')!;
+    expect(empty).not.toBeNull();
+    expect(empty.textContent ?? "").toContain("本条视频还没生成 AI 复盘要点");
+    // CTA 指向 Copilot review.analyze 链路(带本项目 selId)。
+    const cta = card.querySelector<HTMLAnchorElement>(
+      '[data-slot="ai-analysis-cta"]',
+    )!;
+    expect(cta).not.toBeNull();
+    expect(cta.getAttribute("href") ?? "").toContain("surface=review");
+    expect(cta.getAttribute("href") ?? "").toContain("fn=review.analyze");
+    expect(cta.getAttribute("href") ?? "").toContain(`selId=${PROJECT_ID}`);
   });
 });

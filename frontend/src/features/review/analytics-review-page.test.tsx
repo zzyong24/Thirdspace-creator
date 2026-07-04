@@ -6,18 +6,16 @@
  *  - The TopHeader renders in `project-workspace` mode with the
  *    canonical project identity and the six-stage stepper, with the
  *    Review stage active (current stage indicator on the stepper).
- *  - The AnalyticsTabs row exists.
+ *  - [T-116a] 单一诚实视图:去掉了 6 个假「维度 tab」(实为时间窗切换),复盘页
+ *    不再有 AnalyticsTabs 行(断言其已移除)。
  *  - The Main column renders, in this fixed order:
  *      CoreMetricsRow (7 cards in a single row) →
  *      PrimaryCharts (ViewsTrendChart + ConversionFunnel) →
- *      SecondaryCharts (AudienceProfile donut + AudienceSource
- *      horizontal bars + RetentionCurve) →
- *      KeyMomentsSection.
+ *      TopPublished (热门作品发布) → Comments (作品评论)。
+ *  - [T-116b] 观众画像/来源/留存(SecondaryCharts)+ 关键时刻区已移除(无真数据源
+ *    op,需单视频采集 T-100);断言它们不再渲染。
  *  - The ViewsTrendChart and ConversionFunnel use distinct visual
  *    shapes: trend is a line; funnel is a triangle / funnel.
- *  - The SecondaryCharts render three distinct chart types: donut
- *    (audience profile), horizontal bars (audience source), and
- *    retention curve (monotonically decreasing line).
  *  - The Right column renders AI Analysis → Review History in that
  *    fixed order (NOT an overlay or modal).
  *  - Every chart provides a sr-only textual summary (a11y / D-007).
@@ -179,14 +177,13 @@ describe("AnalyticsReviewPage", () => {
     expect((activeItems[0] as HTMLElement).textContent ?? "").toContain("复盘");
   });
 
-  it("renders the AnalyticsTabs row", async () => {
+  // [T-116a] 去假维度 tab:复盘页改为单一滚动视图,不再有 6 个「维度 tab」(实为时间窗
+  // 切换、真项目零反馈的假交互)。断言那排 tabbar 已彻底移除(无残骸)。
+  it("does NOT render the removed 维度-tab row (single scrolling view)", async () => {
     const { container } = await renderWorkspace();
-    const tabs = container.querySelector(
-      '[data-slot="analytics-tabs"]',
-    ) as HTMLElement;
-    expect(tabs).not.toBeNull();
-    const triggers = tabs.querySelectorAll('[data-tab-id]');
-    expect(triggers.length).toBeGreaterThanOrEqual(1);
+    expect(container.querySelector('[data-slot="analytics-tabs"]')).toBeNull();
+    expect(container.querySelector('[data-slot="page-tabs"]')).toBeNull();
+    expect(container.querySelector('[data-tab-id]')).toBeNull();
   });
 
   it("renders the CoreMetricsRow with exactly seven cards in a single row", async () => {
@@ -235,71 +232,36 @@ describe("AnalyticsReviewPage", () => {
     expect(funnel.getAttribute("data-shape")).toBe("funnel");
   });
 
-  it("renders the SecondaryCharts row with AudienceProfile, AudienceSource, and RetentionCurve in spec order", async () => {
+  // [T-116b] 观众画像 / 观众来源 / 留存曲线(SecondaryCharts)+ 关键时刻区已移除:
+  // 均无数据源 op(需单视频采集 T-100),真项目恒空占位。断言它们不再渲染(无残骸)。
+  it("does NOT render the removed 观众细分/留存 (SecondaryCharts) region", async () => {
     const { container } = await renderWorkspace();
-    const secondary = container.querySelector(
-      '[data-slot="secondary-charts"]',
-    ) as HTMLElement;
-    expect(secondary).not.toBeNull();
-    const expectedSlots = [
-      "audience-profile",
-      "audience-source",
-      "retention-curve",
-    ];
-    const orderedNodes = expectedSlots.map((slot) =>
-      secondary.querySelector(`[data-slot="${slot}"]`),
-    );
-    expect(orderedNodes.every((node) => node !== null)).toBe(true);
-    for (let i = 1; i < orderedNodes.length; i += 1) {
-      const node = orderedNodes[i] as Element;
-      const previous = orderedNodes[i - 1] as Element;
-      const relation = previous.compareDocumentPosition(node);
-      expect(relation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(container.querySelector('[data-slot="secondary-charts"]')).toBeNull();
+    for (const slot of ["audience-profile", "audience-source", "retention-curve"]) {
+      expect(container.querySelector(`[data-slot="${slot}"]`)).toBeNull();
     }
   });
 
-  it("renders the three secondary chart types (donut + horizontal bars + retention curve)", async () => {
+  it("does NOT render the removed 关键时刻 (KeyMomentsSection) region", async () => {
     const { container } = await renderWorkspace();
-    const audience = container.querySelector(
-      '[data-slot="audience-profile"]',
-    ) as HTMLElement;
-    expect(audience).not.toBeNull();
-    expect(audience.getAttribute("data-shape")).toBe("donut");
-
-    const source = container.querySelector(
-      '[data-slot="audience-source"]',
-    ) as HTMLElement;
-    expect(source).not.toBeNull();
-    expect(source.getAttribute("data-shape")).toBe("horizontal-bars");
-
-    const retention = container.querySelector(
-      '[data-slot="retention-curve"]',
-    ) as HTMLElement;
-    expect(retention).not.toBeNull();
-    expect(retention.getAttribute("data-shape")).toBe("retention-curve");
+    expect(
+      container.querySelector('[data-slot="key-moments-section"]'),
+    ).toBeNull();
+    expect(container.querySelector('[data-slot="key-moment-row"]')).toBeNull();
   });
 
-  it("renders the KeyMomentsSection at the bottom of the main column", async () => {
-    const { container } = await renderWorkspace();
-    const moments = container.querySelector(
-      '[data-slot="key-moments-section"]',
-    ) as HTMLElement;
-    expect(moments).not.toBeNull();
-    const rows = moments.querySelectorAll('[data-slot="key-moment-row"]');
-    expect(rows.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("preserves the approved order of Main column blocks (metrics → primary → secondary → key moments)", async () => {
+  it("preserves the approved order of Main column blocks (metrics → primary → 热门发布 → 评论)", async () => {
     const { container } = await renderWorkspace();
     const main = container.querySelector(
       '[data-slot="analytics-main-column"]',
     ) as HTMLElement;
     expect(main).not.toBeNull();
+    // [T-116a/b] 单一诚实视图剩下的真数据区,按上→下顺序。
     const expectedSlots = [
       "core-metrics-row",
       "primary-charts",
-      "secondary-charts",
-      "key-moments-section",
+      "top-published-section",
+      "review-comments-section",
     ];
     const orderedNodes = expectedSlots.map((slot) =>
       main.querySelector(`[data-slot="${slot}"]`),
@@ -359,13 +321,8 @@ describe("AnalyticsReviewPage", () => {
 
   it("provides a sr-only textual summary for every chart (a11y)", async () => {
     const { container } = await renderWorkspace();
-    const chartSlots = [
-      "views-trend-chart",
-      "conversion-funnel",
-      "audience-profile",
-      "audience-source",
-      "retention-curve",
-    ];
+    // [T-116b] 观众/留存图已移除;仅剩的真数据图仍须带 sr-only 摘要。
+    const chartSlots = ["views-trend-chart", "conversion-funnel"];
     for (const slot of chartSlots) {
       const chart = container.querySelector(`[data-slot="${slot}"]`) as HTMLElement;
       expect(chart).not.toBeNull();

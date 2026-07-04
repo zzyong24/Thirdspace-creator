@@ -123,6 +123,9 @@ export interface AiRepository {
   listTasks(page: {
     limit: number;
     offset: number;
+    // [T-116c] additive 读过滤(纯读):可选 projectId + taskType,都不传维持全量馈。
+    projectId?: string;
+    taskType?: string;
   }): Promise<{ rows: TaskRow[]; total: number }>;
   findTaskByIdempotencyKey(idempotencyKey: string): Promise<TaskRow | null>;
   createTask(input: CreateTaskInput): Promise<TaskRow>;
@@ -270,20 +273,23 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .orderBy(asc(aiMessages.createdAt));
     },
 
-    async listTasks({ limit, offset }) {
+    async listTasks({ limit, offset, projectId, taskType }) {
       // Global cross-project task feed for the copilot 「最近任务」 surface — scoped to
       // the user (mirrors listConversations), newest-requested first.
+      // [T-116c] additive 读过滤:传了 projectId / taskType 就再叠一层 eq(纯读窄化,
+      // 用户归属门始终在最外层);都不传维持全量馈,旧调用零破坏。
+      const filters = [eq(aiTasks.userId, deps.userId)];
+      if (projectId) filters.push(eq(aiTasks.projectId, projectId));
+      if (taskType) filters.push(eq(aiTasks.taskType, taskType));
+      const where = filters.length === 1 ? filters[0]! : and(...filters);
       const rows = await db
         .select()
         .from(aiTasks)
-        .where(eq(aiTasks.userId, deps.userId))
+        .where(where)
         .orderBy(desc(aiTasks.requestedAt))
         .limit(limit)
         .offset(offset);
-      const all = await db
-        .select({ id: aiTasks.id })
-        .from(aiTasks)
-        .where(eq(aiTasks.userId, deps.userId));
+      const all = await db.select({ id: aiTasks.id }).from(aiTasks).where(where);
       return { rows, total: all.length };
     },
 

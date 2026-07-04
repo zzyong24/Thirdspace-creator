@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  buildReviewWorkspaceViewModel,
   fetchReviewComments,
   type ReviewDataClient,
 } from "./review-workspace-data";
@@ -52,5 +53,154 @@ describe("fetchReviewComments — 热榜排序 (T-042)", () => {
   it("无作品快照 → 空数组(诚实空态,不请求)", async () => {
     const rows = await fetchReviewComments(fakeClient(), []);
     expect(rows).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// [T-116c] AI 分析卡 = 真·本期专属:读本条视频最近一次 review.analyze 结果,
+// 不再挂全站 learnings;无结果 → 诚实空态(空 aiAnalysis)。
+// ---------------------------------------------------------------------------
+
+const REAL_PROJECT = "project-real-xyz"; // 非 canonical fixture → 空快照走诚实空指标
+
+/** 只装配 T-116c 读路径需要的方法(其余读端口缺省 → 各区诚实空/降级)。 */
+function reviewInsightsClient(opts: {
+  tasks: ReadonlyArray<{
+    id: string;
+    taskType: string;
+    projectId: string | null;
+    status: string;
+    requestedAt: string;
+  }>;
+  resultsByTask: Record<
+    string,
+    ReadonlyArray<{ resultType: string; resultData: Record<string, unknown> }>
+  >;
+  /** 断言服务端窄化过滤真被下推(projectId + taskType)。 */
+  onListTasksQuery?: (q: { projectId?: string; taskType?: string }) => void;
+}): ReviewDataClient {
+  return {
+    async getProjectAnalytics() {
+      return []; // 空快照 → 指标区诚实空(与本测无关)
+    },
+    async listAITasks(input: {
+      query: { projectId?: string; taskType?: string };
+    }) {
+      opts.onListTasksQuery?.({
+        projectId: input.query.projectId,
+        taskType: input.query.taskType,
+      });
+      // 模拟服务端 additive 过滤:只回命中 projectId + taskType 的任务。
+      return opts.tasks.filter(
+        (t) =>
+          (!input.query.projectId || t.projectId === input.query.projectId) &&
+          (!input.query.taskType || t.taskType === input.query.taskType),
+      );
+    },
+    async listTaskResults(input: { params: { taskId: string } }) {
+      return opts.resultsByTask[input.params.taskId] ?? [];
+    },
+  } as unknown as ReviewDataClient;
+}
+
+describe("AI 分析卡真本期 (T-116c)", () => {
+  it("读本条视频最近一次 review.analyze 的 learning_list → aiAnalysis 要点", async () => {
+    let captured: { projectId?: string; taskType?: string } | null = null;
+    const client = reviewInsightsClient({
+      tasks: [
+        // 最近一条(requestedAt 最大),有结果 → 取它。
+        {
+          id: "t-new",
+          taskType: "review.analyze",
+          projectId: REAL_PROJECT,
+          status: "awaiting_confirmation",
+          requestedAt: "2026-07-04T10:00:00.000Z",
+        },
+        // 更早一条也有结果,但不应被取(更新的在前)。
+        {
+          id: "t-old",
+          taskType: "review.analyze",
+          projectId: REAL_PROJECT,
+          status: "succeeded",
+          requestedAt: "2026-07-01T10:00:00.000Z",
+        },
+      ],
+      resultsByTask: {
+        "t-new": [
+          {
+            resultType: "learning_list",
+            resultData: {
+              items: [
+                { title: "开头钩子扎实", insight: "前 3 秒抛冲突,完播率高" },
+                { title: "", insight: "空标题应被过滤" },
+                { title: "结尾 CTA 明确", insight: "" },
+              ],
+            },
+          },
+        ],
+        "t-old": [
+          {
+            resultType: "learning_list",
+            resultData: { items: [{ title: "旧要点", insight: "不该出现" }] },
+          },
+        ],
+      },
+      onListTasksQuery: (q) => {
+        captured = q;
+      },
+    });
+
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, client);
+    // 服务端窄化过滤真被下推(projectId + taskType)。
+    expect(captured).toEqual({
+      projectId: REAL_PROJECT,
+      taskType: "review.analyze",
+    });
+    // 取最近一条(t-new)的要点;空标题项被过滤;空 insight 保留但 body 为空。
+    expect(vm.aiAnalysis.map((a) => a.title)).toEqual([
+      "开头钩子扎实",
+      "结尾 CTA 明确",
+    ]);
+    expect(vm.aiAnalysis[0].body).toContain("前 3 秒");
+    // id 带任务与序号锚,唯一。
+    expect(new Set(vm.aiAnalysis.map((a) => a.id)).size).toBe(
+      vm.aiAnalysis.length,
+    );
+  });
+
+  it("本项目没有 review.analyze 结果 → aiAnalysis 空(诚实空态,不回退全站)", async () => {
+    const client = reviewInsightsClient({
+      tasks: [], // 本项目零复盘分析任务
+      resultsByTask: {},
+    });
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, client);
+    expect(vm.aiAnalysis).toEqual([]);
+  });
+
+  it("有任务但无 learning_list 结果(排队/失败)→ aiAnalysis 空", async () => {
+    const client = reviewInsightsClient({
+      tasks: [
+        {
+          id: "t-queued",
+          taskType: "review.analyze",
+          projectId: REAL_PROJECT,
+          status: "queued",
+          requestedAt: "2026-07-04T10:00:00.000Z",
+        },
+      ],
+      resultsByTask: { "t-queued": [] },
+    });
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, client);
+    expect(vm.aiAnalysis).toEqual([]);
+  });
+
+  it("旧 client 无 task 读方法 → aiAnalysis 空(降级不炸)", async () => {
+    const legacy = {
+      async getProjectAnalytics() {
+        return [];
+      },
+    } as unknown as ReviewDataClient;
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, legacy);
+    expect(vm.aiAnalysis).toEqual([]);
   });
 });

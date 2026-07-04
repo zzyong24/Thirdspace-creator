@@ -20,9 +20,10 @@ import {
  * so it stays the deterministic fixture/mock shape — we do NOT fake those as
  * "real". The honest split:
  *
- *   REAL  → `aiAnalysis` overlaid from `learnings.list` (the AI-distilled
- *           experience persisted by the 复盘 pipeline). These are user-scoped
- *           learnings, surfaced as the project's insight card.
+ *   REAL  → `aiAnalysis` = 本条视频(projectId)最近一次 `review.analyze` 复盘分析
+ *           结果的 learning_list items(T-116c 真·本期专属)。经 ai.tasks.list
+ *           (additive projectId+taskType 读过滤)+ ai.tasks.results.list 取。
+ *           无本项目结果 → 空(诚实空态 + 「帮我复盘」CTA),绝不回退全站 learnings。
  *   REAL  → `comparison` (REV-2 对比分析) derived in the pure view-model builder
  *           by grouping the SAME `analytics.projects.get` snapshots by
  *           publicationId (zero new backend op). Honest empty <2 publications.
@@ -34,23 +35,35 @@ import {
  *   - The metrics/chart base is built via `buildAnalyticsReviewViewModelFromOp`
  *     over the real `analytics.projects.get` payload; a failure runs the SAME
  *     builder over an empty snapshot list (honest empty metrics, never demo).
- *   - The learnings read is independent: if it throws, `aiAnalysis` stays empty.
- *     A real learning set fills the insight card.
+ *   - The AI 分析 read is independent: if it throws (or the client lacks the task
+ *     ops), `aiAnalysis` stays empty (honest empty card, never fabricated).
  *
  * The contract client is injected so this helper is unit-testable without the
  * real in-process backend.
  */
 
-// Minimal structural DTO — the contract client returns a parsed
-// `learningResource[]`; we only read the fields we map.
-interface LearningDto {
+// [T-116c] AI 分析卡真本期读侧的两个结构 DTO(ai.tasks.list / ai.tasks.results.list)。
+// AITask:本项目最近一次 review.analyze 任务(projectId + taskType 已在服务端窄化过滤)。
+interface AITaskDto {
   readonly id: string;
-  readonly title: string;
-  readonly insight: string;
-  readonly recommendation: string;
-  readonly validationStatus: "candidate" | "validated" | "discarded";
-  readonly confidenceScore: number;
-  readonly createdAt: string;
+  readonly taskType: string;
+  readonly projectId: string | null;
+  readonly status: string;
+  readonly requestedAt: string;
+  readonly completedAt: string | null;
+}
+
+// AITaskResult:该任务的一条结果;复盘产物是 resultType "learning_list",
+// resultData.items = [{ title, insight }]。读侧只取要点标题 + insight 正文。
+interface AITaskResultDto {
+  readonly id: string;
+  readonly resultType: string;
+  readonly resultData: Record<string, unknown>;
+}
+
+interface LearningListItem {
+  readonly title?: unknown;
+  readonly insight?: unknown;
 }
 
 // [T-052 裁决③] REV-1 收益分析 DTO(MonetizationFunnelDto/OutputProductDto/ProductDto 等)
@@ -62,9 +75,22 @@ export interface ReviewDataClient {
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
-  listLearnings(input: {
+  // [T-116c] AI 分析卡改读「本条视频的 review.analyze 最近一次复盘结果」(真·本期专属),
+  // 不再挂全站 learnings(旧 listLearnings 读已移除)。走既有 ai.tasks.list(additive
+  // projectId+taskType 读过滤)定位本项目任务 → ai.tasks.results.list 取其 learning_list items。
+  listAITasks?(input: {
     params: undefined;
-    query: { page: number; pageSize: number };
+    query: {
+      page: number;
+      pageSize: number;
+      projectId?: string;
+      taskType?: string;
+    };
+    body: undefined;
+  }): Promise<unknown>;
+  listTaskResults?(input: {
+    params: { taskId: string };
+    query: undefined;
     body: undefined;
   }): Promise<unknown>;
   // [T-052 裁决③] getFunnel/listOutputs/listOutputProducts/getProduct 四个
@@ -132,18 +158,73 @@ interface CommentSignalDto {
   readonly createdAt: string;
 }
 
-/** Maps a persisted learning to an `aiAnalysis` insight card item. */
-function learningToInsight(
-  learning: LearningDto,
-): AnalyticsViewModel["aiAnalysis"][number] {
-  const body = learning.recommendation
-    ? `${learning.insight}\n建议：${learning.recommendation}`
-    : learning.insight;
-  return {
-    id: `learning-${learning.id}`,
-    title: learning.title,
-    body,
-  };
+/**
+ * [T-116c] 读「本条视频的最近一次 review.analyze 复盘分析结果」→ AI 分析卡要点。
+ *
+ * 真本期专属(不再挂全站 learnings):
+ *   1. ai.tasks.list(projectId + taskType="review.analyze",additive 读过滤)取本项目
+ *      的复盘分析任务,服务端已按 requestedAt desc 排序;
+ *   2. 顺着取「最近一个有 learning_list 结果」的任务(优先 completed/awaiting_confirmation
+ *      即产出过候选的),读 ai.tasks.results.list → resultData.items;
+ *   3. items({title, insight})映射成要点卡。
+ *
+ * 诚实空态:本项目没有任何 review.analyze 结果 → 返回 []。上层据此渲「本条视频还没生成
+ * AI 复盘要点」+ 指向「帮我复盘」的 CTA,绝不回退全站 learnings 假充本期(宪法 §8)。
+ *
+ * 端口未装配(旧 client 无这两个方法)/ 任一读失败 → [](诚实降级,不炸页)。
+ */
+async function readProjectReviewInsights(
+  client: ReviewDataClient,
+  projectId: string,
+): Promise<AnalyticsViewModel["aiAnalysis"]> {
+  if (!client.listAITasks || !client.listTaskResults) return [];
+  try {
+    const listed = await client.listAITasks({
+      params: undefined,
+      query: {
+        page: 1,
+        pageSize: 50,
+        projectId,
+        taskType: "review.analyze",
+      },
+      body: undefined,
+    });
+    const tasks = (Array.isArray(listed) ? listed : []) as AITaskDto[];
+    // 服务端已 requestedAt desc;客户端再做防御性排序(最近在前)。
+    const ordered = tasks
+      .slice()
+      .sort((a, b) => (a.requestedAt < b.requestedAt ? 1 : a.requestedAt > b.requestedAt ? -1 : 0));
+
+    // 顺着取第一个「真产出了 learning_list」的任务结果(可能有排队/失败的任务夹在中间)。
+    for (const task of ordered) {
+      const resultsRaw = await client.listTaskResults({
+        params: { taskId: task.id },
+        query: undefined,
+        body: undefined,
+      });
+      const results = (Array.isArray(resultsRaw) ? resultsRaw : []) as AITaskResultDto[];
+      // 最新一条 learning_list 结果(CollabField patch 后仍是同一条的 items)。
+      const candidate = results
+        .filter((r) => r.resultType === "learning_list")
+        .at(-1);
+      const items = candidate && Array.isArray(candidate.resultData.items)
+        ? (candidate.resultData.items as LearningListItem[])
+        : [];
+      const mapped = items
+        .map((item, idx): AnalyticsViewModel["aiAnalysis"][number] | null => {
+          const title = typeof item.title === "string" ? item.title.trim() : "";
+          if (!title) return null;
+          const insight =
+            typeof item.insight === "string" ? item.insight.trim() : "";
+          return { id: `review-insight-${task.id}-${idx}`, title, body: insight };
+        })
+        .filter((x): x is AnalyticsViewModel["aiAnalysis"][number] => x !== null);
+      if (mapped.length > 0) return mapped;
+    }
+    return [];
+  } catch {
+    return [];
+  }
 }
 
 // [T-052 裁决③] FUNNEL_STAGE_LABEL 与 buildRevenueTab(REV-1 收益分析纯构建器)
@@ -177,36 +258,11 @@ export async function buildReviewWorkspaceViewModel(
     base = buildAnalyticsReviewViewModelFromOp(projectId, []);
   }
 
-  // --- AI 洞察 / 经验 region (REAL via learnings.list) ---------------------
-  // [T-050] demo 洞察兜底(isFixtureAnalyticsProject 分支)退役:无 learnings 就是
-  // 空洞察卡,不摆演示内容。
-  let aiAnalysis: AnalyticsViewModel["aiAnalysis"] = [];
-  try {
-    const learnings = (await client.listLearnings({
-      params: undefined,
-      query: { page: 1, pageSize: 100 },
-      body: undefined,
-    })) as ReadonlyArray<LearningDto>;
-
-    // Surface the AI-distilled experience: drop discarded learnings, prefer the
-    // higher-confidence validated ones first.
-    const surfaced = learnings
-      .filter((learning) => learning.validationStatus !== "discarded")
-      .sort((a, b) => {
-        const aValidated = a.validationStatus === "validated" ? 1 : 0;
-        const bValidated = b.validationStatus === "validated" ? 1 : 0;
-        if (aValidated !== bValidated) return bValidated - aValidated;
-        return b.confidenceScore - a.confidenceScore;
-      });
-
-    if (surfaced.length > 0) {
-      // Real learnings OVERWRITE the fixture insight content.
-      aiAnalysis = surfaced.map(learningToInsight);
-    }
-    // No learnings → 保持空(诚实空态)。
-  } catch {
-    // Learnings read failed — keep the fixture/empty value already assigned.
-  }
+  // --- AI 分析 region (REAL·真本期专属 via review.analyze 任务结果, T-116c) -----
+  // 停止读全站 learnings 挂本项目(那在全站数据上撒谎「基于本期复盘数据」)。改读本条
+  // 视频(projectId)最近一次 review.analyze 复盘分析的 learning_list 结果。无结果 → 空
+  // (页面渲诚实空态 + 「帮我复盘」CTA),绝不回退全站 learnings 假充本期(宪法 §8)。
+  const aiAnalysis = await readProjectReviewInsights(client, projectId);
 
   // [T-052 裁决③] REV-1 收益分析装配段(getFunnel + outputs→products 三跳读)
   // 随变现中心物理删除;AnalyticsViewModel 不再携带 revenue 字段。

@@ -171,6 +171,66 @@ describe("ai repository (pglite)", () => {
     expect(updated.startedAt).toBe(NOW);
   });
 
+  // [T-116c] listTasks additive 读过滤:传 projectId + taskType 只回命中的任务;
+  // 都不传维持全量馈。用户归属门始终在最外层。
+  it("[T-116c] listTasks additive 过滤:projectId + taskType 窄化;不传维持全量", async () => {
+    const repo = repoFor(db, "user-a");
+    const base = {
+      contentOutputId: null,
+      inputData: {},
+      modelKey: "m",
+      requestedAt: NOW,
+    };
+    // 本项目的复盘分析任务(目标)。
+    await repo.createTask({
+      ...base,
+      projectId: "project-x",
+      taskType: "review.analyze",
+      idempotencyKey: "idem-x-review",
+    });
+    // 本项目的另一种任务(taskType 不匹配 → 被过滤)。
+    await repo.createTask({
+      ...base,
+      projectId: "project-x",
+      taskType: "script.rewrite",
+      idempotencyKey: "idem-x-rewrite",
+    });
+    // 另一项目的复盘分析任务(projectId 不匹配 → 被过滤)。
+    await repo.createTask({
+      ...base,
+      projectId: "project-y",
+      taskType: "review.analyze",
+      idempotencyKey: "idem-y-review",
+    });
+
+    const filtered = await repo.listTasks({
+      limit: 50,
+      offset: 0,
+      projectId: "project-x",
+      taskType: "review.analyze",
+    });
+    expect(filtered.rows).toHaveLength(1);
+    expect(filtered.rows[0]!.projectId).toBe("project-x");
+    expect(filtered.rows[0]!.taskType).toBe("review.analyze");
+    expect(filtered.total).toBe(1);
+
+    // 不传过滤 → 全量(3 条)。
+    const all = await repo.listTasks({ limit: 50, offset: 0 });
+    expect(all.rows).toHaveLength(3);
+    expect(all.total).toBe(3);
+
+    // 另一用户看不到 user-a 的任务(归属门在最外层,过滤是内层)。
+    const repoB = repoFor(db, "user-b");
+    const crossUser = await repoB.listTasks({
+      limit: 50,
+      offset: 0,
+      projectId: "project-x",
+      taskType: "review.analyze",
+    });
+    expect(crossUser.rows).toHaveLength(0);
+    expect(crossUser.total).toBe(0);
+  });
+
   it("seedAgentConfigs/seedModelConfigs are onConflictDoNothing (parity)", async () => {
     const repo = repoFor(db, "user-a");
     const agentRow = {

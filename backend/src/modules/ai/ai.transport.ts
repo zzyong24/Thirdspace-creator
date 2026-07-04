@@ -109,12 +109,21 @@ export function createAiTransport(
         case "ai.tasks.list": {
           // paginationQuery (page/pageSize, 1-based) → repo limit/offset (mirrors
           // ai.conversations.list). Global cross-project task feed for the copilot.
-          const q = (query ?? {}) as { page?: number; pageSize?: number };
+          // [T-116c] additive:projectId + taskType 传了就下推为窄化读过滤(复盘页
+          // AI 分析卡取本条视频的 review.analyze 结果);都不传维持全量馈,旧调用零破坏。
+          const q = (query ?? {}) as {
+            page?: number;
+            pageSize?: number;
+            projectId?: string;
+            taskType?: string;
+          };
           const page = q.page ?? 1;
           const pageSize = q.pageSize ?? 20;
           const { rows, total } = await service.listTasks(ctx, {
             limit: pageSize,
             offset: (page - 1) * pageSize,
+            ...(q.projectId ? { projectId: q.projectId } : {}),
+            ...(q.taskType ? { taskType: q.taskType } : {}),
           });
           return { data: rows, meta: { requestId, page, pageSize, total } };
         }
