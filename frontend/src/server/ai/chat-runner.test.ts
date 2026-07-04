@@ -212,18 +212,21 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).not.toContain("本次复盘对象");
   });
 
-  it("工具白名单层:挂上 chatbox.topic 的白名单工具(topic.* + 3 个只读 context 工具)", async () => {
+  it("[T-104] 工具全放开:任一 surface 暴露全部 15 工具(surface 白名单只决定置顶顺序)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(Object.keys(a.tools).sort()).toEqual([
       "brief.fill",
+      "calibration.diagnose",
       "context.comments",
       "context.knowledge",
       "context.materials",
       "context.projects",
+      "knowledge.distill",
       "learning.capture",
       "material.gather",
       "positioning.generate",
+      "review.analyze",
       "script.draft",
       "script.hooks",
       "topic.enrich",
@@ -255,14 +258,14 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(brief.length).toBeLessThanOrEqual(20);
   });
 
-  it("[T-077c] skillsBrief 按 surface 白名单收窄:review 面只列 review.analyze + learning.capture,不编造别面能力", async () => {
+  it("[T-104] skillsBrief 全列工具:review 面 preferred(review.analyze/learning.capture)在前,工具全放开后其余工具也进自感知清单", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
     expect(a.system).toContain("复盘提炼(review.analyze):");
     expect(a.system).toContain("记录经验(learning.capture):");
-    // 不在复盘白名单的工具绝不出现在清单里(自感知与真实能力一致)。
-    expect(a.system).not.toContain("(topic.generate):");
-    expect(a.system).not.toContain("(context.projects):");
+    // [T-104] 工具全放开:之前刻意收窄的工具现也在清单里(自感知与真实能力一致 = 全部工具可调)。
+    expect(a.system).toContain("(topic.generate):");
+    expect(a.system).toContain("(context.projects):");
   });
 
   it("按 skill 能力解析 model(resolveModelSpec 被以 topic.generate 调用)", async () => {
@@ -272,32 +275,24 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.modelSpec).toEqual(FAKE_SPEC);
   });
 
-  it("surface=calibration → chatbox.calibration skill + 挂 calibration.diagnose 工具", async () => {
+  it("surface=calibration → chatbox.calibration skill + calibration.diagnose preferred([T-104] 全工具暴露)", async () => {
     const { deps, resolveModelSpec } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "calibration" }, deps);
     expect(a.skillId).toBe("chatbox.calibration");
-    expect(Object.keys(a.tools).sort()).toEqual([
-      "calibration.diagnose",
-      "context.comments",
-      "context.knowledge",
-      "context.materials",
-      "context.projects",
-    ]);
+    // [T-104] 工具全放开:preferred 含 calibration.diagnose,但可调工具集 = 全 15。
+    expect(Object.keys(a.tools)).toContain("calibration.diagnose");
+    expect(Object.keys(a.tools).length).toBe(15);
     // 主能力档按 calibration.diagnose 解析(各 surface 复用对应节点的模型配置)。
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "calibration.diagnose");
   });
 
-  it("surface=positioning → chatbox.positioning skill + 挂 positioning.generate 工具", async () => {
+  it("surface=positioning → chatbox.positioning skill + positioning.generate preferred([T-104] 全工具暴露)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "positioning" }, deps);
     expect(a.skillId).toBe("chatbox.positioning");
-    expect(Object.keys(a.tools).sort()).toEqual([
-      "context.comments",
-      "context.knowledge",
-      "context.materials",
-      "context.projects",
-      "positioning.generate",
-    ]);
+    // [T-104] 工具全放开:preferred 含 positioning.generate,但可调工具集 = 全 15。
+    expect(Object.keys(a.tools)).toContain("positioning.generate");
+    expect(Object.keys(a.tools).length).toBe(15);
   });
 
   it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {
@@ -337,17 +332,18 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).not.toContain("@硬核老王");
   });
 
-  it("surface=review → chatbox.review skill + 只挂 review.analyze(收紧:不挂 context.projects/knowledge/materials,防拉全作品标题凑数)", async () => {
+  it("[T-104] surface=review → chatbox.review skill,preferred 是 review.analyze/learning.capture 但工具全放开(暴露全 15 工具,凑数由 T-098 渲染卡根治)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
     expect(a.skillId).toBe("chatbox.review");
-    // T-039a:复盘只聚焦当前这一条作品 → 只挂 review.analyze(它基于注入的这条真材料)。
-    // 刻意去掉 context.projects(列全作品标题)等,防 MiniMax 把其他作品标题当经验凑数。
-    // [T-062a] + learning.capture:复盘对话可手录经验(候选卡,人点才落库)。
-    expect(Object.keys(a.tools).sort()).toEqual([
-      "learning.capture",
-      "review.analyze",
-    ]);
+    // [T-104] 工具全放开:review 面 preferred 仍是 review.analyze/learning.capture(排前、skill 提示词
+    // 也硬约束「只针对这一条作品、严禁引用其他作品标题」),但可调工具集 = 全部(一个 Copilot 常需跨场景
+    // 调其他工具)。原「拉全标题凑数」风险已由 T-098 context.* 渲染卡(指针权非转录权)根治。
+    const names = Object.keys(a.tools);
+    expect(names).toContain("review.analyze");
+    expect(names).toContain("learning.capture");
+    expect(names).toContain("context.projects"); // 放开后可调
+    expect(names.length).toBe(15); // 全部工具暴露
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -403,28 +399,19 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(Object.keys(a.tools)[0]).toBe("topic.enrich");
   });
 
-  it("functionKey 越权(不在该 skill 白名单)→ 不挂越权工具(防越权)", async () => {
+  it("[T-104] functionKey 越权(不在 preferred 白名单)→ 不置顶该工具(工具仍全放开可调,只是不预调置顶)", async () => {
     const { deps } = makeDeps();
-    // 选题页 functionKey 给了校准工具(越权)→ 白名单不变,只挂选题工具 + 只读 context 工具。
+    // 选题页 functionKey 给了校准工具(越权 preferred 白名单)→ 不把它预调置顶;
+    // [T-104] 但工具集仍全放开(calibration.diagnose 可调,只是不在队首)。
     const a = await buildChatAssembly(
       ctx,
       { surface: "topics", functionKey: "calibration.diagnose" },
       deps,
     );
-    expect(Object.keys(a.tools).sort()).toEqual([
-      "brief.fill",
-      "context.comments",
-      "context.knowledge",
-      "context.materials",
-      "context.projects",
-      "learning.capture",
-      "material.gather",
-      "positioning.generate",
-      "script.draft",
-      "script.hooks",
-      "topic.enrich",
-      "topic.generate",
-    ]);
+    const names = Object.keys(a.tools);
+    expect(names.length).toBe(15); // 全放开
+    expect(names).toContain("calibration.diagnose"); // 可调
+    expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });
 
   it("没配 model key(resolveModelSpec 抛错)→ 装配抛出(路由接住返 4xx,不假成功)", async () => {

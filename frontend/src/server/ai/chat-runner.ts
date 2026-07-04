@@ -20,7 +20,11 @@ import {
   assembleSelectionContext,
   type ChatContext,
 } from "./chat-context";
-import { buildChatTools, type ChatToolDeps } from "./chat-tools";
+import {
+  buildChatTools,
+  ALL_CHAT_TOOL_NAMES,
+  type ChatToolDeps,
+} from "./chat-tools";
 import { buildSkillsBrief } from "@/lib/chat-tool-labels";
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
 import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
@@ -228,9 +232,19 @@ export async function buildChatAssembly(
     runTemplatedNode,
   } = await import("@creatoros/ai-worker");
   const skill = getTemplate(skillId);
-  // 工具白名单层(SPEC §3.2 第 1+2 层):surface 选基础 skill 的白名单,再按按钮层 functionKey
-  // 把命中的专用工具置顶(预调)。functionKey 越权(不在白名单)→ 原样,不臆造工具。
-  const toolWhitelist = applyFunctionKey(getTools(skillId), chatContext.functionKey);
+  // 工具排序层(SPEC §3.2 第 1+2 层 + [T-104]):surface 白名单 + functionKey 决定「置顶/预调」
+  // 顺序(命中的专用工具排前,skillsBrief 也按此列),但 [T-104] 每个 Copilot 入口**暴露全部工具**
+  // ——一个 Copilot 常需跨场景调其他工具,隔离没意义;之前选不准工具的锅在 skill 提示词不在工具集。
+  // 隔离机制(getTools/applyFunctionKey)保留只作排序、可逆;会话/上下文隔离仍归 T-096 scope
+  // (蒸馏对话不串味选题);数据转述幻觉由 T-098 context.* 渲染卡根治,放开 context 工具无凑数风险。
+  const preferredTools = applyFunctionKey(
+    getTools(skillId),
+    chatContext.functionKey,
+  );
+  const toolWhitelist = [
+    ...preferredTools,
+    ...ALL_CHAT_TOOL_NAMES.filter((n) => !preferredTools.includes(n)),
+  ];
 
   // 3) 解析 model。基础档按 skill 主能力解析(chatbox.topic/review/positioning 复用各自
   //    主工具的配置档);各工具 exec 内按自己的 capability 再解析(不同工具可配不同模型)。

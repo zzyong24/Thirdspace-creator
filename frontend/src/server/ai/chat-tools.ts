@@ -1020,6 +1020,31 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
 }
 
 /**
+ * 全部 chatbox 工具名(单一真值)。[T-104] 工具全放开:每个 Copilot 入口暴露全部工具,
+ * surface 白名单 + functionKey 仅用于「置顶/预调」排序,不再收窄可调工具集(隔离机制保留、
+ * 可逆)。会话/上下文隔离仍由 T-096 scope 管(蒸馏对话不串味选题);数据转述幻觉由 T-098
+ * context.* 渲染卡(模型只有指针权、无转录权)根治,故放开 context 工具不再有「拉全标题凑数」风险。
+ * drift 由 chat-tools.test.ts 的 guard 用例锁(必须 === Object.keys(allChatTools(deps)))。
+ */
+export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
+  "topic.generate",
+  "topic.enrich",
+  "script.hooks",
+  "script.draft",
+  "material.gather",
+  "calibration.diagnose",
+  "review.analyze",
+  "learning.capture",
+  "brief.fill",
+  "positioning.generate",
+  "knowledge.distill",
+  "context.projects",
+  "context.comments",
+  "context.knowledge",
+  "context.materials",
+];
+
+/**
  * 按 skill 的工具白名单(getTools(skillId))过滤出真正挂给模型的工具集(SPEC §3.2 第 2 层)。
  * 白名单里有但本切片未实现的工具(后续波)直接跳过 —— 不报错、不挂空壳,留给后续切片补齐。
  * 返回的 ToolSet 直接喂 streamText({ tools })。

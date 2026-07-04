@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import type { Tool } from "ai";
 import {
   buildChatTools,
+  allChatTools,
+  ALL_CHAT_TOOL_NAMES,
   clampContextLimit,
   clampExtraBrief,
   clampDistillContent,
@@ -191,6 +193,13 @@ async function runExecute(tool: Tool, input: unknown): Promise<unknown> {
 }
 
 describe("buildChatTools — 白名单过滤(tools 挂载)", () => {
+  it("[T-104] ALL_CHAT_TOOL_NAMES 与 allChatTools 全实现同步(drift guard:加工具忘更新单一真值即挂)", () => {
+    const { deps } = makeDeps();
+    expect([...ALL_CHAT_TOOL_NAMES].sort()).toEqual(
+      Object.keys(allChatTools(deps)).sort(),
+    );
+  });
+
   it("挂上白名单里、本切片已实现的工具(topic.generate + topic.enrich)", () => {
     const { deps } = makeDeps();
     const tools = buildChatTools(TOPIC_WHITELIST, deps);
