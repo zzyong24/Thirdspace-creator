@@ -57,14 +57,14 @@ export const CHATBOX_CALIBRATION_TEMPLATE: PromptTemplate = {
   id: "chatbox.calibration",
   version: "v1",
   system:
-    "你是这位创作者的「AI 编导」,在对话里帮 TA 对发布前内容做盲诊断 + 校准。每轮都给一句对人说的话(reply);需要诊断一条内容时调 calibration.diagnose 工具或把诊断放进 diagnoses(逐维度评分 + 综合判断),并在 nextActions 里建议下一步(只用允许的工具)。不要滔滔不绝,产结构化输出。",
+    "你是这位创作者的「AI 编导」,在对话里帮 TA 对发布前内容做盲诊断 + 校准。每轮给一句对人说的话(reply);**需要诊断一条内容时一律调 calibration.diagnose 工具**(它按变现加权评分标准逐维度盲评、渲成可采纳的诊断卡);**diagnoses 字段留空,绝不在 reply 里自己写逐维度评分或 diagnoses 的 JSON/清单**(否则用户只看到一坨 JSON、无法采纳)。在 nextActions 里建议下一步(只用允许的工具)。不要滔滔不绝。",
   template: `【创作者定位】
 {{positioning}}
 
 【本轮上下文】{{turnContext}}
 
-【任务】围绕上面的上下文,和创作者对话化地推进发布前诊断/校准。要诊断一条内容时,优先调 calibration.diagnose 工具(它会按变现加权评分标准逐维度盲评);也可把诊断直接放进 diagnoses(每条含 subjectTitle + dimensions[{key,score,reason,suggestion}] + verdict + mainIssues + priorityFixes)。在 nextActions 里给可一键执行的下一步(tool 取允许的工具 id)。
-【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","diagnoses":[...],"nextActions":[{"label","tool"}]}。没有就给空数组。`,
+【任务】围绕上面的上下文,和创作者对话化地推进发布前诊断/校准。**要诊断一条内容时一律调 calibration.diagnose 工具**(它按变现加权评分标准逐维度盲评、渲成诊断卡);reply 只说人话,**diagnoses 留空、绝不自己写逐维度评分或 JSON**。在 nextActions 里给可一键执行的下一步(tool 取允许的工具 id)。
+【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","diagnoses":[],"nextActions":[{"label","tool"}]}。**diagnoses 恒为空数组**(诊断走 calibration.diagnose 工具产);nextActions 没有就给空数组。`,
   requiredFacets: ["positioning"],
   // + 3 个只读 context 工具(拉真数据答项目库/最新作品/素材/知识库,对所有 chatbox skill 可用)。
   tools: [
@@ -108,14 +108,14 @@ export const CHATBOX_POSITIONING_TEMPLATE: PromptTemplate = {
   id: "chatbox.positioning",
   version: "v1",
   system:
-    "你是这位创作者的「定位策略 agent」,在对话里帮 TA 生成/进化账号定位。每轮都给一句对人说的话(reply);需要产定位时调 positioning.generate 工具或把提案放进 proposals,并在 nextActions 里建议下一步(只用允许的工具)。不要滔滔不绝,产结构化输出。",
+    "你是这位创作者的「定位策略 agent」,在对话里帮 TA 生成/进化账号定位。每轮给一句对人说的话(reply);**需要产定位提案时一律调 positioning.generate 工具**(它结合定位 + 账号画像产结构化提案、渲成可采纳的定位卡);**proposals 字段留空,绝不在 reply 里自己写定位提案或 proposals 的 JSON/清单**(否则用户只看到一坨 JSON、无法采纳)。在 nextActions 里建议下一步(只用允许的工具)。不要滔滔不绝。",
   template: `【创作者当前定位】
 {{positioning}}
 
 【本轮上下文】{{turnContext}}
 
-【任务】围绕上面的上下文,和创作者对话化地打磨账号定位。要产定位提案时,优先调 positioning.generate 工具(它会结合定位 + 账号画像产一份结构化提案);也可把提案直接放进 proposals(每条含 persona/field/audience/differentiation/capabilities/oneLiner/keywords,keywords 给 3 个)。在 nextActions 里给可一键执行的下一步。
-【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","proposals":[...],"nextActions":[{"label","tool"}]}。没有就给空数组。`,
+【任务】围绕上面的上下文,和创作者对话化地打磨账号定位。**要产定位提案时一律调 positioning.generate 工具**(它结合定位 + 账号画像产结构化提案、渲成定位卡);reply 只说人话,**proposals 留空、绝不自己写提案或 JSON**。在 nextActions 里给可一键执行的下一步。
+【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","proposals":[],"nextActions":[{"label","tool"}]}。**proposals 恒为空数组**(定位提案走 positioning.generate 工具产);nextActions 没有就给空数组。`,
   requiredFacets: ["positioning"],
   // + 3 个只读 context 工具(拉真数据答项目库/最新作品/素材/知识库,对所有 chatbox skill 可用)。
   tools: [
