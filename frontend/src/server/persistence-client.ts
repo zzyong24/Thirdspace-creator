@@ -1547,14 +1547,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const aiBase = createAiTransport(() => aiService);
 
   // T-086 审核门 service + transport(reviewRules.* + scriptReviews.*)。scriptReviews.trigger
-  // 经注入的 AI 端口起 script.review ai_task(dispatch 后台跑 L1 lint + L2 语义审 → saveReport)。
-  // aiService 已在上方构造 → 可作为 ReviewGateAiPort 注入(createTask 内含 user-scoped 门)。
+  // 经注入的 AI 端口起 script.review ai_task。**关键**:审核门 op 不经 ai transport 的
+  // ai.tasks.create 拦截(它直调 aiService.createTask),故 createTask 起任务后必须在此显式
+  // 接入后台 dispatch(dispatchScriptReview,下方 resolveModelSpec 后赋值),否则任务只 queued
+  // 不跑 L1 lint + L2 语义审。best-effort:dispatch 触发失败不回滚已建任务(诚实:任务留 queued
+  // 可重试),但正常路径 dispatchScriptReview 恒已赋值(请求晚于 build)。
   const reviewGateService = createReviewGateService({
     db,
     now: deps.now,
     nextId: deps.nextId,
     ai: {
-      createTask: async (ctx, body) => aiService.createTask(ctx, body),
+      createTask: async (ctx, body) => {
+        const task = await aiService.createTask(ctx, body);
+        if (task && (task as { taskType?: string }).taskType === "script.review") {
+          const t = task as {
+            id: string | number;
+            projectId?: string | null;
+            inputData?: Record<string, unknown> | null;
+          };
+          dispatchScriptReview?.(ctx, {
+            id: String(t.id),
+            projectId: typeof t.projectId === "string" ? t.projectId : null,
+            inputData: (t.inputData ?? {}) as Record<string, unknown>,
+          });
+        }
+        return task;
+      },
     },
   });
   const reviewGate = createReviewGateTransport(() => reviewGateService);
@@ -1567,6 +1585,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     | ((
         ctx: RequestContext,
         task: { id: string; taskType: string; inputData: Record<string, unknown> },
+      ) => void)
+    | undefined;
+  // T-086 文案审核 dispatch 触发点:forward-declared,实体在下方(resolveModelSpec/
+  // settingsService 构造后)赋值。reviewGateService.createTask 起 script.review ai_task 后
+  // 用它在后台跑 runScriptReview —— 审核门 op 不走 ai transport 的 ai.tasks.create 拦截(它
+  // 经注入 AI 端口直起任务),故触发点必须在此显式接入,否则任务只会 queued 不执行。
+  let dispatchScriptReview:
+    | ((
+        ctx: RequestContext,
+        task: {
+          id: string;
+          projectId: string | null;
+          inputData: Record<string, unknown>;
+        },
       ) => void)
     | undefined;
 
@@ -2462,91 +2494,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           task.taskType === "script.review" &&
           task.status === "queued"
         ) {
-          // T-086 文案审核门 —— 读脚本 stage 当前版本文本 → L1 违禁词 lint(active 词表)+
-          // L2 语义审(script.review capability,预设豆包,未配回退默认并标注)→ 落
-          // script_review_reports(绑 artifactVersion)。确定性终态,无采纳候选。
-          void runScriptReview(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              resolveModelSpec,
-              // 专用审核模型探测:script.review 有独立配置行 → true(诚实标注非专用模型)。
-              hasDedicatedReviewModel: async (c) =>
-                Boolean(
-                  await settingsService.getModelConfig(c, "script.review"),
-                ),
-              // 脚本源:项目「脚本」stage 当前版本(优先 output_script,回退 master_script)的
-              // 文本 + 版本号(与 script-editor-data 同口径)。
-              scriptSource: {
-                getLatestScript: async (c, projectId) => {
-                  const artifacts =
-                    await artifactsService.listProjectArtifacts(c, projectId);
-                  const scriptArtifacts = artifacts.filter(
-                    (a) => a.stage === "script",
-                  );
-                  const target =
-                    scriptArtifacts.find(
-                      (a) => a.artifactType === "output_script",
-                    ) ??
-                    scriptArtifacts.find(
-                      (a) => a.artifactType === "master_script",
-                    );
-                  if (!target) return null;
-                  const versions = await artifactsService.listVersions(
-                    c,
-                    target.id,
-                  );
-                  if (versions.length === 0) return null;
-                  const current = versions
-                    .slice()
-                    .sort((a, b) => b.versionNumber - a.versionNumber)[0]!;
-                  // 文本抽取:contentData.transcript / sections(拼段)/ body / bodyText 兜底。
-                  const data = (current.contentData ?? {}) as Record<
-                    string,
-                    unknown
-                  >;
-                  let text = "";
-                  if (typeof data.transcript === "string") {
-                    text = data.transcript;
-                  } else if (Array.isArray(data.sections)) {
-                    text = (data.sections as unknown[])
-                      .map((s) => {
-                        const so = (s ?? {}) as Record<string, unknown>;
-                        return [so.label, so.text, so.narration, so.body]
-                          .filter(
-                            (x): x is string =>
-                              typeof x === "string" && x.length > 0,
-                          )
-                          .join(" ");
-                      })
-                      .join("\n");
-                  } else if (typeof data.body === "string") {
-                    text = data.body;
-                  }
-                  return {
-                    artifactId: target.id,
-                    version: current.versionNumber,
-                    text,
-                  };
-                },
-              },
-              lintRules: {
-                listActiveLintRules: (c) =>
-                  reviewGateService.listActiveLintRules(c),
-              },
-              reportSink: {
-                saveReport: (c, input) =>
-                  reviewGateService.saveReport(c, input),
-              },
-            },
-          );
+          // T-086 文案审核门 —— 单一 dispatch 触发点(下方 resolveModelSpec 后赋值),
+          // 与审核门 op 直起任务路径共用同一 runScriptReview 装配(读脚本当前版本 → L1 lint +
+          // L2 语义审 → 落 script_review_reports)。此分支覆盖经 ai.tasks.create 起的审核任务。
+          dispatchScriptReview?.(ctx, {
+            id: String(task.id),
+            projectId:
+              typeof task.projectId === "string" ? task.projectId : null,
+            inputData: (task.inputData ?? {}) as Record<string, unknown>,
+          });
         } else if (
           task &&
           task.taskType === "publish.platform_adapt" &&
@@ -4359,6 +4315,77 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       model: cfg.model,
       token: cfg.token,
     };
+  };
+
+  // T-086 文案审核 dispatch 实体(forward-declared 于 build 顶部):此处所有依赖已就绪
+  // (aiService/positioningService/settingsService/artifactsService/reviewGateService/
+  // resolveModelSpec)。两条起任务路径共用它:① 审核门 op(reviewGateService.createTask 直起
+  // → 该 port 调用本函数)② ai.tasks.create 拦截分支(下方 ai transport)。后台跑
+  // runScriptReview → L1 违禁词 lint(active 词表)+ L2 语义审(script.review capability,
+  // 预设豆包,未配回退默认并标注非专用)→ 落 script_review_reports(绑 artifactVersion)。
+  dispatchScriptReview = (ctx, task) => {
+    void runScriptReview(ctx, task, {
+      ai: aiService,
+      positioning: {
+        getPositioningCenter: (c: RequestContext) =>
+          positioningService.getPositioningCenter(c),
+      },
+      resolveModelSpec,
+      // 专用审核模型探测:script.review 有独立配置行 → true(诚实标注非专用模型)。
+      hasDedicatedReviewModel: async (c) =>
+        Boolean(await settingsService.getModelConfig(c, "script.review")),
+      // 脚本源:项目「脚本」stage 当前版本(优先 output_script,回退 master_script)的
+      // 文本 + 版本号(与 script-editor-data 同口径)。
+      scriptSource: {
+        getLatestScript: async (c, projectId) => {
+          const artifacts = await artifactsService.listProjectArtifacts(
+            c,
+            projectId,
+          );
+          const scriptArtifacts = artifacts.filter((a) => a.stage === "script");
+          const target =
+            scriptArtifacts.find((a) => a.artifactType === "output_script") ??
+            scriptArtifacts.find((a) => a.artifactType === "master_script");
+          if (!target) return null;
+          const versions = await artifactsService.listVersions(c, target.id);
+          if (versions.length === 0) return null;
+          const current = versions
+            .slice()
+            .sort((a, b) => b.versionNumber - a.versionNumber)[0]!;
+          // 文本抽取:contentData.transcript / sections(拼段)/ body 兜底。
+          const data = (current.contentData ?? {}) as Record<string, unknown>;
+          let text = "";
+          if (typeof data.transcript === "string") {
+            text = data.transcript;
+          } else if (Array.isArray(data.sections)) {
+            text = (data.sections as unknown[])
+              .map((s) => {
+                const so = (s ?? {}) as Record<string, unknown>;
+                return [so.label, so.text, so.narration, so.body]
+                  .filter(
+                    (x): x is string =>
+                      typeof x === "string" && x.length > 0,
+                  )
+                  .join(" ");
+              })
+              .join("\n");
+          } else if (typeof data.body === "string") {
+            text = data.body;
+          }
+          return {
+            artifactId: target.id,
+            version: current.versionNumber,
+            text,
+          };
+        },
+      },
+      lintRules: {
+        listActiveLintRules: (c) => reviewGateService.listActiveLintRules(c),
+      },
+      reportSink: {
+        saveReport: (c, input) => reviewGateService.saveReport(c, input),
+      },
+    });
   };
 
   // ── [T-093] 知识库 AI 搜索:可配 embedding 管线 ─────────────────────────────
