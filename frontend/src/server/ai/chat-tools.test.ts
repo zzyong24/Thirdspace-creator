@@ -12,6 +12,10 @@ import {
   knowledgeRelevanceScore,
   truncateDetailText,
   DETAIL_TEXT_PREVIEW_CHARS,
+  readTextWindow,
+  clampWindowMaxChars,
+  TEXT_WINDOW_DEFAULT_MAX_CHARS,
+  TEXT_WINDOW_CAP_CHARS,
   type ChatToolDeps,
 } from "./chat-tools";
 
@@ -38,6 +42,9 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   getProjectDetail: ReturnType<typeof vi.fn>;
   getPositioningDetail: ReturnType<typeof vi.fn>;
   getKnowledgeDetail: ReturnType<typeof vi.fn>;
+  listProjectArtifacts: ReturnType<typeof vi.fn>;
+  getArtifactText: ReturnType<typeof vi.fn>;
+  getKnowledgeText: ReturnType<typeof vi.fn>;
 } {
   const generateTopics = vi.fn(async () => [
     {
@@ -163,6 +170,35 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     usedInPublished: true,
     relations: [{ targetKnowledgeId: "kn-2", relationType: "supports" }],
   }));
+  // [T-099c] 全文类读端口 fake（产物清单 + 正文全文 + 知识长文）。
+  const listProjectArtifacts = vi.fn(async () => ({
+    projectId: "proj-1",
+    projectTitle: "上下文工程",
+    items: [
+      {
+        artifactType: "output_script",
+        currentVersion: 3,
+        updatedAt: "2026-07-01T00:00:00.000Z",
+        totalChars: 1200,
+      },
+      {
+        artifactType: "content_outline",
+        currentVersion: 1,
+        updatedAt: null,
+        totalChars: 420,
+      },
+    ],
+  }));
+  const getArtifactText = vi.fn(async () => ({
+    artifactType: "output_script",
+    fullText: "这是逐字稿正文全文。".repeat(50),
+  }));
+  const getKnowledgeText = vi.fn(async () => ({
+    id: "kn-1",
+    title: "上下文工程逐字稿",
+    knowledgeType: "quote",
+    fullText: "这是知识条目的长文正文。".repeat(40),
+  }));
   const draftScript = vi.fn(async () => [
     { heading: "1. 开场", body: "口播：90% 文档没人看" },
   ]);
@@ -233,6 +269,9 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     getProjectDetail,
     getPositioningDetail,
     getKnowledgeDetail,
+    listProjectArtifacts,
+    getArtifactText,
+    getKnowledgeText,
     ...over,
   };
   return {
@@ -253,6 +292,9 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     getProjectDetail,
     getPositioningDetail,
     getKnowledgeDetail,
+    listProjectArtifacts,
+    getArtifactText,
+    getKnowledgeText,
   };
 }
 
@@ -847,6 +889,274 @@ describe("[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文
     expect(pos.found).toBe(false);
     expect(pos.positioning.profile).toBeNull();
     expect(kn.found).toBe(false);
+  });
+});
+
+// ── [T-099c] 切片三:全文类 context 工具 execute(产物清单 + 长文本窗口 + §3 全文档预算)────
+describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态", () => {
+  const FULLTEXT_WHITELIST = [
+    "context.artifacts",
+    "context.artifact.text",
+    "context.knowledge.text",
+  ] as const;
+
+  it("三个全文工具全部可挂", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    expect(Object.keys(tools).sort()).toEqual([
+      "context.artifact.text",
+      "context.artifacts",
+      "context.knowledge.text",
+    ]);
+  });
+
+  it("context.artifacts.execute 调 listProjectArtifacts,返回产物清单(kind + found + items)", async () => {
+    const { deps, listProjectArtifacts } = makeDeps();
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.artifacts"], {
+      projectId: "proj-1",
+    })) as {
+      kind: string;
+      found: boolean;
+      projectTitle: string;
+      items: Array<{ artifactType: string; totalChars: number }>;
+    };
+    expect(listProjectArtifacts).toHaveBeenCalledWith({ projectId: "proj-1" });
+    expect(result.kind).toBe("context.artifacts");
+    expect(result.found).toBe(true);
+    expect(result.projectTitle).toBe("上下文工程");
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0]!.artifactType).toBe("output_script");
+  });
+
+  it("context.artifacts.execute 空 projectId → found:false(不调端口,诚实空态)", async () => {
+    const { deps, listProjectArtifacts } = makeDeps();
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.artifacts"], {
+      projectId: "   ",
+    })) as { found: boolean; items: unknown[] };
+    expect(listProjectArtifacts).not.toHaveBeenCalled();
+    expect(result.found).toBe(false);
+    expect(result.items).toEqual([]);
+  });
+
+  it("context.artifact.text.execute 调 getArtifactText,返回窗口(text/offset/totalChars/hasMore)", async () => {
+    const { deps, getArtifactText } = makeDeps();
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.artifact.text"], {
+      projectId: "proj-1",
+      artifactType: "output_script",
+      maxChars: 100,
+    })) as {
+      kind: string;
+      found: boolean;
+      artifactType: string;
+      text: string;
+      offset: number;
+      totalChars: number;
+      hasMore: boolean;
+    };
+    expect(getArtifactText).toHaveBeenCalledWith({
+      projectId: "proj-1",
+      artifactType: "output_script",
+    });
+    expect(result.kind).toBe("context.artifact.text");
+    expect(result.found).toBe(true);
+    expect(result.artifactType).toBe("output_script");
+    // fullText 长度 = "这是逐字稿正文全文。"(10 字)×50 = 500 字;maxChars=100 → 窗口 100 字 + hasMore。
+    expect(result.text.length).toBe(100);
+    expect(result.offset).toBe(0);
+    expect(result.totalChars).toBe(500);
+    expect(result.hasMore).toBe(true);
+  });
+
+  it("context.artifact.text.execute:超长正文 maxChars 强制封顶 8000(execute 侧,非君子协定)", async () => {
+    const { deps } = makeDeps({
+      getArtifactText: vi.fn(async () => ({
+        artifactType: "output_script",
+        fullText: "字".repeat(20000),
+      })),
+    });
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    // maxChars 请求 15000 → 强制夹到 8000。
+    const result = (await runExecute(tools["context.artifact.text"], {
+      projectId: "proj-1",
+      artifactType: "output_script",
+      maxChars: 15000,
+    })) as { text: string; totalChars: number; hasMore: boolean };
+    expect(result.text.length).toBe(TEXT_WINDOW_CAP_CHARS); // 8000
+    expect(result.totalChars).toBe(20000);
+    expect(result.hasMore).toBe(true);
+  });
+
+  it("context.artifact.text.execute:offset 翻窗读到末尾 → hasMore:false", async () => {
+    const { deps } = makeDeps({
+      getArtifactText: vi.fn(async () => ({
+        artifactType: "output_script",
+        fullText: "字".repeat(500),
+      })),
+    });
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.artifact.text"], {
+      projectId: "proj-1",
+      artifactType: "output_script",
+      offset: 480,
+      maxChars: 100,
+    })) as { text: string; offset: number; totalChars: number; hasMore: boolean };
+    expect(result.offset).toBe(480);
+    expect(result.text.length).toBe(20); // 500 - 480
+    expect(result.hasMore).toBe(false);
+  });
+
+  it("context.artifact.text.execute:缺 artifactType / 读不到 → found:false + 空窗口(诚实空态)", async () => {
+    const { deps, getArtifactText } = makeDeps();
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    // 缺 artifactType → 不调端口。
+    const miss = (await runExecute(tools["context.artifact.text"], {
+      projectId: "proj-1",
+      artifactType: "   ",
+    })) as { found: boolean; text: string; totalChars: number };
+    expect(getArtifactText).not.toHaveBeenCalled();
+    expect(miss.found).toBe(false);
+    expect(miss.text).toBe("");
+    expect(miss.totalChars).toBe(0);
+    // 端口回 null(项目/产物不存在)→ found:false。
+    const { deps: deps2 } = makeDeps({
+      getArtifactText: vi.fn(async () => null),
+    });
+    const tools2 = buildChatTools([...FULLTEXT_WHITELIST], deps2);
+    const gone = (await runExecute(tools2["context.artifact.text"], {
+      projectId: "p",
+      artifactType: "output_script",
+    })) as { found: boolean };
+    expect(gone.found).toBe(false);
+  });
+
+  it("context.knowledge.text.execute 调 getKnowledgeText,返回窗口 + 元数据(title/knowledgeType)", async () => {
+    const { deps, getKnowledgeText } = makeDeps();
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.knowledge.text"], {
+      id: "kn-1",
+      maxChars: 50,
+    })) as {
+      kind: string;
+      found: boolean;
+      id: string;
+      title: string;
+      knowledgeType: string;
+      text: string;
+      totalChars: number;
+      hasMore: boolean;
+    };
+    expect(getKnowledgeText).toHaveBeenCalledWith({ id: "kn-1" });
+    expect(result.kind).toBe("context.knowledge.text");
+    expect(result.found).toBe(true);
+    expect(result.title).toBe("上下文工程逐字稿");
+    expect(result.knowledgeType).toBe("quote");
+    // "这是知识条目的长文正文。"(12 字)×40 = 480 字;maxChars=50 → 窗口 50 字 + hasMore。
+    expect(result.text.length).toBe(50);
+    expect(result.totalChars).toBe(480);
+    expect(result.hasMore).toBe(true);
+  });
+
+  it("context.knowledge.text.execute:读不到 → found:false + 空窗口(诚实空态)", async () => {
+    const { deps } = makeDeps({ getKnowledgeText: vi.fn(async () => null) });
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.knowledge.text"], {
+      id: "nope",
+    })) as { found: boolean; text: string; totalChars: number };
+    expect(result.found).toBe(false);
+    expect(result.text).toBe("");
+    expect(result.totalChars).toBe(0);
+  });
+
+  it("全文端口未装配(deps 缺省)→ 三工具诚实空态(不抛、不塞假)", async () => {
+    const { deps } = makeDeps({
+      listProjectArtifacts: undefined,
+      getArtifactText: undefined,
+      getKnowledgeText: undefined,
+    });
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    const arts = (await runExecute(tools["context.artifacts"], {
+      projectId: "p",
+    })) as { found: boolean };
+    const atext = (await runExecute(tools["context.artifact.text"], {
+      projectId: "p",
+      artifactType: "output_script",
+    })) as { found: boolean };
+    const ktext = (await runExecute(tools["context.knowledge.text"], {
+      id: "k",
+    })) as { found: boolean };
+    expect(arts.found).toBe(false);
+    expect(atext.found).toBe(false);
+    expect(ktext.found).toBe(false);
+  });
+});
+
+// [T-099c] 全文档窗口读取纯函数(SPEC §3):offset 按字符 clamp、maxChars 默认 4000/封顶 8000、
+// hasMore 真相、空文本诚实空窗口。
+describe("readTextWindow / clampWindowMaxChars — 全文档窗口预算(§3)", () => {
+  const long = "字".repeat(10000);
+
+  it("默认 maxChars=4000,offset=0 → 窗口 4000 字 + hasMore", () => {
+    const w = readTextWindow(long, {});
+    expect(w.text.length).toBe(TEXT_WINDOW_DEFAULT_MAX_CHARS); // 4000
+    expect(w.offset).toBe(0);
+    expect(w.totalChars).toBe(10000);
+    expect(w.hasMore).toBe(true);
+  });
+
+  it("maxChars 超 8000 → 封顶 8000(硬约束)", () => {
+    const w = readTextWindow(long, { maxChars: 99999 });
+    expect(w.text.length).toBe(TEXT_WINDOW_CAP_CHARS); // 8000
+    expect(w.hasMore).toBe(true);
+  });
+
+  it("offset 翻窗:读到末尾 → hasMore:false,窗口只剩尾段", () => {
+    const w = readTextWindow(long, { offset: 9800, maxChars: 4000 });
+    expect(w.offset).toBe(9800);
+    expect(w.text.length).toBe(200); // 10000 - 9800
+    expect(w.hasMore).toBe(false);
+  });
+
+  it("offset 越界(> totalChars)→ clamp 到末尾,空窗口 + hasMore:false", () => {
+    const w = readTextWindow("短文", { offset: 999 });
+    expect(w.offset).toBe(2);
+    expect(w.text).toBe("");
+    expect(w.hasMore).toBe(false);
+  });
+
+  it("offset 负数/非数 → 兜 0", () => {
+    expect(readTextWindow("abcdef", { offset: -5, maxChars: 3 }).offset).toBe(0);
+    expect(
+      readTextWindow("abcdef", { offset: NaN as unknown as number }).offset,
+    ).toBe(0);
+  });
+
+  it("空文本/非串 → 空窗口 + 0 字 + hasMore:false(诚实,不编)", () => {
+    expect(readTextWindow("", { maxChars: 100 })).toEqual({
+      text: "",
+      offset: 0,
+      totalChars: 0,
+      hasMore: false,
+    });
+    expect(readTextWindow(null, {}).totalChars).toBe(0);
+    expect(readTextWindow(undefined, {}).text).toBe("");
+  });
+
+  it("恰好读完(offset+maxChars == totalChars)边界 → hasMore:false", () => {
+    const w = readTextWindow("字".repeat(100), { offset: 0, maxChars: 100 });
+    expect(w.text.length).toBe(100);
+    expect(w.hasMore).toBe(false);
+  });
+
+  it("clampWindowMaxChars:缺省/≤0/非数 → 4000;>8000 → 8000;区间内取整", () => {
+    expect(clampWindowMaxChars(undefined)).toBe(4000);
+    expect(clampWindowMaxChars(0)).toBe(4000);
+    expect(clampWindowMaxChars(-10)).toBe(4000);
+    expect(clampWindowMaxChars(NaN)).toBe(4000);
+    expect(clampWindowMaxChars(99999)).toBe(8000);
+    expect(clampWindowMaxChars(2500.7)).toBe(2500);
   });
 });
 

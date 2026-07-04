@@ -100,6 +100,19 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "读取知识原子",
     purpose: "拉某条知识全档:正文/出处/标签/战绩/关联边",
   },
+  // [T-099c] 切片三:全文类(产物清单 + 长文本窗口读取,事故二根治)。
+  "context.artifacts": {
+    name: "读取产物清单",
+    purpose: "列某项目每类产物的 artifactType/当前版本/字数/更新时间",
+  },
+  "context.artifact.text": {
+    name: "读取产物正文",
+    purpose: "按窗口读某项目某类产物(脚本/逐字稿等)的正文全文",
+  },
+  "context.knowledge.text": {
+    name: "读取知识全文",
+    purpose: "按窗口读某条知识的长文正文(逐字稿/引用/笔记)",
+  },
 };
 
 // [T-095] 调度采集任务类型的中文词表 —— 「最近任务/继续任务」等任务 feed 渲 taskType 时用,
@@ -123,8 +136,12 @@ export const SCHEDULED_TASK_TYPE_LABELS: Readonly<
   },
 };
 
-/** skillsBrief 每工具行数上限(SPEC §1.3 [gate-F1]:超出截断)。 */
-export const SKILLS_BRIEF_MAX_LINES = 20;
+/**
+ * skillsBrief 每工具行数上限(SPEC §1.3 [gate-F1]:超出截断)。[T-099c] 从 20 提到 30:
+ * context 层 §5 切片持续新增工具(现 23,切片四/五还会加),自感知清单应覆盖全部可调工具
+ * (T-104 全放开语义 —— 模型对「能干什么」的自述须与真实工具集一致),留头量到 30。
+ */
+export const SKILLS_BRIEF_MAX_LINES = 30;
 
 /**
  * [T-077c gate-F1] 技能清单 facet:当前 surface 白名单内每工具一行

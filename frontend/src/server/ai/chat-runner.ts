@@ -27,6 +27,9 @@ import {
   type ProjectDetailRaw,
   type PositioningDetailRaw,
   type KnowledgeDetailRaw,
+  type ArtifactListRaw,
+  type ArtifactTextRaw,
+  type KnowledgeTextRaw,
 } from "./chat-tools";
 import { buildSkillsBrief } from "@/lib/chat-tool-labels";
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
@@ -189,6 +192,33 @@ export interface ContextReaders {
     ctx: RequestContext,
     opts: { id: string },
   ) => Promise<KnowledgeDetailRaw | null>;
+  /**
+   * [T-099c] context.artifacts —— 某项目产物清单(每类产物 artifactType/当前版本号/updatedAt/字数)。
+   * composition root 复用 artifactsService.listProjectArtifacts + listVersions + 当前版本文本长度
+   * (与 getScript 同口径)。读不到(不存在/越权)→ null(诚实降级)。可选:未装配 → 工具报「查不到」。
+   */
+  listProjectArtifacts?: (
+    ctx: RequestContext,
+    opts: { projectId: string },
+  ) => Promise<ArtifactListRaw | null>;
+  /**
+   * [T-099c] context.artifact.text —— 某项目某类产物正文全文(事故二根治)。output_script 走
+   * ReviewSubjectReader.getScript 同读法(transcript 优先);其它 artifactType 走当前版本 contentData
+   * 正文字段。**返回原始全文**;窗口截断(§3)在工具 execute 侧强制。读不到 → null(诚实降级)。
+   */
+  getArtifactText?: (
+    ctx: RequestContext,
+    opts: { projectId: string; artifactType: string },
+  ) => Promise<ArtifactTextRaw | null>;
+  /**
+   * [T-099c] context.knowledge.text —— 某知识条目长文正文全文(transcript/reference/note 当前修订正文,
+   * 与 knowledge.detail 的 note 同读法)。**返回原始全文**;窗口截断(§3)在工具 execute 侧强制。
+   * 读不到(不存在/越权)→ null(诚实降级)。可选:未装配 → 工具报「查不到」。
+   */
+  getKnowledgeText?: (
+    ctx: RequestContext,
+    opts: { id: string },
+  ) => Promise<KnowledgeTextRaw | null>;
 }
 
 // 各 ChatBox skill 的「主能力档」—— 基础模型按它解析(各 surface 复用对应节点的模型配置,
@@ -717,6 +747,21 @@ export async function buildChatAssembly(
     getKnowledgeDetail: async ({ id }) => {
       if (!deps.contextReaders?.getKnowledgeDetail) return null;
       return deps.contextReaders.getKnowledgeDetail(ctx, { id });
+    },
+    // [T-099c] 全文类 context 工具(切片三)—— execute 调注入的 user-scoped 全文读端口。
+    // 端口未装配(contextReaders 缺省 / 具体方法缺省)→ 工具侧诚实空态(found:false),
+    // 绝不塞假数据。窗口截断(§3 全文档预算)由工具 execute 侧强制,读端口只回原始全文。
+    listProjectArtifacts: async ({ projectId }) => {
+      if (!deps.contextReaders?.listProjectArtifacts) return null;
+      return deps.contextReaders.listProjectArtifacts(ctx, { projectId });
+    },
+    getArtifactText: async ({ projectId, artifactType }) => {
+      if (!deps.contextReaders?.getArtifactText) return null;
+      return deps.contextReaders.getArtifactText(ctx, { projectId, artifactType });
+    },
+    getKnowledgeText: async ({ id }) => {
+      if (!deps.contextReaders?.getKnowledgeText) return null;
+      return deps.contextReaders.getKnowledgeText(ctx, { id });
     },
   };
   const tools = buildChatTools(toolWhitelist, toolDeps);

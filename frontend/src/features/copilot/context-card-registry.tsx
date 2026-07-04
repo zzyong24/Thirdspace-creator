@@ -15,8 +15,11 @@
 import * as React from "react";
 
 import type {
+  ContextArtifactsToolResult,
+  ContextArtifactTextToolResult,
   ContextCommentsToolResult,
   ContextKnowledgeDetailToolResult,
+  ContextKnowledgeTextToolResult,
   ContextKnowledgeToolResult,
   ContextMaterialsToolResult,
   ContextPositioningDetailToolResult,
@@ -25,10 +28,13 @@ import type {
 } from "@/server/ai/chat-tools";
 
 import {
+  ChatArtifactListCard,
+  ChatArtifactTextCard,
   ChatCommentListCard,
   ChatContextGenericCard,
   ChatKnowledgeDetailCard,
   ChatKnowledgeListCard,
+  ChatKnowledgeTextCard,
   ChatPositioningDetailCard,
   ChatProjectDetailCard,
   ChatProjectListCard,
@@ -102,6 +108,26 @@ export const CONTEXT_CARD_REGISTRY: Readonly<Record<string, ContextCardRenderer>
   "context.knowledge.detail": (out) => {
     const o = out as unknown as Partial<ContextKnowledgeDetailToolResult>;
     return <ChatKnowledgeDetailCard item={o.item ?? null} />;
+  },
+  // [T-099c] 切片三:全文类(产物清单 + 长文本窗口)。数据从 part.output 直渲,不二次请求。
+  "context.artifacts": (out) => {
+    const o = out as unknown as Partial<ContextArtifactsToolResult>;
+    return (
+      <ChatArtifactListCard
+        found={o.found ?? false}
+        projectTitle={o.projectTitle ?? ""}
+        items={o.items ?? []}
+      />
+    );
+  },
+  "context.artifact.text": (out) => {
+    const o = out as unknown as Partial<ContextArtifactTextToolResult>;
+    return <ChatArtifactTextCard result={o} />;
+  },
+  // context.knowledge.text 复用全文阅读卡(SPEC §1 行#11:#11 复用 #4 卡)。
+  "context.knowledge.text": (out) => {
+    const o = out as unknown as Partial<ContextKnowledgeTextToolResult>;
+    return <ChatKnowledgeTextCard result={o} />;
   },
 };
 

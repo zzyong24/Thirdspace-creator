@@ -171,6 +171,29 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
         usedInPublished: true,
         relations: [{ targetKnowledgeId: "kn-2", relationType: "supports" }],
       }),
+      // [T-099c] 全文类读端口 fake —— 断言工具 execute 经 ctx 调它。
+      listProjectArtifacts: async () => ({
+        projectId: "proj-1",
+        projectTitle: "上下文工程",
+        items: [
+          {
+            artifactType: "output_script",
+            currentVersion: 2,
+            updatedAt: "2026-07-01T00:00:00.000Z",
+            totalChars: 1234,
+          },
+        ],
+      }),
+      getArtifactText: async () => ({
+        artifactType: "output_script",
+        fullText: "逐字稿正文全文".repeat(100),
+      }),
+      getKnowledgeText: async () => ({
+        id: "kn-1",
+        title: "上下文工程逐字稿",
+        knowledgeType: "quote",
+        fullText: "知识长文正文".repeat(100),
+      }),
     },
     ...over,
   };
@@ -263,16 +286,21 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).not.toContain("本次复盘对象");
   });
 
-  it("[T-104] 工具全放开:任一 surface 暴露全部 20 工具(surface 白名单只决定置顶顺序)", async () => {
+  it("[T-104] 工具全放开:任一 surface 暴露全部 23 工具(surface 白名单只决定置顶顺序)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(Object.keys(a.tools).sort()).toEqual([
       "brief.fill",
       "calibration.diagnose",
+      // [T-099c] 切片三:全文类(context.artifact.text 排在 context.artifacts 前:'.' < 's')。
+      "context.artifact.text",
+      "context.artifacts",
       "context.comments",
       "context.knowledge",
       // [T-099b] 切片二:详情类(单实体全字段)。
       "context.knowledge.detail",
+      // [T-099c] context.knowledge.text 排在 .detail 后('d' < 't')。
+      "context.knowledge.text",
       "context.materials",
       "context.positioning.detail",
       "context.project.detail",
@@ -293,7 +321,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     ]);
   });
 
-  it("[T-077c] 技能自感知:skillsBrief 注入 system(每白名单工具一行「中文名(工具名):用途」,行数=白名单数、≤20)", async () => {
+  it("[T-077c] 技能自感知:skillsBrief 注入 system(每白名单工具一行「中文名(工具名):用途」,行数=白名单数、≤30)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     // 清单块头(与 honestyBlock 并列注入)。
@@ -307,14 +335,14 @@ describe("buildChatAssembly — 三层注入装配", () => {
     // 抽查中文名 + 用途同源词表(lib/chat-tool-labels)。
     expect(a.system).toContain("AI 出题(topic.generate):");
     expect(a.system).toContain("记录经验(learning.capture):");
-    // 行数 = 白名单工具数(≤20,gate-F1 截断上限)。
+    // 行数 = 白名单工具数(≤30,gate-F1 截断上限,[T-099c] 从 20 提到 30 覆盖全工具集)。
     const brief = a.system
       .split("【你的技能清单")[1]!
       .split("\n\n")[0]!
       .split("\n")
       .filter((l) => /\(.+\):/.test(l));
     expect(brief).toHaveLength(whitelist.length);
-    expect(brief.length).toBeLessThanOrEqual(20);
+    expect(brief.length).toBeLessThanOrEqual(30);
   });
 
   it("[T-104] skillsBrief 全列工具:review 面 preferred(review.analyze/learning.capture)在前,工具全放开后其余工具也进自感知清单", async () => {
@@ -340,7 +368,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.calibration");
     // [T-104] 工具全放开:preferred 含 calibration.diagnose,但可调工具集 = 全 15。
     expect(Object.keys(a.tools)).toContain("calibration.diagnose");
-    expect(Object.keys(a.tools).length).toBe(20);
+    expect(Object.keys(a.tools).length).toBe(23);
     // 主能力档按 calibration.diagnose 解析(各 surface 复用对应节点的模型配置)。
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "calibration.diagnose");
   });
@@ -351,7 +379,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.positioning");
     // [T-104] 工具全放开:preferred 含 positioning.generate,但可调工具集 = 全 15。
     expect(Object.keys(a.tools)).toContain("positioning.generate");
-    expect(Object.keys(a.tools).length).toBe(20);
+    expect(Object.keys(a.tools).length).toBe(23);
   });
 
   it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {
@@ -402,7 +430,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).toContain("review.analyze");
     expect(names).toContain("learning.capture");
     expect(names).toContain("context.projects"); // 放开后可调
-    expect(names.length).toBe(20); // 全部工具暴露
+    expect(names.length).toBe(23); // 全部工具暴露
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -468,7 +496,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(20); // 全放开
+    expect(names.length).toBe(23); // 全放开
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });
@@ -750,6 +778,169 @@ describe("buildChatAssembly — 三层注入装配", () => {
     })) as { found: boolean; item: unknown };
     expect(result.found).toBe(false);
     expect(result.item).toBeNull();
+  });
+
+  // [T-099c] 切片三:全文类工具 execute —— 经 ctx 调注入的 user-scoped 全文读端口 + §3 窗口预算。
+  it("[T-099c] context.artifacts execute → 经读端口拼产物清单(found + items)", async () => {
+    const listProjectArtifacts = vi.fn(async () => ({
+      projectId: "proj-1",
+      projectTitle: "上下文工程",
+      items: [
+        {
+          artifactType: "output_script",
+          currentVersion: 3,
+          updatedAt: "2026-07-01T00:00:00.000Z",
+          totalChars: 1200,
+        },
+      ],
+    }));
+    const { deps } = makeDeps({
+      contextReaders: {
+        getProjectBrief: async () => null,
+        listProjects: async () => ({ rows: [], total: 0 }),
+        listComments: async () => ({ rows: [], total: 0 }),
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+        listProjectArtifacts,
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const result = (await runToolExecute(a.tools["context.artifacts"], {
+      projectId: "proj-1",
+    })) as { kind: string; found: boolean; items: unknown[] };
+    expect(listProjectArtifacts).toHaveBeenCalledWith(ctx, { projectId: "proj-1" });
+    expect(result.kind).toBe("context.artifacts");
+    expect(result.found).toBe(true);
+    expect(result.items).toHaveLength(1);
+  });
+
+  it("[T-099c] context.artifact.text execute → 经读端口取正文 + §3 窗口截断(maxChars/offset/hasMore)", async () => {
+    const getArtifactText = vi.fn(async () => ({
+      artifactType: "output_script",
+      fullText: "逐字稿正文片段。".repeat(100), // 8 字 × 100 = 800 字
+    }));
+    const { deps } = makeDeps({
+      contextReaders: {
+        getProjectBrief: async () => null,
+        listProjects: async () => ({ rows: [], total: 0 }),
+        listComments: async () => ({ rows: [], total: 0 }),
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+        getArtifactText,
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const result = (await runToolExecute(a.tools["context.artifact.text"], {
+      projectId: "proj-1",
+      artifactType: "output_script",
+      maxChars: 200,
+    })) as {
+      kind: string;
+      found: boolean;
+      artifactType: string;
+      text: string;
+      totalChars: number;
+      hasMore: boolean;
+    };
+    expect(getArtifactText).toHaveBeenCalledWith(ctx, {
+      projectId: "proj-1",
+      artifactType: "output_script",
+    });
+    expect(result.kind).toBe("context.artifact.text");
+    expect(result.found).toBe(true);
+    expect(result.artifactType).toBe("output_script");
+    // §3 全文档预算:窗口 200 字 + totalChars=800 + hasMore(execute 侧强制)。
+    expect(result.text.length).toBe(200);
+    expect(result.totalChars).toBe(800);
+    expect(result.hasMore).toBe(true);
+  });
+
+  it("[T-099c] context.artifact.text execute:读不到(端口回 null)→ found:false + 空窗口(诚实空态)", async () => {
+    const { deps } = makeDeps({
+      contextReaders: {
+        getProjectBrief: async () => null,
+        listProjects: async () => ({ rows: [], total: 0 }),
+        listComments: async () => ({ rows: [], total: 0 }),
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+        getArtifactText: async () => null,
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const result = (await runToolExecute(a.tools["context.artifact.text"], {
+      projectId: "p",
+      artifactType: "output_script",
+    })) as { found: boolean; text: string; totalChars: number };
+    expect(result.found).toBe(false);
+    expect(result.text).toBe("");
+    expect(result.totalChars).toBe(0);
+  });
+
+  it("[T-099c] context.knowledge.text execute → 经读端口取长文 + 窗口截断 + 元数据(title/type)", async () => {
+    const getKnowledgeText = vi.fn(async () => ({
+      id: "kn-1",
+      title: "上下文工程逐字稿",
+      knowledgeType: "quote",
+      fullText: "知识长文正文。".repeat(100), // 7 字 × 100 = 700 字
+    }));
+    const { deps } = makeDeps({
+      contextReaders: {
+        getProjectBrief: async () => null,
+        listProjects: async () => ({ rows: [], total: 0 }),
+        listComments: async () => ({ rows: [], total: 0 }),
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+        getKnowledgeText,
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const result = (await runToolExecute(a.tools["context.knowledge.text"], {
+      id: "kn-1",
+      maxChars: 100,
+    })) as {
+      kind: string;
+      found: boolean;
+      title: string;
+      knowledgeType: string;
+      text: string;
+      totalChars: number;
+      hasMore: boolean;
+    };
+    expect(getKnowledgeText).toHaveBeenCalledWith(ctx, { id: "kn-1" });
+    expect(result.kind).toBe("context.knowledge.text");
+    expect(result.found).toBe(true);
+    expect(result.title).toBe("上下文工程逐字稿");
+    expect(result.knowledgeType).toBe("quote");
+    expect(result.text.length).toBe(100);
+    expect(result.totalChars).toBe(700);
+    expect(result.hasMore).toBe(true);
+  });
+
+  it("[T-099c] 全文类端口未装配 → 三工具 found:false(诚实降级,不报错、不塞假)", async () => {
+    const { deps } = makeDeps({
+      contextReaders: {
+        getProjectBrief: async () => null,
+        listProjects: async () => ({ rows: [], total: 0 }),
+        listComments: async () => ({ rows: [], total: 0 }),
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+        // listProjectArtifacts / getArtifactText / getKnowledgeText 缺省。
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const arts = (await runToolExecute(a.tools["context.artifacts"], {
+      projectId: "p",
+    })) as { found: boolean };
+    const atext = (await runToolExecute(a.tools["context.artifact.text"], {
+      projectId: "p",
+      artifactType: "output_script",
+    })) as { found: boolean };
+    const ktext = (await runToolExecute(a.tools["context.knowledge.text"], {
+      id: "k",
+    })) as { found: boolean };
+    expect(arts.found).toBe(false);
+    expect(atext.found).toBe(false);
+    expect(ktext.found).toBe(false);
   });
 });
 

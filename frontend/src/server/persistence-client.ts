@@ -515,6 +515,46 @@ type CanonicalKnowledge = (typeof canonicalDataset.knowledgeItems)[number];
 type CanonicalRevision = (typeof canonicalDataset.knowledgeRevisions)[number];
 type CanonicalRelation = (typeof canonicalDataset.knowledgeRelations)[number];
 
+// [T-099c] 产物版本正文抽取(单一真值,context.artifacts 字数 + context.artifact.text 全文共用)——
+// output_script transcript 优先(与 makeReviewSubjectReader.getScript 同读法),回退 contentText,
+// 再回退 contentData.sections 拼段 / body(与 scriptSource.getLatestScript 同抽取口径)。无正文 → 空串。
+function extractArtifactText(
+  contentText: string | null | undefined,
+  contentData: unknown,
+): string {
+  const data =
+    contentData && typeof contentData === "object"
+      ? (contentData as Record<string, unknown>)
+      : null;
+  // 逐字稿:contentData.transcript 优先(output_script 的正文落这里)。
+  if (data && typeof data.transcript === "string" && data.transcript.trim()) {
+    return data.transcript;
+  }
+  // 通用回退:artifact 版本的 contentText(结构化编辑器落的纯文本快照)。
+  if (typeof contentText === "string" && contentText.trim()) {
+    return contentText;
+  }
+  // 结构化产物:sections 拼段(label/text/narration/body 任一非空即取)。
+  if (data && Array.isArray(data.sections)) {
+    const joined = (data.sections as unknown[])
+      .map((s) => {
+        const so =
+          s && typeof s === "object" ? (s as Record<string, unknown>) : {};
+        return [so.label, so.text, so.narration, so.body]
+          .filter((x): x is string => typeof x === "string" && x.length > 0)
+          .join(" ");
+      })
+      .filter((line) => line.length > 0)
+      .join("\n");
+    if (joined.trim()) return joined;
+  }
+  // 兜底:contentData.body 纯文本字段。
+  if (data && typeof data.body === "string" && data.body.trim()) {
+    return data.body;
+  }
+  return "";
+}
+
 function toKnowledgeRow(k: CanonicalKnowledge): KnowledgeItemRow {
   return {
     id: k.id,
@@ -5503,6 +5543,120 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             usedCount: item.usedCount,
             usedInPublished: item.usedInPublished,
             relations,
+          };
+        } catch {
+          return null;
+        }
+      },
+      // [T-099c] context.artifacts —— 某项目产物清单。复用既有公开读源(不新造 repo 方法):
+      //   · 产物行 → artifactsService.listProjectArtifacts(user-scoped)
+      //   · 每类产物版本数 → listVersions;当前版本字数 → getVersion 的 contentText/transcript 长度
+      //     (与 getProjectDetail 的产物索引、getScript 同口径,不造影子)。
+      // projectsRepo.get 顺带 ownership 门(越权/不存在 → 抛 → catch 成 null,诚实降级)。
+      listProjectArtifacts: async (
+        c: RequestContext,
+        opts: { projectId: string },
+      ) => {
+        try {
+          const project = await projectsRepo.get(c, opts.projectId);
+          const artifactRows = await artifactsService.listProjectArtifacts(
+            c,
+            opts.projectId,
+          );
+          const repo = createArtifactRepository(db, { ...deps, userId: c.userId });
+          const items = await Promise.all(
+            artifactRows.map(async (a) => {
+              let currentVersion: number | null = null;
+              let totalChars = 0;
+              try {
+                const versions = await artifactsService.listVersions(c, a.id);
+                const current = versions
+                  .slice()
+                  .sort((x, y) => y.versionNumber - x.versionNumber)[0];
+                currentVersion = current?.versionNumber ?? null;
+              } catch {
+                currentVersion = null;
+              }
+              if (a.currentVersionId) {
+                try {
+                  const version = await repo.getVersion(a.currentVersionId);
+                  totalChars = extractArtifactText(
+                    version.contentText,
+                    version.contentData,
+                  ).length;
+                } catch {
+                  totalChars = 0;
+                }
+              }
+              return {
+                artifactType: a.artifactType,
+                currentVersion,
+                updatedAt: a.updatedAt ?? null,
+                totalChars,
+              };
+            }),
+          );
+          return {
+            projectId: project.id,
+            projectTitle: project.title,
+            items,
+          };
+        } catch {
+          return null;
+        }
+      },
+      // [T-099c] context.artifact.text —— 某项目某类产物正文全文(事故二根治)。找该 artifactType 的
+      // 当前版本,抽正文:output_script transcript 优先(与 getScript 同读法),回退 contentText,再回退
+      // contentData.sections 拼段 / body(与 scriptSource.getLatestScript 同抽取口径)。找不到该类产物 /
+      // 无当前版本 → null(诚实空态,工具侧渲「这个项目还没有 X 产物」)。ownership 门经 projectsRepo.get。
+      getArtifactText: async (
+        c: RequestContext,
+        opts: { projectId: string; artifactType: string },
+      ) => {
+        try {
+          await projectsRepo.get(c, opts.projectId); // ownership 门(越权/不存在 → 抛 → null)
+          const artifactRows = await artifactsService.listProjectArtifacts(
+            c,
+            opts.projectId,
+          );
+          const target = artifactRows.find(
+            (a) => a.artifactType === opts.artifactType,
+          );
+          if (!target || !target.currentVersionId) return null;
+          const repo = createArtifactRepository(db, { ...deps, userId: c.userId });
+          const version = await repo.getVersion(target.currentVersionId);
+          const fullText = extractArtifactText(
+            version.contentText,
+            version.contentData,
+          );
+          return { artifactType: target.artifactType, fullText };
+        } catch {
+          return null;
+        }
+      },
+      // [T-099c] context.knowledge.text —— 某知识条目长文正文全文。取当前修订(缺则 revisionNumber 最大)
+      // 的 content(transcript/reference/note 长文都落在 revision content,与 getKnowledgeDetail 的 note
+      // 同读法)。读不到(不存在/越权)→ null(getKnowledge 抛 → catch 成 null,诚实降级)。
+      getKnowledgeText: async (c: RequestContext, opts: { id: string }) => {
+        try {
+          const item = await knowledgeService.getKnowledge(c, opts.id);
+          let fullText = "";
+          try {
+            const revisions = await knowledgeService.listRevisions(c, opts.id);
+            const current =
+              revisions.find((r) => r.id === item.currentRevisionId) ??
+              revisions
+                .slice()
+                .sort((a, b) => b.revisionNumber - a.revisionNumber)[0];
+            fullText = current?.content ?? "";
+          } catch {
+            fullText = "";
+          }
+          return {
+            id: item.id,
+            title: item.title,
+            knowledgeType: item.knowledgeType,
+            fullText,
           };
         } catch {
           return null;

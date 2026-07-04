@@ -14,8 +14,11 @@
 import * as React from "react";
 
 import type {
+  ContextArtifactsToolResult,
+  ContextArtifactTextToolResult,
   ContextCommentsToolResult,
   ContextKnowledgeDetailToolResult,
+  ContextKnowledgeTextToolResult,
   ContextKnowledgeToolResult,
   ContextPositioningDetailToolResult,
   ContextProjectDetailToolResult,
@@ -555,6 +558,191 @@ export function ChatKnowledgeDetailCard({
         {item.usedInPublished ? " · 用于已发布作品" : ""} · 关联 {item.relations.length} 条
       </p>
     </CardShell>
+  );
+}
+
+// ── [T-099c] context.artifacts → 产物清单卡 ────────────────────────────────────
+// artifactType 列表 + 当前版本号 + 字数 + updatedAt(SPEC §1 行#3「UI 渲染卡」)。
+// 点条目提示可用 context.artifact.text 读全文(指针,不二次请求)。
+
+type ArtifactListResult = ContextArtifactsToolResult;
+
+export function ChatArtifactListCard({
+  found,
+  projectTitle,
+  items,
+}: {
+  found: boolean;
+  projectTitle: string;
+  items: ArtifactListResult["items"];
+}) {
+  if (!found) {
+    return (
+      <EmptyCard
+        slot="chat-artifact-list-card"
+        text="查不到这个项目的产物 —— 可能 id 不对、已删除或不属于你。"
+      />
+    );
+  }
+  if (items.length === 0) {
+    return (
+      <EmptyCard
+        slot="chat-artifact-list-card"
+        text="这个项目还没有产物(脚本/逐字稿/结构方案等)—— 先去产出一版。"
+      />
+    );
+  }
+  return (
+    <CardShell
+      slot="chat-artifact-list-card"
+      heading={`产物清单 · ${projectTitle || "（无标题）"}`}
+      footer={
+        <p className="text-[10px] text-text-subtle">
+          要读某类产物正文,让 AI 用 context.artifact.text 读全文。
+        </p>
+      }
+    >
+      <ul className="flex flex-col gap-0.5">
+        {items.map((a) => (
+          <li
+            key={a.artifactType}
+            data-slot="chat-artifact-item"
+            className="flex items-center gap-2 rounded-md px-1.5 py-1 text-[11px]"
+          >
+            <span className="min-w-0 flex-1 truncate text-foreground">
+              {a.artifactType}
+            </span>
+            <span className="shrink-0 text-text-subtle">
+              {a.currentVersion !== null ? `v${a.currentVersion} · ` : ""}
+              {a.totalChars} 字
+              {a.updatedAt ? ` · ${a.updatedAt.slice(0, 10)}` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </CardShell>
+  );
+}
+
+// ── [T-099c] context.artifact.text / context.knowledge.text → 全文阅读卡 ────────
+// 元数据头(标题/类型/字数/窗口位置)+ 折叠正文可展开 + hasMore 时「还有 N 字,可翻窗(offset=X)」
+// 提示(SPEC §1 行#4/#11「UI 渲染卡」)。从 part.output 直渲同一份真值窗口,不二次请求。
+
+export function ChatFullTextCard({
+  found,
+  heading,
+  subheading,
+  text,
+  offset,
+  totalChars,
+  hasMore,
+  emptyText,
+}: {
+  found: boolean;
+  /** 卡头(如 "产物正文 · output_script" / "知识全文 · 标题")。 */
+  heading: string;
+  /** 副标题(可选,如 knowledgeType);空则不渲。 */
+  subheading?: string;
+  text: string;
+  offset: number;
+  totalChars: number;
+  hasMore: boolean;
+  /** found=false 或空正文时的诚实空态文案。 */
+  emptyText: string;
+}) {
+  const [expanded, setExpanded] = React.useState(false);
+  if (!found || (totalChars === 0 && !text)) {
+    return <EmptyCard slot="chat-fulltext-card" text={emptyText} />;
+  }
+  // 窗口末位(offset + 本窗口字数)—— 翻窗提示与「已读到第几字」都用它。
+  const windowEnd = offset + text.length;
+  // 折叠:正文长(>240 字)时默认折叠首屏;短则直接全渲。
+  const COLLAPSE_THRESHOLD = 240;
+  const collapsible = text.length > COLLAPSE_THRESHOLD;
+  const shownText =
+    collapsible && !expanded ? `${text.slice(0, COLLAPSE_THRESHOLD)}…` : text;
+  return (
+    <CardShell
+      slot="chat-fulltext-card"
+      heading={heading}
+      footer={
+        <div className="flex flex-col gap-0.5">
+          <p
+            data-slot="chat-fulltext-window"
+            className="text-[10px] text-text-subtle"
+          >
+            全文 {totalChars} 字 · 本窗口 {offset}–{windowEnd} 字
+          </p>
+          {hasMore ? (
+            <p
+              data-slot="chat-fulltext-more"
+              className="text-[10px] text-brand"
+            >
+              还有 {totalChars - windowEnd} 字未读 · 可让 AI 翻窗(offset={windowEnd})
+            </p>
+          ) : null}
+        </div>
+      }
+    >
+      {subheading ? (
+        <span className="text-[11px] text-muted-foreground">{subheading}</span>
+      ) : null}
+      <p
+        data-slot="chat-fulltext-body"
+        className="whitespace-pre-wrap break-words text-[12px] leading-snug text-foreground"
+      >
+        {shownText}
+      </p>
+      {collapsible ? (
+        <button
+          type="button"
+          data-slot="chat-fulltext-expand"
+          onClick={() => setExpanded((v) => !v)}
+          className="self-start rounded-control border border-brand/40 px-2 py-0.5 text-[10px] font-medium text-brand hover:bg-brand-soft"
+        >
+          {expanded ? "收起正文" : "展开本窗口全文"}
+        </button>
+      ) : null}
+    </CardShell>
+  );
+}
+
+// context.artifact.text 结果 → 全文阅读卡(元数据头 = 产物类型)。
+export function ChatArtifactTextCard({
+  result,
+}: {
+  result: Partial<ContextArtifactTextToolResult>;
+}) {
+  return (
+    <ChatFullTextCard
+      found={result.found ?? false}
+      heading={`产物正文 · ${result.artifactType || "（未知类型）"}`}
+      text={result.text ?? ""}
+      offset={result.offset ?? 0}
+      totalChars={result.totalChars ?? 0}
+      hasMore={result.hasMore ?? false}
+      emptyText="这个项目还没有这类产物的正文 —— 换个 artifactType,或先去产出一版。"
+    />
+  );
+}
+
+// context.knowledge.text 结果 → 全文阅读卡(元数据头 = 知识标题,副标题 = 类型)。
+export function ChatKnowledgeTextCard({
+  result,
+}: {
+  result: Partial<ContextKnowledgeTextToolResult>;
+}) {
+  return (
+    <ChatFullTextCard
+      found={result.found ?? false}
+      heading={`知识全文 · ${result.title || "（无标题）"}`}
+      subheading={result.knowledgeType || undefined}
+      text={result.text ?? ""}
+      offset={result.offset ?? 0}
+      totalChars={result.totalChars ?? 0}
+      hasMore={result.hasMore ?? false}
+      emptyText="这条知识没有可读的长文正文 —— 它可能只是一句观点/金句,没有 transcript/reference 正文。"
+    />
   );
 }
 

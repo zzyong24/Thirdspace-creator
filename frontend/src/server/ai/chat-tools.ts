@@ -258,6 +258,58 @@ export interface ChatToolDeps {
    * **返回原始全值**;note/sourceNote 长文本截断在工具 execute 侧强制(§3 详情档预算)。
    */
   getKnowledgeDetail?: (input: { id: string }) => Promise<KnowledgeDetailRaw | null>;
+  /**
+   * [T-099c] context.artifacts 只读端口 —— 某项目的产物清单(每条 artifactType/当前版本号/
+   * updatedAt/当前版本字数)。composition root 复用 artifactsService.listProjectArtifacts +
+   * listVersions + 当前版本文本长度(与 getScript 同口径)。读不到(不存在/越权)→ null(诚实降级)。
+   */
+  listProjectArtifacts?: (input: {
+    projectId: string;
+  }) => Promise<ArtifactListRaw | null>;
+  /**
+   * [T-099c] context.artifact.text 只读端口 —— 某项目某类产物的**正文全文**(未截断,窗口截断在
+   * 工具 execute 侧强制)。output_script 走 ReviewSubjectReader.getScript 同读法(transcript 优先);
+   * 其它 artifactType 走当前版本 contentData 正文字段(transcript/sections/body)。**这是事故二直接
+   * 根治工具**。读不到(项目/产物不存在、越权、无当前版本)→ null(诚实降级,工具侧渲空态)。
+   */
+  getArtifactText?: (input: {
+    projectId: string;
+    artifactType: string;
+  }) => Promise<ArtifactTextRaw | null>;
+  /**
+   * [T-099c] context.knowledge.text 只读端口 —— 某知识条目的**长文正文全文**(未截断,窗口截断在
+   * 工具 execute 侧强制)。取 transcript/reference/note 长文字段(与 knowledge.detail 的 note 同读法,
+   * 取当前修订正文)。读不到(不存在/越权)→ null(诚实降级)。
+   */
+  getKnowledgeText?: (input: { id: string }) => Promise<KnowledgeTextRaw | null>;
+}
+
+// [T-099c] context.artifacts 的原始全值(产物清单;字数已由 composition root 算好)。
+export interface ArtifactListRaw {
+  projectId: string;
+  projectTitle: string;
+  items: Array<{
+    artifactType: string;
+    currentVersion: number | null;
+    updatedAt: string | null;
+    totalChars: number;
+  }>;
+}
+
+// [T-099c] context.artifact.text 的原始全值(正文未截断,窗口截断在 execute 侧强制)。
+export interface ArtifactTextRaw {
+  artifactType: string;
+  /** 当前版本正文全文(未截断)。无正文 → 空串。 */
+  fullText: string;
+}
+
+// [T-099c] context.knowledge.text 的原始全值(正文未截断,窗口截断在 execute 侧强制)。
+export interface KnowledgeTextRaw {
+  id: string;
+  title: string;
+  knowledgeType: string;
+  /** 长文正文全文(transcript/reference/note 当前修订正文;未截断)。无正文 → 空串。 */
+  fullText: string;
 }
 
 // [T-099b] context.project.detail 的原始全值(composition root 拼装,execute 侧再套详情档预算)。
@@ -636,6 +688,99 @@ export interface ContextKnowledgeDetailToolResult {
   } | null;
 }
 
+// ── [T-099c] 全文档窗口读取(SPEC §3 全文档预算)──────────────────────────────────────
+// 全文档:maxChars 默认 4000 / 封顶 8000(execute 侧强制,非君子协定);offset 按字符;返回
+// { text(窗口), offset, totalChars, hasMore }。模型据 hasMore/offset/totalChars 按需翻窗
+// (honesty 第 6 条如实告知没看全天然适用)。人机同源:全文阅读卡从 part.output 直渲同一份真值。
+
+// [T-099c] 全文档窗口默认取字数(SPEC §3:默认 4000)。导出供单测/工具描述引用。
+export const TEXT_WINDOW_DEFAULT_MAX_CHARS = 4000;
+// [T-099c] 全文档窗口硬上限(SPEC §3:封顶 8000)。execute 侧对 maxChars 强制夹到此值。导出供单测。
+export const TEXT_WINDOW_CAP_CHARS = 8000;
+
+// [T-099c] context.artifact.text / context.knowledge.text 的窗口结果形状(SPEC §3 全文档真相字段)。
+export interface TextWindow {
+  /** 从 offset 起、长度 ≤ maxChars 的正文窗口(封顶 8000)。 */
+  text: string;
+  /** 本窗口起始字符偏移(clamp 到 [0, totalChars])。 */
+  offset: number;
+  /** 正文总字数(全文,窗口前的真相 —— 模型据此知道离看全还差多少)。 */
+  totalChars: number;
+  /** 本窗口之后是否还有正文(offset + text.length < totalChars)。 */
+  hasMore: boolean;
+}
+
+// [T-099c] maxChars 夹取:非法/缺省 → 默认 4000;>8000 → 封顶 8000;≤0 → 默认。导出供单测。
+export function clampWindowMaxChars(maxChars: number | undefined): number {
+  if (
+    typeof maxChars !== "number" ||
+    !Number.isFinite(maxChars) ||
+    maxChars <= 0
+  ) {
+    return TEXT_WINDOW_DEFAULT_MAX_CHARS;
+  }
+  return Math.min(Math.floor(maxChars), TEXT_WINDOW_CAP_CHARS);
+}
+
+/**
+ * [T-099c] 全文档窗口读取纯函数(SPEC §3 全文档预算,execute 侧强制)。
+ * offset 按字符 clamp 到 [0, totalChars];maxChars 经 clampWindowMaxChars(默认 4000/封顶 8000);
+ * 返回 { text(窗口), offset, totalChars, hasMore }。空文本 → 空窗口 + hasMore=false。可单测。
+ */
+export function readTextWindow(
+  fullText: unknown,
+  opts: { offset?: number; maxChars?: number },
+): TextWindow {
+  const s = typeof fullText === "string" ? fullText : "";
+  const totalChars = s.length;
+  const eff = clampWindowMaxChars(opts.maxChars);
+  // offset 夹到 [0, totalChars](负数/越界/非数 → 0 或末尾;不抛)。
+  const rawOffset = opts.offset;
+  const safeOffset =
+    typeof rawOffset === "number" && Number.isFinite(rawOffset) && rawOffset > 0
+      ? Math.floor(rawOffset)
+      : 0;
+  const offset = Math.min(safeOffset, totalChars);
+  const text = s.slice(offset, offset + eff);
+  return {
+    text,
+    offset,
+    totalChars,
+    hasMore: offset + text.length < totalChars,
+  };
+}
+
+// [T-099c] context.artifacts 工具结果 —— 某项目产物清单(清单档 compact)。前端「产物清单卡」直渲。
+export interface ContextArtifactsToolResult {
+  kind: "context.artifacts";
+  found: boolean;
+  projectId: string;
+  projectTitle: string;
+  items: Array<{
+    artifactType: string;
+    currentVersion: number | null;
+    updatedAt: string | null;
+    totalChars: number;
+  }>;
+}
+
+// [T-099c] context.artifact.text 工具结果 —— 产物正文窗口(全文档,SPEC §1 行#4)。前端「全文阅读卡」
+// 直渲(元数据头 artifactType/字数/窗口位置 + 折叠正文可展开 + hasMore 翻窗提示)。这是事故二根治工具。
+export interface ContextArtifactTextToolResult extends TextWindow {
+  kind: "context.artifact.text";
+  found: boolean;
+  artifactType: string;
+}
+
+// [T-099c] context.knowledge.text 工具结果 —— 知识长文窗口(全文档,SPEC §1 行#11,复用全文阅读卡)。
+export interface ContextKnowledgeTextToolResult extends TextWindow {
+  kind: "context.knowledge.text";
+  found: boolean;
+  id: string;
+  title: string;
+  knowledgeType: string;
+}
+
 // ── 工具入参 JSON Schema(可序列化契约)─────────────────────────────────────────────
 
 // [T-081] 产内容工具统一的 extraBrief 入参(对齐 topic.generate deps 先例):对话里翻真数据/
@@ -1001,6 +1146,79 @@ const CONTEXT_KNOWLEDGE_DETAIL_PARAMS = jsonSchema<{ id: string }>({
       description:
         "要查全档的知识条目 id(从 context.knowledge 清单卡拿到的 id)。返回该条目的 type/标题/正文/出处/标签/战绩(被引用次数)/关联边。",
     },
+  },
+  required: ["id"],
+  additionalProperties: false,
+});
+
+// [T-099c] context.artifacts 入参 —— projectId 必填(某项目产物清单)。
+const CONTEXT_ARTIFACTS_PARAMS = jsonSchema<{ projectId: string }>({
+  type: "object",
+  properties: {
+    projectId: {
+      type: "string",
+      description:
+        "要列产物清单的项目 id(从 context.projects 清单卡拿到的 id)。返回该项目每类产物(脚本/逐字稿/论点树等)的类型 + 当前版本号 + 更新时间 + 字数。要读某类产物正文用 context.artifact.text。",
+    },
+  },
+  required: ["projectId"],
+  additionalProperties: false,
+});
+
+// [T-099c] 全文档窗口入参共用属性(offset/maxChars)—— context.artifact.text / context.knowledge.text
+// 同窗口协议(SPEC §3)。offset 按字符;maxChars 默认 4000/封顶 8000(execute 侧强制)。
+const WINDOW_OFFSET_PROPERTY = {
+  type: "number",
+  description:
+    "从正文第几个字符开始读(默认 0,按字符)。上一窗口 hasMore=true 时,用上一窗口的 offset+已读字数继续翻,直到看全或如实告知还剩多少。",
+} as const;
+const WINDOW_MAX_CHARS_PROPERTY = {
+  type: "number",
+  description:
+    "本窗口最多读多少字(默认 4000,封顶 8000;超过会被截到 8000)。正文很长时按需分窗读,不要一次性硬拿全文。",
+} as const;
+
+// [T-099c] context.artifact.text 入参 —— projectId + artifactType 必填,offset/maxChars 可选(窗口)。
+const CONTEXT_ARTIFACT_TEXT_PARAMS = jsonSchema<{
+  projectId: string;
+  artifactType: string;
+  offset?: number;
+  maxChars?: number;
+}>({
+  type: "object",
+  properties: {
+    projectId: {
+      type: "string",
+      description:
+        "产物所属项目 id(从 context.projects 拿)。先用 context.artifacts 看该项目有哪些 artifactType,再来读正文。",
+    },
+    artifactType: {
+      type: "string",
+      description:
+        "要读正文的产物类型(如 output_script=逐字稿/脚本、content_outline=结构方案、thesis_tree=论点树、content_contract=内容合同)。取值来自 context.artifacts 清单里的 artifactType。",
+    },
+    offset: WINDOW_OFFSET_PROPERTY,
+    maxChars: WINDOW_MAX_CHARS_PROPERTY,
+  },
+  required: ["projectId", "artifactType"],
+  additionalProperties: false,
+});
+
+// [T-099c] context.knowledge.text 入参 —— id 必填,offset/maxChars 可选(与 artifact.text 同窗口协议)。
+const CONTEXT_KNOWLEDGE_TEXT_PARAMS = jsonSchema<{
+  id: string;
+  offset?: number;
+  maxChars?: number;
+}>({
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+      description:
+        "要读长文正文的知识条目 id(从 context.knowledge 搜到,或 context.knowledge.detail 提示正文很长时)。返回 transcript/reference/note 长文的窗口。",
+    },
+    offset: WINDOW_OFFSET_PROPERTY,
+    maxChars: WINDOW_MAX_CHARS_PROPERTY,
   },
   required: ["id"],
   additionalProperties: false,
@@ -1510,6 +1728,128 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         };
       },
     }),
+    // ── [T-099c] 只读 context 全文工具(切片三,事故二根治)—— 产物清单 + 长文本窗口读取。
+    //    人机同源:结果同一份真值,模型读进上下文,前端 CONTEXT_CARD_REGISTRY 直渲(产物清单卡 /
+    //    全文阅读卡)。§3 全文档预算:窗口 maxChars 默认 4000/封顶 8000(execute 侧强制),返回带
+    //    offset/totalChars/hasMore 真相字段,模型按需翻窗。
+    "context.artifacts": tool({
+      description:
+        "只读:列某个项目/作品的**产物清单**(每类产物「脚本/逐字稿/结构方案/论点树等」的 artifactType + 当前版本号 + 字数 + 更新时间)。当用户问「这个项目有哪些产物 / 脚本写了没 / 逐字稿多长」时,先用 context.projects 拿到 id,再调它。这里只给字数索引,不给正文——要读某类产物的正文全文用 context.artifact.text。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_ARTIFACTS_PARAMS,
+      execute: async ({ projectId }): Promise<ContextArtifactsToolResult> => {
+        const pid = typeof projectId === "string" ? projectId.trim() : "";
+        if (!pid || !deps.listProjectArtifacts) {
+          return {
+            kind: "context.artifacts",
+            found: false,
+            projectId: pid,
+            projectTitle: "",
+            items: [],
+          };
+        }
+        const raw = await deps.listProjectArtifacts({ projectId: pid });
+        if (!raw) {
+          return {
+            kind: "context.artifacts",
+            found: false,
+            projectId: pid,
+            projectTitle: "",
+            items: [],
+          };
+        }
+        return {
+          kind: "context.artifacts",
+          found: true,
+          projectId: raw.projectId,
+          projectTitle: raw.projectTitle,
+          items: raw.items,
+        };
+      },
+    }),
+    "context.artifact.text": tool({
+      description:
+        "只读:按窗口读取某个项目某类产物的**正文全文**(脚本/逐字稿/结构方案等)。这是让你真正摸到作品正文的通路——绝不要拿标题脑补内容。入参 projectId + artifactType(从 context.artifacts 拿),offset/maxChars 控制窗口(默认 4000 字/封顶 8000)。返回 { artifactType, text(窗口正文), offset, totalChars, hasMore }:hasMore=true 时带 offset 继续翻窗读全,或如实告知还剩多少字没读。正文已在对话的全文阅读卡里渲给用户,你只有指针权(引用/归纳),别逐字复述整段。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_ARTIFACT_TEXT_PARAMS,
+      execute: async ({
+        projectId,
+        artifactType,
+        offset,
+        maxChars,
+      }): Promise<ContextArtifactTextToolResult> => {
+        const pid = typeof projectId === "string" ? projectId.trim() : "";
+        const atype = typeof artifactType === "string" ? artifactType.trim() : "";
+        const emptyWindow = readTextWindow("", { offset, maxChars });
+        if (!pid || !atype || !deps.getArtifactText) {
+          return {
+            kind: "context.artifact.text",
+            found: false,
+            artifactType: atype,
+            ...emptyWindow,
+          };
+        }
+        const raw = await deps.getArtifactText({ projectId: pid, artifactType: atype });
+        if (!raw) {
+          return {
+            kind: "context.artifact.text",
+            found: false,
+            artifactType: atype,
+            ...emptyWindow,
+          };
+        }
+        // §3 全文档预算(execute 侧强制,非君子协定):maxChars 默认 4000/封顶 8000,offset 按字符。
+        const window = readTextWindow(raw.fullText, { offset, maxChars });
+        return {
+          kind: "context.artifact.text",
+          found: true,
+          artifactType: raw.artifactType,
+          ...window,
+        };
+      },
+    }),
+    "context.knowledge.text": tool({
+      description:
+        "只读:按窗口读取某条知识库条目的**长文正文全文**(逐字稿 transcript / 引用原文 reference / 笔记 note)。当 context.knowledge.detail 提示正文很长、或用户要「读全这条知识」时,用 id(从 context.knowledge 搜到)调它。offset/maxChars 控制窗口(默认 4000 字/封顶 8000),与 context.artifact.text 同窗口协议。返回 { title, knowledgeType, text(窗口), offset, totalChars, hasMore }:hasMore=true 时翻窗读全。正文已在全文阅读卡里渲给用户,你只有指针权,别逐字复述整段。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_KNOWLEDGE_TEXT_PARAMS,
+      execute: async ({
+        id,
+        offset,
+        maxChars,
+      }): Promise<ContextKnowledgeTextToolResult> => {
+        const kid = typeof id === "string" ? id.trim() : "";
+        const emptyWindow = readTextWindow("", { offset, maxChars });
+        if (!kid || !deps.getKnowledgeText) {
+          return {
+            kind: "context.knowledge.text",
+            found: false,
+            id: kid,
+            title: "",
+            knowledgeType: "",
+            ...emptyWindow,
+          };
+        }
+        const raw = await deps.getKnowledgeText({ id: kid });
+        if (!raw) {
+          return {
+            kind: "context.knowledge.text",
+            found: false,
+            id: kid,
+            title: "",
+            knowledgeType: "",
+            ...emptyWindow,
+          };
+        }
+        // §3 全文档预算(execute 侧强制):与 artifact.text 同窗口协议(readTextWindow)。
+        const window = readTextWindow(raw.fullText, { offset, maxChars });
+        return {
+          kind: "context.knowledge.text",
+          found: true,
+          id: raw.id,
+          title: raw.title,
+          knowledgeType: raw.knowledgeType,
+          ...window,
+        };
+      },
+    }),
   };
 }
 
@@ -1542,6 +1882,10 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "context.project.detail",
   "context.positioning.detail",
   "context.knowledge.detail",
+  // [T-099c] 切片三:全文类(产物清单 + 长文本窗口读取,事故二根治)。
+  "context.artifacts",
+  "context.artifact.text",
+  "context.knowledge.text",
 ];
 
 /**
