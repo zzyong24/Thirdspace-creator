@@ -187,6 +187,7 @@ describe("content-calendar island wiring", () => {
               plannedAt: "2026-07-23T09:00:00.000Z",
             },
           ],
+          projects: [],
           cadence: null,
           attainment: LAGGING_ATTAINMENT,
           window: { from: LAGGING_ATTAINMENT.from, to: LAGGING_ATTAINMENT.to },

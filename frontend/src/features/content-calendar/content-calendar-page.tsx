@@ -65,6 +65,12 @@ export interface CalendarPublicationItem {
   readonly coverAssetId: string | null;
 }
 
+/** 排期表单的项目下拉最小投影(id + 标题;可选绑到某项目/产出)。 */
+export interface CalendarProjectOption {
+  readonly id: string;
+  readonly title: string;
+}
+
 export interface ContentCalendarViewModel {
   readonly accountId: string | null;
   readonly accounts: PlatformAccountResource[];
@@ -76,6 +82,8 @@ export interface ContentCalendarViewModel {
   readonly publications: CalendarPublicationItem[];
   /** 本月排期 entries(content_calendar_entries;现 0 行 → 诚实空)。 */
   readonly entries: ContentCalendarEntryResource[];
+  /** 用户的项目列表(排期表单「选项目」用;读失败 → 诚实空)。 */
+  readonly projects: CalendarProjectOption[];
   readonly cadence: PublishingCadenceResource | null;
   readonly attainment: CadenceAttainmentResource | null;
   readonly window: { from: string; to: string };
@@ -130,6 +138,7 @@ async function loadViewModel(
       referenceDateKey,
       publications: [],
       entries: [],
+      projects: [],
       cadence: null,
       attainment: null,
       window,
@@ -163,6 +172,20 @@ async function loadViewModel(
     body: undefined,
   })) as unknown as ContentCalendarEntryResource[];
 
+  // 排期表单「选项目」的候选:读用户项目列表(id + 标题)。读失败 → 诚实空,
+  // 表单退化为「只填计划标题」,不阻断排期。
+  let projects: CalendarProjectOption[] = [];
+  try {
+    const rows = (await client.listProjects({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as unknown as Array<{ id: string; title: string }>;
+    projects = rows.map((p) => ({ id: p.id, title: p.title }));
+  } catch {
+    projects = [];
+  }
+
   const cadence = (await client.getCadence({
     params: { accountId: active.id },
     query: undefined,
@@ -182,6 +205,7 @@ async function loadViewModel(
     referenceDateKey,
     publications,
     entries,
+    projects,
     cadence,
     attainment,
     window,

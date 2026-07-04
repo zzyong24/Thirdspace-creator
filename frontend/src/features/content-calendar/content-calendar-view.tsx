@@ -18,6 +18,7 @@ import * as React from "react";
 import { SectionCard } from "@/components/project/section-card";
 import { CoverThumb } from "@/components/resources/cover-thumb";
 import { buildMonthGrid, shiftMonth, type DayCell } from "./calendar-month";
+import { ScheduleEntryForm, DrawerEntryRow } from "./content-calendar-schedule";
 import type {
   CalendarPublicationItem,
   ContentCalendarViewModel,
@@ -55,7 +56,7 @@ export function ContentCalendarView({
 }: {
   readonly viewModel: ContentCalendarViewModel;
 }) {
-  const { accountId, month, referenceDateKey, publications, entries } =
+  const { accountId, month, referenceDateKey, publications, entries, projects } =
     viewModel;
   const [selectedDay, setSelectedDay] = React.useState<string | null>(null);
 
@@ -101,6 +102,9 @@ export function ContentCalendarView({
   const selectedEntries = selectedDay
     ? (entriesByDay.get(selectedDay) ?? [])
     : [];
+  // 未来/今天的抽屉可排期(过去日只读复盘,不排期)。
+  const selectedCanSchedule =
+    selectedDay !== null && selectedDay >= referenceDateKey;
 
   return (
     <div
@@ -218,7 +222,9 @@ export function ContentCalendarView({
 
             {selectedPubs.length === 0 && selectedEntries.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                这一天没有发布记录，也没有排期。
+                {selectedCanSchedule
+                  ? "这一天还没有排期。点下方「+ 排期」规划一条。"
+                  : "这一天没有发布记录，也没有排期。"}
               </p>
             ) : null}
 
@@ -261,23 +267,20 @@ export function ContentCalendarView({
                 </h4>
                 <ul className="flex flex-col gap-1.5">
                   {selectedEntries.map((entry) => (
-                    <li
-                      key={entry.id}
-                      data-testid="calendar-drawer-entry"
-                      data-status={entry.status}
-                      className="rounded-md border border-dashed border-border p-2 text-sm"
-                    >
-                      {ENTRY_STATUS_LABELS[entry.status] ?? entry.status} ·{" "}
-                      {entry.plannedAt.slice(0, 16).replace("T", " ")}
-                      {entry.note ? (
-                        <span className="text-muted-foreground">
-                          {" "}
-                          · {entry.note}
-                        </span>
-                      ) : null}
-                    </li>
+                    <DrawerEntryRow key={entry.id} entry={entry} />
                   ))}
                 </ul>
+              </div>
+            ) : null}
+
+            {/* 未来/今天:排期写路径入口(过去日不展示——只读复盘)。 */}
+            {selectedCanSchedule && selectedDay ? (
+              <div className="mt-1">
+                <ScheduleEntryForm
+                  accountId={accountId}
+                  dateKey={selectedDay}
+                  projects={projects}
+                />
               </div>
             ) : null}
           </aside>
@@ -303,8 +306,11 @@ function CalendarDayCell({
   const total = pubs.length + entries.length;
   const isPast = cell.dateKey < referenceDateKey;
   const isToday = cell.dateKey === referenceDateKey;
+  const isFutureOrToday = cell.dateKey >= referenceDateKey;
   // 断更空窗:过去的本月格且当天 0 条 → 淡色。
   const isGap = cell.inMonth && isPast && total === 0;
+  // 可点开抽屉:有内容的任意本月格,或未来/今天的本月格(空格也可点进去排期)。
+  const openable = cell.inMonth && (total > 0 || isFutureOrToday);
   const visiblePubs = pubs.slice(0, MAX_CHIPS_PER_CELL);
   const visibleEntries =
     pubs.length >= MAX_CHIPS_PER_CELL
@@ -318,12 +324,13 @@ function CalendarDayCell({
       data-in-month={cell.inMonth}
       data-count={total}
       data-gap={isGap || undefined}
-      onClick={cell.inMonth && total > 0 ? onOpen : undefined}
+      data-openable={openable || undefined}
+      onClick={openable ? onOpen : undefined}
       className={[
         "min-h-24 border-r border-border p-1.5 last:border-r-0",
         cell.inMonth ? "" : "bg-surface-subtle/60",
         isGap ? "bg-muted" : "",
-        cell.inMonth && total > 0 ? "cursor-pointer hover:bg-surface-subtle" : "",
+        openable ? "cursor-pointer hover:bg-surface-subtle" : "",
       ]
         .filter(Boolean)
         .join(" ")}

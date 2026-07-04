@@ -47,6 +47,7 @@ function vm(
     referenceDateKey: "2026-07-03",
     publications: [],
     entries: [],
+    projects: [],
     cadence: null,
     attainment: null,
     window: {
