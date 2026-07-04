@@ -17,27 +17,37 @@ import * as React from "react";
 import type {
   ContextArtifactsToolResult,
   ContextArtifactTextToolResult,
+  ContextCandidatesToolResult,
   ContextCommentsToolResult,
   ContextKnowledgeDetailToolResult,
   ContextKnowledgeTextToolResult,
   ContextKnowledgeToolResult,
+  ContextLearningsToolResult,
   ContextMaterialsToolResult,
+  ContextMetricsToolResult,
   ContextPositioningDetailToolResult,
+  ContextPredictionsToolResult,
   ContextProjectDetailToolResult,
   ContextProjectsToolResult,
+  ContextPublicationsToolResult,
 } from "@/server/ai/chat-tools";
 
 import {
   ChatArtifactListCard,
   ChatArtifactTextCard,
+  ChatCandidateListCard,
   ChatCommentListCard,
   ChatContextGenericCard,
   ChatKnowledgeDetailCard,
   ChatKnowledgeListCard,
   ChatKnowledgeTextCard,
+  ChatLearningsListCard,
+  ChatMetricsCard,
   ChatPositioningDetailCard,
+  ChatPredictionsCard,
   ChatProjectDetailCard,
   ChatProjectListCard,
+  ChatPublicationListCard,
 } from "./chat-context-cards";
 import { ChatMaterialListCard } from "./chat-material-list-card";
 
@@ -128,6 +138,57 @@ export const CONTEXT_CARD_REGISTRY: Readonly<Record<string, ContextCardRenderer>
   "context.knowledge.text": (out) => {
     const o = out as unknown as Partial<ContextKnowledgeTextToolResult>;
     return <ChatKnowledgeTextCard result={o} />;
+  },
+  // [T-099 切片四] 指标/发布类。数据从 tool-result part.output 直渲,不二次请求。
+  "context.publications": (out) => {
+    const o = out as unknown as Partial<ContextPublicationsToolResult>;
+    return (
+      <ChatPublicationListCard
+        items={o.items ?? []}
+        total={o.total ?? (o.items?.length ?? 0)}
+        hasMore={o.hasMore ?? false}
+      />
+    );
+  },
+  "context.metrics": (out) => {
+    const o = out as unknown as Partial<ContextMetricsToolResult>;
+    return (
+      <ChatMetricsCard
+        subject={o.subject ?? null}
+        rows={o.rows ?? []}
+        retention={o.retention ?? []}
+      />
+    );
+  },
+  // [T-099 切片五] 经验/候选/校准类。数据从 part.output 直渲,不二次请求。
+  "context.learnings": (out) => {
+    const o = out as unknown as Partial<ContextLearningsToolResult>;
+    return (
+      <ChatLearningsListCard
+        items={o.items ?? []}
+        total={o.total ?? (o.items?.length ?? 0)}
+      />
+    );
+  },
+  "context.candidates": (out) => {
+    const o = out as unknown as Partial<ContextCandidatesToolResult>;
+    return (
+      <ChatCandidateListCard
+        items={o.items ?? []}
+        total={o.total ?? (o.items?.length ?? 0)}
+        hasMore={o.hasMore ?? false}
+      />
+    );
+  },
+  "context.predictions": (out) => {
+    const o = out as unknown as Partial<ContextPredictionsToolResult>;
+    return (
+      <ChatPredictionsCard
+        rubric={o.rubric ?? null}
+        items={o.items ?? []}
+        total={o.total ?? (o.items?.length ?? 0)}
+      />
+    );
   },
 };
 

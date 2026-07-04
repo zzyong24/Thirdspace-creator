@@ -5662,6 +5662,265 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           return null;
         }
       },
+      // [T-099 切片四] context.publications —— 该用户发布记录清单。复用 publishing 公开读源
+      // getRecentPublicationsWithTitle(user-scoped,已把 revision 标题解析进 row.title)。该读源
+      // 无 total:多拉一页(limit+1)探 hasMore,total 用「offset+已见 + (还有更多 ? 1 : 0)」诚实近似
+      // (不新造 count op;分页真相 hasMore 精确,total 为下界近似,前端脚注不谎称已看全)。
+      listPublications: async (
+        c: RequestContext,
+        opts: { limit: number; offset: number },
+      ) => {
+        try {
+          const probe = await publishingService.getRecentPublicationsWithTitle(c, {
+            limit: opts.limit + 1,
+            offset: opts.offset,
+          });
+          const hasMore = probe.length > opts.limit;
+          const page = probe.slice(0, opts.limit);
+          return {
+            rows: page.map((p) => ({
+              id: p.id,
+              platform: p.platform,
+              url: p.externalUrl ?? null,
+              publishedAt: p.publishedAt ?? null,
+              projectTitle: p.title ?? "",
+              status: p.status,
+            })),
+            // total 下界:本页起点 + 本页条数 (+1 当还有更多)。工具 hasMore 精确,total 诚实近似。
+            total: opts.offset + page.length + (hasMore ? 1 : 0),
+          };
+        } catch {
+          return { rows: [], total: 0 };
+        }
+      },
+      // [T-099 切片四] context.metrics —— 给 projectId → 单作品指标快照(播放/点赞/评论/分享,复用
+      // dashboard 的 views??plays 归一 + 最新帧口径,与 getMetricsSummary 同读法);不给 → 账号级最近
+      // N 作品指标行(getRecentPublicationsWithTitle 的作品 × 各自最新 snapshot)。留存点无公开读 seam
+      // (不跨模块直连 repo,守 SPEC §22 / 零新 contract)→ 诚实回空数组(不编)。全 best-effort 空兜底。
+      getMetrics: async (
+        c: RequestContext,
+        opts: { projectId?: string; limit: number },
+      ) => {
+        // 从一条 publication 的最新 snapshot rawMetrics 抽 4 项核心指标(views??plays 归一)。
+        const metricsOfPublication = async (
+          publicationId: string,
+        ): Promise<{
+          plays: number | null;
+          likes: number | null;
+          comments: number | null;
+          shares: number | null;
+        }> => {
+          try {
+            const page = await analyticsService.getPublicationAnalytics(
+              c,
+              publicationId,
+              1,
+              10,
+            );
+            const latest = page.rows
+              .slice()
+              .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
+            const raw = (latest?.rawMetrics ?? {}) as Record<string, unknown>;
+            const num = (k: string): number | null => {
+              const v = raw[k];
+              return typeof v === "number" && Number.isFinite(v) ? v : null;
+            };
+            return {
+              plays: num("views") ?? num("plays"),
+              likes: num("likes") ?? num("digg"),
+              comments: num("comments"),
+              shares: num("shares"),
+            };
+          } catch {
+            return { plays: null, likes: null, comments: null, shares: null };
+          }
+        };
+        // 单作品模式:该项目 outputs → publications,合并各 publication 最新 snapshot(取有值者)。
+        if (opts.projectId) {
+          try {
+            const project = await projectsRepo.get(c, opts.projectId); // ownership 门
+            const outputIds = await projectsService.listOutputIdsByProject(
+              c,
+              opts.projectId,
+            );
+            const merged = {
+              plays: null as number | null,
+              likes: null as number | null,
+              comments: null as number | null,
+              shares: null as number | null,
+            };
+            for (const outputId of outputIds) {
+              let pubs: Array<{ id: string }> = [];
+              try {
+                pubs = await publishingService.listPublications(c, outputId, {
+                  limit: 20,
+                  offset: 0,
+                });
+              } catch {
+                pubs = [];
+              }
+              for (const pub of pubs) {
+                const m = await metricsOfPublication(pub.id);
+                merged.plays = merged.plays ?? m.plays;
+                merged.likes = merged.likes ?? m.likes;
+                merged.comments = merged.comments ?? m.comments;
+                merged.shares = merged.shares ?? m.shares;
+              }
+            }
+            const hasAny =
+              merged.plays !== null ||
+              merged.likes !== null ||
+              merged.comments !== null ||
+              merged.shares !== null;
+            return {
+              subject: project.title,
+              rows: hasAny ? [{ title: project.title, ...merged }] : [],
+              // 留存点无公开读 seam → 诚实空(不跨模块直连 repo、不编)。
+              retention: [],
+            };
+          } catch {
+            return { subject: null, rows: [], retention: [] };
+          }
+        }
+        // 账号级模式:最近 N 发布作品,每作品一行(标题 + 该 publication 最新 snapshot 指标)。
+        try {
+          const pubs = await publishingService.getRecentPublicationsWithTitle(c, {
+            limit: opts.limit,
+            offset: 0,
+          });
+          const rows = await Promise.all(
+            pubs.map(async (p) => {
+              const m = await metricsOfPublication(p.id);
+              return {
+                title: p.title || p.platform || "（无标题发布）",
+                ...m,
+              };
+            }),
+          );
+          return { subject: null, rows, retention: [] };
+        } catch {
+          return { subject: null, rows: [], retention: [] };
+        }
+      },
+      // [T-099 切片五] context.learnings —— 经验清单(含 validated/candidate 状态)。复用 learnings
+      // 公开读源 listLearnings(user-scoped,带 reuseCount 战绩)。契约 list op 无 query/type/status
+      // 过滤 → 多拉一批(上限 200)后内存过滤:query 命中标题/洞察(knowledgeRelevanceScore 分词 OR),
+      // learningType/status 精确匹配。诚实:全不命中 → 空。total = 过滤后全量数(前端脚注真相)。
+      listLearnings: async (
+        c: RequestContext,
+        opts: {
+          query?: string;
+          learningType?: string;
+          status?: string;
+          limit: number;
+        },
+      ) => {
+        try {
+          const { rows } = await learningsService.listLearnings(c, {
+            limit: 200,
+            offset: 0,
+          });
+          const q = (opts.query ?? "").trim();
+          const filtered = rows.filter((r) => {
+            if (opts.learningType && r.learningType !== opts.learningType)
+              return false;
+            if (opts.status && r.validationStatus !== opts.status) return false;
+            if (q && knowledgeRelevanceScore(`${r.title}\n${r.insight}`, q) === 0)
+              return false;
+            return true;
+          });
+          return {
+            total: filtered.length,
+            rows: filtered.slice(0, opts.limit).map((r) => ({
+              id: r.id,
+              title: r.title,
+              insight: r.insight,
+              learningType: r.learningType,
+              status: r.validationStatus,
+              reuseCount: r.reuseCount,
+            })),
+          };
+        } catch {
+          return { rows: [], total: 0 };
+        }
+      },
+      // [T-099 切片五] context.candidates —— 选题候选池清单。复用 candidate 公开读源 listCandidates
+      // (user-scoped,带 total 分页)。title/status/predictedScore/source 直投影。
+      listCandidates: async (
+        c: RequestContext,
+        opts: { limit: number; offset: number },
+      ) => {
+        try {
+          const { rows, total } = await candidateService.listCandidates(c, {
+            limit: opts.limit,
+            offset: opts.offset,
+          });
+          return {
+            total,
+            rows: rows.map((r) => ({
+              id: r.id,
+              title: r.title,
+              status: r.status,
+              score: r.predictedScore,
+              source: r.source,
+            })),
+          };
+        } catch {
+          return { rows: [], total: 0 };
+        }
+      },
+      // [T-099 切片五] context.predictions —— 预测 vs 实绩对照 + 当前 rubric 摘要。复用 calibration
+      // 公开读源:getOverview(reflowRows = prediction+result 逐维度对照 + KPI)+ getCurrentRubricVersion
+      // (canonical rubric 摘要)。overview.reflowRows 只含已回流的预测;total 用 reflowRows 长度(诚实:
+      // 未回流的预测无对照行,不编 actual)。rubric 读失败 / 母版未建 → rubric:null(诚实空态)。
+      getPredictions: async (c: RequestContext, opts: { limit: number }) => {
+        let rubric: {
+          name: string;
+          versionNumber: number;
+          dimensionCount: number;
+        } | null = null;
+        try {
+          const version = await calibrationService.getCurrentRubricVersion(
+            c,
+            "rubric-canonical",
+          );
+          rubric = {
+            name: "校准评分标准",
+            versionNumber: version.versionNumber,
+            dimensionCount: version.dimensions.length,
+          };
+        } catch {
+          rubric = null; // 母版未建 / 读不到 → 诚实空(不编版本号)
+        }
+        try {
+          const overview = await calibrationService.getOverview(c);
+          const reflow = overview.reflowRows.slice(0, opts.limit);
+          // 各对照行的作品标题 —— 从 pendingSubjects 按 subjectId 反查(overview 已含,不新读)。
+          const titleBySubject = new Map(
+            overview.pendingSubjects.map((s) => [s.subjectId, s.title]),
+          );
+          const rows = reflow.map((r) => {
+            const hasResult = r.dimensions.some((d) => d.actual !== null);
+            return {
+              predictionId: r.predictionId,
+              subjectTitle: titleBySubject.get(r.subjectId) ?? "",
+              hasResult,
+              deviationBand: r.deviationBand,
+              finding: r.reason,
+              dimensions: r.dimensions.map((d) => ({
+                key: d.key,
+                label: d.label,
+                predicted: d.predicted,
+                actual: d.actual,
+                deviation: d.deviation,
+              })),
+            };
+          });
+          return { rubric, rows, total: overview.reflowRows.length };
+        } catch {
+          return { rubric, rows: [], total: 0 };
+        }
+      },
     },
     // [T-084a] 联网检索端口 —— gatherMaterials 前置检索 + honestyBlock/工具动态描述探测。
     probeSearchConfigured,

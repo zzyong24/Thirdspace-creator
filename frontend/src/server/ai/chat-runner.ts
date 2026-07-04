@@ -30,6 +30,11 @@ import {
   type ArtifactListRaw,
   type ArtifactTextRaw,
   type KnowledgeTextRaw,
+  type PublicationsListRaw,
+  type MetricsRaw,
+  type LearningsListRaw,
+  type CandidatesListRaw,
+  type PredictionsRaw,
 } from "./chat-tools";
 import { buildSkillsBrief } from "@/lib/chat-tool-labels";
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
@@ -219,6 +224,55 @@ export interface ContextReaders {
     ctx: RequestContext,
     opts: { id: string },
   ) => Promise<KnowledgeTextRaw | null>;
+  /**
+   * [T-099 切片四] context.publications —— 该用户发布记录清单(平台/链接/发布时间/关联作品标题),
+   * 分页。composition root 复用 publishing getRecentPublicationsWithTitle(user-scoped)。可选:
+   * 未装配 → 工具读到空(诚实空态)。
+   */
+  listPublications?: (
+    ctx: RequestContext,
+    opts: { limit: number; offset: number },
+  ) => Promise<PublicationsListRaw>;
+  /**
+   * [T-099 切片四] context.metrics —— 给 projectId → 单作品指标快照 + 留存点;不给 → 账号级最近 N
+   * 作品指标行。composition root 复用 analytics(snapshot 口径复用 dashboard 的 views??plays + 最新帧)。
+   * 可选:未装配 → 工具读到空(诚实空态)。
+   */
+  getMetrics?: (
+    ctx: RequestContext,
+    opts: { projectId?: string; limit: number },
+  ) => Promise<MetricsRaw>;
+  /**
+   * [T-099 切片五] context.learnings —— 经验清单(含 validated/candidate 状态)。composition root
+   * 复用 learnings listLearnings(user-scoped),按 query/learningType/status 内存过滤。可选:未装配
+   * → 工具读到空(诚实空态)。
+   */
+  listLearnings?: (
+    ctx: RequestContext,
+    opts: {
+      query?: string;
+      learningType?: string;
+      status?: string;
+      limit: number;
+    },
+  ) => Promise<LearningsListRaw>;
+  /**
+   * [T-099 切片五] context.candidates —— 选题候选池清单(title/status/score/来源),分页。composition
+   * root 复用 candidate listCandidates(user-scoped)。可选:未装配 → 工具读到空(诚实空态)。
+   */
+  listCandidates?: (
+    ctx: RequestContext,
+    opts: { limit: number; offset: number },
+  ) => Promise<CandidatesListRaw>;
+  /**
+   * [T-099 切片五] context.predictions —— 预测 vs 实绩对照(prediction + calibrationResult 拼)+ 当前
+   * rubric 版本摘要。composition root 复用 calibration getOverview(reflowRows/KPI)+ getCurrentRubricVersion。
+   * 可选:未装配 → 工具读到空(诚实空态)。
+   */
+  getPredictions?: (
+    ctx: RequestContext,
+    opts: { limit: number },
+  ) => Promise<PredictionsRaw>;
 }
 
 // 各 ChatBox skill 的「主能力档」—— 基础模型按它解析(各 surface 复用对应节点的模型配置,
@@ -762,6 +816,44 @@ export async function buildChatAssembly(
     getKnowledgeText: async ({ id }) => {
       if (!deps.contextReaders?.getKnowledgeText) return null;
       return deps.contextReaders.getKnowledgeText(ctx, { id });
+    },
+    // [T-099 切片四/五] 指标/发布/经验/候选/校准类 context 工具 —— execute 调注入的 user-scoped
+    // 清单读端口。端口未装配(contextReaders 缺省 / 具体方法缺省)→ 工具侧诚实空态(空数组 /
+    // rows 空 / rubric:null),绝不塞假数据。全部按 ctx.userId 收窄(读端口内部据 ctx 收窄)。
+    listPublications: async ({ limit, offset }) => {
+      if (!deps.contextReaders?.listPublications) {
+        return { rows: [], total: 0 };
+      }
+      return deps.contextReaders.listPublications(ctx, { limit, offset });
+    },
+    getMetrics: async ({ projectId, limit }) => {
+      if (!deps.contextReaders?.getMetrics) {
+        return { subject: null, rows: [], retention: [] };
+      }
+      return deps.contextReaders.getMetrics(ctx, { projectId, limit });
+    },
+    listLearnings: async ({ query, learningType, status, limit }) => {
+      if (!deps.contextReaders?.listLearnings) {
+        return { rows: [], total: 0 };
+      }
+      return deps.contextReaders.listLearnings(ctx, {
+        query,
+        learningType,
+        status,
+        limit,
+      });
+    },
+    listCandidates: async ({ limit, offset }) => {
+      if (!deps.contextReaders?.listCandidates) {
+        return { rows: [], total: 0 };
+      }
+      return deps.contextReaders.listCandidates(ctx, { limit, offset });
+    },
+    getPredictions: async ({ limit }) => {
+      if (!deps.contextReaders?.getPredictions) {
+        return { rubric: null, rows: [], total: 0 };
+      }
+      return deps.contextReaders.getPredictions(ctx, { limit });
     },
   };
   const tools = buildChatTools(toolWhitelist, toolDeps);

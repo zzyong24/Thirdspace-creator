@@ -282,6 +282,142 @@ export interface ChatToolDeps {
    * 取当前修订正文)。读不到(不存在/越权)→ null(诚实降级)。
    */
   getKnowledgeText?: (input: { id: string }) => Promise<KnowledgeTextRaw | null>;
+  /**
+   * [T-099 切片四] context.publications 只读端口 —— 该用户的发布记录清单(平台/链接/发布时间/
+   * 关联作品标题),分页。composition root 复用 publishing 公开读源(getRecentPublicationsWithTitle,
+   * user-scoped)。读不到 → 空数组(诚实空态)。**纯读上下文**。
+   */
+  listPublications?: (input: {
+    limit: number;
+    offset: number;
+  }) => Promise<PublicationsListRaw>;
+  /**
+   * [T-099 切片四] context.metrics 只读端口 —— 给 projectId → 单作品指标快照(播放/点赞/评论/分享
+   * + 留存点);不给 → 账号级最近 N 作品指标行。composition root 复用 analytics(snapshot 口径复用
+   * dashboard 的 views??plays + 最新帧,不新造)。读不到 → rows 空 + subject:null(诚实空态)。**纯读**。
+   */
+  getMetrics?: (input: {
+    projectId?: string;
+    limit: number;
+  }) => Promise<MetricsRaw>;
+  /**
+   * [T-099 切片五] context.learnings 只读端口 —— 经验清单,含 validated/candidate 状态(注入 brief 只
+   * 喂 validated,本工具可见全量并标状态)。composition root 复用 learnings 公开读源(listLearnings,
+   * user-scoped),按 query/learningType/status 内存过滤。读不到 → 空数组(诚实空态)。**纯读**。
+   */
+  listLearnings?: (input: {
+    query?: string;
+    learningType?: string;
+    status?: string;
+    limit: number;
+  }) => Promise<LearningsListRaw>;
+  /**
+   * [T-099 切片五] context.candidates 只读端口 —— 选题候选池(title/status/score/来源),分页。
+   * composition root 复用 candidate 公开读源(listCandidates,user-scoped)。读不到 → 空数组
+   * (诚实空态)。**纯读上下文**。
+   */
+  listCandidates?: (input: {
+    limit: number;
+    offset: number;
+  }) => Promise<CandidatesListRaw>;
+  /**
+   * [T-099 切片五] context.predictions 只读端口 —— 预测 vs 实绩对照(prediction + calibrationResult
+   * 拼行)+ 当前 rubric 版本摘要。composition root 复用 calibration 公开读源(getOverview 的
+   * reflowRows + KPI + getCurrentRubricVersion)。读不到 → rows 空 + rubric:null(诚实空态)。**纯读**。
+   */
+  getPredictions?: (input: { limit: number }) => Promise<PredictionsRaw>;
+}
+
+// [T-099 切片四] context.publications 的原始全值(publishing 公开读源拼装)。
+export interface PublicationsListRaw {
+  rows: Array<{
+    id: string;
+    platform: string;
+    /** 平台链接(externalUrl;无则 null)。 */
+    url: string | null;
+    /** 发布时间(publishedAt ISO;未发布/无则 null)。 */
+    publishedAt: string | null;
+    /** 关联作品标题(revision 标题;拿不到 → 空串,不编)。 */
+    projectTitle: string;
+    status: string;
+  }>;
+  total: number;
+}
+
+// [T-099 切片四] context.metrics 的原始全值(analytics 口径,单作品或账号级)。
+export interface MetricsRaw {
+  /** 单作品模式:该作品标题(账号级模式为 null)。 */
+  subject: string | null;
+  /** 指标行:单作品模式为该作品一行 + 可选留存点;账号级模式为最近 N 作品每行。 */
+  rows: Array<{
+    /** 作品标题(账号级每行;单作品模式与 subject 同)。 */
+    title: string;
+    plays: number | null;
+    likes: number | null;
+    comments: number | null;
+    shares: number | null;
+  }>;
+  /** 单作品模式的留存点(账号级为空数组;拿不到 → 空)。 */
+  retention: Array<{ atSeconds: number; retentionRate: number }>;
+}
+
+// [T-099 切片五] context.learnings 的原始全值(learnings 公开读源,已按过滤/上限切好)。
+export interface LearningsListRaw {
+  rows: Array<{
+    id: string;
+    title: string;
+    insight: string;
+    learningType: string;
+    /** validated / candidate / discarded(本工具可见全量并标状态)。 */
+    status: string;
+    reuseCount: number;
+  }>;
+  total: number;
+}
+
+// [T-099 切片五] context.candidates 的原始全值(candidate 公开读源,分页)。
+export interface CandidatesListRaw {
+  rows: Array<{
+    id: string;
+    title: string;
+    status: string;
+    /** 预测分(predictedScore;未评 → null)。 */
+    score: number | null;
+    /** 来源(source:idea/ai/…)。 */
+    source: string;
+  }>;
+  total: number;
+}
+
+// [T-099 切片五] context.predictions 的原始全值(calibration 公开读源:预测vs实绩 + rubric 摘要)。
+export interface PredictionsRaw {
+  /** 当前 rubric 版本摘要(名称 + 版本号 + 维度数;母版未建 → null,诚实空态)。 */
+  rubric: {
+    name: string;
+    versionNumber: number;
+    dimensionCount: number;
+  } | null;
+  /** 预测 vs 实绩对照行(prediction + calibrationResult 拼)。 */
+  rows: Array<{
+    predictionId: string;
+    /** 被评作品标题(拿不到 → 空串)。 */
+    subjectTitle: string;
+    /** 是否已有实绩回流(calibrationResult 落地)。 */
+    hasResult: boolean;
+    /** 偏差档位(low/mid/high/none;无回流 → none)。 */
+    deviationBand: string;
+    /** 偏差发现一句话(无回流 → 空串)。 */
+    finding: string;
+    /** 逐维度预测分 vs 实绩分 vs 偏差(无回流时 actual/deviation 为 null)。 */
+    dimensions: Array<{
+      key: string;
+      label: string;
+      predicted: number | null;
+      actual: number | null;
+      deviation: number | null;
+    }>;
+  }>;
+  total: number;
 }
 
 // [T-099c] context.artifacts 的原始全值(产物清单;字数已由 composition root 算好)。
@@ -781,6 +917,85 @@ export interface ContextKnowledgeTextToolResult extends TextWindow {
   knowledgeType: string;
 }
 
+// ── [T-099 切片四] 指标/发布类 context 工具结果 —— 清单档(SPEC §1 行#6/#7)──────────────
+// 人机同源:结果同一份真值,模型读进上下文归纳,前端 CONTEXT_CARD_REGISTRY 直渲(发布清单卡 /
+// 指标表卡)。清单档预算:默认 20/封顶 50,带 total/offset/hasMore 真相字段(§3)。
+
+// [T-099 切片四] context.publications 工具结果 —— 发布记录清单。前端「发布清单卡」直渲。
+export interface ContextPublicationsToolResult {
+  kind: "context.publications";
+  items: Array<{
+    id: string;
+    platform: string;
+    url: string | null;
+    publishedAt: string | null;
+    projectTitle: string;
+    status: string;
+  }>;
+  total: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+// [T-099 切片四] context.metrics 工具结果 —— 指标表(单作品快照时间线 或 账号级最近 N 作品行)。
+// 前端「指标表卡」直渲(表格:作品×指标 + 单作品模式留存点)。
+export interface ContextMetricsToolResult {
+  kind: "context.metrics";
+  /** 单作品模式:被查作品标题;账号级模式为 null(前端据此切表头文案)。 */
+  subject: string | null;
+  rows: Array<{
+    title: string;
+    plays: number | null;
+    likes: number | null;
+    comments: number | null;
+    shares: number | null;
+  }>;
+  /** 单作品模式的留存点(账号级为空)。 */
+  retention: Array<{ atSeconds: number; retentionRate: number }>;
+}
+
+// ── [T-099 切片五] 经验/候选/校准类 context 工具结果 —— 清单档(SPEC §1 行#13/#14/#15)────
+
+// [T-099 切片五] context.learnings 工具结果 —— 经验清单(含 validated/candidate 状态)。
+// 前端「经验清单卡」直渲(复用 ChatLearningsCard 只读态)。
+export interface ContextLearningsToolResult {
+  kind: "context.learnings";
+  items: Array<{
+    id: string;
+    title: string;
+    insight: string;
+    learningType: string;
+    status: string;
+    reuseCount: number;
+  }>;
+  total: number;
+}
+
+// [T-099 切片五] context.candidates 工具结果 —— 选题候选池清单。前端「候选池清单卡」直渲。
+export interface ContextCandidatesToolResult {
+  kind: "context.candidates";
+  items: Array<{
+    id: string;
+    title: string;
+    status: string;
+    score: number | null;
+    source: string;
+  }>;
+  total: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+// [T-099 切片五] context.predictions 工具结果 —— 预测 vs 实绩对照 + 当前 rubric 摘要。
+// 前端「校准对照卡」直渲。
+export interface ContextPredictionsToolResult {
+  kind: "context.predictions";
+  /** 当前 rubric 版本摘要(母版未建 → null)。 */
+  rubric: PredictionsRaw["rubric"];
+  items: PredictionsRaw["rows"];
+  total: number;
+}
+
 // ── 工具入参 JSON Schema(可序列化契约)─────────────────────────────────────────────
 
 // [T-081] 产内容工具统一的 extraBrief 入参(对齐 topic.generate deps 先例):对话里翻真数据/
@@ -1221,6 +1436,79 @@ const CONTEXT_KNOWLEDGE_TEXT_PARAMS = jsonSchema<{
     maxChars: WINDOW_MAX_CHARS_PROPERTY,
   },
   required: ["id"],
+  additionalProperties: false,
+});
+
+// [T-099 切片四] context.publications 入参 —— 分页(limit/offset,与 comments 同形)。
+const CONTEXT_PUBLICATIONS_PARAMS = jsonSchema<{
+  limit?: number;
+  offset?: number;
+}>({
+  type: "object",
+  properties: {
+    limit: { type: "number", description: "本页条数(默认 20,最大 50)" },
+    offset: { type: "number", description: "翻页偏移(默认 0;结果带 total/hasMore,可继续翻)" },
+  },
+  additionalProperties: false,
+});
+
+// [T-099 切片四] context.metrics 入参 —— projectId 可选:给了 → 单作品快照 + 留存点;不给 →
+// 账号级最近 N 作品指标行。
+const CONTEXT_METRICS_PARAMS = jsonSchema<{ projectId?: string }>({
+  type: "object",
+  properties: {
+    projectId: {
+      type: "string",
+      description:
+        "要看指标的项目 id(从 context.projects 拿):给了 → 返回这条作品的播放/点赞/评论/分享快照 + 留存点;不给 → 返回账号级最近若干作品的指标行。",
+    },
+  },
+  additionalProperties: false,
+});
+
+// [T-099 切片五] context.learnings 入参 —— query/learningType/status 全可选(缺省回最近全量)。
+const CONTEXT_LEARNINGS_PARAMS = jsonSchema<{
+  query?: string;
+  learningType?: string;
+  status?: string;
+}>({
+  type: "object",
+  properties: {
+    query: {
+      type: "string",
+      description: "搜索关键词(可选;命中标题/洞察,缺省回最近若干条)。",
+    },
+    learningType: {
+      type: "string",
+      description:
+        "按类型过滤(可选):strategy/hook/structure/failure/process/editing/conversion_pattern/offer_insight。",
+    },
+    status: {
+      type: "string",
+      description:
+        "按状态过滤(可选):validated=已验证 / candidate=待验证 / discarded=已弃。缺省回全部并逐条标状态(注入 brief 只喂 validated,本工具可见全量)。",
+    },
+  },
+  additionalProperties: false,
+});
+
+// [T-099 切片五] context.candidates 入参 —— 分页(limit/offset)。
+const CONTEXT_CANDIDATES_PARAMS = jsonSchema<{
+  limit?: number;
+  offset?: number;
+}>({
+  type: "object",
+  properties: {
+    limit: { type: "number", description: "本页条数(默认 20,最大 50)" },
+    offset: { type: "number", description: "翻页偏移(默认 0;结果带 total/hasMore,可继续翻)" },
+  },
+  additionalProperties: false,
+});
+
+// [T-099 切片五] context.predictions 入参 —— 无入参(账号级最近若干预测对照;limit execute 兜)。
+const CONTEXT_PREDICTIONS_PARAMS = jsonSchema<Record<string, never>>({
+  type: "object",
+  properties: {},
   additionalProperties: false,
 });
 
@@ -1850,6 +2138,140 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         };
       },
     }),
+    // ── [T-099 切片四] 指标/发布类 context 工具 —— 清单读。人机同源:结果同一份真值,模型读进
+    //    上下文归纳,前端 CONTEXT_CARD_REGISTRY 直渲(发布清单卡 / 指标表卡)。清单档预算:
+    //    默认 20/封顶 50(clampContextLimit),带 total/offset/hasMore 真相字段。
+    "context.publications": tool({
+      description:
+        "只读:拉取创作者的发布记录清单(平台/链接/发布时间/关联作品标题),带 total/hasMore 可翻页(offset)。当用户问「我发过哪些 / 最近发布了什么 / 我的作品发在哪些平台」时调它拿真实发布数据回答。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_PUBLICATIONS_PARAMS,
+      execute: async ({
+        limit,
+        offset,
+      }): Promise<ContextPublicationsToolResult> => {
+        const eff = clampContextLimit(limit);
+        const effOffset = Math.max(0, offset ?? 0);
+        if (!deps.listPublications) {
+          return {
+            kind: "context.publications",
+            items: [],
+            total: 0,
+            offset: effOffset,
+            hasMore: false,
+          };
+        }
+        const { rows, total } = await deps.listPublications({
+          limit: eff,
+          offset: effOffset,
+        });
+        return {
+          kind: "context.publications",
+          items: rows,
+          total,
+          offset: effOffset,
+          hasMore: effOffset + rows.length < total,
+        };
+      },
+    }),
+    "context.metrics": tool({
+      description:
+        "只读:拉取作品指标数据。给 projectId(从 context.projects 拿)→ 返回这条作品的播放/点赞/评论/分享快照 + 留存点;不给 → 返回账号级最近若干作品的指标行。当用户问「这条数据怎么样 / 播放多少 / 我最近作品的数据 / 留存曲线」时调它拿真实指标回答,别瞎报数。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_METRICS_PARAMS,
+      execute: async ({ projectId }): Promise<ContextMetricsToolResult> => {
+        const pid =
+          typeof projectId === "string" && projectId.trim()
+            ? projectId.trim()
+            : undefined;
+        if (!deps.getMetrics) {
+          return { kind: "context.metrics", subject: null, rows: [], retention: [] };
+        }
+        // 账号级默认最近 20 作品(封顶 50);单作品模式 limit 无意义(读端口忽略)。
+        const raw = await deps.getMetrics({
+          projectId: pid,
+          limit: clampContextLimit(undefined),
+        });
+        return {
+          kind: "context.metrics",
+          subject: raw.subject,
+          rows: raw.rows,
+          retention: raw.retention,
+        };
+      },
+    }),
+    // ── [T-099 切片五] 经验/候选/校准类 context 工具 —— 清单读。人机同源:前端直渲(经验清单卡 /
+    //    候选池清单卡 / 校准对照卡)。清单档预算同上。
+    "context.learnings": tool({
+      description:
+        "只读:拉取创作者的经验库(可复用方法论/教训),可按 query 搜、按 learningType/status 过滤。含 validated(已验证)/candidate(待验证)状态并逐条标注(系统注入只喂已验证的,这里能看全量)。当用户问「我沉淀了哪些经验 / 有没有关于 X 的经验 / 哪些经验还没验证」时调它拿真实经验回答。纯读取上下文,不产候选、不写库(要新增经验用 learning.capture 产卡)。",
+      inputSchema: CONTEXT_LEARNINGS_PARAMS,
+      execute: async ({
+        query,
+        learningType,
+        status,
+      }): Promise<ContextLearningsToolResult> => {
+        if (!deps.listLearnings) {
+          return { kind: "context.learnings", items: [], total: 0 };
+        }
+        const { rows, total } = await deps.listLearnings({
+          query: typeof query === "string" ? query : undefined,
+          learningType: typeof learningType === "string" ? learningType : undefined,
+          status: typeof status === "string" ? status : undefined,
+          limit: clampContextLimit(undefined),
+        });
+        return { kind: "context.learnings", items: rows, total };
+      },
+    }),
+    "context.candidates": tool({
+      description:
+        "只读:拉取创作者的选题候选池(title/status/预测分/来源),带 total/hasMore 可翻页(offset)。当用户问「我有哪些选题在排队 / 候选池里有什么 / 下一条做什么」时调它拿真实候选回答。纯读取上下文,不产候选、不写库(要生成新选题用 topic.generate 产卡)。",
+      inputSchema: CONTEXT_CANDIDATES_PARAMS,
+      execute: async ({
+        limit,
+        offset,
+      }): Promise<ContextCandidatesToolResult> => {
+        const eff = clampContextLimit(limit);
+        const effOffset = Math.max(0, offset ?? 0);
+        if (!deps.listCandidates) {
+          return {
+            kind: "context.candidates",
+            items: [],
+            total: 0,
+            offset: effOffset,
+            hasMore: false,
+          };
+        }
+        const { rows, total } = await deps.listCandidates({
+          limit: eff,
+          offset: effOffset,
+        });
+        return {
+          kind: "context.candidates",
+          items: rows,
+          total,
+          offset: effOffset,
+          hasMore: effOffset + rows.length < total,
+        };
+      },
+    }),
+    "context.predictions": tool({
+      description:
+        "只读:拉取创作者的校准对照(发布前盲预测 vs 真实表现,逐维度预测分/实绩分/偏差)+ 当前评分标准(rubric)版本摘要。当用户问「我的预测准不准 / 预测和实际差多少 / 校准做到哪了 / 当前评分标准是什么」时调它拿真实校准数据回答。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_PREDICTIONS_PARAMS,
+      execute: async (): Promise<ContextPredictionsToolResult> => {
+        if (!deps.getPredictions) {
+          return { kind: "context.predictions", rubric: null, items: [], total: 0 };
+        }
+        const raw = await deps.getPredictions({
+          limit: clampContextLimit(undefined),
+        });
+        return {
+          kind: "context.predictions",
+          rubric: raw.rubric,
+          items: raw.rows,
+          total: raw.total,
+        };
+      },
+    }),
   };
 }
 
@@ -1886,6 +2308,13 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "context.artifacts",
   "context.artifact.text",
   "context.knowledge.text",
+  // [T-099 切片四] 指标/发布类(清单读)。
+  "context.publications",
+  "context.metrics",
+  // [T-099 切片五] 经验/候选/校准类(清单读)。
+  "context.learnings",
+  "context.candidates",
+  "context.predictions",
 ];
 
 /**

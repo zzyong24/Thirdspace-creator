@@ -45,6 +45,11 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   listProjectArtifacts: ReturnType<typeof vi.fn>;
   getArtifactText: ReturnType<typeof vi.fn>;
   getKnowledgeText: ReturnType<typeof vi.fn>;
+  listPublications: ReturnType<typeof vi.fn>;
+  getMetrics: ReturnType<typeof vi.fn>;
+  listLearnings: ReturnType<typeof vi.fn>;
+  listCandidates: ReturnType<typeof vi.fn>;
+  getPredictions: ReturnType<typeof vi.fn>;
 } {
   const generateTopics = vi.fn(async () => [
     {
@@ -199,6 +204,81 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     knowledgeType: "quote",
     fullText: "这是知识条目的长文正文。".repeat(40),
   }));
+  // [T-099 切片四] 发布/指标读端口 fake。
+  const listPublications = vi.fn(async () => ({
+    rows: [
+      {
+        id: "pub-1",
+        platform: "douyin",
+        url: "https://v.douyin.com/x",
+        publishedAt: "2026-07-01T00:00:00.000Z",
+        projectTitle: "上下文工程",
+        status: "published",
+      },
+    ],
+    total: 3,
+  }));
+  const getMetrics = vi.fn(async () => ({
+    subject: "上下文工程",
+    rows: [
+      {
+        title: "上下文工程",
+        plays: 85000,
+        likes: 3000,
+        comments: 420,
+        shares: 120,
+      },
+    ],
+    retention: [{ atSeconds: 3, retentionRate: 0.82 }],
+  }));
+  // [T-099 切片五] 经验/候选/校准读端口 fake。
+  const listLearnings = vi.fn(async () => ({
+    rows: [
+      {
+        id: "lrn-1",
+        title: "前3秒给结果",
+        insight: "完播更高",
+        learningType: "hook",
+        status: "validated",
+        reuseCount: 4,
+      },
+    ],
+    total: 1,
+  }));
+  const listCandidates = vi.fn(async () => ({
+    rows: [
+      {
+        id: "cand-1",
+        title: "反直觉开头",
+        status: "candidate",
+        score: 80,
+        source: "ai",
+      },
+    ],
+    total: 5,
+  }));
+  const getPredictions = vi.fn(async () => ({
+    rubric: { name: "校准评分标准", versionNumber: 2, dimensionCount: 5 },
+    rows: [
+      {
+        predictionId: "pred-1",
+        subjectTitle: "上下文工程",
+        hasResult: true,
+        deviationBand: "low",
+        finding: "钩子维度偏差最大",
+        dimensions: [
+          {
+            key: "hook",
+            label: "开头钩子",
+            predicted: 4,
+            actual: 5,
+            deviation: 1,
+          },
+        ],
+      },
+    ],
+    total: 1,
+  }));
   const draftScript = vi.fn(async () => [
     { heading: "1. 开场", body: "口播：90% 文档没人看" },
   ]);
@@ -272,6 +352,11 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     listProjectArtifacts,
     getArtifactText,
     getKnowledgeText,
+    listPublications,
+    getMetrics,
+    listLearnings,
+    listCandidates,
+    getPredictions,
     ...over,
   };
   return {
@@ -295,6 +380,11 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     listProjectArtifacts,
     getArtifactText,
     getKnowledgeText,
+    listPublications,
+    getMetrics,
+    listLearnings,
+    listCandidates,
+    getPredictions,
   };
 }
 
@@ -1090,6 +1180,198 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
     expect(arts.found).toBe(false);
     expect(atext.found).toBe(false);
     expect(ktext.found).toBe(false);
+  });
+});
+
+// ── [T-099 切片四/五] 指标/发布/经验/候选/校准类 context 工具 execute(清单读 + 分页 + 空态)──
+describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态", () => {
+  const LIST_WHITELIST = [
+    "context.publications",
+    "context.metrics",
+    "context.learnings",
+    "context.candidates",
+    "context.predictions",
+  ] as const;
+
+  it("五个清单工具全部可挂", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools([...LIST_WHITELIST], deps);
+    expect(Object.keys(tools).sort()).toEqual([
+      "context.candidates",
+      "context.learnings",
+      "context.metrics",
+      "context.predictions",
+      "context.publications",
+    ]);
+  });
+
+  it("[切片四] context.publications.execute 调 listPublications,带 total/offset/hasMore", async () => {
+    const { deps, listPublications } = makeDeps();
+    const tools = buildChatTools([...LIST_WHITELIST], deps);
+    const result = (await runExecute(tools["context.publications"], {})) as {
+      kind: string;
+      items: Array<{ platform: string }>;
+      total: number;
+      offset: number;
+      hasMore: boolean;
+    };
+    // limit 缺省 20、offset 兜 0(clampContextLimit)。
+    expect(listPublications).toHaveBeenCalledWith({ limit: 20, offset: 0 });
+    expect(result.kind).toBe("context.publications");
+    expect(result.items).toHaveLength(1);
+    expect(result.total).toBe(3);
+    expect(result.offset).toBe(0);
+    // total=3 > offset+items(0+1) → hasMore。
+    expect(result.hasMore).toBe(true);
+  });
+
+  it("[切片四] context.publications limit 封顶 50、offset 兜 0", async () => {
+    const { deps, listPublications } = makeDeps();
+    const tools = buildChatTools([...LIST_WHITELIST], deps);
+    await runExecute(tools["context.publications"], { limit: 999, offset: -5 });
+    expect(listPublications).toHaveBeenCalledWith({ limit: 50, offset: 0 });
+  });
+
+  it("[切片四] context.metrics.execute 给 projectId → 单作品快照(subject + rows + 留存点)", async () => {
+    const { deps, getMetrics } = makeDeps();
+    const tools = buildChatTools([...LIST_WHITELIST], deps);
+    const result = (await runExecute(tools["context.metrics"], {
+      projectId: "proj-1",
+    })) as {
+      kind: string;
+      subject: string | null;
+      rows: Array<{ plays: number | null }>;
+      retention: unknown[];
+    };
+    expect(getMetrics).toHaveBeenCalledWith({ projectId: "proj-1", limit: 20 });
+    expect(result.kind).toBe("context.metrics");
+    expect(result.subject).toBe("上下文工程");
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]!.plays).toBe(85000);
+    expect(result.retention).toHaveLength(1);
+  });
+
+  it("[切片四] context.metrics.execute 不给 projectId → 账号级(projectId=undefined)", async () => {
+    // 覆盖 getMetrics(makeDeps 用 over 的这个 fn),断言执行的就是它。
+    const accountMetrics = vi.fn(async () => ({
+      subject: null as string | null,
+      rows: [
+        { title: "作品A", plays: 100, likes: 10, comments: 2, shares: 1 },
+        { title: "作品B", plays: 200, likes: 20, comments: 4, shares: 3 },
+      ],
+      retention: [] as Array<{ atSeconds: number; retentionRate: number }>,
+    }));
+    const { deps } = makeDeps({ getMetrics: accountMetrics });
+    const tools = buildChatTools([...LIST_WHITELIST], deps);
+    const result = (await runExecute(tools["context.metrics"], {})) as {
+      subject: string | null;
+      rows: unknown[];
+    };
+    expect(accountMetrics).toHaveBeenCalledWith({
+      projectId: undefined,
+      limit: 20,
+    });
+    expect(result.subject).toBeNull();
+    expect(result.rows).toHaveLength(2);
+  });
+
+  it("[切片五] context.learnings.execute 调 listLearnings(透传 query/type/status)", async () => {
+    const { deps, listLearnings } = makeDeps();
+    const tools = buildChatTools([...LIST_WHITELIST], deps);
+    const result = (await runExecute(tools["context.learnings"], {
+      query: "钩子",
+      learningType: "hook",
+      status: "validated",
+    })) as {
+      kind: string;
+      items: Array<{ status: string }>;
+      total: number;
+    };
+    expect(listLearnings).toHaveBeenCalledWith({
+      query: "钩子",
+      learningType: "hook",
+      status: "validated",
+      limit: 20,
+    });
+    expect(result.kind).toBe("context.learnings");
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]!.status).toBe("validated");
+    expect(result.total).toBe(1);
+  });
+
+  it("[切片五] context.candidates.execute 调 listCandidates,带 total/offset/hasMore", async () => {
+    const { deps, listCandidates } = makeDeps();
+    const tools = buildChatTools([...LIST_WHITELIST], deps);
+    const result = (await runExecute(tools["context.candidates"], {
+      offset: 0,
+    })) as {
+      kind: string;
+      items: Array<{ score: number | null }>;
+      total: number;
+      hasMore: boolean;
+    };
+    expect(listCandidates).toHaveBeenCalledWith({ limit: 20, offset: 0 });
+    expect(result.kind).toBe("context.candidates");
+    expect(result.items[0]!.score).toBe(80);
+    expect(result.total).toBe(5);
+    // total=5 > 0+1 → hasMore。
+    expect(result.hasMore).toBe(true);
+  });
+
+  it("[切片五] context.predictions.execute 调 getPredictions,拼 rubric 摘要 + 对照行", async () => {
+    const { deps, getPredictions } = makeDeps();
+    const tools = buildChatTools([...LIST_WHITELIST], deps);
+    const result = (await runExecute(tools["context.predictions"], {})) as {
+      kind: string;
+      rubric: { versionNumber: number; dimensionCount: number } | null;
+      items: Array<{ subjectTitle: string; dimensions: unknown[] }>;
+      total: number;
+    };
+    expect(getPredictions).toHaveBeenCalledWith({ limit: 20 });
+    expect(result.kind).toBe("context.predictions");
+    expect(result.rubric?.versionNumber).toBe(2);
+    expect(result.rubric?.dimensionCount).toBe(5);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]!.subjectTitle).toBe("上下文工程");
+    expect(result.items[0]!.dimensions).toHaveLength(1);
+    expect(result.total).toBe(1);
+  });
+
+  it("清单端口未装配(deps 缺省)→ 五工具诚实空态(不抛、不塞假)", async () => {
+    const { deps } = makeDeps({
+      listPublications: undefined,
+      getMetrics: undefined,
+      listLearnings: undefined,
+      listCandidates: undefined,
+      getPredictions: undefined,
+    });
+    const tools = buildChatTools([...LIST_WHITELIST], deps);
+    const pub = (await runExecute(tools["context.publications"], {})) as {
+      items: unknown[];
+      total: number;
+    };
+    const met = (await runExecute(tools["context.metrics"], {})) as {
+      subject: string | null;
+      rows: unknown[];
+    };
+    const lrn = (await runExecute(tools["context.learnings"], {})) as {
+      items: unknown[];
+    };
+    const cand = (await runExecute(tools["context.candidates"], {})) as {
+      items: unknown[];
+    };
+    const pred = (await runExecute(tools["context.predictions"], {})) as {
+      rubric: unknown;
+      items: unknown[];
+    };
+    expect(pub.items).toEqual([]);
+    expect(pub.total).toBe(0);
+    expect(met.subject).toBeNull();
+    expect(met.rows).toEqual([]);
+    expect(lrn.items).toEqual([]);
+    expect(cand.items).toEqual([]);
+    expect(pred.rubric).toBeNull();
+    expect(pred.items).toEqual([]);
   });
 });
 

@@ -194,6 +194,80 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
         knowledgeType: "quote",
         fullText: "知识长文正文".repeat(100),
       }),
+      // [T-099 切片四/五] 指标/发布/经验/候选/校准读端口 fake —— 断言工具 execute 经 ctx 调它。
+      listPublications: async () => ({
+        rows: [
+          {
+            id: "pub-1",
+            platform: "douyin",
+            url: "https://v.douyin.com/x",
+            publishedAt: "2026-07-01T00:00:00.000Z",
+            projectTitle: "上下文工程",
+            status: "published",
+          },
+        ],
+        total: 1,
+      }),
+      getMetrics: async () => ({
+        subject: "上下文工程",
+        rows: [
+          {
+            title: "上下文工程",
+            plays: 85000,
+            likes: 3000,
+            comments: 420,
+            shares: 120,
+          },
+        ],
+        retention: [{ atSeconds: 3, retentionRate: 0.82 }],
+      }),
+      listLearnings: async () => ({
+        rows: [
+          {
+            id: "lrn-1",
+            title: "前3秒给结果",
+            insight: "完播更高",
+            learningType: "hook",
+            status: "validated",
+            reuseCount: 4,
+          },
+        ],
+        total: 1,
+      }),
+      listCandidates: async () => ({
+        rows: [
+          {
+            id: "cand-1",
+            title: "反直觉开头",
+            status: "candidate",
+            score: 80,
+            source: "ai",
+          },
+        ],
+        total: 1,
+      }),
+      getPredictions: async () => ({
+        rubric: { name: "校准评分标准", versionNumber: 2, dimensionCount: 5 },
+        rows: [
+          {
+            predictionId: "pred-1",
+            subjectTitle: "上下文工程",
+            hasResult: true,
+            deviationBand: "low",
+            finding: "钩子维度偏差最大",
+            dimensions: [
+              {
+                key: "hook",
+                label: "开头钩子",
+                predicted: 4,
+                actual: 5,
+                deviation: 1,
+              },
+            ],
+          },
+        ],
+        total: 1,
+      }),
     },
     ...over,
   };
@@ -286,7 +360,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).not.toContain("本次复盘对象");
   });
 
-  it("[T-104] 工具全放开:任一 surface 暴露全部 23 工具(surface 白名单只决定置顶顺序)", async () => {
+  it("[T-104] 工具全放开:任一 surface 暴露全部 28 工具(surface 白名单只决定置顶顺序)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(Object.keys(a.tools).sort()).toEqual([
@@ -295,16 +369,26 @@ describe("buildChatAssembly — 三层注入装配", () => {
       // [T-099c] 切片三:全文类(context.artifact.text 排在 context.artifacts 前:'.' < 's')。
       "context.artifact.text",
       "context.artifacts",
+      // [T-099 切片五] context.candidates(排在 artifacts 后、comments 前:'a' < 'c')。
+      "context.candidates",
       "context.comments",
       "context.knowledge",
       // [T-099b] 切片二:详情类(单实体全字段)。
       "context.knowledge.detail",
       // [T-099c] context.knowledge.text 排在 .detail 后('d' < 't')。
       "context.knowledge.text",
+      // [T-099 切片五] context.learnings(排在 knowledge 后、materials 前)。
+      "context.learnings",
       "context.materials",
+      // [T-099 切片四] context.metrics(排在 materials 后、positioning 前)。
+      "context.metrics",
       "context.positioning.detail",
+      // [T-099 切片五] context.predictions(排在 positioning 后、project 前:'pre' < 'pro')。
+      "context.predictions",
       "context.project.detail",
       "context.projects",
+      // [T-099 切片四] context.publications(排在 projects 后:'pro' < 'pub')。
+      "context.publications",
       "knowledge.distill",
       "learning.capture",
       "material.gather",
@@ -368,7 +452,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.calibration");
     // [T-104] 工具全放开:preferred 含 calibration.diagnose,但可调工具集 = 全 15。
     expect(Object.keys(a.tools)).toContain("calibration.diagnose");
-    expect(Object.keys(a.tools).length).toBe(23);
+    expect(Object.keys(a.tools).length).toBe(28);
     // 主能力档按 calibration.diagnose 解析(各 surface 复用对应节点的模型配置)。
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "calibration.diagnose");
   });
@@ -379,7 +463,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.positioning");
     // [T-104] 工具全放开:preferred 含 positioning.generate,但可调工具集 = 全 15。
     expect(Object.keys(a.tools)).toContain("positioning.generate");
-    expect(Object.keys(a.tools).length).toBe(23);
+    expect(Object.keys(a.tools).length).toBe(28);
   });
 
   it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {
@@ -430,7 +514,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).toContain("review.analyze");
     expect(names).toContain("learning.capture");
     expect(names).toContain("context.projects"); // 放开后可调
-    expect(names.length).toBe(23); // 全部工具暴露
+    expect(names.length).toBe(28); // 全部工具暴露
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -496,7 +580,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(23); // 全放开
+    expect(names.length).toBe(28); // 全放开
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });

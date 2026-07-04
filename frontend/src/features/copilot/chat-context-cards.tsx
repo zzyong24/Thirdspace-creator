@@ -16,13 +16,18 @@ import * as React from "react";
 import type {
   ContextArtifactsToolResult,
   ContextArtifactTextToolResult,
+  ContextCandidatesToolResult,
   ContextCommentsToolResult,
   ContextKnowledgeDetailToolResult,
   ContextKnowledgeTextToolResult,
   ContextKnowledgeToolResult,
+  ContextLearningsToolResult,
+  ContextMetricsToolResult,
   ContextPositioningDetailToolResult,
+  ContextPredictionsToolResult,
   ContextProjectDetailToolResult,
   ContextProjectsToolResult,
+  ContextPublicationsToolResult,
   DetailTextField,
 } from "@/server/ai/chat-tools";
 
@@ -743,6 +748,396 @@ export function ChatKnowledgeTextCard({
       hasMore={result.hasMore ?? false}
       emptyText="这条知识没有可读的长文正文 —— 它可能只是一句观点/金句,没有 transcript/reference 正文。"
     />
+  );
+}
+
+// ── [T-099 切片四] context.publications → 发布清单卡 ────────────────────────────
+// platform/url/publishedAt/关联作品标题(SPEC §1 行#6「UI 渲染卡」)。清单档:前 8 条 + 展开 +
+// total/hasMore 真相脚注。
+
+type PublicationItem = ContextPublicationsToolResult["items"][number];
+
+export function ChatPublicationListCard({
+  items,
+  total,
+  hasMore,
+}: {
+  items: ReadonlyArray<PublicationItem>;
+  total: number;
+  hasMore: boolean;
+}) {
+  const { visible, hasHidden, expand } = useExpandable(items);
+  if (items.length === 0) {
+    return (
+      <EmptyCard
+        slot="chat-publication-list-card"
+        text="还没有发布记录 —— 发布或采集作品后这里会有真数据。"
+      />
+    );
+  }
+  return (
+    <CardShell
+      slot="chat-publication-list-card"
+      heading={`发布记录 · ${total} 条`}
+      footer={<PagingTruth shown={items.length} total={total} hasMore={hasMore} />}
+    >
+      <ol className="flex flex-col gap-0.5">
+        {visible.map((p, i) => (
+          <li
+            key={p.id}
+            data-slot="chat-publication-item"
+            className="flex items-center gap-2 rounded-md px-1.5 py-1"
+          >
+            <span className="w-5 shrink-0 text-right text-[10px] tabular-nums text-text-subtle">
+              {i + 1}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[12px] text-foreground">
+              {p.url ? (
+                <a
+                  href={p.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-brand underline underline-offset-2"
+                >
+                  {p.projectTitle || "（无标题作品）"}
+                </a>
+              ) : (
+                p.projectTitle || "（无标题作品）"
+              )}
+            </span>
+            <span className="shrink-0 rounded-md bg-surface-subtle px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              {p.platform}
+            </span>
+            <span className="shrink-0 text-[10px] text-muted-foreground">
+              {p.publishedAt ? String(p.publishedAt).slice(0, 10) : p.status}
+            </span>
+          </li>
+        ))}
+      </ol>
+      {hasHidden ? <ExpandButton count={items.length} onClick={expand} /> : null}
+    </CardShell>
+  );
+}
+
+// ── [T-099 切片四] context.metrics → 指标表卡 ──────────────────────────────────
+// 表格:作品 × (播放/点赞/评论/分享);单作品模式表头带作品名 + 留存点(有则渲,无则不渲,
+// 不编)(SPEC §1 行#7「UI 渲染卡」)。空态诚实。
+
+type MetricsRow = ContextMetricsToolResult["rows"][number];
+
+function fmtMetric(v: number | null): string {
+  return v === null ? "—" : String(v);
+}
+
+export function ChatMetricsCard({
+  subject,
+  rows,
+  retention,
+}: {
+  subject: string | null;
+  rows: ReadonlyArray<MetricsRow>;
+  retention: ContextMetricsToolResult["retention"];
+}) {
+  if (rows.length === 0) {
+    return (
+      <EmptyCard
+        slot="chat-metrics-card"
+        text={
+          subject
+            ? `《${subject}》还没有指标数据 —— 采集一次作品数据后这里会有真数值。`
+            : "还没有作品指标数据 —— 采集一次作品数据后这里会有真数值。"
+        }
+      />
+    );
+  }
+  return (
+    <CardShell
+      slot="chat-metrics-card"
+      heading={subject ? `作品指标 · ${subject}` : `账号指标 · 最近 ${rows.length} 条`}
+      footer={
+        retention.length > 0 ? (
+          <p
+            data-slot="chat-metrics-retention"
+            className="text-[10px] text-text-subtle"
+          >
+            留存点:
+            {retention
+              .slice(0, 6)
+              .map((r) => `${r.atSeconds}s→${Math.round(r.retentionRate * 100)}%`)
+              .join(" · ")}
+          </p>
+        ) : undefined
+      }
+    >
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-[11px]">
+          <thead>
+            <tr>
+              {(subject ? [] : ["作品"]).concat(["播放", "点赞", "评论", "分享"]).map((h) => (
+                <th
+                  key={h}
+                  className="border-b border-border px-1.5 py-1 text-left font-medium text-muted-foreground"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i} data-slot="chat-metrics-row">
+                {!subject ? (
+                  <td className="max-w-[180px] truncate border-b border-border/40 px-1.5 py-1 text-foreground">
+                    {r.title || "（无标题）"}
+                  </td>
+                ) : null}
+                <td className="border-b border-border/40 px-1.5 py-1 tabular-nums text-foreground">
+                  {fmtMetric(r.plays)}
+                </td>
+                <td className="border-b border-border/40 px-1.5 py-1 tabular-nums text-foreground">
+                  {fmtMetric(r.likes)}
+                </td>
+                <td className="border-b border-border/40 px-1.5 py-1 tabular-nums text-foreground">
+                  {fmtMetric(r.comments)}
+                </td>
+                <td className="border-b border-border/40 px-1.5 py-1 tabular-nums text-foreground">
+                  {fmtMetric(r.shares)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </CardShell>
+  );
+}
+
+// ── [T-099 切片五] context.learnings → 经验清单卡 ──────────────────────────────
+// title/insight/type/状态(validated/candidate)/复用战绩(SPEC §1 行#13「UI 渲染卡」,复用
+// ChatLearningsCard 只读态信息面)。清单档:前 8 条 + 展开 + total 真相。
+
+type LearningItem = ContextLearningsToolResult["items"][number];
+
+const LEARNING_STATUS_LABEL: Record<string, string> = {
+  validated: "已验证",
+  candidate: "待验证",
+  discarded: "已弃",
+};
+
+export function ChatLearningsListCard({
+  items,
+  total,
+}: {
+  items: ReadonlyArray<LearningItem>;
+  total: number;
+}) {
+  const { visible, hasHidden, expand } = useExpandable(items);
+  if (items.length === 0) {
+    return (
+      <EmptyCard
+        slot="chat-learnings-list-card"
+        text="经验库还是空的 —— 复盘作品或用「记录经验」沉淀后这里会有真数据。"
+      />
+    );
+  }
+  return (
+    <CardShell
+      slot="chat-learnings-list-card"
+      heading={`经验库 · ${total} 条`}
+      footer={
+        <PagingTruth shown={items.length} total={total} hasMore={items.length < total} />
+      }
+    >
+      <ol className="flex flex-col gap-1">
+        {visible.map((l) => (
+          <li
+            key={l.id}
+            data-slot="chat-learning-item"
+            className="flex flex-col gap-0.5 rounded-md px-1.5 py-1"
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground">
+                {l.title}
+              </span>
+              <span className="shrink-0 rounded-md bg-surface-subtle px-1.5 py-0.5 text-[9.5px] text-muted-foreground">
+                {LEARNING_STATUS_LABEL[l.status] ?? l.status}
+              </span>
+            </div>
+            {l.insight ? (
+              <span className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                {l.insight}
+              </span>
+            ) : null}
+            <span className="text-[10px] text-text-subtle">
+              {l.learningType}
+              {l.reuseCount > 0 ? ` · 复用 ${l.reuseCount} 次` : ""}
+            </span>
+          </li>
+        ))}
+      </ol>
+      {hasHidden ? <ExpandButton count={items.length} onClick={expand} /> : null}
+    </CardShell>
+  );
+}
+
+// ── [T-099 切片五] context.candidates → 候选池清单卡 ───────────────────────────
+// title/status/预测分/来源(SPEC §1 行#14「UI 渲染卡」)。清单档:前 8 条 + 展开 + total/hasMore。
+
+type CandidateItem = ContextCandidatesToolResult["items"][number];
+
+export function ChatCandidateListCard({
+  items,
+  total,
+  hasMore,
+}: {
+  items: ReadonlyArray<CandidateItem>;
+  total: number;
+  hasMore: boolean;
+}) {
+  const { visible, hasHidden, expand } = useExpandable(items);
+  if (items.length === 0) {
+    return (
+      <EmptyCard
+        slot="chat-candidate-list-card"
+        text="选题候选池还是空的 —— 用「生成选题」或抓热点后这里会有真数据。"
+      />
+    );
+  }
+  return (
+    <CardShell
+      slot="chat-candidate-list-card"
+      heading={`选题候选池 · ${total} 条`}
+      footer={<PagingTruth shown={items.length} total={total} hasMore={hasMore} />}
+    >
+      <ol className="flex flex-col gap-0.5">
+        {visible.map((cand, i) => (
+          <li
+            key={cand.id}
+            data-slot="chat-candidate-item"
+            className="flex items-center gap-2 rounded-md px-1.5 py-1"
+          >
+            <span className="w-5 shrink-0 text-right text-[10px] tabular-nums text-text-subtle">
+              {i + 1}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[12px] text-foreground">
+              {cand.title || "（无标题选题）"}
+            </span>
+            {cand.score !== null ? (
+              <span className="shrink-0 rounded-md bg-brand-soft px-1.5 py-0.5 text-[10px] text-brand">
+                {cand.score} 分
+              </span>
+            ) : null}
+            <span className="shrink-0 rounded-md bg-surface-subtle px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              {cand.status}
+            </span>
+            <span className="shrink-0 text-[10px] text-muted-foreground">
+              {cand.source}
+            </span>
+          </li>
+        ))}
+      </ol>
+      {hasHidden ? <ExpandButton count={items.length} onClick={expand} /> : null}
+    </CardShell>
+  );
+}
+
+// ── [T-099 切片五] context.predictions → 校准对照卡 ────────────────────────────
+// 当前 rubric 摘要 + 逐条预测 vs 实绩(逐维度 预测分/实绩分/偏差)(SPEC §1 行#15「UI 渲染卡」)。
+// 清单档:前 8 条 + 展开。空态诚实。
+
+type PredictionItem = ContextPredictionsToolResult["items"][number];
+
+const DEVIATION_BAND_LABEL: Record<string, string> = {
+  low: "偏差小",
+  mid: "偏差中",
+  high: "偏差大",
+  none: "无回流",
+};
+
+export function ChatPredictionsCard({
+  rubric,
+  items,
+  total,
+}: {
+  rubric: ContextPredictionsToolResult["rubric"];
+  items: ReadonlyArray<PredictionItem>;
+  total: number;
+}) {
+  const { visible, hasHidden, expand } = useExpandable(items);
+  if (items.length === 0 && !rubric) {
+    return (
+      <EmptyCard
+        slot="chat-predictions-card"
+        text="还没有校准数据 —— 发布前写盲预测、发布后录真实表现,这里会显示对照。"
+      />
+    );
+  }
+  return (
+    <CardShell
+      slot="chat-predictions-card"
+      heading={`校准对照 · ${total} 条回流`}
+      footer={
+        rubric ? (
+          <p
+            data-slot="chat-predictions-rubric"
+            className="text-[10px] text-text-subtle"
+          >
+            当前评分标准:{rubric.name} v{rubric.versionNumber} · {rubric.dimensionCount} 维度
+          </p>
+        ) : (
+          <p className="text-[10px] text-text-subtle">评分标准母版还没建。</p>
+        )
+      }
+    >
+      {items.length === 0 ? (
+        <p className="text-[11px] text-text-subtle">
+          还没有发布后回流的预测对照 —— 发布作品并录入真实表现后这里会有真数据。
+        </p>
+      ) : (
+        <ol className="flex flex-col gap-1.5">
+          {visible.map((p) => (
+            <li
+              key={p.predictionId}
+              data-slot="chat-prediction-item"
+              className="flex flex-col gap-0.5 rounded-md border border-border/60 px-1.5 py-1"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-foreground">
+                  {p.subjectTitle || "（无标题作品）"}
+                </span>
+                <span className="shrink-0 rounded-md bg-surface-subtle px-1.5 py-0.5 text-[9.5px] text-muted-foreground">
+                  {DEVIATION_BAND_LABEL[p.deviationBand] ?? p.deviationBand}
+                </span>
+              </div>
+              {p.dimensions.length > 0 ? (
+                <ul className="flex flex-col gap-0.5">
+                  {p.dimensions.map((d) => (
+                    <li
+                      key={d.key}
+                      className="flex items-center gap-2 text-[10.5px]"
+                    >
+                      <span className="min-w-0 flex-1 truncate text-text-subtle">
+                        {d.label}
+                      </span>
+                      <span className="shrink-0 tabular-nums text-foreground">
+                        预测 {d.predicted ?? "—"} · 实绩 {d.actual ?? "—"}
+                        {d.deviation !== null
+                          ? ` · 偏差 ${d.deviation > 0 ? "+" : ""}${d.deviation}`
+                          : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {p.finding ? (
+                <span className="text-[10px] text-text-subtle">{p.finding}</span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      )}
+      {hasHidden ? <ExpandButton count={items.length} onClick={expand} /> : null}
+    </CardShell>
   );
 }
 
