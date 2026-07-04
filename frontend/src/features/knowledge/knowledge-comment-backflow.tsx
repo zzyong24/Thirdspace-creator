@@ -210,7 +210,7 @@ export function KnowledgeCommentBackflow() {
             还没有采集到评论
           </p>
           <p className="text-[11px] text-muted-foreground">
-            先在作品复盘页采集评论(或去任务中心配「抓我作品评论」),回来再回流。
+            先在作品复盘页采集评论(或去自动化配「抓我作品评论」),回来再回流。
           </p>
           <Link
             href="/projects"

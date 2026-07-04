@@ -83,7 +83,7 @@ export interface ScheduledCollectionTask {
 }
 
 // 未登录/登录过期的人话引导(T-032b ②):明确指去「设置 → 账户」扫码登录,别留空/泛化。
-// 「登录抖音」按钮在任务中心 needs_reconnect 行也在(D4),两处入口都提;主动初次绑定入口在设置。
+// 「登录抖音」按钮在自动化 needs_reconnect 行也在(D4),两处入口都提;主动初次绑定入口在设置。
 const NEEDS_RECONNECT_ERROR =
   "抖音登录态未连接或已过期,请去「设置 → 账户」扫码登录(或点本行「登录抖音」)后再采集。";
 
@@ -178,7 +178,7 @@ export async function runScheduledCollection(
     itemsNew = result.itemsNew;
     itemsUpdated = result.itemsUpdated;
 
-    // 合成 step 写 ai_task_steps(经现有 recordStep;任务中心运行详情复用窗口步骤日志渲染)。
+    // 合成 step 写 ai_task_steps(经现有 recordStep;自动化运行详情复用窗口步骤日志渲染)。
     await deps.ai.recordStep(ctx, task.id, {
       stepNo: 1,
       kind: "collect",

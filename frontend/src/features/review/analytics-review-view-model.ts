@@ -186,7 +186,7 @@ export function buildAnalyticsReviewViewModelFromOp(
   const base = buildAnalyticsReviewViewModel(projectId);
   // Zero owned snapshots → reflect real persistence.
   //  - REAL (non-fixture) project: 该作品还没拉到任何明细快照 → 诚实空态。清空
-  //    metrics/趋势/漏斗(页面据此渲染「暂无复盘数据」引导去任务中心跑「拉明细」),
+  //    metrics/趋势/漏斗(页面据此渲染「暂无复盘数据」引导去自动化跑「拉明细」),
   //    绝不显 fixture 的 7 张 0 卡 + 假 delta(宪法 §8 / 任务 ②)。
   //  - Canonical demo project: 保留 fixture 演示基座(有 canonical 快照演示用)。
   if (snapshots.length === 0) {
@@ -268,7 +268,7 @@ export function buildAnalyticsReviewViewModelFromOp(
   ): MetricCard => ({ id, label, value, delta: "", trend: "flat", tone });
   // 完播率 / 封面点击率:仅当最新采集帧真的携带该字段才显真值;否则「暂无」——
   // 该作品的最新采集是 views-only 帧(无 ctr/finish_rate),不编「0.0%」(读起来像
-  // 「0% 完播」的假值)。诚实标暂无 → 去任务中心跑「拉明细」采集。
+  // 「0% 完播」的假值)。诚实标暂无 → 去自动化跑「拉明细」采集。
   const metrics: ReadonlyArray<MetricCard> = [
     card("m-views", "总播放量", formatCount(views), "positive"),
     card("m-likes", "点赞数", formatCount(likes), "positive"),

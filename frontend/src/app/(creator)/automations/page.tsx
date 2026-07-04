@@ -1,5 +1,5 @@
 /**
- * 任务中心 `/automations` route(T-007 切片 D6)。
+ * 自动化 `/automations` route(T-007 切片 D6)。
  *
  * 在共享 (creator) layout 内渲染 AutomationsPage,layout 已提供 AppShell
  * (Sidebar + TopHeader)。页面本身是 Server Component。

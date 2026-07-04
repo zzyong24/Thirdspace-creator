@@ -1,5 +1,5 @@
 /**
- * 任务中心 `/automations` 页面(T-007 切片 D6,data-source-pipeline-design §9)。
+ * 自动化 `/automations` 页面(T-007 切片 D6,data-source-pipeline-design §9)。
  *
  * 调度 Agent 作业的读/管 UI —— 数据链路可视化。Server Component:读
  * `scheduledJobs.list`(真 SQL via composite transport,pglite 迁移 0009 的
@@ -33,7 +33,7 @@ export async function AutomationsPage({
   client = defaultClient,
 }: AutomationsPageProps = {}) {
   // 读:page -> await client.listScheduledJobs -> composite transport -> pglite -> DTO。
-  // `jobs?` 是测试覆盖缝(fixture,sync);生产读拉全部 enabled+disabled 作业(任务中心
+  // `jobs?` 是测试覆盖缝(fixture,sync);生产读拉全部 enabled+disabled 作业(自动化
   // 两态都展示),按创建时刻的自然顺序(service 默认)。
   const rows =
     jobs === undefined
@@ -55,7 +55,7 @@ export async function AutomationsPage({
           data-slot="automations-page-heading"
           className="font-heading text-2xl font-semibold text-foreground"
         >
-          任务中心
+          自动化
         </h1>
         <p
           data-slot="automations-subtitle"

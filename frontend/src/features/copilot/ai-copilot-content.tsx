@@ -503,7 +503,7 @@ function taskSecondLine(t: WireTask): string | null {
 }
 
 // [T-095③] Copilot 首屏「最近任务/继续任务」只显与创作直接相关的 AI 任务 —— 调度采集任务
-// (scheduled.*)是后台巡航噪音,已有任务中心/自动化页承载,这里过滤掉,避免首屏被
+// (scheduled.*)是后台巡航噪音,已有自动化页承载,这里过滤掉,避免首屏被
 // 「作品明细采集 ×N」刷屏、真正的创作任务(出题/诊断/复盘…)被挤出视野。
 function isCreativeTask(t: WireTask): boolean {
   return !t.taskType.startsWith("scheduled.");

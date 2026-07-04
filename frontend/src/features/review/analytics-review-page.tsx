@@ -112,7 +112,7 @@ export function AnalyticsReviewPage({
         <>
           <EmptyState
             title="该作品暂无明细数据"
-            description="还没有拉到这个作品的播放/互动明细。去任务中心跑「拉明细」采集，数据回收后即可在此查看复盘分析。"
+            description="还没有拉到这个作品的播放/互动明细。去自动化跑「拉明细」采集，数据回收后即可在此查看复盘分析。"
           />
           {/* [T-063e] 已锁定盲预测但数据未回流,正是空指标态 —— 对照区照渲(等待回流)。 */}
           {predictionComparison !== undefined ? (

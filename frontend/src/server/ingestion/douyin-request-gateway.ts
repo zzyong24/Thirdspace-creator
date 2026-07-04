@@ -361,7 +361,7 @@ export class DouyinRequestGateway {
     await this.persist(channel);
   }
 
-  // getChannelStatus:可观测(供 T-038c 透传任务中心)。
+  // getChannelStatus:可观测(供 T-038c 透传自动化)。
   getChannelStatus(channel: DouyinChannel): ChannelStatus {
     const s = this.state[channel];
     const cd = s.cooldownUntil;

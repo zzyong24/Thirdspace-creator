@@ -771,7 +771,7 @@ function TopPublishedList({ items }: { items: ReadonlyArray<TopPublished> }) {
 // CommentsSection — 复盘每作品评论 (T-030 §10 / D6)
 //
 // 当前作品的真实评论 (前 100 条, 文本 + demand_tag 若有), 读自 publications.comments.list。
-// 空态诚实 (宪法 §8 / T-010): 无评论 → 引导「去任务中心配『抓我作品评论』采集」, 绝不摆假评论。
+// 空态诚实 (宪法 §8 / T-010): 无评论 → 引导「去自动化配『抓我作品评论』采集」, 绝不摆假评论。
 // F3 边界: 存量评论无 aweme_id 锚未回填 publication_id → 查不到 → 走空态 (需重采)。
 // ---------------------------------------------------------------------------
 
@@ -860,7 +860,7 @@ function CommentsSection({
             未采集该作品评论
           </p>
           <p className="text-[11px] text-muted-foreground">
-            去任务中心配「抓我作品评论」采集，评论回收后会显示在这里。
+            去自动化配「抓我作品评论」采集，评论回收后会显示在这里。
           </p>
         </div>
       ) : (

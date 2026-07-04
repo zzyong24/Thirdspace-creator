@@ -214,7 +214,7 @@ export async function buildReviewWorkspaceViewModel(
   // --- 复盘每作品评论 region (REAL via publications.comments.list, T-030 D6) --------
   // The current 作品 的真实评论 (前 100 条). Scope to the project's publication(s), read
   // from the analytics snapshots' publicationId. F3 边界:存量评论无 aweme_id 锚未回填,
-  // publication_id 空 → 查不到 → 诚实空态(去任务中心配「抓我作品评论」重采)。绝不摆假评论。
+  // publication_id 空 → 查不到 → 诚实空态(去自动化配「抓我作品评论」重采)。绝不摆假评论。
   const comments = await fetchReviewComments(client, snapshots);
 
   // [T-053 断点③] 复盘记录接真(reviews.list):完成/进行中的真 review 都列出;空就空。
@@ -424,7 +424,7 @@ function publicationIdsFromSnapshots(
  * Reads `publications.comments.list` for each of the project's publications and merges,
  * capped at 100. Each read is isolated: one failing publication never sinks the region.
  * Returns `[]` on no publications / no comments (honest empty state — the page shows the
- * "去任务中心配采集" guidance, never fake comments).
+ * "去自动化配采集" guidance, never fake comments).
  */
 export async function fetchReviewComments(
   client: ReviewDataClient,

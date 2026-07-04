@@ -891,7 +891,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // T-038c 采集限流可观测读端口:绑到 gateway 单例的 getChannelStatus(读内存镜像,同步)。
   // 遍历两个 channel 组装 contract 的 throttle-status 快照,供 ingestion.douyin.throttleStatus
-  // 只读 op 返给任务中心。纯读、无副作用、不落表。
+  // 只读 op 返给自动化。纯读、无副作用、不落表。
   const DOUYIN_CHANNELS: DouyinChannel[] = ["creator-center", "iesdouyin"];
   const readDouyinThrottleStatus = () => ({
     channels: DOUYIN_CHANNELS.map((channel) => {

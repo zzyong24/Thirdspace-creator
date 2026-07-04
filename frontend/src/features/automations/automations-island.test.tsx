@@ -475,7 +475,7 @@ describe("D4 — needs_reconnect 行:红标 + 登录抖音恢复", () => {
   });
 });
 
-// T-038c 采集限流可观测:cooldown 时任务中心诚实显限流保护横幅(不装死)。
+// T-038c 采集限流可观测:cooldown 时自动化诚实显限流保护横幅(不装死)。
 describe("T-038c — 采集限流可观测(cooldown 显限流保护横幅)", () => {
   it("JobRow:channelThrottle cooldownActive → 显「⏳ 限流保护中,下次约 N 分钟(已退避 K 次)」", () => {
     render(

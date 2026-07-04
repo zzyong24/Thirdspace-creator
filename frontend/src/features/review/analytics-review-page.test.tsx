@@ -455,7 +455,7 @@ describe("AnalyticsReviewPage", () => {
       expect(section!.textContent ?? "").toContain("热榜前 2 条");
     });
 
-    it("无评论 → 诚实空态文案(不摆假评论,引导去任务中心采集)", async () => {
+    it("无评论 → 诚实空态文案(不摆假评论,引导去自动化采集)", async () => {
       const viewModel = await vmWith([]);
       const { container } = await renderWorkspace("project-podcast-launch", {
         viewModel,

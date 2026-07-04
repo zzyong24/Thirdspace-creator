@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * `AutomationsIsland` —— 任务中心 /automations 的 client 交互层(T-007 D6)。
+ * `AutomationsIsland` —— 自动化 /automations 的 client 交互层(T-007 D6)。
  *
  * 承载 D6 全部读/管交互(纯前端 over D1 契约 op,不碰执行层 D3/D5):
  *  1. 作业列表:每行 name / source_kind(自己作品|评论)/ schedule(cron)/ enabled 开关 /
@@ -177,7 +177,7 @@ function runResultText(run: {
 // ── T-038c 采集限流可观测(SPEC §4.5 [gate-F4])────────────────────────────────
 //
 // 抖音采集经统一限流网关(DouyinRequestGateway),连续撞风控信号会进 cooldown 退避。
-// cooldown 期间采集 job 看似「卡住/静默」——这里把网关的实时退避态透传到任务中心,
+// cooldown 期间采集 job 看似「卡住/静默」——这里把网关的实时退避态透传到自动化,
 // 让用户诚实看到「限流保护中,约 N 分钟后重试」,而不是以为死了。数据走只读 op
 // ingestion.douyin.throttleStatus(读网关内存镜像,不落表),挂载时拉一次。
 
@@ -1326,7 +1326,7 @@ export function AutomationsIsland({
 
   // T-038c:挂载时拉一次两个 channel 的限流退避快照(只读 op,读网关内存镜像)。jobs 变化
   // (router.refresh 重传)即重拉,让登录恢复/立即运行后限流态也刷新。失败/未配网关 → 静默空
-  // (诚实不显限流,不打断任务中心)。这是实时态快照:cooldown 回看历史 run 的限流事件待后续
+  // (诚实不显限流,不打断自动化)。这是实时态快照:cooldown 回看历史 run 的限流事件待后续
   // (SPEC §4.5 标注可选,本片先只做实时 channel 态)。
   React.useEffect(() => {
     let cancelled = false;
