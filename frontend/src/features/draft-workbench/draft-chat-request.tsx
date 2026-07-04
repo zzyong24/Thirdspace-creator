@@ -96,7 +96,21 @@ export function DraftChatRequestProvider({
   const flushSave = React.useCallback<FlushSaveFn>(async () => {
     const fn = flushFnRef.current;
     if (!fn) return; // 无编辑器注册 → no-op(结构测试/纯文本无编辑器)。
-    await fn();
+    // [T-120] flush 是「让 AI 审最新版」的**尽力而为**,绝不能无限挂起把 AI 按钮卡死在
+    // 「打开对话中…」。编辑器 performSave 若因 server 冷启动/网络慢而久挂,最多等 4s 就放行
+    // 开对话(审到的版本最多差最后一次未落库的编辑);fn 报错也吞掉不阻断(开对话是主目标)。
+    await Promise.race([
+      (async () => {
+        try {
+          await fn();
+        } catch {
+          /* flush 失败不阻断开对话 */
+        }
+      })(),
+      new Promise<void>((resolve) => {
+        setTimeout(resolve, 4000);
+      }),
+    ]);
   }, []);
   const value = React.useMemo<DraftChatRequestContextValue>(
     () => ({ request, openChat, registerFlush, flushSave }),
