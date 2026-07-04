@@ -384,6 +384,28 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).not.toContain("当前项目 —— 你正在为这一个具体项目编导");
   });
 
+  it("[T-117] functionKey 命中真工具 → forcedTool 置该工具(streamText 会 toolChoice 强制)", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(
+      ctx,
+      { surface: "topics", functionKey: "topic.enrich" },
+      deps,
+    );
+    expect(a.forcedTool).toBe("topic.enrich");
+  });
+
+  it("[T-117] 无 functionKey / functionKey 非真工具 → forcedTool undefined(自由对话不强制)", async () => {
+    const { deps } = makeDeps();
+    const none = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(none.forcedTool).toBeUndefined();
+    const bogus = await buildChatAssembly(
+      ctx,
+      { surface: "topics", functionKey: "not-a-tool" },
+      deps,
+    );
+    expect(bogus.forcedTool).toBeUndefined();
+  });
+
   it("[T-104] 工具全放开:任一 surface 暴露全部 29 工具(surface 白名单只决定置顶顺序)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);

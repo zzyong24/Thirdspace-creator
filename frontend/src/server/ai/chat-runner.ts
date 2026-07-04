@@ -353,6 +353,13 @@ export interface ChatAssembly {
   system: string;
   tools: ToolSet;
   modelSpec: ModelSpec;
+  /**
+   * [T-117 确定性修] functionKey 命中真工具(深链/按钮明确要某工具,如「补全选题卡」→
+   * `topic.enrich`)时,本轮**强制**模型调该工具 —— 光靠 skill 提示词压不住弱 tool-calling
+   * 的模型(它会把卡当文本吐 + 谎称已渲卡)。runChatStream 用 prepareStep 在第 0 步 toolChoice
+   * 强制它,之后步恢复 auto。undefined = 不强制(自由对话)。
+   */
+  forcedTool?: string;
 }
 
 /**
@@ -925,7 +932,14 @@ export async function buildChatAssembly(
   };
   const tools = buildChatTools(toolWhitelist, toolDeps);
 
-  return { skillId, system, tools, modelSpec };
+  // [T-117 确定性修] functionKey 是深链/按钮明确指定的工具(如「补全选题卡」深链 fn=topic.enrich);
+  // 命中真工具时强制本轮调它,防模型把卡当文本吐 + 谎称已渲卡(弱 tool-calling 模型的常态)。
+  const forcedTool =
+    chatContext.functionKey && toolWhitelist.includes(chatContext.functionKey)
+      ? chatContext.functionKey
+      : undefined;
+
+  return { skillId, system, tools, modelSpec, forcedTool };
 }
 
 /**
@@ -947,6 +961,20 @@ export async function runChatStream(
     system: assembly.system,
     messages: modelMessages,
     tools: assembly.tools,
+    // [T-117 确定性修] functionKey 命中真工具时,第 0 步 toolChoice 强制调它 → 必产 tool-result
+    // → 前端渲真卡(弱 tool-calling 模型不再把卡当文本吐 + 谎称已渲卡);之后步恢复 auto,让模型
+    // 据工具结果把话说完。非强制轮(自由对话)prepareStep=undefined,行为不变。
+    prepareStep: assembly.forcedTool
+      ? ({ stepNumber }) =>
+          stepNumber === 0
+            ? {
+                toolChoice: {
+                  type: "tool" as const,
+                  toolName: assembly.forcedTool!,
+                },
+              }
+            : {}
+      : undefined,
     // 工具调用后让模型据工具结果继续把话说完(候选已在 tool-result part 里流回前端渲卡)。
     stopWhen: stepCountIs(5),
     onFinish: onFinish
