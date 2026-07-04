@@ -50,8 +50,28 @@ vi.mock("@/lib/contract-client", () => ({
 }));
 
 import { RegisterPublishedForm } from "./register-published-form";
+import type { ScriptReviewReportResource } from "@creatoros/contract";
 
 const LINK = "https://www.douyin.com/video/7423000000000000001";
+
+// [T-110] 审核报告 fixture 工厂:只关心 verdict + artifactVersion(门控输入)。
+function review(
+  verdict: ScriptReviewReportResource["verdict"],
+  artifactVersion: number,
+): ScriptReviewReportResource {
+  return {
+    id: "rep",
+    projectId: "project-1",
+    artifactId: "a1",
+    artifactVersion,
+    verdict,
+    summary: "",
+    lintFindings: [],
+    llmFindings: [],
+    modelLabel: "默认模型",
+    reviewedAt: "2026-07-04T00:00:00.000Z",
+  };
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -65,6 +85,8 @@ describe("RegisterPublishedForm", () => {
         projectId="project-1"
         projectTitle="我的作品"
         outputId="output-1"
+        scriptReview={null}
+        scriptVersion={1}
       />,
     );
     fireEvent.change(screen.getByLabelText("抖音链接"), {
@@ -105,6 +127,8 @@ describe("RegisterPublishedForm", () => {
         projectId="project-1"
         projectTitle="我的作品"
         outputId={null}
+        scriptReview={null}
+        scriptVersion={1}
       />,
     );
     fireEvent.change(screen.getByLabelText("抖音链接"), {
@@ -133,6 +157,8 @@ describe("RegisterPublishedForm", () => {
         projectId="project-1"
         projectTitle="我的作品"
         outputId="output-1"
+        scriptReview={null}
+        scriptVersion={1}
       />,
     );
     fireEvent.change(screen.getByLabelText("抖音链接"), {
@@ -157,6 +183,8 @@ describe("RegisterPublishedForm", () => {
         projectId="project-1"
         projectTitle="我的作品"
         outputId="output-1"
+        scriptReview={null}
+        scriptVersion={1}
       />,
     );
     fireEvent.change(screen.getByLabelText("抖音链接"), {
@@ -170,5 +198,109 @@ describe("RegisterPublishedForm", () => {
     expect(mockClient.registerPublishedPublication).not.toHaveBeenCalled();
     expect(mockClient.createOutput).not.toHaveBeenCalled();
     expect(mockRouter.refresh).not.toHaveBeenCalled();
+  });
+});
+
+// [T-110] 审核折中门:红硬拦、黄软提醒、绿/无报告放行、stale 软提醒不硬拦。
+describe("RegisterPublishedForm 审核折中门(T-110)", () => {
+  it("verdict=block(红)→ 登记按钮硬禁用 + 「先去审核」引导 + 不发登记 op", () => {
+    render(
+      <RegisterPublishedForm
+        projectId="project-1"
+        projectTitle="我的作品"
+        outputId="output-1"
+        scriptReview={review("block", 2)}
+        scriptVersion={2}
+      />,
+    );
+    // 硬拦条 + 引导按钮在。
+    expect(
+      screen.getByTestId("register-published-hard-block"),
+    ).toBeTruthy();
+    expect(
+      screen.getByTestId("register-published-goto-review"),
+    ).toBeTruthy();
+    // 登记按钮 disabled(即便填了合法链接也提交不了)。
+    fireEvent.change(screen.getByLabelText("抖音链接"), {
+      target: { value: LINK },
+    });
+    const submitBtn = screen.getByRole("button", { name: "登记已发布" });
+    expect(submitBtn).toHaveProperty("disabled", true);
+    fireEvent.click(submitBtn);
+    expect(mockClient.registerPublishedPublication).not.toHaveBeenCalled();
+    expect(mockClient.createOutput).not.toHaveBeenCalled();
+  });
+
+  it("verdict=risk(黄)→ 软提醒但不禁用,仍能登记", async () => {
+    render(
+      <RegisterPublishedForm
+        projectId="project-1"
+        projectTitle="我的作品"
+        outputId="output-1"
+        scriptReview={review("risk", 2)}
+        scriptVersion={2}
+      />,
+    );
+    // 软提醒在,硬拦条不在。
+    expect(screen.getByTestId("register-published-soft-warn").textContent).toMatch(
+      /建议先改/,
+    );
+    expect(screen.queryByTestId("register-published-hard-block")).toBeNull();
+    fireEvent.change(screen.getByLabelText("抖音链接"), {
+      target: { value: LINK },
+    });
+    const submitBtn = screen.getByRole("button", { name: "登记已发布" });
+    expect(submitBtn).toHaveProperty("disabled", false);
+    fireEvent.click(submitBtn);
+    await waitFor(() =>
+      expect(mockClient.registerPublishedPublication).toHaveBeenCalled(),
+    );
+  });
+
+  it("verdict=pass(绿)→ 无提示,放行登记", async () => {
+    render(
+      <RegisterPublishedForm
+        projectId="project-1"
+        projectTitle="我的作品"
+        outputId="output-1"
+        scriptReview={review("pass", 2)}
+        scriptVersion={2}
+      />,
+    );
+    expect(screen.queryByTestId("register-published-hard-block")).toBeNull();
+    expect(screen.queryByTestId("register-published-soft-warn")).toBeNull();
+    fireEvent.change(screen.getByLabelText("抖音链接"), {
+      target: { value: LINK },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "登记已发布" }));
+    await waitFor(() =>
+      expect(mockClient.registerPublishedPublication).toHaveBeenCalled(),
+    );
+  });
+
+  it("stale(报告版本 < 当前脚本版本)且旧报告是 block → 软提醒不硬拦,仍能登记", async () => {
+    render(
+      <RegisterPublishedForm
+        projectId="project-1"
+        projectTitle="我的作品"
+        outputId="output-1"
+        scriptReview={review("block", 1)}
+        scriptVersion={3}
+      />,
+    );
+    // stale 降为软提醒(脚本已改),不出硬拦条。
+    expect(screen.queryByTestId("register-published-hard-block")).toBeNull();
+    expect(screen.getByTestId("register-published-soft-warn").textContent).toMatch(
+      /脚本已改/,
+    );
+    fireEvent.change(screen.getByLabelText("抖音链接"), {
+      target: { value: LINK },
+    });
+    const submitBtn = screen.getByRole("button", { name: "登记已发布" });
+    expect(submitBtn).toHaveProperty("disabled", false);
+    fireEvent.click(submitBtn);
+    await waitFor(() =>
+      expect(mockClient.registerPublishedPublication).toHaveBeenCalled(),
+    );
   });
 });

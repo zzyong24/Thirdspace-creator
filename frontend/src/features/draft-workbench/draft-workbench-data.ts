@@ -57,6 +57,8 @@ interface RevisionDto {
 }
 
 interface MaterialLinkDto {
+  /** [T-109] material_link 行自身 id —— 解绑(deleteMaterialLink)的目标,非 entityId。 */
+  readonly id: string;
   readonly entityType: "knowledge" | "asset";
   readonly entityId: string;
 }
@@ -207,6 +209,11 @@ export interface DraftWorkbenchVm {
     readonly lockedAt: string | null;
   } | null;
   readonly ammo: ReadonlyArray<{
+    /**
+     * [T-109] material_link 行自身 id —— 稿面「移除」解绑(deleteMaterialLink)的目标。
+     * 注意:这不是 knowledge/asset 的 id(那是 entityId),删链接必须用它。
+     */
+    readonly linkId: string;
     readonly id: string;
     readonly kind: "knowledge" | "asset";
     readonly title: string;
@@ -337,6 +344,8 @@ async function readAmmo(
               body: undefined,
             })) as KnowledgeDto;
             return {
+              // [T-109] linkId = material_link 行 id(解绑目标),与 entity id 区分开。
+              linkId: link.id,
               id: k.id,
               kind: "knowledge" as const,
               title: k.title,
@@ -365,6 +374,8 @@ async function readAmmo(
             }
           }
           return {
+            // [T-109] linkId = material_link 行 id(解绑目标),与 asset id 区分开。
+            linkId: link.id,
             id: a.id,
             kind: "asset" as const,
             title: a.name,

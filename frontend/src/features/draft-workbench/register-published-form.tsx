@@ -15,12 +15,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { LinkIcon } from "lucide-react";
+import { LinkIcon, ShieldX, AlertTriangle } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { parseDouyinAwemeId, douyinVideoUrl } from "@/lib/douyin-link";
+import { deriveReviewPublishGate } from "./review-publish-gate";
+import type { ScriptReviewReportResource } from "@creatoros/contract";
 
 interface ScheduledJobDto {
   readonly id: string;
@@ -58,11 +60,17 @@ export function RegisterPublishedForm({
   projectId,
   projectTitle,
   outputId,
+  scriptReview,
+  scriptVersion,
 }: {
   readonly projectId: string;
   readonly projectTitle: string;
   /** 项目现有 ContentOutput;null = 还没有(提交时先铸一个)。 */
   readonly outputId: string | null;
+  /** [T-110] 最新审核报告(getLatestScriptReview 首屏真值;null = 未审)。 */
+  readonly scriptReview: ScriptReviewReportResource | null;
+  /** [T-110] 当前脚本版本号;判 stale(报告版本 < 当前 → 旧 verdict 不作数)。 */
+  readonly scriptVersion: number;
 }) {
   const router = useRouter();
   const [link, setLink] = React.useState("");
@@ -72,10 +80,12 @@ export function RegisterPublishedForm({
     text: string;
   } | null>(null);
 
+  // [T-110] 审核折中门:block(红)硬禁用登记;risk/stale 软提醒不禁用;pass/无报告放行。
+  const gate = deriveReviewPublishGate(scriptReview, scriptVersion);
   const valid = link.trim().length > 0;
 
   function submit() {
-    if (!valid || phase === "saving") return;
+    if (!valid || phase === "saving" || gate.hardBlocked) return;
     const awemeId = parseDouyinAwemeId(link);
     if (!awemeId) {
       setMessage({
@@ -129,8 +139,44 @@ export function RegisterPublishedForm({
     <div
       data-slot="register-published-form"
       data-testid="register-published-form"
+      data-gate={gate.hardBlocked ? "blocked" : gate.softWarn ? "warn" : "open"}
       className="mt-3 flex flex-col gap-1.5 border-t border-border pt-3"
     >
+      {/* [T-110] block(红)→ 硬拦条 +「先去审核」引导(动作已 disabled)。 */}
+      {gate.hardBlocked ? (
+        <div
+          data-testid="register-published-hard-block"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-1.5"
+        >
+          <span className="flex items-center gap-1.5 text-[11px] font-medium text-destructive">
+            <ShieldX className="size-3.5 shrink-0" />
+            {gate.reason}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            data-testid="register-published-goto-review"
+            className="h-6 px-2 text-[10px]"
+            onClick={() =>
+              document
+                .getElementById("script")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            先去审核
+          </Button>
+        </div>
+      ) : gate.softWarn ? (
+        /* [T-110] risk(黄)/ stale → 只软提醒,不禁用。 */
+        <p
+          data-testid="register-published-soft-warn"
+          className="flex items-center gap-1.5 text-[11px] font-medium text-warning"
+        >
+          <AlertTriangle className="size-3.5 shrink-0" />
+          {gate.reason}
+        </p>
+      ) : null}
       <form
         className="flex flex-wrap items-center gap-2"
         onSubmit={(e) => {
@@ -144,13 +190,18 @@ export function RegisterPublishedForm({
           placeholder="发完了?粘抖音链接(或视频编号),登记为已发布…"
           value={link}
           onChange={(e) => setLink(e.target.value)}
-          disabled={phase === "saving"}
+          disabled={phase === "saving" || gate.hardBlocked}
           className="h-8 min-w-0 flex-1 text-xs"
         />
         <Button
           type="submit"
           size="sm"
-          disabled={!valid || phase === "saving"}
+          disabled={!valid || phase === "saving" || gate.hardBlocked}
+          title={
+            gate.hardBlocked
+              ? "合规审核判为阻断，请先去审核并处理命中项"
+              : undefined
+          }
           className="h-8 shrink-0 px-3 text-xs"
         >
           {phase === "saving" ? "登记中…" : "登记已发布"}

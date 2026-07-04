@@ -23,6 +23,7 @@ import { DraftChatRequestProvider } from "./draft-chat-request";
 import { RevealProjectButton } from "./reveal-project-button";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
+import { AmmoRemoveButton } from "./ammo-remove-button";
 import { DraftPrimaryAction } from "./draft-primary-action";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
@@ -278,6 +279,8 @@ function PublishPackSection({
           projectId={projectId}
           projectTitle={projectTitle}
           outputId={outputId}
+          scriptReview={scriptReview}
+          scriptVersion={scriptVersion}
         />
       ) : null}
     </section>
@@ -331,14 +334,22 @@ function AmmoDrawer({
                   className="mb-1.5 h-20 w-full rounded-md border border-border object-cover"
                 />
               ) : null}
-              <p
-                className={cn(
-                  "mb-1 text-[10.5px] font-bold tracking-wide",
-                  item.kind === "knowledge" ? "text-warning" : "text-info",
-                )}
-              >
-                {item.kind === "knowledge" ? "知识" : "素材"}
-              </p>
+              <div className="mb-1 flex items-center justify-between gap-1">
+                <p
+                  className={cn(
+                    "text-[10.5px] font-bold tracking-wide",
+                    item.kind === "knowledge" ? "text-warning" : "text-info",
+                  )}
+                >
+                  {item.kind === "knowledge" ? "知识" : "素材"}
+                </p>
+                {/* [T-109] 移除:解绑本条与项目的关联(系统 Dialog 二次确认,不删实体)。 */}
+                <AmmoRemoveButton
+                  linkId={item.linkId}
+                  kind={item.kind}
+                  title={item.title}
+                />
+              </div>
               <p className="line-clamp-2 text-xs leading-relaxed text-foreground">
                 {item.title}
               </p>
