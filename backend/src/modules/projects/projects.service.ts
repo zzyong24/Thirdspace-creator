@@ -210,6 +210,10 @@ export interface ProjectsService {
     },
   ): Promise<ProjectRow>;
   archiveProject(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
+  // T-102 物理删除(区别于 archive 软隐藏):级联清除该项目全部关联行 + 项目本身。
+  // ownership 门:cross-user/missing → OwnershipError(404)。archived 与否都可删
+  // (删除是终极下线,不受 archive 只读态限制)。返回删除前的项目快照。
+  deleteProject(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
   transitionProjectStage(
     ctx: RequestContext,
     projectId: string,
@@ -842,6 +846,14 @@ export function createProjectsService(
         }),
       );
       return archived;
+    },
+
+    async deleteProject(ctx, projectId) {
+      // ownership 校验在 repo.deleteProjectCascade 内(删前 get());这里不再另守 archived
+      // 态 —— 物理删除是终极下线,归档项目照样可删(与 archive 的 already-archived 409
+      // 守卫正交)。级联清理 + 删根一个事务包裹(见 repository.deleteProjectCascade)。
+      // 不 appendActivity:项目行连同 project_activities 一并物理删除,写活动无处存也无意义。
+      return repo.deleteProjectCascade(ctx, projectId);
     },
 
     async transitionProjectStage(ctx, projectId, stage, cmd) {

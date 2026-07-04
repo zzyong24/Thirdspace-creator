@@ -41,6 +41,11 @@ const mockClient = {
     (input: unknown): Promise<unknown> =>
       Promise.resolve({ id: "p", status: "archived", input }),
   ),
+  // [T-102] 物理删除:返回删除前快照。
+  deleteProject: vi.fn(
+    (input: unknown): Promise<unknown> =>
+      Promise.resolve({ id: "p", status: "active", input }),
+  ),
 };
 
 vi.mock("@/lib/contract-client", () => ({
@@ -49,6 +54,7 @@ vi.mock("@/lib/contract-client", () => ({
       mockClient.transitionProjectStage(input),
     patchProject: (input: unknown) => mockClient.patchProject(input),
     archiveProject: (input: unknown) => mockClient.archiveProject(input),
+    deleteProject: (input: unknown) => mockClient.deleteProject(input),
   },
 }));
 
@@ -58,9 +64,11 @@ async function importIsland() {
 
 beforeEach(() => {
   mockRouter.refresh.mockClear();
+  mockRouter.push.mockClear();
   mockClient.transitionProjectStage.mockClear();
   mockClient.patchProject.mockClear();
   mockClient.archiveProject.mockClear();
+  mockClient.deleteProject.mockClear();
 });
 
 afterEach(() => {
@@ -185,6 +193,75 @@ describe("ProjectOverviewActions", () => {
     // 失败后仍 refresh(拿到最新 status,按钮下一帧变禁用态)。
     await waitFor(() => {
       expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // [T-102] 删除确认流:点删除只弹系统级确认框、不直接删;确认才调 deleteProject + 跳列表。
+  it("点删除只弹确认框、不调 deleteProject;确认后才删并跳回项目列表", async () => {
+    const { ProjectOverviewActions } = await importIsland();
+    render(
+      <ProjectOverviewActions
+        projectId="project-ainativebrowser"
+        currentStage="research"
+        starred={false}
+        projectTitle="AI 原生浏览器"
+      />,
+    );
+    // 点触发按钮 → 只打开确认框,尚未删。
+    await userEvent.click(screen.getByRole("button", { name: "删除项目" }));
+    await waitFor(() => {
+      expect(screen.getByText(/删除项目「AI 原生浏览器」/)).toBeTruthy();
+    });
+    expect(mockClient.deleteProject).not.toHaveBeenCalled();
+    // 警告文案含不可恢复 + 会清除的关联物。
+    expect(screen.getByText(/不可恢复/)).toBeTruthy();
+
+    // 点「永久删除」→ 调 deleteProject + push('/projects') + refresh。
+    await userEvent.click(screen.getByRole("button", { name: "永久删除" }));
+    await waitFor(() => {
+      expect(mockClient.deleteProject).toHaveBeenCalledTimes(1);
+    });
+    expect(mockClient.deleteProject.mock.calls[0]![0]).toMatchObject({
+      params: { projectId: "project-ainativebrowser" },
+    });
+    await waitFor(() => {
+      expect(mockRouter.push).toHaveBeenCalledWith("/projects");
+    });
+  });
+
+  it("删除确认框点取消 → 不调 deleteProject", async () => {
+    const { ProjectOverviewActions } = await importIsland();
+    render(
+      <ProjectOverviewActions
+        projectId="project-ainativebrowser"
+        currentStage="research"
+        starred={false}
+        projectTitle="AI 原生浏览器"
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "删除项目" }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "取消" })).toBeTruthy();
+    });
+    await userEvent.click(screen.getByRole("button", { name: "取消" }));
+    expect(mockClient.deleteProject).not.toHaveBeenCalled();
+  });
+
+  // [T-102] imported 项目:确认框额外强调「含真实作品数据」。
+  it("imported 项目删除确认框额外警告含真实作品数据", async () => {
+    const { ProjectOverviewActions } = await importIsland();
+    render(
+      <ProjectOverviewActions
+        projectId="project-imported-1"
+        currentStage="review"
+        starred={false}
+        projectTitle="历史作品"
+        projectSource="imported"
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "删除项目" }));
+    await waitFor(() => {
+      expect(screen.getByText(/含真实作品数据/)).toBeTruthy();
     });
   });
 });

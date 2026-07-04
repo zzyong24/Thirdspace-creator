@@ -95,6 +95,18 @@ export const projectsOperations = {
     response: projectResource,
     fr: ["FR-PROJECTS-ARCHIVE"],
   }),
+  // T-102 物理删除(区别于 archive 软隐藏):DELETE /projects/:projectId。级联清除
+  // 该项目全部关联行(脚本/发布/复盘/数据),不可恢复。additive —— 归档语义不变,
+  // 删除是并列的第二种下线动作(用户裁决 2026-07-03「项目也要支持删除,除了归档之外」)。
+  // 返回被删除项目的最后快照(与 archive 同 ProjectResource 形状,便于前端确认后展示/跳转)。
+  deleteProject: defineEndpoint({
+    id: "projects.delete",
+    method: "DELETE",
+    path: "/projects/:projectId",
+    params: projectParams,
+    response: projectResource,
+    fr: ["FR-PROJECTS-DELETE"],
+  }),
   transitionProjectStage: defineEndpoint({
     id: "projects.stage.transition",
     method: "POST",

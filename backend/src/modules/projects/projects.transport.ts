@@ -20,7 +20,7 @@ import type {
   ProjectActivityResource,
 } from "./projects.schema";
 
-// Projects transport (foundation §5.4) — all 15 contract ops in the SPEC §13
+// Projects transport (foundation §5.4) — all contract ops in the SPEC §13
 // "项目与流程" group served over REAL SQL behind /api/v1/dispatch. A Transport
 // whose request(endpoint,input,ctx) switches on endpoint.id, delegates to the
 // per-ctx service/repo, and returns the SPEC §14 envelope. No ctx ⇒
@@ -36,6 +36,7 @@ export const PROJECT_OP_IDS = [
   "projects.get",
   "projects.patch",
   "projects.archive",
+  "projects.delete",
   "projects.stage.transition",
   "projects.outputs.create",
   "projects.outputs.list",
@@ -254,6 +255,12 @@ export function createProjectsTransport(
         case "projects.archive":
           return {
             data: toProject(await service.archiveProject(ctx, p.projectId ?? "")),
+            meta: singleMeta,
+          };
+        case "projects.delete":
+          // T-102 物理删除:级联清理 + 删根(service.deleteProject),返回删除前快照。
+          return {
+            data: toProject(await service.deleteProject(ctx, p.projectId ?? "")),
             meta: singleMeta,
           };
         case "projects.stage.transition":

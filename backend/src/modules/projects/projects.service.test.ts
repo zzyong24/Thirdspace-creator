@@ -1,5 +1,24 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import {
+  createDb,
+  type Db,
+  eq,
+  // T-102 级联删除锁测:跨模块子表(断言删后一并清理)。
+  artifacts,
+  artifactVersions,
+  scriptSections,
+  publications,
+  publicationRevisions,
+  reviews,
+  reviewInsights,
+  scriptReviewReports,
+  materialLinks,
+  aiConversations,
+  aiMessages,
+  aiTasks,
+  aiTaskResults,
+  audienceSignals,
+} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createProjectRepository,
@@ -116,6 +135,280 @@ describe("createProject UoW", () => {
     expect(stages.find((s) => s.stage === "production")!.status).toBe(
       "completed",
     );
+  });
+});
+
+describe("deleteProject 级联物理删除 (T-102)", () => {
+  it("cross-user/missing → OwnershipError(404,不泄露存在性)", async () => {
+    const mine = await service.createProject(ctx, { title: "我的" });
+    const otherCtx: RequestContext = {
+      userId: "user-2",
+      requestId: "req-2",
+      source: "user",
+    };
+    // 别人删我的项目 → 404。
+    await expect(
+      service.deleteProject(otherCtx, mine.id),
+    ).rejects.toMatchObject({ name: "OwnershipError" });
+    // 删不存在的 → 404。
+    await expect(
+      service.deleteProject(ctx, "project-does-not-exist"),
+    ).rejects.toMatchObject({ name: "OwnershipError" });
+  });
+
+  it("删项目 → 项目本身 + 全部关联行(脚本/发布/复盘/AI/素材/评论锚)一并清理", async () => {
+    // 建项目(带 7 stages + platforms + activity)。
+    const project = await service.createProject(ctx, {
+      title: "待删项目",
+      targetPlatforms: ["douyin"],
+    });
+    const projectId = project.id;
+    // content_output(经 service,带 output_stages)。
+    const output = await service.createOutput(ctx, projectId, {
+      title: "成片",
+    });
+    const outputId = output.id;
+    // task。
+    await service.createTask(ctx, projectId, {
+      title: "拍摄",
+      stage: "production",
+    });
+
+    // ── 直接插入跨模块关联行(模拟真实使用后挂满数据) ────────────────────
+    const NOW_ISO = "2026-06-20T08:00:00.000Z";
+    // artifact + version + script_section。
+    await db.insert(artifacts).values({
+      id: "art-1",
+      userId: ctx.userId,
+      projectId,
+      contentOutputId: outputId,
+      currentVersionId: "artv-1",
+      stage: "script",
+      artifactType: "script",
+      title: "脚本",
+      status: "drafting",
+      createdAt: NOW_ISO,
+      updatedAt: NOW_ISO,
+    });
+    await db.insert(artifactVersions).values({
+      id: "artv-1",
+      artifactId: "art-1",
+      versionNumber: 1,
+      contentText: "正文",
+      createdAt: NOW_ISO,
+    });
+    await db.insert(scriptSections).values({
+      id: "ss-1",
+      artifactVersionId: "artv-1",
+      sectionType: "hook",
+      title: "开场",
+      content: "钩子",
+      position: 0,
+    });
+    // publication + revision(挂 content_output)。
+    await db.insert(publications).values({
+      id: "pub-1",
+      userId: ctx.userId,
+      contentOutputId: outputId,
+      platform: "douyin",
+      accountReference: "acc-1",
+      status: "published",
+      currentRevisionId: "pubrev-1",
+      externalId: "aweme-1",
+      createdAt: NOW_ISO,
+      updatedAt: NOW_ISO,
+    });
+    await db.insert(publicationRevisions).values({
+      id: "pubrev-1",
+      userId: ctx.userId,
+      publicationId: "pub-1",
+      revisionNumber: 1,
+      title: "发布标题",
+      createdAt: NOW_ISO,
+    });
+    // audience_signal 指向该 publication(应被解锚 publication_id=null,行留存)。
+    await db.insert(audienceSignals).values({
+      id: "sig-1",
+      userId: ctx.userId,
+      source: "comment",
+      rawText: "好视频",
+      publicationId: "pub-1",
+      createdAt: NOW_ISO,
+    });
+    // review + insight(挂 project_id)。
+    await db.insert(reviews).values({
+      id: "rev-1",
+      userId: ctx.userId,
+      projectId,
+      reviewType: "project",
+      status: "completed",
+      periodStart: NOW_ISO,
+      periodEnd: NOW_ISO,
+      createdAt: NOW_ISO,
+    });
+    await db.insert(reviewInsights).values({
+      id: "ri-1",
+      userId: ctx.userId,
+      reviewId: "rev-1",
+      insightType: "success",
+      title: "洞察",
+    });
+    // script_review_report(挂 project_id)。
+    await db.insert(scriptReviewReports).values({
+      id: "srr-1",
+      userId: ctx.userId,
+      projectId,
+      artifactId: "art-1",
+      artifactVersion: 1,
+      verdict: "pass",
+      reviewedAt: NOW_ISO,
+    });
+    // material_link(挂 project_id)。
+    await db.insert(materialLinks).values({
+      id: "ml-1",
+      userId: ctx.userId,
+      projectId,
+      entityType: "knowledge",
+      entityId: "k-1",
+      createdAt: NOW_ISO,
+    });
+    // ai_conversation + message,ai_task + result(挂 project_id)。
+    await db.insert(aiConversations).values({
+      id: "conv-1",
+      userId: ctx.userId,
+      projectId,
+      scope: `project:${projectId}`,
+      title: "会话",
+      createdAt: NOW_ISO,
+      updatedAt: NOW_ISO,
+    });
+    await db.insert(aiMessages).values({
+      id: "msg-1",
+      conversationId: "conv-1",
+      role: "user",
+      content: "hi",
+      createdAt: NOW_ISO,
+    });
+    await db.insert(aiTasks).values({
+      id: "task-1",
+      userId: ctx.userId,
+      projectId,
+      taskType: "script.generate",
+      status: "succeeded",
+      idempotencyKey: "idem-1",
+      requestedAt: NOW_ISO,
+    });
+    await db.insert(aiTaskResults).values({
+      id: "tr-1",
+      aiTaskId: "task-1",
+      resultType: "artifact",
+      artifactId: "art-1",
+    });
+
+    // ── 删除 ──────────────────────────────────────────────────────────────
+    const deleted = await service.deleteProject(ctx, projectId);
+    expect(deleted.id).toBe(projectId); // 返回删除前快照
+
+    // 项目本身 → 404。
+    await expect(repo.get(ctx, projectId)).rejects.toMatchObject({
+      name: "OwnershipError",
+    });
+
+    // 直接子表清零(经 repo 的只读或直接 db 查)。
+    expect(
+      await db.select().from(reviews).where(eq(reviews.projectId, projectId)),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(reviewInsights)
+        .where(eq(reviewInsights.reviewId, "rev-1")),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(scriptReviewReports)
+        .where(eq(scriptReviewReports.projectId, projectId)),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(materialLinks)
+        .where(eq(materialLinks.projectId, projectId)),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(artifacts)
+        .where(eq(artifacts.projectId, projectId)),
+    ).toHaveLength(0);
+    // 孙表(artifact_version / script_section)清零。
+    expect(
+      await db
+        .select()
+        .from(artifactVersions)
+        .where(eq(artifactVersions.artifactId, "art-1")),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(scriptSections)
+        .where(eq(scriptSections.artifactVersionId, "artv-1")),
+    ).toHaveLength(0);
+    // 发布链(publication + revision)清零。
+    expect(
+      await db
+        .select()
+        .from(publications)
+        .where(eq(publications.contentOutputId, outputId)),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(publicationRevisions)
+        .where(eq(publicationRevisions.publicationId, "pub-1")),
+    ).toHaveLength(0);
+    // AI 会话/消息 + 任务/结果清零。
+    expect(
+      await db
+        .select()
+        .from(aiConversations)
+        .where(eq(aiConversations.projectId, projectId)),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(aiMessages)
+        .where(eq(aiMessages.conversationId, "conv-1")),
+    ).toHaveLength(0);
+    expect(
+      await db.select().from(aiTasks).where(eq(aiTasks.projectId, projectId)),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(aiTaskResults)
+        .where(eq(aiTaskResults.aiTaskId, "task-1")),
+    ).toHaveLength(0);
+
+    // 评论信号(audience_signal)行留存,但 publication_id 已解锚为 null(独立 ingestion
+    // 溯源不随项目物理删而丢,只断开对已删 publication 的悬挂引用)。
+    const sig = await db
+      .select()
+      .from(audienceSignals)
+      .where(eq(audienceSignals.id, "sig-1"));
+    expect(sig).toHaveLength(1);
+    expect(sig[0]!.publicationId).toBeNull();
+  });
+
+  it("已归档项目也能物理删除(archive 只读态不拦删除)", async () => {
+    const project = await service.createProject(ctx, { title: "归档后删" });
+    await service.archiveProject(ctx, project.id);
+    const deleted = await service.deleteProject(ctx, project.id);
+    expect(deleted.id).toBe(project.id);
+    await expect(repo.get(ctx, project.id)).rejects.toMatchObject({
+      name: "OwnershipError",
+    });
   });
 });
 

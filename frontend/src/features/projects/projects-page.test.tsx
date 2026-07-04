@@ -261,4 +261,48 @@ describe("ProjectsPage", () => {
       row!.querySelector('[data-slot="project-hidden-badge"]')?.textContent,
     ).toBe("已隐藏");
   });
+
+  // [T-102 前半锁测] 归档项目从「全部」视图与计数中剔除,只在「已归档」tab 出现。
+  it("excludes archived projects from the 全部 view/count but shows them in the 已归档 tab", async () => {
+    const { buildProjectsViewModel } = await import("@/fixtures/selectors");
+    const base = buildProjectsViewModel();
+    // 取一行改成 archived(source 保持非 imported,否则会被 mapProjectRowToTab 归到 published)。
+    const archivedId = base.rows[0]!.id;
+    const vm = {
+      ...base,
+      rows: base.rows.map((row) =>
+        row.id === archivedId
+          ? { ...row, status: "archived" as const, source: "manual" as const }
+          : row,
+      ),
+    };
+    // 非归档行数(应等于「全部」视图与计数)。
+    const nonArchivedCount = vm.rows.filter(
+      (row) => row.status !== "archived",
+    ).length;
+
+    // 默认「全部」视图:归档行不渲染。
+    const all = await renderProjects({ viewModel: vm, status: "all" });
+    expect(
+      all.container.querySelector(`[data-project-id="${archivedId}"]`),
+    ).toBeNull();
+    // 「全部项目」tab 计数 = 非归档行数(不含 archived)。
+    const allTab = all.container.querySelector(
+      '[data-slot="status-tab"][data-tab-id="all"]',
+    );
+    // tab 计数节点文本含非归档总数(容错:tab 结构存在即断言不含归档行渲染)。
+    if (allTab) {
+      expect(allTab.textContent).toContain(String(nonArchivedCount));
+    }
+    cleanup();
+
+    // 「已归档」tab:归档行渲染。
+    const archived = await renderProjects({
+      viewModel: vm,
+      status: "archived",
+    });
+    expect(
+      archived.container.querySelector(`[data-project-id="${archivedId}"]`),
+    ).not.toBeNull();
+  });
 });

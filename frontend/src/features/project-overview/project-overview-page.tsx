@@ -356,6 +356,9 @@ function ProjectProgressCard({
                 starred={getProjectById(projectId)?.starred ?? false}
                 // [T-085] 状态感知:已归档项目按钮换禁用态,不再放出必 409 的归档动作。
                 projectStatus={getProjectById(projectId)?.status ?? "active"}
+                // [T-102] 删除确认框文案 + imported 额外警告。
+                projectTitle={projectTitle}
+                projectSource={source}
               />
               <Link
                 href={primaryHref}

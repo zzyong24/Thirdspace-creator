@@ -393,6 +393,8 @@ function ProjectListItem({ row }: { row: ProjectListRow }) {
           openHref={workspaceHrefForRow(row)}
           // [T-085] 状态感知:已归档行的菜单不再放出必 409 的归档动作。
           projectStatus={row.status}
+          // [T-102] 来源透传:imported 项目删除确认框额外强调含真实数据。
+          projectSource={row.source}
         />
       </div>
     </article>

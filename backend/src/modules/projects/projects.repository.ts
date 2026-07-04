@@ -1,4 +1,4 @@
-import { and, eq, asc, sql, type Db } from "@creatoros/backend";
+import { and, eq, asc, inArray, sql, type Db } from "@creatoros/backend";
 import {
   projects,
   projectActivities,
@@ -8,6 +8,33 @@ import {
   outputStages,
   tasks,
 } from "./projects.db-schema";
+// T-102 物理删除级联:跨模块子表(用户裁决 2026-07-03)。项目物理删除必须把挂在
+// 该项目上的所有关联行一并清理,否则留孤儿(发布记录/脚本/复盘/评论锚等)。这些表的
+// canonical 定义都在共享基座 @creatoros/backend(与 db.ts 的 schema 联合同源),这里只
+// 为「按 project 收敛删除」引用它们的列 —— 不改这些模块的服务/契约(T-102 禁区)。
+import {
+  artifacts,
+  artifactVersions,
+  artifactRelations,
+  scriptSections,
+  timelineSegments,
+  publications,
+  publicationRevisions,
+  reviews,
+  reviewInsights,
+  reviewPublications,
+  scriptReviewReports,
+  learningApplications,
+  materialLinks,
+  aiConversations,
+  aiMessages,
+  aiTasks,
+  aiTaskReferences,
+  aiTaskResults,
+  aiTaskSteps,
+  audienceSignals,
+  topicPromotions,
+} from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { OwnershipError } from "./projects.errors";
 
@@ -55,6 +82,15 @@ export interface ProjectRepository {
     ctx: RequestContext,
     projectId: string,
     set: Partial<ProjectRow>,
+  ): Promise<ProjectRow>;
+
+  // T-102 物理删除:级联清除该项目全部关联行 + 项目本身,一个事务包裹(全成或全不成)。
+  // ownership 由调用方(service)在删前 get() 校验;这里再按 project_id / 派生子键收敛
+  // 删除,顺序自底向上(先删孙表再删子表),避免留孤儿。返回删除前的 project 快照,
+  // 供 service 落 DTO / 前端确认后展示。
+  deleteProjectCascade(
+    ctx: RequestContext,
+    projectId: string,
   ): Promise<ProjectRow>;
 
   // Activity (ownership via parent project).
@@ -267,6 +303,181 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .where(and(eq(projects.id, projectId), eq(projects.userId, ctx.userId)))
         .returning();
       return updated[0]!;
+    },
+
+    async deleteProjectCascade(ctx, projectId) {
+      // 删前再断言所有权(cross-user/missing → 404,不泄露存在性)。
+      const target = await get(ctx, projectId);
+      // 一个事务包裹整条级联:全成或全不成(pglite/node-postgres 同一 Drizzle API)。
+      await db.transaction(async (tx) => {
+        // ── 先解析派生子键(删除孙表要用到) ──────────────────────────────
+        // 该项目下的 content_output ids。
+        const outputRows = await tx
+          .select({ id: contentOutputs.id })
+          .from(contentOutputs)
+          .where(eq(contentOutputs.projectId, projectId));
+        const outputIds = outputRows.map((r) => r.id);
+        // 这些 output 的 publication ids。
+        const pubRows =
+          outputIds.length > 0
+            ? await tx
+                .select({ id: publications.id })
+                .from(publications)
+                .where(inArray(publications.contentOutputId, outputIds))
+            : [];
+        const publicationIds = pubRows.map((r) => r.id);
+        // 该项目的 artifact ids + 其 version ids(脚本结构挂在 version 上)。
+        const artifactRows = await tx
+          .select({ id: artifacts.id })
+          .from(artifacts)
+          .where(eq(artifacts.projectId, projectId));
+        const artifactIds = artifactRows.map((r) => r.id);
+        const versionRows =
+          artifactIds.length > 0
+            ? await tx
+                .select({ id: artifactVersions.id })
+                .from(artifactVersions)
+                .where(inArray(artifactVersions.artifactId, artifactIds))
+            : [];
+        const versionIds = versionRows.map((r) => r.id);
+        // 该项目的 ai_conversation / ai_task ids(子表经它们收敛)。
+        const convoRows = await tx
+          .select({ id: aiConversations.id })
+          .from(aiConversations)
+          .where(eq(aiConversations.projectId, projectId));
+        const conversationIds = convoRows.map((r) => r.id);
+        const aiTaskRows = await tx
+          .select({ id: aiTasks.id })
+          .from(aiTasks)
+          .where(eq(aiTasks.projectId, projectId));
+        const aiTaskIds = aiTaskRows.map((r) => r.id);
+        // 该项目的 review ids(review_insights / review_publications 经它收敛)。
+        const reviewRows = await tx
+          .select({ id: reviews.id })
+          .from(reviews)
+          .where(eq(reviews.projectId, projectId));
+        const reviewIds = reviewRows.map((r) => r.id);
+
+        // ── 自底向上删除(先孙后子再父) ───────────────────────────────────
+        // artifact 结构表(script_sections / timeline_segments 挂 artifact_version)。
+        if (versionIds.length > 0) {
+          await tx
+            .delete(scriptSections)
+            .where(inArray(scriptSections.artifactVersionId, versionIds));
+          await tx
+            .delete(timelineSegments)
+            .where(inArray(timelineSegments.artifactVersionId, versionIds));
+        }
+        if (artifactIds.length > 0) {
+          await tx
+            .delete(artifactVersions)
+            .where(inArray(artifactVersions.artifactId, artifactIds));
+          // artifact_relations 双向:source 或 target 命中都删(悬挂关系不留)。
+          await tx
+            .delete(artifactRelations)
+            .where(inArray(artifactRelations.sourceArtifactId, artifactIds));
+          await tx
+            .delete(artifactRelations)
+            .where(inArray(artifactRelations.targetArtifactId, artifactIds));
+        }
+        await tx.delete(artifacts).where(eq(artifacts.projectId, projectId));
+
+        // 发布链:revisions + review_publications(join)先删,audience_signals 的
+        // publication_id 锚置空(评论/信号带独立 ingestion 溯源,不随项目物理删除而丢,
+        // 但其指向的 publication 已不存在 → 解锚,避免悬挂引用)。
+        if (publicationIds.length > 0) {
+          await tx
+            .delete(publicationRevisions)
+            .where(inArray(publicationRevisions.publicationId, publicationIds));
+          await tx
+            .delete(reviewPublications)
+            .where(inArray(reviewPublications.publicationId, publicationIds));
+          await tx
+            .update(audienceSignals)
+            .set({ publicationId: null })
+            .where(inArray(audienceSignals.publicationId, publicationIds));
+          await tx
+            .delete(publications)
+            .where(inArray(publications.id, publicationIds));
+        }
+        // output 阶段行 + outputs 本身。
+        if (outputIds.length > 0) {
+          await tx
+            .delete(outputStages)
+            .where(inArray(outputStages.contentOutputId, outputIds));
+        }
+        await tx
+          .delete(contentOutputs)
+          .where(eq(contentOutputs.projectId, projectId));
+
+        // review 子表(insights / publications-join)+ reviews 本身。
+        if (reviewIds.length > 0) {
+          await tx
+            .delete(reviewInsights)
+            .where(inArray(reviewInsights.reviewId, reviewIds));
+          await tx
+            .delete(reviewPublications)
+            .where(inArray(reviewPublications.reviewId, reviewIds));
+        }
+        await tx.delete(reviews).where(eq(reviews.projectId, projectId));
+        // 稿面审核门报告(script_review_reports 挂 project_id)。
+        await tx
+          .delete(scriptReviewReports)
+          .where(eq(scriptReviewReports.projectId, projectId));
+
+        // AI 会话/消息 + AI 任务/引用/结果/步骤。
+        if (conversationIds.length > 0) {
+          await tx
+            .delete(aiMessages)
+            .where(inArray(aiMessages.conversationId, conversationIds));
+        }
+        await tx
+          .delete(aiConversations)
+          .where(eq(aiConversations.projectId, projectId));
+        if (aiTaskIds.length > 0) {
+          await tx
+            .delete(aiTaskReferences)
+            .where(inArray(aiTaskReferences.aiTaskId, aiTaskIds));
+          await tx
+            .delete(aiTaskResults)
+            .where(inArray(aiTaskResults.aiTaskId, aiTaskIds));
+          await tx
+            .delete(aiTaskSteps)
+            .where(inArray(aiTaskSteps.aiTaskId, aiTaskIds));
+        }
+        await tx.delete(aiTasks).where(eq(aiTasks.projectId, projectId));
+
+        // 素材关联 + 复用应用 + 选题晋升链(candidate 本身不删 —— 只解绑晋升)。
+        await tx
+          .delete(materialLinks)
+          .where(eq(materialLinks.projectId, projectId));
+        await tx
+          .delete(learningApplications)
+          .where(eq(learningApplications.projectId, projectId));
+        await tx
+          .delete(topicPromotions)
+          .where(eq(topicPromotions.projectId, projectId));
+
+        // project 直接子表(平台/阶段/任务/活动)。
+        await tx
+          .delete(projectTargetPlatforms)
+          .where(eq(projectTargetPlatforms.projectId, projectId));
+        await tx
+          .delete(projectStages)
+          .where(eq(projectStages.projectId, projectId));
+        await tx.delete(tasks).where(eq(tasks.projectId, projectId));
+        await tx
+          .delete(projectActivities)
+          .where(eq(projectActivities.projectId, projectId));
+
+        // 最后删项目根行(user-scoped 再兜一层)。
+        await tx
+          .delete(projects)
+          .where(
+            and(eq(projects.id, projectId), eq(projects.userId, ctx.userId)),
+          );
+      });
+      return target;
     },
 
     async listActivity(ctx, projectId) {

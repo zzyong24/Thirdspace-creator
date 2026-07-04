@@ -20,12 +20,17 @@
  */
 
 import * as React from "react";
-import { Archive, Star, Wand2 } from "lucide-react";
+import { Archive, Star, Trash2, Wand2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { DeleteProjectDialog } from "@/features/projects/delete-project-dialog";
 import { client } from "@/lib/contract-client";
-import type { ProjectStageName, ProjectStatus } from "@/types/domain";
+import type {
+  ProjectStageName,
+  ProjectStatus,
+  ProjectSource,
+} from "@/types/domain";
 
 // The project pipeline order. The next stage is the adjacent forward step;
 // `review` is terminal. Mirrors STAGE_ORDER in the transition handler.
@@ -53,6 +58,10 @@ export interface ProjectOverviewActionsProps {
   // archiveProject 的 already-archived 守卫)。传入 status,archived 时按钮换
   // 「已归档」禁用态(契约无 unarchive op,不新增)。缺省按 active 渲染(兼容旧挂载点)。
   readonly projectStatus?: ProjectStatus;
+  // [T-102] 项目来源:imported = 真实历史作品,删除确认框额外强调含真实数据。
+  readonly projectSource?: ProjectSource;
+  // [T-102] 项目标题:删除确认框文案用(缺省回退项目 id,兼容旧挂载点)。
+  readonly projectTitle?: string;
 }
 
 // 把 HttpTransport 抛出的错误转成一句中文。transport 现在把后端错误透传成
@@ -85,9 +94,13 @@ export function ProjectOverviewActions({
   currentStage,
   starred,
   projectStatus = "active",
+  projectSource,
+  projectTitle,
 }: ProjectOverviewActionsProps) {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
+  // [T-102] 删除确认框开关(受控);删成功后回项目列表(当前在项目详情页)。
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
   // [T-085] 双发防重:pending state 更新是异步的,同一 tick 内连点两次都读到
   // pending=false(React 批处理)→ 两个请求都发出。用 ref 做同步互斥,state 只管 UI 禁用态。
   const pendingRef = React.useRef(false);
@@ -223,6 +236,19 @@ export function ProjectOverviewActions({
           进入下一步
         </Button>
       ) : null}
+      {/* [T-102] 物理删除:与归档并列,更危险 → 红色 destructive 图标按钮 +
+          系统级二次确认框(禁原生 confirm)。归档与否都可删。 */}
+      <Button
+        type="button"
+        variant="destructive"
+        size="icon"
+        aria-label="删除项目"
+        disabled={pending}
+        onClick={() => setDeleteOpen(true)}
+        data-slot="project-delete-trigger"
+      >
+        <Trash2 aria-hidden="true" className="size-4" />
+      </Button>
       </div>
       {/* bug #6:gate 拒绝原因就地展示(原来静默无反应)。 */}
       {transitionError ? (
@@ -234,6 +260,18 @@ export function ProjectOverviewActions({
           {transitionError}
         </p>
       ) : null}
+      {/* [T-102] 删除确认框:确认成功 → 回项目列表(当前在项目详情页)。 */}
+      <DeleteProjectDialog
+        projectId={projectId}
+        projectTitle={projectTitle ?? projectId}
+        source={projectSource}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => {
+          router.push("/projects");
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

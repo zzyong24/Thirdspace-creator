@@ -23,7 +23,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Archive, FolderOpen } from "lucide-react";
+import { Archive, FolderOpen, Trash2 } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -32,7 +32,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DeleteProjectDialog } from "@/features/projects/delete-project-dialog";
 import { client } from "@/lib/contract-client";
+import type { ProjectSource } from "@/types/domain";
 
 export interface ProjectRowMenuProps {
   readonly projectId: string;
@@ -42,6 +44,8 @@ export interface ProjectRowMenuProps {
   // [T-085] 状态感知:已归档行(「已归档」tab)不再放出必 409 的归档动作,
   // 换禁用态「已归档」。缺省按 active 渲染(兼容旧挂载点)。
   readonly projectStatus?: string;
+  // [T-102] 项目来源:imported = 真实历史作品,删除确认框额外强调含真实数据。
+  readonly projectSource?: ProjectSource;
 }
 
 export function ProjectRowMenu({
@@ -49,12 +53,15 @@ export function ProjectRowMenu({
   projectTitle,
   openHref,
   projectStatus = "active",
+  projectSource,
 }: ProjectRowMenuProps) {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
   // [T-085] 归档失败(如并发下已归档 → 409)不再是 unhandled rejection,
   // 内联展示在菜单里(禁浏览器 alert)。
   const [archiveError, setArchiveError] = React.useState<string | null>(null);
+  // [T-102] 删除确认框开关(受控;菜单项点开 → 置 true,不直接删)。
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
   const archived = projectStatus === "archived";
 
   const onArchive = React.useCallback(() => {
@@ -82,6 +89,7 @@ export function ProjectRowMenu({
   }, [pending, projectId, router]);
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
@@ -133,8 +141,35 @@ export function ProjectRowMenu({
             {archiveError}
           </p>
         ) : null}
+        <DropdownMenuSeparator />
+        {/* [T-102] 物理删除入口:与归档并列,更危险 → 红色 destructive 项 +
+            系统级二次确认框(禁原生 confirm)。点击只打开确认框,不直接删。 */}
+        <DropdownMenuItem
+          data-slot="project-row-delete"
+          variant="destructive"
+          onSelect={(event) => {
+            // 阻止默认关闭抢在打开框之前;受控 Dialog 是菜单的兄弟节点,菜单关闭后仍显示。
+            event.preventDefault();
+            setDeleteOpen(true);
+          }}
+        >
+          <Trash2 aria-hidden="true" className="size-4" />
+          删除
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <DeleteProjectDialog
+      projectId={projectId}
+      projectTitle={projectTitle}
+      source={projectSource}
+      open={deleteOpen}
+      onOpenChange={setDeleteOpen}
+      onDeleted={() => {
+        // 删除后行从列表消失 + tab 计数随真实数据变。
+        router.refresh();
+      }}
+    />
+    </>
   );
 }
 

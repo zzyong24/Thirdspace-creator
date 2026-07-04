@@ -26,7 +26,7 @@ import {
   projectActivityResource,
 } from "./projects.schema";
 
-// Drive each of the 16 ops through the transport with a valid input and assert
+// Drive each of the 17 ops through the transport with a valid input and assert
 // the envelope `data` validates against the op's contract response DTO
 // (per-item for isList). A returning call == DTO conformance (foundation §5.4).
 
@@ -61,7 +61,7 @@ async function call(id: string, input: unknown, isList = false) {
   return transport.request(ep(id, isList), input as never, ctx);
 }
 
-describe("projects.transport — 16-op contract conformance", () => {
+describe("projects.transport — 17-op contract conformance", () => {
   it("projects.create / list / get → ProjectResource", async () => {
     const created = await call("projects.create", {
       body: { title: "深度解析", brief: "拆解", targetPlatforms: ["bilibili"] },
@@ -199,7 +199,7 @@ describe("projects.transport — 16-op contract conformance", () => {
     expect(parsed.data.length).toBe(7);
   });
 
-  it("covers all 16 op ids + unknown → UnsupportedOperationError", async () => {
+  it("covers all 17 op ids + unknown → UnsupportedOperationError", async () => {
     const ids = Object.values(ENDPOINTS)
       .filter((e) =>
         [
@@ -208,6 +208,8 @@ describe("projects.transport — 16-op contract conformance", () => {
           "projects.get",
           "projects.patch",
           "projects.archive",
+          // T-102 物理删除(additive)。
+          "projects.delete",
           "projects.stage.transition",
           "projects.outputs.create",
           "projects.outputs.list",
@@ -222,10 +224,25 @@ describe("projects.transport — 16-op contract conformance", () => {
         ].includes(e.id),
       )
       .map((e) => e.id);
-    expect(ids).toHaveLength(16);
+    expect(ids).toHaveLength(17);
 
     await expect(
       transport.request(ep("projects.nope"), {} as never, ctx),
     ).rejects.toBeInstanceOf(UnsupportedOperationError);
+  });
+
+  // T-102 物理删除:删除返回删除前的 ProjectResource 快照,且删后 get → 404(OwnershipError)。
+  it("projects.delete → ProjectResource + 删后 get 404", async () => {
+    const created = await call("projects.create", { body: { title: "待删" } });
+    const projectId = (created as { data: { id: string } }).data.id;
+
+    const deleted = await call("projects.delete", { params: { projectId } });
+    expect(() => successEnvelope(projectResource).parse(deleted)).not.toThrow();
+    expect((deleted as { data: { id: string } }).data.id).toBe(projectId);
+
+    // 删后再读该项目 → OwnershipError(404,不泄露存在性)。
+    await expect(
+      call("projects.get", { params: { projectId } }),
+    ).rejects.toMatchObject({ name: "OwnershipError" });
   });
 });
