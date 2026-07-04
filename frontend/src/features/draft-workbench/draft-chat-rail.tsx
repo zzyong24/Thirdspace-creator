@@ -18,9 +18,15 @@ import { AICopilotContent } from "@/features/copilot/ai-copilot-content";
 export function DraftChatRail({
   projectId,
   projectTitle,
+  outputId,
 }: {
   readonly projectId: string;
   readonly projectTitle: string;
+  /**
+   * [T-103a] 项目现有 ContentOutput 挂点(null=还没铸);注入 embed.blindPredict,
+   * 让对话内 calibration.diagnosis 卡在稿面场景长出「锁定为盲预测」确认门。
+   */
+  readonly outputId?: string | null;
 }) {
   return (
     <div className="flex h-full min-h-0 flex-col p-4">
@@ -33,6 +39,12 @@ export function DraftChatRail({
             title: "编导对话",
             // [T-054 组B] 规范 §2:可见文案不夹生英文机制词,「hook」改「钩子」。
             subtitle: "聊定位、改钩子、搜素材都在这里",
+            // [T-103a] 稿面盲预测:诊断卡长确认门,锁定走既有端点链铸 immutable Prediction。
+            blindPredict: {
+              outputId: outputId ?? null,
+              projectId,
+              projectTitle,
+            },
           }}
         />
       </React.Suspense>

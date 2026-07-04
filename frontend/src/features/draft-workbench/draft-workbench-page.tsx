@@ -142,7 +142,11 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           data-slot="draft-chat-rail"
           className="hidden w-[380px] shrink-0 flex-col border-l border-border bg-surface xl:flex"
         >
-          <DraftChatRail projectId={project.id} projectTitle={project.title} />
+          <DraftChatRail
+            projectId={project.id}
+            projectTitle={project.title}
+            outputId={outputId}
+          />
         </aside>
       </div>
     </main>

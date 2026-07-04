@@ -373,6 +373,17 @@ export interface AICopilotContentProps {
     readonly persistKey?: string;
     readonly title?: string;
     readonly subtitle?: string;
+    /**
+     * [T-103a] 稿面盲预测锁定上下文 —— 稿面右栏(surface=project)常驻,让对话内的
+     * calibration.diagnosis 卡长出「锁定为盲预测」确认门(铁律②)。带项目的 content_output
+     * 挂点(null=还没铸,锁定时先自愈)+ 项目 id/标题(铸 output 兜底)。仅稿面注入;
+     * 其他 surface 的诊断卡不带 → 只读展示。
+     */
+    readonly blindPredict?: {
+      readonly outputId: string | null;
+      readonly projectId: string;
+      readonly projectTitle: string;
+    };
   };
 }
 
@@ -1624,7 +1635,9 @@ export function AICopilotContent({
                         />
                       );
                     }
-                    // 编导诊断(calibration.diagnose)→ 维度评分表(只读展示)。
+                    // 编导诊断(calibration.diagnose)→ 维度评分表。稿面盲预测场景
+                    // (embed.blindPredict 注入)长出「锁定为盲预测」确认门(T-103a);
+                    // 其他 surface 仍只读展示。
                     if (
                       name === "calibration.diagnose" &&
                       out.kind === "calibration.diagnosis"
@@ -1634,6 +1647,7 @@ export function AICopilotContent({
                         <ChatDiagnosisCard
                           key={key}
                           diagnosis={o.diagnosis ?? null}
+                          blindPredict={embed?.blindPredict ?? null}
                         />
                       );
                     }
