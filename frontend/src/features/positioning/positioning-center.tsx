@@ -209,7 +209,7 @@ function PageHeader({
       <div className="flex min-w-0 flex-col gap-0.5">
         <h1 className="text-xl font-semibold text-foreground">定位中心</h1>
         <p className="text-sm text-muted-foreground">
-          账号的定位母版——下游的选题、评分、素材匹配与变现都以它为约束源。
+          账号的定位母版——下游的选题、评分、素材匹配与发布都以它为约束源。
         </p>
       </div>
       {isEmpty ? null : (
