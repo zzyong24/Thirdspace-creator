@@ -14,10 +14,26 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import type React from "react";
 
 import "@/styles/tokens.css";
+
+// [T-115] The sidebar `storage` card (SidebarStorageCard) now client-fetches the
+// REAL `settings.storage.get` on mount instead of showing hardcoded 12.4/50GB.
+// jsdom has no HTTP backend, so mock the client transport: a mutable resolver
+// lets a test drive the real-value path OR the failure (诚实降级) path.
+const storageMock = vi.hoisted(() => ({
+  getStorage: vi.fn(async () => ({
+    backend: "local",
+    rootPath: "~/CreatorOS/media",
+    // 用户实录真值:已用 ~0.1 GB / 磁盘容量 ~494.4 GB。
+    usedBytes: 107_374_182,
+    totalBytes: 530_842_000_000,
+    breakdown: [],
+  })),
+}));
+vi.mock("@/lib/contract-client", () => ({ client: storageMock }));
 
 // Capture computed CSS variables from :root so geometry assertions
 // align with the actual token layer (tokens.css → globals.css).
@@ -144,6 +160,55 @@ describe("AppShell", () => {
     );
     expect(assistantCard).toBeNull();
     expect(storageCard).not.toBeNull();
+  });
+
+  // [T-115] The storage card接真实源:挂载后拉 settings.storage.get,显真实
+  // usedBytes / totalBytes(真实磁盘容量)。旧硬编码 12.4/50GB · 固定 25% · 自动同步
+  // 全删,读失败诚实降级为「存储用量不可用」——绝不回退假值。
+  it("[T-115] storage card shows REAL used/total (not the old 12.4/50GB fake) after mount", async () => {
+    storageMock.getStorage.mockResolvedValueOnce({
+      backend: "local",
+      rootPath: "~/CreatorOS/media",
+      usedBytes: 107_374_182, // ~0.1 GB
+      totalBytes: 530_842_000_000, // ~494.4 GB 真实磁盘容量
+      breakdown: [],
+    });
+    const { container } = await renderShell({
+      pathname: "/assets",
+      contextualCardVariant: "storage",
+    });
+    const card = container.querySelector(
+      '[data-slot="sidebar-contextual-card"][data-variant="storage"]',
+    ) as HTMLElement;
+    // 真值到达后 badge 显 "0.1 / 530.8 GB"(bytes/1e9,与设置页同口径)。
+    await waitFor(() => {
+      expect(card.textContent).toContain("0.1 / 530.8 GB");
+    });
+    // 旧假串必须消失。
+    expect(card.textContent).not.toContain("12.4 / 50 GB");
+    expect(card.textContent).not.toContain("自动同步已开启");
+    expect(card.getAttribute("data-storage-state")).toBe("ready");
+    // 进度条 aria-valuenow 是真实百分比(≈0),不再是固定 25。
+    const bar = card.querySelector('[role="progressbar"]');
+    expect(bar?.getAttribute("aria-valuenow")).not.toBe("25");
+  });
+
+  it("[T-115] storage card degrades honestly (存储用量不可用) when getStorage fails — no fake fallback", async () => {
+    storageMock.getStorage.mockRejectedValueOnce(new Error("no backend"));
+    const { container } = await renderShell({
+      pathname: "/assets",
+      contextualCardVariant: "storage",
+    });
+    const card = container.querySelector(
+      '[data-slot="sidebar-contextual-card"][data-variant="storage"]',
+    ) as HTMLElement;
+    await waitFor(() => {
+      expect(card.getAttribute("data-storage-state")).toBe("error");
+    });
+    expect(card.textContent).toContain("存储用量不可用");
+    // 绝不回退假值。
+    expect(card.textContent).not.toContain("12.4 / 50 GB");
+    expect(card.textContent).not.toContain("50 GB");
   });
 
   it("passes the supported header mode down to the top header", async () => {

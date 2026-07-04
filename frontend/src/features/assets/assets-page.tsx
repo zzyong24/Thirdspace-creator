@@ -672,10 +672,11 @@ interface StorageUsageCardProps {
 }
 
 function StorageUsageCard({ storage }: StorageUsageCardProps) {
-  const pct = Math.min(
-    100,
-    Math.round((storage.usedBytes / storage.totalBytes) * 100),
-  );
+  // [T-115] totalBytes 未知(0,真实磁盘容量读失败/降级)时以 used 自身为 max,进度条
+  // 仍渲染且不除零;且只显「已用 X GB」不带假分母(与设置页 totalGb ? … : … 同款诚实处理)。
+  const hasTotal = storage.totalBytes > 0 && storage.totalLabel.length > 0;
+  const max = hasTotal ? storage.totalBytes : storage.usedBytes || 1;
+  const pct = Math.min(100, Math.max(0, Math.round((storage.usedBytes / max) * 100)));
   return (
     <SectionCard
       title="存储空间"
@@ -686,7 +687,9 @@ function StorageUsageCard({ storage }: StorageUsageCardProps) {
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">已使用</span>
           <span className="font-mono tabular-nums text-foreground">
-            {storage.usedLabel} / {storage.totalLabel}
+            {hasTotal
+              ? `${storage.usedLabel} / ${storage.totalLabel}`
+              : storage.usedLabel}
           </span>
         </div>
         <ProgressBar

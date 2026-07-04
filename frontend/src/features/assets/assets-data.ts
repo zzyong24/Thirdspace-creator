@@ -32,9 +32,10 @@ import type { ViewModelError } from "@/types/view-models";
  *                  by-assetId reverse-lookup op returns the 用料链 edges that
  *                  reference each asset directly (no N-project walk). projects.list
  *                  is still read to resolve each edge's project title.
- *   - 存储「已用」: 弱真 — Σ of the REAL `fileSizeBytes` over the read asset
- *                  rows (a front-end aggregate, NOT a fabricated GB). The total
- *                  QUOTA has no op → a fixed cap label, flagged 规划中.
+ *   - 存储 (已用 + 容量): [T-115] REAL via settings.storage.get — 与设置页 /
+ *                  sidebar 卡同一真实源。usedBytes = Σ asset_files.file_size,
+ *                  totalBytes = rootPath 所在磁盘真实容量 (fs.statfs)。不再用前端自算 Σ、
+ *                  不再用 fixture 50GB 假 cap;读失败诚实降级 (used 0 / 无分母)。
  *   - 上传字节 / 下载 / 复制链接 / 收藏: 规划中 (heavy: real object storage). The
  *                  metadata upload stays real; the byte transfer is out of scope.
  *                  Those affordances carry a 规划中 marker in the UI islands.
@@ -51,10 +52,10 @@ import type { ViewModelError } from "@/types/view-models";
  *                                    whole fixture VM on a real read failure —
  *                                    dressing a failure as fake data is the bug
  *                                    this lane removes.
- * Secondary reads (projects, per-asset usage) stay independently guarded: a
- * failure there contributes no rows but never downgrades the gallery to error.
- * The storage QUOTA cap (totalLabel) has no op → a fixed planning label, and
- * 已用 is the 弱真 Σ of the REAL read bytes (not fabricated).
+ * Secondary reads (projects, per-asset usage, storage) stay independently
+ * guarded: a failure there contributes no rows but never downgrades the gallery
+ * to error. [T-115] 存储 used/total 均取 settings.storage.get 真值 (与设置页一致);
+ * 该读失败仅降级存储块 (used 0 / 无分母),不影响画廊三态。
  *
  * The contract client is injected so this helper is unit-testable without the
  * real in-process backend (mirrors publishing-center-data.ts). The route
@@ -101,6 +102,14 @@ export interface AssetsDataClient {
     query: undefined;
     body: undefined;
   }): Promise<unknown>;
+  // [T-115] 存储用量真实源 (settings.storage.get):与设置页 / sidebar 卡同一 op。
+  // 返回真实 usedBytes(Σ asset_files.file_size)+ totalBytes(rootPath 所在磁盘容量,
+  // fs.statfs;未知为 0)。素材页 StorageUsageCard 由此接真实磁盘容量,不再用 fixture 50GB cap。
+  getStorage(input: {
+    params: undefined;
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
 }
 
 export interface ProjectOptionDto {
@@ -128,9 +137,10 @@ export interface AssetsRealData {
 
 /**
  * An empty Assets VM placeholder used for the error tri-state. It carries NO
- * fabricated assets/usage rows — the storage card keeps the planning quota cap
- * (totalLabel, which has no op) but reports zero 已用. We never reuse the
- * fixture gallery for an error: a read failure must not masquerade as data.
+ * fabricated assets/usage rows. [T-115] The storage block is also honest: no
+ * fixture 50GB cap — a failed page reports 已用 0 GB with no fake 分母 (totalBytes
+ * 0 → totalLabel 空串). We never reuse the fixture gallery for an error: a read
+ * failure must not masquerade as data.
  */
 function emptyAssetsViewModel(): AssetsViewModel {
   const fixtureVm = buildAssetsViewModel();
@@ -140,9 +150,9 @@ function emptyAssetsViewModel(): AssetsViewModel {
     usageHistory: [],
     storage: {
       usedBytes: 0,
-      totalBytes: fixtureVm.storage.totalBytes,
+      totalBytes: 0,
       usedLabel: "0.00 GB",
-      totalLabel: fixtureVm.storage.totalLabel,
+      totalLabel: "",
     },
   };
 }
@@ -199,6 +209,52 @@ async function assembleUsageHistory(
     .flat()
     .slice()
     .sort((a, b) => b.dateLabel.localeCompare(a.dateLabel));
+}
+
+/**
+ * 存储用量组装 (T-115) — 读真实 `settings.storage.get`,与设置页 / sidebar 卡同一真实源。
+ *
+ * used / total 都取 getStorage 真值(usedBytes = Σ asset_files.file_size,totalBytes =
+ * rootPath 所在磁盘真实容量,fs.statfs;未知为 0)。读失败或形状不对 → 诚实降级:
+ * used=0 / total=0 / totalLabel 空串(不回退 fixture 50GB 假 cap)。GB 显示统一到设置页 /
+ * sidebar 卡的 `/1e9` 1 位小数口径(bytes/1e9,toFixed(1)),三处显同一数字(如
+ * 0.1 GB / 494.4 GB);totalBytes>0 时给 totalLabel,否则空串(StorageUsageCard 据空
+ * totalLabel 只显「已用 X GB」不摆假分母)。
+ */
+async function assembleStorage(client: AssetsDataClient): Promise<StorageUsage> {
+  // 与 settings-interactive-region 的 gb() / sidebar-storage-card 完全一致:bytes/1e9,1 位小数。
+  const gib = (bytes: number): string =>
+    `${(bytes / 1_000_000_000).toFixed(1)} GB`;
+  try {
+    const s = (await client.getStorage({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    })) as { usedBytes?: unknown; totalBytes?: unknown };
+    const usedBytes =
+      typeof s.usedBytes === "number" && Number.isFinite(s.usedBytes)
+        ? s.usedBytes
+        : NaN;
+    const totalBytes =
+      typeof s.totalBytes === "number" && Number.isFinite(s.totalBytes)
+        ? s.totalBytes
+        : NaN;
+    if (!Number.isFinite(usedBytes)) {
+      // 读到但 used 形状不对 → 诚实降级,不拼半真值。
+      return { usedBytes: 0, totalBytes: 0, usedLabel: gib(0), totalLabel: "" };
+    }
+    const total = Number.isFinite(totalBytes) ? totalBytes : 0;
+    return {
+      usedBytes,
+      totalBytes: total,
+      usedLabel: gib(usedBytes),
+      // 真实磁盘容量已知才给分母 label;未知(0)→ 空串 → 卡只显已用。
+      totalLabel: total > 0 ? gib(total) : "",
+    };
+  } catch {
+    // transport race / 读失败 → 诚实降级为「已用 0 GB」,绝不回退 fixture 假 cap。
+    return { usedBytes: 0, totalBytes: 0, usedLabel: gib(0), totalLabel: "" };
+  }
 }
 
 /**
@@ -266,26 +322,12 @@ export async function buildAssetsViewModelReal(
     usageHistory = [];
   }
 
-  // --- 存储「已用」(弱真: Σ real fileSizeBytes) ----------------------------
-  // 「已用」is the real sum of the read rows' fileSizeBytes (front-end aggregate,
-  // not fabricated). The QUOTA total has no op → keep the fixed cap from the
-  // fixture (flagged 规划中 in the spec).
-  const usedBytes = summaries.reduce(
-    (acc, asset) => acc + (Number.isFinite(asset.fileSizeBytes) ? asset.fileSizeBytes : 0),
-    0,
-  );
-  // The storage QUOTA cap has no read op → keep the fixed planning label from
-  // the fixture (flagged 规划中 in the spec). This is a static cap LABEL, not
-  // fabricated usage data: 已用 above is the 弱真 Σ of the REAL read bytes.
-  const fixtureStorage = buildAssetsViewModel().storage;
-  const totalBytes = fixtureStorage.totalBytes;
-  const usedLabel = `${(usedBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-  const storage: StorageUsage = {
-    usedBytes,
-    totalBytes,
-    usedLabel,
-    totalLabel: fixtureStorage.totalLabel,
-  };
+  // --- 存储 (真实源: settings.storage.get, T-115) --------------------------
+  // 统一口径:与设置页 / sidebar 卡同一真实源。usedBytes / totalBytes 直接取 getStorage
+  // 真值(usedBytes = Σ asset_files.file_size,totalBytes = 真实磁盘容量),不再用前端自算 Σ
+  // (避免两处 used 有细微差)、不再用 fixture 50GB cap。读失败诚实降级:used=0、totalBytes=0
+  // (让进度条以 used 为 max)、totalLabel 空串(素材页只显「已用 X GB」不带假分母),绝不回退假值。
+  const storage = await assembleStorage(client);
 
   // typeCounts in the VM are computed downstream by the page's deriveGallery
   // over the summaries; we pass the fixture's tone-carrying counts through (the

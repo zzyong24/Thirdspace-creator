@@ -64,6 +64,21 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// [T-115] The global Sidebar `storage` card (SidebarStorageCard) client-fetches
+// settings.storage.get on mount. jsdom has no HTTP backend → mock the client so
+// the card resolves deterministically instead of hammering a dead transport.
+vi.mock("@/lib/contract-client", () => ({
+  client: {
+    getStorage: vi.fn(async () => ({
+      backend: "local",
+      rootPath: "~/CreatorOS/media",
+      usedBytes: 107_374_182,
+      totalBytes: 530_842_000_000,
+      breakdown: [],
+    })),
+  },
+}));
+
 type AssetsPageProps = React.ComponentProps<
   typeof import("./assets-page").AssetsPage
 >;

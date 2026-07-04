@@ -5,7 +5,9 @@
  *   - gallery summaries come from REAL `assets.list` rows,
  *   - 用料历史 (usageHistory) is the REAL `assets.usage.list` asset edges,
  *     read per asset by id (用料反查, Option B), title resolved from projects.list,
- *   - 存储「已用」is the弱真 Σ of the read rows' real fileSizeBytes,
+ *   - [T-115] 存储 used/total come from REAL `settings.storage.get` (与设置页同源);
+ *     a getStorage read failure degrades honestly (used 0 / no 分母), NOT to a
+ *     fixture 50GB cap,
  *   - a per-asset usage read failure contributes no usage rows (never throws),
  *   - a SUCCESSFUL-but-empty assets read returns the honest empty VM (NOT seed),
  *   - an outright assets-read FAILURE returns the error tri-state (state:"error",
@@ -61,6 +63,11 @@ interface FakeData {
       }>
     | "throw"
   >;
+  // [T-115] settings.storage.get 真值; "throw" simulates a failed read (→ honest
+  // degrade). Omit to leave getStorage unimplemented (also → throw → degrade).
+  readonly storage?:
+    | { usedBytes: number; totalBytes: number }
+    | "throw";
 }
 
 function fakeClient(data: FakeData): AssetsDataClient {
@@ -82,6 +89,12 @@ function fakeClient(data: FakeData): AssetsDataClient {
       const rows = data.usage?.[params.assetId];
       if (rows === "throw") throw new Error("usage read failed");
       return rows ?? [];
+    },
+    async getStorage() {
+      if (data.storage === undefined || data.storage === "throw") {
+        throw new Error("storage read failed");
+      }
+      return data.storage;
     },
   };
 }
@@ -143,26 +156,70 @@ describe("buildAssetsViewModelReal (GAP-AST-1 读侧做真)", () => {
     expect(row.dateLabel).toBe("2026-06-10");
   });
 
-  it("storage 已用 is the 弱真 sum of the read rows' real fileSizeBytes", async () => {
+  it("[T-115] storage used/total come from settings.storage.get (真实源, 不再自算 Σ)", async () => {
+    // Real disk: 已用 0.1 GB / 494.4 GB(用户实录真值)。这两个值必须直接来自 getStorage,
+    // 与设置页完全一致 —— NOT the 弱真 Σ of read rows, NOT the fixture 50GB cap.
+    const usedBytes = 107_374_182; // ~0.1 GiB
+    const totalBytes = 530_000_000_000; // ~494 GiB 磁盘容量
     const { viewModel } = await buildAssetsViewModelReal(
       fakeClient({
         assets: [
           {
             id: firstAsset.id,
             currentFileId: firstFile.id,
-            assetType: firstFile.mimeType.startsWith("image/")
-              ? "image"
-              : "document",
+            assetType: "image",
             name: "n",
             description: "d",
             updatedAt: "2026-06-01T00:00:00.000Z",
           },
         ],
         projects: [],
+        storage: { usedBytes, totalBytes },
       }),
     );
-    expect(viewModel.storage.usedBytes).toBe(firstFile.fileSize);
-    expect(viewModel.storage.usedBytes).toBeGreaterThan(0);
+    expect(viewModel.storage.usedBytes).toBe(usedBytes);
+    expect(viewModel.storage.totalBytes).toBe(totalBytes);
+    // 真实磁盘容量 → totalLabel 有值(带分母),不再是 fixture "50 GB"。
+    expect(viewModel.storage.totalLabel).not.toBe("");
+    expect(viewModel.storage.totalLabel).not.toBe("50 GB");
+    // used ≠ Σ read rows' fileSizeBytes(证明不是前端自算)。
+    expect(viewModel.storage.usedBytes).not.toBe(firstFile.fileSize);
+  });
+
+  it("[T-115] a getStorage read failure degrades honestly (used 0 / no 分母, 不回退 50GB cap)", async () => {
+    const { viewModel } = await buildAssetsViewModelReal(
+      fakeClient({
+        assets: [
+          {
+            id: firstAsset.id,
+            currentFileId: firstFile.id,
+            assetType: "image",
+            name: "n",
+            description: "d",
+            updatedAt: "2026-06-01T00:00:00.000Z",
+          },
+        ],
+        projects: [],
+        storage: "throw",
+      }),
+    );
+    expect(viewModel.storage.usedBytes).toBe(0);
+    expect(viewModel.storage.totalBytes).toBe(0);
+    // 诚实降级:无分母 label,绝不回退 fixture 50GB 假 cap。
+    expect(viewModel.storage.totalLabel).toBe("");
+  });
+
+  it("[T-115] totalBytes 0 (磁盘容量未知) → totalLabel 空串, 只显已用不摆假分母", async () => {
+    const { viewModel } = await buildAssetsViewModelReal(
+      fakeClient({
+        assets: [],
+        projects: [],
+        storage: { usedBytes: 5_000_000, totalBytes: 0 },
+      }),
+    );
+    expect(viewModel.storage.usedBytes).toBe(5_000_000);
+    expect(viewModel.storage.totalBytes).toBe(0);
+    expect(viewModel.storage.totalLabel).toBe("");
   });
 
   it("a per-asset usage read failure contributes no usage rows (never throws)", async () => {

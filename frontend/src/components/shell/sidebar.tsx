@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { creatorIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { canonicalDataset } from "@/fixtures/canonical";
+import { SidebarStorageCard } from "./sidebar-storage-card";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -261,31 +262,10 @@ interface SidebarContextualCardProps {
 
 function SidebarContextualCard({ variant, userDisplayName }: SidebarContextualCardProps) {
   if (variant === "storage") {
-    return (
-      <div
-        data-slot="sidebar-contextual-card"
-        data-variant="storage"
-        className="flex flex-col gap-1 rounded-card border border-border bg-surface-subtle p-3 text-xs text-muted-foreground"
-      >
-        <div className="flex items-center justify-between text-foreground">
-          <span className="font-medium">素材库存储</span>
-          <Badge variant="outline" className="text-[10px]">
-            12.4 / 50 GB
-          </Badge>
-        </div>
-        <div
-          role="progressbar"
-          aria-valuenow={25}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="素材库存储使用率"
-          className="h-1.5 w-full overflow-hidden rounded-full bg-border"
-        >
-          <div className="h-full w-1/4 bg-brand" />
-        </div>
-        <p>个人本地素材库 · 自动同步已开启</p>
-      </div>
-    );
+    // [T-115] storage 卡接真实源 —— 客户端拉 settings.storage.get,显真实
+    // usedBytes / totalBytes(真实磁盘容量),读失败诚实降级。旧硬编码
+    // (12.4/50GB · 固定 25% · 自动同步已开启)全删。
+    return <SidebarStorageCard />;
   }
   return (
     <div
