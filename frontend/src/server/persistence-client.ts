@@ -831,6 +831,13 @@ export interface ChatRuntime {
     ctx: RequestContext,
     input: { kind: "image" | "video"; prompt: string; projectId?: string | null },
   ) => Promise<{ taskId: string }>;
+  // [T-103b] review.script 端口 —— dispatch 既有 script.review ai_task(reviewGateService.triggerReview,
+  // 复用 T-086 审核链路 L1 lint + L2 语义审 → 落 script_review_reports),立即返回 taskId。对话审核工具
+  // (review.script)据此触发,前端 ChatReviewReportCard 轮询 getTask → 读 getLatestScriptReview 渲报告卡。
+  dispatchScriptReview: (
+    ctx: RequestContext,
+    input: { projectId: string },
+  ) => Promise<{ taskId: string }>;
 }
 
 const globalForPersistence = globalThis as unknown as {
@@ -5983,6 +5990,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const taskId = task && typeof task.id === "string" ? task.id : "";
       if (!taskId) {
         throw new Error("dispatchGenerateAsset: 起 asset.generate task 失败(无 taskId)");
+      }
+      return { taskId };
+    },
+    // [T-103b] review.script 端口 —— 起 script.review ai_task 复用稿面「审核」按钮的旧 trigger 链路
+    // (reviewGateService.triggerReview:createTask 后由注入 AI 端口显式接 dispatchScriptReview 在后台
+    // 跑 L1 违禁词 lint + L2 语义审 → saveReport)。立即返回 taskId,不阻塞对话回合(审核分钟内)。
+    dispatchScriptReview: async (
+      ctx: RequestContext,
+      input: { projectId: string },
+    ) => {
+      const task = (await reviewGateService.triggerReview(
+        ctx,
+        input.projectId,
+      )) as { id?: unknown } | null;
+      const taskId = task && typeof task.id === "string" ? task.id : "";
+      if (!taskId) {
+        throw new Error("dispatchScriptReview: 起 script.review task 失败(无 taskId)");
       }
       return { taskId };
     },

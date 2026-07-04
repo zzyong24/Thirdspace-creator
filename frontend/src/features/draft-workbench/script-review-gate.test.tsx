@@ -2,36 +2,20 @@ import * as React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// 稿面编导文案审核门(T-086 SPEC §3)测试:
+// 稿面编导文案审核门(T-086 SPEC §3 · T-103b 对话化)测试:
 //  - 未审:显「未审」提示 +「审核」按钮(不报错)。
 //  - 有报告:verdict 徽章 + summary + modelLabel(非专用醒目)+ L1/L2 命中列表。
 //  - 报告版本 < 当前脚本版本:显「稿已改动,建议重审」+ 软门提示条。
-//  - 「审核」→ triggerScriptReview → 轮询 getTask(succeeded)→ getLatestScriptReview。
+//  - [T-103b]「审核」→ 打开稿面右栏对话(copilotDeepLink fn=review.script + prefill,router.push),
+//    退役后台 triggerScriptReview + 轮询(审核/改写在对话卡 ChatReviewReportCard 里完成)。
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 
 const mockClient = {
-  triggerScriptReview: vi.fn(
-    (_i: unknown): Promise<unknown> => Promise.resolve({ id: "task-r1" }),
-  ),
-  getTask: vi.fn(
-    (_i: unknown): Promise<unknown> => Promise.resolve({ status: "succeeded" }),
-  ),
-  getLatestScriptReview: vi.fn(
-    (_i: unknown): Promise<unknown> =>
-      Promise.resolve({
-        id: "rep-1",
-        projectId: "p1",
-        artifactId: "a1",
-        artifactVersion: 3,
-        verdict: "pass",
-        summary: "无重大风险。",
-        lintFindings: [],
-        llmFindings: [],
-        modelLabel: "doubao-seed-1-6",
-        reviewedAt: "2026-07-03T00:00:00.000Z",
-      }),
+  // [T-103b] 深链前先自愈铸 content_output 挂点(纯站内项目还没铸时)。
+  createOutput: vi.fn(
+    (_i: unknown): Promise<unknown> => Promise.resolve({ id: "co-1" }),
   ),
   // 改写确认门链(readCurrentVersion → createArtifactVersion → restoreArtifact)。
   getArtifact: vi.fn(
@@ -58,9 +42,7 @@ const mockClient = {
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
-    triggerScriptReview: (i: unknown) => mockClient.triggerScriptReview(i),
-    getTask: (i: unknown) => mockClient.getTask(i),
-    getLatestScriptReview: (i: unknown) => mockClient.getLatestScriptReview(i),
+    createOutput: (i: unknown) => mockClient.createOutput(i),
     getArtifact: (i: unknown) => mockClient.getArtifact(i),
     listArtifactVersions: (i: unknown) => mockClient.listArtifactVersions(i),
     createArtifactVersion: (i: unknown) => mockClient.createArtifactVersion(i),
@@ -108,10 +90,16 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("ScriptReviewGate(稿面审核门,T-086)", () => {
+describe("ScriptReviewGate(稿面审核门,T-086 · T-103b 对话化)", () => {
   it("未审:显「未审」提示 +「审核」按钮,不报错", () => {
     render(
-      <ScriptReviewGate projectId="p1" currentVersion={1} initialReport={null} />,
+      <ScriptReviewGate
+        projectId="p1"
+        projectTitle="标题"
+        outputId="co-1"
+        currentVersion={1}
+        initialReport={null}
+      />,
     );
     expect(screen.getByTestId("script-review-unreviewed")).toBeTruthy();
     expect(screen.getByTestId("script-review-trigger")).toBeTruthy();
@@ -121,6 +109,8 @@ describe("ScriptReviewGate(稿面审核门,T-086)", () => {
     render(
       <ScriptReviewGate
         projectId="p1"
+        projectTitle="标题"
+        outputId="co-1"
         currentVersion={3}
         initialReport={passReport}
       />,
@@ -145,31 +135,63 @@ describe("ScriptReviewGate(稿面审核门,T-086)", () => {
     expect((apply[0] as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it("「审核」→ triggerScriptReview → 轮询 getTask → getLatestScriptReview", async () => {
+  it("[T-103b]「审核」→ 打开稿面右栏对话(深链 fn=review.script + prefill,不再后台轮询)", async () => {
     render(
-      <ScriptReviewGate projectId="p1" currentVersion={3} initialReport={null} />,
+      <ScriptReviewGate
+        projectId="p1"
+        projectTitle="标题"
+        outputId="co-1"
+        currentVersion={3}
+        initialReport={null}
+      />,
     );
     fireEvent.click(screen.getByTestId("script-review-trigger"));
     await waitFor(() => {
-      expect(mockClient.triggerScriptReview).toHaveBeenCalledWith({
+      expect(mockRouter.push).toHaveBeenCalled();
+    });
+    // 深链带 surface=project + fn=review.script + selection(content_output)+ prefill(不自动发)。
+    const href = mockRouter.push.mock.calls[0]![0] as string;
+    expect(href).toContain("copilot=open");
+    expect(href).toContain("surface=project");
+    expect(href).toContain("fn=review.script");
+    expect(href).toContain("selKind=content_output");
+    expect(href).toContain("selId=co-1");
+    expect(href).toContain("prefill=");
+    // 已有 outputId → 不再自愈铸 output;绝不后台起 review 任务(退役轮询)。
+    expect(mockClient.createOutput).not.toHaveBeenCalled();
+  });
+
+  it("[T-103b]「审核」无 outputId → 先自愈铸 content_output 再深链带其 id", async () => {
+    render(
+      <ScriptReviewGate
+        projectId="p1"
+        projectTitle="标题"
+        outputId={null}
+        currentVersion={1}
+        initialReport={null}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("script-review-trigger"));
+    await waitFor(() => {
+      expect(mockClient.createOutput).toHaveBeenCalledWith({
         params: { projectId: "p1" },
         query: undefined,
-        body: undefined,
+        body: { title: "标题" },
       });
     });
-    // 轮询首拍有 3s 延时(与 blind-predict 同款)→ 放宽 waitFor 超时越过一拍。
-    await waitFor(
-      () => {
-        expect(mockClient.getLatestScriptReview).toHaveBeenCalled();
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(mockRouter.push).toHaveBeenCalled();
+    });
+    const href = mockRouter.push.mock.calls[0]![0] as string;
+    expect(href).toContain("selId=co-1"); // 用自愈铸出的 output id
   });
 
   it("改写确认门:点「应用改写」→ 单点替换 → createArtifactVersion(不自动改稿)", async () => {
     render(
       <ScriptReviewGate
         projectId="p1"
+        projectTitle="标题"
+        outputId="co-1"
         currentVersion={2}
         initialReport={passReport}
       />,
@@ -205,6 +227,8 @@ describe("ScriptReviewGate(稿面审核门,T-086)", () => {
     render(
       <ScriptReviewGate
         projectId="p1"
+        projectTitle="标题"
+        outputId="co-1"
         currentVersion={2}
         initialReport={passReport}
       />,

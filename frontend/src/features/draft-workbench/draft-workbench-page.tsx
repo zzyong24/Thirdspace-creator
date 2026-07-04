@@ -116,6 +116,8 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
                 硬门切换点见 blind-predict-row / PublishPackSection 的软门提示注释。 */}
             <ScriptReviewGate
               projectId={project.id}
+              projectTitle={project.title}
+              outputId={outputId}
               currentVersion={script.versionCount}
               initialReport={scriptReview}
             />

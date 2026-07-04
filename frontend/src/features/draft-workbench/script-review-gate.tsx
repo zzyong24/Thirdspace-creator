@@ -1,16 +1,19 @@
 "use client";
 
 /**
- * `script-review-gate.tsx` — 稿面编导文案审核门(T-086 SPEC §3 主案,软门)。
+ * `script-review-gate.tsx` — 稿面编导文案审核门(T-086 SPEC §3 主案,软门 · T-103b 起对话化)。
  *
  * 稿面(draft-workbench)脚本区下方的合规审核入口 + 结构化报告面板 + 软门提示。
  *
- *  - 「审核」按钮:client.triggerScriptReview(projectId) 起 script.review 任务 →
- *    轮询 getTask 直到 succeeded/failed(dispatch 后台跑 L1 lint + L2 语义审 →
- *    落 script_review_reports)→ 读 getLatestScriptReview 展示报告。与
- *    blind-predict-row 同一条 trigger+poll 惯例(零新 op)。
- *  - 结构化报告:verdict 徽章(pass 绿 / risk 黄 / block 红)+ summary + modelLabel
- *    (含「非专用审核模型」字样时醒目标注,诚实数据)+ lintFindings/llmFindings 命中列表。
+ *  - 「审核」按钮(**T-103b 起改为对话内即时反馈**,SPEC 2026-07-04 ai-into-copilot-convergence
+ *    §1.1/§3):不再后台静默 triggerScriptReview + 轮询,而是打开稿面右栏编导对话,深链带
+ *    `fn=review.script` + selection(content_output id + 项目标题)+ 预填话术(不自动发,T-055b)。
+ *    编导在对话里调 review.script 工具触发既有 script.review 审核链路(L1 违禁词 lint + L2 语义审)
+ *    → **审核报告卡**(ChatReviewReportCard:verdict + findings)+ 改写建议逐条「应用」门。退役后台
+ *    trigger+poll 死码。
+ *  - 结构化报告(**保留**,真值展示):verdict 徽章(pass 绿 / risk 黄 / block 红)+ summary +
+ *    modelLabel(含「非专用审核模型」字样时醒目标注,诚实数据)+ lintFindings/llmFindings 命中列表。
+ *    首屏 initialReport(服务端读 getLatestScriptReview)—— 这是稿面门的真值面,不是 AI 触发。
  *  - 软门([gate-F1] 缺省软门):无报告 / verdict≠pass / 报告版本 < 当前脚本版本 →
  *    内联醒目提示 +「先去审核」一键触发,**但不禁用**「先盲预测」「登记已发布」——
  *    operations 不阻断(硬门切换点见 blind-predict-row 注释)。
@@ -22,6 +25,7 @@
  * (quote)按 suggestion 单点替换,经 createArtifactVersion(append-only)物化成脚本新版本,
  * 卡上出「已应用 · 撤销」(restoreArtifact 回写前版本)。AI 绝不自动改稿;复用 ChatHookCard
  * 同一条 ensure→读当前版本→createArtifactVersion→restore 撤销的确认门链(零新 op)。
+ * 对话内改写门(ChatReviewReportCard)与本地报告面板共用同一条应用门链。
  */
 
 import * as React from "react";
@@ -31,10 +35,11 @@ import {
   ShieldAlert,
   ShieldX,
   AlertTriangle,
-  Loader2,
+  MessagesSquare,
 } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type {
@@ -43,7 +48,11 @@ import type {
   LlmFindingResource,
 } from "@creatoros/contract";
 
-type Phase = "idle" | "running" | "error";
+// [T-103b] 稿面审核的预填话术 —— 只填不发(T-055b),编导据此优先调 review.script。
+const SCRIPT_REVIEW_PREFILL =
+  "审核这份文案:跑一遍违禁词/合规诊断,命中给逐条改写建议。";
+
+type Phase = "idle" | "opening" | "error";
 
 /** verdict → 徽章样式 + 文案。 */
 const VERDICT_META: Record<
@@ -69,21 +78,27 @@ const VERDICT_META: Record<
 
 export function ScriptReviewGate({
   projectId,
+  projectTitle,
+  outputId,
   currentVersion,
   initialReport,
 }: {
   readonly projectId: string;
+  /** 项目标题(深链 selection 带,免编导索要;铸 content_output 兜底)。 */
+  readonly projectTitle: string;
+  /** 项目现有 ContentOutput 挂点(null = 还没铸;深链前先自愈铸一个,与登记表单同款)。 */
+  readonly outputId: string | null;
   /** 当前脚本版本号(script.versionCount);用于判「报告版本过期」。 */
   readonly currentVersion: number;
   /** 服务端首屏读到的最新报告;null = 未审。 */
   readonly initialReport: ScriptReviewReportResource | null;
 }) {
   const router = useRouter();
-  const [report, setReport] = React.useState<ScriptReviewReportResource | null>(
-    initialReport,
-  );
+  // 报告是服务端首屏真值(getLatestScriptReview);对话内审核落库后 router.refresh 会重取。
+  const report = initialReport;
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [error, setError] = React.useState<string | null>(null);
+  // 卸载后停止在 await 链里 setState(长任务守卫)。
   const cancelledRef = React.useRef(false);
   React.useEffect(
     () => () => {
@@ -92,60 +107,45 @@ export function ScriptReviewGate({
     [],
   );
 
-  // 「审核」:trigger script.review → 轮询 getTask → 读 getLatestScriptReview。
-  const runReview = React.useCallback(() => {
-    if (phase === "running") return;
-    setPhase("running");
+  // [T-103b] 「审核」:确保 content_output 挂点 → 打开稿面右栏编导对话(深链预填,不自动发)。
+  // 审核/改写在对话里完成(ChatReviewReportCard:review.script 触发既有审核链路 + 逐条改写门)。
+  const openCopilot = React.useCallback(() => {
+    if (phase === "opening") return;
+    setPhase("opening");
     setError(null);
     void (async () => {
       try {
-        const task = (await client.triggerScriptReview({
-          params: { projectId },
-          query: undefined,
-          body: undefined,
-        })) as { id: string };
-        for (let i = 0; i < 75; i++) {
-          if (cancelledRef.current) return;
-          await new Promise((r) => setTimeout(r, 3000));
-          if (cancelledRef.current) return;
-          const status = (await client.getTask({
-            params: { taskId: task.id },
+        // 纯站内项目可能还没走制作 → 先自愈铸挂点(与登记表单/盲预测行同款),让深链 selection 有真 id。
+        let subjectId = outputId;
+        if (!subjectId) {
+          const created = (await client.createOutput({
+            params: { projectId },
             query: undefined,
-            body: undefined,
-          })) as { status: string };
-          if (status.status === "succeeded") {
-            const latest = await fetchLatest(projectId);
-            if (!cancelledRef.current) {
-              setReport(latest);
-              setPhase(latest ? "idle" : "error");
-              if (!latest) setError("审核完成但未取到报告,请刷新重试。");
-              // 报告落库后刷新服务端 vm → 发布区软门提示条同步更新(不阻断)。
-              else router.refresh();
-            }
-            return;
-          }
-          if (status.status === "failed" || status.status === "cancelled") {
-            if (!cancelledRef.current) {
-              setPhase("error");
-              setError("审核失败(可能没配模型),请重试。");
-            }
-            return;
-          }
+            body: { title: projectTitle || "主内容" },
+          })) as { id: string };
+          subjectId = created.id;
         }
-        if (!cancelledRef.current) {
-          setPhase("error");
-          setError("审核超时,请重试。");
-        }
+        if (cancelledRef.current) return;
+        // 深链:surface=project(稿面右栏),fn=review.script,selection=content_output
+        // (免编导索要 id/标题),prefill 话术(不自动发)。query-only href → 就地开右栏对话不跳页。
+        const href = copilotDeepLink(
+          "project",
+          "review.script",
+          { kind: "content_output", id: subjectId, title: projectTitle },
+          SCRIPT_REVIEW_PREFILL,
+        );
+        router.push(href);
+        if (!cancelledRef.current) setPhase("idle");
       } catch {
         if (!cancelledRef.current) {
           setPhase("error");
-          setError("审核出错,请重试。");
+          setError("打开对话出错,请重试。");
         }
       }
     })();
-  }, [phase, projectId, router]);
+  }, [phase, outputId, projectId, projectTitle, router]);
 
-  const running = phase === "running";
+  const opening = phase === "opening";
   const stale = report !== null && report.artifactVersion < currentVersion;
   const nonDedicated = report?.modelLabel.includes("非专用") ?? false;
 
@@ -167,15 +167,17 @@ export function ScriptReviewGate({
           variant="outline"
           data-testid="script-review-trigger"
           className="h-7 gap-1 px-2.5 text-[11px]"
-          disabled={running}
-          onClick={runReview}
+          disabled={opening}
+          onClick={openCopilot}
         >
-          {running ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <ShieldCheck className="size-3.5" />
-          )}
-          {running ? "审核中…" : report ? "重新审核" : "审核"}
+          <MessagesSquare className="size-3.5" />
+          {opening
+            ? "打开对话中…"
+            : phase === "error"
+              ? "重试审核"
+              : report
+                ? "重新审核"
+                : "审核"}
         </Button>
       </div>
 
@@ -184,7 +186,7 @@ export function ScriptReviewGate({
           data-testid="script-review-unreviewed"
           className="text-[12px] text-muted-foreground"
         >
-          当前稿未审核。发布前跑一次合规审(L1 违禁词 + L2 语义审)。
+          当前稿未审核。发布前在右栏对话里跑一次合规审(L1 违禁词 + L2 语义审),命中给逐条改写建议。
         </p>
       ) : (
         <ReviewReportPanel
@@ -551,21 +553,6 @@ function RewriteApplyButton({
       {state.phase === "applying" ? "应用中…" : "应用改写"}
     </Button>
   );
-}
-
-/** 读最新报告;404(未审)吞成 null,诚实显未审不报错。 */
-async function fetchLatest(
-  projectId: string,
-): Promise<ScriptReviewReportResource | null> {
-  try {
-    return (await client.getLatestScriptReview({
-      params: { projectId },
-      query: undefined,
-      body: undefined,
-    })) as ScriptReviewReportResource;
-  } catch {
-    return null;
-  }
 }
 
 /**

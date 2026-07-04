@@ -30,6 +30,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   enrichTopic: ReturnType<typeof vi.fn>;
   captureScreenshot: ReturnType<typeof vi.fn>;
   dispatchGenerateAsset: ReturnType<typeof vi.fn>;
+  dispatchScriptReview: ReturnType<typeof vi.fn>;
   diagnoseContent: ReturnType<typeof vi.fn>;
   analyzeReview: ReturnType<typeof vi.fn>;
   generatePositioning: ReturnType<typeof vi.fn>;
@@ -329,6 +330,12 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   }));
   // [T-084c] material.generate 核心(fake:dispatch asset.generate task → 返回 taskId)。
   const dispatchGenerateAsset = vi.fn(async () => ({ taskId: "task-gen-1" }));
+  // [T-103b] review.script 核心(fake:dispatch script.review → 返回 taskId + projectId)。
+  const dispatchScriptReview = vi.fn(async () => ({
+    taskId: "task-rev-1",
+    projectId: "proj-1",
+    error: null as string | null,
+  }));
   const deps: ChatToolDeps = {
     generateTopics,
     enrichTopic,
@@ -337,6 +344,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     gatherMaterials,
     captureScreenshot,
     dispatchGenerateAsset,
+    dispatchScriptReview,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -365,6 +373,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     enrichTopic,
     captureScreenshot,
     dispatchGenerateAsset,
+    dispatchScriptReview,
     diagnoseContent,
     analyzeReview,
     generatePositioning,

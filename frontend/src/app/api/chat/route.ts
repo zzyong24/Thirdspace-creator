@@ -173,6 +173,8 @@ export async function POST(req: Request): Promise<Response> {
         captureScreenshotPort: runtime.captureScreenshot,
         // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(立即返回 taskId)。
         dispatchGenerateAssetPort: runtime.dispatchGenerateAsset,
+        // [T-103b] review.script 端口 —— dispatch 既有 script.review 审核链路(L1 lint + L2 语义审)。
+        dispatchScriptReviewPort: runtime.dispatchScriptReview,
       },
       async (finalText) => {
         // assistant 回复落库(best-effort,失败不影响已流给前端的内容)。

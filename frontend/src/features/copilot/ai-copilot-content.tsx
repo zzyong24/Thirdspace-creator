@@ -91,6 +91,8 @@ import type {
 } from "@/server/ai/chat-tools";
 // [T-098] context.* 数据卡统一走注册表分发(素材卡也归入,行为不变)。
 import { renderContextCard } from "./context-card-registry";
+// [T-103b] 对话内审核报告卡:review.script 工具结果 → 轮询报告 + verdict/findings + 逐条改写门。
+import { ChatReviewReportCard } from "./chat-review-report-card";
 import {
   ChatDiagnosisCard,
   ChatLearningsCard,
@@ -440,6 +442,7 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
   "topic.enrich": { label: "选题补全", sub: "补全成完整选题卡" },
   "planning.thesis": { label: "核心论点", sub: "提炼论点树" },
   "review.analyze": { label: "复盘分析", sub: "提炼可复用爆款要素" },
+  "script.review": { label: "文案审核", sub: "违禁词 lint + 语义审" },
   "positioning.generate": { label: "定位策略", sub: "生成结构化定位提案" },
   "script.draft": { label: "脚本初稿", sub: "起草口播脚本" },
   "script.rewrite": { label: "脚本改写", sub: "按反馈重写脚本" },
@@ -546,6 +549,8 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   "topic.enrich": "把我刚选的选题补全成完整选题卡。",
   "calibration.diagnose": "对我这条发布前的内容做编导诊断,逐维度盲评并指出优先修改。",
   "review.analyze": "帮我复盘,提炼可复用的爆款要素沉淀成经验。",
+  // [T-103b] 稿面文案审核进对话:填不发(T-055b),编导据此优先调 review.script。
+  "review.script": "审核这份文案:跑一遍违禁词/合规诊断,命中给逐条改写建议。",
   "positioning.generate": "结合我的账号画像,生成/进化一份结构化定位提案。",
   "script.draft": "帮我为这条内容起草一版完整的分镜口播脚本。",
   "material.gather": "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
@@ -1659,6 +1664,26 @@ export function AICopilotContent({
                       const o = out as { items?: ChatLearningItem[] };
                       return (
                         <ChatLearningsCard key={key} items={o.items ?? []} />
+                      );
+                    }
+                    // [T-103b] 文案审核(review.script)→ 轮询审核任务 → 审核报告卡
+                    // (verdict + L1/L2 命中);改写建议逐条走 createArtifactVersion append-only
+                    // 应用门(复用稿面审核门链)。dispatch 失败/无项目上下文 → 卡渲诚实错误态。
+                    if (name === "review.script" && out.kind === "review.report") {
+                      const o = out as {
+                        taskId?: string | null;
+                        projectId?: string | null;
+                        error?: string | null;
+                      };
+                      return (
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatReviewReportCard
+                            taskId={o.taskId ?? null}
+                            projectId={o.projectId ?? activeProjectChip?.id ?? null}
+                            error={o.error ?? null}
+                          />
+                        </React.Fragment>
                       );
                     }
                     // 定位提案(positioning.generate)→ 整条采纳写入定位母版。

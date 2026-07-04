@@ -193,6 +193,18 @@ export interface ChatToolDeps {
     style?: string;
   }) => Promise<{ taskId: string }>;
   /**
+   * [T-103b] review.script 核心 —— **不直接审**(script.review 后台跑 L1 违禁词 lint + L2 豆包
+   * 语义审、分钟内不能阻塞对话回合):dispatch 既有 script.review ai_task(复用 T-086 审核链路,
+   * 别重造 L1/L2),立即返回 { taskId, projectId }。前端 ChatReviewReportCard 据 taskId 轮询
+   * getTask → succeeded 后读 getLatestScriptReview 渲**审核报告卡**(verdict + findings),改写
+   * 建议逐条走 createArtifactVersion append-only 应用门。projectId 由 chat-runner 从 chatContext
+   * 注入(项目对话才有;无项目上下文 → projectId=null,工具诚实报「需在项目稿面里审核」)。
+   */
+  dispatchScriptReview: (input: {
+    /** 显式项目 id(模型从 selection 拿到时可传);缺省用 chatContext.projectId。 */
+    projectId?: string;
+  }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
+  /**
    * context.projects 只读端口 —— 列该用户最近的项目/作品(项目库 / 「最新一条」)。
    * **纯读上下文**(与上面的候选工具不同):不产候选、不写实体,只把真数据回给模型读进去用文字回答。
    * 按当前用户过滤(端口在 composition root 绑到 user-scoped 读源);limit 由 execute 兜(默认 5,封顶 10)。
@@ -614,6 +626,21 @@ export interface MaterialGenerateToolResult {
 export interface CalibrationDiagnoseToolResult {
   kind: "calibration.diagnosis";
   diagnosis: Awaited<ReturnType<ChatToolDeps["diagnoseContent"]>>;
+}
+
+// [T-103b] review.script 工具结果 —— dispatch 了一次 script.review 审核(立即返回,L1+L2 后台跑,
+// 不阻塞对话回合)。前端 ChatReviewReportCard 据 taskId 轮询 getTask → succeeded 后读
+// getLatestScriptReview 渲审核报告卡(verdict + findings + 逐条改写 apply 门)。projectId 供卡读
+// 报告(getLatestScriptReview 按 projectId)+ 改写门定位脚本 artifact。dispatch 失败 / 无项目上下文
+// → error 非 null(卡渲错误态,诚实提示去项目稿面审核或去设置)。
+export interface ReviewScriptToolResult {
+  kind: "review.report";
+  /** dispatch 出的 script.review 任务 id(卡据此轮询 getTask;失败为 null)。 */
+  taskId: string | null;
+  /** 被审项目 id(卡据此读 getLatestScriptReview + 定位脚本 artifact;无项目上下文为 null)。 */
+  projectId: string | null;
+  /** dispatch 失败 / 无项目上下文时的诚实错误(成功为 null)。 */
+  error: string | null;
 }
 
 // review.analyze 工具结果 —— 可复用经验候选(渲成经验卡,逐条采纳沉淀)。
@@ -1159,6 +1186,20 @@ const REVIEW_ANALYZE_PARAMS = jsonSchema<{
       description: "本次复盘对象(可选;没有就按账号整体表现提炼经验)。",
     },
     extraBrief: EXTRA_BRIEF_PROPERTY,
+  },
+  additionalProperties: false,
+});
+
+// [T-103b] review.script 入参 —— 可选显式 projectId(缺省用当前项目对话的 projectId)。
+// 审核对象恒是「当前项目的脚本」(script.review 只吃 projectId);无入参也能审当前项目。
+const REVIEW_SCRIPT_PARAMS = jsonSchema<{ projectId?: string }>({
+  type: "object",
+  properties: {
+    projectId: {
+      type: "string",
+      description:
+        "要审核脚本的项目 id(可选)。缺省用当前项目对话的项目——所以在稿面右栏对话里直接调、不用传。",
+    },
   },
   additionalProperties: false,
 });
@@ -1753,6 +1794,31 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         return { kind: "review.learnings", items };
       },
     }),
+    // [T-103b] 稿面文案审核进对话:dispatch 既有 script.review 审核链路(L1 违禁词 lint + L2 豆包
+    // 语义审,复用 T-086,别重造)→ 立即返回 taskId + projectId(不阻塞对话回合)。前端
+    // ChatReviewReportCard 据 taskId 轮询 → succeeded 后读 getLatestScriptReview 渲审核报告卡
+    // (verdict + findings);改写建议逐条走 createArtifactVersion append-only 应用门。无项目上下文 /
+    // dispatch 失败 → error 非 null(卡渲错误态,诚实提示),不假装审过。
+    "review.script": tool({
+      description:
+        "对当前项目的脚本做发布前合规/表达审核(L1 违禁词 lint + L2 语义审)。当用户说「审核这份文案/审一下脚本/查违禁词/合规诊断」时调用。审核在后台跑(分钟内),结果渲成审核报告卡(verdict + 命中项 + 逐条改写建议);改写建议由用户逐条点「应用」才写入脚本新版本——你没有改稿能力,绝不口头宣称「已改」。只能审当前项目对话里的脚本;没有项目上下文时会诚实提示去项目稿面里审。若未配专用审核模型,报告会如实标注(L1 违禁词 lint 照常跑,确定性)。",
+      inputSchema: REVIEW_SCRIPT_PARAMS,
+      execute: async ({ projectId }): Promise<ReviewScriptToolResult> => {
+        try {
+          const { taskId, projectId: pid, error } = await deps.dispatchScriptReview({
+            projectId: typeof projectId === "string" && projectId.trim() ? projectId.trim() : undefined,
+          });
+          return { kind: "review.report", taskId, projectId: pid, error };
+        } catch (err) {
+          return {
+            kind: "review.report",
+            taskId: null,
+            projectId: null,
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
+      },
+    }),
     // [T-062a] 对话手录经验:「记一条经验:…」→ 模型填参 → 候选卡。execute 纯回显
     // (不读库不写库、不跑二次 LLM),故不占 ChatToolDeps —— 落库动作在前端卡上由人触发。
     "learning.capture": tool({
@@ -2292,6 +2358,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "material.generate",
   "calibration.diagnose",
   "review.analyze",
+  // [T-103b] 稿面文案审核进对话(dispatch script.review → 审核报告卡 + 改写 apply 门)。
+  "review.script",
   "learning.capture",
   "brief.fill",
   "positioning.generate",

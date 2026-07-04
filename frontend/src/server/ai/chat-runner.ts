@@ -111,6 +111,16 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     input: { kind: "image" | "video"; prompt: string; projectId?: string | null },
   ) => Promise<{ taskId: string }>;
+  /**
+   * [T-103b] review.script 端口 —— dispatch 既有 script.review ai_task(复用 T-086 审核链路:
+   * L1 违禁词 lint + L2 豆包语义审 → 落 script_review_reports,别重造),立即返回 taskId(不阻塞
+   * 对话回合)。由 composition root 绑(reviewGateService.triggerReview,同稿面「审核」按钮的旧
+   * trigger 链路)。可选:未装配 → 工具报「审核能力未接入」(诚实降级)。
+   */
+  dispatchScriptReviewPort?: (
+    ctx: RequestContext,
+    input: { projectId: string },
+  ) => Promise<{ taskId: string }>;
 }
 
 /**
@@ -669,6 +679,40 @@ export async function buildChatAssembly(
         // 项目对话(chatContext.projectId)时把生成 task 挂到当前项目(采纳可绑用料链)。
         projectId: chatContext.projectId ?? null,
       });
+    },
+    // [T-103b] review.script:审的恒是「当前项目的脚本」(script.review 只吃 projectId)。项目
+    // 从模型显式传参优先,否则用 chatContext.projectId(稿面右栏对话恒有)。无项目上下文 →
+    // 不 dispatch,诚实回 error(卡渲「去项目稿面里审」);端口未装配 → 同样诚实 error(不抛裸码)。
+    dispatchScriptReview: async ({ projectId }) => {
+      const pid =
+        (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
+        chatContext.projectId ||
+        "";
+      if (!pid) {
+        return {
+          taskId: null,
+          projectId: null,
+          error:
+            "文案审核要在具体项目的稿面里进行 —— 请在项目稿面右栏的编导对话里让我审核这份脚本。",
+        };
+      }
+      if (!deps.dispatchScriptReviewPort) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: "文案审核能力当前未接入(服务端未装配审核分派) —— 暂时无法审核。",
+        };
+      }
+      try {
+        const { taskId } = await deps.dispatchScriptReviewPort(ctx, { projectId: pid });
+        return { taskId, projectId: pid, error: null };
+      } catch (err) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: err instanceof Error ? err.message : String(err),
+        };
+      }
     },
     diagnoseContent: async ({ title, script, extraBrief }) => {
       // 复用 calibration.diagnose 模板 + parseDiagnosis(与 calibration-diagnose-runner 同源)。
