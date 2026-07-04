@@ -23,6 +23,6 @@
 
 - **只要结论、不要文件堆 → SubAgent**(它替你扛大上下文 = 天然压缩)。宽搜/调研/多视角审都走子代理。
 - **并行且会改重叠文件 → worktree 隔离**(防冲突);只读并行不用 worktree。
-- **找符号/调用链/影响面 → CodeGraph 先行**:`codegraph query <sym> -j` / `callers` / `impact`(本仓 `.codegraph/` 已建索引;grep 只兜字面量/注释/配置值)。规范:orchestrator `rules/code-retrieval-rules.md`。
+- **检索代码一律优先 codegraph CLI(默认手段,非可选)**:找符号定义/调用链/影响面 → `codegraph query <sym> -j` / `codegraph callers <sym>` / `codegraph impact <sym>`(本仓 `.codegraph/` 已建索引,11k+ nodes)。**grep/ripgrep 只在 codegraph 够不到时兜底**——字面量、注释、配置值、跨文件字符串;**别用 grep 找符号定义/调用关系**(那是 codegraph 的活,grep 会漏会慢)。规范:orchestrator `rules/code-retrieval-rules.md`。
 - **任务边界(做完一个 BACKLOG 项)→ checkpoint 进看板/记忆 + 压缩 + `codegraph index --force` 重建索引**(禁用 `sync`:增量检测不可靠会谎报最新;重建后用本次新建符号 `query` 验证),下个任务起步干净。
 - 单线程小改不开子代理/worktree(有成本)。硬门用 hook 强制,战术选择是清晰触发下的判断。
