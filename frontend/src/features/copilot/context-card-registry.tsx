@@ -16,15 +16,21 @@ import * as React from "react";
 
 import type {
   ContextCommentsToolResult,
+  ContextKnowledgeDetailToolResult,
   ContextKnowledgeToolResult,
   ContextMaterialsToolResult,
+  ContextPositioningDetailToolResult,
+  ContextProjectDetailToolResult,
   ContextProjectsToolResult,
 } from "@/server/ai/chat-tools";
 
 import {
   ChatCommentListCard,
   ChatContextGenericCard,
+  ChatKnowledgeDetailCard,
   ChatKnowledgeListCard,
+  ChatPositioningDetailCard,
+  ChatProjectDetailCard,
   ChatProjectListCard,
 } from "./chat-context-cards";
 import { ChatMaterialListCard } from "./chat-material-list-card";
@@ -72,6 +78,30 @@ export const CONTEXT_CARD_REGISTRY: Readonly<Record<string, ContextCardRenderer>
   "context.materials": (out, ctx) => {
     const o = out as unknown as Partial<ContextMaterialsToolResult>;
     return <ChatMaterialListCard items={o.items ?? []} projectId={ctx.projectId} />;
+  },
+  // [T-099b] 切片二:详情类。数据从 tool-result part.output 直渲,不二次请求。
+  "context.project.detail": (out) => {
+    const o = out as unknown as Partial<ContextProjectDetailToolResult>;
+    return <ChatProjectDetailCard project={o.project ?? null} />;
+  },
+  "context.positioning.detail": (out) => {
+    const o = out as unknown as Partial<ContextPositioningDetailToolResult>;
+    return (
+      <ChatPositioningDetailCard
+        positioning={
+          o.positioning ?? {
+            profile: null,
+            currentStatement: null,
+            statementCount: null,
+            accounts: [],
+          }
+        }
+      />
+    );
+  },
+  "context.knowledge.detail": (out) => {
+    const o = out as unknown as Partial<ContextKnowledgeDetailToolResult>;
+    return <ChatKnowledgeDetailCard item={o.item ?? null} />;
   },
 };
 

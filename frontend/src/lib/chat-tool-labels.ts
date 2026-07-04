@@ -87,6 +87,19 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "读取观众评论",
     purpose: "拉取你作品下的真实观众评论",
   },
+  // [T-099b] 切片二:详情类(单实体全字段)。
+  "context.project.detail": {
+    name: "读取项目档案",
+    purpose: "拉某项目全档:立项 brief/阶段/发布状态/产物索引/最新指标",
+  },
+  "context.positioning.detail": {
+    name: "读取定位档案",
+    purpose: "拉定位母版全档:9 facets/下游约束/当前陈述/账号画像",
+  },
+  "context.knowledge.detail": {
+    name: "读取知识原子",
+    purpose: "拉某条知识全档:正文/出处/标签/战绩/关联边",
+  },
 };
 
 // [T-095] 调度采集任务类型的中文词表 —— 「最近任务/继续任务」等任务 feed 渲 taskType 时用,

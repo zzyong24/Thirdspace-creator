@@ -24,6 +24,9 @@ import {
   buildChatTools,
   ALL_CHAT_TOOL_NAMES,
   type ChatToolDeps,
+  type ProjectDetailRaw,
+  type PositioningDetailRaw,
+  type KnowledgeDetailRaw,
 } from "./chat-tools";
 import { buildSkillsBrief } from "@/lib/chat-tool-labels";
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
@@ -161,6 +164,31 @@ export interface ContextReaders {
     ctx: RequestContext,
     opts: { query: string; limit: number },
   ) => Promise<Array<{ id: string; title: string; kind: string }>>;
+  /**
+   * [T-099b] context.project.detail —— 某项目全档(brief/阶段/发布/产物索引/最新指标)。
+   * composition root 复用既有公开读源(projects getProject/briefDetail + artifacts
+   * listProjectArtifacts/listVersions + publishing + ReviewSubjectReader 口径的最新 snapshot)。
+   * 读不到(不存在/越权)→ null(诚实降级)。可选:未装配 → 工具报「查不到」(诚实空态)。
+   */
+  getProjectDetail?: (
+    ctx: RequestContext,
+    opts: { projectId: string },
+  ) => Promise<ProjectDetailRaw | null>;
+  /**
+   * [T-099b] context.positioning.detail —— 定位母版全档(facets/downstreamRules/陈述/陈述版本数)
+   * + 账号画像并入。composition root 复用 PositioningReader + AccountsReader。母版未建 → profile
+   * 全空(诚实空态,不抛)。可选:未装配 → 工具报空档(诚实降级)。
+   */
+  getPositioningDetail?: (ctx: RequestContext) => Promise<PositioningDetailRaw>;
+  /**
+   * [T-099b] context.knowledge.detail —— 单条知识全字段(type/title/note/sourceNote/tags/战绩/关联)。
+   * composition root 复用 knowledge getKnowledge(带 T-079c 战绩投影)+ listRevisions(正文)+
+   * listRelations。读不到(不存在/越权)→ null(诚实降级)。可选:未装配 → 工具报「查不到」。
+   */
+  getKnowledgeDetail?: (
+    ctx: RequestContext,
+    opts: { id: string },
+  ) => Promise<KnowledgeDetailRaw | null>;
 }
 
 // 各 ChatBox skill 的「主能力档」—— 基础模型按它解析(各 surface 复用对应节点的模型配置,
@@ -667,6 +695,28 @@ export async function buildChatAssembly(
     searchMaterials: async ({ query, limit }) => {
       if (!deps.contextReaders) return [];
       return deps.contextReaders.searchMaterials(ctx, { query, limit });
+    },
+    // [T-099b] 详情类 context 工具(切片二)—— execute 直接调注入的 user-scoped 详情读端口。
+    // 端口未装配(contextReaders 缺省 / 具体方法缺省)→ 工具侧诚实空态(found:false / null),
+    // 绝不塞假数据。全部按 ctx.userId 收窄(读端口内部据 ctx 收窄,读不到 → null/空)。
+    getProjectDetail: async ({ projectId }) => {
+      if (!deps.contextReaders?.getProjectDetail) return null;
+      return deps.contextReaders.getProjectDetail(ctx, { projectId });
+    },
+    getPositioningDetail: async () => {
+      if (!deps.contextReaders?.getPositioningDetail) {
+        return {
+          profile: null,
+          currentStatement: null,
+          statementCount: null,
+          accounts: [],
+        };
+      }
+      return deps.contextReaders.getPositioningDetail(ctx);
+    },
+    getKnowledgeDetail: async ({ id }) => {
+      if (!deps.contextReaders?.getKnowledgeDetail) return null;
+      return deps.contextReaders.getKnowledgeDetail(ctx, { id });
     },
   };
   const tools = buildChatTools(toolWhitelist, toolDeps);

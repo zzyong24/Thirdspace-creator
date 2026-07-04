@@ -5268,6 +5268,246 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           kind: a.assetType,
         }));
       },
+      // [T-099b] context.project.detail —— 某项目全档。复用既有公开读源(不新造 repo 方法):
+      //   · 项目行(标题/阶段/状态/brief)→ projectsRepo.get(user-scoped,顺带 ownership 门)
+      //   · 产物索引(type/版本数/updatedAt/字数)→ artifactsService.listProjectArtifacts +
+      //     listVersions + 当前版本 contentText 长度(transcript 回退,与 getScript 同口径)
+      //   · 发布状态 → listOutputIdsByProject → publishingService.listPublications(取首个已发布)
+      //   · 最新指标摘要 → makeReviewSubjectReader().getMetricsSummary(同口径,不新造)
+      // 读不到(不存在/越权)→ null(projectsRepo.get 抛 → catch 成 null,诚实降级不崩)。
+      getProjectDetail: async (c: RequestContext, opts: { projectId: string }) => {
+        try {
+          const project = await projectsRepo.get(c, opts.projectId);
+          const brief = (project.briefDetail ?? {}) as Record<string, unknown>;
+          const s = (v: unknown): string | undefined =>
+            typeof v === "string" && v.trim() ? v.trim() : undefined;
+          const platforms = Array.isArray(brief.targetPlatforms)
+            ? brief.targetPlatforms.filter((p): p is string => typeof p === "string")
+            : undefined;
+          // 产物索引 —— 每类产物的版本数 + updatedAt + 当前版本字数(全文走 context.artifact.text)。
+          const artifactRows = await artifactsService.listProjectArtifacts(
+            c,
+            opts.projectId,
+          );
+          const repo = createArtifactRepository(db, { ...deps, userId: c.userId });
+          const artifacts = await Promise.all(
+            artifactRows.map(async (a) => {
+              let versionCount = 0;
+              let charCount = 0;
+              try {
+                const versions = await artifactsService.listVersions(c, a.id);
+                versionCount = versions.length;
+              } catch {
+                versionCount = 0;
+              }
+              if (a.currentVersionId) {
+                try {
+                  const version = await repo.getVersion(a.currentVersionId);
+                  const data = version.contentData as
+                    | Record<string, unknown>
+                    | null
+                    | undefined;
+                  const text =
+                    version.contentText && version.contentText.trim()
+                      ? version.contentText
+                      : data && typeof data.transcript === "string"
+                        ? data.transcript
+                        : "";
+                  charCount = text.length;
+                } catch {
+                  charCount = 0;
+                }
+              }
+              return {
+                artifactType: a.artifactType,
+                versionCount,
+                updatedAt: a.updatedAt ?? null,
+                charCount,
+              };
+            }),
+          );
+          // 发布状态 —— 项目 outputs → publications;取首个已发布(publishedAt 非空)作代表。
+          let publish = {
+            published: false,
+            platform: null as string | null,
+            publishedAt: null as string | null,
+          };
+          try {
+            const outputIds = await projectsService.listOutputIdsByProject(
+              c,
+              opts.projectId,
+            );
+            outer: for (const outputId of outputIds) {
+              const pubs = await publishingService.listPublications(c, outputId, {
+                limit: 20,
+                offset: 0,
+              });
+              for (const pub of pubs) {
+                if (pub.publishedAt) {
+                  publish = {
+                    published: true,
+                    platform: pub.platform,
+                    publishedAt: pub.publishedAt,
+                  };
+                  break outer;
+                }
+              }
+            }
+          } catch {
+            /* 发布状态 best-effort,读失败按未发布(诚实,不编) */
+          }
+          // 最新指标摘要 —— 复用 ReviewSubjectReader 口径(views/plays 归一,人类可读串)。
+          let metricsSummary = "";
+          try {
+            metricsSummary = await makeReviewSubjectReader().getMetricsSummary(
+              c,
+              opts.projectId,
+            );
+          } catch {
+            metricsSummary = "";
+          }
+          return {
+            id: project.id,
+            title: project.title,
+            stage: project.currentStage,
+            status: project.status,
+            publish,
+            brief: {
+              targetAudience: s(brief.targetAudience),
+              contentGoal: s(brief.contentGoal),
+              contentFormat: s(brief.contentFormat),
+              targetPlatforms: platforms,
+              durationEstimate: s(brief.durationEstimate),
+              coreMessage: s(brief.coreMessage),
+              successCriteria: s(brief.successCriteria),
+            },
+            artifacts,
+            metricsSummary,
+          };
+        } catch {
+          return null;
+        }
+      },
+      // [T-099b] context.positioning.detail —— 定位母版全档 + 账号画像并入(不单开账号工具)。
+      // 复用 positioningService.getPositioningCenter(profile 全 facets + downstreamRules + 陈述 +
+      // history 版本数)+ platformAccountService.listAccounts(账号画像)。母版未建 → profile:null
+      // (诚实空态)。best-effort:账号读失败 → 空数组(不阻断定位档案)。
+      getPositioningDetail: async (c: RequestContext) => {
+        const center = await positioningService.getPositioningCenter(c);
+        const p = center.profile;
+        const facets = (p?.facets ?? {}) as Record<string, string>;
+        const rules = (p?.downstreamRules ?? {}) as Record<string, string>;
+        let accounts: Array<{
+          platform: string;
+          accountHandle: string;
+          followerBaseline: number;
+        }> = [];
+        try {
+          const res = await platformAccountService.listAccounts(c, {
+            limit: 100,
+            offset: 0,
+          });
+          accounts = res.rows.map((a) => ({
+            platform: a.platform,
+            accountHandle: a.accountHandle,
+            followerBaseline: a.followerBaseline,
+          }));
+        } catch {
+          accounts = [];
+        }
+        return {
+          profile: p
+            ? {
+                persona: p.persona,
+                field: p.field,
+                audience: p.audience,
+                differentiation: p.differentiation,
+                capabilities: p.capabilities,
+                facets: {
+                  contentScope: facets.contentScope || undefined,
+                  avoid: facets.avoid || undefined,
+                  corePain: facets.corePain || undefined,
+                  coreValue: facets.coreValue || undefined,
+                  tone: facets.tone || undefined,
+                  statusNote: facets.statusNote || undefined,
+                },
+                downstreamRules: {
+                  topicRule: rules.topicRule || undefined,
+                  scriptRule: rules.scriptRule || undefined,
+                  projectRule: rules.projectRule || undefined,
+                  forbidRule: rules.forbidRule || undefined,
+                  expressionRule: rules.expressionRule || undefined,
+                },
+              }
+            : null,
+          currentStatement: center.currentStatement
+            ? {
+                oneLiner: center.currentStatement.oneLiner,
+                keywords: center.currentStatement.keywords,
+              }
+            : null,
+          statementCount: Array.isArray(center.history)
+            ? center.history.length
+            : null,
+          accounts,
+        };
+      },
+      // [T-099b] context.knowledge.detail —— 单条知识全字段。复用 knowledgeService.getKnowledge
+      //   (带 T-079c 战绩投影 usedCount/usedInPublished)+ listRevisions(取当前修订正文 note)+
+      //   listRelations(语义关联边)。tags 从 sourceMetadata.tags 取(schema 无独立 tags 列)。
+      //   读不到(不存在/越权)→ null(getKnowledge 抛 → catch 成 null,诚实降级)。
+      getKnowledgeDetail: async (c: RequestContext, opts: { id: string }) => {
+        try {
+          const item = await knowledgeService.getKnowledge(c, opts.id);
+          // 正文 note —— 当前修订 content(缺则取 revisionNumber 最大的最新修订)。
+          let note = "";
+          try {
+            const revisions = await knowledgeService.listRevisions(c, opts.id);
+            const current =
+              revisions.find((r) => r.id === item.currentRevisionId) ??
+              revisions
+                .slice()
+                .sort((a, b) => b.revisionNumber - a.revisionNumber)[0];
+            note = current?.content ?? "";
+          } catch {
+            note = "";
+          }
+          // 关联边 —— 语义关系(目标 id + 关系类型)。
+          let relations: Array<{
+            targetKnowledgeId: string;
+            relationType: string;
+          }> = [];
+          try {
+            const rels = await knowledgeService.listRelations(c, opts.id);
+            relations = rels.map((r) => ({
+              targetKnowledgeId: r.targetKnowledgeId,
+              relationType: r.relationType,
+            }));
+          } catch {
+            relations = [];
+          }
+          // tags —— sourceMetadata.tags(字符串数组;缺失/形状不符 → 空)。
+          const meta = (item.sourceMetadata ?? {}) as { tags?: unknown };
+          const tags = Array.isArray(meta.tags)
+            ? meta.tags.filter((t): t is string => typeof t === "string")
+            : [];
+          return {
+            id: item.id,
+            title: item.title,
+            knowledgeType: item.knowledgeType,
+            note,
+            sourceNote: item.sourceNote ?? null,
+            sourceType: item.sourceType,
+            sourceUrl: item.sourceUrl ?? null,
+            tags,
+            usedCount: item.usedCount,
+            usedInPublished: item.usedInPublished,
+            relations,
+          };
+        } catch {
+          return null;
+        }
+      },
     },
     // [T-084a] 联网检索端口 —— gatherMaterials 前置检索 + honestyBlock/工具动态描述探测。
     probeSearchConfigured,

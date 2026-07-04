@@ -237,6 +237,114 @@ export interface ChatToolDeps {
   searchMaterials: (input: { query: string; limit: number }) => Promise<
     Array<{ id: string; title: string; kind: string }>
   >;
+  /**
+   * [T-099b] context.project.detail 只读端口 —— 拉某项目的全档:brief 全字段 + 当前阶段 +
+   * 发布状态 + 产物索引(每产物 type/当前版本数/updatedAt/字数)+ 最新指标摘要。composition
+   * root 复用既有公开读源(projects getProject/briefDetail + artifacts listProjectArtifacts +
+   * publishing + ReviewSubjectReader 口径的最新 snapshot)拼装。读不到(不存在/越权)→ null
+   * (诚实降级,不抛不编)。**返回原始全值**;长文本截断在工具 execute 侧强制(§3 详情档预算)。
+   */
+  getProjectDetail?: (input: { projectId: string }) => Promise<ProjectDetailRaw | null>;
+  /**
+   * [T-099b] context.positioning.detail 只读端口 —— 母版全 facets + downstreamRules + 当前陈述 +
+   * 陈述版本数 + 账号画像(accountsBrief 数据并入,不单开账号工具)。composition root 复用既有
+   * PositioningReader + AccountsReader。母版未建 → profile 全空 + 诚实空态(不抛)。
+   */
+  getPositioningDetail?: () => Promise<PositioningDetailRaw>;
+  /**
+   * [T-099b] context.knowledge.detail 只读端口 —— 单条知识全字段(type/title/note/sourceNote/
+   * tags/战绩 usedCount/关联边 relations)。composition root 复用 knowledge get(带 T-079c 战绩
+   * 投影)+ listRevisions(取正文 note)+ listRelations。读不到(不存在/越权)→ null(诚实降级)。
+   * **返回原始全值**;note/sourceNote 长文本截断在工具 execute 侧强制(§3 详情档预算)。
+   */
+  getKnowledgeDetail?: (input: { id: string }) => Promise<KnowledgeDetailRaw | null>;
+}
+
+// [T-099b] context.project.detail 的原始全值(composition root 拼装,execute 侧再套详情档预算)。
+export interface ProjectDetailRaw {
+  id: string;
+  title: string;
+  stage: string;
+  status: string;
+  /** 是否已有发布记录 + 首个平台/发布时间(有则「已发布」,无则按项目 status)。 */
+  publish: {
+    published: boolean;
+    platform: string | null;
+    publishedAt: string | null;
+  };
+  /** brief 全字段(选题卡 briefDetail;未填字段缺省)。 */
+  brief: {
+    targetAudience?: string;
+    contentGoal?: string;
+    contentFormat?: string;
+    targetPlatforms?: string[];
+    durationEstimate?: string;
+    coreMessage?: string;
+    successCriteria?: string;
+  };
+  /** 产物索引:每产物 type + 当前版本数 + updatedAt + 当前版本字数(全文走 context.artifact.text)。 */
+  artifacts: Array<{
+    artifactType: string;
+    versionCount: number;
+    updatedAt: string | null;
+    charCount: number;
+  }>;
+  /** 最新指标摘要(ReviewSubjectReader.getMetricsSummary 同口径,人类可读串;无 → 空串)。 */
+  metricsSummary: string;
+}
+
+// [T-099b] context.positioning.detail 的原始全值。
+export interface PositioningDetailRaw {
+  profile: {
+    persona: string;
+    field: string;
+    audience: string;
+    differentiation: string;
+    capabilities: string[];
+    facets: {
+      contentScope?: string;
+      avoid?: string;
+      corePain?: string;
+      coreValue?: string;
+      tone?: string;
+      statusNote?: string;
+    };
+    downstreamRules: {
+      topicRule?: string;
+      scriptRule?: string;
+      projectRule?: string;
+      forbidRule?: string;
+      expressionRule?: string;
+    };
+  } | null;
+  currentStatement: { oneLiner: string; keywords: string[] } | null;
+  /** 陈述版本数(创建过多少条定位陈述;拿不到 → null,不编)。 */
+  statementCount: number | null;
+  /** 账号画像(并入,不单开账号工具)。 */
+  accounts: Array<{
+    platform: string;
+    accountHandle: string;
+    followerBaseline: number;
+  }>;
+}
+
+// [T-099b] context.knowledge.detail 的原始全值(note/sourceNote 未截断;截断在 execute 侧)。
+export interface KnowledgeDetailRaw {
+  id: string;
+  title: string;
+  knowledgeType: string;
+  /** 正文(最新修订 content;无正文 → 空串)。 */
+  note: string;
+  /** 出处(sourceNote,可空)。 */
+  sourceNote: string | null;
+  sourceType: string;
+  sourceUrl: string | null;
+  tags: string[];
+  /** T-079c 战绩投影:被用料链引用次数 + 是否用于已发布作品。 */
+  usedCount: number;
+  usedInPublished: boolean;
+  /** 关联边(语义关系:目标 id + 关系类型)。 */
+  relations: Array<{ targetKnowledgeId: string; relationType: string }>;
 }
 
 // ── 工具结果形状(候选,非实体)──────────────────────────────────────────────────────
@@ -443,6 +551,89 @@ export interface ContextKnowledgeToolResult {
 export interface ContextMaterialsToolResult {
   kind: "context.materials";
   items: Array<{ id: string; title: string; kind: string }>;
+}
+
+// [T-099b] 详情档长文本字段的统一形状(§3 详情档预算):只回前 200 字 + totalChars,并带
+// 指针到对应全文工具 —— 详情档永不夹带全文。前端卡直渲 preview + 「全文用 X 读取」提示。
+export interface DetailTextField {
+  /** 截断后的预览(≤ DETAIL_TEXT_PREVIEW_CHARS 字;≤该长度时即全文)。 */
+  preview: string;
+  /** 原文总字数(超出 preview 时模型/卡据此如实告知「还有 N 字未展开」)。 */
+  totalChars: number;
+  /** 被截断(totalChars > preview 长度)时,读全文该调的工具名(切片三落地);未超则 null。 */
+  fullTextTool: string | null;
+}
+
+// [T-099b] 详情档长文本预览上限(§3:长文本字段只回前 200 字 + totalChars)。导出供单测。
+export const DETAIL_TEXT_PREVIEW_CHARS = 200;
+
+// [T-099b] 详情档长文本字段截断(§3 详情档预算,execute 侧强制、非君子协定):超 200 字截断,
+// 带 totalChars + 指针到全文工具;未超则 fullTextTool=null(全文已在 preview 里)。fullTextTool
+// 传对应切片三全文工具名(context.artifact.text / context.knowledge.text);raw 空/非串 → 空预览。
+export function truncateDetailText(
+  raw: unknown,
+  fullTextTool: string,
+): DetailTextField {
+  const s = typeof raw === "string" ? raw : "";
+  const totalChars = s.length;
+  if (totalChars <= DETAIL_TEXT_PREVIEW_CHARS) {
+    return { preview: s, totalChars, fullTextTool: null };
+  }
+  return {
+    preview: s.slice(0, DETAIL_TEXT_PREVIEW_CHARS),
+    totalChars,
+    fullTextTool,
+  };
+}
+
+// [T-099b] context.project.detail 工具结果 —— 项目全档(brief/阶段/发布/产物索引/指标)。
+// 前端「项目档案卡」直渲。coreMessage/successCriteria 等 brief 文本字段本就短(选题卡输入),
+// 不套详情档预算;唯 metricsSummary 是拼接串、也短。全字段直渲,无长正文(正文走 context.artifact.text)。
+export interface ContextProjectDetailToolResult {
+  kind: "context.project.detail";
+  found: boolean;
+  project: {
+    id: string;
+    title: string;
+    stage: string;
+    status: string;
+    publish: {
+      published: boolean;
+      platform: string | null;
+      publishedAt: string | null;
+    };
+    brief: ProjectDetailRaw["brief"];
+    artifacts: ProjectDetailRaw["artifacts"];
+    metricsSummary: string;
+  } | null;
+}
+
+// [T-099b] context.positioning.detail 工具结果 —— 定位母版全档(facets/rules/陈述/账号画像)。
+// 前端「定位档案卡」直渲(对齐 ChatPositioningCard 9-facet 只读态 + downstreamRules + 账号画像)。
+export interface ContextPositioningDetailToolResult {
+  kind: "context.positioning.detail";
+  found: boolean;
+  positioning: PositioningDetailRaw;
+}
+
+// [T-099b] context.knowledge.detail 工具结果 —— 单条知识原子全档。前端「知识原子卡」直渲。
+// note/sourceNote 长文本走详情档预算(≤200 字 + totalChars + 指针到 context.knowledge.text)。
+export interface ContextKnowledgeDetailToolResult {
+  kind: "context.knowledge.detail";
+  found: boolean;
+  item: {
+    id: string;
+    title: string;
+    knowledgeType: string;
+    note: DetailTextField;
+    sourceNote: DetailTextField;
+    sourceType: string;
+    sourceUrl: string | null;
+    tags: string[];
+    usedCount: number;
+    usedInPublished: boolean;
+    relations: Array<{ targetKnowledgeId: string; relationType: string }>;
+  } | null;
 }
 
 // ── 工具入参 JSON Schema(可序列化契约)─────────────────────────────────────────────
@@ -777,6 +968,41 @@ const CONTEXT_MATERIALS_PARAMS = jsonSchema<{ query?: string; limit?: number }>(
       description: "返回条数(可选;默认 5,封顶 10)。",
     },
   },
+  additionalProperties: false,
+});
+
+// [T-099b] context.project.detail 入参 —— projectId 必填(单实体全档查)。
+const CONTEXT_PROJECT_DETAIL_PARAMS = jsonSchema<{ projectId: string }>({
+  type: "object",
+  properties: {
+    projectId: {
+      type: "string",
+      description:
+        "要查全档的项目 id(从 context.projects 清单卡拿到的 id)。返回该项目的立项 brief 全字段 + 当前阶段 + 发布状态 + 产物索引 + 最新指标摘要。",
+    },
+  },
+  required: ["projectId"],
+  additionalProperties: false,
+});
+
+// [T-099b] context.positioning.detail 入参 —— 无入参(账号级单实体,母版就一份)。
+const CONTEXT_POSITIONING_DETAIL_PARAMS = jsonSchema<Record<string, never>>({
+  type: "object",
+  properties: {},
+  additionalProperties: false,
+});
+
+// [T-099b] context.knowledge.detail 入参 —— id 必填(单条知识全字段查)。
+const CONTEXT_KNOWLEDGE_DETAIL_PARAMS = jsonSchema<{ id: string }>({
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+      description:
+        "要查全档的知识条目 id(从 context.knowledge 清单卡拿到的 id)。返回该条目的 type/标题/正文/出处/标签/战绩(被引用次数)/关联边。",
+    },
+  },
+  required: ["id"],
   additionalProperties: false,
 });
 
@@ -1197,6 +1423,93 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         return { kind: "context.materials", items };
       },
     }),
+    // ── [T-099b] 只读 context 详情工具(切片二)—— 单实体全字段。人机同源:结果同一份真值,
+    //    模型读进上下文归纳,前端 CONTEXT_CARD_REGISTRY 直渲档案卡(模型只有指针权、无转录权)。
+    //    §3 详情档预算:长文本字段恒 ≤200 字 + totalChars + 指针到全文工具(切片三)。
+    "context.project.detail": tool({
+      description:
+        "只读:拉取某个项目/作品的**全档**(立项 brief 全字段 + 当前阶段 + 发布状态 + 产物索引「每类产物有几个版本/多少字/何时更新」+ 最新指标摘要)。当用户问「这个项目做到哪了 / 它的策划是什么 / 有哪些产物 / 数据怎么样」时,先用 context.projects 拿到 id,再调它拿真实全档。产物正文不在这里(只给字数索引)——要读脚本/逐字稿全文用 context.artifact.text。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_PROJECT_DETAIL_PARAMS,
+      execute: async ({ projectId }): Promise<ContextProjectDetailToolResult> => {
+        const pid = typeof projectId === "string" ? projectId.trim() : "";
+        if (!pid || !deps.getProjectDetail) {
+          return { kind: "context.project.detail", found: false, project: null };
+        }
+        const raw = await deps.getProjectDetail({ projectId: pid });
+        if (!raw) {
+          return { kind: "context.project.detail", found: false, project: null };
+        }
+        return {
+          kind: "context.project.detail",
+          found: true,
+          project: {
+            id: raw.id,
+            title: raw.title,
+            stage: raw.stage,
+            status: raw.status,
+            publish: raw.publish,
+            brief: raw.brief,
+            artifacts: raw.artifacts,
+            metricsSummary: raw.metricsSummary,
+          },
+        };
+      },
+    }),
+    "context.positioning.detail": tool({
+      description:
+        "只读:拉取创作者的**定位档案全档**(定位母版 9 facets:人设/领域/人群/差异化/内容范围/不做什么/核心痛点/核心价值/表达风格 + 5 条下游硬约束 downstreamRules + 当前定位陈述 + 陈述版本数 + 抖音账号画像)。当用户问「我的定位是什么 / 我的人设 / 我在平台上是谁 / 定位约束」时调它拿真实定位档案回答。无入参(母版就一份)。纯读取上下文,不产候选、不写库(要改定位用 positioning.generate 产提案卡)。",
+      inputSchema: CONTEXT_POSITIONING_DETAIL_PARAMS,
+      execute: async (): Promise<ContextPositioningDetailToolResult> => {
+        const empty: PositioningDetailRaw = {
+          profile: null,
+          currentStatement: null,
+          statementCount: null,
+          accounts: [],
+        };
+        if (!deps.getPositioningDetail) {
+          return { kind: "context.positioning.detail", found: false, positioning: empty };
+        }
+        const raw = await deps.getPositioningDetail();
+        return {
+          kind: "context.positioning.detail",
+          found: raw.profile !== null || raw.currentStatement !== null,
+          positioning: raw,
+        };
+      },
+    }),
+    "context.knowledge.detail": tool({
+      description:
+        "只读:拉取某条知识库条目的**全档**(类型/标题/正文/出处/标签/战绩「被多少条内容引用过、是否用在已发布作品」/关联的其他知识)。当用户问「这条知识具体是什么 / 它被用过没 / 关联了哪些」时,先用 context.knowledge 搜到 id,再调它拿真实全档。正文很长时只回前 200 字 + 总字数(要读全文用 context.knowledge.text)。纯读取上下文,不产候选、不写库。",
+      inputSchema: CONTEXT_KNOWLEDGE_DETAIL_PARAMS,
+      execute: async ({ id }): Promise<ContextKnowledgeDetailToolResult> => {
+        const kid = typeof id === "string" ? id.trim() : "";
+        if (!kid || !deps.getKnowledgeDetail) {
+          return { kind: "context.knowledge.detail", found: false, item: null };
+        }
+        const raw = await deps.getKnowledgeDetail({ id: kid });
+        if (!raw) {
+          return { kind: "context.knowledge.detail", found: false, item: null };
+        }
+        return {
+          kind: "context.knowledge.detail",
+          found: true,
+          item: {
+            id: raw.id,
+            title: raw.title,
+            knowledgeType: raw.knowledgeType,
+            // §3 详情档预算:正文/出处长文本 ≤200 字 + totalChars + 指针到 context.knowledge.text。
+            note: truncateDetailText(raw.note, "context.knowledge.text"),
+            sourceNote: truncateDetailText(raw.sourceNote, "context.knowledge.text"),
+            sourceType: raw.sourceType,
+            sourceUrl: raw.sourceUrl,
+            tags: raw.tags,
+            usedCount: raw.usedCount,
+            usedInPublished: raw.usedInPublished,
+            relations: raw.relations,
+          },
+        };
+      },
+    }),
   };
 }
 
@@ -1225,6 +1538,10 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "context.comments",
   "context.knowledge",
   "context.materials",
+  // [T-099b] 切片二:详情类(单实体全字段)。
+  "context.project.detail",
+  "context.positioning.detail",
+  "context.knowledge.detail",
 ];
 
 /**

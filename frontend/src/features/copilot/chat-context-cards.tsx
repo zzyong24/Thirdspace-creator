@@ -15,8 +15,12 @@ import * as React from "react";
 
 import type {
   ContextCommentsToolResult,
+  ContextKnowledgeDetailToolResult,
   ContextKnowledgeToolResult,
+  ContextPositioningDetailToolResult,
+  ContextProjectDetailToolResult,
   ContextProjectsToolResult,
+  DetailTextField,
 } from "@/server/ai/chat-tools";
 
 /** 清单卡默认可见条数(SPEC §2.3:前 8 条 + 展开全部)。 */
@@ -247,6 +251,309 @@ export function ChatKnowledgeListCard({
         ))}
       </ol>
       {hasHidden ? <ExpandButton count={items.length} onClick={expand} /> : null}
+    </CardShell>
+  );
+}
+
+// ── [T-099b] 详情档共用件 ──────────────────────────────────────────────────────
+// 详情卡全字段直渲(SPEC §2.3);长文本字段(DetailTextField)渲 preview + 「还有 N 字 ·
+// 全文用 X 读取」指针提示(§3 详情档预算,详情档永不夹带全文)。
+
+/** 字段行(label 左、value 右;value 空则不渲,不摆假空字段)。 */
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  if (value === null || value === undefined || value === "") return null;
+  return (
+    <div className="flex gap-1.5 text-[11px]" data-slot="chat-detail-row">
+      <dt className="shrink-0 text-text-subtle">{label}</dt>
+      <dd className="min-w-0 flex-1 whitespace-pre-wrap break-words text-foreground">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+/** 长文本字段:preview + 截断时的「还有 N 字 · 全文用 X 读取」诚实指针(不夹带全文)。 */
+function DetailLongText({ field }: { field: DetailTextField }) {
+  if (!field.preview) return null;
+  const truncated = field.fullTextTool !== null;
+  return (
+    <div className="flex flex-col gap-0.5" data-slot="chat-detail-longtext">
+      <p className="whitespace-pre-wrap break-words text-[11px] leading-snug text-foreground">
+        {field.preview}
+        {truncated ? "…" : ""}
+      </p>
+      {truncated ? (
+        <span className="text-[10px] text-text-subtle">
+          共 {field.totalChars} 字 · 全文用 {field.fullTextTool} 读取
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+// ── context.project.detail → 项目档案卡 ────────────────────────────────────────
+// brief 字段 + 阶段徽标 + 发布状态 + 产物索引列表 + 指标摘要(SPEC §1 行#2「UI 渲染卡」)。
+
+type ProjectDetail = NonNullable<ContextProjectDetailToolResult["project"]>;
+
+export function ChatProjectDetailCard({
+  project,
+}: {
+  project: ProjectDetail | null;
+}) {
+  if (!project) {
+    return (
+      <EmptyCard
+        slot="chat-project-detail-card"
+        text="查不到这个项目 —— 可能 id 不对、已删除或不属于你。"
+      />
+    );
+  }
+  const b = project.brief;
+  const briefRows: ReadonlyArray<readonly [string, string | undefined]> = [
+    ["目标观众", b.targetAudience],
+    ["内容目标", b.contentGoal],
+    ["内容形式", b.contentFormat],
+    ["核心信息", b.coreMessage],
+    ["预估时长", b.durationEstimate],
+    ["成功标准", b.successCriteria],
+    [
+      "目标平台",
+      b.targetPlatforms && b.targetPlatforms.length > 0
+        ? b.targetPlatforms.join("、")
+        : undefined,
+    ],
+  ];
+  return (
+    <CardShell
+      slot="chat-project-detail-card"
+      heading={`项目档案 · ${project.title || "（无标题）"}`}
+    >
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="rounded-md bg-surface-subtle px-1.5 py-0.5 text-[10px] text-muted-foreground">
+          阶段:{project.stage}
+        </span>
+        <span
+          data-slot="chat-project-detail-publish"
+          className="rounded-md bg-surface-subtle px-1.5 py-0.5 text-[10px] text-muted-foreground"
+        >
+          {project.publish.published
+            ? `已发布${project.publish.platform ? ` · ${project.publish.platform}` : ""}${
+                project.publish.publishedAt
+                  ? ` · ${project.publish.publishedAt.slice(0, 10)}`
+                  : ""
+              }`
+            : `未发布 · ${project.status}`}
+        </span>
+      </div>
+      {briefRows.some(([, v]) => v) ? (
+        <dl className="flex flex-col gap-0.5">
+          {briefRows.map(([label, value]) => (
+            <DetailRow key={label} label={label} value={value} />
+          ))}
+        </dl>
+      ) : (
+        <p className="text-[11px] text-text-subtle">立项 brief 还没填。</p>
+      )}
+      {project.artifacts.length > 0 ? (
+        <div className="flex flex-col gap-0.5" data-slot="chat-project-detail-artifacts">
+          <span className="text-[10px] font-medium text-text-subtle">产物索引</span>
+          <ul className="flex flex-col gap-0.5">
+            {project.artifacts.map((a) => (
+              <li
+                key={a.artifactType}
+                data-slot="chat-project-detail-artifact"
+                className="flex items-center gap-2 text-[11px]"
+              >
+                <span className="min-w-0 flex-1 truncate text-foreground">
+                  {a.artifactType}
+                </span>
+                <span className="shrink-0 text-text-subtle">
+                  {a.versionCount} 版 · {a.charCount} 字
+                  {a.updatedAt ? ` · ${a.updatedAt.slice(0, 10)}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="text-[11px] text-text-subtle">还没有产物(脚本/逐字稿等)。</p>
+      )}
+      {project.metricsSummary ? (
+        <p
+          data-slot="chat-project-detail-metrics"
+          className="text-[11px] text-foreground"
+        >
+          最新数据:{project.metricsSummary}
+        </p>
+      ) : null}
+    </CardShell>
+  );
+}
+
+// ── context.positioning.detail → 定位档案卡 ────────────────────────────────────
+// 9 facets + downstreamRules + 当前陈述 + 陈述版本数 + 账号画像(SPEC §1 行#5,只读态,
+// 对齐 ChatPositioningCard 的 9-facet 信息面,但这是只读档案卡,无采纳按钮 —— 改定位走
+// positioning.generate 产提案卡)。
+
+type PositioningDetail = ContextPositioningDetailToolResult["positioning"];
+
+export function ChatPositioningDetailCard({
+  positioning,
+}: {
+  positioning: PositioningDetail;
+}) {
+  const p = positioning.profile;
+  if (!p && !positioning.currentStatement) {
+    return (
+      <EmptyCard
+        slot="chat-positioning-detail-card"
+        text="定位母版还没建 —— 去定位中心生成,或让 AI 产一份定位提案。"
+      />
+    );
+  }
+  const facetRows: ReadonlyArray<readonly [string, string | undefined]> = p
+    ? [
+        ["人设", p.persona],
+        ["领域", p.field],
+        ["人群", p.audience],
+        ["差异化", p.differentiation],
+        ["内容范围", p.facets.contentScope],
+        ["不做什么", p.facets.avoid],
+        ["核心痛点", p.facets.corePain],
+        ["核心价值", p.facets.coreValue],
+        ["表达风格", p.facets.tone],
+      ]
+    : [];
+  const ruleRows: ReadonlyArray<readonly [string, string | undefined]> = p
+    ? [
+        ["选题约束", p.downstreamRules.topicRule],
+        ["写稿约束", p.downstreamRules.scriptRule],
+        ["立项约束", p.downstreamRules.projectRule],
+        ["禁区", p.downstreamRules.forbidRule],
+        ["表达约束", p.downstreamRules.expressionRule],
+      ]
+    : [];
+  return (
+    <CardShell slot="chat-positioning-detail-card" heading="定位档案">
+      {positioning.currentStatement?.oneLiner ? (
+        <p className="text-[13px] font-medium leading-snug text-foreground">
+          {positioning.currentStatement.oneLiner}
+        </p>
+      ) : null}
+      {positioning.currentStatement?.keywords?.filter(Boolean).length ? (
+        <div className="flex flex-wrap gap-1">
+          {positioning.currentStatement.keywords.filter(Boolean).map((kw) => (
+            <span
+              key={kw}
+              className="rounded-full bg-secondary px-1.5 py-0.5 text-[9.5px] text-secondary-foreground"
+            >
+              {kw}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      {facetRows.some(([, v]) => v) ? (
+        <dl className="flex flex-col gap-0.5">
+          {facetRows.map(([label, value]) => (
+            <DetailRow key={label} label={label} value={value} />
+          ))}
+        </dl>
+      ) : null}
+      {ruleRows.some(([, v]) => v) ? (
+        <div className="flex flex-col gap-0.5" data-slot="chat-positioning-detail-rules">
+          <span className="text-[10px] font-medium text-text-subtle">下游硬约束</span>
+          <dl className="flex flex-col gap-0.5">
+            {ruleRows.map(([label, value]) => (
+              <DetailRow key={label} label={label} value={value} />
+            ))}
+          </dl>
+        </div>
+      ) : null}
+      {positioning.accounts.length > 0 ? (
+        <div className="flex flex-col gap-0.5" data-slot="chat-positioning-detail-accounts">
+          <span className="text-[10px] font-medium text-text-subtle">账号画像</span>
+          <ul className="flex flex-col gap-0.5">
+            {positioning.accounts.map((a) => (
+              <li key={`${a.platform}-${a.accountHandle}`} className="text-[11px] text-foreground">
+                {a.platform} · {a.accountHandle} · {a.followerBaseline} 粉
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      <p className="text-[10px] text-text-subtle">
+        {positioning.statementCount !== null
+          ? `定位陈述共 ${positioning.statementCount} 版`
+          : ""}
+      </p>
+    </CardShell>
+  );
+}
+
+// ── context.knowledge.detail → 知识原子卡 ──────────────────────────────────────
+// type/title/note/tags/战绩/关联(SPEC §1 行#10,对齐 KnowledgeDetailPreview 信息面)。
+// note/sourceNote 长文本走详情档预算(≤200 字 preview + 全文指针)。
+
+type KnowledgeDetail = NonNullable<ContextKnowledgeDetailToolResult["item"]>;
+
+export function ChatKnowledgeDetailCard({
+  item,
+}: {
+  item: KnowledgeDetail | null;
+}) {
+  if (!item) {
+    return (
+      <EmptyCard
+        slot="chat-knowledge-detail-card"
+        text="查不到这条知识 —— 可能 id 不对、已归档或不属于你。"
+      />
+    );
+  }
+  return (
+    <CardShell
+      slot="chat-knowledge-detail-card"
+      heading={`知识原子 · ${item.knowledgeType}`}
+    >
+      <p className="text-[13px] font-medium leading-snug text-foreground">
+        {item.title || "（无标题）"}
+      </p>
+      {item.note.preview ? <DetailLongText field={item.note} /> : null}
+      {item.sourceNote.preview ? (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] font-medium text-text-subtle">出处</span>
+          <DetailLongText field={item.sourceNote} />
+        </div>
+      ) : null}
+      {item.sourceType === "web" && item.sourceUrl ? (
+        <a
+          href={item.sourceUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="w-fit break-all text-[11px] text-brand underline underline-offset-2"
+        >
+          来源:{item.sourceUrl}
+        </a>
+      ) : null}
+      {item.tags.length > 0 ? (
+        <div className="flex flex-wrap gap-1" data-slot="chat-knowledge-detail-tags">
+          {item.tags.map((t) => (
+            <span
+              key={t}
+              className="rounded-full bg-secondary px-1.5 py-0.5 text-[9.5px] text-secondary-foreground"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <p
+        data-slot="chat-knowledge-detail-stats"
+        className="text-[10px] text-text-subtle"
+      >
+        战绩:被引用 {item.usedCount} 次
+        {item.usedInPublished ? " · 用于已发布作品" : ""} · 关联 {item.relations.length} 条
+      </p>
     </CardShell>
   );
 }

@@ -10,6 +10,8 @@ import {
   MAX_DISTILL_TOOL_CONTENT_CHARS,
   compactTitle,
   knowledgeRelevanceScore,
+  truncateDetailText,
+  DETAIL_TEXT_PREVIEW_CHARS,
   type ChatToolDeps,
 } from "./chat-tools";
 
@@ -33,6 +35,9 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   listComments: ReturnType<typeof vi.fn>;
   searchKnowledge: ReturnType<typeof vi.fn>;
   searchMaterials: ReturnType<typeof vi.fn>;
+  getProjectDetail: ReturnType<typeof vi.fn>;
+  getPositioningDetail: ReturnType<typeof vi.fn>;
+  getKnowledgeDetail: ReturnType<typeof vi.fn>;
 } {
   const generateTopics = vi.fn(async () => [
     {
@@ -107,6 +112,57 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   const searchMaterials = vi.fn(async () => [
     { id: "as-1", title: "封面图 A", kind: "image" },
   ]);
+  // [T-099b] 详情类读端口 fake(单实体全档)。
+  const getProjectDetail = vi.fn(async () => ({
+    id: "proj-1",
+    title: "上下文工程",
+    stage: "planning",
+    status: "active",
+    publish: {
+      published: true,
+      platform: "douyin",
+      publishedAt: "2026-07-01T00:00:00.000Z",
+    },
+    brief: { targetAudience: "一线开发者", coreMessage: "上下文是护城河" },
+    artifacts: [
+      {
+        artifactType: "output_script",
+        versionCount: 3,
+        updatedAt: "2026-07-01T00:00:00.000Z",
+        charCount: 1200,
+      },
+    ],
+    metricsSummary: "播放 8.5万",
+  }));
+  const getPositioningDetail = vi.fn(async () => ({
+    profile: {
+      persona: "硬核工程师",
+      field: "AI 工程",
+      audience: "一线开发者",
+      differentiation: "可运行代码",
+      capabilities: ["论文拆解"],
+      facets: { contentScope: "只做 AI 工程", avoid: "不追泛热点" },
+      downstreamRules: { forbidRule: "禁标题党" },
+    },
+    currentStatement: { oneLiner: "把论文落成代码", keywords: ["代码", "论文", "落地"] },
+    statementCount: 4,
+    accounts: [
+      { platform: "douyin", accountHandle: "@硬核老王", followerBaseline: 12000 },
+    ],
+  }));
+  const getKnowledgeDetail = vi.fn(async () => ({
+    id: "kn-1",
+    title: "上下文工程是护城河",
+    knowledgeType: "claim",
+    note: "短正文",
+    sourceNote: "作者原话",
+    sourceType: "manual",
+    sourceUrl: null,
+    tags: ["上下文工程"],
+    usedCount: 5,
+    usedInPublished: true,
+    relations: [{ targetKnowledgeId: "kn-2", relationType: "supports" }],
+  }));
   const draftScript = vi.fn(async () => [
     { heading: "1. 开场", body: "口播：90% 文档没人看" },
   ]);
@@ -174,6 +230,9 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     listComments,
     searchKnowledge,
     searchMaterials,
+    getProjectDetail,
+    getPositioningDetail,
+    getKnowledgeDetail,
     ...over,
   };
   return {
@@ -191,6 +250,9 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     listComments,
     searchKnowledge,
     searchMaterials,
+    getProjectDetail,
+    getPositioningDetail,
+    getKnowledgeDetail,
   };
 }
 
@@ -645,6 +707,179 @@ describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", (
       items: unknown[];
     };
     expect(result.items).toEqual([]);
+  });
+});
+
+// ── [T-099b] 切片二:详情类 context 工具 execute(单实体全字段 + 详情档预算)────────────
+describe("[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态", () => {
+  const DETAIL_WHITELIST = [
+    "context.project.detail",
+    "context.positioning.detail",
+    "context.knowledge.detail",
+  ] as const;
+
+  it("三个详情工具全部可挂", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools([...DETAIL_WHITELIST], deps);
+    expect(Object.keys(tools).sort()).toEqual([
+      "context.knowledge.detail",
+      "context.positioning.detail",
+      "context.project.detail",
+    ]);
+  });
+
+  it("context.project.detail.execute 调 getProjectDetail 拼全档(found + project 直渲字段)", async () => {
+    const { deps, getProjectDetail } = makeDeps();
+    const tools = buildChatTools([...DETAIL_WHITELIST], deps);
+    const result = (await runExecute(tools["context.project.detail"], {
+      projectId: "proj-1",
+    })) as {
+      kind: string;
+      found: boolean;
+      project: { title: string; publish: { published: boolean }; artifacts: unknown[] };
+    };
+    expect(getProjectDetail).toHaveBeenCalledWith({ projectId: "proj-1" });
+    expect(result.kind).toBe("context.project.detail");
+    expect(result.found).toBe(true);
+    expect(result.project.title).toBe("上下文工程");
+    expect(result.project.publish.published).toBe(true);
+    expect(result.project.artifacts).toHaveLength(1);
+  });
+
+  it("context.project.detail.execute 空 projectId → found:false(不调端口,诚实空态)", async () => {
+    const { deps, getProjectDetail } = makeDeps();
+    const tools = buildChatTools([...DETAIL_WHITELIST], deps);
+    const result = (await runExecute(tools["context.project.detail"], {
+      projectId: "   ",
+    })) as { found: boolean; project: unknown };
+    expect(getProjectDetail).not.toHaveBeenCalled();
+    expect(result.found).toBe(false);
+    expect(result.project).toBeNull();
+  });
+
+  it("context.positioning.detail.execute 调 getPositioningDetail(无入参,全 facets/rules/账号画像)", async () => {
+    const { deps, getPositioningDetail } = makeDeps();
+    const tools = buildChatTools([...DETAIL_WHITELIST], deps);
+    const result = (await runExecute(tools["context.positioning.detail"], {})) as {
+      kind: string;
+      found: boolean;
+      positioning: {
+        profile: { facets: { contentScope?: string } } | null;
+        statementCount: number | null;
+        accounts: unknown[];
+      };
+    };
+    expect(getPositioningDetail).toHaveBeenCalled();
+    expect(result.kind).toBe("context.positioning.detail");
+    expect(result.found).toBe(true);
+    expect(result.positioning.profile?.facets.contentScope).toBe("只做 AI 工程");
+    expect(result.positioning.statementCount).toBe(4);
+    expect(result.positioning.accounts).toHaveLength(1);
+  });
+
+  it("context.knowledge.detail.execute 调 getKnowledgeDetail,长正文走详情档预算(≤200+totalChars+指针)", async () => {
+    const longNote = "字".repeat(360);
+    const { deps } = makeDeps({
+      getKnowledgeDetail: vi.fn(async () => ({
+        id: "kn-1",
+        title: "长正文知识",
+        knowledgeType: "evidence",
+        note: longNote,
+        sourceNote: "短出处",
+        sourceType: "manual",
+        sourceUrl: null,
+        tags: [],
+        usedCount: 0,
+        usedInPublished: false,
+        relations: [],
+      })),
+    });
+    const tools = buildChatTools([...DETAIL_WHITELIST], deps);
+    const result = (await runExecute(tools["context.knowledge.detail"], {
+      id: "kn-1",
+    })) as {
+      kind: string;
+      found: boolean;
+      item: {
+        note: { preview: string; totalChars: number; fullTextTool: string | null };
+        sourceNote: { preview: string; totalChars: number; fullTextTool: string | null };
+      };
+    };
+    expect(result.kind).toBe("context.knowledge.detail");
+    expect(result.found).toBe(true);
+    // 长正文:preview 恰 200 字 + totalChars=360 + 指针到 context.knowledge.text。
+    expect(result.item.note.preview.length).toBe(DETAIL_TEXT_PREVIEW_CHARS);
+    expect(result.item.note.totalChars).toBe(360);
+    expect(result.item.note.fullTextTool).toBe("context.knowledge.text");
+    // 短出处:未截断 → fullTextTool=null(全文即 preview)。
+    expect(result.item.sourceNote.fullTextTool).toBeNull();
+    expect(result.item.sourceNote.preview).toBe("短出处");
+  });
+
+  it("context.knowledge.detail.execute 读不到 → found:false + item:null(诚实空态)", async () => {
+    const { deps } = makeDeps({ getKnowledgeDetail: vi.fn(async () => null) });
+    const tools = buildChatTools([...DETAIL_WHITELIST], deps);
+    const result = (await runExecute(tools["context.knowledge.detail"], {
+      id: "nope",
+    })) as { found: boolean; item: unknown };
+    expect(result.found).toBe(false);
+    expect(result.item).toBeNull();
+  });
+
+  it("详情端口未装配(deps 缺省)→ 工具诚实空态(不抛、不塞假)", async () => {
+    const { deps } = makeDeps({
+      getProjectDetail: undefined,
+      getPositioningDetail: undefined,
+      getKnowledgeDetail: undefined,
+    });
+    const tools = buildChatTools([...DETAIL_WHITELIST], deps);
+    const proj = (await runExecute(tools["context.project.detail"], {
+      projectId: "p",
+    })) as { found: boolean };
+    const pos = (await runExecute(tools["context.positioning.detail"], {})) as {
+      found: boolean;
+      positioning: { profile: unknown };
+    };
+    const kn = (await runExecute(tools["context.knowledge.detail"], {
+      id: "k",
+    })) as { found: boolean };
+    expect(proj.found).toBe(false);
+    expect(pos.found).toBe(false);
+    expect(pos.positioning.profile).toBeNull();
+    expect(kn.found).toBe(false);
+  });
+});
+
+// [T-099b] 详情档预算纯函数:长文本 ≤200 字 + totalChars + 指针,未超则全文即 preview。
+describe("truncateDetailText — 详情档长文本预算(§3)", () => {
+  it("超 200 字 → preview 截 200 + totalChars 原长 + fullTextTool 指针", () => {
+    const raw = "字".repeat(500);
+    const f = truncateDetailText(raw, "context.knowledge.text");
+    expect(f.preview.length).toBe(DETAIL_TEXT_PREVIEW_CHARS);
+    expect(f.totalChars).toBe(500);
+    expect(f.fullTextTool).toBe("context.knowledge.text");
+  });
+
+  it("恰 200 字(边界)→ 不截断,fullTextTool=null(全文即 preview)", () => {
+    const raw = "字".repeat(200);
+    const f = truncateDetailText(raw, "context.knowledge.text");
+    expect(f.preview).toBe(raw);
+    expect(f.totalChars).toBe(200);
+    expect(f.fullTextTool).toBeNull();
+  });
+
+  it("空/非串 → 空 preview + 0 字 + null 指针(不编)", () => {
+    expect(truncateDetailText("", "x")).toEqual({
+      preview: "",
+      totalChars: 0,
+      fullTextTool: null,
+    });
+    expect(truncateDetailText(null, "x")).toEqual({
+      preview: "",
+      totalChars: 0,
+      fullTextTool: null,
+    });
+    expect(truncateDetailText(undefined, "x").preview).toBe("");
   });
 });
 

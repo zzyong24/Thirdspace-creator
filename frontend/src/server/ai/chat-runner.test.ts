@@ -120,6 +120,57 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
       searchMaterials: async () => [
         { id: "as-1", title: "封面图 A", kind: "image" },
       ],
+      // [T-099b] 详情类读端口 fake —— 断言工具 execute 经 ctx 调它拼全档。
+      getProjectDetail: async () => ({
+        id: "proj-1",
+        title: "上下文工程",
+        stage: "planning",
+        status: "active",
+        publish: { published: false, platform: null, publishedAt: null },
+        brief: { targetAudience: "一线开发者", targetPlatforms: ["douyin"] },
+        artifacts: [
+          {
+            artifactType: "output_script",
+            versionCount: 2,
+            updatedAt: "2026-07-01T00:00:00.000Z",
+            charCount: 1234,
+          },
+        ],
+        metricsSummary: "播放 8.5万 · 点赞 3000",
+      }),
+      getPositioningDetail: async () => ({
+        profile: {
+          persona: "硬核创作者",
+          field: "AI 工程",
+          audience: "一线开发者",
+          differentiation: "可运行代码",
+          capabilities: ["论文拆解"],
+          facets: { contentScope: "只做 AI 工程" },
+          downstreamRules: { forbidRule: "不追泛热点" },
+        },
+        currentStatement: { oneLiner: "把论文落成代码", keywords: ["代码"] },
+        statementCount: 3,
+        accounts: [
+          {
+            platform: "douyin",
+            accountHandle: "@硬核老王",
+            followerBaseline: 12000,
+          },
+        ],
+      }),
+      getKnowledgeDetail: async () => ({
+        id: "kn-1",
+        title: "上下文工程是护城河",
+        knowledgeType: "claim",
+        note: "短正文",
+        sourceNote: "作者原话",
+        sourceType: "manual",
+        sourceUrl: null,
+        tags: ["上下文工程"],
+        usedCount: 5,
+        usedInPublished: true,
+        relations: [{ targetKnowledgeId: "kn-2", relationType: "supports" }],
+      }),
     },
     ...over,
   };
@@ -212,7 +263,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).not.toContain("本次复盘对象");
   });
 
-  it("[T-104] 工具全放开:任一 surface 暴露全部 17 工具(surface 白名单只决定置顶顺序)", async () => {
+  it("[T-104] 工具全放开:任一 surface 暴露全部 20 工具(surface 白名单只决定置顶顺序)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(Object.keys(a.tools).sort()).toEqual([
@@ -220,7 +271,11 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "calibration.diagnose",
       "context.comments",
       "context.knowledge",
+      // [T-099b] 切片二:详情类(单实体全字段)。
+      "context.knowledge.detail",
       "context.materials",
+      "context.positioning.detail",
+      "context.project.detail",
       "context.projects",
       "knowledge.distill",
       "learning.capture",
@@ -285,7 +340,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.calibration");
     // [T-104] 工具全放开:preferred 含 calibration.diagnose,但可调工具集 = 全 15。
     expect(Object.keys(a.tools)).toContain("calibration.diagnose");
-    expect(Object.keys(a.tools).length).toBe(17);
+    expect(Object.keys(a.tools).length).toBe(20);
     // 主能力档按 calibration.diagnose 解析(各 surface 复用对应节点的模型配置)。
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "calibration.diagnose");
   });
@@ -296,7 +351,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.skillId).toBe("chatbox.positioning");
     // [T-104] 工具全放开:preferred 含 positioning.generate,但可调工具集 = 全 15。
     expect(Object.keys(a.tools)).toContain("positioning.generate");
-    expect(Object.keys(a.tools).length).toBe(17);
+    expect(Object.keys(a.tools).length).toBe(20);
   });
 
   it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {
@@ -347,7 +402,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).toContain("review.analyze");
     expect(names).toContain("learning.capture");
     expect(names).toContain("context.projects"); // 放开后可调
-    expect(names.length).toBe(17); // 全部工具暴露
+    expect(names.length).toBe(20); // 全部工具暴露
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -413,7 +468,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(17); // 全放开
+    expect(names.length).toBe(20); // 全放开
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });
@@ -523,6 +578,178 @@ describe("buildChatAssembly — 三层注入装配", () => {
     })) as { kind: string; items: unknown[] };
     expect(result.kind).toBe("context.knowledge");
     expect(result.items).toEqual([]);
+  });
+
+  // [T-099b] 切片二:详情类工具 execute —— 经 ctx 调注入的 user-scoped 详情读端口拼全档。
+  it("[T-099b] context.project.detail execute → 经读端口拼项目全档(brief/阶段/发布/产物索引/指标)", async () => {
+    const getProjectDetail = vi.fn(async () => ({
+      id: "proj-1",
+      title: "上下文工程",
+      stage: "planning",
+      status: "active",
+      publish: { published: true, platform: "douyin", publishedAt: "2026-07-01T00:00:00.000Z" },
+      brief: { targetAudience: "一线开发者", coreMessage: "上下文是护城河" },
+      artifacts: [
+        {
+          artifactType: "output_script",
+          versionCount: 3,
+          updatedAt: "2026-07-01T00:00:00.000Z",
+          charCount: 999,
+        },
+      ],
+      metricsSummary: "播放 8.5万",
+    }));
+    const { deps } = makeDeps({
+      contextReaders: {
+        getProjectBrief: async () => null,
+        listProjects: async () => ({ rows: [], total: 0 }),
+        listComments: async () => ({ rows: [], total: 0 }),
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+        getProjectDetail,
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const result = (await runToolExecute(a.tools["context.project.detail"], {
+      projectId: "proj-1",
+    })) as {
+      kind: string;
+      found: boolean;
+      project: { title: string; stage: string; publish: { published: boolean }; artifacts: unknown[] };
+    };
+    expect(getProjectDetail).toHaveBeenCalledWith(ctx, { projectId: "proj-1" });
+    expect(result.kind).toBe("context.project.detail");
+    expect(result.found).toBe(true);
+    expect(result.project.title).toBe("上下文工程");
+    expect(result.project.publish.published).toBe(true);
+    expect(result.project.artifacts).toHaveLength(1);
+  });
+
+  it("[T-099b] context.project.detail execute:读不到(端口回 null)→ found:false + project:null(诚实空态)", async () => {
+    const { deps } = makeDeps({
+      contextReaders: {
+        getProjectBrief: async () => null,
+        listProjects: async () => ({ rows: [], total: 0 }),
+        listComments: async () => ({ rows: [], total: 0 }),
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+        getProjectDetail: async () => null,
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const result = (await runToolExecute(a.tools["context.project.detail"], {
+      projectId: "nope",
+    })) as { found: boolean; project: unknown };
+    expect(result.found).toBe(false);
+    expect(result.project).toBeNull();
+  });
+
+  it("[T-099b] context.positioning.detail execute → 全 facets + downstreamRules + 陈述版本数 + 账号画像", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "positioning" }, deps);
+    const result = (await runToolExecute(a.tools["context.positioning.detail"], {})) as {
+      kind: string;
+      found: boolean;
+      positioning: {
+        profile: { facets: { contentScope?: string }; downstreamRules: { forbidRule?: string } } | null;
+        statementCount: number | null;
+        accounts: unknown[];
+      };
+    };
+    expect(result.kind).toBe("context.positioning.detail");
+    expect(result.found).toBe(true);
+    expect(result.positioning.profile?.facets.contentScope).toBe("只做 AI 工程");
+    expect(result.positioning.profile?.downstreamRules.forbidRule).toBe("不追泛热点");
+    expect(result.positioning.statementCount).toBe(3);
+    expect(result.positioning.accounts).toHaveLength(1);
+  });
+
+  it("[T-099b] context.positioning.detail execute:端口未装配 → found:false + 空档(诚实降级)", async () => {
+    const { deps } = makeDeps({
+      contextReaders: {
+        getProjectBrief: async () => null,
+        listProjects: async () => ({ rows: [], total: 0 }),
+        listComments: async () => ({ rows: [], total: 0 }),
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+        // getPositioningDetail 缺省。
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "positioning" }, deps);
+    const result = (await runToolExecute(a.tools["context.positioning.detail"], {})) as {
+      found: boolean;
+      positioning: { profile: unknown; accounts: unknown[] };
+    };
+    expect(result.found).toBe(false);
+    expect(result.positioning.profile).toBeNull();
+    expect(result.positioning.accounts).toEqual([]);
+  });
+
+  it("[T-099b] context.knowledge.detail execute → 单条全字段 + 长文本截断(≤200 字 + totalChars + 指针)", async () => {
+    const longNote = "字".repeat(500);
+    const getKnowledgeDetail = vi.fn(async () => ({
+      id: "kn-1",
+      title: "上下文工程是护城河",
+      knowledgeType: "claim",
+      note: longNote,
+      sourceNote: "作者原话",
+      sourceType: "manual",
+      sourceUrl: null,
+      tags: ["上下文工程"],
+      usedCount: 5,
+      usedInPublished: true,
+      relations: [{ targetKnowledgeId: "kn-2", relationType: "supports" }],
+    }));
+    const { deps } = makeDeps({
+      contextReaders: {
+        getProjectBrief: async () => null,
+        listProjects: async () => ({ rows: [], total: 0 }),
+        listComments: async () => ({ rows: [], total: 0 }),
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+        getKnowledgeDetail,
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const result = (await runToolExecute(a.tools["context.knowledge.detail"], {
+      id: "kn-1",
+    })) as {
+      kind: string;
+      found: boolean;
+      item: {
+        note: { preview: string; totalChars: number; fullTextTool: string | null };
+        usedCount: number;
+        relations: unknown[];
+      };
+    };
+    expect(getKnowledgeDetail).toHaveBeenCalledWith(ctx, { id: "kn-1" });
+    expect(result.kind).toBe("context.knowledge.detail");
+    expect(result.found).toBe(true);
+    // §3 详情档预算:长正文只回前 200 字 + totalChars + 指针到全文工具。
+    expect(result.item.note.preview.length).toBe(200);
+    expect(result.item.note.totalChars).toBe(500);
+    expect(result.item.note.fullTextTool).toBe("context.knowledge.text");
+    expect(result.item.usedCount).toBe(5);
+    expect(result.item.relations).toHaveLength(1);
+  });
+
+  it("[T-099b] context.knowledge.detail execute:读不到 → found:false + item:null(诚实空态)", async () => {
+    const { deps } = makeDeps({
+      contextReaders: {
+        getProjectBrief: async () => null,
+        listProjects: async () => ({ rows: [], total: 0 }),
+        listComments: async () => ({ rows: [], total: 0 }),
+        searchKnowledge: async () => [],
+        searchMaterials: async () => [],
+        getKnowledgeDetail: async () => null,
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const result = (await runToolExecute(a.tools["context.knowledge.detail"], {
+      id: "nope",
+    })) as { found: boolean; item: unknown };
+    expect(result.found).toBe(false);
+    expect(result.item).toBeNull();
   });
 });
 
