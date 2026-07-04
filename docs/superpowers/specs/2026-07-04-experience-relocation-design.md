@@ -1,6 +1,8 @@
 # 经验归位设计(裁决进复盘 · 已验证库进知识库 · 经验模块退役)
 
-> 状态:草稿(待 spec-review gate)。作者:Claude(Opus 4.8)。日期:2026-07-04。
+> 状态:⚠️ **CONCERNS(已处置)**(MiniMax spec-review gate,2026-07-04;0 blocker / 1 major / 3 minor,全部内联 [gate-F1..F4]);处置后**可开工 T-118a→b→c**(待用户复审)。作者:Claude(Opus 4.8)。日期:2026-07-04。
+>
+> **裁决注(2026-07-04,MiniMax reviewer)**:总评「合定位、方向正确、零 schema、复盘→经验→知识库飞轮路径清晰」。1 major + 3 minor 已内联:[gate-F1](major)AI 分析卡 vs 本期经验区 UI 语义边界只列风险未给方案 → 新增 **§D UI 边界设计**明文区分;[gate-F2] T-119 分页补规格(§B);[gate-F3] review.analyze 输出 schema 含 learnings+projectId 需引证/验收(§5);[gate-F4] ExperienceCaptureLink 归宿补验收(§B)。
 > 触发:用户在 T-113(知识库+经验合并为双 Tab)后追问「这俩合并从产品上该怎么设计」→ 提出更优:「裁决和经验入库合并到项目复盘板块」。
 > 对应 BACKLOG:T-118(经验归位)。关联:[ia-convergence SPEC](2026-07-04-ia-convergence-design.md)(T-113 双 Tab 是本 SPEC 要迭代的前身)、[两阶段项目 SPEC](2026-07-03-two-stage-project-design.md)(复盘阶段)、[产品定位](../../产品定位.md)。
 
@@ -53,7 +55,8 @@ T-113 把经验沉淀并入 `/knowledge` 作第二个 Tab(裁决台整块搬进 
   - **左栏 CategoryPanel** 加「经验」分类(计数=validated learnings 数),与观点/证据/金句/问答并列。
   - **中栏「最近更新」** 混排:知识卡 + 经验条目按更新时间倒序,每条带类型 chip;**经验条目只读**(不带采纳/翻案,那是复盘的活),点开看详情/来源作品。
 - **不在知识库裁决**:知识库只读展示已验证经验;所有裁决动作只在复盘。
-- `ExperienceCaptureLink`(Copilot 记录入口)去留:并入知识库「记一条」(既有 knowledge.create)或保留为经验类型下的记录入口,实现时定(小)。
+- **[gate-F2] 分页规格(T-119 落此)**:「最近更新」混排(知识卡 + validated 经验)按 `updatedAt` 倒序,**10 条/页**(与项目列表 T-096 范式一致,最新在前);知识卡与经验条目共用同一分页上下文(不分开翻页)。若 `knowledge.list`/`learnings.list` 缺 page/pageSize,加 additive query(不改归属)。
+- **[gate-F4] `ExperienceCaptureLink`(Copilot 手录一条经验)归宿**:并入知识库「记一条」入口(与已验证库同处)。**验收**:T-118b 后该入口指向 `/knowledge`,手录一条经验直接落 `learningType=experience` 的 validated 条目(手录=用户亲判,不经 candidate 裁决态);经验独立页的旧 CaptureLink 随 ExperiencePage 壳退役清除。
 
 ### §C 经验模块退役 · T-118c
 
@@ -62,11 +65,28 @@ T-113 把经验沉淀并入 `/knowledge` 作第二个 Tab(裁决台整块搬进 
 - 清理:`experience-page.tsx` / `experience-interactive-region.tsx` 中 `AdjudicationQueue` 迁往复盘后,`ValidatedLibrary` 迁往知识库读层;`ExperiencePage` 壳退役(或降级为薄封装);全仓清指向经验独立模块的残留跳转。
 - 复盘页读 learnings 的既有区(analytics-review 里若有经验区)与 §A 统一,不重复。
 
+### §D UI 边界设计(复盘板块「AI 分析卡」vs「本期经验区」)· [gate-F1]
+
+复盘板块内两个语义邻近的区,必须让用户一眼分清「AI 只读要点摘要」与「可裁决的经验候选」:
+
+| | AI 分析卡(T-116,已有) | 本期经验区(T-118a,新增) |
+|---|---|---|
+| **标题** | 「AI 要点 · 本期复盘摘要」 | 「本期经验 · 可采纳沉淀」 |
+| **副标题(数据源标注)** | 「来源:帮我复盘生成的要点」 | 「来源:本作品复盘提炼、待你裁决」 |
+| **数据源** | `review.analyze` 结果(`readProjectReviewInsights`,只读摘要) | candidate learnings(`learnings.list` projectId+candidate,可裁决) |
+| **动作** | 无(只读) | 采纳 / 不采 / inline 编辑(`evaluateLearning`) |
+| **空态** | 「本条视频还没生成 AI 复盘要点 → 帮我复盘」 | 「本条视频还没有可裁决的经验候选 → 帮我复盘(复盘会同时产要点 + 经验候选)」 |
+
+- **视觉分隔**:两区用不同底色/分隔线明确切开(不并排贴在一起造成「一个区」的错觉);位置上「本期经验区」紧随 AI 分析卡但有明确区块标题分界。
+- **一次「帮我复盘」两产**:review.analyze 一次跑既产 AI 要点(填 AI 分析卡)又产经验候选(填本期经验区)——同源不同消费,UI 上标清各自来源。
+- **T-118a 验收加一条**:用户能清楚区分「AI 要点摘要(只读)」与「本期经验候选(可裁决)」——测试锁两区标题/data-slot 不同 + 经验区有采纳按钮、AI 卡无。
+
 ## 5. 数据与契约
 
 - **零 schema / 零数据归属变更**。`learnings` 表(candidate/validated/discarded + projectId)不动。
 - **契约 additive**(纯读过滤,不改归属→不需单独 gate,随实现):`learnings.list` 加可选 `projectId` + `validationStatus` query(与 T-116 给 `ai.tasks.list` 加过滤同款),backend repo/service/transport 三层下推;用户归属门始终最外层。
 - 若 `learnings.list` 已支持这些过滤,则零契约改动,纯前端消费面迁移。
+- **[gate-F3] review.analyze 闭环的契约前提**:§A 的闭环依赖「`review.analyze` 产的 `learning_list` 候选带 `projectId` 且落成 candidate learnings」。实现前**先核实**:`review-runner` 的 outputSchema/`recordCandidate` 是否已给 learnings 带上 task 的 `projectId`(勘查显 AI 任务带 projectId,但需坐实 recordCandidate 有把它写进 learning 行)。**若未带**,T-118a 随手补上(recordCandidate 传 projectId,非新 schema——learnings 表已有 projectId 列)。**T-118a 验收硬条件**:对某项目触发 `review.analyze` 后,`learnings.list(projectId=X, validationStatus=candidate)` 能**非空读出**(闭环落地验证,而非纸面声称)。
 
 ## 6. 切片(拆 BACKLOG Task 预告)
 
