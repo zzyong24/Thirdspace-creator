@@ -24,6 +24,8 @@ import {
 // 内置 skill(三位一体的模板本体)。registerAllTemplates 全量注册它们。
 import { TOPIC_GENERATE_TEMPLATE } from "./templates/topic-generate";
 import { SCRIPT_DRAFT_TEMPLATE } from "./templates/script-draft";
+// T-086 文案审核门:L2 语义审 skill(generateObject 绑结构化报告 schema)。
+import { SCRIPT_REVIEW_TEMPLATE } from "./templates/script-review";
 import { PLANNING_THESIS_TEMPLATE } from "./templates/planning-thesis";
 import { PLANNING_CONTRACT_TEMPLATE } from "./templates/planning-contract";
 import { PLANNING_OUTLINE_TEMPLATE } from "./templates/planning-outline";
@@ -61,6 +63,8 @@ const SCHEMA_OVERRIDES = new Map<string, SchemaValidator>();
 const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   TOPIC_GENERATE_TEMPLATE,
   SCRIPT_DRAFT_TEMPLATE,
+  // T-086 文案审核门 L2 语义审(script.review)。
+  SCRIPT_REVIEW_TEMPLATE,
   PLANNING_THESIS_TEMPLATE,
   PLANNING_CONTRACT_TEMPLATE,
   PLANNING_OUTLINE_TEMPLATE,

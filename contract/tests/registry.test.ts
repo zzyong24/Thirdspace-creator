@@ -201,6 +201,13 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/scheduled-jobs/:jobId/run-now"],
   ["GET", "/scheduled-jobs/:jobId/runs"],
   ["GET", "/job-runs/:runId"],
+  // 编导文案审核门 (review-gate / T-086):规则库 CRUD + 稿面审核报告读/触发。
+  ["GET", "/review-rules"],
+  ["POST", "/review-rules"],
+  ["PATCH", "/review-rules/:ruleId"],
+  ["DELETE", "/review-rules/:ruleId"],
+  ["GET", "/projects/:projectId/script-review/latest"],
+  ["POST", "/projects/:projectId/script-review"],
 ];
 
 describe("endpoint registry", () => {

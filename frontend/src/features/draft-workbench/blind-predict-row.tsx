@@ -170,6 +170,7 @@ export function BlindPredictRow({
             <Crosshair className="size-3.5 shrink-0 text-brand" />
             发布前先盲预测:锁一份预测分,发布后用真实数据对照校准。
           </span>
+          {/* [gate-F1] 硬门切换点:如需强制,加 disabled={report?.verdict !== "pass"} —— 一行改动,当前按主案软门实现 */}
           <Button
             type="button"
             size="sm"

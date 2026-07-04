@@ -118,6 +118,14 @@ const VM: SettingsViewModel = {
       baseUrl: "",
       hasSecret: false as const,
     },
+    // [T-086] 文案审核模型(测试 fixture 默认未配置)。
+    review: {
+      capability: "script.review" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
   },
   douyinAccount: { loggedIn: false },
 };
@@ -344,6 +352,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         audio: VM.multimodalModels.audio,
         vision: VM.multimodalModels.vision,
         embed: VM.multimodalModels.embed,
+        review: VM.multimodalModels.review,
       },
     };
     const doc = renderDialog(VM_MULTIMODAL);

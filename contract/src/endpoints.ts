@@ -9,6 +9,8 @@ import { productionOperations } from "./operations/production";
 import { publishingOperations } from "./operations/publishing";
 import { analyticsOperations } from "./operations/analytics";
 import { reviewsOperations } from "./operations/reviews";
+// T-086 编导文案审核门(违禁词 lint 规则库 + 稿面双层审核报告)。
+import { reviewGateOperations } from "./operations/review-gate";
 import { learningsOperations } from "./operations/learnings";
 import { aiOperations } from "./operations/ai";
 import { searchOperations } from "./operations/search";
@@ -86,6 +88,8 @@ export const ENDPOINTS = {
   ...publishingOperations,
   ...analyticsOperations,
   ...reviewsOperations,
+  // T-086 审核门:reviewRules.* + scriptReviews.*(additive)。
+  ...reviewGateOperations,
   ...learningsOperations,
   ...aiOperations,
   ...searchOperations,

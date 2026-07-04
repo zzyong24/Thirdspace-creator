@@ -106,6 +106,15 @@ export function buildSettingsViewModel(): SettingsViewModel {
       baseUrl: "",
       hasSecret: false as const,
     },
+    // [T-086] 文案审核模型。缺省未配 —— 编导文案审用默认模型并标注非专用,直到用户在此
+    // 绑豆包/火山方舟(或任意 OpenAI 兼容端点)provider/model/key。
+    review: {
+      capability: "script.review" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
     },
     // 抖音账号绑定状态 (T-032a). Default unconnected — the real status is read by
     // the (creator)/settings route via `ingestion.douyin.status` and overlaid onto

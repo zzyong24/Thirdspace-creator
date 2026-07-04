@@ -100,6 +100,12 @@ export {
   reviewPublications,
   REVIEWS_DDL,
 } from "./schema/reviews";
+// T-086 审核门(违禁词 lint 规则库 + 稿面审核报告)。
+export {
+  reviewRules,
+  scriptReviewReports,
+  REVIEW_GATE_DDL,
+} from "./schema/review-gate";
 export {
   learnings,
   learningApplications,

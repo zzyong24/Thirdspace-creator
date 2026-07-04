@@ -239,7 +239,9 @@ export interface MultimodalModelState {
     | "transcribe.audio"
     | "asset.classify"
     // [T-093] 知识库语义搜索 embedding(OpenAI 兼容 embedding 端点;未配诚实降级关键词)。
-    | "knowledge.search.embed";
+    | "knowledge.search.embed"
+    // [T-086] 编导文案审核 L2 语义审(豆包/火山方舟预设;未配回退默认并标注非专用)。
+    | "script.review";
   /** Free-form provider name (the dispatch switch; "minimax"/"siliconflow" today, extensible). */
   readonly provider: string;
   /** Free-form model id (e.g. image-01 / video-01 / FunAudioLLM/SenseVoiceSmall). */
@@ -271,6 +273,13 @@ export interface MultimodalModelsState {
    * 知识库 AI 搜索诚实降级为纯关键词(结果区渲「AI 语义搜索未启用」提示条)。
    */
   readonly embed: MultimodalModelState;
+  /**
+   * [T-086] 文案审核模型 — capability "script.review"。编导文案发布前合规审核(L2
+   * 语义审)专用。同一 `settings.models.list` op 读回(capability 自由字符串,零契约
+   * 改动)。豆包/火山方舟仅为预设,用户可整卡改成任何 OpenAI 兼容端点;未配 → 用默认
+   * 模型审核,报告标注「非专用审核模型」(诚实数据)。
+   */
+  readonly review: MultimodalModelState;
 }
 
 // ---------------------------------------------------------------------------

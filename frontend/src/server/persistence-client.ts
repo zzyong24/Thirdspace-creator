@@ -127,6 +127,15 @@ import {
   createReviewsTransport,
   REVIEWS_OP_IDS,
 } from "@creatoros/backend/modules/reviews";
+// T-086 文案审核门(review_rules + script_review_reports)。
+import {
+  createReviewGateService,
+  createReviewGateTransport,
+  REVIEW_GATE_OP_IDS,
+  buildReviewRuleSeedRows,
+  createReviewGateRepository,
+} from "@creatoros/backend/modules/review";
+import { runScriptReview } from "@/server/ai/script-review-runner";
 import {
   createLearningsService,
   createLearningsTransport,
@@ -330,6 +339,7 @@ const PERSISTED_OPS = new Set<string>([
   // user-scoped with §12 Review status machine (idempotent complete). Period from
   // the Publishing window, evidence from the Analytics snapshot (injected ports).
   ...REVIEWS_OP_IDS,
+  ...REVIEW_GATE_OP_IDS,
   // Learnings (module 14) — list/create + applications.create + evaluate,
   // user-scoped with the §12 validationStatus machine (candidate→validated|
   // discarded; validated→discarded). Apply-target project ownership + activity via
@@ -449,6 +459,9 @@ const INGESTION_OPS = new Set<string>(INGESTION_OP_IDS);
 
 // The set of op ids owned by the reviews module's transport (module 13).
 const REVIEWS_OPS = new Set<string>(REVIEWS_OP_IDS);
+
+// T-086 审核门 op ids(reviewRules.* + scriptReviews.*),独立 transport 路由。
+const REVIEW_GATE_OPS = new Set<string>(REVIEW_GATE_OP_IDS);
 
 // The set of op ids owned by the learnings module's transport (module 14).
 const LEARNINGS_OPS = new Set<string>(LEARNINGS_OP_IDS);
@@ -655,6 +668,8 @@ interface PersistenceBundle {
   analytics: Transport;
   ingestion: Transport;
   reviews: Transport;
+  // T-086 审核门 transport(reviewRules.* + scriptReviews.*)。
+  reviewGate: Transport;
   learnings: Transport;
   ai: Transport;
   positioning: Transport;
@@ -1530,6 +1545,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
   const aiBase = createAiTransport(() => aiService);
+
+  // T-086 审核门 service + transport(reviewRules.* + scriptReviews.*)。scriptReviews.trigger
+  // 经注入的 AI 端口起 script.review ai_task(dispatch 后台跑 L1 lint + L2 语义审 → saveReport)。
+  // aiService 已在上方构造 → 可作为 ReviewGateAiPort 注入(createTask 内含 user-scoped 门)。
+  const reviewGateService = createReviewGateService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+    ai: {
+      createTask: async (ctx, body) => aiService.createTask(ctx, body),
+    },
+  });
+  const reviewGate = createReviewGateTransport(() => reviewGateService);
 
   // 调度采集 dispatch 触发点(T-007 D3):forward-declared,实体在下方(candidateService/
   // schedulingService 构造后)赋值。dispatch 分支(ai transport 内)与调度器 triggerScheduledJob
@@ -2427,6 +2455,96 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               reviewSubject: makeReviewSubjectReader(),
               // Vercel AI SDK 路径(弃 LlmCompleter):复盘节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "script.review" &&
+          task.status === "queued"
+        ) {
+          // T-086 文案审核门 —— 读脚本 stage 当前版本文本 → L1 违禁词 lint(active 词表)+
+          // L2 语义审(script.review capability,预设豆包,未配回退默认并标注)→ 落
+          // script_review_reports(绑 artifactVersion)。确定性终态,无采纳候选。
+          void runScriptReview(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              positioning: positioningReader,
+              resolveModelSpec,
+              // 专用审核模型探测:script.review 有独立配置行 → true(诚实标注非专用模型)。
+              hasDedicatedReviewModel: async (c) =>
+                Boolean(
+                  await settingsService.getModelConfig(c, "script.review"),
+                ),
+              // 脚本源:项目「脚本」stage 当前版本(优先 output_script,回退 master_script)的
+              // 文本 + 版本号(与 script-editor-data 同口径)。
+              scriptSource: {
+                getLatestScript: async (c, projectId) => {
+                  const artifacts =
+                    await artifactsService.listProjectArtifacts(c, projectId);
+                  const scriptArtifacts = artifacts.filter(
+                    (a) => a.stage === "script",
+                  );
+                  const target =
+                    scriptArtifacts.find(
+                      (a) => a.artifactType === "output_script",
+                    ) ??
+                    scriptArtifacts.find(
+                      (a) => a.artifactType === "master_script",
+                    );
+                  if (!target) return null;
+                  const versions = await artifactsService.listVersions(
+                    c,
+                    target.id,
+                  );
+                  if (versions.length === 0) return null;
+                  const current = versions
+                    .slice()
+                    .sort((a, b) => b.versionNumber - a.versionNumber)[0]!;
+                  // 文本抽取:contentData.transcript / sections(拼段)/ body / bodyText 兜底。
+                  const data = (current.contentData ?? {}) as Record<
+                    string,
+                    unknown
+                  >;
+                  let text = "";
+                  if (typeof data.transcript === "string") {
+                    text = data.transcript;
+                  } else if (Array.isArray(data.sections)) {
+                    text = (data.sections as unknown[])
+                      .map((s) => {
+                        const so = (s ?? {}) as Record<string, unknown>;
+                        return [so.label, so.text, so.narration, so.body]
+                          .filter(
+                            (x): x is string =>
+                              typeof x === "string" && x.length > 0,
+                          )
+                          .join(" ");
+                      })
+                      .join("\n");
+                  } else if (typeof data.body === "string") {
+                    text = data.body;
+                  }
+                  return {
+                    artifactId: target.id,
+                    version: current.versionNumber,
+                    text,
+                  };
+                },
+              },
+              lintRules: {
+                listActiveLintRules: (c) =>
+                  reviewGateService.listActiveLintRules(c),
+              },
+              reportSink: {
+                saveReport: (c, input) =>
+                  reviewGateService.saveReport(c, input),
+              },
             },
           );
         } else if (
@@ -4461,6 +4579,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     buildAiAgentConfigs(canonicalDataset.user.id, FIXED_NOW_ISO),
   );
 
+  // T-086 审核规则种子(SPEC §1)—— 从用户知识库移植的抖音违禁词表(Tier1 官方硬规则确定性
+  // 投影 + Tier2 经验限流 + doud+ 投放特有词),幂等 id(rrule-seed-<user>-<slug>)+
+  // onConflictDoNothing → 重建单例不双写。规则种子本体在 backend review 模块(review-rules.seed.ts)。
+  const reviewGateSeedRepo = createReviewGateRepository(db, {
+    ...deps,
+    userId: canonicalDataset.user.id,
+  });
+  await reviewGateSeedRepo.seedRules(
+    buildReviewRuleSeedRows(canonicalDataset.user.id, FIXED_NOW_ISO),
+  );
+
   // Seed the canonical positioning (module 17): one CreatorProfile + two immutable
   // statement versions (v1→v2 append-only chain), owned by the canonical user, so
   // the /positioning 定位中心 page resolves real rows under the seeded login
@@ -5057,6 +5186,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     analytics,
     ingestion,
     reviews,
+    reviewGate,
     learnings,
     ai,
     positioning,
@@ -5133,6 +5263,10 @@ async function getIngestion(): Promise<Transport> {
 
 async function getReviews(): Promise<Transport> {
   return (await getBundle()).reviews;
+}
+
+async function getReviewGate(): Promise<Transport> {
+  return (await getBundle()).reviewGate;
 }
 
 async function getLearnings(): Promise<Transport> {
@@ -5352,6 +5486,13 @@ export const compositeTransport: Transport = {
     if (REVIEWS_OPS.has(endpoint.id)) {
       const reviews = await getReviews();
       return reviews.request(endpoint, input, ctx);
+    }
+    // T-086 审核门 ops(reviewRules.* + scriptReviews.*)—— 规则库 CRUD + 稿面审核
+    // 报告读/触发,走本模块 user-scoped transport(同一 pglite store)。scriptReviews.trigger
+    // 起 script.review ai_task,dispatch 后台跑 L1+L2。No ctx ⇒ AuthenticationError。
+    if (REVIEW_GATE_OPS.has(endpoint.id)) {
+      const reviewGate = await getReviewGate();
+      return reviewGate.request(endpoint, input, ctx);
     }
     // Learnings ops (module 14) — learnings.list/create + learnings.applications.create
     // + learnings.evaluate served by the module's own user-scoped transport over the

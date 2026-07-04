@@ -14,6 +14,8 @@ import * as publishingSchema from "./schema/publishing";
 import * as analyticsSchema from "./schema/analytics";
 import * as ingestionSchema from "./schema/ingestion";
 import * as reviewsSchema from "./schema/reviews";
+// T-086 审核门(review_rules + script_review_reports)。
+import * as reviewGateSchema from "./schema/review-gate";
 import * as learningsSchema from "./schema/learnings";
 import * as aiSchema from "./schema/ai";
 import * as positioningSchema from "./schema/positioning";
@@ -58,6 +60,7 @@ const schema = {
   ...analyticsSchema,
   ...ingestionSchema,
   ...reviewsSchema,
+  ...reviewGateSchema,
   ...learningsSchema,
   ...aiSchema,
   ...positioningSchema,

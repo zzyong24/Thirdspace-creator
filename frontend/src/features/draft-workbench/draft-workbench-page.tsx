@@ -25,11 +25,15 @@ import { AmmoDumpZone } from "./ammo-dump-zone";
 import { DraftPrimaryAction } from "./draft-primary-action";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
+import {
+  ScriptReviewGate,
+  ReviewSoftGateHint,
+} from "./script-review-gate";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
 
 export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
-  const { project, script, scriptArtifactId, outputId, publishPack, publishUnlocked, blindPrediction, ammo } = vm;
+  const { project, script, scriptArtifactId, outputId, publishPack, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
   const initialHtml = script.editorHtml ?? sectionsToHtml(script.sections);
 
   return (
@@ -108,6 +112,13 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
                 projectId={project.id}
               />
             </ScriptStructureToggle>
+            {/* [T-086 SPEC §3] 编导文案审核门(软门):审核按钮 + 结构化报告 + 命中列表。
+                硬门切换点见 blind-predict-row / PublishPackSection 的软门提示注释。 */}
+            <ScriptReviewGate
+              projectId={project.id}
+              currentVersion={script.versionCount}
+              initialReport={scriptReview}
+            />
           </section>
 
           {/* ── 发布包区 ── */}
@@ -118,6 +129,8 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             projectTitle={project.title}
             outputId={outputId}
             blindPrediction={blindPrediction}
+            scriptReview={scriptReview}
+            scriptVersion={script.versionCount}
           />
 
           {/* ── 弹药抽屉 ── */}
@@ -147,6 +160,8 @@ function PublishPackSection({
   projectTitle,
   outputId,
   blindPrediction,
+  scriptReview,
+  scriptVersion,
 }: {
   publishPack: DraftWorkbenchVm["publishPack"];
   unlocked: boolean;
@@ -154,6 +169,8 @@ function PublishPackSection({
   projectTitle: string;
   outputId: string | null;
   blindPrediction: DraftWorkbenchVm["blindPrediction"];
+  scriptReview: DraftWorkbenchVm["scriptReview"];
+  scriptVersion: number;
 }) {
   // [T-055h③] 登记入口:解锁后、还没有已发布行时展示(已发布的不重复登记 ——
   //   幂等虽兜底,但界面不做多余承诺)。
@@ -228,6 +245,13 @@ function PublishPackSection({
           )}
         </div>
       </div>
+      {/* [T-086 软门] 发布前动作旁的合规软门提示(不阻断,一键跳审核门)。 */}
+      {unlocked ? (
+        <ReviewSoftGateHint
+          report={scriptReview}
+          currentVersion={scriptVersion}
+        />
+      ) : null}
       {/* [T-063e] 飞轮第一步:发布前先盲预测(解锁后常驻;已预测显预测分/锁定态)。 */}
       {unlocked ? (
         <BlindPredictRow

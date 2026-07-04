@@ -185,6 +185,18 @@ export {
   reviewInsightsSchema,
   type ReviewInsightsOutput,
 } from "./prompt/templates/review-insights";
+// T-086 文案审核门:L2 语义审模板 + L1 lint 纯函数。
+export {
+  SCRIPT_REVIEW_TEMPLATE,
+  scriptReviewSchema,
+  type ScriptReviewOutput,
+  DEFAULT_OFFICIAL_RULES,
+} from "./prompt/templates/script-review";
+export {
+  lintScript,
+  type LintRule,
+  type LintFinding,
+} from "./review/lint";
 export {
   CALIBRATION_DIAGNOSE_TEMPLATE,
   diagnosisSchema,

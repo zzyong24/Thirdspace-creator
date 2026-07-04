@@ -8,6 +8,7 @@ import {
 } from "@/features/script/script-editor-data";
 import type { ProjectBriefDetail, ProjectStageName } from "@/types/domain";
 import type { ScriptSectionView } from "@/types/view-models";
+import type { ScriptReviewReportResource } from "@creatoros/contract";
 
 /**
  * 稿面工作台读侧装配(T-055a,SPEC §3/§4)。
@@ -147,6 +148,13 @@ export interface DraftWorkbenchClient extends ScriptDataClient {
     query: { page: number; pageSize: number };
     body: undefined;
   }): Promise<unknown>;
+  // [T-086] 稿面审核门:读本项目最新审核报告(scriptReviews.getLatest;404=未审吞成 null)。
+  // optional —— 旧测试桩不带它时诚实降级 null(稿面显「未审」)。
+  getLatestScriptReview?(input: {
+    params: { projectId: string };
+    query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
 }
 
 // ---------------------------------------------------------------------------
@@ -206,6 +214,11 @@ export interface DraftWorkbenchVm {
     /** [T-058④] 图片素材的签名预览 URL(非图片/取不到 → null,卡片退回类型徽标)。 */
     readonly previewUrl: string | null;
   }>;
+  /**
+   * [T-086] 稿面审核门首屏报告(scriptReviews.getLatest;null = 未审)。稿面客户端岛
+   * 用它渲染 verdict/命中列表 + 软门提示(报告版本 < script.versionCount → 提示重审)。
+   */
+  readonly scriptReview: ScriptReviewReportResource | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -397,6 +410,9 @@ export async function buildDraftWorkbenchVm(
   // [T-063e] 盲预测读依赖 outputId,故在发布包读之后串行。
   const blindPrediction = await readBlindPrediction(client, outputId);
 
+  // [T-086] 稿面审核门首屏报告(404=未审吞成 null,桩不带 op → null,诚实)。
+  const scriptReview = await readScriptReview(client, project.id);
+
   return {
     project: {
       id: project.id,
@@ -417,5 +433,24 @@ export async function buildDraftWorkbenchVm(
     publishUnlocked: (scriptData?.versions.length ?? 0) > 0,
     blindPrediction,
     ammo,
+    scriptReview,
   };
+}
+
+// [T-086] 读本项目最新审核报告。404(未审)/ 桩不带 op / 读失败 → null(诚实显未审)。
+async function readScriptReview(
+  client: DraftWorkbenchClient,
+  projectId: string,
+): Promise<ScriptReviewReportResource | null> {
+  if (!client.getLatestScriptReview) return null;
+  try {
+    const raw = await client.getLatestScriptReview({
+      params: { projectId },
+      query: undefined,
+      body: undefined,
+    });
+    return (raw ?? null) as ScriptReviewReportResource | null;
+  } catch {
+    return null;
+  }
 }

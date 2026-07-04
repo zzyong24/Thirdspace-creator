@@ -147,6 +147,8 @@ export default async function SettingsRoutePage() {
         vision: multimodalRow("asset.classify"),
         // [T-093] 知识库语义搜索 embedding(未配 = AI 搜索诚实降级关键词)。
         embed: multimodalRow("knowledge.search.embed"),
+        // [T-086] 文案审核模型(未配 = 用默认模型审核,报告标注非专用)。
+        review: multimodalRow("script.review"),
       };
     } catch {
       // listModels unavailable (transport race) → fall back to the fixture.

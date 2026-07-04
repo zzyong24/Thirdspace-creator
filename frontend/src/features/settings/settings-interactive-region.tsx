@@ -65,8 +65,12 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
+  ShieldCheck,
+  Trash2,
+  Plus,
   type LucideIcon,
 } from "lucide-react";
+import type { ReviewRuleResource } from "@creatoros/contract";
 
 import type {
   DouyinAccountState,
@@ -321,6 +325,13 @@ export function SettingsDialog({
                   kind="embed"
                   state={viewModel.multimodalModels.embed}
                 />
+                {/* [T-086 SPEC §2] 文案审核模型(豆包/火山方舟预设;未配 → 默认模型+标注非专用)。 */}
+                <MultimodalModelCard
+                  kind="review"
+                  state={viewModel.multimodalModels.review}
+                />
+                {/* [T-086 SPEC §4] 审核规则库管理(候选态复盘回流采纳门;禁新增一级导航)。 */}
+                <ReviewRulesCard />
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="skills" active={tab}>
@@ -1549,13 +1560,33 @@ const MULTIMODAL_META = {
     baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
     disabledHint: "未配 → 素材归类只跑确定性第一层。",
   },
+  // [T-086 SPEC §2] 文案审核模型 —— 编导文案发布前 L2 语义审专用。豆包/火山方舟(Ark =
+  // OpenAI 兼容端点)为预设,用户可整卡改成任何端点(绝不写死)。apiFormat 显式存
+  // openai_chat(Ark 走 OpenAI 兼容协议);未配 → 用默认模型审核,报告标注非专用。
+  review: {
+    capability: "script.review" as const,
+    title: "文案审核模型",
+    icon: Cpu,
+    description:
+      "编导文案发布前合规审核用(L2 语义审);未配则用默认模型并标注非专用审核模型。",
+    providerSuggestions: ["doubao"] as ReadonlyArray<string>,
+    providerPlaceholder: "doubao",
+    providerHelp:
+      "火山方舟 Ark = OpenAI 兼容端点,provider 可自定义。",
+    modelHelp:
+      "豆包模型 id 或 Ark 推理接入点,如 doubao-seed-1-6-* 或 ep-*。",
+    modelPlaceholder: "",
+    baseUrlPlaceholder:
+      "https://ark.cn-beijing.volces.com/api/v3(留空=provider 默认)",
+    disabledHint: "未配 → 用默认模型审核,报告标注非专用。",
+  },
 } as const;
 
 function MultimodalModelCard({
   kind,
   state,
 }: {
-  kind: "image" | "video" | "audio" | "embed";
+  kind: "image" | "video" | "audio" | "embed" | "vision" | "review";
   state: MultimodalModelState;
 }) {
   const meta = MULTIMODAL_META[kind];
@@ -1592,9 +1623,10 @@ function MultimodalModelCard({
             modelName: modelName.trim(),
             baseUrl: baseUrl.trim() || undefined,
             secret: secret.length > 0 ? secret : undefined,
-            // [T-093] embedding 卡显式存 openai_chat(缺省会被落成 anthropic,
-            // 而 embedding 无 anthropic 协议;其余多模态卡不带 apiFormat 不变)。
-            ...(kind === "embed"
+            // [T-093/T-086] embedding 与文案审核卡显式存 openai_chat(缺省会被落成
+            // anthropic;embedding 无 anthropic 协议,火山方舟 Ark 走 OpenAI 兼容协议)。
+            // 其余多模态卡不带 apiFormat 不变。
+            ...(kind === "embed" || kind === "review"
               ? { apiFormat: "openai_chat" as const }
               : {}),
           },
@@ -1737,6 +1769,406 @@ function MultimodalModelCard({
         </div>
       </div>
     </SectionCard>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ReviewRulesCard — 审核规则库管理(T-086 SPEC §4 切片 d)
+// ---------------------------------------------------------------------------
+//
+// 就近挂在设置页 models 面板下(禁止新增一级导航,§10.5 教训)。列出 reviewRules.list,
+// 按 tier 分组渲规则(category/matchType/pattern/replacement/note/status)。
+//
+// 确认门(铁律):candidate 态规则(T-087 复盘回流落点)单独分区「待采纳」,只有用户点
+// 「采纳」(patch status→active)才让 candidate→active —— UI 是 candidate→active 的唯一
+// 路径,AI 绝不自动写 active。启停走 patch status,增走 create(source 默认 manual),
+// 删走 delete。
+const TIER_META: Record<
+  ReviewRuleResource["tier"],
+  { readonly label: string; readonly hint: string }
+> = {
+  official_hard: { label: "官方硬规则", hint: "公约条文的确定性投影" },
+  empirical: { label: "经验限流", hint: "实测限流/降权词" },
+  doudplus: { label: "doud+ 投放", hint: "投放特有规则" },
+};
+
+function statusBadgeClass(status: ReviewRuleResource["status"]): string {
+  if (status === "active") return "border-success/40 bg-success-soft text-success";
+  if (status === "candidate") return "border-warning/40 bg-warning-soft text-warning";
+  return "border-border bg-surface-subtle text-muted-foreground";
+}
+
+function ReviewRulesCard() {
+  const [rules, setRules] = React.useState<ReviewRuleResource[] | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const { pending, run } = useSettingsMutation();
+  // 新建表单草稿。
+  const [draftTier, setDraftTier] =
+    React.useState<ReviewRuleResource["tier"]>("empirical");
+  const [draftCategory, setDraftCategory] = React.useState("");
+  const [draftMatchType, setDraftMatchType] =
+    React.useState<ReviewRuleResource["matchType"]>("word");
+  const [draftPattern, setDraftPattern] = React.useState("");
+  const [draftReplacement, setDraftReplacement] = React.useState("");
+  const [draftNote, setDraftNote] = React.useState("");
+
+  const reload = React.useCallback(() => {
+    void (async () => {
+      try {
+        // isList op:client 静态返回类型是单项(z.infer<response>),运行时 listEnvelope
+        // 落成数组 —— 与既有 listProjects 消费惯例一致,经 unknown 转数组。
+        const list = (await client.listReviewRules({
+          params: undefined,
+          query: undefined,
+          body: undefined,
+        })) as unknown as ReviewRuleResource[];
+        setRules(list);
+        setError(null);
+      } catch {
+        setError("审核规则加载失败,请刷新重试。");
+        setRules([]);
+      }
+    })();
+  }, []);
+
+  React.useEffect(() => {
+    reload();
+  }, [reload]);
+
+  // 启停/采纳/否决 —— 都走 patch status(candidate→active 是采纳的唯一路径)。
+  const patchStatus = React.useCallback(
+    (ruleId: string, status: ReviewRuleResource["status"]) => {
+      run(async () => {
+        await client.patchReviewRule({
+          params: { ruleId },
+          query: undefined,
+          body: { status },
+        });
+        reload();
+      });
+    },
+    [run, reload],
+  );
+
+  const removeRule = React.useCallback(
+    (ruleId: string) => {
+      run(async () => {
+        await client.deleteReviewRule({
+          params: { ruleId },
+          query: undefined,
+          body: undefined,
+        });
+        reload();
+      });
+    },
+    [run, reload],
+  );
+
+  const createRule = React.useCallback(() => {
+    if (!draftCategory.trim() || !draftPattern.trim()) return;
+    run(async () => {
+      await client.createReviewRule({
+        params: undefined,
+        query: undefined,
+        body: {
+          tier: draftTier,
+          category: draftCategory.trim(),
+          matchType: draftMatchType,
+          pattern: draftPattern.trim(),
+          replacement: draftReplacement.trim() || null,
+          note: draftNote.trim(),
+          // 手动建规则缺省 manual + active(用户显式建的即生效;SPEC §1/§4d:
+          // candidate 是 T-087 复盘回流预留态,不走手动建表单)。
+          source: "manual",
+          status: "active",
+        },
+      });
+      setDraftCategory("");
+      setDraftPattern("");
+      setDraftReplacement("");
+      setDraftNote("");
+      reload();
+    });
+  }, [
+    run,
+    reload,
+    draftTier,
+    draftCategory,
+    draftMatchType,
+    draftPattern,
+    draftReplacement,
+    draftNote,
+  ]);
+
+  const candidates = (rules ?? []).filter((r) => r.status === "candidate");
+  const nonCandidates = (rules ?? []).filter((r) => r.status !== "candidate");
+
+  return (
+    <SectionCard
+      title="审核规则库"
+      description="编导文案发布前的 L1 违禁词/模式 lint 规则;candidate 态由复盘回流,须你采纳才生效。"
+      action={
+        <ShieldCheck className="size-4 text-muted-foreground" aria-hidden />
+      }
+    >
+      <div data-slot="review-rules-card" className="flex flex-col gap-4">
+        {error ? (
+          <p className="text-[12px] text-destructive">{error}</p>
+        ) : null}
+
+        {/* 待采纳分区(复盘回流的用户确认门)。 */}
+        {candidates.length > 0 ? (
+          <div
+            data-slot="review-rules-candidates"
+            className="rounded-md border border-warning/30 bg-warning-soft/40 p-3"
+          >
+            <p className="mb-2 text-[12px] font-semibold text-warning">
+              待采纳(来自复盘)· {candidates.length}
+            </p>
+            <ul className="flex flex-col gap-2">
+              {candidates.map((rule) => (
+                <li
+                  key={rule.id}
+                  data-slot="review-rule-candidate"
+                  data-rule-id={rule.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded border border-border/60 bg-background px-2.5 py-2"
+                >
+                  <RuleSummary rule={rule} />
+                  <span className="flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      data-slot="review-rule-adopt"
+                      className="h-7 px-2.5 text-[11px]"
+                      disabled={pending}
+                      onClick={() => patchStatus(rule.id, "active")}
+                    >
+                      采纳
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      data-slot="review-rule-reject"
+                      className="h-7 px-2.5 text-[11px] text-muted-foreground"
+                      disabled={pending}
+                      onClick={() => patchStatus(rule.id, "disabled")}
+                    >
+                      否决
+                    </Button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {/* 已有规则(按 tier 分组;启停/删除)。 */}
+        {rules === null ? (
+          <p className="text-[12px] text-muted-foreground">加载中…</p>
+        ) : nonCandidates.length === 0 ? (
+          <p className="text-[12px] text-muted-foreground">
+            暂无规则。可在下方手动新增,或等复盘回流候选规则。
+          </p>
+        ) : (
+          (Object.keys(TIER_META) as ReviewRuleResource["tier"][]).map((tier) => {
+            const group = nonCandidates.filter((r) => r.tier === tier);
+            if (group.length === 0) return null;
+            return (
+              <div key={tier} data-slot="review-rules-tier" data-tier={tier}>
+                <p className="mb-1.5 text-[12px] font-semibold text-foreground">
+                  {TIER_META[tier].label}
+                  <span className="ml-1.5 font-normal text-muted-foreground">
+                    {TIER_META[tier].hint}
+                  </span>
+                </p>
+                <ul className="flex flex-col gap-1.5">
+                  {group.map((rule) => (
+                    <li
+                      key={rule.id}
+                      data-slot="review-rule-item"
+                      data-rule-id={rule.id}
+                      data-status={rule.status}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded border border-border/60 px-2.5 py-2"
+                    >
+                      <RuleSummary rule={rule} />
+                      <span className="flex items-center gap-1.5">
+                        <Switch
+                          data-slot="review-rule-toggle"
+                          checked={rule.status === "active"}
+                          disabled={pending}
+                          aria-label={`启停规则 ${rule.pattern}`}
+                          onCheckedChange={(next) =>
+                            patchStatus(rule.id, next ? "active" : "disabled")
+                          }
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          data-slot="review-rule-delete"
+                          className="size-7 text-muted-foreground hover:text-destructive"
+                          disabled={pending}
+                          aria-label={`删除规则 ${rule.pattern}`}
+                          onClick={() => removeRule(rule.id)}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })
+        )}
+
+        {/* 手动新增规则(source=manual;显式建即 active)。 */}
+        <div
+          data-slot="review-rule-create"
+          className="flex flex-col gap-2 border-t border-border/60 pt-3"
+        >
+          <p className="text-[12px] font-semibold text-foreground">新增规则</p>
+          <div className="flex flex-wrap gap-2">
+            <Select
+              value={draftTier}
+              onValueChange={(v) =>
+                setDraftTier(v as ReviewRuleResource["tier"])
+              }
+            >
+              <SelectTrigger
+                data-slot="review-rule-tier-select"
+                className="h-8 w-[128px] text-[12px]"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(TIER_META) as ReviewRuleResource["tier"][]).map(
+                  (tier) => (
+                    <SelectItem key={tier} value={tier}>
+                      {TIER_META[tier].label}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+            <Select
+              value={draftMatchType}
+              onValueChange={(v) =>
+                setDraftMatchType(v as ReviewRuleResource["matchType"])
+              }
+            >
+              <SelectTrigger
+                data-slot="review-rule-match-select"
+                className="h-8 w-[96px] text-[12px]"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="word">全文</SelectItem>
+                <SelectItem value="regex">正则</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              data-slot="review-rule-category-input"
+              className="h-8 w-[112px] text-[12px]"
+              value={draftCategory}
+              disabled={pending}
+              placeholder="类目"
+              onChange={(e) => setDraftCategory(e.target.value)}
+              aria-label="规则类目"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Input
+              data-slot="review-rule-pattern-input"
+              className="h-8 flex-1 text-[12px]"
+              value={draftPattern}
+              disabled={pending}
+              placeholder="命中词/模式"
+              onChange={(e) => setDraftPattern(e.target.value)}
+              aria-label="命中词或模式"
+            />
+            <Input
+              data-slot="review-rule-replacement-input"
+              className="h-8 w-[140px] text-[12px]"
+              value={draftReplacement}
+              disabled={pending}
+              placeholder="建议替代(可空)"
+              onChange={(e) => setDraftReplacement(e.target.value)}
+              aria-label="建议替代"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              data-slot="review-rule-note-input"
+              className="h-8 flex-1 text-[12px]"
+              value={draftNote}
+              disabled={pending}
+              placeholder="出处/原因(可空)"
+              onChange={(e) => setDraftNote(e.target.value)}
+              aria-label="出处或原因"
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              data-slot="review-rule-create-submit"
+              className="h-8 gap-1 px-2.5 text-[12px]"
+              disabled={pending || !draftCategory.trim() || !draftPattern.trim()}
+              onClick={createRule}
+            >
+              <Plus className="size-3.5" />
+              新增
+            </Button>
+          </div>
+        </div>
+      </div>
+    </SectionCard>
+  );
+}
+
+// 单条规则的摘要展示(pattern + 徽章串)。
+function RuleSummary({ rule }: { rule: ReviewRuleResource }) {
+  return (
+    <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+      <code className="rounded bg-surface-subtle px-1.5 py-0.5 text-[12px] font-medium text-foreground">
+        {rule.pattern}
+      </code>
+      <Badge
+        variant="outline"
+        className="border-border bg-surface-subtle text-[10px] text-muted-foreground"
+      >
+        {rule.category}
+      </Badge>
+      <Badge
+        variant="outline"
+        className="border-border bg-surface-subtle text-[10px] text-muted-foreground"
+      >
+        {rule.matchType === "regex" ? "正则" : "全文"}
+      </Badge>
+      <Badge
+        variant="outline"
+        className={cn("text-[10px]", statusBadgeClass(rule.status))}
+      >
+        {rule.status === "active"
+          ? "启用"
+          : rule.status === "candidate"
+            ? "待采纳"
+            : "停用"}
+      </Badge>
+      {rule.replacement ? (
+        <span className="text-[11px] text-muted-foreground">
+          → {rule.replacement}
+        </span>
+      ) : null}
+      {rule.note ? (
+        <span className="truncate text-[11px] text-muted-foreground">
+          · {rule.note}
+        </span>
+      ) : null}
+    </span>
   );
 }
 

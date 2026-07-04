@@ -80,6 +80,22 @@ export {
   type ScheduledJobResource,
   type JobRunResource,
 } from "./resources/scheduling";
+// T-086 编导文案审核门 —— 规则库行 + 稿面审核报告 DTO(backend review 模块 schema.ts
+// 与 frontend 报告卡共用单一真值;同上各模块 re-export 约定,additive)。
+export {
+  reviewRuleResource,
+  reviewRuleTier,
+  reviewRuleStatus,
+  reviewRuleMatchType,
+  lintFindingResource,
+  llmFindingResource,
+  scriptReviewVerdict,
+  scriptReviewReportResource,
+  type ReviewRuleResource,
+  type LintFindingResource,
+  type LlmFindingResource,
+  type ScriptReviewReportResource,
+} from "./resources/review-gate";
 
 // PAGE composition DTOs (SPEC §19). The dashboard / projectOverview / globalSearch
 // DTOs are reachable via `ENDPOINTS.<op>.response`; `publishingCenterPage` has NO
