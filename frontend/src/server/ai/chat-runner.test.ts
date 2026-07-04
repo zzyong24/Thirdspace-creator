@@ -360,6 +360,30 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).not.toContain("本次复盘对象");
   });
 
+  it("[T-106] 项目态注入当前项目 id 为工具可用值 + 指路 context.artifact.text + 禁 context.projects 找", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(
+      ctx,
+      {
+        surface: "project",
+        projectId: "proj-x",
+        selection: { kind: "project", id: "proj-x", label: "我的作品" },
+      },
+      deps,
+    );
+    // 当前项目 id 作为工具入参注入(模型不用 groping)。
+    expect(a.system).toContain('projectId="proj-x"');
+    expect(a.system).toContain("context.artifact.text");
+    // 明令别用 context.projects 列全站找这一条(修 groping 根因)。
+    expect(a.system).toContain("绝不要用 context.projects");
+  });
+
+  it("[T-106] 无 projectId(账号级对话)→ 不注入当前项目块", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).not.toContain("当前项目 —— 你正在为这一个具体项目编导");
+  });
+
   it("[T-104] 工具全放开:任一 surface 暴露全部 28 工具(surface 白名单只决定置顶顺序)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);

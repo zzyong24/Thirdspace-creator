@@ -465,10 +465,24 @@ export async function buildChatAssembly(
           .filter(Boolean)
           .join("\n")
       : "";
+  // [T-106] 项目态当前项目注入 —— 项目内对话(chatContext.projectId 有值)把「当前项目 id」作为
+  // **工具可用值**注入 + 指路 context.artifact.text/detail,免得模型不知道 id 就调 context.projects
+  // 列全站去找(实录:项目内编导拉 79 条项目库还找不到匹配、退回口播稿脑补)。id 是工具入参,标题仅提示。
+  const currentProjectTitle = chatContext.selection?.label?.trim() ?? "";
+  const currentProjectBlock = chatContext.projectId
+    ? [
+        `【当前项目 —— 你正在为这一个具体项目编导,projectId="${chatContext.projectId}"${
+          currentProjectTitle ? `,标题《${currentProjectTitle}》` : ""
+        }】`,
+        `要读这个项目的脚本/逐字稿/产物正文,直接调 context.artifact.text 或 context.project.detail 并传 projectId="${chatContext.projectId}";要读它的指标/发布,调 context.metrics / context.publications 传同一个 projectId。`,
+        `你已经知道这条内容的 projectId 了,**绝不要用 context.projects 列出全站项目去找这一条**——那是全账号清单,不是当前项目。`,
+      ].join("\n")
+    : "";
   const system = [
     baseSystem,
     honestyBlock,
     skillsBriefBlock,
+    currentProjectBlock,
     reviewSubjectBlock,
     selectionBlock,
   ]
