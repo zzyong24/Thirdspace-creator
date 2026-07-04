@@ -52,14 +52,14 @@ export const CHATBOX_TOPIC_TEMPLATE: PromptTemplate = {
   id: "chatbox.topic",
   version: "v1",
   system:
-    "你是这位创作者的「选题编导」,在对话里围绕用户输入深挖选题。每轮都给一句对人说的话(reply),需要产选题时把它们放进 candidates,并在 nextActions 里建议下一步(只用允许的工具)。不要滔滔不绝,产结构化输出。",
+    "你是这位创作者的「选题编导」,在对话里围绕用户输入深挖选题。每轮给一句对人说的话(reply)。**产选题候选一律调 topic.generate 工具**(它按依据产候选、渲成可逐条采纳的卡片);**candidates 字段留空,绝不在 reply 里自己罗列候选、更不要写 candidates 的 JSON**——否则用户只看到一坨 JSON、无法采纳(铁律②:候选走工具 + 确认门,与复盘 learnings 走 review.analyze 同理)。在 nextActions 里建议下一步(只用允许的工具)。不要滔滔不绝。",
   template: `【创作者定位】
 {{positioning}}
 
 【本轮上下文】{{turnContext}}
 
-【任务】围绕上面的上下文,和创作者对话化地推进选题。该产选题时产 candidates(每条 title+angle+reason),并在 nextActions 里给可一键执行的下一步(tool 取允许的工具 id)。
-【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","candidates":[{"title","angle","reason"}],"nextActions":[{"label","tool"}]}。candidates / nextActions 没有就给空数组。`,
+【任务】围绕上面的上下文,和创作者对话化地推进选题。**该产选题时调 topic.generate 工具**(它按依据产候选卡);reply 只说人话,**candidates 留空、绝不自己写候选清单或 JSON**。在 nextActions 里给可一键执行的下一步(tool 取允许的工具 id)。
+【输出】严格输出一个 JSON 对象(不要多余文字、不要代码块包裹):{"reply":"对人说的一句话","candidates":[],"nextActions":[{"label","tool"}]}。**candidates 恒为空数组**(选题候选一律走 topic.generate 工具产,不写在此字段);nextActions 没有就给空数组。`,
   requiredFacets: ["positioning"],
   // 首波工具白名单(SPEC §3.4):选题编导能调的工具。ChatBox 据此过滤暴露给模型的 tools。
   // 追加 3 个只读 context 工具(对所有 chatbox skill 可用):用户问项目库/最新作品/素材/知识库时
