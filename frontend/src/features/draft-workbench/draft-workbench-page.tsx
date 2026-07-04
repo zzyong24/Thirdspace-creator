@@ -19,6 +19,7 @@ import { ScriptStructureToggle } from "@/features/script/script-structure-view";
 import { sectionsToHtml } from "@/features/script/script-editor-bridge";
 import { TopicCard } from "./topic-card";
 import { DraftChatRail } from "./draft-chat-rail";
+import { DraftChatRequestProvider } from "./draft-chat-request";
 import { RevealProjectButton } from "./reveal-project-button";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
@@ -67,7 +68,10 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
         </div>
       </header>
 
-      {/* ── 主体:左稿面 + 右对话位 ── */}
+      {/* ── 主体:左稿面 + 右对话位 ──
+          [T-108] DraftChatRequestProvider 包住左稿面 + 右 rail:左稿面的 AI 按钮(盲预测/审核)
+          通过 context 直接预填右栏常驻 rail(方案 A),不再走 `?copilot=open` 深链开全局弹层。 */}
+      <DraftChatRequestProvider>
       <div className="flex min-h-0 flex-1">
         <div
           data-slot="draft-pane"
@@ -151,6 +155,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           />
         </aside>
       </div>
+      </DraftChatRequestProvider>
     </main>
   );
 }

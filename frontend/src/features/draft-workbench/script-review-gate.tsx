@@ -6,11 +6,13 @@
  * 稿面(draft-workbench)脚本区下方的合规审核入口 + 结构化报告面板 + 软门提示。
  *
  *  - 「审核」按钮(**T-103b 起改为对话内即时反馈**,SPEC 2026-07-04 ai-into-copilot-convergence
- *    §1.1/§3):不再后台静默 triggerScriptReview + 轮询,而是打开稿面右栏编导对话,深链带
- *    `fn=review.script` + selection(content_output id + 项目标题)+ 预填话术(不自动发,T-055b)。
- *    编导在对话里调 review.script 工具触发既有 script.review 审核链路(L1 违禁词 lint + L2 语义审)
- *    → **审核报告卡**(ChatReviewReportCard:verdict + findings)+ 改写建议逐条「应用」门。退役后台
- *    trigger+poll 死码。
+ *    §1.1/§3;**T-108 修真**):不再后台静默 triggerScriptReview + 轮询。稿面右栏是**常驻嵌入式
+ *    Copilot**(无独立全局弹层),原走 `copilotDeepLink`(`?copilot=open`)+ router.push 在稿面
+ *    开不出、prefill 进不了 rail(live bug)。改为方案 A(lift state):点击 → `onOpenChat` 预填
+ *    常驻 rail(functionKey=review.script + selection(content_output id + 项目标题)+ 审核话术,
+ *    只填不发,T-055b)。编导在对话里调 review.script 工具触发既有 script.review 审核链路(L1
+ *    违禁词 lint + L2 语义审)→ **审核报告卡**(ChatReviewReportCard:verdict + findings)+ 改写
+ *    建议逐条「应用」门。退役后台 trigger+poll 死码。
  *  - 结构化报告(**保留**,真值展示):verdict 徽章(pass 绿 / risk 黄 / block 红)+ summary +
  *    modelLabel(含「非专用审核模型」字样时醒目标注,诚实数据)+ lintFindings/llmFindings 命中列表。
  *    首屏 initialReport(服务端读 getLatestScriptReview)—— 这是稿面门的真值面,不是 AI 触发。
@@ -39,7 +41,7 @@ import {
 } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
-import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
+import { useDraftChatRequest } from "./draft-chat-request";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type {
@@ -93,7 +95,8 @@ export function ScriptReviewGate({
   /** 服务端首屏读到的最新报告;null = 未审。 */
   readonly initialReport: ScriptReviewReportResource | null;
 }) {
-  const router = useRouter();
+  // [T-108] 稿面对话请求协调器 —— 点击自动发进右栏常驻 rail(不开全局弹层)+ 发前 flush 编辑器。
+  const { openChat, flushSave } = useDraftChatRequest();
   // 报告是服务端首屏真值(getLatestScriptReview);对话内审核落库后 router.refresh 会重取。
   const report = initialReport;
   const [phase, setPhase] = React.useState<Phase>("idle");
@@ -107,15 +110,21 @@ export function ScriptReviewGate({
     [],
   );
 
-  // [T-103b] 「审核」:确保 content_output 挂点 → 打开稿面右栏编导对话(深链预填,不自动发)。
-  // 审核/改写在对话里完成(ChatReviewReportCard:review.script 触发既有审核链路 + 逐条改写门)。
+  // [T-103b → T-108] 「审核」:先 flush 保存编辑器最新内容(审最新版,非 DB 旧版)→ 确保
+  // content_output 挂点 → **自动发**审核话术进稿面右栏常驻编导对话(functionKey=review.script
+  // + selection=content_output + autoSend)。审核/改写在对话里完成(ChatReviewReportCard:
+  // review.script 触发既有审核链路 + 逐条改写门)。
   const openCopilot = React.useCallback(() => {
     if (phase === "opening") return;
     setPhase("opening");
     setError(null);
     void (async () => {
       try {
-        // 纯站内项目可能还没走制作 → 先自愈铸挂点(与登记表单/盲预测行同款),让深链 selection 有真 id。
+        // [T-108 v2] 先 flush 保存编辑器在途未落库的最新内容(dirty 才真存,saved 则 no-op)——
+        // 否则 review.script 审的是持久化旧版(用户改了还在 dirty 窗口没保存)。
+        await flushSave();
+        if (cancelledRef.current) return;
+        // 纯站内项目可能还没走制作 → 先自愈铸挂点(与登记表单/盲预测行同款),让 selection 有真 id。
         let subjectId = outputId;
         if (!subjectId) {
           const created = (await client.createOutput({
@@ -126,15 +135,19 @@ export function ScriptReviewGate({
           subjectId = created.id;
         }
         if (cancelledRef.current) return;
-        // 深链:surface=project(稿面右栏),fn=review.script,selection=content_output
-        // (免编导索要 id/标题),prefill 话术(不自动发)。query-only href → 就地开右栏对话不跳页。
-        const href = copilotDeepLink(
-          "project",
-          "review.script",
-          { kind: "content_output", id: subjectId, title: projectTitle },
-          SCRIPT_REVIEW_PREFILL,
-        );
-        router.push(href);
+        // 方案 A:自动发进常驻 rail —— functionKey=review.script(置顶审核工具),
+        // selection=content_output(免编导索要 id/标题),autoSend 直接发审核话术。
+        openChat({
+          functionKey: "review.script",
+          prefill: SCRIPT_REVIEW_PREFILL,
+          autoSend: true,
+          selection: {
+            kind: "content_output",
+            id: subjectId,
+            title: projectTitle,
+          },
+        });
+        // 自动发成功即结束(不卡在「打开对话中…」):loading 态语义修正。
         if (!cancelledRef.current) setPhase("idle");
       } catch {
         if (!cancelledRef.current) {
@@ -143,7 +156,7 @@ export function ScriptReviewGate({
         }
       }
     })();
-  }, [phase, outputId, projectId, projectTitle, router]);
+  }, [phase, outputId, projectId, projectTitle, openChat, flushSave]);
 
   const opening = phase === "opening";
   const stale = report !== null && report.artifactVersion < currentVersion;

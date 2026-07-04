@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
+import { useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
 import { ensureScriptArtifact } from "./ensure-script-artifact";
 import { htmlToSections } from "./script-editor-bridge";
 
@@ -189,9 +190,15 @@ export function ScriptRichEditor({
   onEditorReady,
 }: ScriptRichEditorProps) {
   const router = useRouter();
+  // [T-108 v2] 稿面对话请求 context —— 编辑器把 flushSave 注册进去,让审核/盲预测按钮
+  // 自动发前先 flush 保存最新内容(审最新版,非 DB 旧版)。稿面外(无 Provider)返回 no-op。
+  const { registerFlush } = useDraftChatRequest();
   const [pending, startTransition] = React.useTransition();
   const [saveStatus, setSaveStatus] = React.useState<SaveStatus>("saved");
   const [wordCount, setWordCount] = React.useState(0);
+  // saveStatus 的 ref 镜像 —— flush 闭包读最新态(dirty 才真存,saved 则 no-op)。
+  const saveStatusRef = React.useRef<SaveStatus>("saved");
+  saveStatusRef.current = saveStatus;
   // 订阅 editor 的事务,强制工具栏 aria-pressed 随选区刷新。
   const [, forceTick] = React.useReducer((n: number) => n + 1, 0);
 
@@ -265,12 +272,16 @@ export function ScriptRichEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
-  const handleSave = React.useCallback(() => {
+  // 保存核心(awaitable)—— 把编辑器当前 html/text append 成新 ArtifactVersion,resolve 后
+  // DB = 最新。抽出成 promise(原 handleSave 只 startTransition 无从 await),供:
+  //   ① 「保存」按钮(handleSave 包一层 transition 调它);
+  //   ② [T-108 v2] flushSave(审核/盲预测自动发前 await 它,确保审最新版)。
+  // 无 artifactId 且无 projectId(结构测试)→ 仅本地翻「已保存」,不打契约(与原行为一致)。
+  const performSave = React.useCallback(async (): Promise<void> => {
     if (!editor) return;
     const html = editor.getHTML();
     const contentText = editor.getText();
     if (!artifactId && !projectId) {
-      // fixture-only 渲染(无 artifactId 也无 projectId,结构测试)→ 不打契约,仅本地翻「已保存」。
       setSaveStatus("saved");
       return;
     }
@@ -280,40 +291,55 @@ export function ScriptRichEditor({
     // 覆盖用户在途键入。lastSavedHtmlRef 让 timing 无关:回流值 == 刚存 html 即认作 echo。
     savePendingRef.current = true;
     lastSavedHtmlRef.current = html;
-    startTransition(async () => {
-      try {
-        // [T-053 断点①] 真项目还没有脚本 artifact → 首存时 getOrCreate 再落库
-        // (消掉「显示已保存但什么都没存」的假保存)。
-        let targetId = artifactId;
-        if (!targetId && projectId) {
-          const ensured = await ensureScriptArtifact(projectId, null);
-          targetId = ensured.artifactId as string;
-        }
-        if (!targetId) throw new Error("no script artifact target");
-        await client.createArtifactVersion({
-          params: { artifactId: targetId },
-          query: undefined,
-          body: {
-            contentText,
-            // html = 富文本真值(忠实往返);sections = 派生(大纲/金句读侧 + AI 兼容)。
-            contentData: { html, sections },
-            changeSummary: "编辑脚本",
-          },
-        });
-        setSaveStatus("saved");
-        router.refresh();
-      } catch {
-        // 失败保留 dirty,用户可重试。
-        setSaveStatus("dirty");
-      } finally {
-        // 保存动作结束(成功/失败)→ 解除在途抑制。router.refresh 的 props 回流是下一轮
-        // effect,此时 pending 已解除;若回流值与当前编辑器不同(用户在途改过 → getHTML 已变),
-        // 那正是「刚存的旧值」,会与用户在途新值不一致 —— 但 appliedHtmlRef 在途已被标记消费,
-        // 故不会再 setContent 覆盖,保住在途编辑。之后真正的新外部值(如版本回滚)仍能正常应用。
-        savePendingRef.current = false;
+    try {
+      // [T-053 断点①] 真项目还没有脚本 artifact → 首存时 getOrCreate 再落库
+      // (消掉「显示已保存但什么都没存」的假保存)。
+      let targetId = artifactId;
+      if (!targetId && projectId) {
+        const ensured = await ensureScriptArtifact(projectId, null);
+        targetId = ensured.artifactId as string;
       }
-    });
+      if (!targetId) throw new Error("no script artifact target");
+      await client.createArtifactVersion({
+        params: { artifactId: targetId },
+        query: undefined,
+        body: {
+          contentText,
+          // html = 富文本真值(忠实往返);sections = 派生(大纲/金句读侧 + AI 兼容)。
+          contentData: { html, sections },
+          changeSummary: "编辑脚本",
+        },
+      });
+      setSaveStatus("saved");
+      router.refresh();
+    } catch {
+      // 失败保留 dirty,用户可重试。
+      setSaveStatus("dirty");
+    } finally {
+      // 保存动作结束(成功/失败)→ 解除在途抑制。router.refresh 的 props 回流是下一轮
+      // effect,此时 pending 已解除;若回流值与当前编辑器不同(用户在途改过 → getHTML 已变),
+      // 那正是「刚存的旧值」,会与用户在途新值不一致 —— 但 appliedHtmlRef 在途已被标记消费,
+      // 故不会再 setContent 覆盖,保住在途编辑。之后真正的新外部值(如版本回滚)仍能正常应用。
+      savePendingRef.current = false;
+    }
   }, [artifactId, projectId, editor, router]);
+
+  const handleSave = React.useCallback(() => {
+    startTransition(() => {
+      void performSave();
+    });
+  }, [performSave]);
+
+  // [T-108 v2] 注册 flushSave 到稿面对话请求 context:审核/盲预测按钮自动发前 `await flushSave()`。
+  // dirty(有在途未保存修改)→ 真 performSave 落库;saved/saving 态 → no-op 立即返回(不重复存)。
+  // 卸载注销(传 null),避免旧编辑器闭包泄漏。
+  React.useEffect(() => {
+    registerFlush(async () => {
+      if (saveStatusRef.current !== "dirty") return; // 已保存/保存中 → no-op。
+      await performSave();
+    });
+    return () => registerFlush(null);
+  }, [registerFlush, performSave]);
 
   // [T-054 组B] 卡头去掉「主脚本 / TipTap 富文本编辑器…」的实现描述文案(规范 §2:库名/
   // 机制名出现在可见文案 = 泄漏)。用户视角的小标题「口播脚本 + 副行」由稿面页区头统一承载

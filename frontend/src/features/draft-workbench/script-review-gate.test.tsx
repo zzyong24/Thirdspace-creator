@@ -2,12 +2,13 @@ import * as React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// 稿面编导文案审核门(T-086 SPEC §3 · T-103b 对话化)测试:
+// 稿面编导文案审核门(T-086 SPEC §3 · T-103b 对话化 · **T-108 修真**)测试:
 //  - 未审:显「未审」提示 +「审核」按钮(不报错)。
 //  - 有报告:verdict 徽章 + summary + modelLabel(非专用醒目)+ L1/L2 命中列表。
 //  - 报告版本 < 当前脚本版本:显「稿已改动,建议重审」+ 软门提示条。
-//  - [T-103b]「审核」→ 打开稿面右栏对话(copilotDeepLink fn=review.script + prefill,router.push),
-//    退役后台 triggerScriptReview + 轮询(审核/改写在对话卡 ChatReviewReportCard 里完成)。
+//  - [T-108]「审核」→ **先 flush 保存编辑器最新** → **自动发进稿面右栏常驻 rail**
+//    (onOpenChat: fn=review.script + selection=content_output + autoSend),不再 router.push
+//    深链开全局弹层、不再后台 triggerScriptReview 轮询(审核/改写在对话卡 ChatReviewReportCard 里完成)。
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
@@ -51,6 +52,11 @@ vi.mock("@/lib/contract-client", () => ({
 }));
 
 import { ScriptReviewGate, ReviewSoftGateHint } from "./script-review-gate";
+import {
+  DraftChatRequestProvider,
+  useDraftChatRequest,
+  type DraftChatRequest,
+} from "./draft-chat-request";
 import type { ScriptReviewReportResource } from "@creatoros/contract";
 
 const passReport: ScriptReviewReportResource = {
@@ -90,7 +96,40 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("ScriptReviewGate(稿面审核门,T-086 · T-103b 对话化)", () => {
+// [T-108] 测试探针 + Provider 包装:捕获 rail 收到的对话请求,并注册 mock flushSave(编辑器 flush
+// 替身)记录调用顺序。稿面「审核」按钮 → context.flushSave + openChat。
+let capturedRequest: DraftChatRequest | null = null;
+const callOrder: string[] = [];
+const flushSaveMock = vi.fn(async () => {
+  callOrder.push("flush");
+});
+function ChatRequestProbe() {
+  const { request, registerFlush } = useDraftChatRequest();
+  capturedRequest = request;
+  React.useEffect(() => {
+    if (request) callOrder.push("openChat");
+  }, [request]);
+  React.useEffect(() => {
+    registerFlush(flushSaveMock);
+    return () => registerFlush(null);
+  }, [registerFlush]);
+  return null;
+}
+function renderWithProvider(ui: React.ReactNode) {
+  return render(
+    <DraftChatRequestProvider>
+      {ui}
+      <ChatRequestProbe />
+    </DraftChatRequestProvider>,
+  );
+}
+afterEach(() => {
+  capturedRequest = null;
+  callOrder.length = 0;
+  flushSaveMock.mockClear();
+});
+
+describe("ScriptReviewGate(稿面审核门,T-086 · T-103b · T-108 自动发+flush)", () => {
   it("未审:显「未审」提示 +「审核」按钮,不报错", () => {
     render(
       <ScriptReviewGate
@@ -135,8 +174,8 @@ describe("ScriptReviewGate(稿面审核门,T-086 · T-103b 对话化)", () => {
     expect((apply[0] as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it("[T-103b]「审核」→ 打开稿面右栏对话(深链 fn=review.script + prefill,不再后台轮询)", async () => {
-    render(
+  it("[T-108]「审核」→ flush 保存最新 → 自动发进稿面右栏常驻 rail(fn=review.script + autoSend,不再 router.push 深链/后台轮询)", async () => {
+    renderWithProvider(
       <ScriptReviewGate
         projectId="p1"
         projectTitle="标题"
@@ -146,23 +185,27 @@ describe("ScriptReviewGate(稿面审核门,T-086 · T-103b 对话化)", () => {
       />,
     );
     fireEvent.click(screen.getByTestId("script-review-trigger"));
-    await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalled();
+    // 先 flush 保存编辑器最新内容(审最新版,非 DB 旧版)。
+    await waitFor(() => expect(flushSaveMock).toHaveBeenCalledTimes(1));
+    // 对话请求进 rail:置顶 review.script + content_output selection + autoSend + 审核话术。
+    await waitFor(() => expect(capturedRequest).not.toBeNull());
+    expect(capturedRequest!.functionKey).toBe("review.script");
+    expect(capturedRequest!.autoSend).toBe(true);
+    expect(capturedRequest!.selection).toEqual({
+      kind: "content_output",
+      id: "co-1",
+      title: "标题",
     });
-    // 深链带 surface=project + fn=review.script + selection(content_output)+ prefill(不自动发)。
-    const href = mockRouter.push.mock.calls[0]![0] as string;
-    expect(href).toContain("copilot=open");
-    expect(href).toContain("surface=project");
-    expect(href).toContain("fn=review.script");
-    expect(href).toContain("selKind=content_output");
-    expect(href).toContain("selId=co-1");
-    expect(href).toContain("prefill=");
-    // 已有 outputId → 不再自愈铸 output;绝不后台起 review 任务(退役轮询)。
+    expect(capturedRequest!.prefill.length).toBeGreaterThan(0);
+    // 链序:flush 在 openChat(请求到达)之前。
+    expect(callOrder.indexOf("flush")).toBeLessThan(callOrder.indexOf("openChat"));
+    // 绝不再 router.push 开全局弹层;已有 outputId → 不再自愈铸 output。
+    expect(mockRouter.push).not.toHaveBeenCalled();
     expect(mockClient.createOutput).not.toHaveBeenCalled();
   });
 
-  it("[T-103b]「审核」无 outputId → 先自愈铸 content_output 再深链带其 id", async () => {
-    render(
+  it("[T-108]「审核」无 outputId → flush → 先自愈铸 content_output 再自动发带其 id", async () => {
+    renderWithProvider(
       <ScriptReviewGate
         projectId="p1"
         projectTitle="标题"
@@ -172,6 +215,7 @@ describe("ScriptReviewGate(稿面审核门,T-086 · T-103b 对话化)", () => {
       />,
     );
     fireEvent.click(screen.getByTestId("script-review-trigger"));
+    await waitFor(() => expect(flushSaveMock).toHaveBeenCalledTimes(1));
     await waitFor(() => {
       expect(mockClient.createOutput).toHaveBeenCalledWith({
         params: { projectId: "p1" },
@@ -179,11 +223,10 @@ describe("ScriptReviewGate(稿面审核门,T-086 · T-103b 对话化)", () => {
         body: { title: "标题" },
       });
     });
-    await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalled();
-    });
-    const href = mockRouter.push.mock.calls[0]![0] as string;
-    expect(href).toContain("selId=co-1"); // 用自愈铸出的 output id
+    await waitFor(() => expect(capturedRequest).not.toBeNull());
+    expect(capturedRequest!.selection?.id).toBe("co-1"); // 用自愈铸出的 output id
+    expect(capturedRequest!.autoSend).toBe(true);
+    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 
   it("改写确认门:点「应用改写」→ 单点替换 → createArtifactVersion(不自动改稿)", async () => {

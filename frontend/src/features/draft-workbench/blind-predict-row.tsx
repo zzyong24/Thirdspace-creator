@@ -5,12 +5,16 @@
  *
  * 飞轮第一步「盲预测」在发布前的稿面触发。**T-103a 起改为对话内即时反馈**(SPEC
  * 2026-07-04 ai-into-copilot-convergence §1.2/§3):点「先盲预测」不再后台静默
- * createAITask + 轮询,而是打开稿面右栏的编导对话(内嵌 AICopilotContent),深链带
- * `fn=calibration.diagnose` + selection(content_output id + 项目标题)+ 预填话术
- * (不自动发,T-055b 机制)。编导在对话里流式产逐维度诊断 → **盲预测确认卡**(ChatDiagnosisCard
- * 的 blindPredict 分支)上点「锁定为盲预测」→ 走既有端点链铸 immutable locked Prediction。
- *  - 未预测:提示行 +「先盲预测」按钮 —— 点击 = 确保 content_output 挂点(纯站内项目
- *    先自愈铸一个,与登记表单同款)→ router.push 深链打开右栏编导对话并预填。
+ * createAITask + 轮询。**T-108 修真**:稿面右栏是**常驻嵌入式 Copilot**(无独立全局弹层),
+ * 原走 `copilotDeepLink`(`?copilot=open`)+ router.push 在稿面开不出、prefill 进不了 rail
+ * (live bug)。改为方案 A(lift state):点击 → **先 flush 保存编辑器最新内容**(诊断最新版,
+ * 非 DB 旧版)→ `onOpenChat` **自动发**盲预测话术进常驻 rail(functionKey=calibration.diagnose
+ * + selection(content_output id + 项目标题)+ autoSend),编导流式产逐维度诊断 → **盲预测确认卡**
+ * (ChatDiagnosisCard 的 blindPredict
+ * 分支,由 embed.blindPredict 常驻注入,与开对话方式无关)上点「锁定为盲预测」→ 走既有端点链
+ * 铸 immutable locked Prediction。
+ *  - 未预测:提示行 +「先盲预测」按钮 —— 点击 = flush 保存最新 → 确保 content_output 挂点
+ *    (纯站内项目先自愈铸一个,与登记表单同款)→ openChat 自动发进右栏常驻编导对话。
  *  - 已预测:显示服务端派生的预测分(变现加权)+ 状态(草稿/已锁定);草稿态给
  *    「锁定」(lockPrediction,盲预测不可改的形式化,作为对话锁定的补锁兜底);深链
  *    /settings?tab=calibration 看校准历史。
@@ -25,7 +29,7 @@ import { useRouter } from "next/navigation";
 import { Crosshair, Lock, MessagesSquare } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
-import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
+import { useDraftChatRequest } from "./draft-chat-request";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +60,8 @@ export function BlindPredictRow({
   readonly prediction: BlindPredictionInfo | null;
 }) {
   const router = useRouter();
+  // [T-108] 稿面对话请求协调器 —— 点击自动发进右栏常驻 rail(不开全局弹层)+ 发前 flush 编辑器。
+  const { openChat, flushSave } = useDraftChatRequest();
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [error, setError] = React.useState<string | null>(null);
   // 卸载后停止在 await 链里 setState(长任务守卫)。
@@ -67,15 +73,20 @@ export function BlindPredictRow({
     [],
   );
 
-  // [T-103a] 「先盲预测」:确保 content_output 挂点 → 打开稿面右栏编导对话(深链预填,
-  // 不自动发)。诊断/锁定在对话里完成(ChatDiagnosisCard 的 blindPredict 确认门)。
+  // [T-103a → T-108] 「先盲预测」:先 flush 保存编辑器最新内容(诊断最新版,非 DB 旧版)→
+  // 确保 content_output 挂点 → **自动发**盲预测话术进稿面右栏常驻编导对话(functionKey=
+  // calibration.diagnose + selection=content_output + autoSend)。诊断/锁定在对话里完成
+  // (ChatDiagnosisCard 的 blindPredict 确认门,由 embed.blindPredict 常驻,与开对话方式无关)。
   const openCopilot = React.useCallback(() => {
     if (phase === "opening" || phase === "locking") return;
     setPhase("opening");
     setError(null);
     void (async () => {
       try {
-        // 纯站内项目可能还没走制作 → 先自愈铸挂点(与登记表单同款),让深链 selection 有真 id。
+        // [T-108 v2] 先 flush 保存编辑器在途未落库的最新内容(dirty 才真存,saved 则 no-op)。
+        await flushSave();
+        if (cancelledRef.current) return;
+        // 纯站内项目可能还没走制作 → 先自愈铸挂点(与登记表单同款),让 selection 有真 id。
         let subjectId = outputId;
         if (!subjectId) {
           const created = (await client.createOutput({
@@ -86,15 +97,19 @@ export function BlindPredictRow({
           subjectId = created.id;
         }
         if (cancelledRef.current) return;
-        // 深链:surface=project(稿面右栏),fn=calibration.diagnose,selection=content_output
-        // (免编导索要 id/标题),prefill 话术(不自动发)。query-only href → 就地开右栏对话不跳页。
-        const href = copilotDeepLink(
-          "project",
-          "calibration.diagnose",
-          { kind: "content_output", id: subjectId, title: projectTitle },
-          BLIND_PREDICT_PREFILL,
-        );
-        router.push(href);
+        // 方案 A:自动发进常驻 rail —— functionKey=calibration.diagnose(置顶诊断工具),
+        // selection=content_output(免编导索要 id/标题),autoSend 直接发盲预测话术。
+        openChat({
+          functionKey: "calibration.diagnose",
+          prefill: BLIND_PREDICT_PREFILL,
+          autoSend: true,
+          selection: {
+            kind: "content_output",
+            id: subjectId,
+            title: projectTitle,
+          },
+        });
+        // 自动发成功即结束(不卡在「打开对话中…」):loading 态语义修正。
         if (!cancelledRef.current) setPhase("idle");
       } catch {
         if (!cancelledRef.current) {
@@ -103,7 +118,7 @@ export function BlindPredictRow({
         }
       }
     })();
-  }, [phase, outputId, projectId, projectTitle, router]);
+  }, [phase, outputId, projectId, projectTitle, openChat, flushSave]);
 
   // 「锁定」:draft → locked(不可改)。对话内锁定的补锁兜底(草稿已落库但没锁死时手动补)。
   const lock = React.useCallback(() => {

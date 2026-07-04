@@ -386,6 +386,26 @@ export interface AICopilotContentProps {
       readonly projectId: string;
       readonly projectTitle: string;
     };
+    /**
+     * [T-108] 外部对话请求(方案 A · lift state)—— 稿面 AI 按钮(盲预测/审核)点击后,由
+     * DraftChatRequestProvider 提上来的一次请求:置顶 functionKey(review.script /
+     * calibration.diagnose)+ 话术 + selection(content_output)。embed 监听 `request.nonce`
+     * 变化 → 置 functionKey + 应用 selection + **autoSend=true 时自动 sendMessage 那句话术**
+     * (稿面常驻 rail + 用户显式点按钮,直接发;autoSend 缺省则只预填输入框,延续 T-055b)。
+     * **不开全局弹层**(根治 T-108:稿面开不出 `?copilot=open` + 消息进不了常驻 rail)。
+     * null/nonce=0 = 还没发起(首帧),不动。nonce 天然去重(重渲不重复发)。
+     */
+    readonly request?: {
+      readonly functionKey: string;
+      readonly prefill: string;
+      readonly autoSend?: boolean;
+      readonly selection?: {
+        readonly kind: string;
+        readonly id: string;
+        readonly title?: string;
+      };
+      readonly nonce: number;
+    } | null;
   };
 }
 
@@ -662,13 +682,28 @@ export function AICopilotContent({
   // 从稿面内深链触发);浮层模式维持全 URL 驱动。
   const surface =
     embed?.surface ?? (searchParams?.get("surface") || DEFAULT_SURFACE);
-  const functionKey = searchParams?.get("fn") || undefined;
+  // [T-108] embed.request(稿面 AI 按钮发起)优先于 URL:functionKey/selection 从 request 读,
+  // 让常驻 rail 无需 `?copilot=open` 深链就置顶专用工具 + 注入选中态(根治 T-108)。request 为
+  // null(首帧/未发起)时回落 URL(浮层深链)/ embed.selection(常驻项目上下文),行为不变。
+  const activeRequest = embed?.request ?? null;
+  const functionKey =
+    activeRequest?.functionKey || searchParams?.get("fn") || undefined;
   // T-027:选中态从 URL 读(一键岛带 ?selKind=&selId=&selTitle=),装进 ChatContext.selection →
   // 后端注入 system + 工具入参兜底,让 Copilot 知道用户"这条"指哪条,不再瞎答/反复索要标题。
-  const selKind = embed?.selection?.kind ?? (searchParams?.get("selKind") || undefined);
-  const selId = embed?.selection?.id ?? (searchParams?.get("selId") || undefined);
+  // [T-108] request.selection(稿面按钮带的 content_output)优先,其次 embed.selection(常驻项目),
+  // 最后 URL(浮层深链)。
+  const selKind =
+    activeRequest?.selection?.kind ??
+    embed?.selection?.kind ??
+    (searchParams?.get("selKind") || undefined);
+  const selId =
+    activeRequest?.selection?.id ??
+    embed?.selection?.id ??
+    (searchParams?.get("selId") || undefined);
   const selTitle =
-    embed?.selection?.title ?? (searchParams?.get("selTitle") || undefined);
+    activeRequest?.selection?.title ??
+    embed?.selection?.title ??
+    (searchParams?.get("selTitle") || undefined);
   // [T-096] 会话作用域(scope)—— 历史列表/恢复/新对话的归属桶,与 surface(技能装配)解耦。
   // 入口 → scope 总表见 chat-scope.ts:内嵌右栏 = project:<id>;深链选中项目(复盘岛/选题卡
   // brief.fill)归并 project:<id>;一键岛 = surface:<name>;左下角/首页显式 ?scope=global;
@@ -737,6 +772,12 @@ export function AICopilotContent({
       selection?: { kind: string; ids: string[]; label?: string };
     } = { surface, scope };
     if (functionKey) chatContext.functionKey = functionKey;
+    // [T-108] 稿面常驻 rail:embed.selection 是项目(kind=project),始终把它的 id 当 projectId 注入,
+    // 让后端项目 facet 恒能读到本项目材料 —— 即使本轮 selection 主题被 request 换成 content_output
+    // (稿面按钮带的 subject),项目上下文也不丢(overlay 深链路径原来没带 projectId,这里更完整)。
+    if (embed?.selection?.kind === "project" && embed.selection.id) {
+      chatContext.projectId = embed.selection.id;
+    }
     if (!selectionDismissed && selKind && selId) {
       chatContext.selection = {
         kind: selKind,
@@ -769,6 +810,8 @@ export function AICopilotContent({
     selTitle,
     mentionedProject,
     selectionDismissed,
+    embed?.selection?.kind,
+    embed?.selection?.id,
   ]);
   const transport = React.useMemo(
     () =>
@@ -852,7 +895,51 @@ export function AICopilotContent({
     prefilledRef.current = true;
     // 不覆盖用户已敲的字(预填只填空输入框)。
     setPrompt((prev) => (prev.trim().length > 0 ? prev : text));
+    lastPrefillRef.current = text;
   }, [functionKey, messages.length, streaming]);
+
+  // [T-108] 外部对话请求(方案 A)—— 稿面 AI 按钮点击后 embed.request.nonce 自增,本 effect
+  // 据 nonce 变化处理该请求。functionKey/selection 已在上方按 request 优先重算(置顶专用工具 +
+  // 注入 content_output → transport body 会带上最新 chatContext)。两种模式:
+  //   ① autoSend=true(稿面审核/盲预测):**直接 sendMessage** 那句话术(常驻 rail + 用户显式
+  //      点按钮,直接发;模型据 functionKey 优先调 review.script/calibration.diagnose)。
+  //   ② autoSend 缺省:只预填输入框(不覆盖用户已敲的字,延续 T-055b),用户回车才发。
+  // nonce 由 Provider 内部计数器生成(SSR 安全,非 Date.now/Random),天然去重(重渲不重复发)。
+  const lastPrefillRef = React.useRef<string>("");
+  const handledRequestNonceRef = React.useRef(0);
+  React.useEffect(() => {
+    const req = embed?.request ?? null;
+    if (!req || req.nonce === 0) return;
+    if (req.nonce === handledRequestNonceRef.current) return;
+    const text = req.prefill;
+    if (!text) {
+      handledRequestNonceRef.current = req.nonce; // 空话术:标记消费,别反复触发。
+      return;
+    }
+    // 新请求即「用户显式发起」→ 放开首次预填守卫(URL 预填 effect 不再重复填,二者互不打架)。
+    prefilledRef.current = true;
+    if (req.autoSend) {
+      // 流式中不打断本轮(极窄竞态:用户上一条还在流)—— 此时**不**标记消费,待 streaming 结束
+      // effect 重跑(依赖 streaming)再发,不丢这条请求。functionKey/selection 已随 request 重算进
+      // chatContextBody → transport 本次求值带最新上下文,模型据 functionKey 优先调专用工具。
+      if (streaming) return;
+      handledRequestNonceRef.current = req.nonce;
+      setPrompt("");
+      void sendMessage({ text });
+      return;
+    }
+    handledRequestNonceRef.current = req.nonce;
+    // 预填模式:仅当输入框为空、或仍是上次预填原文(用户没动过)时替换 —— 不 clobber 用户输入。
+    setPrompt((prev) => {
+      const untouched =
+        prev.trim().length === 0 || prev === lastPrefillRef.current;
+      return untouched ? text : prev;
+    });
+    lastPrefillRef.current = text;
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }, [embed?.request, streaming, sendMessage]);
 
   const submit = React.useCallback(() => {
     const value = prompt.trim();
@@ -1183,23 +1270,40 @@ export function AICopilotContent({
 
   // [T-055b] 上下文 chips 派生:生效的项目上下文(URL/embed 选中态优先,@ 引用次之,
   // 与 chatContextBody 的注入优先级一字不差),以及非项目对象 chip(脚本/候选等)。
+  // [T-108] 稿面常驻 rail:项目 chip 恒来自 embed.selection(project)—— 与 chatContextBody 的
+  // projectId 注入同源,不因本轮 request 把 subject 换成 content_output 而消失(项目上下文常驻);
+  // content_output 走下面的 objectChip。activeProjectChip.id 还被下游卡(审核报告/HOOK/素材)当
+  // projectId 用,故必须稳定解析到项目 id。
+  const embedProjectSelection =
+    embed?.selection?.kind === "project" && embed.selection.id
+      ? { id: embed.selection.id, title: embed.selection.title || "当前项目" }
+      : null;
   const urlProjectSelection =
-    !selectionDismissed && selKind === "project" && selId
+    !embed && !selectionDismissed && selKind === "project" && selId
       ? { id: selId, title: selTitle || "当前项目" }
       : null;
-  const activeProjectChip = urlProjectSelection
+  const activeProjectChip = embedProjectSelection
     ? {
-        id: urlProjectSelection.id,
-        title: urlProjectSelection.title,
-        dismiss: () => setSelectionDismissed(true),
+        id: embedProjectSelection.id,
+        title: embedProjectSelection.title,
+        // 稿面常驻项目上下文不提供「摘除」(它是本页固定归属);仅 chip 展示。
+        dismiss: undefined,
       }
-    : mentionedProject
+    : urlProjectSelection
       ? {
-          id: mentionedProject.id,
-          title: mentionedProject.title,
-          dismiss: () => setMentionedProject(null),
+          id: urlProjectSelection.id,
+          title: urlProjectSelection.title,
+          dismiss: () => setSelectionDismissed(true),
         }
-      : null;
+      : mentionedProject
+        ? {
+            id: mentionedProject.id,
+            title: mentionedProject.title,
+            dismiss: () => setMentionedProject(null),
+          }
+        : null;
+  // 非项目 subject chip(content_output/脚本/候选…):embed 模式下 request 带的 content_output
+  // 也走这里;URL 深链的非项目选中态同理。project kind 归 activeProjectChip,不重复渲。
   const objectChip =
     !selectionDismissed && selKind && selKind !== "project" && selId
       ? { kind: selKind, label: selTitle || selKind }
@@ -1330,15 +1434,19 @@ export function AICopilotContent({
             <span className="max-w-[200px] truncate">
               @{activeProjectChip.title}
             </span>
-            <button
-              type="button"
-              aria-label="移除项目上下文"
-              data-slot="context-chip-remove"
-              onClick={activeProjectChip.dismiss}
-              className="ml-0.5 rounded text-brand/70 transition-colors hover:text-brand focus:outline-none"
-            >
-              ×
-            </button>
+            {/* [T-108] 稿面常驻项目上下文(embed.selection)不给摘除按钮 —— 它是本页固定归属;
+                URL/@ 引用来的项目仍可一键摘除。 */}
+            {activeProjectChip.dismiss ? (
+              <button
+                type="button"
+                aria-label="移除项目上下文"
+                data-slot="context-chip-remove"
+                onClick={activeProjectChip.dismiss}
+                className="ml-0.5 rounded text-brand/70 transition-colors hover:text-brand focus:outline-none"
+              >
+                ×
+              </button>
+            ) : null}
           </span>
         ) : (
           <span

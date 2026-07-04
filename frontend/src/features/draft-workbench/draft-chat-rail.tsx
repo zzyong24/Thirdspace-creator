@@ -14,6 +14,7 @@
 import * as React from "react";
 
 import { AICopilotContent } from "@/features/copilot/ai-copilot-content";
+import { useDraftChatRequest } from "./draft-chat-request";
 
 export function DraftChatRail({
   projectId,
@@ -28,6 +29,9 @@ export function DraftChatRail({
    */
   readonly outputId?: string | null;
 }) {
+  // [T-108] 稿面 AI 按钮(盲预测/审核)发起的对话请求 —— 透传进 embed.request,让常驻 rail
+  // 据 request.nonce 变化预填输入框 + 置 functionKey + 注入 content_output(不开全局弹层)。
+  const { request } = useDraftChatRequest();
   return (
     <div className="flex h-full min-h-0 flex-col p-4">
       <React.Suspense fallback={null}>
@@ -45,6 +49,8 @@ export function DraftChatRail({
               projectId,
               projectTitle,
             },
+            // [T-108] 外部对话请求(方案 A):稿面按钮 → context → 这里 → embed 预填 rail。
+            request,
           }}
         />
       </React.Suspense>

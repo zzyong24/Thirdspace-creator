@@ -308,6 +308,78 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
+  it("[T-108] embed.request(autoSend)—— 稿面按钮请求进 rail → 自动 sendMessage 那句话术(不等回车)", async () => {
+    // 稿面右栏常驻 rail:embed.selection=project(项目上下文常驻)+ request 带 content_output +
+    // autoSend。首帧 request=null,rerender 带一个 nonce=1 的请求 → effect 自动发。
+    const embedBase = {
+      surface: "project",
+      selection: { kind: "project", id: "proj-1", title: "我的作品" },
+      persistKey: "project:proj-1",
+    } as const;
+    const { rerender } = render(
+      <AICopilotContent viewModel={VM} embed={{ ...embedBase, request: null }} />,
+    );
+    expect(sendMessage).not.toHaveBeenCalled();
+    rerender(
+      <AICopilotContent
+        viewModel={VM}
+        embed={{
+          ...embedBase,
+          request: {
+            functionKey: "review.script",
+            prefill: "审核这份文案:跑一遍违禁词/合规诊断,命中给逐条改写建议。",
+            autoSend: true,
+            selection: { kind: "content_output", id: "co-1", title: "我的作品" },
+            nonce: 1,
+          },
+        }}
+      />,
+    );
+    // autoSend → 自动发那句审核话术(而不是写进输入框等回车)。
+    await waitFor(() => {
+      expect(sendMessage).toHaveBeenCalledWith({
+        text: "审核这份文案:跑一遍违禁词/合规诊断,命中给逐条改写建议。",
+      });
+    });
+  });
+
+  it("[T-108] embed.request(autoSend)—— content_output subject 进 chip,项目 chip 仍常驻(项目上下文不丢)", async () => {
+    const embedBase = {
+      surface: "project",
+      selection: { kind: "project", id: "proj-1", title: "我的作品" },
+      persistKey: "project:proj-1",
+    } as const;
+    render(
+      <AICopilotContent
+        viewModel={VM}
+        embed={{
+          ...embedBase,
+          request: {
+            functionKey: "review.script",
+            prefill: "审核",
+            autoSend: true,
+            selection: { kind: "content_output", id: "co-1", title: "我的作品" },
+            nonce: 1,
+          },
+        }}
+      />,
+    );
+    // 项目 chip(embed.selection)常驻(不因 request 把 subject 换成 content_output 而消失),
+    // 且稿面常驻项目上下文不给「摘除」按钮(它是本页固定归属)。
+    const projectChip = document.querySelector(
+      '[data-slot="context-chip"][data-kind="project"][data-project-id="proj-1"]',
+    );
+    expect(projectChip).not.toBeNull();
+    expect(
+      projectChip!.querySelector('[data-slot="context-chip-remove"]'),
+    ).toBeNull();
+    // content_output subject 走 objectChip。
+    const objectChip = document.querySelector(
+      '[data-slot="context-chip"][data-kind="content_output"]',
+    );
+    expect(objectChip).not.toBeNull();
+  });
+
   it("renders the REAL continuing-task feed (in-progress only) and 「继续」 routes to the task's project/stage", async () => {
     const user = userEvent.setup();
     listTasks.mockResolvedValue([
