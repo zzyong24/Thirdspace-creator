@@ -4,6 +4,7 @@ import {
   RESEARCH_GATHER_TEMPLATE,
   type ResearchMaterialOutput,
 } from "../prompt/templates/research-gather";
+import type { SearchResult } from "../runtime/search-factory";
 
 // 素材搜集节点(research.gather,跑在 **Vercel AI SDK** 上)。L2「创作向重写」:
 // 从「自由文本解析 web-search 输出」改成 **generateObject + outputSchema**(复用 T-005
@@ -25,7 +26,12 @@ export interface MaterialItem {
   url: string;
   source: string;
   why_relevant: string;
+  /** [T-084a] 该条素材引用的联网检索真实 URL(cases/dataPoints 有则带;记忆内容为空)。 */
+  sourceUrl?: string;
 }
+
+/** [T-084a] 素材整体信源打标:web=经联网检索、model_memory=纯模型记忆(未配/检索失败降级)。 */
+export type MaterialGrounding = "web" | "model_memory";
 
 /** 四类创作向素材候选(原样回带给 UI 分类展示;由 outputSchema 卡死形状)。 */
 export type ResearchCategories = ResearchMaterialOutput;
@@ -39,6 +45,12 @@ export interface RunResearchNodeInput {
   topicTitle: string;
   /** 选题切入角度(选填)。 */
   topicAngle?: string;
+  /**
+   * [T-084a] 联网检索结果(选填)—— 调用方先 searchWeb(query) 拿真结果,在此注入。
+   * 有则格式化成「【联网检索结果(真实,今日抓取)】」块进 prompt facet,模型据它填真实 URL;
+   * 无(未配/检索失败降级)则该 facet 为空,模型走纯记忆(整体 grounding=model_memory)。
+   */
+  searchResults?: SearchResult[];
   /** 护栏:校验失败的最大重试次数(默认 2,Vercel SDK 透传)。 */
   maxRetries?: number;
 }
@@ -48,12 +60,48 @@ export interface RunResearchNodeResult {
   items: MaterialItem[];
   /** 四类创作向候选(原样,供研究工作台分类展示)。 */
   categories: ResearchCategories;
+  /** [T-084a] 整体信源打标(有检索=web,无=model_memory)—— 供 UI 渲黄条/需核实徽标。 */
+  grounding: MaterialGrounding;
+}
+
+/**
+ * [T-084a] 把联网检索结果格式化成 prompt facet 块(「【联网检索结果(真实,今日抓取)】编号+
+ * 标题+URL+摘要」)。空数组 → 空串(该 facet 整段省略,不注空噪声)。编号让模型能在 sourceUrl
+ * 里带编号回链引用真实信源。
+ */
+export function formatSearchResultsFacet(results: SearchResult[]): string {
+  if (!results || results.length === 0) return "";
+  const lines = results.map((r, i) => {
+    const parts = [`[${i + 1}] ${r.title || r.url}`, `    URL: ${r.url}`];
+    if (r.snippet) parts.push(`    摘要: ${r.snippet}`);
+    const meta = [r.siteName, r.publishedAt].filter(Boolean).join(" · ");
+    if (meta) parts.push(`    来源: ${meta}`);
+    return parts.join("\n");
+  });
+  return [
+    "",
+    "【联网检索结果(真实,今日抓取)—— 优先据此产 cases/dataPoints 并回填真实 URL 到 sourceUrl】",
+    ...lines,
+    "",
+  ].join("\n");
 }
 
 /**
  * Anthropic provider 内置 web search 工具集 —— 服务端执行,仅 anthropic 协议族可用。
  * 本节点默认路径(纯结构化生成)不再用它;保留导出供调用方/未来真 Anthropic 路径选用。
  * 需要时调用方在外层自行用 generateText/runAgentNode 注入,不在本结构化路径里挂工具。
+ *
+ * [T-084a TODO —— 真 Anthropic 增强路(SPEC §1.2 末,兜底增强非主路,本切片留待后续)]
+ * SPEC 允许:`isGenuineAnthropic` 且用户未配 web.search 时,可挂回本工具作为兜底增强(两者都配
+ * 时独立搜索优先)。**本切片未接线**,原因(诚实标注,非偷懒):
+ *   1. 主路(独立搜索 provider bocha/tavily/serpapi 前置注入)已让**任何模型**(含用户默认 MiniMax)
+ *      拿到真实信源 —— 增强路只在「真配 Claude 官方端点 + 未配独立搜索」这个窄交集白赚,收益小。
+ *   2. 结构化脊梁走 generateObject(无工具循环)。接 anthropic server web_search 需另开 generateText
+ *      工具循环 + 复活 fb8d056 的 isGenuineAnthropic 判定(现已随 ffb7951 删除,仓内无残留)——
+ *      这正是 SPEC §6/ffb7951 教训要避免的「回自由文本工具循环」风险面。
+ *   3. SPEC §1.9 明示:「如果这一条会显著增加复杂度/风险,可标注 TODO 留注释」——即此处。
+ * 接线时的落点:在 gatherMaterials(chat-runner)先探测 isGenuineAnthropic(需先在 provider-factory
+ * 补该判定)→ 未配 web.search 且真 Anthropic → 走一条 generateText+本工具的增强综合,再回填 items。
  */
 export function anthropicWebSearchTools(opts?: { maxUses?: number }): {
   web_search: unknown;
@@ -86,17 +134,27 @@ export function flattenCategories(cats: ResearchCategories): MaterialItem[] {
   for (const c of cats.cases ?? []) {
     const title = trim(c.title);
     if (!title) continue;
+    const sourceUrl = trim(c.sourceUrl);
     items.push({
       title: `案例：${title}`,
-      url: "",
+      // [T-084a] url 位镜像 sourceUrl(既有 material_list 落库路径以 url 存证来源)。
+      url: sourceUrl,
       source: trim(c.source),
       why_relevant: trim(c.opening),
+      ...(sourceUrl ? { sourceUrl } : {}),
     });
   }
   for (const d of cats.dataPoints ?? []) {
     const stat = trim(d.stat);
     if (!stat) continue;
-    items.push({ title: `数据：${stat}`, url: "", source: trim(d.source), why_relevant: "" });
+    const sourceUrl = trim(d.sourceUrl);
+    items.push({
+      title: `数据：${stat}`,
+      url: sourceUrl,
+      source: trim(d.source),
+      why_relevant: "",
+      ...(sourceUrl ? { sourceUrl } : {}),
+    });
   }
   for (const q of cats.quotes ?? []) {
     const line = trim(q.line);
@@ -114,6 +172,9 @@ export function flattenCategories(cats: ResearchCategories): MaterialItem[] {
 export async function runResearchNode(
   input: RunResearchNodeInput,
 ): Promise<RunResearchNodeResult> {
+  const searchResults = input.searchResults ?? [];
+  const grounding: MaterialGrounding =
+    searchResults.length > 0 ? "web" : "model_memory";
   const { object } = await runStructuredNode<ResearchCategories>({
     model: input.model,
     template: RESEARCH_GATHER_TEMPLATE,
@@ -123,6 +184,8 @@ export async function runResearchNode(
         "（创作者尚未设置定位——按选题本身的价值判断相关性即可）",
       topic: input.topicTitle,
       angle: input.topicAngle ? `\n切入角度：${input.topicAngle}` : "",
+      // [T-084a] 联网检索结果块(空 → 整段省略,模型走纯记忆)。
+      searchResults: formatSearchResultsFacet(searchResults),
     },
     maxRetries: input.maxRetries,
   });
@@ -130,5 +193,5 @@ export async function runResearchNode(
   if (items.length === 0) {
     throw new Error("research-node: agent 未产出可解析素材");
   }
-  return { items, categories: object };
+  return { items, categories: object, grounding };
 }

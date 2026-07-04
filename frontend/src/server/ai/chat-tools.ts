@@ -22,6 +22,12 @@ import { humanizeAiError } from "@/lib/ai-error-humanize";
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
   /**
+   * [T-084a] 是否已配置联网检索(web.search capability)—— 由 chat-runner 在装配期探测
+   * resolveSearchSpec 是否成功后注入。仅驱动 material.gather 工具的**动态诚实描述**(配了才说
+   * 「真实搜集…带来源」;未配则明说素材来自训练记忆需核实)。默认 undefined = 未配。
+   */
+  searchConfigured?: boolean;
+  /**
    * topic.generate 核心 —— 复用 ai-worker.runTopicNode,产选题候选(TopicItem[])。
    * [T-081] extraBrief:对话中获得的补充指令/洞察,原样进生成 prompt(优先级高于既有档案)。
    */
@@ -76,12 +82,23 @@ export interface ChatToolDeps {
     extraBrief?: string;
   }) => Promise<Array<{ heading: string; body: string }>>;
   /**
-   * [T-057④] material.gather 核心 —— 搜素材候选(复用 runResearchNode 四类结构化输出)。
-   * 产物经 ChatGatherCard 逐条「存入弹药」(knowledge.create+materialLink,人采纳)。
+   * [T-057④/T-084a] material.gather 核心 —— 先真联网检索(resolveSearchSpec+searchWeb),再
+   * runResearchNode 结构化综合(检索结果前置注入,非模型工具),诚实降级。产物经 ChatGatherCard
+   * 逐条「存入弹药」(knowledge.create+materialLink,人采纳)。
+   *   - grounding: "web"=经联网检索、"model_memory"=未配/检索失败降级(前端渲黄条 + 需核实徽标)。
+   *   - items[].sourceUrl: 该条素材引用的检索真实 URL(有则前端渲可点域名链接;无则渲需核实徽标)。
    */
-  gatherMaterials: (input: { query?: string }) => Promise<
-    Array<{ title: string; url: string; source: string; whyRelevant: string; category: string }>
-  >;
+  gatherMaterials: (input: { query?: string }) => Promise<{
+    grounding: "web" | "model_memory";
+    items: Array<{
+      title: string;
+      url: string;
+      source: string;
+      whyRelevant: string;
+      category: string;
+      sourceUrl?: string;
+    }>;
+  }>;
   /**
    * calibration.diagnose 核心 —— 对一条对话里描述的发布前内容(title + 可选 script)按变现加权
    * 评分标准逐维度盲评,产**诊断候选**(非实体)。复用 calibration.diagnose 模板 + parseDiagnosis。
@@ -230,7 +247,17 @@ export interface ScriptDraftToolResult {
 
 export interface MaterialGatherToolResult {
   kind: "material.gather";
-  items: Array<{ title: string; url: string; source: string; whyRelevant: string; category: string }>;
+  // [T-084a] 整体信源打标:web=经联网检索、model_memory=未配/降级(前端据此渲黄条)。
+  grounding: "web" | "model_memory";
+  items: Array<{
+    title: string;
+    url: string;
+    source: string;
+    whyRelevant: string;
+    category: string;
+    /** [T-084a] 该条引用的检索真实 URL(有则前端渲可点域名链接;无则渲「需核实」徽标)。 */
+    sourceUrl?: string;
+  }>;
 }
 
 export interface CalibrationDiagnoseToolResult {
@@ -770,12 +797,15 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       },
     }),
     "material.gather": tool({
-      description:
-        "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类,带来源)。创作者会逐条挑选存入这条内容的弹药。当用户要找素材/搜资料/要案例数据时调用。",
+      // [T-084a] 动态诚实描述:配了联网检索才说「真实搜集…带来源」;未配则明说素材来自训练
+      // 记忆需核实(去掉无条件的「真实…带来源」宣称,防名实不符)。
+      description: deps.searchConfigured
+        ? "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类)。已配联网检索,会先真联网搜索再综合,带真实来源 URL。创作者会逐条挑选存入这条内容的弹药。当用户要找素材/搜资料/要案例数据时调用。"
+        : "围绕主题搜集创作素材(钩子/案例/数据点/金句四类)。**当前未配置联网检索,素材来自模型训练记忆、非实时搜索,来源需核实**——调用后要主动告知用户这一点,绝不假装搜过网。当用户要找素材/搜资料/要案例数据时调用。",
       inputSchema: MATERIAL_GATHER_PARAMS,
       execute: async ({ query }): Promise<MaterialGatherToolResult> => {
-        const items = await deps.gatherMaterials({ query });
-        return { kind: "material.gather", items };
+        const { items, grounding } = await deps.gatherMaterials({ query });
+        return { kind: "material.gather", grounding, items };
       },
     }),
     "calibration.diagnose": tool({

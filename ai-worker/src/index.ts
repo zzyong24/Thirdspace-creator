@@ -103,6 +103,26 @@ export {
   createImageOnlyFakeAdapter,
   createFakeAsyncVideoAdapter,
 } from "./runtime/multimodal-factory.fake";
+// 联网检索工厂(T-084a,SPEC 2026-07-03 §1.1)—— searchWeb 按 provider 分派 REST 适配器,与
+// generateImage/generateVideo 并列。host(persistence-client)解析 SearchSpec(resolveSearchSpec)
+// + 注册 provider 适配器,调 searchWeb(spec, query) 即可,统一返 SearchResult[]。检索做**节点前置
+// 步骤**(非模型工具):调用方先 searchWeb 拿真结果,再注入 generateObject 综合(SPEC §0.5-D)。
+export {
+  searchWeb,
+  SearchConfigError,
+  SearchExecutionError,
+  type SearchSpec,
+  type SearchResult,
+  type SearchWebOptions,
+  type SearchProviderAdapter,
+  type SearchProviderRegistry,
+} from "./runtime/search-factory";
+// 三家搜索 provider 适配器(bocha/tavily/serpapi)—— host 注册进 registry(keyed by provider);
+// fetchImpl 可注入(fake fetch)供单测。各自打真 REST(api.bochaai.com / api.tavily.com /
+// serpapi.com),响应映射到 SearchResult。
+export { createBochaAdapter } from "./runtime/search-bocha";
+export { createTavilyAdapter } from "./runtime/search-tavily";
+export { createSerpapiAdapter } from "./runtime/search-serpapi";
 
 // [T-055h asset.classify] 视觉理解(OpenAI 兼容 chat vision,VLM 看图打标签)。
 export { describeImageOpenAICompatible } from "./runtime/vision";

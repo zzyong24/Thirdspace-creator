@@ -106,15 +106,18 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   const draftScript = vi.fn(async () => [
     { heading: "1. 开场", body: "口播：90% 文档没人看" },
   ]);
-  const gatherMaterials = vi.fn(async () => [
-    {
-      title: "RAG 落地案例",
-      url: "https://example.com",
-      source: "案例",
-      whyRelevant: "同赛道",
-      category: "案例",
-    },
-  ]);
+  const gatherMaterials = vi.fn(async () => ({
+    grounding: "model_memory" as const,
+    items: [
+      {
+        title: "RAG 落地案例",
+        url: "https://example.com",
+        source: "案例",
+        whyRelevant: "同赛道",
+        category: "案例",
+      },
+    ],
+  }));
   const generateHooks = vi.fn(async () => [
     { text: "你们公司那堆文档,90% 没人看", angle: "反常识断言" },
   ]);

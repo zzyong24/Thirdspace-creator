@@ -42,6 +42,29 @@ export interface AssembleChatDeps extends ContextDeps {
     capability: string,
   ) => Promise<ModelSpec>;
   /**
+   * [T-084a] 联网检索端口(可选)—— gatherMaterials 的「先真联网检索」用。由 composition root
+   * (persistence-client)绑:内部 resolveSearchSpec(web.search)+ 按 provider 分派 REST adapter。
+   *   - probeSearchConfigured: 探测用户是否配了 web.search(honestyBlock 第 6 条 + 工具动态描述用),
+   *     不打网络、只查配置;未装配 → 视为未配(诚实降级)。
+   *   - searchWeb: 真执行一次联网检索,返 SearchResult[];未配抛 SearchConfigError、检索失败抛
+   *     SearchExecutionError,由 gatherMaterials catch 成 model_memory 降级(不 crash)。
+   * 两者都可选:未装配时 gatherMaterials 走纯记忆(与今天现状一致),honestyBlock 注未配措辞。
+   */
+  probeSearchConfigured?: (ctx: RequestContext) => Promise<boolean>;
+  searchWeb?: (
+    ctx: RequestContext,
+    query: string,
+    opts?: { count?: number },
+  ) => Promise<
+    Array<{
+      title: string;
+      url: string;
+      snippet: string;
+      publishedAt?: string;
+      siteName?: string;
+    }>
+  >;
+  /**
    * 只读 context 读端口(供 context.projects / context.knowledge / context.materials 工具)。
    * **只读、按 ctx.userId 过滤**,由 composition root(persistence-client)绑到 user-scoped 读源
    * (projects repo / knowledge service / assets service)。可选:未装配时对应工具读到空(诚实降级,
@@ -234,6 +257,16 @@ export async function buildChatAssembly(
   const baseSystem = assembleChatSystem(skill.system, context, {
     includeAccounts: skillId === "chatbox.positioning",
   });
+  // [T-084a] 联网检索配置探测(honestyBlock 第 6.5 条 + material.gather 工具动态描述用)。
+  // 只查配置、不打网络;端口未装配(probeSearchConfigured 缺省)或探测抛错 → 视为未配(诚实降级)。
+  let searchConfigured = false;
+  if (deps.probeSearchConfigured) {
+    try {
+      searchConfigured = await deps.probeSearchConfigured(ctx);
+    } catch {
+      searchConfigured = false;
+    }
+  }
   // [T-058①B] 能力边界诚实(实录复盘:模型口头宣称「已采纳写入定位母版」但 DB 未动):
   // 写库只经工具产卡+用户点采纳;禁止假承诺;工具带分页限制时如实说明。
   const honestyBlock = [
@@ -249,6 +282,11 @@ export async function buildChatAssembly(
     // 数据卡直渲给用户,模型只有指针权、无转录权 —— 弱模型长清单逐字转录必幻觉(80 条标题
     // 被整批重写实录),禁掉转录通路。
     "6. context.* 工具返回的清单/详情/全文,用户已在对话中的数据卡上看到原文。你对这些数据只有指针权——可以引用条目(说第几条/哪个标题/id)、归纳统计、对比分析;禁止逐字复述清单内容(标题列表、评论原文批量照抄都算)。用户要看数据时,告诉 TA「已展示在卡片中」。",
+    // [T-084a SPEC §1.3] 素材搜集诚实降级第 6 条(动态,按 resolveSearchSpec 探测结果注入):
+    // 未配联网检索时,素材来自训练记忆,模型必须主动告知非实时检索,绝不假装搜过网。
+    searchConfigured
+      ? "7. 素材搜集(material.gather)已配置联网检索:调用后素材会先经真实联网搜索再综合,带真实来源 URL。你可以说「联网搜到」,但仍要提醒用户带 URL 的条目才是查证过的真信源、标『需核实』的是模型记忆。"
+      : "7. 素材搜集(material.gather)当前**未配置联网检索**:你给出的素材来自训练记忆、不是实时检索结果。调用素材工具后,必须主动告知用户「这些素材来自我的训练记忆、非实时联网搜索,来源需你自行核实」,绝不使用「我搜到/我查到/联网搜到」等话术、绝不假装搜过网。想要真实联网素材,引导用户去设置配『联网搜索』。",
   ].join("\n");
   // [T-077c] 技能自感知(SPEC §1.3 [gate-F1]):把当前 surface 白名单的技能清单注进 system
   // (每工具一行「中文名(工具名):一句话用途」,行数=白名单工具数、上限 20 超出截断)——
@@ -290,6 +328,8 @@ export async function buildChatAssembly(
 
   // 5) 工具白名单层:按 skill 白名单挂工具,execute 复用现有 runner 核心产**候选**(非实体)。
   const toolDeps: ChatToolDeps = {
+    // [T-084a] 联网检索是否已配 —— 驱动 material.gather 工具的动态诚实描述(上方已探测)。
+    searchConfigured,
     generateTopics: async ({ basis, extraBrief }) => {
       // 复用 ai-worker.runTopicNode —— 产 TopicItem[] 候选(与一键岛同一引擎)。
       // [T-081] extraBrief 对任意 basis 都生效:comments/knowledge 依据块后追加「本次生成指令」段
@@ -393,21 +433,50 @@ export async function buildChatAssembly(
       });
     },
     gatherMaterials: async ({ query }) => {
-      // [T-057④] 复用 runResearchNode(research.gather capability,四类结构化素材)。
+      // [T-057④/T-084a] 两步:①先真联网检索(searchWeb,失败/未配降级)②runResearchNode 结构化
+      // 综合(检索结果前置注入,非模型工具 —— 保住任何模型都产可解析输出,ffb7951 教训)。
+      const effQuery = query?.trim() || selectionTitle || "";
+      // ① 联网检索(端口未装配 → 空;SearchConfigError/SearchExecutionError → catch 成空降级)。
+      let searchResults: Array<{
+        title: string;
+        url: string;
+        snippet: string;
+        publishedAt?: string;
+        siteName?: string;
+      }> = [];
+      if (deps.searchWeb && effQuery) {
+        try {
+          searchResults = await deps.searchWeb(ctx, effQuery, { count: 10 });
+        } catch (err) {
+          // 未配/检索失败 → 诚实降级纯记忆(不 crash);记日志供 dev 排查。
+          console.warn(
+            `[chat-runner] gatherMaterials searchWeb 降级(model_memory): ${
+              err instanceof Error ? err.message : String(err)
+            }`,
+          );
+          searchResults = [];
+        }
+      }
+      // ② 结构化综合(research.gather capability,四类结构化素材;检索结果注入 → 模型据其填真实 URL)。
       const spec = await deps.resolveModelSpec(ctx, "research.gather");
       const { runResearchNode } = await import("@creatoros/ai-worker");
-      const { items } = await runResearchNode({
+      const { items, grounding } = await runResearchNode({
         model: modelFor(spec),
         positioningBrief: context.positioningBrief,
-        topicTitle: query?.trim() || selectionTitle || "",
+        topicTitle: effQuery,
+        searchResults,
       });
-      return items.map((it) => ({
-        title: it.title,
-        url: it.url,
-        source: it.source,
-        whyRelevant: it.why_relevant,
-        category: it.source || "素材",
-      }));
+      return {
+        grounding,
+        items: items.map((it) => ({
+          title: it.title,
+          url: it.url,
+          source: it.source,
+          whyRelevant: it.why_relevant,
+          category: it.source || "素材",
+          ...(it.sourceUrl ? { sourceUrl: it.sourceUrl } : {}),
+        })),
+      };
     },
     diagnoseContent: async ({ title, script, extraBrief }) => {
       // 复用 calibration.diagnose 模板 + parseDiagnosis(与 calibration-diagnose-runner 同源)。

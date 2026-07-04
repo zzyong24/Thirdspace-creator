@@ -115,6 +115,15 @@ export function buildSettingsViewModel(): SettingsViewModel {
       baseUrl: "",
       hasSecret: false as const,
     },
+    // [T-084a] 联网搜索。缺省未配 —— 素材搜集来自模型记忆(卡片黄条+需核实徽标),直到
+    // 用户在此绑博查/Tavily/SerpApi(或任意搜索 provider)provider/key。
+    search: {
+      capability: "web.search" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
     },
     // 抖音账号绑定状态 (T-032a). Default unconnected — the real status is read by
     // the (creator)/settings route via `ingestion.douyin.status` and overlaid onto

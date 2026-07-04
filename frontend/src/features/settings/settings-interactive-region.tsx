@@ -330,6 +330,11 @@ export function SettingsDialog({
                   kind="review"
                   state={viewModel.multimodalModels.review}
                 />
+                {/* [T-084a SPEC §1.1] 联网搜索(素材搜集前置真检索;未配 → 素材来自记忆+需核实)。 */}
+                <MultimodalModelCard
+                  kind="search"
+                  state={viewModel.multimodalModels.search}
+                />
                 {/* [T-086 SPEC §4] 审核规则库管理(候选态复盘回流采纳门;禁新增一级导航)。 */}
                 <ReviewRulesCard />
               </div>
@@ -1580,13 +1585,33 @@ const MULTIMODAL_META = {
       "https://ark.cn-beijing.volces.com/api/v3(留空=provider 默认)",
     disabledHint: "未配 → 用默认模型审核,报告标注非专用。",
   },
+  // [T-084a SPEC §1.1] 联网搜索 —— 素材搜集(material.gather)前置真检索用。provider 用户可配
+  // (博查/Tavily/SerpApi 首发);未配 → 素材来自模型记忆(卡片黄条 + 需核实徽标 + honestyBlock
+  // 声明非实时检索)。model 对搜索多选填(serpapi 用它当 engine,默认 google)。
+  search: {
+    capability: "web.search" as const,
+    title: "联网搜索",
+    icon: Cpu,
+    description:
+      "素材搜集(找素材/搜资料)前置真联网检索用;不配则素材来自模型训练记忆、来源需核实。",
+    providerSuggestions: ["bocha", "tavily", "serpapi"] as ReadonlyArray<string>,
+    providerPlaceholder: "bocha",
+    providerHelp:
+      "搜索厂商:bocha(博查,中文优)/ tavily / serpapi,可自定义。",
+    modelHelp:
+      "多数搜索无「模型」概念可留空;serpapi 用它当 engine(默认 google,可填 bing 等)。",
+    modelPlaceholder: "",
+    baseUrlPlaceholder:
+      "留空=provider 默认(bocha=api.bochaai.com / tavily=api.tavily.com / serpapi=serpapi.com)",
+    disabledHint: "未配 → 素材来自模型记忆,标注需核实。",
+  },
 } as const;
 
 function MultimodalModelCard({
   kind,
   state,
 }: {
-  kind: "image" | "video" | "audio" | "embed" | "vision" | "review";
+  kind: "image" | "video" | "audio" | "embed" | "vision" | "review" | "search";
   state: MultimodalModelState;
 }) {
   const meta = MULTIMODAL_META[kind];
@@ -1605,7 +1630,12 @@ function MultimodalModelCard({
     setSecret("");
   }, [state]);
 
-  const configured = provider.trim().length > 0 && modelName.trim().length > 0;
+  // 多数档要 provider + model 齐全;搜索档(web.search)model 选填,只需 provider(serpapi 用
+  // model 当 engine、留空默认 google;bocha/tavily 无模型概念)。
+  const configured =
+    kind === "search"
+      ? provider.trim().length > 0
+      : provider.trim().length > 0 && modelName.trim().length > 0;
   const canSave = configured && !pending;
 
   // One PUT upserts the whole capability row; an empty secret is omitted so a

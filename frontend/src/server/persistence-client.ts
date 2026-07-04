@@ -233,6 +233,8 @@ import {
   resolveMultimodalSpec as resolveMultimodalSpecFn,
   resolveTranscribeSpec as resolveTranscribeSpecFn,
 } from "@/server/ai/multimodal/resolve";
+// [T-084a] 联网检索解析层 —— 与多模态 resolve 并列(web.search capability,自由字符串零契约改)。
+import { resolveSearchSpec as resolveSearchSpecFn } from "@/server/ai/search/resolve";
 // 多模态 provider 适配器(L5 asset.generate)。createMinimaxAdapter 是纯自建 REST(image
 // 同步 / video 异步轮询),不碰 Agent SDK —— 不违 determinism 边界,可在 host 组合层直接注册。
 // createOpenaiAsrAdapter(T-030-D2)= OpenAI 兼容 ASR(SiliconFlow/OpenAI/Groq),逐字稿转写用。
@@ -242,6 +244,15 @@ import {
   createOpenaiAsrAdapter,
   transcribeAudio as transcribeAudioFn,
   type MultimodalProviderRegistry,
+} from "@creatoros/ai-worker";
+// [T-084a] 联网检索工厂 + 三家 provider 适配器 —— host 注册进 registry(keyed by provider),
+// gatherMaterials 前置检索用。与多模态 registry 并列;加 provider = 在此注册一个适配器。
+import {
+  searchWeb as searchWebFn,
+  createBochaAdapter,
+  createTavilyAdapter,
+  createSerpapiAdapter,
+  type SearchProviderRegistry,
 } from "@creatoros/ai-worker";
 import {
   createPositioningService,
@@ -740,6 +751,23 @@ export interface ChatRuntime {
   // 按需读,由 chat-runner 的对应工具 execute 调用。全部 user-scoped(绑到 projects repo / knowledge
   // service / assets service 的 ctx.userId 读)。
   contextReaders: ChatContextReaders;
+  // [T-084a] 联网检索端口(gatherMaterials 前置检索用)。probeSearchConfigured 探测 web.search
+  // 是否已配(honestyBlock 第 6 条 + 工具动态描述);searchWeb 真执行检索(未配/失败抛错,
+  // chat-runner catch 成 model_memory 降级)。
+  probeSearchConfigured: (ctx: RequestContext) => Promise<boolean>;
+  searchWeb: (
+    ctx: RequestContext,
+    query: string,
+    opts?: { count?: number },
+  ) => Promise<
+    Array<{
+      title: string;
+      url: string;
+      snippet: string;
+      publishedAt?: string;
+      siteName?: string;
+    }>
+  >;
 }
 
 const globalForPersistence = globalThis as unknown as {
@@ -4572,6 +4600,43 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     groq: openaiAsrAdapter,
   };
 
+  // ── [T-084a] 联网检索解析 + registry(SPEC 2026-07-03 §1.1)─────────────────────
+  // resolveSearchSpec:与多模态层同一套 getModelConfig(settings 拥有 model_configurations)+ env,
+  // 投影成 SearchSpec(provider/baseUrl/model/token)。web.search 未配 → 抛 SearchConfigError
+  // (gatherMaterials 接住 → grounding=model_memory 降级,不 crash)。search provider 用户可配。
+  const resolveSearchSpec = (ctx: RequestContext) =>
+    resolveSearchSpecFn(ctx, {
+      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      env: process.env,
+    });
+  // 搜索 provider 注册表(keyed by provider)。三家首发适配器(纯自建 REST,不碰 Agent SDK);
+  // 加 provider = 在此注册一个适配器,不改 runner 与业务代码。真检索要真 web.search key(未配 →
+  // resolveSearchSpec 抛错、诚实降级);单测装配注 fake fetch,不碰这个真 registry。
+  const searchRegistry: SearchProviderRegistry = {
+    bocha: createBochaAdapter(),
+    tavily: createTavilyAdapter(),
+    serpapi: createSerpapiAdapter(),
+  };
+  // ChatBox gatherMaterials 前置检索端口:解析 spec + 按 provider 分派 REST。未配抛 SearchConfigError、
+  // 检索失败抛 SearchExecutionError(chat-runner catch 成 model_memory 降级)。
+  const searchWebPort = async (
+    ctx: RequestContext,
+    query: string,
+    opts?: { count?: number },
+  ) => {
+    const spec = await resolveSearchSpec(ctx);
+    return searchWebFn(spec, query, searchRegistry, opts);
+  };
+  // honestyBlock 第 6 条 + 工具动态描述用:探测 web.search 是否已配(只查配置、不打网络)。
+  const probeSearchConfigured = async (ctx: RequestContext): Promise<boolean> => {
+    try {
+      await resolveSearchSpec(ctx);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   // Seed the canonical user's Settings rows (plan Step 6 seed parity) so the
   // /settings page resolves the real preference/model/agent rows under the seeded
   // login. seed* is onConflictDoNothing → a re-built singleton never double-seeds.
@@ -5181,6 +5246,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         }));
       },
     },
+    // [T-084a] 联网检索端口 —— gatherMaterials 前置检索 + honestyBlock/工具动态描述探测。
+    probeSearchConfigured,
+    searchWeb: searchWebPort,
   };
 
   // ── T-040a 提示词/skill 服务端可配(装配接线,SPEC 2026-07-02 §4.2)──────────────

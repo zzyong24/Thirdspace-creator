@@ -19,6 +19,9 @@ export default defineConfig({
     // 127 文件并发时会撞穿默认 5s → 假超时。给足余量(仍能抓真 hang,只是更慢才失败)。
     testTimeout: 20000,
     hookTimeout: 20000,
+    // knowledge 域重集成测在满套件高负载下偶发 `Timeout starting forks runner`(fork 池
+    // 启动型 flaky,单文件跑必绿、失败文件轮换)→ retry 2 次消除,不掩盖真失败(真 hang 仍 3 连败)。
+    retry: 2,
     // `server-only` / `client-only` throw outside the Next build conditions;
     // stub them for tests. The guards stay active in the Turbopack build.
     alias: {

@@ -126,6 +126,14 @@ const VM: SettingsViewModel = {
       baseUrl: "",
       hasSecret: false as const,
     },
+    // [T-084a] 联网搜索(测试 fixture 默认未配置)。
+    search: {
+      capability: "web.search" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
   },
   douyinAccount: { loggedIn: false },
 };
@@ -353,6 +361,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         vision: VM.multimodalModels.vision,
         embed: VM.multimodalModels.embed,
         review: VM.multimodalModels.review,
+        search: VM.multimodalModels.search,
       },
     };
     const doc = renderDialog(VM_MULTIMODAL);

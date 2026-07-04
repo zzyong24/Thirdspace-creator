@@ -1461,17 +1461,22 @@ export function AICopilotContent({
                         />
                       );
                     }
-                    // [T-057④] 搜素材(material.gather)→ 逐条「存入弹药」(knowledge+materialLink)。
+                    // [T-057④/T-084a] 搜素材(material.gather)→ 逐条「存入弹药」(knowledge+
+                    // materialLink);grounding=model_memory 时卡片渲黄条 + 需核实徽标(未配联网)。
                     if (
                       name === "material.gather" &&
                       out.kind === "material.gather"
                     ) {
-                      const o = out as { items?: ChatGatherItem[] };
+                      const o = out as {
+                        items?: ChatGatherItem[];
+                        grounding?: "web" | "model_memory";
+                      };
                       return (
                         <ChatGatherCard
                           key={key}
                           items={o.items ?? []}
                           projectId={activeProjectChip?.id ?? null}
+                          grounding={o.grounding ?? "model_memory"}
                         />
                       );
                     }

@@ -10,6 +10,39 @@ import {
 } from "./chat-runner";
 import type { ChatContext } from "./chat-context";
 
+// [T-084a] 保留 ai-worker 全部真实导出(registerAllTemplates/getTemplate/modelFor 等装配用),
+// 仅把 runResearchNode 换成不打网络的探针:grounding 由入参 searchResults 是否非空驱动(与真
+// 节点同逻辑),让 gatherMaterials 绑定的「前置检索→注入→透传 grounding/sourceUrl」可零成本单测。
+vi.mock("@creatoros/ai-worker", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@creatoros/ai-worker")>();
+  return {
+    ...actual,
+    runResearchNode: vi.fn(
+      async (input: { searchResults?: unknown[] }) => {
+        const hasSearch = (input.searchResults?.length ?? 0) > 0;
+        return {
+          grounding: hasSearch ? "web" : "model_memory",
+          categories: {
+            hooks: [],
+            cases: [],
+            dataPoints: [],
+            quotes: [],
+          },
+          items: [
+            {
+              title: hasSearch ? "案例：真实检索案例" : "案例：记忆案例",
+              url: hasSearch ? "https://blog.example.com/rag" : "",
+              source: hasSearch ? "example.com" : "需核实",
+              why_relevant: "同赛道",
+              ...(hasSearch ? { sourceUrl: "https://blog.example.com/rag" } : {}),
+            },
+          ],
+        };
+      },
+    ),
+  };
+});
+
 // /api/chat 装配单测(SPEC §7「/api/chat 装配:resolve skill + 注入 context + tools 挂载」+
 // 「ChatContext 三层注入选对 skill」)。
 //
@@ -520,6 +553,84 @@ describe("[T-081⑤] honestyBlock — 工具边界诚实", () => {
     expect(a.system).toContain("只有指针权");
     expect(a.system).toContain("禁止逐字复述清单内容");
     expect(a.system).toContain("已展示在卡片中");
+  });
+});
+
+// [T-084a SPEC §1.3] 素材搜集诚实降级:honestyBlock 第 7 条按 probeSearchConfigured 动态注入;
+// gatherMaterials 先真检索(searchWeb)再综合,失败/未配降级 grounding=model_memory。
+describe("[T-084a] 联网检索诚实降级 + honestyBlock 动态第 7 条", () => {
+  it("未配联网检索(默认无 probe 端口)→ 注入「未配置联网检索…绝不假装搜过网」", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).toContain("未配置联网检索");
+    expect(a.system).toContain("绝不使用「我搜到/我查到/联网搜到」等话术");
+    expect(a.system).not.toContain("已配置联网检索:调用后素材会先经真实联网搜索");
+  });
+
+  it("已配联网检索(probeSearchConfigured=true)→ 注入「已配置联网检索」措辞", async () => {
+    const { deps } = makeDeps({
+      probeSearchConfigured: async () => true,
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).toContain("已配置联网检索");
+    expect(a.system).not.toContain("未配置联网检索**:你给出的素材来自训练记忆");
+  });
+
+  it("probeSearchConfigured 抛错 → 视为未配(诚实降级,不崩装配)", async () => {
+    const { deps } = makeDeps({
+      probeSearchConfigured: async () => {
+        throw new Error("settings unavailable");
+      },
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).toContain("未配置联网检索");
+  });
+
+  it("gatherMaterials 有 searchWeb 端口 → 真检索 + grounding=web + sourceUrl 透传", async () => {
+    const searchWeb = vi.fn(async () => [
+      {
+        title: "RAG 复盘",
+        url: "https://blog.example.com/rag",
+        snippet: "响应砍到 1/5",
+        siteName: "example.com",
+      },
+    ]);
+    const { deps } = makeDeps({
+      probeSearchConfigured: async () => true,
+      searchWeb,
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const gather = a.tools["material.gather"] as { execute?: unknown };
+    const res = (await runToolExecute(gather, { query: "AI 提效" })) as {
+      kind: string;
+      grounding: string;
+      items: Array<{ sourceUrl?: string; url: string }>;
+    };
+    // searchWeb 以真 query 被调(前置检索真发生,top 10)。
+    expect(searchWeb).toHaveBeenCalledWith(
+      ctx,
+      "AI 提效",
+      expect.objectContaining({ count: 10 }),
+    );
+    expect(res.kind).toBe("material.gather");
+    // 有检索结果 → grounding=web,sourceUrl 透传到工具结果(前端渲可点域名链接)。
+    expect(res.grounding).toBe("web");
+    expect(res.items[0]?.sourceUrl).toBe("https://blog.example.com/rag");
+  });
+
+  it("searchWeb 抛错(未配/超时)→ catch 成 model_memory 降级,不 crash", async () => {
+    const searchWeb = vi.fn(async () => {
+      throw new Error("SearchConfigError: web.search 未配置");
+    });
+    const { deps } = makeDeps({ searchWeb });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const gather = a.tools["material.gather"] as { execute?: unknown };
+    const res = (await runToolExecute(gather, { query: "X" })) as {
+      grounding: string;
+    };
+    expect(searchWeb).toHaveBeenCalled();
+    // 检索抛错被吞 → 走纯记忆综合,grounding=model_memory(诚实降级)。
+    expect(res.grounding).toBe("model_memory");
   });
 });
 

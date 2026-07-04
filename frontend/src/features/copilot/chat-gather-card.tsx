@@ -19,14 +19,28 @@ export interface ChatGatherItem {
   source: string;
   whyRelevant: string;
   category: string;
+  /** [T-084a] 该条引用的联网检索真实 URL(有则渲可点域名链接;无则渲「需核实」徽标)。 */
+  sourceUrl?: string;
+}
+
+/** [T-084a] 从 URL 取域名做链接文案(失败原样返)。 */
+function domainOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
 }
 
 export function ChatGatherCard({
   items,
   projectId,
+  grounding = "model_memory",
 }: {
   items: ReadonlyArray<ChatGatherItem>;
   projectId: string | null;
+  /** [T-084a] web=经联网检索(不显黄条)、model_memory=未配/降级(显黄条 + 需核实徽标)。 */
+  grounding?: "web" | "model_memory";
 }) {
   const router = useRouter();
   const [states, setStates] = React.useState<
@@ -39,13 +53,15 @@ export function ChatGatherCard({
       if (!item || !projectId) return;
       setStates((prev) => ({ ...prev, [index]: "saving" }));
       try {
+        // [T-084a] 来源链:优先 sourceUrl(检索真实 URL),回退 url(镜像位)。
+        const srcUrl = item.sourceUrl || item.url;
         const created = (await client.createKnowledge({
           params: undefined,
           query: undefined,
           body: {
             title: item.title,
             knowledgeType: "reference",
-            content: [item.whyRelevant, item.url && `来源:${item.url}`]
+            content: [item.whyRelevant, srcUrl && `来源:${srcUrl}`]
               .filter(Boolean)
               .join("\n"),
           },
@@ -85,10 +101,28 @@ export function ChatGatherCard({
   return (
     <div
       data-slot="chat-gather-card"
+      data-grounding={grounding}
       className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
     >
+      {/* [T-084a SPEC §1.3] 未配联网检索 → 黄条诚实告知素材来自模型记忆、来源需核实。 */}
+      {grounding === "model_memory" ? (
+        <div
+          data-slot="chat-gather-warning"
+          className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-md border border-warning/40 bg-warning-soft px-2 py-1.5 text-[10px] leading-snug text-warning-foreground"
+        >
+          <span>
+            ⚠️ 未配置联网搜索——以下素材来自模型记忆,来源需自行核实。
+          </span>
+          <a
+            href="/settings?tab=models"
+            className="font-medium text-brand underline underline-offset-2"
+          >
+            去设置配联网搜索
+          </a>
+        </div>
+      ) : null}
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        搜到素材 · {items.length} 条 · 逐条存入弹药
+        {grounding === "web" ? "联网搜到素材" : "搜到素材"} · {items.length} 条 · 逐条存入弹药
       </span>
       <ol className="flex flex-col gap-1.5">
         {items.map((it, i) => {
@@ -111,18 +145,30 @@ export function ChatGatherCard({
                 {it.whyRelevant}
               </p>
               <div className="flex items-center justify-between gap-2">
-                {it.url ? (
-                  <a
-                    href={it.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="truncate text-[10px] text-brand underline underline-offset-2"
-                  >
-                    {it.url}
-                  </a>
-                ) : (
-                  <span />
-                )}
+                {(() => {
+                  // [T-084a] 有 sourceUrl(检索真实来源)→ 可点域名链接(新窗查证);
+                  // 无 → 「需核实」徽标(诚实标注非查证过的真信源)。
+                  const src = it.sourceUrl || it.url;
+                  return src ? (
+                    <a
+                      href={src}
+                      target="_blank"
+                      rel="noreferrer"
+                      data-slot="chat-gather-source-link"
+                      className="inline-flex min-w-0 items-center gap-1 truncate text-[10px] text-brand underline underline-offset-2"
+                      title={src}
+                    >
+                      🔗 {domainOf(src)}
+                    </a>
+                  ) : (
+                    <span
+                      data-slot="chat-gather-needs-check"
+                      className="shrink-0 rounded-full border border-warning/40 bg-warning-soft px-1.5 py-0.5 text-[10px] text-warning-foreground"
+                    >
+                      需核实
+                    </span>
+                  );
+                })()}
                 {projectId ? (
                   s === "saved" ? (
                     <span className="shrink-0 text-[10px] font-medium text-success">

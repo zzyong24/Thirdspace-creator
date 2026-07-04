@@ -166,6 +166,9 @@ export async function POST(req: Request): Promise<Response> {
         resolveModelSpec: runtime.resolveModelSpec,
         // 只读 context 工具(context.projects/knowledge/materials)的真数据读端口(user-scoped)。
         contextReaders: runtime.contextReaders,
+        // [T-084a] 联网检索端口 —— gatherMaterials 先真搜索、honestyBlock 探测未配诚实降级。
+        probeSearchConfigured: runtime.probeSearchConfigured,
+        searchWeb: runtime.searchWeb,
       },
       async (finalText) => {
         // assistant 回复落库(best-effort,失败不影响已流给前端的内容)。

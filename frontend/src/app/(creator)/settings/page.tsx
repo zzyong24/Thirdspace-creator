@@ -149,6 +149,8 @@ export default async function SettingsRoutePage() {
         embed: multimodalRow("knowledge.search.embed"),
         // [T-086] 文案审核模型(未配 = 用默认模型审核,报告标注非专用)。
         review: multimodalRow("script.review"),
+        // [T-084a] 联网搜索(未配 = 素材来自模型记忆,卡片黄条+需核实徽标)。
+        search: multimodalRow("web.search"),
       };
     } catch {
       // listModels unavailable (transport race) → fall back to the fixture.
