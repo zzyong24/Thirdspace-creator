@@ -66,6 +66,7 @@ import {
   type UIMessage,
 } from "ai";
 import { ChatCandidateCard, type ChatTopicCandidate } from "./chat-candidate-card";
+import { ChatEnrichCard, type ChatEnrichCardData } from "./chat-enrich-card";
 import { ChatHookCard, type ChatHookItem } from "./chat-hook-card";
 import {
   ChatScriptDraftCard,
@@ -1588,6 +1589,20 @@ export function AICopilotContent({
                         <React.Fragment key={key}>
                           {traceRow}
                           <ChatCandidateCard candidates={o.items ?? []} />
+                        </React.Fragment>
+                      );
+                    }
+                    // [T-117] 补全选题卡(topic.enrich)→ 富卡渲染 + 采纳(patch 到被补全的
+                    // 那条候选)。此前缺此分支 → topic.card 结果被静默丢弃(用户看不到卡)。
+                    if (name === "topic.enrich" && out.kind === "topic.card") {
+                      const o = out as { card?: ChatEnrichCardData | null };
+                      return (
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatEnrichCard
+                            card={o.card ?? null}
+                            candidateId={selKind === "candidate" ? (selId ?? null) : null}
+                          />
                         </React.Fragment>
                       );
                     }
