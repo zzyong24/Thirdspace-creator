@@ -80,6 +80,13 @@ export function extractJsonObject(text: string): unknown {
  * schema 约束**:降级到 generateText + extractJsonObject + 用同一 schema 校验(asSchema().validate),
  * 小重试几次。两条路都拿不到合 schema 的对象才抛(调用方接住 → 任务进终态,绝不落一条编造的候选)。
  */
+// [T-122] 单次模型调用硬超时(ms)。Vercel SDK 的 generateObject/generateText 默认**无超时**:
+// 模型端点挂起(不响应也不报错)→ `await` 永不 settle → 调它的 AI 任务(script.review 审核 /
+// topic.enrich 补全 / calibration.diagnose 等)永远卡 running,前端一直转圈。加 AbortSignal.timeout
+// 把「挂起」变成「reject(TimeoutError)」→ 调用方的 try/catch 接住 → 任务进终态(审核降级 L1-only
+// + markSucceeded)。任何有限超时都能抓住挂起;90s 给正常慢模型足够余量,又不至于让用户无限等。
+const MODEL_CALL_TIMEOUT_MS = 90_000;
+
 export async function runStructuredNode<T>(
   input: RunStructuredNodeInput<T>,
 ): Promise<RunStructuredNodeResult<T>> {
@@ -100,6 +107,8 @@ export async function runStructuredNode<T>(
       prompt,
       schema,
       maxRetries,
+      // [T-122] 防端点挂起把任务永远卡 running(见 MODEL_CALL_TIMEOUT_MS 注释)。
+      abortSignal: AbortSignal.timeout(MODEL_CALL_TIMEOUT_MS),
     });
     return { object: object as T };
   } catch (err) {
@@ -118,6 +127,8 @@ export async function runStructuredNode<T>(
         system,
         prompt,
         maxRetries: 0,
+        // [T-122] 文本兜底路径同样加超时(每次尝试独立计时)。
+        abortSignal: AbortSignal.timeout(MODEL_CALL_TIMEOUT_MS),
       });
       const raw = extractJsonObject(text);
       if (raw !== null) {
