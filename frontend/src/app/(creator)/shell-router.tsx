@@ -74,7 +74,6 @@ interface RouteResolution {
  */
 const CONTENT_FILL_ROUTES: ReadonlySet<string> = new Set([
   "/topics",
-  "/calibration",
   "/positioning",
 ]);
 
@@ -205,14 +204,6 @@ export function resolveRoute(
       pageTitle: "选题候选池",
       // [T-052 裁决③] 「按变现潜力排序」随变现中心移除改为「按综合评分排序」。
       pageDescription: "AI / 受众信号 → 按综合评分排序的待选选题 · 一键晋升为 Project（七步③）",
-      contextualCardVariant: "assistant",
-    };
-  }
-  if (pathname === "/calibration") {
-    return {
-      headerMode: "global",
-      pageTitle: "校准",
-      pageDescription: "发布前盲预测 + 回流校准评分维度（七步⑤⑥ · §6.5）",
       contextualCardVariant: "assistant",
     };
   }

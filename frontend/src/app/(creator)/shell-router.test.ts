@@ -5,7 +5,6 @@ import { isContentFillRoute, resolveRoute } from "./shell-router";
 describe("isContentFillRoute", () => {
   it("opts the multi-column workbench routes into fixed-height fill mode", () => {
     expect(isContentFillRoute("/topics")).toBe(true);
-    expect(isContentFillRoute("/calibration")).toBe(true);
     expect(isContentFillRoute("/positioning")).toBe(true);
   });
 

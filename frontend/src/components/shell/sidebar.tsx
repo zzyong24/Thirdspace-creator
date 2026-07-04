@@ -71,8 +71,8 @@ const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   // 选题候选池 — 七步③, SPEC §5.5: AI/受众信号 → 按综合评分排序的待选选题. 紧跟定位中心
   // (定位→选题→项目 的上游顺序): 定位约束选题, 选题落地为项目. [T-052 裁决③] 排序措辞去变现化。
   { id: "topics", label: "选题", href: "/topics", icon: creatorIcons.topics, match: matchExact("/topics") },
-  // 校准闭环 — 七步⑤⑥, §6.5: 发布前盲预测 + 回流校准评分维度. 紧跟选题.
-  { id: "calibration", label: "校准", href: "/calibration", icon: creatorIcons.check, match: matchExact("/calibration") },
+  // [T-112] 独立「校准」模块退役(IA 收敛 SPEC §A):校准能力只走稿面盲预测
+  // (blind-predict-row)+ Copilot calibration.diagnose 深链,不再有独立 /calibration 中心页。
   { id: "projects", label: "项目", href: "/projects", icon: creatorIcons.projects, match: matchPrefix("/projects") },
   { id: "knowledge", label: "知识库", href: "/knowledge", icon: creatorIcons.knowledge, match: matchExact("/knowledge") },
   { id: "assets", label: "素材中心", href: "/assets", icon: creatorIcons.assets, match: matchExact("/assets") },
