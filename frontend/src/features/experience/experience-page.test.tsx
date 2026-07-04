@@ -108,15 +108,19 @@ function makeVm(
   };
 }
 
+// T-113:经验沉淀并入 /knowledge 双 Tab 后,`ExperiencePage` 不再是独立路由的
+// 页壳,而是知识库工作台的一个 Tab body。这里用 /knowledge 路由壳包裹(激活项 =
+// 知识库),锁定的是 ExperiencePage **组件本身**的契约(汇总卡 / 工作台 / 诚实态
+// / Copilot 深链),不再断言经验独立 nav / 独立页标题(那些随入口退役已移除)。
 async function renderExperience(vm: ExperienceViewModel = makeVm()) {
   const { AppShell } = await import("@/components/shell/app-shell");
   const { ExperiencePage } = await import("./experience-page");
   return render(
     <AppShell
-      pathname="/experience"
+      pathname="/knowledge"
       headerMode="global"
-      pageTitle="经验沉淀"
-      pageDescription="被验证的创作经验与失败案例"
+      pageTitle="知识库"
+      pageDescription="沉淀的笔记、灵感与外部参考"
     >
       <ExperiencePage viewModel={vm} />
     </AppShell>,
@@ -128,23 +132,25 @@ describe("ExperiencePage(经验裁决台)", () => {
     cleanup();
   });
 
-  it("TopHeader global 模式 + 经验沉淀标题", async () => {
+  it("经验裁决台区块标题渲染(作为 /knowledge 经验 Tab body)", async () => {
     const { container } = await renderExperience();
     const header = container.querySelector('[data-slot="app-top-header"]');
     expect(header).not.toBeNull();
     expect(header!.getAttribute("data-mode")).toBe("global");
-    const heading = container.querySelector(
-      '[data-slot="header-page-heading"]',
-    );
-    expect(heading!.textContent ?? "").toContain("经验沉淀");
+    // 组件自带的区块标题「经验裁决台」不动(§B 命名:Tab 内沿用现有标题)。
+    expect(screen.getByRole("heading", { name: "经验裁决台" })).not.toBeNull();
   });
 
-  it("Sidebar 激活项 = 经验沉淀", async () => {
+  it("T-113:经验独立 nav 项已退役(侧栏无「经验沉淀」链接)", async () => {
     await renderExperience();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
+    const experienceLink = within(nav).queryByRole("link", {
+      name: "经验沉淀",
+    });
+    expect(experienceLink).toBeNull();
+    // 承载入口收敛到知识库(/knowledge 路由壳 → 激活项 = 知识库)。
     const active = within(nav).getByRole("link", { current: "page" });
-    expect(active).toHaveAttribute("href", "/experience");
-    expect(active.textContent?.trim()).toBe("经验沉淀");
+    expect(active).toHaveAttribute("href", "/knowledge");
   });
 
   it("contextual card variant = assistant(非 storage)", async () => {

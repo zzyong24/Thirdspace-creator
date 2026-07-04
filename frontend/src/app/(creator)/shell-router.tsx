@@ -325,14 +325,8 @@ export function resolveRoute(
       contextualCardVariant: "assistant",
     };
   }
-  if (pathname === "/experience") {
-    return {
-      headerMode: "global",
-      pageTitle: "经验沉淀",
-      pageDescription: "被验证的创作经验与失败案例",
-      contextualCardVariant: "assistant",
-    };
-  }
+  // [T-113] 独立「经验沉淀」页退役 → 并入 /knowledge 双 Tab;/experience 已 307
+  // 重定向到 /knowledge?tab=experience,不再有独立页标题配置(走 /knowledge 头)。
   if (pathname === "/search") {
     return {
       headerMode: "search",

@@ -115,10 +115,10 @@ export function ChatLearningCard({
           >
             已存入裁决队列 ·{" "}
             <Link
-              href="/experience"
+              href="/knowledge?tab=experience"
               className="underline underline-offset-2"
             >
-              去 /experience 裁决
+              去经验沉淀裁决
             </Link>
           </span>
         ) : (

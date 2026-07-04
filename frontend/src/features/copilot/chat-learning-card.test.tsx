@@ -62,8 +62,8 @@ describe("ChatLearningCard", () => {
       }),
     );
     expect(await screen.findByText(/已存入裁决队列/)).toBeTruthy();
-    const link = screen.getByText(/去 \/experience 裁决/) as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe("/experience");
+    const link = screen.getByText(/去经验沉淀裁决/) as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe("/knowledge?tab=experience");
     expect(routerRefresh).toHaveBeenCalled();
     // 存过后按钮退场(不给二次落库入口)。
     expect(screen.queryByText("存为经验")).toBeNull();

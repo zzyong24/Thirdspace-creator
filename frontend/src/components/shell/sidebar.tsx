@@ -81,7 +81,8 @@ const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   // 的调度作业, 数据落库供 Dashboard/选题消费. 归在运营/采集类, 紧跟发布中心.
   { id: "automations", label: "自动化", href: "/automations", icon: creatorIcons.automations, match: matchPrefix("/automations") },
   // MONE-01:变现中心移除/隐藏(太难且不影响飞轮,见 lifecycle spec §4)。路由保留但无入口。
-  { id: "experience", label: "经验沉淀", href: "/experience", icon: creatorIcons.experience, match: matchExact("/experience") },
+  // [T-113] 独立「经验沉淀」入口退役(IA 收敛 SPEC §B):经验沉淀并入 /knowledge 双 Tab
+  // (?tab=experience);/experience 路由 307 重定向到 /knowledge?tab=experience,无独立 nav 项。
   { id: "settings", label: "设置", href: "/settings", icon: creatorIcons.settings, match: matchExact("/settings") },
 ];
 
