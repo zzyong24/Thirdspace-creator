@@ -1328,14 +1328,16 @@ export function AICopilotContent({
 
       {/* Conversation region (主区,bug #5)—— 消息流 + 输入框。flex-1 占满浮层主体,消息区
           自身滚动,输入框 pin 在底部。对话才是 Copilot 的核心,放大、可读、可滚。
-          [T-095] 板块重合修复:原 min-h-0 允许主区被压到小于最小内容(消息区 220 下限 + 输入框),
-          子元素溢出画到下方次区上。改 min-h-min(下限 = 自身最小内容),空间不足时由可收缩的
-          次区让位(见 copilot-secondary),主区永不溢出重叠。 */}
+          [T-095] 板块重合修复的根因是「次区 shrink-0 拒绝收缩」(已改为可收缩 max-h 次区,见
+          copilot-secondary),而非主区高度模式。
+          [T-101] 主区必须 min-h-0:长对话时 flex 才能把主区收缩到父容器给的高度,让内部消息滚动区
+          (min-h-[220px] 固定保底 + overflow-y-auto)真正滚动。此前误用 min-h-min(下限=min-content=
+          消息全内容高)使滚动容器被撑到全高、scrollHeight==clientHeight,长对话滚不动。 */}
       <div
         data-slot="copilot-conversation"
         data-region="prompt"
         data-slot-region="copilot-region"
-        className="flex min-h-min flex-1 flex-col gap-2"
+        className="flex min-h-0 flex-1 flex-col gap-2"
       >
         {/* 消息流(可滚)—— 给一个 min-h 下限,保证对话区是视觉主区,不被次区压扁(bug #5)。 */}
         <div
