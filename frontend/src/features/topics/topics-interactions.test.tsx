@@ -312,7 +312,7 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(patchArg.body.card).not.toHaveProperty("materialScore");
   });
 
-  it("编导起草(IdeaDraftForm)→ createCandidate(idea) 再 createAITask(topic.enrich)", async () => {
+  it("[T-103c] 编导起草(IdeaDraftForm)→ createCandidate(idea) 再打开 Copilot 深链(topic.enrich, 不再后台轮询)", async () => {
     mockClient.createCandidate.mockResolvedValueOnce({ id: "cand-new" });
     render(<IdeaDraftForm />);
     fireEvent.change(screen.getByLabelText("一句话起选题"), {
@@ -327,13 +327,18 @@ describe("topics islands (needs-backend wiring)", () => {
       body: { title: string; source: string };
     };
     expect(cArg.body).toMatchObject({ title: "副业避坑指南", source: "idea" });
-    // 第二步:编导补全(topic.enrich,挂到刚建的候选)
-    await waitFor(() => expect(mockClient.createAITask).toHaveBeenCalledTimes(1));
-    const tArg = mockClient.createAITask.mock.calls[0]![0] as {
-      body: { taskType: string; inputData: { candidateId: string } };
-    };
-    expect(tArg.body.taskType).toBe("topic.enrich");
-    expect(tArg.body.inputData.candidateId).toBe("cand-new");
+    // 第二步:打开 Copilot 深链(surface=topics, fn=topic.enrich, selection=刚建的候选)—— 补全进对话,
+    // 不再后台 createAITask 轮询。
+    await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(1));
+    const href = mockRouter.push.mock.calls[0]![0] as string;
+    expect(href).toContain("copilot=open");
+    expect(href).toContain("surface=topics");
+    expect(href).toContain("fn=topic.enrich");
+    expect(href).toContain("selKind=candidate");
+    expect(href).toContain("selId=cand-new");
+    expect(href).toContain("prefill=");
+    // 编导起草不再直接起后台任务 —— 补全全部走对话确认门。
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
   it("立项为 Project → client.promoteCandidate then push to the new /projects/:id", async () => {
@@ -358,17 +363,18 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(mockRouter.refresh).toHaveBeenCalled();
   });
 
-  it("补全选题卡 → client.createAITask(topic.enrich, candidateId)", async () => {
+  it("[T-103c] 补全选题卡 → Copilot 深链预填(topic.enrich, selection=候选;不再 createAITask 轮询)", () => {
     render(<CandidateCard candidate={candidate()} />);
-    fireEvent.click(screen.getByText("补全选题卡"));
-    await waitFor(() =>
-      expect(mockClient.createAITask).toHaveBeenCalledTimes(1),
-    );
-    const arg = mockClient.createAITask.mock.calls[0]![0] as {
-      body: { taskType: string; inputData: { candidateId: string } };
-    };
-    expect(arg.body.taskType).toBe("topic.enrich");
-    expect(arg.body.inputData.candidateId).toBe("cand-1");
+    const link = screen.getByTestId("enrich-button");
+    const href = link.getAttribute("href") ?? "";
+    expect(href).toContain("copilot=open");
+    expect(href).toContain("surface=topics");
+    expect(href).toContain("fn=topic.enrich");
+    expect(href).toContain("selKind=candidate");
+    expect(href).toContain("selId=cand-1");
+    expect(href).toContain("prefill=");
+    // 补全不再后台起任务 —— 走对话确认门物化。
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
   it("排序控制 → navigates /topics?sort=<key> (re-issues the sorted list)", () => {

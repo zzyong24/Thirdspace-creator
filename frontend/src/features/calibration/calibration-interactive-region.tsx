@@ -18,10 +18,13 @@
  *  过程,不是页面常驻栏)、目标 tabs / 预测切换带(为三栏选中态服务,主线式布局不需要)。
  *
  * needs-backend 交互全部复用现有 ops(不新增契约):
- *  - `StartPredictionButton` → ai.tasks.create { calibration.diagnose } → poll → confirm。
+ *  - `StartPredictionButton`(**T-103c 起统一到对话**,SPEC 2026-07-04 ai-into-copilot-convergence §3):
+ *    退役后台 ai.tasks.create { calibration.diagnose } + 轮询 confirm 快路,只留「对话诊断」深链 ——
+ *    打开 Copilot 预调 calibration.diagnose(带 subject selection),编导在对话里流式盲评、诊断卡内锁定盲预测。
  *  - `LockPredictionButton` → client.lockPrediction(draft → locked,盲预测不可改)。
- *  - `RecordResultButton` → getPrediction 取维度 + createResult(可先让编导 calibration.score
- *    据真实指标预填)。
+ *  - `RecordResultButton` → getPrediction 取维度 + createResult;「让编导据真实指标评分」(原后台
+ *    calibration.score 轮询预填快路)**T-103c 退役 → 改对话入口**(深链预调 calibration.diagnose),
+ *    在对话里逐维度给真实分,人对照本地录入框手填/采纳(共用 createResult 落库门)。
  *  - `RefreshDouyinButton` → ingestion.douyin.refresh(核心工作流的「采集回收」一步,保留)。
  *
  * 零造假:所有可见值来自 props 的真实 jsonb;缺字段渲染「—」/诚实空态,绝不编造。
@@ -241,9 +244,14 @@ type DimScore = { key: string; score?: number };
 
 function RecordResultButton({
   predictionId,
+  subjectType,
+  subjectId,
   title,
 }: {
   readonly predictionId: string;
+  /** 预测挂的 subject(深链 selection 用,让编导据这条作品的真实指标给分)。 */
+  readonly subjectType: string;
+  readonly subjectId: string;
   readonly title: string;
 }) {
   const router = useRouter();
@@ -254,13 +262,7 @@ function RecordResultButton({
   const [dims, setDims] = React.useState<DimScore[]>([]);
   // 维度 key → 用户录入的真实分(字符串,提交时转数字)。
   const [actuals, setActuals] = React.useState<Record<string, string>>({});
-  // 编导自动评分(B2 飞轮回流):AI 据真实指标产维度真实分候选 → 预填录入框,人可改。
-  const [scoring, setScoring] = React.useState(false);
-  const [scoreError, setScoreError] = React.useState<string | null>(null);
-  const [scoreReasons, setScoreReasons] = React.useState<
-    Record<string, string>
-  >({});
-  // 卸载后别再 setState(轮询是长任务)。
+  // 卸载后别再 setState。
   const cancelledRef = React.useRef(false);
   React.useEffect(
     () => () => {
@@ -269,11 +271,19 @@ function RecordResultButton({
     [],
   );
 
+  // [T-103c] 编导据真实指标评分统一到对话:退役原后台 createAITask(calibration.score) + 轮询预填快路,
+  // 改「让编导据真实指标评分」为 Copilot 深链 —— 打开对话预调 calibration.diagnose(带 subject selection),
+  // 编导在对话里据真实指标逐维度给分,人对照本录入框手填/采纳(诊断卡与本地录入共用一条落库门:createResult)。
+  const directorScoreHref = copilotDeepLink(
+    "calibration",
+    "calibration.diagnose",
+    { kind: subjectType, id: subjectId, title },
+    "根据这条作品发布后的真实指标(播放/完播/互动…),逐维度给真实分,我要对照当初的盲预测。",
+  );
+
   const openForm = React.useCallback(async () => {
     setOpen(true);
     setError(null);
-    setScoreError(null);
-    setScoreReasons({});
     setLoading(true);
     try {
       const pred = (await client.getPrediction({
@@ -294,83 +304,6 @@ function RecordResultButton({
       setLoading(false);
     }
   }, [predictionId]);
-
-  // 编导评分 — 起 calibration.score AI 任务,轮询到 awaiting_confirmation 读候选
-  // (resultData.dimensions = 维度真实分候选)并**预填**录入框(人可改)。不 confirmTask:
-  // 采纳走下方「录入」→ createResult。
-  const runDirectorScore = React.useCallback(async () => {
-    if (scoring) return;
-    setScoring(true);
-    setScoreError(null);
-    try {
-      const task = (await client.createAITask({
-        params: undefined,
-        query: undefined,
-        body: {
-          taskType: "calibration.score",
-          inputData: { predictionId },
-        },
-      })) as { id: string };
-      for (let i = 0; i < 75; i++) {
-        if (cancelledRef.current) return;
-        await new Promise((r) => setTimeout(r, 4000));
-        if (cancelledRef.current) return;
-        const status = (await client.getTask({
-          params: { taskId: task.id },
-          query: undefined,
-          body: undefined,
-        })) as { status: string };
-        if (status.status === "awaiting_confirmation") {
-          const results = (await client.listTaskResults({
-            params: { taskId: task.id },
-            query: undefined,
-            body: undefined,
-          })) as unknown as Array<{ resultData: Record<string, unknown> }>;
-          const last = results[results.length - 1];
-          const scored = Array.isArray(last?.resultData?.dimensions)
-            ? (last!.resultData.dimensions as Array<Record<string, unknown>>)
-            : [];
-          if (cancelledRef.current) return;
-          // 预填:每个维度的 AI 真实分 → 录入框字符串;理由留存展示。人改分不影响理由。
-          const nextActuals: Record<string, string> = {};
-          const nextReasons: Record<string, string> = {};
-          for (const d of scored) {
-            const key = typeof d.key === "string" ? d.key : "";
-            if (!key) continue;
-            if (typeof d.score === "number" && Number.isFinite(d.score)) {
-              nextActuals[key] = String(d.score);
-            }
-            if (typeof d.reason === "string" && d.reason) {
-              nextReasons[key] = d.reason;
-            }
-          }
-          setActuals((s) => ({ ...s, ...nextActuals }));
-          setScoreReasons(nextReasons);
-          if (Object.keys(nextActuals).length === 0) {
-            setScoreError("编导没能据真实指标给分,请手填或重试。");
-          }
-          setScoring(false);
-          return;
-        }
-        if (status.status === "cancelled" || status.status === "failed") {
-          if (!cancelledRef.current) {
-            setScoreError("编导评分失败(可能没配模型或暂无真实指标),请手填或重试。");
-            setScoring(false);
-          }
-          return;
-        }
-      }
-      if (!cancelledRef.current) {
-        setScoreError("编导评分超时,请手填或重试。");
-        setScoring(false);
-      }
-    } catch {
-      if (!cancelledRef.current) {
-        setScoreError("编导评分出错,请手填或重试。");
-        setScoring(false);
-      }
-    }
-  }, [scoring, predictionId]);
 
   const submit = React.useCallback(async () => {
     setSaving(true);
@@ -435,33 +368,28 @@ function RecordResultButton({
             </DialogDescription>
           </DialogHeader>
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
-            {/* 编导评分(B2)— AI 读真实指标自动给维度真实分,预填下面的录入框,人审核可改。 */}
+            {/* [T-103c] 编导据真实指标评分统一到对话:退役后台快路,改「让编导据真实指标评分」为
+                对话入口(深链预调 calibration.diagnose)—— 在对话里逐维度给真实分,人对照下方录入框手填/采纳。 */}
             {!loading && dims.length > 0 ? (
               <div className="flex flex-col gap-1.5 rounded-control border border-border bg-surface-subtle/50 px-3 py-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 text-[11px] font-medium text-text-subtle">
                     <Sparkles className="size-3.5 text-brand" />
-                    编导自动评分
+                    编导据真实指标评分
                   </span>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
+                  <Link
+                    href={directorScoreHref}
                     data-testid="director-score-button"
-                    className="h-7 gap-1.5 px-2.5 text-[11px]"
-                    disabled={scoring || saving}
-                    onClick={runDirectorScore}
+                    aria-label="在对话里据真实指标评分"
+                    className="inline-flex h-7 items-center gap-1.5 rounded-control border border-brand/30 bg-surface px-2.5 text-[11px] font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft/60"
                   >
-                    <Sparkles className="size-3.5" />
-                    {scoring ? "编导评分中…" : "让编导据真实指标评分"}
-                  </Button>
+                    <MessagesSquare className="size-3.5" />
+                    在对话里评分
+                  </Link>
                 </div>
                 <p className="text-[11px] leading-snug text-muted-foreground">
-                  AI 读这条作品的真实指标(播放/完播/互动…)给每个维度打真实分,自动预填下方录入框 —— 人审核后可改。
+                  在对话里让编导读这条作品的真实指标(播放/完播/互动…)逐维度给真实分,你对照下方录入框手填/采纳 —— 人出判断。
                 </p>
-                {scoreError ? (
-                  <p className="text-[11px] text-destructive">{scoreError}</p>
-                ) : null}
               </div>
             ) : null}
             {loading ? (
@@ -471,49 +399,34 @@ function RecordResultButton({
                 这条盲预测没有维度评分,无法逐维度录入。
               </p>
             ) : (
-              dims.map((d) => {
-                const reason = scoreReasons[d.key];
-                return (
-                  <div key={d.key} className="flex flex-col gap-1">
-                    <label className="flex items-center justify-between gap-3 text-xs">
-                      <span className="min-w-0 flex-1">
-                        <span className="font-medium text-foreground">
-                          {d.key}
-                        </span>
-                        {typeof d.score === "number" ? (
-                          <span className="ml-1.5 text-muted-foreground">
-                            预测 {d.score}
-                          </span>
-                        ) : null}
+              dims.map((d) => (
+                <div key={d.key} className="flex flex-col gap-1">
+                  <label className="flex items-center justify-between gap-3 text-xs">
+                    <span className="min-w-0 flex-1">
+                      <span className="font-medium text-foreground">
+                        {d.key}
                       </span>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={5}
-                        step={1}
-                        aria-label={`${d.key} 真实分`}
-                        value={actuals[d.key] ?? ""}
-                        onChange={(e) =>
-                          setActuals((s) => ({ ...s, [d.key]: e.target.value }))
-                        }
-                        className="h-8 w-20 shrink-0"
-                      />
-                    </label>
-                    {reason ? (
-                      <p
-                        data-testid="score-reason"
-                        className="flex items-start gap-1 pl-0.5 text-[11px] leading-snug text-muted-foreground"
-                      >
-                        <Sparkles className="mt-0.5 size-3 shrink-0 text-brand" />
-                        <span>
-                          <span className="text-text-subtle">编导依据 · </span>
-                          {reason}
+                      {typeof d.score === "number" ? (
+                        <span className="ml-1.5 text-muted-foreground">
+                          预测 {d.score}
                         </span>
-                      </p>
-                    ) : null}
-                  </div>
-                );
-              })
+                      ) : null}
+                    </span>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={5}
+                      step={1}
+                      aria-label={`${d.key} 真实分`}
+                      value={actuals[d.key] ?? ""}
+                      onChange={(e) =>
+                        setActuals((s) => ({ ...s, [d.key]: e.target.value }))
+                      }
+                      className="h-8 w-20 shrink-0"
+                    />
+                  </label>
+                </div>
+              ))
             )}
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </div>
@@ -736,7 +649,12 @@ function PredictionRow({
               <Hourglass className="size-3" />
               等待数据回流
             </Badge>
-            <RecordResultButton predictionId={prediction.id} title={title} />
+            <RecordResultButton
+              predictionId={prediction.id}
+              subjectType={prediction.subjectType}
+              subjectId={prediction.subjectId}
+              title={title}
+            />
           </span>
         )}
       </div>
@@ -927,108 +845,32 @@ function ReflowTable({
 }
 
 // ── 侧栏:发起新预测(补充入口;主入口在稿面发布包区) ─────────────────────────────────
-// 开始预测 — 起 calibration.diagnose AI 任务,轮询到 awaiting_confirmation 后 confirm
-// (铸一条 draft Prediction),再 refresh 落新评分表。诊断是产预测的过程,产物折叠在
-// 预测行里,不再占页面常驻栏。
+// 发起新预测 —— **T-103c 起统一到对话**(SPEC 2026-07-04 ai-into-copilot-convergence §3):退役
+// 原「开始预测」后台 createAITask(calibration.diagnose) + 轮询 confirm 快路(静默铸预测、无中间反馈),
+// 只留「对话诊断」深链入口:打开 Copilot 预调 calibration.diagnose(带 subject selection),编导在对话里
+// 流式逐维度盲评 → 诊断卡(T-107 tool-only + T-103a 盲预测卡)对话内锁定为盲预测。诊断/锁定端点全复用。
 function StartPredictionButton({
   subject,
 }: {
   readonly subject: CalibrationOverviewResource["pendingSubjects"][number];
 }) {
-  const { run } = useMutation();
-  const [phase, setPhase] = React.useState<"idle" | "running" | "error">("idle");
-  const cancelledRef = React.useRef(false);
-  React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
-    },
-    [],
-  );
-
-  function start(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (phase === "running") return;
-    setPhase("running");
-    void (async () => {
-      try {
-        const task = (await client.createAITask({
-          params: undefined,
-          query: undefined,
-          body: {
-            taskType: "calibration.diagnose",
-            inputData: {
-              subjectType: subject.subjectType,
-              subjectId: subject.subjectId,
-            },
-          },
-        })) as { id: string };
-        for (let i = 0; i < 75; i++) {
-          if (cancelledRef.current) return;
-          await new Promise((r) => setTimeout(r, 4000));
-          if (cancelledRef.current) return;
-          const status = (await client.getTask({
-            params: { taskId: task.id },
-            query: undefined,
-            body: undefined,
-          })) as { status: string };
-          if (status.status === "awaiting_confirmation") {
-            await client.confirmTask({
-              params: { taskId: task.id },
-              query: undefined,
-              body: undefined,
-            });
-            if (!cancelledRef.current) {
-              setPhase("idle");
-              run(() => Promise.resolve()); // router.refresh()
-            }
-            return;
-          }
-          if (status.status === "cancelled" || status.status === "failed") {
-            if (!cancelledRef.current) setPhase("error");
-            return;
-          }
-        }
-        if (!cancelledRef.current) setPhase("error");
-      } catch {
-        if (!cancelledRef.current) setPhase("error");
-      }
-    })();
-  }
-
+  // 一键岛预调(SPEC §3.4):打开 ChatBox 进编导诊断,预调 calibration.diagnose,带 subject selection
+  // (免编导索要 id/标题)。query-only href → 就地开浮层不跳页;逐维度盲评 + 锁定盲预测在对话内完成。
   return (
-    <div className="flex items-center gap-1.5">
-      <Button
-        type="button"
-        size="sm"
-        data-testid="start-prediction-button"
-        className="h-7 gap-1 bg-brand px-2.5 text-xs text-brand-foreground hover:bg-brand/90"
-        disabled={phase === "running"}
-        onClick={start}
-      >
-        <Sparkles className="size-3.5" />
-        {phase === "running"
-          ? "AI 诊断中…"
-          : phase === "error"
-            ? "重试预测"
-            : "开始预测"}
-      </Button>
-      {/* 一键岛预调(SPEC §3.4):打开 ChatBox 进编导诊断,预调 calibration.diagnose —— 想边聊
-          边逐维度盲评/多轮打磨走这条;左边「开始预测」是直接起任务铸盲预测的快路(两条并存)。 */}
-      <Link
-        href={copilotDeepLink("calibration", "calibration.diagnose", {
-          kind: subject.subjectType,
-          id: subject.subjectId,
-          title: subject.title,
-        })}
-        data-testid="calibration-open-copilot"
-        aria-label="在对话里诊断"
-        onClick={(e) => e.stopPropagation()}
-        className="inline-flex h-7 items-center gap-1 rounded-control border border-brand/30 bg-surface px-2 text-xs font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft/60"
-      >
-        <MessagesSquare className="size-3.5" />
-        对话诊断
-      </Link>
-    </div>
+    <Link
+      href={copilotDeepLink("calibration", "calibration.diagnose", {
+        kind: subject.subjectType,
+        id: subject.subjectId,
+        title: subject.title,
+      })}
+      data-testid="start-prediction-button"
+      aria-label="在对话里诊断"
+      onClick={(e) => e.stopPropagation()}
+      className="inline-flex h-7 items-center gap-1 rounded-control border border-brand/30 bg-surface px-2 text-xs font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft/60"
+    >
+      <MessagesSquare className="size-3.5" />
+      对话诊断
+    </Link>
   );
 }
 

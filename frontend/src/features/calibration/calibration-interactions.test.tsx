@@ -260,19 +260,18 @@ describe("calibration mainline layout (T-067)", () => {
     expect(screen.queryByTestId("lock-prediction-button")).toBeNull();
   });
 
-  it("侧栏发起新预测:开始预测 → createAITask({ calibration.diagnose }),无直接预测写入", async () => {
+  it("[T-103c] 侧栏发起新预测:统一到对话 —— 「对话诊断」深链(calibration.diagnose, selection),不再后台 createAITask 快路", () => {
     renderWorkbench({ predictions: [] });
     const rail = screen.getByTestId("calibration-new-prediction");
-    fireEvent.click(within(rail).getByTestId("start-prediction-button"));
-    await waitFor(() =>
-      expect(mockClient.createAITask).toHaveBeenCalledTimes(1),
-    );
-    const arg = mockClient.createAITask.mock.calls[0]![0] as {
-      body: { taskType: string; inputData: { subjectId: string } };
-    };
-    expect(arg.body.taskType).toBe("calibration.diagnose");
-    expect(arg.body.inputData.subjectId).toBe("dy-out-09");
-    // no fake parallel prediction write
+    const link = within(rail).getByTestId("start-prediction-button");
+    const href = link.getAttribute("href") ?? "";
+    expect(href).toContain("copilot=open");
+    expect(href).toContain("surface=calibration");
+    expect(href).toContain("fn=calibration.diagnose");
+    expect(href).toContain("selKind=content_output");
+    expect(href).toContain("selId=dy-out-09");
+    // 退役后台快路:诊断/铸预测全部走对话确认门,页面不再直接起任务或写预测。
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
     expect(mockClient.lockPrediction).not.toHaveBeenCalled();
   });
 
@@ -294,6 +293,21 @@ describe("calibration mainline layout (T-067)", () => {
     // §C-4:前端不传 run,服务端自建 manual run。
     expect(arg.body.ingestionRunId).toBeUndefined();
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
+  it("[T-103c] 录入弹窗「据真实指标评分」统一到对话 —— 深链(calibration.diagnose),不再后台 calibration.score 轮询", async () => {
+    renderWorkbench({ predictions: [AWAITING] });
+    fireEvent.click(screen.getByTestId("record-result-trigger"));
+    await waitFor(() => expect(mockClient.getPrediction).toHaveBeenCalled());
+    const link = await screen.findByTestId("director-score-button");
+    const href = link.getAttribute("href") ?? "";
+    expect(href).toContain("copilot=open");
+    expect(href).toContain("surface=calibration");
+    expect(href).toContain("fn=calibration.diagnose");
+    expect(href).toContain("selKind=content_output");
+    expect(href).toContain("selId=dy-out-05");
+    // 打开录入弹窗只读维度(getPrediction),不再起后台评分任务。
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
 
   it("renders the 发布后回流对照 table with 预测/真实/偏差 columns", () => {

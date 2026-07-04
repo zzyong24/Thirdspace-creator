@@ -13,7 +13,10 @@
  *  - rich `CandidateCard` 立项为 Project → `client.promoteCandidate` → navigate to the new
  *    `/projects/:id`; 丢弃 → `client.patchCandidate { status:'dropped' }`; 查看选题卡 →
  *    selects the card (drives the right detail column, no op); 补充信息 / 补全选题卡 →
- *    `EnrichButton` fires a `topic.enrich` AI task (poll → confirm → refresh).
+ *    `EnrichButton`(**T-103c 起改为对话内即时反馈**,SPEC 2026-07-04 ai-into-copilot-convergence
+ *    §3):不再后台 createAITask(topic.enrich) + 轮询,而是打开 Copilot 深链带
+ *    `fn=topic.enrich` + selection(candidate id + 标题)+ 预填话术(不自动发,T-055b),编导在对话里
+ *    调 topic.enrich 产 enrich 卡(既有)→ 对话内采纳落库。退役后台 poll 死码。
  *  - `CandidateSortControl` (推荐排序 / …) → re-issues `candidates.list` with the new
  *    `sort` via a URL search-param navigation.
  *
@@ -22,10 +25,12 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, type LucideIcon } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -304,10 +309,14 @@ export function CandidateCard({
   );
 }
 
-// 补充信息 / 补全选题卡 — fires a topic.enrich AI task for THIS candidate, polls to
-// awaiting_confirmation, confirms, then refreshes so the filled 选题卡 lands. The label
-// flips to 「补全选题卡」 when the card is still empty (待评估), 「补充信息」 once it has a
-// 一句话选题 (待补充→可再补).
+// [T-103c] 选题补全的预填话术 —— 只填不发(T-055b),编导据此优先调 topic.enrich。
+const TOPIC_ENRICH_PREFILL =
+  "基于这条选题,补全一份完整选题卡(观众/痛点/结构/形式),我要采纳进候选池。";
+
+// 补充信息 / 补全选题卡(**T-103c 起改为对话内即时反馈**)— 不再后台起 topic.enrich 任务 + 轮询,
+// 而是打开 Copilot 深链:fn=topic.enrich + selection(candidate id + 标题,免编导索要)+ 预填话术
+// (不自动发)。编导在对话里调 topic.enrich 产 enrich 卡(既有)→ 对话内采纳落库。label 在裸卡时
+// 「补全选题卡」、已有一句话选题时「补充信息」。
 export function EnrichButton({
   candidate,
   className,
@@ -315,81 +324,32 @@ export function EnrichButton({
   readonly candidate: CandidateResource;
   readonly className?: string;
 }) {
-  const { run } = useMutation();
-  const [phase, setPhase] = React.useState<"idle" | "running" | "error">(
-    "idle",
-  );
-  const cancelledRef = React.useRef(false);
-  React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
-    },
-    [],
-  );
-
   const hasCard = Boolean(candidate.card.oneLiner);
   const label = hasCard ? "补充信息" : "补全选题卡";
-
-  function enrich(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (phase === "running") return;
-    setPhase("running");
-    void (async () => {
-      try {
-        const task = (await client.createAITask({
-          params: undefined,
-          query: undefined,
-          body: {
-            taskType: "topic.enrich",
-            inputData: { candidateId: candidate.id },
-          },
-        })) as { id: string };
-        // poll until awaiting_confirmation, then confirm (AI proposes → 采纳 materializes)
-        for (let i = 0; i < 75; i++) {
-          if (cancelledRef.current) return;
-          await new Promise((r) => setTimeout(r, 4000));
-          if (cancelledRef.current) return;
-          const status = (await client.getTask({
-            params: { taskId: task.id },
-            query: undefined,
-            body: undefined,
-          })) as { status: string };
-          if (status.status === "awaiting_confirmation") {
-            await client.confirmTask({
-              params: { taskId: task.id },
-              query: undefined,
-              body: undefined,
-            });
-            if (!cancelledRef.current) {
-              setPhase("idle");
-              run(() => Promise.resolve()); // router.refresh()
-            }
-            return;
-          }
-          if (status.status === "cancelled" || status.status === "failed") {
-            if (!cancelledRef.current) setPhase("error");
-            return;
-          }
-        }
-        if (!cancelledRef.current) setPhase("error");
-      } catch {
-        if (!cancelledRef.current) setPhase("error");
-      }
-    })();
-  }
+  // query-only 深链 → 就地开 Copilot 浮层不跳页;selection.kind=candidate 让编导知道"这条"指哪条。
+  const href = copilotDeepLink(
+    "topics",
+    "topic.enrich",
+    { kind: "candidate", id: candidate.id, title: candidate.title },
+    TOPIC_ENRICH_PREFILL,
+  );
 
   return (
     <Button
+      asChild
       type="button"
       variant="outline"
       size="sm"
-      data-testid="enrich-button"
       className={cn("h-7 gap-1 px-2 text-xs", className)}
-      disabled={phase === "running"}
-      onClick={enrich}
     >
-      <Sparkles className="size-3.5" />
-      {phase === "running" ? "补全中…" : phase === "error" ? "重试补全" : label}
+      <Link
+        href={href}
+        data-testid="enrich-button"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Sparkles className="size-3.5" />
+        {label}
+      </Link>
     </Button>
   );
 }
@@ -959,13 +919,13 @@ function CandidateCardDetail({
 }
 
 // ── 编导起草:一句话 → 补全整张选题卡(A1 把"填表"翻成"审稿")────────────────────────
-// 人只打一句意图;编导一气做完 建卡(createCandidate)→ 补全(topic.enrich)→ 物化(confirm),
-// 补全的整卡进池等人审/改(CollabField)。补全失败也让裸卡进池(人可手动详填)。复用 EnrichButton 流。
+// 人只打一句意图;**T-103c 起改为对话内即时反馈**:编导先建裸卡(createCandidate),再打开 Copilot
+// 深链(fn=topic.enrich + selection=新建候选 + 预填话术,不自动发)——补全在对话里流式进行,产 enrich
+// 卡逐条采纳落库,不再后台轮询 confirm。裸卡已进池(title 在),补全没走完也可在卡上再点「补全选题卡」。
 export function IdeaDraftForm() {
-  const { run } = useMutation();
+  const router = useRouter();
   const [idea, setIdea] = React.useState("");
-  const [phase, setPhase] = React.useState<"idle" | "running" | "error">("idle");
-  const [hint, setHint] = React.useState("");
+  const [phase, setPhase] = React.useState<"idle" | "opening" | "error">("idle");
   const cancelledRef = React.useRef(false);
   React.useEffect(
     () => () => {
@@ -976,58 +936,29 @@ export function IdeaDraftForm() {
   const valid = idea.trim().length > 0;
 
   function draft() {
-    if (!valid || phase === "running") return;
-    setPhase("running");
-    setHint("编导起草中:建卡…");
+    if (!valid || phase === "opening") return;
+    setPhase("opening");
     void (async () => {
       try {
+        const title = idea.trim();
         const created = (await client.createCandidate({
           params: undefined,
           query: undefined,
-          body: { title: idea.trim(), angle: "", source: "idea" },
+          body: { title, angle: "", source: "idea" },
         })) as { id: string };
-        setHint("编导补全中:读定位 · 找痛点 · 写 Hook…");
-        const task = (await client.createAITask({
-          params: undefined,
-          query: undefined,
-          body: { taskType: "topic.enrich", inputData: { candidateId: created.id } },
-        })) as { id: string };
-        for (let i = 0; i < 75; i++) {
-          if (cancelledRef.current) return;
-          await new Promise((r) => setTimeout(r, 4000));
-          if (cancelledRef.current) return;
-          const status = (await client.getTask({
-            params: { taskId: task.id },
-            query: undefined,
-            body: undefined,
-          })) as { status: string };
-          if (status.status === "awaiting_confirmation") {
-            await client.confirmTask({
-              params: { taskId: task.id },
-              query: undefined,
-              body: undefined,
-            });
-            if (!cancelledRef.current) {
-              setIdea("");
-              setHint("");
-              setPhase("idle");
-              run(() => Promise.resolve()); // router.refresh() — 补全的卡进池
-            }
-            return;
-          }
-          if (status.status === "cancelled" || status.status === "failed") {
-            // 裸卡已建(title 在);补全没成 → 仍刷新让它进池,人可手动详填。
-            if (!cancelledRef.current) {
-              setHint("");
-              setPhase("error");
-              run(() => Promise.resolve());
-            }
-            return;
-          }
-        }
+        if (cancelledRef.current) return;
+        // 深链:surface=topics,fn=topic.enrich,selection=刚建的候选(免编导索要 id/标题),预填
+        // 话术(不自动发)。query-only href → 就地开 Copilot 浮层不跳页;补全的 enrich 卡对话内采纳。
+        const href = copilotDeepLink(
+          "topics",
+          "topic.enrich",
+          { kind: "candidate", id: created.id, title },
+          TOPIC_ENRICH_PREFILL,
+        );
+        router.push(href);
         if (!cancelledRef.current) {
-          setPhase("error");
-          run(() => Promise.resolve());
+          setIdea("");
+          setPhase("idle");
         }
       } catch {
         if (!cancelledRef.current) setPhase("error");
@@ -1053,24 +984,21 @@ export function IdeaDraftForm() {
           placeholder="说一句你想做的选题,编导补全成整张卡…"
           value={idea}
           onChange={(e) => setIdea(e.target.value)}
-          disabled={phase === "running"}
+          disabled={phase === "opening"}
           className="h-8 flex-1 border-transparent bg-surface text-xs"
         />
         <Button
           type="submit"
           size="sm"
-          disabled={!valid || phase === "running"}
+          disabled={!valid || phase === "opening"}
           className="h-8 shrink-0 gap-1.5 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
         >
-          {phase === "running" ? "编导起草中…" : "编导起草"}
+          {phase === "opening" ? "打开对话中…" : "编导起草"}
         </Button>
       </form>
-      {phase === "running" && hint ? (
-        <p className="mt-1.5 pl-6 text-[11px] text-brand">{hint}</p>
-      ) : null}
       {phase === "error" ? (
         <p className="mt-1.5 pl-6 text-[11px] text-muted-foreground">
-          补全没成,但裸卡已进池 —— 你可在卡上点「补全选题卡」重试,或手动详填。
+          打开对话出错,请重试 —— 裸卡若已建也已进池,你可在卡上点「补全选题卡」再补。
         </p>
       ) : null}
     </div>
