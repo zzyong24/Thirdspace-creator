@@ -545,9 +545,18 @@ export async function buildChatAssembly(
       }));
     },
     enrichTopic: async ({ title, angle }) => {
+      // [T-111] 选中某选题(编导起草深链 selection.kind="candidate")时,补全**一律锚定这条选题的
+      // 标题** —— 别让模型把开场选中的选题当「新选题」、或拿自己另生成的候选替换掉它(实录:模型
+      // 传错标题把《Hermes对比》补成不相干的《Claude Code 装好第一步报错》)。无 candidate 选中时
+      // 退回模型传的 title、再退回 selectionTitle 兜底(与其它工具同款锚定)。
+      const effTitle =
+        (chatContext.selection?.kind === "candidate" && selectionTitle) ||
+        title?.trim() ||
+        selectionTitle ||
+        "";
       // 复用 topic-enrich-runner 的 enrich prompt + parseCard —— 产选题卡候选(非实体)。
       const { runAgentNode } = await import("@creatoros/ai-worker");
-      const prompt = buildEnrichPrompt(context, { title, angle });
+      const prompt = buildEnrichPrompt(context, { title: effTitle, angle });
       const res = await runAgentNode({
         model,
         system:
