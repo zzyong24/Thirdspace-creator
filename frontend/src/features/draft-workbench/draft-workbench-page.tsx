@@ -20,6 +20,7 @@ import { sectionsToHtml } from "@/features/script/script-editor-bridge";
 import { TopicCard } from "./topic-card";
 import { DraftChatRail } from "./draft-chat-rail";
 import { DraftChatRequestProvider } from "./draft-chat-request";
+import { CreationFlowCtas } from "./creation-flow-ctas";
 import { RevealProjectButton } from "./reveal-project-button";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
@@ -85,6 +86,9 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             brief={project.brief}
             briefDetail={project.briefDetail}
           />
+
+          {/* [T-127] 创作流引导 CTA:选题 → 搜素材(联网)→ 立论点 → 写脚本。 */}
+          <CreationFlowCtas />
 
           {/* ── 脚本区(活跃) ── */}
           <section
