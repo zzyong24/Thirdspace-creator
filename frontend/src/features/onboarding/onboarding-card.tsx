@@ -123,7 +123,11 @@ export function OnboardingCard() {
     <section
       data-slot="onboarding-card"
       aria-label="新手清单"
-      className="flex flex-col gap-3 rounded-card border border-brand/30 bg-brand-soft/30 p-4"
+      // mt-14:避让 AppShell 顶部 absolute header(高 80px,z-20,悬浮盖住内容顶部);
+      // 内容容器只有 py-8(32px)避让,缺口 48px 会把卡头「打开完整引导/不再显示」压到
+      // header 的搜索框/新建项目下重合 —— 加 top margin 让卡整体落到 header 下方。
+      // 卡不渲染时(hidden/complete)此 margin 不生效,不影响无卡态布局。
+      className="mt-14 flex flex-col gap-3 rounded-card border border-brand/30 bg-brand-soft/30 p-4"
     >
       {/* 卡头:折叠切换 + 标题 + 进度 + 操作按钮。 */}
       <div className="flex items-start justify-between gap-3">
