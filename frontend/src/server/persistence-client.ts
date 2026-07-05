@@ -260,6 +260,8 @@ import {
   createRssAdapter,
   type SearchProviderRegistry,
 } from "@creatoros/ai-worker";
+// [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
+import { createBrowserScrapeAdapter } from "@/server/ai/search/search-browser";
 import {
   createPositioningService,
   createPositioningTransport,
@@ -4689,6 +4691,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     serpapi: createSerpapiAdapter(),
     // [T-126a] RSS/Atom 免 key 检索 —— provider "rss",baseUrl 填 feed URL(s),无需搜索 API key。
     rss: createRssAdapter(),
+    // [T-126b] 浏览器采集 —— provider "browser",真开无头 Chromium 搜(默认 Bing,baseUrl 可换)+ 自截图存证,免 key。
+    browser: createBrowserScrapeAdapter(),
   };
   // ChatBox gatherMaterials 前置检索端口:解析 spec + 按 provider 分派 REST。未配抛 SearchConfigError、
   // 检索失败抛 SearchExecutionError(chat-runner catch 成 model_memory 降级)。

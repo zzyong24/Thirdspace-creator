@@ -1593,16 +1593,16 @@ const MULTIMODAL_META = {
     title: "联网搜索",
     icon: Cpu,
     description:
-      "素材搜集(找素材/搜资料)前置真联网检索用;不配则素材来自模型训练记忆、来源需核实。rss 免 key。",
-    providerSuggestions: ["rss", "bocha", "tavily", "serpapi"] as ReadonlyArray<string>,
+      "素材搜集(找素材/搜资料)前置真联网检索用;不配则素材来自模型训练记忆、来源需核实。rss / browser 免 key。",
+    providerSuggestions: ["rss", "browser", "bocha", "tavily", "serpapi"] as ReadonlyArray<string>,
     providerPlaceholder: "rss",
     providerHelp:
-      "rss=免 key(baseUrl 填 RSS/Atom feed 网址,逗号分隔多个);bocha(博查,中文优)/ tavily / serpapi=付费搜索 API 需 key。任意模型都能真联网。",
+      "免 key:rss(baseUrl 填 RSS/Atom feed 网址,逗号分隔多个)/ browser(真开无头浏览器搜 Bing,自截图存证,较慢较脆弱)。付费需 key:bocha(博查,中文优)/ tavily / serpapi。任意模型都能真联网。",
     modelHelp:
-      "多数搜索无「模型」概念可留空;serpapi 用它当 engine(默认 google,可填 bing 等);rss 留空。",
+      "多数搜索无「模型」概念可留空;serpapi 用它当 engine(默认 google,可填 bing 等);rss/browser 留空。",
     modelPlaceholder: "",
     baseUrlPlaceholder:
-      "rss=RSS/Atom feed URL(逗号分隔多个);留空=provider 默认(bocha=api.bochaai.com / tavily=api.tavily.com / serpapi=serpapi.com)",
+      "rss=feed URL(逗号分隔);browser=搜索 URL 模板(留空=Bing,{q} 占位查询词);留空=provider 默认(bocha=api.bochaai.com 等)",
     disabledHint: "未配 → 素材来自模型记忆,标注需核实。",
   },
 } as const;

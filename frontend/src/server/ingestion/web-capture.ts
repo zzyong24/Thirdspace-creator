@@ -72,7 +72,8 @@ export interface CaptureUrlDeps {
 
 // 自起干净无头 Chromium(不带 .auth/ 登录态 —— 只做公开页)。反自动化标记 + 跳系统代理
 // (对齐 douyin-cdp openContext 的成熟做法),桌面 UA/视口在 newContext 层设。
-async function realOpenContext(): Promise<CaptureCapableContext> {
+// [T-126b] 导出复用:浏览器搜索适配器(search-browser.ts)复用同一套干净无头 context 起法。
+export async function realOpenContext(): Promise<CaptureCapableContext> {
   const { chromium } = await import("@playwright/test");
   const browser = await chromium.launch({
     headless: true,
