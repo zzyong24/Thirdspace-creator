@@ -22,6 +22,7 @@ import { DraftChatRail } from "./draft-chat-rail";
 import { DraftChatRequestProvider } from "./draft-chat-request";
 import { DraftResizableLayout } from "./draft-resizable-layout";
 import { CreationFlowCtas } from "./creation-flow-ctas";
+import { ThesisSkeletonPanel } from "./thesis-skeleton-panel";
 import { RevealProjectButton } from "./reveal-project-button";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
@@ -37,7 +38,7 @@ import type { DraftWorkbenchVm } from "./draft-workbench-data";
 import { cn } from "@/lib/utils";
 
 export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
-  const { project, script, scriptArtifactId, outputId, publishPack, publishUnlocked, blindPrediction, ammo, scriptReview } = vm;
+  const { project, script, scriptArtifactId, outputId, publishPack, publishUnlocked, blindPrediction, ammo, scriptReview, thesis } = vm;
   const initialHtml = script.editorHtml ?? sectionsToHtml(script.sections);
 
   return (
@@ -89,6 +90,10 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
 
           {/* [T-127] 创作流引导 CTA:选题 → 搜素材(联网)→ 立论点 → 写脚本。 */}
           <CreationFlowCtas />
+
+          {/* [T-127] 论点骨架面板:把已采纳的论点树(核心论点+支撑/证据/反驳)显性化到稿面,
+              空态引导立论点。首版可见+立论点/重立;可编辑增删排待用户 preview 确认交互再做。 */}
+          <ThesisSkeletonPanel nodes={thesis} />
 
           {/* ── 脚本区(活跃) ── */}
           <section

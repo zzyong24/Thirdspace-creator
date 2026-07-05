@@ -3,8 +3,10 @@ import "server-only";
 import { client as defaultClient } from "@/lib/contract-client.server";
 import {
   loadScriptEditorData,
+  loadThesisSkeleton,
   resolveScriptArtifactIdFromDb,
   type ScriptDataClient,
+  type ThesisSkeletonNode,
 } from "@/features/script/script-editor-data";
 import type { ProjectBriefDetail, ProjectStageName } from "@/types/domain";
 import type { ScriptSectionView } from "@/types/view-models";
@@ -226,6 +228,12 @@ export interface DraftWorkbenchVm {
    * 用它渲染 verdict/命中列表 + 软门提示(报告版本 < script.versionCount → 提示重审)。
    */
   readonly scriptReview: ScriptReviewReportResource | null;
+  /**
+   * [T-127] 项目已采纳的论点骨架(thesis_tree 当前版本 nodes:核心论点 + 支撑/证据/反驳分支);
+   * null = 还没立论点(稿面「论点骨架」面板渲染诚实空态 + 立论点 CTA)。让原本埋在 Copilot、
+   * 稿面看不到的论点显性化 —— 用户「不知道要先立论点」的根因。
+   */
+  readonly thesis: ReadonlyArray<ThesisSkeletonNode> | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -413,9 +421,11 @@ export async function buildDraftWorkbenchVm(
   );
   const scriptData = await loadScriptEditorData(scriptArtifactId, client);
 
-  const [{ outputId, publishPack }, ammo] = await Promise.all([
+  const [{ outputId, publishPack }, ammo, thesis] = await Promise.all([
     readPublishPack(client, project.id),
     readAmmo(client, project.id),
+    // [T-127] 读已采纳论点骨架(无 → null,面板显诚实空态)。与 script/ammo 并行。
+    loadThesisSkeleton(project.id, client),
   ]);
 
   // [T-063e] 盲预测读依赖 outputId,故在发布包读之后串行。
@@ -445,6 +455,7 @@ export async function buildDraftWorkbenchVm(
     blindPrediction,
     ammo,
     scriptReview,
+    thesis,
   };
 }
 

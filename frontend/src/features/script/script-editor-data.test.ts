@@ -22,7 +22,7 @@ vi.mock("@/lib/contract-client.server", () => ({
   },
 }));
 
-import { loadPlanningOutline } from "./script-editor-data";
+import { loadPlanningOutline, loadThesisSkeleton } from "./script-editor-data";
 import type { ScriptDataClient } from "./script-editor-data";
 
 interface FakeData {
@@ -147,5 +147,117 @@ describe("loadPlanningOutline (SEAM-02)", () => {
       },
     };
     expect(await loadPlanningOutline("project-x", client)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// [T-127] loadThesisSkeleton — 稿面「论点骨架」面板读 thesis_tree 当前版本 nodes
+// ---------------------------------------------------------------------------
+
+const THESIS_VERSION = {
+  id: "av-thesis-1",
+  versionNumber: 1,
+  contentData: {
+    nodes: [
+      { column: "core", title: "核心论点", summary: "一句话主张" },
+      { column: "support", title: "支撑A", summary: "论据一" },
+      { column: "evidence", title: "证据X", summary: "数据来源" },
+      { column: "counter", title: "反驳", summary: "对立观点回应" },
+    ],
+  },
+};
+
+describe("loadThesisSkeleton (T-127)", () => {
+  it("读 thesis_tree 当前版本的 nodes(core/support/evidence/counter)", async () => {
+    const client = makeClient({
+      artifacts: [
+        { id: "art-thesis", artifactType: "thesis_tree" },
+        { id: "art-outline", artifactType: "content_outline" },
+      ],
+      currentVersionId: "av-thesis-1",
+      versions: [THESIS_VERSION],
+    });
+    const nodes = await loadThesisSkeleton("project-x", client);
+    expect(nodes).not.toBeNull();
+    expect(nodes).toHaveLength(4);
+    expect(nodes![0]).toMatchObject({ column: "core", title: "核心论点" });
+    expect(nodes!.map((n) => n.column)).toEqual([
+      "core",
+      "support",
+      "evidence",
+      "counter",
+    ]);
+  });
+
+  it("过滤非法 column 与空(title/summary 都空)节点", async () => {
+    const client = makeClient({
+      artifacts: [{ id: "art-thesis", artifactType: "thesis_tree" }],
+      currentVersionId: "av-1",
+      versions: [
+        {
+          id: "av-1",
+          versionNumber: 1,
+          contentData: {
+            nodes: [
+              { column: "core", title: "有效", summary: "" },
+              { column: "bogus", title: "非法列", summary: "x" },
+              { column: "support", title: "", summary: "" },
+            ],
+          },
+        },
+      ],
+    });
+    const nodes = await loadThesisSkeleton("project-x", client);
+    expect(nodes).toHaveLength(1);
+    expect(nodes![0]).toMatchObject({ column: "core", title: "有效" });
+  });
+
+  it("无 projectId → null", async () => {
+    expect(await loadThesisSkeleton(null, makeClient({}))).toBeNull();
+  });
+
+  it("项目无 thesis_tree artifact → null(诚实空态)", async () => {
+    const client = makeClient({
+      artifacts: [{ id: "art-outline", artifactType: "content_outline" }],
+    });
+    expect(await loadThesisSkeleton("project-x", client)).toBeNull();
+  });
+
+  it("有 artifact 但无版本 → null", async () => {
+    const client = makeClient({
+      artifacts: [{ id: "art-thesis", artifactType: "thesis_tree" }],
+      versions: [],
+    });
+    expect(await loadThesisSkeleton("project-x", client)).toBeNull();
+  });
+
+  it("全部节点无效 → null(不渲染空面板)", async () => {
+    const client = makeClient({
+      artifacts: [{ id: "art-thesis", artifactType: "thesis_tree" }],
+      currentVersionId: "av-1",
+      versions: [
+        {
+          id: "av-1",
+          versionNumber: 1,
+          contentData: { nodes: [{ column: "nope", title: "", summary: "" }] },
+        },
+      ],
+    });
+    expect(await loadThesisSkeleton("project-x", client)).toBeNull();
+  });
+
+  it("读失败 → null(优雅降级,不抛)", async () => {
+    const client: ScriptDataClient = {
+      async getArtifact() {
+        return {};
+      },
+      async listArtifactVersions() {
+        return [];
+      },
+      async listArtifacts() {
+        throw new Error("boom");
+      },
+    };
+    expect(await loadThesisSkeleton("project-x", client)).toBeNull();
   });
 });

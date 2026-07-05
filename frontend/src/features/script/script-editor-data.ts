@@ -361,3 +361,67 @@ export async function loadPlanningOutline(
     return null;
   }
 }
+
+// [T-127] 论点骨架一等类型 —— 稿面「论点骨架」面板据它渲染(核心论点 + 支撑/证据/反驳 分支)。
+// 与 CreativeContext 的 ThesisReader(server/ai/creative-context.ts)同源:都读 `thesis_tree`
+// artifact 当前版本的 `contentData.nodes`(column ∈ core|support|evidence|counter + title + summary)。
+export type ThesisColumn = "core" | "support" | "evidence" | "counter";
+export interface ThesisSkeletonNode {
+  readonly column: ThesisColumn;
+  readonly title: string;
+  readonly summary: string;
+}
+
+const THESIS_COLUMNS: ReadonlySet<string> = new Set([
+  "core",
+  "support",
+  "evidence",
+  "counter",
+]);
+
+/**
+ * [T-127] 读项目已采纳的论点树(`thesis_tree` artifact 当前版本 `contentData.nodes`)→ 稿面
+ * 「论点骨架」面板的数据。让原本埋在 Copilot(planning.thesis 生成 + 采纳成 artifact)、稿面看不到
+ * 的论点显性化到稿面(用户复盘「不知道要先立论点」的根因)。返回:
+ *   - 规整后的节点数组(至少一条有内容的 core/support/evidence/counter),
+ *   - null:无 projectId / 无 thesis_tree artifact / 无当前版本 / 无有效节点 / 任何读解析失败
+ *     → 面板渲染诚实空态(「还没立论点」+ 立论点 CTA)。
+ *
+ * 优雅降级(任何失败 → null);绝不炸页面。与 loadPlanningOutline 同款读法(复用
+ * fetchVersionsAndCurrent + listArtifacts + OutlineArtifactDto)。
+ */
+export async function loadThesisSkeleton(
+  projectId: string | null,
+  client: ScriptDataClient = defaultClient as unknown as ScriptDataClient,
+): Promise<ReadonlyArray<ThesisSkeletonNode> | null> {
+  if (!projectId || !client.listArtifacts) return null;
+  try {
+    const listed = await client.listArtifacts({
+      params: { projectId },
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    });
+    const artifacts = (Array.isArray(listed) ? listed : []) as OutlineArtifactDto[];
+    const thesisArtifact = artifacts.find(
+      (a) => a.artifactType === "thesis_tree",
+    );
+    if (!thesisArtifact) return null;
+    const fetched = await fetchVersionsAndCurrent(client, thesisArtifact.id);
+    if (!fetched) return null;
+    const data = fetched.current.contentData as { nodes?: unknown } | undefined;
+    const rawNodes = Array.isArray(data?.nodes) ? data.nodes : [];
+    const out: ThesisSkeletonNode[] = [];
+    for (const raw of rawNodes) {
+      const o = (raw ?? {}) as Record<string, unknown>;
+      const column = typeof o.column === "string" ? o.column : "";
+      const title = typeof o.title === "string" ? o.title.trim() : "";
+      const summary = typeof o.summary === "string" ? o.summary.trim() : "";
+      if (!THESIS_COLUMNS.has(column)) continue;
+      if (!title && !summary) continue;
+      out.push({ column: column as ThesisColumn, title, summary });
+    }
+    return out.length > 0 ? out : null;
+  } catch {
+    return null;
+  }
+}
