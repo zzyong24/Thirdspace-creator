@@ -32,7 +32,8 @@ cp .env.example .env               # 若有;否则手写 .env:DATABASE_URL=postg
 pnpm db:migrate
 
 # 4. 启动 → 开箱即干净:中性身份「创作者」+ 违禁词/rubric 默认 + AI 能力待配 + 空作品库
-pnpm dev
+#    (root 无 dev script;next dev 在 frontend 子包里)
+pnpm -C frontend dev
 
 # 5. 新用户走引导页(T-131 onboarding):配文本模型 → 填定位 → 扫码绑抖音号 → 建首个项目
 ```
@@ -69,7 +70,8 @@ pnpm db:migrate
 rm -rf .auth/douyin .cache/search-browser
 
 # 4. 重启 → 空库 + 工具默认 seed(中性身份/违禁词/rubric/AI骨架空)
-pnpm dev
+#    先停掉清库前的旧 server(Ctrl-C 或 kill <pid>),否则 Next 16 同目录单实例会挡
+pnpm -C frontend dev
 
 # 5. 浏览器清 localStorage(DevTools Console):
 #    Object.keys(localStorage).forEach(k => { if (/^(creatoros|copilot)/.test(k)) localStorage.removeItem(k) })
