@@ -102,11 +102,19 @@ describe("PositioningCenterView", () => {
     ).toBeTruthy();
   });
 
-  it("renders the empty-state CTA when there is no profile (brand-new user)", () => {
+  it("renders the empty-state CTAs when there is no profile: 显眼的「和 AI 聊定位」入口 + 手动创建 (brand-new user)", () => {
     render(<PositioningCenterView viewModel={EMPTY} />);
     expect(screen.getByTestId("positioning-empty-state")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "创建定位" })).toBeTruthy();
-    // No 英雄区 / AI 带 / history before there is a profile.
+    // T-143 ①:空态必须显眼可见「和 AI 聊定位」主入口(深链到 Copilot positioning
+    // surface,新用户对话式聊出第一版定位,采纳时一次成型建 profile)。
+    const aiCta = screen.getByTestId("positioning-empty-ai-cta");
+    expect(aiCta).toBeTruthy();
+    const aiLink = screen.getByTestId("positioning-empty-open-copilot");
+    expect(aiLink.getAttribute("href")).toContain("surface=positioning");
+    expect(aiLink.getAttribute("href")).toContain("fn=positioning.generate");
+    // 手动兜底入口仍在(想清楚了直接落库)。
+    expect(screen.getByRole("button", { name: "手动创建定位" })).toBeTruthy();
+    // populated 分支的 AI 带(英雄区下)仍不在空态出现。
     expect(screen.queryByTestId("positioning-ai-band")).toBeNull();
   });
 

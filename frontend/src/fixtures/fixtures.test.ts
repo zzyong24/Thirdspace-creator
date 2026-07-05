@@ -293,8 +293,9 @@ describe("Page ViewModel selectors", () => {
 
     expect(dashboard.kind).toBe("dashboard");
     expect(dashboard.metrics).toHaveLength(5);
-    expect(dashboard.continueCreating).toBeDefined();
-    expect(dashboard.continueCreating.heading).toContain("继续创作");
+    // canonicalDataset 含 active 项目 → continueCreating 非 null(T-143 ③ 后仍如此)。
+    expect(dashboard.continueCreating).not.toBeNull();
+    expect(dashboard.continueCreating?.heading).toContain("继续创作");
     expect(dashboard.todos.length).toBeGreaterThan(0);
     expect(dashboard.recentPublications.length).toBeGreaterThan(0);
     expect(dashboard.assistantPrompt.length).toBeGreaterThan(0);

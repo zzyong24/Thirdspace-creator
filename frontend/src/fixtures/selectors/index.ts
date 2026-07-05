@@ -329,17 +329,22 @@ function buildDataOverview(metrics: ReadonlyArray<MetricCard>): DataOverview {
 export function buildDashboardViewModel(
   dataset: DashboardSource = canonicalDataset,
 ): DashboardViewModel {
-  const continueProject =
-    dataset.projects.find((project) => project.status === "active") ?? dataset.projects[0];
+  // T-143 ③:只有真实活跃(非归档)项目才算「进行中」;没有则为 null → 首页渲染
+  // 诚实空态,不再回退 projects[0] 演示假项目占位。
+  const continueProject = dataset.projects.find(
+    (project) => project.status === "active",
+  );
 
-  const continueCreating = {
-    heading: "继续创作",
-    projectId: continueProject.id,
-    projectTitle: continueProject.title,
-    stage: continueProject.currentStage,
-    progressPct: continueProject.progressPct,
-    updatedAt: continueProject.updatedAt,
-  } as const;
+  const continueCreating = continueProject
+    ? ({
+        heading: "继续创作",
+        projectId: continueProject.id,
+        projectTitle: continueProject.title,
+        stage: continueProject.currentStage,
+        progressPct: continueProject.progressPct,
+        updatedAt: continueProject.updatedAt,
+      } as const)
+    : null;
 
   const todos = dataset.tasks
     .filter((task) => task.status !== "done")

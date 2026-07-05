@@ -7,7 +7,8 @@
  *  - 累计播放 == sum of the `views` MetricValue rows,
  *  - 进行中项目 == count of projects with status "active",
  *  - 素材库 == asset count.
- * The dashboard also renders the spec-required SidebarAssistantCard.
+ * [T-143 ②] 首页内容区的重复 AI 助手卡已删,本文件转为断言它不再渲染
+ * (侧栏底部的 AI 助手入口由 (creator)/layout 的 Sidebar 单独挂载,不在本页组件树内)。
  *
  * Determinism: every aggregation is a pure reduction over the canonical
  * dataset — no Date.now / Math.random / network.
@@ -82,14 +83,15 @@ describe("Dashboard derived metrics", () => {
     expect(total).toBeGreaterThan(0);
   });
 
-  it("renders the spec-required SidebarAssistantCard", async () => {
+  it("[T-143 ②] 首页内容区不再渲染多余的 AI 助手卡(侧栏的 SidebarContextualCard 才是保留入口)", async () => {
     // `DashboardPage` is an async Server Component; drive it through the
     // `viewModel?` override seam with the fixture-composed view model and
     // resolve it to a concrete element so the render stays synchronous.
     const element = await DashboardPage({ viewModel: buildDashboardViewModel() });
     const { container } = render(element);
+    // 首页内容区那张重复的 AI 助手卡已删;侧栏底部的 AI 助手入口不在本页组件树内,
+    // 由 (creator)/layout 的 Sidebar 单独挂载,故此处应查无。
     const card = container.querySelector('[data-slot="sidebar-assistant-card"]');
-    expect(card).not.toBeNull();
-    expect(card!.textContent ?? "").toContain("AI 助手");
+    expect(card).toBeNull();
   });
 });

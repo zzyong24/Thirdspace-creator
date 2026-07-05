@@ -88,7 +88,9 @@ export const dashboardPage = z.object({
   loading: z.boolean(),
   error: viewModelError.nullable(),
   metrics: z.array(metricCard),
-  continueCreating,
+  // 诚实空态(T-143 ③):无进行中项目时为 null,前端渲染「还没有进行中的项目」空态,
+  // 不再回退演示假项目 / sentinel 占位。
+  continueCreating: continueCreating.nullable(),
   todos: z.array(todoRow),
   trendingTopics: z.array(topicRow),
   recentPublications: z.array(publicationCompactRow),

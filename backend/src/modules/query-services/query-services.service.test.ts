@@ -137,7 +137,7 @@ describe("DashboardQueryService.getDashboard", () => {
     expect(JSON.stringify(result)).not.toContain('"unreadCount"');
   });
 
-  it("empty scenario: all upstreams empty → scenario:empty, empty arrays, zero-value continueCreating still valid", async () => {
+  it("empty scenario: all upstreams empty → scenario:empty, empty arrays, continueCreating is null (诚实空态,非 sentinel)", async () => {
     const svc = createDashboardQueryService({
       projects: {
         getDashboardSummary: vi.fn(async () => ({
@@ -158,9 +158,9 @@ describe("DashboardQueryService.getDashboard", () => {
     expect(result.scenario).toBe("empty");
     expect(result.todos).toEqual([]);
     expect(result.recentPublications).toEqual([]);
-    // zero-value continueCreating still satisfies the DTO shape.
-    expect(result.continueCreating.projectId).toBeDefined();
-    expect(result.continueCreating.stage).toBeDefined();
+    // T-143 ③:无进行中项目 → continueCreating 为 null(诚实空态),前端渲染
+    // 「还没有进行中的项目」+ 新建 CTA,不再回退 sentinel/演示假项目占位。
+    expect(result.continueCreating).toBeNull();
   });
 
   it("error isolation: a throwing upstream → scenario:error, error set, still a valid DTO", async () => {

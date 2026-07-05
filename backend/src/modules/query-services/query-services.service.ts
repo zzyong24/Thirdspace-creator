@@ -20,25 +20,16 @@ import type {
 // Shared building blocks
 // ---------------------------------------------------------------------------
 
-type ProjectStageName = DashboardPage["continueCreating"]["stage"];
-
+// continueCreating 现为 nullable(T-143 ③),不能再从它索引 stage。改从仍非空的
+// GlobalSearchPage 项目卡取同一 ProjectStageName 联合,供 ProjectOverview / search card 复用。
+type ProjectStageName = GlobalSearchPage["projects"][number]["stage"];
 const DEFAULT_STAGE: ProjectStageName = "research";
+
 const DASHBOARD_ASSISTANT_PROMPT =
   "需要我帮你把今天的待办拆成可执行的脚本步骤吗？";
 
-// A DTO-valid zero-value `continueCreating` (the empty scenario still validates).
-function zeroContinueCreating(): DashboardPage["continueCreating"] {
-  // `id` is z.string().min(1); the empty-scenario card carries a non-empty
-  // sentinel so the DTO validates while signalling "no active project".
-  return {
-    heading: "开始新的创作",
-    projectId: "none",
-    projectTitle: "",
-    stage: DEFAULT_STAGE,
-    progressPct: 0,
-    updatedAt: "1970-01-01T00:00:00.000Z",
-  };
-}
+// T-143 ③:continueCreating 现为 nullable。无进行中项目 → 传 null(诚实空态),
+// 前端渲染「还没有进行中的项目」+「创建第一个项目」CTA,不再造 sentinel/演示假项目。
 
 // ---------------------------------------------------------------------------
 // Dashboard
@@ -102,8 +93,8 @@ export function createDashboardQueryService(
             deps.knowledge.getTrendingTopics(ctx),
           ]);
 
-        const continueCreating =
-          summary.continueCreating ?? zeroContinueCreating();
+        // T-143 ③:无进行中项目 → 保留 null(诚实空态),前端渲染「还没有进行中的项目」。
+        const continueCreating = summary.continueCreating ?? null;
         const todos = summary.todos ?? [];
         const metrics = metricsBundle.metrics ?? [];
         const trend = metricsBundle.trend ?? [];
@@ -142,7 +133,7 @@ export function createDashboardQueryService(
             message: err instanceof Error ? err.message : "组合面板数据失败",
           },
           metrics: [],
-          continueCreating: zeroContinueCreating(),
+          continueCreating: null,
           todos: [],
           trendingTopics: [],
           recentPublications: [],

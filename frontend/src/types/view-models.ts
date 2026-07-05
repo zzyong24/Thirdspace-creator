@@ -138,7 +138,8 @@ export interface CreationSuggestion {
 export interface DashboardViewModel extends BasePageViewModel {
   readonly kind: "dashboard";
   readonly metrics: ReadonlyArray<MetricCard>;
-  readonly continueCreating: ContinueCreating;
+  // T-143 ③:无进行中项目时为 null → 首页「继续创作」渲染诚实空态,不回退演示假项目。
+  readonly continueCreating: ContinueCreating | null;
   readonly todos: ReadonlyArray<TodoRow>;
   readonly trendingTopics: ReadonlyArray<TopicRow>;
   readonly recentPublications: ReadonlyArray<PublicationCompactRow>;

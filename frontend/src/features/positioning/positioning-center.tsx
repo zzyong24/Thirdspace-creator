@@ -22,6 +22,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 import {
   User,
   Compass,
@@ -30,6 +31,7 @@ import {
   HeartPulse,
   Sparkles,
   MessageCircle,
+  MessagesSquare,
   Gem,
   Activity,
   Lightbulb,
@@ -42,6 +44,7 @@ import {
 
 import { SectionCard } from "@/components/project/section-card";
 import { Badge } from "@/components/ui/badge";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 import { client as defaultClient } from "@/lib/contract-client.server";
 import { cn } from "@/lib/utils";
 import type {
@@ -153,18 +156,30 @@ export function PositioningCenterView({
           <SectionCard title="账号定位">
             <div
               data-testid="positioning-empty-state"
-              className="flex flex-col items-start gap-3 py-4"
+              className="flex flex-col items-start gap-4 py-4"
             >
               <p className="text-sm text-muted-foreground">
-                还没有账号定位。先创建你的账号画像与第一条定位陈述，下游的选题、评分与变现都会以它为约束源。
+                还没有账号定位。下游的选题、评分与变现都会以它为约束源——先定好第一版。
               </p>
-              <PositioningDraftDrawer
-                profile={null}
-                triggerLabel="创建定位"
-                triggerIcon="plus"
-                title="创建定位"
-                description="填写账号画像与第一条定位陈述。"
-              />
+
+              {/* T-143 ①:空态显眼的「和 AI 聊定位」主入口。深链到 Copilot 的
+                  positioning surface(positioning.generate),让新用户用对话逐步聊出
+                  第一版定位;对话内采纳卡采纳时会先 upsertProfile(无则创建)再追加
+                  一条 AI 陈述——全新用户一次成型落库(诚实,非空承诺)。 */}
+              <EmptyStateAiCta />
+
+              <div className="flex items-center gap-2 text-xs text-text-subtle">
+                <span>已经想清楚了？</span>
+                <PositioningDraftDrawer
+                  profile={null}
+                  triggerLabel="手动创建定位"
+                  triggerVariant="outline"
+                  triggerSize="sm"
+                  triggerIcon="plus"
+                  title="创建定位"
+                  description="填写账号画像与第一条定位陈述。"
+                />
+              </div>
             </div>
           </SectionCard>
         </div>
@@ -192,6 +207,39 @@ export function PositioningCenterView({
           <DownstreamRules profile={profile} />
         </div>
       )}
+    </div>
+  );
+}
+
+// T-143 ①:空态的「和 AI 聊定位」主入口。显眼 brand 强调卡 + 深链到 Copilot 的
+// positioning surface(positioning.generate),让新用户对话式聊出第一版定位。采纳链
+// (chat-result-cards adopt)会 upsertProfile(无则创建)+ createStatement,一次成型落库。
+function EmptyStateAiCta() {
+  return (
+    <div
+      data-testid="positioning-empty-ai-cta"
+      className="flex w-full flex-col gap-3 rounded-card border border-brand/30 bg-brand-soft/40 p-4"
+    >
+      <div className="flex items-start gap-3">
+        <IconChip icon={Sparkles} tone="brand" />
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <p className="text-sm font-semibold text-foreground">
+            和 AI 聊定位
+          </p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            不用一次填满表单——和编导聊你的账号与内容方向，逐条打磨聊出第一版定位。
+            聊清楚后在对话里点「采纳」，就会自动建好你的定位母版。
+          </p>
+        </div>
+      </div>
+      <Link
+        href={copilotDeepLink("positioning", "positioning.generate")}
+        data-testid="positioning-empty-open-copilot"
+        className="inline-flex h-9 w-fit items-center gap-1.5 rounded-control bg-brand px-3.5 text-[13px] font-medium text-brand-foreground transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <MessagesSquare className="size-4" />
+        让 AI 帮你聊出第一版定位
+      </Link>
     </div>
   );
 }

@@ -104,7 +104,25 @@ describe("pages contract", () => {
     const parsed = dashboardPage.parse(dashboard);
     expect(parsed.kind).toBe("dashboard");
     expect(parsed.metrics[0].tone).toBe("positive");
-    expect(parsed.continueCreating.stage).toBe("script");
+    expect(parsed.continueCreating?.stage).toBe("script");
+  });
+
+  it("accepts a null continueCreating (T-143 ③ 诚实空态:无进行中项目)", () => {
+    const parsed = dashboardPage.parse({
+      scenario: "empty",
+      kind: "dashboard",
+      loading: false,
+      error: null,
+      metrics: [],
+      continueCreating: null,
+      todos: [],
+      trendingTopics: [],
+      recentPublications: [],
+      dataOverview: { metrics: [], trend: [] },
+      suggestions: [],
+      assistantPrompt: "今天想先做点什么？",
+    });
+    expect(parsed.continueCreating).toBeNull();
   });
 
   it("rejects an unknown publication status in the dashboard DTO", () => {

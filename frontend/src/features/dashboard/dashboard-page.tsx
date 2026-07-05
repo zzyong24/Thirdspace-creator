@@ -111,41 +111,7 @@ export async function DashboardPage({
 
       <SummaryMetrics metrics={vm.metrics} />
       <DashboardGrid vm={vm} />
-      <SidebarAssistantCard prompt={vm.assistantPrompt} />
     </main>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// SidebarAssistantCard (page-specs §1 component tree, R1-7)
-// ---------------------------------------------------------------------------
-
-function SidebarAssistantCard({ prompt }: { prompt: string }) {
-  return (
-    <aside
-      data-slot="sidebar-assistant-card"
-      aria-label="AI 助手"
-      className="flex items-center justify-between gap-3 rounded-card border border-brand/30 bg-brand-soft/40 p-4"
-    >
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-sm font-medium text-foreground">AI 助手</span>
-        <p className="truncate text-xs text-muted-foreground">{prompt}</p>
-      </div>
-      {/* bug #3:query-only href(以 `?` 开头)= 保持当前页路径,就地开 Copilot 浮层,不跳首页。
-          [T-096 #2] 显式 scope=global:与左下角侧栏同一个全局会话桶(同为无特定任务的
-          全局助手,产品语义一致)。 */}
-      <Link
-        href="?copilot=open&scope=global"
-        data-slot="sidebar-assistant-cta"
-        className={cn(
-          "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-card bg-brand px-3 text-sm font-medium text-brand-foreground",
-          "transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        )}
-      >
-        <span aria-hidden="true">✦</span>
-        <span>开始对话</span>
-      </Link>
-    </aside>
   );
 }
 
@@ -188,7 +154,11 @@ function DashboardGrid({ vm }: { vm: DashboardViewModel }) {
     >
       <ContinueCreatingCard
         continueCreating={vm.continueCreating}
-        projectPlatforms={getProjectPlatformLabels(vm.continueCreating.projectId)}
+        projectPlatforms={
+          vm.continueCreating
+            ? getProjectPlatformLabels(vm.continueCreating.projectId)
+            : []
+        }
       />
       <TodoCard todos={vm.todos} />
       <TrendingTopicsCard topics={vm.trendingTopics} />
@@ -210,9 +180,43 @@ function ContinueCreatingCard({
   continueCreating,
   projectPlatforms,
 }: {
-  continueCreating: ContinueCreating;
+  continueCreating: ContinueCreating | null;
   projectPlatforms: ReadonlyArray<string>;
 }) {
+  // T-143 ③:没有进行中项目(全新用户/清库)→ 诚实空态,不摆演示假项目。
+  if (!continueCreating) {
+    return (
+      <div data-slot="continue-creating-card">
+        <SectionCard title="继续创作" description="最近编辑的项目与下一步行动">
+          <div
+            data-slot="continue-creating-empty"
+            className="flex flex-col items-start gap-3 rounded-card border border-dashed border-border bg-surface-subtle px-3.5 py-6"
+          >
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium text-foreground">
+                还没有进行中的项目
+              </p>
+              <p className="text-xs text-muted-foreground">
+                创建第一个项目,把选题变成可执行的创作流程。
+              </p>
+            </div>
+            <Link
+              href="/projects/new"
+              data-slot="new-project-entry"
+              className={cn(
+                "flex h-10 items-center justify-center gap-2 rounded-card bg-brand px-4 text-sm font-medium text-brand-foreground",
+                "transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              )}
+            >
+              <span aria-hidden="true">＋</span>
+              <span>创建第一个项目</span>
+            </Link>
+          </div>
+        </SectionCard>
+      </div>
+    );
+  }
+
   // Deep-link the project row to its workspace (D3)。[T-076] 两阶段化:统一走
   // projectWorkspaceHref(review → 复盘页,其余 → 稿面),不再拼阶段子路由。
   const projectHref = projectWorkspaceHref(
@@ -474,7 +478,7 @@ function CreationSuggestionsCard({
   continueCreating,
 }: {
   suggestions: ReadonlyArray<CreationSuggestion>;
-  continueCreating: ContinueCreating;
+  continueCreating: ContinueCreating | null;
 }) {
   return (
     <div data-slot="creation-suggestions-card">
@@ -554,22 +558,30 @@ function todoHref(todo: TodoRow): string {
  */
 function suggestionCta(
   category: string,
-  continueCreating: ContinueCreating,
+  continueCreating: ContinueCreating | null,
 ): { href: string; label: string } {
   if (category === "research" || category === "topic" || category === "planning") {
     return { href: "/topics", label: "去选题池" };
   }
-  if (category === "review") {
-    return {
-      href: `/projects/${continueCreating.projectId}/review`,
-      label: "立即创作",
-    };
-  }
-  if (category === "script" || category === "production" || category === "publishing") {
-    return {
-      href: `/projects/${continueCreating.projectId}`,
-      label: "立即创作",
-    };
+  // T-143 ③:review/script/production/publishing 需要一个活跃项目;没有进行中项目时
+  // 无从「继续」某个项目,回退到新建项目入口(诚实,不深链到不存在的 projectId)。
+  if (continueCreating) {
+    if (category === "review") {
+      return {
+        href: `/projects/${continueCreating.projectId}/review`,
+        label: "立即创作",
+      };
+    }
+    if (
+      category === "script" ||
+      category === "production" ||
+      category === "publishing"
+    ) {
+      return {
+        href: `/projects/${continueCreating.projectId}`,
+        label: "立即创作",
+      };
+    }
   }
   return { href: "/projects/new", label: "立即创作" };
 }
