@@ -572,15 +572,16 @@ function RewriteApplyButton({
     <Button
       type="button"
       size="sm"
-      variant="ghost"
+      variant="outline"
       data-slot="script-review-apply-rewrite"
       data-testid="script-review-apply-rewrite"
-      className="h-5 px-1.5 text-[10px] text-muted-foreground"
+      // [T-125] 醒目成绿色按钮态(原 ghost + muted 太淡,看不出是可点按钮)。
+      className="h-6 gap-1 rounded-control border-success/50 bg-success-soft px-2 text-[10px] font-medium text-success hover:bg-success/15"
       disabled={state.phase === "applying"}
       onClick={apply}
       title="应用改写(确认门)—— 人工确认才写入新脚本版本,可撤销,绝不自动改稿"
     >
-      {state.phase === "applying" ? "应用中…" : "应用改写"}
+      {state.phase === "applying" ? "应用中…" : "✎ 应用改写"}
     </Button>
   );
 }
