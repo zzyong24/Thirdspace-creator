@@ -196,3 +196,40 @@ describe("OnboardingCard — 交互", () => {
     expect(document.querySelector('[data-slot="onboarding-progress"]')).not.toBeNull();
   });
 });
+
+describe("reopenOnboarding — [T-137] 二次开启(让「不再显示」可逆)", () => {
+  const DISMISS_KEY = "creatoros:onboarding:dismissed";
+
+  it("清 hidden+dismissed 两个 flag 并派发 open event", async () => {
+    window.localStorage.setItem(HIDDEN_KEY, "1");
+    window.localStorage.setItem(DISMISS_KEY, "1");
+    const { reopenOnboarding } = await importCard();
+
+    const spy = vi.fn();
+    window.addEventListener(OPEN_EVENT, spy);
+    reopenOnboarding();
+
+    // 两个 flag 都被清 → 常驻卡与弹窗下次都会重现。
+    expect(window.localStorage.getItem(HIDDEN_KEY)).toBeNull();
+    expect(window.localStorage.getItem(DISMISS_KEY)).toBeNull();
+    // 立即唤起弹窗。
+    expect(spy).toHaveBeenCalledTimes(1);
+    window.removeEventListener(OPEN_EVENT, spy);
+  });
+
+  it("clearOnboardingFlags 只清两 flag,不派发 open event(供设置页入口:清后导航)", async () => {
+    window.localStorage.setItem(HIDDEN_KEY, "1");
+    window.localStorage.setItem(DISMISS_KEY, "1");
+    const { clearOnboardingFlags } = await importCard();
+
+    const spy = vi.fn();
+    window.addEventListener(OPEN_EVENT, spy);
+    clearOnboardingFlags();
+
+    expect(window.localStorage.getItem(HIDDEN_KEY)).toBeNull();
+    expect(window.localStorage.getItem(DISMISS_KEY)).toBeNull();
+    // 不同页唤起(设置页靠导航后首页 overlay 自动弹,避免两 modal 叠加)。
+    expect(spy).not.toHaveBeenCalled();
+    window.removeEventListener(OPEN_EVENT, spy);
+  });
+});

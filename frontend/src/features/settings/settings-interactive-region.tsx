@@ -80,6 +80,7 @@ import type {
 // T-077a 技能页签:列表/详情组件 + 可序列化条目类型(route server 侧投影传入)。
 import { SkillsSection } from "./skills-section";
 import type { SkillItem } from "./skills-data";
+import { clearOnboardingFlags } from "@/features/onboarding/onboarding-card";
 
 // ---------------------------------------------------------------------------
 // useSettingsMutation — the shared island mutation seam (plan Step 5)
@@ -999,6 +1000,28 @@ function PreferenceSettingsCard({
             }}
             aria-label="启用使用情况分析"
           />
+        </SettingsFormRow>
+        <SettingsFormRow
+          label="新手引导"
+          controlId="pref-reopen-onboarding"
+          help="重新打开新手清单引导（即使之前在清单上点过「不再显示」）。"
+        >
+          <Button
+            id="pref-reopen-onboarding"
+            type="button"
+            variant="outline"
+            size="sm"
+            data-slot="pref-reopen-onboarding"
+            onClick={() => {
+              // 清「不再显示」/「session-dismiss」两 flag,再 full-reload 回首页:
+              // 关掉设置 modal(避免两 modal 叠加把引导弹窗挤坏),首页 overlay 全新
+              // 挂载 → 因 dismissed 已清 + 必备未配全会自动弹 + 常驻卡重现。
+              clearOnboardingFlags();
+              window.location.href = "/";
+            }}
+          >
+            重新打开新手引导
+          </Button>
         </SettingsFormRow>
       </div>
     </SectionCard>

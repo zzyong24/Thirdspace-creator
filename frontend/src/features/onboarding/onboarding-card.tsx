@@ -30,7 +30,7 @@ import {
   type OnboardingStep,
 } from "./onboarding-steps";
 import { loadState } from "./onboarding-data";
-import { openOnboarding } from "./onboarding-overlay";
+import { openOnboarding, DISMISS_KEY } from "./onboarding-overlay";
 import { ProgressBar, StepGroup } from "./onboarding-checklist";
 
 /** 常驻卡「不再显示」的永久 localStorage key(区别于弹窗的 session dismissed)。 */
@@ -53,6 +53,30 @@ export function writeHidden(): void {
   } catch {
     /* noop —— 写失败不抛,hidden 只是本地偏好 */
   }
+}
+
+/**
+ * [T-137] 清「永久隐藏」(hidden)+「弹窗 session-dismiss」(dismissed)两个 flag,**不**唤起。
+ * 清后:常驻卡下次挂载重现;首页 overlay 因 dismissed 已清 + 必备未配全会自动弹。
+ * 设置页入口用它 —— 设置本身是 modal,不能同页 dispatch 唤起(两 modal 叠加会挤坏弹窗),
+ * 故清 flag 后导航回首页,靠首页 overlay 自动弹。
+ */
+export function clearOnboardingFlags(): void {
+  try {
+    window.localStorage.removeItem(HIDDEN_KEY);
+    window.localStorage.removeItem(DISMISS_KEY);
+  } catch {
+    /* noop —— 清 flag 失败不影响后续导航/唤起 */
+  }
+}
+
+/**
+ * [T-137] 二次开启引导:清 flag 后**同页**唤起弹窗。仅用于无 modal 遮挡的场景
+ * (设置页请改用 clearOnboardingFlags + 导航,避免两 modal 叠加把弹窗挤坏)。
+ */
+export function reopenOnboarding(): void {
+  clearOnboardingFlags();
+  openOnboarding();
 }
 
 type Load =

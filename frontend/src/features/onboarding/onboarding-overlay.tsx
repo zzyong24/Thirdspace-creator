@@ -38,7 +38,7 @@ import {
 import { loadState } from "./onboarding-data";
 import { ProgressBar, StepGroup } from "./onboarding-checklist";
 
-const DISMISS_KEY = "creatoros:onboarding:dismissed";
+export const DISMISS_KEY = "creatoros:onboarding:dismissed";
 /** 手动重开引导的自定义事件名(shell / 侧栏 / 常驻卡 dispatch 它即弹开)。 */
 export const ONBOARDING_OPEN_EVENT = "creatoros:onboarding:open";
 
