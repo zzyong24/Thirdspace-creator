@@ -41,16 +41,16 @@ describe("knowledge ops registered in the composite transport", () => {
     expect(KNOWLEDGE_OP_IDS).toContain("knowledge.relations.listAll");
   });
 
-  it("knowledge.list returns the seeded canonical items for the owner", async () => {
+  it("knowledge.list 开箱为空(T-135:canonical + douyin 内容 seed 全退役)", async () => {
+    // T-135 补漏:退役全部内容 seed(含 douyin 真金句,它是用户私人内容不该固化重灌)→
+    // 新库知识库开箱空;真实知识由用户采集(douyin-anchor-transcribe)/录入进库。归属由下方
+    // knowledge.create round-trips 覆盖。
     const res = (await compositeTransport.request(
       ep("knowledge.list", true),
       { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined } as never,
       ctx(canonicalDataset.user.id),
     )) as { data: Array<{ id: string; userId: string }> };
-    expect(res.data.length).toBeGreaterThan(0);
-    for (const row of res.data) {
-      expect(row.userId).toBe(canonicalDataset.user.id);
-    }
+    expect(res.data.length).toBe(0);
   });
 
   it("knowledge.create round-trips: the new item is then listable", async () => {

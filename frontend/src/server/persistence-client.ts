@@ -13,8 +13,6 @@ import { canonicalDataset } from "@/fixtures/canonical";
 // [T-050] 抖音真实数据里只保留金句知识库 seed(项目/发布/指标图谱旧种子已全删)。
 // [T-135] DOUYIN_FAN_TOTAL 已随 canonical platform account seed(唯一使用点)退役移除。
 import {
-  douyinKnowledgeItems,
-  douyinKnowledgeRevisions,
 } from "@/fixtures/douyin-real";
 import type { MetricCard } from "@/types/view-models";
 import type { ProjectStageName, TaskStatus } from "@/types/domain";
@@ -507,9 +505,8 @@ const SCHEDULING_OPS = new Set<string>(SCHEDULING_OP_IDS);
 // agree on the same key.
 const CANONICAL_RUBRIC_ID = "rubric-canonical";
 
-type CanonicalKnowledge = (typeof canonicalDataset.knowledgeItems)[number];
-type CanonicalRevision = (typeof canonicalDataset.knowledgeRevisions)[number];
-// [T-135] CanonicalRelation 已随 canonical knowledge relations seed(toRelationRow)退役移除。
+// [T-135] canonical + douyin knowledge seed 全退役 → CanonicalKnowledge/CanonicalRevision 类型
+// + toKnowledgeRow/toRevisionRow mapper 一并移除(知识全由用户真实采集/录入进库,不再 seed)。
 
 // [T-099c] 产物版本正文抽取(单一真值,context.artifacts 字数 + context.artifact.text 全文共用)——
 // output_script transcript 优先(与 makeReviewSubjectReader.getScript 同读法),回退 contentText,
@@ -551,40 +548,9 @@ function extractArtifactText(
   return "";
 }
 
-function toKnowledgeRow(k: CanonicalKnowledge): KnowledgeItemRow {
-  return {
-    id: k.id,
-    userId: k.userId,
-    currentRevisionId: k.currentRevisionId,
-    knowledgeType: k.knowledgeType,
-    title: k.title,
-    sourceType: k.sourceType,
-    sourceUrl: k.sourceUrl ?? null,
-    sourceMetadata: k.sourceMetadata as Record<string, unknown>,
-    status: k.status,
-    archivedAt: k.archivedAt ?? null,
-    // [T-079a] 种子数据无出处标注,落 NULL(source_note 列见迁移 0018)。
-    sourceNote: null,
-    createdAt: k.createdAt,
-    updatedAt: k.updatedAt,
-  };
-}
-
-function toRevisionRow(r: CanonicalRevision): KnowledgeRevisionRow {
-  return {
-    id: r.id,
-    knowledgeItemId: r.knowledgeItemId,
-    revisionNumber: r.revisionNumber,
-    content: r.content,
-    structuredData: r.structuredData as Record<string, unknown>,
-    createdAt: r.createdAt,
-  };
-}
-
-// [T-135] toRelationRow / toAssetRow / toAssetFileRow / toPreferenceRow / toModelRow /
-// toAgentRow(及其 CanonicalRelation/Asset/AssetFile/Preference/Model/Agent 类型)已随
-// 对应 canonical seed 退役一并删除(唯一调用点是被删的 seed 编排)。toKnowledgeRow /
-// toRevisionRow 仍保留——它们还服务于用户抖音真实作品的金句知识种子(douyinKnowledge*)。
+// [T-135] toKnowledgeRow/toRevisionRow(及 toRelationRow/toAssetRow/toAssetFileRow/
+// toPreferenceRow/toModelRow/toAgentRow 等)已随全部 canonical + douyin 内容 seed 退役移除
+// (知识/素材/定位等全由用户真实采集或录入进库,不再 seed 固化任何内容)。
 
 // Pin the singleton on globalThis, NOT a module-level `let`: Next/Turbopack give
 // the route handler and server components separate module instances, so a
@@ -4725,28 +4691,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 复盘 learning「learning-hook-15s」→ 无来源可回流)。校准中心「复盘回流建议」开箱空;
   // 真实建议由用户复盘结论回流生成。
 
-  // ── Real Douyin catalog + metrics (用户抖音作品初始化) ─────────────────────
-  // Append the user's REAL Douyin works (58 published videos) + their REAL
-  // creator-center metrics on top of the canonical demo dataset. Source of truth:
-  // ~/.hermes/douyin_stats.db + vault 04-项目/内容创作/创作, frozen into
-  // src/fixtures/douyin-real.ts (regenerate via /tmp/douyin-real/gen.mjs). Every
-  // seed* is onConflictDoNothing, so this is idempotent across a re-built
-  // singleton and never collides with the canonical (project-*/pub-*) ids — the
-  // Douyin rows are namespaced `dy-*`. All rows are owned by the canonical login.
-  // [T-050] douyin-real 冻结种子(dy-proj-* 58 项目全链)已退役(用户裁决:直接全删,
-  // 与 T-030 真采集大面积重复导致列表重复/指标翻倍)。仅保留其金句知识种子(真实内容,
-  // 挂 user 不挂已删项目)。
-  const DY_OWNER = canonicalDataset.user.id;
-  await knowledgeRepo.seedKnowledge(
-    douyinKnowledgeItems.map((k) =>
-      toKnowledgeRow({ ...k, userId: DY_OWNER } as unknown as CanonicalKnowledge),
-    ),
-  );
-  await knowledgeRepo.seedRevisions(
-    douyinKnowledgeRevisions.map((r) =>
-      toRevisionRow(r as unknown as CanonicalRevision),
-    ),
-  );
+  // [T-135 补漏 2026-07-05] douyin 金句知识种子(dy-know-*/dy-krev-*)已退役 —— 它是**用户本人**
+  // 的真实抖音文案/金句/粉丝画像固化在代码(fixtures/douyin-real.ts),每次启动 seed 会灌进
+  // **任何**库 → 部署给新用户时会把私人内容泄漏给每个人,且令「开箱空」不成立。知识改由用户
+  // 真实采集(douyin-anchor-transcribe / 知识库录入)进库,不再 seed 固化内容。
 
   // T-004 ChatBox runtime — bundle the /api/chat route's needs: persist (aiService),
   // resolve model (resolveModelSpec), and the bound CreativeContext readers (定位/飞轮/
