@@ -8,6 +8,9 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:migrate": "pnpm --filter @creatoros/backend exec tsx scripts/migrate.ts",
-    "db:gen-baseline": "pnpm --filter @creatoros/backend exec tsx scripts/gen-baseline-migration.ts"
+    "db:gen-baseline": "pnpm --filter @creatoros/backend exec tsx scripts/gen-baseline-migration.ts",
+    "reconcile": "node orchestrator/process/reconcile.mjs",
+    "boundary": "node orchestrator/process/boundary-scan.mjs",
+    "pmem:sync": "node orchestrator/process/pmem.mjs sync"
   }
 }

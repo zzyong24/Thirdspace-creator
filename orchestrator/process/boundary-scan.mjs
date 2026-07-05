@@ -74,6 +74,24 @@ function moduleOf(p) {
   return m ? m[1] : null;
 }
 
+// specifier 匹配 —— **不用裸 includes**(会把 "ai" 误伤成 "@/types/domain"、"asset-detail"、
+// "@/components/ai/*" 等含子串的本地路径,门卫沦为噪音)。分三态:
+//   • 以 "/" 结尾 = 包 scope 前缀规则(如 "@ai-sdk/") → startsWith
+//   • 以 "." 或 "/" 开头 = 路径后缀规则(如 ".repository"/"/repository",R3 用) → endsWith
+//   • 否则 = 精确包名(如 "ai"/"@anthropic-ai/claude-agent-sdk") → 精确相等或其子路径 pkg/xxx
+function specMatches(spec, patterns) {
+  for (const s of patterns) {
+    if (s.endsWith("/")) {
+      if (spec.startsWith(s)) return true;
+    } else if (s.startsWith(".") || s.startsWith("/")) {
+      if (spec.endsWith(s)) return true;
+    } else if (spec === s || spec.startsWith(s + "/")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 const violations = [];
 
 for (const rule of cfg.rules ?? []) {
@@ -92,7 +110,7 @@ for (const rule of cfg.rules ?? []) {
       const r = rel(f);
       const ownMod = moduleOf(r);
       for (const spec of importsOf(f)) {
-        const hit = (rule.specifiers ?? []).some((s) => spec.includes(s));
+        const hit = specMatches(spec, rule.specifiers ?? []);
         if (!hit) continue;
         if (rule.allowSameModule) {
           if (spec.startsWith("./")) continue; // 同目录 = 同模块,放行

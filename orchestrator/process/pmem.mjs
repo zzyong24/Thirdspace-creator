@@ -22,8 +22,9 @@ const LEDGER = path.join(REPO, "orchestrator", "TASK_LEDGER.jsonl");
 const PROJECT = path.join(REPO, "PROJECT.md");
 const BASELINE = path.join(HERE, "boundary-baseline.json");
 
+// 定位单一真值 = docs/产品定位.md(宪法)。本常量是它的精炼副本,演进时两处对齐(见 T-145/D38)。
 const POSITIONING =
-  "CreatorOS —— 自媒体「编导创作操作系统」:项目/选题/研究/脚本/素材/发布/复盘/经验八大工作台 + 嵌在每个环节的可换模型 Agent 能力。pnpm monorepo(frontend Next.js / backend 库 / contract zod / worker)。";
+  "CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理工具),核心是「越用越准的编导智能体」:出选题、起草文案与结构、管素材,发布后采集真实表现回流校准。项目主干两阶段:脚本(选题/脚本/素材/发布动作一体)→ 复盘(数据对照/经验沉淀);研究/策划/制作不再是独立阶段。护城河=飞轮复利(盲预测→发布→采集→对照偏差→沉淀经验→回流)。pnpm monorepo(frontend Next.js / backend 库 / contract zod / worker)。";
 
 function readLedger() {
   if (!fs.existsSync(LEDGER)) return [];
