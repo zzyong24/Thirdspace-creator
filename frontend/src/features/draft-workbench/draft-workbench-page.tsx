@@ -91,9 +91,9 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           {/* [T-127] 创作流引导 CTA:选题 → 搜素材(联网)→ 立论点 → 写脚本。 */}
           <CreationFlowCtas />
 
-          {/* [T-127] 论点骨架面板:把已采纳的论点树(核心论点+支撑/证据/反驳)显性化到稿面,
-              空态引导立论点。首版可见+立论点/重立;可编辑增删排待用户 preview 确认交互再做。 */}
-          <ThesisSkeletonPanel nodes={thesis} />
+          {/* [T-127] 论点骨架面板:把已采纳的论点树(核心论点+支撑/证据/反驳)显性化到稿面 +
+              可编辑(加/删/重排 → 保存追加新版本),空态引导立论点。挂素材待后续增量。 */}
+          <ThesisSkeletonPanel thesis={thesis} />
 
           {/* ── 脚本区(活跃) ── */}
           <section

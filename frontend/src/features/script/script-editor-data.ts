@@ -371,6 +371,11 @@ export interface ThesisSkeletonNode {
   readonly title: string;
   readonly summary: string;
 }
+// [T-127] 返回 artifactId 一并给稿面面板 —— 可编辑保存时 createArtifactVersion 需要目标 artifact。
+export interface ThesisSkeleton {
+  readonly artifactId: string;
+  readonly nodes: ReadonlyArray<ThesisSkeletonNode>;
+}
 
 const THESIS_COLUMNS: ReadonlySet<string> = new Set([
   "core",
@@ -393,7 +398,7 @@ const THESIS_COLUMNS: ReadonlySet<string> = new Set([
 export async function loadThesisSkeleton(
   projectId: string | null,
   client: ScriptDataClient = defaultClient as unknown as ScriptDataClient,
-): Promise<ReadonlyArray<ThesisSkeletonNode> | null> {
+): Promise<ThesisSkeleton | null> {
   if (!projectId || !client.listArtifacts) return null;
   try {
     const listed = await client.listArtifacts({
@@ -420,7 +425,7 @@ export async function loadThesisSkeleton(
       if (!title && !summary) continue;
       out.push({ column: column as ThesisColumn, title, summary });
     }
-    return out.length > 0 ? out : null;
+    return out.length > 0 ? { artifactId: thesisArtifact.id, nodes: out } : null;
   } catch {
     return null;
   }

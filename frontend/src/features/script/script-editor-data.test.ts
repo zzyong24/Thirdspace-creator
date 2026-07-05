@@ -177,11 +177,13 @@ describe("loadThesisSkeleton (T-127)", () => {
       currentVersionId: "av-thesis-1",
       versions: [THESIS_VERSION],
     });
-    const nodes = await loadThesisSkeleton("project-x", client);
-    expect(nodes).not.toBeNull();
+    const result = await loadThesisSkeleton("project-x", client);
+    expect(result).not.toBeNull();
+    expect(result!.artifactId).toBe("art-thesis");
+    const nodes = result!.nodes;
     expect(nodes).toHaveLength(4);
-    expect(nodes![0]).toMatchObject({ column: "core", title: "核心论点" });
-    expect(nodes!.map((n) => n.column)).toEqual([
+    expect(nodes[0]).toMatchObject({ column: "core", title: "核心论点" });
+    expect(nodes.map((n) => n.column)).toEqual([
       "core",
       "support",
       "evidence",
@@ -207,9 +209,9 @@ describe("loadThesisSkeleton (T-127)", () => {
         },
       ],
     });
-    const nodes = await loadThesisSkeleton("project-x", client);
-    expect(nodes).toHaveLength(1);
-    expect(nodes![0]).toMatchObject({ column: "core", title: "有效" });
+    const result = await loadThesisSkeleton("project-x", client);
+    expect(result!.nodes).toHaveLength(1);
+    expect(result!.nodes[0]).toMatchObject({ column: "core", title: "有效" });
   });
 
   it("无 projectId → null", async () => {

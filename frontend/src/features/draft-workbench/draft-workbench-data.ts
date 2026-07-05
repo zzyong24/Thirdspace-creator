@@ -6,7 +6,7 @@ import {
   loadThesisSkeleton,
   resolveScriptArtifactIdFromDb,
   type ScriptDataClient,
-  type ThesisSkeletonNode,
+  type ThesisSkeleton,
 } from "@/features/script/script-editor-data";
 import type { ProjectBriefDetail, ProjectStageName } from "@/types/domain";
 import type { ScriptSectionView } from "@/types/view-models";
@@ -231,9 +231,10 @@ export interface DraftWorkbenchVm {
   /**
    * [T-127] 项目已采纳的论点骨架(thesis_tree 当前版本 nodes:核心论点 + 支撑/证据/反驳分支);
    * null = 还没立论点(稿面「论点骨架」面板渲染诚实空态 + 立论点 CTA)。让原本埋在 Copilot、
-   * 稿面看不到的论点显性化 —— 用户「不知道要先立论点」的根因。
+   * 稿面看不到的论点显性化 —— 用户「不知道要先立论点」的根因。artifactId 供面板可编辑保存
+   * (createArtifactVersion 目标)。
    */
-  readonly thesis: ReadonlyArray<ThesisSkeletonNode> | null;
+  readonly thesis: ThesisSkeleton | null;
 }
 
 // ---------------------------------------------------------------------------
