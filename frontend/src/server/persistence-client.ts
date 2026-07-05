@@ -257,6 +257,7 @@ import {
   createBochaAdapter,
   createTavilyAdapter,
   createSerpapiAdapter,
+  createRssAdapter,
   type SearchProviderRegistry,
 } from "@creatoros/ai-worker";
 import {
@@ -4686,6 +4687,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     bocha: createBochaAdapter(),
     tavily: createTavilyAdapter(),
     serpapi: createSerpapiAdapter(),
+    // [T-126a] RSS/Atom 免 key 检索 —— provider "rss",baseUrl 填 feed URL(s),无需搜索 API key。
+    rss: createRssAdapter(),
   };
   // ChatBox gatherMaterials 前置检索端口:解析 spec + 按 provider 分派 REST。未配抛 SearchConfigError、
   // 检索失败抛 SearchExecutionError(chat-runner catch 成 model_memory 降级)。

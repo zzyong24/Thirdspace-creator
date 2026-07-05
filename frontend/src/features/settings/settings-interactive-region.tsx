@@ -1593,16 +1593,16 @@ const MULTIMODAL_META = {
     title: "联网搜索",
     icon: Cpu,
     description:
-      "素材搜集(找素材/搜资料)前置真联网检索用;不配则素材来自模型训练记忆、来源需核实。",
-    providerSuggestions: ["bocha", "tavily", "serpapi"] as ReadonlyArray<string>,
-    providerPlaceholder: "bocha",
+      "素材搜集(找素材/搜资料)前置真联网检索用;不配则素材来自模型训练记忆、来源需核实。rss 免 key。",
+    providerSuggestions: ["rss", "bocha", "tavily", "serpapi"] as ReadonlyArray<string>,
+    providerPlaceholder: "rss",
     providerHelp:
-      "搜索厂商:bocha(博查,中文优)/ tavily / serpapi,可自定义。",
+      "rss=免 key(baseUrl 填 RSS/Atom feed 网址,逗号分隔多个);bocha(博查,中文优)/ tavily / serpapi=付费搜索 API 需 key。任意模型都能真联网。",
     modelHelp:
-      "多数搜索无「模型」概念可留空;serpapi 用它当 engine(默认 google,可填 bing 等)。",
+      "多数搜索无「模型」概念可留空;serpapi 用它当 engine(默认 google,可填 bing 等);rss 留空。",
     modelPlaceholder: "",
     baseUrlPlaceholder:
-      "留空=provider 默认(bocha=api.bochaai.com / tavily=api.tavily.com / serpapi=serpapi.com)",
+      "rss=RSS/Atom feed URL(逗号分隔多个);留空=provider 默认(bocha=api.bochaai.com / tavily=api.tavily.com / serpapi=serpapi.com)",
     disabledHint: "未配 → 素材来自模型记忆,标注需核实。",
   },
 } as const;

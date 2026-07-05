@@ -123,6 +123,8 @@ export {
 export { createBochaAdapter } from "./runtime/search-bocha";
 export { createTavilyAdapter } from "./runtime/search-tavily";
 export { createSerpapiAdapter } from "./runtime/search-serpapi";
+// [T-126a] RSS/Atom 免 key 检索适配器 —— provider "rss",baseUrl 填 feed URL(s),不需搜索 API key。
+export { createRssAdapter } from "./runtime/search-rss";
 
 // [T-055h asset.classify] 视觉理解(OpenAI 兼容 chat vision,VLM 看图打标签)。
 export { describeImageOpenAICompatible } from "./runtime/vision";
