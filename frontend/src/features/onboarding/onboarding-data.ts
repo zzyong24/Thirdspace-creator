@@ -1,14 +1,13 @@
 /**
- * onboarding-data — [T-132 切片 2] 从 onboarding-overlay.tsx 抽出的能力 state 装配层。
+ * onboarding-data — [T-132 切片 2;T-138] 能力 state 装配层。
  *
- * `loadState` 及 6 个 loader 从 overlay 移过来(逻辑一字不改,含各自 try/catch 诚实
- * 降级),供弹窗壳(onboarding-overlay)与常驻卡(onboarding-card)共用 —— 两处都
- * 挂载后并行拉真值 → deriveSteps。每个读 op 各自 try/catch:失败 → 该字段留
- * undefined(诚实降级),不让一个读失败拖垮整份 state,deriveSteps 一律当未完成、
- * 绝不假打勾。
+ * `loadState` 及 6 个 loader 供常驻卡(onboarding-card)挂载后并行拉真值 →
+ * deriveSteps。(T-138 弹窗已删,常驻卡是唯一消费方。)每个读 op 各自 try/catch:
+ * 失败 → 该字段留 undefined(诚实降级),不让一个读失败拖垮整份 state,deriveSteps
+ * 一律当未完成、绝不假打勾。
  *
- * 本模块 import 了 contract-client(client),故消费方(overlay/card)本身是 client
- * 组件;但本文件不 import React —— 纯装配逻辑,好复用。
+ * 本模块 import 了 contract-client(client),故消费方(card)本身是 client 组件;
+ * 但本文件不 import React —— 纯装配逻辑,好复用。
  */
 
 import { client } from "@/lib/contract-client";

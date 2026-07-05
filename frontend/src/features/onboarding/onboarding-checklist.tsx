@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * onboarding-checklist — [T-132 切片 2] 从 onboarding-overlay.tsx 抽出的展示件。
+ * onboarding-checklist — [T-132 切片 2;T-138] 引导清单的展示件。
  *
- * `ProgressBar` / `StepGroup` / `StepRow` 从 overlay 移过来并导出,供弹窗壳
- * (onboarding-overlay)与常驻卡(onboarding-card)共用同一套渲染。行为与 v1 一致,
+ * `ProgressBar` / `StepGroup` / `StepRow` 导出供常驻卡(onboarding-card)渲染同一套
+ * 清单。(T-138 弹窗已删,常驻卡是唯一消费方。)
  * 唯一增益:
  *   - `StepGroup` 已支持传入 `heading` / `hint` —— 现在有三档(required / recommended
  *     / optional),调用方各传各自组标题;`steps.length === 0` → return null(某档为空

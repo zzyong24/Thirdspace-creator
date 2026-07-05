@@ -1,11 +1,14 @@
 /**
- * [T-132 切片 3] OnboardingCard 常驻卡集成测:
+ * [T-132 切片 3;T-138] OnboardingCard 常驻卡集成测:
  *  - 显隐矩阵:hidden(localStorage)→ null;isComplete(required+recommended 全配)→ null;
  *    有缺口 → 渲染。
  *  - 点「不再显示」→ 写 localStorage hidden=1 且卡隐藏。
- *  - 点「打开完整引导」→ 派发 ONBOARDING_OPEN_EVENT(接上 v1 弹窗)。
+ *  - clearOnboardingFlags 清 hidden flag(设置页入口用,清后导航回首页 → 卡重现)。
  *
- * jsdom 无 HTTP 后端 → mock contract-client 的读 op(照 overlay.test 的 mock 方式)。
+ * [T-138] 弹窗已删,常驻卡是唯一引导载体:无「打开完整引导」按钮、无 open event、
+ * 无 reopenOnboarding、无 dismissed flag。
+ *
+ * jsdom 无 HTTP 后端 → mock contract-client 的读 op。
  */
 
 import * as React from "react";
@@ -44,7 +47,6 @@ async function importCard() {
 }
 
 const HIDDEN_KEY = "creatoros:onboarding:hidden";
-const OPEN_EVENT = "creatoros:onboarding:open";
 
 /** 全读失败 → 全能力 state 缺席 = 有缺口(未完成)。 */
 function makeAllFail() {
@@ -156,25 +158,6 @@ describe("OnboardingCard — 交互", () => {
     expect(window.localStorage.getItem(HIDDEN_KEY)).toBe("1");
   });
 
-  it("点「打开完整引导」→ 派发 ONBOARDING_OPEN_EVENT", async () => {
-    makeAllFail();
-    const { OnboardingCard } = await importCard();
-    render(<OnboardingCard />);
-
-    await waitFor(() => {
-      expect(document.querySelector('[data-slot="onboarding-card"]')).not.toBeNull();
-    });
-
-    const spy = vi.fn();
-    window.addEventListener(OPEN_EVENT, spy);
-    const openBtn = document.querySelector(
-      '[data-slot="onboarding-card-open-full"]',
-    ) as HTMLButtonElement;
-    fireEvent.click(openBtn);
-    expect(spy).toHaveBeenCalledTimes(1);
-    window.removeEventListener(OPEN_EVENT, spy);
-  });
-
   it("点卡头折叠切换 → 折叠隐藏清单主体(进度条仍在)", async () => {
     makeAllFail();
     const { OnboardingCard } = await importCard();
@@ -197,39 +180,14 @@ describe("OnboardingCard — 交互", () => {
   });
 });
 
-describe("reopenOnboarding — [T-137] 二次开启(让「不再显示」可逆)", () => {
-  const DISMISS_KEY = "creatoros:onboarding:dismissed";
-
-  it("清 hidden+dismissed 两个 flag 并派发 open event", async () => {
+describe("clearOnboardingFlags — [T-138] 让「不再显示」可逆(设置页入口用)", () => {
+  it("清 hidden flag(清后常驻卡下次挂载重现)", async () => {
     window.localStorage.setItem(HIDDEN_KEY, "1");
-    window.localStorage.setItem(DISMISS_KEY, "1");
-    const { reopenOnboarding } = await importCard();
-
-    const spy = vi.fn();
-    window.addEventListener(OPEN_EVENT, spy);
-    reopenOnboarding();
-
-    // 两个 flag 都被清 → 常驻卡与弹窗下次都会重现。
-    expect(window.localStorage.getItem(HIDDEN_KEY)).toBeNull();
-    expect(window.localStorage.getItem(DISMISS_KEY)).toBeNull();
-    // 立即唤起弹窗。
-    expect(spy).toHaveBeenCalledTimes(1);
-    window.removeEventListener(OPEN_EVENT, spy);
-  });
-
-  it("clearOnboardingFlags 只清两 flag,不派发 open event(供设置页入口:清后导航)", async () => {
-    window.localStorage.setItem(HIDDEN_KEY, "1");
-    window.localStorage.setItem(DISMISS_KEY, "1");
     const { clearOnboardingFlags } = await importCard();
 
-    const spy = vi.fn();
-    window.addEventListener(OPEN_EVENT, spy);
     clearOnboardingFlags();
 
+    // hidden 被清 → 常驻卡下次挂载重现。
     expect(window.localStorage.getItem(HIDDEN_KEY)).toBeNull();
-    expect(window.localStorage.getItem(DISMISS_KEY)).toBeNull();
-    // 不同页唤起(设置页靠导航后首页 overlay 自动弹,避免两 modal 叠加)。
-    expect(spy).not.toHaveBeenCalled();
-    window.removeEventListener(OPEN_EVENT, spy);
   });
 });

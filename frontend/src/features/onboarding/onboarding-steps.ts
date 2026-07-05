@@ -4,10 +4,10 @@
  * [T-131a] 新用户首次引导 checklist 的判定核心(SPEC 2026-07-05 §4 / §C)。
  * 完成态 100% 从现网 state 派生(零新后端、零 progress 真值表);每一步 `done`
  * 只由传入的 capability state 决定 —— 配了→done、没配→未完成、读失败→未完成
- * (读失败在 overlay 装配层降级成「该 state 缺席」,这里一律当未完成,绝不假打勾)。
+ * (读失败在装配层降级成「该 state 缺席」,这里一律当未完成,绝不假打勾)。
  *
  * 本模块是**纯函数 + 静态配置数组**,不 import 任何 client / React —— 好单测、
- * 好复用。overlay 壳(onboarding-overlay.tsx)负责并行拉真值填 OnboardingState,
+ * 好复用。装配层(onboarding-data.ts)负责并行拉真值填 OnboardingState,
  * 再喂给 deriveSteps。
  */
 

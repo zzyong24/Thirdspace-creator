@@ -33,7 +33,6 @@ import type {
 import { OverlayController } from "@/components/overlays/overlay-controller";
 import { AICopilotDialog } from "@/components/overlays/ai-copilot-dialog";
 import { CopilotOverlayBridge } from "@/components/overlays/copilot-overlay-bridge";
-import { OnboardingOverlay } from "@/features/onboarding/onboarding-overlay";
 import { canonicalDataset } from "@/fixtures/canonical";
 import type { NotificationsViewModel } from "@/fixtures/selectors";
 import {
@@ -420,10 +419,6 @@ export function ShellRouter({
           <CopilotOverlayBridge />
         </OverlayController>
       </React.Suspense>
-      {/* [T-131] 新用户首次引导 checklist。挂载后自拉各能力 state 判是否自动弹;
-          state 未加载完 / 无必备缺口 / 已 dismissed → 不渲 dialog(不占布局、不
-          破坏 shell.test —— 后者渲 AppShell 而非 ShellRouter,根本不含本 overlay)。 */}
-      <OnboardingOverlay />
     </AppShell>
   );
 }
