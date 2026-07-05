@@ -366,10 +366,17 @@ export async function loadPlanningOutline(
 // 与 CreativeContext 的 ThesisReader(server/ai/creative-context.ts)同源:都读 `thesis_tree`
 // artifact 当前版本的 `contentData.nodes`(column ∈ core|support|evidence|counter + title + summary)。
 export type ThesisColumn = "core" | "support" | "evidence" | "counter";
+// [T-127] 分论点挂载的素材引用(用户拍板②「每分论点挂 1-2 素材」)。存 entity id + 冗余 title
+// 供展示(免二次读用料链)。AI 生成的节点无此字段 → []。
+export interface ThesisMaterialRef {
+  readonly id: string;
+  readonly title: string;
+}
 export interface ThesisSkeletonNode {
   readonly column: ThesisColumn;
   readonly title: string;
   readonly summary: string;
+  readonly materialRefs: ReadonlyArray<ThesisMaterialRef>;
 }
 // [T-127] 返回 artifactId 一并给稿面面板 —— 可编辑保存时 createArtifactVersion 需要目标 artifact。
 export interface ThesisSkeleton {
@@ -423,7 +430,16 @@ export async function loadThesisSkeleton(
       const summary = typeof o.summary === "string" ? o.summary.trim() : "";
       if (!THESIS_COLUMNS.has(column)) continue;
       if (!title && !summary) continue;
-      out.push({ column: column as ThesisColumn, title, summary });
+      // [T-127] 读回挂载的素材引用(AI 生成节点无此字段 → [];规整 {id,title})。
+      const rawRefs = Array.isArray(o.materialRefs) ? o.materialRefs : [];
+      const materialRefs: ThesisMaterialRef[] = [];
+      for (const r of rawRefs) {
+        const ro = (r ?? {}) as Record<string, unknown>;
+        const id = typeof ro.id === "string" ? ro.id : "";
+        const t = typeof ro.title === "string" ? ro.title.trim() : "";
+        if (id) materialRefs.push({ id, title: t });
+      }
+      out.push({ column: column as ThesisColumn, title, summary, materialRefs });
     }
     return out.length > 0 ? { artifactId: thesisArtifact.id, nodes: out } : null;
   } catch {

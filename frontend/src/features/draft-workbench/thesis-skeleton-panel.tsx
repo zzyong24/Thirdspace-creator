@@ -6,9 +6,11 @@ import {
   ChevronDown,
   ChevronUp,
   GitBranch,
+  Paperclip,
   Plus,
   Sparkles,
   Trash2,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -17,9 +19,17 @@ import { client } from "@/lib/contract-client";
 import { useDraftChatRequest } from "./draft-chat-request";
 import type {
   ThesisColumn,
+  ThesisMaterialRef,
   ThesisSkeleton,
   ThesisSkeletonNode,
 } from "@/features/script/script-editor-data";
+
+// 稿面用料链(弹药)可挂载素材(draft-workbench VM ammo 投影)—— 挂到分论点用。
+export interface AvailableMaterial {
+  readonly id: string;
+  readonly title: string;
+  readonly kind: string;
+}
 
 // [T-127] 稿面「论点骨架」面板 —— 把埋在 Copilot(planning.thesis 生成 + 采纳成 thesis_tree
 // artifact)、稿面看不到的论点显性化 + **可编辑**(用户拍板②:数据蓝图非重编辑器,加/删/重排分论点)。
@@ -55,12 +65,13 @@ const THESIS_PREFILL =
 
 // ── 纯逻辑(可单测)──────────────────────────────────────────────────────
 
-// 可编辑节点(带稳定 local key 供 React 列表 + 编辑期定位;非落库字段)。
+// 可编辑节点(带稳定 local key 供 React 列表 + 编辑期定位;key 非落库字段)。
 export interface EditNode {
   key: string;
   column: ThesisColumn;
   title: string;
   summary: string;
+  materialRefs: ThesisMaterialRef[];
 }
 
 // 落库节点 → 可编辑草稿(稳定 key)。
@@ -72,7 +83,34 @@ export function toEditNodes(
     column: n.column,
     title: n.title,
     summary: n.summary,
+    materialRefs: n.materialRefs.map((r) => ({ id: r.id, title: r.title })),
   }));
+}
+
+// 给某分论点挂一条素材(去重:同 id 不重复挂)。
+export function mountMaterial(
+  nodes: ReadonlyArray<EditNode>,
+  key: string,
+  ref: ThesisMaterialRef,
+): EditNode[] {
+  return nodes.map((n) =>
+    n.key === key && !n.materialRefs.some((r) => r.id === ref.id)
+      ? { ...n, materialRefs: [...n.materialRefs, ref] }
+      : n,
+  );
+}
+
+// 从某分论点卸一条素材。
+export function unmountMaterial(
+  nodes: ReadonlyArray<EditNode>,
+  key: string,
+  materialId: string,
+): EditNode[] {
+  return nodes.map((n) =>
+    n.key === key
+      ? { ...n, materialRefs: n.materialRefs.filter((r) => r.id !== materialId) }
+      : n,
+  );
 }
 
 // 同列相邻交换(reorder,dir=-1 上移 / +1 下移);跨列节点跳过,无同列邻居 → 原样返回。
@@ -103,6 +141,10 @@ export function serializeNodes(
       column: n.column,
       title: n.title.trim(),
       summary: n.summary.trim(),
+      materialRefs: n.materialRefs.map((r) => ({
+        id: r.id,
+        title: r.title,
+      })),
     }))
     .filter((n) => n.title || n.summary);
   return cleaned
@@ -123,8 +165,11 @@ function freshKey(): string {
 
 export function ThesisSkeletonPanel({
   thesis,
+  ammo = [],
 }: {
   thesis: ThesisSkeleton | null;
+  // 稿面用料链可挂素材(vm.ammo 投影);空 → 挂素材入口提示先去弹药区加素材。
+  ammo?: ReadonlyArray<AvailableMaterial>;
 }) {
   const { openChat } = useDraftChatRequest();
   const router = useRouter();
@@ -177,10 +222,19 @@ export function ThesisSkeletonPanel({
     setDraft((d) => d.filter((n) => n.key !== key));
   }, []);
   const addNode = React.useCallback((column: ThesisColumn) => {
-    setDraft((d) => [...d, { key: freshKey(), column, title: "", summary: "" }]);
+    setDraft((d) => [
+      ...d,
+      { key: freshKey(), column, title: "", summary: "", materialRefs: [] },
+    ]);
   }, []);
   const move = React.useCallback((key: string, dir: -1 | 1) => {
     setDraft((d) => reorderWithinColumn(d, key, dir));
+  }, []);
+  const mount = React.useCallback((key: string, ref: ThesisMaterialRef) => {
+    setDraft((d) => mountMaterial(d, key, ref));
+  }, []);
+  const unmount = React.useCallback((key: string, materialId: string) => {
+    setDraft((d) => unmountMaterial(d, key, materialId));
   }, []);
 
   const save = React.useCallback(async () => {
@@ -244,10 +298,13 @@ export function ThesisSkeletonPanel({
               key={col}
               column={col}
               nodes={draft.filter((n) => n.column === col)}
+              ammo={ammo}
               onEdit={editNode}
               onDelete={deleteNode}
               onAdd={addNode}
               onMove={move}
+              onMount={mount}
+              onUnmount={unmount}
             />
           ))}
 
@@ -311,17 +368,23 @@ export function ThesisSkeletonPanel({
 function ThesisColumnEditor({
   column,
   nodes,
+  ammo,
   onEdit,
   onDelete,
   onAdd,
   onMove,
+  onMount,
+  onUnmount,
 }: {
   column: ThesisColumn;
   nodes: EditNode[];
+  ammo: ReadonlyArray<AvailableMaterial>;
   onEdit: (key: string, field: "title" | "summary", value: string) => void;
   onDelete: (key: string) => void;
   onAdd: (column: ThesisColumn) => void;
   onMove: (key: string, dir: -1 | 1) => void;
+  onMount: (key: string, ref: ThesisMaterialRef) => void;
+  onUnmount: (key: string, materialId: string) => void;
 }) {
   const isCore = column === "core";
   return (
@@ -356,59 +419,164 @@ function ThesisColumnEditor({
       ) : (
         <ul className="flex flex-col gap-1.5">
           {nodes.map((n, i) => (
-            <li
+            <ThesisNodeRow
               key={n.key}
-              data-slot="thesis-node"
-              className={cn(
-                "flex flex-col gap-1 rounded-md border px-2.5 py-2",
-                isCore
-                  ? "border-brand/40 bg-brand-soft"
-                  : "border-border bg-surface-subtle",
-              )}
-            >
-              <div className="flex items-center gap-1.5">
-                <input
-                  data-slot="thesis-node-title"
-                  aria-label={`${COLUMN_LABEL[column]}标题`}
-                  value={n.title}
-                  onChange={(e) => onEdit(n.key, "title", e.target.value)}
-                  placeholder="一句话论点"
-                  className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 py-0.5 text-[12.5px] font-medium text-foreground placeholder:text-text-subtle focus-visible:border-border focus-visible:bg-surface focus-visible:outline-none"
-                />
-                <div className="flex shrink-0 items-center gap-0.5">
-                  <IconBtn
-                    label="上移"
-                    disabled={i === 0}
-                    onClick={() => onMove(n.key, -1)}
-                  >
-                    <ChevronUp className="size-3.5" aria-hidden="true" />
-                  </IconBtn>
-                  <IconBtn
-                    label="下移"
-                    disabled={i === nodes.length - 1}
-                    onClick={() => onMove(n.key, 1)}
-                  >
-                    <ChevronDown className="size-3.5" aria-hidden="true" />
-                  </IconBtn>
-                  <IconBtn label="删除" onClick={() => onDelete(n.key)} danger>
-                    <Trash2 className="size-3.5" aria-hidden="true" />
-                  </IconBtn>
-                </div>
-              </div>
-              <textarea
-                data-slot="thesis-node-summary"
-                aria-label={`${COLUMN_LABEL[column]}说明`}
-                value={n.summary}
-                onChange={(e) => onEdit(n.key, "summary", e.target.value)}
-                placeholder="补充说明 / 依据(可选)"
-                rows={2}
-                className="w-full resize-none rounded border border-transparent bg-transparent px-1 py-0.5 text-xs leading-relaxed text-muted-foreground placeholder:text-text-subtle focus-visible:border-border focus-visible:bg-surface focus-visible:outline-none"
-              />
-            </li>
+              node={n}
+              column={column}
+              isCore={isCore}
+              first={i === 0}
+              last={i === nodes.length - 1}
+              ammo={ammo}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onMove={onMove}
+              onMount={onMount}
+              onUnmount={onUnmount}
+            />
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+// 单个分论点行:标题/说明可编 + 上移/下移/删 + 挂载素材(chips + 内联 picker)。
+function ThesisNodeRow({
+  node,
+  column,
+  isCore,
+  first,
+  last,
+  ammo,
+  onEdit,
+  onDelete,
+  onMove,
+  onMount,
+  onUnmount,
+}: {
+  node: EditNode;
+  column: ThesisColumn;
+  isCore: boolean;
+  first: boolean;
+  last: boolean;
+  ammo: ReadonlyArray<AvailableMaterial>;
+  onEdit: (key: string, field: "title" | "summary", value: string) => void;
+  onDelete: (key: string) => void;
+  onMove: (key: string, dir: -1 | 1) => void;
+  onMount: (key: string, ref: ThesisMaterialRef) => void;
+  onUnmount: (key: string, materialId: string) => void;
+}) {
+  const [picking, setPicking] = React.useState(false);
+  // 未挂载的可选素材(已挂的不重复列)。
+  const available = ammo.filter(
+    (a) => !node.materialRefs.some((r) => r.id === a.id),
+  );
+  return (
+    <li
+      data-slot="thesis-node"
+      className={cn(
+        "flex flex-col gap-1 rounded-md border px-2.5 py-2",
+        isCore ? "border-brand/40 bg-brand-soft" : "border-border bg-surface-subtle",
+      )}
+    >
+      <div className="flex items-center gap-1.5">
+        <input
+          data-slot="thesis-node-title"
+          aria-label={`${COLUMN_LABEL[column]}标题`}
+          value={node.title}
+          onChange={(e) => onEdit(node.key, "title", e.target.value)}
+          placeholder="一句话论点"
+          className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 py-0.5 text-[12.5px] font-medium text-foreground placeholder:text-text-subtle focus-visible:border-border focus-visible:bg-surface focus-visible:outline-none"
+        />
+        <div className="flex shrink-0 items-center gap-0.5">
+          <IconBtn label="上移" disabled={first} onClick={() => onMove(node.key, -1)}>
+            <ChevronUp className="size-3.5" aria-hidden="true" />
+          </IconBtn>
+          <IconBtn label="下移" disabled={last} onClick={() => onMove(node.key, 1)}>
+            <ChevronDown className="size-3.5" aria-hidden="true" />
+          </IconBtn>
+          <IconBtn label="删除" onClick={() => onDelete(node.key)} danger>
+            <Trash2 className="size-3.5" aria-hidden="true" />
+          </IconBtn>
+        </div>
+      </div>
+      <textarea
+        data-slot="thesis-node-summary"
+        aria-label={`${COLUMN_LABEL[column]}说明`}
+        value={node.summary}
+        onChange={(e) => onEdit(node.key, "summary", e.target.value)}
+        placeholder="补充说明 / 依据(可选)"
+        rows={2}
+        className="w-full resize-none rounded border border-transparent bg-transparent px-1 py-0.5 text-xs leading-relaxed text-muted-foreground placeholder:text-text-subtle focus-visible:border-border focus-visible:bg-surface focus-visible:outline-none"
+      />
+      {/* 挂载的素材 chips(× 卸载)+ 挂素材入口。 */}
+      <div data-slot="thesis-node-materials" className="flex flex-wrap items-center gap-1">
+        {node.materialRefs.map((r) => (
+          <span
+            key={r.id}
+            data-slot="thesis-material-chip"
+            className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-surface px-2 py-0.5 text-[11px] text-muted-foreground"
+          >
+            <Paperclip className="size-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">{r.title || r.id}</span>
+            <button
+              type="button"
+              aria-label={`卸载素材 ${r.title || r.id}`}
+              onClick={() => onUnmount(node.key, r.id)}
+              className="shrink-0 rounded text-text-subtle hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X className="size-3" aria-hidden="true" />
+            </button>
+          </span>
+        ))}
+        <button
+          type="button"
+          data-slot="thesis-mount-toggle"
+          aria-label="挂素材"
+          aria-expanded={picking}
+          onClick={() => setPicking((v) => !v)}
+          className="inline-flex items-center gap-0.5 rounded-full border border-dashed border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Paperclip className="size-3" aria-hidden="true" />
+          挂素材
+        </button>
+      </div>
+      {picking ? (
+        <div
+          data-slot="thesis-material-picker"
+          className="mt-0.5 flex flex-col gap-0.5 rounded-md border border-border bg-surface p-1"
+        >
+          {ammo.length === 0 ? (
+            <p className="px-1 py-0.5 text-[11px] text-text-subtle">
+              还没有可挂的素材 —— 先在下方「弹药」区加素材,或用「搜素材」联网找。
+            </p>
+          ) : available.length === 0 ? (
+            <p className="px-1 py-0.5 text-[11px] text-text-subtle">
+              可用素材都挂上了。
+            </p>
+          ) : (
+            available.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                data-slot="thesis-material-option"
+                onClick={() => {
+                  onMount(node.key, { id: a.id, title: a.title });
+                  setPicking(false);
+                }}
+                className="flex items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Paperclip className="size-3 shrink-0" aria-hidden="true" />
+                <span className="truncate">{a.title}</span>
+                <span className="ml-auto shrink-0 text-[10px] text-text-subtle">
+                  {a.kind === "asset" ? "素材" : "知识"}
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      ) : null}
+    </li>
   );
 }
 

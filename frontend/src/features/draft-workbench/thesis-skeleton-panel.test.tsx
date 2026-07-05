@@ -1,10 +1,10 @@
 /**
- * [T-127] 稿面论点骨架面板(可编辑)测试:
- *   - 纯逻辑:reorderWithinColumn(同列交换/跨列跳过/边界 no-op)、serializeNodes(剔空/trim/按列排)、
- *     toEditNodes(稳定 key);
- *   - 空态(thesis=null)→ 引导「立论点」深链;
- *   - 有论点 → 渲四列可编辑;编辑标题 → dirty → 保存;加/删/重排;
- *   - 保存 → client.createArtifactVersion(序列化 nodes)+ router.refresh。
+ * [T-127] 稿面论点骨架面板(可编辑 + 挂素材)测试:
+ *   - 纯逻辑:reorderWithinColumn / serializeNodes(剔空/trim/按列排/带 materialRefs)/ toEditNodes /
+ *     mountMaterial(去重)/ unmountMaterial;
+ *   - 空态 → 引导「立论点」深链;
+ *   - 有论点 → 四列可编辑;编辑 → dirty → 保存 createArtifactVersion + refresh;加/删/重排;
+ *   - 挂素材:picker 选用料链素材 → chip;× 卸载;保存序列化带 materialRefs。
  */
 
 import * as React from "react";
@@ -38,7 +38,10 @@ import {
   reorderWithinColumn,
   serializeNodes,
   toEditNodes,
+  mountMaterial,
+  unmountMaterial,
   type EditNode,
+  type AvailableMaterial,
 } from "./thesis-skeleton-panel";
 import type {
   ThesisSkeleton,
@@ -49,60 +52,93 @@ beforeEach(() => vi.clearAllMocks());
 afterEach(() => cleanup());
 
 const NODES: ThesisSkeletonNode[] = [
-  { column: "core", title: "本地 AI 栈三步搭好", summary: "普通开发者也能自建" },
-  { column: "support", title: "痛点真实", summary: "环境难配" },
-  { column: "support", title: "有替代", summary: "云太贵" },
-  { column: "evidence", title: "实测数据", summary: "10 分钟跑通" },
-  { column: "counter", title: "有人说太慢", summary: "量化模型可缓解" },
+  { column: "core", title: "本地 AI 栈三步搭好", summary: "普通开发者也能自建", materialRefs: [] },
+  { column: "support", title: "痛点真实", summary: "环境难配", materialRefs: [] },
+  { column: "support", title: "有替代", summary: "云太贵", materialRefs: [] },
+  { column: "evidence", title: "实测数据", summary: "10 分钟跑通", materialRefs: [] },
+  { column: "counter", title: "有人说太慢", summary: "量化模型可缓解", materialRefs: [] },
 ];
 const THESIS: ThesisSkeleton = { artifactId: "art-thesis-1", nodes: NODES };
+const AMMO: AvailableMaterial[] = [
+  { id: "kn-1", title: "案例:某开发者自建栈", kind: "knowledge" },
+  { id: "as-1", title: "截图:跑通耗时", kind: "asset" },
+];
 
 // ── 纯逻辑 ────────────────────────────────────────────────────────────────
 
 describe("thesis-skeleton pure helpers", () => {
-  const ns = (): EditNode[] => [
-    { key: "a", column: "support", title: "A", summary: "" },
-    { key: "b", column: "core", title: "C", summary: "" },
-    { key: "c", column: "support", title: "B", summary: "" },
-  ];
+  const en = (
+    key: string,
+    column: EditNode["column"],
+    title: string,
+  ): EditNode => ({ key, column, title, summary: "", materialRefs: [] });
 
   it("reorderWithinColumn:同列相邻交换(跨列跳过)", () => {
-    // support 列顺序 A,B → 下移 A 跳过中间的 core,与 B 交换。
-    const out = reorderWithinColumn(ns(), "a", 1);
+    const nodes = [en("a", "support", "A"), en("b", "core", "C"), en("c", "support", "B")];
+    const out = reorderWithinColumn(nodes, "a", 1);
     expect(out.map((n) => n.key)).toEqual(["c", "b", "a"]);
   });
 
   it("reorderWithinColumn:无同列邻居 → no-op", () => {
-    const out = reorderWithinColumn(ns(), "b", -1); // core 只此一条
+    const nodes = [en("a", "support", "A"), en("b", "core", "C"), en("c", "support", "B")];
+    const out = reorderWithinColumn(nodes, "b", -1);
     expect(out.map((n) => n.key)).toEqual(["a", "b", "c"]);
   });
 
-  it("serializeNodes:剔空 + trim + 按列顺序排", () => {
+  it("serializeNodes:剔空 + trim + 按列排 + 带 materialRefs", () => {
     const draft: EditNode[] = [
-      { key: "1", column: "counter", title: " 反 ", summary: "" },
-      { key: "2", column: "core", title: "核心", summary: " 说明 " },
-      { key: "3", column: "support", title: "", summary: "" }, // 剔除
+      { key: "1", column: "counter", title: " 反 ", summary: "", materialRefs: [] },
+      {
+        key: "2",
+        column: "core",
+        title: "核心",
+        summary: " 说明 ",
+        materialRefs: [{ id: "kn-1", title: "案例" }],
+      },
+      { key: "3", column: "support", title: "", summary: "", materialRefs: [] },
     ];
     expect(serializeNodes(draft)).toEqual([
-      { column: "core", title: "核心", summary: "说明" },
-      { column: "counter", title: "反", summary: "" },
+      { column: "core", title: "核心", summary: "说明", materialRefs: [{ id: "kn-1", title: "案例" }] },
+      { column: "counter", title: "反", summary: "", materialRefs: [] },
     ]);
   });
 
-  it("toEditNodes:稳定 key(n0/n1…)", () => {
-    expect(toEditNodes(NODES).map((n) => n.key)).toEqual([
-      "n0",
-      "n1",
-      "n2",
-      "n3",
-      "n4",
-    ]);
+  it("toEditNodes:稳定 key + 复制 materialRefs", () => {
+    const withRef: ThesisSkeletonNode[] = [
+      { column: "core", title: "c", summary: "", materialRefs: [{ id: "x", title: "X" }] },
+    ];
+    const out = toEditNodes(withRef);
+    expect(out[0]!.key).toBe("n0");
+    expect(out[0]!.materialRefs).toEqual([{ id: "x", title: "X" }]);
+  });
+
+  it("mountMaterial:挂载去重(同 id 不重复)", () => {
+    const nodes: EditNode[] = [
+      { key: "a", column: "core", title: "c", summary: "", materialRefs: [] },
+    ];
+    const once = mountMaterial(nodes, "a", { id: "kn-1", title: "案例" });
+    expect(once[0]!.materialRefs).toHaveLength(1);
+    const twice = mountMaterial(once, "a", { id: "kn-1", title: "案例" });
+    expect(twice[0]!.materialRefs).toHaveLength(1);
+  });
+
+  it("unmountMaterial:按 id 卸载", () => {
+    const nodes: EditNode[] = [
+      {
+        key: "a",
+        column: "core",
+        title: "c",
+        summary: "",
+        materialRefs: [{ id: "kn-1", title: "案例" }],
+      },
+    ];
+    expect(unmountMaterial(nodes, "a", "kn-1")[0]!.materialRefs).toEqual([]);
   });
 });
 
 // ── 组件 ────────────────────────────────────────────────────────────────
 
-describe("ThesisSkeletonPanel(可编辑)", () => {
+describe("ThesisSkeletonPanel(可编辑 + 挂素材)", () => {
   it("空态(null)→ 诚实空态 + 「立论点」深链 planning.thesis", () => {
     render(<ThesisSkeletonPanel thesis={null} />);
     const panel = screen.getByRole("region", { name: "论点骨架" });
@@ -116,10 +152,9 @@ describe("ThesisSkeletonPanel(可编辑)", () => {
   });
 
   it("有论点 → 四列可编辑渲染,初始未 dirty(保存禁用)", () => {
-    render(<ThesisSkeletonPanel thesis={THESIS} />);
+    render(<ThesisSkeletonPanel thesis={THESIS} ammo={AMMO} />);
     const panel = screen.getByRole("region", { name: "论点骨架" });
     expect(panel.getAttribute("data-has-thesis")).toBe("true");
-    // 标题以 input 值呈现(可编辑)。
     expect(
       (within(panel).getByLabelText("核心论点标题") as HTMLInputElement).value,
     ).toBe("本地 AI 栈三步搭好");
@@ -128,8 +163,8 @@ describe("ThesisSkeletonPanel(可编辑)", () => {
     ).toBeDisabled();
   });
 
-  it("编辑标题 → dirty → 保存启用 → createArtifactVersion(序列化 nodes)+ refresh", async () => {
-    render(<ThesisSkeletonPanel thesis={THESIS} />);
+  it("编辑标题 → dirty → 保存 createArtifactVersion(序列化 nodes)+ refresh", async () => {
+    render(<ThesisSkeletonPanel thesis={THESIS} ammo={AMMO} />);
     const panel = screen.getByRole("region", { name: "论点骨架" });
     fireEvent.change(within(panel).getByLabelText("核心论点标题"), {
       target: { value: "改后的核心论点" },
@@ -151,7 +186,7 @@ describe("ThesisSkeletonPanel(可编辑)", () => {
   });
 
   it("加分论点 → 该列多一行空节点", () => {
-    render(<ThesisSkeletonPanel thesis={THESIS} />);
+    render(<ThesisSkeletonPanel thesis={THESIS} ammo={AMMO} />);
     const panel = screen.getByRole("region", { name: "论点骨架" });
     const before = within(panel).getAllByLabelText("证据标题").length;
     fireEvent.click(within(panel).getByRole("button", { name: "加证据" }));
@@ -159,9 +194,8 @@ describe("ThesisSkeletonPanel(可编辑)", () => {
   });
 
   it("删除分论点 → 该行消失 + dirty", () => {
-    render(<ThesisSkeletonPanel thesis={THESIS} />);
+    render(<ThesisSkeletonPanel thesis={THESIS} ammo={AMMO} />);
     const panel = screen.getByRole("region", { name: "论点骨架" });
-    // 反驳列删掉唯一一条。
     const counterTitle = within(panel).getByLabelText("反驳标题");
     const row = counterTitle.closest('[data-slot="thesis-node"]') as HTMLElement;
     fireEvent.click(within(row).getByRole("button", { name: "删除" }));
@@ -172,9 +206,8 @@ describe("ThesisSkeletonPanel(可编辑)", () => {
   });
 
   it("下移支撑分论点 → 顺序反转(保存序列化反映)", async () => {
-    render(<ThesisSkeletonPanel thesis={THESIS} />);
+    render(<ThesisSkeletonPanel thesis={THESIS} ammo={AMMO} />);
     const panel = screen.getByRole("region", { name: "论点骨架" });
-    // 第一条 support 「痛点真实」下移。
     const firstSupport = within(panel).getAllByLabelText("支撑依据标题")[0]!;
     const row = firstSupport.closest('[data-slot="thesis-node"]') as HTMLElement;
     fireEvent.click(within(row).getByRole("button", { name: "下移" }));
@@ -183,9 +216,61 @@ describe("ThesisSkeletonPanel(可编辑)", () => {
     const arg = createArtifactVersion.mock.calls[0][0] as {
       body: { contentData: { nodes: ThesisSkeletonNode[] } };
     };
-    const supports = arg.body.contentData.nodes.filter(
-      (n) => n.column === "support",
-    );
+    const supports = arg.body.contentData.nodes.filter((n) => n.column === "support");
     expect(supports.map((n) => n.title)).toEqual(["有替代", "痛点真实"]);
+  });
+
+  it("挂素材:picker 选用料链素材 → chip + dirty → 保存序列化带 materialRefs", async () => {
+    render(<ThesisSkeletonPanel thesis={THESIS} ammo={AMMO} />);
+    const panel = screen.getByRole("region", { name: "论点骨架" });
+    const coreRow = (
+      within(panel).getByLabelText("核心论点标题")
+    ).closest('[data-slot="thesis-node"]') as HTMLElement;
+    // 开 picker → 选第一条素材。
+    fireEvent.click(within(coreRow).getByRole("button", { name: "挂素材" }));
+    fireEvent.click(within(coreRow).getByText("案例:某开发者自建栈"));
+    // chip 出现。
+    expect(
+      within(coreRow).getByText("案例:某开发者自建栈"),
+    ).toBeInTheDocument();
+    // 保存 → materialRefs 带上。
+    fireEvent.click(within(panel).getByRole("button", { name: "保存论点骨架" }));
+    await waitFor(() => expect(createArtifactVersion).toHaveBeenCalled());
+    const arg = createArtifactVersion.mock.calls[0][0] as {
+      body: { contentData: { nodes: ThesisSkeletonNode[] } };
+    };
+    const core = arg.body.contentData.nodes.find((n) => n.column === "core")!;
+    expect(core.materialRefs).toEqual([
+      { id: "kn-1", title: "案例:某开发者自建栈" },
+    ]);
+  });
+
+  it("卸载素材:× 移除 chip", () => {
+    const withRef: ThesisSkeleton = {
+      artifactId: "art-1",
+      nodes: [
+        {
+          column: "core",
+          title: "核心",
+          summary: "",
+          materialRefs: [{ id: "kn-1", title: "案例" }],
+        },
+      ],
+    };
+    render(<ThesisSkeletonPanel thesis={withRef} ammo={AMMO} />);
+    const panel = screen.getByRole("region", { name: "论点骨架" });
+    expect(within(panel).getByText("案例")).toBeInTheDocument();
+    fireEvent.click(within(panel).getByRole("button", { name: "卸载素材 案例" }));
+    expect(within(panel).queryByText("案例")).toBeNull();
+  });
+
+  it("无可挂素材(ammo 空)→ picker 提示先加素材", () => {
+    render(<ThesisSkeletonPanel thesis={THESIS} ammo={[]} />);
+    const panel = screen.getByRole("region", { name: "论点骨架" });
+    const coreRow = (
+      within(panel).getByLabelText("核心论点标题")
+    ).closest('[data-slot="thesis-node"]') as HTMLElement;
+    fireEvent.click(within(coreRow).getByRole("button", { name: "挂素材" }));
+    expect(within(coreRow).getByText(/还没有可挂的素材/)).toBeInTheDocument();
   });
 });

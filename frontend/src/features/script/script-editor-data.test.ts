@@ -214,6 +214,36 @@ describe("loadThesisSkeleton (T-127)", () => {
     expect(result!.nodes[0]).toMatchObject({ column: "core", title: "有效" });
   });
 
+  it("读回节点 materialRefs(挂载素材,规整 {id,title};无字段 → [])", async () => {
+    const client = makeClient({
+      artifacts: [{ id: "art-thesis", artifactType: "thesis_tree" }],
+      currentVersionId: "av-1",
+      versions: [
+        {
+          id: "av-1",
+          versionNumber: 1,
+          contentData: {
+            nodes: [
+              {
+                column: "core",
+                title: "核心",
+                summary: "",
+                materialRefs: [
+                  { id: "kn-1", title: "案例" },
+                  { id: "", title: "无 id 丢弃" },
+                ],
+              },
+              { column: "support", title: "无 refs", summary: "" },
+            ],
+          },
+        },
+      ],
+    });
+    const result = await loadThesisSkeleton("project-x", client);
+    expect(result!.nodes[0]!.materialRefs).toEqual([{ id: "kn-1", title: "案例" }]);
+    expect(result!.nodes[1]!.materialRefs).toEqual([]);
+  });
+
   it("无 projectId → null", async () => {
     expect(await loadThesisSkeleton(null, makeClient({}))).toBeNull();
   });

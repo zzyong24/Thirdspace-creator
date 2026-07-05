@@ -92,8 +92,11 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           <CreationFlowCtas />
 
           {/* [T-127] 论点骨架面板:把已采纳的论点树(核心论点+支撑/证据/反驳)显性化到稿面 +
-              可编辑(加/删/重排 → 保存追加新版本),空态引导立论点。挂素材待后续增量。 */}
-          <ThesisSkeletonPanel thesis={thesis} />
+              可编辑(加/删/重排/挂用料链素材 → 保存追加新版本),空态引导立论点。 */}
+          <ThesisSkeletonPanel
+            thesis={thesis}
+            ammo={ammo.map((a) => ({ id: a.id, title: a.title, kind: a.kind }))}
+          />
 
           {/* ── 脚本区(活跃) ── */}
           <section
