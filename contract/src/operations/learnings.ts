@@ -15,7 +15,16 @@ export const learningsOperations = {
     id: "learnings.list",
     method: "GET",
     path: "/learnings",
-    query: paginationQuery,
+    // [T-118a] additive 读过滤(纯读、不改数据归属/schema、无需过 gate):可选 projectId +
+    // validationStatus —— 复盘页「本期经验」区据此取「本作品的 candidate learnings」而非全站库
+    // (同 T-116 给 ai.tasks.list 加 projectId+taskType 的范式)。都不传 → 维持全量(经验库/裁决台
+    // 全量读),旧调用零破坏。
+    query: paginationQuery.extend({
+      projectId: id.optional(),
+      validationStatus: z
+        .enum(["candidate", "validated", "discarded"])
+        .optional(),
+    }),
     response: learningResource,
     isList: true,
     fr: ["FR-LEARNINGS-LIST"],

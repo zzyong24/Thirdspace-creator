@@ -147,6 +147,122 @@ describe("learnings repository (integration, user-scoped)", () => {
     expect(page.rows[0]!.id).toBe(second.id);
   });
 
+  // [T-118a gate-F3] createLearning 持久化 projectId(nullable);默认(不传)为 null。
+  it("createLearning persists projectId (nullable, default null)", async () => {
+    const repo = repoFor(db, "user-a");
+    const withProject = await repo.createLearning({
+      title: "本作品经验",
+      insight: "",
+      learningType: "hook",
+      recommendation: "",
+      reviewId: null,
+      projectId: "project-abc",
+      confidenceScore: 0,
+    });
+    expect(withProject.projectId).toBe("project-abc");
+    const legacy = await repo.createLearning({
+      title: "手录经验",
+      insight: "",
+      learningType: "strategy",
+      recommendation: "",
+      reviewId: null,
+      confidenceScore: 0,
+    });
+    expect(legacy.projectId).toBeNull();
+  });
+
+  // [T-118a] listLearnings 的 additive 过滤:projectId + validationStatus 窄化;不传时全量;
+  // 归属门始终最外层(跨用户过滤内层)。
+  it("listLearnings narrows by projectId + validationStatus; empty filter = all", async () => {
+    const repo = repoFor(db, "user-a");
+    // A 的项目 P 的 candidate 经验。
+    const pCand = await repo.createLearning({
+      title: "P candidate",
+      insight: "",
+      learningType: "hook",
+      recommendation: "",
+      reviewId: null,
+      projectId: "project-P",
+      confidenceScore: 0,
+    });
+    // A 的项目 P 的 validated 经验(状态不同,应被 candidate 过滤排除)。
+    const pValidated = await repo.createLearning({
+      title: "P validated",
+      insight: "",
+      learningType: "hook",
+      recommendation: "",
+      reviewId: null,
+      projectId: "project-P",
+      confidenceScore: 0,
+    });
+    await repo.updateLearningStatus(pValidated.id, {
+      validationStatus: "validated",
+      confidenceScore: 40,
+    });
+    // A 的项目 Q 的 candidate 经验(项目不同,应被 project-P 过滤排除)。
+    await repo.createLearning({
+      title: "Q candidate",
+      insight: "",
+      learningType: "hook",
+      recommendation: "",
+      reviewId: null,
+      projectId: "project-Q",
+      confidenceScore: 0,
+    });
+    // A 的无项目 candidate 经验(projectId=null,应被 project-P 过滤排除)。
+    await repo.createLearning({
+      title: "orphan candidate",
+      insight: "",
+      learningType: "strategy",
+      recommendation: "",
+      reviewId: null,
+      confidenceScore: 0,
+    });
+
+    // projectId=project-P + validationStatus=candidate → 只出 pCand。
+    const narrowed = await repo.listLearnings(
+      { limit: 50, offset: 0 },
+      { projectId: "project-P", validationStatus: "candidate" },
+    );
+    expect(narrowed.total).toBe(1);
+    expect(narrowed.rows.map((r) => r.id)).toEqual([pCand.id]);
+
+    // 只按 projectId 过滤(不限状态)→ P 下两条(candidate + validated)。
+    const byProject = await repo.listLearnings(
+      { limit: 50, offset: 0 },
+      { projectId: "project-P" },
+    );
+    expect(byProject.total).toBe(2);
+    expect(new Set(byProject.rows.map((r) => r.id))).toEqual(
+      new Set([pCand.id, pValidated.id]),
+    );
+
+    // 不传过滤 → 全量(4 条)。
+    const all = await repo.listLearnings({ limit: 50, offset: 0 });
+    expect(all.total).toBe(4);
+  });
+
+  // [T-118a] 归属门最外层:B 用 A 的 projectId 过滤读到 0(过滤在归属门内层,永不越界)。
+  it("listLearnings projectId filter never leaks across users (ownership outermost)", async () => {
+    const repoA = repoFor(db, "user-a");
+    await repoA.createLearning({
+      title: "A's P candidate",
+      insight: "",
+      learningType: "hook",
+      recommendation: "",
+      reviewId: null,
+      projectId: "project-shared",
+      confidenceScore: 0,
+    });
+    const repoB = repoFor(db, "user-b");
+    const leaked = await repoB.listLearnings(
+      { limit: 50, offset: 0 },
+      { projectId: "project-shared", validationStatus: "candidate" },
+    );
+    expect(leaked.total).toBe(0);
+    expect(leaked.rows).toHaveLength(0);
+  });
+
   it("countApplications returns the per-learning scoped count", async () => {
     const repo = repoFor(db, "user-a");
     const x = await repo.createLearning({

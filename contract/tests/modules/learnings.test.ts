@@ -93,4 +93,57 @@ describe("learnings contract", () => {
     );
     expect(learningsOperations.listLearnings.fr.length).toBeGreaterThan(0);
   });
+
+  // [T-118a gate-F3] projectId 是 additive + optional:旧 payload 不带该键仍解析(零破坏),
+  // 带了(null 或真值)也解析。
+  it("keeps projectId additive+optional on the Learning resource", () => {
+    // 旧 payload(无 projectId)仍解析。
+    const without = learningResource.parse({
+      id: "learning-legacy",
+      userId: "user-zyongzhu",
+      reviewId: null,
+      learningType: "hook",
+      title: "t",
+      insight: "i",
+      recommendation: "r",
+      validationStatus: "candidate",
+      confidenceScore: 0,
+      reuseCount: 0,
+      createdAt: "2026-07-04T02:00:00.000Z",
+      updatedAt: "2026-07-04T02:00:00.000Z",
+    });
+    expect(without.projectId).toBeUndefined();
+    // 带 projectId 真值。
+    const withProject = learningResource.parse({
+      ...without,
+      projectId: "project-abc",
+    });
+    expect(withProject.projectId).toBe("project-abc");
+    // null(手录/非复盘来源)也合法。
+    const nullProject = learningResource.parse({ ...without, projectId: null });
+    expect(nullProject.projectId).toBeNull();
+  });
+
+  // [T-118a] learnings.list 的 additive 读过滤:projectId + validationStatus 可选;
+  // 都不传维持全量(旧调用零破坏);枚举校验 validationStatus。
+  it("accepts optional projectId + validationStatus query on learnings.list", () => {
+    const q = learningsOperations.listLearnings.query;
+    expect(q).toBeDefined();
+    // 只带分页(旧调用)仍解析。
+    expect(q!.parse({ page: 1, pageSize: 20 })).toMatchObject({
+      page: 1,
+      pageSize: 20,
+    });
+    // 带 projectId + validationStatus=candidate(本期经验区读)。
+    const filtered = q!.parse({
+      page: 1,
+      pageSize: 100,
+      projectId: "project-abc",
+      validationStatus: "candidate",
+    });
+    expect(filtered.projectId).toBe("project-abc");
+    expect(filtered.validationStatus).toBe("candidate");
+    // 非法 validationStatus 拒绝。
+    expect(() => q!.parse({ validationStatus: "not_a_status" })).toThrow();
+  });
 });

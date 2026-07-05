@@ -89,7 +89,9 @@ export interface AiCandidatePort {
 export interface AiLearningsPort {
   createLearning(
     ctx: RequestContext,
-    body: { title: string; insight?: string },
+    // [T-118a gate-F3] additive projectId:review.analyze 采纳时带上任务的来源作品,让复盘页能
+    // 读「本作品的 candidate learnings」。手录/无项目上下文来源省略 → null(旧行为)。
+    body: { title: string; insight?: string; projectId?: string | null },
   ): Promise<unknown>;
 }
 
@@ -798,6 +800,12 @@ export function createAiService(deps: ServiceDeps): AiService {
       if (candidate.resultType === "learning_list") {
         const data = (candidate.resultData ?? {}) as { items?: unknown };
         const items = Array.isArray(data.items) ? data.items : [];
+        // [T-118a gate-F3] 采纳时带上任务的来源作品(project-scoped 复盘读的锚)。task 无
+        // projectId(账号级/无上下文复盘)→ null,经验仍进全站库、复盘页项目级读不到它(诚实)。
+        const projectId =
+          typeof task.projectId === "string" && task.projectId.length > 0
+            ? task.projectId
+            : null;
         for (const raw of items) {
           const m = (raw ?? {}) as Record<string, unknown>;
           const title = typeof m.title === "string" ? m.title : "";
@@ -805,6 +813,7 @@ export function createAiService(deps: ServiceDeps): AiService {
           await deps.learnings.createLearning(ctx, {
             title,
             insight: typeof m.insight === "string" ? m.insight : "",
+            projectId,
           });
         }
         const updated = await repo.updateTaskStatus(taskId, {

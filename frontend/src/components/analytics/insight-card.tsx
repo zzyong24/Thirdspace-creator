@@ -42,10 +42,13 @@ export function InsightCard({ items, projectId }: InsightCardProps) {
       className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-card-gap shadow-card"
     >
       <header className="flex flex-col gap-1">
-        <h3 className="text-md font-semibold text-foreground">AI 分析</h3>
-        {/* [T-116c] 诚实标题:要点来自本条视频的复盘分析,不再写「本期复盘数据」这种
-            在全站数据上撒谎的话。 */}
-        <p className="text-xs text-muted-foreground">基于本条视频的复盘分析</p>
+        {/* [T-118a gate-F1 §D] 与「本期经验」裁决区做语义边界:AI 卡 = 只读要点摘要。 */}
+        <h3 className="text-md font-semibold text-foreground">
+          AI 要点 · 本期复盘摘要
+        </h3>
+        {/* [T-116c] 诚实标题:要点来自本条视频的复盘分析,不在全站数据上撒谎。
+            [T-118a §D] 副标题标数据源,与本期经验区(可裁决候选)区分。 */}
+        <p className="text-xs text-muted-foreground">来源:帮我复盘生成的要点</p>
       </header>
       {isEmpty ? (
         <div

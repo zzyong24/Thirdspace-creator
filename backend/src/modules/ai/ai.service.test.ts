@@ -377,6 +377,38 @@ describe("ai service", () => {
     const done = await service.confirmTask(ctx, task.id);
     expect(done.status).toBe("succeeded");
     expect(learnings.createLearning).toHaveBeenCalledTimes(2);
+    // [T-118a gate-F3] 采纳时把 task 的来源作品(projectId)带进每条 learning —— project-scoped
+    // 复盘读的前提(否则复盘页永远读不到本作品的经验候选)。
+    expect(learnings.createLearning).toHaveBeenNthCalledWith(
+      1,
+      ctx,
+      expect.objectContaining({ title: "前3秒用具体数字", projectId: "p-1" }),
+    );
+    expect(learnings.createLearning).toHaveBeenNthCalledWith(
+      2,
+      ctx,
+      expect.objectContaining({ title: "争议性钩子", projectId: "p-1" }),
+    );
+  });
+
+  // [T-118a gate-F3] 账号级/无上下文复盘(task 无 projectId)→ createLearning projectId=null
+  // (经验仍进全站库,只是复盘页项目级读不到它 —— 诚实)。
+  it("confirmTask on a learning_list with NO project passes projectId=null", async () => {
+    const { service, learnings } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "review.analyze",
+      inputData: {},
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "learning_list",
+      resultData: { items: [{ title: "账号级泛论经验", insight: "" }] },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    expect(learnings.createLearning).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({ title: "账号级泛论经验", projectId: null }),
+    );
   });
 
   it("confirmTask on a publication_drafts candidate materializes each draft via publishing.createPublicationFromDraft and flips succeeded", async () => {

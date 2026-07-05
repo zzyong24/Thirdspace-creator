@@ -25,7 +25,9 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Sparkles } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { ViewsTrendChart } from "@/components/analytics/views-trend-chart";
@@ -33,6 +35,12 @@ import { ConversionFunnelChart } from "@/components/analytics/conversion-funnel-
 import { InsightCard } from "@/components/analytics/insight-card";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
+import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
+// [T-118a §A] 复用经验裁决队列组件(采纳/不采→evaluateLearning、inline 编辑),不另造。
+import {
+  AdjudicationQueue,
+  type AdjudicationQueueProps,
+} from "@/features/experience/experience-interactive-region";
 import type {
   AnalyticsViewModel,
   MetricCard as MetricCardVm,
@@ -139,6 +147,12 @@ export function AnalyticsReviewInteractiveRegion({
             均无数据源 op(需单视频采集 T-100),真项目恒空占位。待 T-100 做了再加回。 */}
         <TopPublishedList items={viewModel.topPublished} />
         <CommentsSection comments={viewModel.comments ?? []} />
+        {/* [T-118a §A/§D] 本期经验裁决区:本作品复盘提炼的经验候选,当场采纳/翻案。
+            与 AI 要点卡(右栏,只读摘要)视觉分隔 + 数据源标注,防混淆。 */}
+        <CurrentPeriodLearnings
+          candidates={viewModel.candidateLearnings ?? []}
+          projectId={viewModel.projectId}
+        />
       </div>
       <div
         data-slot="analytics-right-rail"
@@ -598,6 +612,72 @@ function CommentsSection({
             </li>
           ))}
         </ul>
+      )}
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CurrentPeriodLearnings — 本期经验裁决区 (T-118a §A / §D [gate-F1])
+//
+// 渲染本作品的 candidate learnings(复盘提炼的经验候选),复用 experience 的
+// AdjudicationQueue(采纳/不采→evaluateLearning、inline 编辑)。§D UI 边界:
+//   - 标题「本期经验 · 可采纳沉淀」+ 副标题「来源:本作品复盘提炼、待你裁决」;
+//   - 与右栏「AI 要点 · 本期复盘摘要」(只读)视觉分隔(独立区块 + 顶部强调边 + 不同底色);
+//   - 空态差异化:无候选 → 「本条视频还没有可裁决的经验候选 → 点『帮我复盘』
+//     (复盘会同时产要点 + 经验候选)」+ 复用 T-116 的「帮我复盘」CTA(深链既有 review.analyze)。
+// 与 AI 卡的区分锁点:data-slot 不同(current-period-learnings vs ai-analysis-card)+
+// 本区有采纳按钮(AdjudicationQueue 的 learning-adopt),AI 卡无任何动作。
+// ---------------------------------------------------------------------------
+
+function CurrentPeriodLearnings({
+  candidates,
+  projectId,
+}: {
+  candidates: AdjudicationQueueProps["candidates"];
+  projectId: string;
+}) {
+  const isEmpty = candidates.length === 0;
+  return (
+    <section
+      data-slot="current-period-learnings"
+      data-empty={isEmpty ? "true" : "false"}
+      aria-label="本期经验"
+      className="flex flex-col gap-2 rounded-xl border border-brand/25 border-t-4 border-t-brand/50 bg-brand-soft/20 p-3 shadow-card"
+    >
+      <header className="flex flex-col gap-0.5 px-1">
+        <h3 className="text-[13px] font-semibold text-foreground">
+          本期经验 · 可采纳沉淀
+        </h3>
+        <p className="text-[11px] text-muted-foreground">
+          来源:本作品复盘提炼、待你裁决
+        </p>
+      </header>
+      {isEmpty ? (
+        <div
+          data-slot="current-period-learnings-empty"
+          className="flex flex-col items-start gap-2 rounded-lg border border-dashed border-border bg-surface px-3 py-4"
+        >
+          <p className="text-[12px] font-medium text-foreground">
+            本条视频还没有可裁决的经验候选
+          </p>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            点「帮我复盘」让编导从本期评论 / 指标提炼(复盘会同时产要点 + 经验候选)。
+          </p>
+          <Link
+            href={copilotDeepLink("review", "review.analyze", {
+              kind: "project",
+              id: projectId,
+            })}
+            data-slot="current-period-learnings-cta"
+            className="inline-flex h-7 w-fit items-center gap-1.5 rounded-control border border-brand/30 bg-brand-soft/50 px-3 text-[11px] font-medium text-brand transition-colors hover:border-brand hover:bg-brand-soft"
+          >
+            <Sparkles className="size-3.5" />
+            帮我复盘
+          </Link>
+        </div>
+      ) : (
+        <AdjudicationQueue candidates={candidates} />
       )}
     </section>
   );

@@ -204,3 +204,106 @@ describe("AI 分析卡真本期 (T-116c)", () => {
     expect(vm.aiAnalysis).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// [T-118a §A] 本期经验区:读本作品的 candidate learnings(learnings.list additive
+// projectId + validationStatus=candidate 过滤)。诚实空态,不 fixture、不回退全站。
+// ---------------------------------------------------------------------------
+
+/** 只装配「本期经验」读路径需要的方法(其余读端口缺省 → 各区诚实空/降级)。 */
+function candidateLearningsClient(opts: {
+  rows: ReadonlyArray<Record<string, unknown>>;
+  onListLearningsQuery?: (q: {
+    projectId?: string;
+    validationStatus?: string;
+  }) => void;
+  throwOnList?: boolean;
+}): ReviewDataClient {
+  return {
+    async getProjectAnalytics() {
+      return [];
+    },
+    async listLearnings(input: {
+      query: { projectId?: string; validationStatus?: string };
+    }) {
+      opts.onListLearningsQuery?.({
+        projectId: input.query.projectId,
+        validationStatus: input.query.validationStatus,
+      });
+      if (opts.throwOnList) throw new Error("boom");
+      return opts.rows;
+    },
+  } as unknown as ReviewDataClient;
+}
+
+function learningRow(over: Record<string, unknown>): Record<string, unknown> {
+  return {
+    id: "l-1",
+    title: "钩子前置",
+    insight: "前 3 秒抛冲突",
+    learningType: "hook",
+    validationStatus: "candidate",
+    confidenceScore: 0,
+    reuseCount: 0,
+    reviewId: null,
+    projectId: REAL_PROJECT,
+    createdAt: "2026-07-04T02:00:00.000Z",
+    updatedAt: "2026-07-04T02:00:00.000Z",
+    ...over,
+  };
+}
+
+describe("本期经验 candidate learnings (T-118a §A)", () => {
+  it("读本作品 candidate learnings → candidateLearnings(projectId+candidate 过滤真下推)", async () => {
+    let captured: { projectId?: string; validationStatus?: string } | null =
+      null;
+    const client = candidateLearningsClient({
+      rows: [
+        learningRow({ id: "l-new", createdAt: "2026-07-04T05:00:00.000Z" }),
+        learningRow({ id: "l-old", createdAt: "2026-07-04T01:00:00.000Z" }),
+      ],
+      onListLearningsQuery: (q) => {
+        captured = q;
+      },
+    });
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, client);
+    // 服务端窄化过滤真被下推(projectId + validationStatus=candidate)。
+    expect(captured).toEqual({
+      projectId: REAL_PROJECT,
+      validationStatus: "candidate",
+    });
+    // createdAt 倒序(最新在前)。
+    expect((vm.candidateLearnings ?? []).map((l) => l.id)).toEqual([
+      "l-new",
+      "l-old",
+    ]);
+    // 映射成 LearningVm 形状(AdjudicationQueue 消费)。
+    expect(vm.candidateLearnings?.[0]).toMatchObject({
+      title: "钩子前置",
+      learningType: "hook",
+      validationStatus: "candidate",
+    });
+  });
+
+  it("本作品无候选 → candidateLearnings 空(诚实空态,页面渲 CTA)", async () => {
+    const client = candidateLearningsClient({ rows: [] });
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, client);
+    expect(vm.candidateLearnings).toEqual([]);
+  });
+
+  it("learnings.list 读失败 → candidateLearnings 空(降级不炸,不 fixture 兜底)", async () => {
+    const client = candidateLearningsClient({ rows: [], throwOnList: true });
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, client);
+    expect(vm.candidateLearnings).toEqual([]);
+  });
+
+  it("旧 client 无 listLearnings → candidateLearnings 空(降级不炸)", async () => {
+    const legacy = {
+      async getProjectAnalytics() {
+        return [];
+      },
+    } as unknown as ReviewDataClient;
+    const vm = await buildReviewWorkspaceViewModel(REAL_PROJECT, legacy);
+    expect(vm.candidateLearnings).toEqual([]);
+  });
+});

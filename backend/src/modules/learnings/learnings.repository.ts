@@ -25,7 +25,16 @@ export interface CreateLearningInput {
   learningType: string;
   recommendation: string;
   reviewId: string | null;
+  // [T-118a gate-F3] 来源作品(project-scoped 复盘读的锚);手录/非复盘来源传 null。
+  projectId?: string | null;
   confidenceScore: number;
+}
+
+// [T-118a] listLearnings 的 additive 读过滤。都可选;都不传 → 全量(经验库/裁决台全量读)。
+// 用户归属门(eq userId)始终最外层,与这里的过滤 AND 合并。
+export interface ListLearningsFilter {
+  projectId?: string;
+  validationStatus?: string;
 }
 
 export interface UpdateLearningStatusInput {
@@ -42,10 +51,14 @@ export interface LearningsRepository {
   // Fixture hydration (insert with explicit user_id already on the row).
   seedLearnings(rows: LearningRow[]): Promise<void>;
 
-  listLearnings(page: {
-    limit: number;
-    offset: number;
-  }): Promise<{ rows: LearningRow[]; total: number }>;
+  listLearnings(
+    page: {
+      limit: number;
+      offset: number;
+    },
+    // [T-118a] 可选窄化过滤(projectId / validationStatus);省略 → 全量。
+    filter?: ListLearningsFilter,
+  ): Promise<{ rows: LearningRow[]; total: number }>;
   createLearning(input: CreateLearningInput): Promise<LearningRow>;
   getLearningRowById(learningId: string): Promise<LearningRow>;
   updateLearningStatus(
@@ -98,18 +111,28 @@ export function createLearningsRepository(
       await db.insert(learnings).values(rows).onConflictDoNothing();
     },
 
-    async listLearnings({ limit, offset }) {
+    async listLearnings({ limit, offset }, filter) {
+      // [T-118a] 归属门(userId)始终最外层;projectId / validationStatus 是可选的 AND 窄化。
+      // 都不传 → where 只剩 userId(全量,旧行为)。
+      const conds = [eq(learnings.userId, deps.userId)];
+      if (filter?.projectId !== undefined) {
+        conds.push(eq(learnings.projectId, filter.projectId));
+      }
+      if (filter?.validationStatus !== undefined) {
+        conds.push(eq(learnings.validationStatus, filter.validationStatus));
+      }
+      const where = conds.length === 1 ? conds[0] : and(...conds);
       const rows = await db
         .select()
         .from(learnings)
-        .where(eq(learnings.userId, deps.userId))
+        .where(where)
         .orderBy(desc(learnings.updatedAt))
         .limit(limit)
         .offset(offset);
       const all = await db
         .select({ id: learnings.id })
         .from(learnings)
-        .where(eq(learnings.userId, deps.userId));
+        .where(where);
       return { rows, total: all.length };
     },
 
@@ -120,6 +143,8 @@ export function createLearningsRepository(
           id: deps.nextId("learning"),
           userId: deps.userId,
           reviewId: input.reviewId ?? null,
+          // [T-118a gate-F3] 来源作品锚(复盘产经验采纳时带上 task.projectId)。
+          projectId: input.projectId ?? null,
           learningType: input.learningType,
           title: input.title,
           insight: input.insight,

@@ -9,6 +9,7 @@ import {
   buildAnalyticsReviewViewModelFromOp,
   type MetricSnapshotDto,
 } from "./analytics-review-view-model";
+import type { LearningVm } from "@/features/experience/experience-data";
 
 /**
  * Analytics & Review Workspace READ-side data assembly ("工作台读侧做真").
@@ -66,6 +67,91 @@ interface LearningListItem {
   readonly insight?: unknown;
 }
 
+// [T-118a] 本作品 candidate learning 行(learnings.list 的 learningResource 子集)。
+// AdjudicationQueue 复用 experience 的 LearningVm 形状,这里映射真值(读失败诚实空)。
+interface CandidateLearningDto {
+  readonly id: string;
+  readonly title: string;
+  readonly insight: string;
+  readonly learningType: string;
+  readonly validationStatus: "candidate" | "validated" | "discarded";
+  readonly confidenceScore: number;
+  readonly reuseCount?: number;
+  readonly reviewId?: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+const LEARNING_TYPE_KEYS = [
+  "strategy",
+  "hook",
+  "structure",
+  "failure",
+  "process",
+  "editing",
+  "conversion_pattern",
+  "offer_insight",
+] as const;
+
+function normalizeLearningType(raw: string): LearningVm["learningType"] {
+  return (LEARNING_TYPE_KEYS as ReadonlyArray<string>).includes(raw)
+    ? (raw as LearningVm["learningType"])
+    : "strategy";
+}
+
+function toLearningVm(dto: CandidateLearningDto): LearningVm {
+  return {
+    id: dto.id,
+    title: dto.title,
+    insight: dto.insight,
+    learningType: normalizeLearningType(dto.learningType),
+    validationStatus: dto.validationStatus,
+    confidenceScore: dto.confidenceScore,
+    reuseCount: dto.reuseCount ?? 0,
+    reviewId: dto.reviewId ?? null,
+    createdAt: dto.createdAt ?? "",
+    updatedAt: dto.updatedAt ?? "",
+  };
+}
+
+/**
+ * [T-118a §A] 读「本作品的 candidate learnings」→ 复盘页「本期经验」裁决区。
+ *
+ * 走 learnings.list 的 additive projectId + validationStatus=candidate 过滤(纯读窄化,
+ * 归属门在 backend 最外层)。createdAt 倒序(最新的经验候选在前)。
+ *
+ * 诚实空态:本作品还没产经验候选 / 端口未装配 / 读失败 → [](上层渲空态 + 「帮我复盘」CTA),
+ * 绝不 fixture 兜底、绝不回退全站 learnings(宪法 §8)。
+ */
+async function readProjectCandidateLearnings(
+  client: ReviewDataClient,
+  projectId: string,
+): Promise<ReadonlyArray<LearningVm>> {
+  if (!client.listLearnings) return [];
+  try {
+    const listed = await client.listLearnings({
+      params: undefined,
+      query: {
+        page: 1,
+        // paginationQuery 上限 100(见 contract primitives)。单作品的经验候选不会到百级,
+        // 取满一页即可(超出极端情况按最新 100 条裁决,诚实边界)。
+        pageSize: 100,
+        projectId,
+        validationStatus: "candidate",
+      },
+      body: undefined,
+    });
+    const rows = (Array.isArray(listed) ? listed : []) as CandidateLearningDto[];
+    return rows
+      .map(toLearningVm)
+      .sort((a, b) =>
+        a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0,
+      );
+  } catch {
+    return [];
+  }
+}
+
 // [T-052 裁决③] REV-1 收益分析 DTO(MonetizationFunnelDto/OutputProductDto/ProductDto 等)
 // 随变现中心物理删除(宪法 §8「变现中心移除」)。
 
@@ -91,6 +177,18 @@ export interface ReviewDataClient {
   listTaskResults?(input: {
     params: { taskId: string };
     query: undefined;
+    body: undefined;
+  }): Promise<unknown>;
+  // [T-118a] 本作品的 candidate learnings(复盘产的经验候选)——「本期经验」裁决区读。
+  // 走 learnings.list 的 additive projectId + validationStatus 过滤(纯读窄化)。
+  listLearnings?(input: {
+    params: undefined;
+    query: {
+      page: number;
+      pageSize: number;
+      projectId?: string;
+      validationStatus?: "candidate" | "validated" | "discarded";
+    };
     body: undefined;
   }): Promise<unknown>;
   // [T-052 裁决③] getFunnel/listOutputs/listOutputProducts/getProduct 四个
@@ -276,12 +374,21 @@ export async function buildReviewWorkspaceViewModel(
   // [T-053 断点③] 复盘记录接真(reviews.list):完成/进行中的真 review 都列出;空就空。
   const reviewHistory = await readReviewHistory(client, projectId);
 
+  // [T-118a §A] 本作品的经验候选(candidate learnings)——「本期经验」裁决区。读失败/空 → []
+  // (页面渲诚实空态 + 「帮我复盘」CTA),绝不 fixture 兜底、绝不回退全站 learnings。
+  const candidateLearnings = await readProjectCandidateLearnings(
+    client,
+    projectId,
+  );
+
   return {
     ...base,
     aiAnalysis,
     reviewHistory,
     // 复盘每作品评论 (T-030 D6) — 前 100 条真实评论;空 → 页面渲染诚实空态。
     comments,
+    // [T-118a §A] 本作品经验候选;空 → 本期经验区渲诚实空态 + CTA。
+    candidateLearnings,
   };
 }
 

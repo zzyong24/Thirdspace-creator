@@ -505,6 +505,30 @@ export interface AnalyticsViewModel extends BasePageViewModel {
   // `publications.comments.list`. Optional + additive: absent / empty → 复盘页评论区渲染
   // 诚实空态(去自动化配「抓我作品评论」采集),绝不摆假评论 (宪法 §8 / T-010)。
   readonly comments?: ReadonlyArray<ReviewCommentItem>;
+  // [T-118a §A] 本作品的经验候选(复盘产的 candidate learnings),复盘页「本期经验」裁决区渲染
+  // (复用 experience 的 AdjudicationQueue,采纳/不采走 evaluateLearning)。Optional + additive:
+  // absent / empty → 该区渲诚实空态 +「帮我复盘」CTA,绝不 fixture 兜底(宪法 §8)。字段结构等同
+  // experience 的 LearningVm(避免跨 feature 类型耦合,这里用最小结构映)。
+  readonly candidateLearnings?: ReadonlyArray<{
+    readonly id: Id;
+    readonly title: string;
+    readonly insight: string;
+    readonly learningType:
+      | "strategy"
+      | "hook"
+      | "structure"
+      | "failure"
+      | "process"
+      | "editing"
+      | "conversion_pattern"
+      | "offer_insight";
+    readonly validationStatus: "candidate" | "validated" | "discarded";
+    readonly confidenceScore: number;
+    readonly reuseCount: number;
+    readonly reviewId: string | null;
+    readonly createdAt: Iso8601;
+    readonly updatedAt: Iso8601;
+  }>;
 }
 
 // 复盘每作品评论条目 (T-030 D6) — 一条真实评论文本 (+ 需求标签 demand_tag 若有)。

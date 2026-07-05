@@ -148,6 +148,13 @@
       "when": 1782380700000,
       "tag": "0020_review_gate",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1782380800000,
+      "tag": "0021_learnings_project_id",
+      "breakpoints": true
     }
   ]
 }

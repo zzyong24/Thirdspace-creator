@@ -44,6 +44,8 @@ export function toLearningDto(
     id: row.id,
     userId: row.userId,
     reviewId: row.reviewId ?? null,
+    // [T-118a gate-F3] 来源作品(project-scoped 复盘读的锚);手录/非复盘来源为 null。
+    projectId: row.projectId ?? null,
     learningType: row.learningType as LearningResource["learningType"],
     title: row.title,
     insight: row.insight,

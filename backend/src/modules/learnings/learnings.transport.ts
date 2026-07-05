@@ -49,13 +49,31 @@ export function createLearningsTransport(
         case "learnings.list": {
           // The contract query is paginationQuery (page/pageSize, 1-based). Convert
           // to the repo's limit/offset (mirrors the other list transports).
-          const q = (query ?? {}) as { page?: number; pageSize?: number };
+          // [T-118a] additive 读过滤:可选 projectId + validationStatus(纯读窄化,不改归属)。
+          // 都不传 → 全量(经验库/裁决台全量读),旧调用零破坏。
+          const q = (query ?? {}) as {
+            page?: number;
+            pageSize?: number;
+            projectId?: string;
+            validationStatus?: "candidate" | "validated" | "discarded";
+          };
           const page = q.page ?? 1;
           const pageSize = q.pageSize ?? 20;
-          const { rows, total } = await service.listLearnings(ctx, {
-            limit: pageSize,
-            offset: (page - 1) * pageSize,
-          });
+          const filter: {
+            projectId?: string;
+            validationStatus?: string;
+          } = {};
+          if (q.projectId !== undefined) filter.projectId = q.projectId;
+          if (q.validationStatus !== undefined)
+            filter.validationStatus = q.validationStatus;
+          const { rows, total } = await service.listLearnings(
+            ctx,
+            {
+              limit: pageSize,
+              offset: (page - 1) * pageSize,
+            },
+            filter,
+          );
           return { data: rows, meta: { requestId, page, pageSize, total } };
         }
         case "learnings.patch": {

@@ -31,6 +31,11 @@ export const learnings = pgTable("learnings", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   reviewId: text("review_id"), // nullable — a Learning can exist without a Review (SPEC §22 reuse)
+  // [T-118a gate-F3] 复盘产经验的来源作品(project-scoped 读的锚)。nullable —— 手录/非复盘
+  // 来源的经验没有归属作品。review.analyze 的 learning_list 采纳时带上 task.projectId(见
+  // ai.service learning_list confirm 分支),让复盘页能读「本作品的 candidate learnings」。
+  // additive:旧行 project_id 为 NULL,行为不变(全站库读不过滤时照旧全出)。
+  projectId: text("project_id"),
   learningType: text("learning_type").notNull().default("strategy"),
   title: text("title").notNull(),
   insight: text("insight").notNull().default(""),
@@ -61,6 +66,7 @@ CREATE TABLE IF NOT EXISTS learnings (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   review_id TEXT,
+  project_id TEXT,
   learning_type TEXT NOT NULL DEFAULT 'strategy',
   title TEXT NOT NULL,
   insight TEXT NOT NULL DEFAULT '',
@@ -71,6 +77,10 @@ CREATE TABLE IF NOT EXISTS learnings (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_learnings_status ON learnings (user_id, validation_status);
+-- [T-118a gate-F3] additive:给既有 learnings 表补 project_id 列(project-scoped 复盘读的锚)。
+-- ADD COLUMN IF NOT EXISTS 幂等且不动存量行(旧行 NULL);同款范式见 positioning.ts / publishing.ts。
+ALTER TABLE learnings ADD COLUMN IF NOT EXISTS project_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_learnings_project ON learnings (user_id, project_id, validation_status);
 CREATE TABLE IF NOT EXISTS learning_applications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,

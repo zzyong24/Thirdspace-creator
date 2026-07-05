@@ -334,8 +334,10 @@ describe("AnalyticsReviewPage AI 分析卡 (T-116c)", () => {
     );
     const card = container.querySelector('[data-slot="ai-analysis-card"]')!;
     expect(card.getAttribute("data-empty")).toBe("false");
-    // 诚实标题:不再写「本期复盘数据」这种在全站数据上撒谎的话。
-    expect(card.textContent ?? "").toContain("基于本条视频的复盘分析");
+    // [T-118a §D] 诚实标题 + 数据源标注:AI 卡 = 只读要点摘要,与本期经验区(可裁决)区分。
+    // 不再写「本期复盘数据」这种在全站数据上撒谎的话。
+    expect(card.textContent ?? "").toContain("AI 要点 · 本期复盘摘要");
+    expect(card.textContent ?? "").toContain("来源:帮我复盘生成的要点");
     expect(card.textContent ?? "").not.toContain("本期复盘数据");
     expect(
       card.querySelectorAll('[data-slot="ai-analysis-item"]'),

@@ -115,6 +115,9 @@ export interface LearningsService {
   listLearnings(
     ctx: RequestContext,
     page: { limit: number; offset: number },
+    // [T-118a] 可选窄化过滤(projectId / validationStatus);省略 → 全量。归属门在 repo
+    // 层始终最外层,过滤只是 AND 收窄。
+    filter?: { projectId?: string; validationStatus?: string },
   ): Promise<{ rows: LearningResource[]; total: number }>;
   // Single-learning read (contract op learnings.get). Ownership-gated; the DTO
   // carries the real reuseCount (application count) like the list read.
@@ -124,7 +127,14 @@ export interface LearningsService {
   ): Promise<LearningResource>;
   createLearning(
     ctx: RequestContext,
-    body: { title: string; insight?: string; learningType?: string },
+    // [T-118a gate-F3] additive projectId:复盘产经验采纳时带上来源作品(project-scoped 读的锚);
+    // 手录/无上下文来源省略 → null(旧行为)。
+    body: {
+      title: string;
+      insight?: string;
+      learningType?: string;
+      projectId?: string | null;
+    },
   ): Promise<LearningResource>;
   // The Reviews→Learnings bridge (roadmap §4 G13/G14). Called by ReviewsService via
   // this module's index.ts public interface only (no Reviews repo import here, no
@@ -254,9 +264,10 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
   }
 
   return {
-    async listLearnings(ctx, page) {
+    async listLearnings(ctx, page, filter) {
       const repo = repoFor(ctx);
-      const { rows, total } = await repo.listLearnings(page);
+      // [T-118a] 归属门(repoFor 已把 userId 烘进 repo)最外层;filter 只做 AND 窄化透传。
+      const { rows, total } = await repo.listLearnings(page, filter);
       // Reuse signal: one grouped read of learningApplications for the page's ids
       // (degrades to 0 per learning if the aggregate fails or has no rows).
       let counts: Map<string, number>;
@@ -285,12 +296,15 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
 
     async createLearning(ctx, body) {
       // [T-049 B17] learningType 透传(富录入表单用户可选);缺省 strategy 向后兼容。
+      // [T-118a gate-F3] projectId 透传(复盘 learning_list 采纳时带上 task.projectId);
+      // 手录/无来源作品时为 null。
       const row = await repoFor(ctx).createLearning({
         title: body.title,
         insight: body.insight ?? "",
         learningType: body.learningType ?? "strategy",
         recommendation: "",
         reviewId: null,
+        projectId: body.projectId ?? null,
         confidenceScore: 0,
       });
       return toLearningDto(row);

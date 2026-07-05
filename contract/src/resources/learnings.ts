@@ -25,6 +25,10 @@ export const learningResource = z.object({
   id,
   userId: id,
   reviewId: id.nullable(),
+  // [T-118a gate-F3] 来源作品(project-scoped 复盘读的锚)。nullable —— 手录/非复盘来源无归属
+  // 作品;review.analyze 采纳的经验带上任务的 projectId。additive + optional:旧 payload 不带
+  // 该键仍解析(零破坏),后端 DTO mapper 始终填(null 或真值)。
+  projectId: id.nullable().optional(),
   learningType,
   title: z.string(),
   insight: z.string(),
