@@ -6,6 +6,8 @@
 >
 > **裁决注(2026-07-05,MiniMax reviewer)**:verdict=**CONCERNS**,总评「解耦方向正确合定位」。6 finding 全采纳、已内联处置:①trendradar-mcp 非 drop-in(仓库 `mcp-server` 仅 Server 端、无 MCP client)→ **默认改 RSS via WebFetch(§B)**,trendradar-mcp 降为可选增强(需补 MCP client,§7 T-126f);②browser-scrape 复用方式明确为**独立搜索 context**(§C);③OQ1 裁决为 **per-capability 覆盖 + 全局默认**(§D);④验收补量化超时/降级/grounding 规则(§8);⑤GPL 免责声明(§5);⑥切片补拆 BACKLOG 说明(§7)。
 
+> **⚠️ 现网事实重大修正(2026-07-05,开工前勘查发现)**:本 SPEC 初稿把「检索抽象地基」当**新建**,实为**已存在**——T-084a(2026-07-03 素材能力升级)**已建整套检索 provider 抽象并接进 gather 流**:`ai-worker/src/runtime/search-factory.ts`(`searchWeb`/`SearchSpec`/`SearchResult`/`SearchProviderAdapter`/registry,设计立场与本 SPEC §A 完全一致「检索是节点前置步骤非模型工具」)+ 3 个 REST 适配器 `search-{bocha,tavily,serpapi}.ts` + `frontend/src/server/ai/search/resolve.ts`(`resolveSearchSpec`,web.search capability,三层回退)+ `persistence-client.ts` searchPort 装配 + `chat-tools.ts` material.gather 已先真检索再综合 + `settings-interactive-region.tsx`「联网搜索」配置卡 + `chat-gather-card.tsx` grounding 诚实徽标(web/model_memory)。**所以「搜索与模型解耦」的架构早已实现,任意模型(含 MiniMax)配一个 provider 就能真联网。** 用户体验成「必须配」的真根 = **现有 3 个 provider(bocha/tavily/serpapi)全是付费搜索 API 要 key**,没有免 key 的 RSS/浏览器路径。**故 T-126 真实范围塌缩为:往现有 registry 加 2 个免 key 适配器(RSS + browser-scrape)+ 配置面暴露 + 择一设为零配置默认。§A~§9 的抽象/配置/grounding 设计大多描述的是已存在的东西;真正待建见修正后的 §7。** 这是「加 provider = 注册一个适配器,不改上层」的最小增量,不需重新过 gate(在已过审的抽象上加适配器)。
+
 ## 0. 用户诉求(2026-07-05)
 
 用户:「为什么现在不支持联网搜索?之前通过 Chrome DevTools 让 Agent 操作浏览器、或接 RSS 就能联网搜索,现在必须配联网搜索的模型,这是什么导致的?」+「这个能力在 cheat-on-content 我已经加上了,包括它还能自己截图。」
@@ -78,16 +80,16 @@
 - `material_list` candidate 采纳路径不变(AI 只产候选走确认门,铁律②)。
 - **零破坏**:现状 `model-web-search`(Anthropic)保留为一态;未配用户行为不变(仍 model_memory 兜底)。
 
-## 7. 切片(拆 BACKLOG Task 预告 —— 过 gate 后按此拆,每切片一条引用本 SPEC)
+## 7. 切片(修正后 —— 抽象/接线/配置/grounding 已由 T-084a 建好,只加免 key 适配器)
 
-- **T-126a 检索抽象地基**:`RetrievalProvider` 接口 + `resolveRetrievalProvider`(平行 resolveMultimodalSpec)+ grounding 枚举扩 + material.gather 检索步接口化(现 `model-web-search` 收敛为一态实现)。
-- **T-126b mcp-hotlist provider**:接 trendradar-mcp / RSS 源(WebFetch + MCP tool),normalize→MaterialItem[];默认态。
-- **T-126c browser-scrape provider**:复用 playwright 采集基建,搜→抓→自截图存证→MaterialItem[]。
-- **T-126d 配置面**:model-config/设置加检索 provider 选择 + 各 provider 凭据/源(对齐多模态范式)。
-- **T-126e 验收**:三态各真链路冒烟(配 MiniMax 综合模型 + 各 provider 均能出真素材,grounding 标注正确);未配兜底 model_memory 不崩。
-- **T-126f(可选)MCP client 接线**:补 `@modelcontextprotocol/sdk` Client 侧接线,让 mcp-hotlist 可选走 trendradar-mcp(而非仅 RSS)。**非默认路径必需**,排最后;不做也不影响 a~e 的默认 RSS 通路。
+**已存在(不做,别重造)**:检索抽象 `search-factory.ts` + registry + `resolveSearchSpec`(web.search)+ searchPort 装配(persistence-client)+ material.gather 前置检索接线(chat-tools)+ 设置「联网搜索」配置卡 + grounding 诚实徽标(chat-gather-card)。**加 provider = 实现 `SearchProviderAdapter` + host registry 注册 + 设置 providerSuggestions 加一项**,上层零改(工厂设计如此)。
 
-> **拆条说明**:以上切片是**预告**,本 SPEC 过 gate 后须逐条拆进 `BACKLOG.md`(每条一行、状态 📋、引用本 SPEC),ID 沿用 T-126a~T-126f。验收对照 BACKLOG 追踪,不在本 SPEC 内当执行总账。
+- **T-126a RSS 适配器(免 key)**:`ai-worker/src/runtime/search-rss.ts` `createRssAdapter` 实现 `SearchProviderAdapter` —— 按 query 拉配置的 RSS 源(用现有 `search-http.ts` 带超时 fetch)→ 解析条目(title/link/description/pubDate)→ 映射 `SearchResult[]`。host 在 registry 注册 `rss`;设置卡 providerSuggestions 加 `rss`。fake-fetch 单测覆盖响应映射(零成本,同 bocha/tavily 范式)。
+- **T-126b browser-scrape 适配器(免 key + 自截图)**:`createBrowserScrapeAdapter` 实现 `SearchProviderAdapter` —— playwright(复用抖音采集启动/反爬封装,起**独立搜索 context**,§C)驱动真浏览器搜→抓结果→`page.screenshot()` 落 `.cache/` 存证→`SearchResult[]`。registry 注册 `browser`;设置 providerSuggestions 加 `browser`。**注**:需确认 playwright 运行位置(采集链在 frontend/server;此适配器落 host registry 注册处或复用采集链)。
+- **T-126c 零配置默认 + 验收**:择一(建议 rss,无浏览器开销)设为 web.search 未显式配置时的**零配置默认**(而非直接 model_memory 降级),让用户开箱即真联网;真链路冒烟(MiniMax 综合 + rss/browser 出真素材,grounding=web);默认失败仍诚实 model_memory 兜底。
+- **T-126d(可选)trendradar-mcp**:如需 MCP 热榜,补 `@modelcontextprotocol/sdk` Client 接线一个适配器。排最后,RSS 已覆盖免 key 需求。
+
+> **范围收敛**:原 a~f(建抽象/resolveRetrievalProvider/配置面/grounding 枚举)已由 T-084a 存在,删除。真活只剩 2 个适配器(a/b)+ 默认策略(c)。**在已过审的抽象上加适配器,不需重新 gate。**验收对照 BACKLOG 追踪。
 
 ## 8. 验收标准(含量化规则[reviewer-4])
 
