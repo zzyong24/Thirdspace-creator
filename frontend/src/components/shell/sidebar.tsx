@@ -1,29 +1,49 @@
+"use client";
+
 /**
  * Sidebar is the pinned left rail shared by every CreatorOS page.
  *
  * Structure (D-002, D-003, D-004, D-005):
- *  - Brand
+ *  - Brand + [T-129] 折叠开关
  *  - PrimaryNav (seven approved items in fixed order)
  *  - ContextSection (current project / quick access, when present)
  *  - AssistantPromoCard with two content variants: `assistant` (default)
  *    and `storage` (used by the Assets Center per D-003)
  *  - UserProfileMenu
  *
- * The component is rendered as a Server Component. Active state is derived
- * from the `pathname` prop, not from a router hook, so it is testable
- * without a Next.js runtime.
+ * Active state is derived from the `pathname` prop, not from a router hook, so
+ * it is testable without a Next.js runtime.
+ *
+ * [T-129] 折叠态:client 组件(useState + localStorage 持久)—— 展开(图标+文字,w-sidebar)↔
+ * 收拢(仅图标窄条 w-16 + hover tooltip 显名)。默认展开(SSR 安全,localStorage 挂载后读),
+ * 状态存 localStorage `creatoros:sidebar:collapsed`。宽度由 aside 宽度 class 跟随,主框 flex-1
+ * 自动补位(AppShell 无需改)。
  */
 
 import * as React from "react";
 import Link from "next/link";
-import { Sparkles, type LucideIcon } from "lucide-react";
+import {
+  PanelLeftClose,
+  PanelLeftOpen,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { creatorIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { canonicalDataset } from "@/fixtures/canonical";
 import { SidebarStorageCard } from "./sidebar-storage-card";
+
+// [T-129] 折叠态持久化键。收拢="1"、展开="0"/缺失。隐私模式/禁用 storage → try/catch 降级不持久。
+const SIDEBAR_COLLAPSED_KEY = "creatoros:sidebar:collapsed";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -122,54 +142,144 @@ export function Sidebar({
 }: SidebarProps) {
   const activeNavId = findActiveNav(pathname);
   const resolvedUser = resolveUser(user);
+  // [T-129] 折叠态。默认展开(SSR/首帧一致,避免 hydration mismatch);挂载后读 localStorage,
+  // 是收拢态则切过去(收拢用户会有一帧展开闪,可接受)。
+  const [collapsed, setCollapsed] = React.useState(false);
+  React.useEffect(() => {
+    try {
+      if (window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1") {
+        setCollapsed(true);
+      }
+    } catch {
+      /* storage 不可用 → 维持展开(默认),不崩 */
+    }
+  }, []);
+  const handleToggle = React.useCallback(() => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? "1" : "0");
+      } catch {
+        /* 写失败(隐私模式)→ 本次会话内切换仍生效,只是不持久 */
+      }
+      return next;
+    });
+  }, []);
   return (
-    <aside
-      data-slot="app-sidebar"
-      data-testid="app-sidebar"
-      aria-label="主侧栏"
-      className={cn(
-        "flex h-screen w-sidebar shrink-0 flex-col gap-4 border-r border-border bg-surface px-4 pb-8 pt-6",
-        className,
-      )}
-    >
-      <SidebarBrand />
-      <PrimaryNav activeId={activeNavId} />
-      {contextSection ? <ContextSection section={contextSection} /> : null}
-      <div className="mt-auto flex flex-col gap-card-gap">
-        <SidebarContextualCard
-          variant={contextualCardVariant}
-          userDisplayName={resolvedUser.displayName}
-        />
-        <UserProfileMenu
-          displayName={resolvedUser.displayName}
-          email={resolvedUser.email}
-          planLabel={resolvedUser.planLabel}
-          initials={resolvedUser.initials}
-        />
-      </div>
-    </aside>
+    <TooltipProvider delayDuration={0}>
+      <aside
+        data-slot="app-sidebar"
+        data-testid="app-sidebar"
+        data-collapsed={collapsed ? "true" : "false"}
+        aria-label="主侧栏"
+        className={cn(
+          "flex h-screen shrink-0 flex-col gap-4 border-r border-border bg-surface pb-8 pt-6 transition-[width] duration-200",
+          collapsed ? "w-16 px-2" : "w-sidebar px-4",
+          className,
+        )}
+      >
+        <SidebarHeader collapsed={collapsed} onToggle={handleToggle} />
+        <PrimaryNav activeId={activeNavId} collapsed={collapsed} />
+        {contextSection && !collapsed ? (
+          <ContextSection section={contextSection} />
+        ) : null}
+        <div
+          className={cn(
+            "mt-auto flex flex-col gap-card-gap",
+            collapsed && "items-center",
+          )}
+        >
+          {/* 收拢态隐藏促销/存储卡(留出窄条空间);展开态照旧。 */}
+          {!collapsed ? (
+            <SidebarContextualCard
+              variant={contextualCardVariant}
+              userDisplayName={resolvedUser.displayName}
+            />
+          ) : null}
+          <UserProfileMenu
+            collapsed={collapsed}
+            displayName={resolvedUser.displayName}
+            email={resolvedUser.email}
+            planLabel={resolvedUser.planLabel}
+            initials={resolvedUser.initials}
+          />
+        </div>
+      </aside>
+    </TooltipProvider>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Brand
+// Brand + [T-129] 折叠开关
 // ---------------------------------------------------------------------------
 
-function SidebarBrand() {
+function SidebarHeader({
+  collapsed,
+  onToggle,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   // The brand is a visual anchor, not a focusable link — the home route
   // is reachable through the primary nav. Keeping the brand out of the
   // focus order ensures the first Tab lands inside the TopHeader.
   return (
     <div
-      data-slot="sidebar-brand"
-      aria-hidden="true"
-      className="mb-7 flex items-center gap-2 px-2 py-1 text-[15px] font-semibold text-foreground"
+      data-slot="sidebar-header"
+      className={cn(
+        "mb-7 flex",
+        collapsed
+          ? "flex-col items-center gap-2"
+          : "items-center justify-between",
+      )}
     >
-      <span className="flex size-7 items-center justify-center rounded-md bg-brand text-primary-foreground">
-        <Sparkles className="size-4" />
-      </span>
-      <span>CreatorOS</span>
+      <div
+        data-slot="sidebar-brand"
+        aria-hidden="true"
+        className={cn(
+          "flex items-center text-[15px] font-semibold text-foreground",
+          collapsed ? "" : "gap-2 px-2 py-1",
+        )}
+      >
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-brand text-primary-foreground">
+          <Sparkles className="size-4" />
+        </span>
+        {!collapsed ? <span>CreatorOS</span> : null}
+      </div>
+      <SidebarCollapseToggle collapsed={collapsed} onToggle={onToggle} />
     </div>
+  );
+}
+
+function SidebarCollapseToggle({
+  collapsed,
+  onToggle,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = collapsed ? PanelLeftOpen : PanelLeftClose;
+  const label = collapsed ? "展开侧栏" : "收起侧栏";
+  const button = (
+    <button
+      type="button"
+      data-slot="sidebar-collapse-toggle"
+      data-testid="sidebar-collapse-toggle"
+      aria-label={label}
+      aria-pressed={collapsed}
+      onClick={onToggle}
+      className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <Icon className="size-4" aria-hidden="true" />
+    </button>
+  );
+  // 收拢态给 tooltip(窄条无文字);展开态按钮本身够清楚,不加 tooltip(避免与文字重复)。
+  if (!collapsed) return button;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -177,7 +287,13 @@ function SidebarBrand() {
 // Primary nav
 // ---------------------------------------------------------------------------
 
-function PrimaryNav({ activeId }: { activeId: string }) {
+function PrimaryNav({
+  activeId,
+  collapsed,
+}: {
+  activeId: string;
+  collapsed: boolean;
+}) {
   return (
     <nav
       data-slot="sidebar-primary-nav"
@@ -187,23 +303,35 @@ function PrimaryNav({ activeId }: { activeId: string }) {
       {PRIMARY_NAV.map((entry) => {
         const Icon = entry.icon;
         const isActive = entry.id === activeId;
-        return (
+        const link = (
           <Link
-            key={entry.id}
             href={entry.href}
             data-slot="sidebar-nav-item"
             data-active={isActive ? "true" : "false"}
             aria-current={isActive ? "page" : undefined}
+            // 收拢态无可见文字 → aria-label + title 兜底可及性(tooltip 另作视觉提示)。
+            aria-label={collapsed ? entry.label : undefined}
+            title={collapsed ? entry.label : undefined}
             className={cn(
-              "flex h-10 items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors",
+              "flex h-10 items-center rounded-md text-[13px] transition-colors",
+              collapsed ? "justify-center px-0" : "gap-2.5 px-2.5",
               "text-muted-foreground hover:bg-muted hover:text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               isActive && "bg-brand-soft font-medium text-brand",
             )}
           >
-            <Icon className="size-4" aria-hidden="true" />
-            <span>{entry.label}</span>
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
+            {!collapsed ? <span>{entry.label}</span> : null}
           </Link>
+        );
+        if (!collapsed) {
+          return <React.Fragment key={entry.id}>{link}</React.Fragment>;
+        }
+        return (
+          <Tooltip key={entry.id}>
+            <TooltipTrigger asChild>{link}</TooltipTrigger>
+            <TooltipContent side="right">{entry.label}</TooltipContent>
+          </Tooltip>
         );
       })}
     </nav>
@@ -304,16 +432,39 @@ function SidebarContextualCard({ variant, userDisplayName }: SidebarContextualCa
 // ---------------------------------------------------------------------------
 
 function UserProfileMenu({
+  collapsed,
   displayName,
   email,
   planLabel,
   initials,
 }: {
+  collapsed: boolean;
   displayName: string;
   email: string;
   planLabel: string;
   initials: string;
 }) {
+  // [T-129] 收拢态:仅头像(tooltip 显名+套餐),窄条不摆姓名/邮箱/套餐条。
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            data-slot="sidebar-user-profile"
+            aria-label={displayName}
+            className="flex items-center justify-center rounded-card border border-border bg-surface p-1.5"
+          >
+            <Avatar size="sm">
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          {displayName} · {planLabel}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
   return (
     <div
       data-slot="sidebar-user-profile"

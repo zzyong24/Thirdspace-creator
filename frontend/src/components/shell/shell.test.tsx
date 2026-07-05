@@ -14,7 +14,14 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import type React from "react";
 
 import "@/styles/tokens.css";
@@ -389,5 +396,73 @@ describe("AppShell", () => {
     expect(
       within(header as HTMLElement).getByRole("link", { name: /进入工作台/ }),
     ).toHaveAttribute("href", "/projects/ai-native-browser/script");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// [T-129] Sidebar 折叠(展开 ↔ 收拢窄条,状态持久化 localStorage)
+// ---------------------------------------------------------------------------
+
+describe("Sidebar 折叠 (T-129)", () => {
+  afterEach(() => {
+    cleanup();
+    try {
+      window.localStorage.clear();
+    } catch {
+      /* noop */
+    }
+  });
+
+  it("默认展开:data-collapsed=false + 折叠开关标签「收起侧栏」+ nav 文字可见", async () => {
+    await renderShell();
+    const sidebar = screen.getByRole("complementary", { name: /主侧栏/ });
+    expect(sidebar.getAttribute("data-collapsed")).toBe("false");
+    const toggle = within(sidebar).getByTestId("sidebar-collapse-toggle");
+    expect(toggle).toHaveAttribute("aria-label", "收起侧栏");
+    // 展开态 nav 文字可见(accessible name 来自可见文字)。
+    expect(
+      within(sidebar).getByRole("link", { name: "知识库" }),
+    ).toBeInTheDocument();
+  });
+
+  it("点折叠开关 → 收拢(data-collapsed=true,w-16 窄条,nav icon-only)+ 持久化 localStorage=1", async () => {
+    await renderShell();
+    const sidebar = screen.getByRole("complementary", { name: /主侧栏/ });
+    fireEvent.click(within(sidebar).getByTestId("sidebar-collapse-toggle"));
+    await waitFor(() => {
+      expect(sidebar.getAttribute("data-collapsed")).toBe("true");
+    });
+    // 开关切换为「展开侧栏」;窄条宽度 class;nav 仍可达(aria-label 兜底)但可见文字 span 隐藏。
+    expect(
+      within(sidebar).getByTestId("sidebar-collapse-toggle"),
+    ).toHaveAttribute("aria-label", "展开侧栏");
+    expect(sidebar.className).toContain("w-16");
+    const knowledge = within(sidebar).getByRole("link", { name: "知识库" });
+    expect(knowledge.querySelector("span")).toBeNull();
+    expect(window.localStorage.getItem("creatoros:sidebar:collapsed")).toBe("1");
+  });
+
+  it("localStorage 记为收拢 → 挂载后读回,初次渲染即收拢窄条", async () => {
+    window.localStorage.setItem("creatoros:sidebar:collapsed", "1");
+    await renderShell();
+    const sidebar = screen.getByRole("complementary", { name: /主侧栏/ });
+    await waitFor(() => {
+      expect(sidebar.getAttribute("data-collapsed")).toBe("true");
+    });
+    expect(sidebar.className).toContain("w-16");
+  });
+
+  it("收拢后再点 → 展开回来 + localStorage 置 0", async () => {
+    window.localStorage.setItem("creatoros:sidebar:collapsed", "1");
+    await renderShell();
+    const sidebar = screen.getByRole("complementary", { name: /主侧栏/ });
+    await waitFor(() =>
+      expect(sidebar.getAttribute("data-collapsed")).toBe("true"),
+    );
+    fireEvent.click(within(sidebar).getByTestId("sidebar-collapse-toggle"));
+    await waitFor(() =>
+      expect(sidebar.getAttribute("data-collapsed")).toBe("false"),
+    );
+    expect(window.localStorage.getItem("creatoros:sidebar:collapsed")).toBe("0");
   });
 });
