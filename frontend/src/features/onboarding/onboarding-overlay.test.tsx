@@ -36,6 +36,9 @@ const clientMock = vi.hoisted(() => ({
   getProfile: vi.fn(async () => ({}) as unknown),
   listProjects: vi.fn(async () => [] as unknown[]),
   getStorage: vi.fn(async () => ({ rootPath: "" }) as unknown),
+  // [T-131d] 违禁词/审核规则 + 抖音登录态。
+  listReviewRules: vi.fn(async () => [] as unknown[]),
+  statusDouyin: vi.fn(async () => ({ loggedIn: false }) as unknown),
 }));
 vi.mock("@/lib/contract-client", () => ({ client: clientMock }));
 
@@ -49,6 +52,8 @@ function makeAllFail() {
   clientMock.getProfile.mockRejectedValue(new Error("404"));
   clientMock.listProjects.mockRejectedValue(new Error("no backend"));
   clientMock.getStorage.mockRejectedValue(new Error("no backend"));
+  clientMock.listReviewRules.mockRejectedValue(new Error("no backend"));
+  clientMock.statusDouyin.mockRejectedValue(new Error("no backend"));
 }
 
 /** 必备全配:text 模型 + 定位母版 + 1 个项目。 */
@@ -59,6 +64,8 @@ function makeAllRequiredDone() {
   clientMock.getProfile.mockResolvedValue({ id: "p", persona: "x" });
   clientMock.listProjects.mockResolvedValue([{ id: "proj-1", title: "T" }]);
   clientMock.getStorage.mockRejectedValue(new Error("no backend"));
+  clientMock.listReviewRules.mockResolvedValue([]);
+  clientMock.statusDouyin.mockResolvedValue({ loggedIn: false });
 }
 
 beforeEach(() => {
@@ -66,6 +73,8 @@ beforeEach(() => {
   clientMock.getProfile.mockReset();
   clientMock.listProjects.mockReset();
   clientMock.getStorage.mockReset();
+  clientMock.listReviewRules.mockReset();
+  clientMock.statusDouyin.mockReset();
   try {
     window.localStorage.clear();
   } catch {
@@ -134,8 +143,8 @@ describe("OnboardingOverlay — 自动弹 / 空态", () => {
     const progress = document.querySelector(
       '[data-slot="onboarding-progress"]',
     ) as HTMLElement;
-    // 9 步总,配了 1 步。
-    expect(progress.textContent).toContain("已完成 1/9");
+    // 11 步总(3 必备 + 8 可选,含 T-131d 违禁词/抖音),配了 1 步。
+    expect(progress.textContent).toContain("已完成 1/11");
     // text-model 打勾。
     const textRow = document.querySelector(
       '[data-step-key="text-model"]',

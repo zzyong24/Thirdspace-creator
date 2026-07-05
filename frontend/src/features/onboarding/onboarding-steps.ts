@@ -51,6 +51,11 @@ export interface OnboardingState {
   readonly hasPositioningProfile?: boolean;
   readonly projectCount?: number;
   readonly hasStorageRoot?: boolean;
+  // [T-131d] 违禁词/审核规则:是否已有 ≥1 条 active 规则(`client.listReviewRules`,
+  //   status==="active" 才参与 L1 lint;candidate/disabled 不算)。读失败 → undefined → 未完成。
+  readonly hasActiveReviewRule?: boolean;
+  // [T-131d] 抖音扫码登录态(`client.statusDouyin` → {loggedIn})。读失败 → undefined → 未完成。
+  readonly douyinLoggedIn?: boolean;
 }
 
 /**
@@ -151,8 +156,26 @@ export const ONBOARDING_STEP_SET: readonly StepSpec[] = [
     why: "指定素材落盘位置,统一管理图片 / 视频 / 音频。",
     href: "/settings",
     // ⚠️ 弱信号:后端对未配用户也返回默认根,故 done 只表达「存储配置可读」,
-    // 不能真区分用户是否显式设过(留 SPEC 切片 d 补强判定端口)。读失败 → 未完成。
+    // 不能真区分用户是否显式设过(强区分待后续)。读失败 → 未完成。
     isDone: (s) => s.hasStorageRoot === true,
+  },
+  {
+    // [T-131d] 违禁词/审核规则:有 ≥1 条 active 规则即算配了(L1 发布前 lint 的底表)。
+    key: "review-rules",
+    group: "optional",
+    title: "配置违禁词 / 审核规则",
+    why: "发布前 L1 违禁词 lint 拦红线词,降限流 / 封号风险。",
+    href: "/settings",
+    isDone: (s) => s.hasActiveReviewRule === true,
+  },
+  {
+    // [T-131d] 抖音扫码登录:登录后可自动采集自己作品的指标 / 评论。
+    key: "douyin-login",
+    group: "optional",
+    title: "登录抖音(扫码)",
+    why: "登录后自动采集你的作品指标 / 评论,喂复盘与选题飞轮。",
+    href: "/automations",
+    isDone: (s) => s.douyinLoggedIn === true,
   },
 ];
 

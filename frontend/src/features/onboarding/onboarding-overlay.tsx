@@ -82,18 +82,28 @@ type Load =
  * (诚实降级),不让一个读失败拖垮整份 state。返回可直接喂 deriveSteps 的 state。
  */
 async function loadState(): Promise<OnboardingState> {
-  const [capabilities, hasProfile, projectCount, hasStorageRoot] =
-    await Promise.all([
-      loadConfiguredCapabilities(),
-      loadHasProfile(),
-      loadProjectCount(),
-      loadHasStorageRoot(),
-    ]);
+  const [
+    capabilities,
+    hasProfile,
+    projectCount,
+    hasStorageRoot,
+    hasActiveReviewRule,
+    douyinLoggedIn,
+  ] = await Promise.all([
+    loadConfiguredCapabilities(),
+    loadHasProfile(),
+    loadProjectCount(),
+    loadHasStorageRoot(),
+    loadHasActiveReviewRule(),
+    loadDouyinLoggedIn(),
+  ]);
   return {
     configuredCapabilities: capabilities,
     hasPositioningProfile: hasProfile,
     projectCount,
     hasStorageRoot,
+    hasActiveReviewRule,
+    douyinLoggedIn,
   };
 }
 
@@ -172,6 +182,36 @@ async function loadHasStorageRoot(): Promise<boolean | undefined> {
     return typeof s.rootPath === "string" && s.rootPath.trim().length > 0
       ? true
       : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** [T-131d] 是否有 ≥1 条 active 审核规则(listReviewRules,status==="active")。读失败 → undefined。 */
+async function loadHasActiveReviewRule(): Promise<boolean | undefined> {
+  try {
+    const rows = (await client.listReviewRules({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ status?: unknown }>;
+    return Array.isArray(rows)
+      ? rows.some((r) => r.status === "active") || undefined
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** [T-131d] 抖音扫码登录态(statusDouyin → {loggedIn})。读失败 → undefined。 */
+async function loadDouyinLoggedIn(): Promise<boolean | undefined> {
+  try {
+    const s = (await client.statusDouyin({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    })) as { loggedIn?: unknown };
+    return s.loggedIn === true ? true : undefined;
   } catch {
     return undefined;
   }

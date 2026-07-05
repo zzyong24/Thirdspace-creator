@@ -86,6 +86,18 @@ describe("deriveSteps — done 派生", () => {
     expect(step({}, "storage-root")?.done).toBe(false);
   });
 
+  it("[T-131d] 违禁词/审核规则:有 active 规则 → done;无 / 读失败 → 未完成", () => {
+    expect(step({ hasActiveReviewRule: true }, "review-rules")?.done).toBe(true);
+    expect(step({ hasActiveReviewRule: false }, "review-rules")?.done).toBe(false);
+    expect(step({}, "review-rules")?.done).toBe(false);
+  });
+
+  it("[T-131d] 抖音登录:loggedIn → done;未登录 / 读失败 → 未完成", () => {
+    expect(step({ douyinLoggedIn: true }, "douyin-login")?.done).toBe(true);
+    expect(step({ douyinLoggedIn: false }, "douyin-login")?.done).toBe(false);
+    expect(step({}, "douyin-login")?.done).toBe(false);
+  });
+
   it("多能力可选模型 done 独立派生", () => {
     const state: OnboardingState = {
       configuredCapabilities: new Set([
