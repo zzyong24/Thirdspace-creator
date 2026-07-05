@@ -20,6 +20,7 @@ import { sectionsToHtml } from "@/features/script/script-editor-bridge";
 import { TopicCard } from "./topic-card";
 import { DraftChatRail } from "./draft-chat-rail";
 import { DraftChatRequestProvider } from "./draft-chat-request";
+import { DraftResizableLayout } from "./draft-resizable-layout";
 import { CreationFlowCtas } from "./creation-flow-ctas";
 import { RevealProjectButton } from "./reveal-project-button";
 import { AmmoNoteForm } from "./ammo-note-form";
@@ -74,11 +75,10 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           [T-108] DraftChatRequestProvider 包住左稿面 + 右 rail:左稿面的 AI 按钮(盲预测/审核)
           通过 context 直接预填右栏常驻 rail(方案 A),不再走 `?copilot=open` 深链开全局弹层。 */}
       <DraftChatRequestProvider>
-      <div className="flex min-h-0 flex-1">
-        <div
-          data-slot="draft-pane"
-          className="relative flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto px-6 py-4"
-        >
+      {/* [T-130] 可拖拽分栏:左稿面(flex-1)| 右编导栏(可拖拽调宽 + localStorage 持久)。 */}
+      <DraftResizableLayout
+        left={
+          <>
           {/* 成熟度轨(装饰,随区块态着色由各区块节点体现) */}
           <TopicCard
             projectId={project.id}
@@ -146,20 +146,17 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
 
           {/* ── 弹药抽屉 ── */}
           <AmmoDrawer ammo={ammo} projectId={project.id} />
-        </div>
-
-        {/* 右栏:编导对话(T-055b)—— 全局 ChatBox 内嵌常驻,上下文 chip = 当前项目。 */}
-        <aside
-          data-slot="draft-chat-rail"
-          className="hidden w-[380px] shrink-0 flex-col border-l border-border bg-surface xl:flex"
-        >
+          </>
+        }
+        right={
+          /* 右栏:编导对话(T-055b)—— 全局 ChatBox 内嵌常驻,上下文 chip = 当前项目。 */
           <DraftChatRail
             projectId={project.id}
             projectTitle={project.title}
             outputId={outputId}
           />
-        </aside>
-      </div>
+        }
+      />
       </DraftChatRequestProvider>
     </main>
   );
