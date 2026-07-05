@@ -114,6 +114,64 @@ describe("resolveChatScope — §1.2 入口→scope 总表(穷举)", () => {
     );
   });
 
+  // ── [T-121] 选题候选对象级隔离(引用对象变了 → 开新窗口)──────────────────
+  it("[T-121] 选题候选(surface=topics + selKind=candidate + selId)→ surface:topics:<candidateId> 对象级桶", () => {
+    expect(
+      resolveChatScope({
+        urlSurface: "topics",
+        selKind: "candidate",
+        selId: "cand-1",
+      }),
+    ).toBe("surface:topics:cand-1");
+  });
+
+  it("[T-121] 换引用的选题 → 换桶(cand-1 ≠ cand-2,旧上下文不污染新引用)", () => {
+    const a = resolveChatScope({
+      urlSurface: "topics",
+      selKind: "candidate",
+      selId: "cand-1",
+    });
+    const b = resolveChatScope({
+      urlSurface: "topics",
+      selKind: "candidate",
+      selId: "cand-2",
+    });
+    expect(a).not.toBe(b);
+    // 且都不落回旧的公共 surface:topics 桶(否则又串味)。
+    expect(a).not.toBe("surface:topics");
+    expect(b).not.toBe("surface:topics");
+  });
+
+  it("[T-121] candidate 但无 selId → 回落公共 surface 桶(不造 surface:topics: 空桶)", () => {
+    expect(
+      resolveChatScope({ urlSurface: "topics", selKind: "candidate" }),
+    ).toBe("surface:topics");
+  });
+
+  it("[T-121] 非 candidate 的选中(如 publication)不启用对象级隔离 → 仍公共 surface 桶", () => {
+    expect(
+      resolveChatScope({
+        urlSurface: "topics",
+        selKind: "publication",
+        selId: "pub-1",
+      }),
+    ).toBe("surface:topics");
+  });
+
+  it("[T-121] project 选中仍归并 project:<id>(不受对象级隔离影响)", () => {
+    expect(
+      resolveChatScope({
+        urlSurface: "topics",
+        selKind: "project",
+        selId: "proj-9",
+      }),
+    ).toBe("project:proj-9");
+  });
+
+  it("[T-121] 对象级桶文法合法(isValidScope 接受 3 段式)", () => {
+    expect(isValidScope("surface:topics:cand-1")).toBe(true);
+  });
+
   it("矩阵 #7:复盘一键岛与稿面右栏(同一项目)解析到同一 scope —— 同源是特性", () => {
     const island = resolveChatScope({
       urlSurface: "review",
@@ -165,5 +223,7 @@ describe("构造器与文案", () => {
     expect(scopeHistoryLabel("global")).toBe("全局助手的历史会话");
     expect(scopeHistoryLabel("project:p1")).toBe("本项目的历史会话");
     expect(scopeHistoryLabel("surface:topics")).toBe("本入口的历史会话");
+    // [T-121] 对象级隔离桶 → 「本选题的历史会话」。
+    expect(scopeHistoryLabel("surface:topics:cand-1")).toBe("本选题的历史会话");
   });
 });

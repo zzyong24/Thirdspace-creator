@@ -26,9 +26,13 @@
  * 映射规则(SPEC §1.2,判定顺序即优先级):
  *   0. URL 显式 ?scope=(文法合法)最高 —— 全局入口用它声明 global,不再借 surface 桶;
  *   1. 入口聚焦某个具体项目(selection.kind=project 或宿主是项目页)→ project:<id>;
- *   2. 入口聚焦某个工作面/功能(URL 显式带 surface)→ surface:<name>;
+ *   2a.[T-121] 入口聚焦某个**选题候选对象**(URL surface + selKind=candidate + selId)→
+ *      surface:<name>:<candidateId> 对象级隔离桶 —— 换 @引用的选题即换桶=开新对话,旧选题
+ *      上下文不污染新引用(用户洞察「引用对象变了应开新窗口」)。project 归并(规则 1)与
+ *      稿面/复盘 embed persistKey 续接不受影响,仅选题候选这一窄口启用对象级隔离。
+ *   2. 入口聚焦某个工作面/功能(URL 显式带 surface,无对象级选中)→ surface:<name>;
  *   3. 无任务的全局唤醒(裸 ?copilot=open)→ global;
- *   4. 对象级隔离 surface:<name>:<entityId> 本期无需求,只定文法。
+ *   4. 对象级隔离 surface:<name>:<entityId> [T-121] 启用于 candidate;其它 kind 保留文法未用。
  */
 
 /** 全局作用域(左下角/首页全局入口)。 */
@@ -46,6 +50,20 @@ export function projectScope(projectId: string): string {
 export function surfaceScope(name: string): string {
   return `surface:${name}`;
 }
+
+/**
+ * [T-121] surface:<name>:<entityId> 对象级隔离桶构造器 —— 同一 surface 下不同选中对象各自一桶。
+ * 本期只用于选题候选(换引用的选题即换桶,旧上下文不污染)。
+ */
+export function entitySurfaceScope(name: string, entityId: string): string {
+  return `surface:${name}:${entityId}`;
+}
+
+/**
+ * [T-121] 启用对象级隔离的 selKind 白名单 —— 换这些 kind 的选中对象即换会话桶。目前仅选题
+ * 候选(candidate);project 走 project:<id> 归并(规则 1)、稿面/复盘走 embed persistKey,均不在此列。
+ */
+const OBJECT_SCOPED_SEL_KINDS: ReadonlySet<string> = new Set(["candidate"]);
 
 /**
  * scope 文法校验(与 /api/chat 服务端 isValidScope 同语义)。非法串不进入持久化/请求,
@@ -102,7 +120,13 @@ export function resolveChatScope(input: ChatScopeInput): string {
   // 与右栏同一条对话(同源是特性,T-068 语义;修 #11 裸 `project` 桶 bug)。
   if (selKind === "project" && selId) return projectScope(selId);
 
-  // 规则 2:聚焦工作面(#4/#5/#6/#8/#12 深链显式带 surface)→ surface:<name>。
+  // 规则 2a:[T-121] 聚焦某选题候选对象(surface + selKind=candidate + selId)→ 对象级隔离桶
+  // surface:<name>:<candidateId>。换引用的选题即换桶=开新对话,旧选题上下文不污染新引用。
+  if (urlSurface && selId && OBJECT_SCOPED_SEL_KINDS.has(selKind ?? "")) {
+    return entitySurfaceScope(urlSurface, selId);
+  }
+
+  // 规则 2:聚焦工作面(#4/#5/#6/#8/#12 深链显式带 surface,无对象级选中)→ surface:<name>。
   if (urlSurface) return surfaceScope(urlSurface);
 
   // 规则 3:无任务全局唤醒(裸 ?copilot=open,旧深链无 scope)→ global。
@@ -114,5 +138,9 @@ export function resolveChatScope(input: ChatScopeInput): string {
 export function scopeHistoryLabel(scope: string): string {
   if (scope === GLOBAL_SCOPE) return "全局助手的历史会话";
   if (scope.startsWith("project:")) return "本项目的历史会话";
+  // [T-121] 对象级隔离桶 surface:<name>:<entityId>(3 段)—— 选题候选各自一桶。
+  if (scope.startsWith("surface:") && scope.split(":").length >= 3) {
+    return "本选题的历史会话";
+  }
   return "本入口的历史会话";
 }
