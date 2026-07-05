@@ -7,7 +7,9 @@ import type { PromptTemplate } from "../template";
  * generateObject 绑结构化报告 schema(命中项/风险等级/改写建议)。
  * facets:
  *   - script(必需):待审全文。
- *   - lintFindings:L1 结果注入(让 L2 不复述已报条目、可交叉确认),空则整段省略。
+ *   - lexicon:创作者配置的违禁词表(runner 注入 active 词表);L1 已按表精确匹配,模型据此照表
+ *     复核 lint 精确匹配漏掉的谐音/变体/拆字/同义命中。空则省略。
+ *   - lintFindings:L1 结果注入(让 L2 不复述已报原词、可交叉确认),空则整段省略。
  *   - officialRules:公约 Tier1 条文摘要(模板内置默认,可被 skill_config_overrides 换)。
  *   - positioning:创作者定位(判「是否带货/医疗金融资质红线」语境),空则省略。
  * outputSchema(顶层对象,generateObject 稳定):
@@ -54,7 +56,10 @@ export const SCRIPT_REVIEW_TEMPLATE: PromptTemplate = {
 【官方硬规则(判 block/warn 依据)】
 {{officialRules}}
 
-【L1 已确定命中(违禁词 lint,勿复述,可交叉确认)】
+【违禁词表(创作者配置的确定词表;L1 已按此表精确匹配命中,你在此基础上照表复核 lint 漏掉的谐音/变体/拆字/同义命中)】
+{{lexicon}}
+
+【L1 已确定命中(违禁词 lint 精确匹配,已计入报告,勿复述原词)】
 {{lintFindings}}
 
 【待审文案(只审这段文本,逐字比对)】
@@ -65,7 +70,7 @@ export const SCRIPT_REVIEW_TEMPLATE: PromptTemplate = {
 ② severity:block(明确违禁,发出去大概率删/封)/ warn(风险,建议改)/ info(提示,可不改);
 ③ reason 说明踩了哪条规则/为什么有风险;ruleRef 尽量给公约小节号(如「公约34」),无对应留 null;
 ④ suggestion 给**最小改写**(只改命中片段,不重写全文),无更优改法留 null;
-⑤ **不要复述 L1 已命中的条目**(那些已由确定性 lint 报出);只补语义级风险;
+⑤ **不要复述 L1 已精确命中的原词**(已由确定性 lint 报出);但要照【违禁词表】补出 lint 精确匹配漏掉的**谐音/变体/拆字/同义**命中,以及词表外的语义级风险;
 ⑥ 材料无风险就诚实少给或空 findings,绝不为凑数编造。
 【verdict 汇总】任一 block → "block";无 block 但有 warn → "risk";全无或仅 info → "pass"。
 【输出】只输出一个 JSON 对象 {"verdict","summary"(一句话总体结论,中文),"findings":[...]},不要多余文字、不要代码块包裹。`,

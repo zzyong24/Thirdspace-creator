@@ -92,6 +92,29 @@ function summarizeVerdict(
   return hasWarn ? "risk" : "pass";
 }
 
+// [T-124] 把 active 违禁词表渲成一段可注入 L2 语义审的文本(让模型照表复核 lint 精确匹配漏掉的
+// 谐音/变体/拆字/同义命中)。纯函数、确定性、无 IO —— 违禁词是确定的,注进 prompt 让模型也照表审。
+export function buildLexiconBlock(
+  rules: {
+    tier: string;
+    category: string;
+    pattern: string;
+    replacement: string | null;
+  }[],
+): string {
+  if (rules.length === 0) {
+    return "（创作者未配置违禁词表——按官方硬规则与语义判断)";
+  }
+  return rules
+    .map(
+      (r) =>
+        `· [${r.tier}/${r.category}] ${r.pattern}${
+          r.replacement ? ` → 建议:${r.replacement}` : ""
+        }`,
+    )
+    .join("\n");
+}
+
 // 从定位中心对象里抽一段简述(best-effort;读不到就通用兜底)。
 function positioningBriefOf(pc: unknown): string {
   const o = (pc ?? {}) as Record<string, unknown>;
@@ -126,21 +149,16 @@ export async function runScriptReview(
     const rules = await deps.lintRules.listActiveLintRules(ctx);
     const { lintScript } = await import("@creatoros/ai-worker");
     const lintFindings = lintScript(script.text, rules);
-    await deps.ai.recordStep(ctx, task.id, {
-      stepNo: 1,
-      kind: "step",
-      text: `L1 违禁词 lint 完成(命中 ${lintFindings.length} 条）`,
-      toolCalls: [],
-    });
+    // [T-124] 违禁词表本身注进语义审 prompt(词表确定 → 让模型也照表复核变体),不再是独立两阶段。
 
-    // ── L2:LLM 语义审(resolveModelSpec 按 script.review capability 解析;未配回退默认)──
+    // ── 语义审(resolveModelSpec 按 script.review capability 解析;未配自动回退默认模型,不强制豆包)──
     const spec = await deps.resolveModelSpec(ctx, "script.review");
-    // 诚实标注:未配专用审核模型(script.review 无独立配置行,resolve 落回退链)时,报告标
-    // 「非专用审核模型」(model_label 字段承载,SPEC §2 诚实数据原则)。
+    // [T-124] 诚实标注但不误导:未配专用审核模型时用默认模型审(resolve 回退链已自动降级,非「必须
+    // 配豆包」);措辞改「默认模型审核,配专用可更准」——去掉旧「建议配豆包」易被读成强制的表述。
     const isDedicated = await deps.hasDedicatedReviewModel(ctx);
     const modelLabel = isDedicated
       ? `${spec.model}`
-      : `${spec.model}(非专用审核模型——建议在设置中配置豆包等审核模型)`;
+      : `${spec.model}(默认模型审核;如需更精准可在设置配置专用审核模型)`;
 
     let positioningBrief = "（未设置定位——按通用合规标准审核）";
     if (deps.positioning) {
@@ -178,6 +196,7 @@ export async function runScriptReview(
         template: getTemplate("script.review"),
         facets: {
           script: script.text,
+          lexicon: buildLexiconBlock(rules),
           lintFindings: lintBlock,
           officialRules: DEFAULT_OFFICIAL_RULES,
           positioning: positioningBrief,
@@ -195,10 +214,12 @@ export async function runScriptReview(
       console.error(`[script-review-runner] L2 语义审失败 ${task.id}:`, err);
       summary = "L2 语义审未完成(模型不可用),本报告仅含 L1 违禁词 lint 结果。";
     }
+    // [T-124] 合并为一次审核的单条完成日志(不再「L1 完成 → L2 完成」两阶段观感):
+    // 违禁词表精筛(确定性)+ 语义复核(含照表复核变体)= 一份统一合规审核报告。
     await deps.ai.recordStep(ctx, task.id, {
-      stepNo: 2,
+      stepNo: 1,
       kind: "step",
-      text: `L2 语义审完成(命中 ${llmFindings.length} 条,模型 ${modelLabel}）`,
+      text: `合规审核完成 —— 违禁词表精筛命中 ${lintFindings.length} 条 + 语义复核命中 ${llmFindings.length} 条(含照表复核谐音/变体),模型 ${modelLabel}`,
       toolCalls: [],
     });
 
