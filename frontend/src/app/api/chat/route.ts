@@ -176,16 +176,6 @@ export async function POST(req: Request): Promise<Response> {
         // [T-103b] review.script 端口 —— dispatch 既有 script.review 审核链路(L1 lint + L2 语义审)。
         dispatchScriptReviewPort: runtime.dispatchScriptReview,
       },
-      async (finalText) => {
-        // assistant 回复落库(best-effort,失败不影响已流给前端的内容)。
-        const text = finalText.trim();
-        if (!text || !conversationId) return;
-        try {
-          await runtime.ai.appendAssistantMessage(ctx, conversationId, text);
-        } catch (err) {
-          console.error("[api/chat] persist assistant reply failed:", err);
-        }
-      },
     );
     // 流式回前端(useChat 消费 UIMessage stream);回带 conversationId 头供客户端复用会话。
     // [T-094] onError:流中错误(如 MiniMax 内容安全审核拦截整轮输入 new_sensitive/1026)
@@ -198,6 +188,38 @@ export async function POST(req: Request): Promise<Response> {
         const human = humanizeAiError(error);
         if (human) return human.message;
         return error instanceof Error ? error.message : String(error);
+      },
+      // [T-128] assistant 回复落库带**完整 parts**(text + tool-result 卡数据)。之前 onFinish 只拿
+      // finalText → 只存纯文本,tool-result 卡(候选卡/素材卡/审核报告卡)在存那刻就丢 → 刷新即消失
+      // (用户实录)。这里的 responseMessage 是 SDK 组装好的这轮 assistant UIMessage,与 useChat 内存
+      // 态同形,存它 → 恢复时 toUIMessages 原样回放 parts → 复用现有卡渲染分支,卡不再丢。
+      // best-effort:落库失败不影响已流给前端的内容(对话优先)。
+      onFinish: async ({ responseMessage }) => {
+        if (!conversationId) return;
+        const rawParts = (responseMessage as { parts?: unknown[] } | undefined)
+          ?.parts;
+        const parts = Array.isArray(rawParts) ? rawParts : [];
+        const text = textOf(responseMessage as UIMessage | undefined);
+        // 有文本 或 有可渲染的 tool-result 部件才落库(纯空轮不留空气泡);tool part 的 type 形如
+        // `tool-<name>`(AI SDK v5 ToolUIPart),据此判定「这轮产出了卡」。
+        const hasRenderable =
+          text.length > 0 ||
+          parts.some(
+            (p) =>
+              typeof (p as { type?: unknown }).type === "string" &&
+              (p as { type: string }).type.startsWith("tool-"),
+          );
+        if (!hasRenderable) return;
+        try {
+          await runtime.ai.appendAssistantMessage(
+            ctx,
+            conversationId,
+            text,
+            parts,
+          );
+        } catch (err) {
+          console.error("[api/chat] persist assistant reply failed:", err);
+        }
       },
     });
   } catch (err) {

@@ -14,6 +14,15 @@ const appendAssistantMessage = vi.fn();
 const getConversation = vi.fn();
 const runChatStream = vi.fn();
 
+// [T-128] 捕获路由传给 toUIMessageStreamResponse 的 init(headers + onFinish),让测试能手动
+// 触发 onFinish 断言 assistant 回复(text + parts)落库。
+let capturedStreamInit:
+  | {
+      headers?: Record<string, string>;
+      onFinish?: (e: { responseMessage: unknown }) => Promise<void> | void;
+    }
+  | null = null;
+
 vi.mock("@/server/persistence-client", () => ({
   getIdentityService: async () => ({
     resolveContextFromToken,
@@ -73,10 +82,17 @@ beforeEach(() => {
   appendAssistantMessage.mockReset();
   appendAssistantMessage.mockResolvedValue({ id: "m-2" });
   runChatStream.mockReset();
-  // Default: a stream result whose toUIMessageStreamResponse returns a plain Response.
+  capturedStreamInit = null;
+  // Default: a stream result whose toUIMessageStreamResponse captures its init(headers +
+  // [T-128] onFinish 持久化回调)并返回普通 Response。
   runChatStream.mockResolvedValue({
-    toUIMessageStreamResponse: (init?: { headers?: Record<string, string> }) =>
-      new Response("stream", { status: 200, headers: init?.headers }),
+    toUIMessageStreamResponse: (init?: {
+      headers?: Record<string, string>;
+      onFinish?: (e: { responseMessage: unknown }) => Promise<void> | void;
+    }) => {
+      capturedStreamInit = init ?? null;
+      return new Response("stream", { status: 200, headers: init?.headers });
+    },
   });
 });
 
@@ -148,16 +164,43 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     );
   });
 
-  it("onFinish 回调把 assistant 文本落 appendAssistantMessage", async () => {
-    // 捕获路由传给 runChatStream 的 onFinish,手动触发它,断言落库。
+  it("[T-128] onFinish 把 assistant 文本 + 完整 parts(含 tool-result 卡)落 appendAssistantMessage", async () => {
+    // 路由把 assistant 持久化放进 toUIMessageStreamResponse 的 onFinish —— 那里拿得到 SDK 组装好的
+    // responseMessage.parts(text + tool-result 卡数据)。手动触发,断言 text + parts 一并落库
+    // (刷新恢复据 parts 重建候选卡/素材卡/审核报告卡,不再丢卡)。
     await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    const onFinish = runChatStream.mock.calls[0][3] as (t: string) => Promise<void>;
-    await onFinish("编导的回复");
+    const parts = [
+      { type: "text", text: "给你 3 个选题" },
+      {
+        type: "tool-topic.generate",
+        toolCallId: "tc-1",
+        state: "output-available",
+        input: {},
+        output: { kind: "topic.candidates", items: [{ title: "A" }] },
+      },
+    ];
+    expect(capturedStreamInit?.onFinish).toBeTypeOf("function");
+    await capturedStreamInit!.onFinish!({
+      responseMessage: { id: "m-2", role: "assistant", parts },
+    });
     expect(appendAssistantMessage).toHaveBeenCalledWith(
       { userId: "u-1" },
       "conv-1",
-      "编导的回复",
+      "给你 3 个选题",
+      parts,
     );
+  });
+
+  it("[T-128] 纯空轮(无文本、无 tool-result 部件)→ 不落库空气泡", async () => {
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    await capturedStreamInit!.onFinish!({
+      responseMessage: {
+        id: "m-x",
+        role: "assistant",
+        parts: [{ type: "step-start" }],
+      },
+    });
+    expect(appendAssistantMessage).not.toHaveBeenCalled();
   });
 
   // ── [T-096] 会话作用域:lazy 建落 scope + 续接服务端硬门(§3 矩阵 #2)──

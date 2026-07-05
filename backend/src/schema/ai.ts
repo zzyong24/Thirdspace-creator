@@ -46,6 +46,10 @@ export const aiMessages = pgTable("ai_messages", {
   conversationId: text("conversation_id").notNull(), // owned via requireConversation
   role: text("role").notNull(), // user | assistant | system
   content: text("content").notNull().default(""),
+  // [T-128] parts:落库的 useChat UIMessage parts(text + tool-result 部件)。刷新后恢复据它重建
+  // message.parts → 复用现有候选卡/素材卡/审核报告卡渲染分支(此前只存 content,tool-result 卡丢)。
+  // additive、default '[]':存量行读到空数组 → 前端 toUIMessages 回落 content 文本气泡。
+  parts: jsonb("parts").notNull().default([]),
   attachments: jsonb("attachments").notNull().default([]),
   modelMetadata: jsonb("model_metadata").notNull().default({}),
   createdAt: text("created_at").notNull(),
@@ -125,6 +129,7 @@ CREATE TABLE IF NOT EXISTS ai_messages (
   conversation_id TEXT NOT NULL,
   role TEXT NOT NULL,
   content TEXT NOT NULL DEFAULT '',
+  parts JSONB NOT NULL DEFAULT '[]'::jsonb,
   attachments JSONB NOT NULL DEFAULT '[]'::jsonb,
   model_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL

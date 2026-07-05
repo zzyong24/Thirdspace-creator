@@ -233,10 +233,14 @@ export interface AiService {
   // copilot runner produces a real positioning-aware reply on the user's subscription
   // token in the BACKGROUND, then appends it as an assistant-role message here. The
   // service stays deterministic (no SDK); the UI surfaces the reply via listMessages.
+  // [T-128] parts:落库 assistant 回复的完整 useChat UIMessage parts(text + tool-result 部件),
+  // 让刷新后会话恢复能重建候选卡/素材卡/审核报告卡(此前只存 content 纯文本 → 卡刷新即丢)。
+  // 缺省(旧调用/纯文本回复)→ [](恢复时回落 content 文本气泡,向后兼容)。
   appendAssistantMessage(
     ctx: RequestContext,
     conversationId: string,
     content: string,
+    parts?: unknown[],
   ): Promise<AIMessageResource>;
   listMessages(
     ctx: RequestContext,
@@ -432,10 +436,12 @@ export function createAiService(deps: ServiceDeps): AiService {
       return toMessageDto(userRow);
     },
 
-    async appendAssistantMessage(ctx, conversationId, content) {
+    async appendAssistantMessage(ctx, conversationId, content, parts) {
       const row = await repoFor(ctx).createMessage(conversationId, {
         role: "assistant",
         content,
+        // [T-128] 存全 parts(含 tool-result 卡数据),恢复时据它重建卡渲染。
+        parts: parts ?? [],
         attachments: [],
         modelMetadata: {},
       });

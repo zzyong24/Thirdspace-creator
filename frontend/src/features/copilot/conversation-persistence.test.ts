@@ -105,3 +105,60 @@ describe("conversation-persistence: toUIMessages 映射", () => {
     expect(ui[0].id).toBe("k1");
   });
 });
+
+describe("conversation-persistence: [T-128] 落库 parts 回放(卡刷新不丢)", () => {
+  it("有落库 parts(含 tool-result 卡)→ 原样回放,复用现有卡渲染分支", () => {
+    const parts = [
+      { type: "text", text: "给你 3 个选题" },
+      {
+        type: "tool-topic.generate",
+        toolCallId: "tc-1",
+        state: "output-available",
+        input: {},
+        output: { kind: "topic.candidates", items: [{ title: "A" }] },
+      },
+    ];
+    const ui = toUIMessages([
+      { id: "m1", role: "assistant", content: "给你 3 个选题", parts },
+    ]);
+    expect(ui).toHaveLength(1);
+    // parts 原样透传(含 tool part),恢复时 ai-copilot-content 据 part.output.kind 渲候选卡。
+    expect(ui[0].parts).toEqual(parts);
+    expect(ui[0].role).toBe("assistant");
+  });
+
+  it("parts 只含纯文本 part → 回放文本气泡", () => {
+    const ui = toUIMessages([
+      {
+        id: "m1",
+        role: "assistant",
+        content: "在的",
+        parts: [{ type: "text", text: "在的" }],
+      },
+    ]);
+    expect(ui[0].parts).toEqual([{ type: "text", text: "在的" }]);
+  });
+
+  it("存量行/旧后端(parts 缺失 或 [])→ 回落 content 文本气泡(向后兼容)", () => {
+    const ui = toUIMessages([
+      { id: "m1", role: "assistant", content: "旧文本" }, // parts undefined
+      { id: "m2", role: "user", content: "旧用户", parts: [] }, // parts 空数组
+    ]);
+    expect(ui).toHaveLength(2);
+    expect(ui[0].parts).toEqual([{ type: "text", text: "旧文本" }]);
+    expect(ui[1].parts).toEqual([{ type: "text", text: "旧用户" }]);
+  });
+
+  it("parts 只含无渲染内容的空壳(step-start / 空 text)→ 回落 content", () => {
+    const ui = toUIMessages([
+      {
+        id: "m1",
+        role: "assistant",
+        content: "兜底文本",
+        parts: [{ type: "step-start" }, { type: "text", text: "  " }],
+      },
+    ]);
+    // 无可渲染 part → 回落 content 文本气泡。
+    expect(ui[0].parts).toEqual([{ type: "text", text: "兜底文本" }]);
+  });
+});

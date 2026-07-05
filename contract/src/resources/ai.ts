@@ -23,11 +23,16 @@ export type AIConversationResource = z.infer<typeof aiConversationResource>;
 const aiMessageRole = z.enum(["user", "assistant", "system"]);
 
 // AIMessage extends BaseEntity (declares createdAt explicitly).
+// [T-128] parts:落库的 useChat UIMessage parts(text + tool-result 部件)。刷新后会话恢复据它
+// 重建 message.parts → 复用 ai-copilot-content 的候选卡/素材卡/审核报告卡渲染分支(此前只存
+// content 纯文本,tool-result 卡在存那刻就丢)。additive、default([]):存量行/旧客户端读到空
+// 数组 → toUIMessages 回落 content 文本气泡(向后兼容)。
 export const aiMessageResource = z.object({
   id,
   conversationId: id,
   role: aiMessageRole,
   content: z.string(),
+  parts: z.array(z.unknown()).default([]),
   attachments: z.array(id),
   modelMetadata: z.record(z.string(), z.unknown()),
   createdAt: iso8601,

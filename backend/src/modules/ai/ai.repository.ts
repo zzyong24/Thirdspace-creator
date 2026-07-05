@@ -55,6 +55,9 @@ export interface CreateConversationInput {
 export interface CreateMessageInput {
   role: string;
   content: string;
+  // [T-128] useChat UIMessage parts(text + tool-result 部件)。缺省 [](用户消息/旧调用无部件,
+  // 恢复时前端 toUIMessages 回落 content 文本气泡)。assistant 回复带完整 parts → 卡刷新可重渲。
+  parts?: unknown[];
   attachments: string[];
   modelMetadata: Record<string, unknown>;
 }
@@ -246,6 +249,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
           conversationId,
           role: input.role,
           content: input.content,
+          parts: input.parts ?? [],
           attachments: input.attachments,
           modelMetadata: input.modelMetadata,
           createdAt: deps.now(),

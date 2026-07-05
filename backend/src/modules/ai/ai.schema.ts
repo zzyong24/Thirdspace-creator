@@ -52,6 +52,8 @@ export function toMessageDto(row: MessageRow): AIMessageResource {
     conversationId: row.conversationId,
     role: row.role as AIMessageResource["role"],
     content: row.content,
+    // [T-128] parts 透传(存量行/无部件消息 → []);恢复时前端据它重建卡渲染。
+    parts: (row.parts ?? []) as unknown[],
     attachments: (row.attachments ?? []) as string[],
     modelMetadata: (row.modelMetadata ?? {}) as Record<string, unknown>,
     createdAt: row.createdAt,
