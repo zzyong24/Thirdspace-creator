@@ -56,7 +56,7 @@
 - **user 级共享(不加)**:`users`、`sessions`、`platform_accounts`(账号注册册本身)、`user_preferences`、`model_configurations`、`agent_configurations`、`storage_configs`(模型 / 密钥 / 偏好换号复用)、`notifications`、`scheduled_jobs`。
 - **[gate MAJOR-4] `search_documents` 改按号隔离**(从共享移出):虽派生可重建,但按 user 共享会让搜索**跨号串味**(在科技号里搜到美食号内容),与「切号只显当前号」验收(§8)矛盾。故 `search_documents` 加 `account_id`,搜索按 `ctx.accountId` 过滤;启动重建投影时按号 stamp。
 - **[gate MAJOR-2] UNIQUE 约束边界**:**仅 `creator_profiles` 需 `UNIQUE(user_id, account_id)`**(每号最多一套定位母版);其余内容表(projects/artifacts/learnings/candidates…)只加 `account_id` 列、**不加 account 维 UNIQUE**(同号下允许多条同类,如一个号多个项目)。
-- **OQ(§9)**:`ai_conversations` / `ai_tasks` 本期是否按号(倾向暂 user 级,`scope` 字段已预留 `account:<id>` 扩展位)。
+- **[用户裁决 2026-07-05] `ai_conversations` / `ai_tasks` 按号隔离**:用户定「AI 编导对话历史要按号切」→ 加 `account_id` + 启用 `chat-scope` 已预留的 `account:<id>` scope 维度(切号 = 换对话桶,不串)。同范式扩展(account 第二维度),非新归属方向 → 不触发重 gate。
 
 ### §C 定位 per-account
 
@@ -123,8 +123,8 @@ T-135 去掉 canonical seed 后,新用户 = 空 user + 0 个 account → 引导�
 
 ## 9. 风险与开放问题(OQ,SPEC 审 + gate 定)
 
-- **OQ1 知识库 / 素材是否 per-account**:用户选「每号完全独立人设」→ 倾向按号隔离(knowledge/assets 加 account_id)。但「同一批金句 / 素材想跨号复用」也合理。**推荐**:按号隔离(独立最纯粹),日后要共享再加「素材跨号引用」而非默认共享。待用户拍。
-- **OQ2 ai_conversations/ai_tasks 是否 per-account**:倾向本期 user 级(scope 已预留 `account:<id>` 扩展位,YAGNI 先不启),会话历史不按号切。待定。
+- **OQ1 知识库 / 素材是否 per-account [裁决 2026-07-05]**:用户定 = **按号独立**(knowledge_items/assets 加 account_id,与作品 / 定位 / 数据一致,最纯粹的独立人设)。日后要跨号复用再加「素材 / 金句跨号引用」,而非默认共享。
+- **OQ2 ai_conversations/ai_tasks 是否 per-account [裁决 2026-07-05]**:用户定 = **按号切**(加 account_id + 启用 `chat-scope` 的 `account:<id>` scope 维;§B 已并入按号隔离)。切号 = 换对话桶。
 - **OQ3 全局 / 跨号总览**:是否要「全部号总览」视图(accountId=null 聚合)?本期默认「必选一个号」,总览列后续。
 - **OQ4 迁移默认号 handle**:存量 71 作品归的默认号 handle 由用户填还是占位「我的抖音」?建议引导用户首启填真实号。
 - **风险**:①改 `creator_profiles` 唯一约束是数据归属改动(gate 重点,须验不破存量单 profile 用户);②账号维度贯穿全站,漏改某 repo 门 = 跨号串味(用 grep/codegraph 全量核 owned-root 消费点 + 单测锁);③采集登录态分目录后磁盘占用随号数增长(可接受);④「当前账号」server 注入依赖前端带 header,遗漏 = 退化全局(降级安全,但要覆盖所有 client 调用点)。
