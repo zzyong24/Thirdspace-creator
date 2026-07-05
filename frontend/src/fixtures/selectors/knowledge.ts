@@ -49,6 +49,13 @@ interface KnowledgeRow {
   readonly updatedAt: string;
   readonly status: "active" | "archived" | "draft";
   readonly tags: ReadonlyArray<string>;
+  // [T-118b] 行来源 + 经验行只读详情(与 knowledge-page.tsx 的 KnowledgeRow 同步)。
+  // buildRecentRowsFromItems 产的都是知识卡,origin 缺省 → 页面按 "knowledge" 兜底。
+  readonly origin?: "knowledge" | "experience";
+  readonly experienceDetail?: {
+    readonly insight: string;
+    readonly reviewId: string | null;
+  };
 }
 
 interface KnowledgeTag {

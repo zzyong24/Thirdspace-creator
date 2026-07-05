@@ -53,6 +53,10 @@ import { buildKnowledgeDashboardViewModel } from "./knowledge-data";
 import { KnowledgeCommentBackflow } from "./knowledge-comment-backflow";
 import { KnowledgeDumpZone } from "./knowledge-dump-zone";
 import { KnowledgeInteractiveRegion } from "./knowledge-interactive-region";
+// [T-118b gate-F4]「记一条经验」入口并入知识库(与已验证经验库同处)。复用经验
+// 模块的 Copilot 深链入口组件(client,走 ?copilot=open&surface=experience 就地
+// 开浮层,与页面路径解耦)—— 手录一条经验走同一 learning.capture 链路。
+import { ExperienceCaptureLink } from "@/features/experience/experience-interactive-region";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -78,6 +82,16 @@ export interface KnowledgeViewModel extends BasePageViewModel {
   readonly unsorted: ReadonlyArray<KnowledgeUnsorted>;
   readonly snippets: ReadonlyArray<KnowledgeSnippet>;
   readonly graphSeries: ReadonlyArray<{ readonly label: string; readonly value: number }>;
+  /**
+   * [T-118b/T-119] 「最近更新」混排分页:知识卡 + validated 经验条目共用同一
+   * 分页上下文(按 updatedAt 倒序,最新在前,10 条/页)。`recent` 已是当前页
+   * 的切片;`page`(1-based)/ `totalPages` / `total` 供页面渲染分页控件。
+   * 可选是兼容缝:旧 fixture / 测试 override 不设置时,页面按单页(page=1,
+   * totalPages=1,total=recent.length)兜底,既有结构性测试不受影响。
+   */
+  readonly recentPage?: number;
+  readonly recentTotalPages?: number;
+  readonly recentTotal?: number;
   /**
    * KNOW-13:当前生效的 `?tag=` 标签筛选(标签名)。非空时 `recent` 已在读侧
    * 装配层按该标签过滤,页面渲染「清除筛选」返回全量列表。可选:fixture 构建
@@ -113,6 +127,22 @@ export interface KnowledgeRow {
   readonly updatedAt: string;
   readonly status: "active" | "archived" | "draft";
   readonly tags: ReadonlyArray<string>;
+  /**
+   * [T-118b] 行来源:知识卡("knowledge",默认)或已验证经验条目
+   * ("experience")。经验行在「最近更新」混排里带「经验」类型 chip 且**只读**
+   * (点开看详情/来源,无采纳/翻案 —— 裁决是复盘的活)。可选:旧 fixture / 知识
+   * 卡不设置时按 "knowledge" 兜底。
+   */
+  readonly origin?: "knowledge" | "experience";
+  /**
+   * [T-118b] 经验行(origin="experience")的只读详情:insight 全文 + 来源标注
+   * (来自复盘 / 手录)。知识行不带(点开走 KnowledgeDetailPreview 读修订正文)。
+   */
+  readonly experienceDetail?: {
+    readonly insight: string;
+    /** 非 null ⇒ 来自复盘诊断;null ⇒ 手录/对话录入。 */
+    readonly reviewId: string | null;
+  };
 }
 
 export interface KnowledgeTag {
@@ -172,6 +202,17 @@ export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
       data-page-state={state}
       className="flex flex-col gap-section-gap"
     >
+      {/* [T-118b gate-F4] 知识库页头:「记一条经验」入口并入(与已验证经验库同处)。
+          手录一条经验 = 用户亲判,走 Copilot 深链(learning.capture)。经验 Tab
+          退役后,这是记经验的唯一入口。仅 loading/error 不渲。 */}
+      {state === "default" || state === "empty" ? (
+        <div
+          data-slot="knowledge-header"
+          className="flex items-center justify-end"
+        >
+          <ExperienceCaptureLink />
+        </div>
+      ) : null}
       {/* T-062c 知识倾倒场:录入主入口(AI 归类确认门 + 手动补录),页面顶部常驻。
           空库也要能倒(否则空账号无录入口),仅 loading/error 不渲。 */}
       {state === "default" || state === "empty" ? <KnowledgeDumpZone /> : null}

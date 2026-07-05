@@ -250,6 +250,14 @@ export function KnowledgeInteractiveRegion({
     });
   }, [viewModel.recent, activeFilter, query]);
 
+  // [T-118b] 选中行是知识卡还是经验行?经验行只读(展开 experienceDetail,不走
+  // KnowledgeDetailPreview 读修订正文,也不显修订表单)。
+  const selectedRow = React.useMemo(
+    () => viewModel.recent.find((row) => row.id === selectedId) ?? null,
+    [viewModel.recent, selectedId],
+  );
+  const selectedIsExperience = selectedRow?.origin === "experience";
+
   return (
     <>
       {/* T-079c/T-091 视图切换:atlas VM 在场才渲切换器(旧 VM 无地图可切);
@@ -326,6 +334,10 @@ export function KnowledgeInteractiveRegion({
           snippets={viewModel.snippets}
           selectedId={selectedId}
           onSelectRow={setSelectedId}
+          page={viewModel.recentPage ?? 1}
+          totalPages={viewModel.recentTotalPages ?? 1}
+          total={viewModel.recentTotal ?? filteredRecent.length}
+          activeTag={viewModel.activeTag ?? null}
         />
       ) : null}
 
@@ -339,12 +351,17 @@ export function KnowledgeInteractiveRegion({
           /knowledge/:id/relations, deferred), Reusable snippets (insert into
           script — belongs to Artifacts), Metrics ×5 / graph chart (display
           only). These render with NO click handlers on purpose. */}
-      {selectedId !== null ? (
+      {/* [T-118b] 经验行只读详情:展开 insight 全文 + 来源标注(来自复盘/手录),
+          绝无采纳/翻案/修订按钮 —— 裁决是复盘的活,知识库只读展示已验证经验。 */}
+      {selectedId !== null && selectedIsExperience && selectedRow ? (
+        <ExperienceDetailPreview row={selectedRow} />
+      ) : null}
+      {selectedId !== null && !selectedIsExperience ? (
         // T-062c:知识卡内容预览 —— 选中行读元数据+最新修订正文,markdown 渲染;
         // source=web 型显来源链接(与素材预览同范式,诚实三态)。
         <KnowledgeDetailPreview knowledgeId={selectedId} />
       ) : null}
-      {selectedId !== null ? (
+      {selectedId !== null && !selectedIsExperience ? (
         <form
           data-slot="knowledge-add-revision"
           onSubmit={handleRevisionSubmit}
@@ -373,6 +390,58 @@ export function KnowledgeInteractiveRegion({
         </form>
       ) : null}
     </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ExperienceDetailPreview — [T-118b] 经验行只读详情
+//   点开一条 validated 经验条目:显 insight 全文 + 来源标注(来自复盘 / 手录)。
+//   **只读**:绝无采纳/翻案/修订按钮(裁决是复盘的活)。数据已在 VM 行里
+//   (experienceDetail),无需额外读 —— 与知识卡走 knowledge.get 读修订不同。
+// ---------------------------------------------------------------------------
+
+function ExperienceDetailPreview({ row }: { readonly row: KnowledgeRow }) {
+  const detail = row.experienceDetail;
+  return (
+    <section
+      data-slot="experience-detail-preview"
+      data-learning-id={row.id}
+      aria-label="经验详情(只读)"
+      className="flex flex-col gap-2 rounded-md border border-border bg-surface p-3"
+    >
+      <div className="flex items-center gap-2">
+        <span
+          data-slot="experience-detail-chip"
+          className="inline-flex rounded-full bg-info/10 px-1.5 py-0.5 text-[11px] font-medium text-info"
+        >
+          经验
+        </span>
+        <h3 className="min-w-0 text-sm font-medium text-foreground">
+          {row.title}
+        </h3>
+      </div>
+      {detail && detail.insight.trim() !== "" ? (
+        <p
+          data-slot="experience-detail-insight"
+          className="whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground"
+        >
+          {detail.insight}
+        </p>
+      ) : (
+        <p
+          data-slot="experience-detail-empty"
+          className="text-[12px] text-muted-foreground"
+        >
+          这条经验暂无洞察正文。
+        </p>
+      )}
+      <div
+        data-slot="experience-detail-source"
+        className="text-[11px] text-muted-foreground"
+      >
+        来源:{detail?.reviewId ? "来自复盘诊断" : "手录 / 对话录入"}
+      </div>
+    </section>
   );
 }
 
@@ -654,6 +723,10 @@ function KnowledgeGrid({
   snippets,
   selectedId,
   onSelectRow,
+  page,
+  totalPages,
+  total,
+  activeTag,
 }: {
   readonly categories: ReadonlyArray<KnowledgeCategory>;
   readonly recent: ReadonlyArray<KnowledgeRow>;
@@ -663,6 +736,12 @@ function KnowledgeGrid({
   readonly snippets: ReadonlyArray<KnowledgeSnippet>;
   readonly selectedId: string | null;
   readonly onSelectRow: (id: string) => void;
+  // [T-119] 「最近更新」混排分页(知识卡 + validated 经验共用同一上下文)。
+  readonly page: number;
+  readonly totalPages: number;
+  readonly total: number;
+  // [T-119] `?tag=` 生效时分页需保留标签参数(经 buildPageHref 拼)。
+  readonly activeTag: string | null;
 }) {
   return (
     <div
@@ -670,11 +749,19 @@ function KnowledgeGrid({
       className="grid grid-cols-1 gap-card-gap lg:grid-cols-[220px_minmax(0,1fr)_300px]"
     >
       <CategoryPanel categories={categories} />
-      <RecentKnowledgeTable
-        rows={recent}
-        selectedId={selectedId}
-        onSelectRow={onSelectRow}
-      />
+      <div className="flex flex-col gap-card-gap">
+        <RecentKnowledgeTable
+          rows={recent}
+          selectedId={selectedId}
+          onSelectRow={onSelectRow}
+        />
+        <RecentPagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          activeTag={activeTag}
+        />
+      </div>
       <InsightRail
         popularTags={popularTags}
         memoryInsights={memoryInsights}
@@ -682,6 +769,85 @@ function KnowledgeGrid({
         snippets={snippets}
       />
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// RecentPagination — [T-119] 「最近更新」混排分页控件(10 条/页,`?page=` 承载)
+//   服务端分页:上/下一页链到 `?page=`(带 URL 请求让读侧切页),最新在前。
+//   单页(totalPages<=1)不渲(诚实:没有可翻的页不摆控件)。
+// ---------------------------------------------------------------------------
+
+function buildPageHref(page: number, activeTag: string | null): string {
+  const params = new URLSearchParams();
+  if (activeTag) params.set("tag", activeTag);
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return qs ? `/knowledge?${qs}` : "/knowledge";
+}
+
+function RecentPagination({
+  page,
+  totalPages,
+  total,
+  activeTag,
+}: {
+  readonly page: number;
+  readonly totalPages: number;
+  readonly total: number;
+  readonly activeTag: string | null;
+}) {
+  if (totalPages <= 1) return null;
+  const hasPrev = page > 1;
+  const hasNext = page < totalPages;
+  return (
+    <nav
+      data-slot="recent-pagination"
+      aria-label="最近更新分页"
+      className="flex items-center justify-between gap-2 text-[12px] text-muted-foreground"
+    >
+      <span data-slot="recent-pagination-status" className="tabular-nums">
+        第 {page} / {totalPages} 页 · 共 {total} 条
+      </span>
+      <div className="flex items-center gap-1.5">
+        {hasPrev ? (
+          <Link
+            data-slot="recent-pagination-prev"
+            href={buildPageHref(page - 1, activeTag)}
+            className="rounded-md border border-border bg-surface px-2 py-1 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            上一页
+          </Link>
+        ) : (
+          <span
+            data-slot="recent-pagination-prev"
+            data-disabled="true"
+            aria-disabled="true"
+            className="rounded-md border border-border/50 px-2 py-1 text-muted-foreground/50"
+          >
+            上一页
+          </span>
+        )}
+        {hasNext ? (
+          <Link
+            data-slot="recent-pagination-next"
+            href={buildPageHref(page + 1, activeTag)}
+            className="rounded-md border border-border bg-surface px-2 py-1 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            下一页
+          </Link>
+        ) : (
+          <span
+            data-slot="recent-pagination-next"
+            data-disabled="true"
+            aria-disabled="true"
+            className="rounded-md border border-border/50 px-2 py-1 text-muted-foreground/50"
+          >
+            下一页
+          </span>
+        )}
+      </div>
+    </nav>
   );
 }
 
@@ -779,12 +945,16 @@ function RecentKnowledgeTable({
             ) : (
               rows.map((row) => {
                 const selected = row.id === selectedId;
+                // [T-118b] 经验行(origin="experience")在混排里带高亮「经验」chip 且
+                // 标记 data-origin,供只读展开区分（知识行走修订预览,经验行只读详情）。
+                const isExperience = row.origin === "experience";
                 return (
                   <tr
                     key={row.id}
                     data-slot="recent-knowledge-row"
                     data-knowledge-id={row.id}
                     data-status={row.status}
+                    data-origin={row.origin ?? "knowledge"}
                     data-selected={selected ? "true" : "false"}
                     aria-selected={selected}
                     onClick={() => onSelectRow(row.id)}
@@ -794,7 +964,25 @@ function RecentKnowledgeTable({
                     }
                   >
                     <td className="py-1.5 text-foreground">{row.title}</td>
-                    <td className="py-1.5 text-muted-foreground">{row.type}</td>
+                    <td className="py-1.5">
+                      {isExperience ? (
+                        <span
+                          data-slot="recent-type-chip"
+                          data-type="experience"
+                          className="inline-flex rounded-full bg-info/10 px-1.5 py-0.5 text-[11px] font-medium text-info"
+                        >
+                          经验
+                        </span>
+                      ) : (
+                        <span
+                          data-slot="recent-type-chip"
+                          data-type="knowledge"
+                          className="text-[11px] text-muted-foreground"
+                        >
+                          {row.type}
+                        </span>
+                      )}
+                    </td>
                     <td className="py-1.5">
                       <div className="flex flex-wrap gap-0.5">
                         {row.tags.length > 0 ? (

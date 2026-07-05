@@ -325,8 +325,10 @@ export function resolveRoute(
       contextualCardVariant: "assistant",
     };
   }
-  // [T-113] 独立「经验沉淀」页退役 → 并入 /knowledge 双 Tab;/experience 已 307
-  // 重定向到 /knowledge?tab=experience,不再有独立页标题配置(走 /knowledge 头)。
+  // [T-118c] 独立「经验沉淀」模块彻底退役:已验证经验并入 /knowledge 作只读一等
+  // 类型(T-118b),裁决迁进复盘页(T-118a);/knowledge 已从双 Tab 收敛为单一
+  // 库视图。/experience 307 重定向到 /knowledge(去掉旧 ?tab=experience),无独立
+  // 页标题配置(走 /knowledge 头)。
   if (pathname === "/search") {
     return {
       headerMode: "search",

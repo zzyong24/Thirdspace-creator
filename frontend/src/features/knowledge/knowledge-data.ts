@@ -7,6 +7,7 @@ import {
 } from "@/fixtures/selectors";
 import type {
   KnowledgeViewModel,
+  KnowledgeRow,
   KnowledgeTag as KnowledgeTagVm,
   KnowledgeInsight as KnowledgeInsightVm,
   KnowledgeUnsorted as KnowledgeUnsortedVm,
@@ -125,10 +126,45 @@ interface GraphEdge {
   readonly type: string;
 }
 
+// [T-118b] `learnings.list` 返回 learningResource 行;只读投影经验行用到的字段。
+// validationStatus 由 query 过滤为 validated,这里仍收下作诚实收窄。
+interface LearningDto {
+  readonly id: string;
+  readonly title: string;
+  readonly insight: string;
+  readonly learningType: string;
+  readonly validationStatus: "candidate" | "validated" | "discarded";
+  readonly reviewId?: string | null;
+  readonly updatedAt: string;
+}
+
+// [T-118b] validated 经验投影成的只读「经验行」内部结构(带 updatedAt 供混排排序 +
+// experienceDetail 供只读详情展开)。映射到 KnowledgeRow 时 origin="experience"。
+interface ExperienceRow {
+  readonly id: string;
+  readonly title: string;
+  readonly updatedAt: string;
+  readonly insight: string;
+  readonly reviewId: string | null;
+}
+
 export interface KnowledgeDataClient {
   listKnowledge(input: {
     params: undefined;
     query: { page: number; pageSize: number };
+    body: undefined;
+  }): Promise<unknown>;
+  // [T-118b] learnings.list —— 读 validated 经验(跨作品方法论)并入知识库作只读
+  // 一等类型。契约 query 支持 validationStatus 过滤(T-118a additive)。标 optional
+  // 是兼容缝:旧 fake client 不带这个读 → 经验并入静默跳过(诚实空,不 fixture 兜底,
+  // 见 fetchValidatedLearnings)。
+  listLearnings?(input: {
+    params: undefined;
+    query: {
+      page: number;
+      pageSize: number;
+      validationStatus?: "candidate" | "validated" | "discarded";
+    };
     body: undefined;
   }): Promise<unknown>;
   listKnowledgeRelations(input: {
@@ -200,12 +236,17 @@ const CATEGORY_LABEL: Record<string, string> = {
  *                     时,`recent` 列表只保留挂该标签的条目(其余块/指标仍按
  *                     全量统计),并在 VM 上回传 `activeTag` 供页面渲染
  *                     「清除筛选」。
+ * @param options.page [T-118b/T-119] `?page=` 的 1-based 页码(缺省 1)。「最近
+ *                     更新」= 知识卡 + validated 经验条目混排,按 updatedAt 倒序
+ *                     (最新在前),10 条/页;`recent` 为该页切片,VM 回传
+ *                     recentPage / recentTotalPages / recentTotal。
  */
 export async function buildKnowledgeDashboardViewModel(
   client: KnowledgeDataClient = defaultClient as unknown as KnowledgeDataClient,
-  options: { readonly tag?: string | null } = {},
+  options: { readonly tag?: string | null; readonly page?: number } = {},
 ): Promise<KnowledgeViewModel> {
   const activeTag = normalizeTagParam(options.tag);
+  const requestedPage = normalizePageParam(options.page);
   // `base` supplies ONLY the VM shell + the five metric-card identities/order
   // (the five-card row is a test invariant). It is NOT used as a content
   // fallback: an empty account must read EMPTY blocks, not seed fixtures.
@@ -237,6 +278,10 @@ export async function buildKnowledgeDashboardViewModel(
       memoryInsights: [],
       popularTags: [],
       activeTag,
+      // 读失败没有可翻的页(错误态不渲内容区),分页归零。
+      recentPage: 1,
+      recentTotalPages: 1,
+      recentTotal: 0,
       // 读失败没有地图可组;null 让交互岛不渲观点地图(错误态本来也不渲内容区)。
       atlas: null,
       graph: null,
@@ -264,6 +309,23 @@ export async function buildKnowledgeDashboardViewModel(
       ? items
       : await filterItemsByTag(client, tags, activeTag, items);
 
+  // [T-118b] validated 经验并入知识库作只读一等类型:读跨作品 validated learnings
+  // 投影为经验行。读失败/client 不支持 → 空(诚实降级,不 fixture 兜底)。标签
+  // 筛选(?tag=)生效时,经验不参与标签过滤(经验无 taxonomy 标签挂载)→ 只在
+  // 无标签筛选的默认视图里混排。
+  const experienceRows =
+    activeTag === null ? await fetchValidatedLearnings(client) : [];
+
+  // [T-118b/T-119] 「最近更新」混排 + 分页:知识卡行 + 经验行按 updatedAt 倒序
+  // (最新在前)合流,10 条/页;recent = 当前页切片。经验行只在默认视图混排,
+  // 标签筛选视图仍是纯知识卡列表(不分页,保持 KNOW-13 语义)。
+  const knowledgeRows = buildRecentRowsFromItems(recentItems);
+  const mergedRecent =
+    activeTag === null
+      ? mergeRecentRows(knowledgeRows, experienceRows)
+      : knowledgeRows;
+  const recentPagination = paginateRecent(mergedRecent, requestedPage);
+
   // T-079c 观点地图:tag → 知识挂载走现成契约 op(entityTags fan-out,与
   // KNOW-13 过滤同一读法),分组/排序交给纯函数 buildKnowledgeAtlas。
   const atlas = await assembleAtlas(client, tags, items);
@@ -277,8 +339,12 @@ export async function buildKnowledgeDashboardViewModel(
     scenario: "default",
     error: null,
     metrics: buildMetrics(items, base.metrics, relations?.count ?? null),
-    categories: buildCategories(items),
-    recent: buildRecentRowsFromItems(recentItems),
+    // [T-118b] 分类加「经验」类(count = validated learnings 数),与知识 type 分类并列。
+    categories: buildCategories(items, experienceRows.length),
+    recent: recentPagination.rows,
+    recentPage: recentPagination.page,
+    recentTotalPages: recentPagination.totalPages,
+    recentTotal: recentPagination.total,
     snippets: buildSnippets(items),
     unsorted: buildUnsorted(items, relations?.edges ?? null),
     graphSeries: buildGraphSeries(items, relations?.edges ?? null),
@@ -287,6 +353,94 @@ export async function buildKnowledgeDashboardViewModel(
     activeTag,
     atlas,
     graph,
+  };
+}
+
+// [T-118b/T-119] 「最近更新」混排每页条数(与项目列表 T-096 范式一致,最新在前)。
+const RECENT_PAGE_SIZE = 10;
+
+// 归一化 `?page=` 参数:非有限/小于 1 → 1(1-based)。上界由 paginateRecent 夹取。
+function normalizePageParam(page: number | null | undefined): number {
+  if (typeof page !== "number" || !Number.isFinite(page)) return 1;
+  return page < 1 ? 1 : Math.floor(page);
+}
+
+/**
+ * [T-118b] 读跨作品 validated 经验 → 投影为只读经验行。
+ *   - client 不支持 listLearnings(旧 fake client)或读失败 → `[]`(诚实降级,
+ *     绝不 fixture 兜底);
+ *   - query 带 validationStatus=validated 让服务端过滤,收下后仍防御性只留 validated。
+ */
+async function fetchValidatedLearnings(
+  client: KnowledgeDataClient,
+): Promise<ReadonlyArray<ExperienceRow>> {
+  if (typeof client.listLearnings !== "function") return [];
+  try {
+    const rows = (await client.listLearnings({
+      params: undefined,
+      query: { page: 1, pageSize: 200, validationStatus: "validated" },
+      body: undefined,
+    })) as ReadonlyArray<LearningDto>;
+    return rows
+      .filter((row) => row.validationStatus === "validated")
+      .map<ExperienceRow>((row) => ({
+        id: row.id,
+        title: row.title,
+        updatedAt: row.updatedAt ?? "",
+        insight: row.insight ?? "",
+        reviewId: row.reviewId ?? null,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * [T-118b] 混排知识卡行 + 经验行:经验行映射成 KnowledgeRow(origin="experience",
+ * type 固定「经验」chip,携只读 experienceDetail),与知识卡按 updatedAt 倒序合流。
+ * 经验行无 taxonomy 标签 → tags 空;status 固定 active(仅用于行样式,经验恒生效)。
+ */
+function mergeRecentRows(
+  knowledgeRows: ReadonlyArray<KnowledgeRow>,
+  experienceRows: ReadonlyArray<ExperienceRow>,
+): ReadonlyArray<KnowledgeRow> {
+  const experienceAsRows = experienceRows.map<KnowledgeRow>((row) => ({
+    id: row.id,
+    title: row.title,
+    type: "经验",
+    updatedAt: row.updatedAt.slice(0, 10),
+    status: "active",
+    tags: [],
+    origin: "experience",
+    experienceDetail: { insight: row.insight, reviewId: row.reviewId },
+  }));
+  return [...knowledgeRows, ...experienceAsRows]
+    .slice()
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+/**
+ * [T-118b/T-119] 客户端分页(读侧已装配好全量混排行):按 RECENT_PAGE_SIZE 切页。
+ * page 夹取到 [1, totalPages];空列表 → totalPages=1(诚实空态,不显 0 页)。
+ */
+function paginateRecent(
+  rows: ReadonlyArray<KnowledgeRow>,
+  requestedPage: number,
+): {
+  readonly rows: ReadonlyArray<KnowledgeRow>;
+  readonly page: number;
+  readonly totalPages: number;
+  readonly total: number;
+} {
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / RECENT_PAGE_SIZE));
+  const page = Math.min(Math.max(1, requestedPage), totalPages);
+  const start = (page - 1) * RECENT_PAGE_SIZE;
+  return {
+    rows: rows.slice(start, start + RECENT_PAGE_SIZE),
+    page,
+    totalPages,
+    total,
   };
 }
 
@@ -598,23 +752,40 @@ function buildMetrics(
  * REAL category counts: tally the live list by `knowledgeType`. An empty list
  * yields an empty array → the CategoryPanel renders its honest empty state
  * instead of fabricated counts.
+ *
+ * [T-118b] `experienceCount` = validated learnings 数:>0 时追加「经验」分类
+ * (与 knowledgeType 分类并列,固定 info tone),count 为真值。=0 时不追加
+ * (诚实:没有已验证经验就不显该类)。空知识列表但有经验 → 仍显「经验」类
+ * (经验是一等类型,不因知识空而消失)。
  */
 function buildCategories(
   items: ReadonlyArray<KnowledgeListDto>,
+  experienceCount: number,
 ): ReadonlyArray<KnowledgeViewModel["categories"][number]> {
-  if (items.length === 0) return [];
   const tally = new Map<string, number>();
   for (const item of items) {
     tally.set(item.knowledgeType, (tally.get(item.knowledgeType) ?? 0) + 1);
   }
-  return Array.from(tally.entries())
+  const typeCategories = Array.from(tally.entries())
     .sort((a, b) => b[1] - a[1])
-    .map(([type, count]) => ({
-      id: `cat-${type}`,
-      name: CATEGORY_LABEL[type] ?? type,
-      count,
-      tone: CATEGORY_TONE[type] ?? "neutral",
+    .map((entry) => ({
+      id: `cat-${entry[0]}`,
+      name: CATEGORY_LABEL[entry[0]] ?? entry[0],
+      count: entry[1],
+      tone: CATEGORY_TONE[entry[0]] ?? "neutral",
     }));
+  const experienceCategory =
+    experienceCount > 0
+      ? [
+          {
+            id: "cat-experience",
+            name: "经验",
+            count: experienceCount,
+            tone: "info" as const,
+          },
+        ]
+      : [];
+  return [...typeCategories, ...experienceCategory];
 }
 
 /**

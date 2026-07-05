@@ -120,6 +120,15 @@ describe("KnowledgePage", () => {
     expect(search).not.toBeNull();
   });
 
+  it("[T-118b gate-F4] 页头挂「记一条经验」入口(经验 Tab 退役后的唯一记经验入口)", async () => {
+    const { container } = await renderKnowledge();
+    const captureLink = container.querySelector(
+      '[data-slot="knowledge-header"] [data-slot="experience-capture-link"]',
+    );
+    expect(captureLink).not.toBeNull();
+    expect(captureLink!.textContent).toContain("记一条经验");
+  });
+
   it("renders exactly five KnowledgeMetric cards in a single row", async () => {
     const { container } = await renderKnowledge();
     const row = container.querySelector(

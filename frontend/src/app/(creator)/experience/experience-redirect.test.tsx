@@ -1,9 +1,9 @@
 /**
- * `/experience` route redirect 契约测试(T-113 · IA 收敛 SPEC §B)。
+ * `/experience` route redirect 契约测试(T-118c · 经验归位 SPEC §C)。
  *
- * 经验沉淀独立入口退役后,`/experience` 只做服务端重定向到
- * `/knowledge?tab=experience`(防旧链接/书签失效)。这里锁定 route 组件
- * 调用 `redirect("/knowledge?tab=experience")`,不再渲染经验页。
+ * 经验模块彻底退役后,`/experience` 只做服务端重定向到 `/knowledge`(去掉旧的
+ * `?tab=experience` —— 经验 Tab 已退役,/knowledge 收敛为单一库视图)。这里锁定
+ * route 组件调用 `redirect("/knowledge")`,不再渲染经验页。
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -21,8 +21,8 @@ vi.mock("next/navigation", () => ({
 import ExperienceRoute from "./page";
 
 describe("/experience route(退役 → 重定向)", () => {
-  it("redirect 到 /knowledge?tab=experience", () => {
+  it("redirect 到 /knowledge(经验 Tab 退役,去掉旧 ?tab=experience)", () => {
     expect(() => ExperienceRoute()).toThrow("NEXT_REDIRECT");
-    expect(redirect).toHaveBeenCalledWith("/knowledge?tab=experience");
+    expect(redirect).toHaveBeenCalledWith("/knowledge");
   });
 });

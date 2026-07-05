@@ -4,9 +4,9 @@
  * 对话内手录经验候选卡(T-062a,SPEC §2.4)。
  *
  * learning.capture 工具产的一条结构化经验候选({ title, insight, learningType })渲成卡,
- * 人点「存为经验」→ client.createLearning(status 默认 candidate,进 /experience 裁决队列)
+ * 人点「存为经验」→ client.createLearning(status 默认 candidate,进复盘页裁决队列)
  * —— 铁律②确认门:AI 只产候选,人点才物化。失败显式报错(不静默);成功显「已存入裁决队列」
- * + /experience 链接。
+ * + 知识库链接([T-118c] 经验模块退役,`/experience`→`/knowledge`)。
  */
 
 import * as React from "react";
@@ -115,10 +115,10 @@ export function ChatLearningCard({
           >
             已存入裁决队列 ·{" "}
             <Link
-              href="/knowledge?tab=experience"
+              href="/knowledge"
               className="underline underline-offset-2"
             >
-              去经验沉淀裁决
+              去知识库查看
             </Link>
           </span>
         ) : (

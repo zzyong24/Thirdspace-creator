@@ -62,8 +62,9 @@ describe("ChatLearningCard", () => {
       }),
     );
     expect(await screen.findByText(/已存入裁决队列/)).toBeTruthy();
-    const link = screen.getByText(/去经验沉淀裁决/) as HTMLAnchorElement;
-    expect(link.getAttribute("href")).toBe("/knowledge?tab=experience");
+    // [T-118c] 经验模块退役,链接改指向 /knowledge(去掉旧 ?tab=experience)。
+    const link = screen.getByText(/去知识库查看/) as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe("/knowledge");
     expect(routerRefresh).toHaveBeenCalled();
     // 存过后按钮退场(不给二次落库入口)。
     expect(screen.queryByText("存为经验")).toBeNull();
