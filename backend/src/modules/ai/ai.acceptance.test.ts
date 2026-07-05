@@ -7,6 +7,7 @@ import type { RequestContext } from "@creatoros/contract";
 import { createAiService, type AiArtifactsPort } from "./ai.service";
 import { OwnershipError } from "./ai.errors";
 import { AI_OP_IDS } from "./ai.transport";
+import { buildAiModelConfigs } from "./ai.seed";
 
 // SPEC §22 + foundation §5.6 acceptance for the AI module (plan Step 6/7). Asserts the
 // structural invariants the plan's acceptance checklist calls out:
@@ -177,10 +178,23 @@ describe("ai acceptance (SPEC §22)", () => {
     );
   });
 
-  it("secretReference is env:ANTHROPIC_API_KEY (never hardcoded) in the seed catalog", async () => {
+  it("[T-135] seed catalog presets NO provider/model/secret (empty placeholders) and no raw key literal", () => {
+    // T-135「新用户开箱即干净空账号」:AI capability 骨架保留(设置页据此列可配能力),
+    // 但去掉预设 provider/model/凭据 —— buildAiModelConfigs 现在 provider/modelName/
+    // secretReference 全为空占位,由 onboarding 引导用户配自己的 provider。因此 seed 源
+    // 不再含 "env:ANTHROPIC_API_KEY"(那是被退役的预设);安全不变量仍成立:任何原始 key
+    // 字面量(sk-ant-…)绝不出现在 seed 里。
+    const rows = buildAiModelConfigs("user-x", "2020-01-01T00:00:00.000Z");
+    expect(rows.length).toBeGreaterThan(0);
+    for (const r of rows) {
+      // 骨架保留(capability 行仍在),但预设全空 —— 无预设 provider/model/凭据。
+      expect(r.capability.length).toBeGreaterThan(0);
+      expect(r.provider).toBe("");
+      expect(r.modelName).toBe("");
+      expect(r.secretReference).toBe("");
+    }
+    // 安全不变量:seed 源里绝不出现任何原始 key 字面量(sk-ant-…)。
     const seedSrc = readFileSync(join(HERE, "ai.seed.ts"), "utf8");
-    expect(seedSrc.includes("env:ANTHROPIC_API_KEY")).toBe(true);
-    // No raw key literal (sk-ant-...) anywhere.
     expect(/sk-ant-[a-zA-Z0-9]/.test(seedSrc)).toBe(false);
   });
 

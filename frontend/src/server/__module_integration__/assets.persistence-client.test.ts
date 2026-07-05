@@ -21,6 +21,35 @@ const ctx = (userId: string): RequestContext => ({
   source: "user",
 });
 
+// [T-135] canonical assets seed 已退役(新库/新用户开箱空),原来依赖「启动时 seed 一批
+// canonical 素材」的这几条集成测试改成**自建 fixture 素材**——走公开的 upload→complete
+// ops 真造一条 asset(与下方 round-trip 测试同一路径),再验 list/get/favorite/usage,
+// 验的是「素材 ops 全链 + 多租户边界」而非「seed 存在」。
+async function createAsset(
+  owner: RequestContext,
+  name = "T-135 测试素材",
+): Promise<string> {
+  const up = (await compositeTransport.request(
+    ep("assets.uploads.create"),
+    {
+      params: undefined,
+      query: undefined,
+      body: { assetType: "image", mimeType: "image/png", fileSize: 1024 },
+    } as never,
+    owner,
+  )) as { data: { uploadId: string } };
+  const done = (await compositeTransport.request(
+    ep("assets.uploads.complete"),
+    {
+      params: { uploadId: up.data.uploadId },
+      query: undefined,
+      body: { name },
+    } as never,
+    owner,
+  )) as { data: { id: string } };
+  return done.data.id;
+}
+
 beforeEach(() => {
   __resetPersistenceForTests();
 });
@@ -38,17 +67,25 @@ describe("assets ops registered in the composite transport", () => {
     expect(ASSET_OP_IDS).toHaveLength(10);
   });
 
-  it("assets.list returns the seeded canonical assets for the owner", async () => {
+  it("[T-135] 开箱空:owner 的 assets.list 初始为空,建一条后可列出(全部本人 + active)", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    // 开箱空态:没有任何 canonical 素材 seed。
+    const empty = (await compositeTransport.request(
+      ep("assets.list", true),
+      { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined } as never,
+      owner,
+    )) as { data: Array<{ id: string }> };
+    expect(empty.data).toHaveLength(0);
+
+    // 自建一条素材后可列出,且行属主 = 本人、状态 active。
+    const createdId = await createAsset(owner);
     const res = (await compositeTransport.request(
       ep("assets.list", true),
-      {
-        params: undefined,
-        query: { page: 1, pageSize: 50 },
-        body: undefined,
-      } as never,
-      ctx(canonicalDataset.user.id),
+      { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined } as never,
+      owner,
     )) as { data: Array<{ id: string; userId: string; status: string }> };
     expect(res.data.length).toBeGreaterThan(0);
+    expect(res.data.some((r) => r.id === createdId)).toBe(true);
     for (const row of res.data) {
       expect(row.userId).toBe(canonicalDataset.user.id);
       expect(row.status).toBe("active");
@@ -90,8 +127,9 @@ describe("assets ops registered in the composite transport", () => {
     expect(list.data.some((r) => r.id === done.data.id)).toBe(true);
   });
 
-  it("multi-tenant: user B cannot list or get user A's seeded assets", async () => {
-    const seededAssetId = canonicalDataset.assets[0]!.id;
+  it("multi-tenant: user B cannot list or get user A's assets", async () => {
+    // [T-135] 不再依赖 canonical seed:先由 A 自建一条素材,再验 B 看不到/取不到。
+    const seededAssetId = await createAsset(ctx(canonicalDataset.user.id));
     // B's list excludes A's assets.
     const bList = (await compositeTransport.request(
       ep("assets.list", true),
@@ -120,7 +158,8 @@ describe("assets ops registered in the composite transport", () => {
 
   it("assets.favorite.toggle flips the persisted isFavorite and is re-readable", async () => {
     const owner = ctx(canonicalDataset.user.id);
-    const assetId = canonicalDataset.assets[0]!.id;
+    // [T-135] 自建 fixture 素材(不依赖 canonical seed)。
+    const assetId = await createAsset(owner);
     const before = (await compositeTransport.request(
       ep("assets.get"),
       { params: { assetId }, query: undefined, body: undefined } as never,
@@ -143,7 +182,8 @@ describe("assets ops registered in the composite transport", () => {
 
   it("assets.usage.list returns the 用料链 edges referencing the asset (用料反查)", async () => {
     const owner = ctx(canonicalDataset.user.id);
-    const assetId = canonicalDataset.assets[0]!.id;
+    // [T-135] 自建 fixture 素材(不依赖 canonical seed)。
+    const assetId = await createAsset(owner);
     // Create a 用料链 edge that references this asset, then reverse-look it up.
     const projectId = canonicalDataset.projects[0]!.id;
     await compositeTransport.request(

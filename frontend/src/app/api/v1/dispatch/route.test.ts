@@ -5,7 +5,8 @@ import { resetStore } from "@/server/mock-backend/index";
 import { __resetPersistenceForTests } from "@/server/persistence-client";
 import { DEV_PASSWORD } from "@creatoros/backend/modules/identity";
 
-const CANONICAL_EMAIL = "zyongzhu@creatoros.local";
+// [T-135] seeded canonical 登录邮箱中性化(id 仍 user-zyongzhu,只改 email/displayName)。
+const CANONICAL_EMAIL = "creator@creatoros.local";
 
 // Task 9 — dispatch now derives ctx from the `creatoros_session` cookie. The
 // existing round-trip tests below authenticate first (mint a real session via

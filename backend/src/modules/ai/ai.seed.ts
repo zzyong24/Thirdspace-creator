@@ -73,7 +73,13 @@ const CATALOG: CapabilitySpec[] = [
   },
 ];
 
-const SECRET_REF = "env:ANTHROPIC_API_KEY";
+// [T-135] 新用户开箱即干净空账号(用户裁决 2026-07-05):AI capability **骨架保留**
+// (设置页据此列出每个可配能力 + agent 挂哪个 Skill),但**去掉预设 provider/model/凭据**——
+// provider/modelName/secretReference 全部留空占位,由 onboarding 引导用户在设置里配自己的
+// provider(如 MiniMax)。resolveLlmConfig(frontend/src/server/ai/llm/resolve.ts)对空 token 的
+// DB 行短路返回 null → 诚实降级到 env 兜底 → 都没配则抛 LlmCredentialError 引导去配,不假成功。
+// effort/skills(capability 本征属性)保留;isDefault 仍标(copilot.assist),让设置页知道哪个是
+// 全局默认槽。secretReference "" 触发 schema default(见 settings.ts 列 default("")）。
 
 // A stable, capability-keyed id so the seed is idempotent across rebuilds. The settings
 // module may also seed (user_id, capability) rows; the AI seed targets distinct ids
@@ -87,9 +93,10 @@ export function buildAiModelConfigs(
     id: `ai-model-${userId}-${c.capability}`,
     userId,
     capability: c.capability,
-    provider: "anthropic",
-    modelName: c.modelName,
-    secretReference: SECRET_REF,
+    // [T-135] 空占位:不预设 provider/model/凭据,用户 onboarding 自行配置。
+    provider: "",
+    modelName: "",
+    secretReference: "",
     secretValue: null,
     baseUrl: null,
     apiFormat: "anthropic",
@@ -108,9 +115,10 @@ export function buildAiAgentConfigs(
     name: c.capability,
     agentType: c.capability,
     status: "active",
+    // [T-135] agent 骨架保留(挂哪个 Skill + effort 是能力本征),但不预填凭据。
     capabilities: { skills: c.skills },
     settings: { effort: c.effort },
-    secretReference: SECRET_REF,
+    secretReference: "",
     createdAt: now,
     updatedAt: now,
   }));

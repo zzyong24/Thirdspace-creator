@@ -251,13 +251,16 @@ describe("identity.service seedCanonicalUser (Task 7)", () => {
     await seedCanonicalUser(repo, makeDeps());
     const svc = createIdentityService(repo, makeDeps());
 
+    // [T-135] 默认身份中性化:email/displayName 去 canonical 假名,但 id 硬保持
+    // user-zyongzhu(用户真实作品绑它,改 id 断归属)。
     const { user, rawToken } = await svc.login({
-      email: "zyongzhu@creatoros.local",
+      email: "creator@creatoros.local",
       password: DEV_PASSWORD,
     });
     expect(user.id).toBe(CANONICAL_USER_ID);
     expect(user.id).toBe("user-zyongzhu");
-    expect(user.displayName).toBe("Zyong Zhu");
+    expect(user.displayName).toBe("创作者");
+    expect(user.email).toBe("creator@creatoros.local");
     expect(user.timezone).toBe("Asia/Shanghai");
     expect(user.locale).toBe("zh-CN");
 
@@ -275,7 +278,7 @@ describe("identity.service seedCanonicalUser (Task 7)", () => {
     const svc = createIdentityService(repo, makeDeps());
 
     const ctx = await svc
-      .login({ email: "zyongzhu@creatoros.local", password: DEV_PASSWORD })
+      .login({ email: "creator@creatoros.local", password: DEV_PASSWORD })
       .then((r) => svc.resolveContextFromToken(r.rawToken));
     expect(ctx.userId).toBe("user-zyongzhu");
   });

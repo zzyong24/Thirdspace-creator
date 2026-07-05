@@ -19,6 +19,30 @@ const ctx = (userId: string): RequestContext => ({
   source: "user",
 });
 
+// [T-135] canonical platform account seed(acct-canonical-douyin)已退役(开箱空)。原来
+// 依赖「启动时 seed 一个抖音账号」的这几条集成测试改成**自建 fixture 账号**——走公开
+// accounts.create op 真造一条(与下方 round-trip 测试同一路径),验的是「账号 ops + 多租户
+// 边界」而非「seed 存在」。
+async function createAccount(
+  owner: RequestContext,
+  handle = "@t135-fixture",
+): Promise<string> {
+  const created = (await compositeTransport.request(
+    ep("accounts.create"),
+    {
+      params: undefined,
+      query: undefined,
+      body: {
+        platform: "douyin",
+        accountHandle: handle,
+        followerBaseline: 300,
+      },
+    } as never,
+    owner,
+  )) as { data: { id: string } };
+  return created.data.id;
+}
+
 beforeEach(() => {
   __resetPersistenceForTests();
 });
@@ -35,14 +59,24 @@ describe("platform-account ops registered in the composite transport", () => {
     expect(PLATFORM_ACCOUNT_OP_IDS).toHaveLength(5);
   });
 
-  it("accounts.list returns the seeded canonical accounts for the owner", async () => {
+  it("[T-135] 开箱空:owner 的 accounts.list 初始为空,建一条后可列出(全部本人)", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    // 开箱空态:没有任何 canonical 账号 seed。
+    const empty = (await compositeTransport.request(
+      ep("accounts.list", true),
+      { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined } as never,
+      owner,
+    )) as { data: Array<{ id: string }> };
+    expect(empty.data).toHaveLength(0);
+
+    // 自建一条账号后可列出,且行属主 = 本人。
+    const createdId = await createAccount(owner);
     const res = (await compositeTransport.request(
       ep("accounts.list", true),
       { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined } as never,
-      ctx(canonicalDataset.user.id),
-    )) as { data: Array<{ id: string; userId: string; secretReference: string | null }> };
-    // [T-074] bilibili 假 seed 已删,canonical 只剩真实抖音账号。
-    expect(res.data.length).toBeGreaterThanOrEqual(1);
+      owner,
+    )) as { data: Array<{ id: string; userId: string }> };
+    expect(res.data.some((r) => r.id === createdId)).toBe(true);
     for (const row of res.data) {
       expect(row.userId).toBe(canonicalDataset.user.id);
     }
@@ -74,12 +108,14 @@ describe("platform-account ops registered in the composite transport", () => {
     expect(list.data.some((r) => r.id === created.data.id)).toBe(true);
   });
 
-  it("multi-tenant: another user cannot get the owner's seeded account (404 OwnershipError)", async () => {
+  it("multi-tenant: another user cannot get the owner's account (404 OwnershipError)", async () => {
+    // [T-135] 不再依赖 canonical seed:先由 owner 自建一条账号,再验闯入者取不到。
+    const ownedId = await createAccount(ctx(canonicalDataset.user.id));
     await expect(
       compositeTransport.request(
         ep("accounts.get"),
         {
-          params: { accountId: "acct-canonical-douyin" },
+          params: { accountId: ownedId },
           query: undefined,
           body: undefined,
         } as never,

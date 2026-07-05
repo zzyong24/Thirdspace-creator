@@ -10,12 +10,11 @@ import { ENDPOINTS } from "@creatoros/contract";
 import { mockTransport } from "@/server/mock-backend/mock-transport";
 import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
 import { canonicalDataset } from "@/fixtures/canonical";
-// [T-050] 抖音真实数据里只保留金句知识库 + 账号粉丝真值 seed;项目/发布/指标图谱
-// 已由用户裁决全删(旧种子当垃圾清算),对应 import 一并移除。
+// [T-050] 抖音真实数据里只保留金句知识库 seed(项目/发布/指标图谱旧种子已全删)。
+// [T-135] DOUYIN_FAN_TOTAL 已随 canonical platform account seed(唯一使用点)退役移除。
 import {
   douyinKnowledgeItems,
   douyinKnowledgeRevisions,
-  DOUYIN_FAN_TOTAL,
 } from "@/fixtures/douyin-real";
 import type { MetricCard } from "@/types/view-models";
 import type { ProjectStageName, TaskStatus } from "@/types/domain";
@@ -61,9 +60,8 @@ import {
   createSettingsTransport,
   SETTINGS_OP_IDS,
   type SettingsService,
-  type ModelConfigurationRow,
-  type UserPreferenceRow,
-  type AgentConfigurationRow,
+  // [T-135] ModelConfigurationRow / UserPreferenceRow / AgentConfigurationRow 已随
+  // canonical settings seed(toModelRow/toPreferenceRow/toAgentRow)退役一并移除。
 } from "@creatoros/backend/modules/settings";
 import {
   createProjectRepository,
@@ -91,8 +89,7 @@ import {
   ensureBucket,
   type ObjectStorageForCtx,
   ASSET_OP_IDS,
-  type AssetRow,
-  type AssetFileRow,
+  // [T-135] AssetRow / AssetFileRow 已随 canonical assets seed(toAssetRow/toAssetFileRow)退役移除。
 } from "@creatoros/backend/modules/assets";
 import {
   createArtifactRepository,
@@ -142,9 +139,8 @@ import { runScriptReview } from "@/server/ai/script-review-runner";
 import {
   createLearningsService,
   createLearningsTransport,
-  createLearningsRepository,
+  // [T-135] createLearningsRepository / LearningRow 已随 canonical learnings seed 退役移除。
   LEARNINGS_OP_IDS,
-  type LearningRow,
 } from "@creatoros/backend/modules/learnings";
 import {
   createAiService,
@@ -265,17 +261,15 @@ import { createBrowserScrapeAdapter } from "@/server/ai/search/search-browser";
 import {
   createPositioningService,
   createPositioningTransport,
-  createPositioningRepository,
+  // [T-135] createPositioningRepository / CreatorProfileRow / PositioningStatementRow
+  // 已随 canonical positioning seed(Zyong Zhu 人设)退役移除——唯一调用点是被删的 seed。
   POSITIONING_OP_IDS,
-  type CreatorProfileRow,
-  type PositioningStatementRow,
 } from "@creatoros/backend/modules/positioning";
 import {
   createCandidateService,
   createCandidateTransport,
-  createCandidateRepository,
+  // [T-135] createCandidateRepository / CandidateRow 已随 canonical candidates seed 退役移除。
   CANDIDATE_OP_IDS,
-  type CandidateRow,
 } from "@creatoros/backend/modules/candidate";
 import {
   createCalibrationService,
@@ -284,14 +278,13 @@ import {
   CALIBRATION_OP_IDS,
   type RubricRow as CalibrationRubricRow,
   type RubricVersionRow as CalibrationRubricVersionRow,
-  type RuleSuggestionRow as CalibrationRuleSuggestionRow,
+  // [T-135] CalibrationRuleSuggestionRow(RuleSuggestionRow)已随 canonical 复盘回流建议 seed 退役移除。
 } from "@creatoros/backend/modules/calibration";
 import {
   createPlatformAccountService,
   createPlatformAccountTransport,
-  createPlatformAccountRepository,
+  // [T-135] createPlatformAccountRepository / PlatformAccountRow 已随 canonical platform account seed 退役移除。
   PLATFORM_ACCOUNT_OP_IDS,
-  type PlatformAccountRow,
 } from "@creatoros/backend/modules/platform-account";
 import {
   createContentCalendarService,
@@ -516,7 +509,7 @@ const CANONICAL_RUBRIC_ID = "rubric-canonical";
 
 type CanonicalKnowledge = (typeof canonicalDataset.knowledgeItems)[number];
 type CanonicalRevision = (typeof canonicalDataset.knowledgeRevisions)[number];
-type CanonicalRelation = (typeof canonicalDataset.knowledgeRelations)[number];
+// [T-135] CanonicalRelation 已随 canonical knowledge relations seed(toRelationRow)退役移除。
 
 // [T-099c] 产物版本正文抽取(单一真值,context.artifacts 字数 + context.artifact.text 全文共用)——
 // output_script transcript 优先(与 makeReviewSubjectReader.getScript 同读法),回退 contentText,
@@ -588,118 +581,10 @@ function toRevisionRow(r: CanonicalRevision): KnowledgeRevisionRow {
   };
 }
 
-function toRelationRow(r: CanonicalRelation): {
-  id: string;
-  sourceKnowledgeId: string;
-  targetKnowledgeId: string;
-  relationType: string;
-  strength: string;
-  createdByType: string;
-} {
-  return {
-    id: r.id,
-    sourceKnowledgeId: r.sourceKnowledgeId,
-    targetKnowledgeId: r.targetKnowledgeId,
-    relationType: r.relationType,
-    strength: String(r.strength),
-    createdByType: r.createdByType,
-  };
-}
-
-// Assets (module 07) canonical mappers. The fixture asset/file shapes match the
-// DB rows (ISO text timestamps, jsonb mediaMetadata); `description` defaults to
-// "" and `deletedAt`/nullable dimensions pass through.
-type CanonicalAsset = (typeof canonicalDataset.assets)[number];
-type CanonicalAssetFile = (typeof canonicalDataset.assetFiles)[number];
-
-function toAssetRow(a: CanonicalAsset): AssetRow {
-  return {
-    id: a.id,
-    userId: a.userId,
-    currentFileId: a.currentFileId ?? null,
-    assetType: a.assetType,
-    name: a.name,
-    description: a.description ?? "",
-    status: a.status,
-    deletedAt: a.deletedAt ?? null,
-    createdAt: a.createdAt,
-    updatedAt: a.updatedAt,
-  };
-}
-
-function toAssetFileRow(f: CanonicalAssetFile): AssetFileRow {
-  return {
-    id: f.id,
-    assetId: f.assetId,
-    versionNumber: f.versionNumber,
-    storageKey: f.storageKey,
-    mimeType: f.mimeType,
-    fileSize: f.fileSize,
-    checksum: f.checksum,
-    width: f.width ?? null,
-    height: f.height ?? null,
-    durationMs: f.durationMs ?? null,
-    mediaMetadata: f.mediaMetadata as Record<string, unknown>,
-    createdAt: f.createdAt,
-  };
-}
-
-// Artifacts (module 08) canonical mappers. The fixture artifact rows carry no
-// `userId` (they hang off projects owned by the canonical user), so the owner is
-// injected at seed time. Version rows match the DB shape (immutable, no updatedAt);
-// relations match directly.
-type CanonicalPreference = (typeof canonicalDataset.userPreferences)[number];
-type CanonicalModel = (typeof canonicalDataset.modelConfigurations)[number];
-type CanonicalAgent = (typeof canonicalDataset.agentConfigurations)[number];
-
-// USER_PREFERENCE is keyed by user_id (no own id column in the row); the canonical
-// fixture carries a DTO `id` which the schema does not persist — drop it here.
-function toPreferenceRow(p: CanonicalPreference): UserPreferenceRow {
-  return {
-    userId: p.userId,
-    defaultHome: p.defaultHome,
-    defaultCreationMode: p.defaultCreationMode,
-    defaultVisibility: p.defaultVisibility,
-    autosaveEnabled: p.autosaveEnabled,
-    fileNamingRule: p.fileNamingRule,
-    analyticsEnabled: p.analyticsEnabled,
-  };
-}
-
-function toModelRow(m: CanonicalModel): ModelConfigurationRow {
-  return {
-    id: m.id,
-    userId: m.userId,
-    capability: m.capability,
-    provider: m.provider,
-    modelName: m.modelName,
-    secretReference: m.secretReference,
-    // The canonical fixture stores no inline key — it resolves via the env-ref
-    // secretReference; secretValue (the cc-switch local-db key column) stays null.
-    secretValue: null,
-    // The canonical fixture predates the cc-switch baseUrl/apiFormat columns; default to
-    // the official Anthropic endpoint so the seeded rows match the extended row type.
-    baseUrl: null,
-    apiFormat: "anthropic",
-    settings: m.settings,
-    isDefault: m.isDefault,
-  };
-}
-
-function toAgentRow(a: CanonicalAgent): AgentConfigurationRow {
-  return {
-    id: a.id,
-    userId: a.userId,
-    name: a.name,
-    agentType: a.agentType,
-    status: a.status,
-    capabilities: a.capabilities,
-    settings: a.settings,
-    secretReference: a.secretReference,
-    createdAt: a.createdAt,
-    updatedAt: a.updatedAt,
-  };
-}
+// [T-135] toRelationRow / toAssetRow / toAssetFileRow / toPreferenceRow / toModelRow /
+// toAgentRow(及其 CanonicalRelation/Asset/AssetFile/Preference/Model/Agent 类型)已随
+// 对应 canonical seed 退役一并删除(唯一调用点是被删的 seed 编排)。toKnowledgeRow /
+// toRevisionRow 仍保留——它们还服务于用户抖音真实作品的金句知识种子(douyinKnowledge*)。
 
 // Pin the singleton on globalThis, NOT a module-level `let`: Next/Turbopack give
 // the route handler and server components separate module instances, so a
@@ -4237,36 +4122,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     search: searchQuery,
   });
 
-  // Seed one canonical mock external source owned by the canonical user so a dev
-  // import resolves under the seeded login (foundation §2/§4). seedExternalSources
-  // is onConflictDoNothing → a re-built singleton never double-seeds.
-  await createIngestionRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-  }).seedExternalSources([
-    {
-      id: "src-mock-canonical",
-      userId: canonicalDataset.user.id,
-      sourceType: "mock",
-      name: "Mock Ingestion Source",
-      sourceIdentifier: "mock://canonical",
-      secretReference: "",
-      configuration: {},
-      createdAt: FIXED_NOW_ISO,
-    },
-    {
-      // 线 B:抖音真抓来源。refreshDouyin 据此校验来源类型=douyin;真抓走 CDP 连
-      // 用户已登录 Chrome,此处不存任何 cookie/凭据。
-      id: "src-douyin-canonical",
-      userId: canonicalDataset.user.id,
-      sourceType: "douyin",
-      name: "抖音创作者中心",
-      sourceIdentifier: "douyin://creator",
-      secretReference: "",
-      configuration: {},
-      createdAt: FIXED_NOW_ISO,
-    },
-  ]);
+  // [T-135] canonical external sources 种子已退役(用户裁决 2026-07-05:新库/新用户开箱空)。
+  // 外部源全部来自用户运行时真实创建/绑定(抖音扫码走 CDP 连已登录 Chrome,不预置任何来源行)。
 
   // Seed the Projects exemplar dataset (owned by the canonical user) AND the
   // canonical identity row, so real login resolves to `user-zyongzhu` and every
@@ -4281,29 +4138,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // [T-050] canonical 通知种子已退役(demo 文案指向已删除的演示项目);通知全部
   // 来自运行时真实事件。
 
-  // Seed the canonical knowledge graph (items + revisions + relations), all owned
-  // by the canonical user, so the /knowledge page + Research workspace resolve the
-  // real rows under the seeded login (foundation §2). seed* are onConflictDoNothing
-  // → a re-built singleton never double-seeds.
-  await knowledgeRepo.seedKnowledge(
-    canonicalDataset.knowledgeItems.map(toKnowledgeRow),
-  );
-  await knowledgeRepo.seedRevisions(
-    canonicalDataset.knowledgeRevisions.map(toRevisionRow),
-  );
-  await knowledgeRepo.seedRelations(
-    canonicalDataset.knowledgeRelations.map(toRelationRow),
-  );
+  // [T-135] canonical knowledge graph 种子已退役(金句 items+revisions+relations 都是
+  // Zyong Zhu 假内容)。知识库开箱空;真实知识由用户导入/蒸馏/对话沉淀写入。
+  // (下方仍保留用户抖音真实作品的金句知识种子 douyinKnowledge*,那是真内容不是 canonical。)
 
-  // Seed the canonical assets graph (assets + their files), all owned by the
-  // canonical user, so the /assets gallery resolves the real rows under the
-  // seeded login (foundation §2). seed* are onConflictDoNothing → a re-built
-  // singleton never double-seeds. Files are seeded first so currentFileId
-  // references resolve.
-  await assetsRepo.seedAssetFiles(
-    canonicalDataset.assetFiles.map(toAssetFileRow),
-  );
-  await assetsRepo.seedAssets(canonicalDataset.assets.map(toAssetRow));
+  // [T-135] canonical assets graph 种子已退役(素材 assets+files 都是 Zyong Zhu 假素材)。
+  // /assets 画廊开箱空;真实素材由用户上传/录制/生成写入。
 
   // [T-050] canonical artifacts 种子已退役(挂在已删除的 demo 项目上)。
   // 真实项目的 artifact 由 AI 节点首次起草时创建(见 AdoptCandidateCard.prepareInput)。
@@ -4714,20 +4554,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     }
   };
 
-  // Seed the canonical user's Settings rows (plan Step 6 seed parity) so the
-  // /settings page resolves the real preference/model/agent rows under the seeded
-  // login. seed* is onConflictDoNothing → a re-built singleton never double-seeds.
-  // PK conflict targets: user_preferences(user_id), model_configurations(id),
-  // agent_configurations(id) — the canonical ids are stable/deterministic.
-  await settingsRepo.seedPreferences(
-    canonicalDataset.userPreferences.map(toPreferenceRow),
-  );
-  await settingsRepo.seedModels(
-    canonicalDataset.modelConfigurations.map(toModelRow),
-  );
-  await settingsRepo.seedAgents(
-    canonicalDataset.agentConfigurations.map(toAgentRow),
-  );
+  // [T-135] canonical Settings 种子已退役(userPreferences + modelConfigurations +
+  // agentConfigurations 都是 Zyong Zhu 的预设,含默认 Anthropic model + env key)。
+  // 偏好走 service 默认值;AI 能力骨架仍由下方 buildAiModelConfigs/buildAiAgentConfigs
+  // seed(去 provider 预设的空占位行),用户 onboarding 自行配置。
 
   // Seed the AI per-capability catalog (Step 3 seed; design-spec §3): one
   // ModelConfiguration per capability (script.rewrite → fable-5/high, copilot.assist →
@@ -4759,182 +4589,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     buildReviewRuleSeedRows(canonicalDataset.user.id, FIXED_NOW_ISO),
   );
 
-  // Seed the canonical positioning (module 17): one CreatorProfile + two immutable
-  // statement versions (v1→v2 append-only chain), owned by the canonical user, so
-  // the /positioning 定位中心 page resolves real rows under the seeded login
-  // (foundation §2). Deterministic ids/clock (FIXED_NOW_ISO). seed* are
-  // onConflictDoNothing → a re-built singleton never double-seeds. A user-scoped
-  // seed repo is minted for the canonical owner.
-  const positioningSeedRepo = createPositioningRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-  });
-  const canonicalProfile: CreatorProfileRow = {
-    id: "profile-canonical",
-    userId: canonicalDataset.user.id,
-    persona: "把前沿 AI 论文工程化的硬核创作者",
-    field: "AI 工程 / 应用落地",
-    audience: "想把 AI 用起来的一线开发者",
-    differentiation: "每条内容都给出可运行的代码与踩坑记录",
-    capabilities: ["论文拆解", "代码演示", "工程化复盘"],
-    // 定位中心重建 — the richer facets (英雄区 9 格) + 5 downstream rules (右栏规则卡),
-    // real on-brand values for the canonical creator (NOT placeholders).
-    facets: {
-      contentScope: "前沿 AI 论文精读、把模型/算法落成可跑的工程代码、Agent 与 RAG 实战",
-      avoid: "纯理论推导、不写无法复现的演示、不追与开发者无关的泛 AI 热点",
-      corePain: "看得懂论文却落不了地：环境、依赖、踩坑让 idea 卡在 demo",
-      coreValue: "把论文里的 idea 变成一线开发者今天就能 clone 跑通的工程代码",
-      tone: "硬核、克制、工程师口吻——少形容词,多结论与代码",
-      statusNote: "稳定更新中,正从单条论文精读扩展到成体系的工程化专栏",
-    },
-    downstreamRules: {
-      topicRule: "只做能产出可运行代码或踩坑结论的选题;纯概念科普不立项",
-      scriptRule: "开头 15 秒抛出可复现的结果钩子;正文按「问题→论文方案→工程落地→踩坑」展开",
-      projectRule: "每个项目必须绑定一个可演示的代码产物;无 demo 不进入制作",
-      forbidRule: "不夸大效果、不贴无法运行的截图、不引用未读过的论文",
-      expressionRule: "统一工程师口吻:第一人称、给结论、给代码,不用营销腔与情绪词",
-    },
-    createdAt: FIXED_NOW_ISO,
-    updatedAt: FIXED_NOW_ISO,
-  };
-  const canonicalStatements: PositioningStatementRow[] = [
-    {
-      id: "posstmt-canonical-1",
-      userId: canonicalDataset.user.id,
-      profileId: canonicalProfile.id,
-      oneLiner: "我帮一线开发者把最新 AI 论文变成可运行的工程代码",
-      keywords: ["论文", "代码", "工程化"],
-      productAnchorIds: [],
-      versionNumber: 1,
-      createdByType: "human",
-      aiTaskId: null,
-      createdAt: FIXED_NOW_ISO,
-    },
-    {
-      id: "posstmt-canonical-2",
-      userId: canonicalDataset.user.id,
-      profileId: canonicalProfile.id,
-      oneLiner: "我帮一线开发者把最新 AI 论文变成生产级、可复用的工程代码",
-      keywords: ["论文", "生产级", "工程化"],
-      productAnchorIds: [],
-      versionNumber: 2,
-      createdByType: "human",
-      aiTaskId: null,
-      createdAt: FIXED_NOW_ISO,
-    },
-  ];
-  await positioningSeedRepo.seedProfiles([canonicalProfile]);
-  await positioningSeedRepo.seedStatements(canonicalStatements);
+  // [T-135] canonical positioning 种子已退役(CreatorProfile + statements = Zyong Zhu 人设,
+  // 「把前沿 AI 论文工程化的硬核创作者」全是假身份定位)。/positioning 定位中心开箱空;
+  // 真实定位由用户在定位中心填写/一键岛 AI 生成后落库(配合 T-131 引导页、T-136 per-account 人设)。
 
   // [T-052 裁决③] canonical monetization products 种子(module 18)已随变现中心物理删除。
 
-  // Seed the canonical candidates (module 19): three 选题候选 owned by the canonical
-  // user so the /topics 选题候选池 page resolves real rows under the seeded login
-  // (foundation §2) — one idea, one trend (AI-sourced provenance), one demand, with
-  // varied predicted/positioning/demand scores so the composite-score sort is
-  // observable. [T-052 裁决③] 排序措辞随变现中心移除改为「综合评分」。 Deterministic ids/clock (FIXED_NOW_ISO). seedCandidates is
-  // onConflictDoNothing → a re-built singleton never double-seeds.
-  const candidateSeedRepo = createCandidateRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-  });
-  const canonicalCandidates: CandidateRow[] = [
-    {
-      id: "cand-canonical-1",
-      userId: canonicalDataset.user.id,
-      title: "用 RAG 把内部文档变成问答助手",
-      angle: "从一篇论文到一条可跑的最小实现",
-      source: "trend",
-      contentRole: "traffic",
-      productAnchorId: null,
-      positioningFit: 82,
-      predictedScore: 74,
-      demandCount: 0,
-      status: "pool",
-      aiTaskId: null,
-      // 已补全的选题卡(待补充/待决策)— AI 工程化创作者口吻,非占位。
-      card: {
-        oneLiner: "不调 API、不写框架,30 行代码把你公司的文档变成能问答的助手",
-        targetAudience: "想落地 AI 但被「框架太重」劝退的中小团队技术负责人",
-        audiencePain:
-          "看了一堆 LangChain 教程,真要接自己文档时全是版本报错,搭一周搭不出能用的",
-        coreConflict: "大家以为 RAG 很高大上,其实核心就是「切片+向量检索+塞进 prompt」三步",
-        hook: "你司那份没人看的 200 页 SOP,今天我让它自己开口回答问题",
-        contentStructure: [
-          "开场:演示——对着内部文档直接提问,秒回带出处的答案",
-          "拆解:RAG 三步走(切片 / 嵌入检索 / 拼进 prompt),每步一句话讲透",
-          "实操:30 行最小实现,边写边解释为什么不需要框架",
-          "收尾:这套能扩到客服/法务/培训,留个「评论区报你的场景」钩子",
-        ],
-        format: "口播 + 屏幕录制代码演示,8-10 分钟",
-        materialBasis: "自己之前给客户做的内部知识库项目截图 + 一份可脱敏的 SOP 样例",
-        riskNote: "演示要避开真实公司数据;代码别用付费 API,否则观众复现门槛高",
-        proposal: "做——蹭 RAG 热度但落到「最小实现」,既引流又给训练营铺信任,优先级高",
-        audiencePainScore: 78,
-        materialScore: 70,
-        productionDifficulty: "mid",
-      },
-      createdAt: FIXED_NOW_ISO,
-      updatedAt: FIXED_NOW_ISO,
-    },
-    {
-      id: "cand-canonical-2",
-      userId: canonicalDataset.user.id,
-      title: "为什么你的 Agent 总是跑偏",
-      angle: "三个最常见的上下文工程错误",
-      source: "demand",
-      contentRole: "trust",
-      productAnchorId: null,
-      positioningFit: 68,
-      predictedScore: 61,
-      demandCount: 0,
-      status: "pool",
-      aiTaskId: null,
-      // 已补全的选题卡——来自评论区反复出现的真实需求(source=demand)。
-      card: {
-        oneLiner: "Agent 不是不够聪明,是你把上下文喂错了——三个错误今天讲清楚",
-        targetAudience: "自己搭过 Agent、但效果时好时坏、说不清问题在哪的开发者",
-        audiencePain:
-          "同样的 prompt,昨天好好的今天就胡说;以为是模型问题,其实是上下文管理",
-        coreConflict: "大家拼命换更强的模型,真正的杠杆却在「给模型看什么、不看什么」",
-        hook: "你的 Agent 跑偏,90% 不是模型笨,是这三个上下文错误你天天在犯",
-        contentStructure: [
-          "错误一:把全部历史塞进去——噪声淹没指令",
-          "错误二:工具返回值不裁剪——一次检索撑爆窗口",
-          "错误三:没有显式的当前目标——模型自己脑补任务",
-          "每个错误配「错误写法 vs 修正写法」对照,最后给一张自查清单",
-        ],
-        format: "口播为主 + 关键处贴代码对照图,6-8 分钟",
-        materialBasis: "评论区和私信里攒的真实提问截图 + 自己踩坑的 prompt 前后对比",
-        riskNote: "三个错误要给得具体可复现,泛泛而谈会被评论区质疑「正确的废话」",
-        proposal: "做——直接回应受众真实提问,信任向内容,顺带为训练营「上下文工程」模块预热",
-        audiencePainScore: 85,
-        materialScore: 64,
-        productionDifficulty: "low",
-      },
-      createdAt: FIXED_NOW_ISO,
-      updatedAt: FIXED_NOW_ISO,
-    },
-    {
-      id: "cand-canonical-3",
-      userId: canonicalDataset.user.id,
-      title: "我的 AI 工程化训练营到底教什么",
-      angle: "一条转化向内容，锚定咨询产品",
-      source: "idea",
-      contentRole: "conversion",
-      productAnchorId: null,
-      // 待评估 — 空选题卡(无 oneLiner),让漏斗里「待评估」与前两条「待补充」都有真数据。
-      card: {},
-      positioningFit: 90,
-      predictedScore: 88,
-      demandCount: 0,
-      status: "pool",
-      aiTaskId: null,
-      createdAt: FIXED_NOW_ISO,
-      updatedAt: FIXED_NOW_ISO,
-    },
-  ];
-  await candidateSeedRepo.seedCandidates(canonicalCandidates);
+  // [T-135] canonical candidates(选题候选池)种子已退役(cand-canonical-1/2/3 = Zyong Zhu
+  // 口吻的假选题「用 RAG 把内部文档变成问答助手」等)。/topics 选题候选池开箱空;真实候选由
+  // 用户从热点/需求/想法生成(ChatBox 选题、AI 选题一键岛)后落库。
 
   // Seed the canonical 变现加权 rubric (module 20): one Rubric + its immutable v1
   // RubricVersion (五维: hook 强度 / 利他性 / 人群匹配 / CTA 清晰度 / 为产品铺路程度,
@@ -5052,66 +4715,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // [T-050] canonical 盲预测/回流结果种子已退役(主体 dy-out-* 已随 demo 数据删除;
   // 审计 B30:seed 预测把校准页撕成两个数据世界)。真实预测由用户在校准中心创建。
 
-  // Seed two canonical platform accounts (module 21): a douyin + a bilibili 矩阵号 owned
-  // by the canonical user so the 账号管理 surface resolves real rows under the seeded
-  // login (foundation §2). secretReference is an opaque env reference (§7.1 — never a raw
-  // token). Deterministic ids/clock (FIXED_NOW_ISO). seedAccounts is onConflictDoNothing
-  // → a re-built singleton never double-seeds. A user-scoped seed repo is minted.
-  const platformAccountSeedRepo = createPlatformAccountRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-  });
-  const canonicalAccounts: PlatformAccountRow[] = [
-    {
-      id: "acct-canonical-douyin",
-      userId: canonicalDataset.user.id,
-      platform: "douyin",
-      accountHandle: "@抖音创作者",
-      secretReference: "env:DOUYIN_TOKEN_REF",
-      // Real follower total from ~/.hermes/douyin_stats.db (2026-06-21 snapshot).
-      followerBaseline: DOUYIN_FAN_TOTAL,
-      status: "active",
-      createdAt: FIXED_NOW_ISO,
-      updatedAt: FIXED_NOW_ISO,
-    },
-    // [T-074] bilibili「@AI工程实录 8400 粉」系编造的 seed(用户实锤:「B站我也没有
-    // 8400 粉丝,你这又是哪来的幻觉?」)—— 已连根删除,DB 存量行同日清理。
-  ];
-  await platformAccountSeedRepo.seedAccounts(canonicalAccounts);
+  // [T-135] canonical platform account 种子已退役(acct-canonical-douyin「@抖音创作者」
+  // 是假账号)。账号管理开箱空;新用户自己扫码绑第一个抖音号(T-136 建默认账号)。
 
-  // Learnings (module 14) — 经验沉淀 seed 仍保留(方法论示例,不挂 demo 项目)。
-  // [T-050] canonical 发布种子已退役(挂在已删除的 demo 产出上);发布行全部来自
-  // 真实导入(T-030)与发布工作台真实创建。
+  // [T-135] canonical learnings(经验沉淀)种子已退役(canonicalDataset.learnings 是假方法论
+  // 示例)。经验中心开箱空;真实经验由用户复盘沉淀写入。
 
-  const learningsSeedRepo = createLearningsRepository(db, {
-    ...deps,
-    userId: canonicalDataset.user.id,
-  });
-  await learningsSeedRepo.seedLearnings(
-    canonicalDataset.learnings as unknown as LearningRow[],
-  );
-
-  // 复盘飞轮回流 轨B (Learning→校准) — seed ONE canonical pending CalibrationRuleSuggestion so
-  // the 校准中心「复盘回流建议」surface shows a real adoptable row out of the box (it ties the
-  // seeded 复盘 `learning-hook-15s` to the canonical rubric). onConflictDoNothing → idempotent.
-  const canonicalRuleSuggestion: CalibrationRuleSuggestionRow = {
-    id: "calibsug-canonical-1",
-    userId: canonicalDataset.user.id,
-    learningId: "learning-hook-15s",
-    rubricId: "rubric-canonical",
-    status: "pending",
-    proposedDimension: {
-      key: "hook",
-      label: "钩子强度",
-      weight: 0.25,
-      description: "前15秒抛冲突显著提升保留率（复盘回流：上调钩子评分权重）",
-    },
-    rationale: "复盘结论「前15秒抛冲突」回流为评分维度，建议上调钩子权重",
-    adoptedVersionId: null,
-    createdAt: FIXED_NOW_ISO,
-    adoptedAt: null,
-  };
-  await calibrationSeedRepo.seedRuleSuggestions([canonicalRuleSuggestion]);
+  // [T-135] 复盘飞轮回流 轨B 的 canonical CalibrationRuleSuggestion 种子已退役(它引用被删的
+  // 复盘 learning「learning-hook-15s」→ 无来源可回流)。校准中心「复盘回流建议」开箱空;
+  // 真实建议由用户复盘结论回流生成。
 
   // ── Real Douyin catalog + metrics (用户抖音作品初始化) ─────────────────────
   // Append the user's REAL Douyin works (58 published videos) + their REAL

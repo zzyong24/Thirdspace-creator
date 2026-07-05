@@ -14,7 +14,9 @@ import { CONTENT_CALENDAR_OP_IDS } from "@creatoros/backend/modules/content-cale
 // PlatformAccountService (a canonical account is required), and the multi-tenant
 // boundary holds end-to-end.
 
-const ACC = "acct-canonical-douyin"; // seeded for the canonical user
+// [T-135] canonical platform account seed(acct-canonical-douyin)已退役(开箱空)。日历条目的
+// account-ownership gate 走真 PlatformAccountService 校验属主,故账号必须真实存在 —— 每条测试
+// 里先由 owner 自建一条账号(公开 accounts.create op),再用它的 id 当 accountId。
 const ep = (id: string, isList = false) =>
   ({ id, isList }) as unknown as Endpoint;
 const ctx = (userId: string): RequestContext => ({
@@ -23,6 +25,23 @@ const ctx = (userId: string): RequestContext => ({
   source: "user",
 });
 const WINDOW = { from: "2026-07-01T00:00:00.000Z", to: "2026-07-31T00:00:00.000Z" };
+
+async function createAccount(owner: RequestContext): Promise<string> {
+  const created = (await compositeTransport.request(
+    ep("accounts.create"),
+    {
+      params: undefined,
+      query: undefined,
+      body: {
+        platform: "douyin",
+        accountHandle: "@t135-calendar-fixture",
+        followerBaseline: 300,
+      },
+    } as never,
+    owner,
+  )) as { data: { id: string } };
+  return created.data.id;
+}
 
 beforeEach(() => {
   __resetPersistenceForTests();
@@ -42,6 +61,7 @@ describe("content-calendar ops registered in the composite transport", () => {
 
   it("entries.create round-trips: the new entry is then listable in window", async () => {
     const owner = ctx(canonicalDataset.user.id);
+    const ACC = await createAccount(owner);
     const created = (await compositeTransport.request(
       ep("accounts.calendar.entries.create"),
       {
@@ -70,6 +90,7 @@ describe("content-calendar ops registered in the composite transport", () => {
   });
 
   it("multi-tenant: a non-owner cannot list the owner's account calendar (OwnershipError)", async () => {
+    const ACC = await createAccount(ctx(canonicalDataset.user.id));
     await expect(
       compositeTransport.request(
         ep("accounts.calendar.list", true),

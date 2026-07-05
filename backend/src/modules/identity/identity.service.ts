@@ -260,11 +260,15 @@ export const CANONICAL_USER_ID = "user-zyongzhu";
 export const DEV_PASSWORD =
   process.env.CREATOROS_DEV_PASSWORD ?? "creatoros-dev";
 
-/** Canonical user row values — EXACTLY the fixture's (canonical.ts L113-118). */
+// [T-135] 新用户开箱即干净空账号(宪法 §5「替换所有 mock/seed」+ 用户裁决 2026-07-05):
+// 默认身份中性化——去掉 canonical 假名/假邮箱(Zyong Zhu / zyongzhu@creatoros.local),
+// 引导用户填自己信息(配合 T-131 引导页)。**⚠️ id 硬保持 `user-zyongzhu`(CANONICAL_USER_ID)
+// 绝不改**:用户自己的真实作品全绑这个 id,改 id 会断掉数据归属(seed onConflictDoNothing
+// 不覆盖存量,仅影响新库/新用户)。只中性化 displayName/email,不动 id/timezone/locale。
 const CANONICAL_USER = {
   id: CANONICAL_USER_ID,
-  email: "zyongzhu@creatoros.local",
-  displayName: "Zyong Zhu",
+  email: "creator@creatoros.local",
+  displayName: "创作者",
   timezone: "Asia/Shanghai",
   locale: "zh-CN",
   createdAt: FIXED_NOW_ISO,

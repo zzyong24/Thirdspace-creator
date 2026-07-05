@@ -13,7 +13,9 @@ import { DEV_PASSWORD, CANONICAL_USER_ID } from "@creatoros/backend/modules/iden
 // Routes go through identity.service / compositeTransport only (never the db
 // client directly — SPEC §22) and emit the SPEC §14 envelope shapes.
 
-const CANONICAL_EMAIL = "zyongzhu@creatoros.local";
+// [T-135] 默认身份中性化后,seeded canonical 登录邮箱改为 creator@creatoros.local
+// (id 仍是 user-zyongzhu,只改 email/displayName)。
+const CANONICAL_EMAIL = "creator@creatoros.local";
 
 function loginReq(body: unknown): Request {
   return new Request("http://localhost/api/v1/auth/login", {
