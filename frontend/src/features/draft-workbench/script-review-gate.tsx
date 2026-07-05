@@ -121,31 +121,48 @@ export function ScriptReviewGate({
     void (async () => {
       try {
         // [T-108 v2] 先 flush 保存编辑器在途未落库的最新内容(dirty 才真存,saved 则 no-op)——
-        // 否则 review.script 审的是持久化旧版(用户改了还在 dirty 窗口没保存)。
+        // 否则 review.script 审的是持久化旧版(用户改了还在 dirty 窗口没保存)。flushSave 已 4s
+        // 封顶(T-120),不会挂死。
         await flushSave();
         if (cancelledRef.current) return;
-        // 纯站内项目可能还没走制作 → 先自愈铸挂点(与登记表单/盲预测行同款),让 selection 有真 id。
+        // [T-123] 纯站内项目可能还没走制作 → 自愈铸 content_output 挂点让 selection 有真 id。
+        // **但铸挂点是尽力而为,绝不能阻断「开对话+自动发」**:createOutput 慢/挂/失败都不卡按钮
+        // ——review.script 工具靠 projectId 审当前脚本,不依赖 content_output id(selection 只为
+        // 免编导索要标题)。之前 createOutput 无超时,一挂起按钮就永远卡「打开对话中」(用户实录)。
         let subjectId = outputId;
         if (!subjectId) {
-          const created = (await client.createOutput({
-            params: { projectId },
-            query: undefined,
-            body: { title: projectTitle || "主内容" },
-          })) as { id: string };
-          subjectId = created.id;
+          try {
+            const created = (await Promise.race([
+              client.createOutput({
+                params: { projectId },
+                query: undefined,
+                body: { title: projectTitle || "主内容" },
+              }),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("createOutput 超时")), 6000),
+              ),
+            ])) as { id: string };
+            subjectId = created.id;
+          } catch {
+            /* 铸挂点慢/挂/失败 → 不阻断开对话;subjectId 保持 null */
+          }
         }
         if (cancelledRef.current) return;
-        // 方案 A:自动发进常驻 rail —— functionKey=review.script(置顶审核工具),
-        // selection=content_output(免编导索要 id/标题),autoSend 直接发审核话术。
+        // 方案 A:自动发进常驻 rail —— functionKey=review.script(置顶审核工具),autoSend 直接发
+        // 审核话术。有挂点就带 selection(免编导索要 id/标题);没铸出来也照开(工具靠 projectId 审)。
         openChat({
           functionKey: "review.script",
           prefill: SCRIPT_REVIEW_PREFILL,
           autoSend: true,
-          selection: {
-            kind: "content_output",
-            id: subjectId,
-            title: projectTitle,
-          },
+          ...(subjectId
+            ? {
+                selection: {
+                  kind: "content_output",
+                  id: subjectId,
+                  title: projectTitle,
+                },
+              }
+            : {}),
         });
         // 自动发成功即结束(不卡在「打开对话中…」):loading 态语义修正。
         if (!cancelledRef.current) setPhase("idle");
