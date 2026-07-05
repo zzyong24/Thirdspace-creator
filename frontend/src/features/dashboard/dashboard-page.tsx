@@ -31,6 +31,7 @@ import { TagChip } from "@/components/content/tag-chip";
 import { ChartFrame } from "@/components/analytics/chart-frame";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { projectWorkspaceHref } from "@/features/projects/project-href";
+import { OnboardingCard } from "@/features/onboarding/onboarding-card";
 import { client } from "@/lib/contract-client.server";
 import {
   canonicalDataset,
@@ -90,6 +91,10 @@ export async function DashboardPage({
       data-page="dashboard"
       className="flex flex-col gap-section-gap"
     >
+      {/* [T-132] 常驻新手清单:Dashboard 主内容最顶部。client 组件,自己拉 state /
+          判显隐(未完成且未「不再显示」才渲),配全或点「不再显示」后自动消失。 */}
+      <OnboardingCard />
+
       <header className="flex flex-col gap-0.5">
         <h1
           data-slot="dashboard-welcome"

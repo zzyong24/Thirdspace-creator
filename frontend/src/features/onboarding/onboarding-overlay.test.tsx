@@ -108,15 +108,12 @@ describe("OnboardingOverlay — 自动弹 / 空态", () => {
       expect(row?.getAttribute("data-done")).toBe("false");
     }
 
-    // 去配置深链:文本模型 → /settings,定位 → /positioning,项目 → /projects/new。
+    // 去配置深链:文本模型 → /settings?highlight=text-model([T-132] 带高亮锚点),
+    // 项目 → /projects/new(整页跳转,不带 highlight)。
     const textCta = document
       .querySelector('[data-step-key="text-model"]')
       ?.querySelector("a");
-    expect(textCta?.getAttribute("href")).toBe("/settings");
-    const posCta = document
-      .querySelector('[data-step-key="positioning-profile"]')
-      ?.querySelector("a");
-    expect(posCta?.getAttribute("href")).toBe("/positioning");
+    expect(textCta?.getAttribute("href")).toBe("/settings?highlight=text-model");
     const projCta = document
       .querySelector('[data-step-key="first-project"]')
       ?.querySelector("a");

@@ -12,6 +12,7 @@ import {
   ONBOARDING_STEP_SET,
   allRequiredDone,
   deriveSteps,
+  isOnboardingComplete,
   progressOf,
   type OnboardingState,
 } from "./onboarding-steps";
@@ -117,15 +118,25 @@ describe("deriveSteps — done 派生", () => {
 });
 
 describe("deriveSteps — 分组 / 元数据", () => {
-  it("必备组恰为 文本模型 / 定位母版 / 首个项目", () => {
+  it("必备组恰为 文本模型 / 首个项目(定位/联网搜索改归 recommended)", () => {
     const required = deriveSteps({})
       .filter((s) => s.group === "required")
       .map((s) => s.key);
-    expect(required).toEqual([
-      "text-model",
-      "positioning-profile",
-      "first-project",
-    ]);
+    expect(required).toEqual(["text-model", "first-project"]);
+  });
+
+  it("[T-132] 强烈建议组恰为 定位母版 / 联网搜索", () => {
+    const recommended = deriveSteps({})
+      .filter((s) => s.group === "recommended")
+      .map((s) => s.key);
+    expect(recommended).toEqual(["positioning-profile", "web-search"]);
+  });
+
+  it("[T-132] positioning-profile 与 web-search 归 recommended,不再 required/optional", () => {
+    const byKey = (key: string) =>
+      deriveSteps({}).find((s) => s.key === key)?.group;
+    expect(byKey("positioning-profile")).toBe("recommended");
+    expect(byKey("web-search")).toBe("recommended");
   });
 
   it("每步都带非空 title / why / href 深链", () => {
@@ -136,14 +147,22 @@ describe("deriveSteps — 分组 / 元数据", () => {
     }
   });
 
-  it("必备步深链指向对应配置页", () => {
+  it("必备/建议步深链指向对应配置页", () => {
     const steps = deriveSteps({});
-    expect(steps.find((s) => s.key === "text-model")?.href).toBe("/settings");
+    // [T-132] settings 类步骤带 ?highlight=<key> 深链锚点(settings 页据此定位卡片)。
+    expect(steps.find((s) => s.key === "text-model")?.href).toBe(
+      "/settings?highlight=text-model",
+    );
+    // 整页跳转类(定位 / 首个项目)不带 highlight。
     expect(steps.find((s) => s.key === "positioning-profile")?.href).toBe(
       "/positioning",
     );
     expect(steps.find((s) => s.key === "first-project")?.href).toBe(
       "/projects/new",
+    );
+    // 联网搜索(recommended,settings 类)带 highlight。
+    expect(steps.find((s) => s.key === "web-search")?.href).toBe(
+      "/settings?highlight=web-search",
     );
   });
 });
@@ -191,5 +210,69 @@ describe("progressOf", () => {
     const { done, total } = progressOf(deriveSteps({}));
     expect(done).toBe(0);
     expect(total).toBe(ONBOARDING_STEP_SET.length);
+  });
+});
+
+describe("[T-132] isOnboardingComplete", () => {
+  /** required + recommended 全配(optional 一律没配)。 */
+  const requiredAndRecommended: OnboardingState = {
+    configuredCapabilities: new Set(["default", "web.search"]),
+    hasPositioningProfile: true,
+    projectCount: 1,
+  };
+
+  it("required + recommended 全 done → true(即使 optional 全未配)", () => {
+    expect(isOnboardingComplete(deriveSteps(requiredAndRecommended))).toBe(true);
+  });
+
+  it("仅缺一个 optional(如存储根)→ 仍 true(optional 不计入)", () => {
+    // requiredAndRecommended 本就没配任何 optional → 已覆盖「缺 optional 仍 true」。
+    // 这里再显式补配一部分 optional、独缺 storage-root,确认结论不变。
+    const state: OnboardingState = {
+      ...requiredAndRecommended,
+      configuredCapabilities: new Set([
+        "default",
+        "web.search",
+        "image.generate",
+        "video.generate",
+      ]),
+      // 独缺 hasStorageRoot(optional)。
+    };
+    expect(isOnboardingComplete(deriveSteps(state))).toBe(true);
+  });
+
+  it("缺一个 recommended(联网搜索)→ false", () => {
+    const state: OnboardingState = {
+      configuredCapabilities: new Set(["default"]), // 缺 web.search
+      hasPositioningProfile: true,
+      projectCount: 1,
+    };
+    expect(isOnboardingComplete(deriveSteps(state))).toBe(false);
+  });
+
+  it("缺一个 recommended(定位母版)→ false", () => {
+    const state: OnboardingState = {
+      configuredCapabilities: new Set(["default", "web.search"]),
+      hasPositioningProfile: false, // 缺定位
+      projectCount: 1,
+    };
+    expect(isOnboardingComplete(deriveSteps(state))).toBe(false);
+  });
+
+  it("缺一个 required(首个项目)→ false", () => {
+    const state: OnboardingState = {
+      configuredCapabilities: new Set(["default", "web.search"]),
+      hasPositioningProfile: true,
+      projectCount: 0, // 缺项目
+    };
+    expect(isOnboardingComplete(deriveSteps(state))).toBe(false);
+  });
+
+  it("空 state → false", () => {
+    expect(isOnboardingComplete(deriveSteps({}))).toBe(false);
+  });
+
+  it("无 required+recommended 步(空数组)→ true(防空数组误判)", () => {
+    expect(isOnboardingComplete([])).toBe(true);
   });
 });

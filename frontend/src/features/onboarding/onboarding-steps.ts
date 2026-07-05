@@ -11,7 +11,10 @@
  * 再喂给 deriveSteps。
  */
 
-export type OnboardingGroup = "required" | "optional";
+// [T-132] 三档 scope:required(必备,不配无法跑通核心流程)/ recommended
+// (强烈建议,配了少走弯路)/ optional(可选增益)。定位母版、联网搜索由用户拍板
+// 归 recommended —— 非硬必备(不配也能跑最小流程)、也非纯可选(缺了明显跑偏)。
+export type OnboardingGroup = "required" | "recommended" | "optional";
 
 /** 单步判定后的视图数据。overlay 直接渲染这个形状。 */
 export interface OnboardingStep {
@@ -87,18 +90,11 @@ export const ONBOARDING_STEP_SET: readonly StepSpec[] = [
   {
     key: "text-model",
     group: "required",
+    // [T-132] href 带 ?highlight=<key>:settings 页据此滚动+高亮对应配置卡(深链落地定位)。
     title: "配置文本模型",
     why: "所有 AI 能力(选题、写稿、审核)的地基,不配无法跑通任何生成。",
-    href: "/settings",
+    href: "/settings?highlight=text-model",
     isDone: (s) => hasCapability(s, "default"),
-  },
-  {
-    key: "positioning-profile",
-    group: "required",
-    title: "建立定位母版",
-    why: "账号定位是下游选题 / 评分的约束源 —— 先定位,选题写稿才不跑偏。",
-    href: "/positioning",
-    isDone: (s) => s.hasPositioningProfile === true,
   },
   {
     key: "first-project",
@@ -108,13 +104,32 @@ export const ONBOARDING_STEP_SET: readonly StepSpec[] = [
     href: "/projects/new",
     isDone: (s) => (s.projectCount ?? 0) >= 1,
   },
+  // ── 强烈建议组([T-132] 定位 / 联网搜索:配了少走弯路)──────────────────
+  {
+    // [T-132] 从 required 改 recommended(用户拍板):定位是强烈建议、非硬必备。
+    key: "positioning-profile",
+    group: "recommended",
+    title: "建立定位母版",
+    why: "账号定位是下游选题 / 评分的约束源 —— 先定位,选题写稿才不跑偏。",
+    href: "/positioning",
+    isDone: (s) => s.hasPositioningProfile === true,
+  },
+  {
+    // [T-132] 从 optional 改 recommended(用户拍板):联网搜索属强烈建议。
+    key: "web-search",
+    group: "recommended",
+    title: "配置联网搜索",
+    why: "素材搜集前置真检索,不配则素材来自模型记忆(需人工核实)。",
+    href: "/settings?highlight=web-search",
+    isDone: (s) => hasCapability(s, "web.search"),
+  },
   // ── 可选组(增益,配了体验更完整)────────────────────────────────────
   {
     key: "image-model",
     group: "optional",
     title: "配置生图模型",
     why: "给内容自动配封面 / 隐喻图,省去手动找图。",
-    href: "/settings",
+    href: "/settings?highlight=image-model",
     isDone: (s) => hasCapability(s, "image.generate"),
   },
   {
@@ -122,7 +137,7 @@ export const ONBOARDING_STEP_SET: readonly StepSpec[] = [
     group: "optional",
     title: "配置生视频模型",
     why: "生成 B-roll / 分镜画面,补齐视频素材。",
-    href: "/settings",
+    href: "/settings?highlight=video-model",
     isDone: (s) => hasCapability(s, "video.generate"),
   },
   {
@@ -130,7 +145,7 @@ export const ONBOARDING_STEP_SET: readonly StepSpec[] = [
     group: "optional",
     title: "配置审核模型",
     why: "用专用模型跑文案审核,不配则退回默认模型(报告会标注非专用)。",
-    href: "/settings",
+    href: "/settings?highlight=review-model",
     isDone: (s) => hasCapability(s, "script.review"),
   },
   {
@@ -138,23 +153,16 @@ export const ONBOARDING_STEP_SET: readonly StepSpec[] = [
     group: "optional",
     title: "配置 ASR 模型",
     why: "把音视频转逐字稿,复盘 / 二创才有文字底稿。",
-    href: "/settings",
+    href: "/settings?highlight=asr-model",
     isDone: (s) => hasCapability(s, "transcribe.audio"),
   },
-  {
-    key: "web-search",
-    group: "optional",
-    title: "配置联网搜索",
-    why: "素材搜集前置真检索,不配则素材来自模型记忆(需人工核实)。",
-    href: "/settings",
-    isDone: (s) => hasCapability(s, "web.search"),
-  },
+  // [T-132] web-search 已上移至 recommended 组(见上),不再列在 optional。
   {
     key: "storage-root",
     group: "optional",
     title: "设置存储根目录",
     why: "指定素材落盘位置,统一管理图片 / 视频 / 音频。",
-    href: "/settings",
+    href: "/settings?highlight=storage-root",
     // ⚠️ 弱信号:后端对未配用户也返回默认根,故 done 只表达「存储配置可读」,
     // 不能真区分用户是否显式设过(强区分待后续)。读失败 → 未完成。
     isDone: (s) => s.hasStorageRoot === true,
@@ -165,7 +173,7 @@ export const ONBOARDING_STEP_SET: readonly StepSpec[] = [
     group: "optional",
     title: "配置违禁词 / 审核规则",
     why: "发布前 L1 违禁词 lint 拦红线词,降限流 / 封号风险。",
-    href: "/settings",
+    href: "/settings?highlight=review-rules",
     isDone: (s) => s.hasActiveReviewRule === true,
   },
   {
@@ -197,11 +205,26 @@ export function deriveSteps(state: OnboardingState): OnboardingStep[] {
   }));
 }
 
-/** 必备步是否全部完成(→ 不自动弹)。 */
+/** 必备步是否全部完成(→ 不自动弹)。仅看 required —— 自动弹判据不变。 */
 export function allRequiredDone(steps: readonly OnboardingStep[]): boolean {
   const required = steps.filter((s) => s.group === "required");
   // 无必备步(理论不会) → 视为已完成(不自动弹),防空数组误判。
   return required.every((s) => s.done);
+}
+
+/**
+ * [T-132] onboarding 是否「已完成」—— required 与 recommended 两组步骤**全部 done**
+ * (optional 增益项不计入、不阻止退场)。常驻卡据此决定是否隐藏:两组全配 → 卡自动
+ * 消失。区别于 `allRequiredDone`(只看 required,是自动弹弹窗的判据)。
+ *
+ * 无 required+recommended 步(空数组)→ 视为 true,防空数组误判成「永不完成」。
+ */
+export function isOnboardingComplete(
+  steps: readonly OnboardingStep[],
+): boolean {
+  return steps
+    .filter((s) => s.group === "required" || s.group === "recommended")
+    .every((s) => s.done);
 }
 
 /** 进度:已完成步数 / 总步数(全组一起算,顶部「已完成 N/总 M」用)。 */

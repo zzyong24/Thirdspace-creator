@@ -29,7 +29,7 @@
  */
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
 import { Badge } from "@/components/ui/badge";
@@ -211,6 +211,20 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
   { id: "storage", label: "存储", icon: HardDrive },
 ];
 
+// [T-132] onboarding 深链 stepKey → 该卡所在设置页签。settings 类步骤点「去配置」跳
+// /settings?highlight=<stepKey>,弹窗据此先切到对应页签、再滚动+高亮那张卡。未列出的
+// stepKey(或缺省 highlight)→ 无副作用(不切页签、不报错)。
+const HIGHLIGHT_TAB: Record<string, string> = {
+  "text-model": "models",
+  "image-model": "models",
+  "video-model": "models",
+  "review-model": "models",
+  "asr-model": "models",
+  "web-search": "models",
+  "review-rules": "models",
+  "storage-root": "storage",
+};
+
 export function SettingsDialog({
   viewModel,
   skills = [],
@@ -223,6 +237,8 @@ export function SettingsDialog({
   skills?: readonly SkillItem[];
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const highlight = searchParams?.get("highlight") ?? null;
   const [open, setOpen] = React.useState(true);
   const [tab, setTab] = React.useState<string>(SETTINGS_DIALOG_TABS[0]!.id);
 
@@ -240,6 +256,35 @@ export function SettingsDialog({
     },
     [router],
   );
+
+  // [T-132] ?highlight=<stepKey> 深链落地定位(非逐步 tour,只是把 onboarding「去配置」
+  // 的深链滚到对应卡)。先切到该卡所在页签,下一帧找 [data-highlight=<key>] 元素滚到
+  // 视野中央 + 临时加高亮 ring,2s 后移除。highlight 缺省 / 找不到对应卡 → 无副作用。
+  React.useEffect(() => {
+    if (!highlight) return;
+    const targetTab = HIGHLIGHT_TAB[highlight];
+    if (!targetTab) return; // 未知 stepKey → 不切页签、不报错。
+    setTab(targetTab);
+    // 切页签后延一帧,让目标 panel 由 hidden 转可见再滚动 + 高亮。
+    const raf = requestAnimationFrame(() => {
+      if (typeof document === "undefined") return;
+      const el = document.querySelector(
+        `[data-highlight="${CSS.escape(highlight)}"]`,
+      );
+      if (!(el instanceof HTMLElement)) return; // 找不到对应卡 → 无副作用。
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // 高亮 ring(2s 后移除)—— 用与卡片 focus 同调性的 brand ring。
+      el.classList.add("ring-2", "ring-brand", "ring-offset-2", "rounded-card");
+      const timer = window.setTimeout(() => {
+        el.classList.remove("ring-2", "ring-brand", "ring-offset-2");
+      }, 2000);
+      // 保存 timer 到 dataset 以便卸载时清(避免组件卸载后 setTimeout 触发 DOM 访问)。
+      el.dataset.highlightTimer = String(timer);
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+    };
+  }, [highlight]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -1156,7 +1201,11 @@ function StorageUsageCard({
 
   return (
     <SectionCard title="存储空间" description="素材、知识库与导出文件">
-      <div data-slot="storage-usage-card" className="flex flex-col gap-3">
+      <div
+        data-slot="storage-usage-card"
+        data-highlight="storage-root"
+        className="flex flex-col gap-3"
+      >
         <SettingsFormRow
           label="存储后端"
           controlId="storage-backend"
@@ -1317,7 +1366,11 @@ function ModelConfigurationCard({
       title="模型配置"
       description="自定义绑定厂商 / 模型 / 接口地址 / 密钥;修改后点保存生效"
     >
-      <div data-slot="model-configuration-card" className="flex flex-col gap-3">
+      <div
+        data-slot="model-configuration-card"
+        data-highlight="text-model"
+        className="flex flex-col gap-3"
+      >
         <SettingsFormRow
           label="提供商"
           controlId="model-provider"
@@ -1607,6 +1660,22 @@ const MULTIMODAL_META = {
   },
 } as const;
 
+// [T-132] 多模态卡 kind → onboarding stepKey(?highlight=<stepKey> 深链落地定位)。
+// 只映射 onboarding 清单里有对应步的 kind;embed/vision 无 onboarding 步 → undefined
+// (不加 data-highlight,不影响定位)。
+const MULTIMODAL_HIGHLIGHT_KEY: Record<
+  "image" | "video" | "audio" | "embed" | "vision" | "review" | "search",
+  string | undefined
+> = {
+  image: "image-model",
+  video: "video-model",
+  audio: "asr-model",
+  review: "review-model",
+  search: "web-search",
+  embed: undefined,
+  vision: undefined,
+};
+
 function MultimodalModelCard({
   kind,
   state,
@@ -1695,6 +1764,9 @@ function MultimodalModelCard({
       <div
         data-slot={`multimodal-${kind}-card`}
         data-capability={meta.capability}
+        // [T-132] onboarding 深链高亮锚点(?highlight=<stepKey>)。stepKey 与卡 kind
+        // 不完全同名(asr-model→audio、web-search→search),故显式映射。
+        data-highlight={MULTIMODAL_HIGHLIGHT_KEY[kind]}
         className="flex flex-col gap-3"
       >
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -1941,7 +2013,11 @@ function ReviewRulesCard() {
         <ShieldCheck className="size-4 text-muted-foreground" aria-hidden />
       }
     >
-      <div data-slot="review-rules-card" className="flex flex-col gap-4">
+      <div
+        data-slot="review-rules-card"
+        data-highlight="review-rules"
+        className="flex flex-col gap-4"
+      >
         {error ? (
           <p className="text-[12px] text-destructive">{error}</p>
         ) : null}

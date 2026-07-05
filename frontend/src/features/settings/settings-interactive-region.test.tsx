@@ -12,7 +12,12 @@ import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
-vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
+// [T-132] SettingsDialog 读 ?highlight;默认无 query(highlight 相关测试各自覆盖 mock)。
+let mockSearchParams = new URLSearchParams();
+vi.mock("next/navigation", () => ({
+  useRouter: () => mockRouter,
+  useSearchParams: () => mockSearchParams,
+}));
 
 const mockClient = {
   patchPreferences: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
@@ -139,6 +144,7 @@ const VM: SettingsViewModel = {
 };
 
 beforeEach(() => {
+  mockSearchParams = new URLSearchParams();
   mockRouter.refresh.mockClear();
   mockClient.patchPreferences.mockClear();
   mockClient.putModel.mockClear();
@@ -652,5 +658,92 @@ describe("AccountBindingCard (T-032a — 抖音扫码登录入口 + 徽标)", ()
       .not.toBeNull();
     expect(badge.getAttribute("data-connected")).toBe("false");
     expect(mockClient.statusDouyin).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// [T-132 切片 4] ?highlight=<stepKey> 深链落地定位(非逐步 tour)
+// ---------------------------------------------------------------------------
+describe("SettingsDialog — ?highlight 深链定位", () => {
+  // jsdom 不实现 scrollIntoView → stub 掉,只断言它被调用 + 高亮 class 加上。
+  const scrollSpy = vi.fn();
+  beforeEach(() => {
+    scrollSpy.mockClear();
+    Element.prototype.scrollIntoView = scrollSpy;
+  });
+
+  /** rAF 在 jsdom 是异步的,等它跑完一帧。 */
+  async function flushRaf() {
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    await new Promise((r) => setTimeout(r, 0));
+  }
+
+  it("highlight=text-model → 滚动到文本模型配置卡并加高亮 ring", async () => {
+    mockSearchParams = new URLSearchParams("highlight=text-model");
+    const doc = renderDialog();
+    await flushRaf();
+
+    const card = doc.querySelector('[data-highlight="text-model"]') as HTMLElement;
+    expect(card).not.toBeNull();
+    expect(scrollSpy).toHaveBeenCalled();
+    expect(card.classList.contains("ring-brand")).toBe(true);
+    // 切到 models 页签(该卡所在)。
+    const modelsPanel = doc.querySelector(
+      '[data-slot="settings-panel"][data-tab-id="models"]',
+    ) as HTMLElement;
+    expect(modelsPanel.getAttribute("data-active")).toBe("true");
+  });
+
+  it("highlight=asr-model → 定位到逐字稿(audio)多模态卡(stepKey↔kind 非同名映射)", async () => {
+    mockSearchParams = new URLSearchParams("highlight=asr-model");
+    const doc = renderDialog();
+    await flushRaf();
+
+    const card = doc.querySelector('[data-highlight="asr-model"]') as HTMLElement;
+    expect(card).not.toBeNull();
+    // 该锚点正是 audio 多模态卡。
+    expect(card.getAttribute("data-slot")).toBe("multimodal-audio-card");
+    expect(scrollSpy).toHaveBeenCalled();
+    expect(card.classList.contains("ring-brand")).toBe(true);
+  });
+
+  it("highlight=storage-root → 切到存储页签并定位存储卡", async () => {
+    mockSearchParams = new URLSearchParams("highlight=storage-root");
+    const doc = renderDialog();
+    await flushRaf();
+
+    const card = doc.querySelector('[data-highlight="storage-root"]') as HTMLElement;
+    expect(card).not.toBeNull();
+    expect(card.getAttribute("data-slot")).toBe("storage-usage-card");
+    expect(scrollSpy).toHaveBeenCalled();
+    const storagePanel = doc.querySelector(
+      '[data-slot="settings-panel"][data-tab-id="storage"]',
+    ) as HTMLElement;
+    expect(storagePanel.getAttribute("data-active")).toBe("true");
+  });
+
+  it("无 highlight → 无副作用(不滚动、默认页签)", async () => {
+    mockSearchParams = new URLSearchParams();
+    const doc = renderDialog();
+    await flushRaf();
+
+    expect(scrollSpy).not.toHaveBeenCalled();
+    // 默认停在第一个页签(account)。
+    const accountPanel = doc.querySelector(
+      '[data-slot="settings-panel"][data-tab-id="account"]',
+    ) as HTMLElement;
+    expect(accountPanel.getAttribute("data-active")).toBe("true");
+  });
+
+  it("未知 highlight 值 → 无副作用、不报错", async () => {
+    mockSearchParams = new URLSearchParams("highlight=does-not-exist");
+    const doc = renderDialog();
+    await flushRaf();
+
+    expect(scrollSpy).not.toHaveBeenCalled();
+    const accountPanel = doc.querySelector(
+      '[data-slot="settings-panel"][data-tab-id="account"]',
+    ) as HTMLElement;
+    expect(accountPanel.getAttribute("data-active")).toBe("true");
   });
 });

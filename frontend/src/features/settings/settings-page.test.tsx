@@ -61,6 +61,8 @@ vi.mock("next/navigation", () => ({
     replace: vi.fn(),
     back: vi.fn(),
   }),
+  // [T-132] SettingsDialog 读 ?highlight 做深链定位;测试无 query → 返回空 params。
+  useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/lib/contract-client", () => ({
   client: {
