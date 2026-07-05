@@ -68,6 +68,8 @@ import {
   ShieldCheck,
   Trash2,
   Plus,
+  ChevronDownIcon,
+  ChevronRightIcon,
   type LucideIcon,
 } from "lucide-react";
 import type { ReviewRuleResource } from "@creatoros/contract";
@@ -353,34 +355,70 @@ export function SettingsDialog({
             </SettingsPanel>
             <SettingsPanel tabId="models" active={tab}>
               <div data-slot="settings-rail" className="flex flex-col gap-card-gap">
-                <ModelConfigurationCard model={viewModel.model} />
-                <MultimodalModelCard
-                  kind="image"
-                  state={viewModel.multimodalModels.image}
-                />
-                <MultimodalModelCard
-                  kind="video"
-                  state={viewModel.multimodalModels.video}
-                />
-                <MultimodalModelCard
-                  kind="audio"
-                  state={viewModel.multimodalModels.audio}
-                />
-                {/* [T-093] 知识库语义搜索 embedding(未配 → AI 搜索诚实降级关键词)。 */}
-                <MultimodalModelCard
-                  kind="embed"
-                  state={viewModel.multimodalModels.embed}
-                />
-                {/* [T-086 SPEC §2] 文案审核模型(豆包/火山方舟预设;未配 → 默认模型+标注非专用)。 */}
-                <MultimodalModelCard
-                  kind="review"
-                  state={viewModel.multimodalModels.review}
-                />
-                {/* [T-084a SPEC §1.1] 联网搜索(素材搜集前置真检索;未配 → 素材来自记忆+需核实)。 */}
-                <MultimodalModelCard
-                  kind="search"
-                  state={viewModel.multimodalModels.search}
-                />
+                {/* ① 必配块:文本模型是 AI 写字 / 对话的地基,配这一个就能用。 */}
+                <div data-slot="models-required-group" className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-semibold text-foreground">必配</span>
+                    <span className="text-xs text-muted-foreground">
+                      AI 写字 / 对话的地基,配这一个就能用;不配时有官方兜底。
+                    </span>
+                  </div>
+                  <ModelConfigurationCard model={viewModel.model} />
+                </div>
+
+                {/* ② 折叠块「更多能力」:5 张按需卡,默认收起(不配也能用,各自诚实降级)。
+                    highlight 命中组内某张卡时初始展开,保证 ?highlight 深链能滚到它。 */}
+                <CollapsibleModelGroup
+                  title="更多能力(按需,不配也能用)"
+                  highlight={highlight}
+                  highlightKeys={[
+                    "review-model",
+                    "image-model",
+                    "video-model",
+                    "asr-model",
+                  ]}
+                >
+                  {/* [T-086 SPEC §2] 文案审核模型(豆包/火山方舟预设;未配 → 默认模型+标注非专用)。 */}
+                  <MultimodalModelCard
+                    kind="review"
+                    state={viewModel.multimodalModels.review}
+                  />
+                  <MultimodalModelCard
+                    kind="image"
+                    state={viewModel.multimodalModels.image}
+                  />
+                  <MultimodalModelCard
+                    kind="video"
+                    state={viewModel.multimodalModels.video}
+                  />
+                  <MultimodalModelCard
+                    kind="audio"
+                    state={viewModel.multimodalModels.audio}
+                  />
+                  {/* [T-093] 知识库语义搜索 embedding(未配 → AI 搜索诚实降级关键词)。 */}
+                  <MultimodalModelCard
+                    kind="embed"
+                    state={viewModel.multimodalModels.embed}
+                  />
+                </CollapsibleModelGroup>
+
+                {/* ③ 联网搜索单独块:这不是模型 API,是找素材的检索方式(rss / browser 免 key)。 */}
+                <div data-slot="models-search-group" className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-semibold text-foreground">
+                      联网搜索(免 key 检索)
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      这不是模型 API,是找素材的检索方式;rss / browser 免 key。
+                    </span>
+                  </div>
+                  {/* [T-084a SPEC §1.1] 联网搜索(素材搜集前置真检索;未配 → 素材来自记忆+需核实)。 */}
+                  <MultimodalModelCard
+                    kind="search"
+                    state={viewModel.multimodalModels.search}
+                  />
+                </div>
+
                 {/* [T-086 SPEC §4] 审核规则库管理(候选态复盘回流采纳门;禁新增一级导航)。 */}
                 <ReviewRulesCard />
               </div>
@@ -1541,6 +1579,77 @@ function ModelConfigurationCard({
 }
 
 // ---------------------------------------------------------------------------
+// CollapsibleModelGroup — [T-140] 「更多能力(按需)」折叠容器
+// ---------------------------------------------------------------------------
+//
+// 把按需的多模态卡收进一个默认折叠的分组,让 models 页签不再一屏平铺 8 张卡吓人。
+// 折叠范式照 onboarding-card(useState collapsed + Chevron 图标 + 点击切换,本仓无
+// ui/collapsible 原语)。关键:children 始终挂载(不做 collapsed ? null),折叠只用
+// `hidden` 属性隐藏 body —— 这样 ?highlight=<stepKey> 深链的 scrollIntoView(见
+// SettingsDialog highlight effect)与既有测按 data-slot 直取卡都不受折叠影响。
+// 若当前 highlight 命中组内某张卡(highlightKeys),初始即展开,保证深链能滚到它。
+function CollapsibleModelGroup({
+  title,
+  highlight,
+  highlightKeys,
+  children,
+}: {
+  title: string;
+  /** 当前 ?highlight 值(SettingsDialog 透传);命中 highlightKeys 时初始展开。 */
+  highlight: string | null;
+  /** 组内各卡的 highlight stepKey;highlight 命中其一 → 初始展开。 */
+  highlightKeys: readonly string[];
+  children: React.ReactNode;
+}) {
+  const shouldOpenForHighlight =
+    highlight != null && highlightKeys.includes(highlight);
+  const [collapsed, setCollapsed] = React.useState(!shouldOpenForHighlight);
+  const count = React.Children.count(children);
+
+  return (
+    <div data-slot="models-more-group" className="flex flex-col gap-2">
+      <button
+        type="button"
+        data-slot="models-more-toggle"
+        aria-expanded={!collapsed}
+        onClick={() => setCollapsed((v) => !v)}
+        className={cn(
+          "flex w-full items-center gap-2 text-left",
+          "rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        )}
+      >
+        {collapsed ? (
+          <ChevronRightIcon
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
+        ) : (
+          <ChevronDownIcon
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
+        )}
+        <span className="text-sm font-semibold text-foreground">{title}</span>
+        <span
+          data-slot="models-more-count"
+          className="text-xs text-muted-foreground"
+        >
+          {count} 项
+        </span>
+      </button>
+      {/* body 始终挂载,折叠时仅 hidden(保深链/测可达);展开时纵向排列各卡。 */}
+      <div
+        data-slot="models-more-body"
+        hidden={collapsed}
+        className="flex flex-col gap-card-gap"
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // MultimodalModelCard — 文生图 / 文生视频 (SPEC 2026-07-01 §2.1 / M3)
 // ---------------------------------------------------------------------------
 //
@@ -1594,10 +1703,10 @@ const MULTIMODAL_META = {
   // ASR(SiliconFlow/OpenAI/Groq);建议值给 SiliconFlow(skill 已验)但不锁死。
   audio: {
     capability: "transcribe.audio" as const,
-    title: "逐字稿模型",
+    title: "语音转文字",
     icon: Cpu,
     description:
-      "抓作品时把音频转成逐字稿用(OpenAI 兼容 ASR);不配则逐字稿功能禁用。",
+      "把视频里的话转成文字稿(复盘 / 二创的底稿);不配则语音转文字功能禁用。",
     providerSuggestions: ["siliconflow", "openai", "groq"] as ReadonlyArray<string>,
     providerPlaceholder: "siliconflow",
     providerHelp:
@@ -1605,7 +1714,7 @@ const MULTIMODAL_META = {
     modelHelp: "ASR 模型 id,如 FunAudioLLM/SenseVoiceSmall(SiliconFlow)。",
     modelPlaceholder: "FunAudioLLM/SenseVoiceSmall",
     baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
-    disabledHint: "未配 → 逐字稿功能禁用。",
+    disabledHint: "未配 → 语音转文字功能禁用。",
   },
   // [T-093] 知识库语义搜索 embedding —— OpenAI 兼容 embedding 端点(SiliconFlow/OpenAI
   // 同形状);未配 → 知识库 AI 搜索诚实降级纯关键词。apiFormat 显式存 openai_chat

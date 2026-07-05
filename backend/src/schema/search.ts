@@ -25,10 +25,15 @@ export const searchDocuments = pgTable("search_documents", {
   title: text("title").notNull(),
   body: text("body").notNull().default(""),
   // search_text is the denormalized FTS column: `${title}\n${body}`.lowercase().
-  // queried via ILIKE this wave (pgvector/tsvector swap is a stage-N change behind
-  // the same column + SearchService.search seam — roadmap §59).
+  // The exact/lexical layer is queried via ILIKE (pgvector/tsvector swap for the
+  // lexical layer is a stage-N change behind the same column + SearchService.search
+  // seam — roadmap §59).
   searchText: text("search_text").notNull(),
-  // embedding persisted but NOT queried this wave (vector search deferred). jsonb
+  // embedding drives the semantic layer of hybridSearch (T-093): cosine similarity
+  // against the query embedding with a threshold cutoff (see search.service.ts
+  // hybridSearch; persistence-client hybridSearch lazily backfills doc embeddings
+  // and computes the query embedding at runtime). The exact layer still goes through
+  // ILIKE; the semantic layer complements it by queryEmbedding cosine. jsonb
   // array-of-number per searchDocumentResource.embedding; avoids a pgvector dep.
   embedding: jsonb("embedding").notNull().default([]),
   indexedAt: text("indexed_at").notNull(),
