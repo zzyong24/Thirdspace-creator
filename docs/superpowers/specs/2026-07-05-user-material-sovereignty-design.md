@@ -40,7 +40,8 @@ T-146 补的是第 2 条:让用户上传的文档成为**该内容的最高优�
 - **两阶段**:
   1. **确定性抽全文**(无 AI):按 mimeType 分派 —— PDF→`pdf-parse`、docx→`mammoth`、md/txt→UTF-8 直读。落 `extracted_text`。加密/扫描件/损坏 → `extract_status='failed'` + 诚实标注(不假装成功)。
   2. **AI 摘要要点卡**(用户裁决①):把全文(超长按 token 预算分段/截断)喂**可配文本模型**,`generateObject` 绑 `materialSummary` outputSchema(keyPoints/facts/sellingPoints)。摘要提示铁律:**「只提炼原文已有的事实/数据/卖点,不得补充原文没有的内容;拿不准的字段留空」**(承 research-gather 的「宁缺毋滥绝不编造」)。
-- **模型走 model-config 可配**(铁律,绝不写死):复用现有文本能力解析层(script/text 模型),或加 `document.summarize` capability(自由字符串,零 contract 改动,同 `transcribe.audio`/`web.search` 加入方式)。**实现期定,倾向复用现有文本模型**避免 capability 膨胀。未配/失败 → 诚实降级:只留 `extracted_text` 全文、`materialSummary` 空,注入时退化为「全文截断」模式(见 §3)。
+- **[gate 处置·定 OQ1] 模型分工定死**:阶段 1 确定性抽全文**无 AI**(不占 capability);阶段 2 AI 摘要**复用现有 script/text 文本模型解析层**(不新增 capability、避免膨胀,合「model-config 可配」铁律)。未配/失败 → 诚实降级:只留 `extracted_text` 全文、`materialSummary` 空,注入退化「全文截断」模式(见 §3)。
+- **[gate 处置·大文件兜底]**:上传入口加**文档大小上限**(前端 accept + 后端拒超限,阈值如 20MB);AI 摘要输入按 **token 预算截断**(截到模型上下文合理比例,超长诚实标「资料过长已截断」);`extracted_text` 存全文但注入走截断,防 OOM/超 context。
 
 ### 1.3 前端呈现
 - 素材详情面板(`asset-detail-panel.tsx`)对 document 类型显「资料要点卡」(keyPoints/facts)+「查看全文」;`extract_status='failed'` 显诚实提示「该文档无法自动解析文本(可能是扫描件/加密),AI 将无法读取其内容」。
@@ -63,6 +64,7 @@ T-146 补的是第 2 条:让用户上传的文档成为**该内容的最高优�
   > 【用户第一手资料 · 最高优先 · 必须遵守】以下为创作者提供的核心资料。文案**必须紧扣其核心事实、数据、卖点**,不得脱离、弱化或编造与之矛盾的内容。这些是本条内容的事实地基。
   > <要点卡:keyPoints / facts / sellingPoints>
 - **平衡「紧扣事实」vs「只会复述」**:硬约束限定在**事实/数据/卖点层**(不许改/不许编造),但**表达角度、钩子、结构留给 AI 自由发挥**(prompt 显式说明:「事实必须忠于资料,但开头/角度/叙述由你创作」)。既满足用户「硬约束紧扣核心事实」,又防止 AI 沦为复读机。
+- **[gate 处置] 「卖点」收窄 + 合规边界**:硬约束里的「卖点」限定为**只引用原文已声明的卖点,AI 不得创造新卖点**(与「事实/数据」同级——只提取不创作,守宪法 §5「AI 不直接写领域实体」)。prompt 给正反示例:✅ 资料说「续航 20 小时」→ 文案可主打续航;❌ 资料没提防水 → 文案不得说「防水」。
 - `normal` 优先素材进既有普通 `assetsBrief`(参考级,非硬约束)。
 
 ## §4 搜索深度结合(增量④,复用 T-084 facet 范式)
@@ -82,7 +84,8 @@ T-146 补的是第 2 条:让用户上传的文档成为**该内容的最高优�
 - 迁移(新 `backend/drizzle/00XX_*`,additive):`asset_files` 加 `extracted_text`/`extract_status`;`material_links` 加 `priority DEFAULT 'normal'`;(`materialSummary` 走既有 `mediaMetadata` jsonb,无需新列)。
 - 契约:`AssetsReader` 返回结构加 `materialSummary?`/`extractedText?`/`priority?`(additive,旧消费不破);material-links create op 支持 `priority`(可选,默认按 addedByType 派生)。
 - 依赖:加 `pdf-parse`、`mammoth`(docx);md/txt 零依赖。
-- 契约零删除;capability 若加 `document.summarize` 走自由字符串;敏感 key 只进 .env.local。
+- **[gate 处置·文件安全]**:抽取**只取文本层,不执行 PDF 内嵌 JS / Word 宏**(pdf-parse/mammoth 纯文本抽取,不运行嵌入脚本);沿用现有两阶段上传的 presigned `storageKey`(与原始文件名隔离,防路径注入)。
+- 契约零删除;文档 AI 摘要**复用现有文本模型**(不新增 capability,见 §1.2);敏感 key 只进 .env.local。
 
 ## §7 切片(一次从 0 到 1,非分期减法)
 
@@ -119,3 +122,19 @@ T-146 补的是第 2 条:让用户上传的文档成为**该内容的最高优�
 - **OQ2 全文超长**:要点卡摘要 + 全文截断注入的 token 预算阈值定多少?实现期按模型上下文窗口定,诚实标「资料过长已截断」。
 - **OQ3 OCR(未来)**:扫描件/图片型 PDF 是否要接 OCR(视觉模型)?本期不做,`extract_status='unsupported'` 诚实标注。
 - **未来(本期不做)**:OCR 扫描件、手动优先级 UI(pin/星级)、跨项目素材复用、素材版本管理。
+
+## §11 gate 评审处置(2026-07-05,MiniMax 独立评审 + 评审员亲验校正)
+
+MiniMax(mmx)判 FAIL(2 blocker+8 major);评审员亲验代码**校正为 CONCERNS**——2 blocker 均驳回:①「T-136 已加 account_id 冲突」= 事实错误(切片 a 只到 RequestContext,未给业务表加列);②「素材归属未定义」= 误读(§2 已答 priority 落 material_links,per-(project,asset) 一行,天然化解跨项目冲突)。
+
+3 条真 major 已内联处置(additive,不需重新 gate):
+
+| major | 处置 | 落点 |
+|---|---|---|
+| 硬约束「卖点」偏领域实体判断 | 收窄为「只引用原文已声明的卖点,不创造」+ 正反示例 | §3 |
+| OQ1 悬置 + 大文件无上限/截断 | 定死抽全文无 AI / 摘要复用现有文本模型 + 文档大小上限 + token 截断 | §1.2 |
+| 恶意文件安全零覆盖 | 只取文本层不执行宏/JS + storageKey 隔离 | §6 |
+
+minor:priority 加 CHECK → **驳回**(本仓枚举一律 service 层校验,加 CHECK 破坏一致性);截断阈值/JSONB schema 版本 → 实现期定(OQ2 认领)。
+
+**re-gate 结论:可开工**(CONCERNS≠FAIL,3 major 已处置)。
