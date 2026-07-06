@@ -1495,7 +1495,7 @@ export function AICopilotContent({
           ref={messagesScrollRef}
           onScroll={handleMessagesScroll}
           data-slot="copilot-message-scroll"
-          className="min-h-[220px] flex-1 overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
+          className="min-h-[120px] flex-1 overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
         >
           {messages.length > 0 ? (
             <ol

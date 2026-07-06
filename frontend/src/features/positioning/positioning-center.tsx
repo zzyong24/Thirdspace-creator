@@ -470,7 +470,7 @@ function DownstreamRules({
     // 固定高度下作独立框滚动列 (取代旧的 lg:sticky 整页滚定位)。
     <aside
       data-testid="positioning-downstream"
-      className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-card p-card-padding"
+      className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-card p-5"
     >
       <div className="flex shrink-0 flex-col gap-0.5">
         <h2 className="text-[15px] font-semibold text-foreground">
