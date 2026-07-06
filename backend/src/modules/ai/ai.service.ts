@@ -385,7 +385,7 @@ const DEFAULT_MODEL_FOR_CAPABILITY: Record<string, string> = {
 // Date.now / Math.random (determinism boundary, design-spec §8).
 function stableHash(parts: string[]): string {
   let h = 0x811c9dc5;
-  const s = parts.join(" ");
+  const s = parts.join("\0");
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i);
     h = Math.imul(h, 0x01000193);
