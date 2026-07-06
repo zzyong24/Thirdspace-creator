@@ -23,14 +23,16 @@ ASR **选配**:
 - 惰性加载模型(首次调用下载 + 缓存,后续复用)。
 - 输入 audioBytes(runner 已从 iesdouyin 取到音频)→ 本地推理 → 文本。
 
-### 3.2 实现选型(**关键决策,待定/参考 msg-collect**)
+### 3.2 实现选型(**关键决策 —— 已查 msg-collect**)
+**msg-collect 实测用的是 Python `faster-whisper==1.2.1`**(`~/Workbase/Msg-collect`):`WhisperModel(size, device="cpu", compute_type="int8")`,模型首用自动下到 `~/.cache/huggingface`(tiny ~75MB / medium ~1.5GB),默认 tiny,可升 small/medium,支持 CPU/CUDA。**但它是 Python 应用**;CreatorOS 是 Node/Next.js(+ 桌面化 Tauri)—— faster-whisper **无法直接搬进 Node**。选型:
+
 | 选项 | 说明 | 取舍 |
 |---|---|---|
-| **A. Transformers.js**(`@xenova/transformers`) | 纯 JS/WASM 跑 Whisper,从 HF 下载模型,无外部二进制/python | **推荐**:纯 JS、桌面化(T-147 Tauri/Electron)零依赖、跨平台一致。慢于原生但够用 |
-| B. whisper.cpp 二进制 | 下载/内置 whisper.cpp binary + ggml 模型,spawn 子进程 | 快(原生),但要按平台分发二进制 + 编译,打包复杂 |
-| C. nodejs-whisper / smart-whisper | node 绑定 whisper.cpp | 介于 A/B,需 native 编译 |
+| **A. Transformers.js**(`@xenova/transformers`) | 纯 JS/WASM 跑 Whisper,同款 Whisper 模型从 HF 下载,无 Python/二进制 | **推荐**:Node 原生、桌面化零依赖、跨平台一致。**把 msg-collect 的 Whisper 能力移到 Node**(同模型同 UX:tiny/small 默认、HF 缓存),只是换库。CPU-WASM 慢些但够用 |
+| B. spawn Python `faster-whisper` | 子进程调 Python(与 msg-collect 完全一致) | **与 msg-collect 逐行对齐**,但**要求用户机装 Python + faster-whisper**——桌面分发极重、非 Node 用户装不上,不推荐 |
+| C. whisper.cpp 二进制 / node 绑定 | 原生二进制 spawn / native 绑定 | 快,但按平台分发/编译二进制,打包复杂 |
 
-> **需你拍板 / 给 msg-collect 实现路径**:msg-collect 用的哪种?若能给我 msg-collect 那块代码/路径,我照它做;否则默认 **A(Transformers.js)**——最契合桌面化零依赖。
+> **我的判断 + 推荐 A**:msg-collect 给的是**功能参照**(本地 Whisper、自动下模型、tiny/small 默认、CPU),这些 Transformers.js 都能在 Node 里等价实现,且不背 Python 依赖(对桌面化 T-147 至关重要)。B 逐行对齐但把 Python 运行时塞进 Node 桌面应用,得不偿失。**除非你要求与 msg-collect 完全同栈(B),否则我按 A 实现。**
 
 ### 3.3 模型下载 + 缓存
 - 缓存目录:`~/CreatorOS/models/whisper/<level>`(或复用存储 root 下 `models/`)。首次下载(small ~150–500MB)带进度。
