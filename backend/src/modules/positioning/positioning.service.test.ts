@@ -239,4 +239,33 @@ describe("positioning service", () => {
     expect(center.productAnchors).toEqual(["product-9"]);
     expect(center.history.map((h) => h.versionNumber)).toEqual([2, 1]);
   });
+
+  // ── [T-136 切片 ④ · SPEC §C/§D] service→repo accountId 透传:切号 = 换定位母版 ──
+  it("按号切:同 user 不同 accountId 的 getPositioningCenter 见各自的定位母版", async () => {
+    const service = makeService(db, makeProjectsPort());
+    const ctxAcc1: RequestContext = { ...ctx, accountId: "acc-1" };
+    const ctxAcc2: RequestContext = { ...ctx, accountId: "acc-2" };
+
+    await service.upsertProfile(ctxAcc1, { ...PROFILE_INPUT, persona: "科技号" });
+    await service.upsertProfile(ctxAcc2, { ...PROFILE_INPUT, persona: "美食号" });
+
+    // 号 1 只见科技号母版;号 2 只见美食号母版 —— 切号即换约束(§D)。
+    const center1 = await service.getPositioningCenter(ctxAcc1);
+    const center2 = await service.getPositioningCenter(ctxAcc2);
+    expect(center1.profile!.persona).toBe("科技号");
+    expect(center2.profile!.persona).toBe("美食号");
+    expect(center1.profile!.id).not.toBe(center2.profile!.id);
+
+    // statement 也按号:号 1 建的 statement 在号 2 的 center 里看不到。
+    await service.createStatementVersion(ctxAcc1, {
+      oneLiner: "科技号定位",
+      keywords: ["a", "b", "c"],
+      productAnchorIds: [],
+    });
+    expect((await service.getPositioningCenter(ctxAcc1)).currentStatement)
+      .not.toBeNull();
+    expect(
+      (await service.getPositioningCenter(ctxAcc2)).currentStatement,
+    ).toBeNull();
+  });
 });

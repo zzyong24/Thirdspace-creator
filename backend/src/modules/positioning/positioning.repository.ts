@@ -24,6 +24,12 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // the ownership boundary, baked in at construction
+  // [T-136 切片 ④ · SPEC §C] 第二所有权维度(多抖音号 / 多人设)。非空 → 读门在
+  // eq(userId) 上叠 eq(creator_profiles.account_id)(每号一套定位母版,尊重复合唯一
+  // UNIQUE(user_id, account_id));null(存量 / 未选号)→ 退化不按号过滤(返回该 user
+  // 全部 profile,§A 全局视图兜底)。profile insert stamp accountId,建第二号 profile
+  // 不撞旧的单 profile。
+  accountId: string | null;
 }
 
 // The richer facets + downstream rules (定位中心重建) — persisted as ONE jsonb each.
@@ -121,7 +127,15 @@ export function createPositioningRepository(
       const rows = await db
         .select()
         .from(creatorProfiles)
-        .where(eq(creatorProfiles.userId, deps.userId));
+        .where(
+          and(
+            eq(creatorProfiles.userId, deps.userId),
+            // [T-136 ④] 号维度收窄:accountId 非空才叠(and 忽略 undefined → null 退化不过滤,§A)。
+            deps.accountId
+              ? eq(creatorProfiles.accountId, deps.accountId)
+              : undefined,
+          ),
+        );
       return rows[0];
     },
 
@@ -131,6 +145,9 @@ export function createPositioningRepository(
         .values({
           id: deps.nextId("profile"),
           userId: deps.userId,
+          // [T-136 ④] 每号一套定位母版:stamp 当前号(null = 存量 / 未选号)。尊重复合唯一
+          // UNIQUE(user_id, account_id) —— 建第二号 profile 不撞第一号。
+          accountId: deps.accountId,
           persona: input.persona,
           field: input.field,
           audience: input.audience,
@@ -158,23 +175,38 @@ export function createPositioningRepository(
           downstreamRules: input.downstreamRules,
           updatedAt: deps.now(),
         })
-        .where(eq(creatorProfiles.userId, deps.userId))
+        .where(
+          and(
+            eq(creatorProfiles.userId, deps.userId),
+            // [T-136 ④] 只更新当前号的母版(null 退化:该 user 唯一存量 profile)。
+            deps.accountId
+              ? eq(creatorProfiles.accountId, deps.accountId)
+              : undefined,
+          ),
+        )
         .returning();
       return updated[0]!;
     },
 
     async listStatements({ limit, offset }) {
+      // [T-136 ④] statement 承 profile 的号;读门叠 accountId(null 退化不过滤)。
+      const scope = and(
+        eq(positioningStatements.userId, deps.userId),
+        deps.accountId
+          ? eq(positioningStatements.accountId, deps.accountId)
+          : undefined,
+      );
       const rows = await db
         .select()
         .from(positioningStatements)
-        .where(eq(positioningStatements.userId, deps.userId))
+        .where(scope)
         .orderBy(desc(positioningStatements.versionNumber))
         .limit(limit)
         .offset(offset);
       const all = await db
         .select({ id: positioningStatements.id })
         .from(positioningStatements)
-        .where(eq(positioningStatements.userId, deps.userId));
+        .where(scope);
       return { rows, total: all.length };
     },
 
@@ -185,6 +217,10 @@ export function createPositioningRepository(
         .where(
           and(
             eq(positioningStatements.userId, deps.userId),
+            // [T-136 ④] 跨号读别号的 statement → 空 → OwnershipError(404,不泄存在)。
+            deps.accountId
+              ? eq(positioningStatements.accountId, deps.accountId)
+              : undefined,
             eq(positioningStatements.id, statementId),
           ),
         );
@@ -204,6 +240,9 @@ export function createPositioningRepository(
         .where(
           and(
             eq(positioningStatements.userId, deps.userId),
+            deps.accountId
+              ? eq(positioningStatements.accountId, deps.accountId)
+              : undefined,
             eq(positioningStatements.profileId, profileId),
           ),
         )
@@ -219,6 +258,9 @@ export function createPositioningRepository(
         .where(
           and(
             eq(positioningStatements.userId, deps.userId),
+            deps.accountId
+              ? eq(positioningStatements.accountId, deps.accountId)
+              : undefined,
             eq(positioningStatements.profileId, profileId),
           ),
         )
@@ -233,6 +275,8 @@ export function createPositioningRepository(
         .values({
           id: deps.nextId("posstmt"),
           userId: deps.userId,
+          // [T-136 ④] statement 承 profile 的号(stamp 当前号;null = 存量 / 未选号)。
+          accountId: deps.accountId,
           profileId: input.profileId,
           oneLiner: input.oneLiner,
           keywords: input.keywords,

@@ -34,12 +34,18 @@ const BLANK_RULES = {
   expressionRule: "",
 };
 
-function repoFor(db: Db, userId: string, tag = userId): PositioningRepository {
+function repoFor(
+  db: Db,
+  userId: string,
+  accountId: string | null = null,
+  tag = accountId ?? userId,
+): PositioningRepository {
   let seq = 0;
   return createPositioningRepository(db, {
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${tag}-${++seq}`,
     userId,
+    accountId,
   });
 }
 
@@ -168,5 +174,79 @@ describe("positioning repository (integration, user-scoped)", () => {
     // A still reads its own.
     expect((await repoA.getProfile())!.id).toBe(profileA.id);
     expect((await repoA.getStatement(stmtA.id)).id).toBe(stmtA.id);
+  });
+
+  // ── [T-136 切片 ④ · SPEC §C] 定位母版 per-account ─────────────────────────────
+  const mkProfileInput = (persona: string) => ({
+    persona,
+    field: "f",
+    audience: "a",
+    differentiation: "d",
+    capabilities: [] as string[],
+    facets: BLANK_FACETS,
+    downstreamRules: BLANK_RULES,
+  });
+
+  it("按号隔离:设当前号只见该号母版,不串到同 user 的别号", async () => {
+    const repoAcc1 = repoFor(db, "user-a", "acc-1");
+    const repoAcc2 = repoFor(db, "user-a", "acc-2");
+
+    const p1 = await repoAcc1.insertProfile(mkProfileInput("科技号人设"));
+    const p2 = await repoAcc2.insertProfile(mkProfileInput("美食号人设"));
+    expect(p1.accountId).toBe("acc-1");
+    expect(p2.accountId).toBe("acc-2");
+
+    // 号 1 只见自己的母版,不见号 2。
+    expect((await repoAcc1.getProfile())!.id).toBe(p1.id);
+    expect((await repoAcc1.getProfile())!.persona).toBe("科技号人设");
+    // 号 2 只见自己的母版。
+    expect((await repoAcc2.getProfile())!.id).toBe(p2.id);
+    expect((await repoAcc2.getProfile())!.persona).toBe("美食号人设");
+
+    // 号 1 的 statement 归号 1;号 2 读不到(承 profile 的号)。
+    const s1 = await repoAcc1.insertStatement({
+      profileId: p1.id,
+      oneLiner: "科技号一句话",
+      keywords: ["a", "b", "c"],
+      productAnchorIds: [],
+      versionNumber: 1,
+      createdByType: "human",
+      aiTaskId: null,
+    });
+    expect(s1.accountId).toBe("acc-1");
+    // 号 2 跨号读号 1 的 statement → OwnershipError（404，不泄存在）。
+    await expect(repoAcc2.getStatement(s1.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    // 号 2 的 list 不含号 1 的 statement。
+    expect((await repoAcc2.listStatements({ limit: 50, offset: 0 })).total).toBe(
+      0,
+    );
+    // 号 1 的 list 只含自己那条。
+    const l1 = await repoAcc1.listStatements({ limit: 50, offset: 0 });
+    expect(l1.total).toBe(1);
+    expect(l1.rows[0]!.id).toBe(s1.id);
+  });
+
+  it("建第二个号的 profile 不撞旧唯一约束（复合 UNIQUE(user_id, account_id) 生效）", async () => {
+    const repoAcc1 = repoFor(db, "user-a", "acc-1");
+    const repoAcc2 = repoFor(db, "user-a", "acc-2");
+    // 同一 user 建两号各一套母版 —— 旧 UNIQUE(user_id) 下第二条会撞，复合唯一后 OK。
+    await repoAcc1.insertProfile(mkProfileInput("号1"));
+    await expect(
+      repoAcc2.insertProfile(mkProfileInput("号2")),
+    ).resolves.toMatchObject({ accountId: "acc-2" });
+  });
+
+  it("accountId=null 退化：不按号过滤，读到该 user 的存量母版（全局视图兜底）", async () => {
+    // 存量场景:先建一条带号的母版(模拟已迁移存量),再用 null-account repo 读 —— 应能读到。
+    const repoAcc1 = repoFor(db, "user-a", "acc-1");
+    const stamped = await repoAcc1.insertProfile(mkProfileInput("存量母版"));
+
+    const repoNull = repoFor(db, "user-a", null);
+    const seen = await repoNull.getProfile();
+    // null 退化不按号过滤 → 读到该 user 的(唯一)母版。
+    expect(seen).toBeDefined();
+    expect(seen!.id).toBe(stamped.id);
   });
 });

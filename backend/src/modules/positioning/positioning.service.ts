@@ -146,7 +146,18 @@ export function createPositioningService(
   const { db, now, nextId, projects } = deps;
 
   function repoFor(ctx: RequestContext): PositioningRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+    // [T-136 切片 ④ · SPEC §C/§D] 号维度透传:ctx.accountId 属主已由
+    // resolveRequestContext 校验可信(不属主 / 未知号已降级 null)。非空 → repo 门按号
+    // 收窄(每号一套定位母版);null(存量 / 未选号)→ 退化按 user。getPositioningCenter /
+    // upsertProfile / createStatementVersion / evaluateGate 全经此,故定位全消费面(positioning
+    // 页 / creative-context positioning facet / script-review-runner / positioning-runner)
+    // 随 ctx.accountId 自动按号。
+    const repoDeps: RepoDeps = {
+      now,
+      nextId,
+      userId: ctx.userId,
+      accountId: ctx.accountId ?? null,
+    };
     return createPositioningRepository(db, repoDeps);
   }
 

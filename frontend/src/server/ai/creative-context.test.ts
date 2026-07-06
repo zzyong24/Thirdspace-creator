@@ -500,3 +500,127 @@ describe("markReconstructedBrief — 纯函数", () => {
     expect(markReconstructedBrief("", "reconstructed")).toBe("");
   });
 });
+
+// ── [T-136 切片 ④ · SPEC §D] AI 上下文 per-account ──────────────────────────────
+// creative-context 层对 ctx 是纯透传:assembleCreativeContext(ctx, …) 把同一个 ctx
+// 逐个传给每个 reader,reader 再交给底层 module service(positioning/learnings/candidate/
+// knowledge/… 的 repo 门已按 ctx.accountId 收窄)。故「同一 topic.generate 在不同号下注入
+// 不同定位 / 受众 / 经验」= ctx.accountId 一路透传到每个 reader,无遗漏。本测两件事:
+//   ① 透传无遗漏:每个装配的 reader 都收到带 accountId 的 ctx(漏一个 = 该维度跨号串味)。
+//   ② 按号即换约束:positioning reader 依 ctx.accountId 返回不同母版 → positioningBrief 随号变。
+describe("creative-context per-account — ctx.accountId 透传到每个 reader(§D)", () => {
+  it("每个 reader 都收到带 accountId 的 ctx(透传无遗漏)", async () => {
+    const seenAccountIds: Record<string, string | null | undefined> = {};
+    const record = (key: string) => (c: RequestContext) => {
+      seenAccountIds[key] = c.accountId;
+    };
+    const ctxAcc: RequestContext = {
+      userId: "u1",
+      requestId: "r1",
+      source: "user",
+      accountId: "acc-tech",
+    };
+    const deps: ContextDeps = {
+      positioning: {
+        getPositioningCenter: async (c) => {
+          record("positioning")(c);
+          return { profile: null, currentStatement: null };
+        },
+      },
+      learnings: {
+        getSuggestions: async (c) => {
+          record("learnings")(c);
+          return [];
+        },
+      },
+      assets: {
+        list: async (c) => {
+          record("assets")(c);
+          return [];
+        },
+      },
+      accounts: {
+        list: async (c) => {
+          record("accounts")(c);
+          return [];
+        },
+      },
+      signals: {
+        list: async (c) => {
+          record("signals")(c);
+          return [];
+        },
+      },
+      knowledge: {
+        list: async (c) => {
+          record("knowledge")(c);
+          return [];
+        },
+      },
+    };
+
+    await assembleCreativeContext(
+      ctxAcc,
+      { projectId: "proj-1", topic: "选题" },
+      deps,
+    );
+
+    // 每个装配的 reader 都必须收到当前号 —— 漏一个即该维度跨号串味。
+    for (const key of [
+      "positioning",
+      "learnings",
+      "assets",
+      "accounts",
+      "signals",
+      "knowledge",
+    ]) {
+      expect(seenAccountIds[key]).toBe("acc-tech");
+    }
+  });
+
+  it("按号换约束:不同 accountId → positioningBrief 注入不同定位", async () => {
+    // positioning reader 模拟底层 service 已按号:依 ctx.accountId 返回不同母版。
+    const byAccount: Record<string, string> = {
+      "acc-tech": "硬核科技号",
+      "acc-food": "家常美食号",
+    };
+    const deps: ContextDeps = {
+      positioning: {
+        getPositioningCenter: async (c) => ({
+          profile: {
+            persona: byAccount[c.accountId ?? ""] ?? "",
+            field: "",
+            audience: "",
+            differentiation: "",
+            capabilities: [],
+          },
+          currentStatement: null,
+        }),
+      },
+    };
+
+    const techCtx: RequestContext = {
+      userId: "u1",
+      requestId: "r1",
+      source: "user",
+      accountId: "acc-tech",
+    };
+    const foodCtx: RequestContext = { ...techCtx, accountId: "acc-food" };
+
+    const techContext = await assembleCreativeContext(
+      techCtx,
+      { projectId: null, topic: "选题" },
+      deps,
+    );
+    const foodContext = await assembleCreativeContext(
+      foodCtx,
+      { projectId: null, topic: "选题" },
+      deps,
+    );
+
+    // 同一 topic.generate,切号 → 注入的定位不同(§D 端到端语义)。
+    expect(techContext.positioningBrief).toContain("硬核科技号");
+    expect(foodContext.positioningBrief).toContain("家常美食号");
+    expect(techContext.positioningBrief).not.toBe(foodContext.positioningBrief);
+  });
+});
