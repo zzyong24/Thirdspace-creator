@@ -120,9 +120,10 @@ export function Pagination({
               current={isCurrent}
               ariaLabel={`第 ${page} 页`}
               className={cn(
-                "inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                "inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                 isCurrent
-                  ? "bg-brand text-brand-foreground"
+                  ? // [UI] 当前页:不用满饱和实心紫圆(太重),改柔紫底 + 品牌色字 + 细描边 —— 清晰"当前"但克制。
+                    "bg-brand-soft font-semibold text-brand ring-1 ring-inset ring-brand/30"
                   : "text-muted-foreground hover:bg-surface-subtle hover:text-foreground",
               )}
             >

@@ -219,7 +219,9 @@ function EmptyStateAiCta() {
   return (
     <div
       data-testid="positioning-empty-ai-cta"
-      className="flex w-full flex-col gap-3 rounded-card border border-brand/30 bg-brand-soft/40 p-4"
+      // [UI] 去"紫压紫":卡片改中性面(原 border-brand/30 + bg-brand-soft/40 与内部紫按钮+紫图标叠三层紫)。
+      //   中性卡 → 让实心品牌按钮成为唯一强色焦点,图标 chip 作小面积品牌点缀。
+      className="flex w-full flex-col gap-3 rounded-card border border-border bg-surface-subtle/60 p-4"
     >
       <div className="flex items-start gap-3">
         <IconChip icon={Sparkles} tone="brand" />

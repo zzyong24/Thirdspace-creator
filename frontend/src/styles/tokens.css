@@ -5,6 +5,8 @@
   --creatoros-brand: #6d4aff;
   --creatoros-brand-hover: #5b38eb;
   --creatoros-brand-soft: #f2efff;
+  /* [UI 修真] brand 上的前景 —— 白色,压在饱和紫上高对比(此前缺失致按钮字回退成深色)。 */
+  --creatoros-brand-foreground: #ffffff;
   --creatoros-text: #171a25;
   --creatoros-text-muted: #667085;
   --creatoros-text-subtle: #98a2b3;

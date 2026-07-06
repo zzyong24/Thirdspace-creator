@@ -14,6 +14,10 @@
   --color-brand: var(--creatoros-brand);
   --color-brand-hover: var(--creatoros-brand-hover);
   --color-brand-soft: var(--creatoros-brand-soft);
+  /* [UI 修真] brand 上的前景色。此前**未定义** → `text-brand-foreground`(全仓 45 处按钮)
+     回退到主题 `--foreground`:亮色模式=深色字压在饱和紫底上(低对比、发闷),暗色靠 --foreground
+     恰为浅色蒙混。定义为白色 → 品牌按钮全都白字压紫,高对比、干净。 */
+  --color-brand-foreground: var(--creatoros-brand-foreground);
   --color-text: var(--creatoros-text);
   --color-text-muted: var(--creatoros-text-muted);
   --color-text-subtle: var(--creatoros-text-subtle);
