@@ -281,6 +281,7 @@ import {
 import {
   createPlatformAccountService,
   createPlatformAccountTransport,
+  type PlatformAccountService,
   // [T-135] createPlatformAccountRepository / PlatformAccountRow 已随 canonical platform account seed 退役移除。
   PLATFORM_ACCOUNT_OP_IDS,
 } from "@creatoros/backend/modules/platform-account";
@@ -595,6 +596,10 @@ interface PersistenceBundle {
   queryServices: Transport;
   publishingCenter: PublishingCenterQueryService;
   identity: IdentityService;
+  // [T-136 切片 a] 暴露 platform-account service(不只 transport),供 resolveRequestContext
+  // 在解析 ctx 时对 x-account-id header 做属主硬校验(getAccount 域内查号,不属主抛 404 → 降级
+  // null)。与 identity/settingsService 同款「无 dispatch endpoint 的 route 直调服务」逃生口。
+  platformAccountService: PlatformAccountService;
   // item B — exposed so the blob route (no dispatch endpoint) can resolve the
   // request user's media root, the same root uploads were minted against.
   settingsService: SettingsService;
@@ -5622,6 +5627,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     queryServices,
     publishingCenter,
     identity,
+    platformAccountService,
     settingsService,
     chatRuntime,
     localFileRuntime,
@@ -5750,6 +5756,17 @@ export async function getPublishingCenterService(): Promise<PublishingCenterQuer
  */
 export async function getIdentityService(): Promise<IdentityService> {
   return (await getBundle()).identity;
+}
+
+/**
+ * [T-136 切片 a] platform-account service,bound to the same pglite store。
+ * `resolveRequestContext` 用它对 x-account-id header 做属主硬校验(gate BLOCKER-1):
+ * getAccount(ctx, accountId) 在 ctx.userId 域内查号,不属主 / 不存在 → OwnershipError,
+ * 调用侧据此把 accountId 降级为 null(防伪造 header 越权穿透 per-account repo 门)。
+ * 与 getIdentityService 同款「无 dispatch endpoint 的 route 直调服务」逃生口。
+ */
+export async function getPlatformAccountService(): Promise<PlatformAccountService> {
+  return (await getBundle()).platformAccountService;
 }
 
 /**

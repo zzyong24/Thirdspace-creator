@@ -14,10 +14,14 @@ vi.mock("server-only", () => ({}));
 
 const resolveContextFromToken = vi.fn();
 const resolveLocalContext = vi.fn();
+const getAccount = vi.fn();
 vi.mock("@/server/persistence-client", () => ({
   getIdentityService: async () => ({
     resolveContextFromToken,
     resolveLocalContext,
+  }),
+  getPlatformAccountService: async () => ({
+    getAccount,
   }),
 }));
 
@@ -28,6 +32,7 @@ const LOCAL = { userId: "user-zyongzhu", requestId: "r", source: "user" as const
 beforeEach(() => {
   resolveContextFromToken.mockReset();
   resolveLocalContext.mockReset();
+  getAccount.mockReset();
   resolveLocalContext.mockResolvedValue(LOCAL);
 });
 
@@ -67,6 +72,70 @@ describe("resolveRequestContext — 失效 cookie 回落本机主用户", () => 
     resolveContextFromToken.mockRejectedValue(new Error("db connection lost"));
     await expect(resolveRequestContext("tok")).rejects.toThrow(
       "db connection lost",
+    );
+  });
+});
+
+/**
+ * [T-136 切片 a · gate BLOCKER-1] accountId 属主硬校验 + 退化。
+ *
+ * `resolveRequestContext(rawToken, accountId)` 读到前端传来的 x-account-id 后,**绝不信任**——
+ * 必须查 platform_accounts 确认 `account.user_id === ctx.userId`(getAccount 已按 ctx.userId
+ * 域内查,不属主 → 抛 OwnershipError/404)。属主不符 / 号不存在 → 降级 accountId=null,不返他人
+ * 数据(否则伪造 header 指他人号 = 水平越权穿透 repo 门)。校验在任何按号过滤前。
+ */
+describe("resolveRequestContext — accountId 属主硬校验(BLOCKER-1)+ 退化", () => {
+  it("不传 accountId → ctx 不带 accountId(未选号 / 全局,兼容旧调用)", async () => {
+    const ctx = await resolveRequestContext(null);
+    expect(ctx.accountId).toBeUndefined();
+    expect(getAccount).not.toHaveBeenCalled();
+  });
+
+  it("传属于本 user 的 accountId(getAccount 成功)→ accountId 落进 ctx", async () => {
+    getAccount.mockResolvedValue({ id: "acct-1", userId: "user-zyongzhu" });
+    const ctx = await resolveRequestContext(null, "acct-1");
+    expect(getAccount).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "user-zyongzhu" }),
+      "acct-1",
+    );
+    expect(ctx.accountId).toBe("acct-1");
+  });
+
+  it("[越权] accountId 指向非本 user 的号(getAccount 抛 OwnershipError)→ 降级 null,不返他人数据", async () => {
+    const { OwnershipError } = await import(
+      "@creatoros/backend/modules/identity"
+    );
+    getAccount.mockRejectedValue(new OwnershipError());
+    const ctx = await resolveRequestContext(null, "acct-of-another-user");
+    expect(ctx.accountId).toBeNull();
+  });
+
+  it("[退化] accountId 指向已删/不存在的号 → getAccount 抛 404 → 降级 null(不崩)", async () => {
+    // 号被删后 localStorage 仍存旧 id → getAccount 找不到 → OwnershipError/404 → 降级 null。
+    const notFound = Object.assign(new Error("not found"), {
+      name: "OwnershipError",
+      code: "OwnershipError",
+    });
+    getAccount.mockRejectedValue(notFound);
+    const ctx = await resolveRequestContext(null, "acct-deleted");
+    expect(ctx.accountId).toBeNull();
+  });
+
+  it("空串 accountId(header 存在但为空)→ 视作未选,不查号也不落 accountId", async () => {
+    const ctx = await resolveRequestContext(null, "");
+    expect(getAccount).not.toHaveBeenCalled();
+    expect(ctx.accountId).toBeUndefined();
+  });
+
+  it("校验用的是 token 解析出的真实 userId(而非前端可控)——防越权基石", async () => {
+    const tokenCtx = { userId: "u-real", requestId: "r2", source: "user" as const };
+    resolveContextFromToken.mockResolvedValue(tokenCtx);
+    getAccount.mockResolvedValue({ id: "acct-x", userId: "u-real" });
+    await resolveRequestContext("good-token", "acct-x");
+    // getAccount 收到的 ctx 必须带 token 真实 userId,platform-account service 据此域内查权。
+    expect(getAccount).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "u-real" }),
+      "acct-x",
     );
   });
 });

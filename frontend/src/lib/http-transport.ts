@@ -1,5 +1,21 @@
 import type { Endpoint, Transport } from "@creatoros/contract";
 
+// [T-136 切片 a] 当前选中抖音号的 localStorage 键(与 account-switcher 同一真值)。切号写它,
+// 每次请求读它注入 x-account-id header。server 端会验属主(不属主降级 null),故这里带的值是
+// 「意图」而非「授权」——安全边界在 server。
+export const CURRENT_ACCOUNT_KEY = "creatoros:current-account";
+
+// 读当前号 id。仅浏览器有 localStorage;SSR / 隐私模式禁用 storage → try/catch 降级为 null
+// (= 未选号,server 退化全局,不崩)。复用 sidebar collapse 同款降级范式。
+function readCurrentAccountId(): string | null {
+  try {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem(CURRENT_ACCOUNT_KEY);
+  } catch {
+    return null;
+  }
+}
+
 // Client-safe transport: serializes the operation to the /api/v1 RPC dispatch
 // route, which runs the handler against the SERVER store and returns the
 // contract envelope. Browser islands use this so their mutations reach the
@@ -11,9 +27,16 @@ import type { Endpoint, Transport } from "@creatoros/contract";
 export function createHttpTransport(baseUrl = "/api/v1"): Transport {
   return {
     async request(endpoint: Endpoint, input) {
+      // [T-136 切片 a] 每次请求注入当前选中号 → server 据此(验属主后)按号过滤。集中在此一处,
+      // 不散落到各 island。未选号 / storage 不可用 → 不带 header(server 退化全局)。
+      const currentAccountId = readCurrentAccountId();
+      const headers: Record<string, string> = {
+        "content-type": "application/json",
+      };
+      if (currentAccountId) headers["x-account-id"] = currentAccountId;
       const res = await fetch(`${baseUrl}/dispatch`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers,
         // Send the httpOnly session cookie so the route can derive the
         // RequestContext (multi-tenant). Same-origin defaults to sending it,
         // but make it explicit so a future base-url change can't silently drop

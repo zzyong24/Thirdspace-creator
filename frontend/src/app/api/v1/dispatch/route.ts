@@ -54,10 +54,13 @@ export async function POST(req: Request): Promise<Response> {
 
   // Derive RequestContext. [T-046 单机免登录] 有 session cookie 照旧验 token;无/失效
   // cookie 以本机主用户直通(登录页已下线)。401 仅剩「库中无任何用户」的异常态兜底。
+  // [T-136 切片 a] x-account-id header = 前端当前选中的抖音号(从 localStorage 注入)。
+  // **绝不信任**:resolveRequestContext 内部会以真实 userId 查号验属主,不属主 → 降级 null。
   const rawToken = readSessionCookie(req);
+  const accountId = req.headers.get("x-account-id");
   let ctx;
   try {
-    ctx = await resolveRequestContext(rawToken);
+    ctx = await resolveRequestContext(rawToken, accountId);
   } catch (err) {
     if (err instanceof AuthenticationError) {
       return errorEnvelope(ErrorCode.AuthenticationError, err.message);

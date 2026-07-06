@@ -41,6 +41,7 @@ import { creatorIcons } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { canonicalDataset } from "@/fixtures/canonical";
 import { SidebarStorageCard } from "./sidebar-storage-card";
+import { AccountSwitcher } from "./account-switcher";
 
 // [T-129] 折叠态持久化键。收拢="1"、展开="0"/缺失。隐私模式/禁用 storage → try/catch 降级不持久。
 const SIDEBAR_COLLAPSED_KEY = "creatoros:sidebar:collapsed";
@@ -196,6 +197,9 @@ export function Sidebar({
               userDisplayName={resolvedUser.displayName}
             />
           ) : null}
+          {/* [T-136 切片 a] 当前抖音号切换器(多号 = 多独立人设);紧挨用户区上方,
+              展开/收拢态都渲染(收拢态只显图标 + tooltip)。 */}
+          <AccountSwitcher collapsed={collapsed} />
           <UserProfileMenu
             collapsed={collapsed}
             displayName={resolvedUser.displayName}
