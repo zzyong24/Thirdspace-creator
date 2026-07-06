@@ -31,6 +31,9 @@ import { pgTable, text, jsonb, real, integer } from "drizzle-orm/pg-core";
 export const aiConversations = pgTable("ai_conversations", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
+  // [T-136 多账号 · OQ2 裁决=按号切] AI 编导对话按号隔离(切号=换对话桶)。nullable 稳定终态。
+  // 子表 ai_messages 经 requireConversation 门透传属主,不加 account_id。
+  accountId: text("account_id"),
   projectId: text("project_id"), // nullable
   // T-096 会话作用域(SPEC 2026-07-03 chat-session-scope-contract §1.1)—— 入口级隔离与延续的
   // 一等公民字段。文法:'global' | 'project:<id>' | 'surface:<name>'(<name>:<entityId> 扩展位
@@ -58,6 +61,9 @@ export const aiMessages = pgTable("ai_messages", {
 export const aiTasks = pgTable("ai_tasks", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
+  // [T-136 多账号 · OQ2 裁决=按号切] AI 任务按号隔离。nullable 稳定终态。子表
+  // ai_task_references/results/steps 经 requireTask 门透传属主,不加 account_id。
+  accountId: text("account_id"),
   projectId: text("project_id"), // nullable
   contentOutputId: text("content_output_id"), // nullable
   taskType: text("task_type").notNull(),
@@ -116,6 +122,7 @@ export const AI_DDL = `
 CREATE TABLE IF NOT EXISTS ai_conversations (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   project_id TEXT,
   scope TEXT NOT NULL DEFAULT 'global',
   title TEXT NOT NULL,
@@ -138,6 +145,7 @@ CREATE INDEX IF NOT EXISTS idx_ai_messages_conversation ON ai_messages (conversa
 CREATE TABLE IF NOT EXISTS ai_tasks (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   project_id TEXT,
   content_output_id TEXT,
   task_type TEXT NOT NULL,
@@ -182,4 +190,10 @@ CREATE TABLE IF NOT EXISTS ai_task_steps (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_ai_task_steps_task ON ai_task_steps (ai_task_id, step_no);
+-- [T-136 多账号 · OQ2] ai_conversations/ai_tasks 按号隔离列(additive、幂等)。存量行 NULL,
+-- 迁移 0025 backfill 默认号。切号 = 换对话桶(§B 启用 chat-scope 的 account:<id> 维度,后续切片)。
+ALTER TABLE ai_conversations ADD COLUMN IF NOT EXISTS account_id TEXT;
+ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS account_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_ai_conversations_user_account ON ai_conversations (user_id, account_id, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ai_tasks_user_account ON ai_tasks (user_id, account_id);
 `;

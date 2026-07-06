@@ -76,6 +76,7 @@ async function seedSource(
     {
       id,
       userId: ctx.userId,
+      accountId: null,
       sourceType,
       name: sourceType,
       sourceIdentifier: `${sourceType}://x`,

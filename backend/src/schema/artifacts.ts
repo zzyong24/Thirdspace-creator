@@ -22,6 +22,10 @@ import { pgTable, text, integer, real, jsonb } from "drizzle-orm/pg-core";
 export const artifacts = pgTable("artifacts", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  // [T-136 多账号] 按号隔离维度(soft FK → platform_accounts.id)。nullable 稳定终态
+  // (SPEC §6 MAJOR-3)。子表 artifact_versions/relations/script_sections/timeline_segments
+  // 无 user_id、经 requireArtifact 门透传属主,故不加 account_id(同 user_id 范式)。
+  accountId: text("account_id"),
   projectId: text("project_id").notNull(),
   contentOutputId: text("content_output_id"), // nullable → contract id|null
   // Nullable in the DB only during the create UoW (artifact row inserted before
@@ -100,6 +104,7 @@ export const ARTIFACTS_DDL = `
 CREATE TABLE IF NOT EXISTS artifacts (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   project_id TEXT NOT NULL,
   content_output_id TEXT,
   current_version_id TEXT,
@@ -113,6 +118,9 @@ CREATE TABLE IF NOT EXISTS artifacts (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS artifacts_user_project_ix ON artifacts(user_id, project_id, created_at);
+-- [T-136 多账号] 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill 默认号。
+ALTER TABLE artifacts ADD COLUMN IF NOT EXISTS account_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_artifacts_user_account ON artifacts (user_id, account_id);
 CREATE TABLE IF NOT EXISTS artifact_versions (
   id TEXT PRIMARY KEY,
   artifact_id TEXT NOT NULL,

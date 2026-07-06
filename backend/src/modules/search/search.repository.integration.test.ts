@@ -150,6 +150,7 @@ describe("search.repository (pglite, user-scoped)", () => {
     const docRow = {
       id: "seed-doc-1",
       userId: "user-a",
+      accountId: null,
       entityType: "project",
       entityId: "p-seed",
       title: "Seed Hook",

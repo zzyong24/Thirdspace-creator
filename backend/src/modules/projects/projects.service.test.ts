@@ -672,6 +672,7 @@ describe("getDashboardSummary (GAP-DASH-1)", () => {
   function projectRow(over: Partial<ProjectRow> & Pick<ProjectRow, "id" | "updatedAt">): ProjectRow {
     return {
       userId: ctx.userId,
+      accountId: over.accountId ?? null,
       title: over.title ?? over.id,
       brief: "",
       briefDetail: {},

@@ -18,6 +18,10 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const knowledgeItems = pgTable("knowledge_items", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  // [T-136 多账号 · OQ1 裁决=按号独立] 按号隔离维度(soft FK → platform_accounts.id)。
+  // nullable 稳定终态(SPEC §6 MAJOR-3)。子表 revisions/relations 无 user_id、经父门透传
+  // 属主,不加 account_id(同 user_id 范式)。
+  accountId: text("account_id"),
   currentRevisionId: text("current_revision_id").notNull(),
   knowledgeType: text("knowledge_type").notNull().default("note"),
   title: text("title").notNull(),
@@ -62,6 +66,7 @@ export const KNOWLEDGE_DDL = `
 CREATE TABLE IF NOT EXISTS knowledge_items (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   current_revision_id TEXT NOT NULL,
   knowledge_type TEXT NOT NULL DEFAULT 'note',
   title TEXT NOT NULL,
@@ -75,6 +80,9 @@ CREATE TABLE IF NOT EXISTS knowledge_items (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS knowledge_items_user_created_ix ON knowledge_items(user_id, created_at);
+-- [T-136 多账号] 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill 默认号。
+ALTER TABLE knowledge_items ADD COLUMN IF NOT EXISTS account_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_knowledge_items_user_account ON knowledge_items (user_id, account_id);
 CREATE TABLE IF NOT EXISTS knowledge_revisions (
   id TEXT PRIMARY KEY,
   knowledge_item_id TEXT NOT NULL,

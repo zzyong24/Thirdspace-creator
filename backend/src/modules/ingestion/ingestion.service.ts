@@ -344,6 +344,7 @@ export function createIngestionService(args: {
           {
             id: sourceId,
             userId: ctx.userId,
+            accountId: ctx.accountId ?? null, // [T-136] 按号隔离;无当前号时 NULL(存量兜底)
             sourceType: "manual",
             name: "手动录入",
             sourceIdentifier: "",
@@ -561,6 +562,7 @@ export function createIngestionService(args: {
           {
             id: sourceId,
             userId: ctx.userId,
+            accountId: ctx.accountId ?? null, // [T-136] 按号隔离;无当前号时 NULL(存量兜底)
             sourceType: "douyin",
             // handle 在扫码阶段拿不到(登录态 cookie 不含昵称)→ 占位;真实昵称由 T-136 §D
             // 采集到主页信息后回填(此处不阻塞采集能用)。

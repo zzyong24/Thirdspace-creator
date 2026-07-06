@@ -76,6 +76,7 @@ describe("ProjectRepository (pglite-backed real persistence)", () => {
     const seedRow = {
       id: "seed-1",
       userId: "user-1",
+      accountId: null,
       title: "种子项目",
       brief: "",
       briefDetail: {},

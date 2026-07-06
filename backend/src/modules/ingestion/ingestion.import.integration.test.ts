@@ -117,6 +117,7 @@ async function seedDouyinSource(db: Db): Promise<void> {
     {
       id: "src-douyin",
       userId: ctx.userId,
+      accountId: null,
       sourceType: "douyin",
       name: "抖音",
       sourceIdentifier: "douyin://creator",

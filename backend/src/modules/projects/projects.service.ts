@@ -662,6 +662,7 @@ export function createProjectsService(
       const project = await repo.insertProject(ctx, {
         id: projectId,
         userId: ctx.userId,
+        accountId: ctx.accountId ?? null, // [T-136] 按号隔离;无当前号时 NULL(存量兜底,service 后续切片强制带号)
         title: cmd.title,
         brief: cmd.brief ?? "",
         briefDetail: briefDetailMirror,

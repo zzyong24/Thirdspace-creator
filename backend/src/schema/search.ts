@@ -20,6 +20,9 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const searchDocuments = pgTable("search_documents", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  // [T-136 多账号 · SPEC §B MAJOR-4] 搜索索引按号隔离(防跨号串味);启动重建投影时按号
+  // stamp。派生可重建,nullable 稳定终态。search_history 是 user 级查询日志,不按号隔离。
+  accountId: text("account_id"),
   entityType: text("entity_type").notNull(), // project|knowledge|asset|video|...
   entityId: text("entity_id").notNull(),
   title: text("title").notNull(),
@@ -58,6 +61,7 @@ export const SEARCH_DDL = `
 CREATE TABLE IF NOT EXISTS search_documents (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   entity_type TEXT NOT NULL,
   entity_id TEXT NOT NULL,
   title TEXT NOT NULL,
@@ -68,6 +72,10 @@ CREATE TABLE IF NOT EXISTS search_documents (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS search_documents_user_entity_uniq ON search_documents (user_id, entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS search_documents_user_indexed_ix ON search_documents(user_id, indexed_at);
+-- [T-136 多账号 · MAJOR-4] search_documents 按号隔离列(additive、幂等)。存量行 NULL;派生索引
+-- 可重建,迁移 0025 也 backfill 默认号(重建时会重新 stamp)。搜索按 ctx.accountId 过滤。
+ALTER TABLE search_documents ADD COLUMN IF NOT EXISTS account_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_search_documents_user_account ON search_documents (user_id, account_id, indexed_at);
 CREATE TABLE IF NOT EXISTS search_history (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,

@@ -23,6 +23,7 @@ function projectRow(over: Partial<ProjectRow> & { id: string; userId: string }):
   return {
     id: over.id,
     userId: over.userId,
+    accountId: over.accountId ?? null,
     title: over.title ?? "项目",
     brief: over.brief ?? "",
     briefDetail: over.briefDetail ?? {},

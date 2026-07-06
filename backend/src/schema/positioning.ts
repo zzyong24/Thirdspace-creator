@@ -26,6 +26,10 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const creatorProfiles = pgTable("creator_profiles", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  // [T-136 多账号 · SPEC §C] 定位母版 per-account:UNIQUE(user_id) → UNIQUE(user_id,
+  // account_id)(迁移 0025 换约束)。account_id nullable 稳定终态(SPEC §6 MAJOR-3);
+  // 一号一套定位母版。
+  accountId: text("account_id"),
   persona: text("persona").notNull().default(""),
   field: text("field").notNull().default(""), // 领域/赛道
   audience: text("audience").notNull().default(""), // 目标人群
@@ -44,6 +48,7 @@ export const creatorProfiles = pgTable("creator_profiles", {
 export const positioningStatements = pgTable("positioning_statements", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column (foundation §1)
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离(承 profile 的号);UNIQUE(profile_id, version_number) 不变
   profileId: text("profile_id").notNull(), // FK → creator_profiles
   oneLiner: text("one_liner").notNull().default(""), // 我是谁+帮谁+解决什么+怎么表达
   keywords: jsonb("keywords").notNull().default([]), // exactly 3 strings (service guard)
@@ -65,6 +70,7 @@ export const POSITIONING_DDL = `
 CREATE TABLE IF NOT EXISTS creator_profiles (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   persona TEXT NOT NULL DEFAULT '',
   field TEXT NOT NULL DEFAULT '',
   audience TEXT NOT NULL DEFAULT '',
@@ -75,12 +81,18 @@ CREATE TABLE IF NOT EXISTS creator_profiles (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS uq_creator_profiles_user ON creator_profiles (user_id);
 ALTER TABLE creator_profiles ADD COLUMN IF NOT EXISTS facets JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE creator_profiles ADD COLUMN IF NOT EXISTS downstream_rules JSONB NOT NULL DEFAULT '{}'::jsonb;
+-- [T-136 多账号 · SPEC §C] 定位母版 per-account:加 account_id + 换唯一约束
+-- UNIQUE(user_id) → UNIQUE(user_id, account_id)。迁移 0025 有序做「建号→backfill→换约束」;
+-- 此 inline DDL 供 pglite/seed 新库初始化到终态(幂等:先删旧唯一索引再建复合)。
+ALTER TABLE creator_profiles ADD COLUMN IF NOT EXISTS account_id TEXT;
+DROP INDEX IF EXISTS uq_creator_profiles_user;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_creator_profiles_user_account ON creator_profiles (user_id, account_id);
 CREATE TABLE IF NOT EXISTS positioning_statements (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   profile_id TEXT NOT NULL,
   one_liner TEXT NOT NULL DEFAULT '',
   keywords JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -93,4 +105,6 @@ CREATE TABLE IF NOT EXISTS positioning_statements (
 CREATE UNIQUE INDEX IF NOT EXISTS uq_positioning_statements_version ON positioning_statements (profile_id, version_number);
 CREATE INDEX IF NOT EXISTS idx_positioning_statements_current ON positioning_statements (user_id, profile_id, version_number DESC);
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS positioning_statement_id TEXT;
+-- [T-136 多账号] positioning_statements 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill。
+ALTER TABLE positioning_statements ADD COLUMN IF NOT EXISTS account_id TEXT;
 `;

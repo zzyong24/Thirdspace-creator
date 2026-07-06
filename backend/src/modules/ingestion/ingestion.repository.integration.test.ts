@@ -29,6 +29,7 @@ function makeRepo(db: Db, userId: string): IngestionRepository {
 const sourceRow = (userId: string, id: string): ExternalSourceRow => ({
   id,
   userId,
+  accountId: null,
   sourceType: "mock",
   name: "Mock Source",
   sourceIdentifier: "mock://canonical",

@@ -30,6 +30,7 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const reviews = pgTable("reviews", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离(复盘归到号);nullable 稳定终态
   projectId: text("project_id").notNull(),
   contentOutputId: text("content_output_id"), // nullable — only set when reviewType="output"
   reportArtifactId: text("report_artifact_id"), // nullable — optional review_report ArtifactVersion link
@@ -44,6 +45,7 @@ export const reviews = pgTable("reviews", {
 export const reviewInsights = pgTable("review_insights", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
   reviewId: text("review_id").notNull(),
   insightType: text("insight_type").notNull(),
   title: text("title").notNull(),
@@ -69,6 +71,7 @@ export const REVIEWS_DDL = `
 CREATE TABLE IF NOT EXISTS reviews (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   project_id TEXT NOT NULL,
   content_output_id TEXT,
   report_artifact_id TEXT,
@@ -83,6 +86,7 @@ CREATE INDEX IF NOT EXISTS idx_reviews_project ON reviews (user_id, project_id);
 CREATE TABLE IF NOT EXISTS review_insights (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   review_id TEXT NOT NULL,
   insight_type TEXT NOT NULL,
   title TEXT NOT NULL,
@@ -98,4 +102,10 @@ CREATE TABLE IF NOT EXISTS review_publications (
   publication_id TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS reviews_review_publication_uq ON review_publications (review_id, publication_id);
+-- [T-136 多账号] 按号隔离列(additive、幂等)。review_publications 是 join 表、其两端
+-- (reviews / publications)均已按号隔离,不重复加 account_id。存量行 NULL,迁移 0025 backfill。
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS account_id TEXT;
+ALTER TABLE review_insights ADD COLUMN IF NOT EXISTS account_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_reviews_user_account ON reviews (user_id, account_id);
+CREATE INDEX IF NOT EXISTS idx_review_insights_user_account ON review_insights (user_id, account_id);
 `;

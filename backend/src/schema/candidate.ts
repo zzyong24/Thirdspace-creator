@@ -31,6 +31,7 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const candidates = pgTable("candidates", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column (foundation §1)
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离(soft FK → platform_accounts.id);nullable 稳定终态
   title: text("title").notNull(),
   angle: text("angle").notNull().default(""), // 切入角度
   source: text("source").notNull(), // trend|benchmark|demand|idea
@@ -53,6 +54,7 @@ export const candidates = pgTable("candidates", {
 export const audienceSignals = pgTable("audience_signals", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离;采集 stamp 归到「哪个号」的评论/信号
   source: text("source").notNull(), // comment|dm|consultation|review
   rawText: text("raw_text").notNull().default(""),
   demandTag: text("demand_tag"), // 需求标签 (nullable)
@@ -78,6 +80,7 @@ export const audienceSignals = pgTable("audience_signals", {
 export const topicPromotions = pgTable("topic_promotions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
   candidateId: text("candidate_id").notNull(), // FK → candidates
   projectId: text("project_id").notNull(), // FK → projects (the promoted Project)
   promotedAt: text("promoted_at").notNull(),
@@ -94,6 +97,7 @@ export const CANDIDATE_DDL = `
 CREATE TABLE IF NOT EXISTS candidates (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   title TEXT NOT NULL,
   angle TEXT NOT NULL DEFAULT '',
   source TEXT NOT NULL,
@@ -111,6 +115,7 @@ CREATE TABLE IF NOT EXISTS candidates (
 CREATE TABLE IF NOT EXISTS audience_signals (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   source TEXT NOT NULL,
   raw_text TEXT NOT NULL DEFAULT '',
   demand_tag TEXT,
@@ -125,6 +130,7 @@ CREATE TABLE IF NOT EXISTS audience_signals (
 CREATE TABLE IF NOT EXISTS topic_promotions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   candidate_id TEXT NOT NULL,
   project_id TEXT NOT NULL,
   promoted_at TEXT NOT NULL
@@ -134,4 +140,11 @@ CREATE INDEX IF NOT EXISTS ix_audience_signals_pub ON audience_signals (user_id,
 CREATE UNIQUE INDEX IF NOT EXISTS ux_audience_signals_user_source_external ON audience_signals (user_id, source, external_id) WHERE external_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS ix_candidates_user_status ON candidates (user_id, status);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_topic_promotions_candidate ON topic_promotions (candidate_id);
+-- [T-136 多账号] 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill 默认号。
+ALTER TABLE candidates ADD COLUMN IF NOT EXISTS account_id TEXT;
+ALTER TABLE audience_signals ADD COLUMN IF NOT EXISTS account_id TEXT;
+ALTER TABLE topic_promotions ADD COLUMN IF NOT EXISTS account_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_candidates_user_account ON candidates (user_id, account_id);
+CREATE INDEX IF NOT EXISTS idx_audience_signals_user_account ON audience_signals (user_id, account_id);
+CREATE INDEX IF NOT EXISTS idx_topic_promotions_user_account ON topic_promotions (user_id, account_id);
 `;

@@ -13,6 +13,10 @@ import {
 export const projects = pgTable("projects", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  // [T-136 多账号] 按号隔离维度(soft FK → platform_accounts.id)。nullable —— 存量行/
+  // 全局视图 accountId=null 兜底(SPEC §6 MAJOR-3:nullable 是稳定终态,新行由 service
+  // 层强制带号,非 DB 约束)。迁移 0025 建默认号后 backfill。
+  accountId: text("account_id"),
   title: text("title").notNull(),
   brief: text("brief").notNull().default(""),
   // 结构化 Brief(立项 Brief 地基 / PRD §5.2)—— jsonb 扩展位(沿用 facets/card 模式,
@@ -126,6 +130,7 @@ export const PROJECTS_DDL = `
 CREATE TABLE IF NOT EXISTS projects (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   title TEXT NOT NULL,
   brief TEXT NOT NULL DEFAULT '',
   brief_detail JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -144,6 +149,9 @@ CREATE TABLE IF NOT EXISTS projects (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+-- [T-136 多账号] 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill 默认号。
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS account_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_projects_user_account ON projects (user_id, account_id);
 CREATE TABLE IF NOT EXISTS project_activities (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,

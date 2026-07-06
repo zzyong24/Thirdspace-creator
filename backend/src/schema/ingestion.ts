@@ -30,6 +30,8 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const externalSources = pgTable("external_sources", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  // [T-136 多账号 · SPEC §D] 采集源按号隔离(区分同 user 的多号源)。nullable 稳定终态。
+  accountId: text("account_id"),
   sourceType: text("source_type").notNull(),
   name: text("name").notNull(),
   sourceIdentifier: text("source_identifier").notNull().default(""),
@@ -41,6 +43,9 @@ export const externalSources = pgTable("external_sources", {
 export const ingestionRuns = pgTable("ingestion_runs", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  // [T-136 多账号 · SPEC §D] 采集 run 按号隔离(采集结果归到「哪个号」)。nullable 稳定终态。
+  // 子表 ingestion_errors/ingestion_records 无独立归属需要,经 run 透传,不加 account_id。
+  accountId: text("account_id"),
   externalSourceId: text("external_source_id").notNull(),
   runType: text("run_type").notNull(),
   idempotencyKey: text("idempotency_key").notNull(),
@@ -94,6 +99,7 @@ export const INGESTION_DDL = `
 CREATE TABLE IF NOT EXISTS external_sources (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   source_type TEXT NOT NULL,
   name TEXT NOT NULL,
   source_identifier TEXT NOT NULL DEFAULT '',
@@ -102,9 +108,13 @@ CREATE TABLE IF NOT EXISTS external_sources (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_external_sources_user ON external_sources (user_id);
+-- [T-136 多账号] external_sources 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill。
+ALTER TABLE external_sources ADD COLUMN IF NOT EXISTS account_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_external_sources_user_account ON external_sources (user_id, account_id);
 CREATE TABLE IF NOT EXISTS ingestion_runs (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   external_source_id TEXT NOT NULL,
   run_type TEXT NOT NULL,
   idempotency_key TEXT NOT NULL,
@@ -117,6 +127,9 @@ CREATE TABLE IF NOT EXISTS ingestion_runs (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_ingestion_runs_source_idem ON ingestion_runs (external_source_id, idempotency_key);
 CREATE INDEX IF NOT EXISTS idx_ingestion_runs_user ON ingestion_runs (user_id);
+-- [T-136 多账号] ingestion_runs 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill。
+ALTER TABLE ingestion_runs ADD COLUMN IF NOT EXISTS account_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_ingestion_runs_user_account ON ingestion_runs (user_id, account_id);
 CREATE TABLE IF NOT EXISTS ingestion_errors (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,

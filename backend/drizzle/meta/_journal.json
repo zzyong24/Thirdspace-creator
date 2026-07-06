@@ -176,6 +176,13 @@
       "when": 1782381100000,
       "tag": "0024_asset_file_extraction",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1782381200000,
+      "tag": "0025_multi_account_ownership",
+      "breakpoints": true
     }
   ]
 }

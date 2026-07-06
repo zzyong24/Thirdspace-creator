@@ -14,15 +14,17 @@ import type { SearchDocumentRow } from "./search.repository";
 // Minimal structural shape of the canonical dataset slices this seed reads. We
 // keep it loose (string indexers) so the seed never couples to the full domain
 // types — it consumes only the fields it denormalizes.
+// [T-136 MAJOR-4] 各源投影带可选 accountId,让派生 search_documents 承源实体的号;
+// 松散结构,缺省(seed fixture / 存量)回落 null,真实 canonical 数据带号则透传。
 interface CanonicalLike {
   user: { id: string };
   projects: ReadonlyArray<{
-    id: string; title: string; brief: string; currentStage: string; progressPct: number;
+    id: string; title: string; brief: string; currentStage: string; progressPct: number; accountId?: string | null;
   }>;
-  knowledgeItems: ReadonlyArray<{ id: string; title: string; currentRevisionId: string }>;
+  knowledgeItems: ReadonlyArray<{ id: string; title: string; currentRevisionId: string; accountId?: string | null }>;
   knowledgeRevisions: ReadonlyArray<{ id: string; knowledgeItemId: string; content?: string }>;
-  assets: ReadonlyArray<{ id: string; name: string; assetType: string }>;
-  publications: ReadonlyArray<{ id: string; platform: string; currentRevisionId: string | null }>;
+  assets: ReadonlyArray<{ id: string; name: string; assetType: string; accountId?: string | null }>;
+  publications: ReadonlyArray<{ id: string; platform: string; currentRevisionId: string | null; accountId?: string | null }>;
   publicationRevisions: ReadonlyArray<{ id: string; title?: string }>;
 }
 
@@ -41,6 +43,7 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-project-${p.id}`,
       userId,
+      accountId: p.accountId ?? null, // [T-136 MAJOR-4] 派生索引承源实体的号
       entityType: "project",
       entityId: p.id,
       title: p.title,
@@ -64,6 +67,7 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-knowledge-${k.id}`,
       userId,
+      accountId: k.accountId ?? null, // [T-136 MAJOR-4] 派生索引承源实体的号
       entityType: "knowledge",
       entityId: k.id,
       title: k.title,
@@ -78,6 +82,7 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-asset-${a.id}`,
       userId,
+      accountId: a.accountId ?? null, // [T-136 MAJOR-4] 派生索引承源实体的号
       entityType: "asset",
       entityId: a.id,
       title: a.name,
@@ -96,6 +101,7 @@ export function buildCanonicalSearchDocuments(
     rows.push({
       id: `searchdoc-seed-video-${pub.id}`,
       userId,
+      accountId: pub.accountId ?? null, // [T-136 MAJOR-4] 派生索引承源实体的号(publications 已带 account_id)
       entityType: "video",
       entityId: pub.id,
       title,

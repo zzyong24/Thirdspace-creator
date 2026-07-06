@@ -88,6 +88,7 @@ async function seedSource(db: Db, userId: string): Promise<void> {
     {
       id: `src-${userId}`,
       userId,
+      accountId: null,
       sourceType: "mock",
       name: "Mock",
       sourceIdentifier: "mock://x",

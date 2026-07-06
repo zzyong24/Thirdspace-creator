@@ -26,6 +26,10 @@ import {
 export const assets = pgTable("assets", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  // [T-136 多账号 · OQ1 裁决=按号独立] 按号隔离维度(soft FK → platform_accounts.id)。
+  // nullable 稳定终态(SPEC §6 MAJOR-3)。子表 asset_files 无 user_id、经父门透传属主,
+  // 不加 account_id。asset_uploads 是临时上传会话(非内容表),不按号隔离。
+  accountId: text("account_id"),
   currentFileId: text("current_file_id"), // nullable until first file → contract id (set on completeUpload)
   assetType: text("asset_type").notNull(),
   name: text("name").notNull(),
@@ -84,6 +88,7 @@ export const ASSETS_DDL = `
 CREATE TABLE IF NOT EXISTS assets (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   current_file_id TEXT,
   asset_type TEXT NOT NULL,
   name TEXT NOT NULL,
@@ -95,6 +100,9 @@ CREATE TABLE IF NOT EXISTS assets (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS assets_user_status_ix ON assets(user_id, status);
+-- [T-136 多账号] 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill 默认号。
+ALTER TABLE assets ADD COLUMN IF NOT EXISTS account_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_assets_user_account ON assets (user_id, account_id);
 CREATE TABLE IF NOT EXISTS asset_files (
   id TEXT PRIMARY KEY,
   asset_id TEXT NOT NULL,
