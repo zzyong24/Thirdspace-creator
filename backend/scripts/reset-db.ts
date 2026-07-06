@@ -82,6 +82,12 @@ try {
         const list = wipe.map((t) => `"${t}"`).join(", ");
         await client.query("SET session_replication_role = replica");
         await client.query(`TRUNCATE TABLE ${list} RESTART IDENTITY`);
+        // [用户裁决 2026-07-06] 用户属性不 seed:保留的登录用户 profile 也清回空白
+        // (id/passwordHash/sessions 保留 → 仍登录;display_name/email 空 → 新用户从零填,
+        // 与 seedCanonicalUser 的 blank 一致)。只清规范用户,避免多行 email='' 撞唯一索引。
+        await client.query(
+          "UPDATE users SET display_name = '', email = '' WHERE id = 'user-zyongzhu'",
+        );
         await client.query("SET session_replication_role = origin");
       } finally {
         client.release();

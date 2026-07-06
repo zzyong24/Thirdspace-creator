@@ -5,7 +5,6 @@ import {
   createIdentityService,
   seedCanonicalUser,
   CANONICAL_USER_ID,
-  DEV_PASSWORD,
   type IdentityService,
 } from "./identity.service";
 import { AuthenticationError, EmailTakenError } from "./identity.errors";
@@ -245,41 +244,37 @@ describe("identity.service updateProfile (PATCH /me)", () => {
 });
 
 describe("identity.service seedCanonicalUser (Task 7)", () => {
-  it("seeds the canonical user so login resolves to user-zyongzhu", async () => {
+  it("seeds the canonical user with BLANK 身份属性 (用户自填), id + locale 保留", async () => {
     const { db } = await createDb();
     const repo = createIdentityRepository(db, makeDeps());
     await seedCanonicalUser(repo, makeDeps());
     const svc = createIdentityService(repo, makeDeps());
 
-    // [T-135] 默认身份中性化:email/displayName 去 canonical 假名,但 id 硬保持
-    // user-zyongzhu(用户真实作品绑它,改 id 断归属)。
-    const { user, rawToken } = await svc.login({
-      email: "creator@creatoros.local",
-      password: DEV_PASSWORD,
-    });
-    expect(user.id).toBe(CANONICAL_USER_ID);
-    expect(user.id).toBe("user-zyongzhu");
-    expect(user.displayName).toBe("创作者");
-    expect(user.email).toBe("creator@creatoros.local");
+    // [用户裁决 2026-07-06]「用户属性不该配置任何 seed」——不再 email-login(canonical email
+    // 已置空),改走运行时免登录路径(T-046 resolveLocalContext = 本机主用户 = seed canonical)。
+    const ctx = await svc.resolveLocalContext();
+    expect(ctx.userId).toBe(CANONICAL_USER_ID);
+    expect(ctx.userId).toBe("user-zyongzhu");
+
+    const user = await svc.getCurrentUser(ctx);
+    // 身份属性 blank:email/displayName 空,由用户经 onboarding/设置自填。
+    expect(user.email).toBe("");
+    expect(user.displayName).toBe("");
+    // 功能性 locale 默认保留(非身份 seed;空 locale 会崩 Intl)。
     expect(user.timezone).toBe("Asia/Shanghai");
     expect(user.locale).toBe("zh-CN");
-
-    const ctx = await svc.resolveContextFromToken(rawToken);
-    expect(ctx.userId).toBe("user-zyongzhu");
   });
 
   it("is idempotent — a second seed is a no-op (onConflictDoNothing)", async () => {
     const { db } = await createDb();
     const repo = createIdentityRepository(db, makeDeps());
     await seedCanonicalUser(repo, makeDeps());
-    // A second seed must not throw (e.g. unique-email violation) and must not
-    // overwrite the existing row — login still works with the dev password.
+    // A second seed must not throw (e.g. unique-email violation on "" ) and must
+    // not overwrite the existing row — 免登录仍解析到同一 canonical user。
     await seedCanonicalUser(repo, makeDeps());
     const svc = createIdentityService(repo, makeDeps());
 
-    const ctx = await svc
-      .login({ email: "creator@creatoros.local", password: DEV_PASSWORD })
-      .then((r) => svc.resolveContextFromToken(r.rawToken));
+    const ctx = await svc.resolveLocalContext();
     expect(ctx.userId).toBe("user-zyongzhu");
   });
 });

@@ -1,31 +1,13 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { POST } from "./route";
-import { POST as loginPOST } from "../auth/login/route";
 import { resetStore } from "@/server/mock-backend/index";
 import { __resetPersistenceForTests } from "@/server/persistence-client";
-import { DEV_PASSWORD } from "@creatoros/backend/modules/identity";
 
-// [T-135] seeded canonical 登录邮箱中性化(id 仍 user-zyongzhu,只改 email/displayName)。
-const CANONICAL_EMAIL = "creator@creatoros.local";
-
-// Task 9 — dispatch now derives ctx from the `creatoros_session` cookie. The
-// existing round-trip tests below authenticate first (mint a real session via
-// the login route) and pass that cookie on every dispatch, so the working
-// Projects FE↔BE SQL path stays green under the new auth gate.
-let SESSION_COOKIE = "";
-
-async function authenticate(): Promise<void> {
-  const res = await loginPOST(
-    new Request("http://localhost/api/v1/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email: CANONICAL_EMAIL, password: DEV_PASSWORD }),
-    }),
-  );
-  const setCookie = res.headers.get("set-cookie") ?? "";
-  const match = /creatoros_session=([^;]*)/.exec(setCookie);
-  SESSION_COOKIE = match ? `creatoros_session=${match[1]}` : "";
-}
+// Task 9 — dispatch derives ctx from the `creatoros_session` cookie.
+// [用户裁决 2026-07-06] canonical email 已置空(用户属性不 seed)→ 不再 email-login。
+// 走 T-046 单机免登录:不带 cookie → 本机主用户(= seed canonical user-zyongzhu)直通,
+// dispatch 照旧解析到规范租户,无需 mint 会话。
+const SESSION_COOKIE = "";
 
 function dispatch(id: string, input: unknown, cookie = SESSION_COOKIE) {
   const headers: Record<string, string> = {
@@ -55,7 +37,7 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
   beforeEach(async () => {
     resetStore(); // mock-backed ops (outputs/tasks/pages)
     __resetPersistenceForTests(); // fresh pglite seed (project ops)
-    await authenticate(); // mint a real session; dispatch carries its cookie
+    // 免登录:不 mint 会话,dispatch 不带 cookie → 本机主用户直通(seed canonical)。
   });
 
   it("serves a project read from the persistence store", async () => {

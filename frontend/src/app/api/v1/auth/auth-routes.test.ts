@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { POST as loginPOST } from "./login/route";
+import { POST as registerPOST } from "./register/route";
 import { POST as logoutPOST } from "./logout/route";
 import { GET as meGET } from "./me/route";
 import { resetStore } from "@/server/mock-backend/index";
 import { __resetPersistenceForTests } from "@/server/persistence-client";
-import { DEV_PASSWORD, CANONICAL_USER_ID } from "@creatoros/backend/modules/identity";
+import { CANONICAL_USER_ID } from "@creatoros/backend/modules/identity";
 
 // Module 00, Task 9 — the three bare auth routes (foundation §2, SPEC §13):
 //   POST /api/v1/auth/login   — email+password → set httpOnly session cookie
@@ -13,9 +14,11 @@ import { DEV_PASSWORD, CANONICAL_USER_ID } from "@creatoros/backend/modules/iden
 // Routes go through identity.service / compositeTransport only (never the db
 // client directly — SPEC §22) and emit the SPEC §14 envelope shapes.
 
-// [T-135] 默认身份中性化后,seeded canonical 登录邮箱改为 creator@creatoros.local
-// (id 仍是 user-zyongzhu,只改 email/displayName)。
-const CANONICAL_EMAIL = "creator@creatoros.local";
+// [用户裁决 2026-07-06] canonical 用户属性不 seed(email/displayName 空)→ canonical 不能
+// email-login。故 email-login 端点(login/valid-cookie)改用**注册的专用测试用户**覆盖;
+// 免登录路径(无/坏 cookie 直通本机主用户 = canonical seed)仍以 CANONICAL_USER_ID 断言。
+const TEST_EMAIL = "tester@creatoros.local";
+const TEST_PASSWORD = "test-pass-123";
 
 function loginReq(body: unknown): Request {
   return new Request("http://localhost/api/v1/auth/login", {
@@ -41,15 +44,38 @@ function sessionCookieFrom(res: Response): string | undefined {
   return `creatoros_session=${match[1]}`;
 }
 
+function registerReq(body: unknown): Request {
+  return new Request("http://localhost/api/v1/auth/register", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+// 注册一个专用测试用户(带真 email)—— email-login 端点测试的主体(canonical 已无 email)。
+// 返回 register 响应携带的 session cookie + 新用户 id。
+async function registerTestUser(): Promise<{ id: string; cookie?: string }> {
+  const res = await registerPOST(
+    registerReq({
+      email: TEST_EMAIL,
+      password: TEST_PASSWORD,
+      displayName: "Tester",
+    }),
+  );
+  const json = (await res.json()) as { data: { id: string } };
+  return { id: json.data.id, cookie: sessionCookieFrom(res) };
+}
+
 beforeEach(() => {
   resetStore();
   __resetPersistenceForTests();
 });
 
 describe("POST /api/v1/auth/login", () => {
-  it("with canonical creds → 200, sets HttpOnly session cookie + user DTO", async () => {
+  it("with valid creds(注册用户)→ 200, sets HttpOnly session cookie + user DTO", async () => {
+    const { id } = await registerTestUser();
     const res = await loginPOST(
-      loginReq({ email: CANONICAL_EMAIL, password: DEV_PASSWORD }),
+      loginReq({ email: TEST_EMAIL, password: TEST_PASSWORD }),
     );
     expect(res.status).toBe(200);
 
@@ -63,15 +89,16 @@ describe("POST /api/v1/auth/login", () => {
       data: { id: string; email: string; passwordHash?: unknown };
       meta: { requestId: string };
     };
-    expect(json.data.id).toBe(CANONICAL_USER_ID);
-    expect(json.data.email).toBe(CANONICAL_EMAIL);
+    expect(json.data.id).toBe(id);
+    expect(json.data.email).toBe(TEST_EMAIL);
     expect(json.data).not.toHaveProperty("passwordHash");
     expect(typeof json.meta.requestId).toBe("string");
   });
 
   it("with a wrong password → 401 AuthenticationError envelope, no cookie", async () => {
+    await registerTestUser();
     const res = await loginPOST(
-      loginReq({ email: CANONICAL_EMAIL, password: "nope" }),
+      loginReq({ email: TEST_EMAIL, password: "nope" }),
     );
     expect(res.status).toBe(401);
     expect(res.headers.get("set-cookie")).toBeNull();
@@ -88,11 +115,9 @@ describe("POST /api/v1/auth/login", () => {
 });
 
 describe("GET /api/v1/auth/me", () => {
-  it("with a valid session cookie → 200 + the canonical user", async () => {
-    const login = await loginPOST(
-      loginReq({ email: CANONICAL_EMAIL, password: DEV_PASSWORD }),
-    );
-    const cookie = sessionCookieFrom(login);
+  it("with a valid session cookie → 200 + that session's user(注册用户)", async () => {
+    // 注册即下发 session cookie;/me 用它解析 → 该注册用户(非免登录的 canonical)。
+    const { id, cookie } = await registerTestUser();
     expect(cookie).toBeDefined();
 
     const res = await meGET(
@@ -100,8 +125,8 @@ describe("GET /api/v1/auth/me", () => {
     );
     expect(res.status).toBe(200);
     const json = (await res.json()) as { data: { id: string; email: string } };
-    expect(json.data.id).toBe(CANONICAL_USER_ID);
-    expect(json.data.email).toBe(CANONICAL_EMAIL);
+    expect(json.data.id).toBe(id);
+    expect(json.data.email).toBe(TEST_EMAIL);
   });
 
   // [T-046 单机免登录] 无/坏 cookie 不再 401,以本机主用户(最早创建 = canonical seed)直通。
@@ -130,10 +155,7 @@ describe("GET /api/v1/auth/me", () => {
 
 describe("POST /api/v1/auth/logout", () => {
   it("clears the cookie and revokes the session(撤销后旧 cookie 走单机直通,不再 401)", async () => {
-    const login = await loginPOST(
-      loginReq({ email: CANONICAL_EMAIL, password: DEV_PASSWORD }),
-    );
-    const cookie = sessionCookieFrom(login);
+    const { cookie } = await registerTestUser();
     expect(cookie).toBeDefined();
 
     const out = await logoutPOST(

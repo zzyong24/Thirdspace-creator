@@ -260,17 +260,19 @@ export const CANONICAL_USER_ID = "user-zyongzhu";
 export const DEV_PASSWORD =
   process.env.CREATOROS_DEV_PASSWORD ?? "creatoros-dev";
 
-// [T-135] 新用户开箱即干净空账号(宪法 §5「替换所有 mock/seed」+ 用户裁决 2026-07-05):
-// 默认身份中性化——去掉 canonical 假名/假邮箱(Zyong Zhu / zyongzhu@creatoros.local),
-// 引导用户填自己信息(配合 T-131 引导页)。**⚠️ id 硬保持 `user-zyongzhu`(CANONICAL_USER_ID)
-// 绝不改**:用户自己的真实作品全绑这个 id,改 id 会断掉数据归属(seed onConflictDoNothing
-// 不覆盖存量,仅影响新库/新用户)。只中性化 displayName/email,不动 id/timezone/locale。
+// [T-135 → 用户裁决 2026-07-06]「用户属性不该配置任何 seed」——新用户就是空白,自己填。
+// 从「中性化占位」(创作者 / creator@creatoros.local)再进一步:**身份属性 displayName/email
+// 完全置空**,由用户经 onboarding(T-131)/ 设置页 patchProfile 自填。空串安全:computeInitials("")
+// 不崩、UI 显空。**⚠️ id 硬保持 `user-zyongzhu`(CANONICAL_USER_ID)绝不改**(dev ctx 硬绑此
+// id,改 id 断数据归属)。**timezone/locale 保留** zh-CN/Asia-Shanghai —— 这是**功能性 locale
+// 默认**(非身份属性;空 locale 会让 Intl.DateTimeFormat 抛 RangeError),不属"用户属性 seed"。
+// passwordHash 是 dev 登录基础设施(id 认证用),非用户可见属性,保留。
 const CANONICAL_USER = {
   id: CANONICAL_USER_ID,
-  email: "creator@creatoros.local",
-  displayName: "创作者",
-  timezone: "Asia/Shanghai",
-  locale: "zh-CN",
+  email: "", // 不 seed 身份:用户自填
+  displayName: "", // 不 seed 身份:用户自填
+  timezone: "Asia/Shanghai", // 功能性 locale 默认(空会崩 Intl),非身份 seed
+  locale: "zh-CN", // 同上
   createdAt: FIXED_NOW_ISO,
   updatedAt: FIXED_NOW_ISO,
 } as const;
