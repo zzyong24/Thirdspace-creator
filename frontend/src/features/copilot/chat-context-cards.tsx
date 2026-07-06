@@ -13,6 +13,7 @@
 
 import * as React from "react";
 
+import { humanizeArtifactType } from "@/lib/ai-error-humanize";
 import type {
   ContextArtifactsToolResult,
   ContextArtifactTextToolResult,
@@ -374,7 +375,7 @@ export function ChatProjectDetailCard({
                 className="flex items-center gap-2 text-[11px]"
               >
                 <span className="min-w-0 flex-1 truncate text-foreground">
-                  {a.artifactType}
+                  {humanizeArtifactType(a.artifactType)}
                 </span>
                 <span className="shrink-0 text-text-subtle">
                   {a.versionCount} 版 · {a.charCount} 字
@@ -615,7 +616,7 @@ export function ChatArtifactListCard({
             className="flex items-center gap-2 rounded-md px-1.5 py-1 text-[11px]"
           >
             <span className="min-w-0 flex-1 truncate text-foreground">
-              {a.artifactType}
+              {humanizeArtifactType(a.artifactType)}
             </span>
             <span className="shrink-0 text-text-subtle">
               {a.currentVersion !== null ? `v${a.currentVersion} · ` : ""}
@@ -721,12 +722,12 @@ export function ChatArtifactTextCard({
   return (
     <ChatFullTextCard
       found={result.found ?? false}
-      heading={`产物正文 · ${result.artifactType || "（未知类型）"}`}
+      heading={`产物正文 · ${humanizeArtifactType(result.artifactType)}`}
       text={result.text ?? ""}
       offset={result.offset ?? 0}
       totalChars={result.totalChars ?? 0}
       hasMore={result.hasMore ?? false}
-      emptyText="这个项目还没有这类产物的正文 —— 换个 artifactType,或先去产出一版。"
+      emptyText="这个项目还没有这类产物的正文 —— 换一类产物,或先去产出一版。"
     />
   );
 }

@@ -13,6 +13,8 @@
 // 原则:只翻译**能识别的**错误(规则不命中返回 null,调用方回落原始 message —— 诚实,
 // 不把未知错误包装成似是而非的人话)。规则表可扩展,其他 AI 链路直接复用。
 
+import type { ArtifactType } from "@/types/domain";
+
 /** 翻译结果:人话 message + 是否建议「去设置换模型」(渲染层据此挂设置深链)。 */
 export interface HumanAiError {
   /** 给人看的错误说明(含建议动作)。 */
@@ -81,20 +83,199 @@ export function humanizeAiErrorMessage(raw: string): HumanAiError | null {
 
 /** Error/unknown → 人话(取 message 走规则表)。不命中返回 null。 */
 export function humanizeAiError(err: unknown): HumanAiError | null {
-  const raw =
-    err instanceof Error
-      ? // AI SDK 的 APICallError 常把平台码藏在 cause/responseBody 里,message 只有一层 —— 一并扫。
-        [
-          err.message,
-          (err as { responseBody?: unknown }).responseBody,
-          err.cause instanceof Error
-            ? err.cause.message
-            : typeof err.cause === "string"
-              ? err.cause
-              : "",
-        ]
-          .filter((v): v is string => typeof v === "string" && v.length > 0)
-          .join(" | ")
-      : String(err ?? "");
+  const raw = collectErrorText(err);
   return humanizeAiErrorMessage(raw);
+}
+
+/**
+ * 把 unknown 错误里所有可能藏机器码的字段拼成一个可匹配串(仅内部用于匹配,
+ * **绝不**直接渲给用户)。AI SDK 的 APICallError 常把平台码藏在 cause/responseBody。
+ */
+function collectErrorText(err: unknown): string {
+  return err instanceof Error
+    ? [
+        err.message,
+        (err as { responseBody?: unknown }).responseBody,
+        (err as { name?: unknown }).name,
+        err.cause instanceof Error
+          ? err.cause.message
+          : typeof err.cause === "string"
+            ? err.cause
+            : "",
+      ]
+        .filter((v): v is string => typeof v === "string" && v.length > 0)
+        .join(" | ")
+    : String(err ?? "");
+}
+
+// ---------------------------------------------------------------------------
+// [T-133] 通用面向用户错误收口 + artifactType → 中文 术语映射(单一真值)。
+//
+// 背景:审查发现 ~20 处前端 catch 把原始 `err.message`/技术码(ECONNREFUSED / HTTP 401 /
+// stack / 后端内部串)直接渲给用户 —— 既看不懂又可能泄露实现细节。本收口层原则:
+//   - 优先走 humanizeAiError(AI 类错已人话)命中即返;
+//   - 否则识别常见结构化码(鉴权/网络/404/限流)映射人话;
+//   - 再否则返 fallback(默认「操作失败,请重试。」)—— **绝不**把裸 err.message 渲给用户;
+//   - **仅 dev**(NODE_ENV!=='production')把原始 err 打 console.error 便于排查(prod 静默)。
+// 与 ai-error-humanize 同库(纯常量/纯函数,前后端可 import),扩展而非另起炉灶。
+
+/** 结构化(非 AI 平台码)错误 → 人话规则:按序匹配,先命中先用。 */
+const STRUCTURED_ERROR_RULES: readonly {
+  pattern: RegExp;
+  message: string;
+}[] = [
+  {
+    // 鉴权失败:401 / 403 / Unauthorized / Forbidden。
+    pattern: /\b401\b|\b403\b|unauthorized|forbidden|not[\s_-]*authenticated/i,
+    message: "登录状态已失效或没有权限,请重新登录后再试。",
+  },
+  {
+    // 资源不存在:404 / not found(并发下已被删等)。
+    pattern: /\b404\b|not[\s_-]*found/i,
+    message: "要操作的内容已不存在,可能已被移除或删除。",
+  },
+  {
+    // 限流:429 / rate limit / too many requests。
+    pattern: /\b429\b|rate[\s_-]*limit|too many requests/i,
+    message: "操作太频繁了,请稍等片刻再试。",
+  },
+  {
+    // 网络/连接类:fetch 失败 / 连接被拒 / 超时 / 断网。
+    pattern:
+      /failed to fetch|networkerror|network request failed|econnrefused|etimedout|timeout|err_network|load failed/i,
+    message: "网络连接不稳定,请检查网络后重试。",
+  },
+  {
+    // 服务端错误:5xx / internal server error。
+    pattern: /\b5\d\d\b|internal server error|服务(器)?错误/i,
+    message: "服务开小差了,请稍后重试。",
+  },
+];
+
+/** 默认兜底文案(不传 fallback 时用)。 */
+export const DEFAULT_USER_ERROR = "操作失败，请重试。";
+
+/**
+ * 面向用户的错误收口(唯一入口):AI 错→人话 / 结构化码→人话 / 其余→fallback。
+ * **绝不**返回裸 err.message 或技术码。dev 才把原始 err 打 console.error(排查用)。
+ *
+ * @param err 任意 catch 到的错误。
+ * @param fallback 识别不出时给用户看的人话(默认「操作失败,请重试。」)。
+ */
+export function describeUserError(
+  err: unknown,
+  fallback: string = DEFAULT_USER_ERROR,
+): string {
+  // dev 留原文进 console(便于排查);prod 静默(避免噪音 + 泄露)。
+  if (
+    typeof process !== "undefined" &&
+    process.env?.NODE_ENV !== "production"
+  ) {
+    // eslint-disable-next-line no-console
+    console.error("[describeUserError]", err);
+  }
+
+  const ai = humanizeAiError(err);
+  if (ai) return ai.message;
+
+  const raw = collectErrorText(err);
+  for (const rule of STRUCTURED_ERROR_RULES) {
+    if (rule.pattern.test(raw)) return rule.message;
+  }
+
+  // 后端刻意抛的「已经是人话的中文短句」(如「无可用 LLM 凭据」「阶段核心交付物缺失」)
+  // 予以透传 —— 它是策展过的面向用户文案,不是裸机器码。只有同时满足以下条件才算:
+  // 单条 err.message(非拼接过的多字段串)+ 含中文 + 够短 + 无技术标记(ASCII 错误码 /
+  // 栈帧 / URL / JSON / Error: 前缀 等)。否则一律回落 fallback,绝不裸吐。
+  const single =
+    err instanceof Error ? err.message : typeof err === "string" ? err : "";
+  if (isCuratedHumanMessage(single)) return single.trim();
+
+  return fallback;
+}
+
+/** 技术噪声特征:命中任一即视为「不是策展人话」,不予透传。 */
+const TECHNICAL_NOISE = /[{}[\]<>]|https?:\/\/|\bError\b|_[a-z]|[a-z]{2,}\.[a-z]{2,}|\b\d{3,}\b|\bat\s|::/i;
+
+/** 判断是否为后端刻意抛的中文人话短句(可安全透传给用户)。 */
+function isCuratedHumanMessage(msg: string): boolean {
+  const s = msg.trim();
+  if (!s || s.length > 40) return false; // 过长多半是拼接/堆栈,不透传。
+  if (!/[一-龥]/.test(s)) return false; // 必须含中文。
+  if (TECHNICAL_NOISE.test(s)) return false; // 含技术噪声即不透传。
+  return true;
+}
+
+/**
+ * 阶段推进(transition)错误 → 一句中文。transport 把后端错误透传成
+ * `HttpTransport: 409 for projects.stage.transition: <后端 message>`(见 http-transport.ts)。
+ * 后端这条 message(如「阶段核心交付物缺失」)对用户有意义 —— 抽出冒号后的真实原因原样呈现;
+ * 抽不到再按状态码兜底人话。**不**把 `HttpTransport:` 技术前缀渲给用户。
+ * (原 project-actions.tsx 内私有函数,T-133 抽到共享库,brief-workbench 复用同一真值。)
+ */
+export function describeTransitionError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  const m = raw.match(/^HttpTransport: \d+ for [^:]+: ([\s\S]+)$/);
+  if (m?.[1]?.trim()) return m[1].trim();
+  if (raw.includes("409") || /Conflict/i.test(raw)) {
+    return "当前阶段还有核心交付物未完成，无法进入下一步。";
+  }
+  return "进入下一步失败，请稍后重试。";
+}
+
+/**
+ * 归档错误 → 一句中文(after already-archived 守卫抛 409)。
+ * (原 project-actions.tsx 内私有函数,T-133 抽到共享库。)
+ */
+export function describeArchiveError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  if (raw.includes("409") || /Conflict|archived/i.test(raw)) {
+    return "该项目已归档，无需重复归档。";
+  }
+  return "归档失败，请稍后重试。";
+}
+
+/**
+ * artifactType(内部枚举码)→ 中文标签(单一真值)。UI 一律走它,**不渲内部类型码**。
+ * 覆盖 domain.ts `ArtifactType` 全部枚举;新增枚举时在此补一行(TS Record 会强制)。
+ */
+export const ARTIFACT_TYPE_LABELS: Readonly<Record<ArtifactType, string>> = {
+  project_idea: "项目立项",
+  trend_analysis: "趋势分析",
+  market_analysis: "市场分析",
+  competitor_analysis: "竞品分析",
+  audience_research: "受众调研",
+  research_note: "调研笔记",
+  content_contract: "内容合同",
+  thesis_tree: "论点树",
+  evidence_map: "证据图谱",
+  audience_profile: "受众画像",
+  differentiation: "差异化定位",
+  content_outline: "内容大纲",
+  master_script: "母本脚本",
+  output_script: "成片脚本",
+  golden_quotes: "金句集",
+  script_review: "脚本审核",
+  production_plan: "拍摄方案",
+  shot_list: "分镜清单",
+  timeline: "时间线",
+  subtitle_plan: "字幕方案",
+  export_config: "导出配置",
+  publish_package: "发布物料",
+  platform_copy: "平台文案",
+  cover_brief: "封面简报",
+  review_report: "复盘报告",
+  comparison_report: "横评报告",
+  optimization_plan: "优化方案",
+};
+
+/**
+ * artifactType → 中文(缺省/未知诚实回落「产物」,不裸吐内部码)。
+ * 接受 string 以兼容运行期从后端拿到的、类型上是宽 string 的值。
+ */
+export function humanizeArtifactType(type: string | null | undefined): string {
+  if (!type) return "产物";
+  return (
+    ARTIFACT_TYPE_LABELS[type as ArtifactType] ?? "产物"
+  );
 }

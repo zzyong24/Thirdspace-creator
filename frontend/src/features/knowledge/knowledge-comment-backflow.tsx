@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageSquareQuote } from "lucide-react";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 
@@ -84,7 +85,7 @@ export function KnowledgeCommentBackflow() {
         json.candidates.map((c) => ({ ...c, selected: true, conflicted: false })),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "评论回流失败,请重试。");
+      setError(describeUserError(err, "评论回流失败，请重试。"));
     } finally {
       setBusy("idle");
     }
@@ -155,7 +156,7 @@ export function KnowledgeCommentBackflow() {
         router.refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "采纳入库失败,请重试。");
+      setError(describeUserError(err, "采纳入库失败，请重试。"));
     } finally {
       setBusy("idle");
     }

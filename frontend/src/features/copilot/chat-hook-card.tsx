@@ -17,6 +17,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { ensureScriptArtifact } from "@/features/script/ensure-script-artifact";
 
 export interface ChatHookItem {
@@ -147,8 +148,7 @@ export function ChatHookCard({
       } catch (err) {
         setState({
           phase: "error",
-          message:
-            err instanceof Error && err.message ? err.message : "写入失败,重试",
+          message: describeUserError(err, "写入稿面失败，请重试。"),
         });
       }
     },
@@ -170,8 +170,7 @@ export function ChatHookCard({
     } catch (err) {
       setState({
         phase: "error",
-        message:
-          err instanceof Error && err.message ? err.message : "撤销失败,重试",
+        message: describeUserError(err, "撤销失败，请重试。"),
       });
     }
   }, [router, state]);

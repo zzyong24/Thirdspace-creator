@@ -25,6 +25,10 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { DeleteProjectDialog } from "@/features/projects/delete-project-dialog";
+import {
+  describeTransitionError,
+  describeArchiveError,
+} from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import type {
   ProjectStageName,
@@ -64,30 +68,8 @@ export interface ProjectOverviewActionsProps {
   readonly projectTitle?: string;
 }
 
-// 把 HttpTransport 抛出的错误转成一句中文。transport 现在把后端错误透传成
-// `HttpTransport: 409 for projects.stage.transition: <后端 message>`(见 http-transport.ts)。
-// 这里抽出冒号后的真实 message(交付物缺失原因);抽不到就按状态码给兜底。
-function describeTransitionError(err: unknown): string {
-  const raw = err instanceof Error ? err.message : String(err);
-  // 形如 "HttpTransport: 409 for projects.stage.transition: 阶段「research」核心交付物缺失,…"
-  const m = raw.match(/^HttpTransport: \d+ for [^:]+: ([\s\S]+)$/);
-  if (m?.[1]?.trim()) return m[1].trim();
-  if (raw.includes("409") || /Conflict/i.test(raw)) {
-    return "当前阶段还有核心交付物未完成，无法进入下一步。";
-  }
-  return "进入下一步失败，请稍后重试。";
-}
-
-// [T-085] 归档 409 转人话:后端 already-archived 守卫抛 ProjectStateError(409),
-// transport 透传成 "HttpTransport: 409 for projects.archive: …"。禁浏览器 alert,
-// 内联错误条展示。
-function describeArchiveError(err: unknown): string {
-  const raw = err instanceof Error ? err.message : String(err);
-  if (raw.includes("409") || /Conflict|archived/i.test(raw)) {
-    return "该项目已归档，无需重复归档。";
-  }
-  return "归档失败，请稍后重试。";
-}
+// [T-133] describeTransitionError / describeArchiveError 已抽到 @/lib/ai-error-humanize
+// 共享库(单一真值,brief-workbench 复用)。此处仅 import,不再本地重复定义。
 
 export function ProjectOverviewActions({
   projectId,

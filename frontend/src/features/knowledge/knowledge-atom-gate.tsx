@@ -18,6 +18,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 
@@ -184,7 +185,7 @@ export function KnowledgeAtomGate({
       router.refresh();
     } catch (err) {
       // 失败内联保留候选(已成条目不回滚 —— 诚实呈现,refresh 后可见已入库的部分)。
-      setError(err instanceof Error ? err.message : "采纳入库失败,请重试。");
+      setError(describeUserError(err, "采纳入库失败，请重试。"));
     } finally {
       setBusy(false);
     }

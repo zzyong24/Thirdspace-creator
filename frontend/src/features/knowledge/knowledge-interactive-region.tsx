@@ -30,6 +30,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { KnowledgeAtlas } from "./knowledge-atlas";
 import { KnowledgeDetailPreview } from "./knowledge-detail-preview";
@@ -195,7 +196,7 @@ export function KnowledgeInteractiveRegion({
         semanticEnabled: false,
         semanticError: null,
         results: [],
-        error: err instanceof Error ? err.message : "搜索失败,请重试。",
+        error: describeUserError(err, "搜索失败，请重试。"),
       });
     }
   }, []);

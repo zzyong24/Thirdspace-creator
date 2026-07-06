@@ -20,6 +20,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Inbox, Sparkles } from "lucide-react";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
@@ -155,7 +156,7 @@ export function KnowledgeDumpZone() {
         reset();
         router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "存入知识库失败,请重试。");
+        setError(describeUserError(err, "存入知识库失败，请重试。"));
       } finally {
         setBusy("idle");
       }

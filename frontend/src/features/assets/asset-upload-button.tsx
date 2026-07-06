@@ -22,6 +22,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { describeUserError } from "@/lib/ai-error-humanize";
 import type { AssetType } from "@/types/domain";
 
 // Map a File's MIME type to the contract `assetType` enum
@@ -111,9 +112,9 @@ export function AssetUploadButton() {
           router.refresh();
         } catch (err) {
           // [T-049 B5] 全链兜底:任一步抛错都给用户可见反馈,不再静默吞掉。
-          const detail = err instanceof Error ? err.message : "";
+          // [T-133] 走人话收口,绝不把裸 err.message 截给用户(dev 会进 console 排查)。
           setUploadStatus(
-            `上传失败「${file.name}」${detail ? `:${detail.slice(0, 80)}` : "。"}`,
+            `上传失败「${file.name}」：${describeUserError(err, "请重试。")}`,
           );
         }
       });

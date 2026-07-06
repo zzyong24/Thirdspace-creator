@@ -40,6 +40,7 @@ import {
   MessagesSquare,
 } from "lucide-react";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { useDraftChatRequest } from "./draft-chat-request";
 import { Button } from "@/components/ui/button";
@@ -508,8 +509,7 @@ function RewriteApplyButton({
       } catch (err) {
         setState({
           phase: "error",
-          message:
-            err instanceof Error && err.message ? err.message : "应用失败,重试",
+          message: describeUserError(err, "应用改写失败，请重试。"),
         });
       }
     })();
@@ -532,8 +532,7 @@ function RewriteApplyButton({
       } catch (err) {
         setState({
           phase: "error",
-          message:
-            err instanceof Error && err.message ? err.message : "撤销失败,重试",
+          message: describeUserError(err, "撤销失败，请重试。"),
         });
       }
     })();

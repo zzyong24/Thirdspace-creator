@@ -179,10 +179,20 @@ export function AssetsInteractiveRegion({
             body: JSON.stringify({ assetId }),
           });
           if (!res.ok) {
+            // [T-133] route 的 error 是英文内部码(path rejected / unauthorized…),
+            // 不直接渲给用户;按状态码给人话。dev 才留原始 error 进 console 排查。
             const data = (await res.json().catch(() => null)) as
               | { error?: string }
               | null;
-            setActionStatus(`Finder 定位失败：${data?.error ?? res.status}`);
+            if (process.env.NODE_ENV !== "production") {
+              // eslint-disable-next-line no-console
+              console.error("[reveal] failed:", res.status, data?.error);
+            }
+            setActionStatus(
+              res.status === 404
+                ? "Finder 定位失败：文件已不存在或不可访问。"
+                : "Finder 定位失败，请重试。",
+            );
             return;
           }
           setActionStatus("已在 Finder 中显示。");

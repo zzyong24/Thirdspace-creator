@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { describeUserError } from "@/lib/ai-error-humanize";
 import type { LearningCaptureType } from "@/server/ai/chat-tools";
 
 // 8 类经验的中文徽章(与 learnings.create 契约 enum / 裁决台展示同源口径)。
@@ -63,7 +64,7 @@ export function ChatLearningCard({
       router.refresh();
     } catch (err) {
       setState("error");
-      setErrorText(err instanceof Error ? err.message : "保存失败,请重试");
+      setErrorText(describeUserError(err, "保存经验失败，请重试。"));
     }
   }, [suggestion, router]);
 

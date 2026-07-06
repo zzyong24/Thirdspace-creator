@@ -160,6 +160,7 @@ describe("KnowledgeDumpZone — 手动补录降级路径", () => {
     await waitFor(() =>
       expect(q(container, "knowledge-dump-error")).not.toBeNull(),
     );
+    // [T-133] 人话收口:「后端连接失败」是干净中文短句(策展人话)→ 透传;输入仍保留。
     expect(q(container, "knowledge-dump-error")!.textContent).toContain(
       "后端连接失败",
     );

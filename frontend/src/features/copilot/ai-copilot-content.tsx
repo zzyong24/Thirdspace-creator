@@ -134,7 +134,10 @@ import {
   SCHEDULED_TASK_TYPE_LABELS,
 } from "@/lib/chat-tool-labels";
 // [T-094] AI 链路错误 → 人话共享映射(与服务端同一张表;客户端兜底二次转译)。
-import { humanizeAiErrorMessage } from "@/lib/ai-error-humanize";
+import {
+  humanizeAiErrorMessage,
+  describeUserError,
+} from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
@@ -872,7 +875,9 @@ export function AICopilotContent({
     const raw = error.message || String(error);
     const human = humanizeAiErrorMessage(raw);
     return {
-      message: human?.message ?? raw,
+      // [T-133] 命中 AI 人话优先;否则走通用收口(结构化码人话 / fallback),
+      // 绝不把裸 raw 机器码渲进错误气泡。
+      message: human?.message ?? describeUserError(error, "出错了，请重试。"),
       suggestSwitchModel: human?.suggestSwitchModel ?? /在设置里换一个模型/.test(raw),
     };
   }, [error]);

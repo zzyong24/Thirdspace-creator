@@ -22,6 +22,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import type { EChartsOption } from "echarts";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import { EChart, useChartTokens } from "@/components/analytics/echarts-base";
@@ -260,7 +261,7 @@ export function KnowledgeGraphView({
         }),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "AI 找关联失败,请重试。");
+      setError(describeUserError(err, "AI 找关联失败，请重试。"));
     } finally {
       setBusy("idle");
     }
@@ -305,7 +306,7 @@ export function KnowledgeGraphView({
       setCandidates(null);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "采纳失败,请重试。");
+      setError(describeUserError(err, "采纳失败，请重试。"));
     } finally {
       setBusy("idle");
     }

@@ -12,6 +12,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { ensureScriptArtifact } from "@/features/script/ensure-script-artifact";
 
 export interface ChatScriptSection {
@@ -80,8 +81,7 @@ export function ChatScriptDraftCard({
     } catch (err) {
       setState({
         phase: "error",
-        message:
-          err instanceof Error && err.message ? err.message : "写入失败,重试",
+        message: describeUserError(err, "写入稿面失败，请重试。"),
       });
     }
   }, [projectId, sections, router]);

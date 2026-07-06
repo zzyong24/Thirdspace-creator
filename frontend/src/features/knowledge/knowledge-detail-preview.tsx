@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 
 interface KnowledgeItemDto {
@@ -80,7 +81,7 @@ export function KnowledgeDetailPreview({ knowledgeId }: { knowledgeId: string })
           phase: "error",
           item: null,
           content: "",
-          error: err instanceof Error ? err.message : "内容读取失败",
+          error: describeUserError(err, "内容读取失败，请重试。"),
         });
       }
     })();
@@ -211,7 +212,7 @@ function KnowledgeRelateEntry({ knowledgeId }: { knowledgeId: string }) {
       setTargetId("");
       router.refresh();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "关联失败,请重试。");
+      setMessage(describeUserError(err, "关联失败，请重试。"));
     } finally {
       setBusy(false);
     }

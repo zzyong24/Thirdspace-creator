@@ -137,7 +137,10 @@ describe("ChatBriefCard", () => {
 
     await user.click(screen.getByText("写入选题卡"));
 
-    expect(await screen.findByText(/写入失败:network down/)).toBeTruthy();
+    // [T-133] 显式错误但走人话收口:识别不出的原始错误(network down)不裸吐给用户,
+    // 显人话兜底文案;「重试」仍在。
+    expect(await screen.findByText(/写入选题卡失败/)).toBeTruthy();
+    expect(screen.queryByText(/network down/)).toBeNull();
     expect(screen.getByText("重试")).toBeTruthy();
 
     await user.click(screen.getByText("重试"));

@@ -29,6 +29,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { ViewsTrendChart } from "@/components/analytics/views-trend-chart";
 import { ConversionFunnelChart } from "@/components/analytics/conversion-funnel-chart";
@@ -465,9 +466,11 @@ function CommentsSection({
         setBackflowFor(null);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        // service 幂等兜底(锚已入库)→ 诚实标注,不重复入库。
+        // service 幂等兜底(锚已入库)→ 诚实标注,不重复入库;其余走人话收口(不裸吐)。
         setBackflowMessage(
-          message.includes("已回流") ? "该评论已回流过知识库。" : message,
+          message.includes("已回流")
+            ? "该评论已回流过知识库。"
+            : describeUserError(err, "回流失败，请重试。"),
         );
       } finally {
         setBackflowBusy(false);

@@ -23,6 +23,10 @@ import { SectionCard } from "@/components/project/section-card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  describeUserError,
+  describeTransitionError,
+} from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
 import type { ProjectOverviewViewModel } from "@/types/view-models";
@@ -176,9 +180,7 @@ export function BriefWorkbench({
       router.refresh();
       return true;
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "保存失败,请稍后重试。",
-      );
+      setError(describeUserError(err, "保存失败，请稍后重试。"));
       return false;
     } finally {
       setSaving(false);
@@ -203,11 +205,9 @@ export function BriefWorkbench({
       });
       router.refresh();
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "进入下一步失败:请确认核心信息已填齐。",
-      );
+      // [T-133] 阶段推进错误走共享 describeTransitionError(后端 gate message 对用户有意义,
+      // 但要剥掉 HttpTransport: 技术前缀);抽不到按状态码兜底。
+      setError(describeTransitionError(err));
     } finally {
       setAdvancing(false);
     }

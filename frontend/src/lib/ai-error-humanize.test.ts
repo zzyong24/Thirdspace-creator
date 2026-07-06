@@ -1,8 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   humanizeAiError,
   humanizeAiErrorMessage,
+  describeUserError,
+  humanizeArtifactType,
+  ARTIFACT_TYPE_LABELS,
 } from "./ai-error-humanize";
+import type { ArtifactType } from "@/types/domain";
 
 // [T-094] AI 错误人话化映射单测 —— 锚定实录错误串与规则表语义:
 // 命中 → 人话 + suggestSwitchModel;不命中 → null(调用方回落原串,不装懂)。
@@ -69,5 +73,164 @@ describe("humanizeAiError — Error/unknown 入口", () => {
   it("非 Error / 不命中 → null", () => {
     expect(humanizeAiError("random failure")).toBeNull();
     expect(humanizeAiError(undefined)).toBeNull();
+  });
+});
+
+// [T-133] 通用面向用户错误收口 —— 绝不把裸 err.message / 技术码渲给用户。
+describe("describeUserError — 通用面向用户错误收口", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it("AI 类错(命中 humanize)→ 返人话,不返裸串", () => {
+    const err = new Error("AI_APICallError: input new_sensitive (1026)");
+    expect(describeUserError(err)).toContain("内容安全审核");
+  });
+
+  it("普通未知错(识别不出)→ 返 fallback,绝不泄露裸 err.message", () => {
+    const err = new Error("SomeInternalWidget failed: secret-token=abc frob=42");
+    const out = describeUserError(err, "保存失败,请重试");
+    expect(out).toBe("保存失败,请重试");
+    expect(out).not.toContain("secret-token");
+    expect(out).not.toContain("frob");
+  });
+
+  it("网络类裸串(ECONNREFUSED 等)→ 映射网络人话,不泄露原始细节", () => {
+    const out = describeUserError(
+      new Error("ECONNREFUSED 127.0.0.1:8080 secret-token=abc"),
+    );
+    expect(out).toContain("网络");
+    expect(out).not.toContain("ECONNREFUSED");
+    expect(out).not.toContain("secret-token");
+  });
+
+  it("不传 fallback → 用默认「操作失败,请重试」", () => {
+    expect(describeUserError(new Error("boom"))).toBe("操作失败，请重试。");
+  });
+
+  it("结构化码 401/鉴权失败 → 映射人话", () => {
+    expect(describeUserError(new Error("HTTP 401 Unauthorized"))).toContain(
+      "登录",
+    );
+  });
+
+  it("结构化码 404 → 映射「已不存在」类人话", () => {
+    const out = describeUserError(new Error("Request failed: 404 Not Found"));
+    expect(out).toContain("不存在");
+  });
+
+  it("网络错(Failed to fetch / NetworkError)→ 映射网络人话", () => {
+    expect(describeUserError(new TypeError("Failed to fetch"))).toContain(
+      "网络",
+    );
+  });
+
+  it("dev 环境把原始 err 打 console.error(便于排查),但不返给用户", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const err = new Error("raw-technical-detail-xyz");
+    const out = describeUserError(err, "上传失败,请重试");
+    expect(out).toBe("上传失败,请重试");
+    expect(spy).toHaveBeenCalled();
+    // console 收到的是原始 err;返回给用户的绝不含它。
+    expect(out).not.toContain("raw-technical-detail-xyz");
+  });
+
+  it("prod 环境不把原始 err 打 console(避免噪音/泄露)", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    describeUserError(new Error("boom"), "失败");
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("非 Error(字符串/undefined)也安全收口成 fallback", () => {
+    expect(describeUserError("some raw string", "失败了")).toBe("失败了");
+    expect(describeUserError(undefined)).toBe("操作失败，请重试。");
+  });
+
+  it("后端刻意抛的中文人话短句 → 透传(策展文案,非裸机器码)", () => {
+    // 后端为特定流程精心写的面向用户中文短句应保留(否则丢掉「去配凭据」等指引)。
+    expect(describeUserError(new Error("无可用 LLM 凭据"))).toBe(
+      "无可用 LLM 凭据",
+    );
+    expect(describeUserError(new Error("阶段核心交付物缺失"))).toBe(
+      "阶段核心交付物缺失",
+    );
+  });
+
+  it("含技术噪声的字符串即使有中文也不透传(防裸吐)", () => {
+    // 栈帧 / 英文 Error / 下划线标识符 / 长码 / JSON 花括号 —— 一律回落 fallback。
+    expect(
+      describeUserError(new Error("保存失败 at parseChunk (index.js:12)"), "失败"),
+    ).toBe("失败");
+    expect(
+      describeUserError(new Error('失败 {"code":"E_INTERNAL"}'), "失败"),
+    ).toBe("失败");
+    expect(
+      describeUserError(new Error("失败 AI_APICallError xyz"), "失败"),
+    ).toBe("失败");
+    // 过长的中文串(多半是拼接/堆栈)也不透传。
+    expect(
+      describeUserError(
+        new Error("这是一个非常非常非常非常非常非常非常非常非常长的错误描述串超过四十字上限了真的很长"),
+        "失败",
+      ),
+    ).toBe("失败");
+  });
+});
+
+// [T-133] artifactType → 中文 术语映射 —— UI 一律走它,不渲内部类型码。
+describe("humanizeArtifactType — 产物类型码 → 中文", () => {
+  it("常见类型映射到中文", () => {
+    expect(humanizeArtifactType("output_script")).toBe("成片脚本");
+    expect(humanizeArtifactType("master_script")).toBe("母本脚本");
+    expect(humanizeArtifactType("thesis_tree")).toBe("论点树");
+    expect(humanizeArtifactType("content_outline")).toBe("内容大纲");
+    expect(humanizeArtifactType("content_contract")).toBe("内容合同");
+    expect(humanizeArtifactType("review_report")).toBe("复盘报告");
+  });
+
+  it("全部 ArtifactType 枚举都有词条(编译期穷尽 + 运行期非空)", () => {
+    const all: readonly ArtifactType[] = [
+      "project_idea",
+      "trend_analysis",
+      "market_analysis",
+      "competitor_analysis",
+      "audience_research",
+      "research_note",
+      "content_contract",
+      "thesis_tree",
+      "evidence_map",
+      "audience_profile",
+      "differentiation",
+      "content_outline",
+      "master_script",
+      "output_script",
+      "golden_quotes",
+      "script_review",
+      "production_plan",
+      "shot_list",
+      "timeline",
+      "subtitle_plan",
+      "export_config",
+      "publish_package",
+      "platform_copy",
+      "cover_brief",
+      "review_report",
+      "comparison_report",
+      "optimization_plan",
+    ];
+    for (const t of all) {
+      expect(ARTIFACT_TYPE_LABELS[t]).toBeTruthy();
+      // 中文词条,不能等于内部码本身。
+      expect(humanizeArtifactType(t)).not.toBe(t);
+    }
+  });
+
+  it("未知/缺省类型码 → 诚实回落「产物」而非裸吐码", () => {
+    expect(humanizeArtifactType("")).toBe("产物");
+    expect(humanizeArtifactType(undefined)).toBe("产物");
+    expect(humanizeArtifactType("some_future_type")).toBe("产物");
   });
 });

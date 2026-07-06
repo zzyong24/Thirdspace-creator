@@ -1,5 +1,6 @@
 import "server-only";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { client as defaultClient } from "@/lib/contract-client.server";
 import {
   buildKnowledgeViewModel,
@@ -267,7 +268,7 @@ export async function buildKnowledgeDashboardViewModel(
       scenario: "error",
       error: {
         code: "knowledge_read_failed",
-        message: err instanceof Error ? err.message : "知识库读取失败",
+        message: describeUserError(err, "知识库读取失败，请稍后重试。"),
       },
       metrics: [],
       categories: [],

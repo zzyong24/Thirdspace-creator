@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { cn } from "@/lib/utils";
 import type { CreationMode } from "@/types/domain";
 
@@ -172,11 +173,7 @@ export function NewProjectForm({
         // Surface the failure inline and PRESERVE the user's input — never
         // silently swallow a rejected create.
         setStatus("error");
-        setErrorMsg(
-          error instanceof Error && error.message
-            ? error.message
-            : "创建失败，请稍后重试。",
-        );
+        setErrorMsg(describeUserError(error, "创建失败，请稍后重试。"));
       }
     },
     [submitting, trimmedName, values],

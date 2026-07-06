@@ -1,5 +1,6 @@
 import "server-only";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { client as defaultClient } from "@/lib/contract-client.server";
 import {
   buildAssetsViewModel,
@@ -288,7 +289,7 @@ export async function buildAssetsViewModelReal(
       state: "error",
       error: {
         code: "assets_read_failed",
-        message: err instanceof Error ? err.message : "素材库读取失败",
+        message: describeUserError(err, "素材库读取失败，请稍后重试。"),
       },
       viewModel: emptyAssetsViewModel(),
       projects: [],

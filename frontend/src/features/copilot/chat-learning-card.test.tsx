@@ -77,7 +77,9 @@ describe("ChatLearningCard", () => {
 
     await user.click(screen.getByText("存为经验"));
 
-    expect(await screen.findByText(/保存失败:network down/)).toBeTruthy();
+    // [T-133] 人话收口:识别不出的原始错误(network down)不裸吐,显人话兜底;「重试」仍在。
+    expect(await screen.findByText(/保存经验失败/)).toBeTruthy();
+    expect(screen.queryByText(/network down/)).toBeNull();
     expect(screen.getByText("重试")).toBeTruthy();
 
     // 重试成功 → 转入已存状态。

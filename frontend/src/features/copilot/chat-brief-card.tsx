@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { describeUserError } from "@/lib/ai-error-humanize";
 import type {
   BriefFillSuggestion,
   BriefCurrentDetail,
@@ -78,7 +79,7 @@ export function ChatBriefCard({
       router.refresh();
     } catch (err) {
       setState("error");
-      setErrorText(err instanceof Error ? err.message : "写入失败,请重试");
+      setErrorText(describeUserError(err, "写入选题卡失败，请重试。"));
     }
   }, [suggestion, current, projectId, router]);
 

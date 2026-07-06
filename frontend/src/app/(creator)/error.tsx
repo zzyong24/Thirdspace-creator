@@ -14,6 +14,8 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+import { describeUserError } from "@/lib/ai-error-humanize";
+
 interface CreatorErrorProps {
   readonly error: Error & { digest?: string };
   readonly reset: () => void;
@@ -38,7 +40,9 @@ export default function CreatorError({ error, reset }: CreatorErrorProps) {
           出了点问题
         </h1>
         <p className="text-sm text-muted-foreground">
-          {error.message || "页面加载失败，请稍后重试。"}
+          {/* [T-133] 不把裸 error.message(可能含技术栈/内部串)渲给用户;
+              走人话收口,识别不出给兜底。错误编号(digest)仍展示便于排查。 */}
+          {describeUserError(error, "页面加载失败，请稍后重试。")}
         </p>
         {error.digest ? (
           <p className="text-xs text-text-subtle">错误编号：{error.digest}</p>
