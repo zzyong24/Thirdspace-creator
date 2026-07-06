@@ -58,9 +58,9 @@
 
 6. **AI 没严格遵循数量** —— 要"3 个"选题给了 8 个(选题池"多候选"逻辑,单看合理,但没尊重用户明确数量)。
 7. **保存无成功提示** —— 账户昵称点保存,名字立即变了(隐式反馈),但**无 toast「已保存」**,用户不确定成没成功。
-8. **技能列表部分缺友好名** —— `chatbox.distill`、`script.review` 直接显示原始 ID(「chatbox.distill chatbox.distill」),其他技能有中文名+描述,不一致。
-9. **账号切换器 cursor 是 default** —— 可点击元素习惯用手型(pointer)光标。
-10. **上传 file input `accept=""`** —— 不过滤到支持类型(图/视频/音频/文档/字幕),且 `multiple=false` 不支持多选。
+8. **✅ 技能列表缺友好名 —— 已修 + live 验**。`chatbox.distill`/`script.review` 缺 `SKILL_LABELS` 词表 → `skillLabelOf` 兜底 `name:id`(显「chatbox.distill chatbox.distill」双重原始 id)。补词表:知识蒸馏师 / 合规审核编导。live 验:中文名已渲染。(核实发现真实注册 skill 里 6 个缺词表,但只有 2 个有 template 会渲染成技能行,故只补这 2 个;另 4 个是 tools 不渲染。)
+9. **✅ 账号切换器 cursor —— 已修(局部)**。原生 `<button>` 加 `cursor-pointer`。**观察**:这是系统性问题(共享 Button 原语 + 全局 CSS 都无 cursor-pointer,全站按钮默认光标),只修了走查点名处;系统性 design-system 改动(给 Button 原语加)留给你定。
+10. **✅ 上传 accept —— 已修(accept 部分)**。`asset-upload-button` 加 `accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.md,.txt,.srt,.vtt"` 过滤支持类型。`multiple` 未加(onChange 只取 `files[0]`,加 multiple 需改循环逻辑;且批量上传已由知识/素材倾倒场承担,本按钮偏单文件,不塞半吊子)。
 11. **`@ai-sdk/anthropic` 编译警告刷屏** —— dev 日志反复打(纯 ESM + serverExternalPackages),运行时无害(dispatch 全 200、AI 真能跑),但噪音大。已评估:改 next.config 有破坏打包风险,暂不动。
 12. **空态用 404 表达** —— 无定位母版时 `positioning.getProfile` 返回 404(OwnershipError),正常使用也刷 404 污染网络/错误日志(前端已优雅处理成空态,功能无碍,但语义糙)。
 
