@@ -182,7 +182,21 @@ export function createPlatformAccountService(
     },
 
     async archiveAccount(ctx, accountId) {
-      const row = await repoFor(ctx).archiveAccount(accountId);
+      const repo = repoFor(ctx);
+      // [T-136§D-bind ⑥] 末号保护:不准移除最后一个 active 号。移除了就没号可切、
+      // ctx.accountId 落 NULL → 读门退化把所有 NULL 数据全显(用户误以为"隔离失效");
+      // 且该号名下作品/定位/项目会失去归属锚点。至少保留一个号。
+      const target = await repo.getAccount(accountId); // ownership gate + 拿当前状态
+      if (target.status === "active") {
+        const { rows } = await repo.listAccounts({ limit: 1000, offset: 0 });
+        const activeCount = rows.filter((r) => r.status === "active").length;
+        if (activeCount <= 1) {
+          throw new ValidationError(
+            "ValidationError: 不能移除最后一个抖音号——至少保留一个号,否则作品/定位/项目将失去归属。",
+          );
+        }
+      }
+      const row = await repo.archiveAccount(accountId);
       return toPlatformAccountDto(row);
     },
 

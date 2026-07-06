@@ -155,10 +155,49 @@ describe("platform-account service", () => {
         platform: "douyin",
         accountHandle: "@bind",
       });
+      // [T-136§D-bind⑥] 留一个"守门号",否则末号保护会拒绝 archive(@bind 成末号)。
+      await svc.createAccount(ctxA, {
+        platform: "douyin",
+        accountHandle: "@keep",
+      });
       const archived = await svc.archiveAccount(ctxA, acct.id);
       expect(archived.status).toBe("archived");
       await expect(
         svc.assertOwnedAccount(ctxA, acct.id, "douyin"),
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+  });
+
+  // [T-136§D-bind⑥ · 用户 2026-07-06 报障] 末号保护:不准移除最后一个 active 号。
+  describe("archiveAccount 末号保护", () => {
+    it("拒绝移除最后一个 active 号(ValidationError)", async () => {
+      const only = await svc.createAccount(ctxA, {
+        platform: "douyin",
+        accountHandle: "@only",
+      });
+      await expect(
+        svc.archiveAccount(ctxA, only.id),
+      ).rejects.toBeInstanceOf(ValidationError);
+      // 仍为 active(没被误移除)。
+      const after = await svc.getAccount(ctxA, only.id);
+      expect(after.status).toBe("active");
+    });
+
+    it("有多个 active 号时可移除其一,剩一个后再移除被拒", async () => {
+      const a1 = await svc.createAccount(ctxA, {
+        platform: "douyin",
+        accountHandle: "@a1",
+      });
+      const a2 = await svc.createAccount(ctxA, {
+        platform: "douyin",
+        accountHandle: "@a2",
+      });
+      // 两个 active → 移除一个 OK。
+      const archived = await svc.archiveAccount(ctxA, a1.id);
+      expect(archived.status).toBe("archived");
+      // 只剩 a2 一个 active → 再移除被拒。
+      await expect(
+        svc.archiveAccount(ctxA, a2.id),
       ).rejects.toBeInstanceOf(ValidationError);
     });
   });

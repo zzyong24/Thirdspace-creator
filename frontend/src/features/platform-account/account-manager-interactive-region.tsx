@@ -25,7 +25,22 @@ import { useRouter } from "next/navigation";
 import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { PlatformAccountResource } from "@creatoros/backend/modules/platform-account";
+
+// [T-136§D-bind⑥ · 用户 2026-07-06 报障] 移除账号是破坏性动作(影响该号定位/选题/项目归属),
+// 必须打字二次确认(防误点)。要求逐字键入此句才放行「确认移除」。
+const REMOVE_CONFIRM_PHRASE = "我已确认移除该账户";
 
 // [T-146/T-136] 抖音-only:产品单平台聚焦抖音。保留 PLATFORM_LABELS 供已有(可能历史遗留的)
 // 非抖音号行正确显示标签,但 UI 不再提供多平台选择/筛选。
@@ -164,17 +179,32 @@ export function CreateAccountForm() {
   );
 }
 
-// [T-136§D-bind⑤] 账号行(极简)—— 真实抖音昵称 + 抖音号 ID(若已回填)+「移除」。
+// [T-136§D-bind⑤+⑥] 账号行(极简)—— 真实抖音昵称 + 抖音号 ID(若已回填)+「移除」。
 // 删掉:「未配置密钥」徽标、涨粉基线输入 + 「保存基线」按钮(用户看不懂的多平台矩阵老字段)。
 // 「移除」复用 archiveAccount(status→archived,可逆/诚实,不硬删)。
+// [⑥ 用户报障] 两道防线:①`isOnlyAccount`(列表只剩这一个 active 号)→ 移除禁用(服务端 archiveAccount
+//   也硬拒末号,前端只是先给可见反馈);②非末号 → 点「移除」弹二次确认框,须逐字键入 REMOVE_CONFIRM_PHRASE
+//   才放行(破坏性动作防误点)。
 export function AccountRow({
   account,
+  isOnlyAccount = false,
 }: {
   readonly account: PlatformAccountResource;
+  readonly isOnlyAccount?: boolean;
 }) {
   const { pending, run } = useMutation();
+  const [open, setOpen] = React.useState(false);
+  const [confirmText, setConfirmText] = React.useState("");
+  const phraseMatches = confirmText.trim() === REMOVE_CONFIRM_PHRASE;
+  const canConfirm = phraseMatches && !pending;
 
-  function remove() {
+  // 弹窗关闭即清空已输入的确认文字(下次打开须重新键入,防"记忆残留"绕过友情摩擦)。
+  React.useEffect(() => {
+    if (!open) setConfirmText("");
+  }, [open]);
+
+  function confirmRemove() {
+    if (!canConfirm) return;
     run(() =>
       client.archiveAccount({
         params: { accountId: account.id },
@@ -182,12 +212,15 @@ export function AccountRow({
         body: undefined,
       }),
     );
+    setOpen(false);
   }
 
   // 抖音号 ID:§D 回填到 external_source.sourceIdentifier;平台账号侧尚无独立 ID 列,
   // 此处若契约后续随行带 externalId 就显,当前无 → 不显(不造假)。
   const externalId =
     (account as unknown as { externalId?: string | null }).externalId ?? null;
+
+  const removeDisabled = pending || account.status === "archived";
 
   return (
     <li
@@ -218,16 +251,68 @@ export function AccountRow({
           </Badge>
         ) : null}
       </span>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        data-testid="account-remove"
-        disabled={pending || account.status === "archived"}
-        onClick={remove}
-      >
-        移除
-      </Button>
+      {isOnlyAccount ? (
+        // ① 末号保护:唯一 active 号不准移除(否则没号可切、数据全落 NULL 退化)。
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          data-testid="account-remove"
+          disabled
+          title="至少保留一个抖音号，不能移除最后一个"
+        >
+          移除
+        </Button>
+      ) : (
+        // ② 二次确认弹窗:点「移除」不直接删,弹框须逐字键入确认句才放行。
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              data-testid="account-remove"
+              disabled={removeDisabled}
+            >
+              移除
+            </Button>
+          </DialogTrigger>
+          <DialogContent data-testid="account-remove-dialog">
+            <DialogHeader>
+              <DialogTitle>移除抖音号「{account.accountHandle}」</DialogTitle>
+              <DialogDescription>
+                移除后该号从列表消失（可逆，不删历史数据）。此操作影响该号名下的定位/选题/项目归属。
+                如确认，请在下方逐字键入「{REMOVE_CONFIRM_PHRASE}」。
+              </DialogDescription>
+            </DialogHeader>
+            <Input
+              data-testid="account-remove-confirm-input"
+              aria-label="移除二次确认"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={REMOVE_CONFIRM_PHRASE}
+              autoComplete="off"
+            />
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="ghost" size="sm">
+                  取消
+                </Button>
+              </DialogClose>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                data-testid="account-remove-confirm"
+                disabled={!canConfirm}
+                onClick={confirmRemove}
+              >
+                确认移除
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </li>
   );
 }

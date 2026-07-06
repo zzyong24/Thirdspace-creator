@@ -98,10 +98,26 @@ describe("account-manager 极简版 island wiring", () => {
     expect(screen.queryByRole("button", { name: "新增账号" })).toBeNull();
   });
 
-  // 移除:复用 client.archiveAccount(可逆),成功后 router.refresh()。
-  it("移除 issues client.archiveAccount then router.refresh", async () => {
+  // [⑥] 移除:点「移除」不直接删 —— 弹二次确认框,须逐字键入确认句才放行 archiveAccount。
+  it("移除弹二次确认框,键入确认句后才 archiveAccount + refresh", async () => {
     render(<AccountRow account={DOUYIN} />);
+    // 点「移除」→ 弹框,尚未调 archiveAccount。
     fireEvent.click(screen.getByTestId("account-remove"));
+    await waitFor(() =>
+      expect(screen.getByTestId("account-remove-dialog")).toBeTruthy(),
+    );
+    expect(mockClient.archiveAccount).not.toHaveBeenCalled();
+    // 「确认移除」在键入前禁用。
+    const confirmBtn = screen.getByTestId(
+      "account-remove-confirm",
+    ) as HTMLButtonElement;
+    expect(confirmBtn.disabled).toBe(true);
+    // 键入正确确认句 → 放行。
+    fireEvent.change(screen.getByTestId("account-remove-confirm-input"), {
+      target: { value: "我已确认移除该账户" },
+    });
+    expect(confirmBtn.disabled).toBe(false);
+    fireEvent.click(confirmBtn);
     await waitFor(() =>
       expect(mockClient.archiveAccount).toHaveBeenCalledTimes(1),
     );
@@ -110,6 +126,32 @@ describe("account-manager 极简版 island wiring", () => {
     };
     expect(arg.params.accountId).toBe("acct-d");
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
+  // [⑥] 键入错误确认句 → 「确认移除」保持禁用,不调 archiveAccount。
+  it("确认句不匹配时「确认移除」禁用且不删", async () => {
+    render(<AccountRow account={DOUYIN} />);
+    fireEvent.click(screen.getByTestId("account-remove"));
+    await waitFor(() =>
+      expect(screen.getByTestId("account-remove-dialog")).toBeTruthy(),
+    );
+    fireEvent.change(screen.getByTestId("account-remove-confirm-input"), {
+      target: { value: "确认移除" }, // 不等于完整确认句
+    });
+    const confirmBtn = screen.getByTestId(
+      "account-remove-confirm",
+    ) as HTMLButtonElement;
+    expect(confirmBtn.disabled).toBe(true);
+    expect(mockClient.archiveAccount).not.toHaveBeenCalled();
+  });
+
+  // [⑥] 末号保护:isOnlyAccount → 「移除」禁用,无二次确认框可开。
+  it("最后一个号(isOnlyAccount)的移除按钮禁用", () => {
+    render(<AccountRow account={DOUYIN} isOnlyAccount />);
+    const btn = screen.getByTestId("account-remove") as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    fireEvent.click(btn);
+    expect(screen.queryByTestId("account-remove-dialog")).toBeNull();
   });
 
   // 账号行极简:显真实昵称,不再有密钥徽标 / 涨粉基线框 / 保存基线按钮。
@@ -166,6 +208,13 @@ describe("account-manager 极简版 view", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toHaveAttribute("data-account-id", "acct-d");
     expect(screen.queryByText("@已移除的号")).toBeNull();
+  });
+
+  // [⑥] 只有一个 active 号 → 该行移除按钮禁用(末号保护,视图侧传 isOnlyAccount）。
+  it("只有一个号时,该号移除按钮禁用", () => {
+    render(<AccountManagerView viewModel={{ accounts: [DOUYIN] }} />);
+    const btn = screen.getByTestId("account-remove") as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
   });
 
   it("无号时显空态引导扫码", () => {

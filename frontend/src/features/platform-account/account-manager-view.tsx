@@ -51,7 +51,14 @@ export function AccountManagerView({
                 还没有绑定抖音号。点上方「扫码绑定新抖音号」即可。
               </li>
             ) : (
-              visible.map((a) => <AccountRow key={a.id} account={a} />)
+              // [T-136§D-bind⑥] 只剩一个 active 号 → 传 isOnlyAccount 禁用其「移除」(末号保护)。
+              visible.map((a) => (
+                <AccountRow
+                  key={a.id}
+                  account={a}
+                  isOnlyAccount={visible.length === 1}
+                />
+              ))
             )}
           </ul>
         </div>
