@@ -4931,6 +4931,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const canonicalRubricVersion: CalibrationRubricVersionRow = {
     id: "rubricver-canonical-1",
     userId: canonicalDataset.user.id,
+    accountId: null, // [T-136] 默认 rubric = 系统级默认,不绑号(nullable 兜底,§6 MAJOR-3)
     rubricId: "rubric-canonical",
     versionNumber: 1,
     dimensions: [
@@ -4984,6 +4985,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const canonicalRubric: CalibrationRubricRow = {
     id: "rubric-canonical",
     userId: canonicalDataset.user.id,
+    accountId: null, // [T-136] 默认 rubric = 系统级默认,不绑号(nullable 兜底,§6 MAJOR-3)
     name: "变现加权评分标准",
     currentVersionId: canonicalRubricVersion.id,
     createdAt: FIXED_NOW_ISO,
