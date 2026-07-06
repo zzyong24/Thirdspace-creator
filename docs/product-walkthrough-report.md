@@ -138,3 +138,18 @@
 - 四包 typecheck 0;新 5 测 + 回归 18 + backend search 34 全绿。
 **live 验证**:重启后建新项目「实时索引验证ZXCV」→ **不重启立即搜到**(结果卡正常),实时索引生效。
 (附遗留小项:搜索结果卡里项目 stage 显示「研究」——读侧 `PROJECT_STAGES` 白名单不含新建项目 startStage `brief`,fallback 到默认阶段名;纯展示、不影响命中,归入下面"七步文案残留"一起清。)
+
+---
+
+## 九、独立自审复核结论(2026-07-06)
+
+对 `feat/make-it-runnable`(相对 `main` 全部提交)做了一次**对抗性代码自审**(独立子代理 + 主 agent 逐条复核)。
+
+**结论:可以合。无 blocker、无 major。** 所有重点改动核心链路读码坐实完整自洽:搜索 fan-out 无双写/无 snippet-wipe、`ensureDouyinSource` 幂等并发安全、T-149 source 透传链无断点、analytics 默认三处一致、审核门 21 补测真测行为。诚实性核查:走查报告声称的修复与提交代码一致,无「声称已修但代码没做到」缺口。
+
+**复核后修掉的 2 minor + 1 bonus**:
+1. fixture `analyticsEnabled` 两处 `true`→`false`(与后端新默认 + PROTECTION.md §4 一致,消尾巴);
+2. onboarding 对 `web.search` 放开免 key(rss/browser provider 非空即算已配,不强求 hasSecret)——修前免 key 配了搜索的用户「配置联网搜索」步骤会漏判未完成;
+3. **bonus**:顺藤逮到并修了 **T-148 遗留的一条静默失败测试**(`onboarding-card「全配」` mock 的 `default` 行漏给 `hasSecret`)。
+
+剩 1 nit(`ensureAccount` `listAccounts limit:100`,单账号退化场景不可触发 + UNIQUE catch 兜底,无实际后果),记录不改。
