@@ -36,6 +36,25 @@ export const scheduledJobResource = z.object({
 });
 export type ScheduledJobResource = z.infer<typeof scheduledJobResource>;
 
+// [T-152] JobRun 实时采集进度(additive、nullable)。running 态由 runner/collector best-effort
+// + 节流写入(每页/每 batch 一次),前端 2s 轮询显示阶段 + 累计条数,不再是黑盒只在结束看数。
+//   - stage:当前阶段可读键(login / fetch / cover_backfill / export / parse / ingest / …)。
+//   - processed:该阶段已处理条数(累计拉了几条 / 翻到第几页 / 回填第几张封面)。
+//   - total:该阶段总量;未知时 null(抖音翻页 has_more 才知有无下一页,total 常为 null)。
+//   - message:人类可读一句话(可选)。
+//   - updatedAt:进度写入时刻 ISO(前端判「是否还在动」)。
+// 宽松容错:jsonb 自由形状,读侧兜住旧/脏数据(passthrough),缺字段不崩。
+export const jobRunProgress = z
+  .object({
+    stage: z.string(),
+    processed: z.number().int().nonnegative(),
+    total: z.number().int().nonnegative().nullable(),
+    message: z.string().optional(),
+    updatedAt: iso8601,
+  })
+  .passthrough();
+export type JobRunProgress = z.infer<typeof jobRunProgress>;
+
 // JobRun — 瘦"调度触发记录"(owned-root):一次到点触发一行。步骤日志复用 ai_task_steps
 // (经 aiTaskId 关联,不在此存步骤)。itemsNew/itemsUpdated 是本次采集的新鲜度统计。
 export const jobRunResource = z.object({
@@ -47,6 +66,9 @@ export const jobRunResource = z.object({
   itemsNew: z.number().int(), // 本次新增条数(作品/快照/评论)
   itemsUpdated: z.number().int(), // 本次更新条数
   error: z.string().nullable(), // 失败原因 / "需重连 Chrome"
+  // [T-152] 实时采集进度(nullable → 旧 run / 未上报进度读到 null,向后兼容)。
+  // 用 nullish:DB 列 NULL / 字段缺失都归一到 null,读侧统一判空。
+  progress: jobRunProgress.nullish(),
   startedAt: iso8601,
   finishedAt: iso8601.nullable(), // nullable until terminal
 });

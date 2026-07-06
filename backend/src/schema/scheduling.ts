@@ -51,6 +51,10 @@ export const jobRuns = pgTable("job_run", {
   itemsNew: integer("items_new").notNull().default(0), // 本次新增条数
   itemsUpdated: integer("items_updated").notNull().default(0), // 本次更新条数
   error: text("error"), // nullable — 失败原因 / "需重连 Chrome"
+  // [T-152] 采集实时进度(additive、nullable)。running 态由 runner/collector best-effort +
+  // 节流写入,前端 2s 轮询显示阶段 + 累计条数。形状:{ stage, processed, total, message?,
+  // updatedAt }(见 0026_job_run_progress.sql)。旧 run / 旧客户端读到 NULL 不崩(向后兼容)。
+  progress: jsonb("progress"), // nullable — { stage, processed, total, message?, updatedAt }
   startedAt: text("started_at").notNull(),
   finishedAt: text("finished_at"), // nullable until terminal
 });
@@ -92,6 +96,9 @@ CREATE TABLE IF NOT EXISTS job_run (
   started_at TEXT NOT NULL,
   finished_at TEXT
 );
+-- [T-152] 采集实时进度列(additive、幂等、nullable)。与 0026_job_run_progress.sql 对齐
+-- (迁移才是运行时真正建列的那份;此 const 供 seed/doc 有处可读)。
+ALTER TABLE job_run ADD COLUMN IF NOT EXISTS progress JSONB;
 CREATE INDEX IF NOT EXISTS ix_scheduled_job_user_enabled ON scheduled_job (user_id, enabled);
 CREATE INDEX IF NOT EXISTS ix_job_run_job ON job_run (job_id, started_at);
 `;

@@ -67,6 +67,8 @@ export interface CreateRunInput {
 }
 
 // A run 回填 patch (D3) — status/items/error/finishedAt/aiTaskId. undefined = unchanged.
+// [T-152] progress:实时采集进度 jsonb(nullable);采集器 best-effort + 节流写入,
+//   undefined = 不动,null = 清空(终态可清)。形状见 contract jobRunProgress。
 export interface UpdateRunInput {
   status?: string;
   itemsNew?: number;
@@ -74,6 +76,7 @@ export interface UpdateRunInput {
   error?: string | null;
   aiTaskId?: string | null;
   finishedAt?: string | null;
+  progress?: Record<string, unknown> | null;
 }
 
 export interface ListRunsQuery {
@@ -270,6 +273,7 @@ export function createSchedulingRepository(
       if (patch.error !== undefined) set.error = patch.error;
       if (patch.aiTaskId !== undefined) set.aiTaskId = patch.aiTaskId;
       if (patch.finishedAt !== undefined) set.finishedAt = patch.finishedAt;
+      if (patch.progress !== undefined) set.progress = patch.progress; // [T-152] 进度写入
       const updated = await db
         .update(jobRuns)
         .set(set)

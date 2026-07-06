@@ -53,9 +53,12 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
 
     // (a) 唯一数据路径是注入的 collector(结构上不可能调 LLM);带 target 调用
     expect(deps.collectors["self.metrics"]).toHaveBeenCalledTimes(1);
-    expect(deps.collectors["self.metrics"]).toHaveBeenCalledWith(ctx, {
-      externalSourceId: "src1",
-    });
+    // [T-152] collector 第三参是 report 回调(runner 注入的进度上报器)。
+    expect(deps.collectors["self.metrics"]).toHaveBeenCalledWith(
+      ctx,
+      { externalSourceId: "src1" },
+      expect.any(Function),
+    );
 
     // markRunning → recordStep(合成 step,文案含新增条数)→ markSucceeded
     expect(deps.ai.markRunning).toHaveBeenCalledWith(ctx, "task1");
@@ -76,6 +79,7 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
       itemsUpdated: 1,
       error: null,
       finishedAt: "2026-07-01T00:00:00.000Z",
+      progress: null, // [T-152] 终态清空进度(让位给结果文案)
     });
   });
 
@@ -238,9 +242,13 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
       },
       deps,
     );
-    // 明细 collector 被调(带 target);其它 collector 不被调
+    // 明细 collector 被调(带 target + report 回调);其它 collector 不被调
     expect(detailCollector).toHaveBeenCalledTimes(1);
-    expect(detailCollector).toHaveBeenCalledWith(ctx, { externalSourceId: "src1" });
+    expect(detailCollector).toHaveBeenCalledWith(
+      ctx,
+      { externalSourceId: "src1" },
+      expect.any(Function),
+    );
     // 合成 step 文案含明细源标签 + 新增条数
     const stepArg = (deps.ai.recordStep as ReturnType<typeof vi.fn>).mock.calls[0][2];
     expect(stepArg.text).toContain("抖音作品明细数据");
@@ -275,6 +283,142 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     ).resolves.toBeUndefined();
     expect(deps.runs.updateRun).not.toHaveBeenCalled();
     // task 仍走完成功路径
+    expect(deps.ai.markSucceeded).toHaveBeenCalled();
+  });
+
+  // ── T-152 实时进度上报 ─────────────────────────────────────────────────────────
+
+  // 进度写库辅助:从 updateRun mock 里挑出带 progress 字段的调用(区别于终态回填)。
+  function progressCalls(deps: ScheduledCollectionDeps) {
+    return (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock.calls.filter(
+      (c) => (c[2] as { progress?: unknown }).progress != null,
+    );
+  }
+
+  it("T-152:collector 调 report(阶段推进/条数累计)→ 写 job_run.progress(stage/processed/total/updatedAt)", async () => {
+    const deps = makeDeps({
+      progressThrottleMs: 0, // 关节流,断言每次上报都写库
+      collectors: {
+        "self.metrics": vi.fn(async (_ctx, _target, report) => {
+          report({ stage: "login", processed: 0, total: null, message: "校验登录态" });
+          report({ stage: "fetch", processed: 12, total: null, message: "抓作品列表" });
+          report({ stage: "cover_backfill", processed: 3, total: 5 });
+          return { itemsNew: 12, itemsUpdated: 3 };
+        }),
+      },
+    });
+    await runScheduledCollection(ctx, baseTask, deps);
+
+    const progs = progressCalls(deps);
+    expect(progs.length).toBe(3);
+    // 第一条:login stage,processed 0,total null,带 message + updatedAt
+    expect(progs[0][2].progress).toMatchObject({
+      stage: "login",
+      processed: 0,
+      total: null,
+      message: "校验登录态",
+      updatedAt: "2026-07-01T00:00:00.000Z",
+    });
+    // 累计条数:fetch 抓到 12 条
+    expect(progs[1][2].progress).toMatchObject({ stage: "fetch", processed: 12 });
+    // total 已知(封面回填 3/5)
+    expect(progs[2][2].progress).toMatchObject({
+      stage: "cover_backfill",
+      processed: 3,
+      total: 5,
+    });
+    // 终态仍正常回填 succeeded(进度不干扰终态)
+    expect(deps.ai.markSucceeded).toHaveBeenCalledWith(ctx, "task1");
+    const terminal = (deps.runs.updateRun as ReturnType<typeof vi.fn>).mock.calls.at(
+      -1,
+    )![2];
+    expect(terminal.status).toBe("succeeded");
+    expect(terminal.progress).toBeNull(); // 终态清空进度
+  });
+
+  it("T-152 节流:同 stage 内高频 report 在 throttleMs 内只写一次(不每条都写库)", async () => {
+    const deps = makeDeps({
+      progressThrottleMs: 100_000, // 极大间隔:同 stage 第二次之后全被节流吞掉
+      collectors: {
+        "self.metrics": vi.fn(async (_ctx, _target, report) => {
+          // 同一 stage 连报 5 次(模拟逐条累计)→ 应只写库 1 次(首次放行,余下节流)
+          for (let i = 1; i <= 5; i++) {
+            report({ stage: "ingest", processed: i, total: 5 });
+          }
+          return { itemsNew: 5, itemsUpdated: 0 };
+        }),
+      },
+    });
+    await runScheduledCollection(ctx, baseTask, deps);
+    // 同 stage 5 次上报,节流后只落库 1 次(首次)
+    expect(progressCalls(deps).length).toBe(1);
+    expect(progressCalls(deps)[0][2].progress).toMatchObject({
+      stage: "ingest",
+      processed: 1,
+    });
+  });
+
+  it("T-152 阶段推进不受节流:stage 变化立即写库(即便距上次不足 throttleMs)", async () => {
+    const deps = makeDeps({
+      progressThrottleMs: 100_000, // 极大间隔
+      collectors: {
+        "self.metrics": vi.fn(async (_ctx, _target, report) => {
+          report({ stage: "login", processed: 0, total: null });
+          report({ stage: "fetch", processed: 8, total: null }); // stage 变了 → 立即写
+          report({ stage: "ingest", processed: 8, total: 8 }); // stage 又变 → 立即写
+          return { itemsNew: 8, itemsUpdated: 0 };
+        }),
+      },
+    });
+    await runScheduledCollection(ctx, baseTask, deps);
+    // 3 个不同 stage 各写一次(阶段推进立即可见,不被节流吞)
+    const stages = progressCalls(deps).map((c) => c[2].progress.stage);
+    expect(stages).toEqual(["login", "fetch", "ingest"]);
+  });
+
+  it("T-152 best-effort:进度写库失败绝不阻断采集(collector 照常返回 succeeded)", async () => {
+    const updateRun = vi.fn(async (_c: unknown, _r: unknown, patch: { progress?: unknown }) => {
+      // 进度写(带 progress)抛错;终态回填(无 progress 或 progress=null)正常。
+      if (patch.progress != null) throw new Error("db write failed");
+      return {};
+    });
+    const deps = makeDeps({
+      progressThrottleMs: 0,
+      runs: { updateRun },
+      collectors: {
+        "self.metrics": vi.fn(async (_ctx, _target, report) => {
+          report({ stage: "fetch", processed: 3, total: null });
+          return { itemsNew: 3, itemsUpdated: 0 };
+        }),
+      },
+    });
+    // 不抛:进度写失败被 catch 吞,采集主流程走完
+    await expect(runScheduledCollection(ctx, baseTask, deps)).resolves.toBeUndefined();
+    expect(deps.ai.markSucceeded).toHaveBeenCalledWith(ctx, "task1");
+    // 终态回填仍成功(succeeded)
+    const terminal = updateRun.mock.calls.at(-1)![2] as { status?: string };
+    expect(terminal.status).toBe("succeeded");
+  });
+
+  it("T-152:缺 jobRunId → report 为 no-op(无处可写,不崩)", async () => {
+    const deps = makeDeps({
+      progressThrottleMs: 0,
+      collectors: {
+        "self.metrics": vi.fn(async (_ctx, _target, report) => {
+          report({ stage: "fetch", processed: 1, total: null }); // jobRunId 缺失 → no-op
+          return { itemsNew: 1, itemsUpdated: 0 };
+        }),
+      },
+    });
+    await expect(
+      runScheduledCollection(
+        ctx,
+        { ...baseTask, inputData: { jobId: "job1", target: {} } },
+        deps,
+      ),
+    ).resolves.toBeUndefined();
+    // jobRunId 缺失 → 完全不写 job_run(进度 + 终态都无处可写)
+    expect(deps.runs.updateRun).not.toHaveBeenCalled();
     expect(deps.ai.markSucceeded).toHaveBeenCalled();
   });
 });

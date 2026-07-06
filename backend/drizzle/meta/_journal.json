@@ -183,6 +183,13 @@
       "when": 1782381200000,
       "tag": "0025_multi_account_ownership",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1782381300000,
+      "tag": "0026_job_run_progress",
+      "breakpoints": true
     }
   ]
 }

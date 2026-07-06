@@ -149,6 +149,90 @@ function runStatusMeta(status: string) {
   );
 }
 
+// ── T-152 实时采集进度 ─────────────────────────────────────────────────────────
+//
+// job_run.progress(running 态由采集器 best-effort + 节流写入,前端 2s 轮询已存在)。
+// 形状:{ stage, processed, total, message?, updatedAt }。旧 run / 未上报 → null(向后兼容)。
+
+// 采集阶段 key → 中文可读标签(采集器上报的 stage 键)。未知 key 原样显示(诚实降级)。
+const PROGRESS_STAGE_LABELS: Record<string, string> = {
+  login: "校验登录态",
+  fetch: "抓取作品",
+  cover_backfill: "回填封面",
+  comments: "抓取评论",
+  export: "导出明细",
+  parse: "解析明细",
+  ingest: "落库",
+};
+
+interface RunProgress {
+  stage: string;
+  processed: number;
+  total: number | null;
+  message?: string;
+  updatedAt?: string;
+}
+
+// 宽松读 run.progress(jsonb 自由形状 / 旧脏数据 → 兜住,读不出返 null 不崩)。
+function readRunProgress(raw: unknown): RunProgress | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const p = raw as Record<string, unknown>;
+  if (typeof p.stage !== "string") return null;
+  const processed = typeof p.processed === "number" ? p.processed : 0;
+  const total = typeof p.total === "number" ? p.total : null;
+  return {
+    stage: p.stage,
+    processed,
+    total,
+    message: typeof p.message === "string" ? p.message : undefined,
+    updatedAt: typeof p.updatedAt === "string" ? p.updatedAt : undefined,
+  };
+}
+
+// 进度文案:优先采集器写的 message(已含条数);无则用「阶段 · 已处理 N[/M]」兜底。
+function progressText(p: RunProgress): string {
+  const stageLabel = PROGRESS_STAGE_LABELS[p.stage] ?? p.stage;
+  if (p.message) return `${stageLabel} · ${p.message}`;
+  const count = p.total != null ? `${p.processed}/${p.total}` : `${p.processed}`;
+  return `${stageLabel} · 已处理 ${count}`;
+}
+
+// 进度百分比(total 已知才算;未知 total 返 null → 前端显不定长条,不假造百分比)。
+function progressPercent(p: RunProgress): number | null {
+  if (p.total == null || p.total <= 0) return null;
+  return Math.min(100, Math.round((p.processed / p.total) * 100));
+}
+
+// running 态进度条(total 已知 → 定长填充;未知 → 不定长脉冲条 + 阶段文案)。
+function RunProgressBar({ progress }: { readonly progress: RunProgress }) {
+  const pct = progressPercent(progress);
+  return (
+    <div
+      data-slot="automation-run-progress"
+      data-testid="automation-run-progress"
+      data-stage={progress.stage}
+      className="mt-1 flex flex-col gap-1"
+    >
+      <div className="flex items-center gap-1.5 text-[11px] text-brand">
+        <Loader2 className="size-3 animate-spin" />
+        <span className="truncate">{progressText(progress)}</span>
+      </div>
+      <div className="h-1 w-full overflow-hidden rounded-full bg-brand-soft">
+        {pct != null ? (
+          // total 已知:定长填充条(百分比)。
+          <div
+            className="h-full rounded-full bg-brand transition-[width] duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        ) : (
+          // total 未知(抖音翻页 has_more 才知有无下一页):不定长脉冲条(诚实不假造百分比)。
+          <div className="h-full w-1/3 animate-pulse rounded-full bg-brand" />
+        )}
+      </div>
+    </div>
+  );
+}
+
 // 一次运行的结果文案(T-032b ③):按 status + itemsNew 分档,替死板的「新增 N · 更新 M」。
 // 核心是区分 succeeded-0(已完成·无新数据,别显得像失败)vs needs_reconnect(去扫码)vs failed(显真因)。
 function runResultText(run: {
@@ -275,6 +359,12 @@ export function JobRow({
   const SourceIcon = meta?.icon ?? BarChart3;
   // D4:最近一次 run 是 needs_reconnect → 登录态过期(调度器停跑),该行红标 + 换「登录抖音」。
   const needsReconnect = latestRun?.status === "needs_reconnect";
+  // [T-152] 最近一次 run 正在跑 → 行内显实时进度(阶段 + 累计条数)。进度详情在运行详情抽屉
+  //   持续 2s 轮询;此处行级是挂载/刷新时的快照(点作业名进抽屉看实时刷新)。
+  const running = latestRun?.status === "running";
+  const rowProgress = running
+    ? readRunProgress((latestRun as { progress?: unknown } | null)?.progress)
+    : null;
   // T-038c:对应 channel 正 cooldown → 行内显限流保护横幅(诚实告知,别当卡死)。
   const throttled = channelThrottle?.cooldownActive === true;
   return (
@@ -319,6 +409,19 @@ export function JobRow({
               {sourceLabel(job.sourceKind)}
             </span>
           )}
+          {/* [T-152] running 态:行内实时进度(阶段 + 累计条数 + 进度条)。点作业名进抽屉看 2s 轮询刷新。 */}
+          {running && rowProgress ? (
+            <RunProgressBar progress={rowProgress} />
+          ) : running ? (
+            // 已在跑但还没上报进度(刚触发 / 旧 run 无 progress)→ 诚实显「运行中…」不假造进度。
+            <span
+              data-slot="automation-row-running"
+              className="inline-flex w-fit items-center gap-1 text-[11px] font-medium text-brand"
+            >
+              <Loader2 className="size-3 animate-spin" />
+              采集进行中…
+            </span>
+          ) : null}
           {/* T-038c:限流保护中(该 channel 正 cooldown)—— 诚实告知,别看着像卡死。
               与 needs_reconnect 可并存(登录过期 + 恰好也在退避),独立成条显示。 */}
           {throttled && channelThrottle ? (
@@ -1100,34 +1203,46 @@ export function RunDetailDialog({
                     <button
                       type="button"
                       onClick={() => selectRun(run)}
-                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-subtle"
+                      className="flex w-full flex-col gap-1 px-3 py-2.5 text-left hover:bg-surface-subtle"
                     >
-                      <StatusIcon
-                        className={cn(
-                          "size-4 shrink-0",
-                          sm.tone,
-                          run.status === "running" && "animate-spin",
-                        )}
-                      />
-                      <span className={cn("text-xs font-medium", sm.tone)}>
-                        {sm.label}
-                      </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {formatDateTime(run.startedAt)}
-                      </span>
-                      <span
-                        data-slot="automation-run-result"
-                        className={cn(
-                          "ml-auto text-[11px] tabular-nums",
-                          run.status === "needs_reconnect"
-                            ? "font-medium text-amber-600"
-                            : run.status === "failed"
-                              ? "text-destructive"
-                              : "text-muted-foreground",
-                        )}
-                      >
-                        {runResultText(run)}
-                      </span>
+                      <div className="flex w-full items-center gap-3">
+                        <StatusIcon
+                          className={cn(
+                            "size-4 shrink-0",
+                            sm.tone,
+                            run.status === "running" && "animate-spin",
+                          )}
+                        />
+                        <span className={cn("text-xs font-medium", sm.tone)}>
+                          {sm.label}
+                        </span>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {formatDateTime(run.startedAt)}
+                        </span>
+                        <span
+                          data-slot="automation-run-result"
+                          className={cn(
+                            "ml-auto text-[11px] tabular-nums",
+                            run.status === "needs_reconnect"
+                              ? "font-medium text-amber-600"
+                              : run.status === "failed"
+                                ? "text-destructive"
+                                : "text-muted-foreground",
+                          )}
+                        >
+                          {runResultText(run)}
+                        </span>
+                      </div>
+                      {/* [T-152] running 态:实时采集进度条(阶段 + 累计条数)。轮询 2s 刷新。
+                          终态 progress 已被 runner 清空(null)→ 不显,让位给结果文案。 */}
+                      {run.status === "running"
+                        ? (() => {
+                            const prog = readRunProgress(
+                              (run as { progress?: unknown }).progress,
+                            );
+                            return prog ? <RunProgressBar progress={prog} /> : null;
+                          })()
+                        : null}
                     </button>
 
                     {/* 选中 → ai_task_steps */}
@@ -1298,31 +1413,60 @@ export function AutomationsIsland({
     Partial<Record<DouyinChannel, ChannelThrottle>>
   >({});
 
-  // 批量拉每个 job 的最近一次 run(jobRuns.listByJob limit 1)。jobs 变化(router.refresh
-  // 重传)即重拉,保证登录恢复/立即运行后行状态刷新。
+  // 批量拉每个 job 的最近一次 run(jobRuns.listByJob limit 1)。
+  const fetchLatestRuns = React.useCallback(async (): Promise<
+    Record<string, JobRunResource | null>
+  > => {
+    const entries = await Promise.all(
+      jobs.map(async (job) => {
+        try {
+          const rows = (await client.listJobRunsByJob({
+            params: { jobId: job.id },
+            query: { page: 1, pageSize: 1 },
+            body: undefined,
+          })) as unknown as JobRunResource[];
+          return [job.id, Array.isArray(rows) && rows[0] ? rows[0] : null] as const;
+        } catch {
+          return [job.id, null] as const;
+        }
+      }),
+    );
+    return Object.fromEntries(entries);
+  }, [jobs]);
+
+  // 挂载 / jobs 变化(router.refresh 重传)即重拉,保证登录恢复/立即运行后行状态刷新。
   React.useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const entries = await Promise.all(
-        jobs.map(async (job) => {
-          try {
-            const rows = (await client.listJobRunsByJob({
-              params: { jobId: job.id },
-              query: { page: 1, pageSize: 1 },
-              body: undefined,
-            })) as unknown as JobRunResource[];
-            return [job.id, Array.isArray(rows) && rows[0] ? rows[0] : null] as const;
-          } catch {
-            return [job.id, null] as const;
-          }
-        }),
-      );
-      if (!cancelled) setLatestRuns(Object.fromEntries(entries));
+      const next = await fetchLatestRuns();
+      if (!cancelled) setLatestRuns(next);
     })();
     return () => {
       cancelled = true;
     };
-  }, [jobs]);
+  }, [fetchLatestRuns]);
+
+  // [T-152] 行级实时进度轮询:任一 job 最近一次 run 仍 running → 每 2s 静默重拉 latestRuns,
+  //   让列表行的进度条(阶段 + 累计条数)实时翻篇。无 running 即停(省轮询);与抽屉内轮询正交
+  //   (抽屉拉某 job 的历史 run,行级拉全 job 最近 run)。
+  const anyRunning = React.useMemo(
+    () => Object.values(latestRuns).some((r) => r?.status === "running"),
+    [latestRuns],
+  );
+  React.useEffect(() => {
+    if (!anyRunning) return;
+    let cancelled = false;
+    const t = setInterval(() => {
+      void (async () => {
+        const next = await fetchLatestRuns();
+        if (!cancelled) setLatestRuns(next);
+      })();
+    }, 2000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, [anyRunning, fetchLatestRuns]);
 
   // T-038c:挂载时拉一次两个 channel 的限流退避快照(只读 op,读网关内存镜像)。jobs 变化
   // (router.refresh 重传)即重拉,让登录恢复/立即运行后限流态也刷新。失败/未配网关 → 静默空

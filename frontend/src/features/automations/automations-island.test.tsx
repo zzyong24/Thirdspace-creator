@@ -183,6 +183,101 @@ describe("JobRow — 启用开关", () => {
   });
 });
 
+// ── T-152 实时采集进度显示 ─────────────────────────────────────────────────────
+function renderJobRow(over: Parameters<typeof JobRow>[0]) {
+  return render(
+    <table>
+      <tbody>
+        <tr>
+          <td>
+            <JobRow {...over} />
+          </td>
+        </tr>
+      </tbody>
+    </table>,
+  );
+}
+
+const jobRowBase = {
+  job: makeJob({ enabled: true }),
+  channelThrottle: null,
+  onToggle: vi.fn(),
+  onOpenDetail: vi.fn(),
+  onRunNow: vi.fn(),
+  onLogin: vi.fn(),
+  pendingToggle: false,
+  pendingRunNow: false,
+  loginPhase: "idle" as const,
+};
+
+describe("T-152 — JobRow 实时采集进度显示", () => {
+  it("running run 带 progress(total 已知)→ 显阶段文案 + 定长进度条 + 累计条数", () => {
+    renderJobRow({
+      ...jobRowBase,
+      latestRun: makeRun({
+        status: "running",
+        finishedAt: null,
+        // additive 进度字段(jsonb):封面回填 3/5
+        progress: {
+          stage: "cover_backfill",
+          processed: 3,
+          total: 5,
+          message: "回填封面 3/5",
+          updatedAt: "2026-06-30T09:00:30.000Z",
+        },
+      } as Partial<JobRunResource>),
+    });
+    const bar = screen.getByTestId("automation-run-progress");
+    expect(bar).toHaveAttribute("data-stage", "cover_backfill");
+    // 阶段中文标签 + 采集器 message(含累计条数)
+    expect(bar.textContent).toContain("回填封面");
+    expect(bar.textContent).toContain("3/5");
+  });
+
+  it("running run 带 progress(total 未知,total=null)→ 显不定长脉冲条 + 阶段文案(不假造百分比)", () => {
+    renderJobRow({
+      ...jobRowBase,
+      latestRun: makeRun({
+        status: "running",
+        finishedAt: null,
+        progress: {
+          stage: "fetch",
+          processed: 12,
+          total: null,
+          message: "已落库 12 条作品指标",
+          updatedAt: "2026-06-30T09:00:10.000Z",
+        },
+      } as Partial<JobRunResource>),
+    });
+    const bar = screen.getByTestId("automation-run-progress");
+    expect(bar).toHaveAttribute("data-stage", "fetch");
+    expect(bar.textContent).toContain("抓取作品");
+    expect(bar.textContent).toContain("12"); // 累计条数
+  });
+
+  it("running run 但无 progress(刚触发 / 旧 run null)→ 诚实显「采集进行中…」不假造进度", () => {
+    renderJobRow({
+      ...jobRowBase,
+      latestRun: makeRun({
+        status: "running",
+        finishedAt: null,
+        progress: null,
+      } as Partial<JobRunResource>),
+    });
+    expect(screen.queryByTestId("automation-run-progress")).toBeNull();
+    expect(screen.getByText("采集进行中…")).toBeInTheDocument();
+  });
+
+  it("终态 run(succeeded)→ 不显进度条(让位给结果文案)", () => {
+    renderJobRow({
+      ...jobRowBase,
+      latestRun: makeRun({ status: "succeeded", itemsNew: 5 }),
+    });
+    expect(screen.queryByTestId("automation-run-progress")).toBeNull();
+    expect(screen.queryByText("采集进行中…")).toBeNull();
+  });
+});
+
 describe("AutomationsIsland — 启用开关接线", () => {
   it("toggle → setScheduledJobEnabled(jobId, enabled) + router.refresh", async () => {
     render(<AutomationsIsland jobs={[makeJob({ enabled: true })]} />);

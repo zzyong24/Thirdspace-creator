@@ -53,16 +53,38 @@ export interface ScheduledCollectionRunsPort {
       itemsUpdated?: number;
       error?: string | null;
       finishedAt?: string | null;
+      // [T-152] 实时采集进度(jsonb)。best-effort + 节流写入,undefined = 不动,null = 清空。
+      progress?: Record<string, unknown> | null;
     },
   ): Promise<unknown>;
 }
 
+// [T-152] 一次进度快照(采集器阶段推进时上报)。runner 补 updatedAt 后写 job_run.progress。
+//   - stage:当前阶段可读键(login / fetch / cover_backfill / export / parse / ingest / …)。
+//   - processed:该阶段已处理条数(累计拉了几条 / 翻到第几页 / 回填第几张封面)。
+//   - total:该阶段总量;未知时 null(抖音翻页 has_more 才知有无下一页,total 常为 null)。
+//   - message:人类可读一句话(可选)。
+export interface CollectProgress {
+  stage: string;
+  processed: number;
+  total?: number | null;
+  message?: string;
+}
+
+// [T-152] 采集器上报进度的回调(runner 注入)。采集器在关键阶段调它;runner 负责节流 + 补
+//   updatedAt + best-effort 写 job_run.progress(写失败绝不阻断采集)。
+export type ReportProgress = (progress: CollectProgress) => void;
+
 /** 一个源的确定性采集器:拿 target → 抓真数据 → ingestion 落库 → 返回新鲜度统计。
  *  host 为每个 sourceKind 装配一个(self.metrics=fetchDouyinMetrics+ingestMetrics /
- *  comments=fetchDouyinComments+ingestComments);测试注 fake(返回固定统计 / 抛异常)。 */
+ *  comments=fetchDouyinComments+ingestComments);测试注 fake(返回固定统计 / 抛异常)。
+ *  [T-152] 第三参 report:采集器在关键阶段(登录校验 / 抓列表 / 封面回填 / 导出解析 / 逐作品)
+ *    调它上报进度;runner 负责节流 + best-effort 写 job_run.progress。旧 collector 不调 report
+ *    也不破(可选调用),进度只是没上报,采集照常。 */
 export type Collector = (
   ctx: RequestContext,
   target: Record<string, unknown>,
+  report: ReportProgress,
 ) => Promise<CollectResult>;
 
 export interface ScheduledCollectionDeps {
@@ -74,6 +96,9 @@ export interface ScheduledCollectionDeps {
    *  `(e) => e instanceof DouyinNotLoggedInError`,让 runner 不 import douyin-cdp(保持可测)。 */
   isNotLoggedInError: (err: unknown) => boolean;
   now: () => string;
+  // [T-152] 进度写库节流最小间隔(ms)。同一 stage 内两次写库至少间隔这么久(防每条都写库拖垮
+  //   采集);stage 变化 / 终态 flush 不受节流限制(阶段推进立即可见)。默认 1500ms。测试注 0 关节流。
+  progressThrottleMs?: number;
 }
 
 export interface ScheduledCollectionTask {
@@ -162,6 +187,41 @@ export async function runScheduledCollection(
   let itemsNew = 0;
   let itemsUpdated = 0;
 
+  // [T-152] 实时进度上报器(采集器阶段推进时调 report → 节流 + best-effort 写 job_run.progress)。
+  //   节流:同一 stage 内两次写库至少间隔 throttleMs;stage 变化立即写(阶段推进要立即可见)。
+  //   best-effort:写库失败(catch 吞)绝不阻断采集;fire-and-forget(不 await,不拖慢抓取)。
+  //   幂等/不阻断:jobRunId 缺失(异常输入)→ report 直接 no-op。
+  const throttleMs = deps.progressThrottleMs ?? 1500;
+  let lastStage: string | null = null;
+  let lastWriteAt = 0;
+  const report: ReportProgress = (p) => {
+    if (!jobRunId) return; // 无处可写(异常输入),静默丢弃,不影响采集
+    const nowMs = Date.now();
+    const stageChanged = p.stage !== lastStage;
+    // 节流:同 stage 且距上次写库不足 throttleMs → 跳过(阶段变化 / 首次总是放行)。
+    if (!stageChanged && throttleMs > 0 && nowMs - lastWriteAt < throttleMs) {
+      return;
+    }
+    lastStage = p.stage;
+    lastWriteAt = nowMs;
+    const progress: Record<string, unknown> = {
+      stage: p.stage,
+      processed: p.processed,
+      total: p.total ?? null,
+      updatedAt: deps.now(),
+    };
+    if (p.message) progress.message = p.message;
+    // fire-and-forget:进度写库不 await(不拖慢抓取);失败吞掉(采集主流程绝不受影响)。
+    void Promise.resolve(
+      deps.runs.updateRun(ctx, jobRunId, { progress }),
+    ).catch((e) => {
+      console.error(
+        `[scheduled-collection-runner] 进度写库失败(不影响采集,run ${jobRunId}):`,
+        e,
+      );
+    });
+  };
+
   try {
     await deps.ai.markRunning(ctx, task.id); // honest status while 采集
 
@@ -174,7 +234,8 @@ export async function runScheduledCollection(
 
     // 确定性采集(collector 内:抓真 XHR/DOM 抽值 → ingestion 落库 → 返回新鲜度统计)。
     // 绝不调 LLM —— 数值程序化抽取(SPEC §2 铁律①)。
-    const result = await collector(ctx, target);
+    // [T-152] 传入 report:采集器在关键阶段上报进度(runner 节流 + best-effort 写 job_run)。
+    const result = await collector(ctx, target, report);
     itemsNew = result.itemsNew;
     itemsUpdated = result.itemsUpdated;
 
@@ -227,6 +288,9 @@ export async function runScheduledCollection(
           itemsUpdated,
           error: runError,
           finishedAt: deps.now(),
+          // [T-152] 终态清空进度(null):running 态的阶段/条数进度条让位给终态结果文案
+          // (✅ 新增 N / ⚠️ 需重连 / ❌ 失败),避免残留一条 stale 的进行中进度。
+          progress: null,
         });
       } catch (e) {
         console.error(

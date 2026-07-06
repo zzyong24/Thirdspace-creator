@@ -3617,7 +3617,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // createGeneratedAsset 直落字节 → setCover 写 revision.coverAssetId。幂等(已有
     // 封面不进候选集)、单作品降级(runner 内 catch 继续)、整批失败不影响指标主流程
     // (此处再 catch 一层)。itemsUpdated = 本轮真回填的封面数(publication 确被更新,诚实)。
-    "self.metrics": async (ctx, target) => {
+    "self.metrics": async (ctx, target, report) => {
+      // [T-152] 阶段①:登录校验 + 确保采集源(refreshDouyin 内部先校验登录态再抓)。
+      report({ stage: "login", processed: 0, total: null, message: "校验抖音登录态" });
       const externalSourceId =
         typeof target.externalSourceId === "string" && target.externalSourceId
           ? target.externalSourceId
@@ -3625,8 +3627,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             // 复用),绝不再指已退役的 "src-douyin-canonical"(新库查无 → 抛「外部来源不存在」
             // → runner 报 failed → 采 0 条的根因)。ensure 后 refreshDouyin 能校验通过。
             await ingestionService.ensureDouyinSource(ctx);
+      // [T-152] 阶段②:抓主页作品列表 + 落库(refreshDouyin 内部翻页/逐字稿是慢阶段,但在
+      //   douyinFetch 端口后不可逐页上报 —— 见诚实存疑⑥。此处只标进入抓取阶段,完成后报条数)。
+      report({ stage: "fetch", processed: 0, total: null, message: "抓取主页作品与指标" });
       const run = await ingestionService.refreshDouyin(ctx, {
         externalSourceId,
+      });
+      // 抓取落库完成:上报本轮真写入的快照数(累计条数)。
+      report({
+        stage: "fetch",
+        processed: run.recordsWritten,
+        total: null,
+        message: `已落库 ${run.recordsWritten} 条作品指标`,
       });
       // [T-078] 封面回填(拉指标跑一轮即回填存量,无需独立入口)。
       let coversFilled = 0;
@@ -3663,7 +3675,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               await publishingService.setCover(ctx, publicationId, coverAssetId);
             },
           },
-          { limit: resolveCoverBackfillLimit() },
+          {
+            limit: resolveCoverBackfillLimit(),
+            // [T-152] 封面回填阶段逐条上报进度(M/N;runner 节流到每 ~1.5s 写一次库)。
+            onProgress: (doneN, totalN) =>
+              report({
+                stage: "cover_backfill",
+                processed: doneN,
+                total: totalN,
+                message: `回填封面 ${doneN}/${totalN}`,
+              }),
+          },
         );
         coversFilled = backfill.filled;
         if (backfill.attempted > 0) {
@@ -3681,7 +3703,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // ux_ingestion_records_run_key 去重 → candidateService.ingestAudienceSignal(source=
     // "comment",带 ingestionRunId,C-4)→ completeRun)。itemsNew=written(新写信号数);
     // 评论只新写不更新 → itemsUpdated 恒 0。
-    comments: async (ctx, target) => {
+    comments: async (ctx, target, report) => {
+      // [T-152] 阶段①:登录校验 + 确保采集源(抓评论前 fetchDouyinComments* 内先校验登录态)。
+      report({ stage: "login", processed: 0, total: null, message: "校验抖音登录态" });
       const externalSourceId =
         typeof target.externalSourceId === "string" && target.externalSourceId
           ? target.externalSourceId
@@ -3778,6 +3802,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if (single) {
         // 单作品仍走单作品抓取路径(fetchDouyinComments 内部 openContext 一次)。
         // [gate-F7 插装点③] creator-center 评论翻页限流(注真单例)。
+        // [T-152] 单作品:标进入抓取阶段(1/1)。
+        report({
+          stage: "comments",
+          processed: 0,
+          total: 1,
+          message: "抓取该作品评论",
+        });
         const records = await fetchDouyinComments(
           {
             awemeId: single,
@@ -3786,10 +3817,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           },
           { gateway: douyinGateway },
         );
-        return {
-          itemsNew: await ingestRecordsForWork(single, records),
-          itemsUpdated: 0,
-        };
+        const written = await ingestRecordsForWork(single, records);
+        report({
+          stage: "comments",
+          processed: 1,
+          total: 1,
+          message: `已落库 ${written} 条评论`,
+        });
+        return { itemsNew: written, itemsUpdated: 0 };
       }
       const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
         limit: 500,
@@ -3800,6 +3835,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // 复用单 context 一次性抓完所有作品评论(未登录 → 一次性抛 DouyinNotLoggedInError,
       // runner catch → needs_reconnect),再逐作品 ingestComments 落库(落库逻辑不变)。
       // [gate-F7 插装点③④] creator-center:每作品 acquire 一次 + 作品内翻页每页 acquire(注真单例)。
+      // [T-152] 标进入抓取阶段(总作品数已知 → total=awemeIds.length)。
+      report({
+        stage: "comments",
+        processed: 0,
+        total: awemeIds.length,
+        message: `抓取 ${awemeIds.length} 个作品的评论`,
+      });
       const perWork = await fetchDouyinCommentsForWorks(
         awemeIds,
         {
@@ -3809,8 +3851,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         { gateway: douyinGateway },
       );
       let total = 0;
+      let doneWorks = 0;
       for (const { awemeId, records } of perWork) {
         total += await ingestRecordsForWork(awemeId, records);
+        // [T-152] 逐作品上报进度(M/N;runner 节流写库)。processed=已落库作品数,累计评论数入 message。
+        doneWorks += 1;
+        report({
+          stage: "comments",
+          processed: doneWorks,
+          total: perWork.length,
+          message: `已处理 ${doneWorks}/${perWork.length} 个作品 · 累计 ${total} 条评论`,
+        });
       }
       return { itemsNew: total, itemsUpdated: 0 };
     },
@@ -3821,7 +3872,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // rawMetrics 带完播/封面CTR/5s完播/2s跳出/主页访问 → 复盘核心指标从 0/fixture 变真)。
     // 未登录 → DouyinNotLoggedInError(runner catch → needs_reconnect,§6);导出非 xlsx →
     // DouyinExportError(普通失败)。itemsNew=真写入快照数;明细快照 append-only → itemsUpdated 0。
-    "self.detail": async (ctx, target) => {
+    "self.detail": async (ctx, target, report) => {
+      // [T-152] 阶段①:登录校验 + 确保采集源(导出前 fetchDouyinWorkListExport 内先校验登录态)。
+      report({ stage: "login", processed: 0, total: null, message: "校验抖音登录态" });
       const externalSourceId =
         typeof target.externalSourceId === "string" && target.externalSourceId
           ? target.externalSourceId
@@ -3832,12 +3885,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const capturedAt = deps.now();
       // 1) 抓导出 xlsx bytes(headless 复用扫码登录态;未登录/非 xlsx 抛,run 不建 → 快速失败)。
       // [gate-F7 插装点⑤] creator-center 导出限流(注真单例)。
+      // [T-152] 阶段②:导出明细 xlsx(点「刷新数据」+「导出数据」,慢阶段)。
+      report({ stage: "export", processed: 0, total: null, message: "导出作品明细数据" });
       const bytes = await fetchDouyinWorkListExport(
         { authDir: douyinAuthDirFor(ctx.accountId) }, // [T-136] 按当前号登录态
         { gateway: douyinGateway },
       );
       // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
+      // [T-152] 阶段③:解析明细(N 条)。
+      report({ stage: "parse", processed: 0, total: null, message: "解析明细数据" });
       const details = await parseDouyinWorkListXlsx(bytes);
+      report({
+        stage: "parse",
+        processed: details.length,
+        total: null,
+        message: `解析出 ${details.length} 条明细`,
+      });
       // 3) 装配作品目录(title + externalId=aweme_id + publishedAt),按 title/pub_date 匹配。
       //    T-034 断裂修复:导入作品(external_id=aweme_id)故意无 revision(见 publishing.repository
       //    createImportedPublication),故 getRecentPublicationsWithTitle 回来的 title 为空 —— 与
@@ -3909,6 +3972,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // 一条都没匹配上(作品未导入 / title 对不上)—— 不建空 run,诚实返 0(F3 边界)。
         return { itemsNew: 0, itemsUpdated: 0 };
       }
+      // [T-152] 阶段④:匹配落库(records.length 条匹配上的明细 → ingestMetrics)。
+      report({
+        stage: "ingest",
+        processed: 0,
+        total: records.length,
+        message: `匹配落库 ${records.length} 条明细`,
+      });
       const run = await ingestionService.createRun(ctx, {
         externalSourceId,
         runType: "douyin_detail",
@@ -3919,6 +3989,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         records: records as unknown as Array<Record<string, unknown>>,
       });
       await ingestionService.completeRun(ctx, { runId: run.id });
+      report({
+        stage: "ingest",
+        processed: result.recordsWritten,
+        total: records.length,
+        message: `已落库 ${result.recordsWritten} 条明细`,
+      });
       return { itemsNew: result.recordsWritten, itemsUpdated: 0 };
     },
   };

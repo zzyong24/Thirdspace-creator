@@ -66,7 +66,12 @@ export const DEFAULT_COVER_BACKFILL_LIMIT = 100;
  */
 export async function backfillDouyinCovers(
   ports: CoverBackfillPorts,
-  opts?: { limit?: number },
+  opts?: {
+    limit?: number;
+    // [T-152] 逐封面进度回调(可选):每处理完一条作品调一次(done=已处理数,total=候选总数)。
+    //   best-effort:回调抛错不阻断回填(内部吞)。用于采集器把封面回填阶段进度上报 job_run。
+    onProgress?: (done: number, total: number) => void;
+  },
 ): Promise<CoverBackfillResult> {
   const limit = opts?.limit ?? DEFAULT_COVER_BACKFILL_LIMIT;
   const result: CoverBackfillResult = {
@@ -77,6 +82,7 @@ export async function backfillDouyinCovers(
   };
   const missing = await ports.listMissingCover(limit);
   result.attempted = missing.length;
+  let done = 0;
   for (const pub of missing) {
     try {
       const { coverUrl } = await ports.fetchVideoUrl(pub.externalId);
@@ -106,6 +112,15 @@ export async function backfillDouyinCovers(
         `[douyin-cover-backfill] 作品 ${pub.externalId} 封面回填失败:`,
         err instanceof Error ? err.message : err,
       );
+    }
+    // [T-152] 逐条上报进度(best-effort:回调抛错吞掉,不拖垮回填)。
+    done += 1;
+    if (opts?.onProgress) {
+      try {
+        opts.onProgress(done, missing.length);
+      } catch {
+        /* 进度回调失败不影响回填 */
+      }
     }
   }
   return result;

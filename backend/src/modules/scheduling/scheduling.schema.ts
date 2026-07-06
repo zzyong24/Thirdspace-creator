@@ -75,6 +75,9 @@ export function toJobRunDto(row: JobRunRow): JobRunResource {
     itemsNew: row.itemsNew,
     itemsUpdated: row.itemsUpdated,
     error: row.error ?? null,
+    // [T-152] 实时采集进度(jsonb → nullable record)。NULL / 非对象 → null(旧 run / 未上报
+    // 进度向后兼容,前端读到 null 不崩)。zod jobRunProgress.nullish() 兜住形状。
+    progress: toNullableRecord(row.progress) as JobRunResource["progress"],
     startedAt: row.startedAt,
     finishedAt: row.finishedAt ?? null,
   };

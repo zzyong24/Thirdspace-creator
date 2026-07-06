@@ -77,8 +77,10 @@ export {
 export {
   scheduledJobResource,
   jobRunResource,
+  jobRunProgress,
   type ScheduledJobResource,
   type JobRunResource,
+  type JobRunProgress,
 } from "./resources/scheduling";
 // T-086 编导文案审核门 —— 规则库行 + 稿面审核报告 DTO(backend review 模块 schema.ts
 // 与 frontend 报告卡共用单一真值;同上各模块 re-export 约定,additive)。
