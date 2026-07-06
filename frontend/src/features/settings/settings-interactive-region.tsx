@@ -667,7 +667,7 @@ function AccountBindingCard({
       try {
         const status = (await client.statusDouyin({
           params: undefined,
-          query: undefined,
+          query: {}, // [T-136] 被动探针走 header 注入的当前号;query 带号位 additive
           body: undefined,
         })) as { loggedIn?: boolean; sourceReady?: boolean };
         if (alive && typeof status.loggedIn === "boolean") {
@@ -707,7 +707,7 @@ function AccountBindingCard({
           try {
             const status = (await client.statusDouyin({
               params: undefined,
-              query: undefined,
+              query: {}, // [T-136] 被动探针走 header 注入的当前号;query 带号位 additive
               body: undefined,
             })) as { loggedIn?: boolean; sourceReady?: boolean };
             confirmed = status.loggedIn ?? true;

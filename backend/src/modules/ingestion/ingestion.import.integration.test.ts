@@ -113,6 +113,7 @@ async function seedDouyinSource(db: Db): Promise<void> {
     now: () => NOW,
     nextId: (p: string) => `${p}-seed-${++seq}`,
     userId: ctx.userId,
+    accountId: ctx.accountId ?? null, // [T-136] seed helper 按号(未选号 → null)
   }).seedExternalSources([
     {
       id: "src-douyin",

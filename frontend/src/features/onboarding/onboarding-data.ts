@@ -157,7 +157,9 @@ export async function loadDouyinLoggedIn(): Promise<boolean | undefined> {
   try {
     const s = (await client.statusDouyin({
       params: undefined,
-      query: undefined,
+      // [T-136] status query additive 带号位;此处被动探针不显式指号 → 走 header 注入的
+      //   ctx.accountId(当前号)。传空对象满足 query schema。
+      query: {},
       body: undefined,
     })) as { loggedIn?: unknown };
     return s.loggedIn === true ? true : undefined;

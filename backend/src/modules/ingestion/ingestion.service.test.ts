@@ -110,6 +110,7 @@ async function seedSource(db: Db, userId = "user-a"): Promise<void> {
     now: () => NOW,
     nextId: (p: string) => `${p}-seed-${++seq}`,
     userId,
+    accountId: null, // [T-136] seed helper 无号(存量兜底)
   });
   await repo.seedExternalSources([
     {

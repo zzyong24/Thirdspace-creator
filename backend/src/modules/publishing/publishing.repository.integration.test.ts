@@ -183,3 +183,56 @@ describe("publishing.repository — user-scoped ownership (Step 2)", () => {
     expect(updated.currentRevisionId).toBe(rev.id);
   });
 });
+
+// [T-136 §D 切片 c] 激活 publications 预留的 account_id 列 —— 采集导入作品 create 时 stamp
+//   归号(切号只见该号发布)。RepoDeps.accountId 从 ctx.accountId 下推。
+describe("publishing.repository — account stamp (T-136)", () => {
+  it("createImportedPublication stamps account_id from deps", async () => {
+    const { db } = await createDb();
+    const repo = createPublishingRepository(db, {
+      ...deterministicDeps(A),
+      accountId: "acct-1",
+    });
+    const pub = await repo.createImportedPublication("output-imp", {
+      platform: "douyin",
+      accountReference: "douyin 导入",
+      externalId: "aweme-123",
+    });
+    expect(pub.status).toBe("published");
+    const rows = await db
+      .select()
+      .from(publications)
+      .where(eq(publications.id, pub.id));
+    expect(rows[0]!.accountId).toBe("acct-1"); // 采集导入作品归当前号
+  });
+
+  it("createPublication stamps account_id; null deps → null (存量 / 未选号兜底)", async () => {
+    const { db } = await createDb();
+    const repoAcct = createPublishingRepository(db, {
+      ...deterministicDeps(A),
+      accountId: "acct-1",
+    });
+    const repoNull = createPublishingRepository(db, {
+      ...deterministicDeps(B),
+      accountId: null,
+    });
+    const withAcct = await repoAcct.createPublication("out-a", {
+      platform: "douyin",
+      accountReference: "@a",
+    });
+    const withNull = await repoNull.createPublication("out-b", {
+      platform: "douyin",
+      accountReference: "@b",
+    });
+    const [rowA] = await db
+      .select()
+      .from(publications)
+      .where(eq(publications.id, withAcct.id));
+    const [rowB] = await db
+      .select()
+      .from(publications)
+      .where(eq(publications.id, withNull.id));
+    expect(rowA!.accountId).toBe("acct-1");
+    expect(rowB!.accountId).toBeNull();
+  });
+});

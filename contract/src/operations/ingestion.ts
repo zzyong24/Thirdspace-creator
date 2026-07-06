@@ -32,6 +32,10 @@ export const ingestionOperations = {
     body: z.object({
       externalSourceId: id,
       capturedAt: iso8601.optional(),
+      // [T-136 §D 切片 c] additive 带号 —— 采集绑到「哪个号」:登录态分目录
+      // `.auth/douyin/<accountId>` + 采集结果 stamp account_id。缺省(旧调用不传)退化
+      // 当前单号/未选号行为(authDir 回退 `_default`,stamp 取 ctx.accountId ?? null)。
+      accountId: id.optional(),
     }),
     response: ingestionRunResource,
     fr: ["FR-INGESTION-DOUYIN"],
@@ -41,7 +45,9 @@ export const ingestionOperations = {
     id: "ingestion.douyin.login",
     method: "POST",
     path: "/ingestion/douyin/login",
-    body: z.object({}).optional(),
+    // [T-136 §D 切片 c] additive 带号 —— 扫码建/复用该号独立源 + 登录态落 `.auth/douyin/<accountId>`。
+    // body 整体仍 optional(旧空调用不破);不传 accountId 退化单号(authDir `_default`,源用 userId)。
+    body: z.object({ accountId: id.optional() }).optional(),
     response: z.object({ loggedIn: z.boolean() }),
     fr: ["FR-INGESTION-DOUYIN"],
   }),
@@ -54,6 +60,9 @@ export const ingestionOperations = {
     id: "ingestion.douyin.status",
     method: "GET",
     path: "/ingestion/douyin/status",
+    // [T-136 §D 切片 c] additive 带号 query —— status 按号返回:sourceReady 针对该号的源
+    // (`.auth/douyin/<accountId>` 登录态 + `extsrc-douyin-<accountId>` 源)。不传退化单号。
+    query: z.object({ accountId: id.optional() }),
     response: z.object({
       loggedIn: z.boolean(),
       sourceReady: z.boolean().optional().default(false),

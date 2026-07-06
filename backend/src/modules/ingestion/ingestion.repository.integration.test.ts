@@ -17,12 +17,17 @@ import { OwnershipError } from "./ingestion.errors";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
-function makeRepo(db: Db, userId: string): IngestionRepository {
+function makeRepo(
+  db: Db,
+  userId: string,
+  accountId: string | null = null, // [T-136] 默认无号;按号门用例显式传号
+): IngestionRepository {
   let seq = 0;
   return createIngestionRepository(db, {
     now: () => NOW,
-    nextId: (prefix: string) => `${prefix}-${userId}-${++seq}`,
+    nextId: (prefix: string) => `${prefix}-${userId}-${accountId ?? "u"}-${++seq}`,
     userId,
+    accountId,
   });
 }
 
@@ -200,5 +205,152 @@ describe("ingestion repository — multi-tenant ownership", () => {
     ).resolves.toBeUndefined();
     const after = await repoA.getRun(run.id);
     expect(after.recordsReceived).toBe(1); // not double-counted
+  });
+});
+
+// [T-136 §D 切片 c] 按号隔离 repo 门 —— external_sources / ingestion_runs 加 account_id,
+//   读点条件过滤(选号只见该号,未选号见该 user 全部),create stamp accountId,跨号不串。
+describe("ingestion repository — account gate (T-136)", () => {
+  let db: Db;
+
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("createRun stamps account_id from deps; a run created under acct-1 is invisible to an acct-2 repo", async () => {
+    const repoAcct1 = makeRepo(db, "user-a", "acct-1");
+    const repoAcct2 = makeRepo(db, "user-a", "acct-2");
+    // 两号各自源(同 user、不同 account)。
+    await repoAcct1.seedExternalSources([
+      { ...sourceRow("user-a", "src-1"), accountId: "acct-1" },
+    ]);
+    const run = await repoAcct1.createRun({
+      externalSourceId: "src-1",
+      runType: "metrics",
+      idempotencyKey: "idem-acct",
+    });
+    // acct-1 repo 看得到自己的 run(号门命中)。
+    await expect(repoAcct1.getRun(run.id)).resolves.toMatchObject({
+      id: run.id,
+    });
+    // acct-2 repo 看不到 acct-1 的 run(号门不命中 → OwnershipError 404,跨号隔离)。
+    await expect(repoAcct2.getRun(run.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+  });
+
+  it("unscoped repo (accountId=null) sees runs regardless of stamped account_id (存量兜底 / 全局视图)", async () => {
+    const repoAcct1 = makeRepo(db, "user-a", "acct-1");
+    const repoUnscoped = makeRepo(db, "user-a", null);
+    await repoAcct1.seedExternalSources([
+      { ...sourceRow("user-a", "src-1"), accountId: "acct-1" },
+    ]);
+    const run = await repoAcct1.createRun({
+      externalSourceId: "src-1",
+      runType: "metrics",
+      idempotencyKey: "idem-null",
+    });
+    // 无号门 repo(null)→ 门忽略 → 看得到该 user 任意号的 run(存量 / 全局视图退化)。
+    await expect(repoUnscoped.getRun(run.id)).resolves.toMatchObject({
+      id: run.id,
+    });
+  });
+
+  it("getExternalSource is account-scoped: acct-2 repo cannot see acct-1's source", async () => {
+    const repoAcct1 = makeRepo(db, "user-a", "acct-1");
+    const repoAcct2 = makeRepo(db, "user-a", "acct-2");
+    await repoAcct1.seedExternalSources([
+      { ...sourceRow("user-a", "src-1"), accountId: "acct-1" },
+    ]);
+    expect(await repoAcct1.getExternalSource("src-1")).toBeDefined();
+    expect(await repoAcct2.getExternalSource("src-1")).toBeUndefined();
+  });
+
+  it("findRunByIdempotency: same idempotencyKey in different accounts are independent runs", async () => {
+    const repoAcct1 = makeRepo(db, "user-a", "acct-1");
+    const repoAcct2 = makeRepo(db, "user-a", "acct-2");
+    await repoAcct1.seedExternalSources([
+      { ...sourceRow("user-a", "src-1"), accountId: "acct-1" },
+    ]);
+    await repoAcct2.seedExternalSources([
+      { ...sourceRow("user-a", "src-2"), accountId: "acct-2" },
+    ]);
+    const run1 = await repoAcct1.createRun({
+      externalSourceId: "src-1",
+      runType: "metrics",
+      idempotencyKey: "shared-key",
+    });
+    // acct-1 命中自己的 run;acct-2 用同 key 查自己的源 → 无命中(不同号独立)。
+    expect(
+      await repoAcct1.findRunByIdempotency("src-1", "shared-key"),
+    ).toMatchObject({ id: run1.id });
+    expect(
+      await repoAcct2.findRunByIdempotency("src-2", "shared-key"),
+    ).toBeUndefined();
+  });
+});
+
+// [T-136 §9 MINOR-3] external_sources 去重 —— 同 (user, account, name) 多条 douyin 源 →
+//   保留最新其余标 deprecated;不同 account 相同 name 视独立源各留。
+describe("ingestion repository — deduplicateDouyinSources (T-136 MINOR-3)", () => {
+  let db: Db;
+
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  const douyinSrc = (
+    id: string,
+    accountId: string | null,
+    createdAt: string,
+  ): ExternalSourceRow => ({
+    id,
+    userId: "user-a",
+    accountId,
+    sourceType: "douyin",
+    name: "我的抖音",
+    sourceIdentifier: "",
+    secretReference: "",
+    configuration: {},
+    createdAt,
+  });
+
+  it("keeps the newest, marks older same-(account,name) douyin sources deprecated", async () => {
+    const repo = makeRepo(db, "user-a", "acct-1");
+    await repo.seedExternalSources([
+      douyinSrc("d-old", "acct-1", "2026-01-01T00:00:00.000Z"),
+      douyinSrc("d-new", "acct-1", "2026-06-01T00:00:00.000Z"),
+    ]);
+    const marked = await repo.deduplicateDouyinSources();
+    expect(marked).toBe(1); // 旧的那条被标 deprecated
+    const oldSrc = await repo.getExternalSource("d-old");
+    const newSrc = await repo.getExternalSource("d-new");
+    expect((oldSrc!.configuration as Record<string, unknown>).deprecated).toBe(
+      true,
+    );
+    expect(
+      (newSrc!.configuration as Record<string, unknown>).deprecated,
+    ).toBeUndefined();
+  });
+
+  it("different accounts with the same name are independent — never deduped", async () => {
+    // 无号 repo → 看该 user 全部,按各行自身 account 分组;acct-1 / acct-2 各一条同名源。
+    const repo = makeRepo(db, "user-a", null);
+    await repo.seedExternalSources([
+      douyinSrc("d-a1", "acct-1", "2026-01-01T00:00:00.000Z"),
+      douyinSrc("d-a2", "acct-2", "2026-01-01T00:00:00.000Z"),
+    ]);
+    const marked = await repo.deduplicateDouyinSources();
+    expect(marked).toBe(0); // 不同 account 相同 name 视独立源,不去重
+  });
+
+  it("is idempotent — a second run marks nothing new", async () => {
+    const repo = makeRepo(db, "user-a", "acct-1");
+    await repo.seedExternalSources([
+      douyinSrc("d-old", "acct-1", "2026-01-01T00:00:00.000Z"),
+      douyinSrc("d-new", "acct-1", "2026-06-01T00:00:00.000Z"),
+    ]);
+    expect(await repo.deduplicateDouyinSources()).toBe(1);
+    expect(await repo.deduplicateDouyinSources()).toBe(0); // 幂等
   });
 });

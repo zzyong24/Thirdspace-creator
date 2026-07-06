@@ -22,6 +22,10 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // owner — baked in; the service mints one repo per ctx
+  // [T-136 §D 切片 c] 第二属主维度(按号)。激活 publications 预留的 account_id 列 —— 采集
+  //   导入作品 create 时 stamp 归号。null = 未选号 / 存量兜底(write stamp null)。本切片只做
+  //   写 stamp(采集写路径 createImportedPublication);读点按号隔离归其他切片,故读门不改。
+  accountId?: string | null;
 }
 
 export interface CreatePublicationInput {
@@ -167,6 +171,8 @@ export function createPublishingRepository(
       await db.insert(publications).values({
         id,
         userId,
+        // [T-136 §D] 按号 stamp(激活预留列;发布草稿归当前号,null 兜底)。
+        accountId: deps.accountId ?? null,
         contentOutputId: outputId,
         platform: input.platform,
         accountReference: input.accountReference,
@@ -192,6 +198,8 @@ export function createPublishingRepository(
       await db.insert(publications).values({
         id,
         userId,
+        // [T-136 §D 切片 c] 采集 stamp:导入作品归到当前号(null 兜底 → 存量 / 未选号)。
+        accountId: deps.accountId ?? null,
         contentOutputId: outputId,
         platform: input.platform,
         accountReference: input.accountReference,

@@ -205,6 +205,8 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
+      // [T-136 §D 切片 c] 按号 stamp 下推(采集导入作品经 createImportedPublication 归号)。
+      accountId: ctx.accountId ?? null,
     });
   }
 

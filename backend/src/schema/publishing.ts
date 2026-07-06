@@ -32,6 +32,9 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const publications = pgTable("publications", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  // [T-136 多账号 · SPEC §D/§6] 按号隔离(激活 platform-account.ts DDL 预留的 account_id 列;
+  //   非本文件新增列)。采集导入作品 stamp 归号;nullable 稳定终态(存量 / 未选号兜底)。
+  accountId: text("account_id"),
   contentOutputId: text("content_output_id").notNull(),
   platform: text("platform").notNull(),
   accountReference: text("account_reference").notNull(),

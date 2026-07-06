@@ -87,6 +87,10 @@ export function createIngestionTransport(
             externalSourceId?: string;
             capturedAt?: string;
           };
+          // [T-136 §D/§A 切片 c] 号来自 **ctx.accountId**(x-account-id header 经
+          //   resolveRequestContext 属主校验的唯一可信路径),不读 body.accountId —— body 的
+          //   accountId 是 additive 客户端声明位,客户端应同步写 header;transport 认 body 会绕过
+          //   §A BLOCKER-1 属主校验(伪造 body.accountId 指他人号)。service 从 ctx.accountId 取号。
           const run = await service.refreshDouyin(ctx, {
             externalSourceId: b.externalSourceId ?? "",
             capturedAt: b.capturedAt,
@@ -94,10 +98,12 @@ export function createIngestionTransport(
           return { data: toRunResource(run), meta };
         }
         case "ingestion.douyin.login": {
+          // [T-136] 号取 ctx.accountId(见 refresh 注释);扫码落该号独立登录态目录。
           const result = await service.loginDouyin(ctx);
           return { data: result, meta };
         }
         case "ingestion.douyin.status": {
+          // [T-136] 号取 ctx.accountId;status 按该号返回(sourceReady 针对该号的源)。
           const result = await service.checkDouyinStatus(ctx);
           return { data: result, meta };
         }

@@ -209,4 +209,37 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
       snapshotCount: 0,
     });
   });
+
+  // [T-136 §D 切片 c] 采集 stamp:appendSnapshot 带 accountId → metric_snapshots /
+  //   metric_values 都归到该号(采集数据无号归属 = 切号看不到该号真实指标)。
+  it("[T-136] appendSnapshot stamps account_id onto snapshot and its metric_values", async () => {
+    const repo = makeRepo(db);
+    const res = await repo.appendSnapshot("user-a", {
+      publicationId: "pub-acct",
+      ingestionRunId: "run-acct",
+      capturedAt: "2026-06-12T10:00:00.000Z",
+      source: "ingestion",
+      rawMetrics: { views: 100 },
+      accountId: "acct-1",
+      values: [
+        { metricKey: "views", numericValue: 100, unit: "count", dimensions: {} },
+      ],
+    });
+    expect(res.created).toBe(true);
+    expect(res.snapshot.accountId).toBe("acct-1"); // 快照归号
+    const values = await repo.listValuesBySnapshot("user-a", res.snapshot.id);
+    expect(values.length).toBe(1);
+    expect(values[0]!.accountId).toBe("acct-1"); // 子指标值随快照归同号
+  });
+
+  it("[T-136] appendSnapshot without accountId stamps null (存量 / 未选号兜底)", async () => {
+    const repo = makeRepo(db);
+    const res = await repo.appendSnapshot("user-a", {
+      publicationId: "pub-null",
+      capturedAt: "2026-06-12T10:00:00.000Z",
+      source: "ingestion",
+      rawMetrics: { views: 1 },
+    });
+    expect(res.snapshot.accountId).toBeNull();
+  });
 });

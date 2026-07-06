@@ -757,6 +757,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 主动调(singleton 跟随进程生命周期),保留以备未来显式 teardown。
   const { db, driver } = await createConfiguredDb();
 
+  // [T-136 §D 切片 c] 抖音登录态**按号分目录**:`.auth/douyin/<accountId>`(每号独立
+  //   persistent context / sessionid,互不顶号)。accountId 为 null(单号 / 未选号 / 存量)→
+  //   确定回退目录 `_default`(兼容旧单号,不破)。base 走 env(CREATOROS_DOUYIN_AUTH_DIR)或
+  //   默认项目内 `.auth/douyin`(cookie 只在本机、不入 Git)。douyinFetch 端口 + 采集器共用。
+  const douyinAuthDirBase =
+    process.env.CREATOROS_DOUYIN_AUTH_DIR ??
+    nodePath.join(process.cwd(), ".auth", "douyin");
+  const douyinAuthDirFor = (accountId?: string | null): string =>
+    nodePath.join(douyinAuthDirBase, accountId ?? "_default");
+
   // Deterministic clock/ids keep the seeded dataset reproducible (visual/test
   // parity); new creates get collision-free ids distinct from the slug seeds.
   // `createSeq` lives at build scope (NOT per-request) so ids stay stable across
@@ -1294,29 +1304,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
     // 线 B:抖音真抓端口 —— 自起持久化 Chromium(.auth/ 复用扫码登录态,见 douyin-cdp.ts)。
-    // authDir 走 env 配置,默认落项目内 .auth/douyin(cookie 只在本机,不入 Git)。测试经各自
-    // 的 createIngestionService 注入 fake,不连真浏览器。
+    // [T-136 §D 切片 c] authDir **按号分目录**(douyinAuthDirFor(opts.accountId)):每号独立
+    //   登录态,互不顶号;accountId 为 null → `_default` 回退(单号 / 未选号,兼容旧行为)。
+    //   测试经各自的 createIngestionService 注入 fake,不连真浏览器。
     douyinFetch: {
       fetch: (opts) =>
         fetchDouyinMetrics({
           capturedAt: opts.capturedAt,
-          authDir:
-            process.env.CREATOROS_DOUYIN_AUTH_DIR ??
-            nodePath.join(process.cwd(), ".auth", "douyin"),
+          authDir: douyinAuthDirFor(opts.accountId),
           gateway: douyinGateway, // [gate-F7 插装点②] creator-center 翻页限流(注真单例)
         }),
-      login: () =>
+      login: (opts) =>
         loginDouyin({
-          authDir:
-            process.env.CREATOROS_DOUYIN_AUTH_DIR ??
-            nodePath.join(process.cwd(), ".auth", "douyin"),
+          authDir: douyinAuthDirFor(opts?.accountId),
         }),
       // T-032a:被动状态探针 —— headless 快查登录态(不弹窗),设置页「账号绑定」徽标读它。
-      status: () =>
+      status: (opts) =>
         checkDouyinStatus({
-          authDir:
-            process.env.CREATOROS_DOUYIN_AUTH_DIR ??
-            nodePath.join(process.cwd(), ".auth", "douyin"),
+          authDir: douyinAuthDirFor(opts?.accountId),
         }),
     },
     // T-038c:限流可观测读端口 —— 绑 gateway 单例 getChannelStatus(内存镜像,同步无 IO)。
@@ -3556,11 +3561,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // collectors:每个 sourceKind 一个确定性采集器(抓真数据 → ingestion 落库 → 返回新鲜度
   // 统计)。runner 靠注入调它,不 import fetchDouyin*(保持可测)。
   //
-  // 抖音 authDir:与 ingestion 的 douyinFetch 端口同源(.auth/douyin,cookie 只在本机、不入
-  // Git),env 可配。
-  const douyinAuthDir =
-    process.env.CREATOROS_DOUYIN_AUTH_DIR ??
-    nodePath.join(process.cwd(), ".auth", "douyin");
+  // [T-136 §D 切片 c] 抖音 authDir **按号分目录**:采集器内用 douyinAuthDirFor(ctx.accountId)
+  //   逐调解析(每号独立登录态,与 douyinFetch 端口同源、同 base)。评论 / 明细采集直连
+  //   fetchDouyinComments*/Export,故在此按当前号拼路径(不像 refresh 走端口透传)。
 
   // [T-078] 每轮封面回填上限(env 可调,验证/降载用;非法值回默认)。
   const resolveCoverBackfillLimit = (): number => {
@@ -3661,6 +3664,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         now: deps.now,
         nextId: deps.nextId,
         userId: ctx.userId,
+        // [T-136 §D 切片 c] 评论采集 run/去重 ledger 按当前号(去重锚仍是 run+recordKey,
+        //   run 已 stamp 号;这里带号让 repo 门与 service 侧一致)。
+        accountId: ctx.accountId ?? null,
       });
       const commentPorts: CommentIngestPorts = {
         createRun: async (input) => {
@@ -3677,10 +3683,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           ingestionRepo.markRecordResult(runId, recordKey, "written"),
         ingestSignal: async (input) => {
           // C-4:AudienceSignal 写必带 ctx.ingestionRunId(source="ingestion")。
+          // [T-136 §D 切片 c] 关键:透传当前号 —— candidateService.ingestAudienceSignal 的
+          //   repo 门据 ctx.accountId stamp audience_signals.account_id。漏传 = 评论信号无号
+          //   归属(切号看不到该号受众信号 / 串味)。这是手搓 ctx,不经 downstreamCtx,必须显式带。
           const signalCtx: RequestContext = {
             userId: ctx.userId,
             requestId: ctx.requestId,
             source: "ingestion",
+            accountId: ctx.accountId ?? null,
             ingestionRunId: input.ingestionRunId,
           };
           const res = await candidateService.ingestAudienceSignal(signalCtx, {
@@ -3738,7 +3748,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const records = await fetchDouyinComments(
           {
             awemeId: single,
-            authDir: douyinAuthDir,
+            authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
             maxPages,
           },
           { gateway: douyinGateway },
@@ -3760,7 +3770,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const perWork = await fetchDouyinCommentsForWorks(
         awemeIds,
         {
-          authDir: douyinAuthDir,
+          authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
           maxPages,
         },
         { gateway: douyinGateway },
@@ -3790,7 +3800,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // 1) 抓导出 xlsx bytes(headless 复用扫码登录态;未登录/非 xlsx 抛,run 不建 → 快速失败)。
       // [gate-F7 插装点⑤] creator-center 导出限流(注真单例)。
       const bytes = await fetchDouyinWorkListExport(
-        { authDir: douyinAuthDir },
+        { authDir: douyinAuthDirFor(ctx.accountId) }, // [T-136] 按当前号登录态
         { gateway: douyinGateway },
       );
       // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。

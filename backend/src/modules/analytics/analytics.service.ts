@@ -93,7 +93,12 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
     async appendSnapshot(ctx, input) {
       // Append-only: delegate the idempotent insert. The denormalized user_id is
       // stamped from ctx.userId inside the repo.
-      return repo.appendSnapshot(ctx.userId, input);
+      // [T-136 §D 切片 c] 采集 stamp:input 未显式带 accountId 时从 ctx.accountId 兜底透传
+      //   (ingestion fan-out 的 downstreamCtx 已带号)→ 快照/指标值归到当前号。
+      return repo.appendSnapshot(ctx.userId, {
+        ...input,
+        accountId: input.accountId ?? ctx.accountId ?? null,
+      });
     },
 
     async getPublicationAnalytics(ctx, publicationId, page, pageSize) {

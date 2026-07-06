@@ -44,6 +44,10 @@ export interface AppendSnapshotInput {
   source: string;
   rawMetrics?: Record<string, unknown>;
   values?: ReadonlyArray<AppendValueInput>;
+  // [T-136 §D 切片 c] 采集结果按号 stamp —— metric_snapshots / metric_values 归到「哪个号」。
+  //   service 从 ctx.accountId 透传;null = 未选号 / 存量兜底(nullable 稳定终态)。读侧(复盘/
+  //   看板)按号隔离归切片 d/消费面,此处只保证写 stamp(采集数据无号归属 = 切号看不到)。
+  accountId?: string | null;
 }
 
 export interface Page<T> {
@@ -150,6 +154,8 @@ export function createAnalyticsRepository(
         .values({
           id,
           userId,
+          // [T-136 §D 切片 c] 采集 stamp:快照归到当前号(null 兜底 → 存量 / 未选号)。
+          accountId: input.accountId ?? null,
           publicationId: input.publicationId,
           ingestionRunId: input.ingestionRunId ?? null,
           capturedAt: input.capturedAt,
@@ -176,6 +182,8 @@ export function createAnalyticsRepository(
             values.map((v) => ({
               id: deps.nextId("mv"),
               userId,
+              // [T-136] 子指标值随快照 stamp 同一号(承 snapshot.accountId)。
+              accountId: input.accountId ?? null,
               metricSnapshotId: snapshot.id,
               metricKey: v.metricKey,
               numericValue: v.numericValue,
