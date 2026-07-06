@@ -4,6 +4,7 @@ import type { RequestContext } from "@creatoros/contract";
 import {
   createIngestionService,
   type DouyinFetchPort,
+  type IngestionPlatformAccountPort,
 } from "./ingestion.service";
 import { createIngestionRepository } from "./ingestion.repository";
 import type { MetricRecord } from "./ingestion.schema";
@@ -170,7 +171,8 @@ describe("ingestion.checkDouyinStatus — 抖音登录态被动探针 (T-032a)",
   it("status() → true ⇒ { loggedIn: true }", async () => {
     const { db } = await createDb();
     const svc = statusService(db, true);
-    await expect(svc.checkDouyinStatus(ctx)).resolves.toEqual({
+    // T-144:响应 additive 加了 sourceReady 字段(此处只断 loggedIn,专测见下方 sourceReady 用例)。
+    await expect(svc.checkDouyinStatus(ctx)).resolves.toMatchObject({
       loggedIn: true,
     });
   });
@@ -178,8 +180,162 @@ describe("ingestion.checkDouyinStatus — 抖音登录态被动探针 (T-032a)",
   it("status() → false ⇒ { loggedIn: false }(未连接 / 登录态过期)", async () => {
     const { db } = await createDb();
     const svc = statusService(db, false);
-    await expect(svc.checkDouyinStatus(ctx)).resolves.toEqual({
+    await expect(svc.checkDouyinStatus(ctx)).resolves.toMatchObject({
       loggedIn: false,
+    });
+  });
+
+  it("sourceReady 反映真实采集源:无源 → false;ensure 后 → true(T-144 去虚假承诺)", async () => {
+    const { db } = await createDb();
+    const svc = statusService(db, true);
+    // 登录态 true 但还没建采集源 → sourceReady=false(诚实:登录态≠能采集)。
+    await expect(svc.checkDouyinStatus(ctx)).resolves.toEqual({
+      loggedIn: true,
+      sourceReady: false,
+    });
+    // ensure 出真实源后 → sourceReady=true。
+    await svc.ensureDouyinSource(ctx);
+    await expect(svc.checkDouyinStatus(ctx)).resolves.toEqual({
+      loggedIn: true,
+      sourceReady: true,
+    });
+  });
+});
+
+// T-144 —— ensureDouyinSource:确保本 user 有一条确定 id 的真实抖音采集源(无源建、有源复用),
+// 取代采集器写死的已退役 "src-douyin-canonical" fallback。复用 ensureManualRun 的确定性 id +
+// 幂等 seed 范式。source_type=douyin,拿不到 handle 用占位名。
+describe("ingestion.ensureDouyinSource — 确保真实抖音采集源 (T-144)", () => {
+  function bareService(db: Db) {
+    let seq = 0;
+    const douyinFetch: DouyinFetchPort = {
+      fetch: async () => [],
+      login: async () => true,
+      status: async () => true,
+    };
+    return createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
+      db,
+      douyinFetch,
+      ports: {
+        publishing: { resolvePublication: () => Promise.resolve({ id: "pub" }) },
+        analytics: { appendSnapshot: () => Promise.resolve({ created: true }) },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+  }
+
+  it("无源 → 建一条 source_type=douyin 的真实源,返回确定 id(非 canonical)", async () => {
+    const { db } = await createDb();
+    const svc = bareService(db);
+    const id = await svc.ensureDouyinSource(ctx);
+    expect(id).toBe(`extsrc-douyin-${ctx.userId}`);
+    expect(id).not.toContain("canonical");
+    // 建出的源可被 refreshDouyin 校验为 douyin(此前 canonical 查无 → 0 条)。
+    const run = await svc.refreshDouyin(ctx, { externalSourceId: id });
+    expect(run.status).toBe("completed"); // 源存在且 sourceType=douyin,不再抛「外部来源不存在」
+  });
+
+  it("有源 → 复用同一确定 id(幂等,不建第二条)", async () => {
+    const { db } = await createDb();
+    const svc = bareService(db);
+    const a = await svc.ensureDouyinSource(ctx);
+    const b = await svc.ensureDouyinSource(ctx);
+    expect(a).toBe(b);
+  });
+
+  it("已存在同 id 的源被复用,不覆盖其 name/handle(onConflictDoNothing)", async () => {
+    const { db } = await createDb();
+    // 预置一条同确定 id、用户自定义 name 的源。
+    await seedSource(db, `extsrc-douyin-${ctx.userId}`, "douyin");
+    const svc = bareService(db);
+    const id = await svc.ensureDouyinSource(ctx);
+    expect(id).toBe(`extsrc-douyin-${ctx.userId}`);
+  });
+});
+
+// T-144 —— 扫码登录同时建 platform_account + external_source,让「设置徽标 / 切换器 / 日历」
+// 三处账号状态同源(都基于真实绑定)。platformAccount 端口可选:未注入 → 仅建源(不破旧组合)。
+describe("ingestion.loginDouyin — 扫码成功同时建采集源 + 平台账号 (T-144)", () => {
+  function loginService(
+    db: Db,
+    loggedIn: boolean,
+    accountPort?: IngestionPlatformAccountPort,
+  ) {
+    let seq = 0;
+    const douyinFetch: DouyinFetchPort = {
+      fetch: async () => [],
+      login: async () => loggedIn,
+      status: async () => loggedIn,
+    };
+    return createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
+      db,
+      douyinFetch,
+      platformAccount: accountPort,
+      ports: {
+        publishing: { resolvePublication: () => Promise.resolve({ id: "pub" }) },
+        analytics: { appendSnapshot: () => Promise.resolve({ created: true }) },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+  }
+
+  it("扫码成功 → ensure 真实源 + ensure 平台账号(三处状态同源的地基)", async () => {
+    const { db } = await createDb();
+    const ensured: Array<{ platform: string; handle: string }> = [];
+    const accountPort: IngestionPlatformAccountPort = {
+      ensureAccount: async (_c, input) => {
+        ensured.push(input);
+        return { id: "acct-1" };
+      },
+    };
+    const svc = loginService(db, true, accountPort);
+    const res = await svc.loginDouyin(ctx);
+    expect(res.loggedIn).toBe(true);
+    // 源已建(sourceReady 转真)。
+    await expect(svc.checkDouyinStatus(ctx)).resolves.toMatchObject({
+      sourceReady: true,
+    });
+    // 平台账号已 ensure(douyin,占位 handle 或真实 handle)。
+    expect(ensured).toHaveLength(1);
+    expect(ensured[0]!.platform).toBe("douyin");
+    expect(ensured[0]!.handle.length).toBeGreaterThan(0);
+  });
+
+  it("扫码失败(loggedIn=false)→ 不建源、不建账号(不假装绑定)", async () => {
+    const { db } = await createDb();
+    const ensured: Array<{ platform: string; handle: string }> = [];
+    const accountPort: IngestionPlatformAccountPort = {
+      ensureAccount: async (_c, input) => {
+        ensured.push(input);
+        return { id: "acct-1" };
+      },
+    };
+    const svc = loginService(db, false, accountPort);
+    const res = await svc.loginDouyin(ctx);
+    expect(res.loggedIn).toBe(false);
+    expect(ensured).toHaveLength(0);
+    await expect(svc.checkDouyinStatus(ctx)).resolves.toMatchObject({
+      sourceReady: false,
+    });
+  });
+
+  it("platformAccount 端口未注入 → 仍建源(退化,不破旧组合根)", async () => {
+    const { db } = await createDb();
+    const svc = loginService(db, true, undefined);
+    const res = await svc.loginDouyin(ctx);
+    expect(res.loggedIn).toBe(true);
+    await expect(svc.checkDouyinStatus(ctx)).resolves.toMatchObject({
+      sourceReady: true,
     });
   });
 });

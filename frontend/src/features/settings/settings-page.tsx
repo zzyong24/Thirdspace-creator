@@ -153,6 +153,11 @@ export interface SettingsViewModel {
 export interface DouyinAccountState {
   /** 被动探针 `ingestion.douyin.status` 的结果:是否有有效登录态(sessionid cookie 存在)。 */
   readonly loggedIn: boolean;
+  /**
+   * [T-144] 是否已有真实采集源(external_source)。登录态 ≠ 能采集:缺采集源时显「已扫码,
+   * 采集源未就绪」而非虚假「可采集」。SSR 兜底缺省 false(与 loggedIn 同,诚实)。
+   */
+  readonly sourceReady?: boolean;
 }
 
 export interface AccountInformation {

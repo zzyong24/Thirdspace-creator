@@ -26,7 +26,7 @@ const mockClient = {
   putStorage: vi.fn((input: unknown): Promise<unknown> => Promise.resolve(input)),
   // AccountBindingCard (T-032a): status pull on mount + loginDouyin on click.
   statusDouyin: vi.fn(
-    (_input: unknown): Promise<{ loggedIn: boolean }> =>
+    (_input: unknown): Promise<{ loggedIn: boolean; sourceReady?: boolean }> =>
       Promise.resolve({ loggedIn: false }),
   ),
   loginDouyin: vi.fn(
@@ -563,6 +563,36 @@ describe("AccountBindingCard (T-032a — 抖音扫码登录入口 + 徽标)", ()
     );
     expect(badge.textContent).toContain("已连接");
     expect(action.textContent).toContain("重新扫码");
+  });
+
+  it("[T-144] 已扫码但采集源未就绪(loggedIn=true, sourceReady=false): 不说「可采集」", async () => {
+    mockClient.statusDouyin.mockResolvedValue({
+      loggedIn: true,
+      sourceReady: false,
+    });
+    const doc = renderDialog();
+    await waitFor(() => expect(mockClient.statusDouyin).toHaveBeenCalled());
+    const hint = doc.querySelector(
+      '[data-slot="douyin-binding-hint"]',
+    ) as HTMLElement;
+    await waitFor(() =>
+      expect(hint.textContent).toContain("采集源"),
+    );
+    // 去虚假承诺:登录态有效但无源时,绝不出现「可采集」承诺。
+    expect(hint.textContent).not.toContain("可采集");
+  });
+
+  it("[T-144] 已连接且采集源就绪(loggedIn=true, sourceReady=true): 显「可采集」", async () => {
+    mockClient.statusDouyin.mockResolvedValue({
+      loggedIn: true,
+      sourceReady: true,
+    });
+    const doc = renderDialog();
+    await waitFor(() => expect(mockClient.statusDouyin).toHaveBeenCalled());
+    const hint = doc.querySelector(
+      '[data-slot="douyin-binding-hint"]',
+    ) as HTMLElement;
+    await waitFor(() => expect(hint.textContent).toContain("可采集"));
   });
 
   it("未连接(status → loggedIn=false): 显「未连接」徽标 + 「连接抖音(扫码)」按钮", async () => {

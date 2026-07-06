@@ -643,6 +643,11 @@ function AccountBindingCard({
   // status 是 headless 起 Chromium 的被动探针,SSR 读会让每次开设置页都 spawn 浏览器 + 阻塞
   // 渲染,故挪到 useEffect 异步拉,徽标先显 SSR 兜底再翻真。
   const [loggedIn, setLoggedIn] = React.useState<boolean>(douyinAccount.loggedIn);
+  // [T-144] 采集源是否就绪(有 external_source)。登录态 ≠ 能采集 —— 据此把「可采集」承诺
+  // 收敛到真实能力。SSR 兜底缺省 false(诚实,同 loggedIn)。
+  const [sourceReady, setSourceReady] = React.useState<boolean>(
+    douyinAccount.sourceReady ?? false,
+  );
   const [phase, setPhase] = React.useState<BindingPhase>("idle");
   const [feedback, setFeedback] = React.useState<BindingFeedback>({
     kind: "none",
@@ -651,7 +656,8 @@ function AccountBindingCard({
   // SSR 值变化(切账号 / 首次水合)时同步徽标。
   React.useEffect(() => {
     setLoggedIn(douyinAccount.loggedIn);
-  }, [douyinAccount.loggedIn]);
+    setSourceReady(douyinAccount.sourceReady ?? false);
+  }, [douyinAccount.loggedIn, douyinAccount.sourceReady]);
 
   // 挂载后拉一次真 status(不弹窗,headless 探针),把 SSR 兜底徽标翻真。探针失败(无
   // 浏览器 / transport race)静默保持 SSR 值(未连接),不误显已连接。
@@ -663,9 +669,13 @@ function AccountBindingCard({
           params: undefined,
           query: undefined,
           body: undefined,
-        })) as { loggedIn?: boolean };
+        })) as { loggedIn?: boolean; sourceReady?: boolean };
         if (alive && typeof status.loggedIn === "boolean") {
           setLoggedIn(status.loggedIn);
+        }
+        // [T-144] 采集源就绪态(缺省 false):去「可采集」虚假承诺。
+        if (alive && typeof status.sourceReady === "boolean") {
+          setSourceReady(status.sourceReady);
         }
       } catch {
         // 探针失败 → 保持 SSR 兜底(未连接),诚实不误报。
@@ -699,8 +709,13 @@ function AccountBindingCard({
               params: undefined,
               query: undefined,
               body: undefined,
-            })) as { loggedIn?: boolean };
+            })) as { loggedIn?: boolean; sourceReady?: boolean };
             confirmed = status.loggedIn ?? true;
+            // [T-144] 扫码成功后 loginDouyin 已 ensure external_source → 重拉的 status
+            // sourceReady 应转真;据此翻「可采集」态(诚实,以探针为准)。
+            if (typeof status.sourceReady === "boolean") {
+              setSourceReady(status.sourceReady);
+            }
           } catch {
             // status 探针失败(transport race)→ 信任 login 的成功返回。
             confirmed = true;
@@ -785,12 +800,17 @@ function AccountBindingCard({
               data-slot="douyin-binding-hint"
               className={cn(
                 "text-xs",
-                loggedIn ? "text-success" : "text-muted-foreground",
+                loggedIn && sourceReady
+                  ? "text-success"
+                  : "text-muted-foreground",
               )}
             >
-              {loggedIn
-                ? "登录态有效,可采集你的作品数据与评论。"
-                : "登录态已过期或未连接,请扫码登录以采集数据。"}
+              {!loggedIn
+                ? "登录态已过期或未连接,请扫码登录以采集数据。"
+                : sourceReady
+                  ? "登录态有效,可采集你的作品数据与评论。"
+                  : // [T-144] 去虚假承诺:登录态有效但采集源未建时,别说「可采集」。
+                    "已扫码,采集源尚未就绪。重新扫码或运行一次采集即可建源。"}
             </span>
           </div>
           <Button

@@ -1235,6 +1235,38 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     // T-038c:限流可观测读端口 —— 绑 gateway 单例 getChannelStatus(内存镜像,同步无 IO)。
     throttleStatus: { read: readDouyinThrottleStatus },
+    // [T-144] 扫码绑定时 ensure 平台账号 —— 让「设置徽标 / 切换器 / 日历」三处账号状态同源
+    // (都基于真实 platform_account)。幂等:先 listAccounts 找同 (platform, handle) 既有,无则
+    // createAccount(catch ConflictError 兜并发)。thunk 引用 platformAccountService(下方构造,
+    // ensureAccount 只在扫码运行时被调,晚于其初始化,闭包安全)。
+    platformAccount: {
+      ensureAccount: async (ctx, input) => {
+        const { rows } = await platformAccountService.listAccounts(ctx, {
+          platform: input.platform,
+          limit: 100,
+          offset: 0,
+        });
+        const existing = rows.find((r) => r.accountHandle === input.handle);
+        if (existing) return { id: existing.id };
+        try {
+          const created = await platformAccountService.createAccount(ctx, {
+            platform: input.platform,
+            accountHandle: input.handle,
+          });
+          return { id: created.id };
+        } catch (err) {
+          // 并发/重试撞 UNIQUE(user,platform,handle)→ 重查取既有(幂等)。
+          const again = await platformAccountService.listAccounts(ctx, {
+            platform: input.platform,
+            limit: 100,
+            offset: 0,
+          });
+          const hit = again.rows.find((r) => r.accountHandle === input.handle);
+          if (hit) return { id: hit.id };
+          throw err;
+        }
+      },
+    },
   });
   const ingestion = createIngestionTransport(() => ingestionService);
 
@@ -3463,7 +3495,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const externalSourceId =
         typeof target.externalSourceId === "string" && target.externalSourceId
           ? target.externalSourceId
-          : "src-douyin-canonical";
+          : // [T-144] 空 target(job 未绑源)→ ensure 本 user 的真实抖音采集源(无源建、有源
+            // 复用),绝不再指已退役的 "src-douyin-canonical"(新库查无 → 抛「外部来源不存在」
+            // → runner 报 failed → 采 0 条的根因)。ensure 后 refreshDouyin 能校验通过。
+            await ingestionService.ensureDouyinSource(ctx);
       const run = await ingestionService.refreshDouyin(ctx, {
         externalSourceId,
       });
@@ -3524,7 +3559,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const externalSourceId =
         typeof target.externalSourceId === "string" && target.externalSourceId
           ? target.externalSourceId
-          : "src-douyin-canonical";
+          : // [T-144] 空 target(job 未绑源)→ ensure 本 user 的真实抖音采集源(无源建、有源
+            // 复用),绝不再指已退役的 "src-douyin-canonical"(新库查无 → 抛「外部来源不存在」
+            // → runner 报 failed → 采 0 条的根因)。ensure 后 refreshDouyin 能校验通过。
+            await ingestionService.ensureDouyinSource(ctx);
       const maxPages =
         typeof target.maxPages === "number" ? target.maxPages : undefined;
       // CommentIngestPorts 真实装配(所有作品共用一套 ports):ingestion repo(去重 ledger)+
@@ -3654,7 +3692,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const externalSourceId =
         typeof target.externalSourceId === "string" && target.externalSourceId
           ? target.externalSourceId
-          : "src-douyin-canonical";
+          : // [T-144] 空 target(job 未绑源)→ ensure 本 user 的真实抖音采集源(无源建、有源
+            // 复用),绝不再指已退役的 "src-douyin-canonical"(新库查无 → 抛「外部来源不存在」
+            // → runner 报 failed → 采 0 条的根因)。ensure 后 refreshDouyin 能校验通过。
+            await ingestionService.ensureDouyinSource(ctx);
       const capturedAt = deps.now();
       // 1) 抓导出 xlsx bytes(headless 复用扫码登录态;未登录/非 xlsx 抛,run 不建 → 快速失败)。
       // [gate-F7 插装点⑤] creator-center 导出限流(注真单例)。

@@ -125,6 +125,18 @@ export interface IngestionPorts {
   projects?: IngestionProjectsPort;
 }
 
+// T-144 —— 扫码绑定时"确保有一个平台账号"的端口(composition root 适配到 platformAccount
+// Service)。可选:未注入时 loginDouyin 仅 ensure external_source(退化,不破旧组合根)。
+// 让「设置徽标 / 切换器 / 日历」三处账号状态同源(都基于真实 platform_account + external_source)。
+// 幂等:同 (userId, platform, handle) 复用既有账号(handle 拿不到时用占位「我的抖音」)。
+// 边界:T-136 §D 会把 account 维度下推到采集/登录态目录;此端口是其单账号退化,兼容扩展。
+export interface IngestionPlatformAccountPort {
+  ensureAccount(
+    ctx: RequestContext,
+    input: { platform: string; handle: string },
+  ): Promise<{ id: string }>;
+}
+
 // 抖音抓取端口 —— composition root 注入 fetchDouyinMetrics(自起持久 context 复用扫码登录态);
 // 测试注 fake。`login` 弹窗扫码(headed);`fetch` headless 复刷,未登录抛 DouyinNotLoggedInError。
 export interface DouyinFetchPort {
@@ -198,11 +210,21 @@ export interface IngestionService {
     ctx: RequestContext,
     input: { externalSourceId: string; capturedAt?: string },
   ): Promise<IngestionRunRow>;
+  // T-144 —— 确保本 user 有一条确定 id 的真实抖音采集源(无源建、有源复用),返回源 id。
+  // 取代采集器写死的已退役 "src-douyin-canonical" fallback(新库查无 → 0 条的根因)。复用
+  // ensureManualRun 的确定性 id + 幂等 seed 范式。source_type=douyin,name 用占位「我的抖音」。
+  ensureDouyinSource(ctx: RequestContext): Promise<string>;
   // 抖音扫码登录:弹 Chromium 窗口让用户扫码,落 .auth/ 持久化,返回是否成功(供 refresh 复用)。
+  // T-144:扫码成功后同时 ensure external_source + platform_account(端口注入时),让三处账号
+  // 状态同源(设置徽标/切换器/日历都读真实绑定);失败不建任何东西(不假装绑定)。
   loginDouyin(ctx: RequestContext): Promise<{ loggedIn: boolean }>;
   // 抖音登录态被动探针(T-032a):headless 快查 sessionid cookie(不弹窗),返回是否有效登录。
   // 设置页「账号绑定」徽标读它;false 覆盖「未连接」与「登录态已过期」两态(cookie 失效即 false)。
-  checkDouyinStatus(ctx: RequestContext): Promise<{ loggedIn: boolean }>;
+  // T-144:additive 返回 sourceReady —— 是否已有真实采集源。登录态有效但 sourceReady=false 时
+  // 设置页显「已扫码,采集源未就绪」而非虚假的「可采集」(登录态 ≠ 能采集,缺 external_source)。
+  checkDouyinStatus(
+    ctx: RequestContext,
+  ): Promise<{ loggedIn: boolean; sourceReady: boolean }>;
   // 抖音采集限流可观测(T-038c / SPEC §4.5 [gate-F4]):读 gateway 两个 channel 的当前退避
   // 快照(cooldown 是否激活、剩多久、连续退避几次),供任务中心 cooldown 时诚实显限流文案。
   // 纯读内存镜像(不落新表);未注入 throttleStatus 端口时返空 channels。
@@ -217,8 +239,16 @@ export function createIngestionService(args: {
   db: Db;
   douyinFetch?: DouyinFetchPort;
   throttleStatus?: DouyinThrottleStatusPort;
+  // T-144:扫码绑定时 ensure 平台账号的端口(可选;未注入时 loginDouyin 仅建 external_source)。
+  platformAccount?: IngestionPlatformAccountPort;
 }): IngestionService {
-  const { deps, ports, db, douyinFetch, throttleStatus } = args;
+  const { deps, ports, db, douyinFetch, throttleStatus, platformAccount } =
+    args;
+
+  // T-144 —— 抖音采集源的确定性 id(user 级单源;与 ensureManualRun 的
+  // `extsrc-manual-${userId}` 同范式)。external_sources 表无 account_id 列 → 最小修复是
+  // user 级单源;T-136 §D 多账号时可换成 `extsrc-douyin-${accountId}`(向下兼容)。
+  const douyinSourceId = (userId: string): string => `extsrc-douyin-${userId}`;
 
   function repoFor(ctx: RequestContext): IngestionRepository {
     return createIngestionRepository(db, {
@@ -520,22 +550,70 @@ export function createIngestionService(args: {
       return service.completeRun(ctx, { runId: run.id });
     },
 
-    async loginDouyin() {
+    async ensureDouyinSource(ctx) {
+      // T-144 —— 复用 ensureManualRun 的确定性 id + 幂等 seed 范式:无源 seed 一条真实
+      // source_type=douyin,有源(onConflictDoNothing)复用不覆盖用户自定义 name/handle。
+      const repo = repoFor(ctx);
+      const sourceId = douyinSourceId(ctx.userId);
+      const existing = await repo.getExternalSource(sourceId);
+      if (!existing) {
+        await repo.seedExternalSources([
+          {
+            id: sourceId,
+            userId: ctx.userId,
+            sourceType: "douyin",
+            // handle 在扫码阶段拿不到(登录态 cookie 不含昵称)→ 占位;真实昵称由 T-136 §D
+            // 采集到主页信息后回填(此处不阻塞采集能用)。
+            name: "我的抖音",
+            sourceIdentifier: "",
+            secretReference: "",
+            configuration: {},
+            createdAt: deps.now(),
+          },
+        ]);
+      }
+      return sourceId;
+    },
+
+    async loginDouyin(ctx) {
       if (!douyinFetch) {
         throw new Error("抖音抓取端口未配置(douyinFetch)");
       }
       // 弹 Chromium 窗口扫码;成功后登录态落 .auth/,后续 refreshDouyin 直接 headless 复用。
       const loggedIn = await douyinFetch.login();
+      // T-144 —— 扫码成功才建绑定(诚实:失败不假装);同时 ensure external_source(采集源)+
+      // platform_account(端口注入时),让「设置徽标 / 切换器 / 日历」三处同源。ensure 是尽力
+      // 而为:建绑定失败绝不把"已成功的扫码"翻成失败(登录态已落 .auth/,是真的)。
+      if (loggedIn) {
+        try {
+          await service.ensureDouyinSource(ctx);
+        } catch (err) {
+          console.error("[ingestion] loginDouyin: ensure external_source 失败:", err);
+        }
+        if (platformAccount) {
+          try {
+            await platformAccount.ensureAccount(ctx, {
+              platform: "douyin",
+              handle: "我的抖音",
+            });
+          } catch (err) {
+            console.error("[ingestion] loginDouyin: ensure platform_account 失败:", err);
+          }
+        }
+      }
       return { loggedIn };
     },
 
-    async checkDouyinStatus() {
+    async checkDouyinStatus(ctx) {
       if (!douyinFetch) {
         throw new Error("抖音抓取端口未配置(douyinFetch)");
       }
       // headless 快查 .auth/ 里的 sessionid cookie(不弹窗);cookie 失效即 false(登录态过期)。
       const loggedIn = await douyinFetch.status();
-      return { loggedIn };
+      // T-144 —— sourceReady:是否已有真实采集源(user 级确定 id 的 external_source 存在)。
+      // 设置页据此把「可采集」承诺收敛到真实能力(登录态有效 + 源就绪);去虚假承诺。
+      const src = await repoFor(ctx).getExternalSource(douyinSourceId(ctx.userId));
+      return { loggedIn, sourceReady: Boolean(src) };
     },
 
     async getDouyinThrottleStatus() {
