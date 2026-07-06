@@ -3,7 +3,7 @@
  * 0),故这里用 **键盘可调**(←/→,共享同一 clampRail + setRailWidth + persist 逻辑)覆盖核心:
  * slot 渲染、默认宽、加宽/收窄、边界钳制、localStorage 持久 + 读回。
  *
- * [T-146] 追加:右栏折叠开关(收起/展开)的持久、收起态布局、以及「收起态来新 request →
+ * [T-150] 追加:右栏折叠开关(收起/展开)的持久、收起态布局、以及「收起态来新 request →
  * 自动展开」的边界(用真实 DraftChatRequestProvider + 触发 openChat 驱动 nonce 变化验证)。
  */
 
@@ -110,7 +110,7 @@ describe("DraftResizableLayout (T-130)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// [T-146] 右栏折叠开关
+// [T-150] 右栏折叠开关
 // ---------------------------------------------------------------------------
 
 /** 测试辅助:渲染一个能主动 openChat 的按钮,用来驱动 request.nonce 变化(模拟稿面 AI 按钮)。 */
@@ -141,7 +141,7 @@ function renderLayoutWithProvider() {
   );
 }
 
-describe("DraftResizableLayout 折叠开关 (T-146)", () => {
+describe("DraftResizableLayout 折叠开关 (T-150)", () => {
   it("默认展开:收起按钮可见、展开 affordance 不在、右栏可见", () => {
     const { container } = renderLayout();
     expect(

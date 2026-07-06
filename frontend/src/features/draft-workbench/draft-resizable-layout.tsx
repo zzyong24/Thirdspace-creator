@@ -8,7 +8,7 @@
  * 分隔条(pointer 事件,col-resize)+ 键盘可调(←/→)+ 宽度持久化。左栏 flex-1 自动补位。
  * 右栏 `hidden xl:flex`(窄屏隐藏,分隔条同 `xl:block`),故拖拽只在 xl+ 生效;窄屏左栏满宽。
  *
- * [T-146] 右栏可折叠 —— 用户反馈右栏「常驻关不掉」,想全宽看稿面。加 `collapsed` 状态
+ * [T-150] 右栏可折叠 —— 用户反馈右栏「常驻关不掉」,想全宽看稿面。加 `collapsed` 状态
  * (localStorage 持久,默认展开不改 T-055b 常驻默认):收起 → 右栏 + 拖拽手柄隐藏、左稿面
  * 满宽、最右露一条细竖条 affordance 可点展开;展开恢复到之前持久的宽度(不丢 T-130 记忆)。
  * 关键边界:本组件在 DraftChatRequestProvider 内,监听 request.nonce —— 收起态来了新 request
@@ -21,7 +21,7 @@ import { useDraftChatRequest } from "./draft-chat-request";
 
 // 持久化键 + 边界。默认 380(与旧固定 w-[380px] 一致),拖拽/键盘钳到 [300,640]。
 const RAIL_WIDTH_KEY = "creatoros:draft:rail-width";
-// [T-146] 折叠态持久化键。存 "1"=收起 / "0"=展开;缺省(首装/无值)= 展开(默认不变)。
+// [T-150] 折叠态持久化键。存 "1"=收起 / "0"=展开;缺省(首装/无值)= 展开(默认不变)。
 const RAIL_COLLAPSED_KEY = "creatoros:draft:rail-collapsed";
 const DEFAULT_RAIL = 380;
 const MIN_RAIL = 300;
@@ -41,7 +41,7 @@ export function DraftResizableLayout({
   right: React.ReactNode;
 }) {
   const [railWidth, setRailWidth] = React.useState<number>(DEFAULT_RAIL);
-  // [T-146] 折叠态。SSR/首帧默认 false(展开)避免 hydration 闪,挂载后读回持久值。
+  // [T-150] 折叠态。SSR/首帧默认 false(展开)避免 hydration 闪,挂载后读回持久值。
   const [collapsed, setCollapsed] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const draggingRef = React.useRef(false);
@@ -56,7 +56,7 @@ export function DraftResizableLayout({
     }
   }, []);
 
-  // [T-146] 挂载后读回持久折叠态(仅 "1" → 收起;缺省/其它 → 保持展开默认)。这是「从外部
+  // [T-150] 挂载后读回持久折叠态(仅 "1" → 收起;缺省/其它 → 保持展开默认)。这是「从外部
   // 系统(localStorage)同步到 React」的合法一次性挂载读取(与上方 T-130 宽度读回同范式);
   // set-state-in-effect 规则的启发式会误报,故就地豁免(SSR 首帧展开避免 hydration 闪)。
   React.useEffect(() => {
@@ -78,7 +78,7 @@ export function DraftResizableLayout({
     }
   }, []);
 
-  // [T-146] 折叠态持久化(与宽度共享 try/catch 降级范式)。
+  // [T-150] 折叠态持久化(与宽度共享 try/catch 降级范式)。
   const persistCollapsed = React.useCallback((next: boolean) => {
     try {
       window.localStorage.setItem(RAIL_COLLAPSED_KEY, next ? "1" : "0");
@@ -149,7 +149,7 @@ export function DraftResizableLayout({
     [persist],
   );
 
-  // [T-146] 关键边界:收起态来了**新** request(nonce 变)→ 自动展开右栏,否则用户收起后点
+  // [T-150] 关键边界:收起态来了**新** request(nonce 变)→ 自动展开右栏,否则用户收起后点
   // 「立论点/审核/搜素材/盲预测」结果喂进隐藏 rail 就丢了。用 ref 记上一个 nonce,只在真的
   // 变化时展开(首挂载 request=null / nonce 概念上为 0,不误触发把手动收起顶开)。
   const { request } = useDraftChatRequest();
@@ -176,7 +176,7 @@ export function DraftResizableLayout({
       </div>
 
       {/* [T-130] 拖拽分隔条(仅 xl+ 右栏可见时 xl:block)—— pointer 拖 + 键盘 ←/→ 微调,
-          role=separator + aria-valuenow/min/max 供辅助技术。[T-146] 收起态整条隐藏(连同右栏)。 */}
+          role=separator + aria-valuenow/min/max 供辅助技术。[T-150] 收起态整条隐藏(连同右栏)。 */}
       {!collapsed ? (
         <div
           role="separator"
@@ -201,14 +201,14 @@ export function DraftResizableLayout({
       ) : null}
 
       {/* 右栏:编导对话(T-055b)—— 宽度可拖拽(inline style),窄屏 hidden(左栏满宽)。
-          [T-146] 收起态整栏卸载(左稿面 flex-1 自动占满全宽);展开恢复到持久宽度。 */}
+          [T-150] 收起态整栏卸载(左稿面 flex-1 自动占满全宽);展开恢复到持久宽度。 */}
       {!collapsed ? (
         <aside
           data-slot="draft-chat-rail"
           style={{ width: railWidth }}
           className="hidden shrink-0 flex-col border-l border-border bg-surface xl:flex"
         >
-          {/* [T-146] 右栏头部:显眼的「收起编导」开关(仅 xl+ 右栏可见时存在)。 */}
+          {/* [T-150] 右栏头部:显眼的「收起编导」开关(仅 xl+ 右栏可见时存在)。 */}
           <div
             data-slot="draft-rail-header"
             className="flex shrink-0 items-center justify-end border-b border-border px-3 py-1.5"
@@ -231,7 +231,7 @@ export function DraftResizableLayout({
           <div className="flex min-h-0 flex-1 flex-col">{right}</div>
         </aside>
       ) : (
-        /* [T-146] 收起态的展开 affordance —— 最右一条细竖条,竖排「⟨ 编导」,点击展开右栏。
+        /* [T-150] 收起态的展开 affordance —— 最右一条细竖条,竖排「⟨ 编导」,点击展开右栏。
            仅 xl+ 出现(右栏本就 hidden xl:flex);窄屏本无右栏,不需要此入口。 */
         <button
           type="button"
