@@ -40,11 +40,14 @@ export const candidateOperations = {
     id: "candidates.create",
     method: "POST",
     path: "/candidates",
-    // manual entry only — `source` is fixed `idea`.
+    // 人确认门 — 默认 `idea`(手动新建),但 AI 出题(topic.generate)在对话内**无 ai_task**、
+    // 走不通 confirm 流(createFromAIResult 需 aiTaskId)/AdoptCandidateCard(需 confirmTask),
+    // 只能落这条门 —— 故 source 放开为全枚举,让 AI 出题采纳保住 provenance(trend|benchmark|
+    // demand),不再被硬编码成 idea 冲进「手动灵感」统计(T-149)。
     body: z.object({
       title: z.string().min(1),
       angle: z.string().default(""),
-      source: z.literal("idea").default("idea"),
+      source: candidateSource.default("idea"),
       contentRole: contentRole.optional(),
       productAnchorId: id.optional(),
     }),

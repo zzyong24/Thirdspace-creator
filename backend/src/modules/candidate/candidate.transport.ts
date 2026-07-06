@@ -73,12 +73,14 @@ export function createCandidateTransport(
           const b = (body ?? {}) as {
             title: string;
             angle?: string;
+            source?: "trend" | "benchmark" | "demand" | "idea";
             contentRole?: "traffic" | "trust" | "conversion";
             productAnchorId?: string;
           };
           const created = await service.createCandidate(ctx, {
             title: b.title,
             angle: b.angle ?? "",
+            source: b.source ?? "idea", // 透传采纳侧来源(T-149);缺省仍 idea(手动新建)。
             contentRole: b.contentRole ?? null,
             productAnchorId: b.productAnchorId ?? null,
           });

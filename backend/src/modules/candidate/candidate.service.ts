@@ -119,6 +119,9 @@ export interface ServiceDeps {
 export interface CreateCandidateInput {
   title: string;
   angle?: string;
+  // 人确认门的来源标注:默认 idea(手动新建);对话内 AI 出题(topic.generate)无 ai_task、
+  // 只能落这条门,采纳时透传其真实 AI 渠道(trend|benchmark|demand)保住 provenance(T-149)。
+  source?: "trend" | "benchmark" | "demand" | "idea";
   contentRole?: "traffic" | "trust" | "conversion" | null;
   productAnchorId?: string | null;
 }
@@ -296,7 +299,9 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       const row = await repo.createCandidate({
         title: input.title,
         angle,
-        source: "idea", // manual entry only — AI-sourced go via createFromAIResult.
+        // 默认 idea(手动新建);对话内 AI 出题采纳透传真实 AI 渠道(T-149 — 无 ai_task 的
+        // topic.generate 走不通 createFromAIResult,只能落这条门,故这里保住其 source)。
+        source: input.source ?? "idea",
         contentRole: input.contentRole ?? null,
         productAnchorId: input.productAnchorId ?? null,
         positioningFit,

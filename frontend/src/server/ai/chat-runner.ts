@@ -545,6 +545,9 @@ export async function buildChatAssembly(
         title: t.title,
         angle: t.angle,
         contentRole: t.contentRole,
+        // [T-149] 出题渠道(trend|benchmark|demand)透传到工具结果 → 采纳时落成候选 source,
+        // 不再在采纳卡里被硬编码成 idea 冲进「手动灵感」统计。
+        source: t.source,
         predictedScore: t.predictedScore,
         reason: t.reason,
         // [T-066] 原始评论引用透传到工具结果 → 候选卡渲「依据评论」。

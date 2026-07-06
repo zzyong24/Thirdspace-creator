@@ -62,6 +62,27 @@ describe("candidate contract", () => {
     expect(res.meta?.requestId).toBe("r1");
   });
 
+  // [T-149] 对话内 AI 出题(topic.generate,无 ai_task → 走不通 confirm 流)采纳时,把真实出题
+  // 渠道透传进 candidates.create,候选 source 保住 provenance(不再被硬编码 idea 冲进「手动灵感」)。
+  it("[T-149] candidates.create 透传 AI 渠道 source(非 idea)", async () => {
+    for (const source of ["trend", "benchmark", "demand"] as const) {
+      const res = await call(transport, "candidates.create", {
+        body: { title: `AI-${source}`, angle: "", source },
+      });
+      const parsed = ENDPOINTS.createCandidate.response.parse(res.data);
+      expect(parsed).toMatchObject({ source, status: "pool" });
+    }
+  });
+
+  // 手动新建门(不带 source)仍落 idea —— 向后兼容(手动灵感统计不受影响)。
+  it("[T-149] candidates.create 不带 source → 兜底 idea", async () => {
+    const res = await call(transport, "candidates.create", {
+      body: { title: "手动选题", angle: "" },
+    });
+    const parsed = ENDPOINTS.createCandidate.response.parse(res.data);
+    expect(parsed).toMatchObject({ source: "idea" });
+  });
+
   it("candidates.list → candidateResource[] (per item)", async () => {
     await call(transport, "candidates.create", {
       body: { title: "a", angle: "", source: "idea" },

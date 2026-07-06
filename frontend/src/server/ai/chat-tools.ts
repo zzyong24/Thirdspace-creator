@@ -39,6 +39,8 @@ export interface ChatToolDeps {
       title: string;
       angle: string;
       contentRole: string;
+      /** [T-149] 出题渠道(trend|benchmark|demand);采纳时落成候选 source,保 provenance。 */
+      source: string;
       predictedScore: number | null;
       reason: string;
       /** [T-066] 该选题依据的原始评论(逐字引用);非评论依据为空数组。 */
@@ -559,6 +561,8 @@ export interface TopicGenerateToolResult {
     title: string;
     angle: string;
     contentRole: string;
+    /** [T-149] 出题渠道(trend|benchmark|demand);采纳时落成候选 source,保 provenance。 */
+    source: string;
     predictedScore: number | null;
     reason: string;
     /** [T-066] 基于评论出题必须贴原始评论 —— 候选卡渲「依据评论」折叠区的数据源。 */

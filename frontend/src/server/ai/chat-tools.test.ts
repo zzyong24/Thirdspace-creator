@@ -57,6 +57,8 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
       title: "反直觉开头",
       angle: "用数据打破直觉",
       contentRole: "traffic",
+      // [T-149] 出题渠道透传给工具结果 → 采纳落成候选 source(此例评论依据 → demand)。
+      source: "demand",
       predictedScore: 80,
       reason: "评论反复问",
       // [T-066] 基于评论出题贴原始评论 —— 工具结果透传给候选卡渲「依据评论」。

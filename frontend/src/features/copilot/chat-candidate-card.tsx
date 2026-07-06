@@ -19,6 +19,11 @@ export interface ChatTopicCandidate {
   title: string;
   angle: string;
   contentRole: string;
+  /**
+   * [T-149] AI 出题渠道(trend|benchmark|demand)。采纳时落成候选 source,保住来源统计的
+   * provenance;缺省/旧工具结果无此字段 → 采纳侧兜 idea(向后兼容)。
+   */
+  source?: string;
   predictedScore: number | null;
   reason: string;
   /**
@@ -26,6 +31,17 @@ export interface ChatTopicCandidate {
    * 可选:旧工具结果/非评论依据没有此字段,渲染侧兜 []。
    */
   sourceComments?: readonly string[];
+}
+
+// [T-149] AI 出题渠道 → 候选 source 归一:只放行 trend|benchmark|demand(真 AI 渠道),
+// 其余(空/未知/'idea'/'positioning'/'knowledge' 等模型自由输出)一律兜底 idea —— candidateSource
+// 枚举只有 trend/benchmark/demand/idea,没有「定位」「知识库」桶(与后端 confirmTask 同款收窄)。
+function normalizeSource(
+  source: string | undefined,
+): "trend" | "benchmark" | "demand" | "idea" {
+  return source === "trend" || source === "benchmark" || source === "demand"
+    ? source
+    : "idea";
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -69,14 +85,16 @@ export function ChatCandidateCard({
     async (i: number, c: ChatTopicCandidate) => {
       setAt(i, "adopting");
       try {
-        // 现有 confirm 门:人确认 → candidates.create(source=idea)落候选池。AI 不直接写。
+        // 人确认门:candidates.create 落候选池(AI 不直接写)。[T-149] source 透传 AI 出题的真实
+        // 渠道(trend|benchmark|demand),不再硬编码 idea —— 否则 AI 出的题被算进「手动灵感」统计。
+        // 对话内 topic.generate 无 ai_task,走不通 confirm 流,只能落这条门,故 provenance 保在这里。
         await client.createCandidate({
           params: undefined,
           query: undefined,
           body: {
             title: c.title,
             angle: c.angle,
-            source: "idea",
+            source: normalizeSource(c.source),
             ...(normalizeRole(c.contentRole)
               ? { contentRole: normalizeRole(c.contentRole) }
               : {}),

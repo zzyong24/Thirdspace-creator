@@ -29,6 +29,7 @@ const CANDIDATES = [
     title: "反直觉开头对你有效",
     angle: "用数据打破直觉",
     contentRole: "traffic",
+    source: "demand", // [T-149] AI 出题渠道(评论依据)→ 采纳应落 demand,非 idea。
     predictedScore: 82,
     reason: "评论反复问",
   },
@@ -36,6 +37,7 @@ const CANDIDATES = [
     title: "第二条",
     angle: "",
     contentRole: "unknown-role",
+    // 无 source(旧工具结果兼容)→ 采纳兜底 idea。
     predictedScore: null,
     reason: "",
   },
@@ -58,7 +60,7 @@ describe("ChatCandidateCard", () => {
     expect(screen.getByText("第二条")).not.toBeNull();
   });
 
-  it("采纳一条 → candidates.create(source=idea + 归一化的 contentRole),并 router.refresh", async () => {
+  it("[T-149] 采纳一条 AI 出题 → candidates.create 透传 AI 渠道 source(非 idea)+ 归一化 contentRole,并 router.refresh", async () => {
     const user = userEvent.setup();
     render(<ChatCandidateCard candidates={CANDIDATES} />);
     const adoptButtons = screen.getAllByText("采纳");
@@ -69,7 +71,7 @@ describe("ChatCandidateCard", () => {
           body: {
             title: "反直觉开头对你有效",
             angle: "用数据打破直觉",
-            source: "idea",
+            source: "demand", // 保住 AI 出题 provenance,不冲进「手动灵感」统计(T-149)。
             contentRole: "traffic",
           },
         }),
@@ -80,6 +82,25 @@ describe("ChatCandidateCard", () => {
     await waitFor(() => {
       expect(screen.getByText("✓ 已入候选池")).not.toBeNull();
     });
+  });
+
+  it("[T-149] source 缺省/非法(旧结果 或 模型自由输出)→ 采纳兜底 idea(无「定位/知识库」桶)", async () => {
+    const user = userEvent.setup();
+    render(
+      <ChatCandidateCard
+        candidates={[
+          { ...CANDIDATES[0], title: "无 source", source: undefined },
+          { ...CANDIDATES[0], title: "非法 source", source: "positioning" },
+        ]}
+      />,
+    );
+    const adoptButtons = screen.getAllByText("采纳");
+    await user.click(adoptButtons[0]); // 无 source
+    await waitFor(() => expect(createCandidate).toHaveBeenCalledTimes(1));
+    expect(createCandidate.mock.calls[0][0].body.source).toBe("idea");
+    await user.click(adoptButtons[1]); // 非法 source
+    await waitFor(() => expect(createCandidate).toHaveBeenCalledTimes(2));
+    expect(createCandidate.mock.calls[1][0].body.source).toBe("idea");
   });
 
   it("未知 contentRole 不透给 create(让 backend 用缺省)", async () => {
