@@ -99,6 +99,14 @@ export interface AssetRepository {
     assetId: string,
     patch: Record<string, unknown>,
   ): Promise<void>;
+  // [T-146 切片 a] 落文档抽取结果到 current file:extractedText(全文,可空)+ extractStatus
+  // (done/failed/unsupported)。文件不存在 → no-op(诚实静默,抽取是增强)。要点卡 materialSummary
+  // 走 mergeFileMetadata(jsonb),与此分开(全文/状态是独立列,要点卡是 metadata)。
+  updateFileExtraction(
+    userId: string,
+    assetId: string,
+    patch: { extractedText?: string | null; extractStatus?: string },
+  ): Promise<void>;
   insertAssetFile(
     userId: string,
     input: InsertAssetFileInput,
@@ -261,6 +269,18 @@ export function createAssetRepository(
           },
         })
         .where(eq(assetFiles.id, current.id));
+    },
+
+    async updateFileExtraction(userId, assetId, patch) {
+      // [T-146 切片 a] 写 current file 的抽取列。文件不存在 → 静默(与 mergeFileMetadata 一致)。
+      const files = await this.listAssetFiles(userId, assetId);
+      const current = files[files.length - 1];
+      if (!current) return;
+      const set: Record<string, unknown> = {};
+      if (patch.extractedText !== undefined) set.extractedText = patch.extractedText;
+      if (patch.extractStatus !== undefined) set.extractStatus = patch.extractStatus;
+      if (Object.keys(set).length === 0) return;
+      await db.update(assetFiles).set(set).where(eq(assetFiles.id, current.id));
     },
 
     async insertAssetFile(userId, input) {

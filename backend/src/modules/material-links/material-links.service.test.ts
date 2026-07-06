@@ -57,6 +57,60 @@ describe("material-links service", () => {
     expect(listed.rows[0]?.id).toBe(link.id);
   });
 
+  // [T-146 切片 b] priority 自动派生(用户裁决②:二元自动,用户上传 = 最高)。规则在
+  // SERVICE 层(本仓枚举一律 service 校验,不加 DB CHECK):addedByType='user'(含默认)→ high;
+  // addedByType='ai'(AI 找的二手素材)→ normal。显式传 priority 覆盖派生(逃生口)。
+  it("derives priority=high for user-added links (default addedByType)", async () => {
+    const link = await svc.create(ctxA, {
+      projectId: "proj-1",
+      entityType: "asset",
+      entityId: "a-1",
+    });
+    expect(link.priority).toBe("high");
+  });
+
+  it("derives priority=high when addedByType explicitly 'user'", async () => {
+    const link = await svc.create(ctxA, {
+      projectId: "proj-1",
+      entityType: "asset",
+      entityId: "a-1",
+      addedByType: "user",
+    });
+    expect(link.priority).toBe("high");
+  });
+
+  it("derives priority=normal for AI-found links (addedByType='ai')", async () => {
+    const link = await svc.create(ctxA, {
+      projectId: "proj-1",
+      entityType: "asset",
+      entityId: "a-1",
+      addedByType: "ai",
+    });
+    expect(link.priority).toBe("normal");
+  });
+
+  it("an explicit priority overrides the addedByType derivation", async () => {
+    const link = await svc.create(ctxA, {
+      projectId: "proj-1",
+      entityType: "asset",
+      entityId: "a-1",
+      addedByType: "ai",
+      priority: "high",
+    });
+    expect(link.priority).toBe("high");
+  });
+
+  it("rejects an unknown priority with ValidationError", async () => {
+    await expect(
+      svc.create(ctxA, {
+        projectId: "proj-1",
+        entityType: "asset",
+        entityId: "a-1",
+        priority: "urgent" as unknown as "high",
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
   it("is cross-project isolated (a link on project B not returned for project A)", async () => {
     await svc.create(ctxA, {
       projectId: "proj-a",

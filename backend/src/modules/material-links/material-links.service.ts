@@ -18,6 +18,9 @@ import { OwnershipError, ValidationError } from "./material-links.errors";
 // soft references validated by a peer service at the caller's seam, not here).
 
 const VALID_ENTITY_TYPES = new Set(["knowledge", "asset"]);
+// [T-146 切片 b] priority 枚举:二元(用户裁决②)。枚举一律 service 校验(gate minor 驳回加
+// DB CHECK,本仓约定)。
+const VALID_PRIORITIES = new Set(["high", "normal"]);
 
 export interface ServiceDeps {
   db: Db;
@@ -33,6 +36,9 @@ export interface CreateMaterialLinkInput {
   role?: string;
   stage?: string;
   addedByType?: string;
+  // [T-146 切片 b] 显式优先级(逃生口,可选)。缺省 → 按 addedByType 自动派生
+  // (user/默认→high;ai→normal)。传入即覆盖派生。
+  priority?: string;
 }
 
 export interface ListMaterialLinksQuery {
@@ -65,6 +71,20 @@ function guardCreateInput(input: CreateMaterialLinkInput): void {
   if (input.entityId.trim().length === 0) {
     throw new ValidationError("ValidationError: entityId must be non-empty");
   }
+  // [T-146 切片 b] 显式 priority 必须合枚举(派生值天然合法,不经此路)。
+  if (input.priority !== undefined && !VALID_PRIORITIES.has(input.priority)) {
+    throw new ValidationError(
+      `ValidationError: unknown priority '${input.priority}'`,
+    );
+  }
+}
+
+// [T-146 切片 b] priority 自动派生(用户裁决②:二元自动)。显式传值 → 用它(逃生口);
+// 否则按 provenance:AI 找的二手素材('ai')→ normal;用户第一手(默认/'user')→ high。
+// 「用户上传素材优先级最高」的核心规则落在这一行。
+function derivePriority(input: CreateMaterialLinkInput): string {
+  if (input.priority !== undefined) return input.priority;
+  return input.addedByType === "ai" ? "normal" : "high";
 }
 
 export function createMaterialLinksService(
@@ -96,6 +116,8 @@ export function createMaterialLinksService(
         role: input.role,
         stage: input.stage,
         addedByType: input.addedByType,
+        // [T-146 切片 b] service 派生 priority 后显式落 repo(repo 不派生)。
+        priority: derivePriority(input),
       });
       return toMaterialLinkDto(row);
     },

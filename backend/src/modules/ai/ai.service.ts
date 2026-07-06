@@ -126,6 +126,9 @@ export interface AiMaterialLinksPort {
       entityId: string;
       role?: string;
       stage?: string;
+      // [T-146 切片 b] provenance:AI 采纳建的 link 一律标 'ai' → service 派生 priority='normal'
+      // (让用户第一手上传的 'high' 素材主权盖过 AI 找/生成的二手素材)。
+      addedByType?: string;
     },
   ): Promise<unknown>;
 }
@@ -561,6 +564,8 @@ export function createAiService(deps: ServiceDeps): AiService {
               entityId: created.id,
               role: "reference",
               stage: "research",
+              // [T-146 切片 b] AI 采纳建的 link → priority='normal'(service 派生)。
+              addedByType: "ai",
             });
           }
         }
@@ -602,6 +607,8 @@ export function createAiService(deps: ServiceDeps): AiService {
             entityId: assetId,
             role: "clip",
             stage: "production",
+            // [T-146 切片 b] AI 生成素材(asset.generate)采纳 → priority='normal'。
+            addedByType: "ai",
           });
         }
         const updated = await repo.updateTaskStatus(taskId, {
@@ -631,6 +638,8 @@ export function createAiService(deps: ServiceDeps): AiService {
               entityId: assetId,
               role,
               stage: "production",
+              // [T-146 切片 b] AI 匹配素材(material.match)采纳 → priority='normal'。
+              addedByType: "ai",
             });
           }
         }

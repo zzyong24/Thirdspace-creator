@@ -124,6 +124,20 @@ export function AmmoDumpZone({ projectId }: { projectId: string }) {
               body: { taskType: "asset.classify", inputData: { assetId: asset.id } },
             })
             .catch(() => undefined);
+          // [T-146 切片 a] document 上传完成 → fire-and-forget 文档抽取(抽全文 + AI 要点卡)。
+          // 只对 document 触发;fileName 传给 runner 做 mimeType 分派兜底(File.type 常为空)。
+          if (assetType === "document") {
+            void client
+              .createAITask({
+                params: undefined,
+                query: undefined,
+                body: {
+                  taskType: "material.extract",
+                  inputData: { assetId: asset.id, fileName: file.name },
+                },
+              })
+              .catch(() => undefined);
+          }
         }
         setPending((prev) => prev.filter((p) => p.key !== key));
       } catch {

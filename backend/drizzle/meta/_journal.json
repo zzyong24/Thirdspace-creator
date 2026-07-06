@@ -162,6 +162,20 @@
       "when": 1782380900000,
       "tag": "0022_ai_messages_parts",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1782381000000,
+      "tag": "0023_material_link_priority",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1782381100000,
+      "tag": "0024_asset_file_extraction",
+      "breakpoints": true
     }
   ]
 }

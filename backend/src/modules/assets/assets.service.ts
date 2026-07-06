@@ -40,6 +40,11 @@ const ASSET_TYPES = new Set([
   "subtitle",
 ]);
 
+// [T-146 切片 a · gate 处置·大文件兜底] 文档上传大小上限(20MB)。文档要走文本抽取 + AI 摘要,
+// 超大文档抽取会 OOM/超 context;后端在 createUpload 硬拒(前端 accept 只是提示,不可信)。仅
+// 卡 document 类型(图/视/音走各自媒体链,不受此限)。
+const MAX_DOCUMENT_BYTES = 20 * 1024 * 1024;
+
 export interface AssetUploadDto {
   uploadId: string;
   storageKey: string;
@@ -84,6 +89,14 @@ export interface AssetsService {
     ctx: RequestContext,
     assetId: string,
     patch: Record<string, unknown>,
+  ): Promise<void>;
+  // [T-146 切片 a] 文档抽取的两个回写端口:落全文/状态列(updateFileExtraction)+ 落要点卡
+  // (走 mergeAiAnnotation 的 jsonb merge,materialSummary 键)。runner 经这里,service 仍是
+  // 唯一 storage/repo 调用方。
+  updateFileExtraction(
+    ctx: RequestContext,
+    assetId: string,
+    patch: { extractedText?: string | null; extractStatus?: string },
   ): Promise<void>;
   // L5 asset.generate (SPEC 2026-07-01 §3) — the SERVER-SIDE counterpart to the two-phase
   // client upload: an AI-generated image/video whose bytes the runner already holds. Mints
@@ -195,6 +208,11 @@ export function createAssetsService(
       await repo.mergeFileMetadata(ctx.userId, assetId, patch);
     },
 
+    async updateFileExtraction(ctx, assetId, patch) {
+      await requireAsset(ctx, assetId);
+      await repo.updateFileExtraction(ctx.userId, assetId, patch);
+    },
+
     async createUpload(ctx, input) {
       // SPEC §20 input validation (phase 1).
       if (!ASSET_TYPES.has(input.assetType)) {
@@ -205,6 +223,15 @@ export function createAssetsService(
       }
       if (!(input.fileSize > 0)) {
         throw new UploadValidationError("fileSize must be positive");
+      }
+      // [T-146 切片 a · gate 大文件兜底] 文档超 20MB 硬拒(抽取/摘要会 OOM/超 context)。
+      if (
+        input.assetType === "document" &&
+        input.fileSize > MAX_DOCUMENT_BYTES
+      ) {
+        throw new UploadValidationError(
+          `文档超过 20MB 上限(${(input.fileSize / 1024 / 1024).toFixed(1)}MB),无法自动解析,请拆分后再传`,
+        );
       }
       const storage = await objectStorageForCtx(ctx);
       // [T-055d SPEC §7.1] 目录规则:带 projectId → projects/<safe>-<id6>/素材(经

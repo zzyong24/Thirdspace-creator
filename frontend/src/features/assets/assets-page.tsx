@@ -144,6 +144,14 @@ export interface AssetSummary {
   readonly updatedAt: string;
   // [T-051 2e] 收藏痕迹(assets.favorite.toggle 写库的 isFavorite 读回)。
   readonly isFavorite?: boolean;
+  // [T-146 切片 a] 文档抽取投影(仅 document;非文档缺省)。详情面板据此显资料要点卡 / 诚实失败提示。
+  readonly extractStatus?: string | null;
+  readonly materialSummary?: {
+    readonly keyPoints?: ReadonlyArray<string>;
+    readonly facts?: ReadonlyArray<string>;
+    readonly sellingPoints?: ReadonlyArray<string>;
+  } | null;
+  readonly extractedText?: string | null;
 }
 
 export interface AssetTypeCount {

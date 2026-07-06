@@ -26,6 +26,7 @@ export function toMaterialLinkDto(row: MaterialLinkRow): MaterialLinkResource {
     role: row.role,
     stage: row.stage,
     addedByType: row.addedByType,
+    priority: row.priority,
     createdAt: row.createdAt,
   };
 }

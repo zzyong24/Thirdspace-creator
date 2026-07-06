@@ -52,6 +52,12 @@ export const assetFiles = pgTable("asset_files", {
   height: integer("height"), // nullable
   durationMs: integer("duration_ms"), // nullable
   mediaMetadata: jsonb("media_metadata").notNull().default({}),
+  // [T-146 切片 a] 文档文本抽取(用户上传素材主权)。extractedText = 确定性抽取的全文
+  // (PDF/docx/md·txt),可空;extractStatus ∈ pending|done|failed|unsupported,三类诚实降级
+  // 的落点(failed=加密/扫描/损坏无文本层;unsupported=非文档类型不抽)。要点卡 materialSummary
+  // 走 mediaMetadata jsonb(无新列)。两列 nullable → 存量文件/非文档行留 NULL。
+  extractedText: text("extracted_text"), // nullable
+  extractStatus: text("extract_status"), // nullable — pending|done|failed|unsupported
   createdAt: text("created_at").notNull(),
   // No updated_at — files are immutable version rows (matches assetFileResource).
 });
@@ -101,6 +107,8 @@ CREATE TABLE IF NOT EXISTS asset_files (
   height INTEGER,
   duration_ms INTEGER,
   media_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  extracted_text TEXT,
+  extract_status TEXT,
   created_at TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS asset_files_asset_version_ux ON asset_files(asset_id, version_number);

@@ -15,6 +15,10 @@ export const materialLinkResource = z.object({
   role: z.string(),
   stage: z.string(),
   addedByType: z.string(),
+  // [T-146 切片 b] 项目内优先级(用户裁决②:二元自动,用户上传 = 最高)。落在 material_link
+  // 这条边(项目内语义:同一素材在不同项目可不同优先级)。派生规则在 service 层
+  // (addedByType='user'→high / 'ai'→normal),字段留扩展位(日后手动 pin 只需写这一列)。
+  priority: z.string(),
   createdAt: iso8601,
 });
 export type MaterialLinkResource = z.infer<typeof materialLinkResource>;

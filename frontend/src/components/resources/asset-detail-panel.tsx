@@ -76,6 +76,9 @@ export function AssetDetailPanel({
           >
             <AssetLivePreview asset={asset} />
           </SectionCard>
+          {asset.type === "document" ? (
+            <DocumentSummaryCard asset={asset} />
+          ) : null}
           <SectionCard
             title="操作"
             description="管理此素材的使用方式"
@@ -250,5 +253,130 @@ export function AssetDetailPanel({
         </p>
       )}
     </aside>
+  );
+}
+
+// [T-146 切片 a SPEC §1.3] 文档「资料要点卡」+ 查看全文 + 诚实降级提示。只对 document 渲染。
+//   - done + materialSummary  → 显 keyPoints / facts(+ 卖点)+「查看全文」(details 折叠)。
+//   - done 但无要点卡          → 只显「查看全文」(未配摘要模型的诚实降级:全文在,卡没生成)。
+//   - failed                   → 诚实提示「无法自动解析(可能扫描件/加密),AI 将读不到内容」。
+//   - unsupported              → 诚实提示「不支持自动解析的文档类型」。
+//   - pending / 无状态         → 「正在解析…」占位(异步抽取尚未回)。
+function DocumentSummaryCard({ asset }: { asset: ResourceAsset }) {
+  const status = asset.extractStatus ?? null;
+  const summary = asset.materialSummary ?? null;
+  const keyPoints = summary?.keyPoints ?? [];
+  const facts = summary?.facts ?? [];
+  const sellingPoints = summary?.sellingPoints ?? [];
+  const hasCard =
+    keyPoints.length > 0 || facts.length > 0 || sellingPoints.length > 0;
+  const fullText = asset.extractedText ?? "";
+
+  if (status === "failed") {
+    return (
+      <SectionCard title="资料要点" description="AI 抽取" className="gap-1.5">
+        <p
+          data-slot="doc-extract-failed"
+          className="text-[11px] leading-relaxed text-destructive"
+        >
+          无法自动解析该文档的文本(可能是扫描件 / 加密 / 损坏)。AI 将读不到它的内容,
+          写文案时无法紧扣这份资料。
+        </p>
+      </SectionCard>
+    );
+  }
+  if (status === "unsupported") {
+    return (
+      <SectionCard title="资料要点" description="AI 抽取" className="gap-1.5">
+        <p
+          data-slot="doc-extract-unsupported"
+          className="text-[11px] leading-relaxed text-muted-foreground"
+        >
+          不支持自动解析的文档类型(如旧版 .doc)。请转存为 PDF / DOCX / Markdown 再传。
+        </p>
+      </SectionCard>
+    );
+  }
+  if (status !== "done") {
+    // pending / null:异步抽取尚未回。
+    return (
+      <SectionCard title="资料要点" description="AI 抽取" className="gap-1.5">
+        <p
+          data-slot="doc-extract-pending"
+          className="text-[11px] text-muted-foreground"
+        >
+          正在解析文档并提炼要点…
+        </p>
+      </SectionCard>
+    );
+  }
+
+  // status === "done"
+  return (
+    <SectionCard
+      title="资料要点"
+      description="AI 从这份第一手资料提炼(只提炼原文已有,不编造)"
+      className="gap-1.5"
+    >
+      <div data-slot="doc-material-summary" className="flex flex-col gap-2">
+        {hasCard ? (
+          <>
+            {keyPoints.length > 0 ? (
+              <div>
+                <p className="mb-0.5 text-[11px] font-medium text-foreground">核心要点</p>
+                <ul className="flex flex-col gap-0.5 text-[11px] text-muted-foreground">
+                  {keyPoints.map((p, i) => (
+                    <li key={`kp-${i}`} className="flex gap-1">
+                      <span aria-hidden="true" className="text-brand">·</span>
+                      <span className="min-w-0">{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {facts.length > 0 ? (
+              <div>
+                <p className="mb-0.5 text-[11px] font-medium text-foreground">事实 / 数据</p>
+                <ul className="flex flex-col gap-0.5 text-[11px] text-muted-foreground">
+                  {facts.map((f, i) => (
+                    <li key={`ft-${i}`} className="flex gap-1">
+                      <span aria-hidden="true" className="text-brand">·</span>
+                      <span className="min-w-0">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {sellingPoints.length > 0 ? (
+              <div>
+                <p className="mb-0.5 text-[11px] font-medium text-foreground">卖点(原文已声明)</p>
+                <ul className="flex flex-col gap-0.5 text-[11px] text-muted-foreground">
+                  {sellingPoints.map((s, i) => (
+                    <li key={`sp-${i}`} className="flex gap-1">
+                      <span aria-hidden="true" className="text-brand">·</span>
+                      <span className="min-w-0">{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-[11px] text-muted-foreground">
+            已抽取全文,但未生成要点卡(可在设置页配置文本摘要模型)。
+          </p>
+        )}
+        {fullText ? (
+          <details data-slot="doc-full-text" className="text-[11px]">
+            <summary className="cursor-pointer text-brand hover:underline">
+              查看全文
+            </summary>
+            <pre className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap rounded-control bg-surface-subtle p-2 text-[11px] leading-relaxed text-muted-foreground">
+              {fullText}
+            </pre>
+          </details>
+        ) : null}
+      </div>
+    </SectionCard>
   );
 }

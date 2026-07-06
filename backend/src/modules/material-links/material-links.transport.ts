@@ -60,6 +60,8 @@ export function createMaterialLinksTransport(
             entityId: string;
             role?: string;
             stage?: string;
+            addedByType?: string;
+            priority?: string;
           };
           const created = await service.create(ctx, {
             projectId: b.projectId,
@@ -68,6 +70,9 @@ export function createMaterialLinksTransport(
             entityId: b.entityId,
             role: b.role,
             stage: b.stage,
+            // [T-146 切片 b] provenance + 优先级透传(缺省 → service 派生 high)。
+            addedByType: b.addedByType,
+            priority: b.priority,
           });
           return { data: created, meta: { requestId } };
         }

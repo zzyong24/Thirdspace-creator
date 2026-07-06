@@ -27,6 +27,10 @@ export const materialLinks = pgTable("material_links", {
   role: text("role").notNull().default("reference"),
   stage: text("stage").notNull().default("research"),
   addedByType: text("added_by_type").notNull().default("user"),
+  // [T-146 切片 b] priority: 'high' | 'normal'. 项目内优先级(用户第一手素材 = high,
+  // AI 找的二手 = normal)。派生在 service 层(addedByType→priority),枚举 service 校验(不加
+  // DB CHECK,gate minor 驳回:本仓枚举一律 service 校验)。DEFAULT 'normal' 兜住直插/存量行。
+  priority: text("priority").notNull().default("normal"),
   createdAt: text("created_at").notNull(),
 });
 
@@ -45,6 +49,7 @@ CREATE TABLE IF NOT EXISTS material_links (
   role TEXT NOT NULL DEFAULT 'reference',
   stage TEXT NOT NULL DEFAULT 'research',
   added_by_type TEXT NOT NULL DEFAULT 'user',
+  priority TEXT NOT NULL DEFAULT 'normal',
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS material_links_user_project_ix ON material_links(user_id, project_id);

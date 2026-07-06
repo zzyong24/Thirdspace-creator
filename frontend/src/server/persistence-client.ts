@@ -220,13 +220,18 @@ import { runCopilotAssist } from "@/server/ai/copilot-runner";
 import { runAssetGenerate } from "@/server/ai/asset-generate-runner";
 import { runTranscribe } from "@/server/ai/transcribe-runner";
 import { runAssetClassify } from "@/server/ai/asset-classify-runner";
+// [T-146 切片 a] 文档抽取 runner + 未配摘要模型的信号错误(诚实降级)。
+import {
+  runMaterialExtract,
+  MaterialSummaryModelNotConfiguredError,
+} from "@/server/ai/material-extract-runner";
 import { runReconstruct } from "@/server/ai/reconstruct-runner";
 // T-040a 提示词/skill 服务端可配 —— 装配期读 skill_config_overrides 全表 → 套进常驻 REGISTRY。
 import {
   applySkillConfigOverridesFromDb,
   createPgliteSkillConfigOverrideReadPort,
 } from "@/server/ai/skill-config-overrides";
-import { createLlmCompleter } from "@/server/ai/llm/provider";
+import { createLlmCompleter, LlmCredentialError } from "@/server/ai/llm/provider";
 import { resolveLlmConfig } from "@/server/ai/llm/resolve";
 import {
   resolveMultimodalSpec as resolveMultimodalSpecFn,
@@ -310,6 +315,43 @@ import {
   QUERY_SERVICES_OP_IDS,
   type PublishingCenterQueryService,
 } from "@creatoros/backend/modules/query-services";
+
+// [T-146 切片 a SPEC §1.2 + §11 gate 处置·卖点收窄] 文档 AI 摘要要点卡的内联 skill 模板 + 输出
+// 契约。**复用现有文本模型**(script.draft capability)但用一份**内联** PromptTemplate + 显式 JSON
+// schema(逃生口,不注册 registry、不新增 capability,合 gate 处置)。摘要铁律:只提炼原文已有的
+// 事实/数据/卖点,不补充原文没有的;卖点尤其收窄(只引用原文已声明,AI 不创造)。
+const MATERIAL_SUMMARY_TEMPLATE = {
+  id: "material.summarize.inline",
+  version: "v1",
+  system: [
+    "你是短视频创作者的资料分析员。把创作者上传的第一手资料浓缩成结构化「资料要点卡」,供后续写文案紧扣。",
+    "",
+    "铁律(违反即失职):",
+    "1. 只提炼原文**已明确写出**的事实、数据、卖点 —— 逐字有据。原文没写的,一个字都不许补。",
+    "2. keyPoints:资料的核心论点/信息(≤6 条,每条一句)。",
+    "3. facts:可核验的具体事实与数据(数字、规格、时间、价格等),照抄原文口径,不改写不四舍五入。",
+    "4. sellingPoints(卖点):**只允许摘录原文已声明的卖点**,AI 绝不创造新卖点。",
+    "   ✅ 原文写「续航 20 小时」→ sellingPoints 可含「长续航(20 小时)」。",
+    "   ❌ 原文没提防水 → 绝不得写「防水」;拿不准是不是卖点 → 不放进 sellingPoints。",
+    "5. 拿不准、原文没有的字段 → 留空数组。宁缺毋滥,绝不编造。",
+    "只输出 JSON,不要多余文字。",
+  ].join("\n"),
+  template: "以下为创作者上传的资料全文(可能已截断):\n\n{{fullText}}",
+  requiredFacets: ["fullText"] as const,
+} as const;
+
+// materialSummary 输出契约(JSON Schema,frontend 不引 zod)。runStructuredNode 经 asSchema 吃它,
+// generateObject 绑它校验 + 不符自动重试;落空→文本兜底同 schema 再校验(跨模型健壮)。
+const MATERIAL_SUMMARY_SCHEMA = {
+  type: "object",
+  properties: {
+    keyPoints: { type: "array", items: { type: "string" } },
+    facts: { type: "array", items: { type: "string" } },
+    sellingPoints: { type: "array", items: { type: "string" } },
+  },
+  required: ["keyPoints", "facts"],
+  additionalProperties: false,
+};
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -2649,6 +2691,104 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   "@creatoros/ai-worker"
                 );
                 return describeImageOpenAICompatible(spec, input);
+              },
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "material.extract" &&
+          task.status === "queued"
+        ) {
+          // [T-146 切片 a SPEC §1] 用户上传文档抽取 —— 上传 document 完成后 fire-and-forget:
+          // ① 确定性抽全文(pdf-parse/mammoth/UTF-8,无 AI)② AI 摘要要点卡(复用现有文本模型
+          // script.draft capability + runStructuredNode,不新增 capability)。三类诚实降级(抽取
+          // 失败/未配摘要模型/超长截断),绝不阻塞上传主链。
+          void runMaterialExtract(
+            ctx,
+            {
+              id: String(task.id),
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: {
+                markRunning: (c, id) => aiService.markRunning(c, id),
+                recordStep: (c, id, stepInput) =>
+                  aiService.recordStep(c, id, stepInput),
+                markSucceeded: (c, id) => aiService.markSucceeded(c, id),
+                markFailed: (c, id, err) => aiService.markFailed(c, id, err),
+              },
+              assets: {
+                getAssetBytes: (c, id) => assetsService.getAssetBytes(c, id),
+                updateExtraction: (c, id, patch) =>
+                  assetsService.updateFileExtraction(c, id, patch),
+                mergeSummary: (c, id, summary) =>
+                  assetsService.mergeAiAnnotation(c, id, {
+                    materialSummary: summary,
+                  }),
+              },
+              // 阶段①确定性抽全文:按 family 分派纯文本抽取器(只取文本层,不执行 PDF JS / Word 宏)。
+              extractText: async (family, bytes) => {
+                if (family === "plaintext") {
+                  return new TextDecoder("utf-8").decode(bytes);
+                }
+                if (family === "docx") {
+                  const mammoth = (await import("mammoth")).default;
+                  const { value } = await mammoth.extractRawText({
+                    buffer: Buffer.from(bytes),
+                  });
+                  return value;
+                }
+                // pdf:pdf-parse v2 —— new PDFParse({ data }).getText().text(纯文本层)。
+                const { PDFParse } = await import("pdf-parse");
+                const parser = new PDFParse({ data: bytes });
+                const result = await parser.getText();
+                return result.text;
+              },
+              // 阶段② AI 摘要:复用现有文本模型(script.draft capability)+ runStructuredNode 绑
+              // materialSummary JSON schema(逃生口,不污染 registry / 不新增 capability)。未配模型
+              // → LlmCredentialError → 转 MaterialSummaryModelNotConfiguredError(runner 诚实降级)。
+              summarize: async (fullText) => {
+                let spec: Awaited<ReturnType<typeof resolveModelSpec>>;
+                try {
+                  spec = await resolveModelSpec(ctx, "script.draft");
+                } catch (err) {
+                  if (err instanceof LlmCredentialError) {
+                    throw new MaterialSummaryModelNotConfiguredError(
+                      err.message,
+                    );
+                  }
+                  throw err;
+                }
+                const { modelFor, runStructuredNode } = await import(
+                  "@creatoros/ai-worker"
+                );
+                const { jsonSchema } = await import("ai");
+                const { object } = await runStructuredNode<{
+                  keyPoints?: unknown;
+                  facts?: unknown;
+                  sellingPoints?: unknown;
+                }>({
+                  model: modelFor(spec),
+                  // 内联 skill 模板(不注册 registry):抽全文摘要成结构化要点卡。
+                  template: MATERIAL_SUMMARY_TEMPLATE,
+                  facets: { fullText },
+                  // 逃生口:显式传 JSON schema(frontend 不引 zod,经 ai 的 jsonSchema 包装),覆盖 registry。
+                  outputSchema: jsonSchema(
+                    MATERIAL_SUMMARY_SCHEMA as Parameters<typeof jsonSchema>[0],
+                  ),
+                });
+                const asStrings = (v: unknown): string[] =>
+                  Array.isArray(v)
+                    ? v.filter(
+                        (x): x is string =>
+                          typeof x === "string" && x.trim().length > 0,
+                      )
+                    : [];
+                return {
+                  keyPoints: asStrings(object.keyPoints),
+                  facts: asStrings(object.facts),
+                  sellingPoints: asStrings(object.sellingPoints),
+                };
               },
             },
           );

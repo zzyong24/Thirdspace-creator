@@ -50,13 +50,22 @@ export function AssetUploadButton() {
       // The File may have an empty `type`; this same value goes to createUpload AND (for
       // real storage) the PUT's Content-Type header — they MUST match the signed value.
       const mimeType = file.type || "application/octet-stream";
+      const assetType = assetTypeForFile(file);
+      // [T-146 切片 a · gate 大文件兜底] 文档前端 accept 提示上限(20MB;后端 createUpload 硬拒
+      // 兜底不可信前端)。超限直接给可见反馈,不发起上传。
+      if (assetType === "document" && file.size > 20 * 1024 * 1024) {
+        setUploadStatus(
+          `文档「${file.name}」超过 20MB 上限,无法自动解析,请拆分后再传。`,
+        );
+        return;
+      }
       startTransition(async () => {
         try {
           const upload = (await client.createUpload({
             params: undefined,
             query: undefined,
             body: {
-              assetType: assetTypeForFile(file),
+              assetType,
               mimeType,
               // `fileSize.positive()` — clamp 0-byte files to 1.
               fileSize: Math.max(1, file.size),
@@ -80,11 +89,24 @@ export function AssetUploadButton() {
             }
           }
           // Phase 2: finalize — the service headObjects the stored bytes and creates the asset.
-          await client.completeUpload({
+          const asset = (await client.completeUpload({
             params: { uploadId: upload.uploadId },
             query: undefined,
             body: { name: file.name },
-          });
+          })) as unknown as { id?: string };
+          // [T-146 切片 a] document 上传完成 → fire-and-forget 文档抽取(抽全文 + AI 要点卡)。
+          if (assetType === "document" && asset?.id) {
+            void client
+              .createAITask({
+                params: undefined,
+                query: undefined,
+                body: {
+                  taskType: "material.extract",
+                  inputData: { assetId: asset.id, fileName: file.name },
+                },
+              })
+              .catch(() => undefined);
+          }
           setUploadStatus(`已上传素材「${file.name}」。`);
           router.refresh();
         } catch (err) {

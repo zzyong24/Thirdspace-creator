@@ -27,6 +27,14 @@ export const assetResource = z.object({
   width: z.number().int().nullable(),
   height: z.number().int().nullable(),
   durationMs: z.number().int().nullable(),
+  // [T-146 切片 a] 文档抽取投影(current file 派生,additive nullable — 旧消费不破)。
+  //   extractStatus: pending|done|failed|unsupported|null(非文档/未抽 → null)。
+  //   materialSummary: 「资料要点卡」({ keyPoints[], facts[], sellingPoints?[] }),
+  //     落在 file.mediaMetadata.materialSummary;未生成 → null。
+  //   extractedText: 确定性抽取的全文(详情面板「查看全文」);未抽/非文档 → null。
+  extractStatus: z.string().nullable(),
+  materialSummary: z.record(z.string(), z.unknown()).nullable(),
+  extractedText: z.string().nullable(),
   deletedAt: iso8601.nullable(),
   ...timestamps,
 });

@@ -62,10 +62,28 @@ function toAssetResource(row: AssetRow, file: AssetFileRow | null): AssetResourc
     width: file?.width ?? null,
     height: file?.height ?? null,
     durationMs: file?.durationMs ?? null,
+    // [T-146 切片 a] 文档抽取投影(current file 派生)。materialSummary 从 mediaMetadata 取
+    // (asset-classify 的 aiDescription 与它同库不同键,互不干扰)。非文档/未抽 → null(诚实不编)。
+    extractStatus: file?.extractStatus ?? null,
+    materialSummary: extractMaterialSummary(file),
+    extractedText: file?.extractedText ?? null,
     deletedAt: row.deletedAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
+}
+
+// [T-146 切片 a] 从 current file 的 mediaMetadata 取「资料要点卡」。存在且为对象 → 原样透传
+// (wire 已声明 record<string, unknown> nullable);缺省/形状不对 → null(不构造空壳冒充有卡)。
+function extractMaterialSummary(
+  file: AssetFileRow | null,
+): Record<string, unknown> | null {
+  const meta = (file?.mediaMetadata ?? null) as Record<string, unknown> | null;
+  const summary = meta?.materialSummary;
+  if (summary && typeof summary === "object" && !Array.isArray(summary)) {
+    return summary as Record<string, unknown>;
+  }
+  return null;
 }
 
 // 用料反查 row → contract materialLinkResource. MaterialLinkRow ($inferSelect)
@@ -82,6 +100,7 @@ function toMaterialLinkResource(row: MaterialLinkRow): MaterialLinkResource {
     role: row.role,
     stage: row.stage,
     addedByType: row.addedByType,
+    priority: row.priority,
     createdAt: row.createdAt,
   };
 }

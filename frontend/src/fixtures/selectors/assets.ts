@@ -80,6 +80,14 @@ export interface AssetListRow {
   readonly width?: number | null;
   readonly height?: number | null;
   readonly durationMs?: number | null;
+  // [T-146 切片 a] 文档抽取投影(assetResource 现随行带;仅 document 有值)。
+  readonly extractStatus?: string | null;
+  readonly materialSummary?: {
+    readonly keyPoints?: ReadonlyArray<string>;
+    readonly facts?: ReadonlyArray<string>;
+    readonly sellingPoints?: ReadonlyArray<string>;
+  } | null;
+  readonly extractedText?: string | null;
 }
 
 export function buildAssetSummariesFromResources(
@@ -110,6 +118,10 @@ export function buildAssetSummariesFromResources(
       updatedAt: asset.updatedAt,
       // [T-051 2e] 收藏读回:此前 toggle 落库但投影不带,全 UI 无痕迹。
       isFavorite: asset.isFavorite ?? false,
+      // [T-146 切片 a] 文档抽取投影透传(op 真值;非文档/未抽 → 缺省)。
+      extractStatus: asset.extractStatus ?? null,
+      materialSummary: asset.materialSummary ?? null,
+      extractedText: asset.extractedText ?? null,
     };
   });
 }

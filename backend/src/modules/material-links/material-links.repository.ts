@@ -25,6 +25,9 @@ export interface CreateMaterialLinkInput {
   role?: string;
   stage?: string;
   addedByType?: string;
+  // [T-146 切片 b] 项目内优先级('high' | 'normal')。缺省 → repo DEFAULT 'normal';
+  // 派生(user→high / ai→normal)由 SERVICE 层算好后显式传入(repo 不派生,只落值)。
+  priority?: string;
 }
 
 export interface ListMaterialLinksQuery {
@@ -89,6 +92,7 @@ export function createMaterialLinkRepository(
           role: input.role ?? "reference",
           stage: input.stage ?? "research",
           addedByType: input.addedByType ?? "user",
+          priority: input.priority ?? "normal",
           createdAt: deps.now(),
         })
         .returning();
