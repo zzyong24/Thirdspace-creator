@@ -21,6 +21,10 @@ export const PROJECT_SORT_OPTIONS = [
   { id: "progress", label: "进度" },
   { id: "stage", label: "阶段" },
   { id: "title", label: "标题" },
+  // [T-153] 内容指标排序:数据来自采集的 metric_snapshot 最新快照(page 层全量解析)。
+  { id: "plays", label: "播放量" },
+  { id: "likes", label: "点赞" },
+  { id: "comments", label: "评论" },
 ] as const;
 
 export type ProjectSortId = (typeof PROJECT_SORT_OPTIONS)[number]["id"];

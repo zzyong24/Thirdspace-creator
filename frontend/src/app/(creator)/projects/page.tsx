@@ -28,11 +28,17 @@ export default async function Page({
   const parsed = Number(raw);
   const page = Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
   // [T-051 2b] 状态筛选 + 排序从 URL 读(三件套接真;非法值回默认)。
+  // [T-153] 默认 status 改「已发布」:用户列表以已发布作品为主视图(URL 无 ?status= 时
+  //   落 published;显式传 ?status=all 仍可回全部)。仅改 route 默认,ProjectsPage 组件
+  //   默认参数保持 "all"(测试 seam 不受影响)。
   const rawStatus = Array.isArray(params.status) ? params.status[0] : params.status;
-  const status = rawStatus && /^[a-z]+$/.test(rawStatus) ? rawStatus : "all";
+  const status = rawStatus && /^[a-z]+$/.test(rawStatus) ? rawStatus : "published";
   const rawSort = Array.isArray(params.sort) ? params.sort[0] : params.sort;
   const sort =
-    rawSort && ["updated", "progress", "stage", "title"].includes(rawSort)
+    rawSort &&
+    ["updated", "progress", "stage", "title", "plays", "likes", "comments"].includes(
+      rawSort,
+    )
       ? rawSort
       : "updated";
   // [T-073] 显示已隐藏(抖音端「仅自己可见/已隐藏」的作品):?hidden=1 才显,默认过滤。

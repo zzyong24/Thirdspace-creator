@@ -17,6 +17,8 @@ import { UploadCloud } from "lucide-react";
 import { client } from "@/lib/contract-client";
 // [T-076] classify-asset 随 production 前端退役迁入稿面(弹药区是它的消费点)。
 import { classifyFile } from "./classify-asset";
+// [T-146] 上传链抽成共用函数(AmmoDumpZone 与稿面「＋上传素材」CTA 共用,不重造)。
+import { uploadFileToProject } from "./upload-to-project";
 import { cn } from "@/lib/utils";
 
 interface PendingFile {
@@ -76,69 +78,10 @@ export function AmmoDumpZone({ projectId }: { projectId: string }) {
 
   const uploadOne = React.useCallback(
     async (key: string, file: File) => {
-      const mimeType = file.type || "application/octet-stream";
-      const { assetType, tags } = classifyFile(file.name, mimeType);
       try {
-        const upload = (await client.createUpload({
-          params: undefined,
-          query: undefined,
-          body: {
-            assetType,
-            mimeType,
-            fileSize: Math.max(1, file.size),
-            projectId,
-            fileName: file.name,
-          },
-        })) as unknown as { uploadId: string; uploadUrl: string };
-        if (!upload.uploadUrl.startsWith("mock://")) {
-          const put = await fetch(upload.uploadUrl, {
-            method: "PUT",
-            headers: { "content-type": mimeType },
-            body: file,
-          });
-          if (!put.ok) throw new Error(`PUT ${put.status}`);
-        }
-        const asset = (await client.completeUpload({
-          params: { uploadId: upload.uploadId },
-          query: undefined,
-          body: { name: file.name },
-        })) as unknown as { id: string };
-        if (asset?.id) {
-          await client.createMaterialLink({
-            params: undefined,
-            query: undefined,
-            body: {
-              projectId,
-              entityType: "asset",
-              entityId: asset.id,
-              role: "reference",
-              stage: "script",
-            },
-          });
-          await assignTagsBestEffort(asset.id, tags);
-          // AI 归类排队慢跑(未配视觉模型 → runner 诚实跳过)。
-          void client
-            .createAITask({
-              params: undefined,
-              query: undefined,
-              body: { taskType: "asset.classify", inputData: { assetId: asset.id } },
-            })
-            .catch(() => undefined);
-          // [T-146 切片 a] document 上传完成 → fire-and-forget 文档抽取(抽全文 + AI 要点卡)。
-          // 只对 document 触发;fileName 传给 runner 做 mimeType 分派兜底(File.type 常为空)。
-          if (assetType === "document") {
-            void client
-              .createAITask({
-                params: undefined,
-                query: undefined,
-                body: {
-                  taskType: "material.extract",
-                  inputData: { assetId: asset.id, fileName: file.name },
-                },
-              })
-              .catch(() => undefined);
-          }
-        }
+        // [T-146] 上传链走共用 uploadFileToProject(createUpload → PUT → complete →
+        //   materialLink → 标签 → asset.classify/material.extract),两处同源不重造。
+        await uploadFileToProject(projectId, file);
         setPending((prev) => prev.filter((p) => p.key !== key));
       } catch {
         setPending((prev) =>

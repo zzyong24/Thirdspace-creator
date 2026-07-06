@@ -110,16 +110,17 @@ describe("ProjectsPage", () => {
     expect(within(active).getByTestId("status-tab-count").textContent).toBe("2");
   });
 
-  it("renders the projects top-header actions with search, filter and new project entries", async () => {
+  it("renders the projects top-header actions with search and new project entries", async () => {
     const { container } = await renderProjects();
     const header = container.querySelector('[data-slot="app-top-header"]');
     expect(header).not.toBeNull();
     expect(
       within(header as HTMLElement).getByRole("link", { name: "搜索项目" }),
     ).toHaveAttribute("href", "/search");
+    // [T-153] 全局 header 的「筛选」假按钮已移除(页内 ProjectsToolbar 提供真筛选/排序/可见性)。
     expect(
-      within(header as HTMLElement).getByRole("button", { name: "筛选项目" }),
-    ).toBeInTheDocument();
+      within(header as HTMLElement).queryByRole("button", { name: "筛选项目" }),
+    ).toBeNull();
     expect(
       within(header as HTMLElement).getByRole("link", { name: /新建项目/ }),
     ).toHaveAttribute("href", "/projects/new");

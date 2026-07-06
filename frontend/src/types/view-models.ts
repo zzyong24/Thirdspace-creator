@@ -176,6 +176,14 @@ export interface ProjectListRow {
   // [T-078] 真封面(publication 当前 revision.coverAssetId,采集回填/手选)。
   //   页级 server 解析只补当前页 10 行;缺省/null → 渐变占位。
   readonly coverAssetId?: string | null;
+  // [T-153] 内容指标(最新 metric_snapshot 快照:播放/点赞/评论)。用于列表按内容指标
+  //   排序。仅当选中 metric 类排序时页级 server 全量解析(project → outputs →
+  //   publications → analytics 最新快照);其余路径缺省 → undefined(不解析,不付 N+1 成本)。
+  readonly metrics?: {
+    readonly plays: number;
+    readonly likes: number;
+    readonly comments: number;
+  };
 }
 
 export interface ContentOutputSummary {

@@ -508,10 +508,9 @@ function ProjectsHeaderActions() {
           ⌘ K
         </kbd>
       </Link>
-      <Button type="button" variant="outline" size="lg" aria-label="筛选项目">
-        <span aria-hidden="true">⚙</span>
-        筛选
-      </Button>
+      {/* [T-153] 移除全局 header 的「筛选」假按钮(无 onClick,不生效,误导用户):
+          页内 ProjectsToolbar 已提供真筛选(状态 tab)+ 真排序 + 可见性开关(URL 驱动),
+          此处重复且假。裁决「接不了真就移除避免误导」。 */}
       <Link
         href="/projects/new"
         className={buttonVariants({ size: "lg" })}

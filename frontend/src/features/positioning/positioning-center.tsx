@@ -39,6 +39,7 @@ import {
   FolderKanban,
   ShieldAlert,
   Mic2,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 
@@ -486,12 +487,13 @@ function DownstreamRules({
           className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto pr-1"
         >
           {/* 规则卡「一眼可读不挤」(T-090):卡间距 3.5、卡内 padding 拉开、
-              标题 13px 半粗 / 正文 12.5px 行高 1.6 形成字号层次。 */}
+              标题 13px 半粗 / 正文 12.5px 行高 1.6 形成字号层次。
+              [T-154] 加 hover 描边,与左栏 facet 卡视觉一致。 */}
           {shown.map((rule) => (
             <div
               key={rule.label}
               data-testid="positioning-rule-card"
-              className="flex items-start gap-3 rounded-control border border-border bg-surface px-3.5 py-3"
+              className="flex items-start gap-3 rounded-control border border-border bg-surface px-3.5 py-3 transition-colors hover:border-brand/40"
             >
               <IconChip icon={rule.icon} tone={rule.tone} className="size-7" />
               <div className="flex min-w-0 flex-col gap-1">
@@ -506,13 +508,57 @@ function DownstreamRules({
           ))}
         </div>
       ) : (
-        <p className="rounded-control border border-dashed border-border px-3 py-4 text-xs text-muted-foreground">
-          还没有设置定位规则。在「编辑」抽屉里填写选题 / 写稿 / 项目 / 禁止 / 表达规则后，下游 AI 会以它们为硬约束。
-        </p>
+        // [T-154] 空态精致化:旧版一段虚线框文字(粗糙)→ 居中图标 chip + 标题 + 引导 +
+        //   5 条规则名预览 + CTA 直接打开「编辑」抽屉填规则。与左栏 AI 强调卡同款 brand 语言。
+        <div
+          data-testid="positioning-downstream-empty"
+          className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 rounded-control border border-dashed border-border/70 bg-surface-subtle/40 px-5 py-8 text-center"
+        >
+          <IconChip icon={SlidersHorizontal} tone="brand" className="size-11" />
+          <div className="flex flex-col gap-1.5">
+            <p className="text-sm font-semibold text-foreground">
+              还没有定位规则
+            </p>
+            <p className="mx-auto max-w-[15rem] text-xs leading-relaxed text-muted-foreground">
+              规则是下游 AI 的硬约束——填好后，选题 / 写稿 / 项目 / 评分 / Copilot
+              每次生成都照它来。
+            </p>
+          </div>
+          {/* 5 条规则名预览(轻提示要填什么),与规则卡同一套图标语言。 */}
+          <ul className="flex flex-wrap items-center justify-center gap-1.5">
+            {RULE_HINTS.map((hint) => (
+              <li
+                key={hint.label}
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2 py-0.5 text-[11px] text-muted-foreground"
+              >
+                <hint.icon className="size-3" aria-hidden />
+                {hint.label}
+              </li>
+            ))}
+          </ul>
+          <PositioningDraftDrawer
+            profile={profile}
+            triggerLabel="去填定位规则"
+            triggerVariant="default"
+            triggerSize="sm"
+            triggerIcon="pencil"
+            title="编辑当前定位"
+            description="填写选题 / 写稿 / 项目 / 禁止 / 表达规则,下游 AI 会以它们为硬约束。"
+          />
+        </div>
       )}
     </aside>
   );
 }
+
+// [T-154] 空态的 5 条规则名预览(与 DownstreamRules 的 rules 同图标语言,静态提示要填什么)。
+const RULE_HINTS: ReadonlyArray<{ label: string; icon: LucideIcon }> = [
+  { label: "选题规则", icon: Lightbulb },
+  { label: "写稿规则", icon: PenLine },
+  { label: "项目规则", icon: FolderKanban },
+  { label: "禁止事项", icon: ShieldAlert },
+  { label: "表达风格", icon: Mic2 },
+];
 
 // 历史版本紧凑表：版本号 / 一句话 / 状态 pill / 操作（复制为草稿）.
 function HistoryTable({

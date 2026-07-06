@@ -54,7 +54,11 @@ export type ProjectsReadClient = Pick<typeof defaultClient, "listProjects"> &
   Partial<
     Pick<
       typeof defaultClient,
-      "listOutputs" | "listPublications" | "listPublicationRevisions"
+      | "listOutputs"
+      | "listPublications"
+      | "listPublicationRevisions"
+      // [T-153] 内容指标排序读:project → outputs → publications → 最新 metric_snapshot。
+      | "getPublicationAnalytics"
     >
   >;
 
@@ -92,6 +96,14 @@ const DEMO_PROJECT_IDS = new Set<string>([
 ]);
 
 const PROJECTS_PAGE_SIZE = 10;
+
+// [T-153] metric 类排序 id(server 侧本地常量,不跨 client 边界 import —— 从
+//   "use client" 的 projects-toolbar 导出 Set 会在 RSC 序列化时丢 .has,真机报错)。
+//   决定是否付「全量解析最新快照」的 N+1 成本。
+const PROJECT_METRIC_SORT_IDS = ["plays", "likes", "comments"] as const;
+function isMetricSort(sort: string): boolean {
+  return (PROJECT_METRIC_SORT_IDS as ReadonlyArray<string>).includes(sort);
+}
 
 // ---------------------------------------------------------------------------
 // Page
@@ -142,8 +154,15 @@ export async function ProjectsPage({
     status === "all"
       ? baseRows.filter((row) => mapProjectRowToTab(row) !== "archived")
       : baseRows.filter((row) => mapProjectRowToTab(row) === status);
+  // [T-153] 内容指标排序(播放/点赞/评论)才付「全量解析最新快照」的 N+1 成本:
+  //   对筛选后的行集全量解析 metric_snapshot(排序作用在分页前,故须全量);其余排序
+  //   (updated/progress/stage/title)与测试 seam 路径不解析 → metrics undefined。
+  const rowsForSort =
+    viewModel === undefined && isMetricSort(sort) && canResolveMetrics(client)
+      ? await resolveRowsMetrics(client, filteredRows)
+      : filteredRows;
   // [T-051 2b] 排序真接线:updated(默认,保持真实发布时刻倒序的原序)之外按选项排。
-  const sortedRows = sortProjectRows(filteredRows, sort);
+  const sortedRows = sortProjectRows(rowsForSort, sort);
 
   // Pagination only applies to the real-read path; the test-override VM renders
   // its rows verbatim (totalPages 1) so existing page tests stay green.
@@ -443,6 +462,20 @@ function sortProjectRows(
         );
     case "title":
       return rows.slice().sort((a, b) => a.title.localeCompare(b.title, "zh"));
+    // [T-153] 内容指标排序:按最新 metric_snapshot 快照倒序(高→低)。无 metrics 的行
+    //   (未解析 / 无采集数据)排最后(视为 0),不歪排序。
+    case "plays":
+      return rows
+        .slice()
+        .sort((a, b) => (b.metrics?.plays ?? 0) - (a.metrics?.plays ?? 0));
+    case "likes":
+      return rows
+        .slice()
+        .sort((a, b) => (b.metrics?.likes ?? 0) - (a.metrics?.likes ?? 0));
+    case "comments":
+      return rows
+        .slice()
+        .sort((a, b) => (b.metrics?.comments ?? 0) - (a.metrics?.comments ?? 0));
     default:
       return rows;
   }
@@ -620,6 +653,109 @@ async function resolveProjectCoverAssetId(
   } catch {
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// [T-153] 项目行内容指标解析(server 侧,仅 metric 类排序时全量解析)
+// ---------------------------------------------------------------------------
+
+function canResolveMetrics(
+  client: ProjectsReadClient,
+): client is ProjectsReadClient &
+  Required<
+    Pick<
+      typeof defaultClient,
+      "listOutputs" | "listPublications" | "getPublicationAnalytics"
+    >
+  > {
+  return (
+    typeof client.listOutputs === "function" &&
+    typeof client.listPublications === "function" &&
+    typeof client.getPublicationAnalytics === "function"
+  );
+}
+
+/**
+ * 给行集全量解析最新 metric_snapshot(project → outputs → publications →
+ * analytics 最新快照;键名归一 views/plays、likes、comments,与 publishing-center /
+ * backend analytics.repository 同口径)。一个项目聚合其所有 publication 的最新快照
+ * (取各 publication 最新快照求和)。任一读失败 → 该行 metrics 缺省(排序视为 0),
+ * 绝不把指标故障放大成列表故障。
+ */
+async function resolveRowsMetrics(
+  client: ProjectsReadClient &
+    Required<
+      Pick<
+        typeof defaultClient,
+        "listOutputs" | "listPublications" | "getPublicationAnalytics"
+      >
+    >,
+  rows: ReadonlyArray<ProjectListRow>,
+): Promise<ReadonlyArray<ProjectListRow>> {
+  return Promise.all(
+    rows.map(async (row) => {
+      const metrics = await resolveProjectMetrics(client, row.id);
+      return metrics ? { ...row, metrics } : row;
+    }),
+  );
+}
+
+async function resolveProjectMetrics(
+  client: ProjectsReadClient &
+    Required<
+      Pick<
+        typeof defaultClient,
+        "listOutputs" | "listPublications" | "getPublicationAnalytics"
+      >
+    >,
+  projectId: string,
+): Promise<ProjectListRow["metrics"] | null> {
+  try {
+    const outputs = (await client.listOutputs({
+      params: { projectId },
+      query: undefined,
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ id: string }>;
+    let plays = 0;
+    let likes = 0;
+    let comments = 0;
+    let sawAny = false;
+    for (const output of outputs.slice(0, 3)) {
+      const pubs = (await client.listPublications({
+        params: { outputId: output.id },
+        query: { page: 1, pageSize: 10 },
+        body: undefined,
+      })) as unknown as ReadonlyArray<{ id: string }>;
+      for (const pub of pubs) {
+        const snapshots = (await client.getPublicationAnalytics({
+          params: { publicationId: pub.id },
+          query: { page: 1, pageSize: 20 },
+          body: undefined,
+        })) as unknown as ReadonlyArray<{
+          capturedAt: string;
+          rawMetrics?: Record<string, unknown>;
+        }>;
+        if (!snapshots || snapshots.length === 0) continue;
+        const latest = snapshots
+          .slice()
+          .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0]!;
+        const raw = latest.rawMetrics ?? {};
+        sawAny = true;
+        // 键名归一:真采集写 `views`,fixture 写 `plays`(与 analytics.repository 同口径)。
+        plays += numOfMetric(raw, "views") || numOfMetric(raw, "plays");
+        likes += numOfMetric(raw, "likes");
+        comments += numOfMetric(raw, "comments");
+      }
+    }
+    return sawAny ? { plays, likes, comments } : null;
+  } catch {
+    return null;
+  }
+}
+
+function numOfMetric(raw: Record<string, unknown>, key: string): number {
+  const v = raw[key];
+  return typeof v === "number" && Number.isFinite(v) ? v : 0;
 }
 
 const COVER_BG_CLASSES = [
