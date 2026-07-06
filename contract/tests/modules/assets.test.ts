@@ -20,6 +20,10 @@ describe("assets contract", () => {
       height: 1080,
       durationMs: null,
       deletedAt: null,
+      // [T-146/0024] 文档抽取派生字段:非文档/未抽 → null(键必在)。
+      extractStatus: null,
+      materialSummary: null,
+      extractedText: null,
       createdAt: "2026-06-06T02:00:00.000Z",
       updatedAt: "2026-06-06T02:00:00.000Z",
     });
