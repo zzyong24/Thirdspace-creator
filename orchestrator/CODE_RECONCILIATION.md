@@ -1,5 +1,7 @@
 # Code ↔ Spec Reconciliation — CreatorOS
 
+> 快照日期 2026-06-22;RISK-001~010 状态未逐条更新,最新真值以 BACKLOG + 门卫 baseline 为准。
+
 Date: 2026-06-20 · Method: three read-only audits (components, pages, data-model+architecture) of branch
 `feat/frontend-implementation` against the approved specs. This is the **stage-09 frontend-implementation
 gate run** the earlier doc-only ratification skipped. The user's assessment ("doesn't follow the prior

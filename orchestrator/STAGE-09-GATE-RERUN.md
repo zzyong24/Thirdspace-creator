@@ -1,5 +1,7 @@
 # Stage-09 Frontend-Implementation Gate — Re-run (post-remediation)
 
+> 归档:已废「分-stage」流程的一次性 gate 工件,保留仅作历史,不代表当前流程。
+
 Date: 2026-06-21 · Branch: `remediation/frontend-spec-alignment` (off
 `feat/frontend-implementation`) · Decision basis: DEC-006 full spec alignment.
 
