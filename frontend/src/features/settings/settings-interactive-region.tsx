@@ -1698,22 +1698,25 @@ const MULTIMODAL_META = {
     baseUrlPlaceholder: "https://api.minimaxi.com/v1(留空=provider 默认)",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
-  // 逐字稿 ASR(T-030-D1,SPEC §5.1)—— 与图/视频同款 cc-switch 表单,provider 走 OpenAI 兼容
-  // ASR(SiliconFlow/OpenAI/Groq);建议值给 SiliconFlow(skill 已验)但不锁死。
+  // 逐字稿 ASR(T-030-D1 / **T-160 改选配**)—— 与图/视频同款 cc-switch 表单,provider 走 OpenAI
+  // 兼容 ASR(SiliconFlow/OpenAI/Groq);建议值给 SiliconFlow(skill 已验)但不锁死。
+  // [T-160] ASR 变**选配**:不配 API 也能转写——回退本地 Whisper(免 key,首次自动下模型,默认
+  // small 级)。文案改「选配」+ 说明未配走本地。TODO:级别选择器(tiny/base/small/medium)——
+  // 现按 env CREATOROS_WHISPER_LEVEL 或默认 small;做进 UI 需新 model_config 字段/迁移,暂缓。
   audio: {
     capability: "transcribe.audio" as const,
-    title: "语音转文字",
+    title: "语音转文字(选配)",
     icon: Cpu,
     description:
-      "把视频里的话转成文字稿(复盘 / 二创的底稿);不配则语音转文字功能禁用。",
+      "把视频里的话转成文字稿(复盘 / 二创的底稿)。选配:不配则用本地 Whisper(免 key,首次自动下模型,默认 small 级);配了云端 ASR 则更快更准。",
     providerSuggestions: ["siliconflow", "openai", "groq"] as ReadonlyArray<string>,
     providerPlaceholder: "siliconflow",
     providerHelp:
-      "OpenAI 兼容 ASR 厂商,可自定义(SiliconFlow / OpenAI / Groq 同形状)。",
+      "OpenAI 兼容 ASR 厂商,可自定义(SiliconFlow / OpenAI / Groq 同形状)。留空则用本地 Whisper。",
     modelHelp: "ASR 模型 id,如 FunAudioLLM/SenseVoiceSmall(SiliconFlow)。",
     modelPlaceholder: "FunAudioLLM/SenseVoiceSmall",
     baseUrlPlaceholder: "https://api.siliconflow.cn/v1(留空=provider 默认)",
-    disabledHint: "未配 → 语音转文字功能禁用。",
+    disabledHint: "未配 → 用本地 Whisper 转写(免 key,首次下载模型)。",
   },
   // [T-093] 知识库语义搜索 embedding —— OpenAI 兼容 embedding 端点(SiliconFlow/OpenAI
   // 同形状);未配 → 知识库 AI 搜索诚实降级纯关键词。apiFormat 显式存 openai_chat

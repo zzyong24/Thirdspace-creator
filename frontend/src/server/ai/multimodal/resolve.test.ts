@@ -4,7 +4,6 @@ import {
   resolveMultimodalSpec,
   resolveTranscribeSpec,
   MultimodalConfigError,
-  TranscribeConfigError,
 } from "./resolve";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
@@ -217,15 +216,54 @@ describe("resolveTranscribeSpec — 3 层回退(kind=audio)", () => {
     });
   });
 
-  it("tier 3:都无 → 抛 TranscribeConfigError(非 MultimodalConfigError,供 D2 精确接住)", async () => {
-    await expect(
-      resolveTranscribeSpec(ctx, { getModelConfig: noRow, env: {} }),
-    ).rejects.toBeInstanceOf(TranscribeConfigError);
+  // [T-160] ASR 改选配:tier 3 未配**不再抛**,回退本地 whisper spec(免 key)。
+  it("tier 3:都无 → 回退本地 whisper spec(不抛;provider=whisper-local,默认级别 small)", async () => {
+    const spec = await resolveTranscribeSpec(ctx, {
+      getModelConfig: noRow,
+      env: {},
+    });
+    expect(spec).toEqual({
+      provider: "whisper-local",
+      baseUrl: null,
+      model: "small",
+      token: "",
+      kind: "audio",
+    });
   });
 
-  it("tier 3:错误信息含 capability 名(供 UI 引导去设置配 ASR)", async () => {
-    await expect(
-      resolveTranscribeSpec(ctx, { getModelConfig: noRow, env: {} }),
-    ).rejects.toThrow(/transcribe\.audio/);
+  it("tier 3:CREATOROS_WHISPER_LEVEL 覆盖回退级别(medium)", async () => {
+    const spec = await resolveTranscribeSpec(ctx, {
+      getModelConfig: noRow,
+      env: { CREATOROS_WHISPER_LEVEL: "medium" },
+    });
+    expect(spec.provider).toBe("whisper-local");
+    expect(spec.model).toBe("medium");
+  });
+
+  it("tier 3:非法 CREATOROS_WHISPER_LEVEL → 回退 small", async () => {
+    const spec = await resolveTranscribeSpec(ctx, {
+      getModelConfig: noRow,
+      env: { CREATOROS_WHISPER_LEVEL: "gigantic" },
+    });
+    expect(spec.model).toBe("small");
+  });
+
+  // 用户**配了**云端 ASR → 仍走用户 provider(不被 whisper 回退抢路)。
+  it("配了云端 ASR 仍走用户 spec(whisper 回退只在未配时兜底)", async () => {
+    const spec = await resolveTranscribeSpec(ctx, {
+      getModelConfig: async (_c, cap) =>
+        cap === "transcribe.audio"
+          ? ({
+              provider: "siliconflow",
+              baseUrl: "https://api.siliconflow.cn/v1",
+              modelName: "FunAudioLLM/SenseVoiceSmall",
+              secretValue: "sk-user",
+              secretReference: null,
+            } as never)
+          : null,
+      env: {},
+    });
+    expect(spec.provider).toBe("siliconflow");
+    expect(spec.model).toBe("FunAudioLLM/SenseVoiceSmall");
   });
 });

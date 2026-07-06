@@ -252,6 +252,8 @@ import { resolveSearchSpec as resolveSearchSpecFn } from "@/server/ai/search/res
 import {
   createMinimaxAdapter,
   createOpenaiAsrAdapter,
+  // [T-160] 本地 Whisper 适配器(ASR 选配的兜底后端;未配云端 ASR 时走它,免 key、自动下模型)。
+  createDefaultWhisperLocalAdapter,
   transcribeAudio as transcribeAudioFn,
   type MultimodalProviderRegistry,
 } from "@creatoros/ai-worker";
@@ -5160,10 +5162,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // (归一);加 provider = 在此注册。真跑要真 transcribe.audio key(未配 → resolveTranscribeSpec
   // 抛 TranscribeConfigError,整任务停 + 引导);单测装配注 fake,不碰这个真 registry。
   const openaiAsrAdapter = createOpenaiAsrAdapter();
+  // [T-160] 本地 Whisper 兜底(ASR 选配):用户没配云端 ASR → resolveTranscribeSpec 回退
+  // provider="whisper-local",转写走本地 Transformers.js(Xenova/whisper-<level>,默认 small,
+  // ffmpeg 解 16kHz mono PCM)。首次自动下模型到 ~/CreatorOS/models/whisper,幂等复用。免 key。
+  const whisperLocalAdapter = createDefaultWhisperLocalAdapter();
   const asrRegistry: MultimodalProviderRegistry = {
     siliconflow: openaiAsrAdapter,
     openai: openaiAsrAdapter,
     groq: openaiAsrAdapter,
+    "whisper-local": whisperLocalAdapter,
   };
 
   // ── [T-084a] 联网检索解析 + registry(SPEC 2026-07-03 §1.1)─────────────────────

@@ -95,6 +95,23 @@ export {
   createOpenaiAsrAdapter,
   type OpenaiAsrAdapterDeps,
 } from "./runtime/multimodal-openai-asr";
+// 本地 Whisper 适配器(T-160,SPEC 2026-07-06 §3.1/§3.2 方案 A)—— ASR 选配的兜底后端:
+// 用户没配 transcribe.audio provider 时,resolveTranscribeSpec 回退到 provider "whisper-local"。
+// 用 Transformers.js(@xenova/transformers)本地跑 Whisper(Xenova/whisper-<level>,默认 small),
+// 音频用 ffmpeg 解成 16kHz mono f32le PCM。host 用 createDefaultWhisperLocalAdapter() 装配;
+// 单测注 fake deps(不真下模型/不 spawn 真 ffmpeg)。免 key、免外部 API、桌面化零 Python。
+export {
+  createWhisperLocalAdapter,
+  createDefaultWhisperLocalAdapter,
+  createDefaultPipelineProvider,
+  createFfmpegPcmDecoder,
+  whisperLevelFromSpec,
+  whisperModelId,
+  type WhisperLevel,
+  type WhisperLocalAdapterDeps,
+  type AsrPipeline,
+  type FfmpegDecoderDeps,
+} from "./runtime/multimodal-whisper-local";
 // Fake 多模态适配器(测试支持,零成本)—— 与 createFakeAgentRunner 同类的测试用假件,经 index
 // 公开出口给消费方单测用(frontend asset.generate runner 测装配 + 异步轮询)。含 fake 异步
 // video provider(先 taskId、N 次轮询后返 bytes),坐实 [gate-F1]/[gate-F2] 的异步链路覆盖。

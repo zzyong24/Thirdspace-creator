@@ -1,6 +1,13 @@
 # SPEC — 逐字稿 ASR 改选配 + 未配时本地 Whisper 回退(T-160)
 
-> 状态:待用户过目 · 2026-07-06 · 关联 T-151 A(逐字稿)/T-147(桌面化)
+> 状态:✅ 已实现(方案 A · main · 2026-07-06;真机端到端待验)· 关联 T-151 A(逐字稿)/T-147(桌面化)
+>
+> **实现落点(T-160)**:用户拍板方案 A(Transformers.js)。
+> - ai-worker:`src/runtime/multimodal-whisper-local.ts`(`whisper-local` 适配器 + 默认 pipeline provider[memo 幂等] + `createFfmpegPcmDecoder`)+ `index.ts` 导出;依赖 `@xenova/transformers@^2.17.2`。
+> - **音频解码定论**:douyin 采集音频是 **16kHz mono 64k MP3**(`streamAudioFromVideo`),采样率/声道已对但需解 MP3→f32le PCM。**复用项目已装的 ffmpeg**(douyin-cdp 抽音在用,**非新增重依赖**)`ffmpeg -i pipe:0 -f f32le -ar 16000 -ac 1 pipe:1` → Float32Array。decode/pipeline 可注入,单测用 fake(不真下模型、不 spawn 真 ffmpeg)。
+> - `frontend/src/server/ai/multimodal/resolve.ts`:`resolveTranscribeSpec` 未配**不再抛**,回退 whisper-local spec(级别 env `CREATOROS_WHISPER_LEVEL` 或默认 small)。
+> - host `persistence-client.ts`:asrRegistry 注册 `whisper-local`。设置 ASR 卡文案改「选配」。
+> - **真机待验**:真下 whisper small(~几百 MB)+ 真 douyin 音频端到端转出中文;级别选择器进 UI + 首次下模型进度接 T-152 job 进度(均标 TODO,未做)。
 > 一句话:ASR 从「必配 key 才能转写」变「选配」——没配 API 就**下载本地 Whisper(small/可选级)自己跑**,零 key。参考 msg-collect。
 
 ## 1. 问题

@@ -206,14 +206,36 @@ export async function resolveMultimodalSpec(
   );
 }
 
+// [T-160] 本地 Whisper 回退 provider 名(与 ai-worker registry keyed by "whisper-local" 对齐)。
+// ASR 选配:用户没配 transcribe.audio 时,resolveTranscribeSpec **不再抛**,而回退本地 whisper
+// (免 key、免外部 API,首次自动下模型)。级别默认 small,可用 env CREATOROS_WHISPER_LEVEL 覆盖。
+export const WHISPER_LOCAL_PROVIDER = "whisper-local";
+const DEFAULT_WHISPER_LEVEL = "small";
+const VALID_WHISPER_LEVELS: ReadonlySet<string> = new Set([
+  "tiny",
+  "base",
+  "small",
+  "medium",
+]);
+
+/** 从 env 读回退 whisper 级别(默认 small;非法值 → small)。级别经 spec.model 传给 ai-worker
+ *  whisper-local 适配器(whisperLevelFromSpec 再归一一次,双保)。 */
+function resolveWhisperLevel(env: Record<string, string | undefined>): string {
+  const raw = env.CREATOROS_WHISPER_LEVEL?.trim().toLowerCase();
+  return raw && VALID_WHISPER_LEVELS.has(raw) ? raw : DEFAULT_WHISPER_LEVEL;
+}
+
 /**
- * ASR 逐字稿模型解析(T-030-D1,SPEC §5.1)—— 与 image/video **完全同款**的三层回退,只是
- * capability 固定为 `transcribe.audio`、错误类型换成 `TranscribeConfigError`(供 D2
- * transcribe-runner 按类型精确接住「逐字稿未配」)。
- *   Tier 1 库存密钥:transcribe.audio 行 → asr.default 行;库存 secretValue > env-ref。
+ * ASR 逐字稿模型解析(T-030-D1 / **T-160 改选配**,SPEC 2026-07-06)—— 与 image/video 同款三层
+ * 回退,但 capability 固定 `transcribe.audio`;**关键差异:未配不再抛,而回退本地 Whisper**。
+ *   Tier 1 库存密钥:transcribe.audio 行 → asr.default 行;库存 secretValue > env-ref(用户配了云端 ASR → 照旧走)。
  *   Tier 2 env 默认:CREATOROS_ASR_*(需 provider+model+key 齐全)。
- *   Tier 3 未配:抛 TranscribeConfigError(上层 → 停任务 + UI「未配置逐字稿模型,去设置配」)。
+ *   Tier 3 **未配 → 本地 Whisper 回退**:返回 `{ provider:"whisper-local", model:<级别 ?? "small">,
+ *          kind:"audio", token:"", baseUrl:null }`,**不抛 TranscribeConfigError**。runner 不因未配停整链,
+ *          转写走本地(首次自动下模型)。ai-worker registry 的 whisper-local adapter 接手推理。
  * 返回的 spec.kind === "audio",喂给 ai-worker `transcribeAudio` 工厂(按 provider 取 ASR adapter)。
+ *
+ * 注:TranscribeConfigError 仍导出保留(向后兼容 + runner 里对它的 catch 分支仍在,只是此路径不再触发)。
  */
 export async function resolveTranscribeSpec(
   ctx: RequestContext,
@@ -222,9 +244,15 @@ export async function resolveTranscribeSpec(
   try {
     return await resolveMultimodalSpec(ctx, "transcribe.audio", deps);
   } catch (err) {
-    // 复用 resolveMultimodalSpec 的三层回退,仅把「未配」错误换成 ASR 专用类型(保留原文)。
+    // [T-160] 未配(MultimodalConfigError)→ **不抛**,回退本地 whisper spec(免 key)。
     if (err instanceof MultimodalConfigError) {
-      throw new TranscribeConfigError(err.message);
+      return {
+        provider: WHISPER_LOCAL_PROVIDER,
+        baseUrl: null,
+        model: resolveWhisperLevel(deps.env),
+        token: "", // 本地 whisper 免 key
+        kind: "audio",
+      };
     }
     throw err;
   }
