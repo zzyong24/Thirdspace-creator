@@ -201,8 +201,8 @@ describe("settings.repository (patchPreferences insert-then-update)", () => {
     });
     expect(first.fileNamingRule).toBe("{project}-{stage}");
     expect(first.autosaveEnabled).toBe(false);
-    // Unset keys take schema defaults.
-    expect(first.analyticsEnabled).toBe(true);
+    // Unset keys take schema defaults (analytics 默认关 · PROTECTION.md §4).
+    expect(first.analyticsEnabled).toBe(false);
 
     // Second patch: only analyticsEnabled — fileNamingRule untouched.
     const second = await repo.patchPreferences(ctxA, { analyticsEnabled: false });

@@ -319,7 +319,7 @@ export function createSettingsService(
         defaultVisibility: "private",
         autosaveEnabled: true,
         fileNamingRule: "{date}-{title}",
-        analyticsEnabled: true,
+        analyticsEnabled: false, // 默认关(PROTECTION.md §4 遥测零收集)
       };
     },
 

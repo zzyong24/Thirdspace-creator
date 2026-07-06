@@ -145,7 +145,7 @@ const PREFERENCE_DEFAULTS = {
   defaultVisibility: "private",
   autosaveEnabled: true,
   fileNamingRule: "",
-  analyticsEnabled: true,
+  analyticsEnabled: false, // 默认关(PROTECTION.md §4 遥测零收集)
 } as const;
 
 // Strip undefined values from a patch so an `update().set({})` never clobbers a

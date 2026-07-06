@@ -72,7 +72,7 @@ function makeFakeRepo(
         defaultVisibility: "private",
         autosaveEnabled: true,
         fileNamingRule: "",
-        analyticsEnabled: true,
+        analyticsEnabled: false, // 镜像 schema 默认关(PROTECTION.md §4)
       };
       const provided = Object.fromEntries(
         Object.entries(patch).filter(([, v]) => v !== undefined),
@@ -238,8 +238,8 @@ describe("settings.service", () => {
     expect(dto.id).toBe("pref-user-z");
     expect(dto.userId).toBe("user-z");
     expect(dto.defaultHome).toBe("projects");
-    // Untouched keys keep their defaults.
-    expect(dto.analyticsEnabled).toBe(true);
+    // Untouched keys keep their defaults (analytics 默认关 · PROTECTION.md §4).
+    expect(dto.analyticsEnabled).toBe(false);
   });
 
   it("setModelConfiguration upserts; secretReference/settings default when omitted", async () => {

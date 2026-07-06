@@ -43,16 +43,14 @@
 
 ## 三、⚠️ 中等问题(体验瑕疵)
 
-### 3. "七步"废弃文案**跨多页系统性残留**
-- 选题页:「一键晋升为 Project(**七步③**)」;
-- 内容日历页:「发布节奏…(**七步⑦ · §7.2**)」;
-产品早改成**两阶段**(脚本→复盘),但"七步流水线"的编号(③/⑦)散落在多个页面副标题里没清。这是**系统性文案残留**(不止一处),建议全局搜"七步"清一遍。
+### 3. ✅ "七步"废弃文案跨页残留 —— 已修(用户可见 3 处)
+产品早改**两阶段**(脚本→复盘),但"七步流水线"编号(③/⑤/⑦)散落在页面副标题。**已修**:`shell-router.tsx` 用户可见的 3 条 `pageDescription`(账号⑤/日历⑦/选题③)已去掉「(七步X)」尾注。(代码注释里的"七步"是内部溯源标注,不面向用户,保留。)遗留 1 处:搜索/项目卡的 stage 显示旧阶段名「研究」(读侧 `PROJECT_STAGES` 白名单不含新建项目 startStage `brief` → fallback),纯展示、归下面小项。
 
-### 4. AI 出的选题采纳后归类为"手动灵感"
-明明是 AI 出题采纳的,选题池却把来源统计到「**手动灵感 1**」,而不是「AI 选题」来源。归类逻辑不对,"选题来源"统计会失真。
+### 4. ⚠️ AI 出的选题采纳后归类为"手动灵感"(根因已定位,待修)
+选题池把 AI 出题采纳的候选统计到「手动灵感」而非 AI 来源。**连库坐实**:promoted 候选 `cand-1ddf1e04-76` 的 `source`=`idea`。**根因**:候选有两条创建路径——`createFromAIResult`(AI,`source`=trend/benchmark/demand)vs `createCandidate`(手动,固定 `source`='idea')。这条 AI 候选落到了 `idea`,说明**采纳路径没保住 AI provenance / 或 topic.generate 节点没正确设 `source`**。修复需追 AI 管线运行态(topic.generate 输出的 source 字段 + 采纳路由),**不宜盲改,单开任务修**。
 
-### 5. 「使用情况分析」默认开着(隐私问题)
-偏好设置里 `pref-analytics` 默认 = 开(checked=true)。但产品是隐私优先的本地软件,`docs/PROTECTION.md` §4 明确「任何 telemetry 默认关 / 零收集」。**分析默认开与自己的隐私原则矛盾**,对一个主打"数据不出本机"的产品是信任伤害。应默认关。
+### 5. ✅ 「使用情况分析」默认开着 —— 已修(默认关)
+`docs/PROTECTION.md` §4 明确「telemetry 默认关 / 零收集」,但 `analyticsEnabled` schema/repository/service 默认全 =`true`,与隐私原则矛盾。**已修**:4 处默认翻 `false`(schema 列 + DDL + repo defaults + service getPreferences fallback),2 处默认断言测试同步更新,settings 测试 37/37 绿。**补注**:该开关是 **dormant**(全仓无真实遥测消费点,纯 UI),翻默认是原则对齐、功能零影响;当前用户行本就 =false。
 
 ---
 
@@ -111,8 +109,8 @@
 
 ## 八、补充发现(继续细测·选题页深测)
 
-### ⚠️ 新增中等:选题流转漏斗计数不准
-候选「AI工具用了一堆」DB 状态 = `promoted`(已立项,且真建了 project-85),但选题页**流转漏斗显示「已立项 0 / 待补充 1」**——`promoted` 状态没被计入「已立项」计数。用户看漏斗会误以为没立项过。连库实测坐实(candidates.status=promoted,projects 表有对应项目)。
+### ✅ 撤回:选题流转漏斗计数"不准"—— 复核后是**误报**
+先前报「已立项 0 / 待补充 1」疑似 promoted 没计入。**连库复核推翻**:promoted 候选 `cand-1ddf1e04-76` **有 1 条对应 `topic_promotions` 行**,`promotionsCount`=1,funnel 代码 `{ label:"已立项", count: counts.promotionsCount }` 正确会显示 1。原「已立项0」是 **stale UI / 我看漏斗的时点早于 promote 落库**,**不是代码 bug**,撤回。(与搜索那次同类:先前基于瞬时快照过早下结论,连库后修正。)
 
 ### ✅ 再次验证 AI 能用 + 出色的自我感知
 点「基于定位出题」→ 调通 minimax 出 8 条,且 AI **自我感知无定位母版** → 警告「这批没定位依据、会污染候选池」→ 主动提议「先产一份定位提案」。编导 agent 行为很成熟。
