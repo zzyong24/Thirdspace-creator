@@ -70,9 +70,17 @@ describe("G2 — domain acceptance (SPEC §22)", () => {
   it("KnowledgeRevision is append-only/immutable (rev #1 byte-identical after rev #2)", async () => {
     const item = await service.createKnowledge(ctxA, { title: "T", content: "v1" });
     const firstRevId = item.currentRevisionId;
-    const before = await repo.getRevision(ctxA.userId, firstRevId);
+    const before = await repo.getRevision(
+      ctxA.userId,
+      ctxA.accountId ?? null,
+      firstRevId,
+    );
     await service.createRevision(ctxA, item.id, { content: "v2" });
-    const after = await repo.getRevision(ctxA.userId, firstRevId);
+    const after = await repo.getRevision(
+      ctxA.userId,
+      ctxA.accountId ?? null,
+      firstRevId,
+    );
     expect(after).toEqual(before);
   });
 

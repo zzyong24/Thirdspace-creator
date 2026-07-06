@@ -19,12 +19,18 @@ import {
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
-function makeRepo(db: Db, userId: string, tag = userId): ReviewsRepository {
+function makeRepo(
+  db: Db,
+  userId: string,
+  tag = userId,
+  accountId: string | null = null,
+): ReviewsRepository {
   let seq = 0;
   return createReviewsRepository(db, {
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${tag}-${++seq}`,
     userId,
+    accountId,
   });
 }
 
@@ -230,5 +236,52 @@ describe("reviews repository (user-scoped, Step 2)", () => {
     const done = await repoA.completeReview(review.id);
     expect(done.status).toBe("completed");
     expect(done.completedAt).toBe(NOW);
+  });
+
+  // [T-136 切片 b] 号维度隔离:同一 user 下两个抖音号。
+  it("accountId-scoped repo only sees its own account's reviews; null sees all; create stamps accountId", async () => {
+    const mk = (projectId: string) => ({
+      projectId,
+      reviewType: "project",
+      contentOutputId: null,
+      periodStart: NOW,
+      periodEnd: NOW,
+      reportArtifactId: null,
+    });
+    const repoA = makeRepo(db, "user-a", "acc-a", "account-a");
+    const repoB = makeRepo(db, "user-a", "acc-b", "account-b");
+    const repoNull = makeRepo(db, "user-a", "acc-n", null);
+
+    const rA = await repoA.createReview(mk("proj-shared"));
+    const rB = await repoB.createReview(mk("proj-shared"));
+    // create stamp。
+    expect(rA.accountId).toBe("account-a");
+    expect(rB.accountId).toBe("account-b");
+
+    // listReviewsByProject 号门收窄:同一 projectId,各号只见本号。
+    expect(
+      (await repoA.listReviewsByProject("proj-shared")).map((r) => r.id),
+    ).toEqual([rA.id]);
+    expect(
+      (await repoB.listReviewsByProject("proj-shared")).map((r) => r.id),
+    ).toEqual([rB.id]);
+    // null 号 → 不过滤,两条都见。
+    expect(
+      (await repoNull.listReviewsByProject("proj-shared")).map((r) => r.id).sort(),
+    ).toEqual([rA.id, rB.id].sort());
+
+    // 跨号 get → 404。
+    await expect(repoB.getReview(rA.id)).rejects.toThrow();
+
+    // review_insights 随号盖章 + 号门 count。
+    await repoA.createInsight(rA.id, {
+      insightType: "success",
+      title: "T",
+      description: "",
+      evidence: {},
+      priority: 0,
+    });
+    expect(await repoA.countInsights(rA.id)).toBe(1);
+    expect((await repoA.listInsights(rA.id)).length).toBe(1);
   });
 });

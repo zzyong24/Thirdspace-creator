@@ -61,34 +61,55 @@ export interface RepoDeps {
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
 }
 
+// [T-136 切片 b] 第二所有权维度(多抖音号 / 多人设)。knowledge 的 repo 一次构造、
+// userId 逐调用传入(非 baked deps),故 accountId 也随调用透传(与 userId 并列):
+// 非空 → owned-root(knowledge_items)读门叠 eq(accountId);null(存量/未选号)→ 退化
+// 不过滤,create 落 NULL 兜底。子表 revisions/relations 无此列,经父行门透传。
+export type AccountScope = string | null;
+
 export interface KnowledgeRepository {
   seedKnowledge(rows: KnowledgeItemRow[]): Promise<void>;
   seedRevisions(rows: KnowledgeRevisionRow[]): Promise<void>;
   seedRelations(rows: KnowledgeRelationDbRow[]): Promise<void>;
   // [T-079a] list/get 返回带战绩投影的行(usedCount/usedInPublished);写路径的
   // 内部所有权门仍走轻量行读,不为门查询付统计成本。
-  list(userId: string): Promise<KnowledgeItemWithStats[]>;
-  get(userId: string, knowledgeId: string): Promise<KnowledgeItemWithStats>;
+  // [T-136 切片 b] 每个方法 userId 后紧跟 accountId(号维度收窄;null → 不过滤)。
+  list(userId: string, accountId: AccountScope): Promise<KnowledgeItemWithStats[]>;
+  get(
+    userId: string,
+    accountId: AccountScope,
+    knowledgeId: string,
+  ): Promise<KnowledgeItemWithStats>;
   getRevision(
     userId: string,
+    accountId: AccountScope,
     revisionId: string,
   ): Promise<KnowledgeRevisionRow>;
   listRevisions(
     userId: string,
+    accountId: AccountScope,
     knowledgeId: string,
   ): Promise<KnowledgeRevisionRow[]>;
   listRelations(
     userId: string,
+    accountId: AccountScope,
     knowledgeId: string,
   ): Promise<KnowledgeRelationRow[]>;
   // [T-091] 全量语义边(user-scoped):经 source 端 knowledge_items 的 user_id 收窄
   // (relations 子表无 user_id 列,所有权经父行 join 保证)。单查询,无 N+1。
-  listAllRelations(userId: string): Promise<KnowledgeRelationRow[]>;
+  listAllRelations(
+    userId: string,
+    accountId: AccountScope,
+  ): Promise<KnowledgeRelationRow[]>;
   // [T-092] 已回流评论锚集合:active 且 sourceMetadata.origin='comment_backflow'
   // 的知识行,聚合其 signalExternalIds(幂等反查;库量级几百行,内存 diff)。
-  listBackflowedSignalExternalIds(userId: string): Promise<Set<string>>;
+  listBackflowedSignalExternalIds(
+    userId: string,
+    accountId: AccountScope,
+  ): Promise<Set<string>>;
   create(
     userId: string,
+    accountId: AccountScope,
     input: {
       title: string;
       knowledgeType?: string;
@@ -102,11 +123,13 @@ export interface KnowledgeRepository {
   ): Promise<KnowledgeItemWithStats>;
   createRevision(
     userId: string,
+    accountId: AccountScope,
     knowledgeId: string,
     input: { content: string },
   ): Promise<KnowledgeRevisionRow>;
   createRelation(
     userId: string,
+    accountId: AccountScope,
     sourceKnowledgeId: string,
     input: {
       targetKnowledgeId: string;
@@ -115,9 +138,14 @@ export interface KnowledgeRepository {
       createdByType?: "user" | "ai";
     },
   ): Promise<KnowledgeRelationRow>;
-  archive(userId: string, knowledgeId: string): Promise<KnowledgeItemWithStats>;
+  archive(
+    userId: string,
+    accountId: AccountScope,
+    knowledgeId: string,
+  ): Promise<KnowledgeItemWithStats>;
   removeRelation(
     userId: string,
+    accountId: AccountScope,
     sourceKnowledgeId: string,
     input: { targetKnowledgeId: string; relationType: string },
   ): Promise<KnowledgeRelationRow>;
@@ -132,8 +160,10 @@ export function createKnowledgeRepository(
   deps: RepoDeps,
 ): KnowledgeRepository {
   // 轻量行读:写路径/子实体的所有权门用它(不付战绩统计成本)。
+  // [T-136 切片 b] accountId 非空 → 叠号门(and 忽略 undefined → null 时退化不过滤,§A)。
   async function getRow(
     userId: string,
+    accountId: AccountScope,
     knowledgeId: string,
   ): Promise<KnowledgeItemRow> {
     const rows = await db
@@ -143,6 +173,7 @@ export function createKnowledgeRepository(
         and(
           eq(knowledgeItems.id, knowledgeId),
           eq(knowledgeItems.userId, userId),
+          accountId ? eq(knowledgeItems.accountId, accountId) : undefined,
         ),
       );
     const row = rows[0];
@@ -203,9 +234,10 @@ export function createKnowledgeRepository(
 
   async function get(
     userId: string,
+    accountId: AccountScope,
     knowledgeId: string,
   ): Promise<KnowledgeItemWithStats> {
-    const row = await getRow(userId, knowledgeId);
+    const row = await getRow(userId, accountId, knowledgeId);
     const [withStats] = await attachStats(userId, [row]);
     return withStats!;
   }
@@ -224,11 +256,17 @@ export function createKnowledgeRepository(
       await db.insert(knowledgeRelations).values(rows).onConflictDoNothing();
     },
 
-    async list(userId) {
+    async list(userId, accountId) {
       const rows = await db
         .select()
         .from(knowledgeItems)
-        .where(eq(knowledgeItems.userId, userId))
+        .where(
+          and(
+            eq(knowledgeItems.userId, userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            accountId ? eq(knowledgeItems.accountId, accountId) : undefined,
+          ),
+        )
         .orderBy(asc(knowledgeItems.createdAt));
       // [T-079a] 列表带战绩投影(一次 grouped 查询,无 N+1)。
       return attachStats(userId, rows);
@@ -236,23 +274,23 @@ export function createKnowledgeRepository(
 
     get,
 
-    async getRevision(userId, revisionId) {
+    async getRevision(userId, accountId, revisionId) {
       const rows = await db
         .select()
         .from(knowledgeRevisions)
         .where(eq(knowledgeRevisions.id, revisionId));
       const rev = rows[0];
       if (!rev) throw new OwnershipError("Revision not found");
-      // Ownership gate: the parent item must be owned by `userId` (throws if not).
-      await getRow(userId, rev.knowledgeItemId);
+      // Ownership gate: the parent item must be owned by `userId` (+号) (throws if not).
+      await getRow(userId, accountId, rev.knowledgeItemId);
       return rev;
     },
 
-    async listRevisions(userId, knowledgeId) {
-      // Ownership gate on the parent item (cross-user / unknown id → 404, no
+    async listRevisions(userId, accountId, knowledgeId) {
+      // Ownership gate on the parent item (cross-user / 跨号 / unknown id → 404, no
       // leak). Newest revision first so the caller can read the current head
       // (highest revisionNumber) as rows[0] without re-querying the item.
-      await getRow(userId, knowledgeId);
+      await getRow(userId, accountId, knowledgeId);
       return db
         .select()
         .from(knowledgeRevisions)
@@ -260,9 +298,9 @@ export function createKnowledgeRepository(
         .orderBy(desc(knowledgeRevisions.revisionNumber));
     },
 
-    async listRelations(userId, knowledgeId) {
+    async listRelations(userId, accountId, knowledgeId) {
       // Ownership gate on the source item.
-      await getRow(userId, knowledgeId);
+      await getRow(userId, accountId, knowledgeId);
       const rows = await db
         .select()
         .from(knowledgeRelations)
@@ -270,9 +308,10 @@ export function createKnowledgeRepository(
       return rows.map(parseRelation);
     },
 
-    async listAllRelations(userId) {
+    async listAllRelations(userId, accountId) {
       // [T-091] 全量边:relations 无 user_id 列 → join source 端 knowledge_items
       // 以 user_id 收窄(createRelation 已保证两端同 owner,source 端过滤即够)。
+      // [T-136 切片 b] 号维度:经 source 端 knowledge_items.account_id 收窄(非空才叠)。
       const rows = await db
         .select({ relation: knowledgeRelations })
         .from(knowledgeRelations)
@@ -280,11 +319,16 @@ export function createKnowledgeRepository(
           knowledgeItems,
           eq(knowledgeItems.id, knowledgeRelations.sourceKnowledgeId),
         )
-        .where(eq(knowledgeItems.userId, userId));
+        .where(
+          and(
+            eq(knowledgeItems.userId, userId),
+            accountId ? eq(knowledgeItems.accountId, accountId) : undefined,
+          ),
+        );
       return rows.map((r) => parseRelation(r.relation));
     },
 
-    async listBackflowedSignalExternalIds(userId) {
+    async listBackflowedSignalExternalIds(userId, accountId) {
       // [T-092] 幂等反查:active + origin='comment_backflow' 的行,聚合
       // sourceMetadata.signalExternalIds(jsonb 内数组;行数量级几百,内存收集)。
       const rows = await db
@@ -293,6 +337,8 @@ export function createKnowledgeRepository(
         .where(
           and(
             eq(knowledgeItems.userId, userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            accountId ? eq(knowledgeItems.accountId, accountId) : undefined,
             eq(knowledgeItems.status, "active"),
             sql`${knowledgeItems.sourceMetadata} ->> 'origin' = 'comment_backflow'`,
           ),
@@ -309,7 +355,7 @@ export function createKnowledgeRepository(
       return set;
     },
 
-    async create(userId, input) {
+    async create(userId, accountId, input) {
       const now = deps.now();
       const itemId = deps.nextId("knowledge");
       const revId = deps.nextId("revision");
@@ -319,6 +365,8 @@ export function createKnowledgeRepository(
       await db.insert(knowledgeItems).values({
         id: itemId,
         userId,
+        // [T-136 切片 b] 号维度盖章(null 兜底)。
+        accountId,
         currentRevisionId: revId,
         knowledgeType: input.knowledgeType ?? "note",
         title: input.title,
@@ -342,12 +390,12 @@ export function createKnowledgeRepository(
         structuredData: {},
         createdAt: now,
       });
-      return get(userId, itemId);
+      return get(userId, accountId, itemId);
     },
 
-    async createRevision(userId, knowledgeId, input) {
-      // Ownership gate: a cross-user / unknown id throws before any write.
-      await getRow(userId, knowledgeId);
+    async createRevision(userId, accountId, knowledgeId, input) {
+      // Ownership gate: a cross-user / 跨号 / unknown id throws before any write.
+      await getRow(userId, accountId, knowledgeId);
 
       // Allocate the next revision number (max+1, starting at 1). Append-only:
       // we never UPDATE/DELETE an existing revision.
@@ -386,14 +434,14 @@ export function createKnowledgeRepository(
       return rows[0]!;
     },
 
-    async createRelation(userId, sourceKnowledgeId, input) {
+    async createRelation(userId, accountId, sourceKnowledgeId, input) {
       // Reject a self-link before touching ownership (cheap guard first).
       if (sourceKnowledgeId === input.targetKnowledgeId) {
         throw new ConflictError("Cannot link a knowledge item to itself");
       }
-      // Both ends must be owned (cross-user link → OwnershipError, no leak).
-      await getRow(userId, sourceKnowledgeId);
-      await getRow(userId, input.targetKnowledgeId);
+      // Both ends must be owned (cross-user / 跨号 link → OwnershipError, no leak).
+      await getRow(userId, accountId, sourceKnowledgeId);
+      await getRow(userId, accountId, input.targetKnowledgeId);
 
       // [T-091] 幂等兜底:同向同类型边已存在 → 返回既有边,不重插(AI 候选门
       // 重复采纳同一对不产生重复行,SPEC §1.3)。
@@ -426,12 +474,12 @@ export function createKnowledgeRepository(
       return parseRelation(rows[0]!);
     },
 
-    async archive(userId, knowledgeId) {
-      // Ownership gate (cross-user / unknown id → 404, no leak). The §12-style
+    async archive(userId, accountId, knowledgeId) {
+      // Ownership gate (cross-user / 跨号 / unknown id → 404, no leak). The §12-style
       // status transition (active → archived) is enforced by the SERVICE; the
       // repo only stamps the new status + archivedAt + updatedAt. Re-read scoped
       // so a cross-user update surfaces as a no-op (WHERE matched 0 rows).
-      await getRow(userId, knowledgeId);
+      await getRow(userId, accountId, knowledgeId);
       const now = deps.now();
       await db
         .update(knowledgeItems)
@@ -442,13 +490,13 @@ export function createKnowledgeRepository(
             eq(knowledgeItems.userId, userId),
           ),
         );
-      return get(userId, knowledgeId);
+      return get(userId, accountId, knowledgeId);
     },
 
-    async removeRelation(userId, sourceKnowledgeId, input) {
+    async removeRelation(userId, accountId, sourceKnowledgeId, input) {
       // Ownership gate on the source item (the only end we need to own to drop
-      // an outgoing relation; cross-user / unknown id → 404, no leak).
-      await getRow(userId, sourceKnowledgeId);
+      // an outgoing relation; cross-user / 跨号 / unknown id → 404, no leak).
+      await getRow(userId, accountId, sourceKnowledgeId);
       // Capture the row we're about to delete so the op can echo the removed
       // relation back (mirrors the create op's return shape). A missing relation
       // is a 404 (OwnershipError) — never reveal whether it ever existed.

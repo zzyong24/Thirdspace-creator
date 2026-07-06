@@ -107,7 +107,13 @@ export function createReviewsService(deps: ServiceDeps): ReviewsService {
   const { db, now, nextId, projects, publishing, analytics } = deps;
 
   function repoFor(ctx: RequestContext): ReviewsRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+    // [T-136 切片 b] 号维度透传(ctx.accountId 属主已由 resolveRequestContext 校验)。
+    const repoDeps: RepoDeps = {
+      now,
+      nextId,
+      userId: ctx.userId,
+      accountId: ctx.accountId ?? null,
+    };
     return createReviewsRepository(db, repoDeps);
   }
 

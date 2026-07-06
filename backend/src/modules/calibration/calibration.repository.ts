@@ -28,6 +28,9 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // the ownership boundary, baked in at construction
+  // [T-136 切片 b] 第二所有权维度(多抖音号 / 多人设)。非空 → 读门叠 eq(table.accountId);
+  // null(存量/未选号)→ 读门退化不过滤,create 落 NULL 兜底。逐个 list/get/count/exists 都叠。
+  accountId: string | null;
 }
 
 export interface RubricDimension {
@@ -150,7 +153,14 @@ export function createCalibrationRepository(
     const rows = await db
       .select()
       .from(rubrics)
-      .where(and(eq(rubrics.userId, deps.userId), eq(rubrics.id, rubricId)));
+      .where(
+        and(
+          eq(rubrics.userId, deps.userId),
+          // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤,§A)。
+          deps.accountId ? eq(rubrics.accountId, deps.accountId) : undefined,
+          eq(rubrics.id, rubricId),
+        ),
+      );
     const row = rows[0];
     if (!row) {
       throw new OwnershipError(`OwnershipError: rubric not found: ${rubricId}`);
@@ -167,6 +177,10 @@ export function createCalibrationRepository(
       .where(
         and(
           eq(rubricVersions.userId, deps.userId),
+          // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+          deps.accountId
+            ? eq(rubricVersions.accountId, deps.accountId)
+            : undefined,
           eq(rubricVersions.id, versionId),
         ),
       );
@@ -186,6 +200,10 @@ export function createCalibrationRepository(
       .where(
         and(
           eq(predictions.userId, deps.userId),
+          // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+          deps.accountId
+            ? eq(predictions.accountId, deps.accountId)
+            : undefined,
           eq(predictions.id, predictionId),
         ),
       );
@@ -233,6 +251,8 @@ export function createCalibrationRepository(
         .values({
           id: deps.nextId("rubric"),
           userId: deps.userId,
+          // [T-136 切片 b] 号维度盖章(null 兜底)。
+          accountId: deps.accountId,
           name,
           currentVersionId: null,
           createdAt: deps.now(),
@@ -248,6 +268,8 @@ export function createCalibrationRepository(
         .values({
           id: deps.nextId("rubricver"),
           userId: deps.userId,
+          // [T-136 切片 b] 号维度盖章(与父 rubric 同号;null 兜底)。
+          accountId: deps.accountId,
           rubricId: input.rubricId,
           versionNumber: input.versionNumber,
           dimensions: input.dimensions,
@@ -284,6 +306,10 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(rubricVersions.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(rubricVersions.accountId, deps.accountId)
+              : undefined,
             eq(rubricVersions.rubricId, rubricId),
           ),
         )
@@ -297,6 +323,10 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(rubricVersions.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(rubricVersions.accountId, deps.accountId)
+              : undefined,
             eq(rubricVersions.rubricId, rubricId),
           ),
         );
@@ -309,6 +339,8 @@ export function createCalibrationRepository(
         .values({
           id: deps.nextId("pred"),
           userId: deps.userId,
+          // [T-136 切片 b] 号维度盖章(null 兜底)。
+          accountId: deps.accountId,
           subjectType: input.subjectType,
           subjectId: input.subjectId,
           rubricVersionId: input.rubricVersionId,
@@ -348,17 +380,22 @@ export function createCalibrationRepository(
     },
 
     async listPredictions({ limit, offset }) {
+      // [T-136 切片 b] 号维度收窄:accountId 非空才叠 eq(null → 只按 userId,全量,旧行为)。
+      const where = and(
+        eq(predictions.userId, deps.userId),
+        deps.accountId ? eq(predictions.accountId, deps.accountId) : undefined,
+      );
       const rows = await db
         .select()
         .from(predictions)
-        .where(eq(predictions.userId, deps.userId))
+        .where(where)
         .orderBy(desc(predictions.createdAt))
         .limit(limit)
         .offset(offset);
       const all = await db
         .select({ id: predictions.id })
         .from(predictions)
-        .where(eq(predictions.userId, deps.userId));
+        .where(where);
       return { rows, total: all.length };
     },
 
@@ -370,6 +407,8 @@ export function createCalibrationRepository(
         .values({
           id: deps.nextId("calibres"),
           userId: deps.userId,
+          // [T-136 切片 b] 号维度盖章(与父 prediction 同号;null 兜底)。
+          accountId: deps.accountId,
           predictionId: input.predictionId,
           ingestionRunId: input.ingestionRunId,
           actualMetrics: input.actualMetrics,
@@ -383,6 +422,10 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationResults.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(calibrationResults.accountId, deps.accountId)
+              : undefined,
             eq(calibrationResults.predictionId, input.predictionId),
           ),
         );
@@ -396,6 +439,10 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationResults.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(calibrationResults.accountId, deps.accountId)
+              : undefined,
             eq(calibrationResults.predictionId, predictionId),
           ),
         );
@@ -406,7 +453,15 @@ export function createCalibrationRepository(
       return db
         .select()
         .from(predictions)
-        .where(eq(predictions.userId, deps.userId))
+        .where(
+          and(
+            eq(predictions.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(predictions.accountId, deps.accountId)
+              : undefined,
+          ),
+        )
         .orderBy(desc(predictions.createdAt));
     },
 
@@ -414,7 +469,15 @@ export function createCalibrationRepository(
       return db
         .select()
         .from(calibrationResults)
-        .where(eq(calibrationResults.userId, deps.userId))
+        .where(
+          and(
+            eq(calibrationResults.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(calibrationResults.accountId, deps.accountId)
+              : undefined,
+          ),
+        )
         .orderBy(desc(calibrationResults.createdAt));
     },
 
@@ -428,6 +491,10 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationRuleSuggestions.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(calibrationRuleSuggestions.accountId, deps.accountId)
+              : undefined,
             eq(calibrationRuleSuggestions.learningId, input.learningId),
             eq(calibrationRuleSuggestions.rubricId, input.rubricId),
             eq(calibrationRuleSuggestions.status, "pending"),
@@ -439,6 +506,8 @@ export function createCalibrationRepository(
         .values({
           id: deps.nextId("calibsug"),
           userId: deps.userId,
+          // [T-136 切片 b] 号维度盖章(null 兜底)。
+          accountId: deps.accountId,
           learningId: input.learningId,
           rubricId: input.rubricId,
           status: "pending",
@@ -459,6 +528,10 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationRuleSuggestions.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(calibrationRuleSuggestions.accountId, deps.accountId)
+              : undefined,
             eq(calibrationRuleSuggestions.id, suggestionId),
           ),
         );
@@ -472,27 +545,25 @@ export function createCalibrationRepository(
     },
 
     async listPendingRuleSuggestions({ limit, offset }) {
+      // [T-136 切片 b] 号维度收窄(非空才叠;null → 只按 userId+status,全量,旧行为)。
+      const where = and(
+        eq(calibrationRuleSuggestions.userId, deps.userId),
+        deps.accountId
+          ? eq(calibrationRuleSuggestions.accountId, deps.accountId)
+          : undefined,
+        eq(calibrationRuleSuggestions.status, "pending"),
+      );
       const rows = await db
         .select()
         .from(calibrationRuleSuggestions)
-        .where(
-          and(
-            eq(calibrationRuleSuggestions.userId, deps.userId),
-            eq(calibrationRuleSuggestions.status, "pending"),
-          ),
-        )
+        .where(where)
         .orderBy(desc(calibrationRuleSuggestions.createdAt))
         .limit(limit)
         .offset(offset);
       const all = await db
         .select({ id: calibrationRuleSuggestions.id })
         .from(calibrationRuleSuggestions)
-        .where(
-          and(
-            eq(calibrationRuleSuggestions.userId, deps.userId),
-            eq(calibrationRuleSuggestions.status, "pending"),
-          ),
-        );
+        .where(where);
       return { rows, total: all.length };
     },
 

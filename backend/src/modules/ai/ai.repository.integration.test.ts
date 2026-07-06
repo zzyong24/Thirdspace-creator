@@ -11,12 +11,18 @@ import { OwnershipError } from "./ai.errors";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
-function repoFor(db: Db, userId: string) {
+function repoFor(
+  db: Db,
+  userId: string,
+  accountId: string | null = null,
+  tag = userId,
+) {
   let seq = 0;
   return createAiRepository(db, {
     now: () => NOW,
-    nextId: (prefix: string) => `${prefix}-${userId}-${++seq}`,
+    nextId: (prefix: string) => `${prefix}-${tag}-${++seq}`,
     userId,
+    accountId,
   });
 }
 
@@ -334,5 +340,67 @@ describe("ai repository (pglite)", () => {
       scope: "global",
     });
     expect(listB.total).toBe(0);
+  });
+
+  // [T-136 切片 b] 号维度隔离:同一 user 下两个抖音号,ai_conversations / ai_tasks 盖章 + 号门。
+  it("accountId-scoped repo isolates conversations/tasks across accounts; null sees all; create stamps accountId", async () => {
+    const repoA = repoFor(db, "user-a", "account-a", "acc-a");
+    const repoB = repoFor(db, "user-a", "account-b", "acc-b");
+    const repoNull = repoFor(db, "user-a", null, "acc-n");
+
+    const convA = await repoA.createConversation({
+      title: "号A 会话",
+      projectId: null,
+    });
+    const convB = await repoB.createConversation({
+      title: "号B 会话",
+      projectId: null,
+    });
+    expect(convA.accountId).toBe("account-a");
+    expect(convB.accountId).toBe("account-b");
+
+    // listConversations 号门:各号只见本号;null 见全部。
+    expect(
+      (await repoA.listConversations({ limit: 20, offset: 0 })).rows.map(
+        (r) => r.id,
+      ),
+    ).toEqual([convA.id]);
+    expect(
+      (await repoB.listConversations({ limit: 20, offset: 0 })).rows.map(
+        (r) => r.id,
+      ),
+    ).toEqual([convB.id]);
+    expect(
+      (await repoNull.listConversations({ limit: 20, offset: 0 })).rows
+        .map((r) => r.id)
+        .sort(),
+    ).toEqual([convA.id, convB.id].sort());
+
+    // 跨号 requireConversation → 404。
+    await expect(repoB.requireConversation(convA.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+
+    const taskA = await repoA.createTask({
+      projectId: "project-1",
+      contentOutputId: null,
+      taskType: "script.rewrite",
+      inputData: {},
+      modelKey: "claude-fable-5",
+      idempotencyKey: "idem-A",
+      requestedAt: NOW,
+    });
+    expect(taskA.accountId).toBe("account-a");
+
+    // listTasks + requireTask 号门。
+    expect(
+      (await repoA.listTasks({ limit: 20, offset: 0 })).rows.map((r) => r.id),
+    ).toEqual([taskA.id]);
+    expect((await repoB.listTasks({ limit: 20, offset: 0 })).rows).toHaveLength(
+      0,
+    );
+    await expect(repoB.requireTask(taskA.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
   });
 });

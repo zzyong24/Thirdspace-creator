@@ -91,30 +91,32 @@ export interface KnowledgeService {
 export function createKnowledgeService(
   repo: KnowledgeRepository,
 ): KnowledgeService {
+  // [T-136 切片 b] 号维度透传:ctx.accountId 属主已由 resolveRequestContext 校验可信;
+  // 缺省(未选号/存量)→ null → repo owned-root 读门退化不过滤。每个 repo 调用 userId 后紧跟它。
   return {
     async listKnowledge(ctx) {
-      return repo.list(ctx.userId);
+      return repo.list(ctx.userId, ctx.accountId ?? null);
     },
 
     async getKnowledge(ctx, knowledgeId) {
-      return repo.get(ctx.userId, knowledgeId);
+      return repo.get(ctx.userId, ctx.accountId ?? null, knowledgeId);
     },
 
     async listRevisions(ctx, knowledgeId) {
       // Read op: the parent's ownership gate lives in the repo (404 on a
-      // cross-user / unknown id). Returns newest-first so the head revision
+      // cross-user / 跨号 / unknown id). Returns newest-first so the head revision
       // (with the current content) is rows[0].
-      return repo.listRevisions(ctx.userId, knowledgeId);
+      return repo.listRevisions(ctx.userId, ctx.accountId ?? null, knowledgeId);
     },
 
     async listRelations(ctx, knowledgeId) {
       // Read op: relations of the (owned) source item; repo gates ownership.
-      return repo.listRelations(ctx.userId, knowledgeId);
+      return repo.listRelations(ctx.userId, ctx.accountId ?? null, knowledgeId);
     },
 
     async listAllRelations(ctx) {
       // [T-091] 全量边读:所有权由 repo 的 source 端 join 收窄。
-      return repo.listAllRelations(ctx.userId);
+      return repo.listAllRelations(ctx.userId, ctx.accountId ?? null);
     },
 
     async createKnowledge(ctx, input) {
@@ -125,6 +127,7 @@ export function createKnowledgeService(
       if (anchors.length > 0) {
         const backflowed = await repo.listBackflowedSignalExternalIds(
           ctx.userId,
+          ctx.accountId ?? null,
         );
         const hit = anchors.find((anchor) => backflowed.has(anchor));
         if (hit) {
@@ -134,15 +137,16 @@ export function createKnowledgeService(
         }
       }
       // Items are born active with revision #1 (repo owns the UoW + stamps).
-      return repo.create(ctx.userId, input);
+      return repo.create(ctx.userId, ctx.accountId ?? null, input);
     },
 
     async createRevision(ctx, knowledgeId, input) {
       // Read the current head number before appending so we can assert the new
       // revision strictly increases it (append-only invariant, defence-in-depth).
-      const before = await repo.get(ctx.userId, knowledgeId);
-      const head = await repo.getRevision(ctx.userId, before.currentRevisionId);
-      const rev = await repo.createRevision(ctx.userId, knowledgeId, input);
+      const acc = ctx.accountId ?? null;
+      const before = await repo.get(ctx.userId, acc, knowledgeId);
+      const head = await repo.getRevision(ctx.userId, acc, before.currentRevisionId);
+      const rev = await repo.createRevision(ctx.userId, acc, knowledgeId, input);
       if (rev.revisionNumber <= head.revisionNumber) {
         throw new Error(
           `Revision numbering must strictly increase (got ${rev.revisionNumber} after ${head.revisionNumber})`,
@@ -152,9 +156,14 @@ export function createKnowledgeService(
     },
 
     async createRelation(ctx, knowledgeId, input) {
-      // Self-link + cross-user ownership are enforced by the repo; surface
+      // Self-link + cross-user / 跨号 ownership are enforced by the repo; surface
       // unswallowed (Conflict→409, Ownership→404 at the dispatch route).
-      return repo.createRelation(ctx.userId, knowledgeId, input);
+      return repo.createRelation(
+        ctx.userId,
+        ctx.accountId ?? null,
+        knowledgeId,
+        input,
+      );
     },
 
     async archiveKnowledge(ctx, knowledgeId) {
@@ -162,20 +171,26 @@ export function createKnowledgeService(
       // assets.trashAsset). The service owns the transition guard — archiving an
       // already-archived item is an InvalidTransitionError (→409); the repo only
       // gates ownership + stamps the new status/archivedAt.
-      const item = await repo.get(ctx.userId, knowledgeId);
+      const acc = ctx.accountId ?? null;
+      const item = await repo.get(ctx.userId, acc, knowledgeId);
       if (item.status !== "active") {
         throw new InvalidTransitionError(
           `Cannot archive a knowledge item in status '${item.status}'`,
         );
       }
-      return repo.archive(ctx.userId, knowledgeId);
+      return repo.archive(ctx.userId, acc, knowledgeId);
     },
 
     async removeRelation(ctx, knowledgeId, input) {
       // Drop one outgoing relation off the (owned) source item. Ownership of the
       // source + existence of the relation are enforced by the repo (a missing
       // relation → OwnershipError → 404, no existence leak).
-      return repo.removeRelation(ctx.userId, knowledgeId, input);
+      return repo.removeRelation(
+        ctx.userId,
+        ctx.accountId ?? null,
+        knowledgeId,
+        input,
+      );
     },
   };
 }

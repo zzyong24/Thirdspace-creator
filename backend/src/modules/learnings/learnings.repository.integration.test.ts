@@ -10,12 +10,18 @@ import { OwnershipError } from "./learnings.errors";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
-function repoFor(db: Db, userId: string, tag = userId) {
+function repoFor(
+  db: Db,
+  userId: string,
+  tag = userId,
+  accountId: string | null = null,
+) {
   let seq = 0;
   return createLearningsRepository(db, {
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${tag}-${++seq}`,
     userId,
+    accountId,
   });
 }
 
@@ -114,6 +120,7 @@ describe("learnings repository (integration, user-scoped)", () => {
       now: () => `2026-06-2${++seq}T00:00:00.000Z`,
       nextId: (prefix: string) => `${prefix}-${seq}`,
       userId: "user-a",
+      accountId: null,
     });
     const first = await repo.createLearning({
       title: "first",
@@ -285,5 +292,47 @@ describe("learnings repository (integration, user-scoped)", () => {
     await repo.createApplication(x.id, { projectId: "p2", applicationNote: "" });
     expect(await repo.countApplications(x.id)).toBe(2);
     expect(await repo.countApplications(y.id)).toBe(0);
+  });
+
+  // [T-136 切片 b] 号维度隔离:同一 user 下两个抖音号(account-a / account-b)。
+  it("accountId-scoped repo only sees its own account's learnings; null sees all; create stamps accountId", async () => {
+    const mk = (title: string) => ({
+      title,
+      insight: "",
+      learningType: "strategy",
+      recommendation: "",
+      reviewId: null,
+      confidenceScore: 0,
+    });
+    const repoA = repoFor(db, "user-a", "acc-a", "account-a");
+    const repoB = repoFor(db, "user-a", "acc-b", "account-b");
+    const repoNull = repoFor(db, "user-a", "acc-n", null);
+
+    const a = await repoA.createLearning(mk("A-号"));
+    const b = await repoB.createLearning(mk("B-号"));
+    // create stamp:account_id 落到行上。
+    expect(a.accountId).toBe("account-a");
+    expect(b.accountId).toBe("account-b");
+
+    // 号 A 的 repo 只看到 A 的经验(list 号门收窄)。
+    const listA = await repoA.listLearnings({ limit: 50, offset: 0 });
+    expect(listA.rows.map((r) => r.id)).toEqual([a.id]);
+    // 号 B 只看到 B 的。
+    const listB = await repoB.listLearnings({ limit: 50, offset: 0 });
+    expect(listB.rows.map((r) => r.id)).toEqual([b.id]);
+    // null 号(未选号/存量)→ 退化不过滤,两条都看到。
+    const listNull = await repoNull.listLearnings({ limit: 50, offset: 0 });
+    expect(listNull.rows.map((r) => r.id).sort()).toEqual([a.id, b.id].sort());
+
+    // 跨号 get 门:号 B 的 repo 取号 A 的 learning → OwnershipError(404,不泄露存在)。
+    await expect(repoB.getLearningRowById(a.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    // 本号 get 正常。
+    expect((await repoA.getLearningRowById(a.id)).id).toBe(a.id);
+
+    // learning_applications 也随号盖章 + 号门收窄计数。
+    await repoA.createApplication(a.id, { projectId: "p1", applicationNote: "" });
+    expect(await repoA.countApplications(a.id)).toBe(1);
   });
 });

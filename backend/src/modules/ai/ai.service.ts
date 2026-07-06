@@ -399,6 +399,8 @@ export function createAiService(deps: ServiceDeps): AiService {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
+      // [T-136 切片 b] 号维度透传(ctx.accountId 属主已由 resolveRequestContext 校验)。
+      accountId: ctx.accountId ?? null,
     });
   }
 

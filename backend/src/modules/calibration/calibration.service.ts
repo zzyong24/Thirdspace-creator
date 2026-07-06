@@ -373,7 +373,13 @@ export function createCalibrationService(
   const { db, now, nextId, ingestion, learnings, overview } = deps;
 
   function repoFor(ctx: RequestContext): CalibrationRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+    // [T-136 切片 b] 号维度透传(ctx.accountId 属主已由 resolveRequestContext 校验)。
+    const repoDeps: RepoDeps = {
+      now,
+      nextId,
+      userId: ctx.userId,
+      accountId: ctx.accountId ?? null,
+    };
     return createCalibrationRepository(db, repoDeps);
   }
 

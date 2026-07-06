@@ -16,12 +16,18 @@ import { OwnershipError } from "./calibration.errors";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
-function repoFor(db: Db, userId: string, tag = userId): CalibrationRepository {
+function repoFor(
+  db: Db,
+  userId: string,
+  tag = userId,
+  accountId: string | null = null,
+): CalibrationRepository {
   let seq = 0;
   return createCalibrationRepository(db, {
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${tag}-${++seq}`,
     userId,
+    accountId,
   });
 }
 
@@ -242,5 +248,61 @@ describe("calibration repository (integration, user-scoped)", () => {
       offset: 0,
     });
     expect(listAfter.total).toBe(0);
+  });
+
+  // [T-136 切片 b] 号维度隔离:同一 user 下两个抖音号,rubric→version→prediction 全链盖章 + 号门。
+  it("accountId-scoped repo isolates rubrics/predictions across accounts; null sees all; create stamps accountId", async () => {
+    const repoA = repoFor(db, "user-a", "acc-a", "account-a");
+    const repoB = repoFor(db, "user-a", "acc-b", "account-b");
+    const repoNull = repoFor(db, "user-a", "acc-n", null);
+
+    const rubricA = await repoA.createRubric({ name: "号A rubric" });
+    const rubricB = await repoB.createRubric({ name: "号B rubric" });
+    expect(rubricA.accountId).toBe("account-a");
+    expect(rubricB.accountId).toBe("account-b");
+
+    const vA = await repoA.insertRubricVersion({
+      rubricId: rubricA.id,
+      versionNumber: 1,
+      dimensions: DIMENSIONS,
+      changeSummary: "",
+    });
+    expect(vA.accountId).toBe("account-a");
+
+    const predA = await repoA.createPrediction({
+      subjectType: "content_output",
+      subjectId: "output-1",
+      rubricVersionId: vA.id,
+      predictedMetrics: {},
+      predictedConversion: {},
+      predictedScore: "10",
+      confidence: "high",
+    });
+    expect(predA.accountId).toBe("account-a");
+
+    // 号 B 看不到号 A 的 rubric / prediction(getter 号门 → 404)。
+    await expect(repoB.getRubric(rubricA.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    await expect(repoB.getPrediction(predA.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    // 本号 get 正常。
+    expect((await repoA.getRubric(rubricA.id)).id).toBe(rubricA.id);
+
+    // listAllPredictions 号门:A 只见自己那条;null 见全部。
+    expect((await repoA.listAllPredictions()).map((p) => p.id)).toEqual([
+      predA.id,
+    ]);
+    expect((await repoB.listAllPredictions()).map((p) => p.id)).toEqual([]);
+    expect((await repoNull.listAllPredictions()).map((p) => p.id)).toEqual([
+      predA.id,
+    ]);
+
+    // listRubricVersions 号门。
+    expect((await repoA.listRubricVersions(rubricA.id)).map((v) => v.id)).toEqual(
+      [vA.id],
+    );
+    expect(await repoA.countRubricVersions(rubricA.id)).toBe(1);
   });
 });

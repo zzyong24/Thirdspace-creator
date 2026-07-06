@@ -22,6 +22,9 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // the ownership boundary, baked in at construction
+  // [T-136 切片 b] 第二所有权维度(多抖音号 / 多人设)。非空 → 读门叠 eq(table.accountId);
+  // null(存量/未选号)→ 读门退化不过滤,create 落 NULL 兜底。
+  accountId: string | null;
 }
 
 export interface CreateReviewInput {
@@ -74,7 +77,14 @@ export function createReviewsRepository(
     const rows = await db
       .select()
       .from(reviews)
-      .where(and(eq(reviews.userId, deps.userId), eq(reviews.id, reviewId)));
+      .where(
+        and(
+          eq(reviews.userId, deps.userId),
+          // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤,§A)。
+          deps.accountId ? eq(reviews.accountId, deps.accountId) : undefined,
+          eq(reviews.id, reviewId),
+        ),
+      );
     const row = rows[0];
     if (!row) {
       throw new OwnershipError(`OwnershipError: review not found: ${reviewId}`);
@@ -98,6 +108,8 @@ export function createReviewsRepository(
         .values({
           id: deps.nextId("review"),
           userId: deps.userId,
+          // [T-136 切片 b] 号维度盖章(null 兜底)。
+          accountId: deps.accountId,
           projectId: input.projectId,
           contentOutputId: input.contentOutputId ?? null,
           reportArtifactId: input.reportArtifactId ?? null,
@@ -133,6 +145,8 @@ export function createReviewsRepository(
         .values({
           id: deps.nextId("insight"),
           userId: deps.userId,
+          // [T-136 切片 b] 号维度盖章(与父 review 同号;null 兜底)。
+          accountId: deps.accountId,
           reviewId,
           insightType: input.insightType,
           title: input.title,
@@ -151,6 +165,10 @@ export function createReviewsRepository(
         .where(
           and(
             eq(reviewInsights.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(reviewInsights.accountId, deps.accountId)
+              : undefined,
             eq(reviewInsights.reviewId, reviewId),
           ),
         )
@@ -164,6 +182,10 @@ export function createReviewsRepository(
         .where(
           and(
             eq(reviewInsights.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(reviewInsights.accountId, deps.accountId)
+              : undefined,
             eq(reviewInsights.reviewId, reviewId),
           ),
         );
@@ -177,6 +199,7 @@ export function createReviewsRepository(
         .values({
           id: deps.nextId("reviewpub"),
           userId: deps.userId,
+          // [T-136] review_publications 是 join 表,不按号隔离(经父 review 号门透传;地基存疑#1)。
           reviewId,
           publicationId,
         })
@@ -190,6 +213,8 @@ export function createReviewsRepository(
         .where(
           and(
             eq(reviews.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId ? eq(reviews.accountId, deps.accountId) : undefined,
             eq(reviews.projectId, projectId),
           ),
         )

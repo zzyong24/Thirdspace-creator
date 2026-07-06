@@ -4898,6 +4898,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const aiSeedRepo = createAiRepository(db, {
     ...deps,
     userId: canonicalDataset.user.id,
+    accountId: null, // [T-136] seed = 系统默认,不绑号
   });
   await aiSeedRepo.seedModelConfigs(
     buildAiModelConfigs(canonicalDataset.user.id, FIXED_NOW_ISO),
@@ -4937,6 +4938,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const calibrationSeedRepo = createCalibrationRepository(db, {
     ...deps,
     userId: canonicalDataset.user.id,
+    accountId: null, // [T-136] seed = 系统默认,不绑号
   });
   const canonicalRubricVersion: CalibrationRubricVersionRow = {
     id: "rubricver-canonical-1",

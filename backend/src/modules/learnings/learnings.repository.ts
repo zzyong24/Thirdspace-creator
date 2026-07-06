@@ -17,6 +17,9 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // the ownership boundary, baked in at construction
+  // [T-136 切片 b] 第二所有权维度(多抖音号 / 多人设)。非空 → 读门叠 eq(table.accountId)
+  // 收窄到该号;null(存量/未选号)→ 读门退化不过滤(全量),create 落 NULL 兜底。
+  accountId: string | null;
 }
 
 export interface CreateLearningInput {
@@ -94,7 +97,13 @@ export function createLearningsRepository(
       .select()
       .from(learnings)
       .where(
-        and(eq(learnings.userId, deps.userId), eq(learnings.id, learningId)),
+        and(
+          eq(learnings.userId, deps.userId),
+          // [T-136 切片 b] 号维度收窄:accountId 非空才叠 eq(and 忽略 undefined →
+          // accountId null 时退化不过滤,§A)。
+          deps.accountId ? eq(learnings.accountId, deps.accountId) : undefined,
+          eq(learnings.id, learningId),
+        ),
       );
     const row = rows[0];
     if (!row) {
@@ -115,6 +124,10 @@ export function createLearningsRepository(
       // [T-118a] 归属门(userId)始终最外层;projectId / validationStatus 是可选的 AND 窄化。
       // 都不传 → where 只剩 userId(全量,旧行为)。
       const conds = [eq(learnings.userId, deps.userId)];
+      // [T-136 切片 b] 号维度收窄(非空才叠;null → 全量,旧行为)。
+      if (deps.accountId) {
+        conds.push(eq(learnings.accountId, deps.accountId));
+      }
       if (filter?.projectId !== undefined) {
         conds.push(eq(learnings.projectId, filter.projectId));
       }
@@ -142,6 +155,8 @@ export function createLearningsRepository(
         .values({
           id: deps.nextId("learning"),
           userId: deps.userId,
+          // [T-136 切片 b] 号维度盖章(与 userId 并列;null 兜底不报错)。
+          accountId: deps.accountId,
           reviewId: input.reviewId ?? null,
           // [T-118a gate-F3] 来源作品锚(复盘产经验采纳时带上 task.projectId)。
           projectId: input.projectId ?? null,
@@ -201,6 +216,8 @@ export function createLearningsRepository(
         .values({
           id: deps.nextId("learning-app"),
           userId: deps.userId,
+          // [T-136 切片 b] 号维度盖章(与父 learning 同号;null 兜底)。
+          accountId: deps.accountId,
           learningId,
           projectId: input.projectId,
           contentOutputId: null,
@@ -220,6 +237,10 @@ export function createLearningsRepository(
         .where(
           and(
             eq(learningApplications.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(learningApplications.accountId, deps.accountId)
+              : undefined,
             eq(learningApplications.learningId, learningId),
           ),
         );
@@ -237,6 +258,10 @@ export function createLearningsRepository(
         .where(
           and(
             eq(learningApplications.userId, deps.userId),
+            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
+            deps.accountId
+              ? eq(learningApplications.accountId, deps.accountId)
+              : undefined,
             inArray(learningApplications.learningId, learningIds),
           ),
         )

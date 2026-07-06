@@ -246,7 +246,14 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
   const { db, now, nextId, projects, calibration } = deps;
 
   function repoFor(ctx: RequestContext): LearningsRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+    // [T-136 切片 b] 号维度透传:ctx.accountId 属主已由 resolveRequestContext 校验可信;
+    // 缺省(未选号/存量)→ null → repo 读门退化不过滤。
+    const repoDeps: RepoDeps = {
+      now,
+      nextId,
+      userId: ctx.userId,
+      accountId: ctx.accountId ?? null,
+    };
     return createLearningsRepository(db, repoDeps);
   }
 
