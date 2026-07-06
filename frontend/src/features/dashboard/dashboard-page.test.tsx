@@ -81,9 +81,19 @@ describe("DashboardPage", () => {
   it("renders a welcome heading greeting the current user", async () => {
     await renderDashboard();
     const heading = screen.getByRole("heading", { level: 1 });
-    // The greeting text includes the user name from the canonical
-    // dataset. Loose match keeps the test robust to small copy changes.
-    expect(heading.textContent ?? "").toMatch(/早上好|Kevin|Zyong/i);
+    // The greeting text includes the user name. Loose match keeps the test
+    // robust to small copy changes.
+    expect(heading.textContent ?? "").toMatch(/早上好/);
+  });
+
+  it("greets the real account holder passed via greetingName, not the fixture", async () => {
+    // Bug #1 regression: production passes the session user's displayName
+    // (identity 中性化后 =「创作者」) through the `greetingName` seam. The
+    // greeting must reflect THAT name, never the fixture "Zyong Zhu".
+    await renderDashboard({ greetingName: "创作者" });
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading.textContent ?? "").toBe("早上好, 创作者!");
+    expect(heading.textContent ?? "").not.toMatch(/Zyong/i);
   });
 
   it("renders exactly five metric cards in a single summary row", async () => {

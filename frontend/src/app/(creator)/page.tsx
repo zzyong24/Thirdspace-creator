@@ -30,5 +30,14 @@ export default async function Page() {
     body: undefined,
   });
 
-  return <DashboardPage viewModel={viewModel} />;
+  // Greet the REAL account holder (identity.getCurrentUser via resolveSession),
+  // the same source the Shell user card reads — not the fixture dataset. After
+  // the T-135 identity 中性化 this renders「早上好, 创作者!」instead of the old
+  // fixture "Zyong". The `greetingName` prop remains DashboardPage's test seam.
+  return (
+    <DashboardPage
+      viewModel={viewModel}
+      greetingName={session.user.displayName}
+    />
+  );
 }

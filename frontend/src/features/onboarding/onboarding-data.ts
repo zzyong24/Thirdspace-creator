@@ -43,7 +43,20 @@ export async function loadState(): Promise<OnboardingState> {
   };
 }
 
-/** 已配的 model capability 集合(provider + modelName 非空才算已配)。读失败 → undefined。 */
+/**
+ * 已配的 model capability 集合。**「已配」= 真能跑,不是「行存在」**。
+ *
+ * [Bug #3] T-135 中性化保留了各 AI capability 的**空占位骨架**(行存在,但
+ * provider 空 / secret 空),没配 key 也跑不通。旧判定只看 `provider` 非空,
+ * 会把「有 provider 占位但没配 key」误算成已配 → 新手清单假打勾。
+ *
+ * 修正:以 `provider 非空 且 hasSecret` 为「真配了」下限 —— `hasSecret` 是后端
+ * `toModelResource` 掩码出的布尔(有 stored key 或 env-ref 才 true,与设置页
+ * 卡片「已配」判定同源)。空占位 hasSecret=false → 不入集合 → 未完成。web.search
+ * 档同理(真配了搜索的行必带 key/env-ref),不误伤:未真配一律不打勾。
+ *
+ * 读失败 → undefined(诚实降级,deriveSteps 当未完成)。
+ */
 export async function loadConfiguredCapabilities(): Promise<
   ReadonlySet<string> | undefined
 > {
@@ -55,20 +68,17 @@ export async function loadConfiguredCapabilities(): Promise<
     })) as ReadonlyArray<{
       capability?: unknown;
       provider?: unknown;
-      modelName?: unknown;
+      hasSecret?: unknown;
     }>;
     const set = new Set<string>();
     for (const row of rows) {
       const capability =
         typeof row.capability === "string" ? row.capability : "";
       const provider = typeof row.provider === "string" ? row.provider : "";
-      const modelName = typeof row.modelName === "string" ? row.modelName : "";
-      // web.search 档 model 选填(只需 provider);其余档要 provider 齐。统一以
-      // provider 非空为「已配」下限 —— 未配的行 provider 为空,不误判 done。
-      if (capability && provider) {
-        // model 非空更稳,但 web.search 允许空 model(provider 即可用);这里以
-        // provider 为准(与设置页搜索档判定一致),避免 web.search 永远判未完成。
-        void modelName;
+      const hasSecret = row.hasSecret === true;
+      // 「真能跑」下限:provider 非空 且 配了可用 secret(key 或 env-ref)。
+      // 只有 provider 占位、没配 key 的空骨架 hasSecret=false → 不算已配。
+      if (capability && provider && hasSecret) {
         set.add(capability);
       }
     }

@@ -56,9 +56,11 @@ export interface DashboardPageProps {
   /** Override hook for tests; defaults to the production selector. */
   readonly viewModel?: DashboardViewModel;
   /**
-   * Override for the displayed greeting name (test seam). In production the
-   * greeting uses the real account holder — `canonicalDataset.user.displayName`,
-   * the same source the sidebar's `resolveUser` reads.
+   * The displayed greeting name. In production `(creator)/page.tsx` passes the
+   * REAL account holder (`resolveSession().user.displayName` — identity
+   * getCurrentUser, the same source the Shell user card reads). Only when there
+   * is no session (SSR fallback / unit tests) is this omitted and the greeting
+   * falls back to the fixture dataset so SSR never crashes. Also the test seam.
    */
   readonly greetingName?: string;
 }
@@ -78,9 +80,9 @@ export async function DashboardPage({
       query: undefined,
       body: undefined,
     }));
-  // Greet the real account holder — the same source the sidebar uses
-  // (`resolveUser` → `canonicalDataset.user.displayName`). Tests may still
-  // override via the `greetingName` prop seam.
+  // Greet the real account holder: `page.tsx` passes the session user's
+  // displayName via `greetingName`. Only the no-session SSR fallback / unit
+  // tests reach the fixture default (so SSR never crashes).
   const greeting = buildGreeting(
     vm,
     greetingName ?? canonicalDataset.user.displayName,
