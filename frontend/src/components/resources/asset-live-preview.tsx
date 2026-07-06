@@ -22,6 +22,7 @@ export function AssetLivePreview({ asset }: { asset: ResourceAsset }) {
 
   React.useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 换 URL 时重置为占位态,避免旧图闪
     setUrl(null);
     setFailed(false);
     // [T-061] 共享缓存:与网格缩略图同一素材只换一次签名 URL。
@@ -35,7 +36,8 @@ export function AssetLivePreview({ asset }: { asset: ResourceAsset }) {
     };
   }, [asset.id]);
 
-  // 取不到 → 占位 glyph(诚实);取到前也先显 glyph(避免布局跳)。
+  // 取不到,或换到 URL 但媒体加载失败(字节坏/404)→ 占位 glyph(诚实);
+  // 取到前也先显 glyph(避免布局跳)。
   if (failed || !url) return <MediaPreview asset={asset} />;
 
   if (asset.type === "image") {
@@ -44,6 +46,7 @@ export function AssetLivePreview({ asset }: { asset: ResourceAsset }) {
       <img
         src={url}
         alt={asset.name}
+        onError={() => setFailed(true)}
         data-slot="asset-live-preview"
         data-preview-type="image"
         className="aspect-[3/2] w-full rounded-control border border-border object-contain bg-surface-subtle"
@@ -57,6 +60,7 @@ export function AssetLivePreview({ asset }: { asset: ResourceAsset }) {
         src={url}
         controls
         preload="metadata"
+        onError={() => setFailed(true)}
         data-slot="asset-live-preview"
         data-preview-type="video"
         className="aspect-[3/2] w-full rounded-control border border-border bg-black object-contain"

@@ -102,6 +102,14 @@ interface AssetDto {
   readonly id: string;
   readonly name: string;
   readonly assetType: string;
+  // [T-146] 文档抽取投影(assetResource 随行带;仅 document 有值)——弹药双击预览显要点/全文。
+  readonly extractStatus?: string | null;
+  readonly materialSummary?: {
+    readonly keyPoints?: ReadonlyArray<string>;
+    readonly facts?: ReadonlyArray<string>;
+    readonly sellingPoints?: ReadonlyArray<string>;
+  } | null;
+  readonly extractedText?: string | null;
 }
 
 export interface DraftWorkbenchClient extends ScriptDataClient {
@@ -222,6 +230,15 @@ export interface DraftWorkbenchVm {
     readonly sourceLabel: string;
     /** [T-058④] 图片素材的签名预览 URL(非图片/取不到 → null,卡片退回类型徽标)。 */
     readonly previewUrl: string | null;
+    /** [T-146] 双击预览用:素材类型 + 文档抽取投影(资料要点/全文);knowledge 项均为空。 */
+    readonly assetType?: string | null;
+    readonly extractStatus?: string | null;
+    readonly materialSummary?: {
+      readonly keyPoints?: ReadonlyArray<string>;
+      readonly facts?: ReadonlyArray<string>;
+      readonly sellingPoints?: ReadonlyArray<string>;
+    } | null;
+    readonly extractedText?: string | null;
   }>;
   /**
    * [T-086] 稿面审核门首屏报告(scriptReviews.getLatest;null = 未审)。稿面客户端岛
@@ -390,6 +407,11 @@ async function readAmmo(
             title: a.name,
             sourceLabel: `素材 · ${a.assetType}`,
             previewUrl,
+            // [T-146] 双击预览投影:类型 + 文档抽取(资料要点/全文)。
+            assetType: a.assetType,
+            extractStatus: a.extractStatus ?? null,
+            materialSummary: a.materialSummary ?? null,
+            extractedText: a.extractedText ?? null,
           };
         } catch {
           return null;

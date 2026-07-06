@@ -11,7 +11,6 @@
  */
 
 import * as React from "react";
-import Link from "next/link";
 
 import { CoverThumb } from "@/components/resources/cover-thumb";
 import { ScriptRichEditor } from "@/features/script/script-rich-editor";
@@ -26,7 +25,8 @@ import { ThesisSkeletonPanel } from "./thesis-skeleton-panel";
 import { RevealProjectButton } from "./reveal-project-button";
 import { AmmoNoteForm } from "./ammo-note-form";
 import { AmmoDumpZone } from "./ammo-dump-zone";
-import { AmmoRemoveButton } from "./ammo-remove-button";
+// [T-146] 弹药卡列表 + 双击预览抽为 client 组件(Modal 交互)。
+import { AmmoCardList } from "./ammo-card-list";
 import { DraftPrimaryAction } from "./draft-primary-action";
 import { RegisterPublishedForm } from "./register-published-form";
 import { BlindPredictRow } from "./blind-predict-row";
@@ -92,6 +92,10 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
               [T-146] 传 projectId:「＋上传素材」把资料上传进「当前项目」弹药库。 */}
           <CreationFlowCtas projectId={project.id} />
 
+          {/* [T-146] 弹药上移:内容弹药是写作的原料,置于论点/脚本之上 —— 用户先看到手里
+              有哪些素材/资料,再立论点、写脚本(此前埋在最底部,写完才发现有料没用上)。 */}
+          <AmmoDrawer ammo={ammo} projectId={project.id} />
+
           {/* [T-127] 论点骨架面板:把已采纳的论点树(核心论点+支撑/证据/反驳)显性化到稿面 +
               可编辑(加/删/重排/挂用料链素材 → 保存追加新版本),空态引导立论点。 */}
           <ThesisSkeletonPanel
@@ -152,9 +156,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             scriptReview={scriptReview}
             scriptVersion={script.versionCount}
           />
-
-          {/* ── 弹药抽屉 ── */}
-          <AmmoDrawer ammo={ammo} projectId={project.id} />
+          {/* [T-146] 弹药抽屉已上移至 CreationFlowCtas 之后(论点/脚本之上)。 */}
           </>
         }
         right={
@@ -325,51 +327,8 @@ function AmmoDrawer({
       <div className="mb-2">
         <AmmoDumpZone projectId={projectId} />
       </div>
-      {ammo.length > 0 ? (
-        <div className="flex gap-2.5 overflow-x-auto pb-1">
-          {ammo.map((item) => (
-            <div
-              key={`${item.kind}-${item.id}`}
-              data-slot="draft-ammo-card"
-              data-kind={item.kind}
-              className="w-[220px] shrink-0 rounded-[10px] border border-border bg-surface px-3 py-2.5"
-            >
-              {/* [T-058④] 图片素材直接给缩略图预览;非图片退回类型徽标。 */}
-              {item.previewUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={item.previewUrl}
-                  alt={item.title}
-                  data-slot="ammo-preview"
-                  className="mb-1.5 h-20 w-full rounded-md border border-border object-cover"
-                />
-              ) : null}
-              <div className="mb-1 flex items-center justify-between gap-1">
-                <p
-                  className={cn(
-                    "text-[10.5px] font-bold tracking-wide",
-                    item.kind === "knowledge" ? "text-warning" : "text-info",
-                  )}
-                >
-                  {item.kind === "knowledge" ? "知识" : "素材"}
-                </p>
-                {/* [T-109] 移除:解绑本条与项目的关联(系统 Dialog 二次确认,不删实体)。 */}
-                <AmmoRemoveButton
-                  linkId={item.linkId}
-                  kind={item.kind}
-                  title={item.title}
-                />
-              </div>
-              <p className="line-clamp-2 text-xs leading-relaxed text-foreground">
-                {item.title}
-              </p>
-              <p className="mt-1.5 truncate text-[11px] text-text-subtle">
-                ↳ {item.sourceLabel}
-              </p>
-            </div>
-          ))}
-        </div>
-      ) : null}
+      {/* [T-146] 已上传素材/知识列表 + 双击预览(client 组件);空态时不渲染。 */}
+      {ammo.length > 0 ? <AmmoCardList ammo={ammo} /> : null}
     </section>
   );
 }

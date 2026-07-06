@@ -30,15 +30,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { PlatformAccountResource } from "@creatoros/backend/modules/platform-account";
 
-// The contract platformId enum (kept inline — deterministic, no zod in the FE bundle).
-const PLATFORMS = [
-  "youtube",
-  "bilibili",
-  "douyin",
-  "xiaohongshu",
-  "wechatVideo",
-  "x",
-] as const;
+// [T-146] 抖音-only:产品单平台聚焦抖音,账号 UI 只呈现抖音号(此前多平台下拉/tab 与
+// 「连接抖音扫码」的真实能力不符 —— 采集/登录/身份回填都只对抖音做真)。PLATFORMS 收敛为
+// 单元素,账号列表 tab 只剩抖音,新增表单去掉平台下拉(平台恒为 douyin)。
+const PLATFORMS = ["douyin"] as const;
 type PlatformId = (typeof PLATFORMS)[number];
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -73,9 +68,123 @@ function useMutation() {
   return { pending, run };
 }
 
+// [T-146] 扫码绑定新抖音号 —— 复用设置页账号绑定的同款扫码链(client.loginDouyin,零新 op)。
+// 点扫码 → 弹本机 Chromium 让用户扫码(headed,真弹窗)→ 成功后 loginDouyin 已 ensure
+// external_source + §D 的 applyDouyinIdentity 抓真实抖音名/ID 建号 → router.refresh() 让
+// 账号列表读回新号。诚实(铁律):headed 扫码端到端卡真机,前端只发起 + 据结果推进,绝不假装
+// 登录过;扫码超时/失败 → 明确提示重试,不写任何假账号。真扫码端到端(DATA-2)真机待验。
+type ScanPhase = "idle" | "scanning" | "refreshing";
+type ScanFeedback =
+  | { kind: "none" }
+  | { kind: "success"; text: string }
+  | { kind: "error"; text: string };
+
 export function CreateAccountForm() {
+  const router = useRouter();
+  const [phase, setPhase] = React.useState<ScanPhase>("idle");
+  const [feedback, setFeedback] = React.useState<ScanFeedback>({ kind: "none" });
+  const busy = phase !== "idle";
+
+  // 手动登记(次入口,折叠):契约 createAccount 仍是真 op(无抖音真机时也能建号占位),
+  // 保留 handle/密钥/基线手填。扫码抓真名是主路径,手动登记是降级兜底。
+  const [manualOpen, setManualOpen] = React.useState(false);
+
+  const scan = React.useCallback(() => {
+    if (busy) return;
+    setPhase("scanning");
+    setFeedback({ kind: "none" });
+    void (async () => {
+      try {
+        // 复用设置页同款:client.loginDouyin({}) → headed 扫码。返回 {loggedIn}。
+        const res = (await client.loginDouyin({
+          params: undefined,
+          query: undefined,
+          body: {},
+        })) as { loggedIn?: boolean };
+        if (res.loggedIn) {
+          // 登录成功 → loginDouyin 已 ensure external_source + applyDouyinIdentity 建/更新号。
+          setPhase("refreshing");
+          setFeedback({
+            kind: "success",
+            text: "抖音已连接，正在读回账号…",
+          });
+          router.refresh();
+        } else {
+          // 超时(未扫)→ 明确提示重试,不写任何假号。
+          setFeedback({
+            kind: "error",
+            text: "未检测到登录，请重试（需在弹出的 Chrome 窗口内扫码）。",
+          });
+        }
+      } catch {
+        setFeedback({ kind: "error", text: "扫码登录失败，请重试。" });
+      } finally {
+        setPhase("idle");
+      }
+    })();
+  }, [busy, router]);
+
+  const scanLabel = busy
+    ? phase === "scanning"
+      ? "扫码中…"
+      : "读回账号…"
+    : "扫码绑定新抖音号";
+
+  return (
+    <div data-testid="create-account-form" className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          data-testid="bind-douyin-scan"
+          disabled={busy}
+          onClick={scan}
+          className="self-start"
+        >
+          {scanLabel}
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          点此弹本机 Chrome 窗口，扫码即绑定；成功后自动抓取抖音昵称与 ID。
+        </span>
+      </div>
+      {/* 扫码进行中的引导态(仿设置页 loginPhase):真弹本机 Chrome,前端不假装。 */}
+      {phase === "scanning" ? (
+        <p
+          data-slot="douyin-scan-hint"
+          className="text-[11px] text-muted-foreground"
+        >
+          扫码中…请在弹出的 Chrome 窗口扫码（最多 4 分钟）。
+        </p>
+      ) : null}
+      {feedback.kind !== "none" ? (
+        <p
+          data-slot="douyin-scan-feedback"
+          role="status"
+          aria-live="polite"
+          className={
+            "text-[11px] " +
+            (feedback.kind === "success" ? "text-success" : "text-destructive")
+          }
+        >
+          {feedback.text}
+        </p>
+      ) : null}
+      {/* 手动登记(次入口):无抖音真机 / 想补历史号时手填。默认折叠。 */}
+      <button
+        type="button"
+        data-testid="manual-account-toggle"
+        onClick={() => setManualOpen((v) => !v)}
+        className="self-start text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground"
+      >
+        {manualOpen ? "收起手动登记" : "或手动登记账号"}
+      </button>
+      {manualOpen ? <ManualAccountForm /> : null}
+    </div>
+  );
+}
+
+// 手动登记表单(次入口)—— 平台恒为 douyin(抖音-only),去掉平台下拉。
+function ManualAccountForm() {
   const { pending, run } = useMutation();
-  const [platform, setPlatform] = React.useState<PlatformId>("douyin");
   const [accountHandle, setAccountHandle] = React.useState("");
   const [secretReference, setSecretReference] = React.useState("");
   const [followerBaseline, setFollowerBaseline] = React.useState("");
@@ -90,7 +199,8 @@ export function CreateAccountForm() {
         params: undefined,
         query: undefined,
         body: {
-          platform,
+          // [T-146] 抖音-only:平台恒 douyin,不再从下拉取。
+          platform: "douyin",
           accountHandle: accountHandle.trim(),
           secretReference:
             secretReference.trim().length > 0
@@ -109,25 +219,13 @@ export function CreateAccountForm() {
 
   return (
     <form
-      data-testid="create-account-form"
+      data-testid="manual-account-form"
       className="flex w-full flex-wrap items-center gap-2"
       onSubmit={(e) => {
         e.preventDefault();
         submit();
       }}
     >
-      <select
-        aria-label="平台"
-        value={platform}
-        onChange={(e) => setPlatform(e.target.value as PlatformId)}
-        className="h-9 rounded-md border border-border bg-background px-2 text-sm"
-      >
-        {PLATFORMS.map((p) => (
-          <option key={p} value={p}>
-            {PLATFORM_LABELS[p] ?? p}
-          </option>
-        ))}
-      </select>
       <Input
         aria-label="账号 handle"
         placeholder="账号 handle（如 @我的主账号）"

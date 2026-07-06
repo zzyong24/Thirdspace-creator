@@ -20,11 +20,15 @@ import type { ResourceAsset } from "@/components/resources/types";
 export function AssetThumbnail({ asset }: { readonly asset: ResourceAsset }) {
   const visual = asset.type === "image" || asset.type === "video";
   const [url, setUrl] = React.useState<string | null>(null);
+  // [T-146] 加载失败(签名到手但字节坏/404/网络断)→ 回退占位 glyph,不摆碎图。
+  const [loadFailed, setLoadFailed] = React.useState(false);
 
   React.useEffect(() => {
     if (!visual) return;
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 换 URL 时重置为占位态,避免旧图闪
     setUrl(null);
+    setLoadFailed(false);
     void resolveAssetPreviewUrl(asset.id).then((u) => {
       if (!cancelled) setUrl(u);
     });
@@ -33,7 +37,8 @@ export function AssetThumbnail({ asset }: { readonly asset: ResourceAsset }) {
     };
   }, [asset.id, visual]);
 
-  if (!visual || !url) return <MediaPreview asset={asset} />;
+  // URL 换取失败,或换到了但媒体加载失败 → 诚实降级占位 glyph(thumbnailToken 渐变)。
+  if (!visual || !url || loadFailed) return <MediaPreview asset={asset} />;
 
   if (asset.type === "image") {
     return (
@@ -42,6 +47,7 @@ export function AssetThumbnail({ asset }: { readonly asset: ResourceAsset }) {
         src={url}
         alt={asset.name}
         loading="lazy"
+        onError={() => setLoadFailed(true)}
         data-slot="asset-thumbnail"
         data-preview-type="image"
         className="aspect-[3/2] w-full rounded-t-card object-cover bg-surface-subtle"
@@ -55,6 +61,7 @@ export function AssetThumbnail({ asset }: { readonly asset: ResourceAsset }) {
       src={url}
       muted
       preload="metadata"
+      onError={() => setLoadFailed(true)}
       data-slot="asset-thumbnail"
       data-preview-type="video"
       className="aspect-[3/2] w-full rounded-t-card object-cover bg-black"
