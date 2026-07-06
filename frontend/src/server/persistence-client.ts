@@ -846,10 +846,80 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     deps,
     stageGateReadersRef,
   );
-  const projects = createProjectsTransport(() => ({
+  const projectsBaseTransport = createProjectsTransport(() => ({
     service: projectsService,
     repo: projectsRepo,
   }));
+  // [全局搜索修复①] 项目写路径的搜索索引 fan-out(composition root 组合,projects 模块
+  // 不反向依赖 search)。projects 是四大实体里唯一漏接搜索索引的 —— createProject/
+  // patchProject 全程不碰 search_documents,导致「搜项目标题恒 0」。这里在 create/patch
+  // 成功后**同步 await** 投影一条 entity_type='project' 的 search_document(载荷 stage/
+  // progressPct/snippet 与读侧 toProjectCard 对齐);delete 走 removeDocument。同步(非
+  // fire-and-forget)消除「建完即搜」竞态。索引 best-effort:失败只丢检索增益,业务真值
+  // 已提交不回滚(SPEC §16 派生索引纪律),故 try/catch 吞掉。
+  const indexProjectBestEffort = async (
+    ctx: RequestContext,
+    data: {
+      id?: string;
+      title?: string;
+      currentStage?: string;
+      progressPct?: number;
+      brief?: string;
+    },
+  ): Promise<void> => {
+    if (!data.id) return;
+    try {
+      const title = data.title ?? "";
+      const snippet = data.brief ?? "";
+      await searchService.upsertDocument(ctx, {
+        entityType: "project",
+        entityId: data.id,
+        title,
+        body: JSON.stringify({
+          stage: data.currentStage ?? "",
+          progressPct: data.progressPct ?? 0,
+          snippet,
+        }),
+        searchText: `${title}\n${snippet}`.toLowerCase().trim(),
+      });
+    } catch (err) {
+      console.warn("[project-index] 索引失败(业务真值不受影响):", err);
+    }
+  };
+  const projects: Transport = {
+    async request(endpoint, input, ctx) {
+      const result = await projectsBaseTransport.request(endpoint, input, ctx);
+      if (ctx) {
+        if (
+          endpoint.id === "projects.create" ||
+          endpoint.id === "projects.patch"
+        ) {
+          const data = (result as { data?: unknown }).data as
+            | {
+                id?: string;
+                title?: string;
+                currentStage?: string;
+                progressPct?: number;
+                brief?: string;
+              }
+            | undefined;
+          if (data) await indexProjectBestEffort(ctx, data);
+        } else if (endpoint.id === "projects.delete") {
+          const data = (result as { data?: unknown }).data as
+            | { id?: string }
+            | undefined;
+          if (data?.id) {
+            try {
+              await searchService.removeDocument(ctx, "project", data.id);
+            } catch (err) {
+              console.warn("[project-index] 删除索引失败:", err);
+            }
+          }
+        }
+      }
+      return result;
+    },
+  };
 
   // Taxonomy (module 04): one repository over the shared db; its transport mints
   // a per-ctx service so every tag/entity_tag query is scoped to `ctx.userId`.
@@ -908,9 +978,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const knowledgeId =
           endpoint.id === "knowledge.create" ? data?.id : data?.knowledgeItemId;
         if (knowledgeId) {
-          void indexKnowledgeDocumentBestEffort(ctx, knowledgeId).catch(
-            () => {},
-          );
+          // [全局搜索修复②] 原 `void ...catch()` fire-and-forget 有「建完即搜」竞态:
+          // knowledge.create 返回后 search_document 可能尚未落库 → 立刻搜命中不到。改为
+          // 同步 await(indexKnowledgeDocumentBestEffort 内部已 try/catch 吞错,失败绝不
+          // 回滚业务真值),消除竞态。
+          await indexKnowledgeDocumentBestEffort(ctx, knowledgeId);
         }
       }
       return result;
@@ -1086,8 +1158,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: deps.now,
     nextId: deps.nextId,
     publisher: createMockPublisher(),
+    // [全局搜索修复③] video/publication tab 对齐:publishing.service 发布时投影
+    // entity_type='publication',但读侧 search.transport 的 video tab 查的是
+    // entity_type='video'(启动 seed 亦投影成 video)→ 已发布作品在 video tab 恒搜不到。
+    // 只在 wiring 层把 'publication' 归一为 'video'(不动 publishing.service 业务代码),
+    // 与读侧 TAB_DEFS + 启动重建三处一致。
     searchIndex: (ctx, input) =>
-      searchService.upsertDocument(ctx, input),
+      searchService.upsertDocument(ctx, {
+        ...input,
+        entityType: input.entityType === "publication" ? "video" : input.entityType,
+      }),
     assertCoverOwned: (ctx, id) => assetsService.getAsset(ctx, id),
     // Project→ContentOutput-ids resolver — drives Analytics' project metric read
     // (publishing.listPublicationIdsByProject → analytics.projects.get) without an
@@ -4370,8 +4450,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // [T-050 ⑦] 搜索索引投影**真实数据**:旧实现投影 canonical mock 数据集 → 用户自己
   // 的真实作品一条都搜不到(审计 B19)。现在启动时从 DB 读真 projects/knowledge/assets/
   // publications(+revision 真标题)拼成同形状喂 buildCanonicalSearchDocuments。
-  // seedDocuments 幂等(onConflictDoNothing);id 以 entityId 定名,重启不重复。
+  // [全局搜索修复④] 启动全量重建改用 searchService.rebuildUserIndex(deleteAll +
+  //   re-upsert),取代旧的 seedDocuments(insert-only + onConflictDoNothing)。旧路径三宗罪:
+  //   ① 只 insert 不刷新 —— 存量项目改了标题,search_document 仍是旧标题;② onConflictDoNothing
+  //   固定 seed id,重启后新建的项目/删除的实体既不进也不清(孤儿留存);③ 存量项目(如既有
+  //   2 个)若 seed id 已占位就永不回填。rebuildUserIndex 先 deleteAllDocuments(user-scoped)
+  //   再从 DB 真值逐条 re-upsert —— 幂等、刷新标题、清孤儿,把存量一并索引。启动时跑一次即可
+  //   (运行时 create/patch/delete 由上面的 fan-out wrapper 增量维护)。
   {
+    const startupRebuildCtx: RequestContext = {
+      userId: canonicalDataset.user.id,
+      requestId: "startup-search-rebuild",
+      source: "ingestion",
+    };
     const [dbProjects, dbKnowledge, dbKRevisions, dbAssets, dbPubs, dbPubRevs] =
       await Promise.all([
         db.select().from(projectsTable),
@@ -4381,48 +4472,55 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         db.select().from(publicationsTable),
         db.select().from(publicationRevisionsTable),
       ]);
-    await createSearchRepository(db, {
-      ...deps,
-      userId: canonicalDataset.user.id,
-    }).seedDocuments(
-      buildCanonicalSearchDocuments(
-        {
-          user: { id: canonicalDataset.user.id },
-          projects: dbProjects.map((p) => ({
-            id: p.id,
-            title: p.title,
-            brief: p.brief ?? "",
-            currentStage: p.currentStage,
-            progressPct: p.progressPct ?? 0,
-          })),
-          knowledgeItems: dbKnowledge.map((k) => ({
-            id: k.id,
-            title: k.title,
-            currentRevisionId: k.currentRevisionId ?? "",
-          })),
-          knowledgeRevisions: dbKRevisions.map((r) => ({
-            id: r.id,
-            knowledgeItemId: r.knowledgeItemId,
-            content: r.content ?? "",
-          })),
-          assets: dbAssets.map((a) => ({
-            id: a.id,
-            name: a.name,
-            assetType: a.assetType,
-          })),
-          publications: dbPubs.map((pub) => ({
-            id: pub.id,
-            platform: pub.platform,
-            currentRevisionId: pub.currentRevisionId ?? null,
-          })),
-          publicationRevisions: dbPubRevs.map((r) => ({
-            id: r.id,
-            title: r.title ?? "",
-          })),
-        },
-        FIXED_NOW_ISO,
-      ),
-    );
+    // buildCanonicalSearchDocuments 投影出的 SearchDocumentRow[](publication 已归一为
+    //   entity_type='video',payload 与读侧对齐)→ 转成 rebuildUserIndex 期望的 RebuildDoc[]
+    //   (只取 entityType/entityId/title/body/searchText/embedding;id/userId/indexedAt 由
+    //   service 重新分配,保证与运行时 upsert 同源)。
+    const rebuildDocs = buildCanonicalSearchDocuments(
+      {
+        user: { id: canonicalDataset.user.id },
+        projects: dbProjects.map((p) => ({
+          id: p.id,
+          title: p.title,
+          brief: p.brief ?? "",
+          currentStage: p.currentStage,
+          progressPct: p.progressPct ?? 0,
+        })),
+        knowledgeItems: dbKnowledge.map((k) => ({
+          id: k.id,
+          title: k.title,
+          currentRevisionId: k.currentRevisionId ?? "",
+        })),
+        knowledgeRevisions: dbKRevisions.map((r) => ({
+          id: r.id,
+          knowledgeItemId: r.knowledgeItemId,
+          content: r.content ?? "",
+        })),
+        assets: dbAssets.map((a) => ({
+          id: a.id,
+          name: a.name,
+          assetType: a.assetType,
+        })),
+        publications: dbPubs.map((pub) => ({
+          id: pub.id,
+          platform: pub.platform,
+          currentRevisionId: pub.currentRevisionId ?? null,
+        })),
+        publicationRevisions: dbPubRevs.map((r) => ({
+          id: r.id,
+          title: r.title ?? "",
+        })),
+      },
+      FIXED_NOW_ISO,
+    ).map((row) => ({
+      entityType: row.entityType,
+      entityId: row.entityId,
+      title: row.title,
+      body: row.body,
+      searchText: row.searchText,
+      embedding: (row.embedding as number[]) ?? [],
+    }));
+    await searchService.rebuildUserIndex(startupRebuildCtx, rebuildDocs);
   }
 
   // [T-050] canonical analytics 种子已退役(快照/留存/观众全挂在已删除的 demo 发布上)。
