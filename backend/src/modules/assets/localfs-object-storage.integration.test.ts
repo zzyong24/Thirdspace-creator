@@ -35,8 +35,11 @@ describe("localfs-object-storage", () => {
       mimeType: "image/png",
       fileSize: 2048,
     });
-    expect(up.storageKey).toBe("image/uploads/objkey-1");
-    expect(up.uploadUrl).toContain("/api/v1/blob/image/uploads/objkey-1");
+    // [T-157] 未传 accountId → `_default/` 头段(账号分区,存量/未选号回退)。
+    expect(up.storageKey).toBe("_default/image/uploads/objkey-1");
+    expect(up.uploadUrl).toContain(
+      "/api/v1/blob/_default/image/uploads/objkey-1",
+    );
     expect(up.uploadUrl).toContain("token=");
 
     // The minted token verifies for PUT on this key at the embedded exp.
@@ -53,6 +56,29 @@ describe("localfs-object-storage", () => {
     );
     expect(sidecar.mimeType).toBe("image/png");
     expect(sidecar.width).toBe(1920);
+  });
+
+  it("[T-157] createPresignedUpload 按 accountId 分区 key 头段(存量回退 _default)", async () => {
+    const storage = makeStorage();
+    const up = await storage.createPresignedUpload({
+      assetType: "image",
+      mimeType: "image/png",
+      fileSize: 2048,
+      accountId: "acct-douyin-1",
+    });
+    // 选号 → key 头段 = 该号(物理目录按抖音号隔离)。
+    expect(up.storageKey).toBe("acct-douyin-1/image/uploads/objkey-1");
+    expect(up.uploadUrl).toContain(
+      "/api/v1/blob/acct-douyin-1/image/uploads/objkey-1",
+    );
+    // 未选号(null)→ _default 回退,向后兼容。
+    const up2 = await storage.createPresignedUpload({
+      assetType: "video",
+      mimeType: "video/mp4",
+      fileSize: 1,
+      accountId: null,
+    });
+    expect(up2.storageKey).toBe("_default/video/uploads/objkey-2");
   });
 
   it("headObject returns the REAL on-disk size + sha256 checksum", async () => {

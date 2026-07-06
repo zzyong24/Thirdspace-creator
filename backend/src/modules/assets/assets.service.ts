@@ -247,6 +247,8 @@ export function createAssetsService(
         assetType: input.assetType,
         mimeType: input.mimeType,
         fileSize: input.fileSize,
+        // [T-157] 存储 key 按当前抖音号分区(未选号 → _default);向后兼容。
+        accountId: ctx.accountId ?? null,
         folder: folder ?? undefined,
         fileName: input.fileName,
       });
@@ -329,6 +331,8 @@ export function createAssetsService(
         assetType: input.assetType,
         mimeType: input.mimeType,
         fileSize: input.bytes.byteLength,
+        // [T-157] 服务端直写(采集封面/AI 生成)同样按当前号分区,与客户端上传布局一致。
+        accountId: ctx.accountId ?? null,
       });
       // Direct-write the in-process bytes (the runner already generated them) — no HTTP
       // blob-route round-trip. Then head the object to get the authoritative size/checksum.

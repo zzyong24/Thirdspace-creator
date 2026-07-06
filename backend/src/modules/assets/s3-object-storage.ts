@@ -15,6 +15,7 @@ import type {
   HeadObjectResult,
   PresignedUpload,
 } from "./object-storage";
+import { accountKeyPrefix } from "./object-storage";
 
 export interface S3ObjectStorageConfig {
   endpoint?: string; // e.g. http://localhost:9000 (MinIO); omit for AWS S3
@@ -50,8 +51,9 @@ export function createS3ObjectStorage(
   const s3 = makeClient(cfg);
   const expiresIn = cfg.expiresInSeconds ?? 900;
   return {
-    async createPresignedUpload({ assetType, mimeType }) {
-      const storageKey = `${assetType}/${deps.nextKey()}`;
+    async createPresignedUpload({ assetType, mimeType, accountId }) {
+      // [T-157] 账号分区:key = <accountId ?? _default>/<assetType>/<nextKey>。
+      const storageKey = `${accountKeyPrefix(accountId)}${assetType}/${deps.nextKey()}`;
       // Sign ContentType so the client MUST send the same header on PUT (tamper-resistant).
       const uploadUrl = await presign(
         s3,

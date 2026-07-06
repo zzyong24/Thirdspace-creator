@@ -15,6 +15,14 @@ export interface PresignedUpload {
   uploadUrl: string;
 }
 
+// [T-157] 账号分区前缀 —— 存储 key 头段 = `<accountId ?? _default>/`,把多账号隔离延伸到
+// 存储层(mirror 登录态 `.auth/douyin/<accountId>`)。accountId 是内部 id(acct-.../user-...),
+// 仍做 path-safe 收窄(只留 [A-Za-z0-9_-])防目录穿越;空/清洗后为空 → `_default`。
+export function accountKeyPrefix(accountId?: string | null): string {
+  const seg = (accountId ?? "_default").replace(/[^a-zA-Z0-9_-]/g, "_");
+  return `${seg || "_default"}/`;
+}
+
 // Metadata the storage backend reports for an uploaded object (SPEC §20: the
 // service validates MIME/size/checksum against this at completeUpload). The mock
 // echoes the values recorded at createPresignedUpload time.
@@ -35,6 +43,9 @@ export interface ObjectStoragePort {
     assetType: string;
     mimeType: string;
     fileSize: number;
+    // [T-157] 当前抖音号 —— key 头段按号分区(`<accountId ?? _default>/…`)。可选,
+    // 缺省(存量/未选号)回退 `_default`;向后兼容(老 key 不迁移,DB 存每 asset 的 key)。
+    accountId?: string | null;
     // [T-055d SPEC §7.1] 目录规则(local-fs):folder 形如 "projects/<safe>-<id6>/素材"
     // 或 "inbox";fileName 原名保真。二者可选 —— 缺省回退旧 key 规则(assetType/nextKey),
     // mock/s3 后端可忽略。
@@ -82,8 +93,10 @@ export function createMockObjectStorage(
   const objects = new Map<string, HeadObjectResult>();
 
   return {
-    async createPresignedUpload({ assetType, mimeType, fileSize }) {
-      const storageKey = deps.nextKey();
+    async createPresignedUpload({ assetType, mimeType, fileSize, accountId }) {
+      // [T-157] 账号分区:key 头段 = <accountId ?? _default>(mock 键也分区,让集成测试
+      // 看到与真实后端一致的按号 key 形状)。
+      const storageKey = `${accountKeyPrefix(accountId)}${deps.nextKey()}`;
       objects.set(storageKey, {
         mimeType,
         fileSize,
