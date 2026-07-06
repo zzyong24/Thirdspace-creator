@@ -46,8 +46,8 @@
 ### 3. ✅ "七步"废弃文案跨页残留 —— 已修(用户可见 3 处)
 产品早改**两阶段**(脚本→复盘),但"七步流水线"编号(③/⑤/⑦)散落在页面副标题。**已修**:`shell-router.tsx` 用户可见的 3 条 `pageDescription`(账号⑤/日历⑦/选题③)已去掉「(七步X)」尾注。(代码注释里的"七步"是内部溯源标注,不面向用户,保留。)遗留 1 处:搜索/项目卡的 stage 显示旧阶段名「研究」(读侧 `PROJECT_STAGES` 白名单不含新建项目 startStage `brief` → fallback),纯展示、归下面小项。
 
-### 4. ⚠️ AI 出的选题采纳后归类为"手动灵感"(根因已定位,待修)
-选题池把 AI 出题采纳的候选统计到「手动灵感」而非 AI 来源。**连库坐实**:promoted 候选 `cand-1ddf1e04-76` 的 `source`=`idea`。**根因**:候选有两条创建路径——`createFromAIResult`(AI,`source`=trend/benchmark/demand)vs `createCandidate`(手动,固定 `source`='idea')。这条 AI 候选落到了 `idea`,说明**采纳路径没保住 AI provenance / 或 topic.generate 节点没正确设 `source`**。修复需追 AI 管线运行态(topic.generate 输出的 source 字段 + 采纳路由),**不宜盲改,单开任务修**。
+### 4. ✅ AI 出的选题采纳后归类为"手动灵感"—— 已修 + live 验证(T-149,commit `c5ff296`)
+选题池把 AI 出题采纳的候选统计到「手动灵感」而非 AI 来源。**根因**(子代理定位):**采纳路由错**——Copilot 里 `topic.generate` 是纯 Vercel AI SDK tool、**不建 ai_task** → 无 taskId → 走不通 `confirmTask`→`createFromAIResult`,只能落 `createCandidate` 手动門,而该門契约锁死 `source: z.literal("idea")`;且 `chat-runner.ts:544` 的 map 把 AI 真实渠道 `t.source` 丢了。**端到端修 6 处保 provenance**:契约 `z.literal("idea")`→`candidateSource.default("idea")`、service/transport 透传 `source`、chat-runner map 补 `source`、chat-tools 返回类型加 `source`、采纳卡走 `normalizeSource`(只放行 trend/benchmark/demand,含 idea/positioning/knowledge 兜底 idea,不自造渠道)。**验证**:四包 typecheck 0;chat-candidate-card+chat-tools 100 测 + candidate.contract 12 测(独立复跑绿);**live 验证**:直接 dispatch `candidates.create` 传 `source='trend'` → 连库确认真落 `trend`(門解锁生效、不再被锁 idea)。**诚实存疑**:完整 Copilot-UI 采纳流因合成事件驱动不了 Copilot 覆盖层(既有工具局限)未逐帧实机跑,但采纳路径由单测覆盖 + 后端門/透传 live 验证;另 topic-node 对 positioning/knowledge basis 的 source 提示词未优化(属提示词质量、不影响本 bug 数据正确性,未顺手改)。
 
 ### 5. ✅ 「使用情况分析」默认开着 —— 已修(默认关)
 `docs/PROTECTION.md` §4 明确「telemetry 默认关 / 零收集」,但 `analyticsEnabled` schema/repository/service 默认全 =`true`,与隐私原则矛盾。**已修**:4 处默认翻 `false`(schema 列 + DDL + repo defaults + service getPreferences fallback),2 处默认断言测试同步更新,settings 测试 37/37 绿。**补注**:该开关是 **dormant**(全仓无真实遥测消费点,纯 UI),翻默认是原则对齐、功能零影响;当前用户行本就 =false。
