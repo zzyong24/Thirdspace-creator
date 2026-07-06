@@ -197,6 +197,151 @@ describe("ingestion.refreshDouyin — 抖音真抓落库 (线 B)", () => {
   });
 });
 
+// [T-136 §D] 绑定流程:采集时抓登录用户自己的真实身份(昵称+抖音号),回填当前号占位
+//   (external_source.name / platform_account.handle),替「我的抖音」。**仅抓到才覆盖**、幂等、
+//   best-effort(回填失败不阻断采集)。scraper 抓身份的纯函数在 douyin-cdp.test.ts;此处测编排。
+describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)", () => {
+  const record: MetricRecord = {
+    recordKey: "douyin:9100:NOW",
+    platform: "douyin",
+    externalId: "9100",
+    capturedAt: NOW,
+    metrics: { views: 100 },
+  };
+
+  function identityService(
+    db: Db,
+    fetchResult:
+      | MetricRecord[]
+      | {
+          records: MetricRecord[];
+          identity: { nickname: string; secUid: string; douyinId: string } | null;
+        },
+    handleUpdates: Array<{ platform: string; handle: string }>,
+  ) {
+    let seq = 0;
+    const douyinFetch: DouyinFetchPort = {
+      fetch: async () => fetchResult,
+      login: async () => true,
+      status: async () => true,
+    };
+    const platformAccount: IngestionPlatformAccountPort = {
+      ensureAccount: async () => ({ id: "acct-x" }),
+      updateAccountHandle: async (_c, input) => {
+        handleUpdates.push(input);
+      },
+    };
+    return createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
+      db,
+      douyinFetch,
+      platformAccount,
+      ports: {
+        publishing: {
+          resolvePublication: () => Promise.resolve({ id: "pub-9100" }),
+        },
+        analytics: { appendSnapshot: () => Promise.resolve({ created: true }) },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+  }
+
+  async function readSource(db: Db, id: string) {
+    let seq = 0;
+    return createIngestionRepository(db, {
+      now: () => NOW,
+      nextId: (p: string) => `${p}-r-${++seq}`,
+      userId: ctx.userId,
+      accountId: null,
+    }).getExternalSource(id);
+  }
+
+  it("抓到真实身份 → external_source.name=真实昵称、sourceIdentifier=抖音号;platform_account handle 更新", async () => {
+    const { db } = await createDb();
+    await seedSource(db, "src-douyin-id", "douyin"); // 占位 name(seedSource 里 name=sourceType)
+    const updates: Array<{ platform: string; handle: string }> = [];
+    const svc = identityService(
+      db,
+      {
+        records: [record],
+        identity: {
+          nickname: "月色创作者",
+          secUid: "MS4wsecuid",
+          douyinId: "moonlit_creator",
+        },
+      },
+      updates,
+    );
+    await svc.refreshDouyin(ctx, { externalSourceId: "src-douyin-id" });
+    const src = await readSource(db, "src-douyin-id");
+    expect(src?.name).toBe("月色创作者"); // 真实昵称替占位
+    expect(src?.sourceIdentifier).toBe("moonlit_creator"); // 抖音号存 sourceIdentifier
+    // platform_account handle 也更新为真实昵称。
+    expect(updates).toEqual([{ platform: "douyin", handle: "月色创作者" }]);
+  });
+
+  it("抓不到身份(identity=null)→ 保留占位 name,不覆盖不清空、不更新账号 handle", async () => {
+    const { db } = await createDb();
+    await seedSource(db, "src-douyin-noid", "douyin");
+    const before = await readSource(db, "src-douyin-noid");
+    const updates: Array<{ platform: string; handle: string }> = [];
+    const svc = identityService(
+      db,
+      { records: [record], identity: null },
+      updates,
+    );
+    await svc.refreshDouyin(ctx, { externalSourceId: "src-douyin-noid" });
+    const after = await readSource(db, "src-douyin-noid");
+    expect(after?.name).toBe(before?.name); // 占位保持,不被清空
+    expect(updates).toHaveLength(0); // 未抓到 → 不更新账号 handle
+  });
+
+  it("旧数组形状(无 identity 的向后兼容 fetch)→ 不回填,采集照旧完成", async () => {
+    const { db } = await createDb();
+    await seedSource(db, "src-douyin-legacy", "douyin");
+    const before = await readSource(db, "src-douyin-legacy");
+    const updates: Array<{ platform: string; handle: string }> = [];
+    // fetch 返回裸 MetricRecord[](旧装配)→ normalizeFetch identity=null。
+    const svc = identityService(db, [record], updates);
+    const run = await svc.refreshDouyin(ctx, {
+      externalSourceId: "src-douyin-legacy",
+    });
+    expect(run.status).toBe("completed");
+    const after = await readSource(db, "src-douyin-legacy");
+    expect(after?.name).toBe(before?.name); // 无 identity → 保持占位
+    expect(updates).toHaveLength(0);
+  });
+
+  it("幂等:重复采集同一昵称 → external_source.name 稳定(值不变,无副作用)", async () => {
+    const { db } = await createDb();
+    await seedSource(db, "src-douyin-idem", "douyin");
+    const updates: Array<{ platform: string; handle: string }> = [];
+    const svc = identityService(
+      db,
+      {
+        records: [record],
+        identity: { nickname: "月色", secUid: "s", douyinId: "d" },
+      },
+      updates,
+    );
+    // 换 capturedAt 触发新 run(否则 idempotencyKey=capturedAt 会复用同 run)。
+    await svc.refreshDouyin(ctx, {
+      externalSourceId: "src-douyin-idem",
+      capturedAt: "2026-06-29T01:00:00.000Z",
+    });
+    await svc.refreshDouyin(ctx, {
+      externalSourceId: "src-douyin-idem",
+      capturedAt: "2026-06-29T02:00:00.000Z",
+    });
+    const src = await readSource(db, "src-douyin-idem");
+    expect(src?.name).toBe("月色"); // 两次采集后仍是真实昵称(稳定)
+  });
+});
+
 // T-032a 被动状态探针 —— checkDouyinStatus 直穿注入端口的 status()(测试注 fake,不连浏览器),
 // 返回 { loggedIn }。设置页「账号绑定」徽标读它;不建 run、不抓取、不需要 externalSource。
 describe("ingestion.checkDouyinStatus — 抖音登录态被动探针 (T-032a)", () => {

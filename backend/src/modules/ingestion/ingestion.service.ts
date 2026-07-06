@@ -135,7 +135,31 @@ export interface IngestionPlatformAccountPort {
     ctx: RequestContext,
     input: { platform: string; handle: string },
   ): Promise<{ id: string }>;
+  // [T-136 §D] 用采集到的真实身份把当前号的占位 handle(「我的抖音」)更新为真实昵称
+  //   (幂等:handle 已是真实值 / 传入空 → no-op)。可选 —— 未实现时 refreshDouyin 跳过账号
+  //   handle 回填(仅回填 external_source),不破旧组合根。仅当 identity 抓到才调。
+  updateAccountHandle?(
+    ctx: RequestContext,
+    input: { platform: string; handle: string },
+  ): Promise<void>;
 }
+
+// [T-136 §D] 登录用户自己的抖音身份(scraper 从作品列表 XHR 反解 —— 见 douyin-cdp
+// parseSelfIdentity)。service 用真实 nickname 替占位「我的抖音」、存 sourceIdentifier(抖音号)。
+// 抓不到 → null(诚实降级,保留占位不覆盖)。字段与 douyin-cdp DouyinSelfIdentity 同形(此处独立
+// 声明,避免 backend→frontend 反向依赖;composition root 结构化透传)。
+export interface DouyinSelfIdentity {
+  nickname: string;
+  secUid: string;
+  douyinId: string;
+}
+
+// fetch 的返回:向后兼容联合 —— 旧 fake / 旧装配返 `MetricRecord[]`;[T-136 §D] 新装配返
+// `{ records, identity }`(identity 为登录用户自己的身份,抓不到 null)。service 用 normalizeFetch
+// 归一,故两种形状都吃,旧测试零回归。
+export type DouyinFetchResult =
+  | MetricRecord[]
+  | { records: MetricRecord[]; identity: DouyinSelfIdentity | null };
 
 // 抖音抓取端口 —— composition root 注入 fetchDouyinMetrics(自起持久 context 复用扫码登录态);
 // 测试注 fake。`login` 弹窗扫码(headed);`fetch` headless 复刷,未登录抛 DouyinNotLoggedInError。
@@ -146,10 +170,19 @@ export interface DouyinFetchPort {
   fetch(opts: {
     capturedAt: string;
     accountId?: string | null;
-  }): Promise<MetricRecord[]>;
+  }): Promise<DouyinFetchResult>;
   login(opts?: { accountId?: string | null }): Promise<boolean>;
   // 被动探针(T-032a):headless 快查登录态,不弹窗。设置页「账号绑定」徽标读它。
   status(opts?: { accountId?: string | null }): Promise<boolean>;
+}
+
+// [T-136 §D] 归一 fetch 返回:旧数组形状 → { records, identity: null };新对象形状原样返回。
+function normalizeFetch(result: DouyinFetchResult): {
+  records: MetricRecord[];
+  identity: DouyinSelfIdentity | null;
+} {
+  if (Array.isArray(result)) return { records: result, identity: null };
+  return { records: result.records, identity: result.identity };
 }
 
 // T-038c 采集限流可观测端口 —— composition root 绑到 DouyinRequestGateway 单例的
@@ -314,6 +347,42 @@ export function createIngestionService(args: {
       accountId: ctx.accountId ?? null,
       ingestionRunId: runId,
     };
+  }
+
+  // [T-136 §D] 把采集到的登录用户真实身份回填到当前号(替占位「我的抖音」)。**仅当抓到真实值
+  //   才覆盖**(identity 为 null 或 nickname 空 → 保持占位不清空);幂等(重复采集同一昵称 →
+  //   更新到相同值,无副作用);best-effort(回填失败绝不阻断采集主流程,吞错记日志)。
+  //   两处同源:①external_source(采集源)name=昵称、sourceIdentifier=抖音号/sec_uid;
+  //   ②platform_account(端口注入且实现 updateAccountHandle 时)handle=昵称。
+  async function applyDouyinIdentity(
+    ctx: RequestContext,
+    sourceId: string,
+    identity: DouyinSelfIdentity | null,
+  ): Promise<void> {
+    const nickname = identity?.nickname?.trim();
+    if (!identity || !nickname) return; // 抓不到真实昵称 → 保留占位,不覆盖不清空
+    // 抖音号(人可读)优先存 sourceIdentifier;无则退化 sec_uid(仍是稳定身份锚)。
+    const sourceIdentifier = identity.douyinId || identity.secUid || undefined;
+    // ① 采集源:name 替占位为真实昵称;sourceIdentifier 存真实抖音号/sec_uid(有才写)。
+    try {
+      await repoFor(ctx).updateExternalSource(sourceId, {
+        name: nickname,
+        ...(sourceIdentifier ? { sourceIdentifier } : {}),
+      });
+    } catch (err) {
+      console.error("[ingestion] applyDouyinIdentity: 回填 external_source 失败:", err);
+    }
+    // ② 平台账号:把占位 handle 更新为真实昵称(端口实现 updateAccountHandle 时)。
+    if (platformAccount?.updateAccountHandle) {
+      try {
+        await platformAccount.updateAccountHandle(ctx, {
+          platform: "douyin",
+          handle: nickname,
+        });
+      } catch (err) {
+        console.error("[ingestion] applyDouyinIdentity: 回填 platform_account handle 失败:", err);
+      }
+    }
   }
 
   // Shared per-record loop for the four push methods. Marks the run running,
@@ -564,12 +633,18 @@ export function createIngestionService(args: {
         throw new Error("该外部来源不是抖音(sourceType≠douyin)");
       }
       const capturedAt = input.capturedAt ?? deps.now();
-      // 真抓(CDP)→ records;失败/无登录态会抛,run 不会被建(快速失败)。
+      // 真抓(CDP)→ records + identity;失败/无登录态会抛,run 不会被建(快速失败)。
       // [T-136 §D 切片 c] 带当前号 → composition root 用 `.auth/douyin/<accountId>` 登录态复刷。
-      const records = await douyinFetch.fetch({
-        capturedAt,
-        accountId: ctx.accountId ?? null,
-      });
+      const { records, identity } = normalizeFetch(
+        await douyinFetch.fetch({
+          capturedAt,
+          accountId: ctx.accountId ?? null,
+        }),
+      );
+      // [T-136 §D] 抓到登录用户真实身份 → 回填当前号占位:external_source.name=真实昵称、
+      //   sourceIdentifier=抖音号/sec_uid;platform_account.handle=真实昵称(仅抓到才覆盖,
+      //   幂等、best-effort:回填失败绝不阻断采集主流程)。抓不到 identity=null → 保留占位。
+      await applyDouyinIdentity(ctx, src.id, identity);
       // 数据底座(SPEC §1.3):抓到的每条作品先 ensureImportedProject(幂等于
       //   (userId, platform, externalId))—— 未知作品就地建历史项目 + content_output +
       //   publication(external_id=aweme_id),治"24 条被 reject"。projects 端口未注入

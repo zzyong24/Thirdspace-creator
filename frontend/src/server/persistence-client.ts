@@ -1308,6 +1308,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     //   登录态,互不顶号;accountId 为 null → `_default` 回退(单号 / 未选号,兼容旧行为)。
     //   测试经各自的 createIngestionService 注入 fake,不连真浏览器。
     douyinFetch: {
+      // [T-136 §D] fetchDouyinMetrics 现返回 { records, identity }(identity=登录用户自己的
+      //   身份,抓不到 null)—— 直接透传;service 用真实昵称替占位「我的抖音」。
       fetch: (opts) =>
         fetchDouyinMetrics({
           capturedAt: opts.capturedAt,
@@ -1355,6 +1357,37 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           const hit = again.rows.find((r) => r.accountHandle === input.handle);
           if (hit) return { id: hit.id };
           throw err;
+        }
+      },
+      // [T-136 §D] 采集到真实昵称后,把当前号的占位 handle(「我的抖音」/「待完善」)更新为
+      //   真实昵称。策略:列出该 user 的 douyin 账号,若已有同 handle=真实昵称 → no-op(幂等);
+      //   否则找占位账号(handle=「我的抖音」)更新其 handle。UNIQUE(user,platform,handle) 撞
+      //   (真实昵称账号已存在)→ 归并语义超出本切片(主 agent 账号合并),此处遇冲突吞错记日志。
+      updateAccountHandle: async (ctx, input) => {
+        const real = input.handle.trim();
+        if (!real) return;
+        const { rows } = await platformAccountService.listAccounts(ctx, {
+          platform: input.platform,
+          limit: 100,
+          offset: 0,
+        });
+        // 已有真实昵称账号 → 幂等 no-op(重复采集不重复更新)。
+        if (rows.some((r) => r.accountHandle === real)) return;
+        // 找占位账号更新(loginDouyin/ensureAccount 建的「我的抖音」)。
+        const placeholder = rows.find(
+          (r) => r.accountHandle === "我的抖音" || r.accountHandle === "待完善",
+        );
+        if (!placeholder) return; // 无占位可更新 → 交由后续 ensureAccount 建真实号
+        try {
+          await platformAccountService.updateAccount(ctx, placeholder.id, {
+            accountHandle: real,
+          });
+        } catch (err) {
+          // 撞 UNIQUE(真实昵称账号并发已建)/ 归并冲突 → 吞错(账号合并是主 agent 的活)。
+          console.error(
+            "[persistence] updateAccountHandle: 更新占位账号 handle 失败(可能已存在真实号):",
+            err,
+          );
         }
       },
     },

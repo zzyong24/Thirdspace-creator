@@ -132,7 +132,14 @@ function makeFakeMetricsContext(pages: number) {
       url: () => "https://x/aweme/v1/creator/item/list?count=12",
       json: () =>
         Promise.resolve({
-          aweme_list: [{ aweme_id: `w-${served}`, statistics: { play_count: 1 } }],
+          aweme_list: [
+            {
+              aweme_id: `w-${served}`,
+              statistics: { play_count: 1 },
+              // [T-136 §D] 登录用户自己作品的 author = 本人 → fetchDouyinMetrics 反解 identity。
+              author: { nickname: "月色本人", sec_uid: "MS4wself", unique_id: "moon_self" },
+            },
+          ],
           has_more: hasMore,
         }),
     });
@@ -190,7 +197,7 @@ describe("[gate-F7 插装点②] fetchDouyinMetrics 翻页每页过 creator-cent
     const spy = makeSpyGateway();
     const N = 3;
     const { calls, openContext } = makeFakeMetricsContext(N);
-    const records = await fetchDouyinMetrics(
+    const result = await fetchDouyinMetrics(
       { authDir: "/fake/.auth", capturedAt: "2026-07-02T00:00:00.000Z", maxPages: 10, gateway: spy.gateway },
       { openContext },
     );
@@ -199,7 +206,13 @@ describe("[gate-F7 插装点②] fetchDouyinMetrics 翻页每页过 creator-cent
     expect(spy.acquireCount("iesdouyin")).toBe(0);
     // 每页 acquire 后 report('ok')(滚动成功)。
     expect(spy.reports("creator-center")).toEqual(["ok", "ok", "ok"]);
-    expect(records.length).toBeGreaterThan(0); // 真解析出作品
+    expect(result.records.length).toBeGreaterThan(0); // 真解析出作品
+    // [T-136 §D] 从作品列表 XHR 的 author 反解登录用户自己的身份。
+    expect(result.identity).toEqual({
+      nickname: "月色本人",
+      secUid: "MS4wself",
+      douyinId: "moon_self",
+    });
     expect(calls.close).toBe(1);
   });
 });

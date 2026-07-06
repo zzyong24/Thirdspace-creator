@@ -99,6 +99,50 @@ export function parseWorkList(json: unknown): DouyinWork[] {
 }
 
 // ---------------------------------------------------------------------------
+// 登录用户自己的抖音身份(T-136 §D 绑定流程)—— 昵称 + sec_uid + 抖音号。来源:创作者中心
+// 作品列表 XHR 里每条作品的 `author`/`user` 字段(**登录用户自己的作品列表**,故 author 就是
+// 自己)。扫码阶段的 sessionid cookie 不含昵称,只能从内容 payload 反解;抓不到给 null(诚实
+// 降级,不硬造),service 保留占位「我的抖音」不覆盖。字段名从现有 scraper 及 cheat-on-content
+// 推断:nickname(昵称)/ sec_uid | sec_user_id(稳定加密 uid)/ unique_id(抖音号)兜底 uid。
+// ---------------------------------------------------------------------------
+
+export interface DouyinSelfIdentity {
+  /** 登录用户抖音昵称(必有才算抓到;空则整体返 null)。 */
+  nickname: string;
+  /** 稳定加密 uid(sec_uid / sec_user_id);抓不到空串。存 external_source.sourceIdentifier。 */
+  secUid: string;
+  /** 抖音号(unique_id)优先,兜底数字 uid;抓不到空串。人可读的号码,供展示/去重。 */
+  douyinId: string;
+}
+
+/**
+ * 从作品列表 XHR(`aweme_list`/`item_list`)抽登录用户**自己**的身份(纯函数,可单测)。
+ * 取第一条带 author/user 且有 nickname 的作品的作者身份 —— 登录用户的作品列表里 author 就是
+ * 本人。nickname 是身份最小充分条件:无 nickname(或列表空 / 脏 JSON)→ 返 null(降级,由
+ * service 保留占位,不覆盖)。secUid/douyinId 尽力取,取不到留空串(不阻断)。
+ */
+export function parseSelfIdentity(json: unknown): DouyinSelfIdentity | null {
+  const root = (json ?? {}) as Record<string, unknown>;
+  const list =
+    (Array.isArray(root.aweme_list) && root.aweme_list) ||
+    (Array.isArray(root.item_list) && root.item_list) ||
+    (Array.isArray((root.data as Record<string, unknown>)?.aweme_list) &&
+      ((root.data as Record<string, unknown>).aweme_list as unknown[])) ||
+    [];
+  for (const raw of list as unknown[]) {
+    const o = (raw ?? {}) as Record<string, unknown>;
+    const author = (o.author ?? o.user ?? {}) as Record<string, unknown>;
+    const nickname = str(author.nickname) || str(author.name);
+    if (!nickname.trim()) continue; // 无昵称不算身份,试下一条
+    const secUid = str(author.sec_uid) || str(author.sec_user_id);
+    // 抖音号(人可读):unique_id 优先(如 `moonlit_creator`);无则退化数字 uid。
+    const douyinId = str(author.unique_id) || str(author.uid) || str(author.user_id);
+    return { nickname, secUid, douyinId };
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // 评论(T-007 D2)—— 落 audience_signals。source 用既有 enum "comment"(不扩 enum),
 // record_key=`douyin:comment:${commentId}` 经 ux_ingestion_records_run_key 去重。
 // 字段口径对齐 cheat-on-content crawler.py `_normalize_comment_creator`:
@@ -691,14 +735,26 @@ const realMetricsOpenContext = (authDir: string, headless: boolean) =>
   openContext(authDir, headless) as unknown as Promise<MetricsCapableContext>;
 
 /**
+ * fetchDouyinMetrics 的返回:作品指标 records + 登录用户自己的身份 identity(T-136 §D)。
+ * identity 从抓取过程中拦到的作品列表 XHR 反解(每条作品的 author 就是登录用户本人);抓不到
+ * 给 null(诚实降级,service 保留占位不覆盖)。records 语义不变(向后兼容:归一 helper 见 service)。
+ */
+export interface FetchDouyinMetricsResult {
+  records: MetricRecord[];
+  identity: DouyinSelfIdentity | null;
+}
+
+/**
  * 真抓:headless 复用 .auth/ 登录态 → 导航创作者中心 → 拦作品列表 XHR → 礼貌滚动翻页 →
- * MetricRecord[]。**不落库**(落库由 ingestion.service 负责)。未登录抛 DouyinNotLoggedInError
+ * { records, identity }。**不落库**(落库由 ingestion.service 负责)。未登录抛 DouyinNotLoggedInError
  * (调用方提示先扫码登录)。openContext 端口注入(默认真 openContext),故翻页限流可确定性单测。
+ * [T-136 §D] 顺带从作品列表 XHR 反解登录用户自己的身份(nickname/sec_uid/抖音号),供 service
+ * 用真实昵称替占位「我的抖音」;抓不到 identity=null(不硬造)。
  */
 export async function fetchDouyinMetrics(
   opts: FetchDouyinOptions,
   deps: FetchDouyinMetricsDeps = {},
-): Promise<MetricRecord[]> {
+): Promise<FetchDouyinMetricsResult> {
   const maxPages = opts.maxPages ?? 40; // 上限(每页 ~12 条;has_more=false 会提前停,40 覆盖 ~480 作品)
   const gateway = opts.gateway ?? instantNoopGateway; // [gate-F7 插装点②] creator-center 每页限流
   const openCtx = deps.openContext ?? realMetricsOpenContext;
@@ -786,7 +842,15 @@ export async function fetchDouyinMetrics(
     // 去重(同 aweme_id 保留最后一次)。明细(完播/转粉)留后续补;先返回列表级真实指标。
     const byId = new Map<string, DouyinWork>();
     for (const w of works) byId.set(w.awemeId, w);
-    return toMetricRecords([...byId.values()], new Map(), opts.capturedAt);
+    const records = toMetricRecords([...byId.values()], new Map(), opts.capturedAt);
+    // [T-136 §D] 从拦到的作品列表 XHR 反解登录用户自己的身份(第一条命中的 author = 本人);
+    //   抓不到 → null(service 保留占位「我的抖音」不覆盖,诚实降级)。
+    let identity: DouyinSelfIdentity | null = null;
+    for (const j of workJsons) {
+      identity = parseSelfIdentity(j);
+      if (identity) break;
+    }
+    return { records, identity };
   } finally {
     await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
   }

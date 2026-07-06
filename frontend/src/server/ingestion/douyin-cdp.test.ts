@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   parseWorkList,
+  parseSelfIdentity,
   parseDetail,
   toMetricRecords,
   deriveWorkTitle,
@@ -65,6 +66,60 @@ describe("douyin-cdp 纯函数", () => {
     expect(parseWorkList(null)).toEqual([]);
     expect(parseWorkList({})).toEqual([]);
     expect(parseWorkList({ aweme_list: "not-an-array" })).toEqual([]);
+  });
+
+  // [T-136 §D] 从作品列表 XHR 抽登录用户**自己**的身份(登录用户的作品列表,每条作品的
+  //   author 就是自己):昵称 + sec_uid(兜底 uid)+ 抖音号(unique_id)。抓不到给 null。
+  it("parseSelfIdentity 从作品 author 抽自己身份(nickname/secUid/douyinId)", () => {
+    const json = {
+      aweme_list: [
+        {
+          aweme_id: "7400000000000000001",
+          desc: "x",
+          author: {
+            nickname: "月色创作者",
+            sec_uid: "MS4wLjABAAAAsecuid1234",
+            uid: "98765432100",
+            unique_id: "moonlit_creator",
+          },
+        },
+      ],
+    };
+    const id = parseSelfIdentity(json);
+    expect(id).not.toBeNull();
+    expect(id!.nickname).toBe("月色创作者");
+    expect(id!.secUid).toBe("MS4wLjABAAAAsecuid1234");
+    expect(id!.douyinId).toBe("moonlit_creator"); // unique_id 优先(抖音号),兜底 uid
+  });
+
+  it("parseSelfIdentity 兜底:无 unique_id 用 uid、user 键、sec_user_id", () => {
+    const json = {
+      aweme_list: [
+        {
+          user: {
+            nickname: "备用作者",
+            sec_user_id: "MS4wLjABsecuser",
+            uid: "111222333",
+          },
+        },
+      ],
+    };
+    const id = parseSelfIdentity(json);
+    expect(id!.nickname).toBe("备用作者");
+    expect(id!.secUid).toBe("MS4wLjABsecuser");
+    expect(id!.douyinId).toBe("111222333"); // 无 unique_id → 退化 uid
+  });
+
+  it("parseSelfIdentity 无 author / 无 nickname / 脏 JSON → null(诚实降级,不硬造)", () => {
+    expect(parseSelfIdentity(null)).toBeNull();
+    expect(parseSelfIdentity({})).toBeNull();
+    expect(parseSelfIdentity({ aweme_list: [] })).toBeNull();
+    // 有作品但无 author 身份字段 → null(不编造)。
+    expect(parseSelfIdentity({ aweme_list: [{ aweme_id: "7", desc: "x" }] })).toBeNull();
+    // author 存在但 nickname 空 → null(昵称是身份最小充分条件)。
+    expect(
+      parseSelfIdentity({ aweme_list: [{ author: { sec_uid: "s", nickname: "" } }] }),
+    ).toBeNull();
   });
 
   it("parseDetail 抽完播/转粉 + 缺字段记 null", () => {
