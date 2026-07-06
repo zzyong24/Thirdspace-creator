@@ -61,7 +61,8 @@ function makeAllFail() {
 /** required + recommended 全配(text 模型 + 定位 + 项目 + 联网搜索)→ isComplete=true。 */
 function makeRequiredAndRecommendedDone() {
   clientMock.listModels.mockResolvedValue([
-    { capability: "default", provider: "anthropic", modelName: "claude" },
+    // text 模型必配 key(hasSecret)才算「真能跑」;web.search 免 key(rss 无需密钥)。
+    { capability: "default", provider: "anthropic", modelName: "claude", hasSecret: true },
     { capability: "web.search", provider: "rss", modelName: "" },
   ]);
   clientMock.getProfile.mockResolvedValue({ id: "p", persona: "x" });

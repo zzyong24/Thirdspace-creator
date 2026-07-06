@@ -129,7 +129,7 @@ const userPreferences: UserPreference[] = [
     defaultVisibility: "private",
     autosaveEnabled: true,
     fileNamingRule: "{project}-{stage}-{date}",
-    analyticsEnabled: true,
+    analyticsEnabled: false, // 默认关(PROTECTION.md §4 遥测零收集,与后端默认一致)
   },
 ];
 

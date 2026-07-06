@@ -77,8 +77,11 @@ export async function loadConfiguredCapabilities(): Promise<
       const provider = typeof row.provider === "string" ? row.provider : "";
       const hasSecret = row.hasSecret === true;
       // 「真能跑」下限:provider 非空 且 配了可用 secret(key 或 env-ref)。
-      // 只有 provider 占位、没配 key 的空骨架 hasSecret=false → 不算已配。
-      if (capability && provider && hasSecret) {
+      // 只有 provider 占位、没配 key 的空骨架(provider="")一律排除 → 防 [Bug #3] 假打勾。
+      // 例外:web.search 可免 key(rss / browser 免密钥检索,T-140)——provider 非空即算已配,
+      // 不强求 hasSecret;空占位仍因 provider="" 被排除,不重开 #3。
+      const keylessOk = capability === "web.search";
+      if (capability && provider && (hasSecret || keylessOk)) {
         set.add(capability);
       }
     }
