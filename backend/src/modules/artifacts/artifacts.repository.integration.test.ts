@@ -18,18 +18,20 @@ const A = "user-a";
 const B = "user-b";
 const NOW = "2026-06-21T00:00:00.000Z";
 
-function deterministicDeps(userId: string) {
+function deterministicDeps(userId: string, accountId: string | null = null) {
   const counters = new Map<string, number>();
   return {
     now: () => NOW,
-    // Namespace ids by userId so two repos sharing the same pglite db never mint
-    // colliding PKs (in the real app one shared createSeq serves all ctx repos).
+    // Namespace ids by userId+accountId so two repos sharing the same pglite db
+    // never mint colliding PKs (in the real app one shared createSeq serves all
+    // ctx repos).
     nextId: (prefix: string) => {
       const n = (counters.get(prefix) ?? 0) + 1;
       counters.set(prefix, n);
-      return `${prefix}-${userId}-${n}`;
+      return `${prefix}-${userId}-${accountId ?? "g"}-${n}`;
     },
     userId,
+    accountId,
   };
 }
 
@@ -277,5 +279,87 @@ describe("artifacts.repository — origin provenance (F1)", () => {
     expect(resolveNextOrigin("user", undefined, "user")).toBe("user");
     expect(resolveNextOrigin(null, undefined, "user")).toBeNull();
     expect(resolveNextOrigin(null, undefined, "ai")).toBeNull();
+  });
+});
+
+// [T-136 切片 b] 同一 user 下按号(account_id)隔离门。artifacts 是 owned-root;子表经
+// requireArtifact 门透传。三态:设号只见该号 / null 见全部 / create stamp 正确。
+describe("artifacts.repository — per-account isolation (T-136 slice b)", () => {
+  it("accountId 设时 listByProject 只返该号的 artifact", async () => {
+    const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
+    const repoAcct2 = createArtifactRepository(db, deterministicDeps(A, "acct-2"));
+    await repoAcct1.create({
+      projectId: "proj-shared",
+      title: "号1稿",
+      artifactType: "master_script",
+      stage: "script",
+    });
+    await repoAcct2.create({
+      projectId: "proj-shared",
+      title: "号2稿",
+      artifactType: "master_script",
+      stage: "script",
+    });
+    const list1 = await repoAcct1.listByProject("proj-shared");
+    expect(list1.map((a) => a.title)).toEqual(["号1稿"]);
+    const list2 = await repoAcct2.listByProject("proj-shared");
+    expect(list2.map((a) => a.title)).toEqual(["号2稿"]);
+  });
+
+  it("accountId null(全局视图)时 listByProject 返该 user 全部号的 artifact", async () => {
+    const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
+    const repoAcct2 = createArtifactRepository(db, deterministicDeps(A, "acct-2"));
+    const repoGlobal = createArtifactRepository(db, deterministicDeps(A, null));
+    await repoAcct1.create({
+      projectId: "proj-shared",
+      title: "号1稿",
+      artifactType: "master_script",
+      stage: "script",
+    });
+    await repoAcct2.create({
+      projectId: "proj-shared",
+      title: "号2稿",
+      artifactType: "master_script",
+      stage: "script",
+    });
+    const all = await repoGlobal.listByProject("proj-shared");
+    expect(all.map((a) => a.title).sort()).toEqual(["号1稿", "号2稿"]);
+  });
+
+  it("accountId 设时 requireArtifact 拿不到别号的行 → OwnershipError", async () => {
+    const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
+    const repoAcct2 = createArtifactRepository(db, deterministicDeps(A, "acct-2"));
+    const a2 = await repoAcct2.create({
+      projectId: "proj-shared",
+      title: "号2稿",
+      artifactType: "master_script",
+      stage: "script",
+    });
+    await expect(repoAcct1.requireArtifact(a2.id)).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    // 全局视图能拿到。
+    const repoGlobal = createArtifactRepository(db, deterministicDeps(A, null));
+    expect((await repoGlobal.requireArtifact(a2.id)).id).toBe(a2.id);
+  });
+
+  it("create stamp:artifact 行落库带 accountId", async () => {
+    const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
+    const a = await repoAcct1.create({
+      projectId: "proj-shared",
+      title: "号1稿",
+      artifactType: "master_script",
+      stage: "script",
+    });
+    expect(a.accountId).toBe("acct-1");
+    // null 号 create → 存 null 兜底。
+    const repoGlobal = createArtifactRepository(db, deterministicDeps(A, null));
+    const g = await repoGlobal.create({
+      projectId: "proj-shared",
+      title: "存量稿",
+      artifactType: "master_script",
+      stage: "script",
+    });
+    expect(g.accountId).toBeNull();
   });
 });

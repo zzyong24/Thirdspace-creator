@@ -26,6 +26,11 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // the ownership boundary, baked in at construction
+  // [T-136 切片 b] 第二属主维度(按号 / 多人设)。三表(candidates/audience_signals/
+  // topic_promotions)均 owned-root 且各自有 account_id 列。null = 未选号 / 全局视图 /
+  // 存量兜底(§E 退化):读点条件叠加为 undefined → drizzle `and()` 忽略 → 只按 userId
+  // 过滤(返该 user 全部);写点 stamp null 兜底。
+  accountId: string | null;
 }
 
 export type CandidateSort =
@@ -169,6 +174,18 @@ export function createCandidateRepository(
     }
   }
 
+  // [T-136 切片 b] 按号隔离条件门(每表一个,列相同语义)。有号叠加 `eq(table.accountId,
+  // deps.accountId)`,null 返 undefined → `and()` 忽略 → 退化只按 userId(返该 user 全部)。
+  const candAccountGate = deps.accountId
+    ? eq(candidates.accountId, deps.accountId)
+    : undefined;
+  const sigAccountGate = deps.accountId
+    ? eq(audienceSignals.accountId, deps.accountId)
+    : undefined;
+  const promoAccountGate = deps.accountId
+    ? eq(topicPromotions.accountId, deps.accountId)
+    : undefined;
+
   return {
     async seedCandidates(rows) {
       if (rows.length === 0) return;
@@ -177,6 +194,7 @@ export function createCandidateRepository(
 
     async listCandidates({ status, source, sort, limit = 100, offset = 0 }) {
       const filters = [eq(candidates.userId, deps.userId)];
+      if (candAccountGate) filters.push(candAccountGate);
       if (status) filters.push(eq(candidates.status, status));
       if (source) filters.push(eq(candidates.source, source));
       const where = and(...filters);
@@ -202,6 +220,8 @@ export function createCandidateRepository(
         .values({
           id: deps.nextId("cand"),
           userId: deps.userId,
+          // [T-136 切片 b] create stamp:归到当前号(null 兜底,列 nullable)。
+          accountId: deps.accountId,
           title: input.title,
           angle: input.angle,
           source: input.source,
@@ -224,7 +244,11 @@ export function createCandidateRepository(
         .select()
         .from(candidates)
         .where(
-          and(eq(candidates.userId, deps.userId), eq(candidates.id, id)),
+          and(
+            eq(candidates.userId, deps.userId),
+            candAccountGate,
+            eq(candidates.id, id),
+          ),
         );
       const row = rows[0];
       if (!row) {
@@ -242,6 +266,7 @@ export function createCandidateRepository(
         .where(
           and(
             eq(candidates.userId, deps.userId),
+            candAccountGate,
             eq(candidates.aiTaskId, aiTaskId),
           ),
         )
@@ -284,7 +309,11 @@ export function createCandidateRepository(
         .update(candidates)
         .set(set)
         .where(
-          and(eq(candidates.userId, deps.userId), eq(candidates.id, id)),
+          and(
+            eq(candidates.userId, deps.userId),
+            candAccountGate,
+            eq(candidates.id, id),
+          ),
         )
         .returning();
       return updated[0]!;
@@ -296,7 +325,11 @@ export function createCandidateRepository(
         .update(candidates)
         .set({ card, updatedAt: deps.now() })
         .where(
-          and(eq(candidates.userId, deps.userId), eq(candidates.id, id)),
+          and(
+            eq(candidates.userId, deps.userId),
+            candAccountGate,
+            eq(candidates.id, id),
+          ),
         )
         .returning();
       return updated[0]!;
@@ -308,7 +341,11 @@ export function createCandidateRepository(
         .update(candidates)
         .set({ status: "promoted", updatedAt: deps.now() })
         .where(
-          and(eq(candidates.userId, deps.userId), eq(candidates.id, id)),
+          and(
+            eq(candidates.userId, deps.userId),
+            candAccountGate,
+            eq(candidates.id, id),
+          ),
         )
         .returning();
       return updated[0]!;
@@ -320,6 +357,8 @@ export function createCandidateRepository(
         .values({
           id: deps.nextId("promo"),
           userId: deps.userId,
+          // [T-136 切片 b] create stamp:晋升记录归到当前号(null 兜底)。
+          accountId: deps.accountId,
           candidateId: input.candidateId,
           projectId: input.projectId,
           promotedAt: deps.now(),
@@ -332,6 +371,10 @@ export function createCandidateRepository(
       const values = {
         id: deps.nextId("sig"),
         userId: deps.userId,
+        // [T-136 切片 b] create stamp:采集/信号归到当前号(null 兜底)。诚实存疑:幂等锚
+        // ux_audience_signals_user_source_external 是 (user, source, external_id),**不含
+        // account_id** —— 同一评论被两个号采集会被去重到先入库的号(设计层问题,非本切片能定)。
+        accountId: deps.accountId,
         source: input.source,
         rawText: input.rawText,
         demandTag: input.demandTag,
@@ -387,6 +430,7 @@ export function createCandidateRepository(
         .where(
           and(
             eq(audienceSignals.userId, deps.userId),
+            sigAccountGate,
             eq(audienceSignals.id, id),
           ),
         );
@@ -407,6 +451,7 @@ export function createCandidateRepository(
       offset = 0,
     }) {
       const filters = [eq(audienceSignals.userId, deps.userId)];
+      if (sigAccountGate) filters.push(sigAccountGate);
       if (source) filters.push(eq(audienceSignals.source, source));
       if (demandTag) filters.push(eq(audienceSignals.demandTag, demandTag));
       if (linkedCandidateId)
@@ -433,6 +478,7 @@ export function createCandidateRepository(
         .where(
           and(
             eq(audienceSignals.userId, deps.userId),
+            sigAccountGate,
             eq(audienceSignals.linkedCandidateId, candidateId),
           ),
         )
@@ -450,6 +496,7 @@ export function createCandidateRepository(
         .where(
           and(
             eq(audienceSignals.userId, deps.userId),
+            sigAccountGate,
             eq(audienceSignals.source, "comment"),
             eq(audienceSignals.publicationId, publicationId),
           ),
@@ -468,6 +515,7 @@ export function createCandidateRepository(
         .where(
           and(
             eq(audienceSignals.userId, deps.userId),
+            sigAccountGate,
             eq(audienceSignals.ingestionRunId, ingestionRunId),
             eq(audienceSignals.rawText, rawText),
           ),
@@ -484,6 +532,7 @@ export function createCandidateRepository(
         .where(
           and(
             eq(audienceSignals.userId, deps.userId),
+            sigAccountGate,
             eq(audienceSignals.id, signalId),
           ),
         )
@@ -498,6 +547,7 @@ export function createCandidateRepository(
         .where(
           and(
             eq(audienceSignals.userId, deps.userId),
+            sigAccountGate,
             eq(audienceSignals.linkedCandidateId, candidateId),
           ),
         );
@@ -508,6 +558,7 @@ export function createCandidateRepository(
         .where(
           and(
             eq(candidates.userId, deps.userId),
+            candAccountGate,
             eq(candidates.id, candidateId),
           ),
         );
@@ -523,7 +574,7 @@ export function createCandidateRepository(
           linkedCandidateId: audienceSignals.linkedCandidateId,
         })
         .from(audienceSignals)
-        .where(eq(audienceSignals.userId, deps.userId));
+        .where(and(eq(audienceSignals.userId, deps.userId), sigAccountGate));
       const signalsBySource: Record<string, number> = {};
       let signalsUnlinked = 0;
       for (const s of sigRows) {
@@ -535,7 +586,7 @@ export function createCandidateRepository(
       const candRows = await db
         .select({ status: candidates.status, card: candidates.card })
         .from(candidates)
-        .where(eq(candidates.userId, deps.userId));
+        .where(and(eq(candidates.userId, deps.userId), candAccountGate));
       let poolWithCard = 0;
       let poolWithoutCard = 0;
       let droppedCount = 0;
@@ -557,7 +608,7 @@ export function createCandidateRepository(
       const promoRows = await db
         .select({ id: topicPromotions.id })
         .from(topicPromotions)
-        .where(eq(topicPromotions.userId, deps.userId));
+        .where(and(eq(topicPromotions.userId, deps.userId), promoAccountGate));
 
       return {
         signalsTotal: sigRows.length,

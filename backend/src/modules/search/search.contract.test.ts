@@ -27,6 +27,7 @@ function repoFor(db: Db, userId: string): SearchRepository {
     now: () => NOW,
     nextId: (p) => `${p}-${userId}-${++seq}`,
     userId,
+    accountId: null, // [T-136 切片 b] 契约测试走全局视图(不过滤号)
   });
 }
 

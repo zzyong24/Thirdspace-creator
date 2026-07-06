@@ -171,13 +171,28 @@ export interface ProjectRepository {
 }
 
 export function createProjectRepository(db: Db): ProjectRepository {
+  // [T-136 切片 b] 按号隔离条件门:当 ctx.accountId 有值时叠加 `eq(projects.accountId, …)`,
+  // 为 null/undefined(未选号 / 全局视图 / 存量兜底,§E 退化)时返回 undefined —— drizzle
+  // `and()` 忽略 undefined,门退化为「只按 userId 过滤,返回该 user 全部行」。projects 是
+  // 唯一 owned-root(有自身 account_id 列)的表;子表(activities/stages/platforms/outputs/
+  // output_stages/tasks 无 account_id 列)经父 project 门透传,不强加(SPEC §9)。
+  function accountGate(ctx: RequestContext) {
+    return ctx.accountId ? eq(projects.accountId, ctx.accountId) : undefined;
+  }
+
   // Resolve + ownership-check a project; cross-user/missing is indistinguishable
   // (foundation §2: 404, never reveal existence) → OwnershipError.
   async function get(ctx: RequestContext, projectId: string): Promise<ProjectRow> {
     const rows = await db
       .select()
       .from(projects)
-      .where(and(eq(projects.id, projectId), eq(projects.userId, ctx.userId)));
+      .where(
+        and(
+          eq(projects.id, projectId),
+          eq(projects.userId, ctx.userId),
+          accountGate(ctx),
+        ),
+      );
     const row = rows[0];
     if (!row) throw new OwnershipError(`Project not found: ${projectId}`);
     return row;
@@ -193,7 +208,13 @@ export function createProjectRepository(db: Db): ProjectRepository {
       .from(contentOutputs)
       .innerJoin(projects, eq(contentOutputs.projectId, projects.id))
       .where(
-        and(eq(contentOutputs.id, outputId), eq(projects.userId, ctx.userId)),
+        and(
+          eq(contentOutputs.id, outputId),
+          eq(projects.userId, ctx.userId),
+          // [T-136 切片 b] 父门透传账号维度:反查 output 时也要按父 project 的号隔离
+          // (否则有号 ctx 能读到别号项目下的 output → 串味)。
+          accountGate(ctx),
+        ),
       );
     const row = rows[0]?.output;
     if (!row) throw new OwnershipError(`Output not found: ${outputId}`);
@@ -208,7 +229,13 @@ export function createProjectRepository(db: Db): ProjectRepository {
       .select({ task: tasks })
       .from(tasks)
       .innerJoin(projects, eq(tasks.projectId, projects.id))
-      .where(and(eq(tasks.id, taskId), eq(projects.userId, ctx.userId)));
+      .where(
+        and(
+          eq(tasks.id, taskId),
+          eq(projects.userId, ctx.userId),
+          accountGate(ctx), // [T-136 切片 b] 父门透传账号维度
+        ),
+      );
     const row = rows[0]?.task;
     if (!row) throw new OwnershipError(`Task not found: ${taskId}`);
     return row;
@@ -248,7 +275,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
       return db
         .select()
         .from(projects)
-        .where(eq(projects.userId, ctx.userId))
+        .where(and(eq(projects.userId, ctx.userId), accountGate(ctx)))
         .orderBy(asc(projects.createdAt));
     },
 
@@ -261,7 +288,11 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .select()
         .from(projects)
         .where(
-          and(eq(projects.userId, ctx.userId), eq(projects.source, "imported")),
+          and(
+            eq(projects.userId, ctx.userId),
+            eq(projects.source, "imported"),
+            accountGate(ctx),
+          ),
         )
         .orderBy(asc(projects.createdAt));
     },
@@ -287,6 +318,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
           and(
             eq(projects.userId, ctx.userId),
             eq(projects.source, "imported"),
+            accountGate(ctx),
             sql`${projects.platformRef} ->> 'platform' = ${ref.platform}`,
             sql`${projects.platformRef} ->> 'externalId' = ${ref.externalId}`,
           ),
@@ -296,11 +328,17 @@ export function createProjectRepository(db: Db): ProjectRepository {
     },
 
     async updateProjectRow(ctx, projectId, set) {
-      await get(ctx, projectId); // re-assert ownership before the write
+      await get(ctx, projectId); // re-assert ownership (含账号门) before the write
       const updated = await db
         .update(projects)
         .set(set)
-        .where(and(eq(projects.id, projectId), eq(projects.userId, ctx.userId)))
+        .where(
+          and(
+            eq(projects.id, projectId),
+            eq(projects.userId, ctx.userId),
+            accountGate(ctx),
+          ),
+        )
         .returning();
       return updated[0]!;
     },
@@ -470,11 +508,15 @@ export function createProjectRepository(db: Db): ProjectRepository {
           .delete(projectActivities)
           .where(eq(projectActivities.projectId, projectId));
 
-        // 最后删项目根行(user-scoped 再兜一层)。
+        // 最后删项目根行(user-scoped + 账号门再兜一层;删前 get() 已含账号门守过)。
         await tx
           .delete(projects)
           .where(
-            and(eq(projects.id, projectId), eq(projects.userId, ctx.userId)),
+            and(
+              eq(projects.id, projectId),
+              eq(projects.userId, ctx.userId),
+              accountGate(ctx), // [T-136 切片 b]
+            ),
           );
       });
       return target;
@@ -535,7 +577,11 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .from(projectStages)
         .innerJoin(projects, eq(projectStages.projectId, projects.id))
         .where(
-          and(eq(projectStages.id, stageId), eq(projects.userId, ctx.userId)),
+          and(
+            eq(projectStages.id, stageId),
+            eq(projects.userId, ctx.userId),
+            accountGate(ctx), // [T-136 切片 b] 父门透传账号维度
+          ),
         );
       if (!owned[0]) throw new OwnershipError(`Stage not found: ${stageId}`);
       const updated = await db
@@ -634,7 +680,11 @@ export function createProjectRepository(db: Db): ProjectRepository {
         )
         .innerJoin(projects, eq(contentOutputs.projectId, projects.id))
         .where(
-          and(eq(outputStages.id, stageId), eq(projects.userId, ctx.userId)),
+          and(
+            eq(outputStages.id, stageId),
+            eq(projects.userId, ctx.userId),
+            accountGate(ctx), // [T-136 切片 b] 父门透传账号维度
+          ),
         );
       if (!owned[0]) throw new OwnershipError(`Output stage not found: ${stageId}`);
       const updated = await db

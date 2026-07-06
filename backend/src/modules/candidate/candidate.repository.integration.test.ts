@@ -16,12 +16,18 @@ import { OwnershipError, DerivedFieldError } from "./candidate.errors";
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
-function repoFor(db: Db, userId: string, tag = userId): CandidateRepository {
+function repoFor(
+  db: Db,
+  userId: string,
+  accountId: string | null = null,
+  tag = `${userId}-${accountId ?? "g"}`,
+): CandidateRepository {
   let seq = 0;
   return createCandidateRepository(db, {
     now: () => NOW,
     nextId: (prefix: string) => `${prefix}-${tag}-${++seq}`,
     userId,
+    accountId,
   });
 }
 
@@ -214,5 +220,106 @@ describe("candidate repository (integration)", () => {
     expect(bSignals).toHaveLength(0);
     const aSignals = await repoA.listSignalsForCandidate(cand.id);
     expect(aSignals).toHaveLength(1);
+  });
+});
+
+// [T-136 切片 b] 同一 user 下按号(account_id)隔离门。三表(candidates/audience_signals/
+// topic_promotions)均 owned-root、各带 account_id。三态:设号只见该号 / null 见全部 /
+// create stamp 正确。
+describe("candidate repository — per-account isolation (T-136 slice b)", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  function mkCand(source = "idea") {
+    return {
+      title: "选题",
+      angle: "角度",
+      source,
+      contentRole: null,
+      productAnchorId: null,
+      positioningFit: null,
+      predictedScore: null,
+      aiTaskId: null,
+    };
+  }
+
+  it("candidates:accountId 设时 listCandidates/getCandidate 只见该号,别号 → OwnershipError", async () => {
+    const repo1 = repoFor(db, "user-a", "acct-1");
+    const repo2 = repoFor(db, "user-a", "acct-2");
+    const c1 = await repo1.createCandidate(mkCand());
+    const c2 = await repo2.createCandidate(mkCand());
+    expect((await repo1.listCandidates({})).rows.map((r) => r.id)).toEqual([c1.id]);
+    expect((await repo2.listCandidates({})).rows.map((r) => r.id)).toEqual([c2.id]);
+    await expect(repo1.getCandidate(c2.id)).rejects.toBeInstanceOf(OwnershipError);
+  });
+
+  it("candidates:accountId null(全局视图)时 listCandidates 见该 user 全部号", async () => {
+    const repo1 = repoFor(db, "user-a", "acct-1");
+    const repo2 = repoFor(db, "user-a", "acct-2");
+    const repoGlobal = repoFor(db, "user-a", null);
+    const c1 = await repo1.createCandidate(mkCand());
+    const c2 = await repo2.createCandidate(mkCand());
+    const cg = await repoGlobal.createCandidate(mkCand()); // accountId=null 存量
+    const ids = (await repoGlobal.listCandidates({})).rows.map((r) => r.id).sort();
+    expect(ids).toEqual([c1.id, c2.id, cg.id].sort());
+  });
+
+  it("candidates:create stamp 落库带 accountId(null 兜底)", async () => {
+    const repo1 = repoFor(db, "user-a", "acct-1");
+    const repoGlobal = repoFor(db, "user-a", null);
+    const c1 = await repo1.createCandidate(mkCand());
+    expect(c1.accountId).toBe("acct-1");
+    const cg = await repoGlobal.createCandidate(mkCand());
+    expect(cg.accountId).toBeNull();
+  });
+
+  it("audience_signals:accountId 设时 listSignals 只见该号 + create stamp 正确", async () => {
+    const repo1 = repoFor(db, "user-a", "acct-1");
+    const repo2 = repoFor(db, "user-a", "acct-2");
+    const s1 = await repo1.createSignal({
+      source: "comment",
+      rawText: "号1评论",
+      demandTag: null,
+      payingIntent: null,
+      linkedCandidateId: null,
+      ingestionRunId: null,
+    });
+    await repo2.createSignal({
+      source: "comment",
+      rawText: "号2评论",
+      demandTag: null,
+      payingIntent: null,
+      linkedCandidateId: null,
+      ingestionRunId: null,
+    });
+    expect(s1.row.accountId).toBe("acct-1");
+    const list1 = await repo1.listSignals({});
+    expect(list1.rows.map((r) => r.rawText)).toEqual(["号1评论"]);
+    // 全局视图见两条。
+    const repoGlobal = repoFor(db, "user-a", null);
+    const all = await repoGlobal.listSignals({});
+    expect(all.rows.map((r) => r.rawText).sort()).toEqual(["号1评论", "号2评论"]);
+  });
+
+  it("topic_promotions:createPromotion stamp + topicsOverviewCounts 按号计数", async () => {
+    const repo1 = repoFor(db, "user-a", "acct-1");
+    const repo2 = repoFor(db, "user-a", "acct-2");
+    const c1 = await repo1.createCandidate(mkCand());
+    const c2 = await repo2.createCandidate(mkCand());
+    const promo1 = await repo1.createPromotion({
+      candidateId: c1.id,
+      projectId: "proj-1",
+    });
+    await repo2.createPromotion({ candidateId: c2.id, projectId: "proj-2" });
+    expect(promo1.accountId).toBe("acct-1");
+    // 号1 总览只算号1的:1 个 pool(c1)、1 个 promotion。
+    const counts1 = await repo1.topicsOverviewCounts();
+    expect(counts1.promotionsCount).toBe(1);
+    // 全局总览:2 个 promotion。
+    const repoGlobal = repoFor(db, "user-a", null);
+    const countsG = await repoGlobal.topicsOverviewCounts();
+    expect(countsG.promotionsCount).toBe(2);
   });
 });

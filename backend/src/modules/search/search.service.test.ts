@@ -32,6 +32,7 @@ function realService(db: Db): SearchService {
         now: () => NOW,
         nextId: (p) => `${p}-${++seq}`,
         userId: ctx.userId,
+        accountId: ctx.accountId ?? null, // [T-136 切片 b] 透传按号维度
       }),
     { now: () => NOW },
   );

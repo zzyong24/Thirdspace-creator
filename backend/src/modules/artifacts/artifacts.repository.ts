@@ -37,6 +37,10 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // owner — baked in; the service mints one repo per ctx
+  // [T-136 切片 b] 第二属主维度(按号 / 多人设)。null = 未选号 / 全局视图 / 存量兜底
+  // (§E 退化)。owned-root(artifacts)读点条件叠加 `eq(artifacts.accountId, …)`;为 null
+  // 时门退化(and 忽略 undefined)= 只按 userId 返该 user 全部行。子表经 requireArtifact 透传。
+  accountId: string | null;
 }
 
 export interface StructuredContent {
@@ -122,11 +126,23 @@ export function createArtifactRepository(
 ): ArtifactRepository {
   const userId = deps.userId;
 
+  // [T-136 切片 b] 按号隔离条件门:有号叠加过滤,null(全局视图/存量)返 undefined →
+  // drizzle `and()` 忽略 → 退化为只按 userId 过滤(返该 user 全部行)。
+  const accountGate = deps.accountId
+    ? eq(artifacts.accountId, deps.accountId)
+    : undefined;
+
   async function requireArtifact(artifactId: string): Promise<ArtifactRow> {
     const rows = await db
       .select()
       .from(artifacts)
-      .where(and(eq(artifacts.id, artifactId), eq(artifacts.userId, userId)));
+      .where(
+        and(
+          eq(artifacts.id, artifactId),
+          eq(artifacts.userId, userId),
+          accountGate,
+        ),
+      );
     const row = rows[0];
     // Cross-user / unknown id is indistinguishable (foundation §2: 404, never
     // reveal existence) → OwnershipError.
@@ -194,7 +210,11 @@ export function createArtifactRepository(
         .select()
         .from(artifacts)
         .where(
-          and(eq(artifacts.userId, userId), eq(artifacts.projectId, projectId)),
+          and(
+            eq(artifacts.userId, userId),
+            eq(artifacts.projectId, projectId),
+            accountGate,
+          ),
         )
         .orderBy(asc(artifacts.createdAt));
     },
@@ -210,6 +230,8 @@ export function createArtifactRepository(
       await db.insert(artifacts).values({
         id: artifactId,
         userId,
+        // [T-136 切片 b] create stamp:落库把行归到当前号(null 兜底,列 nullable)。
+        accountId: deps.accountId,
         projectId: input.projectId,
         contentOutputId: input.contentOutputId ?? null,
         currentVersionId: null,
@@ -232,7 +254,13 @@ export function createArtifactRepository(
       await db
         .update(artifacts)
         .set({ currentVersionId: version.id, updatedAt: now })
-        .where(and(eq(artifacts.id, artifactId), eq(artifacts.userId, userId)));
+        .where(
+          and(
+            eq(artifacts.id, artifactId),
+            eq(artifacts.userId, userId),
+            accountGate,
+          ),
+        );
       return requireArtifact(artifactId);
     },
 
@@ -264,7 +292,13 @@ export function createArtifactRepository(
           origin: nextOrigin,
           updatedAt: deps.now(),
         })
-        .where(and(eq(artifacts.id, artifactId), eq(artifacts.userId, userId)));
+        .where(
+          and(
+            eq(artifacts.id, artifactId),
+            eq(artifacts.userId, userId),
+            accountGate,
+          ),
+        );
       return version;
     },
 
@@ -312,7 +346,13 @@ export function createArtifactRepository(
       await db
         .update(artifacts)
         .set({ currentVersionId: clone.id, updatedAt: deps.now() })
-        .where(and(eq(artifacts.id, artifactId), eq(artifacts.userId, userId)));
+        .where(
+          and(
+            eq(artifacts.id, artifactId),
+            eq(artifacts.userId, userId),
+            accountGate,
+          ),
+        );
       return requireArtifact(artifactId);
     },
 

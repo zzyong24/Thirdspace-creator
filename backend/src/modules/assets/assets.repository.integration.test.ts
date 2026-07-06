@@ -219,3 +219,49 @@ describe("assets.repository — upload sessions user-scoped (B6)", () => {
     );
   });
 });
+
+// [T-136 切片 b] 同一 user 下按号(account_id)隔离门。assets 是 owned-root(OQ1 裁决=按号
+// 独立);asset_files 经父门透传、asset_uploads 不按号隔离。owned-root 方法收**可选**
+// accountId:设号只见该号 / 不传(undefined)见全部 / create stamp 正确。
+describe("assets.repository — per-account isolation (T-136 slice b)", () => {
+  it("accountId 设时 listAssets 只返该号的 asset", async () => {
+    await repo.insertAsset(A, { assetType: "image", name: "号1图", currentFileId: null }, "acct-1");
+    await repo.insertAsset(A, { assetType: "image", name: "号2图", currentFileId: null }, "acct-2");
+    const list1 = await repo.listAssets(A, { limit: 50, cursor: null }, "acct-1");
+    expect(list1.map((a) => a.name)).toEqual(["号1图"]);
+    const list2 = await repo.listAssets(A, { limit: 50, cursor: null }, "acct-2");
+    expect(list2.map((a) => a.name)).toEqual(["号2图"]);
+  });
+
+  it("accountId 不传(全局视图)时 listAssets 返该 user 全部号的 asset", async () => {
+    await repo.insertAsset(A, { assetType: "image", name: "号1图", currentFileId: null }, "acct-1");
+    await repo.insertAsset(A, { assetType: "image", name: "号2图", currentFileId: null }, "acct-2");
+    await repo.insertAsset(A, { assetType: "image", name: "存量图", currentFileId: null }); // accountId=null
+    const all = await repo.listAssets(A, { limit: 50, cursor: null });
+    expect(all.map((a) => a.name).sort()).toEqual(["号1图", "号2图", "存量图"]);
+  });
+
+  it("accountId 设时 getAsset 拿不到别号的行(→ null,不泄露)", async () => {
+    const a2 = await repo.insertAsset(A, { assetType: "image", name: "号2图", currentFileId: null }, "acct-2");
+    expect(await repo.getAsset(A, a2.id, "acct-1")).toBeNull();
+    expect((await repo.getAsset(A, a2.id, "acct-2"))?.id).toBe(a2.id);
+    // 全局视图能拿到。
+    expect((await repo.getAsset(A, a2.id))?.id).toBe(a2.id);
+  });
+
+  it("accountId 设时 updateAssetStatus 改不到别号的行(→ null no-op)", async () => {
+    const a2 = await repo.insertAsset(A, { assetType: "image", name: "号2图", currentFileId: null }, "acct-2");
+    const miss = await repo.updateAssetStatus(A, a2.id, { status: "archived" }, "acct-1");
+    expect(miss).toBeNull();
+    // 本号内可改。
+    const hit = await repo.updateAssetStatus(A, a2.id, { status: "archived" }, "acct-2");
+    expect(hit?.status).toBe("archived");
+  });
+
+  it("create stamp:insertAsset 落库带 accountId(null 兜底)", async () => {
+    const a = await repo.insertAsset(A, { assetType: "image", name: "号1图", currentFileId: null }, "acct-1");
+    expect(a.accountId).toBe("acct-1");
+    const g = await repo.insertAsset(A, { assetType: "image", name: "存量图", currentFileId: null });
+    expect(g.accountId).toBeNull();
+  });
+});

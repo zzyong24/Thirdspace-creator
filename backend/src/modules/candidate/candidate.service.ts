@@ -264,7 +264,13 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
   const { db, now, nextId, projects, positioning, ingestion, overview } = deps;
 
   function repoFor(ctx: RequestContext): CandidateRepository {
-    const repoDeps: RepoDeps = { now, nextId, userId: ctx.userId };
+    const repoDeps: RepoDeps = {
+      now,
+      nextId,
+      userId: ctx.userId,
+      // [T-136 切片 b] 按号隔离维度透传;未选号/全局视图为 null(§E 退化)。
+      accountId: ctx.accountId ?? null,
+    };
     return createCandidateRepository(db, repoDeps);
   }
 

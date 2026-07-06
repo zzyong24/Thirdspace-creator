@@ -57,6 +57,7 @@ function wire(db: Db): Wired {
   const artifactsRepo = createArtifactRepository(db, {
     ...deps,
     userId: ctx.userId,
+    accountId: ctx.accountId ?? null, // [T-136 切片 b]
   });
   const warnings: string[] = [];
 

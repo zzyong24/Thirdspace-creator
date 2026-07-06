@@ -158,14 +158,14 @@ export function createAssetsService(
     ctx: RequestContext,
     assetId: string,
   ): Promise<AssetRow> {
-    const row = await repo.getAsset(ctx.userId, assetId);
+    const row = await repo.getAsset(ctx.userId, assetId, ctx.accountId ?? null);
     if (!row) throw new OwnershipError("Asset not found");
     return row;
   }
 
   return {
     async listAssets(ctx, query) {
-      return repo.listAssets(ctx.userId, query);
+      return repo.listAssets(ctx.userId, query, ctx.accountId ?? null);
     },
 
     async listFilesByIds(_ctx, fileIds) {
@@ -279,11 +279,15 @@ export function createAssetsService(
       const head = await storage.headObject(session.storageKey);
       // Materialize: create the asset (active), then the first file (v1), then
       // re-point currentFileId. The repo stamps userId + status='active'.
-      const asset = await repo.insertAsset(ctx.userId, {
-        assetType: session.assetType,
-        name: input.name,
-        currentFileId: null,
-      });
+      const asset = await repo.insertAsset(
+        ctx.userId,
+        {
+          assetType: session.assetType,
+          name: input.name,
+          currentFileId: null,
+        },
+        ctx.accountId ?? null,
+      );
       const file = await repo.insertAssetFile(ctx.userId, {
         assetId: asset.id,
         storageKey: session.storageKey,
@@ -295,9 +299,14 @@ export function createAssetsService(
         durationMs: head.durationMs,
         mediaMetadata: head.mediaMetadata,
       });
-      const updated = await repo.updateAssetStatus(ctx.userId, asset.id, {
-        currentFileId: file.id,
-      });
+      const updated = await repo.updateAssetStatus(
+        ctx.userId,
+        asset.id,
+        {
+          currentFileId: file.id,
+        },
+        ctx.accountId ?? null,
+      );
       await repo.markUploadCompleted(ctx.userId, uploadId);
       return updated ?? asset;
     },
@@ -332,11 +341,15 @@ export function createAssetsService(
       const head = await storage.headObject(storageKey);
       // Materialize: asset (active) → first file (v1) → re-point currentFileId (mirror
       // completeUpload). The repo stamps userId + status='active'.
-      const asset = await repo.insertAsset(ctx.userId, {
-        assetType: input.assetType,
-        name: input.name,
-        currentFileId: null,
-      });
+      const asset = await repo.insertAsset(
+        ctx.userId,
+        {
+          assetType: input.assetType,
+          name: input.name,
+          currentFileId: null,
+        },
+        ctx.accountId ?? null,
+      );
       const file = await repo.insertAssetFile(ctx.userId, {
         assetId: asset.id,
         storageKey,
@@ -348,9 +361,14 @@ export function createAssetsService(
         durationMs: head.durationMs,
         mediaMetadata: head.mediaMetadata,
       });
-      const updated = await repo.updateAssetStatus(ctx.userId, asset.id, {
-        currentFileId: file.id,
-      });
+      const updated = await repo.updateAssetStatus(
+        ctx.userId,
+        asset.id,
+        {
+          currentFileId: file.id,
+        },
+        ctx.accountId ?? null,
+      );
       return updated ?? asset;
     },
 
@@ -371,9 +389,14 @@ export function createAssetsService(
         mediaMetadata: head.mediaMetadata,
       });
       // Advance currentFileId to the new file (the favorite/version affordance).
-      await repo.updateAssetStatus(ctx.userId, assetId, {
-        currentFileId: file.id,
-      });
+      await repo.updateAssetStatus(
+        ctx.userId,
+        assetId,
+        {
+          currentFileId: file.id,
+        },
+        ctx.accountId ?? null,
+      );
       return file;
     },
 
@@ -384,10 +407,15 @@ export function createAssetsService(
           `Cannot trash an asset in status '${asset.status}'`,
         );
       }
-      const updated = await repo.updateAssetStatus(ctx.userId, assetId, {
-        status: "deleted",
-        deletedAt: deps.now(),
-      });
+      const updated = await repo.updateAssetStatus(
+        ctx.userId,
+        assetId,
+        {
+          status: "deleted",
+          deletedAt: deps.now(),
+        },
+        ctx.accountId ?? null,
+      );
       return updated!;
     },
 
@@ -398,10 +426,15 @@ export function createAssetsService(
           `Cannot restore an asset in status '${asset.status}'`,
         );
       }
-      const updated = await repo.updateAssetStatus(ctx.userId, assetId, {
-        status: "active",
-        deletedAt: null,
-      });
+      const updated = await repo.updateAssetStatus(
+        ctx.userId,
+        assetId,
+        {
+          status: "active",
+          deletedAt: null,
+        },
+        ctx.accountId ?? null,
+      );
       return updated!;
     },
 
@@ -410,9 +443,14 @@ export function createAssetsService(
       // §12 status machine, so there is NO transition guard — any owned asset can
       // be (un)favorited. Flips the current isFavorite and re-reads the row.
       const asset = await requireAsset(ctx, assetId);
-      const updated = await repo.updateAssetStatus(ctx.userId, assetId, {
-        isFavorite: !asset.isFavorite,
-      });
+      const updated = await repo.updateAssetStatus(
+        ctx.userId,
+        assetId,
+        {
+          isFavorite: !asset.isFavorite,
+        },
+        ctx.accountId ?? null,
+      );
       return updated!;
     },
 
@@ -432,9 +470,14 @@ export function createAssetsService(
           `Cannot archive an asset in status '${asset.status}'`,
         );
       }
-      const updated = await repo.updateAssetStatus(ctx.userId, assetId, {
-        status: "archived",
-      });
+      const updated = await repo.updateAssetStatus(
+        ctx.userId,
+        assetId,
+        {
+          status: "archived",
+        },
+        ctx.accountId ?? null,
+      );
       return updated!;
     },
 
@@ -445,9 +488,14 @@ export function createAssetsService(
           `Cannot unarchive an asset in status '${asset.status}'`,
         );
       }
-      const updated = await repo.updateAssetStatus(ctx.userId, assetId, {
-        status: "active",
-      });
+      const updated = await repo.updateAssetStatus(
+        ctx.userId,
+        assetId,
+        {
+          status: "active",
+        },
+        ctx.accountId ?? null,
+      );
       return updated!;
     },
   };

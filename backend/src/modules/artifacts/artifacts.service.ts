@@ -127,6 +127,8 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
+      // [T-136 切片 b] 按号隔离维度透传;未选号/全局视图为 null(§E 退化)。
+      accountId: ctx.accountId ?? null,
     });
   }
 

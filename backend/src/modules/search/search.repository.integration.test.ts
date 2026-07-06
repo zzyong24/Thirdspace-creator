@@ -20,12 +20,17 @@ import {
 
 const NOW = "2026-06-21T00:00:00.000Z";
 
-function makeRepo(db: Db, userId: string): SearchRepository {
+function makeRepo(
+  db: Db,
+  userId: string,
+  accountId: string | null = null,
+): SearchRepository {
   let seq = 0;
   return createSearchRepository(db, {
     now: () => NOW,
-    nextId: (prefix) => `${prefix}-${userId}-${++seq}`,
+    nextId: (prefix) => `${prefix}-${userId}-${accountId ?? "g"}-${++seq}`,
     userId,
+    accountId,
   });
 }
 
@@ -123,6 +128,7 @@ describe("search.repository (pglite, user-scoped)", () => {
       now: () => "2026-06-22T00:00:00.000Z",
       nextId: (p) => `${p}-a-later-${++seq}`,
       userId: "user-a",
+      accountId: null,
     });
     await repoALater.appendHistory({ query: "newer", filters: { type: "project" }, resultCount: 2 });
     await repoB.appendHistory({ query: "b-only", filters: {}, resultCount: 0 });
@@ -174,5 +180,75 @@ describe("search.repository (pglite, user-scoped)", () => {
     await repoA.seedHistory([histRow]);
     await repoA.seedHistory([histRow]);
     expect(await repoA.listHistory(10)).toHaveLength(1);
+  });
+});
+
+// [T-136 切片 b · SPEC §B MAJOR-4] 同一 user 下按号(account_id)隔离门。search_documents
+// 是 owned-root(按号隔离);search_history 是 user 级日志(不按号隔离)。三态:设号只见该号 /
+// null 见全部 / upsert stamp 正确。
+describe("search.repository — per-account isolation (T-136 slice b)", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("accountId 设时 search/listByEntityType 只见该号的文档 + upsert stamp 正确", async () => {
+    const repo1 = makeRepo(db, "user-a", "acct-1");
+    const repo2 = makeRepo(db, "user-a", "acct-2");
+    const d1 = await repo1.upsertDocument({
+      entityType: "project",
+      entityId: "p1",
+      title: "号1项目 Hook",
+      body: "",
+      searchText: "号1项目 hook",
+    });
+    await repo2.upsertDocument({
+      entityType: "project",
+      entityId: "p2",
+      title: "号2项目 Hook",
+      body: "",
+      searchText: "号2项目 hook",
+    });
+    expect(d1.accountId).toBe("acct-1");
+    // 号1 只搜到号1的。
+    const s1 = await repo1.search("hook");
+    expect(s1.map((r) => r.entityId)).toEqual(["p1"]);
+    const s2 = await repo2.search("hook");
+    expect(s2.map((r) => r.entityId)).toEqual(["p2"]);
+    // listByEntityType 同样按号收窄。
+    expect((await repo1.listByEntityType("project")).map((r) => r.entityId)).toEqual(["p1"]);
+  });
+
+  it("accountId null(全局视图)时 search 见该 user 全部号的文档", async () => {
+    const repo1 = makeRepo(db, "user-a", "acct-1");
+    const repo2 = makeRepo(db, "user-a", "acct-2");
+    const repoGlobal = makeRepo(db, "user-a", null);
+    await repo1.upsertDocument({ entityType: "project", entityId: "p1", title: "Hook1", body: "", searchText: "hook1" });
+    await repo2.upsertDocument({ entityType: "project", entityId: "p2", title: "Hook2", body: "", searchText: "hook2" });
+    const all = await repoGlobal.search("hook");
+    expect(all.map((r) => r.entityId).sort()).toEqual(["p1", "p2"]);
+  });
+
+  it("accountId 设时 deleteAllDocuments 只删该号的文档(按号重建)", async () => {
+    const repo1 = makeRepo(db, "user-a", "acct-1");
+    const repo2 = makeRepo(db, "user-a", "acct-2");
+    await repo1.upsertDocument({ entityType: "project", entityId: "p1", title: "Hook1", body: "", searchText: "hook1" });
+    await repo2.upsertDocument({ entityType: "project", entityId: "p2", title: "Hook2", body: "", searchText: "hook2" });
+    await repo1.deleteAllDocuments();
+    expect(await repo1.search("hook")).toHaveLength(0);
+    // 号2 的文档未受影响。
+    expect(await repo2.search("hook")).toHaveLength(1);
+    // 全局视图仍见号2的。
+    const repoGlobal = makeRepo(db, "user-a", null);
+    expect((await repoGlobal.search("hook")).map((r) => r.entityId)).toEqual(["p2"]);
+  });
+
+  it("facetMatches 按号收窄", async () => {
+    const repo1 = makeRepo(db, "user-a", "acct-1");
+    const repo2 = makeRepo(db, "user-a", "acct-2");
+    await repo1.upsertDocument({ entityType: "project", entityId: "p1", title: "Hook1", body: "", searchText: "hook1" });
+    await repo2.upsertDocument({ entityType: "asset", entityId: "a2", title: "Hook2", body: "", searchText: "hook2" });
+    const f1 = await repo1.facetMatches("hook");
+    expect(f1.map((r) => r.entityId)).toEqual(["p1"]);
   });
 });

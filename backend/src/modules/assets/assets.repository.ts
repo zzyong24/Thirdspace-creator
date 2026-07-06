@@ -64,11 +64,23 @@ export interface InsertAssetFileInput {
 export interface AssetRepository {
   seedAssets(rows: AssetRow[]): Promise<void>;
   seedAssetFiles(rows: AssetFileRow[]): Promise<void>;
-  listAssets(userId: string, query: ListAssetsQuery): Promise<AssetRow[]>;
-  getAsset(userId: string, assetId: string): Promise<AssetRow | null>;
+  // [T-136 切片 b] owned-root(assets)方法加**可选** accountId(additive:旧调用不传
+  // = undefined → 门退化不过滤 = 返该 user 全部,行为不变)。有号时按号过滤(读)/ stamp
+  // (写)。repo 是单例、userId 随调用传,故 accountId 也随调用传(不能 baked 进 deps)。
+  listAssets(
+    userId: string,
+    query: ListAssetsQuery,
+    accountId?: string | null,
+  ): Promise<AssetRow[]>;
+  getAsset(
+    userId: string,
+    assetId: string,
+    accountId?: string | null,
+  ): Promise<AssetRow | null>;
   insertAsset(
     userId: string,
     input: { assetType: string; name: string; currentFileId: string | null },
+    accountId?: string | null,
   ): Promise<AssetRow>;
   updateAssetStatus(
     userId: string,
@@ -79,6 +91,7 @@ export interface AssetRepository {
       currentFileId?: string;
       isFavorite?: boolean;
     },
+    accountId?: string | null,
   ): Promise<AssetRow | null>;
   // 用料反查 (mirror material-links list, inverse direction): the user-scoped 用料链
   // edges whose entity_type='asset' AND entity_id=assetId — i.e. which 创作 use
@@ -136,16 +149,31 @@ export function createAssetRepository(
   db: Db,
   deps: RepoDeps,
 ): AssetRepository {
+  // [T-136 切片 b] 按号隔离条件门:有号叠加 `eq(assets.accountId, …)`,无号(undefined/null,
+  // 全局视图/存量)返 undefined → drizzle `and()` 忽略 → 退化为只按 userId 过滤。
+  function accountGate(accountId?: string | null) {
+    return accountId ? eq(assets.accountId, accountId) : undefined;
+  }
+
   // Internal ownership gate reused by the file methods (cross-user / unknown id
-  // is indistinguishable → 404, never reveal existence).
+  // is indistinguishable → 404, never reveal existence). accountId 可选:owned-root
+  // 直接读点(getAsset 等)传号叠加过滤;子表方法(insertAssetFile/listAssetFiles)经
+  // 此门透传属主但**不叠加账号门**(assetId 已唯一定位,账号维度在父读点隔离,SPEC §9)。
   async function requireOwnedAsset(
     userId: string,
     assetId: string,
+    accountId?: string | null,
   ): Promise<AssetRow> {
     const rows = await db
       .select()
       .from(assets)
-      .where(and(eq(assets.id, assetId), eq(assets.userId, userId)));
+      .where(
+        and(
+          eq(assets.id, assetId),
+          eq(assets.userId, userId),
+          accountGate(accountId),
+        ),
+      );
     const row = rows[0];
     if (!row) throw new OwnershipError("Asset not found");
     return row;
@@ -161,14 +189,20 @@ export function createAssetRepository(
       await db.insert(assetFiles).values(rows).onConflictDoNothing();
     },
 
-    async listAssets(userId, query) {
+    async listAssets(userId, query, accountId) {
       // Default gallery scope: active-only (trash/archived excluded). Ordered
       // newest-first; the cursor is the createdAt of the last seen row (simple
       // keyset pagination consistent with paginationQuery's intent).
       const rows = await db
         .select()
         .from(assets)
-        .where(and(eq(assets.userId, userId), eq(assets.status, "active")))
+        .where(
+          and(
+            eq(assets.userId, userId),
+            eq(assets.status, "active"),
+            accountGate(accountId),
+          ),
+        )
         .orderBy(desc(assets.createdAt), asc(assets.id));
       const sliced = query.cursor
         ? rows.filter((r) => r.createdAt < query.cursor!)
@@ -176,20 +210,28 @@ export function createAssetRepository(
       return sliced.slice(0, query.limit);
     },
 
-    async getAsset(userId, assetId) {
+    async getAsset(userId, assetId, accountId) {
       const rows = await db
         .select()
         .from(assets)
-        .where(and(eq(assets.id, assetId), eq(assets.userId, userId)));
+        .where(
+          and(
+            eq(assets.id, assetId),
+            eq(assets.userId, userId),
+            accountGate(accountId),
+          ),
+        );
       return rows[0] ?? null;
     },
 
-    async insertAsset(userId, input) {
+    async insertAsset(userId, input, accountId) {
       const now = deps.now();
       const id = deps.nextId("asset");
       await db.insert(assets).values({
         id,
         userId,
+        // [T-136 切片 b] create stamp:归到当前号(null 兜底,列 nullable)。
+        accountId: accountId ?? null,
         currentFileId: input.currentFileId,
         assetType: input.assetType,
         name: input.name,
@@ -203,7 +245,7 @@ export function createAssetRepository(
       return rows[0]!;
     },
 
-    async updateAssetStatus(userId, assetId, patch) {
+    async updateAssetStatus(userId, assetId, patch, accountId) {
       const set: Record<string, unknown> = { updatedAt: deps.now() };
       if (patch.status !== undefined) set.status = patch.status;
       if (patch.deletedAt !== undefined) set.deletedAt = patch.deletedAt;
@@ -213,13 +255,25 @@ export function createAssetRepository(
       await db
         .update(assets)
         .set(set)
-        .where(and(eq(assets.id, assetId), eq(assets.userId, userId)));
-      // Re-read scoped: if the WHERE matched 0 rows (wrong user), the read also
-      // returns null, so a cross-user update is a no-op surfacing as null.
+        .where(
+          and(
+            eq(assets.id, assetId),
+            eq(assets.userId, userId),
+            accountGate(accountId),
+          ),
+        );
+      // Re-read scoped: if the WHERE matched 0 rows (wrong user/account), the read
+      // also returns null, so a cross-user/cross-account update is a no-op → null.
       const rows = await db
         .select()
         .from(assets)
-        .where(and(eq(assets.id, assetId), eq(assets.userId, userId)));
+        .where(
+          and(
+            eq(assets.id, assetId),
+            eq(assets.userId, userId),
+            accountGate(accountId),
+          ),
+        );
       return rows[0] ?? null;
     },
 

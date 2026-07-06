@@ -22,6 +22,10 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // owner for created/queried rows
+  // [T-136 切片 b · SPEC §B MAJOR-4] 搜索索引按号隔离维度(防跨号串味)。search_documents
+  // 是 owned-root(有 account_id);search_history 是 user 级查询日志,不按号隔离。null =
+  // 未选号 / 全局视图 / 存量兜底(§E 退化):scopedDoc 叠加为 undefined → 只按 userId 过滤。
+  accountId: string | null;
 }
 
 export type SearchDocumentRow = typeof searchDocuments.$inferSelect;
@@ -80,7 +84,15 @@ function escapeLike(value: string): string {
 }
 
 export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository {
-  const scopedDoc = eq(searchDocuments.userId, deps.userId);
+  // [T-136 切片 b] scopedDoc 升级为「userId + 按号门」复合条件:有号叠加
+  // `eq(searchDocuments.accountId, …)`,null 时 accountGate 为 undefined → drizzle
+  // `and()` 忽略 → 退化为只按 userId 过滤(返该 user 全部索引文档)。所有 search_documents
+  // owned-root 读/删点(search/facetMatches/listByEntityType/removeDocument/
+  // deleteAllDocuments)复用它,一处升级全覆盖。search_history 不按号隔离,scopedHist 不变。
+  const accountGate = deps.accountId
+    ? eq(searchDocuments.accountId, deps.accountId)
+    : undefined;
+  const scopedDoc = and(eq(searchDocuments.userId, deps.userId), accountGate);
   const scopedHist = eq(searchHistory.userId, deps.userId);
 
   return {
@@ -91,6 +103,11 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
         .values({
           id: deps.nextId("searchdoc"),
           userId: deps.userId,
+          // [T-136 切片 b] create stamp:投影索引归到当前号(null 兜底,派生可重建)。诚实
+          // 存疑:唯一键 (user_id, entity_type, entity_id) **不含 account_id** —— 同一 entity
+          // 若在两个号下被索引会撞唯一约束(设计层:索引是 per-entity 派生,当前不支持同
+          // entity 跨号双份,非本切片能定)。
+          accountId: deps.accountId,
           entityType: input.entityType,
           entityId: input.entityId,
           title: input.title,
@@ -106,6 +123,8 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
             searchDocuments.entityId,
           ],
           set: {
+            // conflict 时刷新归属号(重建/重索引把 stale 号纠正到当前号)。
+            accountId: deps.accountId,
             title: input.title,
             body: input.body,
             searchText: input.searchText,

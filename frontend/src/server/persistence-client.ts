@@ -945,7 +945,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // serviceFactory can therefore return ONE shared service. Clock/ids share the
   // deterministic `deps` (createSeq keeps searchdoc/searchhist ids collision-free).
   const searchService = createSearchService(
-    (ctx) => createSearchRepository(db, { ...deps, userId: ctx.userId }),
+    (ctx) =>
+      createSearchRepository(db, {
+        ...deps,
+        userId: ctx.userId,
+        // [T-136 切片 b] 搜索索引按号隔离维度透传;未选号/全局视图为 null(§E 退化)。
+        accountId: ctx.accountId ?? null,
+      }),
     deps,
   );
   const search = createSearchTransport(() => searchService);
@@ -1794,6 +1800,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const repo = createArtifactRepository(db, {
           ...deps,
           userId: c.userId,
+          accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
         });
         for (const r of rows) {
           if (r.artifactType !== "output_script") continue;
@@ -3035,6 +3042,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 const repo = createArtifactRepository(db, {
                   ...deps,
                   userId: c.userId,
+                  accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
                 });
                 for (const r of rows) {
                   if (r.artifactType !== "output_script") continue;
@@ -3074,6 +3082,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                     const repo = createArtifactRepository(db, {
                       ...deps,
                       userId: cc.userId,
+                      accountId: cc.accountId ?? null, // [T-136 切片 b] 透传按号维度
                     });
                     const version = await repo.getVersion(versionId);
                     const data = version.contentData;
@@ -3139,6 +3148,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 const repo = createArtifactRepository(db, {
                   ...deps,
                   userId: c.userId,
+                  accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
                 });
                 for (const r of rows) {
                   if (r.artifactType !== "output_script") continue;
@@ -5260,7 +5270,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             c,
             opts.projectId,
           );
-          const repo = createArtifactRepository(db, { ...deps, userId: c.userId });
+          const repo = createArtifactRepository(db, {
+            ...deps,
+            userId: c.userId,
+            accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
+          });
           const artifacts = await Promise.all(
             artifactRows.map(async (a) => {
               let versionCount = 0;
@@ -5494,7 +5508,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             c,
             opts.projectId,
           );
-          const repo = createArtifactRepository(db, { ...deps, userId: c.userId });
+          const repo = createArtifactRepository(db, {
+            ...deps,
+            userId: c.userId,
+            accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
+          });
           const items = await Promise.all(
             artifactRows.map(async (a) => {
               let currentVersion: number | null = null;
@@ -5554,7 +5572,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             (a) => a.artifactType === opts.artifactType,
           );
           if (!target || !target.currentVersionId) return null;
-          const repo = createArtifactRepository(db, { ...deps, userId: c.userId });
+          const repo = createArtifactRepository(db, {
+            ...deps,
+            userId: c.userId,
+            accountId: c.accountId ?? null, // [T-136 切片 b] 透传按号维度
+          });
           const version = await repo.getVersion(target.currentVersionId);
           const fullText = extractArtifactText(
             version.contentText,
