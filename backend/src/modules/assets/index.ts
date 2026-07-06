@@ -39,6 +39,11 @@ export {
 } from "./localfs-object-storage";
 
 export { resolveRootPath, defaultMediaRoot, blobRouteRoot } from "./media-root";
+// [T-162] 存储目录迁移(改 rootPath 时搬旧文件到新目录)。
+export {
+  migrateStorageRoot,
+  type StorageMigrationResult,
+} from "./migrate-storage-root";
 
 // Blob-security primitives (signed-URL token + path-traversal guard). Exposed via the
 // public index so consumers (blob route, settings storage-config) never deep-import

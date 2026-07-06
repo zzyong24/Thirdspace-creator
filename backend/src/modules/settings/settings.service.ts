@@ -23,6 +23,7 @@ import type {
 } from "./settings.schema";
 import { resolveRootPath } from "@creatoros/backend/modules/assets";
 import { rootPathLegalityReason } from "@creatoros/backend/modules/assets";
+import { migrateStorageRoot } from "@creatoros/backend/modules/assets";
 import {
   StorageValidationError,
   PromptValidationError,
@@ -426,7 +427,35 @@ export function createSettingsService(
         }
       }
       const repo = repoForCtx(ctx);
+
+      // [T-162] 改存储目录 → 内置文件迁移(旧 → 新),防历史 blob 404。
+      //   copy-verify-swap-delete:先拷旧树到新 + 校验(migrateStorageRoot,抛错即不 persist,
+      //   旧目录原封、系统仍可读旧 blob)→ persist 新 rootPath → best-effort 删旧目录。
+      //   仅 local backend 迁移(S3↔S3 跨桶 out-of-scope);同路径/空旧目录自动 skip。
+      //   storageKey 相对 root → DB 不改,只搬物理文件。
+      let oldRootToPrune: string | null = null;
+      if (patch.rootPath !== undefined) {
+        const current = await repo.getStorageConfig(ctx);
+        const effectiveBackend = patch.backend ?? current?.backend ?? "local";
+        if (effectiveBackend === "local") {
+          const oldResolved = resolveRootPath(current?.rootPath);
+          const newResolved = resolveRootPath(patch.rootPath);
+          const migration = await migrateStorageRoot(oldResolved, newResolved);
+          if (!migration.skipped) {
+            // 拷贝 + 校验已通过 → persist 后再删旧目录(删失败只留孤儿,不裂功能)。
+            oldRootToPrune = oldResolved;
+          }
+        }
+      }
+
       const row = await repo.putStorageConfig(ctx, patch);
+
+      if (oldRootToPrune) {
+        void fs.rm(oldRootToPrune, { recursive: true, force: true }).catch(() => {
+          // best-effort:旧目录删不掉只留孤儿文件,不影响新目录读写。
+        });
+      }
+
       const usage = await repo.sumUsageByAssetType(ctx);
       return buildStorageResource(row, usage);
     },
