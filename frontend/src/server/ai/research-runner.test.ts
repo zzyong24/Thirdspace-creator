@@ -18,6 +18,9 @@ const runResearchNode = vi.fn(
 vi.mock("@creatoros/ai-worker", () => ({
   modelFor: vi.fn(() => ({}) as never),
   runResearchNode,
+  // [T-146d] runner 解构 formatUserMaterialFacet(仅当 context 有高优先素材时才调;这些测试无
+  // projectMaterials reader → hardBrief 空 → 不实际调用,但解构需该导出存在)。透传实现即可。
+  formatUserMaterialFacet: (s: string) => (s ? `【素材】${s}` : ""),
 }));
 
 import { runGatherMaterial } from "./research-runner";

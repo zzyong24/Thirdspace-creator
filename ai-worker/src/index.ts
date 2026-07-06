@@ -289,6 +289,8 @@ export {
   runResearchNode,
   flattenCategories,
   anthropicWebSearchTools,
+  // [T-146d] 用户第一手资料要点 facet 组装 —— chat-runner/research-runner 装配后注入 research 综合。
+  formatUserMaterialFacet,
   type MaterialItem,
   type ResearchCategories,
   type RunResearchNodeInput,

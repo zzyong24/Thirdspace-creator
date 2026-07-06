@@ -3,8 +3,11 @@ import type { RequestContext } from "@creatoros/contract";
 import {
   assembleCreativeContext,
   formatKnowledgeBrief,
+  formatUserMaterialBrief,
+  materialQueryTerms,
   markReconstructedBrief,
   type ContextDeps,
+  type ProjectMaterial,
 } from "./creative-context";
 
 // F2 消费侧隔离单测(T-030-D4,SPEC §7 边界②)。creative-context 把项目的论点树/内容合同/
@@ -293,6 +296,192 @@ describe("creative-context T-079c — formatKnowledgeBrief 分段纯函数", () 
     );
     expect(context.knowledgeBrief).toContain("【我的观点】");
     expect(context.knowledgeBrief).toContain("· 观点甲（被 2 条内容用过）");
+  });
+});
+
+// ── T-146 切片 c/d:用户上传素材主权(硬约束注入 + 搜索结合)────────────────────────
+// 高优先(priority=high,用户第一手)素材的要点卡(keyPoints/facts/sellingPoints)进
+// userMaterialHardBrief(下游套「必须遵守」硬约束段);normal(AI 找的)进 userMaterialRefBrief
+// (参考级)。有全文无要点卡 → 截断兜底进 brief。解析失败(extractStatus=failed/unsupported)
+// 的素材绝不进 AI 上下文冒充可读。materialQueryTerms 从高优先要点卡抽关键词供 query 扩展。
+describe("creative-context T-146 — formatUserMaterialBrief 纯函数", () => {
+  const highDoc: ProjectMaterial = {
+    name: "产品资料.pdf",
+    priority: "high",
+    extractStatus: "done",
+    materialSummary: {
+      keyPoints: ["续航 20 小时"],
+      facts: ["机身重 180g"],
+      sellingPoints: ["静音降噪"],
+    },
+  };
+
+  it("high 素材 → 「最高优先 · 必须遵守」硬约束头 + 三类要点(要点/事实/卖点)", () => {
+    const brief = formatUserMaterialBrief([highDoc], "high");
+    expect(brief).toContain("最高优先");
+    expect(brief).toContain("必须遵守");
+    expect(brief).toContain("续航 20 小时");
+    expect(brief).toContain("机身重 180g");
+    expect(brief).toContain("静音降噪");
+    // 素材名带出(可追溯是哪份资料)
+    expect(brief).toContain("产品资料.pdf");
+  });
+
+  it("normal 素材 → 参考段(不带「最高优先 · 必须遵守」硬约束头)", () => {
+    const normalDoc: ProjectMaterial = {
+      name: "竞品调研.md",
+      priority: "normal",
+      extractStatus: "done",
+      materialSummary: { keyPoints: ["竞品普遍 15 小时"], facts: [] },
+    };
+    const brief = formatUserMaterialBrief([normalDoc], "normal");
+    expect(brief).toContain("竞品普遍 15 小时");
+    expect(brief).not.toContain("最高优先 · 必须遵守");
+  });
+
+  it("有全文无要点卡(未配摘要模型降级)→ 截断全文进 brief 兜底", () => {
+    const noSummary: ProjectMaterial = {
+      name: "长文.txt",
+      priority: "high",
+      extractStatus: "done",
+      extractedText: "这是一份很长的资料".repeat(500),
+    };
+    const brief = formatUserMaterialBrief([noSummary], "high");
+    expect(brief).toContain("这是一份很长的资料");
+    // 截断(不把上万字全灌进 prompt)
+    expect(brief.length).toBeLessThan(3000);
+  });
+
+  it("解析失败/不支持的素材不进 brief(不冒充可读)", () => {
+    const failed: ProjectMaterial = {
+      name: "扫描件.pdf",
+      priority: "high",
+      extractStatus: "failed",
+    };
+    const unsupported: ProjectMaterial = {
+      name: "老 .doc",
+      priority: "high",
+      extractStatus: "unsupported",
+    };
+    expect(formatUserMaterialBrief([failed, unsupported], "high")).toBe("");
+  });
+
+  it("空列表 → 空串(下游整段省略)", () => {
+    expect(formatUserMaterialBrief([], "high")).toBe("");
+  });
+
+  it("materialQueryTerms 从高优先要点卡抽关键词(供 query 扩展)", () => {
+    const terms = materialQueryTerms([highDoc]);
+    // 要点/卖点原文成为可拼进 query 的词条
+    expect(terms.join(" ")).toContain("续航 20 小时");
+    expect(terms.join(" ")).toContain("静音降噪");
+  });
+
+  it("materialQueryTerms 只取 high 优先(normal 不扩展 query)", () => {
+    const normalDoc: ProjectMaterial = {
+      name: "n.md",
+      priority: "normal",
+      extractStatus: "done",
+      materialSummary: { keyPoints: ["NORMAL_KEYWORD"], facts: [] },
+    };
+    const terms = materialQueryTerms([normalDoc, highDoc]);
+    expect(terms.join(" ")).not.toContain("NORMAL_KEYWORD");
+    expect(terms.join(" ")).toContain("续航 20 小时");
+  });
+});
+
+describe("creative-context T-146 — assembleCreativeContext 装配 projectMaterials", () => {
+  function makeDeps(materials: ProjectMaterial[]): ContextDeps {
+    return {
+      positioning: {
+        getPositioningCenter: async () => ({
+          profile: null,
+          currentStatement: null,
+        }),
+      },
+      projectMaterials: {
+        listProjectMaterials: async () => materials,
+      },
+    };
+  }
+
+  const highDoc: ProjectMaterial = {
+    name: "PR资料.pdf",
+    priority: "high",
+    extractStatus: "done",
+    materialSummary: { keyPoints: ["核心卖点 A"], facts: ["数据 B"] },
+  };
+  const normalDoc: ProjectMaterial = {
+    name: "AI找的.md",
+    priority: "normal",
+    extractStatus: "done",
+    materialSummary: { keyPoints: ["参考 C"], facts: [] },
+  };
+
+  it("有 projectId + reader → high 进 hardBrief、normal 进 refBrief、query terms 来自 high", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-1", topic: "带货" },
+      makeDeps([highDoc, normalDoc]),
+    );
+    expect(context.userMaterialHardBrief).toContain("核心卖点 A");
+    expect(context.userMaterialHardBrief).toContain("必须遵守");
+    expect(context.userMaterialRefBrief).toContain("参考 C");
+    expect(context.userMaterialRefBrief).not.toContain("必须遵守");
+    // query terms 只从 high 抽
+    expect(context.userMaterialQueryTerms.join(" ")).toContain("核心卖点 A");
+    expect(context.userMaterialQueryTerms.join(" ")).not.toContain("参考 C");
+  });
+
+  it("缺 projectId → 不调 reader,三个字段空兜底", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: null, topic: "x" },
+      makeDeps([highDoc]),
+    );
+    expect(context.userMaterialHardBrief).toBe("");
+    expect(context.userMaterialRefBrief).toBe("");
+    expect(context.userMaterialQueryTerms).toEqual([]);
+  });
+
+  it("未装配 projectMaterials reader → 字段空(其它节点不受影响)", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-1", topic: "x" },
+      {
+        positioning: {
+          getPositioningCenter: async () => ({
+            profile: null,
+            currentStatement: null,
+          }),
+        },
+      },
+    );
+    expect(context.userMaterialHardBrief).toBe("");
+    expect(context.userMaterialRefBrief).toBe("");
+    expect(context.userMaterialQueryTerms).toEqual([]);
+  });
+
+  it("reader 抛错 → 诚实降级空(never block)", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-1", topic: "x" },
+      {
+        positioning: {
+          getPositioningCenter: async () => ({
+            profile: null,
+            currentStatement: null,
+          }),
+        },
+        projectMaterials: {
+          listProjectMaterials: async () => {
+            throw new Error("db down");
+          },
+        },
+      },
+    );
+    expect(context.userMaterialHardBrief).toBe("");
+    expect(context.userMaterialRefBrief).toBe("");
   });
 });
 

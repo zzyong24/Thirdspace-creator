@@ -62,12 +62,19 @@ export async function runGatherMaterial(
     // 可解析输出 —— 根治旧版自由文本解析对 MiniMax-M3「未产出可解析素材」的卡死(用户配的 default
     // capability 即 MiniMax,无对等内置 web search 时旧路径必失败)。
     const spec = await deps.resolveModelSpec(ctx, "research.gather");
-    const { modelFor, runResearchNode } = await import("@creatoros/ai-worker");
+    const { modelFor, runResearchNode, formatUserMaterialFacet } = await import(
+      "@creatoros/ai-worker"
+    );
+    // [T-146d] 搜索深度结合用户素材(任务链路径):高优先用户素材要点作 facet 注入,让结构化综合
+    // 「贴着 PR/第一手资料产素材」而非泛搜。context 已按 material_link.priority 分流装配好硬约束段。
     const { items, categories } = await runResearchNode({
       model: modelFor(spec),
       positioningBrief: context.positioningBrief,
       topicTitle: context.topic.title,
       topicAngle: context.topic.angle || undefined,
+      userMaterialFacet: context.userMaterialHardBrief
+        ? formatUserMaterialFacet(context.userMaterialHardBrief)
+        : undefined,
     });
     if (items.length === 0) {
       throw new Error("research-runner: agent returned no parseable materials");

@@ -5,6 +5,7 @@ import {
   runResearchNode,
   flattenCategories,
   formatSearchResultsFacet,
+  formatUserMaterialFacet,
   anthropicWebSearchTools,
   type ResearchCategories,
 } from "./research-node";
@@ -187,6 +188,57 @@ describe("runResearchNode（结构化四类候选)", () => {
     expect(block).toContain("URL: https://a.com");
     expect(block).toContain("摘要A");
     expect(block).toContain("a.com · 2026-07-01");
+  });
+
+  // [T-146 切片 d] 用户第一手资料要点 facet:综合应「优先服务于它、补充它、佐证它」而非跑题。
+  it("[T-146d] formatUserMaterialFacet 空串 → 空串(不注空噪声)", () => {
+    expect(formatUserMaterialFacet("")).toBe("");
+    expect(formatUserMaterialFacet("   ")).toBe("");
+  });
+
+  it("[T-146d] formatUserMaterialFacet 有要点 → 块标 + 服务于资料的提示 + 要点原文", () => {
+    const block = formatUserMaterialFacet(
+      "【要点】续航 20 小时\n【卖点】静音降噪",
+    );
+    expect(block).toContain("创作者第一手资料");
+    // 提示综合优先服务/补充/佐证该资料(非跑题)
+    expect(block).toContain("佐证");
+    expect(block).toContain("续航 20 小时");
+    expect(block).toContain("静音降噪");
+  });
+
+  it("[T-146d] userMaterialFacet 入参 → 资料要点块真进 research prompt", async () => {
+    let capturedPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        capturedPrompt = JSON.stringify(opts.prompt);
+        return finalText(FOUR_CATEGORIES);
+      },
+    });
+    await runResearchNode({
+      model,
+      positioningBrief: "带货博主",
+      topicTitle: "降噪耳机测评",
+      userMaterialFacet: formatUserMaterialFacet("【卖点】主动降噪 40dB"),
+    });
+    expect(capturedPrompt).toContain("创作者第一手资料");
+    expect(capturedPrompt).toContain("主动降噪 40dB");
+  });
+
+  it("[T-146d] 不传 userMaterialFacet → 资料块整段省略", async () => {
+    let capturedPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        capturedPrompt = JSON.stringify(opts.prompt);
+        return finalText(FOUR_CATEGORIES);
+      },
+    });
+    await runResearchNode({
+      model,
+      positioningBrief: "x",
+      topicTitle: "t",
+    });
+    expect(capturedPrompt).not.toContain("创作者第一手资料");
   });
 
   it("anthropicWebSearchTools 仍暴露 provider 内置 web_search(真 Anthropic 路径备用)", () => {

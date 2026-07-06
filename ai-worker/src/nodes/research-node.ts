@@ -51,6 +51,12 @@ export interface RunResearchNodeInput {
    * 无(未配/检索失败降级)则该 facet 为空,模型走纯记忆(整体 grounding=model_memory)。
    */
   searchResults?: SearchResult[];
+  /**
+   * [T-146d] 用户第一手资料要点 facet(选填)—— 调用方(chat-runner/research-runner)读当前项目
+   * high-priority 用户素材要点卡 → 经 formatUserMaterialFacet 装配成块注入。有则综合「贴着资料产」
+   * (优先服务于它、补充它、佐证它,而非跑题);无则该 facet 整段省略(纯选题泛搜)。
+   */
+  userMaterialFacet?: string;
   /** 护栏:校验失败的最大重试次数(默认 2,Vercel SDK 透传)。 */
   maxRetries?: number;
 }
@@ -82,6 +88,22 @@ export function formatSearchResultsFacet(results: SearchResult[]): string {
     "",
     "【联网检索结果(真实,今日抓取)—— 优先据此产 cases/dataPoints 并回填真实 URL 到 sourceUrl】",
     ...lines,
+    "",
+  ].join("\n");
+}
+
+/**
+ * [T-146d] 把用户第一手资料要点(高优先素材要点卡文本)格式化成 prompt facet 块。空/纯空白 → 空串
+ * (整段省略,不注空噪声)。综合应**优先服务于它、补充它、佐证它,而非跑题** —— 这是「搜索深度结合
+ * 用户素材」的核心:搜/综合贴着 PR/第一手资料产,而非只认选题标题泛搜。
+ */
+export function formatUserMaterialFacet(materialBrief: string): string {
+  const body = (materialBrief ?? "").trim();
+  if (!body) return "";
+  return [
+    "",
+    "【创作者第一手资料要点（最高优先）—— 搜集与综合应优先服务于它：补充它、佐证它、为它找证据/案例/数据，而不是跑题到无关方向】",
+    body,
     "",
   ].join("\n");
 }
@@ -186,6 +208,8 @@ export async function runResearchNode(
       angle: input.topicAngle ? `\n切入角度：${input.topicAngle}` : "",
       // [T-084a] 联网检索结果块(空 → 整段省略,模型走纯记忆)。
       searchResults: formatSearchResultsFacet(searchResults),
+      // [T-146d] 用户第一手资料要点块(空 → 整段省略;有则综合贴着资料产,非泛搜)。
+      userMaterial: input.userMaterialFacet ?? "",
     },
     maxRetries: input.maxRetries,
   });

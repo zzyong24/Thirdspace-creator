@@ -152,6 +152,8 @@ import {
 import type {
   ContextDeps as ChatContextDeps,
   ReviewSubjectReader,
+  ProjectMaterialsReader,
+  ProjectMaterial,
 } from "@/server/ai/creative-context";
 import type { ContextReaders as ChatContextReaders } from "@/server/ai/chat-runner";
 import { knowledgeRelevanceScore } from "@/server/ai/chat-tools";
@@ -1781,6 +1783,66 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
 
+  // [T-146 切片 c/d] 项目素材 reader —— 读**当前项目**挂载的用户上传 document 素材(带 per-project
+  // priority + 文档抽取投影),供写文案(script.draft)硬约束注入 + 搜索(gatherMaterials)深度结合。
+  // 读法:materialLinksService.list(projectId) → 取 entityType='asset' 的边(带 priority)→ 逐个
+  // assetsService.getAsset + listFilesByIds 取当前文件(materialSummary 在 mediaMetadata)→ 组装
+  // ProjectMaterial。只保留 document 类且解析成功/有内容的(失败/非文档不进,不冒充可读)。全程 best-
+  // effort:任一素材读失败只跳过该条(不牵连其它、不阻断节点)。与既有 assetsReader/复盘 reader 同
+  // 「per-ctx 公开 service 读法」,不造影子 repo。
+  const makeProjectMaterialsReader = (): ProjectMaterialsReader => ({
+    listProjectMaterials: async (c, projectId) => {
+      // material_links 是「料库⇄创作」一等公民边;list(projectId) 已 user-scoped(repo 用 ctx.userId)。
+      const { rows } = await materialLinksService.list(c, {
+        projectId,
+        page: 1,
+        pageSize: 100,
+      });
+      const assetLinks = rows.filter((r) => r.entityType === "asset");
+      const materials: ProjectMaterial[] = [];
+      for (const link of assetLinks) {
+        try {
+          const asset = await assetsService.getAsset(c, link.entityId); // OwnershipError → catch 跳过
+          // 只读 document 类(图/视/音不是「资料」,不进硬约束);非文档跳过。
+          if (asset.assetType !== "document") continue;
+          // 文档抽取的三件套(extractedText/extractStatus/materialSummary)都落在**当前文件**行
+          // (切片 a:extracted_text/extract_status 是 asset_files 列,materialSummary 在其 mediaMetadata),
+          // 与契约 assetResource 的 file 派生投影同源。故一并从 current file 读(与 toAssetResource 一致)。
+          let materialSummary: ProjectMaterial["materialSummary"] = null;
+          let extractStatus: string | null = null;
+          let extractedText: string | null = null;
+          if (asset.currentFileId) {
+            const files = await assetsService.listFilesByIds(c, [
+              asset.currentFileId,
+            ]);
+            const file = files[0] ?? null;
+            extractStatus = file?.extractStatus ?? null;
+            extractedText = file?.extractedText ?? null;
+            const meta = (file?.mediaMetadata ?? null) as Record<
+              string,
+              unknown
+            > | null;
+            const summary = meta?.materialSummary;
+            if (summary && typeof summary === "object" && !Array.isArray(summary)) {
+              materialSummary = summary as ProjectMaterial["materialSummary"];
+            }
+          }
+          materials.push({
+            name: asset.name,
+            priority: link.priority === "high" ? "high" : "normal",
+            extractStatus,
+            materialSummary,
+            extractedText,
+          });
+        } catch {
+          // 单份素材读失败(越权/已删)→ 跳过该条,不牵连其它素材、不阻断写文案/搜索。
+          continue;
+        }
+      }
+      return materials;
+    },
+  });
+
   // 机制③④ — the gather-trigger seam. The AI module/service stays deterministic (never
   // imports the Agent SDK); the non-determinism lives HERE in the composition layer. We
   // wrap the AI transport so that a freshly-queued `research.gather_material` task fires
@@ -2014,6 +2076,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             {
               ai: aiService,
               positioning: positioningReader,
+              // [T-146d] 搜索深度结合用户素材:本项目高优先素材要点作 facet 注入 research 综合,让
+              // 「贴着 PR/第一手资料产素材」而非泛搜。creative-context 按 material_link.priority 分流。
+              projectMaterials: makeProjectMaterialsReader(),
               // Vercel AI SDK 路径:素材搜集节点跑在 ai-worker + 外置模板 + generateObject
               // 绑四类 outputSchema(钩子/案例/数据点/金句),schema 强约束根治不可解析卡死。
               resolveModelSpec,
@@ -2358,6 +2423,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               // F2 (T-030-D4):策划产物若是 AI 历史反推(origin='reconstructed'),把注入 script.draft
               // 的论点树/合同/结构方案 brief 显式标「未经确认」,脚本不静默当已确认蓝图。
               artifactOrigin: artifactOriginReader,
+              // [T-146c] 用户上传素材主权:本项目高优先(用户第一手)素材进「必须遵守」硬约束段,
+              // normal(AI 找的)进参考段。creative-context 按 material_link.priority 分流。
+              projectMaterials: makeProjectMaterialsReader(),
               // 立项画幅(横/竖屏)→ script.draft 据此调钩子与时长(SKL-01/02 下游赋能)。
               brief: {
                 getBriefDetail: async (c, projectId) => {
@@ -4907,6 +4975,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // 文案/标题/数据/评论(前提是前端带了 projectId → 复盘一键岛以 kind=project 打开时已带)。
       // 与后端复盘 task 共用同一份读法(makeReviewSubjectReader),不造影子。
       reviewSubject: makeReviewSubjectReader(),
+      // [T-146c/d] 用户上传素材主权(稿面对话路径)—— 稿面右栏对话里整稿(draftScript)吃硬约束段、
+      // 搜素材(gatherMaterials)贴资料搜。与写文案 task / research task 共用同一份读法,不造影子。
+      projectMaterials: makeProjectMaterialsReader(),
     },
     // 只读 context 工具的真数据读端口 —— 全部 user-scoped(经各自 service/repo 用 ctx.userId 收窄),
     // 只读、不写实体。找不到现成的「带 query 搜」读方法时,在此对现成 list 端口做内存过滤(优先复用

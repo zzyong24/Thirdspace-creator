@@ -65,6 +65,16 @@ export interface CreativeContext {
   reviewMetrics: string;
   // 本次复盘作品的观众评论(audience_signals 里 source 含 comment 的前 N 条,拼成列表)。空 = 无评论。
   reviewComments: string;
+  // ── [T-146 切片 c/d] 用户上传素材主权 —— 只在有 projectId + 装配了 projectMaterials reader 时填。
+  //    用户上传的第一手资料(PR 产品资料/采访/研究文档)是「创作者手里的真相」,主权盖过 AI 找的
+  //    二手素材。按 material_link.priority 分流:high(用户第一手)进硬约束段(下游套「必须遵守」),
+  //    normal(AI 找的)进参考段。全部诚实空兜底:读不到/未装配就空,绝不塞假。
+  // 高优先(priority=high)素材的要点卡/全文,已装配含「最高优先 · 必须遵守」段头(硬约束)。空 = 无高优先素材。
+  userMaterialHardBrief: string;
+  // normal 优先(AI 找的二手)素材,参考级(非硬约束)。空 = 无 normal 素材。
+  userMaterialRefBrief: string;
+  // 从高优先素材要点卡抽的关键词/实体(供搜索 query 扩展,切片 d:标题 + 资料关键词而非纯标题)。
+  userMaterialQueryTerms: string[];
   topic: { title: string; angle: string };
   projectId: string | null;
 }
@@ -122,6 +132,37 @@ export interface AssetsReader {
   list(
     ctx: RequestContext,
   ): Promise<Array<{ id: string; name: string; type?: string }>>;
+}
+
+// [T-146 切片 c/d] 「资料要点卡」结构(与 material-extract-runner.MaterialSummary 同形,只提炼原文
+// 已有,拿不准留空)。keyPoints/facts 必有(可空数组),sellingPoints 选填(带货类才有)。
+export interface ProjectMaterialSummary {
+  keyPoints?: string[];
+  facts?: string[];
+  sellingPoints?: string[];
+}
+
+// [T-146 切片 c/d] 一份挂在当前项目上的用户素材(document 类):名字 + 项目内优先级 + 抽取状态 +
+// 要点卡/全文。priority 落在 material_link(per-project 语义);extractStatus/materialSummary/
+// extractedText 是 asset 的文档抽取投影(切片 a 已建)。解析失败(failed/unsupported)的素材不进
+// AI 上下文(不冒充可读)。
+export interface ProjectMaterial {
+  name: string;
+  priority: "high" | "normal";
+  extractStatus?: string | null;
+  materialSummary?: ProjectMaterialSummary | null;
+  extractedText?: string | null;
+}
+
+// [T-146 切片 c/d] 项目素材 reader —— 读**当前项目**挂载的用户上传 document 素材(带 per-project
+// priority + 文档抽取投影)。project-scoped(不同项目同一素材优先级可不同,故必须带 projectId)。
+// Optional:只有写文案(script.draft)/ 搜索(gatherMaterials)路径装配它;其它节点省略。composition
+// root 绑到 material_links.list(projectId) ⋈ assets(文档抽取字段)。best-effort:读失败 → 空。
+export interface ProjectMaterialsReader {
+  listProjectMaterials(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<ProjectMaterial[]>;
 }
 
 // 抖音账号 reader — the creator's connected platform accounts (platform + handle +
@@ -258,6 +299,9 @@ export interface ContextDeps {
   positioning: PositioningReader;
   learnings?: LearningsReader;
   assets?: AssetsReader;
+  // [T-146 切片 c/d] 项目素材 reader(用户上传第一手资料,per-project priority)。只有写文案 /
+  // 搜索路径装配。Optional:未装配 → 用户素材主权字段全空(降级 legacy 行为)。
+  projectMaterials?: ProjectMaterialsReader;
   accounts?: AccountsReader;
   signals?: SignalsReader;
   knowledge?: KnowledgeReader;
@@ -494,10 +538,38 @@ export async function assembleCreativeContext(
     }
   }
 
+  // ── [T-146 切片 c/d] 用户上传素材主权 —— 只有 projectMaterials reader 装配 + 有 projectId 时,读
+  //    当前项目挂载的用户 document 素材,按 priority 分流:high → 硬约束段(套「必须遵守」),normal →
+  //    参考段。best-effort:读失败 → 三字段全空(never block)。high 素材要点抽词供搜索 query 扩展。
+  let userMaterialHardBrief = "";
+  let userMaterialRefBrief = "";
+  let userMaterialQueryTerms: string[] = [];
+  if (deps.projectMaterials && input.projectId) {
+    try {
+      const materials = await deps.projectMaterials.listProjectMaterials(
+        ctx,
+        input.projectId,
+      );
+      const high = materials.filter((m) => m.priority === "high");
+      const normal = materials.filter((m) => m.priority !== "high");
+      userMaterialHardBrief = formatUserMaterialBrief(high, "high");
+      userMaterialRefBrief = formatUserMaterialBrief(normal, "normal");
+      userMaterialQueryTerms = materialQueryTerms(high);
+    } catch {
+      // 用户素材是 best-effort context;读失败绝不阻塞写文案/搜索节点(降级为无素材主权)。
+      userMaterialHardBrief = "";
+      userMaterialRefBrief = "";
+      userMaterialQueryTerms = [];
+    }
+  }
+
   return {
     positioningBrief,
     learningsBrief,
     assetsBrief,
+    userMaterialHardBrief,
+    userMaterialRefBrief,
+    userMaterialQueryTerms,
     accountsBrief,
     signalsBrief,
     knowledgeBrief,
@@ -586,6 +658,110 @@ export function formatKnowledgeBrief(
       topOf("quote").map((k) => `· ${truncate(k.title)}${usedSuffix(k)}`),
     ),
   ].join("\n");
+}
+
+// ── [T-146 切片 c/d] 用户上传素材主权 brief 组装(SPEC §3/§4)────────────────────────
+// 用户上传的第一手资料(PR 产品资料/采访/研究文档)是最真的数据底座,主权盖过 AI 找的二手素材。
+// 按 material_link.priority 分流:
+//   mode='high'(用户第一手)→ 渲染成「【用户第一手资料 · 最高优先 · 必须遵守】」硬约束段:文案必须
+//     紧扣其事实/数据/卖点(下游 script-node 在段后追加「事实硬约束 + 表达自由」gate 平衡说明)。
+//   mode='normal'(AI 找的二手)→ 渲染成普通参考段(参考级,非硬约束)。
+// 每份素材:优先用要点卡(keyPoints/facts/sellingPoints);无要点卡(未配摘要模型降级)→ 截断全文
+// 兜底(SPEC §3 全文截断注入)。解析失败(extractStatus=failed/unsupported)的素材**不进 brief**
+// (不冒充可读,SPEC §8.5 诚实降级)。全空 → 空串(下游整段省略,不注空壳)。纯函数,导出供单测。
+const USER_MATERIAL_TEXT_MAX = 1200; // 单份素材全文兜底注入的字符上限(防把上万字灌进 prompt)
+const USER_MATERIAL_MAX_DOCS = 8; // 单个 brief 最多列几份素材(防素材过多爆 context)
+
+// 一份素材是否有可读内容(有要点卡任一非空段 或 有非空全文),且抽取未失败。
+function materialIsReadable(m: ProjectMaterial): boolean {
+  if (m.extractStatus === "failed" || m.extractStatus === "unsupported") {
+    return false;
+  }
+  const s = m.materialSummary;
+  const hasSummary = Boolean(
+    (s?.keyPoints?.length ?? 0) > 0 ||
+      (s?.facts?.length ?? 0) > 0 ||
+      (s?.sellingPoints?.length ?? 0) > 0,
+  );
+  const hasText = Boolean(m.extractedText && m.extractedText.trim().length > 0);
+  return hasSummary || hasText;
+}
+
+// 渲染单份素材的内容体(要点卡优先,无则截断全文兜底)。不含段头(段头由 mode 统一加)。
+function renderMaterialBody(m: ProjectMaterial): string {
+  const s = m.materialSummary;
+  const lines: string[] = [];
+  const seg = (label: string, items?: string[]) => {
+    const nonEmpty = (items ?? []).map((x) => x.trim()).filter(Boolean);
+    if (nonEmpty.length > 0) {
+      lines.push(`${label}：${nonEmpty.join("；")}`);
+    }
+  };
+  seg("要点", s?.keyPoints);
+  seg("事实/数据", s?.facts);
+  seg("卖点", s?.sellingPoints);
+  if (lines.length === 0) {
+    // 无要点卡 → 截断全文兜底(未配摘要模型的诚实降级)。
+    const text = (m.extractedText ?? "").trim();
+    if (text) {
+      const clipped =
+        text.length > USER_MATERIAL_TEXT_MAX
+          ? `${text.slice(0, USER_MATERIAL_TEXT_MAX)}…（资料过长，已截断）`
+          : text;
+      lines.push(`全文摘录：${clipped}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+export function formatUserMaterialBrief(
+  materials: ProjectMaterial[],
+  mode: "high" | "normal",
+): string {
+  const readable = materials
+    .filter(materialIsReadable)
+    .slice(0, USER_MATERIAL_MAX_DOCS);
+  if (readable.length === 0) return "";
+
+  const blocks = readable
+    .map((m) => {
+      const body = renderMaterialBody(m);
+      if (!body) return "";
+      const nameLine = m.name ? `〔资料：${m.name}〕` : "";
+      return [nameLine, body].filter(Boolean).join("\n");
+    })
+    .filter(Boolean);
+  if (blocks.length === 0) return "";
+
+  if (mode === "high") {
+    // 套 positioning「【必须遵守】」硬约束范式(SPEC §3):事实地基,文案必须紧扣。
+    return [
+      "【用户第一手资料 · 最高优先 · 必须遵守】以下为创作者提供的核心资料。文案**必须紧扣其核心事实、数据、卖点**，不得脱离、弱化或编造与之矛盾的内容。这些是本条内容的事实地基。",
+      ...blocks,
+    ].join("\n");
+  }
+  // normal:参考级(非硬约束)。
+  return ["【创作者素材（参考级）】", ...blocks].join("\n");
+}
+
+// [T-146 切片 d] 从高优先素材的要点卡抽关键词/实体,供搜索 query 扩展(标题 + 资料关键词,而非纯
+// 标题)。取 keyPoints + sellingPoints(facts 常是长句数据,不宜直接拼进 query）。每条 trim 去空,
+// 去重,上限 6 条(防 query 过长)。无要点卡/解析失败的素材不产词。纯函数,导出供单测。
+const MATERIAL_QUERY_TERMS_MAX = 6;
+export function materialQueryTerms(materials: ProjectMaterial[]): string[] {
+  const terms: string[] = [];
+  for (const m of materials) {
+    // 只有 high 优先(用户第一手)才扩展 query;normal(AI 找的)不改 query(防用二手素材反向污染搜索)。
+    if (m.priority !== "high") continue;
+    if (!materialIsReadable(m)) continue;
+    const s = m.materialSummary;
+    for (const t of [...(s?.keyPoints ?? []), ...(s?.sellingPoints ?? [])]) {
+      const clean = t.trim();
+      if (clean) terms.push(clean);
+    }
+  }
+  // 去重 + 上限。
+  return Array.from(new Set(terms)).slice(0, MATERIAL_QUERY_TERMS_MAX);
 }
 
 // ── [T-081②] 真实作品画像 brief —— 全部作品标题压缩列表(每条截 40 字、上限 100 条、带发布

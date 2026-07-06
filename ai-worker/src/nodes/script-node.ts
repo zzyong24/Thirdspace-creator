@@ -42,6 +42,16 @@ export interface RunScriptNodeInput {
   outlineBrief?: string;
   /** [T-081] 对话中获得的补充指令/洞察(选填):原样注入 prompt,优先级高于既有档案。 */
   extraBrief?: string;
+  /**
+   * [T-146c] 用户第一手资料·最高优先·硬约束段(选填):高优先(priority=high)用户上传素材的
+   * 要点卡/全文,调用方(creative-context.formatUserMaterialBrief)已装配含「最高优先 · 必须遵守」
+   * 段头。文案必须紧扣其事实/数据/卖点。本节点在此段后追加「事实硬约束 + 表达自由」的 gate 平衡说明。
+   */
+  userMaterialHardBrief?: string;
+  /**
+   * [T-146c] 用户参考素材·参考级(选填):normal 优先(AI 找的二手)素材,进普通参考段,非硬约束。
+   */
+  userMaterialRefBrief?: string;
   /** 步骤回调 —— 喂窗口步骤日志。 */
   onStep?: (event: AgentStepEvent) => void | Promise<void>;
   /** 护栏:结构化校验失败的最大重试次数(默认 2,透传 runStructuredNode)。 */
@@ -125,6 +135,16 @@ export async function runScriptNode(
       // [T-081] 对话洞察/补充指令 —— ChatBox 对话里聊出的生成方向经此进 prompt(空则整段省略)。
       extraBrief: input.extraBrief
         ? `\n【本次生成指令（来自对话，优先遵循）】\n${input.extraBrief}`
+        : "",
+      // [T-146c] 用户第一手资料硬约束段 —— creative-context 已装配含「最高优先 · 必须遵守」段头
+      // (要点/事实/卖点)。这里在段后追加 gate 平衡说明:事实/数据/卖点必须忠于资料(不许改、不许
+      // 编造原文没有的卖点),但开头/角度/钩子/叙述结构由你创作 —— 既紧扣核心事实,又不沦为复读机。
+      userMaterialHard: input.userMaterialHardBrief
+        ? `\n${input.userMaterialHardBrief}\n（说明：以上资料的**事实、数据、卖点**必须忠于原文——不得改动、弱化，也不得编造原文未声明的卖点；但开头、切入角度、钩子、叙述结构由你自由创作，写出有传播力的文案，而不是机械复述资料。）`
+        : "",
+      // [T-146c] 参考素材段 —— normal 优先(AI 找的),参考级注入,不套硬约束头。
+      userMaterialRef: input.userMaterialRefBrief
+        ? `\n【参考素材（AI 搜集，参考级）】\n${input.userMaterialRefBrief}`
         : "",
     },
     maxRetries: input.maxRetries,

@@ -90,6 +90,64 @@ describe("runScriptNode", () => {
     expect(seenPrompt).not.toContain("EXTRA_MARKER");
   });
 
+  // [T-146 切片 c] 高优先用户素材 → 「【用户第一手资料 · 最高优先 · 必须遵守】」硬约束段 +
+  // 「事实忠于资料、表达角度自由」的 gate 平衡说明。normal 优先素材 → 普通参考段(非硬约束)。
+  it("[T-146c] userMaterialHardBrief(高优先)→ 「必须遵守」硬约束段 + 表达自由说明", async () => {
+    let seenPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        seenPrompt = JSON.stringify((opts as { prompt?: unknown }).prompt ?? "");
+        return finalText(SHOTS_OBJECT_JSON);
+      },
+    });
+    // 调用方(creative-context.formatUserMaterialBrief)已装配含「最高优先 · 必须遵守」段头。
+    await runScriptNode({
+      model,
+      positioningBrief: "带货博主,面向宝妈",
+      userMaterialHardBrief:
+        "【用户第一手资料 · 最高优先 · 必须遵守】\n【要点】续航 20 小时\n【事实】机身重 180g\n【卖点】静音降噪",
+    });
+    // 硬约束段头(套 positioning「必须遵守」范式)
+    expect(seenPrompt).toContain("最高优先");
+    expect(seenPrompt).toContain("必须遵守");
+    // 要点卡内容真进了 prompt
+    expect(seenPrompt).toContain("续航 20 小时");
+    expect(seenPrompt).toContain("静音降噪");
+    // gate 平衡:表达角度/钩子/结构留给 AI 自由发挥(防复读机)
+    expect(seenPrompt).toContain("角度");
+  });
+
+  it("[T-146c] userMaterialRefBrief(normal 优先)→ 参考段,非「必须遵守」硬约束", async () => {
+    let seenPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        seenPrompt = JSON.stringify((opts as { prompt?: unknown }).prompt ?? "");
+        return finalText(SHOTS_OBJECT_JSON);
+      },
+    });
+    await runScriptNode({
+      model,
+      positioningBrief: "带货博主,面向宝妈",
+      userMaterialRefBrief: "· AI 找的参考资料:同类竞品普遍 15 小时续航",
+    });
+    // 参考内容进 prompt
+    expect(seenPrompt).toContain("同类竞品普遍 15 小时续航");
+    // 但不套「最高优先 · 必须遵守」硬约束头(它是参考级)
+    expect(seenPrompt).not.toContain("最高优先 · 必须遵守");
+  });
+
+  it("[T-146c] 不传素材 brief → 两段都省略(不注空噪声)", async () => {
+    let seenPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        seenPrompt = JSON.stringify((opts as { prompt?: unknown }).prompt ?? "");
+        return finalText(SHOTS_OBJECT_JSON);
+      },
+    });
+    await runScriptNode({ model, positioningBrief: "x" });
+    expect(seenPrompt).not.toContain("用户第一手资料");
+  });
+
   it("空 shots(模型没产出分镜)→ 抛错(不假成功)", async () => {
     // 合法但空的结构化输出 → runScriptNode 的 empty guard 触发(不摆空格子)。
     const model = new MockLanguageModelV4({

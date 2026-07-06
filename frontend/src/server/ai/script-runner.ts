@@ -119,6 +119,10 @@ export async function runScriptDraft(
       thesisBrief: context.thesisBrief || undefined,
       contractBrief: context.contractBrief || undefined,
       outlineBrief: context.outlineBrief || undefined,
+      // [T-146c] 用户上传素材主权:高优先(用户第一手)进「必须遵守」硬约束段,normal(AI 找的)进
+      // 参考段。creative-context 已按 material_link.priority 分流 + 装配好段头(硬约束 + 事实地基)。
+      userMaterialHardBrief: context.userMaterialHardBrief || undefined,
+      userMaterialRefBrief: context.userMaterialRefBrief || undefined,
       onStep: async (e) => {
         await deps.ai.recordStep(ctx, task.id, {
           stepNo: e.stepNo,

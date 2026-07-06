@@ -607,6 +607,10 @@ export async function buildChatAssembly(
         topicAngle: angle ?? "",
         // [T-081①] 对话洞察/补充指令进整稿 prompt(script-node 空则整段省略)。
         extraBrief,
+        // [T-146c] 用户上传素材主权:高优先进「必须遵守」硬约束段,normal 进参考段(context 已按
+        // material_link.priority 分流并装配段头)。稿面对话里整稿也吃这条主权,与任务链一致。
+        userMaterialHardBrief: context.userMaterialHardBrief || undefined,
+        userMaterialRefBrief: context.userMaterialRefBrief || undefined,
       });
       return shots.map((shot, i) => {
         const label = shot.口播 ? shot.口播.slice(0, 16) : `分镜 ${i + 1}`;
@@ -626,7 +630,12 @@ export async function buildChatAssembly(
     gatherMaterials: async ({ query }) => {
       // [T-057④/T-084a] 两步:①先真联网检索(searchWeb,失败/未配降级)②runResearchNode 结构化
       // 综合(检索结果前置注入,非模型工具 —— 保住任何模型都产可解析输出,ffb7951 教训)。
-      const effQuery = query?.trim() || selectionTitle || "";
+      const baseQuery = query?.trim() || selectionTitle || "";
+      // [T-146d] 搜索深度结合用户素材:构造 query 前读当前项目 high-priority 用户素材要点(关键词/
+      // 实体)→ 扩展 query(标题 + 资料关键词,而非纯标题),让搜索贴着 PR/第一手资料搜。
+      // context.userMaterialQueryTerms 已由 creative-context 从高优先素材要点卡抽好(只 high,去重上限)。
+      const materialTerms = context.userMaterialQueryTerms ?? [];
+      const effQuery = [baseQuery, ...materialTerms].filter(Boolean).join(" ");
       // ① 联网检索(端口未装配 → 空;SearchConfigError/SearchExecutionError → catch 成空降级)。
       let searchResults: Array<{
         title: string;
@@ -649,13 +658,20 @@ export async function buildChatAssembly(
         }
       }
       // ② 结构化综合(research.gather capability,四类结构化素材;检索结果注入 → 模型据其填真实 URL)。
+      // [T-146d] 高优先用户素材要点作 facet 注入 → 综合「贴着资料产」(优先服务于它、补充它、佐证它,
+      // 而非跑题)。topicTitle 保持原选题(不掺资料词,避免污染综合的相关性判断);资料主权走 facet。
       const spec = await deps.resolveModelSpec(ctx, "research.gather");
-      const { runResearchNode } = await import("@creatoros/ai-worker");
+      const { runResearchNode, formatUserMaterialFacet } = await import(
+        "@creatoros/ai-worker"
+      );
       const { items, grounding } = await runResearchNode({
         model: modelFor(spec),
         positioningBrief: context.positioningBrief,
-        topicTitle: effQuery,
+        topicTitle: baseQuery,
         searchResults,
+        userMaterialFacet: context.userMaterialHardBrief
+          ? formatUserMaterialFacet(context.userMaterialHardBrief)
+          : undefined,
       });
       return {
         grounding,

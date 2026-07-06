@@ -75,10 +75,11 @@ export type ResearchMaterialOutput = z.infer<typeof researchMaterialSchema>;
 
 export const RESEARCH_GATHER_TEMPLATE: PromptTemplate = {
   id: "research.gather",
+  // [T-146d] v4:新增选填 facet userMaterial(创作者第一手资料要点块)—— 综合优先服务于/佐证它。
   // [T-084a] v3:新增选填 facet searchResults(联网检索结果块)+ sourceUrl 信源铁律。
   // 检索走**节点前置注入**(调用方先 searchWeb 拿真结果 → 注 searchResults facet → 本模板综合),
   // 不回自由文本工具循环(保住任何模型都产可解析输出;ffb7951 教训)。
-  version: "v3",
+  version: "v4",
   // 三位一体「输出 Zod schema」位收口到 registry(SPEC §4.2):runStructuredNode 从 registry
   // 取它绑 generateObject,模型必须吐四类候选,校验失败自动重试(防发散 + 根治不可解析)。
   outputSchema: researchMaterialSchema,
@@ -91,7 +92,7 @@ export const RESEARCH_GATHER_TEMPLATE: PromptTemplate = {
 {{positioning}}
 
 【选题】{{topic}}{{angle}}
-{{searchResults}}
+{{userMaterial}}{{searchResults}}
 【任务】围绕这个选题,为创作者备好能直接写进脚本的素材。分四类产出:
 1. hooks（开场钩子）：能在前 3 秒抓住注意力的开头句(反直觉 / 悬念 / 痛点 / 具体数字)。每条给 text(钩子原句)+ why(为什么抓人)。
 2. cases（可讲的案例）：真实或经典的案例,讲出来有说服力。每条给 title(案例名)+ source(可信出处,如机构/报告/人物)+ opening(在视频里怎么起这个案例)+ sourceUrl(见下方信源铁律)。
