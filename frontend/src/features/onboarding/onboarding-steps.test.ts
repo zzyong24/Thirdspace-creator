@@ -1,278 +1,316 @@
 /**
- * [T-131a] deriveSteps 纯逻辑单测 —— 锁 done 派生的三条铁律:
- *  - 配了 → done。
- *  - 没配(读到空 state)→ 未完成。
- *  - 读失败(state 字段 undefined)→ 未完成(诚实降级,绝不假打勾)。
- * 外加进度 / 全必备完成 / 分组 / href 深链的断言。
+ * [T-161] deriveGuidedSteps 纯逻辑单测 —— 有序引导流(取代 T-131a 扁平三档)。
+ *
+ * 锁住:
+ *  - 步序:配文本模型 → 确认起点 →(existing)扫码导入 →(existing)后台初始化 →
+ *    创建定位 → 创建首个项目,order 递增。
+ *  - 门控:前置未 done → 该步 blocked(灰/锁);前置 done → 解锁。
+ *  - 分支:origin=fresh → 隐藏 existing 专属步(扫码导入/后台初始化);origin=existing → 全程。
+ *  - done 判定:各步 isDone 从 state 派生(诚实降级,读失败一律未完成)。
+ *  - 清理:web-search / asr 步不再出现(T-159/T-160 联动)。
+ *  - 全 done → isOnboardingComplete=true(按可见步,fresh 只看 4 步)。
  */
 
 import { describe, expect, it } from "vitest";
 
 import {
-  ONBOARDING_STEP_SET,
-  allRequiredDone,
-  deriveSteps,
+  GUIDED_STEP_SET,
+  deriveGuidedSteps,
   isOnboardingComplete,
   progressOf,
   type OnboardingState,
 } from "./onboarding-steps";
 
-/** 取某 key 的派生步。 */
+/** 取某 key 的派生步(按给定 state / origin)。 */
 function step(state: OnboardingState, key: string) {
-  return deriveSteps(state).find((s) => s.key === key);
+  return deriveGuidedSteps(state).find((s) => s.key === key);
 }
 
-describe("deriveSteps — done 派生", () => {
-  it("空 state(全未配 / 未加载)→ 所有步未完成", () => {
-    const steps = deriveSteps({});
-    expect(steps.length).toBe(ONBOARDING_STEP_SET.length);
-    expect(steps.every((s) => s.done === false)).toBe(true);
+/** 各步 key(声明序)。 */
+const ALL_KEYS = [
+  "text-model",
+  "confirm-origin",
+  "import-account",
+  "init-data",
+  "positioning-profile",
+  "first-project",
+] as const;
+
+describe("[T-161] GUIDED_STEP_SET — 步序 / 元数据", () => {
+  it("恰含 6 个引导步,order 从 1 递增无重复", () => {
+    const orders = GUIDED_STEP_SET.map((s) => s.order);
+    expect(GUIDED_STEP_SET.map((s) => s.key)).toEqual([...ALL_KEYS]);
+    expect(orders).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
-  it("配了文本模型(default capability)→ text-model done", () => {
-    const state: OnboardingState = {
-      configuredCapabilities: new Set(["default"]),
-    };
-    expect(step(state, "text-model")?.done).toBe(true);
-    // 没配的其余步仍未完成。
-    expect(step(state, "positioning-profile")?.done).toBe(false);
-    expect(step(state, "first-project")?.done).toBe(false);
-  });
-
-  it("没配文本模型(集合里没有 default)→ text-model 未完成", () => {
-    const state: OnboardingState = {
-      configuredCapabilities: new Set(["image.generate"]),
-    };
-    expect(step(state, "text-model")?.done).toBe(false);
-    // 但生图配了 → image-model done。
-    expect(step(state, "image-model")?.done).toBe(true);
-  });
-
-  it("读失败(configuredCapabilities undefined)→ 相关模型步一律未完成,不假打勾", () => {
-    const state: OnboardingState = { configuredCapabilities: undefined };
-    for (const key of [
-      "text-model",
+  it("清理:web-search / asr / 生图 / 存储 / 违禁词步不再出现(T-159/T-160 联动)", () => {
+    const keys = GUIDED_STEP_SET.map((s) => s.key);
+    for (const gone of [
+      "web-search",
+      "asr-model",
       "image-model",
       "video-model",
       "review-model",
-      "asr-model",
-      "web-search",
+      "storage-root",
+      "review-rules",
+      "douyin-login",
     ]) {
-      expect(step(state, key)?.done).toBe(false);
+      expect(keys).not.toContain(gone);
     }
   });
 
-  it("定位母版:存在 → done;不存在 / 读失败 → 未完成", () => {
-    expect(step({ hasPositioningProfile: true }, "positioning-profile")?.done).toBe(
-      true,
+  it("existing 专属步 = 扫码导入 / 后台初始化;其余为全员步", () => {
+    const existingOnly = GUIDED_STEP_SET.filter(
+      (s) => s.branch === "existing",
+    ).map((s) => s.key);
+    expect(existingOnly).toEqual(["import-account", "init-data"]);
+    const allBranch = GUIDED_STEP_SET.filter((s) => s.branch === "all").map(
+      (s) => s.key,
     );
-    expect(
-      step({ hasPositioningProfile: false }, "positioning-profile")?.done,
-    ).toBe(false);
-    // 读失败(undefined)。
-    expect(step({}, "positioning-profile")?.done).toBe(false);
-  });
-
-  it("首个项目:count≥1 → done;count=0 / 读失败 → 未完成", () => {
-    expect(step({ projectCount: 3 }, "first-project")?.done).toBe(true);
-    expect(step({ projectCount: 1 }, "first-project")?.done).toBe(true);
-    expect(step({ projectCount: 0 }, "first-project")?.done).toBe(false);
-    // 读失败(undefined)。
-    expect(step({}, "first-project")?.done).toBe(false);
-  });
-
-  it("存储根:读到 → done;读失败 → 未完成", () => {
-    expect(step({ hasStorageRoot: true }, "storage-root")?.done).toBe(true);
-    expect(step({ hasStorageRoot: false }, "storage-root")?.done).toBe(false);
-    expect(step({}, "storage-root")?.done).toBe(false);
-  });
-
-  it("[T-131d] 违禁词/审核规则:有 active 规则 → done;无 / 读失败 → 未完成", () => {
-    expect(step({ hasActiveReviewRule: true }, "review-rules")?.done).toBe(true);
-    expect(step({ hasActiveReviewRule: false }, "review-rules")?.done).toBe(false);
-    expect(step({}, "review-rules")?.done).toBe(false);
-  });
-
-  it("[T-131d] 抖音登录:loggedIn → done;未登录 / 读失败 → 未完成", () => {
-    expect(step({ douyinLoggedIn: true }, "douyin-login")?.done).toBe(true);
-    expect(step({ douyinLoggedIn: false }, "douyin-login")?.done).toBe(false);
-    expect(step({}, "douyin-login")?.done).toBe(false);
-  });
-
-  it("多能力可选模型 done 独立派生", () => {
-    const state: OnboardingState = {
-      configuredCapabilities: new Set([
-        "video.generate",
-        "script.review",
-        "transcribe.audio",
-        "web.search",
-      ]),
-    };
-    expect(step(state, "video-model")?.done).toBe(true);
-    expect(step(state, "review-model")?.done).toBe(true);
-    expect(step(state, "asr-model")?.done).toBe(true);
-    expect(step(state, "web-search")?.done).toBe(true);
-    // 没配的仍未完成。
-    expect(step(state, "image-model")?.done).toBe(false);
-  });
-});
-
-describe("deriveSteps — 分组 / 元数据", () => {
-  it("必备组恰为 文本模型 / 首个项目(定位/联网搜索改归 recommended)", () => {
-    const required = deriveSteps({})
-      .filter((s) => s.group === "required")
-      .map((s) => s.key);
-    expect(required).toEqual(["text-model", "first-project"]);
-  });
-
-  it("[T-132] 强烈建议组恰为 定位母版 / 联网搜索", () => {
-    const recommended = deriveSteps({})
-      .filter((s) => s.group === "recommended")
-      .map((s) => s.key);
-    expect(recommended).toEqual(["positioning-profile", "web-search"]);
-  });
-
-  it("[T-132] positioning-profile 与 web-search 归 recommended,不再 required/optional", () => {
-    const byKey = (key: string) =>
-      deriveSteps({}).find((s) => s.key === key)?.group;
-    expect(byKey("positioning-profile")).toBe("recommended");
-    expect(byKey("web-search")).toBe("recommended");
+    expect(allBranch).toEqual([
+      "text-model",
+      "confirm-origin",
+      "positioning-profile",
+      "first-project",
+    ]);
   });
 
   it("每步都带非空 title / why / href 深链", () => {
-    for (const s of deriveSteps({})) {
+    for (const s of GUIDED_STEP_SET) {
       expect(s.title.length).toBeGreaterThan(0);
       expect(s.why.length).toBeGreaterThan(0);
-      expect(s.href.startsWith("/")).toBe(true);
+      expect(s.href.length).toBeGreaterThan(0);
     }
   });
+});
 
-  it("必备/建议步深链指向对应配置页", () => {
-    const steps = deriveSteps({});
-    // [T-132] settings 类步骤带 ?highlight=<key> 深链锚点(settings 页据此定位卡片)。
-    expect(steps.find((s) => s.key === "text-model")?.href).toBe(
-      "/settings?highlight=text-model",
-    );
-    // 整页跳转类(定位 / 首个项目)不带 highlight。
-    expect(steps.find((s) => s.key === "positioning-profile")?.href).toBe(
-      "/positioning",
-    );
-    expect(steps.find((s) => s.key === "first-project")?.href).toBe(
-      "/projects/new",
-    );
-    // 联网搜索(recommended,settings 类)带 highlight。
-    expect(steps.find((s) => s.key === "web-search")?.href).toBe(
-      "/settings?highlight=web-search",
-    );
+describe("[T-161] deriveGuidedSteps — 分支显隐(按 origin)", () => {
+  it("origin=null(未选起点)→ existing 专属步暂不显示(等确认起点后才分叉)", () => {
+    const keys = deriveGuidedSteps({ origin: null }).map((s) => s.key);
+    expect(keys).not.toContain("import-account");
+    expect(keys).not.toContain("init-data");
+  });
+
+  it("origin=fresh → 隐藏 扫码导入 / 后台初始化(从零跳过 3/4)", () => {
+    const keys = deriveGuidedSteps({ origin: "fresh" }).map((s) => s.key);
+    expect(keys).toEqual([
+      "text-model",
+      "confirm-origin",
+      "positioning-profile",
+      "first-project",
+    ]);
+  });
+
+  it("origin=existing → 全程 6 步(含扫码导入 / 后台初始化)", () => {
+    const keys = deriveGuidedSteps({ origin: "existing" }).map((s) => s.key);
+    expect(keys).toEqual([...ALL_KEYS]);
   });
 });
 
-describe("allRequiredDone", () => {
-  it("必备全配 → true(即使可选未配)", () => {
+describe("[T-161] deriveGuidedSteps — done 派生", () => {
+  it("配了文本模型(default capability)→ text-model done", () => {
+    expect(
+      step({ configuredCapabilities: new Set(["default"]) }, "text-model")?.done,
+    ).toBe(true);
+    expect(step({}, "text-model")?.done).toBe(false);
+  });
+
+  it("确认起点:origin 非 null → confirm-origin done;null → 未完成", () => {
+    expect(step({ origin: "fresh" }, "confirm-origin")?.done).toBe(true);
+    expect(step({ origin: "existing" }, "confirm-origin")?.done).toBe(true);
+    expect(step({ origin: null }, "confirm-origin")?.done).toBe(false);
+    expect(step({}, "confirm-origin")?.done).toBe(false);
+  });
+
+  it("扫码导入:douyinLoggedIn → done;未登录 / 读失败 → 未完成", () => {
+    const base = { origin: "existing" as const };
+    expect(step({ ...base, douyinLoggedIn: true }, "import-account")?.done).toBe(
+      true,
+    );
+    expect(step({ ...base, douyinLoggedIn: false }, "import-account")?.done).toBe(
+      false,
+    );
+    expect(step(base, "import-account")?.done).toBe(false);
+  });
+
+  it("后台初始化:存在 imported 作品 → done;无 / 读失败 → 未完成", () => {
+    const base = { origin: "existing" as const };
+    expect(step({ ...base, hasImportedWorks: true }, "init-data")?.done).toBe(
+      true,
+    );
+    expect(step({ ...base, hasImportedWorks: false }, "init-data")?.done).toBe(
+      false,
+    );
+    expect(step(base, "init-data")?.done).toBe(false);
+  });
+
+  it("创建定位:hasPositioningProfile → done", () => {
+    expect(
+      step({ hasPositioningProfile: true }, "positioning-profile")?.done,
+    ).toBe(true);
+    expect(
+      step({ hasPositioningProfile: false }, "positioning-profile")?.done,
+    ).toBe(false);
+    expect(step({}, "positioning-profile")?.done).toBe(false);
+  });
+
+  it("创建首个项目:projectCount≥1 → done", () => {
+    expect(step({ projectCount: 1 }, "first-project")?.done).toBe(true);
+    expect(step({ projectCount: 0 }, "first-project")?.done).toBe(false);
+    expect(step({}, "first-project")?.done).toBe(false);
+  });
+});
+
+describe("[T-161] deriveGuidedSteps — 门控(前置未满足 → blocked)", () => {
+  it("步1(文本模型)永不 blocked(第一步无前置)", () => {
+    expect(step({}, "text-model")?.blocked).toBe(false);
+  });
+
+  it("步1 未 done → 步2(确认起点)blocked + 锁提示", () => {
+    const s = step({}, "confirm-origin");
+    expect(s?.blocked).toBe(true);
+    expect(s?.blockedReason && s.blockedReason.length > 0).toBe(true);
+  });
+
+  it("步1 done → 步2 解锁(不 blocked)", () => {
+    const s = step(
+      { configuredCapabilities: new Set(["default"]) },
+      "confirm-origin",
+    );
+    expect(s?.blocked).toBe(false);
+  });
+
+  it("existing:步3(扫码导入)前置=步2(起点),origin=existing 即步2 done → 步3 解锁", () => {
+    // 门控只看「前一个可见步」:origin=existing 时 confirm-origin(步2)恒 done → 步3 不 blocked。
+    // (选了 existing 就该能立刻去扫码,不被更前面的步反向锁。)
+    const s = step({ origin: "existing" }, "import-account");
+    expect(s?.blocked).toBe(false);
+  });
+
+  it("existing 全前置就绪:步1 done + 已登录 → 步4(后台初始化)解锁", () => {
     const state: OnboardingState = {
+      origin: "existing",
       configuredCapabilities: new Set(["default"]),
-      hasPositioningProfile: true,
-      projectCount: 2,
+      douyinLoggedIn: true,
     };
-    const steps = deriveSteps(state);
-    expect(allRequiredDone(steps)).toBe(true);
+    expect(step(state, "init-data")?.blocked).toBe(false);
   });
 
-  it("任一必备未完成 → false", () => {
+  it("existing:步3(扫码)未 done → 步4(后台初始化)blocked", () => {
     const state: OnboardingState = {
+      origin: "existing",
       configuredCapabilities: new Set(["default"]),
-      hasPositioningProfile: true,
-      projectCount: 0, // 缺首个项目
+      douyinLoggedIn: false, // 未扫码
     };
-    expect(allRequiredDone(deriveSteps(state))).toBe(false);
+    expect(step(state, "init-data")?.blocked).toBe(true);
   });
 
-  it("空 state → false", () => {
-    expect(allRequiredDone(deriveSteps({}))).toBe(false);
+  it("existing:步4(初始化)未 done → 步5(定位)blocked", () => {
+    const state: OnboardingState = {
+      origin: "existing",
+      configuredCapabilities: new Set(["default"]),
+      douyinLoggedIn: true,
+      hasImportedWorks: false, // 未初始化
+    };
+    expect(step(state, "positioning-profile")?.blocked).toBe(true);
+  });
+
+  it("fresh:步1 done + 起点已选 → 步5(定位)解锁(fresh 无 3/4 前置)", () => {
+    const state: OnboardingState = {
+      origin: "fresh",
+      configuredCapabilities: new Set(["default"]),
+    };
+    expect(step(state, "positioning-profile")?.blocked).toBe(false);
+  });
+
+  it("步5(定位)未 done → 步6(首个项目)blocked;定位 done → 解锁", () => {
+    const gated: OnboardingState = {
+      origin: "fresh",
+      configuredCapabilities: new Set(["default"]),
+      hasPositioningProfile: false,
+    };
+    expect(step(gated, "first-project")?.blocked).toBe(true);
+    const unlocked: OnboardingState = {
+      ...gated,
+      hasPositioningProfile: true,
+    };
+    expect(step(unlocked, "first-project")?.blocked).toBe(false);
   });
 });
 
-describe("progressOf", () => {
-  it("统计已完成 / 总步数", () => {
+describe("[T-161] isOnboardingComplete — 按可见步(origin 分支)", () => {
+  it("fresh 全 done(文本模型+起点+定位+项目)→ true(不看 existing 专属步)", () => {
     const state: OnboardingState = {
-      configuredCapabilities: new Set(["default", "image.generate"]),
-      hasPositioningProfile: true,
-      projectCount: 0,
-    };
-    const steps = deriveSteps(state);
-    const { done, total } = progressOf(steps);
-    // done: text-model + positioning-profile + image-model = 3
-    expect(done).toBe(3);
-    expect(total).toBe(ONBOARDING_STEP_SET.length);
-  });
-
-  it("空 state → 0 / total", () => {
-    const { done, total } = progressOf(deriveSteps({}));
-    expect(done).toBe(0);
-    expect(total).toBe(ONBOARDING_STEP_SET.length);
-  });
-});
-
-describe("[T-132] isOnboardingComplete", () => {
-  /** required + recommended 全配(optional 一律没配)。 */
-  const requiredAndRecommended: OnboardingState = {
-    configuredCapabilities: new Set(["default", "web.search"]),
-    hasPositioningProfile: true,
-    projectCount: 1,
-  };
-
-  it("required + recommended 全 done → true(即使 optional 全未配)", () => {
-    expect(isOnboardingComplete(deriveSteps(requiredAndRecommended))).toBe(true);
-  });
-
-  it("仅缺一个 optional(如存储根)→ 仍 true(optional 不计入)", () => {
-    // requiredAndRecommended 本就没配任何 optional → 已覆盖「缺 optional 仍 true」。
-    // 这里再显式补配一部分 optional、独缺 storage-root,确认结论不变。
-    const state: OnboardingState = {
-      ...requiredAndRecommended,
-      configuredCapabilities: new Set([
-        "default",
-        "web.search",
-        "image.generate",
-        "video.generate",
-      ]),
-      // 独缺 hasStorageRoot(optional)。
-    };
-    expect(isOnboardingComplete(deriveSteps(state))).toBe(true);
-  });
-
-  it("缺一个 recommended(联网搜索)→ false", () => {
-    const state: OnboardingState = {
-      configuredCapabilities: new Set(["default"]), // 缺 web.search
+      origin: "fresh",
+      configuredCapabilities: new Set(["default"]),
       hasPositioningProfile: true,
       projectCount: 1,
     };
-    expect(isOnboardingComplete(deriveSteps(state))).toBe(false);
+    expect(isOnboardingComplete(deriveGuidedSteps(state))).toBe(true);
   });
 
-  it("缺一个 recommended(定位母版)→ false", () => {
+  it("existing 全 done(6 步)→ true", () => {
     const state: OnboardingState = {
-      configuredCapabilities: new Set(["default", "web.search"]),
-      hasPositioningProfile: false, // 缺定位
+      origin: "existing",
+      configuredCapabilities: new Set(["default"]),
+      douyinLoggedIn: true,
+      hasImportedWorks: true,
+      hasPositioningProfile: true,
       projectCount: 1,
     };
-    expect(isOnboardingComplete(deriveSteps(state))).toBe(false);
+    expect(isOnboardingComplete(deriveGuidedSteps(state))).toBe(true);
   });
 
-  it("缺一个 required(首个项目)→ false", () => {
+  it("existing 缺 扫码导入 → false", () => {
     const state: OnboardingState = {
-      configuredCapabilities: new Set(["default", "web.search"]),
+      origin: "existing",
+      configuredCapabilities: new Set(["default"]),
+      douyinLoggedIn: false, // 缺
+      hasImportedWorks: true,
       hasPositioningProfile: true,
-      projectCount: 0, // 缺项目
+      projectCount: 1,
     };
-    expect(isOnboardingComplete(deriveSteps(state))).toBe(false);
+    expect(isOnboardingComplete(deriveGuidedSteps(state))).toBe(false);
+  });
+
+  it("未选起点(origin=null)→ false(至少还差确认起点这一步)", () => {
+    const state: OnboardingState = {
+      origin: null,
+      configuredCapabilities: new Set(["default"]),
+      hasPositioningProfile: true,
+      projectCount: 1,
+    };
+    expect(isOnboardingComplete(deriveGuidedSteps(state))).toBe(false);
   });
 
   it("空 state → false", () => {
-    expect(isOnboardingComplete(deriveSteps({}))).toBe(false);
+    expect(isOnboardingComplete(deriveGuidedSteps({}))).toBe(false);
   });
 
-  it("无 required+recommended 步(空数组)→ true(防空数组误判)", () => {
+  it("无步(空数组)→ true(防空数组误判)", () => {
     expect(isOnboardingComplete([])).toBe(true);
+  });
+});
+
+describe("[T-161] progressOf — 已完成 / 总(可见步)", () => {
+  it("fresh:文本模型+起点已 done、定位/项目未 → 2/4", () => {
+    const state: OnboardingState = {
+      origin: "fresh",
+      configuredCapabilities: new Set(["default"]),
+    };
+    const { done, total } = progressOf(deriveGuidedSteps(state));
+    expect(done).toBe(2); // text-model + confirm-origin
+    expect(total).toBe(4);
+  });
+
+  it("existing:仅文本模型 done → 1/6", () => {
+    const state: OnboardingState = {
+      origin: "existing",
+      configuredCapabilities: new Set(["default"]),
+    };
+    // origin=existing → confirm-origin 也算 done(origin!=null),故 2/6。
+    const { done, total } = progressOf(deriveGuidedSteps(state));
+    expect(total).toBe(6);
+    expect(done).toBe(2);
   });
 });

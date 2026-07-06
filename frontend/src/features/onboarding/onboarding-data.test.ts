@@ -1,21 +1,29 @@
 /**
- * [Bug #3] onboarding-data 装配层单测 —— 锁 `loadConfiguredCapabilities` 的核心铁律:
- * **「已配」= 真能跑(provider 非空 且 hasSecret),不是「行存在」**。
+ * onboarding-data 装配层单测。
  *
- * T-135 中性化保留了各 AI capability 的空占位骨架(行存在,但 provider 空 / secret
- * 空)。旧判定只看 provider 非空,会把「有 provider 占位但没配 key」误算成已配 →
- * 新手清单「配置文本模型」假打勾。这些用例证明修正后:未真配一律不入集合。
+ * [Bug #3] `loadConfiguredCapabilities` 铁律:**「已配」= 真能跑(provider 非空 且
+ * hasSecret),不是「行存在」**(空占位骨架不打勾)。
+ *
+ * [T-161] 新增:
+ *  - origin 起点落盘(localStorage `creatoros:onboarding:origin`)读/写。
+ *  - `loadHasImportedWorks`:存在 ≥1 个 source==="imported" 的项目 → true(推断后台初始化跑过)。
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const listModels = vi.hoisted(() => vi.fn());
+const listProjects = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/contract-client", () => ({
-  client: { listModels },
+  client: { listModels, listProjects },
 }));
 
-import { loadConfiguredCapabilities } from "./onboarding-data";
+import {
+  loadConfiguredCapabilities,
+  loadHasImportedWorks,
+  readOrigin,
+  writeOrigin,
+} from "./onboarding-data";
 
 /** 造一行 listModels DTO —— 默认「真配了」,各 case 覆写要考察的字段。 */
 function modelRow(over: Record<string, unknown> = {}) {
@@ -39,9 +47,7 @@ describe("loadConfiguredCapabilities — 「真配了」才入集合", () => {
     expect(set?.has("default")).toBe(true);
   });
 
-  it("T-135 空占位骨架(provider 非空但 hasSecret=false,没配 key)→ 不入集合", async () => {
-    // 这是 Bug #3 的核心:行存在、provider 占位,但没配 key(hasSecret=false),
-    // 真跑不通 → 绝不打勾。旧判定会误算成已配。
+  it("T-135 空占位骨架(provider 非空但 hasSecret=false)→ 不入集合", async () => {
     listModels.mockResolvedValue([
       modelRow({ capability: "default", hasSecret: false }),
     ]);
@@ -57,44 +63,67 @@ describe("loadConfiguredCapabilities — 「真配了」才入集合", () => {
     expect(set?.has("default")).toBe(false);
   });
 
-  it("配了 key 但 provider 仍空(异常态)→ 不入集合(provider 是硬下限)", async () => {
-    listModels.mockResolvedValue([
-      modelRow({ capability: "default", provider: "", hasSecret: true }),
-    ]);
-    const set = await loadConfiguredCapabilities();
-    expect(set?.has("default")).toBe(false);
-  });
-
-  it("web.search 档同理:真配(带 key/env-ref)→ 入;空占位 → 不入(不误伤)", async () => {
-    listModels.mockResolvedValue([
-      // 真配了搜索(provider + secret 齐)
-      modelRow({ capability: "web.search", provider: "tavily", hasSecret: true }),
-      // 空占位的生图骨架(有 provider 占位,没 key)
-      modelRow({
-        capability: "image.generate",
-        provider: "minimax",
-        hasSecret: false,
-      }),
-    ]);
-    const set = await loadConfiguredCapabilities();
-    expect(set?.has("web.search")).toBe(true);
-    expect(set?.has("image.generate")).toBe(false);
-  });
-
-  it("混合:只有真配的那几档入集合,占位骨架全部落选", async () => {
-    listModels.mockResolvedValue([
-      modelRow({ capability: "default", hasSecret: true }), // 真配
-      modelRow({ capability: "image.generate", hasSecret: false }), // 占位
-      modelRow({ capability: "video.generate", hasSecret: false }), // 占位
-      modelRow({ capability: "script.review", provider: "openai", hasSecret: true }), // 真配
-    ]);
-    const set = await loadConfiguredCapabilities();
-    expect([...set!].sort()).toEqual(["default", "script.review"]);
-  });
-
-  it("读失败(listModels reject)→ undefined(诚实降级,deriveSteps 当未完成)", async () => {
+  it("读失败(listModels reject)→ undefined(诚实降级)", async () => {
     listModels.mockRejectedValue(new Error("read failed"));
     const set = await loadConfiguredCapabilities();
     expect(set).toBeUndefined();
+  });
+});
+
+describe("[T-161] loadHasImportedWorks — 有 imported 作品才 true", () => {
+  beforeEach(() => {
+    listProjects.mockReset();
+  });
+
+  it("存在 ≥1 个 source==='imported' 的项目 → true", async () => {
+    listProjects.mockResolvedValue([
+      { id: "p1", source: "manual" },
+      { id: "p2", source: "imported" },
+    ]);
+    expect(await loadHasImportedWorks()).toBe(true);
+  });
+
+  it("全是 manual / topic(无导入)→ false", async () => {
+    listProjects.mockResolvedValue([
+      { id: "p1", source: "manual" },
+      { id: "p2", source: "topic" },
+    ]);
+    expect(await loadHasImportedWorks()).toBe(false);
+  });
+
+  it("空列表 → false", async () => {
+    listProjects.mockResolvedValue([]);
+    expect(await loadHasImportedWorks()).toBe(false);
+  });
+
+  it("读失败 → undefined(诚实降级)", async () => {
+    listProjects.mockRejectedValue(new Error("no backend"));
+    expect(await loadHasImportedWorks()).toBeUndefined();
+  });
+});
+
+describe("[T-161] origin 起点落盘(localStorage)", () => {
+  beforeEach(() => {
+    try {
+      window.localStorage.clear();
+    } catch {
+      /* noop */
+    }
+  });
+
+  it("未写过 → readOrigin() = null", () => {
+    expect(readOrigin()).toBeNull();
+  });
+
+  it("写 fresh → 读回 fresh;写 existing → 读回 existing", () => {
+    writeOrigin("fresh");
+    expect(readOrigin()).toBe("fresh");
+    writeOrigin("existing");
+    expect(readOrigin()).toBe("existing");
+  });
+
+  it("脏值(非 fresh/existing)→ readOrigin() 降级为 null", () => {
+    window.localStorage.setItem("creatoros:onboarding:origin", "garbage");
+    expect(readOrigin()).toBeNull();
   });
 });

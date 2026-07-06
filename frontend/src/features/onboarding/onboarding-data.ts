@@ -1,61 +1,83 @@
 /**
- * onboarding-data — [T-132 切片 2;T-138] 能力 state 装配层。
+ * onboarding-data — [T-161] 有序引导流的 state 装配层(重构自 T-132 扁平三档装配)。
  *
- * `loadState` 及 6 个 loader 供常驻卡(onboarding-card)挂载后并行拉真值 →
- * deriveSteps。(T-138 弹窗已删,常驻卡是唯一消费方。)每个读 op 各自 try/catch:
- * 失败 → 该字段留 undefined(诚实降级),不让一个读失败拖垮整份 state,deriveSteps
- * 一律当未完成、绝不假打勾。
+ * `loadState` 供常驻卡(onboarding-card)挂载后并行拉真值 → deriveGuidedSteps。每个读 op
+ * 各自 try/catch:失败 → 该字段留 undefined(诚实降级),不让一个读失败拖垮整份 state,
+ * deriveGuidedSteps 一律当未完成、绝不假打勾。
  *
- * 本模块 import 了 contract-client(client),故消费方(card)本身是 client 组件;
- * 但本文件不 import React —— 纯装配逻辑,好复用。
+ * 引导流只依赖 5 个信号(SPEC §3.1 六步的 done 判据):
+ *   - configuredCapabilities(步1 文本模型)
+ *   - origin(步2 起点,localStorage 落盘,非后端 —— additive、不碰 user_preferences schema)
+ *   - douyinLoggedIn(步3 扫码导入)
+ *   - hasImportedWorks(步4 后台初始化,由 imported 作品推断)
+ *   - hasPositioningProfile(步5 定位)/ projectCount(步6 项目)
+ *
+ * 本模块 import contract-client(client),故消费方(card)是 client 组件;但本文件不 import
+ * React —— 纯装配逻辑,好复用。origin 的 localStorage 读/写也放这里(浏览器 API,非 React)。
  */
 
 import { client } from "@/lib/contract-client";
-import { type OnboardingState } from "./onboarding-steps";
+import { type OnboardingState, type OnboardingOrigin } from "./onboarding-steps";
+
+/** 起点选择的 localStorage key(引导流专属存储;与 hidden flag 同源,不碰后端 schema)。 */
+const ORIGIN_KEY = "creatoros:onboarding:origin";
 
 /**
- * 并行拉各能力 state。每个读 op 各自 try/catch:失败 → 该字段留 undefined
- * (诚实降级),不让一个读失败拖垮整份 state。返回可直接喂 deriveSteps 的 state。
+ * 读起点选择(try/catch 降级,不抛)。脏值 / 未写 / localStorage 不可用 → null(未选)。
+ * 只认 "fresh" / "existing" 两个合法值,其余一律降级 null(诚实,防脏值污染分支判定)。
+ */
+export function readOrigin(): OnboardingOrigin {
+  try {
+    const v = window.localStorage.getItem(ORIGIN_KEY);
+    return v === "fresh" || v === "existing" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 写起点选择(try/catch 降级,不抛)。 */
+export function writeOrigin(origin: "fresh" | "existing"): void {
+  try {
+    window.localStorage.setItem(ORIGIN_KEY, origin);
+  } catch {
+    /* noop —— 写失败不抛,origin 只是本地引导偏好 */
+  }
+}
+
+/**
+ * 并行拉各能力 state + 读 origin。每个读 op 各自 try/catch:失败 → 该字段留 undefined
+ * (诚实降级)。返回可直接喂 deriveGuidedSteps 的 state。
  */
 export async function loadState(): Promise<OnboardingState> {
   const [
-    capabilities,
-    hasProfile,
-    projectCount,
-    hasStorageRoot,
-    hasActiveReviewRule,
+    configuredCapabilities,
     douyinLoggedIn,
+    hasImportedWorks,
+    hasPositioningProfile,
+    projectCount,
   ] = await Promise.all([
     loadConfiguredCapabilities(),
+    loadDouyinLoggedIn(),
+    loadHasImportedWorks(),
     loadHasProfile(),
     loadProjectCount(),
-    loadHasStorageRoot(),
-    loadHasActiveReviewRule(),
-    loadDouyinLoggedIn(),
   ]);
   return {
-    configuredCapabilities: capabilities,
-    hasPositioningProfile: hasProfile,
-    projectCount,
-    hasStorageRoot,
-    hasActiveReviewRule,
+    configuredCapabilities,
+    // origin 从 localStorage 同步读(非 async);未选 → null。
+    origin: readOrigin(),
     douyinLoggedIn,
+    hasImportedWorks,
+    hasPositioningProfile,
+    projectCount,
   };
 }
 
 /**
  * 已配的 model capability 集合。**「已配」= 真能跑,不是「行存在」**。
  *
- * [Bug #3] T-135 中性化保留了各 AI capability 的**空占位骨架**(行存在,但
- * provider 空 / secret 空),没配 key 也跑不通。旧判定只看 `provider` 非空,
- * 会把「有 provider 占位但没配 key」误算成已配 → 新手清单假打勾。
- *
- * 修正:以 `provider 非空 且 hasSecret` 为「真配了」下限 —— `hasSecret` 是后端
- * `toModelResource` 掩码出的布尔(有 stored key 或 env-ref 才 true,与设置页
- * 卡片「已配」判定同源)。空占位 hasSecret=false → 不入集合 → 未完成。web.search
- * 档同理(真配了搜索的行必带 key/env-ref),不误伤:未真配一律不打勾。
- *
- * 读失败 → undefined(诚实降级,deriveSteps 当未完成)。
+ * [Bug #3] 以 `provider 非空 且 hasSecret` 为「真配了」下限 —— 空占位骨架
+ * (provider="" / hasSecret=false)不入集合 → 防新手清单假打勾。读失败 → undefined。
  */
 export async function loadConfiguredCapabilities(): Promise<
   ReadonlySet<string> | undefined
@@ -76,12 +98,7 @@ export async function loadConfiguredCapabilities(): Promise<
         typeof row.capability === "string" ? row.capability : "";
       const provider = typeof row.provider === "string" ? row.provider : "";
       const hasSecret = row.hasSecret === true;
-      // 「真能跑」下限:provider 非空 且 配了可用 secret(key 或 env-ref)。
-      // 只有 provider 占位、没配 key 的空骨架(provider="")一律排除 → 防 [Bug #3] 假打勾。
-      // 例外:web.search 可免 key(rss / browser 免密钥检索,T-140)——provider 非空即算已配,
-      // 不强求 hasSecret;空占位仍因 provider="" 被排除,不重开 #3。
-      const keylessOk = capability === "web.search";
-      if (capability && provider && (hasSecret || keylessOk)) {
+      if (capability && provider && hasSecret) {
         set.add(capability);
       }
     }
@@ -101,7 +118,6 @@ export async function loadHasProfile(): Promise<boolean | undefined> {
     });
     return true;
   } catch {
-    // 无 profile → 后端返 404(OwnershipError)→ reject → 诚实降级为未完成。
     return undefined;
   }
 }
@@ -120,33 +136,22 @@ export async function loadProjectCount(): Promise<number | undefined> {
   }
 }
 
-/** 存储根可读性(getStorage 成功且 rootPath 非空)。读失败 → undefined。 */
-export async function loadHasStorageRoot(): Promise<boolean | undefined> {
+/**
+ * [T-161] 步4「后台数据初始化」done 推断 —— 是否已有 ≥1 个 source==="imported" 的项目。
+ *
+ * 导入采集会给已发布作品建 source:imported 的历史项目(contract projectSource 枚举,
+ * persistence-client 采集链)。存在即视为「后台初始化跑过一轮」(SPEC §3.1 importInitialized)。
+ * 读失败 → undefined(诚实降级)。
+ */
+export async function loadHasImportedWorks(): Promise<boolean | undefined> {
   try {
-    const s = (await client.getStorage({
+    const rows = (await client.listProjects({
       params: undefined,
-      query: undefined,
+      query: { page: 1, pageSize: 100 },
       body: undefined,
-    })) as { rootPath?: unknown };
-    return typeof s.rootPath === "string" && s.rootPath.trim().length > 0
-      ? true
-      : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/** [T-131d] 是否有 ≥1 条 active 审核规则(listReviewRules,status==="active")。读失败 → undefined。 */
-export async function loadHasActiveReviewRule(): Promise<boolean | undefined> {
-  try {
-    const rows = (await client.listReviewRules({
-      params: undefined,
-      query: undefined,
-      body: undefined,
-    })) as unknown as ReadonlyArray<{ status?: unknown }>;
-    return Array.isArray(rows)
-      ? rows.some((r) => r.status === "active") || undefined
-      : undefined;
+    })) as unknown as ReadonlyArray<{ source?: unknown }>;
+    if (!Array.isArray(rows)) return undefined;
+    return rows.some((r) => r.source === "imported");
   } catch {
     return undefined;
   }
@@ -157,8 +162,7 @@ export async function loadDouyinLoggedIn(): Promise<boolean | undefined> {
   try {
     const s = (await client.statusDouyin({
       params: undefined,
-      // [T-136] status query additive 带号位;此处被动探针不显式指号 → 走 header 注入的
-      //   ctx.accountId(当前号)。传空对象满足 query schema。
+      // [T-136] 被动探针不显式指号 → 走 header 注入的 ctx.accountId(当前号)。
       query: {},
       body: undefined,
     })) as { loggedIn?: unknown };

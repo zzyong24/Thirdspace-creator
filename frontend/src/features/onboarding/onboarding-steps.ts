@@ -1,83 +1,90 @@
 /**
- * onboarding-steps — 纯逻辑:把「各能力已配 state」派生成一份 OnboardingStep[]。
+ * onboarding-steps — [T-161] 有序引导流的纯逻辑核心(取代 T-131a/T-132 的扁平三档)。
  *
- * [T-131a] 新用户首次引导 checklist 的判定核心(SPEC 2026-07-05 §4 / §C)。
- * 完成态 100% 从现网 state 派生(零新后端、零 progress 真值表);每一步 `done`
- * 只由传入的 capability state 决定 —— 配了→done、没配→未完成、读失败→未完成
- * (读失败在装配层降级成「该 state 缺席」,这里一律当未完成,绝不假打勾)。
+ * 新用户引导从「并列打勾清单」重构为**有序引导流**:按新用户真实旅程一步步带,
+ * 含前置门(未满足则后续步锁/灰)+ 从零/有存量分支(origin)。流程(SPEC
+ * `2026-07-06-onboarding-guided-flow-design.md` §3.1):
+ *   1. 配置文本模型(前置门 —— 所有 AI 能力地基)
+ *   2. 确认起点(你之前在抖音发过作品吗?→ fresh / existing)
+ *   3. 扫码导入抖音号            (仅 existing;复用 T-136§D 扫码链)
+ *   4. 后台数据初始化           (仅 existing;复用 T-151 一键初始化三定时任务)
+ *   5. 创建定位                 (existing 基于导入作品预设,复用 positioning.generate;fresh 手动)
+ *   6. 创建首个项目
+ * fresh 分支跳过 3/4;existing 走全程。
  *
- * 本模块是**纯函数 + 静态配置数组**,不 import 任何 client / React —— 好单测、
- * 好复用。装配层(onboarding-data.ts)负责并行拉真值填 OnboardingState,
- * 再喂给 deriveSteps。
+ * 本模块是**纯函数 + 静态配置数组**,不 import 任何 client / React —— 好单测、好复用。
+ * 装配层(onboarding-data.ts)并行拉真值填 OnboardingState,再喂 deriveGuidedSteps。
+ * done 判定诚实降级:配了→done、没配/读失败(state 字段 undefined)→未完成,绝不假打勾。
+ *
+ * 清理(T-159/T-160 联动,SPEC §3.4):删「配置联网搜索」步(T-159 已删设置卡 → href
+ * 死链)、删「配置 ASR」步(T-160 本地 Whisper 回退 → ASR 选配,不再当必走引导步)。
+ * 生图/视频/审核/存储/违禁词等仍是设置页可选增益,不挤这条有序主流程(移出引导流)。
  */
 
-// [T-132] 三档 scope:required(必备,不配无法跑通核心流程)/ recommended
-// (强烈建议,配了少走弯路)/ optional(可选增益)。定位母版、联网搜索由用户拍板
-// 归 recommended —— 非硬必备(不配也能跑最小流程)、也非纯可选(缺了明显跑偏)。
-export type OnboardingGroup = "required" | "recommended" | "optional";
+/** 起点选择:fresh=从零新人 / existing=有存量老创作者 / null=尚未选。 */
+export type OnboardingOrigin = "fresh" | "existing" | null;
 
-/** 单步判定后的视图数据。overlay 直接渲染这个形状。 */
-export interface OnboardingStep {
+/** 分支:all=全员步 / existing=仅有存量分支专属步(扫码导入 / 后台初始化)。 */
+export type StepBranch = "all" | "existing";
+
+/**
+ * 各能力/起点的已配 state —— 装配层(onboarding-data.ts)并行拉各读 op 填这个形状。
+ *
+ * 关键:每个字段都可能 `undefined`,表示**该 state 尚未加载 / 读失败**(诚实降级)。
+ * deriveGuidedSteps 把 undefined 与「读到但为空」都当未完成 —— 只有明确读到「已配」才 done。
+ *
+ * - `configuredCapabilities`:已配的模型 capability 集合(`client.listModels`,
+ *   provider 非空且 hasSecret 才算真配)。读失败 → undefined。
+ * - `origin`:起点选择(localStorage `creatoros:onboarding:origin`)。undefined=未加载、
+ *   null=已加载但未选。步2 done 判据 = origin ∈ {fresh, existing}。
+ * - `douyinLoggedIn`:抖音扫码登录态(`client.statusDouyin` → {loggedIn})。读失败 → undefined。
+ * - `hasImportedWorks`:是否已有 ≥1 个 source==="imported" 的项目(推断「后台初始化跑过一轮」,
+ *   SPEC §3.1 importInitialized)。读失败 → undefined。
+ * - `hasPositioningProfile`:定位母版是否存在(`client.getProfile` 成功 resolve → true)。
+ * - `projectCount`:项目数(`client.listProjects` 长度)。读失败 → undefined。
+ */
+export interface OnboardingState {
+  readonly configuredCapabilities?: ReadonlySet<string>;
+  readonly origin?: OnboardingOrigin;
+  readonly douyinLoggedIn?: boolean;
+  readonly hasImportedWorks?: boolean;
+  readonly hasPositioningProfile?: boolean;
+  readonly projectCount?: number;
+}
+
+/** 单步判定后的视图数据。onboarding-card 直接渲染这个形状。 */
+export interface GuidedStep {
   /** 稳定 key(测试与 data-slot 定位用),同时是 step-set 配置的主键。 */
   readonly key: string;
-  readonly group: OnboardingGroup;
+  /** 步序(1 起,决定竖向编号与门控链)。 */
+  readonly order: number;
+  /** 分支归属(all=全员 / existing=仅有存量)。 */
+  readonly branch: StepBranch;
   /** 中文标题(要做什么)。 */
   readonly title: string;
   /** 一句话「为什么」(动机)。 */
   readonly why: string;
   /** 完成态 —— 纯派生自 state,未配 / 读失败一律 false。 */
   readonly done: boolean;
-  /** 「去配置 →」深链(到对应设置 / 页面路由)。 */
+  /** 前置未满足 → true(该步置灰 + 锁提示,推荐序,不硬锁导航)。 */
+  readonly blocked: boolean;
+  /** blocked 时的锁提示(为什么现在还不能做);未 blocked → 空串。 */
+  readonly blockedReason: string;
+  /** 「去做 →」深链(到对应页 / 触发起点选择)。 */
   readonly href: string;
 }
 
-/**
- * 各能力的已配 state —— overlay 挂载后并行拉各读 op 填这个形状。
- *
- * 关键:每个字段都可能 `undefined`,表示**该 state 尚未加载 / 读失败**
- * (诚实降级)。deriveSteps 把 undefined 与「读到但为空」都当未完成 —— 只有
- * 明确读到「已配」才 done。
- *
- * - `configuredCapabilities`:已配的模型 capability 集合(来自 `client.listModels`,
- *   每行取 `capability`,provider/modelName 非空才算已配)。读失败 → undefined。
- * - `hasPositioningProfile`:定位母版是否存在(`client.getProfile` 成功 resolve →
- *   true;404 / 读失败 → false via undefined 或 false)。
- * - `projectCount`:项目数(`client.listProjects` 长度)。读失败 → undefined。
- * - `hasStorageRoot`:存储根目录是否已由用户设定(`client.getStorage` 成功且
- *   rootPath 非空)。⚠️ 见 storage-root step 注释:后端对未配用户也返回默认根,
- *   故这里的信号只能表达「存储配置可读」,不能真区分「用户显式设过」——本切片
- *   据此 done=true(读到即算),把「显式设过 vs 默认」的强区分留 SPEC 切片 d。
- *   读失败 → undefined → 未完成。
- */
-export interface OnboardingState {
-  readonly configuredCapabilities?: ReadonlySet<string>;
-  readonly hasPositioningProfile?: boolean;
-  readonly projectCount?: number;
-  readonly hasStorageRoot?: boolean;
-  // [T-131d] 违禁词/审核规则:是否已有 ≥1 条 active 规则(`client.listReviewRules`,
-  //   status==="active" 才参与 L1 lint;candidate/disabled 不算)。读失败 → undefined → 未完成。
-  readonly hasActiveReviewRule?: boolean;
-  // [T-131d] 抖音扫码登录态(`client.statusDouyin` → {loggedIn})。读失败 → undefined → 未完成。
-  readonly douyinLoggedIn?: boolean;
-}
-
-/**
- * step-set —— 易调的配置数组(SPEC §C 推荐默认 scope)。每条声明一步的静态
- * 元数据 + 一个纯判定函数 `isDone(state)`。要增删步 / 调必备-可选划分,只改这个
- * 数组,deriveSteps 逻辑不用动。
- *
- * done 判定只用「能从现有 client 读 op 廉价得到」的信号(SPEC 范围约束):
- * - required:文本模型(default capability)/ 定位母版 / 首个项目。
- * - optional:生图 / 生视频 / 审核 / ASR 模型 / 联网搜索 provider / 存储根目录。
- *   （抖音登录、违禁词表无现成浏览器 client 读 op → 本切片不纳入,留 SPEC 切片 d。）
- */
-interface StepSpec {
+/** step-set 静态配置:每步声明元数据 + `isDone` 纯判定函数。要增删/调序只改此数组。 */
+interface GuidedStepSpec {
   readonly key: string;
-  readonly group: OnboardingGroup;
+  readonly order: number;
+  readonly branch: StepBranch;
   readonly title: string;
   readonly why: string;
   readonly href: string;
   readonly isDone: (state: OnboardingState) => boolean;
+  /** 前置未满足时的锁提示(为什么现在还不能做)。第一步无前置 → 空串。 */
+  readonly blockedReason: string;
 }
 
 /** 某个 model capability 是否已配(读到集合且含该 capability)。读失败(集合 undefined)→ 未完成。 */
@@ -85,150 +92,138 @@ function hasCapability(state: OnboardingState, capability: string): boolean {
   return state.configuredCapabilities?.has(capability) ?? false;
 }
 
-export const ONBOARDING_STEP_SET: readonly StepSpec[] = [
-  // ── 必备组 ────────────────────────────────────────────────────────────
+/**
+ * 有序引导流的 step-set(SPEC §3.1 六步)。branch=existing 的两步只在 origin=existing 时可见。
+ * href 深链:
+ *   - text-model → 设置页高亮文本模型卡。
+ *   - confirm-origin → 特殊值 `#origin`:卡内二选一,不跳页(onboarding-card 拦截)。
+ *   - import-account → `/accounts`(扫码绑号,account-manager「扫码绑定新抖音号」主操作)。
+ *   - init-data → `/automations`(用模板一键建三采集任务 + 立即运行,复用 T-151 链)。
+ *   - positioning-profile → `/positioning`(existing 走 positioning.generate 基于导入作品预设,
+ *     深链由 card 在 existing 场景带 prefill,见 onboarding-card)。
+ *   - first-project → `/projects/new`。
+ */
+export const GUIDED_STEP_SET: readonly GuidedStepSpec[] = [
   {
     key: "text-model",
-    group: "required",
-    // [T-132] href 带 ?highlight=<key>:settings 页据此滚动+高亮对应配置卡(深链落地定位)。
+    order: 1,
+    branch: "all",
     title: "配置文本模型",
-    why: "所有 AI 能力(选题、写稿、审核)的地基,不配无法跑通任何生成。",
+    why: "这是所有 AI 能力(选题、写稿、定位、审核)的地基。先配好它,后面的步骤才能用起来。",
+    // [T-132] href 带 ?highlight=<key>:settings 页据此滚动 + 高亮对应配置卡。
     href: "/settings?highlight=text-model",
     isDone: (s) => hasCapability(s, "default"),
+    blockedReason: "",
+  },
+  {
+    key: "confirm-origin",
+    order: 2,
+    branch: "all",
+    title: "确认你的起点",
+    why: "你之前在抖音发过作品吗?告诉我们是「从零开始」还是「已有存量」,后面的引导会为你量身安排。",
+    // 特殊深链:卡内二选一,不跳页(onboarding-card 据 `#origin` 拦截,渲染起点选择 UI)。
+    href: "#origin",
+    isDone: (s) => s.origin === "fresh" || s.origin === "existing",
+    blockedReason: "先配好文本模型,再来确认起点。",
+  },
+  {
+    key: "import-account",
+    order: 3,
+    branch: "existing",
+    title: "扫码导入你的抖音号",
+    why: "扫码绑定后,我们就能把你已发布的作品、指标、评论同步进来,让定位和复盘立足你的真实数据。",
+    href: "/accounts",
+    isDone: (s) => s.douyinLoggedIn === true,
+    blockedReason: "先确认起点(有存量),再扫码导入。",
+  },
+  {
+    key: "init-data",
+    order: 4,
+    branch: "existing",
+    title: "后台初始化你的数据",
+    why: "一键跑三个采集任务(作品指标 + 逐字稿 + 明细),把你的历史创作沉淀成可分析的底座。后台自动跑,不用一直盯着。",
+    href: "/automations",
+    isDone: (s) => s.hasImportedWorks === true,
+    blockedReason: "先扫码导入抖音号,才能拉取你的作品数据。",
+  },
+  {
+    key: "positioning-profile",
+    order: 5,
+    branch: "all",
+    title: "创建你的定位",
+    // why 文案在 card 里按 origin 微调(existing 强调「基于已导入作品」);此处给通用底。
+    why: "账号定位是下游选题 / 评分的约束源 —— 先定位,选题写稿才不跑偏。",
+    href: "/positioning",
+    isDone: (s) => s.hasPositioningProfile === true,
+    blockedReason: "先完成前面的步骤,再来创建定位。",
   },
   {
     key: "first-project",
-    group: "required",
+    order: 6,
+    branch: "all",
     title: "创建首个项目",
     why: "把一个选题落地为项目,才能进入脚本 → 发布 → 复盘的创作飞轮。",
     href: "/projects/new",
     isDone: (s) => (s.projectCount ?? 0) >= 1,
-  },
-  // ── 强烈建议组([T-132] 定位 / 联网搜索:配了少走弯路)──────────────────
-  {
-    // [T-132] 从 required 改 recommended(用户拍板):定位是强烈建议、非硬必备。
-    key: "positioning-profile",
-    group: "recommended",
-    title: "建立定位母版",
-    why: "账号定位是下游选题 / 评分的约束源 —— 先定位,选题写稿才不跑偏。",
-    href: "/positioning",
-    isDone: (s) => s.hasPositioningProfile === true,
-  },
-  {
-    // [T-132] 从 optional 改 recommended(用户拍板):联网搜索属强烈建议。
-    key: "web-search",
-    group: "recommended",
-    title: "配置联网搜索",
-    why: "素材搜集前置真检索,不配则素材来自模型记忆(需人工核实)。",
-    href: "/settings?highlight=web-search",
-    isDone: (s) => hasCapability(s, "web.search"),
-  },
-  // ── 可选组(增益,配了体验更完整)────────────────────────────────────
-  {
-    key: "image-model",
-    group: "optional",
-    title: "配置生图模型",
-    why: "给内容自动配封面 / 隐喻图,省去手动找图。",
-    href: "/settings?highlight=image-model",
-    isDone: (s) => hasCapability(s, "image.generate"),
-  },
-  {
-    key: "video-model",
-    group: "optional",
-    title: "配置生视频模型",
-    why: "生成 B-roll / 分镜画面,补齐视频素材。",
-    href: "/settings?highlight=video-model",
-    isDone: (s) => hasCapability(s, "video.generate"),
-  },
-  {
-    key: "review-model",
-    group: "optional",
-    title: "配置审核模型",
-    why: "用专用模型跑文案审核,不配则退回默认模型(报告会标注非专用)。",
-    href: "/settings?highlight=review-model",
-    isDone: (s) => hasCapability(s, "script.review"),
-  },
-  {
-    key: "asr-model",
-    group: "optional",
-    title: "配置 ASR 模型",
-    why: "把音视频转逐字稿,复盘 / 二创才有文字底稿。",
-    href: "/settings?highlight=asr-model",
-    isDone: (s) => hasCapability(s, "transcribe.audio"),
-  },
-  // [T-132] web-search 已上移至 recommended 组(见上),不再列在 optional。
-  {
-    key: "storage-root",
-    group: "optional",
-    title: "设置存储根目录",
-    why: "指定素材落盘位置,统一管理图片 / 视频 / 音频。",
-    href: "/settings?highlight=storage-root",
-    // ⚠️ 弱信号:后端对未配用户也返回默认根,故 done 只表达「存储配置可读」,
-    // 不能真区分用户是否显式设过(强区分待后续)。读失败 → 未完成。
-    isDone: (s) => s.hasStorageRoot === true,
-  },
-  {
-    // [T-131d] 违禁词/审核规则:有 ≥1 条 active 规则即算配了(L1 发布前 lint 的底表)。
-    key: "review-rules",
-    group: "optional",
-    title: "配置违禁词 / 审核规则",
-    why: "发布前 L1 违禁词 lint 拦红线词,降限流 / 封号风险。",
-    href: "/settings?highlight=review-rules",
-    isDone: (s) => s.hasActiveReviewRule === true,
-  },
-  {
-    // [T-131d] 抖音扫码登录:登录后可自动采集自己作品的指标 / 评论。
-    key: "douyin-login",
-    group: "optional",
-    title: "登录抖音(扫码)",
-    why: "登录后自动采集你的作品指标 / 评论,喂复盘与选题飞轮。",
-    href: "/automations",
-    isDone: (s) => s.douyinLoggedIn === true,
+    blockedReason: "先建立定位,再落地首个项目。",
   },
 ];
 
 /**
- * deriveSteps —— 纯函数:吃各能力 state → 产 OnboardingStep[]。
- *
- * 每步的 `done` 由 step-set 里各自的 `isDone` 从 state 派生:配了→done、
- * 没配→false、读失败(state 字段 undefined)→false(诚实降级,绝不假打勾)。
- * 返回顺序与 step-set 声明顺序一致(必备在前、可选在后)。
+ * 某步在给定 origin 下是否可见。
+ *   - branch=all → 恒可见。
+ *   - branch=existing → 仅 origin=existing 可见(fresh 跳过;null 未分叉时也不显)。
  */
-export function deriveSteps(state: OnboardingState): OnboardingStep[] {
-  return ONBOARDING_STEP_SET.map((spec) => ({
-    key: spec.key,
-    group: spec.group,
-    title: spec.title,
-    why: spec.why,
-    href: spec.href,
-    done: spec.isDone(state),
-  }));
-}
-
-/** 必备步是否全部完成(→ 不自动弹)。仅看 required —— 自动弹判据不变。 */
-export function allRequiredDone(steps: readonly OnboardingStep[]): boolean {
-  const required = steps.filter((s) => s.group === "required");
-  // 无必备步(理论不会) → 视为已完成(不自动弹),防空数组误判。
-  return required.every((s) => s.done);
+function isVisible(spec: GuidedStepSpec, origin: OnboardingOrigin): boolean {
+  return spec.branch === "all" || origin === "existing";
 }
 
 /**
- * [T-132] onboarding 是否「已完成」—— required 与 recommended 两组步骤**全部 done**
- * (optional 增益项不计入、不阻止退场)。常驻卡据此决定是否隐藏:两组全配 → 卡自动
- * 消失。区别于 `allRequiredDone`(只看 required,是自动弹弹窗的判据)。
+ * deriveGuidedSteps —— 吃 state → 产**当前 origin 下可见的**有序 GuidedStep[]。
  *
- * 无 required+recommended 步(空数组)→ 视为 true,防空数组误判成「永不完成」。
+ * - 显隐:按 origin 过滤 existing 专属步(fresh / null → 只留全员步)。
+ * - done:各步 isDone 从 state 派生(诚实降级)。
+ * - blocked:该步的**前一个可见步**未 done → blocked(前置未满足 → 灰/锁)。第一步永不 blocked。
+ *   门控沿「可见步链」逐级传导:existing 时步5 的前置是步4;fresh 时步5 的前置是步2(3/4 已隐)。
+ * 返回顺序 = order 升序(声明序已如此)。
  */
-export function isOnboardingComplete(
-  steps: readonly OnboardingStep[],
-): boolean {
-  return steps
-    .filter((s) => s.group === "required" || s.group === "recommended")
-    .every((s) => s.done);
+export function deriveGuidedSteps(state: OnboardingState): GuidedStep[] {
+  const origin = state.origin ?? null;
+  const visible = GUIDED_STEP_SET.filter((spec) => isVisible(spec, origin));
+  const out: GuidedStep[] = [];
+  let prevDone = true; // 第一个可见步无前置 → 视为「前置已满足」。
+  for (const spec of visible) {
+    const done = spec.isDone(state);
+    const blocked = !prevDone;
+    out.push({
+      key: spec.key,
+      order: spec.order,
+      branch: spec.branch,
+      title: spec.title,
+      why: spec.why,
+      done,
+      blocked,
+      blockedReason: blocked ? spec.blockedReason : "",
+      href: spec.href,
+    });
+    prevDone = done;
+  }
+  return out;
 }
 
-/** 进度:已完成步数 / 总步数(全组一起算,顶部「已完成 N/总 M」用)。 */
-export function progressOf(steps: readonly OnboardingStep[]): {
+/**
+ * [T-161] onboarding 是否「已完成」—— **当前 origin 下所有可见步全部 done**。常驻卡据此决定
+ * 是否隐藏(全走完 → 卡自动消失)。fresh 只看 4 步、existing 看 6 步(deriveGuidedSteps 已按
+ * origin 过滤,这里只需全 done)。
+ *
+ * 无可见步(空数组)→ 视为 true,防空数组误判成「永不完成」。
+ */
+export function isOnboardingComplete(steps: readonly GuidedStep[]): boolean {
+  return steps.every((s) => s.done);
+}
+
+/** 进度:已完成步数 / 可见总步数(顶部「已完成 N/M」用;M 随 origin 分支变)。 */
+export function progressOf(steps: readonly GuidedStep[]): {
   readonly done: number;
   readonly total: number;
 } {
