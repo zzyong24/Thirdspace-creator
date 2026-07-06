@@ -177,8 +177,9 @@ export function resolveRoute(
   if (pathname === "/accounts") {
     return {
       headerMode: "global",
-      pageTitle: "账号管理(设置)",
-      pageDescription: "多账号矩阵 · 每个发布/指标归到真实账号，而不是一个字符串",
+      // [T-136§D-bind⑤] 抖音-only 极简:去「多账号矩阵/字符串」老话术,一句话说清扫码即绑。
+      pageTitle: "抖音号",
+      pageDescription: "扫码绑定你的抖音号，作品数据、定位都归到这个号",
       contextualCardVariant: "assistant",
     };
   }

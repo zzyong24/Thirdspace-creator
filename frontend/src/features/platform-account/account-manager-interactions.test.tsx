@@ -8,28 +8,23 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Account-manager island wiring test (Step 5a). Proves the needs-backend controls each
-// issue their mapped contract op then router.refresh() (the island → client.* →
-// router.refresh seam); the client-local platform filter issues NO mutation; and the
-// raw secretReference value is NEVER rendered (only a masked indicator, §7.1).
-// Deterministic — the mock client resolves immediately, no network/clock.
+// [T-136§D-bind⑤] 账号页极简版 island 测试:整页 = 「扫码绑定新抖音号」单一主操作 +
+// 账号行(真实昵称 + 移除)。证:①扫码 → client.loginDouyin + router.refresh;②超时诚实提示不
+// refresh;③移除 → client.archiveAccount + refresh;④删了手动登记表单 / 平台 tab / 密钥徽标 /
+// 涨粉基线框(废设计不再渲染);⑤已移除(archived)的号不显。确定性 —— mock client 即时 resolve。
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 
 const mockClient = {
-  createAccount: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
-  updateAccount: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   archiveAccount: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
-  // [T-146] 扫码绑定新抖音号复用设置页同款 loginDouyin;默认 mock 成功登录。
+  // 扫码绑定复用设置页同款 loginDouyin;默认 mock 成功登录。
   loginDouyin: vi.fn(
     (i: unknown): Promise<unknown> => Promise.resolve({ loggedIn: true }),
   ),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
-    createAccount: (i: unknown) => mockClient.createAccount(i),
-    updateAccount: (i: unknown) => mockClient.updateAccount(i),
     archiveAccount: (i: unknown) => mockClient.archiveAccount(i),
     loginDouyin: (i: unknown) => mockClient.loginDouyin(i),
   },
@@ -47,19 +42,18 @@ const DOUYIN: PlatformAccountResource = {
   id: "acct-d",
   userId: "user-a",
   platform: "douyin",
-  accountHandle: "@douyin-main",
-  secretReference: "env:DOUYIN_TOKEN_REF",
+  accountHandle: "@抖音真实昵称",
+  secretReference: null,
   followerBaseline: 1000,
   status: "active",
   createdAt: "2026-06-21T00:00:00.000Z",
   updatedAt: "2026-06-21T00:00:00.000Z",
 };
-const BILI: PlatformAccountResource = {
+const ARCHIVED: PlatformAccountResource = {
   ...DOUYIN,
-  id: "acct-b",
-  platform: "bilibili",
-  accountHandle: "@bili-main",
-  secretReference: null,
+  id: "acct-arch",
+  accountHandle: "@已移除的号",
+  status: "archived",
 };
 
 beforeEach(() => {
@@ -67,14 +61,14 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 
-describe("account-manager island wiring", () => {
-  // [T-146] 抖音-only:PLATFORMS 收敛为单元素 douyin(此前 6 平台)。
+describe("account-manager 极简版 island wiring", () => {
+  // 抖音-only:PLATFORMS 收敛为单元素 douyin。
   it("PLATFORMS is douyin-only", () => {
     expect([...PLATFORMS]).toEqual(["douyin"]);
   });
 
-  // [T-146] 扫码绑定新抖音号:点扫码按钮 → 复用设置页同款 client.loginDouyin,
-  // 成功后 router.refresh() 读回新号(端到端 headed 扫码真机待验)。
+  // 扫码绑定新抖音号:点扫码 → 复用设置页同款 client.loginDouyin,成功后 router.refresh()
+  // 读回真实号(后端 upsert 去重 + 占位合并;端到端 headed 扫码真机待验)。
   it("扫码绑定新抖音号 issues client.loginDouyin then router.refresh", async () => {
     render(<CreateAccountForm />);
     fireEvent.click(screen.getByTestId("bind-douyin-scan"));
@@ -89,48 +83,25 @@ describe("account-manager island wiring", () => {
     render(<CreateAccountForm />);
     fireEvent.click(screen.getByTestId("bind-douyin-scan"));
     await waitFor(() => expect(mockClient.loginDouyin).toHaveBeenCalledTimes(1));
-    await waitFor(() =>
-      expect(screen.getByText(/未检测到登录/)).toBeTruthy(),
-    );
+    await waitFor(() => expect(screen.getByText(/未检测到登录/)).toBeTruthy());
     expect(mockRouter.refresh).not.toHaveBeenCalled();
   });
 
-  it("手动登记(次入口)issues client.createAccount platform=douyin then refresh", async () => {
+  // 废设计已删:扫码卡里不再有手动登记表单(handle / 密钥引用 / 涨粉基线 / 「新增账号」)。
+  it("扫码卡不再渲染手动登记表单 / 密钥 / 涨粉基线", () => {
     render(<CreateAccountForm />);
-    // 手动表单默认折叠;先展开次入口。
-    fireEvent.click(screen.getByTestId("manual-account-toggle"));
-    fireEvent.change(screen.getByLabelText("账号 handle"), {
-      target: { value: "@new" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "新增账号" }));
-    await waitFor(() => expect(mockClient.createAccount).toHaveBeenCalledTimes(1));
-    const arg = mockClient.createAccount.mock.calls[0]![0] as {
-      body: { accountHandle: string; platform: string };
-    };
-    expect(arg.body.accountHandle).toBe("@new");
-    // 抖音-only:平台恒 douyin(无平台下拉)。
-    expect(arg.body.platform).toBe("douyin");
-    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+    expect(screen.queryByTestId("manual-account-toggle")).toBeNull();
+    expect(screen.queryByTestId("manual-account-form")).toBeNull();
+    expect(screen.queryByLabelText("账号 handle")).toBeNull();
+    expect(screen.queryByLabelText("密钥引用")).toBeNull();
+    expect(screen.queryByLabelText("涨粉基线")).toBeNull();
+    expect(screen.queryByRole("button", { name: "新增账号" })).toBeNull();
   });
 
-  it("保存基线 issues client.updateAccount with the new followerBaseline", async () => {
+  // 移除:复用 client.archiveAccount(可逆),成功后 router.refresh()。
+  it("移除 issues client.archiveAccount then router.refresh", async () => {
     render(<AccountRow account={DOUYIN} />);
-    fireEvent.change(screen.getByLabelText(`涨粉基线 ${DOUYIN.accountHandle}`), {
-      target: { value: "2500" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "保存基线" }));
-    await waitFor(() => expect(mockClient.updateAccount).toHaveBeenCalledTimes(1));
-    const arg = mockClient.updateAccount.mock.calls[0]![0] as {
-      params: { accountId: string };
-      body: { followerBaseline: number };
-    };
-    expect(arg.params.accountId).toBe("acct-d");
-    expect(arg.body.followerBaseline).toBe(2500);
-  });
-
-  it("归档 issues client.archiveAccount then router.refresh", async () => {
-    render(<AccountRow account={DOUYIN} />);
-    fireEvent.click(screen.getByRole("button", { name: "归档" }));
+    fireEvent.click(screen.getByTestId("account-remove"));
     await waitFor(() =>
       expect(mockClient.archiveAccount).toHaveBeenCalledTimes(1),
     );
@@ -141,31 +112,67 @@ describe("account-manager island wiring", () => {
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 
-  it("the platform filter is client-local (抖音-only): filtering issues NO mutation", () => {
-    render(
-      <AccountManagerView viewModel={{ accounts: [DOUYIN, BILI] }} />,
-    );
-    // both rows visible under 全部(既有非抖音号仍显示,不隐藏历史数据)。
-    expect(screen.getAllByTestId("account-row")).toHaveLength(2);
-    // [T-146] 抖音-only:tab 只剩「全部 + 抖音」,B站 tab 已移除。
-    expect(screen.queryByRole("button", { name: "B站" })).toBeNull();
-    // filter to 抖音 → only the douyin row, no network call
-    fireEvent.click(screen.getByRole("button", { name: "抖音" }));
-    const rows = screen.getAllByTestId("account-row");
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toHaveAttribute("data-platform", "douyin");
-    expect(mockClient.createAccount).not.toHaveBeenCalled();
-    expect(mockClient.updateAccount).not.toHaveBeenCalled();
-    expect(mockClient.archiveAccount).not.toHaveBeenCalled();
+  // 账号行极简:显真实昵称,不再有密钥徽标 / 涨粉基线框 / 保存基线按钮。
+  it("账号行只显真实昵称 + 移除,无密钥徽标 / 涨粉基线 / 保存基线", () => {
+    render(<AccountRow account={DOUYIN} />);
+    expect(screen.getByText("@抖音真实昵称")).toBeTruthy();
+    expect(screen.getByTestId("account-remove")).toBeTruthy();
+    expect(screen.queryByTestId("account-secret-indicator")).toBeNull();
+    expect(
+      screen.queryByLabelText(`涨粉基线 ${DOUYIN.accountHandle}`),
+    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "保存基线" })).toBeNull();
   });
 
-  it("never renders the raw secretReference value (only a masked indicator, §7.1)", () => {
-    render(<AccountManagerView viewModel={{ accounts: [DOUYIN, BILI] }} />);
-    // the raw reference string must NOT appear in the DOM.
-    expect(screen.queryByText("env:DOUYIN_TOKEN_REF")).toBeNull();
-    // a configured account shows the masked indicator.
-    const indicators = screen.getAllByTestId("account-secret-indicator");
-    expect(indicators.some((el) => el.textContent === "已配置密钥引用")).toBe(true);
-    expect(indicators.some((el) => el.textContent === "未配置密钥")).toBe(true);
+  // 抖音号 ID:契约随行带 externalId 时显「抖音号 <ID>」;无则不显(不造假)。
+  it("无 externalId 时不显抖音号 ID(不造假)", () => {
+    render(<AccountRow account={DOUYIN} />);
+    expect(
+      document.querySelector('[data-slot="account-external-id"]'),
+    ).toBeNull();
+  });
+
+  it("有 externalId 时显抖音号 ID", () => {
+    render(
+      <AccountRow
+        account={
+          {
+            ...DOUYIN,
+            externalId: "douyin12345",
+          } as unknown as PlatformAccountResource
+        }
+      />,
+    );
+    const idEl = document.querySelector('[data-slot="account-external-id"]');
+    expect(idEl?.textContent).toContain("douyin12345");
+  });
+});
+
+describe("account-manager 极简版 view", () => {
+  // 删了平台筛选 tab(全部/抖音):整页无 tab 按钮。
+  it("无平台筛选 tab(全部/抖音)", () => {
+    render(<AccountManagerView viewModel={{ accounts: [DOUYIN] }} />);
+    expect(screen.queryByTestId("account-platform-filter")).toBeNull();
+    expect(screen.queryByRole("button", { name: "全部" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "B站" })).toBeNull();
+  });
+
+  // 只显活跃号:archived 的不进列表(移除即消失,可逆)。
+  it("只显活跃号,已移除(archived)的不显", () => {
+    render(
+      <AccountManagerView viewModel={{ accounts: [DOUYIN, ARCHIVED] }} />,
+    );
+    const rows = screen.getAllByTestId("account-row");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toHaveAttribute("data-account-id", "acct-d");
+    expect(screen.queryByText("@已移除的号")).toBeNull();
+  });
+
+  it("无号时显空态引导扫码", () => {
+    render(<AccountManagerView viewModel={{ accounts: [] }} />);
+    const empty = screen.getByTestId("account-empty-state");
+    expect(empty.textContent).toContain("扫码绑定新抖音号");
+    // 扫码主按钮仍在(空态也能扫码绑定)。
+    expect(screen.getByTestId("bind-douyin-scan")).toBeTruthy();
   });
 });

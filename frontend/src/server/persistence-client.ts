@@ -540,6 +540,117 @@ const CALIBRATION_OPS = new Set<string>(CALIBRATION_OP_IDS);
 // The set of op ids owned by the platform-account module's transport (module 21).
 const PLATFORM_ACCOUNT_OPS = new Set<string>(PLATFORM_ACCOUNT_OP_IDS);
 
+// [T-136§D-bind⑤] 抖音号占位 handle 集合 —— 扫码阶段 cookie 不含昵称,先占位;真实身份由
+// applyDouyinIdentity(refresh 抓 secUid/昵称)回填后合并。判定用于:①ensureAccount 复用既有
+// 占位不冒新号;②updateAccountHandle 把所有占位合并为一行真实号。
+//   「我的抖音」= loginDouyin ensureAccount 建;「待完善」= migration 0025 默认号 seed。
+const DOUYIN_PLACEHOLDER_HANDLES = new Set<string>(["我的抖音", "待完善"]);
+function isPlaceholderHandle(handle: string): boolean {
+  return DOUYIN_PLACEHOLDER_HANDLES.has(handle.trim());
+}
+
+// [T-136§D-bind⑤] 合并占位号 = archive(status→archived,可逆/诚实,不硬删)。best-effort:
+// 单条失败吞错记日志,不阻断(登录/采集主流程已成功)。合并后账号列表(只显 active)只剩真实号一行。
+async function archivePlaceholderBestEffort(
+  service: PlatformAccountService,
+  ctx: RequestContext,
+  accountId: string,
+): Promise<void> {
+  try {
+    await service.archiveAccount(ctx, accountId);
+  } catch (err) {
+    console.error(
+      "[persistence] archivePlaceholderBestEffort: 合并占位号(archive)失败:",
+      err,
+    );
+  }
+}
+
+// [T-136§D-bind⑤] 扫码 ensureAccount 的 upsert 去重:传占位 handle 时,若已存在**任意** active
+// douyin 占位号(migration 0025 的「待完善」/ 上次扫码的「我的抖音」)→ 复用它,绝不冒第二个占位;
+// 精确 handle 命中(含真实昵称号)→ 幂等复用;都不命中 → 建新号(catch UNIQUE 并发重查)。
+// 导出供单测直接验(against 真实 platformAccountService),不经 loginDouyin 黑盒。
+export async function ensureDouyinAccountUpsert(
+  service: PlatformAccountService,
+  ctx: RequestContext,
+  input: { platform: string; handle: string },
+): Promise<{ id: string }> {
+  const { rows } = await service.listAccounts(ctx, {
+    platform: input.platform,
+    limit: 100,
+    offset: 0,
+  });
+  const existing = rows.find((r) => r.accountHandle === input.handle);
+  if (existing) return { id: existing.id };
+  if (isPlaceholderHandle(input.handle)) {
+    const placeholder = rows.find(
+      (r) => isPlaceholderHandle(r.accountHandle) && r.status === "active",
+    );
+    if (placeholder) return { id: placeholder.id };
+  }
+  try {
+    const created = await service.createAccount(ctx, {
+      platform: input.platform,
+      accountHandle: input.handle,
+    });
+    return { id: created.id };
+  } catch (err) {
+    const again = await service.listAccounts(ctx, {
+      platform: input.platform,
+      limit: 100,
+      offset: 0,
+    });
+    const hit = again.rows.find((r) => r.accountHandle === input.handle);
+    if (hit) return { id: hit.id };
+    throw err;
+  }
+}
+
+// [T-136§D-bind⑤] applyDouyinIdentity 抓到真实昵称后:把占位号回填为真实昵称 + **合并所有占位为一行**。
+//   A. 已有同 handle=真实昵称号 → 其余占位全 archive(合并),幂等 no-op 该真实号。
+//   B. 无真实号但有占位 → 取一个占位改真实昵称,其余占位全 archive(只留一行);改名撞 UNIQUE →
+//      archive 该占位(合并到并发已建的真实号)。
+//   C. 无占位 → no-op(交由后续 ensureAccount 建真实号)。
+//   archive 可逆/诚实;合并后账号列表(只显 active)只剩真实号一行 —— 干掉「扫一次冒俩占位」。
+//   导出供单测直接验(against 真实 platformAccountService)。
+export async function mergeDouyinPlaceholders(
+  service: PlatformAccountService,
+  ctx: RequestContext,
+  input: { platform: string; handle: string },
+): Promise<void> {
+  const real = input.handle.trim();
+  if (!real) return;
+  const { rows } = await service.listAccounts(ctx, {
+    platform: input.platform,
+    limit: 100,
+    offset: 0,
+  });
+  const active = rows.filter((r) => r.status === "active");
+  const placeholders = active.filter((r) => isPlaceholderHandle(r.accountHandle));
+  const realExisting = active.find((r) => r.accountHandle === real);
+
+  if (realExisting) {
+    for (const p of placeholders) {
+      await archivePlaceholderBestEffort(service, ctx, p.id);
+    }
+    return;
+  }
+  const [keep, ...rest] = placeholders;
+  if (!keep) return; // 无占位可更新 → 交由后续 ensureAccount 建真实号
+  try {
+    await service.updateAccount(ctx, keep.id, { accountHandle: real });
+  } catch (err) {
+    console.error(
+      "[persistence] mergeDouyinPlaceholders: 占位改真实昵称失败(可能已存在真实号),改为 archive 占位:",
+      err,
+    );
+    await archivePlaceholderBestEffort(service, ctx, keep.id);
+  }
+  for (const p of rest) {
+    await archivePlaceholderBestEffort(service, ctx, p.id);
+  }
+}
+
 // The set of op ids owned by the content-calendar module's transport (module 22).
 const CONTENT_CALENDAR_OPS = new Set<string>(CONTENT_CALENDAR_OP_IDS);
 
@@ -1337,63 +1448,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // createAccount(catch ConflictError 兜并发)。thunk 引用 platformAccountService(下方构造,
     // ensureAccount 只在扫码运行时被调,晚于其初始化,闭包安全)。
     platformAccount: {
-      ensureAccount: async (ctx, input) => {
-        const { rows } = await platformAccountService.listAccounts(ctx, {
-          platform: input.platform,
-          limit: 100,
-          offset: 0,
-        });
-        const existing = rows.find((r) => r.accountHandle === input.handle);
-        if (existing) return { id: existing.id };
-        try {
-          const created = await platformAccountService.createAccount(ctx, {
-            platform: input.platform,
-            accountHandle: input.handle,
-          });
-          return { id: created.id };
-        } catch (err) {
-          // 并发/重试撞 UNIQUE(user,platform,handle)→ 重查取既有(幂等)。
-          const again = await platformAccountService.listAccounts(ctx, {
-            platform: input.platform,
-            limit: 100,
-            offset: 0,
-          });
-          const hit = again.rows.find((r) => r.accountHandle === input.handle);
-          if (hit) return { id: hit.id };
-          throw err;
-        }
-      },
-      // [T-136 §D] 采集到真实昵称后,把当前号的占位 handle(「我的抖音」/「待完善」)更新为
-      //   真实昵称。策略:列出该 user 的 douyin 账号,若已有同 handle=真实昵称 → no-op(幂等);
-      //   否则找占位账号(handle=「我的抖音」)更新其 handle。UNIQUE(user,platform,handle) 撞
-      //   (真实昵称账号已存在)→ 归并语义超出本切片(主 agent 账号合并),此处遇冲突吞错记日志。
-      updateAccountHandle: async (ctx, input) => {
-        const real = input.handle.trim();
-        if (!real) return;
-        const { rows } = await platformAccountService.listAccounts(ctx, {
-          platform: input.platform,
-          limit: 100,
-          offset: 0,
-        });
-        // 已有真实昵称账号 → 幂等 no-op(重复采集不重复更新)。
-        if (rows.some((r) => r.accountHandle === real)) return;
-        // 找占位账号更新(loginDouyin/ensureAccount 建的「我的抖音」)。
-        const placeholder = rows.find(
-          (r) => r.accountHandle === "我的抖音" || r.accountHandle === "待完善",
-        );
-        if (!placeholder) return; // 无占位可更新 → 交由后续 ensureAccount 建真实号
-        try {
-          await platformAccountService.updateAccount(ctx, placeholder.id, {
-            accountHandle: real,
-          });
-        } catch (err) {
-          // 撞 UNIQUE(真实昵称账号并发已建)/ 归并冲突 → 吞错(账号合并是主 agent 的活)。
-          console.error(
-            "[persistence] updateAccountHandle: 更新占位账号 handle 失败(可能已存在真实号):",
-            err,
-          );
-        }
-      },
+      // [T-136§D-bind⑤] upsert 去重:传占位 handle 时复用既有占位,不冒第二个占位(逻辑抽为
+      //   导出的 ensureDouyinAccountUpsert,单测直接验)。
+      ensureAccount: (ctx, input) =>
+        ensureDouyinAccountUpsert(platformAccountService, ctx, input),
+      // [T-136 §D / §D-bind⑤] 采集到真实昵称后回填占位 + **合并所有占位为一行**(逻辑抽为导出的
+      //   mergeDouyinPlaceholders,单测直接验)—— 干掉「扫一次冒俩占位」的用户报障。
+      updateAccountHandle: (ctx, input) =>
+        mergeDouyinPlaceholders(platformAccountService, ctx, input),
     },
   });
   const ingestion = createIngestionTransport(() => ingestionService);
