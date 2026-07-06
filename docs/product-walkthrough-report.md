@@ -27,17 +27,17 @@
 
 ---
 
-## 二、🔴 严重问题(影响可用性 / 误导用户)
+## 二、🔴 严重问题(影响可用性 / 误导用户)—— 三条全部已修复
 
-### 1. 采集完全跑不通,且**静默失败无任何反馈**(T-144)
-自动化页 3 个采集任务已配好,点「立即运行」后 `external_sources` 仍 = 0、采不到数据,**前端没有任何错误提示**。用户点了采集,既没数据也没报错,完全一脸懵。根因:扫码只建登录态、没建 external_source 采集源,采集器 fallback 到已退役的 canonical 源。**静默失败比报错更伤体验。这是飞轮数据回流的总闸。**
+> **修复批次**:线 A(采集+账号,commit `T-144 采集抓不到数据根因`)+ 线 B(搜索实时,commit `fix(search): 搜索索引实时化`),均在 `feat/make-it-runnable` 子分支,main 未动。搜索已 live 验证;采集端到端待用户真机扫码验。
 
-### 2. 账号连接状态**三处不一致 + 虚假承诺**
-- 设置→账号绑定:「抖音 **已连接** · 登录态有效,**可采集**你的作品数据与评论」;
-- 首页账号切换器:「当前抖音号:**未绑定账号**」;
-- 实测:采集 0 条、`external_sources`=0。
+### 1. ✅ 采集静默失败(T-144)—— 已修
+自动化页 3 个采集任务点「立即运行」后 `external_sources` 仍 = 0、采不到数据、前端无错误提示。根因:扫码只建登录态、没建 external_source 采集源,采集器 fallback 到已退役 canonical 源。
+**已修**:新增 `ensureDouyinSource(ctx)`(确定 id `extsrc-douyin-${userId}`,无源建/有源复用);扫码后建 external_source + platform_account;3 个采集器的 `src-douyin-canonical` fallback 全部改为 `await ensureDouyinSource(ctx)`(grep 确认已清零)。**采集端到端(真机扫码→采到数据)待用户自己验。**
 
-三处状态互相矛盾,「可采集」是**虚假承诺**(登录态 ≠ 能采集,缺 external_source)。用户被"已连接可采集"误导去点采集,空手而归还没报错。
+### 2. ✅ 账号状态三处不一致 + 虚假承诺 —— 已修 + live 验
+原:设置说「已连接·可采集」,首页切换器说「未绑定」,实测采 0 条——互相矛盾且「可采集」是虚假承诺(登录态 ≠ 能采集)。
+**已修 + live 验证**:徽标改 3 态(未连接 / 「已扫码,采集源尚未就绪·重新扫码或运行一次采集即可建源」/ 可采集),`statusDouyin` 返回 `sourceReady`。实测徽标现在诚实显示「已扫码,采集源尚未就绪」,不再假承诺"可采集"。
 
 ---
 
@@ -123,10 +123,13 @@
 ### ✅ 建项目双路径均通(连库确认)
 `projects` 表实有 2 条:立项建的 `project-85`(AI工具用了一堆) + 模态建的 `project-199`(QA测试项目),status 均 active。选题→立项→建项目、手动模态建项目,两条路径都真落库。
 
-### ⚠️ 搜索索引不实时更新(新建实体要重启 server 才能搜到)
-**几次修正后的准确结论**:
-- 建 2 项目后立即搜「AI工具」→ 0 结果,连库 `search_documents`=0;
-- **重启 server 后** `search_documents`=2(两个项目都进了索引),再搜「AI工具」→ **找到 1 个结果**(读侧正常)。
-→ 所以不是"搜索完全不可用/索引完全空",而是:**索引只在 server 启动时对存量建一次(buildPersistence 一次性),运行中新建/改动的实体不实时写索引**。用户建完项目立即搜会搜不到,直到下次重启。读侧(ILIKE)正常。
-**修复方向**(搜索子代理进行中):实体 create/update 路径挂 `upsertDocument` 实时索引 + 启动重建改为 deleteAll+re-upsert(刷新/清孤儿)+ video/publication tab entity_type 对齐。
-(附:搜索结果卡里项目 stage 显示「研究」——又一处"七步"旧阶段名残留,产品已两阶段。)
+### ✅ 搜索索引不实时更新 —— 已修复 + live 验证通过
+**原准确结论**:索引只在 server 启动时对存量建一次(buildPersistence 一次性),运行中新建/改动的实体不实时写索引;读侧(ILIKE)正常。
+**已修复**(commit `fix(search): 搜索索引实时化`):
+- 项目 transport 加 search fan-out(create/patch 同步 `await upsertDocument`,delete `removeDocument`);
+- knowledge fan-out `void`→`await`(消"建完即搜"竞态);
+- video/publication tab `entity_type` 对齐;
+- 启动重建 `seedDocuments`→`rebuildUserIndex`(deleteAll+re-upsert,刷新/清孤儿)。
+- 四包 typecheck 0;新 5 测 + 回归 18 + backend search 34 全绿。
+**live 验证**:重启后建新项目「实时索引验证ZXCV」→ **不重启立即搜到**(结果卡正常),实时索引生效。
+(附遗留小项:搜索结果卡里项目 stage 显示「研究」——读侧 `PROJECT_STAGES` 白名单不含新建项目 startStage `brief`,fallback 到默认阶段名;纯展示、不影响命中,归入下面"七步文案残留"一起清。)
