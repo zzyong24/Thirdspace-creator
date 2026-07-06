@@ -279,6 +279,13 @@ export interface ProjectsService {
   //   publishing 解析,不跨模块直连 repo)。
   listImportedProjectIds(ctx: RequestContext): Promise<string[]>;
 
+  // [T-151 / T-037 缺口 A] imported 项目 + 其平台锚(platform, externalId=aweme_id):导入后
+  //   触发逐字稿(transcribe.douyin 按 awemeId)+ 重建(reconstruct.project 按 projectId)都要
+  //   这两维。platformRef 无 externalId 的(异常 imported 行)不返回(诚实,无锚无法触发)。
+  listImportedWorks(ctx: RequestContext): Promise<
+    { projectId: string; platform: string; externalId: string }[]
+  >;
+
   // GAP-DASH-1 — dashboard read: the user's "continue creating" project (the
   // most-recently-updated non-archived project) plus its top open tasks. Pure
   // read; returns empty/null on no data (never throws on absence).
@@ -1103,6 +1110,26 @@ export function createProjectsService(
     async listImportedProjectIds(ctx) {
       const imported = await repo.listImported(ctx);
       return imported.map((p) => p.id);
+    },
+
+    async listImportedWorks(ctx) {
+      // [T-151 / T-037 缺口 A] imported 项目 → { projectId, platform, externalId }。externalId 从
+      //   platformRef(JSON {platform, externalId})取;无锚(异常行)诚实过滤掉(无法触发逐字稿/重建)。
+      const imported = await repo.listImported(ctx);
+      const out: { projectId: string; platform: string; externalId: string }[] =
+        [];
+      for (const p of imported) {
+        const ref = (p.platformRef ?? {}) as {
+          platform?: unknown;
+          externalId?: unknown;
+        };
+        const platform = typeof ref.platform === "string" ? ref.platform : "";
+        const externalId =
+          typeof ref.externalId === "string" ? ref.externalId : "";
+        if (!externalId) continue; // 无 aweme 锚 → 无法按 awemeId 转写 / 无法可靠触发,诚实跳过
+        out.push({ projectId: p.id, platform, externalId });
+      }
+      return out;
     },
 
     async getDashboardSummary(ctx) {

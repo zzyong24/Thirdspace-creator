@@ -18,6 +18,7 @@ function makePorts(overrides?: Partial<CoverBackfillPorts>): {
     downloaded: string[];
     assets: Array<{ name: string; mimeType: string }>;
     covers: Array<{ publicationId: string; coverAssetId: string }>;
+    bound: Array<{ publicationId: string; coverAssetId: string }>;
   };
 } {
   const calls = {
@@ -25,6 +26,7 @@ function makePorts(overrides?: Partial<CoverBackfillPorts>): {
     downloaded: [] as string[],
     assets: [] as Array<{ name: string; mimeType: string }>,
     covers: [] as Array<{ publicationId: string; coverAssetId: string }>,
+    bound: [] as Array<{ publicationId: string; coverAssetId: string }>,
   };
   let assetSeq = 0;
   const ports: CoverBackfillPorts = {
@@ -43,6 +45,9 @@ function makePorts(overrides?: Partial<CoverBackfillPorts>): {
     },
     setCover: async (publicationId, coverAssetId) => {
       calls.covers.push({ publicationId, coverAssetId });
+    },
+    bindCoverToProject: async (publicationId, coverAssetId) => {
+      calls.bound.push({ publicationId, coverAssetId });
     },
     ...overrides,
   };
@@ -136,6 +141,42 @@ describe("backfillDouyinCovers", () => {
     await backfillDouyinCovers(ports);
     await backfillDouyinCovers(ports, { limit: 3 });
     expect(seen).toEqual([100, 3]);
+  });
+
+  it("[缺口 B] setCover 后把封面绑到作品所属项目(素材中心按项目可见)", async () => {
+    const { ports, calls } = makePorts({
+      listMissingCover: async () => missing(2),
+    });
+    await backfillDouyinCovers(ports);
+    // 每条 filled 的作品都调 bindCoverToProject(publicationId + 刚建的 coverAssetId)。
+    expect(calls.bound).toEqual([
+      { publicationId: "pub-1", coverAssetId: "asset-1" },
+      { publicationId: "pub-2", coverAssetId: "asset-2" },
+    ]);
+  });
+
+  it("[缺口 B] 绑项目失败绝不把已落封面翻成 failed(filled 计数不说谎)", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const { ports } = makePorts({
+      listMissingCover: async () => missing(1),
+      bindCoverToProject: async () => {
+        throw new Error("material link db down");
+      },
+    });
+    const result = await backfillDouyinCovers(ports);
+    // 封面 setCover 已成功 → filled=1;绑定失败只记日志,不计 failed。
+    expect(result).toEqual({ attempted: 1, filled: 1, skipped: 0, failed: 0 });
+  });
+
+  it("[缺口 B] 未注入 bindCoverToProject 端口 → 退回旧行为(只落封面不绑项目)", async () => {
+    const { ports, calls } = makePorts({
+      listMissingCover: async () => missing(1),
+      bindCoverToProject: undefined,
+    });
+    const result = await backfillDouyinCovers(ports);
+    expect(result.filled).toBe(1);
+    expect(calls.bound).toEqual([]); // 未绑,但封面照落
+    expect(calls.covers).toEqual([{ publicationId: "pub-1", coverAssetId: "asset-1" }]);
   });
 });
 

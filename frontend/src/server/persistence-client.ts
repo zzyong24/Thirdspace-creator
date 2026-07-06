@@ -187,6 +187,10 @@ import {
   downloadDouyinImage,
   DEFAULT_COVER_BACKFILL_LIMIT,
 } from "@/server/ingestion/douyin-cover-backfill";
+// [T-151 / T-037 缺口 A] 导入作品逐字稿 + 重建触发:给 imported 作品排 transcribe.douyin(逐字稿 D3)
+//   + reconstruct.project(反推 research/planning)任务(fire-and-forget;dispatch 链自动跑 runner)。
+//   多闸幂等在 helper 内(runner 逐 aweme 跳已转写 / 已有 reconstructed artifact 跳过 / createTask 去重)。
+import { enqueueReconstructForImported } from "@/server/ingestion/reconstruct-enqueue";
 // T-038b 抖音采集限流网关(单例接线):所有对外抖音请求经它 acquire/report(SPEC §4.4)。
 import {
   DouyinRequestGateway,
@@ -3642,6 +3646,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
       // [T-078] 封面回填(拉指标跑一轮即回填存量,无需独立入口)。
       let coversFilled = 0;
+      // [T-151 缺口 B] publicationId → contentOutputId 映射(由候选集查询装配)——
+      //   bindCoverToProject 据此解析作品所属项目(getOutput().projectId),把封面 asset 绑进
+      //   该项目用料链。放在闭包里,listMissingCover 里填充,bindCoverToProject 里消费。
+      const outputIdByPublication = new Map<string, string>();
       try {
         const backfill = await backfillDouyinCovers(
           {
@@ -3653,10 +3661,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 })
               )
                 .filter((p) => typeof p.externalId === "string" && p.externalId)
-                .map((p) => ({
-                  publicationId: p.id,
-                  externalId: p.externalId as string,
-                })),
+                .map((p) => {
+                  // [缺口 B] 记下每条候选作品的 contentOutputId,供封面绑项目解析 projectId。
+                  if (typeof p.contentOutputId === "string" && p.contentOutputId) {
+                    outputIdByPublication.set(p.id, p.contentOutputId);
+                  }
+                  return {
+                    publicationId: p.id,
+                    externalId: p.externalId as string,
+                  };
+                }),
             // [gate-F7] iesdouyin channel 限流:注真网关单例(与逐字稿取直链同一 channel)。
             fetchVideoUrl: (awemeId) =>
               fetchDouyinVideoUrl(awemeId, {
@@ -3673,6 +3687,27 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               }),
             setCover: async (publicationId, coverAssetId) => {
               await publishingService.setCover(ctx, publicationId, coverAssetId);
+            },
+            // [T-151 缺口 B] 封面绑作品所属项目:publicationId → contentOutputId(上面装配的
+            //   map)→ getOutput().projectId → materialLinksService.create(entityType='asset')。
+            //   让素材中心「按项目」看到该作品封面(此前封面只进全局池,项目视图空)。绑定幂等
+            //   由 materialLinks 服务侧兜底(重复采集同一封面 → 同一 (project, asset) 边);
+            //   解析不到 output/project 或建边失败 → runner 侧独立 try/catch 吞掉(封面已落是真的)。
+            bindCoverToProject: async (publicationId, coverAssetId) => {
+              const outputId = outputIdByPublication.get(publicationId);
+              if (!outputId) return; // 无 output 锚 → 无法解析项目,诚实跳过(不硬造)
+              const output = await projectsRepo.getOutput(ctx, outputId);
+              const projectId = output.projectId;
+              if (!projectId) return;
+              await materialLinksService.create(ctx, {
+                projectId,
+                contentOutputId: outputId,
+                entityType: "asset",
+                entityId: coverAssetId,
+                role: "cover",
+                stage: "publishing",
+                addedByType: "ingestion",
+              });
             },
           },
           {
@@ -3696,6 +3731,78 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       } catch (err) {
         // 封面是锦上添花:回填整批失败绝不拖垮指标采集(run 仍 succeeded)。
         console.error("[douyin-cover-backfill] 封面回填整批失败(指标不受影响):", err);
+      }
+      // [T-151 / T-037 缺口 A] 逐字稿 + 重建触发:指标落库后,给 imported 作品排 transcribe.douyin
+      //   (按 awemeId 取音频+ASR → 逐字稿 D3)+ reconstruct.project(按 projectId → 逐字稿+指标+定位
+      //   反推 research/planning)。**fire-and-forget**:两者都慢(ASR/LLM),绝不同步阻塞导入 —— helper
+      //   只排队即返回(经 ai transport ai.tasks.create 立即返回 queued),真正的 runner 由 dispatch 链
+      //   后台跑。多闸幂等:transcribe runner 逐 aweme 跳已转写 + reconstruct 已有 artifact 跳过 +
+      //   createTask 去重 IN-FLIGHT。整批失败绝不拖垮指标采集(best-effort)。
+      //   注:reconstruct 依赖逐字稿存在(缺则 runner markFailed)——首轮逐字稿刚排未就绪,reconstruct
+      //   会失败;本 helper 每轮采集都调(幂等),后续轮次逐字稿就绪后 reconstruct 即成功(诚实收敛)。
+      try {
+        const enqueued = await enqueueReconstructForImported(
+          {
+            listImportedWorks: (c) => projectsService.listImportedWorks(c),
+            // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
+            //   ai.tasks.create → runTranscribe;直调 service 会死链。runner 内逐 aweme 幂等跳已转写)。
+            enqueueTranscribe: async (c, awemeIds) => {
+              await ai.request(
+                ENDPOINTS.createAITask,
+                {
+                  params: undefined,
+                  query: undefined,
+                  body: {
+                    taskType: "transcribe.douyin",
+                    inputData: { awemeIds },
+                  },
+                },
+                c,
+              );
+            },
+            // 闸:该项目是否已有 origin='reconstructed' 的 artifact(重建过了不重跑)。复用
+            //   listProjectArtifacts 公开读(与 artifactOriginReader 同法),不加内容拉取。
+            hasReconstructedArtifact: async (c, projectId) => {
+              const rows = await artifactsService.listProjectArtifacts(
+                c,
+                projectId,
+              );
+              return rows.some((r) => r.origin === "reconstructed");
+            },
+            // **必须经 ai transport 的 ai.tasks.create 起任务**(不直调 aiService.createTask)——
+            //   reconstruct.project 的 dispatch 分支(void runReconstruct)只在 ai transport request
+            //   拦 endpoint.id==="ai.tasks.create" 时触发(见本文件 `const ai: Transport`)。直调
+            //   service 会让任务停在 queued 死链(与 asset.generate 的 dispatchGenerateAsset 同款接线,
+            //   memory: ai-task-execution-live-dispatch)。inputData.projectId 让 service 落 projectId
+            //   并派生幂等键去重 IN-FLIGHT 重复(同项目 queued/running 命中既有,不建第二行、无副作用)。
+            enqueueReconstruct: async (c, projectId) => {
+              await ai.request(
+                ENDPOINTS.createAITask,
+                {
+                  params: undefined,
+                  query: undefined,
+                  body: {
+                    taskType: "reconstruct.project",
+                    inputData: { projectId },
+                  },
+                },
+                c,
+              );
+            },
+          },
+          ctx,
+        );
+        if (enqueued.considered > 0) {
+          console.log(
+            `[reconstruct-enqueue] imported ${enqueued.considered},逐字稿批 ${enqueued.transcribeEnqueued ? enqueued.transcribeAwemeCount : 0} 条,重建排队 ${enqueued.reconstructEnqueued},跳过 ${enqueued.reconstructSkipped},失败 ${enqueued.failed}`,
+          );
+        }
+      } catch (err) {
+        // 逐字稿/重建触发是锦上添花:排队整批失败绝不拖垮指标采集(run 仍 succeeded)。
+        console.error(
+          "[reconstruct-enqueue] 逐字稿/重建任务排队整批失败(指标不受影响):",
+          err,
+        );
       }
       return { itemsNew: run.recordsWritten, itemsUpdated: coversFilled };
     },
@@ -3940,12 +4047,36 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       //     → publication.hidden_at + 导入项目 platform_ref.hidden。判定不了(审核中/
       //     未通过/空)诚实跳过,不动既有标记;找不到承载行也跳过(不硬造)。放在指标
       //     落库之前、且不受 records.length===0 早退影响(隐藏作品也可能产不出 record)。
+      // [T-151 缺口 C 诊断] 可见性同步逐档计数 —— 存量真机 hidden_at 全 NULL 的根因需真机 xlsx
+      //   才能定位(是 title 匹配不上?还是「审核状态」列没解析到值?还是状态字面量不含隐藏口径?)。
+      //   加这组计数 + 采样,让下次真扫**自证根因**(不改数据、不硬猜),诚实分层。
+      const visDiag = {
+        total: matches.length,
+        unmatched: 0, // publicationId=null(title 匹配不上 → T-034 断裂域)
+        unknownStatus: 0, // 匹上了但审核状态判不出(列没解析 / 字面量不含隐藏口径)
+        noExtId: 0, // 匹上了但无 externalId 锚(fixture 轨)
+        hiddenSynced: 0, // 真标了 hidden
+        visibleSynced: 0, // 真标了 visible
+      };
+      const statusSamples = new Set<string>();
       for (const m of matches) {
-        if (!m.publicationId) continue;
+        if (!m.publicationId) {
+          visDiag.unmatched += 1;
+          // 采样未匹配明细的「审核状态」原值(去重,最多留几个),便于真机比对列/字面量。
+          if (statusSamples.size < 8) statusSamples.add(m.detail.status ?? "");
+          continue;
+        }
         const vis = visibilityFromDetailStatus(m.detail.status);
-        if (vis === "unknown") continue;
+        if (vis === "unknown") {
+          visDiag.unknownStatus += 1;
+          if (statusSamples.size < 8) statusSamples.add(m.detail.status ?? "");
+          continue;
+        }
         const extId = externalIdById.get(m.publicationId);
-        if (!extId) continue; // 无 externalId 锚(fixture 轨)→ 跳过
+        if (!extId) {
+          visDiag.noExtId += 1;
+          continue; // 无 externalId 锚(fixture 轨)→ 跳过
+        }
         const hidden = vis === "hidden";
         try {
           await publishingService.setVisibilityByExternalKey(ctx, {
@@ -3958,10 +4089,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             externalId: extId,
             hidden,
           });
+          if (hidden) visDiag.hiddenSynced += 1;
+          else visDiag.visibleSynced += 1;
         } catch {
           // 可见性同步失败不拖垮整批指标落库(best-effort;下轮采集会再同步)。
         }
       }
+      // [缺口 C 诊断] 打印逐档结果 + 未判定明细的审核状态采样。真机看这行即知根因:
+      //   unmatched 高 → title 匹配断裂;unknownStatus 高 + 采样非空 → 列/字面量口径需扩;
+      //   hidden/visibleSynced 有值 → 同步链本身通(问题只在存量那一次)。
+      console.log(
+        `[douyin-detail-visibility] 明细 ${visDiag.total}:未匹配 ${visDiag.unmatched},状态判不出 ${visDiag.unknownStatus},无锚 ${visDiag.noExtId},标隐藏 ${visDiag.hiddenSynced},标可见 ${visDiag.visibleSynced}` +
+          (statusSamples.size > 0
+            ? ` · 未判定审核状态采样: ${Array.from(statusSamples)
+                .map((s) => JSON.stringify(s))
+                .join(", ")}`
+            : ""),
+      );
       // 4) 匹配上的明细 → MetricRecord[](未匹配 / 无 externalId 锚 → 跳过,诚实)。
       const records = toDetailMetricRecords(
         matches,

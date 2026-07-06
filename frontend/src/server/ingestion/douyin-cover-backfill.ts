@@ -54,6 +54,13 @@ export interface CoverBackfillPorts {
   }): Promise<{ id: string }>;
   /** 封面落账(host 绑 publishingService.setCover;幂等在 service 层)。 */
   setCover(publicationId: string, coverAssetId: string): Promise<void>;
+  /**
+   * [T-151 缺口 B] 把封面 asset 绑到作品所属项目(host 绑 materialLinksService.create,
+   * entityType='asset'),让素材中心「按项目」能看到该作品封面。可选 —— 未注入时退回旧
+   * 行为(封面只进全局池,不绑项目;旧组合根不破)。best-effort:绑定失败绝不把「已落封面」
+   * 翻成 failed(封面 setCover 已成功是真的)——host 内部吞错记日志,不抛回本 runner。
+   */
+  bindCoverToProject?(publicationId: string, coverAssetId: string): Promise<void>;
 }
 
 /** 每轮默认回填上限(env CREATOROS_COVER_BACKFILL_LIMIT 可调)。iesdouyin channel
@@ -104,6 +111,19 @@ export async function backfillDouyinCovers(
         mimeType,
       });
       await ports.setCover(pub.publicationId, asset.id);
+      // [T-151 缺口 B] 封面已落账 → 绑到作品所属项目(素材中心「按项目」可见)。绑定**独立
+      //   try/catch**:封面 setCover 已成功是真的,绑定是锦上添花 —— 绑定失败绝不把这条 filled
+      //   翻成 failed(否则 filled 计数说谎)。端口未注入则跳过(退回旧行为,不绑项目)。
+      if (ports.bindCoverToProject) {
+        try {
+          await ports.bindCoverToProject(pub.publicationId, asset.id);
+        } catch (bindErr) {
+          console.error(
+            `[douyin-cover-backfill] 作品 ${pub.externalId} 封面绑项目失败(封面已落,项目视图暂缺):`,
+            bindErr instanceof Error ? bindErr.message : bindErr,
+          );
+        }
+      }
       result.filled += 1;
     } catch (err) {
       // ③ 单作品降级:记日志继续,绝不抛出拖垮整批(整批的 best-effort 兜底在调用方)。

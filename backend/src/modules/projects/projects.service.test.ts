@@ -510,6 +510,31 @@ describe("ensureImportedProject (数据底座 / SPEC §1.3)", () => {
     });
     expect(missing).toBeNull();
   });
+
+  // [T-151 / T-037 缺口 A] 导入后触发逐字稿/重建需要 { projectId, platform, externalId } 两维。
+  it("listImportedWorks:返回 imported 作品的 projectId + platform + externalId(无锚的过滤掉)", async () => {
+    const a = await service.ensureImportedProject(ctx, {
+      title: "作品甲",
+      platform: "douyin",
+      externalId: "aweme-A",
+    });
+    const b = await service.ensureImportedProject(ctx, {
+      title: "作品乙",
+      platform: "douyin",
+      externalId: "aweme-B",
+    });
+    const works = await service.listImportedWorks(ctx);
+    // 两条都带真实 aweme 锚。
+    expect(works).toEqual(
+      expect.arrayContaining([
+        { projectId: a.projectId, platform: "douyin", externalId: "aweme-A" },
+        { projectId: b.projectId, platform: "douyin", externalId: "aweme-B" },
+      ]),
+    );
+    expect(works).toHaveLength(2);
+    // 每条都有非空 externalId(无锚的诚实过滤,不返回)。
+    for (const w of works) expect(w.externalId.length).toBeGreaterThan(0);
+  });
 });
 
 describe("Stage machine (SPEC §12)", () => {
