@@ -129,6 +129,8 @@ export function AssetUploadButton() {
         data-slot="assets-upload-input"
         aria-hidden="true"
         className="hidden"
+        // 过滤到弹药库支持的素材类型(图/视频/音频/文档/字幕),不让用户误选不支持的文件。
+        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.md,.txt,.srt,.vtt"
         onChange={(e) => {
           const file = e.target.files?.[0];
           // Reset so re-selecting the same file fires `change` again.

@@ -145,7 +145,7 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
       data-testid="account-switcher-trigger"
       aria-label={`当前抖音号：${triggerLabel}`}
       className={cn(
-        "flex items-center rounded-card border border-border bg-surface text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex cursor-pointer items-center rounded-card border border-border bg-surface text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         collapsed ? "size-9 justify-center p-0" : "w-full gap-2 px-2.5 py-2",
       )}
     >

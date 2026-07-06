@@ -77,6 +77,10 @@ export const SKILL_LABELS: Readonly<Record<string, SkillLabel>> = {
     name: "复盘编导",
     purpose: "围绕单条已发布作品的真数据与评论做复盘对话。",
   },
+  "chatbox.distill": {
+    name: "知识蒸馏师",
+    purpose: "对话里粘入原文(笔记 / 逐字稿 / 网页 / 评论),蒸馏成知识原子,采纳后进知识库。",
+  },
   // —— 创作节点 ——
   "topic.generate": {
     name: "AI 出题",
@@ -89,6 +93,10 @@ export const SKILL_LABELS: Readonly<Record<string, SkillLabel>> = {
   "script.draft": {
     name: "写文案",
     purpose: "按策划契约与大纲起草整稿口播脚本(个人风格与文案结构在此定制)。",
+  },
+  "script.review": {
+    name: "合规审核编导",
+    purpose: "发布前审核文案的抖音合规风险(L1 违禁词 + L2 语义审),给可撤销的逐条改写建议。",
   },
   "planning.thesis": {
     name: "论点树",
