@@ -42,11 +42,13 @@
 ### 3.3 边界与契约(⚠️ gate 关切②修正:runner 分两类,边界不都对)
 **核实(2026-07-06,gate 关切②坐实)**:26 runner 分**两类**,迁移工作量/回归面差很多:
 - **A. 后台队列类**(transcribe/reconstruct/asset-generate/topic/planning/calibration/script/review/platform-adapt/material…):经 `persistence-client` 里 `void runXxx` → `ai.tasks.create` **dispatch seam** 起 ai_task。**这批边界已对**,搬 backend = 机械迁移(改包位置 + import),前端经 `ai.request` 起任务不变。
-- **B. 在线同步类**(**5 条**:`knowledge/classify`、`knowledge/distill`、`knowledge/relate`、`knowledge/comment-sift`、`chat`):在前端 route 里**直接 `await runXxx(...)` 同步调**,**不走 dispatch seam**。搬 backend 需**新建同步跨包调用边界**(RPC/端口/新契约 op)—— 这是**设计活、有回归面**,不是机械搬。
+- **B. 在线同步类**(共 **5 个同步调用点**,分两组):在前端 route 里**直接 `await runXxx(...)` 同步调**,**不走 dispatch seam**,搬 backend 需**新建同步跨包边界**(RPC/端口/新契约 op)——设计活、有回归面,非机械搬。
+  - **B1 = 4 条 knowledge/comment-sift**(`knowledge/classify`、`knowledge/distill`、`knowledge/relate`、`knowledge/comment-sift`)→ 走 §3.5 新同步边界。
+  - **B2 = chat(第 5 条)** → 流式,最重,单列 §3.2 处理。
 - `conversation-persistence` 的 UIMessage 类型 → contract 或 backend 导出的共享类型,前端不再 `from "ai"`。
 
-### 3.5 B 类同步 runner 的新边界(gate 关切②)
-5 条同步 runner 搬 backend,给每条设计同步调用边界:
+### 3.5 B1 同步 runner 的新边界(gate 关切②)
+4 条 B1 同步 runner(knowledge/comment-sift)搬 backend,给每条设计同步调用边界(chat=B2 另见 §3.2):
 - 走既有 **dispatch/contract 机制的同步变体**:加同步 op(如 `knowledge.classify`/`knowledge.distill` 等 contract endpoint,backend transport 同步返回结果),前端 route 从「直接 import runner」改「经 client 调该 op」。或
 - 若某条本就该异步(如 distill 可后台化)→ 改走 ai_task dispatch(归 A 类)。逐条判。
 - **chat 见 §3.2**(流式,单独处理,最重)。
@@ -79,7 +81,7 @@
 
 **首审(2026-07-06)= CONCERNS,3 项处置进度:**
 - **① 动机与 [D4] 冲突 → ✅ 已解**:gate 依 SPEC 里误记的 [D4]「接受可逆向」判动机悬空;用户 2026-07-06 澄清「prompt 可改 ≠ 接受可逆向,要保护」,**[D4] 已更正**(见桌面总纲 §5.5),逻辑下沉保护动机成立,T-163 归 T-147 保护套件。
-- **② 「边界已对」对同步 runner 证伪 → ✅ 本版处置**:§3.3 区分 A 后台队列(机械搬)/ B 5 条同步(knowledge×4+chat,需新同步边界)+ §3.5 给 B 类设计边界 + §4 打法分层(非一律机械并行)。
+- **② 「边界已对」对同步 runner 证伪 → ✅ 本版处置**:§3.3 区分 A 后台队列(机械搬)/ B 同步(B1=4 条 knowledge/comment-sift 走新同步边界 §3.5,B2=chat 走流式 §3.2)+ §4 打法分层(非一律机械并行)。
 - **③ chat 流式是新造能力 → ✅ 本版处置**:§3.2 坐实 backend 无 SSE、补协议(toUIMessageStreamResponse 透传)+ 鉴权落点 + 端到端验收标准。
 
 **下一步**:本改版**重过 gate**;≠FAIL 后按 §4 分层拆 Task(A 并行 / B 主导 / chat 主做)进 BACKLOG 开工。
