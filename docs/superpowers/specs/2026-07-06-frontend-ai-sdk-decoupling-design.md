@@ -34,19 +34,34 @@
 - 前端 `/api/chat` 降级为**薄代理**:鉴权(session cookie)后把请求转发 backend 流式端点,**原样透传流**回 `useChat`。前端路由不再 import `ai`,只转发字节流。
 - `useChat`(@ai-sdk/react)留前端(纯客户端 UI 库,不含 prompt/key,消费标准 UIMessage stream)——**这条可留**(它只是流消费 UI,非「AI 逻辑」);`UIMessage` 类型走 contract 共享类型或 backend 导出。
 - **判断**:真正要下沉的是 `streamText`/`tool`/`jsonSchema`/prompt(AI 逻辑)。`useChat` 客户端 hook 是 UI,保留合理(边界清:客户端只发消息+渲流,backend 做生成)。
+- **⚠️ gate 关切③坐实:backend 现无任何 SSE/流式能力**(grep `text/event-stream`/`ReadableStream`/`streamText` 在 backend 零命中)——**这条是新造能力,非复用,是全链最脆一环**。必须补的设计:
+  - **协议**:backend 流式端点用 `streamText().toUIMessageStreamResponse()`(SSE)直出,前端薄代理**原样透传 `Response.body` 字节流**(不缓冲、不解析、保留 SSE 头)。
+  - **鉴权落点**:薄代理侧先验 session cookie → 解析 ctx → 转发时带 ctx(header/内部 token)给 backend 流式端点;backend 不再自己碰 cookie。
+  - **验收标准**(不能只「单测透传」):真起 backend + 前端,`useChat` 端到端发一条 → 流式逐字回显 → onFinish 落库 conversation/message,与迁移前**逐字节行为一致**;断流/超时/取消路径不崩。
 
-### 3.3 边界与契约
-- 非流式 AI(26 runner 的 ai_task)已走 dispatch/contract seam —— runner 搬 backend 后,前端经 `ai.request` 起任务不变(边界已对)。
-- 流式 chat 加一个 backend 流式端点 + 前端薄代理(唯一新增边界)。
+### 3.3 边界与契约(⚠️ gate 关切②修正:runner 分两类,边界不都对)
+**核实(2026-07-06,gate 关切②坐实)**:26 runner 分**两类**,迁移工作量/回归面差很多:
+- **A. 后台队列类**(transcribe/reconstruct/asset-generate/topic/planning/calibration/script/review/platform-adapt/material…):经 `persistence-client` 里 `void runXxx` → `ai.tasks.create` **dispatch seam** 起 ai_task。**这批边界已对**,搬 backend = 机械迁移(改包位置 + import),前端经 `ai.request` 起任务不变。
+- **B. 在线同步类**(**5 条**:`knowledge/classify`、`knowledge/distill`、`knowledge/relate`、`knowledge/comment-sift`、`chat`):在前端 route 里**直接 `await runXxx(...)` 同步调**,**不走 dispatch seam**。搬 backend 需**新建同步跨包调用边界**(RPC/端口/新契约 op)—— 这是**设计活、有回归面**,不是机械搬。
 - `conversation-persistence` 的 UIMessage 类型 → contract 或 backend 导出的共享类型,前端不再 `from "ai"`。
+
+### 3.5 B 类同步 runner 的新边界(gate 关切②)
+5 条同步 runner 搬 backend,给每条设计同步调用边界:
+- 走既有 **dispatch/contract 机制的同步变体**:加同步 op(如 `knowledge.classify`/`knowledge.distill` 等 contract endpoint,backend transport 同步返回结果),前端 route 从「直接 import runner」改「经 client 调该 op」。或
+- 若某条本就该异步(如 distill 可后台化)→ 改走 ai_task dispatch(归 A 类)。逐条判。
+- **chat 见 §3.2**(流式,单独处理,最重)。
+- **这批不适合「纯机械并行 subagent」**——每条要设计边界 + 迁测,主 agent 主导(见 §4 修正)。
 
 ### 3.4 桌面化落点(T-147)
 - backend 成受保护进程(sidecar / 加密),持有 prompt 模板 + 模型 key;前端 = Tauri 壳只 UI。
 - 本 SPEC 只做「解耦」(逻辑搬到边界正确的一侧);**加密/防逆向是 T-147 P4/P6 的事**,不在本 SPEC(但解耦是其前置)。
 
-## 4. 规模与打法
-- **大**(26 runner + 流式重构 + 类型迁移)。按铁律「一次 0→1、不分阶段」:一把做完,但用**并行 subagent**分片搬 runner(按领域分组,worktree 隔离防冲突)+ 主 agent 做流式边界 + 验收。
-- 搬 runner 是机械迁移(逻辑不变,改包位置 + import),适合并行子代理;流式边界是设计活,主做。
+## 4. 规模与打法(gate 关切②修正:非全机械,分层)
+- **大**(26 runner + 5 条同步边界 + chat 流式新造 + 类型迁移)。按铁律「一次 0→1、不分阶段」,但**分层不同打法**(不是一律「机械并行 subagent」):
+  1. **A 类后台队列 runner(~21 条)** = 机械迁移(改包位置+import,dispatch 边界已对)→ **并行 subagent 分片搬**(worktree 隔离),每条迁测跟着走。
+  2. **B 类同步 runner(4 条 knowledge/comment-sift)** = 每条要**设计新同步边界**(§3.5)→ **主 agent 主导 or 逐条谨慎 subagent**(非纯机械并行,会踩新边界的协同)。
+  3. **chat 流式(1 条,最脆)** = **主 agent 做**(§3.2 新造 SSE 端点 + 薄代理 + 端到端验收)。
+- **拆 Task 粒度按此分层**,别把 B/chat 当 A 的机械粒度切(gate 关切②:低估回归)。
 
 ## 5. 测试
 - 每个 runner 迁后其既有测试跟着迁 + 绿(行为不变)。
@@ -60,4 +75,11 @@
 - 模型 provider 抽象重写(model-config 已在,不动)。
 
 ## 7. Gate
-**改架构(AI 逻辑归属包边界迁移)——按铁律必须过 spec-review gate(verdict≠FAIL)才准开工**。reviewer 见 orchestrator `prompts/spec-reviewer.md`。过审后拆 Task(按领域分片 runner 迁移 + 流式边界)进 BACKLOG 再开工。
+**改架构 → 必须过 spec-review gate(verdict≠FAIL)才准开工。**
+
+**首审(2026-07-06)= CONCERNS,3 项处置进度:**
+- **① 动机与 [D4] 冲突 → ✅ 已解**:gate 依 SPEC 里误记的 [D4]「接受可逆向」判动机悬空;用户 2026-07-06 澄清「prompt 可改 ≠ 接受可逆向,要保护」,**[D4] 已更正**(见桌面总纲 §5.5),逻辑下沉保护动机成立,T-163 归 T-147 保护套件。
+- **② 「边界已对」对同步 runner 证伪 → ✅ 本版处置**:§3.3 区分 A 后台队列(机械搬)/ B 5 条同步(knowledge×4+chat,需新同步边界)+ §3.5 给 B 类设计边界 + §4 打法分层(非一律机械并行)。
+- **③ chat 流式是新造能力 → ✅ 本版处置**:§3.2 坐实 backend 无 SSE、补协议(toUIMessageStreamResponse 透传)+ 鉴权落点 + 端到端验收标准。
+
+**下一步**:本改版**重过 gate**;≠FAIL 后按 §4 分层拆 Task(A 并行 / B 主导 / chat 主做)进 BACKLOG 开工。
