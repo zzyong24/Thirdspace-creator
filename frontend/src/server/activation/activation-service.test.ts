@@ -290,3 +290,116 @@ describe("activation state machine — check", () => {
     expect(r.allowed).toBe(true);
   });
 });
+
+// T-167 设置页「激活状态」面板 —— getStatus() 本地读态(**零网络**:license.status 绝不被调)。
+// 覆盖:未激活→inactive(其余 null);永久卡(expiresAt=null)未过期→active;已过期→expired;
+//   宽限窗内→active;超宽限窗→grace;并断言透传 machineId/licenseMode/activatedAt/lastOnlineCheckAt。
+describe("activation state machine — getStatus (local, no network)", () => {
+  it("未激活 → inactive,其余字段 null", async () => {
+    const { repo } = makeRepo(null);
+    const license = makeLicense();
+    const svc = createActivationService({
+      repo,
+      license,
+      ...BASE,
+      now: () => new Date("2026-07-06T00:00:00Z"),
+    });
+    const v = await svc.getStatus();
+    expect(v).toEqual({
+      status: "inactive",
+      machineId: null,
+      licenseMode: null,
+      expiresAt: null,
+      activatedAt: null,
+      lastOnlineCheckAt: null,
+    });
+    // 纯本地读:绝不打在线接口。
+    expect(license.status).not.toHaveBeenCalled();
+  });
+
+  it("永久卡(expiresAt=null,近期在线校过)→ active + 透传机器码/授权类型/时间戳", async () => {
+    const { repo } = makeRepo(
+      storedFixture({
+        expiresAt: null,
+        licenseMode: "PERMANENT",
+        // 近期在线校过(窗内)→ active。永久卡到期永不触发,新鲜度看 lastOnlineCheckAt。
+        lastOnlineCheckAt: "2029-12-30T00:00:00.000Z",
+      }),
+    );
+    const license = makeLicense();
+    const svc = createActivationService({
+      repo,
+      license,
+      ...BASE,
+      graceDays: 7,
+      now: () => new Date("2030-01-01T00:00:00Z"),
+    });
+    const v = await svc.getStatus();
+    expect(v.status).toBe("active");
+    expect(v.machineId).toBe("M-fixture");
+    expect(v.licenseMode).toBe("PERMANENT");
+    expect(v.expiresAt).toBeNull();
+    expect(v.activatedAt).toBe("2026-07-06T00:00:00.000Z");
+    expect(v.lastOnlineCheckAt).toBe("2029-12-30T00:00:00.000Z");
+    expect(license.status).not.toHaveBeenCalled();
+  });
+
+  it("本地已过期 → expired", async () => {
+    const { repo } = makeRepo(
+      storedFixture({ expiresAt: "2026-01-01T00:00:00.000Z" }),
+    );
+    const license = makeLicense();
+    const svc = createActivationService({
+      repo,
+      license,
+      ...BASE,
+      now: () => new Date("2026-07-06T00:00:00Z"),
+    });
+    const v = await svc.getStatus();
+    expect(v.status).toBe("expired");
+    expect(v.expiresAt).toBe("2026-01-01T00:00:00.000Z");
+    expect(license.status).not.toHaveBeenCalled();
+  });
+
+  it("未过期 + 宽限窗内(距上次在线校 ≤ graceDays)→ active", async () => {
+    const { repo } = makeRepo(
+      storedFixture({
+        expiresAt: "2027-07-06T00:00:00.000Z",
+        lastOnlineCheckAt: "2026-08-01T00:00:00.000Z",
+      }),
+    );
+    const license = makeLicense();
+    const svc = createActivationService({
+      repo,
+      license,
+      ...BASE,
+      graceDays: 7,
+      // 距上次在线校 3 天(窗内)。
+      now: () => new Date("2026-08-04T00:00:00Z"),
+    });
+    const v = await svc.getStatus();
+    expect(v.status).toBe("active");
+    expect(license.status).not.toHaveBeenCalled();
+  });
+
+  it("未过期 + 超宽限窗(距上次在线校 > graceDays)→ grace(待一次在线校收敛)", async () => {
+    const { repo } = makeRepo(
+      storedFixture({
+        expiresAt: "2027-07-06T00:00:00.000Z",
+        lastOnlineCheckAt: "2026-08-01T00:00:00.000Z",
+      }),
+    );
+    const license = makeLicense();
+    const svc = createActivationService({
+      repo,
+      license,
+      ...BASE,
+      graceDays: 7,
+      // 距上次在线校 10 天(超窗)——本地未过期,展示为离线宽限中。
+      now: () => new Date("2026-08-11T00:00:00Z"),
+    });
+    const v = await svc.getStatus();
+    expect(v.status).toBe("grace");
+    expect(license.status).not.toHaveBeenCalled();
+  });
+});

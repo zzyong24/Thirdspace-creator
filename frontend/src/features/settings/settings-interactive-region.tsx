@@ -66,6 +66,7 @@ import {
   AlertCircle,
   Sparkles,
   ShieldCheck,
+  KeyRound,
   Trash2,
   Plus,
   ChevronDownIcon,
@@ -74,6 +75,7 @@ import {
 } from "lucide-react";
 
 import type {
+  ActivationState,
   DouyinAccountState,
   MultimodalModelState,
   SettingsViewModel,
@@ -230,6 +232,7 @@ const HIGHLIGHT_TAB: Record<string, string> = {
 export function SettingsDialog({
   viewModel,
   skills = [],
+  activation,
 }: {
   viewModel: SettingsViewModel;
   /**
@@ -237,6 +240,11 @@ export function SettingsDialog({
    * 投影)。单测/无 server 数据时缺省空数组 → SkillsSection 渲诚实空态。
    */
   skills?: readonly SkillItem[];
+  /**
+   * [T-167] 桌面激活状态(route server 侧经 getActivationService().getStatus() 本地读)。
+   * web / 未装配 / 单测缺省 → undefined:激活卡显「激活为桌面端功能」诚实空态。
+   */
+  activation?: ActivationState;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -344,6 +352,8 @@ export function SettingsDialog({
               <div data-slot="main-settings" className="flex flex-col gap-card-gap">
                 <AccountInformationCard viewModel={viewModel} />
                 <AccountBindingCard douyinAccount={viewModel.douyinAccount} />
+                {/* [T-167] 激活状态卡:桌面端读真态四态诚实展示;web/未装配 → 桌面端专属空态。 */}
+                <ActivationStatusCard activation={activation} />
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="preferences" active={tab}>
@@ -856,6 +866,231 @@ function AccountBindingCard({
             {feedback.text}
           </p>
         ) : null}
+      </div>
+    </SectionCard>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ActivationStatusCard — 激活状态面板 (T-167)
+// ---------------------------------------------------------------------------
+//
+// P5 已落地一机一码激活授权(activation-service 状态机)。本卡在「账户」页签展示激活态,
+// 让用户看到:激活状态(四态徽章)/ 授权类型 / 到期 / 机器码 / 最后在线校验 / 购买续期入口。
+//
+// 数据源:route server 侧 `getActivationService().getStatus()` 本地读(**不打网络**,纯展示),
+// 结果作为 `activation` prop 传入。四态诚实映射(铁律:未激活/web 态如实展示,不假装已激活):
+//   active  → 已激活(绿)   grace → 离线宽限(黄)
+//   expired → 已过期(红)   inactive → 未激活(灰)
+// web / 未装配 / 读失败 → activation undefined:显「激活为桌面端功能」诚实空态。
+//
+// **纯展示卡,无 client 交互 / 无网络**:激活/续期动作走 /activate 页(P5),此处只给购买入口链接。
+
+// 四态 → 徽章文案 + 色调(brand token,与设置页其它徽章同款视觉)。
+const ACTIVATION_BADGE: Record<
+  ActivationState["status"],
+  { label: string; className: string }
+> = {
+  active: {
+    label: "已激活",
+    className: "border-success/40 bg-success-soft text-success",
+  },
+  grace: {
+    label: "离线宽限",
+    className: "border-warning/40 bg-warning-soft text-warning",
+  },
+  expired: {
+    label: "已过期",
+    className: "border-danger/40 bg-danger-soft text-danger",
+  },
+  inactive: {
+    label: "未激活",
+    className: "border-border bg-surface-subtle text-muted-foreground",
+  },
+};
+
+// licenseMode + expiresAt → 授权类型中文。永久(expiresAt=null)优先显「永久激活」;
+// 否则据 licenseMode 映射(TIME→时间型),未知 mode 回退原值(诚实,不臆造)。
+function licenseModeLabel(
+  licenseMode: string | null,
+  expiresAt: string | null,
+): string {
+  if (expiresAt === null && licenseMode !== null) return "永久激活";
+  if (licenseMode === null) return "—";
+  const upper = licenseMode.toUpperCase();
+  if (upper === "TIME") return "时间型";
+  if (upper === "PERMANENT") return "永久激活";
+  return licenseMode; // 未知授权类型:透传原值,不臆造。
+}
+
+// ISO → 本地日期(YYYY-MM-DD)。SSR/CSR 一致:显式用 UTC 切片而非 toLocaleString
+// (避免 hydration 时区漂移)。脏值 → 原样透传(诚实,不吞)。
+function formatIsoDate(iso: string): string {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return iso;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+// 到期展示:永久 → 「永久」;grace → 「离线宽限中」;否则显到期日期。
+function expiryLabel(
+  status: ActivationState["status"],
+  expiresAt: string | null,
+): string {
+  if (expiresAt === null) return "永久";
+  if (status === "grace") return "离线宽限中";
+  return formatIsoDate(expiresAt);
+}
+
+// 机器码截断显示:一机一码,完整码较长,前 8 + 后 6 中间省略(hover title 显全码)。
+function truncateMachineId(machineId: string): string {
+  if (machineId.length <= 18) return machineId;
+  return `${machineId.slice(0, 8)}…${machineId.slice(-6)}`;
+}
+
+// T-168 官网已上线:购买 / 续期激活码 → 官网购买联系区(#buy)。DNS(creatoros.aitongban.cloud
+// → 152.136.151.58)配好后即可达;桌面端点此按钮外开浏览器到购买页。
+const PURCHASE_URL = "https://creatoros.aitongban.cloud/#buy";
+
+function ActivationStatusCard({
+  activation,
+}: {
+  activation?: ActivationState;
+}) {
+  // web / 未装配 / 读失败 → 诚实空态卡:激活是桌面端功能,web 端不显激活态(绝不假装)。
+  if (!activation) {
+    return (
+      <SectionCard
+        title="激活"
+        description="桌面端一机一码激活授权"
+        action={
+          <Badge
+            data-slot="activation-status-badge"
+            data-status="unavailable"
+            variant="outline"
+            className="border-border bg-surface-subtle text-muted-foreground"
+          >
+            桌面端专属
+          </Badge>
+        }
+      >
+        <div
+          data-slot="activation-status-card"
+          data-activation-available="false"
+          className="flex items-start gap-3 rounded-md border border-border bg-surface-subtle p-3"
+        >
+          <div
+            aria-hidden="true"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"
+          >
+            <ShieldCheck className="size-5" />
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-sm font-medium text-foreground">
+              激活为桌面端功能
+            </span>
+            <span className="text-xs text-muted-foreground">
+              一机一码激活授权仅在桌面客户端生效。Web 端无需激活,可直接使用。
+            </span>
+          </div>
+        </div>
+      </SectionCard>
+    );
+  }
+
+  const badge = ACTIVATION_BADGE[activation.status];
+
+  return (
+    <SectionCard
+      title="激活"
+      description="桌面端一机一码激活授权"
+      action={
+        <Badge
+          data-slot="activation-status-badge"
+          data-status={activation.status}
+          variant="outline"
+          className={badge.className}
+        >
+          {badge.label}
+        </Badge>
+      }
+    >
+      <div
+        data-slot="activation-status-card"
+        data-activation-available="true"
+        className="flex flex-col gap-3"
+      >
+        <SettingsFormRow
+          label="授权类型"
+          controlId="activation-license-mode"
+          help="时间型有到期日;永久激活不过期。"
+        >
+          <span
+            id="activation-license-mode"
+            data-slot="activation-license-mode"
+            className="text-sm text-foreground"
+          >
+            {licenseModeLabel(activation.licenseMode, activation.expiresAt)}
+          </span>
+        </SettingsFormRow>
+        <SettingsFormRow
+          label="到期"
+          controlId="activation-expires-at"
+          help="离线宽限期内仍可使用,请尽快联网复校授权。"
+        >
+          <span
+            id="activation-expires-at"
+            data-slot="activation-expires-at"
+            className="text-sm text-foreground"
+          >
+            {expiryLabel(activation.status, activation.expiresAt)}
+          </span>
+        </SettingsFormRow>
+        {activation.machineId ? (
+          <SettingsFormRow
+            label="机器码"
+            controlId="activation-machine-id"
+            help="一机一码,绑定当前设备。换机请联系作者迁移授权。"
+          >
+            <span
+              id="activation-machine-id"
+              data-slot="activation-machine-id"
+              title={activation.machineId}
+              className="font-mono text-xs text-muted-foreground"
+            >
+              {truncateMachineId(activation.machineId)}
+            </span>
+          </SettingsFormRow>
+        ) : null}
+        {activation.lastOnlineCheckAt ? (
+          <SettingsFormRow
+            label="最后在线校验"
+            controlId="activation-last-check"
+            help="上次成功联网复校授权的时间。"
+          >
+            <span
+              id="activation-last-check"
+              data-slot="activation-last-check"
+              className="text-sm text-muted-foreground"
+            >
+              {formatIsoDate(activation.lastOnlineCheckAt)}
+            </span>
+          </SettingsFormRow>
+        ) : null}
+        <div className="flex justify-end">
+          {/* 购买 / 续期激活码 → 官网(T-168 待定,先占位 #)。用 <a> 而非 client 动作:
+              纯外链跳转,无需 router;激活/续期真流程走 /activate 页(P5)。 */}
+          <Button asChild variant="outline" size="sm">
+            <a
+              href={PURCHASE_URL}
+              data-slot="activation-purchase-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <KeyRound aria-hidden="true" className="size-4 shrink-0" />
+              购买 / 续期激活码
+            </a>
+          </Button>
+        </div>
       </div>
     </SectionCard>
   );

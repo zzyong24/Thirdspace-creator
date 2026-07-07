@@ -236,4 +236,124 @@ describe("SettingsPage", () => {
     const main = container.querySelector('main[data-page="settings"]');
     expect(main).not.toBeNull();
   });
+
+  // [T-167] 激活状态卡(账户页签)。desktop 有激活态 → 四态徽章 + 授权类型/到期/机器码;
+  // web/未装配(activation undefined)→ 诚实空态「激活为桌面端功能」,绝不假装已激活。
+  describe("ActivationStatusCard (T-167)", () => {
+    it("web / 未装配(activation undefined)→ 诚实空态卡「桌面端专属」", async () => {
+      await renderSettings();
+      const card = document.querySelector('[data-slot="activation-status-card"]');
+      expect(card).not.toBeNull();
+      expect(card!.getAttribute("data-activation-available")).toBe("false");
+      const badge = document.querySelector(
+        '[data-slot="activation-status-badge"]',
+      );
+      expect(badge?.getAttribute("data-status")).toBe("unavailable");
+      expect(badge?.textContent).toContain("桌面端专属");
+      expect(card!.textContent).toContain("激活为桌面端功能");
+    });
+
+    it("已激活(active)→ 绿徽章 + 授权类型/到期/机器码/最后在线校验", async () => {
+      await renderSettings({
+        activation: {
+          status: "active",
+          machineId: "MACHINE-abcdef0123456789-XYZ",
+          licenseMode: "TIME",
+          expiresAt: "2027-12-31T00:00:00.000Z",
+          activatedAt: "2026-07-06T00:00:00.000Z",
+          lastOnlineCheckAt: "2026-07-06T00:00:00.000Z",
+        },
+      });
+      const card = document.querySelector('[data-slot="activation-status-card"]');
+      expect(card).not.toBeNull();
+      expect(card!.getAttribute("data-activation-available")).toBe("true");
+      const badge = document.querySelector(
+        '[data-slot="activation-status-badge"]',
+      );
+      expect(badge?.getAttribute("data-status")).toBe("active");
+      expect(badge?.textContent).toContain("已激活");
+      // 授权类型:TIME → 时间型;到期显日期;机器码截断 + 完整码在 title。
+      expect(
+        document.querySelector('[data-slot="activation-license-mode"]')
+          ?.textContent,
+      ).toBe("时间型");
+      expect(
+        document.querySelector('[data-slot="activation-expires-at"]')
+          ?.textContent,
+      ).toBe("2027-12-31");
+      const machine = document.querySelector(
+        '[data-slot="activation-machine-id"]',
+      );
+      expect(machine?.getAttribute("title")).toBe("MACHINE-abcdef0123456789-XYZ");
+      expect(
+        document.querySelector('[data-slot="activation-last-check"]')
+          ?.textContent,
+      ).toBe("2026-07-06");
+      // 购买/续期入口存在。
+      expect(
+        document.querySelector('[data-slot="activation-purchase-link"]'),
+      ).not.toBeNull();
+    });
+
+    it("永久激活(expiresAt=null)→ 授权类型「永久激活」+ 到期「永久」", async () => {
+      await renderSettings({
+        activation: {
+          status: "active",
+          machineId: "M-perm",
+          licenseMode: "PERMANENT",
+          expiresAt: null,
+          activatedAt: "2026-07-06T00:00:00.000Z",
+          lastOnlineCheckAt: "2026-07-06T00:00:00.000Z",
+        },
+      });
+      expect(
+        document.querySelector('[data-slot="activation-license-mode"]')
+          ?.textContent,
+      ).toBe("永久激活");
+      expect(
+        document.querySelector('[data-slot="activation-expires-at"]')
+          ?.textContent,
+      ).toBe("永久");
+    });
+
+    it("离线宽限(grace)→ 黄徽章 + 到期「离线宽限中」", async () => {
+      await renderSettings({
+        activation: {
+          status: "grace",
+          machineId: "M-grace",
+          licenseMode: "TIME",
+          expiresAt: "2027-12-31T00:00:00.000Z",
+          activatedAt: "2026-07-06T00:00:00.000Z",
+          lastOnlineCheckAt: "2026-06-01T00:00:00.000Z",
+        },
+      });
+      const badge = document.querySelector(
+        '[data-slot="activation-status-badge"]',
+      );
+      expect(badge?.getAttribute("data-status")).toBe("grace");
+      expect(badge?.textContent).toContain("离线宽限");
+      expect(
+        document.querySelector('[data-slot="activation-expires-at"]')
+          ?.textContent,
+      ).toBe("离线宽限中");
+    });
+
+    it("已过期(expired)→ 红徽章「已过期」", async () => {
+      await renderSettings({
+        activation: {
+          status: "expired",
+          machineId: "M-exp",
+          licenseMode: "TIME",
+          expiresAt: "2026-01-01T00:00:00.000Z",
+          activatedAt: "2025-07-06T00:00:00.000Z",
+          lastOnlineCheckAt: "2025-12-01T00:00:00.000Z",
+        },
+      });
+      const badge = document.querySelector(
+        '[data-slot="activation-status-badge"]',
+      );
+      expect(badge?.getAttribute("data-status")).toBe("expired");
+      expect(badge?.textContent).toContain("已过期");
+    });
+  });
 });

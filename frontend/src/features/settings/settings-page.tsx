@@ -115,6 +115,26 @@ export interface SettingsPageProps {
    * 投影成可序列化条目)。设置弹窗「技能」页签据此渲列表/详情;缺省(单测)→ 诚实空态。
    */
   readonly skills?: readonly SkillItem[];
+  /**
+   * [T-167] 桌面激活状态(route server 侧经 `getActivationService().getStatus()` 本地读,
+   * **不打网络**)。「账户」页签的激活卡据此显四态徽章 + 授权类型 / 到期 / 机器码 / 最后在线校验。
+   * web / 未装配 / 读失败 → undefined:激活卡显「激活为桌面端功能」诚实空态,绝不假装已激活。
+   */
+  readonly activation?: ActivationState;
+}
+
+/**
+ * [T-167] 激活状态视图段。字段直接来自 `activation-service.getStatus()`(`ActivationStatusView`);
+ * 全部可序列化(server → client props)。缺激活态 → status="inactive"、其余 null(诚实四态)。
+ */
+export interface ActivationState {
+  readonly status: "inactive" | "active" | "grace" | "expired";
+  readonly machineId: string | null;
+  readonly licenseMode: string | null;
+  /** ISO;null = 永久激活。 */
+  readonly expiresAt: string | null;
+  readonly activatedAt: string | null;
+  readonly lastOnlineCheckAt: string | null;
 }
 
 /** The identity fields the Settings account card binds to (`userResource`). */
@@ -346,6 +366,7 @@ export function SettingsPage({
   douyinAccount,
   preferences,
   skills,
+  activation,
 }: SettingsPageProps = {}) {
   const base = viewModel ?? buildSettingsViewModel();
   const withIdentity = identity ? applyIdentity(base, identity) : base;
@@ -371,7 +392,7 @@ export function SettingsPage({
       data-settings-id="settings-root"
       className="flex flex-col gap-section-gap"
     >
-      <SettingsDialog viewModel={vm} skills={skills} />
+      <SettingsDialog viewModel={vm} skills={skills} activation={activation} />
     </main>
   );
 }

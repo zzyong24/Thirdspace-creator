@@ -18,7 +18,11 @@ import { resolveMachineId, type MachineIdFs } from "./machine-id";
 // **不真联网**:license 客户端用全局 fetch,只有桌面态门控/激活页才真调(测试不走这条装配路径)。
 
 export type { ActivationService } from "./activation-service";
-export type { ActivationCheck, ActivationStatus } from "./activation-service";
+export type {
+  ActivationCheck,
+  ActivationStatus,
+  ActivationStatusView,
+} from "./activation-service";
 export { isDesktopRuntime } from "./is-desktop";
 export { resolveActivationConfig } from "./activation-config";
 

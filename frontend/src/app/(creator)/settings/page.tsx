@@ -25,6 +25,7 @@ import {
   type MultimodalModelState,
   type MultimodalModelsState,
   type StorageState,
+  type ActivationState,
 } from "@/features/settings/settings-page";
 import {
   buildSkillItems,
@@ -33,6 +34,10 @@ import {
 } from "@/features/settings/skills-data";
 import { createServerClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
+// [T-167] 激活状态面板:server 侧本地读 getActivationService().getStatus()(**不打网络**)。
+// 仅桌面态(isDesktopRuntime)有意义;web/未装配 → 传 undefined → 卡片显「桌面端专属」空态。
+import { getActivationService } from "@/server/persistence-client";
+import { isDesktopRuntime } from "@/server/activation";
 // T-077a 技能页签:server 侧读 ai-worker REGISTRY(listTemplates 惰性 bootstrap 内置 18+)
 // + exportSkillSchema(Zod → JSON Schema,只读展示)。仅只读,不在此写 REGISTRY。
 import {
@@ -263,6 +268,28 @@ export default async function SettingsRoutePage() {
     skills = undefined;
   }
 
+  // [T-167] 桌面激活状态(账户页签的激活卡)。**只桌面态读**:isDesktopRuntime 判 false
+  // (web/dev)→ 不触碰 getActivationService(),直接留 undefined → 卡片显「桌面端专属」诚实
+  // 空态,绝不假装已激活。桌面态经 getStatus() 本地读(不打网络);读失败(装配态/transport
+  // race)也退回 undefined(同 web 空态,诚实兜底)。
+  let activation: ActivationState | undefined;
+  if (isDesktopRuntime()) {
+    try {
+      const status = await (await getActivationService()).getStatus();
+      activation = {
+        status: status.status,
+        machineId: status.machineId,
+        licenseMode: status.licenseMode,
+        expiresAt: status.expiresAt,
+        activatedAt: status.activatedAt,
+        lastOnlineCheckAt: status.lastOnlineCheckAt,
+      };
+    } catch {
+      // 激活服务不可用(装配态 / transport race)→ 退回空态卡(诚实,不误显激活)。
+      activation = undefined;
+    }
+  }
+
   return (
     <SettingsPage
       identity={identity}
@@ -271,6 +298,7 @@ export default async function SettingsRoutePage() {
       multimodalModels={multimodalModels}
       preferences={preferences}
       skills={skills}
+      activation={activation}
     />
   );
 }

@@ -47,6 +47,17 @@ export interface ActivateOutcome {
   expiresAt: string | null;
 }
 
+// T-167 设置页「激活状态」面板 —— 本地读态(**不打网络**,纯展示用)。
+// 缺激活态 → status="inactive"、其余 null;有态则据本地过期 + 离线宽限判 status。
+export interface ActivationStatusView {
+  status: ActivationStatus;
+  machineId: string | null;
+  licenseMode: string | null;
+  expiresAt: string | null; // ISO;null = 永久
+  activatedAt: string | null;
+  lastOnlineCheckAt: string | null;
+}
+
 export interface ActivationServiceDeps {
   repo: ActivationRepository;
   license: LicenseClient;
@@ -72,6 +83,21 @@ function withinGrace(
   if (Number.isNaN(t)) return false;
   const elapsedMs = now.getTime() - t;
   return elapsedMs <= graceDays * 24 * 60 * 60 * 1000;
+}
+
+// T-167 —— 纯本地态判定(**不联网**),供设置页 getStatus() 复用 check() 里的到期 + 宽限逻辑:
+//   - 本地已过期(expiresAt ≤ now)→ expired。
+//   - 未过期 + 距上次在线校 ≤ graceDays → active(在宽限窗内视作有效)。
+//   - 未过期 + 超宽限窗 → grace(本地未过期但久未在线复校,展示离线宽限中,等一次在线校收敛)。
+// 注:这是纯本地判定,不真联网;真正的 active/grace/expired 收敛仍以 check() 的在线校为准。
+export function deriveLocalStatus(
+  stored: StoredActivation,
+  graceDays: number,
+  now: Date,
+): ActivationStatus {
+  if (isLocallyExpired(stored.expiresAt, now)) return "expired";
+  if (withinGrace(stored.lastOnlineCheckAt, graceDays, now)) return "active";
+  return "grace";
 }
 
 export function createActivationService(deps: ActivationServiceDeps) {
@@ -194,7 +220,32 @@ export function createActivationService(deps: ActivationServiceDeps) {
     };
   }
 
-  return { activate, check };
+  // T-167 设置页展示用:本地读态(**不打网络**)。读 repo 的 StoredActivation,用注入的
+  // now/graceDays 本地计算 status(复用 deriveLocalStatus,与 check() 同一到期/宽限判定)。
+  // 缺激活态 → status="inactive"、其余 null。绝不触发在线校验(与 check() 的关键差异)。
+  async function getStatus(): Promise<ActivationStatusView> {
+    const stored = await repo.read();
+    if (!stored) {
+      return {
+        status: "inactive",
+        machineId: null,
+        licenseMode: null,
+        expiresAt: null,
+        activatedAt: null,
+        lastOnlineCheckAt: null,
+      };
+    }
+    return {
+      status: deriveLocalStatus(stored, graceDays, now()),
+      machineId: stored.machineId,
+      licenseMode: stored.licenseMode,
+      expiresAt: stored.expiresAt,
+      activatedAt: stored.activatedAt,
+      lastOnlineCheckAt: stored.lastOnlineCheckAt,
+    };
+  }
+
+  return { activate, check, getStatus };
 }
 
 export type ActivationService = ReturnType<typeof createActivationService>;
