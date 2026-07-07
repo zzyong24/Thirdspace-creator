@@ -122,18 +122,37 @@ function bundlePlaywright() {
   } catch (e) {
     throw new Error(`[build-sidecar] 解析 Playwright 包失败: ${e.message}`);
   }
+  const pnpmDir = join(SIDECAR_RUNTIME, "node_modules", ".pnpm");
+  let pnpmOverwrote = 0;
   for (const [pkg, srcDir] of [
     ["@playwright/test", testDir],
     ["playwright", pwDir],
     ["playwright-core", coreDir],
   ]) {
+    // ① frontend/node_modules 直拷(直接 import 路径 / 自检走这)。
     const destDir = join(destNm, pkg);
     rmSync(destDir, { recursive: true, force: true });
     mkdirSync(dirname(destDir), { recursive: true });
     cpSync(srcDir, destDir, { recursive: true, dereference: true });
+    // ② **覆盖 Next-traced 的 .pnpm 残缺版**(关键):Next serverExternalPackages 运行时从
+    //   `.pnpm/<pkg>@ver/node_modules/<pkg>` 解析这些外置包,而 Next tracing 只带了 JS、**漏了
+    //   browsers.json 等数据文件** → chromium.launch 报「Cannot find module …/browsers.json」→ 扫码崩。
+    //   (T-170 首版只拷 frontend/node_modules,Next 不从那解析 → 真机仍崩;真 app dispatch 才暴露。)
+    //   用完整仓库版整体覆盖 .pnpm 下每个匹配条目。
+    const key = pkg.replace("/", "+"); // @playwright/test → @playwright+test
+    if (existsSync(pnpmDir)) {
+      for (const e of readdirSync(pnpmDir).filter((x) => x.startsWith(key + "@"))) {
+        const d2 = join(pnpmDir, e, "node_modules", pkg);
+        rmSync(d2, { recursive: true, force: true });
+        mkdirSync(dirname(d2), { recursive: true });
+        cpSync(srcDir, d2, { recursive: true, dereference: true });
+        pnpmOverwrote++;
+      }
+    }
     console.log(`[build-sidecar]   实拷 ${pkg} ← ${srcDir}`);
   }
-  // 自检:sidecar node 从 frontend/ 能否解析 @playwright/test(=运行时扫码 import 的那个)。
+  console.log(`[build-sidecar]   覆盖 .pnpm 残缺版 ${pnpmOverwrote} 处`);
+  // 自检①:sidecar node 从 frontend/ 能否解析 @playwright/test。
   const check = spawnSync(
     process.execPath,
     ["-e", "require.resolve('@playwright/test'); console.log('OK')"],
@@ -141,10 +160,22 @@ function bundlePlaywright() {
   );
   if (check.status !== 0 || !`${check.stdout}`.includes("OK")) {
     throw new Error(
-      `[build-sidecar] 自检失败:sidecar 内仍解析不到 @playwright/test\n${check.stdout}${check.stderr}`,
+      `[build-sidecar] 自检①失败:sidecar 内仍解析不到 @playwright/test\n${check.stdout}${check.stderr}`,
     );
   }
-  console.log("[build-sidecar]   ✓ 自检:sidecar 内 @playwright/test 可解析");
+  // 自检②(硬):**每个** .pnpm playwright-core 必须有 browsers.json(chromium.launch 依赖的浏览器
+  //   注册表;缺它=扫码必崩)。这条是上一版假通过的教训 —— 只查 resolve 不查数据文件不够。
+  if (existsSync(pnpmDir)) {
+    const cores = readdirSync(pnpmDir).filter((x) => x.startsWith("playwright-core@"));
+    for (const e of cores) {
+      const bj = join(pnpmDir, e, "node_modules", "playwright-core", "browsers.json");
+      if (!existsSync(bj)) {
+        throw new Error(`[build-sidecar] 自检②失败:.pnpm/${e} 缺 browsers.json → chromium 起不来`);
+      }
+    }
+    console.log(`[build-sidecar]   ✓ 自检②:${cores.length} 个 .pnpm playwright-core 均含 browsers.json`);
+  }
+  console.log("[build-sidecar]   ✓ 自检①:sidecar 内 @playwright/test 可解析");
 }
 
 function main() {
