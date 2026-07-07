@@ -27,7 +27,7 @@
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -178,6 +178,45 @@ function bundlePlaywright() {
   console.log("[build-sidecar]   ✓ 自检①:sidecar 内 @playwright/test 可解析");
 }
 
+// [T-172] macOS：产出 sidecar 内的 mini `.app`，让 node sidecar 在 Dock 里隐身。
+//   结构（随 sidecar.tar.gz 一起打包，首启由 lib.rs 系统 tar 解压到可写 runtime 目录）：
+//     <SIDECAR_RUNTIME>/server.app/Contents/MacOS/creatoros-server   ← node 二进制（0755）
+//     <SIDECAR_RUNTIME>/server.app/Contents/Info.plist               ← LSUIElement=true 隐身声明
+//   为何有效：LaunchServices 读 .app 的 Info.plist；LSUIElement/LSBackgroundOnly 让进程不注册为 GUI app
+//     → 不进 Dock（实测 lsappinfo ApplicationType=NULL）。dylib 不放这里（仍在 sidecar/lib/，lib.rs 注
+//     DYLD_LIBRARY_PATH 指过去，绝对路径可用），故 .app 里只放 node 本体，保持精简。
+function buildServerApp() {
+  const appRoot = join(SIDECAR_RUNTIME, "server.app");
+  const macosDir = join(appRoot, "Contents", "MacOS");
+  rmSync(appRoot, { recursive: true, force: true });
+  mkdirSync(macosDir, { recursive: true });
+  const innerBin = join(macosDir, "creatoros-server");
+  copyFileSync(process.execPath, innerBin); // node 二进制即内层可执行体
+  chmodSync(innerBin, 0o755);
+  // Info.plist：LSUIElement + LSBackgroundOnly 双保险（agent 型进程，无 Dock、无菜单栏）。
+  const plist = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key>
+  <string>creatoros-server</string>
+  <key>CFBundleIdentifier</key>
+  <string>cloud.aitongban.creatoros.sidecar</string>
+  <key>CFBundleName</key>
+  <string>creatoros-server</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>LSUIElement</key>
+  <true/>
+  <key>LSBackgroundOnly</key>
+  <true/>
+</dict>
+</plist>
+`;
+  writeFileSync(join(appRoot, "Contents", "Info.plist"), plist);
+  console.log(`[build-sidecar]   [T-172] 产出 sidecar/server.app（LSUIElement，Dock 隐身）→ ${innerBin}`);
+}
+
 function main() {
   // [T-164 P6] tauri.conf.json beforeBuildCommand 会在 tauri build 阶段再跑本脚本重建 sidecar,
   //   会**覆盖 desktop:package 步2 的 JS 混淆结果**。package.mjs 在 tauri build 前已跑过
@@ -315,6 +354,17 @@ function main() {
     }
   }
 
+  // [T-172] macOS:把 node 二进制额外包进 sidecar 内的一个 mini `.app`,让它在 Dock 里隐身。
+  //   根因:裸 node 被 macOS LaunchServices 注册成 GUI app → 在 Dock 显通用图标(用户看到「两个图标」)。
+  //   实测(lsappinfo):把 node 放进带 `LSUIElement=true` + `LSBackgroundOnly=true` 的 Info.plist 的
+  //   `.app` 里、运行其内层二进制 → `lsappinfo info -only ApplicationType <pid>` 返回 NULL(=不进 Dock);
+  //   裸 node 则注册为 GUI app。故打包版 macOS 走 server.app,由 lib.rs 直接 spawn 其内层二进制(见 lib.rs
+  //   #[cfg(target_os = "macos")] 分支)。dylib 仍 co-ship 到 sidecar/lib/(lib.rs 注 DYLD 指过去,绝对路径)。
+  //   Win/Linux 不受影响:那边 Dock 图标不是问题,仍走 externalBin 的 binaries/creatoros-server(见下)。
+  if (platform === "darwin") {
+    buildServerApp();
+  }
+
   // [T-170] 实拷 Playwright 包进 sidecar(修 Next tracing 漏 @playwright/test → 打包扫码崩)。
   //   放在打 tarball 之前,让 playwright 包进 tarball。
   bundlePlaywright();
@@ -325,6 +375,9 @@ function main() {
 
   console.log(`[build-sidecar] ✅ 完成。`);
   console.log(`    sidecar bin (=node runtime): ${sidecarPath}`);
+  if (platform === "darwin") {
+    console.log(`    [T-172] mac Dock 隐身 wrapper: ${join(SIDECAR_RUNTIME, "server.app", "Contents", "MacOS", "creatoros-server")}`);
+  }
   console.log(`    standalone 运行目录         : ${SIDECAR_RUNTIME}`);
   console.log(`    server.js                  : ${join(SIDECAR_RUNTIME, "frontend", "server.js")}`);
   console.log(`    bundle tarball             : ${join(SRC_TAURI, "sidecar.tar.gz")}`);

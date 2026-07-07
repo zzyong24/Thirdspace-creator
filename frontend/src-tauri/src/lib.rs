@@ -14,7 +14,12 @@ use std::time::Duration;
 
 use base64::Engine as _;
 use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
+// [T-172] CommandChild / CommandEvent / ShellExt 只在非 macOS(走 tauri sidecar externalBin)分支用;
+//   macOS 走 std::process 直接 spawn server.app(Dock 隐身),不引这些,故按平台条件 import,免 macOS
+//   下 unused import / dead_code warning。
+#[cfg(not(target_os = "macos"))]
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+#[cfg(not(target_os = "macos"))]
 use tauri_plugin_shell::ShellExt;
 
 /// T-147 P2 本地加密 —— master key 在 OS keychain 里的服务名/账号。keyring 用这对
@@ -131,8 +136,38 @@ fn resolve_machine_id(app: &AppHandle) -> Option<String> {
 }
 
 /// sidecar 子进程句柄。存进 Tauri state 以便退出时 kill,避免 orphan Node 进程。
+///
+/// [T-172] 两种 spawn 方式各自的子进程类型不同,用 enum 统一存:
+///   · macOS:走 `std::process::Command` 直接 spawn server.app 内层二进制(为让 LaunchServices 读
+///     server.app 的 Info.plist LSUIElement → Dock 隐身),句柄是 `std::process::Child`;
+///   · Win/Linux:走 tauri-plugin-shell 的 `app.shell().sidecar(...)`(externalBin),句柄是 `CommandChild`。
+/// 退出(RunEvent::ExitRequested)时对当前平台的句柄 kill,避免 orphan sidecar。
+enum SidecarChild {
+    /// macOS：std 直接 spawn 的子进程(走 server.app 内层二进制,Dock 隐身)。
+    #[cfg(target_os = "macos")]
+    Std(std::process::Child),
+    /// Win/Linux：tauri sidecar(externalBin)的子进程。
+    #[cfg(not(target_os = "macos"))]
+    Shell(CommandChild),
+}
+
+impl SidecarChild {
+    fn kill(self) {
+        match self {
+            #[cfg(target_os = "macos")]
+            SidecarChild::Std(mut c) => {
+                let _ = c.kill();
+            }
+            #[cfg(not(target_os = "macos"))]
+            SidecarChild::Shell(c) => {
+                let _ = c.kill();
+            }
+        }
+    }
+}
+
 #[derive(Default)]
-struct SidecarHandle(Mutex<Option<CommandChild>>);
+struct SidecarHandle(Mutex<Option<SidecarChild>>);
 
 /// 找一个空闲 TCP 端口(绑 127.0.0.1:0 让 OS 分配后立即释放)。sidecar 用它启 Next server,
 /// WebView 指向同一端口。避免固定端口在多实例/占用时冲突。
@@ -298,68 +333,133 @@ pub fn run() {
             // 作为**运行时**桌面标记(激活门只桌面拦 / web 跳的唯一判据)。
             let machine_id = resolve_machine_id(&app.handle());
 
-            // 4) spawn sidecar:externalBin `creatoros-server`(= 随包 node runtime,按 triple 命名,
-            //    见 tauri.conf.json externalBin + scripts/desktop/build-sidecar.mjs)。以 server.js
-            //    绝对路径为 arg 让该 node 跑 next standalone server。注入:
+            // 4) spawn sidecar(= 随包 node runtime 跑 next standalone server.js)。注入:
             //      PORT / HOSTNAME —— next standalone server.js 读这两个 env 决定 listen 地址;
             //      CREATOROS_DB_DIR —— DB 落盘目录(resolveDbDriver 会认,见 backend/src/db.ts §3b);
-            //      NODE_ENV=production;DYLD/LD_LIBRARY_PATH —— 让 node 找到 co-ship 的 dylib。
-            let sidecar = app
-                .shell()
-                .sidecar("creatoros-server")
-                .expect("sidecar `creatoros-server` 未在 tauri.conf.json externalBin 注册")
-                .args([server_js_str])
-                .env("PORT", &port_str)
-                .env("HOSTNAME", "127.0.0.1")
-                .env("CREATOROS_DB_DIR", &db_dir_str)
-                .env("NODE_ENV", "production")
-                // T-147 P5 —— 运行时桌面标记(激活门只桌面拦 / web 跳的唯一判据;build 期的
-                // CREATOROS_DESKTOP 只决定 output:standalone,运行时需在这里再注入一次)。
-                .env("CREATOROS_DESKTOP", "1")
-                .env("DYLD_LIBRARY_PATH", &lib_dir)
-                .env("LD_LIBRARY_PATH", &lib_dir);
+            //      NODE_ENV=production;CREATOROS_DESKTOP=1;DYLD/LD_LIBRARY_PATH —— 让 node 找到 co-ship 的 dylib;
+            //      CREATOROS_MASTER_KEY / CREATOROS_MACHINE_ID —— 取到才注入(取不到 sidecar/node 侧各有降级)。
+            //
+            // [T-172] 平台分叉:
+            //   · macOS 走 `std::process::Command` 直接 spawn `<sidecar>/server.app/Contents/MacOS/creatoros-server`
+            //     (mini .app,Info.plist 含 LSUIElement=true)→ LaunchServices 读到该声明 → node 不注册为
+            //     GUI app、不进 Dock(解决用户看到「两个图标」)。tauri sidecar 走的是 externalBin 那份**裸**
+            //     node,会被注册进 Dock,故 macOS 不用它。
+            //   · Win/Linux 保持原 `app.shell().sidecar("creatoros-server")`(externalBin)逻辑不动
+            //     (那边 Dock 图标不是问题;Windows console 窗口是另一议题,本任务不管)。
+            let handle_state = app.state::<SidecarHandle>();
 
-            // T-147 P2 —— 注入 keychain master key(取到才注入;取不到 sidecar 走降级)。
-            let sidecar = match &master_key {
-                Some(k) => sidecar.env("CREATOROS_MASTER_KEY", k),
-                None => sidecar,
-            };
+            #[cfg(target_os = "macos")]
+            {
+                use std::io::{BufRead, BufReader};
+                use std::process::Stdio;
 
-            // T-147 P5 —— 注入机器指纹(取到才注入;取不到 node 侧走落盘回退,仍同机稳定)。
-            let sidecar = match &machine_id {
-                Some(m) => sidecar.env("CREATOROS_MACHINE_ID", m),
-                None => sidecar,
-            };
+                // server.app 内层二进制(build-sidecar.mjs 在 sidecar/server.app 里产出;随 tarball 解压到位)。
+                let inner_bin = sidecar_dir
+                    .join("server.app")
+                    .join("Contents")
+                    .join("MacOS")
+                    .join("creatoros-server");
 
-            let (mut rx, child) = sidecar
-                .spawn()
-                .expect("启动 creatoros-server sidecar 失败");
-
-            // 存句柄供退出 kill。
-            app.state::<SidecarHandle>()
-                .0
-                .lock()
-                .unwrap()
-                .replace(child);
-
-            // 把 sidecar 的 stdout/stderr 打到本壳日志(排障用)。
-            tauri::async_runtime::spawn(async move {
-                while let Some(event) = rx.recv().await {
-                    match event {
-                        CommandEvent::Stdout(line) => {
-                            eprintln!("[sidecar] {}", String::from_utf8_lossy(&line).trim_end());
-                        }
-                        CommandEvent::Stderr(line) => {
-                            eprintln!("[sidecar:err] {}", String::from_utf8_lossy(&line).trim_end());
-                        }
-                        CommandEvent::Terminated(payload) => {
-                            eprintln!("[sidecar] terminated: {payload:?}");
-                            break;
-                        }
-                        _ => {}
-                    }
+                let mut cmd = std::process::Command::new(&inner_bin);
+                cmd.arg(&server_js_str)
+                    .env("PORT", &port_str)
+                    .env("HOSTNAME", "127.0.0.1")
+                    .env("CREATOROS_DB_DIR", &db_dir_str)
+                    .env("NODE_ENV", "production")
+                    .env("CREATOROS_DESKTOP", "1")
+                    .env("DYLD_LIBRARY_PATH", &lib_dir)
+                    .env("LD_LIBRARY_PATH", &lib_dir)
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped());
+                if let Some(k) = &master_key {
+                    cmd.env("CREATOROS_MASTER_KEY", k);
                 }
-            });
+                if let Some(m) = &machine_id {
+                    cmd.env("CREATOROS_MACHINE_ID", m);
+                }
+
+                let mut child = cmd
+                    .spawn()
+                    .expect("启动 creatoros-server sidecar(server.app 内层二进制)失败");
+
+                // 把 sidecar 的 stdout/stderr 各起线程读打到本壳日志(排障用)。
+                if let Some(out) = child.stdout.take() {
+                    std::thread::spawn(move || {
+                        for line in BufReader::new(out).lines().map_while(Result::ok) {
+                            eprintln!("[sidecar] {line}");
+                        }
+                    });
+                }
+                if let Some(err) = child.stderr.take() {
+                    std::thread::spawn(move || {
+                        for line in BufReader::new(err).lines().map_while(Result::ok) {
+                            eprintln!("[sidecar:err] {line}");
+                        }
+                    });
+                }
+
+                // 存句柄供退出 kill(避免 orphan sidecar)。
+                handle_state
+                    .0
+                    .lock()
+                    .unwrap()
+                    .replace(SidecarChild::Std(child));
+            }
+
+            #[cfg(not(target_os = "macos"))]
+            {
+                let sidecar = app
+                    .shell()
+                    .sidecar("creatoros-server")
+                    .expect("sidecar `creatoros-server` 未在 tauri.conf.json externalBin 注册")
+                    .args([server_js_str])
+                    .env("PORT", &port_str)
+                    .env("HOSTNAME", "127.0.0.1")
+                    .env("CREATOROS_DB_DIR", &db_dir_str)
+                    .env("NODE_ENV", "production")
+                    .env("CREATOROS_DESKTOP", "1")
+                    .env("DYLD_LIBRARY_PATH", &lib_dir)
+                    .env("LD_LIBRARY_PATH", &lib_dir);
+
+                let sidecar = match &master_key {
+                    Some(k) => sidecar.env("CREATOROS_MASTER_KEY", k),
+                    None => sidecar,
+                };
+                let sidecar = match &machine_id {
+                    Some(m) => sidecar.env("CREATOROS_MACHINE_ID", m),
+                    None => sidecar,
+                };
+
+                let (mut rx, child) = sidecar.spawn().expect("启动 creatoros-server sidecar 失败");
+
+                handle_state
+                    .0
+                    .lock()
+                    .unwrap()
+                    .replace(SidecarChild::Shell(child));
+
+                // 把 sidecar 的 stdout/stderr 打到本壳日志(排障用)。
+                tauri::async_runtime::spawn(async move {
+                    while let Some(event) = rx.recv().await {
+                        match event {
+                            CommandEvent::Stdout(line) => {
+                                eprintln!("[sidecar] {}", String::from_utf8_lossy(&line).trim_end());
+                            }
+                            CommandEvent::Stderr(line) => {
+                                eprintln!(
+                                    "[sidecar:err] {}",
+                                    String::from_utf8_lossy(&line).trim_end()
+                                );
+                            }
+                            CommandEvent::Terminated(payload) => {
+                                eprintln!("[sidecar] terminated: {payload:?}");
+                                break;
+                            }
+                            _ => {}
+                        }
+                    }
+                });
+            }
 
             // 5) 另起线程等就绪 → 在主线程建窗口指向 sidecar。就绪探测跑在后台,不阻塞 setup。
             std::thread::spawn(move || {
@@ -390,9 +490,10 @@ pub fn run() {
         .expect("Tauri 应用构建失败")
         .run(|app_handle, event| {
             // 退出前 kill sidecar,避免 orphan Node 进程占端口/落盘句柄。
+            // [T-172] 句柄是 SidecarChild(mac=std::process::Child / Win-Linux=CommandChild),统一 kill。
             if let RunEvent::ExitRequested { .. } = event {
                 if let Some(child) = app_handle.state::<SidecarHandle>().0.lock().unwrap().take() {
-                    let _ = child.kill();
+                    child.kill();
                 }
             }
         });

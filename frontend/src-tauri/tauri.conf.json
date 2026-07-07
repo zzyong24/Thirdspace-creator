@@ -30,7 +30,7 @@
     "resources": [
       "sidecar.tar.gz"
     ],
-    "createUpdaterArtifacts": true,
+    "createUpdaterArtifacts": false,
     "macOS": {
       "minimumSystemVersion": "10.15",
       "signingIdentity": null
