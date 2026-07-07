@@ -140,6 +140,8 @@ import {
   createReviewGateRepository,
 } from "@creatoros/backend/modules/review";
 import { runScriptReview } from "@creatoros/backend/modules/ai-runtime";
+import { runMaterialSummary } from "@creatoros/backend/modules/ai-runtime";
+import { runEmbedTexts } from "@creatoros/backend/modules/ai-runtime";
 import {
   createLearningsService,
   createLearningsTransport,
@@ -330,42 +332,8 @@ import {
   type PublishingCenterQueryService,
 } from "@creatoros/backend/modules/query-services";
 
-// [T-146 切片 a SPEC §1.2 + §11 gate 处置·卖点收窄] 文档 AI 摘要要点卡的内联 skill 模板 + 输出
-// 契约。**复用现有文本模型**(script.draft capability)但用一份**内联** PromptTemplate + 显式 JSON
-// schema(逃生口,不注册 registry、不新增 capability,合 gate 处置)。摘要铁律:只提炼原文已有的
-// 事实/数据/卖点,不补充原文没有的;卖点尤其收窄(只引用原文已声明,AI 不创造)。
-const MATERIAL_SUMMARY_TEMPLATE = {
-  id: "material.summarize.inline",
-  version: "v1",
-  system: [
-    "你是短视频创作者的资料分析员。把创作者上传的第一手资料浓缩成结构化「资料要点卡」,供后续写文案紧扣。",
-    "",
-    "铁律(违反即失职):",
-    "1. 只提炼原文**已明确写出**的事实、数据、卖点 —— 逐字有据。原文没写的,一个字都不许补。",
-    "2. keyPoints:资料的核心论点/信息(≤6 条,每条一句)。",
-    "3. facts:可核验的具体事实与数据(数字、规格、时间、价格等),照抄原文口径,不改写不四舍五入。",
-    "4. sellingPoints(卖点):**只允许摘录原文已声明的卖点**,AI 绝不创造新卖点。",
-    "   ✅ 原文写「续航 20 小时」→ sellingPoints 可含「长续航(20 小时)」。",
-    "   ❌ 原文没提防水 → 绝不得写「防水」;拿不准是不是卖点 → 不放进 sellingPoints。",
-    "5. 拿不准、原文没有的字段 → 留空数组。宁缺毋滥,绝不编造。",
-    "只输出 JSON,不要多余文字。",
-  ].join("\n"),
-  template: "以下为创作者上传的资料全文(可能已截断):\n\n{{fullText}}",
-  requiredFacets: ["fullText"] as const,
-} as const;
-
-// materialSummary 输出契约(JSON Schema,frontend 不引 zod)。runStructuredNode 经 asSchema 吃它,
-// generateObject 绑它校验 + 不符自动重试;落空→文本兜底同 schema 再校验(跨模型健壮)。
-const MATERIAL_SUMMARY_SCHEMA = {
-  type: "object",
-  properties: {
-    keyPoints: { type: "array", items: { type: "string" } },
-    facts: { type: "array", items: { type: "string" } },
-    sellingPoints: { type: "array", items: { type: "string" } },
-  },
-  required: ["keyPoints", "facts"],
-  additionalProperties: false,
-};
+// [T-163 Batch 4] 文档 AI 摘要节点(模板 + JSON schema + runStructuredNode)已提到 backend
+// ai-runtime 的 runMaterialSummary —— 组合根只解析 spec + 映射错误,AI 逻辑不住前端包。
 
 // Project-entity operations now served by REAL SQL persistence (@creatoros/backend
 // over pglite). Everything else falls back to the in-memory mock. Listed
@@ -3061,36 +3029,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   }
                   throw err;
                 }
-                const { modelFor, runStructuredNode } = await import(
-                  "@creatoros/ai-worker"
-                );
-                const { jsonSchema } = await import("ai");
-                const { object } = await runStructuredNode<{
-                  keyPoints?: unknown;
-                  facts?: unknown;
-                  sellingPoints?: unknown;
-                }>({
-                  model: modelFor(spec),
-                  // 内联 skill 模板(不注册 registry):抽全文摘要成结构化要点卡。
-                  template: MATERIAL_SUMMARY_TEMPLATE,
-                  facets: { fullText },
-                  // 逃生口:显式传 JSON schema(frontend 不引 zod,经 ai 的 jsonSchema 包装),覆盖 registry。
-                  outputSchema: jsonSchema(
-                    MATERIAL_SUMMARY_SCHEMA as Parameters<typeof jsonSchema>[0],
-                  ),
-                });
-                const asStrings = (v: unknown): string[] =>
-                  Array.isArray(v)
-                    ? v.filter(
-                        (x): x is string =>
-                          typeof x === "string" && x.trim().length > 0,
-                      )
-                    : [];
-                return {
-                  keyPoints: asStrings(object.keyPoints),
-                  facts: asStrings(object.facts),
-                  sellingPoints: asStrings(object.sellingPoints),
-                };
+                // [T-163 Batch 4] AI 摘要节点(模板 + jsonSchema + runStructuredNode)已下沉
+                // backend ai-runtime;组合根只解析 spec + 映射未配错误,把 spec 传进去。
+                return runMaterialSummary(spec, fullText);
               },
             },
           );
@@ -5046,20 +4987,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     };
   };
 
-  // 批量算 embedding(Vercel AI SDK embedMany;provider 经 ai-worker embeddingModelFor
-  // 解析,anthropic 协议诚实抛错)。
+  // [T-163 Batch 4] 批量算 embedding 已下沉 backend ai-runtime 的 runEmbedTexts(embedMany +
+  // embeddingModelFor 用 embedding key,不住前端包);组合根只解析 spec + 传入。
   const embedTexts = async (
     spec: NonNullable<Awaited<ReturnType<typeof resolveEmbedSpec>>>,
     texts: string[],
-  ): Promise<number[][]> => {
-    const { embeddingModelFor } = await import("@creatoros/ai-worker");
-    const { embedMany } = await import("ai");
-    const { embeddings } = await embedMany({
-      model: embeddingModelFor(spec),
-      values: texts,
-    });
-    return embeddings;
-  };
+  ): Promise<number[][]> => runEmbedTexts(spec, texts);
 
   // 单条知识 → search_document 重建(标题+正文摘要;embedding 可配则同步算)。
   // best-effort:任何失败只丢索引增益,业务真值不回滚。

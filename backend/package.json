@@ -26,7 +26,7 @@
     "@creatoros/ai-worker": "workspace:*",
     "@creatoros/contract": "workspace:*",
     "@electric-sql/pglite": "^0.2.0",
-    "ai": "^7.0.4",
+    "ai": "7.0.4",
     "drizzle-orm": "^0.36.0",
     "node-cron": "^4.5.0",
     "pg": "^8.22.0",
