@@ -7,7 +7,9 @@ import {
   agentConfigurations,
   storageConfigs,
   skillConfigOverrides,
+  skillConfigOverrideVersions,
 } from "./settings.db-schema";
+import { desc } from "drizzle-orm";
 
 // Settings repository (foundation §5.2) — user-scoped queries ONLY. Every method
 // takes a RequestContext and filters/stamps on `ctx.userId` (foundation §1/§2,
@@ -39,6 +41,8 @@ export type StorageConfigRow = typeof storageConfigs.$inferSelect;
 // so these ops are NOT ctx-filtered (unlike every other repo method here). Each column
 // is nullable = 未配 → 装配期归一 undefined → `?? base` 回退内置模板.
 export type SkillConfigOverrideRow = typeof skillConfigOverrides.$inferSelect;
+export type SkillConfigOverrideVersionRow =
+  typeof skillConfigOverrideVersions.$inferSelect;
 
 // item B — the editable storage-config fields (every key optional; only provided
 // keys are written on the user_id-PK upsert).
@@ -138,6 +142,18 @@ export interface SettingsRepository {
   putSkillConfigOverride(
     ctx: RequestContext,
     body: SkillConfigOverridePutBody,
+  ): Promise<SkillConfigOverrideRow>;
+  // [T-165] 版本历史:putSkillConfigOverride 每次 upsert 追加一条快照(见其实现)。
+  // listSkillConfigOverrideVersions = 按记录时刻倒序列某 skill 的历史版本(最新在前)。
+  listSkillConfigOverrideVersions(
+    id: string,
+  ): Promise<SkillConfigOverrideVersionRow[]>;
+  // rollbackSkillConfigOverride = 取某历史版本快照,重新 put 为当前配置(回滚本身也留一条
+  // 新版本 → 审计链不断)。versionId 不存在 / 不属于该 override → 抛错(诚实,不静默)。
+  rollbackSkillConfigOverride(
+    ctx: RequestContext,
+    id: string,
+    versionId: string,
   ): Promise<SkillConfigOverrideRow>;
   seedPreferences(rows: UserPreferenceRow[]): Promise<void>;
   seedModels(rows: ModelConfigurationRow[]): Promise<void>;
@@ -437,7 +453,71 @@ export function createSettingsRepository(
           set: updateSet,
         })
         .returning();
-      return inserted[0]!;
+      const row = inserted[0]!;
+      // [T-165] 追加本次生效配置的版本快照(不覆盖历史,供一键回滚)。快照取**写后**的当前
+      // 行状态(含 onConflict 合并后的完整字段),createdAt = 该次 updatedAt(同源、便于按序排)。
+      await db.insert(skillConfigOverrideVersions).values({
+        id: deps.nextId("skover"),
+        overrideId: row.id,
+        version: row.version,
+        system: row.system,
+        template: row.template,
+        tools: row.tools,
+        requiredFacets: row.requiredFacets,
+        outputSchema: row.outputSchema,
+        updatedBy: row.updatedBy,
+        createdAt: row.updatedAt,
+      });
+      return row;
+    },
+
+    async listSkillConfigOverrideVersions(id) {
+      // 某 skill 的历史版本,最新在前(按 createdAt 倒序;同刻回落 version 号次)。
+      return db
+        .select()
+        .from(skillConfigOverrideVersions)
+        .where(eq(skillConfigOverrideVersions.overrideId, id))
+        .orderBy(
+          desc(skillConfigOverrideVersions.createdAt),
+          desc(skillConfigOverrideVersions.id),
+        );
+    },
+
+    async rollbackSkillConfigOverride(ctx, id, versionId) {
+      // 取目标历史版本快照(须存在且属于该 override —— 诚实,不静默回滚到错的东西)。
+      const snap = await db
+        .select()
+        .from(skillConfigOverrideVersions)
+        .where(
+          and(
+            eq(skillConfigOverrideVersions.id, versionId),
+            eq(skillConfigOverrideVersions.overrideId, id),
+          ),
+        )
+        .limit(1);
+      const target = snap[0];
+      if (!target) {
+        throw new Error(
+          `rollbackSkillConfigOverride: 版本 ${versionId} 不存在或不属于 skill "${id}"`,
+        );
+      }
+      // 重新 put 快照字段为当前配置 —— 复用 putSkillConfigOverride(version++ + 自身再记一条
+      // 版本快照 = 回滚也进历史,审计链不断)。jsonb 列存 unknown,归一回 body 形状。
+      return this.putSkillConfigOverride(ctx, {
+        id,
+        system: target.system ?? undefined,
+        template: target.template ?? undefined,
+        tools: Array.isArray(target.tools)
+          ? (target.tools as string[])
+          : undefined,
+        requiredFacets: Array.isArray(target.requiredFacets)
+          ? (target.requiredFacets as string[])
+          : undefined,
+        outputSchema:
+          target.outputSchema && typeof target.outputSchema === "object"
+            ? (target.outputSchema as Record<string, unknown>)
+            : undefined,
+      });
     },
 
     async seedPreferences(rows) {

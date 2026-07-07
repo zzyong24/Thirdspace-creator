@@ -281,3 +281,72 @@ describe("settings.repository (storage config — item B)", () => {
     expect(totalA).toBe(5500);
   });
 });
+
+describe("[T-165] skill_config_overrides 版本历史 + 回滚", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("每次 putSkillConfigOverride 追加一条版本快照(不覆盖历史)", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+    await repo.putSkillConfigOverride(ctxA, {
+      id: "chatbox.topic",
+      system: "A 版",
+    });
+    await repo.putSkillConfigOverride(ctxA, {
+      id: "chatbox.topic",
+      system: "B 版",
+    });
+    const versions = await repo.listSkillConfigOverrideVersions("chatbox.topic");
+    expect(versions).toHaveLength(2);
+    // 最新在前(nextId 递增,desc(id) 兜同刻 createdAt)。
+    expect(versions[0]!.system).toBe("B 版");
+    expect(versions[0]!.version).toBe("2");
+    expect(versions[1]!.system).toBe("A 版");
+    expect(versions[1]!.version).toBe("1");
+    // 快照带 overrideId + 审计字段。
+    expect(versions[0]!.overrideId).toBe("chatbox.topic");
+    expect(versions[0]!.updatedBy).toBe("user-a");
+  });
+
+  it("rollbackSkillConfigOverride:取历史版本重新生效,且回滚本身也记一条新版本(审计链不断)", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+    await repo.putSkillConfigOverride(ctxA, {
+      id: "chatbox.topic",
+      system: "原始 A",
+      tools: ["topic.generate"],
+    });
+    await repo.putSkillConfigOverride(ctxA, {
+      id: "chatbox.topic",
+      system: "试验 B（要回滚掉）",
+    });
+    // 当前 = B。
+    const cur = await repo.getSkillConfigOverride("chatbox.topic");
+    expect(cur!.system).toBe("试验 B（要回滚掉）");
+    // 取 A 版本(列表末尾=最早),回滚。
+    const versions = await repo.listSkillConfigOverrideVersions("chatbox.topic");
+    const vA = versions.find((v) => v.system === "原始 A")!;
+    const rolled = await repo.rollbackSkillConfigOverride(
+      ctxA,
+      "chatbox.topic",
+      vA.id,
+    );
+    // 当前配置回到 A 的 system + tools。
+    expect(rolled.system).toBe("原始 A");
+    expect(rolled.tools).toEqual(["topic.generate"]);
+    // 回滚也进历史:第 3 条版本快照(version 号继续 ++)。
+    const after = await repo.listSkillConfigOverrideVersions("chatbox.topic");
+    expect(after).toHaveLength(3);
+    expect(after[0]!.system).toBe("原始 A"); // 最新那条=回滚产生的
+    expect(after[0]!.version).toBe("3");
+  });
+
+  it("回滚到不存在 / 不属于该 skill 的版本 → 抛错(诚实,不静默)", async () => {
+    const repo = createSettingsRepository(db, DEPS);
+    await repo.putSkillConfigOverride(ctxA, { id: "chatbox.topic", system: "X" });
+    await expect(
+      repo.rollbackSkillConfigOverride(ctxA, "chatbox.topic", "不存在的版本 id"),
+    ).rejects.toThrow(/不存在或不属于/);
+  });
+});

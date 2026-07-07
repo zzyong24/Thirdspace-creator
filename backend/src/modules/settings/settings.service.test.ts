@@ -178,6 +178,15 @@ function makeFakeRepo(
       else state._prompts.push(row);
       return row;
     },
+    // [T-165] 版本历史 mock(service test 不覆盖这条路径,给满足 interface 的最小 stub)。
+    async listSkillConfigOverrideVersions() {
+      return [];
+    },
+    async rollbackSkillConfigOverride(_ctx, id, versionId) {
+      throw new Error(
+        `mock settings repo: rollbackSkillConfigOverride 未实现(${id}/${versionId})`,
+      );
+    },
     async seedPreferences() {},
     async seedModels() {},
     async seedAgents() {},

@@ -101,6 +101,30 @@ export type SkillConfigOverrideRow = InferSelectModel<
   typeof skillConfigOverrides
 >;
 
+// [T-165] skill_config_overrides 版本历史 —— 每次 putSkillConfigOverride upsert 追加一条本次
+// 生效配置的**快照**(不覆盖历史),供一键回滚(A/B 失败秒回)。additive、独立表、无外键
+// (override 行删了历史仍可查/回滚)。overrideId = skill_config_overrides.id;version 同步那次的
+// 审计版本号;created_at = 记录时刻(与 override.updated_at 同值,单独列便于按记录序排)。
+export const skillConfigOverrideVersions = pgTable(
+  "skill_config_override_versions",
+  {
+    id: text("id").primaryKey(), // deps.nextId("skover")
+    overrideId: text("override_id").notNull(),
+    version: text("version"),
+    system: text("system"),
+    template: text("template"),
+    tools: jsonb("tools"),
+    requiredFacets: jsonb("required_facets"),
+    outputSchema: jsonb("output_schema"),
+    updatedBy: text("updated_by"),
+    createdAt: text("created_at").notNull(),
+  },
+);
+
+export type SkillConfigOverrideVersionRow = InferSelectModel<
+  typeof skillConfigOverrideVersions
+>;
+
 // Raw DDL applied at db init (pglite has no migration runner wired here yet).
 //   - model_config_user_capability: the (user_id, capability) unique upsert key
 //     putModel's ON CONFLICT DO UPDATE targets.

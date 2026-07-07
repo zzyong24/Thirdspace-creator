@@ -197,6 +197,13 @@
       "when": 1782381400000,
       "tag": "0027_activation_state",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1782381500000,
+      "tag": "0028_skill_config_override_versions",
+      "breakpoints": true
     }
   ]
 }

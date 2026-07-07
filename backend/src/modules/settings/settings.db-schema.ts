@@ -11,6 +11,10 @@ export {
   agentConfigurations,
   storageConfigs,
   skillConfigOverrides,
+  skillConfigOverrideVersions,
   SETTINGS_DDL,
 } from "@creatoros/backend";
-export type { SkillConfigOverrideRow } from "@creatoros/backend";
+export type {
+  SkillConfigOverrideRow,
+  SkillConfigOverrideVersionRow,
+} from "@creatoros/backend";

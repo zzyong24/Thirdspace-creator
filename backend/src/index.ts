@@ -43,9 +43,13 @@ export {
   agentConfigurations,
   storageConfigs,
   skillConfigOverrides,
+  skillConfigOverrideVersions,
   SETTINGS_DDL,
 } from "./schema/settings";
-export type { SkillConfigOverrideRow } from "./schema/settings";
+export type {
+  SkillConfigOverrideRow,
+  SkillConfigOverrideVersionRow,
+} from "./schema/settings";
 export {
   knowledgeItems,
   knowledgeRevisions,
