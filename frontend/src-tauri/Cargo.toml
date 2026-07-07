@@ -1,0 +1,33 @@
+[package]
+name = "creatoros-desktop"
+version = "0.1.0"
+description = "CreatorOS 桌面壳(Tauri v2)—— T-147 P1 底座"
+authors = ["CreatorOS"]
+edition = "2021"
+# Tauri 2 需要 Rust 1.77+;本机 1.94.1 满足。
+rust-version = "1.77"
+
+# main.rs 编译成同名可执行体;lib.rs 承载可复用的 run() 入口(Tauri 官方脚手架惯例,
+# 便于将来接 mobile / 单测)。
+[lib]
+name = "creatoros_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# tauri 核心:壳/窗口/生命周期。features 保持最小(默认已含 wry webview)。
+tauri = { version = "2", features = [] }
+# shell 插件:唯一用途 = spawn/kill Next standalone sidecar 二进制(externalBin)。
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# 发布体积:release 用 opt-level=s + LTO + strip(桌面壳求小)。
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

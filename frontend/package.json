@@ -21,7 +21,12 @@
     "visual:capture-current": "node scripts/visual/capture-current.mjs",
     "visual:diff": "node scripts/visual/diff.mjs",
     "fixtures:export": "tsx --tsconfig tsconfig.json scripts/fixtures/export-canonical-json.mts",
-    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "tauri": "tauri",
+    "desktop:build-sidecar": "node scripts/desktop/build-sidecar.mjs",
+    "desktop:dev": "node scripts/desktop/build-sidecar.mjs && tauri dev --config src-tauri/tauri.dev.conf.json",
+    "desktop:build": "tauri build",
+    "desktop:package": "node scripts/desktop/package.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.6",
@@ -61,6 +66,8 @@
     "@axe-core/playwright": "4.11.3",
     "@playwright/test": "1.60.0",
     "@tailwindcss/postcss": "4.3.1",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/cli": "^2.11.4",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "14.6.1",

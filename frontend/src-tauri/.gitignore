@@ -1,0 +1,7 @@
+# [T-147 P1] Rust/Tauri 构建产物,不入库。
+/target/
+# Tauri 生成的 capability schema / 平台工程文件(build 时再生)。
+/gen/
+# sidecar 组装产物:next standalone 运行目录 + 随包 node 二进制(体积大,build 时由 build-sidecar.mjs 再生)。
+/sidecar/
+/binaries/
