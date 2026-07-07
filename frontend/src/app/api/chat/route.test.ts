@@ -45,7 +45,7 @@ vi.mock("@/server/persistence-client", () => ({
   }),
 }));
 
-vi.mock("@/server/ai/chat-runner", () => ({
+vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
   runChatStream: (...args: unknown[]) => runChatStream(...args),
 }));
 

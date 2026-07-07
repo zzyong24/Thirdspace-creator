@@ -20,7 +20,7 @@ import { describeUserError } from "@/lib/ai-error-humanize";
 import type {
   BriefFillSuggestion,
   BriefCurrentDetail,
-} from "@/server/ai/chat-tools";
+} from "@creatoros/backend/modules/ai-runtime";
 
 // 建议字段 → 中文名(与立项工作台 BriefWorkbench 的字段口径一致)。
 const BRIEF_FIELD_LABELS: ReadonlyArray<{

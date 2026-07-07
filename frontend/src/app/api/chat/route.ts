@@ -6,8 +6,10 @@ import {
   OwnershipError,
 } from "@creatoros/backend/modules/identity";
 import { getChatRuntime } from "@/server/persistence-client";
-import { runChatStream } from "@/server/ai/chat-runner";
-import type { ChatContext } from "@/server/ai/chat-context";
+import {
+  runChatStream,
+  type ChatContext,
+} from "@creatoros/backend/modules/ai-runtime";
 import { readSessionCookie } from "../v1/auth/_session";
 import { resolveRequestContext } from "@/lib/request-context.server";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
@@ -163,6 +165,9 @@ export async function POST(req: Request): Promise<Response> {
         // (T-039a 复盘对象)与 accounts(T-039b 账号画像)—— 装配点 assembleCreativeContext 拿不到
         // 就跳过对应 facet。改为整体展开:composition root 绑什么,装配层就能读什么,不再逐个漏接。
         ...runtime.context,
+        // [T-163] 错误→人话端口:chat-tools 下沉 backend 后不再直 import 前端 ai-error-humanize
+        // (它含 ArtifactType 依赖),改由这里(前端边界)把 humanizeAiError 注入。
+        humanizeError: humanizeAiError,
         resolveModelSpec: runtime.resolveModelSpec,
         // 只读 context 工具(context.projects/knowledge/materials)的真数据读端口(user-scoped)。
         contextReaders: runtime.contextReaders,

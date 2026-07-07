@@ -30,7 +30,7 @@ import type {
   ContextProjectDetailToolResult,
   ContextProjectsToolResult,
   ContextPublicationsToolResult,
-} from "@/server/ai/chat-tools";
+} from "@creatoros/backend/modules/ai-runtime";
 
 import {
   ChatArtifactListCard,

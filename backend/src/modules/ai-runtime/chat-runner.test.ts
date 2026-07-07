@@ -66,6 +66,8 @@ function makeDeps(over: Partial<AssembleChatDeps> = {}): {
   const resolveModelSpec = vi.fn(async () => FAKE_SPEC);
   const deps: AssembleChatDeps = {
     resolveModelSpec,
+    // [T-163] humanizeError 端口(下沉后经注入);chat-runner 测试不走 distill 错误路径,回落 null。
+    humanizeError: () => null,
     positioning: {
       getPositioningCenter: async () => ({
         profile: {
@@ -682,7 +684,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const result = (await runToolExecute(a.tools["context.projects"], {
+    const result = (await runToolExecute(a.tools["context.projects"]!, {
       limit: 5,
     })) as { kind: string; items: unknown[] };
     // 读端口收到本请求 ctx(user-scoping 由端口内部据 ctx.userId 收窄)。
@@ -699,7 +701,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       { surface: "project", projectId: "proj-1" },
       deps,
     );
-    const result = (await runToolExecute(a.tools["brief.fill"], {
+    const result = (await runToolExecute(a.tools["brief.fill"]!, {
       targetAudience: "AI 新手",
       contentGoal: "涨粉",
       coreMessage: "", // 空串 → 清洗掉,不进建议
@@ -724,7 +726,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
   it("[T-077b] brief.fill execute:无项目上下文(无 projectId)→ current=null(诚实降级,不编现状)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "project" }, deps);
-    const result = (await runToolExecute(a.tools["brief.fill"], {
+    const result = (await runToolExecute(a.tools["brief.fill"]!, {
       targetAudience: "AI 新手",
     })) as { current: unknown };
     expect(result.current).toBeNull();
@@ -733,7 +735,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
   it("contextReaders 未装配 → context 工具读到空(诚实降级,不报错、不塞假数据)", async () => {
     const { deps } = makeDeps({ contextReaders: undefined });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const result = (await runToolExecute(a.tools["context.knowledge"], {
+    const result = (await runToolExecute(a.tools["context.knowledge"]!, {
       query: "x",
     })) as { kind: string; items: unknown[] };
     expect(result.kind).toBe("context.knowledge");
@@ -770,7 +772,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const result = (await runToolExecute(a.tools["context.project.detail"], {
+    const result = (await runToolExecute(a.tools["context.project.detail"]!, {
       projectId: "proj-1",
     })) as {
       kind: string;
@@ -797,7 +799,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const result = (await runToolExecute(a.tools["context.project.detail"], {
+    const result = (await runToolExecute(a.tools["context.project.detail"]!, {
       projectId: "nope",
     })) as { found: boolean; project: unknown };
     expect(result.found).toBe(false);
@@ -807,7 +809,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
   it("[T-099b] context.positioning.detail execute → 全 facets + downstreamRules + 陈述版本数 + 账号画像", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "positioning" }, deps);
-    const result = (await runToolExecute(a.tools["context.positioning.detail"], {})) as {
+    const result = (await runToolExecute(a.tools["context.positioning.detail"]!, {})) as {
       kind: string;
       found: boolean;
       positioning: {
@@ -836,7 +838,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "positioning" }, deps);
-    const result = (await runToolExecute(a.tools["context.positioning.detail"], {})) as {
+    const result = (await runToolExecute(a.tools["context.positioning.detail"]!, {})) as {
       found: boolean;
       positioning: { profile: unknown; accounts: unknown[] };
     };
@@ -871,7 +873,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const result = (await runToolExecute(a.tools["context.knowledge.detail"], {
+    const result = (await runToolExecute(a.tools["context.knowledge.detail"]!, {
       id: "kn-1",
     })) as {
       kind: string;
@@ -905,7 +907,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const result = (await runToolExecute(a.tools["context.knowledge.detail"], {
+    const result = (await runToolExecute(a.tools["context.knowledge.detail"]!, {
       id: "nope",
     })) as { found: boolean; item: unknown };
     expect(result.found).toBe(false);
@@ -937,7 +939,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const result = (await runToolExecute(a.tools["context.artifacts"], {
+    const result = (await runToolExecute(a.tools["context.artifacts"]!, {
       projectId: "proj-1",
     })) as { kind: string; found: boolean; items: unknown[] };
     expect(listProjectArtifacts).toHaveBeenCalledWith(ctx, { projectId: "proj-1" });
@@ -962,7 +964,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const result = (await runToolExecute(a.tools["context.artifact.text"], {
+    const result = (await runToolExecute(a.tools["context.artifact.text"]!, {
       projectId: "proj-1",
       artifactType: "output_script",
       maxChars: 200,
@@ -999,7 +1001,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const result = (await runToolExecute(a.tools["context.artifact.text"], {
+    const result = (await runToolExecute(a.tools["context.artifact.text"]!, {
       projectId: "p",
       artifactType: "output_script",
     })) as { found: boolean; text: string; totalChars: number };
@@ -1026,7 +1028,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const result = (await runToolExecute(a.tools["context.knowledge.text"], {
+    const result = (await runToolExecute(a.tools["context.knowledge.text"]!, {
       id: "kn-1",
       maxChars: 100,
     })) as {
@@ -1060,14 +1062,14 @@ describe("buildChatAssembly — 三层注入装配", () => {
       },
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const arts = (await runToolExecute(a.tools["context.artifacts"], {
+    const arts = (await runToolExecute(a.tools["context.artifacts"]!, {
       projectId: "p",
     })) as { found: boolean };
-    const atext = (await runToolExecute(a.tools["context.artifact.text"], {
+    const atext = (await runToolExecute(a.tools["context.artifact.text"]!, {
       projectId: "p",
       artifactType: "output_script",
     })) as { found: boolean };
-    const ktext = (await runToolExecute(a.tools["context.knowledge.text"], {
+    const ktext = (await runToolExecute(a.tools["context.knowledge.text"]!, {
       id: "k",
     })) as { found: boolean };
     expect(arts.found).toBe(false);
@@ -1141,7 +1143,7 @@ describe("[T-084a] 联网检索诚实降级 + honestyBlock 动态第 7 条", () 
       searchWeb,
     });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const gather = a.tools["material.gather"] as { execute?: unknown };
+    const gather = a.tools["material.gather"]! as { execute?: unknown };
     const res = (await runToolExecute(gather, { query: "AI 提效" })) as {
       kind: string;
       grounding: string;
@@ -1165,7 +1167,7 @@ describe("[T-084a] 联网检索诚实降级 + honestyBlock 动态第 7 条", () 
     });
     const { deps } = makeDeps({ searchWeb });
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
-    const gather = a.tools["material.gather"] as { execute?: unknown };
+    const gather = a.tools["material.gather"]! as { execute?: unknown };
     const res = (await runToolExecute(gather, { query: "X" })) as {
       grounding: string;
     };

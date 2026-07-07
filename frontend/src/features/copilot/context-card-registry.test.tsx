@@ -15,7 +15,7 @@ vi.mock("@/lib/contract-client", () => ({ client: {} }));
 import {
   allChatTools,
   type ChatToolDeps,
-} from "@/server/ai/chat-tools";
+} from "@creatoros/backend/modules/ai-runtime";
 import {
   CONTEXT_CARD_REGISTRY,
   renderContextCard,

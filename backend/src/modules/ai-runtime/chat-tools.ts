@@ -1,6 +1,4 @@
-import "server-only";
 import { tool, jsonSchema, type Tool, type ToolSet } from "ai";
-import { humanizeAiError } from "@/lib/ai-error-humanize";
 
 // 首波工具(本切片 2 个):topic.generate + topic.enrich,注册为 Vercel AI SDK tool
 // (SPEC §3.4)。每个工具 = { description, parameters(JSON Schema), execute → 复用现有
@@ -21,6 +19,14 @@ import { humanizeAiError } from "@/lib/ai-error-humanize";
 // 路由在请求期解析(resolveModelSpec + assembleCreativeContext)后注入,故工具本身无副作用、
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
+  /**
+   * [T-163] 错误→人话端口。humanizeAiError 所在 lib 含 ArtifactType(前端 domain 类型)依赖,
+   * 故留前端;此处经端口注入(host=chat-runner deps→route 传 humanizeAiError),backend 不跨包
+   * import 前端 lib。返回 null=无匹配人话映射,调用方回落原始 message。
+   */
+  humanizeError: (
+    err: unknown,
+  ) => { message: string; suggestSwitchModel: boolean } | null;
   /**
    * [T-084a] 是否已配置联网检索(web.search capability)—— 由 chat-runner 在装配期探测
    * resolveSearchSpec 是否成功后注入。仅驱动 material.gather 工具的**动态诚实描述**(配了才说
@@ -1910,7 +1916,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             suggestSwitchModel: false,
           };
         } catch (err) {
-          const human = humanizeAiError(err);
+          const human = deps.humanizeError(err);
           return {
             kind: "knowledge.distill",
             atoms: [],

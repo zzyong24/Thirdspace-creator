@@ -30,7 +30,7 @@ import type {
   ContextProjectsToolResult,
   ContextPublicationsToolResult,
   DetailTextField,
-} from "@/server/ai/chat-tools";
+} from "@creatoros/backend/modules/ai-runtime";
 
 /** 清单卡默认可见条数(SPEC §2.3:前 8 条 + 展开全部)。 */
 export const CONTEXT_CARD_VISIBLE = 8;

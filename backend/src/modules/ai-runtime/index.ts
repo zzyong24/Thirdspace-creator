@@ -13,6 +13,11 @@ export * from "./asset-classify-runner";
 export * from "./asset-generate-runner";
 export * from "./calibration-diagnose-runner";
 export * from "./calibration-score-runner";
+// [T-163 Batch 3] chat 流式(runChatStream + tools + context 装配)—— streamText/tool/jsonSchema
+// (Vercel AI SDK)在此;前端只留 /api/chat 薄代理 + useChat UI。
+export * from "./chat-context";
+export * from "./chat-runner";
+export * from "./chat-tools";
 export * from "./comment-qa-sift-runner";
 export * from "./copilot-runner";
 export * from "./creative-context";

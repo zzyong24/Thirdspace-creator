@@ -1,4 +1,3 @@
-import "server-only";
 import {
   streamText,
   convertToModelMessages,
@@ -12,7 +11,7 @@ import {
   assembleCreativeContext,
   formatWorksBrief,
   type ContextDeps,
-} from "@creatoros/backend/modules/ai-runtime";
+} from "./creative-context";
 import {
   resolveSkillForSurface,
   applyFunctionKey,
@@ -36,11 +35,11 @@ import {
   type CandidatesListRaw,
   type PredictionsRaw,
 } from "./chat-tools";
-import { buildSkillsBrief } from "@/lib/chat-tool-labels";
-import { buildEnrichPrompt, parseCard } from "@creatoros/backend/modules/ai-runtime";
-import { buildPositioningPrompt, parseSuggestion } from "@creatoros/backend/modules/ai-runtime";
-import { parseLearnings, reviewFacets } from "@creatoros/backend/modules/ai-runtime";
-import { parseDiagnosis } from "@creatoros/backend/modules/ai-runtime";
+import { buildSkillsBrief } from "@creatoros/contract";
+import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
+import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
+import { parseLearnings, reviewFacets } from "./review-runner";
+import { parseDiagnosis } from "./calibration-diagnose-runner";
 
 // 上下文感知 ChatBox 的服务端装配(SPEC §3.3)—— /api/chat 路由的「大脑」,从这里调
 // streamText。把路由薄壳化:路由只管鉴权 + 解析 body + 持久化;真正的「resolve skill →
@@ -51,6 +50,11 @@ import { parseDiagnosis } from "@creatoros/backend/modules/ai-runtime";
 // (别内联);工具结果 = 候选(execute 复用现有 runner 核心,不直接写实体)。
 
 export interface AssembleChatDeps extends ContextDeps {
+  /** [T-163] 错误→人话端口,透传给 chat-tools(host=route 传前端 humanizeAiError;该 lib 含
+   *  ArtifactType 依赖故留前端,经端口注入不跨包)。 */
+  humanizeError: (
+    err: unknown,
+  ) => { message: string; suggestSwitchModel: boolean } | null;
   /** 按 capability 解析用户配的 model(复用 persistence-client 的 resolveModelSpec)。 */
   resolveModelSpec: (
     ctx: RequestContext,
@@ -317,7 +321,7 @@ export const EXTRA_BRIEF_HEADING = "【本次生成指令(来自对话,优先遵
 
 // [T-081②] positioning.generate 的真实作品画像 —— formatWorksBrief 已移到 creative-context
 // (对话工具 + 后台 task 两条定位生成路径共用,单一真值);此处再导出保持既有 import 面不变。
-export { formatWorksBrief, WORKS_BRIEF_MAX_ROWS } from "@creatoros/backend/modules/ai-runtime";
+export { formatWorksBrief, WORKS_BRIEF_MAX_ROWS } from "./creative-context";
 
 // [T-081①] script.hooks 的 prompt 拼装 —— 从 generateHooks 内联提出为纯函数(可单测):
 // 原文案不变,新增 extraBrief 段(空则整段省略,不注空噪声)。
@@ -510,6 +514,8 @@ export async function buildChatAssembly(
 
   // 5) 工具白名单层:按 skill 白名单挂工具,execute 复用现有 runner 核心产**候选**(非实体)。
   const toolDeps: ChatToolDeps = {
+    // [T-163] 错误→人话端口透传(route 注入前端 humanizeAiError)。
+    humanizeError: deps.humanizeError,
     // [T-084a] 联网检索是否已配 —— 驱动 material.gather 工具的动态诚实描述(上方已探测)。
     searchConfigured,
     generateTopics: async ({ basis, extraBrief }) => {
@@ -841,7 +847,7 @@ export async function buildChatAssembly(
     // capability 走 model-config,多模态可配铁律)。失败抛错由工具 execute 接住转人话渲卡。
     distillKnowledge: async ({ content }) => {
       const { runKnowledgeDistill } = await import(
-        "@creatoros/backend/modules/ai-runtime"
+        "./knowledge-distill-runner"
       );
       return runKnowledgeDistill(
         ctx,

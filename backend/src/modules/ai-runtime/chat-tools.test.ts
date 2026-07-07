@@ -339,6 +339,19 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     error: null as string | null,
   }));
   const deps: ChatToolDeps = {
+    // [T-163] humanizeError 端口(下沉 backend 后经注入,原直连前端 ai-error-humanize)。测试
+    // 复刻其对 new_sensitive(内容安全审核)的映射,使 distill 失败用例断言不变即过;其余回落 null。
+    humanizeError: (err) => {
+      const text = err instanceof Error ? err.message : String(err);
+      if (/new_sensitive|sensitive|1026/i.test(text)) {
+        return {
+          message:
+            "输入被模型平台的内容安全审核拦截(new_sensitive),建议换一个模型或改写后重试",
+          suggestSwitchModel: true,
+        };
+      }
+      return null;
+    },
     generateTopics,
     enrichTopic,
     generateHooks,
@@ -433,7 +446,7 @@ describe("buildChatTools — 白名单过滤(tools 挂载)", () => {
     const { deps } = makeDeps();
     const tools = buildChatTools(["topic.generate"], deps);
     expect(Object.keys(tools)).toEqual(["topic.generate"]);
-    expect(tools["topic.enrich"]).toBeUndefined();
+    expect(tools["topic.enrich"]!).toBeUndefined();
   });
 
   it("首波 5 工具全部可挂(slice 2 补齐 calibration.diagnose / review.analyze / positioning.generate)", () => {
@@ -477,7 +490,7 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
   it("topic.generate.execute 调注入的 generateTopics,返回候选列表(kind=topic.candidates)", async () => {
     const { deps, generateTopics } = makeDeps();
     const tools = buildChatTools(TOPIC_WHITELIST, deps);
-    const result = await runExecute(tools["topic.generate"], {
+    const result = await runExecute(tools["topic.generate"]!, {
       basis: "comments",
     });
     expect(generateTopics).toHaveBeenCalledWith({ basis: "comments" });
@@ -496,14 +509,14 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
   it("topic.generate.execute basis 缺省 positioning", async () => {
     const { deps, generateTopics } = makeDeps();
     const tools = buildChatTools(TOPIC_WHITELIST, deps);
-    await runExecute(tools["topic.generate"], {});
+    await runExecute(tools["topic.generate"]!, {});
     expect(generateTopics).toHaveBeenCalledWith({ basis: "positioning" });
   });
 
   it("topic.enrich.execute 调注入的 enrichTopic,返回选题卡候选(kind=topic.card)", async () => {
     const { deps, enrichTopic } = makeDeps();
     const tools = buildChatTools(TOPIC_WHITELIST, deps);
-    const result = await runExecute(tools["topic.enrich"], {
+    const result = await runExecute(tools["topic.enrich"]!, {
       title: "选题 X",
       angle: "角度 Y",
     });
@@ -520,7 +533,7 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
   it("topic.enrich 返回 null(模型没产可解析卡)→ result.card 为 null(诚实,不假候选)", async () => {
     const { deps } = makeDeps({ enrichTopic: vi.fn(async () => null) });
     const tools = buildChatTools(TOPIC_WHITELIST, deps);
-    const result = (await runExecute(tools["topic.enrich"], {
+    const result = (await runExecute(tools["topic.enrich"]!, {
       title: "X",
     })) as { kind: string; card: unknown };
     expect(result.kind).toBe("topic.card");
@@ -543,7 +556,7 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
   it("calibration.diagnose.execute 调注入的 diagnoseContent,返回诊断候选(kind=calibration.diagnosis)", async () => {
     const { deps, diagnoseContent } = makeDeps();
     const tools = buildChatTools(["calibration.diagnose"], deps);
-    const result = (await runExecute(tools["calibration.diagnose"], {
+    const result = (await runExecute(tools["calibration.diagnose"]!, {
       title: "标题 X",
       script: "脚本 Y",
     })) as { kind: string; diagnosis: { dimensions: unknown[] } | null };
@@ -558,7 +571,7 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
   it("calibration.diagnose 返回 null(没产可解析诊断)→ diagnosis 为 null(诚实)", async () => {
     const { deps } = makeDeps({ diagnoseContent: vi.fn(async () => null) });
     const tools = buildChatTools(["calibration.diagnose"], deps);
-    const result = (await runExecute(tools["calibration.diagnose"], {
+    const result = (await runExecute(tools["calibration.diagnose"]!, {
       title: "X",
     })) as { diagnosis: unknown };
     expect(result.diagnosis).toBeNull();
@@ -567,7 +580,7 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
   it("review.analyze.execute 调注入的 analyzeReview,返回经验候选(kind=review.learnings)", async () => {
     const { deps, analyzeReview } = makeDeps();
     const tools = buildChatTools(["review.analyze"], deps);
-    const result = (await runExecute(tools["review.analyze"], {
+    const result = (await runExecute(tools["review.analyze"]!, {
       subject: "我的某条视频",
     })) as { kind: string; items: unknown[] };
     expect(analyzeReview).toHaveBeenCalledWith({ subject: "我的某条视频" });
@@ -626,7 +639,7 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
   it("positioning.generate.execute 调注入的 generatePositioning,返回定位候选(kind=positioning.suggestion)", async () => {
     const { deps, generatePositioning } = makeDeps();
     const tools = buildChatTools(["positioning.generate"], deps);
-    const result = (await runExecute(tools["positioning.generate"], {})) as {
+    const result = (await runExecute(tools["positioning.generate"]!, {})) as {
       kind: string;
       suggestion: { oneLiner: string } | null;
     };
@@ -784,7 +797,7 @@ describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", (
   it("context.projects.execute 调 listProjects,返回真数据(kind=context.projects)", async () => {
     const { deps, listProjects } = makeDeps();
     const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.projects"], {
+    const result = (await runExecute(tools["context.projects"]!, {
       limit: 3,
     })) as { kind: string; items: unknown[] };
     expect(listProjects).toHaveBeenCalledWith({ limit: 3, offset: 0 });
@@ -795,18 +808,18 @@ describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", (
   it("[T-058②] context.projects limit 缺省 20、封顶 50,offset 兜 0", async () => {
     const { deps, listProjects } = makeDeps();
     const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
-    await runExecute(tools["context.projects"], {}); // 缺省 → 20
+    await runExecute(tools["context.projects"]!, {}); // 缺省 → 20
     expect(listProjects).toHaveBeenLastCalledWith({ limit: 20, offset: 0 });
-    await runExecute(tools["context.projects"], { limit: 999, offset: 30 }); // 超界 → 50
+    await runExecute(tools["context.projects"]!, { limit: 999, offset: 30 }); // 超界 → 50
     expect(listProjects).toHaveBeenLastCalledWith({ limit: 50, offset: 30 });
-    await runExecute(tools["context.projects"], { limit: 0, offset: -3 }); // ≤0 → 20/0
+    await runExecute(tools["context.projects"]!, { limit: 0, offset: -3 }); // ≤0 → 20/0
     expect(listProjects).toHaveBeenLastCalledWith({ limit: 20, offset: 0 });
   });
 
   it("[T-058③] context.comments.execute 调 listComments,带 total/hasMore", async () => {
     const { deps, listComments } = makeDeps();
     const tools = buildChatTools(["context.comments"], deps);
-    const result = (await runExecute(tools["context.comments"], {})) as {
+    const result = (await runExecute(tools["context.comments"]!, {})) as {
       kind: string;
       items: unknown[];
       total: number;
@@ -821,20 +834,20 @@ describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", (
   it("context.knowledge.execute 调 searchKnowledge(query 缺省空串)", async () => {
     const { deps, searchKnowledge } = makeDeps();
     const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.knowledge"], {
+    const result = (await runExecute(tools["context.knowledge"]!, {
       query: "RAG",
     })) as { kind: string; items: unknown[] };
     expect(searchKnowledge).toHaveBeenCalledWith({ query: "RAG", limit: 20 });
     expect(result.kind).toBe("context.knowledge");
     expect(result.items).toHaveLength(1);
-    await runExecute(tools["context.knowledge"], {});
+    await runExecute(tools["context.knowledge"]!, {});
     expect(searchKnowledge).toHaveBeenLastCalledWith({ query: "", limit: 20 });
   });
 
   it("context.materials.execute 调 searchMaterials(query 缺省空串)", async () => {
     const { deps, searchMaterials } = makeDeps();
     const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.materials"], {
+    const result = (await runExecute(tools["context.materials"]!, {
       query: "封面",
       limit: 2,
     })) as { kind: string; items: unknown[] };
@@ -846,7 +859,7 @@ describe("只读 context 工具 execute — 拉真数据(纯读、非候选)", (
   it("context 工具返回空(端口无数据)→ items 为空数组(诚实,不塞假数据)", async () => {
     const { deps } = makeDeps({ listProjects: vi.fn(async () => ({ rows: [], total: 0 })) });
     const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.projects"], {})) as {
+    const result = (await runExecute(tools["context.projects"]!, {})) as {
       items: unknown[];
     };
     expect(result.items).toEqual([]);
@@ -874,7 +887,7 @@ describe("[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文
   it("context.project.detail.execute 调 getProjectDetail 拼全档(found + project 直渲字段)", async () => {
     const { deps, getProjectDetail } = makeDeps();
     const tools = buildChatTools([...DETAIL_WHITELIST], deps);
-    const result = (await runExecute(tools["context.project.detail"], {
+    const result = (await runExecute(tools["context.project.detail"]!, {
       projectId: "proj-1",
     })) as {
       kind: string;
@@ -892,7 +905,7 @@ describe("[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文
   it("context.project.detail.execute 空 projectId → found:false(不调端口,诚实空态)", async () => {
     const { deps, getProjectDetail } = makeDeps();
     const tools = buildChatTools([...DETAIL_WHITELIST], deps);
-    const result = (await runExecute(tools["context.project.detail"], {
+    const result = (await runExecute(tools["context.project.detail"]!, {
       projectId: "   ",
     })) as { found: boolean; project: unknown };
     expect(getProjectDetail).not.toHaveBeenCalled();
@@ -903,7 +916,7 @@ describe("[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文
   it("context.positioning.detail.execute 调 getPositioningDetail(无入参,全 facets/rules/账号画像)", async () => {
     const { deps, getPositioningDetail } = makeDeps();
     const tools = buildChatTools([...DETAIL_WHITELIST], deps);
-    const result = (await runExecute(tools["context.positioning.detail"], {})) as {
+    const result = (await runExecute(tools["context.positioning.detail"]!, {})) as {
       kind: string;
       found: boolean;
       positioning: {
@@ -938,7 +951,7 @@ describe("[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文
       })),
     });
     const tools = buildChatTools([...DETAIL_WHITELIST], deps);
-    const result = (await runExecute(tools["context.knowledge.detail"], {
+    const result = (await runExecute(tools["context.knowledge.detail"]!, {
       id: "kn-1",
     })) as {
       kind: string;
@@ -962,7 +975,7 @@ describe("[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文
   it("context.knowledge.detail.execute 读不到 → found:false + item:null(诚实空态)", async () => {
     const { deps } = makeDeps({ getKnowledgeDetail: vi.fn(async () => null) });
     const tools = buildChatTools([...DETAIL_WHITELIST], deps);
-    const result = (await runExecute(tools["context.knowledge.detail"], {
+    const result = (await runExecute(tools["context.knowledge.detail"]!, {
       id: "nope",
     })) as { found: boolean; item: unknown };
     expect(result.found).toBe(false);
@@ -976,14 +989,14 @@ describe("[T-099b] 详情类 context 工具 execute — 单实体全档 + 长文
       getKnowledgeDetail: undefined,
     });
     const tools = buildChatTools([...DETAIL_WHITELIST], deps);
-    const proj = (await runExecute(tools["context.project.detail"], {
+    const proj = (await runExecute(tools["context.project.detail"]!, {
       projectId: "p",
     })) as { found: boolean };
-    const pos = (await runExecute(tools["context.positioning.detail"], {})) as {
+    const pos = (await runExecute(tools["context.positioning.detail"]!, {})) as {
       found: boolean;
       positioning: { profile: unknown };
     };
-    const kn = (await runExecute(tools["context.knowledge.detail"], {
+    const kn = (await runExecute(tools["context.knowledge.detail"]!, {
       id: "k",
     })) as { found: boolean };
     expect(proj.found).toBe(false);
@@ -1014,7 +1027,7 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
   it("context.artifacts.execute 调 listProjectArtifacts,返回产物清单(kind + found + items)", async () => {
     const { deps, listProjectArtifacts } = makeDeps();
     const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.artifacts"], {
+    const result = (await runExecute(tools["context.artifacts"]!, {
       projectId: "proj-1",
     })) as {
       kind: string;
@@ -1033,7 +1046,7 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
   it("context.artifacts.execute 空 projectId → found:false(不调端口,诚实空态)", async () => {
     const { deps, listProjectArtifacts } = makeDeps();
     const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.artifacts"], {
+    const result = (await runExecute(tools["context.artifacts"]!, {
       projectId: "   ",
     })) as { found: boolean; items: unknown[] };
     expect(listProjectArtifacts).not.toHaveBeenCalled();
@@ -1044,7 +1057,7 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
   it("context.artifact.text.execute 调 getArtifactText,返回窗口(text/offset/totalChars/hasMore)", async () => {
     const { deps, getArtifactText } = makeDeps();
     const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.artifact.text"], {
+    const result = (await runExecute(tools["context.artifact.text"]!, {
       projectId: "proj-1",
       artifactType: "output_script",
       maxChars: 100,
@@ -1080,7 +1093,7 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
     });
     const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
     // maxChars 请求 15000 → 强制夹到 8000。
-    const result = (await runExecute(tools["context.artifact.text"], {
+    const result = (await runExecute(tools["context.artifact.text"]!, {
       projectId: "proj-1",
       artifactType: "output_script",
       maxChars: 15000,
@@ -1098,7 +1111,7 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
       })),
     });
     const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.artifact.text"], {
+    const result = (await runExecute(tools["context.artifact.text"]!, {
       projectId: "proj-1",
       artifactType: "output_script",
       offset: 480,
@@ -1113,7 +1126,7 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
     const { deps, getArtifactText } = makeDeps();
     const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
     // 缺 artifactType → 不调端口。
-    const miss = (await runExecute(tools["context.artifact.text"], {
+    const miss = (await runExecute(tools["context.artifact.text"]!, {
       projectId: "proj-1",
       artifactType: "   ",
     })) as { found: boolean; text: string; totalChars: number };
@@ -1126,7 +1139,7 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
       getArtifactText: vi.fn(async () => null),
     });
     const tools2 = buildChatTools([...FULLTEXT_WHITELIST], deps2);
-    const gone = (await runExecute(tools2["context.artifact.text"], {
+    const gone = (await runExecute(tools2["context.artifact.text"]!, {
       projectId: "p",
       artifactType: "output_script",
     })) as { found: boolean };
@@ -1136,7 +1149,7 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
   it("context.knowledge.text.execute 调 getKnowledgeText,返回窗口 + 元数据(title/knowledgeType)", async () => {
     const { deps, getKnowledgeText } = makeDeps();
     const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.knowledge.text"], {
+    const result = (await runExecute(tools["context.knowledge.text"]!, {
       id: "kn-1",
       maxChars: 50,
     })) as {
@@ -1163,7 +1176,7 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
   it("context.knowledge.text.execute:读不到 → found:false + 空窗口(诚实空态)", async () => {
     const { deps } = makeDeps({ getKnowledgeText: vi.fn(async () => null) });
     const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.knowledge.text"], {
+    const result = (await runExecute(tools["context.knowledge.text"]!, {
       id: "nope",
     })) as { found: boolean; text: string; totalChars: number };
     expect(result.found).toBe(false);
@@ -1178,14 +1191,14 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
       getKnowledgeText: undefined,
     });
     const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
-    const arts = (await runExecute(tools["context.artifacts"], {
+    const arts = (await runExecute(tools["context.artifacts"]!, {
       projectId: "p",
     })) as { found: boolean };
-    const atext = (await runExecute(tools["context.artifact.text"], {
+    const atext = (await runExecute(tools["context.artifact.text"]!, {
       projectId: "p",
       artifactType: "output_script",
     })) as { found: boolean };
-    const ktext = (await runExecute(tools["context.knowledge.text"], {
+    const ktext = (await runExecute(tools["context.knowledge.text"]!, {
       id: "k",
     })) as { found: boolean };
     expect(arts.found).toBe(false);
@@ -1219,7 +1232,7 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
   it("[切片四] context.publications.execute 调 listPublications,带 total/offset/hasMore", async () => {
     const { deps, listPublications } = makeDeps();
     const tools = buildChatTools([...LIST_WHITELIST], deps);
-    const result = (await runExecute(tools["context.publications"], {})) as {
+    const result = (await runExecute(tools["context.publications"]!, {})) as {
       kind: string;
       items: Array<{ platform: string }>;
       total: number;
@@ -1239,14 +1252,14 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
   it("[切片四] context.publications limit 封顶 50、offset 兜 0", async () => {
     const { deps, listPublications } = makeDeps();
     const tools = buildChatTools([...LIST_WHITELIST], deps);
-    await runExecute(tools["context.publications"], { limit: 999, offset: -5 });
+    await runExecute(tools["context.publications"]!, { limit: 999, offset: -5 });
     expect(listPublications).toHaveBeenCalledWith({ limit: 50, offset: 0 });
   });
 
   it("[切片四] context.metrics.execute 给 projectId → 单作品快照(subject + rows + 留存点)", async () => {
     const { deps, getMetrics } = makeDeps();
     const tools = buildChatTools([...LIST_WHITELIST], deps);
-    const result = (await runExecute(tools["context.metrics"], {
+    const result = (await runExecute(tools["context.metrics"]!, {
       projectId: "proj-1",
     })) as {
       kind: string;
@@ -1274,7 +1287,7 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
     }));
     const { deps } = makeDeps({ getMetrics: accountMetrics });
     const tools = buildChatTools([...LIST_WHITELIST], deps);
-    const result = (await runExecute(tools["context.metrics"], {})) as {
+    const result = (await runExecute(tools["context.metrics"]!, {})) as {
       subject: string | null;
       rows: unknown[];
     };
@@ -1289,7 +1302,7 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
   it("[切片五] context.learnings.execute 调 listLearnings(透传 query/type/status)", async () => {
     const { deps, listLearnings } = makeDeps();
     const tools = buildChatTools([...LIST_WHITELIST], deps);
-    const result = (await runExecute(tools["context.learnings"], {
+    const result = (await runExecute(tools["context.learnings"]!, {
       query: "钩子",
       learningType: "hook",
       status: "validated",
@@ -1313,7 +1326,7 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
   it("[切片五] context.candidates.execute 调 listCandidates,带 total/offset/hasMore", async () => {
     const { deps, listCandidates } = makeDeps();
     const tools = buildChatTools([...LIST_WHITELIST], deps);
-    const result = (await runExecute(tools["context.candidates"], {
+    const result = (await runExecute(tools["context.candidates"]!, {
       offset: 0,
     })) as {
       kind: string;
@@ -1332,7 +1345,7 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
   it("[切片五] context.predictions.execute 调 getPredictions,拼 rubric 摘要 + 对照行", async () => {
     const { deps, getPredictions } = makeDeps();
     const tools = buildChatTools([...LIST_WHITELIST], deps);
-    const result = (await runExecute(tools["context.predictions"], {})) as {
+    const result = (await runExecute(tools["context.predictions"]!, {})) as {
       kind: string;
       rubric: { versionNumber: number; dimensionCount: number } | null;
       items: Array<{ subjectTitle: string; dimensions: unknown[] }>;
@@ -1357,21 +1370,21 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
       getPredictions: undefined,
     });
     const tools = buildChatTools([...LIST_WHITELIST], deps);
-    const pub = (await runExecute(tools["context.publications"], {})) as {
+    const pub = (await runExecute(tools["context.publications"]!, {})) as {
       items: unknown[];
       total: number;
     };
-    const met = (await runExecute(tools["context.metrics"], {})) as {
+    const met = (await runExecute(tools["context.metrics"]!, {})) as {
       subject: string | null;
       rows: unknown[];
     };
-    const lrn = (await runExecute(tools["context.learnings"], {})) as {
+    const lrn = (await runExecute(tools["context.learnings"]!, {})) as {
       items: unknown[];
     };
-    const cand = (await runExecute(tools["context.candidates"], {})) as {
+    const cand = (await runExecute(tools["context.candidates"]!, {})) as {
       items: unknown[];
     };
-    const pred = (await runExecute(tools["context.predictions"], {})) as {
+    const pred = (await runExecute(tools["context.predictions"]!, {})) as {
       rubric: unknown;
       items: unknown[];
     };
@@ -1540,7 +1553,7 @@ describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道"
   it("positioning.generate:extraBrief 透传到 deps.generatePositioning(原零入参 → 洞察永远进不去)", async () => {
     const { deps, generatePositioning } = makeDeps();
     const tools = buildChatTools([...ALL], deps);
-    await runExecute(tools["positioning.generate"], {
+    await runExecute(tools["positioning.generate"]!, {
       extraBrief: "定位应转向 AI 工程实战,粉丝评论都在问落地",
     });
     expect(generatePositioning).toHaveBeenCalledWith({
@@ -1551,7 +1564,7 @@ describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道"
   it("topic.generate:extraBrief 透传到 deps.generateTopics(原 schema 未暴露该参)", async () => {
     const { deps, generateTopics } = makeDeps();
     const tools = buildChatTools([...ALL], deps);
-    await runExecute(tools["topic.generate"], {
+    await runExecute(tools["topic.generate"]!, {
       basis: "comments",
       extraBrief: "围绕「上下文工程」出题",
     });
@@ -1564,7 +1577,7 @@ describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道"
   it("script.hooks / script.draft:extraBrief 透传到 generateHooks / draftScript", async () => {
     const { deps } = makeDeps();
     const tools = buildChatTools([...ALL], deps);
-    await runExecute(tools["script.hooks"], {
+    await runExecute(tools["script.hooks"]!, {
       topic: "RAG",
       extraBrief: "hook 要带真实数据",
     });
@@ -1573,7 +1586,7 @@ describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道"
       direction: undefined,
       extraBrief: "hook 要带真实数据",
     });
-    await runExecute(tools["script.draft"], {
+    await runExecute(tools["script.draft"]!, {
       topic: "RAG",
       extraBrief: "按我们刚聊的三段式结构写",
     });
@@ -1587,7 +1600,7 @@ describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道"
   it("calibration.diagnose / review.analyze:extraBrief 透传到 diagnoseContent / analyzeReview", async () => {
     const { deps, diagnoseContent, analyzeReview } = makeDeps();
     const tools = buildChatTools([...ALL], deps);
-    await runExecute(tools["calibration.diagnose"], {
+    await runExecute(tools["calibration.diagnose"]!, {
       title: "标题",
       extraBrief: "重点看转化引导",
     });
@@ -1596,7 +1609,7 @@ describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道"
       script: undefined,
       extraBrief: "重点看转化引导",
     });
-    await runExecute(tools["review.analyze"], {
+    await runExecute(tools["review.analyze"]!, {
       subject: "某条作品",
       extraBrief: "聚焦评论区的负反馈",
     });
@@ -1609,7 +1622,7 @@ describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道"
   it("extraBrief 缺省 → 透传 undefined(行为与旧零入参一致,不注空噪声)", async () => {
     const { deps, generatePositioning } = makeDeps();
     const tools = buildChatTools([...ALL], deps);
-    await runExecute(tools["positioning.generate"], {});
+    await runExecute(tools["positioning.generate"]!, {});
     expect(generatePositioning).toHaveBeenCalledWith({ extraBrief: undefined });
   });
 });
@@ -1638,11 +1651,11 @@ describe("[T-081③] context.projects compact 模式", () => {
   it("compact=true:limit 缺省与封顶放宽到 200", async () => {
     const { deps, listProjects } = makeDeps();
     const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
-    await runExecute(tools["context.projects"], { compact: true }); // 缺省 → 200
+    await runExecute(tools["context.projects"]!, { compact: true }); // 缺省 → 200
     expect(listProjects).toHaveBeenLastCalledWith({ limit: 200, offset: 0 });
-    await runExecute(tools["context.projects"], { compact: true, limit: 999 });
+    await runExecute(tools["context.projects"]!, { compact: true, limit: 999 });
     expect(listProjects).toHaveBeenLastCalledWith({ limit: 200, offset: 0 });
-    await runExecute(tools["context.projects"], { compact: true, limit: 80 });
+    await runExecute(tools["context.projects"]!, { compact: true, limit: 80 });
     expect(listProjects).toHaveBeenLastCalledWith({ limit: 80, offset: 0 });
   });
 
@@ -1662,7 +1675,7 @@ describe("[T-081③] context.projects compact 模式", () => {
     }));
     const { deps } = makeDeps({ listProjects });
     const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.projects"], {
+    const result = (await runExecute(tools["context.projects"]!, {
       compact: true,
     })) as { items: Array<{ title: string }> };
     expect(result.items[0]!.title).toHaveLength(41); // 40 字 + …
@@ -1680,7 +1693,7 @@ describe("[T-081③] context.projects compact 模式", () => {
     }));
     const { deps } = makeDeps({ listProjects });
     const tools = buildChatTools([...CONTEXT_WHITELIST], deps);
-    const result = (await runExecute(tools["context.projects"], {})) as {
+    const result = (await runExecute(tools["context.projects"]!, {})) as {
       items: Array<{ title: string }>;
     };
     expect(listProjects).toHaveBeenLastCalledWith({ limit: 20, offset: 0 });
@@ -1706,7 +1719,7 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
   it("execute 调注入的 distillKnowledge,返回原子候选 + 原文(kind=knowledge.distill)", async () => {
     const { deps, distillKnowledge } = makeDeps();
     const tools = buildChatTools(WHITELIST, deps);
-    const result = await runExecute(tools["knowledge.distill"], {
+    const result = await runExecute(tools["knowledge.distill"]!, {
       content: "  上下文工程是新的护城河。模型不缺聪明,缺的是你的上下文。  ",
     });
     expect(distillKnowledge).toHaveBeenCalledWith({
@@ -1733,7 +1746,7 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
       );
     };
     const tools = buildChatTools(WHITELIST, deps);
-    const result = (await runExecute(tools["knowledge.distill"], {
+    const result = (await runExecute(tools["knowledge.distill"]!, {
       content: "一段被平台审核拦截的原文",
     })) as {
       kind: string;
@@ -1757,7 +1770,7 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
       throw new Error("ECONNREFUSED 127.0.0.1:11434");
     };
     const tools = buildChatTools(WHITELIST, deps);
-    const result = (await runExecute(tools["knowledge.distill"], {
+    const result = (await runExecute(tools["knowledge.distill"]!, {
       content: "原文",
     })) as { error: string | null; suggestSwitchModel: boolean };
     expect(result.error).toBe("ECONNREFUSED 127.0.0.1:11434");
@@ -1767,7 +1780,7 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
   it("空原文 → 诚实报错引导粘贴,不调蒸馏引擎", async () => {
     const { deps, distillKnowledge } = makeDeps();
     const tools = buildChatTools(WHITELIST, deps);
-    const result = (await runExecute(tools["knowledge.distill"], {
+    const result = (await runExecute(tools["knowledge.distill"]!, {
       content: "   ",
     })) as { error: string | null };
     expect(distillKnowledge).not.toHaveBeenCalled();

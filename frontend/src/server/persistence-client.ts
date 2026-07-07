@@ -161,8 +161,8 @@ import type {
   ProjectMaterialsReader,
   ProjectMaterial,
 } from "@creatoros/backend/modules/ai-runtime";
-import type { ContextReaders as ChatContextReaders } from "@/server/ai/chat-runner";
-import { knowledgeRelevanceScore } from "@/server/ai/chat-tools";
+import type { ContextReaders as ChatContextReaders } from "@creatoros/backend/modules/ai-runtime";
+import { knowledgeRelevanceScore } from "@creatoros/backend/modules/ai-runtime";
 import { runGatherMaterial } from "@creatoros/backend/modules/ai-runtime";
 import { runTopicGenerateV2 } from "@creatoros/backend/modules/ai-runtime";
 import * as nodePath from "node:path";

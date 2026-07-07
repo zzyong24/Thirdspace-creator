@@ -89,7 +89,7 @@ import { ChatDistillCard, type ChatDistillResult } from "./chat-distill-card";
 import type {
   BriefFillSuggestion,
   BriefCurrentDetail,
-} from "@/server/ai/chat-tools";
+} from "@creatoros/backend/modules/ai-runtime";
 // [T-098] context.* 数据卡统一走注册表分发(素材卡也归入,行为不变)。
 import { renderContextCard } from "./context-card-registry";
 // [T-103b] 对话内审核报告卡:review.script 工具结果 → 轮询报告 + verdict/findings + 逐条改写门。
@@ -132,7 +132,7 @@ import { buildCopilotViewModel } from "@/fixtures/selectors";
 import {
   CHAT_TOOL_LABELS,
   SCHEDULED_TASK_TYPE_LABELS,
-} from "@/lib/chat-tool-labels";
+} from "@creatoros/contract";
 // [T-094] AI 链路错误 → 人话共享映射(与服务端同一张表;客户端兜底二次转译)。
 import {
   humanizeAiErrorMessage,

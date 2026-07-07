@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
 import { describeUserError } from "@/lib/ai-error-humanize";
-import type { LearningCaptureType } from "@/server/ai/chat-tools";
+import type { LearningCaptureType } from "@creatoros/backend/modules/ai-runtime";
 
 // 8 类经验的中文徽章(与 learnings.create 契约 enum / 裁决台展示同源口径)。
 export const LEARNING_TYPE_LABELS: Record<LearningCaptureType, string> = {

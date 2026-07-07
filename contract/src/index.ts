@@ -130,3 +130,8 @@ export {
   skillConfigOverrideResource,
   type SkillConfigOverrideResource,
 } from "./resources/settings";
+
+// [T-163 Batch 3] Copilot 对话工具中文词表 —— chat-runner(backend,下沉后)与
+// ai-copilot-content(client)+ ai-error-humanize 共用单一真值,故从前端 lib 提到 contract
+// 共享包(纯常量/纯函数,零依赖,前后端安全 import)。
+export * from "./chat-tool-labels";
