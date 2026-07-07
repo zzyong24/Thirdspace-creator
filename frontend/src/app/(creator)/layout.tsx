@@ -32,6 +32,8 @@ import { redirect } from "next/navigation";
 import { ShellRouter, type ShellUser } from "./shell-router";
 import { GlobalSearchHotkey } from "@/components/shell/global-search-hotkey";
 import { resolveSession, currentPathname } from "@/lib/session.server";
+// T-147 P5 桌面激活授权 —— 桌面态未激活/到期则弹回 /activate;web/dev 永远放行(门不触发)。
+import { isActivationAllowed } from "@/lib/activation-gate.server";
 import { createServerClient } from "@/lib/contract-client.server";
 import type { NotificationsViewModel } from "@/fixtures/selectors";
 import type { RequestContext } from "@creatoros/contract";
@@ -90,6 +92,13 @@ export default async function CreatorLayout({
   if (!session) {
     const pathname = await currentPathname();
     redirect(`/login?from=${encodeURIComponent(pathname)}`);
+  }
+
+  // T-147 P5 — 一机一码激活门。**只桌面壳(CREATOROS_DESKTOP=1)拦**:未激活/年卡到期/超离线
+  // 宽限 → 弹回 /activate。web/dev 恒放行(isActivationAllowed 内 isDesktopRuntime=false 硬短路,
+  // 不启激活校验、不联网)——web 绝不被卡。放在 session 之后:先有本机用户再谈授权。
+  if (!(await isActivationAllowed())) {
+    redirect("/activate");
   }
 
   // Real identity for the Shell user card (Shell §4 row, Module = Identity).

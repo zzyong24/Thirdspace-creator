@@ -62,6 +62,11 @@ import {
   // [T-135] ModelConfigurationRow / UserPreferenceRow / AgentConfigurationRow 已随
   // canonical settings seed(toModelRow/toPreferenceRow/toAgentRow)退役一并移除。
 } from "@creatoros/backend/modules/settings";
+// T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
+import {
+  assembleActivationService,
+  type ActivationService,
+} from "./activation";
 import {
   createProjectRepository,
   createProjectsService,
@@ -765,6 +770,9 @@ interface PersistenceBundle {
   // item B — exposed so the blob route (no dispatch endpoint) can resolve the
   // request user's media root, the same root uploads were minted against.
   settingsService: SettingsService;
+  // T-147 P5 — 一机一码激活门 service(无 dispatch endpoint;门控 RSC + 激活页 server action
+  // 直调,同 settingsService 逃生口)。web/dev 装了不触发,桌面态才真 check/activate。
+  activationService: ActivationService;
   // T-004 ChatBox — exposed so the /api/chat route (no dispatch endpoint; it streams
   // via the Vercel AI SDK, not the RPC envelope) can assemble + persist a turn against
   // the SAME pglite store: aiService (persist conversation/messages), resolveModelSpec
@@ -4898,6 +4906,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
   const settings = createSettingsTransport(() => settingsService);
 
+  // T-147 P5 — 装配一机一码激活门 service(复用上面解析的 masterKey 加密激活码,同 db)。
+  // web/dev 装了不触发(门控前置 isDesktopRuntime 判 false 直接放行);桌面态才真 check/activate。
+  const activationService = await assembleActivationService({
+    db,
+    masterKey,
+    env: process.env,
+  });
+
   // 纯-prompt 节点的可配置 LLM completer:resolveLlmConfig 读 settings 拥有的
   // model_configurations 行(注入 getModelConfig,settings 不反向依赖 ai 层)+ process.env。
   // 在此(settingsService 已定义后)构造;6 个 `void runXxx(...)` dispatch 调用位于
@@ -6350,6 +6366,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     identity,
     platformAccountService,
     settingsService,
+    activationService,
     chatRuntime,
     localFileRuntime,
     knowledgeSearchRuntime,
@@ -6477,6 +6494,15 @@ export async function getPublishingCenterService(): Promise<PublishingCenterQuer
  */
 export async function getIdentityService(): Promise<IdentityService> {
   return (await getBundle()).identity;
+}
+
+/**
+ * T-147 P5 — 一机一码激活门 service。(creator)/layout gate(RSC)+ /activate 激活页
+ * (server action)经此直调 check()/activate();无 dispatch endpoint(同 identity 逃生口)。
+ * web/dev 门控前置 isDesktopRuntime 判 false 直接放行,不 check。
+ */
+export async function getActivationService(): Promise<ActivationService> {
+  return (await getBundle()).activationService;
 }
 
 /**

@@ -86,6 +86,12 @@ vi.mock("@/lib/contract-client.server", () => ({
   createServerClient: () => ({ listNotifications }),
 }));
 
+// --- T-147 P5 激活门:这些 session-guard 测试聚焦身份守卫,激活门默认放行(=web/dev 语义)。
+//     激活门的桌面拦/web 跳逻辑由 activation-gate.server.test.ts 专门覆盖。 ---
+vi.mock("@/lib/activation-gate.server", () => ({
+  isActivationAllowed: async () => true,
+}));
+
 async function importLayout() {
   return (await import("./layout")).default;
 }

@@ -39,6 +39,7 @@ const PRESERVE = new Set([
   "agent_configurations", // AI agent 路由配置
   "storage_configs", // 对象存储配置(blob 路由可用)
   "skill_config_overrides", // 技能/prompt 覆盖配置
+  "activation_state", // T-147 P5 一机一码激活态(清库不清激活,免每次重激活)
 ]);
 
 const pool = new Pool({ connectionString: url });

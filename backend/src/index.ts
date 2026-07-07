@@ -160,6 +160,9 @@ export {
   jobRuns,
   SCHEDULING_DDL,
 } from "./schema/scheduling";
+// T-147 P5 桌面激活授权(activation_state 一机一码激活态表)。
+export { activationState } from "./schema/activation";
+export type { ActivationStateRow } from "./schema/activation";
 export type { RequestContext } from "./request-context";
 // T-147 P2 本地加密 —— 模型 API key 静态加密工具(AES-256-GCM + keychain/env master key)。
 // settings.repository 透明加解密引用它;脚本(key 初始化/存量迁移)也从这里取。

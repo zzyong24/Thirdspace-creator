@@ -72,6 +72,51 @@ fn resolve_or_create_master_key() -> Option<String> {
     Some(b64)
 }
 
+/// T-147 P5 桌面激活授权 —— 机器指纹(machineId)。多因子:平台稳定机器标识
+/// (Tauri 的 hardware id,底层 macOS IOPlatformUUID / Windows MachineGuid / Linux
+/// machine-id)+ 本机持久 UUID(<appDataDir>/machine-id,首启随机生成、后续复用),
+/// 二者组合 SHA-256 → 稳定短指纹,注入 sidecar env `CREATOROS_MACHINE_ID`。
+///
+/// 取不到平台 id 时退化为「仅持久 UUID」(仍同机稳定、跨设备唯一)。伪造是所有软件授权的
+/// 固有限制(文档 §5.2 已注),这里尽力稳,不宣称防伪造。
+fn resolve_machine_id(app: &AppHandle) -> Option<String> {
+    use sha2::{Digest, Sha256};
+
+    // ① 本机持久 UUID(<appDataDir>/machine-id)。首启无 → 生成随机 UUID 落盘;后续读回。
+    let persist_path = app
+        .path()
+        .app_data_dir()
+        .map(|d| d.join("machine-id"))
+        .ok()?;
+    if let Some(parent) = persist_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let persisted = match std::fs::read_to_string(&persist_path) {
+        Ok(s) if !s.trim().is_empty() => s.trim().to_string(),
+        _ => {
+            // 生成随机 32B → hex,落盘。
+            use rand::RngCore as _;
+            let mut raw = [0u8; 16];
+            rand::rngs::OsRng.fill_bytes(&mut raw);
+            let uuid = raw.iter().map(|b| format!("{b:02x}")).collect::<String>();
+            let _ = std::fs::write(&persist_path, &uuid);
+            uuid
+        }
+    };
+
+    // ② 平台稳定机器标识(best-effort;拿不到就只用持久 UUID)。
+    let platform_id = machine_uid::get().unwrap_or_default();
+
+    // ③ 组合 → SHA-256 → 前 32 hex(不暴露平台原始 UUID)。
+    let mut hasher = Sha256::new();
+    hasher.update(platform_id.as_bytes());
+    hasher.update(b"|");
+    hasher.update(persisted.as_bytes());
+    let digest = hasher.finalize();
+    let hex = digest.iter().map(|b| format!("{b:02x}")).collect::<String>();
+    Some(hex[..32].to_string())
+}
+
 /// sidecar 子进程句柄。存进 Tauri state 以便退出时 kill,避免 orphan Node 进程。
 #[derive(Default)]
 struct SidecarHandle(Mutex<Option<CommandChild>>);
@@ -171,6 +216,11 @@ pub fn run() {
             // 加解密。取不到(keychain 不可用)→ 不注入,sidecar 走开发降级(不崩,弱安全)。
             let master_key = resolve_or_create_master_key();
 
+            // T-147 P5 —— 机器指纹(multi-factor)。注入 sidecar env `CREATOROS_MACHINE_ID`,
+            // node 侧 resolveMachineId 优先用它(桌面最稳);下面还注入 `CREATOROS_DESKTOP=1`
+            // 作为**运行时**桌面标记(激活门只桌面拦 / web 跳的唯一判据)。
+            let machine_id = resolve_machine_id(&app.handle());
+
             // 4) spawn sidecar:externalBin `creatoros-server`(= 随包 node runtime,按 triple 命名,
             //    见 tauri.conf.json externalBin + scripts/desktop/build-sidecar.mjs)。以 server.js
             //    绝对路径为 arg 让该 node 跑 next standalone server。注入:
@@ -186,12 +236,21 @@ pub fn run() {
                 .env("HOSTNAME", "127.0.0.1")
                 .env("CREATOROS_DB_DIR", &db_dir_str)
                 .env("NODE_ENV", "production")
+                // T-147 P5 —— 运行时桌面标记(激活门只桌面拦 / web 跳的唯一判据;build 期的
+                // CREATOROS_DESKTOP 只决定 output:standalone,运行时需在这里再注入一次)。
+                .env("CREATOROS_DESKTOP", "1")
                 .env("DYLD_LIBRARY_PATH", &lib_dir)
                 .env("LD_LIBRARY_PATH", &lib_dir);
 
             // T-147 P2 —— 注入 keychain master key(取到才注入;取不到 sidecar 走降级)。
             let sidecar = match &master_key {
                 Some(k) => sidecar.env("CREATOROS_MASTER_KEY", k),
+                None => sidecar,
+            };
+
+            // T-147 P5 —— 注入机器指纹(取到才注入;取不到 node 侧走落盘回退,仍同机稳定)。
+            let sidecar = match &machine_id {
+                Some(m) => sidecar.env("CREATOROS_MACHINE_ID", m),
                 None => sidecar,
             };
 

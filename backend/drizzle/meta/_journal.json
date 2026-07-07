@@ -190,6 +190,13 @@
       "when": 1782381300000,
       "tag": "0026_job_run_progress",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1782381400000,
+      "tag": "0027_activation_state",
+      "breakpoints": true
     }
   ]
 }
