@@ -52,18 +52,46 @@ const cargo = resolveCargo();
 const cargoBinDir = cargo === "cargo" ? "" : dirname(cargo);
 const pathEnv = cargoBinDir ? { PATH: `${cargoBinDir}${delimiter}${process.env.PATH ?? ""}` } : {};
 
-console.log("[desktop:package] CreatorOS 桌面端打包(未签名)开始。");
+console.log("[desktop:package] CreatorOS 桌面端打包开始。");
 
 // 1) sidecar 二进制化(内部会跑 CREATOROS_DESKTOP=1 next build)。
 step("sidecar 二进制化", process.execPath, [join("scripts", "desktop", "build-sidecar.mjs")]);
 
-// 2) tauri build(beforeBuildCommand 会再跑一次 build-sidecar 以保证最新;幂等)。
-step("tauri build(出未签名 .app/.dmg)", process.execPath, [
+// 2) [T-164 P6] sidecar bundle JS 混淆(build-sidecar 之后、tauri build 之前)。
+//    幂等 + 硬排除 + symlink 逃逸防护;失败 fail-fast(见 obfuscate.mjs)。
+//    ⚠️ tauri.conf.json beforeBuildCommand 会在 tauri build 里**再跑一次 build-sidecar**(重建
+//    干净 sidecar),那次重建会覆盖此处混淆结果。故这里改成:先禁 beforeBuildCommand 的重建冲突——
+//    通过 CREATOROS_SKIP_SIDECAR_REBUILD env 让 build-sidecar 在 tauri build 阶段跳过(见下 step 3
+//    注入)。混淆放在 build-sidecar(步1)之后、tauri build(步3)之前,tauri build 不再重建即保住混淆。
+step("sidecar JS 混淆(§3.1)", process.execPath, [join("scripts", "desktop", "obfuscate.mjs")]);
+
+// 2.5) [T-164] 混淆后运行时冒烟(真起 sidecar:TCP ready + GET / 200 + 一条 ai-runtime 路由不崩)。
+//    §3.1 验收闸 / gate ④:ready-probe 只证 boot,冒烟证运行时没被混淆炸。失败 → fail-fast + 回滚
+//    (回滚 = 重跑 build-sidecar 拿干净源;此处仅 fail,提示重建)。
+//    真机/CI 必跑;本地若嫌重可 CREATOROS_SKIP_SMOKE=1 跳过(默认跑)。
+if (process.env.CREATOROS_SKIP_SMOKE !== "1") {
+  step("混淆后运行时冒烟(真起 sidecar)", process.execPath, [
+    join("scripts", "desktop", "obfuscate.mjs"),
+    "--smoke-only",
+  ]);
+} else {
+  console.log("[desktop:package] ⏭ CREATOROS_SKIP_SMOKE=1 → 跳过运行时冒烟(真机/CI 必跑)。");
+}
+
+// 3) tauri build。beforeBuildCommand(build-sidecar)会重建 sidecar → 覆盖步2的混淆。
+//    注入 CREATOROS_SKIP_SIDECAR_REBUILD=1 让 build-sidecar 在此阶段短路(保住已混淆的 sidecar)。
+step("tauri build(含 updater 签名/占位)", process.execPath, [
   join("node_modules", "@tauri-apps", "cli", "tauri.js"),
   "build",
-], pathEnv);
+], { ...pathEnv, CREATOROS_SKIP_SIDECAR_REBUILD: "1" });
+
+// 4) [T-164 P6] 代码签名占位(未配 env → skip 退 0 + 标 signed:false)。
+step("代码签名(占位)", process.execPath, [join("scripts", "desktop", "codesign.mjs")]);
+
+// 5) [T-164 P6] 公证占位(未配 env → skip 退 0 + 标 notarized:false)。
+step("公证(占位)", process.execPath, [join("scripts", "desktop", "notarize.mjs")]);
 
 console.log(
   "\n[desktop:package] ✅ 完成。产物在 src-tauri/target/release/bundle/(macos/*.app + dmg/*.dmg)。",
 );
-console.log("[desktop:package] 注意:未签名/未公证 —— 首次打开需右键「打开」绕过 Gatekeeper;正式分发待用户证书。");
+console.log("[desktop:package] 签名/公证状态见 bundle/creatoros-release-manifest.json(未配证书则 signed:false)。");

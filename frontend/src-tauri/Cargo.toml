@@ -21,6 +21,9 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 # shell 插件:唯一用途 = spawn/kill Next standalone sidecar 二进制(externalBin)。
 tauri-plugin-shell = "2"
+# T-147 P6 桌面加固 —— updater 插件(minisign/Ed25519 签名更新包,不需 Apple 证书)。
+# 配 tauri.conf.json plugins.updater.{pubkey,endpoints} + bundle.createUpdaterArtifacts。
+tauri-plugin-updater = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # T-147 P2 本地加密 —— master key 存 OS keychain(macOS Keychain / Windows Credential

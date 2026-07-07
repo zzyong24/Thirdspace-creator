@@ -35,7 +35,8 @@ export default defineConfig({
       "tests/visual/**",
       "tests/accessibility/**",
     ],
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // [T-164] 桌面打包脚本(scripts/desktop)的 .mjs 单测也纳入发现范围(纯增量,不动现有 src 规则)。
+    include: ["src/**/*.{test,spec}.{ts,tsx}", "scripts/**/*.{test,spec}.mjs"],
     setupFiles: ["./src/test/setup.ts"],
   },
 });

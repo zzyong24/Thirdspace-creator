@@ -172,6 +172,8 @@ fn resolve_sidecar_dir(app: &AppHandle) -> PathBuf {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        // T-147 P6 —— updater 插件(签名更新包校验;pubkey/endpoints 在 tauri.conf.json)。
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(SidecarHandle::default())
         .setup(|app| {
             let handle = app.handle().clone();

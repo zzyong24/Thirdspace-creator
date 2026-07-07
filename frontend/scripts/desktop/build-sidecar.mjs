@@ -79,6 +79,24 @@ function run(cmd, args, opts = {}) {
 }
 
 function main() {
+  // [T-164 P6] tauri.conf.json beforeBuildCommand 会在 tauri build 阶段再跑本脚本重建 sidecar,
+  //   会**覆盖 desktop:package 步2 的 JS 混淆结果**。package.mjs 在 tauri build 前已跑过
+  //   build-sidecar + obfuscate,故此阶段注入 CREATOROS_SKIP_SIDECAR_REBUILD=1 让本脚本短路
+  //   (保住已混淆的 sidecar)。前提:sidecar 已存在(package.mjs 保证步1先建)。
+  //   直接 `pnpm desktop:build` / `desktop:dev`(不经 package.mjs)不设此 env → 照常重建。
+  if (process.env.CREATOROS_SKIP_SIDECAR_REBUILD === "1") {
+    const existing = join(SIDECAR_RUNTIME, "frontend", "server.js");
+    if (existsSync(existing)) {
+      console.log(
+        "[build-sidecar] ⏭ CREATOROS_SKIP_SIDECAR_REBUILD=1 且 sidecar 已存在 → 跳过重建(保住 obfuscate 步的混淆结果)。",
+      );
+      return;
+    }
+    console.warn(
+      "[build-sidecar] ⚠️ CREATOROS_SKIP_SIDECAR_REBUILD=1 但 sidecar 不存在 → 仍重建(否则打包缺 sidecar)。",
+    );
+  }
+
   const triple = targetTriple();
   const isWin = platform === "win32";
   console.log(`[build-sidecar] target triple = ${triple}`);
