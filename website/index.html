@@ -227,15 +227,13 @@
 
   /* buy / contact */
   .buy { text-align: center; }
-  .buy-card { max-width: 600px; margin: 52px auto 0; display: grid; grid-template-columns: 148px 1fr; gap: 30px; align-items: center; background: var(--panel); border: 1px solid var(--hair); border-radius: 22px; padding: 32px; text-align: left; }
-  .qr { width: 148px; height: 148px; border-radius: 16px; background:
-      repeating-linear-gradient(45deg, #ecebf5 0 8px, #fff 8px 16px);
-    border: 1px solid var(--hair); display: grid; place-items: center; color: var(--faint); font-size: 12px; text-align: center; padding: 10px; }
-  .buy-card h3 { font-size: 21px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
-  .buy-card p { font-size: 14.5px; color: var(--muted); margin: 0 0 14px; line-height: 1.5; }
-  .contact-line { font-size: 14.5px; color: var(--ink); }
-  .contact-line b { color: var(--brand-ink); font-variant-numeric: tabular-nums; }
-  @media (max-width: 560px) { .buy-card { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+  .buy-card { max-width: 460px; margin: 52px auto 0; background: var(--panel); border: 1px solid var(--hair); border-radius: 22px; padding: 36px 32px; text-align: center; }
+  .buy-card h3 { font-size: 21px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 10px; }
+  .buy-card > p { font-size: 14.5px; color: var(--muted); margin: 0 auto 22px; line-height: 1.55; max-width: 34ch; }
+  .contact-rows { display: flex; flex-direction: column; gap: 10px; }
+  .contact-line { font-size: 15px; color: var(--muted); display: flex; justify-content: center; align-items: baseline; gap: 8px; }
+  .contact-line span { color: var(--faint); font-size: 13px; letter-spacing: .02em; }
+  .contact-line b { color: var(--brand-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 
   /* footer */
   footer { border-top: 1px solid var(--hair); padding: 40px 0 56px; color: var(--faint); }
@@ -396,14 +394,13 @@
   <div class="wrap">
     <p class="sec-eyebrow">购买</p>
     <h2>直接找作者拿激活码。</h2>
-    <p class="sec-sub">扫码或加微信,备注「CreatorOS」,付款后发你专属激活码。</p>
+    <p class="sec-sub">加微信,备注「CreatorOS」,确认后付款,作者手动发你专属激活码。</p>
     <div class="buy-card reveal">
-      <div class="qr">微信 / 收款码<br>(部署时替换)</div>
-      <div>
-        <h3>联系作者购买</h3>
-        <p>目前限量、手动发码,确保每位用户都能顺利激活与迁移。</p>
-        <p class="contact-line">微信:<b>[ 你的微信号 ]</b></p>
-        <p class="contact-line">邮箱:<b>[ 你的邮箱 ]</b></p>
+      <h3>联系作者购买</h3>
+      <p>目前限量、手动发码,确保每位用户都能顺利激活与迁移。加微信时请备注「CreatorOS」。</p>
+      <div class="contact-rows">
+        <p class="contact-line"><span>微信</span><b>zyong181818z</b></p>
+        <p class="contact-line"><span>邮箱</span><b>1968286694@qq.com</b></p>
       </div>
     </div>
   </div>
