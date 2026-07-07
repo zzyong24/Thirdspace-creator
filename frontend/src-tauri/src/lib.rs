@@ -12,9 +12,65 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::Duration;
 
+use base64::Engine as _;
 use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
+
+/// T-147 P2 本地加密 —— master key 在 OS keychain 里的服务名/账号。keyring 用这对
+/// (service, user) 定位条目(macOS Keychain / Windows Credential Manager / Linux
+/// Secret Service 各自的原生存储)。
+const KEYCHAIN_SERVICE: &str = "com.creatoros.desktop";
+const KEYCHAIN_KEY_NAME: &str = "master-key";
+
+/// 取/建 32B master key,base64 返回,供注入 sidecar env `CREATOROS_MASTER_KEY`。
+///
+/// 首启:keychain 无条目 → 随机生成 32 字节 → base64 存 keychain → 返回。
+/// 后续:keychain 有条目 → 取出返回(校验解出 32 字节;损坏则重建)。
+///
+/// keychain 不可用(极端:无 Secret Service 的 headless Linux / 权限被拒)→ 返回 None,
+/// sidecar 侧 resolveMasterKey 会走**开发降级**(web 路径不崩,安全性弱,已在总纲认知)。
+fn resolve_or_create_master_key() -> Option<String> {
+    let entry = match keyring::Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_KEY_NAME) {
+        Ok(e) => e,
+        Err(e) => {
+            eprintln!("[shell] keychain entry 创建失败(降级 dev key): {e}");
+            return None;
+        }
+    };
+
+    // 已存在 → 取出并校验长度(base64 解出 32 字节)。
+    match entry.get_password() {
+        Ok(existing) => {
+            match base64::engine::general_purpose::STANDARD.decode(existing.trim()) {
+                Ok(bytes) if bytes.len() == 32 => return Some(existing.trim().to_string()),
+                _ => {
+                    eprintln!("[shell] keychain master key 损坏/非 32B,重建");
+                    // fall through to regenerate
+                }
+            }
+        }
+        Err(keyring::Error::NoEntry) => {
+            // 首启:无条目,下面生成。
+        }
+        Err(e) => {
+            eprintln!("[shell] 读 keychain master key 失败(降级 dev key): {e}");
+            return None;
+        }
+    }
+
+    // 生成随机 32B → base64 → 存 keychain。
+    use rand::RngCore as _;
+    let mut raw = [0u8; 32];
+    rand::rngs::OsRng.fill_bytes(&mut raw);
+    let b64 = base64::engine::general_purpose::STANDARD.encode(raw);
+    if let Err(e) = entry.set_password(&b64) {
+        eprintln!("[shell] 写 keychain master key 失败(降级 dev key): {e}");
+        return None;
+    }
+    eprintln!("[shell] 首次生成 master key 并存入 OS keychain");
+    Some(b64)
+}
 
 /// sidecar 子进程句柄。存进 Tauri state 以便退出时 kill,避免 orphan Node 进程。
 #[derive(Default)]
@@ -110,6 +166,11 @@ pub fn run() {
             // sidecar/lib/;注入 DYLD_LIBRARY_PATH(mac)/ LD_LIBRARY_PATH(linux)指向它。
             let lib_dir = sidecar_dir.join("lib").to_string_lossy().to_string();
 
+            // T-147 P2 —— 取/建 OS keychain 里的 master key(base64 32B),下面注入 sidecar env
+            // `CREATOROS_MASTER_KEY`,node 侧 resolveMasterKey 认它做 model key 的 AES-256-GCM
+            // 加解密。取不到(keychain 不可用)→ 不注入,sidecar 走开发降级(不崩,弱安全)。
+            let master_key = resolve_or_create_master_key();
+
             // 4) spawn sidecar:externalBin `creatoros-server`(= 随包 node runtime,按 triple 命名,
             //    见 tauri.conf.json externalBin + scripts/desktop/build-sidecar.mjs)。以 server.js
             //    绝对路径为 arg 让该 node 跑 next standalone server。注入:
@@ -127,6 +188,12 @@ pub fn run() {
                 .env("NODE_ENV", "production")
                 .env("DYLD_LIBRARY_PATH", &lib_dir)
                 .env("LD_LIBRARY_PATH", &lib_dir);
+
+            // T-147 P2 —— 注入 keychain master key(取到才注入;取不到 sidecar 走降级)。
+            let sidecar = match &master_key {
+                Some(k) => sidecar.env("CREATOROS_MASTER_KEY", k),
+                None => sidecar,
+            };
 
             let (mut rx, child) = sidecar
                 .spawn()

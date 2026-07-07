@@ -23,6 +23,14 @@ tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# T-147 P2 本地加密 —— master key 存 OS keychain(macOS Keychain / Windows Credential
+# Manager / Linux Secret Service),首启随机生成 32B、后续取出,base64 后经 env
+# `CREATOROS_MASTER_KEY` 注入 sidecar(node 侧 AES-256-GCM 加解密 model key)。
+# keyring v3 默认 features 已带各平台原生后端(apple-native / windows-native /
+# linux-native-sync-persistent),无需额外 native 编译链。
+keyring = "3"
+base64 = "0.22"
+rand = "0.8"
 
 # 发布体积:release 用 opt-level=s + LTO + strip(桌面壳求小)。
 [profile.release]

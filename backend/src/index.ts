@@ -161,6 +161,16 @@ export {
   SCHEDULING_DDL,
 } from "./schema/scheduling";
 export type { RequestContext } from "./request-context";
+// T-147 P2 本地加密 —— 模型 API key 静态加密工具(AES-256-GCM + keychain/env master key)。
+// settings.repository 透明加解密引用它;脚本(key 初始化/存量迁移)也从这里取。
+export {
+  ENC_PREFIX,
+  isEncrypted,
+  encryptSecret,
+  decryptSecret,
+  resolveMasterKey,
+} from "./secret-crypto";
+export type { ResolvedMasterKey, MasterKeySource } from "./secret-crypto";
 // Re-export the drizzle query helpers modules need so per-module repositories
 // under the Next app (which does not declare drizzle-orm directly) build their
 // user-scoped queries against the ONE shared-infra drizzle (foundation §1: the

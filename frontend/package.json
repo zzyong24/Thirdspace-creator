@@ -26,7 +26,8 @@
     "desktop:build-sidecar": "node scripts/desktop/build-sidecar.mjs",
     "desktop:dev": "node scripts/desktop/build-sidecar.mjs && tauri dev --config src-tauri/tauri.dev.conf.json",
     "desktop:build": "tauri build",
-    "desktop:package": "node scripts/desktop/package.mjs"
+    "desktop:package": "node scripts/desktop/package.mjs",
+    "desktop:master-key": "node scripts/desktop/master-key.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.6",

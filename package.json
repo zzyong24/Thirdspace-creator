@@ -9,6 +9,7 @@
     "db:down": "docker compose down",
     "db:migrate": "pnpm --filter @creatoros/backend exec tsx scripts/migrate.ts",
     "db:reset": "pnpm --filter @creatoros/backend exec tsx scripts/reset-db.ts",
+    "db:migrate-secrets": "pnpm --filter @creatoros/backend exec tsx scripts/migrate-model-secrets.ts",
     "db:gen-baseline": "pnpm --filter @creatoros/backend exec tsx scripts/gen-baseline-migration.ts",
     "reconcile": "node orchestrator/process/reconcile.mjs",
     "boundary": "node orchestrator/process/boundary-scan.mjs",

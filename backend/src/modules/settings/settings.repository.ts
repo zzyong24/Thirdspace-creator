@@ -1,5 +1,6 @@
 import { and, eq, sql, type Db, type RequestContext } from "@creatoros/backend";
 import { assets, assetFiles } from "@creatoros/backend";
+import { encryptSecret, decryptSecret } from "@creatoros/backend";
 import {
   userPreferences,
   modelConfigurations,
@@ -21,6 +22,12 @@ import {
 export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
+  // T-147 P2 本地加密 —— 注入 32B master key 后,model_configurations.secret_value
+  // 在 putModel 写库前加密(AES-256-GCM,enc:v1: 前缀)、getModel/listModels 读出后解密
+  // (透明:service/resolve 拿到明文,无感)。**缺省(不注入)= 明文路径**(向后兼容,
+  // 现有集成测试/旧调用不变)。master key 来源见 secret-crypto.resolveMasterKey
+  // (桌面 keychain via env / web-dev 降级)。装配处 persistence-client 传入。
+  masterKey?: Buffer;
 }
 
 export type UserPreferenceRow = typeof userPreferences.$inferSelect;
@@ -162,6 +169,16 @@ export function createSettingsRepository(
   db: Db,
   deps: RepoDeps,
 ): SettingsRepository {
+  // T-147 P2 — 透明加解密收口。masterKey 缺省 = 无操作(明文路径,向后兼容)。
+  //   encSecret: 写库前加密一个非空明文 secret;null/空 → 原样(不加密 NULL/空列)。
+  //   decRow: 读出一行后就地解密其 secretValue(密文→明文;存量明文无前缀→透传)。
+  const key = deps.masterKey;
+  const encSecret = (plain: string): string =>
+    key ? encryptSecret(plain, key) : plain;
+  const decRow = (row: ModelConfigurationRow): ModelConfigurationRow => {
+    if (!key || row.secretValue == null) return row;
+    return { ...row, secretValue: decryptSecret(row.secretValue, key) };
+  };
   return {
     async getPreferences(ctx) {
       const rows = await db
@@ -215,7 +232,8 @@ export function createSettingsRepository(
           ),
         )
         .limit(1);
-      return rows[0] ?? null;
+      // T-147 P2 — 读出即解密(密文→明文;存量明文透传)。
+      return rows[0] ? decRow(rows[0]) : null;
     },
 
     async putModel(ctx, capability, body) {
@@ -230,6 +248,9 @@ export function createSettingsRepository(
       // (provider/model only) never clobbers an existing stored key.
       const secretProvided =
         typeof body.secret === "string" && body.secret.length > 0;
+      // T-147 P2 — 写库前加密(masterKey 缺省 = 明文,向后兼容)。存量明文列不受影响
+      // (只有 provided 的新 secret 才加密写入)。
+      const secretToStore = secretProvided ? encSecret(body.secret!) : null;
       const updateSet: Record<string, unknown> = {
         provider: body.provider,
         modelName: body.modelName,
@@ -239,7 +260,7 @@ export function createSettingsRepository(
         apiFormat,
         isDefault,
       };
-      if (secretProvided) updateSet.secretValue = body.secret;
+      if (secretProvided) updateSet.secretValue = secretToStore;
       const inserted = await db
         .insert(modelConfigurations)
         .values({
@@ -249,7 +270,7 @@ export function createSettingsRepository(
           provider: body.provider,
           modelName: body.modelName,
           secretReference,
-          secretValue: secretProvided ? body.secret! : null,
+          secretValue: secretToStore,
           settings,
           baseUrl,
           apiFormat,
@@ -260,14 +281,17 @@ export function createSettingsRepository(
           set: updateSet,
         })
         .returning();
-      return inserted[0]!;
+      // Decrypt on the way out so the caller (service→resolve) sees plaintext.
+      return decRow(inserted[0]!);
     },
 
     async listModels(ctx) {
-      return db
+      const rows = await db
         .select()
         .from(modelConfigurations)
         .where(eq(modelConfigurations.userId, ctx.userId));
+      // T-147 P2 — 每行读出即解密。
+      return rows.map(decRow);
     },
 
     async getStorageConfig(ctx) {

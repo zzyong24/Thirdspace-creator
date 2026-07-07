@@ -1,0 +1,120 @@
+import { describe, it, expect, vi, afterEach } from "vitest";
+import {
+  resolveMasterKey,
+  encryptSecret,
+  decryptSecret,
+  isEncrypted,
+  ENC_PREFIX,
+} from "./secret-crypto";
+
+// A deterministic 32-byte key (base64) for round-trip tests.
+const KEY = Buffer.alloc(32, 7); // 32 bytes of 0x07
+const KEY_B64 = KEY.toString("base64");
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe("secret-crypto AES-256-GCM round-trip", () => {
+  it("encrypts to an enc:v1: prefixed blob and decrypts back to plaintext", () => {
+    const plain = "sk-super-secret-key-1234567890";
+    const blob = encryptSecret(plain, KEY);
+    expect(blob.startsWith(ENC_PREFIX)).toBe(true);
+    expect(blob).not.toContain(plain); // ciphertext, not plaintext
+    expect(decryptSecret(blob, KEY)).toBe(plain);
+  });
+
+  it("produces a different ciphertext each call (random iv) but same plaintext", () => {
+    const plain = "sk-abc";
+    const a = encryptSecret(plain, KEY);
+    const b = encryptSecret(plain, KEY);
+    expect(a).not.toBe(b); // random iv → different blob
+    expect(decryptSecret(a, KEY)).toBe(plain);
+    expect(decryptSecret(b, KEY)).toBe(plain);
+  });
+
+  it("round-trips empty string and unicode", () => {
+    for (const plain of ["", "密钥-测试-🔐", "a".repeat(500)]) {
+      expect(decryptSecret(encryptSecret(plain, KEY), KEY)).toBe(plain);
+    }
+  });
+
+  it("throws when decrypting with the wrong key (GCM auth tag mismatch)", () => {
+    const blob = encryptSecret("sk-real", KEY);
+    const wrong = Buffer.alloc(32, 9);
+    expect(() => decryptSecret(blob, wrong)).toThrow();
+  });
+});
+
+describe("prefix marker — encrypted vs legacy plaintext", () => {
+  it("isEncrypted true only for the enc:v1: prefix", () => {
+    expect(isEncrypted(encryptSecret("x", KEY))).toBe(true);
+    expect(isEncrypted("sk-plaintext-legacy")).toBe(false);
+    expect(isEncrypted("")).toBe(false);
+    expect(isEncrypted(null)).toBe(false);
+  });
+
+  it("decryptSecret passes legacy plaintext through unchanged (no prefix)", () => {
+    // Backward-compat: existing rows are raw plaintext with NO prefix →透传.
+    expect(decryptSecret("sk-legacy-plaintext", KEY)).toBe("sk-legacy-plaintext");
+    expect(decryptSecret("", KEY)).toBe("");
+  });
+
+  it("decryptSecret returns null unchanged", () => {
+    expect(decryptSecret(null, KEY)).toBe(null);
+  });
+});
+
+describe("resolveMasterKey — desktop keychain env vs web/dev fallback", () => {
+  it("reads a base64 32-byte key from CREATOROS_MASTER_KEY (desktop keychain path)", () => {
+    const res = resolveMasterKey({ CREATOROS_MASTER_KEY: KEY_B64 });
+    expect(res.key.equals(KEY)).toBe(true);
+    expect(res.source).toBe("env");
+    expect(res.degraded).toBe(false);
+  });
+
+  it("ignores a malformed (non-32-byte) env key and falls back", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const res = resolveMasterKey({
+      CREATOROS_MASTER_KEY: Buffer.alloc(16, 1).toString("base64"),
+      NODE_ENV: "development",
+    });
+    // Malformed → not "env"; dev fallback kicks in (never throws in web path).
+    expect(res.source).not.toBe("env");
+    expect(res.key.length).toBe(32);
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it("dev fallback: no env key in development → fixed dev key + warning, degraded=true", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const res = resolveMasterKey({ NODE_ENV: "development" });
+    expect(res.key.length).toBe(32);
+    expect(res.source).toBe("dev-fallback");
+    expect(res.degraded).toBe(true);
+    expect(warn).toHaveBeenCalled();
+  });
+
+  it("web path never throws when the key is absent (returns a usable degraded key)", () => {
+    // production without a key must NOT crash the app (additive: encryption is
+    // best-effort at rest; the app keeps working). A degraded key is returned.
+    expect(() => resolveMasterKey({ NODE_ENV: "production" })).not.toThrow();
+    const res = resolveMasterKey({ NODE_ENV: "production" });
+    expect(res.key.length).toBe(32);
+    expect(res.degraded).toBe(true);
+  });
+
+  it("the dev fallback key is stable across calls (so a dev-written blob decrypts next boot)", () => {
+    const a = resolveMasterKey({ NODE_ENV: "development" });
+    const b = resolveMasterKey({ NODE_ENV: "development" });
+    expect(a.key.equals(b.key)).toBe(true);
+  });
+});
+
+describe("end-to-end: encrypt under resolved key, decrypt under the same resolved key", () => {
+  it("a value written with the env master key decrypts with the same env master key", () => {
+    const { key } = resolveMasterKey({ CREATOROS_MASTER_KEY: KEY_B64 });
+    const blob = encryptSecret("sk-live-key", key);
+    const { key: key2 } = resolveMasterKey({ CREATOROS_MASTER_KEY: KEY_B64 });
+    expect(decryptSecret(blob, key2)).toBe("sk-live-key");
+  });
+});

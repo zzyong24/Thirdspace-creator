@@ -2,6 +2,7 @@ import "server-only";
 import {
   createConfiguredDb,
   UnsupportedOperationError,
+  resolveMasterKey,
 } from "@creatoros/backend";
 import type { Endpoint, Transport, RequestContext } from "@creatoros/contract";
 // [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
@@ -4874,7 +4875,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // foundation §1). The preference/model/agent mutations are user-scoped via the
   // per-ctx repo. resolveModelForCapability (public on the service) is what the AI
   // worker reads. Clock/ids share the deterministic `deps`.
-  const settingsRepo = createSettingsRepository(db, deps);
+  // T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`
+  // 由 Rust keyring 注入 / web-dev 降级),注入 settings repo 后 model_configurations
+  // .secret_value 静态加密(AES-256-GCM),读出透明解密。web 路径永不崩(降级 key)。
+  const { key: masterKey, degraded: masterKeyDegraded } = resolveMasterKey(
+    process.env,
+  );
+  if (masterKeyDegraded) {
+    console.warn(
+      "[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。" +
+        "桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。",
+    );
+  }
+  const settingsRepo = createSettingsRepository(db, { ...deps, masterKey });
   const settingsService = createSettingsService(
     () => settingsRepo,
     (ctx) => identity.getCurrentUser(ctx),
