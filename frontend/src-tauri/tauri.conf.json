@@ -27,6 +27,9 @@
     "externalBin": [
       "binaries/creatoros-server"
     ],
+    "resources": {
+      "sidecar": "sidecar"
+    },
     "createUpdaterArtifacts": true,
     "macOS": {
       "minimumSystemVersion": "10.15",
