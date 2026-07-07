@@ -30,45 +30,58 @@ const KEYCHAIN_KEY_NAME: &str = "master-key";
 ///
 /// keychain 不可用(极端:无 Secret Service 的 headless Linux / 权限被拒)→ 返回 None,
 /// sidecar 侧 resolveMasterKey 会走**开发降级**(web 路径不崩,安全性弱,已在总纲认知)。
-fn resolve_or_create_master_key() -> Option<String> {
-    let entry = match keyring::Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_KEY_NAME) {
-        Ok(e) => e,
-        Err(e) => {
-            eprintln!("[shell] keychain entry 创建失败(降级 dev key): {e}");
-            return None;
-        }
+fn resolve_or_create_master_key(app_data_dir: &std::path::Path) -> Option<String> {
+    let valid = |s: &str| {
+        base64::engine::general_purpose::STANDARD
+            .decode(s.trim())
+            .map(|b| b.len() == 32)
+            .unwrap_or(false)
     };
+    let key_file = app_data_dir.join(".master-key");
 
-    // 已存在 → 取出并校验长度(base64 解出 32 字节)。
-    match entry.get_password() {
-        Ok(existing) => {
-            match base64::engine::general_purpose::STANDARD.decode(existing.trim()) {
-                Ok(bytes) if bytes.len() == 32 => return Some(existing.trim().to_string()),
-                _ => {
-                    eprintln!("[shell] keychain master key 损坏/非 32B,重建");
-                    // fall through to regenerate
-                }
+    // ① keychain 读(签名 app 上稳定 + 安全)。未签名 app 上 keychain 常不持久(macOS 把访问绑签名
+    //    身份,rebuild/未签名每次身份变 → set_password 不真持久),故失败不致命,下面走文件兜底。
+    if let Ok(entry) = keyring::Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_KEY_NAME) {
+        if let Ok(existing) = entry.get_password() {
+            if valid(&existing) {
+                return Some(existing.trim().to_string());
             }
-        }
-        Err(keyring::Error::NoEntry) => {
-            // 首启:无条目,下面生成。
-        }
-        Err(e) => {
-            eprintln!("[shell] 读 keychain master key 失败(降级 dev key): {e}");
-            return None;
         }
     }
 
-    // 生成随机 32B → base64 → 存 keychain。
+    // ② 文件兜底读(<appDataDir>/.master-key)。未签名下 keychain 读不回时靠这个**稳定**(否则每次
+    //    启动重生成 key → 激活码/model key 全解不开、每次都要重激活,不可用)。
+    if let Ok(existing) = std::fs::read_to_string(&key_file) {
+        if valid(&existing) {
+            // best-effort 回填 keychain(签名后即生效,自动升级回强安全路径)。
+            if let Ok(entry) = keyring::Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_KEY_NAME) {
+                let _ = entry.set_password(existing.trim());
+            }
+            return Some(existing.trim().to_string());
+        }
+    }
+
+    // ③ 都没有 → 生成随机 32B,双写:keychain(best-effort)+ 文件(chmod 600,稳定兜底)。
     use rand::RngCore as _;
     let mut raw = [0u8; 32];
     rand::rngs::OsRng.fill_bytes(&mut raw);
     let b64 = base64::engine::general_purpose::STANDARD.encode(raw);
-    if let Err(e) = entry.set_password(&b64) {
-        eprintln!("[shell] 写 keychain master key 失败(降级 dev key): {e}");
+    if let Ok(entry) = keyring::Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_KEY_NAME) {
+        let _ = entry.set_password(&b64);
+    }
+    if let Err(e) = std::fs::write(&key_file, &b64) {
+        // 连文件都写不了 → 降级(sidecar 用固定 dev key,弱安全但不崩)。
+        eprintln!("[shell] 写 master key 文件失败(降级 dev key): {e}");
         return None;
     }
-    eprintln!("[shell] 首次生成 master key 并存入 OS keychain");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt as _;
+        let _ = std::fs::set_permissions(&key_file, std::fs::Permissions::from_mode(0o600));
+    }
+    // 安全说明:文件兜底把 master key 明文存 appDataDir(与加密数据同盘)—— 安全弱于 keychain
+    //   (能读盘者可解),但**未签名 app keychain 不持久**下这是唯一可用方案(签名后自动走 keychain)。
+    eprintln!("[shell] 生成 master key(keychain best-effort + 文件兜底 .master-key)");
     Some(b64)
 }
 
@@ -270,10 +283,15 @@ pub fn run() {
             // sidecar/lib/;注入 DYLD_LIBRARY_PATH(mac)/ LD_LIBRARY_PATH(linux)指向它。
             let lib_dir = sidecar_dir.join("lib").to_string_lossy().to_string();
 
-            // T-147 P2 —— 取/建 OS keychain 里的 master key(base64 32B),下面注入 sidecar env
-            // `CREATOROS_MASTER_KEY`,node 侧 resolveMasterKey 认它做 model key 的 AES-256-GCM
-            // 加解密。取不到(keychain 不可用)→ 不注入,sidecar 走开发降级(不崩,弱安全)。
-            let master_key = resolve_or_create_master_key();
+            // T-147 P2 —— master key(base64 32B),注入 sidecar env `CREATOROS_MASTER_KEY` 做 model
+            //   key / 激活码的 AES-256-GCM 加解密。keychain 优先(签名 app 稳定+安全),**文件兜底**
+            //   (未签名下 keychain 不持久 → <appDataDir>/.master-key,稳定;避免每次启动重生成 key
+            //   致数据解不开、每次重激活)。取不到(连文件都写不了)→ 不注入,sidecar 降级(弱安全不崩)。
+            let app_data_dir = db_dir
+                .parent()
+                .map(|p| p.to_path_buf())
+                .unwrap_or_else(|| std::path::PathBuf::from(".creatoros"));
+            let master_key = resolve_or_create_master_key(&app_data_dir);
 
             // T-147 P5 —— 机器指纹(multi-factor)。注入 sidecar env `CREATOROS_MACHINE_ID`,
             // node 侧 resolveMachineId 优先用它(桌面最稳);下面还注入 `CREATOROS_DESKTOP=1`

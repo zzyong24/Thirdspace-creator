@@ -59,7 +59,6 @@ import {
   Palette,
   Cpu,
   HardDrive,
-  Link2,
   QrCode,
   Loader2,
   CheckCircle2,
@@ -777,12 +776,13 @@ function AccountBindingCard({
           data-slot="douyin-binding-row"
           className="flex items-center gap-3 rounded-md border border-border bg-surface-subtle p-3"
         >
-          <div
+          {/* T-174:抖音官方 logo(替原 Link2 通用链接图标),圆角方形贴合抖音 app 图标观感。 */}
+          <img
+            src="/douyin-icon.png"
+            alt="抖音"
             aria-hidden="true"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"
-          >
-            <Link2 className="size-5" />
-          </div>
+            className="size-10 shrink-0 rounded-[9px]"
+          />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="text-sm font-medium text-foreground">抖音</span>
             <span
