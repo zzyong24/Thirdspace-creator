@@ -43,6 +43,12 @@ const nextConfig: NextConfig = {
     "@ai-sdk/anthropic",
     "@ai-sdk/deepseek",
     "@ai-sdk/openai-compatible",
+    // [T-173] 采集/扫码用 Playwright(douyin-cdp/web-capture 动态 import + require.resolve CLI)。
+    //   保持外置:不让 Next 打包(playwright 有 ESM 入口 → 打包报 "require() resolves to a EcmaScript
+    //   module")。运行时从 node_modules 解析(桌面包由 build-sidecar bundlePlaywright 实拷进去)。
+    "playwright",
+    "playwright-core",
+    "@playwright/test",
   ],
 };
 

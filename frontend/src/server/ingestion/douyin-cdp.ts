@@ -661,9 +661,12 @@ async function ensureChromiumInstalled(): Promise<void> {
   const { createRequire } = await import("node:module");
   const { dirname, join } = await import("node:path");
   const require = createRequire(import.meta.url);
-  // playwright bin=cli.js,但 exports 未列 ./cli.js(require.resolve 会被 exports 挡)→ 解析
-  //   已导出的 package.json 再 join 同级 cli.js。bundlePlaywright 已把 playwright 实拷进包。
-  const cli = join(dirname(require.resolve("playwright/package.json")), "cli.js");
+  // playwright bin=cli.js,但 exports 未列 ./cli.js(require.resolve 被 exports 挡)→ 解析已导出的
+  //   package.json 再 join 同级 cli.js。**包名拼接**避开 Next 构建期静态解析(否则 Next 把 playwright
+  //   trace 到 ESM 入口 → "require() resolves to a EcmaScript module" build error);运行时才真解析
+  //   (sidecar 内 bundlePlaywright 已实拷 playwright)。
+  const pwPkgJson = require.resolve(["play", "wright/package.json"].join(""));
+  const cli = join(dirname(pwPkgJson), "cli.js");
   await new Promise<void>((resolve, reject) => {
     const child = spawn(process.execPath, [cli, "install", "chromium"], {
       stdio: "inherit", // 进度打到 sidecar 日志(UI 侧「扫码中…」覆盖等待;进度条 UI 列后续)
