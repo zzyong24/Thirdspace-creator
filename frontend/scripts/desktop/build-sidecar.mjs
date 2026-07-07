@@ -30,6 +30,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import { platform, arch } from "node:process";
 
 // 统计目录树里的 symlink 数(诊断/日志用)。
@@ -90,6 +91,51 @@ function packSidecarTarball() {
   const r = spawnSync("tar", ["-czf", tarball, "-C", SIDECAR_RUNTIME, "."], { stdio: "inherit" });
   if (r.status !== 0) throw new Error(`[build-sidecar] tar 打包失败(exit ${r.status})`);
   console.log(`[build-sidecar]   → ${tarball}`);
+}
+
+// [T-170] 采集/扫码依赖 Playwright,但 Next output-tracing **漏掉** douyin-cdp/web-capture 里的
+//   动态 `import("@playwright/test")`(playwright-core 的 .pnpm 被拖进来了,但 frontend/node_modules/
+//   下没建解析链)→ 打包版一点扫码就 ERR_MODULE_NOT_FOUND → loginDouyin 抛错「扫码登录失败」。
+//   修:把 @playwright/test → playwright → playwright-core 三个包**解引用实拷**进 sidecar 的
+//   frontend/node_modules/(全在顶层,node 从 frontend/ walk-up 即解析)。依赖链已核实只此三包
+//   (@playwright/test deps playwright;playwright deps playwright-core;playwright-core 自包含)。
+//   注:chromium **浏览器二进制**(rev 1223,344M)在 ~/Library/Caches/ms-playwright,**不**在此拷
+//   (bundle 体积决策留产品定;用户机有缓存即可用,分发到无缓存机器需另 bundle/首启下载,见 T-170②)。
+function bundlePlaywright() {
+  console.log("[build-sidecar] 实拷 Playwright 包(修 Next tracing 漏 @playwright/test → 打包扫码崩)…");
+  const require = createRequire(join(FRONTEND, "package.json"));
+  const destNm = join(SIDECAR_RUNTIME, "frontend", "node_modules");
+  for (const pkg of ["playwright-core", "playwright", "@playwright/test"]) {
+    let srcDir;
+    try {
+      // 从 frontend 解析包的真实目录(monorepo hoist 到 root .pnpm)。exports 可能不暴露
+      // package.json,故先解析入口再 walk-up 到含 package.json 的目录。
+      const entry = require.resolve(pkg);
+      let d = dirname(entry);
+      while (d !== dirname(d) && !existsSync(join(d, "package.json"))) d = dirname(d);
+      // 对 scoped 包,package.json 所在即包根;但 walk-up 可能停在 dist 的上级,校验 name 匹配。
+      srcDir = d;
+    } catch (e) {
+      throw new Error(`[build-sidecar] 解析 Playwright 包失败 ${pkg}: ${e.message}`);
+    }
+    const destDir = join(destNm, pkg);
+    rmSync(destDir, { recursive: true, force: true });
+    mkdirSync(dirname(destDir), { recursive: true });
+    cpSync(srcDir, destDir, { recursive: true, dereference: true });
+    console.log(`[build-sidecar]   实拷 ${pkg} ← ${srcDir}`);
+  }
+  // 自检:sidecar node 从 frontend/ 能否解析 @playwright/test(=运行时扫码 import 的那个)。
+  const check = spawnSync(
+    process.execPath,
+    ["-e", "require.resolve('@playwright/test'); console.log('OK')"],
+    { cwd: join(SIDECAR_RUNTIME, "frontend"), encoding: "utf8" },
+  );
+  if (check.status !== 0 || !`${check.stdout}`.includes("OK")) {
+    throw new Error(
+      `[build-sidecar] 自检失败:sidecar 内仍解析不到 @playwright/test\n${check.stdout}${check.stderr}`,
+    );
+  }
+  console.log("[build-sidecar]   ✓ 自检:sidecar 内 @playwright/test 可解析");
 }
 
 function main() {
@@ -229,8 +275,12 @@ function main() {
     }
   }
 
-  // [T-169] dylib co-ship 之后打 tarball(含 lib/ 里的 libnode)。tauri build bundle 的是这个单文件,
-  //   规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压(保 symlink)。
+  // [T-170] 实拷 Playwright 包进 sidecar(修 Next tracing 漏 @playwright/test → 打包扫码崩)。
+  //   放在打 tarball 之前,让 playwright 包进 tarball。
+  bundlePlaywright();
+
+  // [T-169] dylib co-ship + playwright 实拷之后打 tarball(含 lib/ 里的 libnode)。tauri build
+  //   bundle 的是这个单文件,规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压。
   packSidecarTarball();
 
   console.log(`[build-sidecar] ✅ 完成。`);
