@@ -20,11 +20,14 @@
     "backfill:pub-titles": "tsx scripts/backfill-publication-titles.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.105.0",
     "@aws-sdk/client-s3": "^3.1075.0",
     "@aws-sdk/s3-request-presigner": "^3.1075.0",
+    "@creatoros/ai-worker": "workspace:*",
     "@creatoros/contract": "workspace:*",
     "@electric-sql/pglite": "^0.2.0",
     "drizzle-orm": "^0.36.0",
+    "node-cron": "^4.5.0",
     "pg": "^8.22.0",
     "zod": "^4.4.3"
   },

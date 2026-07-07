@@ -5,7 +5,7 @@ import { getChatRuntime } from "@/server/persistence-client";
 import {
   runCommentQaSift,
   type SiftCommentInput,
-} from "@/server/ai/comment-qa-sift-runner";
+} from "@creatoros/backend/modules/ai-runtime";
 import {
   prefilterComments,
   collectBackflowedAnchors,

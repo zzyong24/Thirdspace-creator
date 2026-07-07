@@ -5,7 +5,7 @@ import { getChatRuntime } from "@/server/persistence-client";
 import {
   runKnowledgeRelate,
   type RelateAtomInput,
-} from "@/server/ai/knowledge-relate-runner";
+} from "@creatoros/backend/modules/ai-runtime";
 import { readSessionCookie } from "../../v1/auth/_session";
 import { resolveRequestContext } from "@/lib/request-context.server";
 import { createServerClient } from "@/lib/contract-client.server";

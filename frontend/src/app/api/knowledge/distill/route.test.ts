@@ -19,7 +19,7 @@ vi.mock("@/server/persistence-client", () => ({
   }),
 }));
 
-vi.mock("@/server/ai/knowledge-distill-runner", () => ({
+vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
   runKnowledgeDistill: (...args: unknown[]) => runKnowledgeDistill(...args),
 }));
 

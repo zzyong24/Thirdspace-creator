@@ -139,7 +139,7 @@ import {
   buildReviewRuleSeedRows,
   createReviewGateRepository,
 } from "@creatoros/backend/modules/review";
-import { runScriptReview } from "@/server/ai/script-review-runner";
+import { runScriptReview } from "@creatoros/backend/modules/ai-runtime";
 import {
   createLearningsService,
   createLearningsTransport,
@@ -160,11 +160,11 @@ import type {
   ReviewSubjectReader,
   ProjectMaterialsReader,
   ProjectMaterial,
-} from "@/server/ai/creative-context";
+} from "@creatoros/backend/modules/ai-runtime";
 import type { ContextReaders as ChatContextReaders } from "@/server/ai/chat-runner";
 import { knowledgeRelevanceScore } from "@/server/ai/chat-tools";
-import { runGatherMaterial } from "@/server/ai/research-runner";
-import { runTopicGenerateV2 } from "@/server/ai/topic-task-adapter";
+import { runGatherMaterial } from "@creatoros/backend/modules/ai-runtime";
+import { runTopicGenerateV2 } from "@creatoros/backend/modules/ai-runtime";
 import * as nodePath from "node:path";
 import {
   fetchDouyinMetrics,
@@ -209,46 +209,46 @@ import { captureUrl } from "@/server/ingestion/web-capture";
 import {
   runScheduledCollection,
   type Collector as ScheduledCollector,
-} from "@/server/ai/scheduled-collection-runner";
+} from "@creatoros/backend/modules/ai-runtime";
 import {
   runJobNow,
   startScheduler,
   sweepStaleRuns,
   type CronJob as SchedulableCronJob,
   type TriggerDeps,
-} from "@/server/ai/scheduled-collection-scheduler";
-import { runTopicEnrich } from "@/server/ai/topic-enrich-runner";
-import { runCalibrationDiagnose } from "@/server/ai/calibration-diagnose-runner";
-import { runCalibrationScore } from "@/server/ai/calibration-score-runner";
-import { runScriptDraft } from "@/server/ai/script-runner";
-import { runPlanningThesis } from "@/server/ai/planning-runner";
-import { runPlanningContract } from "@/server/ai/planning-contract-runner";
-import { runPlanningOutline } from "@/server/ai/planning-outline-runner";
-import { runReviewAnalyze } from "@/server/ai/review-runner";
-import { runPlatformAdapt } from "@/server/ai/platform-adapt-runner";
-import { runMaterialMatch } from "@/server/ai/material-match-runner";
-import { runPositioningGenerate } from "@/server/ai/positioning-runner";
-import { runCopilotAssist } from "@/server/ai/copilot-runner";
-import { runAssetGenerate } from "@/server/ai/asset-generate-runner";
-import { runTranscribe } from "@/server/ai/transcribe-runner";
-import { runAssetClassify } from "@/server/ai/asset-classify-runner";
+} from "@creatoros/backend/modules/ai-runtime";
+import { runTopicEnrich } from "@creatoros/backend/modules/ai-runtime";
+import { runCalibrationDiagnose } from "@creatoros/backend/modules/ai-runtime";
+import { runCalibrationScore } from "@creatoros/backend/modules/ai-runtime";
+import { runScriptDraft } from "@creatoros/backend/modules/ai-runtime";
+import { runPlanningThesis } from "@creatoros/backend/modules/ai-runtime";
+import { runPlanningContract } from "@creatoros/backend/modules/ai-runtime";
+import { runPlanningOutline } from "@creatoros/backend/modules/ai-runtime";
+import { runReviewAnalyze } from "@creatoros/backend/modules/ai-runtime";
+import { runPlatformAdapt } from "@creatoros/backend/modules/ai-runtime";
+import { runMaterialMatch } from "@creatoros/backend/modules/ai-runtime";
+import { runPositioningGenerate } from "@creatoros/backend/modules/ai-runtime";
+import { runCopilotAssist } from "@creatoros/backend/modules/ai-runtime";
+import { runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
+import { runTranscribe } from "@creatoros/backend/modules/ai-runtime";
+import { runAssetClassify } from "@creatoros/backend/modules/ai-runtime";
 // [T-146 切片 a] 文档抽取 runner + 未配摘要模型的信号错误(诚实降级)。
 import {
   runMaterialExtract,
   MaterialSummaryModelNotConfiguredError,
-} from "@/server/ai/material-extract-runner";
-import { runReconstruct } from "@/server/ai/reconstruct-runner";
+} from "@creatoros/backend/modules/ai-runtime";
+import { runReconstruct } from "@creatoros/backend/modules/ai-runtime";
 // T-040a 提示词/skill 服务端可配 —— 装配期读 skill_config_overrides 全表 → 套进常驻 REGISTRY。
 import {
   applySkillConfigOverridesFromDb,
   createPgliteSkillConfigOverrideReadPort,
-} from "@/server/ai/skill-config-overrides";
-import { createLlmCompleter, LlmCredentialError } from "@/server/ai/llm/provider";
-import { resolveLlmConfig } from "@/server/ai/llm/resolve";
+} from "@creatoros/backend/modules/ai-runtime";
+import { createLlmCompleter, LlmCredentialError } from "@creatoros/backend/modules/ai-runtime";
+import { resolveLlmConfig } from "@creatoros/backend/modules/ai-runtime";
 import {
   resolveMultimodalSpec as resolveMultimodalSpecFn,
   resolveTranscribeSpec as resolveTranscribeSpecFn,
-} from "@/server/ai/multimodal/resolve";
+} from "@creatoros/backend/modules/ai-runtime";
 // [T-084a] 联网检索解析层 —— 与多模态 resolve 并列(web.search capability,自由字符串零契约改)。
 import { resolveSearchSpec as resolveSearchSpecFn } from "@/server/ai/search/resolve";
 // 多模态 provider 适配器(L5 asset.generate)。createMinimaxAdapter 是纯自建 REST(image

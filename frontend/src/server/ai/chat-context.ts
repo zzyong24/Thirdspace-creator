@@ -1,5 +1,5 @@
 import "server-only";
-import type { CreativeContext } from "./creative-context";
+import type { CreativeContext } from "@creatoros/backend/modules/ai-runtime";
 
 // 上下文感知 ChatBox 的「三层注入」装配纯函数(SPEC §3.2)—— ChatBox 的心脏。
 //

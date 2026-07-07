@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { RequestContext } from "@creatoros/contract";
 import { AuthenticationError } from "@creatoros/backend/modules/identity";
 import { getChatRuntime } from "@/server/persistence-client";
-import { runKnowledgeDistill } from "@/server/ai/knowledge-distill-runner";
+import { runKnowledgeDistill } from "@creatoros/backend/modules/ai-runtime";
 import { readSessionCookie } from "../../v1/auth/_session";
 import { resolveRequestContext } from "@/lib/request-context.server";
 import { humanizeAiError } from "@/lib/ai-error-humanize";

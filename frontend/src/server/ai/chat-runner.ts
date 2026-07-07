@@ -12,7 +12,7 @@ import {
   assembleCreativeContext,
   formatWorksBrief,
   type ContextDeps,
-} from "./creative-context";
+} from "@creatoros/backend/modules/ai-runtime";
 import {
   resolveSkillForSurface,
   applyFunctionKey,
@@ -37,10 +37,10 @@ import {
   type PredictionsRaw,
 } from "./chat-tools";
 import { buildSkillsBrief } from "@/lib/chat-tool-labels";
-import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
-import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
-import { parseLearnings, reviewFacets } from "./review-runner";
-import { parseDiagnosis } from "./calibration-diagnose-runner";
+import { buildEnrichPrompt, parseCard } from "@creatoros/backend/modules/ai-runtime";
+import { buildPositioningPrompt, parseSuggestion } from "@creatoros/backend/modules/ai-runtime";
+import { parseLearnings, reviewFacets } from "@creatoros/backend/modules/ai-runtime";
+import { parseDiagnosis } from "@creatoros/backend/modules/ai-runtime";
 
 // 上下文感知 ChatBox 的服务端装配(SPEC §3.3)—— /api/chat 路由的「大脑」,从这里调
 // streamText。把路由薄壳化:路由只管鉴权 + 解析 body + 持久化;真正的「resolve skill →
@@ -317,7 +317,7 @@ export const EXTRA_BRIEF_HEADING = "【本次生成指令(来自对话,优先遵
 
 // [T-081②] positioning.generate 的真实作品画像 —— formatWorksBrief 已移到 creative-context
 // (对话工具 + 后台 task 两条定位生成路径共用,单一真值);此处再导出保持既有 import 面不变。
-export { formatWorksBrief, WORKS_BRIEF_MAX_ROWS } from "./creative-context";
+export { formatWorksBrief, WORKS_BRIEF_MAX_ROWS } from "@creatoros/backend/modules/ai-runtime";
 
 // [T-081①] script.hooks 的 prompt 拼装 —— 从 generateHooks 内联提出为纯函数(可单测):
 // 原文案不变,新增 extraBrief 段(空则整段省略,不注空噪声)。
@@ -840,7 +840,9 @@ export async function buildChatAssembly(
     // [T-094] 对话蒸馏:复用倾倒场同一引擎 runKnowledgeDistill(knowledge.distill 模板 +
     // capability 走 model-config,多模态可配铁律)。失败抛错由工具 execute 接住转人话渲卡。
     distillKnowledge: async ({ content }) => {
-      const { runKnowledgeDistill } = await import("./knowledge-distill-runner");
+      const { runKnowledgeDistill } = await import(
+        "@creatoros/backend/modules/ai-runtime"
+      );
       return runKnowledgeDistill(
         ctx,
         { content },

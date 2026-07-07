@@ -19,7 +19,7 @@ vi.mock("@/server/persistence-client", () => ({
   }),
 }));
 
-vi.mock("@/server/ai/knowledge-classify-runner", () => ({
+vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
   runKnowledgeClassify: (...args: unknown[]) => runKnowledgeClassify(...args),
 }));
 
