@@ -637,9 +637,53 @@ async function clearSingletonLocks(authDir: string): Promise<void> {
   }
 }
 
+// [T-173] Chromium 浏览器二进制(~344M)不打进桌面包 —— 首次用采集/扫码时**自动下载**到 Playwright
+//   默认缓存(Mac: ~/Library/Caches/ms-playwright;Win: %LOCALAPPDATA%\ms-playwright)。跨 Win/Mac:
+//   走 playwright CLI `install chromium`,平台差异由 Playwright 自己处理。装过即秒过(检查 executablePath
+//   实际存在)。用 bundled node(process.execPath)跑 CLI —— 桌面包里就是它。
+let chromiumEnsured = false;
+async function ensureChromiumInstalled(): Promise<void> {
+  if (chromiumEnsured) return;
+  const { chromium } = await import("@playwright/test");
+  const { existsSync } = await import("node:fs");
+  try {
+    const p = chromium.executablePath();
+    if (p && existsSync(p)) {
+      chromiumEnsured = true;
+      return;
+    }
+  } catch {
+    // executablePath 抛错 = 版本/注册表异常,照样走下载兜底。
+  }
+  // 未装 → playwright install chromium(首启一次性下载;之后共享缓存,app 更新也复用)。
+  console.warn("[ingestion] 未检测到 Chromium,首次自动下载(playwright install chromium)…");
+  const { spawn } = await import("node:child_process");
+  const { createRequire } = await import("node:module");
+  const { dirname, join } = await import("node:path");
+  const require = createRequire(import.meta.url);
+  // playwright bin=cli.js,但 exports 未列 ./cli.js(require.resolve 会被 exports 挡)→ 解析
+  //   已导出的 package.json 再 join 同级 cli.js。bundlePlaywright 已把 playwright 实拷进包。
+  const cli = join(dirname(require.resolve("playwright/package.json")), "cli.js");
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(process.execPath, [cli, "install", "chromium"], {
+      stdio: "inherit", // 进度打到 sidecar 日志(UI 侧「扫码中…」覆盖等待;进度条 UI 列后续)
+      env: process.env,
+    });
+    child.on("exit", (code) =>
+      code === 0
+        ? resolve()
+        : reject(new Error(`playwright install chromium 退出码 ${code}`)),
+    );
+    child.on("error", reject);
+  });
+  chromiumEnsured = true;
+  console.warn("[ingestion] Chromium 下载完成。");
+}
+
 // 自起 Chromium + 持久化 profile(.auth/),不连用户现成浏览器(connectOverCDP 那条路对真实
 // 用户 Chrome 不稳)。headless=false 用于扫码登录;true 用于复刷抓取。
 async function openContext(authDir: string, headless: boolean) {
+  await ensureChromiumInstalled(); // [T-173] 首启自动下载 Chromium(装过秒过)
   const { chromium } = await import("@playwright/test");
   const { mkdir } = await import("node:fs/promises");
   await mkdir(authDir, { recursive: true }).catch(() => {});

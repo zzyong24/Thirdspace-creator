@@ -181,7 +181,19 @@ fn resolve_sidecar_dir(app: &AppHandle) -> PathBuf {
     };
     // 首启(或版本升级后首启)才解压;server.js 在位即认为已解压过,直接复用(避免每启动重解 598M)。
     let marker = dest.join("frontend").join("server.js");
-    if !marker.exists() {
+    let stamp = dest.join(".tarball-stamp");
+    // [T-169b] 陈旧缓存修复:版本恒 0.1.0(dev 反复重打 / 同版本 patch)时,仅凭 server.js 存在就跳过
+    //   解压 → **新 tarball 永不生效**(跑的还是首次解压的旧 runtime,我的修复全不到达运行的 app)。
+    //   改用 tarball 字节大小当指纹:与上次解压记录(.tarball-stamp)不符(或 marker 缺失)→ 清目录
+    //   重解压。任何 rebuild/更新 tarball 尺寸都会变 → 新 runtime 必生效。bsdtar 解压快(秒级)。
+    let tarball_size = std::fs::metadata(&tarball).map(|m| m.len()).unwrap_or(0);
+    let stamped = std::fs::read_to_string(&stamp)
+        .ok()
+        .and_then(|s| s.trim().parse::<u64>().ok());
+    let need_extract = !marker.exists() || stamped != Some(tarball_size);
+    if need_extract {
+        // 清掉可能的陈旧解压(旧 runtime)再全新解压 —— 否则残留旧文件混入。
+        let _ = std::fs::remove_dir_all(&dest);
         if let Err(e) = std::fs::create_dir_all(&dest) {
             eprintln!("[shell] 建 sidecar 解压目录失败 {}: {e}", dest.display());
         }
@@ -195,7 +207,11 @@ fn resolve_sidecar_dir(app: &AppHandle) -> PathBuf {
             .status();
         match status {
             Ok(s) if s.success() => {
-                eprintln!("[shell] sidecar 首启解压完成 → {}", dest.display());
+                let _ = std::fs::write(&stamp, tarball_size.to_string());
+                eprintln!(
+                    "[shell] sidecar 解压完成(size={tarball_size})→ {}",
+                    dest.display()
+                );
             }
             other => {
                 eprintln!(

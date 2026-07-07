@@ -42,9 +42,23 @@ export function createActivationRepository(
         .limit(1);
       const row = rows[0];
       if (!row) return null;
+      let code: string;
+      try {
+        code = dec(row.code);
+      } catch (e) {
+        // [T-171] master key 换了/丢了(如 keychain 重置、未签名 app 换签名)→ 存储的激活码解不开
+        //   (AES-256-GCM auth tag 校验失败)。**绝不硬崩**——否则激活 check 抛错 → 整个 app
+        //   首页 500「This page couldn't load」卡死。按「无有效激活」诚实降级 → 返回 null,门跳
+        //   /activate 让用户重激活(重激活用当前 master key 重新加密,恢复)。解不开的记录=等于没激活。
+        console.warn(
+          "[activation] 存储的激活码解密失败(master key 不符?)→ 视为未激活,请重新激活。",
+          e instanceof Error ? e.message : e,
+        );
+        return null;
+      }
       return {
         machineId: row.machineId,
-        code: dec(row.code),
+        code,
         licenseMode: row.licenseMode,
         projectKey: row.projectKey,
         expiresAt: row.expiresAt,

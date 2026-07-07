@@ -192,7 +192,19 @@ export function createSettingsRepository(
     key ? encryptSecret(plain, key) : plain;
   const decRow = (row: ModelConfigurationRow): ModelConfigurationRow => {
     if (!key || row.secretValue == null) return row;
-    return { ...row, secretValue: decryptSecret(row.secretValue, key) };
+    try {
+      return { ...row, secretValue: decryptSecret(row.secretValue, key) };
+    } catch (e) {
+      // [T-171] master key 换了/丢了(keychain 重置 / 未签名 app 换签名)→ 密文解不开
+      //   (AES-256-GCM auth tag 校验失败)。**绝不硬崩**——否则 getModel/listModels 抛错 →
+      //   任何读模型配置的 SSR 页 500。降级:secretValue=null(视为未配 key),用户重填即恢复
+      //   (重填用当前 master key 重新加密)。诚实:解不开的 key = 等于没配。
+      console.warn(
+        `[settings] model secret 解密失败(master key 不符?)capability=${row.capability} → 视为未配置`,
+        e instanceof Error ? e.message : e,
+      );
+      return { ...row, secretValue: null };
+    }
   };
   return {
     async getPreferences(ctx) {
