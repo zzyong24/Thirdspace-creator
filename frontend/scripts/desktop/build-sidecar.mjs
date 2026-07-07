@@ -103,21 +103,30 @@ function packSidecarTarball() {
 //   (bundle 体积决策留产品定;用户机有缓存即可用,分发到无缓存机器需另 bundle/首启下载,见 T-170②)。
 function bundlePlaywright() {
   console.log("[build-sidecar] 实拷 Playwright 包(修 Next tracing 漏 @playwright/test → 打包扫码崩)…");
-  const require = createRequire(join(FRONTEND, "package.json"));
   const destNm = join(SIDECAR_RUNTIME, "frontend", "node_modules");
-  for (const pkg of ["playwright-core", "playwright", "@playwright/test"]) {
-    let srcDir;
-    try {
-      // 从 frontend 解析包的真实目录(monorepo hoist 到 root .pnpm)。exports 可能不暴露
-      // package.json,故先解析入口再 walk-up 到含 package.json 的目录。
-      const entry = require.resolve(pkg);
-      let d = dirname(entry);
-      while (d !== dirname(d) && !existsSync(join(d, "package.json"))) d = dirname(d);
-      // 对 scoped 包,package.json 所在即包根;但 walk-up 可能停在 dist 的上级,校验 name 匹配。
-      srcDir = d;
-    } catch (e) {
-      throw new Error(`[build-sidecar] 解析 Playwright 包失败 ${pkg}: ${e.message}`);
-    }
+  // 解析包真实目录:从 fromPkgJson 的上下文 require.resolve,再 walk-up 到含 package.json 的目录。
+  const resolvePkgDir = (pkg, fromPkgJson) => {
+    const entry = createRequire(fromPkgJson).resolve(pkg);
+    let d = dirname(entry);
+    while (d !== dirname(d) && !existsSync(join(d, "package.json"))) d = dirname(d);
+    return d;
+  };
+  // **按依赖链逐级解析**:playwright/playwright-core 是传递依赖,不在 frontend/node_modules 顶层,
+  //   从 frontend 直接 resolve 会 Cannot find module。故:@playwright/test(frontend 直依)→ 从它的
+  //   上下文解析 playwright → 再从 playwright 上下文解析 playwright-core。
+  let testDir, pwDir, coreDir;
+  try {
+    testDir = resolvePkgDir("@playwright/test", join(FRONTEND, "package.json"));
+    pwDir = resolvePkgDir("playwright", join(testDir, "package.json"));
+    coreDir = resolvePkgDir("playwright-core", join(pwDir, "package.json"));
+  } catch (e) {
+    throw new Error(`[build-sidecar] 解析 Playwright 包失败: ${e.message}`);
+  }
+  for (const [pkg, srcDir] of [
+    ["@playwright/test", testDir],
+    ["playwright", pwDir],
+    ["playwright-core", coreDir],
+  ]) {
     const destDir = join(destNm, pkg);
     rmSync(destDir, { recursive: true, force: true });
     mkdirSync(dirname(destDir), { recursive: true });
