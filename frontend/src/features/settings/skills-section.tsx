@@ -23,6 +23,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import type { SkillConfigOverrideVersionResource } from "@creatoros/contract";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/project/section-card";
@@ -323,6 +324,14 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
         </details>
       ) : null}
 
+      {/* [T-165] 版本历史 + 一键回滚 —— 展开拉该 skill 历史快照,可回滚到任一版本(回滚后
+          server 热更即生效,router.refresh 重取生效值)。 */}
+      <SkillVersionHistory
+        skillId={skill.id}
+        disabled={pending}
+        onRolledBack={() => router.refresh()}
+      />
+
       {error ? (
         <p
           data-slot="skill-save-error"
@@ -360,5 +369,124 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
         </Button>
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SkillVersionHistory — [T-165] 某 skill 的版本历史 + 一键回滚(行内 <details>,首次展开拉取)
+// ---------------------------------------------------------------------------
+
+function SkillVersionHistory({
+  skillId,
+  disabled,
+  onRolledBack,
+}: {
+  skillId: string;
+  disabled: boolean;
+  onRolledBack: () => void;
+}) {
+  const [versions, setVersions] = React.useState<
+    SkillConfigOverrideVersionResource[] | null
+  >(null);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [rollingId, setRollingId] = React.useState<string | null>(null);
+
+  const load = React.useCallback(() => {
+    setLoading(true);
+    setError(null);
+    void (async () => {
+      try {
+        const rows = await client.listPromptVersions({
+          params: { id: skillId },
+          query: undefined,
+          body: undefined,
+        });
+        setVersions(rows);
+      } catch {
+        setError("加载版本历史失败,请重试。");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [skillId]);
+
+  const rollback = React.useCallback(
+    (versionId: string) => {
+      if (rollingId) return;
+      setRollingId(versionId);
+      setError(null);
+      void (async () => {
+        try {
+          await client.rollbackPrompt({
+            params: { id: skillId },
+            query: undefined,
+            body: { versionId },
+          });
+          onRolledBack(); // 父 router.refresh 重取生效值(热更已在服务端)。
+          load(); // 回滚也进历史 → 重拉列表。
+        } catch {
+          setError("回滚失败,请重试。");
+        } finally {
+          setRollingId(null);
+        }
+      })();
+    },
+    [rollingId, skillId, onRolledBack, load],
+  );
+
+  return (
+    <details
+      data-slot="skill-version-history"
+      className="group"
+      onToggle={(event) => {
+        const el = event.currentTarget;
+        if (el.open && versions === null && !loading) load();
+      }}
+    >
+      <summary className="cursor-pointer text-xs font-medium text-foreground">
+        版本历史 / 一键回滚
+      </summary>
+      <div className="mt-1 flex flex-col gap-1.5">
+        {loading ? (
+          <p className="text-xs text-muted-foreground">加载中…</p>
+        ) : error ? (
+          <p data-slot="skill-version-error" className="text-xs text-destructive">
+            {error}
+          </p>
+        ) : versions && versions.length > 0 ? (
+          versions.map((v, i) => (
+            <div
+              key={v.id}
+              data-slot="skill-version-row"
+              data-version-id={v.id}
+              className="flex items-center justify-between gap-2 rounded-md border border-border/70 bg-background px-2 py-1.5 text-xs"
+            >
+              <span className="text-muted-foreground">
+                v{v.version ?? "?"}
+                {i === 0 ? "(当前)" : ""} · {v.updatedBy ?? "system"} ·{" "}
+                {v.createdAt.slice(0, 19).replace("T", " ")}
+              </span>
+              {/* 首行=当前生效版本,回滚它无意义 → 禁用。 */}
+              <Button
+                type="button"
+                data-slot="skill-version-rollback"
+                variant="ghost"
+                size="sm"
+                disabled={disabled || i === 0 || rollingId !== null}
+                onClick={() => rollback(v.id)}
+                title="把这个历史版本重新生效为当前配置(回滚也会记一条新版本,可再回滚)"
+              >
+                {rollingId === v.id ? "回滚中…" : "回滚到此版本"}
+              </Button>
+            </div>
+          ))
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            暂无历史版本(保存或恢复默认后会记录快照)。
+          </p>
+        )}
+      </div>
+    </details>
   );
 }
