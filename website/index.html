@@ -1,0 +1,425 @@
+<style>
+  :root {
+    --ground: #fbfbfd;
+    --panel: #ffffff;
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --faint: #86868b;
+    --hair: #d2d2d7;
+    --brand: #6d3bef;
+    --brand-soft: #a78bfa;
+    --brand-ink: #4c22c9;
+    --dark: #0b0b0f;
+    --dark-panel: #17171d;
+    --good: #1a8f4c;
+    --max: 1000px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+      "Helvetica Neue", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font);
+    color: var(--ink);
+    background: var(--ground);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.5;
+  }
+
+  .wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(251, 251, 253, 0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .nav-inner {
+    max-width: var(--max); margin: 0 auto; padding: 0 24px;
+    height: 52px; display: flex; align-items: center; gap: 28px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 9px;
+    font-weight: 600; font-size: 18px; letter-spacing: -0.02em; color: var(--ink);
+    text-decoration: none;
+  }
+  .glyph {
+    width: 22px; height: 22px; border-radius: 6px; flex: none;
+    background: linear-gradient(145deg, var(--brand-soft), var(--brand) 60%, var(--brand-ink));
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    position: relative;
+  }
+  .glyph::after {
+    content: ""; position: absolute; inset: 6px 6px auto 6px; height: 2px;
+    border-radius: 2px; background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 0 rgba(255, 255, 255, 0.55), 0 8px 0 rgba(255, 255, 255, 0.3);
+  }
+  .nav-links { display: flex; gap: 26px; margin-left: auto; }
+  .nav-links a {
+    font-size: 13.5px; color: var(--muted); text-decoration: none; letter-spacing: -0.01em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta {
+    font-size: 13.5px; font-weight: 500; color: #fff; background: var(--brand);
+    padding: 6px 15px; border-radius: 980px; text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .nav-cta:hover { background: var(--brand-ink); }
+  @media (max-width: 720px) { .nav-links { display: none; } .nav-cta { margin-left: auto; } }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 4px;
+  }
+
+  /* ---------- hero ---------- */
+  .hero { text-align: center; padding: 96px 0 0; position: relative; overflow: hidden; }
+  .hero::before {
+    content: ""; position: absolute; left: 50%; top: -140px; transform: translateX(-50%);
+    width: 900px; height: 520px; pointer-events: none; z-index: 0;
+    background: radial-gradient(50% 50% at 50% 40%, rgba(109, 59, 239, 0.16), transparent 70%);
+    filter: blur(4px);
+  }
+  .hero .wrap { position: relative; z-index: 1; }
+  .eyebrow {
+    font-size: 14px; font-weight: 600; letter-spacing: -0.01em;
+    color: var(--brand); margin: 0 0 14px;
+  }
+  h1 {
+    font-size: clamp(40px, 7vw, 76px); line-height: 1.05; letter-spacing: -0.03em;
+    font-weight: 650; margin: 0 auto; max-width: 15ch; text-wrap: balance;
+  }
+  .hero-sub {
+    font-size: clamp(18px, 2.2vw, 23px); line-height: 1.45; color: var(--muted);
+    max-width: 30ch; margin: 22px auto 0; letter-spacing: -0.01em; text-wrap: balance;
+  }
+  .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+  .btn {
+    font-size: 16px; font-weight: 500; padding: 12px 24px; border-radius: 980px;
+    text-decoration: none; letter-spacing: -0.01em; border: 1px solid transparent;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s; cursor: pointer;
+  }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover { background: var(--brand-ink); transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--brand); border-color: var(--hair); }
+  .btn-ghost:hover { border-color: var(--brand); }
+  .hero-foot { margin-top: 16px; font-size: 12.5px; color: var(--faint); }
+
+  /* ---------- product mockup ---------- */
+  .shot { margin: 58px auto 0; max-width: 940px; padding: 0 24px; position: relative; z-index: 1; }
+  .win {
+    border-radius: 16px; overflow: hidden; background: var(--panel);
+    border: 1px solid var(--hair);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04), 0 30px 70px -30px rgba(76, 34, 201, 0.35);
+  }
+  .titlebar {
+    height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 15px;
+    background: linear-gradient(#fafafc, #f2f2f5); border-bottom: 1px solid var(--hair);
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+  .titlebar .t { margin-left: 12px; font-size: 12px; color: var(--faint); letter-spacing: -0.01em; }
+  .app { display: grid; grid-template-columns: 190px 1fr; min-height: 372px; }
+  .side { background: #faf9fe; border-right: 1px solid var(--hair); padding: 14px 10px; }
+  .side-h { font-size: 10.5px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 10px 8px; }
+  .nav-item { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted); padding: 8px 10px; border-radius: 8px; letter-spacing: -0.01em; }
+  .nav-item .ic { width: 15px; height: 15px; border-radius: 4px; background: var(--hair); flex: none; }
+  .nav-item.on { background: rgba(109, 59, 239, 0.1); color: var(--brand-ink); font-weight: 500; }
+  .nav-item.on .ic { background: var(--brand); }
+  .main { padding: 20px 22px; }
+  .crumb { font-size: 12px; color: var(--faint); letter-spacing: -0.01em; }
+  .h2m { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin: 5px 0 16px; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .c {
+    border: 1px solid var(--hair); border-radius: 12px; padding: 14px; background: #fff;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .c-tag { font-size: 10.5px; font-weight: 600; color: var(--brand); letter-spacing: 0.02em; }
+  .c-title { font-size: 13.5px; font-weight: 550; letter-spacing: -0.01em; line-height: 1.3; }
+  .bar { height: 6px; border-radius: 3px; background: #eee; overflow: hidden; }
+  .bar > i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--brand-soft), var(--brand)); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { font-size: 10.5px; color: var(--muted); background: #f2f0fb; padding: 3px 8px; border-radius: 980px; }
+  .score { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--good); font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) { .app { grid-template-columns: 1fr; } .side { display: none; } .cards { grid-template-columns: 1fr; } }
+
+  /* ---------- section scaffolding ---------- */
+  section { padding: 108px 0; }
+  .sec-eyebrow { font-size: 14px; font-weight: 600; color: var(--brand); letter-spacing: -0.01em; text-align: center; margin: 0 0 12px; }
+  h2 { font-size: clamp(30px, 4.6vw, 48px); line-height: 1.08; letter-spacing: -0.025em; font-weight: 650; text-align: center; margin: 0 auto; max-width: 18ch; text-wrap: balance; }
+  .sec-sub { font-size: clamp(17px, 2vw, 20px); color: var(--muted); text-align: center; max-width: 34ch; margin: 18px auto 0; line-height: 1.5; letter-spacing: -0.01em; text-wrap: balance; }
+
+  /* feature flywheel */
+  .flywheel { padding-bottom: 40px; }
+  .flow { display: flex; align-items: stretch; gap: 0; margin: 64px auto 0; max-width: 920px; flex-wrap: wrap; justify-content: center; }
+  .step { flex: 1 1 150px; min-width: 140px; text-align: center; position: relative; padding: 0 8px; }
+  .step .n { width: 44px; height: 44px; margin: 0 auto 14px; border-radius: 12px; display: grid; place-items: center; font-weight: 600; font-size: 17px; color: #fff; background: linear-gradient(145deg, var(--brand-soft), var(--brand)); box-shadow: 0 8px 18px -8px rgba(109, 59, 239, 0.6); }
+  .step h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 5px; }
+  .step p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.45; }
+  .step:not(:last-child)::after { content: "→"; position: absolute; right: -8px; top: 12px; color: var(--hair); font-size: 18px; }
+  @media (max-width: 640px) { .step:not(:last-child)::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -6px; transform: translateX(-50%); } .step { padding-bottom: 28px; } }
+
+  /* dark band */
+  .band { background: var(--dark); color: #f5f5f7; }
+  .band h2 { color: #f5f5f7; }
+  .band .sec-sub { color: #a1a1a8; }
+  .band .sec-eyebrow { color: var(--brand-soft); }
+  .feat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 60px auto 0; }
+  .feat {
+    background: var(--dark-panel); border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px; padding: 26px; text-align: left;
+  }
+  .feat .fi { width: 40px; height: 40px; border-radius: 11px; margin-bottom: 16px; background: linear-gradient(145deg, rgba(167, 139, 250, 0.9), var(--brand)); display: grid; place-items: center; }
+  .feat .fi span { width: 16px; height: 16px; border: 2px solid #fff; border-radius: 4px; }
+  .feat h3 { font-size: 18px; font-weight: 600; letter-spacing: -0.015em; margin: 0 0 8px; }
+  .feat p { font-size: 14px; color: #a1a1a8; margin: 0; line-height: 1.55; }
+  @media (max-width: 800px) { .feat-grid { grid-template-columns: 1fr; } }
+
+  /* updates */
+  .updates .u-card { max-width: 760px; margin: 56px auto 0; background: var(--panel); border: 1px solid var(--hair); border-radius: 20px; padding: 34px 36px; box-shadow: 0 24px 60px -34px rgba(76, 34, 201, 0.28); }
+  .u-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .pulse { width: 10px; height: 10px; border-radius: 50%; background: var(--good); position: relative; flex: none; }
+  .pulse::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--good); animation: ring 2.2s ease-out infinite; }
+  @keyframes ring { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.6); opacity: 0; } }
+  .u-head .lbl { font-size: 13px; font-weight: 600; color: var(--good); letter-spacing: -0.01em; }
+  .u-row { display: flex; gap: 14px; padding: 13px 0; border-top: 1px solid var(--hair); align-items: baseline; }
+  .u-ver { font-size: 13px; font-weight: 600; color: var(--brand); font-variant-numeric: tabular-nums; flex: none; width: 62px; }
+  .u-txt { font-size: 14.5px; color: var(--ink); letter-spacing: -0.01em; }
+  .u-txt small { color: var(--faint); }
+  .u-note { margin-top: 22px; font-size: 13px; color: var(--muted); text-align: center; }
+
+  /* pricing */
+  .price { text-align: center; }
+  .price-card {
+    max-width: 460px; margin: 56px auto 0; background: var(--panel);
+    border: 1px solid var(--hair); border-radius: 24px; padding: 44px 40px 40px;
+    box-shadow: 0 30px 80px -40px rgba(76, 34, 201, 0.4); position: relative;
+  }
+  .price-badge { display: inline-block; font-size: 12.5px; font-weight: 600; color: var(--brand); background: rgba(109, 59, 239, 0.1); padding: 6px 14px; border-radius: 980px; letter-spacing: -0.01em; }
+  .price-amt { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin: 22px 0 4px; }
+  .price-amt .cur { font-size: 30px; font-weight: 600; }
+  .price-amt .num { font-size: 76px; font-weight: 650; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .price-kicker { font-size: 15px; color: var(--muted); }
+  .price-list { list-style: none; padding: 0; margin: 28px 0; text-align: left; display: flex; flex-direction: column; gap: 13px; }
+  .price-list li { display: flex; gap: 11px; align-items: flex-start; font-size: 15px; letter-spacing: -0.01em; }
+  .tick { width: 20px; height: 20px; border-radius: 50%; background: rgba(109, 59, 239, 0.12); color: var(--brand); flex: none; display: grid; place-items: center; font-size: 12px; margin-top: 1px; }
+  .price-note { font-size: 12.5px; color: var(--faint); margin-top: 18px; }
+
+  /* buy / contact */
+  .buy { text-align: center; }
+  .buy-card { max-width: 600px; margin: 52px auto 0; display: grid; grid-template-columns: 148px 1fr; gap: 30px; align-items: center; background: var(--panel); border: 1px solid var(--hair); border-radius: 22px; padding: 32px; text-align: left; }
+  .qr { width: 148px; height: 148px; border-radius: 16px; background:
+      repeating-linear-gradient(45deg, #ecebf5 0 8px, #fff 8px 16px);
+    border: 1px solid var(--hair); display: grid; place-items: center; color: var(--faint); font-size: 12px; text-align: center; padding: 10px; }
+  .buy-card h3 { font-size: 21px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .buy-card p { font-size: 14.5px; color: var(--muted); margin: 0 0 14px; line-height: 1.5; }
+  .contact-line { font-size: 14.5px; color: var(--ink); }
+  .contact-line b { color: var(--brand-ink); font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) { .buy-card { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+
+  /* footer */
+  footer { border-top: 1px solid var(--hair); padding: 40px 0 56px; color: var(--faint); }
+  .foot-inner { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; font-size: 12.5px; }
+  .foot-inner a { color: var(--muted); text-decoration: none; }
+  .foot-inner a:hover { color: var(--ink); }
+  .foot-inner .sp { margin-left: auto; }
+
+  /* scroll reveal */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
+
+  .note-tag { position: fixed; left: 12px; bottom: 12px; z-index: 80; font-size: 11px; color: var(--faint); background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); border: 1px solid var(--hair); border-radius: 980px; padding: 5px 12px; letter-spacing: -0.01em; }
+</style>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top"><span class="glyph"></span>CreatorOS</a>
+    <div class="nav-links">
+      <a href="#flywheel">飞轮</a>
+      <a href="#features">能力</a>
+      <a href="#updates">更新</a>
+      <a href="#price">定价</a>
+      <a href="#buy">购买</a>
+    </div>
+    <a class="nav-cta" href="#price">获取</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <p class="eyebrow">桌面版 · Mac / Windows</p>
+    <h1>创作,不再只靠灵感。</h1>
+    <p class="hero-sub">CreatorOS 把定位、选题、脚本、复盘连成一条飞轮 —— 一套住在你本机的内容生产系统。</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#price">获取 CreatorOS</a>
+      <a class="btn btn-ghost" href="#flywheel">看它怎么运转 ↓</a>
+    </div>
+    <p class="hero-foot">一次买断 · 永久激活 · 数据全在你本机</p>
+  </div>
+
+  <div class="shot reveal">
+    <div class="win">
+      <div class="titlebar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="t">CreatorOS — 复盘</span>
+      </div>
+      <div class="app">
+        <aside class="side">
+          <div class="side-h">工作台</div>
+          <div class="nav-item"><span class="ic"></span>定位中心</div>
+          <div class="nav-item"><span class="ic"></span>选题岛</div>
+          <div class="nav-item"><span class="ic"></span>脚本台</div>
+          <div class="nav-item on"><span class="ic"></span>复盘</div>
+          <div class="nav-item"><span class="ic"></span>数据</div>
+          <div class="side-h" style="margin-top:10px">资产</div>
+          <div class="nav-item"><span class="ic"></span>知识库</div>
+          <div class="nav-item"><span class="ic"></span>素材</div>
+        </aside>
+        <div class="main">
+          <div class="crumb">复盘 · 已发布作品</div>
+          <div class="h2m">这条为什么爆?</div>
+          <div class="cards">
+            <div class="c">
+              <span class="c-tag">可复用要素</span>
+              <span class="c-title">开场 3 秒抛冲突,把结论前置</span>
+              <div class="chips"><span class="chip">钩子</span><span class="chip">已验证</span></div>
+            </div>
+            <div class="c">
+              <span class="c-tag">真实数据</span>
+              <span class="c-title">完播率 <span style="color:var(--brand-ink)">42%</span> · 高于账号均值</span>
+              <div class="bar"><i style="width:82%"></i></div>
+            </div>
+            <div class="c">
+              <span class="c-tag">观众信号</span>
+              <span class="c-title">评论集中在「求同款清单」</span>
+              <div class="chips"><span class="chip">选题线索</span></div>
+            </div>
+            <div class="c">
+              <span class="c-tag">AI 编导</span>
+              <span class="c-title">建议:把这条要素沉进定位母版
+                <span class="score">采纳</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="flywheel" id="flywheel">
+  <div class="wrap">
+    <p class="sec-eyebrow">飞轮,不是清单</p>
+    <h2>每一条作品,都反哺下一条。</h2>
+    <p class="sec-sub">别人做完就忘。CreatorOS 让复盘沉淀成定位,定位长出选题,一圈比一圈准。</p>
+    <div class="flow">
+      <div class="step reveal"><div class="n">1</div><h3>定位</h3><p>你是谁、给谁、凭什么。母版沉淀,越用越清。</p></div>
+      <div class="step reveal"><div class="n">2</div><h3>选题</h3><p>立足定位与真实评论出题,不再对着空白发呆。</p></div>
+      <div class="step reveal"><div class="n">3</div><h3>脚本</h3><p>AI 编导陪你写,合规审核前置,不踩雷。</p></div>
+      <div class="step reveal"><div class="n">4</div><h3>复盘</h3><p>用真数据提炼可复用爆款要素。</p></div>
+      <div class="step reveal"><div class="n">5</div><h3>回流</h3><p>要素沉回定位 —— 飞轮再转一圈。</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="features">
+  <div class="wrap">
+    <p class="sec-eyebrow">为创作者造的</p>
+    <h2>强,但不喧宾夺主。</h2>
+    <p class="sec-sub">AI 只产候选,你说了算。数据全在本机,加密落盘。</p>
+    <div class="feat-grid">
+      <div class="feat reveal"><div class="fi"><span></span></div><h3>AI 编导对话</h3><p>选题、诊断、复盘、写稿,都能对着你的真实数据聊。它产候选卡,你点采纳才落库 —— 绝不替你瞎改。</p></div>
+      <div class="feat reveal"><div class="fi"><span></span></div><h3>数据留在你本机</h3><p>作品、定位、知识库全部本地优先落盘,模型密钥经系统钥匙串加密。你的创作资产,只属于你。</p></div>
+      <div class="feat reveal"><div class="fi"><span></span></div><h3>一键导入抖音</h3><p>扫码绑号,自动拉取作品、逐字稿、封面与真实指标,复盘立刻有据可依。</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="updates" id="updates">
+  <div class="wrap">
+    <p class="sec-eyebrow">越用越好</p>
+    <h2>持续迭代,自动更新。</h2>
+    <p class="sec-sub">签名的更新实时下发,不用重装、不用重买。买一次,一直新。</p>
+    <div class="u-card reveal">
+      <div class="u-head"><span class="pulse"></span><span class="lbl">正在实时更新</span></div>
+      <div class="u-row"><span class="u-ver">v1.4</span><span class="u-txt">复盘评论线索 → 一键转选题 <small>· 本周</small></span></div>
+      <div class="u-row"><span class="u-ver">v1.3</span><span class="u-txt">桌面端本地加密 + 一机一码激活 <small>· 已发布</small></span></div>
+      <div class="u-row"><span class="u-ver">v1.2</span><span class="u-txt">AI 编导提示词持续打磨,免更新即刻生效 <small>· 已发布</small></span></div>
+      <p class="u-note">提示词与能力经签名远程下发,你的本地定制永远优先。</p>
+    </div>
+  </div>
+</section>
+
+<section class="price" id="price">
+  <div class="wrap">
+    <p class="sec-eyebrow">定价</p>
+    <h2>一次买断,永久属于你。</h2>
+    <p class="sec-sub">没有订阅、没有续费。一台机器,一个码,后续更新全免费。</p>
+    <div class="price-card reveal">
+      <span class="price-badge">永久激活 · 一机一码</span>
+      <div class="price-amt"><span class="cur">¥</span><span class="num">1499</span></div>
+      <div class="price-kicker">一次性 · 永久使用</div>
+      <ul class="price-list">
+        <li><span class="tick">✓</span><span>全部能力解锁:定位飞轮 / AI 编导 / 复盘 / 数据</span></li>
+        <li><span class="tick">✓</span><span>后续版本 <b>免费</b> 自动更新,不再收费</span></li>
+        <li><span class="tick">✓</span><span>数据全在你本机,加密落盘,永不上云</span></li>
+        <li><span class="tick">✓</span><span>Mac 与 Windows 桌面端</span></li>
+      </ul>
+      <a class="btn btn-primary" style="width:100%;display:block;box-sizing:border-box" href="#buy">购买激活码</a>
+      <p class="price-note">激活码绑定单台机器(一机一码)。换机请联系作者迁移。</p>
+    </div>
+  </div>
+</section>
+
+<section class="buy" id="buy">
+  <div class="wrap">
+    <p class="sec-eyebrow">购买</p>
+    <h2>直接找作者拿激活码。</h2>
+    <p class="sec-sub">扫码或加微信,备注「CreatorOS」,付款后发你专属激活码。</p>
+    <div class="buy-card reveal">
+      <div class="qr">微信 / 收款码<br>(部署时替换)</div>
+      <div>
+        <h3>联系作者购买</h3>
+        <p>目前限量、手动发码,确保每位用户都能顺利激活与迁移。</p>
+        <p class="contact-line">微信:<b>[ 你的微信号 ]</b></p>
+        <p class="contact-line">邮箱:<b>[ 你的邮箱 ]</b></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <a class="brand" href="#top" style="font-size:15px"><span class="glyph"></span>CreatorOS</a>
+    <a href="#flywheel">飞轮</a>
+    <a href="#features">能力</a>
+    <a href="#price">定价</a>
+    <a href="#buy">购买</a>
+    <span class="sp">© 2026 CreatorOS · 数据本机优先 · 一机一码</span>
+  </div>
+</footer>
+
+<div class="note-tag">概念稿 · 待填真实联系方式 / 截图</div>
+
+<script>
+  (function () {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.14 });
+    document.querySelectorAll(".reveal").forEach(function (el, i) {
+      el.style.transitionDelay = (Math.min(i % 5, 4) * 60) + "ms";
+      io.observe(el);
+    });
+  })();
+</script>
