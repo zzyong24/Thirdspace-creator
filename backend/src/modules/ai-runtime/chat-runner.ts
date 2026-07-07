@@ -17,6 +17,7 @@ import {
   applyFunctionKey,
   assembleChatSystem,
   assembleSelectionContext,
+  wrapUserData,
   type ChatContext,
 } from "./chat-context";
 import {
@@ -478,10 +479,12 @@ export async function buildChatAssembly(
     context.reviewTitle || context.reviewScript || context.reviewMetrics
       ? [
           "【本次复盘对象 —— 创作者已在工作台选定这一条作品,请直接基于它提炼可复用要素,不要再问用户「复盘对象是什么」、也不要退回账号整体泛论】",
-          context.reviewTitle ? `标题:《${context.reviewTitle}》` : "",
-          context.reviewScript ? `文案/逐字稿:\n${context.reviewScript}` : "",
+          // [T-134] 逐字稿/评论是外部来源用户可控内容(prompt-injection 最高危面)→ <user_data> 硬边界
+          // 包裹;真实数据是派生统计数字,不含自由文本、不包。守卫指令已在 baseSystem 顶部(全局覆盖)。
+          context.reviewTitle ? `标题:${wrapUserData(`《${context.reviewTitle}》`)}` : "",
+          context.reviewScript ? `文案/逐字稿:\n${wrapUserData(context.reviewScript)}` : "",
           context.reviewMetrics ? `真实数据:${context.reviewMetrics}` : "",
-          context.reviewComments ? `观众评论(真实):\n${context.reviewComments}` : "",
+          context.reviewComments ? `观众评论(真实):\n${wrapUserData(context.reviewComments)}` : "",
         ]
           .filter(Boolean)
           .join("\n")
