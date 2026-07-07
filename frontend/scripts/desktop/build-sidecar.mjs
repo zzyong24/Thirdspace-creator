@@ -78,6 +78,20 @@ function run(cmd, args, opts = {}) {
   }
 }
 
+// [T-169] 把组装好的 sidecar/ 打成单文件 tarball `src-tauri/sidecar.tar.gz`,供 Tauri 当 resource 带上。
+//   为何 tarball 而非整目录:Tauri 的 resource 拷贝器**丢 symlink**(实测源 180 → bundle 0),
+//   sidecar 靠 pnpm 相对 symlink 解析 node_modules → 丢了必崩。tarball 把 symlink 原样存档,首启由
+//   lib.rs 用系统 tar 解压到可写目录(原生保 symlink)。
+//   `-C <dir> .`:进 sidecar/ 后打其内容(不含 sidecar/ 前缀),解压到 dest 即 dest/frontend/server.js。
+//   tar 默认把 symlink 存为 symlink(不 -h 解引用)—— 正是所需。
+function packSidecarTarball() {
+  const tarball = join(SRC_TAURI, "sidecar.tar.gz");
+  console.log(`[build-sidecar] 打 sidecar.tar.gz(保留 symlink,供 bundle resource;解压见 lib.rs)…`);
+  const r = spawnSync("tar", ["-czf", tarball, "-C", SIDECAR_RUNTIME, "."], { stdio: "inherit" });
+  if (r.status !== 0) throw new Error(`[build-sidecar] tar 打包失败(exit ${r.status})`);
+  console.log(`[build-sidecar]   → ${tarball}`);
+}
+
 function main() {
   // [T-164 P6] tauri.conf.json beforeBuildCommand 会在 tauri build 阶段再跑本脚本重建 sidecar,
   //   会**覆盖 desktop:package 步2 的 JS 混淆结果**。package.mjs 在 tauri build 前已跑过
@@ -90,6 +104,8 @@ function main() {
       console.log(
         "[build-sidecar] ⏭ CREATOROS_SKIP_SIDECAR_REBUILD=1 且 sidecar 已存在 → 跳过重建(保住 obfuscate 步的混淆结果)。",
       );
+      // [T-169] 即便跳过重建,也从当前(已混淆的)sidecar/ 重打 tarball —— tauri build 要 bundle 它。
+      packSidecarTarball();
       return;
     }
     console.warn(
@@ -213,12 +229,17 @@ function main() {
     }
   }
 
+  // [T-169] dylib co-ship 之后打 tarball(含 lib/ 里的 libnode)。tauri build bundle 的是这个单文件,
+  //   规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压(保 symlink)。
+  packSidecarTarball();
+
   console.log(`[build-sidecar] ✅ 完成。`);
   console.log(`    sidecar bin (=node runtime): ${sidecarPath}`);
   console.log(`    standalone 运行目录         : ${SIDECAR_RUNTIME}`);
   console.log(`    server.js                  : ${join(SIDECAR_RUNTIME, "frontend", "server.js")}`);
+  console.log(`    bundle tarball             : ${join(SRC_TAURI, "sidecar.tar.gz")}`);
   console.log(
-    "    Tauri bundle 会把 src-tauri/sidecar/ 作 resource 带上;Rust 侧解析其 frontend/server.js 绝对路径传给该 node。",
+    "    Tauri bundle 会把 src-tauri/sidecar.tar.gz 作 resource 带上;Rust 侧首启解压到 appDataDir/runtime/<version>/sidecar(保 symlink)后跑其 frontend/server.js。",
   );
 }
 

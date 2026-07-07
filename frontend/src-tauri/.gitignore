@@ -5,3 +5,5 @@
 # sidecar 组装产物:next standalone 运行目录 + 随包 node 二进制(体积大,build 时由 build-sidecar.mjs 再生)。
 /sidecar/
 /binaries/
+# [T-169] sidecar tarball(bundle resource,~322M,build 时由 build-sidecar.mjs 从 sidecar/ 再生)。
+/sidecar.tar.gz

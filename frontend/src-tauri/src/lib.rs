@@ -145,11 +145,13 @@ fn wait_until_ready(port: u16, timeout: Duration) -> bool {
     false
 }
 
-/// 定位 sidecar 组装目录(src-tauri/sidecar,内含 frontend/ + backend/ + node_modules/ + lib/)。
-/// sidecar 保留 pnpm 相对 symlink 结构,Tauri resource 拷贝会丢 symlink,故:
+/// 定位 sidecar 组装目录(内含 frontend/ + backend/ + node_modules/ + lib/)。
+/// sidecar 保留 pnpm 相对 symlink 结构,而 **Tauri resource 拷贝会丢 symlink**(T-169 实测:源 180 个
+/// → bundle 0 个 → node 解析 next 断 → sidecar 起不来)。故 bundle 里带的是**单文件 tarball**
+/// `sidecar.tar.gz`(symlink 存档内原样保留),首启解压到可写目录(系统 tar 原生保 symlink)。
 ///   ① CREATOROS_SIDECAR_DIR env 覆盖(打包/测试可指定);
 ///   ② dev:CARGO_MANIFEST_DIR/sidecar(编译期常量,指向源目录,symlink 完好);
-///   ③ 兜底:resource 目录下的 sidecar(bundle;symlink 完好性见 README 待验点)。
+///   ③ bundle:资源里的 sidecar.tar.gz → 首启解压到 appDataDir/runtime/<version>/sidecar(复用)。
 fn resolve_sidecar_dir(app: &AppHandle) -> PathBuf {
     if let Ok(dir) = std::env::var("CREATOROS_SIDECAR_DIR") {
         let p = PathBuf::from(dir);
@@ -162,10 +164,49 @@ fn resolve_sidecar_dir(app: &AppHandle) -> PathBuf {
     if dev_dir.join("frontend").join("server.js").exists() {
         return dev_dir;
     }
-    // bundle 兜底:resource 目录。
-    app.path()
-        .resolve("sidecar", tauri::path::BaseDirectory::Resource)
-        .unwrap_or(dev_dir)
+    // ③ bundle 兜底:资源里是 sidecar.tar.gz(单文件,规避 Tauri resource 丢 symlink)。
+    let tarball = match app
+        .path()
+        .resolve("sidecar.tar.gz", tauri::path::BaseDirectory::Resource)
+    {
+        Ok(p) if p.exists() => p,
+        // 资源里没 tarball(理论不会到这):退回 dev_dir,让上层探活失败,便于诊断而非静默乱指。
+        _ => return dev_dir,
+    };
+    // 解压目标按版本隔离:appDataDir/runtime/<version>/sidecar。升级(新版本)→ 新目录 → 自动重解压。
+    let version = app.package_info().version.to_string();
+    let dest = match app.path().app_data_dir() {
+        Ok(d) => d.join("runtime").join(&version).join("sidecar"),
+        Err(_) => return dev_dir,
+    };
+    // 首启(或版本升级后首启)才解压;server.js 在位即认为已解压过,直接复用(避免每启动重解 598M)。
+    let marker = dest.join("frontend").join("server.js");
+    if !marker.exists() {
+        if let Err(e) = std::fs::create_dir_all(&dest) {
+            eprintln!("[shell] 建 sidecar 解压目录失败 {}: {e}", dest.display());
+        }
+        // 系统 tar 解压(-x 解 / -z gzip / -f 文件 / -C 目标)。macOS bsdtar、Win10+ tar.exe、Linux
+        //   GNU tar 均原生按 symlink 还原 —— 这是选 tar 而非 Rust 解压库的关键(免依赖 + 保 symlink)。
+        let status = std::process::Command::new("tar")
+            .arg("-xzf")
+            .arg(&tarball)
+            .arg("-C")
+            .arg(&dest)
+            .status();
+        match status {
+            Ok(s) if s.success() => {
+                eprintln!("[shell] sidecar 首启解压完成 → {}", dest.display());
+            }
+            other => {
+                eprintln!(
+                    "[shell] sidecar 解压失败({other:?}),tarball={} → dest={}",
+                    tarball.display(),
+                    dest.display()
+                );
+            }
+        }
+    }
+    dest
 }
 
 /// 桌面壳入口。web 运行方式(pnpm dev / 浏览器)完全不受影响 —— 这是纯新增的壳。
