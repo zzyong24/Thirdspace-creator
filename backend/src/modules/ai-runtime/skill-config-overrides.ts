@@ -97,13 +97,21 @@ export interface ApplySkillConfigOverridesDeps {
   readPort: SkillConfigOverrideReadPort;
   /** 日志端口(坏 id 跳过时记一条;默认 console.warn)。注入便于测试断言。 */
   logger?: (message: string) => void;
+  /**
+   * [T-166 / P3] 可选远程 prompt override 层(已验签的 bundle overrides)。**skill 粒度锁守 D1**:
+   * 只套在**本地表未出现**的 skillId 上——用户手改过的 skill,远程一个字段都不碰(见函数体)。
+   * 缺省 undefined = 纯本地(向后兼容,现有调用方不变)。远程层**不写本地表**,只运行时套 REGISTRY。
+   */
+  remoteOverrides?: readonly SkillConfigOverride[];
 }
 
 export interface ApplySkillConfigOverridesResult {
-  /** 成功套用的条数。 */
+  /** 成功套用的本地条数。 */
   applied: number;
-  /** 跳过(坏 id / 套用抛错)的 skill id 列表。 */
+  /** 跳过(坏 id / 套用抛错)的 skill id 列表(本地 + 远程)。 */
   skipped: string[];
+  /** [T-166] 成功套用的远程条数(经 skill 锁过滤后)。 */
+  remoteApplied: number;
 }
 
 /**
@@ -127,9 +135,31 @@ export async function applySkillConfigOverridesFromDb(
 
   const log = deps.logger ?? ((m: string) => console.warn(m));
   const rows = await deps.readPort.loadAll();
-
-  let applied = 0;
   const skipped: string[] = [];
+
+  // [T-166 / P3] 远程层先套(在 registerAllTemplates 之后、本地循环之前——gate② 纠偏:本函数是
+  // 全量重建,远程层若在函数外先套会被上面的 registerAllTemplates() 清掉,故必须织进这里)。
+  // **skill 粒度锁守 D1**(gate①):本地表出现过的 skillId 整条远程丢弃 —— 用户手改过的 skill,
+  // 远程一个字段都不碰(不做字段级合并,否则远程能悄改用户已定制 skill 的其它字段)。
+  const localIds = new Set(rows.map((r) => r.id));
+  let remoteApplied = 0;
+  for (const ov of deps.remoteOverrides ?? []) {
+    if (localIds.has(ov.id)) continue; // D1 skill 锁:本地已定制 → 远程整条丢弃。
+    try {
+      overrideTemplatesFromConfig([ov]);
+      remoteApplied += 1;
+    } catch (err) {
+      skipped.push(ov.id);
+      log(
+        `[skill-config-overrides] 跳过远程 skill "${ov.id}"(套用失败,回退内置): ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+  }
+
+  // 本地层后套(本地赢;skill 锁已保证本地/远程不重叠,顺序在此是双保险)。
+  let applied = 0;
   for (const row of rows) {
     const override = rowToOverride(row);
     try {
@@ -145,5 +175,5 @@ export async function applySkillConfigOverridesFromDb(
       );
     }
   }
-  return { applied, skipped };
+  return { applied, skipped, remoteApplied };
 }

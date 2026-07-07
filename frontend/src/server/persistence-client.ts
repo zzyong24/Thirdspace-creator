@@ -244,6 +244,7 @@ import { runReconstruct } from "@creatoros/backend/modules/ai-runtime";
 import {
   applySkillConfigOverridesFromDb,
   createPgliteSkillConfigOverrideReadPort,
+  fetchRemotePromptOverrides,
 } from "@creatoros/backend/modules/ai-runtime";
 import { createLlmCompleter, LlmCredentialError } from "@creatoros/backend/modules/ai-runtime";
 import { resolveLlmConfig } from "@creatoros/backend/modules/ai-runtime";
@@ -6263,9 +6264,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 坏 id 只记日志跳过、不阻塞装配。
   // T-040c:把「重读表+重套覆盖」闭包在 db 可见处,启动装配调一次;prompts.put 后经 bundle
   // 再调一次做热更(compositeTransport 那层没有 db,故经 bundle 暴露)。
+  // [T-166 / P3] 启动拉一次远程 prompt 包(验签 + 解析在 fetchRemotePromptOverrides 内;任何失败
+  // →[] 诚实降级、纯本地不崩)。缓存,后续 reapply(prompts.put/rollback 热更)复用,不每次打网络。
+  // 未配 PROMPT_BUNDLE_URL/PUBLIC_KEY → [] → 远程层关(零副作用,现有纯本地行为不变)。托管 endpoint
+  // 待产品方拍板;客户端只认「一个可配的 signed bundle URL」,与托管解耦。**skill 粒度锁守 D1**
+  // (用户本地定制永远赢)在 applySkillConfigOverridesFromDb 里。
+  const remotePromptOverrides = await fetchRemotePromptOverrides({
+    url: process.env.PROMPT_BUNDLE_URL,
+    publicKey: process.env.PROMPT_BUNDLE_PUBLIC_KEY,
+  });
   const reapplySkillOverrides = () =>
     applySkillConfigOverridesFromDb({
       readPort: createPgliteSkillConfigOverrideReadPort(db),
+      remoteOverrides: remotePromptOverrides,
     });
   await reapplySkillOverrides();
 

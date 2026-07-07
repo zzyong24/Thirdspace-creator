@@ -32,6 +32,7 @@ export * from "./llm/resolve";
 export * from "./material-extract-runner";
 export * from "./material-match-runner";
 export * from "./material-summary";
+export * from "./remote-prompt-bundle";
 export * from "./multimodal/resolve";
 export * from "./planning-contract-runner";
 export * from "./planning-outline-runner";

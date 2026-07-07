@@ -256,3 +256,59 @@ describe("PGlite 持久化集成测(real pglite + 迁移 0013_skill_config_overr
     expect(getTemplate(SKILL_ID).system).toBe(builtinSystemBefore);
   });
 });
+
+describe("[T-166 / P3] 远程 override 层 —— skill 粒度锁守 D1 + 重建织入", () => {
+  const REMOTE_ID = "chatbox.review"; // 第二个内置 skill(无本地 override 的远程-only 用例)
+  beforeEach(() => {
+    _resetRegistry();
+  });
+
+  it("skill 粒度锁(gate①核心):本地手改 A 的 system + 远程改 A 的 template → 远程整条丢弃,A.template 保持内置", async () => {
+    const builtinTopicTemplate = getTemplate(SKILL_ID).template;
+    _resetRegistry();
+
+    const res = await applySkillConfigOverridesFromDb({
+      readPort: fakeReadPort([row({ id: SKILL_ID, system: "本地手改的 system" })]),
+      // 远程试图改同一 skill 的**另一个字段** template —— 字段级合并会让它悄悄生效(违 D1);
+      // skill 粒度锁应整条丢弃。
+      remoteOverrides: [{ id: SKILL_ID, template: "远程想改的 template（不该生效）" }],
+    });
+
+    const tpl = getTemplate(SKILL_ID);
+    expect(tpl.system).toBe("本地手改的 system"); // 本地赢
+    expect(tpl.template).toBe(builtinTopicTemplate); // 远程 template 没进(skill 锁);保持内置
+    expect(res.applied).toBe(1); // 本地 1 条
+    expect(res.remoteApplied).toBe(0); // 远程被 skill 锁挡掉
+  });
+
+  it("远程-only skill(本地无该 id)→ 远程生效", async () => {
+    const builtinReview = getTemplate(REMOTE_ID).system;
+    expect(builtinReview).not.toBe("远程 review system"); // 前置:内置 ≠ 远程值
+    _resetRegistry();
+
+    const res = await applySkillConfigOverridesFromDb({
+      readPort: fakeReadPort([]), // 本地空
+      remoteOverrides: [{ id: REMOTE_ID, system: "远程 review system" }],
+    });
+    expect(getTemplate(REMOTE_ID).system).toBe("远程 review system");
+    expect(res.remoteApplied).toBe(1);
+  });
+
+  it("重建织入(gate②):远程层在 registerAllTemplates 之后套、没被重建清掉;缺省 remoteOverrides = 纯本地", async () => {
+    // 缺省(undefined)→ 纯本地路径,现有行为不变(向后兼容)。
+    const res1 = await applySkillConfigOverridesFromDb({
+      readPort: fakeReadPort([row({ id: SKILL_ID, system: "仅本地" })]),
+    });
+    expect(res1.remoteApplied).toBe(0);
+    expect(getTemplate(SKILL_ID).system).toBe("仅本地");
+
+    // 有远程 + 本地空 → 远程活着(证明没被函数体首行 registerAllTemplates 清掉)。
+    _resetRegistry();
+    const res2 = await applySkillConfigOverridesFromDb({
+      readPort: fakeReadPort([]),
+      remoteOverrides: [{ id: SKILL_ID, system: "远程活着" }],
+    });
+    expect(res2.remoteApplied).toBe(1);
+    expect(getTemplate(SKILL_ID).system).toBe("远程活着");
+  });
+});
