@@ -6535,7 +6535,11 @@ export const compositeTransport: Transport = {
       // (overrideTemplatesFromConfig 是「套一次进内存」,非每次 getTemplate 查库)——
       // 于是下一次 getTemplate/装配即读到新值,**不必重启**。fire-and-forget catch,
       // 失败只吞、不影响 put 本身的返回。
-      if (endpoint.id === "settings.prompts.put") {
+      // [T-165] rollback 同样改当前生效配置 → 一并触发热更(否则回滚后要重启才生效)。
+      if (
+        endpoint.id === "settings.prompts.put" ||
+        endpoint.id === "settings.prompts.rollback"
+      ) {
         await bundle.reapplySkillOverrides().catch(() => {});
       }
       return result;

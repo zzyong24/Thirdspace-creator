@@ -17,6 +17,7 @@ import {
   modelConfigurationResource,
   agentConfigurationResource,
   skillConfigOverrideResource,
+  skillConfigOverrideVersionResource,
 } from "./settings.schema";
 
 // Settings contract conformance (plan Step 4). Drive each of the 4 ops through an
@@ -230,6 +231,47 @@ describe("settings.transport (contract conformance)", () => {
     });
     expect(Array.isArray(list)).toBe(true);
     expect(list.find((p) => p.id === "topic.generate")).toBeTruthy();
+  });
+
+  it("[T-165] settings.prompts.versions.list + rollback → 契约合形 + 回滚生效", async () => {
+    const client = createClient(ENDPOINTS, transport, ctx);
+    // 两次 put 产两版本。
+    await client.putPrompt({
+      params: { id: "review.insights" },
+      query: undefined,
+      body: { system: "第一版" },
+    });
+    await client.putPrompt({
+      params: { id: "review.insights" },
+      query: undefined,
+      body: { system: "第二版" },
+    });
+    // 版本历史列表(最新在前),逐条合契约。
+    const versions = await client.listPromptVersions({
+      params: { id: "review.insights" },
+      query: undefined,
+      body: undefined,
+    });
+    expect(versions.length).toBe(2);
+    for (const v of versions)
+      expect(() => skillConfigOverrideVersionResource.parse(v)).not.toThrow();
+    expect(versions[0]!.system).toBe("第二版");
+    const firstVersion = versions.find((v) => v.system === "第一版")!;
+    // 回滚到第一版 → 当前配置回到「第一版」,响应合 skillConfigOverrideResource。
+    const rolled = await client.rollbackPrompt({
+      params: { id: "review.insights" },
+      query: undefined,
+      body: { versionId: firstVersion.id },
+    });
+    expect(() => skillConfigOverrideResource.parse(rolled)).not.toThrow();
+    expect(rolled.system).toBe("第一版");
+    // 回滚也进历史(第 3 版)。
+    const after = await client.listPromptVersions({
+      params: { id: "review.insights" },
+      query: undefined,
+      body: undefined,
+    });
+    expect(after.length).toBe(3);
   });
 
   it("settings.prompts.get → skillConfigOverrideResource single envelope", async () => {

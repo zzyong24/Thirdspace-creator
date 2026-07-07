@@ -9,7 +9,6 @@ import {
   skillConfigOverrides,
   skillConfigOverrideVersions,
 } from "./settings.db-schema";
-import { desc } from "drizzle-orm";
 
 // Settings repository (foundation §5.2) — user-scoped queries ONLY. Every method
 // takes a RequestContext and filters/stamps on `ctx.userId` (foundation §1/§2,
@@ -472,15 +471,22 @@ export function createSettingsRepository(
     },
 
     async listSkillConfigOverrideVersions(id) {
-      // 某 skill 的历史版本,最新在前(按 createdAt 倒序;同刻回落 version 号次)。
-      return db
+      const rows = await db
         .select()
         .from(skillConfigOverrideVersions)
-        .where(eq(skillConfigOverrideVersions.overrideId, id))
-        .orderBy(
-          desc(skillConfigOverrideVersions.createdAt),
-          desc(skillConfigOverrideVersions.id),
-        );
+        .where(eq(skillConfigOverrideVersions.overrideId, id));
+      // 最新在前:主 createdAt 倒序;次 version 数值倒序(putSkillConfigOverride 的 version 单调
+      // 递增 → 版本号即插入序)。**不靠 text id 字典序兜底** —— 那在 id 数字跨位(如 c-9→c-10)会
+      // 错排,且固定测试时钟下 createdAt 同刻会暴露它。version 数值排序稳、时钟无关。
+      return rows.sort((a, b) => {
+        if (a.createdAt !== b.createdAt)
+          return a.createdAt < b.createdAt ? 1 : -1;
+        const na = Number(a.version);
+        const nb = Number(b.version);
+        if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb)
+          return nb - na;
+        return 0;
+      });
     },
 
     async rollbackSkillConfigOverride(ctx, id, versionId) {

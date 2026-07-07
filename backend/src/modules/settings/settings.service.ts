@@ -7,6 +7,7 @@ import type {
   AgentConfigurationRow,
   StorageConfigRow,
   SkillConfigOverrideRow,
+  SkillConfigOverrideVersionRow,
   PreferencePatch,
   ModelPutBody,
   AgentCreateInput,
@@ -20,6 +21,7 @@ import type {
   AgentConfigurationResource,
   StorageConfigResource,
   SkillConfigOverrideResource,
+  SkillConfigOverrideVersionResource,
 } from "./settings.schema";
 import { resolveRootPath } from "@creatoros/backend/modules/assets";
 import { rootPathLegalityReason } from "@creatoros/backend/modules/assets";
@@ -163,6 +165,17 @@ export interface SettingsService {
     ctx: RequestContext,
     body: SkillConfigOverridePutBody,
   ): Promise<SkillConfigOverrideResource>;
+  // [T-165] 版本历史 + 一键回滚。list = 某 skill 历史快照(最新在前);rollback = 取某历史
+  // 版本重新生效(热更接线同 put,在 persistence-client 装配处)。
+  listSkillConfigOverrideVersions(
+    ctx: RequestContext,
+    id: string,
+  ): Promise<SkillConfigOverrideVersionResource[]>;
+  rollbackSkillConfigOverride(
+    ctx: RequestContext,
+    id: string,
+    versionId: string,
+  ): Promise<SkillConfigOverrideResource>;
   // item B — read the resolved storage config + real usage.
   getStorage(ctx: RequestContext): Promise<StorageConfigResource>;
   // item B — update the backend choice / media root (validated: an illegal /
@@ -280,6 +293,32 @@ function toSkillConfigOverrideResource(
   };
 }
 
+// [T-165] 版本快照行 → DTO(同款 jsonb 归一)。
+function toSkillConfigOverrideVersionResource(
+  row: SkillConfigOverrideVersionRow,
+): SkillConfigOverrideVersionResource {
+  const toStringArray = (v: unknown): string[] | null =>
+    Array.isArray(v)
+      ? v.filter((x): x is string => typeof x === "string")
+      : null;
+  const toObject = (v: unknown): Record<string, unknown> | null =>
+    v !== null && typeof v === "object" && !Array.isArray(v)
+      ? (v as Record<string, unknown>)
+      : null;
+  return {
+    id: row.id,
+    overrideId: row.overrideId,
+    version: row.version ?? null,
+    system: row.system ?? null,
+    template: row.template ?? null,
+    tools: toStringArray(row.tools),
+    requiredFacets: toStringArray(row.requiredFacets),
+    outputSchema: toObject(row.outputSchema),
+    updatedBy: row.updatedBy ?? null,
+    createdAt: row.createdAt,
+  };
+}
+
 export function createSettingsService(
   repoForCtx: (ctx: RequestContext) => SettingsRepository,
   accountReader: AccountReader,
@@ -385,6 +424,28 @@ export function createSettingsService(
         );
       }
       const row = await repoForCtx(ctx).putSkillConfigOverride(ctx, body);
+      return toSkillConfigOverrideResource(row);
+    },
+
+    async listSkillConfigOverrideVersions(ctx, id) {
+      const rows =
+        await repoForCtx(ctx).listSkillConfigOverrideVersions(id);
+      return rows.map(toSkillConfigOverrideVersionResource);
+    },
+
+    async rollbackSkillConfigOverride(ctx, id, versionId) {
+      // 同 put 的 id 合法性门(回滚只针对已注册 skill 的历史)。
+      if (!skillIdValid(id)) {
+        throw new PromptValidationError(
+          `未知 skill id "${id}" — 只能回滚已注册的 18 个模板之一`,
+        );
+      }
+      // 错版 id / 不属于该 skill → repo 抛错;这里让它冒泡(400/500 由 dispatch 映射)。
+      const row = await repoForCtx(ctx).rollbackSkillConfigOverride(
+        ctx,
+        id,
+        versionId,
+      );
       return toSkillConfigOverrideResource(row);
     },
 

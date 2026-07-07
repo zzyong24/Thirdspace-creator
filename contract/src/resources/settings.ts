@@ -97,6 +97,23 @@ export type SkillConfigOverrideResource = z.infer<
   typeof skillConfigOverrideResource
 >;
 
+// [T-165] skill_config_overrides 的一条历史版本快照(供版本历史列表 + 一键回滚)。
+export const skillConfigOverrideVersionResource = z.object({
+  id: z.string(),
+  overrideId: z.string(),
+  version: z.string().nullable(),
+  system: z.string().nullable(),
+  template: z.string().nullable(),
+  tools: z.array(z.string()).nullable(),
+  requiredFacets: z.array(z.string()).nullable(),
+  outputSchema: z.record(z.string(), z.unknown()).nullable(),
+  updatedBy: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type SkillConfigOverrideVersionResource = z.infer<
+  typeof skillConfigOverrideVersionResource
+>;
+
 // AgentConfiguration extends BaseEntity only; carries explicit createdAt/updatedAt.
 export const agentConfigurationResource = z.object({
   id,

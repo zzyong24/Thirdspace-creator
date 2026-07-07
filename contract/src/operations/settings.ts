@@ -7,6 +7,7 @@ import {
   agentConfigurationResource,
   storageConfigResource,
   skillConfigOverrideResource,
+  skillConfigOverrideVersionResource,
 } from "../resources/settings";
 
 // SPEC §13 "设置" group. `GET /settings` is the singleton settings view for the
@@ -144,5 +145,25 @@ export const settingsOperations = {
     }),
     response: skillConfigOverrideResource,
     fr: ["FR-SETTINGS-PROMPT-UPSERT"],
+  }),
+  // [T-165] 版本历史 + 一键回滚。list = 某 skill 的历史版本快照(最新在前);rollback =
+  // 把某历史版本重新生效为当前配置(回滚本身也记一条新版本,审计链不断)。put 后同款热更
+  // (persistence-client 重套 override 进常驻 REGISTRY,不重启)。
+  listPromptVersions: defineEndpoint({
+    id: "settings.prompts.versions.list",
+    method: "GET",
+    path: "/settings/prompts/:id/versions",
+    params: z.object({ id: z.string().min(1) }),
+    response: z.array(skillConfigOverrideVersionResource),
+    fr: ["FR-SETTINGS-PROMPT-VERSIONS-LIST"],
+  }),
+  rollbackPrompt: defineEndpoint({
+    id: "settings.prompts.rollback",
+    method: "POST",
+    path: "/settings/prompts/:id/rollback",
+    params: z.object({ id: z.string().min(1) }),
+    body: z.object({ versionId: z.string().min(1) }),
+    response: skillConfigOverrideResource,
+    fr: ["FR-SETTINGS-PROMPT-ROLLBACK"],
   }),
 } as const;

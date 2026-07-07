@@ -129,6 +129,8 @@ export {
 export {
   skillConfigOverrideResource,
   type SkillConfigOverrideResource,
+  skillConfigOverrideVersionResource,
+  type SkillConfigOverrideVersionResource,
 } from "./resources/settings";
 
 // [T-163 Batch 3] Copilot 对话工具中文词表 —— chat-runner(backend,下沉后)与

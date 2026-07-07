@@ -37,3 +37,10 @@ export type StorageConfigResource =
 export const skillConfigOverrideResource = ENDPOINTS.getPrompt.response;
 export type SkillConfigOverrideResource =
   (typeof skillConfigOverrideResource)["_output"];
+
+// [T-165] 版本历史快照 DTO —— listPromptVersions 的数组元素(topology 同款:从端点响应派生,
+// 不直引 contract resource 文件)。
+export const skillConfigOverrideVersionResource =
+  ENDPOINTS.listPromptVersions.response.element;
+export type SkillConfigOverrideVersionResource =
+  (typeof skillConfigOverrideVersionResource)["_output"];

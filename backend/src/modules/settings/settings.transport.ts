@@ -45,6 +45,8 @@ export const SETTINGS_OP_IDS = [
   "settings.prompts.list",
   "settings.prompts.get",
   "settings.prompts.put",
+  "settings.prompts.versions.list",
+  "settings.prompts.rollback",
 ] as const;
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
@@ -134,6 +136,25 @@ export function createSettingsTransport(
             id: p.id ?? "",
             ...b,
           });
+          return { data, meta: { requestId: ctx.requestId } };
+        }
+        // [T-165] 版本历史列表 + 一键回滚。
+        case "settings.prompts.versions.list": {
+          const p = (params ?? {}) as { id?: string };
+          const data = await service.listSkillConfigOverrideVersions(
+            ctx,
+            p.id ?? "",
+          );
+          return { data, meta: { requestId: ctx.requestId } };
+        }
+        case "settings.prompts.rollback": {
+          const p = (params ?? {}) as { id?: string };
+          const b = (body ?? {}) as { versionId?: string };
+          const data = await service.rollbackSkillConfigOverride(
+            ctx,
+            p.id ?? "",
+            b.versionId ?? "",
+          );
           return { data, meta: { requestId: ctx.requestId } };
         }
         default:
