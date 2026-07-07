@@ -106,6 +106,10 @@ describe("platform-account contract", () => {
         body: { platform: "douyin", accountHandle: "@a" },
       })
     ).data as { id: string };
+    // [T-136§D-bind⑥] 末号保护:留个"守门号",否则 archive 唯一 active 号会被守卫拒绝。
+    await call(transport, "accounts.create", {
+      body: { platform: "douyin", accountHandle: "@keep" },
+    });
     const res = await call(transport, "accounts.archive", {
       params: { accountId: created.id },
       body: {},
