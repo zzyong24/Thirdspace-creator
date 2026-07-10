@@ -30,6 +30,12 @@ export interface ModelSpec {
   token: string;
 }
 
+/** [T-182c] trend 出题联网检索命中项(T-126 SearchResult 的子集,只取出题所需字段)。 */
+export interface TrendHit {
+  title: string;
+  snippet?: string;
+}
+
 export interface TopicTaskAdapterDeps extends ContextDeps {
   ai: AiService;
   /** 按 capability 解析出可用 model 规格;无可用 key 时抛错(LlmCredentialError)。 */
@@ -37,6 +43,36 @@ export interface TopicTaskAdapterDeps extends ContextDeps {
     ctx: RequestContext,
     capability: string,
   ) => Promise<ModelSpec>;
+  // [T-182c] trend 出题依据检索端口 —— 复用 T-126 联网检索(rss 免 key / browser 无头采集,
+  // 组合根绑 searchWebPort)。抓当前热点拼进 basisBrief 喂 topic.generate,不在此重造采集器。
+  // 未绑 / 未配 web.search / 检索失败 → 空 brief,靠 basis="trend" 让节点走无热点降级路径,不崩。
+  trendSearch?: (
+    ctx: RequestContext,
+    query: string,
+    opts?: { count?: number },
+  ) => Promise<TrendHit[]>;
+}
+
+/** [T-182c] 由定位简报派生 trend 检索 query(有定位则贴领域,无则通用),空白归一。 */
+export function buildTrendQuery(positioningBrief: string): string {
+  const seed = (positioningBrief ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+  return seed ? `${seed} 最新热点 趋势` : "内容创作 最新热点 趋势";
+}
+
+/** [T-182c] 把联网检索到的热点结果拼成 trend 出题依据 brief(空数组 → 空串,诚实降级)。 */
+export function formatTrendBrief(hits: ReadonlyArray<TrendHit>): string {
+  const lines = hits
+    .map((h) => {
+      const title = (h.title ?? "").trim();
+      if (!title) return "";
+      const snip = (h.snippet ?? "").trim();
+      return snip ? `${title} —— ${snip}` : title;
+    })
+    .filter((s) => s !== "")
+    .map((s, i) => `${i + 1}. ${s}`);
+  return lines.length > 0
+    ? ["【当前热点(联网检索)】", ...lines].join("\n")
+    : "";
 }
 
 export interface TopicTask {
@@ -63,13 +99,28 @@ export async function runTopicGenerateV2(
       deps,
     );
     // Sfix(basis 装配 bug):按出题依据装配对应 brief 一起喂进去,让 4 个按钮真的不同
-    // (评论→评论信号 / 知识→知识库)。之前只传 positioningBrief,导致各 basis 出一样的题。
-    const basisBrief =
-      basis === "comments"
-        ? context.signalsBrief
-        : basis === "knowledge"
-          ? context.knowledgeBrief
-          : "";
+    // (评论→评论信号 / 知识→知识库 / 热点→联网检索)。之前只传 positioningBrief,导致各 basis 出一样的题。
+    let basisBrief = "";
+    if (basis === "comments") {
+      basisBrief = context.signalsBrief;
+    } else if (basis === "knowledge") {
+      basisBrief = context.knowledgeBrief;
+    } else if (basis === "trend") {
+      // [T-182c] trend 出题:复用 T-126 联网检索(rss/browser 免 key adapter)抓当前热点拼进 basisBrief。
+      // 未绑端口 / 未配 web.search / 检索失败 → 空 brief;basis="trend" 仍透传给节点当降级 hint,不崩。
+      if (deps.trendSearch) {
+        try {
+          const hits = await deps.trendSearch(
+            ctx,
+            buildTrendQuery(context.positioningBrief),
+            { count: 8 },
+          );
+          basisBrief = formatTrendBrief(hits);
+        } catch {
+          basisBrief = ""; // 检索失败 → 诚实降级空,靠 basis 参数让节点走无热点路径
+        }
+      }
+    }
     // 4) 跑整条编排:markRunning → 跑节点(发步骤)→ recordCandidate;失败 cancelTask。
     await runTopicTask({
       taskId: task.id,

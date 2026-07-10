@@ -1985,20 +1985,47 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         return "";
       }
     },
-    // 本作品观众评论 —— audience_signals 里 source 含 "comment"(如 douyin_comment)的信号 rawText。
-    // 多拉一些再按 comment 过滤 + 截前 limit 条(listSignals 不带 source 过滤,内存筛;诚实空兜底)。
+    // [T-182b] 本作品观众评论 —— 走 per-work 归属查询(不再账号级内存筛)。project → outputs →
+    // 逐 publication 调 listCommentsForPublication(source='comment' AND publication_id=pubId,
+    // 已按点赞热榜倒序)→ 合并取前 limit 条。与 getMetricsSummary 同一 project→outputs→pubs 装配
+    // 口径,零 schema 变更(per-work 外键与查询已建齐)。无 publication / 读失败 → 诚实空兜底。
     getComments: async (c, projectId, opts) => {
       try {
-        void projectId; // 现阶段受众信号按账号维度存(无 per-project 外键)→ 取账号级评论作复盘参考。
-        const res = await candidateService.listSignals(c, {
-          limit: Math.max(opts.limit * 3, 60),
-          offset: 0,
-        });
-        return res.rows
-          .filter((s) => (s.source ?? "").toLowerCase().includes("comment"))
-          .map((s) => s.rawText)
-          .filter((t): t is string => typeof t === "string" && t.trim() !== "")
-          .slice(0, opts.limit);
+        const outputIds = await projectsService.listOutputIdsByProject(
+          c,
+          projectId,
+        );
+        const comments: string[] = [];
+        for (const outputId of outputIds) {
+          let pubs: Array<{ id: string }> = [];
+          try {
+            pubs = await publishingService.listPublications(c, outputId, {
+              limit: 20,
+              offset: 0,
+            });
+          } catch {
+            pubs = []; // 单 output 的 publication 读失败 → 跳过,不牵连其它、不崩
+          }
+          for (const pub of pubs) {
+            if (comments.length >= opts.limit) break;
+            try {
+              const rows = await candidateService.listCommentsForPublication(
+                c,
+                pub.id,
+                opts.limit,
+              );
+              for (const r of rows) {
+                if (typeof r.rawText === "string" && r.rawText.trim() !== "") {
+                  comments.push(r.rawText);
+                }
+              }
+            } catch {
+              /* 单 publication 评论读失败 → skip, never crash */
+            }
+          }
+          if (comments.length >= opts.limit) break;
+        }
+        return comments.slice(0, opts.limit);
       } catch {
         return [];
       }
@@ -2325,6 +2352,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               learnings: learningsReader,
               signals: signalsReader,
               knowledge: knowledgeReader,
+              // [T-182c] trend 出题依据接 T-126 联网检索:组合根把 searchWebPort(rss 免key/browser
+              // 无头采集,同一 search registry)绑进来抓当前热点。未配 web.search → searchWebPort 抛
+              // SearchConfigError,adapter 内 catch 成空 brief 降级,不重造采集器、不崩。
+              trendSearch: (c, query, opts) => searchWebPort(c, query, opts),
               resolveModelSpec,
             },
           );
@@ -2636,6 +2667,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ai: aiService,
               positioning: positioningReader,
               learnings: learningsReader,
+              // [T-182a] 知识库沉淀接入写文案上下文 —— 组合根把 knowledgeReader 绑给 script.draft
+              // (与 topic.generate 同一 reader),assembleCreativeContext 据此产出 knowledgeBrief,
+              // 真喂进 runScriptNode 的写脚本 prompt。补断链前此项恒空(见 script-runner.ts)。
+              knowledge: knowledgeReader,
               // SEAM-01:策划→脚本上下文 —— 把本项目策划产物(论点树/内容合同/结构方案)经
               // reader 端口注入写文案上下文,和 positioning+learnings 并列。脚本据此铺策划的
               // 结构与论点,不再自己重造蓝图。各 reader 读对应 artifact 当前版本(无则降级空)。

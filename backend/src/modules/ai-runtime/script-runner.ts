@@ -108,9 +108,9 @@ export async function runScriptDraft(
       model: modelFor(spec),
       positioningBrief: context.positioningBrief,
       learningsBrief: context.learningsBrief,
-      // [T-182 待接] 知识库沉淀本应喂进写文案 prompt,但组合根 runScriptDraft dispatch 未绑
-      //   knowledge reader(见 persistence-client.ts,对比 topic.generate 有绑)→ context.knowledgeBrief
-      //   恒空 → 此处恒 undefined。**知识库当前未真喂进写脚本**,待 T-182 补 knowledge 接线。
+      // [T-182a 已接] 知识库沉淀喂进写文案 prompt:组合根 runScriptDraft dispatch 已绑 knowledge
+      //   reader(persistence-client.ts,与 topic.generate 同一 reader)→ assembleCreativeContext
+      //   产出 context.knowledgeBrief(库空/读失败降级空)→ 此处真喂进写脚本节点。
       knowledgeBrief: context.knowledgeBrief || undefined,
       topicTitle: context.topic.title,
       topicAngle: context.topic.angle,
