@@ -32,6 +32,10 @@ import type {
 const ctx: RequestContext = { userId: "user-z", requestId: "req-z", source: "user" };
 const NOW = "2026-06-21T00:00:00.000Z";
 
+// [T-196] no-op 存储迁移 stub —— updateStorage 单测传它,避免真的对 ~/CreatorOS 做
+//   copy/delete(原来直接 import 的 migrateStorageRoot 会动真机 home,搬走用户真实封面 + flaky)。
+const noopMigrate = async () => ({ migrated: 0, skipped: true });
+
 // A tiny in-memory fake of the user-scoped repository. It ignores ctx scoping
 // (the integration test covers scoping); it just records state for the mapping
 // assertions.
@@ -370,7 +374,13 @@ describe("settings.service", () => {
 
   it("updateStorage expands a `~`-prefixed rootPath via os.homedir()", async () => {
     const repo = makeFakeRepo();
-    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    const svc = createSettingsService(
+      () => repo,
+      accountReader,
+      accountWriter,
+      undefined,
+      noopMigrate,
+    );
     const s = await svc.updateStorage(ctx, { rootPath: "~/CreatorOS/custom" });
     expect(s.rootPath).toBe(
       path.join(os.homedir(), "CreatorOS", "custom"),
@@ -390,7 +400,13 @@ describe("settings.service", () => {
 
   it("resolveStorageRoot / resolveStorageBackend reflect the stored config", async () => {
     const repo = makeFakeRepo();
-    const svc = createSettingsService(() => repo, accountReader, accountWriter);
+    const svc = createSettingsService(
+      () => repo,
+      accountReader,
+      accountWriter,
+      undefined,
+      noopMigrate,
+    );
     // Persist a custom path under the OS tmp dir (writable, legal).
     const tmpRoot = path.join(os.tmpdir(), "creatoros-svc-test-root");
     await svc.updateStorage(ctx, { backend: "local", rootPath: tmpRoot });

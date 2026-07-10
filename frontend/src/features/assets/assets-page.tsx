@@ -680,11 +680,13 @@ interface StorageUsageCardProps {
 }
 
 function StorageUsageCard({ storage }: StorageUsageCardProps) {
-  // [T-115] totalBytes 未知(0,真实磁盘容量读失败/降级)时以 used 自身为 max,进度条
-  // 仍渲染且不除零;且只显「已用 X GB」不带假分母(与设置页 totalGb ? … : … 同款诚实处理)。
+  // [T-196] totalBytes 未知(0,真实磁盘容量读失败/降级)时**不显百分比**——原来以 used 自身为
+  //   max → pct 恒 100%,进度条拉满 + 「使用率 100%」是误导(看着像磁盘满了,实际只用了几百KB)。
+  //   诚实处理:有真容量才显「已用/总量 + 百分比条」;没有就只显「已使用 X GB」,不摆假分母/假满条。
   const hasTotal = storage.totalBytes > 0 && storage.totalLabel.length > 0;
-  const max = hasTotal ? storage.totalBytes : storage.usedBytes || 1;
-  const pct = Math.min(100, Math.max(0, Math.round((storage.usedBytes / max) * 100)));
+  const pct = hasTotal
+    ? Math.min(100, Math.max(0, Math.round((storage.usedBytes / storage.totalBytes) * 100)))
+    : null;
   return (
     <SectionCard
       title="存储空间"
@@ -700,12 +702,19 @@ function StorageUsageCard({ storage }: StorageUsageCardProps) {
               : storage.usedLabel}
           </span>
         </div>
-        <ProgressBar
-          value={pct}
-          showValue
-          label="素材库存储使用率"
-          tone="brand"
-        />
+        {pct !== null ? (
+          <ProgressBar
+            value={pct}
+            showValue
+            label="素材库存储使用率"
+            tone="brand"
+          />
+        ) : (
+          // 磁盘总容量未知 → 不显误导的百分比条,给一句诚实说明。
+          <p className="text-[11px] text-muted-foreground">
+            磁盘总容量未知,仅显示已用量
+          </p>
+        )}
         <p className="text-[11px] text-muted-foreground">
           {/* ASSET-17:去掉"自动同步已开启"假文案(无同步机制支撑)。 */}
           个人本地素材库

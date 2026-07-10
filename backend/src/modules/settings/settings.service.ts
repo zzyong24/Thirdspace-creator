@@ -328,6 +328,10 @@ export function createSettingsService(
   // takes no dependency on ai-worker. When absent (unit/contract tests), fall back to
   // the inline REGISTERED_SKILL_IDS set (kept in sync with BUILTIN_TEMPLATES).
   isValidSkillId?: (id: string) => boolean,
+  // [T-196] 存储目录迁移函数可注入(默认真实现)。单测传 no-op stub → 不碰真实文件系统
+  //   (原来直接 import 的 migrateStorageRoot 在测试里会对真机 ~/CreatorOS/media 做 copy/delete,
+  //   曾把用户真实封面从 media 搬去 custom+删 media,并是那条 flaky 测试的根源)。
+  migrate: typeof migrateStorageRoot = migrateStorageRoot,
 ): SettingsService {
   const skillIdValid = isValidSkillId ?? ((id: string) => REGISTERED_SKILL_IDS.has(id));
   return {
@@ -501,7 +505,7 @@ export function createSettingsService(
         if (effectiveBackend === "local") {
           const oldResolved = resolveRootPath(current?.rootPath);
           const newResolved = resolveRootPath(patch.rootPath);
-          const migration = await migrateStorageRoot(oldResolved, newResolved);
+          const migration = await migrate(oldResolved, newResolved);
           if (!migration.skipped) {
             // 拷贝 + 校验已通过 → persist 后再删旧目录(删失败只留孤儿,不裂功能)。
             oldRootToPrune = oldResolved;
