@@ -687,3 +687,89 @@ describe("ingestion.loginDouyin — 扫码成功同时建采集源 + 平台账�
     expect(fetchCalls).toBe(1);
   });
 });
+
+// T-189a —— 扫码绑定成功 → fire-and-forget 调 onDouyinBound(组合根据此建三个每天定时采集 job +
+//   初始化跑一次)。「已有账户」路径也复用 loginDouyin,故同样触发。onDouyinBound 注入时不再跑
+//   Bug-13 内联 refreshDouyin(避免双跑 Chromium 抢号)。
+describe("ingestion.loginDouyin — 绑定成功触发 onDouyinBound (T-189a)", () => {
+  function bindService(
+    db: Db,
+    loggedIn: boolean,
+    onDouyinBound?: (c: RequestContext) => void,
+    opts?: { fetch?: () => Promise<MetricRecord[]> },
+  ) {
+    let seq = 0;
+    const douyinFetch: DouyinFetchPort = {
+      fetch: opts?.fetch ?? (async () => []),
+      login: async () => loggedIn,
+      status: async () => loggedIn,
+    };
+    const accountPort: IngestionPlatformAccountPort = {
+      ensureAccount: async () => ({ id: "acct-1" }),
+    };
+    return createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
+      db,
+      douyinFetch,
+      platformAccount: accountPort,
+      onDouyinBound,
+      ports: {
+        publishing: { resolvePublication: () => Promise.resolve({ id: "pub" }) },
+        analytics: { appendSnapshot: () => Promise.resolve({ created: true }) },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+  }
+
+  it("扫码成功 → onDouyinBound 被调一次(带绑定 ctx),源已就绪", async () => {
+    const { db } = await createDb();
+    const boundCtx: RequestContext[] = [];
+    const svc = bindService(db, true, (c) => boundCtx.push(c));
+    const res = await svc.loginDouyin(ctx);
+    expect(res.loggedIn).toBe(true);
+    for (let i = 0; i < 10; i++) {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+    expect(boundCtx).toHaveLength(1);
+    expect(boundCtx[0]!.userId).toBe(ctx.userId);
+    await expect(svc.checkDouyinStatus(ctx)).resolves.toMatchObject({
+      sourceReady: true,
+    });
+  });
+
+  it("扫码失败 → onDouyinBound 不被调(不假装绑定)", async () => {
+    const { db } = await createDb();
+    let calls = 0;
+    const svc = bindService(db, false, () => {
+      calls += 1;
+    });
+    const res = await svc.loginDouyin(ctx);
+    expect(res.loggedIn).toBe(false);
+    for (let i = 0; i < 10; i++) {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+    expect(calls).toBe(0);
+  });
+
+  it("onDouyinBound 注入时不跑 Bug-13 内联 refreshDouyin(避免双跑抢号 → fetch 不被调)", async () => {
+    const { db } = await createDb();
+    let fetchCalls = 0;
+    const svc = bindService(db, true, () => {}, {
+      fetch: async () => {
+        fetchCalls += 1;
+        return [];
+      },
+    });
+    const res = await svc.loginDouyin(ctx);
+    expect(res.loggedIn).toBe(true);
+    for (let i = 0; i < 20; i++) {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+    // 初始化采集由组合根 onDouyinBound(此处 fake 空实现)负责;service 内联 refresh 不再跑。
+    expect(fetchCalls).toBe(0);
+  });
+});

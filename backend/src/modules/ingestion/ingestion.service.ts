@@ -290,9 +290,21 @@ export function createIngestionService(args: {
   throttleStatus?: DouyinThrottleStatusPort;
   // T-144:扫码绑定时 ensure 平台账号的端口(可选;未注入时 loginDouyin 仅建 external_source)。
   platformAccount?: IngestionPlatformAccountPort;
+  // [T-189a] 绑定成功回调(可选;组合根注入)——扫码成功 + ensure 源/账号后 fire-and-forget 调它,
+  //   由组合根「幂等建三个每天定时采集 job + 初始化跑一次(按 self.metrics→self.detail→comments 序)」。
+  //   backend 模块**不 import scheduling**(守 SPEC §22),故经此回调把跨模块编排下推到组合根。
+  //   未注入(旧最小组合)→ 回退 Bug-13 内联 refreshDouyin 刷昵称(identity backfill,不破旧行为)。
+  onDouyinBound?: (ctx: RequestContext) => void;
 }): IngestionService {
-  const { deps, ports, db, douyinFetch, throttleStatus, platformAccount } =
-    args;
+  const {
+    deps,
+    ports,
+    db,
+    douyinFetch,
+    throttleStatus,
+    platformAccount,
+    onDouyinBound,
+  } = args;
 
   // T-144 → [T-136 §D 切片 c] 抖音采集源的确定性 id,**每号独立源**:
   //   `extsrc-douyin-${accountId ?? userId}`。选了号 → 该号独立源;未选号(存量 / 单号)→
@@ -759,6 +771,19 @@ export function createIngestionService(args: {
           } catch (err) {
             console.error("[ingestion] loginDouyin: ensure platform_account 失败:", err);
           }
+        }
+        // [T-189a] 绑定成功 → 组合根 bootstrap:幂等建三个每天定时采集 job(self.metrics /
+        //   self.detail / comments)+ 立即初始化跑一次拉全量(按序,gate-F5 串行链)。fire-and-forget
+        //   (回调内部 void,不阻塞绑定返回)。「已有账户」路径也复用 loginDouyin,故此处同样触发。
+        //   identity backfill 由初始化的 self.metrics(=refreshDouyin→applyDouyinIdentity)顺带完成,
+        //   故 onDouyinBound 注入时**不再**跑下方 Bug-13 内联 refreshDouyin(避免双跑 Chromium 抢号)。
+        if (onDouyinBound) {
+          try {
+            onDouyinBound(ctx);
+          } catch (err) {
+            console.error("[ingestion] loginDouyin: onDouyinBound 建 job/初始化触发失败:", err);
+          }
+        } else if (platformAccount) {
           // [Bug-13 T-029] 扫码后**立即** fire-and-forget 跑 refreshDouyin(cookies 刚落了 .auth/,
           // 直接 headless 复用)→ applyDouyinIdentity 把 accountHandle 从占位「我的抖音」改成
           // 真实抖音昵称。**这步之前**:sidebar 显空 handle(占位)、后续 collector 用 _default/

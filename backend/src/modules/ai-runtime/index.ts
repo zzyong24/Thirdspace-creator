@@ -13,6 +13,8 @@ export * from "./asset-classify-runner";
 export * from "./asset-generate-runner";
 export * from "./calibration-diagnose-runner";
 export * from "./calibration-score-runner";
+// [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排,组合根经 onDouyinBound 接)。
+export * from "./collection-bootstrap";
 // [T-163 Batch 3] chat 流式(runChatStream + tools + context 装配)—— streamText/tool/jsonSchema
 // (Vercel AI SDK)在此;前端只留 /api/chat 薄代理 + useChat UI。
 export * from "./chat-context";

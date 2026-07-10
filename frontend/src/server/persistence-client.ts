@@ -217,11 +217,15 @@ import {
 } from "@creatoros/backend/modules/ai-runtime";
 import {
   runJobNow,
+  triggerScheduledJob,
   startScheduler,
   sweepStaleRuns,
   type CronJob as SchedulableCronJob,
   type TriggerDeps,
 } from "@creatoros/backend/modules/ai-runtime";
+// [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排;组合根注入 listJobs/
+//   createJob/trigger 端口)。
+import { bootstrapDouyinCollectionJobs } from "@creatoros/backend/modules/ai-runtime";
 import { runTopicEnrich } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationDiagnose } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationScore } from "@creatoros/backend/modules/ai-runtime";
@@ -1350,9 +1354,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // (foundation §4) used by dev/seeds — not on the dispatch path.
   const ingestionMockSource = createMockIngestionSource();
   void ingestionMockSource; // producer-side seam; reserved for dev/seed import flows
+  // [T-189a] 绑定抖音成功 → 建三个每天定时采集 job + 初始化跑一次。forward-declared(实体在
+  //   schedulingService / triggerDeps 装配后赋值,见下方);loginDouyin 运行时才调(闭包延迟执行),
+  //   故此处引用尚未赋值的 let 是安全的(与 dispatchScheduledCollection 同款前向声明范式)。
+  let bootstrapDouyinOnBind: ((ctx: RequestContext) => void) | undefined;
   const ingestionService = createIngestionService({
     deps,
     db,
+    // [T-189a] 绑定成功回调:fire-and-forget 触发组合根 bootstrap(建 job + 初始化)。
+    onDouyinBound: (ctx) => bootstrapDouyinOnBind?.(ctx),
     ports: {
       publishing: {
         resolvePublication: (ctx, ref) =>
@@ -4294,6 +4304,41 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     dispatch: (ctx, task) => dispatchScheduledCollection?.(ctx, task),
     now: deps.now,
+  };
+
+  // [T-189a] 绑定抖音成功回调实体(loginDouyin 成功后 fire-and-forget 调):幂等建三个每天定时采集
+  //   job(self.metrics / self.detail / comments)+ 按序初始化触发一次拉全量(triggerScheduledJob
+  //   经 triggerDeps → dispatch 挂 gate-F5 串行链)。用**请求 ctx**(带当前号 accountId,init 采集
+  //   走该号 authDir);整体经 void 包裹不阻塞绑定返回。schedulingService/triggerDeps 均已在上方装配。
+  bootstrapDouyinOnBind = (ctx) => {
+    void bootstrapDouyinCollectionJobs(ctx, {
+      listJobsBySourceKind: async (c, sourceKind) => {
+        const { rows } = await schedulingService.listJobs(c, {
+          sourceKind,
+          limit: 1,
+          offset: 0,
+        });
+        return rows.map((r) => ({ id: r.id }));
+      },
+      createJob: async (c, input) => {
+        const job = await schedulingService.createJob(c, {
+          name: input.name,
+          prompt: input.prompt,
+          sourceKind: input.sourceKind,
+          schedule: input.schedule,
+          target: input.target,
+        });
+        return { id: job.id };
+      },
+      // 初始化触发复用 triggerScheduledJob(与 cron 到点 / 「立即运行」同一幂等双闸 + 触发点)。
+      trigger: async (c, job) => {
+        await triggerScheduledJob(c, job, triggerDeps);
+      },
+      // 空 target:采集器空 target 时自 ensureDouyinSource 兜底解析源(与手动建的 job 一致)。
+      target: {},
+    }).catch((err) =>
+      console.error("[persistence-client] 绑定抖音 bootstrap 建 job/初始化失败:", err),
+    );
   };
 
   // 「立即运行」(D5):wrap scheduling transport,拦 scheduledJobs.runNow(composition-only
