@@ -126,9 +126,12 @@ describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
   });
 
   // [T-136 切片 b] 号维度隔离:同一 user 下两个抖音号(account-a / account-b)。
-  it("accountId scopes reads within a user: 号a sees only 号a's; null sees all; create stamps accountId", async () => {
+  // 存量 account_id=null 的知识是历史/全局知识,选中具体号时也要能读(否则
+  // 服务端列表无号门可见,客户端预览带 x-account-id 后 404)。
+  it("accountId scopes reads within a user while including legacy null-account knowledge", async () => {
     const ACC_A = "account-a";
     const ACC_B = "account-b";
+    const legacy = await repo.create(A, null, { title: "存量全局笔记" });
     // 同一 user A,分别以两个号 create(号维度随调用透传)。
     const kA = await repo.create(A, ACC_A, { title: "号a 笔记" });
     const kB = await repo.create(A, ACC_B, { title: "号b 笔记" });
@@ -136,21 +139,25 @@ describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
     expect(kA.accountId).toBe(ACC_A);
     expect(kB.accountId).toBe(ACC_B);
 
-    // 号a 视角 list 只见号a 的;号b 只见号b 的。
+    // 号a 视角 list 见号a + 存量 null;号b 见号b + 存量 null。
     const listA = await repo.list(A, ACC_A);
-    expect(listA.map((r) => r.id)).toEqual([kA.id]);
+    expect(listA.map((r) => r.id).sort()).toEqual([legacy.id, kA.id].sort());
     const listB = await repo.list(A, ACC_B);
-    expect(listB.map((r) => r.id)).toEqual([kB.id]);
+    expect(listB.map((r) => r.id).sort()).toEqual([legacy.id, kB.id].sort());
     // null 号(未选号/存量)→ 退化不过滤,两条都见。
     const listNull = await repo.list(A, null);
-    expect(listNull.map((r) => r.id).sort()).toEqual([kA.id, kB.id].sort());
+    expect(listNull.map((r) => r.id).sort()).toEqual(
+      [legacy.id, kA.id, kB.id].sort(),
+    );
 
     // 跨号 get:号b 视角取号a 的行 → OwnershipError(404,不泄露存在)。
     await expect(repo.get(A, ACC_B, kA.id)).rejects.toBeInstanceOf(
       OwnershipError,
     );
-    // 本号 get 正常;null 号可取任意本人行。
+    // 本号 get 正常;任意选中号可取存量 null;null 号可取任意本人行。
     expect((await repo.get(A, ACC_A, kA.id)).id).toBe(kA.id);
+    expect((await repo.get(A, ACC_A, legacy.id)).id).toBe(legacy.id);
+    expect((await repo.get(A, ACC_B, legacy.id)).id).toBe(legacy.id);
     expect((await repo.get(A, null, kB.id)).id).toBe(kB.id);
   });
 });

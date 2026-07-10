@@ -113,15 +113,16 @@ export async function loadConfiguredCapabilities(): Promise<
   }
 }
 
-/** 定位母版是否存在(getProfile 成功 resolve → true;404 / 读失败 → undefined)。 */
+/** [T-194] 定位母版是否**真存在**:读成功但 profile=null → false(原来 getProfile 一 resolve
+ *  就返 true 是假阳,母版为空也算完成);读失败 → undefined。改用 getPositioningCenter 判 profile 非空。 */
 export async function loadHasProfile(): Promise<boolean | undefined> {
   try {
-    await client.getProfile({
+    const center = (await client.getPositioningCenter({
       params: undefined,
       query: undefined,
       body: undefined,
-    });
-    return true;
+    })) as { profile?: unknown };
+    return center.profile !== null && center.profile !== undefined;
   } catch {
     return undefined;
   }

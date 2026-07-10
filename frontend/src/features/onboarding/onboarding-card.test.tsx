@@ -35,6 +35,8 @@ vi.mock("next/link", () => ({
 const clientMock = vi.hoisted(() => ({
   listModels: vi.fn(async () => [] as unknown[]),
   getProfile: vi.fn(async () => ({}) as unknown),
+  // [T-194] loadHasProfile 改用 getPositioningCenter 判 profile 非空(修 getProfile 假阳)。
+  getPositioningCenter: vi.fn(async () => ({ profile: null }) as unknown),
   listProjects: vi.fn(async () => [] as unknown[]),
   statusDouyin: vi.fn(async () => ({ loggedIn: false }) as unknown),
 }));
@@ -51,6 +53,7 @@ const ORIGIN_KEY = "creatoros:onboarding:origin";
 function makeAllFail() {
   clientMock.listModels.mockRejectedValue(new Error("no backend"));
   clientMock.getProfile.mockRejectedValue(new Error("404"));
+  clientMock.getPositioningCenter.mockRejectedValue(new Error("no backend"));
   clientMock.listProjects.mockRejectedValue(new Error("no backend"));
   clientMock.statusDouyin.mockRejectedValue(new Error("no backend"));
 }
@@ -61,6 +64,7 @@ function makeTextModelDone() {
     { capability: "default", provider: "anthropic", modelName: "claude", hasSecret: true },
   ]);
   clientMock.getProfile.mockRejectedValue(new Error("404"));
+  clientMock.getPositioningCenter.mockResolvedValue({ profile: null });
   clientMock.listProjects.mockResolvedValue([]);
   clientMock.statusDouyin.mockResolvedValue({ loggedIn: false });
 }
@@ -71,6 +75,7 @@ function makeFreshComplete() {
     { capability: "default", provider: "anthropic", modelName: "claude", hasSecret: true },
   ]);
   clientMock.getProfile.mockResolvedValue({ id: "p", persona: "x" });
+  clientMock.getPositioningCenter.mockResolvedValue({ profile: { id: "p", persona: "x" } });
   clientMock.listProjects.mockResolvedValue([{ id: "proj-1", title: "T", source: "manual" }]);
   clientMock.statusDouyin.mockResolvedValue({ loggedIn: false });
 }
@@ -78,6 +83,7 @@ function makeFreshComplete() {
 beforeEach(() => {
   clientMock.listModels.mockReset();
   clientMock.getProfile.mockReset();
+  clientMock.getPositioningCenter.mockReset();
   clientMock.listProjects.mockReset();
   clientMock.statusDouyin.mockReset();
   try {

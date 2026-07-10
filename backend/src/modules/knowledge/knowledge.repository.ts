@@ -4,6 +4,8 @@ import {
   eq,
   desc,
   inArray,
+  isNull,
+  or,
   sql,
   type Db,
   // [T-079a] 战绩投影的只读跨表直查(SPEC §1)。仓内跨模块 seam 惯例是 service 层
@@ -159,8 +161,13 @@ export function createKnowledgeRepository(
   db: Db,
   deps: RepoDeps,
 ): KnowledgeRepository {
+  const accountVisibility = (accountId: AccountScope) =>
+    accountId
+      ? or(eq(knowledgeItems.accountId, accountId), isNull(knowledgeItems.accountId))
+      : undefined;
+
   // 轻量行读:写路径/子实体的所有权门用它(不付战绩统计成本)。
-  // [T-136 切片 b] accountId 非空 → 叠号门(and 忽略 undefined → null 时退化不过滤,§A)。
+  // [T-136 切片 b] accountId 非空 → 读当前号 + 存量 null 号知识;null → 退化不过滤。
   async function getRow(
     userId: string,
     accountId: AccountScope,
@@ -173,7 +180,7 @@ export function createKnowledgeRepository(
         and(
           eq(knowledgeItems.id, knowledgeId),
           eq(knowledgeItems.userId, userId),
-          accountId ? eq(knowledgeItems.accountId, accountId) : undefined,
+          accountVisibility(accountId),
         ),
       );
     const row = rows[0];
@@ -263,8 +270,8 @@ export function createKnowledgeRepository(
         .where(
           and(
             eq(knowledgeItems.userId, userId),
-            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-            accountId ? eq(knowledgeItems.accountId, accountId) : undefined,
+            // [T-136 切片 b] 非空号读当前号 + 存量 null 号知识;null → 不过滤。
+            accountVisibility(accountId),
           ),
         )
         .orderBy(asc(knowledgeItems.createdAt));
@@ -322,7 +329,7 @@ export function createKnowledgeRepository(
         .where(
           and(
             eq(knowledgeItems.userId, userId),
-            accountId ? eq(knowledgeItems.accountId, accountId) : undefined,
+            accountVisibility(accountId),
           ),
         );
       return rows.map((r) => parseRelation(r.relation));
@@ -337,8 +344,8 @@ export function createKnowledgeRepository(
         .where(
           and(
             eq(knowledgeItems.userId, userId),
-            // [T-136 切片 b] 号维度收窄(非空才叠;null → 不过滤)。
-            accountId ? eq(knowledgeItems.accountId, accountId) : undefined,
+            // [T-136 切片 b] 非空号读当前号 + 存量 null 号知识;null → 不过滤。
+            accountVisibility(accountId),
             eq(knowledgeItems.status, "active"),
             sql`${knowledgeItems.sourceMetadata} ->> 'origin' = 'comment_backflow'`,
           ),
