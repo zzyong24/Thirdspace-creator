@@ -1359,6 +1359,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // 数据底座(SPEC §1.3):导入作品落 published publication(external_id=aweme_id)。
         createImportedPublication: (ctx, outputId, input) =>
           publishingService.createImportedPublication(ctx, outputId, input),
+        // [T-177 主 agent 复核决定] 不接线 listPublishedExternalIds → refreshDouyin 传 knownAwemeIds=
+        //   undefined → fetchDouyinMetrics 保持**全量翻页刷新所有作品指标**。metrics 翻页 early-stop
+        //   机制留在抓取层(fetchDouyinMetrics 支持 knownAwemeIds,单测覆盖),但默认不启:
+        //   ① metrics 快照随时间变化,停刷旧作品会让首页总粉丝/完播率等聚合陈旧(依赖所有作品当前指标);
+        //   ② metrics 翻页是浏览器 XHR 成本(非 token),不是"太耗 token"的来源——真正 token 大头是评论
+        //     (已 commentWatermark 增量)与逐字稿/reconstruct(已幂等跳过)。故作品"增量"由幂等重活跳过承担,
+        //     指标保持全量刷新。若将来要"快速发现新作品"模式,再接此端口即可。
       },
       // 数据底座(SPEC §1.3):导入历史项目端口 → projectsService.ensureImportedProject
       //   (建 project source:imported + content_output,经公共 service,不跨模块直连 repo)。
@@ -1412,6 +1419,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           capturedAt: opts.capturedAt,
           authDir: douyinAuthDirFor(opts.accountId),
           gateway: douyinGateway, // [gate-F7 插装点②] creator-center 翻页限流(注真单例)
+          knownAwemeIds: opts.knownAwemeIds, // [T-177] 翻页 early-stop 锚(undefined → 全量)
         }),
       login: (opts) =>
         loginDouyin({
@@ -3927,6 +3935,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         });
         return result.written;
       };
+      // [T-177 增量化] 评论 watermark 只读端口:按 awemeId 反查库里该作品已知评论的 externalId 集
+      //   (`douyin:comment:<cid>`)。resolvePublication(aweme→pubId) + listCommentsForPublication
+      //   (source='comment' AND publication_id=pubId 的信号,externalId 即去重锚)。抓取层据此在倒序
+      //   翻页里 early-break(某页评论全 ∈ 该集 → 停)。无匹配作品 / 无已知评论 → 空集 → 退化全量。
+      //   limit 取大值(覆盖该作品全量已存评论);该读一次/作品,不在热路径,成本远低于省下的重复滚动。
+      const commentWatermark = async (aweme: string): Promise<Set<string>> => {
+        const pub = await publishingService.resolvePublication(ctx, {
+          platform: "douyin",
+          externalId: aweme,
+        });
+        if (!pub?.id) return new Set<string>();
+        const rows = await candidateService.listCommentsForPublication(
+          ctx,
+          pub.id,
+          5000,
+        );
+        const ids = new Set<string>();
+        for (const r of rows) if (r.externalId) ids.add(r.externalId);
+        return ids;
+      };
       // ① 指定 target.awemeId → 只抓该作品;② 未指定 → 抓「我所有作品」评论:遍历用户所有
       //    douyin publications(external_id=aweme_id),**复用单 browser context 跨作品**
       //    (fetchDouyinCommentsForWorks:openContext 开一次 → 循环内逐作品抓 → close 一次),
@@ -3951,7 +3979,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
             maxPages,
           },
-          { gateway: douyinGateway },
+          { gateway: douyinGateway, commentWatermark }, // [T-177] 增量 early-break
         );
         const written = await ingestRecordsForWork(single, records);
         report({
@@ -3984,7 +4012,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
           maxPages,
         },
-        { gateway: douyinGateway },
+        { gateway: douyinGateway, commentWatermark }, // [T-177] 每作品增量 early-break
       );
       let total = 0;
       let doneWorks = 0;

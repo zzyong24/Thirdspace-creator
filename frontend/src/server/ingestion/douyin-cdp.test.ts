@@ -9,6 +9,7 @@ import {
   ingestComments,
   fetchDouyinComments,
   fetchDouyinCommentsForWorks,
+  fetchDouyinMetrics,
   DouyinNotLoggedInError,
   parseDouyinVideoUrl,
   DouyinAudioFetchError,
@@ -787,6 +788,250 @@ describe("fetchDouyinComments 单作品复用注入 openContext(T-033b)", () => 
     expect(gotoUrls[0]).toContain("item_id=7409");
     expect(records).toHaveLength(1);
     expect(records[0].commentId).toBe("cmt-7409");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// [T-177 增量化] 采集 early-break —— 用 fake 多页分页响应,验证:
+//   ① 评论:有 watermark 时某页评论全 ≤ watermark(全已抓过)→ 提前停翻页(1 轮滚动,不滚到 staleRounds);
+//   ② 评论:无 watermark(首次)→ 退化为原全量滚动(滚到连续 3 轮无新评论 staleRounds);
+//   ③ 作品:传 knownAwemeIds 且首屏作品全已知 → 提前停翻页(0 轮滚动,不受 has_more=true 影响)。
+// fake 每轮 mouse.wheel 吐下一页,记 wheel 次数当"翻页深度"标尺。
+// ---------------------------------------------------------------------------
+
+type FakeComment = {
+  cid: string;
+  aweme_id?: string;
+  text?: string;
+  digg_count?: number;
+};
+
+/**
+ * 建一个"多页评论"fake context:goto 吐第 0 页(首屏),之后**每次 mouse.wheel 吐下一页**
+ * (pages[wheelCalls]);翻完(下标越界)则该轮不吐 → seenIds 不增长(驱动 staleRounds 兜底)。
+ * calls.wheel = 翻页深度标尺(watermark early-break vs 全量 staleRounds 的对照量)。
+ */
+function makeFakePagingCommentContext(pages: FakeComment[][], loggedIn = true) {
+  const calls = { openContext: 0, close: 0, goto: 0, wheel: 0 };
+  let handlers: FakeResponseHandler[] = [];
+  const emit = (comments: FakeComment[]) => {
+    const resp: FakeResponse = {
+      url: () => "https://x/aweme/v1/web/comment/list/?count=20",
+      json: () => Promise.resolve({ comments }),
+    };
+    for (const h of handlers) h(resp);
+  };
+  const page = {
+    on(_event: "response", cb: FakeResponseHandler) {
+      handlers.push(cb);
+    },
+    off(_event: "response", cb: FakeResponseHandler) {
+      handlers = handlers.filter((h) => h !== cb);
+    },
+    async goto() {
+      calls.goto += 1;
+      if (pages[0]) emit(pages[0]); // 首屏(第 0 页)
+      return undefined;
+    },
+    async waitForTimeout() {
+      return undefined; // 立即 resolve,让 handler 的 async 解析(microtask)结算
+    },
+    async evaluate() {
+      return undefined as unknown;
+    },
+    mouse: {
+      async wheel() {
+        calls.wheel += 1;
+        const next = pages[calls.wheel]; // 第 wheel 页(pages[1],pages[2]…)
+        if (next) emit(next);
+        return undefined;
+      },
+    },
+  };
+  const ctx = {
+    pages() {
+      return [page];
+    },
+    async newPage() {
+      return page;
+    },
+    async cookies(_url: string) {
+      return loggedIn ? [{ name: "sessionid" }] : [];
+    },
+    async close() {
+      calls.close += 1;
+    },
+  };
+  type InjectedOpenContext = NonNullable<
+    Parameters<typeof fetchDouyinCommentsForWorks>[2]
+  >["openContext"];
+  type InjectedContext = Awaited<ReturnType<NonNullable<InjectedOpenContext>>>;
+  const openContext: NonNullable<InjectedOpenContext> = async () => {
+    calls.openContext += 1;
+    return ctx as unknown as InjectedContext;
+  };
+  return { calls, openContext };
+}
+
+describe("[T-177] 评论增量 watermark early-break", () => {
+  // 两页评论:第 0 页含 1 条新评论 + 1 条老评论;第 1 页全是老评论(∈ watermark)。
+  const PAGES: FakeComment[][] = [
+    [
+      { cid: "new1", text: "新评论" },
+      { cid: "old1", text: "老评论1" },
+    ],
+    [
+      { cid: "old2", text: "老评论2" },
+      { cid: "old3", text: "老评论3" },
+    ],
+  ];
+  // watermark = 库里已知评论 externalId 集(`douyin:comment:<cid>`),含全部老评论。
+  const WATERMARK = new Set([
+    "douyin:comment:old1",
+    "douyin:comment:old2",
+    "douyin:comment:old3",
+  ]);
+
+  it("①有 watermark:某页评论全 ≤ watermark → 1 轮滚动即停(不滚到 staleRounds)", async () => {
+    const { calls, openContext } = makeFakePagingCommentContext(PAGES);
+    const records = await fetchDouyinComments(
+      { awemeId: "7401", authDir: "/fake/.auth", maxPages: 10 },
+      {
+        openContext,
+        commentWatermark: async () => WATERMARK,
+      },
+    );
+    // 首屏(new1 未知)不停;第 1 轮滚动吐第 1 页(old2/old3 全已知)→ reachedWatermark → break。
+    expect(calls.wheel).toBe(1);
+    // 仍抓全本轮加载到的评论(新 + 老,去重)。
+    expect(records.map((r) => r.commentId).sort()).toEqual([
+      "new1",
+      "old1",
+      "old2",
+      "old3",
+    ]);
+  });
+
+  it("②无 watermark(首次)→ 退化为全量滚动(滚到 staleRounds=3)", async () => {
+    const { calls, openContext } = makeFakePagingCommentContext(PAGES);
+    const records = await fetchDouyinComments(
+      { awemeId: "7401", authDir: "/fake/.auth", maxPages: 10 },
+      { openContext }, // 不注入 commentWatermark → watermark 空集
+    );
+    // 无 early-break:第 1 轮吐第 1 页(新增),之后 3 轮无新评论 → staleRounds 到 3 才停 → 4 轮滚动。
+    expect(calls.wheel).toBe(4);
+    expect(records.map((r) => r.commentId).sort()).toEqual([
+      "new1",
+      "old1",
+      "old2",
+      "old3",
+    ]);
+  });
+});
+
+// —— 作品列表 early-stop(fake 指标 context)——
+function makeFakeMetricsContext(
+  pages: Array<Array<{ aweme_id: string }>>,
+  loggedIn = true,
+) {
+  const calls = { openContext: 0, close: 0, goto: 0, wheel: 0 };
+  type MetricsResp = { url(): string; json(): Promise<unknown> };
+  let handlers: Array<(resp: MetricsResp) => void> = [];
+  const emit = (works: Array<{ aweme_id: string }>) => {
+    const resp: MetricsResp = {
+      url: () => "https://creator.douyin.com/aweme/v1/creator/item/list?count=12",
+      // has_more:true 故意保持 —— 证明停翻页来自 knownAwemeIds early-stop 而非 has_more=false。
+      json: () => Promise.resolve({ aweme_list: works, has_more: true }),
+    };
+    for (const h of handlers) h(resp);
+  };
+  const page = {
+    on(_event: "response", cb: (resp: MetricsResp) => void) {
+      handlers.push(cb);
+    },
+    async goto() {
+      calls.goto += 1;
+      if (pages[0]) emit(pages[0]);
+      return undefined;
+    },
+    async waitForTimeout() {
+      return undefined;
+    },
+    async evaluate() {
+      return undefined as unknown;
+    },
+    keyboard: {
+      async press() {
+        return undefined;
+      },
+    },
+    mouse: {
+      async wheel() {
+        calls.wheel += 1;
+        const next = pages[calls.wheel];
+        if (next) emit(next);
+        return undefined;
+      },
+    },
+  };
+  const ctx = {
+    pages() {
+      return [page];
+    },
+    async newPage() {
+      return page;
+    },
+    async cookies(_url: string) {
+      return loggedIn ? [{ name: "sessionid" }] : [];
+    },
+    async close() {
+      calls.close += 1;
+    },
+  };
+  type InjectedOpenContext = NonNullable<
+    Parameters<typeof fetchDouyinMetrics>[1]
+  >["openContext"];
+  type InjectedContext = Awaited<ReturnType<NonNullable<InjectedOpenContext>>>;
+  const openContext: NonNullable<InjectedOpenContext> = async () => {
+    calls.openContext += 1;
+    return ctx as unknown as InjectedContext;
+  };
+  return { calls, openContext };
+}
+
+describe("[T-177] 作品列表 knownAwemeIds 翻页 early-stop", () => {
+  it("③首屏作品全已知 → 0 轮滚动即停(即便 has_more=true)", async () => {
+    const { calls, openContext } = makeFakeMetricsContext([
+      [{ aweme_id: "w1" }, { aweme_id: "w2" }],
+    ]);
+    const { records } = await fetchDouyinMetrics(
+      {
+        authDir: "/fake/.auth",
+        capturedAt: "2026-07-10T00:00:00.000Z",
+        maxPages: 40,
+        knownAwemeIds: new Set(["w1", "w2"]),
+      },
+      { openContext },
+    );
+    // 首屏两条作品全在 knownAwemeIds → reachedKnown → 循环入口即 break,不滚动。
+    expect(calls.wheel).toBe(0);
+    expect(records.map((r) => r.externalId).sort()).toEqual(["w1", "w2"]);
+  });
+
+  it("③对照:不传 knownAwemeIds → 不 early-stop(照常滚到 staleRounds)", async () => {
+    const { calls, openContext } = makeFakeMetricsContext([
+      [{ aweme_id: "w1" }, { aweme_id: "w2" }],
+    ]);
+    await fetchDouyinMetrics(
+      {
+        authDir: "/fake/.auth",
+        capturedAt: "2026-07-10T00:00:00.000Z",
+        maxPages: 40,
+      },
+      { openContext },
+    );
+    // 无 knownAwemeIds:首屏后每轮无新作品 → staleRounds 到 3 才停 → 3 轮滚动(> 0,证明对照生效)。
+    expect(calls.wheel).toBe(3);
   });
 });
 

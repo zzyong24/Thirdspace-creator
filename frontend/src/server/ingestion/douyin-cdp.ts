@@ -598,6 +598,14 @@ export interface FetchDouyinOptions {
   // T-038b [gate-F7 插装点②]:creator-center channel 限流网关(带 sessionid,封账号,minInterval 4s)。
   // **每翻一页 acquire 一次**(把 40 页翻页真正限速)。默认 instantNoopGateway(既有单测不真等)。
   gateway?: DouyinChannelGate;
+  // [T-177 增量化] 库里已知的 douyin 作品 awemeId 集(由 composition root 从 publications 反查)。
+  //   作品列表默认按发布时间倒序(新→旧):某页作品**全部**已在该集(且非空)= 已翻到旧作品,
+  //   提前停翻页(不再滚到 staleRounds≥3 / maxPages),省掉每轮几十页的重复滚动。
+  //   省略 / 空集(首次采集,库里无作品)→ 退化为原全量滚动(安全,无行为变化)。
+  //   **coverage 权衡(诚实标注)**:early-stop 只优化翻页深度 —— 稳态(无新作品)下会在最新页即停,
+  //   故更旧的作品当轮不再被重新快照(时间序列仅最新作品每轮刷新,旧作品刷新频率下降)。这是本任务
+  //   有意的省 token 取舍(创作者最关心近作指标);要旧作品也每轮全量快照,置空该集即可退回全量。
+  knownAwemeIds?: Set<string>;
 }
 
 export interface LoginDouyinOptions {
@@ -826,6 +834,9 @@ export async function fetchDouyinMetrics(
 
     const workJsons: unknown[] = [];
     const seenIds = new Set<string>();
+    // [T-177 增量化] 库里已知作品集(倒序翻页 early-stop 锚);未注入 → 空集 → 退化全量。
+    const known = opts.knownAwemeIds ?? new Set<string>();
+    let reachedKnown = false; // 某页作品全已知(且非空)→ 已翻到旧作品,提前停翻页
     let hasMore = true; // 直到某页 work_list 明确 has_more=false 才停(比"无新响应"可靠)
     const readHasMore = (j: unknown): boolean | undefined => {
       const root = (j ?? {}) as Record<string, unknown>;
@@ -839,7 +850,16 @@ export async function fetchDouyinMetrics(
       try {
         const j = await resp.json();
         workJsons.push(j);
-        for (const w of parseWorkList(j)) seenIds.add(w.awemeId);
+        const works = parseWorkList(j);
+        // [T-177] 本页作品全部已是库里已知 awemeId(且非空)→ 无新作品 → 更深页更旧、也全已知 → 停翻页。
+        if (
+          known.size > 0 &&
+          works.length > 0 &&
+          works.every((w) => known.has(w.awemeId))
+        ) {
+          reachedKnown = true;
+        }
+        for (const w of works) seenIds.add(w.awemeId);
         const hm = readHasMore(j);
         if (hm !== undefined) hasMore = hm;
       } catch {
@@ -858,6 +878,8 @@ export async function fetchDouyinMetrics(
     let staleRounds = 0;
     for (let i = 0; i < maxPages; i++) {
       if (!hasMore) break; // 抖音 work_list 明确翻到底
+      // [T-177 增量化] 首屏(goto 后)或上一轮滚动加载的页已全是库里已知作品 → 提前停,少滚几十页。
+      if (reachedKnown) break;
       const before = seenIds.size;
       // [gate-F7 插装点②] 每翻一页 acquire 一次 creator-center(把翻页真正限速,防高频撞账号风控)。
       await withDouyinChannel(gateway, "creator-center", async () => {
@@ -890,6 +912,7 @@ export async function fetchDouyinMetrics(
         await page.mouse.wheel(0, 3000).catch(() => {});
         await page.waitForTimeout(2500);
       });
+      if (reachedKnown) break; // [T-177] 本轮滚动加载的页全是已知作品 → 停
       staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
       if (staleRounds >= 3) break; // has_more 不返回时的兜底,防死循环
     }
@@ -958,6 +981,16 @@ export interface FetchDouyinCommentsDeps {
   // T-038b [gate-F7 插装点③④]:creator-center channel 限流网关。③ 评论翻页**每页 acquire 一次**;
   // ④ 多作品**每作品 acquire 一次**。默认 instantNoopGateway(既有单测不传即不真等)。
   gateway?: DouyinChannelGate;
+  // [T-177 增量化 · 收益最大] 评论 watermark 只读端口:按 awemeId 反查**库里该作品已知评论**的
+  //   externalId 集(`douyin:comment:<cid>`,即 audience_signals.external_id;composition root 经
+  //   publishingService.resolvePublication + candidateService.listCommentsForPublication 反查装配)。
+  //   评论列表倒序(新→旧):翻页时某页评论**全部** ∈ 该集(且非空)= 已翻到之前抓过的老评论 →
+  //   提前 break,不再滚到 staleRounds≥3。首次无 watermark(空集 / 省略)→ 退化为原全量(安全)。
+  //   [依赖 item_id T-065,诚实标注]:若创作者中心评论管理页对该账号返回的是**全局评论列表**
+  //   (item_id 未服务端过滤,见 scrapeCommentsForWork 注释),某页会混入**其它作品**的评论 →
+  //   本作品 watermark 无法覆盖它们 → 该页非"全已知" → early-break 不触发,安全退化为全量滚动。
+  //   故真增量收益(每作品少翻很多页)要等 item_id 真机验证/收窄后才**完全**兑现;当前实现无回归。
+  commentWatermark?: (awemeId: string) => Promise<Set<string>>;
 }
 
 const DEFAULT_COMMENT_MAX_PAGES = 40;
@@ -981,9 +1014,13 @@ async function scrapeCommentsForWork(
   maxPages: number,
   // [gate-F7 插装点③] 评论翻页限流网关(每页 acquire 一次 creator-center)。默认 no-op(单测不真等)。
   gateway: DouyinChannelGate = instantNoopGateway,
+  // [T-177 增量化] 库里该作品已知评论的 externalId 集(倒序 early-break 锚)。空集 → 退化全量。
+  watermark: Set<string> = new Set<string>(),
 ): Promise<CommentRecord[]> {
   const commentJsons: unknown[] = [];
   const seenIds = new Set<string>();
+  // [T-177] 某页评论全部已在 watermark(且非空)→ 倒序下已翻到老评论,提前停翻页。
+  let reachedWatermark = false;
   // [T-065 / T-176 已知未决] item_id 过滤是否真在服务端生效**尚未在真机核实**:onResponse 目前
   //   无条件收下每一个 `/comment/list/` XHR 并用页面级 awemeId 兜底归属(parseCommentList 的
   //   `|| defaultAwemeId`)。若创作者中心评论管理页对某些账号返回的是**全局评论列表**(item_id
@@ -999,7 +1036,17 @@ async function scrapeCommentsForWork(
       try {
         const j = await resp.json();
         commentJsons.push(j);
-        for (const c of parseCommentList(j, awemeId)) {
+        const batch = parseCommentList(j, awemeId);
+        // [T-177 增量化] 倒序 early-break:本页评论全部已在 watermark(库里已抓过)且非空 →
+        //   已翻到老评论,标记提前停(externalId 口径同落库锚 commentExternalId,cid 缺失 hash 兜底一致)。
+        if (
+          watermark.size > 0 &&
+          batch.length > 0 &&
+          batch.every((c) => watermark.has(commentExternalId(c)))
+        ) {
+          reachedWatermark = true;
+        }
+        for (const c of batch) {
           seenIds.add(c.commentId);
         }
       } catch {
@@ -1019,6 +1066,8 @@ async function scrapeCommentsForWork(
     // 礼貌滚动翻页:滚到底触发下一页加载;连续 3 轮无新评论即停(评论无 has_more 可靠信号)。
     let staleRounds = 0;
     for (let i = 0; i < maxPages; i++) {
+      // [T-177 增量化] 首屏(goto 后)或上一轮已翻到全是库里已抓过的老评论 → 提前停,不再全量重翻。
+      if (reachedWatermark) break;
       const before = seenIds.size;
       // [gate-F7 插装点③] 每翻一页 acquire 一次 creator-center(评论翻页真正限速)。
       await withDouyinChannel(gateway, "creator-center", async () => {
@@ -1038,6 +1087,7 @@ async function scrapeCommentsForWork(
         await page.mouse.wheel(0, 2000).catch(() => {});
         await page.waitForTimeout(2000);
       });
+      if (reachedWatermark) break; // [T-177] 本轮滚动加载的页全是老评论 → 停
       staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
       if (staleRounds >= 3) break;
     }
@@ -1078,8 +1128,18 @@ export async function fetchDouyinComments(
   try {
     if (!(await isCommentContextLoggedIn(ctx))) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
+    // [T-177 增量化] 抓前反查该作品 watermark(库里已知评论 externalId 集);无端口 → 空集退化全量。
+    const watermark = deps.commentWatermark
+      ? await deps.commentWatermark(target.awemeId)
+      : new Set<string>();
     // 单作品:翻页限流由 scrapeCommentsForWork 内部 acquire(插装点③);不额外套作品级 acquire。
-    return await scrapeCommentsForWork(page, target.awemeId, maxPages, gateway);
+    return await scrapeCommentsForWork(
+      page,
+      target.awemeId,
+      maxPages,
+      gateway,
+      watermark,
+    );
   } finally {
     await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
   }
@@ -1122,11 +1182,15 @@ export async function fetchDouyinCommentsForWorks(
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     const out: FetchCommentsForWorksResult[] = [];
     for (const awemeId of awemeIds) {
+      // [T-177 增量化] 每作品抓前反查其 watermark(库里已知评论 externalId 集);无端口 → 空集退化全量。
+      const watermark = deps.commentWatermark
+        ? await deps.commentWatermark(awemeId)
+        : new Set<string>();
       // [gate-F7 插装点④] **每作品 acquire 一次** creator-center(把 72 作品逐个导航真正限速);
       // 作品内翻页再由 scrapeCommentsForWork 内部 acquire(插装点③),两层正交、均串行到 creator-center。
       const records = await withDouyinChannel(gateway, "creator-center", () =>
         // 同一 context / 同一 page 逐作品导航抓取(评论管理页每作品 item_id 过滤,goto 会换页)。
-        scrapeCommentsForWork(page, awemeId, maxPages, gateway),
+        scrapeCommentsForWork(page, awemeId, maxPages, gateway, watermark),
       );
       out.push({ awemeId, records });
     }

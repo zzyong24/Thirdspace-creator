@@ -41,6 +41,13 @@ export interface IngestionPublishingPort {
     ctx: RequestContext,
     ref: { platform: string; externalId: string },
   ): Promise<{ id: string } | null>;
+  // [T-177 增量化] 列出该平台库里已知作品的 externalId(=aweme_id)集,供 refreshDouyin 传给
+  //   fetch 做翻页 early-stop(某页作品全已知 → 停翻页)。可选 —— 未注入时 refreshDouyin 不传
+  //   knownAwemeIds,fetch 退化为原全量滚动(向后兼容旧最小组合/旧 fake,零回归)。
+  listPublishedExternalIds?(
+    ctx: RequestContext,
+    platform: string,
+  ): Promise<string[]>;
   // 数据底座(SPEC §1.3):为一条真实已发布作品落 publication(直接 published +
   // external_id=aweme_id)。幂等于 (platform, externalId)。可选(未注入时
   // ensureImportedProject 退化为仅建项目,不建 publication —— 旧组合根不破)。
@@ -170,6 +177,9 @@ export interface DouyinFetchPort {
   fetch(opts: {
     capturedAt: string;
     accountId?: string | null;
+    // [T-177 增量化] 库里已知作品 awemeId 集(refreshDouyin 从 publications 反查后透传)。抓取层
+    //   据此在倒序作品列表翻页里 early-stop。省略 → fetchDouyinMetrics 退化为原全量滚动。
+    knownAwemeIds?: Set<string>;
   }): Promise<DouyinFetchResult>;
   login(opts?: { accountId?: string | null }): Promise<boolean>;
   // 被动探针(T-032a):headless 快查登录态,不弹窗。设置页「账号绑定」徽标读它。
@@ -633,12 +643,20 @@ export function createIngestionService(args: {
         throw new Error("该外部来源不是抖音(sourceType≠douyin)");
       }
       const capturedAt = input.capturedAt ?? deps.now();
+      // [T-177 增量化] 反查库里已知作品 awemeId 集,传给抓取层做翻页 early-stop(某页作品全已知 → 停)。
+      //   端口可选:未注入 → undefined → fetchDouyinMetrics 退化为原全量滚动(向后兼容,零回归)。
+      const knownAwemeIds = ports.publishing.listPublishedExternalIds
+        ? new Set(
+            await ports.publishing.listPublishedExternalIds(ctx, "douyin"),
+          )
+        : undefined;
       // 真抓(CDP)→ records + identity;失败/无登录态会抛,run 不会被建(快速失败)。
       // [T-136 §D 切片 c] 带当前号 → composition root 用 `.auth/douyin/<accountId>` 登录态复刷。
       const { records, identity } = normalizeFetch(
         await douyinFetch.fetch({
           capturedAt,
           accountId: ctx.accountId ?? null,
+          knownAwemeIds, // [T-177] 翻页 early-stop 锚(undefined → 全量)
         }),
       );
       // [T-136 §D] 抓到登录用户真实身份 → 回填当前号占位:external_source.name=真实昵称、
