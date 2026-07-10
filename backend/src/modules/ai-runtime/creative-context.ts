@@ -193,19 +193,26 @@ export interface SignalsReader {
 // sourceNote 给证据段带出处,usedInPublished 是最硬的战绩信号(排序优先)。三个
 // 字段 optional —— 旧绑定/测试 fake 只给 {title, knowledgeType} 也能跑(缺省按
 // 0/false/null 兜底,brief 退化为无战绩排序)。
+// [T-186] 检索/列举返回的知识行形状(list 与 search 同形,便于共用 formatKnowledgeBrief)。
+export interface KnowledgeRow {
+  title: string;
+  knowledgeType: string;
+  usedCount?: number;
+  usedInPublished?: boolean;
+  sourceNote?: string | null;
+}
+
 export interface KnowledgeReader {
-  list(
+  list(ctx: RequestContext, opts: { limit?: number }): Promise<KnowledgeRow[]>;
+  // [T-186] 相关性检索(L3 策展护栏)—— 按当前选题/定位 query 检索**相关**知识,复用已建向量
+  // hybridSearch(exact ILIKE 优先 + 余弦补位 + 阈值截断;未配 embedding 时诚实降级纯关键词),
+  // 替代旧的「最近 40 条全量 dump」。返回同 list 形状(带 knowledgeType/战绩/出处),按相关性排序。
+  // Optional:未绑 search 端口 / query 为空 / 无命中 → 装配层退回 .list dump(降级,永不阻塞节点)。
+  search?(
     ctx: RequestContext,
+    query: string,
     opts: { limit?: number },
-  ): Promise<
-    Array<{
-      title: string;
-      knowledgeType: string;
-      usedCount?: number;
-      usedInPublished?: boolean;
-      sourceNote?: string | null;
-    }>
-  >;
+  ): Promise<KnowledgeRow[]>;
 }
 
 // 论点树 reader — the project's ADOPTED thesis tree (核心论点 + 支撑/证据/反驳 分支), read
@@ -415,10 +422,41 @@ export async function assembleCreativeContext(
   let knowledgeBrief = "";
   if (deps.knowledge) {
     try {
-      // [T-079c] 喂料升级(SPEC §3):brief 按四原子分段(观点/证据/金句 各取战绩
-      // top5),替代旧的扁平 title 列表 —— 组装逻辑在纯函数 formatKnowledgeBrief。
-      const rows = await deps.knowledge.list(ctx, { limit: 40 });
-      knowledgeBrief = formatKnowledgeBrief(rows);
+      // [T-186] L3 策展护栏 —— 知识注入从「最近 40 条 dump」升级为「按当前选题/定位相关性检索 +
+      // token 预算截断」。scope 感知(SPEC §3-L3.3):有选题 → 贴该选题检索(项目态最高优先);无选题
+      // → 退定位领域检索(全局态)。知识库本身非项目分区(user-scoped),故 scope 落在 query 派生上。
+      //   检索走已建 hybridSearch(deps.knowledge.search,exact 优先 + 余弦补位 + 阈值截断)→ 相关性
+      //   选候选集;再交 [T-079c] formatKnowledgeBrief 按四原子分段 + 战绩排序渲染呈现 = SPEC「相关性 +
+      //   你的赢家 > 上下文数量」。search 端口未绑 / query 空 / 无命中 → 退回 .list dump(诚实降级)。
+      // 注:「渐进式**多轮**注入」(按需一轮轮追问补料)属声明式注入框架(PromptTemplate 声明「是否渐进
+      //   多轮」)—— 归 T-184,本任务不做;此处只做单遍的相关性选择 + token 预算分层截断。
+      const query = buildKnowledgeQuery(
+        { topic: input.topic, angle: input.angle },
+        positioningBrief,
+      );
+      let rows: KnowledgeRow[] = [];
+      if (deps.knowledge.search && query) {
+        rows = await deps.knowledge.search(ctx, query, {
+          limit: KNOWLEDGE_RETRIEVE_LIMIT,
+        });
+      }
+      // 无 search 端口 / query 空 / 检索无命中 → 退回最近 dump(降级,永不阻塞节点)。
+      if (rows.length === 0) {
+        rows = await deps.knowledge.list(ctx, { limit: KNOWLEDGE_RETRIEVE_LIMIT });
+      }
+      // token 预算:超预算按呈现顺序(相关性选候选 + 战绩排序,前部=高优先)保留,尾部低优先诚实标注
+      // 截断(不静默丢)。formatKnowledgeBrief 输出本已受控(3 段×5 条),预算是第二道观测/护栏。
+      const rawBrief = formatKnowledgeBrief(rows);
+      if (rawBrief.length > KNOWLEDGE_BRIEF_BUDGET_CHARS) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[T-186] knowledgeBrief 超 token 预算(${rawBrief.length}>${KNOWLEDGE_BRIEF_BUDGET_CHARS} 字符),已按相关性/战绩从尾部截断`,
+        );
+      }
+      knowledgeBrief = truncateKnowledgeBriefToBudget(
+        rawBrief,
+        KNOWLEDGE_BRIEF_BUDGET_CHARS,
+      );
     } catch {
       knowledgeBrief = ""; // 知识库 is best-effort context; never block a node on it
     }
@@ -598,6 +636,57 @@ export async function assembleCreativeContext(
 // 纯函数导出,供单测直接断言分段头与战绩排序。
 const KNOWLEDGE_BRIEF_TOP_N = 5;
 const KNOWLEDGE_TITLE_MAX = 80;
+
+// ── [T-186] L3 策展护栏:相关性检索 query 派生 + token 预算截断 ─────────────────────
+// 检索候选上限:交给 hybridSearch 的 top-k(阈值已截无关项),再由 formatKnowledgeBrief 取各段 top5。
+// 与旧 dump 的 40 对齐,保「库小/无命中退 list」时行为一致。
+export const KNOWLEDGE_RETRIEVE_LIMIT = 40;
+// knowledgeBrief 的 token 预算(近似,按字符计,不引 tokenizer 重依赖)。SPEC §3-L3 未给数值;
+// 取 ~1500 tokens 的保守中文估算(中文 1 token≈1~2 字)→ 1800 字符默认。可按需调。formatKnowledgeBrief
+// 输出通常远小于此(3 段×5 条×≤~90 字);预算是第二道护栏 + 观测点(超预算 log + brief 内诚实标注)。
+export const KNOWLEDGE_BRIEF_BUDGET_CHARS = 1800;
+
+// [T-186] 由「当前选题 + 定位」派生知识检索 query(scope 感知:选题优先 → 项目态贴该选题;无选题 →
+// 退定位领域 → 全局态)。参照 topic-task-adapter.buildTrendQuery 的派生范式。空白归一;两者都空 → 空串
+// (装配层据此退回 .list dump)。定位段截 80 字防 query 过长/噪声过多。纯函数,导出供单测。
+export function buildKnowledgeQuery(
+  input: { topic: string; angle?: string },
+  positioningBrief: string,
+): string {
+  const topicPart = [input.topic ?? "", input.angle ?? ""]
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  // 有选题 → 用选题(项目态最相关信号);无选题 → 退定位领域(全局态账户口径)。
+  if (topicPart) return topicPart;
+  return (positioningBrief ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
+}
+
+// [T-186] token 预算截断:brief 超预算时按行边界从尾部(相关性/战绩较低项在后)裁到预算内,并追加
+// 一行诚实标注「已按预算截断 + 省略行数」(不静默丢,配合装配层 console.warn 满足 SPEC「log 丢了什么」)。
+// 未超预算 → 原样返回。至少保留 1 行(极端小预算也不返回空)。纯函数,导出供单测。
+export function truncateKnowledgeBriefToBudget(
+  brief: string,
+  maxChars: number,
+): string {
+  if (brief.length <= maxChars) return brief;
+  const lines = brief.split("\n");
+  const kept: string[] = [];
+  let used = 0;
+  for (const line of lines) {
+    const add = line.length + 1; // +1 计入换行
+    if (used + add > maxChars) break;
+    kept.push(line);
+    used += add;
+  }
+  if (kept.length === 0) kept.push(lines[0] ?? ""); // 兜底保留首行
+  const dropped = lines.length - kept.length;
+  return [
+    ...kept,
+    `…（知识库已按 token 预算截断，省略 ${dropped} 行相关度/战绩较低项）`,
+  ].join("\n");
+}
 
 export function formatKnowledgeBrief(
   rows: Array<{

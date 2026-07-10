@@ -6,7 +6,11 @@ import {
   formatUserMaterialBrief,
   materialQueryTerms,
   markReconstructedBrief,
+  buildKnowledgeQuery,
+  truncateKnowledgeBriefToBudget,
+  KNOWLEDGE_BRIEF_BUDGET_CHARS,
   type ContextDeps,
+  type KnowledgeRow,
   type ProjectMaterial,
 } from "./creative-context";
 
@@ -622,5 +626,155 @@ describe("creative-context per-account — ctx.accountId 透传到每个 reader(
     expect(techContext.positioningBrief).toContain("硬核科技号");
     expect(foodContext.positioningBrief).toContain("家常美食号");
     expect(techContext.positioningBrief).not.toBe(foodContext.positioningBrief);
+  });
+});
+
+// ── [T-186] L3 策展护栏:知识注入相关性检索 + token 预算截断 ────────────────────────
+// 目标:知识注入从「最近 40 条 dump」升级为「按当前选题/定位 query 相关性检索 + 超预算诚实截断」。
+// 覆盖:①有 search 端口 + query → 走相关性检索路径(不用 list dump);②无 query/无命中 → 退回 list
+// dump(降级);③query 派生 scope 感知(选题优先、无选题退定位);④超预算 → 截断且标注。
+
+describe("creative-context T-186 — buildKnowledgeQuery scope 感知派生", () => {
+  it("有选题 → 用选题(+angle),项目态最相关", () => {
+    expect(
+      buildKnowledgeQuery({ topic: " 上下文工程 ", angle: " 反直觉 " }, "定位一句话：硬核 AI"),
+    ).toBe("上下文工程 反直觉");
+  });
+  it("无选题 → 退定位领域(全局态),截 80 字", () => {
+    const pos = "定位一句话：硬核 AI 创作者   关键词：AI、Agent";
+    expect(buildKnowledgeQuery({ topic: "", angle: "" }, pos)).toBe(
+      pos.replace(/\s+/g, " ").trim().slice(0, 80),
+    );
+  });
+  it("选题与定位都空 → 空串(装配层据此退回 list dump)", () => {
+    expect(buildKnowledgeQuery({ topic: "  ", angle: "" }, "   ")).toBe("");
+  });
+});
+
+describe("creative-context T-186 — truncateKnowledgeBriefToBudget", () => {
+  it("未超预算 → 原样返回", () => {
+    const brief = "【我的观点】\n· 短观点";
+    expect(truncateKnowledgeBriefToBudget(brief, 1000)).toBe(brief);
+  });
+  it("超预算 → 按行截断 + 诚实标注省略行数", () => {
+    const lines = Array.from({ length: 20 }, (_, i) => `· 第 ${i} 行知识点`);
+    const brief = lines.join("\n");
+    const out = truncateKnowledgeBriefToBudget(brief, 40);
+    expect(out).toContain("已按 token 预算截断");
+    expect(out).toContain("省略");
+    // 截断后长度受控(留有余量给标注行);至少保留 1 行内容。
+    expect(out.split("\n")[0]).toBe("· 第 0 行知识点");
+  });
+  it("预算极小也至少保留首行,不返回空", () => {
+    const brief = "· 唯一有用的一行\n· 第二行";
+    const out = truncateKnowledgeBriefToBudget(brief, 1);
+    expect(out.split("\n")[0]).toBe("· 唯一有用的一行");
+  });
+});
+
+describe("creative-context T-186 — assembleCreativeContext 相关性检索接线", () => {
+  const baseCtx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
+
+  // 只装 positioning(空兜底)+ knowledge(list + 可选 search)的最小 deps。
+  function makeKnowledgeDeps(knowledge: ContextDeps["knowledge"]): ContextDeps {
+    return {
+      positioning: {
+        getPositioningCenter: async () => ({ profile: null, currentStatement: null }),
+      },
+      knowledge,
+    };
+  }
+
+  it("有 search 端口 + 非空选题 → 走相关性检索(不落 list dump)", async () => {
+    const calls: { search: string[]; list: number } = { search: [], list: 0 };
+    const relevantRows: KnowledgeRow[] = [
+      { title: "相关观点甲", knowledgeType: "claim", usedCount: 2 },
+    ];
+    const context = await assembleCreativeContext(
+      baseCtx,
+      { projectId: "p1", topic: "上下文工程", angle: "反直觉" },
+      makeKnowledgeDeps({
+        list: async () => {
+          calls.list += 1;
+          return [{ title: "最近 dump 项", knowledgeType: "claim" }];
+        },
+        search: async (_c, query) => {
+          calls.search.push(query);
+          return relevantRows;
+        },
+      }),
+    );
+    // 检索路径命中 → 用相关性结果,未退回 dump。
+    expect(calls.search).toEqual(["上下文工程 反直觉"]);
+    expect(calls.list).toBe(0);
+    expect(context.knowledgeBrief).toContain("· 相关观点甲（被 2 条内容用过）");
+    expect(context.knowledgeBrief).not.toContain("最近 dump 项");
+  });
+
+  it("检索无命中 → 退回 list dump(诚实降级)", async () => {
+    const calls: { search: number; list: number } = { search: 0, list: 0 };
+    const context = await assembleCreativeContext(
+      baseCtx,
+      { projectId: "p1", topic: "冷门选题" },
+      makeKnowledgeDeps({
+        list: async () => {
+          calls.list += 1;
+          return [{ title: "兜底 dump 观点", knowledgeType: "claim" }];
+        },
+        search: async () => {
+          calls.search += 1;
+          return []; // 无命中
+        },
+      }),
+    );
+    expect(calls.search).toBe(1);
+    expect(calls.list).toBe(1);
+    expect(context.knowledgeBrief).toContain("兜底 dump 观点");
+  });
+
+  it("无 search 端口(旧绑定) → 仍走 list dump(向后兼容)", async () => {
+    let listCalls = 0;
+    const context = await assembleCreativeContext(
+      baseCtx,
+      { projectId: "p1", topic: "任意选题" },
+      makeKnowledgeDeps({
+        list: async () => {
+          listCalls += 1;
+          return [{ title: "无 search 端口 dump", knowledgeType: "claim" }];
+        },
+      }),
+    );
+    expect(listCalls).toBe(1);
+    expect(context.knowledgeBrief).toContain("无 search 端口 dump");
+  });
+
+  it("超预算 → knowledgeBrief 被截断且带标注", async () => {
+    // formatKnowledgeBrief 每条截 80 字、每段 top5;要触发预算需喂满 3 段长内容(尤其 evidence
+    // 带 80 字出处 → 单行 ~170 字)。造 5 evidence(长标题+长出处)+ 5 claim + 5 quote → 输出超 1800。
+    const long = "长".repeat(80);
+    const rows: KnowledgeRow[] = [];
+    for (let i = 0; i < 5; i++) {
+      rows.push({
+        title: `${long}${i}`,
+        knowledgeType: "evidence",
+        usedCount: 3,
+        sourceNote: `${long}出处${i}`,
+      });
+      rows.push({ title: `${long}claim${i}`, knowledgeType: "claim", usedCount: 2 });
+      rows.push({ title: `${long}quote${i}`, knowledgeType: "quote" });
+    }
+    const context = await assembleCreativeContext(
+      baseCtx,
+      { projectId: "p1", topic: "选题" },
+      makeKnowledgeDeps({
+        list: async () => [],
+        search: async () => rows,
+      }),
+    );
+    // 前置 sanity:原始 brief 确实超预算(否则该用例失去意义)。
+    expect(formatKnowledgeBrief(rows).length).toBeGreaterThan(
+      KNOWLEDGE_BRIEF_BUDGET_CHARS,
+    );
+    expect(context.knowledgeBrief).toContain("已按 token 预算截断");
   });
 });

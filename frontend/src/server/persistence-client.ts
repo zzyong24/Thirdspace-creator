@@ -2177,6 +2177,44 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 usedInPublished: k.usedInPublished,
                 sourceNote: k.sourceNote ?? null,
               })),
+          // [T-186] L3 策展护栏:按 query 相关性检索知识,复用已建 hybridSearch 运行时
+          // (knowledgeSearchRuntime,entityType=knowledge,exact ILIKE 优先 + 余弦补位 + 阈值截断;
+          // 未配 embedding 时诚实降级纯关键词)。把命中 knowledge id 按 hybridSearch 相关性顺序映射回
+          // listKnowledge 的全字段行(带 knowledgeType/战绩/出处),供 creative-context 的
+          // formatKnowledgeBrief 分段渲染。knowledgeSearchRuntime 定义在本文件后方,search 仅在任务
+          // dispatch(build 完成后)被调用,前向引用安全(与 dispatchScheduledCollection 同款范式)。
+          // 无命中 → 空数组(creative-context 据此退回 .list dump 降级)。
+          search: async (
+            c: RequestContext,
+            query: string,
+            opts: { limit?: number },
+          ) => {
+            const { hits } = await knowledgeSearchRuntime.hybridSearch(c, query);
+            if (hits.length === 0) return [];
+            const all = await knowledgeService.listKnowledge(c);
+            const byId = new Map(all.map((k) => [k.id, k]));
+            const rows: Array<{
+              title: string;
+              knowledgeType: string;
+              usedCount?: number;
+              usedInPublished?: boolean;
+              sourceNote?: string | null;
+            }> = [];
+            const limit = opts.limit ?? 40;
+            for (const h of hits) {
+              const k = byId.get(h.document.entityId);
+              if (!k) continue; // 命中的索引行对应的知识已删/跨号不可见 → 跳过
+              rows.push({
+                title: k.title,
+                knowledgeType: k.knowledgeType,
+                usedCount: k.usedCount,
+                usedInPublished: k.usedInPublished,
+                sourceNote: k.sourceNote ?? null,
+              });
+              if (rows.length >= limit) break;
+            }
+            return rows;
+          },
         };
         // 论点树 reader (策划 downstream nodes) — read the project's `thesis_tree` artifact's
         // current version's `contentData.nodes` back as the upstream 编导判断 that
