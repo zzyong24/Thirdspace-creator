@@ -9,6 +9,7 @@
 | SPEC | 审核日期 | verdict | 状态 | 备注 |
 |---|---|---|---|---|
 | [产品定位.md](../产品定位.md)(宪法) | — | — | 单一真值 | 不是待审 SPEC,是审一切 SPEC 的对照基准 |
+| [skill-driven-creative-agent-design](2026-07-10-skill-driven-creative-agent-design.md) | 2026-07-10 | ✅ PASS | **可开工 T-182~T-186** | Skill 驱动品味对齐飞轮 + 服务端接管。**双通道审**:① cross-family MiniMax PASS/0 findings(合定位 §3 飞轮 / 方案 / 完整 / 无缩水);② 代码接地核查(codegraph+grep+Read,补 MiniMax 够不到的"不造轮子"维)——5 条断链断言全属实、0 需撤销。2 处内联裁决:[gate-F1] T-182b 描述误导("无 per-project 外键"已过时,per-work 归属已建齐 `listCommentsForPublication`)→改为"reader 未接已有查询"、零 schema;[gate-F2] T-182c trend 复用 T-126 rss/browser adapter 别重造采集。CLAIM-1 为 1 行接线(`knowledgeReader` 已在 :2137)。详见同目录 .review.md |
 | [product-to-code-orchestrator-v3.3 优化设计](2026-07-06-product-to-code-orchestrator-v3-3-optimization.md) | — | ⬜ 未审 | 草案待审 | Skill v3.3 优化: 补业界调研借鉴,强化 Stitch/UI 可落地性、组件映射、物理架构、hook、docs/backlog 健康门卫。未改 Skill 本体;开工前须 review + 用户拍板。 |
 | [data-foundation-and-director-chatbox](2026-06-30-data-foundation-and-director-chatbox-design.md) | 2026-06-30 | ⚠️ CONCERNS | **已处置→可开工** | 逮 2 真问题(迁移 0006 撞号→0008、评论抓取悬空 wikilink)已裁决修复(`d30d6b5`)。T-001/002/003/004/005/006 据此已落地 |
 | [project-lifecycle-0to1-spec](2026-06-30-project-lifecycle-0to1-spec.md) | 2026-06-30 | ⚠️ CONCERNS | **已处置→可开工** | 逮 video_type 矛盾(→删 content_category)+ 缺基线 reconcile,已修(`d30d6b5`)。T-008/009 据此已落地 |
