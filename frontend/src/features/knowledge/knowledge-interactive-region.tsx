@@ -32,6 +32,13 @@ import { useRouter } from "next/navigation";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { KnowledgeAtlas } from "./knowledge-atlas";
 import { KnowledgeDetailPreview } from "./knowledge-detail-preview";
 import { KnowledgeGraphView } from "./knowledge-graph-view";
@@ -352,44 +359,73 @@ export function KnowledgeInteractiveRegion({
           /knowledge/:id/relations, deferred), Reusable snippets (insert into
           script — belongs to Artifacts), Metrics ×5 / graph chart (display
           only). These render with NO click handlers on purpose. */}
-      {/* [T-118b] 经验行只读详情:展开 insight 全文 + 来源标注(来自复盘/手录),
-          绝无采纳/翻案/修订按钮 —— 裁决是复盘的活,知识库只读展示已验证经验。 */}
-      {selectedId !== null && selectedIsExperience && selectedRow ? (
-        <ExperienceDetailPreview row={selectedRow} />
-      ) : null}
-      {selectedId !== null && !selectedIsExperience ? (
-        // T-062c:知识卡内容预览 —— 选中行读元数据+最新修订正文,markdown 渲染;
-        // source=web 型显来源链接(与素材预览同范式,诚实三态)。
-        <KnowledgeDetailPreview knowledgeId={selectedId} />
-      ) : null}
-      {selectedId !== null && !selectedIsExperience ? (
-        <form
-          data-slot="knowledge-add-revision"
-          onSubmit={handleRevisionSubmit}
-          className="flex flex-col gap-2 rounded-md border border-border bg-surface-subtle p-2.5"
+      {/* T-192 知识详情弹窗:选中知识项(recent 行 / 观点地图卡 / 图谱节点 / AI 搜索
+          结果)→ 用 ui/dialog 就地弹窗展开,不跳任何知识详情路由(项目无 /knowledge/:id
+          路由,跳则触发 404「内容已不存在」)。知识卡走 KnowledgeDetailPreview 读元数据 +
+          最新修订正文(诚实三态 loading/error/empty);经验行只读详情(insight + 来源,无
+          裁决/修订)。知识卡额外带修订表单(knowledge.revisions.create)。关闭 → 清空
+          选中态与草稿。 */}
+      <Dialog
+        open={selectedId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedId(null);
+            setRevisionContent("");
+          }
+        }}
+      >
+        <DialogContent
+          data-slot="knowledge-detail-dialog"
+          className="max-h-[85vh] overflow-y-auto sm:max-w-lg"
         >
-          <label className="sr-only" htmlFor="knowledge-revision-content">
-            修订内容
-          </label>
-          <textarea
-            id="knowledge-revision-content"
-            data-slot="knowledge-revision-content"
-            placeholder="为所选条目添加新的修订内容"
-            value={revisionContent}
-            onChange={(event) => setRevisionContent(event.target.value)}
-            rows={3}
-            className="rounded-md border border-border bg-surface px-3 py-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-          />
-          <button
-            type="submit"
-            data-slot="knowledge-revision-submit"
-            disabled={pending || revisionContent.trim().length === 0}
-            className="inline-flex h-8 w-fit items-center rounded-md bg-brand px-3 text-[13px] font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
-          >
-            保存修订
-          </button>
-        </form>
-      ) : null}
+          <DialogHeader>
+            <DialogTitle data-slot="knowledge-detail-dialog-title">
+              {selectedRow?.title ?? "知识详情"}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {selectedIsExperience
+                ? "已验证经验条目的只读详情"
+                : "知识条目的正文与来源预览"}
+            </DialogDescription>
+          </DialogHeader>
+          {/* [T-118b] 经验行只读详情:insight 全文 + 来源标注,绝无采纳/翻案/修订。 */}
+          {selectedIsExperience && selectedRow ? (
+            <ExperienceDetailPreview row={selectedRow} />
+          ) : selectedId !== null ? (
+            <>
+              {/* T-062c:知识卡内容预览 —— 读元数据 + 最新修订正文,markdown 渲染;
+                  source=web 型显来源链接(诚实三态)。 */}
+              <KnowledgeDetailPreview knowledgeId={selectedId} />
+              <form
+                data-slot="knowledge-add-revision"
+                onSubmit={handleRevisionSubmit}
+                className="flex flex-col gap-2 rounded-md border border-border bg-surface-subtle p-2.5"
+              >
+                <label className="sr-only" htmlFor="knowledge-revision-content">
+                  修订内容
+                </label>
+                <textarea
+                  id="knowledge-revision-content"
+                  data-slot="knowledge-revision-content"
+                  placeholder="为所选条目添加新的修订内容"
+                  value={revisionContent}
+                  onChange={(event) => setRevisionContent(event.target.value)}
+                  rows={3}
+                  className="rounded-md border border-border bg-surface px-3 py-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                />
+                <button
+                  type="submit"
+                  data-slot="knowledge-revision-submit"
+                  disabled={pending || revisionContent.trim().length === 0}
+                  className="inline-flex h-8 w-fit items-center rounded-md bg-brand px-3 text-[13px] font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
+                >
+                  保存修订
+                </button>
+              </form>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

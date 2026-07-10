@@ -9,7 +9,7 @@
  *  - 诚实数据:client 不支持 listLearnings / 读失败 → 经验并入静默空,不 fixture 兜底。
  */
 
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
@@ -281,14 +281,18 @@ describe("[T-118b] 经验行只读渲染", () => {
       '[data-slot="recent-knowledge-row"][data-origin="experience"]',
     )!;
     fireEvent.click(expRow);
-    const detail = container.querySelector('[data-slot="experience-detail-preview"]');
-    expect(detail).not.toBeNull();
-    expect(detail!.textContent).toContain("洞察正文 l-1");
-    expect(detail!.textContent).toContain("来自复盘诊断");
+    // T-192:详情进 ui/dialog 弹窗(Radix portal → document.body)。
+    const detail = await waitFor(() => {
+      const el = document.querySelector('[data-slot="experience-detail-preview"]');
+      expect(el).not.toBeNull();
+      return el!;
+    });
+    expect(detail.textContent).toContain("洞察正文 l-1");
+    expect(detail.textContent).toContain("来自复盘诊断");
     // 只读:绝无裁决/修订入口。
-    expect(container.querySelector('[data-slot="learning-adopt"]')).toBeNull();
-    expect(container.querySelector('[data-slot="learning-reopen"]')).toBeNull();
-    expect(container.querySelector('[data-slot="knowledge-add-revision"]')).toBeNull();
+    expect(document.querySelector('[data-slot="learning-adopt"]')).toBeNull();
+    expect(document.querySelector('[data-slot="learning-reopen"]')).toBeNull();
+    expect(document.querySelector('[data-slot="knowledge-add-revision"]')).toBeNull();
   });
 
   it("点开知识卡行 → 走 KnowledgeDetailPreview + 修订表单(非只读)", async () => {
@@ -297,13 +301,15 @@ describe("[T-118b] 经验行只读渲染", () => {
       '[data-slot="recent-knowledge-row"][data-origin="knowledge"]',
     )!;
     fireEvent.click(kRow);
-    // 知识卡不渲经验只读详情;渲修订表单。
+    // T-192:知识卡走弹窗(portal → document.body);不渲经验只读详情,渲修订表单。
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-slot="knowledge-add-revision"]'),
+      ).not.toBeNull(),
+    );
     expect(
-      container.querySelector('[data-slot="experience-detail-preview"]'),
+      document.querySelector('[data-slot="experience-detail-preview"]'),
     ).toBeNull();
-    expect(
-      container.querySelector('[data-slot="knowledge-add-revision"]'),
-    ).not.toBeNull();
   });
 });
 

@@ -200,7 +200,7 @@ describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 
-  it("选中一行 → 内容预览:markdown 渲染最新修订正文 + web 型来源链接(T-062c)", async () => {
+  it("选中一行 → 弹窗打开,内容预览:markdown 渲染最新修订正文 + web 型来源链接(T-062c/T-192)", async () => {
     const { container } = await renderKnowledge();
     const row = container.querySelector<HTMLTableRowElement>(
       '[data-slot="recent-knowledge-row"]',
@@ -208,9 +208,23 @@ describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
     const knowledgeId = row!.getAttribute("data-knowledge-id");
     fireEvent.click(row!);
 
+    // T-192:预览进 ui/dialog 弹窗(Radix portal 到 document.body),不再跳详情路由。
     await waitFor(() =>
       expect(
-        container.querySelector(
+        document.querySelector('[data-slot="knowledge-detail-dialog"]'),
+      ).not.toBeNull(),
+    );
+    // 点知识项不导航(在页弹窗,绝不 router.push 到不存在的 /knowledge/:id 路由)。
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    // 弹窗标题 = 选中行标题。
+    expect(
+      document.querySelector('[data-slot="knowledge-detail-dialog-title"]')
+        ?.textContent,
+    ).not.toBe("");
+
+    await waitFor(() =>
+      expect(
+        document.querySelector(
           '[data-slot="knowledge-detail-preview"][data-phase="ready"]',
         ),
       ).not.toBeNull(),
@@ -219,18 +233,43 @@ describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
       expect.objectContaining({ params: { knowledgeId } }),
     );
     // markdown 已渲染(# → h1,** ** → strong)
-    const content = container.querySelector(
+    const content = document.querySelector(
       '[data-slot="knowledge-detail-content"]',
     );
     expect(content).not.toBeNull();
     expect(content!.querySelector("h1")?.textContent).toBe("标题");
     expect(content!.querySelector("strong")?.textContent).toBe("加粗");
     // source=web 型显来源链接
-    const source = container.querySelector<HTMLAnchorElement>(
+    const source = document.querySelector<HTMLAnchorElement>(
       '[data-slot="knowledge-detail-source"]',
     );
     expect(source).not.toBeNull();
     expect(source!.getAttribute("href")).toBe("https://example.com/article");
+  });
+
+  it("弹窗内 getKnowledge 失败 → 诚实错误态(不崩,不跳路由)(T-192)", async () => {
+    mockClient.getKnowledge.mockRejectedValueOnce(
+      Object.assign(new Error("HTTP 404 not found"), { status: 404 }),
+    );
+    const { container } = await renderKnowledge();
+    const row = container.querySelector<HTMLTableRowElement>(
+      '[data-slot="recent-knowledge-row"]',
+    );
+    fireEvent.click(row!);
+
+    await waitFor(() =>
+      expect(
+        document.querySelector(
+          '[data-slot="knowledge-detail-preview"][data-phase="error"]',
+        ),
+      ).not.toBeNull(),
+    );
+    // 错误态是内联人话报错,不是崩溃/白屏,也没跳路由。
+    expect(
+      document.querySelector('[data-slot="knowledge-detail-error"]')?.textContent
+        ?.length,
+    ).toBeGreaterThan(0);
+    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 
   it("selecting a row + 保存修订 calls client.createKnowledgeRevision with the knowledgeId", async () => {
@@ -241,13 +280,16 @@ describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
     const knowledgeId = row!.getAttribute("data-knowledge-id");
     fireEvent.click(row!);
 
-    const textarea = container.querySelector<HTMLTextAreaElement>(
-      '[data-slot="knowledge-revision-content"]',
-    );
-    expect(textarea).not.toBeNull();
-    fireEvent.change(textarea!, { target: { value: "新的修订" } });
+    const textarea = await waitFor(() => {
+      const el = document.querySelector<HTMLTextAreaElement>(
+        '[data-slot="knowledge-revision-content"]',
+      );
+      expect(el).not.toBeNull();
+      return el!;
+    });
+    fireEvent.change(textarea, { target: { value: "新的修订" } });
 
-    const form = container.querySelector<HTMLFormElement>(
+    const form = document.querySelector<HTMLFormElement>(
       '[data-slot="knowledge-add-revision"]',
     );
     fireEvent.submit(form!);
