@@ -120,9 +120,11 @@ export async function resolveSearchSpec(
   const fromEnv = tryEnvRow(env);
   if (fromEnv) return fromEnv;
 
-  // Tier 3 — 未配:诚实抛错(不假装能搜)。
-  throw new SearchConfigError(
-    `capability "web.search" 未配置联网检索:请在设置里为 web.search 配 provider/key(bocha/tavily/serpapi),` +
-      `或设置 .env.local 的 ${ENV_KEYS.provider}/${ENV_KEYS.secretRef}`,
-  );
+  // Tier 3 — [T-191] 未配 provider → **默认走浏览器搜索 adapter**(免 key,已注册进 searchWeb
+  //   registry:persistence-client `browser: createBrowserScrapeAdapter()`)。零配置即真联网:
+  //   无头 Chromium 抓 Bing SERP → 解析结果。不再抛 SearchConfigError/掉训练记忆。
+  //   诚实边界:browser adapter(search-browser.ts)★★脆(SERP 反爬/结构变)→ 抓不到时抛
+  //   SearchExecutionError → gatherMaterials 接住 → grounding=model_memory 诚实降级(不产垃圾/不假装)。
+  //   用户仍可在设置里配 bocha/tavily/serpapi(Tier 1)覆盖浏览器档换更稳的 provider。
+  return { provider: "browser", baseUrl: null, model: "", token: "" };
 }
