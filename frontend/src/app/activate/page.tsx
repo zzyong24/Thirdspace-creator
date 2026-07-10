@@ -11,6 +11,10 @@ import { isDesktopRuntime } from "@/server/activation";
 //
 // 已激活(check.allowed)时也回首页:避免手动敲 /activate 停在这。展示当前状态可读消息(到期/未激活)。
 
+// [T-179] 「联系授权方」链到产品官网购买/联系区(T-168 已上线,含微信/邮箱)。与 settings
+//   PURCHASE_URL 同址;桌面端 <a> 外开浏览器。DNS(creatoros.aitongban.cloud→152.136.151.58)配好即达。
+const CONTACT_URL = "https://creatoros.aitongban.cloud/#buy";
+
 export default async function ActivatePage(): Promise<React.JSX.Element> {
   // web/dev:无激活门,/activate 无意义 → 回首页。
   if (!isDesktopRuntime(process.env)) {
@@ -44,7 +48,16 @@ export default async function ActivatePage(): Promise<React.JSX.Element> {
         </div>
         <ActivateForm />
         <p className="text-center text-xs text-muted-foreground">
-          激活码由 CreatorOS 授权方提供,遇问题请联系授权方。
+          激活码由 CreatorOS 授权方提供,遇问题请
+          <a
+            href={CONTACT_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary underline underline-offset-2 hover:opacity-80"
+          >
+            联系授权方
+          </a>
+          。
         </p>
       </div>
     </main>
