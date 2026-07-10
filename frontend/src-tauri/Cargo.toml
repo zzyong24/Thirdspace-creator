@@ -24,6 +24,8 @@ tauri-plugin-shell = "2"
 # T-147 P6 桌面加固 —— updater 插件(minisign/Ed25519 签名更新包,不需 Apple 证书)。
 # 配 tauri.conf.json plugins.updater.{pubkey,endpoints} + bundle.createUpdaterArtifacts。
 tauri-plugin-updater = "2"
+# [T-180] process 插件:更新装好后 relaunch() 重启 app(前端 @tauri-apps/plugin-process 的 Rust 侧)。
+tauri-plugin-process = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # T-147 P2 本地加密 —— master key 存 OS keychain(macOS Keychain / Windows Credential

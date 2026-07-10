@@ -28,6 +28,13 @@ use tauri_plugin_shell::ShellExt;
 const KEYCHAIN_SERVICE: &str = "com.creatoros.desktop";
 const KEYCHAIN_KEY_NAME: &str = "master-key";
 
+// [T-181] Skill 远程下发(prompt-bundle):sidecar 的 remote-prompt-bundle.ts 拉签名 bundle.json
+//   + 内置公钥验签。URL 与公钥都是**公开的**(非密钥),硬编码进壳、注入 sidecar env。
+//   私钥在产品方(~/.creatoros/prompt-bundle.key,签 bundle 时用,绝不进客户端/git)。
+const PROMPT_BUNDLE_URL: &str = "http://creatoros.aitongban.cloud/prompts/bundle.json";
+const PROMPT_BUNDLE_PUBLIC_KEY: &str =
+    "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEArmDGPC34VMSU2Isf3X+gULIwOH+5X3GBHwlXYFbgjg4=\n-----END PUBLIC KEY-----\n";
+
 /// 取/建 32B master key,base64 返回,供注入 sidecar env `CREATOROS_MASTER_KEY`。
 ///
 /// 首启:keychain 无条目 → 随机生成 32 字节 → base64 存 keychain → 返回。
@@ -289,6 +296,8 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         // T-147 P6 —— updater 插件(签名更新包校验;pubkey/endpoints 在 tauri.conf.json)。
         .plugin(tauri_plugin_updater::Builder::new().build())
+        // [T-180] process 插件 —— 更新装好后 relaunch() 重启 app。
+        .plugin(tauri_plugin_process::init())
         .manage(SidecarHandle::default())
         .setup(|app| {
             let handle = app.handle().clone();
@@ -377,6 +386,9 @@ pub fn run() {
                     .env("CREATOROS_DB_DIR", &db_dir_str)
                     .env("NODE_ENV", "production")
                     .env("CREATOROS_DESKTOP", "1")
+                    // [T-181] Skill 远程下发端点 + 验签公钥。
+                    .env("PROMPT_BUNDLE_URL", PROMPT_BUNDLE_URL)
+                    .env("PROMPT_BUNDLE_PUBLIC_KEY", PROMPT_BUNDLE_PUBLIC_KEY)
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir)
                     .stdout(Stdio::piped())
@@ -428,6 +440,9 @@ pub fn run() {
                     .env("CREATOROS_DB_DIR", &db_dir_str)
                     .env("NODE_ENV", "production")
                     .env("CREATOROS_DESKTOP", "1")
+                    // [T-181] Skill 远程下发端点 + 验签公钥(Win/Linux 同 macOS)。
+                    .env("PROMPT_BUNDLE_URL", PROMPT_BUNDLE_URL)
+                    .env("PROMPT_BUNDLE_PUBLIC_KEY", PROMPT_BUNDLE_PUBLIC_KEY)
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir);
 

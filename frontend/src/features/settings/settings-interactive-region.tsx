@@ -71,8 +71,19 @@ import {
   Plus,
   ChevronDownIcon,
   ChevronRightIcon,
+  Download,
+  RefreshCw,
   type LucideIcon,
 } from "lucide-react";
+// [T-180] 桌面软件更新的前端薄封装(client-only,web/SSR 安全降级)。
+import {
+  checkForUpdate,
+  getAppVersion,
+  isDesktopRuntimeClient,
+  relaunchApp,
+  type AvailableUpdate,
+  type UpdateProgress,
+} from "@/lib/desktop-updater";
 
 import type {
   ActivationState,
@@ -354,6 +365,8 @@ export function SettingsDialog({
                 <AccountBindingCard douyinAccount={viewModel.douyinAccount} />
                 {/* [T-167] 激活状态卡:桌面端读真态四态诚实展示;web/未装配 → 桌面端专属空态。 */}
                 <ActivationStatusCard activation={activation} />
+                {/* [T-180] 软件更新卡:桌面端「检查更新」+ 下载并安装 + 重启;web → 桌面端专属空态。 */}
+                <CheckUpdateCard />
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="preferences" active={tab}>
@@ -1095,6 +1108,290 @@ function ActivationStatusCard({
             </a>
           </Button>
         </div>
+      </div>
+    </SectionCard>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CheckUpdateCard — 软件更新 (T-180)
+// ---------------------------------------------------------------------------
+//
+// Rust 侧 updater 插件已装 + 初始化,tauri.conf 已配 pubkey + endpoint。本卡是**前端入口**:
+// 桌面端显当前版本 + 「检查更新」按钮,点击走 `desktop-updater` 薄封装的 check():
+//   - 有新版 → 显版本号 + notes + 「下载并安装」(downloadAndInstall + 进度)→ 装完 relaunch();
+//             relaunch 不可用则提示手动重启;
+//   - 无新版 → 「已是最新版」;
+//   - 失败 → 可读错误文案(网络失败友好提示),不崩。
+//
+// **只桌面态有意义**:挂载后经 `isDesktopRuntimeClient()` 探测;web/SSR → 显「桌面端专属」诚实
+// 空态(无检查入口),绝不假装能更新。SSR 首帧走空态(desktop=false),挂载后翻真(避免水合漂移)。
+
+type UpdatePhase =
+  | "idle"
+  | "checking"
+  | "available"
+  | "downloading"
+  | "installed"
+  | "uptodate"
+  | "error";
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function CheckUpdateCard() {
+  // SSR 首帧 desktop=false → 渲空态;挂载后 isDesktopRuntimeClient() 翻真(无水合漂移)。
+  const [isDesktop, setIsDesktop] = React.useState(false);
+  const [version, setVersion] = React.useState<string | null>(null);
+  const [phase, setPhase] = React.useState<UpdatePhase>("idle");
+  const [available, setAvailable] = React.useState<AvailableUpdate | null>(null);
+  const [message, setMessage] = React.useState<string>("");
+  const [progress, setProgress] = React.useState<UpdateProgress | null>(null);
+
+  React.useEffect(() => {
+    const desktop = isDesktopRuntimeClient();
+    setIsDesktop(desktop);
+    if (desktop) {
+      void getAppVersion().then((v) => setVersion(v));
+    }
+  }, []);
+
+  const busy = phase === "checking" || phase === "downloading";
+
+  const check = React.useCallback(() => {
+    if (busy) return;
+    setPhase("checking");
+    setMessage("");
+    setAvailable(null);
+    setProgress(null);
+    void (async () => {
+      const res = await checkForUpdate();
+      switch (res.kind) {
+        case "available":
+          setAvailable(res);
+          setPhase("available");
+          break;
+        case "uptodate":
+          setPhase("uptodate");
+          setMessage("已是最新版。");
+          break;
+        case "unavailable":
+          // 理论上桌面态不会走到(按钮只在 desktop 显);兜底诚实提示。
+          setPhase("error");
+          setMessage("当前环境不支持自动更新。");
+          break;
+        case "error":
+          setPhase("error");
+          setMessage(res.message);
+          break;
+      }
+    })();
+  }, [busy]);
+
+  const install = React.useCallback(() => {
+    if (busy || !available) return;
+    setPhase("downloading");
+    setMessage("");
+    setProgress({ phase: "started" });
+    void (async () => {
+      try {
+        await available.downloadAndInstall((p) => setProgress(p));
+        setPhase("installed");
+        const relaunched = await relaunchApp();
+        if (!relaunched) {
+          setMessage("更新已安装完成,请手动重启应用以生效。");
+        }
+      } catch {
+        setPhase("error");
+        setMessage("下载或安装更新失败,请稍后重试。");
+      }
+    })();
+  }, [busy, available]);
+
+  // web / SSR → 诚实空态:软件更新是桌面端功能,web 端随浏览器自动更新,无检查入口。
+  if (!isDesktop) {
+    return (
+      <SectionCard
+        title="软件更新"
+        description="桌面端自动更新"
+        action={
+          <Badge
+            data-slot="check-update-badge"
+            data-status="unavailable"
+            variant="outline"
+            className="border-border bg-surface-subtle text-muted-foreground"
+          >
+            桌面端专属
+          </Badge>
+        }
+      >
+        <div
+          data-slot="check-update-card"
+          data-desktop="false"
+          className="flex items-start gap-3 rounded-md border border-border bg-surface-subtle p-3"
+        >
+          <div
+            aria-hidden="true"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"
+          >
+            <Download className="size-5" />
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-sm font-medium text-foreground">
+              软件更新为桌面端功能
+            </span>
+            <span className="text-xs text-muted-foreground">
+              桌面客户端支持一键检查并安装新版。Web 端随浏览器加载最新版,无需手动更新。
+            </span>
+          </div>
+        </div>
+      </SectionCard>
+    );
+  }
+
+  const downloadedText =
+    progress && progress.phase === "downloading"
+      ? progress.contentLength
+        ? `${formatBytes(progress.downloaded)} / ${formatBytes(progress.contentLength)}`
+        : formatBytes(progress.downloaded)
+      : null;
+
+  return (
+    <SectionCard
+      title="软件更新"
+      description="检查并安装桌面客户端新版"
+      action={
+        <Badge
+          data-slot="check-update-badge"
+          data-status="desktop"
+          variant="outline"
+          className="border-border bg-surface-subtle text-muted-foreground"
+        >
+          {version ? `v${version}` : "桌面端"}
+        </Badge>
+      }
+    >
+      <div
+        data-slot="check-update-card"
+        data-desktop="true"
+        className="flex flex-col gap-3"
+      >
+        <div className="flex items-center gap-3 rounded-md border border-border bg-surface-subtle p-3">
+          <div
+            aria-hidden="true"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"
+          >
+            <Download className="size-5" />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="text-sm font-medium text-foreground">
+              当前版本
+            </span>
+            <span
+              data-slot="app-version"
+              className="font-mono text-xs text-muted-foreground"
+            >
+              {version ? `v${version}` : "读取中…"}
+            </span>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            data-slot="check-update-action"
+            disabled={busy}
+            onClick={check}
+          >
+            {phase === "checking" ? (
+              <Loader2 aria-hidden="true" className="size-4 shrink-0 animate-spin" />
+            ) : (
+              <RefreshCw aria-hidden="true" className="size-4 shrink-0" />
+            )}
+            检查更新
+          </Button>
+        </div>
+
+        {/* 有新版:显版本号 + notes + 「下载并安装」按钮。 */}
+        {phase === "available" && available ? (
+          <div
+            data-slot="check-update-available"
+            className="flex flex-col gap-2 rounded-md border border-brand/40 bg-brand-soft/40 p-3"
+          >
+            <span className="text-sm font-medium text-foreground">
+              发现新版本 v{available.version}
+              <span className="ml-1.5 font-normal text-muted-foreground">
+                (当前 v{available.currentVersion})
+              </span>
+            </span>
+            {available.notes ? (
+              <p className="whitespace-pre-line text-xs text-muted-foreground">
+                {available.notes}
+              </p>
+            ) : null}
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                data-slot="check-update-install"
+                onClick={install}
+                disabled={busy}
+              >
+                <Download aria-hidden="true" className="size-4 shrink-0" />
+                下载并安装
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {/* 下载中:进度文案(累计字节 / 总长)。 */}
+        {phase === "downloading" ? (
+          <p
+            data-slot="check-update-progress"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+          >
+            <Loader2 aria-hidden="true" className="size-3.5 shrink-0 animate-spin" />
+            {downloadedText ? `下载中… ${downloadedText}` : "下载中…"}
+          </p>
+        ) : null}
+
+        {/* 已是最新版。 */}
+        {phase === "uptodate" ? (
+          <p
+            data-slot="check-update-feedback"
+            data-tone="uptodate"
+            className="flex items-center gap-1.5 text-xs text-success"
+          >
+            <CheckCircle2 aria-hidden="true" className="size-3.5 shrink-0" />
+            {message}
+          </p>
+        ) : null}
+
+        {/* 安装完成(relaunch 不可用时提示手动重启)。 */}
+        {phase === "installed" ? (
+          <p
+            data-slot="check-update-feedback"
+            data-tone="installed"
+            className="flex items-center gap-1.5 text-xs text-success"
+          >
+            <CheckCircle2 aria-hidden="true" className="size-3.5 shrink-0" />
+            {message || "更新已安装,正在重启应用…"}
+          </p>
+        ) : null}
+
+        {/* 失败(可读文案)。 */}
+        {phase === "error" ? (
+          <p
+            data-slot="check-update-feedback"
+            data-tone="error"
+            className="flex items-center gap-1.5 text-xs text-destructive"
+          >
+            <AlertCircle aria-hidden="true" className="size-3.5 shrink-0" />
+            {message}
+          </p>
+        ) : null}
       </div>
     </SectionCard>
   );
