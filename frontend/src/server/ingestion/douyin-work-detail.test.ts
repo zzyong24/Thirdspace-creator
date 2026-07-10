@@ -6,6 +6,7 @@ import {
   matchDetailsToPublications,
   toDetailMetricRecords,
   visibilityFromDetailStatus,
+  isPublicationRunnableForHeavyWork,
   type DouyinWorkDetail,
   type PublicationCatalogEntry,
 } from "./douyin-work-detail";
@@ -432,5 +433,53 @@ describe("visibilityFromDetailStatus ([T-073] 审核状态 → 可见性)", () =
     expect(visibilityFromDetailStatus("未通过")).toBe("unknown");
     expect(visibilityFromDetailStatus("")).toBe("unknown");
     expect(visibilityFromDetailStatus("  ")).toBe("unknown");
+  });
+});
+
+describe("isPublicationRunnableForHeavyWork ([T-190] 重活可见性判据)", () => {
+  it("hidden_at 非空 → 不可跑重活(false)", () => {
+    expect(
+      isPublicationRunnableForHeavyWork({
+        hiddenAt: "2026-07-09T00:00:00.000Z",
+        platformStatus: null,
+      }),
+    ).toBe(false);
+    // hidden_at + 任意 platform_status 都不可跑
+    expect(
+      isPublicationRunnableForHeavyWork({
+        hiddenAt: "2026-07-09T00:00:00.000Z",
+        platformStatus: "已通过",
+      }),
+    ).toBe(false);
+  });
+
+  it("platform_status 非「已通过」(仅自己可见/私密/未通过/审核中)→ 不可跑(false)", () => {
+    for (const ps of ["仅自己可见", "私密", "未通过", "审核中"]) {
+      expect(
+        isPublicationRunnableForHeavyWork({ hiddenAt: null, platformStatus: ps }),
+      ).toBe(false);
+    }
+  });
+
+  it("「已通过」→ 照跑(true)", () => {
+    expect(
+      isPublicationRunnableForHeavyWork({ hiddenAt: null, platformStatus: "已通过" }),
+    ).toBe(true);
+    // 前后空白容错
+    expect(
+      isPublicationRunnableForHeavyWork({ hiddenAt: null, platformStatus: " 已通过 " }),
+    ).toBe(true);
+  });
+
+  it("NULL / 空(旧数据、未跑过 self.detail 同步)→ 向后兼容照跑(true)", () => {
+    expect(
+      isPublicationRunnableForHeavyWork({ hiddenAt: null, platformStatus: null }),
+    ).toBe(true);
+    expect(
+      isPublicationRunnableForHeavyWork({ hiddenAt: "", platformStatus: "" }),
+    ).toBe(true);
+    expect(
+      isPublicationRunnableForHeavyWork({ hiddenAt: "  ", platformStatus: "  " }),
+    ).toBe(true);
   });
 });

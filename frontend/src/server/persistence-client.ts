@@ -189,6 +189,7 @@ import {
   matchDetailsToPublications,
   toDetailMetricRecords,
   visibilityFromDetailStatus,
+  isPublicationRunnableForHeavyWork,
   type PublicationCatalogEntry,
 } from "@/server/ingestion/douyin-work-detail";
 // [T-078] 作品封面回填:iesdouyin 分享页 coverUrl → 下载字节 → asset → revision.coverAssetId。
@@ -3686,6 +3687,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 })
               )
                 .filter((p) => typeof p.externalId === "string" && p.externalId)
+                // [T-190] 采集入口过滤:平台侧已知隐藏的作品不回填封面(不当飞轮素材)。仓库查询
+                //   已滤 hidden_at IS NULL;此处再按 platform_status 兜一道(非「已通过」→ 跳),与
+                //   逐字稿/重建同一 isPublicationRunnableForHeavyWork 判据对齐。NULL → 向后兼容照跑。
+                .filter((p) => isPublicationRunnableForHeavyWork(p))
                 .map((p) => {
                   // [缺口 B] 记下每条候选作品的 contentOutputId,供封面绑项目解析 projectId。
                   if (typeof p.contentOutputId === "string" && p.contentOutputId) {
@@ -3769,6 +3774,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const enqueued = await enqueueReconstructForImported(
           {
             listImportedWorks: (c) => projectsService.listImportedWorks(c),
+            // [T-190] 只读可见性判据:从 publications 反查该作品(externalId=aweme_id)的
+            //   hidden_at / platform_status,平台侧已知隐藏(仅自己可见 / 私密 / 非「已通过」)→
+            //   逐字稿 + 重建**都不排**(省 token,不给已隐藏作品跑重活)。查不到 publication →
+            //   false(诚实不硬跳)。判据与封面回填、列表默认过滤同一 isPublicationRunnableForHeavyWork。
+            isWorkHidden: async (c, externalId) => {
+              const pub = await publishingService.resolvePublication(c, {
+                platform: "douyin",
+                externalId,
+              });
+              if (!pub) return false; // 未导入对应 publication → 无判据,不跳
+              return !isPublicationRunnableForHeavyWork(pub);
+            },
             // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
             //   ai.tasks.create → runTranscribe;直调 service 会死链。runner 内逐 aweme 幂等跳已转写)。
             enqueueTranscribe: async (c, awemeIds) => {

@@ -48,6 +48,11 @@ export interface ReconstructEnqueueResult {
   reconstructEnqueued: number;
   /** 闸命中:已有 reconstructed artifact → 诚实跳过(重建过了不重跑)。 */
   reconstructSkipped: number;
+  /**
+   * [T-190] 平台侧已知隐藏(hidden_at 非空 / platform_status 非「已通过」)→ 逐字稿 + 重建
+   * **都跳过**的作品数。不给已隐藏/私密作品跑重活(省 token)、不当飞轮素材。
+   */
+  hiddenSkipped: number;
   /** 单步(读 artifact / 排队)失败 → 降级继续,计数(绝不抛出拖垮整批)。 */
   failed: number;
 }
@@ -55,6 +60,14 @@ export interface ReconstructEnqueueResult {
 export interface ReconstructEnqueuePorts {
   /** 本 user 全部 imported 作品的两维锚(host 绑 projectsService.listImportedWorks)。 */
   listImportedWorks(ctx: RequestContext): Promise<ImportedWork[]>;
+  /**
+   * [T-190] 只读可见性判据:该作品(externalId=aweme_id)在平台侧是否**已知隐藏**
+   * (host 从 publications 反查 resolvePublication → hidden_at / platform_status,判据见
+   * isPublicationRunnableForHeavyWork)。返回 true = 隐藏 → 逐字稿 + 重建**都不排**。
+   * **可选**:未注入 → 全部视为可见(向后兼容,退化为原全量行为,既有单测零改动)。
+   * 找不到对应 publication(未导入 / 无判据)→ host 应返 false(不硬跳,诚实)。
+   */
+  isWorkHidden?(ctx: RequestContext, externalId: string): Promise<boolean>;
   /**
    * 排一个 transcribe.douyin 任务(host 绑 ai transport 的 ai.tasks.create,inputData={awemeIds})。
    * **必须经 ai transport**(dispatch 链只在拦 ai.tasks.create 时触发;直调 service 会死链)。
@@ -91,16 +104,36 @@ export async function enqueueReconstructForImported(
     transcribeAwemeCount: 0,
     reconstructEnqueued: 0,
     reconstructSkipped: 0,
+    hiddenSkipped: 0,
     failed: 0,
   };
-  let works: ImportedWork[];
+  let allWorks: ImportedWork[];
   try {
-    works = await ports.listImportedWorks(ctx);
+    allWorks = await ports.listImportedWorks(ctx);
   } catch {
     // 连 imported 列表都读不到 → 整批放弃(0 considered),绝不抛(封面/指标主流程不受影响)。
     return result;
   }
-  result.considered = works.length;
+  result.considered = allWorks.length;
+
+  // [T-190] 采集入口过滤:平台侧已知隐藏(hidden_at 非空 / platform_status 非「已通过」)的作品
+  //   逐字稿 + 重建**都跳过**(不给已隐藏/私密作品跑重活、不当飞轮素材)。isWorkHidden 未注入 →
+  //   全部视为可见(退化原全量,向后兼容)。判据读失败 → 保守当「可见」照跑(不因反查抖动误跳)。
+  const works: ImportedWork[] = [];
+  if (ports.isWorkHidden) {
+    for (const w of allWorks) {
+      let hidden = false;
+      try {
+        hidden = w.externalId.length > 0 && (await ports.isWorkHidden(ctx, w.externalId));
+      } catch {
+        hidden = false; // 反查判据抖动 → 保守照跑(不误跳真实作品)
+      }
+      if (hidden) result.hiddenSkipped += 1;
+      else works.push(w);
+    }
+  } else {
+    works.push(...allWorks);
+  }
 
   // 1) 逐字稿:一批 awemeId 排一个 transcribe.douyin 批任务(runner 逐 aweme 幂等跳已转写)。
   const awemeIds = works.map((w) => w.externalId).filter((x) => x.length > 0);

@@ -163,4 +163,63 @@ describe("enqueueReconstructForImported", () => {
     expect(res.transcribeAwemeCount).toBe(1);
     expect(calls.reconstructed).toEqual(["p1", "p2"]); // reconstruct 按 projectId,两个都排
   });
+
+  // [T-190] 平台侧已知隐藏的作品:逐字稿 + 重建都跳过(不给已隐藏/私密作品跑重活)。
+  it("isWorkHidden=true 的作品:逐字稿批不含它 + 不排 reconstruct + 计 hiddenSkipped", async () => {
+    const { ports, calls } = makePorts({
+      listImportedWorks: async () => works(3), // aweme-1/2/3
+      // aweme-2 平台侧已隐藏(仅自己可见 / 私密)→ 跳过重活。
+      isWorkHidden: async (_c, externalId) => externalId === "aweme-2",
+    });
+    const res = await enqueueReconstructForImported(ports, ctx);
+    // 逐字稿批只含可见作品(aweme-2 被剔除)。
+    expect(calls.transcribed).toEqual([["aweme-1", "aweme-3"]]);
+    // reconstruct 只对可见项目排(proj-2 对应隐藏作品 → 不排,也不查 artifact)。
+    expect(calls.reconstructed).toEqual(["proj-1", "proj-3"]);
+    expect(calls.checked).toEqual(["proj-1", "proj-3"]);
+    expect(res).toMatchObject({
+      considered: 3, // 候选面仍是全部(hiddenSkipped 从中扣)
+      transcribeEnqueued: true,
+      transcribeAwemeCount: 2,
+      reconstructEnqueued: 2,
+      hiddenSkipped: 1,
+      failed: 0,
+    });
+  });
+
+  it("全部作品可见(isWorkHidden 恒 false)→ 照原样全排,hiddenSkipped=0", async () => {
+    const { ports, calls } = makePorts({
+      listImportedWorks: async () => works(2),
+      isWorkHidden: async () => false,
+    });
+    const res = await enqueueReconstructForImported(ports, ctx);
+    expect(calls.transcribed).toEqual([["aweme-1", "aweme-2"]]);
+    expect(calls.reconstructed).toEqual(["proj-1", "proj-2"]);
+    expect(res.hiddenSkipped).toBe(0);
+    expect(res.transcribeAwemeCount).toBe(2);
+  });
+
+  it("isWorkHidden 未注入(向后兼容)→ 全排,退化原全量行为", async () => {
+    const { ports, calls } = makePorts({
+      listImportedWorks: async () => works(2), // 无 isWorkHidden override
+    });
+    const res = await enqueueReconstructForImported(ports, ctx);
+    expect(calls.transcribed).toEqual([["aweme-1", "aweme-2"]]);
+    expect(calls.reconstructed).toEqual(["proj-1", "proj-2"]);
+    expect(res.hiddenSkipped).toBe(0);
+  });
+
+  it("isWorkHidden 反查抖动(抛错)→ 保守当可见照跑(不误跳真实作品)", async () => {
+    const { ports, calls } = makePorts({
+      listImportedWorks: async () => works(2),
+      isWorkHidden: async (_c, externalId) => {
+        if (externalId === "aweme-1") throw new Error("反查失败");
+        return false;
+      },
+    });
+    const res = await enqueueReconstructForImported(ports, ctx);
+    // aweme-1 判据抛错 → 保守照跑(仍在批里),不误判为隐藏。
+    expect(calls.transcribed).toEqual([["aweme-1", "aweme-2"]]);
+    expect(res.hiddenSkipped).toBe(0);
+  });
 });

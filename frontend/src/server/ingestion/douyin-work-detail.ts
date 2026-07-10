@@ -248,6 +248,30 @@ export function visibilityFromDetailStatus(status: string): DetailVisibility {
   return "unknown";
 }
 
+/**
+ * [T-190] 已发布作品是否**可跑重活**(逐字稿 / reconstruct / 封面回填)的只读判据 —— 纯函数,
+ * 消费 publication 行上 self.detail 已落的两列(hiddenAt / platformStatus),判**已知隐藏**的作品
+ * 不再给它跑重活、不当飞轮素材。判据与 publishing.repository 列表默认可见性过滤**逐字对齐**
+ * (hiddenAt IS NULL AND (platformStatus IS NULL OR platformStatus = '已通过')):
+ *   - hiddenAt 非空(抖音端「仅自己可见 / 私密 / 已隐藏」经明细同步)→ 不可跑(false);
+ *   - platformStatus 非空且非「已通过」(仅自己可见 / 私密 / 未通过 / 审核中)→ 不可跑(false);
+ *   - **NULL / 空(旧数据、未跑过 self.detail 同步)→ 向后兼容视为可见 → 照跑(true)**。
+ *
+ * 诚实标注:「未通过 / 审核中」这两态当前 self.detail 走 visibilityFromDetailStatus→"unknown"
+ * 分支时**既不写 hiddenAt 也不写 platformStatus**(见 persistence-client self.detail),故这两态
+ * 的作品此处仍会被判「可跑」;要连它们一起挡需 self.detail 侧把 unknown 态也落 platformStatus,
+ * 属正交改动,不在本判据内。本判据对「仅自己可见 / 私密」(hiddenAt 已落)是可靠生效的。
+ */
+export function isPublicationRunnableForHeavyWork(row: {
+  hiddenAt: string | null;
+  platformStatus: string | null;
+}): boolean {
+  if (row.hiddenAt != null && row.hiddenAt.trim() !== "") return false;
+  const ps = (row.platformStatus ?? "").trim();
+  if (ps === "") return true; // NULL / 空 = 向后兼容(旧数据 / 未同步)→ 照跑
+  return ps === "已通过"; // 非「已通过」(仅自己可见 / 私密 / 未通过 / 审核中)→ 隐藏,跳过
+}
+
 // ---------------------------------------------------------------------------
 // ② 映射 DouyinWorkDetail[] → MetricRecord[](喂复盘,SPEC §10)
 // ---------------------------------------------------------------------------
