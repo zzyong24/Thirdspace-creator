@@ -12,13 +12,18 @@
 
 import * as React from "react";
 
-import { resolveAssetPreviewUrl } from "@/components/resources/asset-preview-url";
+import {
+  invalidateAssetPreviewUrl,
+  resolveAssetPreviewUrl,
+} from "@/components/resources/asset-preview-url";
 import { MediaPreview } from "@/components/resources/media-preview";
 import type { ResourceAsset } from "@/components/resources/types";
 
 export function AssetLivePreview({ asset }: { asset: ResourceAsset }) {
   const [url, setUrl] = React.useState<string | null>(null);
   const [failed, setFailed] = React.useState(false);
+  const [retryNonce, setRetryNonce] = React.useState(0);
+  const retriedAssetRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -34,6 +39,18 @@ export function AssetLivePreview({ asset }: { asset: ResourceAsset }) {
     return () => {
       cancelled = true;
     };
+  }, [asset.id, retryNonce]);
+
+  React.useEffect(() => {
+    retriedAssetRef.current = null;
+  }, [asset.id]);
+
+  const handleLoadError = React.useCallback(() => {
+    invalidateAssetPreviewUrl(asset.id);
+    setFailed(true);
+    if (retriedAssetRef.current === asset.id) return;
+    retriedAssetRef.current = asset.id;
+    queueMicrotask(() => setRetryNonce((n) => n + 1));
   }, [asset.id]);
 
   // 取不到,或换到 URL 但媒体加载失败(字节坏/404)→ 占位 glyph(诚实);
@@ -46,7 +63,7 @@ export function AssetLivePreview({ asset }: { asset: ResourceAsset }) {
       <img
         src={url}
         alt={asset.name}
-        onError={() => setFailed(true)}
+        onError={handleLoadError}
         data-slot="asset-live-preview"
         data-preview-type="image"
         className="aspect-[3/2] w-full rounded-control border border-border object-contain bg-surface-subtle"
@@ -60,7 +77,7 @@ export function AssetLivePreview({ asset }: { asset: ResourceAsset }) {
         src={url}
         controls
         preload="metadata"
-        onError={() => setFailed(true)}
+        onError={handleLoadError}
         data-slot="asset-live-preview"
         data-preview-type="video"
         className="aspect-[3/2] w-full rounded-control border border-border bg-black object-contain"

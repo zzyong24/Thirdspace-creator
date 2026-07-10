@@ -666,7 +666,7 @@ describe("T-038c — 采集限流可观测(cooldown 显限流保护横幅)", () 
     ).not.toBeInTheDocument();
   });
 
-  it("island:throttleStatus 返 creator-center cooldown → self.metrics 行显限流,comments 行(iesdouyin 无 cooldown)不显", async () => {
+  it("island:throttleStatus 返 creator-center cooldown → self.metrics/comments 行都显限流", async () => {
     mockClient.throttleStatusDouyin.mockResolvedValueOnce({
       channels: [
         {
@@ -693,15 +693,44 @@ describe("T-038c — 采集限流可观测(cooldown 显限流保护横幅)", () 
         ]}
       />,
     );
-    // creator-center cooldown → self.metrics 行显限流横幅(挂载后异步拉到)。
+    // creator-center cooldown → self.metrics + comments 都显限流横幅:
+    // comments 抓取真实走创作者中心 interactive/comment,不是 iesdouyin 公开分享页。
     await waitFor(() =>
-      expect(screen.getByTestId("automation-throttle-badge")).toBeInTheDocument(),
+      expect(screen.getAllByTestId("automation-throttle-badge")).toHaveLength(2),
     );
-    // 只有一条(self.metrics),comments 行走 iesdouyin 无 cooldown 不显。
-    expect(screen.getAllByTestId("automation-throttle-badge")).toHaveLength(1);
-    expect(
-      screen.getByText(/限流保护中,下次约 2 分钟后重试/),
-    ).toBeInTheDocument();
+    expect(screen.getAllByText(/限流保护中,下次约 2 分钟后重试/)).toHaveLength(2);
+  });
+
+  it("island:只有 iesdouyin cooldown 时 comments 行不误显限流", async () => {
+    mockClient.throttleStatusDouyin.mockResolvedValueOnce({
+      channels: [
+        {
+          channel: "creator-center",
+          cooldownActive: false,
+          cooldownEtaMs: 0,
+          consecutiveThrottles: 0,
+          lastRequestAt: null,
+        },
+        {
+          channel: "iesdouyin",
+          cooldownActive: true,
+          cooldownEtaMs: 3 * 60_000,
+          consecutiveThrottles: 2,
+          lastRequestAt: 1_700_000_000_000,
+        },
+      ],
+    });
+    render(
+      <AutomationsIsland
+        jobs={[
+          makeJob({ id: "job-comments", sourceKind: "comments", name: "抓评论" }),
+        ]}
+      />,
+    );
+    await waitFor(() =>
+      expect(mockClient.throttleStatusDouyin).toHaveBeenCalled(),
+    );
+    expect(screen.queryByTestId("automation-throttle-badge")).not.toBeInTheDocument();
   });
 });
 

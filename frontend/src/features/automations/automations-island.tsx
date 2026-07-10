@@ -280,9 +280,10 @@ interface ChannelThrottle {
 
 // job 的 sourceKind → 采集实际走的网关 channel。
 //   self.metrics / self.detail → creator-center(抓创作者中心指标 / 明细导出)。
-//   comments                   → iesdouyin(评论采集走 iesdouyin 页面)。
-function channelForSourceKind(sourceKind: string): DouyinChannel {
-  return sourceKind === "comments" ? "iesdouyin" : "creator-center";
+//   comments                   → creator-center(评论采集实际走创作者中心评论管理页,
+//     非 iesdouyin;修正 stale 口径,与 douyin-request-gateway/T-176 退避 channel 对齐)。
+function channelForSourceKind(_sourceKind: string): DouyinChannel {
+  return "creator-center";
 }
 
 // cooldown 剩余毫秒 → 人话「约 N 分钟」。不足 1 分钟显「不到 1 分钟」(不显 0 分钟误导)。

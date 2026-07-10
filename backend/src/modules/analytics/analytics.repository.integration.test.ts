@@ -193,6 +193,48 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
     expect(r.finishAvg).toBeCloseTo(0.7, 10);
   });
 
+  it("getDashboardRollup: numeric-string detail metrics still count as detail snapshots", async () => {
+    const repo = makeRepo(db);
+    await repo.seedSnapshots([
+      snapshotRow({
+        id: "ms-string-detail-1",
+        userId: "user-a",
+        publicationId: "pub-1",
+        capturedAt: "2026-06-12T10:00:00.000Z",
+        rawMetrics: {
+          views: "100",
+          likes: "10",
+          comments: "5",
+          shares: "2",
+          follower_gain: "3",
+          ctr: "20.5",
+          finish_rate: "12.5",
+        },
+      }),
+      snapshotRow({
+        id: "ms-string-detail-2",
+        userId: "user-a",
+        publicationId: "pub-2",
+        capturedAt: "2026-06-12T10:00:00.000Z",
+        rawMetrics: {
+          views: "50",
+          follower_gain: "7",
+          ctr: "40.5",
+          finish_rate: "17.5",
+        },
+      }),
+    ]);
+
+    const r = await repo.getDashboardRollup("user-a");
+    expect(r.snapshotCount).toBe(2);
+    expect(r.plays).toBe(150);
+    expect(r.likes).toBe(10);
+    expect(r.followerGain).toBe(10);
+    expect(r.finishCount).toBe(2);
+    expect(r.ctrAvg).toBeCloseTo(30.5, 10);
+    expect(r.finishAvg).toBeCloseTo(15, 10);
+  });
+
   it("getDashboardRollup: no snapshots → all-zero rollup, snapshotCount 0 (no throw)", async () => {
     const repo = makeRepo(db);
     const r = await repo.getDashboardRollup("user-empty");

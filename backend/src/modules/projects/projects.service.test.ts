@@ -754,6 +754,29 @@ describe("getDashboardSummary (GAP-DASH-1)", () => {
     });
   });
 
+  it("continueCreating excludes imported history projects", async () => {
+    await repo.seedProjects([
+      projectRow({
+        id: "p-manual",
+        title: "手动创作项目",
+        updatedAt: "2026-06-20T00:00:00+08:00",
+      }),
+      projectRow({
+        id: "p-imported",
+        title: "抖音历史作品",
+        source: "imported",
+        currentStage: "review",
+        progressPct: 100,
+        updatedAt: "2026-06-21T00:00:00+08:00",
+      }),
+    ]);
+
+    const summary = await service.getDashboardSummary(ctx);
+
+    expect(summary.continueCreating?.projectId).toBe("p-manual");
+    expect(summary.continueCreating?.projectTitle).toBe("手动创作项目");
+  });
+
   it("todos: done filtered out, sorted priority desc then dueAt asc, capped at 5, carries projectTitle", async () => {
     await repo.seedProjects([
       projectRow({ id: "p1", title: "我的项目", updatedAt: "2026-06-20T00:00:00+08:00" }),

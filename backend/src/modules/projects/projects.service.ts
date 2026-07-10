@@ -1136,7 +1136,9 @@ export function createProjectsService(
       // continueCreating = most-recently-updated non-archived project (in-module
       // read only; repo.list is already user-scoped).
       const projectRows = await repo.list(ctx);
-      const active = projectRows.filter((p) => p.status !== "archived");
+      const active = projectRows.filter(
+        (p) => p.status !== "archived" && p.source !== "imported",
+      );
       const latest = active.reduce<ProjectRow | null>(
         (best, p) =>
           best === null || p.updatedAt > best.updatedAt ? p : best,

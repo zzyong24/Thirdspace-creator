@@ -362,6 +362,20 @@ export function createAnalyticsRepository(
       // 快照里有;基础采集(views/likes/…)没有。每 publication 另记「最新一条带明细
       // 字段的快照」,防止最新恰为基础快照时把完播率稀释成 0(用户实锤的假 0.0%)。
       const latestDetailByPublication = new Map<string, MetricSnapshotRow>();
+      // Coerce a jsonb value to a finite number (missing / non-numeric → 0).
+      const num = (raw: Record<string, unknown>, key: string): number => {
+        const v = raw[key];
+        const n = typeof v === "number" ? v : Number(v);
+        return Number.isFinite(n) ? n : 0;
+      };
+      const hasNumericMetric = (
+        raw: Record<string, unknown>,
+        key: string,
+      ): boolean =>
+        Object.prototype.hasOwnProperty.call(raw, key) &&
+        Number.isFinite(
+          typeof raw[key] === "number" ? raw[key] : Number(raw[key]),
+        );
       for (const row of rows) {
         // First occurrence wins = newest captured_at (rows are DESC-ordered).
         if (!latestByPublication.has(row.publicationId)) {
@@ -370,8 +384,8 @@ export function createAnalyticsRepository(
         const m = (row.rawMetrics ?? {}) as Record<string, unknown>;
         if (
           !latestDetailByPublication.has(row.publicationId) &&
-          (typeof m["finish_rate"] === "number" ||
-            typeof m["follower_gain"] === "number")
+          (hasNumericMetric(m, "finish_rate") ||
+            hasNumericMetric(m, "follower_gain"))
         ) {
           latestDetailByPublication.set(row.publicationId, row);
         }
@@ -392,12 +406,6 @@ export function createAnalyticsRepository(
       };
       if (latest.length === 0) return rollup;
 
-      // Coerce a jsonb value to a finite number (missing / non-numeric → 0).
-      const num = (raw: Record<string, unknown>, key: string): number => {
-        const v = raw[key];
-        const n = typeof v === "number" ? v : Number(v);
-        return Number.isFinite(n) ? n : 0;
-      };
       // 数据底座(SPEC §1.4):播放量在真采集与演示 fixture 里键名不同 —— 真实抖音
       //   ingestion(douyin-cdp toMetricRecords)写 `views`,演示 fixture 写 `plays`。读侧
       //   归一:优先取真采集的 `views`,缺失再回退 fixture 的 `plays`(单值取大于 0 者,
