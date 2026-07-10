@@ -17,7 +17,11 @@
  */
 
 import { client } from "@/lib/contract-client";
-import { type OnboardingState, type OnboardingOrigin } from "./onboarding-steps";
+import {
+  resolveOrigin,
+  type OnboardingState,
+  type OnboardingOrigin,
+} from "./onboarding-steps";
 
 /** 起点选择的 localStorage key(引导流专属存储;与 hidden flag 同源,不碰后端 schema)。 */
 const ORIGIN_KEY = "creatoros:onboarding:origin";
@@ -64,8 +68,9 @@ export async function loadState(): Promise<OnboardingState> {
   ]);
   return {
     configuredCapabilities,
-    // origin 从 localStorage 同步读(非 async);未选 → null。
-    origin: readOrigin(),
+    // [T-189b] origin:localStorage 显式选择**优先**;无显式选择但已绑抖音 / 已有导入作品 → 回灌
+    // existing(已有存量的人不再被问新 / 老,直接解锁 existing 分支导入步)。显式 fresh 不被覆盖。
+    origin: resolveOrigin(readOrigin(), { douyinLoggedIn, hasImportedWorks }),
     douyinLoggedIn,
     hasImportedWorks,
     hasPositioningProfile,

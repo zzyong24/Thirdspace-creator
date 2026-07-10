@@ -18,6 +18,7 @@ import {
   deriveGuidedSteps,
   isOnboardingComplete,
   progressOf,
+  resolveOrigin,
   type OnboardingState,
 } from "./onboarding-steps";
 
@@ -81,6 +82,42 @@ describe("[T-161] GUIDED_STEP_SET — 步序 / 元数据", () => {
       expect(s.why.length).toBeGreaterThan(0);
       expect(s.href.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("[T-189b] resolveOrigin — 显式选择优先,绑定态回灌兜底", () => {
+  it("显式 fresh → 保持 fresh(即便已绑抖音 / 已有导入作品,也不回灌 existing)", () => {
+    expect(
+      resolveOrigin("fresh", { douyinLoggedIn: true, hasImportedWorks: true }),
+    ).toBe("fresh");
+  });
+
+  it("显式 existing → 保持 existing", () => {
+    expect(resolveOrigin("existing", {})).toBe("existing");
+  });
+
+  it("无显式选择 + douyinLoggedIn=true → 回灌 existing", () => {
+    expect(resolveOrigin(null, { douyinLoggedIn: true })).toBe("existing");
+  });
+
+  it("无显式选择 + hasImportedWorks=true → 回灌 existing", () => {
+    expect(resolveOrigin(null, { hasImportedWorks: true })).toBe("existing");
+  });
+
+  it("无显式选择 + 无绑定态(false / undefined)→ null(仍未分叉)", () => {
+    expect(
+      resolveOrigin(null, { douyinLoggedIn: false, hasImportedWorks: false }),
+    ).toBeNull();
+    expect(resolveOrigin(null, {})).toBeNull();
+  });
+
+  it("回灌后 existing 分支步随 deriveGuidedSteps 可见(步2 done + 导入步现身)", () => {
+    const origin = resolveOrigin(null, { douyinLoggedIn: true });
+    const steps = deriveGuidedSteps({ origin, douyinLoggedIn: true });
+    const keys = steps.map((s) => s.key);
+    expect(keys).toContain("import-account");
+    expect(keys).toContain("init-data");
+    expect(steps.find((s) => s.key === "confirm-origin")?.done).toBe(true);
   });
 });
 

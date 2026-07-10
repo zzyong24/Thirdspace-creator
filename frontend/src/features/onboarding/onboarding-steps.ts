@@ -170,6 +170,32 @@ export const GUIDED_STEP_SET: readonly GuidedStepSpec[] = [
 ];
 
 /**
+ * [T-189b] 解析实际生效的 origin —— **显式选择优先,绑定态回灌兜底**(引导与实际行为双向绑定)。
+ *
+ * 优先级:
+ *   1. 用户卡内显式二选一(localStorage `creatoros:onboarding:origin`)—— fresh / existing 都尊重,
+ *      **绝不被自动回灌覆盖**(已手选 fresh 的人不该因绑了号被强改成 existing)。
+ *   2. 无显式选择时,若已绑抖音(douyinLoggedIn)或已有导入作品(hasImportedWorks)→ 回灌 existing:
+ *      已绑 / 已有作品的人显然是「有存量」,不该再被问新 / 老,直接进 existing 分支解锁导入步。
+ *   3. 都没有 → null(仍未分叉,等用户手点)。
+ *
+ * 纯派生、不落盘:回灌只影响本次渲染,localStorage 仍留空,用户后续仍可手点覆盖。
+ */
+export function resolveOrigin(
+  explicit: OnboardingOrigin,
+  signals: {
+    readonly douyinLoggedIn?: boolean;
+    readonly hasImportedWorks?: boolean;
+  },
+): OnboardingOrigin {
+  if (explicit === "fresh" || explicit === "existing") return explicit;
+  if (signals.douyinLoggedIn === true || signals.hasImportedWorks === true) {
+    return "existing";
+  }
+  return null;
+}
+
+/**
  * 某步在给定 origin 下是否可见。
  *   - branch=all → 恒可见。
  *   - branch=existing → 仅 origin=existing 可见(fresh 跳过;null 未分叉时也不显)。

@@ -13,17 +13,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const listModels = vi.hoisted(() => vi.fn());
 const listProjects = vi.hoisted(() => vi.fn());
+const statusDouyin = vi.hoisted(() => vi.fn());
+const getProfile = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/contract-client", () => ({
-  client: { listModels, listProjects },
+  client: { listModels, listProjects, statusDouyin, getProfile },
 }));
 
 import {
   loadConfiguredCapabilities,
   loadHasImportedWorks,
+  loadState,
   readOrigin,
   writeOrigin,
 } from "./onboarding-data";
+
+const ORIGIN_KEY = "creatoros:onboarding:origin";
 
 /** 造一行 listModels DTO —— 默认「真配了」,各 case 覆写要考察的字段。 */
 function modelRow(over: Record<string, unknown> = {}) {
@@ -125,5 +130,52 @@ describe("[T-161] origin 起点落盘(localStorage)", () => {
   it("脏值(非 fresh/existing)→ readOrigin() 降级为 null", () => {
     window.localStorage.setItem("creatoros:onboarding:origin", "garbage");
     expect(readOrigin()).toBeNull();
+  });
+});
+
+describe("[T-189b] loadState — origin 回灌(显式选择优先 > 绑定态,不落盘)", () => {
+  beforeEach(() => {
+    listModels.mockReset();
+    listProjects.mockReset();
+    statusDouyin.mockReset();
+    getProfile.mockReset();
+    try {
+      window.localStorage.clear();
+    } catch {
+      /* noop */
+    }
+    // 默认全空 / 降级:无模型、无项目、无定位、未登录。
+    listModels.mockResolvedValue([]);
+    listProjects.mockResolvedValue([]);
+    getProfile.mockRejectedValue(new Error("404"));
+    statusDouyin.mockResolvedValue({ loggedIn: false });
+  });
+
+  it("localStorage 无选择 + douyinLoggedIn=true → origin 回灌 existing", async () => {
+    statusDouyin.mockResolvedValue({ loggedIn: true });
+    const s = await loadState();
+    expect(s.origin).toBe("existing");
+    expect(s.douyinLoggedIn).toBe(true);
+    // 回灌只是运行时派生,不写 localStorage。
+    expect(window.localStorage.getItem(ORIGIN_KEY)).toBeNull();
+  });
+
+  it("localStorage 无选择 + hasImportedWorks=true → origin 回灌 existing", async () => {
+    listProjects.mockResolvedValue([{ id: "p", source: "imported" }]);
+    const s = await loadState();
+    expect(s.origin).toBe("existing");
+    expect(s.hasImportedWorks).toBe(true);
+  });
+
+  it("用户已手选 fresh → 不被回灌成 existing(即便已登录)", async () => {
+    window.localStorage.setItem(ORIGIN_KEY, "fresh");
+    statusDouyin.mockResolvedValue({ loggedIn: true });
+    const s = await loadState();
+    expect(s.origin).toBe("fresh");
+  });
+
+  it("无选择 + 无绑定态 → origin=null(仍未分叉)", async () => {
+    const s = await loadState();
+    expect(s.origin).toBeNull();
   });
 });

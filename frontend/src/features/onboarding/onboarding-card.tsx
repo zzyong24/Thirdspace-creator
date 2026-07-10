@@ -42,6 +42,7 @@ import {
 } from "./onboarding-steps";
 import { loadState, writeOrigin } from "./onboarding-data";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
+import { useAccountsChanged } from "@/lib/account-events";
 
 /** 常驻卡「不再显示」的永久 localStorage key(onboarding 隐藏 flag)。 */
 const HIDDEN_KEY = "creatoros:onboarding:hidden";
@@ -115,19 +116,35 @@ export function OnboardingCard() {
   const [hidden, setHidden] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
 
-  // 挂载后拉真值;同时读一次永久隐藏偏好。
+  // 卸载后不再 setState(异步 loadState 回来时组件可能已卸载 → 防泄漏 / 防 warning)。
+  const aliveRef = React.useRef(true);
   React.useEffect(() => {
-    let alive = true;
-    setHidden(readHidden());
-    void (async () => {
-      const state = await loadState();
-      if (!alive) return;
-      setLoad({ kind: "ready", state });
-    })();
+    aliveRef.current = true;
     return () => {
-      alive = false;
+      aliveRef.current = false;
     };
   }, []);
+
+  // [T-189b] 重拉真值刷新引导态 —— 稳定 callback,挂载时跑一次、账号绑定/变更广播时再跑
+  // (引导与实际行为双向绑定;loadState 内每读各自 try/catch,失败当未完成、绝不假打勾)。
+  const refresh = React.useCallback(() => {
+    void (async () => {
+      const state = await loadState();
+      if (!aliveRef.current) return;
+      setLoad({ kind: "ready", state });
+    })();
+  }, []);
+
+  // 挂载后拉真值;同时读一次永久隐藏偏好。
+  React.useEffect(() => {
+    setHidden(readHidden());
+    refresh();
+  }, [refresh]);
+
+  // [T-189b Gap A] 订阅账号态广播(loginDouyin / 绑定成功后走 notifyAccountsChanged)→ 重拉引导态。
+  //   绑了抖音后 statusDouyin.loggedIn 翻真 → 步3「扫码导入」立即变已完成、后续步解锁,不再对
+  //   已绑号的人继续追问「扫码导入」。useAccountsChanged 内部 effect 清理时自动解绑,防监听泄漏。
+  useAccountsChanged(refresh);
 
   const dismiss = React.useCallback(() => {
     writeHidden();

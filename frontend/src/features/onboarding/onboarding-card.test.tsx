@@ -275,6 +275,107 @@ describe("[T-161] OnboardingCard — 清理 / 交互", () => {
   });
 });
 
+describe("[T-189b] OnboardingCard — 引导与实际行为双向绑定", () => {
+  it("Gap A:账号绑定广播 → 重拉引导态(绑号后 statusDouyin 翻真 → 步3「扫码导入」变已完成)", async () => {
+    window.localStorage.setItem(ORIGIN_KEY, "existing");
+    makeTextModelDone(); // 初始 statusDouyin loggedIn=false → 步3 未完成
+    const { OnboardingCard } = await importCard();
+    render(<OnboardingCard />);
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-step-key="import-account"]'),
+      ).not.toBeNull();
+    });
+    // 初始:未登录 → 步3 未完成。
+    expect(
+      document
+        .querySelector('[data-step-key="import-account"]')
+        ?.getAttribute("data-done"),
+    ).toBe("false");
+
+    // 模拟绑定成功:statusDouyin 翻真 + 广播账号变更 → 卡应重拉并刷新引导态。
+    clientMock.statusDouyin.mockResolvedValue({ loggedIn: true });
+    fireEvent(window, new CustomEvent("creatoros:accounts-changed"));
+
+    await waitFor(() => {
+      expect(
+        document
+          .querySelector('[data-step-key="import-account"]')
+          ?.getAttribute("data-done"),
+      ).toBe("true");
+    });
+  });
+
+  it("Gap B:已绑抖音 + localStorage 无起点选择 → 回灌 existing(步2 done + 导入步可见,不落盘)", async () => {
+    // 无 ORIGIN_KEY;statusDouyin 登录 → loadState 回灌 origin=existing。
+    clientMock.listModels.mockResolvedValue([
+      { capability: "default", provider: "anthropic", modelName: "claude", hasSecret: true },
+    ]);
+    clientMock.getProfile.mockRejectedValue(new Error("404"));
+    clientMock.listProjects.mockResolvedValue([]);
+    clientMock.statusDouyin.mockResolvedValue({ loggedIn: true });
+    const { OnboardingCard } = await importCard();
+    render(<OnboardingCard />);
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-step-key="import-account"]'),
+      ).not.toBeNull();
+    });
+    // 步2 起点已回灌 → done(不再追问新 / 老)。
+    expect(
+      document
+        .querySelector('[data-step-key="confirm-origin"]')
+        ?.getAttribute("data-done"),
+    ).toBe("true");
+    // existing 分支步(后台初始化)可见。
+    expect(document.querySelector('[data-step-key="init-data"]')).not.toBeNull();
+    // 回灌只影响渲染,不写 localStorage。
+    expect(window.localStorage.getItem(ORIGIN_KEY)).toBeNull();
+  });
+
+  it("Gap B:已有 imported 作品 + localStorage 无选择 → 同样回灌 existing", async () => {
+    clientMock.listModels.mockResolvedValue([
+      { capability: "default", provider: "anthropic", modelName: "claude", hasSecret: true },
+    ]);
+    clientMock.getProfile.mockRejectedValue(new Error("404"));
+    clientMock.listProjects.mockResolvedValue([{ id: "p", title: "T", source: "imported" }]);
+    clientMock.statusDouyin.mockResolvedValue({ loggedIn: false });
+    const { OnboardingCard } = await importCard();
+    render(<OnboardingCard />);
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-step-key="init-data"]'),
+      ).not.toBeNull();
+    });
+    expect(
+      document
+        .querySelector('[data-step-key="confirm-origin"]')
+        ?.getAttribute("data-done"),
+    ).toBe("true");
+    expect(window.localStorage.getItem(ORIGIN_KEY)).toBeNull();
+  });
+
+  it("Gap B:用户已手选 fresh + 已登录 → 不被回灌成 existing(显式选择优先)", async () => {
+    window.localStorage.setItem(ORIGIN_KEY, "fresh");
+    clientMock.listModels.mockResolvedValue([
+      { capability: "default", provider: "anthropic", modelName: "claude", hasSecret: true },
+    ]);
+    clientMock.getProfile.mockRejectedValue(new Error("404"));
+    clientMock.listProjects.mockResolvedValue([]);
+    clientMock.statusDouyin.mockResolvedValue({ loggedIn: true });
+    const { OnboardingCard } = await importCard();
+    render(<OnboardingCard />);
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-step-key="confirm-origin"]'),
+      ).not.toBeNull();
+    });
+    // 手选 fresh → existing 专属步不显(未被回灌)。
+    expect(document.querySelector('[data-step-key="import-account"]')).toBeNull();
+    expect(document.querySelector('[data-step-key="init-data"]')).toBeNull();
+  });
+});
+
 describe("clearOnboardingFlags — 让「不再显示」可逆(设置页入口用)", () => {
   it("清 hidden flag(清后常驻卡下次挂载重现)", async () => {
     window.localStorage.setItem(HIDDEN_KEY, "1");
