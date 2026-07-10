@@ -361,6 +361,15 @@ function TrendingTopicsCard({ topics }: { topics: ReadonlyArray<TopicRow> }) {
         </Link>
       }
     >
+      {topics.length === 0 ? (
+        // [T-197] 诚实空态(原来空数组渲空 ul = 一片空白像坏了)。
+        <p
+          data-slot="trending-topics-empty"
+          className="rounded-control border border-dashed border-border bg-surface-subtle px-3 py-6 text-center text-xs text-muted-foreground"
+        >
+          还没有热门选题。去选题池让 AI 结合你的定位与知识库生成一批。
+        </p>
+      ) : (
       <ul
         data-slot="trending-topics"
         className="flex flex-col gap-2"
@@ -392,6 +401,7 @@ function TrendingTopicsCard({ topics }: { topics: ReadonlyArray<TopicRow> }) {
           </li>
         ))}
       </ul>
+      )}
     </SectionCard>
     </div>
   );
@@ -458,6 +468,16 @@ function DataOverviewCard({ vm }: { vm: DashboardViewModel }) {
     >
       {/* [T-054] 删重复 KPI 瓷砖:同 5 个指标顶部一排已展示,本区再铺一遍是
           信息冗余(审计「怪」感来源之一)。数据概览聚焦趋势图。 */}
+      {vm.dataOverview.trend.length === 0 ? (
+        // [T-197] 无日序数据时显诚实说明,别显「最高0最低0」空图(误导成 0 播放;
+        //   实际是单点快照没跨天日序)。需连续多日采集才有本周趋势。
+        <p
+          data-slot="data-overview-empty"
+          className="mt-1 rounded-control border border-dashed border-border bg-surface-subtle px-3 py-6 text-center text-xs text-muted-foreground"
+        >
+          暂无本周播放趋势。趋势需连续多日采集积累(顶部「总播放」是累计值)。
+        </p>
+      ) : (
       <div className="mt-1">
         <ChartFrame
           title="本周播放趋势"
@@ -466,6 +486,7 @@ function DataOverviewCard({ vm }: { vm: DashboardViewModel }) {
           testId="dashboard-data-trend"
         />
       </div>
+      )}
     </SectionCard>
     </div>
   );
@@ -488,6 +509,15 @@ function CreationSuggestionsCard({
       title="创作建议"
       description="基于当前进度的下一步行动"
     >
+      {suggestions.length === 0 ? (
+        // [T-197] 诚实空态(原来空数组渲空 ul 一片空白)。
+        <p
+          data-slot="creation-suggestions-empty"
+          className="rounded-control border border-dashed border-border bg-surface-subtle px-3 py-6 text-center text-xs text-muted-foreground"
+        >
+          暂无创作建议。开始一个项目、发布作品后,这里会基于你的进度给下一步行动。
+        </p>
+      ) : (
       <ul
         data-slot="creation-suggestions"
         className="flex flex-col gap-2"
@@ -532,6 +562,7 @@ function CreationSuggestionsCard({
           </li>
         ))}
       </ul>
+      )}
     </SectionCard>
     </div>
   );
