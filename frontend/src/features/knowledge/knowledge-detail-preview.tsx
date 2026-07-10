@@ -17,6 +17,10 @@ import remarkGfm from "remark-gfm";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
+import {
+  parseLessonPoints,
+  type LessonPoint,
+} from "./knowledge-lesson-content";
 
 interface KnowledgeItemDto {
   readonly id: string;
@@ -129,19 +133,186 @@ export function KnowledgeDetailPreview({ knowledgeId }: { knowledgeId: string })
               该条目暂无正文内容。
             </p>
           ) : (
-            <div
-              data-slot="knowledge-detail-content"
-              className="prose prose-sm max-w-none text-[13px] leading-relaxed text-foreground [&_a]:text-brand [&_code]:rounded [&_code]:bg-surface-subtle [&_code]:px-1 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-surface-subtle [&_pre]:p-2"
-            >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {state.content}
-              </ReactMarkdown>
-            </div>
+            <KnowledgeContentBody content={state.content} />
           )}
           {/* [T-091] 手动建边入口:「关联到…」→ 同一 create op(createdByType='user')。 */}
           <KnowledgeRelateEntry knowledgeId={knowledgeId} />
         </>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// KnowledgeContentBody — [T-198] 正文渲染:课程 YAML → 带小标题的可读区块;
+//   其余(markdown / 纯文本)→ react-markdown 正常渲染(诚实退回,绝不崩)。
+// ---------------------------------------------------------------------------
+
+function KnowledgeContentBody({ content }: { content: string }) {
+  const lessons = React.useMemo(() => parseLessonPoints(content), [content]);
+  if (lessons && lessons.length > 0) {
+    return (
+      <div
+        data-slot="knowledge-detail-content"
+        data-structured="lesson"
+        className="flex flex-col gap-3"
+      >
+        {lessons.map((lesson, index) => (
+          <LessonPointView
+            key={lesson.id ?? `lesson-${index}`}
+            lesson={lesson}
+            index={index}
+          />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div
+      data-slot="knowledge-detail-content"
+      className="prose prose-sm max-w-none text-[13px] leading-relaxed text-foreground [&_a]:text-brand [&_code]:rounded [&_code]:bg-surface-subtle [&_code]:px-1 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-surface-subtle [&_pre]:p-2"
+    >
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+    </div>
+  );
+}
+
+// 单个知识点的结构化区块(一句话 / 正文 / 案例 / 易错点 / 苏格拉底提问 / 实践作业)。
+function LessonPointView({
+  lesson,
+  index,
+}: {
+  lesson: LessonPoint;
+  index: number;
+}) {
+  return (
+    <section
+      data-slot="lesson-point"
+      data-lesson-index={index}
+      className="flex flex-col gap-2 rounded-md border border-border bg-surface-subtle/40 p-3"
+    >
+      {lesson.title ? (
+        <div className="flex flex-wrap items-baseline gap-2">
+          <h4
+            data-slot="lesson-point-title"
+            className="text-[14px] font-semibold leading-snug text-foreground"
+          >
+            {lesson.title}
+          </h4>
+          {lesson.module ? (
+            <span className="rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] text-brand">
+              {lesson.module}
+            </span>
+          ) : null}
+          {lesson.difficulty ? (
+            <span className="text-[10px] text-muted-foreground">
+              难度 {lesson.difficulty}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      {lesson.oneLine ? (
+        <LessonBlock slot="one-line" label="一句话">
+          <p className="text-[13px] font-medium leading-relaxed text-foreground">
+            {lesson.oneLine}
+          </p>
+        </LessonBlock>
+      ) : null}
+      {lesson.core ? (
+        <LessonBlock slot="core" label="正文">
+          <LessonProse text={lesson.core} />
+        </LessonBlock>
+      ) : null}
+      {lesson.examples ? (
+        <LessonBlock slot="examples" label="案例">
+          <LessonProse text={lesson.examples} />
+        </LessonBlock>
+      ) : null}
+      {lesson.misconceptions ? (
+        <LessonBlock slot="misconceptions" label="易错点">
+          <LessonProse text={lesson.misconceptions} />
+        </LessonBlock>
+      ) : null}
+      {lesson.socratic.length > 0 ? (
+        <LessonBlock slot="socratic" label="苏格拉底提问">
+          <ol className="flex flex-col gap-2">
+            {lesson.socratic.map((question, qi) => (
+              <li
+                key={qi}
+                data-slot="socratic-question"
+                className="flex flex-col gap-1 rounded-md bg-surface px-2.5 py-2"
+              >
+                <p className="text-[13px] font-medium text-foreground">
+                  Q{qi + 1}. {question.q}
+                </p>
+                {question.keyPoints.length > 0 ? (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      要点
+                    </span>
+                    <ul className="ml-4 list-disc text-[12px] leading-relaxed text-muted-foreground">
+                      {question.keyPoints.map((point, pi) => (
+                        <li key={pi} data-slot="socratic-key-point">
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {question.hint ? (
+                  <p className="text-[11px] leading-snug text-muted-foreground">
+                    提示:{question.hint}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        </LessonBlock>
+      ) : null}
+      {lesson.practiceTask ? (
+        <LessonBlock slot="practice" label="实践作业">
+          <LessonProse text={lesson.practiceTask} />
+        </LessonBlock>
+      ) : null}
+    </section>
+  );
+}
+
+function LessonBlock({
+  slot,
+  label,
+  children,
+}: {
+  slot: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div data-slot={`lesson-${slot}`} className="flex flex-col gap-1">
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+// 多段正文按空行分段渲染(保留换行/段落留白,读起来不挤成一坨)。
+function LessonProse({ text }: { text: string }) {
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+  return (
+    <div className="flex flex-col gap-1.5">
+      {paragraphs.map((para, i) => (
+        <p
+          key={i}
+          className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground"
+        >
+          {para}
+        </p>
+      ))}
     </div>
   );
 }

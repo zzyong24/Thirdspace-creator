@@ -3,22 +3,19 @@
  *
  * The `/knowledge` global resource-center landing page. Composes:
  *  - a `KnowledgeToolbar` (search + filter affordances),
- *  - a `KnowledgeMetrics` row of FIVE MetricCard items in a single row,
+ *  - a `KnowledgeMetrics` row of MetricCard items in a single row,
  *  - a `KnowledgeGrid` with three columns in the spec order
  *      CategoryPanel → RecentKnowledgeTable → InsightRail
  *    where InsightRail contains the four insight blocks in the
  *    locked order PopularTags → MemoryInsights → UnsortedItems →
- *    ReusableSnippets,
- *  - a `KnowledgeGraph` rendered at the bottom of the same page
- *    (NOT a separate route — page-specs §11 "禁止改变").
+ *    ReusableSnippets.
  *
  * The page is a Server Component shell. The interactive part — search
  * input + category/type filter chips that narrow the rendered list, plus
  * row selection — lives in the Client island
  * `KnowledgeInteractiveRegion` (`./knowledge-interactive-region.tsx`),
  * consistent with the existing islands pattern (assets / settings /
- * search). The KnowledgeMetrics row and the KnowledgeGraph stay server
- * components.
+ * search).
  *
  * When the ViewModel envelope signals `loading` / `error` / `empty`, the
  * page renders the shared page-state placeholders for the main content
@@ -31,14 +28,11 @@
  *    Sidebar/TopHeader. The Header region remains in `global` mode
  *    with the page title "知识库".
  *  - The MemoryInsights block is NOT removed (page-specs §11).
- *  - The KnowledgeGraph stays on the same page (no graph-as-route
- *    redesign). No folder-tree hierarchy is added.
+ *  - No folder-tree hierarchy is added.
  */
 
 import * as React from "react";
 
-import { ChartFrame } from "@/components/analytics/chart-frame";
-import { SectionCard } from "@/components/project/section-card";
 import {
   EmptyState,
   ErrorState,
@@ -81,7 +75,6 @@ export interface KnowledgeViewModel extends BasePageViewModel {
   readonly memoryInsights: ReadonlyArray<KnowledgeInsight>;
   readonly unsorted: ReadonlyArray<KnowledgeUnsorted>;
   readonly snippets: ReadonlyArray<KnowledgeSnippet>;
-  readonly graphSeries: ReadonlyArray<{ readonly label: string; readonly value: number }>;
   /**
    * [T-118b/T-119] 「最近更新」混排分页:知识卡 + validated 经验条目共用同一
    * 分页上下文(按 updatedAt 倒序,最新在前,10 条/页)。`recent` 已是当前页
@@ -105,12 +98,6 @@ export interface KnowledgeViewModel extends BasePageViewModel {
    * 既有结构性契约测试(toolbar/grid 三列)不受影响。
    */
   readonly atlas?: import("./knowledge-atlas-vm").KnowledgeAtlasVm | null;
-  /**
-   * T-091 知识图谱 VM(节点=知识全类型+project 战绩锚,边=knowledge_relations
-   * 语义边+materialLinks 引用边,server 侧全真值装配)。可选是兼容缝:旧 fixture
-   * VM / 读失败 → null,交互岛不渲「知识图谱」tab(诚实降级)。
-   */
-  readonly graph?: import("./knowledge-graph-vm").KnowledgeGraphVm | null;
 }
 
 export interface KnowledgeCategory {
@@ -175,10 +162,9 @@ export interface KnowledgeSnippet {
 
 export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
   // READ-side made real ("知识库读侧做真"): the VM now derives `recent`, the
-  // `metrics` row (知识条目 total / 本周新增 / 复用片段 / 知识关联 are REAL counts;
-  // 记忆命中率 has no read op → 「规划中」 placeholder, not a fixture number),
+  // `metrics` row (知识条目 total / 本周新增 / 复用片段 / 知识关联 are REAL counts),
   // `categories` tally, the reusable-snippet LIST, the 未整理 (unlinked) LIST,
-  // the knowledge GRAPH, and light memory-insights — all from the REAL
+  // and light memory-insights — all from the REAL
   // `knowledge.list` + `knowledge.relations.list` ops (pglite, user-scoped).
   // 热门标签 derives from the REAL `taxonomy.tags.list` op (ranked by usageCount).
   // AI-search material confirmed into a KnowledgeItem flows through this list,
@@ -230,54 +216,8 @@ export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
           description="把笔记、金句、逐字稿倒进上方的倾倒场,AI 自动归类后确认入库。"
         />
       ) : (
-        <>
-          <KnowledgeInteractiveRegion viewModel={vm} />
-          <KnowledgeGraph series={vm.graphSeries} />
-        </>
+        <KnowledgeInteractiveRegion viewModel={vm} />
       )}
     </main>
   );
-}
-
-// ---------------------------------------------------------------------------
-// KnowledgeGraph — rendered on the same page (page-specs §11 invariant)
-// ---------------------------------------------------------------------------
-
-function KnowledgeGraph({
-  series,
-}: {
-  series: ReadonlyArray<{ readonly label: string; readonly value: number }>;
-}) {
-  const summary = summariseGraph(series);
-  return (
-    <SectionCard title="知识图谱" description="按类型分布的条目数">
-      <div data-slot="knowledge-graph" className="flex flex-col gap-1">
-        <ChartFrame
-          title="条目分布"
-          description="按类型聚合的知识条目数"
-          summary={summary}
-          trend={series}
-          slot="knowledge-graph-chart"
-          shape="line"
-          testId="knowledge-graph-chart"
-          height={160}
-        />
-        <p data-slot="knowledge-graph-summary" className="sr-only">
-          {summary}
-        </p>
-      </div>
-    </SectionCard>
-  );
-}
-
-function summariseGraph(
-  series: ReadonlyArray<{ readonly label: string; readonly value: number }>,
-): string {
-  if (series.length === 0) return "知识图谱：暂无数据。";
-  const total = series.reduce((acc, row) => acc + row.value, 0);
-  const top = series.reduce(
-    (acc, row) => (row.value > acc.value ? row : acc),
-    series[0]!,
-  );
-  return `知识图谱：共 ${total} 条，最多的类型是 ${top.label}（${top.value} 条）。`;
 }

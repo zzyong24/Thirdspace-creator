@@ -32,7 +32,6 @@ export interface KnowledgeViewModel extends BasePageViewModel {
   readonly memoryInsights: ReadonlyArray<KnowledgeInsight>;
   readonly unsorted: ReadonlyArray<KnowledgeUnsorted>;
   readonly snippets: ReadonlyArray<KnowledgeSnippet>;
-  readonly graphSeries: ReadonlyArray<{ readonly label: string; readonly value: number }>;
 }
 
 interface KnowledgeCategory {
@@ -118,14 +117,6 @@ const DEFAULT_METRICS: ReadonlyArray<MetricCardVm> = [
     delta: "+5",
     trend: "up",
     tone: "info",
-  },
-  {
-    id: "km-memory",
-    label: "记忆命中率",
-    value: "78%",
-    delta: "-2%",
-    trend: "down",
-    tone: "warning",
   },
 ];
 
@@ -259,21 +250,6 @@ const DEFAULT_SNIPPETS: ReadonlyArray<KnowledgeSnippet> = [
 ];
 
 // ---------------------------------------------------------------------------
-// Locked default graph series (fallback) — used by the KnowledgeGraph
-// chart, which stays on the same page (page-specs §11).
-// ---------------------------------------------------------------------------
-
-const DEFAULT_GRAPH_SERIES: ReadonlyArray<{ readonly label: string; readonly value: number }> = [
-  { label: "调研", value: 18 },
-  { label: "趋势", value: 26 },
-  { label: "片段", value: 34 },
-  { label: "笔记", value: 48 },
-  { label: "访谈", value: 22 },
-  { label: "脚本", value: 30 },
-  { label: "素材", value: 28 },
-];
-
-// ---------------------------------------------------------------------------
 // View model — derived from canonical dataset, with deterministic
 // fallbacks so the page is never empty.
 // ---------------------------------------------------------------------------
@@ -291,7 +267,6 @@ export function buildKnowledgeViewModel(): KnowledgeViewModel {
     memoryInsights: buildMemoryInsights(),
     unsorted: DEFAULT_UNSORTED,
     snippets: DEFAULT_SNIPPETS,
-    graphSeries: DEFAULT_GRAPH_SERIES,
   };
 }
 

@@ -7,16 +7,17 @@
  *    page title "知识库".
  *  - The sidebar marks "知识库" as the active nav item.
  *  - The page renders a KnowledgeToolbar with search + filter affordances.
- *  - The page renders a KnowledgeMetrics row with exactly FIVE
- *    MetricCard items in a single row.
+ *  - The page renders a KnowledgeMetrics row with exactly FOUR
+ *    MetricCard items in a single row (T-199 dropped the 记忆命中率
+ *    「规划中」 placeholder card).
  *  - The KnowledgeGrid renders three columns in the spec order:
  *      CategoryPanel → RecentKnowledgeTable → InsightRail.
  *  - The InsightRail contains the four insight blocks in the
  *    locked spec order: PopularTags → MemoryInsights →
  *    UnsortedItems → ReusableSnippets. The MemoryInsights block
  *    is NOT removed (forbidden by page-specs §11).
- *  - The KnowledgeGraph is rendered on the SAME page (not as a
- *    separate route) at the bottom of the main scroll area.
+ *  - T-199 removed the KnowledgeGraph block + the 知识图谱 force view
+ *    (and its bottom whitespace) from the knowledge page.
  *  - The page is wrapped in the shared AppShell with exactly one
  *    Sidebar and one TopHeader — no second Shell is created
  *    (D-002: project identity is part of the Header region, not
@@ -129,14 +130,23 @@ describe("KnowledgePage", () => {
     expect(captureLink!.textContent).toContain("记一条经验");
   });
 
-  it("renders exactly five KnowledgeMetric cards in a single row", async () => {
+  it("renders exactly four KnowledgeMetric cards in a single row", async () => {
     const { container } = await renderKnowledge();
     const row = container.querySelector(
       '[data-slot="knowledge-metrics"]',
     ) as HTMLElement;
     expect(row).not.toBeNull();
     const cards = row.querySelectorAll('[data-slot="metric-card"]');
-    expect(cards).toHaveLength(5);
+    expect(cards).toHaveLength(4);
+  });
+
+  it("T-199 去掉「记忆命中率」规划中占位卡(不再渲染)", async () => {
+    const { container } = await renderKnowledge();
+    const row = container.querySelector(
+      '[data-slot="knowledge-metrics"]',
+    ) as HTMLElement;
+    expect(row.textContent ?? "").not.toContain("记忆命中率");
+    expect(row.textContent ?? "").not.toContain("规划中");
   });
 
   it("renders the three-column KnowledgeGrid (Category / Table / InsightRail) in spec order", async () => {
@@ -198,21 +208,22 @@ describe("KnowledgePage", () => {
     expect(items.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders the KnowledgeGraph on the same page (not a separate route)", async () => {
+  it("T-199 不再渲染知识图谱区块(已从知识库页移除)", async () => {
     const { container } = await renderKnowledge();
-    const graph = container.querySelector(
-      '[data-slot="knowledge-graph"]',
-    ) as HTMLElement;
-    expect(graph).not.toBeNull();
-    // The graph lives inside the page <main>, not as a second
-    // AppShell or a separate route. There is only ONE app-shell
-    // in the rendered DOM.
+    // 底部 KnowledgeGraph 图表区块与图谱 force 视图均已移除。
+    expect(container.querySelector('[data-slot="knowledge-graph"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="knowledge-graph-view"]'),
+    ).toBeNull();
+    // 三态视图切换里不再有「知识图谱」选项(只剩 观点地图 / 全部)。
+    const graphTab = container.querySelector(
+      '[data-slot="knowledge-view-switch-option"][data-view-id="graph"]',
+    );
+    expect(graphTab).toBeNull();
+    // 页面仍是单一 AppShell + 单一 <main>。
     const shells = container.querySelectorAll('[data-slot="app-shell"]');
     expect(shells).toHaveLength(1);
-    // And only one <main> with data-page="knowledge".
-    const mains = container.querySelectorAll(
-      'main[data-page="knowledge"]',
-    );
+    const mains = container.querySelectorAll('main[data-page="knowledge"]');
     expect(mains).toHaveLength(1);
   });
 

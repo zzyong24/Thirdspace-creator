@@ -3,6 +3,8 @@ import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 
+import { lessonPointsToMarkdown } from "@/features/knowledge/knowledge-lesson-content";
+
 // win-video-tutor 22 节课程 → CreatorOS 知识库 seed。
 //
 // 用户给了一份 22 节完整短视频课程(`win-video-tutor` skill)的 zip,装在
@@ -18,8 +20,9 @@ import * as os from "node:os";
 //   3. 幂等:每节写入前先看 source_metadata->>'origin'='win-video-tutor' AND
 //      source_metadata->>'lessonNumber'=<N> 是否已存在 → 存在则 skip(重装 / 重启安全)。
 //   4. 每节 = 1 个 knowledgeItem(`reference` 类型,知识型,适合整节课程归档)+ 1 个
-//      revision(content=整篇 markdown 原文,structuredData=index.md 里的 module/lesson
-//      元信息,方便知识库视图渲染「属于哪个模块」)。
+//      revision(content=课程 YAML 转成的**可读 markdown**(带小标题:一句话/正文/案例/
+//      易错点/苏格拉底提问/实践作业),而非原始 YAML dump —— 新装机预览直接可读
+//      [T-198];解析不出则诚实退回原文)。
 //   5. sourceType='import' + sourceMetadata.origin='win-video-tutor' / lessonNumber /
 //      module,标记来源可追溯。
 
@@ -183,12 +186,15 @@ export async function seedWinVideoTutor(
     const lesson = await parseLessonFile(path.join(knowledgeDir, f));
     if (!lesson) continue;
     try {
+      // [T-198] 入库存可读 markdown(YAML → 带小标题);解析不出退回原文(诚实)。
+      const readableContent =
+        lessonPointsToMarkdown(lesson.content) ?? lesson.content;
       await knowledgeService.createKnowledge(
         ctx,
         {
           title: `Win 短视频私教 · 第 ${lesson.lessonNumber} 节 · ${lesson.title}`,
           knowledgeType: "reference",
-          content: lesson.content,
+          content: readableContent,
           sourceType: "import",
           sourceMetadata: {
             origin: SEED_ORIGIN,

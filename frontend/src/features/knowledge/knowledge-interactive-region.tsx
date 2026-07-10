@@ -41,7 +41,6 @@ import {
 } from "@/components/ui/dialog";
 import { KnowledgeAtlas } from "./knowledge-atlas";
 import { KnowledgeDetailPreview } from "./knowledge-detail-preview";
-import { KnowledgeGraphView } from "./knowledge-graph-view";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
@@ -143,16 +142,13 @@ export function KnowledgeInteractiveRegion({
   const [activeFilter, setActiveFilter] = React.useState<string>("all");
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
-  // T-079c 「观点地图|全部」→ [T-091] 扩三态「观点地图|知识图谱|全部」(graph 居中,
-  // 用户指定:观点地图与全部之间);默认视图仍 = 观点地图(T-079c 裁决不动)。回落:
+  // T-079c 「观点地图|全部」视图切换;默认视图 = 观点地图(T-079c 裁决不动)。回落:
   //   - 旧 fixture VM / 测试 override 不带 atlas → 「全部」(既有结构性契约
   //     测试不受影响;真实装配层 knowledge-data 始终提供 atlas);
-  //   - 不带 graph(旧 VM / 图谱装配读失败)→ 不渲「知识图谱」选项(诚实降级);
   //   - `?tag=` 生效(KNOW-13 标签筛选)→ 「全部」:标签过滤作用在时间流列表
   //     上,用户点 tag chip 进来要看的就是过滤后的列表,不是地图。
   const atlas = viewModel.atlas ?? null;
-  const graph = viewModel.graph ?? null;
-  const [view, setView] = React.useState<"atlas" | "graph" | "all">(
+  const [view, setView] = React.useState<"atlas" | "all">(
     atlas !== null && !viewModel.activeTag ? "atlas" : "all",
   );
 
@@ -268,14 +264,9 @@ export function KnowledgeInteractiveRegion({
 
   return (
     <>
-      {/* T-079c/T-091 视图切换:atlas VM 在场才渲切换器(旧 VM 无地图可切);
-          graph VM 在场才渲「知识图谱」态。 */}
+      {/* T-079c 视图切换:atlas VM 在场才渲切换器(旧 VM 无地图可切)。 */}
       {atlas !== null ? (
-        <KnowledgeViewSwitch
-          view={view}
-          onViewChange={setView}
-          hasGraph={graph !== null}
-        />
+        <KnowledgeViewSwitch view={view} onViewChange={setView} />
       ) : null}
       {/* [T-093] 搜索入口醒目化:工具栏在三视图常驻(输入即时=客户端过滤不动;
           回车=服务端 hybrid AI 搜索);类型 chips 只作用于「全部」列表。 */}
@@ -304,11 +295,6 @@ export function KnowledgeInteractiveRegion({
           selectedId={selectedId}
           onSelectCard={setSelectedId}
         />
-      ) : null}
-      {/* [T-091] 知识图谱 tab:真实节点/边 force 图 + AI 建边确认门。点 knowledge
-          节点复用下方 T-062c 详情预览(setSelectedId)。 */}
-      {view === "graph" && graph !== null ? (
-        <KnowledgeGraphView graph={graph} onSelectKnowledge={setSelectedId} />
       ) : null}
       {/* KNOW-13:`?tag=` 生效时(recent 已在服务端装配层按标签过滤)显示当前
           筛选 + 「清除筛选」返回全量列表(去掉 URL 参数即可)。 */}
@@ -489,17 +475,12 @@ function ExperienceDetailPreview({ row }: { readonly row: KnowledgeRow }) {
 function KnowledgeViewSwitch({
   view,
   onViewChange,
-  hasGraph,
 }: {
-  readonly view: "atlas" | "graph" | "all";
-  readonly onViewChange: (view: "atlas" | "graph" | "all") => void;
-  readonly hasGraph: boolean;
+  readonly view: "atlas" | "all";
+  readonly onViewChange: (view: "atlas" | "all") => void;
 }) {
-  // [T-091] 三态:graph 居中(用户裁决:观点地图与「全部」之间);graph VM 缺失
-  // (旧 VM / 装配读失败)不渲该选项 —— 诚实降级回二态。
   const options = [
     { id: "atlas" as const, label: "观点地图" },
-    ...(hasGraph ? [{ id: "graph" as const, label: "知识图谱" }] : []),
     { id: "all" as const, label: "全部" },
   ];
   return (
@@ -730,7 +711,7 @@ function KnowledgeMetrics({
     <section
       data-slot="knowledge-metrics"
       aria-label="知识统计"
-      className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+      className="grid grid-cols-1 gap-card-gap sm:grid-cols-2 md:grid-cols-4"
     >
       {metrics.map((metric) => (
         <MetricCard

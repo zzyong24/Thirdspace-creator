@@ -21,10 +21,6 @@ import {
   type AtlasTagAssignment,
   type KnowledgeAtlasVm,
 } from "./knowledge-atlas-vm";
-import {
-  buildKnowledgeGraphVm,
-  type KnowledgeGraphVm,
-} from "./knowledge-graph-vm";
 
 /**
  * Knowledge & Memory READ-side data assembly ("知识库读侧做真").
@@ -36,9 +32,7 @@ import {
  *   - `metrics`     → 知识条目 (total), 本周新增 (createdAt within 7d), 复用片段
  *                     (knowledgeType==="snippet"), 知识关联 (real edge count,
  *                     aggregated via knowledge.relations.list over every item).
- *                     These four are REAL counts. 记忆命中率 (km-memory) has NO
- *                     read op (no memory analytics) → rendered as a 「规划中」
- *                     placeholder (value "—") instead of a fabricated number.
+ *                     These four are REAL counts.
  *   - `categories`  → REAL tally by `knowledgeType` over the live list.
  *   - `recent`      → REAL rows (via buildRecentRowsFromItems).
  *   - `snippets`    → REAL rows where knowledgeType==="snippet" (the snippet
@@ -49,8 +43,6 @@ import {
  *                     the "未整理" signal is "unlinked", derived from the same
  *                     relations fan-out used for the metric/graph. Empty →
  *                     honest "全部已整理" empty state.
- *   - `graphSeries` → REAL graph: one bucket per knowledgeType node with its
- *                     incident-edge count, derived from the collected edges.
  *   - `popularTags` → REAL tags from `taxonomy.tags.list`, ranked by the
  *                     server-derived `usageCount` (descending). Tag read fails
  *                     or empty → its own empty state, does not block the rest.
@@ -70,8 +62,7 @@ import {
  *                                    fixture VM" fallback is removed in this lane.
  * Secondary reads (relations, tags) stay independently guarded but degrade to
  * EMPTY, not to seed fixtures: an empty account's relations/tags blocks read
- * empty. The 记忆命中率 metric still has no op → 「规划中」 placeholder. The
- * contract client is injected (and the route passes a session-scoped client) so
+ * empty. The contract client is injected (and the route passes a session-scoped client) so
  * reads stay ctx.userId-scoped and the helper stays unit-testable.
  */
 
@@ -275,7 +266,6 @@ export async function buildKnowledgeDashboardViewModel(
       recent: [],
       snippets: [],
       unsorted: [],
-      graphSeries: [],
       memoryInsights: [],
       popularTags: [],
       activeTag,
@@ -285,7 +275,6 @@ export async function buildKnowledgeDashboardViewModel(
       recentTotal: 0,
       // 读失败没有地图可组;null 让交互岛不渲观点地图(错误态本来也不渲内容区)。
       atlas: null,
-      graph: null,
     };
   }
 
@@ -331,10 +320,6 @@ export async function buildKnowledgeDashboardViewModel(
   // KNOW-13 过滤同一读法),分组/排序交给纯函数 buildKnowledgeAtlas。
   const atlas = await assembleAtlas(client, tags, items);
 
-  // [T-091] 知识图谱:三份真值(全量语义边 + materialLinks 引用边 + 项目标题)
-  // server 侧一次装配成 GraphVm;任一读失败 → null(诚实降级,交互岛不渲图谱 tab)。
-  const graph = await assembleGraph(client, items);
-
   return {
     ...base,
     scenario: "default",
@@ -348,12 +333,10 @@ export async function buildKnowledgeDashboardViewModel(
     recentTotal: recentPagination.total,
     snippets: buildSnippets(items),
     unsorted: buildUnsorted(items, relations?.edges ?? null),
-    graphSeries: buildGraphSeries(items, relations?.edges ?? null),
     memoryInsights: buildMemoryInsights(items, relations?.edges ?? null),
     popularTags,
     activeTag,
     atlas,
-    graph,
   };
 }
 
@@ -443,89 +426,6 @@ function paginateRecent(
     totalPages,
     total,
   };
-}
-
-// [T-091] materialLinks / projects 的最小结构投影。
-interface MaterialLinkDto {
-  readonly projectId: string;
-  readonly entityType: string;
-  readonly entityId: string;
-  readonly role: string;
-  readonly stage: string;
-  readonly createdAt: string;
-}
-
-interface ProjectDto {
-  readonly id: string;
-  readonly title: string;
-}
-
-interface RelationRowDto {
-  readonly sourceKnowledgeId: string;
-  readonly targetKnowledgeId: string;
-  readonly relationType: string;
-  readonly strength: number;
-  readonly createdByType: string;
-}
-
-/**
- * [T-091] 图谱装配:knowledge.list(节点,已读回)+ relations.listAll(语义边)
- * + materialLinks.list(引用边)+ projects.list(战绩锚标题)→ 纯函数
- * buildKnowledgeGraphVm。语义边/引用边任一读失败 → null(诚实降级,不画残图);
- * projects 读失败只降级标题(以 projectId 兜底显示,不阻断)。
- */
-async function assembleGraph(
-  client: KnowledgeDataClient,
-  items: ReadonlyArray<KnowledgeListDto>,
-): Promise<KnowledgeGraphVm | null> {
-  if (
-    !client.listAllKnowledgeRelations ||
-    !client.listMaterialLinks ||
-    !client.listProjects
-  ) {
-    return null;
-  }
-  let relations: ReadonlyArray<RelationRowDto>;
-  let links: ReadonlyArray<MaterialLinkDto>;
-  try {
-    [relations, links] = (await Promise.all([
-      client.listAllKnowledgeRelations({
-        params: undefined,
-        query: { page: 1, pageSize: 200 },
-        body: undefined,
-      }),
-      client.listMaterialLinks({
-        params: undefined,
-        query: { page: 1, pageSize: 200 },
-        body: undefined,
-      }),
-    ])) as [ReadonlyArray<RelationRowDto>, ReadonlyArray<MaterialLinkDto>];
-  } catch {
-    return null;
-  }
-  let projects: ReadonlyArray<ProjectDto> = [];
-  try {
-    projects = (await client.listProjects({
-      params: undefined,
-      query: { page: 1, pageSize: 200 },
-      body: undefined,
-    })) as ReadonlyArray<ProjectDto>;
-  } catch {
-    projects = []; // 标题降级为 projectId 兜底(buildKnowledgeGraphVm 内诚实处理)。
-  }
-  return buildKnowledgeGraphVm(
-    items.map((i) => ({
-      id: i.id,
-      title: i.title,
-      knowledgeType: i.knowledgeType,
-      status: i.status,
-      usedCount: i.usedCount ?? 0,
-      usedInPublished: i.usedInPublished ?? false,
-    })),
-    Array.isArray(relations) ? relations : [],
-    Array.isArray(links) ? links : [],
-    Array.isArray(projects) ? projects : [],
-  );
 }
 
 /**
@@ -669,12 +569,11 @@ async function collectRelations(
 }
 
 /**
- * 5 metric cards. Total / this-week / snippets / relations are REAL counts;
+ * 4 metric cards. Total / this-week / snippets / relations are REAL counts;
  * total/this-week/snippets derive from the live list, 知识关联 from the
  * aggregated relations.list edge count (`relationCount`; `null` ⇒ 读失败 ⇒
- * 「—」错误降级,见 KNOW-08). 记忆命中率 (memory hit rate) has no read op,
- * so its fixture card passes through unchanged. Card identity + order are
- * preserved so the row stays exactly five cards (test invariant).
+ * 「—」错误降级,见 KNOW-08). Card identity + order are preserved so the row
+ * stays exactly four cards (test invariant).
  */
 function buildMetrics(
   items: ReadonlyArray<KnowledgeListDto>,
@@ -731,17 +630,6 @@ function buildMetrics(
           value: formatCount(relationCount),
           delta: "",
           trend: "flat" as const,
-        };
-      case "km-memory":
-        // 记忆命中率 has NO read op (no memory analytics). We refuse to render
-        // the fixture number (78%) as if real — show a 「规划中」 placeholder so
-        // the five-card row stays intact without fabricating a metric.
-        return {
-          ...card,
-          value: "—",
-          delta: "规划中",
-          trend: "flat" as const,
-          tone: "neutral" as const,
         };
       default:
         return card;
@@ -844,38 +732,6 @@ function buildUnsorted(
 }
 
 /**
- * REAL knowledge graph: one series bucket per `knowledgeType`, valued by the
- * number of relation edges incident to items of that type. `edges === null`
- * (relations 读全部失败,无真实信号) → `[]` (honest empty, NOT seed).
- * Real-but-no-edges → `[]` → the KnowledgeGraph "暂无数据" summary (handled by
- * the page).
- */
-function buildGraphSeries(
-  items: ReadonlyArray<KnowledgeListDto>,
-  edges: ReadonlyArray<GraphEdge> | null,
-): ReadonlyArray<{ readonly label: string; readonly value: number }> {
-  if (edges === null) return [];
-  const typeOf = new Map<string, string>();
-  for (const item of items) typeOf.set(item.id, item.knowledgeType);
-  const tally = new Map<string, number>();
-  const bump = (id: string) => {
-    const type = typeOf.get(id);
-    if (type === undefined) return;
-    tally.set(type, (tally.get(type) ?? 0) + 1);
-  };
-  for (const edge of edges) {
-    bump(edge.source);
-    bump(edge.target);
-  }
-  return Array.from(tally.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([type, value]) => ({
-      label: GRAPH_TYPE_LABEL[type] ?? type,
-      value,
-    }));
-}
-
-/**
  * REAL 记忆洞察 (light): derive a few insights from the relations graph — the
  * most-connected knowledge items ("高关联条目"). `edges === null` or no edges →
  * `[]` (honest empty, NOT seed). The MemoryInsights block stays in the layout
@@ -945,16 +801,6 @@ function buildPopularTags(
       tone: TAG_COLOR_TONE[tag.color ?? ""] ?? "neutral",
     }));
 }
-
-// Chinese labels for the knowledgeType graph buckets (mirrors CATEGORY_LABEL,
-// kept separate so graph + category labelling can diverge if needed).
-const GRAPH_TYPE_LABEL: Record<string, string> = {
-  reference: "参考",
-  note: "笔记",
-  snippet: "片段",
-  transcript: "记录",
-  inspiration: "灵感",
-};
 
 // Map a tag's `color` hex to a chip tone (mirrors the fixture selector's
 // color→tone mapping so real tags render consistently).
