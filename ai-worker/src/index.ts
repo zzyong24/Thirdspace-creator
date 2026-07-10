@@ -1,46 +1,11 @@
 export const AI_WORKER_PACKAGE = "@creatoros/ai-worker";
 
-// Public worker surface (Task 11). The host (the Next app's composition root, in dev/seed
-// run mode) imports the runner factory + the run-loop drainer. The legacy ClaudeAgentRunner
-// (@anthropic-ai/claude-agent-sdk) is RETIRED — 全程 Vercel AI SDK(产品定位 §9 铁律1):
-// real generation runs on the Vercel AI SDK runtime (runtime/agent-runtime + provider-factory
-// + the templated/script/research nodes), so this package no longer depends on the Agent SDK
-// at all. createAgentRunner now only yields the deterministic FakeAgentRunner. The
-// orchestrator / confirm / state-machine / context tools stay the structural-port substrate
-// the host binds to the shared pglite db.
-export { createAgentRunner } from "./runner/agent-runner-factory";
-export type { AgentRunnerEnv } from "./runner/agent-runner-factory";
-export { createFakeAgentRunner } from "./runner/fake-agent-runner";
-export { drainQueue } from "./run-loop";
-export type { RunLoopDeps, RunLoopOutcome } from "./run-loop";
-export { runTask } from "./orchestrator";
-export type { RunTaskDeps, RunTaskResult } from "./orchestrator";
-export { confirmResult, rejectResult } from "./confirm";
-export { canTransition, AI_TASK_STATUSES } from "./state-machine";
-export type { AiTaskStatus } from "./state-machine";
-export { resolveRunOptions } from "./agent-config-resolver";
-export type {
-  AgentConfigRow,
-  ModelConfigRow,
-} from "./agent-config-resolver";
-export { createContextTools } from "./context-tools";
-export {
-  parseCandidate,
-  formalizes,
-  RESULT_TYPES,
-} from "./candidate-schemas";
-export type {
-  AgentRunner,
-  AgentRunOptions,
-  AgentRunOutcome,
-  AiTaskRecord,
-  AiTaskStore,
-  AiTaskReferenceRecord,
-  AiTaskResultRecord,
-  ContextTools,
-  DomainReadPort,
-  DomainWritePort,
-} from "./ports";
+// Public worker surface. 全程 Vercel AI SDK(产品定位 §9 铁律1):real generation runs on the
+// Vercel AI SDK runtime (runtime/agent-runtime + provider-factory + the templated/script/research
+// nodes), so this package no longer depends on the Agent SDK at all. The legacy Claude Agent SDK
+// 编排链(orchestrator / run-loop drainQueue / confirm / state-machine / context-tools /
+// agent-config-resolver / candidate-schemas / ports / runner factory + fake runner)已随 T-193
+// 退役删除(live 零调用);唯一 live 出口是下面的 Agent Runtime + 节点 + 编排 + 提示词模板。
 
 // Phase 3 Agent Runtime(Vercel AI SDK 薄壳)+ 节点 + 编排。host(persistence-client)
 // 解析 model(modelFor)+ 装配 positioningBrief + 注入真 ports,调 runTopicTask 即可。

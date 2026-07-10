@@ -3,7 +3,8 @@ import type { RequestContext } from "@creatoros/contract";
 import type { ModelConfigInternal } from "@creatoros/backend/modules/settings";
 
 // 联网检索 model-config 解析(SPEC 2026-07-03 §1.1 T-084a)—— 与多模态 `resolveMultimodalSpec`
-// (../multimodal/resolve.ts)、文本 `resolveLlmConfig`(../llm/resolve.ts)**并列**的一层:把
+// (backend/src/modules/ai-runtime/multimodal/resolve.ts)、文本 `resolveLlmConfig`
+// (backend/src/modules/ai-runtime/llm/resolve.ts)**并列**的一层:把
 // 用户在 model_configurations 表里为 `web.search` capability 配的 provider/baseUrl/key,按同款三层
 // 优先级(库存密钥 > env > 抛错)投影成 SearchSpec,喂给 ai-worker 的 searchWeb 工厂。
 //
