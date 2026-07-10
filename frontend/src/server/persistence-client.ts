@@ -189,19 +189,17 @@ import {
   matchDetailsToPublications,
   toDetailMetricRecords,
   visibilityFromDetailStatus,
-  isPublicationRunnableForHeavyWork,
   type PublicationCatalogEntry,
 } from "@/server/ingestion/douyin-work-detail";
-// [T-078] 作品封面回填:iesdouyin 分享页 coverUrl → 下载字节 → asset → revision.coverAssetId。
+// [T-078] 作品封面回填字节下载 + 默认上限(封面回填/逐字稿/重建编排见 douyin-heavy-backfill)。
 import {
-  backfillDouyinCovers,
   downloadDouyinImage,
   DEFAULT_COVER_BACKFILL_LIMIT,
 } from "@/server/ingestion/douyin-cover-backfill";
-// [T-151 / T-037 缺口 A] 导入作品逐字稿 + 重建触发:给 imported 作品排 transcribe.douyin(逐字稿 D3)
-//   + reconstruct.project(反推 research/planning)任务(fire-and-forget;dispatch 链自动跑 runner)。
-//   多闸幂等在 helper 内(runner 逐 aweme 跳已转写 / 已有 reconstructed artifact 跳过 / createTask 去重)。
-import { enqueueReconstructForImported } from "@/server/ingestion/reconstruct-enqueue";
+// [T-195] 抖音初始化重活编排:封面回填(只对可见作品)+ 逐字稿/重建排队(隐藏经 isWorkHidden 跳)。
+//   由 self.detail 落完明细(hidden_at/platform_status 已标)后调 —— 可见性已知才跑重活(见根因注释)。
+//   多闸幂等在子 helper 内(runner 逐 aweme 跳已转写 / 已有 reconstructed artifact 跳过 / createTask 去重)。
+import { runDouyinHeavyBackfill } from "@/server/ingestion/douyin-heavy-backfill";
 // T-038b 抖音采集限流网关(单例接线):所有对外抖音请求经它 acquire/report(SPEC §4.4)。
 import {
   DouyinRequestGateway,
@@ -3680,185 +3678,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         total: null,
         message: `已落库 ${run.recordsWritten} 条作品指标`,
       });
-      // [T-078] 封面回填(拉指标跑一轮即回填存量,无需独立入口)。
-      let coversFilled = 0;
-      // [T-151 缺口 B] publicationId → contentOutputId 映射(由候选集查询装配)——
-      //   bindCoverToProject 据此解析作品所属项目(getOutput().projectId),把封面 asset 绑进
-      //   该项目用料链。放在闭包里,listMissingCover 里填充,bindCoverToProject 里消费。
-      const outputIdByPublication = new Map<string, string>();
-      try {
-        const backfill = await backfillDouyinCovers(
-          {
-            listMissingCover: async (limit) =>
-              (
-                await publishingService.listPublicationsMissingCover(ctx, {
-                  platform: "douyin",
-                  limit,
-                })
-              )
-                .filter((p) => typeof p.externalId === "string" && p.externalId)
-                // [T-190] 采集入口过滤:平台侧已知隐藏的作品不回填封面(不当飞轮素材)。仓库查询
-                //   已滤 hidden_at IS NULL;此处再按 platform_status 兜一道(非「已通过」→ 跳),与
-                //   逐字稿/重建同一 isPublicationRunnableForHeavyWork 判据对齐。NULL → 向后兼容照跑。
-                .filter((p) => isPublicationRunnableForHeavyWork(p))
-                .map((p) => {
-                  // [缺口 B] 记下每条候选作品的 contentOutputId,供封面绑项目解析 projectId。
-                  if (typeof p.contentOutputId === "string" && p.contentOutputId) {
-                    outputIdByPublication.set(p.id, p.contentOutputId);
-                  }
-                  return {
-                    publicationId: p.id,
-                    externalId: p.externalId as string,
-                  };
-                }),
-            // [gate-F7] iesdouyin channel 限流:注真网关单例(与逐字稿取直链同一 channel)。
-            fetchVideoUrl: (awemeId) =>
-              fetchDouyinVideoUrl(awemeId, {
-                fetch: (...args) => fetch(...args),
-                gateway: douyinGateway,
-              }),
-            downloadImage: (url) => downloadDouyinImage(url),
-            createImageAsset: (input) =>
-              assetsService.createGeneratedAsset(ctx, {
-                assetType: "image",
-                name: input.name,
-                bytes: input.bytes,
-                mimeType: input.mimeType,
-              }),
-            setCover: async (publicationId, coverAssetId) => {
-              await publishingService.setCover(ctx, publicationId, coverAssetId);
-            },
-            // [T-151 缺口 B] 封面绑作品所属项目:publicationId → contentOutputId(上面装配的
-            //   map)→ getOutput().projectId → materialLinksService.create(entityType='asset')。
-            //   让素材中心「按项目」看到该作品封面(此前封面只进全局池,项目视图空)。绑定幂等
-            //   由 materialLinks 服务侧兜底(重复采集同一封面 → 同一 (project, asset) 边);
-            //   解析不到 output/project 或建边失败 → runner 侧独立 try/catch 吞掉(封面已落是真的)。
-            bindCoverToProject: async (publicationId, coverAssetId) => {
-              const outputId = outputIdByPublication.get(publicationId);
-              if (!outputId) return; // 无 output 锚 → 无法解析项目,诚实跳过(不硬造)
-              const output = await projectsRepo.getOutput(ctx, outputId);
-              const projectId = output.projectId;
-              if (!projectId) return;
-              await materialLinksService.create(ctx, {
-                projectId,
-                contentOutputId: outputId,
-                entityType: "asset",
-                entityId: coverAssetId,
-                role: "cover",
-                stage: "publishing",
-                addedByType: "ingestion",
-              });
-            },
-          },
-          {
-            limit: resolveCoverBackfillLimit(),
-            // [T-152] 封面回填阶段逐条上报进度(M/N;runner 节流到每 ~1.5s 写一次库)。
-            onProgress: (doneN, totalN) =>
-              report({
-                stage: "cover_backfill",
-                processed: doneN,
-                total: totalN,
-                message: `回填封面 ${doneN}/${totalN}`,
-              }),
-          },
-        );
-        coversFilled = backfill.filled;
-        if (backfill.attempted > 0) {
-          console.log(
-            `[douyin-cover-backfill] 候选 ${backfill.attempted},回填 ${backfill.filled},跳过 ${backfill.skipped},失败 ${backfill.failed}`,
-          );
-        }
-      } catch (err) {
-        // 封面是锦上添花:回填整批失败绝不拖垮指标采集(run 仍 succeeded)。
-        console.error("[douyin-cover-backfill] 封面回填整批失败(指标不受影响):", err);
-      }
-      // [T-151 / T-037 缺口 A] 逐字稿 + 重建触发:指标落库后,给 imported 作品排 transcribe.douyin
-      //   (按 awemeId 取音频+ASR → 逐字稿 D3)+ reconstruct.project(按 projectId → 逐字稿+指标+定位
-      //   反推 research/planning)。**fire-and-forget**:两者都慢(ASR/LLM),绝不同步阻塞导入 —— helper
-      //   只排队即返回(经 ai transport ai.tasks.create 立即返回 queued),真正的 runner 由 dispatch 链
-      //   后台跑。多闸幂等:transcribe runner 逐 aweme 跳已转写 + reconstruct 已有 artifact 跳过 +
-      //   createTask 去重 IN-FLIGHT。整批失败绝不拖垮指标采集(best-effort)。
-      //   注:reconstruct 依赖逐字稿存在(缺则 runner markFailed)——首轮逐字稿刚排未就绪,reconstruct
-      //   会失败;本 helper 每轮采集都调(幂等),后续轮次逐字稿就绪后 reconstruct 即成功(诚实收敛)。
-      try {
-        const enqueued = await enqueueReconstructForImported(
-          {
-            listImportedWorks: (c) => projectsService.listImportedWorks(c),
-            // [T-190] 只读可见性判据:从 publications 反查该作品(externalId=aweme_id)的
-            //   hidden_at / platform_status,平台侧已知隐藏(仅自己可见 / 私密 / 非「已通过」)→
-            //   逐字稿 + 重建**都不排**(省 token,不给已隐藏作品跑重活)。查不到 publication →
-            //   false(诚实不硬跳)。判据与封面回填、列表默认过滤同一 isPublicationRunnableForHeavyWork。
-            isWorkHidden: async (c, externalId) => {
-              const pub = await publishingService.resolvePublication(c, {
-                platform: "douyin",
-                externalId,
-              });
-              if (!pub) return false; // 未导入对应 publication → 无判据,不跳
-              return !isPublicationRunnableForHeavyWork(pub);
-            },
-            // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
-            //   ai.tasks.create → runTranscribe;直调 service 会死链。runner 内逐 aweme 幂等跳已转写)。
-            enqueueTranscribe: async (c, awemeIds) => {
-              await ai.request(
-                ENDPOINTS.createAITask,
-                {
-                  params: undefined,
-                  query: undefined,
-                  body: {
-                    taskType: "transcribe.douyin",
-                    inputData: { awemeIds },
-                  },
-                },
-                c,
-              );
-            },
-            // 闸:该项目是否已有 origin='reconstructed' 的 artifact(重建过了不重跑)。复用
-            //   listProjectArtifacts 公开读(与 artifactOriginReader 同法),不加内容拉取。
-            hasReconstructedArtifact: async (c, projectId) => {
-              const rows = await artifactsService.listProjectArtifacts(
-                c,
-                projectId,
-              );
-              return rows.some((r) => r.origin === "reconstructed");
-            },
-            // **必须经 ai transport 的 ai.tasks.create 起任务**(不直调 aiService.createTask)——
-            //   reconstruct.project 的 dispatch 分支(void runReconstruct)只在 ai transport request
-            //   拦 endpoint.id==="ai.tasks.create" 时触发(见本文件 `const ai: Transport`)。直调
-            //   service 会让任务停在 queued 死链(与 asset.generate 的 dispatchGenerateAsset 同款接线,
-            //   memory: ai-task-execution-live-dispatch)。inputData.projectId 让 service 落 projectId
-            //   并派生幂等键去重 IN-FLIGHT 重复(同项目 queued/running 命中既有,不建第二行、无副作用)。
-            enqueueReconstruct: async (c, projectId) => {
-              await ai.request(
-                ENDPOINTS.createAITask,
-                {
-                  params: undefined,
-                  query: undefined,
-                  body: {
-                    taskType: "reconstruct.project",
-                    inputData: { projectId },
-                  },
-                },
-                c,
-              );
-            },
-          },
-          ctx,
-        );
-        if (enqueued.considered > 0) {
-          console.log(
-            `[reconstruct-enqueue] imported ${enqueued.considered},逐字稿批 ${enqueued.transcribeEnqueued ? enqueued.transcribeAwemeCount : 0} 条,重建排队 ${enqueued.reconstructEnqueued},跳过 ${enqueued.reconstructSkipped},失败 ${enqueued.failed}`,
-          );
-        }
-      } catch (err) {
-        // 逐字稿/重建触发是锦上添花:排队整批失败绝不拖垮指标采集(run 仍 succeeded)。
-        console.error(
-          "[reconstruct-enqueue] 逐字稿/重建任务排队整批失败(指标不受影响):",
-          err,
-        );
-      }
+      // [T-195] self.metrics 轻量化:封面回填 + 逐字稿/重建排队(重活)已整体挪到 self.detail 尾。
+      //   根因(真机实测):这两步撞可见性——可见性(hidden_at/platform_status)要到 self.detail 落
+      //   明细才标。原挂在 self.metrics 尾会照撞全部作品(含隐藏),隐藏作品分享页 item_list 为空逐个
+      //   失败(~40s/个),把串行闸(gate-F5 并发 1)后面的 self.detail/comments/逐字稿全堵住。故只保留
+      //   建作品(ensureImportedProject)+ 指标快照(ingestMetrics)+ 身份回填(applyDouyinIdentity/
+      //   昵称,均在 refreshDouyin 内),让 self.metrics 秒返回、昵称秒回;重活见 self.detail 尾。
       const selfMetricsResult = {
         itemsNew: run.recordsWritten,
-        itemsUpdated: coversFilled,
+        // [T-195] 封面回填已挪到 self.detail → self.metrics 不再回填封面,itemsUpdated 恒 0。
+        itemsUpdated: 0,
       };
       // [T-176] 移除 self.metrics → self.detail 的每轮 fire-and-forget 自接。
       //   旧行为(Bug-10/11 T-023/T-024):self.metrics 每次成功后自动再跑一次 self.detail 全量导出。
@@ -4204,34 +4033,154 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         (pubId) => externalIdById.get(pubId) ?? null,
         capturedAt,
       );
-      if (records.length === 0) {
-        // 一条都没匹配上(作品未导入 / title 对不上)—— 不建空 run,诚实返 0(F3 边界)。
-        return { itemsNew: 0, itemsUpdated: 0 };
+      // [T-195] records 空(一条都没匹配上)时**不早退**:可见性已在上面同步(hidden_at/
+      //   platform_status 已标),缺封面 / 待重建的可见作品仍应跑重活。故只跳过「建空 run」,
+      //   下面的初始化重活(封面回填 + 逐字稿/重建)无论 records 是否为空都要跑。
+      let detailWritten = 0;
+      if (records.length > 0) {
+        // [T-152] 阶段④:匹配落库(records.length 条匹配上的明细 → ingestMetrics)。
+        report({
+          stage: "ingest",
+          processed: 0,
+          total: records.length,
+          message: `匹配落库 ${records.length} 条明细`,
+        });
+        const run = await ingestionService.createRun(ctx, {
+          externalSourceId,
+          runType: "douyin_detail",
+          idempotencyKey: `${externalSourceId}:detail:${capturedAt}`,
+        });
+        const result = await ingestionService.ingestMetrics(ctx, {
+          runId: run.id,
+          records: records as unknown as Array<Record<string, unknown>>,
+        });
+        await ingestionService.completeRun(ctx, { runId: run.id });
+        report({
+          stage: "ingest",
+          processed: result.recordsWritten,
+          total: records.length,
+          message: `已落库 ${result.recordsWritten} 条明细`,
+        });
+        detailWritten = result.recordsWritten;
       }
-      // [T-152] 阶段④:匹配落库(records.length 条匹配上的明细 → ingestMetrics)。
-      report({
-        stage: "ingest",
-        processed: 0,
-        total: records.length,
-        message: `匹配落库 ${records.length} 条明细`,
-      });
-      const run = await ingestionService.createRun(ctx, {
-        externalSourceId,
-        runType: "douyin_detail",
-        idempotencyKey: `${externalSourceId}:detail:${capturedAt}`,
-      });
-      const result = await ingestionService.ingestMetrics(ctx, {
-        runId: run.id,
-        records: records as unknown as Array<Record<string, unknown>>,
-      });
-      await ingestionService.completeRun(ctx, { runId: run.id });
-      report({
-        stage: "ingest",
-        processed: result.recordsWritten,
-        total: records.length,
-        message: `已落库 ${result.recordsWritten} 条明细`,
-      });
-      return { itemsNew: result.recordsWritten, itemsUpdated: 0 };
+      // 5) [T-195] 明细落库(可见性已标)后跑初始化重活:①封面回填(只对可见作品)②逐字稿 +
+      //    重建排队(隐藏经 isWorkHidden 跳)。整体从 self.metrics 尾挪到这里 —— 此刻 hidden_at /
+      //    platform_status 已标,故重活天然只对可见作品跑(不撞隐藏作品空 item_list 分享页)。两步
+      //    各自 best-effort(见 runDouyinHeavyBackfill),整批失败绝不拖垮明细采集主流程。
+      const heavy = await runDouyinHeavyBackfill(
+        ctx,
+        {
+          // ── 封面回填 host ──────────────────────────────────────────────────
+          listPublicationsMissingCover: async (c, limit) =>
+            (
+              await publishingService.listPublicationsMissingCover(c, {
+                platform: "douyin",
+                limit,
+              })
+            ).map((p) => ({
+              id: p.id,
+              externalId: p.externalId ?? null,
+              contentOutputId: p.contentOutputId ?? null,
+              hiddenAt: p.hiddenAt,
+              platformStatus: p.platformStatus,
+            })),
+          // [gate-F7] iesdouyin channel 限流:注真网关单例(与逐字稿取直链同一 channel)。
+          fetchVideoUrl: (awemeId) =>
+            fetchDouyinVideoUrl(awemeId, {
+              fetch: (...args) => fetch(...args),
+              gateway: douyinGateway,
+            }),
+          downloadImage: (url) => downloadDouyinImage(url),
+          createImageAsset: (c, input) =>
+            assetsService.createGeneratedAsset(c, {
+              assetType: "image",
+              name: input.name,
+              bytes: input.bytes,
+              mimeType: input.mimeType,
+            }),
+          setCover: async (c, publicationId, coverAssetId) => {
+            await publishingService.setCover(c, publicationId, coverAssetId);
+          },
+          // [T-151 缺口 B] 封面绑作品所属项目:contentOutputId → getOutput().projectId →
+          //   materialLinksService.create(entityType='asset')。素材中心「按项目」可见该封面。
+          //   解析不到 project → 诚实跳过;建边失败由本 host 独立吞掉(封面已落是真的)。
+          bindCoverToProjectByOutput: async (c, { contentOutputId, coverAssetId }) => {
+            const output = await projectsRepo.getOutput(c, contentOutputId);
+            const projectId = output.projectId;
+            if (!projectId) return;
+            await materialLinksService.create(c, {
+              projectId,
+              contentOutputId,
+              entityType: "asset",
+              entityId: coverAssetId,
+              role: "cover",
+              stage: "publishing",
+              addedByType: "ingestion",
+            });
+          },
+          // ── 逐字稿 + 重建排队 host ─────────────────────────────────────────
+          listImportedWorks: (c) => projectsService.listImportedWorks(c),
+          // [T-190] 反查作品 publication 可见性两列(找不到 → null,模块据此不硬跳)。
+          resolvePublicationVisibility: async (c, externalId) => {
+            const pub = await publishingService.resolvePublication(c, {
+              platform: "douyin",
+              externalId,
+            });
+            if (!pub) return null;
+            return { hiddenAt: pub.hiddenAt, platformStatus: pub.platformStatus };
+          },
+          // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
+          //   ai.tasks.create → runTranscribe;直调 service 会死链)。
+          enqueueTranscribe: async (c, awemeIds) => {
+            await ai.request(
+              ENDPOINTS.createAITask,
+              {
+                params: undefined,
+                query: undefined,
+                body: {
+                  taskType: "transcribe.douyin",
+                  inputData: { awemeIds },
+                },
+              },
+              c,
+            );
+          },
+          // 闸:该项目是否已有 origin='reconstructed' 的 artifact(重建过了不重跑)。
+          hasReconstructedArtifact: async (c, projectId) => {
+            const rows = await artifactsService.listProjectArtifacts(c, projectId);
+            return rows.some((r) => r.origin === "reconstructed");
+          },
+          // 重建:经 ai transport 的 ai.tasks.create 起 reconstruct.project(dispatch 链后台跑;
+          //   service 从 inputData.projectId 派生幂等键去重 IN-FLIGHT 重复)。
+          enqueueReconstruct: async (c, projectId) => {
+            await ai.request(
+              ENDPOINTS.createAITask,
+              {
+                params: undefined,
+                query: undefined,
+                body: {
+                  taskType: "reconstruct.project",
+                  inputData: { projectId },
+                },
+              },
+              c,
+            );
+          },
+        },
+        {
+          coverLimit: resolveCoverBackfillLimit(),
+          // [T-152] 封面回填阶段逐条上报进度(M/N;runner 节流到每 ~1.5s 写一次库)。
+          onCoverProgress: (doneN, totalN) =>
+            report({
+              stage: "cover_backfill",
+              processed: doneN,
+              total: totalN,
+              message: `回填封面 ${doneN}/${totalN}`,
+            }),
+        },
+      );
+      // itemsUpdated 承载本轮真回填的封面数(诚实;明细写入数入 itemsNew)。
+      return { itemsNew: detailWritten, itemsUpdated: heavy.coversFilled };
     },
   };
 
