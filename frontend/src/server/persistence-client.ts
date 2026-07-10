@@ -4267,7 +4267,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           limit: 1,
           offset: 0,
         });
-        return rows.map((r) => ({ id: r.id }));
+        // [T-200] 带既有 job 属主号:复用既有 job 时把号带给 trigger(触发采集 ctx 由此派生)。
+        return rows.map((r) => ({ id: r.id, accountId: r.accountId ?? null }));
       },
       createJob: async (c, input) => {
         const job = await schedulingService.createJob(c, {
@@ -4282,6 +4283,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // 初始化触发复用 triggerScheduledJob(与 cron 到点 / 「立即运行」同一幂等双闸 + 触发点)。
       trigger: async (c, job) => {
         await triggerScheduledJob(c, job, triggerDeps);
+      },
+      // [T-200] 认领存量无号采集数据给 ctx.accountId(单账号现实下安全):经各模块公开 claim 端口
+      //   (不跨模块直连 repo);projects(imported)/publications/metric_snapshots+values/assets/
+      //   scheduled_job 各自认领。幂等、best-effort;返回各表认领行数(诊断日志用)。
+      //   多账号诚实边界:此认领把 orphan 归给触发绑定的号(单号现实安全);多账号精确 targeting
+      //   是 T-136 §D 后续。
+      claimOrphans: async (c) => {
+        const [projectsN, pubsN, metrics, assetsN, jobsN] = await Promise.all([
+          projectsService.claimOrphanImportedProjects(c),
+          publishingService.claimOrphanPublications(c),
+          analyticsService.claimOrphanMetrics(c),
+          assetsService.claimOrphanAssets(c),
+          schedulingService.claimOrphanJobs(c),
+        ]);
+        return {
+          projects: projectsN,
+          publications: pubsN,
+          metricSnapshots: metrics.snapshots,
+          metricValues: metrics.values,
+          assets: assetsN,
+          scheduledJobs: jobsN,
+        };
       },
       // 空 target:采集器空 target 时自 ensureDouyinSource 兜底解析源(与手动建的 job 一致)。
       target: {},
@@ -4306,7 +4329,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           job: {
             getJob: async (c, id) => {
               const j = await schedulingService.getJob(c, id);
-              return { id: j.id, sourceKind: j.sourceKind, target: j.target };
+              // [T-200] 带 job 属主号:触发采集 ctx.accountId 由此派生(与 cron/bind 三路统一)。
+              return {
+                id: j.id,
+                sourceKind: j.sourceKind,
+                target: j.target,
+                accountId: j.accountId ?? null,
+              };
             },
           },
         });
@@ -4368,6 +4397,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           target: (job.target ?? {}) as Record<string, unknown>,
           schedule: job.schedule,
           enabled: job.enabled,
+          // [T-200] 带 job 属主号:cron 到点触发的采集 ctx.accountId 由此派生(串号根因修复)。
+          accountId: job.accountId ?? null,
         });
       }
       return runnable;

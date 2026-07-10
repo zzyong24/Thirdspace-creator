@@ -18,17 +18,25 @@ const ctx: RequestContext = {
 
 // 无既有 job 的 fake deps:createJob 递增发 id,trigger 记录被触发的 job(顺序即调用序)。
 function makeDeps(
-  existingBySourceKind: Record<string, { id: string }[]> = {},
+  existingBySourceKind: Record<string, { id: string; accountId?: string | null }[]> = {},
 ): CollectionBootstrapDeps & {
   _listJobs: ReturnType<typeof vi.fn>;
   _createJob: ReturnType<typeof vi.fn>;
   _trigger: ReturnType<typeof vi.fn>;
+  _claimOrphans: ReturnType<typeof vi.fn>;
   createdJobs: { sourceKind: string; schedule: string; name: string }[];
   triggeredSourceKinds: string[];
+  triggeredAccountIds: (string | null | undefined)[];
+  claimCallOrder: number[];
+  callCounter: { n: number };
 } {
   let seq = 0;
   const createdJobs: { sourceKind: string; schedule: string; name: string }[] = [];
   const triggeredSourceKinds: string[] = [];
+  const triggeredAccountIds: (string | null | undefined)[] = [];
+  // 记录 claim 相对 create/trigger 的调用顺序(claim 必须最先,让存量先归号)。
+  const claimCallOrder: number[] = [];
+  const callCounter = { n: 0 };
   const _listJobs = vi.fn(async (_c: RequestContext, sourceKind: string) => {
     return existingBySourceKind[sourceKind] ?? [];
   });
@@ -43,6 +51,7 @@ function makeDeps(
         target: Record<string, unknown>;
       },
     ) => {
+      callCounter.n += 1;
       createdJobs.push({
         sourceKind: input.sourceKind,
         schedule: input.schedule,
@@ -54,21 +63,44 @@ function makeDeps(
   const _trigger = vi.fn(
     async (
       _c: RequestContext,
-      job: { id: string; sourceKind: string; target: Record<string, unknown> },
+      job: {
+        id: string;
+        sourceKind: string;
+        target: Record<string, unknown>;
+        accountId?: string | null;
+      },
     ) => {
+      callCounter.n += 1;
       triggeredSourceKinds.push(job.sourceKind);
+      triggeredAccountIds.push(job.accountId);
     },
   );
+  const _claimOrphans = vi.fn(async (_c: RequestContext) => {
+    claimCallOrder.push(callCounter.n); // 记录 claim 时 create/trigger 已发生几次(应为 0)
+    return {
+      projects: 3,
+      publications: 2,
+      metricSnapshots: 5,
+      metricValues: 10,
+      assets: 4,
+      scheduledJobs: 1,
+    };
+  });
   return {
     listJobsBySourceKind: _listJobs,
     createJob: _createJob,
     trigger: _trigger,
+    claimOrphans: _claimOrphans,
     target: {},
     _listJobs,
     _createJob,
     _trigger,
+    _claimOrphans,
     createdJobs,
     triggeredSourceKinds,
+    triggeredAccountIds,
+    claimCallOrder,
+    callCounter,
   };
 }
 
@@ -159,6 +191,48 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(res.created).toEqual(["self.metrics", "comments"]);
     // self.detail 建失败 → 不触发它;其余仍触发。
     expect(res.triggered).toEqual(["self.metrics", "comments"]);
+  });
+
+  it("[T-200] 触发的 job 带当前号(新建 job accountId = ctx.accountId)", async () => {
+    const deps = makeDeps();
+    await bootstrapDouyinCollectionJobs(ctx, deps);
+    // 三条触发都带 acct-1(采集 ctx.accountId 由此派生 → 落正确号,修串号根因)。
+    expect(deps.triggeredAccountIds).toEqual(["acct-1", "acct-1", "acct-1"]);
+  });
+
+  it("[T-200] 复用既有 job → 带既有 job 的属主号给触发", async () => {
+    const deps = makeDeps({
+      "self.metrics": [{ id: "existing-metrics", accountId: "acct-1" }],
+      "self.detail": [{ id: "existing-detail", accountId: "acct-1" }],
+      comments: [{ id: "existing-comments", accountId: "acct-1" }],
+    });
+    await bootstrapDouyinCollectionJobs(ctx, deps);
+    expect(deps.triggeredAccountIds).toEqual(["acct-1", "acct-1", "acct-1"]);
+  });
+
+  it("[T-200] 既有 job 无号(旧 job)→ 退化用 ctx.accountId 触发", async () => {
+    const deps = makeDeps({
+      "self.metrics": [{ id: "old-metrics", accountId: null }],
+    });
+    await bootstrapDouyinCollectionJobs(ctx, deps);
+    // old-metrics 无号 → 退化 acct-1;其余新建 → acct-1。
+    expect(deps.triggeredAccountIds).toEqual(["acct-1", "acct-1", "acct-1"]);
+  });
+
+  it("[T-200] 认领存量无号采集数据:claimOrphans 在建 job/触发之前调一次", async () => {
+    const deps = makeDeps();
+    await bootstrapDouyinCollectionJobs(ctx, deps);
+    expect(deps._claimOrphans).toHaveBeenCalledTimes(1);
+    // claim 时 create/trigger 均未发生(claimCallOrder 记录的计数应为 0 = 最先跑)。
+    expect(deps.claimCallOrder).toEqual([0]);
+  });
+
+  it("[T-200] claimOrphans 抛错 → 不阻断建 job/触发(best-effort)", async () => {
+    const deps = makeDeps();
+    deps._claimOrphans.mockRejectedValueOnce(new Error("claim boom"));
+    const res = await bootstrapDouyinCollectionJobs(ctx, deps);
+    expect(res.created).toEqual(["self.metrics", "self.detail", "comments"]);
+    expect(res.triggered).toEqual(["self.metrics", "self.detail", "comments"]);
   });
 
   it("模板常量固定为三源(self.metrics / self.detail / comments)", () => {

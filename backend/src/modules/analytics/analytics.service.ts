@@ -85,6 +85,11 @@ export interface AnalyticsService {
     finishCount: number;
     snapshotCount: number;
   }>;
+  // [T-200] 认领存量无号 metric_snapshots + metric_values 给 ctx.accountId(修采集串号)。
+  //   幂等;ctx.accountId 缺省 → no-op。返回 { snapshots, values } 认领行数(诊断用)。
+  claimOrphanMetrics(
+    ctx: RequestContext,
+  ): Promise<{ snapshots: number; values: number }>;
 }
 
 export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
@@ -137,6 +142,11 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
       // rollup (snapshotCount 0); we never throw. 数据底座(SPEC §1.4):传入
       // publicationIds 时把汇总收窄到这批发布(imported 让位);空数组 → all-zero。
       return repo.getDashboardRollup(ctx.userId, opts?.publicationIds);
+    },
+
+    async claimOrphanMetrics(ctx) {
+      if (!ctx.accountId) return { snapshots: 0, values: 0 }; // 未选号:无号可认领
+      return repo.claimOrphanMetrics(ctx.userId, ctx.accountId);
     },
   };
 }

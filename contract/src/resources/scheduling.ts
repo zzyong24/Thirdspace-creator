@@ -21,6 +21,9 @@ import {
 export const scheduledJobResource = z.object({
   id,
   userId: id,
+  // [T-200] 第二属主维度(按抖音号,nullable)。建 job 时从 ctx.accountId stamp;cron 到点触发的
+  //   采集 ctx.accountId 由此列派生(修串号根因)。旧 job / 未选号 → null(向后兼容)。
+  accountId: id.nullish(),
   name: z.string(), // 作业名(任务中心展示)
   prompt: z.string(), // 作业提示词(Agent 发现路径用;内建采集器源可空 → "")
   sourceKind: scheduledJobSourceKind, // self.metrics | comments(本期两源)

@@ -65,6 +65,8 @@ export interface UpdateStatusPatch {
 }
 
 export interface PublishingRepository {
+  // [T-200] 认领存量无号 publications 给 accountId(修采集串号)。返回改动行数。
+  claimOrphanPublications(accountId: string): Promise<number>;
   seedPublications(rows: PublicationRow[]): Promise<void>;
   seedRevisions(rows: PublicationRevisionRow[]): Promise<void>;
   createPublication(
@@ -162,6 +164,17 @@ export function createPublishingRepository(
   }
 
   return {
+    // [T-200] 认领存量 account_id IS NULL 的 publications 给 accountId(该 user 名下)。
+    //   幂等:已归属的不动。修采集导入作品在无号 ctx 下落的 null 号(串号根因)。返回改动行数。
+    async claimOrphanPublications(accountId) {
+      const updated = await db
+        .update(publications)
+        .set({ accountId, updatedAt: deps.now() })
+        .where(and(eq(publications.userId, userId), isNull(publications.accountId)))
+        .returning({ id: publications.id });
+      return updated.length;
+    },
+
     async seedPublications(rows) {
       if (rows.length === 0) return;
       await db.insert(publications).values(rows).onConflictDoNothing();

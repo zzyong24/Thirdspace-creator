@@ -54,6 +54,9 @@ export interface AssetUploadDto {
 }
 
 export interface AssetsService {
+  // [T-200] 认领存量无号 assets 给 ctx.accountId(修采集封面/素材在无号 ctx 下落的 null 号 →
+  //   读侧严格 eq gate 排除 → 占位的根因)。幂等;ctx.accountId 缺省 → no-op(返回 0)。返回改动行数。
+  claimOrphanAssets(ctx: RequestContext): Promise<number>;
   listAssets(ctx: RequestContext, query: ListAssetsQuery): Promise<AssetRow[]>;
   /** [T-061] Batch-read current files for the list/get 投影(ids 来自 user-scoped rows)。 */
   listFilesByIds(ctx: RequestContext, fileIds: string[]): Promise<AssetFileRow[]>;
@@ -165,6 +168,11 @@ export function createAssetsService(
   }
 
   return {
+    async claimOrphanAssets(ctx) {
+      if (!ctx.accountId) return 0; // 未选号:无号可认领
+      return repo.claimOrphanAssets(ctx.userId, ctx.accountId);
+    },
+
     async listAssets(ctx, query) {
       return repo.listAssets(ctx.userId, query, ctx.accountId ?? null);
     },

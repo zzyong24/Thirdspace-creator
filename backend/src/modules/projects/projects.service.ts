@@ -175,6 +175,9 @@ export interface EnsureImportedProjectResult {
 
 export interface ProjectsService {
   createProject(ctx: RequestContext, cmd: CreateProjectCommand): Promise<ProjectRow>;
+  // [T-200] 认领存量无号采集导入项目(source='imported')给 ctx.accountId(修采集串号)。
+  //   幂等;ctx.accountId 缺省 → no-op(返回 0)。返回改动行数(诊断用)。
+  claimOrphanImportedProjects(ctx: RequestContext): Promise<number>;
   // 数据底座(SPEC §1.3):为一条真实已发布作品就地建历史项目 + 其 content_output。
   //   幂等键 (userId, platform, externalId):命中既有 imported 项目则直接返回其
   //   (projectId, outputId, created:false),否则新建(created:true)。ingestion 经
@@ -636,6 +639,11 @@ export function createProjectsService(
   // 命名 const(非裸 return 对象字面量),让方法间可互调(ensureImportedProject 复用
   // createProject/createOutput,同 ingestion.service 的 `service.createRun` 自引用套路)。
   const service: ProjectsService = {
+    async claimOrphanImportedProjects(ctx) {
+      if (!ctx.accountId) return 0; // 未选号:无号可认领
+      return repo.claimOrphanImportedProjects(ctx, ctx.accountId);
+    },
+
     async createProject(ctx, cmd) {
       const ts = deps.now();
       const projectId = deps.nextId("project");

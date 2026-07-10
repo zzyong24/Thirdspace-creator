@@ -96,6 +96,9 @@ export interface SchedulingService {
     jobId: string,
     enabled: boolean,
   ): Promise<ScheduledJobResource>;
+  // [T-200] 认领存量无号 job 给 ctx.accountId(修 0030 前建的旧 job 的串号)。返回改动行数。
+  //   ctx.accountId 缺省(未选号)→ 直接返回 0(无号可认领,不动数据)。
+  claimOrphanJobs(ctx: RequestContext): Promise<number>;
 
   // job_run — the thin trigger record. createRun/updateRun are the base write methods the
   // scheduler (D3) drives; getRun/listRunsByJob back the contract read ops. All ownership
@@ -142,8 +145,15 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
         target: input.target ?? {},
         schedule: input.schedule,
         toolGrants: input.toolGrants ?? [],
+        // [T-200] 建 job 时 stamp 当前号(从 ctx 透传);未选号 → null(退化)。
+        accountId: ctx.accountId ?? null,
       });
       return toScheduledJobDto(row);
+    },
+
+    async claimOrphanJobs(ctx) {
+      if (!ctx.accountId) return 0; // 未选号:无号可认领
+      return repoFor(ctx).claimOrphanJobs(ctx.accountId);
     },
 
     async getJob(ctx, jobId) {

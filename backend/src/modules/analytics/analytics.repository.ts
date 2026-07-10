@@ -1,4 +1,13 @@
-import { and, asc, desc, eq, inArray, sql, type Db } from "@creatoros/backend";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  sql,
+  type Db,
+} from "@creatoros/backend";
 import {
   metricSnapshots,
   metricValues,
@@ -120,6 +129,12 @@ export interface AnalyticsRepository {
     userId: string,
     publicationIds?: readonly string[],
   ): Promise<DashboardRollup>;
+  // [T-200] 认领存量 account_id IS NULL 的 metric_snapshots + metric_values 给 accountId
+  //   (该 user 名下)。修采集在无号 ctx 下落的 null 号(串号根因)。幂等;返回 { snapshots, values }。
+  claimOrphanMetrics(
+    userId: string,
+    accountId: string,
+  ): Promise<{ snapshots: number; values: number }>;
 }
 
 export function createAnalyticsRepository(
@@ -127,6 +142,27 @@ export function createAnalyticsRepository(
   deps: RepoDeps,
 ): AnalyticsRepository {
   return {
+    async claimOrphanMetrics(userId, accountId) {
+      const snaps = await db
+        .update(metricSnapshots)
+        .set({ accountId })
+        .where(
+          and(
+            eq(metricSnapshots.userId, userId),
+            isNull(metricSnapshots.accountId),
+          ),
+        )
+        .returning({ id: metricSnapshots.id });
+      const vals = await db
+        .update(metricValues)
+        .set({ accountId })
+        .where(
+          and(eq(metricValues.userId, userId), isNull(metricValues.accountId)),
+        )
+        .returning({ id: metricValues.id });
+      return { snapshots: snaps.length, values: vals.length };
+    },
+
     async seedSnapshots(rows) {
       if (rows.length === 0) return;
       await db.insert(metricSnapshots).values(rows).onConflictDoNothing();

@@ -52,13 +52,17 @@ describe("triggerScheduledJob(幂等双闸)", () => {
     const res = await triggerScheduledJob(ctx, job, deps);
 
     expect(deps._createTask).toHaveBeenCalledTimes(1);
-    expect(deps._createTask).toHaveBeenCalledWith(ctx, {
-      taskType: "scheduled.self.metrics",
-      inputData: expect.objectContaining({
-        idempotencyKey: "job1:2026-07-01", // jobId:自然日
-        jobId: "job1",
-      }),
-    });
+    // [T-200] ctx 现为派生的 collectionCtx(job 无号 + ctx 无号 → accountId: null)。
+    expect(deps._createTask).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "u1", requestId: "sched", accountId: null }),
+      {
+        taskType: "scheduled.self.metrics",
+        inputData: expect.objectContaining({
+          idempotencyKey: "job1:2026-07-01", // jobId:自然日
+          jobId: "job1",
+        }),
+      },
+    );
     expect(deps._createRun).toHaveBeenCalledTimes(1);
     // dispatch 收到带 jobRunId 的 task(交 runner 回填)
     expect(deps._dispatch).toHaveBeenCalledTimes(1);
@@ -81,6 +85,36 @@ describe("triggerScheduledJob(幂等双闸)", () => {
     expect(deps._createTask).not.toHaveBeenCalled();
     expect(deps._createRun).not.toHaveBeenCalled();
     expect(deps._dispatch).not.toHaveBeenCalled();
+  });
+
+  it("[T-200] 采集 ctx.accountId 由 job.accountId 派生(cron 系统 ctx 无号 → 落 job 的号)", async () => {
+    // 模拟 cron:调用方 ctx(schedulerCtx)无 accountId;job 带号 acct-9。
+    const cronCtx: RequestContext = { userId: "u1", requestId: "scheduler", source: "ingestion" };
+    const jobWithAccount: SchedulableJob = { ...job, accountId: "acct-9" };
+    const deps = makeTriggerDeps([]);
+    await triggerScheduledJob(cronCtx, jobWithAccount, deps);
+
+    // createTask / createRun / dispatch 全收到派生号 acct-9(userId 仍 canonical u1)。
+    const expectAcct = expect.objectContaining({ userId: "u1", accountId: "acct-9" });
+    expect(deps._createTask).toHaveBeenCalledWith(expectAcct, expect.anything());
+    expect(deps._createRun).toHaveBeenCalledWith(expectAcct, expect.anything());
+    expect(deps._dispatch.mock.calls[0]![0]).toMatchObject({
+      userId: "u1",
+      accountId: "acct-9",
+    });
+  });
+
+  it("[T-200] job 无号 → 退化用 ctx.accountId(runNow/bind 的请求号)", async () => {
+    const reqCtx: RequestContext = {
+      userId: "u1",
+      requestId: "runNow",
+      source: "user",
+      accountId: "acct-req",
+    };
+    const jobNoAccount: SchedulableJob = { ...job, accountId: null };
+    const deps = makeTriggerDeps([]);
+    await triggerScheduledJob(reqCtx, jobNoAccount, deps);
+    expect(deps._dispatch.mock.calls[0]![0]).toMatchObject({ accountId: "acct-req" });
   });
 
   it("昨天的 run 不算数(自然日锚)→ 今天仍会新产", async () => {
@@ -106,10 +140,13 @@ describe("runJobNow(D5「立即运行」手动触发)", () => {
     // getJob 命中(ownership gate 经 service),再走 triggerScheduledJob 幂等双闸。
     expect(getJob).toHaveBeenCalledWith(ctx, "job1");
     expect(base._createTask).toHaveBeenCalledTimes(1);
-    expect(base._createTask).toHaveBeenCalledWith(ctx, {
-      taskType: "scheduled.self.metrics",
-      inputData: expect.objectContaining({ jobId: "job1" }),
-    });
+    expect(base._createTask).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "u1", accountId: null }),
+      {
+        taskType: "scheduled.self.metrics",
+        inputData: expect.objectContaining({ jobId: "job1" }),
+      },
+    );
     expect(base._createRun).toHaveBeenCalledTimes(1);
     // fire-and-forget:dispatch 收到带 jobRunId 的 task(runner 后台采集,不在此跑真抖音)。
     expect(base._dispatch).toHaveBeenCalledTimes(1);

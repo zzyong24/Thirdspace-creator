@@ -1,4 +1,4 @@
-import { and, eq, asc, inArray, sql, type Db } from "@creatoros/backend";
+import { and, eq, asc, inArray, isNull, sql, type Db } from "@creatoros/backend";
 import {
   projects,
   projectActivities,
@@ -74,6 +74,11 @@ export interface ProjectRepository {
   // 数据底座(SPEC §1.4):user-scoped 且 source='imported' 的项目(真实采集导入)。
   //   "优先读真"判据 hasImportedProjects + 三向 portfolio 让位的物理读源。
   listImported(ctx: RequestContext): Promise<ProjectRow[]>;
+  // [T-200] 认领存量无号采集导入项目(source='imported')给 accountId(修采集串号)。返回改动行数。
+  claimOrphanImportedProjects(
+    ctx: RequestContext,
+    accountId: string,
+  ): Promise<number>;
   get(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
   insertProject(ctx: RequestContext, row: ProjectRow): Promise<ProjectRow>;
   // 数据底座(SPEC §1.3):按平台引用查既有 imported 项目(幂等键
@@ -311,6 +316,23 @@ export function createProjectRepository(db: Db): ProjectRepository {
           ),
         )
         .orderBy(asc(projects.createdAt));
+    },
+
+    async claimOrphanImportedProjects(ctx, accountId) {
+      // [T-200] 认领存量 account_id IS NULL 的**采集导入**项目(source='imported')给 accountId。
+      //   幂等:已归属的不动。只认领 imported(真采集),不碰 manual(演示 fixture / 用户手建)。
+      const updated = await db
+        .update(projects)
+        .set({ accountId })
+        .where(
+          and(
+            eq(projects.userId, ctx.userId),
+            eq(projects.source, "imported"),
+            isNull(projects.accountId),
+          ),
+        )
+        .returning({ id: projects.id });
+      return updated.length;
     },
 
     get,

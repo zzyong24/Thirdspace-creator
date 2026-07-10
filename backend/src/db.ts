@@ -109,6 +109,16 @@ async function openAndMigrate(dataDir?: string): Promise<{
         "ALTER TABLE publications ADD COLUMN IF NOT EXISTS platform_status TEXT",
       );
     }
+    // [T-200 fixup] 同款兜底:老 pglite 无 scheduled_job.account_id 列(0030 前的装机),
+    // migrator 若因 journal 不同步没跑 0030 → 建/读 job 报「column 不存在」。缺就补(幂等)。
+    const acctColCheck = await client.query<{ exists: boolean }>(
+      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'scheduled_job' AND column_name = 'account_id') AS exists",
+    );
+    if (!acctColCheck.rows[0]?.exists) {
+      await client.exec(
+        "ALTER TABLE scheduled_job ADD COLUMN IF NOT EXISTS account_id TEXT",
+      );
+    }
     return { db, client };
   } catch (err) {
     // client 可能已半开占着目录 —— 关掉(自身也可能因 WASM 已 abort 再抛,吞掉)。

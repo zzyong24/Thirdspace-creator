@@ -264,4 +264,29 @@ describe("assets.repository — per-account isolation (T-136 slice b)", () => {
     const g = await repo.insertAsset(A, { assetType: "image", name: "存量图", currentFileId: null });
     expect(g.accountId).toBeNull();
   });
+
+  // [T-200] 认领存量无号 asset:复现「采集封面落 null 号 → 严格 gate 排除 → 占位」的修复。
+  it("claimOrphanAssets:无号 asset(采集落的)被严格 gate 排除 → 认领后按当前号可见", async () => {
+    // 采集在无号 ctx 下落的封面/素材(accountId=null)。
+    const orphan = await repo.insertAsset(A, { assetType: "image", name: "采集封面", currentFileId: null });
+    expect(orphan.accountId).toBeNull();
+    // 修复前:webview 带当前号 acct-1 → 严格 eq gate 排除 null 号 → 拿不到(占位根因)。
+    expect(await repo.getAsset(A, orphan.id, "acct-1")).toBeNull();
+
+    // 认领:该 user 的无号 asset 归 acct-1(返回 1 行)。
+    expect(await repo.claimOrphanAssets(A, "acct-1")).toBe(1);
+
+    // 修复后:acct-1 视角能拿到(封面/素材不再占位)。
+    expect((await repo.getAsset(A, orphan.id, "acct-1"))?.id).toBe(orphan.id);
+    // 幂等:再认领 → 0 行(已无无号 asset)。
+    expect(await repo.claimOrphanAssets(A, "acct-1")).toBe(0);
+  });
+
+  it("claimOrphanAssets 只动本 user(不串号)+ 不动已归属的 asset", async () => {
+    const bOrphan = await repo.insertAsset(B, { assetType: "image", name: "B 无号图", currentFileId: null });
+    const aOwned = await repo.insertAsset(A, { assetType: "image", name: "A 已归属图", currentFileId: null }, "acct-1");
+    await repo.claimOrphanAssets(A, "acct-1"); // A 此刻无无号 asset → 不影响 B,也不改 aOwned
+    expect((await repo.getAsset(B, bOrphan.id))?.accountId).toBeNull(); // B 未被串号
+    expect((await repo.getAsset(A, aOwned.id, "acct-1"))?.accountId).toBe("acct-1"); // 未被改动
+  });
 });

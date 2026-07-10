@@ -50,6 +50,8 @@ export function toScheduledJobDto(row: ScheduledJobRow): ScheduledJobResource {
   return {
     id: row.id,
     userId: row.userId,
+    // [T-200] 属主号(nullable)。cron 触发的采集 ctx.accountId 由此派生;DTO 带出便于调试/前端。
+    accountId: (row as { accountId?: string | null }).accountId ?? null,
     name: row.name,
     prompt: row.prompt,
     sourceKind: row.sourceKind as ScheduledJobResource["sourceKind"],

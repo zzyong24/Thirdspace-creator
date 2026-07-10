@@ -172,4 +172,57 @@ describe("scheduling repository (user-scoped)", () => {
       repoB.updateRun(run.id, { status: "failed" }),
     ).rejects.toBeInstanceOf(OwnershipError);
   });
+
+  // [T-200] scheduled_job.account_id:建 job stamp + 认领存量无号 job(修 cron 触发串号)。
+  it("createJob stamps account_id from input; claimOrphanJobs 归无号 job 给当前号", async () => {
+    const repoA = repoFor(db, "user-a");
+    // 旧 job(无号,模拟 0030 前建的)。
+    const orphan = await repoA.createJob({
+      name: "旧作业",
+      prompt: "",
+      sourceKind: "self.metrics",
+      target: {},
+      schedule: "0 9 * * *",
+      toolGrants: [],
+      // accountId 不传 → null
+    });
+    expect(orphan.accountId).toBeNull();
+
+    // 新 job(带号)。
+    const owned = await repoA.createJob({
+      name: "带号作业",
+      prompt: "",
+      sourceKind: "comments",
+      target: {},
+      schedule: "0 9 * * *",
+      toolGrants: [],
+      accountId: "acct-a",
+    });
+    expect(owned.accountId).toBe("acct-a");
+
+    // 认领:无号 job 归 acct-a;已归属的不动(幂等)。
+    const claimed = await repoA.claimOrphanJobs("acct-a");
+    expect(claimed).toBe(1); // 只 orphan 一条被认领
+    expect((await repoA.getJob(orphan.id)).accountId).toBe("acct-a");
+    expect((await repoA.getJob(owned.id)).accountId).toBe("acct-a"); // 未被改动
+
+    // 幂等:再认领 → 0 行(已无无号 job)。
+    expect(await repoA.claimOrphanJobs("acct-a")).toBe(0);
+  });
+
+  it("claimOrphanJobs 只动本 user 的 job(不串号到别的 user)", async () => {
+    const repoA = repoFor(db, "user-a");
+    const repoB = repoFor(db, "user-b");
+    const bOrphan = await repoB.createJob({
+      name: "B 的无号作业",
+      prompt: "",
+      sourceKind: "self.metrics",
+      target: {},
+      schedule: "0 9 * * *",
+      toolGrants: [],
+    });
+    // A 认领自己的无号 job(此刻 A 无 job)→ 0;B 的 job 不受影响。
+    expect(await repoA.claimOrphanJobs("acct-a")).toBe(0);
+    expect((await repoB.getJob(bOrphan.id)).accountId).toBeNull();
+  });
 });

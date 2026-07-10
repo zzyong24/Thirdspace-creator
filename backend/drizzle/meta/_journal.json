@@ -211,6 +211,13 @@
       "when": 1782381510000,
       "tag": "0029_publication_platform_status",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1782381520000,
+      "tag": "0030_scheduled_job_account",
+      "breakpoints": true
     }
   ]
 }

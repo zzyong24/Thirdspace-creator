@@ -55,12 +55,13 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
 ];
 
 export interface CollectionBootstrapDeps {
-  /** 列该 sourceKind 现存 job(幂等判据:有则不重建)。host 绑 schedulingService.listJobs。 */
+  /** 列该 sourceKind 现存 job(幂等判据:有则不重建)。host 绑 schedulingService.listJobs。
+   *  [T-200] 返回 accountId:复用既有 job 时把其属主号带给 trigger(触发采集 ctx 由此派生)。 */
   listJobsBySourceKind: (
     ctx: RequestContext,
     sourceKind: string,
-  ) => Promise<{ id: string }[]>;
-  /** 建一个采集 job。host 绑 schedulingService.createJob。 */
+  ) => Promise<{ id: string; accountId?: string | null }[]>;
+  /** 建一个采集 job。host 绑 schedulingService.createJob(内部从 ctx.accountId stamp 属主号)。 */
   createJob: (
     ctx: RequestContext,
     input: {
@@ -72,11 +73,22 @@ export interface CollectionBootstrapDeps {
     },
   ) => Promise<{ id: string }>;
   /** 触发一次采集(初始化拉全量)。host 绑 triggerScheduledJob(triggerDeps)。fire-and-forget:
-   *  内部 dispatch 后即返(真实采集在 gate-F5 串行链后台跑)。 */
+   *  内部 dispatch 后即返(真实采集在 gate-F5 串行链后台跑)。
+   *  [T-200] job 带 accountId:触发采集 runtime ctx.accountId 由它派生(串号根因修复)。 */
   trigger: (
     ctx: RequestContext,
-    job: { id: string; sourceKind: string; target: Record<string, unknown> },
+    job: {
+      id: string;
+      sourceKind: string;
+      target: Record<string, unknown>;
+      accountId?: string | null;
+    },
   ) => Promise<void>;
+  /** [T-200] 认领存量 account_id IS NULL 的采集数据(projects/publications/metric_snapshots/
+   *  assets + scheduled_job)给 ctx.accountId(单账号现实下安全)。host 绑各模块公开 claim 端口的
+   *  组合。幂等:已归属的不动;ctx.accountId 缺省(未选号)→ no-op。返回各表认领行数(诊断用)。
+   *  best-effort:失败不阻断建 job / 初始化触发。 */
+  claimOrphans?: (ctx: RequestContext) => Promise<Record<string, number>>;
   /** 三个 job 的 target(默认 {} —— 采集器空 target 时自 ensureDouyinSource 兜底解析源)。 */
   target?: Record<string, unknown>;
 }
@@ -105,7 +117,23 @@ export async function bootstrapDouyinCollectionJobs(
     id: string;
     sourceKind: string;
     target: Record<string, unknown>;
+    accountId?: string | null;
   }[] = [];
+
+  // ⓪ [T-200] 认领存量无号采集数据给当前绑定号(单账号现实下安全)。best-effort、幂等:失败不阻断
+  //   建 job / 触发;已归属的不动;未选号 → no-op。必须在建 job / 触发**之前**跑,让存量数据先归号
+  //   (含把旧 scheduled_job 归号,使后续复用既有 job 的触发能读到正确 accountId)。
+  if (deps.claimOrphans) {
+    try {
+      const claimed = await deps.claimOrphans(ctx);
+      console.log(
+        `[collection-bootstrap] 认领存量无号采集数据(account=${ctx.accountId ?? "∅"}):`,
+        claimed,
+      );
+    } catch (err) {
+      console.error("[collection-bootstrap] 认领存量数据失败(不阻断建 job/触发):", err);
+    }
+  }
 
   // ① 幂等建 job(顺序即模板顺序 self.metrics → self.detail → comments)。
   for (const tpl of DAILY_COLLECTION_JOB_DEFAULTS) {
@@ -113,10 +141,12 @@ export async function bootstrapDouyinCollectionJobs(
       const existing = await deps.listJobsBySourceKind(ctx, tpl.sourceKind);
       if (existing.length > 0) {
         // 幂等:已有同 sourceKind job → 复用既有 id,不重建(重复绑定/重启不重复建)。
+        // [T-200] 带既有 job 的属主号(claim 已把旧 null 号归号);若仍无号则退化用 ctx.accountId。
         jobsInOrder.push({
           id: existing[0]!.id,
           sourceKind: tpl.sourceKind,
           target,
+          accountId: existing[0]!.accountId ?? ctx.accountId ?? null,
         });
         continue;
       }
@@ -128,7 +158,13 @@ export async function bootstrapDouyinCollectionJobs(
         target,
       });
       created.push(tpl.sourceKind);
-      jobsInOrder.push({ id: job.id, sourceKind: tpl.sourceKind, target });
+      // [T-200] 新建 job 的属主号 = ctx.accountId(createJob 已 stamp);带给 trigger 派生采集 ctx。
+      jobsInOrder.push({
+        id: job.id,
+        sourceKind: tpl.sourceKind,
+        target,
+        accountId: ctx.accountId ?? null,
+      });
     } catch (err) {
       // 单源建 job 失败不阻断其余(诚实记错;该源既无 job 也不触发)。
       console.error(

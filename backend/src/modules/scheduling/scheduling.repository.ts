@@ -1,4 +1,4 @@
-import { and, desc, eq, type Db } from "@creatoros/backend";
+import { and, desc, eq, isNull, type Db } from "@creatoros/backend";
 import { scheduledJobs, jobRuns } from "./scheduling.db-schema";
 import { OwnershipError } from "./scheduling.errors";
 
@@ -42,6 +42,9 @@ export interface CreateJobInput {
   target: Record<string, unknown>;
   schedule: string;
   toolGrants: unknown[];
+  // [T-200] 建 job 时的属主号(从 ctx.accountId 透传)。null = 未选号退化。cron 到点触发时
+  //   采集 ctx.accountId 由此列派生,使新采集落正确号。
+  accountId?: string | null;
 }
 
 // A curation patch — only the fields the caller touches (undefined = leave unchanged).
@@ -95,6 +98,10 @@ export interface SchedulingRepository {
   getJob(id: string): Promise<ScheduledJobRow>; // ownership gate (404)
   updateJob(id: string, patch: UpdateJobInput): Promise<ScheduledJobRow>;
   setEnabled(id: string, enabled: boolean): Promise<ScheduledJobRow>;
+  // [T-200] 认领存量 account_id IS NULL 的 job 给 accountId(该 user 名下)。返回改动行数。
+  //   幂等:已归属(account_id 非 NULL)的不动。修 0030 前建的旧 job(串号根因之一:cron
+  //   到点时读到 null 号)。
+  claimOrphanJobs(accountId: string): Promise<number>;
 
   // job_run reads/writes — all reach the parent job through requireJob first.
   createRun(input: CreateRunInput): Promise<JobRunRow>;
@@ -150,6 +157,7 @@ export function createSchedulingRepository(
         .values({
           id: deps.nextId("job"),
           userId: deps.userId,
+          accountId: input.accountId ?? null,
           name: input.name,
           prompt: input.prompt,
           sourceKind: input.sourceKind,
@@ -207,6 +215,20 @@ export function createSchedulingRepository(
         .where(and(eq(scheduledJobs.userId, deps.userId), eq(scheduledJobs.id, id)))
         .returning();
       return updated[0]!;
+    },
+
+    async claimOrphanJobs(accountId) {
+      const updated = await db
+        .update(scheduledJobs)
+        .set({ accountId, updatedAt: deps.now() })
+        .where(
+          and(
+            eq(scheduledJobs.userId, deps.userId),
+            isNull(scheduledJobs.accountId),
+          ),
+        )
+        .returning({ id: scheduledJobs.id });
+      return updated.length;
     },
 
     async createRun(input) {

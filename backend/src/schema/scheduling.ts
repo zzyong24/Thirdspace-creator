@@ -28,6 +28,10 @@ import { pgTable, text, integer, jsonb, boolean } from "drizzle-orm/pg-core";
 export const scheduledJobs = pgTable("scheduled_job", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
+  // [T-200] 第二属主维度(按抖音号):建 job 时从 ctx.accountId stamp。cron 到点触发时,采集
+  //   runtime ctx.accountId 由此列派生(triggerScheduledJob),使采集落库 stamp 正确 account_id,
+  //   而非系统调度 ctx 的 null 号(串号根因)。nullable(旧 job / 未选号退化,稳定终态)。
+  accountId: text("account_id"),
   name: text("name").notNull(),
   prompt: text("prompt").notNull().default(""), // Agent 发现路径用;内建采集器源可空
   sourceKind: text("source_kind").notNull(), // self.metrics | comments (contract Zod 校验)
@@ -71,6 +75,7 @@ export const SCHEDULING_DDL = `
 CREATE TABLE IF NOT EXISTS scheduled_job (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  account_id TEXT,
   name TEXT NOT NULL,
   prompt TEXT NOT NULL DEFAULT '',
   source_kind TEXT NOT NULL,
@@ -99,6 +104,9 @@ CREATE TABLE IF NOT EXISTS job_run (
 -- [T-152] 采集实时进度列(additive、幂等、nullable)。与 0026_job_run_progress.sql 对齐
 -- (迁移才是运行时真正建列的那份;此 const 供 seed/doc 有处可读)。
 ALTER TABLE job_run ADD COLUMN IF NOT EXISTS progress JSONB;
+-- [T-200] scheduled_job 按号维度列(additive、幂等、nullable)。与 0030_scheduled_job_account.sql
+-- 对齐(迁移才是运行时真正建列的那份)。cron 到点触发的采集 ctx.accountId 由此列派生。
+ALTER TABLE scheduled_job ADD COLUMN IF NOT EXISTS account_id TEXT;
 CREATE INDEX IF NOT EXISTS ix_scheduled_job_user_enabled ON scheduled_job (user_id, enabled);
 CREATE INDEX IF NOT EXISTS ix_job_run_job ON job_run (job_id, started_at);
 `;

@@ -209,6 +209,9 @@ export interface PublishingService {
     publicationId: string,
     coverAssetId: string,
   ): Promise<PublicationRevisionRow>;
+  // [T-200] 认领存量无号 publications 给 ctx.accountId(修采集导入作品在无号 ctx 下落的 null 号)。
+  //   幂等;ctx.accountId 缺省 → no-op(返回 0)。返回改动行数(诊断用)。
+  claimOrphanPublications(ctx: RequestContext): Promise<number>;
 }
 
 export function createPublishingService(deps: ServiceDeps): PublishingService {
@@ -223,6 +226,11 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
   }
 
   return {
+    async claimOrphanPublications(ctx) {
+      if (!ctx.accountId) return 0; // 未选号:无号可认领
+      return repoFor(ctx).claimOrphanPublications(ctx.accountId);
+    },
+
     async listPublications(ctx, outputId, pagination) {
       return repoFor(ctx).listPublicationsByOutput(outputId, pagination);
     },

@@ -1,4 +1,4 @@
-import { and, asc, eq, desc, inArray, type Db } from "@creatoros/backend";
+import { and, asc, eq, desc, inArray, isNull, type Db } from "@creatoros/backend";
 import { materialLinks } from "@creatoros/backend";
 import { assets, assetFiles, assetUploads } from "./assets.db-schema";
 import { OwnershipError } from "./assets.errors";
@@ -64,6 +64,10 @@ export interface InsertAssetFileInput {
 export interface AssetRepository {
   seedAssets(rows: AssetRow[]): Promise<void>;
   seedAssetFiles(rows: AssetFileRow[]): Promise<void>;
+  // [T-200] 认领存量 account_id IS NULL 的 assets 给 accountId(该 user 名下)。修采集(封面/
+  //   素材)在无号 ctx 下落的 null 号 —— 读侧严格 eq gate 排除 null 号 → 封面/素材占位的根因。
+  //   幂等:已归属的不动。返回改动行数。
+  claimOrphanAssets(userId: string, accountId: string): Promise<number>;
   // [T-136 切片 b] owned-root(assets)方法加**可选** accountId(additive:旧调用不传
   // = undefined → 门退化不过滤 = 返该 user 全部,行为不变)。有号时按号过滤(读)/ stamp
   // (写)。repo 是单例、userId 随调用传,故 accountId 也随调用传(不能 baked 进 deps)。
@@ -151,6 +155,8 @@ export function createAssetRepository(
 ): AssetRepository {
   // [T-136 切片 b] 按号隔离条件门:有号叠加 `eq(assets.accountId, …)`,无号(undefined/null,
   // 全局视图/存量)返 undefined → drizzle `and()` 忽略 → 退化为只按 userId 过滤。
+  // **账号隔离是设计要求**:严格 eq,不放宽 null(放宽会串号)。asset 必须在创建时带正确 account_id
+  //   (采集侧 T-200 修:ctx.accountId 传进 createGeneratedAsset/insertAsset),而不是读侧放宽。
   function accountGate(accountId?: string | null) {
     return accountId ? eq(assets.accountId, accountId) : undefined;
   }
@@ -180,6 +186,15 @@ export function createAssetRepository(
   }
 
   return {
+    async claimOrphanAssets(userId, accountId) {
+      const updated = await db
+        .update(assets)
+        .set({ accountId, updatedAt: deps.now() })
+        .where(and(eq(assets.userId, userId), isNull(assets.accountId)))
+        .returning({ id: assets.id });
+      return updated.length;
+    },
+
     async seedAssets(rows) {
       if (rows.length === 0) return;
       await db.insert(assets).values(rows).onConflictDoNothing();

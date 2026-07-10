@@ -117,6 +117,11 @@ describe("seedWinVideoTutor — 22 节 win-video-tutor 知识库种子", () => {
       expect(typeof it.sourceMetadata.lessonNumber).toBe("number");
       expect(it.title).toMatch(/^Win 短视频私教 · 第 \d+ 节 · /);
       expect(it.content.length).toBeGreaterThan(50);
+      // [T-198] 入库存的是可读 markdown(带小标题),不是原始 YAML dump。
+      expect(it.content).not.toMatch(/^- id:/);
+      expect(it.content).toContain("## 一句话");
+      expect(it.content).toContain("一句话总结。");
+      expect(it.content).toContain("## 正文");
     }
     // lesson 1 解析正确:module=模块1(ceil(1/4)=1)
     const l1 = items.find((i) => i.sourceMetadata.lessonNumber === 1);

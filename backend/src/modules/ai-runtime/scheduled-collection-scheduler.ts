@@ -54,6 +54,9 @@ export interface SchedulableJob {
   id: string;
   sourceKind: string; // self.metrics | comments
   target: Record<string, unknown>;
+  // [T-200] job 的属主号(建 job 时 stamp)。触发时采集 runtime ctx.accountId 由此派生,使
+  //   cron 系统 ctx(无 accountId)的采集也落正确号(串号根因修复)。null/缺省 → 退化用 ctx.accountId。
+  accountId?: string | null;
 }
 
 export interface TriggerDeps {
@@ -98,8 +101,17 @@ export async function triggerScheduledJob(
   const nowIso = deps.now();
   const today = dayKeyOf(nowIso);
 
+  // [T-200] 采集 runtime ctx:userId 保持调用方(cron=canonical / bind/runNow=请求 user,均正确),
+  //   只把 accountId 派生成 job.account_id —— cron 系统 ctx 无 accountId,不派生就落 null 号(串号根因)。
+  //   job 无号(旧 job / 未选号)时退化用 ctx.accountId(runNow/bind 的请求号),再无则 null。
+  //   task/run/dispatch 全用这个 ctx,使 ai_task + 下游采集落库 stamp 正确 account_id。
+  const collectionCtx: RequestContext = {
+    ...ctx,
+    accountId: job.accountId ?? ctx.accountId ?? null,
+  };
+
   // 闸①(job_run 层):同 job 当天已有 in-flight run → 幂等短路,不重复产。
-  const recent = await deps.runs.listRunsByJob(ctx, job.id, {
+  const recent = await deps.runs.listRunsByJob(collectionCtx, job.id, {
     limit: 20,
     offset: 0,
   });
@@ -118,8 +130,8 @@ export async function triggerScheduledJob(
   const idempotencyKey = `${job.id}:${today}`;
 
   // 闸②(createTask 层):idempotencyKey 走 inputData,命中 in-flight task 返回既有
-  //   (ai_tasks_user_idempotency,SPEC §5 复用既有幂等,不自造)。
-  const task = await deps.ai.createTask(ctx, {
+  //   (ai_tasks_user_idempotency,SPEC §5 复用既有幂等,不自造)。ctx 带派生号 → ai_task 落正确号。
+  const task = await deps.ai.createTask(collectionCtx, {
     taskType,
     inputData: {
       idempotencyKey,
@@ -129,7 +141,7 @@ export async function triggerScheduledJob(
   });
 
   // 写 job_run(running, aiTaskId);再把 jobRunId 塞进 task.inputData 交 runner 回填。
-  const run = await deps.runs.createRun(ctx, {
+  const run = await deps.runs.createRun(collectionCtx, {
     jobId: job.id,
     aiTaskId: task.id,
     status: "running",
@@ -146,7 +158,8 @@ export async function triggerScheduledJob(
   };
 
   // 触发确定性采集 runner(fire-and-forget:即返,runner 后台跑并回填 job_run)。
-  deps.dispatch(ctx, dispatchInput);
+  //   collectionCtx 带派生号 → runner → collectors → ingestion 落库全 stamp 正确 account_id。
+  deps.dispatch(collectionCtx, dispatchInput);
 
   return { jobRunId: run.id, aiTaskId: task.id, deduped: false };
 }
@@ -156,7 +169,12 @@ export interface RunNowJobPort {
   getJob(
     ctx: RequestContext,
     jobId: string,
-  ): Promise<{ id: string; sourceKind: string; target: Record<string, unknown> }>;
+  ): Promise<{
+    id: string;
+    sourceKind: string;
+    target: Record<string, unknown>;
+    accountId?: string | null; // [T-200] 触发采集 ctx 由此派生
+  }>;
 }
 
 /**
@@ -172,7 +190,12 @@ export async function runJobNow(
   const job = await deps.job.getJob(ctx, jobId); // requireJob ownership gate（越权 → 抛）
   return triggerScheduledJob(
     ctx,
-    { id: job.id, sourceKind: job.sourceKind, target: job.target },
+    {
+      id: job.id,
+      sourceKind: job.sourceKind,
+      target: job.target,
+      accountId: job.accountId ?? null,
+    },
     deps,
   );
 }
