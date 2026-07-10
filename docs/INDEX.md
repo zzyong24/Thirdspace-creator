@@ -20,18 +20,13 @@
 
 ## 产品 / 工作流
 
-- [prd/](prd/) —— 早期 PRD 与工作流缺口报告(v0.1,历史)。
-- [positioning-redesign/](positioning-redesign/) —— 定位重设计的规划稿面截图(planning 岛/AI 节点/大纲/契约)。
 - [CreatorOS-产品评审与工作流重设计.md](CreatorOS-产品评审与工作流重设计.md)
 - [CreatorOS-七步整合设计.md](CreatorOS-七步整合设计.md)
 - [product-walkthrough-report.md](product-walkthrough-report.md) —— 产品走查报告。
 
 ## 数据 / 存储 / 运行时(历史设计,以现行 SPEC + 代码为准)
 
-- [CreatorOS-data-model.md](CreatorOS-data-model.md) —— 数据模型设计(历史稿)。
-- [CreatorOS-storage-and-business-logic.md](CreatorOS-storage-and-business-logic.md) —— 存储与业务逻辑设计(历史稿)。
 - [CreatorOS-运行时协同设计.md](CreatorOS-运行时协同设计.md) —— 运行时协同设计(历史稿)。
-- [CreatorOS-implementation-plan.md](CreatorOS-implementation-plan.md) —— 早期实施计划(历史稿)。
 
 ## 桌面端 / 部署 / 变更
 
