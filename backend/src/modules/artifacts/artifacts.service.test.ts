@@ -159,3 +159,86 @@ describe("artifacts.service — structured-content guard", () => {
     ).rejects.toBeInstanceOf(ConflictError);
   });
 });
+
+// [T-183] 改稿 delta 捕捉埋点。仅当「前一版 AI 产出 → 新版用户手改 + 脚本 artifact」时,
+// 调 recordEditDelta seam(before=前版正文, after=新版正文);其余组合不误触。
+describe("artifacts.service — 改稿 delta 捕捉埋点 (recordEditDelta seam)", () => {
+  type Call = {
+    projectId: string;
+    artifactId: string;
+    before: string;
+    after: string;
+  };
+
+  function makeServiceWithSpy(db: Db): {
+    service: ArtifactsService;
+    calls: Call[];
+  } {
+    let seq = 0;
+    const calls: Call[] = [];
+    const service = createArtifactsService({
+      db,
+      now: () => NOW,
+      nextId: (prefix: string) => `${prefix}-${++seq}`,
+      recordEditDelta: async (_ctx, input) => {
+        calls.push(input as Call);
+      },
+    });
+    return { service, calls };
+  }
+
+  async function seedScript(svc: ArtifactsService, ctx: RequestContext) {
+    return svc.createArtifact(ctx, {
+      projectId: "project-1",
+      title: "脚本",
+      artifactType: "output_script",
+      stage: "script",
+    });
+  }
+
+  it("AI 版 → 用户改版 (脚本) → 触发一条 delta,before/after 正确", async () => {
+    const { db } = await createDb();
+    const { service: svc, calls } = makeServiceWithSpy(db);
+    const artifact = await seedScript(svc, ctxA);
+    // 前一版 = AI 产出。
+    await svc.createVersion(ctxA, artifact.id, {
+      contentText: "AI 产出的脚本正文",
+      createdByType: "ai",
+      aiTaskId: "task-1",
+    });
+    expect(calls).toHaveLength(0); // AI 落版本本身不触发(前版是 user 初稿)。
+    // 新版 = 用户手改(transport 默认 createdByType 'user',这里省略)。
+    await svc.createVersion(ctxA, artifact.id, { contentText: "用户改后的正文" });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.before).toBe("AI 产出的脚本正文");
+    expect(calls[0]!.after).toBe("用户改后的正文");
+    expect(calls[0]!.projectId).toBe("project-1");
+    expect(calls[0]!.artifactId).toBe(artifact.id);
+  });
+
+  it("纯用户版 → 用户版 → 不触发(前版非 AI)", async () => {
+    const { db } = await createDb();
+    const { service: svc, calls } = makeServiceWithSpy(db);
+    const artifact = await seedScript(svc, ctxA);
+    await svc.createVersion(ctxA, artifact.id, { contentText: "用户稿 A" });
+    await svc.createVersion(ctxA, artifact.id, { contentText: "用户稿 B" });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("非脚本 artifact 即使 AI→用户 也不触发(埋点限脚本改稿)", async () => {
+    const { db } = await createDb();
+    const { service: svc, calls } = makeServiceWithSpy(db);
+    const artifact = await svc.createArtifact(ctxA, {
+      projectId: "project-1",
+      title: "选题树",
+      artifactType: "thesis_tree",
+      stage: "planning",
+    });
+    await svc.createVersion(ctxA, artifact.id, {
+      contentText: "AI 选题",
+      createdByType: "ai",
+    });
+    await svc.createVersion(ctxA, artifact.id, { contentText: "用户改选题" });
+    expect(calls).toHaveLength(0);
+  });
+});

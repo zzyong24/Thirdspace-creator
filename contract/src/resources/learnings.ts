@@ -7,7 +7,9 @@ const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
 // Enums local to this module (not exported by primitives.ts).
 // learningType — extended with monetization-weighted types (§4.6):
 // conversion_pattern / offer_insight. `editing` is the post-production (后期剪辑)
-// bucket (GAP-EXP-edit). Additive: existing values still parse.
+// bucket (GAP-EXP-edit). [T-183] edit_delta 是改稿信号源:用户手改 AI 产出的脚本时,
+// before→after 差异沉淀成的「该创作者偏好」候选(飞轮最强品味信号)。Additive:
+// existing values still parse.
 const learningType = z.enum([
   "strategy",
   "hook",
@@ -17,6 +19,7 @@ const learningType = z.enum([
   "editing",
   "conversion_pattern",
   "offer_insight",
+  "edit_delta",
 ]);
 const validationStatus = z.enum(["candidate", "validated", "discarded"]);
 

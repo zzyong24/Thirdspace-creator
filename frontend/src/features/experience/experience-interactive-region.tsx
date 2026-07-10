@@ -40,6 +40,7 @@ export const LEARNING_TYPE_LABELS: Record<LearningTypeKey, string> = {
   editing: "剪辑",
   conversion_pattern: "转化模式",
   offer_insight: "变现洞察",
+  edit_delta: "改稿偏好",
 };
 
 // ---------------------------------------------------------------------------

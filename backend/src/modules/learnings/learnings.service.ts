@@ -12,6 +12,13 @@ import {
   type LearningApplicationResource,
 } from "./learnings.schema";
 import { ConflictError } from "./learnings.errors";
+// [T-183] 改稿 delta 摘要器(纯文本 diff)。用户手改 AI 产出的脚本 → before→after 差异 →
+// 一条 edit_delta candidate learning(飞轮最强品味信号)。
+import {
+  summarizeEditDelta as defaultSummarizeEditDelta,
+  renderEditDeltaInsight,
+  type EditDeltaSummary,
+} from "./edit-delta";
 
 // Learnings service (foundation §5.3) — every public method takes
 // `(ctx: RequestContext, …)` and builds a repository bound to `ctx.userId`
@@ -89,6 +96,12 @@ export interface ServiceDeps {
   // 复盘飞轮回流 轨B — OPTIONAL cross-module seam. Wired at composition; when absent the
   // suggestCalibrationRule op rejects with a ConflictError (the FE hides the button).
   calibration?: LearningsCalibrationPort;
+  // [T-183] 可注入的改稿 delta 摘要器(默认真实纯 diff)。仅为测试「提炼失败降级存原始」
+  // 路径提供覆盖点 —— 注入一个抛错实现即可验证降级不崩。生产永远用默认。
+  summarizeEditDelta?: (
+    before: string,
+    after: string,
+  ) => EditDeltaSummary | null;
 }
 
 // 复盘飞轮回流 轨B — the suggestCalibrationRule body. Every field is optional; the service
@@ -109,6 +122,15 @@ export interface PromoteReviewInsightInput {
   insightBody: string;
   learningType: string;
   recommendation: string;
+}
+
+// [T-183] 改稿 delta 捕捉的入参。before = 前一版(AI 产出)正文,after = 新版(用户手改)
+// 正文;projectId 追溯到具体作品(裁决台 project-scoped 读的锚)。artifactId 仅作溯源附注。
+export interface CaptureEditDeltaInput {
+  projectId: string | null;
+  artifactId: string;
+  before: string;
+  after: string;
 }
 
 export interface LearningsService {
@@ -143,6 +165,14 @@ export interface LearningsService {
     ctx: RequestContext,
     input: PromoteReviewInsightInput,
   ): Promise<LearningResource>;
+  // [T-183] 改稿信号沉淀:用户手改 AI 产出的脚本 → before→after delta → 一条 edit_delta
+  // candidate learning(带 projectId,进既有裁决台经 promote 流转成写稿规则)。仿
+  // promoteReviewInsight 新增一条 source(learningType='edit_delta')。best-effort:无实质
+  // 变化返回 null(不误产);提炼失败降级为存原始 delta(不崩)。
+  captureEditDelta(
+    ctx: RequestContext,
+    input: CaptureEditDeltaInput,
+  ): Promise<LearningResource | null>;
   applyLearning(
     ctx: RequestContext,
     learningId: string,
@@ -225,6 +255,13 @@ const LEARNING_TYPE_TO_DIMENSION: Record<
     label: "CTA 清晰度",
     description: "行动召唤是否清晰（复盘回流：把 CTA 纳入评分）",
   },
+  // [T-183] 改稿信号回流:用户反复把 AI 稿改成「像自己说的话」→ 把语言风格贴合度纳入评分。
+  edit_delta: {
+    key: "voice_fit",
+    label: "语言风格贴合度",
+    description:
+      "文案是否贴合创作者本人的表达风格（改稿信号回流：把「像本人说的话」纳入评分维度）",
+  },
 };
 
 const DEFAULT_REFLOW_DIMENSION = {
@@ -244,6 +281,8 @@ const ALLOWED_TRANSITIONS: Record<string, ReadonlySet<string>> = {
 
 export function createLearningsService(deps: ServiceDeps): LearningsService {
   const { db, now, nextId, projects, calibration } = deps;
+  // [T-183] 改稿 delta 摘要器:默认真实纯 diff,测试可注入抛错实现验证降级路径。
+  const summarizeEditDelta = deps.summarizeEditDelta ?? defaultSummarizeEditDelta;
 
   function repoFor(ctx: RequestContext): LearningsRepository {
     // [T-136 切片 b] 号维度透传:ctx.accountId 属主已由 resolveRequestContext 校验可信;
@@ -324,6 +363,42 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
         learningType: input.learningType,
         recommendation: input.recommendation,
         reviewId: input.reviewId,
+        confidenceScore: 0,
+      });
+      return toLearningDto(row);
+    },
+
+    async captureEditDelta(ctx, input) {
+      const before = input.before ?? "";
+      const after = input.after ?? "";
+      let title: string;
+      let insight: string;
+      // 「提炼」= 纯文本 diff。summarize 返回 null ⇒ 无实质变化 ⇒ 不误产候选。
+      // summarize/render 抛错(理论极少;或注入的降级测试实现)⇒ 降级为存原始 delta,绝不崩、
+      // 绝不吞掉信号(T-183 铁律:失败必降级)。
+      try {
+        const summary = summarizeEditDelta(before, after);
+        if (!summary) return null;
+        title = `改稿偏好:${summary.clue}`.slice(0, 120);
+        insight = renderEditDeltaInsight(summary);
+      } catch {
+        if (before === after) return null;
+        title = "改稿偏好(原始 delta·提炼降级)";
+        insight =
+          "【改稿信号·降级】delta 提炼失败,存原始 before→after 供裁决台人工评判。\n" +
+          `--- before(AI 产出) ---\n${before.slice(0, 1000)}\n` +
+          `--- after(用户手改) ---\n${after.slice(0, 1000)}`;
+      }
+      // 仿 promoteReviewInsight 落一条 candidate learning(source=edit_delta,带 projectId
+      // 溯源到作品;validationStatus 默认 candidate → 进既有裁决台)。artifactId 附在 insight
+      // 尾注,便于溯源到具体脚本 artifact。
+      const row = await repoFor(ctx).createLearning({
+        title,
+        insight: `${insight}\n(来源脚本 artifact: ${input.artifactId})`,
+        learningType: "edit_delta",
+        recommendation: "",
+        reviewId: null,
+        projectId: input.projectId ?? null,
         confidenceScore: 0,
       });
       return toLearningDto(row);

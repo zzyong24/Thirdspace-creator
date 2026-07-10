@@ -530,7 +530,9 @@ export interface AnalyticsViewModel extends BasePageViewModel {
       | "process"
       | "editing"
       | "conversion_pattern"
-      | "offer_insight";
+      | "offer_insight"
+      // [T-183] 改稿信号源(与 contract learningResource + experience-data 对齐)。
+      | "edit_delta";
     readonly validationStatus: "candidate" | "validated" | "discarded";
     readonly confidenceScore: number;
     readonly reuseCount: number;

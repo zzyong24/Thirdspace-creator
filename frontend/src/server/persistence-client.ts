@@ -1231,6 +1231,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     searchUpsert: (ctx, input) => searchService.upsertDocument(ctx, input),
     assertKnowledgeOwned: (ctx, id) => knowledgeService.getKnowledge(ctx, id),
     assertAssetOwned: (ctx, id) => assetsService.getAsset(ctx, id),
+    // [T-183] 改稿 delta → 品味信号 best-effort seam。Lazy 箭头:`learningsService` 在下方
+    // 构造(request 时才求值,TDZ-safe,同 calibration/AI confirm thunk 范式)。用户手改
+    // AI 产出的脚本 → 一条 edit_delta candidate learning 进裁决台。
+    recordEditDelta: (ctx, input) =>
+      learningsService.captureEditDelta(ctx, input),
   });
   const artifacts = createArtifactsTransport(() => artifactsService);
 

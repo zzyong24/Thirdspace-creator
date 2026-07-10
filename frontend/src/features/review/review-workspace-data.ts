@@ -91,6 +91,8 @@ const LEARNING_TYPE_KEYS = [
   "editing",
   "conversion_pattern",
   "offer_insight",
+  // [T-183] 改稿信号源(与 contract learningResource + experience-data 对齐)。
+  "edit_delta",
 ] as const;
 
 function normalizeLearningType(raw: string): LearningVm["learningType"] {

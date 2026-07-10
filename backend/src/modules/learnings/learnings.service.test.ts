@@ -327,3 +327,76 @@ describe("learnings suggestCalibrationRule (复盘飞轮回流 轨B)", () => {
     ).rejects.toBeInstanceOf(ConflictError);
   });
 });
+
+// [T-183] 改稿信号沉淀 captureEditDelta。产 edit_delta candidate learning、带 projectId、
+// 无变化不误产、提炼失败降级存原始。
+describe("learnings service — captureEditDelta (改稿 delta → 品味信号)", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("有实质改稿 → 产一条 edit_delta candidate learning(带 projectId,可被裁决台读到)", async () => {
+    const service = makeService(db, makeProjectsPort());
+    const learning = await service.captureEditDelta(ctx, {
+      projectId: "proj-1",
+      artifactId: "art-1",
+      before: "开场一句非常啰嗦的废话😄\n正文",
+      after: "正文\n新钩子",
+    });
+    expect(learning).not.toBeNull();
+    expect(learning!.learningType).toBe("edit_delta");
+    expect(learning!.validationStatus).toBe("candidate");
+    expect(learning!.projectId).toBe("proj-1");
+    // 原始 delta 落在 insight;溯源到脚本 artifact。
+    expect(learning!.insight).toContain("新钩子");
+    expect(learning!.insight).toContain("art-1");
+
+    // 进裁决台:list(projectId, status=candidate) 读得到。
+    const { rows } = await service.listLearnings(
+      ctx,
+      { limit: 50, offset: 0 },
+      { projectId: "proj-1", validationStatus: "candidate" },
+    );
+    expect(rows.some((r) => r.id === learning!.id)).toBe(true);
+  });
+
+  it("无实质变化(前后相同) → 返回 null,不误产", async () => {
+    const service = makeService(db, makeProjectsPort());
+    const learning = await service.captureEditDelta(ctx, {
+      projectId: "proj-1",
+      artifactId: "art-1",
+      before: "同一段话",
+      after: "同一段话",
+    });
+    expect(learning).toBeNull();
+    const { total } = await service.listLearnings(ctx, { limit: 50, offset: 0 });
+    expect(total).toBe(0);
+  });
+
+  it("提炼失败(summarizer 抛错) → 降级为存原始 before→after,不崩", async () => {
+    let seq = 0;
+    const service = createLearningsService({
+      db,
+      now: () => NOW,
+      nextId: (prefix: string) => `${prefix}-x-${++seq}`,
+      projects: makeProjectsPort(),
+      // 注入抛错的摘要器,强制走降级分支。
+      summarizeEditDelta: () => {
+        throw new Error("boom");
+      },
+    });
+    const learning = await service.captureEditDelta(ctx, {
+      projectId: "proj-1",
+      artifactId: "art-1",
+      before: "AI 产出的原文",
+      after: "用户手改后的文",
+    });
+    expect(learning).not.toBeNull();
+    expect(learning!.learningType).toBe("edit_delta");
+    expect(learning!.insight).toContain("降级");
+    // 原始 before / after 都被保留。
+    expect(learning!.insight).toContain("AI 产出的原文");
+    expect(learning!.insight).toContain("用户手改后的文");
+  });
+});

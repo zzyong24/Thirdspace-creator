@@ -26,7 +26,7 @@ import { client as defaultClient } from "@/lib/contract-client.server";
 // ViewModel 类型(页面 + 岛共用;experience-page.tsx re-export 给渲染层)
 // ---------------------------------------------------------------------------
 
-/** 8 类 learningType 枚举(同 contract learningResource)。 */
+/** learningType 枚举(同 contract learningResource)。[T-183] 增 edit_delta 改稿信号源。 */
 export type LearningTypeKey =
   | "strategy"
   | "hook"
@@ -35,7 +35,8 @@ export type LearningTypeKey =
   | "process"
   | "editing"
   | "conversion_pattern"
-  | "offer_insight";
+  | "offer_insight"
+  | "edit_delta";
 
 /** 单条 Learning 的渲染视图 —— 字段全部来自 learningResource 真值。 */
 export interface LearningVm {
@@ -128,6 +129,7 @@ const LEARNING_TYPE_KEYS: ReadonlyArray<LearningTypeKey> = [
   "editing",
   "conversion_pattern",
   "offer_insight",
+  "edit_delta",
 ];
 
 function normalizeLearningType(raw: string): LearningTypeKey {
