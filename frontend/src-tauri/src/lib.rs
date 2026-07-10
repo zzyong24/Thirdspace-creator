@@ -93,10 +93,13 @@ fn resolve_or_create_master_key(app_data_dir: &std::path::Path) -> Option<String
 /// T-147 P5 桌面激活授权 —— 机器指纹(machineId)。多因子:平台稳定机器标识
 /// (Tauri 的 hardware id,底层 macOS IOPlatformUUID / Windows MachineGuid / Linux
 /// machine-id)+ 本机持久 UUID(<appDataDir>/machine-id,首启随机生成、后续复用),
-/// 二者组合 SHA-256 → 稳定短指纹,注入 sidecar env `CREATOROS_MACHINE_ID`。
+/// 平台 id 优先 SHA-256 → 稳定短指纹,注入 sidecar env `CREATOROS_MACHINE_ID`。
 ///
-/// 取不到平台 id 时退化为「仅持久 UUID」(仍同机稳定、跨设备唯一)。伪造是所有软件授权的
-/// 固有限制(文档 §5.2 已注),这里尽力稳,不宣称防伪造。
+/// [T-178] 平台硬件 id 拿得到 → **只用平台 id 派生**(硬件稳定,清 appDataDir / 重装也不变
+/// → 重装不换机、不占激活码);仅当平台 id 取不到时才回退「仅持久 UUID」(退化但同机稳定)。
+/// 旧实现无条件把易失的持久随机 UUID 混进哈希 → 清 appDataDir(卸载器/换机)后 UUID 重生 →
+/// machineId 变 → 服务端一机一码认作新设备拒 → **重装被占码**(T-178 根因)。哈希"只和最弱因子
+/// 一样稳",故不再混入随机因子。伪造是所有软件授权的固有限制(文档 §5.2 已注),不宣称防伪造。
 fn resolve_machine_id(app: &AppHandle) -> Option<String> {
     use sha2::{Digest, Sha256};
 
@@ -122,14 +125,21 @@ fn resolve_machine_id(app: &AppHandle) -> Option<String> {
         }
     };
 
-    // ② 平台稳定机器标识(best-effort;拿不到就只用持久 UUID)。
+    // ② 平台稳定机器标识(best-effort)。
     let platform_id = machine_uid::get().unwrap_or_default();
 
-    // ③ 组合 → SHA-256 → 前 32 hex(不暴露平台原始 UUID)。
+    // ③ [T-178] 派生种子:平台 id 非空 → **只用平台 id**(硬件稳定,不随 appDataDir 清空而变);
+    //   平台 id 为空(取不到硬件标识)才回退到持久随机 UUID。不再无条件混入随机因子(见函数头注释)。
+    //   持久 UUID 仍照常生成落盘(上方 ①),仅作硬件缺失时的兜底种子。
+    let seed = if platform_id.trim().is_empty() {
+        persisted.as_str()
+    } else {
+        platform_id.as_str()
+    };
+
+    // ④ SHA-256 → 前 32 hex(不暴露平台原始 UUID)。
     let mut hasher = Sha256::new();
-    hasher.update(platform_id.as_bytes());
-    hasher.update(b"|");
-    hasher.update(persisted.as_bytes());
+    hasher.update(seed.as_bytes());
     let digest = hasher.finalize();
     let hex = digest.iter().map(|b| format!("{b:02x}")).collect::<String>();
     Some(hex[..32].to_string())
