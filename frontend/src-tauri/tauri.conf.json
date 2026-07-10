@@ -16,7 +16,10 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "dmg"],
+    "targets": [
+      "app",
+      "dmg"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -30,7 +33,7 @@
     "resources": [
       "sidecar.tar.gz"
     ],
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "macOS": {
       "minimumSystemVersion": "10.15",
       "signingIdentity": null
@@ -43,9 +46,9 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM0MEI4MzE0NjgzN0IzMEQKUldRTnN6ZG9GSU1MTkdxOVJqLzcrTStCVFZxNEd2Z3V6ZitSQ3NqMFk5Wnk0REdLWi8yK2dsOHkK",
       "endpoints": [
-        "https://github.com/OWNER/REPO/releases/latest/download/latest.json"
+        "http://creatoros.aitongban.cloud/updates/latest.json"
       ]
     }
   }
