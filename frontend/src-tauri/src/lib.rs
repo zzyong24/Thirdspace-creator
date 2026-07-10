@@ -31,7 +31,7 @@ const KEYCHAIN_KEY_NAME: &str = "master-key";
 // [T-181] Skill 远程下发(prompt-bundle):sidecar 的 remote-prompt-bundle.ts 拉签名 bundle.json
 //   + 内置公钥验签。URL 与公钥都是**公开的**(非密钥),硬编码进壳、注入 sidecar env。
 //   私钥在产品方(~/.creatoros/prompt-bundle.key,签 bundle 时用,绝不进客户端/git)。
-const PROMPT_BUNDLE_URL: &str = "http://creatoros.aitongban.cloud/prompts/bundle.json";
+const PROMPT_BUNDLE_URL: &str = "https://creatoros.aitongban.cloud/prompts/bundle.json";
 const PROMPT_BUNDLE_PUBLIC_KEY: &str =
     "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEArmDGPC34VMSU2Isf3X+gULIwOH+5X3GBHwlXYFbgjg4=\n-----END PUBLIC KEY-----\n";
 
