@@ -49,11 +49,16 @@ describe("ChatGatherCard — T-084a 诚实降级", () => {
     );
     const warn = document.querySelector('[data-slot="chat-gather-warning"]');
     expect(warn).not.toBeNull();
-    expect(warn?.textContent).toContain("未配置联网搜索");
+    // [Bug-12 T-026] 措辞更新:明示「浏览器/RSS 免 key」与「付费 API」两条路径,不再让人误以为要再配模型。
+    expect(warn?.textContent).toContain("本轮素材来自模型记忆");
     expect(warn?.textContent).toContain("来源需自行核实");
-    // 去设置链接指向 models 面板。
+    expect(warn?.textContent).toContain("浏览器抓取 Bing");
+    expect(warn?.textContent).toContain("RSS 订阅");
+    // 去设置链接指向 models 面板 + 联网搜索 capability(深链到搜索项,免用户再找)。
     const link = warn?.querySelector("a");
-    expect(link?.getAttribute("href")).toBe("/settings?tab=models");
+    expect(link?.getAttribute("href")).toBe(
+      "/settings?tab=models&capability=web.search",
+    );
     // 无 sourceUrl → 「需核实」徽标(不渲链接)。
     expect(
       document.querySelector('[data-slot="chat-gather-needs-check"]'),

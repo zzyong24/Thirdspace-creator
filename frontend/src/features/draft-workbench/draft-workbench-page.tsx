@@ -114,9 +114,15 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             <div className="mb-1.5 flex items-baseline gap-2 px-0.5">
               <h2 className="text-[13.5px] font-semibold text-foreground">口播脚本</h2>
               <span className="text-xs text-text-subtle">
+                {/* [Bug-8 T-021] imported 项目没跑逐字稿 → 提示去跑(而非「直接开写」误导)。 */}
                 {script.versionCount > 0
                   ? `v${script.versionCount} · 写你的口播稿——保存即新版本,可回滚`
-                  : "写你的口播稿——直接开写,或在右侧让编导起草"}
+                  : project.imported
+                    // [Bug-8 T-021 二次修订] 用户视角文案:不暴露内部(自动入队/后台转写/T-151 等 PM 术语),
+                    // 不引导用户去「配 ASR」(T-160 whisper-local 已自动兜底,转写无需用户操心)。
+                    // 给两个透明选项:① 系统会自己处理 ② 不想等就让 AI 现在就起草。
+                    ? "系统会从抖音自动拉逐字稿进来,稍等就能看到;着急的话直接点右侧让编导先起草"
+                    : "写你的口播稿——直接开写,或在右侧让编导起草"}
               </span>
             </div>
             {/* [T-070→T-072] 编辑|结构 双视图:结构 = **可编辑**分段卡(段型徽章内联,

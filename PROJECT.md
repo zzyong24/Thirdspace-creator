@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ e6b1ba6
+LAST_SYNCED: main @ 0f6d177
 
 ## 这是什么(定位)
 
@@ -33,5 +33,5 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 模块地图(生成自 backend/src/modules)
 
-`ai` · `analytics` · `artifacts` · `assets` · `calibration` · `candidate` · `content-calendar` · `identity` · `ingestion` · `knowledge` · `learnings` · `material-links` · `notifications` · `platform-account` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy`
+`ai` · `ai-runtime` · `analytics` · `artifacts` · `assets` · `calibration` · `candidate` · `content-calendar` · `identity` · `ingestion` · `knowledge` · `learnings` · `material-links` · `notifications` · `platform-account` · `positioning` · `production` · `projects` · `publishing` · `query-services` · `review` · `reviews` · `scheduling` · `search` · `settings` · `taxonomy`
 

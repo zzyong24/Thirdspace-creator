@@ -204,6 +204,13 @@
       "when": 1782381500000,
       "tag": "0028_skill_config_override_versions",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1782381510000,
+      "tag": "0029_publication_platform_status",
+      "breakpoints": true
     }
   ]
 }

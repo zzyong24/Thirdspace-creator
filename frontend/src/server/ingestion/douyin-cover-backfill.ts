@@ -158,7 +158,7 @@ const DY_IMAGE_UA =
   "AppleWebKit/605.1.15 (KHTML, like Gecko) " +
   "EdgiOS/121.0.2277.107 Version/17.0 Mobile/15E148 Safari/604.1";
 
-/** 封面下载失败(非 2xx / 非图片 / 空字节)—— 调用方按单作品降级处理。 */
+/** 封面下载失败(非 2xx / 非图片 / 空字节 / 超时)—— 调用方按单作品降级处理。 */
 export class DouyinCoverDownloadError extends Error {
   constructor(message: string) {
     super(message);
@@ -166,10 +166,19 @@ export class DouyinCoverDownloadError extends Error {
   }
 }
 
+// [Bug-4 T-017] 封面 CDN 图下载 30s 超时(同 fetchDouyinVideoUrl 同病):裸 await 永不 resolve
+// → 整批卡死。30s 远超正常(~1-3s)但不拖垮坏作品。
+const COVER_IMAGE_FETCH_TIMEOUT_MS = 30_000;
+
 /**
  * 下载封面图字节(带 Referer/UA,抖音 CDN 直链)。非 2xx / content-type 非 image /
  * 空 body → 抛 DouyinCoverDownloadError(runner 记该作品 failed,其余继续)。
  * fetch 注入:host 传真全局 fetch,单测注 fake 不走网络。
+ *
+ * [Bug-4 T-017] **30s 超时**:CDN 半开连接 / 服务器静默吞请求 → 裸 await 永不 resolve
+ * → 整批封面回填卡死。30s 远超正常 (CDN ~1s) 但不至于让一个坏作品卡整批。
+ * 超时 → fetch reject AbortError → 下面 try/catch 把它包成 DouyinCoverDownloadError,
+ * runner 增 failed 计数继续下一条。
  */
 export async function downloadDouyinImage(
   url: string,
@@ -183,6 +192,7 @@ export async function downloadDouyinImage(
         Referer: DY_IMAGE_REFERER,
         Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
       },
+      signal: AbortSignal.timeout(COVER_IMAGE_FETCH_TIMEOUT_MS),
     });
   } catch (err) {
     throw new DouyinCoverDownloadError(

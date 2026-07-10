@@ -153,13 +153,33 @@ export async function runScriptReview(
     // [T-124] 违禁词表本身注进语义审 prompt(词表确定 → 让模型也照表复核变体),不再是独立两阶段。
 
     // ── 语义审(resolveModelSpec 按 script.review capability 解析;未配自动回退默认模型,不强制豆包)──
-    const spec = await deps.resolveModelSpec(ctx, "script.review");
+    // [Bug-9 T-022] resolveModelSpec 失败 → 降级为「仅 L1」报告(整次审核不崩)。
+    // 触发场景(T-171 已知):用户的 model_configurations secret_value 因 master key 不匹配解不开
+    // → resolveModelSpec tier1 落空 → tier2/3 全无 → 抛 LlmCredentialError。旧代码此处 try 块
+    // 外 → 外层 catch 把整次审核 markFailed,用户面前冒「没有配置审核模型Key」——其实只是 secret
+    // 解不开,**默认模型完全可降级**(本次先给 L1 报告,模型补好后再跑 L2)。
+    let spec: ModelSpec | null = null;
+    let resolveErr: unknown = null;
+    try {
+      spec = await deps.resolveModelSpec(ctx, "script.review");
+    } catch (e) {
+      resolveErr = e;
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[script-review-runner] resolveModelSpec(script.review) 失败 ${task.id}:`,
+        e instanceof Error ? e.message : e,
+      );
+    }
     // [T-124] 诚实标注但不误导:未配专用审核模型时用默认模型审(resolve 回退链已自动降级,非「必须
     // 配豆包」);措辞改「默认模型审核,配专用可更准」——去掉旧「建议配豆包」易被读成强制的表述。
-    const isDedicated = await deps.hasDedicatedReviewModel(ctx);
-    const modelLabel = isDedicated
-      ? `${spec.model}`
-      : `${spec.model}(默认模型审核;如需更精准可在设置配置专用审核模型)`;
+    const isDedicated = spec
+      ? await deps.hasDedicatedReviewModel(ctx)
+      : false;
+    const modelLabel = spec
+      ? isDedicated
+        ? `${spec.model}`
+        : `${spec.model}(默认模型审核;如需更精准可在设置配置专用审核模型)`
+      : "无可用模型(L1-only — 请检查 API key 设置)";
 
     let positioningBrief = "（未设置定位——按通用合规标准审核）";
     if (deps.positioning) {
@@ -191,29 +211,42 @@ export async function runScriptReview(
     let llmFindings: ScriptReviewOutput["findings"] = [];
     let llmVerdict: "pass" | "risk" | "block" = "pass";
     let summary = "";
-    try {
-      const { object } = await runStructuredNode<ScriptReviewOutput>({
-        model: modelFor(spec),
-        template: getTemplate("script.review"),
-        facets: {
-          script: script.text,
-          lexicon: buildLexiconBlock(rules),
-          lintFindings: lintBlock,
-          officialRules: DEFAULT_OFFICIAL_RULES,
-          positioning: positioningBrief,
-        },
-      });
-      // quote 必为原文子串(防幻觉命中):滤掉不在原文里的 finding(诚实数据)。
-      llmFindings = (object.findings ?? []).filter(
-        (f) => typeof f.quote === "string" && script.text.includes(f.quote),
-      );
-      llmVerdict = object.verdict ?? "pass";
-      summary = object.summary ?? "";
-    } catch (err) {
-      // L2 失败(模型不可用/超时)不让整次审核崩:降级为「仅 L1」报告,summary 如实标注。
+    if (spec) {
+      try {
+        const { object } = await runStructuredNode<ScriptReviewOutput>({
+          model: modelFor(spec),
+          template: getTemplate("script.review"),
+          facets: {
+            script: script.text,
+            lexicon: buildLexiconBlock(rules),
+            lintFindings: lintBlock,
+            officialRules: DEFAULT_OFFICIAL_RULES,
+            positioning: positioningBrief,
+          },
+        });
+        // quote 必为原文子串(防幻觉命中):滤掉不在原文里的 finding(诚实数据)。
+        llmFindings = (object.findings ?? []).filter(
+          (f) => typeof f.quote === "string" && script.text.includes(f.quote),
+        );
+        llmVerdict = object.verdict ?? "pass";
+        summary = object.summary ?? "";
+      } catch (err) {
+        // L2 失败(模型不可用/超时)不让整次审核崩:降级为「仅 L1」报告,summary 如实标注。
+        // eslint-disable-next-line no-console
+        console.error(`[script-review-runner] L2 语义审失败 ${task.id}:`, err);
+        summary = "L2 语义审未完成(模型不可用),本报告仅含 L1 违禁词 lint 结果。";
+      }
+    } else {
+      // [Bug-9 T-022] resolveModelSpec 失败 + L2 跳跑 → 整报告退到 L1-only。
+      // 诚实:不假装 L2 跑过,summary 明示「未配置审核模型 / 模型不可用」,引导用户去设置补 key;
+      // 同时 verdict 仍按 L1 命中给出(pass/risk/block),不让用户卡在「没审核」。
+      summary =
+        "L2 语义审未运行(无可用模型),本报告仅含 L1 违禁词 lint 结果。请在「设置 → 模型」配置审核模型(或默认模型 API key)。";
       // eslint-disable-next-line no-console
-      console.error(`[script-review-runner] L2 语义审失败 ${task.id}:`, err);
-      summary = "L2 语义审未完成(模型不可用),本报告仅含 L1 违禁词 lint 结果。";
+      console.warn(
+        `[script-review-runner] L2 跳过(无 spec) → 仅 L1 报告 ${task.id}, 原因:`,
+        resolveErr instanceof Error ? resolveErr.message : resolveErr,
+      );
     }
     // [T-124] 合并为一次审核的单条完成日志(不再「L1 完成 → L2 完成」两阶段观感):
     // 违禁词表精筛(确定性)+ 语义复核(含照表复核变体)= 一份统一合规审核报告。

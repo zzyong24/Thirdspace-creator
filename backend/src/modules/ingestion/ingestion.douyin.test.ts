@@ -642,4 +642,48 @@ describe("ingestion.loginDouyin — 扫码成功同时建采集源 + 平台账�
       sourceReady: true,
     });
   });
+
+  // [Bug-13 T-029] 扫码成功 → 立即 fire-and-forget refreshDouyin 刷真昵称,避免「占位未刷 → 立即
+  // 触发 job 时 collector 拿不到 accountId/cookies → needs_reconnect」的时序坑。test 模拟 douyinFetch.fetch
+  // 计数(被 refreshDouyin 内部调)→ 等 fire-and-forget 链跑完再断言 fetch 被调到 1 次。
+  it("[Bug-13 T-029] 扫码成功 → fire-and-forget 立即 refreshDouyin 一次(刷真昵称,end-to-end 扫码即齐活)", async () => {
+    const { db } = await createDb();
+    let fetchCalls = 0;
+    const accountPort: IngestionPlatformAccountPort = {
+      ensureAccount: async () => ({ id: "acct-1" }),
+    };
+    let seq = 0;
+    const douyinFetch: DouyinFetchPort = {
+      fetch: async () => {
+        fetchCalls += 1;
+        return [];
+      },
+      login: async () => true,
+      status: async () => true,
+    };
+    const svc = createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
+      db,
+      douyinFetch,
+      platformAccount: accountPort,
+      ports: {
+        publishing: { resolvePublication: () => Promise.resolve({ id: "pub" }) },
+        analytics: { appendSnapshot: () => Promise.resolve({ created: true }) },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+    const res = await svc.loginDouyin(ctx);
+    expect(res.loggedIn).toBe(true);
+    // 等 fire-and-forget 链跑完:用 await new Promise(setImmediate) 把微任务队列抽干
+    // (refreshDouyin 内部 await 多个 IO,需要多轮)。
+    for (let i = 0; i < 20; i++) {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+    // 关键:fire-and-forget refreshDouyin 跑了 → douyinFetch.fetch 被调 1 次。
+    expect(fetchCalls).toBe(1);
+  });
 });

@@ -125,7 +125,7 @@ export async function ProjectsPage({
     viewModel === undefined
       ? ((await client.listProjects({
           params: undefined,
-          query: { page: 1, pageSize: 500 },
+          query: { page: 1, pageSize: 500, hidden: showHidden ? true : undefined },
           body: undefined,
         })) as unknown as ReadonlyArray<Project>)
       : [];
@@ -185,7 +185,7 @@ export async function ProjectsPage({
       ? await Promise.all(
           pagedRows.map(async (row) => ({
             ...row,
-            coverAssetId: await resolveProjectCoverAssetId(client, row.id),
+            coverAssetId: await resolveProjectCoverAssetId(client, row.id, showHidden),
           })),
         )
       : pagedRows;
@@ -617,6 +617,7 @@ async function resolveProjectCoverAssetId(
       >
     >,
   projectId: string,
+  showHidden: boolean,
 ): Promise<string | null> {
   try {
     // contract client 的类型标的是单资源,运行时 list op 返回数组 —— 与
@@ -629,7 +630,7 @@ async function resolveProjectCoverAssetId(
     for (const output of outputs.slice(0, 3)) {
       const pubs = (await client.listPublications({
         params: { outputId: output.id },
-        query: { page: 1, pageSize: 10 },
+        query: { page: 1, pageSize: 10, hidden: showHidden ? true : undefined },
         body: undefined,
       })) as unknown as ReadonlyArray<{
         id: string;

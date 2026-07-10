@@ -16,7 +16,11 @@ export const publishingOperations = {
     method: "GET",
     path: "/outputs/:outputId/publications",
     params: outputParams,
-    query: paginationQuery,
+    // [T-033] includeHidden:默认过滤 hidden+未通过(平台审核);?hidden=1 全显。
+    //  整型 query(z.coerce.boolean 接 0/1/true/false)。NULL=用默认(过滤)。
+    query: paginationQuery.extend({
+      hidden: z.coerce.boolean().optional(),
+    }),
     response: publicationResource,
     isList: true,
     fr: ["FR-PUBLISHING-LIST"],

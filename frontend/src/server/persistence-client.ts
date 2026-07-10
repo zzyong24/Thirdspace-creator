@@ -18,11 +18,13 @@ import {
 import type { MetricCard } from "@/types/view-models";
 import type { ProjectStageName, TaskStatus } from "@/types/domain";
 import {
+  CANONICAL_USER_ID,
   createIdentityRepository,
   createIdentityService,
   seedCanonicalUser,
   type IdentityService,
 } from "@creatoros/backend/modules/identity";
+import { seedWinVideoTutor } from "@/server/seeds/win-video-tutor";
 import {
   createTaxonomyRepository,
   createTaxonomyService,
@@ -3819,7 +3821,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           err,
         );
       }
-      return { itemsNew: run.recordsWritten, itemsUpdated: coversFilled };
+      const selfMetricsResult = {
+        itemsNew: run.recordsWritten,
+        itemsUpdated: coversFilled,
+      };
+      // [T-176] 移除 self.metrics → self.detail 的每轮 fire-and-forget 自接。
+      //   旧行为(Bug-10/11 T-023/T-024):self.metrics 每次成功后自动再跑一次 self.detail 全量导出。
+      //   死循环根因之一:self.detail 走创作者中心导出面板,DOM 极脆(直播 tab 无数据 / 图集 /
+      //   微前端未就绪)→ waitForEvent('download') 超时,反复触发脆弱路径 + 污染共享的 creator-center
+      //   退避状态,把评论采集拖进退避死循环。故**解耦**:self.detail 改由用户/调度显式触发,
+      //   拉指标不再每轮自动接全量导出(finish_rate/follower_gain/ctr 请单独配 self.detail job)。
+      //   注:即便 self.detail 单跑失败,classifyDouyinOutcome(export-download-timeout)也已判
+      //   content-error 不顶退避(见 douyin-request-gateway.ts),双保险。
+      return selfMetricsResult;
     },
     // 评论:fetchDouyinComments(target)→ ingestComments(D2 的纯 ports 落库:建 run → 逐条经
     // ux_ingestion_records_run_key 去重 → candidateService.ingestAudienceSignal(source=
@@ -4098,6 +4112,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             platform: "douyin",
             externalId: extId,
             hidden,
+          });
+          // [T-033] 同步平台侧原始审核状态字面量(「已通过」/「仅自己可见」/「私密」等),供 list
+          // 「默认只显示已通过」过滤用。detail.status 是抖音原值,直接落(不做归一化,
+          // 字面量保留方便后续诊断「为何这条被过滤」)。
+          await publishingService.setPlatformStatusByExternalKey(ctx, {
+            platform: "douyin",
+            externalId: extId,
+            platformStatus: m.detail.status ?? null,
           });
           await projectsService.setImportedProjectHidden(ctx, {
             platform: "douyin",
@@ -4543,8 +4565,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           tone: "positive",
         });
         // [T-071] 总粉丝(用户裁决:算不了增量就算总数)—— platform_accounts 基线求和,
-        // 读失败诚实「—」。
-        let followerTotal: string = "—";
+        // 读失败诚实「—」。[Bug-2 T-015] 用户没手动设基线(baseline=0)时,**回退到 rollup
+        // 的 followerGain**(采集期内粉丝增长,真值),label 跟着切到「新增粉丝(期内)」——不
+        // 假装那是「总粉丝」。两者都没 → 「—」诚实空。
+        let followerTotal: { label: string; value: string } = {
+          label: "总粉丝",
+          value: "—",
+        };
         try {
           const { rows: accounts } = await platformAccountService.listAccounts(
             ctx,
@@ -4552,17 +4579,26 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           );
           // [T-074 用户裁决] 总粉丝只统计抖音(B站 8400 系 seed 幻觉数据已清,
           // 用户:「不要统计B站」);未来接别的平台前不并入总数。
-          const sum = accounts
+          const baselineSum = accounts
             .filter((a) => a.status === "active" && a.platform === "douyin")
             .reduce((acc, a) => acc + (a.followerBaseline ?? 0), 0);
-          if (sum > 0) followerTotal = fmt(sum);
+          if (baselineSum > 0) {
+            followerTotal = { label: "总粉丝", value: fmt(baselineSum) };
+          } else if (r.followerGain > 0) {
+            // [Bug-2 T-015] 真值兜底:期内采集到的新增粉丝总和(label 显式标「期内」,别假装总数)。
+            followerTotal = {
+              label: "新增粉丝(期内)",
+              value: fmt(r.followerGain),
+            };
+          }
         } catch {
           /* 显「—」 */
         }
         const metrics: MetricCard[] = [
           card("d-views", "总播放量", fmt(r.plays)),
           card("d-likes", "总点赞", fmt(r.likes)),
-          card("d-followers", "总粉丝", followerTotal),
+          // [Bug-2 T-015] label 随数据源动态切(基线 vs 期内增长 vs 诚实空)。
+          card("d-followers", followerTotal.label, followerTotal.value),
           // [T-071] 完播率只在有明细快照(finish_rate 字段,拉明细采集产)时显真均值;
           // 没有 → 「—」,绝不显假 0.0%。
           {
@@ -4722,6 +4758,27 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // [T-050] canonical demo 项目图种子已退役(用户裁决 2026-07-02:4 个演示项目彻底
   // 删除,不再重种)。项目/产出/任务全部来自真实导入(T-030 管线)与用户运行时创建。
   await seedCanonicalUser(identityRepo, deps);
+
+  // [User] win-video-tutor 22 节课程 → canonical user 知识库(knowledge_items reference 类型,
+  // 整篇 markdown 入 content)。**替代 T-135 退役的金句假内容**,让知识库开箱就有真东西。
+  // Idempotent(查 sourceMetadata.origin);文件缺失/异常 → 安静 no-op(该 skill 没装到本机是合法状态,
+  // 绝不能因此炸 buildPersistence)。用户首次开 app 触发一次,后续 build/install 跳过。
+  try {
+    const seeded = await seedWinVideoTutor(knowledgeService, {
+      userId: CANONICAL_USER_ID,
+      accountId: null,
+    });
+    if (seeded > 0) {
+      console.log(
+        `[seed] win-video-tutor 课程已写入 ${seeded} 节到 canonical user 知识库`,
+      );
+    }
+  } catch (seedErr) {
+    console.error(
+      "[seed] win-video-tutor 知识库 seed 失败(已 ignore,app 仍可启动):",
+      seedErr instanceof Error ? seedErr.message : seedErr,
+    );
+  }
 
   // [T-050] canonical 通知种子已退役(demo 文案指向已删除的演示项目);通知全部
   // 来自运行时真实事件。

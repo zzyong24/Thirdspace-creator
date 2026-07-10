@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/zyongzhu/Workbase/Thirdspace-creator/.codex/hooks/spec-decompose-gate.sh'"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/zyongzhu/Workbase/Thirdspace-creator/.codex/hooks/session-start.sh'"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -104,21 +104,25 @@ export function ChatGatherCard({
       data-grounding={grounding}
       className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
     >
-      {/* [T-084a SPEC §1.3] 未配联网检索 → 黄条诚实告知素材来自模型记忆、来源需核实。 */}
+      {/* [Bug-12 T-026] 未配联网检索 → 黄条诚实告知素材来自模型记忆、来源需核实。措辞更新:
+          T-126 解耦后搜索有「免 key」(浏览器/RSS)与「付费 API」(bocha/tavily/serpapi)两条路径,
+          用户看到「去设置配联网搜索」容易误以为又要配模型。换成两条路径都明示 + 给免 key
+          选项深链,降低「我明明浏览器搜索了为什么还要配」的困惑。 */}
       {grounding === "model_memory" ? (
         <div
           data-slot="chat-gather-warning"
           className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-md border border-warning/40 bg-warning-soft px-2 py-1.5 text-[10px] leading-snug text-warning-foreground"
         >
           <span>
-            ⚠️ 未配置联网搜索——以下素材来自模型记忆,来源需自行核实。
+            ⚠️ 本轮素材来自模型记忆(非实时检索),来源需自行核实 —— 在
           </span>
           <a
-            href="/settings?tab=models"
+            href="/settings?tab=models&capability=web.search"
             className="font-medium text-brand underline underline-offset-2"
           >
-            去设置配联网搜索
+            设置 → 模型 → 联网搜索
           </a>
+          <span>启用「浏览器抓取 Bing / RSS 订阅」(免 key)或配置付费 API</span>
         </div>
       ) : null}
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">

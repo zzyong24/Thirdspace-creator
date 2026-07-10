@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   fetchDouyinVideoUrl,
   fetchDouyinComments,
@@ -112,6 +112,58 @@ describe("[gate-F7 插装点①] fetchDouyinVideoUrl 过 iesdouyin channel", () 
     expect(spy.acquireCount("iesdouyin")).toBe(1);
     // router-data-missing → throttled(退避)。
     expect(spy.reports("iesdouyin")).toEqual(["throttled"]);
+  });
+
+  // [Bug-4 T-017] 超时兜底:iesdouyin 半开连接 / 服务器静默 → AbortSignal.timeout
+  // 30s 触发 → fetch reject AbortError → 包成 DouyinAudioFetchError → 网关归一 net-timeout。
+  // 真根:旧实现裸 await 永不 resolve → runner 卡死在某条作品 → 任务「5/73」僵死。
+  it("[Bug-4 T-017] signal abort → 抛 DouyinAudioFetchError 且 report('content-error') 仍继续", async () => {
+    const spy = makeSpyGateway();
+    // 测试里把生产代码的 30s 超时缩到 50ms(vitest 默认 5s 测试超时,30s 跑不完)。
+    // 只 mock 这一次,不影响其它测试。
+    const timeoutSpy = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockImplementation((ms: number) => AbortSignal.timeout(Math.min(ms, 50)));
+    try {
+      // fake fetch:收到 abort 信号立刻 reject AbortError(模拟服务端不返头/CDN 半开)。
+      const abortedFetch = async (
+        _url: string,
+        init?: RequestInit,
+      ): Promise<Response> =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            reject(new DOMException("aborted", "AbortError"));
+          });
+        });
+      await expect(
+        fetchDouyinVideoUrl("7400", {
+          fetch: abortedFetch as typeof fetch,
+          gateway: spy.gateway,
+        }),
+      ).rejects.toThrow(/fetchDouyinVideoUrl: 请求 iesdouyin 失败/);
+      // net-timeout 单次 → content-error(不 cooldown,SPEC §4.4 兜底链)。
+      expect(spy.reports("iesdouyin")).toEqual(["content-error"]);
+    } finally {
+      timeoutSpy.mockRestore();
+    }
+  });
+
+  it("[Bug-4 T-017] fetch 收到的 init.signal 是 AbortSignal 实例(链式超时实际挂上)", async () => {
+    const spy = makeSpyGateway();
+    let receivedSignal: AbortSignal | undefined;
+    const captureFetch = async (
+      _url: string,
+      init?: RequestInit,
+    ): Promise<Response> => {
+      receivedSignal = init?.signal as AbortSignal | undefined;
+      return new Response(OK_HTML, { status: 200 }) as unknown as Response;
+    };
+    await fetchDouyinVideoUrl("7400", {
+      fetch: captureFetch as typeof fetch,
+      gateway: spy.gateway,
+    });
+    expect(receivedSignal).toBeInstanceOf(AbortSignal);
+    expect(receivedSignal?.aborted).toBe(false);
   });
 });
 
@@ -478,7 +530,7 @@ describe("[gate-F7 插装点⑤] fetchDouyinWorkListExport 过 creator-center", 
     expect(spy.reports("creator-center")).toEqual(["content-error"]);
   });
 
-  it("[gate-F6 错误映射] download 超时 + 无 toast → report('throttled')(疑似频控退避)", async () => {
+  it("[T-176 错误映射] download 超时 + 无 toast → report('content-error')(导出 DOM 脆弱,不再退避)", async () => {
     const spy = makeSpyGateway();
     // present 缺 CODE_BTN_EXPORT → 点不到导出 → 抛 DouyinExportError(非 download 超时路径),
     // 归 content-error。为测"无 toast + download 超时 → throttled",让导出可点但 download 永不来:
@@ -510,13 +562,14 @@ describe("[gate-F7 插装点⑤] fetchDouyinWorkListExport 过 creator-center", 
       ),
     ).rejects.toThrow();
     expect(spy.acquireCount("creator-center")).toBe(1);
-    // 无 toast + download 超时 → throttled(退避)。
-    expect(spy.reports("creator-center")).toEqual(["throttled"]);
+    // [T-176] 无 toast + download 超时 = 导出面板 DOM 脆弱(非平台风控)→ content-error(不退避),
+    //   不再顶 creator-center 账号级 cooldown → 不污染评论采集 → 打破退避死循环。
+    expect(spy.reports("creator-center")).toEqual(["content-error"]);
   });
 });
 
 // 专造:切到投稿列表、导出可标记可点,但点击**不触发** download(→ waitForEvent 超时),
-// 且 no-data toast **不可见**([gate-F6] 无 toast + 超时 → throttled 分支)。
+// 且 no-data toast **不可见**([T-176] 无 toast + 超时 → export-download-timeout → content-error 分支)。
 function makeExportNeverDownloadNoToast() {
   const state = { onPostsTab: false, onListSubtab: false };
   let lastMarkedKey: string | null = null;

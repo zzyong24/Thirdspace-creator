@@ -229,4 +229,86 @@ describe("downloadDouyinImage", () => {
       "空响应体",
     );
   });
+
+  // [Bug-4 T-017] 超时兜底:CDN 半开连接 / 服务器静默 → AbortSignal.timeout 30s 触发
+  // → fetch reject AbortError → 包成 DouyinCoverDownloadError(runner 增 failed 继续)。
+  it("[Bug-4 T-017] signal abort → DouyinCoverDownloadError(不挂死)", async () => {
+    // 缩到 50ms(同上:vitest 测试超时上限)。
+    const timeoutSpy = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockImplementation((ms: number) => AbortSignal.timeout(Math.min(ms, 50)));
+    try {
+      const abortedFetch = async (
+        _url: unknown,
+        init?: RequestInit,
+      ): Promise<Response> =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            reject(new DOMException("aborted", "AbortError"));
+          });
+        });
+      await expect(
+        downloadDouyinImage(
+          "https://x",
+          abortedFetch as unknown as typeof fetch,
+        ),
+      ).rejects.toBeInstanceOf(DouyinCoverDownloadError);
+    } finally {
+      timeoutSpy.mockRestore();
+    }
+  });
+
+  it("[Bug-4 T-017] fetch 收到的 init.signal 是 AbortSignal(超时实际挂上)", async () => {
+    let received: AbortSignal | undefined;
+    const captureFetch = async (
+      _url: unknown,
+      init?: RequestInit,
+    ): Promise<Response> => {
+      received = init?.signal as AbortSignal | undefined;
+      return okResponse(new Uint8Array([1]), "image/jpeg");
+    };
+    await downloadDouyinImage(
+      "https://x",
+      captureFetch as unknown as typeof fetch,
+    );
+    expect(received).toBeInstanceOf(AbortSignal);
+  });
+
+  // [Bug-4 T-017] runner 端到端:第 2 条作品 download 超时 → failed=1,后续作品继续处理。
+  // 旧实现(无超时)会让 runner 在第 2 条上 await 永不 resolve → onProgress 永远停在
+  // 「回填封面 1/3」,job 看起来「卡死」。修后 30s 后自动放行,跑完全部候选。
+  it("[Bug-4 T-017] runner 单作品 download 超时 → failed+1,后续作品照常处理", async () => {
+    // 缩 30s → 50ms,让 runner 能在测试超时内完成。
+    const timeoutSpy = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockImplementation((ms: number) => AbortSignal.timeout(Math.min(ms, 50)));
+    try {
+      const ports = makePorts({
+        listMissingCover: async () => [
+          { publicationId: "pub-1", externalId: "aweme-1" },
+          { publicationId: "pub-2", externalId: "aweme-2" },
+          { publicationId: "pub-3", externalId: "aweme-3" },
+        ],
+        downloadImage: async (url: string, _init?: RequestInit) => {
+          if (url.includes("aweme-2")) {
+            // 模拟半开连接:signal abort 时 reject(不直接抛,与生产 fetch 行为一致)。
+            return new Promise((_resolve, reject) => {
+              // 这里拿不到 init.signal(ports 接口只传 url),用 Promise.race 假装超时。
+              setTimeout(
+                () => reject(new DOMException("aborted", "AbortError")),
+                50,
+              );
+            });
+          }
+          return { bytes: new Uint8Array([1]), mimeType: "image/jpeg" };
+        },
+      });
+      const result = await backfillDouyinCovers(ports.ports);
+      expect(result.attempted).toBe(3); // makePorts default missing=3
+      expect(result.filled).toBe(2); // aweme-1 + aweme-3 成功
+      expect(result.failed).toBe(1); // aweme-2 超时降级
+    } finally {
+      timeoutSpy.mockRestore();
+    }
+  });
 });

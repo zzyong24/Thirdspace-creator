@@ -23,6 +23,7 @@ import type {
 } from "./object-storage";
 import { accountKeyPrefix } from "./object-storage";
 import { safeJoin, signBlobToken } from "./blob-security";
+import { extForMime } from "../../lib/mime-ext";
 
 export interface LocalFsObjectStorageConfig {
   // The resolved absolute media root (the service resolves `~`/default first).
@@ -95,10 +96,15 @@ export function createLocalFsObjectStorage(
         : null;
       // [T-157] 账号分区前缀:两种 key 规则都套 `<accountId ?? _default>/`(数据落盘按号隔离)。
       const prefix = accountKeyPrefix(accountId);
+      // [Bug-1 T-014] 不带 folder+fileName 分支,按 mimeType 拼 ext → 磁盘文件有真 ext,
+      // Mac Finder / 文件夹预览靠 ext(MIME 没写到文件名 → 系统识别不出);folder+fileName
+      // 分支 safeName 已带原名 ext,不再叠(会变 foo.png.png)。unknown mime → 不拼(诚实
+      // 不假),由 getDownloadUrl 走 mimeType 兜底补 ext 给下载保存名。
+      const ext = !folder || !safeName ? extForMime(mimeType) : null;
       const storageKey =
         folder && safeName
           ? `${prefix}${folder}/${deps.nextKey()}-${safeName}`
-          : `${prefix}${assetType}/${deps.nextKey()}`;
+          : `${prefix}${assetType}/${deps.nextKey()}${ext ?? ""}`;
       // Validate + resolve the on-disk path (mkdir its parent so the later PUT
       // lands cleanly) and write the sidecar with the declared metadata.
       const absKey = safeJoin(cfg.rootPath, storageKey);

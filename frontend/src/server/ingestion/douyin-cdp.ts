@@ -406,7 +406,15 @@ function mapIesdouyinErr(err: unknown): ClassifyInput {
  * GET iesdouyin 分享页(手机 UA)→ parseDouyinVideoUrl 抽无水印直链。fetch 可注入(默认真
  * 全局 fetch),故 D2 runner 里这层由 host 装配真 fetch,单测注 fake(返 canned HTML)。
  * 非 2xx / 无 _ROUTER_DATA → 抛 DouyinAudioFetchError(runner 标该 aweme 失败,其余继续)。
+ *
+ * [Bug-4 T-017] **30s 超时**(AbortSignal.timeout):iesdouyin 偶发半开连接 / IP 静默风控 /
+ * 服务器不返响应,裸 await 永不 resolve → runner 卡死(封面回填看到「5/73」即此) →
+ * 整批僵在某条作品等永远。30s 远超正常 (~1-3s) 但不至于让一个坏作品卡整批。
+ * 超时触发 → fetch reject AbortError → 下面 try/catch 把它当失败归一,网关报 net-timeout,
+ * runner 增 failed 计数继续下一条(已存在的兜底链路)。
  */
+const IESDOUYIN_FETCH_TIMEOUT_MS = 30_000;
+
 export async function fetchDouyinVideoUrl(
   awemeId: string,
   deps: FetchDouyinVideoUrlDeps = REAL_FETCH_DEPS,
@@ -429,6 +437,7 @@ export async function fetchDouyinVideoUrl(
               "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "zh-CN,zh;q=0.9",
           },
+          signal: AbortSignal.timeout(IESDOUYIN_FETCH_TIMEOUT_MS),
         });
       } catch (err) {
         throw new DouyinAudioFetchError(
@@ -975,6 +984,14 @@ async function scrapeCommentsForWork(
 ): Promise<CommentRecord[]> {
   const commentJsons: unknown[] = [];
   const seenIds = new Set<string>();
+  // [T-065 / T-176 已知未决] item_id 过滤是否真在服务端生效**尚未在真机核实**:onResponse 目前
+  //   无条件收下每一个 `/comment/list/` XHR 并用页面级 awemeId 兜底归属(parseCommentList 的
+  //   `|| defaultAwemeId`)。若创作者中心评论管理页对某些账号返回的是**全局评论列表**(item_id
+  //   仅作 UI 过滤、XHR 未带 item_id / 未服务端过滤),则 N 个作品会各自拦到同一份列表并全部误挂到
+  //   当前 awemeId → N 作品重刷 N 次。安全的收敛做法是「只保留 comment 自带 aweme_id/item_id ===
+  //   目标 awemeId 的记录」,但当且仅当该 XHR 确实逐条带 aweme_id 时才不会误伤成采 0——这需要真机
+  //   抓一次 comment/list 响应体确认字段形状(本任务硬约束:不跑真实采集/不扫码),故**暂不硬改**
+  //   运行时行为以免把「重复」变成「采 0」。待 T-177 增量化或后续真机验证时按实测 XHR 形状收窄。
   const onResponse: CommentResponseHandler = (resp) => {
     const url = resp.url();
     if (!COMMENT_LIST_HINTS.some((h) => url.includes(h))) return;
@@ -1498,17 +1515,19 @@ export async function fetchDouyinWorkListExport(
   let sawNoDataToast = false;
   // 导出错误 → classify 输入映射:
   //   - DouyinNotLoggedInError / DouyinExportError(登录/版式/PK 头)= 内容/环境错,非频控 → content-error(不退避)。
-  //   - download 超时:按 [gate-F6] 先看 no-data toast:有 → content-error(图集/无数据);无 → export-download-timeout(→throttled)。
+  //   - download 超时:[T-176] 导出面板 DOM 极脆(非平台风控),classifyDouyinOutcome 已把
+  //     export-download-timeout 统一判 content-error(不再顶 creator-center 退避,防污染死循环)。
+  //     sawNoDataToast 仅保留作诊断信号,不再改变分类结果。
   const mapExportErr = (err: unknown): ClassifyInput => {
     if (err instanceof DouyinNotLoggedInError || err instanceof DouyinExportError) {
       return { kind: "empty-item-list" }; // content-error 家族:不动退避
     }
     const raw = err instanceof Error ? err.message : String(err ?? "");
-    // waitForEvent download 超时:交由 hasNoDataToast 定分类([gate-F6] 顺序写死)。
+    // waitForEvent download 超时 → export-download-timeout(→ content-error,T-176)。
     if (raw.includes("download") || raw.toLowerCase().includes("timeout")) {
       return { kind: "export-download-timeout", hasNoDataToast: sawNoDataToast };
     }
-    return { kind: "net-timeout", consecutiveTimeouts: 1 }; // 兜底保守单次
+    return { kind: "net-timeout", consecutiveTimeouts: 1 }; // 兜底:net-timeout → content-error
   };
 
   try {

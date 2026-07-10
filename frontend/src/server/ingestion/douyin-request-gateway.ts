@@ -63,13 +63,12 @@ export interface ClassifyInput {
 }
 
 // 纯函数:据结构化信号定分类。保守偏「throttled」——宁可慢,不可封(SPEC §4.2)。
+//
+// [T-176] 只有**平台明确的风控信号**才顶退避(http-429 / captcha / router-data-missing /
+//   未知信号)。DOM 脆弱(导出 download 超时)和家宽抖动(net-timeout)一律 content-error,
+//   不该污染账号级 creator-center 共享 channel 的 cooldown——那是评论采集退避死循环的一环。
 export function classifyDouyinOutcome(input: ClassifyInput): DouyinOutcome {
-  const {
-    kind,
-    hasNoDataToast,
-    consecutiveTimeouts,
-    timeoutThrottleThreshold = 2,
-  } = input;
+  const { kind } = input;
 
   switch (kind) {
     case "ok":
@@ -81,12 +80,13 @@ export function classifyDouyinOutcome(input: ClassifyInput): DouyinOutcome {
     case "router-data-missing":
       return "throttled";
 
-    // [gate-F6] 导出 download 超时:先看「暂无数据可导出」toast。
+    // [T-176] 导出 download 超时:创作者中心导出面板 DOM 极脆(直播场次 tab 无数据 / 图集 /
+    //   微前端未就绪 / 引导 modal 遮挡都会让 waitForEvent('download') 超时),是**页面脆弱而非
+    //   平台风控**——不该顶 creator-center 账号级退避。旧逻辑「无 toast → throttled」把这条脆弱
+    //   路径写进共享单例 cooldown,叠加 self.metrics 每轮自接 self.detail 反复污染 → 评论采集被
+    //   拖进死循环。故一律判 content-error(不动退避);真频控走 http-429/captcha,不靠导出超时猜。
     case "export-download-timeout":
-      // ① 有 toast → 内容空,非频控(图集/无数据导出),不退避。
-      if (hasNoDataToast) return "content-error";
-      // ② 无 toast + 超时 → 疑似频控,退避。
-      return "throttled";
+      return "content-error";
 
     // 内容性质,非风控(图集/无视频/已删除)——不触发退避(T-037:41 图集 0 风控)。
     case "empty-item-list":
@@ -94,11 +94,12 @@ export function classifyDouyinOutcome(input: ClassifyInput): DouyinOutcome {
     case "ffmpeg-183":
       return "content-error";
 
-    // [gate-F6] 偶发网络:单次不 cooldown(仅记数),连续 ≥ 阈值才 throttled 长退避。
-    case "net-timeout": {
-      const n = consecutiveTimeouts ?? 1;
-      return n >= timeoutThrottleThreshold ? "throttled" : "content-error";
-    }
+    // [T-176] 偶发网络 ERR_TIMED_OUT:家宽抖动误伤,单次不封。旧「连续 ≥ 阈值才 throttled」逻辑
+    //   因 consecutiveTimeouts 恒为 1(调用方 withDouyinChannel/mapExportErr 从不真累加)+ 阈值 2
+    //   → 那条 throttled 分支永不触发,形同虚设。删掉假分支,统一判 content-error(真风控走
+    //   http-429/captcha,不靠 net-timeout 计数猜)。
+    case "net-timeout":
+      return "content-error";
 
     default:
       // 未知信号保守退避(宁可慢不可封)。
@@ -131,7 +132,32 @@ export interface GatewayDeps {
   // 但**可注入确定性源**让单测断言落 ±ratio 区间(不用真 Math.random 致 flaky)。
   // 语义:baseMs 应用 ±jitterRatio → 返回 [base*(1-ratio), base*(1+ratio)] 内的值。
   jitter?: (baseMs: number, jitterRatio: number) => number;
+  // [T-176] acquire 遇未到期 cooldown 时单次最长等待(ms)。cooldown 剩余超过它 → **快速失败**
+  //   (抛 DouyinCooldownActiveError),让 job_run 干净结束而非在 acquire 里 sleep 到被
+  //   stale-sweep(默认 30min)标 failed → 永远等不到能清退避的 report("ok") → 死循环。
+  //   默认 15min(staleMs 30min 的一半),保证 max acquire wait < staleMs。
+  maxAcquireWaitMs?: number;
 }
+
+// [T-176] cooldown 剩余超过单次 acquire 等待上限时抛出。调用方(withDouyinChannel)不会 report,
+//   本轮请求快速失败向上传播,job_run 干净结束(而非卡死等 stale-sweep)。
+export class DouyinCooldownActiveError extends Error {
+  constructor(
+    readonly channel: DouyinChannel,
+    readonly remainMs: number,
+  ) {
+    super(
+      `[douyin-gateway] channel "${channel}" 冷却中,剩余 ${Math.ceil(
+        remainMs / 1000,
+      )}s 超过单次 acquire 等待上限,快速失败本轮(避免卡死被 stale-sweep 标 failed → 退避死循环)`,
+    );
+    this.name = "DouyinCooldownActiveError";
+  }
+}
+
+// [T-176] acquire 遇未到期 cooldown 的单次最长等待默认值:15min。必须 < scheduler staleMs(30min),
+//   否则 acquire sleep 会睡过 sweep 阈值 → run 被标 failed → 永远等不到 report("ok") 清退避。
+const DEFAULT_MAX_ACQUIRE_WAIT_MS = 15 * 60 * 1000;
 
 export interface ChannelStatus {
   cooldownActive: boolean;
@@ -220,6 +246,8 @@ export class DouyinRequestGateway {
   private readonly now: () => number;
   private readonly sleep: (ms: number) => Promise<void>;
   private readonly jitter: (baseMs: number, jitterRatio: number) => number;
+  // [T-176] acquire 单次遇 cooldown 的等待上限;超过则快速失败(见 acquire ①)。
+  private readonly maxAcquireWaitMs: number;
 
   private readonly state: Record<DouyinChannel, ChannelState>;
 
@@ -232,6 +260,8 @@ export class DouyinRequestGateway {
     this.now = deps.now;
     this.sleep = deps.sleep;
     this.jitter = deps.jitter ?? defaultJitter;
+    this.maxAcquireWaitMs =
+      deps.maxAcquireWaitMs ?? DEFAULT_MAX_ACQUIRE_WAIT_MS;
 
     this.state = {
       "creator-center": {
@@ -307,6 +337,13 @@ export class DouyinRequestGateway {
           // 到期:清 cooldown(consecutive 不清——留给 report(ok) 清,cooldown 只是时间闸)。
           s.cooldownUntil = null;
           break;
+        }
+        // [T-176] 防时序倒挂:cooldown 剩余超过单次 acquire 等待上限(< staleMs)→ **快速失败**,
+        //   不在这里 sleep 到被 stale-sweep 标 failed。抛出后 withDouyinChannel 不 report、原错向上
+        //   传播,本轮 job_run 干净结束;下一轮 cron 再来时 cooldown 已缩短到上限内则正常等待放行。
+        //   注:release() 在 finally 里执行,串行闸不会因本次抛出而卡死。
+        if (remain > this.maxAcquireWaitMs) {
+          throw new DouyinCooldownActiveError(channel, remain);
         }
         const waited = this.jitter(remain, cfg.pacing.jitterRatio);
         await this.sleep(waited);

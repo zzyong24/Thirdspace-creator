@@ -27,6 +27,7 @@
 | [2026-06-23-configurable-llm-design.md](2026-06-23-configurable-llm-design.md) | 纯 prompt 节点走供应商无关的可配置 LLM 薄抽象层(不写死 Agent SDK) | — |
 | [2026-07-01-multimodal-model-config-and-recording-design.md](2026-07-01-multimodal-model-config-and-recording-design.md) | 多模态生图/生视频 model-config 抽象 + L5 录制阶段(T-020) | ⚠️ 已处置→可开工 |
 | [2026-07-02-server-configurable-prompts-design.md](2026-07-02-server-configurable-prompts-design.md) | 提示词/skill 服务端可配可热更(接线既有 override 通道,T-040) | v1 ⛔→v2 ⚠️ 已处置→可开工 |
+| [2026-07-10-skill-driven-creative-agent-design.md](2026-07-10-skill-driven-creative-agent-design.md) | Skill 驱动编导智能体·品味对齐飞轮为主轴 + 服务端接管更新/Skill 下发 + 采集增量/退避/激活占码地基(T-176~T-186) | 📋 待过 gate |
 
 ## 数据管线与采集
 
@@ -103,6 +104,7 @@
 
 | 文件 | 摘要 | 状态 |
 |---|---|---|
+| [2026-07-06-product-to-code-orchestrator-v3-3-optimization.md](2026-07-06-product-to-code-orchestrator-v3-3-optimization.md) | product-to-code-orchestrator v3.3: 补业界调研借鉴,强化 Stitch/UI 可落地性、组件映射、物理架构、hook、docs/backlog 健康门卫 | 📝 草案(待审) |
 | [2026-06-30-page-binding-spec.md](2026-06-30-page-binding-spec.md) | 制作/知识库/素材页控件级约束规格(稳定 ID + 处置项) | — binding 约束规格 |
 | [2026-06-30-product-workflow-and-triage.md](2026-06-30-product-workflow-and-triage.md) | 业务飞轮梳理 + 假按钮 triage + 经验沉淀闭环缺口盘点 | — 未审(清理类) |
 | [2026-06-14-frontend-visual-fidelity-repair-design.md](2026-06-14-frontend-visual-fidelity-repair-design.md) | 把前端 17 条路由修到贴合 ui/*.png 参考图的视觉校正 | — |

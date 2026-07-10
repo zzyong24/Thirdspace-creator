@@ -104,7 +104,8 @@ export interface PublishingCenterDataClient {
   }): Promise<unknown>;
   listPublications(input: {
     params: { outputId: string };
-    query: { page: number; pageSize: number };
+    // [T-033] hidden: ?hidden=1 全显(私密/未通过);undefined/0/false → 默认过滤。
+    query: { page: number; pageSize: number; hidden?: boolean };
     body: undefined;
   }): Promise<unknown>;
   listPublicationRevisions(input: {
@@ -319,6 +320,7 @@ interface AssembledRows {
  */
 async function assembleRealRows(
   client: PublishingCenterDataClient,
+  opts: { includeHidden?: boolean } = {},
 ): Promise<AssembledRows | null> {
   let projects: ReadonlyArray<ProjectDto>;
   try {
@@ -357,9 +359,14 @@ async function assembleRealRows(
       const publicationLists = await Promise.all(
         outputs.map(async (output) => {
           try {
+            // [T-033] 默认过滤 hidden + 未通过(opts.includeHidden 兜底是「全显」开关透传)。
             return (await client.listPublications({
               params: { outputId: output.id },
-              query: { page: 1, pageSize: 50 },
+              query: {
+                page: 1,
+                pageSize: 50,
+                hidden: opts.includeHidden ? true : undefined,
+              },
               body: undefined,
             })) as ReadonlyArray<PublicationDto>;
           } catch {
@@ -595,6 +602,7 @@ function buildRailFromSnapshots(railInputs: ReadonlyArray<RailInput>): RailBlock
  */
 export async function buildPublishingCenterViewModelReal(
   client: PublishingCenterDataClient = defaultClient as unknown as PublishingCenterDataClient,
+  opts: { includeHidden?: boolean } = {},
 ): Promise<PublishingCenterViewModel> {
   // [T-050] fixture VM 只剩 tab 结构(锁定顺序/文案)来源;读失败不再整套回退
   // demo 数据,改渲染诚实错误态(空表 + error 文案)。
@@ -619,7 +627,7 @@ export async function buildPublishingCenterViewModelReal(
 
   let assembled: AssembledRows | null;
   try {
-    assembled = await assembleRealRows(client);
+    assembled = await assembleRealRows(client, { includeHidden: opts.includeHidden });
   } catch {
     return errorVm();
   }

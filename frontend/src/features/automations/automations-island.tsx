@@ -34,6 +34,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useAccountsChanged } from "@/lib/account-events";
 import {
   Plus,
   Clock,
@@ -52,6 +53,7 @@ import {
 
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
+import { notifyAccountsChanged } from "@/lib/account-events";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1386,6 +1388,10 @@ export function AutomationsIsland({
   readonly jobs: ReadonlyArray<ScheduledJobResource>;
 }) {
   const router = useRouter();
+  // [Bug-7 T-020] 跨页失效广播:settings / account-manager / automations 本岛 loginDouyin
+  // 成功后 dispatch 'creatoros:accounts-changed' → 这里 router.refresh() 立刻拉 server 数据,
+  // 让每行 latestRuns 翻篇(needs_reconnect 红标消失)、job 列表反映新绑定的号。
+  useAccountsChanged(() => router.refresh());
   const [createOpen, setCreateOpen] = React.useState(false);
   // 模板卡预填(点模板 → 装配 → 打开弹窗带值);null = 空白新建。
   const [prefill, setPrefill] = React.useState<CreateJobPrefill | null>(null);
@@ -1611,6 +1617,8 @@ export function AutomationsIsland({
           setDetailJob(job);
           setDetailOpen(true);
         }
+        // [Bug-7 T-020] 跨页失效广播(同 settings / account-manager 页)。
+        notifyAccountsChanged();
         router.refresh();
       } finally {
         setLoginPhaseById((m) => ({ ...m, [job.id]: "idle" }));

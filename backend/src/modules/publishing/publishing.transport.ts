@@ -53,6 +53,9 @@ function toPublicationResource(row: PublicationRow): PublicationResource {
     removedAt: row.removedAt ?? null,
     // [T-073] 平台侧可见性(非空 = 抖音端「仅自己可见/已隐藏」;列表读侧默认过滤)。
     hiddenAt: row.hiddenAt ?? null,
+    // [T-033] 平台侧审核状态原值(detail 导出 .xlsx「审核状态」列,如「已通过」/「仅自己可见」/
+    // 「私密」/「审核中」/「未通过」);列表默认按 '已通过' 过滤,NULL = 旧数据向后兼容视为可见。
+    platformStatus: row.platformStatus ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -78,22 +81,31 @@ function toRevisionResource(
 
 type Input = { params?: unknown; query?: unknown; body?: unknown };
 
-function paginationFrom(query: unknown): { limit: number; offset: number } {
+function paginationFrom(query: unknown): {
+  limit: number;
+  offset: number;
+  includeHidden?: boolean;
+} {
   // The contract paginationQuery is { page, pageSize } (1-based). Map it to the
   // repository's limit/offset. Tolerate a raw { limit, offset } too (the
   // module's own tests drive the transport directly).
+  // [T-033] includeHidden: ?hidden=1 全显私密/未通过,默认过滤(双闸 hidden_at + 未通过)。
   const q = (query ?? {}) as {
     page?: number;
     pageSize?: number;
     limit?: number;
     offset?: number;
+    hidden?: unknown;
   };
-  if (q.limit !== undefined || q.offset !== undefined) {
-    return { limit: q.limit ?? 20, offset: q.offset ?? 0 };
+  const limit = q.limit ?? q.pageSize ?? 20;
+  const offset =
+    q.offset ?? (typeof q.page === "number" ? (q.page - 1) * limit : 0);
+  // hidden=true / "true" / 1 都视为开;'false'/0/undefined → 默认过滤。
+  let includeHidden = false;
+  if (q.hidden === true || q.hidden === "true" || q.hidden === 1) {
+    includeHidden = true;
   }
-  const page = q.page ?? 1;
-  const pageSize = q.pageSize ?? 20;
-  return { limit: pageSize, offset: (page - 1) * pageSize };
+  return { limit, offset, includeHidden };
 }
 
 export function createPublishingTransport(

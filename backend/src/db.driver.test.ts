@@ -172,6 +172,57 @@ describe("file-backed PGlite 落盘 + 迁移一致 + 重启不丢(L0 验收)", (
   }, 30_000); // 两套 PGlite 各跑迁移,满载 WASM 竞争 >5s,显式放宽(task-review L0 minor)
 });
 
+describe("[T-175] 打不开的落盘目录 → 隔离坏目录 + 全新初始化(升级路径 500 根治)", () => {
+  it("坏 PGlite 目录(缺 pg_control → WASM Aborted)→ createDb 移开坏目录并返回可用 db", async () => {
+    const base = await freshTmp("creatoros-corrupt-");
+    const dir = path.join(base, "db");
+
+    // 1) 先建一个正常落盘库并写一行(模拟老版本留下的数据)。
+    const first = await createDb({ dataDir: dir });
+    const NOW = "2026-07-01T00:00:00.000Z";
+    await first.db.insert(users).values({
+      id: "u-old",
+      email: "old@example.com",
+      displayName: "Old",
+      timezone: "UTC",
+      locale: "zh-CN",
+      passwordHash: "x",
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+    await first.client.close();
+
+    // 2) 破坏:删 global/pg_control —— PGlite(Postgres-WASM)打开即 `RuntimeError: Aborted()`
+    //    (与实测的旧版/异常退出数据目录同一失败面)。
+    await fs.rm(path.join(dir, "global", "pg_control"));
+
+    // 3) 重开:createDb 应捕获 abort → 把坏目录移到 `<dir>.corrupt-<ts>` → 全新初始化返回可用 db。
+    const recovered = await createDb({ dataDir: dir });
+    const ping = await recovered.client.query<{ ok: number }>(
+      "SELECT 1 AS ok",
+    );
+    expect(ping.rows[0]?.ok).toBe(1);
+    // 全新库 → 旧那行不在(数据在隔离目录里,不在活库)。
+    const gotUsers = await recovered.db.select().from(users);
+    expect(gotUsers).toHaveLength(0);
+    await recovered.client.close();
+
+    // 坏目录被隔离保留(可人工恢复),活目录是全新的。
+    const siblings = (await fs.readdir(base)).filter((n) =>
+      n.startsWith("db.corrupt-"),
+    );
+    expect(siblings).toHaveLength(1);
+  }, 30_000);
+
+  it("内存库(无 dataDir)打开失败不触发隔离逻辑(无目录可隔离)—— 正常建成", async () => {
+    // 内存库不可能"损坏";这里只验正常路径不被降级分支影响。
+    const mem = await createDb();
+    const r = await mem.client.query<{ ok: number }>("SELECT 1 AS ok");
+    expect(r.rows[0]?.ok).toBe(1);
+    await mem.client.close();
+  });
+});
+
 describe("PGlite 单连接并发落盘(gate 点名:串行化不锁竞争/不丢写)", () => {
   it("N 个并发写 + 同时并发读,全部落盘、计数精确、无丢写/无死锁", async () => {
     const dir = await freshTmp("creatoros-l0-concurrency-");

@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
 
 // T-078 封面缩略图渲染测试:mock 共享签名 URL 缓存(不走真 dispatch)。
 const resolveAssetPreviewUrl = vi.fn<(id: string) => Promise<string | null>>();
+const invalidateAssetPreviewUrl = vi.fn<(assetId: string) => void>();
 vi.mock("@/components/resources/asset-preview-url", () => ({
   resolveAssetPreviewUrl: (id: string) => resolveAssetPreviewUrl(id),
+  invalidateAssetPreviewUrl: (assetId: string) => invalidateAssetPreviewUrl(assetId),
 }));
 
 import { CoverThumb } from "./cover-thumb";
@@ -14,6 +16,7 @@ const fallback = <div data-testid="cover-fallback">占位</div>;
 
 beforeEach(() => {
   resolveAssetPreviewUrl.mockReset();
+  invalidateAssetPreviewUrl.mockReset();
 });
 
 describe("CoverThumb", () => {
@@ -73,6 +76,27 @@ describe("CoverThumb", () => {
     img.dispatchEvent(new Event("error"));
     await waitFor(() =>
       expect(screen.getByTestId("cover-fallback")).toBeInTheDocument(),
+    );
+  });
+
+  // [Bug-6 T-019] 图加载失败 → 清缓存 + bump 重拉(给一次重试机会)。
+  // 否则坏 URL 在 module-scope 缓存里永远卡死,路由回来再渲 → 同一坏 URL → 永 fallback。
+  // 注:onError 的 fireEvent 用 .error()(不是 .dispatchEvent)才能触发 React handler,
+  // 而 microtask bump + retry 重渲染与 test 的 waitFor 异步管道要一并发。
+  it("[Bug-6 T-019] onError → invalidateAssetPreviewUrl 被调", async () => {
+    resolveAssetPreviewUrl.mockResolvedValue("https://signed/broken.jpg");
+    render(
+      <CoverThumb
+        assetId="asset-4"
+        alt="x"
+        className="h-9"
+        fallback={fallback}
+      />,
+    );
+    const img = await screen.findByRole("img");
+    fireEvent.error(img);
+    await waitFor(() =>
+      expect(invalidateAssetPreviewUrl).toHaveBeenCalledWith("asset-4"),
     );
   });
 });

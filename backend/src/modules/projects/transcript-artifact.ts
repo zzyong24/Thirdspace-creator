@@ -117,6 +117,16 @@ export interface TranscriptArtifactPorts {
 const SCRIPT_ARTIFACT_TYPE = "output_script";
 const SCRIPT_STAGE = "script";
 
+// [Bug-5 T-018] master_script(口播脚本)是稿面区头部真正展示的 artifact;output_script
+// 存的是 transcript 事实。两者不是一回事 —— fixture 里它们并存(douyin-real.ts),但真链路上
+// createImportedPublication 只建 publication 行,**没建任何 artifact**,导致稿面「口播脚本」
+// 永远空。本 helper 在 ensureTranscriptArtifact 同步建一份 master_script,初始内容=transcript:
+//   - 用户没动过 master_script → 用 transcript 填充(给他一个起点,可在编辑器自由改)
+//   - 用户已编辑过(artifactType=master_script 已存在) → **不动**(避免覆盖人工内容)
+// 双 idempotent:runs 多次同 awemeId 不重复建,跨作品也不互相覆盖。
+const MASTER_SCRIPT_ARTIFACT_TYPE = "master_script";
+const MASTER_SCRIPT_TITLE = "口播脚本";
+
 /**
  * 把一条逐字稿按 aweme_id 绑到已导入的 imported 作品,灌进 script 阶段。
  *
@@ -180,6 +190,44 @@ export async function ensureTranscriptArtifact(
     changeSummary: "逐字稿绑定(transcribed)",
     contentData: contentData as unknown as Record<string, unknown>,
   });
+
+  // [Bug-5 T-018] 同步建 master_script(口播脚本),初始内容=transcript。
+  // [Bug-5 T-018] 「用户已编辑过 master_script」= 已存在 master_script artifact → **不动**;
+  // 否则按 transcript 建一份,让它在稿面非空,用户可自由编辑。幂等:同 project 多次调不重复建。
+  // [Bug-5 T-018] Note:本步失败(网络/库瞬时错)仅记 warn,**不**把 transcript 整批翻 failed
+  // —— transcript 自身已成功落地,master_script 是锦上添花。
+  const existingMaster = artifacts.find(
+    (a) => a.artifactType === MASTER_SCRIPT_ARTIFACT_TYPE,
+  );
+  if (existingMaster) {
+    warn(
+      `[ensureTranscriptArtifact] master_script 已存在(已由用户/其它路径编辑),不覆盖 ` +
+        `(projectId=${projectId}, artifactId=${existingMaster.id})`,
+    );
+  } else {
+    try {
+      const master = await ports.createScriptArtifact(ctx, {
+        projectId,
+        title: MASTER_SCRIPT_TITLE,
+        artifactType: MASTER_SCRIPT_ARTIFACT_TYPE,
+        stage: SCRIPT_STAGE,
+      });
+      await ports.createArtifactVersion(ctx, master.id, {
+        contentText: input.transcript,
+        // [Bug-5 T-018] contentData 用 html 包原文,sectionsFromVersion 见 html 缺失回退
+        // contentText → 单段「脚本正文」,这里显式存好让编辑器有起点。
+        changeSummary: "从逐字稿初始化口播脚本",
+        contentData: { transcript: input.transcript, source, awemeId },
+      });
+    } catch (masterErr) {
+      warn(
+        `[ensureTranscriptArtifact] master_script 同步建失败(transcript 已落,口播脚本暂缺) ` +
+          `(projectId=${projectId}): ${
+            masterErr instanceof Error ? masterErr.message : String(masterErr)
+          }`,
+      );
+    }
+  }
 
   return { status: "bound", projectId, artifactId: created.id, awemeId };
 }

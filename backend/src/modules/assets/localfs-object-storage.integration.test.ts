@@ -36,9 +36,10 @@ describe("localfs-object-storage", () => {
       fileSize: 2048,
     });
     // [T-157] 未传 accountId → `_default/` 头段(账号分区,存量/未选号回退)。
-    expect(up.storageKey).toBe("_default/image/uploads/objkey-1");
+    // [Bug-1 T-014] mimeType=image/png → key 末段拼 .png(让磁盘文件有真 ext,文件夹预览可用)。
+    expect(up.storageKey).toBe("_default/image/uploads/objkey-1.png");
     expect(up.uploadUrl).toContain(
-      "/api/v1/blob/_default/image/uploads/objkey-1",
+      "/api/v1/blob/_default/image/uploads/objkey-1.png",
     );
     expect(up.uploadUrl).toContain("token=");
 
@@ -66,19 +67,19 @@ describe("localfs-object-storage", () => {
       fileSize: 2048,
       accountId: "acct-douyin-1",
     });
-    // 选号 → key 头段 = 该号(物理目录按抖音号隔离)。
-    expect(up.storageKey).toBe("acct-douyin-1/image/uploads/objkey-1");
+    // 选号 → key 头段 = 该号(物理目录按抖音号隔离);[Bug-1 T-014] 拼 ext。
+    expect(up.storageKey).toBe("acct-douyin-1/image/uploads/objkey-1.png");
     expect(up.uploadUrl).toContain(
-      "/api/v1/blob/acct-douyin-1/image/uploads/objkey-1",
+      "/api/v1/blob/acct-douyin-1/image/uploads/objkey-1.png",
     );
-    // 未选号(null)→ _default 回退,向后兼容。
+    // 未选号(null)→ _default 回退,向后兼容;[Bug-1 T-014] video/mp4 → .mp4。
     const up2 = await storage.createPresignedUpload({
       assetType: "video",
       mimeType: "video/mp4",
       fileSize: 1,
       accountId: null,
     });
-    expect(up2.storageKey).toBe("_default/video/uploads/objkey-2");
+    expect(up2.storageKey).toBe("_default/video/uploads/objkey-2.mp4");
   });
 
   it("headObject returns the REAL on-disk size + sha256 checksum", async () => {
@@ -156,5 +157,28 @@ describe("localfs-object-storage", () => {
         fileSize: 1,
       }),
     ).rejects.toThrow();
+  });
+
+  it("[Bug-1 T-014] folder+fileName 分支不叠 ext(原名已有则保留)", async () => {
+    // safeName 自带 .png → storageKey 末段是 foo.png(不是 foo.png.png)。
+    const storage = makeStorage();
+    const up = await storage.createPresignedUpload({
+      assetType: "image",
+      mimeType: "image/png",
+      fileSize: 2048,
+      folder: "inbox",
+      fileName: "foo.png",
+    });
+    expect(up.storageKey).toBe("_default/inbox/uploads/objkey-1-foo.png");
+  });
+
+  it("[Bug-1 T-014] unknown mimeType 不假拼 ext(诚实不返 .bin 也不瞎猜)", async () => {
+    const storage = makeStorage();
+    const up = await storage.createPresignedUpload({
+      assetType: "image",
+      mimeType: "application/x-fantasy-thing",
+      fileSize: 2048,
+    });
+    expect(up.storageKey).toBe("_default/image/uploads/objkey-1"); // 无 ext 末段
   });
 });

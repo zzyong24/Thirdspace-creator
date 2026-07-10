@@ -23,6 +23,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { notifyAccountsChanged } from "@/lib/account-events";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -115,6 +116,8 @@ export function CreateAccountForm() {
             kind: "success",
             text: "抖音已连接，正在读回账号…",
           });
+          // [Bug-7 T-020] 跨页失效广播(同 settings 页)。
+          notifyAccountsChanged();
           router.refresh();
         } else {
           // 超时(未扫)→ 明确提示重试,不写任何假号。

@@ -26,3 +26,5 @@ node orchestrator/process/reconcile.mjs                  # 跑对账 + 教训守
 ## 教训账本
 
 `orchestrator/LESSON_LEDGER.md`(LED-*)记「踩了什么坑 + 防复发的可执行规则」。能写成命令的坑都登记进 `reconcile.config.json` 的 `lessons[]`,每次 reconcile 重跑。
+
+## Imported Claude Cowork project instructions

@@ -96,7 +96,12 @@ export interface PublishingService {
   listPublications(
     ctx: RequestContext,
     outputId: string,
-    pagination: { limit: number; offset: number },
+    pagination: { limit: number; offset: number; includeHidden?: boolean },
+  ): Promise<PublicationRow[]>;
+  // [T-033] 同 listPublications 的 includeHidden + 分页(analytics 跨模块读路径用)。
+  listPublicationsForUser(
+    ctx: RequestContext,
+    pagination: { limit: number; offset: number; includeHidden?: boolean },
   ): Promise<PublicationRow[]>;
   createPublication(
     ctx: RequestContext,
@@ -133,7 +138,7 @@ export interface PublishingService {
   // Downstream consumers (SPEC §19 DashboardQueryService / SPEC §11 Analytics).
   getRecentPublications(
     ctx: RequestContext,
-    opts: { limit: number; offset?: number },
+    opts: { limit: number; offset?: number; includeHidden?: boolean },
   ): Promise<PublicationRow[]>;
   // Dashboard「最近发布」(GAP-DASH-3): the recent publications joined with their
   // REAL display title (resolved from the owning revision — the title lives on a
@@ -142,7 +147,7 @@ export interface PublishingService {
   // via Analytics (cross-module composition stays at the facade layer).
   getRecentPublicationsWithTitle(
     ctx: RequestContext,
-    opts: { limit: number; offset?: number },
+    opts: { limit: number; offset?: number; includeHidden?: boolean },
   ): Promise<Array<PublicationRow & { title: string }>>;
   // Declared for the Ingestion wave (SPEC §11) — signature only this wave.
   resolvePublication(
@@ -181,6 +186,13 @@ export interface PublishingService {
     ctx: RequestContext,
     input: { platform: string; externalId: string; hidden: boolean },
   ): Promise<PublicationRow | null>;
+  // [T-033] 平台侧审核状态同步:detail 导出 .xlsx「审核状态」列(原值,如「已通过」/
+  // 「仅自己可见」/「私密」/「审核中」/「未通过」) → publication.platformStatus。幂等(同值
+  // 不再写);找不到该作品(未导入)诚实返 null。不动 hidden_at(两者正交,各管各的)。
+  setPlatformStatusByExternalKey(
+    ctx: RequestContext,
+    input: { platform: string; externalId: string; platformStatus: string | null },
+  ): Promise<PublicationRow | null>;
   // [T-078] 封面回填读侧:该平台已发布、带 external_id、未隐藏、当前 revision 缺
   // coverAssetId(或无 revision)的 publications —— 采集侧据此逐条抓 iesdouyin 封面。
   listPublicationsMissingCover(
@@ -213,6 +225,10 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
   return {
     async listPublications(ctx, outputId, pagination) {
       return repoFor(ctx).listPublicationsByOutput(outputId, pagination);
+    },
+
+    async listPublicationsForUser(ctx, pagination) {
+      return repoFor(ctx).listPublicationsForUser(pagination);
     },
 
     async createPublication(ctx, outputId, body) {
@@ -387,6 +403,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       return repoFor(ctx).listPublicationsForUser({
         limit: opts.limit,
         offset: opts.offset ?? 0,
+        includeHidden: opts.includeHidden,
       });
     },
 
@@ -395,6 +412,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       const rows = await repo.listPublicationsForUser({
         limit: opts.limit,
         offset: opts.offset ?? 0,
+        includeHidden: opts.includeHidden,
       });
       // Resolve each publication's display title from its revisions (prefer the
       // current revision, else the highest revisionNumber). A publication with no
@@ -515,6 +533,16 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       const currentlyHidden = pub.hiddenAt != null;
       if (currentlyHidden === input.hidden) return pub; // 幂等:已是目标态不再写
       return repo.setHiddenAt(pub.id, input.hidden ? deps.now() : null);
+    },
+
+    async setPlatformStatusByExternalKey(ctx, input) {
+      // [T-033] 平台侧审核状态同步。找不到(该作品未导入)→ null(诚实跳过,不硬造)。
+      // 幂等:同值不再写。null 也算合法状态(比如采集拿不到这列 → 显式清空)。
+      const repo = repoFor(ctx);
+      const pub = await repo.findByExternalKey(input.platform, input.externalId);
+      if (!pub) return null;
+      if (pub.platformStatus === input.platformStatus) return pub; // 幂等
+      return repo.setPlatformStatus(pub.id, input.platformStatus);
     },
   };
 }

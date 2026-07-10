@@ -36,6 +36,7 @@ import { migrate as migratePglite } from "drizzle-orm/pglite/migrator";
 import { dirname, resolve, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { homedir } from "node:os";
+import { rename } from "node:fs/promises";
 
 // Versioned migrations live in backend/drizzle (baseline 0000_init derived from the
 // per-module *_DDL). The pglite (tests) and node-postgres (runtime) migrators apply this
@@ -83,20 +84,71 @@ export interface CreateDbOptions {
   dataDir?: string;
 }
 
+// 打开 PGlite(内存或落盘)并把版本化迁移跑齐。抛错(含 WASM `Aborted()`)时先关掉半开
+// 的 client 释放句柄,再上抛 —— 让 createDb 的降级层决定是否隔离数据目录后重来。
+async function openAndMigrate(dataDir?: string): Promise<{
+  db: Db;
+  client: PGlite;
+}> {
+  const client = dataDir ? new PGlite(dataDir) : new PGlite();
+  try {
+    const db = drizzle(client, { schema });
+    // Apply the same versioned migrations the runtime uses. pglite is Postgres-WASM, so the
+    // baseline drizzle/0000_init.sql is identical across drivers. Replaces the old
+    // per-module client.exec(*_DDL) sequence — the schema is now built by the migration.
+    await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
+    // [T-033 fixup] 老 pglite(< 2026-07-08 build 前的 .dmg 装的)schema 不带 publications.platform_status 列,
+    // 旧 journal 也没记 0029 → migrator 不会跑 → 启动 SSR list 报「column 不存在」500。
+    // 这里用 information_schema 查列存不存在,缺就 ALTER TABLE 加(IF NOT EXISTS 兜幂等)。
+    // 不动 journal(保留 migrator 单一真源),这是 T-033 加列后的启动兼容层。
+    const colCheck = await client.query<{ exists: boolean }>(
+      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'publications' AND column_name = 'platform_status') AS exists",
+    );
+    if (!colCheck.rows[0]?.exists) {
+      await client.exec(
+        "ALTER TABLE publications ADD COLUMN IF NOT EXISTS platform_status TEXT",
+      );
+    }
+    return { db, client };
+  } catch (err) {
+    // client 可能已半开占着目录 —— 关掉(自身也可能因 WASM 已 abort 再抛,吞掉)。
+    await client.close().catch(() => {});
+    throw err;
+  }
+}
+
 // Creates a pglite-backed Drizzle db with the Projects-slice schema applied.
 // pglite is pure-WASM Postgres — runs in Node, vitest, and the Next server with
 // no Docker. Returns the db plus the underlying client for raw exec/teardown.
+//
+// [T-175] 打不开落盘目录的降级:旧版/异常退出留下的 PGlite 数据目录,被新构建打开时可能
+// WASM `Aborted()`(crash-recovery/跨版本读不了)。实测该 abort 是可 catch 的 rejection、
+// 且同进程内可重建新实例。故:落盘库打开失败 → 把坏目录移到 `<dir>.corrupt-<ts>`(保留、
+// 不删,可人工恢复)后全新初始化,让 app 能启动而不是每页 500(升级路径 bug 的根治)。
+// 内存库(无 dataDir)不可能"损坏" → 直接上抛。
 export async function createDb(options: CreateDbOptions = {}): Promise<{
   db: Db;
   client: PGlite;
 }> {
-  const client = options.dataDir ? new PGlite(options.dataDir) : new PGlite();
-  const db = drizzle(client, { schema });
-  // Apply the same versioned migrations the runtime uses. pglite is Postgres-WASM, so the
-  // baseline drizzle/0000_init.sql is identical across drivers. Replaces the old
-  // per-module client.exec(*_DDL) sequence — the schema is now built by the migration.
-  await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
-  return { db, client };
+  const dataDir = options.dataDir;
+  try {
+    return await openAndMigrate(dataDir);
+  } catch (err) {
+    if (!dataDir) throw err;
+    const quarantine = `${dataDir}.corrupt-${Date.now()}`;
+    const e = err as Error;
+    console.error(
+      `[db] PGlite 落盘目录打不开(${e?.name}: ${e?.message});移至 ${quarantine} 并全新初始化。原数据保留可人工恢复。`,
+    );
+    try {
+      await rename(dataDir, quarantine);
+    } catch (mvErr) {
+      // 连移开都失败(权限/占用)→ 无法安全降级,把原始错误上抛(别吞根因)。
+      console.error(`[db] 隔离坏目录失败,放弃降级:`, mvErr);
+      throw err;
+    }
+    return await openAndMigrate(dataDir);
+  }
 }
 
 export interface RuntimeDb {

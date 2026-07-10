@@ -24,6 +24,7 @@ import { ChevronsUpDown, Plus, Check, AtSign } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { CURRENT_ACCOUNT_KEY } from "@/lib/http-transport";
+import { useAccountsChanged } from "@/lib/account-events";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -72,7 +73,7 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
   const [state, setState] = React.useState<LoadState>({ kind: "loading" });
   const [currentId, setCurrentId] = React.useState<string | null>(null);
 
-  React.useEffect(() => {
+  const load = React.useCallback(() => {
     let alive = true;
     void (async () => {
       try {
@@ -115,6 +116,16 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
       alive = false;
     };
   }, []);
+
+  // [Bug-7 T-020] mount 时拉一次(settings/account-manager 页 loginDouyin 之后 router.refresh
+  // 刷不到 layout 里的 sidebar → 收事件重拉,左下账号名立刻翻新)。
+  React.useEffect(() => {
+    return load();
+  }, [load]);
+
+  // [Bug-7 T-020] 跨页失效广播(loginDouyin/mergeDouyinPlaceholders 等成功后 notifyAccountsChanged)
+  // → 立即重拉账号列表 + 归一当前号,避免 sidebar 显陈旧 handle。
+  useAccountsChanged(load);
 
   const handleSelect = React.useCallback(
     (id: string) => {

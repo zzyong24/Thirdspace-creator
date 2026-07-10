@@ -166,10 +166,13 @@ describe("runTranscribe(transcribe.douyin, T-030-D2)", () => {
     expect(writeCall?.awemeId).toBe("7400000000000000001");
   });
 
-  it("F7-a:ASR 未配(TranscribeConfigError)→ 整任务停 markFailed,不 markSucceeded", async () => {
+  it("[T-160] F7-a:resolveTranscribeSpec 真抛(被注入假 dep / 罕见 provider bug)→ 与取音频失败归一:每条 aweme 失败、其余继续;0 成功 → markFailed(诚实 0 结果)", async () => {
+    // [T-160] 真实生产 resolveTranscribeSpec 永不抛(Tier 3 whisper-local 兜底);但若上游真抛
+    // (注入假 dep / 罕见 provider bug),runner 不再「整任务停」分支,按单作品失败降级 —— 与
+    // 取音频失败同路径。最终 0 条成功 → markFailed(诚实:任务实际没拿到结果)。
     const { deps, spies } = makeDeps({
       awemeIds: ["a1", "a2"],
-      resolveThrows: new TranscribeConfigError("transcribe.audio 未配置"),
+      resolveThrows: new TranscribeConfigError("transcribe.audio 未配置(测试注入)"),
     });
     await runTranscribe(
       ctx,
@@ -181,14 +184,15 @@ describe("runTranscribe(transcribe.douyin, T-030-D2)", () => {
       deps,
     );
     expect(spies.markRunning).toHaveBeenCalledTimes(1);
+    // [T-160] 没有「整任务停」特殊分支(注释也不再说),改走与取音频失败同路径:每条 aweme 走 inner
+    // try/catch,resolveTranscribeSpec 抛被当单作品失败;两条都失败 → 0 成功 → markFailed(诚实)。
     expect(spies.markSucceeded).not.toHaveBeenCalled();
     expect(spies.markFailed).toHaveBeenCalledTimes(1);
-    // 引导文案提到「设置」+「ASR」(去配 transcribe.audio)。
-    const [, , msg] = spies.markFailed.mock.calls[0]!;
-    expect(String(msg)).toContain("设置");
-    // ASR 未配对整批成立:第一条就停,不应处理第二条(streamAudio 只跑到第一条)。
-    // resolve 在第一条抛 → transcribeAudio 从未成功;markSucceeded 未调即证「整任务停」。
+    // 取音频都跑了(每条都进 inner try),但 transcribeAudio 永远没成功(resolve 之前抛)。
     expect(spies.transcribeAudio).not.toHaveBeenCalled();
+    // 失败消息如实拼出两条 error,不再有「去设置配 ASR」特殊引导(那是老 dead 路径的话术)。
+    const [, , msg] = spies.markFailed.mock.calls[0]!;
+    expect(String(msg)).toMatch(/a1.*a2|全部失败/);
   });
 
   it("F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)", async () => {

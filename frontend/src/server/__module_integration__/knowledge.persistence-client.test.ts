@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll, afterAll } from "vitest";
 import type { Endpoint, RequestContext } from "@creatoros/contract";
 import {
   compositeTransport,
@@ -6,6 +6,20 @@ import {
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
 import { KNOWLEDGE_OP_IDS } from "@creatoros/backend/modules/knowledge";
+
+// 集成测试不应依赖用户本机 home 状态(win-video-tutor skill 在 ~/.claude/skills/ 真装着
+// → buildPersistence 走 seedWinVideoTutor → 写 22 条 → 旧「list 应空」断言挂)。
+// 关掉 seed,断言「真空」只测 round-trip,seed 行为在 src/server/seeds/win-video-tutor.test.ts 单测。
+const SEED_PATH_OVERRIDE = "/nonexistent/for-integration-test";
+let prevSeedEnv: string | undefined;
+beforeAll(() => {
+  prevSeedEnv = process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH;
+  process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH = SEED_PATH_OVERRIDE;
+});
+afterAll(() => {
+  if (prevSeedEnv === undefined) delete process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH;
+  else process.env.CREATOROS_WIN_VIDEO_TUTOR_SKILL_PATH = prevSeedEnv;
+});
 
 // D2 — the 9 knowledge ops are registered into the composite (PERSISTED_OPS) and
 // a knowledge.create round-trips through compositeTransport against the seeded
@@ -41,10 +55,16 @@ describe("knowledge ops registered in the composite transport", () => {
     expect(KNOWLEDGE_OP_IDS).toContain("knowledge.relations.listAll");
   });
 
-  it("knowledge.list 开箱为空(T-135:canonical + douyin 内容 seed 全退役)", async () => {
-    // T-135 补漏:退役全部内容 seed(含 douyin 真金句,它是用户私人内容不该固化重灌)→
-    // 新库知识库开箱空;真实知识由用户采集(douyin-anchor-transcribe)/录入进库。归属由下方
-    // knowledge.create round-trips 覆盖。
+  it("[User] knowledge.list 开箱 = win-video-tutor 22 节课程(replace T-135 退役的 Zyong 假内容)", async () => {
+    // T-135 补漏退役了 canonical 假金句 + douyin 真金句(后者是用户私内容不该固化重灌)。
+    // 后续用户从 win-video-tutor skill 给了真课程 zip(22 节 .md),作为替换 seed 到 canonical
+    // user 知识库(运行 buildPersistence 时一次性 idempotent 写入):
+    //   - 22 个 knowledgeItem,knowledgeType=reference,sourceType=import,
+    //     sourceMetadata.origin='win-video-tutor' + lessonNumber + module。
+    //   - 课程源 `~/.claude/skills/win-video-tutor/knowledge/*.md` 在集成测试里**没造**
+    //     (test 不写 skill 目录),所以 seed 走 ENOENT 安静返回 0;knowledge.list 应该 0
+    //     → 与原「T-135 全空」期望一致(语义不变,只是多了「真内容路径」在生产)。
+    // 真正的 win-video-tutor 写入在 src/server/seeds/win-video-tutor.test.ts 单独覆盖。
     const res = (await compositeTransport.request(
       ep("knowledge.list", true),
       { params: undefined, query: { page: 1, pageSize: 50 }, body: undefined } as never,

@@ -22,6 +22,10 @@ export const publicationResource = z.object({
   // null = 可见。default(null) 保证存量 payload / fixture(不带该键)仍能 parse。
   // 与 removedAt(平台已删)语义正交:hidden 可恢复可见,removed 不可。
   hiddenAt: iso8601.nullable().default(null),
+  // [T-033] 平台侧审核状态原值(detail 导出 .xlsx「审核状态」列,如「已通过」/「仅自己可见」/「私密」/「审核中」/
+  // 「未通过」)。列表默认按 exact '已通过' 过滤(配合 hiddenAt 双闸);NULL = 旧数据(没跑过 detail 同步)向后
+  // 兼容视为可见。
+  platformStatus: z.string().nullable().default(null),
   ...timestamps,
 });
 export type PublicationResource = z.infer<typeof publicationResource>;

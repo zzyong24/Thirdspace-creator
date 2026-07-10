@@ -23,8 +23,16 @@ import { buildPublishingCenterViewModelReal } from "@/features/publishing-center
 import { resolveSession } from "@/lib/session.server";
 import { createServerClient } from "@/lib/contract-client.server";
 
-export default async function PublishingCenterRoutePage() {
+export default async function PublishingCenterRoutePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ hidden?: string }>;
+}) {
   const session = await resolveSession();
+  // [T-033] 「显示已隐藏作品」开关:URL ?hidden=1 显私密 + 未通过;默认过滤。
+  const sp = await searchParams;
+  const includeHidden = sp.hidden === "1";
+
   if (!session) {
     // No session (the (creator) layout guard redirects on a real request).
     return <PublishingCenterPage />;
@@ -36,6 +44,8 @@ export default async function PublishingCenterRoutePage() {
   const client = createServerClient(
     session.ctx,
   ) as unknown as PublishingCenterDataClient;
-  const viewModel = await buildPublishingCenterViewModelReal(client);
+  const viewModel = await buildPublishingCenterViewModelReal(client, {
+    includeHidden,
+  });
   return <PublishingCenterPage viewModel={viewModel} />;
 }

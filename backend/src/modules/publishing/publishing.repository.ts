@@ -78,11 +78,12 @@ export interface PublishingRepository {
   ): Promise<PublicationRow>;
   listPublicationsByOutput(
     outputId: string,
-    page: { limit: number; offset: number },
+    page: { limit: number; offset: number; includeHidden?: boolean },
   ): Promise<PublicationRow[]>;
   listPublicationsForUser(page: {
     limit: number;
     offset: number;
+    includeHidden?: boolean;
   }): Promise<PublicationRow[]>;
   // User-scoped publication ids for a set of ContentOutput ids (Analytics project
   // read resolves project→outputs→publications without an Analytics cross-module
@@ -117,6 +118,12 @@ export interface PublishingRepository {
   setHiddenAt(
     publicationId: string,
     hiddenAt: string | null,
+  ): Promise<PublicationRow>;
+  // [T-033] 平台侧审核状态同步(detail 导出「审核状态」列 → publication.platformStatus)。
+  // 只动 platform_status + updated_at,不碰 hidden_at(两者正交,各管各的)。
+  setPlatformStatus(
+    publicationId: string,
+    platformStatus: string | null,
   ): Promise<PublicationRow>;
   // [T-078] 封面回填候选:该平台已发布、带 external_id(可拼 iesdouyin 分享页)、
   // 未隐藏(隐藏作品分享页多半 404,别每轮浪费限流预算)、且**当前 revision 没有
@@ -217,6 +224,18 @@ export function createPublishingRepository(
     },
 
     async listPublicationsByOutput(outputId, page) {
+      // [T-033] includeHidden=false(默认)→ 过滤 hidden + 未通过(platform_status != '已通过')。
+      //   NULL platformStatus 视为向后兼容「旧数据 + 没跑过 detail 同步」,放行。
+      //   includeHidden=true → 不加可见性过滤(私密/未通过都显)。
+      const visibility = page.includeHidden
+        ? sql`1 = 1`
+        : and(
+            isNull(publications.hiddenAt),
+            or(
+              isNull(publications.platformStatus),
+              eq(publications.platformStatus, "已通过"),
+            ),
+          );
       return db
         .select()
         .from(publications)
@@ -224,6 +243,7 @@ export function createPublishingRepository(
           and(
             eq(publications.userId, userId),
             eq(publications.contentOutputId, outputId),
+            visibility,
           ),
         )
         .orderBy(desc(publications.createdAt))
@@ -232,14 +252,21 @@ export function createPublishingRepository(
     },
 
     async listPublicationsForUser(page) {
-      // 真机反馈 #1(时间倒序):最近发布 / 待校准列表必须「最新发布在前」。导入的
-      //   真实作品 published_at 是真实发布时刻(可空仅对未发布草稿),所以按
-      //   COALESCE(published_at, created_at) 倒序 —— 已发布优先用真实发布时刻排序,
-      //   未发布草稿回退建档时刻。原 createdAt 倒序对导入历史作品语义错(导入顺序≠发布顺序)。
+      // [T-033] 同 listPublicationsByOutput 的可见性过滤(默认 hidden+未通过过滤,
+      //   includeHidden=true 时全显)。时间倒序已通过 COALESCE(published_at, created_at) 实现。
+      const visibility = page.includeHidden
+        ? sql`1 = 1`
+        : and(
+            isNull(publications.hiddenAt),
+            or(
+              isNull(publications.platformStatus),
+              eq(publications.platformStatus, "已通过"),
+            ),
+          );
       return db
         .select()
         .from(publications)
-        .where(eq(publications.userId, userId))
+        .where(and(eq(publications.userId, userId), visibility))
         .orderBy(
           desc(sql`coalesce(${publications.publishedAt}, ${publications.createdAt})`),
         )
@@ -379,6 +406,20 @@ export function createPublishingRepository(
       await db
         .update(publications)
         .set({ hiddenAt, updatedAt: deps.now() })
+        .where(
+          and(
+            eq(publications.id, publicationId),
+            eq(publications.userId, userId),
+          ),
+        );
+      return getPublicationRowById(publicationId);
+    },
+
+    async setPlatformStatus(publicationId, platformStatus) {
+      await getPublicationRowById(publicationId); // ownership gate
+      await db
+        .update(publications)
+        .set({ platformStatus, updatedAt: deps.now() })
         .where(
           and(
             eq(publications.id, publicationId),

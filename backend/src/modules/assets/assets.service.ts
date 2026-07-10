@@ -14,6 +14,7 @@ import {
   ConflictError,
   UploadValidationError,
 } from "./assets.errors";
+import { extForFileName, extForMime } from "../../lib/mime-ext";
 
 // Assets service (foundation §5.3) — RequestContext-taking methods that thread
 // `ctx.userId` into the user-scoped repository (foundation §2). It is the ONLY
@@ -188,8 +189,13 @@ export function createAssetsService(
       const storage = await objectStorageForCtx(ctx);
       const url = await storage.getSignedUrl(current.storageKey);
       // 保存名:storageKey 末段(local-fs 目录规则下含原名);剥 nextKey 前缀。
+      // [Bug-1 T-014] 兜底:旧 key 末段可能没 ext(早期版本 nextKey() 不拼 ext) →
+      // extForFileName 抽不到 → 从 current.mimeType 推 ext 补上,让浏览器保存到本地能识别。
       const base = current.storageKey.split("/").pop() ?? "download";
-      const fileName = base.replace(/^asset-key-\d+-/, "");
+      const stripped = base.replace(/^asset-key-\d+-/, "");
+      const existingExt = extForFileName(stripped);
+      const fileName =
+        existingExt ?? stripped + (extForMime(current.mimeType) ?? "");
       return { url, fileName };
     },
     async getAssetBytes(ctx, assetId) {

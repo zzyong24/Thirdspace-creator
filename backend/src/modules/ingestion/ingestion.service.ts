@@ -741,6 +741,34 @@ export function createIngestionService(args: {
           } catch (err) {
             console.error("[ingestion] loginDouyin: ensure platform_account 失败:", err);
           }
+          // [Bug-13 T-029] 扫码后**立即** fire-and-forget 跑 refreshDouyin(cookies 刚落了 .auth/,
+          // 直接 headless 复用)→ applyDouyinIdentity 把 accountHandle 从占位「我的抖音」改成
+          // 真实抖音昵称。**这步之前**:sidebar 显空 handle(占位)、后续 collector 用 _default/
+          // 找不到 accountId、jobs 触发时 needs_reconnect —— 用户实操「扫码完立刻叉掉提示→建任务→跑
+          // 必坏」的真根。**这步之后**:sidebar 显真实昵称 + 后续 collector 拿得到 accountId + source
+          // 就绪,端到端扫码即齐活。失败吞掉(不把已成功的扫码翻成失败,登录态已落是真的)。
+          // [Bug-13] 用 findDouyinSourceId 拿真源 ID(上一步 ensureDouyinSource 刚建过,这里能拿到),
+          // 不能传空串(refreshDouyin 会因「外部来源不存在」抛错,反而把成功扫码翻失败)。
+          try {
+            const sourceId = await findDouyinSourceId(ctx);
+            if (sourceId) {
+              void service
+                .refreshDouyin(ctx, { externalSourceId: sourceId })
+                .catch((refreshErr) => {
+                  console.error(
+                    "[ingestion] loginDouyin: refreshDouyin 刷新昵称失败(cookies 可能没就绪):",
+                    refreshErr instanceof Error
+                      ? refreshErr.message
+                      : refreshErr,
+                  );
+                });
+            }
+          } catch (refreshErr) {
+            console.error(
+              "[ingestion] loginDouyin: refreshDouyin 同步调度失败:",
+              refreshErr instanceof Error ? refreshErr.message : refreshErr,
+            );
+          }
         }
       }
       return { loggedIn };

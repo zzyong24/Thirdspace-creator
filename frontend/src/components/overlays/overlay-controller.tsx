@@ -23,13 +23,19 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { cn } from "@/lib/utils";
+import {
+  OVERLAY_QUERY_KEY,
+  OVERLAY_OPEN_VALUE,
+} from "@/lib/overlay-constants";
 
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
+//
+// `OVERLAY_QUERY_KEY` / `OVERLAY_OPEN_VALUE` 已抽到 lib/overlay-constants(无 "use client"),
+// 让 server component(如 copilot-deeplink.ts)也能直接 import 拿真字面量 ——
+// 不然 Next.js RSC 会把 client reference proxy 注入 URL,渲染出「点了没反应」的破 href。
 
-export const OVERLAY_QUERY_KEY = "copilot";
-export const OVERLAY_OPEN_VALUE = "open";
 const COPILOT_DIALOG_TITLE = "AI 助手";
 
 // ---------------------------------------------------------------------------

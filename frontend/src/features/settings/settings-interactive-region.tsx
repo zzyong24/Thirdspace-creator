@@ -33,6 +33,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
 import { Badge } from "@/components/ui/badge";
+import { notifyAccountsChanged } from "@/lib/account-events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -715,6 +716,9 @@ function AccountBindingCard({
               ? "抖音已连接。"
               : "已扫码,但未检测到有效登录态,请重试。",
           });
+          // [Bug-7 T-020] 跨页失效广播:settings 路由的 router.refresh() 刷不到 layout 里的
+          // AccountSwitcher 和其他打开页面的陈旧 state(loginDouyin 不重 mount 它们)。
+          notifyAccountsChanged();
           router.refresh();
         } else {
           // 超时(240s 内未扫)→ 明确提示重试,徽标保持未连接。

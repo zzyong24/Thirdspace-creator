@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   DouyinRequestGateway,
+  DouyinCooldownActiveError,
   classifyDouyinOutcome,
   type ThrottleStatePort,
   type ThrottleStateRecord,
@@ -146,7 +147,8 @@ describe("classifyDouyinOutcome (SPEC §4.2)", () => {
     expect(classifyDouyinOutcome({ kind: "ok" })).toBe("ok");
   });
 
-  // ⑨ [gate-F6] 导出 download 超时优先级
+  // ⑨ [T-176] 导出 download 超时 = 页面 DOM 脆弱(非平台风控)→ 一律 content-error(不顶退避),
+  //   无论有无「暂无数据」toast。防止脆弱导出污染共享 creator-center channel → 评论采集退避死循环。
   it("⑨ 导出 download 超时 + 有『暂无数据』toast → content-error(不退避)", () => {
     expect(
       classifyDouyinOutcome({
@@ -155,17 +157,18 @@ describe("classifyDouyinOutcome (SPEC §4.2)", () => {
       }),
     ).toBe("content-error");
   });
-  it("⑨ 导出 download 超时 + 无 toast → throttled", () => {
+  it("⑨ [T-176] 导出 download 超时 + 无 toast → content-error(不再 throttled,防污染死循环)", () => {
     expect(
       classifyDouyinOutcome({
         kind: "export-download-timeout",
         hasNoDataToast: false,
       }),
-    ).toBe("throttled");
+    ).toBe("content-error");
   });
 
-  // ⑩ [gate-F6] ERR_TIMED_OUT 单次不升级、连续 2 次才 throttled
-  it("⑩ net-timeout 单次(consecutive=1)→ content-error(不 cooldown)", () => {
+  // ⑩ [T-176] ERR_TIMED_OUT(家宽抖动)→ content-error;删除了「连续 N 次升级 throttled」的假分支
+  //   (consecutiveTimeouts 恒为 1 从不真累加,那条 throttled 永不触发)。真风控走 http-429/captcha。
+  it("⑩ net-timeout 单次 → content-error(不 cooldown)", () => {
     expect(
       classifyDouyinOutcome({
         kind: "net-timeout",
@@ -174,14 +177,14 @@ describe("classifyDouyinOutcome (SPEC §4.2)", () => {
       }),
     ).toBe("content-error");
   });
-  it("⑩ net-timeout 连续 2 次(≥阈值)→ throttled", () => {
+  it("⑩ [T-176] net-timeout 即使 consecutive=2 也 → content-error(假累加分支已删)", () => {
     expect(
       classifyDouyinOutcome({
         kind: "net-timeout",
         consecutiveTimeouts: 2,
         timeoutThrottleThreshold: 2,
       }),
-    ).toBe("throttled");
+    ).toBe("content-error");
   });
 });
 
@@ -479,6 +482,67 @@ describe("DouyinRequestGateway (SPEC §5)", () => {
     // 距上次 1s,还差 3s 才够 4s → 阻塞。
     expect(granted).toBe(false);
     await h.advance(3000);
+    expect(granted).toBe(true);
+    await p;
+  });
+
+  // [T-176] 防时序倒挂:cooldown 剩余超过单次 acquire 等待上限 → 快速失败(不 sleep 到被 sweep)。
+  it("[T-176] cooldown 剩余 > maxAcquireWaitMs → acquire 快速失败抛 DouyinCooldownActiveError(不 sleep)", async () => {
+    const h = makeClock();
+    const now = h.now();
+    // 恢复出一个远超上限的 cooldown(60min),maxAcquireWaitMs 设 15min。
+    const port = makeFakePort({
+      [CC]: {
+        cooldownUntil: now + 60 * 60 * 1000, // 60min
+        consecutiveThrottles: 6,
+        lastRequestAt: null,
+      },
+    });
+    const gw = makeGateway(h, port, { maxAcquireWaitMs: 15 * 60 * 1000 });
+    await gw.readyPromise;
+
+    // acquire 应立即 reject,不注册任何 sleep waiter(不睡)。
+    await expect(gw.acquire(CC)).rejects.toBeInstanceOf(DouyinCooldownActiveError);
+    expect(h.pendingCount()).toBe(0); // 没 sleep:纯快速失败
+    // cooldown 状态未被清(consecutive 仍在;留给未来 report(ok) 清)。
+    expect(gw.getChannelStatus(CC).consecutiveThrottles).toBe(6);
+    expect(gw.getChannelStatus(CC).cooldownActive).toBe(true);
+  });
+
+  it("[T-176] 快速失败后串行闸不卡死:同 channel 下一个 acquire 仍能推进(release 在 finally)", async () => {
+    const h = makeClock();
+    const now = h.now();
+    const port = makeFakePort({
+      [CC]: {
+        cooldownUntil: now + 60 * 60 * 1000,
+        consecutiveThrottles: 6,
+        lastRequestAt: null,
+      },
+    });
+    const gw = makeGateway(h, port, { maxAcquireWaitMs: 15 * 60 * 1000 });
+    await gw.readyPromise;
+
+    // 第一个快速失败。
+    await expect(gw.acquire(CC)).rejects.toBeInstanceOf(DouyinCooldownActiveError);
+    // 串行 tail 已因 finally.release() 推进 → 第二个也能进入并同样快速失败(而非永久挂起)。
+    await expect(gw.acquire(CC)).rejects.toBeInstanceOf(DouyinCooldownActiveError);
+  });
+
+  it("[T-176] cooldown 剩余 ≤ maxAcquireWaitMs → 仍正常等待到期放行(不误伤短 cooldown)", async () => {
+    const h = makeClock();
+    const gw = makeGateway(h, makeFakePort(), {
+      maxAcquireWaitMs: 15 * 60 * 1000,
+    });
+    await gw.readyPromise;
+
+    await gw.report(CC, "throttled"); // cooldown = base 120000(2min)< 15min 上限
+    let granted = false;
+    const p = gw.acquire(CC).then(() => {
+      granted = true;
+    });
+    await h.flush();
+    expect(granted).toBe(false); // 在上限内 → 正常阻塞等待
+    await h.advance(120000);
     expect(granted).toBe(true);
     await p;
   });

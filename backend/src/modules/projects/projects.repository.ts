@@ -64,8 +64,13 @@ export interface ProjectRepository {
   seedTasks(rows: TaskRow[]): Promise<void>;
   seedActivities(rows: ActivityRow[]): Promise<void>;
 
-  // Project root (user-scoped).
-  list(ctx: RequestContext): Promise<ProjectRow[]>;
+  // Project root (user-scoped). [T-033] includeHidden: ?hidden=1 → 全显(私密作品也展示,
+  // 行上带 platformRef.hidden=true 徽标);默认 → 过滤 platformRef.hidden=true(单条件过滤
+  // 已足够,无需再加 status —— 项目 status='imported' 是物理标识,与抖音审核态正交)。
+  list(
+    ctx: RequestContext,
+    opts?: { includeHidden?: boolean },
+  ): Promise<ProjectRow[]>;
   // 数据底座(SPEC §1.4):user-scoped 且 source='imported' 的项目(真实采集导入)。
   //   "优先读真"判据 hasImportedProjects + 三向 portfolio 让位的物理读源。
   listImported(ctx: RequestContext): Promise<ProjectRow[]>;
@@ -271,11 +276,22 @@ export function createProjectRepository(db: Db): ProjectRepository {
       await db.insert(projectActivities).values(rows).onConflictDoNothing();
     },
 
-    async list(ctx) {
+    async list(ctx, opts) {
+      // [T-033] 默认过滤 platformRef.hidden=true 的项目(平台侧私密/已隐藏),
+      // includeHidden=true 时全显。
+      const hiddenFilter = opts?.includeHidden
+        ? sql`1 = 1`
+        : sql`coalesce((${projects.platformRef}->>'hidden')::boolean, false) = false`;
       return db
         .select()
         .from(projects)
-        .where(and(eq(projects.userId, ctx.userId), accountGate(ctx)))
+        .where(
+          and(
+            eq(projects.userId, ctx.userId),
+            accountGate(ctx),
+            hiddenFilter,
+          ),
+        )
         .orderBy(asc(projects.createdAt));
     },
 

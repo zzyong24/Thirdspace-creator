@@ -269,13 +269,17 @@ export function buildAnalyticsReviewViewModelFromOp(
   // 完播率 / 封面点击率:仅当最新采集帧真的携带该字段才显真值;否则「暂无」——
   // 该作品的最新采集是 views-only 帧(无 ctr/finish_rate),不编「0.0%」(读起来像
   // 「0% 完播」的假值)。诚实标暂无 → 去自动化跑「拉明细」采集。
+  // [Bug-3 T-016] 该作品的最新采集是 views-only(无 ctr/finish_rate)时,label 加「待采集」提示,
+  // 让用户一眼知道「暂无」= 没跑明细采集,不是 0%。value 仍诚实标暂无(不编假 0.0%)。
+  const completionLabel = finN > 0 ? "完播率" : "完播率(待采集)";
+  const ctrLabel = ctrN > 0 ? "封面点击率" : "封面点击率(待采集)";
   const metrics: ReadonlyArray<MetricCard> = [
     card("m-views", "总播放量", formatCount(views), "positive"),
     card("m-likes", "点赞数", formatCount(likes), "positive"),
     card("m-comments", "评论数", formatCount(comments), "neutral"),
     card("m-followers", "新增粉丝", formatCount(follower), "positive"),
-    card("m-completion", "完播率", finN > 0 ? `${finish.toFixed(1)}%` : "暂无", "info"),
-    card("m-ctr", "封面点击率", ctrN > 0 ? `${ctr.toFixed(1)}%` : "暂无", "info"),
+    card("m-completion", completionLabel, finN > 0 ? `${finish.toFixed(1)}%` : "暂无", "info"),
+    card("m-ctr", ctrLabel, ctrN > 0 ? `${ctr.toFixed(1)}%` : "暂无", "info"),
     card("m-shares", "分享数", formatCount(shares), "positive"),
   ];
 

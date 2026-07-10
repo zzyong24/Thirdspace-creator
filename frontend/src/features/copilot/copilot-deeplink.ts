@@ -13,7 +13,7 @@
 import {
   OVERLAY_QUERY_KEY,
   OVERLAY_OPEN_VALUE,
-} from "@/components/overlays/overlay-controller";
+} from "@/lib/overlay-constants";
 
 /**
  * 构造「打开 ChatBox 并预调指定工具」的深链。

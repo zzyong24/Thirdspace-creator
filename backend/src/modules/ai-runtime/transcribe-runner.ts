@@ -27,16 +27,15 @@ export interface DouyinVideoUrl {
 //   (幂等,§4.3/F8)先试 ensureTranscriptArtifact —— 它幂等,已有 transcript artifact 直接
 //      skip 不重复转写(为省流,已存在就跳过 fetch/ASR)。
 //   → 否则 fetchVideoUrl(iesdouyin 无水印直链)→ streamAudio(ffmpeg 抽 mp3 bytes)
-//   → resolveTranscribeSpec(用户配的 ASR model,未配抛 TranscribeConfigError)
-//   → transcribeAudio(云端 ASR → 逐字稿文本)
+//   → resolveTranscribeSpec(用户配的 ASR,缺时[T-160] Tier 3 自动 fallback whisper-local 本地推理)
+//   → transcribeAudio(spec + 音频 bytes → 文本)
 //   → ensureTranscriptArtifact(awemeId, text, source:"transcribed") 绑到 imported 作品
 //   → recordStep(kind:"transcribe")
 //
 // F7 失败分类(SPEC §5.3,别一条视频拖垮整批):
-//   - ASR 未配(TranscribeConfigError)→ **整任务停** + markFailed + 引导文案(去设置配 ASR);
-//     一旦命中,不再处理后续 aweme(配置问题对整批都成立)。
-//   - 取音频失败(ffmpeg / 直链 / 去水印,DouyinAudioFetchError 或其它非 config 异常)→ **标该
-//     aweme 失败、recordStep 记因、其余 aweme 继续**。
+//   - [T-160] ASR 永远能 resolve(whisper-local 兜底)→ **不再**有「整任务停」分支。
+//   - 取音频失败(ffmpeg / 直链 / 去水印,DouyinAudioFetchError 等)→ **标该 aweme 失败、
+//     recordStep 记因、其余 aweme 继续**。
 //   - 末尾:全失败 → markFailed;有成功 → markSucceeded(带失败计数,写在最后一条 step)。
 //
 // 端口全注入(fetchVideoUrl/streamAudio/resolveTranscribeSpec/transcribeAudio+registry/
@@ -71,7 +70,11 @@ export interface TranscribeRunnerDeps {
     ctx: RequestContext,
     playUrl: string,
   ) => Promise<Uint8Array>;
-  /** 解析用户配的 ASR model(未配抛 TranscribeConfigError → 整任务停)。host 绑 resolveTranscribeSpec。 */
+  /**
+   * 解析 ASR model spec。[T-160] Tier 3 自动 whisper-local 兜底,所以 resolveTranscribeSpec
+   * 不会抛 TranscribeConfigError —— 永远返回 MultimodalSpec(用户云端 ASR 或本地 Whisper 都行)。
+   * host 绑 resolveTranscribeSpec。
+   */
   resolveTranscribeSpec: (ctx: RequestContext) => Promise<MultimodalSpec>;
   /** 云端 ASR 转写(spec + 音频 bytes → 文本)。host 绑 ai-worker transcribeAudio;测试注 fake。 */
   transcribeAudio: (
@@ -120,10 +123,10 @@ function readAwemeIds(inputData: Record<string, unknown>): string[] {
 }
 
 /**
- * Orchestrate one transcribe.douyin task end to end —— 确定性、逐 aweme 取音频 + 云端 ASR + 绑作品。
+ * Orchestrate one transcribe.douyin task end to end —— 确定性、逐 aweme 取音频 + ASR 转写 + 绑作品。
  *   markRunning → 逐 awemeId:(幂等)已有则 skip;否则 fetch 直链 → 抽音 → 解析 ASR → 转写 → 绑作品
  *   → recordStep(transcribe)。
- *   F7:ASR 未配(TranscribeConfigError)→ 整任务停 markFailed;取音频失败 → 标该 aweme 失败其余继续;
+ *   F7:[T-160] ASR 永远能 resolve,无「整任务停」分支;取音频失败 → 标该 aweme 失败其余继续;
  *   末尾全失败→markFailed,有成功→markSucceeded(带失败计数)。
  *   fire-and-forget 兜底:catch 里 best-effort markFailed,绝不把 task 卡 running / 崩服务。
  */
@@ -162,12 +165,14 @@ export async function runTranscribe(
         continue;
       }
 
-      // 2) 取音频 + 转写。取音频失败(DouyinAudioFetchError 等)→ 标该 aweme 失败、其余继续;
-      //    ASR 未配(TranscribeConfigError)→ 抛到外层 catch,整任务停(配置问题对整批都成立)。
+      // 2) 取音频 + 转写。取音频失败(DouyinAudioFetchError 等)→ 标该 aweme 失败、其余继续。
+      //    [T-160] ASR 不再有「未配」分支:resolveTranscribeSpec Tier 3 自动用 whisper-local
+      //    兜底,transcribe.audio capability 永远能解析出 MultimodalSpec —— TranscribeConfigError
+      //    类保留只做向后兼容(永不触发),runner 也就不需要 catch 它去「整任务停」。
       try {
         const { playUrl } = await deps.fetchVideoUrl(ctx, awemeId);
         const audioBytes = await deps.streamAudio(ctx, playUrl);
-        // ASR 未配在这里抛 TranscribeConfigError —— 不 catch,让它冒泡到外层整任务停。
+        // [T-160] resolveTranscribeSpec 永远不抛 TranscribeConfigError(Tier 3 whisper-local 兜底)。
         const spec = await deps.resolveTranscribeSpec(ctx);
         const { text } = await deps.transcribeAudio(
           spec,
@@ -198,8 +203,8 @@ export async function runTranscribe(
         });
         ok += 1;
       } catch (err) {
-        // ASR 未配 → 整任务停(冒泡到外层 catch)。
-        if (err instanceof TranscribeConfigError) throw err;
+        // [T-160] ASR 未配已兜底,无专门 catch 分支;取音频失败 / ASR 跑挂 / 空文本 → 单作品失败
+        // 降级继续(整批不拖垮)。这里不再 instanceof TranscribeConfigError 抛(那条路已堵死)。
         // 其它(取音频 / 直链 / 去水印 / ASR provider HTTP / 空文本)→ 标该 aweme 失败,其余继续。
         const reason =
           err instanceof Error ? err.message : String(err ?? "unknown error");
@@ -239,7 +244,8 @@ export async function runTranscribe(
     });
     await deps.ai.markSucceeded(ctx, task.id);
   } catch (err) {
-    // ASR 未配 / markRunning 前置校验失败 / 空 awemeIds —— 整任务停(诚实终态)。
+    // [T-160] ASR 已自动兜底,此处只 catch 真异常(markRunning 失败 / 空 awemeIds / 真 bug);
+    // ASR_NOT_CONFIGURED_HINT 已死代码,保留只是给真出现 TranscribeConfigError 时的兜底消息。
     const message =
       err instanceof TranscribeConfigError
         ? ASR_NOT_CONFIGURED_HINT

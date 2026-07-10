@@ -31,11 +31,12 @@ export const projectsOperations = {
     id: "projects.list",
     method: "GET",
     path: "/projects",
-    // paginationQuery + optional status filter and sort key (v0.2). Both are
-    // optional so existing callers keep validating against the base shape.
+    // paginationQuery + optional status filter + sort key (v0.2) + 显隐开关 (T-033)。
+    // 整型 query(z.coerce.boolean 接 0/1/true/false)。NULL=用默认(过滤 platformRef.hidden=true)。
     query: paginationQuery.extend({
       status: projectStatus.optional(),
       sort: z.enum(["updatedAt", "createdAt", "title"]).optional(),
+      hidden: z.coerce.boolean().optional(),
     }),
     response: projectResource,
     isList: true,
