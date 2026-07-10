@@ -38,6 +38,10 @@ export function CoverThumb({
   const [url, setUrl] = React.useState<string | null>(null);
   const [retryNonce, setRetryNonce] = React.useState(0); // [Bug-6] bump 触发重拉
   const [broken, setBroken] = React.useState(false);
+  // [T-187] 连续加载失败计数。仅对"连续失败"计数;一旦某次 <img> 成功
+  // (onLoad)即归零 —— 这样 token 过期(常见)第一次 onError 重拉新 token 成功后,
+  // 后续独立失败仍享有完整重试额度,不会被历史失败误伤成永久 broken。
+  const retryCountRef = React.useRef(0);
 
   React.useEffect(() => {
     if (!assetId) return;
@@ -52,6 +56,12 @@ export function CoverThumb({
     };
   }, [assetId, retryNonce]);
 
+  // [T-187] 换 asset 时重置失败计数(retryNonce bump 不重置 —— 那是同一 asset
+  // 的重试轮次,必须让计数累加到上限才能停)。
+  React.useEffect(() => {
+    retryCountRef.current = 0;
+  }, [assetId]);
+
   if (!assetId || !url || broken) return <>{fallback}</>;
 
   return (
@@ -63,10 +73,22 @@ export function CoverThumb({
       data-slot="cover-thumb"
       data-asset-id={assetId}
       className={className}
-      // [Bug-6 T-019] 图加载失败(token 过期 / 后端 5xx)→ 清缓存 + bump 重拉。
-      // 一限(仅一次失败):如果重拉的 URL 也炸,保持在 fallback 不无限重试打爆 dispatch。
+      // [T-187] <img> 成功渲染 → 失败计数归零。兑现"只对连续失败计数":
+      // token 过期第一次 onError 重拉、这次成功 → 计数复位,下次真失败仍有完整额度。
+      onLoad={() => {
+        retryCountRef.current = 0;
+      }}
+      // [Bug-6 T-019 / T-187] 图加载失败(token 过期 / 后端 5xx)→ 清缓存 + bump 重拉。
+      // 上限 MAX_COVER_RETRIES(仅一次):重拉的 URL 也炸(持续 404/5xx)→ 停在 fallback,
+      // 不再 invalidate/bump,不无限重试打爆 dispatch(兑现注释承诺)。
       onError={() => {
         if (!assetId) return;
+        if (retryCountRef.current >= MAX_COVER_RETRIES) {
+          // 已达上限:持续失败,停在占位,不再打 dispatch。
+          setBroken(true);
+          return;
+        }
+        retryCountRef.current += 1;
         invalidateAssetPreviewUrl(assetId);
         setBroken(true);
         // 微任务后 bump —— 给一次重试机会(常见的 token 过期情况会修好)。
@@ -75,3 +97,6 @@ export function CoverThumb({
     />
   );
 }
+
+/** [T-187] 封面 <img> 连续加载失败的重试上限(仅 1 次)。达上限后停在占位,不再重拉。 */
+const MAX_COVER_RETRIES = 1;

@@ -99,4 +99,66 @@ describe("CoverThumb", () => {
       expect(invalidateAssetPreviewUrl).toHaveBeenCalledWith("asset-4"),
     );
   });
+
+  // [T-187] 持续 onError(URL 一直炸,如 asset 字节真缺失 / 持续 404/5xx)→ 达重试
+  // 上限后**停止**再拉,不无限重试打爆 dispatch。断言 resolve/invalidate 调用次数有上限。
+  it("[T-187] 持续 onError → 达上限后停止再拉(dispatch 调用有界)", async () => {
+    resolveAssetPreviewUrl.mockResolvedValue("https://signed/broken.jpg");
+    render(
+      <CoverThumb assetId="asset-5" alt="x" className="h-9" fallback={fallback} />,
+    );
+
+    // 首帧失败 → 触发唯一一次重拉(invalidate + 第二次 resolve)。
+    const img1 = await screen.findByRole("img");
+    fireEvent.error(img1);
+    await waitFor(() =>
+      expect(resolveAssetPreviewUrl).toHaveBeenCalledTimes(2),
+    );
+
+    // 重拉的 URL 仍炸 → 已达上限 → 停在 fallback,不再 invalidate/重拉。
+    const img2 = await screen.findByRole("img");
+    fireEvent.error(img2);
+    await waitFor(() =>
+      expect(screen.getByTestId("cover-fallback")).toBeInTheDocument(),
+    );
+
+    // 再等一拍确认没有第三次 resolve / 第二次 invalidate(上限 = 1 次重拉)。
+    await new Promise((r) => setTimeout(r, 20));
+    expect(resolveAssetPreviewUrl).toHaveBeenCalledTimes(2);
+    expect(invalidateAssetPreviewUrl).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("img")).toBeNull();
+  });
+
+  // [T-187] token 过期自愈:首帧 URL 炸(过期)→ 重拉拿新 token 成功显示;onLoad 后计数
+  // 归零 → 后续再来一次独立 onError 仍享有完整重试额度(不被历史失败误伤成永久 broken)。
+  it("[T-187] onError 一次后成功 → 显示且计数重置(token 过期自愈不被误伤)", async () => {
+    resolveAssetPreviewUrl
+      .mockResolvedValueOnce("https://signed/stale.jpg") // 首帧:过期 token,即将炸
+      .mockResolvedValue("https://signed/fresh.jpg"); // 重拉:新 token,成功
+    render(
+      <CoverThumb assetId="asset-6" alt="x" className="h-9" fallback={fallback} />,
+    );
+
+    const img1 = await screen.findByRole("img");
+    expect(img1).toHaveAttribute("src", "https://signed/stale.jpg");
+    fireEvent.error(img1); // 过期 → 重拉
+
+    const img2 = await screen.findByRole("img");
+    await waitFor(() =>
+      expect(img2).toHaveAttribute("src", "https://signed/fresh.jpg"),
+    );
+    fireEvent.load(img2); // 成功渲染 → 计数归零
+    expect(invalidateAssetPreviewUrl).toHaveBeenCalledTimes(1);
+
+    // 计数已重置:再来一次 onError 仍能重拉(证明额度完整,未被历史失败误伤)。
+    resolveAssetPreviewUrl.mockResolvedValue("https://signed/fresh2.jpg");
+    fireEvent.error(img2);
+    await waitFor(() =>
+      expect(invalidateAssetPreviewUrl).toHaveBeenCalledTimes(2),
+    );
+    const img3 = await screen.findByRole("img");
+    await waitFor(() =>
+      expect(img3).toHaveAttribute("src", "https://signed/fresh2.jpg"),
+    );
+  });
 });
