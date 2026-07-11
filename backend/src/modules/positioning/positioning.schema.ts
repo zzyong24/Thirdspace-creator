@@ -107,6 +107,8 @@ export function toPositioningStatementDto(
     createdByType:
       row.createdByType as PositioningStatementResource["createdByType"],
     aiTaskId: row.aiTaskId ?? null,
+    // [T-234 读侧补] 写侧 0034 已落库,补投影让 get/list 读得回。
+    changeReason: (row as { changeReason?: string }).changeReason ?? "",
     createdAt: row.createdAt,
   };
 }

@@ -64,6 +64,8 @@ export const positioningStatementResource = z.object({
   versionNumber: z.number().int(),
   createdByType: statementAuthorType,
   aiTaskId: id.nullable(),
+  // [T-234 读侧补] 修改原因(硬约束留痕):写侧 0034 已落库,读侧此前漏投影 → get 读不回。
+  changeReason: z.string().default(""),
   createdAt: iso8601,
 });
 export type PositioningStatementResource = z.infer<
