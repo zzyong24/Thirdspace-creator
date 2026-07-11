@@ -5267,6 +5267,42 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     );
   }
 
+  // [T-220] 启动认领存量无号 asset(现网破图修复)。截图/封面在**无号 chat ctx**(此前 chat
+  //   route 漏读 x-account-id → 全程无号)下落的 asset account_id=NULL → 读侧 accountGate 严格
+  //   eq 排除 → getDownloadUrl/requireAsset 404 → 前端紫色占位。写侧根因已在 chat route + 截图
+  //   端口治本;此块补认领**存量** NULL asset,让 build 后现网破图直接恢复(不用 reset/重扫)。
+  //   单账号现实下安全:把该 user 名下唯一 active 号认领 account_id IS NULL 的 asset(claimOrphanAssets
+  //   = userId + isNull(account_id) → set 该号,幂等,已归属的不动)。0 号 / 多号 → 跳过(多号精确
+  //   targeting 归 T-136 §D);best-effort:失败只告警,不阻断启动。
+  try {
+    const startupClaimCtx: RequestContext = {
+      userId: canonicalDataset.user.id,
+      requestId: "startup-asset-claim",
+      source: "ingestion",
+    };
+    const { rows: claimAccounts } = await platformAccountService.listAccounts(
+      startupClaimCtx,
+      { limit: 100, offset: 0 },
+    );
+    const activeAccounts = claimAccounts.filter((a) => a.status === "active");
+    if (activeAccounts.length === 1) {
+      const claimed = await assetsService.claimOrphanAssets({
+        ...startupClaimCtx,
+        accountId: activeAccounts[0]!.id,
+      });
+      if (claimed > 0) {
+        console.log(
+          `[T-220] 启动认领 ${claimed} 条无号 asset 归当前号 ${activeAccounts[0]!.id}(截图/封面破图恢复)`,
+        );
+      }
+    }
+  } catch (claimErr) {
+    console.warn(
+      "[T-220] 启动认领存量无号 asset 失败(已 ignore,app 仍可启动):",
+      claimErr instanceof Error ? claimErr.message : claimErr,
+    );
+  }
+
   // [T-050] canonical 通知种子已退役(demo 文案指向已删除的演示项目);通知全部
   // 来自运行时真实事件。
 
@@ -6728,11 +6764,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     ) => {
       const shot = await captureUrl(input.url, { fullPage: input.fullPage });
       const name = `截图·${(shot.title || shot.finalUrl).slice(0, 40)}`;
+      // [T-219] 铁律②:AI 写入需人确认。截图落 **pending** asset(素材库 list 按 active 过滤 →
+      //   不显示、不进库),对话确认门卡「存入素材库」→ assets.commit 翻 active 才入库。
+      //   [T-220] account 归属:ctx 现由 chat route 读 x-account-id 带当前号(见 route.ts),
+      //   createGeneratedAsset 据 ctx.accountId stamp → 存量破图根因(NULL 号)在写侧治本。
       const asset = await assetsService.createGeneratedAsset(ctx, {
         assetType: "image",
         name,
         bytes: shot.bytes,
         mimeType: shot.contentType,
+        pending: true,
       });
       // sourceUrl 存证:merge 进 asset 文件 mediaMetadata(与 asset-classify 的 aiDescription
       // 同一条 merge 路径,jsonb additive,不改 DB schema —— SPEC §2.2 来源存证)。best-effort:

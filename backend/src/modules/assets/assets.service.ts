@@ -116,8 +116,15 @@ export interface AssetsService {
       name: string;
       bytes: Uint8Array;
       mimeType: string;
+      // [T-219] 待确认落库:截图端口传 true → asset 生为 'pending'(不进素材库 list),由对话
+      //   确认门 commitPendingAsset 翻 active 才入库。缺省 false = 生 active(封面回填 / AI 生成
+      //   素材等既有直落场景不变)。
+      pending?: boolean;
     },
   ): Promise<AssetRow>;
+  // [T-219] 确认门:把某 pending asset 翻 active 进素材库 + stamp 当前号(ctx.accountId)。
+  //   非 pending / 越权 / 不存在 → OwnershipError(404)。铁律②:AI 只落 pending,人确认才进库。
+  commitPendingAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
   addAssetFile(
     ctx: RequestContext,
     assetId: string,
@@ -171,6 +178,17 @@ export function createAssetsService(
     async claimOrphanAssets(ctx) {
       if (!ctx.accountId) return 0; // 未选号:无号可认领
       return repo.claimOrphanAssets(ctx.userId, ctx.accountId);
+    },
+
+    async commitPendingAsset(ctx, assetId) {
+      // pending → active + stamp 当前号(确认门经 dispatch route,ctx 带 x-account-id 校验后的号)。
+      const row = await repo.commitPendingAsset(
+        ctx.userId,
+        assetId,
+        ctx.accountId ?? null,
+      );
+      if (!row) throw new OwnershipError("Asset not found"); // 非 pending / 越权 / 不存在
+      return row;
     },
 
     async listAssets(ctx, query) {
@@ -365,6 +383,8 @@ export function createAssetsService(
           assetType: input.assetType,
           name: input.name,
           currentFileId: null,
+          // [T-219] 截图端口传 pending → 生为待确认态(素材库 list 按 active 过滤,不显示)。
+          status: input.pending ? "pending" : "active",
         },
         ctx.accountId ?? null,
       );

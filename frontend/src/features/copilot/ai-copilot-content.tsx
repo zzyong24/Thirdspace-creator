@@ -139,6 +139,7 @@ import {
   describeUserError,
 } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
+import { readCurrentAccountId } from "@/lib/http-transport";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
   readStoredConversationId,
@@ -821,6 +822,13 @@ export function AICopilotContent({
     () =>
       new DefaultChatTransport<UIMessage>({
         api: "/api/chat",
+        // [T-220] 每次请求注入当前选中号 header(与 dispatch 同源 localStorage 真值)。chat route
+        //   据此 stamp 工具产的 asset(截图/封面)当前号 —— 此前漏注入 → chat 全程无号 → asset
+        //   account_id=NULL → blob 取回 404 破图。未选号 → 不带(server 退化全局)。
+        headers: (): Record<string, string> => {
+          const acct = readCurrentAccountId();
+          return acct ? { "x-account-id": acct } : {};
+        },
         // body 是 Resolvable(每次发请求求值):把当前 conversationId(ref 读最新)和 chatContext
         // 一起带上。首轮 conversationId 为 null → 不带,后端 lazy 建;拿到响应头后续轮带上续接。
         body: () => ({

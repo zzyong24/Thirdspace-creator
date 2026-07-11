@@ -5,7 +5,9 @@ import { id, iso8601, assetType } from "../primitives";
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
 
 // Asset.status is a local literal union in domain.ts (not exported by primitives).
-const assetStatus = z.enum(["active", "archived", "deleted"]);
+// [T-219] 'pending' = AI 写入待人确认态(截图先落 pending → 素材库 list 按 active 过滤 → 天然
+//   不显示;用户在对话确认门点「存入素材库」→ assets.commit 翻 active 才进库,铁律②)。
+const assetStatus = z.enum(["active", "archived", "deleted", "pending"]);
 
 // Asset extends BaseEntity + Timestamped.
 export const assetResource = z.object({

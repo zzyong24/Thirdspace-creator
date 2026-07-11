@@ -68,6 +68,15 @@ export interface AssetRepository {
   //   素材)在无号 ctx 下落的 null 号 —— 读侧严格 eq gate 排除 null 号 → 封面/素材占位的根因。
   //   幂等:已归属的不动。返回改动行数。
   claimOrphanAssets(userId: string, accountId: string): Promise<number>;
+  // [T-219] 确认门:把 user 名下某 pending asset 翻成 active + stamp accountId(当前号)。**只**
+  //   命中 status='pending' 的行(幂等:已 active / 不存在 / 越权 → 返 null,不误翻 active/archived/
+  //   deleted)。account gate 不叠加(pending 可能 account_id=NULL,不能用 eq gate 排除自己),
+  //   属主用 userId 收窄;stamp 时把 accountId 一并写(与创建时若已带号则重写同值,幂等安全)。
+  commitPendingAsset(
+    userId: string,
+    assetId: string,
+    accountId: string | null,
+  ): Promise<AssetRow | null>;
   // [T-136 切片 b] owned-root(assets)方法加**可选** accountId(additive:旧调用不传
   // = undefined → 门退化不过滤 = 返该 user 全部,行为不变)。有号时按号过滤(读)/ stamp
   // (写)。repo 是单例、userId 随调用传,故 accountId 也随调用传(不能 baked 进 deps)。
@@ -83,7 +92,14 @@ export interface AssetRepository {
   ): Promise<AssetRow | null>;
   insertAsset(
     userId: string,
-    input: { assetType: string; name: string; currentFileId: string | null },
+    input: {
+      assetType: string;
+      name: string;
+      currentFileId: string | null;
+      // [T-219] 出生态(缺省 active,兼容所有既有调用)。截图端口传 'pending' → 待确认门翻转
+      //   才进素材库(list 按 active 过滤,pending 天然不显示)。
+      status?: string;
+    },
     accountId?: string | null,
   ): Promise<AssetRow>;
   updateAssetStatus(
@@ -195,6 +211,30 @@ export function createAssetRepository(
       return updated.length;
     },
 
+    async commitPendingAsset(userId, assetId, accountId) {
+      // 只翻 pending → active(WHERE status='pending' 保证幂等 + 不误动其他态)。stamp accountId
+      // (当前号)—— pending 若 account_id=NULL(未选号时创建)在此补号;有号则同值重写。
+      await db
+        .update(assets)
+        .set({ status: "active", accountId: accountId ?? null, updatedAt: deps.now() })
+        .where(
+          and(
+            eq(assets.id, assetId),
+            eq(assets.userId, userId),
+            eq(assets.status, "pending"),
+          ),
+        );
+      // 回读 user-scoped:WHERE 未命中(非 pending / 越权 / 不存在)→ 读也返 null → service 抛 404。
+      const rows = await db
+        .select()
+        .from(assets)
+        .where(and(eq(assets.id, assetId), eq(assets.userId, userId)));
+      const row = rows[0];
+      // 命中且已 active 才算翻转成功;若该 id 是本 user 的但当时非 pending(已 active/deleted),
+      // 回读会拿到它但状态不是我们刚翻的 —— 用 status==='active' 兜底判定(commit 幂等语义)。
+      return row && row.status === "active" ? row : null;
+    },
+
     async seedAssets(rows) {
       if (rows.length === 0) return;
       await db.insert(assets).values(rows).onConflictDoNothing();
@@ -251,7 +291,8 @@ export function createAssetRepository(
         assetType: input.assetType,
         name: input.name,
         description: "",
-        status: "active",
+        // [T-219] 出生态可选(缺省 active,兼容既有);截图端口传 'pending' 待确认门翻转。
+        status: input.status ?? "active",
         deletedAt: null,
         createdAt: now,
         updatedAt: now,

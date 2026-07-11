@@ -172,10 +172,11 @@ export interface ChatToolDeps {
     suggestedTags: string[];
   }>;
   /**
-   * [T-084b] material.screenshot 核心 —— 真开无头浏览器给公开 URL 截图,落 asset(带 sourceUrl
-   * 存证),返回落库后的 asset 摘要。失败**抛错**(逐类诚实:打不开 / HTTP 码 / 登录墙),由工具
-   * execute 接住转人话随结果卡渲错误态。截图字节已真实产生,落 asset 是存储动作(与上传同性质,
-   * 非 AI 写领域实体);「挂进用料链」才留给人点(SPEC §2.2 注)。
+   * [T-084b] material.screenshot 核心 —— 真开无头浏览器给公开 URL 截图,落 **pending** asset
+   * (带 sourceUrl 存证),返回 asset 摘要(含预览 URL)。失败**抛错**(逐类诚实:打不开 / HTTP 码 /
+   * 登录墙),由工具 execute 接住转人话随结果卡渲错误态。
+   * [T-219] 铁律②:AI 写入需人确认。截图字节虽已真实产生,但落 pending(不进素材库 list),前端
+   * 确认门卡点「存入素材库」→ assets.commit 翻 active 才入库;再「挂进用料链」是第二级人点。
    */
   captureScreenshot: (input: {
     url: string;
@@ -1696,7 +1697,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 逐类报错(打不开/HTTP/登录墙)转人话随结果卡渲错误态,不抛给 SDK(避免裸机器码/spinner)。
     "material.screenshot": tool({
       description:
-        "给一个**公开**网页 URL,服务端真开浏览器截图并存进素材中心(带来源 URL 存证)。截图是不可抵赖的真证据(不同于搜集/生成的素材)。当用户要「截个图/把这个页面截下来/存这个网页的样子」时调用。当前只支持公开页面——登录墙/需登录页会诚实报错,不产垃圾图。截好的图渲成卡片,用户点「加入弹药」才挂进这条内容的用料链。",
+        "给一个**公开**网页 URL,服务端真开浏览器截图(带来源 URL 存证)。截图是不可抵赖的真证据(不同于搜集/生成的素材)。当用户要「截个图/把这个页面截下来/存这个网页的样子」时调用。当前只支持公开页面——登录墙/需登录页会诚实报错,不产垃圾图。截好的图渲成卡片**待用户确认**:点「存入素材库」才进库(铁律②:AI 写入需人确认),入库后可再「加入弹药」挂进这条内容的用料链。",
       inputSchema: MATERIAL_SCREENSHOT_PARAMS,
       execute: async ({ url, fullPage }): Promise<MaterialScreenshotToolResult> => {
         const target = typeof url === "string" ? url.trim() : "";

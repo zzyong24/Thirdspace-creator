@@ -55,7 +55,7 @@ beforeEach(() => {
 });
 
 describe("assets ops registered in the composite transport", () => {
-  it("the 10 assets op ids are persistence-backed (not the mock)", async () => {
+  it("the 11 assets op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of ASSET_OP_IDS) {
@@ -63,8 +63,8 @@ describe("assets ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    // [T-055d] +assets.downloadUrl(下载做真)。
-    expect(ASSET_OP_IDS).toHaveLength(10);
+    // [T-055d] +assets.downloadUrl(下载做真)。[T-219] +assets.commit(截图确认门)。
+    expect(ASSET_OP_IDS).toHaveLength(11);
   });
 
   it("[T-135] 开箱空:owner 的 assets.list 初始为空,建一条后可列出(全部本人 + active)", async () => {

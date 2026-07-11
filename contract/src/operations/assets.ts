@@ -94,6 +94,17 @@ export const assetsOperations = {
     response: assetResource,
     fr: ["FR-ASSETS-RESTORE"],
   }),
+  // [T-219] 确认门:把 AI 写入的 pending asset(截图)翻成 active 才进素材库 + stamp 当前号
+  // (铁律②「所有 AI 写入需人确认」)。mirror restoreAsset(状态转移,返回更新后 item)。幂等:
+  // 非 pending / 越权 / 不存在 → 404(OwnershipError,不泄露存在性)。
+  commitPendingAsset: defineEndpoint({
+    id: "assets.commit",
+    method: "POST",
+    path: "/assets/:assetId/commit",
+    params: assetParams,
+    response: assetResource,
+    fr: ["FR-ASSETS-COMMIT"],
+  }),
   // 收藏翻转 (mirror trashAsset): POST flips the asset's isFavorite flag and
   // returns the updated Asset. Persists 收藏 so the gallery affordance survives
   // reloads (replaces the old storageKey=favorites/ file-version hack).

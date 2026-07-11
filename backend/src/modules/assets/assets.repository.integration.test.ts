@@ -290,3 +290,55 @@ describe("assets.repository — per-account isolation (T-136 slice b)", () => {
     expect((await repo.getAsset(A, aOwned.id, "acct-1"))?.accountId).toBe("acct-1"); // 未被改动
   });
 });
+
+// [T-219] pending 出生态 + 确认门 commitPendingAsset(pending→active + stamp 号)。
+describe("assets.repository — [T-219] pending 态 + commitPendingAsset 确认门", () => {
+  it("insertAsset status='pending' → 素材库 list(active-only)不显示,commit 后才显示", async () => {
+    const p = await repo.insertAsset(
+      A,
+      { assetType: "image", name: "截图", currentFileId: null, status: "pending" },
+      "acct-1",
+    );
+    expect(p.status).toBe("pending");
+    // 素材库默认 list 只 active → pending 不在。
+    let list = await repo.listAssets(A, { limit: 50, cursor: null }, "acct-1");
+    expect(list.some((r) => r.id === p.id)).toBe(false);
+    // commit → active → 进 list。
+    const committed = await repo.commitPendingAsset(A, p.id, "acct-1");
+    expect(committed?.status).toBe("active");
+    list = await repo.listAssets(A, { limit: 50, cursor: null }, "acct-1");
+    expect(list.some((r) => r.id === p.id)).toBe(true);
+  });
+
+  it("commitPendingAsset 给 account_id=NULL 的 pending 补 stamp 当前号", async () => {
+    // 未选号时创建的 pending(account_id=NULL)。
+    const p = await repo.insertAsset(
+      A,
+      { assetType: "image", name: "无号截图", currentFileId: null, status: "pending" },
+    );
+    expect(p.accountId).toBeNull();
+    const committed = await repo.commitPendingAsset(A, p.id, "acct-1");
+    expect(committed?.status).toBe("active");
+    expect(committed?.accountId).toBe("acct-1"); // 确认时补号
+  });
+
+  it("commitPendingAsset 只翻 pending:非 pending / 越权 / 不存在 → null(不误动 active/deleted)", async () => {
+    // 已 active:commit 幂等返 active(不报错、不重复动)。
+    const active = await repo.insertAsset(
+      A,
+      { assetType: "image", name: "已入库", currentFileId: null, status: "active" },
+      "acct-1",
+    );
+    expect((await repo.commitPendingAsset(A, active.id, "acct-1"))?.status).toBe("active");
+    // 越权:B 的 pending A 翻不动 → null。
+    const bPending = await repo.insertAsset(
+      B,
+      { assetType: "image", name: "B 截图", currentFileId: null, status: "pending" },
+      "acct-b",
+    );
+    expect(await repo.commitPendingAsset(A, bPending.id, "acct-1")).toBeNull();
+    expect((await repo.getAsset(B, bPending.id))?.status).toBe("pending"); // B 未被翻
+    // 不存在 → null。
+    expect(await repo.commitPendingAsset(A, "asset-nope", "acct-1")).toBeNull();
+  });
+});

@@ -7,7 +7,9 @@ export const CURRENT_ACCOUNT_KEY = "creatoros:current-account";
 
 // 读当前号 id。仅浏览器有 localStorage;SSR / 隐私模式禁用 storage → try/catch 降级为 null
 // (= 未选号,server 退化全局,不崩)。复用 sidebar collapse 同款降级范式。
-function readCurrentAccountId(): string | null {
+// [T-220] 导出:/api/chat 的 useChat transport 不走本 dispatch,需复用同一读法注入 x-account-id
+//   (否则 chat 全程无号 → 截图/封面 asset 落 NULL 号 → 破图)。单一真值,不另抄 localStorage 键。
+export function readCurrentAccountId(): string | null {
   try {
     if (typeof window === "undefined") return null;
     return window.localStorage.getItem(CURRENT_ACCOUNT_KEY);

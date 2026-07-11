@@ -183,6 +183,53 @@ describe("assets.service — createGeneratedAsset (L5 asset.generate)", () => {
   });
 });
 
+describe("assets.service — [T-219] pending 截图 → 确认门 commitPendingAsset", () => {
+  it("createGeneratedAsset({pending:true}) 生 pending → 不进素材库 list;commit 后才进库", async () => {
+    const asset = await service.createGeneratedAsset(ctxA, {
+      assetType: "image",
+      name: "网页截图",
+      bytes: new Uint8Array([1, 2, 3, 4]),
+      mimeType: "image/png",
+      pending: true,
+    });
+    expect(asset.status).toBe("pending");
+    // 铁律②:未确认 → 素材库 list(active-only)不显示。
+    let list = await service.listAssets(ctxA, { limit: 50, cursor: null });
+    expect(list.some((a) => a.id === asset.id)).toBe(false);
+    // 确认门:commit → active → 进库。
+    const committed = await service.commitPendingAsset(ctxA, asset.id);
+    expect(committed.status).toBe("active");
+    list = await service.listAssets(ctxA, { limit: 50, cursor: null });
+    expect(list.some((a) => a.id === asset.id)).toBe(true);
+  });
+
+  it("createGeneratedAsset 默认(不传 pending)仍生 active(封面/AI 生成直落场景不变)", async () => {
+    const asset = await service.createGeneratedAsset(ctxA, {
+      assetType: "image",
+      name: "封面",
+      bytes: new Uint8Array([9]),
+      mimeType: "image/png",
+    });
+    expect(asset.status).toBe("active");
+  });
+
+  it("commitPendingAsset 越权 / 不存在 → OwnershipError(404)", async () => {
+    const asset = await service.createGeneratedAsset(ctxA, {
+      assetType: "image",
+      name: "A 截图",
+      bytes: new Uint8Array([1]),
+      mimeType: "image/png",
+      pending: true,
+    });
+    await expect(
+      service.commitPendingAsset(ctxB, asset.id),
+    ).rejects.toBeInstanceOf(OwnershipError);
+    await expect(
+      service.commitPendingAsset(ctxA, "nope"),
+    ).rejects.toBeInstanceOf(OwnershipError);
+  });
+});
+
 describe("assets.service — getAsset / listAssets (C1/C2)", () => {
   it("getAsset(foreign id) → OwnershipError", async () => {
     const asset = await upload(ctxA);

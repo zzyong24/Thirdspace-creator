@@ -36,6 +36,7 @@ export const ASSET_OP_IDS = [
   "assets.files.create",
   "assets.trash",
   "assets.restore",
+  "assets.commit",
   "assets.favorite.toggle",
   "assets.usage.list",
 ] as const;
@@ -219,6 +220,14 @@ export function createAssetsTransport(
         }
         case "assets.restore": {
           const row = await service.restoreAsset(ctx, p.assetId ?? "");
+          return {
+            data: await withFile(row),
+            meta: { requestId: ctx.requestId },
+          };
+        }
+        case "assets.commit": {
+          // [T-219] 确认门:pending → active + stamp 当前号,返回更新后 asset(进素材库)。
+          const row = await service.commitPendingAsset(ctx, p.assetId ?? "");
           return {
             data: await withFile(row),
             meta: { requestId: ctx.requestId },

@@ -1,12 +1,13 @@
 "use client";
 
 /**
- * 对话内网页截图结果卡(T-084b,SPEC 2026-07-03 §2.2)。
+ * 对话内网页截图结果卡(T-084b;T-219 加确认门)。
  *
- * material.screenshot 工具真开无头浏览器给公开 URL 截图 → 已落素材中心(带 sourceUrl 存证)。
- * 本卡渲缩略图 + 来源 URL + 「加入弹药」(= createMaterialLink 挂当前项目,复用 ChatGatherCard
- * 同款按钮语义)。截图字节已真实产生、asset 已落库(存储动作,非 AI 写领域实体);「挂进这条
- * 内容用料链」才是人点的判断(与 asset-generate 候选门同界线,SPEC §2.2 注)。
+ * material.screenshot 工具真开无头浏览器给公开 URL 截图 → 落 **pending** asset(带 sourceUrl
+ * 存证,素材库 list 按 active 过滤 → 未确认前不进库)。本卡渲缩略图 + 来源 URL + 两级确认门:
+ *   ①「存入素材库」= client.commitPendingAsset(pending→active + stamp 当前号,铁律②:AI 写入
+ *      需人确认才进库);
+ *   ②(存入后)「加入弹药」= createMaterialLink 挂当前项目(把已入库截图挂进这条内容用料链)。
  *
  * 失败(打不开 / HTTP 码 / 登录墙)→ error 非 null → 卡渲诚实错误态,不摆假缩略图。
  */
@@ -42,15 +43,37 @@ export function ChatScreenshotCard({
   projectId: string | null;
 }) {
   const router = useRouter();
-  const [state, setState] = React.useState<"idle" | "saving" | "saved" | "error">(
-    "idle",
-  );
+  // [T-219] 存入素材库(确认门①):pending → active。
+  const [saveState, setSaveState] = React.useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  // 加入弹药(确认门②,存入后才可):createMaterialLink 挂当前项目。
+  const [linkState, setLinkState] = React.useState<
+    "idle" | "linking" | "linked" | "error"
+  >("idle");
 
-  const save = React.useCallback(async () => {
-    if (!asset || !projectId) return;
-    setState("saving");
+  // [T-219] 「存入素材库」= commitPendingAsset(pending→active + stamp 当前号,铁律②)。
+  const commit = React.useCallback(async () => {
+    if (!asset) return;
+    setSaveState("saving");
     try {
-      // 「加入弹药」= 把已落库的截图 asset 挂进当前项目用料链(与 ChatGatherCard 同链,人采纳)。
+      await client.commitPendingAsset({
+        params: { assetId: asset.id },
+        query: undefined,
+        body: undefined,
+      });
+      setSaveState("saved");
+      router.refresh();
+    } catch {
+      setSaveState("error");
+    }
+  }, [asset, router]);
+
+  // 「加入弹药」= 把已入库(active)截图 asset 挂进当前项目用料链(与 ChatGatherCard 同链)。
+  const link = React.useCallback(async () => {
+    if (!asset || !projectId) return;
+    setLinkState("linking");
+    try {
       await client.createMaterialLink({
         params: undefined,
         query: undefined,
@@ -62,10 +85,10 @@ export function ChatScreenshotCard({
           stage: "script",
         },
       });
-      setState("saved");
+      setLinkState("linked");
       router.refresh();
     } catch {
-      setState("error");
+      setLinkState("error");
     }
   }, [asset, projectId, router]);
 
@@ -93,7 +116,8 @@ export function ChatScreenshotCard({
       className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        网页截图 · 真证据 · 已存素材中心
+        网页截图 · 真证据 ·{" "}
+        {saveState === "saved" ? "已存素材库" : "待确认存入"}
       </span>
       {asset.previewUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -105,7 +129,7 @@ export function ChatScreenshotCard({
         />
       ) : (
         <div className="flex h-24 w-full items-center justify-center rounded-md border border-dashed border-border text-[11px] text-text-subtle">
-          缩略图加载中 / 不可用（素材已入库）
+          缩略图加载中 / 不可用
         </div>
       )}
       <div className="min-w-0 truncate text-[12px] text-foreground" title={asset.name}>
@@ -122,31 +146,53 @@ export function ChatScreenshotCard({
         >
           🔗 {domainOf(asset.sourceUrl)}
         </a>
-        {projectId ? (
-          state === "saved" ? (
-            <span className="shrink-0 text-[10px] font-medium text-success">
-              已进弹药
-            </span>
+        {/* [T-219] 确认门①:未存入 → 「存入素材库」(pending→active);存入后 → 若有项目再露
+            确认门②「加入弹药」(挂用料链),否则显「已存素材库」。 */}
+        {saveState === "saved" ? (
+          projectId ? (
+            linkState === "linked" ? (
+              <span className="shrink-0 text-[10px] font-medium text-success">
+                已进弹药
+              </span>
+            ) : (
+              <button
+                type="button"
+                data-slot="chat-screenshot-link"
+                disabled={linkState === "linking"}
+                onClick={() => void link()}
+                className="inline-flex h-6 shrink-0 items-center rounded-control border border-brand/40 px-2 text-[10px] font-medium text-brand hover:bg-brand-soft disabled:opacity-50"
+              >
+                {linkState === "linking"
+                  ? "加入中…"
+                  : linkState === "error"
+                    ? "重试"
+                    : "加入弹药"}
+              </button>
+            )
           ) : (
-            <button
-              type="button"
-              data-slot="chat-screenshot-save"
-              disabled={state === "saving"}
-              onClick={() => void save()}
-              className="inline-flex h-6 shrink-0 items-center rounded-control border border-brand/40 px-2 text-[10px] font-medium text-brand hover:bg-brand-soft disabled:opacity-50"
-            >
-              {state === "saving"
-                ? "加入中…"
-                : state === "error"
-                  ? "重试"
-                  : "加入弹药"}
-            </button>
+            <span className="shrink-0 text-[10px] font-medium text-success">
+              已存素材库
+            </span>
           )
-        ) : null}
+        ) : (
+          <button
+            type="button"
+            data-slot="chat-screenshot-save"
+            disabled={saveState === "saving"}
+            onClick={() => void commit()}
+            className="inline-flex h-6 shrink-0 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+          >
+            {saveState === "saving"
+              ? "存入中…"
+              : saveState === "error"
+                ? "重试"
+                : "存入素材库"}
+          </button>
+        )}
       </div>
-      {!projectId ? (
+      {saveState === "saved" && !projectId ? (
         <p className="text-[11px] text-text-subtle">
-          未关联项目 —— 输入 @ 引用一个项目后可把截图加进它的弹药。
+          已进素材库 —— 输入 @ 引用一个项目后可把截图加进它的弹药。
         </p>
       ) : null}
     </div>
