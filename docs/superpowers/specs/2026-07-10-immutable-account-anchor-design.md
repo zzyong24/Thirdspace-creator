@@ -1,6 +1,6 @@
 # SPEC:不可变 account id 锚点 + 身份与昵称解耦(T-201)
 
-> 日期 2026-07-10 · 状态:待过 spec-review gate(改数据归属)· 对照宪法 [docs/产品定位.md](../../产品定位.md)
+> 日期 2026-07-10 · 状态:✅ **PASS(2026-07-10 过 gate)** —— 双通道(MiniMax PASS/0 findings 合 §7 数据底座租户隔离 + 主 agent 真机 dispatch 实测锁两 bug)。裁决见 [.review.md](2026-07-10-immutable-account-anchor-design.review.md)。可开工 T-201a~d。· 对照宪法 [docs/产品定位.md](../../产品定位.md)
 > 单一执行总账在 [BACKLOG.md](../../../BACKLOG.md)。用户 2026-07-10 拍板设计,本 SPEC 是其形式化。
 
 ## 0. 一句话
