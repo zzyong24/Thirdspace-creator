@@ -217,6 +217,69 @@ function buildServerApp() {
   console.log(`[build-sidecar]   [T-172] 产出 sidecar/server.app（LSUIElement，Dock 隐身）→ ${innerBin}`);
 }
 
+// [T-225] onnxruntime-node 原生库 co-ship —— Next standalone tracing 拷了 onnxruntime_binding.node，
+//   但**漏了它运行时 dlopen 的 libonnxruntime.<ver>.dylib**(同 @playwright/test 那类 tracing 盲区)。
+//   缺它 → whisper-local ASR「Library not loaded: @rpath/libonnxruntime.*.dylib」→ 逐字稿转录**全失败**
+//   (真机 T-225 实测:transcribe.douyin 49/49 failed→reconstruct 全崩→飞轮无真内容→编导编造)。
+//   修:把 dylib(mac)/so(linux)/dll(win) 补拷进 sidecar 内每个 onnxruntime-node 的 bin/napi-v3/<plat>/<arch>/
+//   与 .node 同目录(rpath 首选就近查同目录)。硬自检:补完仍缺则 throw(不容假通过,教训同 playwright 自检②)。
+function ensureOnnxRuntimeDylib() {
+  const libExt = platform === "darwin" ? ".dylib" : platform === "win32" ? ".dll" : ".so";
+  const isLib = (f) => f.startsWith("libonnxruntime") && f.endsWith(libExt);
+  // 递归找 sidecar 里所有 onnxruntime_binding.node 所在目录(可能多份:frontend/ 与根 node_modules)。
+  const bindingDirs = [];
+  const walk = (dir) => {
+    let entries;
+    try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      if (e.isSymbolicLink()) continue;
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name === "onnxruntime_binding.node") bindingDirs.push(dir);
+    }
+  };
+  walk(SIDECAR_RUNTIME);
+  if (bindingDirs.length === 0) return; // sidecar 没用到 onnxruntime → 无需处理
+  // 源库:从 REPO/node_modules/.pnpm 找同尾路径(bin/napi-v3/<plat>/<arch>)的 libonnxruntime*.<ext>。
+  const findSourceLibs = (bindingDir) => {
+    const tail = bindingDir.split(/onnxruntime-node[/\\]/).pop(); // e.g. bin/napi-v3/darwin/arm64
+    const pnpmRoot = join(REPO, "node_modules", ".pnpm");
+    let dirs;
+    try { dirs = readdirSync(pnpmRoot).filter((x) => x.startsWith("onnxruntime-node@")); } catch { return []; }
+    for (const d of dirs) {
+      const cand = join(pnpmRoot, d, "node_modules", "onnxruntime-node", tail);
+      try {
+        const files = readdirSync(cand).filter(isLib);
+        if (files.length) return files.map((f) => join(cand, f));
+      } catch { /* 继续找下一个版本目录 */ }
+    }
+    return [];
+  };
+  let copied = 0;
+  for (const bd of bindingDirs) {
+    let have = false;
+    try { have = readdirSync(bd).some(isLib); } catch { /* noop */ }
+    if (have) continue;
+    const srcs = findSourceLibs(bd);
+    for (const src of srcs) {
+      const dst = join(bd, src.split(/[/\\]/).pop());
+      rmSync(dst, { force: true });
+      copyFileSync(src, dst);
+      if (platform !== "win32") chmodSync(dst, 0o644);
+      copied++;
+    }
+  }
+  console.log(`[build-sidecar]   ✓ [T-225] onnxruntime 原生库补拷 ${copied} 个(修 whisper-local 逐字稿转录 dlopen 崩)`);
+  // 硬自检:每个 binding 目录现在必须有原生库,否则打包版转录必崩 —— 宁可 build 失败也不假通过。
+  for (const bd of bindingDirs) {
+    let ok = false;
+    try { ok = readdirSync(bd).some(isLib); } catch { /* noop */ }
+    if (!ok) {
+      throw new Error(`[build-sidecar] 自检失败[T-225]:${bd} 仍缺 libonnxruntime${libExt} → 逐字稿转录会全崩`);
+    }
+  }
+}
+
 function main() {
   // [T-164 P6] tauri.conf.json beforeBuildCommand 会在 tauri build 阶段再跑本脚本重建 sidecar,
   //   会**覆盖 desktop:package 步2 的 JS 混淆结果**。package.mjs 在 tauri build 前已跑过
@@ -368,6 +431,9 @@ function main() {
   // [T-170] 实拷 Playwright 包进 sidecar(修 Next tracing 漏 @playwright/test → 打包扫码崩)。
   //   放在打 tarball 之前,让 playwright 包进 tarball。
   bundlePlaywright();
+
+  // [T-225] onnxruntime 原生库补拷(修 whisper-local 逐字稿转录 dlopen 崩)—— 在打 tarball 前，让 dylib 进包。
+  ensureOnnxRuntimeDylib();
 
   // [T-169] dylib co-ship + playwright 实拷之后打 tarball(含 lib/ 里的 libnode)。tauri build
   //   bundle 的是这个单文件,规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压。
