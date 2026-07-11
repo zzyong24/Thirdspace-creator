@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-216 | 对标飞轮前端接线(对标登记UI+护栏排序接选题列表+淘汰原因输入) | 📋 | [SPEC](docs/superpowers/specs/2026-07-11-benchmark-topic-flywheel-design.md) | T-212 代码全成缺 FE:①对标源登记页(benchmark.sources CRUD 已通,建表单登记 sec_uid+开关)②rankTopicsWithGuardrails seam 接选题列表读(现 positioningFit 排,护栏不可见)③选题淘汰加原因输入(dropReason 契约已通)。纯前端接线。 |
 | T-216 | 对标飞轮前端接线(对标登记UI+护栏排序接选题列表+淘汰原因输入) | 📋 | [SPEC](docs/superpowers/specs/2026-07-11-benchmark-topic-flywheel-design.md) | T-212 代码全成缺 FE:①对标源登记页(benchmark.sources CRUD 已通)②rankTopicsWithGuardrails seam 接选题列表读(现 positioningFit 排,护栏不可见)③选题淘汰加原因输入(dropReason 契约已通)。纯前端接线。 |
 | T-214 | 采集总粉丝数→回填账号(治编导"粉丝 0")| ✅ 2026-07-11(44d6b30)·**真机验证**:[douyin-identity] followerCount=2506,followerBaseline 从 0→2506。author 对象确带粉丝字段(三键兜底命中),采集直抓+回填,编导账号画像不再 0。60+70 单测+双端 tsc 绿 | — | T-213 定位:总粉丝数从没采集(parseSelfIdentity 只抓昵称/secUid;metrics 只 follower_gain 增量;followerBaseline 恒 0)。编导账号画像读 0。修:采集从创作者中心主页抓总粉丝数→身份对齐后 updateAccount({followerBaseline})(update seam repository.ts:189 已存在,缺抓取+接线)。查粉丝字段在现有 work-list XHR author 里能否直接拿(follower_count/mplatform_followers_count)。 |
 | T-215 | 对本号跑评论文本采集(ingestComments)| 📋 | — | T-213 定位:评论文本没进 audience_signals(=0),但指标里 comments:6 说明评论存在→编导说"没评论"实则有。采集器有 ingestComments 能力,对本号没跑。修:确保评论采集对本号真跑(可能被 T-176 退避/item_id/隐藏过滤挡,查为何 0)。 |
