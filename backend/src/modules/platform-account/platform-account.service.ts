@@ -42,12 +42,14 @@ export interface ServiceDeps {
 export interface CreateAccountInput {
   platform: string;
   accountHandle: string;
+  externalAccountId?: string | null; // [T-201b] 稳定身份锚(sec_uid)
   secretReference?: string | null;
   followerBaseline?: number;
 }
 
 export interface UpdateAccountInput {
-  accountHandle?: string;
+  accountHandle?: string; // [T-201b] 显示名(display),非唯一可改
+  externalAccountId?: string | null; // [T-201b] 身份锚回填(仅 NULL→值)
   secretReference?: string | null;
   followerBaseline?: number;
   status?: "active" | "archived";
@@ -165,6 +167,7 @@ export function createPlatformAccountService(
       const row = await repoFor(ctx).createAccount({
         platform: input.platform,
         accountHandle: input.accountHandle,
+        externalAccountId: input.externalAccountId ?? null, // [T-201b]
         secretReference: input.secretReference ?? null,
         followerBaseline: input.followerBaseline,
       });

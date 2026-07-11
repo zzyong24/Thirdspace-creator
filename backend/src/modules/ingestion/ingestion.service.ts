@@ -145,9 +145,11 @@ export interface IngestionPlatformAccountPort {
   // [T-136 §D] 用采集到的真实身份把当前号的占位 handle(「我的抖音」)更新为真实昵称
   //   (幂等:handle 已是真实值 / 传入空 → no-op)。可选 —— 未实现时 refreshDouyin 跳过账号
   //   handle 回填(仅回填 external_source),不破旧组合根。仅当 identity 抓到才调。
+  // [T-201b] 顺带把稳定身份锚 externalAccountId(sec_uid)一并透传:实现侧仅当该号身份键为空时
+  //   一次性回填(永不覆盖已有 id)。handle 只更显示名,绝不参与身份匹配。
   updateAccountHandle?(
     ctx: RequestContext,
-    input: { platform: string; handle: string },
+    input: { platform: string; handle: string; externalAccountId?: string | null },
   ): Promise<void>;
 }
 
@@ -394,12 +396,13 @@ export function createIngestionService(args: {
     } catch (err) {
       console.error("[ingestion] applyDouyinIdentity: 回填 external_source 失败:", err);
     }
-    // ② 平台账号:把占位 handle 更新为真实昵称(端口实现 updateAccountHandle 时)。
+    // ② 平台账号:把占位 handle 更新为真实昵称 + [T-201b] 顺带回填稳定身份锚 sec_uid(端口实现时)。
     if (platformAccount?.updateAccountHandle) {
       try {
         await platformAccount.updateAccountHandle(ctx, {
           platform: "douyin",
           handle: nickname,
+          externalAccountId: identity.secUid || null, // [T-201b] 身份键(空则不回填)
         });
       } catch (err) {
         console.error("[ingestion] applyDouyinIdentity: 回填 platform_account handle 失败:", err);

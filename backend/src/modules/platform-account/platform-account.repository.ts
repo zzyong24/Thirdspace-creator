@@ -25,6 +25,7 @@ export interface RepoDeps {
 export interface CreateAccountInput {
   platform: string;
   accountHandle: string;
+  externalAccountId?: string | null; // [T-201b] 稳定身份锚(sec_uid);首绑未知 → null
   secretReference?: string | null;
   followerBaseline?: number;
 }
@@ -36,7 +37,8 @@ export interface ListAccountsQuery {
 }
 
 export interface UpdateAccountInput {
-  accountHandle?: string;
+  accountHandle?: string; // [T-201b] 显示名(display),可改非唯一
+  externalAccountId?: string | null; // [T-201b] 身份锚回填(仅 NULL→值,永不改已有 id)
   secretReference?: string | null;
   followerBaseline?: number;
   status?: "active" | "archived";
@@ -77,7 +79,9 @@ function isUniqueViolation(err: unknown): boolean {
   const message = (err as { message?: unknown }).message;
   return (
     typeof message === "string" &&
-    message.includes("platform_accounts_handle_ux")
+    // [T-201b] 身份唯一索引 handle_ux → external_ux(旧名保留兜旧库/兼容)
+    (message.includes("platform_accounts_external_ux") ||
+      message.includes("platform_accounts_handle_ux"))
   );
 }
 
@@ -119,6 +123,7 @@ export function createPlatformAccountRepository(
             userId: deps.userId,
             platform: input.platform,
             accountHandle: input.accountHandle,
+            externalAccountId: input.externalAccountId ?? null, // [T-201b]
             secretReference: input.secretReference ?? null,
             followerBaseline: input.followerBaseline ?? 0,
             status: "active",
@@ -177,6 +182,8 @@ export function createPlatformAccountRepository(
       const set: Record<string, unknown> = { updatedAt: deps.now() };
       if (patch.accountHandle !== undefined)
         set.accountHandle = patch.accountHandle;
+      if (patch.externalAccountId !== undefined)
+        set.externalAccountId = patch.externalAccountId; // [T-201b] 身份锚回填
       if (patch.secretReference !== undefined)
         set.secretReference = patch.secretReference;
       if (patch.followerBaseline !== undefined)

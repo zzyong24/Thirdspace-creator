@@ -119,6 +119,21 @@ async function openAndMigrate(dataDir?: string): Promise<{
         "ALTER TABLE scheduled_job ADD COLUMN IF NOT EXISTS account_id TEXT",
       );
     }
+    // [T-201b fixup] 同款兜底:老 pglite 无 platform_accounts.external_account_id 列(0031 前装机),
+    // migrator 若因 journal 不同步没跑 0031 → 身份解析读该列报「column 不存在」。缺就补(幂等);
+    // 并把旧 handle 唯一索引换成 sec_uid 身份唯一(与 0031 一致,幂等 DROP/CREATE IF)。
+    const extColCheck = await client.query<{ exists: boolean }>(
+      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'platform_accounts' AND column_name = 'external_account_id') AS exists",
+    );
+    if (!extColCheck.rows[0]?.exists) {
+      await client.exec(
+        "ALTER TABLE platform_accounts ADD COLUMN IF NOT EXISTS external_account_id TEXT",
+      );
+      await client.exec("DROP INDEX IF EXISTS platform_accounts_handle_ux");
+      await client.exec(
+        "CREATE UNIQUE INDEX IF NOT EXISTS platform_accounts_external_ux ON platform_accounts(user_id, platform, external_account_id)",
+      );
+    }
     return { db, client };
   } catch (err) {
     // client 可能已半开占着目录 —— 关掉(自身也可能因 WASM 已 abort 再抛,吞掉)。

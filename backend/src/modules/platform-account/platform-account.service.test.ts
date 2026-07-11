@@ -84,11 +84,27 @@ describe("platform-account service", () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
-  it("rejects a duplicate handle with ConflictError", async () => {
-    await svc.createAccount(ctxA, { platform: "douyin", accountHandle: "@dup" });
+  // [T-201b] 身份唯一键换 external_account_id(sec_uid):撞同 sec_uid → ConflictError;
+  //   同 handle 不同/无 sec_uid → 允许(display 非唯一)。
+  it("rejects a duplicate external_account_id with ConflictError; allows duplicate handle", async () => {
+    await svc.createAccount(ctxA, {
+      platform: "douyin",
+      accountHandle: "@a",
+      externalAccountId: "sec-uid-1",
+    });
     await expect(
-      svc.createAccount(ctxA, { platform: "douyin", accountHandle: "@dup" }),
+      svc.createAccount(ctxA, {
+        platform: "douyin",
+        accountHandle: "@b",
+        externalAccountId: "sec-uid-1",
+      }),
     ).rejects.toBeInstanceOf(ConflictError);
+    // 同 handle、无 sec_uid → 允许(不再撞唯一)。
+    const dup = await svc.createAccount(ctxA, {
+      platform: "douyin",
+      accountHandle: "@a",
+    });
+    expect(dup.accountHandle).toBe("@a");
   });
 
   it("updateAccount patches only provided fields and rejects unknown status", async () => {

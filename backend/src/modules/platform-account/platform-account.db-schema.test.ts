@@ -40,11 +40,14 @@ describe("platform-account db-schema", () => {
     });
   });
 
-  it("rejects a duplicate (user_id, platform, account_handle)", async () => {
+  // [T-201b] 身份唯一键从可变 account_handle 换到稳定 external_account_id(sec_uid):
+  //   同 (user_id, platform, external_account_id) 撞唯一 → reject。
+  it("rejects a duplicate (user_id, platform, external_account_id)", async () => {
     const base = {
       userId: "user-a",
       platform: "bilibili",
       accountHandle: "@dup",
+      externalAccountId: "sec-uid-dup",
       createdAt: "2026-06-21T00:00:00.000Z",
       updatedAt: "2026-06-21T00:00:00.000Z",
     };
@@ -52,6 +55,33 @@ describe("platform-account db-schema", () => {
     await expect(
       db.insert(platformAccounts).values({ id: "acct-b", ...base }),
     ).rejects.toBeTruthy();
+  });
+
+  // [T-201b] account_handle 降级为非唯一显示名:同 (user, platform, handle) 但身份键(NULL)不撞 → 允许。
+  //   (PG 多个 NULL external_account_id 不冲突。)
+  it("allows duplicate account_handle when external_account_id differs / is null (display 非唯一)", async () => {
+    const ts = "2026-06-21T00:00:00.000Z";
+    await db.insert(platformAccounts).values({
+      id: "acct-h1",
+      userId: "user-a",
+      platform: "douyin",
+      accountHandle: "@same-display",
+      createdAt: ts,
+      updatedAt: ts,
+    });
+    await db.insert(platformAccounts).values({
+      id: "acct-h2",
+      userId: "user-a",
+      platform: "douyin",
+      accountHandle: "@same-display", // 同显示名,身份键都 NULL → 允许共存
+      createdAt: ts,
+      updatedAt: ts,
+    });
+    const rows = await db
+      .select()
+      .from(platformAccounts)
+      .where(eq(platformAccounts.accountHandle, "@same-display"));
+    expect(rows).toHaveLength(2);
   });
 
   it("same handle different platform / different user is allowed (per-user scoped)", async () => {

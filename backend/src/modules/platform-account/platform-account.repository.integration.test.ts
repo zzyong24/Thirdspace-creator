@@ -50,24 +50,41 @@ describe("platform-account repository", () => {
     expect(await a.existsOwnedActiveAccount(created.id, "douyin")).toBe(true);
   });
 
-  it("enforces per-user (platform, handle) uniqueness", async () => {
+  // [T-201b] 身份唯一键 = (user_id, platform, external_account_id)(稳定 sec_uid),不再是可变 handle。
+  it("enforces per-user (platform, external_account_id) uniqueness", async () => {
     const a = repoFor(db, "user-a");
-    await a.createAccount({ platform: "douyin", accountHandle: "@dup" });
-    // same user, same platform+handle → ConflictError.
+    await a.createAccount({
+      platform: "douyin",
+      accountHandle: "@main",
+      externalAccountId: "sec-uid-x",
+    });
+    // same user, same platform + same sec_uid → ConflictError(哪怕 display 名不同)。
     await expect(
-      a.createAccount({ platform: "douyin", accountHandle: "@dup" }),
+      a.createAccount({
+        platform: "douyin",
+        accountHandle: "@another-display",
+        externalAccountId: "sec-uid-x",
+      }),
     ).rejects.toBeInstanceOf(ConflictError);
+    // 同 handle 但身份键不同(NULL)→ OK(display 非唯一)。
+    const dupHandle = await a.createAccount({
+      platform: "douyin",
+      accountHandle: "@main",
+    });
+    expect(dupHandle.accountHandle).toBe("@main");
     // same user, different platform → OK.
     const other = await a.createAccount({
       platform: "bilibili",
       accountHandle: "@dup",
+      externalAccountId: "sec-uid-x",
     });
     expect(other.platform).toBe("bilibili");
-    // different user, same platform+handle → OK (per-user scoped).
+    // different user, same platform + same sec_uid → OK (per-user scoped).
     const b = repoFor(db, "user-b");
     const bRow = await b.createAccount({
       platform: "douyin",
       accountHandle: "@dup",
+      externalAccountId: "sec-uid-x",
     });
     expect(bRow.userId).toBe("user-b");
   });

@@ -29,6 +29,7 @@ export function toPlatformAccountDto(
     userId: row.userId,
     platform: row.platform as PlatformAccountResource["platform"],
     accountHandle: row.accountHandle,
+    externalAccountId: row.externalAccountId ?? null, // [T-201b] 稳定身份锚(sec_uid),可空
     secretReference: row.secretReference ?? null,
     followerBaseline: row.followerBaseline,
     status: row.status as PlatformAccountResource["status"],

@@ -158,6 +158,68 @@ describe("douyin 扫码 upsert 去重 + 占位号合并", () => {
     expect(await activeHandles(svc)).toEqual(["@已经是真实号"]);
   });
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // [T-201b] 身份键解耦(external_account_id / sec_uid):昵称漂移不再冒重号。
+  // ───────────────────────────────────────────────────────────────────────────
+
+  async function findAccount(
+    svc: PlatformAccountService,
+    id: string,
+  ) {
+    const { rows } = await svc.listAccounts(ctx, {
+      platform: "douyin",
+      limit: 100,
+      offset: 0,
+    });
+    return rows.find((r) => r.id === id)!;
+  }
+
+  it("[T-201b] ensure:按 external_account_id(sec_uid)幂等复用 —— 昵称已改真实值,再绑仍复用同号", async () => {
+    // 号早已建、handle 是真实昵称、身份键=sec_uid。
+    const real = await svc.createAccount(ctx, {
+      platform: "douyin",
+      accountHandle: "月明水清深",
+      externalAccountId: "sec-uid-A",
+    });
+    // 再次绑定:传占位 handle 但带上采集到的 sec_uid → 按身份键复用,绝不冒第二个号。
+    const { id } = await ensureDouyinAccountUpsert(svc, ctx, {
+      platform: "douyin",
+      handle: "我的抖音",
+      externalAccountId: "sec-uid-A",
+    });
+    expect(id).toBe(real.id);
+    expect(await activeHandles(svc)).toEqual(["月明水清深"]); // 仍一行
+  });
+
+  it("[T-201b] merge:昵称回填只改 display,且一次性回填身份键 sec_uid(永不覆盖已有)", async () => {
+    // 占位号,身份键为空。
+    const ph = await svc.createAccount(ctx, {
+      platform: "douyin",
+      accountHandle: "我的抖音",
+    });
+    expect((await findAccount(svc, ph.id)).externalAccountId).toBeNull();
+    // 采集抓到真实昵称 + sec_uid → 回填 display + 身份键。
+    await mergeDouyinPlaceholders(svc, ctx, {
+      platform: "douyin",
+      handle: "@真实昵称",
+      externalAccountId: "sec-uid-B",
+    });
+    const after = await findAccount(svc, ph.id);
+    expect(after.accountHandle).toBe("@真实昵称"); // display 改了
+    expect(after.externalAccountId).toBe("sec-uid-B"); // 身份键落地
+    // 号已非占位、身份键已有 → 再次采集(即便平台返回不同临时 sec_uid)身份键**不被覆盖**(永不改身份锚)。
+    //   走 realExisting 分支(handle 命中当前真实名),backfill 因 current 非空跳过。
+    await mergeDouyinPlaceholders(svc, ctx, {
+      platform: "douyin",
+      handle: "@真实昵称",
+      externalAccountId: "sec-uid-DIFFERENT",
+    });
+    const after2 = await findAccount(svc, ph.id);
+    expect(after2.externalAccountId).toBe("sec-uid-B"); // 身份键纹丝不动
+    expect(after2.id).toBe(ph.id); // id 锚点不变
+    expect(await activeHandles(svc)).toEqual(["@真实昵称"]); // 始终一行
+  });
+
   it("扫码全链路模拟:ensure(建占位)→ ensure(复用不冒俩)→ merge(回填真实名)= 一行真实号", async () => {
     // migration seed 占位。
     await svc.createAccount(ctx, { platform: "douyin", accountHandle: "待完善" });

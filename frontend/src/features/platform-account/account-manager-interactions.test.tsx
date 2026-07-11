@@ -43,6 +43,7 @@ const DOUYIN: PlatformAccountResource = {
   userId: "user-a",
   platform: "douyin",
   accountHandle: "@抖音真实昵称",
+  externalAccountId: "sec-uid-d", // [T-201b]
   secretReference: null,
   followerBaseline: 1000,
   status: "active",

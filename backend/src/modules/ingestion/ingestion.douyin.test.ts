@@ -217,7 +217,11 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
           records: MetricRecord[];
           identity: { nickname: string; secUid: string; douyinId: string } | null;
         },
-    handleUpdates: Array<{ platform: string; handle: string }>,
+    handleUpdates: Array<{
+      platform: string;
+      handle: string;
+      externalAccountId?: string | null;
+    }>,
   ) {
     let seq = 0;
     const douyinFetch: DouyinFetchPort = {
@@ -263,7 +267,7 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
   it("抓到真实身份 → external_source.name=真实昵称、sourceIdentifier=抖音号;platform_account handle 更新", async () => {
     const { db } = await createDb();
     await seedSource(db, "src-douyin-id", "douyin"); // 占位 name(seedSource 里 name=sourceType)
-    const updates: Array<{ platform: string; handle: string }> = [];
+    const updates: Array<{ platform: string; handle: string; externalAccountId?: string | null }> = [];
     const svc = identityService(
       db,
       {
@@ -281,14 +285,17 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
     expect(src?.name).toBe("月色创作者"); // 真实昵称替占位
     expect(src?.sourceIdentifier).toBe("moonlit_creator"); // 抖音号存 sourceIdentifier
     // platform_account handle 也更新为真实昵称。
-    expect(updates).toEqual([{ platform: "douyin", handle: "月色创作者" }]);
+    // [T-201b] 顺带把稳定身份锚 sec_uid 一并透传(handle=显示名,externalAccountId=身份键)。
+    expect(updates).toEqual([
+      { platform: "douyin", handle: "月色创作者", externalAccountId: "MS4wsecuid" },
+    ]);
   });
 
   it("抓不到身份(identity=null)→ 保留占位 name,不覆盖不清空、不更新账号 handle", async () => {
     const { db } = await createDb();
     await seedSource(db, "src-douyin-noid", "douyin");
     const before = await readSource(db, "src-douyin-noid");
-    const updates: Array<{ platform: string; handle: string }> = [];
+    const updates: Array<{ platform: string; handle: string; externalAccountId?: string | null }> = [];
     const svc = identityService(
       db,
       { records: [record], identity: null },
@@ -304,7 +311,7 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
     const { db } = await createDb();
     await seedSource(db, "src-douyin-legacy", "douyin");
     const before = await readSource(db, "src-douyin-legacy");
-    const updates: Array<{ platform: string; handle: string }> = [];
+    const updates: Array<{ platform: string; handle: string; externalAccountId?: string | null }> = [];
     // fetch 返回裸 MetricRecord[](旧装配)→ normalizeFetch identity=null。
     const svc = identityService(db, [record], updates);
     const run = await svc.refreshDouyin(ctx, {
@@ -319,7 +326,7 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
   it("幂等:重复采集同一昵称 → external_source.name 稳定(值不变,无副作用)", async () => {
     const { db } = await createDb();
     await seedSource(db, "src-douyin-idem", "douyin");
-    const updates: Array<{ platform: string; handle: string }> = [];
+    const updates: Array<{ platform: string; handle: string; externalAccountId?: string | null }> = [];
     const svc = identityService(
       db,
       {

@@ -586,13 +586,20 @@ export function resolveContextDeps(
 export async function ensureDouyinAccountUpsert(
   service: PlatformAccountService,
   ctx: RequestContext,
-  input: { platform: string; handle: string },
+  input: { platform: string; handle: string; externalAccountId?: string | null },
 ): Promise<{ id: string }> {
   const { rows } = await service.listAccounts(ctx, {
     platform: input.platform,
     limit: 100,
     offset: 0,
   });
+  // [T-201b] 身份解析**优先**按稳定 external_account_id(sec_uid)幂等复用 —— 身份键不再是可变 handle。
+  //   有 sec_uid 且命中 → 直接复用该号(display 名叫什么都无关)。account_handle 只用于显示,绝不匹配身份。
+  const ext = input.externalAccountId?.trim();
+  if (ext) {
+    const byExt = rows.find((r) => r.externalAccountId === ext);
+    if (byExt) return { id: byExt.id };
+  }
   const existing = rows.find((r) => r.accountHandle === input.handle);
   if (existing) return { id: existing.id };
   if (isPlaceholderHandle(input.handle)) {
@@ -607,6 +614,7 @@ export async function ensureDouyinAccountUpsert(
     const created = await service.createAccount(ctx, {
       platform: input.platform,
       accountHandle: input.handle,
+      externalAccountId: ext || null, // [T-201b] 首绑 sec_uid 未知 → null(回填不到共存)
     });
     return { id: created.id };
   } catch (err) {
@@ -631,10 +639,11 @@ export async function ensureDouyinAccountUpsert(
 export async function mergeDouyinPlaceholders(
   service: PlatformAccountService,
   ctx: RequestContext,
-  input: { platform: string; handle: string },
+  input: { platform: string; handle: string; externalAccountId?: string | null },
 ): Promise<void> {
   const real = input.handle.trim();
   if (!real) return;
+  const ext = input.externalAccountId?.trim() || null; // [T-201b] 采集到的 sec_uid(可空)
   const { rows } = await service.listAccounts(ctx, {
     platform: input.platform,
     limit: 100,
@@ -642,9 +651,24 @@ export async function mergeDouyinPlaceholders(
   });
   const active = rows.filter((r) => r.status === "active");
   const placeholders = active.filter((r) => isPlaceholderHandle(r.accountHandle));
+  // [T-201b] 身份键回填:仅当该号 external_account_id 当前为空(NULL/空串)才写入采集到的 sec_uid;
+  //   **永不覆盖已有身份键 / id**。是身份锚的一次性落地,不参与后续显示逻辑。
+  async function backfillExternalId(accountId: string, current: string | null): Promise<void> {
+    if (!ext) return;
+    if (current && current.trim()) return; // 已有身份键 → 不动
+    try {
+      await service.updateAccount(ctx, accountId, { externalAccountId: ext });
+    } catch (err) {
+      console.error(
+        "[persistence] mergeDouyinPlaceholders: 回填 external_account_id 失败:",
+        err,
+      );
+    }
+  }
   const realExisting = active.find((r) => r.accountHandle === real);
 
   if (realExisting) {
+    await backfillExternalId(realExisting.id, realExisting.externalAccountId);
     for (const p of placeholders) {
       await archivePlaceholderBestEffort(service, ctx, p.id);
     }
@@ -652,6 +676,7 @@ export async function mergeDouyinPlaceholders(
   }
   const [keep, ...rest] = placeholders;
   if (!keep) return; // 无占位可更新 → 交由后续 ensureAccount 建真实号
+  await backfillExternalId(keep.id, keep.externalAccountId);
   try {
     await service.updateAccount(ctx, keep.id, { accountHandle: real });
   } catch (err) {
