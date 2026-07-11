@@ -229,8 +229,8 @@ const CATEGORY_LABEL: Record<string, string> = {
  *                     全量统计),并在 VM 上回传 `activeTag` 供页面渲染
  *                     「清除筛选」。
  * @param options.page [T-118b/T-119] `?page=` 的 1-based 页码(缺省 1)。「最近
- *                     更新」= 知识卡 + validated 经验条目混排,按 updatedAt 倒序
- *                     (最新在前),10 条/页;`recent` 为该页切片,VM 回传
+ *                     更新」= 知识卡 + validated 经验条目混排,按 updatedAt 正序
+ *                     ([T-211] 最早在前),10 条/页;`recent` 为该页切片,VM 回传
  *                     recentPage / recentTotalPages / recentTotal。
  */
 export async function buildKnowledgeDashboardViewModel(
@@ -306,8 +306,8 @@ export async function buildKnowledgeDashboardViewModel(
   const experienceRows =
     activeTag === null ? await fetchValidatedLearnings(client) : [];
 
-  // [T-118b/T-119] 「最近更新」混排 + 分页:知识卡行 + 经验行按 updatedAt 倒序
-  // (最新在前)合流,10 条/页;recent = 当前页切片。经验行只在默认视图混排,
+  // [T-118b/T-119] 「最近更新」混排 + 分页:知识卡行 + 经验行按 updatedAt 正序
+  // ([T-211] 最早在前)合流,10 条/页;recent = 当前页切片。经验行只在默认视图混排,
   // 标签筛选视图仍是纯知识卡列表(不分页,保持 KNOW-13 语义)。
   const knowledgeRows = buildRecentRowsFromItems(recentItems);
   const mergedRecent =
@@ -340,7 +340,7 @@ export async function buildKnowledgeDashboardViewModel(
   };
 }
 
-// [T-118b/T-119] 「最近更新」混排每页条数(与项目列表 T-096 范式一致,最新在前)。
+// [T-118b/T-119] 「最近更新」混排每页条数。
 const RECENT_PAGE_SIZE = 10;
 
 // 归一化 `?page=` 参数:非有限/小于 1 → 1(1-based)。上界由 paginateRecent 夹取。
@@ -381,7 +381,7 @@ async function fetchValidatedLearnings(
 
 /**
  * [T-118b] 混排知识卡行 + 经验行:经验行映射成 KnowledgeRow(origin="experience",
- * type 固定「经验」chip,携只读 experienceDetail),与知识卡按 updatedAt 倒序合流。
+ * type 固定「经验」chip,携只读 experienceDetail),与知识卡按 updatedAt 正序合流([T-211])。
  * 经验行无 taxonomy 标签 → tags 空;status 固定 active(仅用于行样式,经验恒生效)。
  */
 function mergeRecentRows(
@@ -398,9 +398,11 @@ function mergeRecentRows(
     origin: "experience",
     experienceDetail: { insight: row.insight, reviewId: row.reviewId },
   }));
+  // [T-211] 正序:知识库列表按时间升序(最早在前),预设课程/章节按自然序(第 1 节
+  // 在前)。原为倒序(b vs a,最新在前),用户要求改正序。
   return [...knowledgeRows, ...experienceAsRows]
     .slice()
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
 }
 
 /**

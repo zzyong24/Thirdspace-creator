@@ -936,7 +936,7 @@ function RecentKnowledgeTable({
 }) {
   return (
     <div data-slot="recent-knowledge-table-wrapper">
-      <SectionCard title="最近更新" description="按更新时间倒序">
+      <SectionCard title="最近更新" description="按更新时间正序">
         <table
           data-slot="recent-knowledge-table"
           className="w-full text-[13px]"

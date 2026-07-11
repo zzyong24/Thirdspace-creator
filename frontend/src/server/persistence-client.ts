@@ -24,7 +24,11 @@ import {
   seedCanonicalUser,
   type IdentityService,
 } from "@creatoros/backend/modules/identity";
-import { seedWinVideoTutor } from "@/server/seeds/win-video-tutor";
+import {
+  seedWinVideoTutor,
+  // [T-211] 存量去前缀 fixup 用的旧标题前缀常量。
+  WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX,
+} from "@/server/seeds/win-video-tutor";
 import {
   createTaxonomyRepository,
   createTaxonomyService,
@@ -5042,6 +5046,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 整篇 markdown 入 content)。**替代 T-135 退役的金句假内容**,让知识库开箱就有真东西。
   // Idempotent(查 sourceMetadata.origin);文件缺失/异常 → 安静 no-op(该 skill 没装到本机是合法状态,
   // 绝不能因此炸 buildPersistence)。用户首次开 app 触发一次,后续 build/install 跳过。
+  // [T-211] 课程保留作预设(读法 B),只去品牌前缀:seed 内部标题模板已去「Win 短视频私教 · 」,
+  // 存量带前缀条目由下方 fixupWinVideoTutorTitles 幂等改名。
   try {
     const seeded = await seedWinVideoTutor(knowledgeService, {
       userId: CANONICAL_USER_ID,
@@ -5050,6 +5056,36 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     if (seeded > 0) {
       console.log(
         `[seed] win-video-tutor 课程已写入 ${seeded} 节到 canonical user 知识库`,
+      );
+    }
+    // [T-211] 存量去前缀 fixup:已装机(seed 早于本改动)的条目标题仍带「Win 短视频私教 · 」
+    // 前缀 —— 经仓储幂等 strip(drizzle 留在后端,不在前端引 drizzle-orm)。安全边界:
+    // ①仅 canonical user 名下(repo.list userId 收窄);②仅 sourceMetadata.origin=
+    // 'win-video-tutor' 的 seed 条目(不碰用户自己的笔记);③仅标题仍带旧前缀者(已去过
+    // 的跳过 → 幂等,重启不重复动)。renameTitle 只改 title + updatedAt(不动 content/
+    // revision/status);同批 lesson 间自然序仍保留(lesson 1 先改 → updatedAt 最早)。
+    const legacyPrefix = WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX;
+    const canonKnowledgeRows = await knowledgeRepo.list(CANONICAL_USER_ID, null);
+    let renamed = 0;
+    for (const row of canonKnowledgeRows) {
+      const meta = row.sourceMetadata as { origin?: unknown } | null;
+      const isSeed =
+        typeof meta === "object" &&
+        meta !== null &&
+        (meta as { origin?: unknown }).origin === "win-video-tutor";
+      if (!isSeed) continue;
+      if (!row.title.startsWith(legacyPrefix)) continue;
+      await knowledgeRepo.renameTitle(
+        CANONICAL_USER_ID,
+        null,
+        row.id,
+        row.title.slice(legacyPrefix.length),
+      );
+      renamed += 1;
+    }
+    if (renamed > 0) {
+      console.log(
+        `[seed] win-video-tutor ${renamed} 条存量标题已去「Win 短视频私教 · 」前缀`,
       );
     }
   } catch (seedErr) {

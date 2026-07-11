@@ -145,6 +145,14 @@ export interface KnowledgeRepository {
     accountId: AccountScope,
     knowledgeId: string,
   ): Promise<KnowledgeItemWithStats>;
+  // [T-211] 只改标题(scoped 更新,所有权门 + WHERE user 收窄)。startup fixup 用它把
+  // win-video-tutor 存量条目标题去品牌前缀;不动 content/revision/status。
+  renameTitle(
+    userId: string,
+    accountId: AccountScope,
+    knowledgeId: string,
+    title: string,
+  ): Promise<KnowledgeItemWithStats>;
   removeRelation(
     userId: string,
     accountId: AccountScope,
@@ -491,6 +499,24 @@ export function createKnowledgeRepository(
       await db
         .update(knowledgeItems)
         .set({ status: "archived", archivedAt: now, updatedAt: now })
+        .where(
+          and(
+            eq(knowledgeItems.id, knowledgeId),
+            eq(knowledgeItems.userId, userId),
+          ),
+        );
+      return get(userId, accountId, knowledgeId);
+    },
+
+    async renameTitle(userId, accountId, knowledgeId, title) {
+      // [T-211] Ownership gate (cross-user / 跨号 / unknown id → 404, no leak),
+      // then scoped title update. WHERE 收窄 id + userId,跨用户更新 = no-op(0 行)。
+      // 只改 title + updatedAt(不动 content/revision/status/archivedAt)。
+      await getRow(userId, accountId, knowledgeId);
+      const now = deps.now();
+      await db
+        .update(knowledgeItems)
+        .set({ title, updatedAt: now })
         .where(
           and(
             eq(knowledgeItems.id, knowledgeId),

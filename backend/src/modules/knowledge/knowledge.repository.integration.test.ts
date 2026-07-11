@@ -62,6 +62,29 @@ describe("knowledge.repository — ownership enforced (multi-tenant)", () => {
     ).rejects.toBeInstanceOf(OwnershipError);
   });
 
+  it("[T-211] renameTitle 只改标题(content/status/currentRevisionId 不变)", async () => {
+    const a = await repo.create(A, null, { title: "旧标题", content: "正文" });
+    const renamed = await repo.renameTitle(A, null, a.id, "新标题");
+    expect(renamed.title).toBe("新标题");
+    expect(renamed.status).toBe("active");
+    // 不新建 revision:currentRevisionId 保持,内容不变。
+    expect(renamed.currentRevisionId).toBe(a.currentRevisionId);
+    const rev = await repo.getRevision(A, null, renamed.currentRevisionId);
+    expect(rev.content).toBe("正文");
+    // 读回确认落库。
+    const got = await repo.get(A, null, a.id);
+    expect(got.title).toBe("新标题");
+  });
+
+  it("[T-211] renameTitle(B, aItemId) throws — 跨用户不能改 A 的标题", async () => {
+    const a = await repo.create(A, null, { title: "A 的标题" });
+    await expect(
+      repo.renameTitle(B, null, a.id, "被篡改"),
+    ).rejects.toBeInstanceOf(OwnershipError);
+    // A 的标题未被动。
+    expect((await repo.get(A, null, a.id)).title).toBe("A 的标题");
+  });
+
   it("createRelation cannot link to B's item (both ends must be owned)", async () => {
     const a1 = await repo.create(A, null, { title: "A1" });
     const b1 = await repo.create(B, null, { title: "B1" });

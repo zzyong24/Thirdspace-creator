@@ -331,9 +331,12 @@ export function buildRecentRowsFromItems(
   items: ReadonlyArray<KnowledgeListItem>,
 ): ReadonlyArray<KnowledgeRow> {
   if (items.length === 0) return [];
+  // [T-211] 正序:知识库列表按 updatedAt 升序(最早在前)。原为倒序(最新在前),
+  // 用户要求改正序(预设课程/章节按自然序:第 1 节在前)。带标签筛选的列表路径
+  // (knowledge-data.ts mergeRecentRows 不介入)直接吃这里的顺序,故同步翻正序。
   return items
     .slice()
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))
     .map<KnowledgeRow>((item) => ({
       id: item.id,
       title: item.title,

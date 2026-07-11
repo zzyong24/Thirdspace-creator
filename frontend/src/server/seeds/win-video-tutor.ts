@@ -27,6 +27,11 @@ import { lessonPointsToMarkdown } from "@/features/knowledge/knowledge-lesson-co
 //      module,标记来源可追溯。
 
 const SEED_ORIGIN = "win-video-tutor";
+
+// [T-211] 旧标题品牌前缀。用户裁决:课程保留作预设,但标题去掉「Win 短视频私教 · 」
+// 品牌前缀(新 seed 用不带前缀的模板)。存量装机(seed 早于本改动)的 22 条仍带此
+// 前缀 → 由 persistence-client 的启动 fixup 按此常量幂等 strip(见 fixupWinVideoTutorTitles)。
+export const WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX = "Win 短视频私教 · ";
 function resolveDefaultSkillPath(): string {
   // 测试可经 env 切到 tmp 目录(避免测试耦合用户真 home);env="0" 显禁用
   // (生产不需要时也可关)。缺省走 ~/.claude/skills/win-video-tutor。
@@ -192,7 +197,8 @@ export async function seedWinVideoTutor(
       await knowledgeService.createKnowledge(
         ctx,
         {
-          title: `Win 短视频私教 · 第 ${lesson.lessonNumber} 节 · ${lesson.title}`,
+          // [T-211] 标题去品牌前缀「Win 短视频私教 · 」,只留课程/章节自然名。
+          title: `第 ${lesson.lessonNumber} 节 · ${lesson.title}`,
           knowledgeType: "reference",
           content: readableContent,
           sourceType: "import",

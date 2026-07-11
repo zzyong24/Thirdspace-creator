@@ -115,7 +115,9 @@ describe("seedWinVideoTutor — 22 节 win-video-tutor 知识库种子", () => {
       expect(it.sourceType).toBe("import");
       expect(it.sourceMetadata.origin).toBe("win-video-tutor");
       expect(typeof it.sourceMetadata.lessonNumber).toBe("number");
-      expect(it.title).toMatch(/^Win 短视频私教 · 第 \d+ 节 · /);
+      // [T-211] 标题已去品牌前缀「Win 短视频私教 · 」,只留「第 N 节 · …」。
+      expect(it.title).toMatch(/^第 \d+ 节 · /);
+      expect(it.title).not.toContain("Win 短视频私教");
       expect(it.content.length).toBeGreaterThan(50);
       // [T-198] 入库存的是可读 markdown(带小标题),不是原始 YAML dump。
       expect(it.content).not.toMatch(/^- id:/);
