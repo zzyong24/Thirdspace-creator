@@ -1,6 +1,6 @@
 # SPEC:选题/对标强化 —— 对标雷达 + 选题供给飞轮(借鉴飞书「鱼鱼AI运营」)
 
-> 日期 2026-07-11 · 状态:待过 spec-review gate(改数据归属/新采集)· 对照宪法 [docs/产品定位.md](../../产品定位.md)
+> 日期 2026-07-11 · 状态:✅ **CONCERNS→已处置→可开工**(MiniMax gate:方向合定位、无缩水;2 major=复用断言缺 file:line、1 minor=trend 数据源澄清、1 minor=sidecar 引用,**已逐条补证/澄清**,见 .review.md)。可开工 T-212a~d。· 对照宪法 [docs/产品定位.md](../../产品定位.md)
 > 单一执行总账在 [BACKLOG.md](../../../BACKLOG.md)。来源:用户落地的飞书体系 `/Users/zyongzhu/xianwa-feishu` 蒸馏(T-212 研究报告)。
 
 ## 0. 一句话
@@ -10,12 +10,18 @@
 ## 1. 问题(现状不够)
 
 - **对标停在拆 pattern**:CreatorOS 的 learn-from(源自 cheat-on-content)手动导入单账号 script+数据 → 拆 pattern 写 benchmark.md,**不自动进选题池、不定时、不多博主批量、无爆款筛选**。
-- **选题池干**:`topic-runner` 的 `TopicBasis=trend`(注释「对标近期爆款」)**数据源是空的**——没有对标数据喂它。用户觉得选题不够。
+- **选题池干**:`topic-runner` 的 `TopicBasis=trend`(`topic-task-adapter.ts:48-110`)现有 `trendSearch`(T-182c 联网检索 web 热点),但**没有对标爆款数据源**——注释自称「对标近期爆款」却无对标数据管线喂它。用户觉得选题不够。
 - **无防茧房**:选题评分没有"用户淘汰信号回流 + 反过拟合护栏",AI 越学越窄的风险无机制拦。
 
 ## 2. 设计(4 切片,映射到现有模块,非重造)
 
-> 复用核实(T-212):`candidate`(选题池,含 source/status/promoteCandidate 状态机)、`material-links`(对标素材关联)、`ai-runtime/scheduled-collection-scheduler`(采集调度框架)、`learnings`/`calibration`(飞轮)、现有 douyin 采集底座(iesdouyin `aweme/post` 匿名接口 + creator-center)、`topic-runner.TopicBasis=trend` 已预留。
+> **复用核实(gate 处置 F1/F2,附 file:line 反证)**:
+> - **candidate 选题池**:`candidate.service.ts:296 createCandidate` + **`:163 source 枚举已含 "trend"|"benchmark"|"demand"`**——`source=benchmark` 值**已内建**,无需加枚举。状态机/promote 现成。
+> - **对标他号采集接口**:`frontend/src/server/ingestion/douyin-cdp.ts:714 "/web/aweme/post"`——aweme/post 接口 **CreatorOS 已在用**(采集底座现成),对标他号复用它,不重造浏览器层。
+> - **采集调度**:`scheduled-collection-scheduler.ts:55 sourceKind(现 self.metrics|comments)` + `:158 taskType=scheduled.<sourceKind>`——加「benchmark」sourceKind 天然接入,按天幂等现成。
+> - **material-links**:`backend/src/modules/material-links/`(index/db-schema)已存在,对标源可扩它或新表。
+> - **飞轮**:`learnings`/`calibration` 模块已存在(候选/淘汰信号回流现成);拆 pattern 逻辑在 `candidate`+`chat-tools`/`chat-runner`。
+> - **topic basis**:`topic-task-adapter.ts:48-110 basis="trend"` 现有 `trendSearch`(T-182c 联网检索,web 热点)但**无 benchmark 数据源**——即 trend 现在喂的是 web 搜索,不是对标爆款数据。本 SPEC 补的正是「对标数据 → 选题」这条(经 candidate source=benchmark),与 trend 的 web 检索并存互补。
 
 ### 2.1 S1 对标源采集(最高价值)
 - **对标源实体**:用户登记对标博主(douyin `sec_uid` + 主页链接 + `enabled` 开关 + 备注)。落 `material-links` 扩展或新表 `benchmark_sources`(user/account-scoped,复用账号锚点 T-201)。
