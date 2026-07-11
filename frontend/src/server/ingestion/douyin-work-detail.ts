@@ -238,13 +238,23 @@ function firstNonNeg(idx: number, fallback: number): number {
  */
 export type DetailVisibility = "hidden" | "visible" | "unknown";
 
-const HIDDEN_STATUS_HINTS = ["仅自己可见", "仅我可见", "已隐藏", "私密"] as const;
+// [T-206] 真机诊断实证:抖音明细 xlsx「审核状态」列实际字面量是 **"公开" / "自见"**(不是早先
+//   假设的「已通过」/「仅自己可见」)。不补齐 → 75 条全判 unknown、隐藏一个不标、列表过滤空转。
+//   「自见」= 仅自己可见(平台侧不对外 = hidden);「公开」= 对外可见(= visible)。旧字面量保留兼容。
+const HIDDEN_STATUS_HINTS = [
+  "仅自己可见",
+  "仅我可见",
+  "自见", // [T-206] 抖音明细列实际短写 = 仅自己可见
+  "已隐藏",
+  "私密",
+] as const;
+const VISIBLE_STATUS_HINTS = ["已通过", "公开"] as const; // [T-206] 「公开」= 抖音明细列实际值
 
 export function visibilityFromDetailStatus(status: string): DetailVisibility {
   const s = (status ?? "").trim();
   if (!s) return "unknown";
   if (HIDDEN_STATUS_HINTS.some((h) => s.includes(h))) return "hidden";
-  if (s.includes("已通过")) return "visible";
+  if (VISIBLE_STATUS_HINTS.some((h) => s.includes(h))) return "visible";
   return "unknown";
 }
 

@@ -428,6 +428,15 @@ describe("visibilityFromDetailStatus ([T-073] 审核状态 → 可见性)", () =
     expect(visibilityFromDetailStatus("已通过")).toBe("visible");
   });
 
+  it("[T-206] 真机 xlsx 实际字面量:「公开」→ visible,「自见」→ hidden", () => {
+    // 真机诊断:明细「审核状态」列实际值是「公开」/「自见」(非「已通过」/「仅自己可见」)。
+    expect(visibilityFromDetailStatus("公开")).toBe("visible");
+    expect(visibilityFromDetailStatus("自见")).toBe("hidden");
+    // 「自见」不被「仅自己可见」等旧口径误伤;带空白仍命中。
+    expect(visibilityFromDetailStatus(" 自见 ")).toBe("hidden");
+    expect(visibilityFromDetailStatus(" 公开 ")).toBe("visible");
+  });
+
   it("判定不了(审核中/未通过/空)→ unknown,消费侧不动既有标记", () => {
     expect(visibilityFromDetailStatus("审核中")).toBe("unknown");
     expect(visibilityFromDetailStatus("未通过")).toBe("unknown");

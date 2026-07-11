@@ -4160,13 +4160,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             externalId: extId,
             hidden,
           });
-          // [T-033] 同步平台侧原始审核状态字面量(「已通过」/「仅自己可见」/「私密」等),供 list
-          // 「默认只显示已通过」过滤用。detail.status 是抖音原值,直接落(不做归一化,
-          // 字面量保留方便后续诊断「为何这条被过滤」)。
+          // [T-033] 同步平台侧审核状态,供 list「默认只显示已通过」+ 重活判据
+          //   (isPublicationRunnableForHeavyWork)的 `platformStatus = '已通过'` 用。
+          // [T-206] **归一**:真机 xlsx 原值是「公开」/「自见」而非「已通过」/「仅自己可见」——
+          //   若直落原值,可见作品(公开)的 platformStatus='公开' 会被过滤器/判据 `=已通过` 误杀
+          //   (连列表都不显)。故 visible → 落规范值「已通过」(过滤器/判据放行);hidden 由 hidden_at
+          //   兜住(过滤器先判 hiddenAt IS NULL),platformStatus 保留原值方便诊断。
           await publishingService.setPlatformStatusByExternalKey(ctx, {
             platform: "douyin",
             externalId: extId,
-            platformStatus: m.detail.status ?? null,
+            platformStatus: hidden ? (m.detail.status ?? null) : "已通过",
           });
           await projectsService.setImportedProjectHidden(ctx, {
             platform: "douyin",
