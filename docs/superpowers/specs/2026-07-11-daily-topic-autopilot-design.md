@@ -25,7 +25,11 @@
 
 ### 2.2 S-B 热点多源证据(RSS 热榜 + 平台内证据)
 - **热点源配置**:多 feed RSS/热榜源管理(复用 search-rss 适配器,源清单借 cheat-on-content trend-sources:HN/Reddit/B站热门/trendradar,T-126/T-228 已提);trend basis 时**并行拉热榜与 web 搜索**拼 brief(改造 topic-task-adapter:108-123 trend 分支)。
-- **平台内证据**(学 dy--,**[gate-F5] 可选强化的边界**:S-B 验收以 RSS 热榜+web 并行为准,平台内证据不做不影响验收;做的条件=sidecar 登录态可用+限流额度允许,失败诚实降级为纯 RSS+web):复用 douyin 采集通道按定位关键词搜近 N 天视频带互动数据入 brief;对标快照做「≥2 账号发过」交叉验证聚类(参照 dy-- main.py:1774-1809,纯函数可单测)。归 sidecar(蹭登录态)。
+- **平台内证据 = 低粉黑马雷达**(用户实战验证方法论,参照 `xianwa-feishu/yuyu/darkhorse.py`;**[gate-F5] 可选强化的边界**:S-B 验收以 RSS 热榜+web 并行为准,黑马雷达不做不影响验收;做的条件=sidecar 登录态可用+限流额度允许,失败诚实降级为纯 RSS+web):
+  - **原理**:低粉+新发(≤48h)+高赞 = 算法在推**内容本身**而非账号权重 → 选题/形式已被验证且**跟拍窗口未关**。核心信号=**赞粉比**(digg/fans)。
+  - **实现**:按定位关键词搜抖音(publish_time=1 一天内 + sort_type=1 最多赞,页内 fetch 借登录态——与 fetchDouyinUserPosts 同款范式 douyin-cdp:1072,走 douyinGateway 限流+验证码跳过);**黑马三档纯函数**(可单测,阈值配置化):strong=digg≥1000 且(fans≤10w 或 赞粉比≥1)/ niche=digg≥200 且赞粉比≥0.5 / mid=digg≥500 且 fans≤3w;赞粉比优先排序,每关键词 top5。
+  - **落库+转化**:落 benchmark_works(发现方式=黑马雷达,爆款倍数字段存赞粉比)→ 复用 teardown 拆解(prompt 注明时效敏感)→ 进池候选标「🔥跟拍·时效」徽标(S-E 今日新选题里优先展示)。关键词来源=定位 keywords+用户可配。参照锚:darkhorse.py:60-105(搜索+三档过滤)/:108-127(落库字段)/:130+(时效拆解 prompt)。
+  - 对标快照「≥2 账号发过」交叉验证聚类(参照 dy-- main.py:1774-1809)仍为可选补充信号。
 - 出的选题带**数据支撑**(来源链接/互动量),不再是新闻摘要式空转。
 
 ### 2.3 S-C 收藏蒸馏入口
