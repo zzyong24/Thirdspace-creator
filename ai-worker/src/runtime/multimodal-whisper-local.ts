@@ -114,11 +114,17 @@ async function transcribeAudio(
 
   let result: { text: string } | { text: string }[];
   try {
-    // language:whisper 支持 language 提示(默认自动检测)。chunk/stride 用库默认(批处理即可,
-    // SPEC §5 不做流式)。传 language 时映射到 whisper 的 language 选项(如 "zh"→中文)。
-    const pipelineOptions: Record<string, unknown> = opts.language
-      ? { language: opts.language, task: "transcribe" }
-      : {};
+    // language:whisper 支持 language 提示(默认自动检测)。传 language 时映射到 whisper 的
+    // language 选项(如 "zh"→中文)。
+    // [T-225c] chunk_length_s/stride_length_s **必须显式给**:transformers.js 的 whisper 默认
+    //   只吃前 30 秒(>30s 打 "audio longer than 30 seconds" 警告后截断)——真机实测 1-3 分钟
+    //   口播逐字稿全被砍成 ~30s(avg 165 字)。30s 分块 + 5s 滑窗重叠是官方 long-form 推荐,
+    //   分块间用重叠区对齐去重,拼出全长转写。
+    const pipelineOptions: Record<string, unknown> = {
+      chunk_length_s: 30,
+      stride_length_s: 5,
+      ...(opts.language ? { language: opts.language, task: "transcribe" } : {}),
+    };
     result = await pipeline(pcm, pipelineOptions);
   } catch (err) {
     throw new MultimodalGenerationError(
