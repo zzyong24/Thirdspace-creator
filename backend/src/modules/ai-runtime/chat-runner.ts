@@ -10,6 +10,7 @@ import type { ModelSpec } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   formatWorksBrief,
+  formatProjectStageBlock,
   type ContextDeps,
 } from "./creative-context";
 import {
@@ -23,6 +24,7 @@ import {
 import {
   buildChatTools,
   ALL_CHAT_TOOL_NAMES,
+  getSurfaceToolScope,
   type ChatToolDeps,
   type ProjectDetailRaw,
   type PositioningDetailRaw,
@@ -417,18 +419,52 @@ export async function buildChatAssembly(
     runTemplatedNode,
   } = await import("@creatoros/ai-worker");
   const skill = getTemplate(skillId);
-  // 工具排序层(SPEC §3.2 第 1+2 层 + [T-104]):surface 白名单 + functionKey 决定「置顶/预调」
-  // 顺序(命中的专用工具排前,skillsBrief 也按此列),但 [T-104] 每个 Copilot 入口**暴露全部工具**
-  // ——一个 Copilot 常需跨场景调其他工具,隔离没意义;之前选不准工具的锅在 skill 提示词不在工具集。
-  // 隔离机制(getTools/applyFunctionKey)保留只作排序、可逆;会话/上下文隔离仍归 T-096 scope
-  // (蒸馏对话不串味选题);数据转述幻觉由 T-098 context.* 渲染卡根治,放开 context 工具无凑数风险。
+
+  // [T-240①] 阶段判据(动态层):项目对话读该项目的 stage + 发布状态(getProjectDetail 读端口
+  // 已在 composition root 绑好,不新造)。best-effort:读不到/端口未装配 → null(不注阶段块、
+  // 场景白名单不做阶段收窄,兜底不破坏)。用途:①渲成「当前项目阶段」system 块(创作前 vs 已发布,
+  // 治「创作前项目被按复盘套路要逐字稿」实录病例);②喂 getSurfaceToolScope 做阶段感知工具收窄。
+  let projectStage: { stage: string; published: boolean } | null = null;
+  if (chatContext.projectId && deps.contextReaders?.getProjectDetail) {
+    try {
+      const detail = await deps.contextReaders.getProjectDetail(ctx, {
+        projectId: chatContext.projectId,
+      });
+      if (detail) {
+        projectStage = {
+          stage: detail.stage,
+          published: detail.publish.published,
+        };
+      }
+    } catch {
+      projectStage = null; // 阶段判据是 best-effort 增强,读失败绝不阻断装配
+    }
+  }
+
+  // 工具层(SPEC §3.2 第 1+2 层 + [T-240③] 场景真收窄):
+  //   1. 场景白名单:surface 声明允许工具集(getSurfaceToolScope);未知 surface(global/兜底)
+  //      → 回落全量(向后兼容)。project surface 阶段感知:明确未发布 → 砍 review.analyze。
+  //   2. functionKey(深链按钮的显式用户意图)命中真工具但被场景砍掉 → 补回白名单尾部,保
+  //      T-231⑨ 强制置顶机制(forcedTool 依赖 toolWhitelist.includes)不受场景收窄影响。
+  //   3. 排序:skill preferred(registry getTools + applyFunctionKey 置顶)在前,其余场景白名单
+  //      工具在后(skillsBrief 也按此列)。
+  const scopedNames = getSurfaceToolScope(chatContext.surface, {
+    projectPublished: projectStage ? projectStage.published : null,
+  });
+  const baseAllowed = scopedNames ?? ALL_CHAT_TOOL_NAMES;
+  const allowedNames =
+    chatContext.functionKey &&
+    ALL_CHAT_TOOL_NAMES.includes(chatContext.functionKey) &&
+    !baseAllowed.includes(chatContext.functionKey)
+      ? [...baseAllowed, chatContext.functionKey]
+      : baseAllowed;
   const preferredTools = applyFunctionKey(
     getTools(skillId),
     chatContext.functionKey,
-  );
+  ).filter((n) => allowedNames.includes(n));
   const toolWhitelist = [
     ...preferredTools,
-    ...ALL_CHAT_TOOL_NAMES.filter((n) => !preferredTools.includes(n)),
+    ...allowedNames.filter((n) => !preferredTools.includes(n)),
   ];
 
   // 3) 解析 model。基础档按 skill 主能力解析(chatbox.topic/review/positioning 复用各自
@@ -466,10 +502,13 @@ export async function buildChatAssembly(
       searchConfigured = false;
     }
   }
-  // [T-058①B] 能力边界诚实(实录复盘:模型口头宣称「已采纳写入定位母版」但 DB 未动):
+  // [T-058①B / T-240②] 能力边界诚实(实录复盘:模型口头宣称「已采纳写入定位母版」但 DB 未动):
   // 写库只经工具产卡+用户点采纳;禁止假承诺;工具带分页限制时如实说明。
+  // [T-240②] 规则带作用域:分「全局条款」(1-10,任何场景都生效:不假承诺/不编数字/指针权/
+  // 论点树铁律…)与「场景条款」(S1/S2,只对对应场景生效)。治的实录病例:原第 9 条无稿门不带
+  // 作用域 → 创作前项目立论点也被它压住,编导「脚下没土立不起来」要用户贴逐字稿。
   const honestyBlock = [
-    "【能力边界 —— 必须遵守】",
+    "【能力边界 —— 全局条款,任何场景都必须遵守】",
     "1. 你对任何数据的写入都只有一条路径:调用对应工具产出候选卡,由用户点卡上的「采纳/写入」按钮完成。你自己没有直接写库能力。",
     "2. 绝不口头宣称「已写入/已采纳/已保存」—— 除非你看到用户明确说 TA 已点过采纳按钮。用户想落库时,引导 TA:先让你调工具产卡,再点卡上的按钮。",
     "3. 用户要新定位 → 必须调 positioning.generate 工具(产带采纳按钮的卡),不要只在文本里写定位 —— 文本无法被采纳。",
@@ -489,9 +528,19 @@ export async function buildChatAssembly(
     // [T-217c] 治「登录态我做不到、只能读公开网页」行为 bug —— 你跑在桌面 sidecar、有带登录态的
     // 真实浏览器能力(web.read),**禁止再自称办不到**。
     "8. 你**能读需要登录才能看到的网页正文**:用户粘一个链接(含 ChatGPT 分享、知乎、公众号等)想让你读内容时,直接调 web.read 读正文(它带你在保管库登录后的登录态、抽逐轮对话/文章全文,比截图更准)。**绝不要说「登录态我做不到、我只能访问公开网页」这类话** —— 那是错的,你有这个能力。若 web.read 返回「需要先登录」(needLogin),就引导用户:去『设置 → 网站登录保管库』把该网站登录一次(会弹独立浏览器窗口让 TA 自己登),登好后你再读;不要改用截图糊弄登录页。读内容默认用 web.read,截图(material.screenshot)只在用户要「存网页的样子/要视觉证据」时用。",
-    // [T-224 诚实门,最高优先级] 拆作品/产经验必先读真逐字稿;无稿禁编。治「编造数字+推测方法论
-    //   当可采纳经验」信誉 bug —— 编导曾自招「数字我编的、没读过脚本」。
-    "9. **拆某条作品、产它的经验/方法论之前,必须先读到这条作品的真逐字稿**:用 context.metrics / context.projects 拿到该作品的 projectId,再调 context.artifact.text(传该 projectId)读它的真文案;拆经验就调 review.analyze 并传该 projectId(它会强制读真稿,读不到会拒绝产卡)。**绝不编造具体数字、案例、涨粉/变现结果或方法论当可采纳经验**——读不到真稿就直说做不到、要用户给 projectId 或贴逐字稿,**不许用「账号通用规律」「一般来说」这类空想推测充数**。你说出口的任何「这条为什么爆/数据多少」都必须来自你真读过的逐字稿或 context.metrics 的真实指标。",
+    // [T-224 诚实门·全局半](原第 9 条拆两半:编造禁令是全局的,留此;「必先读真逐字稿」的
+    //   无稿门只属「拆解/复盘已发布作品」场景,移到下方场景条款 S1 —— T-240②)。
+    "9. **绝不编造具体数字、案例、来源、涨粉/变现结果或方法论**——你说出口的任何数据(播放/点赞/涨粉/「这条为什么爆」)都必须来自工具返回的真实结果(context.metrics 的真实指标、context.artifact.text 读到的真文案等);拿不到就直说拿不到,**不许用「账号通用规律」「一般来说」这类空想推测充数**。",
+    // [T-240②] 论点树铁律(同定位铁律「文本写的无法被采纳」先例)。治实录病例:编导被纠正后
+    //   「直接写不走工具」产文本论点树 —— thesis_tree 只有 planning.thesis 产的才落 artifact,
+    //   文本树挂不进稿面论点骨架面板、写脚本时不会被引用。
+    "10. **论点树铁律**:能挂进稿面「论点骨架」面板、写脚本时被引用的论点树,只能由 planning.thesis 产出并经采纳落成 thesis_tree 产物——**你在对话文本里写的论点树只是讨论稿,挂不进论点骨架面板、写脚本时不会被引用**。用户要立论点时:可以在对话里帮 TA 把核心论点/支撑/证据/反驳聊清楚(这有价值),但必须明确告知文本树不是成品、要在稿面「论点骨架」面板落成才算立好;**绝不谎称「论点树已立好/已写入骨架」**。",
+    "",
+    // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
+    "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
+    // [T-224 诚实门·场景半] 无稿门只管「拆解/复盘已发布作品」;创作前立框架不适用(S2)。
+    "S1.(仅在拆解/复盘一条**已发布**作品时生效)拆它、产它的经验/方法论之前,**必须先读到这条作品的真逐字稿**:用 context.metrics / context.projects 拿到该作品的 projectId,再调 context.artifact.text(传该 projectId)读它的真文案;拆经验就调 review.analyze 并传该 projectId(它会强制读真稿,读不到会拒绝产卡)。读不到真稿就直说做不到、要用户给 projectId 或贴逐字稿,绝不推测充数。",
+    "S2.(仅在为**创作前(未发布)**的项目立框架时生效)立论点/写大纲/起草脚本的依据是定位+选题卡+已搜集素材——这是正常创作流,**不适用 S1 的无稿门**:创作前没有逐字稿不是缺陷,不要因读不到逐字稿而卡住、不要向用户索要逐字稿、更不要把「没有逐字稿」当成拒绝立框架的理由。",
   ].join("\n");
   // [T-077c] 技能自感知(SPEC §1.3 [gate-F1]):把当前 surface 白名单的技能清单注进 system
   // (每工具一行「中文名(工具名):一句话用途」,行数=白名单工具数、上限 20 超出截断)——
@@ -534,11 +583,15 @@ export async function buildChatAssembly(
         `你已经知道这条内容的 projectId 了,**绝不要用 context.projects 列出全站项目去找这一条**——那是全账号清单,不是当前项目。`,
       ].join("\n")
     : "";
+  // [T-240①] 阶段判据块 —— 项目对话把「创作前(未发布)/已发布(可复盘)」渲成明确场景信号
+  // (formatProjectStageBlock 纯函数);读不到项目详情(projectStage=null)→ 不注(不喂猜测)。
+  const stageBlock = projectStage ? formatProjectStageBlock(projectStage) : "";
   const system = [
     baseSystem,
     honestyBlock,
     skillsBriefBlock,
     currentProjectBlock,
+    stageBlock,
     reviewSubjectBlock,
     selectionBlock,
   ]

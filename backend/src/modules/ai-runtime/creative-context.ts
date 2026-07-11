@@ -852,6 +852,33 @@ export function materialQueryTerms(materials: ProjectMaterial[]): string[] {
   return Array.from(new Set(terms)).slice(0, MATERIAL_QUERY_TERMS_MAX);
 }
 
+// ── [T-240①] 项目阶段判据(「场景」一等机制的动态层)─────────────────────────────────
+// 把「这个项目处在创作前还是已发布」渲染成给编导的**明确阶段信号**,注进对话 system(chat-runner
+// 装配时调用;数据源 = contextReaders.getProjectDetail 的 stage + publish.published,不新造读端口)。
+// 治的实录病例:创作前选题(未写稿未发布)让编导立论点树,它按「复盘已发布作品」套路找逐字稿/指标
+// → 触发无稿门「脚下没土立不起来」要用户贴稿。根因 = 模型不知道当前项目处在哪个阶段。
+//   - published=false → 「创作前(未发布)」:立框架用定位+选题卡+素材,**没有逐字稿是正常状态**;
+//   - published=true  → 「已发布(可复盘)」:拆解/复盘必须读真逐字稿/真实指标。
+// 纯函数(可单测);stage 原值(planning/scripting/…)括注保留,主判据是 published(发布记录存在性)。
+export function formatProjectStageBlock(input: {
+  stage: string;
+  published: boolean;
+}): string {
+  const stageNote = input.stage ? `(stage=${input.stage})` : "";
+  if (input.published) {
+    return [
+      "【当前项目阶段 —— 场景判据,决定你的工作方式】",
+      `当前项目阶段:已发布(可复盘)${stageNote}。`,
+      "拆解/复盘这条作品必须基于真材料:先读它的真逐字稿(context.artifact.text)与真实指标(context.metrics),读不到就诚实说读不到,绝不凭记忆或通用规律编。",
+    ].join("\n");
+  }
+  return [
+    "【当前项目阶段 —— 场景判据,决定你的工作方式】",
+    `当前项目阶段:创作前(未发布)${stageNote}。`,
+    "这个阶段是从 0 把内容立起来:立论点/写大纲/起草脚本的依据是定位+选题卡+已搜集素材 —— **没有逐字稿是正常状态**,不要向用户索要逐字稿,也不要按「复盘已发布作品」的套路去找逐字稿/实绩指标。",
+  ].join("\n");
+}
+
 // ── [T-081②] 真实作品画像 brief —— 全部作品标题压缩列表(每条截 40 字、上限 100 条、带发布
 // 状态标记),喂 positioning.generate(对话工具 + 后台 task 两条路径共用,单一真值)。title 可能
 // 是整篇文案(数百字)故必须截断;total > 已列条数时如实标注剩余。纯函数,导出供单测。

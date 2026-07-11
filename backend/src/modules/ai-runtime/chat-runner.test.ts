@@ -408,7 +408,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(bogus.forcedTool).toBeUndefined();
   });
 
-  it("[T-104] 工具全放开:任一 surface 暴露全部 30 工具(surface 白名单只决定置顶顺序)", async () => {
+  it("[T-240③] 场景白名单真收窄:topics(选题页)= 创作产出 + 素材 + 全量只读,不含 review.analyze/review.script", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
     expect(Object.keys(a.tools).sort()).toEqual([
@@ -445,9 +445,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       // [T-084b] 网页截图(公开页真截图落 asset)。
       "material.screenshot",
       "positioning.generate",
-      "review.analyze",
-      // [T-103b] 稿面文案审核进对话(review.analyze < review.script:'a' < 's')。
-      "review.script",
+      // [T-240③] review.analyze / review.script 被场景砍掉:选题页无单条作品的复盘/审核语境。
       "script.draft",
       "script.hooks",
       "topic.enrich",
@@ -481,14 +479,15 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(brief.length).toBeLessThanOrEqual(30);
   });
 
-  it("[T-104] skillsBrief 全列工具:review 面 preferred(review.analyze/learning.capture)在前,工具全放开后其余工具也进自感知清单", async () => {
+  it("[T-240③] skillsBrief 与场景白名单同步:review 面 preferred 在前,被场景砍掉的工具不进自感知清单", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
     expect(a.system).toContain("复盘提炼(review.analyze):");
     expect(a.system).toContain("记录经验(learning.capture):");
-    // [T-104] 工具全放开:之前刻意收窄的工具现也在清单里(自感知与真实能力一致 = 全部工具可调)。
-    expect(a.system).toContain("(topic.generate):");
+    // 只读 context 工具全场景保留(S1 无稿门要靠它们找真稿)。
     expect(a.system).toContain("(context.projects):");
+    // [T-240③] 复盘面不给创作产出工具(topic.generate 等)—— 自感知清单与真实工具集一致。
+    expect(a.system).not.toContain("(topic.generate):");
   });
 
   it("按 skill 能力解析 model(resolveModelSpec 被以 topic.generate 调用)", async () => {
@@ -498,24 +497,30 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.modelSpec).toEqual(FAKE_SPEC);
   });
 
-  it("surface=calibration → chatbox.calibration skill + calibration.diagnose preferred([T-104] 全工具暴露)", async () => {
+  it("surface=calibration → chatbox.calibration skill + calibration.diagnose([T-240③] 场景收窄:不给创作产出工具)", async () => {
     const { deps, resolveModelSpec } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "calibration" }, deps);
     expect(a.skillId).toBe("chatbox.calibration");
-    // [T-104] 工具全放开:preferred 含 calibration.diagnose,但可调工具集 = 全 15。
-    expect(Object.keys(a.tools)).toContain("calibration.diagnose");
-    expect(Object.keys(a.tools).length).toBe(30);
+    // [T-240③] 场景白名单:盲评 + 记经验 + 素材(4)+ 全量只读(15)= 21;创作产出工具被砍。
+    const names = Object.keys(a.tools);
+    expect(names).toContain("calibration.diagnose");
+    expect(names).toContain("learning.capture");
+    expect(names).not.toContain("topic.generate");
+    expect(names).not.toContain("script.draft");
+    expect(names.length).toBe(21);
     // 主能力档按 calibration.diagnose 解析(各 surface 复用对应节点的模型配置)。
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "calibration.diagnose");
   });
 
-  it("surface=positioning → chatbox.positioning skill + positioning.generate preferred([T-104] 全工具暴露)", async () => {
+  it("surface=positioning → chatbox.positioning skill + positioning.generate([T-240③] 场景收窄:不给出题/写稿/复盘)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "positioning" }, deps);
     expect(a.skillId).toBe("chatbox.positioning");
-    // [T-104] 工具全放开:preferred 含 positioning.generate,但可调工具集 = 全 15。
-    expect(Object.keys(a.tools)).toContain("positioning.generate");
-    expect(Object.keys(a.tools).length).toBe(30);
+    const names = Object.keys(a.tools);
+    expect(names).toContain("positioning.generate");
+    expect(names).not.toContain("topic.generate");
+    expect(names).not.toContain("review.analyze");
+    expect(names.length).toBe(21);
   });
 
   it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {
@@ -555,18 +560,21 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(a.system).not.toContain("@硬核老王");
   });
 
-  it("[T-104] surface=review → chatbox.review skill,preferred 是 review.analyze/learning.capture 但工具全放开(暴露全 15 工具,凑数由 T-098 渲染卡根治)", async () => {
+  it("[T-240③] surface=review → chatbox.review skill,场景白名单 = 复盘提炼 + 记经验 + 素材 + 全量只读(不给创作产出)", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "review" }, deps);
     expect(a.skillId).toBe("chatbox.review");
-    // [T-104] 工具全放开:review 面 preferred 仍是 review.analyze/learning.capture(排前、skill 提示词
-    // 也硬约束「只针对这一条作品、严禁引用其他作品标题」),但可调工具集 = 全部(一个 Copilot 常需跨场景
-    // 调其他工具)。原「拉全标题凑数」风险已由 T-098 context.* 渲染卡(指针权非转录权)根治。
+    // [T-240③] 场景真收窄:preferred 是 review.analyze/learning.capture(排前),context.* 全保留
+    // (S1 无稿门要靠 context.metrics/context.artifact.text 找真稿),创作产出工具(topic.generate/
+    // script.draft 等)被砍 —— 复盘面不需要出题/写稿(2026-07-02「拉全标题凑数」污染源先例)。
     const names = Object.keys(a.tools);
     expect(names).toContain("review.analyze");
     expect(names).toContain("learning.capture");
-    expect(names).toContain("context.projects"); // 放开后可调
-    expect(names.length).toBe(30); // 全部工具暴露
+    expect(names).toContain("context.projects");
+    expect(names).toContain("context.metrics");
+    expect(names).not.toContain("topic.generate");
+    expect(names).not.toContain("script.draft");
+    expect(names.length).toBe(21); // 2 产出 + 4 素材 + 15 只读
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -622,19 +630,154 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(Object.keys(a.tools)[0]).toBe("topic.enrich");
   });
 
-  it("[T-104] functionKey 越权(不在 preferred 白名单)→ 不置顶该工具(工具仍全放开可调,只是不预调置顶)", async () => {
+  it("functionKey 越权(不在 skill preferred 白名单)→ 不置顶该工具(在场景白名单内仍可调,只是不预调置顶)", async () => {
     const { deps } = makeDeps();
-    // 选题页 functionKey 给了校准工具(越权 preferred 白名单)→ 不把它预调置顶;
-    // [T-104] 但工具集仍全放开(calibration.diagnose 可调,只是不在队首)。
+    // 选题页 functionKey 给了盲评工具(越权 preferred 白名单)→ 不把它预调置顶;
+    // calibration.diagnose 是发布前盲评(创作流工具),在 topics 场景白名单内 → 可调,只是不在队首。
     const a = await buildChatAssembly(
       ctx,
       { surface: "topics", functionKey: "calibration.diagnose" },
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(30); // 全放开
+    expect(names.length).toBe(28); // [T-240③] topics 场景集(9 产出 + 4 素材 + 15 只读)
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
+  });
+
+  // ── [T-240] 场景一等机制:阶段判据 + 场景白名单 + 兜底 ─────────────────────────────
+  describe("[T-240] 场景一等机制", () => {
+    it("① 创作前项目(未发布)→ system 注入「创作前(未发布)」阶段块 + 「没有逐字稿是正常状态」", async () => {
+      const { deps } = makeDeps(); // fake getProjectDetail: published=false, stage=planning
+      const a = await buildChatAssembly(
+        ctx,
+        { surface: "project", projectId: "proj-1" },
+        deps,
+      );
+      expect(a.system).toContain("当前项目阶段:创作前(未发布)");
+      expect(a.system).toContain("没有逐字稿是正常状态");
+      expect(a.system).toContain("(stage=planning)");
+    });
+
+    it("① 已发布项目 → system 注入「已发布(可复盘)」阶段块(拆解必须读真逐字稿/指标)", async () => {
+      const { deps } = makeDeps();
+      deps.contextReaders!.getProjectDetail = async () => ({
+        id: "proj-pub",
+        title: "已发布的一条",
+        stage: "review",
+        status: "published",
+        publish: {
+          published: true,
+          platform: "douyin",
+          publishedAt: "2026-07-01T00:00:00.000Z",
+        },
+        brief: {},
+        artifacts: [],
+        metricsSummary: "",
+      });
+      const a = await buildChatAssembly(
+        ctx,
+        { surface: "project", projectId: "proj-pub" },
+        deps,
+      );
+      expect(a.system).toContain("当前项目阶段:已发布(可复盘)");
+      expect(a.system).toContain("context.artifact.text");
+    });
+
+    it("① 无 projectId / 读不到项目详情 → 不注阶段块(不喂猜测,装配不崩)", async () => {
+      const { deps } = makeDeps({
+        contextReaders: undefined,
+      } as Partial<AssembleChatDeps>);
+      const a = await buildChatAssembly(
+        ctx,
+        { surface: "project", projectId: "proj-x" },
+        deps,
+      );
+      expect(a.system).not.toContain("当前项目阶段");
+    });
+
+    it("② 规则带作用域:全局条款(编造禁令/论点树铁律)+ 场景条款(S1 已发布无稿门 / S2 创作前豁免)", async () => {
+      const { deps } = makeDeps();
+      const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+      // 全局条款:编造禁令(原第 9 条的全局半)+ 论点树铁律。
+      expect(a.system).toContain("全局条款");
+      expect(a.system).toContain("绝不编造具体数字、案例、来源");
+      expect(a.system).toContain("论点树铁律");
+      expect(a.system).toContain("挂不进论点骨架面板、写脚本时不会被引用");
+      // 场景条款:S1 无稿门限定「已发布」;S2 创作前立框架不适用无稿门。
+      expect(a.system).toContain("场景条款");
+      expect(a.system).toContain("S1.(仅在拆解/复盘一条**已发布**作品时生效)");
+      expect(a.system).toContain("必须先读到这条作品的真逐字稿");
+      expect(a.system).toContain("S2.(仅在为**创作前(未发布)**的项目立框架时生效)");
+      expect(a.system).toContain("不适用 S1 的无稿门");
+    });
+
+    it("③ 创作前 project surface → review.analyze 被阶段感知砍掉(review.script/calibration.diagnose 保留)", async () => {
+      const { deps } = makeDeps(); // published=false
+      const a = await buildChatAssembly(
+        ctx,
+        { surface: "project", projectId: "proj-1" },
+        deps,
+      );
+      const names = Object.keys(a.tools);
+      expect(names).not.toContain("review.analyze");
+      expect(names).toContain("review.script"); // 稿面审核按钮深链落 project
+      expect(names).toContain("calibration.diagnose"); // 盲预测按钮深链落 project
+      expect(names.length).toBe(29);
+    });
+
+    it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
+      const { deps } = makeDeps();
+      deps.contextReaders!.getProjectDetail = async () => ({
+        id: "proj-pub",
+        title: "已发布的一条",
+        stage: "review",
+        status: "published",
+        publish: { published: true, platform: "douyin", publishedAt: null },
+        brief: {},
+        artifacts: [],
+        metricsSummary: "",
+      });
+      const a = await buildChatAssembly(
+        ctx,
+        { surface: "project", projectId: "proj-pub" },
+        deps,
+      );
+      expect(Object.keys(a.tools)).toContain("review.analyze");
+      expect(Object.keys(a.tools).length).toBe(30);
+      // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
+      const { deps: noReaders } = makeDeps({
+        contextReaders: undefined,
+      } as Partial<AssembleChatDeps>);
+      const b = await buildChatAssembly(
+        ctx,
+        { surface: "project", projectId: "proj-x" },
+        noReaders,
+      );
+      expect(Object.keys(b.tools)).toContain("review.analyze");
+      expect(Object.keys(b.tools).length).toBe(30);
+    });
+
+    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 30 工具(向后兼容)", async () => {
+      const { deps } = makeDeps();
+      const a = await buildChatAssembly(ctx, { surface: "nope" }, deps);
+      expect(Object.keys(a.tools).length).toBe(30);
+      expect(Object.keys(a.tools)).toContain("review.analyze");
+      expect(Object.keys(a.tools)).toContain("topic.generate");
+    });
+
+    it("③ functionKey 命中真工具但被场景砍掉 → 补回白名单且 forcedTool 生效(T-231⑨ 强制置顶不受收窄影响)", async () => {
+      const { deps } = makeDeps();
+      // topics 场景砍了 review.script;深链按钮显式要它 → 补回 + 强制。
+      const a = await buildChatAssembly(
+        ctx,
+        { surface: "topics", functionKey: "review.script" },
+        deps,
+      );
+      expect(Object.keys(a.tools)).toContain("review.script");
+      expect(a.forcedTool).toBe("review.script");
+      expect(Object.keys(a.tools).length).toBe(29); // 28 + 补回的 1
+    });
   });
 
   it("没配 model key(resolveModelSpec 抛错)→ 装配抛出(路由接住返 4xx,不假成功)", async () => {

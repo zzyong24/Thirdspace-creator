@@ -2553,6 +2553,116 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "context.predictions",
 ];
 
+// ── [T-240③] 场景工具白名单(「场景」一等机制的静态层)────────────────────────────────
+// T-229 审计结论:T-104 把 getTools(skillId) 降级成「只重排不限制」,33 工具对每个 surface 全暴露
+// → 创作前的项目对话里编导按「复盘已发布作品」套路调复盘工具(实录病例)。这里恢复**真限制**:
+// 每个 surface 声明允许工具集,buildChatAssembly 据此收窄真正挂给模型的工具。
+//
+// 映射原则(保守,宁可多给只读工具、别错砍用户可能要的产出工具):
+//   - context.*(只读全量)全场景保留 —— 读上下文无害,且 T-224 无稿门本身依赖
+//     context.metrics/context.artifact.text 找真稿;
+//   - material.*(gather/screenshot/generate)+ web.read 全场景保留 —— 任何场景都可能中途搜素材;
+//   - calibration.diagnose 是**发布前盲评**(创作流工具,非复盘工具),创作类 surface 保留
+//     (稿面「盲预测」按钮深链 fn=calibration.diagnose 落 project surface,砍了会废按钮);
+//   - 创作类 surface(topics)不给 review.analyze/review.script(复盘/审核无对象);
+//   - 复盘/校准/定位 surface 不给 topic.generate/script.draft 等创作产出工具;
+//   - knowledge-distill 保持聚焦(T-094 先例:聚焦单任务 surface 不挂宽域产出工具);
+//   - project surface 覆盖创作+复盘双场景 → 全量,但**阶段感知**:项目明确未发布(创作前)时
+//     砍 review.analyze(复盘已发布作品的工具,创作前调它必触发无稿门「要用户贴稿」);
+//   - 未知 surface(global 全局唤醒/兜底)→ 无映射,回落全量(不破坏既有行为)。
+// functionKey(深链按钮的显式用户意图)命中真工具但被场景砍掉时,由 buildChatAssembly 补回
+// (T-231⑨ quickFunctionKeyRef/applyFunctionKey 强制置顶机制不受影响)。
+
+/** 全部只读 context 工具(从单一真值派生,加 context 工具自动进全场景白名单,防 drift)。 */
+export const CONTEXT_TOOL_NAMES: readonly string[] = ALL_CHAT_TOOL_NAMES.filter(
+  (n) => n.startsWith("context."),
+);
+
+/** 素材类工具 —— 全场景保留(任何场景都可能中途搜素材/读网页/截图/生成)。 */
+const MATERIAL_TOOL_NAMES: readonly string[] = [
+  "material.gather",
+  "material.screenshot",
+  "web.read",
+  "material.generate",
+];
+
+/** 创作类产出工具(选题/写稿/填卡/记经验/蒸馏/定位卡/发布前盲评)。 */
+const CREATION_TOOL_NAMES: readonly string[] = [
+  "topic.generate",
+  "topic.enrich",
+  "script.hooks",
+  "script.draft",
+  "brief.fill",
+  "learning.capture",
+  "knowledge.distill",
+  "positioning.generate",
+  "calibration.diagnose",
+];
+
+/**
+ * surface → 允许工具集(场景静态白名单)。key 是 ChatContext.surface(页面层真值,比 skillId 细:
+ * project/topics 同 skill 不同场景)。不在表里的 surface(如 global 全局唤醒)→ getSurfaceToolScope
+ * 返回 null,调用方回落全量(向后兼容兜底)。导出供单测锚定映射表。
+ */
+export const SURFACE_TOOL_SCOPES: Readonly<Record<string, readonly string[]>> = {
+  // 选题页:创作产出 + 素材 + 全量只读。无单条作品语境 → 不给 review.analyze/review.script。
+  topics: [...CREATION_TOOL_NAMES, ...MATERIAL_TOOL_NAMES, ...CONTEXT_TOOL_NAMES],
+  // 项目对话:创作 + 审核 + 复盘双场景全量(阶段感知收窄见 getSurfaceToolScope)。
+  project: [
+    ...CREATION_TOOL_NAMES,
+    "review.script",
+    "review.analyze",
+    ...MATERIAL_TOOL_NAMES,
+    ...CONTEXT_TOOL_NAMES,
+  ],
+  // 校准中心:发布前盲评 + 记经验;不给出题/写稿等创作产出。
+  calibration: [
+    "calibration.diagnose",
+    "learning.capture",
+    ...MATERIAL_TOOL_NAMES,
+    ...CONTEXT_TOOL_NAMES,
+  ],
+  // 定位中心:定位提案 + 记经验;不给出题/写稿/复盘。
+  positioning: [
+    "positioning.generate",
+    "learning.capture",
+    ...MATERIAL_TOOL_NAMES,
+    ...CONTEXT_TOOL_NAMES,
+  ],
+  // 复盘页:复盘提炼 + 记经验;不给 topic.generate 等创作产出(2026-07-02 实测污染源先例)。
+  review: [
+    "review.analyze",
+    "learning.capture",
+    ...MATERIAL_TOOL_NAMES,
+    ...CONTEXT_TOOL_NAMES,
+  ],
+  // 知识倾倒场:聚焦蒸馏(T-094 先例);素材/只读保留(粘 URL → web.read 读正文再蒸是正常流)。
+  "knowledge-distill": [
+    "knowledge.distill",
+    ...MATERIAL_TOOL_NAMES,
+    ...CONTEXT_TOOL_NAMES,
+  ],
+};
+
+/**
+ * [T-240③] 解析 surface 的场景工具白名单。
+ *   - 未知 surface(global/兜底)→ null(调用方回落全量,向后兼容);
+ *   - project surface + 项目**明确未发布**(projectPublished===false)→ 砍 review.analyze
+ *     (创作前无稿可复盘,留着它只会诱导编导走复盘套路触发无稿门);published/未知(null/缺省,
+ *     读不到项目详情时的诚实兜底)→ 保留全 project 集(不误伤已发布项目的复盘)。
+ */
+export function getSurfaceToolScope(
+  surface: string,
+  opts?: { projectPublished?: boolean | null },
+): readonly string[] | null {
+  const base = SURFACE_TOOL_SCOPES[surface];
+  if (!base) return null;
+  if (surface === "project" && opts?.projectPublished === false) {
+    return base.filter((n) => n !== "review.analyze");
+  }
+  return base;
+}
+
 /**
  * 按 skill 的工具白名单(getTools(skillId))过滤出真正挂给模型的工具集(SPEC §3.2 第 2 层)。
  * 白名单里有但本切片未实现的工具(后续波)直接跳过 —— 不报错、不挂空壳,留给后续切片补齐。

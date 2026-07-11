@@ -1895,3 +1895,65 @@ describe("[T-094] knowledge.distill 工具 — 对话蒸馏", () => {
     expect(clampDistillContent(long).length).toBe(MAX_DISTILL_TOOL_CONTENT_CHARS);
   });
 });
+
+// ── [T-240③] 场景工具白名单(静态层)—— 映射表锚定 + 阶段感知 + 兜底 ─────────────────
+describe("[T-240③] getSurfaceToolScope — 场景工具白名单", () => {
+  it("映射表每个场景:全部工具名合法(∈ ALL_CHAT_TOOL_NAMES)、无重复、context.* 全量保留(drift guard)", async () => {
+    const { SURFACE_TOOL_SCOPES, CONTEXT_TOOL_NAMES } = await import("./chat-tools");
+    const contextAll = ALL_CHAT_TOOL_NAMES.filter((n) => n.startsWith("context."));
+    expect([...CONTEXT_TOOL_NAMES].sort()).toEqual([...contextAll].sort());
+    for (const [surface, scope] of Object.entries(SURFACE_TOOL_SCOPES)) {
+      // 工具名全部真实存在(加工具改名忘同步映射表即挂)。
+      for (const n of scope) expect(ALL_CHAT_TOOL_NAMES).toContain(n);
+      // 无重复。
+      expect(new Set(scope).size).toBe(scope.length);
+      // context.* 只读全量保留(读上下文无害,S1 无稿门依赖它找真稿)。
+      for (const n of contextAll) {
+        expect(scope, `${surface} 缺只读工具 ${n}`).toContain(n);
+      }
+      // material.* + web.read 全场景保留(任何场景都可能中途搜素材)。
+      for (const n of ["material.gather", "material.screenshot", "web.read", "material.generate"]) {
+        expect(scope, `${surface} 缺素材工具 ${n}`).toContain(n);
+      }
+    }
+  });
+
+  it("场景收窄语义:topics 无复盘/审核;review/calibration/positioning 无创作产出;distill 聚焦蒸馏", async () => {
+    const { SURFACE_TOOL_SCOPES } = await import("./chat-tools");
+    expect(SURFACE_TOOL_SCOPES.topics).not.toContain("review.analyze");
+    expect(SURFACE_TOOL_SCOPES.topics).not.toContain("review.script");
+    expect(SURFACE_TOOL_SCOPES.review).not.toContain("topic.generate");
+    expect(SURFACE_TOOL_SCOPES.review).toContain("review.analyze");
+    expect(SURFACE_TOOL_SCOPES.calibration).not.toContain("script.draft");
+    expect(SURFACE_TOOL_SCOPES.calibration).toContain("calibration.diagnose");
+    expect(SURFACE_TOOL_SCOPES.positioning).toContain("positioning.generate");
+    expect(SURFACE_TOOL_SCOPES.positioning).not.toContain("review.analyze");
+    expect(SURFACE_TOOL_SCOPES["knowledge-distill"]).toContain("knowledge.distill");
+    expect(SURFACE_TOOL_SCOPES["knowledge-distill"]).not.toContain("topic.generate");
+    // project 双场景全集(创作 + 审核 + 复盘)。
+    expect(SURFACE_TOOL_SCOPES.project).toContain("review.analyze");
+    expect(SURFACE_TOOL_SCOPES.project).toContain("review.script");
+    expect(SURFACE_TOOL_SCOPES.project).toContain("calibration.diagnose");
+  });
+
+  it("阶段感知:project + 明确未发布 → 砍 review.analyze;已发布/未知 → 保留;未知 surface → null(回落全量)", async () => {
+    const { getSurfaceToolScope } = await import("./chat-tools");
+    expect(
+      getSurfaceToolScope("project", { projectPublished: false }),
+    ).not.toContain("review.analyze");
+    expect(
+      getSurfaceToolScope("project", { projectPublished: true }),
+    ).toContain("review.analyze");
+    expect(
+      getSurfaceToolScope("project", { projectPublished: null }),
+    ).toContain("review.analyze");
+    expect(getSurfaceToolScope("project")).toContain("review.analyze");
+    // 未知 surface(global 全局唤醒等)→ null,调用方回落全量(向后兼容兜底)。
+    expect(getSurfaceToolScope("global")).toBeNull();
+    expect(getSurfaceToolScope("somepane")).toBeNull();
+    // 非 project 场景不受 projectPublished 影响(阶段感知只作用于 project 双场景)。
+    expect(
+      getSurfaceToolScope("review", { projectPublished: false }),
+    ).toContain("review.analyze");
+  });
+});

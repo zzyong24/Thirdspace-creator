@@ -778,3 +778,30 @@ describe("creative-context T-186 — assembleCreativeContext 相关性检索接�
     expect(context.knowledgeBrief).toContain("已按 token 预算截断");
   });
 });
+
+// ── [T-240①] formatProjectStageBlock —— 项目阶段判据纯函数(「场景」一等机制的动态层)──
+describe("[T-240①] formatProjectStageBlock — 阶段判据渲染", () => {
+  it("未发布 → 「创作前(未发布)」+ 明示「没有逐字稿是正常状态」(治创作前被按复盘套路要稿)", async () => {
+    const { formatProjectStageBlock } = await import("./creative-context");
+    const block = formatProjectStageBlock({ stage: "planning", published: false });
+    expect(block).toContain("当前项目阶段:创作前(未发布)");
+    expect(block).toContain("(stage=planning)");
+    expect(block).toContain("没有逐字稿是正常状态");
+    expect(block).toContain("不要向用户索要逐字稿");
+  });
+
+  it("已发布 → 「已发布(可复盘)」+ 拆解必须读真逐字稿/真实指标", async () => {
+    const { formatProjectStageBlock } = await import("./creative-context");
+    const block = formatProjectStageBlock({ stage: "review", published: true });
+    expect(block).toContain("当前项目阶段:已发布(可复盘)");
+    expect(block).toContain("context.artifact.text");
+    expect(block).toContain("context.metrics");
+  });
+
+  it("stage 空串 → 不渲 stage 括注(不喂空噪声)", async () => {
+    const { formatProjectStageBlock } = await import("./creative-context");
+    const block = formatProjectStageBlock({ stage: "", published: false });
+    expect(block).not.toContain("(stage=");
+    expect(block).toContain("创作前(未发布)");
+  });
+});
