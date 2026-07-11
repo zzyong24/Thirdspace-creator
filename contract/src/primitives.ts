@@ -161,11 +161,15 @@ export const cadenceFrequency = z.enum([
 // [T-222] "benchmark"(对标他号爆款采集)自 T-212 起是真实调度源:collection-bootstrap 绑定抖音
 //   时幂等建每天的 benchmark 采集 job,collector 已接(persistence-client scheduledCollectors.benchmark)。
 //   补进枚举修复漂移 —— 否则 listScheduledJobs(sourceKind:"benchmark")/ 响应校验放不过这些真实存在的 job。
+// [T-235a] "topic.daily"(每天自动出题):每日定时多依据合并出题(定位+评论信号+知识库+热点 brief)
+//   → 护栏排序(T-212d 探索位)→ candidates 落 pool(防灌库 ≤N/天)。collection-bootstrap 模板 9:40
+//   错峰(benchmark 9:30 后,当天新拆解可入引用);collector 见 persistence-client scheduledCollectors。
 export const scheduledJobSourceKind = z.enum([
   "self.metrics",
   "comments",
   "self.detail",
   "benchmark",
+  "topic.daily",
 ]);
 
 // JobRun 的调度触发记录状态(§4)。running=进行中;succeeded/failed=终态;

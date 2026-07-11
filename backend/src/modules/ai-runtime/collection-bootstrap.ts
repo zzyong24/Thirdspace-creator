@@ -60,6 +60,17 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     prompt: "每天抓我登记的对标博主主页的公开爆款作品",
     schedule: "30 9 * * *",
   },
+  // [T-235a] 每天自动出题:多依据合并(定位+评论信号+知识库+热点 brief)→ topic.generate 同模板
+  //   出题 → T-212d 护栏排序(探索位防茧房)→ 候选落 pool(防灌库 ≤N/天,默认 5)。错峰 9:40
+  //   (排 benchmark 9:30 后:当天新拆解的对标爆款已入库,可作出题引用)。未配文本模型 → 诚实
+  //   跳过(itemsNew=0 + 注明「未配文本模型」,不空转不编)。纯 AI + 库内数据 + web 检索,不碰
+  //   douyinGateway(与采集类 job 无限流冲突;gate-F5 串行闸仍统一排队)。
+  {
+    sourceKind: "topic.daily",
+    name: "每天自动出题",
+    prompt: "每天结合我的定位、评论信号、知识库和当下热点,自动出一批选题进选题池",
+    schedule: "40 9 * * *",
+  },
 ];
 
 export interface CollectionBootstrapDeps {

@@ -131,11 +131,13 @@ describe("scheduling contract", () => {
   });
 
   it("enumerates the two new enums exactly", () => {
+    // [T-235a] topic.daily = 每天自动出题(多依据合并 → 护栏排序 → 候选落 pool)。
     expect(scheduledJobSourceKind.options).toEqual([
       "self.metrics",
       "comments",
       "self.detail",
       "benchmark",
+      "topic.daily",
     ]);
     expect(jobRunStatus.options).toEqual([
       "running",

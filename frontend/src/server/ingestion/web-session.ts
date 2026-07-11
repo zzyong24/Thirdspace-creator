@@ -117,7 +117,7 @@ async function realOpenWebContext(
     viewport: { width: 1440, height: 900 },
     args: ["--disable-blink-features=AutomationControlled"],
     ignoreDefaultArgs: ["--enable-automation"],
-  } as const;
+  };
   let ctx;
   try {
     ctx = await chromium.launchPersistentContext(authDir, {
