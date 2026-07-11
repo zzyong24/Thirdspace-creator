@@ -182,6 +182,12 @@ export interface DouyinSelfIdentity {
   secUid: string;
   /** 抖音号(unique_id)优先,兜底数字 uid;抓不到空串。人可读的号码,供展示/去重。 */
   douyinId: string;
+  /**
+   * [T-214] 账号总粉丝数 —— 从 author 对象取 follower_count ?? mplatform_followers_count ??
+   * follower_count_str(数值化)。author 无粉丝字段 / 解析失败 → null(诚实降级,不硬造)。
+   * service 侧仅当 >0 才回填 account.followerBaseline(治编导 agent「粉丝数 0」)。
+   */
+  followerCount: number | null;
 }
 
 /**
@@ -206,7 +212,15 @@ export function parseSelfIdentity(json: unknown): DouyinSelfIdentity | null {
     const secUid = str(author.sec_uid) || str(author.sec_user_id);
     // 抖音号(人可读):unique_id 优先(如 `moonlit_creator`);无则退化数字 uid。
     const douyinId = str(author.unique_id) || str(author.uid) || str(author.user_id);
-    return { nickname, secUid, douyinId };
+    // [T-214] 总粉丝数:author 常带 follower_count / mplatform_followers_count(数值)或
+    //   follower_count_str(字符串)。三键 ?? 兜底;字段全缺(undefined/null)→ null(诚实降级,
+    //   不写 0 冒充);num() 解析失败退 0(不影响回填,service 只在 >0 时才覆盖 baseline)。
+    const followerRaw =
+      author.follower_count ??
+      author.mplatform_followers_count ??
+      author.follower_count_str;
+    const followerCount = followerRaw == null ? null : num(followerRaw);
+    return { nickname, secUid, douyinId, followerCount };
   }
   return null;
 }
@@ -998,6 +1012,18 @@ export async function fetchDouyinMetrics(
     for (const j of workJsons) {
       identity = parseSelfIdentity(j);
       if (identity) break;
+    }
+    // [T-214] 诊断日志(真机确认 author 到底有没有粉丝字段的唯一凭据):followerCount=null
+    //   时明确标注「author 无粉丝字段」—— 若真机稳定为 null,说明 author 路径拿不到,得改从
+    //   创作者中心主页 header 抓(本任务先做 author 路径,靠这条日志暴露真相,不假装拿到)。
+    if (identity) {
+      const fc = identity.followerCount;
+      console.log(
+        `[douyin-identity] nickname=${identity.nickname} secUid=${identity.secUid || "(空)"} ` +
+          `followerCount=${fc === null ? "null(author 无粉丝字段,需改主页抓取)" : fc}`,
+      );
+    } else {
+      console.log("[douyin-identity] 未解析到身份(作品列表空/无 author/脏 JSON)");
     }
     return { records, identity };
   } finally {

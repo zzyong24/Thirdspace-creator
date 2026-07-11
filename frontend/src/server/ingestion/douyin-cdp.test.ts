@@ -83,6 +83,7 @@ describe("douyin-cdp 纯函数", () => {
             sec_uid: "MS4wLjABAAAAsecuid1234",
             uid: "98765432100",
             unique_id: "moonlit_creator",
+            follower_count: 88888, // [T-214] 总粉丝数
           },
         },
       ],
@@ -92,6 +93,23 @@ describe("douyin-cdp 纯函数", () => {
     expect(id!.nickname).toBe("月色创作者");
     expect(id!.secUid).toBe("MS4wLjABAAAAsecuid1234");
     expect(id!.douyinId).toBe("moonlit_creator"); // unique_id 优先(抖音号),兜底 uid
+    expect(id!.followerCount).toBe(88888); // [T-214] follower_count 取到
+  });
+
+  it("[T-214] parseSelfIdentity 粉丝数:mplatform_followers_count 兜底 / 无字段 → null", () => {
+    // follower_count 缺 → 退 mplatform_followers_count。
+    const withMplatform = parseSelfIdentity({
+      aweme_list: [
+        { author: { nickname: "作者A", mplatform_followers_count: 5230 } },
+      ],
+    });
+    expect(withMplatform!.followerCount).toBe(5230);
+    // author 完全无粉丝字段 → null(诚实降级,不写 0 冒充)。这条对应真机日志会打
+    //   「followerCount=null(author 无粉丝字段,需改主页抓取)」。
+    const noFollower = parseSelfIdentity({
+      aweme_list: [{ author: { nickname: "作者B", sec_uid: "s" } }],
+    });
+    expect(noFollower!.followerCount).toBeNull();
   });
 
   it("parseSelfIdentity 兜底:无 unique_id 用 uid、user 键、sec_user_id", () => {

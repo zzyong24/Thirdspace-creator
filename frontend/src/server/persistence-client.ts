@@ -643,11 +643,21 @@ export async function ensureDouyinAccountUpsert(
 export async function mergeDouyinPlaceholders(
   service: PlatformAccountService,
   ctx: RequestContext,
-  input: { platform: string; handle: string; externalAccountId?: string | null },
+  input: {
+    platform: string;
+    handle: string;
+    externalAccountId?: string | null;
+    followerCount?: number | null; // [T-214] 采集到的总粉丝数(可空)
+  },
 ): Promise<void> {
   const real = input.handle.trim();
   if (!real) return;
   const ext = input.externalAccountId?.trim() || null; // [T-201b] 采集到的 sec_uid(可空)
+  // [T-214] 总粉丝数回填值:仅当采到 >0 才认(0/null → undefined,下面不写,不覆盖已有 baseline)。
+  const follower =
+    typeof input.followerCount === "number" && input.followerCount > 0
+      ? input.followerCount
+      : undefined;
   const { rows } = await service.listAccounts(ctx, {
     platform: input.platform,
     limit: 100,
@@ -669,10 +679,25 @@ export async function mergeDouyinPlaceholders(
       );
     }
   }
+  // [T-214] 总粉丝数回填:与 externalAccountId 不同,粉丝数是**会增长的指标**,故每次采集都用
+  //   最新 >0 值刷新 followerBaseline(不是一次性锚)。0/null(follower=undefined)→ 不写,
+  //   保留已有值(诚实降级,治编导 agent「粉丝数 0」)。best-effort,失败吞错不阻断合并。
+  async function backfillFollower(accountId: string): Promise<void> {
+    if (follower === undefined) return;
+    try {
+      await service.updateAccount(ctx, accountId, { followerBaseline: follower });
+    } catch (err) {
+      console.error(
+        "[persistence] mergeDouyinPlaceholders: 回填 followerBaseline 失败:",
+        err,
+      );
+    }
+  }
   const realExisting = active.find((r) => r.accountHandle === real);
 
   if (realExisting) {
     await backfillExternalId(realExisting.id, realExisting.externalAccountId);
+    await backfillFollower(realExisting.id);
     for (const p of placeholders) {
       await archivePlaceholderBestEffort(service, ctx, p.id);
     }
@@ -681,6 +706,7 @@ export async function mergeDouyinPlaceholders(
   const [keep, ...rest] = placeholders;
   if (!keep) return; // 无占位可更新 → 交由后续 ensureAccount 建真实号
   await backfillExternalId(keep.id, keep.externalAccountId);
+  await backfillFollower(keep.id); // [T-214] 顺带回填总粉丝数(>0 才写)
   try {
     await service.updateAccount(ctx, keep.id, { accountHandle: real });
   } catch (err) {

@@ -147,9 +147,16 @@ export interface IngestionPlatformAccountPort {
   //   handle 回填(仅回填 external_source),不破旧组合根。仅当 identity 抓到才调。
   // [T-201b] 顺带把稳定身份锚 externalAccountId(sec_uid)一并透传:实现侧仅当该号身份键为空时
   //   一次性回填(永不覆盖已有 id)。handle 只更显示名,绝不参与身份匹配。
+  // [T-214] 顺带把采集到的总粉丝数 followerCount 透传:实现侧仅当 >0 才回填 followerBaseline
+  //   (0/null 不覆盖已有值,诚实降级)。范式同 externalAccountId(additive,不破旧调用)。
   updateAccountHandle?(
     ctx: RequestContext,
-    input: { platform: string; handle: string; externalAccountId?: string | null },
+    input: {
+      platform: string;
+      handle: string;
+      externalAccountId?: string | null;
+      followerCount?: number | null;
+    },
   ): Promise<void>;
 }
 
@@ -161,6 +168,9 @@ export interface DouyinSelfIdentity {
   nickname: string;
   secUid: string;
   douyinId: string;
+  // [T-214] 账号总粉丝数(author 反解;缺→null)。service 仅当 >0 才回填 account.followerBaseline
+  //   —— 治编导 agent「粉丝数 0」(baseline 从没采集,恒 0)。0/null 不覆盖已有值(诚实降级)。
+  followerCount: number | null;
 }
 
 // fetch 的返回:向后兼容联合 —— 旧 fake / 旧装配返 `MetricRecord[]`;[T-136 §D] 新装配返
@@ -403,6 +413,7 @@ export function createIngestionService(args: {
           platform: "douyin",
           handle: nickname,
           externalAccountId: identity.secUid || null, // [T-201b] 身份键(空则不回填)
+          followerCount: identity.followerCount, // [T-214] 总粉丝数(实现侧仅 >0 才回填 baseline)
         });
       } catch (err) {
         console.error("[ingestion] applyDouyinIdentity: 回填 platform_account handle 失败:", err);

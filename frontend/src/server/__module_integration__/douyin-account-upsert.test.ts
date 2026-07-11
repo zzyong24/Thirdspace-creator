@@ -220,6 +220,47 @@ describe("douyin 扫码 upsert 去重 + 占位号合并", () => {
     expect(await activeHandles(svc)).toEqual(["@真实昵称"]); // 始终一行
   });
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // [T-214] 总粉丝数回填 followerBaseline(治编导 agent「粉丝数 0」)。
+  // ───────────────────────────────────────────────────────────────────────────
+
+  it("[T-214] merge:采到 followerCount>0 → 回填 followerBaseline;0/null 不覆盖已有值", async () => {
+    // 占位号,followerBaseline 初始 0。
+    const ph = await svc.createAccount(ctx, {
+      platform: "douyin",
+      accountHandle: "我的抖音",
+    });
+    expect((await findAccount(svc, ph.id)).followerBaseline).toBe(0);
+    // ① 采到真实粉丝数 12345 → 回填。
+    await mergeDouyinPlaceholders(svc, ctx, {
+      platform: "douyin",
+      handle: "@真实号",
+      followerCount: 12345,
+    });
+    expect((await findAccount(svc, ph.id)).followerBaseline).toBe(12345);
+    // ② 后续采集拿到 null(author 无粉丝字段)→ 不覆盖,保留 12345(诚实降级)。
+    await mergeDouyinPlaceholders(svc, ctx, {
+      platform: "douyin",
+      handle: "@真实号",
+      followerCount: null,
+    });
+    expect((await findAccount(svc, ph.id)).followerBaseline).toBe(12345);
+    // ③ 采到 0(present but zero)→ 同样不覆盖。
+    await mergeDouyinPlaceholders(svc, ctx, {
+      platform: "douyin",
+      handle: "@真实号",
+      followerCount: 0,
+    });
+    expect((await findAccount(svc, ph.id)).followerBaseline).toBe(12345);
+    // ④ 粉丝数增长到 20000 → 用最新值刷新(粉丝数是会增长的指标,非一次性锚)。
+    await mergeDouyinPlaceholders(svc, ctx, {
+      platform: "douyin",
+      handle: "@真实号",
+      followerCount: 20000,
+    });
+    expect((await findAccount(svc, ph.id)).followerBaseline).toBe(20000);
+  });
+
   it("扫码全链路模拟:ensure(建占位)→ ensure(复用不冒俩)→ merge(回填真实名)= 一行真实号", async () => {
     // migration seed 占位。
     await svc.createAccount(ctx, { platform: "douyin", accountHandle: "待完善" });
