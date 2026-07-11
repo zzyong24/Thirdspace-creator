@@ -19,7 +19,7 @@ import { resolveRequestContext } from "@/lib/request-context.server";
 export const dynamic = "force-dynamic";
 
 interface WebSessionBody {
-  action?: "list" | "login" | "status" | "remove";
+  action?: "list" | "login" | "loginConfirm" | "loginCancel" | "status" | "remove";
   url?: string;
   domain?: string;
 }
@@ -54,8 +54,27 @@ export async function POST(req: Request): Promise<Response> {
             { status: 400 },
           );
         }
-        // 有头登录阻塞(用户在弹窗里自己登;默认最长 300s)。非法 URL → webDomainFromUrl 抛 → 400。
+        // [T-221] 开窗即返(不阻塞、不赌 cookie 自动关):弹独立 Chromium 让用户自己登,返回
+        //   { domain, pending:true }。登好由前端触发 loginConfirm 才关窗持久化。非法 URL → 抛 → 400。
         const result = await runtime.loginSession(url);
+        return NextResponse.json(result);
+      }
+      case "loginConfirm": {
+        // [T-221] 用户显式「我登好了」→ 关登录窗 + 持久化 profile,认可成功。
+        const domain = typeof body.domain === "string" ? body.domain.trim() : "";
+        if (!domain) {
+          return NextResponse.json({ error: "domain 不能为空" }, { status: 400 });
+        }
+        const result = await runtime.confirmSession(domain);
+        return NextResponse.json(result);
+      }
+      case "loginCancel": {
+        // [T-221] 用户「取消」→ 关登录窗,不留登录承诺。
+        const domain = typeof body.domain === "string" ? body.domain.trim() : "";
+        if (!domain) {
+          return NextResponse.json({ error: "domain 不能为空" }, { status: 400 });
+        }
+        const result = await runtime.cancelSession(domain);
         return NextResponse.json(result);
       }
       case "status": {
@@ -82,7 +101,10 @@ export async function POST(req: Request): Promise<Response> {
       }
       default:
         return NextResponse.json(
-          { error: "unknown action(需 list/login/status/remove)" },
+          {
+            error:
+              "unknown action(需 list/login/loginConfirm/loginCancel/status/remove)",
+          },
           { status: 400 },
         );
     }

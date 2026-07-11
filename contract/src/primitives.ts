@@ -157,12 +157,15 @@ export const cadenceFrequency = z.enum([
 // `self.metrics`=周期性刷自己主页作品+指标(复用 fetchDouyinMetrics),`comments`=周期性
 // 抓评论落 audience_signals(D2),`self.detail`=周期性拉创作者后台作品明细导出(16 字段:完播/
 // 封面CTR/5s完播/2s跳出/平均时长/主页访问/粉丝增量…)喂复盘核心指标(T-030-D8a,SPEC §9b)。
-// 对标(他人作品)已砍(T-031)。contract Zod 是唯一真值,backend 表 source_kind 存 text、
-// 由这个 enum 校验。
+// contract Zod 是唯一真值,backend 表 source_kind 存 text、由这个 enum 校验。
+// [T-222] "benchmark"(对标他号爆款采集)自 T-212 起是真实调度源:collection-bootstrap 绑定抖音
+//   时幂等建每天的 benchmark 采集 job,collector 已接(persistence-client scheduledCollectors.benchmark)。
+//   补进枚举修复漂移 —— 否则 listScheduledJobs(sourceKind:"benchmark")/ 响应校验放不过这些真实存在的 job。
 export const scheduledJobSourceKind = z.enum([
   "self.metrics",
   "comments",
   "self.detail",
+  "benchmark",
 ]);
 
 // JobRun 的调度触发记录状态(§4)。running=进行中;succeeded/failed=终态;

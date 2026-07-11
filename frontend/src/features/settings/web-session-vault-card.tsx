@@ -59,6 +59,11 @@ export function WebSessionVaultCard() {
   const [busy, setBusy] = React.useState<"idle" | "loggingIn">("idle");
   const [feedback, setFeedback] = React.useState<string | null>(null);
   const [rowBusy, setRowBusy] = React.useState<Record<string, boolean>>({});
+  // [T-221] 待确认登录:开窗后登录窗保持打开,等用户点「我登好了」。null = 无待确认窗。
+  const [pendingLogin, setPendingLogin] = React.useState<{
+    domain: string;
+    confirming: boolean;
+  } | null>(null);
 
   const refresh = React.useCallback(async () => {
     try {
@@ -107,47 +112,82 @@ export function WebSessionVaultCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, sessions.map((s) => s.domain).join(",")]);
 
-  const login = React.useCallback(async () => {
-    const url = urlInput.trim();
-    if (!url || busy !== "idle") return;
-    setBusy("loggingIn");
-    setFeedback("已弹出登录窗口 —— 在打开的浏览器里完成登录,登好后这里会自动更新…");
-    try {
-      const res = (await callWebSession({ action: "login", url })) as {
-        domain?: string;
-        loggedIn?: boolean;
-      };
-      if (res.loggedIn) {
-        setFeedback(`已登录 ${res.domain}。`);
-        setUrlInput("");
-      } else {
-        setFeedback("未检测到登录(可能超时/未完成)——请重试,在弹出的窗口里完成登录。");
-      }
-      await refresh();
-    } catch (err) {
-      setFeedback(err instanceof Error ? err.message : "登录失败,请重试。");
-    } finally {
-      setBusy("idle");
-    }
-  }, [urlInput, busy, refresh]);
-
-  const relogin = React.useCallback(
-    async (domain: string) => {
-      if (busy !== "idle") return;
+  // [T-221] 开窗登录:开窗即返(独立浏览器保持打开),等用户在窗口里登好后点「我登好了」。
+  //   不再赌 cookie 名自动关(治「浏览器秒关」)。
+  const openLogin = React.useCallback(
+    async (url: string) => {
+      if (!url || busy !== "idle" || pendingLogin) return;
       setBusy("loggingIn");
-      setFeedback(`已弹出 ${domain} 登录窗口 —— 在浏览器里完成登录…`);
+      setFeedback(null);
       try {
-        await callWebSession({ action: "login", url: `https://${domain}` });
-        await refresh();
-        setFeedback(`已重新登录 ${domain}。`);
+        const res = (await callWebSession({ action: "login", url })) as {
+          domain?: string;
+          pending?: boolean;
+        };
+        if (res.pending && res.domain) {
+          setPendingLogin({ domain: res.domain, confirming: false });
+          setFeedback(
+            `已打开 ${res.domain} 的登录窗口 —— 在弹出的浏览器里自己登录(账密/扫码都行),登好后回到这里点「我登好了」。`,
+          );
+        } else {
+          setFeedback("没能打开登录窗口,请重试。");
+        }
       } catch (err) {
-        setFeedback(err instanceof Error ? err.message : "重新登录失败。");
+        setFeedback(err instanceof Error ? err.message : "打开登录窗口失败,请重试。");
       } finally {
         setBusy("idle");
       }
     },
-    [busy, refresh],
+    [busy, pendingLogin],
   );
+
+  const login = React.useCallback(async () => {
+    await openLogin(urlInput.trim());
+  }, [openLogin, urlInput]);
+
+  const relogin = React.useCallback(
+    async (domain: string) => {
+      await openLogin(`https://${domain}`);
+    },
+    [openLogin],
+  );
+
+  // [T-221] 用户点「我登好了」:关登录窗 + 持久化登录态,刷新徽标。
+  const confirmLogin = React.useCallback(async () => {
+    if (!pendingLogin || pendingLogin.confirming) return;
+    const domain = pendingLogin.domain;
+    setPendingLogin({ domain, confirming: true });
+    try {
+      const res = (await callWebSession({
+        action: "loginConfirm",
+        domain,
+      })) as { loggedIn?: boolean };
+      if (res.loggedIn) {
+        setFeedback(`已登录 ${domain}。`);
+        setUrlInput("");
+      } else {
+        setFeedback(`没能确认 ${domain} 的登录(窗口可能已关闭)——请重新打开登录窗口。`);
+      }
+      setPendingLogin(null);
+      await refresh();
+    } catch (err) {
+      setPendingLogin({ domain, confirming: false });
+      setFeedback(err instanceof Error ? err.message : "确认登录失败,请重试。");
+    }
+  }, [pendingLogin, refresh]);
+
+  // [T-221] 用户点「取消」:关登录窗,不留登录承诺。
+  const cancelLogin = React.useCallback(async () => {
+    if (!pendingLogin) return;
+    const domain = pendingLogin.domain;
+    setPendingLogin(null);
+    setFeedback("已取消登录。");
+    try {
+      await callWebSession({ action: "loginCancel", domain });
+    } catch {
+      /* 取消失败(窗口可能已关)不阻断 UI */
+    }
+  }, [pendingLogin]);
 
   const remove = React.useCallback(
     async (domain: string) => {
@@ -222,7 +262,7 @@ export function WebSessionVaultCard() {
                 <button
                   type="button"
                   data-slot="web-session-relogin"
-                  disabled={busy !== "idle" || rowBusy[s.domain]}
+                  disabled={busy !== "idle" || pendingLogin !== null || rowBusy[s.domain]}
                   onClick={() => void relogin(s.domain)}
                   className="inline-flex h-7 shrink-0 items-center rounded-control border border-border px-2 text-xs font-medium text-foreground hover:bg-surface disabled:opacity-50"
                 >
@@ -253,19 +293,50 @@ export function WebSessionVaultCard() {
             }}
             placeholder="粘一个网站链接(如 https://chatgpt.com)"
             data-slot="web-session-url-input"
-            disabled={busy !== "idle"}
+            disabled={busy !== "idle" || pendingLogin !== null}
             className="h-8 min-w-0 flex-1 rounded-control border border-border bg-surface px-2 text-sm text-foreground placeholder:text-text-subtle focus:border-brand focus:outline-none disabled:opacity-50"
           />
           <button
             type="button"
             data-slot="web-session-login"
-            disabled={busy !== "idle" || !urlInput.trim()}
+            disabled={busy !== "idle" || pendingLogin !== null || !urlInput.trim()}
             onClick={() => void login()}
             className="inline-flex h-8 shrink-0 items-center rounded-control bg-brand px-3 text-xs font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
           >
-            {busy === "loggingIn" ? "登录中…" : "登录"}
+            {busy === "loggingIn" ? "打开窗口中…" : "登录"}
           </button>
         </div>
+
+        {/* [T-221] 待确认登录条:登录窗保持打开,用户登好后点「我登好了」才关窗持久化(治秒关)。 */}
+        {pendingLogin ? (
+          <div
+            data-slot="web-session-login-confirm"
+            data-domain={pendingLogin.domain}
+            className="flex flex-wrap items-center gap-2 rounded-md border border-brand/40 bg-brand-soft/40 px-3 py-2"
+          >
+            <span className="min-w-0 flex-1 text-xs text-foreground">
+              在弹出的浏览器窗口里登录 <b>{pendingLogin.domain}</b>,登好后点这里 →
+            </span>
+            <button
+              type="button"
+              data-slot="web-session-login-confirm-btn"
+              disabled={pendingLogin.confirming}
+              onClick={() => void confirmLogin()}
+              className="inline-flex h-7 shrink-0 items-center rounded-control bg-brand px-3 text-xs font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+            >
+              {pendingLogin.confirming ? "确认中…" : "我登好了"}
+            </button>
+            <button
+              type="button"
+              data-slot="web-session-login-cancel-btn"
+              disabled={pendingLogin.confirming}
+              onClick={() => void cancelLogin()}
+              className="inline-flex h-7 shrink-0 items-center rounded-control border border-border px-2 text-xs font-medium text-foreground hover:bg-surface disabled:opacity-50"
+            >
+              取消
+            </button>
+          </div>
+        ) : null}
 
         {feedback ? (
           <p

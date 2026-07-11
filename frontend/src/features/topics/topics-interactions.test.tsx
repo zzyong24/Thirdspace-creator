@@ -34,6 +34,12 @@ const mockClient = {
     (_i: unknown): Promise<unknown> => Promise.resolve({ id: "res-1" }),
   ),
   confirmTask: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve({})),
+  // [T-222] 立即采集:找 benchmark 定时作业 → runNow。
+  listScheduledJobs: vi.fn(
+    (_i: unknown): Promise<unknown> =>
+      Promise.resolve([{ id: "job-bench", enabled: true, sourceKind: "benchmark" }]),
+  ),
+  runScheduledJobNow: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve({})),
 };
 const mockListTaskResults = vi.fn(
   (): Promise<Array<{ resultData: Record<string, unknown> }>> =>
@@ -51,6 +57,8 @@ vi.mock("@/lib/contract-client", () => ({
     patchTaskResultItems: (i: unknown) => mockClient.patchTaskResultItems(i),
     confirmTask: (i: unknown) => mockClient.confirmTask(i),
     cancelTask: () => Promise.resolve({}),
+    listScheduledJobs: (i: unknown) => mockClient.listScheduledJobs(i),
+    runScheduledJobNow: (i: unknown) => mockClient.runScheduledJobNow(i),
   },
 }));
 
@@ -60,7 +68,9 @@ import {
   CandidateCard,
   CandidateSortControl,
   TopicsWorkspace,
+  BenchmarkSourcesButton,
 } from "./topics-interactive-region";
+import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
 import { TopicGenerateBand } from "./topic-generate-island";
 import { TopicsView } from "./topics-page";
 import type {
@@ -436,5 +446,78 @@ describe("topics islands (needs-backend wiring)", () => {
     const card = screen.getByTestId("candidate-card");
     const promote = within(card).getByText("立项为 Project");
     expect(promote.closest("button")).toBeDisabled();
+  });
+});
+
+describe("[T-222] 对标源立即采集", () => {
+  function benchSource(
+    over: Partial<BenchmarkSourceResource> = {},
+  ): BenchmarkSourceResource {
+    return {
+      id: "src-1",
+      userId: "user-a",
+      accountId: null,
+      platform: "douyin",
+      externalAccountId: "sec-uid-1",
+      nickname: "对标博主",
+      homeUrl: null,
+      note: null,
+      enabled: true,
+      createdAt: ISO,
+      updatedAt: ISO,
+      ...over,
+    };
+  }
+
+  it("有启用对标源 → 点「立即采集」找 benchmark 作业 runNow + 成功提示 + refresh", async () => {
+    render(<BenchmarkSourcesButton sources={[benchSource()]} />);
+    fireEvent.click(screen.getByTestId("benchmark-sources-trigger")); // 开对话框
+    const btn = screen.getByTestId("benchmark-collect-now");
+    expect(btn).not.toBeDisabled();
+    fireEvent.click(btn);
+    await waitFor(() =>
+      expect(mockClient.listScheduledJobs).toHaveBeenCalledTimes(1),
+    );
+    // 只找 benchmark sourceKind 的作业
+    const listArg = mockClient.listScheduledJobs.mock.calls[0]![0] as {
+      query: { sourceKind: string };
+    };
+    expect(listArg.query.sourceKind).toBe("benchmark");
+    await waitFor(() =>
+      expect(mockClient.runScheduledJobNow).toHaveBeenCalledTimes(1),
+    );
+    const runArg = mockClient.runScheduledJobNow.mock.calls[0]![0] as {
+      params: { jobId: string };
+    };
+    expect(runArg.params.jobId).toBe("job-bench");
+    await waitFor(() =>
+      expect(screen.getByTestId("benchmark-collect-message")).toHaveAttribute(
+        "data-tone",
+        "ok",
+      ),
+    );
+    expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  it("无启用对标源 → 「立即采集」禁用(空跑无意义)", () => {
+    render(
+      <BenchmarkSourcesButton sources={[benchSource({ enabled: false })]} />,
+    );
+    fireEvent.click(screen.getByTestId("benchmark-sources-trigger"));
+    expect(screen.getByTestId("benchmark-collect-now")).toBeDisabled();
+  });
+
+  it("无 benchmark 作业(未绑抖音)→ 诚实提示,不假装采集", async () => {
+    mockClient.listScheduledJobs.mockResolvedValueOnce([]);
+    render(<BenchmarkSourcesButton sources={[benchSource()]} />);
+    fireEvent.click(screen.getByTestId("benchmark-sources-trigger"));
+    fireEvent.click(screen.getByTestId("benchmark-collect-now"));
+    await waitFor(() =>
+      expect(screen.getByTestId("benchmark-collect-message")).toHaveAttribute(
+        "data-tone",
+        "warn",
+      ),
+    );
+    expect(mockClient.runScheduledJobNow).not.toHaveBeenCalled();
   });
 });

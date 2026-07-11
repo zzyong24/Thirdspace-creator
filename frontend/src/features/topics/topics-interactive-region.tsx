@@ -970,6 +970,107 @@ function BenchmarkSourceRow({
   );
 }
 
+// [T-222] 立即采集触发(best-effort):找一条启用中的 benchmark 定时采集作业 → runNow。复用
+//   register-published-form 同款链(listScheduledJobs{sourceKind} → runScheduledJobNow;幂等双闸
+//   在 backend）。benchmark collector 一次读全部启用对标源(collectBenchmark.listEnabledSources)
+//   → 故触发一次即采所有启用源(非逐源)。作业由绑定抖音时 bootstrapDouyinCollectionJobs 幂等建。
+//   采集是 fire-and-forget 后台 job(拆解转化更慢),故只诚实回「已开始」,采完由定时刷新/回选题池看。
+interface ScheduledJobDto {
+  readonly id: string;
+  readonly enabled: boolean;
+  readonly sourceKind: string;
+}
+async function triggerBenchmarkCollection(): Promise<
+  { ok: true; text: string } | { ok: false; text: string }
+> {
+  const jobsRaw = await client.listScheduledJobs({
+    params: undefined,
+    query: { page: 1, pageSize: 50, sourceKind: "benchmark" },
+    body: undefined,
+  });
+  const jobs = (Array.isArray(jobsRaw) ? jobsRaw : []) as ScheduledJobDto[];
+  const job = jobs.find((j) => j.enabled);
+  if (!job) {
+    // 无 benchmark 作业(通常是还没绑定抖音号——采集需登录态抓对标号主页)。诚实提示,不假装采了。
+    return {
+      ok: false,
+      text: "还没有对标采集作业 —— 先在账号管理绑定抖音号,系统会自动建每天的对标采集,再回来点立即采集。",
+    };
+  }
+  await client.runScheduledJobNow({
+    params: { jobId: job.id },
+    query: undefined,
+    body: {},
+  });
+  return {
+    ok: true,
+    text: "已开始采集所有启用的对标源 —— 抓到的爆款拆解后会自动进选题池,稍后回来看。",
+  };
+}
+
+function BenchmarkCollectNowButton({
+  disabled,
+}: {
+  readonly disabled: boolean;
+}) {
+  const { router } = useMutation();
+  const [state, setState] = React.useState<"idle" | "running">("idle");
+  const [message, setMessage] = React.useState<{
+    tone: "ok" | "warn";
+    text: string;
+  } | null>(null);
+
+  function collect() {
+    if (state === "running" || disabled) return;
+    setState("running");
+    setMessage(null);
+    void (async () => {
+      try {
+        const res = await triggerBenchmarkCollection();
+        setMessage({ tone: res.ok ? "ok" : "warn", text: res.text });
+        if (res.ok) router.refresh();
+      } catch {
+        setMessage({
+          tone: "warn",
+          text: "触发采集失败,请稍后重试(不影响已登记的对标源)。",
+        });
+      } finally {
+        setState("idle");
+      }
+    })();
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        data-testid="benchmark-collect-now"
+        disabled={disabled || state === "running"}
+        onClick={collect}
+        className="h-8 gap-1.5 px-3 text-xs"
+      >
+        <RotateCcw className="size-3.5" />
+        {state === "running" ? "采集中…" : "立即采集"}
+      </Button>
+      {message ? (
+        <p
+          data-testid="benchmark-collect-message"
+          data-tone={message.tone}
+          className={
+            message.tone === "ok"
+              ? "text-[11px] text-success"
+              : "text-[11px] text-warning"
+          }
+        >
+          {message.text}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function BenchmarkSourceList({
   sources,
 }: {
@@ -1037,6 +1138,16 @@ export function BenchmarkSourcesButton({
           </DialogHeader>
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
             <BenchmarkSourceForm />
+            {/* [T-222] 立即采集:登记完不必等每天定时,一键触发抓所有启用对标源的公开爆款。
+                无启用源时禁用(空跑无意义)。 */}
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] text-muted-foreground">
+                每天定时自动采集;想马上抓就点右边。
+              </span>
+              <BenchmarkCollectNowButton
+                disabled={!sources.some((s) => s.enabled)}
+              />
+            </div>
             <BenchmarkSourceList sources={sources} />
           </div>
           <DialogFooter className="border-t">

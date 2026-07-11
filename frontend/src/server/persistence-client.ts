@@ -226,9 +226,10 @@ import { createPgliteThrottleStatePort } from "@/server/ingestion/douyin-throttl
 import { captureUrl } from "@/server/ingestion/web-capture";
 // [T-217a] Web Session Vault —— 泛化抖音登录态底座成任意域名保管库(有头登录 + headless 探针)。
 import {
-  loginWeb,
+  openWebLoginWindow,
   checkWebSessionStatus,
   webDomainFromUrl,
+  type WebLoginHandle,
 } from "@/server/ingestion/web-session";
 // [T-217b] Web Reader —— 带 .auth/web 登录态读正文全文(编导 web.read 端口用)。
 import {
@@ -912,8 +913,13 @@ interface PersistenceBundle {
     listSessions: () => Promise<
       Array<{ domain: string; lastLoginAt: string | null }>
     >;
-    /** 有头登录某 URL 的域名(弹独立 Chromium,用户自己登录),落 `.auth/web/<domain>/`。 */
-    loginSession: (url: string) => Promise<{ domain: string; loggedIn: boolean }>;
+    /** [T-221] 开一个有头登录窗口(弹独立 Chromium,用户自己登录)并**保持打开**,不再赌 cookie 名
+     *  自动关(治「浏览器秒关」)。返回 pending=true;登好由用户在 vault 卡点「我登好了」→ confirmSession。 */
+    loginSession: (url: string) => Promise<{ domain: string; pending: boolean }>;
+    /** [T-221] 用户显式「我登好了」:关登录窗(持久化 profile 到 `.auth/web/<domain>/`),认可成功。 */
+    confirmSession: (domain: string) => Promise<{ domain: string; loggedIn: boolean }>;
+    /** [T-221] 用户「取消」登录:关登录窗,不留登录承诺。 */
+    cancelSession: (domain: string) => Promise<{ domain: string; cancelled: boolean }>;
     /** 被动探针(headless 不弹窗)查某域名是否已登录 / 过期。 */
     sessionStatus: (domain: string) => Promise<{ domain: string; loggedIn: boolean }>;
     /** 移除某域名的持久 profile(登出 + 删本地登录态)。 */
@@ -1390,6 +1396,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // [T-217a] Web Session Vault runtime —— per-machine 全局(非 user-scoped),文件系统 + sidecar
   //   浏览器能力:list/remove 是 `.auth/web/` 目录读写(不起浏览器);login 有头弹窗、status
   //   headless 探针(泛化 douyin-cdp 登录/探针)。`/api/web-session` route 据此提供管理面板。
+  // [T-221] 待确认登录窗口注册表(按域名):loginSession 开窗后把 handle 存这里(跨 HTTP 请求持有,
+  //   webSessionRuntime 是 getBundle 单例,存活整进程),confirmSession/cancelSession 据域名取回关窗。
+  //   兜底:15min 未确认自动 cancel(防用户关标签页后遗留独立 Chromium 进程)。
+  const pendingWebLogins = new Map<
+    string,
+    { handle: WebLoginHandle; timer: ReturnType<typeof setTimeout> }
+  >();
+  const disposePendingLogin = (domain: string): WebLoginHandle | null => {
+    const entry = pendingWebLogins.get(domain);
+    if (!entry) return null;
+    clearTimeout(entry.timer);
+    pendingWebLogins.delete(domain);
+    return entry.handle;
+  };
   const webSessionRuntime = {
     listSessions: async (): Promise<
       Array<{ domain: string; lastLoginAt: string | null }>
@@ -1417,14 +1437,46 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       return out.sort((a, b) => (b.lastLoginAt ?? "").localeCompare(a.lastLoginAt ?? ""));
     },
-    loginSession: async (url: string): Promise<{ domain: string; loggedIn: boolean }> => {
+    // [T-221] 开窗即返(不阻塞、不赌 cookie 自动关):弹独立 Chromium 让用户自己登,返回 pending;
+    //   登好由用户在 vault 卡点「我登好了」→ confirmSession 才关窗持久化。重复登同一域先关旧窗。
+    loginSession: async (url: string): Promise<{ domain: string; pending: boolean }> => {
       const domain = webDomainFromUrl(url); // 非法 URL → 抛,route 转 400
-      const { loggedIn } = await loginWeb({
+      const stale = disposePendingLogin(domain);
+      if (stale) await stale.cancel().catch(() => {}); // 同域重复开窗:先关上一次遗留窗
+      const handle = await openWebLoginWindow({
         authDir: webAuthDirFor(domain),
         url,
         domain,
       });
-      return { domain, loggedIn };
+      const timer = setTimeout(
+        () => {
+          const h = disposePendingLogin(domain);
+          void h?.cancel().catch(() => {});
+        },
+        15 * 60 * 1000,
+      );
+      pendingWebLogins.set(domain, { handle, timer });
+      return { domain, pending: true };
+    },
+    // [T-221] 用户显式「我登好了」:取回该域待确认 handle → confirm(关窗 + 持久化 profile)→ 认可成功。
+    //   无待确认窗(过期/已确认)→ 诚实回 loggedIn=false(不假装成功)。
+    confirmSession: async (
+      domain: string,
+    ): Promise<{ domain: string; loggedIn: boolean }> => {
+      const d = domain.trim().toLowerCase().replace(/^www\./, "");
+      const handle = disposePendingLogin(d);
+      if (!handle) return { domain: d, loggedIn: false };
+      const { loggedIn } = await handle.confirm();
+      return { domain: d, loggedIn };
+    },
+    // [T-221] 用户「取消」:取回并关窗,不留登录承诺。无待确认窗 → 幂等回 cancelled=true。
+    cancelSession: async (
+      domain: string,
+    ): Promise<{ domain: string; cancelled: boolean }> => {
+      const d = domain.trim().toLowerCase().replace(/^www\./, "");
+      const handle = disposePendingLogin(d);
+      if (handle) await handle.cancel().catch(() => {});
+      return { domain: d, cancelled: true };
     },
     sessionStatus: async (domain: string): Promise<{ domain: string; loggedIn: boolean }> => {
       const d = domain.trim().toLowerCase().replace(/^www\./, "");

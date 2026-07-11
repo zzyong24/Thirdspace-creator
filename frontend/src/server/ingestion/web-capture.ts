@@ -117,6 +117,11 @@ const WALL_CONTENT_HINTS = [
   "安全验证",
   "unusual traffic",
   "verify you are human",
+  // [T-221] ChatGPT 分享页登出态的登录门 CTA(用户实测:未登录读 share 链接读出「Log in to get
+  //   answers」当正文)。用 ChatGPT 特有短语精确命中(避免误伤含 "log in" 的普通页脚),让 web.read
+  //   返 needLogin(去保管库登录)而非把登录引导页当正文落素材。
+  "log in to get answers",
+  "log in to get smarter responses",
 ];
 
 export function detectLoginWall(finalUrl: string, html: string): boolean {

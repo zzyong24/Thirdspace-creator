@@ -137,9 +137,28 @@ describe("detectLoginWall — 启发式纯函数", () => {
     expect(detectLoginWall("https://x.com/a", "扫码登录才能看")).toBe(true);
     expect(detectLoginWall("https://x.com/a", "Please verify you are human")).toBe(true);
   });
+  it("[T-221] ChatGPT 分享页登出态登录门(Log in to get answers)→ true", () => {
+    // 用户实测:未登录读 chatgpt share 读出「Log in to get answers」当正文;命中 → web.read 走 needLogin。
+    expect(
+      detectLoginWall(
+        "https://chatgpt.com/share/abc",
+        "<html><body><button>Log in to get answers</button></body></html>",
+      ),
+    ).toBe(true);
+    expect(
+      detectLoginWall(
+        "https://chatgpt.com/share/abc",
+        "<div>Log in to get smarter responses, upload files…</div>",
+      ),
+    ).toBe(true);
+  });
   it("正常公开页 → false(不误判)", () => {
     expect(
       detectLoginWall("https://blog.example.com/post", "<h1>正文内容</h1>"),
+    ).toBe(false);
+    // 普通页含 "log in" 但非 ChatGPT 门特有短语 → 不误伤。
+    expect(
+      detectLoginWall("https://blog.example.com/post", "<a>Log in</a> 页脚"),
     ).toBe(false);
   });
 });

@@ -6,9 +6,10 @@ import "server-only";
 // 与 douyin-cdp 完全同款分层/依赖注入范式:
 //   ① openWebContext —— 自起独立 Chromium + 按目录持久 profile(`.auth/web/<domain>/`),
 //      不连用户日常 Chrome(connectOverCDP 对用户 Chrome149 卡死,记忆「douyin-collection-approach」);
-//   ② loginWeb(有头)—— 弹窗让用户**自己**完成登录(账密/扫码/SSO 都行,系统不碰凭据),
-//      轮询「该域出现会话 cookie」判成功(泛化 douyin-cdp:830 的 sessionid 轮询;不硬编码单一
-//      cookie 名 —— 不同站会话 cookie 名不同,用一组启发式 hint 匹配);
+//   ② [T-221] openWebLoginWindow(有头,主路径)—— 弹窗让用户**自己**登录后**保持打开**,由用户
+//      在 vault 卡显式点「我登好了」→ handle.confirm() 关窗持久化。**不轮询 cookie 自动关**(治
+//      「浏览器秒关」:收紧前的 cookie 启发式会把登录页匿名 cookie 误判已登录,首轮就关窗)。
+//      loginWeb(轮询「该域出现会话 cookie」判成功)保留为低层测试基元,不再是 vault 登录主路径。
 //   ③ checkWebSessionStatus(headless 不弹窗)—— 快查 `.auth/web/<domain>/` 是否有有效会话
 //      (泛化 douyin-cdp:813 被动探针;profile 存在≠有效登录,cookie 失效同样返回未登录)。
 //
@@ -39,22 +40,25 @@ export function webDomainFromUrl(url: string): string {
 }
 
 // ── 会话 cookie 启发式 ──────────────────────────────────────────────────────
-// 不硬编码单一 cookie 名(不同站会话 cookie 名不同):匹配一组常见「会话/登录态」cookie 名
-// 子串(大小写不敏感)。保守偏「宁可少判已登录」——误判只是徽标显未登录(低成本,读取时真失败
-// 会再落「去登录」降级),绝不因徽标误显已登录而糊弄用户。
+// 不硬编码单一 cookie 名(不同站会话 cookie 名不同):匹配一组常见「会话/登录态」cookie 名。
+// [T-221] **收紧**:去掉裸子串 "session" / "sid" / "sso" —— 它们太泛,会命中登录页刚 set 的匿名
+// 会话 cookie(如 chatgpt.com 登录页的 `__Host-next-auth.*` / datadome 等),导致「未登录也判已登录」
+// → loginWeb 首轮轮询即成功关窗(用户看到浏览器秒关)。改用**全等名 + 强特征子串**白名单
+// (如 `_session` 必带下划线,避开裸 `session`;`session-token`/`sessionid` 是真实登录态 cookie)。
+// 保守偏「宁可少判已登录」——徽标误显未登录只是低成本(读取时真失败会再落「去登录」降级),
+// 绝不因误显已登录而糊弄用户。登录成功判定改由「用户显式确认」兜底(见 openWebLoginWindow),
+// 不再赌 cookie 名。
 export const SESSION_COOKIE_HINTS = [
   "sessionid",
   "session-token",
   "session_token",
-  "session", // 覆盖 laravel_session / _session 等
-  "__secure-next-auth", // ChatGPT / NextAuth 会话
+  "_session", // laravel_session / xxx_session(必带下划线,避开裸 "session" 匿名会话)
+  "__secure-next-auth", // ChatGPT / NextAuth 登录后会话(登录页不 set 此名)
   "next-auth.session",
   "logged_in",
   "passport", // 抖音等
-  "sso",
   "access_token",
   "auth_token",
-  "sid", // 放末位:较泛,只在前面都没命中时兜底
 ];
 
 interface CookieLike {
@@ -146,6 +150,60 @@ export async function loginWeb(
   } finally {
     await ctx.close().catch(() => {}); // 关我们自起的独立 Chromium(非用户浏览器)
   }
+}
+
+// ── [T-221] 显式确认登录窗口(治「浏览器秒关」)──────────────────────────────
+// 根因:loginWeb 靠 hasSessionCookie 首轮命中就 return 并 close(finally),而收紧前的启发式会把
+// 登录页刚 set 的匿名 cookie 误判「已登录」→ 弹窗瞬间被关,用户来不及登。SPEC
+// 2026-07-11-web-session-vault-reader-design 允许「用户显式确认 或 cookie 出现」二选一——这里选
+// **显式确认**(最稳,完全不赌 cookie 名):
+//   openWebLoginWindow 只负责**开着**独立 Chromium 让用户自己登(不轮询、不自动关);返回一个
+//   handle,由组合根(persistence-client webSessionRuntime)跨请求持有。用户在 vault 卡点「我登好了」
+//   → handle.confirm() 关窗(launchPersistentContext 关闭时把登录态持久化到 authDir);点「取消」
+//   或超时 → handle.cancel() 关窗不留承诺。
+//
+// 隔离/隐私不变:独立 Chromium + 按域持久 profile,登录全程用户自己做,系统只持久化结果。
+// 端口注入(deps.openContext)同 loginWeb,单测注 fake ctx 验「开窗不自动关 / confirm|cancel 才关」。
+
+export interface WebLoginHandle {
+  readonly domain: string;
+  /** 用户显式「我登好了」:关窗(持久化 profile),认可登录成功(不赌 cookie 名)。幂等。 */
+  confirm(): Promise<{ loggedIn: boolean }>;
+  /** 用户「取消」/ 超时:关窗,不留登录承诺。幂等(与 confirm 互斥,先到先关)。 */
+  cancel(): Promise<void>;
+}
+
+/**
+ * [T-221] 开一个有头登录窗口并**保持打开**(不轮询、不自动关),返回待确认 handle。导航到目标
+ * URL(打不开不阻断,用户可手动导航)。真实采集只在用户机器(sidecar)跑;单测经 deps.openContext
+ * 注 fake ctx。**不在此关 ctx** —— 关窗交给 handle.confirm() / handle.cancel()(跨 HTTP 请求)。
+ */
+export async function openWebLoginWindow(
+  opts: { authDir: string; url: string; domain: string },
+  deps: WebSessionDeps = {},
+): Promise<WebLoginHandle> {
+  const openContext = deps.openContext ?? realOpenWebContext;
+  const ctx = await openContext(opts.authDir, false); // 有头,让用户自己登
+  const page = ctx.pages()[0] ?? (await ctx.newPage());
+  await page
+    .goto(opts.url, { waitUntil: "domcontentloaded", timeout: 30_000 })
+    .catch(() => {}); // 打不开也不阻断(用户可在窗口里手动导航)
+  let settled = false;
+  const closeOnce = async (): Promise<void> => {
+    if (settled) return; // confirm/cancel/超时 只关一次
+    settled = true;
+    await ctx.close().catch(() => {}); // 关我们自起的独立 Chromium(persistentContext 关闭即落盘登录态)
+  };
+  return {
+    domain: opts.domain,
+    confirm: async () => {
+      await closeOnce();
+      return { loggedIn: true };
+    },
+    cancel: async () => {
+      await closeOnce();
+    },
+  };
 }
 
 /**

@@ -62,14 +62,14 @@ describe("scheduling contract", () => {
   });
 
   it("rejects an unknown ScheduledJob sourceKind (enum guard)", () => {
-    // 对标已砍:benchmark 不是本期合法源;douyin_xxx 之类孤儿口径也应 reject。
+    // [T-222] benchmark 已是合法源(对标他号采集,collection-bootstrap 建 job);孤儿口径仍 reject。
     expect(() =>
       scheduledJobResource.parse({
         id: "job-x",
         userId: "user-x",
         name: "x",
         prompt: "",
-        sourceKind: "benchmark",
+        sourceKind: "douyin_orphan",
         target: {},
         schedule: "0 9 * * *",
         toolGrants: [],
@@ -135,6 +135,7 @@ describe("scheduling contract", () => {
       "self.metrics",
       "comments",
       "self.detail",
+      "benchmark",
     ]);
     expect(jobRunStatus.options).toEqual([
       "running",
