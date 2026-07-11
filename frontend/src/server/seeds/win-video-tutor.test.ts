@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { seedWinVideoTutor } from "./win-video-tutor";
+import {
+  seedWinVideoTutor,
+  fixupWinVideoTutorModuleTags,
+} from "./win-video-tutor";
 
 // 关键测:
 //   1. 22 个 .md 全在 + service 接受 → seed 22 条
@@ -47,6 +50,7 @@ async function writeFakeSkill(): Promise<string> {
 }
 
 interface CreatedRecord {
+  id: string;
   title: string;
   content: string;
   knowledgeType: string;
@@ -58,11 +62,13 @@ function makeService(alreadySeeded = false) {
   const items: CreatedRecord[] = [];
   if (alreadySeeded) {
     items.push({
+      id: "kn-existing-1",
       title: "Win 短视频私教 · 第 1 节 · 假标题",
       content: "old",
       knowledgeType: "reference",
       sourceType: "import",
-      sourceMetadata: { origin: "win-video-tutor", lessonNumber: 1 },
+      // 存量条目:seed 时已落 module(供 fixup 回填 tag)。
+      sourceMetadata: { origin: "win-video-tutor", lessonNumber: 1, module: "模块1" },
     });
   }
   let seq = 0;
@@ -78,17 +84,73 @@ function makeService(alreadySeeded = false) {
         sourceMetadata: Record<string, unknown>;
       },
     ) => {
+      const id = `kn-${++seq}`;
       items.push({
+        id,
         title: input.title,
         content: input.content,
         knowledgeType: input.knowledgeType,
         sourceType: input.sourceType,
         sourceMetadata: input.sourceMetadata,
       });
-      return { id: `kn-${++seq}` };
+      return { id };
     },
   };
   return { svc, items };
+}
+
+interface FakeTag {
+  id: string;
+  name: string;
+}
+interface FakeEntityTag {
+  tagId: string;
+  entityType: string;
+  entityId: string;
+}
+
+/**
+ * [T-218] fake taxonomy service —— 复刻真实 TaxonomyService 的幂等语义:
+ *   - tag 名 per-user 唯一:createTag 撞名抛错(模拟 DuplicateTagError),调用方按名重查;
+ *   - (tag,entity) 唯一:assignTags 重复挂不产生第二行(模拟 entity_tags_tag_entity_uq)。
+ */
+function makeTaxonomy() {
+  const tags: FakeTag[] = [];
+  const entityTags: FakeEntityTag[] = [];
+  let seq = 0;
+  const svc = {
+    listTags: async () => tags.map((t) => ({ id: t.id, name: t.name })),
+    createTag: async (_ctx: unknown, input: { name: string }) => {
+      if (tags.some((t) => t.name === input.name)) {
+        throw new Error(`DuplicateTag: ${input.name}`);
+      }
+      const tag = { id: `tag-${++seq}`, name: input.name };
+      tags.push(tag);
+      return tag;
+    },
+    assignTags: async (
+      _ctx: unknown,
+      input: { entityType: string; entityId: string; tagIds: string[] },
+    ) => {
+      for (const tagId of input.tagIds) {
+        const dup = entityTags.some(
+          (e) =>
+            e.tagId === tagId &&
+            e.entityType === input.entityType &&
+            e.entityId === input.entityId,
+        );
+        if (!dup) {
+          entityTags.push({
+            tagId,
+            entityType: input.entityType,
+            entityId: input.entityId,
+          });
+        }
+      }
+      return [];
+    },
+  };
+  return { svc, tags, entityTags };
 }
 
 describe("seedWinVideoTutor — 22 节 win-video-tutor 知识库种子", () => {
@@ -158,5 +220,75 @@ describe("seedWinVideoTutor — 22 节 win-video-tutor 知识库种子", () => {
     }, { skillPath: nonexistentPath });
     expect(count).toBe(0);
     expect(items).toHaveLength(0);
+  });
+
+  // [T-218] 观点地图开箱即在:seed 时每节按 module 挂 tag。
+  it("传 taxonomyService → seed 后每节挂上其 module tag(观点地图开箱非空)", async () => {
+    const skillRoot = await writeFakeSkill();
+    const { svc } = makeService();
+    const { svc: tax, tags, entityTags } = makeTaxonomy();
+    const count = await seedWinVideoTutor(
+      svc as never,
+      { userId: "user-test", accountId: null },
+      { skillPath: skillRoot, taxonomyService: tax as never },
+    );
+    expect(count).toBe(22);
+    // 22 节分布在 module1..module6(ceil(i/4)):6 个不重复 tag。
+    const tagNames = tags.map((t) => t.name).sort();
+    expect(tagNames).toEqual(["模块1", "模块2", "模块3", "模块4", "模块5", "模块6"]);
+    // 每节挂 1 个 tag,entityType=knowledge,共 22 条挂载。
+    expect(entityTags).toHaveLength(22);
+    expect(entityTags.every((e) => e.entityType === "knowledge")).toBe(true);
+    // 每条挂载的 tag 名 = 该 item 的 module(抽查 lesson 1 → 模块1)。
+    const tagById = new Map(tags.map((t) => [t.id, t.name]));
+    const l1Item = (await svc.listKnowledge()).find(
+      (i) => i.sourceMetadata.lessonNumber === 1,
+    )!;
+    const l1Assign = entityTags.find((e) => e.entityId === l1Item.id)!;
+    expect(tagById.get(l1Assign.tagId)).toBe("模块1");
+  });
+
+  it("不传 taxonomyService → 只建知识条目,不挂 tag(向后兼容)", async () => {
+    const skillRoot = await writeFakeSkill();
+    const { svc } = makeService();
+    const { svc: tax, entityTags } = makeTaxonomy();
+    const count = await seedWinVideoTutor(
+      svc as never,
+      { userId: "user-test", accountId: null },
+      { skillPath: skillRoot },
+    );
+    expect(count).toBe(22);
+    expect(entityTags).toHaveLength(0); // tax 未传入,无挂载
+    void tax;
+  });
+
+  // [T-218] 存量回填:已 seed(无 tag)的条目,fixup 幂等补挂 module tag。
+  it("fixupWinVideoTutorModuleTags:对存量 origin=win-video-tutor 条目按 module 补挂 tag,幂等", async () => {
+    const { svc } = makeService(true); // 1 条存量,module=模块1,无 tag
+    const { svc: tax, tags, entityTags } = makeTaxonomy();
+    const ctx = { userId: "user-test", accountId: null };
+    const n1 = await fixupWinVideoTutorModuleTags(svc as never, tax as never, ctx);
+    expect(n1).toBe(1);
+    expect(tags.map((t) => t.name)).toEqual(["模块1"]);
+    expect(entityTags).toHaveLength(1);
+    expect(entityTags[0]!.entityType).toBe("knowledge");
+    expect(entityTags[0]!.entityId).toBe("kn-existing-1");
+    // 幂等:重跑不新增 tag / 挂载。
+    const n2 = await fixupWinVideoTutorModuleTags(svc as never, tax as never, ctx);
+    expect(n2).toBe(1); // 仍报告 1 条已挂(assignTags 幂等)
+    expect(tags).toHaveLength(1);
+    expect(entityTags).toHaveLength(1);
+  });
+
+  it("fixupWinVideoTutorModuleTags:无 win-video-tutor 存量 → 返回 0,不建 tag", async () => {
+    const { svc } = makeService(false); // 空知识库
+    const { svc: tax, tags, entityTags } = makeTaxonomy();
+    const n = await fixupWinVideoTutorModuleTags(svc as never, tax as never, {
+      userId: "user-test",
+      accountId: null,
+    });
+    expect(n).toBe(0);
+    expect(tags).toHaveLength(0);
+    expect(entityTags).toHaveLength(0);
   });
 });

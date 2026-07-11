@@ -28,6 +28,8 @@ import {
   seedWinVideoTutor,
   // [T-211] 存量去前缀 fixup 用的旧标题前缀常量。
   WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX,
+  // [T-218] 存量按 module 挂 tag 的回填(观点地图开箱即在)。
+  fixupWinVideoTutorModuleTags,
 } from "@/server/seeds/win-video-tutor";
 import {
   createTaxonomyRepository,
@@ -5201,13 +5203,31 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // [T-211] 课程保留作预设(读法 B),只去品牌前缀:seed 内部标题模板已去「Win 短视频私教 · 」,
   // 存量带前缀条目由下方 fixupWinVideoTutorTitles 幂等改名。
   try {
+    // [T-218] tag 写侧 service:与 taxonomy transport 同一 repo/db,给 seed 挂 module
+    // tag + 给存量回填。canonical ctx(userId + accountId)与知识条目同 scope。
+    const canonTaxonomyService = createTaxonomyService(taxonomyRepo);
+    const canonTagCtx = { userId: CANONICAL_USER_ID, accountId: null };
     const seeded = await seedWinVideoTutor(knowledgeService, {
       userId: CANONICAL_USER_ID,
       accountId: null,
-    });
+    }, { taxonomyService: canonTaxonomyService });
     if (seeded > 0) {
       console.log(
         `[seed] win-video-tutor 课程已写入 ${seeded} 节到 canonical user 知识库`,
+      );
+    }
+    // [T-218] 存量按 module 挂 tag 回填:seed 早于 T-218 的装机(现网 22/23 条)只有
+    // knowledge item、无 tag → 观点地图(默认视图,按 tag 聚类)开箱即空。这里对已存在的
+    // origin=win-video-tutor 条目按 sourceMetadata.module 幂等补挂 module tag,用户不用
+    // reset、下次启动观点地图即填充。幂等(tag 名 per-user 唯一 + entity_tags 唯一)。
+    const backfilledTags = await fixupWinVideoTutorModuleTags(
+      knowledgeService,
+      canonTaxonomyService,
+      canonTagCtx,
+    );
+    if (backfilledTags > 0) {
+      console.log(
+        `[seed] win-video-tutor ${backfilledTags} 条存量已按 module 回填 tag(观点地图)`,
       );
     }
     // [T-211] 存量去前缀 fixup:已装机(seed 早于本改动)的条目标题仍带「Win 短视频私教 · 」
