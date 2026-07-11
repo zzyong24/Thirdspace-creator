@@ -30,6 +30,9 @@ export const candidateCard = z.object({
   audiencePainScore: z.number().int().min(0).max(100).nullable().default(null),
   materialScore: z.number().int().min(0).max(100).nullable().default(null),
   productionDifficulty: z.enum(["low", "mid", "high"]).nullable().default(null),
+  // [T-235d] 溯源(additive)—— 实验候选(正向归因回流的 next_experiments 进池)绑定它的
+  // 归因行 id(soft ref → topic_attributions.id;UI「实验」徽标点开看归因依据)。非实验候选缺省。
+  attributionId: id.optional(),
 });
 export type CandidateCard = z.infer<typeof candidateCard>;
 

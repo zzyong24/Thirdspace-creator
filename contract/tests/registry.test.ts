@@ -207,6 +207,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/trend/sources"],
   ["POST", "/trend/sources/:sourceId/toggle"],
   ["POST", "/trend/sources/:sourceId/remove"],
+  // [T-235d] 选题归因只读(正向归因回流,SPEC 2026-07-11 daily-topic-autopilot §2.4)
+  ["GET", "/topics/attributions"],
   // 调度作业 (scheduling / T-007 data-source-pipeline-design §9 D1)
   ["POST", "/scheduled-jobs"],
   ["GET", "/scheduled-jobs"],

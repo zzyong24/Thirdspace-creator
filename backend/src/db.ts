@@ -31,6 +31,8 @@ import * as schedulingSchema from "./schema/scheduling";
 import * as benchmarkSchema from "./schema/benchmark";
 // [T-235b] 通用网页信源(热点多源证据)。
 import * as trendSourcesSchema from "./schema/trend-sources";
+// [T-235d] 正向归因回流(选题验证库)。
+import * as topicAttributionSchema from "./schema/topic-attribution";
 // T-147 P5 桌面激活授权(activation_state 一机一码激活态)。
 import * as activationSchema from "./schema/activation";
 import { Pool } from "pg";
@@ -79,6 +81,7 @@ const schema = {
   ...schedulingSchema,
   ...benchmarkSchema,
   ...trendSourcesSchema,
+  ...topicAttributionSchema,
   ...activationSchema,
 };
 

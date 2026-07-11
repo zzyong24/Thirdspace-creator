@@ -326,6 +326,18 @@ export {
   trendSignalSchema,
   type TrendExtractOutput,
 } from "./prompt/templates/trend-extract";
+// [T-235d] 正向归因回流(topic.attribution)外置模板 + 输出 schema —— 已发布作品实绩+真逐字稿 →
+// 选题维度枚举化归因 + 下一轮实验选题。schema 定义在本包(有 zod);backend runner 引类型绑
+// generateObject,无需直引 zod。枚举常量一并导出(gate-F3,backend 落库/契约侧对齐同一真源)。
+export {
+  TOPIC_ATTRIBUTION_TEMPLATE,
+  topicAttributionSchema,
+  topicAttributionExperimentSchema,
+  TOPIC_ATTRIBUTION_TOPIC_TYPES,
+  TOPIC_ATTRIBUTION_HOOK_TYPES,
+  TOPIC_ATTRIBUTION_STRUCTURE_FORMULAS,
+  type TopicAttributionOutput,
+} from "./prompt/templates/topic-attribution";
 // [T-212d] 防茧房校准(topic.preference)外置模板 + 输出 schema —— 淘汰原因批 → 结构化偏好信号。
 // schema 定义在本包(有 zod);backend runner 引类型绑 generateObject,无需直引 zod。
 export {

@@ -253,6 +253,9 @@ import {
   assembleCreativeContext,
   // [T-235a] 每天自动出题采集器(topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool)。
   collectDailyTopics,
+  // [T-235d] 正向归因回流(self.detail 采集尾 best-effort 触发:实绩 → 枚举化归因 → 实验候选进池)。
+  runTopicAttribution,
+  createTopicAttributionPort,
   // [T-235b] 低粉黑马雷达采集器(并进 benchmark 采集:对标源后跑黑马关键词,共享限流预算)。
   collectDarkhorse,
   // [T-235b] 热点信源信号采集(web 主路 readUrl+AI 抽取 / rss 辅路 feed 解析)+ AI 抽取端口工厂。
@@ -391,6 +394,13 @@ import {
   TREND_SOURCES_OP_IDS,
   type TrendSourcesService,
 } from "@creatoros/backend/modules/trend-sources";
+// [T-235d] 选题归因(正向归因回流 —— 选题验证库;读侧 1 op + runner 写侧薄层)。
+import {
+  createTopicAttributionService,
+  createTopicAttributionTransport,
+  TOPIC_ATTRIBUTION_OP_IDS,
+  type TopicAttributionService,
+} from "@creatoros/backend/modules/topic-attribution";
 import {
   createSchedulingService,
   createSchedulingTransport,
@@ -516,6 +526,9 @@ const PERSISTED_OPS = new Set<string>([
   // [T-235b] 热点信源 CRUD(热点多源证据,SPEC 2026-07-11 daily-topic-autopilot §2.2)。
   // user/account-scoped,出题时逐 enabled 源抓信号拼 trend brief。
   ...TREND_SOURCES_OP_IDS,
+  // [T-235d] 选题归因只读(正向归因回流,SPEC 2026-07-11 daily-topic-autopilot §2.4)。
+  // user/account-scoped;写侧由 self.detail 采集尾的归因 runner 落库,不走契约 op。
+  ...TOPIC_ATTRIBUTION_OP_IDS,
   // Scheduling (module 23, T-007) — scheduled_job CRUD (create/list/get/update/setEnabled)
   // + job_run reads (listByJob/get). owned-root, transport 按 ctx.userId 收窄, job_run 经
   // requireJob ownership gate。D1 建了 backend module 却没接 dispatch;这条接线让 /automations
@@ -791,6 +804,8 @@ const MATERIAL_LINKS_OPS = new Set<string>(MATERIAL_LINKS_OP_IDS);
 const BENCHMARK_OPS = new Set<string>(BENCHMARK_OP_IDS);
 // [T-235b] 热点信源 CRUD ops 路由集。
 const TREND_SOURCES_OPS = new Set<string>(TREND_SOURCES_OP_IDS);
+// [T-235d] 选题归因只读 ops 路由集。
+const TOPIC_ATTRIBUTION_OPS = new Set<string>(TOPIC_ATTRIBUTION_OP_IDS);
 
 // The set of op ids owned by the scheduling module's transport (module 23, T-007).
 const SCHEDULING_OPS = new Set<string>(SCHEDULING_OP_IDS);
@@ -888,6 +903,8 @@ interface PersistenceBundle {
   benchmark: Transport;
   // [T-235b] 热点信源 CRUD transport(热点多源证据)。
   trendSources: Transport;
+  // [T-235d] 选题归因只读 transport(正向归因回流)。
+  topicAttribution: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
   // reads, plus the Publishing Center composer (no endpoint — the FE calls it
   // server-side via getPublishingCenterService()).
@@ -4075,6 +4092,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     nextId: deps.nextId,
   });
 
+  // [T-235d] 选题归因服务(正向归因回流)。self.detail 采集尾的归因 runner 用它做幂等锚
+  //   (hasAttribution)+ 落库(saveAttribution);composite 用它服务 topics.attributions.list。
+  //   [gate-F1] 与 learnings 零接触:独立表 topic_attributions,由发布实绩触发。
+  const topicAttributionService: TopicAttributionService =
+    createTopicAttributionService({
+      db,
+      now: deps.now,
+      nextId: deps.nextId,
+    });
+
   // ── 调度采集接线 (T-007 D3, SPEC 2026-06-30 §3/§5/§6) ─────────────────────────────
   // collectors:每个 sourceKind 一个确定性采集器(抓真数据 → ingestion 落库 → 返回新鲜度
   // 统计)。runner 靠注入调它,不 import fetchDouyin*(保持可测)。
@@ -4650,6 +4677,155 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             }),
         },
       );
+      // 6) [T-235d] 明细落库后 **best-effort** 触发正向归因回流(fire-and-forget,不阻塞采集/
+      //    串行闸,同 benchmark 采集尾的 teardown 模式):对「有新指标 + 有真逐字稿 + 未归因」
+      //    的已发布作品逐条 AI 归因(枚举化,相对本账号基线分层)→ 落 topic_attributions →
+      //    next_experiments ≤3/run 进候选池(title 前缀「实验|」,card.attributionId 溯源)。
+      //    幂等锚 publication_id;未配文本模型 / 无稿 / 无指标各态诚实跳过(runner 内计数)。
+      //    本轮 enqueueTranscribe 排的新逐字稿要到下一轮 self.detail 才可归因(异步,诚实滞后)。
+      //    [gate-F1] 与 learnings 零接触:由发布实绩触发,独立表,不互相触发。
+      void runTopicAttribution(ctx, {
+        // 未配文本模型 → 整轮诚实跳过(resolveModelSpec 抛 = 未配;闭包引用,无 TDZ,同 topic.daily)。
+        isModelConfigured: async (c) => {
+          try {
+            await resolveModelSpec(c, "topic.attribution");
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        // 候选作品:近期已发布(隐藏的跳过)+ 解析 projectId(output → project;导入作品的
+        // title 回退 content_output 真实标题,与上方 catalog 装配同款回退)。单条解析失败跳过。
+        listWorks: async (c, limit) => {
+          const recent = await publishingService.getRecentPublicationsWithTitle(
+            c,
+            { limit },
+          );
+          const works: Array<{
+            publicationId: string;
+            projectId: string | null;
+            title: string;
+          }> = [];
+          for (const p of recent) {
+            if (p.hiddenAt) continue; // 隐藏作品不归因(与重活判据同口径)
+            let projectId: string | null = null;
+            let title = p.title;
+            try {
+              const out = await projectsRepo.getOutput(c, p.contentOutputId);
+              projectId = out.projectId ?? null;
+              if (!title) title = out.title;
+            } catch {
+              /* output 读不到 → projectId null(runner 按无稿跳过,诚实) */
+            }
+            works.push({ publicationId: p.id, projectId, title: title ?? "" });
+          }
+          return works;
+        },
+        hasAttribution: (c, publicationId) =>
+          topicAttributionService.hasAttribution(c, publicationId),
+        // 真逐字稿:output_script contentData.transcript(与复盘 reader getScript 同一读法,T-225 管线)。
+        getTranscript: (c, projectId) =>
+          makeReviewSubjectReader().getScript(c, projectId),
+        // 该作品最新指标(最新 metric_snapshot rawMetrics;播放归一 views??plays)。无快照 → null。
+        getMetrics: async (c, publicationId) => {
+          const page = await analyticsService.getPublicationAnalytics(
+            c,
+            publicationId,
+            1,
+            10,
+          );
+          const latest = page.rows
+            .slice()
+            .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
+          if (!latest) return null;
+          const raw: Record<string, number> = {};
+          for (const [k, v] of Object.entries(
+            (latest.rawMetrics ?? {}) as Record<string, unknown>,
+          )) {
+            const n = typeof v === "number" ? v : Number(v);
+            if (Number.isFinite(n)) raw[k] = n;
+          }
+          const plays = raw.views ?? raw.plays ?? null;
+          const likes = raw.likes ?? null;
+          return { plays, likes, raw };
+        },
+        // 本账号基线 = 各发布最新快照的播放/赞均值(dashboard rollup 现成口径,latest-per-publication)。
+        getAccountBaseline: async (c) => {
+          const rollup = await analyticsService.getDashboardRollup(c);
+          if (rollup.snapshotCount === 0) return null;
+          return {
+            avgPlays:
+              rollup.plays > 0 ? rollup.plays / rollup.snapshotCount : null,
+            avgLikes:
+              rollup.likes > 0 ? rollup.likes / rollup.snapshotCount : null,
+          };
+        },
+        getPositioningBrief: async (c) => {
+          try {
+            const cc = await assembleCreativeContext(
+              c,
+              { projectId: null, topic: "" },
+              {
+                positioning: {
+                  getPositioningCenter: (c2) =>
+                    positioningService.getPositioningCenter(c2),
+                },
+              },
+            );
+            return cc.positioningBrief;
+          } catch {
+            return "";
+          }
+        },
+        attribute: createTopicAttributionPort({ resolveModelSpec }),
+        saveAttribution: async (c, input) => {
+          const saved = await topicAttributionService.saveAttribution(c, input);
+          return { id: saved.id };
+        },
+        // 实验候选进池:source 用现有枚举里语义最近的 demand(回流实验 = 账号自证的需求信号);
+        // card.attributionId 溯源(additive 字段,UI「实验」徽标点开看归因依据)。
+        createExperimentCandidate: async (c, input) => {
+          const cand = await candidateService.createCandidate(c, {
+            title: input.title,
+            angle: input.angle,
+            source: "demand",
+          });
+          try {
+            await candidateService.patchCandidate(c, cand.id, {
+              card: { attributionId: input.attributionId },
+            });
+          } catch (e) {
+            // 溯源 patch 失败只丢角标(候选已进池是真的),不崩进池。
+            console.error(
+              `[topic-attribution] 实验候选 ${cand.id} 归因溯源 patch 失败(候选已进池):`,
+              e,
+            );
+          }
+          return { id: cand.id };
+        },
+        // 单轮归因上限(省 token,默认 3;env 配置化)。
+        maxWorksPerRun: (() => {
+          const n = Number(process.env.CREATOROS_TOPIC_ATTRIBUTION_LIMIT);
+          return Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
+        })(),
+        // 分层阈值配置化(默认 ≥3x 爆款 / ≤0.5x 低表现)。
+        tierThresholds: {
+          viralMultiple: (() => {
+            const n = Number(process.env.CREATOROS_ATTRIBUTION_VIRAL_MULTIPLE);
+            return Number.isFinite(n) && n > 0 ? n : undefined;
+          })(),
+          lowMultiple: (() => {
+            const n = Number(process.env.CREATOROS_ATTRIBUTION_LOW_MULTIPLE);
+            return Number.isFinite(n) && n > 0 ? n : undefined;
+          })(),
+        },
+      }).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error(
+          "[topic-attribution] 归因回流触发失败(best-effort,不影响明细采集):",
+          err,
+        );
+      });
       // itemsUpdated 承载本轮真回填的封面数(诚实;明细写入数入 itemsNew)。
       return { itemsNew: detailWritten, itemsUpdated: heavy.coversFilled };
     },
@@ -5206,6 +5382,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const benchmark = createBenchmarkTransport(() => benchmarkService);
   // [T-235b] 热点信源 CRUD transport(trendSourcesService 已在 collectors 装配前创建,复用同一实例)。
   const trendSources = createTrendSourcesTransport(() => trendSourcesService);
+  // [T-235d] 选题归因只读 transport(topicAttributionService 已在 collectors 装配前创建,复用同一实例)。
+  const topicAttribution = createTopicAttributionTransport(
+    () => topicAttributionService,
+  );
 
   // Query services (module Q, Wave 4 — SPEC §19). Composition module: NO repo, NO
   // SQL. Each composer is built with facade interfaces; here the composition root
@@ -7452,6 +7632,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     materialLinks,
     benchmark,
     trendSources,
+    topicAttribution,
     queryServices,
     publishingCenter,
     identity,
@@ -7572,6 +7753,11 @@ async function getBenchmark(): Promise<Transport> {
 // [T-235b] 热点信源 CRUD transport 访问器。
 async function getTrendSources(): Promise<Transport> {
   return (await getBundle()).trendSources;
+}
+
+// [T-235d] 选题归因只读 transport 访问器。
+async function getTopicAttribution(): Promise<Transport> {
+  return (await getBundle()).topicAttribution;
 }
 
 async function getQueryServices(): Promise<Transport> {
@@ -7898,6 +8084,12 @@ export const compositeTransport: Transport = {
     if (TREND_SOURCES_OPS.has(endpoint.id)) {
       const trendSources = await getTrendSources();
       return trendSources.request(endpoint, input, ctx);
+    }
+    // [T-235d] 选题归因只读(正向归因回流)—— topics.attributions.list 由模块自有
+    // user/account-scoped transport 服务,同一 pglite store。No ctx ⇒ AuthenticationError。
+    if (TOPIC_ATTRIBUTION_OPS.has(endpoint.id)) {
+      const topicAttribution = await getTopicAttribution();
+      return topicAttribution.request(endpoint, input, ctx);
     }
     // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
     // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by

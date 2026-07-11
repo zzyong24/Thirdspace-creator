@@ -176,6 +176,11 @@ export {
   trendSources,
   TREND_SOURCES_DDL,
 } from "./schema/trend-sources";
+// [T-235d] 正向归因回流(选题验证库)。
+export {
+  topicAttributions,
+  TOPIC_ATTRIBUTION_DDL,
+} from "./schema/topic-attribution";
 // T-147 P5 桌面激活授权(activation_state 一机一码激活态表)。
 export { activationState } from "./schema/activation";
 export type { ActivationStateRow } from "./schema/activation";

@@ -49,6 +49,8 @@ import { BENCHMARK_TEARDOWN_TEMPLATE } from "./templates/benchmark-teardown";
 import { TOPIC_PREFERENCE_DISTILL_TEMPLATE } from "./templates/topic-preference-distill";
 // [T-235b] 热点信源信号抽取 skill(trend.extract)—— 信源页正文 → 结构化信号(无热度不编,诚实门)。
 import { TREND_EXTRACT_TEMPLATE } from "./templates/trend-extract";
+// [T-235d] 正向归因回流 skill(topic.attribution)—— 已发布作品实绩 → 选题维度枚举化归因 + 实验选题。
+import { TOPIC_ATTRIBUTION_TEMPLATE } from "./templates/topic-attribution";
 import {
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
@@ -98,6 +100,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   TOPIC_PREFERENCE_DISTILL_TEMPLATE,
   // [T-235b] 热点信源信号抽取:信源页正文 → 结构化信号列表(无热度/链接/时间一律 null 不编)。
   TREND_EXTRACT_TEMPLATE,
+  // [T-235d] 正向归因回流:已发布作品(表现分层+真逐字稿)→ 枚举化归因 + 下一轮实验选题(≤3 进池)。
+  TOPIC_ATTRIBUTION_TEMPLATE,
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,

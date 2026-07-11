@@ -85,6 +85,11 @@ export {
   trendSourceResource,
   type TrendSourceResource,
 } from "./resources/trend-source";
+// [T-235d] 选题归因(正向归因回流,选题验证库)。
+export {
+  topicAttributionResource,
+  type TopicAttributionResource,
+} from "./resources/topic-attribution";
 export {
   scheduledJobResource,
   jobRunResource,

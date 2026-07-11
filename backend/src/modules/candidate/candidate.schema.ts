@@ -76,6 +76,8 @@ export function toCardDto(raw: unknown): CandidateCard {
     audiencePainScore: score(c.audiencePainScore),
     materialScore: score(c.materialScore),
     productionDifficulty: difficulty,
+    // [T-235d] 归因溯源(additive)—— 实验候选携带其归因行 id(soft ref),UI 点开看依据。
+    attributionId: str(c.attributionId),
   };
 }
 
@@ -92,6 +94,8 @@ const CARD_DETAIL_KEYS = [
   "materialBasis",
   "riskNote",
   "proposal",
+  // [T-235d] 归因溯源(additive)—— 实验候选进池时经 card patch 挂上;patch 不能丢它。
+  "attributionId",
 ] as const;
 
 // A partial 选题卡 patch — keeps only recognized fields, validating each by its type
