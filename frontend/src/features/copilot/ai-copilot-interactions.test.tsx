@@ -168,6 +168,31 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(textarea.value).toBe("");
   });
 
+  // [T-233] Enter=换行(治打字误发);Cmd/Ctrl+Enter 或 Shift+Enter 才发送。
+  it("[T-233] 纯 Enter 不发送(换行),Cmd+Enter 发送", async () => {
+    const user = userEvent.setup();
+    render(<AICopilotContent viewModel={VM} />);
+    const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+    await user.type(textarea, "第一行");
+    await user.keyboard("{Enter}");
+    // 纯 Enter → 不发送,光标处插入换行。
+    expect(sendMessage).not.toHaveBeenCalled();
+    expect(textarea.value).toBe("第一行\n");
+
+    await user.type(textarea, "第二行");
+    await user.keyboard("{Meta>}{Enter}{/Meta}");
+    expect(sendMessage).toHaveBeenCalledWith({ text: "第一行\n第二行" });
+  });
+
+  it("[T-233] Shift+Enter 也发送(宽容两种修饰键)", async () => {
+    const user = userEvent.setup();
+    render(<AICopilotContent viewModel={VM} />);
+    const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+    await user.type(textarea, "一句话");
+    await user.keyboard("{Shift>}{Enter}{/Shift}");
+    expect(sendMessage).toHaveBeenCalledWith({ text: "一句话" });
+  });
+
   it("shows a stop button (not submit) while streaming", () => {
     mockStatus = "streaming";
     render(<AICopilotContent viewModel={VM} />);
