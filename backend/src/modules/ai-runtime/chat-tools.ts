@@ -132,9 +132,16 @@ export interface ChatToolDeps {
    * review.analyze 核心 —— 从一条内容提炼可复用爆款要素候选(复用 review 模板 + parseLearnings)。
    * [T-081] extraBrief:对话中获得的补充指令/洞察,原样进复盘 prompt(优先级高于既有档案)。
    */
-  analyzeReview: (input: { subject?: string; extraBrief?: string }) => Promise<
-    Array<{ title: string; insight: string }>
-  >;
+  analyzeReview: (input: {
+    subject?: string;
+    /** [T-224] 要拆的作品 projectId —— 据此读真逐字稿;缺省用当前对话项目。 */
+    projectId?: string;
+    extraBrief?: string;
+  }) => Promise<{
+    items: Array<{ title: string; insight: string }>;
+    /** [T-224 诚实门] 无真逐字稿 → 空 items + 非空 error(诚实提示,不产卡)。 */
+    error?: string | null;
+  }>;
   /**
    * positioning.generate 核心 —— 结合定位 + 账号画像 + 真实作品画像产一份结构化定位提案候选
    * (复用 positioning prompt + parseSuggestion)。
@@ -390,6 +397,13 @@ export interface MetricsRaw {
   subject: string | null;
   /** 指标行:单作品模式为该作品一行 + 可选留存点;账号级模式为最近 N 作品每行。 */
   rows: Array<{
+    /**
+     * [T-223] 该行对应作品的 projectId(账号级每行都带,让编导能把「最高播放」映射到具体
+     * 作品 → 据此调 context.artifact.text 读该作品真逐字稿);解析不到 → null(诚实空,不硬造)。
+     */
+    projectId?: string | null;
+    /** [T-223] 平台侧作品 id(aweme_id / external_id;无 → null),便于跨源定位。 */
+    externalId?: string | null;
     /** 作品标题(账号级每行;单作品模式与 subject 同)。 */
     title: string;
     plays: number | null;
@@ -701,6 +715,9 @@ export interface ReviewScriptToolResult {
 export interface ReviewAnalyzeToolResult {
   kind: "review.learnings";
   items: Array<{ title: string; insight: string }>;
+  // [T-224 诚实门] 没读到该作品真逐字稿 → 不产经验卡,带诚实提示(前端卡渲提示态,要 projectId/逐字稿);
+  //   正常产卡时为 null。
+  error?: string | null;
 }
 
 // positioning.generate 工具结果 —— 一份定位提案候选(渲成定位卡)。
@@ -1025,6 +1042,10 @@ export interface ContextMetricsToolResult {
   /** 单作品模式:被查作品标题;账号级模式为 null(前端据此切表头文案)。 */
   subject: string | null;
   rows: Array<{
+    /** [T-223] 账号级每行带 projectId(编导据此 context.artifact.text 读该作品逐字稿);无 → null。 */
+    projectId?: string | null;
+    /** [T-223] 平台侧作品 id(aweme_id;无 → null)。 */
+    externalId?: string | null;
     title: string;
     plays: number | null;
     likes: number | null;
@@ -1245,13 +1266,20 @@ const CALIBRATION_DIAGNOSE_PARAMS = jsonSchema<{
 
 const REVIEW_ANALYZE_PARAMS = jsonSchema<{
   subject?: string;
+  projectId?: string;
   extraBrief?: string;
 }>({
   type: "object",
   properties: {
     subject: {
       type: "string",
-      description: "本次复盘对象(可选;没有就按账号整体表现提炼经验)。",
+      description: "本次复盘对象的标题(可选;仅作显示锚,真正的内容依据来自 projectId 定位到的真逐字稿)。",
+    },
+    // [T-224] 拆作品必先定位该作品读真逐字稿:projectId 从 context.metrics/context.projects 每行拿。
+    projectId: {
+      type: "string",
+      description:
+        "要拆的作品 projectId(从 context.metrics/context.projects 每行拿):工具会据此读该作品的真逐字稿再提炼经验。**拆某条具体作品必须传它**;读不到真逐字稿会拒绝产卡并要你补 projectId/逐字稿,绝不凭标题空想。",
     },
     extraBrief: EXTRA_BRIEF_PROPERTY,
   },
@@ -1901,17 +1929,22 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }),
     "review.analyze": tool({
       description:
-        "从一条内容(或账号整体表现)提炼 3-6 条可复用、可迁移的爆款要素/方法论。结果是经验候选,需人逐条采纳后才沉淀经验——不直接写库。",
+        "从一条**具体作品**提炼 3-6 条可复用、可迁移的爆款要素/方法论。**拆某条作品必须传它的 projectId**(从 context.metrics/context.projects 每行拿):工具会先读该作品的真逐字稿再提炼,读不到真逐字稿会拒绝产卡并要你补 projectId/逐字稿——绝不凭标题、指标、账号通用规律编造方法论或数字当经验。结果是经验候选,需人逐条采纳后才沉淀经验——不直接写库。",
       inputSchema: REVIEW_ANALYZE_PARAMS,
       execute: async ({
         subject,
+        projectId,
         extraBrief,
       }): Promise<ReviewAnalyzeToolResult> => {
-        const items = await deps.analyzeReview({
+        const { items, error } = await deps.analyzeReview({
           subject,
+          projectId:
+            typeof projectId === "string" && projectId.trim()
+              ? projectId.trim()
+              : undefined,
           extraBrief: clampExtraBrief(extraBrief),
         });
-        return { kind: "review.learnings", items };
+        return { kind: "review.learnings", items, error: error ?? null };
       },
     }),
     // [T-103b] 稿面文案审核进对话:dispatch 既有 script.review 审核链路(L1 违禁词 lint + L2 豆包
@@ -2361,7 +2394,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }),
     "context.metrics": tool({
       description:
-        "只读:拉取作品指标数据。给 projectId(从 context.projects 拿)→ 返回这条作品的播放/点赞/评论/分享快照 + 留存点;不给 → 返回账号级最近若干作品的指标行。当用户问「这条数据怎么样 / 播放多少 / 我最近作品的数据 / 留存曲线」时调它拿真实指标回答,别瞎报数。纯读取上下文,不产候选、不写库。",
+        "只读:拉取作品指标数据。给 projectId(从 context.projects 拿)→ 返回这条作品的播放/点赞/评论/分享快照 + 留存点;不给 → 返回账号级最近若干作品的指标行。当用户问「这条数据怎么样 / 播放多少 / 我最近作品的数据 / 留存曲线」时调它拿真实指标回答,别瞎报数。**账号级每行都带 projectId + 真实作品标题**:要拆某条(如「最高播放那条」)作品时,先从这里拿到它的 projectId,再调 context.artifact.text 传该 projectId 读它的真逐字稿——绝不凭标题/指标空想内容。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_METRICS_PARAMS,
       execute: async ({ projectId }): Promise<ContextMetricsToolResult> => {
         const pid =

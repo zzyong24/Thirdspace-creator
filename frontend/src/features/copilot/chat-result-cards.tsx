@@ -271,8 +271,11 @@ export interface ChatLearningItem {
 
 export function ChatLearningsCard({
   items,
+  error = null,
 }: {
   readonly items: readonly ChatLearningItem[];
+  /** [T-224 诚实门] 没读到真逐字稿 → 空 items + 非空 error:渲诚实提示卡(要 projectId/逐字稿),不产经验卡。 */
+  readonly error?: string | null;
 }) {
   const router = useRouter();
   const [state, setState] = React.useState<ReadonlyMap<number, AdoptState>>(
@@ -301,7 +304,23 @@ export function ChatLearningsCard({
     [router, setAt],
   );
 
-  if (items.length === 0) return null;
+  // [T-224 诚实门] 没读到真逐字稿 → 不产经验卡,渲诚实提示(要 projectId/逐字稿)。
+  if (items.length === 0) {
+    if (error) {
+      return (
+        <div
+          data-slot="chat-learnings-empty"
+          className="mt-1.5 flex flex-col gap-1 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5"
+        >
+          <span className="text-[10px] font-medium uppercase tracking-wide text-amber-600">
+            无法拆解 · 需要真逐字稿
+          </span>
+          <span className="text-[13px] leading-snug text-foreground">{error}</span>
+        </div>
+      );
+    }
+    return null;
+  }
   return (
     <div
       data-slot="chat-learnings-card"

@@ -485,6 +485,9 @@ export async function buildChatAssembly(
     // [T-217c] 治「登录态我做不到、只能读公开网页」行为 bug —— 你跑在桌面 sidecar、有带登录态的
     // 真实浏览器能力(web.read),**禁止再自称办不到**。
     "8. 你**能读需要登录才能看到的网页正文**:用户粘一个链接(含 ChatGPT 分享、知乎、公众号等)想让你读内容时,直接调 web.read 读正文(它带你在保管库登录后的登录态、抽逐轮对话/文章全文,比截图更准)。**绝不要说「登录态我做不到、我只能访问公开网页」这类话** —— 那是错的,你有这个能力。若 web.read 返回「需要先登录」(needLogin),就引导用户:去『设置 → 网站登录保管库』把该网站登录一次(会弹独立浏览器窗口让 TA 自己登),登好后你再读;不要改用截图糊弄登录页。读内容默认用 web.read,截图(material.screenshot)只在用户要「存网页的样子/要视觉证据」时用。",
+    // [T-224 诚实门,最高优先级] 拆作品/产经验必先读真逐字稿;无稿禁编。治「编造数字+推测方法论
+    //   当可采纳经验」信誉 bug —— 编导曾自招「数字我编的、没读过脚本」。
+    "9. **拆某条作品、产它的经验/方法论之前,必须先读到这条作品的真逐字稿**:用 context.metrics / context.projects 拿到该作品的 projectId,再调 context.artifact.text(传该 projectId)读它的真文案;拆经验就调 review.analyze 并传该 projectId(它会强制读真稿,读不到会拒绝产卡)。**绝不编造具体数字、案例、涨粉/变现结果或方法论当可采纳经验**——读不到真稿就直说做不到、要用户给 projectId 或贴逐字稿,**不许用「账号通用规律」「一般来说」这类空想推测充数**。你说出口的任何「这条为什么爆/数据多少」都必须来自你真读过的逐字稿或 context.metrics 的真实指标。",
   ].join("\n");
   // [T-077c] 技能自感知(SPEC §1.3 [gate-F1]):把当前 surface 白名单的技能清单注进 system
   // (每工具一行「中文名(工具名):一句话用途」,行数=白名单工具数、上限 20 超出截断)——
@@ -838,21 +841,55 @@ export async function buildChatAssembly(
         priorityFixes: parsed.priorityFixes,
       };
     },
-    analyzeReview: async ({ subject, extraBrief }) => {
+    analyzeReview: async ({ subject, projectId, extraBrief }) => {
       // 复用 review.insights 模板 + reviewFacets + parseLearnings(与 review-runner 同源、同一份
       // 真数据注入,不造影子)。T-039a:facets 走共用 reviewFacets —— 它把本项目的真文案/数据/评论
-      // 拼成整块注入(前提是上面 assembleCreativeContext 拿到了 projectId → reviewSubject reader 读齐)。
-      // subject 优先级:模型显式传 > 工作台选中标题 > 作品真标题(reviewFacets 内兜底)。
-      const effSubject = subject?.trim() ? subject : selectionTitle;
+      // 拼成整块注入(前提是 assembleCreativeContext 拿到了 projectId → reviewSubject reader 读齐)。
+      //
+      // [T-224 诚实门,最高优先级] 拆某条作品的经验/方法论**必须基于它的真逐字稿**:
+      //   1) 先定位目标作品(模型显式传的 projectId 优先,否则当前对话项目);
+      //   2) 若目标作品 ≠ 当前对话项目 → 为它单独装配 CreativeContext(读它自己的真文案/数据/评论);
+      //   3) 拿不到真逐字稿(reviewScript 空)→ **不产经验卡**,返回诚实提示要 projectId/逐字稿,
+      //      绝不用「账号通用规律」推测充数、绝不编造具体数字/案例/方法论当可采纳经验。
+      const targetProjectId =
+        (typeof projectId === "string" && projectId.trim()
+          ? projectId.trim()
+          : "") ||
+        chatContext.projectId ||
+        "";
+      let reviewContext = context;
+      if (targetProjectId && targetProjectId !== (chatContext.projectId ?? "")) {
+        try {
+          reviewContext = await assembleCreativeContext(
+            ctx,
+            { projectId: targetProjectId, topic: subject?.trim() ?? "" },
+            deps,
+          );
+        } catch {
+          // 目标作品装配失败(越权/不存在)→ 退回当前 context;下方诚实门仍会拦无稿。
+          reviewContext = context;
+        }
+      }
+      if (!reviewContext.reviewScript?.trim()) {
+        return {
+          items: [],
+          error:
+            "我没读到这条作品的真实逐字稿,不能凭标题、指标或账号通用规律编方法论当经验。请把该作品的 projectId 告诉我(从 context.metrics / context.projects 每行的 projectId 拿),或直接把逐字稿贴给我,我再基于真稿拆。",
+        };
+      }
+      // subject 优先级:模型显式传 > 目标作品真标题 > 工作台选中标题(reviewFacets 内还有兜底)。
+      const effSubject = subject?.trim()
+        ? subject
+        : reviewContext.reviewTitle?.trim() || selectionTitle;
       const spec = await deps.resolveModelSpec(ctx, "review.insights");
       const { text } = await runTemplatedNode({
         model: modelFor(spec),
         // T-040b:运行时 getTemplate 取被覆盖后的 REGISTRY 对象(非 import 快照),吃服务端覆盖。
         template: getTemplate("review.insights"),
         // [T-081①] extraBrief 第三参 → 模板 {{extraBrief}} 占位(空则整段省略)。
-        facets: reviewFacets(context, effSubject, extraBrief),
+        facets: reviewFacets(reviewContext, effSubject, extraBrief),
       });
-      return parseLearnings(text);
+      return { items: parseLearnings(text), error: null };
     },
     generatePositioning: async ({ extraBrief }) => {
       // 复用 positioning-runner 的 prompt + parseSuggestion —— 产定位提案候选(非实体)。

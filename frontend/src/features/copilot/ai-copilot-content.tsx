@@ -1819,9 +1819,16 @@ export function AICopilotContent({
                       name === "review.analyze" &&
                       out.kind === "review.learnings"
                     ) {
-                      const o = out as { items?: ChatLearningItem[] };
+                      const o = out as {
+                        items?: ChatLearningItem[];
+                        error?: string | null;
+                      };
                       return (
-                        <ChatLearningsCard key={key} items={o.items ?? []} />
+                        <ChatLearningsCard
+                          key={key}
+                          items={o.items ?? []}
+                          error={o.error ?? null}
+                        />
                       );
                     }
                     // [T-103b] 文案审核(review.script)→ 轮询审核任务 → 审核报告卡

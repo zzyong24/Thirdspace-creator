@@ -87,9 +87,10 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     mainIssues: ["结尾弱"],
     priorityFixes: ["加 CTA"],
   }));
-  const analyzeReview = vi.fn(async () => [
-    { title: "前3秒给结果", insight: "完播更高" },
-  ]);
+  const analyzeReview = vi.fn(async () => ({
+    items: [{ title: "前3秒给结果", insight: "完播更高" }],
+    error: null,
+  }));
   const generatePositioning = vi.fn(async () => ({
     persona: "硬核工程师",
     field: "AI 工程",
@@ -597,10 +598,26 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     const tools = buildChatTools(["review.analyze"], deps);
     const result = (await runExecute(tools["review.analyze"]!, {
       subject: "我的某条视频",
-    })) as { kind: string; items: unknown[] };
+    })) as { kind: string; items: unknown[]; error: string | null };
     expect(analyzeReview).toHaveBeenCalledWith({ subject: "我的某条视频" });
     expect(result.kind).toBe("review.learnings");
     expect(result.items).toHaveLength(1);
+    expect(result.error).toBeNull();
+  });
+
+  it("[T-224 诚实门] review.analyze:analyzeReview 无真逐字稿 → 空 items + 非空 error(不产经验卡)", async () => {
+    const analyzeReview = vi.fn(async () => ({
+      items: [] as Array<{ title: string; insight: string }>,
+      error: "我没读到这条作品的真实逐字稿,请把 projectId 告诉我或贴逐字稿。",
+    }));
+    const { deps } = makeDeps({ analyzeReview });
+    const tools = buildChatTools(["review.analyze"], deps);
+    const result = (await runExecute(tools["review.analyze"]!, {
+      subject: "11.5W 爆款",
+    })) as { kind: string; items: unknown[]; error: string | null };
+    expect(result.kind).toBe("review.learnings");
+    expect(result.items).toHaveLength(0);
+    expect(result.error).toContain("逐字稿");
   });
 
   it("[T-062a] learning.capture 可挂 + execute 纯回显候选(kind=learning.capture,模型填参、不跑二次 LLM)", async () => {
@@ -1359,8 +1376,9 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
     const accountMetrics = vi.fn(async () => ({
       subject: null as string | null,
       rows: [
-        { title: "作品A", plays: 100, likes: 10, comments: 2, shares: 1 },
-        { title: "作品B", plays: 200, likes: 20, comments: 4, shares: 3 },
+        // [T-223] 账号级每行带 projectId + 真实作品标题(治「编导认不出作品」)。
+        { projectId: "proj-A", externalId: "aw-1", title: "作品A", plays: 100, likes: 10, comments: 2, shares: 1 },
+        { projectId: "proj-B", externalId: "aw-2", title: "作品B", plays: 200, likes: 20, comments: 4, shares: 3 },
       ],
       retention: [] as Array<{ atSeconds: number; retentionRate: number }>,
     }));
@@ -1368,7 +1386,7 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
     const tools = buildChatTools([...LIST_WHITELIST], deps);
     const result = (await runExecute(tools["context.metrics"]!, {})) as {
       subject: string | null;
-      rows: unknown[];
+      rows: Array<{ projectId?: string | null; title: string }>;
     };
     expect(accountMetrics).toHaveBeenCalledWith({
       projectId: undefined,
@@ -1376,6 +1394,10 @@ describe("[T-099 切片四/五] 清单类 context 工具 execute — 读端口 +
     });
     expect(result.subject).toBeNull();
     expect(result.rows).toHaveLength(2);
+    // [T-223] projectId + 真标题透传给模型(据此调 context.artifact.text 读该作品逐字稿)。
+    expect(result.rows[0]!.projectId).toBe("proj-A");
+    expect(result.rows[0]!.title).toBe("作品A");
+    expect(result.rows[1]!.projectId).toBe("proj-B");
   });
 
   it("[切片五] context.learnings.execute 调 listLearnings(透传 query/type/status)", async () => {

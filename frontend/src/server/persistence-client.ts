@@ -6771,7 +6771,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               merged.shares !== null;
             return {
               subject: project.title,
-              rows: hasAny ? [{ title: project.title, ...merged }] : [],
+              // [T-223] 单作品模式该行也带 projectId(前端/编导映射一致);externalId 从 platformRef 兜底。
+              rows: hasAny
+                ? [{ projectId: opts.projectId, title: project.title, ...merged }]
+                : [],
               // 留存点无公开读 seam → 诚实空(不跨模块直连 repo、不编)。
               retention: [],
             };
@@ -6780,16 +6783,48 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           }
         }
         // 账号级模式:最近 N 发布作品,每作品一行(标题 + 该 publication 最新 snapshot 指标)。
+        // [T-223] 每行 join 出 projectId + 真实 project.title —— 治「编导认不出作品」:原本只给
+        //   revision 标题(imported publication 无 revision → 空 → 退到 platform="douyin" 匿名行),
+        //   编导拿不到 projectId 无法读真逐字稿,只能瞎连/编造。现经 publication.contentOutputId →
+        //   content_output(projectId) → project.title 补上锚点(project.title 是导入时落的真标题,
+        //   reconstruct/复盘全档也在这条 project 上),让编导能把「最高播放」映射到具体作品读真稿。
         try {
           const pubs = await publishingService.getRecentPublicationsWithTitle(c, {
             limit: opts.limit,
             offset: 0,
           });
+          // 同一 projectId 的真标题缓存(避免每行重复 get 项目)。
+          const projectTitleCache = new Map<string, string>();
           const rows = await Promise.all(
             pubs.map(async (p) => {
               const m = await metricsOfPublication(p.id);
+              let projectId: string | null = null;
+              let projectTitle = "";
+              try {
+                // publication → content_output(带 projectId + output 标题,ownership 门)。
+                const out = await projectsRepo.getOutput(c, p.contentOutputId);
+                projectId = out.projectId;
+                if (projectTitleCache.has(projectId)) {
+                  projectTitle = projectTitleCache.get(projectId) ?? "";
+                } else {
+                  try {
+                    const proj = await projectsRepo.get(c, projectId);
+                    projectTitle = proj.title?.trim() ?? "";
+                  } catch {
+                    // 项目读不到(越权/已删)→ 退回 output 标题(仍比匿名平台名强)。
+                    projectTitle = out.title?.trim() ?? "";
+                  }
+                  projectTitleCache.set(projectId, projectTitle);
+                }
+              } catch {
+                // 解析不到作品映射 → projectId 留 null(诚实空,不硬造)。
+                projectId = null;
+              }
               return {
-                title: p.title || p.platform || "（无标题发布）",
+                projectId,
+                externalId: p.externalId ?? null,
+                // 真标题优先 project.title;回退 revision(p.title)→ 平台兜底(不再匿名化为 douyin)。
+                title: projectTitle || p.title || p.platform || "（无标题发布）",
                 ...m,
               };
             }),
