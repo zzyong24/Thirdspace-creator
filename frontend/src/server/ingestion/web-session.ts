@@ -106,11 +106,28 @@ async function realOpenWebContext(
   const { mkdir } = await import("node:fs/promises");
   await mkdir(authDir, { recursive: true }).catch(() => {});
   await clearSingletonLocks(authDir);
-  const ctx = await chromium.launchPersistentContext(authDir, {
+  // [T-236] 登录窗优先用**系统正式 Chrome**(channel:"chrome"),而非 Playwright 自带的
+  //   测试构建 Chromium:真机实测 Google OAuth 对测试构建/自动化痕迹格外警惕(强制 passkey
+  //   /拒登「browser may not be secure」),正式 Chrome 构建接受度高得多。仍是**独立隔离
+  //   profile(authDir)**,绝不连用户日常 Chrome(connectOverCDP 对用户 Chrome149 卡死,
+  //   记忆有档)。系统没装 Chrome → 回落自带 Chromium(功能不减,只是 OAuth 兼容差些)。
+  //   ignoreDefaultArgs 去掉 --enable-automation(减少「受自动化控制」横幅/检测面)。
+  const baseOpts = {
     headless,
     viewport: { width: 1440, height: 900 },
     args: ["--disable-blink-features=AutomationControlled"],
-  });
+    ignoreDefaultArgs: ["--enable-automation"],
+  } as const;
+  let ctx;
+  try {
+    ctx = await chromium.launchPersistentContext(authDir, {
+      ...baseOpts,
+      channel: "chrome",
+    });
+  } catch {
+    // 系统无正式 Chrome(或 channel 启动失败)→ 回落 Playwright 自带 Chromium。
+    ctx = await chromium.launchPersistentContext(authDir, baseOpts);
+  }
   return ctx as unknown as WebSessionCapableContext;
 }
 
