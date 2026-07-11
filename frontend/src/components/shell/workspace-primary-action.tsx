@@ -36,8 +36,7 @@ import {
 } from "@/features/review/review-report-export";
 
 // The project pipeline order. The next stage is the adjacent forward step;
-// `review` is terminal. Mirrors STAGE_ORDER in ProjectOverviewActions and the
-// transition handler.
+// `review` is terminal. Mirrors the stage-transition handler's order.
 const STAGE_ORDER: ReadonlyArray<ProjectStageName> = [
   "brief",
   "research",
@@ -143,11 +142,18 @@ export function WorkspacePrimaryAction({
   }
 
   if (!canAdvance) {
-    // Terminal / non-advancing stage: keep the plain button behavior.
+    // [T-231⑧] 终态/非推进 label(且非「导出报告」)接不了真动作 —— 原来渲成
+    // `<Button>{label} →</Button>`(无 onClick 的死按钮,看着能点实际没反应)。
+    // 现状 shell-router 只产出「导出报告」一种非推进 label(上面分支已接真下载),
+    // 本分支实际不可达;为防未来 label 源扩展再造死按钮,这里渲**纯文本状态徽标**
+    // (无按钮语义、无 hover、无「→」诱点),诚实呈现而不是伪装可点。
     return (
-      <Button type="button" size="lg" disabled={pending}>
-        {label} →
-      </Button>
+      <span
+        data-slot="workspace-terminal-status"
+        className="inline-flex h-10 items-center rounded-control border border-border bg-surface-subtle px-4 text-sm font-medium text-muted-foreground"
+      >
+        {label}
+      </span>
     );
   }
 

@@ -183,6 +183,10 @@ export interface CopilotContentViewModel extends BasePageViewModel {
       | "sparkles"
       | "image"
       | "line-chart";
+    // [T-231⑨] 真预调:点 chip = 完整话术预填输入框 + 该工具置顶(下一次发送的
+    // chatContext.functionKey)。缺省(老数据)退化为填 label 的字条,不置顶工具。
+    readonly functionKey?: string;
+    readonly prefill?: string;
   }>;
   readonly recommendedCommands: ReadonlyArray<{
     readonly id: string;
@@ -190,6 +194,9 @@ export interface CopilotContentViewModel extends BasePageViewModel {
     readonly tone: "pink" | "violet" | "mint" | "orange" | "indigo";
     readonly title: string;
     readonly description: string;
+    // [T-231⑨] 推荐指令同机制升级(缺省退化为填 title)。
+    readonly functionKey?: string;
+    readonly prefill?: string;
   }>;
   readonly recentTasks: ReadonlyArray<{
     readonly id: string;
@@ -213,6 +220,9 @@ export interface CopilotContentViewModel extends BasePageViewModel {
   readonly smartRecommendations: ReadonlyArray<{
     readonly id: string;
     readonly title: string;
+    // [T-231⑨] 快速开始同机制升级(缺省退化为填 title)。
+    readonly functionKey?: string;
+    readonly prefill?: string;
   }>;
 }
 
@@ -584,6 +594,9 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   "positioning.generate": "结合我的账号画像,生成/进化一份结构化定位提案。",
   "script.draft": "帮我为这条内容起草一版完整的分镜口播脚本。",
   "material.gather": "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
+  // [T-231⑨] 生成封面(依赖设置里配好的生图模型;未配时工具卡自带「去设置」降级)。
+  "material.generate":
+    "帮我为这条内容生成几张封面图候选(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
 };
 
 // [T-060②→T-077c] 工具 trace 的中文名(对话内「正在调用/已调用」行;未知工具回落原名)。
@@ -823,6 +836,12 @@ export function AICopilotContent({
     embed?.selection?.kind,
     embed?.selection?.id,
   ]);
+  // [T-231⑨] 快捷 chip / 推荐指令的一次性 functionKey:点按钮只**预填**完整话术(T-055b
+  // 铁律:绝不自动发),同时把语义对应的专用工具记在 ref 里;下一次发送时注入
+  // chatContext.functionKey(服务端 applyFunctionKey 置顶 + forcedTool 第 0 步强制),
+  // **读后即清**(一次性)—— 不污染后续自由对话轮次。放 ref 不放 state:body 是
+  // Resolvable(每次请求求值),ref 更新不重建 transport(重建会打断进行中的流)。
+  const quickFunctionKeyRef = React.useRef<string | null>(null);
   const transport = React.useMemo(
     () =>
       new DefaultChatTransport<UIMessage>({
@@ -836,12 +855,21 @@ export function AICopilotContent({
         },
         // body 是 Resolvable(每次发请求求值):把当前 conversationId(ref 读最新)和 chatContext
         // 一起带上。首轮 conversationId 为 null → 不带,后端 lazy 建;拿到响应头后续轮带上续接。
-        body: () => ({
-          ...chatContextBody,
-          ...(conversationIdRef.current
-            ? { conversationId: conversationIdRef.current }
-            : {}),
-        }),
+        body: () => {
+          // [T-231⑨] 一次性 chip functionKey:本次请求置顶该工具后即清;chip 是比
+          // URL/embed 更晚的用户显式动作 → 本轮覆盖之,后续轮次回落原 functionKey。
+          const quickFn = quickFunctionKeyRef.current;
+          quickFunctionKeyRef.current = null;
+          const chatContext = quickFn
+            ? { ...chatContextBody.chatContext, functionKey: quickFn }
+            : chatContextBody.chatContext;
+          return {
+            chatContext,
+            ...(conversationIdRef.current
+              ? { conversationId: conversationIdRef.current }
+              : {}),
+          };
+        },
         // useChat 不直接暴露响应头 → 在 transport 的 fetch 层包一层,读 `x-conversation-id`
         // 后原样把 Response 交回给 SDK(不改流)。这是本 SDK 版本捕获会话 id 最稳的办法。
         fetch: async (input, init) => {
@@ -857,9 +885,11 @@ export function AICopilotContent({
       }),
     [chatContextBody, captureConversationId],
   );
-  const { messages, sendMessage, status, stop, setMessages, error } = useChat({
-    transport,
-  });
+  // [T-231⑩] regenerate:@ai-sdk/react 现成的「重发最后一轮」API(对话出错时的重试通路)。
+  const { messages, sendMessage, status, stop, setMessages, error, regenerate } =
+    useChat({
+      transport,
+    });
   const streaming = status === "streaming" || status === "submitted";
 
   // [T-105] 自动滚到最新:发消息/回复开始(条数增)强制跟随到底;流式增长按「跟随态」滚;
@@ -966,6 +996,21 @@ export function AICopilotContent({
     void sendMessage({ text: value });
     setPrompt("");
   }, [prompt, streaming, sendMessage]);
+
+  // [T-231⑨] 快捷按钮(composer chips / 推荐指令 / 快速开始)统一走真预调:完整话术预填
+  // 输入框 + 语义工具一次性置顶(quickFunctionKeyRef,下一次发送生效)。**预填不自动发**
+  // (T-055b 铁律),用户按发送才出手。无 prefill/functionKey 的老条目退化为原「填字条」。
+  const applyQuickPrompt = React.useCallback(
+    (item: { readonly prefill?: string; readonly functionKey?: string }, fallbackText: string) => {
+      const text = item.prefill ?? fallbackText;
+      if (!text) return;
+      setPrompt(text);
+      lastPrefillRef.current = text;
+      quickFunctionKeyRef.current = item.functionKey ?? null;
+      textareaRef.current?.focus();
+    },
+    [],
+  );
 
   // 切到某个会话:拉它的历史消息 → 映射成 UIMessage → 喂 setMessages(读回);同时把
   // conversationId 设为它 + 按 surface 持久化(后续发言续接这个会话)。读回失败(会话被删/
@@ -1892,6 +1937,18 @@ export function AICopilotContent({
                       去设置换一个模型 →
                     </Link>
                   ) : null}
+                  {/* [T-231⑩] 出错不再只让用户「请重试」却无处可点:regenerate() 重发
+                      最后一条用户消息(@ai-sdk/react 现成 API,不手搓重放)。流式中不渲。 */}
+                  {!streaming && messages.length > 0 ? (
+                    <button
+                      type="button"
+                      data-slot="copilot-error-retry"
+                      onClick={() => void regenerate()}
+                      className="self-start rounded-md border border-destructive/40 px-2 py-0.5 text-[11px] font-medium text-destructive transition-colors hover:bg-destructive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                    >
+                      重试
+                    </button>
+                  ) : null}
                 </li>
               ) : null}
               {streaming ? (
@@ -1975,7 +2032,8 @@ export function AICopilotContent({
                   <button
                     key={action.id}
                     type="button"
-                    onClick={() => setPrompt(action.label)}
+                    // [T-231⑨] 真预调:完整话术预填 + 语义工具一次性置顶(不自动发,T-055b)。
+                    onClick={() => applyQuickPrompt(action, action.label)}
                     data-slot="suggested-chip"
                     data-chip-id={action.id}
                     className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-border/80 bg-surface px-3 text-xs font-medium text-foreground transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
@@ -1990,7 +2048,11 @@ export function AICopilotContent({
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={() => setPrompt("")}
+                  onClick={() => {
+                    setPrompt("");
+                    // [T-231⑨] 清空输入同时撤销 chip 的一次性工具置顶(话术没了,预调也不该留)。
+                    quickFunctionKeyRef.current = null;
+                  }}
                   disabled={isEmpty}
                   data-slot="prompt-clear"
                   aria-label="清空输入"
@@ -2072,7 +2134,8 @@ export function AICopilotContent({
               <button
                 key={cmd.id}
                 type="button"
-                onClick={() => setPrompt(cmd.title)}
+                // [T-231⑨] 推荐指令同机制:完整话术预填 + 工具置顶(缺省退化为填 title)。
+                onClick={() => applyQuickPrompt(cmd, cmd.title)}
                 data-slot="recommended-command"
                 data-command-id={cmd.id}
                 className="flex min-h-9 items-start gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
@@ -2305,7 +2368,8 @@ export function AICopilotContent({
               <button
                 key={rec.id}
                 type="button"
-                onClick={() => setPrompt(rec.title)}
+                // [T-231⑨] 快速开始同机制:预填 + 工具置顶(缺省退化为填 title)。
+                onClick={() => applyQuickPrompt(rec, rec.title)}
                 data-slot="smart-recommendation-item"
                 data-rec-id={rec.id}
                 className="rounded-lg border border-brand/30 bg-surface px-2.5 py-1 text-[10px] font-medium text-brand transition-colors hover:bg-brand-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"

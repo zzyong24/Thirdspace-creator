@@ -37,9 +37,9 @@ export interface AssetDetailPanelProps {
   // Module 07 E3–E6 needs-backend handlers. Optional so the panel stays a pure
   // Server Component when rendered without an island (no handlers → render-only
   // buttons, the previous behavior). When the Assets island passes them, the
-  // four actions fire the mapped contract op (download/copy-link/favorite/trash).
+  // actions fire the mapped contract op (download/favorite/trash/reveal)。
+  // [T-231③] 复制链接不再接 handler:常驻 disabled + 「规划中」徽标。
   readonly onDownload?: (assetId: string) => void;
-  readonly onCopyLink?: (assetId: string) => void;
   readonly onFavorite?: (assetId: string) => void;
   readonly onTrash?: (assetId: string) => void;
   // [T-055d SPEC §7.2] 在 Finder 显示(open -R 定位文件;单机产品 server 与用户同机)。
@@ -52,7 +52,6 @@ export function AssetDetailPanel({
   asset,
   usageHistory,
   onDownload,
-  onCopyLink,
   onFavorite,
   onTrash,
   onReveal,
@@ -101,18 +100,30 @@ export function AssetDetailPanel({
                 </svg>
                 <span>下载</span>
               </button>
+              {/* [T-231③] 复制链接:真实对象存储签名链接尚未接入,原实现往剪贴板写
+                  `mock://` 死链。按诚实空壳范式(参考 Copilot PlannedBadge)常驻
+                  disabled + 「规划中」徽标,不再写剪贴板。 */}
               <button
                 type="button"
                 data-slot="asset-action-copy"
-                disabled={actionsPending}
-                onClick={onCopyLink ? () => onCopyLink(asset.id) : undefined}
-                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
+                disabled
+                aria-disabled="true"
+                title="公开链接规划中:真实对象存储签名链接尚未接入"
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-2 py-1.5 text-foreground disabled:opacity-50"
               >
                 <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.4}>
                   <rect x={5} y={5} width={9} height={9} rx={1.2} />
                   <path d="M3 11 V3 H11" />
                 </svg>
-                <span>复制链接</span>
+                <span className="inline-flex items-center gap-1">
+                  复制链接
+                  <span
+                    data-slot="asset-copy-planned-badge"
+                    className="rounded-md bg-muted px-1 py-0 text-[9px] font-medium text-muted-foreground"
+                  >
+                    规划中
+                  </span>
+                </span>
               </button>
               <button
                 type="button"

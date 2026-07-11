@@ -4,7 +4,7 @@
  * (mocked here) and then router.refresh() where the gallery must re-read:
  *   - E2 ＋上传素材  → createUpload then completeUpload (+ refresh)
  *   - E3 下载        → getAsset
- *   - E4 复制链接    → getAsset
+ *   - E4 复制链接    → 常驻 disabled 规划中(无请求)
  *   - E5 收藏        → REAL toggleFavorite (+ refresh); does NOT call the old
  *                      addAssetFile { storageKey: favorites/... } hack
  *   - E6 更多(回收站) → trashAsset (+ refresh)
@@ -170,13 +170,20 @@ describe("Assets needs-backend wiring", () => {
     );
   });
 
-  it("E4 复制链接 calls assets.get for the selected asset", async () => {
+  // [T-231③] 复制链接:真实签名链接尚未接入 → 按钮常驻 disabled + 「规划中」徽标,
+  // 点击不发任何请求、不写剪贴板(原来会写 `mock://` 死链)。
+  it("E4 复制链接 is disabled (规划中) and issues no request", async () => {
     const { container } = await renderIsland();
     const btn = container.querySelector<HTMLButtonElement>(
       '[data-slot="asset-action-copy"]',
     );
+    expect(btn).not.toBeNull();
+    expect(btn!.disabled).toBe(true);
+    expect(
+      btn!.querySelector('[data-slot="asset-copy-planned-badge"]')?.textContent,
+    ).toBe("规划中");
     fireEvent.click(btn!);
-    await waitFor(() => expect(mockClient.getAsset).toHaveBeenCalledTimes(1));
+    expect(mockClient.getAsset).not.toHaveBeenCalled();
   });
 
   it("E5 收藏 calls assets.favorite.toggle then refresh (not the addAssetFile hack)", async () => {

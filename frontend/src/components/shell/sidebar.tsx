@@ -9,7 +9,7 @@
  *  - ContextSection (current project / quick access, when present)
  *  - AssistantPromoCard with two content variants: `assistant` (default)
  *    and `storage` (used by the Assets Center per D-003)
- *  - UserProfileMenu
+ *  - UserProfileCard
  *
  * Active state is derived from the `pathname` prop, not from a router hook, so
  * it is testable without a Next.js runtime.
@@ -200,7 +200,7 @@ export function Sidebar({
           {/* [T-136 切片 a] 当前抖音号切换器(多号 = 多独立人设);紧挨用户区上方,
               展开/收拢态都渲染(收拢态只显图标 + tooltip)。 */}
           <AccountSwitcher collapsed={collapsed} />
-          <UserProfileMenu
+          <UserProfileCard
             collapsed={collapsed}
             displayName={resolvedUser.displayName}
             email={resolvedUser.email}
@@ -432,10 +432,15 @@ function SidebarContextualCard({ variant, userDisplayName }: SidebarContextualCa
 }
 
 // ---------------------------------------------------------------------------
-// User profile menu
+// User profile card
 // ---------------------------------------------------------------------------
 
-function UserProfileMenu({
+// [T-231⑦] 纯展示的用户卡(原名 UserProfileMenu 名不副实 —— 从来只是静态 div,无菜单)。
+// 审计裁定**不挂登出菜单**:T-046 单机免登录语义下(request-context.server.ts:无 session
+// token / token 失效 → 以本机主用户直通,登录页已下线),登出后一刷新即自动回登,
+// 「退出登录」是无意义按钮;/api/v1/auth/logout 保留给未来多用户/web 形态。
+// 故这里只做身份展示(头像/名/邮箱/套餐),不做任何可点菜单暗示。
+function UserProfileCard({
   collapsed,
   displayName,
   email,

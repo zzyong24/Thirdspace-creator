@@ -103,7 +103,7 @@ import { clearOnboardingFlags } from "@/features/onboarding/onboarding-card";
 //
 // Every needs-backend control optimistically flips its local state, fires the
 // mapped Settings op, then `router.refresh()` so the server re-reads the seeded
-// repo (mirrors `project-overview/project-actions.tsx`). A `pending` guard blocks
+// repo (island → client.* → router.refresh seam). A `pending` guard blocks
 // concurrent writes. The optimistic value is the source of truth in the control
 // while the refresh round-trips; the server read confirms it on the next render.
 function useSettingsMutation() {
@@ -391,7 +391,7 @@ export function SettingsDialog({
                   <ModelConfigurationCard model={viewModel.model} />
                 </div>
 
-                {/* ② 折叠块「更多能力」:5 张按需卡,默认收起(不配也能用,各自诚实降级)。
+                {/* ② 折叠块「更多能力」:7 张按需卡,默认收起(不配也能用,各自诚实降级)。
                     highlight 命中组内某张卡时初始展开,保证 ?highlight 深链能滚到它。 */}
                 <CollapsibleModelGroup
                   title="更多能力(按需,不配也能用)"
@@ -401,6 +401,8 @@ export function SettingsDialog({
                     "image-model",
                     "video-model",
                     "asr-model",
+                    // [T-231⑪] 联网搜索深链(?highlight=web-search)也要能展开组并滚到卡。
+                    "web-search",
                   ]}
                 >
                   {/* [T-086 SPEC §2] 文案审核模型(豆包/火山方舟预设;未配 → 默认模型+标注非专用)。 */}
@@ -424,6 +426,17 @@ export function SettingsDialog({
                   <MultimodalModelCard
                     kind="embed"
                     state={viewModel.multimodalModels.embed}
+                  />
+                  {/* [T-231⑪] 视觉理解(asset.classify)与联网搜索(web.search):组件与
+                      state 早已备好(MULTIMODAL_META.vision/search + viewModel 两档),
+                      此前一直没挂进面板 → 用户想配联网搜索(T-228)/视觉理解无入口。 */}
+                  <MultimodalModelCard
+                    kind="vision"
+                    state={viewModel.multimodalModels.vision}
+                  />
+                  <MultimodalModelCard
+                    kind="search"
+                    state={viewModel.multimodalModels.search}
                   />
                 </CollapsibleModelGroup>
               </div>

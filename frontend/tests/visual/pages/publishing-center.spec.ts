@@ -64,10 +64,10 @@ test.describe("Publishing Center page", () => {
       main.locator('[data-slot="publishing-toolbar"] input[type="search"]'),
     ).toBeVisible();
 
-    // BatchOperationBar present.
+    // [T-231①] BatchOperationBar 已删(批量操作无真实 publisher 支撑)。
     await expect(
       main.locator('[data-slot="batch-operation-bar"]'),
-    ).toBeVisible();
+    ).toHaveCount(0);
 
     // PublicationTable with 7 columns in spec order.
     const table = main.locator('[data-slot="publication-table"]');

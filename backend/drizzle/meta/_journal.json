@@ -239,6 +239,13 @@
       "when": 1782381550000,
       "tag": "0033_topic_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1782381560000,
+      "tag": "0034_positioning_statement_change_reason",
+      "breakpoints": true
     }
   ]
 }

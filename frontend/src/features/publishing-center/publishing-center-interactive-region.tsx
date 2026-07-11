@@ -15,27 +15,27 @@
  *    platform label (case-insensitive substring). Mirrored to `?q=`.
  *  - Filter chips (全部 / 近 7 天 / 近 30 天 / 待优化): narrow the rows by a
  *    derived predicate over the publication date / engagement tone.
- *  - BatchOperationBar: row checkboxes + select-all drive a live selection
- *    count; the batch action buttons are enabled only when ≥1 row is
- *    selected.
  *  - Row "查看" action: marks the row as the active selection.
  *  - Pagination: changing the page slices the filtered rows into pages.
  *
- * Determinism: filtering / paging is pure over props; the only side
- * effect is a `history.replaceState` URL update. No `Date.now` /
- * `Math.random` / `fetch`.
+ * [T-231①] 批量操作(批量发布/批量下架/修改时间)与整套行选择机制已删:
+ * live 端 publisher 绑 mock(persistence-client `createMockPublisher()`),
+ * 批量发布会铸 `mock:douyin:` 假 externalId、批量下架会把真实导入作品标
+ * removed(毁数据)、修改时间无时间选择器——按 T-209「不能实现的去掉」原则整体移除。
+ *
+ * Determinism: filtering / paging is pure over props; side effects are a
+ * `history.replaceState` URL update, plus a mount-time real "today" for the
+ * 近 N 天 chips ([T-231④])。No `Math.random` / `fetch`.
  */
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { ChartFrame } from "@/components/analytics/chart-frame";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { CoverThumb } from "@/components/resources/cover-thumb";
-import { client } from "@/lib/contract-client";
 import type { MetricCard as MetricCardVm } from "@/types/view-models";
 import type {
   ContentTypeTab,
@@ -63,10 +63,12 @@ const FILTER_CHIPS: ReadonlyArray<DateFilterChip> = [
   { id: "needsWork", label: "待优化" },
 ];
 
-// The canonical fixtures are anchored around mid-2026; the page never
-// calls `Date.now`. We use a fixed reference date so the "近 N 天"
-// predicate is deterministic across renders / SSR.
-const REFERENCE_DATE = "2026-06-20";
+// [T-231④] 「近 N 天」以真实"今天"为基准(原来写死 "2026-06-20" 冻结日期,
+// chip 永远相对一个过去的锚点)。SSR/hydration 一致性:初始 chip 是 "all"
+// (不依赖日期),reference date 用 useState 惰性初始化,首帧 DOM 与服务端一致。
+function todayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 // ---------------------------------------------------------------------------
 // Thumbnail hashing — derives a deterministic hue from a token.
@@ -128,12 +130,13 @@ function daysBetween(fromIso: string, toIso: string): number {
 function matchesDateChip(
   row: PublicationRow,
   chip: DateFilterChip["id"],
+  referenceDate: string,
 ): boolean {
   switch (chip) {
     case "recent7":
-      return daysBetween(row.publishedAt, REFERENCE_DATE) <= 7;
+      return daysBetween(row.publishedAt, referenceDate) <= 7;
     case "recent30":
-      return daysBetween(row.publishedAt, REFERENCE_DATE) <= 30;
+      return daysBetween(row.publishedAt, referenceDate) <= 30;
     case "needsWork":
       return row.engagementTone === "warning";
     case "all":
@@ -151,19 +154,16 @@ export function PublishingCenterInteractiveRegion({
 }: {
   readonly viewModel: PublishingCenterViewModel;
 }) {
-  const router = useRouter();
-  const [, startTransition] = React.useTransition();
   const [activeTab, setActiveTab] = React.useState<string>(
     viewModel.contentTypeTabs[0]?.id ?? "all",
   );
   const [chip, setChip] = React.useState<DateFilterChip["id"]>("all");
+  // [T-231④] 「近 N 天」基准 = 真实今天(惰性初始化,组件生命周期内稳定)。
+  const [referenceDate] = React.useState<string>(() => todayIsoDate());
   // [T-073] 显示已隐藏(抖音端「仅自己可见/已隐藏」的发布行,hidden=true)。默认过滤。
   const [showHidden, setShowHidden] = React.useState(false);
   const [query, setQuery] = React.useState<string>(() => readUrlQuery());
   const [page, setPage] = React.useState<number>(1);
-  const [selectedIds, setSelectedIds] = React.useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
   const [activeRowId, setActiveRowId] = React.useState<string | null>(null);
 
   const handleSearchChange = React.useCallback(
@@ -204,13 +204,13 @@ export function PublishingCenterInteractiveRegion({
       if (!showHidden && row.hidden) return false;
       const tabOk = activeTab === "all" || row.contentType === activeTab;
       if (!tabOk) return false;
-      if (!matchesDateChip(row, chip)) return false;
+      if (!matchesDateChip(row, chip, referenceDate)) return false;
       if (q.length === 0) return true;
       const haystack =
         `${row.contentTitle} ${row.projectTitle} ${row.platformLabel}`.toLowerCase();
       return haystack.includes(q);
     });
-  }, [viewModel.publications, activeTab, chip, query, showHidden]);
+  }, [viewModel.publications, activeTab, chip, query, showHidden, referenceDate]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -220,97 +220,6 @@ export function PublishingCenterInteractiveRegion({
     [filtered, safePage],
   );
 
-  const toggleRow = React.useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const visibleIds = React.useMemo(
-    () => pageRows.map((row) => row.id),
-    [pageRows],
-  );
-  const allVisibleSelected =
-    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
-
-  const toggleSelectAll = React.useCallback(() => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      const everySelected =
-        visibleIds.length > 0 && visibleIds.every((id) => next.has(id));
-      if (everySelected) {
-        for (const id of visibleIds) next.delete(id);
-      } else {
-        for (const id of visibleIds) next.add(id);
-      }
-      return next;
-    });
-  }, [visibleIds]);
-
-  // The selected publication rows (the table row id IS the Publication id — the
-  // Wave-4 PublishingCenterQueryService composes the row over the same Publication;
-  // SPEC §19). Used by the 3 needs-backend batch mutations.
-  const selectedRows = React.useMemo(
-    () => viewModel.publications.filter((row) => selectedIds.has(row.id)),
-    [viewModel.publications, selectedIds],
-  );
-
-  // §4 批量发布 (needs-backend): for each selected row, transition → published;
-  // skip rows already published (idempotent FE no-op). Then router.refresh().
-  const handleBatchPublish = React.useCallback(() => {
-    const targets = selectedRows.filter((r) => r.status !== "published");
-    if (targets.length === 0) return;
-    startTransition(async () => {
-      for (const row of targets) {
-        await client.transitionPublication({
-          params: { publicationId: row.id },
-          query: undefined,
-          body: { status: "published" },
-        });
-      }
-      router.refresh();
-    });
-  }, [router, selectedRows]);
-
-  // §4 批量下架 (needs-backend): for each selected published row, transition →
-  // removed (published → removed). Then router.refresh().
-  const handleBatchRemove = React.useCallback(() => {
-    const targets = selectedRows.filter((r) => r.status === "published");
-    if (targets.length === 0) return;
-    startTransition(async () => {
-      for (const row of targets) {
-        await client.transitionPublication({
-          params: { publicationId: row.id },
-          query: undefined,
-          body: { status: "removed" },
-        });
-      }
-      router.refresh();
-    });
-  }, [router, selectedRows]);
-
-  // §4 修改时间 (needs-backend): for each selected row, transition → scheduled
-  // (draft → scheduled; the new schedule time would ride a revision's
-  // platformSettings.scheduledAt per Open Question 2 — the transition body carries
-  // only the status this wave). Then router.refresh().
-  const handleBatchReschedule = React.useCallback(() => {
-    const targets = selectedRows.filter((r) => r.status === "draft");
-    if (targets.length === 0) return;
-    startTransition(async () => {
-      for (const row of targets) {
-        await client.transitionPublication({
-          params: { publicationId: row.id },
-          query: undefined,
-          body: { status: "scheduled" },
-        });
-      }
-      router.refresh();
-    });
-  }, [router, selectedRows]);
-
   return (
     <>
       <ContentTypeTabs
@@ -318,7 +227,7 @@ export function PublishingCenterInteractiveRegion({
         activeTab={activeTab}
         onTabChange={handleTabChange}
       />
-      {/* Two-column layout: left stack (toolbar → batch → table) + right rail */}
+      {/* Two-column layout: left stack (toolbar → table) + right rail */}
       <div
         data-slot="publishing-two-col"
         className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_320px]"
@@ -336,18 +245,8 @@ export function PublishingCenterInteractiveRegion({
             hiddenCount={hiddenCount}
             onToggleHidden={handleToggleHidden}
           />
-          <BatchOperationBar
-            selectedCount={selectedIds.size}
-            allVisibleSelected={allVisibleSelected}
-            onToggleSelectAll={toggleSelectAll}
-            onBatchPublish={handleBatchPublish}
-            onBatchRemove={handleBatchRemove}
-            onBatchReschedule={handleBatchReschedule}
-          />
           <PublicationTable
             publications={pageRows}
-            selectedIds={selectedIds}
-            onToggleRow={toggleRow}
             activeRowId={activeRowId}
             onActivateRow={setActiveRowId}
           />
@@ -526,125 +425,17 @@ function FilterChip({
 }
 
 // ---------------------------------------------------------------------------
-// BatchOperationBar — batch-select + batch actions (wired)
-// ---------------------------------------------------------------------------
-
-function BatchOperationBar({
-  selectedCount,
-  allVisibleSelected,
-  onToggleSelectAll,
-  onBatchPublish,
-  onBatchRemove,
-  onBatchReschedule,
-}: {
-  selectedCount: number;
-  allVisibleSelected: boolean;
-  onToggleSelectAll: () => void;
-  onBatchPublish: () => void;
-  onBatchRemove: () => void;
-  onBatchReschedule: () => void;
-}) {
-  const disabled = selectedCount === 0;
-  return (
-    <div
-      data-slot="batch-operation-bar"
-      aria-label="批量操作"
-      className="flex items-center gap-card-gap rounded-xl border border-border bg-surface px-5 py-3.5"
-    >
-      <label className="flex cursor-pointer select-none items-center gap-2.5">
-        <button
-          type="button"
-          data-slot="batch-select-all"
-          role="checkbox"
-          aria-checked={allVisibleSelected}
-          aria-label="全选"
-          onClick={onToggleSelectAll}
-          className={
-            "flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 " +
-            (allVisibleSelected
-              ? "border-brand bg-brand text-brand-foreground"
-              : "border-border bg-surface")
-          }
-        >
-          {allVisibleSelected ? (
-            <svg viewBox="0 0 16 16" className="size-3" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2.4}>
-              <path d="M3.5 8.5 L6.5 11.5 L12.5 4.5" />
-            </svg>
-          ) : null}
-        </button>
-        <span className="text-[13px] text-muted-foreground">
-          已选择{" "}
-          <span
-            data-slot="batch-selected-count"
-            className="font-mono font-medium tabular-nums text-foreground"
-          >
-            {selectedCount}
-          </span>{" "}
-          项
-        </span>
-      </label>
-      <span aria-hidden="true" className="h-5 w-px bg-border" />
-      <div className="flex items-center gap-2">
-        <span className="text-[11px] text-muted-foreground/60">
-          已选内容可批量：
-        </span>
-        <BatchActionButton
-          label="批量发布"
-          disabled={disabled}
-          onClick={onBatchPublish}
-        />
-        <BatchActionButton
-          label="批量下架"
-          disabled={disabled}
-          onClick={onBatchRemove}
-        />
-        <BatchActionButton
-          label="修改时间"
-          disabled={disabled}
-          onClick={onBatchReschedule}
-        />
-      </div>
-    </div>
-  );
-}
-
-function BatchActionButton({
-  label,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  disabled: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      data-slot="batch-action-button"
-      data-action-label={label}
-      disabled={disabled}
-      onClick={onClick}
-      className="inline-flex h-7 items-center rounded-md border border-border bg-surface px-2.5 text-[12px] text-muted-foreground transition-colors hover:border-brand/40 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:text-muted-foreground"
-    >
-      {label}
-    </button>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // PublicationTable — 7 columns in spec order (rows wired)
+// [T-231①] 批量操作条(BatchOperationBar)与行勾选已删——live publisher 是
+// mock,批量 transition 会铸假数据/毁真数据,按「不能实现的去掉」原则移除。
 // ---------------------------------------------------------------------------
 
 function PublicationTable({
   publications,
-  selectedIds,
-  onToggleRow,
   activeRowId,
   onActivateRow,
 }: {
   publications: ReadonlyArray<PublicationRow>;
-  selectedIds: ReadonlySet<string>;
-  onToggleRow: (id: string) => void;
   activeRowId: string | null;
   onActivateRow: (id: string) => void;
 }) {
@@ -685,8 +476,6 @@ function PublicationTable({
               <PublicationPerformanceRow
                 key={row.id}
                 row={row}
-                selected={selectedIds.has(row.id)}
-                onToggleRow={onToggleRow}
                 active={row.id === activeRowId}
                 onActivateRow={onActivateRow}
               />
@@ -700,14 +489,10 @@ function PublicationTable({
 
 function PublicationPerformanceRow({
   row,
-  selected,
-  onToggleRow,
   active,
   onActivateRow,
 }: {
   row: PublicationRow;
-  selected: boolean;
-  onToggleRow: (id: string) => void;
   active: boolean;
   onActivateRow: (id: string) => void;
 }) {
@@ -717,7 +502,6 @@ function PublicationPerformanceRow({
       data-publication-id={row.id}
       data-status={row.status}
       data-hidden={row.hidden ? "true" : "false"}
-      data-selected={selected ? "true" : "false"}
       data-active={active ? "true" : "false"}
       className={
         "border-b border-border last:border-b-0 " +
@@ -726,14 +510,6 @@ function PublicationPerformanceRow({
     >
       <td className="px-3 py-2.5">
         <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            data-slot="publication-row-checkbox"
-            aria-label={`选择 ${row.contentTitle}`}
-            checked={selected}
-            onChange={() => onToggleRow(row.id)}
-            className="size-3.5 shrink-0 rounded border-border text-brand focus:ring-ring/40"
-          />
           <ContentThumbnail
             platform={row.platform}
             token={row.thumbnailToken}

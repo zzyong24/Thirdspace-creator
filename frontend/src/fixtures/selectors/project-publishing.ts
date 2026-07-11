@@ -16,11 +16,12 @@ import type { PublishingViewModel } from "@/types/view-models";
 // Locked publishing tab descriptors
 // ---------------------------------------------------------------------------
 
+// [T-231①] "batch"(批量发布)项已清:批量发布无真实 publisher 支撑(live 绑
+// mock),按「不能实现的去掉」原则从锁定 tab 列表移除。
 const PUBLISHING_TABS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
   { id: "publishing", label: "发布设置" },
   { id: "history", label: "发布记录" },
   { id: "platforms", label: "平台管理" },
-  { id: "batch", label: "批量发布" },
 ];
 
 // ---------------------------------------------------------------------------

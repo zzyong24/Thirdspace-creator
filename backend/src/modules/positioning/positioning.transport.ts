@@ -96,11 +96,14 @@ export function createPositioningTransport(
             oneLiner: string;
             keywords: string[];
             productAnchorIds?: string[];
+            changeReason?: string;
           };
           const statement = await service.createStatementVersion(ctx, {
             oneLiner: b.oneLiner,
             keywords: b.keywords,
             productAnchorIds: b.productAnchorIds ?? [],
+            // [T-231⑥] 修改原因透传(缺省 "" —— 契约 body 已 default)。
+            changeReason: b.changeReason ?? "",
           });
           return { data: statement, meta: { requestId } };
         }

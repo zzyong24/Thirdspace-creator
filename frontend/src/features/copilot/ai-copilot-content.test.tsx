@@ -110,7 +110,9 @@ describe("AI Copilot dialog (Task 24)", () => {
   it("renders the reference fixture counts", () => {
     renderDialog();
     const dialog = screen.getByRole("dialog");
-    expect(dialog.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(6);
+    // [T-231⑨] 6 → 5:「优化标题」chip 已删(无对应工具,诚实优先);余下 5 个全部
+    // 绑 functionKey + 完整预填话术(真预调,见 fixtures/selectors/copilot.ts)。
+    expect(dialog.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(5);
     expect(dialog.querySelectorAll('[data-slot="recommended-command"]')).toHaveLength(5);
     // RecentTasks is now backed by the REAL global feed (GAP-COP-feed / ai.tasks.list):
     // on first synchronous render the feed is still loading (no fixture rows), so there

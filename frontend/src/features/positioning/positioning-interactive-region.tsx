@@ -546,8 +546,9 @@ export function PositioningStatementForm({
   const [anchors, setAnchors] = React.useState(
     (seed?.productAnchorIds ?? []).join("、"),
   );
-  // 修改原因：记录这次为什么开新版本（团队留痕用）。后端 createStatement body 暂无此槽位，
-  // 故不注入 wire（不造假字段、不破坏契约）；保留输入以保证陈述编辑体验完整。
+  // 修改原因：记录这次为什么开新版本（团队留痕用）。[T-231⑥] 已补全链：契约 body 的
+  // changeReason 槽位 → transport → service → positioning_statements.change_reason 落库
+  // （迁移 0034），不再静默丢弃。
   const [changeReason, setChangeReason] = React.useState("");
 
   const keywordsValid =
@@ -567,6 +568,8 @@ export function PositioningStatementForm({
               .split(/[、,，\s]+/)
               .map((a) => a.trim())
               .filter((a) => a.length > 0),
+            // [T-231⑥] 修改原因随保存落库（可选；空 = 未填）。
+            changeReason: changeReason.trim(),
           },
         }),
       onSuccess,

@@ -17,7 +17,7 @@
 import * as React from "react";
 import Link from "next/link";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { ProjectStageStepper } from "@/components/navigation/project-stage-stepper";
 import { HeaderGlobalSearch } from "./header-global-search";
 import { NotificationPopover } from "./notification-popover";
@@ -341,12 +341,11 @@ function HeaderActions({
         </Link>
       ) : null}
       <NotificationPopover viewModel={notifications} />
-      {/* [T-209] 删除假「分享」(ShareIcon)与假「更多」(MoreIcon)空壳按钮(无 onClick)。 */}
-      {primaryActionLabel ? (
-        <Button type="button" size="sm">
-          {primaryActionLabel}
-        </Button>
-      ) : null}
+      {/* [T-209] 删除假「分享」(ShareIcon)与假「更多」(MoreIcon)空壳按钮(无 onClick)。
+          [T-231⑫] 删除无 onClick 的 primaryActionLabel fallback Button(死按钮):
+          shell-router 只在 project-workspace 段产 primaryActionLabel(resolveWorkspacePrimaryAction),
+          该 label 走上面的 ProjectHeaderActions 分支 —— 本 fallback(search 等模式)不可达;
+          留着只会在未来 label 源扩展时再造一个看着能点、点了没反应的按钮。 */}
     </div>
   );
 }
@@ -409,11 +408,9 @@ function ProjectHeaderActions({
           <Link href={overviewHref} className={buttonVariants({ size: "lg" })}>
             {primaryActionLabel} →
           </Link>
-        ) : (
-          <Button type="button" size="lg">
-            {primaryActionLabel} →
-          </Button>
-        )
+        ) : // [T-231⑫] 原 else 分支是无 onClick 的死按钮(project-overview 有 label 但无
+        // project.stage → 拼不出 overviewHref)。接不了真跳转就不渲按钮 —— 诚实优先。
+        null
       ) : null}
     </div>
   );

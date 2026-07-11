@@ -16,8 +16,6 @@
  *    `router.refresh()` so the archived row drops off the list and the
  *    「已归档」tab count moves with the real data.
  *
- * Sibling reference: `features/project-overview/project-actions.tsx` uses the
- * same `client.archiveProject({ params: { projectId }, ... })` shape.
  */
 
 import * as React from "react";

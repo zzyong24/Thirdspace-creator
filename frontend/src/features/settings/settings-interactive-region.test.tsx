@@ -2,8 +2,8 @@
  * Settings island wiring tests (Settings module Step 5).
  *
  * Proves the needs-backend controls call their mapped contract op and then
- * `router.refresh()` (the island → client.* → router.refresh seam, mirroring
- * project-overview/project-actions.test). The structural/order assertions live in
+ * `router.refresh()` (the island → client.* → router.refresh seam). The
+ * structural/order assertions live in
  * settings-page.test.tsx; here we only assert the mutation wiring.
  */
 

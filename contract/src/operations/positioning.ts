@@ -57,6 +57,9 @@ export const positioningOperations = {
       oneLiner: z.string().min(1),
       keywords: z.array(z.string()).length(3),
       productAnchorIds: z.array(id).default([]),
+      // [T-231⑥] 修改原因(可选,团队留痕)—— 记录这次为什么开新版本。additive:optional
+      // (存量调用方/AI confirm 不传也合法,服务端兜 ""),落 positioning_statements.change_reason 列。
+      changeReason: z.string().optional(),
     }),
     response: positioningStatementResource,
     fr: ["FR-POSITIONING-STATEMENT-CREATE"],

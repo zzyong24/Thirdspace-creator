@@ -20,7 +20,7 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-// The interactive island mounts `useRouter()` (batch wiring).
+// Stub next/navigation for the client island (jsdom has no app router).
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     refresh: vi.fn(),

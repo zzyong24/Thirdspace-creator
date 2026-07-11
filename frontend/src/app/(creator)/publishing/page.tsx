@@ -11,11 +11,11 @@
  * → `outputs.publications.list` (see `publishing-center-data.ts`). A 一稿多平台
  * fan-out — one output published to N platforms — surfaces N rows here. The
  * analytics rail (PublishingMetrics / PlatformComparisonChart / TrendChart /
- * TopContentList) has no real read path this wave and stays fixture-sourced.
+ * TopContentList) aggregates the same REAL snapshots.
  *
  * The assembly is bound to the request session's `ctx` so reads stay user-scoped.
- * When there are no real publications yet (the canonical seed is empty), the helper
- * falls back to the fixture baseline so the page does not regress to an empty table.
+ * [T-231⑤] 诚实降级:读失败 → 错误态 VM(页面渲 ErrorState,不再回退 fixture 假数据);
+ * 零条真实发布 → 诚实空态(publications:[],页面渲 EmptyState)。
  */
 import { PublishingCenterPage } from "@/features/publishing-center/publishing-center-page";
 import type { PublishingCenterDataClient } from "@/features/publishing-center/publishing-center-data";
@@ -39,8 +39,9 @@ export default async function PublishingCenterRoutePage({
   }
 
   // Bind the read assembly to the request's session ctx so the projects /
-  // outputs / publications reads stay user-scoped. Any read failure degrades
-  // inside the helper to the fixture baseline (the page never throws).
+  // outputs / publications reads stay user-scoped. [T-231⑤] Any read failure
+  // degrades inside the helper to an honest error VM (the page renders
+  // ErrorState; no fixture masking, and the page never throws).
   const client = createServerClient(
     session.ctx,
   ) as unknown as PublishingCenterDataClient;

@@ -68,6 +68,9 @@ let mockMessages: Array<{
   parts: Array<Record<string, unknown>>;
 }> = [];
 let mockStatus = "ready";
+// [T-231⑩] error/regenerate 可注入:断言「出错 → 重试按钮 → regenerate()」通路。
+const regenerate = vi.fn();
+let mockError: Error | null = null;
 vi.mock("@ai-sdk/react", () => ({
   useChat: () => ({
     messages: mockMessages,
@@ -76,7 +79,8 @@ vi.mock("@ai-sdk/react", () => ({
     status: mockStatus,
     // 读回把历史喂 setMessages —— 捕获它断言二次进入读回。
     setMessages: (...args: unknown[]) => setMessages(...args),
-    regenerate: vi.fn(),
+    regenerate: (...args: unknown[]) => regenerate(...args),
+    error: mockError,
   }),
 }));
 
@@ -123,6 +127,8 @@ beforeEach(() => {
   mockMessages = [];
   mockStatus = "ready";
   mockSearch = "copilot=open";
+  regenerate.mockReset();
+  mockError = null;
   // 每个用例从干净的会话存档起步(前一个用例可能写过 localStorage)。
   try {
     window.localStorage.clear();
@@ -446,6 +452,46 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     await user.click(screen.getByText("帮我写脚本开场"));
     expect(textarea.value).toBe("帮我写脚本开场");
     expect(screen.getByLabelText("提交提示给 Copilot")).not.toBeDisabled();
+  });
+
+  it("[T-231⑨] 带 prefill 的 chip → 预填完整话术(非 label),且**不自动发送**(T-055b)", async () => {
+    const user = userEvent.setup();
+    render(
+      <AICopilotContent
+        viewModel={{
+          ...VM,
+          chips: [
+            {
+              id: "script",
+              label: "生成脚本",
+              icon: "wand",
+              functionKey: "script.draft",
+              prefill: "帮我为这条内容起草一版完整的分镜口播脚本。",
+            },
+          ],
+        }}
+      />,
+    );
+    const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement;
+    await user.click(screen.getByText("生成脚本"));
+    // 完整话术进输入框(不是 label 字条),但绝不自动发。
+    expect(textarea.value).toBe("帮我为这条内容起草一版完整的分镜口播脚本。");
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  it("[T-231⑩] 对话出错 → 渲「重试」按钮,点击走 regenerate()(重发最后一轮)", async () => {
+    const user = userEvent.setup();
+    mockError = new Error("boom");
+    mockMessages = [
+      { id: "u1", role: "user", parts: [{ type: "text", text: "你好" }] },
+    ];
+    render(<AICopilotContent viewModel={VM} />);
+    const retry = document.querySelector(
+      '[data-slot="copilot-error-retry"]',
+    ) as HTMLButtonElement;
+    expect(retry).not.toBeNull();
+    await user.click(retry);
+    expect(regenerate).toHaveBeenCalledTimes(1);
   });
 
   it("[T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话)", async () => {

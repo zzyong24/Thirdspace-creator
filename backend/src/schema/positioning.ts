@@ -56,6 +56,8 @@ export const positioningStatements = pgTable("positioning_statements", {
   versionNumber: integer("version_number").notNull(),
   createdByType: text("created_by_type").notNull().default("human"), // human|ai
   aiTaskId: text("ai_task_id"), // nullable — FK soft to ai_tasks (AI 演进回流)
+  // [T-231⑥] 修改原因(团队留痕)—— 这次为什么开新版本。additive,存量行 ''(迁移 0034)。
+  changeReason: text("change_reason").notNull().default(""),
   createdAt: text("created_at").notNull(),
   // NO updated_at — rows never update (immutable version chain).
 });
@@ -100,6 +102,7 @@ CREATE TABLE IF NOT EXISTS positioning_statements (
   version_number INTEGER NOT NULL,
   created_by_type TEXT NOT NULL DEFAULT 'human',
   ai_task_id TEXT,
+  change_reason TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_positioning_statements_version ON positioning_statements (profile_id, version_number);
@@ -107,4 +110,6 @@ CREATE INDEX IF NOT EXISTS idx_positioning_statements_current ON positioning_sta
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS positioning_statement_id TEXT;
 -- [T-136 多账号] positioning_statements 按号隔离列(additive、幂等)。存量行 NULL,迁移 0025 backfill。
 ALTER TABLE positioning_statements ADD COLUMN IF NOT EXISTS account_id TEXT;
+-- [T-231⑥] 修改原因(团队留痕,additive、幂等)。存量行 ''(真库走迁移 0034,此处供 pglite/seed 新库)。
+ALTER TABLE positioning_statements ADD COLUMN IF NOT EXISTS change_reason TEXT NOT NULL DEFAULT '';
 `;

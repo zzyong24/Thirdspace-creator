@@ -90,6 +90,8 @@ export interface CreateStatementInput {
   productAnchorIds: string[];
   createdByType?: "human" | "ai";
   aiTaskId?: string | null;
+  // [T-231⑥] 修改原因(可选,团队留痕)—— 缺省 = ""(存量调用方/AI confirm 不传也合法)。
+  changeReason?: string;
 }
 
 // The gate command. `subjectType:"candidate"` accepts an inline payload until the
@@ -291,6 +293,8 @@ export function createPositioningService(
         versionNumber,
         createdByType: input.createdByType ?? "human",
         aiTaskId: input.aiTaskId ?? null,
+        // [T-231⑥] 修改原因留痕(trim 后落库;未填 = "" 诚实表示"没写原因")。
+        changeReason: (input.changeReason ?? "").trim(),
       });
       return toPositioningStatementDto(row);
     },

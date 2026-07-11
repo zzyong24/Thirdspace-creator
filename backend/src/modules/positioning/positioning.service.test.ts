@@ -112,6 +112,30 @@ describe("positioning service", () => {
     ).toBeUndefined();
   });
 
+  it("[T-231⑥] changeReason 落库:传了存 trim 后原文,不传存 ''(留痕不丢)", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await service.upsertProfile(ctx, PROFILE_INPUT);
+    const withReason = await service.createStatementVersion(ctx, {
+      oneLiner: "v1 文案",
+      keywords: ["论文", "代码", "工程化"],
+      productAnchorIds: [],
+      changeReason: "  受众从泛开发者收窄到 AI 应用工程师 ",
+    });
+    const without = await service.createStatementVersion(ctx, {
+      oneLiner: "v2 文案",
+      keywords: ["论文", "代码", "工程化"],
+      productAnchorIds: [],
+    });
+    // DTO 不含 changeReason(留痕列,读面后续接)—— 直接查行验证真落库。
+    const { positioningStatements } = await import("./positioning.db-schema");
+    const rows = await db.select().from(positioningStatements);
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    expect(byId.get(withReason.id)?.changeReason).toBe(
+      "受众从泛开发者收窄到 AI 应用工程师",
+    );
+    expect(byId.get(without.id)?.changeReason).toBe("");
+  });
+
   it("rejects a statement whose keywords are not exactly 3", async () => {
     const service = makeService(db, makeProjectsPort());
     await service.upsertProfile(ctx, PROFILE_INPUT);

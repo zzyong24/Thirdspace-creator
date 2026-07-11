@@ -14,15 +14,53 @@
 
 import type { CopilotContentViewModel } from "@/features/copilot/ai-copilot-content";
 
+// [T-231⑨] chips 从「填 label 的字条」升级为真预调:每个 chip 绑语义最贴的 functionKey
+// (发送时置顶该工具,服务端 applyFunctionKey/forcedTool)+ 完整预填话术(与
+// ai-copilot-content 的 FUNCTION_KEY_PREFILL 同词条;预填不自动发,T-055b 铁律)。
+// 原「优化标题」chip 已删 —— 没有对应工具(诚实优先,不摆做不到的按钮)。
 const SUGGESTED_ACTIONS: CopilotContentViewModel["chips"] = [
-  { id: "analyze", label: "分析机会", icon: "crosshair" },
-  { id: "script", label: "生成脚本", icon: "wand" },
-  { id: "assets", label: "寻找素材", icon: "file-search" },
-  { id: "title", label: "优化标题", icon: "sparkles" },
-  { id: "cover", label: "生成封面", icon: "image" },
-  { id: "review", label: "发布复盘", icon: "line-chart" },
+  {
+    id: "analyze",
+    label: "分析机会",
+    icon: "crosshair",
+    functionKey: "topic.generate",
+    prefill: "基于我的定位和真实信号,出一批选题候选。",
+  },
+  {
+    id: "script",
+    label: "生成脚本",
+    icon: "wand",
+    functionKey: "script.draft",
+    prefill: "帮我为这条内容起草一版完整的分镜口播脚本。",
+  },
+  {
+    id: "assets",
+    label: "寻找素材",
+    icon: "file-search",
+    functionKey: "material.gather",
+    prefill: "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
+  },
+  {
+    id: "cover",
+    label: "生成封面",
+    icon: "image",
+    functionKey: "material.generate",
+    // 话术明确依赖生图模型(未配时工具卡已有「去设置」降级,不另做禁用逻辑)。
+    prefill:
+      "帮我为这条内容生成几张封面图候选(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
+  },
+  {
+    id: "review",
+    label: "发布复盘",
+    icon: "line-chart",
+    functionKey: "review.analyze",
+    prefill: "帮我复盘,提炼可复用的爆款要素沉淀成经验。",
+  },
 ];
 
+// [T-231⑨] 推荐指令同机制升级:绑 functionKey + 完整预填话术(点了填输入框,不自动发)。
+// 原「优化标题和封面」改为「生成封面候选」——「优化标题」无对应工具(同 chips 的删除理由),
+// 封面有真工具 material.generate,保留有真能力的那半。
 const RECOMMENDED_COMMANDS: CopilotContentViewModel["recommendedCommands"] = [
   {
     id: "topic-from-positioning",
@@ -30,6 +68,8 @@ const RECOMMENDED_COMMANDS: CopilotContentViewModel["recommendedCommands"] = [
     tone: "pink",
     title: "基于我的定位出选题",
     description: "结合账号画像生成选题候选",
+    functionKey: "topic.generate",
+    prefill: "基于我的定位和真实信号,出一批选题候选。",
   },
   {
     id: "video-script",
@@ -37,6 +77,8 @@ const RECOMMENDED_COMMANDS: CopilotContentViewModel["recommendedCommands"] = [
     tone: "violet",
     title: "生成视频脚本大纲",
     description: "基于主题生成结构化脚本",
+    functionKey: "script.draft",
+    prefill: "帮我为这条内容起草一版完整的分镜口播脚本。",
   },
   {
     id: "find-assets",
@@ -44,13 +86,18 @@ const RECOMMENDED_COMMANDS: CopilotContentViewModel["recommendedCommands"] = [
     tone: "mint",
     title: "寻找相关素材",
     description: "在全局素材库中搜索相关素材",
+    functionKey: "material.gather",
+    prefill: "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
   },
   {
-    id: "title-cover",
+    id: "generate-cover",
     icon: "sparkles",
     tone: "orange",
-    title: "优化标题和封面",
-    description: "生成更吸引人的标题和封面",
+    title: "生成封面候选",
+    description: "用配置的生图模型生成封面图候选",
+    functionKey: "material.generate",
+    prefill:
+      "帮我为这条内容生成几张封面图候选(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
   },
   {
     id: "publish-review",
@@ -58,6 +105,8 @@ const RECOMMENDED_COMMANDS: CopilotContentViewModel["recommendedCommands"] = [
     tone: "indigo",
     title: "发布效果复盘",
     description: "分析发布数据并给出优化建议",
+    functionKey: "review.analyze",
+    prefill: "帮我复盘,提炼可复用的爆款要素沉淀成经验。",
   },
 ];
 
@@ -112,9 +161,10 @@ const QUICK_ENTRIES: CopilotContentViewModel["quickEntries"] = [
 // bug #5:原为「分析竞品策略 / 寻找最新数据」——「竞品/对标」方向已砍(用户决策),且这块原配的
 // 「检测到你最近在研究『AI 浏览器』」是 fixture 假数据。改成不编造来源、不涉对标的通用创作起点,
 // 点了直接填入对话框,走真实后端。
+// [T-231⑨] 快速开始同机制升级:title 即预填话术,另绑语义工具置顶。
 const SMART_RECOMMENDATIONS: CopilotContentViewModel["smartRecommendations"] = [
-  { id: "rec-1", title: "基于我的定位出 5 个选题" },
-  { id: "rec-2", title: "帮我复盘最近一条发布" },
+  { id: "rec-1", title: "基于我的定位出 5 个选题", functionKey: "topic.generate" },
+  { id: "rec-2", title: "帮我复盘最近一条发布", functionKey: "review.analyze" },
 ];
 
 export function buildCopilotViewModel(): CopilotContentViewModel {

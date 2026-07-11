@@ -9,7 +9,6 @@
  *   ├── Two-column grid
  *   │   ├── Left stack
  *   │   │   ├── PublishingToolbar  (search + filter affordances)
- *   │   │   ├── BatchOperationBar  (全选 + 批量发布/下架/修改时间)
  *   │   │   └── PublicationTable   (7 columns: 内容 / 项目 / 平台 /
  *   │   │                             发布时间 / 状态 / 表现 / 操作)
  *   │   │       └── PublicationPerformanceRow[] (each row keeps a platform
@@ -34,10 +33,10 @@
  *  - No content editor entry is added (page-specs §13 "禁止改变":
  *    "不新增内容编辑入口").
  *  - Platform icons and content thumbnails are preserved.
- *  - No new product structure, no fixture mutation, no Date.now /
- *    Math.random / network access.
- *  - BatchOperationBar is placed between toolbar and table, aligned
- *    with the design reference.
+ *  - No new product structure, no fixture mutation, no Math.random /
+ *    network access ([T-231④] 例外:近 N 天 chip 以挂载时的真实"今天"为基准)。
+ *  - [T-231①] BatchOperationBar(全选 + 批量发布/下架/修改时间)已删:
+ *    live publisher 是 mock,批量 transition 会铸假数据/毁真数据。
  *
  * The page is a Server Component. It does not own a Sidebar or a
  * TopHeader — those live in `(creator)/layout.tsx` and are mounted
@@ -141,7 +140,7 @@ export interface TopContentRow {
 // The page renders the shared page-state placeholders when the ViewModel
 // envelope signals loading / error / empty, and otherwise mounts the
 // Client island (`PublishingCenterInteractiveRegion`) which owns the
-// wired tabs / search / filters / batch-select / pagination / row
+// wired tabs / search / filters / pagination / row
 // actions. The default-state DOM is equivalent to the previous
 // server-only render so the visual baseline holds.
 // ---------------------------------------------------------------------------

@@ -79,6 +79,8 @@ export interface InsertStatementInput {
   versionNumber: number;
   createdByType: string;
   aiTaskId: string | null;
+  // [T-231⑥] 修改原因(团队留痕);缺省/"" = 未填。行不可变,只在 INSERT 时写入。
+  changeReason?: string;
 }
 
 export interface PositioningRepository {
@@ -284,6 +286,8 @@ export function createPositioningRepository(
           versionNumber: input.versionNumber,
           createdByType: input.createdByType,
           aiTaskId: input.aiTaskId,
+          // [T-231⑥] 修改原因留痕落列(缺省 = "" 未填)。
+          changeReason: input.changeReason ?? "",
           createdAt: deps.now(),
         })
         .returning();

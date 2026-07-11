@@ -6,7 +6,6 @@
  *  - content-type tab switching filters the publication table,
  *  - the search box narrows the rows,
  *  - filter chips narrow the rows,
- *  - row checkboxes + select-all drive the batch-selected count,
  *  - pagination changes the visible page,
  *  - a row "查看" action marks the row active,
  * and the LOADING / ERROR / EMPTY state rendering driven by the
@@ -18,22 +17,11 @@
 
 import * as React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { buildPublishingCenterViewModel } from "@/fixtures/selectors";
 import { buildPageScenario } from "@/fixtures/scenarios";
 import { PublishingCenterPage } from "./publishing-center-page";
-
-// The interactive island mounts `useRouter()` (Module 10 Step 5 batch wiring);
-// these client-state tests don't assert on the network so a stub router suffices.
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    refresh: vi.fn(),
-    replace: vi.fn(),
-    push: vi.fn(),
-    back: vi.fn(),
-  }),
-}));
 
 afterEach(() => {
   cleanup();
@@ -89,33 +77,16 @@ describe("PublishingCenterPage interactions", () => {
     expect(countRows(container)).toBeLessThanOrEqual(before);
   });
 
-  it("tracks the batch-selected count via a row checkbox", () => {
+  // [T-231①] 批量选择/批量操作已删(live publisher 是 mock,批量 transition 会
+  // 铸假数据/毁真数据),对应的 batch-selected-count / select-all 测试同步移除。
+  it("no batch operation bar nor row checkboxes render", () => {
     const { container } = render(<PublishingCenterPage />);
-    const count = container.querySelector(
-      '[data-slot="batch-selected-count"]',
-    );
-    expect(count?.textContent).toBe("0");
-    const checkbox = container.querySelector<HTMLInputElement>(
-      '[data-slot="publication-row-checkbox"]',
-    );
-    expect(checkbox).not.toBeNull();
-    fireEvent.click(checkbox!);
     expect(
-      container.querySelector('[data-slot="batch-selected-count"]')?.textContent,
-    ).toBe("1");
-  });
-
-  it("selects all visible rows via the select-all control", () => {
-    const { container } = render(<PublishingCenterPage />);
-    const visible = countRows(container);
-    const selectAll = container.querySelector<HTMLButtonElement>(
-      '[data-slot="batch-select-all"]',
-    );
-    expect(selectAll).not.toBeNull();
-    fireEvent.click(selectAll!);
+      container.querySelector('[data-slot="batch-operation-bar"]'),
+    ).toBeNull();
     expect(
-      container.querySelector('[data-slot="batch-selected-count"]')?.textContent,
-    ).toBe(String(visible));
+      container.querySelector('[data-slot="publication-row-checkbox"]'),
+    ).toBeNull();
   });
 
   it("changes the page via pagination", () => {

@@ -129,12 +129,9 @@ export function AssetsInteractiveRegion({
   // are minted server-side by the AssetsService + MockObjectStorage.
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
-  // GAP-AST-1: an honest aria-live status line. Download / 复制链接 / 收藏 are
-  // 规划中 (real object storage + a 收藏 field have no op this wave), so instead
-  // of pretending a file was downloaded / a public link copied / a favorite
-  // saved, the handler announces the 规划中 state. The detail-panel buttons keep
-  // a 规划中 badge once that prop lands (followUp — the panel is a shared
-  // component outside this lane).
+  // GAP-AST-1: an honest aria-live status line for the wired actions.
+  // [T-231③] 复制链接已改常驻 disabled + 「规划中」徽标(asset-detail-panel.tsx),
+  // 不再经此状态行播报。
   const [actionStatus, setActionStatus] = React.useState<string>("");
 
   // E3 下载: GET assets.get confirms ownership + currentFileId, but the real
@@ -204,29 +201,9 @@ export function AssetsInteractiveRegion({
     [],
   );
 
-  // E4 复制链接: GET assets.get derives a `mock://` signed URL (no real object
-  // storage this wave). Best-effort clipboard write of the mock URL, but the
-  // status line is honest that it is a placeholder link (规划中).
-  const handleCopyLink = React.useCallback(
-    (assetId: string) => {
-      startTransition(async () => {
-        await client.getAsset({
-          params: { assetId },
-          query: undefined,
-          body: undefined,
-        });
-        try {
-          await navigator.clipboard?.writeText(
-            `mock://object-storage/signed/${assetId}`,
-          );
-        } catch {
-          // No clipboard (SSR/jsdom/denied) — the op call is the wired part.
-        }
-        setActionStatus("公开链接规划中：已复制占位链接，真实对象存储签名链接尚未接入。");
-      });
-    },
-    [],
-  );
+  // [T-231③] E4 复制链接:真实对象存储签名链接尚未接入,原实现往剪贴板写
+  // `mock://` 死链误导用户。按钮改为常驻 disabled + 「规划中」徽标(见
+  // asset-detail-panel.tsx),不再写剪贴板、不再发 assets.get。
 
   // E5 收藏 (Toggle favorite): REAL. POST assets.favorite.toggle flips the
   // asset's persisted isFavorite flag (replacing the old misleading
@@ -382,14 +359,13 @@ export function AssetsInteractiveRegion({
           asset={selected}
           usageHistory={viewModel.usageHistory}
           onDownload={handleDownload}
-          onCopyLink={handleCopyLink}
           onFavorite={handleFavorite}
           onTrash={handleTrash}
           onReveal={handleReveal}
           actionsPending={pending}
         />
         {/* GAP-AST-1: honest status line. 收藏 is REAL (persisted toggle);
-            download / 复制链接 stay 规划中 — we never claim a byte download / real
+            复制链接 已常驻 disabled 规划中 ([T-231③]) — we never claim a real
             public link succeeded. */}
         <p
           data-slot="asset-action-status"

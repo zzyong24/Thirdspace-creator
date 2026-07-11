@@ -64,13 +64,10 @@ test.describe("Publishing Center page", () => {
       ),
     ).toBeVisible();
 
-    // BatchOperationBar present between toolbar and table.
+    // [T-231①] BatchOperationBar 已删(批量发布/下架/修改时间无真实 publisher)。
     await expect(
       main.locator('[data-slot="batch-operation-bar"]'),
-    ).toBeVisible();
-    await expect(
-      main.locator('[data-slot="batch-select-all"]'),
-    ).toBeVisible();
+    ).toHaveCount(0);
 
     // PublicationTable with 7 approved columns in spec order.
     const table = main.locator('[data-slot="publication-table"]');
