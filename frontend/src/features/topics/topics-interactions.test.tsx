@@ -68,8 +68,9 @@ import {
   CandidateCard,
   CandidateSortControl,
   TopicsWorkspace,
-  BenchmarkSourcesButton,
 } from "./topics-interactive-region";
+// [T-235e] 对标源面板迁入统一「信号源」弹窗(对标博主 tab);T-222 立即采集行为不变,入口换了。
+import { SignalSourcesButton } from "./topics-supply-region";
 import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
 import { TopicGenerateBand } from "./topic-generate-island";
 import { TopicsView } from "./topics-page";
@@ -470,8 +471,13 @@ describe("[T-222] 对标源立即采集", () => {
   }
 
   it("有启用对标源 → 点「立即采集」找 benchmark 作业 runNow + 成功提示 + refresh", async () => {
-    render(<BenchmarkSourcesButton sources={[benchSource()]} />);
-    fireEvent.click(screen.getByTestId("benchmark-sources-trigger")); // 开对话框
+    render(
+      <SignalSourcesButton
+        benchmarkSources={[benchSource()]}
+        defaultTab="benchmark"
+      />,
+    );
+    fireEvent.click(screen.getByTestId("signal-sources-trigger")); // 开对话框
     const btn = screen.getByTestId("benchmark-collect-now");
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -501,16 +507,24 @@ describe("[T-222] 对标源立即采集", () => {
 
   it("无启用对标源 → 「立即采集」禁用(空跑无意义)", () => {
     render(
-      <BenchmarkSourcesButton sources={[benchSource({ enabled: false })]} />,
+      <SignalSourcesButton
+        benchmarkSources={[benchSource({ enabled: false })]}
+        defaultTab="benchmark"
+      />,
     );
-    fireEvent.click(screen.getByTestId("benchmark-sources-trigger"));
+    fireEvent.click(screen.getByTestId("signal-sources-trigger"));
     expect(screen.getByTestId("benchmark-collect-now")).toBeDisabled();
   });
 
   it("无 benchmark 作业(未绑抖音)→ 诚实提示,不假装采集", async () => {
     mockClient.listScheduledJobs.mockResolvedValueOnce([]);
-    render(<BenchmarkSourcesButton sources={[benchSource()]} />);
-    fireEvent.click(screen.getByTestId("benchmark-sources-trigger"));
+    render(
+      <SignalSourcesButton
+        benchmarkSources={[benchSource()]}
+        defaultTab="benchmark"
+      />,
+    );
+    fireEvent.click(screen.getByTestId("signal-sources-trigger"));
     fireEvent.click(screen.getByTestId("benchmark-collect-now"));
     await waitFor(() =>
       expect(screen.getByTestId("benchmark-collect-message")).toHaveAttribute(

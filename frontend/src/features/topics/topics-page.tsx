@@ -37,15 +37,22 @@ import type {
   TopicsOverviewResource,
 } from "@creatoros/backend/modules/candidate";
 import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
+import type { TrendSourceResource } from "@creatoros/backend/modules/trend-sources";
 
 import {
   TopicsWorkspace,
-  BenchmarkSourcesButton,
   type CandidateSortKey,
 } from "./topics-interactive-region";
 import {
   TopicGenerateBand,
 } from "./topic-generate-island";
+// [T-235e] 被服务感知:今日新选题条带 + 供给链健康条 + 统一「信号源」弹窗(三 tab)。
+import {
+  TodayTopicsStrip,
+  SupplyHealthStrip,
+  SignalSourcesButton,
+  type SupplyHealth,
+} from "./topics-supply-region";
 
 /**
  * Structural seam for the server reads. The route passes a session-scoped
@@ -59,6 +66,12 @@ export type TopicsReadClient = Pick<
   | "pendingTopicReview"
   // [T-216] 对标源登记面板的服务端读源(选题/对标强化 §2.1)。
   | "listBenchmarkSources"
+  // [T-235e] 信号源弹窗 tab1(网页信源)读源。
+  | "listTrendSources"
+  // [T-235e] 供给链健康条:benchmark / topic.daily 作业 lastRunAt。
+  | "listScheduledJobs"
+  // [T-235e] 黑马关键词 tab(展示型 v1):定位 keywords。
+  | "getPositioningCenter"
 >;
 
 export interface TopicsViewModel {
@@ -69,6 +82,14 @@ export interface TopicsViewModel {
   readonly pendingReview: null;
   /** [T-216] 已登记的对标源(对标源登记面板)。可选:测试/无源账号缺省空列表。 */
   readonly benchmarkSources?: BenchmarkSourceResource[];
+  /** [T-235e] 已登记的网页信源(信号源弹窗 tab1)。可选:缺省空列表。 */
+  readonly trendSources?: TrendSourceResource[];
+  /** [T-235e] 供给链健康条的调度实绩;读不到 → undefined → 各环节显「—」诚实降级。 */
+  readonly supplyHealth?: SupplyHealth;
+  /** [T-235e] 本地自然日起点 ISO(服务端算好传入,渲染无 Date.now);缺省 → 今日条带空态。 */
+  readonly dayStartIso?: string;
+  /** [T-235e] 黑马关键词(展示型 v1 = 定位 keywords)。可选:缺省空列表。 */
+  readonly darkhorseKeywords?: string[];
 }
 
 export interface TopicsPageProps {
@@ -127,9 +148,70 @@ async function loadViewModel(
     query: { page: 1, pageSize: 100 },
     body: undefined,
   })) as unknown as BenchmarkSourceResource[];
+  // [T-235e] 信号源 / 健康条 / 黑马关键词 —— 每路独立 try/catch:任一读挂了只降级该环节
+  // (显「—」/ 空列表),不拖垮整页(诚实降级,不编数)。
+  let trendSources: TrendSourceResource[] = [];
+  try {
+    trendSources = (await client.listTrendSources({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as unknown as TrendSourceResource[];
+  } catch {
+    trendSources = [];
+  }
+  let supplyHealth: SupplyHealth | undefined;
+  try {
+    const jobsRaw = (await client.listScheduledJobs({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as unknown as Array<{
+      sourceKind: string;
+      enabled: boolean;
+      lastRunAt: string | null;
+    }>;
+    const jobs = Array.isArray(jobsRaw) ? jobsRaw : [];
+    const lastRunOf = (kind: string): string | null =>
+      jobs
+        .filter((j) => j.sourceKind === kind && j.lastRunAt)
+        .map((j) => j.lastRunAt as string)
+        .sort()
+        .at(-1) ?? null;
+    supplyHealth = {
+      benchmarkLastRunAt: lastRunOf("benchmark"),
+      topicDailyLastRunAt: lastRunOf("topic.daily"),
+    };
+  } catch {
+    supplyHealth = undefined; // 调度读不到 → 健康条时间环节显「—」
+  }
+  let darkhorseKeywords: string[] = [];
+  try {
+    const center = (await client.getPositioningCenter({
+      params: undefined,
+      query: undefined,
+      body: undefined,
+    })) as unknown as { keywords?: string[] };
+    darkhorseKeywords = center?.keywords ?? [];
+  } catch {
+    darkhorseKeywords = [];
+  }
+  // 本地自然日起点(服务端一次算好传入,保持渲染纯净 —— C-5 渲染内无 Date.now)。
+  const dayStart = new Date();
+  dayStart.setHours(0, 0, 0, 0);
   // [T-060①] TopicReviewDialog 弹窗任务流退役 —— pendingTopicReview 不再消费
   // (对话内 ChatCandidateCard 即出即采,没有「待审阅弹窗」概念)。
-  return { candidates, overview, sort, pendingReview: null, benchmarkSources };
+  return {
+    candidates,
+    overview,
+    sort,
+    pendingReview: null,
+    benchmarkSources,
+    trendSources,
+    supplyHealth,
+    dayStartIso: dayStart.toISOString(),
+    darkhorseKeywords,
+  };
 }
 
 // Pure render — split out so tests can drive it synchronously with a fixed VM.
@@ -144,6 +226,10 @@ export function TopicsView({
     sort,
     pendingReview,
     benchmarkSources = [],
+    trendSources = [],
+    supplyHealth,
+    dayStartIso,
+    darkhorseKeywords = [],
   } = viewModel;
 
   return (
@@ -161,11 +247,26 @@ export function TopicsView({
             从真实信号出题、补全选题卡、择优立项——一条选题从灵感到立项的全流程。
           </p>
         </div>
-        {/* [T-216] 对标源登记入口(选题/对标强化 §2.1)。 */}
-        <BenchmarkSourcesButton sources={benchmarkSources} />
+        {/* [T-235e] 统一「信号源」入口(网页信源 / 对标博主 / 黑马关键词 三 tab),
+            替换原「对标源」按钮 —— 心智=「我的选题信号源」。 */}
+        <SignalSourcesButton
+          benchmarkSources={benchmarkSources}
+          trendSources={trendSources}
+          darkhorseKeywords={darkhorseKeywords}
+        />
       </header>
 
-      {/* 1. AI 选题会 带 (钉住·固定高度,候选/步骤进弹窗) */}
+      {/* [T-235e·②] 供给链健康条:灰色细条一行,对标采集→拆解→黑马→出题→待审,点击跳 /automations。 */}
+      <SupplyHealthStrip
+        health={supplyHealth}
+        candidates={candidates}
+        dayStartIso={dayStartIso}
+      />
+
+      {/* [T-235e·①] 今日新选题:页顶横向滚动卡片带(来源徽标 + 一句依据;空态诚实)。 */}
+      <TodayTopicsStrip candidates={candidates} dayStartIso={dayStartIso} />
+
+      {/* 1. AI 选题会 带 (钉住·固定高度,候选/步骤进弹窗) —— 4 依据按钮保留降级为「手动加餐」。 */}
       <div className="shrink-0">
         <TopicGenerateBand basis={overview.basis} pendingReview={pendingReview} />
       </div>

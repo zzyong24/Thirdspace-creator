@@ -27,7 +27,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, Target, type LucideIcon } from "lucide-react";
+import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, FlaskConical, type LucideIcon } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
@@ -67,7 +67,8 @@ const SORT_LABELS: Record<CandidateSortKey, string> = {
 // ── shared mutation seam ────────────────────────────────────────────────────────
 // A `pending` guard blocks concurrent writes; on success it runs `after` (defaults to
 // router.refresh) so the server re-reads persisted rows.
-function useMutation() {
+// [T-235e] export:信号源弹窗(topics-supply-region)的 trend.sources.* mutation 复用同一 seam。
+export function useMutation() {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
   const run = React.useCallback(
@@ -177,6 +178,11 @@ export function CandidateCard({
   const { selectedId, select } = React.useContext(SelectionCtx);
   const selected = selectedId === candidate.id;
   const card = candidate.card;
+  // [T-235d/e] 实验候选(正向归因回流 next_experiments 进池)带 card.attributionId 溯源;
+  // 徽标可点开看归因依据(简版:runner 把归因引用写在 angle 里,展开显示,不开新页面)——
+  // 「系统在学我」的最强感知点。
+  const isExperiment = Boolean(card.attributionId);
+  const [attributionOpen, setAttributionOpen] = React.useState(false);
 
   function promote() {
     run(
@@ -230,9 +236,35 @@ export function CandidateCard({
                 {ROLE_LABELS[candidate.contentRole ?? ""]}
               </Badge>
             ) : null}
+            {isExperiment ? (
+              <button
+                type="button"
+                data-testid="experiment-badge"
+                title="来自正向归因回流的实验候选,点击看归因依据"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAttributionOpen((v) => !v);
+                }}
+                className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-brand/50 px-1.5 py-0.5 text-[10px] font-medium text-brand hover:bg-brand-soft"
+              >
+                <FlaskConical className="size-3" />
+                实验
+              </button>
+            ) : null}
           </span>
         </span>
       </div>
+
+      {/* [T-235d/e] 归因依据展开(实验徽标点开):angle 里携带归因引用(runner 落库时写入),
+          无内容诚实提示。 */}
+      {isExperiment && attributionOpen ? (
+        <p
+          data-testid="experiment-attribution"
+          className="rounded-control border border-brand/30 bg-brand-soft/40 px-2.5 py-1.5 text-[11px] leading-relaxed text-foreground"
+        >
+          {candidate.angle || "该实验候选未携带归因引用文本(可在归因资产里溯源)。"}
+        </p>
+      ) : null}
 
       <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-muted-foreground">
         {meta.map((m, i) => (
@@ -467,7 +499,8 @@ const DIFFICULTY_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "high", label: "高" },
 ];
 
-function FieldRow({
+// [T-235e] export:信号源弹窗(topics-supply-region)的网页信源表单复用同一行样式。
+export function FieldRow({
   label,
   required,
   children,
@@ -1098,70 +1131,30 @@ function BenchmarkSourceList({
   );
 }
 
-export function BenchmarkSourcesButton({
+// [T-235e] 对标博主面板 —— 原「对标源」独立弹窗退役,登记表单 + 立即采集(T-222)+ 列表
+// **整体迁入**统一「信号源」弹窗的「对标博主」tab(topics-supply-region SignalSourcesButton)。
+// 行为不变:登记 create、立即采集 listScheduledJobs(benchmark)→runNow、行内 toggle/remove。
+export function BenchmarkSourcesPanel({
   sources,
 }: {
   readonly sources: BenchmarkSourceResource[];
 }) {
-  const [open, setOpen] = React.useState(false);
   return (
-    <>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        data-testid="benchmark-sources-trigger"
-        className="h-8 shrink-0 gap-1.5 px-3 text-xs"
-        onClick={() => setOpen(true)}
-      >
-        <Target className="size-3.5" />
-        对标源
-        {sources.length > 0 ? (
-          <Badge
-            variant="secondary"
-            className="ml-0.5 text-[10px] tabular-nums"
-          >
-            {sources.length}
-          </Badge>
-        ) : null}
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent
-          data-testid="benchmark-sources-dialog"
-          className="flex max-h-[85vh] flex-col gap-0 p-0 sm:max-w-lg"
-        >
-          <DialogHeader className="border-b px-5 py-4">
-            <DialogTitle>对标源</DialogTitle>
-            <DialogDescription>
-              登记要对标的抖音博主(sec_uid)。定时采集会抓这些号的公开爆款，拆解后自动进选题池。
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
-            <BenchmarkSourceForm />
-            {/* [T-222] 立即采集:登记完不必等每天定时,一键触发抓所有启用对标源的公开爆款。
-                无启用源时禁用(空跑无意义)。 */}
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] text-muted-foreground">
-                每天定时自动采集;想马上抓就点右边。
-              </span>
-              <BenchmarkCollectNowButton
-                disabled={!sources.some((s) => s.enabled)}
-              />
-            </div>
-            <BenchmarkSourceList sources={sources} />
-          </div>
-          <DialogFooter className="border-t">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setOpen(false)}
-            >
-              关闭
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    <div className="flex flex-col gap-4">
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        登记要对标的抖音博主(sec_uid)。定时采集会抓这些号的公开爆款，拆解后自动进选题池。
+      </p>
+      <BenchmarkSourceForm />
+      {/* [T-222] 立即采集:登记完不必等每天定时,一键触发抓所有启用对标源的公开爆款。
+          无启用源时禁用(空跑无意义)。 */}
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] text-muted-foreground">
+          每天定时自动采集;想马上抓就点右边。
+        </span>
+        <BenchmarkCollectNowButton disabled={!sources.some((s) => s.enabled)} />
+      </div>
+      <BenchmarkSourceList sources={sources} />
+    </div>
   );
 }
 

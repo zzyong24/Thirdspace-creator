@@ -37,6 +37,7 @@ import type { PositioningCenterViewModel } from "./positioning-center";
 afterEach(cleanup);
 
 const STATEMENT = (versionNumber: number, oneLiner: string, ai = false) => ({
+  changeReason: "", // [T-234 读侧补] resource 新增字段,fixture 同步
   id: `posstmt-${versionNumber}`,
   userId: "user-a",
   profileId: "profile-1",
