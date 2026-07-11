@@ -9,6 +9,9 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-209 | 复盘页假按钮审计+去除 + 布局修 | 📋 | — | 用户截图复盘页:①「复盘编辑」区多个按钮疑假(成功亮点下拉/洞察标题/补充说明/添加洞察/完成复盘/开始复盘)②右上角「分享」+「···」假按钮。逐个查后端有无真 op:能实现的接线、**不能实现的直接去掉**(诚实不留死按钮)。③布局奇怪(用户反馈)——顺带理顺复盘页栅格/空区。纯前端为主。 |
+| T-210 | 定位工作流改多轮对话访谈(elicitation) | 📋 | — | 用户:定位不是填表,要**多轮问答引导**。按自媒体知识库经验依次问:想做还是已做自媒体?定位确认了吗?想干嘛(变现/涨粉)?主要产品是什么?——问题让用户答,AI 据答+数据帮他收敛定位。**关联 T-185 访谈式 Skill**(已过审):复用 chat-runner 多轮 elicitation,落定位。改交互:先给用户看方案再动手(大改前端先预览)。 |
+| T-211 | 知识库预设内容正序排列 + 去掉「Win 短视频私教」预设 | 📋 | — | 用户:知识库预设课程/内容现**倒序**,改**正序**(按课程/章节自然序);且**去掉「Win 短视频私教」**这个预设(win-video-tutor seed 不再作为默认知识库内容展示)。查 seed/列表排序口径改。 |
 | T-207 | 启动时 sweep 僵尸 job_run(app 被杀/崩后 run 挂 running 挡后续采集)| 📋 | — | 真机逮到:反复重启后 3 个 job_run 挂 running(killed 进程未收尾)→ 幂等短路把新采集/立即运行全 dedup 挡住(限流未冷却纯僵尸阻塞),要等 30min stale-sweep 才解。对分发版:用户关 app 于采集中 → 次日采集可能被挡。修:启动时(或 stale-sweep 提前)把超过合理时长仍 running 的 job_run 标 failed（fire-and-forget 兜底，SPEC §5/§10 已提悬 running 概念）。地基层小改。 |
 | T-206 | 隐藏过滤真因:xlsx「审核状态」实际字面量「公开/自见」未识别 | ✅ 2026-07-11·**诊断日志一击命中**:self.detail 明细导出 75 条/落库 75 条/未匹配 0,但可见性同步「状态判不出 75、标隐藏 0」——采样值是「公开」「自见」而非代码找的「已通过」「仅自己可见」→全判 unknown→隐藏一个不标→列表过滤空转。修:visibilityFromDetailStatus 补「自见」→hidden、「公开」→visible;可见作品 platform_status 归一为「已通过」(否则原值「公开」被列表/重活判据 `=已通过` 误杀)。douyin-work-detail 27 测(+T-206)+双端 tsc 绿·待重 build+触发 self.detail 真机验隐藏被过滤 |
 | T-205 | 抖音登录态跨版本持久(免每次 app 更新都重扫)| ✅ 2026-07-11·**真机逮到**:rebuild 后 self.detail=needs_reconnect,因登录态 .auth/douyin 落在**易失 sidecar 目录**(`<cwd>/.auth`),build-sidecar rmSync 重建 + 分发版按版本解压 `appDataDir/runtime/<version>/sidecar`→**每次更新登录态丢→逼用户重扫**。修:lib.rs 两处 spawn 注入 `CREATOROS_DOUYIN_AUTH_DIR=<appDataDir>/.auth/douyin`(node 侧 persistence-client:897 本就读它),落稳定 appDataDir 顶层(同 .master-key/db),跨版本/sidecar 重建不丢。cargo check 绿·待重 build 后真机验(重扫一次→更新后不再重扫)|
