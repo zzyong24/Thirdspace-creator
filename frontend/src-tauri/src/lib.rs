@@ -352,6 +352,18 @@ pub fn run() {
             // 作为**运行时**桌面标记(激活门只桌面拦 / web 跳的唯一判据)。
             let machine_id = resolve_machine_id(&app.handle());
 
+            // [T-205] 抖音登录态(.auth/douyin/<accountId>)目录 —— 注入 sidecar env
+            //   `CREATOROS_DOUYIN_AUTH_DIR`,落**稳定**的 `<appDataDir>/.auth/douyin`,而非默认的
+            //   易失 sidecar 工作目录(`<cwd>/.auth/douyin`)。根因:sidecar 按版本解压到
+            //   `appDataDir/runtime/<version>/sidecar`,升级换版本目录 + build-sidecar rmSync 重建
+            //   → .auth 随之丢 → 用户**每次 app 更新都要重扫码**(登录态没了)。落 appDataDir 顶层
+            //   (与 .master-key / db 同级,不随版本/sidecar 重建而丢)→ 更新后登录态持久,免重扫。
+            let douyin_auth_dir_str = app_data_dir
+                .join(".auth")
+                .join("douyin")
+                .to_string_lossy()
+                .to_string();
+
             // 4) spawn sidecar(= 随包 node runtime 跑 next standalone server.js)。注入:
             //      PORT / HOSTNAME —— next standalone server.js 读这两个 env 决定 listen 地址;
             //      CREATOROS_DB_DIR —— DB 落盘目录(resolveDbDriver 会认,见 backend/src/db.ts §3b);
@@ -389,6 +401,8 @@ pub fn run() {
                     // [T-181] Skill 远程下发端点 + 验签公钥。
                     .env("PROMPT_BUNDLE_URL", PROMPT_BUNDLE_URL)
                     .env("PROMPT_BUNDLE_PUBLIC_KEY", PROMPT_BUNDLE_PUBLIC_KEY)
+                    // [T-205] 抖音登录态落稳定 appDataDir/.auth/douyin(跨版本持久,免更新后重扫)。
+                    .env("CREATOROS_DOUYIN_AUTH_DIR", &douyin_auth_dir_str)
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir)
                     .stdout(Stdio::piped())
@@ -443,6 +457,8 @@ pub fn run() {
                     // [T-181] Skill 远程下发端点 + 验签公钥(Win/Linux 同 macOS)。
                     .env("PROMPT_BUNDLE_URL", PROMPT_BUNDLE_URL)
                     .env("PROMPT_BUNDLE_PUBLIC_KEY", PROMPT_BUNDLE_PUBLIC_KEY)
+                    // [T-205] 抖音登录态落稳定 appDataDir/.auth/douyin(跨版本持久,免更新后重扫)。
+                    .env("CREATOROS_DOUYIN_AUTH_DIR", &douyin_auth_dir_str)
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir);
 
