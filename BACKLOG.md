@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
+| T-214 | 采集总粉丝数→回填账号(治编导"粉丝 0")| 🔨 | — | T-213 定位:总粉丝数从没采集(parseSelfIdentity 只抓昵称/secUid;metrics 只 follower_gain 增量;followerBaseline 恒 0)。编导账号画像读 0。修:采集从创作者中心主页抓总粉丝数→身份对齐后 updateAccount({followerBaseline})(update seam repository.ts:189 已存在,缺抓取+接线)。查粉丝字段在现有 work-list XHR author 里能否直接拿(follower_count/mplatform_followers_count)。 |
+| T-215 | 对本号跑评论文本采集(ingestComments)| 📋 | — | T-213 定位:评论文本没进 audience_signals(=0),但指标里 comments:6 说明评论存在→编导说"没评论"实则有。采集器有 ingestComments 能力,对本号没跑。修:确保评论采集对本号真跑(可能被 T-176 退避/item_id/隐藏过滤挡,查为何 0)。 |
 | T-213 | 编导 agent 工具逐个真机测(结合真实数据)—— 粉丝数读成 0 等 | 🔨 测试中 | — | 用户真机:和编导 agent 对话它说粉丝数=0(实际有)。逐个测 chat-tools 每个工具的输出 vs 真实采集数据(account 粉丝/作品/指标/评论/定位/知识),定位读错/断链的工具。先建地面真相(dispatch 查实际值)再逐工具比对。 |
 | T-212 | 借鉴飞书「鱼鱼AI运营」对标抓取+选题数据流,强化 CreatorOS 选题/对标 | 🔨 研究中 | — | 用户落地的飞书多维表格体系 `/Users/zyongzhu/xianwa-feishu`(浏览器自动化抓海量对标博主 + 多维表格数据流合理)。研究其:①对标博主内容抓取(automation/ 浏览器自动化)②选题库飞轮(AI 持续补弹药+状态驱动:改「已排期」→自动出脚本建档)③数据模型(schema.sql + 多维表格结构)。借鉴进 CreatorOS 现有 选题(topic pool/trend-sources)+ 对标(cheat-on-content learn-from)——**先蒸馏其架构/数据流,映射到 CreatorOS 现结构,再出 SPEC**。别照搬飞书(CreatorOS 有自己的数据脊)。 |
 | T-209 | 复盘页假按钮审计+去除 + 布局修 | ✅ 2026-07-11(e55e68e)·删假 分享/···(空壳)+ 实现导出报告(客户端自包含 HTML Blob 下载,复用 AnalyticsViewModel)+ 复盘编辑三步绿色反馈 + 主列 gap 对齐。review-report-export 7+shell/review 79 测+tsc 绿。真机待验 | — | 用户截图复盘页:①「复盘编辑」区多个按钮疑假(成功亮点下拉/洞察标题/补充说明/添加洞察/完成复盘/开始复盘)②右上角「分享」+「···」假按钮。逐个查后端有无真 op:能实现的接线、**不能实现的直接去掉**(诚实不留死按钮)。③布局奇怪(用户反馈)——顺带理顺复盘页栅格/空区。纯前端为主。 |
