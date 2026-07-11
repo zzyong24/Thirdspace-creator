@@ -18,10 +18,13 @@ import type { RequestContext } from "@creatoros/contract";
 //      failed/needs_reconnect)+ finished_at + items 回填一律在 **finally** 落,任何异常路径
 //      (采集失败 / 落库后 crash)job_run 都不悬挂在 running。
 
-/** 一次确定性采集的产出(采集器从真 XHR/DOM 抽值后落库返回的新鲜度统计)。 */
+/** 一次确定性采集的产出(采集器从真 XHR/DOM 抽值后落库返回的新鲜度统计)。
+ *  [T-235a] message(可选):采集器的诚实一句话说明(如「未配文本模型,跳过出题」/「今日已达
+ *  防灌库上限」),runner 拼进合成 step 文本供运行详情展示。缺省 = 无补充说明(旧 collector 不破)。 */
 export interface CollectResult {
   itemsNew: number;
   itemsUpdated: number;
+  message?: string;
 }
 
 /** runner 需要的 AI 生命周期窄端口(host 绑 aiService;测试注 fake)。不产候选,故无
@@ -158,6 +161,8 @@ const SOURCE_LABEL: Record<string, string> = {
   "self.detail": "抖音作品明细数据",
   // [T-212a] 对标他号作品（benchmark sourceKind）。
   benchmark: "对标他号作品",
+  // [T-235a] 每天自动出题（topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool）。
+  "topic.daily": "每日选题",
 };
 
 /**
@@ -241,10 +246,13 @@ export async function runScheduledCollection(
     itemsUpdated = result.itemsUpdated;
 
     // 合成 step 写 ai_task_steps(经现有 recordStep;自动化运行详情复用窗口步骤日志渲染)。
+    // [T-235a] collector 的诚实一句话说明(如「未配文本模型,跳过出题」)拼进 step 文本。
     await deps.ai.recordStep(ctx, task.id, {
       stepNo: 1,
       kind: "collect",
-      text: `采集${label} → 新增 ${itemsNew} 条,更新 ${itemsUpdated} 条`,
+      text:
+        `采集${label} → 新增 ${itemsNew} 条,更新 ${itemsUpdated} 条` +
+        (result.message ? `(${result.message})` : ""),
       toolCalls: [],
     });
 

@@ -55,6 +55,8 @@ export * from "./scheduled-collection-scheduler";
 export * from "./script-review-runner";
 export * from "./script-runner";
 export * from "./skill-config-overrides";
+// [T-235a] 每天自动出题采集器(topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool)。
+export * from "./topic-daily-collector";
 export * from "./topic-enrich-runner";
 export * from "./topic-runner";
 export * from "./topic-task-adapter";

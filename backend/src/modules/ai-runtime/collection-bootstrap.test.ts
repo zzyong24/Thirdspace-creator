@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   bootstrapDouyinCollectionJobs,
+  ensureCollectionJobs,
   DAILY_COLLECTION_JOB_DEFAULTS,
   type CollectionBootstrapDeps,
 } from "./collection-bootstrap";
@@ -105,17 +106,18 @@ function makeDeps(
 }
 
 describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
-  it("① 全新绑定 → 建 4 个 job(正确 sourceKind + 每天定时 cron)", async () => {
+  it("① 全新绑定 → 建 5 个 job(正确 sourceKind + 每天定时 cron)", async () => {
     const deps = makeDeps();
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    // [T-212a] 建了恰好 4 个 job(self 三源 + benchmark 对标)。
-    expect(deps._createJob).toHaveBeenCalledTimes(4);
+    // [T-212a][T-235a] 建了恰好 5 个 job(self 三源 + benchmark 对标 + topic.daily 每日出题)。
+    expect(deps._createJob).toHaveBeenCalledTimes(5);
     expect(res.created).toEqual([
       "self.metrics",
       "self.detail",
       "comments",
       "benchmark",
+      "topic.daily",
     ]);
 
     // sourceKind 正确 + 每天定时 cron(5 段,分/时确定、日/月/周为 *)。
@@ -126,6 +128,8 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(bySource.get("self.detail")).toBe("10 9 * * *");
     expect(bySource.get("comments")).toBe("20 9 * * *");
     expect(bySource.get("benchmark")).toBe("30 9 * * *");
+    // [T-235a] 每日出题错峰 9:40(benchmark 9:30 后,当天新拆解可入引用)。
+    expect(bySource.get("topic.daily")).toBe("40 9 * * *");
     // 每条都是"每天"(dom/month/dow 全 *):
     for (const [, cron] of bySource) {
       const [, , dom, mon, dow] = cron.split(/\s+/);
@@ -140,6 +144,7 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       "self.detail": [{ id: "existing-detail" }],
       comments: [{ id: "existing-comments" }],
       benchmark: [{ id: "existing-benchmark" }],
+      "topic.daily": [{ id: "existing-topic-daily" }],
     });
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
@@ -151,6 +156,7 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       "self.detail",
       "comments",
       "benchmark",
+      "topic.daily",
     ]);
   });
 
@@ -160,29 +166,37 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     });
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    // 只建 self.detail + comments + benchmark(self.metrics 复用既有)。
-    expect(deps._createJob).toHaveBeenCalledTimes(3);
-    expect(res.created).toEqual(["self.detail", "comments", "benchmark"]);
+    // 只建 self.detail + comments + benchmark + topic.daily(self.metrics 复用既有)。
+    expect(deps._createJob).toHaveBeenCalledTimes(4);
+    expect(res.created).toEqual([
+      "self.detail",
+      "comments",
+      "benchmark",
+      "topic.daily",
+    ]);
   });
 
-  it("③ 绑定 → 触发一次初始化采集(每源各一次,顺序 self.metrics→self.detail→comments→benchmark)", async () => {
+  it("③ 绑定 → 触发一次初始化采集(每源各一次,顺序 self.metrics→self.detail→comments→benchmark→topic.daily)", async () => {
     const deps = makeDeps();
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    expect(deps._trigger).toHaveBeenCalledTimes(4);
+    expect(deps._trigger).toHaveBeenCalledTimes(5);
     // 顺序铁律(接 T-190:self.metrics 先建 publication → self.detail 落可见性 → comments);
-    // benchmark 无依赖,追加最后(无对标源时诚实空跑)。
+    // benchmark 无依赖,追加最后(无对标源时诚实空跑);[T-235a] topic.daily 压轴(当天新拆解可入引用,
+    // 未配模型诚实跳过)。
     expect(deps.triggeredSourceKinds).toEqual([
       "self.metrics",
       "self.detail",
       "comments",
       "benchmark",
+      "topic.daily",
     ]);
     expect(res.triggered).toEqual([
       "self.metrics",
       "self.detail",
       "comments",
       "benchmark",
+      "topic.daily",
     ]);
   });
 
@@ -207,16 +221,27 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       },
     );
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
-    expect(res.created).toEqual(["self.metrics", "comments", "benchmark"]);
+    expect(res.created).toEqual([
+      "self.metrics",
+      "comments",
+      "benchmark",
+      "topic.daily",
+    ]);
     // self.detail 建失败 → 不触发它;其余仍触发。
-    expect(res.triggered).toEqual(["self.metrics", "comments", "benchmark"]);
+    expect(res.triggered).toEqual([
+      "self.metrics",
+      "comments",
+      "benchmark",
+      "topic.daily",
+    ]);
   });
 
   it("[T-200] 触发的 job 带当前号(新建 job accountId = ctx.accountId)", async () => {
     const deps = makeDeps();
     await bootstrapDouyinCollectionJobs(ctx, deps);
-    // 四条触发都带 acct-1(采集 ctx.accountId 由此派生 → 落正确号,修串号根因)。
+    // 五条触发都带 acct-1(采集 ctx.accountId 由此派生 → 落正确号,修串号根因)。
     expect(deps.triggeredAccountIds).toEqual([
+      "acct-1",
       "acct-1",
       "acct-1",
       "acct-1",
@@ -230,9 +255,11 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       "self.detail": [{ id: "existing-detail", accountId: "acct-1" }],
       comments: [{ id: "existing-comments", accountId: "acct-1" }],
       benchmark: [{ id: "existing-benchmark", accountId: "acct-1" }],
+      "topic.daily": [{ id: "existing-topic-daily", accountId: "acct-1" }],
     });
     await bootstrapDouyinCollectionJobs(ctx, deps);
     expect(deps.triggeredAccountIds).toEqual([
+      "acct-1",
       "acct-1",
       "acct-1",
       "acct-1",
@@ -247,6 +274,7 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     await bootstrapDouyinCollectionJobs(ctx, deps);
     // old-metrics 无号 → 退化 acct-1;其余新建 → acct-1。
     expect(deps.triggeredAccountIds).toEqual([
+      "acct-1",
       "acct-1",
       "acct-1",
       "acct-1",
@@ -271,21 +299,55 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       "self.detail",
       "comments",
       "benchmark",
+      "topic.daily",
     ]);
     expect(res.triggered).toEqual([
       "self.metrics",
       "self.detail",
       "comments",
       "benchmark",
+      "topic.daily",
     ]);
   });
 
-  it("[T-212a] 模板常量为四源(self 三源 + benchmark 对标)", () => {
+  it("[T-227] ensureCollectionJobs:存量账号只补建缺的 job,不触发采集(启动兜底)", async () => {
+    // 存量账号:绑定早于 benchmark/topic.daily 模板 → 只有 self 三源 job。启动 ensure 应补建
+    // 缺失的 benchmark + topic.daily,且**不触发**任何采集(新 job 等下次到点跑)。
+    const deps = makeDeps({
+      "self.metrics": [{ id: "existing-metrics", accountId: "acct-1" }],
+      "self.detail": [{ id: "existing-detail", accountId: "acct-1" }],
+      comments: [{ id: "existing-comments", accountId: "acct-1" }],
+    });
+    const res = await ensureCollectionJobs(ctx, deps);
+    expect(res.created).toEqual(["benchmark", "topic.daily"]);
+    expect(res.jobsInOrder.map((j) => j.sourceKind)).toEqual([
+      "self.metrics",
+      "self.detail",
+      "comments",
+      "benchmark",
+      "topic.daily",
+    ]);
+    expect(deps._trigger).not.toHaveBeenCalled();
+    // 再跑一次(全部已存在)→ 幂等零建。
+    const deps2 = makeDeps({
+      "self.metrics": [{ id: "j1" }],
+      "self.detail": [{ id: "j2" }],
+      comments: [{ id: "j3" }],
+      benchmark: [{ id: "j4" }],
+      "topic.daily": [{ id: "j5" }],
+    });
+    const res2 = await ensureCollectionJobs(ctx, deps2);
+    expect(res2.created).toEqual([]);
+    expect(deps2._createJob).not.toHaveBeenCalled();
+  });
+
+  it("[T-212a][T-235a] 模板常量为五源(self 三源 + benchmark 对标 + topic.daily 每日出题)", () => {
     expect(DAILY_COLLECTION_JOB_DEFAULTS.map((t) => t.sourceKind)).toEqual([
       "self.metrics",
       "self.detail",
       "comments",
       "benchmark",
+      "topic.daily",
     ]);
   });
 });

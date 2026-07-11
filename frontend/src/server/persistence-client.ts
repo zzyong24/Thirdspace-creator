@@ -249,6 +249,8 @@ import {
   createTopicPreferenceDistillPort,
   // [T-212c] 定位简报装配(拆解 getPositioningBrief 端口复用,与各 runner 同一格式)。
   assembleCreativeContext,
+  // [T-235a] 每天自动出题采集器(topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool)。
+  collectDailyTopics,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
   runJobNow,
@@ -259,8 +261,12 @@ import {
   type TriggerDeps,
 } from "@creatoros/backend/modules/ai-runtime";
 // [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排;组合根注入 listJobs/
-//   createJob/trigger 端口)。
-import { bootstrapDouyinCollectionJobs } from "@creatoros/backend/modules/ai-runtime";
+//   createJob/trigger 端口)。[T-227] ensureCollectionJobs:启动兜底,对存量账号幂等补齐缺失的
+//   DEFAULT_JOBS(只建不触发)。
+import {
+  bootstrapDouyinCollectionJobs,
+  ensureCollectionJobs,
+} from "@creatoros/backend/modules/ai-runtime";
 import { runTopicEnrich } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationDiagnose } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationScore } from "@creatoros/backend/modules/ai-runtime";
@@ -4680,6 +4686,101 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
       return result;
     },
+    // [T-235a] 每天自动出题(topic.daily):多依据合并(定位+评论信号+知识库+热点)→ topic.generate
+    //   同模板出题(runTopicNode)→ T-212d 护栏排序(探索位保底)→ candidateService.createCandidate
+    //   落 pool(source 透传 trend/benchmark/demand)。防灌库 ≤N/天(env CREATOROS_TOPIC_DAILY_LIMIT,
+    //   默认 5,按当天已建候选计数);未配文本模型 → 诚实跳过(itemsNew=0 + message)。纯 AI + 库内
+    //   数据 + web 检索,不碰 douyinGateway(与采集类 job 无限流冲突;仍走 gate-F5 串行闸统一排队,
+    //   错峰 9:40 在 benchmark 9:30 后)。resolveModelSpec/searchWebPort 定义在本工厂后方 —— 采集器
+    //   闭包只在到点/触发时执行(工厂初始化早已完成),按闭包引用捕获无 TDZ 问题(与 dispatch 分支同款)。
+    "topic.daily": async (ctx, _target, report) => {
+      const dailyLimitRaw = Number(process.env.CREATOROS_TOPIC_DAILY_LIMIT);
+      return collectDailyTopics(ctx, {
+        // ContextDeps(与 topic.generate dispatch 同源绑法,只装出题需要的读源;知识用 list dump,
+        // creative-context 内部 best-effort 空兜底)。
+        positioning: {
+          getPositioningCenter: (c) =>
+            positioningService.getPositioningCenter(c),
+        },
+        learnings: {
+          getSuggestions: (c, opts) => learningsService.getSuggestions(c, opts),
+        },
+        signals: {
+          list: async (c, opts) =>
+            (
+              await candidateService.listSignals(c, {
+                limit: opts.limit ?? 30,
+                offset: 0,
+              })
+            ).rows.map((s) => ({
+              source: s.source,
+              rawText: s.rawText,
+              demandTag: s.demandTag,
+            })),
+        },
+        knowledge: {
+          list: async (c, opts) =>
+            (await knowledgeService.listKnowledge(c))
+              .slice(0, opts.limit ?? 40)
+              .map((k) => ({
+                title: k.title,
+                knowledgeType: k.knowledgeType,
+                usedCount: k.usedCount,
+                usedInPublished: k.usedInPublished,
+                sourceNote: k.sourceNote ?? null,
+              })),
+        },
+        resolveModelSpec,
+        // [T-126] 热点依据:复用联网检索端口(rss 免 key / browser 无头采集)。未配 web.search →
+        // 抛 SearchConfigError,collector 内 catch 成空热点段(诚实降级)。
+        trendSearch: (c, query, opts) => searchWebPort(c, query, opts),
+        // 出题节点:ai-worker runTopicNode(topic.generate 同模板 + runStructuredNode 跨模型健壮)。
+        // 多依据已合并进 basisBrief(分段),basis 取 "positioning"(定位为纲的通用出题 hint)。
+        generateTopics: async (_c, input) => {
+          const { modelFor, runTopicNode } = await import(
+            "@creatoros/ai-worker"
+          );
+          const { topics } = await runTopicNode({
+            model: modelFor(input.spec),
+            positioningBrief: input.positioningBrief,
+            basisBrief: input.basisBrief,
+            knowledgeBrief: input.knowledgeBrief,
+            learningsBrief: input.learningsBrief,
+            basis: "positioning",
+          });
+          return topics;
+        },
+        // [T-212d] active 硬偏好(candidateService 是唯一读法;service 层已保 ±10 封顶/≥3 例)。
+        listActivePreferences: async (c) =>
+          (await candidateService.listActiveTopicPreferences(c)).map((p) => ({
+            keyword: p.keyword,
+            direction: p.direction === "prefer" ? ("prefer" as const) : ("avoid" as const),
+            weight: p.weight,
+            exampleCount: p.exampleCount,
+            lastReinforcedAt: p.lastReinforcedAt,
+          })),
+        // 防灌库计数:当天(UTC 自然日,与 triggerScheduledJob dayKey 同口径)已建候选数。
+        countCandidatesCreatedToday: async (c) => {
+          const today = deps.now().slice(0, 10);
+          const { rows } = await candidateService.listCandidates(c, {
+            limit: 1000,
+            offset: 0,
+          });
+          return rows.filter((r) => (r.createdAt ?? "").slice(0, 10) === today)
+            .length;
+        },
+        createCandidate: async (c, input) => {
+          const cand = await candidateService.createCandidate(c, input);
+          return { id: cand.id };
+        },
+        now: deps.now,
+        dailyLimit:
+          Number.isFinite(dailyLimitRaw) && dailyLimitRaw > 0
+            ? Math.floor(dailyLimitRaw)
+            : undefined,
+        report,
+      });
+    },
   };
 
   // dispatchScheduledCollection 实体:装 runner deps 后经 [gate-F5] 采集串行闸挂到链尾
@@ -5467,6 +5568,63 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     console.warn(
       "[T-220] 启动认领存量无号 asset 失败(已 ignore,app 仍可启动):",
       claimErr instanceof Error ? claimErr.message : claimErr,
+    );
+  }
+
+  // [T-227] 启动幂等 ensure 全部 DEFAULT_JOBS(存量账号回填缺失采集 job)。根因:collection-
+  //   bootstrap 只在**绑定抖音时**跑一次 —— 账号绑定早于新 job 模板上线(T-212 benchmark /
+  //   T-235a topic.daily)的存量号,模板后加的 job 永远缺(真机曾现「还没有对标采集作业」)。
+  //   修:启动时对 active 账号跑 ensureCollectionJobs(有则跳无则建,**只建不触发** —— 新 job 等
+  //   下一次到点跑,不在每次启动拉一轮采集)。job 查询本就 user-scoped(scheduling repo 按 userId
+  //   收窄),单账号现实下用首个 active 号 stamp 新 job 属主;多号精确 targeting 归 T-136 §D(与
+  //   claimOrphans 同款诚实边界)。best-effort:失败只告警,不阻断启动。
+  try {
+    const ensureJobsCtx: RequestContext = {
+      userId: canonicalDataset.user.id,
+      requestId: "startup-collection-ensure",
+      source: "ingestion",
+    };
+    const { rows: ensureAccounts } = await platformAccountService.listAccounts(
+      ensureJobsCtx,
+      { limit: 100, offset: 0 },
+    );
+    const activeForEnsure = ensureAccounts.filter((a) => a.status === "active");
+    if (activeForEnsure.length > 0) {
+      const { created } = await ensureCollectionJobs(
+        { ...ensureJobsCtx, accountId: activeForEnsure[0]!.id },
+        {
+          listJobsBySourceKind: async (c, sourceKind) => {
+            const { rows } = await schedulingService.listJobs(c, {
+              sourceKind,
+              limit: 1,
+              offset: 0,
+            });
+            return rows.map((r) => ({ id: r.id, accountId: r.accountId ?? null }));
+          },
+          createJob: async (c, input) => {
+            const job = await schedulingService.createJob(c, {
+              name: input.name,
+              prompt: input.prompt,
+              sourceKind: input.sourceKind,
+              schedule: input.schedule,
+              target: input.target,
+            });
+            return { id: job.id };
+          },
+          // 空 target:采集器空 target 时自 ensureDouyinSource 兜底解析源(与 bootstrap 一致)。
+          target: {},
+        },
+      );
+      if (created.length > 0) {
+        console.log(
+          `[T-227] 启动回填缺失采集 job(账号 ${activeForEnsure[0]!.id}):${created.join(", ")}`,
+        );
+      }
+    }
+  } catch (ensureErr) {
+    console.warn(
+      "[T-227] 启动 ensure 采集 job 失败(已 ignore,app 仍可启动):",
+      ensureErr instanceof Error ? ensureErr.message : ensureErr,
     );
   }
 

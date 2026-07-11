@@ -119,42 +119,40 @@ export interface CollectionBootstrapResult {
   triggered: string[];
 }
 
-/**
- * 绑定抖音成功后:幂等建三个每天定时采集 job + 按序初始化触发一次(拉全量)。
- *
- * 幂等:每个 sourceKind 有存量 job 就复用(不重建);触发经 triggerScheduledJob 当天幂等双闸。
- * 顺序:self.metrics → self.detail → comments(await 串行 enqueue → gate-F5 串行链按序执行)。
- * best-effort:单个 job 建/触发失败不阻断其余(记日志继续),整体 fire-and-forget 不阻塞绑定返回。
- */
-export async function bootstrapDouyinCollectionJobs(
-  ctx: RequestContext,
-  deps: CollectionBootstrapDeps,
-): Promise<CollectionBootstrapResult> {
-  const target = deps.target ?? {};
-  const created: string[] = [];
-  const jobsInOrder: {
+/** [T-227] 幂等 ensure 全部 DEFAULT_JOBS 需要的端口子集(只建 job,不触发采集)。 */
+export type EnsureCollectionJobsDeps = Pick<
+  CollectionBootstrapDeps,
+  "listJobsBySourceKind" | "createJob" | "target"
+>;
+
+export interface EnsureCollectionJobsResult {
+  /** 本次**新建**的 job 的 sourceKind(既有复用的不列入)。 */
+  created: string[];
+  /** 全部 ensure 后的 job(模板顺序;含复用的既有 job),供 bootstrap 初始化触发。 */
+  jobsInOrder: {
     id: string;
     sourceKind: string;
     target: Record<string, unknown>;
     accountId?: string | null;
-  }[] = [];
+  }[];
+}
 
-  // ⓪ [T-200] 认领存量无号采集数据给当前绑定号(单账号现实下安全)。best-effort、幂等:失败不阻断
-  //   建 job / 触发;已归属的不动;未选号 → no-op。必须在建 job / 触发**之前**跑,让存量数据先归号
-  //   (含把旧 scheduled_job 归号,使后续复用既有 job 的触发能读到正确 accountId)。
-  if (deps.claimOrphans) {
-    try {
-      const claimed = await deps.claimOrphans(ctx);
-      console.log(
-        `[collection-bootstrap] 认领存量无号采集数据(account=${ctx.accountId ?? "∅"}):`,
-        claimed,
-      );
-    } catch (err) {
-      console.error("[collection-bootstrap] 认领存量数据失败(不阻断建 job/触发):", err);
-    }
-  }
-
-  // ① 幂等建 job(顺序即模板顺序 self.metrics → self.detail → comments)。
+/**
+ * [T-227] 幂等 ensure 全部 DEFAULT_JOBS(有则复用、无则补建;**不触发**采集)。两处消费:
+ *   ① bootstrapDouyinCollectionJobs(绑定抖音时 ensure + 初始化触发);
+ *   ② 组合根启动兜底(persistence-client)—— 存量账号绑定早于新 job 模板(如 T-212 benchmark /
+ *      T-235a topic.daily)时,bootstrap 只在绑定时跑过一次 → 缺新模板 job 且不会自动补齐。
+ *      启动时对 active 账号跑本 ensure,存量号无需重绑即补齐缺失 job(只建不触发:新 job 等
+ *      下一次到点跑,不在每次启动都拉一轮采集)。
+ * 幂等:每个 sourceKind 先查存量,有则复用不重建;单源失败不阻断其余(best-effort,记日志)。
+ */
+export async function ensureCollectionJobs(
+  ctx: RequestContext,
+  deps: EnsureCollectionJobsDeps,
+): Promise<EnsureCollectionJobsResult> {
+  const target = deps.target ?? {};
+  const created: string[] = [];
+  const jobsInOrder: EnsureCollectionJobsResult["jobsInOrder"] = [];
   for (const tpl of DAILY_COLLECTION_JOB_DEFAULTS) {
     try {
       const existing = await deps.listJobsBySourceKind(ctx, tpl.sourceKind);
@@ -192,6 +190,38 @@ export async function bootstrapDouyinCollectionJobs(
       );
     }
   }
+  return { created, jobsInOrder };
+}
+
+/**
+ * 绑定抖音成功后:幂等建三个每天定时采集 job + 按序初始化触发一次(拉全量)。
+ *
+ * 幂等:每个 sourceKind 有存量 job 就复用(不重建);触发经 triggerScheduledJob 当天幂等双闸。
+ * 顺序:self.metrics → self.detail → comments(await 串行 enqueue → gate-F5 串行链按序执行)。
+ * best-effort:单个 job 建/触发失败不阻断其余(记日志继续),整体 fire-and-forget 不阻塞绑定返回。
+ */
+export async function bootstrapDouyinCollectionJobs(
+  ctx: RequestContext,
+  deps: CollectionBootstrapDeps,
+): Promise<CollectionBootstrapResult> {
+  // ⓪ [T-200] 认领存量无号采集数据给当前绑定号(单账号现实下安全)。best-effort、幂等:失败不阻断
+  //   建 job / 触发;已归属的不动;未选号 → no-op。必须在建 job / 触发**之前**跑,让存量数据先归号
+  //   (含把旧 scheduled_job 归号,使后续复用既有 job 的触发能读到正确 accountId)。
+  if (deps.claimOrphans) {
+    try {
+      const claimed = await deps.claimOrphans(ctx);
+      console.log(
+        `[collection-bootstrap] 认领存量无号采集数据(account=${ctx.accountId ?? "∅"}):`,
+        claimed,
+      );
+    } catch (err) {
+      console.error("[collection-bootstrap] 认领存量数据失败(不阻断建 job/触发):", err);
+    }
+  }
+
+  // ① 幂等建 job(顺序即模板顺序 self.metrics → self.detail → comments → benchmark → topic.daily)。
+  //   [T-227] 实体抽到 ensureCollectionJobs(启动兜底与绑定 bootstrap 共用同一份 ensure,单一真源)。
+  const { created, jobsInOrder } = await ensureCollectionJobs(ctx, deps);
 
   // ② 初始化拉全量:按序触发一次(self.metrics 先建 publication → self.detail 落可见性 → comments)。
   const triggered: string[] = [];

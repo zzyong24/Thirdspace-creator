@@ -119,8 +119,17 @@ const SOURCE_META: Record<
   },
 };
 
+// 系统自动建(collection-bootstrap 模板)、不在新建下拉里的 sourceKind 的展示名兜底
+// ([T-212a] benchmark / [T-235a] topic.daily 与 backend SOURCE_LABEL 对齐口径)。
+const EXTRA_SOURCE_LABELS: Record<string, string> = {
+  benchmark: "对标爆款",
+  "topic.daily": "每日选题",
+};
+
 function sourceLabel(kind: string): string {
-  return SOURCE_META[kind as SourceKind]?.label ?? kind;
+  return (
+    SOURCE_META[kind as SourceKind]?.label ?? EXTRA_SOURCE_LABELS[kind] ?? kind
+  );
 }
 
 // job_run.status → 中文态 + 视觉。SPEC §4/§6:running|succeeded|failed|needs_reconnect。
