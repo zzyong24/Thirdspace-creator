@@ -125,6 +125,10 @@ export interface AssembleChatDeps extends ContextDeps {
         title: string;
         excerpt: string;
         extractor: string;
+        /** [T-237] 抽到的对话轮次数(非对话页 null/缺省)。 */
+        turnCount?: number | null;
+        /** [T-237] 抽取诊断人话(「抽到 N 轮(SSR 全量/DOM 可能不全)」);非对话页 null/缺省。 */
+        extraction?: string | null;
       }
     | { needLogin: true; domain: string }
   >;

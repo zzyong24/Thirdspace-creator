@@ -212,6 +212,10 @@ export interface ChatToolDeps {
         title: string;
         excerpt: string;
         extractor: string;
+        /** [T-237] 抽到的对话轮次数(非对话页 null/缺省)。 */
+        turnCount?: number | null;
+        /** [T-237] 抽取诊断人话(「抽到 N 轮(SSR 全量/DOM 可能不全)」);非对话页 null/缺省。 */
+        extraction?: string | null;
       }
     | { needLogin: true; domain: string }
   >;
@@ -672,6 +676,13 @@ export interface WebReadToolResult {
     excerpt: string;
     /** 命中的抽取器(chatgpt-share | readability),存证/可观测用。 */
     extractor: string;
+    /** [T-237] 抽到的对话轮次数(非对话页 null)。 */
+    turnCount?: number | null;
+    /**
+     * [T-237] 抽取诊断人话(如「抽到 12 轮对话(SSR 全量)」/「抽到 2 轮(DOM,可能不全)」)。
+     * 编导据此**如实报告**抽取覆盖度,而不是把截断误判成「分享页本来就短」。
+     */
+    extraction?: string | null;
   } | null;
   /** 需登录降级:该域名需先在保管库登录一次。非 null 时编导引导「去设置→网站登录保管库」。 */
   needLogin: { domain: string } | null;
@@ -1852,6 +1863,9 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
               title: res.title,
               excerpt: res.excerpt,
               extractor: res.extractor,
+              // [T-237] 抽取覆盖度诊断透出给编导:如实说「抽到 N 轮(SSR 全量/DOM 可能不全)」。
+              turnCount: res.turnCount ?? null,
+              extraction: res.extraction ?? null,
             },
             needLogin: null,
             error: null,

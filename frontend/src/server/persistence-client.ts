@@ -999,6 +999,10 @@ export interface ChatRuntime {
         title: string;
         excerpt: string;
         extractor: string;
+        /** [T-237] 抽到的对话轮次数(非对话页 null)—— 编导如实转述,不猜「分享页本来就短」。 */
+        turnCount?: number | null;
+        /** [T-237] 抽取诊断人话(如「抽到 12 轮对话(SSR 全量)」);非对话页 null。 */
+        extraction?: string | null;
       }
     | { needLogin: true; domain: string }
   >;
@@ -7187,6 +7191,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       } catch {
         previewUrl = null;
       }
+      // [T-237] 抽取诊断人话:让编导如实报告「抽到 N 轮(SSR 全量 / DOM 可能不全)」,
+      // 而不是把 DOM 截断误判成「分享页本来就短」。
+      const extraction =
+        read.turnCount != null
+          ? read.extractPath === "ssr"
+            ? `抽到 ${read.turnCount} 轮对话(SSR 全量,长对话不截断)`
+            : `抽到 ${read.turnCount} 轮对话(DOM 渲染抽取,超长对话可能不全)`
+          : null;
       return {
         needLogin: false as const,
         assetId: asset.id,
@@ -7196,6 +7208,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         title: read.title,
         excerpt: read.text.slice(0, 280),
         extractor: read.extractor,
+        turnCount: read.turnCount,
+        extraction,
       };
     },
     // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport
