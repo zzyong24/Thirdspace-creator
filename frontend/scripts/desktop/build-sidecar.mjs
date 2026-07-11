@@ -217,6 +217,53 @@ function buildServerApp() {
   console.log(`[build-sidecar]   [T-172] 产出 sidecar/server.app（LSUIElement，Dock 隐身）→ ${innerBin}`);
 }
 
+// [T-225b] sharp(旧版 0.32.x,@xenova/transformers 依赖)原生库 co-ship —— 同 onnxruntime 的
+//   tracing 盲区第二层:sidecar 里 sharp@0.32.x 只有 JS(build/Release/*.node + vendor/libvips 缺)
+//   → require('sharp') 崩 → @xenova/transformers 顶层 import 连坐 → whisper-local 全崩(真机 T-225
+//   第二轮实测:onnx dylib 修复后转录仍败于「Cannot find module ../build/Release/sharp-darwin-arm64v8.node」)。
+//   注意:根 node_modules 的 sharp@0.32.x 也可能没编译过(pnpm 跳过其 postinstall)——那种情况需先在
+//   根跑一次 `node install/libvips && npx prebuild-install -r napi`(本仓已跑过,产物已落根)。此函数
+//   只做「根有 → sidecar 缺 → 补拷」,根也缺则 throw(不容 build 出必崩转录的包)。
+function ensureSharpNative() {
+  // 找 sidecar 里所有旧结构 sharp 包(有 install/libvips.js 的是 0.32.x;0.34+ 走 @img/* 分包不归这管)。
+  const sharpPkgs = [];
+  const pnpmDirSidecar = join(SIDECAR_RUNTIME, "node_modules", ".pnpm");
+  let entries = [];
+  try { entries = readdirSync(pnpmDirSidecar).filter((x) => x.startsWith("sharp@0.32")); } catch { return; }
+  for (const e of entries) {
+    const pkg = join(pnpmDirSidecar, e, "node_modules", "sharp");
+    if (existsSync(join(pkg, "package.json"))) sharpPkgs.push({ version: e, dir: pkg });
+  }
+  if (sharpPkgs.length === 0) return; // sidecar 没带旧 sharp → 无需处理
+  let copied = 0;
+  for (const { version, dir } of sharpPkgs) {
+    const hasNode = existsSync(join(dir, "build", "Release")) &&
+      readdirSync(join(dir, "build", "Release")).some((f) => f.endsWith(".node"));
+    if (hasNode) continue;
+    const src = join(REPO, "node_modules", ".pnpm", version, "node_modules", "sharp");
+    const srcOk = existsSync(join(src, "build", "Release")) &&
+      readdirSync(join(src, "build", "Release")).some((f) => f.endsWith(".node"));
+    if (!srcOk) {
+      throw new Error(
+        `[build-sidecar] 自检失败[T-225b]:根 node_modules 的 ${version} 也缺原生二进制 —— 先在 ` +
+        `node_modules/.pnpm/${version}/node_modules/sharp 跑 \`node install/libvips && npx prebuild-install -r napi\``,
+      );
+    }
+    for (const sub of ["build", "vendor"]) {
+      const s = join(src, sub);
+      if (existsSync(s)) cpSync(s, join(dir, sub), { recursive: true, dereference: true });
+    }
+    copied++;
+  }
+  console.log(`[build-sidecar]   ✓ [T-225b] sharp 0.32.x 原生补拷 ${copied} 处(修 @xenova/transformers 连坐崩)`);
+  // 硬自检:补完每个旧 sharp 必须有 .node。
+  for (const { dir } of sharpPkgs) {
+    const ok = existsSync(join(dir, "build", "Release")) &&
+      readdirSync(join(dir, "build", "Release")).some((f) => f.endsWith(".node"));
+    if (!ok) throw new Error(`[build-sidecar] 自检失败[T-225b]:${dir} 仍缺 build/Release/*.node`);
+  }
+}
+
 // [T-225] onnxruntime-node 原生库 co-ship —— Next standalone tracing 拷了 onnxruntime_binding.node，
 //   但**漏了它运行时 dlopen 的 libonnxruntime.<ver>.dylib**(同 @playwright/test 那类 tracing 盲区)。
 //   缺它 → whisper-local ASR「Library not loaded: @rpath/libonnxruntime.*.dylib」→ 逐字稿转录**全失败**
@@ -434,6 +481,8 @@ function main() {
 
   // [T-225] onnxruntime 原生库补拷(修 whisper-local 逐字稿转录 dlopen 崩)—— 在打 tarball 前，让 dylib 进包。
   ensureOnnxRuntimeDylib();
+  // [T-225b] sharp 0.32.x 原生补拷(修 @xenova/transformers 顶层 import 连坐崩,同上第二层)。
+  ensureSharpNative();
 
   // [T-169] dylib co-ship + playwright 实拷之后打 tarball(含 lib/ 里的 libnode)。tauri build
   //   bundle 的是这个单文件,规避 Tauri resource 拷贝丢 symlink 的坑;首启由 lib.rs 系统 tar 解压。
