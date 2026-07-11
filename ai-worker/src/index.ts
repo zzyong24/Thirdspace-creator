@@ -106,7 +106,7 @@ export { createBochaAdapter } from "./runtime/search-bocha";
 export { createTavilyAdapter } from "./runtime/search-tavily";
 export { createSerpapiAdapter } from "./runtime/search-serpapi";
 // [T-126a] RSS/Atom 免 key 检索适配器 —— provider "rss",baseUrl 填 feed URL(s),不需搜索 API key。
-export { createRssAdapter } from "./runtime/search-rss";
+export { createRssAdapter, parseFeed } from "./runtime/search-rss";
 
 // [T-055h asset.classify] 视觉理解(OpenAI 兼容 chat vision,VLM 看图打标签)。
 export { describeImageOpenAICompatible } from "./runtime/vision";
@@ -318,6 +318,14 @@ export {
   benchmarkTopicSchema,
   type BenchmarkTeardownOutput,
 } from "./prompt/templates/benchmark-teardown";
+// [T-235b] 热点信源信号抽取(trend.extract)外置模板 + 输出 schema —— 信源页正文 → 结构化信号
+// (无热度不编)。schema 定义在本包(有 zod);backend 采集器引类型,无需直引 zod。
+export {
+  TREND_EXTRACT_TEMPLATE,
+  trendExtractSchema,
+  trendSignalSchema,
+  type TrendExtractOutput,
+} from "./prompt/templates/trend-extract";
 // [T-212d] 防茧房校准(topic.preference)外置模板 + 输出 schema —— 淘汰原因批 → 结构化偏好信号。
 // schema 定义在本包(有 zod);backend runner 引类型绑 generateObject,无需直引 zod。
 export {

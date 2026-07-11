@@ -52,6 +52,10 @@ export function toBenchmarkWorkDto(
     createTime: row.createTime ?? null,
     isViral: row.isViral,
     viralMultiple: row.viralMultiple ?? null,
+    // [T-235b] 发现方式维度(黑马雷达)。
+    discovery: row.discovery,
+    authorFollowerCount: row.authorFollowerCount ?? null,
+    discoveryKeyword: row.discoveryKeyword ?? null,
     teardownStatus: row.teardownStatus,
     capturedAt: row.capturedAt,
     createdAt: row.createdAt,

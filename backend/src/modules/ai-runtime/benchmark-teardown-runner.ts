@@ -63,18 +63,35 @@ export function benchmarkVideoUrl(platform: string, awemeId: string): string {
   return awemeId;
 }
 
-/** 转化选题的 angle 附上参考链接 + 爆款倍数（provenance —— 候选表无独立 metadata 字段，落 angle）。 */
-function buildAngle(angle: string, work: PendingViralWork): string {
-  const url = benchmarkVideoUrl(work.platform, work.awemeId);
-  const mult =
-    work.viralMultiple != null ? `，爆款倍数 ${work.viralMultiple.toFixed(1)}x` : "";
-  const ref = `参考对标爆款：${url}${mult}（对标 sec_uid ${work.sourceExternalAccountId}）`;
-  const a = (angle || "").trim();
-  return a ? `${a}\n\n${ref}` : ref;
+/** [T-235b] 黑马雷达发现的作品(discovery=darkhorse):时效敏感,拆解/转化都要带跟拍语义。 */
+function isDarkhorse(work: PendingViralWork): boolean {
+  return work.discovery === "darkhorse";
 }
 
-/** 对标作品 → benchmark.teardown 的 benchmarkBrief facet（标题 + 数据 + 爆款倍数，逐行）。 */
+/** 转化选题的 angle 附上参考链接 + 爆款倍数（provenance —— 候选表无独立 metadata 字段，落 angle）。
+ *  [T-235b] 黑马作品:倍数语义=赞粉比,并注明跟拍窗口(时效敏感,建议今明两天拍)。 */
+function buildAngle(angle: string, work: PendingViralWork): string {
+  const url = benchmarkVideoUrl(work.platform, work.awemeId);
+  const dark = isDarkhorse(work);
+  const mult =
+    work.viralMultiple != null
+      ? dark
+        ? `，赞粉比 ${work.viralMultiple.toFixed(1)}`
+        : `，爆款倍数 ${work.viralMultiple.toFixed(1)}x`
+      : "";
+  const ref = `参考对标爆款：${url}${mult}（对标 sec_uid ${work.sourceExternalAccountId}）`;
+  const timeliness = dark
+    ? `\n🔥跟拍时效：低粉黑马雷达发现（关键词「${work.discoveryKeyword ?? ""}」），跟拍窗口约 48h 正在关闭，建议今明两天拍。`
+    : "";
+  const a = (angle || "").trim();
+  return (a ? `${a}\n\n${ref}` : ref) + timeliness;
+}
+
+/** 对标作品 → benchmark.teardown 的 benchmarkBrief facet（标题 + 数据 + 爆款倍数，逐行）。
+ *  [T-235b] 黑马作品(discovery=darkhorse)additive 注入:倍数改赞粉比语义 + 作者粉丝 +
+ *  发现关键词 + **时效敏感提示**(跟拍窗口关闭中,prompt 层让拆解带跟拍视角,模板不改)。 */
 export function benchmarkBrief(work: PendingViralWork): string {
+  const dark = isDarkhorse(work);
   const lines: Array<string | null> = [
     `· 标题：${work.description || "（无标题）"}`,
     `· 点赞：${work.diggCount}`,
@@ -83,7 +100,18 @@ export function benchmarkBrief(work: PendingViralWork): string {
     work.shareCount != null ? `· 转发：${work.shareCount}` : null,
     work.duration != null ? `· 时长：${Math.round(work.duration / 1000)}s` : null,
     work.viralMultiple != null
-      ? `· 爆款倍数：${work.viralMultiple.toFixed(1)}x（相对该源样本中位数越高越突出）`
+      ? dark
+        ? `· 赞粉比：${work.viralMultiple.toFixed(1)}（点赞/粉丝，≥1 = 算法在推内容本身而非账号权重）`
+        : `· 爆款倍数：${work.viralMultiple.toFixed(1)}x（相对该源样本中位数越高越突出）`
+      : null,
+    dark && work.authorFollowerCount != null
+      ? `· 作者粉丝：${work.authorFollowerCount}（低粉账号）`
+      : null,
+    dark
+      ? `· 发现方式：低粉黑马雷达（搜索关键词「${work.discoveryKeyword ?? ""}」命中）`
+      : null,
+    dark
+      ? "· ⚠️ 时效敏感：低粉+近 48h+高赞 = 选题/形式刚被算法验证，**跟拍窗口正在关闭**。拆解请给「一个人+手机能当天复刻」的跟拍角度；需要道具/场地/团队的标 fit 从严。"
       : null,
   ];
   return lines.filter((l): l is string => Boolean(l)).join("\n");
@@ -170,8 +198,13 @@ export async function runBenchmarkTeardown(
       );
       for (const topic of highFit) {
         if (promoted >= maxPromote) break; // 全局转化上限（防灌库）
+        // [T-235b] 黑马转化候选标注跟拍时效:title 前缀「🔥跟拍|」(darkhorse.py 同款,复用现有
+        // title 字段表达,不加列);详情(窗口/赞粉比)在 angle 的 provenance 段。
+        const title = isDarkhorse(work)
+          ? `🔥跟拍|${topic.title.trim()}`
+          : topic.title.trim();
         await deps.createCandidate(ctx, {
-          title: topic.title.trim(),
+          title,
           angle: buildAngle(topic.angle, work),
           source: "benchmark",
         });

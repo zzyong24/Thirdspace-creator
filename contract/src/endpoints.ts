@@ -25,6 +25,7 @@ import { platformAccountOperations } from "./operations/platform-accounts";
 import { contentCalendarOperations } from "./operations/content-calendar";
 import { materialLinksOperations } from "./operations/material-links";
 import { benchmarkOperations } from "./operations/benchmark";
+import { trendSourceOperations } from "./operations/trend-source";
 import { schedulingOperations } from "./operations/scheduling";
 import { pagesOperations } from "./operations/pages";
 import { authOperations } from "./operations/auth";
@@ -106,6 +107,8 @@ export const ENDPOINTS = {
   ...materialLinksOperations,
   // [T-212a] 对标源 CRUD(选题/对标强化，SPEC 2026-07-11 §2.1)。
   ...benchmarkOperations,
+  // [T-235b] 热点信源 CRUD(热点多源证据，SPEC 2026-07-11 daily-topic-autopilot §2.2)。
+  ...trendSourceOperations,
   // T-007 调度 Agent 作业(data-source-pipeline-design §9 D1)。scheduled_job CRUD +
   // job_run 只读。owned-root,transport 按 ctx.userId 收窄。
   ...schedulingOperations,

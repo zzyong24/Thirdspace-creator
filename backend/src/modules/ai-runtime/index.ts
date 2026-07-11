@@ -19,6 +19,10 @@ export * from "./collection-bootstrap";
 export * from "./benchmark-collector";
 // [T-212c] 对标爆款拆解 → 转化进选题池(runBenchmarkTeardown 编排 + createBenchmarkTeardownPort AI 端口)。
 export * from "./benchmark-teardown-runner";
+// [T-235b] 低粉黑马雷达采集器(平台内证据:关键词搜近1天最多赞 → 三档判黑马 → 落对标爆款库)。
+export * from "./darkhorse-collector";
+// [T-235b] 热点信源信号采集(通用网页信源主路 readUrl+AI 抽取 / RSS 辅路 feed 解析)。
+export * from "./trend-source-signals";
 // [T-212d] 防茧房校准:淘汰原因蒸馏(runTopicPreferenceDistill 编排 + createTopicPreferenceDistillPort AI 端口)。
 export * from "./topic-preference-distill-runner";
 // [T-163 Batch 3] chat 流式(runChatStream + tools + context 装配)—— streamText/tool/jsonSchema

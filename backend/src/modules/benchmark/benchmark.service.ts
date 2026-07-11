@@ -45,6 +45,10 @@ export interface RecordWorkInput {
   createTime?: string | null;
   isViral?: boolean;
   viralMultiple?: number | null;
+  // [T-235b] 发现方式维度(缺省 benchmark;黑马雷达传 darkhorse,viralMultiple 存赞粉比)。
+  discovery?: "benchmark" | "darkhorse";
+  authorFollowerCount?: number | null;
+  discoveryKeyword?: string | null;
   capturedAt: string;
 }
 
@@ -70,6 +74,11 @@ export interface PendingViralWork {
   duration: number | null;
   viralMultiple: number | null;
   sourceExternalAccountId: string;
+  // [T-235b] 发现方式(darkhorse=黑马雷达,拆解 prompt 注明时效敏感)+ 黑马信号字段。
+  // optional additive:既有消费方/测试 fake 不带这三个字段也结构兼容(缺省视同 benchmark)。
+  discovery?: string;
+  authorFollowerCount?: number | null;
+  discoveryKeyword?: string | null;
 }
 
 export interface BenchmarkService {
@@ -182,6 +191,9 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
         duration: r.duration ?? null,
         viralMultiple: r.viralMultiple ?? null,
         sourceExternalAccountId: r.sourceExternalAccountId,
+        discovery: r.discovery,
+        authorFollowerCount: r.authorFollowerCount ?? null,
+        discoveryKeyword: r.discoveryKeyword ?? null,
       }));
     },
 
@@ -205,6 +217,9 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
         createTime: input.createTime ?? null,
         isViral: input.isViral,
         viralMultiple: input.viralMultiple ?? null,
+        discovery: input.discovery,
+        authorFollowerCount: input.authorFollowerCount ?? null,
+        discoveryKeyword: input.discoveryKeyword ?? null,
         capturedAt: input.capturedAt,
       });
       return { inserted };

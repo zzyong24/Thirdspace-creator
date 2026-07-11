@@ -60,7 +60,8 @@ function linkOf(block: string): string {
 }
 
 // 把一段 RSS/Atom XML 解析成条目(title/url/snippet/publishedAt/siteName)。
-function parseFeed(xml: string, siteName: string): SearchResult[] {
+// [T-235b] export:热点信源辅路(rss 型 trend_source)直接 fetch feed 后复用本解析,不重造。
+export function parseFeed(xml: string, siteName: string): SearchResult[] {
   const blocks = xml.match(/<(item|entry)\b[\s\S]*?<\/(item|entry)>/gi) ?? [];
   const out: SearchResult[] = [];
   for (const block of blocks) {

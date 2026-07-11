@@ -5,11 +5,12 @@ import {
   type ContextDeps,
 } from "./creative-context";
 import {
-  buildTrendQuery,
-  formatTrendBrief,
+  assembleTrendBrief,
   type ModelSpec,
   type TrendHit,
 } from "./topic-task-adapter";
+// [T-235b] 已登记信源信号(通用网页信源主路 + RSS 辅路)—— 与 web 搜索并行拼热点段。
+import { type TrendSourceSignal } from "./trend-source-signals";
 // [T-212d] 防茧房护栏纯函数(与 candidate.service 的 rankGuardrail 同一真源;跨模块只引纯函数,
 //   同 benchmark-collector 引 ../benchmark/benchmark.viral 的先例——无 IO、无 repo)。
 import {
@@ -74,6 +75,9 @@ export interface TopicDailyCollectorDeps extends ContextDeps {
     query: string,
     opts?: { count?: number },
   ) => Promise<TrendHit[]>;
+  /** [T-235b] 已登记信源信号(可选,host 绑 collectTrendSourceSignals)。与 trendSearch
+   *  并行拉;单路失败只丢该段(诚实降级)。 */
+  trendSourceSignals?: (ctx: RequestContext) => Promise<TrendSourceSignal[]>;
   /** 跑一次出题节点(host 绑 ai-worker runTopicNode + modelFor = topic.generate 同模板;测试注 fake)。
    *  抛错 = 模型运行时失败 → 采集器上抛,runner 落普通失败(诚实,不吞)。 */
   generateTopics: (
@@ -158,24 +162,18 @@ export async function collectDailyTopics(
     { projectId: null, topic: "" },
     deps,
   );
-  let trendBrief = "";
-  if (deps.trendSearch) {
-    try {
-      const hits = await deps.trendSearch(
-        ctx,
-        buildTrendQuery(context.positioningBrief),
-        { count: 8 },
-      );
-      trendBrief = formatTrendBrief(hits);
-    } catch {
-      trendBrief = ""; // 未配 web.search / 检索失败 → 热点段空(诚实降级,其余依据照常)
-    }
-  }
+  // [T-235b] 热点段多源并行:已登记信源信号(readUrl+AI 抽取 / rss feed,主路)+ web 搜索
+  //   (既有)。单路失败只丢该段;两路全空 → 热点段空(诚实降级,其余依据照常)。
+  const trendBrief = await assembleTrendBrief(
+    ctx,
+    context.positioningBrief,
+    deps,
+  );
   const basisSections: string[] = [];
   if (context.signalsBrief) {
     basisSections.push(`【受众评论信号】\n${context.signalsBrief}`);
   }
-  if (trendBrief) basisSections.push(trendBrief); // 自带【当前热点(联网检索)】段头
+  if (trendBrief) basisSections.push(trendBrief); // 自带【已登记信源信号】/【当前热点(联网检索)】段头
   const basisBrief = basisSections.join("\n\n");
 
   // ② 出题(topic.generate 同模板,host 绑 runTopicNode;knowledgeBrief/learningsBrief 走模板

@@ -5,6 +5,11 @@ import {
   assembleCreativeContext,
   type ContextDeps,
 } from "./creative-context";
+// [T-235b] 已登记信源信号(通用网页信源主路 + RSS 辅路)—— trend basis 与 web 搜索并行拼 brief。
+import {
+  formatTrendSourceBrief,
+  type TrendSourceSignal,
+} from "./trend-source-signals";
 
 // 选题节点 live 接线(Phase 3 A 路径)—— 把 topic.generate 任务跑在新 Agent Runtime 上,
 // 而不是旧的 runClaudeAgent 订阅路径。这层只做「装配 + 注入」:解析按 capability 配的 model
@@ -51,6 +56,9 @@ export interface TopicTaskAdapterDeps extends ContextDeps {
     query: string,
     opts?: { count?: number },
   ) => Promise<TrendHit[]>;
+  // [T-235b] 已登记信源信号端口(可选,host 绑 collectTrendSourceSignals:web 型 readUrl+AI
+  // 抽取 / rss 型 feed 解析)。与 trendSearch **并行**拉,单路失败只丢该段(诚实降级)。
+  trendSourceSignals?: (ctx: RequestContext) => Promise<TrendSourceSignal[]>;
 }
 
 /** [T-182c] 由定位简报派生 trend 检索 query(有定位则贴领域,无则通用),空白归一。 */
@@ -73,6 +81,37 @@ export function formatTrendBrief(hits: ReadonlyArray<TrendHit>): string {
   return lines.length > 0
     ? ["【当前热点(联网检索)】", ...lines].join("\n")
     : "";
+}
+
+/**
+ * [T-235b] trend 依据多源并行装配:**已登记信源信号(主路)+ 联网 web 搜索(既有)**同时拉,
+ * 拼成一份分段 brief。单路失败/未绑只丢该段(Promise.allSettled,诚实降级空);两路全空 → ""
+ * (节点走无热点降级路径,与旧行为一致)。topic-task-adapter 的 trend 分支与 topic-daily-collector
+ * 共用(端口形状兼容,additive 扩展)。
+ */
+export async function assembleTrendBrief(
+  ctx: RequestContext,
+  positioningBrief: string,
+  deps: Pick<TopicTaskAdapterDeps, "trendSearch" | "trendSourceSignals">,
+): Promise<string> {
+  const [signalsSettled, searchSettled] = await Promise.allSettled([
+    deps.trendSourceSignals
+      ? deps.trendSourceSignals(ctx)
+      : Promise.resolve([]),
+    deps.trendSearch
+      ? deps.trendSearch(ctx, buildTrendQuery(positioningBrief), { count: 8 })
+      : Promise.resolve([]),
+  ]);
+  const sections: string[] = [];
+  if (signalsSettled.status === "fulfilled") {
+    const brief = formatTrendSourceBrief(signalsSettled.value);
+    if (brief) sections.push(brief);
+  } // rejected → 信源段空(collectTrendSourceSignals 内已单源容错,这里兜整体失败)
+  if (searchSettled.status === "fulfilled") {
+    const brief = formatTrendBrief(searchSettled.value);
+    if (brief) sections.push(brief);
+  } // rejected(未配 web.search / 检索失败)→ 搜索段空,诚实降级
+  return sections.join("\n\n");
 }
 
 export interface TopicTask {
@@ -106,20 +145,10 @@ export async function runTopicGenerateV2(
     } else if (basis === "knowledge") {
       basisBrief = context.knowledgeBrief;
     } else if (basis === "trend") {
-      // [T-182c] trend 出题:复用 T-126 联网检索(rss/browser 免 key adapter)抓当前热点拼进 basisBrief。
-      // 未绑端口 / 未配 web.search / 检索失败 → 空 brief;basis="trend" 仍透传给节点当降级 hint,不崩。
-      if (deps.trendSearch) {
-        try {
-          const hits = await deps.trendSearch(
-            ctx,
-            buildTrendQuery(context.positioningBrief),
-            { count: 8 },
-          );
-          basisBrief = formatTrendBrief(hits);
-        } catch {
-          basisBrief = ""; // 检索失败 → 诚实降级空,靠 basis 参数让节点走无热点路径
-        }
-      }
+      // [T-182c→T-235b] trend 出题多源并行:已登记信源信号(readUrl+AI 抽取 / rss feed,主路)
+      // + T-126 联网检索(既有)拼分段 brief。单路失败只丢该段;两路全空 → 空 brief,basis="trend"
+      // 仍透传给节点当降级 hint,不崩。
+      basisBrief = await assembleTrendBrief(ctx, context.positioningBrief, deps);
     }
     // 4) 跑整条编排:markRunning → 跑节点(发步骤)→ recordCandidate;失败 cancelTask。
     await runTopicTask({

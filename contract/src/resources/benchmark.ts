@@ -37,7 +37,12 @@ export const benchmarkWorkResource = z.object({
   duration: z.number().int().nullable(),
   createTime: z.string().nullable(),
   isViral: z.boolean(),
+  // [T-235b] 黑马行(discovery=darkhorse)的 viralMultiple 存赞粉比(digg/fans);对标行存 digg/median。
   viralMultiple: z.number().nullable(),
+  // [T-235b] 发现方式:benchmark=对标源采集(默认)| darkhorse=低粉黑马雷达(关键词搜索)。
+  discovery: z.string(),
+  authorFollowerCount: z.number().int().nullable(), // 作者粉丝数(黑马赞粉比分母;对标采集 NULL)
+  discoveryKeyword: z.string().nullable(), // 黑马命中的搜索关键词(溯源;对标行 NULL)
   teardownStatus: z.string(), // pending 待拆 | done（T-212c 转化后）
   capturedAt: iso8601,
   createdAt: iso8601,

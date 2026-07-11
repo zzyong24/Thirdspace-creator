@@ -1159,6 +1159,174 @@ export async function fetchDouyinUserPosts(
   }
 }
 
+// ---------------------------------------------------------------------------
+// [T-235b] 低粉黑马雷达搜索 —— 按关键词搜抖音「近 1 天 + 最多赞」候选视频(含作者粉丝数,
+//   黑马赞粉比判定的分母)。复用 fetchDouyinUserPosts 同款范式:openContext(.auth/ 登录态)
+//   + 页内 fetch(credentials:include 借登录态调 /aweme/v1/web/search/item/,darkhorse.py 同款
+//   publish_time=1&sort_type=1)+ douyinGateway 限流 + 验证码检测跳过(返 [],不硬闯)。
+//   **只读公开搜索结果的公开统计**(合规红线)。黑马三档判定不在此 —— 纯函数 detectDarkhorse
+//   在 backend/modules/benchmark(本函数只抓原始候选,判定与抓取分层)。
+// ---------------------------------------------------------------------------
+
+/** 搜索命中的一条候选视频(公开统计 + 作者公开信息,程序化从 search/item JSON 抽取)。 */
+export interface DouyinSearchVideo {
+  awemeId: string;
+  description: string;
+  diggCount: number;
+  commentCount: number;
+  collectCount: number;
+  shareCount: number;
+  /** 时长(ms,抖音 video.duration 原值)。 */
+  durationMs: number;
+  /** 发布时间(unix 秒,抖音原值;缺失 0)。 */
+  createTime: number;
+  authorSecUid: string;
+  authorNickname: string;
+  /** 作者粉丝数(黑马赞粉比分母;缺失 0)。 */
+  authorFollowerCount: number;
+}
+
+// darkhorse.py:43-49 同款搜索 API(publish_time=1 一天内 + sort_type=1 最多赞,count=24)。
+const SEARCH_ITEM_API =
+  "https://www.douyin.com/aweme/v1/web/search/item/?device_platform=webapp&aid=6383" +
+  "&channel=channel_pc_web&search_channel=aweme_video_web&enable_history=1" +
+  "&keyword={kw}&search_source=tab_search&query_correct_type=1" +
+  "&is_filter_search=1&sort_type=1&publish_time=1&offset=0&count=24" +
+  "&pc_client_type=1&version_code=170400&version_name=17.4.0&cookie_enabled=true" +
+  "&screen_width=1920&screen_height=1080&browser_language=zh-CN&browser_platform=Win32" +
+  "&browser_name=Chrome&browser_version=126.0.0.0&browser_online=true&platform=PC";
+
+/** 解析 search/item API 的 JSON(data[].aweme_info 或直接条目),字段兜底(纯函数可单测)。 */
+export function parseSearchVideoList(json: unknown): DouyinSearchVideo[] {
+  const root = (json ?? {}) as Record<string, unknown>;
+  const data = Array.isArray(root.data) ? (root.data as unknown[]) : [];
+  const out: DouyinSearchVideo[] = [];
+  for (const item of data) {
+    const wrap = (item ?? {}) as Record<string, unknown>;
+    // 条目可能包在 aweme_info 里(搜索混排),也可能就是条目本体(darkhorse.py 同款兜底)。
+    const a = ((wrap.aweme_info ?? wrap) ?? {}) as Record<string, unknown>;
+    const awemeId = str(a.aweme_id);
+    if (!awemeId) continue; // 非视频条目(用户卡/合集卡)跳过
+    const stats = (a.statistics ?? {}) as Record<string, unknown>;
+    const author = (a.author ?? {}) as Record<string, unknown>;
+    const video = (a.video ?? {}) as Record<string, unknown>;
+    out.push({
+      awemeId,
+      description: str(a.desc).trim(),
+      diggCount: num(stats.digg_count),
+      commentCount: num(stats.comment_count),
+      collectCount: num(stats.collect_count),
+      shareCount: num(stats.share_count),
+      durationMs: num(video.duration),
+      createTime: num(a.create_time),
+      authorSecUid: str(author.sec_uid),
+      authorNickname: str(author.nickname),
+      authorFollowerCount: num(author.follower_count),
+    });
+  }
+  return out;
+}
+
+// fetchDouyinSearchVideos 只依赖 page/context 的这几个能力(收窄便于 fake 单测,不起真
+// Chromium)。真实 Playwright Page/BrowserContext 结构上满足。
+interface SearchCapablePage {
+  goto(url: string, opts?: unknown): Promise<unknown>;
+  waitForTimeout(ms: number): Promise<void>;
+  /** 无参求值(验证码检测读 body 文本)。 */
+  evaluate<R>(fn: () => R): Promise<R>;
+  /** 带参求值(页内 fetch 搜索 API;fn 序列化进页面执行,须自包含)。 */
+  evaluate<R, A>(fn: (arg: A) => R | Promise<R>, arg: A): Promise<R>;
+}
+interface SearchCapableContext {
+  pages(): SearchCapablePage[];
+  newPage(): Promise<SearchCapablePage>;
+  cookies(url: string): Promise<Array<{ name: string }>>;
+  close(): Promise<void>;
+}
+
+export interface FetchSearchVideosOptions {
+  authDir: string;
+  /** 搜索关键词(定位 keywords / 用户可配)。 */
+  keyword: string;
+  gateway?: DouyinChannelGate;
+}
+
+/** fetchDouyinSearchVideos 的可注入依赖(默认真 openContext(.auth/, headless);单测注 fake)。 */
+export interface FetchSearchVideosDeps {
+  openContext?: (
+    authDir: string,
+    headless: boolean,
+  ) => Promise<SearchCapableContext>;
+}
+
+/**
+ * 按关键词搜抖音「近 1 天最多赞」候选视频(黑马雷达的抓取半边)。复用 .auth/ 登录态、
+ * douyinGateway 限流(整次搜索 acquire 一次 creator-center gate)。未登录抛
+ * DouyinNotLoggedInError;**验证码命中 → 返 [] 跳过**(darkhorse.py 同款,不硬闯风控)。
+ * openContext 端口注入,故解析/验证码分支可确定性单测。**只读公开数据。**
+ */
+export async function fetchDouyinSearchVideos(
+  opts: FetchSearchVideosOptions,
+  deps: FetchSearchVideosDeps = {},
+): Promise<DouyinSearchVideo[]> {
+  const gateway = opts.gateway ?? instantNoopGateway;
+  const openCtx =
+    deps.openContext ??
+    ((authDir: string, headless: boolean) =>
+      openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
+  const ctx = await openCtx(opts.authDir, true);
+  try {
+    // 登录态校验(页内 fetch credentials:include 要借它;未登录 → 提示扫码,同 user-posts)。
+    const cookies = await ctx.cookies("https://www.douyin.com");
+    const loggedIn = cookies.some(
+      (c) => c.name === "sessionid" || c.name === "sessionid_ss",
+    );
+    if (!loggedIn) throw new DouyinNotLoggedInError();
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+
+    const kw = encodeURIComponent(opts.keyword);
+    // 整次搜索 acquire 一次限流网关(导航 + 页内 fetch 算一次请求节奏,防高频撞风控)。
+    return await withDouyinChannel(gateway, "creator-center", async () => {
+      // 先落到真实搜索页(建立 referer/风控上下文),再页内 fetch API(darkhorse.py:58-64 同款)。
+      await gotoWithRetry(
+        page as unknown as GotoCapablePage,
+        `https://www.douyin.com/search/${kw}?publish_time=1&sort_type=1&type=video`,
+        { timeoutMs: 60_000, label: `黑马搜索(${opts.keyword})` },
+      );
+      await page.waitForTimeout(5000); // 等页面就绪(darkhorse.py 等 6s,这里 5s + gateway 节奏)
+
+      // 验证码检测:body 前 300 字含「验证」→ 跳过该词(返 [],不硬闯;调用方记日志)。
+      const bodyHead = await page
+        .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
+        .catch(() => "");
+      if (bodyHead.includes("验证")) {
+        console.warn(
+          `[darkhorse] 关键词「${opts.keyword}」搜索页命中验证码,跳过(返回空)`,
+        );
+        return [];
+      }
+
+      // 页内 fetch 搜索 API(credentials:include 借登录态;fn 自包含,只引用页面全局)。
+      const json = await page.evaluate<unknown, string>(async (u: string) => {
+        try {
+          const r = await fetch(u, { credentials: "include" });
+          return (await r.json()) as unknown;
+        } catch (e) {
+          return { error: e instanceof Error ? e.message : String(e) };
+        }
+      }, SEARCH_ITEM_API.replace("{kw}", kw));
+
+      const videos = parseSearchVideoList(json);
+      console.log(
+        `[darkhorse] fetchDouyinSearchVideos 关键词「${opts.keyword}」→ ${videos.length} 条候选`,
+      );
+      return videos;
+    });
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+  }
+}
+
 export interface FetchCommentsTarget {
   /** 目标作品 aweme_id(评论管理页 item_id 过滤 → 只抓这条作品的评论)。 */
   awemeId: string;

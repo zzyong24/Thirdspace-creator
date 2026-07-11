@@ -47,6 +47,8 @@ import { COMMENT_QA_SIFT_TEMPLATE } from "./templates/comment-qa-sift";
 import { BENCHMARK_TEARDOWN_TEMPLATE } from "./templates/benchmark-teardown";
 // [T-212d] 防茧房校准 skill（topic.preference）—— 淘汰原因批 → 结构化偏好信号（≥3 硬门在 backend 护栏强制）。
 import { TOPIC_PREFERENCE_DISTILL_TEMPLATE } from "./templates/topic-preference-distill";
+// [T-235b] 热点信源信号抽取 skill(trend.extract)—— 信源页正文 → 结构化信号(无热度不编,诚实门)。
+import { TREND_EXTRACT_TEMPLATE } from "./templates/trend-extract";
 import {
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
@@ -94,6 +96,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   BENCHMARK_TEARDOWN_TEMPLATE,
   // [T-212d] 防茧房校准:淘汰原因批 → 结构化偏好信号(avoid/prefer + keyword + supportingCount)。
   TOPIC_PREFERENCE_DISTILL_TEMPLATE,
+  // [T-235b] 热点信源信号抽取:信源页正文 → 结构化信号列表(无热度/链接/时间一律 null 不编)。
+  TREND_EXTRACT_TEMPLATE,
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,

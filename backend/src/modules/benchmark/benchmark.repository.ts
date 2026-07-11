@@ -40,6 +40,10 @@ export interface UpsertWorkInput {
   createTime?: string | null;
   isViral?: boolean;
   viralMultiple?: number | null;
+  // [T-235b] 发现方式维度(缺省 benchmark;黑马雷达传 darkhorse,viralMultiple 存赞粉比)。
+  discovery?: "benchmark" | "darkhorse";
+  authorFollowerCount?: number | null;
+  discoveryKeyword?: string | null;
   capturedAt: string;
 }
 
@@ -209,6 +213,10 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
           createTime: input.createTime ?? null,
           isViral: input.isViral ?? false,
           viralMultiple: input.viralMultiple ?? null,
+          // [T-235b] 发现方式维度(黑马雷达=darkhorse;缺省对标采集)。
+          discovery: input.discovery ?? "benchmark",
+          authorFollowerCount: input.authorFollowerCount ?? null,
+          discoveryKeyword: input.discoveryKeyword ?? null,
           capturedAt: input.capturedAt,
           createdAt: nowIso,
           updatedAt: nowIso,
@@ -230,6 +238,9 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
             createTime: input.createTime ?? null,
             isViral: input.isViral ?? false,
             viralMultiple: input.viralMultiple ?? null,
+            discovery: input.discovery ?? "benchmark",
+            authorFollowerCount: input.authorFollowerCount ?? null,
+            discoveryKeyword: input.discoveryKeyword ?? null,
             capturedAt: input.capturedAt,
             updatedAt: nowIso,
           },

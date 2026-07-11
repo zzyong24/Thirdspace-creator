@@ -46,3 +46,13 @@ export {
   type ViralVerdict,
   type DetectViralOptions,
 } from "./benchmark.viral";
+
+// [T-235b] 低粉黑马判定纯函数(darkhorse.py 三档方法论,统计学,可单测)。
+export {
+  detectDarkhorse,
+  DEFAULT_DARKHORSE_OPTIONS,
+  type DarkhorseInputVideo,
+  type DarkhorseVerdict,
+  type DarkhorseTier,
+  type DetectDarkhorseOptions,
+} from "./benchmark.darkhorse";

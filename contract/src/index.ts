@@ -80,6 +80,11 @@ export {
   benchmarkWorkResource,
   type BenchmarkWorkResource,
 } from "./resources/benchmark";
+// [T-235b] 热点信源(热点多源证据)。
+export {
+  trendSourceResource,
+  type TrendSourceResource,
+} from "./resources/trend-source";
 export {
   scheduledJobResource,
   jobRunResource,

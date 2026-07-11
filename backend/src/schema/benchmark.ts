@@ -45,7 +45,12 @@ export const benchmarkWorks = pgTable("benchmark_works", {
   duration: integer("duration"), // 时长(ms)
   createTime: text("create_time"), // 作品发布时间(ISO/unix，采集抽取原值)
   isViral: boolean("is_viral").notNull().default(false), // detectViral 判定
-  viralMultiple: doublePrecision("viral_multiple"), // digg/median(诊断/排序)
+  // [T-235b] 黑马行的 viralMultiple 存**赞粉比**(digg/fans);对标行仍存 digg/median(黑马语义,darkhorse.py)。
+  viralMultiple: doublePrecision("viral_multiple"), // digg/median 或 赞粉比(诊断/排序)
+  // [T-235b] 发现方式维度(低粉黑马雷达):benchmark=对标源采集(默认,存量不变)| darkhorse=关键词黑马。
+  discovery: text("discovery").notNull().default("benchmark"),
+  authorFollowerCount: integer("author_follower_count"), // 作者粉丝数(黑马赞粉比分母;对标采集不抓,NULL)
+  discoveryKeyword: text("discovery_keyword"), // 黑马命中的搜索关键词(溯源;对标行 NULL)
   teardownStatus: text("teardown_status").notNull().default("pending"), // 拆解状态:pending 待拆(T-212c 转 done)
   capturedAt: text("captured_at").notNull(),
   createdAt: text("created_at").notNull(),
@@ -86,6 +91,9 @@ CREATE TABLE IF NOT EXISTS benchmark_works (
   create_time TEXT,
   is_viral BOOLEAN NOT NULL DEFAULT FALSE,
   viral_multiple DOUBLE PRECISION,
+  discovery TEXT NOT NULL DEFAULT 'benchmark',
+  author_follower_count INTEGER,
+  discovery_keyword TEXT,
   teardown_status TEXT NOT NULL DEFAULT 'pending',
   captured_at TEXT NOT NULL,
   created_at TEXT NOT NULL,

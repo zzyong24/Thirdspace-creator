@@ -171,6 +171,11 @@ export {
   benchmarkWorks,
   BENCHMARK_DDL,
 } from "./schema/benchmark";
+// [T-235b] 通用网页信源(热点多源证据)。
+export {
+  trendSources,
+  TREND_SOURCES_DDL,
+} from "./schema/trend-sources";
 // T-147 P5 桌面激活授权(activation_state 一机一码激活态表)。
 export { activationState } from "./schema/activation";
 export type { ActivationStateRow } from "./schema/activation";

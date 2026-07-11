@@ -35,7 +35,7 @@
   - 对标快照「≥2 账号发过」交叉验证聚类(参照 dy-- main.py:1774-1809)仍为可选补充信号。
 - 出的选题带**数据支撑**(来源链接/互动量),不再是新闻摘要式空转。
 
-### 2.3 S-C 收藏蒸馏入口
+### 2.3 S-C 收藏蒸馏入口(**用户修正 2026-07-11:降级为「指定收藏夹」模式,排 S-E 后非主线**——全收藏混杂不合理;核心是信源=低粉爆款跟拍(S-B 黑马雷达为主线)。做则必须用户引导:提示在抖音建专门收藏夹(如「选题库」),系统只抓该指定夹,UI 明示可改)
 - 「我的收藏」采集:launchPersistentContext+登录态(**不抄 dy-- 的 connectOverCDP**,记忆铁律),新 sourceKind `favorites` 或手动触发。**[gate-F2] 前置依赖:T-225 逐字稿管线——已完成 ✅ 2026-07-11(三层修复真机跑通),非阻塞。**
 - 蒸馏链复用:transcribe-runner(T-225)→ 分类蒸馏(仿 dy-- `_distill_content_to_asset` 先判库再落):进知识库走 knowledge-distill **确认门**(铁律②);判为选题 → candidates.create(source enum 加 `favorites`,动 `backend/src/schema/candidate.ts` + service:497 标签表,additive)。
 
