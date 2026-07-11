@@ -36,6 +36,25 @@ export interface PromptTemplate {
   /** 必需注入的 facet 名;缺(undefined/空串)即 bindPrompt 报错,不静默拼空。 */
   requiredFacets: readonly string[];
   /**
+   * [T-184] 声明式 context 注入 —— 本模板需要装配层注入哪些 **context 源 reader**(key = 组合根
+   * ContextDeps 的 facet-reader 字段名,如 "positioning"/"learnings"/"knowledge"/"thesis"/
+   * "contract"/"outline"/"artifactOrigin"/"projectMaterials"/"brief"…)。装配层(组合根
+   * persistence-client 的 resolveContextDeps)按此声明**自动**从中央 reader registry 取 reader 组
+   * deps,取代每个 runXxx dispatch **手列 deps**——手列漏一个 reader = 对应 facet 恒空(T-182
+   * CLAIM-1 script.draft 漏 knowledge 的根因)。此声明就是那份「要哪些 context 源」的单一真值。
+   *
+   * 与 `requiredFacets` 区别:requiredFacets 是 bindPrompt 阶段对**已装配好的 facet 串**做非空校验的
+   * facet 名;contextRequirements 是**更上游**——它决定装配层去装哪些 reader(reader 产出才是 facet)。
+   * 二者互补:声明装哪些源(本字段) → reader 产 facet → bindPrompt 按 requiredFacets 校验非空。
+   *
+   * 可选:未声明的模板(undefined)= 装配层不按声明注入(保持各自现有手列),互不影响。
+   *
+   * future(本切片不做,仅留位):后续可从「静态 key 列表」升成带**权重/渐进式多轮/先问用户**的
+   * 结构(如 `{ key, weight?, stage?, askUser? }[]`),支撑按预算裁剪 context、多轮渐进注入。当前只做
+   * 「声明 → 静态注入 reader」最小骨架。
+   */
+  contextRequirements?: readonly string[];
+  /**
    * 该 skill 在 ChatBox 里允许调用的工具白名单(工具 id,如 "topic.generate")。按 ChatContext
    * 的页面层/按钮层注入(SPEC §3.2/§4.1)。可空 = 该 skill 不挂工具(纯结构化生成)。
    * 配置口子:override 通道可整组替换(后台改白名单不改代码)。

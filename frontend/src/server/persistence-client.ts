@@ -165,6 +165,12 @@ import type {
   ProjectMaterialsReader,
   ProjectMaterial,
 } from "@creatoros/backend/modules/ai-runtime";
+// [T-184] 声明式 context 注入:CreativeContextDeps = creative-context 的 ContextDeps(facet reader
+// 集合的类型),供中央 reader registry + resolveContextDeps 定型;ProjectBriefReader 供命名 briefReader。
+import type {
+  ContextDeps as CreativeContextDeps,
+  ProjectBriefReader,
+} from "@creatoros/backend/modules/ai-runtime";
 import type { ContextReaders as ChatContextReaders } from "@creatoros/backend/modules/ai-runtime";
 import { knowledgeRelevanceScore } from "@creatoros/backend/modules/ai-runtime";
 import { runGatherMaterial } from "@creatoros/backend/modules/ai-runtime";
@@ -281,6 +287,8 @@ import {
   createRssAdapter,
   type SearchProviderRegistry,
 } from "@creatoros/ai-worker";
+// [T-184] script.draft 模板的 contextRequirements 声明 —— 组合根按它 resolveContextDeps 注入 reader。
+import { SCRIPT_DRAFT_TEMPLATE } from "@creatoros/ai-worker";
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
 import { createBrowserScrapeAdapter } from "@/server/ai/search/search-browser";
 import {
@@ -546,6 +554,28 @@ async function archivePlaceholderBestEffort(
       err,
     );
   }
+}
+
+// [T-184] 声明式 context 注入 —— resolver。给定模板声明的 contextRequirements(要哪些 context 源)
+// 和中央 reader registry(key→已构造 reader),按声明挑出子集组成 facet-reader deps。取代 runXxx
+// dispatch **手列 deps**(手列漏一个 reader = 对应 facet 恒空,T-182 CLAIM-1 script.draft 漏 knowledge
+// 的根因)。只解析 facet-reader 类 deps;ai / resolveModelSpec 等基础设施由组合根 always-注入,不进声明。
+// - 未声明(requirements=undefined)→ 空 deps(调用方保持自身既有手列,互不影响)。
+// - registry 里没有 / 值为 undefined 的 key → 跳过(诚实:声明了但装配层没登记该源就是没注入,不塞空壳)。
+// future(本切片不做):当 contextRequirements 升级成带权重/渐进/askUser 的结构时,resolver 在此按预算/
+// 轮次裁剪;当前只做「声明 key → 静态取 reader」最小映射。
+export function resolveContextDeps(
+  requirements: readonly string[] | undefined,
+  registry: Partial<CreativeContextDeps>,
+): Partial<CreativeContextDeps> {
+  const deps: Partial<CreativeContextDeps> = {};
+  const reg = registry as Record<string, unknown>;
+  const out = deps as Record<string, unknown>;
+  for (const key of requirements ?? []) {
+    const reader = reg[key];
+    if (reader !== undefined) out[key] = reader;
+  }
+  return deps;
 }
 
 // [T-136§D-bind⑤] 扫码 ensureAccount 的 upsert 去重:传占位 handle 时,若已存在**任意** active
@@ -2349,6 +2379,43 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               : null;
           },
         };
+        // 立项 Brief reader(立项画幅 横/竖屏 → script.draft 据此调钩子与时长)。best-effort:读不到
+        // 画幅返回 null,绝不阻塞写文案。[T-184] 从 script.draft dispatch 内联提到这里命名,供中央
+        // registry 登记(逻辑与原内联逐字一致,零行为变化)。
+        const briefReader: ProjectBriefReader = {
+          getBriefDetail: async (c, projectId) => {
+            try {
+              const row = await projectsRepo.get(c, projectId);
+              const o = (
+                row.briefDetail as
+                  | { orientation?: "landscape" | "portrait" }
+                  | undefined
+              )?.orientation;
+              return o ? { orientation: o } : null;
+            } catch {
+              return null; // best-effort;读不到画幅绝不阻塞写文案
+            }
+          },
+        };
+        // [T-184] 中央 context reader registry —— key(= ContextDeps facet 字段名)→ 已构造 reader。
+        // 模板用 contextRequirements 声明要哪些源,resolveContextDeps 据此自动取 reader 组 deps,取代
+        // runXxx dispatch 手列(手列漏接 = facet 恒空的根因)。本切片只让 script.draft 一条 dispatch
+        // 走声明式注入(script-first 范式);其它节点仍各自手列,后续按同范式逐条迁移。ai /
+        // resolveModelSpec 是非 facet 基础设施,不进 registry(组合根 always-注入)。
+        const contextReaderRegistry: Partial<CreativeContextDeps> = {
+          positioning: positioningReader,
+          learnings: learningsReader,
+          assets: assetsReader,
+          accounts: accountsReader,
+          signals: signalsReader,
+          knowledge: knowledgeReader,
+          thesis: thesisReader,
+          contract: contractReader,
+          outline: outlineReader,
+          artifactOrigin: artifactOriginReader,
+          projectMaterials: makeProjectMaterialsReader(),
+          brief: briefReader,
+        };
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
@@ -2698,6 +2765,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // 分镜脚本 node — drafts a storyboard from the full creative context, records an
           // `artifact_version` candidate; 采纳 appends a new ArtifactVersion (reuses the
           // existing artifact_version confirm path).
+          // [T-184] 声明式 context 注入(script-first 范式):facet-reader deps 不再手列,改由
+          // resolveContextDeps 按 SCRIPT_DRAFT_TEMPLATE.contextRequirements 从中央 registry 自动取
+          // (positioning/learnings/knowledge/thesis/contract/outline/artifactOrigin/projectMaterials/
+          // brief —— 与旧手列逐项一致,零行为变化)。根治「手列漏一个 reader = 该 facet 恒空」
+          // (T-182 CLAIM-1 script.draft 漏 knowledge 的根因):现在漏接只可能来自漏声明,声明即真值。
+          // ai / resolveModelSpec 是非 facet 基础设施,组合根 always-注入(不进声明/registry)。
           void runScriptDraft(
             ctx,
             {
@@ -2708,40 +2781,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             },
             {
               ai: aiService,
+              ...resolveContextDeps(
+                SCRIPT_DRAFT_TEMPLATE.contextRequirements,
+                contextReaderRegistry,
+              ),
+              // positioning 已在 contextRequirements 声明(resolver 已注入同一 positioningReader);
+              // 此处显式 pin 仅为满足 ScriptDeps 把 positioning 类型标为必需(值同,零行为变化)。
               positioning: positioningReader,
-              learnings: learningsReader,
-              // [T-182a] 知识库沉淀接入写文案上下文 —— 组合根把 knowledgeReader 绑给 script.draft
-              // (与 topic.generate 同一 reader),assembleCreativeContext 据此产出 knowledgeBrief,
-              // 真喂进 runScriptNode 的写脚本 prompt。补断链前此项恒空(见 script-runner.ts)。
-              knowledge: knowledgeReader,
-              // SEAM-01:策划→脚本上下文 —— 把本项目策划产物(论点树/内容合同/结构方案)经
-              // reader 端口注入写文案上下文,和 positioning+learnings 并列。脚本据此铺策划的
-              // 结构与论点,不再自己重造蓝图。各 reader 读对应 artifact 当前版本(无则降级空)。
-              thesis: thesisReader,
-              contract: contractReader,
-              outline: outlineReader,
-              // F2 (T-030-D4):策划产物若是 AI 历史反推(origin='reconstructed'),把注入 script.draft
-              // 的论点树/合同/结构方案 brief 显式标「未经确认」,脚本不静默当已确认蓝图。
-              artifactOrigin: artifactOriginReader,
-              // [T-146c] 用户上传素材主权:本项目高优先(用户第一手)素材进「必须遵守」硬约束段,
-              // normal(AI 找的)进参考段。creative-context 按 material_link.priority 分流。
-              projectMaterials: makeProjectMaterialsReader(),
-              // 立项画幅(横/竖屏)→ script.draft 据此调钩子与时长(SKL-01/02 下游赋能)。
-              brief: {
-                getBriefDetail: async (c, projectId) => {
-                  try {
-                    const row = await projectsRepo.get(c, projectId);
-                    const o = (
-                      row.briefDetail as
-                        | { orientation?: "landscape" | "portrait" }
-                        | undefined
-                    )?.orientation;
-                    return o ? { orientation: o } : null;
-                  } catch {
-                    return null; // best-effort;读不到画幅绝不阻塞写文案
-                  }
-                },
-              },
               // Vercel AI SDK 路径(弃 LlmCompleter):写文案节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },
