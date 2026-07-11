@@ -63,7 +63,6 @@ interface RouteResolution {
   readonly sidebarContext?: SidebarContextSection;
   readonly project?: TopHeaderProjectIdentity;
   readonly primaryActionLabel?: string;
-  readonly secondaryActionLabel?: string;
   readonly projectStages?: ReadonlyArray<TopHeaderStage>;
 }
 
@@ -288,7 +287,7 @@ export function resolveRoute(
       project: identity,
       projectStages: buildProjectStages(stage),
       ...(primaryActionLabel ? { primaryActionLabel } : {}),
-      secondaryActionLabel: "分享",
+      // [T-209] 移除假「分享」按钮的 label 来源(该按钮无 onClick,已随 top-header 一并删除)。
       sidebarContext: {
         heading: "当前项目",
         items: [
@@ -405,7 +404,6 @@ export function ShellRouter({
       project={resolution.project}
       projectStages={resolution.projectStages}
       primaryActionLabel={resolution.primaryActionLabel}
-      secondaryActionLabel={resolution.secondaryActionLabel}
       contentFill={isContentFillRoute(pathname)}
       overlayMasked={hasInterceptingModal || overlayMasked}
     >

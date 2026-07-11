@@ -68,7 +68,7 @@ export interface TopHeaderProps {
     readonly status: "pending" | "in_progress" | "completed" | "skipped";
   }>;
   readonly primaryActionLabel?: string;
-  readonly secondaryActionLabel?: string;
+  // [T-209] secondaryActionLabel 曾只用于假「分享」按钮,连按钮一并移除。
   readonly searchPlaceholder?: string;
   readonly searchValue?: string;
   readonly overlayMasked?: boolean;
@@ -91,8 +91,7 @@ const DEFAULT_STAGES: ReadonlyArray<TopHeaderStage> = [
 ];
 
 const SearchIcon = creatorIcons.search;
-const ShareIcon = creatorIcons.share;
-const MoreIcon = creatorIcons.more;
+// [T-209] ShareIcon / MoreIcon 随假「分享」「更多」按钮一并移除(无消费者)。
 
 // ---------------------------------------------------------------------------
 // Top-level component
@@ -107,7 +106,6 @@ export function TopHeader({
   project,
   projectStages = DEFAULT_STAGES,
   primaryActionLabel,
-  secondaryActionLabel,
   searchPlaceholder = "搜索项目、素材或知识",
   searchValue,
   overlayMasked = false,
@@ -161,7 +159,6 @@ export function TopHeader({
         project={project}
         notifications={notifications}
         primaryActionLabel={primaryActionLabel}
-        secondaryActionLabel={secondaryActionLabel}
       />
     </header>
   );
@@ -290,7 +287,6 @@ function HeaderActions({
   mode,
   pathname,
   primaryActionLabel,
-  secondaryActionLabel,
   project,
   notifications,
 }: {
@@ -298,7 +294,6 @@ function HeaderActions({
   pathname: string;
   project?: TopHeaderProjectIdentity;
   primaryActionLabel?: string;
-  secondaryActionLabel?: string;
   notifications?: NotificationsViewModel;
 }) {
   if (
@@ -323,7 +318,6 @@ function HeaderActions({
         pathname={pathname}
         project={project}
         primaryActionLabel={primaryActionLabel}
-        secondaryActionLabel={secondaryActionLabel}
       />
     );
   }
@@ -347,27 +341,7 @@ function HeaderActions({
         </Link>
       ) : null}
       <NotificationPopover viewModel={notifications} />
-      {secondaryActionLabel ? (
-        <Button type="button" variant="outline" size="sm">
-          {secondaryActionLabel}
-        </Button>
-      ) : null}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label="分享"
-      >
-        <ShareIcon className="size-4" aria-hidden="true" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label="更多"
-      >
-        <MoreIcon className="size-4" aria-hidden="true" />
-      </Button>
+      {/* [T-209] 删除假「分享」(ShareIcon)与假「更多」(MoreIcon)空壳按钮(无 onClick)。 */}
       {primaryActionLabel ? (
         <Button type="button" size="sm">
           {primaryActionLabel}
@@ -382,13 +356,11 @@ function ProjectHeaderActions({
   pathname,
   project,
   primaryActionLabel,
-  secondaryActionLabel,
 }: {
   mode: "project-overview" | "project-workspace";
   pathname: string;
   project?: TopHeaderProjectIdentity;
   primaryActionLabel?: string;
-  secondaryActionLabel?: string;
 }) {
   // The Overview header's primary action enters the workspace (navigation only,
   // no stage change). The Workspace header's primary action PERSISTS the stage
@@ -421,15 +393,9 @@ function ProjectHeaderActions({
           <SearchIcon className="size-4" aria-hidden="true" />
         </Link>
       ) : null}
-      {secondaryActionLabel ? (
-        <Button type="button" variant="outline" size="lg">
-          <ShareIcon className="size-4" aria-hidden="true" />
-          {secondaryActionLabel}
-        </Button>
-      ) : null}
-      <Button type="button" variant="outline" size="icon-lg" aria-label="更多">
-        <MoreIcon className="size-4" aria-hidden="true" />
-      </Button>
+      {/* [T-209] 删除假「分享」(secondaryActionLabel + ShareIcon,无 onClick 空壳)与
+          假「更多」(MoreIcon,无 onClick)按钮 —— 照 [T-153] 删假「筛选」先例:接不了真就
+          移除避免误导。secondaryActionLabel 的唯一来源(shell-router)一并清理。 */}
       {primaryActionLabel ? (
         mode === "project-workspace" ? (
           <WorkspacePrimaryAction
@@ -437,6 +403,7 @@ function ProjectHeaderActions({
             routeProjectId={routeProjectId}
             currentStage={currentStage}
             advances={advances}
+            projectTitle={project?.title}
           />
         ) : overviewHref ? (
           <Link href={overviewHref} className={buttonVariants({ size: "lg" })}>

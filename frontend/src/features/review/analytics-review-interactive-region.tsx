@@ -37,6 +37,8 @@ import { InsightCard } from "@/components/analytics/insight-card";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
+// [T-209] 复盘内容区把当前 viewModel 发布到 module 桥,供 header「导出报告」按钮读取。
+import { publishReviewExportModel } from "./review-report-export";
 // [T-118a §A] 复用经验裁决队列组件(采纳/不采→evaluateLearning、inline 编辑),不另造。
 import {
   AdjudicationQueue,
@@ -109,6 +111,13 @@ export function AnalyticsReviewInteractiveRegion({
   // (reviews.get). A read-only drill — no router.refresh().
   const [reviewDetail, setReviewDetail] = React.useState<ReviewDto | null>(null);
 
+  // [T-209] 发布当前 viewModel 到 module 桥,让 header 的「导出报告」按钮能就地生成
+  // 自包含报告(header 与本内容区在不同子树,context 上浮不到,故用单例桥)。unmount 清空。
+  React.useEffect(() => {
+    publishReviewExportModel(viewModel);
+    return () => publishReviewExportModel(null);
+  }, [viewModel]);
+
   const onSelectReview = React.useCallback(
     (id: string) => {
       setActiveReviewId(id);
@@ -132,7 +141,9 @@ export function AnalyticsReviewInteractiveRegion({
       data-slot="analytics-grid"
       className="grid grid-cols-1 gap-card-gap lg:grid-cols-[minmax(0,1fr)_350px]"
     >
-      <div data-slot="analytics-main-column" className="flex flex-col gap-3">
+      {/* [T-209] 主列竖向间距 gap-3(12px)与右栏/外层网格 gap-card-gap(16px)不齐 →
+          统一为 card-gap,消除左右两列节奏错位的「布局奇怪」观感。 */}
+      <div data-slot="analytics-main-column" className="flex flex-col gap-card-gap">
         <CoreMetricsRow metrics={viewModel.metrics} />
         <PrimaryCharts
           viewsTrend={viewModel.viewsTrend}
@@ -855,53 +866,100 @@ function ReviewAuthoringPanel({
   );
   const [title, setTitle] = React.useState<string>("");
   const [description, setDescription] = React.useState<string>("");
+  // [T-209] 复盘编辑可见反馈:此前开始/添加/完成都只 router.refresh(),用户看不到结果 →
+  // 像假按钮。加内联状态提示(成功绿 / 失败红),让每步都有肉眼可见的确认。
+  const [feedback, setFeedback] = React.useState<{
+    tone: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [busy, setBusy] = React.useState(false);
 
   const startReview = React.useCallback(() => {
-    if (!wiring) return;
+    if (!wiring || busy) return;
+    setBusy(true);
+    setFeedback(null);
     void (async () => {
-      const review = (await client.createReview({
-        params: { projectId },
-        query: undefined,
-        body: { reviewType: "project", contentOutputId: null },
-      })) as { id: string };
-      setActiveReviewId(review.id);
-      router.refresh();
+      try {
+        const review = (await client.createReview({
+          params: { projectId },
+          query: undefined,
+          body: { reviewType: "project", contentOutputId: null },
+        })) as { id: string };
+        setActiveReviewId(review.id);
+        setFeedback({ tone: "success", text: "已开始复盘，可以记录洞察了" });
+        router.refresh();
+      } catch (err) {
+        setFeedback({ tone: "error", text: describeUserError(err, "开始复盘失败，请重试。") });
+      } finally {
+        setBusy(false);
+      }
     })();
-  }, [wiring, projectId, router]);
+  }, [wiring, projectId, router, busy]);
 
   const addInsight = React.useCallback(() => {
-    if (!wiring || !activeReviewId || title.trim() === "") return;
+    if (!wiring || busy) return;
+    if (!activeReviewId) {
+      setFeedback({ tone: "error", text: "请先点「开始复盘」创建一次复盘" });
+      return;
+    }
+    if (title.trim() === "") {
+      setFeedback({ tone: "error", text: "洞察标题不能为空" });
+      return;
+    }
+    setBusy(true);
+    setFeedback(null);
     void (async () => {
-      await client.createReviewInsight({
-        params: { reviewId: activeReviewId },
-        query: undefined,
-        body: {
-          insightType: insightType as
-            | "success"
-            | "issue"
-            | "action"
-            | "hypothesis",
-          title,
-          description,
-        },
-      });
-      setTitle("");
-      setDescription("");
-      router.refresh();
+      try {
+        await client.createReviewInsight({
+          params: { reviewId: activeReviewId },
+          query: undefined,
+          body: {
+            insightType: insightType as
+              | "success"
+              | "issue"
+              | "action"
+              | "hypothesis",
+            title,
+            description,
+          },
+        });
+        setTitle("");
+        setDescription("");
+        setFeedback({ tone: "success", text: "已添加洞察" });
+        router.refresh();
+      } catch (err) {
+        setFeedback({ tone: "error", text: describeUserError(err, "添加洞察失败，请重试。") });
+      } finally {
+        setBusy(false);
+      }
     })();
-  }, [wiring, activeReviewId, insightType, title, description, router]);
+  }, [wiring, activeReviewId, insightType, title, description, router, busy]);
 
   const completeReview = React.useCallback(() => {
-    if (!wiring || !activeReviewId) return;
+    if (!wiring || busy) return;
+    if (!activeReviewId) {
+      setFeedback({ tone: "error", text: "还没有进行中的复盘可完成" });
+      return;
+    }
+    setBusy(true);
+    setFeedback(null);
     void (async () => {
-      await client.completeReview({
-        params: { reviewId: activeReviewId },
-        query: undefined,
-        body: undefined,
-      });
-      router.refresh();
+      try {
+        await client.completeReview({
+          params: { reviewId: activeReviewId },
+          query: undefined,
+          body: undefined,
+        });
+        setActiveReviewId(null);
+        setFeedback({ tone: "success", text: "已完成复盘" });
+        router.refresh();
+      } catch (err) {
+        setFeedback({ tone: "error", text: describeUserError(err, "完成复盘失败，请重试。") });
+      } finally {
+        setBusy(false);
+      }
     })();
-  }, [wiring, activeReviewId, router]);
+  }, [wiring, activeReviewId, router, busy]);
 
   return (
     <article
@@ -968,6 +1026,22 @@ function ReviewAuthoringPanel({
       >
         完成复盘
       </button>
+
+      {/* [T-209] 可见反馈:开始/添加/完成的结果内联回显(成功绿 / 失败红),消除「假按钮」观感。 */}
+      {feedback ? (
+        <p
+          data-slot="review-authoring-feedback"
+          data-tone={feedback.tone}
+          role="status"
+          aria-live="polite"
+          className={
+            "text-[11px] " +
+            (feedback.tone === "success" ? "text-success" : "text-destructive")
+          }
+        >
+          {feedback.text}
+        </p>
+      ) : null}
 
       {/* [T-116b] 纯装饰按钮「添加发布 / 生成复盘报告」(经验沉淀飞轮未接通)已删除。 */}
     </article>

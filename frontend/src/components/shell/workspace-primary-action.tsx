@@ -28,6 +28,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { client } from "@/lib/contract-client";
 import type { ProjectStageName } from "@/types/domain";
+// [T-209] 复盘页「导出报告」→ 就地生成自包含 HTML 报告并触发下载(数据源 = 复盘内容区
+// 经 module 桥发布的 viewModel;不新拉 op)。仅 label==="导出报告"(复盘阶段)时挂此 handler。
+import {
+  REVIEW_EXPORT_LABEL,
+  triggerReviewReportDownload,
+} from "@/features/review/review-report-export";
 
 // The project pipeline order. The next stage is the adjacent forward step;
 // `review` is terminal. Mirrors STAGE_ORDER in ProjectOverviewActions and the
@@ -62,6 +68,11 @@ export interface WorkspacePrimaryActionProps {
    * transition, no navigation), preserving prior behavior.
    */
   readonly advances: boolean;
+  /**
+   * [T-209] 项目标题(header identity 携带)。仅「导出报告」用于报告标题/文件名;
+   * 其它阶段忽略。
+   */
+  readonly projectTitle?: string;
 }
 
 export function WorkspacePrimaryAction({
@@ -69,11 +80,20 @@ export function WorkspacePrimaryAction({
   routeProjectId,
   currentStage,
   advances,
+  projectTitle,
 }: WorkspacePrimaryActionProps) {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
   const nextStage = advances ? nextStageOf(currentStage) : null;
   const canAdvance = advances && nextStage !== null && routeProjectId !== "";
+  // [T-209] 复盘页导出报告:非跳转动作,只在 label 命中「导出报告」时挂 handler,
+  // 绝不影响其它阶段的 primaryAction(它们要么是「进入下一步」跳转,要么无按钮)。
+  const isExportReport = !advances && label === REVIEW_EXPORT_LABEL;
+  const [exportHint, setExportHint] = React.useState<string | null>(null);
+  const onExport = React.useCallback(() => {
+    const ok = triggerReviewReportDownload({ projectTitle });
+    setExportHint(ok ? "已开始下载报告" : "暂无可导出的复盘数据");
+  }, [projectTitle]);
 
   const onAdvance = React.useCallback(() => {
     if (pending || !canAdvance || !nextStage) return;
@@ -102,6 +122,25 @@ export function WorkspacePrimaryAction({
       }
     })();
   }, [canAdvance, nextStage, pending, routeProjectId, router]);
+
+  if (isExportReport) {
+    // [T-209] 复盘页「导出报告」:非跳转终态动作,点击就地生成自包含报告并触发下载。
+    return (
+      <span className="flex flex-col items-end gap-0.5">
+        <Button type="button" size="lg" onClick={onExport}>
+          {label} →
+        </Button>
+        {exportHint ? (
+          <span
+            data-slot="export-report-hint"
+            className="text-[11px] text-muted-foreground"
+          >
+            {exportHint}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
 
   if (!canAdvance) {
     // Terminal / non-advancing stage: keep the plain button behavior.

@@ -54,7 +54,7 @@ export interface AppShellProps {
   readonly project?: TopHeaderProjectIdentity;
   readonly projectStages?: ReadonlyArray<TopHeaderStage>;
   readonly primaryActionLabel?: string;
-  readonly secondaryActionLabel?: string;
+  // [T-209] secondaryActionLabel(假「分享」)已随按钮移除。
   readonly searchPlaceholder?: string;
   readonly searchValue?: string;
   readonly overlayMasked?: boolean;
@@ -85,7 +85,6 @@ export function AppShell({
   project,
   projectStages,
   primaryActionLabel,
-  secondaryActionLabel,
   searchPlaceholder,
   searchValue,
   overlayMasked = false,
@@ -126,7 +125,6 @@ export function AppShell({
           project={project}
           projectStages={projectStages}
           primaryActionLabel={primaryActionLabel}
-          secondaryActionLabel={secondaryActionLabel}
           searchPlaceholder={searchPlaceholder}
           searchValue={searchValue}
           overlayMasked={overlayMasked}
