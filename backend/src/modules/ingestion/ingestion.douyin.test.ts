@@ -215,12 +215,18 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
       | MetricRecord[]
       | {
           records: MetricRecord[];
-          identity: { nickname: string; secUid: string; douyinId: string } | null;
+          identity: {
+            nickname: string;
+            secUid: string;
+            douyinId: string;
+            followerCount: number | null; // [T-214]
+          } | null;
         },
     handleUpdates: Array<{
       platform: string;
       handle: string;
       externalAccountId?: string | null;
+      followerCount?: number | null; // [T-214]
     }>,
   ) {
     let seq = 0;
@@ -267,7 +273,12 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
   it("抓到真实身份 → external_source.name=真实昵称、sourceIdentifier=抖音号;platform_account handle 更新", async () => {
     const { db } = await createDb();
     await seedSource(db, "src-douyin-id", "douyin"); // 占位 name(seedSource 里 name=sourceType)
-    const updates: Array<{ platform: string; handle: string; externalAccountId?: string | null }> = [];
+    const updates: Array<{
+      platform: string;
+      handle: string;
+      externalAccountId?: string | null;
+      followerCount?: number | null;
+    }> = [];
     const svc = identityService(
       db,
       {
@@ -276,6 +287,7 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
           nickname: "月色创作者",
           secUid: "MS4wsecuid",
           douyinId: "moonlit_creator",
+          followerCount: 12345, // [T-214] 采到总粉丝数
         },
       },
       updates,
@@ -286,8 +298,14 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
     expect(src?.sourceIdentifier).toBe("moonlit_creator"); // 抖音号存 sourceIdentifier
     // platform_account handle 也更新为真实昵称。
     // [T-201b] 顺带把稳定身份锚 sec_uid 一并透传(handle=显示名,externalAccountId=身份键)。
+    // [T-214] 顺带把总粉丝数 followerCount 透传(实现侧仅 >0 才回填 followerBaseline)。
     expect(updates).toEqual([
-      { platform: "douyin", handle: "月色创作者", externalAccountId: "MS4wsecuid" },
+      {
+        platform: "douyin",
+        handle: "月色创作者",
+        externalAccountId: "MS4wsecuid",
+        followerCount: 12345,
+      },
     ]);
   });
 
@@ -331,7 +349,7 @@ describe("ingestion.refreshDouyin — 回填登录用户真实身份 (T-136 §D)
       db,
       {
         records: [record],
-        identity: { nickname: "月色", secUid: "s", douyinId: "d" },
+        identity: { nickname: "月色", secUid: "s", douyinId: "d", followerCount: null },
       },
       updates,
     );

@@ -136,6 +136,7 @@ export {
   candidates,
   audienceSignals,
   topicPromotions,
+  topicPreferences,
   CANDIDATE_DDL,
 } from "./schema/candidate";
 export {
@@ -189,4 +190,4 @@ export type { ResolvedMasterKey, MasterKeySource } from "./secret-crypto";
 // user-scoped queries against the ONE shared-infra drizzle (foundation §1: the
 // db factory + ORM live in @creatoros/backend). Identity's repository is the
 // first such in-app module.
-export { eq, and, or, asc, desc, sql, isNull, count, ilike, inArray, gte, lte } from "drizzle-orm";
+export { eq, and, or, asc, desc, sql, isNull, count, ilike, inArray, gte, lte, lt } from "drizzle-orm";

@@ -156,11 +156,12 @@ describe("PositioningCenterView", () => {
     expect(screen.getAllByTestId("positioning-facet").length).toBe(5);
   });
 
-  it("[T-055b] AI 赋能带唯一入口 =「在对话里聊定位」深链(任务流按钮已退役)", () => {
+  it("[T-055b/T-210] AI 赋能带唯一入口 =「开始访谈式定位」深链(任务流按钮已退役)", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
     expect(screen.getByTestId("positioning-ai-band")).toBeTruthy();
     const link = screen.getByTestId("positioning-open-copilot");
-    expect(link.textContent).toContain("在对话里聊定位");
+    // [T-210] 定位改多轮访谈:入口文案从「在对话里聊定位」改为「开始访谈式定位」。
+    expect(link.textContent).toContain("开始访谈式定位");
     // 旧 createAITask 任务流按钮不复存在(用户裁决:双 AI 入口合一)。
     expect(screen.queryByText(/AI 生成定位建议/)).toBeNull();
   });

@@ -310,6 +310,23 @@ export {
   calibrationScoreSchema,
   type CalibrationScoreOutput,
 } from "./prompt/templates/calibration-score";
+// [T-212c] 对标爆款拆解(benchmark.teardown)外置模板 + 输出 schema —— 爆款 + 定位 → 六段拆解 +
+// 换角度转化选题。schema 定义在本包(有 zod);backend runner 引类型绑 generateObject,无需直引 zod。
+export {
+  BENCHMARK_TEARDOWN_TEMPLATE,
+  benchmarkTeardownSchema,
+  benchmarkTopicSchema,
+  type BenchmarkTeardownOutput,
+} from "./prompt/templates/benchmark-teardown";
+// [T-212d] 防茧房校准(topic.preference)外置模板 + 输出 schema —— 淘汰原因批 → 结构化偏好信号。
+// schema 定义在本包(有 zod);backend runner 引类型绑 generateObject,无需直引 zod。
+export {
+  TOPIC_PREFERENCE_DISTILL_TEMPLATE,
+  topicPreferenceDistillSchema,
+  topicPreferenceSchema,
+  type TopicPreferenceDistillOutput,
+  type TopicPreferenceItem,
+} from "./prompt/templates/topic-preference-distill";
 // ChatBox 每轮输出契约脊梁(SPEC §4.2)—— 两段 { reply, candidates[], nextActions[] } + 工具白名单。
 export {
   CHATBOX_TOPIC_TEMPLATE,

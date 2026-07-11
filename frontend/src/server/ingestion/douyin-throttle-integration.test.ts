@@ -189,7 +189,12 @@ function makeFakeMetricsContext(pages: number) {
               aweme_id: `w-${served}`,
               statistics: { play_count: 1 },
               // [T-136 §D] 登录用户自己作品的 author = 本人 → fetchDouyinMetrics 反解 identity。
-              author: { nickname: "月色本人", sec_uid: "MS4wself", unique_id: "moon_self" },
+              author: {
+                nickname: "月色本人",
+                sec_uid: "MS4wself",
+                unique_id: "moon_self",
+                follower_count: 66600, // [T-214] 总粉丝数(反解回填 followerBaseline 的源)
+              },
             },
           ],
           has_more: hasMore,
@@ -264,6 +269,7 @@ describe("[gate-F7 插装点②] fetchDouyinMetrics 翻页每页过 creator-cent
       nickname: "月色本人",
       secUid: "MS4wself",
       douyinId: "moon_self",
+      followerCount: 66600, // [T-214] 总粉丝数一并反解
     });
     expect(calls.close).toBe(1);
   });
