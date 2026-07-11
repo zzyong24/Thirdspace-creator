@@ -194,6 +194,8 @@ import {
   fetchDouyinVideoUrl,
   streamAudioFromVideo,
   fetchDouyinWorkListExport,
+  // [T-212a] 对标他号作品采集(sec_uid 主页 aweme/post,只读公开统计)。
+  fetchDouyinUserPosts,
 } from "@/server/ingestion/douyin-cdp";
 import {
   parseDouyinWorkListXlsx,
@@ -223,6 +225,8 @@ import { captureUrl } from "@/server/ingestion/web-capture";
 import {
   runScheduledCollection,
   type Collector as ScheduledCollector,
+  // [T-212a] 对标采集器(benchmark sourceKind)。
+  collectBenchmark,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
   runJobNow,
@@ -336,6 +340,13 @@ import {
   createMaterialLinksTransport,
   MATERIAL_LINKS_OP_IDS,
 } from "@creatoros/backend/modules/material-links";
+// [T-212a] 对标源 + 对标作品(选题/对标强化)。
+import {
+  createBenchmarkService,
+  createBenchmarkTransport,
+  BENCHMARK_OP_IDS,
+  type BenchmarkService,
+} from "@creatoros/backend/modules/benchmark";
 import {
   createSchedulingService,
   createSchedulingTransport,
@@ -455,6 +466,9 @@ const PERSISTED_OPS = new Set<string>([
   // cross-module repo import); delete is ownership-gated (cross-user → OwnershipError →
   // 404).
   ...MATERIAL_LINKS_OP_IDS,
+  // [T-212a] Benchmark 对标源 CRUD(选题/对标强化,SPEC 2026-07-11 §2.1)。user/account-scoped,
+  // 采集 job 落对标作品供 T-212c 拆解转化。
+  ...BENCHMARK_OP_IDS,
   // Scheduling (module 23, T-007) — scheduled_job CRUD (create/list/get/update/setEnabled)
   // + job_run reads (listByJob/get). owned-root, transport 按 ctx.userId 收窄, job_run 经
   // requireJob ownership gate。D1 建了 backend module 却没接 dispatch;这条接线让 /automations
@@ -726,6 +740,8 @@ const CONTENT_CALENDAR_OPS = new Set<string>(CONTENT_CALENDAR_OP_IDS);
 
 // The set of op ids owned by the material-links module's transport (Plan A4).
 const MATERIAL_LINKS_OPS = new Set<string>(MATERIAL_LINKS_OP_IDS);
+// [T-212a] 对标源 CRUD ops 路由集。
+const BENCHMARK_OPS = new Set<string>(BENCHMARK_OP_IDS);
 
 // The set of op ids owned by the scheduling module's transport (module 23, T-007).
 const SCHEDULING_OPS = new Set<string>(SCHEDULING_OP_IDS);
@@ -819,6 +835,8 @@ interface PersistenceBundle {
   scheduling: Transport;
   contentCalendar: Transport;
   materialLinks: Transport;
+  // [T-212a] 对标源 CRUD transport(选题/对标强化)。
+  benchmark: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
   // reads, plus the Publishing Center composer (no endpoint — the FE calls it
   // server-side via getPublishingCenterService()).
@@ -3810,6 +3828,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const scheduling = createSchedulingTransport(() => schedulingService);
 
+  // [T-212a] 对标源服务(选题/对标强化)。collectors["benchmark"] 用它读 enabled 源 + 落对标作品;
+  //   composite 用它服务 4 个对标源 CRUD op。clock/ids 共享 deterministic deps。
+  const benchmarkService: BenchmarkService = createBenchmarkService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+  });
+
   // ── 调度采集接线 (T-007 D3, SPEC 2026-06-30 §3/§5/§6) ─────────────────────────────
   // collectors:每个 sourceKind 一个确定性采集器(抓真数据 → ingestion 落库 → 返回新鲜度
   // 统计)。runner 靠注入调它,不 import fetchDouyin*(保持可测)。
@@ -4388,6 +4414,38 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // itemsUpdated 承载本轮真回填的封面数(诚实;明细写入数入 itemsNew)。
       return { itemsNew: detailWritten, itemsUpdated: heavy.coversFilled };
     },
+    // [T-212a] 对标他号采集:读该号 enabled 对标源 → 逐源抓公开作品列表(fetchDouyinUserPosts:
+    //   sec_uid 主页 aweme/post,只读公开统计)→ detectViral 筛爆款 → 每源 ≤10 条落 benchmark_works
+    //   (拆解状态=待拆,供 T-212c)。降频(源间 sleep ≥1.5s)、单源失败跳过、限流网关已接(gateway
+    //   在 fetchDouyinUserPosts 内每页 acquire)。空源 → 诚实 0 跑(非失败)。
+    benchmark: async (ctx, _target, report) => {
+      return collectBenchmark(ctx, {
+        listEnabledSources: (c) => benchmarkService.listEnabledSources(c),
+        fetchSourcePosts: async (c, source) => {
+          const works = await fetchDouyinUserPosts(
+            {
+              authDir: douyinAuthDirFor(c.accountId), // [T-136] 按当前号登录态指纹
+              secUid: source.externalAccountId,
+              gateway: douyinGateway,
+            },
+            {},
+          );
+          return works.map((w) => ({
+            awemeId: w.awemeId,
+            description: w.description,
+            diggCount: w.diggCount,
+            commentCount: w.commentCount,
+            collectCount: w.collectCount,
+            shareCount: w.shareCount,
+            duration: w.durationSec * 1000, // 秒 → ms(schema duration 存 ms)
+            createTime: w.createTime ? String(w.createTime) : null, // unix 秒原值
+          }));
+        },
+        recordWork: (c, input) => benchmarkService.recordWork(c, input),
+        now: deps.now,
+        report,
+      });
+    },
   };
 
   // dispatchScheduledCollection 实体:装 runner deps 后经 [gate-F5] 采集串行闸挂到链尾
@@ -4710,6 +4768,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const materialLinks = createMaterialLinksTransport(
     () => materialLinksService,
   );
+
+  // [T-212a] 对标源 CRUD transport(benchmarkService 已在 collectors 装配前创建,此处复用同一实例)。
+  const benchmark = createBenchmarkTransport(() => benchmarkService);
 
   // Query services (module Q, Wave 4 — SPEC §19). Composition module: NO repo, NO
   // SQL. Each composer is built with facade interfaces; here the composition root
@@ -6703,6 +6764,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     scheduling: schedulingWithRunNow, // wrap:透传 CRUD + 拦 scheduledJobs.runNow(D5)
     contentCalendar,
     materialLinks,
+    benchmark,
     queryServices,
     publishingCenter,
     identity,
@@ -6812,6 +6874,11 @@ async function getContentCalendar(): Promise<Transport> {
 
 async function getMaterialLinks(): Promise<Transport> {
   return (await getBundle()).materialLinks;
+}
+
+// [T-212a] 对标源 CRUD transport 访问器。
+async function getBenchmark(): Promise<Transport> {
+  return (await getBundle()).benchmark;
 }
 
 async function getQueryServices(): Promise<Transport> {
@@ -7113,6 +7180,13 @@ export const compositeTransport: Transport = {
     if (MATERIAL_LINKS_OPS.has(endpoint.id)) {
       const materialLinks = await getMaterialLinks();
       return materialLinks.request(endpoint, input, ctx);
+    }
+    // [T-212a] Benchmark 对标源 CRUD(选题/对标强化)—— 4 ops(list/create/toggle/remove)由模块
+    // 自有 user/account-scoped transport 服务,同一 pglite store。toggle/remove ownership-gated
+    // (跨用户 → OwnershipError → 404)。No ctx ⇒ AuthenticationError。
+    if (BENCHMARK_OPS.has(endpoint.id)) {
+      const benchmark = await getBenchmark();
+      return benchmark.request(endpoint, input, ctx);
     }
     // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
     // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by

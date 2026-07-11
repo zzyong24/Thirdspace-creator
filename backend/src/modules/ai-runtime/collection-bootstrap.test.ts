@@ -105,13 +105,18 @@ function makeDeps(
 }
 
 describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
-  it("① 全新绑定 → 建 3 个 job(正确 sourceKind + 每天定时 cron)", async () => {
+  it("① 全新绑定 → 建 4 个 job(正确 sourceKind + 每天定时 cron)", async () => {
     const deps = makeDeps();
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    // 建了恰好 3 个 job。
-    expect(deps._createJob).toHaveBeenCalledTimes(3);
-    expect(res.created).toEqual(["self.metrics", "self.detail", "comments"]);
+    // [T-212a] 建了恰好 4 个 job(self 三源 + benchmark 对标)。
+    expect(deps._createJob).toHaveBeenCalledTimes(4);
+    expect(res.created).toEqual([
+      "self.metrics",
+      "self.detail",
+      "comments",
+      "benchmark",
+    ]);
 
     // sourceKind 正确 + 每天定时 cron(5 段,分/时确定、日/月/周为 *)。
     const bySource = new Map(
@@ -120,6 +125,7 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(bySource.get("self.metrics")).toBe("0 9 * * *");
     expect(bySource.get("self.detail")).toBe("10 9 * * *");
     expect(bySource.get("comments")).toBe("20 9 * * *");
+    expect(bySource.get("benchmark")).toBe("30 9 * * *");
     // 每条都是"每天"(dom/month/dow 全 *):
     for (const [, cron] of bySource) {
       const [, , dom, mon, dow] = cron.split(/\s+/);
@@ -133,13 +139,19 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       "self.metrics": [{ id: "existing-metrics" }],
       "self.detail": [{ id: "existing-detail" }],
       comments: [{ id: "existing-comments" }],
+      benchmark: [{ id: "existing-benchmark" }],
     });
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
     expect(deps._createJob).not.toHaveBeenCalled();
     expect(res.created).toEqual([]);
     // 但仍初始化触发既有 job(拉全量)——复用既有 id。
-    expect(res.triggered).toEqual(["self.metrics", "self.detail", "comments"]);
+    expect(res.triggered).toEqual([
+      "self.metrics",
+      "self.detail",
+      "comments",
+      "benchmark",
+    ]);
   });
 
   it("② 部分已存在 → 只补建缺的(幂等,不重复)", async () => {
@@ -148,23 +160,30 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     });
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    // 只建 self.detail + comments(self.metrics 复用既有)。
-    expect(deps._createJob).toHaveBeenCalledTimes(2);
-    expect(res.created).toEqual(["self.detail", "comments"]);
+    // 只建 self.detail + comments + benchmark(self.metrics 复用既有)。
+    expect(deps._createJob).toHaveBeenCalledTimes(3);
+    expect(res.created).toEqual(["self.detail", "comments", "benchmark"]);
   });
 
-  it("③ 绑定 → 触发一次初始化采集(每源各一次,顺序 self.metrics→self.detail→comments)", async () => {
+  it("③ 绑定 → 触发一次初始化采集(每源各一次,顺序 self.metrics→self.detail→comments→benchmark)", async () => {
     const deps = makeDeps();
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    expect(deps._trigger).toHaveBeenCalledTimes(3);
-    // 顺序铁律(接 T-190:self.metrics 先建 publication → self.detail 落可见性 → comments)。
+    expect(deps._trigger).toHaveBeenCalledTimes(4);
+    // 顺序铁律(接 T-190:self.metrics 先建 publication → self.detail 落可见性 → comments);
+    // benchmark 无依赖,追加最后(无对标源时诚实空跑)。
     expect(deps.triggeredSourceKinds).toEqual([
       "self.metrics",
       "self.detail",
       "comments",
+      "benchmark",
     ]);
-    expect(res.triggered).toEqual(["self.metrics", "self.detail", "comments"]);
+    expect(res.triggered).toEqual([
+      "self.metrics",
+      "self.detail",
+      "comments",
+      "benchmark",
+    ]);
   });
 
   it("③ 触发用的是新建/复用的真实 job id(不是空串)", async () => {
@@ -188,16 +207,21 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       },
     );
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
-    expect(res.created).toEqual(["self.metrics", "comments"]);
+    expect(res.created).toEqual(["self.metrics", "comments", "benchmark"]);
     // self.detail 建失败 → 不触发它;其余仍触发。
-    expect(res.triggered).toEqual(["self.metrics", "comments"]);
+    expect(res.triggered).toEqual(["self.metrics", "comments", "benchmark"]);
   });
 
   it("[T-200] 触发的 job 带当前号(新建 job accountId = ctx.accountId)", async () => {
     const deps = makeDeps();
     await bootstrapDouyinCollectionJobs(ctx, deps);
-    // 三条触发都带 acct-1(采集 ctx.accountId 由此派生 → 落正确号,修串号根因)。
-    expect(deps.triggeredAccountIds).toEqual(["acct-1", "acct-1", "acct-1"]);
+    // 四条触发都带 acct-1(采集 ctx.accountId 由此派生 → 落正确号,修串号根因)。
+    expect(deps.triggeredAccountIds).toEqual([
+      "acct-1",
+      "acct-1",
+      "acct-1",
+      "acct-1",
+    ]);
   });
 
   it("[T-200] 复用既有 job → 带既有 job 的属主号给触发", async () => {
@@ -205,9 +229,15 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       "self.metrics": [{ id: "existing-metrics", accountId: "acct-1" }],
       "self.detail": [{ id: "existing-detail", accountId: "acct-1" }],
       comments: [{ id: "existing-comments", accountId: "acct-1" }],
+      benchmark: [{ id: "existing-benchmark", accountId: "acct-1" }],
     });
     await bootstrapDouyinCollectionJobs(ctx, deps);
-    expect(deps.triggeredAccountIds).toEqual(["acct-1", "acct-1", "acct-1"]);
+    expect(deps.triggeredAccountIds).toEqual([
+      "acct-1",
+      "acct-1",
+      "acct-1",
+      "acct-1",
+    ]);
   });
 
   it("[T-200] 既有 job 无号(旧 job)→ 退化用 ctx.accountId 触发", async () => {
@@ -216,7 +246,12 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     });
     await bootstrapDouyinCollectionJobs(ctx, deps);
     // old-metrics 无号 → 退化 acct-1;其余新建 → acct-1。
-    expect(deps.triggeredAccountIds).toEqual(["acct-1", "acct-1", "acct-1"]);
+    expect(deps.triggeredAccountIds).toEqual([
+      "acct-1",
+      "acct-1",
+      "acct-1",
+      "acct-1",
+    ]);
   });
 
   it("[T-200] 认领存量无号采集数据:claimOrphans 在建 job/触发之前调一次", async () => {
@@ -231,15 +266,26 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     const deps = makeDeps();
     deps._claimOrphans.mockRejectedValueOnce(new Error("claim boom"));
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
-    expect(res.created).toEqual(["self.metrics", "self.detail", "comments"]);
-    expect(res.triggered).toEqual(["self.metrics", "self.detail", "comments"]);
+    expect(res.created).toEqual([
+      "self.metrics",
+      "self.detail",
+      "comments",
+      "benchmark",
+    ]);
+    expect(res.triggered).toEqual([
+      "self.metrics",
+      "self.detail",
+      "comments",
+      "benchmark",
+    ]);
   });
 
-  it("模板常量固定为三源(self.metrics / self.detail / comments)", () => {
+  it("[T-212a] 模板常量为四源(self 三源 + benchmark 对标)", () => {
     expect(DAILY_COLLECTION_JOB_DEFAULTS.map((t) => t.sourceKind)).toEqual([
       "self.metrics",
       "self.detail",
       "comments",
+      "benchmark",
     ]);
   });
 });

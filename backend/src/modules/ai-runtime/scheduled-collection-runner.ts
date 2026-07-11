@@ -156,6 +156,8 @@ const SOURCE_LABEL: Record<string, string> = {
   "self.metrics": "抖音主页作品",
   comments: "抖音评论",
   "self.detail": "抖音作品明细数据",
+  // [T-212a] 对标他号作品（benchmark sourceKind）。
+  benchmark: "对标他号作品",
 };
 
 /**

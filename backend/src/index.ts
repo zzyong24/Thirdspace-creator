@@ -164,6 +164,12 @@ export {
   jobRuns,
   SCHEDULING_DDL,
 } from "./schema/scheduling";
+// [T-212a] 对标源 + 对标作品(选题/对标强化)。
+export {
+  benchmarkSources,
+  benchmarkWorks,
+  BENCHMARK_DDL,
+} from "./schema/benchmark";
 // T-147 P5 桌面激活授权(activation_state 一机一码激活态表)。
 export { activationState } from "./schema/activation";
 export type { ActivationStateRow } from "./schema/activation";

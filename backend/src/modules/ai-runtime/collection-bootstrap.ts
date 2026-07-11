@@ -52,6 +52,14 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     prompt: "每天抓我所有作品的最新评论",
     schedule: "20 9 * * *",
   },
+  // [T-212a] 对标他号爆款采集:读该号 enabled 对标源 → 抓公开作品 → detectViral 筛爆款落库
+  //   (供 T-212c 拆解转化进选题池)。无对标源时诚实空跑(非失败),登记对标源后即生效。错峰 9:30。
+  {
+    sourceKind: "benchmark",
+    name: "每天抓对标号的爆款作品",
+    prompt: "每天抓我登记的对标博主主页的公开爆款作品",
+    schedule: "30 9 * * *",
+  },
 ];
 
 export interface CollectionBootstrapDeps {

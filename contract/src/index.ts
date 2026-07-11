@@ -75,6 +75,12 @@ export {
   type MaterialLinkResource,
 } from "./resources/material-links";
 export {
+  benchmarkSourceResource,
+  type BenchmarkSourceResource,
+  benchmarkWorkResource,
+  type BenchmarkWorkResource,
+} from "./resources/benchmark";
+export {
   scheduledJobResource,
   jobRunResource,
   jobRunProgress,

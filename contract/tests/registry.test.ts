@@ -194,6 +194,11 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/material-links"],
   ["POST", "/material-links"],
   ["POST", "/material-links/:linkId/delete"],
+  // [T-212a] 对标源 CRUD(选题/对标强化,SPEC 2026-07-11 §2.1)
+  ["GET", "/benchmark/sources"],
+  ["POST", "/benchmark/sources"],
+  ["POST", "/benchmark/sources/:sourceId/toggle"],
+  ["POST", "/benchmark/sources/:sourceId/remove"],
   // 调度作业 (scheduling / T-007 data-source-pipeline-design §9 D1)
   ["POST", "/scheduled-jobs"],
   ["GET", "/scheduled-jobs"],

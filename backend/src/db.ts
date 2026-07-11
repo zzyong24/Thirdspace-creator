@@ -27,6 +27,8 @@ import * as platformAccountSchema from "./schema/platform-account";
 import * as contentCalendarSchema from "./schema/content-calendar";
 import * as materialLinksSchema from "./schema/material-links";
 import * as schedulingSchema from "./schema/scheduling";
+// [T-212a] 对标源 + 对标作品(选题/对标强化)。
+import * as benchmarkSchema from "./schema/benchmark";
 // T-147 P5 桌面激活授权(activation_state 一机一码激活态)。
 import * as activationSchema from "./schema/activation";
 import { Pool } from "pg";
@@ -73,6 +75,7 @@ const schema = {
   ...contentCalendarSchema,
   ...materialLinksSchema,
   ...schedulingSchema,
+  ...benchmarkSchema,
   ...activationSchema,
 };
 

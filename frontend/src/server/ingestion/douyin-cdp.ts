@@ -1031,6 +1031,134 @@ export async function fetchDouyinMetrics(
   }
 }
 
+// ---------------------------------------------------------------------------
+// [T-212a] 对标他号作品采集 —— 抓一个对标博主(sec_uid)主页的公开作品列表(digg/评论/收藏/
+//   分享/时长/发布时间)。复用登录态指纹(蹭 .auth/ 的 douyin.com cookie),走用户主页
+//   `www.douyin.com/user/<sec_uid>` 页内 aweme/post XHR(同 self.metrics 那套 WORK_LIST_HINTS,
+//   `/web/aweme/post` 已在集内)。**只抓公开作品的公开统计**(合规红线),不碰非公开数据。
+//
+//   与 fetchDouyinMetrics 的区别:目标是"他号"(profile 页,非创作者中心 content/manage),
+//   身份由 sec_uid 指定而非登录态自解。翻页默认 ~5 页(SPEC §2.1,精选源增量,非全网爬)。
+//
+//   ⚠️ 真机待验点(诚实标注):`www.douyin.com/user/<sec_uid>` 的 aweme/post 是否在当前
+//     登录态下稳定触发、是否需额外 query 参(如 count/max_cursor)/风控参(a_bogus 等前端签名),
+//     未在真机验证。若 profile 页 XHR 拿不到,备选是走 iesdouyin 分享页解析(同 fetchDouyinVideoUrl
+//     那套匿名路径)。本函数按 self.metrics 的 XHR 拦截范式实现,gateway 限流已接;真机跑通前
+//     视为"接线就绪、待验证"。
+// ---------------------------------------------------------------------------
+
+/** 对标他号一条作品(公开统计,程序化从 aweme/post XHR 抽取)。 */
+export interface DouyinBenchmarkWork {
+  awemeId: string;
+  description: string;
+  diggCount: number;
+  commentCount: number;
+  collectCount: number;
+  shareCount: number;
+  durationSec: number;
+  createTime: number; // unix 秒(抖音原值)
+}
+
+export interface FetchUserPostsOptions {
+  authDir: string;
+  /** 对标博主稳定身份 sec_uid。 */
+  secUid: string;
+  /** 翻几页(默认 5;每页 ~18 条)。 */
+  maxPages?: number;
+  gateway?: DouyinChannelGate;
+}
+
+/**
+ * 抓一个对标博主(sec_uid)主页的公开作品列表。复用 .auth/ 登录态、XHR 拦截、滚动翻页、限流网关
+ * (每页 acquire creator-center gate 降频)。未登录抛 DouyinNotLoggedInError。openContext 端口注入
+ * (默认真 openContext),故可确定性单测(不起真 Chromium)。**只读公开数据。**
+ */
+export async function fetchDouyinUserPosts(
+  opts: FetchUserPostsOptions,
+  deps: FetchDouyinMetricsDeps = {},
+): Promise<DouyinBenchmarkWork[]> {
+  const maxPages = opts.maxPages ?? 5;
+  const gateway = opts.gateway ?? instantNoopGateway;
+  const openCtx = deps.openContext ?? realMetricsOpenContext;
+  const ctx = await openCtx(opts.authDir, true);
+  try {
+    // 登录态校验(蹭 douyin.com 会话;未登录 → 提示扫码,同 self.metrics)。
+    const cookies = await ctx.cookies("https://www.douyin.com");
+    const loggedIn = cookies.some(
+      (c) => c.name === "sessionid" || c.name === "sessionid_ss",
+    );
+    if (!loggedIn) throw new DouyinNotLoggedInError();
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+
+    const workJsons: unknown[] = [];
+    const seenIds = new Set<string>();
+    let hasMore = true;
+    const readHasMore = (j: unknown): boolean | undefined => {
+      const root = (j ?? {}) as Record<string, unknown>;
+      const data = (root.data ?? root) as Record<string, unknown>;
+      const v = root.has_more ?? data.has_more;
+      return typeof v === "boolean" ? v : v == null ? undefined : Boolean(v);
+    };
+    page.on("response", async (resp) => {
+      const url = resp.url();
+      if (!WORK_LIST_HINTS.some((h) => url.includes(h))) return;
+      try {
+        const j = await resp.json();
+        workJsons.push(j);
+        for (const w of parseWorkList(j)) seenIds.add(w.awemeId);
+        const hm = readHasMore(j);
+        if (hm !== undefined) hasMore = hm;
+      } catch {
+        /* 非 JSON 响应,忽略 */
+      }
+    });
+
+    const profileUrl = `https://www.douyin.com/user/${encodeURIComponent(opts.secUid)}`;
+    await gotoWithRetry(page, profileUrl, {
+      timeoutMs: 60_000,
+      label: `对标主页(${opts.secUid})`,
+    });
+    await page.waitForTimeout(3000); // 等首屏 aweme/post XHR
+
+    let staleRounds = 0;
+    for (let i = 0; i < maxPages; i++) {
+      if (!hasMore) break;
+      const before = seenIds.size;
+      // 每翻一页 acquire 一次限流网关(降频 ≥ minInterval,防高频撞风控)。
+      await withDouyinChannel(gateway, "creator-center", async () => {
+        await page
+          .evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+          .catch(() => {});
+        await page.keyboard.press("End").catch(() => {});
+        await page.mouse.wheel(0, 3000).catch(() => {});
+        await page.waitForTimeout(2500);
+      });
+      staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
+      if (staleRounds >= 3) break; // 无新作品兜底,防死循环
+    }
+
+    // 去重(同 aweme_id 保留最后一次)+ 映射到对标作品形状。
+    const byId = new Map<string, DouyinWork>();
+    for (const j of workJsons) for (const w of parseWorkList(j)) byId.set(w.awemeId, w);
+    const works: DouyinBenchmarkWork[] = [...byId.values()].map((w) => ({
+      awemeId: w.awemeId,
+      description: w.desc || w.title,
+      diggCount: w.stats.likes,
+      commentCount: w.stats.comments,
+      collectCount: w.stats.favorites,
+      shareCount: w.stats.shares,
+      durationSec: w.durationSec,
+      createTime: w.createTime,
+    }));
+    console.log(
+      `[benchmark] fetchDouyinUserPosts sec_uid=${opts.secUid} → ${works.length} 条公开作品`,
+    );
+    return works;
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+  }
+}
+
 export interface FetchCommentsTarget {
   /** 目标作品 aweme_id(评论管理页 item_id 过滤 → 只抓这条作品的评论)。 */
   awemeId: string;
