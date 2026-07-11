@@ -893,12 +893,30 @@ export function createAiService(deps: ServiceDeps): AiService {
         const str = (v: unknown) => (typeof v === "string" ? v : "");
         const strArr = (v: unknown): string[] =>
           Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+        // [T-234] 硬约束透传:suggestion 可带 downstreamRules(访谈提炼)。只传非空键
+        // (空/缺省 = undefined → 服务端 partial merge 保留库中现值,不抹已有规则)。
+        const rulesRaw = (s.downstreamRules ?? {}) as Record<string, unknown>;
+        const nonEmpty = (v: unknown): string | undefined => {
+          const t = typeof v === "string" ? v.trim() : "";
+          return t ? t : undefined;
+        };
+        const downstreamRules = {
+          topicRule: nonEmpty(rulesRaw.topicRule),
+          scriptRule: nonEmpty(rulesRaw.scriptRule),
+          projectRule: nonEmpty(rulesRaw.projectRule),
+          forbidRule: nonEmpty(rulesRaw.forbidRule),
+          expressionRule: nonEmpty(rulesRaw.expressionRule),
+        };
+        const hasRules = Object.values(downstreamRules).some(
+          (v) => v !== undefined,
+        );
         await deps.positioning.upsertProfile(ctx, {
           persona: str(s.persona),
           field: str(s.field),
           audience: str(s.audience),
           differentiation: str(s.differentiation),
           capabilities: strArr(s.capabilities),
+          ...(hasRules ? { downstreamRules } : {}),
         });
         await deps.positioning.createStatementVersion(ctx, {
           oneLiner: str(s.oneLiner),

@@ -1299,16 +1299,18 @@ export function AICopilotContent({
   const handlePromptKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (!mentionOpen || mentionOptions.length === 0) {
-        // [T-055c] 聊天惯例:Enter 发送、Shift+Enter 换行(原来 Enter 恒为换行,
-        // 只能点按钮提交)。isComposing 时是输入法确认候选词,不发送。
+        // [T-233] 反转 T-055c:纯 Enter = 换行(治打字误发——用户打字时回车把半句话发了出去);
+        // 带修饰键(Cmd/Ctrl+Enter 或 Shift+Enter,两种都宽容支持)才发送。
+        // isComposing 时是输入法确认候选词,不发送。
         if (
           e.key === "Enter" &&
-          !e.shiftKey &&
+          (e.metaKey || e.ctrlKey || e.shiftKey) &&
           !e.nativeEvent.isComposing
         ) {
           e.preventDefault();
           submit();
         }
+        // 纯 Enter 不拦截 → textarea 默认行为 = 插入换行(textarea 内 Enter 不触发表单提交)。
         return;
       }
       if (e.key === "ArrowDown") {
@@ -2046,6 +2048,13 @@ export function AICopilotContent({
                 ))}
               </div>
               <div className="flex items-center gap-1.5">
+                {/* [T-233] 发送快捷键提示:Enter 已改为换行,明示修饰键才发送(不然用户不知道怎么发)。 */}
+                <span
+                  data-slot="prompt-send-hint"
+                  className="whitespace-nowrap text-[10px] text-muted-foreground"
+                >
+                  ⌘/Ctrl ↩ 发送 · Enter 换行
+                </span>
                 <button
                   type="button"
                   onClick={() => {

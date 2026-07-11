@@ -45,6 +45,25 @@ export const positioningSuggestionSchema = z.object({
       tone: "",
       statusNote: "",
     }),
+  // [T-234] 定位硬约束(downstreamRules)—— 键与 contract creatorProfileDownstreamRules
+  // 一字不差(topicRule/scriptRule/projectRule/forbidRule/expressionRule)。用户在访谈里聊到
+  // 的硬约束(不做什么/表达红线/题材边界/效果要求/变现约束)经此字段随提案产出;没聊到的
+  // 键留空串(诚实不编造),采纳链只透传非空键。可选 + 全默认空:老模型输出缺字段也过校验。
+  downstreamRules: z
+    .object({
+      topicRule: z.string().default(""),
+      scriptRule: z.string().default(""),
+      projectRule: z.string().default(""),
+      forbidRule: z.string().default(""),
+      expressionRule: z.string().default(""),
+    })
+    .default({
+      topicRule: "",
+      scriptRule: "",
+      projectRule: "",
+      forbidRule: "",
+      expressionRule: "",
+    }),
 });
 export type PositioningSuggestionOutput = z.infer<
   typeof positioningSuggestionSchema
@@ -79,7 +98,13 @@ export const POSITIONING_GENERATE_TEMPLATE: PromptTemplate = {
   "corePain":"核心痛点（受众最痛的问题）",
   "coreValue":"核心价值（给受众的根本回报）",
   "tone":"表达风格（语气/调性）",
-  "statusNote":"当前状态（账号此刻所处阶段）"}}
-keywords 必须正好 3 个。capabilities 给 2-5 个。facets 六项都要填,不许留空。`,
+  "statusNote":"当前状态（账号此刻所处阶段）"},
+ "downstreamRules":{"topicRule":"选题规则（什么选题该做/不该做，含题材边界）",
+  "scriptRule":"写稿规则（结构/钩子/表达约束，含效果要求）",
+  "projectRule":"项目规则（立项/节奏约束，含变现约束）",
+  "forbidRule":"禁止事项（绝对红线/绝不做什么）",
+  "expressionRule":"表达风格规则（统一语气的硬约束/表达红线）"}}
+keywords 必须正好 3 个。capabilities 给 2-5 个。facets 六项都要填,不许留空。
+downstreamRules 是**下游硬约束**（选题/写稿/项目节点会把它当铁律执行）：只从创作者**明确聊到/材料里真实存在**的约束提炼（不做什么、表达红线、题材边界、效果要求、变现约束），没聊到的键**留空字符串**，绝不编造、绝不用泛泛套话凑数。`,
   requiredFacets: ["current"],
 };

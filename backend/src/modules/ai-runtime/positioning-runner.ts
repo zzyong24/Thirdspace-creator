@@ -50,6 +50,16 @@ export interface PositioningSuggestion {
     tone: string;
     statusNote: string;
   };
+  // [T-234] 定位硬约束(下游规则)—— 键与 contract creatorProfileDownstreamRules 对齐。
+  // 用户访谈里聊到的硬约束经此透传进采纳链(此前 AI 链只产 9 facets,硬约束全被丢);
+  // 没聊到的键空串,采纳时只写非空键(合并语义与手动表单一致)。
+  downstreamRules: {
+    topicRule: string;
+    scriptRule: string;
+    projectRule: string;
+    forbidRule: string;
+    expressionRule: string;
+  };
 }
 
 // [T-081②] 真实作品读端口(选填):后台 task 路径据此把全部作品标题压缩列表注入模板 {{works}}
@@ -136,8 +146,14 @@ ${current}${accounts}${works}${extra}
   "corePain":"核心痛点（受众最痛的问题）",
   "coreValue":"核心价值（给受众的根本回报）",
   "tone":"表达风格（语气/调性）",
-  "statusNote":"当前状态（账号此刻所处阶段）"}}
-keywords 必须正好 3 个。capabilities 给 2-5 个。facets 六项都要填,不许留空。`;
+  "statusNote":"当前状态（账号此刻所处阶段）"},
+ "downstreamRules":{"topicRule":"选题规则（什么选题该做/不该做，含题材边界）",
+  "scriptRule":"写稿规则（结构/钩子/表达约束，含效果要求）",
+  "projectRule":"项目规则（立项/节奏约束，含变现约束）",
+  "forbidRule":"禁止事项（绝对红线/绝不做什么）",
+  "expressionRule":"表达风格规则（统一语气的硬约束/表达红线）"}}
+keywords 必须正好 3 个。capabilities 给 2-5 个。facets 六项都要填,不许留空。
+downstreamRules 是**下游硬约束**（选题/写稿/项目节点会把它当铁律执行）：只从创作者**明确聊到/材料里真实存在**的约束提炼（不做什么、表达红线、题材边界、效果要求、变现约束），没聊到的键**留空字符串**，绝不编造、绝不用泛泛套话凑数。`;
 }
 
 // Assemble the positioning.generate 模板 facets from the CreativeContext (占位化原
@@ -206,6 +222,14 @@ function normalizeSuggestion(
       coreValue: str(o.facets?.coreValue),
       tone: str(o.facets?.tone),
       statusNote: str(o.facets?.statusNote),
+    },
+    // [T-234] 硬约束透传(缺则空串,诚实不编)。
+    downstreamRules: {
+      topicRule: str(o.downstreamRules?.topicRule),
+      scriptRule: str(o.downstreamRules?.scriptRule),
+      projectRule: str(o.downstreamRules?.projectRule),
+      forbidRule: str(o.downstreamRules?.forbidRule),
+      expressionRule: str(o.downstreamRules?.expressionRule),
     },
   };
   // A suggestion with neither a persona nor a one-liner is not usable.

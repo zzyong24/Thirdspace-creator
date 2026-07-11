@@ -134,6 +134,37 @@ describe("parseSuggestion (tolerant JSON object parse — chat 文本兜底路�
     expect(parseSuggestion("完全不是 JSON 的一段话")).toBeNull();
   });
 
+  // [T-234] 硬约束透传:downstreamRules 5 键随提案归一;缺省/部分缺省 → 空串(诚实不编)。
+  it("passes through downstreamRules (缺省键补空串)", () => {
+    const s = parseSuggestion(
+      JSON.stringify({
+        ...VALID_OBJECT,
+        downstreamRules: {
+          topicRule: "只做 AI 工程实战题,不做行业八卦",
+          forbidRule: "绝不贩卖焦虑",
+        },
+      }),
+    );
+    expect(s!.downstreamRules).toEqual({
+      topicRule: "只做 AI 工程实战题,不做行业八卦",
+      scriptRule: "",
+      projectRule: "",
+      forbidRule: "绝不贩卖焦虑",
+      expressionRule: "",
+    });
+  });
+
+  it("downstreamRules 整体缺省 → 全键空串(老输出不崩)", () => {
+    const s = parseSuggestion(VALID_JSON);
+    expect(s!.downstreamRules).toEqual({
+      topicRule: "",
+      scriptRule: "",
+      projectRule: "",
+      forbidRule: "",
+      expressionRule: "",
+    });
+  });
+
   it("returns null when oneLiner + persona are both empty (no usable suggestion)", () => {
     expect(
       parseSuggestion(JSON.stringify({ persona: "", oneLiner: "", keywords: [] })),

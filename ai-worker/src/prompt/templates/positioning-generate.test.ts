@@ -38,3 +38,50 @@ describe("positioning.generate 模板 — {{works}} 真实作品画像占位 (T-
     expect(POSITIONING_GENERATE_TEMPLATE.requiredFacets).toEqual(["current"]);
   });
 });
+
+// [T-234] 定位硬约束:输出 schema 带 downstreamRules(键与 contract creatorProfileDownstreamRules
+// 对齐),prompt 引导「只提炼聊到的、没聊到留空不编造」。老输出(无该字段)仍过校验。
+describe("positioning.generate — downstreamRules 硬约束 (T-234)", () => {
+  it("outputSchema 接受 downstreamRules 并对缺省键补空串", () => {
+    const schema = POSITIONING_GENERATE_TEMPLATE.outputSchema!;
+    const parsed = schema.parse({
+      persona: "P",
+      oneLiner: "O",
+      downstreamRules: { topicRule: "只做实战题", forbidRule: "不贩卖焦虑" },
+    }) as { downstreamRules: Record<string, string> };
+    expect(parsed.downstreamRules).toEqual({
+      topicRule: "只做实战题",
+      scriptRule: "",
+      projectRule: "",
+      forbidRule: "不贩卖焦虑",
+      expressionRule: "",
+    });
+  });
+
+  it("老输出无 downstreamRules → 默认全空键(不崩)", () => {
+    const schema = POSITIONING_GENERATE_TEMPLATE.outputSchema!;
+    const parsed = schema.parse({ persona: "P" }) as {
+      downstreamRules: Record<string, string>;
+    };
+    expect(Object.keys(parsed.downstreamRules).sort()).toEqual([
+      "expressionRule",
+      "forbidRule",
+      "projectRule",
+      "scriptRule",
+      "topicRule",
+    ]);
+    expect(Object.values(parsed.downstreamRules).every((v) => v === "")).toBe(
+      true,
+    );
+  });
+
+  it("prompt 含 downstreamRules 输出形状与「不编造留空」指引", () => {
+    const { prompt } = bindPrompt(POSITIONING_GENERATE_TEMPLATE, {
+      current: CURRENT,
+    });
+    expect(prompt).toContain('"downstreamRules"');
+    expect(prompt).toContain("topicRule");
+    expect(prompt).toContain("留空字符串");
+    expect(prompt).toContain("绝不编造");
+  });
+});

@@ -394,7 +394,34 @@ export interface ChatPositioningSuggestion {
     tone?: string;
     statusNote?: string;
   };
+  // [T-234] 定位硬约束(下游规则)—— 键与 contract creatorProfileDownstreamRules 对齐。
+  // AI 从访谈里提炼的硬约束(不做什么/表达红线/题材边界/效果要求/变现约束),采纳时
+  // 只写非空键(与手动表单同一合并语义,不把空值覆盖已有规则)。
+  downstreamRules?: {
+    topicRule?: string;
+    scriptRule?: string;
+    projectRule?: string;
+    forbidRule?: string;
+    expressionRule?: string;
+  };
 }
+
+// [T-234] downstreamRules 的 5 个键(顺序 = 手动表单/契约声明顺序)。
+const RULE_KEYS = [
+  "topicRule",
+  "scriptRule",
+  "projectRule",
+  "forbidRule",
+  "expressionRule",
+] as const;
+type RuleKey = (typeof RULE_KEYS)[number];
+const RULE_LABELS: Record<RuleKey, string> = {
+  topicRule: "选题规则",
+  scriptRule: "写稿规则",
+  projectRule: "项目规则",
+  forbidRule: "禁止事项",
+  expressionRule: "表达风格规则",
+};
 
 // keywords 须正好 3 个(createStatement 不变量)。截断/补空,与 positioning-runner 的 clamp 同义。
 function clampKeywords(raw: readonly string[]): [string, string, string] {
@@ -415,6 +442,32 @@ export function ChatPositioningCard({
     if (!suggestion) return;
     setState("adopting");
     try {
+      // [T-234] 硬约束合并:AI 只对聊到的键给值,没聊到的是空串。契约层对 downstreamRules
+      // 的缺省键会补 ""(zod default),直接传部分对象会把库里已有规则抹空 —— 故先读现有
+      // profile,逐键「新值非空则取新值,否则保留现值」合成全量对象再提交(与手动表单
+      // 「只改动非空、不覆盖已有」的语义一致)。全空则整个字段省略(服务端保留现值)。
+      const newRules = suggestion.downstreamRules ?? {};
+      const hasNewRules = RULE_KEYS.some((k) => (newRules[k] ?? "").trim());
+      let mergedRules: Record<RuleKey, string> | null = null;
+      if (hasNewRules) {
+        let prevRules: Partial<Record<RuleKey, string>> = {};
+        try {
+          const existing = await client.getProfile({
+            params: undefined,
+            query: undefined,
+            body: undefined,
+          });
+          prevRules = existing.downstreamRules ?? {};
+        } catch {
+          // 尚无 profile(404)→ 现值按空处理,不阻断采纳。
+        }
+        mergedRules = Object.fromEntries(
+          RULE_KEYS.map((k) => {
+            const next = (newRules[k] ?? "").trim();
+            return [k, next || (prevRules[k] ?? "")];
+          }),
+        ) as Record<RuleKey, string>;
+      }
       // 写入定位母版(5 facet)。
       await client.upsertProfile({
         params: undefined,
@@ -438,6 +491,8 @@ export function ChatPositioningCard({
                 },
               }
             : {}),
+          // [T-234] 硬约束随采纳落库(已与现有规则逐键合并;全空则省略 = 保留现值)。
+          ...(mergedRules ? { downstreamRules: mergedRules } : {}),
         },
       });
       // 追加一条定位陈述版本(oneLiner + 3 关键词)—— 仅在 oneLiner 非空时(createStatement 要求)。
@@ -460,6 +515,11 @@ export function ChatPositioningCard({
   }, [router, suggestion]);
 
   if (!suggestion || (!suggestion.oneLiner && !suggestion.persona)) return null;
+
+  // [T-234] 卡上先展示 AI 提炼的硬约束(非空键),用户看清是什么再决定采纳。
+  const ruleRows: ReadonlyArray<readonly [string, string]> = RULE_KEYS.map(
+    (k) => [RULE_LABELS[k], (suggestion.downstreamRules?.[k] ?? "").trim()] as const,
+  ).filter(([, v]) => v.length > 0);
 
   const facets: ReadonlyArray<readonly [string, string]> = [
     ["人设", suggestion.persona],
@@ -506,6 +566,23 @@ export function ChatPositioningCard({
               >
                 {kw}
               </span>
+            ))}
+          </div>
+        ) : null}
+        {/* [T-234] 硬约束组(downstreamRules)—— 采纳前可见,采纳时只写非空键。 */}
+        {ruleRows.length > 0 ? (
+          <div
+            data-slot="chat-positioning-rules"
+            className="flex flex-col gap-0.5 rounded-control border border-warning/30 bg-warning/5 px-2 py-1.5"
+          >
+            <span className="text-[9.5px] font-medium uppercase tracking-wide text-warning">
+              硬约束（供下游选题/写稿/项目遵守）
+            </span>
+            {ruleRows.map(([label, value]) => (
+              <div key={label} className="flex gap-1 text-[10px]">
+                <span className="shrink-0 text-text-subtle">{label}</span>
+                <span className="text-muted-foreground">{value}</span>
+              </div>
             ))}
           </div>
         ) : null}
