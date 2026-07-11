@@ -24,7 +24,10 @@
 - 未配文本模型 → 诚实跳过(job 结果注明「未配模型」,不空转不编)。
 
 ### 2.2 S-B 热点多源证据(RSS 热榜 + 平台内证据)
-- **热点源配置**:多 feed RSS/热榜源管理(复用 search-rss 适配器,源清单借 cheat-on-content trend-sources:HN/Reddit/B站热门/trendradar,T-126/T-228 已提);trend basis 时**并行拉热榜与 web 搜索**拼 brief(改造 topic-task-adapter:108-123 trend 分支)。
+- **信源架构(用户拍板:浏览器自动化为主,RSS 为辅)**——「稳定 RSS 信源太难找,浏览器自动化想去哪找就去哪找」:
+  - **通用网页信源(主路)**:用户登记任意站点/页面为信源(热榜页/垂类社区/搜索结果页,需登录的走 **Web Session Vault(T-217a 已建)** 登录态);定时用浏览器自动化访问(复用 **readUrl/web-reader(T-217b 已建)**:launchPersistentContext+登录态+Readability 抽正文,或站内 API 页内 fetch 范式)→ **AI 结构化抽取**信号(runStructuredNode:标题/热度指标/链接/时间,无热度字段则只取标题+链接,不编)→ 喂选题 brief。信源实体=「{url, 名称, 是否需登录(域名→vault 状态), 抽取备注}」,与对标源/黑马关键词并列管理。
+  - **RSS(辅路)**:有稳定 feed 就配(复用 search-rss:109 适配器),没有不强求。
+  - trend basis 时**并行拉「已登记信源+RSS+web 搜索」**拼 brief(改造 topic-task-adapter:108-123 trend 分支);单信源失败跳过不拖垮(同采集容错纪律)。
 - **平台内证据 = 低粉黑马雷达**(用户实战验证方法论,参照 `xianwa-feishu/yuyu/darkhorse.py`;**[gate-F5] 可选强化的边界**:S-B 验收以 RSS 热榜+web 并行为准,黑马雷达不做不影响验收;做的条件=sidecar 登录态可用+限流额度允许,失败诚实降级为纯 RSS+web):
   - **原理**:低粉+新发(≤48h)+高赞 = 算法在推**内容本身**而非账号权重 → 选题/形式已被验证且**跟拍窗口未关**。核心信号=**赞粉比**(digg/fans)。
   - **实现**:按定位关键词搜抖音(publish_time=1 一天内 + sort_type=1 最多赞,页内 fetch 借登录态——与 fetchDouyinUserPosts 同款范式 douyin-cdp:1072,走 douyinGateway 限流+验证码跳过);**黑马三档纯函数**(可单测,阈值配置化):strong=digg≥1000 且(fans≤10w 或 赞粉比≥1)/ niche=digg≥200 且赞粉比≥0.5 / mid=digg≥500 且 fans≤3w;赞粉比优先排序,每关键词 top5。
