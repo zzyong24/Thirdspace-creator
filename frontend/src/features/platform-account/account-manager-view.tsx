@@ -5,7 +5,7 @@
  *
  * [T-136§D-bind⑤ · 用户 2026-07-06] 删掉平台筛选 tab(全部/抖音)—— 只支持抖音,筛选无意义。
  * 整页 = 「扫码绑定新抖音号」主操作(CreateAccountForm)+ 账号列表(每行真实昵称 + 抖音号 ID +
- * 移除)。默认过滤已移除(archived)的号,只显活跃号(移除即从列表消失,可逆)。
+ * 隐藏)。默认过滤已隐藏(archived)的号,只显活跃号(隐藏即从列表消失,可逆)。[T-201c]
  *
  * Determinism (C-5): no Date.now / Math.random / fetch in render.
  */
@@ -25,7 +25,7 @@ export function AccountManagerView({
   readonly viewModel: AccountManagerViewModel;
 }) {
   const { accounts } = viewModel;
-  // 只显活跃号:移除(archive)后从列表消失。已移除的不显(可逆,但列表不摆冗余)。
+  // [T-201c] 只显活跃号:隐藏(archive)后从列表消失。已隐藏的不显(可逆,但列表不摆冗余)。
   const visible = accounts.filter((a) => a.status !== "archived");
 
   return (
@@ -51,7 +51,7 @@ export function AccountManagerView({
                 还没有绑定抖音号。点上方「扫码绑定新抖音号」即可。
               </li>
             ) : (
-              // [T-136§D-bind⑥] 只剩一个 active 号 → 传 isOnlyAccount 禁用其「移除」(末号保护)。
+              // [T-136§D-bind⑥][T-201c] 只剩一个 active 号 → 传 isOnlyAccount 禁用其「隐藏」(末号保护)。
               visible.map((a) => (
                 <AccountRow
                   key={a.id}

@@ -4405,6 +4405,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     dispatch: (ctx, task) => dispatchScheduledCollection?.(ctx, task),
     now: deps.now,
+    // [T-201d] 隐藏号定时任务停跑 gate 的查号端口:复用 platformAccountService.getAccount
+    //   (自带 ownership gate)取该号 status;号不存在/越权/查失败 → null(降级放行,不误停)。
+    getAccountStatus: (c, accountId) =>
+      platformAccountService
+        .getAccount(c, accountId)
+        .then((a) => a?.status ?? null)
+        .catch(() => null),
   };
 
   // [T-189a] 绑定抖音成功回调实体(loginDouyin 成功后 fire-and-forget 调):幂等建三个每天定时采集
@@ -4508,6 +4515,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             },
           },
         });
+        // [T-201d] 归属号已隐藏(status 非 active)→ triggerScheduledJob 跳过不产 run,
+        //   jobRunId 为空串。runNow response 契约要求 jobRunId 非空(id=min(1)),且此路是用户
+        //   手动「立即运行」→ 诚实抛错告知(账号已隐藏,先恢复再运行),不假装产了 run。
+        //   (与既有 getJob ownership 错误传播同款:runNow 本就可抛。)
+        if (result.skippedReason) {
+          throw new Error(
+            `AccountHiddenError: ${result.skippedReason}。请先在账号管理恢复该抖音号后再运行。`,
+          );
+        }
         return {
           data: {
             jobRunId: result.jobRunId,

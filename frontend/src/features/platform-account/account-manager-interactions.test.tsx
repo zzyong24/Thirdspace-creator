@@ -8,10 +8,10 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// [T-136§D-bind⑤] 账号页极简版 island 测试:整页 = 「扫码绑定新抖音号」单一主操作 +
-// 账号行(真实昵称 + 移除)。证:①扫码 → client.loginDouyin + router.refresh;②超时诚实提示不
-// refresh;③移除 → client.archiveAccount + refresh;④删了手动登记表单 / 平台 tab / 密钥徽标 /
-// 涨粉基线框(废设计不再渲染);⑤已移除(archived)的号不显。确定性 —— mock client 即时 resolve。
+// [T-136§D-bind⑤][T-201c] 账号页极简版 island 测试:整页 = 「扫码绑定新抖音号」单一主操作 +
+// 账号行(真实昵称 + 隐藏)。证:①扫码 → client.loginDouyin + router.refresh;②超时诚实提示不
+// refresh;③隐藏 → client.archiveAccount + refresh;④删了手动登记表单 / 平台 tab / 密钥徽标 /
+// 涨粉基线框(废设计不再渲染);⑤已隐藏(archived)的号不显。确定性 —— mock client 即时 resolve。
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
@@ -53,7 +53,7 @@ const DOUYIN: PlatformAccountResource = {
 const ARCHIVED: PlatformAccountResource = {
   ...DOUYIN,
   id: "acct-arch",
-  accountHandle: "@已移除的号",
+  accountHandle: "@已隐藏的号",
   status: "archived",
 };
 
@@ -99,23 +99,23 @@ describe("account-manager 极简版 island wiring", () => {
     expect(screen.queryByRole("button", { name: "新增账号" })).toBeNull();
   });
 
-  // [⑥] 移除:点「移除」不直接删 —— 弹二次确认框,须逐字键入确认句才放行 archiveAccount。
-  it("移除弹二次确认框,键入确认句后才 archiveAccount + refresh", async () => {
+  // [⑥][T-201c] 隐藏:点「隐藏」不直接生效 —— 弹二次确认框,须逐字键入确认句才放行 archiveAccount。
+  it("隐藏弹二次确认框,键入确认句后才 archiveAccount + refresh", async () => {
     render(<AccountRow account={DOUYIN} />);
-    // 点「移除」→ 弹框,尚未调 archiveAccount。
+    // 点「隐藏」→ 弹框,尚未调 archiveAccount。
     fireEvent.click(screen.getByTestId("account-remove"));
     await waitFor(() =>
       expect(screen.getByTestId("account-remove-dialog")).toBeTruthy(),
     );
     expect(mockClient.archiveAccount).not.toHaveBeenCalled();
-    // 「确认移除」在键入前禁用。
+    // 「确认隐藏」在键入前禁用。
     const confirmBtn = screen.getByTestId(
       "account-remove-confirm",
     ) as HTMLButtonElement;
     expect(confirmBtn.disabled).toBe(true);
     // 键入正确确认句 → 放行。
     fireEvent.change(screen.getByTestId("account-remove-confirm-input"), {
-      target: { value: "我已确认移除该账户" },
+      target: { value: "我已确认隐藏该账户" },
     });
     expect(confirmBtn.disabled).toBe(false);
     fireEvent.click(confirmBtn);
@@ -129,15 +129,15 @@ describe("account-manager 极简版 island wiring", () => {
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 
-  // [⑥] 键入错误确认句 → 「确认移除」保持禁用,不调 archiveAccount。
-  it("确认句不匹配时「确认移除」禁用且不删", async () => {
+  // [⑥][T-201c] 键入错误确认句 → 「确认隐藏」保持禁用,不调 archiveAccount。
+  it("确认句不匹配时「确认隐藏」禁用且不删", async () => {
     render(<AccountRow account={DOUYIN} />);
     fireEvent.click(screen.getByTestId("account-remove"));
     await waitFor(() =>
       expect(screen.getByTestId("account-remove-dialog")).toBeTruthy(),
     );
     fireEvent.change(screen.getByTestId("account-remove-confirm-input"), {
-      target: { value: "确认移除" }, // 不等于完整确认句
+      target: { value: "确认隐藏" }, // 不等于完整确认句
     });
     const confirmBtn = screen.getByTestId(
       "account-remove-confirm",
@@ -146,8 +146,8 @@ describe("account-manager 极简版 island wiring", () => {
     expect(mockClient.archiveAccount).not.toHaveBeenCalled();
   });
 
-  // [⑥] 末号保护:isOnlyAccount → 「移除」禁用,无二次确认框可开。
-  it("最后一个号(isOnlyAccount)的移除按钮禁用", () => {
+  // [⑥][T-201c] 末号保护:isOnlyAccount → 「隐藏」禁用,无二次确认框可开。
+  it("最后一个号(isOnlyAccount)的隐藏按钮禁用", () => {
     render(<AccountRow account={DOUYIN} isOnlyAccount />);
     const btn = screen.getByTestId("account-remove") as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
@@ -156,7 +156,7 @@ describe("account-manager 极简版 island wiring", () => {
   });
 
   // 账号行极简:显真实昵称,不再有密钥徽标 / 涨粉基线框 / 保存基线按钮。
-  it("账号行只显真实昵称 + 移除,无密钥徽标 / 涨粉基线 / 保存基线", () => {
+  it("账号行只显真实昵称 + 隐藏,无密钥徽标 / 涨粉基线 / 保存基线", () => {
     render(<AccountRow account={DOUYIN} />);
     expect(screen.getByText("@抖音真实昵称")).toBeTruthy();
     expect(screen.getByTestId("account-remove")).toBeTruthy();
@@ -200,19 +200,19 @@ describe("account-manager 极简版 view", () => {
     expect(screen.queryByRole("button", { name: "B站" })).toBeNull();
   });
 
-  // 只显活跃号:archived 的不进列表(移除即消失,可逆)。
-  it("只显活跃号,已移除(archived)的不显", () => {
+  // [T-201c] 只显活跃号:archived 的不进列表(隐藏即消失,可逆)。
+  it("只显活跃号,已隐藏(archived)的不显", () => {
     render(
       <AccountManagerView viewModel={{ accounts: [DOUYIN, ARCHIVED] }} />,
     );
     const rows = screen.getAllByTestId("account-row");
     expect(rows).toHaveLength(1);
     expect(rows[0]).toHaveAttribute("data-account-id", "acct-d");
-    expect(screen.queryByText("@已移除的号")).toBeNull();
+    expect(screen.queryByText("@已隐藏的号")).toBeNull();
   });
 
-  // [⑥] 只有一个 active 号 → 该行移除按钮禁用(末号保护,视图侧传 isOnlyAccount）。
-  it("只有一个号时,该号移除按钮禁用", () => {
+  // [⑥][T-201c] 只有一个 active 号 → 该行隐藏按钮禁用(末号保护,视图侧传 isOnlyAccount）。
+  it("只有一个号时,该号隐藏按钮禁用", () => {
     render(<AccountManagerView viewModel={{ accounts: [DOUYIN] }} />);
     const btn = screen.getByTestId("account-remove") as HTMLButtonElement;
     expect(btn.disabled).toBe(true);

@@ -12,8 +12,8 @@
  *  - `CreateAccountForm`(「扫码绑定新抖音号」单一主按钮)→ `client.loginDouyin`(复用设置页同款
  *    扫码链,零新 op);扫码成功后后端按 secUid upsert(命中已有号=更新、无则新增)+ 占位号合并
  *    (§D applyDouyinIdentity/persistence-client),`router.refresh()` 读回真实号。
- *  - `AccountRow`(每行:真实抖音昵称 + 抖音号 ID〔若已回填〕+「移除」)→「移除」复用
- *    `client.archiveAccount`(可逆/诚实,不硬删)。
+ *  - `AccountRow`(每行:真实抖音昵称 + 抖音号 ID〔若已回填〕+「隐藏」)→「隐藏」复用
+ *    `client.archiveAccount`(status→archived,可逆/诚实,永不硬删)。[T-201c]
  *
  * 诚实(铁律):headed 扫码端到端卡真机,前端只发起 + 据结果推进,绝不假装登录过;扫码超时/失败
  * → 明确提示重试,不写任何假账号。粉丝数暂无按号聚合的采集 metric → 不显(不造假),待接。
@@ -39,9 +39,10 @@ import {
 } from "@/components/ui/dialog";
 import type { PlatformAccountResource } from "@creatoros/backend/modules/platform-account";
 
-// [T-136§D-bind⑥ · 用户 2026-07-06 报障] 移除账号是破坏性动作(影响该号定位/选题/项目归属),
-// 必须打字二次确认(防误点)。要求逐字键入此句才放行「确认移除」。
-const REMOVE_CONFIRM_PHRASE = "我已确认移除该账户";
+// [T-136§D-bind⑥ · 用户 2026-07-06 报障][T-201c 只隐藏不移除] 隐藏账号是破坏性动作(影响该号
+// 定位/选题/项目归属),必须打字二次确认(防误点)。要求逐字键入此句才放行「确认隐藏」。
+// [T-201c] 语义 = 隐藏(status→archived,可逆,永不硬删,数据按 id 锚点原地保留);文案统一「隐藏」。
+const REMOVE_CONFIRM_PHRASE = "我已确认隐藏该账户";
 
 // [T-146/T-136] 抖音-only:产品单平台聚焦抖音。保留 PLATFORM_LABELS 供已有(可能历史遗留的)
 // 非抖音号行正确显示标签,但 UI 不再提供多平台选择/筛选。
@@ -182,11 +183,11 @@ export function CreateAccountForm() {
   );
 }
 
-// [T-136§D-bind⑤+⑥] 账号行(极简)—— 真实抖音昵称 + 抖音号 ID(若已回填)+「移除」。
+// [T-136§D-bind⑤+⑥] 账号行(极简)—— 真实抖音昵称 + 抖音号 ID(若已回填)+「隐藏」。
 // 删掉:「未配置密钥」徽标、涨粉基线输入 + 「保存基线」按钮(用户看不懂的多平台矩阵老字段)。
-// 「移除」复用 archiveAccount(status→archived,可逆/诚实,不硬删)。
-// [⑥ 用户报障] 两道防线:①`isOnlyAccount`(列表只剩这一个 active 号)→ 移除禁用(服务端 archiveAccount
-//   也硬拒末号,前端只是先给可见反馈);②非末号 → 点「移除」弹二次确认框,须逐字键入 REMOVE_CONFIRM_PHRASE
+// [T-201c] 「隐藏」复用 archiveAccount(status→archived,可逆/诚实,永不硬删;数据按 id 锚点原地保留)。
+// [⑥ 用户报障] 两道防线:①`isOnlyAccount`(列表只剩这一个 active 号)→ 隐藏禁用(服务端 archiveAccount
+//   也硬拒末号,前端只是先给可见反馈);②非末号 → 点「隐藏」弹二次确认框,须逐字键入 REMOVE_CONFIRM_PHRASE
 //   才放行(破坏性动作防误点)。
 export function AccountRow({
   account,
@@ -250,24 +251,24 @@ export function AccountRow({
         ) : null}
         {account.status === "archived" ? (
           <Badge variant="outline" className="shrink-0 text-[10px]">
-            已移除
+            已隐藏
           </Badge>
         ) : null}
       </span>
       {isOnlyAccount ? (
-        // ① 末号保护:唯一 active 号不准移除(否则没号可切、数据全落 NULL 退化)。
+        // ① 末号保护:唯一 active 号不准隐藏(否则没号可切、数据全落 NULL 退化)。[T-201c]
         <Button
           type="button"
           variant="ghost"
           size="sm"
           data-testid="account-remove"
           disabled
-          title="至少保留一个抖音号，不能移除最后一个"
+          title="至少保留一个抖音号，不能隐藏最后一个"
         >
-          移除
+          隐藏
         </Button>
       ) : (
-        // ② 二次确认弹窗:点「移除」不直接删,弹框须逐字键入确认句才放行。
+        // ② 二次确认弹窗:点「隐藏」不直接生效,弹框须逐字键入确认句才放行。[T-201c]
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button
@@ -277,20 +278,20 @@ export function AccountRow({
               data-testid="account-remove"
               disabled={removeDisabled}
             >
-              移除
+              隐藏
             </Button>
           </DialogTrigger>
           <DialogContent data-testid="account-remove-dialog">
             <DialogHeader>
-              <DialogTitle>移除抖音号「{account.accountHandle}」</DialogTitle>
+              <DialogTitle>隐藏抖音号「{account.accountHandle}」</DialogTitle>
               <DialogDescription>
-                移除后该号从列表消失（可逆，不删历史数据）。此操作影响该号名下的定位/选题/项目归属。
+                隐藏后该号从列表消失（可逆，不删历史数据）。此操作影响该号名下的定位/选题/项目归属。
                 如确认，请在下方逐字键入「{REMOVE_CONFIRM_PHRASE}」。
               </DialogDescription>
             </DialogHeader>
             <Input
               data-testid="account-remove-confirm-input"
-              aria-label="移除二次确认"
+              aria-label="隐藏二次确认"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder={REMOVE_CONFIRM_PHRASE}
@@ -310,7 +311,7 @@ export function AccountRow({
                 disabled={!canConfirm}
                 onClick={confirmRemove}
               >
-                确认移除
+                确认隐藏
               </Button>
             </DialogFooter>
           </DialogContent>

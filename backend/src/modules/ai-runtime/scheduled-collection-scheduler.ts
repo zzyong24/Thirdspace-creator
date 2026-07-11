@@ -73,6 +73,13 @@ export interface TriggerDeps {
     },
   ) => void;
   now: () => string;
+  // [T-201d] 可选:查一个账号的 status（隐藏号定时任务停跑 gate）。返回该号 status；
+  //   号不存在 / 越权 / 查失败 → null（组合根用 .catch(()=>null) 兜底）。**未绑此端口 → 不查、保持原行为跑**
+  //   （诚实降级：绝不因查号失败而误停已在跑的采集）。见 triggerScheduledJob 的 gate。
+  getAccountStatus?: (
+    ctx: RequestContext,
+    accountId: string,
+  ) => Promise<string | null>;
 }
 
 export interface TriggerResult {
@@ -82,6 +89,9 @@ export interface TriggerResult {
   aiTaskId: string;
   /** 是否命中当天既有 in-flight run(幂等短路,未新产 task/run)。 */
   deduped: boolean;
+  /** [T-201d] 若因归属号非 active(隐藏/archived)而跳过不跑 → 填跳过原因(诚实标注);
+   *  正常触发 / 幂等短路时缺省。跳过时 jobRunId/aiTaskId 为空串(不产 run,故无 id)。 */
+  skippedReason?: string;
 }
 
 /** ISO8601 时间戳 → 自然日键(YYYY-MM-DD,UTC 切分,与 capturedAt 幂等锚同口径)。 */
@@ -109,6 +119,25 @@ export async function triggerScheduledJob(
     ...ctx,
     accountId: job.accountId ?? ctx.accountId ?? null,
   };
+
+  // [T-201d] 隐藏号定时任务停跑 gate:job 有归属号 + 端口已绑 → 查该号 status;非 active
+  //   (archived/隐藏等)→ 跳过不跑(不产 task/run/dispatch),诚实 log + 返回 skippedReason。
+  //   恢复 active 后照常跑(每次触发都查,无需额外恢复代码)。
+  //   诚实降级:status 为 null(号不存在/越权/查失败,组合根 .catch(()=>null))或端口未绑 →
+  //   保持原行为跑(绝不因查号失败而误停在跑的采集)。gate 落在触发单点 → cron 与手动 runNow 同源生效。
+  if (job.accountId && deps.getAccountStatus) {
+    let status: string | null = null;
+    try {
+      status = await deps.getAccountStatus(collectionCtx, job.accountId);
+    } catch {
+      status = null; // 查失败 → 降级放行(不误停)
+    }
+    if (status !== null && status !== "active") {
+      const skippedReason = `账号 ${job.accountId} status=${status}(非 active,已隐藏/归档)→ 定时采集跳过`;
+      console.log(`[scheduler] job ${job.id} 跳过:${skippedReason}`);
+      return { jobRunId: "", aiTaskId: "", deduped: false, skippedReason };
+    }
+  }
 
   // 闸①(job_run 层):同 job 当天已有 in-flight run → 幂等短路,不重复产。
   const recent = await deps.runs.listRunsByJob(collectionCtx, job.id, {
