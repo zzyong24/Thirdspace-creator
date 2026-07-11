@@ -56,7 +56,12 @@ export function createCandidateTransport(
             pageSize?: number;
             status?: string;
             source?: string;
-            sort?: "predictedScore" | "positioningFit" | "demandCount";
+            // [T-216] guardrail = 防茧房推荐排序(service.listCandidates 路由到护栏排序)。
+            sort?:
+              | "predictedScore"
+              | "positioningFit"
+              | "demandCount"
+              | "guardrail";
           };
           const page = q.page ?? 1;
           const pageSize = q.pageSize ?? 100;

@@ -27,7 +27,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, type LucideIcon } from "lucide-react";
+import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, Target, type LucideIcon } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
 import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
@@ -48,16 +48,20 @@ import type {
   CandidateResource,
   TopicsOverviewResource,
 } from "@creatoros/backend/modules/candidate";
+import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
 
 export type CandidateSortKey =
   | "predictedScore"
   | "positioningFit"
-  | "demandCount";
+  | "demandCount"
+  // [T-216] 防茧房推荐:走护栏排序(偏好注入后分 + 探索位),防 AI 越学越窄。
+  | "guardrail";
 
 const SORT_LABELS: Record<CandidateSortKey, string> = {
   predictedScore: "推荐排序",
   positioningFit: "定位契合优先",
   demandCount: "需求热度优先",
+  guardrail: "防茧房推荐",
 };
 
 // ── shared mutation seam ────────────────────────────────────────────────────────
@@ -190,16 +194,6 @@ export function CandidateCard({
     );
   }
 
-  function drop() {
-    run(() =>
-      client.patchCandidate({
-        params: { candidateId: candidate.id },
-        query: undefined,
-        body: { status: "dropped" },
-      }),
-    );
-  }
-
   const meta = [
     card.targetAudience ? `观众 ${card.targetAudience}` : null,
     SOURCE_LABELS[candidate.source] ?? candidate.source,
@@ -290,22 +284,110 @@ export function CandidateCard({
           <Rocket className="size-3.5" />
           立项为 Project
         </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 gap-1 px-2 text-xs text-muted-foreground"
-          disabled={pending || candidate.status === "dropped"}
-          onClick={(e) => {
-            e.stopPropagation();
-            drop();
-          }}
-        >
-          <Trash2 className="size-3.5" />
-          丢弃
-        </Button>
+        <DropButton candidate={candidate} />
       </div>
     </li>
+  );
+}
+
+// ── 丢弃(带淘汰原因)────────────────────────────────────────────────────────────
+// [T-216 seam③] 点「丢弃」先填一句为什么 → patchCandidate{status:'dropped', dropReason}。
+// 原因是防茧房校准的信号源(后端 T-212d 蒸馏它),故不能丢;但允许留空直接丢弃(留空不带
+// dropReason)。自带弹窗/mutation,与 EnrichButton 一样是自足小组件。
+function DropButton({
+  candidate,
+}: {
+  readonly candidate: CandidateResource;
+}) {
+  const { pending, run, router } = useMutation();
+  const [open, setOpen] = React.useState(false);
+  const [reason, setReason] = React.useState("");
+
+  function confirmDrop() {
+    const trimmed = reason.trim();
+    run(
+      () =>
+        client.patchCandidate({
+          params: { candidateId: candidate.id },
+          query: undefined,
+          // 留空 → 只带 status(允许直接丢弃);有原因才带 dropReason(校准信号源,不能丢)。
+          body: trimmed
+            ? { status: "dropped", dropReason: trimmed }
+            : { status: "dropped" },
+        }),
+      () => {
+        setReason("");
+        setOpen(false);
+        router.refresh();
+      },
+    );
+  }
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-7 gap-1 px-2 text-xs text-muted-foreground"
+        disabled={pending || candidate.status === "dropped"}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+      >
+        <Trash2 className="size-3.5" />
+        丢弃
+      </Button>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!pending) setOpen(v);
+        }}
+      >
+        <DialogContent
+          data-testid="drop-reason-dialog"
+          className="sm:max-w-md"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DialogHeader>
+            <DialogTitle>丢弃选题</DialogTitle>
+            <DialogDescription>
+              写一句为什么丢弃 —— 编导会据此校准你的偏好(防茧房)。可留空直接丢弃。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-6 py-1">
+            <Textarea
+              aria-label="淘汰原因"
+              data-testid="drop-reason-input"
+              placeholder="例:太理论了没人看 / 又是复盘不想做…（可留空）"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={3}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={pending}
+              onClick={() => setOpen(false)}
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={pending}
+              onClick={confirmDrop}
+            >
+              {pending ? "丢弃中…" : "确认丢弃"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -712,6 +794,263 @@ export function CandidateSortControl({
         ))}
       </select>
     </label>
+  );
+}
+
+// ── 对标源登记面板 (T-216 seam① · 选题/对标强化 §2.1) ──────────────────────────────
+// 登记要对标的抖音博主(sec_uid + 主页链接 + 备注)→ 定时采集抓其公开爆款 → 拆解后自动进
+// 选题池(source=benchmark)。契约:benchmark.sources.create/list/toggle/remove(客户端方法由
+// ENDPOINTS 自动生成,无需 persistence-client 封装)。服务端读源在 topics-page,mutation 后 refresh。
+function BenchmarkSourceForm() {
+  const { pending, run, router } = useMutation();
+  const [secUid, setSecUid] = React.useState("");
+  const [homeUrl, setHomeUrl] = React.useState("");
+  const [note, setNote] = React.useState("");
+  const valid = secUid.trim().length > 0;
+
+  function submit() {
+    if (!valid) return;
+    run(
+      () =>
+        client.createBenchmarkSource({
+          params: undefined,
+          query: undefined,
+          body: {
+            externalAccountId: secUid.trim(), // sec_uid(稳定身份键)必填
+            homeUrl: homeUrl.trim() || null,
+            note: note.trim() || null,
+          },
+        }),
+      () => {
+        setSecUid("");
+        setHomeUrl("");
+        setNote("");
+        router.refresh();
+      },
+    );
+  }
+
+  return (
+    <form
+      data-testid="benchmark-source-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
+      className="flex flex-col gap-2.5 rounded-card border border-border bg-surface-subtle/40 p-3"
+    >
+      <FieldRow label="sec_uid" required>
+        <Input
+          aria-label="对标源 sec_uid"
+          placeholder="博主 sec_uid（稳定身份键）"
+          value={secUid}
+          onChange={(e) => setSecUid(e.target.value)}
+        />
+      </FieldRow>
+      <FieldRow label="主页链接">
+        <Input
+          aria-label="对标源主页链接"
+          placeholder="https://www.douyin.com/user/…（可空）"
+          value={homeUrl}
+          onChange={(e) => setHomeUrl(e.target.value)}
+        />
+      </FieldRow>
+      <FieldRow label="备注">
+        <Input
+          aria-label="对标源备注"
+          placeholder="这个号为什么值得对标（可空）"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
+      </FieldRow>
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          size="sm"
+          disabled={pending || !valid}
+          className="h-8 gap-1.5 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
+        >
+          <Plus className="size-3.5" />
+          {pending ? "登记中…" : "登记对标源"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function BenchmarkSourceRow({
+  source,
+}: {
+  readonly source: BenchmarkSourceResource;
+}) {
+  const { pending, run } = useMutation();
+
+  function toggle() {
+    run(() =>
+      client.toggleBenchmarkSource({
+        params: { sourceId: source.id },
+        query: undefined,
+        body: { enabled: !source.enabled },
+      }),
+    );
+  }
+
+  function remove() {
+    run(() =>
+      client.removeBenchmarkSource({
+        params: { sourceId: source.id },
+        query: undefined,
+        body: undefined,
+      }),
+    );
+  }
+
+  return (
+    <li
+      data-testid="benchmark-source-row"
+      data-source-id={source.id}
+      data-enabled={source.enabled ? "true" : "false"}
+      className="flex items-start justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
+    >
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="flex items-center gap-1.5">
+          <span className="truncate text-sm font-medium text-foreground">
+            {source.nickname ?? source.externalAccountId}
+          </span>
+          <Badge
+            variant={source.enabled ? "secondary" : "outline"}
+            className="shrink-0 text-[10px]"
+          >
+            {source.enabled ? "启用" : "停用"}
+          </Badge>
+        </span>
+        {source.nickname ? (
+          <span className="truncate text-[11px] text-text-subtle">
+            {source.externalAccountId}
+          </span>
+        ) : null}
+        {source.homeUrl ? (
+          <a
+            href={source.homeUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="truncate text-[11px] text-brand hover:underline"
+          >
+            {source.homeUrl}
+          </a>
+        ) : null}
+        {source.note ? (
+          <span className="text-[11px] text-muted-foreground">{source.note}</span>
+        ) : null}
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs"
+          disabled={pending}
+          onClick={toggle}
+        >
+          {source.enabled ? "停用" : "启用"}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 text-muted-foreground"
+          aria-label="删除对标源"
+          disabled={pending}
+          onClick={remove}
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
+      </div>
+    </li>
+  );
+}
+
+function BenchmarkSourceList({
+  sources,
+}: {
+  readonly sources: BenchmarkSourceResource[];
+}) {
+  if (sources.length === 0) {
+    return (
+      <p
+        data-testid="benchmark-source-empty"
+        className="rounded-card border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground"
+      >
+        还没有对标源。登记一个博主 sec_uid，定时采集会抓它的公开爆款，拆解后自动进选题池。
+      </p>
+    );
+  }
+  return (
+    <ul
+      data-testid="benchmark-source-list"
+      className="flex flex-col gap-2"
+    >
+      {sources.map((s) => (
+        <BenchmarkSourceRow key={s.id} source={s} />
+      ))}
+    </ul>
+  );
+}
+
+export function BenchmarkSourcesButton({
+  sources,
+}: {
+  readonly sources: BenchmarkSourceResource[];
+}) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        data-testid="benchmark-sources-trigger"
+        className="h-8 shrink-0 gap-1.5 px-3 text-xs"
+        onClick={() => setOpen(true)}
+      >
+        <Target className="size-3.5" />
+        对标源
+        {sources.length > 0 ? (
+          <Badge
+            variant="secondary"
+            className="ml-0.5 text-[10px] tabular-nums"
+          >
+            {sources.length}
+          </Badge>
+        ) : null}
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          data-testid="benchmark-sources-dialog"
+          className="flex max-h-[85vh] flex-col gap-0 p-0 sm:max-w-lg"
+        >
+          <DialogHeader className="border-b px-5 py-4">
+            <DialogTitle>对标源</DialogTitle>
+            <DialogDescription>
+              登记要对标的抖音博主(sec_uid)。定时采集会抓这些号的公开爆款，拆解后自动进选题池。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+            <BenchmarkSourceForm />
+            <BenchmarkSourceList sources={sources} />
+          </div>
+          <DialogFooter className="border-t">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}
+            >
+              关闭
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

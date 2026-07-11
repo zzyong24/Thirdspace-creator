@@ -261,3 +261,57 @@ describe("[T-212d] 护栏③ 8 周衰减 + 过期归档 (rankTopicsWithGuardrail
     expect(adj).toBe(-5); // 10 * (8-4)/8 = 5,方向 avoid → -5
   });
 });
+
+// [T-216] listCandidates 的 sort=guardrail 路由 —— 复用 list seam 走护栏排序(不新增 op)。
+describe("[T-216] listCandidates sort=guardrail 路由到护栏排序", () => {
+  let db: Db;
+  let svc: CandidateService;
+  const nowRef = { iso: "2026-06-01T00:00:00.000Z" };
+  beforeEach(async () => {
+    ({ db } = await createDb());
+    svc = makeService(db, nowRef);
+  });
+
+  it("sort=guardrail:avoid 命中候选被压到普通候选之后(与 rankTopicsWithGuardrails 同序)", async () => {
+    await svc.createCandidate(ctx, { title: "纯理论解析" }); // 命中 avoid
+    await svc.createCandidate(ctx, { title: "实操演示" });
+    await svc.upsertTopicPreference(ctx, {
+      keyword: "理论",
+      direction: "avoid",
+      signal: "不喜欢理论",
+      exampleCount: 3, // active
+    });
+    const { rows } = await svc.listCandidates(ctx, {
+      sort: "guardrail",
+      limit: 100,
+      offset: 0,
+    });
+    // 只排 pool 候选,实操(50)排在被压低的纯理论之前。
+    expect(rows.map((r) => r.title)).toEqual(["实操演示", "纯理论解析"]);
+  });
+
+  it("sort=guardrail 只返回 pool 候选(已淘汰的不进护栏排序)", async () => {
+    const c1 = await svc.createCandidate(ctx, { title: "留着的" });
+    const c2 = await svc.createCandidate(ctx, { title: "要丢的" });
+    void c1;
+    await svc.patchCandidate(ctx, c2.id, { status: "dropped" });
+    const { rows, total } = await svc.listCandidates(ctx, {
+      sort: "guardrail",
+      limit: 100,
+      offset: 0,
+    });
+    expect(rows.map((r) => r.title)).toEqual(["留着的"]);
+    expect(total).toBe(1);
+  });
+
+  it("sort=predictedScore 仍走原 SQL 排序(不受 guardrail 影响)", async () => {
+    await svc.createCandidate(ctx, { title: "普通一" });
+    await svc.createCandidate(ctx, { title: "普通二" });
+    const { rows } = await svc.listCandidates(ctx, {
+      sort: "predictedScore",
+      limit: 100,
+      offset: 0,
+    });
+    expect(rows).toHaveLength(2);
+  });
+});

@@ -29,7 +29,9 @@ export const candidateOperations = {
       status: candidateStatus.optional(),
       source: candidateSource.optional(),
       sort: z
-        .enum(["predictedScore", "positioningFit", "demandCount"])
+        // [T-216] guardrail = 防茧房推荐排序:复用 list seam 路由到 rankTopicsWithGuardrails
+        // (偏好注入后分 + 探索位),不新增独立 op。
+        .enum(["predictedScore", "positioningFit", "demandCount", "guardrail"])
         .optional(),
     }),
     response: candidateResource,

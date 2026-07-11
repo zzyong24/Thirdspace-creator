@@ -39,7 +39,11 @@ export interface RepoDeps {
 export type CandidateSort =
   | "predictedScore"
   | "positioningFit"
-  | "demandCount";
+  | "demandCount"
+  // [T-216] 防茧房推荐排序 —— 非 SQL 列;service.listCandidates 在到达 repo 前拦截,
+  // 路由到 rankTopicsWithGuardrails(偏好注入后分 + 探索位)。repo 若意外收到则 sortColumn
+  // 默认回退 predictedScore(无害兜底)。
+  | "guardrail";
 
 export interface ListCandidatesQuery {
   status?: string;

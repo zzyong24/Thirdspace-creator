@@ -347,8 +347,73 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     return positioning.evaluateFit(ctx, subject);
   }
 
+  // [T-216] 防茧房护栏排序(rankTopicsWithGuardrails 的实体)—— 抽成闭包函数,让 listCandidates
+  // 的 sort=guardrail 路径与公开的 rankTopicsWithGuardrails 方法共用同一份逻辑(单一真源)。
+  async function rankGuardrail(
+    ctx: RequestContext,
+    query: RankTopicsQuery,
+  ): Promise<RankedTopicResource[]> {
+    const repo = repoFor(ctx);
+    // 护栏③:读前先归档过期偏好(lastReinforcedAt 早于 now-8周)——过期偏好不再注入评分。
+    const cutoff = new Date(
+      Date.parse(now()) - PREFERENCE_DECAY_WEEKS * 7 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    try {
+      await repo.archiveExpiredPreferences(cutoff);
+    } catch {
+      // 归档 best-effort:失败不阻塞排序(读时 computePreferenceAdjustment 仍按龄衰减为 0 兜底)。
+    }
+    const prefRows = await repo.listActiveTopicPreferences();
+    const preferences: ActivePreference[] = prefRows.map((p) => ({
+      keyword: p.keyword,
+      direction: p.direction === "prefer" ? "prefer" : "avoid",
+      weight: p.weight,
+      exampleCount: p.exampleCount,
+      lastReinforcedAt: p.lastReinforcedAt,
+    }));
+
+    // 池内候选(待评估/待补充)。量级百条内,一次读全再算。
+    const { rows } = await repo.listCandidates({
+      status: "pool",
+      limit: 1000,
+      offset: 0,
+    });
+    const nowIso = now();
+    const dtoById = new Map<string, CandidateResource>();
+    const scored: ScoredCandidate[] = rows.map((row) => {
+      const dto = toCandidateDto(row);
+      dtoById.set(dto.id, dto);
+      const baseScore = dto.positioningFit ?? 0;
+      const adjustment = computePreferenceAdjustment(
+        `${dto.title} ${dto.angle}`,
+        preferences,
+        nowIso,
+      );
+      const adjustedScore = Math.max(0, Math.min(100, baseScore + adjustment));
+      return { id: dto.id, baseScore, adjustedScore };
+    });
+
+    const ranked = rankWithExploration(scored, {
+      limit: query.limit,
+      explorationSlots: query.explorationSlots ?? 2,
+    });
+    return ranked.map((s) => ({
+      ...(dtoById.get(s.id) as CandidateResource),
+      baseScore: s.baseScore,
+      preferenceAdjustment: s.adjustedScore - s.baseScore,
+      adjustedScore: s.adjustedScore,
+    }));
+  }
+
   return {
     async listCandidates(ctx, query) {
+      // [T-216] sort=guardrail → 走护栏排序(rankTopicsWithGuardrails),复用 list seam 不新增 op。
+      // 护栏只排 pool 候选,返回偏好注入后分序 + 探索位;RankedTopicResource 是 CandidateResource
+      // 的超集,list 契约(response=candidateResource)会剥掉额外分字段,不破坏 wire 形状。
+      if (query.sort === "guardrail") {
+        const ranked = await rankGuardrail(ctx, { limit: query.limit });
+        return { rows: ranked, total: ranked.length };
+      }
       const { rows, total } = await repoFor(ctx).listCandidates(query);
       return { rows: rows.map(toCandidateDto), total };
     },
@@ -668,56 +733,8 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async rankTopicsWithGuardrails(ctx, query) {
-      const repo = repoFor(ctx);
-      // 护栏③:读前先归档过期偏好(lastReinforcedAt 早于 now-8周)——过期偏好不再注入评分。
-      const cutoff = new Date(
-        Date.parse(now()) - PREFERENCE_DECAY_WEEKS * 7 * 24 * 60 * 60 * 1000,
-      ).toISOString();
-      try {
-        await repo.archiveExpiredPreferences(cutoff);
-      } catch {
-        // 归档 best-effort:失败不阻塞排序(读时 computePreferenceAdjustment 仍按龄衰减为 0 兜底)。
-      }
-      const prefRows = await repo.listActiveTopicPreferences();
-      const preferences: ActivePreference[] = prefRows.map((p) => ({
-        keyword: p.keyword,
-        direction: p.direction === "prefer" ? "prefer" : "avoid",
-        weight: p.weight,
-        exampleCount: p.exampleCount,
-        lastReinforcedAt: p.lastReinforcedAt,
-      }));
-
-      // 池内候选(待评估/待补充)。量级百条内,一次读全再算。
-      const { rows } = await repo.listCandidates({
-        status: "pool",
-        limit: 1000,
-        offset: 0,
-      });
-      const nowIso = now();
-      const dtoById = new Map<string, CandidateResource>();
-      const scored: ScoredCandidate[] = rows.map((row) => {
-        const dto = toCandidateDto(row);
-        dtoById.set(dto.id, dto);
-        const baseScore = dto.positioningFit ?? 0;
-        const adjustment = computePreferenceAdjustment(
-          `${dto.title} ${dto.angle}`,
-          preferences,
-          nowIso,
-        );
-        const adjustedScore = Math.max(0, Math.min(100, baseScore + adjustment));
-        return { id: dto.id, baseScore, adjustedScore };
-      });
-
-      const ranked = rankWithExploration(scored, {
-        limit: query.limit,
-        explorationSlots: query.explorationSlots ?? 2,
-      });
-      return ranked.map((s) => ({
-        ...(dtoById.get(s.id) as CandidateResource),
-        baseScore: s.baseScore,
-        preferenceAdjustment: s.adjustedScore - s.baseScore,
-        adjustedScore: s.adjustedScore,
-      }));
+      // [T-216] 实体抽到闭包 rankGuardrail(与 listCandidates 的 sort=guardrail 共用同一逻辑)。
+      return rankGuardrail(ctx, query);
     },
   };
 }

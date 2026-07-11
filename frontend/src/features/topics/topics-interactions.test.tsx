@@ -350,17 +350,39 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(mockRouter.push).toHaveBeenCalledWith("/projects/proj-99");
   });
 
-  it("丢弃 → client.patchCandidate{status:'dropped'} then router.refresh", async () => {
+  it("[T-216] 丢弃 → 弹窗填原因 → client.patchCandidate{status:'dropped',dropReason} then router.refresh", async () => {
     render(<CandidateCard candidate={candidate()} />);
+    // 点「丢弃」先开弹窗(不立即 patch)。
     fireEvent.click(screen.getByText("丢弃"));
+    expect(mockClient.patchCandidate).not.toHaveBeenCalled();
+    // 填一句原因,确认丢弃。
+    fireEvent.change(screen.getByTestId("drop-reason-input"), {
+      target: { value: "太理论了没人看" },
+    });
+    fireEvent.click(screen.getByText("确认丢弃"));
     await waitFor(() =>
       expect(mockClient.patchCandidate).toHaveBeenCalledTimes(1),
     );
     const arg = mockClient.patchCandidate.mock.calls[0]![0] as {
-      body: { status: string };
+      body: { status: string; dropReason?: string };
     };
     expect(arg.body.status).toBe("dropped");
+    expect(arg.body.dropReason).toBe("太理论了没人看");
     expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  it("[T-216] 留空原因直接确认丢弃 → 只带 status,不带 dropReason", async () => {
+    render(<CandidateCard candidate={candidate()} />);
+    fireEvent.click(screen.getByText("丢弃"));
+    fireEvent.click(screen.getByText("确认丢弃"));
+    await waitFor(() =>
+      expect(mockClient.patchCandidate).toHaveBeenCalledTimes(1),
+    );
+    const arg = mockClient.patchCandidate.mock.calls[0]![0] as {
+      body: { status: string; dropReason?: string };
+    };
+    expect(arg.body.status).toBe("dropped");
+    expect(arg.body).not.toHaveProperty("dropReason");
   });
 
   it("[T-103c] 补全选题卡 → Copilot 深链预填(topic.enrich, selection=候选;不再 createAITask 轮询)", () => {

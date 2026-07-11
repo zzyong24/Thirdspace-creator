@@ -36,9 +36,11 @@ import type {
   CandidateResource,
   TopicsOverviewResource,
 } from "@creatoros/backend/modules/candidate";
+import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
 
 import {
   TopicsWorkspace,
+  BenchmarkSourcesButton,
   type CandidateSortKey,
 } from "./topics-interactive-region";
 import {
@@ -52,7 +54,11 @@ import {
  */
 export type TopicsReadClient = Pick<
   typeof defaultClient,
-  "listCandidates" | "overviewTopics" | "pendingTopicReview"
+  | "listCandidates"
+  | "overviewTopics"
+  | "pendingTopicReview"
+  // [T-216] 对标源登记面板的服务端读源(选题/对标强化 §2.1)。
+  | "listBenchmarkSources"
 >;
 
 export interface TopicsViewModel {
@@ -61,6 +67,8 @@ export interface TopicsViewModel {
   readonly sort: CandidateSortKey;
   /** 最近一条待审阅的 topic.generate 任务(跨刷新缓存);无则 null。 */
   readonly pendingReview: null;
+  /** [T-216] 已登记的对标源(对标源登记面板)。可选:测试/无源账号缺省空列表。 */
+  readonly benchmarkSources?: BenchmarkSourceResource[];
 }
 
 export interface TopicsPageProps {
@@ -79,6 +87,8 @@ const SORT_KEYS: readonly CandidateSortKey[] = [
   "predictedScore",
   "positioningFit",
   "demandCount",
+  // [T-216] 防茧房推荐排序:护栏注入后分 + 探索位。
+  "guardrail",
 ];
 
 function normalizeSort(sort: string | undefined): CandidateSortKey {
@@ -111,9 +121,15 @@ async function loadViewModel(
     query: undefined,
     body: undefined,
   })) as unknown as TopicsOverviewResource;
+  // [T-216] 对标源列表(对标源登记面板)。契约 list envelope → data 数组。
+  const benchmarkSources = (await client.listBenchmarkSources({
+    params: undefined,
+    query: { page: 1, pageSize: 100 },
+    body: undefined,
+  })) as unknown as BenchmarkSourceResource[];
   // [T-060①] TopicReviewDialog 弹窗任务流退役 —— pendingTopicReview 不再消费
   // (对话内 ChatCandidateCard 即出即采,没有「待审阅弹窗」概念)。
-  return { candidates, overview, sort, pendingReview: null };
+  return { candidates, overview, sort, pendingReview: null, benchmarkSources };
 }
 
 // Pure render — split out so tests can drive it synchronously with a fixed VM.
@@ -122,7 +138,13 @@ export function TopicsView({
 }: {
   readonly viewModel: TopicsViewModel;
 }) {
-  const { candidates, overview, sort, pendingReview } = viewModel;
+  const {
+    candidates,
+    overview,
+    sort,
+    pendingReview,
+    benchmarkSources = [],
+  } = viewModel;
 
   return (
     // 固定高度填满：页头 + AI 选题会带 + 漏斗 shrink-0 钉住,中间三栏 flex-1 占满剩余
@@ -132,11 +154,15 @@ export function TopicsView({
       data-testid="topics"
       className="flex h-full min-h-0 flex-col gap-4"
     >
-      <header className="flex shrink-0 flex-col gap-1">
-        <h1 className="text-xl font-semibold text-foreground">选题中心</h1>
-        <p className="text-sm text-muted-foreground">
-          从真实信号出题、补全选题卡、择优立项——一条选题从灵感到立项的全流程。
-        </p>
+      <header className="flex shrink-0 items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold text-foreground">选题中心</h1>
+          <p className="text-sm text-muted-foreground">
+            从真实信号出题、补全选题卡、择优立项——一条选题从灵感到立项的全流程。
+          </p>
+        </div>
+        {/* [T-216] 对标源登记入口(选题/对标强化 §2.1)。 */}
+        <BenchmarkSourcesButton sources={benchmarkSources} />
       </header>
 
       {/* 1. AI 选题会 带 (钉住·固定高度,候选/步骤进弹窗) */}
