@@ -1436,3 +1436,149 @@ describe("[T-202] gotoWithRetry 导航退避重试", () => {
     expect(waits).toEqual([1000, 1000, 1000]);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// [T-235b] 黑马雷达搜索:parseSearchVideoList 纯函数 + fetchDouyinSearchVideos
+//   (fake context:登录校验 / 验证码跳过 / 页内 fetch 解析)。
+// ═══════════════════════════════════════════════════════════════════════════
+
+// 真实 search/item API 形状 fixture(darkhorse.py 消费的同款字段:aweme_info 包裹 +
+// statistics + author.follower_count + video.duration)。
+const SEARCH_ITEM_JSON = {
+  data: [
+    {
+      aweme_info: {
+        aweme_id: "7500000000000000001",
+        desc: " 孕晚期必看的三件事 ",
+        create_time: 1_799_990_000,
+        statistics: { digg_count: 2400, comment_count: 120, collect_count: 300, share_count: 45 },
+        author: { sec_uid: "MS4wLjABxx", nickname: "小鱼妈妈", follower_count: 800 },
+        video: { duration: 45_000 },
+      },
+    },
+    // 非视频条目(无 aweme_id 的用户卡)→ 跳过。
+    { card_info: { type: "user" } },
+    // 不带 aweme_info 包裹的条目本体(兜底路径)。
+    {
+      aweme_id: "7500000000000000002",
+      desc: "直出条目",
+      create_time: 1_799_991_111,
+      statistics: { digg_count: "1,200" },
+      author: { follower_count: 0 },
+    },
+  ],
+};
+
+describe("[T-235b] parseSearchVideoList 纯函数", () => {
+  it("解析 aweme_info 包裹条目:统计/作者粉丝/时长/发布时间齐活", async () => {
+    const { parseSearchVideoList } = await import("./douyin-cdp");
+    const out = parseSearchVideoList(SEARCH_ITEM_JSON);
+    expect(out).toHaveLength(2);
+    expect(out[0]).toEqual({
+      awemeId: "7500000000000000001",
+      description: "孕晚期必看的三件事",
+      diggCount: 2400,
+      commentCount: 120,
+      collectCount: 300,
+      shareCount: 45,
+      durationMs: 45_000,
+      createTime: 1_799_990_000,
+      authorSecUid: "MS4wLjABxx",
+      authorNickname: "小鱼妈妈",
+      authorFollowerCount: 800,
+    });
+    // 兜底路径:直出条目 + 字符串数字归一 + 缺字段取 0/空串。
+    expect(out[1]!.diggCount).toBe(1200);
+    expect(out[1]!.authorSecUid).toBe("");
+    expect(out[1]!.durationMs).toBe(0);
+  });
+
+  it("脏 JSON / 空 data → [](诚实空,不抛)", async () => {
+    const { parseSearchVideoList } = await import("./douyin-cdp");
+    expect(parseSearchVideoList(null)).toEqual([]);
+    expect(parseSearchVideoList({ error: "x" })).toEqual([]);
+    expect(parseSearchVideoList({ data: [] })).toEqual([]);
+  });
+});
+
+// fake 搜索 context:cookies 控登录态;evaluate 无参调用返 body 文本(验证码检测),
+// 带参调用返 SEARCH_ITEM_JSON(页内 fetch)。
+function makeSearchContext(opts: { loggedIn: boolean; bodyText?: string; fetchJson?: unknown }) {
+  const calls = { goto: 0, close: 0 };
+  const page = {
+    async goto() {
+      calls.goto += 1;
+      return null;
+    },
+    async waitForTimeout() {},
+    async evaluate(fn: unknown, arg?: unknown) {
+      // 带参 = 页内 fetch;无参 = 验证码检测读 body。
+      if (arg !== undefined) return opts.fetchJson ?? SEARCH_ITEM_JSON;
+      void fn;
+      return opts.bodyText ?? "正常搜索结果页";
+    },
+  };
+  const ctx = {
+    pages: () => [page],
+    newPage: async () => page,
+    cookies: async () =>
+      opts.loggedIn ? [{ name: "sessionid" }] : [{ name: "other" }],
+    close: async () => {
+      calls.close += 1;
+    },
+  };
+  return { ctx, calls };
+}
+
+describe("[T-235b] fetchDouyinSearchVideos(fake context)", () => {
+  it("登录态在 → 导航 + 页内 fetch → 解析候选;context 关一次", async () => {
+    const { fetchDouyinSearchVideos } = await import("./douyin-cdp");
+    const { ctx, calls } = makeSearchContext({ loggedIn: true });
+    const out = await fetchDouyinSearchVideos(
+      { authDir: "/fake/.auth", keyword: "孕晚期" },
+      { openContext: async () => ctx },
+    );
+    expect(out).toHaveLength(2);
+    expect(out[0]!.authorFollowerCount).toBe(800);
+    expect(calls.goto).toBe(1);
+    expect(calls.close).toBe(1);
+  });
+
+  it("未登录 → DouyinNotLoggedInError(context 仍关闭)", async () => {
+    const { fetchDouyinSearchVideos } = await import("./douyin-cdp");
+    const { ctx, calls } = makeSearchContext({ loggedIn: false });
+    await expect(
+      fetchDouyinSearchVideos(
+        { authDir: "/fake/.auth", keyword: "孕晚期" },
+        { openContext: async () => ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+    expect(calls.close).toBe(1);
+  });
+
+  it("验证码命中(body 含「验证」)→ 返 [] 跳过,不硬闯", async () => {
+    const { fetchDouyinSearchVideos } = await import("./douyin-cdp");
+    const { ctx } = makeSearchContext({
+      loggedIn: true,
+      bodyText: "请完成安全验证后继续访问",
+    });
+    const out = await fetchDouyinSearchVideos(
+      { authDir: "/fake/.auth", keyword: "孕晚期" },
+      { openContext: async () => ctx },
+    );
+    expect(out).toEqual([]);
+  });
+
+  it("页内 fetch 返回错误对象/脏 JSON → [](诚实空)", async () => {
+    const { fetchDouyinSearchVideos } = await import("./douyin-cdp");
+    const { ctx } = makeSearchContext({
+      loggedIn: true,
+      fetchJson: { error: "Failed to fetch" },
+    });
+    const out = await fetchDouyinSearchVideos(
+      { authDir: "/fake/.auth", keyword: "孕晚期" },
+      { openContext: async () => ctx },
+    );
+    expect(out).toEqual([]);
+  });
+});

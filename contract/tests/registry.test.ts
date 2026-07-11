@@ -202,6 +202,11 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/benchmark/sources"],
   ["POST", "/benchmark/sources/:sourceId/toggle"],
   ["POST", "/benchmark/sources/:sourceId/remove"],
+  // [T-235b] 热点信源 CRUD(热点多源证据,SPEC 2026-07-11 daily-topic-autopilot §2.2)
+  ["GET", "/trend/sources"],
+  ["POST", "/trend/sources"],
+  ["POST", "/trend/sources/:sourceId/toggle"],
+  ["POST", "/trend/sources/:sourceId/remove"],
   // 调度作业 (scheduling / T-007 data-source-pipeline-design §9 D1)
   ["POST", "/scheduled-jobs"],
   ["GET", "/scheduled-jobs"],

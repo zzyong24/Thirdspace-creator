@@ -198,6 +198,8 @@ import {
   fetchDouyinWorkListExport,
   // [T-212a] 对标他号作品采集(sec_uid 主页 aweme/post,只读公开统计)。
   fetchDouyinUserPosts,
+  // [T-235b] 黑马雷达搜索(按关键词搜近1天最多赞,页内 fetch 借登录态 + gateway 限流)。
+  fetchDouyinSearchVideos,
 } from "@/server/ingestion/douyin-cdp";
 import {
   parseDouyinWorkListXlsx,
@@ -251,6 +253,11 @@ import {
   assembleCreativeContext,
   // [T-235a] 每天自动出题采集器(topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool)。
   collectDailyTopics,
+  // [T-235b] 低粉黑马雷达采集器(并进 benchmark 采集:对标源后跑黑马关键词,共享限流预算)。
+  collectDarkhorse,
+  // [T-235b] 热点信源信号采集(web 主路 readUrl+AI 抽取 / rss 辅路 feed 解析)+ AI 抽取端口工厂。
+  collectTrendSourceSignals,
+  createTrendExtractPort,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
   runJobNow,
@@ -322,6 +329,8 @@ import {
   createTavilyAdapter,
   createSerpapiAdapter,
   createRssAdapter,
+  // [T-235b] rss 型热点信源辅路:直接 fetch feed 后复用同一解析(不重造)。
+  parseFeed,
   type SearchProviderRegistry,
 } from "@creatoros/ai-worker";
 // [T-184] script.draft 模板的 contextRequirements 声明 —— 组合根按它 resolveContextDeps 注入 reader。
@@ -375,6 +384,13 @@ import {
   BENCHMARK_OP_IDS,
   type BenchmarkService,
 } from "@creatoros/backend/modules/benchmark";
+// [T-235b] 热点信源(通用网页/RSS 信源登记,热点多源证据)。
+import {
+  createTrendSourcesService,
+  createTrendSourcesTransport,
+  TREND_SOURCES_OP_IDS,
+  type TrendSourcesService,
+} from "@creatoros/backend/modules/trend-sources";
 import {
   createSchedulingService,
   createSchedulingTransport,
@@ -497,6 +513,9 @@ const PERSISTED_OPS = new Set<string>([
   // [T-212a] Benchmark 对标源 CRUD(选题/对标强化,SPEC 2026-07-11 §2.1)。user/account-scoped,
   // 采集 job 落对标作品供 T-212c 拆解转化。
   ...BENCHMARK_OP_IDS,
+  // [T-235b] 热点信源 CRUD(热点多源证据,SPEC 2026-07-11 daily-topic-autopilot §2.2)。
+  // user/account-scoped,出题时逐 enabled 源抓信号拼 trend brief。
+  ...TREND_SOURCES_OP_IDS,
   // Scheduling (module 23, T-007) — scheduled_job CRUD (create/list/get/update/setEnabled)
   // + job_run reads (listByJob/get). owned-root, transport 按 ctx.userId 收窄, job_run 经
   // requireJob ownership gate。D1 建了 backend module 却没接 dispatch;这条接线让 /automations
@@ -770,6 +789,8 @@ const CONTENT_CALENDAR_OPS = new Set<string>(CONTENT_CALENDAR_OP_IDS);
 const MATERIAL_LINKS_OPS = new Set<string>(MATERIAL_LINKS_OP_IDS);
 // [T-212a] 对标源 CRUD ops 路由集。
 const BENCHMARK_OPS = new Set<string>(BENCHMARK_OP_IDS);
+// [T-235b] 热点信源 CRUD ops 路由集。
+const TREND_SOURCES_OPS = new Set<string>(TREND_SOURCES_OP_IDS);
 
 // The set of op ids owned by the scheduling module's transport (module 23, T-007).
 const SCHEDULING_OPS = new Set<string>(SCHEDULING_OP_IDS);
@@ -865,6 +886,8 @@ interface PersistenceBundle {
   materialLinks: Transport;
   // [T-212a] 对标源 CRUD transport(选题/对标强化)。
   benchmark: Transport;
+  // [T-235b] 热点信源 CRUD transport(热点多源证据)。
+  trendSources: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
   // reads, plus the Publishing Center composer (no endpoint — the FE calls it
   // server-side via getPublishingCenterService()).
@@ -2729,6 +2752,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               // 无头采集,同一 search registry)绑进来抓当前热点。未配 web.search → searchWebPort 抛
               // SearchConfigError,adapter 内 catch 成空 brief 降级,不重造采集器、不崩。
               trendSearch: (c, query, opts) => searchWebPort(c, query, opts),
+              // [T-235b] 已登记信源信号(主路):web 型 readUrl+AI 抽取 / rss 型 feed 解析,
+              // 与 web 搜索并行拼 trend brief(assembleTrendBrief,单路失败只丢该段)。
+              trendSourceSignals: (c) => trendSourceSignalsPort(c),
               resolveModelSpec,
             },
           );
@@ -4041,6 +4067,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     nextId: deps.nextId,
   });
 
+  // [T-235b] 热点信源服务(热点多源证据)。信号采集端口用它读 enabled 信源;composite 用它服务
+  //   4 个信源 CRUD op。clock/ids 共享 deterministic deps。
+  const trendSourcesService: TrendSourcesService = createTrendSourcesService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+  });
+
   // ── 调度采集接线 (T-007 D3, SPEC 2026-06-30 §3/§5/§6) ─────────────────────────────
   // collectors:每个 sourceKind 一个确定性采集器(抓真数据 → ingestion 落库 → 返回新鲜度
   // 统计)。runner 靠注入调它,不 import fetchDouyin*(保持可测)。
@@ -4650,6 +4684,64 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         now: deps.now,
         report,
       });
+      // [T-235b] 黑马雷达(平台内证据):对标源采集后**串行**跑关键词黑马搜索(共享 gate-F5
+      //   串行闸 + douyinGateway 限流预算)。关键词 = 定位 keywords + env
+      //   CREATOROS_DARKHORSE_KEYWORDS(逗号分隔)可配;无关键词/未登录/验证码 → 采集器内
+      //   诚实降级(0 跑/跳词),**绝不回退对标采集结果**(黑马失败只丢黑马)。
+      let darkhorseResult: { itemsNew: number; itemsUpdated: number; message?: string } = { itemsNew: 0, itemsUpdated: 0 };
+      try {
+        darkhorseResult = await collectDarkhorse(ctx, {
+          listKeywords: async (c) => {
+            const envKeywords = (process.env.CREATOROS_DARKHORSE_KEYWORDS ?? "")
+              .split(/[,，]/)
+              .map((k) => k.trim())
+              .filter((k) => k.length > 0);
+            let positioningKeywords: string[] = [];
+            try {
+              const center = await positioningService.getPositioningCenter(c);
+              positioningKeywords = center.keywords ?? [];
+            } catch {
+              positioningKeywords = []; // 定位读失败 → 只用 env(诚实降级)
+            }
+            return [...positioningKeywords, ...envKeywords];
+          },
+          searchVideos: async (c, keyword) => {
+            const videos = await fetchDouyinSearchVideos(
+              {
+                authDir: douyinAuthDirFor(c.accountId), // [T-136] 按当前号登录态
+                keyword,
+                gateway: douyinGateway,
+              },
+              {},
+            );
+            return videos.map((v) => ({
+              awemeId: v.awemeId,
+              description: v.description,
+              diggCount: v.diggCount,
+              commentCount: v.commentCount,
+              collectCount: v.collectCount,
+              shareCount: v.shareCount,
+              duration: v.durationMs, // 抖音 video.duration 原值已是 ms
+              createTime: v.createTime,
+              authorSecUid: v.authorSecUid,
+              authorNickname: v.authorNickname,
+              authorFollowerCount: v.authorFollowerCount,
+            }));
+          },
+          recordWork: (c, input) => benchmarkService.recordWork(c, input),
+          now: deps.now,
+          report,
+        });
+      } catch (err) {
+        // 黑马整体失败(极端)→ 只丢黑马,不影响对标采集结果(诚实记错)。
+        console.error("[darkhorse] 黑马雷达失败(不影响对标采集):", err);
+      }
+      // 合并计数(job_run 的 itemsNew/Updated = 对标 + 黑马;message 注明黑马实绩)。
+      const result2 = {
+        itemsNew: result.itemsNew + darkhorseResult.itemsNew,
+        itemsUpdated: result.itemsUpdated + darkhorseResult.itemsUpdated,
+        message: darkhorseResult.message,
+      };
       // [T-212c] 采集落库后 **best-effort** 触发拆解转化(fire-and-forget,不阻塞采集/串行闸):
       //   读该号待拆爆款(is_viral+pending)→ AI 拆解(runStructuredNode,不抄袭换角度)→ 高适配
       //   ≤3 条 createCandidate(source=benchmark,参考链接+爆款倍数入 angle)→ 标 teardown_status=done。
@@ -4688,7 +4780,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           err,
         );
       });
-      return result;
+      return result2;
     },
     // [T-235a] 每天自动出题(topic.daily):多依据合并(定位+评论信号+知识库+热点)→ topic.generate
     //   同模板出题(runTopicNode)→ T-212d 护栏排序(探索位保底)→ candidateService.createCandidate
@@ -4736,8 +4828,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         },
         resolveModelSpec,
         // [T-126] 热点依据:复用联网检索端口(rss 免 key / browser 无头采集)。未配 web.search →
-        // 抛 SearchConfigError,collector 内 catch 成空热点段(诚实降级)。
+        // 抛 SearchConfigError,collector 内(assembleTrendBrief allSettled)成空热点段(诚实降级)。
         trendSearch: (c, query, opts) => searchWebPort(c, query, opts),
+        // [T-235b] 已登记信源信号(主路),与 web 搜索并行拼热点段(单路失败只丢该段)。
+        trendSourceSignals: (c) => trendSourceSignalsPort(c),
         // 出题节点:ai-worker runTopicNode(topic.generate 同模板 + runStructuredNode 跨模型健壮)。
         // 多依据已合并进 basisBrief(分段),basis 取 "positioning"(定位为纲的通用出题 hint)。
         generateTopics: async (_c, input) => {
@@ -5110,6 +5204,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // [T-212a] 对标源 CRUD transport(benchmarkService 已在 collectors 装配前创建,此处复用同一实例)。
   const benchmark = createBenchmarkTransport(() => benchmarkService);
+  // [T-235b] 热点信源 CRUD transport(trendSourcesService 已在 collectors 装配前创建,复用同一实例)。
+  const trendSources = createTrendSourcesTransport(() => trendSourcesService);
 
   // Query services (module Q, Wave 4 — SPEC §19). Composition module: NO repo, NO
   // SQL. Each composer is built with facade interfaces; here the composition root
@@ -6076,6 +6172,48 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     const spec = await resolveSearchSpec(ctx);
     return searchWebFn(spec, query, searchRegistry, opts);
   };
+  // [T-235b] 已登记信源信号端口(热点多源证据主路)—— trend 出题(topic.generate trend basis /
+  //   topic.daily)经它逐 enabled 信源抓信号:
+  //   · web 型:readUrl(webAuthDirFor(domain),T-217b 带登录态读正文,**只 import 不改**)→
+  //     trend.extract 结构化抽取(runStructuredNode 绑 Zod,无热度 null 不编);
+  //   · rss 型:直接 fetch feed → parseFeed(search-rss 同一解析,辅路不调 AI)。
+  //   单源失败跳过不拖垮(collectTrendSourceSignals 内容错);未登记信源 → [](诚实空)。
+  const trendExtractPort = createTrendExtractPort({ resolveModelSpec });
+  const trendSourceSignalsPort = (ctx: RequestContext) =>
+    collectTrendSourceSignals(ctx, {
+      listEnabledSources: (c) => trendSourcesService.listEnabledSources(c),
+      readWebSource: async (_c, source) => {
+        const result = await readWebUrlSidecar(source.url, {
+          authDir: webAuthDirFor(source.domain),
+        });
+        return { text: result.text };
+      },
+      extractSignals: (c, input) => trendExtractPort(c, input),
+      fetchRssSignals: async (_c, source) => {
+        const resp = await fetch(source.url, {
+          headers: {
+            Accept:
+              "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+          },
+          signal: AbortSignal.timeout(15_000),
+        });
+        if (!resp.ok) {
+          throw new Error(`RSS 信源 HTTP ${resp.status}: ${source.url}`);
+        }
+        const xml = await resp.text();
+        // parseFeed → 信号形状(feed 无热度概念 → heat=null,诚实;时间/链接原样)。
+        return parseFeed(xml, source.domain)
+          .slice(0, 8)
+          .map((item) => ({
+            title: item.title,
+            url: item.url || null,
+            heat: null,
+            publishedAt: item.publishedAt ?? null,
+            sourceName: source.name,
+          }));
+      },
+    });
+
   // honestyBlock 第 6 条 + 工具动态描述用:探测 web.search 是否已配(只查配置、不打网络)。
   const probeSearchConfigured = async (ctx: RequestContext): Promise<boolean> => {
     try {
@@ -7313,6 +7451,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     contentCalendar,
     materialLinks,
     benchmark,
+    trendSources,
     queryServices,
     publishingCenter,
     identity,
@@ -7428,6 +7567,11 @@ async function getMaterialLinks(): Promise<Transport> {
 // [T-212a] 对标源 CRUD transport 访问器。
 async function getBenchmark(): Promise<Transport> {
   return (await getBundle()).benchmark;
+}
+
+// [T-235b] 热点信源 CRUD transport 访问器。
+async function getTrendSources(): Promise<Transport> {
+  return (await getBundle()).trendSources;
 }
 
 async function getQueryServices(): Promise<Transport> {
@@ -7747,6 +7891,13 @@ export const compositeTransport: Transport = {
     if (BENCHMARK_OPS.has(endpoint.id)) {
       const benchmark = await getBenchmark();
       return benchmark.request(endpoint, input, ctx);
+    }
+    // [T-235b] 热点信源 CRUD(热点多源证据)—— 4 ops(list/create/toggle/remove)由模块自有
+    // user/account-scoped transport 服务,同一 pglite store。toggle/remove ownership-gated
+    // (跨用户 → OwnershipError → 404)。No ctx ⇒ AuthenticationError。
+    if (TREND_SOURCES_OPS.has(endpoint.id)) {
+      const trendSources = await getTrendSources();
+      return trendSources.request(endpoint, input, ctx);
     }
     // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
     // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by
