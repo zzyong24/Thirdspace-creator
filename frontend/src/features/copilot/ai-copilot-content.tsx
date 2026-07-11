@@ -78,6 +78,11 @@ import {
   ChatScreenshotCard,
   type ChatScreenshotAsset,
 } from "./chat-screenshot-card";
+// [T-217c] 网页正文读取卡(带登录态读正文 → 逐字稿素材确认门 / 需登录引导 / 失败态)。
+import {
+  ChatWebReadCard,
+  type ChatWebReadAsset,
+} from "./chat-web-read-card";
 import { ChatGenerateCard } from "./chat-generate-card";
 import {
   ChatLearningCard,
@@ -1674,6 +1679,23 @@ export function AICopilotContent({
                         <ChatScreenshotCard
                           key={key}
                           asset={o.asset ?? null}
+                          error={o.error ?? null}
+                          projectId={activeProjectChip?.id ?? null}
+                        />
+                      );
+                    }
+                    // [T-217c] 网页正文读取(web.read)→ 逐字稿素材确认门卡 / 需登录引导 / 失败态。
+                    if (name === "web.read" && out.kind === "web.read") {
+                      const o = out as {
+                        asset?: ChatWebReadAsset | null;
+                        needLogin?: { domain: string } | null;
+                        error?: string | null;
+                      };
+                      return (
+                        <ChatWebReadCard
+                          key={key}
+                          asset={o.asset ?? null}
+                          needLogin={o.needLogin ?? null}
                           error={o.error ?? null}
                           projectId={activeProjectChip?.id ?? null}
                         />

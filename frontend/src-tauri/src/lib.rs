@@ -364,6 +364,17 @@ pub fn run() {
                 .to_string_lossy()
                 .to_string();
 
+            // [T-217a] Web Session Vault 登录态(.auth/web/<domain>/)目录 —— 注入 sidecar env
+            //   `CREATOROS_WEB_AUTH_DIR`,落**稳定**的 `<appDataDir>/.auth/web`(与 .auth/douyin
+            //   并列),复用 T-205 同一「落 appDataDir 顶层跨版本持久」机制:app 更新/sidecar 重建
+            //   不丢网站登录态(否则每次更新都要重登所有网站)。node 侧 persistence-client 读它,
+            //   缺省回落 `<cwd>/.auth/web`。
+            let web_auth_dir_str = app_data_dir
+                .join(".auth")
+                .join("web")
+                .to_string_lossy()
+                .to_string();
+
             // 4) spawn sidecar(= 随包 node runtime 跑 next standalone server.js)。注入:
             //      PORT / HOSTNAME —— next standalone server.js 读这两个 env 决定 listen 地址;
             //      CREATOROS_DB_DIR —— DB 落盘目录(resolveDbDriver 会认,见 backend/src/db.ts §3b);
@@ -403,6 +414,8 @@ pub fn run() {
                     .env("PROMPT_BUNDLE_PUBLIC_KEY", PROMPT_BUNDLE_PUBLIC_KEY)
                     // [T-205] 抖音登录态落稳定 appDataDir/.auth/douyin(跨版本持久,免更新后重扫)。
                     .env("CREATOROS_DOUYIN_AUTH_DIR", &douyin_auth_dir_str)
+                    // [T-217a] 网站登录态落稳定 appDataDir/.auth/web(跨版本持久,免更新后重登)。
+                    .env("CREATOROS_WEB_AUTH_DIR", &web_auth_dir_str)
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir)
                     .stdout(Stdio::piped())
@@ -459,6 +472,8 @@ pub fn run() {
                     .env("PROMPT_BUNDLE_PUBLIC_KEY", PROMPT_BUNDLE_PUBLIC_KEY)
                     // [T-205] 抖音登录态落稳定 appDataDir/.auth/douyin(跨版本持久,免更新后重扫)。
                     .env("CREATOROS_DOUYIN_AUTH_DIR", &douyin_auth_dir_str)
+                    // [T-217a] 网站登录态落稳定 appDataDir/.auth/web(跨版本持久,免更新后重登)。
+                    .env("CREATOROS_WEB_AUTH_DIR", &web_auth_dir_str)
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir);
 

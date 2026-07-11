@@ -52,6 +52,7 @@ import {
 } from "@/components/ui/dialog";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { SectionCard } from "@/components/project/section-card";
+import { WebSessionVaultCard } from "./web-session-vault-card";
 import { TagChip } from "@/components/content/tag-chip";
 import { cn } from "@/lib/utils";
 import {
@@ -363,6 +364,8 @@ export function SettingsDialog({
               <div data-slot="main-settings" className="flex flex-col gap-card-gap">
                 <AccountInformationCard viewModel={viewModel} />
                 <AccountBindingCard douyinAccount={viewModel.douyinAccount} />
+                {/* [T-217a] 网站登录保管库:登录一次网站 → 编导带登录态读正文(web.read)。 */}
+                <WebSessionVaultCard />
                 {/* [T-167] 激活状态卡:桌面端读真态四态诚实展示;web/未装配 → 桌面端专属空态。 */}
                 <ActivationStatusCard activation={activation} />
                 {/* [T-180] 软件更新卡:桌面端「检查更新」+ 下载并安装 + 重启;web → 桌面端专属空态。 */}

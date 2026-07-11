@@ -29,6 +29,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   generateTopics: ReturnType<typeof vi.fn>;
   enrichTopic: ReturnType<typeof vi.fn>;
   captureScreenshot: ReturnType<typeof vi.fn>;
+  readWeb: ReturnType<typeof vi.fn>;
   dispatchGenerateAsset: ReturnType<typeof vi.fn>;
   dispatchScriptReview: ReturnType<typeof vi.fn>;
   diagnoseContent: ReturnType<typeof vi.fn>;
@@ -330,6 +331,18 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     previewUrl: "/api/v1/blob/k?token=t",
     sourceUrl: "https://example.com/post",
   }));
+  // [T-217c] web.read 核心(fake:带登录态读正文 → 落逐字稿素材,返回摘要)。默认成功态;
+  // 需登录/失败态由用例经 over 覆盖。
+  const readWeb = vi.fn(async () => ({
+    needLogin: false as const,
+    assetId: "as-read-1",
+    name: "正文·示例文章",
+    previewUrl: "/api/v1/blob/kk?token=t",
+    sourceUrl: "https://example.com/article",
+    title: "示例文章",
+    excerpt: "这是正文摘要…",
+    extractor: "readability",
+  }));
   // [T-084c] material.generate 核心(fake:dispatch asset.generate task → 返回 taskId)。
   const dispatchGenerateAsset = vi.fn(async () => ({ taskId: "task-gen-1" }));
   // [T-103b] review.script 核心(fake:dispatch script.review → 返回 taskId + projectId)。
@@ -358,6 +371,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     draftScript,
     gatherMaterials,
     captureScreenshot,
+    readWeb,
     dispatchGenerateAsset,
     dispatchScriptReview,
     diagnoseContent,
@@ -387,6 +401,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     generateTopics,
     enrichTopic,
     captureScreenshot,
+    readWeb,
     dispatchGenerateAsset,
     dispatchScriptReview,
     diagnoseContent,
@@ -696,6 +711,70 @@ describe("[T-084b] material.screenshot 工具 — 自动化截图", () => {
       url: "   ",
     })) as { asset: unknown; error: string | null };
     expect(captureScreenshot).not.toHaveBeenCalled();
+    expect(result.asset).toBeNull();
+    expect(result.error).toContain("URL");
+  });
+});
+
+// [T-217c] web.read 工具:带登录态读正文 → 落逐字稿素材(pending);需登录降级 needLogin;
+// 失败转 error 不抛;空 URL 诚实报错不调端口。
+describe("[T-217c] web.read 工具 — 带登录态读网页正文", () => {
+  const WHITELIST = ["web.read"] as const;
+
+  it("execute 调注入的 readWeb,读到正文 → asset + excerpt(kind=web.read,needLogin/error 为 null)", async () => {
+    const { deps, readWeb } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://example.com/article",
+    })) as {
+      kind: string;
+      asset: { id: string; sourceUrl: string; excerpt: string } | null;
+      needLogin: { domain: string } | null;
+      error: string | null;
+    };
+    expect(readWeb).toHaveBeenCalledWith({ url: "https://example.com/article" });
+    expect(result.kind).toBe("web.read");
+    expect(result.error).toBeNull();
+    expect(result.needLogin).toBeNull();
+    expect(result.asset?.id).toBe("as-read-1");
+    expect(result.asset?.sourceUrl).toBe("https://example.com/article");
+  });
+
+  it("无会话/过期(needLogin)→ 不落库,返回 needLogin.domain(编导引导去保管库登录)", async () => {
+    const { deps } = makeDeps({
+      readWeb: async () => ({ needLogin: true as const, domain: "chatgpt.com" }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://chatgpt.com/share/x",
+    })) as { asset: unknown; needLogin: { domain: string } | null; error: string | null };
+    expect(result.asset).toBeNull();
+    expect(result.needLogin?.domain).toBe("chatgpt.com");
+    expect(result.error).toBeNull();
+  });
+
+  it("读取抛错(打不开/HTTP/抽不出正文)→ 不抛,asset=null + error 人话", async () => {
+    const { deps } = makeDeps({
+      readWeb: async () => {
+        throw new Error("页面返回 HTTP 404:该链接不可访问");
+      },
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://dead.example.com",
+    })) as { asset: unknown; needLogin: unknown; error: string | null };
+    expect(result.asset).toBeNull();
+    expect(result.error).toContain("HTTP 404");
+  });
+
+  it("空 URL → 诚实报错,不调读取端口", async () => {
+    const { deps, readWeb } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, { url: "  " })) as {
+      asset: unknown;
+      error: string | null;
+    };
+    expect(readWeb).not.toHaveBeenCalled();
     expect(result.asset).toBeNull();
     expect(result.error).toContain("URL");
   });

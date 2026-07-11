@@ -61,6 +61,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/assets/:assetId/files"],
   ["POST", "/assets/:assetId/trash"],
   ["POST", "/assets/:assetId/restore"],
+  ["POST", "/assets/:assetId/commit"],
   ["POST", "/assets/:assetId/favorite"],
   ["GET", "/assets/:assetId/usage"],
   // 制作与发布
@@ -128,6 +129,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/settings/prompts"],
   ["GET", "/settings/prompts/:id"],
   ["PUT", "/settings/prompts/:id"],
+  ["GET", "/settings/prompts/:id/versions"],
+  ["POST", "/settings/prompts/:id/rollback"],
   // 身份/认证(register 是首个进 dispatch 表的 auth op;login/logout 仍是 bare route)
   ["POST", "/auth/register"],
   ["PATCH", "/me"],

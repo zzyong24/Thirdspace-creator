@@ -190,6 +190,25 @@ export interface ChatToolDeps {
     sourceUrl: string;
   }>;
   /**
+   * [T-217c] web.read 核心 —— 带 `.auth/web` 登录态读一个 URL 的**正文全文**(比截图准:抽逐轮
+   * 对话/文章全文,不 OCR 失真),落**逐字稿文本素材**(pending 走 T-219 确认门,带 sourceUrl)。
+   * 无会话/过期 → 返回 { needLogin:true, domain }(引导用户去保管库登录,不落库);其余失败(打不开/
+   * HTTP 码/抽不出正文)**抛错**,工具 execute 接住转人话。
+   */
+  readWeb: (input: { url: string }) => Promise<
+    | {
+        needLogin: false;
+        assetId: string;
+        name: string;
+        previewUrl: string | null;
+        sourceUrl: string;
+        title: string;
+        excerpt: string;
+        extractor: string;
+      }
+    | { needLogin: true; domain: string }
+  >;
+  /**
    * [T-084c] material.generate 核心 —— **不直接生成**(视频异步分钟级不能阻塞对话回合):dispatch
    * 既有 asset.generate task(persistence-client dispatch → void runAssetGenerate 范式),立即返回
    * taskId。前端 ChatGenerateCard 据 taskId 轮询 task/candidate → 完成渲缩略图 + 采纳(复用既有
@@ -619,6 +638,30 @@ export interface MaterialScreenshotToolResult {
     sourceUrl: string;
   } | null;
   /** 失败时的诚实错误(成功为 null);模型如实转述、卡渲错误态,绝不假装截到图。 */
+  error: string | null;
+}
+
+// [T-217c] web.read 工具结果 —— 一段已落库(pending 确认门)的正文文本素材 + 摘要,或需登录降级,
+// 或失败。三态互斥:
+//   · asset 非 null → 读到正文,落成待确认逐字稿素材(前端确认门卡「存入素材库」);
+//   · needLogin 非 null → 该站需先在保管库登录一次(编导引导,不落库、不截登录页);
+//   · error 非 null → 逐类诚实失败(打不开/HTTP 码/抽不出正文)。
+export interface WebReadToolResult {
+  kind: "web.read";
+  asset: {
+    id: string;
+    name: string;
+    previewUrl: string | null;
+    sourceUrl: string;
+    title: string;
+    /** 正文前若干字(前端卡预览 + 模型据此转述,不逐字复述全文)。 */
+    excerpt: string;
+    /** 命中的抽取器(chatgpt-share | readability),存证/可观测用。 */
+    extractor: string;
+  } | null;
+  /** 需登录降级:该域名需先在保管库登录一次。非 null 时编导引导「去设置→网站登录保管库」。 */
+  needLogin: { domain: string } | null;
+  /** 失败时的诚实错误(打不开/HTTP 码/抽不出正文);成功或需登录时为 null。 */
   error: string | null;
 }
 
@@ -1135,6 +1178,20 @@ const MATERIAL_SCREENSHOT_PARAMS = jsonSchema<{ url: string; fullPage?: boolean 
     fullPage: {
       type: "boolean",
       description: "true=截整页(长图);缺省/false=只截首屏视口。",
+    },
+  },
+  required: ["url"],
+  additionalProperties: false,
+});
+
+// [T-217c] web.read 入参 —— 要读正文的单个网页 URL(可含需登录内容:ChatGPT 分享/知乎/公众号等)。
+const WEB_READ_PARAMS = jsonSchema<{ url: string }>({
+  type: "object",
+  properties: {
+    url: {
+      type: "string",
+      description:
+        "要读正文的网页 URL(http/https)。可以是**需要登录才能看到**的页面(如 ChatGPT 分享链接、知乎收藏、公众号文章)——会用你在保管库登录后的登录态读到正文全文(比截图准)。若该站还没登录,会返回「需登录」提示,引导用户去保管库登录一次。",
     },
   },
   required: ["url"],
@@ -1725,6 +1782,58 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           return {
             kind: "material.screenshot",
             asset: null,
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
+      },
+    }),
+    // [T-217c] 带登录态读网页正文:给一个 URL(可含需登录内容),服务端用保管库登录态读正文全文
+    // → 落**逐字稿文本素材**(pending 确认门)。无会话/过期 → 返回需登录降级(编导引导去保管库
+    // 登录,不截登录页糊弄);其余失败逐类诚实转人话(不抛给 SDK)。
+    "web.read": tool({
+      description:
+        "读一个网页的**正文全文**(带你在保管库登录后的登录态,能读需登录内容:ChatGPT 分享链接、知乎、公众号、飞书文档等)。抽出的是干净正文文本(ChatGPT 分享抽逐轮对话全文),比截图准、不 OCR 失真。当用户粘一个链接要你「读一下/看看这篇/这段对话讲了啥/据此出选题」时**优先用它**(而不是截图)。读到的正文渲成卡片**待用户确认**存入素材库(铁律②)。若该站还没登录会返回「需登录」——这时引导用户去『设置→网站登录保管库』登录一次,别改用截图糊弄。",
+      inputSchema: WEB_READ_PARAMS,
+      execute: async ({ url }): Promise<WebReadToolResult> => {
+        const target = typeof url === "string" ? url.trim() : "";
+        if (!target) {
+          return {
+            kind: "web.read",
+            asset: null,
+            needLogin: null,
+            error: "没有收到要读取的 URL —— 请给一个网页链接。",
+          };
+        }
+        try {
+          const res = await deps.readWeb({ url: target });
+          if (res.needLogin) {
+            return {
+              kind: "web.read",
+              asset: null,
+              needLogin: { domain: res.domain },
+              error: null,
+            };
+          }
+          return {
+            kind: "web.read",
+            asset: {
+              id: res.assetId,
+              name: res.name,
+              previewUrl: res.previewUrl,
+              sourceUrl: res.sourceUrl,
+              title: res.title,
+              excerpt: res.excerpt,
+              extractor: res.extractor,
+            },
+            needLogin: null,
+            error: null,
+          };
+        } catch (err) {
+          // 逐类诚实报错(WebCaptureError:打不开 / HTTP 码 / 抽不出正文)原样转述。
+          return {
+            kind: "web.read",
+            asset: null,
+            needLogin: null,
             error: err instanceof Error ? err.message : String(err),
           };
         }
@@ -2366,6 +2475,7 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "script.draft",
   "material.gather",
   "material.screenshot",
+  "web.read",
   "material.generate",
   "calibration.diagnose",
   "review.analyze",

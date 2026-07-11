@@ -107,6 +107,28 @@ export interface AssembleChatDeps extends ContextDeps {
     sourceUrl: string;
   }>;
   /**
+   * [T-217c] web.read 端口 —— 带 `.auth/web` 登录态读一个 URL 的正文全文 → createGeneratedAsset
+   * 落**逐字稿文本素材**(pending 走确认门,带 sourceUrl)。无会话/过期 → 返回 { needLogin, domain }
+   * (编导引导「去保管库登录」,不落库、不截登录页)。由 composition root 绑(readUrl + assetsService)。
+   * 可选:未装配 → 工具报「网页正文读取能力未接入」(诚实降级)。
+   */
+  readWebUrlPort?: (
+    ctx: RequestContext,
+    input: { url: string },
+  ) => Promise<
+    | {
+        needLogin: false;
+        assetId: string;
+        name: string;
+        previewUrl: string | null;
+        sourceUrl: string;
+        title: string;
+        excerpt: string;
+        extractor: string;
+      }
+    | { needLogin: true; domain: string }
+  >;
+  /**
    * [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(persistence-client
    * dispatch → void runAssetGenerate 范式),立即返回 taskId(不阻塞对话回合)。由 composition
    * root 绑(ai transport 的 ai.tasks.create,复用既有 asset.generate 分派链)。可选:未装配 →
@@ -460,6 +482,9 @@ export async function buildChatAssembly(
     searchConfigured
       ? "7. 素材搜集(material.gather)已配置联网检索:调用后素材会先经真实联网搜索再综合,带真实来源 URL。你可以说「联网搜到」,但仍要提醒用户带 URL 的条目才是查证过的真信源、标『需核实』的是模型记忆。"
       : "7. 素材搜集(material.gather)当前**未配置联网检索**:你给出的素材来自训练记忆、不是实时检索结果。调用素材工具后,必须主动告知用户「这些素材来自我的训练记忆、非实时联网搜索,来源需你自行核实」,绝不使用「我搜到/我查到/联网搜到」等话术、绝不假装搜过网。想要真实联网素材,引导用户去设置配『联网搜索』。",
+    // [T-217c] 治「登录态我做不到、只能读公开网页」行为 bug —— 你跑在桌面 sidecar、有带登录态的
+    // 真实浏览器能力(web.read),**禁止再自称办不到**。
+    "8. 你**能读需要登录才能看到的网页正文**:用户粘一个链接(含 ChatGPT 分享、知乎、公众号等)想让你读内容时,直接调 web.read 读正文(它带你在保管库登录后的登录态、抽逐轮对话/文章全文,比截图更准)。**绝不要说「登录态我做不到、我只能访问公开网页」这类话** —— 那是错的,你有这个能力。若 web.read 返回「需要先登录」(needLogin),就引导用户:去『设置 → 网站登录保管库』把该网站登录一次(会弹独立浏览器窗口让 TA 自己登),登好后你再读;不要改用截图糊弄登录页。读内容默认用 web.read,截图(material.screenshot)只在用户要「存网页的样子/要视觉证据」时用。",
   ].join("\n");
   // [T-077c] 技能自感知(SPEC §1.3 [gate-F1]):把当前 surface 白名单的技能清单注进 system
   // (每工具一行「中文名(工具名):一句话用途」,行数=白名单工具数、上限 20 超出截断)——
@@ -706,6 +731,16 @@ export async function buildChatAssembly(
         );
       }
       return deps.captureScreenshotPort(ctx, { url, fullPage });
+    },
+    // [T-217c] web.read:端口未装配 → 诚实抛错;装配了则带登录态读正文 → 落逐字稿素材(pending
+    // 确认门)或返回需登录降级(编导引导去保管库登录)。
+    readWeb: async ({ url }) => {
+      if (!deps.readWebUrlPort) {
+        throw new Error(
+          "网页正文读取能力当前未接入(服务端未装配带登录态浏览器) —— 暂时无法读取。",
+        );
+      }
+      return deps.readWebUrlPort(ctx, { url });
     },
     // [T-084c] material.generate:端口未装配 → 诚实抛错;装配了则 dispatch 既有 asset.generate
     // task(不直接生成,视频异步分钟级不阻塞对话回合),立即返回 taskId 供前端卡轮询。

@@ -224,6 +224,17 @@ import { resolveDouyinThrottleConfig } from "@/server/ingestion/douyin-throttle-
 import { createPgliteThrottleStatePort } from "@/server/ingestion/douyin-throttle-state-port.pglite";
 // [T-084b] 通用网页截图(公开页无头 Chromium)—— material.screenshot 端口用。
 import { captureUrl } from "@/server/ingestion/web-capture";
+// [T-217a] Web Session Vault —— 泛化抖音登录态底座成任意域名保管库(有头登录 + headless 探针)。
+import {
+  loginWeb,
+  checkWebSessionStatus,
+  webDomainFromUrl,
+} from "@/server/ingestion/web-session";
+// [T-217b] Web Reader —— 带 .auth/web 登录态读正文全文(编导 web.read 端口用)。
+import {
+  readUrl as readWebUrlSidecar,
+  WebReaderLoginRequiredError,
+} from "@/server/ingestion/web-reader";
 import {
   runScheduledCollection,
   type Collector as ScheduledCollector,
@@ -892,6 +903,22 @@ interface PersistenceBundle {
       projectId: string,
     ) => Promise<string | null>;
   };
+  // [T-217a] Web Session Vault runtime —— `/api/web-session` route(无 dispatch endpoint;
+  //   sidecar 浏览器 + 文件系统能力,非 DB/非 user-scoped,per-machine 全局)据此列站点/有头
+  //   登录/被动探针/移除。与 localFileRuntime / knowledgeSearchRuntime 同款「无 endpoint 的
+  //   runtime 逃生口」(而非 DB 契约 transport op —— 保管库无 DB 层,套 transport 只是空壳 service)。
+  webSessionRuntime: {
+    /** 列已保存站点会话(域名 + 上次登录时间;不逐站起浏览器,状态由 status 按需查)。 */
+    listSessions: () => Promise<
+      Array<{ domain: string; lastLoginAt: string | null }>
+    >;
+    /** 有头登录某 URL 的域名(弹独立 Chromium,用户自己登录),落 `.auth/web/<domain>/`。 */
+    loginSession: (url: string) => Promise<{ domain: string; loggedIn: boolean }>;
+    /** 被动探针(headless 不弹窗)查某域名是否已登录 / 过期。 */
+    sessionStatus: (domain: string) => Promise<{ domain: string; loggedIn: boolean }>;
+    /** 移除某域名的持久 profile(登出 + 删本地登录态)。 */
+    removeSession: (domain: string) => Promise<{ removed: boolean }>;
+  };
 }
 
 // T-004 ChatBox runtime — the minimal surface the /api/chat route needs from the
@@ -944,6 +971,25 @@ export interface ChatRuntime {
     previewUrl: string | null;
     sourceUrl: string;
   }>;
+  // [T-217b/c] web.read 端口 —— 带 .auth/web 登录态读正文全文 → createGeneratedAsset 落**逐字稿
+  //   文本素材**(assetType document,pending 走 T-219 确认门,带 sourceUrl 存证)。无会话/过期 →
+  //   返回 { needLogin:true, domain }(编导据此引导「去保管库登录」,不落库、不截登录页)。
+  readWebUrl: (
+    ctx: RequestContext,
+    input: { url: string },
+  ) => Promise<
+    | {
+        needLogin: false;
+        assetId: string;
+        name: string;
+        previewUrl: string | null;
+        sourceUrl: string;
+        title: string;
+        excerpt: string;
+        extractor: string;
+      }
+    | { needLogin: true; domain: string }
+  >;
   // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport 的
   // ai.tasks.create,复用既有分派链 void runAssetGenerate),立即返回 taskId(不阻塞对话回合)。
   dispatchGenerateAsset: (
@@ -982,6 +1028,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     nodePath.join(process.cwd(), ".auth", "douyin");
   const douyinAuthDirFor = (accountId?: string | null): string =>
     nodePath.join(douyinAuthDirBase, accountId ?? "_default");
+
+  // [T-217a] Web Session Vault 登录态**按域名分目录**:`.auth/web/<domain>/`(每站独立持久
+  //   profile,与 `.auth/douyin/<accountId>` 并列、与用户日常浏览器隔离)。base 走 env
+  //   (CREATOROS_WEB_AUTH_DIR,lib.rs 注 appDataDir 顶层跨版本持久,复用 T-205 注入机制)或
+  //   默认项目内 `.auth/web`(cookie 只在本机、不入 Git —— `.auth/` 已在 .gitignore)。per-user
+  //   全局归属(ChatGPT/知乎登录与抖音号无关),不按 accountId 分。
+  const webAuthDirBase =
+    process.env.CREATOROS_WEB_AUTH_DIR ??
+    nodePath.join(process.cwd(), ".auth", "web");
+  const webAuthDirFor = (domain: string): string =>
+    nodePath.join(webAuthDirBase, domain);
 
   // Deterministic clock/ids keep the seeded dataset reproducible (visual/test
   // parity); new creates get collision-free ids distinct from the slug seeds.
@@ -1329,6 +1386,64 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return current?.storageKey ?? null;
     },
     projectFolder: resolveProjectFolder,
+  };
+  // [T-217a] Web Session Vault runtime —— per-machine 全局(非 user-scoped),文件系统 + sidecar
+  //   浏览器能力:list/remove 是 `.auth/web/` 目录读写(不起浏览器);login 有头弹窗、status
+  //   headless 探针(泛化 douyin-cdp 登录/探针)。`/api/web-session` route 据此提供管理面板。
+  const webSessionRuntime = {
+    listSessions: async (): Promise<
+      Array<{ domain: string; lastLoginAt: string | null }>
+    > => {
+      const { readdir, stat } = await import("node:fs/promises");
+      let entries: string[] = [];
+      try {
+        entries = await readdir(webAuthDirBase);
+      } catch {
+        return []; // 目录不存在(还没登录过任何站)= 空列表(诚实,不报错)
+      }
+      const out: Array<{ domain: string; lastLoginAt: string | null }> = [];
+      for (const domain of entries) {
+        if (domain.startsWith(".")) continue; // 跳过隐藏项(.DS_Store 等)
+        const dir = webAuthDirFor(domain);
+        let lastLoginAt: string | null = null;
+        try {
+          const s = await stat(dir);
+          if (!s.isDirectory()) continue;
+          lastLoginAt = s.mtime.toISOString(); // profile 目录 mtime ≈ 上次登录/使用时间
+        } catch {
+          continue;
+        }
+        out.push({ domain, lastLoginAt });
+      }
+      return out.sort((a, b) => (b.lastLoginAt ?? "").localeCompare(a.lastLoginAt ?? ""));
+    },
+    loginSession: async (url: string): Promise<{ domain: string; loggedIn: boolean }> => {
+      const domain = webDomainFromUrl(url); // 非法 URL → 抛,route 转 400
+      const { loggedIn } = await loginWeb({
+        authDir: webAuthDirFor(domain),
+        url,
+        domain,
+      });
+      return { domain, loggedIn };
+    },
+    sessionStatus: async (domain: string): Promise<{ domain: string; loggedIn: boolean }> => {
+      const d = domain.trim().toLowerCase().replace(/^www\./, "");
+      const { loggedIn } = await checkWebSessionStatus({
+        authDir: webAuthDirFor(d),
+        domain: d,
+      });
+      return { domain: d, loggedIn };
+    },
+    removeSession: async (domain: string): Promise<{ removed: boolean }> => {
+      const d = domain.trim().toLowerCase().replace(/^www\./, "");
+      const { rm } = await import("node:fs/promises");
+      try {
+        await rm(webAuthDirFor(d), { recursive: true, force: true });
+        return { removed: true };
+      } catch {
+        return { removed: false };
+      }
+    },
   };
   const assets = createAssetsTransport(() => assetsService);
 
@@ -6790,6 +6905,54 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       return { assetId: asset.id, name: asset.name, previewUrl, sourceUrl: input.url };
     },
+    // [T-217b/c] web.read 端口 —— launchPersistentContext(webAuthDirFor(domain)) 读正文 →
+    //   createGeneratedAsset 落**逐字稿文本素材**(assetType document,text/plain,pending 走
+    //   T-219 确认门,不自动入库)+ sourceUrl 存证(mergeAiAnnotation,同截图路径)。无会话/过期
+    //   (WebReaderLoginRequiredError)→ 不落库,返回 { needLogin:true, domain } 供编导引导登录。
+    readWebUrl: async (ctx: RequestContext, input: { url: string }) => {
+      const domain = webDomainFromUrl(input.url);
+      let read;
+      try {
+        read = await readWebUrlSidecar(input.url, {
+          authDir: webAuthDirFor(domain),
+        });
+      } catch (err) {
+        if (err instanceof WebReaderLoginRequiredError) {
+          return { needLogin: true as const, domain: err.domain };
+        }
+        throw err; // 三墙其余分类(打不开/HTTP 码/抽不出正文)原样上抛,工具 execute 转人话
+      }
+      const name = `正文·${(read.title || read.finalUrl).slice(0, 40)}`;
+      const bytes = new TextEncoder().encode(read.text);
+      // 逐字稿文本素材:assetType document(文本正文;非截图),pending 待确认(铁律②)。
+      const asset = await assetsService.createGeneratedAsset(ctx, {
+        assetType: "document",
+        name,
+        bytes,
+        mimeType: "text/plain",
+        pending: true,
+      });
+      await assetsService
+        .mergeAiAnnotation(ctx, asset.id, { sourceUrl: input.url })
+        .catch(() => {});
+      let previewUrl: string | null = null;
+      try {
+        const dl = await assetsService.getDownloadUrl(ctx, asset.id);
+        previewUrl = dl.url ?? null;
+      } catch {
+        previewUrl = null;
+      }
+      return {
+        needLogin: false as const,
+        assetId: asset.id,
+        name: asset.name,
+        previewUrl,
+        sourceUrl: input.url,
+        title: read.title,
+        excerpt: read.text.slice(0, 280),
+        extractor: read.extractor,
+      };
+    },
     // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport
     // 的 ai.tasks.create,复用既有分派链 void runAssetGenerate;projectId 走 inputData,service
     // createTask 据它归属项目)。立即返回 taskId,不阻塞对话回合(视频异步分钟级)。
@@ -6900,6 +7063,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     chatRuntime,
     localFileRuntime,
     knowledgeSearchRuntime,
+    webSessionRuntime,
   };
 }
 
@@ -7095,6 +7259,17 @@ export async function getKnowledgeSearchRuntime(): Promise<
   PersistenceBundle["knowledgeSearchRuntime"]
 > {
   return (await getBundle()).knowledgeSearchRuntime;
+}
+
+/**
+ * [T-217a] Web Session Vault 运行时(/api/web-session 消费),与 getLocalFileRuntime 同款
+ * escape hatch:登录态保管库无 DB 层(sidecar 浏览器 + `.auth/web/` 文件系统,per-machine 全局),
+ * 故不走 dispatch 契约 transport,由专用 route 直调本 runtime。
+ */
+export async function getWebSessionRuntime(): Promise<
+  PersistenceBundle["webSessionRuntime"]
+> {
+  return (await getBundle()).webSessionRuntime;
 }
 
 // Composite server transport: persistence for project ops, mock for the rest.

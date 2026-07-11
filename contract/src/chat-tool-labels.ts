@@ -43,6 +43,10 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "网页截图",
     purpose: "给公开 URL 真开浏览器截图,存进素材中心(真证据)",
   },
+  "web.read": {
+    name: "读网页正文",
+    purpose: "带登录态读一个网页的正文全文(含需登录内容),存成逐字稿素材",
+  },
   "material.generate": {
     name: "AI 生成素材",
     purpose: "文生图/文生视频,生成 AI 素材候选,采纳后进素材中心",
