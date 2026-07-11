@@ -227,6 +227,11 @@ import {
   type Collector as ScheduledCollector,
   // [T-212a] 对标采集器(benchmark sourceKind)。
   collectBenchmark,
+  // [T-212c] 对标爆款拆解 → 转化进选题池(采集落库后 best-effort 触发)。
+  runBenchmarkTeardown,
+  createBenchmarkTeardownPort,
+  // [T-212c] 定位简报装配(拆解 getPositioningBrief 端口复用,与各 runner 同一格式)。
+  assembleCreativeContext,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
   runJobNow,
@@ -4419,7 +4424,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     //   (拆解状态=待拆,供 T-212c)。降频(源间 sleep ≥1.5s)、单源失败跳过、限流网关已接(gateway
     //   在 fetchDouyinUserPosts 内每页 acquire)。空源 → 诚实 0 跑(非失败)。
     benchmark: async (ctx, _target, report) => {
-      return collectBenchmark(ctx, {
+      const result = await collectBenchmark(ctx, {
         listEnabledSources: (c) => benchmarkService.listEnabledSources(c),
         fetchSourcePosts: async (c, source) => {
           const works = await fetchDouyinUserPosts(
@@ -4445,6 +4450,45 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         now: deps.now,
         report,
       });
+      // [T-212c] 采集落库后 **best-effort** 触发拆解转化(fire-and-forget,不阻塞采集/串行闸):
+      //   读该号待拆爆款(is_viral+pending)→ AI 拆解(runStructuredNode,不抄袭换角度)→ 高适配
+      //   ≤3 条 createCandidate(source=benchmark,参考链接+爆款倍数入 angle)→ 标 teardown_status=done。
+      //   拆解走真 AI(慢),故不并进采集的 await;失败只记日志,绝不回退采集结果。
+      void runBenchmarkTeardown(ctx, {
+        listPendingViralWorks: (c, limit) =>
+          benchmarkService.listPendingViralWorks(c, limit),
+        getPositioningBrief: async (c) => {
+          try {
+            const cc = await assembleCreativeContext(
+              c,
+              { projectId: null, topic: "" },
+              {
+                positioning: {
+                  getPositioningCenter: (c2) =>
+                    positioningService.getPositioningCenter(c2),
+                },
+              },
+            );
+            return cc.positioningBrief;
+          } catch {
+            return "";
+          }
+        },
+        teardown: createBenchmarkTeardownPort({ resolveModelSpec }),
+        createCandidate: async (c, input) => {
+          const cand = await candidateService.createCandidate(c, input);
+          return { id: cand.id };
+        },
+        markTeardownDone: (c, workId) =>
+          benchmarkService.markTeardownDone(c, workId),
+      }).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error(
+          "[benchmark] 拆解转化触发失败(best-effort,不影响采集):",
+          err,
+        );
+      });
+      return result;
     },
   };
 

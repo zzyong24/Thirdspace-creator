@@ -43,6 +43,8 @@ import { KNOWLEDGE_CLASSIFY_TEMPLATE } from "./templates/knowledge-classify";
 import { KNOWLEDGE_DISTILL_TEMPLATE } from "./templates/knowledge-distill";
 import { KNOWLEDGE_RELATE_TEMPLATE } from "./templates/knowledge-relate";
 import { COMMENT_QA_SIFT_TEMPLATE } from "./templates/comment-qa-sift";
+// [T-212c] 对标爆款拆解 skill（benchmark.teardown）—— 爆款拆解 → 换角度转化选题（generateObject 绑结构化 schema）。
+import { BENCHMARK_TEARDOWN_TEMPLATE } from "./templates/benchmark-teardown";
 import {
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
@@ -86,6 +88,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   KNOWLEDGE_RELATE_TEMPLATE,
   // T-092 评论回流蒸馏筛:评论批 → qa 原子候选 {candidates}(只留真疑问+同义合并;确认门采纳才落库)。
   COMMENT_QA_SIFT_TEMPLATE,
+  // [T-212c] 对标爆款拆解:一条爆款对标作品 + 本账号定位 → 六段拆解 + 换角度转化选题(high 才进池)。
+  BENCHMARK_TEARDOWN_TEMPLATE,
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,

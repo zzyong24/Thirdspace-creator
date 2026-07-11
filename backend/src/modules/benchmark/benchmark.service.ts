@@ -57,6 +57,21 @@ export interface EnabledSource {
   homeUrl: string | null;
 }
 
+// [T-212c] 待拆的爆款对标作品投影（拆解转化 runner 消费；只暴露拆解 + 参考链接需要的字段）。
+export interface PendingViralWork {
+  id: string;
+  platform: string;
+  awemeId: string;
+  description: string;
+  diggCount: number;
+  commentCount: number | null;
+  collectCount: number | null;
+  shareCount: number | null;
+  duration: number | null;
+  viralMultiple: number | null;
+  sourceExternalAccountId: string;
+}
+
 export interface BenchmarkService {
   listSources(
     ctx: RequestContext,
@@ -79,6 +94,11 @@ export interface BenchmarkService {
   listEnabledSources(ctx: RequestContext): Promise<EnabledSource[]>;
   /** 采集用：幂等落库一条对标作品；返回是否新写入（诊断计数用）。 */
   recordWork(ctx: RequestContext, input: RecordWorkInput): Promise<{ inserted: boolean }>;
+  /** [T-212c] 拆解用：列该 ctx（含号）**待拆的爆款作品**（is_viral=true 且 teardown_status=pending），
+   *  按爆款倍数降序，上限 limit（默认 5）。 */
+  listPendingViralWorks(ctx: RequestContext, limit?: number): Promise<PendingViralWork[]>;
+  /** [T-212c] 拆解用：置一条对标作品拆解完成（teardown_status=done，幂等防重拆）。 */
+  markTeardownDone(ctx: RequestContext, workId: string): Promise<void>;
 }
 
 function guardCreate(input: CreateSourceInput): void {
@@ -143,6 +163,30 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
         nickname: r.nickname ?? null,
         homeUrl: r.homeUrl ?? null,
       }));
+    },
+
+    async listPendingViralWorks(ctx, limit = 5) {
+      const rows = await repoFor(ctx).listPendingViral(
+        ctx.accountId ?? null,
+        limit,
+      );
+      return rows.map((r) => ({
+        id: r.id,
+        platform: r.platform,
+        awemeId: r.awemeId,
+        description: r.description,
+        diggCount: r.diggCount,
+        commentCount: r.commentCount ?? null,
+        collectCount: r.collectCount ?? null,
+        shareCount: r.shareCount ?? null,
+        duration: r.duration ?? null,
+        viralMultiple: r.viralMultiple ?? null,
+        sourceExternalAccountId: r.sourceExternalAccountId,
+      }));
+    },
+
+    async markTeardownDone(ctx, workId) {
+      await repoFor(ctx).markTeardownDone(workId);
     },
 
     async recordWork(ctx, input) {

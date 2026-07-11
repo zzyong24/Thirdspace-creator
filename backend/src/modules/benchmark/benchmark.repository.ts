@@ -59,6 +59,13 @@ export interface BenchmarkRepository {
   removeSource(sourceId: string): Promise<BenchmarkSourceRow>;
   /** 幂等 upsert 对标作品（同 (user, platform, aweme_id) 冲突 → 更新统计/爆款/时间）。返回 inserted 标志。 */
   upsertWork(input: UpsertWorkInput): Promise<{ row: BenchmarkWorkRow; inserted: boolean }>;
+  /** [T-212c] 采集用：列该号（accountId=null → 全量）**待拆的爆款作品**（is_viral=true AND
+   *  teardown_status='pending'），按爆款倍数降序（越突出越先拆），上限 limit。命中
+   *  ix_benchmark_works_user_viral (user_id, is_viral, teardown_status) 索引。 */
+  listPendingViral(accountId: string | null, limit: number): Promise<BenchmarkWorkRow[]>;
+  /** [T-212c] 拆解完成 → 置 teardown_status='done'（ownership gate；不存在 → OwnershipError 404）。
+   *  幂等：已 done 的行再置 done 无副作用（防重拆）。 */
+  markTeardownDone(workId: string): Promise<BenchmarkWorkRow>;
 }
 
 export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepository {
@@ -230,7 +237,57 @@ export function createBenchmarkRepository(db: Db, deps: RepoDeps): BenchmarkRepo
         .returning();
       return { row: rows[0]!, inserted: !wasExisting };
     },
+
+    async listPendingViral(accountId, limit) {
+      const base = [
+        eq(benchmarkWorks.userId, deps.userId),
+        eq(benchmarkWorks.isViral, true),
+        eq(benchmarkWorks.teardownStatus, "pending"),
+      ];
+      const where = accountId
+        ? and(...base, eq(benchmarkWorks.accountId, accountId))
+        : and(...base);
+      return db
+        .select()
+        .from(benchmarkWorks)
+        .where(where)
+        // 越突出（爆款倍数高）越先拆；同倍数按赞降序。
+        .orderBy(desc(benchmarkWorks.viralMultiple), desc(benchmarkWorks.diggCount))
+        .limit(limit);
+    },
+
+    async markTeardownDone(workId) {
+      await requireOwnedWork(db, deps.userId, workId);
+      const updated = await db
+        .update(benchmarkWorks)
+        .set({ teardownStatus: "done", updatedAt: deps.now() })
+        .where(
+          and(
+            eq(benchmarkWorks.userId, deps.userId),
+            eq(benchmarkWorks.id, workId),
+          ),
+        )
+        .returning();
+      return updated[0]!;
+    },
   };
+}
+
+// Ownership gate（对标作品）:跨用户 / 未知 id select 空 → OwnershipError(404，不泄露行存在)。
+async function requireOwnedWork(
+  db: Db,
+  userId: string,
+  workId: string,
+): Promise<BenchmarkWorkRow> {
+  const rows = await db
+    .select()
+    .from(benchmarkWorks)
+    .where(and(eq(benchmarkWorks.userId, userId), eq(benchmarkWorks.id, workId)));
+  const row = rows[0];
+  if (!row) {
+    throw new OwnershipError(`OwnershipError: benchmark work not found: ${workId}`);
+  }
+  return row;
 }
 
 // Ownership gate:跨用户 / 未知 id select 空 → OwnershipError(404，不泄露行存在)。

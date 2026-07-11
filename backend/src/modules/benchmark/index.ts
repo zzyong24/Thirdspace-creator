@@ -7,6 +7,8 @@ export {
   type CreateSourceInput,
   type RecordWorkInput,
   type EnabledSource,
+  // [T-212c] 待拆爆款作品投影(拆解转化 runner 消费)。
+  type PendingViralWork,
 } from "./benchmark.service";
 
 export {
