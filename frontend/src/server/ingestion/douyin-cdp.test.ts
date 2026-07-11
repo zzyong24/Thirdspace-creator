@@ -14,6 +14,7 @@ import {
   parseDouyinVideoUrl,
   DouyinAudioFetchError,
   fetchDouyinWorkListExport,
+  gotoWithRetry,
   isXlsxBytes,
   DouyinExportError,
   type DouyinDetail,
@@ -1348,5 +1349,72 @@ describe("fetchDouyinWorkListExport 导航到投稿列表再导出(T-033a,DATA-2
     ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
     expect(calls.close).toBe(1);
     expect(calls.goto).toHaveLength(0); // 登录校验先于任何导航
+  });
+});
+
+// —— [T-202] gotoWithRetry:导航退避重试 —— //
+// fake page:goto 按预设脚本(每次 resolve/reject),waitForTimeout 记录退避调用(不真等)。
+function makeGotoPage(outcomes: Array<"ok" | "fail">) {
+  const gotoCalls: Array<{ url: string; opts: unknown }> = [];
+  const waits: number[] = [];
+  let i = 0;
+  const page = {
+    async goto(url: string, opts?: unknown) {
+      gotoCalls.push({ url, opts });
+      const outcome = outcomes[i++] ?? "ok";
+      if (outcome === "fail") {
+        throw new Error("page.goto: Timeout 60000ms exceeded navigating to X");
+      }
+      return undefined;
+    },
+    async waitForTimeout(ms: number) {
+      waits.push(ms);
+    },
+  };
+  return { page, gotoCalls, waits };
+}
+
+describe("[T-202] gotoWithRetry 导航退避重试", () => {
+  it("首次成功 → 只 goto 一次,不退避", async () => {
+    const { page, gotoCalls, waits } = makeGotoPage(["ok"]);
+    await gotoWithRetry(page, "https://creator.douyin.com/x", { retries: 3 });
+    expect(gotoCalls).toHaveLength(1);
+    expect(waits).toHaveLength(0);
+    // 透传 waitUntil/timeout 到底层 goto(默认 domcontentloaded / 60000)。
+    expect(gotoCalls[0]!.opts).toMatchObject({
+      waitUntil: "domcontentloaded",
+      timeout: 60000,
+    });
+  });
+
+  it("瞬时超时 → 退避重试 → 后续成功(不抛)", async () => {
+    const { page, gotoCalls, waits } = makeGotoPage(["fail", "fail", "ok"]);
+    await gotoWithRetry(page, "https://creator.douyin.com/x", {
+      retries: 3,
+      backoffMs: [2000, 5000, 10000],
+    });
+    expect(gotoCalls).toHaveLength(3); // 2 次失败 + 1 次成功
+    expect(waits).toEqual([2000, 5000]); // 每次失败后各退避一次(末次成功不退避)
+  });
+
+  it("全部失败(用尽重试)→ 抛最后一次原错(保留 Timeout 语义)", async () => {
+    const { page, gotoCalls, waits } = makeGotoPage(["fail", "fail", "fail", "fail"]);
+    await expect(
+      gotoWithRetry(page, "https://creator.douyin.com/x", {
+        retries: 3,
+        backoffMs: [2000, 5000, 10000],
+      }),
+    ).rejects.toThrow(/Timeout 60000ms exceeded/);
+    expect(gotoCalls).toHaveLength(4); // 首次 + 3 次重试
+    expect(waits).toEqual([2000, 5000, 10000]); // 3 次失败各退避一次,末次失败后不再等直接抛
+  });
+
+  it("退避序列比重试次数短 → 复用末位退避值", async () => {
+    const { page, waits } = makeGotoPage(["fail", "fail", "fail", "ok"]);
+    await gotoWithRetry(page, "https://creator.douyin.com/x", {
+      retries: 3,
+      backoffMs: [1000], // 只给一档 → 后续复用末位
+    });
+    expect(waits).toEqual([1000, 1000, 1000]);
   });
 });

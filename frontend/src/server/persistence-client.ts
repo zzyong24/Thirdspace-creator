@@ -4067,6 +4067,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // [T-152] 阶段③:解析明细(N 条)。
       report({ stage: "parse", processed: 0, total: null, message: "解析明细数据" });
       const details = await parseDouyinWorkListXlsx(bytes);
+      // [T-202] 导出/解析条数落 console(不止 job_run progress):真机排「隐藏 0 标」时,先看这行——
+      //   details.length===0 → 导出本身 0 条(登录态/tab/导出按钮问题,查上面 debugShot);
+      //   details.length>0 但下方 hiddenSynced===0 → 同步/匹配问题(看 [douyin-detail-visibility])。
+      console.log(
+        `[douyin-detail-export] 解析 xlsx 得 ${details.length} 条明细行(bytes ${bytes.byteLength})`,
+      );
       report({
         stage: "parse",
         processed: details.length,
@@ -4124,11 +4130,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         visibleSynced: 0, // 真标了 visible
       };
       const statusSamples = new Set<string>();
+      // [T-202] 未匹配明细的「作品标题」采样(锚 = title,匹不上多因 title 断裂 T-034)。真机看到
+      //   具体标题 → 立刻能判是 catalog title 空、还是 xlsx 标题被截断/带表情不一致导致匹不上。
+      const unmatchedTitleSamples = new Set<string>();
       for (const m of matches) {
         if (!m.publicationId) {
           visDiag.unmatched += 1;
-          // 采样未匹配明细的「审核状态」原值(去重,最多留几个),便于真机比对列/字面量。
+          // 采样未匹配明细的「审核状态」原值 + 「标题」(去重,最多留几个),便于真机比对列/字面量。
           if (statusSamples.size < 8) statusSamples.add(m.detail.status ?? "");
+          if (unmatchedTitleSamples.size < 8)
+            unmatchedTitleSamples.add(m.detail.title ?? "");
           continue;
         }
         const vis = visibilityFromDetailStatus(m.detail.status);
@@ -4172,9 +4183,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       //   unmatched 高 → title 匹配断裂;unknownStatus 高 + 采样非空 → 列/字面量口径需扩;
       //   hidden/visibleSynced 有值 → 同步链本身通(问题只在存量那一次)。
       console.log(
-        `[douyin-detail-visibility] 明细 ${visDiag.total}:未匹配 ${visDiag.unmatched},状态判不出 ${visDiag.unknownStatus},无锚 ${visDiag.noExtId},标隐藏 ${visDiag.hiddenSynced},标可见 ${visDiag.visibleSynced}` +
+        `[douyin-detail-visibility] 明细 ${visDiag.total}(catalog ${catalog.length} 条作品):未匹配 ${visDiag.unmatched},状态判不出 ${visDiag.unknownStatus},无锚 ${visDiag.noExtId},标隐藏 ${visDiag.hiddenSynced},标可见 ${visDiag.visibleSynced}` +
           (statusSamples.size > 0
             ? ` · 未判定审核状态采样: ${Array.from(statusSamples)
+                .map((s) => JSON.stringify(s))
+                .join(", ")}`
+            : "") +
+          (unmatchedTitleSamples.size > 0
+            ? ` · 未匹配标题采样: ${Array.from(unmatchedTitleSamples)
                 .map((s) => JSON.stringify(s))
                 .join(", ")}`
             : ""),
@@ -4215,6 +4231,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         });
         detailWritten = result.recordsWritten;
       }
+      // [T-202] 落库条数落 console:与上面 export/visibility 三行拼成完整链路证据
+      //   (导出 N 行 → 匹配 M 条 → 落库 detailWritten 条),真机一眼定位断点。
+      console.log(
+        `[douyin-detail-ingest] 明细落库 ${detailWritten} 条快照(匹配上 ${records.length} 条 record)`,
+      );
       // 5) [T-195] 明细落库(可见性已标)后跑初始化重活:①封面回填(只对可见作品)②逐字稿 +
       //    重建排队(隐藏经 isWorkHidden 跳)。整体从 self.metrics 尾挪到这里 —— 此刻 hidden_at /
       //    platform_status 已标,故重活天然只对可见作品跑(不撞隐藏作品空 item_list 分享页)。两步

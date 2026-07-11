@@ -127,6 +127,113 @@ describe("triggerScheduledJob(幂等双闸)", () => {
   });
 });
 
+describe("[T-201d] 隐藏号定时任务停跑 gate", () => {
+  const jobWithAccount: SchedulableJob = { ...job, accountId: "acct-9" };
+
+  it("归属号非 active(archived/隐藏)→ 跳过:不产 task/run/dispatch,返回 skippedReason", async () => {
+    const deps = makeTriggerDeps([]);
+    const getAccountStatus = vi.fn(async () => "archived");
+    const res = await triggerScheduledJob(ctx, jobWithAccount, {
+      ...deps,
+      getAccountStatus,
+    });
+
+    expect(getAccountStatus).toHaveBeenCalledWith(
+      expect.objectContaining({ accountId: "acct-9" }),
+      "acct-9",
+    );
+    // 跳过:不产 task/run/dispatch。
+    expect(deps._createTask).not.toHaveBeenCalled();
+    expect(deps._createRun).not.toHaveBeenCalled();
+    expect(deps._dispatch).not.toHaveBeenCalled();
+    // 返回「已跳过」形态:空 id + deduped=false + skippedReason。
+    expect(res.jobRunId).toBe("");
+    expect(res.aiTaskId).toBe("");
+    expect(res.deduped).toBe(false);
+    expect(res.skippedReason).toContain("archived");
+  });
+
+  it("归属号 active → 照常产 task/run/dispatch(不跳过)", async () => {
+    const deps = makeTriggerDeps([]);
+    const getAccountStatus = vi.fn(async () => "active");
+    const res = await triggerScheduledJob(ctx, jobWithAccount, {
+      ...deps,
+      getAccountStatus,
+    });
+    expect(deps._createTask).toHaveBeenCalledTimes(1);
+    expect(deps._createRun).toHaveBeenCalledTimes(1);
+    expect(deps._dispatch).toHaveBeenCalledTimes(1);
+    expect(res.skippedReason).toBeUndefined();
+    expect(res).toMatchObject({ deduped: false, aiTaskId: "task1", jobRunId: "run1" });
+  });
+
+  it("端口未绑(getAccountStatus 缺省)→ 保持原行为跑(不查、不跳过)", async () => {
+    const deps = makeTriggerDeps([]); // 无 getAccountStatus
+    const res = await triggerScheduledJob(ctx, jobWithAccount, deps);
+    expect(deps._createTask).toHaveBeenCalledTimes(1);
+    expect(deps._dispatch).toHaveBeenCalledTimes(1);
+    expect(res.skippedReason).toBeUndefined();
+  });
+
+  it("查号返回 null(号不存在/越权/查失败)→ 降级放行(照跑,不误停)", async () => {
+    const deps = makeTriggerDeps([]);
+    const getAccountStatus = vi.fn(async () => null);
+    const res = await triggerScheduledJob(ctx, jobWithAccount, {
+      ...deps,
+      getAccountStatus,
+    });
+    expect(deps._createTask).toHaveBeenCalledTimes(1);
+    expect(deps._dispatch).toHaveBeenCalledTimes(1);
+    expect(res.skippedReason).toBeUndefined();
+  });
+
+  it("查号端口抛错 → 捕获后降级放行(不因查号失败而误停)", async () => {
+    const deps = makeTriggerDeps([]);
+    const getAccountStatus = vi.fn(async () => {
+      throw new Error("boom");
+    });
+    const res = await triggerScheduledJob(ctx, jobWithAccount, {
+      ...deps,
+      getAccountStatus,
+    });
+    expect(deps._createTask).toHaveBeenCalledTimes(1);
+    expect(deps._dispatch).toHaveBeenCalledTimes(1);
+    expect(res.skippedReason).toBeUndefined();
+  });
+
+  it("job 无号 → 不查(gate 只对有归属号的 job 生效)", async () => {
+    const deps = makeTriggerDeps([]);
+    const getAccountStatus = vi.fn(async () => "archived");
+    const jobNoAccount: SchedulableJob = { ...job, accountId: null };
+    const res = await triggerScheduledJob(ctx, jobNoAccount, {
+      ...deps,
+      getAccountStatus,
+    });
+    expect(getAccountStatus).not.toHaveBeenCalled();
+    expect(deps._createTask).toHaveBeenCalledTimes(1);
+    expect(res.skippedReason).toBeUndefined();
+  });
+
+  it("runNow 复用同 gate:归属号隐藏 → 跳过不产 run", async () => {
+    const base = makeTriggerDeps([]);
+    const getAccountStatus = vi.fn(async () => "archived");
+    const getJob = vi.fn(async () => ({
+      id: "job1",
+      sourceKind: "self.metrics",
+      target: {},
+      accountId: "acct-9",
+    }));
+    const res = await runJobNow(ctx, "job1", {
+      ...base,
+      getAccountStatus,
+      job: { getJob },
+    });
+    expect(res.skippedReason).toContain("archived");
+    expect(base._createTask).not.toHaveBeenCalled();
+    expect(base._dispatch).not.toHaveBeenCalled();
+  });
+});
+
 describe("runJobNow(D5「立即运行」手动触发)", () => {
   it("查 job(ownership gate)→ triggerScheduledJob 产 task+run+dispatch(不碰真抖音)", async () => {
     const base = makeTriggerDeps([]);

@@ -21,6 +21,75 @@ import {
 // cookie/会话只活在用户自己的浏览器里,绝不落库、绝不入 Git。
 
 // ---------------------------------------------------------------------------
+// [T-202] 导航重试(可单测):抖音创作者中心 page.goto 偶发瞬时超时(真机报
+//   `page.goto: Timeout 60000ms exceeded navigating to .../content/manage` —— run 历史证明
+//   瞬时:首次 failed、重试即 succeeded)。裸 goto 首次撞抖动就抛,拖垮整轮采集 → self.detail
+//   跑不完 →(可见性没同步/封面没回填/重建没排队)。抽一个统一重试 helper:goto 超时/失败 →
+//   退避重试(默认 2s/5s/10s),全部失败才抛**原错**(保留 DouyinExportError 分类语义不变)。
+// ---------------------------------------------------------------------------
+
+/** gotoWithRetry 只依赖 page 的 goto + waitForTimeout(三处调用点的 page 接口都满足;
+ *  fake page 单测同样只需这两件事)。 */
+interface GotoCapablePage {
+  goto(url: string, opts?: unknown): Promise<unknown>;
+  waitForTimeout(ms: number): Promise<void>;
+}
+
+export interface GotoWithRetryOptions {
+  /** 重试次数(不含首次尝试);默认 3(共 4 次)。 */
+  retries?: number;
+  /** 每次 goto 的超时(ms);默认 60000(与原裸 goto 一致)。 */
+  timeoutMs?: number;
+  /** 每次失败后的退避序列(ms);默认 [2000, 5000, 10000],超出长度取末位。 */
+  backoffMs?: number[];
+  /** goto 的 waitUntil(默认 domcontentloaded,与三处原调用一致)。 */
+  waitUntil?: "domcontentloaded" | "load" | "networkidle" | "commit";
+  /** 日志用短标签(默认取 url);标识是哪一步导航失败/自愈。 */
+  label?: string;
+}
+
+/**
+ * [T-202] 带退避重试的 page.goto。瞬时导航抖动(超时/网络)→ 退避后重试;直到成功或用尽重试
+ * 抛**最后一次的原错**(不吞、不改类型 —— 上层 mapExportErr / catch 分类逻辑不变)。成功但曾
+ * 失败过会 console.log 一行自愈记录,真机可观测「本轮是否踩到瞬时超时」。退避用 page.waitForTimeout
+ * (真 Playwright / fake page 都有),不额外引 timer 依赖,保持可注入单测。
+ */
+export async function gotoWithRetry(
+  page: GotoCapablePage,
+  url: string,
+  opts: GotoWithRetryOptions = {},
+): Promise<void> {
+  const retries = opts.retries ?? 3;
+  const timeoutMs = opts.timeoutMs ?? 60_000;
+  const backoff = opts.backoffMs ?? [2_000, 5_000, 10_000];
+  const waitUntil = opts.waitUntil ?? "domcontentloaded";
+  const label = opts.label ?? url;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      await page.goto(url, { waitUntil, timeout: timeoutMs });
+      if (attempt > 0) {
+        console.log(
+          `[douyin-goto] ${label} 第 ${attempt + 1} 次尝试成功(前 ${attempt} 次瞬时失败已自愈)`,
+        );
+      }
+      return;
+    } catch (err) {
+      lastErr = err;
+      if (attempt >= retries) break; // 用尽重试 → 跳出抛原错
+      const waitMs = backoff[Math.min(attempt, backoff.length - 1)] ?? 2_000;
+      console.warn(
+        `[douyin-goto] ${label} 第 ${attempt + 1} 次导航失败(${String(
+          (err as { message?: unknown })?.message ?? err,
+        ).slice(0, 160)}),${waitMs}ms 后重试`,
+      );
+      await page.waitForTimeout(waitMs);
+    }
+  }
+  throw lastErr;
+}
+
+// ---------------------------------------------------------------------------
 // 纯函数(可单测)
 // ---------------------------------------------------------------------------
 
@@ -867,9 +936,10 @@ export async function fetchDouyinMetrics(
       }
     });
 
-    await page.goto(CREATOR_CONTENT, {
-      waitUntil: "domcontentloaded",
-      timeout: 60000,
+    // [T-202] 导航加退避重试(瞬时超时自愈,不首撞就抛)。
+    await gotoWithRetry(page, CREATOR_CONTENT, {
+      timeoutMs: 60_000,
+      label: "creator-content(作品列表)",
     });
     await page.waitForTimeout(3000); // 等首屏 work_list XHR 回来
 
@@ -1057,9 +1127,11 @@ async function scrapeCommentsForWork(
   page.on("response", onResponse);
   try {
     // item_id 过滤 → 评论管理页只显示该作品的评论(对齐 crawler.py urls_to_try)。
-    await page.goto(
+    // [T-202] 导航加退避重试(瞬时超时自愈)。
+    await gotoWithRetry(
+      page,
       `${CREATOR_COMMENT_MANAGE}?item_id=${encodeURIComponent(awemeId)}`,
-      { waitUntil: "domcontentloaded", timeout: 60000 },
+      { timeoutMs: 60_000, label: `comment-manage(${awemeId})` },
     );
     await page.waitForTimeout(3000); // 等首屏 comment/list XHR 回来
 
@@ -1622,9 +1694,10 @@ async function runExportOnce(
     const page = ctx.pages()[0] ?? (await ctx.newPage());
 
     // 1) 强制导航旧版数据中心作品分析(TzFilm 坑:不设旧版 URL → Garfish 不加载,按钮找不到)。
-    await page.goto(CREATOR_DATA_CENTER_CONTENT, {
-      waitUntil: "domcontentloaded",
-      timeout: 60_000,
+    //    [T-202] 加退避重试:xlsx 导出这一步撞瞬时超时是真机 self.detail 跑不完的头号根因。
+    await gotoWithRetry(page, CREATOR_DATA_CENTER_CONTENT, {
+      timeoutMs: 60_000,
+      label: "data-center-content(xlsx 导出)",
     });
     // 等 Garfish 微前端初始化(真机 ~15s;DATA-2 已验)。
     await page.waitForTimeout(15_000);

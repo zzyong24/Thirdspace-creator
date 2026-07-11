@@ -89,6 +89,13 @@ export async function backfillDouyinCovers(
   };
   const missing = await ports.listMissingCover(limit);
   result.attempted = missing.length;
+  // [T-202] 整批进度日志:75+ 条串行(iesdouyin 9s minInterval → ~15 分钟)真机看着像卡死。
+  //   每 PROGRESS_EVERY 条(及末条)打一行 filled/skipped/failed 计数,让真机能观测「在跑、跑到哪」,
+  //   而非误判整批挂死。不改限流、不改串行(并行只在 acquire 排队,无意义)。
+  const PROGRESS_EVERY = 10;
+  console.log(
+    `[douyin-cover-backfill] 开始回填:候选 ${missing.length} 条缺封面作品(串行,受 iesdouyin 限流节奏)`,
+  );
   let done = 0;
   for (const pub of missing) {
     try {
@@ -141,6 +148,12 @@ export async function backfillDouyinCovers(
       } catch {
         /* 进度回调失败不影响回填 */
       }
+    }
+    // [T-202] 每 N 条(及末条)打一行累计计数,真机可观测进度而非误判卡死。
+    if (done % PROGRESS_EVERY === 0 || done === missing.length) {
+      console.log(
+        `[douyin-cover-backfill] 进度 ${done}/${missing.length} · 已填 ${result.filled} · 跳过 ${result.skipped} · 失败 ${result.failed}`,
+      );
     }
   }
   return result;
