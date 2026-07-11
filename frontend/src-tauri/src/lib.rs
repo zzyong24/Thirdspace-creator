@@ -294,6 +294,8 @@ fn resolve_sidecar_dir(app: &AppHandle) -> PathBuf {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        // [T-241] 外链转系统浏览器(webview 默认吞 target=_blank 新窗口请求)。
+        .plugin(tauri_plugin_opener::init())
         // T-147 P6 —— updater 插件(签名更新包校验;pubkey/endpoints 在 tauri.conf.json)。
         .plugin(tauri_plugin_updater::Builder::new().build())
         // [T-180] process 插件 —— 更新装好后 relaunch() 重启 app。

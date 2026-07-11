@@ -46,6 +46,7 @@
     "@creatoros/contract": "workspace:*",
     "@fontsource-variable/noto-sans-sc": "5.2.10",
     "@mozilla/readability": "^0.6.0",
+    "@tauri-apps/plugin-opener": "^2.5.4",
     "@tiptap/pm": "3.27.1",
     "@tiptap/react": "3.27.1",
     "@tiptap/starter-kit": "3.27.1",

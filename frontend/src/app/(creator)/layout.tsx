@@ -31,6 +31,7 @@ import { redirect } from "next/navigation";
 
 import { ShellRouter, type ShellUser } from "./shell-router";
 import { GlobalSearchHotkey } from "@/components/shell/global-search-hotkey";
+import { ExternalLinkOpener } from "@/components/shell/external-link-opener";
 import { resolveSession, currentPathname } from "@/lib/session.server";
 // T-147 P5 桌面激活授权 —— 桌面态未激活/到期则弹回 /activate;web/dev 永远放行(门不触发)。
 import { isActivationAllowed } from "@/lib/activation-gate.server";
@@ -119,6 +120,8 @@ export default async function CreatorLayout({
     <>
       {/* [T-051 2c] ⌘K 全局热键 → /search(让 TopHeader 的 kbd 提示言行一致)。 */}
       <GlobalSearchHotkey />
+      {/* [T-241] 桌面外链转系统浏览器(webview 吞 target=_blank)。 */}
+      <ExternalLinkOpener />
       <ShellRouter user={user} notifications={notifications}>
         {children}
       </ShellRouter>

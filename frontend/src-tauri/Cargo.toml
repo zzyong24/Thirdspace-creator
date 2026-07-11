@@ -21,6 +21,9 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 # shell 插件:唯一用途 = spawn/kill Next standalone sidecar 二进制(externalBin)。
 tauri-plugin-shell = "2"
+# [T-241] opener 插件:外链(target=_blank / 素材 sourceUrl / 购买链接)转系统浏览器打开。
+# webview 默认拒绝新窗口请求 → 无此插件所有外链点击被吞(用户真机实锤)。
+tauri-plugin-opener = "2"
 # T-147 P6 桌面加固 —— updater 插件(minisign/Ed25519 签名更新包,不需 Apple 证书)。
 # 配 tauri.conf.json plugins.updater.{pubkey,endpoints} + bundle.createUpdaterArtifacts。
 tauri-plugin-updater = "2"
