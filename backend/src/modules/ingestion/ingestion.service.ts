@@ -762,12 +762,18 @@ export function createIngestionService(args: {
         } catch (err) {
           console.error("[ingestion] loginDouyin: ensure external_source 失败:", err);
         }
+        // [T-201a] 绑定成功后 ctx.accountId 常为 null(新绑,号是本次 ensureAccount 刚建/复用的)。
+        //   捕获其 id 派生 boundCtx,让下游(建 job / claimOrphans 认领存量 / 初始化采集)全落**真号**,
+        //   而非 null → 根治「采集/认领全落 null 号 → webview 带真号严格 eq 0 命中 → 封面 OwnershipError
+        //   紫色」(Bug-1)。ctx.accountId 已有(已有账户刷新路径)则尊重它,不覆盖。
+        let boundCtx = ctx;
         if (platformAccount) {
           try {
-            await platformAccount.ensureAccount(ctx, {
+            const ensured = await platformAccount.ensureAccount(ctx, {
               platform: "douyin",
               handle: "我的抖音",
             });
+            boundCtx = { ...ctx, accountId: ctx.accountId ?? ensured.id };
           } catch (err) {
             console.error("[ingestion] loginDouyin: ensure platform_account 失败:", err);
           }
@@ -777,9 +783,11 @@ export function createIngestionService(args: {
         //   (回调内部 void,不阻塞绑定返回)。「已有账户」路径也复用 loginDouyin,故此处同样触发。
         //   identity backfill 由初始化的 self.metrics(=refreshDouyin→applyDouyinIdentity)顺带完成,
         //   故 onDouyinBound 注入时**不再**跑下方 Bug-13 内联 refreshDouyin(避免双跑 Chromium 抢号)。
+        //   [T-201a] 传 boundCtx(带真号)→ claimOrphans 认领存量 null 数据落真号、建的 job/初始化采集
+        //   ctx 也带真号(triggerScheduledJob 由 job.accountId 派生采集 ctx)。
         if (onDouyinBound) {
           try {
-            onDouyinBound(ctx);
+            onDouyinBound(boundCtx);
           } catch (err) {
             console.error("[ingestion] loginDouyin: onDouyinBound 建 job/初始化触发失败:", err);
           }

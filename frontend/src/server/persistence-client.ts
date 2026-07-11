@@ -595,10 +595,12 @@ export async function ensureDouyinAccountUpsert(
   const existing = rows.find((r) => r.accountHandle === input.handle);
   if (existing) return { id: existing.id };
   if (isPlaceholderHandle(input.handle)) {
-    const placeholder = rows.find(
-      (r) => isPlaceholderHandle(r.accountHandle) && r.status === "active",
-    );
-    if (placeholder) return { id: placeholder.id };
+    // [T-201a] 绑定用占位 handle → 复用**任一既有 active 号**(单号现实),不再仅匹配「handle 仍是
+    //   占位」的号:一旦 updateAccountHandle 把昵称改成真实值(如「月明水清深」),再绑仍用占位
+    //   handle 调本函数,旧写法(只找占位 handle 的 active 号)找不到→冒**第二个号**=锚点漂移根因
+    //   (Bug-2)。单号现实下「同 platform 任一 active 号」即本人,复用它。多账号精确 targeting=T-136 §D。
+    const activeExisting = rows.find((r) => r.status === "active");
+    if (activeExisting) return { id: activeExisting.id };
   }
   try {
     const created = await service.createAccount(ctx, {

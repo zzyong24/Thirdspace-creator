@@ -88,6 +88,23 @@ describe("douyin 扫码 upsert 去重 + 占位号合并", () => {
     expect(await activeHandles(svc)).toEqual(["@真实达人"]);
   });
 
+  it("[T-201a] ensure:号已是真实昵称(非占位)+ 再用占位 handle 绑 → 复用同号,不冒重号(锚点漂移根因/用户 bug 现场)", async () => {
+    // 用户 bug 现场:首绑建「我的抖音」→ updateAccountHandle 改成真实昵称「月明水清深」→
+    //   再走 loginDouyin(仍传占位 handle「我的抖音」)。旧写法只找「handle 仍是占位」的 active 号,
+    //   找不到 → 冒第二个号 → 采集/存储锚点漂移。修后:复用任一既有 active 号(单号现实)。
+    const real = await svc.createAccount(ctx, {
+      platform: "douyin",
+      accountHandle: "月明水清深", // 已被 updateAccountHandle 改成真实昵称(非占位)
+    });
+    const { id } = await ensureDouyinAccountUpsert(svc, ctx, {
+      platform: "douyin",
+      handle: "我的抖音", // loginDouyin 仍传占位 handle
+    });
+    expect(id).toBe(real.id); // 复用,不新建
+    // 仍只有一行(没冒第二个号)。
+    expect(await activeHandles(svc)).toEqual(["月明水清深"]);
+  });
+
   it("merge:两个占位号(待完善 + 我的抖音)→ 抓到真实昵称后合并为一行真实号", async () => {
     // 复现 bug 现场:两条占位号并存。
     await svc.createAccount(ctx, { platform: "douyin", accountHandle: "待完善" });
