@@ -45,6 +45,8 @@ import { KNOWLEDGE_RELATE_TEMPLATE } from "./templates/knowledge-relate";
 import { COMMENT_QA_SIFT_TEMPLATE } from "./templates/comment-qa-sift";
 // [T-212c] 对标爆款拆解 skill（benchmark.teardown）—— 爆款拆解 → 换角度转化选题（generateObject 绑结构化 schema）。
 import { BENCHMARK_TEARDOWN_TEMPLATE } from "./templates/benchmark-teardown";
+// [T-212d] 防茧房校准 skill（topic.preference）—— 淘汰原因批 → 结构化偏好信号（≥3 硬门在 backend 护栏强制）。
+import { TOPIC_PREFERENCE_DISTILL_TEMPLATE } from "./templates/topic-preference-distill";
 import {
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
@@ -90,6 +92,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   COMMENT_QA_SIFT_TEMPLATE,
   // [T-212c] 对标爆款拆解:一条爆款对标作品 + 本账号定位 → 六段拆解 + 换角度转化选题(high 才进池)。
   BENCHMARK_TEARDOWN_TEMPLATE,
+  // [T-212d] 防茧房校准:淘汰原因批 → 结构化偏好信号(avoid/prefer + keyword + supportingCount)。
+  TOPIC_PREFERENCE_DISTILL_TEMPLATE,
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,

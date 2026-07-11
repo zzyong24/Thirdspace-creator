@@ -8,5 +8,6 @@ export {
   candidates,
   audienceSignals,
   topicPromotions,
+  topicPreferences,
   CANDIDATE_DDL,
 } from "@creatoros/backend";

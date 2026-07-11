@@ -77,6 +77,8 @@ export const candidateOperations = {
       // edit any subset of 详情/指标). `.partial()` drops candidateCard's array
       // default so an absent field is left untouched rather than reset to [].
       card: candidateCard.partial().optional(),
+      // [T-212d] 防茧房校准 — 淘汰选题时随手写一句原因(status=dropped 时带),蒸馏成偏好信号。
+      dropReason: z.string().optional(),
     }),
     response: candidateResource,
     fr: ["FR-CAND-PATCH"],

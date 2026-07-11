@@ -15,6 +15,12 @@ export * from "./calibration-diagnose-runner";
 export * from "./calibration-score-runner";
 // [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排,组合根经 onDouyinBound 接)。
 export * from "./collection-bootstrap";
+// [T-212a] 对标采集器(benchmark sourceKind 的确定性采集体,注入端口可单测)。
+export * from "./benchmark-collector";
+// [T-212c] 对标爆款拆解 → 转化进选题池(runBenchmarkTeardown 编排 + createBenchmarkTeardownPort AI 端口)。
+export * from "./benchmark-teardown-runner";
+// [T-212d] 防茧房校准:淘汰原因蒸馏(runTopicPreferenceDistill 编排 + createTopicPreferenceDistillPort AI 端口)。
+export * from "./topic-preference-distill-runner";
 // [T-163 Batch 3] chat 流式(runChatStream + tools + context 装配)—— streamText/tool/jsonSchema
 // (Vercel AI SDK)在此;前端只留 /api/chat 薄代理 + useChat UI。
 export * from "./chat-context";

@@ -21,6 +21,17 @@ import {
   PromoteStateError,
   DanglingRunError,
 } from "./candidate.errors";
+// [T-212d] 防茧房校准护栏(纯函数):±10 封顶 / ≥3 例升级 / 8 周衰减 / 探索位。
+import {
+  clampPreferenceWeight,
+  isHardPreference,
+  computePreferenceAdjustment,
+  rankWithExploration,
+  PREFERENCE_DECAY_WEEKS,
+  type ActivePreference,
+  type ScoredCandidate,
+} from "./topic-preference-guardrail";
+import type { TopicPreferenceRow } from "./candidate.repository";
 
 // Candidate service (foundation §5.3) — every public method takes
 // `(ctx: RequestContext, …)` and builds a repository bound to `ctx.userId`
@@ -114,6 +125,10 @@ export interface ServiceDeps {
   // SOFT dep — the cross-module aggregates for topics.overview's 出题依据 + 历史爆款/复盘
   // sources. Absent ⇒ those numbers report 0 / "" (honest, never fabricated).
   overview?: CandidateOverviewPort;
+  // [T-212d] 防茧房校准触发点(OPTIONAL fire-and-forget)—— 用户淘汰选题写原因后,后台跑淘汰原因
+  // 蒸馏(runTopicPreferenceDistill)。绑在 composition root(persistence-client);缺省(测试/未接线)
+  // 则淘汰仍正常落原因、只是不即时蒸馏。service 不 import ai-runtime(仅回调,保层级)。
+  dispatchPreferenceDistill?: (ctx: RequestContext) => void;
 }
 
 export interface CreateCandidateInput {
@@ -134,6 +149,30 @@ export interface PatchCandidateInput {
   status?: "pool" | "dropped";
   // 选题卡可编辑 — a partial 选题卡 patch, shallow-merged over the stored card.
   card?: Record<string, unknown>;
+  // [T-212d] 淘汰原因(status→dropped 时随手写一句)—— 蒸馏「该创作者偏好」信号的原料。
+  dropReason?: string | null;
+}
+
+// [T-212d] 偏好信号 upsert 入参(service 边界)。weight 可选:缺省由 exampleCount 派生并 ±10 封顶。
+export interface UpsertTopicPreferenceInput {
+  keyword: string;
+  direction: "avoid" | "prefer";
+  signal: string;
+  exampleCount: number;
+  weight?: number;
+}
+
+// [T-212d] 护栏后的选题排序结果:候选 DTO + 偏好调整量 + 注入后分(供选题推荐/排序消费)。
+export type RankedTopicResource = CandidateResource & {
+  baseScore: number; // 偏好前(positioningFit,null→0)
+  preferenceAdjustment: number; // 护栏后偏好调整量(±10 封顶)
+  adjustedScore: number; // 注入后分(0–100)
+};
+
+export interface RankTopicsQuery {
+  limit: number;
+  // 护栏④ 探索位数(缺省 2):保留给「被偏好压制但本身不差」的候选,防茧房。
+  explorationSlots?: number;
 }
 
 export interface ListCandidatesQuery {
@@ -258,10 +297,31 @@ export interface CandidateService {
     signalId: string,
     candidateId: string | undefined,
   ): Promise<CandidateResource>;
+
+  // ── [T-212d] 防茧房校准 ──────────────────────────────────────────────────
+  // 全部淘汰候选写过的原因(非空)—— 蒸馏偏好信号的原料。NOT a contract op(蒸馏 runner 消费)。
+  listDropReasons(ctx: RequestContext): Promise<string[]>;
+  // upsert 一条偏好信号。**护栏在此强制**:weight ±10 封顶(护栏①);exampleCount<3 → status
+  // 'candidate'(不注入评分),≥3 → 'active' 硬偏好(护栏②)。NOT a contract op(蒸馏 runner 消费)。
+  upsertTopicPreference(
+    ctx: RequestContext,
+    input: UpsertTopicPreferenceInput,
+  ): Promise<TopicPreferenceRow>;
+  // 已升级(active)的硬偏好 —— 校准中心/调试可读。NOT a contract op(内部 seam)。
+  listActiveTopicPreferences(
+    ctx: RequestContext,
+  ): Promise<TopicPreferenceRow[]>;
+  // 选题评分前置注入 + 排序:读 pool 候选 + active 硬偏好 → 每候选算偏好调整量(护栏①③)→
+  // 按注入后分排序、保留探索位(护栏④)。读前先归档过期偏好(护栏③)。NOT a contract op(内部 seam)。
+  rankTopicsWithGuardrails(
+    ctx: RequestContext,
+    query: RankTopicsQuery,
+  ): Promise<RankedTopicResource[]>;
 }
 
 export function createCandidateService(deps: ServiceDeps): CandidateService {
   const { db, now, nextId, projects, positioning, ingestion, overview } = deps;
+  const dispatchPreferenceDistill = deps.dispatchPreferenceDistill;
 
   function repoFor(ctx: RequestContext): CandidateRepository {
     const repoDeps: RepoDeps = {
@@ -323,12 +383,23 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
 
     async patchCandidate(ctx, candidateId, patch) {
       // Sanitize a partial 选题卡 patch (drop unknown keys / clamp metrics) before it
-      // reaches the repo's shallow-merge; everything else passes through unchanged.
+      // reaches the repo's shallow-merge; everything else (含 [T-212d] dropReason) passes
+      // through unchanged.
       const cleaned: typeof patch =
         patch.card !== undefined
           ? { ...patch, card: pickCardFields(patch.card) }
           : patch;
       const row = await repoFor(ctx).patchCandidate(candidateId, cleaned);
+      // [T-212d] 淘汰(status→dropped)且带原因 → 后台蒸馏偏好信号(fire-and-forget,不阻塞淘汰返回)。
+      // 蒸馏每次从**全部**累积原因重算,累计到 ≥3 例才被 service 护栏升级为硬偏好(单次不立即改规则)。
+      if (
+        cleaned.status === "dropped" &&
+        typeof cleaned.dropReason === "string" &&
+        cleaned.dropReason.trim().length > 0 &&
+        dispatchPreferenceDistill
+      ) {
+        dispatchPreferenceDistill(ctx);
+      }
       return toCandidateDto(row);
     },
 
@@ -565,6 +636,88 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       await repo.linkSignal(signalId, targetId);
       await repo.recomputeDemandCount(targetId);
       return toCandidateDto(await repo.getCandidate(targetId));
+    },
+
+    // ── [T-212d] 防茧房校准 ──────────────────────────────────────────────────
+    async listDropReasons(ctx) {
+      return repoFor(ctx).listDropReasons();
+    },
+
+    async upsertTopicPreference(ctx, input) {
+      // 护栏①:权重 ±10 封顶。缺省由 exampleCount 派生(例越多越强,3 例→9,≥4 例→10 封顶),
+      //   显式传入亦一律再 clamp(单条偏好对评分的影响绝不越 ±10)。存正向 magnitude,方向在评分时施符号。
+      const rawWeight =
+        input.weight !== undefined ? input.weight : input.exampleCount * 3;
+      const weight = Math.abs(clampPreferenceWeight(rawWeight));
+      // 护栏②:≥3 例才升级为 active 硬偏好(注入评分);不足则记为 candidate(只记不改规则)。
+      const status: "candidate" | "active" = isHardPreference(input.exampleCount)
+        ? "active"
+        : "candidate";
+      return repoFor(ctx).upsertTopicPreference({
+        keyword: input.keyword,
+        direction: input.direction,
+        signal: input.signal,
+        exampleCount: input.exampleCount,
+        weight,
+        status,
+      });
+    },
+
+    async listActiveTopicPreferences(ctx) {
+      return repoFor(ctx).listActiveTopicPreferences();
+    },
+
+    async rankTopicsWithGuardrails(ctx, query) {
+      const repo = repoFor(ctx);
+      // 护栏③:读前先归档过期偏好(lastReinforcedAt 早于 now-8周)——过期偏好不再注入评分。
+      const cutoff = new Date(
+        Date.parse(now()) - PREFERENCE_DECAY_WEEKS * 7 * 24 * 60 * 60 * 1000,
+      ).toISOString();
+      try {
+        await repo.archiveExpiredPreferences(cutoff);
+      } catch {
+        // 归档 best-effort:失败不阻塞排序(读时 computePreferenceAdjustment 仍按龄衰减为 0 兜底)。
+      }
+      const prefRows = await repo.listActiveTopicPreferences();
+      const preferences: ActivePreference[] = prefRows.map((p) => ({
+        keyword: p.keyword,
+        direction: p.direction === "prefer" ? "prefer" : "avoid",
+        weight: p.weight,
+        exampleCount: p.exampleCount,
+        lastReinforcedAt: p.lastReinforcedAt,
+      }));
+
+      // 池内候选(待评估/待补充)。量级百条内,一次读全再算。
+      const { rows } = await repo.listCandidates({
+        status: "pool",
+        limit: 1000,
+        offset: 0,
+      });
+      const nowIso = now();
+      const dtoById = new Map<string, CandidateResource>();
+      const scored: ScoredCandidate[] = rows.map((row) => {
+        const dto = toCandidateDto(row);
+        dtoById.set(dto.id, dto);
+        const baseScore = dto.positioningFit ?? 0;
+        const adjustment = computePreferenceAdjustment(
+          `${dto.title} ${dto.angle}`,
+          preferences,
+          nowIso,
+        );
+        const adjustedScore = Math.max(0, Math.min(100, baseScore + adjustment));
+        return { id: dto.id, baseScore, adjustedScore };
+      });
+
+      const ranked = rankWithExploration(scored, {
+        limit: query.limit,
+        explorationSlots: query.explorationSlots ?? 2,
+      });
+      return ranked.map((s) => ({
+        ...(dtoById.get(s.id) as CandidateResource),
+        baseScore: s.baseScore,
+        preferenceAdjustment: s.adjustedScore - s.baseScore,
+        adjustedScore: s.adjustedScore,
+      }));
     },
   };
 }

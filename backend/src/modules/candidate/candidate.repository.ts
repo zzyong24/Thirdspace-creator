@@ -1,8 +1,9 @@
-import { and, desc, eq, sql, type Db } from "@creatoros/backend";
+import { and, desc, eq, lt, sql, type Db } from "@creatoros/backend";
 import {
   candidates,
   audienceSignals,
   topicPromotions,
+  topicPreferences,
 } from "./candidate.db-schema";
 import { OwnershipError, DerivedFieldError } from "./candidate.errors";
 
@@ -21,6 +22,8 @@ import { OwnershipError, DerivedFieldError } from "./candidate.errors";
 export type CandidateRow = typeof candidates.$inferSelect;
 export type AudienceSignalRow = typeof audienceSignals.$inferSelect;
 export type TopicPromotionRow = typeof topicPromotions.$inferSelect;
+// [T-212d] 防茧房校准:选题偏好信号行。
+export type TopicPreferenceRow = typeof topicPreferences.$inferSelect;
 
 export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
@@ -67,6 +70,18 @@ export interface PatchCandidateInput {
   productAnchorId?: string | null;
   status?: "pool" | "dropped";
   card?: Record<string, unknown>;
+  // [T-212d] 淘汰原因(status→dropped 时带)—— 蒸馏偏好信号的原料。
+  dropReason?: string | null;
+}
+
+// [T-212d] 偏好信号 upsert 入参。身份键 (userId, keyword, direction) —— 同一偏好累计强化(不新建平行行)。
+export interface UpsertTopicPreferenceInput {
+  keyword: string;
+  direction: "avoid" | "prefer";
+  signal: string;
+  exampleCount: number; // 支持的淘汰原因数(护栏② 由 service 据此定 status)
+  weight: number; // 已 ±10 封顶的权重(护栏① 由 service clamp 后传入)
+  status: "candidate" | "active"; // service 据 isHardPreference 决定;archived 走 archiveExpired
 }
 
 export interface CreateSignalInput {
@@ -156,6 +171,16 @@ export interface CandidateRepository {
     droppedCount: number; // 已丢弃 — status=dropped
     promotionsCount: number; // 已立项 — topic_promotions 计数
   }>;
+
+  // ── [T-212d] 防茧房校准:淘汰原因 → 偏好信号 ─────────────────────────────────
+  // 全部淘汰候选写过的原因(非空),供蒸馏聚类。user/account-scoped。
+  listDropReasons(): Promise<string[]>;
+  // 偏好信号 upsert(身份键 keyword+direction 归并;累计强化不新建平行行)。
+  upsertTopicPreference(input: UpsertTopicPreferenceInput): Promise<TopicPreferenceRow>;
+  // 已升级(active)的硬偏好 —— 注入选题评分用。
+  listActiveTopicPreferences(): Promise<TopicPreferenceRow[]>;
+  // 护栏③ 归档:lastReinforcedAt 早于 cutoff 的 active 偏好 → status=archived(过期不再注入)。
+  archiveExpiredPreferences(cutoffIso: string): Promise<number>;
 }
 
 export function createCandidateRepository(
@@ -184,6 +209,10 @@ export function createCandidateRepository(
     : undefined;
   const promoAccountGate = deps.accountId
     ? eq(topicPromotions.accountId, deps.accountId)
+    : undefined;
+  // [T-212d] 偏好信号按号读点门(与其它表同语义:有号叠加,null 退化只按 userId)。
+  const prefAccountGate = deps.accountId
+    ? eq(topicPreferences.accountId, deps.accountId)
     : undefined;
 
   return {
@@ -296,6 +325,8 @@ export function createCandidateRepository(
       if (patch.productAnchorId !== undefined)
         set.productAnchorId = patch.productAnchorId;
       if (patch.status !== undefined) set.status = patch.status;
+      // [T-212d] 淘汰原因:随 status→dropped 落库(蒸馏原料)。显式传即写(含清空)。
+      if (patch.dropReason !== undefined) set.dropReason = patch.dropReason;
       if (patch.card !== undefined) {
         // Shallow-merge the partial 选题卡 over the stored card so editing one field
         // never clobbers the rest (the contract patch is candidateCard.partial()).
@@ -619,6 +650,93 @@ export function createCandidateRepository(
         droppedCount,
         promotionsCount: promoRows.length,
       };
+    },
+
+    // ── [T-212d] 防茧房校准 ──────────────────────────────────────────────────
+    async listDropReasons() {
+      const rows = await db
+        .select({ dropReason: candidates.dropReason })
+        .from(candidates)
+        .where(
+          and(
+            eq(candidates.userId, deps.userId),
+            candAccountGate,
+            eq(candidates.status, "dropped"),
+          ),
+        )
+        .orderBy(desc(candidates.updatedAt));
+      return rows
+        .map((r) => (r.dropReason ?? "").trim())
+        .filter((s) => s.length > 0);
+    },
+
+    async upsertTopicPreference(input) {
+      const nowTs = deps.now();
+      // 身份键 (user_id, keyword, direction) 归并同一偏好:命中即累计强化(更新计数/权重/信号 +
+      // 刷新 last_reinforced_at 重置 8 周衰减时钟,并复活可能已归档的行 → 回到传入 status)。
+      const inserted = await db
+        .insert(topicPreferences)
+        .values({
+          id: deps.nextId("tpref"),
+          userId: deps.userId,
+          accountId: deps.accountId,
+          keyword: input.keyword,
+          direction: input.direction,
+          signal: input.signal,
+          exampleCount: input.exampleCount,
+          weight: input.weight,
+          status: input.status,
+          createdAt: nowTs,
+          updatedAt: nowTs,
+          lastReinforcedAt: nowTs,
+        })
+        .onConflictDoUpdate({
+          target: [
+            topicPreferences.userId,
+            topicPreferences.keyword,
+            topicPreferences.direction,
+          ],
+          set: {
+            signal: input.signal,
+            exampleCount: input.exampleCount,
+            weight: input.weight,
+            status: input.status,
+            updatedAt: nowTs,
+            lastReinforcedAt: nowTs,
+          },
+        })
+        .returning();
+      return inserted[0]!;
+    },
+
+    async listActiveTopicPreferences() {
+      return db
+        .select()
+        .from(topicPreferences)
+        .where(
+          and(
+            eq(topicPreferences.userId, deps.userId),
+            prefAccountGate,
+            eq(topicPreferences.status, "active"),
+          ),
+        )
+        .orderBy(desc(topicPreferences.updatedAt));
+    },
+
+    async archiveExpiredPreferences(cutoffIso) {
+      const updated = await db
+        .update(topicPreferences)
+        .set({ status: "archived", updatedAt: deps.now() })
+        .where(
+          and(
+            eq(topicPreferences.userId, deps.userId),
+            prefAccountGate,
+            eq(topicPreferences.status, "active"),
+            lt(topicPreferences.lastReinforcedAt, cutoffIso),
+          ),
+        )
+        .returning({ id: topicPreferences.id });
+      return updated.length;
     },
   };
 }

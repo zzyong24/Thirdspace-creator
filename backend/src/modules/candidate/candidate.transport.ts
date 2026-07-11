@@ -98,6 +98,7 @@ export function createCandidateTransport(
             productAnchorId?: string;
             status?: "pool" | "dropped";
             card?: Record<string, unknown>;
+            dropReason?: string;
           };
           const patched = await service.patchCandidate(ctx, p.candidateId ?? "", {
             title: b.title,
@@ -107,6 +108,8 @@ export function createCandidateTransport(
             status: b.status,
             // 选题卡可编辑 — the partial card is sanitized in the service before merge.
             card: b.card,
+            // [T-212d] 淘汰原因(蒸馏偏好信号原料)。
+            dropReason: b.dropReason,
           });
           return { data: patched, meta: { requestId } };
         }

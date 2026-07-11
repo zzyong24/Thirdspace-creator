@@ -47,8 +47,30 @@ export const candidates = pgTable("candidates", {
   // `{}` until a topic.enrich task formalizes it. Editable via candidates.patch.card.
   // jsonb so a card grows without a migration; an empty card means 待评估 (no oneLiner).
   card: jsonb("card").notNull().default({}),
+  // [T-212d] 防茧房校准 —— 用户淘汰选题时写的一句原因(蒸馏偏好信号的原料,迁移 0033)。
+  // NULLABLE:存量与非淘汰候选留空;仅淘汰(status→dropped)带原因时写。
+  dropReason: text("drop_reason"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
+});
+
+// [T-212d] 选题偏好信号(防茧房校准,SPEC 2026-07-11 §2.4)—— 淘汰原因蒸馏出的**结构化偏好**,
+// 喂进选题评分(与 positioningFit 并列,不覆盖)。反过拟合护栏字段全落表(见迁移 0033 注释):
+//   weight(±10 封顶)· example_count(≥3 才升级 active)· status(candidate|active|archived)·
+//   last_reinforced_at(8 周衰减/归档的时间锚)。身份键 (user_id, keyword, direction) 归并同一偏好。
+export const topicPreferences = pgTable("topic_preferences", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(), // denormalized ownership column
+  accountId: text("account_id"), // [T-201 账号锚点] 按号 stamp;不入身份唯一键(见迁移注释)
+  keyword: text("keyword").notNull(), // 匹配候选标题/角度的短词(护栏按 includes 命中)
+  direction: text("direction").notNull().default("avoid"), // avoid(压分)|prefer(抬分)
+  signal: text("signal").notNull().default(""), // 一句人话偏好
+  exampleCount: integer("example_count").notNull().default(0), // 支持的淘汰原因条数(≥3 → 硬偏好)
+  weight: integer("weight").notNull().default(0), // 评分调整量(写入前已 ±10 封顶)
+  status: text("status").notNull().default("candidate"), // candidate|active|archived
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  lastReinforcedAt: text("last_reinforced_at").notNull(), // 8 周衰减/归档时间锚
 });
 
 export const audienceSignals = pgTable("audience_signals", {
@@ -109,6 +131,7 @@ CREATE TABLE IF NOT EXISTS candidates (
   status TEXT NOT NULL DEFAULT 'pool',
   ai_task_id TEXT,
   card JSONB NOT NULL DEFAULT '{}'::jsonb,
+  drop_reason TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -147,4 +170,22 @@ ALTER TABLE topic_promotions ADD COLUMN IF NOT EXISTS account_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_candidates_user_account ON candidates (user_id, account_id);
 CREATE INDEX IF NOT EXISTS idx_audience_signals_user_account ON audience_signals (user_id, account_id);
 CREATE INDEX IF NOT EXISTS idx_topic_promotions_user_account ON topic_promotions (user_id, account_id);
+-- [T-212d] 防茧房校准:淘汰原因 + 偏好信号表(additive、幂等,迁移 0033)。
+ALTER TABLE candidates ADD COLUMN IF NOT EXISTS drop_reason TEXT;
+CREATE TABLE IF NOT EXISTS topic_preferences (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  account_id TEXT,
+  keyword TEXT NOT NULL,
+  direction TEXT NOT NULL DEFAULT 'avoid',
+  signal TEXT NOT NULL DEFAULT '',
+  example_count INTEGER NOT NULL DEFAULT 0,
+  weight INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'candidate',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  last_reinforced_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_topic_preferences_identity ON topic_preferences (user_id, keyword, direction);
+CREATE INDEX IF NOT EXISTS ix_topic_preferences_user_status ON topic_preferences (user_id, status);
 `;

@@ -230,6 +230,9 @@ import {
   // [T-212c] 对标爆款拆解 → 转化进选题池(采集落库后 best-effort 触发)。
   runBenchmarkTeardown,
   createBenchmarkTeardownPort,
+  // [T-212d] 防茧房校准:淘汰原因蒸馏(选题淘汰写原因后 best-effort 触发)。
+  runTopicPreferenceDistill,
+  createTopicPreferenceDistillPort,
   // [T-212c] 定位简报装配(拆解 getPositioningBrief 端口复用,与各 runner 同一格式)。
   assembleCreativeContext,
 } from "@creatoros/backend/modules/ai-runtime";
@@ -3684,6 +3687,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         });
         return total;
       },
+    },
+    // [T-212d] 防茧房校准触发点:用户淘汰选题写原因后,后台 best-effort 跑淘汰原因蒸馏 →
+    //   AI(runStructuredNode 绑 topic.preference)聚类偏好信号 → upsertTopicPreference 落库
+    //   (护栏在 service 内强制:±10 封顶 / ≥3 例才升级 active)。fire-and-forget,不阻塞淘汰返回;
+    //   失败只记日志。蒸馏端口/落库端口都绑 candidateService 自身的公开方法(同一 service,无跨模块 repo)。
+    dispatchPreferenceDistill: (ctx) => {
+      void runTopicPreferenceDistill(ctx, {
+        listDropReasons: (c) => candidateService.listDropReasons(c),
+        distill: createTopicPreferenceDistillPort({ resolveModelSpec }),
+        upsertPreference: (c, input) =>
+          candidateService.upsertTopicPreference(c, input),
+      }).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error(
+          "[topic-preference] 淘汰原因蒸馏触发失败(best-effort,不影响淘汰):",
+          err,
+        );
+      });
     },
   });
   const candidate = createCandidateTransport(() => candidateService);
