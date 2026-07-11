@@ -1874,7 +1874,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }),
     "positioning.generate": tool({
       description:
-        "结合创作者当前定位 + 抖音账号画像 + 真实作品画像,生成/进化一份结构化定位提案(人设/领域/人群/差异化/能力/一句话定位/关键词)。对话里已翻过真数据/聊出定位洞察时,把结论整理进 extraBrief 一并传入(否则洞察会丢)。结果是定位候选,需人采纳后才写入定位母版——不直接写库。",
+        "结合创作者当前定位 + 抖音账号画像 + 真实作品画像,生成/进化一份结构化定位提案(人设/领域/人群/差异化/能力/一句话定位/关键词)。[T-210] 定位访谈答齐后调用:把访谈 5 问(新手/老手、领域受众、目标、内容形态、对标风格)的回答连同已翻过的真数据/聊出的定位洞察整理进 extraBrief 一并传入(否则访谈结论会丢、只会复读旧档案)。结果是定位候选,需人采纳后才写入定位母版——不直接写库。",
       inputSchema: POSITIONING_GENERATE_PARAMS,
       execute: async ({ extraBrief }): Promise<PositioningGenerateToolResult> => {
         const suggestion = await deps.generatePositioning({

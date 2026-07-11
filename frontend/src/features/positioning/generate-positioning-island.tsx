@@ -19,10 +19,11 @@ import { copilotDeepLink } from "@/features/copilot/copilot-deeplink";
 export function GeneratePositioningIsland() {
   return (
     <div className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-3.5">
-      <p className="text-sm font-semibold text-foreground">AI 帮你定位</p>
+      {/* [T-210] 定位改多轮访谈:编导像私教按 5 问一问一答带你把定位聊清楚,答齐才合成提案。 */}
+      <p className="text-sm font-semibold text-foreground">AI 访谈式带你定位</p>
       <p className="text-xs leading-relaxed text-muted-foreground">
-        和编导聊你的账号与内容方向,生成结构化定位提案;在对话里逐条打磨,
-        采纳后写入当前定位母版并追加一条 AI 版本。
+        编导像私教一样一问一答,带你把账号与内容方向聊清楚,再合成结构化定位提案;
+        在对话里逐条打磨,采纳后写入当前定位母版并追加一条 AI 版本。
       </p>
       <Link
         href={copilotDeepLink("positioning", "positioning.generate")}
@@ -30,7 +31,7 @@ export function GeneratePositioningIsland() {
         className="inline-flex h-9 w-fit items-center gap-1.5 rounded-control bg-brand px-3.5 text-[13px] font-medium text-brand-foreground transition-colors hover:bg-brand/90"
       >
         <MessagesSquare className="size-4" />
-        在对话里聊定位
+        开始访谈式定位
       </Link>
     </div>
   );

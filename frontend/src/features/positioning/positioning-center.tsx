@@ -226,12 +226,13 @@ function EmptyStateAiCta() {
       <div className="flex items-start gap-3">
         <IconChip icon={Sparkles} tone="brand" />
         <div className="flex min-w-0 flex-col gap-0.5">
+          {/* [T-210] 定位改多轮访谈:编导像私教按 5 问一问一答带你聊清楚,答齐才合成第一版定位。 */}
           <p className="text-sm font-semibold text-foreground">
-            和 AI 聊定位
+            AI 访谈式带你定位
           </p>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            不用一次填满表单——和编导聊你的账号与内容方向，逐条打磨聊出第一版定位。
-            聊清楚后在对话里点「采纳」，就会自动建好你的定位母版。
+            不用一次填满表单——编导像私教一样一问一答,带你把账号与内容方向聊清楚,
+            再合成第一版定位。聊清楚后在对话里点「采纳」，就会自动建好你的定位母版。
           </p>
         </div>
       </div>
@@ -241,7 +242,7 @@ function EmptyStateAiCta() {
         className="inline-flex h-9 w-fit items-center gap-1.5 rounded-control bg-brand px-3.5 text-[13px] font-medium text-brand-foreground transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <MessagesSquare className="size-4" />
-        让 AI 帮你聊出第一版定位
+        开始访谈式定位
       </Link>
     </div>
   );
