@@ -176,6 +176,7 @@ import { knowledgeRelevanceScore } from "@creatoros/backend/modules/ai-runtime";
 import { runGatherMaterial } from "@creatoros/backend/modules/ai-runtime";
 import { runTopicGenerateV2 } from "@creatoros/backend/modules/ai-runtime";
 import * as nodePath from "node:path";
+import { existsSync, renameSync } from "node:fs";
 import {
   fetchDouyinMetrics,
   loginDouyin,
@@ -4386,6 +4387,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   经 triggerDeps → dispatch 挂 gate-F5 串行链)。用**请求 ctx**(带当前号 accountId,init 采集
   //   走该号 authDir);整体经 void 包裹不阻塞绑定返回。schedulingService/triggerDeps 均已在上方装配。
   bootstrapDouyinOnBind = (ctx) => {
+    // [T-201a2] 登录态锚点对齐:新绑号 scan 时 ctx.accountId=null(号是 scan 后 ensureAccount 才建)→
+    //   loginDouyin 的 `login({accountId: null})` 把登录态落 `.auth/douyin/_default`;而账号是真 id →
+    //   设置/自动化按号探针 statusDouyin(带 x-account-id)读 `.auth/douyin/<id>` 找不到登录 → 误报
+    //   「重新扫码」;初始采集按号也读 `<id>`(空)→ 采不到。**在触发采集前**(此刻 `<id>` 目录尚未被
+    //   采集建成空壳)把 `_default` 登录态迁到 `<id>` 目录 → 登录态与不可变 id 锚点一致(单号现实;
+    //   多号各自扫码 = T-136 §D)。同步 renameSync(同目录基址、原子);best-effort,失败不阻断建 job/采集。
+    if (ctx.accountId) {
+      try {
+        const fromDir = douyinAuthDirFor(null); // _default
+        const toDir = douyinAuthDirFor(ctx.accountId);
+        if (fromDir !== toDir && existsSync(fromDir) && !existsSync(toDir)) {
+          renameSync(fromDir, toDir);
+        }
+      } catch {
+        /* 登录态迁移 best-effort:失败则 statusDouyin 仍回退可查(见 douyinAuthDirFor 回退),不阻断绑定 */
+      }
+    }
     void bootstrapDouyinCollectionJobs(ctx, {
       listJobsBySourceKind: async (c, sourceKind) => {
         const { rows } = await schedulingService.listJobs(c, {
