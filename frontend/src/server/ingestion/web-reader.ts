@@ -511,14 +511,12 @@ export async function readUrl(
       .catch(() => {});
     await page.waitForTimeout(500);
     const html = await page.content().catch(() => "");
-    // 登录墙 / 验证码启发式命中 → 结构化降级(有 .auth 登录态仍撞墙 = 会话过期/未登录该站)。
-    if (detectLoginWall(finalUrl, html)) {
-      throw new WebReaderLoginRequiredError(domain);
-    }
+    const isChatGpt = domain === "chatgpt.com" || domain.endsWith(".chatgpt.com");
+    // [T-237] ChatGPT share 的 SSR 全量抽取放在登录墙判定**之前**:公开分享页对匿名访客也会渲
+    // 「Log in / 登录」CTA,会让启发式误报登录墙 —— 但 SSR JSON 里已拿到全量对话 = 内容真可读,
+    // 直接返回。真被登录门挡住的分享页 SSR 里没有对话 → 自然落回下方登录墙判定,不漏报。
     const title = (await page.title().catch(() => "")).trim();
-
-    // ChatGPT share 定制优先(T-237 三层):SSR 全量 → 滚真容器 DOM 兜底 → 正则兜底。
-    if (domain === "chatgpt.com" || domain.endsWith(".chatgpt.com")) {
+    if (isChatGpt) {
       // ①首选:流式 SSR script JSON 抽全量轮次(不依赖渲染,长对话不截断)。
       const ssrTurns = extractChatGptShareSsr(html);
       if (ssrTurns && ssrTurns.length) {
@@ -531,6 +529,14 @@ export async function readUrl(
           turnCount: ssrTurns.length,
         };
       }
+    }
+    // 登录墙 / 验证码启发式命中 → 结构化降级(有 .auth 登录态仍撞墙 = 会话过期/未登录该站)。
+    if (detectLoginWall(finalUrl, html)) {
+      throw new WebReaderLoginRequiredError(domain);
+    }
+
+    // ChatGPT share 定制兜底(T-237 修②③):SSR 没抽到 → 滚真容器 DOM 兜底 → 正则兜底。
+    if (isChatGpt) {
       // ②③兜底:页内滚**真滚动容器**到轮次计数稳定,再逐元素 textContent 收轮次
       // (不再正则扒原始 HTML,杜绝 `<div` 标签泄漏)。evaluate 失败不抛,继续降级。
       const domTurns = await page
