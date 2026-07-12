@@ -283,6 +283,11 @@ import {
   isProbablyBinary,
   MAX_LOCAL_READ_BYTES,
   MAX_LOCAL_DIR_ENTRIES,
+  // [T-262] local.read 文件名搜索兜底(scoped 目录集按 basename 搜同名,纯逻辑 + 注入式 fs)。
+  searchLocalByBasename,
+  defaultSearchRoots,
+  localBasename,
+  type LocalSearchFs,
   // [T-256a] 工具探测纯函数:白名单过滤 + 防注入 + 版本解析(IO 在本文件端口)。
   resolveToolsToProbe,
   parseToolVersion,
@@ -1172,6 +1177,21 @@ export interface ChatRuntime {
         path: string;
         entries: Array<{ name: string; kind: "file" | "dir"; size: number | null }>;
         total: number;
+      }
+    // [T-262] 文件名搜索兜底两态(精确路径解析不到时按 basename 搜 scoped 目录集):唯一命中 →
+    // nameMatch(走既有授权门读真实路径);多命中 → nameCandidates(候选选择态)。
+    | {
+        status: "nameMatch";
+        requestedName: string;
+        path: string;
+        size: number | null;
+        type: string;
+      }
+    | {
+        status: "nameCandidates";
+        requestedName: string;
+        items: Array<{ path: string; size: number | null; type: string }>;
+        truncated: boolean;
       }
   >;
   // [T-263] local.read 授权判定端口(HITL 门用,与执行读取 readLocalFile 拆开)—— 只跑归一/realpath/
@@ -8403,13 +8423,83 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     ) => {
       const { homedir } = await import("node:os");
       const fsp = await import("node:fs/promises");
-      const normalized = normalizeLocalPath(input.path, homedir());
+      const home = homedir();
+      // [T-262] 文件名搜索兜底:精确路径解析不到(相对无法归一 / realpath miss)→ 提取 basename 在
+      // **scoped 目录集**(用户「总是允许该目录」授权过的目录 + 常用目录 Desktop/Documents/ThirdSpace)
+      // 按名搜同名文件(scoped 非全盘、守 denylist、限深度/结果数/节点数)。唯一命中 → nameMatch(走既有
+      // 授权门读该真实路径);多命中 → nameCandidates(候选选择态);零命中 → null(调用方回落诚实
+      // 「不存在」)。目标名本身敏感(passwd/.env/*key*…)→ 不搜(搜到也会被拒),直接回落。
+      const nameSearchFallback = async (
+        rawPath: string,
+      ): Promise<
+        | {
+            status: "nameMatch";
+            requestedName: string;
+            path: string;
+            size: number | null;
+            type: string;
+          }
+        | {
+            status: "nameCandidates";
+            requestedName: string;
+            items: Array<{ path: string; size: number | null; type: string }>;
+            truncated: boolean;
+          }
+        | null
+      > => {
+        const wanted = localBasename(rawPath);
+        if (!wanted || sensitivePathReason(wanted)) return null;
+        const roots = [
+          ...listLocalReadAlwaysDirs(ctx.userId),
+          ...defaultSearchRoots(home),
+        ];
+        const searchFs: LocalSearchFs = {
+          readdir: async (dir) => {
+            const ds = await fsp.readdir(dir, { withFileTypes: true });
+            return ds.map((d) => ({
+              name: d.name,
+              isDir: d.isDirectory(),
+              isFile: d.isFile(),
+              isSymlink: d.isSymbolicLink(),
+            }));
+          },
+          fileSize: async (p) => {
+            try {
+              return Number((await fsp.stat(p)).size);
+            } catch {
+              return null;
+            }
+          },
+        };
+        const { items, truncated } = await searchLocalByBasename({
+          roots,
+          targetName: wanted,
+          fs: searchFs,
+          isSensitive: (p) => sensitivePathReason(p) != null,
+        });
+        if (items.length === 0) return null;
+        if (items.length === 1) {
+          const h = items[0]!;
+          return {
+            status: "nameMatch",
+            requestedName: wanted,
+            path: h.path,
+            size: h.size,
+            type: h.type,
+          };
+        }
+        return { status: "nameCandidates", requestedName: wanted, items, truncated };
+      };
+      const normalized = normalizeLocalPath(input.path, home);
       if (!normalized) {
+        // [T-262] 相对/无法归一 → 先按名搜兜底(basename 常仍可用,如 `scripts/xxx.md`→`xxx.md`)。
+        const fb = await nameSearchFallback(input.path);
+        if (fb) return fb;
         return {
           status: "denied" as const,
           path: input.path,
           reason:
-            "路径必须是绝对路径(以 / 开头,或 ~ 开头的家目录路径)—— 相对路径无法确定基准,已拒绝。",
+            "路径必须是绝对路径(以 / 开头,或 ~ 开头的家目录路径)—— 相对路径无法确定基准;也没在你已授权/常用目录里找到同名文件。请给绝对路径,或直接把内容粘贴进来。",
         };
       }
       // 敏感硬门第一遍:对归一路径检查(realpath 之前就能挡住明着写的敏感路径)。
@@ -8422,7 +8512,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       try {
         real = await fsp.realpath(normalized);
       } catch {
-        throw new Error(`路径不存在或不可访问:${normalized}`);
+        // [T-262] 绝对路径不存在 → 按名搜兜底(唯一 nameMatch / 多命中 nameCandidates);零命中才诚实抛。
+        const fb = await nameSearchFallback(normalized);
+        if (fb) return fb;
+        throw new Error(
+          `路径不存在或不可访问:${normalized}(也没在你已授权/常用目录里找到同名文件「${localBasename(normalized)}」)`,
+        );
       }
       const reason2 = sensitivePathReason(real);
       if (reason2) {
@@ -8513,11 +8608,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const fsp = await import("node:fs/promises");
       const normalized = normalizeLocalPath(input.path, homedir());
       if (!normalized) {
-        return {
-          status: "denied" as const,
-          reason:
-            "路径必须是绝对路径(以 / 开头,或 ~ 开头的家目录路径)—— 相对路径无法确定基准,已拒绝。",
-        };
+        // [T-262] 相对/无法归一的路径:不在判定期硬拒 —— 放行让 readLocalFile 执行时做文件名搜索兜底
+        // (提取 basename 在授权/常用目录搜同名,搜到 → needApproval/候选卡;零命中 → 诚实回落)。
+        // 安全不松:搜索 scoped 非全盘 + denylist 硬拒 + 搜到的路径读取仍走本授权门(真读时复检授权表)。
+        return { status: "granted" as const };
       }
       const reason1 = sensitivePathReason(normalized);
       if (reason1) return { status: "denied" as const, reason: reason1 };

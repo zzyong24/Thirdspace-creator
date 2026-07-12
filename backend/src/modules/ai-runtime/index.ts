@@ -37,6 +37,9 @@ export * from "./chat-tools";
 // [T-253] local.read 安全硬门(denylist/路径归一/二进制探测,纯函数)—— composition root
 // (persistence-client readLocalFile 端口)与授权 route 共用。
 export * from "./local-read-security";
+// [T-262] local.read 文件名搜索兜底(scoped 目录集按 basename 搜同名,纯逻辑 + 注入式 fs)——
+// composition root(persistence-client readLocalFile)在 realpath miss 时调用。
+export * from "./local-name-search";
 // [T-256a] 环境感知扩展:工具探测纯函数(白名单/防注入/版本解析)—— 端口层与工具门共用。
 export * from "./local-env-probe";
 export * from "./comment-qa-sift-runner";

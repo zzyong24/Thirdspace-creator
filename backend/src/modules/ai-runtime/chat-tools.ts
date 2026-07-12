@@ -274,6 +274,22 @@ export interface ChatToolDeps {
         entries: Array<{ name: string; kind: "file" | "dir"; size: number | null }>;
         total: number;
       }
+    // [T-262] 精确路径解析不到(相对/不存在)→ 按 basename 在 scoped 目录集搜到**唯一**同名文件:
+    // 交由既有授权门(needApproval 确认卡)读该真实路径(带原始名 requestedName 供卡解释)。
+    | {
+        status: "nameMatch";
+        requestedName: string;
+        path: string;
+        size: number | null;
+        type: string;
+      }
+    // [T-262] 搜到**多个**同名文件 → 候选选择态(用户在卡里选中一个经授权门读)。
+    | {
+        status: "nameCandidates";
+        requestedName: string;
+        items: Array<{ path: string; size: number | null; type: string }>;
+        truncated: boolean;
+      }
   >;
   /**
    * [T-263] local.read 授权**判定**(HITL 门用,与「执行读取」readLocal 拆开)—— 只跑「路径归一/
@@ -852,6 +868,12 @@ export interface WebReadToolResult {
 export interface LocalReadToolResult {
   kind: "local.read";
   needApproval: { path: string; size: number | null; type: string } | null;
+  /**
+   * [T-262] needApproval 来自**文件名搜索兜底**(精确路径没找到、按 basename 搜到唯一同名文件)时的
+   * 注记:原始要读的名字。非 null → 确认卡渲「你要的『X』在原路径没找到,在这找到了同名文件」。
+   * null = 直接给了准确路径的常规授权(卡不加此解释)。
+   */
+  foundByName: { requestedName: string } | null;
   file: {
     path: string;
     name: string;
@@ -865,6 +887,16 @@ export interface LocalReadToolResult {
     path: string;
     entries: Array<{ name: string; kind: "file" | "dir"; size: number | null }>;
     total: number;
+  } | null;
+  /**
+   * [T-262] 精确路径解析不到、按 basename 搜到**多个**同名文件 → 候选选择态。前端渲「找到 N 个同名
+   * 文件,读哪个?」列全路径;用户选中经授权门(grant once + 重调 local.read 该路径)读。truncated=
+   * true 时同名文件较多、只列前若干个(诚实告知)。
+   */
+  candidates: {
+    requestedName: string;
+    items: Array<{ path: string; size: number | null; type: string }>;
+    truncated: boolean;
   } | null;
   error: string | null;
 }
@@ -2300,7 +2332,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 明说原因;大小上限 1MB + 二进制拒读;目录返回清单。窗口截断在 execute 侧(4000/8000 同协议)。
     "local.read": defineChatTool("local.read", {
       description:
-        "读用户**本机**的一个文件或目录(任意绝对路径,支持 ~ 展开)。当用户说「读一下 ~/xx/某文件 / 看看我桌面那份稿子 / 把这个本地 md 读进来」时调用。**授权协议(HITL 阻塞式)**:首次读某路径会**弹出确认卡并把本次调用挂起**(这不是失败,也不需要你重发)——用户点「允许」后系统会在**同一回合自动续跑**、直接把文件内容读回给你;用户点「拒绝」则本次读取作废,你就不再尝试、换其他方式,**绝不换路径绕行**。**安全边界(如实转述,绝不绕)**:敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论用户是否授权都会拒读并说明原因;超过 1MB 或二进制文件拒读(建议用户直接上传到素材库)。目录路径返回文件清单。文本结果按窗返回(offset/totalChars/hasMore,默认 4000 字/封顶 8000):hasMore=true 时带 offset 翻窗读完再归纳。读到的内容直接进对话;用户要「存为素材/知识」时走对应确认门(knowledge.distill 等),不自动落库。",
+        "读用户**本机**的一个文件或目录(优先绝对路径,支持 ~ 展开)。当用户说「读一下 ~/xx/某文件 / 看看我桌面那份稿子 / 把这个本地 md 读进来」时调用。**授权协议(HITL 阻塞式)**:首次读某路径会**弹出确认卡并把本次调用挂起**(这不是失败,也不需要你重发)——用户点「允许」后系统会在**同一回合自动续跑**、直接把文件内容读回给你;用户点「拒绝」则本次读取作废,你就不再尝试、换其他方式,**绝不换路径绕行**。**路径模糊/找不到时的按名搜索兜底**:用户常给相对或记错的路径(如 `scripts/xxx.md`);若精确路径解析不到,系统会自动提取文件名在用户**已授权目录 + 常用目录**里搜同名文件——结果 needApproval 且 foundByName 非空 = 按名找到唯一同名文件(确认卡会说明),结果 candidates 非空 = 找到多个同名文件。**这两种情况都别自己猜选哪个、别自行重调路径**,等用户在卡片里确认/选择;用户选定后你再按其选择的绝对路径读。**安全边界(如实转述,绝不绕)**:敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论用户是否授权都会拒读并说明原因;超过 1MB 或二进制文件拒读(建议用户直接上传到素材库)。目录路径返回文件清单。文本结果按窗返回(offset/totalChars/hasMore,默认 4000 字/封顶 8000):hasMore=true 时带 offset 翻窗读完再归纳。读到的内容直接进对话;用户要「存为素材/知识」时走对应确认门(knowledge.distill 等),不自动落库。",
       inputSchema: LOCAL_READ_PARAMS,
       // [T-263] HITL 授权门:判定与执行拆开 —— needsApproval 只跑授权判定(decideLocalRead),
       // 未授权 → 'user-approval' 挂起本工具调用、surface 确认卡(execute 暂不跑);已授权/敏感硬拒
@@ -2327,8 +2359,10 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         const empty = {
           kind: "local.read" as const,
           needApproval: null,
+          foundByName: null,
           file: null,
           listing: null,
+          candidates: null,
         };
         if (!target) {
           return {
@@ -2343,6 +2377,29 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             return {
               ...empty,
               needApproval: { path: res.path, size: res.size, type: res.type },
+              error: null,
+            };
+          }
+          // [T-262] 按名搜到唯一同名文件 → 复用既有授权门(needApproval 确认卡)读该真实路径;
+          // foundByName 带原始名让卡解释「原路径没找到、在这找到同名文件」。用户「允许」写 grant
+          // 后重调 local.read 该真实路径即读到(经完整 realpath+denylist 复检)。
+          if (res.status === "nameMatch") {
+            return {
+              ...empty,
+              needApproval: { path: res.path, size: res.size, type: res.type },
+              foundByName: { requestedName: res.requestedName },
+              error: null,
+            };
+          }
+          // [T-262] 按名搜到多个同名文件 → 候选选择态(前端渲「读哪个?」,用户选中经授权门读)。
+          if (res.status === "nameCandidates") {
+            return {
+              ...empty,
+              candidates: {
+                requestedName: res.requestedName,
+                items: res.items,
+                truncated: res.truncated,
+              },
               error: null,
             };
           }

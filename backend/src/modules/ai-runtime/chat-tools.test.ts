@@ -2596,6 +2596,78 @@ describe("[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安
     expect(result.error).toContain("不存在");
     expect(result.needApproval).toBeNull();
   });
+
+  // [T-262] 文件名搜索兜底:唯一命中 → needApproval + foundByName(走既有授权门读真实路径)。
+  it("nameMatch(按名唯一命中)→ needApproval 指向真实路径 + foundByName 带原始名", async () => {
+    const { deps } = makeDeps({
+      readLocal: async () => ({
+        status: "nameMatch" as const,
+        requestedName: "xxx.md",
+        path: "/Users/u/Desktop/xxx.md",
+        size: 2048,
+        type: "md",
+      }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.read"]!, {
+      path: "scripts/xxx.md",
+    })) as {
+      kind: string;
+      needApproval: { path: string; size: number | null; type: string } | null;
+      foundByName: { requestedName: string } | null;
+      candidates: unknown;
+      file: unknown;
+      error: string | null;
+    };
+    expect(result.kind).toBe("local.read");
+    expect(result.needApproval).toEqual({
+      path: "/Users/u/Desktop/xxx.md",
+      size: 2048,
+      type: "md",
+    });
+    expect(result.foundByName).toEqual({ requestedName: "xxx.md" });
+    expect(result.candidates).toBeNull();
+    expect(result.file).toBeNull();
+    expect(result.error).toBeNull();
+  });
+
+  // [T-262] 文件名搜索兜底:多命中 → candidates 选择态(列全路径,file/error 空)。
+  it("nameCandidates(按名多命中)→ candidates 态列全路径,不误落 error", async () => {
+    const { deps } = makeDeps({
+      readLocal: async () => ({
+        status: "nameCandidates" as const,
+        requestedName: "plan.md",
+        items: [
+          { path: "/Users/u/Desktop/plan.md", size: 10, type: "md" },
+          { path: "/Users/u/Documents/plan.md", size: 20, type: "md" },
+        ],
+        truncated: false,
+      }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.read"]!, {
+      path: "plan.md",
+    })) as {
+      candidates: {
+        requestedName: string;
+        items: Array<{ path: string }>;
+        truncated: boolean;
+      } | null;
+      needApproval: unknown;
+      file: unknown;
+      error: string | null;
+    };
+    expect(result.candidates?.requestedName).toBe("plan.md");
+    expect(result.candidates?.items).toHaveLength(2);
+    expect(result.candidates?.items.map((i) => i.path)).toEqual([
+      "/Users/u/Desktop/plan.md",
+      "/Users/u/Documents/plan.md",
+    ]);
+    expect(result.candidates?.truncated).toBe(false);
+    expect(result.needApproval).toBeNull();
+    expect(result.file).toBeNull();
+    expect(result.error).toBeNull();
+  });
 });
 
 // ── [T-256a] local.tools 工具 —— 环境工具探测(installed/version + 缺失引导 + rejected 透传)。

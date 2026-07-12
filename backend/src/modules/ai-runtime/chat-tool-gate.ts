@@ -81,9 +81,16 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
     },
   },
   // [T-253] local.read:execute 内已有定制 catch(四态诚实),门只兜非 Error 抛出等极端漏网。
+  // [T-262] 结构占位加 foundByName/candidates(按名搜索兜底两态),错误态卡不因缺字段崩。
   "local.read": {
     kind: "local.read",
-    extras: { needApproval: null, file: null, listing: null },
+    extras: {
+      needApproval: null,
+      foundByName: null,
+      file: null,
+      listing: null,
+      candidates: null,
+    },
   },
   // [T-256a] local.tools:execute 内已有定制 catch(诚实降级),门兜极端漏网(空探测结果)。
   "local.tools": {

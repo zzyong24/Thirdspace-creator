@@ -46,6 +46,18 @@ export interface LocalReadListing {
   total: number;
 }
 
+/** [T-262] needApproval 来自文件名搜索兜底(唯一命中)时的注记:原始要读的名字。 */
+export interface LocalReadFoundByName {
+  requestedName: string;
+}
+
+/** [T-262] 按名搜到多个同名文件的候选选择态(用户选中一个经授权门读)。 */
+export interface LocalReadCandidates {
+  requestedName: string;
+  items: Array<{ path: string; size: number | null; type: string }>;
+  truncated: boolean;
+}
+
 function humanSize(size: number | null): string {
   if (size == null) return "";
   if (size < 1024) return `${size} B`;
@@ -56,6 +68,8 @@ function humanSize(size: number | null): string {
 export function ChatLocalReadCard({
   approvalRequest = null,
   needApproval,
+  foundByName = null,
+  candidates = null,
   file,
   listing,
   error,
@@ -68,6 +82,10 @@ export function ChatLocalReadCard({
   approvalRequest?: LocalReadApprovalRequest | null;
   /** [T-253 兜底] 旧四态输出的未授权态(端口未装授权门时);与 approvalRequest 二选一。 */
   needApproval: LocalReadApproval | null;
+  /** [T-262] needApproval 来自文件名搜索兜底(唯一命中)时的注记 → 卡加「原路径没找到、在这找到同名」。 */
+  foundByName?: LocalReadFoundByName | null;
+  /** [T-262] 按名搜到多个同名文件 → 候选选择态(用户选中一个经授权门读)。 */
+  candidates?: LocalReadCandidates | null;
   file: LocalReadFile | null;
   listing: LocalReadListing | null;
   error: string | null;
@@ -90,9 +108,12 @@ export function ChatLocalReadCard({
   const pendingPath = approvalRequest?.path ?? needApproval?.path ?? "";
   const isNative = approvalRequest != null;
 
+  // [T-262] 写 grant + 让编导重调该真实路径(候选选择/按名唯一命中共用)。pathOverride 缺省用
+  // pendingPath;候选选择时传具体候选路径。原生授权态(approvalRequest)仍走 addToolApprovalResponse。
   const grant = React.useCallback(
-    async (mode: "once" | "dir") => {
-      if (!pendingPath) return;
+    async (mode: "once" | "dir", pathOverride?: string) => {
+      const p = pathOverride ?? pendingPath;
+      if (!p) return;
       setState("granting");
       setGrantError(null);
       try {
@@ -100,7 +121,7 @@ export function ChatLocalReadCard({
         const res = await fetch("/api/v1/local/read-grant", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: pendingPath, mode }),
+          body: JSON.stringify({ path: p, mode }),
         });
         const data = (await res.json()) as { error?: string };
         if (!res.ok) {
@@ -109,15 +130,15 @@ export function ChatLocalReadCard({
           return;
         }
         setState("granted");
-        if (isNative && approvalRequest) {
+        if (isNative && approvalRequest && !pathOverride) {
           // [T-263] 同回合 resume:回执「已批准」→ SDK 续跑 execute 读到内容(卡随即变读取结果)。
           onApprove?.(approvalRequest.approvalId);
         } else {
-          // [T-253 兜底] 双回合:发一句话让编导重调同一路径。
+          // [T-253 兜底 / T-262 按名命中] 双回合:发一句话让编导重调该真实路径。
           onDecision?.(
             mode === "dir"
-              ? `我已允许你读取该目录(${pendingPath} 所在目录今后免确认),请再次调用 local.read 读取 ${pendingPath}。`
-              : `我已允许你读取一次,请再次调用 local.read 读取 ${pendingPath}。`,
+              ? `我已允许你读取该目录(${p} 所在目录今后免确认),请再次调用 local.read 读取 ${p}。`
+              : `我已允许你读取一次,请再次调用 local.read 读取 ${p}。`,
           );
         }
       } catch {
@@ -168,11 +189,17 @@ export function ChatLocalReadCard({
         className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-warning/40 bg-warning/5 px-3 py-2"
       >
         <span className="text-[10px] font-medium uppercase tracking-wide text-warning">
-          本机文件读取 · 待你确认
+          {foundByName ? "本机文件 · 按名找到,待你确认" : "本机文件读取 · 待你确认"}
         </span>
-        <p className="text-[12px] leading-relaxed text-foreground">
-          编导想读取本机文件:
-        </p>
+        {foundByName ? (
+          <p className="text-[12px] leading-relaxed text-foreground">
+            你要读的「{foundByName.requestedName}」在原路径没找到 —— 在你已授权/常用目录里找到了同名文件,读它吗?
+          </p>
+        ) : (
+          <p className="text-[12px] leading-relaxed text-foreground">
+            编导想读取本机文件:
+          </p>
+        )}
         <code
           className="break-all rounded-md border border-border bg-surface-subtle px-2 py-1 text-[11px] text-foreground"
           title={pendingPath}
@@ -231,6 +258,88 @@ export function ChatLocalReadCard({
             </button>
           </div>
         )}
+        {state === "error" && grantError ? (
+          <p className="text-[11px] text-destructive">{grantError}</p>
+        ) : null}
+      </div>
+    );
+  }
+
+  // [T-262] 候选选择态:按名搜到多个同名文件 → 列全路径,用户选中一个经授权门读(grant once + 重调)。
+  // 放在 error 兜底分支之前(candidates 无 file/listing/error,否则会被误判成「没读到内容」)。
+  if (candidates && candidates.items.length > 0) {
+    return (
+      <div
+        data-slot="chat-local-read-card"
+        data-candidates="true"
+        className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-warning/40 bg-warning/5 px-3 py-2"
+      >
+        <span className="text-[10px] font-medium uppercase tracking-wide text-warning">
+          本机文件 · 找到 {candidates.items.length} 个同名文件
+        </span>
+        <p className="text-[12px] leading-relaxed text-foreground">
+          你要读的「{candidates.requestedName}」在原路径没找到 —— 在你已授权/常用目录里找到 {candidates.items.length} 个同名文件,读哪个?
+        </p>
+        {state === "granted" ? (
+          <span className="text-[11px] font-medium text-success">
+            已允许 —— 编导会读取你选的这个文件。
+          </span>
+        ) : state === "denied" ? (
+          <span className="text-[11px] font-medium text-text-subtle">
+            已取消 —— 编导不会读这些文件。
+          </span>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {candidates.items.map((c) => (
+              <li
+                key={c.path}
+                className="flex items-center justify-between gap-2 rounded-md border border-border bg-surface-subtle px-2 py-1.5"
+              >
+                <span className="min-w-0 flex-1">
+                  <code
+                    className="block break-all text-[11px] text-foreground"
+                    title={c.path}
+                  >
+                    {c.path}
+                  </code>
+                  {c.size != null ? (
+                    <span className="text-[10px] text-text-subtle">
+                      {humanSize(c.size)}
+                    </span>
+                  ) : null}
+                </span>
+                <button
+                  type="button"
+                  data-slot="chat-local-read-candidate-pick"
+                  disabled={state === "granting"}
+                  onClick={() => void grant("once", c.path)}
+                  className="inline-flex h-6 shrink-0 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+                >
+                  {state === "granting" ? "授权中…" : "读这个"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {candidates.truncated && state === "idle" ? (
+          <p className="text-[10px] text-text-subtle">
+            同名文件较多,仅列出前 {candidates.items.length} 个 —— 若都不是,请给更准确的路径。
+          </p>
+        ) : null}
+        {state === "idle" ? (
+          <button
+            type="button"
+            data-slot="chat-local-read-candidate-cancel"
+            onClick={() =>
+              onDecision?.(
+                `这些同名文件都不是我要的,请不要读,让我给你更准确的路径。`,
+              )
+            }
+            className="mt-0.5 inline-flex h-6 w-fit items-center rounded-control border border-border px-2 text-[10px] font-medium text-text-subtle hover:bg-surface-subtle"
+          >
+            都不是
+          </button>
+        ) : null}
         {state === "error" && grantError ? (
           <p className="text-[11px] text-destructive">{grantError}</p>
         ) : null}

@@ -196,6 +196,20 @@ export interface AssembleChatDeps extends ContextDeps {
         entries: Array<{ name: string; kind: "file" | "dir"; size: number | null }>;
         total: number;
       }
+    // [T-262] 文件名搜索兜底两态(精确路径解析不到时按 basename 搜 scoped 目录集)。
+    | {
+        status: "nameMatch";
+        requestedName: string;
+        path: string;
+        size: number | null;
+        type: string;
+      }
+    | {
+        status: "nameCandidates";
+        requestedName: string;
+        items: Array<{ path: string; size: number | null; type: string }>;
+        truncated: boolean;
+      }
   >;
   /**
    * [T-263] local.read 授权**判定**端口(HITL 门用,与执行读取 readLocalFilePort 拆开)—— 只跑

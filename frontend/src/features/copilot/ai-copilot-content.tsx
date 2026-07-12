@@ -89,6 +89,8 @@ import {
   type LocalReadApproval,
   type LocalReadFile,
   type LocalReadListing,
+  type LocalReadFoundByName,
+  type LocalReadCandidates,
 } from "./chat-local-read-card";
 import { ChatGenerateCard } from "./chat-generate-card";
 // [T-255a] 执行结果确认卡(exec.* 任务的产物清单 + 采纳/重试/丢弃确认门)。
@@ -2045,6 +2047,8 @@ export function AICopilotContent({
                     if (name === "local.read" && out.kind === "local.read") {
                       const o = out as {
                         needApproval?: LocalReadApproval | null;
+                        foundByName?: LocalReadFoundByName | null;
+                        candidates?: LocalReadCandidates | null;
                         file?: LocalReadFile | null;
                         listing?: LocalReadListing | null;
                         error?: string | null;
@@ -2055,6 +2059,9 @@ export function AICopilotContent({
                           <ChatLocalReadCard
                             approvalRequest={null}
                             needApproval={o.needApproval ?? null}
+                            // [T-262] 按名搜索兜底:唯一命中 → foundByName 注记(卡解释);多命中 → candidates 选择态。
+                            foundByName={o.foundByName ?? null}
+                            candidates={o.candidates ?? null}
                             file={o.file ?? null}
                             listing={o.listing ?? null}
                             error={o.error ?? null}
