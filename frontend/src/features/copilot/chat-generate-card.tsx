@@ -62,14 +62,9 @@ export function ChatGenerateCard({
   );
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [confirming, setConfirming] = React.useState(false);
-  const cancelledRef = React.useRef(false);
-
-  React.useEffect(
-    () => () => {
-      cancelledRef.current = true;
-    },
-    [],
-  );
+  // [T-272] 只用 effect 局部 abandoned 标志控轮询;不再用 mount-cleanup 的 cancelledRef——
+  // 它在 React StrictMode(Next dev 默认双挂)下 remount 不重置 → 轮询恒被 bail 卡死(与 T-265
+  // ChatThesisCard 同款隐患同款修法)。
 
   // 完成后换缩略图签名 URL(与素材库同一份共享缓存,不重复换)。
   React.useEffect(() => {
@@ -89,9 +84,9 @@ export function ChatGenerateCard({
     let abandoned = false;
     void (async () => {
       for (let i = 0; i < MAX_POLLS; i++) {
-        if (abandoned || cancelledRef.current) return;
+        if (abandoned) return;
         await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-        if (abandoned || cancelledRef.current) return;
+        if (abandoned) return;
         let status: string;
         try {
           const t = (await client.getTask({
@@ -112,7 +107,7 @@ export function ChatGenerateCard({
             })) as unknown as Array<{ resultData: Record<string, unknown> }>;
             const last = results[results.length - 1];
             const got = last ? parseGenerated(last.resultData) : null;
-            if (abandoned || cancelledRef.current) return;
+            if (abandoned) return;
             if (got) {
               setCandidate(got);
               setPhase("review");
@@ -125,11 +120,11 @@ export function ChatGenerateCard({
           return;
         }
         if (status === "cancelled" || status === "failed") {
-          if (!abandoned && !cancelledRef.current) setPhase("error");
+          if (!abandoned) setPhase("error");
           return;
         }
       }
-      if (!abandoned && !cancelledRef.current) setPhase("error"); // 轮询预算耗尽
+      if (!abandoned) setPhase("error"); // 轮询预算耗尽
     })();
     return () => {
       abandoned = true;
