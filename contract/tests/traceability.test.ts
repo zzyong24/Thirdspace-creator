@@ -29,7 +29,9 @@ describe("FR → operation traceability (GAP-002)", () => {
       ["FR-044", "Multi-platform publications", has("POST", "/outputs/:outputId/publications") && has("POST", "/publications/:publicationId/transition")],
       ["FR-047", "External write API", has("POST", "/ingestion/runs")],
       ["FR-049", "Idempotent ingestion", has("POST", "/ingestion/runs/:runId/complete")],
-      ["FR-052", "Raw + normalized metrics", has("POST", "/ingestion/runs/:runId/metrics")],
+      // [T-248 批C] FR-052 追溯行已随四个 batch-push op(ingestion.runs.metrics 等)删除 ——
+      // 指标写入现走服务端 ingestion service 层(进程内),不再经契约 op。
+
       ["FR-053", "Metrics aggregation", has("GET", "/analytics/projects/:projectId")],
       ["FR-TAXONOMY", "Tag CRUD + polymorphic entity tagging (v0.2)", has("GET", "/tags") && has("POST", "/tags") && has("PATCH", "/tags/:tagId") && has("POST", "/tags/:tagId/delete") && has("POST", "/tags/assignments") && has("POST", "/tags/assignments/remove") && has("GET", "/tags/for-entity") && has("GET", "/tags/:tagId/entities")],
       // ── contract v0.4 (七步 seven-step) capabilities ──────────────────────

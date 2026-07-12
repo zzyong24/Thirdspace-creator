@@ -74,6 +74,14 @@ export {
   materialLinkResource,
   type MaterialLinkResource,
 } from "./resources/material-links";
+// [T-248 批C] settings.agents.create op 已删(孤 op),但 backend settings 模块的
+// service/repository 仍以该 resource 为 DTO 真值(agent_configurations 表保留)。
+// op 删除后无法再经 ENDPOINTS.createAgent.response 派生,故按 taxonomy 同款约定
+// 从 barrel 直接 re-export 单一真值。
+export {
+  agentConfigurationResource,
+  type AgentConfigurationResource,
+} from "./resources/settings";
 export {
   benchmarkSourceResource,
   type BenchmarkSourceResource,
@@ -157,6 +165,33 @@ export {
   type ExecutionManifest,
   type ExecutionTaskResource,
 } from "./resources/execution";
+
+// [T-254a] video.render 决策 props 契约(渲染器无关)—— T-254b 决策 runner(写侧)与
+// backend execution video.render executor(读侧)共用单一真值(additive re-export)。
+export {
+  videoRenderTone,
+  videoRenderDelivery,
+  videoRenderMeta,
+  videoRenderTalkingHead,
+  videoRenderCaption,
+  videoRenderCard,
+  videoRenderSpecial,
+  videoRenderScene,
+  videoRenderBroll,
+  videoRenderProps,
+  videoRenderParams,
+  type VideoRenderTone,
+  type VideoRenderDelivery,
+  type VideoRenderMeta,
+  type VideoRenderTalkingHead,
+  type VideoRenderCaption,
+  type VideoRenderCard,
+  type VideoRenderSpecial,
+  type VideoRenderScene,
+  type VideoRenderBroll,
+  type VideoRenderProps,
+  type VideoRenderParams,
+} from "./resources/video-render";
 
 // Settings skill 覆盖行 DTO(T-040/T-077a)—— 设置「技能」页签(frontend route/纯数据层)
 // 需要按 override 行判「已定制」与生效值投影,与上面各模块 resource 同约定从根出口复用

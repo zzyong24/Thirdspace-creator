@@ -144,7 +144,12 @@ export function createAssetsTransport(
 
       const { params, query, body } = (input ?? {}) as Input;
       const p = (params ?? {}) as { assetId?: string; uploadId?: string };
-      const q = (query ?? {}) as { page?: number; pageSize?: number };
+      const q = (query ?? {}) as {
+        page?: number;
+        pageSize?: number;
+        // [T-248 批B] 可选状态过滤(契约 assets.list query.status):缺省 active。
+        status?: "active" | "deleted";
+      };
 
       switch (endpoint.id) {
         case "assets.list": {
@@ -153,6 +158,8 @@ export function createAssetsTransport(
           const rows = await service.listAssets(ctx, {
             limit: pageSize,
             cursor: null,
+            // [T-248 批B] "deleted" = 回收站视图读回已回收素材(供还原)。
+            status: q.status,
           });
           const fileIds = rows
             .map((r) => r.currentFileId)

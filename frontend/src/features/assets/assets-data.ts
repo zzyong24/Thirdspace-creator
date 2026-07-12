@@ -83,7 +83,8 @@ interface MaterialLinkDto {
 export interface AssetsDataClient {
   listAssets(input: {
     params: undefined;
-    query: { page: number; pageSize: number };
+    // [T-248 批B] status 可选:缺省 active(画廊);"deleted" = 回收站视图读。
+    query: { page: number; pageSize: number; status?: "active" | "deleted" };
     body: undefined;
   }): Promise<unknown>;
   listProjects(input: {
@@ -149,6 +150,7 @@ function emptyAssetsViewModel(): AssetsViewModel {
     assets: [],
     typeCounts: fixtureVm.typeCounts,
     usageHistory: [],
+    trashedAssets: [],
     storage: {
       usedBytes: 0,
       totalBytes: 0,
@@ -296,6 +298,21 @@ export async function buildAssetsViewModelReal(
     };
   }
 
+  // --- 回收站 (REAL assets.list?status=deleted, T-248 批B) ------------------
+  // 已回收素材的读侧配套:没有它,素材进了回收站就再也看不见、无处还原。SECONDARY
+  // read:失败只降级为空回收站(画廊三态不受影响),绝不编造行。
+  let trashedAssets: ReadonlyArray<AssetSummary>;
+  try {
+    const trashedRows = (await client.listAssets({
+      params: undefined,
+      query: { page: 1, pageSize: 200, status: "deleted" },
+      body: undefined,
+    })) as unknown as ReadonlyArray<AssetListRow>;
+    trashedAssets = buildAssetSummariesFromResources(trashedRows);
+  } catch {
+    trashedAssets = [];
+  }
+
   // --- Projects (REAL projects.list) — picker + usage-history walk ---------
   let projects: ReadonlyArray<ProjectDto>;
   try {
@@ -338,6 +355,7 @@ export async function buildAssetsViewModelReal(
     typeCounts: buildAssetsViewModel().typeCounts,
     usageHistory,
     storage,
+    trashedAssets,
   };
 
   const projectOptions: ReadonlyArray<ProjectOptionDto> = projects.map((p) => ({

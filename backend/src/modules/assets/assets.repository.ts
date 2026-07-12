@@ -47,6 +47,9 @@ export interface RepoDeps {
 export interface ListAssetsQuery {
   limit: number;
   cursor: string | null;
+  // [T-248 批B] 可选状态过滤:缺省 "active"(既有调用不变);"deleted" = 回收站
+  // 视图读回已回收素材(还原入口的读侧配套)。
+  status?: "active" | "deleted";
 }
 
 export interface InsertAssetFileInput {
@@ -259,13 +262,15 @@ export function createAssetRepository(
       // Default gallery scope: active-only (trash/archived excluded). Ordered
       // newest-first; the cursor is the createdAt of the last seen row (simple
       // keyset pagination consistent with paginationQuery's intent).
+      // [T-248 批B] query.status 可选覆盖:"deleted" = 回收站视图(读回已回收素材,
+      // 供还原);缺省仍 active-only,既有调用行为不变。
       const rows = await db
         .select()
         .from(assets)
         .where(
           and(
             eq(assets.userId, userId),
-            eq(assets.status, "active"),
+            eq(assets.status, query.status ?? "active"),
             accountGate(accountId),
           ),
         )

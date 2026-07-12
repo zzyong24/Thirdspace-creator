@@ -10,6 +10,7 @@ import * as path from "node:path";
 import type { z } from "zod";
 import type { ExecutionTaskType } from "@creatoros/contract";
 import type { MaterializedInput, SandboxPaths } from "./sandbox";
+import { createVideoRenderExecutor } from "./video-render/executor";
 
 export interface ExecutorRunOpts {
   /** 超时/丢弃中止贯通(T-239c 模式):executor 应尽早响应 abort。 */
@@ -100,7 +101,10 @@ export function createEchoManifestExecutor(): ExecutionExecutor {
   };
 }
 
-/** 内置 executor 一次性登记(composition 层调用;T-254a 在此追加 video.render)。 */
+/** 内置 executor 一次性登记(composition 层调用)。 */
 export function registerBuiltinExecutors(registry: ExecutorRegistry): void {
   registry.register(createEchoManifestExecutor());
+  // [T-254a] video.render(HyperFrames 确定性渲染)。构造零 IO(工具链检测在 run 内),
+  // 登记无副作用;persistence-client 组装点零改动。
+  registry.register(createVideoRenderExecutor());
 }

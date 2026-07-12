@@ -37,7 +37,8 @@ export const SETTINGS_OP_IDS = [
   "settings.preferences.patch",
   "settings.models.put",
   "settings.models.list",
-  "settings.agents.create",
+  // [T-248 批C] settings.agents.create 已删(孤 op,零调用方);service/repository 的
+  // createAgentConfiguration 链保留(见 contract/src/operations/settings.ts 注)。
   "settings.storage.get",
   "settings.storage.put",
   // T-040c 提示词/skill 服务端可配 — list全表 / get单个 / put upsert. put 后的热更
@@ -97,14 +98,6 @@ export function createSettingsTransport(
         }
         case "settings.models.list": {
           const data = await service.listModelConfigs(ctx);
-          return { data, meta: { requestId: ctx.requestId } };
-        }
-        case "settings.agents.create": {
-          const b = (body ?? {}) as { name?: string; agentType?: string };
-          const data = await service.createAgentConfiguration(ctx, {
-            name: b.name ?? "",
-            agentType: b.agentType ?? "",
-          });
           return { data, meta: { requestId: ctx.requestId } };
         }
         case "settings.storage.get": {

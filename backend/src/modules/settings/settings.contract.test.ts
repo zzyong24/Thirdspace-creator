@@ -15,7 +15,6 @@ import {
   userResource,
   userPreferenceResource,
   modelConfigurationResource,
-  agentConfigurationResource,
   skillConfigOverrideResource,
   skillConfigOverrideVersionResource,
 } from "./settings.schema";
@@ -177,24 +176,8 @@ describe("settings.transport (contract conformance)", () => {
     expect((def as Record<string, unknown>).secretValue).toBeUndefined();
   });
 
-  it("settings.agents.create → agentConfigurationResource single envelope", async () => {
-    const client = createClient(ENDPOINTS, transport, ctx);
-    const agent = await client.createAgent({
-      params: undefined,
-      query: undefined,
-      body: { name: "研究助理", agentType: "research" },
-    });
-    expect(() => agentConfigurationResource.parse(agent)).not.toThrow();
-
-    const raw = await transport.request(
-      ep("settings.agents.create"),
-      { body: { name: "脚本助理", agentType: "script" } } as never,
-      ctx,
-    );
-    const parsed = successEnvelope(agentConfigurationResource).parse(raw);
-    expect(parsed.data.status).toBe("active");
-    expect(parsed.data.createdAt).toBe(parsed.data.updatedAt);
-  });
+  // [T-248 批C] settings.agents.create 契约用例已删(孤 op 移除);service/repository 层的
+  // createAgentConfiguration 覆盖仍在 settings.service.test.ts / repository.integration.test.ts。
 
   it("settings.prompts.put → skillConfigOverrideResource single envelope", async () => {
     const client = createClient(ENDPOINTS, transport, ctx);

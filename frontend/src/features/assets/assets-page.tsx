@@ -127,6 +127,9 @@ export interface AssetsViewModel {
   readonly typeCounts: ReadonlyArray<AssetTypeCount>;
   readonly usageHistory: ReadonlyArray<AssetUsageRow>;
   readonly storage: StorageUsage;
+  // [T-248 批B] 回收站行(assets.list?status=deleted 真读)。可选:fixture / 旧
+  // 测试 seam 不传 = 空回收站,行为不变。
+  readonly trashedAssets?: ReadonlyArray<AssetSummary>;
 }
 
 export interface AssetSummary {

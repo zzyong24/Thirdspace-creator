@@ -77,7 +77,10 @@ export function AssetsInteractiveRegion({
   // [T-060③b] 视图切换:全部 | 按项目(项目=文件夹,点进去看该项目素材)。
   // 分组键来自 usageHistory(material_links 反查):asset ∈ 其挂过的每个项目;
   // 没挂任何项目的进「通用素材」组(素材中心直传的那批)。
-  const [view, setView] = React.useState<"all" | "byProject">("all");
+  // [T-248 批B] 新增「回收站」视图:assets.list?status=deleted 真读的已回收素材,
+  // 每项带「还原」(assets.restore)—— 补上 trash 之后看得见、回得来的闭环。
+  const [view, setView] = React.useState<"all" | "byProject" | "trash">("all");
+  const trashedAssets = viewModel.trashedAssets ?? [];
   const [openProjectId, setOpenProjectId] = React.useState<string | null>(null);
   const projectGroups = React.useMemo(() => {
     const byProject = new Map<
@@ -249,6 +252,31 @@ export function AssetsInteractiveRegion({
     });
   }, [router, trashCandidateId]);
 
+  // [T-248 批B] 回收站还原: POST assets.restore (deleted → active),Dialog 双按钮
+  // 确认门(全站禁原生 window.confirm,同 [T-097] 移入回收站模式):点「还原」先记
+  // 候选 id 弹确认框,确认才执行 assets.restore + refresh(素材回到活跃库),取消只
+  // 关框不动数据。
+  const [restoreCandidateId, setRestoreCandidateId] = React.useState<
+    string | null
+  >(null);
+  const handleRestore = React.useCallback((assetId: string) => {
+    setRestoreCandidateId(assetId);
+  }, []);
+  const handleRestoreConfirm = React.useCallback(() => {
+    const assetId = restoreCandidateId;
+    if (!assetId) return;
+    setRestoreCandidateId(null);
+    startTransition(async () => {
+      await client.restoreAsset({
+        params: { assetId },
+        query: undefined,
+        body: undefined,
+      });
+      setActionStatus("已还原到素材库。");
+      router.refresh();
+    });
+  }, [router, restoreCandidateId]);
+
   // [T-060③a] 「附到项目」退役 —— 素材只两条来路(素材中心=通用,项目内上传=项目素材)。
 
   return (
@@ -262,14 +290,19 @@ export function AssetsInteractiveRegion({
         className="flex flex-col gap-3"
       >
         <GalleryHeader
-          totalCount={gallery?.totalCount ?? allAssets.length}
+          totalCount={
+            view === "trash"
+              ? trashedAssets.length
+              : gallery?.totalCount ?? allAssets.length
+          }
         />
-        {/* [T-060③b] 视图切换:全部 | 按项目(文件夹)。 */}
+        {/* [T-060③b] 视图切换:全部 | 按项目(文件夹)| [T-248 批B] 回收站。 */}
         <div data-slot="assets-view-switch" className="flex items-center gap-1.5">
           {(
             [
               { key: "all", label: "全部" },
               { key: "byProject", label: "按项目" },
+              { key: "trash", label: "回收站" },
             ] as const
           ).map((v) => (
             <button
@@ -302,7 +335,14 @@ export function AssetsInteractiveRegion({
             </button>
           ) : null}
         </div>
-        {view === "byProject" && !openProjectId ? (
+        {view === "trash" ? (
+          // [T-248 批B] 回收站视图:已回收素材列表,每项带「还原」确认门。
+          <TrashList
+            assets={trashedAssets}
+            pending={pending}
+            onRestore={handleRestore}
+          />
+        ) : view === "byProject" && !openProjectId ? (
           <div
             data-slot="assets-folder-grid"
             className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4"
@@ -344,7 +384,7 @@ export function AssetsInteractiveRegion({
             onSelect={setSelectedId}
           />
         )}
-        {gallery ? (
+        {gallery && view !== "trash" ? (
           <Pagination
             currentPage={gallery.currentPage}
             totalPages={gallery.totalPages}
@@ -414,7 +454,106 @@ export function AssetsInteractiveRegion({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* [T-248 批B] 还原确认框 —— Dialog 双按钮(确认执行 assets.restore/取消关闭),
+          同 [T-097] 模式,全站禁原生 confirm。 */}
+      <Dialog
+        open={restoreCandidateId !== null}
+        onOpenChange={(open) => {
+          if (!open) setRestoreCandidateId(null);
+        }}
+      >
+        <DialogContent data-slot="asset-restore-confirm" className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>还原素材?</DialogTitle>
+            <DialogDescription>
+              确定把这份素材从回收站还原?还原后回到素材库。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              data-slot="asset-restore-cancel"
+              onClick={() => setRestoreCandidateId(null)}
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              data-slot="asset-restore-confirm-button"
+              disabled={pending}
+              onClick={handleRestoreConfirm}
+            >
+              还原
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TrashList — [T-248 批B] 回收站视图(已回收素材 + 还原入口)
+// ---------------------------------------------------------------------------
+//
+// assets.list?status=deleted 真读的行。每行带「还原」按钮(先确认门再
+// assets.restore)。空态诚实:「回收站是空的」,不摆假行。
+
+function TrashList({
+  assets,
+  pending,
+  onRestore,
+}: {
+  readonly assets: ReadonlyArray<AssetSummary>;
+  readonly pending: boolean;
+  readonly onRestore: (assetId: string) => void;
+}) {
+  if (assets.length === 0) {
+    return (
+      <p
+        data-slot="assets-trash-empty"
+        className="rounded-card border border-dashed border-border bg-surface-subtle/50 px-4 py-8 text-center text-sm text-muted-foreground"
+      >
+        回收站是空的
+      </p>
+    );
+  }
+  return (
+    <ul
+      data-slot="assets-trash-list"
+      aria-label="回收站素材"
+      className="flex flex-col gap-2"
+    >
+      {assets.map((asset) => (
+        <li
+          key={asset.id}
+          data-slot="assets-trash-item"
+          data-asset-id={asset.id}
+          className="flex items-center justify-between gap-3 rounded-card border border-border bg-surface px-3 py-2.5"
+        >
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate text-sm text-foreground">
+              {asset.name}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              {asset.updatedAt.slice(0, 10)}
+            </span>
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-slot="asset-restore-button"
+            data-asset-id={asset.id}
+            disabled={pending}
+            onClick={() => onRestore(asset.id)}
+          >
+            还原
+          </Button>
+        </li>
+      ))}
+    </ul>
   );
 }
 

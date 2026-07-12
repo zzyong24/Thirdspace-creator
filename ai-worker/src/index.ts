@@ -342,6 +342,30 @@ export {
   TOPIC_ATTRIBUTION_STRUCTURE_FORMULAS,
   type TopicAttributionOutput,
 } from "./prompt/templates/topic-attribution";
+// [T-254b] 制作视频四决策(video.scenes/cards/broll/subtitles)外置模板 + 输出 schema ——
+// SRT+口播稿(+素材清单投影)→ 分场/信息卡/B-roll/双语字幕结构化决策 JSON(零代码生成)。
+// schema 定义在本包(有 zod);backend video-decisions-runner 引 schema 组动态 refine
+// (边界落 SRT 行 start 集合 / assetId 必须在清单内 / 行数不变)作 outputSchema 逃生口。
+export {
+  VIDEO_SCENES_TEMPLATE,
+  VIDEO_CARDS_TEMPLATE,
+  VIDEO_BROLL_TEMPLATE,
+  VIDEO_SUBTITLES_TEMPLATE,
+  videoScenesSchema,
+  videoSceneSchema,
+  videoCardsSchema,
+  videoCardSchema,
+  videoBrollSchema,
+  videoBrollPickSchema,
+  videoSubtitlesSchema,
+  videoSubtitleLineSchema,
+  VIDEO_CARD_KINDS,
+  type VideoCardKind,
+  type VideoScenesOutput,
+  type VideoCardsOutput,
+  type VideoBrollOutput,
+  type VideoSubtitlesOutput,
+} from "./prompt/templates/video-decisions";
 // [T-212d] 防茧房校准(topic.preference)外置模板 + 输出 schema —— 淘汰原因批 → 结构化偏好信号。
 // schema 定义在本包(有 zod);backend runner 引类型绑 generateObject,无需直引 zod。
 export {

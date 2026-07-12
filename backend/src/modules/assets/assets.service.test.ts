@@ -250,6 +250,30 @@ describe("assets.service — getAsset / listAssets (C1/C2)", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]!.name).toBe("A1");
   });
+
+  // [T-248 批B] 回收站视图读侧:status:"deleted" 只返已回收行(user-scoped),
+  // restore 后回到 active 视图、离开回收站视图 —— 还原闭环的读侧保证。
+  it("listAssets({status:'deleted'}) 只返回收站行;restore 后回活跃视图", async () => {
+    await upload(ctxA, "A1");
+    const trashable = await upload(ctxA, "A2");
+    await service.trashAsset(ctxA, trashable.id);
+    const trashed = await service.listAssets(ctxA, {
+      limit: 50,
+      cursor: null,
+      status: "deleted",
+    });
+    expect(trashed).toHaveLength(1);
+    expect(trashed[0]!.name).toBe("A2");
+    await service.restoreAsset(ctxA, trashable.id);
+    const afterRestore = await service.listAssets(ctxA, {
+      limit: 50,
+      cursor: null,
+      status: "deleted",
+    });
+    expect(afterRestore).toHaveLength(0);
+    const active = await service.listAssets(ctxA, { limit: 50, cursor: null });
+    expect(active.map((r) => r.name).sort()).toEqual(["A1", "A2"]);
+  });
 });
 
 describe("assets.service — addAssetFile (C5)", () => {

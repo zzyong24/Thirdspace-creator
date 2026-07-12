@@ -22,10 +22,13 @@ export const modelConfigurationResource = ENDPOINTS.putModel.response;
 export type ModelConfigurationResource =
   (typeof modelConfigurationResource)["_output"];
 
-// settings.agents.create → agentConfigurationResource.
-export const agentConfigurationResource = ENDPOINTS.createAgent.response;
-export type AgentConfigurationResource =
-  (typeof agentConfigurationResource)["_output"];
+// [T-248 批C] settings.agents.create op 已删(孤 op),不能再从 ENDPOINTS 派生;
+// service/repository 的 createAgentConfiguration 链保留,DTO 真值改从 contract barrel
+// 直接 re-export(contract/src/index.ts 已按 taxonomy 同款约定导出)。
+export {
+  agentConfigurationResource,
+  type AgentConfigurationResource,
+} from "@creatoros/contract";
 
 // settings.storage.get / put → storageConfigResource (item B).
 export const storageConfigResource = ENDPOINTS.getStorage.response;

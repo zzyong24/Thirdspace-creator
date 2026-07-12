@@ -39,13 +39,10 @@ describe("ingestion contract", () => {
     expect(run.startedAt).toBeNull();
   });
 
-  it("registers the create-run and metrics endpoints", () => {
+  // [T-248 批C] pushMetrics 等四个 batch-push op 已删,断言只留 createRun。
+  it("registers the create-run endpoint", () => {
     expect(ingestionOperations.createRun.method).toBe("POST");
     expect(ingestionOperations.createRun.path).toBe("/ingestion/runs");
-    expect(ingestionOperations.pushMetrics.method).toBe("POST");
-    expect(ingestionOperations.pushMetrics.path).toBe(
-      "/ingestion/runs/:runId/metrics",
-    );
     expect(ingestionOperations.createRun.fr.length).toBeGreaterThan(0);
   });
 

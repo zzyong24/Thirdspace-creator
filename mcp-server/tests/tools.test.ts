@@ -14,9 +14,9 @@ describe("toToolName", () => {
   it("op id 点换下划线", () => {
     expect(toToolName("projects.list")).toBe("projects_list");
     expect(toToolName("pages.dashboard.get")).toBe("pages_dashboard_get");
-    expect(toToolName("ai.tasks.pending_topic_review")).toBe(
-      "ai_tasks_pending_topic_review",
-    );
+    // [T-248 批C] 原样例 op ai.tasks.pending_topic_review 已删;用合成 id 继续覆盖
+    // 「段内下划线保留、点全部换下划线」这一纯函数性质(不依赖真实契约 op)。
+    expect(toToolName("foo.bar_baz.qux")).toBe("foo_bar_baz_qux");
   });
 });
 

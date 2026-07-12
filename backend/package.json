@@ -28,6 +28,8 @@
     "@electric-sql/pglite": "^0.2.0",
     "ai": "7.0.4",
     "drizzle-orm": "^0.36.0",
+    "gsap": "^3.12.5",
+    "hyperframes": "0.7.54",
     "node-cron": "^4.5.0",
     "pg": "^8.22.0",
     "zod": "^4.4.3"

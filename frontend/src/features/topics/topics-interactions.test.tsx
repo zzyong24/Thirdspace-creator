@@ -552,7 +552,6 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
     const client = {
       listCandidates,
       overviewTopics: () => Promise.resolve(overview()),
-      pendingTopicReview: () => Promise.resolve(null),
       listBenchmarkSources: () => Promise.resolve([]),
       listTrendSources: () => Promise.resolve([]),
       listScheduledJobs: () => Promise.resolve([]),

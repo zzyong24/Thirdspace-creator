@@ -37,6 +37,7 @@ import { useRouter } from "next/navigation";
 import { useAccountsChanged } from "@/lib/account-events";
 import {
   Plus,
+  Pencil,
   Clock,
   PlayCircle,
   AlertTriangle,
@@ -349,6 +350,7 @@ export function JobRow({
   channelThrottle,
   onToggle,
   onOpenDetail,
+  onEdit,
   onRunNow,
   onLogin,
   pendingToggle,
@@ -361,6 +363,8 @@ export function JobRow({
   readonly channelThrottle: ChannelThrottle | null;
   readonly onToggle: (enabled: boolean) => void;
   readonly onOpenDetail: () => void;
+  /** T-248:打开编辑弹窗(预填 name/prompt/频率/target → scheduledJobs.update)。 */
+  readonly onEdit: () => void;
   readonly onRunNow: () => void;
   readonly onLogin: () => void;
   readonly pendingToggle: boolean;
@@ -494,8 +498,19 @@ export function JobRow({
         />
       </div>
 
-      {/* 操作:needs_reconnect → 登录抖音(D4);否则 立即运行(D5) */}
+      {/* 操作:编辑(T-248)+ needs_reconnect → 登录抖音(D4);否则 立即运行(D5) */}
       <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          data-slot="automation-edit"
+          data-testid="automation-edit"
+          onClick={onEdit}
+          title="编辑任务(名称/描述/频率/目标)"
+          className="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-medium text-foreground hover:bg-surface-subtle"
+        >
+          <Pencil className="size-3.5" />
+          编辑
+        </button>
         {needsReconnect ? (
           <button
             type="button"
@@ -826,11 +841,20 @@ function TimePicker({
   );
 }
 
-// ── 新建作业 Dialog(WorkBuddy 式:自然语言 prompt + 友好频率 + 模板预填)──────
+// ── 新建/编辑作业 Dialog(WorkBuddy 式:自然语言 prompt + 友好频率 + 模板预填)──
 //
 // 预填缝 `prefill`:列表页模板卡点击时传入 {name, prompt, sourceKind, cadence},弹窗打开即带值。
 // 提交时:cadence → compileCadenceToCron 存 schedule(不露 cron);prompt 承接 scheduled_job.prompt。
 // sourceKind 主路径由下拉/模板显式给;若用户改了 prompt 但没动下拉,以显式下拉为准(下拉即用户意图)。
+//
+// T-248 编辑模式(mode="edit" + job):同一表单复用于「编辑已有作业」——
+//  - 预填 {name, prompt, target} 直取 job;频率经 compileCronToCadence(job.schedule) 反解。
+//  - 反解失败(手写复杂 cron / 旧数据 → null)诚实降级:提示「原频率无法反解,请重新选择」,
+//    用户重选频率前禁保存(绝不静默把原调度篡改成缺省值)。
+//  - sourceKind 只读展示:契约 scheduledJobs.update 的 body 不含 sourceKind(不可改源),
+//    不给假入口。系统自动建的源(benchmark / topic.daily 等,不在下拉集合)→ target 字段
+//    隐藏且本次提交不改 target(诚实不碰读不懂的 target 形状)。
+//  - 提交即确认(「保存修改」按钮),写操作走 onCreate 回调 → scheduledJobs.update。
 
 export interface CreateJobPrefill {
   readonly name?: string;
@@ -844,46 +868,79 @@ export function CreateJobDialog({
   onOpenChange,
   onCreate,
   prefill,
+  mode = "create",
+  job = null,
 }: {
   readonly open: boolean;
   readonly onOpenChange: (v: boolean) => void;
+  /** 提交回调:create 模式装配新建入参;edit 模式装配更新入参(sourceKind 恒为原值)。 */
   readonly onCreate: (input: {
     name: string;
     sourceKind: SourceKind;
     schedule: string;
     prompt: string;
-    target: Record<string, unknown>;
+    /** 装配好的 target;undefined = 本次不改 target(edit 模式源类型不在已知集合时)。 */
+    target?: Record<string, unknown>;
   }) => Promise<void>;
-  /** 模板卡预填(打开弹窗时应用一次)。 */
+  /** 模板卡预填(打开弹窗时应用一次;仅 create 模式)。 */
   readonly prefill?: CreateJobPrefill | null;
+  /** create=新建(默认);edit=编辑已有作业(从 `job` 预填,sourceKind 只读)。 */
+  readonly mode?: "create" | "edit";
+  /** edit 模式的被编辑作业(打开时预填 name/prompt/频率/target)。 */
+  readonly job?: ScheduledJobResource | null;
 }) {
+  const isEdit = mode === "edit";
   const [name, setName] = React.useState("");
   const [prompt, setPrompt] = React.useState("");
   const [sourceKind, setSourceKind] = React.useState<SourceKind>("self.metrics");
   const [cadence, setCadence] = React.useState<Cadence>({ ...DEFAULT_CADENCE });
+  // T-248 编辑降级锁:job.schedule 反解失败时为 true —— 提示重选,重选前禁保存。
+  const [cadenceUnresolved, setCadenceUnresolved] = React.useState(false);
   const [targetValue, setTargetValue] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
 
   const meta = SOURCE_META[sourceKind];
-  const canSubmit = name.trim().length > 0 && !submitting;
+  // 编辑模式:被编辑作业的源是否在新建下拉的已知集合(系统自动建的 benchmark / topic.daily
+  // 等不在集合 → target 字段隐藏 + 提交不改 target)。create 模式恒 true。
+  const editSourceKnown =
+    !isEdit || !!(job && SOURCE_META[job.sourceKind as SourceKind]);
+  const canSubmit = name.trim().length > 0 && !submitting && !cadenceUnresolved;
 
-  // 打开弹窗时应用一次预填(模板卡 / 空白新建)。open 由 false→true 触发。
+  // 打开弹窗时应用一次预填(模板卡 / 空白新建 / 编辑预填)。open 由 false→true 触发。
   const prevOpenRef = React.useRef(false);
   React.useEffect(() => {
     if (open && !prevOpenRef.current) {
-      // 刚打开:按 prefill 初始化(无 prefill = 空白)。
-      setName(prefill?.name ?? "");
-      setPrompt(prefill?.prompt ?? "");
-      setSourceKind(prefill?.sourceKind ?? "self.metrics");
-      setCadence(prefill?.cadence ?? { ...DEFAULT_CADENCE });
-      setTargetValue("");
+      if (isEdit && job) {
+        // 编辑:从被编辑作业预填。频率用 compileCronToCadence 反解;反解失败(null)诚实
+        // 降级:编辑器落回缺省值 + 标记 unresolved(UI 提示重选,重选前禁保存)。
+        setName(job.name);
+        setPrompt(job.prompt ?? "");
+        const known = SOURCE_META[job.sourceKind as SourceKind];
+        setSourceKind(known ? (job.sourceKind as SourceKind) : "self.metrics");
+        const parsed = compileCronToCadence(job.schedule);
+        setCadence(parsed ?? { ...DEFAULT_CADENCE });
+        setCadenceUnresolved(parsed == null);
+        const rawTarget = known
+          ? (job.target as Record<string, unknown> | null)?.[known.targetKey]
+          : undefined;
+        setTargetValue(typeof rawTarget === "string" ? rawTarget : "");
+      } else {
+        // 新建:按 prefill 初始化(无 prefill = 空白)。
+        setName(prefill?.name ?? "");
+        setPrompt(prefill?.prompt ?? "");
+        setSourceKind(prefill?.sourceKind ?? "self.metrics");
+        setCadence(prefill?.cadence ?? { ...DEFAULT_CADENCE });
+        setCadenceUnresolved(false);
+        setTargetValue("");
+      }
     }
     prevOpenRef.current = open;
-  }, [open, prefill]);
+  }, [open, prefill, isEdit, job]);
 
   // freeform prompt 无模板显式意图时的辅助分类(确定性,仅当用户改了 prompt 后给弱提示)。
   // 主路径仍是下拉(显式即用户意图);这里只在下拉与 prompt 语义明显不符时提示。
   const intentHint = React.useMemo(() => {
+    if (isEdit) return null; // 编辑模式源不可改 → 意图提示无意义,不显。
     const p = prompt.trim();
     if (p.length === 0) return null;
     const c = classifyIntent(p);
@@ -891,7 +948,7 @@ export function CreateJobDialog({
       return c.sourceKind;
     }
     return null;
-  }, [prompt, sourceKind]);
+  }, [prompt, sourceKind, isEdit]);
 
   const submit = React.useCallback(async () => {
     if (!canSubmit) return;
@@ -901,9 +958,13 @@ export function CreateJobDialog({
       const schedule = compileCadenceToCron(cadence);
       // target 按源装配:self.metrics → {externalSourceId?}, comments → {awemeId}。
       // 空值不塞 key(service default {}),让"抓主页全部"这类无参源保持干净。
-      const target: Record<string, unknown> = {};
-      const trimmed = targetValue.trim();
-      if (trimmed) target[meta.targetKey] = trimmed;
+      // 编辑模式源类型不在已知集合(benchmark 等系统作业)→ target=undefined,本次不改。
+      let target: Record<string, unknown> | undefined;
+      if (editSourceKnown) {
+        target = {};
+        const trimmed = targetValue.trim();
+        if (trimmed) target[meta.targetKey] = trimmed;
+      }
       await onCreate({
         name: name.trim(),
         sourceKind,
@@ -920,6 +981,7 @@ export function CreateJobDialog({
     cadence,
     targetValue,
     meta,
+    editSourceKnown,
     onCreate,
     name,
     prompt,
@@ -936,15 +998,22 @@ export function CreateJobDialog({
     >
       <DialogContent
         data-slot="automation-create-dialog"
+        data-mode={mode}
         className="sm:max-w-lg"
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Plus className="size-4 text-brand" />
-            新建采集任务
+            {isEdit ? (
+              <Pencil className="size-4 text-brand" />
+            ) : (
+              <Plus className="size-4 text-brand" />
+            )}
+            {isEdit ? "编辑采集任务" : "新建采集任务"}
           </DialogTitle>
           <DialogDescription>
-            用大白话说你想定时抓什么,选个频率就行 —— 到点自动跑、数据落库,供 Dashboard 与选题消费。
+            {isEdit
+              ? "修改任务的名称、描述、频率或目标,保存后按新配置调度(抓取内容不可改)。"
+              : "用大白话说你想定时抓什么,选个频率就行 —— 到点自动跑、数据落库,供 Dashboard 与选题消费。"}
           </DialogDescription>
         </DialogHeader>
 
@@ -974,7 +1043,19 @@ export function CreateJobDialog({
             />
           </label>
 
-          {/* source_kind 下拉(主路径:显式意图,0 LLM)*/}
+          {/* source_kind:create=下拉(主路径:显式意图,0 LLM);edit=只读展示
+              (契约 scheduledJobs.update 不支持改 sourceKind,不给假入口)。 */}
+          {isEdit ? (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-foreground">抓取内容</span>
+              <span
+                data-slot="automation-field-source-readonly"
+                className="inline-flex w-fit items-center rounded-full border border-border bg-surface-subtle px-2.5 py-1 text-xs text-muted-foreground"
+              >
+                {sourceLabel(job?.sourceKind ?? sourceKind)}(不可修改)
+              </span>
+            </div>
+          ) : (
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">抓取内容</span>
             <Select
@@ -1013,26 +1094,45 @@ export function CreateJobDialog({
               </button>
             ) : null}
           </label>
+          )}
 
-          {/* 友好频率(去裸 cron)*/}
+          {/* 友好频率(去裸 cron)。用户一改频率即解除编辑降级锁(已重选)。 */}
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">频率</span>
-            <CadenceEditor cadence={cadence} onChange={setCadence} />
+            <CadenceEditor
+              cadence={cadence}
+              onChange={(next) => {
+                setCadence(next);
+                setCadenceUnresolved(false);
+              }}
+            />
+            {cadenceUnresolved ? (
+              // T-248 诚实降级:原 cron 反解不出友好频率 → 明示原值,要求重选后才能保存。
+              <p
+                data-slot="automation-cadence-unresolved"
+                data-testid="automation-cadence-unresolved"
+                className="text-[11px] font-medium text-amber-600"
+              >
+                原频率({job?.schedule})无法反解为友好频率,请重新选择频率后再保存。
+              </p>
+            ) : null}
           </div>
 
-          {/* target(按源) */}
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-foreground">
-              {meta.targetLabel}
-              <span className="ml-1 font-normal text-muted-foreground">(选填)</span>
-            </span>
-            <Input
-              data-slot="automation-field-target"
-              value={targetValue}
-              onChange={(e) => setTargetValue(e.target.value)}
-              placeholder={meta.targetPlaceholder}
-            />
-          </label>
+          {/* target(按源)。编辑模式源不在已知集合(系统作业)→ 隐藏,本次不改 target。 */}
+          {editSourceKnown ? (
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-foreground">
+                {meta.targetLabel}
+                <span className="ml-1 font-normal text-muted-foreground">(选填)</span>
+              </span>
+              <Input
+                data-slot="automation-field-target"
+                value={targetValue}
+                onChange={(e) => setTargetValue(e.target.value)}
+                placeholder={meta.targetPlaceholder}
+              />
+            </label>
+          ) : null}
         </div>
 
         <DialogFooter>
@@ -1046,12 +1146,18 @@ export function CreateJobDialog({
           </button>
           <button
             type="button"
-            data-slot="automation-create-submit"
+            data-slot={isEdit ? "automation-edit-submit" : "automation-create-submit"}
             disabled={!canSubmit}
             onClick={submit}
             className="inline-flex h-9 items-center rounded-control bg-brand px-4 text-xs font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
           >
-            {submitting ? "创建中…" : "创建任务"}
+            {submitting
+              ? isEdit
+                ? "保存中…"
+                : "创建中…"
+              : isEdit
+                ? "保存修改"
+                : "创建任务"}
           </button>
         </DialogFooter>
       </DialogContent>
@@ -1318,7 +1424,7 @@ export function RunDetailDialog({
 // ── 从模板入手(WorkBuddy 式模板卡区,SPEC §8.1)────────────────────────────────
 //
 // 列表页顶部的模板卡:点一张 → 打开新建弹窗并预填 {name, prompt, sourceKind, cadence}。
-// 灰置模板(如 D8a 明细数据未落地)点不动,诚实标「敬请期待」。
+// 全部模板可点 —— D8a 明细导出落地后,原「灰置模板」机制(disabled 字段 + 灰置分支)已整体移除。
 
 export function TemplateCards({
   onPick,
@@ -1341,22 +1447,14 @@ export function TemplateCards({
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {COLLECTION_TEMPLATES.map((tpl) => {
           const Icon = SOURCE_META[tpl.sourceKind]?.icon ?? BarChart3;
-          const disabled = !!tpl.disabled;
           return (
             <button
               key={tpl.id}
               type="button"
               data-slot="automation-template-card"
               data-template-id={tpl.id}
-              data-disabled={disabled}
-              disabled={disabled}
               onClick={() => onPick(tpl)}
-              className={cn(
-                "flex flex-col items-start gap-2 rounded-card border p-4 text-left transition-colors",
-                disabled
-                  ? "cursor-not-allowed border-dashed border-border bg-surface-subtle/40 opacity-70"
-                  : "border-border bg-surface hover:border-brand hover:bg-brand-soft/40",
-              )}
+              className="flex flex-col items-start gap-2 rounded-card border border-border bg-surface p-4 text-left transition-colors hover:border-brand hover:bg-brand-soft/40"
             >
               <span className="flex items-center gap-2">
                 <span
@@ -1372,16 +1470,10 @@ export function TemplateCards({
               <span className="text-xs leading-snug text-muted-foreground">
                 {tpl.description}
               </span>
-              {disabled ? (
-                <span className="mt-1 inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
-                  规划中 · D8a 后开放
-                </span>
-              ) : (
-                <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-brand">
-                  <Plus className="size-3" />
-                  用此模板新建
-                </span>
-              )}
+              <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-brand">
+                <Plus className="size-3" />
+                用此模板新建
+              </span>
             </button>
           );
         })}
@@ -1409,6 +1501,11 @@ export function AutomationsIsland({
     null,
   );
   const [detailOpen, setDetailOpen] = React.useState(false);
+  // T-248 编辑弹窗:被编辑作业 + 开关(复用 CreateJobDialog 的 edit 模式)。
+  const [editJob, setEditJob] = React.useState<ScheduledJobResource | null>(
+    null,
+  );
+  const [editOpen, setEditOpen] = React.useState(false);
   const [pendingToggleId, setPendingToggleId] = React.useState<string | null>(
     null,
   );
@@ -1540,7 +1637,7 @@ export function AutomationsIsland({
       sourceKind: SourceKind;
       schedule: string;
       prompt: string;
-      target: Record<string, unknown>;
+      target?: Record<string, unknown>;
     }) => {
       await client.createScheduledJob({
         params: undefined,
@@ -1551,7 +1648,7 @@ export function AutomationsIsland({
           // prompt 是人类可读描述(未来可升级为 schema 约束 LLM 分类的输入)。
           prompt: input.prompt,
           sourceKind: input.sourceKind,
-          target: input.target,
+          target: input.target ?? {},
           schedule: input.schedule, // 已由 CadenceEditor 编译成 cron(不露用户)
           toolGrants: [], // 偏只读 + 落库,首版空;工具授权由执行层(D3)约束
         },
@@ -1560,6 +1657,38 @@ export function AutomationsIsland({
     },
     [router],
   );
+
+  // T-248 编辑保存:调 scheduledJobs.update(PATCH,只传可改字段;sourceKind 契约不可改
+  // 故不传)。target=undefined(源不在已知集合的系统作业)时不传 → 后端不动原 target。
+  const update = React.useCallback(
+    async (input: {
+      name: string;
+      sourceKind: SourceKind;
+      schedule: string;
+      prompt: string;
+      target?: Record<string, unknown>;
+    }) => {
+      if (!editJob) return;
+      await client.updateScheduledJob({
+        params: { jobId: editJob.id },
+        query: undefined,
+        body: {
+          name: input.name,
+          prompt: input.prompt,
+          schedule: input.schedule, // 已由 CadenceEditor 编译成 cron(不露用户)
+          ...(input.target !== undefined ? { target: input.target } : {}),
+        },
+      });
+      router.refresh();
+    },
+    [router, editJob],
+  );
+
+  // T-248:行内「编辑」→ 打开编辑弹窗(预填该作业)。
+  const openEdit = React.useCallback((job: ScheduledJobResource) => {
+    setEditJob(job);
+    setEditOpen(true);
+  }, []);
 
   // 从模板入手(SPEC §8.1):点模板卡 → 装配预填 → 打开新建弹窗。
   const openFromTemplate = React.useCallback((tpl: CollectionTemplate) => {
@@ -1711,6 +1840,7 @@ export function AutomationsIsland({
                   loginPhase={loginPhaseById[job.id] ?? "idle"}
                   onToggle={(v) => toggle(job, v)}
                   onOpenDetail={() => openDetail(job)}
+                  onEdit={() => openEdit(job)}
                   onRunNow={() => runNow(job)}
                   onLogin={() => login(job)}
                 />
@@ -1725,6 +1855,14 @@ export function AutomationsIsland({
         onOpenChange={setCreateOpen}
         onCreate={create}
         prefill={prefill}
+      />
+      {/* T-248 编辑弹窗:复用同一表单组件的 edit 模式,提交走 scheduledJobs.update。 */}
+      <CreateJobDialog
+        mode="edit"
+        job={editJob}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onCreate={update}
       />
       <RunDetailDialog
         job={detailJob}

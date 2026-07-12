@@ -110,7 +110,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/ai/tasks/:taskId"],
   ["GET", "/ai/tasks/:taskId/results"],
   ["GET", "/ai/tasks/:taskId/steps"],
-  ["GET", "/ai/tasks/pending-topic-review"],
+  // [T-248 批C] GET /ai/tasks/pending-topic-review 已删(T-060 弹窗任务流退役,零调用方)。
   ["POST", "/ai/tasks/:taskId/results/patch"],
   ["POST", "/ai/tasks/:taskId/confirm"],
   ["POST", "/ai/tasks/:taskId/cancel"],
@@ -122,7 +122,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["PATCH", "/settings/preferences"],
   ["GET", "/settings/models"],
   ["PUT", "/settings/models/:capability"],
-  ["POST", "/settings/agents"],
+  // [T-248 批C] POST /settings/agents 已删(孤 op,零调用方)。
   ["GET", "/settings/storage"],
   ["PUT", "/settings/storage"],
   // 提示词/skill 服务端可配 (T-040c) — list全表 / get单个 / put upsert(热更)
@@ -140,10 +140,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/ingestion/douyin/login"],
   ["GET", "/ingestion/douyin/status"],
   ["GET", "/ingestion/douyin/throttle-status"],
-  ["POST", "/ingestion/runs/:runId/metrics"],
-  ["POST", "/ingestion/runs/:runId/knowledge"],
-  ["POST", "/ingestion/runs/:runId/assets"],
-  ["POST", "/ingestion/runs/:runId/artifacts"],
+  // [T-248 批C] 四个 batch-push op(metrics/knowledge/assets/artifacts)已删 ——
+  // 真实采集走服务端 ingestion service 层进程内调用,不经契约 dispatch。
   ["POST", "/ingestion/runs/:runId/complete"],
   ["GET", "/ingestion/runs/:runId"],
   // ── contract v0.4 (七步 seven-step) ────────────────────────────────────

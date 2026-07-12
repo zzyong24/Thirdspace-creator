@@ -325,6 +325,12 @@ import { runPlanningOutline } from "@creatoros/backend/modules/ai-runtime";
 import { runReviewAnalyze } from "@creatoros/backend/modules/ai-runtime";
 import { runPlatformAdapt } from "@creatoros/backend/modules/ai-runtime";
 import { runMaterialMatch } from "@creatoros/backend/modules/ai-runtime";
+// [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
+// 预览卡确认门;素材清单投影类型一并引入给 listBrollInventory 端口)。
+import {
+  runVideoDecisions,
+  type BrollAssetRef,
+} from "@creatoros/backend/modules/ai-runtime";
 import { runPositioningGenerate } from "@creatoros/backend/modules/ai-runtime";
 import { runCopilotAssist } from "@creatoros/backend/modules/ai-runtime";
 import { runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
@@ -3358,6 +3364,71 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               // Vercel AI SDK 路径:素材匹配跑在 ai-worker 结构化节点(外置 material.match 模板
               // + generateObject 绑 outputSchema,落空→文本兜底),跨模型健壮(MiniMax 也稳出)。
               resolveModelSpec,
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "video.decisions" &&
+          task.status === "queued"
+        ) {
+          // [T-254b] 制作视频四决策 node(video.decisions,SPEC 2026-07-11 §3.1 步骤 2-3)——
+          // 粗剪 SRT + 口播稿 → ①语义分场 ②信息卡(可溯剔除)③B-roll(清单硬门)④双语字幕,
+          // 四个 runStructuredNode 顺序编排,产 `video_decisions` 候选(awaiting_confirmation)→
+          // 前端分场预览卡过目可改,确认才组 props 交渲染(T-254a video.render executor)。
+          // 素材清单投影:项目 material-links⋈assets 的 video/image(label+描述);项目没挂
+          // 素材时回退整库前 100 条(诚实投影,只给真实 assetId,B-roll 决策禁编造)。
+          void runVideoDecisions(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              resolveModelSpec,
+              listBrollInventory: async (c, projectId) => {
+                const rows: BrollAssetRef[] = [];
+                const pushAsset = (a: {
+                  id: string;
+                  name: string;
+                  assetType: string;
+                  description: string;
+                }) => {
+                  if (a.assetType !== "video" && a.assetType !== "image") return;
+                  rows.push({
+                    assetId: a.id,
+                    label: a.name,
+                    kind: a.assetType,
+                    description: a.description ?? "",
+                  });
+                };
+                if (projectId) {
+                  const { rows: links } = await materialLinksService.list(c, {
+                    projectId,
+                    page: 1,
+                    pageSize: 100,
+                  });
+                  for (const link of links) {
+                    if (link.entityType !== "asset") continue;
+                    try {
+                      pushAsset(await assetsService.getAsset(c, link.entityId));
+                    } catch {
+                      continue; // 单条越权/已删跳过,不牵连整批
+                    }
+                  }
+                }
+                if (rows.length === 0) {
+                  // 项目没挂素材 → 回退整库投影(仍全是真实 assetId)。
+                  const all = await assetsService.listAssets(c, {
+                    limit: 100,
+                    cursor: null,
+                  });
+                  for (const a of all) pushAsset(a);
+                }
+                return rows;
+              },
             },
           );
         } else if (

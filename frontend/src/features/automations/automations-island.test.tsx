@@ -164,6 +164,7 @@ describe("JobRow — 启用开关", () => {
                 job={makeJob({ enabled: true })}
                 latestRun={null}
                 channelThrottle={null}
+                onEdit={vi.fn()}
                 onToggle={onToggle}
                 onOpenDetail={vi.fn()}
                 onRunNow={vi.fn()}
@@ -201,6 +202,7 @@ function renderJobRow(over: Parameters<typeof JobRow>[0]) {
 const jobRowBase = {
   job: makeJob({ enabled: true }),
   channelThrottle: null,
+  onEdit: vi.fn(),
   onToggle: vi.fn(),
   onOpenDetail: vi.fn(),
   onRunNow: vi.fn(),
@@ -587,6 +589,7 @@ describe("T-038c — 采集限流可观测(cooldown 显限流保护横幅)", () 
                   consecutiveThrottles: 3,
                   lastRequestAt: 1_700_000_000_000,
                 }}
+                onEdit={vi.fn()}
                 onToggle={vi.fn()}
                 onOpenDetail={vi.fn()}
                 onRunNow={vi.fn()}
@@ -617,6 +620,7 @@ describe("T-038c — 采集限流可观测(cooldown 显限流保护横幅)", () 
                 job={makeJob({ enabled: true })}
                 latestRun={null}
                 channelThrottle={null}
+                onEdit={vi.fn()}
                 onToggle={vi.fn()}
                 onOpenDetail={vi.fn()}
                 onRunNow={vi.fn()}
@@ -648,6 +652,7 @@ describe("T-038c — 采集限流可观测(cooldown 显限流保护横幅)", () 
                   consecutiveThrottles: 0,
                   lastRequestAt: null,
                 }}
+                onEdit={vi.fn()}
                 onToggle={vi.fn()}
                 onOpenDetail={vi.fn()}
                 onRunNow={vi.fn()}

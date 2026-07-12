@@ -68,7 +68,8 @@ describe("ingestion contract conformance", () => {
     transport = createIngestionTransport(() => service);
   });
 
-  it("exposes exactly the 11 ingestion op ids (7 run + 抖音刷新 + 抖音扫码登录 + 抖音状态探针 + 抖音限流可观测)", () => {
+  // [T-248 批C] 四个 batch-push op(runs.metrics/knowledge/assets/artifacts)已删。
+  it("exposes exactly the 7 ingestion op ids (run create/complete/get + 抖音刷新 + 抖音扫码登录 + 抖音状态探针 + 抖音限流可观测)", () => {
     expect([...INGESTION_OP_IDS].sort()).toEqual(
       [
         "ingestion.runs.create",
@@ -76,10 +77,6 @@ describe("ingestion contract conformance", () => {
         "ingestion.douyin.login",
         "ingestion.douyin.status",
         "ingestion.douyin.throttleStatus",
-        "ingestion.runs.metrics",
-        "ingestion.runs.knowledge",
-        "ingestion.runs.assets",
-        "ingestion.runs.artifacts",
         "ingestion.runs.complete",
         "ingestion.runs.get",
       ].sort(),
@@ -105,7 +102,9 @@ describe("ingestion contract conformance", () => {
     expect(JSON.stringify(data)).not.toContain("user_id");
   });
 
-  it("metrics / knowledge / assets / artifacts / complete / get all return ingestionRunResource", async () => {
+  // [T-248 批C] 四个 batch-push op 的透传用例已随契约 op 删除;service 层
+  // ingestMetrics/ingestKnowledge/… 的覆盖在 ingestion.service 相关测试里,不受影响。
+  it("complete / get all return ingestionRunResource", async () => {
     const created = (await transport.request(
       ep("createRun"),
       {
@@ -118,39 +117,6 @@ describe("ingestion contract conformance", () => {
       ctx,
     )) as { data: { id: string } };
     const runId = created.data.id;
-
-    const metrics = await transport.request(
-      ep("pushMetrics"),
-      {
-        params: { runId },
-        body: {
-          records: [
-            {
-              recordKey: "rk-1",
-              platform: "bilibili",
-              externalId: "e1",
-              capturedAt: "2026-06-12T10:00:00.000Z",
-              metrics: { views: 1 },
-            },
-          ],
-        },
-      } as never,
-      ctx,
-    );
-    expect(() =>
-      ingestionRunResource.parse((metrics as { data: unknown }).data),
-    ).not.toThrow();
-
-    for (const key of ["pushKnowledge", "pushAssets", "pushArtifacts"] as const) {
-      const env = await transport.request(
-        ep(key),
-        { params: { runId }, body: { records: [] } } as never,
-        ctx,
-      );
-      expect(() =>
-        ingestionRunResource.parse((env as { data: unknown }).data),
-      ).not.toThrow();
-    }
 
     const completed = await transport.request(
       ep("completeRun"),

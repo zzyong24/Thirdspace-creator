@@ -93,6 +93,8 @@ import {
 import { ChatGenerateCard } from "./chat-generate-card";
 // [T-255a] 执行结果确认卡(exec.* 任务的产物清单 + 采纳/重试/丢弃确认门)。
 import { ExecutionTaskCard } from "./execution-task-card";
+// [T-248B①] 未终态任务「取消」按钮(Dialog 确认门 → ai.tasks.cancel → 重拉 feed)。
+import { TaskCancelButton } from "./ai-task-cancel";
 import {
   ChatLearningCard,
   type ChatLearningSuggestion,
@@ -1184,8 +1186,11 @@ export function AICopilotContent({
   const [recentTasks, setRecentTasks] = React.useState<
     ReadonlyArray<WireTask> | null
   >(null);
-  React.useEffect(() => {
-    let active = true;
+  // [T-248B①] 拉取逻辑抽成可复用回调:首屏 useEffect 用它,任务「取消」成功后也用它
+  // 重拉刷新 feed(与本文件其它「变更后重拉」模式一致,不引入第二套刷新机制)。
+  const tasksFetchEpochRef = React.useRef(0);
+  const refreshRecentTasks = React.useCallback(() => {
+    const epoch = ++tasksFetchEpochRef.current;
     void (async () => {
       try {
         // [T-095③] 多拉一页(24)再过滤+截 6:调度采集任务高频刷屏,只拉 6 条会被它占满,
@@ -1197,17 +1202,22 @@ export function AICopilotContent({
         })) as unknown as ReadonlyArray<WireTask> | null | undefined;
         // null→[] 收敛:若 op 成功 resolve 但返回 null/undefined(空 DB 的某些 transport
         // 路径),仍要把状态推进到空数组,否则 spinner 会一直转。empty array 触发诚实空态。
-        if (active) setRecentTasks((rows ?? []).filter(isCreativeTask).slice(0, 6));
+        if (epoch === tasksFetchEpochRef.current)
+          setRecentTasks((rows ?? []).filter(isCreativeTask).slice(0, 6));
       } catch {
         // Feed unavailable (e.g. unauthenticated dispatch) — fall back to an empty,
         // honest feed rather than fixture rows.
-        if (active) setRecentTasks([]);
+        if (epoch === tasksFetchEpochRef.current) setRecentTasks([]);
       }
     })();
-    return () => {
-      active = false;
-    };
   }, []);
+  React.useEffect(() => {
+    refreshRecentTasks();
+    return () => {
+      // 卸载后推进 epoch,使在途请求的 setState 失效(等价于原 active 标记)。
+      tasksFetchEpochRef.current += 1;
+    };
+  }, [refreshRecentTasks]);
 
   // GAP-COP-1 做真: 「继续任务」 reuses the SAME ai.tasks.list fetch (no second
   // round-trip) and filters to the user's CROSS-project in-progress tasks
@@ -2288,8 +2298,16 @@ export function AICopilotContent({
                     <span className="min-w-0 truncate text-[9.5px] leading-tight text-muted-foreground">
                       {taskSecondLine(task) ?? ""}
                     </span>
-                    <span className="shrink-0 text-[9.5px] leading-tight text-muted-foreground">
-                      {TASK_STATUS_LABEL[task.status]}
+                    <span className="flex shrink-0 items-center gap-1">
+                      <span className="text-[9.5px] leading-tight text-muted-foreground">
+                        {TASK_STATUS_LABEL[task.status]}
+                      </span>
+                      {/* [T-248B①] 未终态任务可取消(组件内部对终态返回 null)。 */}
+                      <TaskCancelButton
+                        taskId={task.id}
+                        status={task.status}
+                        onCancelled={refreshRecentTasks}
+                      />
                     </span>
                   </div>
                   {/* [T-255a] 执行层任务(exec.*)在 feed 内嵌执行结果确认卡:进行中显
@@ -2364,6 +2382,12 @@ export function AICopilotContent({
                       <span className="min-w-0 truncate text-[9.5px] leading-tight text-muted-foreground">
                         {sub ?? ""}
                       </span>
+                      {/* [T-248B①] 继续任务全部是未终态 → 都可取消(Dialog 确认门)。 */}
+                      <TaskCancelButton
+                        taskId={task.id}
+                        status={task.status}
+                        onCancelled={refreshRecentTasks}
+                      />
                       <Button
                         type="button"
                         variant="outline"

@@ -4,7 +4,6 @@ import {
   userResource,
   userPreferenceResource,
   modelConfigurationResource,
-  agentConfigurationResource,
   storageConfigResource,
   skillConfigOverrideResource,
   skillConfigOverrideVersionResource,
@@ -74,17 +73,9 @@ export const settingsOperations = {
     response: z.array(modelConfigurationResource),
     fr: ["FR-SETTINGS-MODEL-LIST"],
   }),
-  createAgent: defineEndpoint({
-    id: "settings.agents.create",
-    method: "POST",
-    path: "/settings/agents",
-    body: z.object({
-      name: z.string().min(1),
-      agentType: z.string().min(1),
-    }),
-    response: agentConfigurationResource,
-    fr: ["FR-SETTINGS-AGENT-CREATE"],
-  }),
+  // [T-248 批C] settings.agents.create 已删 —— 孤 op(全仓无任何调用方,前端/mcp 均不触达)。
+  // agentConfigurationResource 与 agent_configurations 表、backend service/repository 的
+  // createAgentConfiguration 链保留(整组暂无其他 op 消费,仅契约面收敛;详见 BACKLOG T-248)。
   // item B — media-storage binding. `getStorage` returns the resolved config +
   // real usage; `putStorage` updates the backend choice and/or media root path
   // (validated server-side: a non-writable / system-sensitive path is rejected).

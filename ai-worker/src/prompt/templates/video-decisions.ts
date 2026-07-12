@@ -1,0 +1,184 @@
+import { z } from "zod";
+import type { PromptTemplate } from "../template";
+
+/**
+ * [T-254b] 制作视频四决策 skill 模板(video.scenes / video.cards / video.broll /
+ * video.subtitles)—— 执行层 video.render 管线的「脑」侧:粗剪人物视频 + SRT + 口播稿 →
+ * 结构化决策 JSON(零代码生成,SPEC 2026-07-11 §3.1 步骤 2)。四个模板都走
+ * runStructuredNode(generateObject 绑 outputSchema,落空→文本兜底),模型全由用户
+ * model-config 可配(capability = skill id)。
+ *
+ * 跨模型稳定关键(SPEC 原文):**所有时间插点吸附 SRT 行 start 集合**。模板内置的
+ * outputSchema 只卡「形状」(字段/枚举);跟输入绑定的动态约束(边界落 SRT 行 start 集合 /
+ * assetId 必须在素材清单内 / 字幕行数不变)由 backend runner 用
+ * buildXxxDecisionSchema(...)(zod refine 逃生口)+ 后处理吸附落实 —— schema 不合时
+ * Vercel SDK 自动重试,吸附兜住小偏差。
+ *
+ * 诚实硬约束(prompt 侧,与 T-224 同源):
+ *   - 信息卡数值/文案**只从口播原文提取,禁编造**(runner 侧另有可溯校验剔除);
+ *   - B-roll **精确匹配被讲对象,禁近似替代**;assetId 必须来自清单;label 禁内部词。
+ */
+
+/** 信息卡六 kind 枚举(e03 Scene/Card 打法的天然 props schema,SPEC §3.2)。 */
+export const VIDEO_CARD_KINDS = [
+  "stat",
+  "quote",
+  "list",
+  "compare",
+  "code",
+  "image",
+] as const;
+export type VideoCardKind = (typeof VIDEO_CARD_KINDS)[number];
+
+// ── ① 语义分场(video.scenes)────────────────────────────────────────────────
+
+export const videoSceneSchema = z.object({
+  title: z.string().default(""),
+  startSec: z.number().default(0),
+  endSec: z.number().default(0),
+  summary: z.string().default(""),
+});
+/** 顶层输出契约:对象包 scenes 数组(generateObject 顶层要对象,裸数组部分 provider 不可靠)。 */
+export const videoScenesSchema = z.object({
+  scenes: z.array(videoSceneSchema).default([]),
+});
+export type VideoScenesOutput = z.infer<typeof videoScenesSchema>;
+
+export const VIDEO_SCENES_TEMPLATE: PromptTemplate = {
+  id: "video.scenes",
+  version: "v1",
+  outputSchema: videoScenesSchema,
+  tools: [],
+  system:
+    "你是这位创作者的「视频分场 agent」,把一条口播视频按语义切成若干场景,给每场一个标题和一句概括。",
+  template: `把下面这条口播视频按**语义**切分成场景(scene)。SRT 是唯一时间真值。
+
+【SRT 逐行】(每行: 序号 | 起秒-止秒 | 文本)
+{{srt}}
+
+【口播稿全文】
+{{script}}
+
+【任务】按内容语义切场:开场钩子、每个论点/段落、结尾 CTA 各自成场。一般 3-8 场。
+【硬约束】
+- 每场的 startSec **必须等于上面某一 SRT 行的起秒**(场景边界只能落在 SRT 行边界上,绝不能取行中间的时间)。
+- 第一场从第一行起;场景按时间顺序、不重叠、不留空洞;endSec = 下一场的 startSec(最后一场 = 最后一行的止秒)。
+- title 是给观众看的场景小标题(≤12 字);summary 一句话概括本场讲了什么。只依据 SRT/口播稿原文,不要发挥。
+【输出】只输出一个 JSON 对象 {"scenes": [...]}(不要多余文字、不要代码块),每场:
+{"title","startSec"(数字,秒),"endSec"(数字,秒),"summary"}。`,
+  requiredFacets: ["srt", "script"],
+};
+
+// ── ② 信息卡文案与插点(video.cards)──────────────────────────────────────────
+
+export const videoCardSchema = z.object({
+  sceneIdx: z.number().int().default(0),
+  kind: z.enum(VIDEO_CARD_KINDS),
+  content: z.string().default(""),
+  at: z.number().default(0),
+});
+export const videoCardsSchema = z.object({
+  cards: z.array(videoCardSchema).default([]),
+});
+export type VideoCardsOutput = z.infer<typeof videoCardsSchema>;
+
+export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
+  id: "video.cards",
+  version: "v1",
+  outputSchema: videoCardsSchema,
+  tools: [],
+  system:
+    "你是这位创作者的「信息卡 agent」,为口播视频的每个场景挑值得可视化的信息做成卡片(只从口播原文提取,绝不编造)。",
+  template: `为下面这条口播视频的各场景设计「信息卡」(屏幕上的可视化卡片)。
+
+【场景列表】(每行: 场景序号 | 起秒-止秒 | 标题 | 概括)
+{{scenes}}
+
+【SRT 逐行】(每行: 序号 | 起秒-止秒 | 文本)
+{{srt}}
+
+【口播稿全文】
+{{script}}
+
+【任务】挑口播里**值得可视化**的信息做卡片:数据→stat,金句→quote,要点清单→list,对比→compare,代码/命令→code,需要配图的对象→image。不是每场都必须有卡,宁缺毋滥。
+【硬约束(诚实门,违反即废)】
+- 卡片上的**数值、文案只能从口播稿原文提取**,一个数字都不许编造、不许换算、不许"优化措辞"。
+- kind 只能是 stat/quote/list/compare/code/image 六选一。
+- at(卡片出现时刻,秒)**必须等于某一 SRT 行的起秒**,且落在所属场景的时间范围内。
+- sceneIdx 是上面场景列表的场景序号(从 0 起)。
+【输出】只输出一个 JSON 对象 {"cards": [...]}(不要多余文字、不要代码块),每张:
+{"sceneIdx"(整数),"kind"(六选一),"content"(卡片文案,原文提取),"at"(数字,秒)}。没有值得做卡的就返回 {"cards": []}。`,
+  requiredFacets: ["scenes", "srt", "script"],
+};
+
+// ── ③ B-roll 选择与插点(video.broll)─────────────────────────────────────────
+
+export const videoBrollPickSchema = z.object({
+  sceneIdx: z.number().int().default(0),
+  assetId: z.string().default(""),
+  at: z.number().default(0),
+  durationSec: z.number().default(3),
+});
+export const videoBrollSchema = z.object({
+  broll: z.array(videoBrollPickSchema).default([]),
+});
+export type VideoBrollOutput = z.infer<typeof videoBrollSchema>;
+
+export const VIDEO_BROLL_TEMPLATE: PromptTemplate = {
+  id: "video.broll",
+  version: "v1",
+  outputSchema: videoBrollSchema,
+  tools: [],
+  system:
+    "你是这位创作者的「B-roll 匹配 agent」,从他已有的素材清单里给口播视频的场景配空镜/示意画面(只用真实素材,精确匹配)。",
+  template: `为下面这条口播视频的各场景,从**已有素材清单**里挑 B-roll(叠画/空镜)。
+
+【场景列表】(每行: 场景序号 | 起秒-止秒 | 标题 | 概括)
+{{scenes}}
+
+【可用素材清单】(每行: assetId | 名称 (类型) | 描述)
+{{library}}
+
+【任务】判断哪些场景适合插 B-roll、插哪条素材、什么时刻插、插多久。
+【硬约束(违反即废)】
+- assetId **必须**是清单里出现过的真实 id,绝对不要编造。
+- **精确匹配被讲对象**:讲的是 A 产品就只能配 A 产品的素材,**禁止**拿"看起来像/同类"的素材近似替代;没有精确匹配的素材就不配(宁缺毋滥)。
+- 引用素材时用它清单里的名称描述,**不要**输出文件路径、内部编号等内部词。
+- at(插入时刻,秒)落在所属场景时间范围内;durationSec 一般 2-6 秒,不超过场景长度。
+【输出】只输出一个 JSON 对象 {"broll": [...]}(不要多余文字、不要代码块),每条:
+{"sceneIdx"(整数),"assetId"(清单真实 id),"at"(数字,秒),"durationSec"(数字,秒)}。清单为空或没有匹配就返回 {"broll": []}。`,
+  requiredFacets: ["scenes", "library"],
+};
+
+// ── ④ 双语字幕补全(video.subtitles)──────────────────────────────────────────
+
+export const videoSubtitleLineSchema = z.object({
+  index: z.number().int(),
+  zh: z.string().default(""),
+  en: z.string().default(""),
+});
+export const videoSubtitlesSchema = z.object({
+  lines: z.array(videoSubtitleLineSchema).default([]),
+});
+export type VideoSubtitlesOutput = z.infer<typeof videoSubtitlesSchema>;
+
+export const VIDEO_SUBTITLES_TEMPLATE: PromptTemplate = {
+  id: "video.subtitles",
+  version: "v1",
+  outputSchema: videoSubtitlesSchema,
+  tools: [],
+  system:
+    "你是这位创作者的「双语字幕 agent」,校正 ASR 错字并给每行配英文翻译。行数和时间轴绝不改动。",
+  template: `给下面的 SRT 字幕做双语补全:中文行只做 **ASR 错字校正**(同音错字、专名错写),英文行是对应翻译。
+
+【SRT 逐行】(每行: 序号 | 起秒-止秒 | 文本)
+{{srt}}
+
+【硬约束(违反即废)】
+- **行数、序号、时间轴一律不变**:输入几行就输出几行,index 与输入一一对应。禁止合并、拆分、增删行。
+- zh 在原行文本上**改动最小**:只改真正的错字/专名,不重写、不润色、不改语气词。没有错字就原样返回。
+- en 是该行的自然英文翻译(简洁,适合字幕)。
+【输出】只输出一个 JSON 对象 {"lines": [...]}(不要多余文字、不要代码块),每行:
+{"index"(整数,与输入序号一致),"zh"(校正后中文),"en"(英文翻译)}。`,
+  requiredFacets: ["srt"],
+};

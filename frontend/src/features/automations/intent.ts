@@ -109,8 +109,6 @@ export interface CollectionTemplate {
   readonly prompt: string;
   /** 预填的友好频率(编译成 cron 存 schedule)。 */
   readonly cadence: PeriodCadence;
-  /** 灰置(如 D8a 明细模板未落地),点了不打开弹窗。 */
-  readonly disabled?: boolean;
 }
 
 const CADENCE_DAILY_9: PeriodCadence = {
@@ -122,8 +120,8 @@ const CADENCE_DAILY_9: PeriodCadence = {
 };
 
 /**
- * 采集模板(SPEC §8.1)。前两张真做;明细数据模板(D8a)先灰置占位(点不动),
- * 待 D8a 落地后翻真。
+ * 采集模板(SPEC §8.1)。三张全部可用 —— D8a 明细导出落地后原「灰置占位」机制
+ * (disabled 字段 + 卡片灰置分支)已整体移除,模板卡一律可点。
  */
 export const COLLECTION_TEMPLATES: readonly CollectionTemplate[] = [
   {

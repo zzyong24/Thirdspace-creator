@@ -53,6 +53,10 @@ const mockClient = {
   trashAsset: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "a", status: "deleted" }),
   ),
+  // [T-248 批B] 回收站还原:deleted → active。
+  restoreAsset: vi.fn((_input: unknown): Promise<unknown> =>
+    Promise.resolve({ id: "a", status: "active" }),
+  ),
   toggleFavorite: vi.fn((_input: unknown): Promise<unknown> =>
     Promise.resolve({ id: "a", isFavorite: true }),
   ),
@@ -68,6 +72,7 @@ vi.mock("@/lib/contract-client", () => ({
     getDownloadUrl: (i: unknown) => mockClient.getDownloadUrl(i),
     addAssetFile: (i: unknown) => mockClient.addAssetFile(i),
     trashAsset: (i: unknown) => mockClient.trashAsset(i),
+    restoreAsset: (i: unknown) => mockClient.restoreAsset(i),
     toggleFavorite: (i: unknown) => mockClient.toggleFavorite(i),
     createMaterialLink: (i: unknown) => mockClient.createMaterialLink(i),
   },
@@ -79,11 +84,19 @@ beforeEach(() => {
   mockRouter.refresh.mockClear();
 });
 
-async function renderIsland() {
+async function renderIsland(options?: {
+  // [T-248 批B] 回收站行注入 seam:vm.trashedAssets(缺省 undefined = 空回收站)。
+  trashedAssets?: ReadonlyArray<unknown>;
+}) {
   const { AssetsInteractiveRegion } = await import(
     "./assets-interactive-region"
   );
-  const vm = buildAssetsViewModel();
+  const vm = {
+    ...buildAssetsViewModel(),
+    ...(options?.trashedAssets !== undefined
+      ? { trashedAssets: options.trashedAssets }
+      : {}),
+  } as ReturnType<typeof buildAssetsViewModel>;
   const gallery = {
     assets: vm.assets,
     totalCount: vm.assets.length,
@@ -245,6 +258,98 @@ describe("Assets needs-backend wiring", () => {
     );
     expect(mockClient.trashAsset).not.toHaveBeenCalled();
     expect(mockRouter.refresh).not.toHaveBeenCalled();
+  });
+
+  // [T-248 批B] 回收站还原视图:进回收站视图 → 列出 trashed → 还原确认门 →
+  // assets.restore + refresh;取消不动数据;空态诚实。
+  const trashedFixture = [
+    {
+      id: "asset-trashed-1",
+      name: "被回收的封面.png",
+      description: "",
+      type: "image",
+      mimeType: "image/png",
+      fileSizeBytes: 1024,
+      width: 100,
+      height: 100,
+      durationMs: null,
+      tags: [],
+      thumbnailToken: "image:asset-trashed-1",
+      updatedAt: "2026-07-10T00:00:00.000Z",
+    },
+  ] as const;
+
+  it("[T-248 批B] 回收站视图列出 trashed,还原确认后 assets.restore + refresh", async () => {
+    const { container } = await renderIsland({ trashedAssets: trashedFixture });
+    // 进回收站视图。
+    const trashViewBtn = container.querySelector<HTMLButtonElement>(
+      '[data-slot="assets-view-trash"]',
+    );
+    expect(trashViewBtn).not.toBeNull();
+    fireEvent.click(trashViewBtn!);
+    // 列出已回收素材。
+    const item = container.querySelector(
+      '[data-slot="assets-trash-item"][data-asset-id="asset-trashed-1"]',
+    );
+    expect(item).not.toBeNull();
+    expect(item!.textContent).toContain("被回收的封面.png");
+    // 点「还原」只弹确认框,不直接调 op(全站禁原生 confirm,Dialog 走 portal)。
+    const restoreBtn = container.querySelector<HTMLButtonElement>(
+      '[data-slot="asset-restore-button"]',
+    );
+    fireEvent.click(restoreBtn!);
+    expect(mockClient.restoreAsset).not.toHaveBeenCalled();
+    const confirmBtn = document.querySelector<HTMLButtonElement>(
+      '[data-slot="asset-restore-confirm-button"]',
+    );
+    expect(confirmBtn).not.toBeNull();
+    fireEvent.click(confirmBtn!);
+    await waitFor(() => expect(mockClient.restoreAsset).toHaveBeenCalledTimes(1));
+    expect(mockClient.restoreAsset).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { assetId: "asset-trashed-1" } }),
+    );
+    expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  it("[T-248 批B] 还原确认框取消 → 关框且不调 assets.restore、不 refresh", async () => {
+    const { container } = await renderIsland({ trashedAssets: trashedFixture });
+    fireEvent.click(
+      container.querySelector<HTMLButtonElement>(
+        '[data-slot="assets-view-trash"]',
+      )!,
+    );
+    fireEvent.click(
+      container.querySelector<HTMLButtonElement>(
+        '[data-slot="asset-restore-button"]',
+      )!,
+    );
+    const cancelBtn = document.querySelector<HTMLButtonElement>(
+      '[data-slot="asset-restore-cancel"]',
+    );
+    expect(cancelBtn).not.toBeNull();
+    fireEvent.click(cancelBtn!);
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-slot="asset-restore-confirm-button"]'),
+      ).toBeNull(),
+    );
+    expect(mockClient.restoreAsset).not.toHaveBeenCalled();
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+  });
+
+  it("[T-248 批B] 空回收站显示诚实空态「回收站是空的」", async () => {
+    const { container } = await renderIsland();
+    fireEvent.click(
+      container.querySelector<HTMLButtonElement>(
+        '[data-slot="assets-view-trash"]',
+      )!,
+    );
+    const empty = container.querySelector('[data-slot="assets-trash-empty"]');
+    expect(empty).not.toBeNull();
+    expect(empty!.textContent).toContain("回收站是空的");
+    expect(
+      container.querySelector('[data-slot="assets-trash-item"]'),
+    ).toBeNull();
   });
 
   it("[T-060③a] 附到项目已退役:素材只两条来路(素材中心直传 / 项目内上传)", async () => {

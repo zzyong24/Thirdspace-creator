@@ -21,7 +21,12 @@ export const assetsOperations = {
     id: "assets.list",
     method: "GET",
     path: "/assets",
-    query: paginationQuery,
+    // [T-248 批B] additive 可选 status 过滤:缺省 = active(既有调用行为不变);
+    // "deleted" = 回收站视图读回已回收素材(assets.restore 的读侧配套,否则素材
+    // 进了回收站就再也看不见、无处还原)。
+    query: paginationQuery.extend({
+      status: z.enum(["active", "deleted"]).optional(),
+    }),
     response: assetResource,
     isList: true,
     fr: ["FR-ASSETS-LIST"],

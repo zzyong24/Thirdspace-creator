@@ -87,16 +87,14 @@ describe("COLLECTION_TEMPLATES — 模板定义", () => {
     const detail = COLLECTION_TEMPLATES.find((t) => t.id === "daily-detail");
 
     expect(metrics?.sourceKind).toBe("self.metrics");
-    expect(metrics?.disabled).toBeFalsy();
     expect(metrics?.prompt.length).toBeGreaterThan(0);
 
     expect(comments?.sourceKind).toBe("comments");
-    expect(comments?.disabled).toBeFalsy();
     expect(comments?.prompt.length).toBeGreaterThan(0);
 
-    // 明细模板(T-030-D8a)已接通复盘核心指标 → 真做(去灰置),sourceKind=self.detail
+    // 明细模板(T-030-D8a)已接通复盘核心指标 → 真做,sourceKind=self.detail
+    // (T-248:disabled 灰置字段已随死分支整体删除,模板不再有灰置概念)
     expect(detail?.sourceKind).toBe("self.detail");
-    expect(detail?.disabled).toBeFalsy();
     expect(detail?.prompt.length).toBeGreaterThan(0);
   });
 
@@ -107,8 +105,8 @@ describe("COLLECTION_TEMPLATES — 模板定义", () => {
   });
 
   it("模板的 prompt 经分类器映射回自身 sourceKind(自洽)", () => {
-    // 非灰置模板:prompt 用确定性分类器分出的意图应与模板声明的 sourceKind 一致。
-    for (const t of COLLECTION_TEMPLATES.filter((x) => !x.disabled)) {
+    // 全部模板(T-248 后无灰置):prompt 用确定性分类器分出的意图应与声明的 sourceKind 一致。
+    for (const t of COLLECTION_TEMPLATES) {
       expect(classifyIntent(t.prompt).sourceKind).toBe(t.sourceKind);
     }
   });

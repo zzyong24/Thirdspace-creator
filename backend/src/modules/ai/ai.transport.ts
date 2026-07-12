@@ -28,7 +28,7 @@ export const AI_OP_IDS = [
   "ai.tasks.get",
   "ai.tasks.results.list",
   "ai.tasks.steps.list",
-  "ai.tasks.pending_topic_review",
+  // [T-248 批C] ai.tasks.pending_topic_review 已删(T-060 弹窗任务流退役,零调用方)。
   "ai.tasks.results.patch",
   "ai.tasks.confirm",
   "ai.tasks.cancel",
@@ -144,10 +144,6 @@ export function createAiTransport(
             data: rows,
             meta: { requestId, page: 1, pageSize: Math.max(rows.length, 1), total: rows.length },
           };
-        }
-        case "ai.tasks.pending_topic_review": {
-          const data = await service.getPendingTopicReview(ctx);
-          return { data, meta: { requestId } };
         }
         case "ai.tasks.results.patch": {
           const b = (body ?? {}) as { items?: unknown[] };

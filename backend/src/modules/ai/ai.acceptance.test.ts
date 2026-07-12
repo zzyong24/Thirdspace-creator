@@ -209,7 +209,6 @@ describe("ai acceptance (SPEC §22)", () => {
       "ai.tasks.create",
       "ai.tasks.get",
       "ai.tasks.list",
-      "ai.tasks.pending_topic_review",
       "ai.tasks.results.list",
       "ai.tasks.results.patch",
       "ai.tasks.steps.list",

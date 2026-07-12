@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { KnowledgeAtlas } from "./knowledge-atlas";
 import { KnowledgeDetailPreview } from "./knowledge-detail-preview";
+import { KnowledgeTagManager } from "./knowledge-tag-manager";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
 import { TagChip } from "@/components/content/tag-chip";
@@ -1145,7 +1146,14 @@ function InsightRail({
 
 function PopularTags({ tags }: { tags: ReadonlyArray<KnowledgeTag> }) {
   return (
-    <SectionCard title="热门标签" description="使用频率最高的标签">
+    // [T-248 批B] action 槽挂「管理标签」小面板入口:全量标签列表 + 重命名
+    // (taxonomy.tags.patch)+ 删除确认门(taxonomy.tags.delete)+ 挂载移除
+    // (taxonomy.entityTags.remove)。写侧三 op 的首个前端消费者。
+    <SectionCard
+      title="热门标签"
+      description="使用频率最高的标签"
+      action={<KnowledgeTagManager />}
+    >
       <ul
         data-slot="popular-tags"
         className="flex flex-wrap gap-1"

@@ -53,7 +53,7 @@ export type TopicsReadClient = Pick<
   typeof defaultClient,
   | "listCandidates"
   | "overviewTopics"
-  | "pendingTopicReview"
+  // [T-248 批C] pendingTopicReview 已随契约 op ai.tasks.pending_topic_review 删除(T-060 退役残留)。
   // [T-216] 对标源登记面板的服务端读源(选题/对标强化 §2.1)。
   | "listBenchmarkSources"
   // [T-235e] 信号源弹窗 tab1(网页信源)读源。
@@ -232,8 +232,9 @@ async function loadViewModel(
   // 本地自然日起点(服务端一次算好传入,保持渲染纯净 —— C-5 渲染内无 Date.now)。
   const dayStart = new Date();
   dayStart.setHours(0, 0, 0, 0);
-  // [T-060①] TopicReviewDialog 弹窗任务流退役 —— pendingTopicReview 不再消费
-  // (对话内 ChatCandidateCard 即出即采,没有「待审阅弹窗」概念)。
+  // [T-060①] TopicReviewDialog 弹窗任务流退役(对话内 ChatCandidateCard 即出即采,
+  // 没有「待审阅弹窗」概念);[T-248 批C] 契约 op ai.tasks.pending_topic_review 已删,
+  // pendingReview 恒 null(仅为 TopicGenerateBand props 兼容保留)。
   return {
     candidates,
     overview,

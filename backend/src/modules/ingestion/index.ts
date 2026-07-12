@@ -5,7 +5,8 @@
 // the composite merges, INGESTION_DDL, the contract DTO, the MockIngestionSource
 // producer (foundation §4), and the error classes the dispatch route maps.
 //
-// Ingestion owns the 7 batch-push run ops (ingestion.runs.*); it fans out to
+// Ingestion owns the run ops (ingestion.runs.create/complete/get + 抖音四 op;
+// [T-248 批C] 四个 batch-push 契约 op 已删,批量写只走 service 层进程内调用); it fans out to
 // Publishing/Analytics/Knowledge/Assets/Artifacts ONLY through their public
 // Services (injected as narrow ports — no cross-module repository import, SPEC
 // §17.6/.7). Artifact pushes create a CANDIDATE version, never current_version

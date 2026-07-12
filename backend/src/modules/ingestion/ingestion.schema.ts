@@ -5,10 +5,10 @@
 // `ingestionRunResource`.
 //
 // Topology (verified against analytics.schema.ts): the @creatoros/contract root
-// barrel re-exports `ENDPOINTS` but NOT the resource files. All 7 ingestion ops
+// barrel re-exports `ENDPOINTS` but NOT the resource files. All ingestion run ops
 // respond with the SAME run envelope, reachable as ENDPOINTS.<op>.response:
-//   - createRun / pushMetrics / pushKnowledge / pushAssets / pushArtifacts /
-//     completeRun / getRun .response === ingestionRunResource
+//   - createRun / completeRun / getRun .response === ingestionRunResource
+//   ([T-248 批C] pushMetrics/pushKnowledge/pushAssets/pushArtifacts 契约 op 已删)
 import { ENDPOINTS } from "@creatoros/contract";
 
 export const ingestionRunResource = ENDPOINTS.createRun.response;

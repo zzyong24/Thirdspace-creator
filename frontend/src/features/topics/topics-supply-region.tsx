@@ -56,6 +56,8 @@ import {
   FieldRow,
   BenchmarkSourcesPanel,
 } from "./topics-interactive-region";
+// [T-248B②] 受众信号入口(独立按钮+弹窗,audienceSignals.list / linkToCandidate 接线)。
+import { AudienceSignalsButton } from "./topics-audience-signals";
 
 // ── 供给来源徽标解析(title 前缀 > source 枚举)────────────────────────────────────
 // T-235b 黑马转化候选 title 前缀「🔥跟拍|」(benchmark-teardown-runner.ts:204);
@@ -545,6 +547,7 @@ export function SignalSourcesButton({
   readonly defaultTab?: "web" | "benchmark" | "darkhorse";
 }) {
   const [open, setOpen] = React.useState(false);
+  const { router } = useMutation();
   const total = trendSources.length + benchmarkSources.length;
   return (
     <>
@@ -564,6 +567,10 @@ export function SignalSourcesButton({
           </Badge>
         ) : null}
       </Button>
+      {/* [T-248B②] 受众信号入口 —— 与「信号源」并排的独立按钮+弹窗(不并入三 tab:
+          信号源管「从哪采」,受众信号管「采到了什么 + 转候选」,语义不同;转候选成功后
+          router.refresh() 让候选池吃到新孵化的 demand 候选)。 */}
+      <AudienceSignalsButton onRefresh={() => router.refresh()} />
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           data-testid="signal-sources-dialog"

@@ -7,7 +7,8 @@ import type { IngestionService } from "./ingestion.service";
 import type { IngestionRunRow } from "./ingestion.repository";
 import type { IngestionRunResource } from "./ingestion.schema";
 
-// Ingestion transport (foundation §5.4) — the module's 7 contract ops served over
+// Ingestion transport (foundation §5.4) — the module's契约 ops(run create/complete/get
+// + 抖音四 op;[T-248 批C] 四个 batch-push op 已删)served over
 // REAL SQL behind the same /api/v1/dispatch route. Mirrors the realized
 // publishing/analytics transports: a `Transport` whose request(endpoint,input,ctx)
 // switches on endpoint.id, threads ctx into the service, and returns the SPEC §14
@@ -25,10 +26,8 @@ export const INGESTION_OP_IDS = [
   "ingestion.douyin.login",
   "ingestion.douyin.status",
   "ingestion.douyin.throttleStatus",
-  "ingestion.runs.metrics",
-  "ingestion.runs.knowledge",
-  "ingestion.runs.assets",
-  "ingestion.runs.artifacts",
+  // [T-248 批C] 四个 batch-push op(runs.metrics/knowledge/assets/artifacts)已删 ——
+  // 真实采集在服务端直接调 ingestion service 层(ingestMetrics 等),不经契约 dispatch。
   "ingestion.runs.complete",
   "ingestion.runs.get",
 ] as const;
@@ -52,14 +51,12 @@ function toRunResource(row: IngestionRunRow): IngestionRunResource {
 
 type Input = { params?: unknown; body?: unknown };
 
-type RecordsBody = { records?: Array<Record<string, unknown>> };
-
 export function createIngestionTransport(
   serviceFactory: () => IngestionService,
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
-      // All 7 ops are persisted (owned). No ctx ⇒ unauthenticated dispatch ⇒ reject
+      // All owned ops are persisted. No ctx ⇒ unauthenticated dispatch ⇒ reject
       // before touching the store.
       if (!ctx) throw new AuthenticationError();
       const service = serviceFactory();
@@ -112,34 +109,9 @@ export function createIngestionTransport(
           const result = await service.getDouyinThrottleStatus(ctx);
           return { data: result, meta };
         }
-        case "ingestion.runs.metrics": {
-          const run = await service.ingestMetrics(ctx, {
-            runId: p.runId ?? "",
-            records: ((body ?? {}) as RecordsBody).records ?? [],
-          });
-          return { data: toRunResource(run), meta };
-        }
-        case "ingestion.runs.knowledge": {
-          const run = await service.ingestKnowledge(ctx, {
-            runId: p.runId ?? "",
-            records: ((body ?? {}) as RecordsBody).records ?? [],
-          });
-          return { data: toRunResource(run), meta };
-        }
-        case "ingestion.runs.assets": {
-          const run = await service.ingestAssets(ctx, {
-            runId: p.runId ?? "",
-            records: ((body ?? {}) as RecordsBody).records ?? [],
-          });
-          return { data: toRunResource(run), meta };
-        }
-        case "ingestion.runs.artifacts": {
-          const run = await service.ingestArtifacts(ctx, {
-            runId: p.runId ?? "",
-            records: ((body ?? {}) as RecordsBody).records ?? [],
-          });
-          return { data: toRunResource(run), meta };
-        }
+        // [T-248 批C] runs.metrics/knowledge/assets/artifacts 四个 case 已随契约 op 删除;
+        // service 层 ingestMetrics/ingestKnowledge/ingestAssets/ingestArtifacts 原样保留
+        // (persistence-client 等进程内调用方不受影响)。
         case "ingestion.runs.complete": {
           const b = (body ?? {}) as { status?: string };
           const run = await service.completeRun(ctx, {

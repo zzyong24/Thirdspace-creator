@@ -7,7 +7,6 @@ import {
   aiTaskResource,
   aiTaskResultResource,
   aiTaskStepResource,
-  aiPendingTopicReviewResource,
 } from "../resources/ai";
 
 const conversationParams = z.object({ conversationId: id });
@@ -113,13 +112,8 @@ export const aiOperations = {
     isList: true,
     fr: ["FR-AI-TASKS-RESULTS-LIST"],
   }),
-  pendingTopicReview: defineEndpoint({
-    id: "ai.tasks.pending_topic_review",
-    method: "GET",
-    path: "/ai/tasks/pending-topic-review",
-    response: aiPendingTopicReviewResource,
-    fr: ["FR-AI-TASKS-RESULTS-LIST"],
-  }),
+  // [T-248 批C] ai.tasks.pending_topic_review 已删 —— T-060 弹窗任务流退役后零调用方
+  // (对话内 ChatCandidateCard 即出即采,无「待审阅弹窗」概念)。
   // CollabField(COLLAB-02):采纳前人可逐条编辑/删候选 —— 替换最新结果的 items,再 confirm 物化。
   // 让所有 list 类 AI 节点(选题/素材/复盘/发布候选)的 AI 产物"人可改",不再全有或全无。
   patchTaskResultItems: defineEndpoint({

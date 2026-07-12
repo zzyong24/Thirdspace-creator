@@ -75,3 +75,7 @@ export * from "./topic-enrich-runner";
 export * from "./topic-runner";
 export * from "./topic-task-adapter";
 export * from "./transcribe-runner";
+// [T-254b] 制作视频四决策(runVideoDecisions 编排 + 四决策函数 + 动态 refine schema 构造器
+// + 可溯校验)与 SRT 纯函数(解析/时长匹配/口播稿相似度/吸附;T-254c 上传校验共用)。
+export * from "./srt";
+export * from "./video-decisions-runner";

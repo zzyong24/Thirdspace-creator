@@ -51,6 +51,14 @@ import { TOPIC_PREFERENCE_DISTILL_TEMPLATE } from "./templates/topic-preference-
 import { TREND_EXTRACT_TEMPLATE } from "./templates/trend-extract";
 // [T-235d] 正向归因回流 skill(topic.attribution)—— 已发布作品实绩 → 选题维度枚举化归因 + 实验选题。
 import { TOPIC_ATTRIBUTION_TEMPLATE } from "./templates/topic-attribution";
+// [T-254b] 制作视频四决策 skill(video.scenes/cards/broll/subtitles)—— SRT+口播稿(+素材清单)→
+// 结构化决策 JSON(零代码生成;动态约束由 backend runner 以 outputSchema 逃生口 refine)。
+import {
+  VIDEO_SCENES_TEMPLATE,
+  VIDEO_CARDS_TEMPLATE,
+  VIDEO_BROLL_TEMPLATE,
+  VIDEO_SUBTITLES_TEMPLATE,
+} from "./templates/video-decisions";
 import {
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
@@ -102,6 +110,12 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   TREND_EXTRACT_TEMPLATE,
   // [T-235d] 正向归因回流:已发布作品(表现分层+真逐字稿)→ 枚举化归因 + 下一轮实验选题(≤3 进池)。
   TOPIC_ATTRIBUTION_TEMPLATE,
+  // [T-254b] 制作视频四决策:①语义分场(边界落 SRT 行)②信息卡(六 kind,原文提取禁编造)
+  // ③B-roll(清单真实 id,精确匹配禁近似)④双语字幕(行数/时间轴不变)。
+  VIDEO_SCENES_TEMPLATE,
+  VIDEO_CARDS_TEMPLATE,
+  VIDEO_BROLL_TEMPLATE,
+  VIDEO_SUBTITLES_TEMPLATE,
   CHATBOX_CALIBRATION_TEMPLATE,
   CHATBOX_POSITIONING_TEMPLATE,
   CHATBOX_REVIEW_TEMPLATE,

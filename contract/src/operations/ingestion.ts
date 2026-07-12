@@ -80,42 +80,10 @@ export const ingestionOperations = {
     response: douyinThrottleStatusResource,
     fr: ["FR-INGESTION-DOUYIN"],
   }),
-  pushMetrics: defineEndpoint({
-    id: "ingestion.runs.metrics",
-    method: "POST",
-    path: "/ingestion/runs/:runId/metrics",
-    params: runParams,
-    body: z.object({ records: z.array(z.record(z.string(), z.unknown())) }),
-    response: ingestionRunResource,
-    fr: ["FR-INGESTION-METRICS"],
-  }),
-  pushKnowledge: defineEndpoint({
-    id: "ingestion.runs.knowledge",
-    method: "POST",
-    path: "/ingestion/runs/:runId/knowledge",
-    params: runParams,
-    body: z.object({ records: z.array(z.record(z.string(), z.unknown())) }),
-    response: ingestionRunResource,
-    fr: ["FR-INGESTION-KNOWLEDGE"],
-  }),
-  pushAssets: defineEndpoint({
-    id: "ingestion.runs.assets",
-    method: "POST",
-    path: "/ingestion/runs/:runId/assets",
-    params: runParams,
-    body: z.object({ records: z.array(z.record(z.string(), z.unknown())) }),
-    response: ingestionRunResource,
-    fr: ["FR-INGESTION-ASSETS"],
-  }),
-  pushArtifacts: defineEndpoint({
-    id: "ingestion.runs.artifacts",
-    method: "POST",
-    path: "/ingestion/runs/:runId/artifacts",
-    params: runParams,
-    body: z.object({ records: z.array(z.record(z.string(), z.unknown())) }),
-    response: ingestionRunResource,
-    fr: ["FR-INGESTION-ARTIFACTS"],
-  }),
+  // [T-248 批C] 四个 batch-push op(ingestion.runs.metrics/knowledge/assets/artifacts)已删 ——
+  // 全仓零调用方:真实采集(refreshDouyin 等)在服务端直接走 ingestion service 层
+  // (ingestMetrics/ingestKnowledge/…,由 persistence-client 进程内调用),不经契约 dispatch。
+  // service 层函数原样保留;此处只收敛契约面。
   completeRun: defineEndpoint({
     id: "ingestion.runs.complete",
     method: "POST",
