@@ -356,6 +356,8 @@ import {
 import { runPositioningGenerate } from "@creatoros/backend/modules/ai-runtime";
 import { runCopilotAssist } from "@creatoros/backend/modules/ai-runtime";
 import { runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
+// [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
+import { runCoverGenerate } from "@creatoros/backend/modules/ai-runtime";
 import { runTranscribe } from "@creatoros/backend/modules/ai-runtime";
 import { runAssetClassify } from "@creatoros/backend/modules/ai-runtime";
 // [T-146 切片 a] 文档抽取 runner + 未配摘要模型的信号错误(诚实降级)。
@@ -408,6 +410,8 @@ import {
 // [T-184] script.draft 模板的 contextRequirements 声明 —— 组合根按它 resolveContextDeps 注入 reader。
 // [T-269/T-270] planning.thesis 也走声明式注入(补 brief 硬锚 + projectMaterials 素材可溯的 reader)。
 import { SCRIPT_DRAFT_TEMPLATE, PLANNING_THESIS_TEMPLATE } from "@creatoros/ai-worker";
+// [T-271] 封面链 cover.generate 也走声明式 context 注入(brief 硬锚 + reviewSubject 读口播稿 + 素材可溯)。
+import { COVER_BRIEF_TEMPLATE } from "@creatoros/ai-worker";
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
 import { createBrowserScrapeAdapter } from "@/server/ai/search/search-browser";
 import {
@@ -1219,6 +1223,14 @@ export interface ChatRuntime {
   // ai_task(复活孤儿 runPlanningThesis),立即返回 taskId(不阻塞对话回合)。对话论点树工具
   // (planning.thesis)据此触发,前端 ChatThesisCard 轮询 getTask → awaiting_confirmation 渲候选 → 采纳落面板。
   dispatchPlanningThesis: (
+    ctx: RequestContext,
+    input: { projectId: string; topic?: string },
+  ) => Promise<{ taskId: string }>;
+  // [T-271] cover.generate 端口 —— dispatch 既有 cover.generate ai_task(void runCoverGenerate:结构化
+  // 封面方案硬锚 brief/口播稿 → 文案诚实门 → 结构化组装生图 prompt → image.generate 生图),立即返回
+  // taskId(不阻塞对话回合)。对话封面工具(cover.generate)据此触发,前端 ChatGenerateCard 轮询 getTask
+  // → awaiting_confirmation 渲封面方案 + 封面图候选 → 采纳 confirmTask(既有 asset 采纳门绑进项目)。
+  dispatchGenerateCover: (
     ctx: RequestContext,
     input: { projectId: string; topic?: string },
   ) => Promise<{ taskId: string }>;
@@ -2911,6 +2923,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           artifactOrigin: artifactOriginReader,
           projectMaterials: makeProjectMaterialsReader(),
           brief: briefReader,
+          // [T-271] 封面链声明 reviewSubject 以读**口播稿主张**(getScript 读 output_script 当前版本,
+          // 与复盘同一读法)—— assembleCreativeContext 据此填 context.reviewScript,封面文案硬锚正片主张。
+          reviewSubject: makeReviewSubjectReader(),
         };
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
@@ -3601,6 +3616,54 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               // 建 asset 的窄端口 —— 落字节到对象存储 + 建 asset 行(候选态,未绑项目)。绑到
               // AssetsService 的服务端直写方法(SOLE object-storage caller,SPEC §15)。
               assets: {
+                createGeneratedAsset: async (c, input) => {
+                  const row = await assetsService.createGeneratedAsset(c, input);
+                  return {
+                    id: row.id,
+                    name: row.name,
+                    assetType: row.assetType,
+                  };
+                },
+              },
+            },
+          );
+        } else if (
+          task &&
+          task.taskType === "cover.generate" &&
+          task.status === "queued"
+        ) {
+          // [T-271] 制作封面链 node —— 结构化封面方案(硬锚立项 brief 核心信息/内容形式 + 口播稿主张)
+          // → 封面文案诚实门(annotateUngroundedClaims,数字/成绩只能从内容提取禁编造)→ 生图 prompt
+          // 由结构化方案确定性组装(非裸自由文本)→ 走既有 image.generate 生图(模型用户可配,铁律不写死
+          // MiniMax)→ 记 generated_asset 候选(**复用既有 asset 采纳门**,人采纳才绑项目用料链,铁律②)。
+          // 声明式 context 注入(同 script.draft/planning.thesis 范式):按 COVER_BRIEF_TEMPLATE
+          // .contextRequirements 从中央 registry 自动取 reader —— brief(立项硬锚)+ reviewSubject(读
+          // 口播稿)+ projectMaterials(封面数字可溯来源)+ knowledge。文本层 resolveModelSpec(封面方案)
+          // 与多模态 resolveMultimodalSpec/multimodalRegistry(生图)并列注入,是封面链「文案 + 图」两产物
+          // 的两套模型解析。positioning 显式 pin 满足 CoverGenerateDeps 必需类型(值同 registry)。
+          void runCoverGenerate(
+            ctx,
+            {
+              id: String(task.id),
+              projectId:
+                typeof task.projectId === "string" ? task.projectId : null,
+              inputData: (task.inputData ?? {}) as Record<string, unknown>,
+            },
+            {
+              ai: aiService,
+              ...resolveContextDeps(
+                COVER_BRIEF_TEMPLATE.contextRequirements,
+                contextReaderRegistry,
+              ),
+              positioning: positioningReader,
+              // 封面方案(文案)的文本模型(Vercel SDK;复用 copy.generate capability)。
+              resolveModelSpec,
+              // 封面图的多模态模型(image.generate;用户可配)+ provider 适配器注册表 + 建 asset 窄端口
+              // —— 与 asset.generate 生图同一套(不重造生图能力)。
+              resolveMultimodalSpec,
+              registry: multimodalRegistry,
+              // 建生成 asset 的写端口(命名避开 ContextDeps.assets 素材库读端口)。
+              generatedAssets: {
                 createGeneratedAsset: async (c, input) => {
                   const row = await assetsService.createGeneratedAsset(c, input);
                   return {
@@ -8625,6 +8688,38 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const taskId = task && typeof task.id === "string" ? task.id : "";
       if (!taskId) {
         throw new Error("dispatchPlanningThesis: 起 planning.thesis task 失败(无 taskId)");
+      }
+      return { taskId };
+    },
+    // [T-271] cover.generate 端口 —— dispatch 制作封面链 task(经 ai transport 的 ai.tasks.create →
+    // dispatch 分支 task.taskType==="cover.generate" 触发 void runCoverGenerate)。projectId 走
+    // inputData(service createTask 据它归属项目 → 采纳时既有 asset 采纳门把封面图绑进该项目用料链)。
+    // 与 planning.thesis 不同:封面记 generated_asset 候选(非 artifact_version),故**不 ensure
+    // artifact**(复用既有 asset 采纳门,无需 artifactId)。立即返回 { taskId },不阻塞对话回合。
+    dispatchGenerateCover: async (
+      ctx: RequestContext,
+      input: { projectId: string; topic?: string },
+    ) => {
+      const res = await ai.request(
+        // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
+        ENDPOINTS.createAITask,
+        {
+          params: undefined,
+          query: undefined,
+          body: {
+            taskType: "cover.generate",
+            inputData: {
+              projectId: input.projectId,
+              ...(input.topic ? { topic: input.topic } : {}),
+            },
+          },
+        },
+        ctx,
+      );
+      const task = (res as { data?: { id?: unknown } }).data;
+      const taskId = task && typeof task.id === "string" ? task.id : "";
+      if (!taskId) {
+        throw new Error("dispatchGenerateCover: 起 cover.generate task 失败(无 taskId)");
       }
       return { taskId };
     },

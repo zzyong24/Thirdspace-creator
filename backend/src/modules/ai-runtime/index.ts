@@ -11,6 +11,8 @@
 export * from "./agent-run";
 export * from "./asset-classify-runner";
 export * from "./asset-generate-runner";
+// [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
+export * from "./cover-runner";
 export * from "./calibration-diagnose-runner";
 export * from "./calibration-score-runner";
 // [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排,组合根经 onDouyinBound 接)。

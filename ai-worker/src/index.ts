@@ -181,6 +181,12 @@ export {
   thesisTreeSchema,
   type ThesisTreeOutput,
 } from "./prompt/templates/planning-thesis";
+// [T-271] 封面方案 skill(cover.brief)—— 制作封面链的结构化产方案 + 输出契约。
+export {
+  COVER_BRIEF_TEMPLATE,
+  coverBriefSchema,
+  type CoverBriefOutput,
+} from "./prompt/templates/cover-brief";
 export {
   PLANNING_CONTRACT_TEMPLATE,
   contractSchema,

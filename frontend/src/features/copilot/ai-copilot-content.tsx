@@ -505,6 +505,7 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
   "topic.generate": { label: "AI 出题", sub: "生成选题候选" },
   "topic.enrich": { label: "选题补全", sub: "补全成完整选题卡" },
   "planning.thesis": { label: "核心论点", sub: "提炼论点树" },
+  "cover.generate": { label: "生成封面", sub: "结构化封面方案 + 生图" },
   "review.analyze": { label: "复盘分析", sub: "提炼可复用爆款要素" },
   "script.review": { label: "文案审核", sub: "违禁词 lint + 语义审" },
   "positioning.generate": { label: "定位策略", sub: "生成结构化定位提案" },
@@ -653,9 +654,12 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   "positioning.generate": "结合我的账号画像,生成/进化一份结构化定位提案。",
   "script.draft": "帮我为这条内容起草一版完整的分镜口播脚本。",
   "material.gather": "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
-  // [T-231⑨] 生成封面(依赖设置里配好的生图模型;未配时工具卡自带「去设置」降级)。
+  // 通用 AI 素材生成(配图/B-roll;依赖设置里配好的生图/生视频模型;未配时工具卡自带「去设置」降级)。
   "material.generate":
-    "帮我为这条内容生成几张封面图候选(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
+    "帮我为这条内容生成一张配图/一个画面素材(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
+  // [T-271] 制作封面链 —— 硬锚立项核心信息 + 口播稿产结构化封面文案(过诚实门,不编数字)并生图。
+  "cover.generate":
+    "帮我为这条内容生成封面:先基于这条的立项核心信息和口播稿产一版封面文案方案(主标题/副标题/信息点 + 主视觉 + 构图),封面文案不许编造数字/成绩,再据此生成封面图(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
 };
 
 // [T-060②→T-077c] 工具 trace 的中文名(对话内「正在调用/已调用」行;未知工具回落原名)。
@@ -2230,6 +2234,30 @@ export function AICopilotContent({
                           {traceRow}
                           <ChatThesisCard
                             taskId={o.taskId ?? null}
+                            error={o.error ?? null}
+                          />
+                        </React.Fragment>
+                      );
+                    }
+                    // [T-271] 制作封面(cover.generate)→ 据 taskId 轮询 → awaiting_confirmation 渲
+                    // 封面方案(封面文案已过诚实门,未溯源数据带⚠️)+ 封面图 → 「采纳进素材库」
+                    // (confirmTask,既有 asset 采纳门绑进项目)。dispatch 失败/无项目上下文 → 卡渲诚实
+                    // 错误态(去项目稿面生成封面)。复用 ChatGenerateCard(它按 taskId 轮 generated_asset,
+                    // 并渲 resultData.coverPlan 封面方案块)。
+                    if (
+                      name === "cover.generate" &&
+                      out.kind === "cover.generate"
+                    ) {
+                      const o = out as {
+                        taskId?: string | null;
+                        error?: string | null;
+                      };
+                      return (
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatGenerateCard
+                            taskId={o.taskId ?? null}
+                            kindOf="image"
                             error={o.error ?? null}
                           />
                         </React.Fragment>

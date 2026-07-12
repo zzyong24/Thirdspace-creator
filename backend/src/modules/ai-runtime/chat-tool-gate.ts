@@ -109,6 +109,12 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
     kind: "planning.thesis",
     extras: { taskId: null, projectId: null },
   },
+  // [T-271] cover.generate —— 异步 dispatch(kind === 工具名)。dispatch 失败/无项目上下文 →
+  // 门兜结构占位(taskId/projectId=null,卡渲诚实错误态)。
+  "cover.generate": {
+    kind: "cover.generate",
+    extras: { taskId: null, projectId: null },
+  },
   "knowledge.distill": {
     kind: "knowledge.distill",
     extras: {

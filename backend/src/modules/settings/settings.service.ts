@@ -43,6 +43,8 @@ const REGISTERED_SKILL_IDS: ReadonlySet<string> = new Set([
   "topic.generate",
   "script.draft",
   "planning.thesis",
+  // [T-271] 制作封面链的结构化封面方案 skill(cover.brief)。
+  "cover.brief",
   "planning.contract",
   "planning.outline",
   "platform.adapt",

@@ -319,6 +319,22 @@ export interface ChatToolDeps {
     style?: string;
   }) => Promise<{ taskId: string }>;
   /**
+   * [T-271] cover.generate 核心 —— **不直接生成**(封面链先跑结构化文案方案再生图,分钟级不能阻塞
+   * 对话回合):dispatch 既有 cover.generate ai_task(persistence-client dispatch → void
+   * runCoverGenerate),立即返回 { taskId, projectId }。绑定层把 projectId 写进 task.inputData。
+   * runner:硬注入立项 brief(核心信息/内容形式)+ 口播稿主张产结构化封面方案 → 封面文案上 T-224
+   * 同款诚实门 → 生图 prompt 由结构化方案确定性组装 → 走既有 image.generate(模型可配)生图 → 记
+   * generated_asset 候选(复用既有 asset 采纳门)。前端 ChatGenerateCard 据 taskId 轮询 → 完成渲封面
+   * 方案 + 封面图 + 采纳。projectId 由 chat-runner 从 chatContext 注入(封面锚项目的核心信息/口播稿;
+   * 无项目上下文 → 不 dispatch,诚实回 error 卡渲「去项目稿面里生成封面」)。
+   */
+  dispatchGenerateCover: (input: {
+    /** 显式项目 id(模型从 selection 拿到时可传);缺省用 chatContext.projectId。 */
+    projectId?: string;
+    /** 本期选题(可选,喂进封面方案上下文);缺省用 chatContext.selection 兜底。 */
+    topic?: string;
+  }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
+  /**
    * [T-103b] review.script 核心 —— **不直接审**(script.review 后台跑 L1 违禁词 lint + L2 豆包
    * 语义审、分钟内不能阻塞对话回合):dispatch 既有 script.review ai_task(复用 T-086 审核链路,
    * 别重造 L1/L2),立即返回 { taskId, projectId }。前端 ChatReviewReportCard 据 taskId 轮询
@@ -878,6 +894,21 @@ export interface MaterialGenerateToolResult {
   kindOf: "image" | "video";
   status: "queued";
   /** dispatch 失败时的诚实错误(成功为 null)。 */
+  error: string | null;
+}
+
+// [T-271] cover.generate 工具结果 —— dispatch 了一次 cover.generate 封面链(立即返回,后台跑结构化
+// 封面方案 + 文案诚实门 + 生图,不阻塞对话回合)。前端 ChatGenerateCard 据 taskId 轮询 getTask →
+// awaiting_confirmation 后 listTaskResults 拿 generated_asset 候选(带封面方案 coverPlan + 封面图)
+// → 用户「采纳」confirmTask(既有 asset 采纳门绑进项目用料链)。projectId 供卡兜底/刷新定位。
+// dispatch 失败 / 无项目上下文 → error 非 null(卡渲错误态,诚实提示去项目稿面生成封面)。
+export interface CoverGenerateToolResult {
+  kind: "cover.generate";
+  /** dispatch 出的 cover.generate 任务 id(卡据此轮询 getTask;失败为 null)。 */
+  taskId: string | null;
+  /** 目标项目 id(卡兜底 + 刷新定位;无项目上下文为 null)。 */
+  projectId: string | null;
+  /** dispatch 失败 / 无项目上下文时的诚实错误(成功为 null)。 */
   error: string | null;
 }
 
@@ -1526,6 +1557,25 @@ const MATERIAL_GENERATE_PARAMS = jsonSchema<{
     },
   },
   required: ["kind", "prompt"],
+  additionalProperties: false,
+});
+
+// [T-271] cover.generate 入参 —— 全可选:封面锚「当前项目」(缺省用项目对话的 projectId + 选中标题)。
+// 封面文案的接地来源(核心信息/口播稿/素材)由 runner 从项目上下文读,不靠模型传 —— 故无 prompt 入参
+// (与 material.generate 的裸 prompt 透传相反,这正是封面链接地的核心)。
+const COVER_GENERATE_PARAMS = jsonSchema<{ projectId?: string; topic?: string }>({
+  type: "object",
+  properties: {
+    projectId: {
+      type: "string",
+      description:
+        "要生成封面的项目 id(可选)。缺省用当前项目对话的项目——在稿面右栏对话里直接调、不用传。",
+    },
+    topic: {
+      type: "string",
+      description: "本期选题(可选,喂进封面方案上下文;缺省用工作台选中的标题兜底)。",
+    },
+  },
   additionalProperties: false,
 });
 
@@ -2377,7 +2427,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
     "material.generate": defineChatTool("material.generate", {
       description:
-        "用 AI 生成图片或视频素材(文生图/文生视频)。生成的是 AI 图/视频素材(非真实拍摄/截图);创作者采纳后才进素材中心。当用户要「生成一张配图/做个 B-roll/AI 出个画面」时调用。视频异步、分钟级——提交后后台跑,卡片会显示进度。若未配置生图/生视频模型,任务会失败并在卡上提示去设置(不假装能生成)。",
+        "用 AI 生成图片或视频素材(文生图/文生视频)。生成的是 AI 图/视频素材(非真实拍摄/截图);创作者采纳后才进素材中心。当用户要「生成一张配图/做个 B-roll/AI 出个画面」时调用。视频异步、分钟级——提交后后台跑,卡片会显示进度。若未配置生图/生视频模型,任务会失败并在卡上提示去设置(不假装能生成)。**注意:要「生成封面」请改用 cover.generate 工具**(它会硬锚立项核心信息 + 口播稿产结构化封面文案并过诚实门,不会在封面上编数字);本工具是裸 prompt 通用生成,别拿它生成封面。",
       inputSchema: MATERIAL_GENERATE_PARAMS,
       execute: async ({ kind, prompt, style }): Promise<MaterialGenerateToolResult> => {
         const effKind: "image" | "video" = kind === "video" ? "video" : "image";
@@ -2410,6 +2460,36 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             taskId: null,
             kindOf: effKind,
             status: "queued",
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
+      },
+    }, deps.humanizeError),
+    // [T-271] 制作封面链 —— execute **不直接生成**(封面链先跑结构化文案方案再生图,分钟级不阻塞
+    // 对话回合)。dispatch 既有 cover.generate ai_task(void runCoverGenerate),立即返回
+    // { taskId, projectId };前端 ChatGenerateCard 轮询 → 完成渲封面方案 + 封面图 + 采纳。与
+    // material.generate 的区别:封面链硬锚立项 brief(核心信息/内容形式)+ 口播稿产结构化封面文案 +
+    // 文案诚实门(数字/成绩只从内容提取禁编造),生图 prompt 由结构化方案组装(非裸自由文本)。
+    "cover.generate": defineChatTool("cover.generate", {
+      description:
+        "为**当前项目**生成封面(先产结构化封面方案:封面主标题/副标题/信息点 + 主视觉 + 构图,再生图)。当用户说「生成封面/做张封面/封面图/设计个封面」时调用。封面文案会硬锚这条内容的立项核心信息 + 口播稿主张(封面承载钦定主张,不自创),且过诚实门——封面上的数字/成绩/榜单名只能从立项资料/口播稿/素材提取,**绝不编造数字博眼球**。生成在后台跑(不阻塞对话),结果渲成封面候选卡(封面方案 + 封面图);用户点卡上「采纳」才把封面图绑进项目(铁律②确认门)——你没有直接落封面的能力,绝不宣称「封面已生成/已设置」。只能为项目对话生成封面(封面要锚项目的核心信息/口播稿);没有项目上下文时会诚实提示去项目稿面里生成。若未配置生图模型,任务会失败并在卡上提示去设置(不假装能生成)。",
+      inputSchema: COVER_GENERATE_PARAMS,
+      execute: async ({ projectId, topic }): Promise<CoverGenerateToolResult> => {
+        try {
+          const { taskId, projectId: pid, error } = await deps.dispatchGenerateCover({
+            projectId:
+              typeof projectId === "string" && projectId.trim()
+                ? projectId.trim()
+                : undefined,
+            topic:
+              typeof topic === "string" && topic.trim() ? topic.trim() : undefined,
+          });
+          return { kind: "cover.generate", taskId, projectId: pid, error };
+        } catch (err) {
+          return {
+            kind: "cover.generate",
+            taskId: null,
+            projectId: null,
             error: err instanceof Error ? err.message : String(err),
           };
         }
@@ -3050,6 +3130,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "local.tools",
   "local.workspace",
   "material.generate",
+  // [T-271] 制作封面链(dispatch cover.generate → 结构化封面方案 + 文案诚实门 + 生图 → 封面候选卡)。
+  "cover.generate",
   "calibration.diagnose",
   "review.analyze",
   // [T-103b] 稿面文案审核进对话(dispatch script.review → 审核报告卡 + 改写 apply 门)。
@@ -3127,6 +3209,8 @@ const CREATION_TOOL_NAMES: readonly string[] = [
   "script.draft",
   // [T-265] 论点树是创作产出工具(需项目上下文;无项目时工具诚实降级报「去项目稿面立」)。
   "planning.thesis",
+  // [T-271] 制作封面是创作产出工具(封面锚项目核心信息/口播稿;无项目时工具诚实降级报「去项目稿面生成」)。
+  "cover.generate",
   "brief.fill",
   "learning.capture",
   "knowledge.distill",

@@ -39,6 +39,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   dispatchGenerateAsset: ReturnType<typeof vi.fn>;
   dispatchScriptReview: ReturnType<typeof vi.fn>;
   dispatchPlanningThesis: ReturnType<typeof vi.fn>;
+  dispatchGenerateCover: ReturnType<typeof vi.fn>;
   diagnoseContent: ReturnType<typeof vi.fn>;
   analyzeReview: ReturnType<typeof vi.fn>;
   generatePositioning: ReturnType<typeof vi.fn>;
@@ -405,6 +406,12 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     projectId: "proj-1",
     error: null as string | null,
   }));
+  // [T-271] cover.generate 核心(fake:dispatch cover.generate → 返回 taskId + projectId)。
+  const dispatchGenerateCover = vi.fn(async () => ({
+    taskId: "task-cover-1",
+    projectId: "proj-1",
+    error: null as string | null,
+  }));
   const deps: ChatToolDeps = {
     // [T-163] humanizeError 端口(下沉 backend 后经注入,原直连前端 ai-error-humanize)。测试
     // 复刻其对 new_sensitive(内容安全审核)的映射,使 distill 失败用例断言不变即过;其余回落 null。
@@ -432,6 +439,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     dispatchGenerateAsset,
     dispatchScriptReview,
     dispatchPlanningThesis,
+    dispatchGenerateCover,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -466,6 +474,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     dispatchGenerateAsset,
     dispatchScriptReview,
     dispatchPlanningThesis,
+    dispatchGenerateCover,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -1023,6 +1032,82 @@ describe("[T-265] planning.thesis 工具 — 论点树对话内真生成", () =>
     });
     const tools = buildChatTools(WHITELIST, deps);
     const result = (await runExecute(tools["planning.thesis"]!, {
+      projectId: "proj-1",
+    })) as { taskId: string | null; error: string | null };
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("未接入");
+  });
+});
+
+// [T-271] 制作封面链对话内真生成 —— chat 工具半(execute → dispatchGenerateCover 异步 dispatch)。
+describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", () => {
+  const WHITELIST = ["cover.generate"] as const;
+
+  it("cover.generate 可挂 + 在 ALL_CHAT_TOOL_NAMES 单一真值(否则 fn=cover.generate 深链死链)", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools([...WHITELIST], deps);
+    expect(Object.keys(tools)).toEqual(["cover.generate"]);
+    expect(ALL_CHAT_TOOL_NAMES).toContain("cover.generate");
+  });
+
+  it("execute 调注入的 dispatchGenerateCover,返回 taskId + projectId(kind=cover.generate,异步 dispatch)", async () => {
+    const { deps, dispatchGenerateCover } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["cover.generate"]!, {
+      projectId: "  proj-1  ",
+      topic: "  纪律是护城河  ",
+    })) as {
+      kind: string;
+      taskId: string | null;
+      projectId: string | null;
+      error: string | null;
+    };
+    // projectId/topic trim 后透传;不直接生成(异步 dispatch,不阻塞对话回合)。
+    expect(dispatchGenerateCover).toHaveBeenCalledWith({
+      projectId: "proj-1",
+      topic: "纪律是护城河",
+    });
+    expect(result.kind).toBe("cover.generate");
+    expect(result.taskId).toBe("task-cover-1");
+    expect(result.projectId).toBe("proj-1");
+    expect(result.error).toBeNull();
+  });
+
+  it("无参(稿面右栏对话)→ projectId/topic 缺省不传,由 chat-runner 端口从 chatContext 兜底", async () => {
+    const { deps, dispatchGenerateCover } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    await runExecute(tools["cover.generate"]!, {});
+    expect(dispatchGenerateCover).toHaveBeenCalledWith({
+      projectId: undefined,
+      topic: undefined,
+    });
+  });
+
+  it("端口回 error(无项目上下文)→ 工具透传 error(诚实,不假装已生成封面)", async () => {
+    const { deps } = makeDeps({
+      dispatchGenerateCover: async () => ({
+        taskId: null,
+        projectId: null,
+        error: "封面要锚这条内容的立项核心信息与口播稿 —— 请在项目稿面右栏生成封面。",
+      }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["cover.generate"]!, {})) as {
+      taskId: string | null;
+      error: string | null;
+    };
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("口播稿");
+  });
+
+  it("dispatch 抛错(端口未接入)→ 不抛,taskId=null + error(诚实降级,不裸机器码)", async () => {
+    const { deps } = makeDeps({
+      dispatchGenerateCover: async () => {
+        throw new Error("封面生成能力当前未接入");
+      },
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["cover.generate"]!, {
       projectId: "proj-1",
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();

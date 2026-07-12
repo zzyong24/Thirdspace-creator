@@ -25,13 +25,46 @@ const MAX_POLLS = 90; // ~6 分钟 —— 视频异步生成可达分钟级
 
 type Phase = "running" | "review" | "done" | "error";
 
+// [T-271] 结构化封面方案(cover-runner recordCandidate 写的 resultData.coverPlan 形状)。封面文案
+// 已过诚实门(headline/subheadline/keyPoints 里未溯源的具体数字已带⚠️标注)。
+interface CoverPlan {
+  headline: string;
+  subheadline: string;
+  keyPoints: string[];
+  visualConcept: string;
+  composition: string;
+  palette: string;
+}
+
 interface GeneratedCandidate {
   assetId: string;
   assetType: "image" | "video";
   name: string;
+  // [T-271] 封面链候选带结构化封面方案(通用 material.generate 无此字段 → null)。
+  coverPlan: CoverPlan | null;
+  ungroundedCount: number;
 }
 
-// candidate.resultData(asset-generate-runner recordCandidate 写的形状)→ 收窄。
+// [T-271] resultData.coverPlan → 收窄(封面链 recordCandidate 写的封面方案;非封面候选返回 null）。
+function parseCoverPlan(resultData: Record<string, unknown>): CoverPlan | null {
+  const raw = resultData.coverPlan;
+  if (!raw || typeof raw !== "object") return null;
+  const p = raw as Record<string, unknown>;
+  const str = (v: unknown) => (typeof v === "string" ? v : "");
+  const keyPoints = Array.isArray(p.keyPoints)
+    ? p.keyPoints.filter((x): x is string => typeof x === "string")
+    : [];
+  return {
+    headline: str(p.headline),
+    subheadline: str(p.subheadline),
+    keyPoints,
+    visualConcept: str(p.visualConcept),
+    composition: str(p.composition),
+    palette: str(p.palette),
+  };
+}
+
+// candidate.resultData(asset-generate-runner / cover-runner recordCandidate 写的形状)→ 收窄。
 function parseGenerated(
   resultData: Record<string, unknown>,
 ): GeneratedCandidate | null {
@@ -40,7 +73,11 @@ function parseGenerated(
   if (!assetId) return null;
   const assetType = resultData.assetType === "video" ? "video" : "image";
   const name = typeof resultData.name === "string" ? resultData.name : "AI 生成素材";
-  return { assetId, assetType, name };
+  const coverPlan = parseCoverPlan(resultData);
+  const ungroundedCount = Array.isArray(resultData.ungroundedClaims)
+    ? resultData.ungroundedClaims.length
+    : 0;
+  return { assetId, assetType, name, coverPlan, ungroundedCount };
 }
 
 export function ChatGenerateCard({
@@ -170,6 +207,47 @@ export function ChatGenerateCard({
           <span className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
           正在生成{kindLabel}
           {kindOf === "video" ? "（视频较慢，可能要一两分钟）" : ""}…
+        </div>
+      ) : null}
+
+      {phase === "review" && candidate?.coverPlan ? (
+        <div
+          data-slot="chat-cover-plan"
+          className="flex flex-col gap-1 rounded-md border border-border bg-surface-subtle p-2 text-[12px]"
+        >
+          <span className="text-[10px] font-medium uppercase tracking-wide text-text-subtle">
+            封面方案（文案已过诚实门）
+          </span>
+          {candidate.coverPlan.headline ? (
+            <div className="text-[13px] font-semibold text-foreground">
+              {candidate.coverPlan.headline}
+            </div>
+          ) : null}
+          {candidate.coverPlan.subheadline ? (
+            <div className="text-foreground/80">{candidate.coverPlan.subheadline}</div>
+          ) : null}
+          {candidate.coverPlan.keyPoints.length > 0 ? (
+            <ul className="ml-3.5 list-disc text-foreground/80">
+              {candidate.coverPlan.keyPoints.map((kp, i) => (
+                <li key={i}>{kp}</li>
+              ))}
+            </ul>
+          ) : null}
+          {candidate.coverPlan.visualConcept ? (
+            <div className="text-[11px] text-text-subtle">
+              主视觉：{candidate.coverPlan.visualConcept}
+            </div>
+          ) : null}
+          {candidate.coverPlan.composition ? (
+            <div className="text-[11px] text-text-subtle">
+              构图：{candidate.coverPlan.composition}
+            </div>
+          ) : null}
+          {candidate.ungroundedCount > 0 ? (
+            <div className="text-[11px] text-warning">
+              ⚠️ 封面文案含 {candidate.ungroundedCount} 处未溯源数据（已标注），发布前请核实出处。
+            </div>
+          ) : null}
         </div>
       ) : null}
 

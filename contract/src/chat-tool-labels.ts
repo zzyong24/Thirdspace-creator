@@ -65,6 +65,12 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "AI 生成素材",
     purpose: "文生图/文生视频,生成 AI 素材候选,采纳后进素材中心",
   },
+  // [T-271] 制作封面链 —— 硬锚立项核心信息/口播稿产结构化封面文案(过诚实门)+ 生图,采纳后绑进项目。
+  "cover.generate": {
+    name: "生成封面",
+    purpose:
+      "硬锚立项核心信息+口播稿产结构化封面方案(文案过诚实门、不编数字)并生图,采纳后绑进项目封面",
+  },
   // [T-265] 论点树对话内真生成 —— 产 thesis_tree 候选,采纳后挂进稿面「论点骨架」面板。
   "planning.thesis": {
     name: "立论点树",

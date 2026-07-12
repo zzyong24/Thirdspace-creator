@@ -258,6 +258,17 @@ export interface AssembleChatDeps extends ContextDeps {
     input: { projectId: string; topic?: string },
   ) => Promise<{ taskId: string }>;
   /**
+   * [T-271] cover.generate 端口 —— dispatch 既有 cover.generate ai_task(void runCoverGenerate:
+   * 结构化封面方案硬锚立项 brief/口播稿 → 文案诚实门 → 结构化组装生图 prompt → image.generate 生图),
+   * 立即返回 taskId(不阻塞对话回合;封面链跑文本 + 生图,分钟级)。绑定层把 projectId 写进
+   * task.inputData(采纳时既有 asset 采纳门把封面图绑进项目用料链)。由 composition root 绑(ai
+   * transport 的 ai.tasks.create)。可选:未装配 → 工具报「封面生成能力未接入」(诚实降级)。
+   */
+  dispatchGenerateCoverPort?: (
+    ctx: RequestContext,
+    input: { projectId: string; topic?: string },
+  ) => Promise<{ taskId: string }>;
+  /**
    * [T-268] script.draft 端口 —— dispatch 既有异步 runner runScriptDraft(script-runner.ts,复活
    * 孤儿;整稿分钟级不能 inline 阻塞对话回合)。绑定层先 ensure 项目的 output_script artifact 并把
    * artifactId 写进 task.inputData(采纳时 append 新版本 → 稿面编辑器读回),再 createTask。由
@@ -1189,6 +1200,48 @@ export async function buildChatAssembly(
         "";
       try {
         const { taskId } = await deps.dispatchPlanningThesisPort(ctx, {
+          projectId: pid,
+          ...(effTopic ? { topic: effTopic } : {}),
+        });
+        return { taskId, projectId: pid, error: null };
+      } catch (err) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: err instanceof Error ? err.message : String(err),
+        };
+      }
+    },
+    // [T-271] cover.generate:封面恒是「当前项目的」(封面文案要锚该项目的核心信息/口播稿)。项目从
+    // 模型显式传参优先,否则用 chatContext.projectId(稿面右栏对话恒有)。无项目上下文 → 不 dispatch,
+    // 诚实回 error(卡渲「去项目稿面生成封面」);端口未装配 → 同样诚实 error(不抛裸码)。topic 缺省
+    // 用工作台选中标题兜底(与写稿/立论点同款 selection.label 派生)。
+    dispatchGenerateCover: async ({ projectId, topic }) => {
+      const pid =
+        (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
+        chatContext.projectId ||
+        "";
+      if (!pid) {
+        return {
+          taskId: null,
+          projectId: null,
+          error:
+            "封面要锚这条内容的立项核心信息与口播稿 —— 请在项目稿面右栏的编导对话里让我生成封面。",
+        };
+      }
+      if (!deps.dispatchGenerateCoverPort) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: "封面生成能力当前未接入(服务端未装配封面分派) —— 暂时无法生成封面。",
+        };
+      }
+      const effTopic =
+        (typeof topic === "string" && topic.trim() ? topic.trim() : "") ||
+        selectionTitle ||
+        "";
+      try {
+        const { taskId } = await deps.dispatchGenerateCoverPort(ctx, {
           projectId: pid,
           ...(effTopic ? { topic: effTopic } : {}),
         });

@@ -102,6 +102,11 @@ export const SKILL_LABELS: Readonly<Record<string, SkillLabel>> = {
     name: "论点树",
     purpose: "围绕选题生成中心论点与支撑论点结构。",
   },
+  "cover.brief": {
+    name: "封面方案",
+    purpose:
+      "硬锚立项核心信息与口播稿主张,产结构化封面文案(主标题/副标题/信息点)+ 主视觉 + 构图;封面文案过诚实门,不编造数字。",
+  },
   "planning.contract": {
     name: "策划契约",
     purpose: "生成目标观众、内容目标、核心信息等策划契约候选。",
