@@ -3,6 +3,7 @@ import "@fontsource-variable/noto-sans-sc";
 import "./globals.css";
 
 import { ExternalLinkOpener } from "@/components/shell/external-link-opener";
+import { isDesktopRuntime } from "@/server/activation/is-desktop";
 
 export const metadata: Metadata = {
   title: "CreatorOS",
@@ -18,8 +19,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // [T-257 v4] 桌面态由服务端 env(CREATOROS_DESKTOP)判定,注入 <html data-desktop>,给 client 端
+  // 外链处理一个**可靠**信号(不依赖 __TAURI_INTERNALS__ 在 http-sidecar webview 里是否注入)。
+  const desktop = isDesktopRuntime(process.env);
   return (
-    <html lang="en" className="font-sans" suppressHydrationWarning>
+    <html
+      lang="en"
+      className="font-sans"
+      data-desktop={desktop ? "1" : "0"}
+      suppressHydrationWarning
+    >
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {/* [T-257] 全局挂外链处理:覆盖 /activate 等 (creator) 外的所有页面(桌面运行时才生效)。 */}
