@@ -31,6 +31,7 @@ import type { TrendSourceResource } from "@creatoros/backend/modules/trend-sourc
 import {
   TopicsWorkspace,
   type CandidateSortKey,
+  type CandidateSourceFilter,
 } from "./topics-interactive-region";
 import {
   TopicGenerateBand,
@@ -64,9 +65,20 @@ export type TopicsReadClient = Pick<
 >;
 
 export interface TopicsViewModel {
+  /**
+   * 全量候选(不带来源过滤)—— 今日条带 / 供给链健康条 / 来源行禁用判定都吃它,
+   * 保证来源过滤只影响候选池、不影响页顶统计([T-244] 防回归)。
+   */
   readonly candidates: CandidateResource[];
   readonly overview: TopicsOverviewResource;
   readonly sort: CandidateSortKey;
+  /** [T-244] 当前来源过滤(`?source=`,白名单后);null/缺省 = 不过滤。 */
+  readonly sourceFilter?: CandidateSourceFilter | null;
+  /**
+   * [T-244] 候选池实际渲染的列表:有来源过滤时 = 服务端 `candidates.list?source=` 的结果,
+   * 无过滤时缺省 → 复用 `candidates`(老测试 VM 不用补字段)。
+   */
+  readonly poolCandidates?: CandidateResource[];
   /** 最近一条待审阅的 topic.generate 任务(跨刷新缓存);无则 null。 */
   readonly pendingReview: null;
   /** [T-216] 已登记的对标源(对标源登记面板)。可选:测试/无源账号缺省空列表。 */
@@ -86,6 +98,8 @@ export interface TopicsPageProps {
   readonly viewModel?: TopicsViewModel;
   /** The active sort, read from the search params (defaults to predictedScore). */
   readonly sort?: CandidateSortKey;
+  /** [T-244] `?source=` 来源过滤(白名单 = candidateSource 枚举);非法值静默回全部。 */
+  readonly source?: string;
   /**
    * Session-scoped contract client for the production read path. The route passes
    * `createServerClient(session.ctx)`; defaults to the singleton seam.
@@ -107,18 +121,38 @@ function normalizeSort(sort: string | undefined): CandidateSortKey {
     : "predictedScore";
 }
 
+// [T-244] `?source=` 白名单 —— 契约 candidateSource 全枚举(contract/src/primitives.ts:126)。
+// 照 SORT_KEYS 模式:非法/缺省值静默归一成「不过滤」,绝不把任意字符串透传给后端 query。
+const SOURCE_FILTER_KEYS: readonly CandidateSourceFilter[] = [
+  "trend",
+  "benchmark",
+  "demand",
+  "idea",
+];
+
+function normalizeSourceFilter(
+  source: string | undefined,
+): CandidateSourceFilter | null {
+  return SOURCE_FILTER_KEYS.includes(source as CandidateSourceFilter)
+    ? (source as CandidateSourceFilter)
+    : null;
+}
+
 export async function TopicsPage({
   viewModel,
   sort,
+  source,
   client = defaultClient,
 }: TopicsPageProps) {
   const activeSort = normalizeSort(sort);
-  const vm = viewModel ?? (await loadViewModel(activeSort, client));
+  const activeSource = normalizeSourceFilter(source);
+  const vm = viewModel ?? (await loadViewModel(activeSort, activeSource, client));
   return <TopicsView viewModel={vm} />;
 }
 
 async function loadViewModel(
   sort: CandidateSortKey,
+  sourceFilter: CandidateSourceFilter | null,
   client: TopicsReadClient,
 ): Promise<TopicsViewModel> {
   const candidates = (await client.listCandidates({
@@ -126,6 +160,16 @@ async function loadViewModel(
     query: { page: 1, pageSize: 100, sort },
     body: undefined,
   })) as unknown as CandidateResource[];
+  // [T-244] 来源过滤走服务端 `candidates.list?source=`(真 SQL 过滤,非前端糊)。
+  // 全量 `candidates` 仍照常读:今日条带 / 健康条 / 来源行禁用判定不受过滤影响。
+  let poolCandidates = candidates;
+  if (sourceFilter) {
+    poolCandidates = (await client.listCandidates({
+      params: undefined,
+      query: { page: 1, pageSize: 100, sort, source: sourceFilter },
+      body: undefined,
+    })) as unknown as CandidateResource[];
+  }
   const overview = (await client.overviewTopics({
     params: undefined,
     query: undefined,
@@ -194,6 +238,8 @@ async function loadViewModel(
     candidates,
     overview,
     sort,
+    sourceFilter,
+    poolCandidates,
     pendingReview: null,
     benchmarkSources,
     trendSources,
@@ -213,6 +259,8 @@ export function TopicsView({
     candidates,
     overview,
     sort,
+    sourceFilter = null,
+    poolCandidates,
     pendingReview,
     benchmarkSources = [],
     trendSources = [],
@@ -262,10 +310,14 @@ export function TopicsView({
 
       {/* [T-242] 候选池三栏 C 位：来源 / 候选池 / 详情 —— flex-1 占满全部剩余高度,
           页面主体 (原页尾 6 态漏斗已移除,高度全部让给候选池)。 */}
+      {/* [T-244] 候选池吃过滤后的 poolCandidates;禁用判定吃全量 candidates(来源行是否可点
+          取决于「有没有该来源的候选可看」,不随当前过滤态变化)。 */}
       <TopicsWorkspace
-        candidates={candidates}
+        candidates={poolCandidates ?? candidates}
+        allCandidates={candidates}
         sources={overview.sources}
         sort={sort}
+        sourceFilter={sourceFilter}
       />
     </div>
   );

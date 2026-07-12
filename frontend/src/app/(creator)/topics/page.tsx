@@ -29,12 +29,19 @@ export default async function TopicsRoutePage({
   const rawSort = params.sort;
   const sort = Array.isArray(rawSort) ? rawSort[0] : rawSort;
   const sortKey = sort as CandidateSortKey | undefined;
+  // [T-244] `?source=` 按来源过滤候选池(左栏来源行可点);白名单校验在 TopicsPage 内。
+  const rawSource = params.source;
+  const source = Array.isArray(rawSource) ? rawSource[0] : rawSource;
 
   const session = await resolveSession();
   if (!session) {
-    return <TopicsPage sort={sortKey} />;
+    return <TopicsPage sort={sortKey} source={source} />;
   }
   return (
-    <TopicsPage sort={sortKey} client={createServerClient(session.ctx)} />
+    <TopicsPage
+      sort={sortKey}
+      source={source}
+      client={createServerClient(session.ctx)}
+    />
   );
 }

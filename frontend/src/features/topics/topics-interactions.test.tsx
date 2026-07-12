@@ -74,7 +74,7 @@ import {
 import { SignalSourcesButton } from "./topics-supply-region";
 import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
 import { TopicGenerateBand } from "./topic-generate-island";
-import { TopicsView } from "./topics-page";
+import { TopicsView, TopicsPage, type TopicsReadClient } from "./topics-page";
 import type {
   CandidateResource,
   TopicsOverviewResource,
@@ -449,6 +449,148 @@ describe("topics islands (needs-backend wiring)", () => {
     const card = screen.getByTestId("candidate-card");
     const promote = within(card).getByText("立项为 Project");
     expect(promote.closest("button")).toBeDisabled();
+  });
+});
+
+describe("[T-244] 来源行 → 候选池过滤器", () => {
+  // 可映射到 candidates.source 枚举的两行(行业热点→trend / 手动灵感→idea)是真过滤器;
+  // 其余 5 行(评论/咨询/知识库/历史爆款/复盘)映射不了,保持纯展示(绝不做假过滤)。
+  function pool() {
+    return [
+      candidate({ id: "cand-idea", source: "idea", title: "灵感候选" }),
+      candidate({ id: "cand-trend", source: "trend", title: "热点候选" }),
+    ];
+  }
+
+  it("7 行仍全渲染:2 行(热点/灵感)是可点 button,其余 5 行纯展示非按钮", () => {
+    render(
+      <TopicsWorkspace
+        candidates={pool()}
+        sources={overview().sources}
+        sort="predictedScore"
+      />,
+    );
+    const rows = screen.getAllByTestId("topics-source-row");
+    expect(rows).toHaveLength(7);
+    const buttons = rows.filter((r) => r.tagName === "BUTTON");
+    expect(buttons.map((b) => b.getAttribute("data-source-filter"))).toEqual([
+      "trend",
+      "idea",
+    ]);
+    // 不可映射的 5 行不是按钮(无 onClick 语义,T-051 去假可点样式继续适用)。
+    expect(rows.filter((r) => r.tagName === "LI")).toHaveLength(5);
+  });
+
+  it("点「手动灵感」→ URL 导航 ?source=idea(保留 sort)", () => {
+    render(
+      <TopicsWorkspace
+        candidates={pool()}
+        sources={overview().sources}
+        sort="demandCount"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "按手动灵感过滤候选池" }));
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      "/topics?sort=demandCount&source=idea",
+    );
+  });
+
+  it("再点当前激活来源 → 清除过滤(URL 去掉 ?source=),行带 aria-pressed 高亮 + 候选池提示", () => {
+    render(
+      <TopicsWorkspace
+        candidates={pool().filter((c) => c.source === "idea")}
+        allCandidates={pool()}
+        sources={overview().sources}
+        sort="predictedScore"
+        sourceFilter="idea"
+      />,
+    );
+    // 过滤态提示在候选池标题旁。
+    expect(screen.getByTestId("pool-source-filter-hint").textContent).toContain(
+      "手动灵感",
+    );
+    const active = screen.getByRole("button", { name: "取消按手动灵感过滤" });
+    expect(active).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(active);
+    expect(mockRouter.push).toHaveBeenCalledWith("/topics?sort=predictedScore");
+  });
+
+  it("池里没有该来源的候选 → 来源行禁用(点了不导航)", () => {
+    // 只有 idea 候选 → trend 行禁用。
+    render(
+      <TopicsWorkspace
+        candidates={[candidate({ source: "idea" })]}
+        sources={overview().sources}
+        sort="predictedScore"
+      />,
+    );
+    const trendRow = screen.getByRole("button", { name: "按行业热点过滤候选池" });
+    expect(trendRow).toBeDisabled();
+    fireEvent.click(trendRow);
+    expect(mockRouter.push).not.toHaveBeenCalled();
+  });
+
+  it("排序切换保留当前来源过滤(?sort= 与 ?source= 互不冲掉)", () => {
+    render(<CandidateSortControl sort="predictedScore" sourceFilter="idea" />);
+    fireEvent.change(screen.getByTestId("candidate-sort-control"), {
+      target: { value: "demandCount" },
+    });
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      "/topics?sort=demandCount&source=idea",
+    );
+  });
+
+  function readClient(candidates: CandidateResource[]) {
+    const listCandidates = vi.fn(
+      (i: { query?: { source?: string } }): Promise<unknown> => {
+        const src = i.query?.source;
+        return Promise.resolve(
+          src ? candidates.filter((c) => c.source === src) : candidates,
+        );
+      },
+    );
+    const client = {
+      listCandidates,
+      overviewTopics: () => Promise.resolve(overview()),
+      pendingTopicReview: () => Promise.resolve(null),
+      listBenchmarkSources: () => Promise.resolve([]),
+      listTrendSources: () => Promise.resolve([]),
+      listScheduledJobs: () => Promise.resolve([]),
+      getPositioningCenter: () => Promise.resolve({ keywords: [] }),
+    } as unknown as TopicsReadClient;
+    return { client, listCandidates };
+  }
+
+  it("合法 ?source= → 服务端读侧多发一次带 source 的 candidates.list,池子只渲染该来源", async () => {
+    const { client, listCandidates } = readClient(pool());
+    render(await TopicsPage({ sort: "predictedScore", source: "idea", client }));
+    expect(listCandidates).toHaveBeenCalledTimes(2);
+    const second = listCandidates.mock.calls[1]![0] as {
+      query: { source?: string; sort?: string };
+    };
+    expect(second.query.source).toBe("idea");
+    expect(second.query.sort).toBe("predictedScore");
+    // 候选池只剩 idea 来源那条;trend 候选被服务端过滤掉。
+    expect(screen.getAllByTestId("candidate-card")).toHaveLength(1);
+    expect(screen.getByTestId("pool-source-filter-hint")).toBeInTheDocument();
+  });
+
+  it("白名单挡非法 ?source=:静默回全部(不透传、不发第二次过滤读)", async () => {
+    const { client, listCandidates } = readClient(pool());
+    render(
+      await TopicsPage({
+        sort: "predictedScore",
+        source: "__evil__",
+        client,
+      }),
+    );
+    expect(listCandidates).toHaveBeenCalledTimes(1);
+    const only = listCandidates.mock.calls[0]![0] as {
+      query: { source?: string };
+    };
+    expect(only.query.source).toBeUndefined();
+    expect(screen.queryByTestId("pool-source-filter-hint")).toBeNull();
+    expect(screen.getAllByTestId("candidate-card")).toHaveLength(2);
   });
 });
 

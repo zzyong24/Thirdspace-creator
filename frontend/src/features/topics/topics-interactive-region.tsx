@@ -19,6 +19,9 @@
  *    调 topic.enrich 产 enrich 卡(既有)→ 对话内采纳落库。退役后台 poll 死码。
  *  - `CandidateSortControl` (推荐排序 / …) → re-issues `candidates.list` with the new
  *    `sort` via a URL search-param navigation.
+ *  - [T-244] 左栏来源行(行业热点/手动灵感,可映射到 candidates.source 枚举的两行)→
+ *    `?source=` URL 导航按来源过滤候选池;再点同一行取消。其余 5 行映射不了,保持纯展示
+ *    (见 SOURCE_ROW_FILTERS 注释,绝不做假过滤)。
  *
  * Determinism (C-5): every visible value comes from props; no Date.now / Math.random /
  * fetch in render. The mutation seam mirrors the monetization/positioning islands.
@@ -63,6 +66,45 @@ const SORT_LABELS: Record<CandidateSortKey, string> = {
   demandCount: "需求热度优先",
   guardrail: "防茧房推荐",
 };
+
+// ── [T-244] 来源过滤(左栏来源行 → 候选池)────────────────────────────────────────
+// 契约 candidateSource 全枚举(contract/src/primitives.ts:126)—— `?source=` 的合法值域。
+export type CandidateSourceFilter = "trend" | "benchmark" | "demand" | "idea";
+
+/**
+ * 左栏「选题来源」7 行(overview.sources key)→ candidates.source 枚举的映射。
+ * 只有能一对一映射到真 source 枚举的行才可点(点击 = 服务端按该 source 过滤候选池);
+ * 映射不了的保持纯展示 —— 绝不做「点了像在过滤、实际筛不准」的假过滤:
+ *   - comment(评论问题)/ consultation(客户咨询):计的是 audience_signals 的分布,
+ *     二者转化成候选后都落 source='demand'(多对一)。点「评论问题」若筛 demand,
+ *     会把咨询来的候选也混进来 —— 名不副实,保持展示态。
+ *   - knowledge(知识库资料):计知识卡条数,候选无对应 source 枚举。
+ *   - highPerformer(历史爆款):计自己的高表现作品数,不是 benchmark 候选,无映射。
+ *   - review(项目复盘):计 learnings 条数,候选无对应 source 枚举。
+ *   - trend(行业热点)→ source='trend' ✓;idea(手动灵感)→ source='idea' ✓。
+ */
+const SOURCE_ROW_FILTERS: Partial<Record<string, CandidateSourceFilter>> = {
+  trend: "trend",
+  idea: "idea",
+};
+
+/** 过滤提示用的人话标签(候选池标题旁「已按来源过滤:X」)。 */
+const SOURCE_FILTER_LABELS: Record<CandidateSourceFilter, string> = {
+  trend: "行业热点",
+  benchmark: "对标博主",
+  demand: "观众需求",
+  idea: "手动灵感",
+};
+
+/** 拼 /topics URL:保留 sort,来源过滤有值才带(与 `?sort=` 同款 URL 导航范式)。 */
+function topicsHref(
+  sort: CandidateSortKey,
+  source: CandidateSourceFilter | null,
+): string {
+  return source
+    ? `/topics?sort=${sort}&source=${source}`
+    : `/topics?sort=${sort}`;
+}
 
 // ── shared mutation seam ────────────────────────────────────────────────────────
 // A `pending` guard blocks concurrent writes; on success it runs `after` (defaults to
@@ -803,13 +845,16 @@ export function CreateCandidateForm() {
 
 export function CandidateSortControl({
   sort,
+  sourceFilter = null,
 }: {
   readonly sort: CandidateSortKey;
+  /** [T-244] 当前来源过滤 —— 换排序时保留(URL 导航别把 `?source=` 冲掉)。 */
+  readonly sourceFilter?: CandidateSourceFilter | null;
 }) {
   const { router } = useMutation();
   function onChange(next: string) {
     if (next === sort) return;
-    router.push(`/topics?sort=${next}`);
+    router.push(topicsHref(next as CandidateSortKey, sourceFilter));
   }
   return (
     <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -1159,11 +1204,28 @@ export function BenchmarkSourcesPanel({
 }
 
 // ── 左栏：选题来源 ────────────────────────────────────────────────────────────────
+// [T-244] 能映射到真 candidates.source 枚举的行(SOURCE_ROW_FILTERS:行业热点/手动灵感)
+// 做成真过滤器:点击 → `?source=` URL 导航重发 candidates.list(与 `?sort=` 同款范式),
+// 再点同一行取消。其余 5 行仍是纯信息展示(映射不了,见 SOURCE_ROW_FILTERS 注释)——
+// T-051「去假可点样式」只对它们继续适用。
 function SourcesColumn({
   sources,
+  sort,
+  sourceFilter,
+  candidateCountsBySource,
 }: {
   readonly sources: TopicsOverviewResource["sources"];
+  readonly sort: CandidateSortKey;
+  readonly sourceFilter: CandidateSourceFilter | null;
+  /**
+   * 全量(未过滤)候选按 source 的在池计数 —— 可点行的禁用判据。
+   * 注意不能用行上展示的 overview count 判禁用:trend 行的 count 计的是热点信号存量
+   * (无一等存储诚实置 0,candidate.service.ts:631),而 source='trend' 的候选真实存在
+   * (信源采集/AI 出题采纳产出)—— 有候选可筛就该可点。
+   */
+  readonly candidateCountsBySource: Partial<Record<CandidateSourceFilter, number>>;
 }) {
+  const { router } = useMutation();
   return (
     <aside
       data-testid="topics-sources"
@@ -1173,21 +1235,62 @@ function SourcesColumn({
       <ul className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         {sources.map((s) => {
           const Icon = SOURCE_ICONS[s.key] ?? Lightbulb;
-          return (
-            <li
-              key={s.key}
-              data-testid="topics-source-row"
-              // [T-051 2c] 纯信息行:去掉 hover 高亮与右箭头 —— 原样式暗示可点但
-              // 无任何 onClick(假可点)。按来源筛选候选是未实现的功能,不做假承诺。
-              className="flex items-center gap-2.5 rounded-control px-2 py-2 text-sm"
-            >
+          const filter = SOURCE_ROW_FILTERS[s.key] ?? null;
+          const content = (
+            <>
               <span className="flex size-7 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand">
                 <Icon className="size-4" strokeWidth={2} />
               </span>
-              <span className="flex-1 truncate text-foreground">{s.label}</span>
+              <span className="flex-1 truncate text-left text-foreground">
+                {s.label}
+              </span>
               <Badge variant="secondary" className="text-[10px] tabular-nums">
                 {s.count}
               </Badge>
+            </>
+          );
+          if (!filter) {
+            return (
+              <li
+                key={s.key}
+                data-testid="topics-source-row"
+                // [T-051 2c] 纯信息行:无 hover 高亮 / 指针 —— 该来源分类映射不到
+                // candidates.source 枚举(见 SOURCE_ROW_FILTERS),做可点就是假过滤。
+                className="flex items-center gap-2.5 rounded-control px-2 py-2 text-sm"
+              >
+                {content}
+              </li>
+            );
+          }
+          const active = sourceFilter === filter;
+          // 池里没有该来源的候选 → 点了也是空列表,禁用 + 视觉弱化(诚实:没得筛)。
+          const disabled = (candidateCountsBySource[filter] ?? 0) === 0;
+          return (
+            <li key={s.key} className="flex">
+              <button
+                type="button"
+                data-testid="topics-source-row"
+                data-source-filter={filter}
+                data-active={active ? "true" : "false"}
+                aria-pressed={active}
+                aria-label={
+                  active ? `取消按${s.label}过滤` : `按${s.label}过滤候选池`
+                }
+                disabled={disabled}
+                onClick={() =>
+                  // 再点当前已激活的来源 → 清除过滤回全部;保留 sort。
+                  router.push(topicsHref(sort, active ? null : filter))
+                }
+                className={cn(
+                  "flex flex-1 cursor-pointer items-center gap-2.5 rounded-control px-2 py-2 text-sm transition-colors",
+                  active
+                    ? "bg-brand-soft ring-1 ring-inset ring-brand/40"
+                    : "hover:bg-surface-subtle",
+                  disabled && "cursor-not-allowed opacity-40 hover:bg-transparent",
+                )}
+              >
+                {content}
+              </button>
             </li>
           );
         })}
@@ -1452,9 +1555,12 @@ export function IdeaDraftForm() {
 function PoolColumn({
   pool,
   sort,
+  sourceFilter,
 }: {
   readonly pool: CandidateResource[];
   readonly sort: CandidateSortKey;
+  /** [T-244] 当前来源过滤 —— 标题旁给「已按来源过滤」提示,换排序时保留。 */
+  readonly sourceFilter: CandidateSourceFilter | null;
 }) {
   const [q, setQ] = React.useState("");
   const filtered = q.trim()
@@ -1468,7 +1574,20 @@ function PoolColumn({
   return (
     <section className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-card border border-border bg-surface p-4">
       <div className="flex shrink-0 items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">选题候选池</h3>
+        <div className="flex min-w-0 items-center gap-2">
+          <h3 className="shrink-0 text-sm font-semibold text-foreground">
+            选题候选池
+          </h3>
+          {/* [T-244] 过滤态提示:让用户知道池子当前不是全量,以及在哪取消。 */}
+          {sourceFilter ? (
+            <span
+              data-testid="pool-source-filter-hint"
+              className="truncate rounded-full bg-brand-soft px-2 py-0.5 text-[11px] text-brand"
+            >
+              已按来源过滤:{SOURCE_FILTER_LABELS[sourceFilter]}(点左栏来源可取消)
+            </span>
+          ) : null}
+        </div>
         <CreateCandidateForm />
       </div>
 
@@ -1486,7 +1605,7 @@ function PoolColumn({
             className="h-8 pl-8 text-xs"
           />
         </span>
-        <CandidateSortControl sort={sort} />
+        <CandidateSortControl sort={sort} sourceFilter={sourceFilter} />
       </div>
 
       <ul
@@ -1499,8 +1618,19 @@ function PoolColumn({
             data-testid="candidate-empty-state"
             className="rounded-card border border-dashed border-border px-3 py-8 text-center text-sm text-muted-foreground"
           >
-            还没有候选。<span className="text-brand">用上面一句话让编导起草</span>
-            ，或开一场 AI 选题会 —— 编导基于你的定位 + 评论 + 爆款经验主动出题。
+            {sourceFilter ? (
+              // [T-244] 过滤态空列表 ≠ 真没候选:提示是过滤导致的,别误导用户去建卡。
+              <>
+                「{SOURCE_FILTER_LABELS[sourceFilter]}」来源下暂无候选
+                —— 点左栏来源行可取消过滤,回到全部候选。
+              </>
+            ) : (
+              <>
+                还没有候选。
+                <span className="text-brand">用上面一句话让编导起草</span>
+                ，或开一场 AI 选题会 —— 编导基于你的定位 + 评论 + 爆款经验主动出题。
+              </>
+            )}
           </li>
         ) : (
           filtered.map((c) => <CandidateCard key={c.id} candidate={c} />)
@@ -1513,14 +1643,32 @@ function PoolColumn({
 // ── 三栏工作区 (选中态 owner) ──────────────────────────────────────────────────────
 export function TopicsWorkspace({
   candidates,
+  allCandidates,
   sources,
   sort,
+  sourceFilter = null,
 }: {
+  /** 候选池渲染列表(有来源过滤时已是服务端过滤后的结果)。 */
   readonly candidates: CandidateResource[];
+  /**
+   * [T-244] 全量(未过滤)候选 —— 来源行禁用判定的计数基。缺省回退 candidates
+   * (无过滤时二者相同;老测试调用点不用补)。
+   */
+  readonly allCandidates?: CandidateResource[];
   readonly sources: TopicsOverviewResource["sources"];
   readonly sort: CandidateSortKey;
+  /** [T-244] 当前 `?source=` 过滤态;驱动来源行高亮 + 候选池提示。 */
+  readonly sourceFilter?: CandidateSourceFilter | null;
 }) {
   const pool = candidates.filter((c) => c.status !== "dropped");
+  // [T-244] 可点来源行的禁用判据:全量在池候选按 source 计数(为什么不用 overview
+  // count 见 SourcesColumn prop 注释)。
+  const candidateCountsBySource: Partial<Record<CandidateSourceFilter, number>> = {};
+  for (const c of allCandidates ?? candidates) {
+    if (c.status === "dropped") continue;
+    const key = c.source as CandidateSourceFilter;
+    candidateCountsBySource[key] = (candidateCountsBySource[key] ?? 0) + 1;
+  }
   // The user's explicit pick (null until they click). Derived during render — the
   // EFFECTIVE selection falls back to the first card-bearing candidate (else the first)
   // and self-heals when the picked row leaves the pool (drop/promote/refresh), so we
@@ -1544,8 +1692,13 @@ export function TopicsWorkspace({
         data-testid="topics-three-column"
         className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)_360px]"
       >
-        <SourcesColumn sources={sources} />
-        <PoolColumn pool={pool} sort={sort} />
+        <SourcesColumn
+          sources={sources}
+          sort={sort}
+          sourceFilter={sourceFilter}
+          candidateCountsBySource={candidateCountsBySource}
+        />
+        <PoolColumn pool={pool} sort={sort} sourceFilter={sourceFilter} />
         <CandidateDetailPanel candidate={selected} />
       </div>
     </SelectionCtx.Provider>
