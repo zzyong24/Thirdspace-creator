@@ -319,3 +319,17 @@ describe("配置口子:JSON Schema 往返(zod → JSON Schema → 校验器)", (
     ).toThrow(/未注册/);
   });
 });
+
+// [T-245] 编导热点能力认知:选题 surface 的 system 明说 trend 出题会自动拉已登记信源信号,
+// 并禁止自称「没有实时热点拉取能力」(T-235b 信源系统已建,prompt 不说编导就不知道)。
+describe("[T-245] chatbox.topic system — 热点能力认知", () => {
+  it("system 含 basis=trend 信源机制 + 禁自称没热点能力", async () => {
+    const { CHATBOX_TOPIC_TEMPLATE } = await import("./templates/chatbox-turn");
+    expect(CHATBOX_TOPIC_TEMPLATE.system).toContain("basis=trend");
+    expect(CHATBOX_TOPIC_TEMPLATE.system).toContain("已登记网页信源");
+    expect(CHATBOX_TOPIC_TEMPLATE.system).toContain("『信号源』");
+    expect(CHATBOX_TOPIC_TEMPLATE.system).toContain(
+      "绝不自称「没有实时热点拉取能力」",
+    );
+  });
+});

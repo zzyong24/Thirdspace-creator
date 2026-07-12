@@ -1957,3 +1957,64 @@ describe("[T-240③] getSurfaceToolScope — 场景工具白名单", () => {
     ).toContain("review.analyze");
   });
 });
+
+// [T-245] 编导热点能力认知接线 —— 工具描述明说 trend 能力 + trendNote 诚实注记透传。
+describe("[T-245] 热点能力认知 — 描述话术 + trendNote 透传", () => {
+  it("topic.generate 描述明说 basis=trend 自动拉已登记信源信号 + web 搜索(信号源登记指路)", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(TOPIC_WHITELIST, deps);
+    const desc = (tools["topic.generate"]! as { description?: string })
+      .description!;
+    expect(desc).toContain("basis=trend");
+    expect(desc).toContain("已登记网页信源");
+    expect(desc).toContain("信号源");
+    expect(desc).toContain("绝不要说你没有实时热点能力");
+  });
+
+  it("material.gather 已配联网检索分支:指路 topic.generate(basis=trend)拉热榜信号", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools(
+      ["material.gather"],
+      { ...deps, searchConfigured: true },
+    );
+    const desc = (tools["material.gather"]! as { description?: string })
+      .description!;
+    expect(desc).toContain("topic.generate(basis=trend)");
+    expect(desc).toContain("信号源");
+  });
+
+  it("generateTopics 返回新形状 { items, trendNote } → 工具结果带 trendNote(编导可如实转述)", async () => {
+    const { deps } = makeDeps();
+    deps.generateTopics = vi.fn(async () => ({
+      items: [
+        {
+          title: "热点跟拍",
+          angle: "切角",
+          contentRole: "traffic",
+          source: "trend",
+          predictedScore: 70,
+          reason: "理由",
+          sourceComments: [],
+        },
+      ],
+      trendNote: "本次出题未拉到已登记信源的实时信号(已登记 1 个信源)",
+    }));
+    const tools = buildChatTools(TOPIC_WHITELIST, deps);
+    const result = (await runExecute(tools["topic.generate"]!, {
+      basis: "trend",
+    })) as { kind: string; items: unknown[]; trendNote?: string | null };
+    expect(result.kind).toBe("topic.candidates");
+    expect(result.items).toHaveLength(1);
+    expect(result.trendNote).toContain("未拉到已登记信源");
+  });
+
+  it("旧裸数组形状仍兼容:结果无 trendNote 字段(不渲空噪声)", async () => {
+    const { deps } = makeDeps(); // makeDeps 默认 generateTopics 返回裸数组
+    const tools = buildChatTools(TOPIC_WHITELIST, deps);
+    const result = (await runExecute(tools["topic.generate"]!, {
+      basis: "trend",
+    })) as Record<string, unknown>;
+    expect(result.kind).toBe("topic.candidates");
+    expect("trendNote" in result).toBe(false);
+  });
+});

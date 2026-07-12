@@ -1424,27 +1424,27 @@ function CheckUpdateCard() {
 // ---------------------------------------------------------------------------
 
 type CreationMode = "guided" | "flexible" | "freeform";
-type Visibility = "private" | "unlisted" | "public";
 
+// [T-247 假设置清算] 偏好卡只保留**有真实消费方**的两项:
+//   - defaultCreationMode → 新建项目弹窗预选创作模式(new-project-dialog 读它);
+//   - autosaveEnabled     → 脚本编辑器失焦自动保存开关(script-rich-editor 读它)。
+// 撤掉的控件(契约字段保留兼容,UI 不再渲染):
+//   - defaultHome:导航「首页」href="/" 即 Dashboard,按偏好重定向会让首页不可达,
+//     且产品无独立「启动页」概念 → 无处消费,撤;
+//   - defaultVisibility:项目创建/契约都没有 visibility 字段(宪法 §8 个人产品无分享
+//     范围)→ 无处消费,撤;
+//   - analyticsEnabled:产品无埋点(PROTECTION.md §4 遥测零收集)→ 开关无意义,撤;
+//   - fileNamingRule:从未渲染过控件,命名也不走它 → 维持不渲染。
 function PreferenceSettingsCard({
   viewModel,
 }: {
   viewModel: SettingsViewModel;
 }) {
   const initial = viewModel.preferences;
-  const [defaultHome, setDefaultHome] = React.useState<string>(
-    initial.defaultHome,
-  );
   const [defaultCreationMode, setDefaultCreationMode] =
     React.useState<CreationMode>(initial.defaultCreationMode);
-  const [defaultVisibility, setDefaultVisibility] = React.useState<Visibility>(
-    initial.defaultVisibility,
-  );
   const [autosaveEnabled, setAutosaveEnabled] = React.useState<boolean>(
     initial.autosaveEnabled,
-  );
-  const [analyticsEnabled, setAnalyticsEnabled] = React.useState<boolean>(
-    initial.analyticsEnabled,
   );
   const { pending, run } = useSettingsMutation();
 
@@ -1466,40 +1466,9 @@ function PreferenceSettingsCard({
     >
       <div data-slot="preference-settings-card" className="flex flex-col gap-3">
         <SettingsFormRow
-          label="默认主页"
-          controlId="pref-default-home"
-          help="登录后跳转的第一个页面。"
-        >
-          <Select
-            value={defaultHome}
-            onValueChange={(value) => {
-              const next = String(value);
-              setDefaultHome(next);
-              patch({ defaultHome: next });
-            }}
-          >
-            <SelectTrigger
-              id="pref-default-home"
-              data-slot="pref-default-home-trigger"
-              size="sm"
-              className="w-40"
-              disabled={pending}
-            >
-              <SelectValue placeholder="选择主页" />
-            </SelectTrigger>
-            <SelectContent data-slot="pref-default-home-content">
-              {HOME_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </SettingsFormRow>
-        <SettingsFormRow
           label="默认创作模式"
           controlId="pref-creation-mode"
-          help="新建项目时套用的流程强度。"
+          help="新建项目弹窗会按此预选创作模式。"
         >
           <Select
             value={defaultCreationMode}
@@ -1528,40 +1497,9 @@ function PreferenceSettingsCard({
           </Select>
         </SettingsFormRow>
         <SettingsFormRow
-          label="默认可见性"
-          controlId="pref-visibility"
-          help="新建内容的默认分享范围（个人产品，无团队）。"
-        >
-          <Select
-            value={defaultVisibility}
-            onValueChange={(value) => {
-              const next = value as Visibility;
-              setDefaultVisibility(next);
-              patch({ defaultVisibility: next });
-            }}
-          >
-            <SelectTrigger
-              id="pref-visibility"
-              data-slot="pref-visibility-trigger"
-              size="sm"
-              className="w-40"
-              disabled={pending}
-            >
-              <SelectValue placeholder="选择可见性" />
-            </SelectTrigger>
-            <SelectContent data-slot="pref-visibility-content">
-              {VISIBILITY_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </SettingsFormRow>
-        <SettingsFormRow
           label="自动保存"
           controlId="pref-autosave"
-          help="每 30 秒保存一次草稿。"
+          help="开启后，脚本编辑器失焦即自动保存未保存的修改。"
         >
           <Switch
             id="pref-autosave"
@@ -1575,25 +1513,6 @@ function PreferenceSettingsCard({
               patch({ autosaveEnabled: next });
             }}
             aria-label="启用自动保存"
-          />
-        </SettingsFormRow>
-        <SettingsFormRow
-          label="使用情况分析"
-          controlId="pref-analytics"
-          help="帮助我们改进产品；不会上传个人内容。"
-        >
-          <Switch
-            id="pref-analytics"
-            data-slot="pref-analytics-switch"
-            size="sm"
-            checked={analyticsEnabled}
-            disabled={pending}
-            onCheckedChange={(value) => {
-              const next = Boolean(value);
-              setAnalyticsEnabled(next);
-              patch({ analyticsEnabled: next });
-            }}
-            aria-label="启用使用情况分析"
           />
         </SettingsFormRow>
         <SettingsFormRow
@@ -1623,13 +1542,6 @@ function PreferenceSettingsCard({
   );
 }
 
-const HOME_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "dashboard", label: "首页" },
-  { value: "projects", label: "项目" },
-  { value: "knowledge", label: "知识库" },
-  { value: "publishing", label: "发布中心" },
-];
-
 const CREATION_MODE_OPTIONS: ReadonlyArray<{
   value: CreationMode;
   label: string;
@@ -1638,13 +1550,6 @@ const CREATION_MODE_OPTIONS: ReadonlyArray<{
   { value: "flexible", label: "灵活模式" },
   { value: "freeform", label: "自由模式" },
 ];
-
-const VISIBILITY_OPTIONS: ReadonlyArray<{ value: Visibility; label: string }> =
-  [
-    { value: "private", label: "仅自己" },
-    { value: "unlisted", label: "不公开列出" },
-    { value: "public", label: "公开" },
-  ];
 
 // ---------------------------------------------------------------------------
 // SystemSettingsCard

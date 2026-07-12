@@ -39,7 +39,18 @@ import {
   type PredictionsRaw,
 } from "./chat-tools";
 import { buildSkillsBrief } from "@creatoros/contract";
+// [T-239d] 对话历史窗口化 —— 喂模型前投影(tool-result 清体 + token 估算截窗),存储原样。
+import {
+  projectChatHistory,
+  formatChatContextLog,
+  resolveToolResultKeepTurns,
+  resolveTruncateKeepTurns,
+  resolveContextWindowTokens,
+} from "./chat-history-window";
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
+// [T-245] trend 出题多源装配(T-235b 信源信号 + web 搜索并行,与选题页出题同一装配器)——
+// 对话编导 topic.generate(basis=trend)复用,不再空 brief 出「假热点题」。
+import { assembleTrendBriefDetailed } from "./topic-task-adapter";
 import { createRecoveringModel } from "./llm/recovering-model";
 import { resolveLlmMaxRetries } from "./llm/retry-policy";
 import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
@@ -547,6 +558,9 @@ export async function buildChatAssembly(
     //   「直接写不走工具」产文本论点树 —— thesis_tree 只有 planning.thesis 产的才落 artifact,
     //   文本树挂不进稿面论点骨架面板、写脚本时不会被引用。
     "10. **论点树铁律**:能挂进稿面「论点骨架」面板、写脚本时被引用的论点树,只能由 planning.thesis 产出并经采纳落成 thesis_tree 产物——**你在对话文本里写的论点树只是讨论稿,挂不进论点骨架面板、写脚本时不会被引用**。用户要立论点时:可以在对话里帮 TA 把核心论点/支撑/证据/反驳聊清楚(这有价值),但必须明确告知文本树不是成品、要在稿面「论点骨架」面板落成才算立好;**绝不谎称「论点树已立好/已写入骨架」**。",
+    // [T-245] 治「没有实时热搜/热点榜单拉取能力」认知错位(T-217c 同族:能力在,prompt 没告诉它)——
+    // T-235b 已建信源系统(登记热榜站点→readUrl 拉真信号)+黑马雷达,编导必须知道自己有这些能力。
+    "11. **你有真实热点能力,绝不自称「没有实时热点/热搜拉取能力」——那是错的**。你的热点能力有三路:①已登记网页信源:用户在选题页『信号源』登记的热榜站点(如 36氪热榜),trend 出题时系统自动带登录态读页面、抽真实信号(标题/热度/链接);②黑马雷达:按定位关键词扫抖音近 1 天高赞低粉爆款,产「🔥跟拍」窗口候选(随对标采集自动跑);③web 联网搜索(已配时)。用户要蹭热点/追热榜出题时:**优先调 topic.generate 并传 basis=trend**(它自动并行拉①+③当出题依据,候选自带信源证据);若结果注明未拉到信源信号或用户还没登记信源,**引导 TA 去选题页『信号源』登记热榜站点**(需登录才能看的站点,先去『设置 → 网站登录保管库』登录一次),而不是让用户手动粘热点、更不是自称没能力。",
     "",
     // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
     "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
@@ -622,12 +636,54 @@ export async function buildChatAssembly(
       // 复用 ai-worker.runTopicNode —— 产 TopicItem[] 候选(与一键岛同一引擎)。
       // [T-081] extraBrief 对任意 basis 都生效:comments/knowledge 依据块后追加「本次生成指令」段
       // (原实现只在 positioning/trend 分支吃 extraBrief,评论/知识出题时对话洞察被静默丢弃)。
-      const basisSource =
+      let basisSource =
         basis === "comments"
           ? context.signalsBrief
           : basis === "knowledge"
             ? context.knowledgeBrief
             : "";
+      // [T-245] trend 出题真接信号:复用选题页出题同一装配器(assembleTrendBriefDetailed,
+      // T-235b 已登记信源信号 + web 搜索并行)。此前对话编导 basis=trend 是空 brief(节点走
+      // 无热点降级路径出「假热点题」),与工具描述「自动拉真实信号」名实不符。信源信号为空时
+      // 产 trendNote 诚实注记(随 tool-result 回编导,如实转述 + 引导去『信号源』登记),不猜不编。
+      let trendNote: string | null = null;
+      if (basis === "trend") {
+        const detail = await assembleTrendBriefDetailed(
+          ctx,
+          context.positioningBrief,
+          {
+            trendSourceSignals: deps.trendSourceSignals,
+            // web 搜索路复用 material.gather 的联网检索端口(SearchResult ⊇ TrendHit,
+            // 未配/失败 → 该段空,assembleTrendBriefDetailed 内 allSettled 诚实降级)。
+            trendSearch: deps.searchWeb,
+          },
+        );
+        basisSource = detail.brief;
+        if (detail.sourceSignalCount === 0) {
+          let registered: number | null = null;
+          try {
+            registered = deps.countEnabledTrendSources
+              ? await deps.countEnabledTrendSources(ctx)
+              : null;
+          } catch {
+            registered = null; // 计数是注记增强,读失败绝不阻断出题
+          }
+          trendNote =
+            registered === 0
+              ? "本次出题未拉到已登记信源的实时信号:当前还没有登记任何网页信源。请如实告知用户,并引导 TA 去选题页『信号源』登记热榜站点(需登录的站点先去『设置 → 网站登录保管库』登录)。" +
+                (detail.searchHitCount > 0
+                  ? "本次热点依据仅来自 web 联网搜索。"
+                  : "本次候选没有实时热点信号支撑,不要声称基于实时热榜。")
+              : `本次出题未拉到已登记信源的实时信号${
+                  registered != null
+                    ? `(已登记 ${registered} 个信源,可能抓取失败/登录失效)`
+                    : "(可能抓取失败/登录失效)"
+                }。请如实告知用户,并建议去选题页『信号源』检查信源、或去『设置 → 网站登录保管库』重新登录。` +
+                (detail.searchHitCount > 0
+                  ? "本次热点依据仅来自 web 联网搜索。"
+                  : "本次候选没有实时热点信号支撑,不要声称基于实时热榜。");
+        }
+      }
       const basisBrief = [
         basisSource,
         extraBrief
@@ -647,7 +703,7 @@ export async function buildChatAssembly(
         learningsBrief: context.learningsBrief || undefined,
         basis,
       });
-      return topics.map((t) => ({
+      const items = topics.map((t) => ({
         title: t.title,
         angle: t.angle,
         contentRole: t.contentRole,
@@ -659,6 +715,9 @@ export async function buildChatAssembly(
         // [T-066] 原始评论引用透传到工具结果 → 候选卡渲「依据评论」。
         sourceComments: t.sourceComments,
       }));
+      // [T-245] 新形状 { items, trendNote }:trend 降级注记随 tool-result 回编导(chat-tools
+      // execute 兼容旧裸数组;无注记时 trendNote=null,execute 侧不渲字段)。
+      return { items, trendNote };
     },
     enrichTopic: async ({ title, angle }) => {
       // [T-111] 选中某选题(编导起草深链 selection.kind="candidate")时,补全**一律锚定这条选题的
@@ -1160,6 +1219,9 @@ export function buildChatPrepareStep(opts: {
  * `toUIMessageStreamResponse()` 流回前端(useChat 消费)。
  * [T-239c S2] input.abortSignal = 请求的 req.signal:用户点「停止」/关页 → streamText 立停
  * (不再空烧后续步),且经工具 execute 第二参 { abortSignal } 透传给长工具(截图/web.read)提前退出。
+ * [T-239e] input.onUsage(additive,可选):本轮 token 用量回报口 —— 每步完成时以**累计值**
+ * 回调(route 持最新值,toUIMessageStreamResponse onFinish 落 ai_messages;中断轮已完成步的
+ * 用量也已回报过,照落);整轮 finish 时再以 SDK totalUsage 权威值覆盖一次。
  */
 export async function runChatStream(
   ctx: RequestContext,
@@ -1167,21 +1229,84 @@ export async function runChatStream(
     messages: UIMessage[];
     chatContext: ChatContext;
     abortSignal?: AbortSignal;
+    onUsage?: (usage: {
+      inputTokens: number | null;
+      outputTokens: number | null;
+      cachedTokens: number | null;
+      modelKey: string;
+    }) => void;
   },
   deps: AssembleChatDeps,
   onFinish?: (finalText: string) => void | Promise<void>,
 ) {
   const assembly = await buildChatAssembly(ctx, input.chatContext, deps);
   const { modelFor } = await import("@creatoros/ai-worker");
-  const modelMessages = await convertToModelMessages(input.messages);
+  // [T-239d] 喂模型前投影(chat-history-window 纯函数;**只改喂模型的副本,ai_messages 存储
+  // 原样** —— 刷新恢复/卡重渲不受影响):① 近 N 轮之外的 tool-result 换指针占位(数据卡已渲
+  // 给用户,模型只有指针权 —— honesty 规则 6);② 清体后仍超「窗口×80%」→ 只保 system+近 K 轮,
+  // 更早整轮截掉 + 首条注入「更早历史已省略」。切点选 convertToModelMessages **之前**:
+  // UIMessage 层按「轮」操作最薄;转 ModelMessage 后 tool-call/result 拆散成对,再截会拦腰断对。
+  const projection = projectChatHistory(input.messages, {
+    systemText: assembly.system,
+    keepToolResultTurns: resolveToolResultKeepTurns(process.env),
+    keepTurns: resolveTruncateKeepTurns(process.env),
+    contextWindowTokens: resolveContextWindowTokens(process.env),
+  });
+  console.info(formatChatContextLog(projection));
+  const modelMessages = await convertToModelMessages(projection.messages);
+
+  // [T-239e] token 用量累计(usage 可见):onStepEnd 逐步累加并回报(中断轮已完成步不丢);
+  // finish 时以 totalUsage 权威值覆盖。字段名以 ai@7.0.4 d.ts LanguageModelUsage 为准:
+  // inputTokens / outputTokens / inputTokenDetails.cacheReadTokens(命中缓存的输入)。
+  // 「没拿到任何数字」时不回报(诚实缺省,落库 NULL 而非 0 充数)。
+  const usageAcc = { input: 0, output: 0, cached: 0, seen: false };
+  const reportUsage = () => {
+    if (!input.onUsage || !usageAcc.seen) return;
+    input.onUsage({
+      inputTokens: usageAcc.input,
+      outputTokens: usageAcc.output,
+      cachedTokens: usageAcc.cached,
+      // fallback 接管轮如实记 fallback 的模型 id(计费主体是它),否则记主模型。
+      modelKey:
+        recovery.fallbackUsed && fallbackSpecModel
+          ? fallbackSpecModel
+          : assembly.modelSpec.model,
+    });
+  };
+  const addUsage = (u: {
+    inputTokens?: number;
+    outputTokens?: number;
+    inputTokenDetails?: { cacheReadTokens?: number };
+  }) => {
+    const inTok = u?.inputTokens;
+    const outTok = u?.outputTokens;
+    const cachedTok = u?.inputTokenDetails?.cacheReadTokens;
+    if (
+      typeof inTok !== "number" &&
+      typeof outTok !== "number" &&
+      typeof cachedTok !== "number"
+    ) {
+      return;
+    }
+    usageAcc.seen = true;
+    usageAcc.input += typeof inTok === "number" ? inTok : 0;
+    usageAcc.output += typeof outTok === "number" ? outTok : 0;
+    usageAcc.cached += typeof cachedTok === "number" ? cachedTok : 0;
+    reportUsage();
+  };
 
   // [T-239b S1] fallback 模型(用户可配 chat.fallback,只认专配行):解析失败/未配 → null,
   // 绝不阻断主流程(fallback 是增强,不是门)。
   let fallbackModel: ReturnType<typeof modelFor> | null = null;
+  // [T-239e] fallback 模型 id 留档 —— fallback 接管轮 usage 落库时 modelKey 如实记它。
+  let fallbackSpecModel: string | null = null;
   if (deps.resolveFallbackModelSpec) {
     try {
       const fallbackSpec = await deps.resolveFallbackModelSpec(ctx);
-      if (fallbackSpec) fallbackModel = modelFor(fallbackSpec);
+      if (fallbackSpec) {
+        fallbackModel = modelFor(fallbackSpec);
+        fallbackSpecModel = fallbackSpec.model;
+      }
     } catch {
       fallbackModel = null;
     }
@@ -1251,7 +1376,25 @@ export async function runChatStream(
     onError: () => {
       logOutcome(recovery.exhausted ? "retry_exhausted" : "error");
     },
-    onFinish: async ({ text }) => {
+    // [T-239e] 每步完成即累加回报 usage —— 中断轮(onFinish 不触发)已完成步的用量也已回报,
+    // route 的中断落库分支照带(SPEC「中断轮也落」)。
+    onStepEnd: (step) => {
+      addUsage(step.usage ?? {});
+    },
+    onFinish: async ({ text, totalUsage }) => {
+      // [T-239e] finish 用 SDK totalUsage 权威值覆盖累计(个别 provider 步内 usage 不全时
+      // 以整轮汇总为准),再回报一次 —— route 落库拿到的恒是最终值。
+      if (
+        totalUsage &&
+        (typeof totalUsage.inputTokens === "number" ||
+          typeof totalUsage.outputTokens === "number")
+      ) {
+        usageAcc.seen = true;
+        usageAcc.input = totalUsage.inputTokens ?? 0;
+        usageAcc.output = totalUsage.outputTokens ?? 0;
+        usageAcc.cached = totalUsage.inputTokenDetails?.cacheReadTokens ?? 0;
+        reportUsage();
+      }
       logOutcome(
         recovery.fallbackUsed
           ? "fallback_used"

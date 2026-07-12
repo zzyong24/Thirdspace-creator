@@ -622,6 +622,43 @@ describe("ai service", () => {
     expect(all[1]!.content.length).toBeGreaterThan(0);
   });
 
+  // ── [T-239e] 用量可见 —— usage 落列 + 读回 + 老消息 null 兼容 ──
+  it("[T-239e] appendAssistantMessage 带 usage/modelKey → 落列可读回;无 usage 行/user 行诚实 null", async () => {
+    const { service } = makeService(db);
+    const conv = await service.createConversation(ctx, {
+      title: "用量",
+      projectId: null,
+    });
+    // 老式调用(无 usage)—— user 行 + 无用量 assistant 行:列 NULL,读回 null 不崩。
+    await service.createMessage(ctx, conv.id, { content: "hi", attachments: [] });
+    await service.appendAssistantMessage(ctx, conv.id, "无用量的旧轮");
+    // 新式调用:usage + modelKey 随 opts 落库(中断轮同形,aborted 与 usage 可并存)。
+    await service.appendAssistantMessage(
+      ctx,
+      conv.id,
+      "带用量的一轮",
+      [{ type: "text", text: "带用量的一轮" }],
+      {
+        aborted: true,
+        usage: { inputTokens: 1200, outputTokens: 340, cachedTokens: 800 },
+        modelKey: "deepseek-chat",
+      },
+    );
+    const all = await service.listMessages(ctx, conv.id);
+    expect(all).toHaveLength(3);
+    // user 行/老 assistant 行:全 null(诚实缺省,不填 0 充数)。
+    expect(all[0]!.inputTokens).toBeNull();
+    expect(all[1]!.inputTokens).toBeNull();
+    expect(all[1]!.outputTokens).toBeNull();
+    expect(all[1]!.modelKey).toBeNull();
+    // 新行:token 计数 + 模型 id 齐;aborted 标记不互斥。
+    expect(all[2]!.inputTokens).toBe(1200);
+    expect(all[2]!.outputTokens).toBe(340);
+    expect(all[2]!.cachedTokens).toBe(800);
+    expect(all[2]!.modelKey).toBe("deepseek-chat");
+    expect(all[2]!.modelMetadata).toEqual({ aborted: true });
+  });
+
   it("listConversations is user-scoped (A cannot see B)", async () => {
     const { service } = makeService(db);
     await service.createConversation(ctx, { title: "A", projectId: null });

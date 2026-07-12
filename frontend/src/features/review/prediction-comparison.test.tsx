@@ -8,6 +8,23 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 //  - PredictionComparisonSection:已回流渲逐维度 预测/真实/偏差;未回流显「等待
 //    发布数据回流」;vm=null → 「本项目未做盲预测」空态。
 
+// [T-247] 对照区内嵌「录入实绩」client 岛(useRouter + contract client)→ mock。
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn() }),
+}));
+const mockGateClient = {
+  listAITasks: vi.fn((_i: unknown) => Promise.resolve([])),
+  listTaskResults: vi.fn((_i: unknown) => Promise.resolve([])),
+  createResult: vi.fn((_i: unknown) => Promise.resolve({ id: "res-1" })),
+};
+vi.mock("@/lib/contract-client", () => ({
+  client: {
+    listAITasks: (i: unknown) => mockGateClient.listAITasks(i),
+    listTaskResults: (i: unknown) => mockGateClient.listTaskResults(i),
+    createResult: (i: unknown) => mockGateClient.createResult(i),
+  },
+}));
+
 import {
   buildPredictionComparison,
   type PredictionComparisonClient,
@@ -25,6 +42,8 @@ const PREDICTIONS = [
     predictedScore: 3.8,
     lockedAt: "2026-07-01T00:00:00.000Z",
     createdAt: "2026-07-01T00:00:00.000Z",
+    // [T-247] 维度评分约定 → 「录入实绩」门的录入框来源。
+    predictedConversion: { dimensions: [{ key: "hook", score: 4 }] },
   },
   {
     id: "pred-other",
@@ -75,6 +94,8 @@ describe("buildPredictionComparison(复盘对照读侧,T-063e)", () => {
     expect(row.reflow).not.toBeNull();
     expect(row.reflow!.deviationBand).toBe("mid");
     expect(row.reflow!.dimensions[0]!.deviation).toBe(-1);
+    // [T-247] 维度评分约定随行带出(录入实绩门的录入框来源)。
+    expect(row.dimensions).toEqual([{ key: "hook", predicted: 4 }]);
   });
 
   it("本项目无盲预测 → null;outputs 读失败 → null(诚实空,不编造)", async () => {
@@ -110,6 +131,7 @@ describe("PredictionComparisonSection(复盘对照展示,T-063e)", () => {
               status: "locked",
               predictedScore: 3.8,
               lockedAt: "2026-07-01T00:00:00.000Z",
+              dimensions: [{ key: "hook", predicted: 4 }],
               reflow: {
                 deviationBand: "mid",
                 reason: "钩子高估",
@@ -135,6 +157,10 @@ describe("PredictionComparisonSection(复盘对照展示,T-063e)", () => {
     expect(row.textContent).toContain("钩子强度");
     expect(row.textContent).toContain("钩子高估");
     expect(row.textContent).toContain("中偏差");
+    // [T-247] 已回流的行不再显「录入实绩」门(实绩已落,不重复采纳)。
+    expect(
+      document.querySelector('[data-slot="result-entry-toggle"]'),
+    ).toBeNull();
   });
 
   it("未回流:显示「等待发布数据回流」;vm=null → 诚实空态「本项目未做盲预测」", () => {
@@ -147,6 +173,7 @@ describe("PredictionComparisonSection(复盘对照展示,T-063e)", () => {
               status: "locked",
               predictedScore: 3.8,
               lockedAt: null,
+              dimensions: [{ key: "hook", predicted: 4 }],
               reflow: null,
             },
           ],
@@ -154,6 +181,10 @@ describe("PredictionComparisonSection(复盘对照展示,T-063e)", () => {
       />,
     );
     expect(screen.getByTestId("comparison-awaiting-reflow")).toBeInTheDocument();
+    // [T-247] 锁定未回流 + 带维度 → 「录入实绩」采纳门在场。
+    expect(
+      document.querySelector('[data-slot="result-entry-toggle"]'),
+    ).not.toBeNull();
     cleanup();
     render(<PredictionComparisonSection vm={null} />);
     expect(

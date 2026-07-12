@@ -32,6 +32,8 @@ import { ChartFrame } from "@/components/analytics/chart-frame";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
 import { projectWorkspaceHref } from "@/features/projects/project-href";
 import { OnboardingCard } from "@/features/onboarding/onboarding-card";
+// [T-247] 待办卡 client 岛(完成勾选 → tasks.patch)。
+import { TodoCard } from "./todo-card";
 import { client } from "@/lib/contract-client.server";
 import {
   canonicalDataset,
@@ -41,7 +43,6 @@ import { cn } from "@/lib/utils";
 import type {
   ContinueCreating,
   DashboardViewModel,
-  TodoRow,
   TopicRow,
   PublicationCompactRow,
   CreationSuggestion,
@@ -277,68 +278,8 @@ function ContinueCreatingCard({
 // 待办事项
 // ---------------------------------------------------------------------------
 
-function TodoCard({ todos }: { todos: ReadonlyArray<TodoRow> }) {
-  return (
-    <div data-slot="todo-card">
-    <SectionCard title="待办事项" description={`${todos.length} 项待处理任务`}>
-      {/* [T-054] 空态引导:0 待办时原先整卡空白(基线截图的「大片留白」),
-          改为把人送去下一步(选题池)。 */}
-      {todos.length === 0 ? (
-        <div
-          data-slot="todo-empty"
-          className="flex flex-col items-start gap-2 rounded-card border border-dashed border-border bg-surface-subtle px-3.5 py-4"
-        >
-          <p className="text-sm text-muted-foreground">
-            没有待处理任务。从选题池挑一条,开启下一条内容。
-          </p>
-          <Link
-            href="/topics"
-            className="text-sm font-medium text-brand hover:underline"
-          >
-            去选题池挑一条 →
-          </Link>
-        </div>
-      ) : null}
-      <ul
-        data-slot="todo-list"
-        className="flex flex-col gap-2"
-        aria-label="待办任务"
-      >
-        {todos.slice(0, 4).map((todo) => (
-          <li
-            key={todo.id}
-            data-slot="todo-row"
-            data-priority={todo.priority}
-          >
-            {/* D3: each todo deep-links to its project — to the stage workspace
-                when `stage` is a real project stage, else the project overview. */}
-            <Link
-              href={todoHref(todo)}
-              data-slot="todo-row-link"
-              className="flex flex-col gap-1.5 rounded-card border border-border bg-surface p-3 transition-colors hover:border-brand/40 hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-sm font-medium text-foreground">
-                  {todo.title}
-                </span>
-                <TagChip
-                  label={priorityLabel(todo.priority)}
-                  tone={priorityTone(todo.priority)}
-                  size="sm"
-                />
-              </div>
-              <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                <span className="truncate">{todo.projectTitle}</span>
-                <span>{stageLabel(todo.stage)}</span>
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </SectionCard>
-    </div>
-  );
-}
+// [T-247] TodoCard 抽为 client 岛(./todo-card):每行加「完成」勾选 → tasks.patch
+// { status: 'done' } → router.refresh(),读侧只回未完成任务,数字真的能减。
 
 // ---------------------------------------------------------------------------
 // 热门选题
@@ -572,16 +513,7 @@ function CreationSuggestionsCard({
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * [T-076] 项目两阶段化后的深链:review → 复盘页;其余任何 stage(含遗留
- * research/planning/production/publishing 与 OutputStageName 的 recording/editing/…)
- * 一律落稿面(`/projects/<id>`)——可执行入口都在稿面内。
- */
-function todoHref(todo: TodoRow): string {
-  return todo.stage === "review"
-    ? `/projects/${todo.projectId}/review`
-    : `/projects/${todo.projectId}`;
-}
+// [T-247] todoHref / priorityLabel / priorityTone 随 TodoCard 迁至 ./todo-card。
 
 /**
  * Category-aware CTA for a creation suggestion. 选题/研究/策划 category routes to
@@ -632,29 +564,6 @@ function stageLabel(stage: string): string {
   return STAGE_LABELS[stage] ?? stage;
 }
 
-const PRIORITY_LABELS: Record<number, string> = {
-  1: "高",
-  2: "高",
-  3: "中",
-  4: "低",
-  5: "低",
-};
-
-const PRIORITY_TONES: Record<number, "warning" | "info" | "neutral"> = {
-  1: "warning",
-  2: "warning",
-  3: "info",
-  4: "neutral",
-  5: "neutral",
-};
-
-function priorityLabel(priority: number): string {
-  return PRIORITY_LABELS[priority] ?? "中";
-}
-
-function priorityTone(priority: number): "warning" | "info" | "neutral" {
-  return PRIORITY_TONES[priority] ?? "neutral";
-}
 
 const CATEGORY_LABELS: Record<string, string> = {
   script: "脚本",

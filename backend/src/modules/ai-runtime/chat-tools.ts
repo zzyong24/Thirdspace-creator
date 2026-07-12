@@ -44,17 +44,11 @@ export interface ChatToolDeps {
     basis: "positioning" | "comments" | "knowledge" | "trend";
     extraBrief?: string;
   }) => Promise<
-    Array<{
-      title: string;
-      angle: string;
-      contentRole: string;
-      /** [T-149] 出题渠道(trend|benchmark|demand);采纳时落成候选 source,保 provenance。 */
-      source: string;
-      predictedScore: number | null;
-      reason: string;
-      /** [T-066] 该选题依据的原始评论(逐字引用);非评论依据为空数组。 */
-      sourceComments: string[];
-    }>
+    | Array<TopicGenerateItemShape>
+    // [T-245] 新形状(additive,旧裸数组仍兼容):trend 出题带信源信号降级注记 ——
+    // 未拉到已登记信源信号时 trendNote 诚实注明(「本次未拉到信源信号(已登记 N 个)」),
+    // 随 tool-result 流回,让编导如实转述、引导用户去选题页『信号源』登记,而非猜/编。
+    | { items: Array<TopicGenerateItemShape>; trendNote?: string | null }
   >;
   /** topic.enrich 核心 —— 把一条选题补全成选题卡候选(复用 enrich prompt + parseCard)。 */
   enrichTopic: (input: { title: string; angle: string }) => Promise<{
@@ -607,20 +601,29 @@ export interface KnowledgeDetailRaw {
 // AdoptCandidateCard。形状刻意与现有候选解析对齐(topic.generate 的 items / 选题卡字段),
 // 这样对话内卡片与一键岛弹窗读同一份候选结构。
 
+/** topic.generate 的单条候选形状(与 ai_task_results 的 candidate_list.items 同形)。 */
+export interface TopicGenerateItemShape {
+  title: string;
+  angle: string;
+  contentRole: string;
+  /** [T-149] 出题渠道(trend|benchmark|demand);采纳时落成候选 source,保 provenance。 */
+  source: string;
+  predictedScore: number | null;
+  reason: string;
+  /** [T-066] 基于评论出题必须贴原始评论 —— 候选卡渲「依据评论」折叠区的数据源。 */
+  sourceComments: string[];
+}
+
 export interface TopicGenerateToolResult {
   kind: "topic.candidates";
   /** 渲成候选卡的 items —— 与 ai_task_results 的 candidate_list.items 同形(可走采纳门)。 */
-  items: Array<{
-    title: string;
-    angle: string;
-    contentRole: string;
-    /** [T-149] 出题渠道(trend|benchmark|demand);采纳时落成候选 source,保 provenance。 */
-    source: string;
-    predictedScore: number | null;
-    reason: string;
-    /** [T-066] 基于评论出题必须贴原始评论 —— 候选卡渲「依据评论」折叠区的数据源。 */
-    sourceComments: string[];
-  }>;
+  items: Array<TopicGenerateItemShape>;
+  /**
+   * [T-245] trend 出题的信源信号降级注记(additive,仅 basis=trend 且未拉到已登记信源信号时有值)。
+   * 随 tool-result 流回模型:编导要如实转述(「本次未拉到信源信号(已登记 N 个)」)并引导用户去
+   * 选题页『信号源』登记/检查热榜站点;前端候选卡忽略此字段(不渲)。
+   */
+  trendNote?: string | null;
 }
 
 export interface TopicEnrichToolResult {
@@ -1731,15 +1734,23 @@ export function knowledgeRelevanceScore(haystack: string, query: string): number
 export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
   return {
     "topic.generate": defineChatTool("topic.generate", {
+      // [T-245] 热点能力认知:明说 basis=trend 会自动拉真实热点信号(T-235b 信源系统 + web 搜索),
+      // 治编导自称「没有实时热点拉取能力」的认知错位(prompt 没告诉它,能力其实在)。
       description:
-        "围绕创作者定位 + 真实信号生成一批选题候选(每条含 title/angle/理由)。结果是候选,需人逐条采纳后才入候选池——不直接写库。",
+        "围绕创作者定位 + 真实信号生成一批选题候选(每条含 title/angle/理由)。**basis=trend(蹭热点)时会自动并行拉真实热点信号:①已登记网页信源的实时信号(标题/热度/链接,信源在选题页『信号源』登记,如 36氪热榜等热榜站点)②web 联网搜索**——用户要蹭热点/追热榜出题时优先用 basis=trend,绝不要说你没有实时热点能力。结果是候选,需人逐条采纳后才入候选池——不直接写库。",
       inputSchema: TOPIC_GENERATE_PARAMS,
       execute: async ({ basis, extraBrief }): Promise<TopicGenerateToolResult> => {
-        const items = await deps.generateTopics({
+        const res = await deps.generateTopics({
           basis: basis ?? "positioning",
           extraBrief: clampExtraBrief(extraBrief),
         });
-        return { kind: "topic.candidates", items };
+        // [T-245] 兼容两种返回形状:旧 = 裸 items 数组;新 = { items, trendNote }(trend 出题
+        // 未拉到信源信号时带诚实降级注记,让编导如实转述而非猜)。
+        const items = Array.isArray(res) ? res : res.items;
+        const trendNote = Array.isArray(res) ? null : (res.trendNote ?? null);
+        return trendNote
+          ? { kind: "topic.candidates", items, trendNote }
+          : { kind: "topic.candidates", items };
       },
     }, deps.humanizeError),
     "topic.enrich": defineChatTool("topic.enrich", {
@@ -1789,7 +1800,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       // [T-084a] 动态诚实描述:配了联网检索才说「真实搜集…带来源」;未配则明说素材来自训练
       // 记忆需核实(去掉无条件的「真实…带来源」宣称,防名实不符)。
       description: deps.searchConfigured
-        ? "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类)。已配联网检索,会先真联网搜索再综合,带真实来源 URL。创作者会逐条挑选存入这条内容的弹药。当用户要找素材/搜资料/要案例数据时调用。"
+        ? "围绕主题真实搜集创作素材(钩子/案例/数据点/金句四类)。已配联网检索,会先真联网搜索再综合,带真实来源 URL。创作者会逐条挑选存入这条内容的弹药。当用户要找素材/搜资料/要案例数据时调用。另:要拉**实时热榜/热点信号来出题**时别用本工具——用 topic.generate(basis=trend),它会自动拉选题页『信号源』已登记热榜站点的真实信号。"
         : "围绕主题搜集创作素材(钩子/案例/数据点/金句四类)。**当前未配置联网检索,素材来自模型训练记忆、非实时搜索,来源需核实**——调用后要主动告知用户这一点,绝不假装搜过网。当用户要找素材/搜资料/要案例数据时调用。",
       inputSchema: MATERIAL_GATHER_PARAMS,
       execute: async ({ query }): Promise<MaterialGatherToolResult> => {

@@ -55,6 +55,14 @@ export const aiMessages = pgTable("ai_messages", {
   parts: jsonb("parts").notNull().default([]),
   attachments: jsonb("attachments").notNull().default([]),
   modelMetadata: jsonb("model_metadata").notNull().default({}),
+  // [T-239e] 用量可见:assistant 行随 streamText totalUsage 落 token 计数(user 行/老行 NULL)。
+  // additive nullable —— 存量行读回 null,读侧/前端角标按 null 兼容(不计入累计、不崩)。
+  // cachedTokens = usage.inputTokenDetails.cacheReadTokens(命中缓存的输入 token,省钱信号)。
+  // modelKey = 本轮实际用的模型 id(ModelSpec.model;fallback 接管轮记 fallback 的模型)。
+  inputTokens: integer("input_tokens"),
+  outputTokens: integer("output_tokens"),
+  cachedTokens: integer("cached_tokens"),
+  modelKey: text("model_key"),
   createdAt: text("created_at").notNull(),
 });
 

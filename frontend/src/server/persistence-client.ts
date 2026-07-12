@@ -6809,6 +6809,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // [T-146c/d] 用户上传素材主权(稿面对话路径)—— 稿面右栏对话里整稿(draftScript)吃硬约束段、
       // 搜素材(gatherMaterials)贴资料搜。与写文案 task / research task 共用同一份读法,不造影子。
       projectMaterials: makeProjectMaterialsReader(),
+      // [T-245] 已登记信源信号端口 —— 对话编导 topic.generate(basis=trend)与选题页出题共用
+      // 同一个 trendSourceSignalsPort(readUrl 带登录态读热榜页 + AI 结构化抽取 / rss 解析),
+      // 不造影子。经 route 的 `...runtime.context` 展开注入 chat-runner,不加路由接线。
+      trendSourceSignals: (c: RequestContext) => trendSourceSignalsPort(c),
+      // [T-245] enabled 信源计数 —— 只用于 trend 出题降级注记「已登记 N 个」的诚实措辞。
+      countEnabledTrendSources: async (c: RequestContext) =>
+        (await trendSourcesService.listEnabledSources(c)).length,
     },
     // 只读 context 工具的真数据读端口 —— 全部 user-scoped(经各自 service/repo 用 ctx.userId 收窄),
     // 只读、不写实体。找不到现成的「带 query 搜」读方法时,在此对现成 list 端口做内存过滤(优先复用

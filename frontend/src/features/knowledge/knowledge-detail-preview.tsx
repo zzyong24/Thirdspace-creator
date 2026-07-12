@@ -135,10 +135,157 @@ export function KnowledgeDetailPreview({ knowledgeId }: { knowledgeId: string })
           ) : (
             <KnowledgeContentBody content={state.content} />
           )}
+          {/* [T-247] 已建关系列表 + 逐条删除(knowledge.relations.delete)。 */}
+          <KnowledgeRelationsList knowledgeId={knowledgeId} />
           {/* [T-091] 手动建边入口:「关联到…」→ 同一 create op(createdByType='user')。 */}
           <KnowledgeRelateEntry knowledgeId={knowledgeId} />
         </>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// KnowledgeRelationsList — [T-247] 详情预览内的已建关系列表 + 删除
+//   knowledge.relations.list 读本条目(source 端)的既有边;目标标题经一次
+//   knowledge.list 反查(与 RelateEntry 同款读法)。每行「删除」→
+//   knowledge.relations.delete(body 带 targetKnowledgeId + relationType)→
+//   本地重拉列表。读失败 → 行内提示;无边 → 不渲(不摆空区)。
+// ---------------------------------------------------------------------------
+
+interface RelationDto {
+  readonly id: string;
+  readonly sourceKnowledgeId: string;
+  readonly targetKnowledgeId: string;
+  readonly relationType: string;
+}
+
+const RELATION_TYPE_LABELS: Record<string, string> = {
+  supports: "支撑",
+  contradicts: "矛盾",
+  references: "引用",
+  extends: "延伸",
+};
+
+function KnowledgeRelationsList({ knowledgeId }: { knowledgeId: string }) {
+  const [relations, setRelations] = React.useState<ReadonlyArray<RelationDto> | null>(
+    null,
+  );
+  const [titles, setTitles] = React.useState<ReadonlyMap<string, string>>(
+    new Map(),
+  );
+  const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const load = React.useCallback(async () => {
+    try {
+      const rels = (await client.listKnowledgeRelations({
+        params: { knowledgeId },
+        query: undefined,
+        body: undefined,
+      })) as unknown as ReadonlyArray<RelationDto>;
+      const list = Array.isArray(rels) ? rels : [];
+      setRelations(list);
+      setError(null);
+      if (list.length > 0) {
+        // 目标标题反查(一次 list,同 RelateEntry 的读法;失败只降级显 id)。
+        try {
+          const rows = (await client.listKnowledge({
+            params: undefined,
+            query: { page: 1, pageSize: 200 },
+            body: undefined,
+          })) as unknown as ReadonlyArray<{ id: string; title: string }>;
+          setTitles(
+            new Map(
+              (Array.isArray(rows) ? rows : []).map((r) => [r.id, r.title]),
+            ),
+          );
+        } catch {
+          // 标题读不到 → 行内显目标 id(诚实降级,不编标题)。
+        }
+      }
+    } catch (err) {
+      setRelations([]);
+      setError(describeUserError(err, "关联读取失败。"));
+    }
+  }, [knowledgeId]);
+
+  React.useEffect(() => {
+    setRelations(null);
+    void load();
+  }, [load]);
+
+  const handleDelete = React.useCallback(
+    async (rel: RelationDto) => {
+      if (busyId !== null) return;
+      setBusyId(rel.id);
+      setError(null);
+      try {
+        await client.removeKnowledgeRelation({
+          params: { knowledgeId },
+          query: undefined,
+          body: {
+            targetKnowledgeId: rel.targetKnowledgeId,
+            relationType: rel.relationType,
+          },
+        });
+        await load(); // 以服务端读回为准,不做乐观假删。
+      } catch (err) {
+        setError(describeUserError(err, "删除关联失败，请重试。"));
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [busyId, knowledgeId, load],
+  );
+
+  // 未加载完(null)或无边 → 不渲区块(详情不摆空「关联」区)。读错误仍要露出来。
+  if (relations === null) return null;
+  if (relations.length === 0 && !error) return null;
+
+  return (
+    <div
+      data-slot="knowledge-relations-list"
+      className="flex flex-col gap-1.5 border-t border-border/60 pt-2"
+    >
+      <p className="text-[11px] font-medium text-muted-foreground">
+        已建关联({relations.length})
+      </p>
+      <ul className="flex flex-col gap-1">
+        {relations.map((rel) => (
+          <li
+            key={rel.id}
+            data-slot="knowledge-relation-row"
+            data-relation-type={rel.relationType}
+            className="flex items-center gap-1.5 text-[12px] text-foreground"
+          >
+            <span className="rounded-full bg-surface-subtle px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              {RELATION_TYPE_LABELS[rel.relationType] ?? rel.relationType}
+            </span>
+            <span className="min-w-0 flex-1 truncate">
+              {titles.get(rel.targetKnowledgeId) ?? rel.targetKnowledgeId}
+            </span>
+            <button
+              type="button"
+              data-slot="knowledge-relation-delete"
+              disabled={busyId !== null}
+              onClick={() => void handleDelete(rel)}
+              className="shrink-0 text-[11px] text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50"
+            >
+              {busyId === rel.id ? "删除中…" : "删除"}
+            </button>
+          </li>
+        ))}
+      </ul>
+      {error ? (
+        <p
+          data-slot="knowledge-relations-error"
+          role="alert"
+          className="text-[11px] text-destructive"
+        >
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

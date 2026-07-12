@@ -150,6 +150,9 @@ import {
   readStoredConversationId,
   writeStoredConversationId,
   toUIMessages,
+  // [T-239e] 会话成本角标:历史底数(落库行的 token 列)+ 流式增量(metadata.usage)分账相加。
+  sumUsageTokens,
+  sumStreamedUsage,
   type WireAIMessage,
 } from "./conversation-persistence";
 // [T-096] 会话作用域:入口参数 → scope(纯函数),历史/恢复/新对话全按它分桶。
@@ -1012,6 +1015,14 @@ export function AICopilotContent({
     [],
   );
 
+  // [T-239e] 会话成本角标 —— 历史底数(读回时从落库行 token 列累计;老消息 null 兼容跳过)。
+  // 流式增量另由 sumStreamedUsage(messages) 现算(route messageMetadata 注入 metadata.usage),
+  // 两者相加 = 本会话累计;切会话/新对话/scope 切换时底数重置。
+  const [historyUsage, setHistoryUsage] = React.useState<{
+    inputTokens: number;
+    outputTokens: number;
+  }>({ inputTokens: 0, outputTokens: 0 });
+
   // 切到某个会话:拉它的历史消息 → 映射成 UIMessage → 喂 setMessages(读回);同时把
   // conversationId 设为它 + 按 surface 持久化(后续发言续接这个会话)。读回失败(会话被删/
   // 网络错)→ 静默降级(不清空当前对话、不弹错),只在控制台留日志。既服务「二次进入读回」,
@@ -1028,6 +1039,9 @@ export function AICopilotContent({
           body: undefined,
         })) as unknown as ReadonlyArray<WireAIMessage> | null | undefined;
         const mapped = toUIMessages(rows ?? []);
+        // [T-239e] 会话成本角标的历史底数:落库行 token 列累计(老行/无 usage 行 null 跳过)。
+        // 读回的 UIMessage 不带 metadata → 与下方流式增量(sumStreamedUsage)天然不重复计。
+        setHistoryUsage(sumUsageTokens(rows ?? []));
         setMessages(mapped);
         conversationIdRef.current = id;
         setConversationId(id);
@@ -1099,6 +1113,7 @@ export function AICopilotContent({
       conversationIdRef.current = null;
       setConversationId(null);
       setMessages([]);
+      setHistoryUsage({ inputTokens: 0, outputTokens: 0 }); // [T-239e] 空会话底数归零
       prefilledRef.current = false;
     })();
     // loadConversation 依赖稳定;scope 变化触发恢复。
@@ -1147,6 +1162,7 @@ export function AICopilotContent({
     setConversationId(null);
     writeStoredConversationId(scopeRef.current, null);
     setMessages([]);
+    setHistoryUsage({ inputTokens: 0, outputTokens: 0 }); // [T-239e] 新对话底数归零
     prefilledRef.current = false;
   }, [setMessages]);
 
@@ -1375,6 +1391,13 @@ export function AICopilotContent({
       ? { kind: selKind, label: selTitle || selKind }
       : null;
 
+  // [T-239e] 会话成本角标:历史底数(落库行 token 列)+ 流式增量(本轮 metadata.usage,
+  // route messageMetadata 在 finish part 注入,每轮 onFinish 后 messages 更新即自动刷新)。
+  // 读回历史不带 metadata → 两账不重复。全 0(老会话/无 usage 模型)→ 不渲角标(诚实空态)。
+  const streamedUsage = React.useMemo(() => sumStreamedUsage(messages), [messages]);
+  const usageInput = historyUsage.inputTokens + streamedUsage.inputTokens;
+  const usageOutput = historyUsage.outputTokens + streamedUsage.outputTokens;
+
   return (
     // bug #5:面板布局重排 —— 整体撑满浮层高度(min-h-0 让内部可正确收缩),对话区做主区(flex-1
     // 占满、消息流自身滚动),下面的「控制台/快捷入口/智能推荐」收进一个有界、可滚的次区,不再挤占对话。
@@ -1407,6 +1430,17 @@ export function AICopilotContent({
         {/* 历史记录 + 新对话(SPEC 本切片:占位按钮做实)。历史记录 → 拉过往会话列表,点某条
             切过去 + 读回;新对话 → 清空当前会话(下次发言后端 lazy 建新会话)。 */}
         <div className="ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+          {/* [T-239e] 会话成本角标 —— 本会话累计 token(↑输入 ↓输出)。v1 只显计数不算钱
+              (价格换算待 model-config 可配单价,tooltip 注明);全 0(老会话/无 usage)不渲。 */}
+          {usageInput + usageOutput > 0 && (
+            <span
+              data-slot="copilot-usage-badge"
+              title="本会话累计 token 用量(↑输入 ↓输出)。费用换算后续可在模型配置里配置单价。"
+              className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10px] tabular-nums text-text-subtle"
+            >
+              ↑{usageInput.toLocaleString()} ↓{usageOutput.toLocaleString()} tokens
+            </span>
+          )}
           <button
             type="button"
             onClick={startNewConversation}

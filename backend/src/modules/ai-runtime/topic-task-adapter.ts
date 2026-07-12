@@ -94,6 +94,25 @@ export async function assembleTrendBrief(
   positioningBrief: string,
   deps: Pick<TopicTaskAdapterDeps, "trendSearch" | "trendSourceSignals">,
 ): Promise<string> {
+  return (await assembleTrendBriefDetailed(ctx, positioningBrief, deps)).brief;
+}
+
+/** [T-245] trend brief 装配明细(additive):除 brief 外带两路各自拉到的条数,供调用方(对话
+ *  编导 topic.generate)在信源信号为空时产诚实降级注记(「本次未拉到信源信号」),不猜不编。 */
+export interface TrendBriefDetail {
+  /** 分段 brief(与 assembleTrendBrief 返回值完全一致;两路全空 → "")。 */
+  brief: string;
+  /** 已登记信源实拉到的信号条数(端口未绑/整体失败 → 0,诚实)。 */
+  sourceSignalCount: number;
+  /** web 联网搜索命中条数(未配/失败 → 0,诚实)。 */
+  searchHitCount: number;
+}
+
+export async function assembleTrendBriefDetailed(
+  ctx: RequestContext,
+  positioningBrief: string,
+  deps: Pick<TopicTaskAdapterDeps, "trendSearch" | "trendSourceSignals">,
+): Promise<TrendBriefDetail> {
   const [signalsSettled, searchSettled] = await Promise.allSettled([
     deps.trendSourceSignals
       ? deps.trendSourceSignals(ctx)
@@ -103,15 +122,19 @@ export async function assembleTrendBrief(
       : Promise.resolve([]),
   ]);
   const sections: string[] = [];
+  let sourceSignalCount = 0;
+  let searchHitCount = 0;
   if (signalsSettled.status === "fulfilled") {
+    sourceSignalCount = signalsSettled.value.length;
     const brief = formatTrendSourceBrief(signalsSettled.value);
     if (brief) sections.push(brief);
   } // rejected → 信源段空(collectTrendSourceSignals 内已单源容错,这里兜整体失败)
   if (searchSettled.status === "fulfilled") {
+    searchHitCount = searchSettled.value.length;
     const brief = formatTrendBrief(searchSettled.value);
     if (brief) sections.push(brief);
   } // rejected(未配 web.search / 检索失败)→ 搜索段空,诚实降级
-  return sections.join("\n\n");
+  return { brief: sections.join("\n\n"), sourceSignalCount, searchHitCount };
 }
 
 export interface TopicTask {

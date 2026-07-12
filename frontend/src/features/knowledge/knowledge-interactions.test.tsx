@@ -47,6 +47,17 @@ const mockClient = {
       { id: "rev-1", revisionNumber: 1, content: "# 标题\n\n正文**加粗**内容" },
     ]),
   ),
+  // [T-247] 归档 + 已建关系列表(preview 挂载即读 relations)。
+  archiveKnowledge: vi.fn((_input: unknown): Promise<unknown> =>
+    Promise.resolve({ id: "k-1", status: "archived" }),
+  ),
+  listKnowledgeRelations: vi.fn((_input: unknown): Promise<unknown> =>
+    Promise.resolve([]),
+  ),
+  removeKnowledgeRelation: vi.fn((_input: unknown): Promise<unknown> =>
+    Promise.resolve({}),
+  ),
+  listKnowledge: vi.fn((_input: unknown): Promise<unknown> => Promise.resolve([])),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
@@ -57,6 +68,12 @@ vi.mock("@/lib/contract-client", () => ({
       mockClient.getKnowledge(input),
     listKnowledgeRevisions: (input: unknown) =>
       mockClient.listKnowledgeRevisions(input as never),
+    archiveKnowledge: (input: unknown) => mockClient.archiveKnowledge(input),
+    listKnowledgeRelations: (input: unknown) =>
+      mockClient.listKnowledgeRelations(input),
+    removeKnowledgeRelation: (input: unknown) =>
+      mockClient.removeKnowledgeRelation(input),
+    listKnowledge: (input: unknown) => mockClient.listKnowledge(input),
   },
 }));
 
@@ -70,6 +87,9 @@ beforeEach(() => {
   mockClient.createKnowledgeRevision.mockClear();
   mockClient.getKnowledge.mockClear();
   mockClient.listKnowledgeRevisions.mockClear();
+  mockClient.archiveKnowledge.mockClear();
+  mockClient.listKnowledgeRelations.mockClear();
+  mockClient.removeKnowledgeRelation.mockClear();
 });
 
 // Resolve the async page through the override seam, then render its element.
@@ -245,6 +265,41 @@ describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
     );
     expect(source).not.toBeNull();
     expect(source!.getAttribute("href")).toBe("https://example.com/article");
+  });
+
+  it("[T-247] 归档:两步确认 → archiveKnowledge → 关弹窗 + refresh", async () => {
+    const { container } = await renderKnowledge();
+    const row = container.querySelector<HTMLTableRowElement>(
+      '[data-slot="recent-knowledge-row"]',
+    );
+    const knowledgeId = row!.getAttribute("data-knowledge-id");
+    fireEvent.click(row!);
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-slot="knowledge-archive-button"]'),
+      ).not.toBeNull(),
+    );
+    const archive = document.querySelector(
+      '[data-slot="knowledge-archive-button"]',
+    ) as HTMLButtonElement;
+    // 第一步:翻确认态,不打 op(防误触)。
+    fireEvent.click(archive);
+    expect(mockClient.archiveKnowledge).not.toHaveBeenCalled();
+    expect(archive.getAttribute("data-confirming")).toBe("true");
+    // 第二步:确认 → 真打 knowledge.archive → 弹窗关闭 + refresh。
+    fireEvent.click(archive);
+    await waitFor(() =>
+      expect(mockClient.archiveKnowledge).toHaveBeenCalledTimes(1),
+    );
+    expect(mockClient.archiveKnowledge).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { knowledgeId } }),
+    );
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-slot="knowledge-detail-dialog"]'),
+      ).toBeNull(),
+    );
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
   });
 
   it("弹窗内 getKnowledge 失败 → 诚实错误态(不崩,不跳路由)(T-192)", async () => {

@@ -32,6 +32,7 @@ import { useRouter } from "next/navigation";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { client } from "@/lib/contract-client";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -215,6 +216,34 @@ export function KnowledgeInteractiveRegion({
   const [pending, startTransition] = React.useTransition();
   const [revisionContent, setRevisionContent] = React.useState("");
 
+  // [T-247] 归档入口(knowledge.archive,soft-delete):两步确认防误触 ——
+  // 第一次点「归档」→ 翻确认态;再点「确认归档」→ 打 op → 关弹窗 + refresh
+  // (读侧已滤 archived,列表/地图里该条随即消失)。失败 → 行内错误,不假装已归档。
+  const [archiveConfirming, setArchiveConfirming] = React.useState(false);
+  const [archiveError, setArchiveError] = React.useState<string | null>(null);
+  const handleArchive = React.useCallback(() => {
+    if (selectedId === null) return;
+    if (!archiveConfirming) {
+      setArchiveConfirming(true);
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await client.archiveKnowledge({
+          params: { knowledgeId: selectedId },
+          query: undefined,
+          body: undefined,
+        });
+        setSelectedId(null);
+        setArchiveConfirming(false);
+        setArchiveError(null);
+        router.refresh();
+      } catch (err) {
+        setArchiveError(describeUserError(err, "归档失败，请重试。"));
+      }
+    });
+  }, [selectedId, archiveConfirming, router]);
+
   const handleRevisionSubmit = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -357,6 +386,9 @@ export function KnowledgeInteractiveRegion({
           if (!open) {
             setSelectedId(null);
             setRevisionContent("");
+            // [T-247] 关弹窗清归档确认/错误态,防下次打开残留。
+            setArchiveConfirming(false);
+            setArchiveError(null);
           }
         }}
       >
@@ -408,6 +440,55 @@ export function KnowledgeInteractiveRegion({
                   保存修订
                 </button>
               </form>
+              {/* [T-247] 归档入口(soft-delete):两步确认防误触;归档后条目从
+                  列表/地图消失(读侧滤 archived),恒可在库里追溯(status='archived')。 */}
+              <div
+                data-slot="knowledge-archive-entry"
+                className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2.5"
+              >
+                <button
+                  type="button"
+                  data-slot="knowledge-archive-button"
+                  data-confirming={archiveConfirming ? "true" : "false"}
+                  disabled={pending}
+                  onClick={handleArchive}
+                  className={cn(
+                    "inline-flex h-8 items-center rounded-md border px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50",
+                    archiveConfirming
+                      ? "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
+                      : "border-border bg-surface text-muted-foreground hover:bg-surface-subtle hover:text-foreground",
+                  )}
+                >
+                  {archiveConfirming ? "确认归档(不可撤销)" : "归档"}
+                </button>
+                {archiveConfirming ? (
+                  <button
+                    type="button"
+                    data-slot="knowledge-archive-cancel"
+                    disabled={pending}
+                    onClick={() => {
+                      setArchiveConfirming(false);
+                      setArchiveError(null);
+                    }}
+                    className="text-[12px] text-muted-foreground hover:underline"
+                  >
+                    取消
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-muted-foreground">
+                    归档后从列表消失,条目保留可追溯。
+                  </span>
+                )}
+                {archiveError ? (
+                  <span
+                    data-slot="knowledge-archive-error"
+                    role="alert"
+                    className="text-[12px] text-destructive"
+                  >
+                    {archiveError}
+                  </span>
+                ) : null}
+              </div>
             </>
           ) : null}
         </DialogContent>

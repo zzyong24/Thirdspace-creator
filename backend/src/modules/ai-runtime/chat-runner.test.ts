@@ -19,6 +19,22 @@ vi.mock("@creatoros/ai-worker", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@creatoros/ai-worker")>();
   return {
     ...actual,
+    // [T-245] runTopicNode 探针(不打模型):回一条固定候选,捕获入参供断言
+    // 「trend basis 的 basisBrief 真装进了信源信号段」。
+    runTopicNode: vi.fn(async () => ({
+      topics: [
+        {
+          title: "热点候选",
+          angle: "切角",
+          contentRole: "traffic",
+          source: "trend",
+          predictedScore: 66,
+          reason: "理由",
+          sourceComments: [],
+        },
+      ],
+      steps: [],
+    })),
     runResearchNode: vi.fn(
       async (input: { searchResults?: unknown[] }) => {
         const hasSearch = (input.searchResults?.length ?? 0) > 0;
@@ -1504,5 +1520,102 @@ describe("[T-239c] 长工具 signal 透传(material.screenshot / web.read)", () 
     // 中断错误进结果信封(execute 内 catch 转人话),kind 不变 → 前端卡渲错误态不崩。
     expect(res.kind).toBe("web.read");
     expect(res.error).toContain("已中断");
+  });
+});
+
+// [T-245] 编导热点能力认知接线 —— honesty 第 11 条 + 对话 trend 出题真接信源信号(与选题页同源)。
+describe("[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源", () => {
+  it("system 注入第 11 条:有真实热点能力(信源/黑马雷达/web 搜索)+ 引导登记信号源,绝不自称没能力", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).toContain("你有真实热点能力");
+    expect(a.system).toContain("黑马雷达");
+    expect(a.system).toContain("basis=trend");
+    expect(a.system).toContain("去选题页『信号源』登记热榜站点");
+    expect(a.system).toContain("绝不自称「没有实时热点/热搜拉取能力」");
+  });
+
+  it("basis=trend:并行拉信源信号 + web 搜索进 basisBrief;有信号 → 无降级注记", async () => {
+    const trendSourceSignals = vi.fn(async () => [
+      {
+        title: "AI Agent 融资潮",
+        url: "https://36kr.com/hot/1",
+        heat: 998,
+        publishedAt: null,
+        sourceName: "36氪热榜",
+      },
+    ]);
+    const searchWeb = vi.fn(async () => [
+      {
+        title: "本周 AI 热点",
+        url: "https://example.com/a",
+        snippet: "热点摘要",
+      },
+    ]);
+    const { deps } = makeDeps({ trendSourceSignals, searchWeb });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const tool = a.tools["topic.generate"]! as { execute?: unknown };
+    const res = (await runToolExecute(tool, { basis: "trend" })) as {
+      kind: string;
+      items: Array<{ title: string }>;
+      trendNote?: string | null;
+    };
+    expect(trendSourceSignals).toHaveBeenCalled();
+    expect(searchWeb).toHaveBeenCalled();
+    // runTopicNode 吃到的 basisBrief 装进了信源信号段(与选题页出题同源装配)。
+    const { runTopicNode } = await import("@creatoros/ai-worker");
+    const call = vi.mocked(runTopicNode).mock.calls.at(-1)![0] as {
+      basisBrief?: string;
+      basis: string;
+    };
+    expect(call.basis).toBe("trend");
+    expect(call.basisBrief).toContain("【已登记信源信号】");
+    expect(call.basisBrief).toContain("AI Agent 融资潮");
+    expect(call.basisBrief).toContain("【当前热点(联网检索)】");
+    // 有信源信号 → 不产降级注记(结果无 trendNote 字段,不喂空噪声)。
+    expect(res.kind).toBe("topic.candidates");
+    expect(res.trendNote ?? null).toBeNull();
+  });
+
+  it("basis=trend 信源信号为空 → trendNote 诚实注明「已登记 N 个」并指路信号源登记", async () => {
+    const { deps } = makeDeps({
+      trendSourceSignals: async () => [],
+      countEnabledTrendSources: async () => 2,
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const tool = a.tools["topic.generate"]! as { execute?: unknown };
+    const res = (await runToolExecute(tool, { basis: "trend" })) as {
+      trendNote?: string | null;
+    };
+    expect(res.trendNote).toContain("未拉到已登记信源的实时信号");
+    expect(res.trendNote).toContain("已登记 2 个信源");
+  });
+
+  it("basis=trend 未登记任何信源(count=0)→ trendNote 引导去『信号源』登记热榜站点", async () => {
+    const { deps } = makeDeps({
+      trendSourceSignals: async () => [],
+      countEnabledTrendSources: async () => 0,
+    });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const tool = a.tools["topic.generate"]! as { execute?: unknown };
+    const res = (await runToolExecute(tool, { basis: "trend" })) as {
+      trendNote?: string | null;
+    };
+    expect(res.trendNote).toContain("还没有登记任何网页信源");
+    expect(res.trendNote).toContain("『信号源』");
+    // 没配 searchWeb → 连搜索路都没有,注记明说别声称基于实时热榜。
+    expect(res.trendNote).toContain("不要声称基于实时热榜");
+  });
+
+  it("端口全缺省(未绑 trendSourceSignals/searchWeb)→ trend 出题不崩,带诚实注记", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const tool = a.tools["topic.generate"]! as { execute?: unknown };
+    const res = (await runToolExecute(tool, { basis: "trend" })) as {
+      kind: string;
+      trendNote?: string | null;
+    };
+    expect(res.kind).toBe("topic.candidates");
+    expect(res.trendNote).toContain("未拉到已登记信源的实时信号");
   });
 });

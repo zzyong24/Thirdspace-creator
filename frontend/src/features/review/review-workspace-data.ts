@@ -410,6 +410,14 @@ export interface PredictionComparisonRow {
   readonly status: "draft" | "locked";
   readonly predictedScore: number;
   readonly lockedAt: string | null;
+  /**
+   * [T-247] 盲预测的维度评分(predictedConversion.dimensions 维度评分约定)——
+   * 「录入实绩」确认门按 key 摆录入框、预填 AI 候选分。旧预测无维度约定 → []。
+   */
+  readonly dimensions: ReadonlyArray<{
+    readonly key: string;
+    readonly predicted: number | null;
+  }>;
   /** 已回流 → 逐维度对照;未回流 → null(显「等待发布数据回流」)。 */
   readonly reflow: {
     readonly deviationBand: "low" | "mid" | "high" | "none";
@@ -460,6 +468,28 @@ interface PredictionRowDto {
   readonly predictedScore: number;
   readonly lockedAt: string | null;
   readonly createdAt: string;
+  // [T-247] 维度评分约定(可选强 schema 视图):{ dimensions: [{key, score}] }。
+  readonly predictedConversion?: Record<string, unknown>;
+}
+
+// [T-247] 从 predictedConversion 抽维度评分(键 + 当初预测分)。旧预测(空 jsonb /
+// 无约定)→ [](录入门按无预填的手动录入降级,诚实不编)。
+function extractPredictionDimensions(
+  predictedConversion: Record<string, unknown> | undefined,
+): ReadonlyArray<{ key: string; predicted: number | null }> {
+  const raw = (predictedConversion ?? {}) as {
+    dimensions?: Array<{ key?: unknown; score?: unknown }>;
+  };
+  if (!Array.isArray(raw.dimensions)) return [];
+  const out: Array<{ key: string; predicted: number | null }> = [];
+  for (const d of raw.dimensions) {
+    if (typeof d?.key !== "string" || d.key.length === 0) continue;
+    out.push({
+      key: d.key,
+      predicted: typeof d.score === "number" ? d.score : null,
+    });
+  }
+  return out;
 }
 
 interface OverviewReflowDto {
@@ -566,6 +596,8 @@ export async function buildPredictionComparison(
       status: p.status === "locked" ? "locked" : "draft",
       predictedScore: p.predictedScore,
       lockedAt: p.lockedAt,
+      // [T-247] 维度评分随行带出 → 「录入实绩」门按 key 摆录入框。
+      dimensions: extractPredictionDimensions(p.predictedConversion),
       reflow: reflowByPrediction.get(p.id) ?? null,
     })),
   };

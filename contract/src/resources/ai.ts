@@ -35,6 +35,14 @@ export const aiMessageResource = z.object({
   parts: z.array(z.unknown()).default([]),
   attachments: z.array(id),
   modelMetadata: z.record(z.string(), z.unknown()),
+  // [T-239e] 用量可见:assistant 行的 token 计数(streamText totalUsage 投影)。additive、
+  // nullable + default(null):存量行/老后端读到 null → 前端会话成本角标跳过不计(不崩)。
+  // cachedTokens = 命中缓存的输入 token(inputTokenDetails.cacheReadTokens);modelKey = 本轮
+  // 实际用的模型 id。user 行恒 null(用量只属 assistant 回复轮)。
+  inputTokens: z.number().int().nullable().default(null),
+  outputTokens: z.number().int().nullable().default(null),
+  cachedTokens: z.number().int().nullable().default(null),
+  modelKey: z.string().nullable().default(null),
   createdAt: iso8601,
 });
 export type AIMessageResource = z.infer<typeof aiMessageResource>;

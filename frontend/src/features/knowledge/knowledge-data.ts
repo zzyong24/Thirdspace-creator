@@ -246,11 +246,16 @@ export async function buildKnowledgeDashboardViewModel(
 
   let items: ReadonlyArray<KnowledgeListDto>;
   try {
-    items = (await client.listKnowledge({
+    const rows = (await client.listKnowledge({
       params: undefined,
       query: { page: 1, pageSize: 200 },
       body: undefined,
     })) as ReadonlyArray<KnowledgeListDto>;
+    // [T-247] 读侧滤 archived:knowledge.list 是全量行(repo 不按 status 过滤),
+    // 归档(soft-delete)后的条目不再进列表/地图/指标 —— 归档动作在 UI 上真生效。
+    items = (Array.isArray(rows) ? rows : []).filter(
+      (row) => row.status !== "archived",
+    );
   } catch (err) {
     // Primary list read FAILED → honest ERROR tri-state (scenario "error" +
     // payload). We do NOT fall back to the fixture VM: a failure is not data.

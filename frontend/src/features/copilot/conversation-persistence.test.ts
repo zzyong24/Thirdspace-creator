@@ -11,6 +11,8 @@ import {
   readStoredConversationId,
   writeStoredConversationId,
   toUIMessages,
+  sumUsageTokens,
+  sumStreamedUsage,
   type WireAIMessage,
 } from "./conversation-persistence";
 
@@ -160,5 +162,36 @@ describe("conversation-persistence: [T-128] 落库 parts 回放(卡刷新不丢)
     ]);
     // 无可渲染 part → 回落 content 文本气泡。
     expect(ui[0].parts).toEqual([{ type: "text", text: "兜底文本" }]);
+  });
+});
+
+// ── [T-239e] 会话成本角标的两本账:落库底数 + 流式增量 ────────────────────────────────
+describe("conversation-persistence: [T-239e] token 用量累计", () => {
+  it("sumUsageTokens:只累加真数字;老消息/user 行 null/undefined 诚实跳过(不崩)", () => {
+    const rows: WireAIMessage[] = [
+      { id: "m1", role: "user", content: "hi" }, // 无用量字段(老后端形)
+      { id: "m2", role: "assistant", content: "旧轮", inputTokens: null, outputTokens: null },
+      { id: "m3", role: "assistant", content: "新轮", inputTokens: 1200, outputTokens: 340 },
+      { id: "m4", role: "assistant", content: "再一轮", inputTokens: 800, outputTokens: 60 },
+    ];
+    expect(sumUsageTokens(rows)).toEqual({ inputTokens: 2000, outputTokens: 400 });
+  });
+
+  it("sumUsageTokens:全老消息 → 0/0(角标不渲,诚实空态)", () => {
+    const rows: WireAIMessage[] = [
+      { id: "m1", role: "user", content: "hi" },
+      { id: "m2", role: "assistant", content: "旧" },
+    ];
+    expect(sumUsageTokens(rows)).toEqual({ inputTokens: 0, outputTokens: 0 });
+  });
+
+  it("sumStreamedUsage:读 metadata.usage;无 metadata/形状不合跳过", () => {
+    const messages = [
+      { metadata: undefined }, // 读回历史(toUIMessages 不设 metadata)
+      { metadata: { usage: { inputTokens: 500, outputTokens: 90 } } },
+      { metadata: { usage: { inputTokens: null, outputTokens: "x" } } }, // 形状不合
+      { metadata: { other: 1 } },
+    ];
+    expect(sumStreamedUsage(messages)).toEqual({ inputTokens: 500, outputTokens: 90 });
   });
 });

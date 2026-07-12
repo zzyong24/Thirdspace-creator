@@ -8,7 +8,10 @@ import {
   type TrendSourceSignal,
   type TrendSourceSignalsDeps,
 } from "./trend-source-signals";
-import { assembleTrendBrief } from "./topic-task-adapter";
+import {
+  assembleTrendBrief,
+  assembleTrendBriefDetailed,
+} from "./topic-task-adapter";
 
 // [T-235b] 信源信号采集单测:web 主路(readUrl→AI 抽取)/ rss 辅路(feed 解析)分流、
 // 单源失败跳过不拖垮、正文截断、诚实空;brief 拼装(heat null 不编);多源并行装配。
@@ -162,5 +165,37 @@ describe("assembleTrendBrief 多源并行(信源信号 + web 搜索)", () => {
 
     const none = await assembleTrendBrief(ctx, "母婴定位", {});
     expect(none).toBe("");
+  });
+});
+
+// [T-245] 明细装配(additive):brief 与 assembleTrendBrief 完全一致,另带两路条数,
+// 供对话编导在信源信号为空时产诚实降级注记(「本次未拉到信源信号」),不猜不编。
+describe("assembleTrendBriefDetailed 装配明细(T-245)", () => {
+  it("两路条数如实计数;brief 与 assembleTrendBrief 同值;端口未绑/失败 → 0", async () => {
+    const deps = {
+      trendSourceSignals: async () => [
+        { title: "信源条目", url: null, heat: null, publishedAt: null, sourceName: "36氪热榜" },
+      ],
+      trendSearch: async () => [
+        { title: "搜索命中A" },
+        { title: "搜索命中B" },
+      ],
+    };
+    const detail = await assembleTrendBriefDetailed(ctx, "母婴定位", deps);
+    expect(detail.sourceSignalCount).toBe(1);
+    expect(detail.searchHitCount).toBe(2);
+    expect(detail.brief).toBe(await assembleTrendBrief(ctx, "母婴定位", deps));
+
+    const none = await assembleTrendBriefDetailed(ctx, "母婴定位", {});
+    expect(none).toEqual({ brief: "", sourceSignalCount: 0, searchHitCount: 0 });
+
+    const failed = await assembleTrendBriefDetailed(ctx, "母婴定位", {
+      trendSourceSignals: async () => {
+        throw new Error("信源整体失败");
+      },
+      trendSearch: async () => [{ title: "搜索命中" }],
+    });
+    expect(failed.sourceSignalCount).toBe(0);
+    expect(failed.searchHitCount).toBe(1);
   });
 });

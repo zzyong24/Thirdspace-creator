@@ -241,12 +241,22 @@ export interface AiService {
   // 缺省(旧调用/纯文本回复)→ [](恢复时回落 content 文本气泡,向后兼容)。
   // [T-239c] opts.aborted(additive,可选):本轮被用户中断 —— 已产出的部分文本/已完成
   // tool parts 仍落库(刷新后该轮不丢),modelMetadata.aborted=true 标记(同存储不建新表)。
+  // [T-239e] opts.usage / opts.modelKey(additive,可选):本轮 streamText totalUsage 的
+  // token 计数 + 实际模型 id → 落 ai_messages 新列(用量可见);中断轮已完成步的用量照落。
   appendAssistantMessage(
     ctx: RequestContext,
     conversationId: string,
     content: string,
     parts?: unknown[],
-    opts?: { aborted?: boolean },
+    opts?: {
+      aborted?: boolean;
+      usage?: {
+        inputTokens?: number | null;
+        outputTokens?: number | null;
+        cachedTokens?: number | null;
+      } | null;
+      modelKey?: string | null;
+    },
   ): Promise<AIMessageResource>;
   listMessages(
     ctx: RequestContext,
@@ -453,6 +463,9 @@ export function createAiService(deps: ServiceDeps): AiService {
         attachments: [],
         // [T-239c] 中断标记进 modelMetadata(同存储不建新表):部分产出轮刷新后仍在,且可辨识。
         modelMetadata: opts?.aborted ? { aborted: true } : {},
+        // [T-239e] token 用量 + 模型 id(additive):没报 → repo 落 NULL(诚实缺省,不填 0 充数)。
+        usage: opts?.usage ?? null,
+        modelKey: opts?.modelKey ?? null,
       });
       return toMessageDto(row);
     },

@@ -50,11 +50,8 @@ const VM: SettingsViewModel = {
     locale: "zh-CN",
   },
   preferences: {
-    defaultHome: "dashboard",
     defaultCreationMode: "guided",
-    defaultVisibility: "private",
     autosaveEnabled: true,
-    analyticsEnabled: true,
   },
   system: { theme: "system", density: "comfortable", notifications: true, locale: "zh-CN" },
   storage: {

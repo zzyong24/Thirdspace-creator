@@ -380,6 +380,86 @@ describe("[T-239c] POST /api/chat — 中断真一致", () => {
   });
 });
 
+// ── [T-239e] 用量可见:onUsage 回报的 tokens 随 assistant 落库 ────────────────────────
+describe("[T-239e] POST /api/chat — usage 落库", () => {
+  it("runChatStream 收到 onUsage 回报口;回报后 onFinish 落库带 usage + modelKey", async () => {
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.onUsage).toBeTypeOf("function");
+    // 模拟 chat-runner 流式中回报累计用量(finish 时的权威值)。
+    input.onUsage({
+      inputTokens: 2100,
+      outputTokens: 480,
+      cachedTokens: 1500,
+      modelKey: "deepseek-chat",
+    });
+    await capturedStreamInit!.onFinish!({
+      responseMessage: {
+        id: "m-2",
+        role: "assistant",
+        parts: [{ type: "text", text: "好的" }],
+      },
+    });
+    expect(appendAssistantMessage).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      "conv-1",
+      "好的",
+      [{ type: "text", text: "好的" }],
+      {
+        usage: { inputTokens: 2100, outputTokens: 480, cachedTokens: 1500 },
+        modelKey: "deepseek-chat",
+      },
+    );
+  });
+
+  it("中断轮也带已回报的 usage(aborted 与 usage 并存)", async () => {
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    const [, input] = runChatStream.mock.calls[0];
+    input.onUsage({
+      inputTokens: 900,
+      outputTokens: 120,
+      cachedTokens: 0,
+      modelKey: "glm-4",
+    });
+    await capturedStreamInit!.onFinish!({
+      responseMessage: {
+        id: "m-a",
+        role: "assistant",
+        parts: [{ type: "text", text: "半截" }],
+      },
+      isAborted: true,
+    });
+    expect(appendAssistantMessage).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      "conv-1",
+      "半截",
+      [{ type: "text", text: "半截" }],
+      {
+        aborted: true,
+        usage: { inputTokens: 900, outputTokens: 120, cachedTokens: 0 },
+        modelKey: "glm-4",
+      },
+    );
+  });
+
+  it("整轮没回报 usage → 维持 4 参调用(不带空 opts,老语义原样)", async () => {
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    await capturedStreamInit!.onFinish!({
+      responseMessage: {
+        id: "m-2",
+        role: "assistant",
+        parts: [{ type: "text", text: "无用量轮" }],
+      },
+    });
+    expect(appendAssistantMessage).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      "conv-1",
+      "无用量轮",
+      [{ type: "text", text: "无用量轮" }],
+    );
+  });
+});
+
 // ── [T-239f S6] regenerate 幂等:user 消息不重复落库 ────────────────────────────────
 describe("[T-239f] POST /api/chat — user 消息去重", () => {
   it("trigger='regenerate-message'(useChat regenerate 重发同一条 user)→ 不重复 insert,流式照跑", async () => {

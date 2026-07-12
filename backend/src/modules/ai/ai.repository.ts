@@ -65,6 +65,14 @@ export interface CreateMessageInput {
   parts?: unknown[];
   attachments: string[];
   modelMetadata: Record<string, unknown>;
+  // [T-239e] 用量可见(additive,可选):assistant 行的 token 计数 + 本轮实际模型 id。
+  // 缺省/null → 列落 NULL(user 行/无 usage 的老调用兼容)。
+  usage?: {
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    cachedTokens?: number | null;
+  } | null;
+  modelKey?: string | null;
 }
 
 export interface CreateTaskInput {
@@ -273,6 +281,11 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
           parts: input.parts ?? [],
           attachments: input.attachments,
           modelMetadata: input.modelMetadata,
+          // [T-239e] token 用量(可选,additive):没报 usage → 全 NULL(诚实缺省,不填 0 充数)。
+          inputTokens: input.usage?.inputTokens ?? null,
+          outputTokens: input.usage?.outputTokens ?? null,
+          cachedTokens: input.usage?.cachedTokens ?? null,
+          modelKey: input.modelKey ?? null,
           createdAt: deps.now(),
         })
         .returning();

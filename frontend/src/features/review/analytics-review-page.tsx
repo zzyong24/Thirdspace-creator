@@ -46,6 +46,8 @@ import {
 } from "./analytics-review-interactive-region";
 import { ReviewAnalyzeIsland } from "./review-analyze-island";
 import { PredictionComparisonSection } from "./prediction-comparison-section";
+// [T-247] 校准回流建议采纳/驳回门(client 岛;0 条/读失败不渲)。
+import { CalibrationSuggestionsCard } from "./calibration-suggestions-card";
 import type { PredictionComparisonVm } from "./review-workspace-data";
 
 // ---------------------------------------------------------------------------
@@ -118,6 +120,8 @@ export function AnalyticsReviewPage({
           {predictionComparison !== undefined ? (
             <PredictionComparisonSection vm={predictionComparison} />
           ) : null}
+          {/* [T-247] 已回流校准(待采纳)建议列表(user-scoped;0 条不渲)。 */}
+          <CalibrationSuggestionsCard />
         </>
       ) : (
         <>
@@ -126,6 +130,8 @@ export function AnalyticsReviewPage({
           {predictionComparison !== undefined ? (
             <PredictionComparisonSection vm={predictionComparison} />
           ) : null}
+          {/* [T-247] 已回流校准(待采纳):复盘裁决产生的评分维度建议 → 采纳/驳回门。 */}
+          <CalibrationSuggestionsCard />
           <AnalyticsReviewInteractiveRegion
             viewModel={vm}
             reviewsWiring={reviewsWiring}

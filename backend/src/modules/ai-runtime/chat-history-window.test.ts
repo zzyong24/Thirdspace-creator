@@ -1,0 +1,167 @@
+import { describe, it, expect } from "vitest";
+import type { UIMessage } from "ai";
+import {
+  TOOL_RESULT_CLEARED_MESSAGE,
+  omittedTurnsNotice,
+  resolveToolResultKeepTurns,
+  resolveContextWindowTokens,
+  resolveTruncateKeepTurns,
+  estimateTokens,
+  projectChatHistory,
+  formatChatContextLog,
+} from "./chat-history-window";
+
+// [T-239d] 对话历史窗口化 —— 投影层单测:①tool-result 清体只影响 N 轮之前、近轮原样;
+// ②截窗保 system+近 K 轮 + 注入省略提示;③存储侧入参绝不被改(投影是副本);④日志格式锚定。
+
+function userMsg(id: string, text: string): UIMessage {
+  return { id, role: "user", parts: [{ type: "text", text }] } as UIMessage;
+}
+
+function assistantMsgWithTool(id: string, output: unknown): UIMessage {
+  return {
+    id,
+    role: "assistant",
+    parts: [
+      { type: "text", text: `回复 ${id}` },
+      {
+        type: "tool-context.projects",
+        toolCallId: `tc-${id}`,
+        state: "output-available",
+        input: { limit: 10 },
+        output,
+      },
+    ],
+  } as UIMessage;
+}
+
+// n 轮对话(每轮 user + assistant(带 tool 输出))。
+function turns(n: number, outputSize = 10): UIMessage[] {
+  const out: UIMessage[] = [];
+  for (let i = 0; i < n; i++) {
+    out.push(userMsg(`u-${i}`, `问题 ${i}`));
+    out.push(assistantMsgWithTool(`a-${i}`, { rows: "x".repeat(outputSize) }));
+  }
+  return out;
+}
+
+const baseOpts = {
+  systemText: "system",
+  keepToolResultTurns: 4,
+  keepTurns: 12,
+  contextWindowTokens: 100000,
+};
+
+describe("[T-239d] env 解析器", () => {
+  it("缺省:keepToolResultTurns=4 / window=100000 / keepTurns=12", () => {
+    expect(resolveToolResultKeepTurns({})).toBe(4);
+    expect(resolveContextWindowTokens({})).toBe(100000);
+    expect(resolveTruncateKeepTurns({})).toBe(12);
+  });
+  it("env 可配 + 非法值回落默认", () => {
+    expect(
+      resolveToolResultKeepTurns({ CREATOROS_CHAT_TOOLRESULT_KEEP_TURNS: "2" }),
+    ).toBe(2);
+    expect(
+      resolveContextWindowTokens({
+        CREATOROS_CHAT_CONTEXT_WINDOW_TOKENS: "32000",
+      }),
+    ).toBe(32000);
+    expect(resolveTruncateKeepTurns({ CREATOROS_CHAT_KEEP_TURNS: "6" })).toBe(6);
+    expect(
+      resolveToolResultKeepTurns({ CREATOROS_CHAT_TOOLRESULT_KEEP_TURNS: "abc" }),
+    ).toBe(4);
+    expect(
+      resolveContextWindowTokens({ CREATOROS_CHAT_CONTEXT_WINDOW_TOKENS: "-1" }),
+    ).toBe(1000); // 下限夹紧,防误配出 0 窗
+  });
+});
+
+describe("[T-239d] tool-result 清体(近 N 轮之外)", () => {
+  it("N 轮之前的 tool 输出替换为指针占位;近 N 轮原样", () => {
+    const messages = turns(6); // 6 轮,keepToolResultTurns=4 → 前 2 轮清体
+    const p = projectChatHistory(messages, baseOpts);
+    expect(p.cleared).toBe(2);
+    // 前 2 轮 assistant 的 tool part 输出已清
+    for (const i of [0, 1]) {
+      const a = p.messages[i * 2 + 1] as { parts: Array<Record<string, unknown>> };
+      const tool = a.parts.find((x) => x.type === "tool-context.projects")!;
+      expect(tool.output).toBe(TOOL_RESULT_CLEARED_MESSAGE);
+      // input / state / toolCallId 原样保留(只清输出体,不破坏成对结构)
+      expect(tool.state).toBe("output-available");
+      expect(tool.toolCallId).toBe(`tc-a-${i}`);
+    }
+    // 近 4 轮 tool 输出原样
+    for (const i of [2, 3, 4, 5]) {
+      const a = p.messages[i * 2 + 1] as { parts: Array<Record<string, unknown>> };
+      const tool = a.parts.find((x) => x.type === "tool-context.projects")!;
+      expect(tool.output).toEqual({ rows: "x".repeat(10) });
+    }
+    // 文本 part 不动
+    const first = p.messages[1] as { parts: Array<Record<string, unknown>> };
+    expect(first.parts[0]).toEqual({ type: "text", text: "回复 a-0" });
+  });
+
+  it("轮数 ≤ N → 不清体、不截窗、消息原样", () => {
+    const messages = turns(3);
+    const p = projectChatHistory(messages, baseOpts);
+    expect(p.cleared).toBe(0);
+    expect(p.truncated).toBe(0);
+    expect(p.messages).toEqual(messages);
+    expect(p.estAfter).toBe(p.estBefore);
+  });
+
+  it("**入参消息对象绝不被改**(存储层投影隔离铁律)", () => {
+    const messages = turns(6);
+    const snapshot = JSON.parse(JSON.stringify(messages));
+    projectChatHistory(messages, baseOpts);
+    expect(messages).toEqual(snapshot);
+  });
+});
+
+describe("[T-239d] token 估算截窗", () => {
+  it("超「窗口×80%」→ 只保近 K 轮,更早整轮截掉 + 首条注入省略提示", () => {
+    // 20 轮、每轮 tool 输出 3000 字符 → 估算远超 1000×0.8 token 阈值
+    const messages = turns(20, 3000);
+    const p = projectChatHistory(messages, {
+      ...baseOpts,
+      keepToolResultTurns: 100, // 关掉清体,单测截窗
+      keepTurns: 5,
+      contextWindowTokens: 1000,
+    });
+    expect(p.truncated).toBe(15);
+    expect(p.messages).toHaveLength(10); // 5 轮 × (user+assistant)
+    // 首条保留消息(该轮 user)注入省略提示
+    const first = p.messages[0] as { role: string; parts: Array<{ type: string; text?: string }> };
+    expect(first.role).toBe("user");
+    expect(first.parts[0]!.text).toContain(omittedTurnsNotice(15));
+    expect(first.parts[0]!.text).toContain("问题 15"); // 原文还在,提示是前缀
+    // 最新一轮完整保留
+    const last = p.messages[p.messages.length - 1] as { id: string };
+    expect(last.id).toBe("a-19");
+    expect(p.estAfter).toBeLessThan(p.estBefore);
+  });
+
+  it("没超阈 → 不截(truncated=0)", () => {
+    const p = projectChatHistory(turns(20, 10), baseOpts);
+    expect(p.truncated).toBe(0);
+    expect(p.messages).toHaveLength(40);
+  });
+
+  it("估算 chars/3(粗估中文保守)", () => {
+    expect(estimateTokens("abc")).toBe(2); // JSON 引号 +2 字符 → ceil(5/3)=2
+  });
+});
+
+describe("[T-239d] 日志格式(SPEC 验收锚定)", () => {
+  it("[chat-context] est=X→Y tokens cleared=N truncated=M", () => {
+    const line = formatChatContextLog({
+      messages: [],
+      estBefore: 1234,
+      estAfter: 567,
+      cleared: 3,
+      truncated: 2,
+    });
+    expect(line).toBe("[chat-context] est=1234→567 tokens cleared=3 truncated=2");
+  });
+});

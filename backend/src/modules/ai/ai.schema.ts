@@ -56,6 +56,11 @@ export function toMessageDto(row: MessageRow): AIMessageResource {
     parts: (row.parts ?? []) as unknown[],
     attachments: (row.attachments ?? []) as string[],
     modelMetadata: (row.modelMetadata ?? {}) as Record<string, unknown>,
+    // [T-239e] 用量投影(additive):存量行/user 行 → null,前端角标按 null 跳过(不崩)。
+    inputTokens: row.inputTokens ?? null,
+    outputTokens: row.outputTokens ?? null,
+    cachedTokens: row.cachedTokens ?? null,
+    modelKey: row.modelKey ?? null,
     createdAt: row.createdAt,
   };
 }

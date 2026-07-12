@@ -23,6 +23,9 @@ import {
 import { SectionCard } from "@/components/project/section-card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+// [T-247] 「录入实绩」确认门(client 岛):锁定未回流的预测在此人工采纳实绩
+// (AI calibration_score 候选预填 → 确认 → calibration.results.create)。
+import { ResultEntryGate } from "./result-entry-gate";
 import type { PredictionComparisonVm } from "./review-workspace-data";
 
 const DEVIATION_BAND_LABELS: Record<string, string> = {
@@ -120,6 +123,16 @@ export function PredictionComparisonSection({
                     </span>
                   )}
                 </div>
+                {/* [T-247] 锁定未回流 + 带维度评分 → 「录入实绩」采纳门(发布出实绩后
+                    人工确认落 calibration_result,对照区随即翻已回流)。 */}
+                {!row.reflow &&
+                row.status === "locked" &&
+                row.dimensions.length > 0 ? (
+                  <ResultEntryGate
+                    predictionId={row.predictionId}
+                    dimensions={row.dimensions}
+                  />
+                ) : null}
                 {row.reflow ? (
                   <>
                     {row.reflow.reason ? (

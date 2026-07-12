@@ -194,12 +194,12 @@ export interface AccountInformation {
   readonly locale: string;
 }
 
+// [T-247 假设置清算] 偏好投影只保留有真实消费方的两项(defaultCreationMode →
+// 新建项目预选;autosaveEnabled → 编辑器失焦自动保存)。defaultHome / defaultVisibility /
+// analyticsEnabled / fileNamingRule 契约字段保留兼容,但 UI 不再渲染、投影不再携带。
 export interface PreferencesState {
-  readonly defaultHome: string;
   readonly defaultCreationMode: "guided" | "flexible" | "freeform";
-  readonly defaultVisibility: "private" | "unlisted" | "public";
   readonly autosaveEnabled: boolean;
-  readonly analyticsEnabled: boolean;
 }
 
 export interface SystemState {

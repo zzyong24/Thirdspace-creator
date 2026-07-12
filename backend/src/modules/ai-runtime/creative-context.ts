@@ -321,6 +321,25 @@ export interface ContextDeps {
   // content_outline artifacts so reconstructed briefs get an explicit "未经确认"
   // marker before they ride downstream as confirmed premises. Optional.
   artifactOrigin?: ArtifactOriginReader;
+  // [T-245] 已登记信源信号端口(T-235b collectTrendSourceSignals)—— 本装配器不消费,
+  // 消费方是 chat-runner 的 topic.generate(basis=trend):与 web 搜索并行拼 trend brief,
+  // 让对话编导蹭热点出题也吃到真信号(与选题页出题同源)。挂在 ContextDeps 上是为了随
+  // /api/chat 路由的 `...runtime.context` 展开注入,不加路由接线。Optional:未绑 → trend
+  // 出题只剩 web 搜索路(诚实降级)。
+  trendSourceSignals?: (
+    ctx: RequestContext,
+  ) => Promise<
+    Array<{
+      title: string;
+      url: string | null;
+      heat: number | null;
+      publishedAt: string | null;
+      sourceName: string;
+    }>
+  >;
+  // [T-245] 已登记(enabled)信源个数 —— 只用于 trend 出题降级注记的「已登记 N 个」诚实措辞。
+  // Optional:未绑 → 注记不带个数。
+  countEnabledTrendSources?: (ctx: RequestContext) => Promise<number>;
 }
 
 // F2 (SPEC §7 边界②): the artifactType each 已确认前提 brief is read back from. Used to

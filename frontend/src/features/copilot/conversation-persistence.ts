@@ -68,6 +68,51 @@ export interface WireAIMessage {
   // [T-128] 落库的 useChat UIMessage parts(text + tool-result 部件)。存量行/旧后端读到 undefined
   // 或 [] → 回落 content 文本气泡(向后兼容)。assistant 回复带完整 parts → 卡刷新可重渲。
   readonly parts?: readonly unknown[];
+  // [T-239e] assistant 行的 token 用量(ai_messages 新列投影)。老行/user 行/旧后端 → null 或
+  // undefined,累计时跳过(不崩、不计 0)。
+  readonly inputTokens?: number | null;
+  readonly outputTokens?: number | null;
+}
+
+/** 会话累计 token 用量(角标用)。 */
+export interface UsageTotals {
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+}
+
+/**
+ * [T-239e] 汇总一段落库消息的 token 用量(会话成本角标的历史底数)。只累加真数字;
+ * null/undefined(老消息/user 行/无 usage 轮)诚实跳过 —— 兼容性硬要求:老会话不崩不假计。
+ */
+export function sumUsageTokens(rows: readonly WireAIMessage[]): UsageTotals {
+  let input = 0;
+  let output = 0;
+  for (const row of rows) {
+    if (typeof row.inputTokens === "number") input += row.inputTokens;
+    if (typeof row.outputTokens === "number") output += row.outputTokens;
+  }
+  return { inputTokens: input, outputTokens: output };
+}
+
+/**
+ * [T-239e] 汇总 useChat 内存消息里**流式带回**的用量(route messageMetadata 在 finish part
+ * 注入 metadata.usage)。读回历史(toUIMessages)不设 metadata → 天然与 sumUsageTokens 的
+ * 历史底数不重复计;两者相加 = 会话累计。形状不合(老流/无 metadata)诚实跳过。
+ */
+export function sumStreamedUsage(
+  messages: ReadonlyArray<{ metadata?: unknown }>,
+): UsageTotals {
+  let input = 0;
+  let output = 0;
+  for (const m of messages) {
+    const usage = (m.metadata as { usage?: unknown } | undefined)?.usage as
+      | { inputTokens?: unknown; outputTokens?: unknown }
+      | undefined;
+    if (!usage) continue;
+    if (typeof usage.inputTokens === "number") input += usage.inputTokens;
+    if (typeof usage.outputTokens === "number") output += usage.outputTokens;
+  }
+  return { inputTokens: input, outputTokens: output };
 }
 
 // [T-128] 一个 part 是否「有可渲染内容」——非空 text part,或任意 tool-result 部件(type 形如

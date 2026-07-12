@@ -190,12 +190,30 @@ export async function POST(req: Request): Promise<Response> {
     console.error("[api/chat] persist user turn failed:", err);
   }
 
+  // [T-239e] 本轮 token 用量(runChatStream 每步累计回报,finish 以 totalUsage 权威值覆盖)。
+  // route 只持最新值;toUIMessageStreamResponse onFinish 落库时随 assistant 消息带上 ——
+  // 中断轮已完成步的用量也已回报过,照落。null = 本轮没拿到任何 usage(落库 NULL,不填 0)。
+  let turnUsage: {
+    inputTokens: number | null;
+    outputTokens: number | null;
+    cachedTokens: number | null;
+    modelKey: string;
+  } | null = null;
+
   try {
     const result = await runChatStream(
       ctx,
       // [T-239c] req.signal 贯通:用户点「停止」/关页 → streamText abort(服务端 1s 内停,
       // 不再空跑后续工具烧钱);signal 同时经工具 execute 第二参透传给长工具提前退出。
-      { messages, chatContext, abortSignal: req.signal },
+      {
+        messages,
+        chatContext,
+        abortSignal: req.signal,
+        // [T-239e] 用量回报口:持最新累计值(闭包变量,onFinish 落库时读)。
+        onUsage: (u) => {
+          turnUsage = u;
+        },
+      },
       {
         // 展开 runtime.context 里所有已绑定的 CreativeContext reader(positioning / learnings /
         // signals / knowledge / accounts / reviewSubject …)。原来手列 4 个,漏了 reviewSubject
@@ -235,6 +253,19 @@ export async function POST(req: Request): Promise<Response> {
       // consumeSseStream 让服务端自己把流消费完(SDK 官方中断持久化形态),onFinish 才能在中断轮
       // 也拿到 isAborted + 已组装的部分 responseMessage。
       consumeSseStream: consumeStream,
+      // [T-239e] 本轮 usage 以 message metadata 流回前端(SDK 官方口:finish part 携带
+      // totalUsage)—— copilot 会话成本角标据此在流式中即时累加本轮,不用等重拉历史。
+      messageMetadata: ({ part }) => {
+        if (part.type !== "finish") return undefined;
+        const u = part.totalUsage;
+        if (!u) return undefined;
+        return {
+          usage: {
+            inputTokens: u.inputTokens ?? null,
+            outputTokens: u.outputTokens ?? null,
+          },
+        };
+      },
       onError: (error) => {
         console.error("[api/chat] stream errored:", error);
         const human = humanizeAiError(error);
@@ -267,14 +298,33 @@ export async function POST(req: Request): Promise<Response> {
           );
         if (!hasRenderable) return;
         try {
-          if (isAborted) {
-            // 中断轮:带 aborted 标记落库(modelMetadata.aborted=true)。
+          // [T-239e] usage 随 assistant 消息落库(有才带,没拿到 → 不带 = 列 NULL,诚实缺省);
+          // 中断轮(aborted)已完成步的用量照带。opts 全空时保持 4 参调用(既有语义/测试锚定)。
+          const opts: {
+            aborted?: boolean;
+            usage?: {
+              inputTokens: number | null;
+              outputTokens: number | null;
+              cachedTokens: number | null;
+            };
+            modelKey?: string;
+          } = {};
+          if (isAborted) opts.aborted = true;
+          if (turnUsage) {
+            opts.usage = {
+              inputTokens: turnUsage.inputTokens,
+              outputTokens: turnUsage.outputTokens,
+              cachedTokens: turnUsage.cachedTokens,
+            };
+            opts.modelKey = turnUsage.modelKey;
+          }
+          if (Object.keys(opts).length > 0) {
             await runtime.ai.appendAssistantMessage(
               ctx,
               conversationId,
               text,
               parts,
-              { aborted: true },
+              opts,
             );
           } else {
             await runtime.ai.appendAssistantMessage(

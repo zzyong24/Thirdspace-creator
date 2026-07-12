@@ -58,11 +58,8 @@ const VM: SettingsViewModel = {
     locale: "zh-CN",
   },
   preferences: {
-    defaultHome: "dashboard",
     defaultCreationMode: "guided",
-    defaultVisibility: "private",
     autosaveEnabled: true,
-    analyticsEnabled: true,
   },
   system: {
     theme: "system",
@@ -217,17 +214,23 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
   });
 
-  it("toggling 使用情况分析 PATCHes only its own key", async () => {
+  // [T-247 假设置清算] 撤掉的偏好控件不得再渲染:defaultHome(无处消费)、
+  // defaultVisibility(项目无 visibility 字段)、analyticsEnabled(产品无埋点)。
+  // 反向断言锚定「保存了没人读」的控件不复活。
+  it("[T-247] 撤掉的假偏好控件(默认主页/默认可见性/使用情况分析)不再渲染", () => {
     const doc = renderDialog();
-    const sw = doc.querySelector(
-      '[data-slot="pref-analytics-switch"]',
-    ) as HTMLElement;
-    fireEvent.click(sw);
-    await waitFor(() =>
-      expect(mockClient.patchPreferences).toHaveBeenCalledWith(
-        expect.objectContaining({ body: { analyticsEnabled: false } }),
-      ),
-    );
+    expect(
+      doc.querySelector('[data-slot="pref-default-home-trigger"]'),
+    ).toBeNull();
+    expect(doc.querySelector('[data-slot="pref-visibility-trigger"]')).toBeNull();
+    expect(doc.querySelector('[data-slot="pref-analytics-switch"]')).toBeNull();
+    // 留下来的两个真偏好仍在(有真实消费方:新建项目预选 / 编辑器失焦自动保存)。
+    expect(
+      doc.querySelector('[data-slot="pref-creation-mode-trigger"]'),
+    ).not.toBeNull();
+    expect(
+      doc.querySelector('[data-slot="pref-autosave-switch"]'),
+    ).not.toBeNull();
   });
 
   it("saving the model form PUTs the whole default config (provider/model/baseUrl/format/secret/temperature)", async () => {

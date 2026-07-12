@@ -27,6 +27,17 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// [T-247] TodoCard 成为 client 岛(useRouter → tasks.patch 后 refresh),
+// 本文件在 App Router provider 外渲整页,故 mock next/navigation。
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+  }),
+}));
+
 import { buildDashboardViewModel } from "@/fixtures/selectors";
 import { canonicalDataset } from "@/fixtures/canonical";
 import { DashboardPage } from "./dashboard-page";

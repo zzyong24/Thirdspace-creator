@@ -341,6 +341,42 @@ export function ScriptRichEditor({
     return () => registerFlush(null);
   }, [registerFlush, performSave]);
 
+  // [T-247] 设置「偏好 · 自动保存」的真实消费方:开启时编辑器失焦(blur)自动
+  // performSave 未保存的修改(dirty 才存,与手动保存/flush 同一条落库链路)。
+  // 偏好挂载后读一次(settings.preferences.get);读失败/单测 mock 未提供该 op →
+  // 保持关闭(只手动保存),诚实降级。用 ref 而非 state:blur 回调读最新值,不重渲。
+  const autosaveEnabledRef = React.useRef(false);
+  React.useEffect(() => {
+    let alive = true;
+    void (async () => {
+      try {
+        const pref = (await client.getPreferences({
+          params: undefined,
+          query: undefined,
+          body: undefined,
+        })) as { autosaveEnabled?: boolean };
+        if (alive) autosaveEnabledRef.current = pref?.autosaveEnabled === true;
+      } catch {
+        // 读不到偏好 → 不自动保存(与既有手动保存行为一致)。
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+  React.useEffect(() => {
+    if (!editor) return;
+    const onBlur = () => {
+      if (!autosaveEnabledRef.current) return;
+      if (saveStatusRef.current !== "dirty") return; // 无未保存修改 → no-op。
+      void performSave();
+    };
+    editor.on("blur", onBlur);
+    return () => {
+      editor.off("blur", onBlur);
+    };
+  }, [editor, performSave]);
+
   // [T-054 组B] 卡头去掉「主脚本 / TipTap 富文本编辑器…」的实现描述文案(规范 §2:库名/
   // 机制名出现在可见文案 = 泄漏)。用户视角的小标题「口播脚本 + 副行」由稿面页区头统一承载
   // (见 draft-workbench-page),编辑器自身只保留工具栏/正文/状态栏,不再双头。

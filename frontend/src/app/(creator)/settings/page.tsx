@@ -217,12 +217,10 @@ export default async function SettingsRoutePage() {
         query: undefined,
         body: undefined,
       });
+      // [T-247 假设置清算] 只投影有真实消费方的两项;其余契约字段保留兼容不再读。
       preferences = {
-        defaultHome: pref.defaultHome,
         defaultCreationMode: pref.defaultCreationMode,
-        defaultVisibility: pref.defaultVisibility,
         autosaveEnabled: pref.autosaveEnabled,
-        analyticsEnabled: pref.analyticsEnabled,
       };
     } catch {
       preferences = undefined;

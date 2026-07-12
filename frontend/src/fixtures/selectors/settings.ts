@@ -37,12 +37,10 @@ export function buildSettingsViewModel(): SettingsViewModel {
 
   return {
     account: buildAccount(user),
+    // [T-247 假设置清算] 偏好投影只保留有真实消费方的两项(其余契约字段保留兼容)。
     preferences: {
-      defaultHome: preferences.defaultHome,
       defaultCreationMode: preferences.defaultCreationMode,
-      defaultVisibility: preferences.defaultVisibility,
       autosaveEnabled: preferences.autosaveEnabled,
-      analyticsEnabled: preferences.analyticsEnabled,
     },
     system: {
       theme: "system",

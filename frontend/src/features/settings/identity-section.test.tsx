@@ -79,11 +79,8 @@ function buildStubViewModel(): SettingsViewModel {
       locale: STUB_IDENTITY.locale,
     },
     preferences: {
-      defaultHome: "dashboard",
       defaultCreationMode: "guided",
-      defaultVisibility: "private",
       autosaveEnabled: true,
-      analyticsEnabled: true,
     },
     system: {
       theme: "system",

@@ -244,3 +244,18 @@
     pointer-events: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * [T-247] 界面密度真消费 —— 设置「外观 · 密度」写的 <html data-density="compact">
+ * 此前全仓零 CSS 消费(半假控件)。补最小可感知集:
+ *   - 区块/卡片间距 token(gap-section-gap / gap-card-gap 全仓消费)收紧;
+ *   - Card 内边距变量 --card-spacing(ui/card 的 padding 都引用它)收紧。
+ * comfortable(缺省)不写规则 = 现状不变。
+ * ------------------------------------------------------------------------- */
+:root[data-density="compact"] {
+  --creatoros-section-gap: 14px;
+  --creatoros-card-gap: 10px;
+}
+:root[data-density="compact"] [data-slot="card"] {
+  --card-spacing: calc(var(--spacing) * 3);
+}

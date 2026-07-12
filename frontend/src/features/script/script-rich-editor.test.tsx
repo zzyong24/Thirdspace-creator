@@ -29,10 +29,15 @@ vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
 const mockCreateArtifactVersion = vi.fn(
   (input: unknown): Promise<unknown> => Promise.resolve({ id: "av-new", input }),
 );
+// [T-247] 偏好读(autosaveEnabled → 失焦自动保存)。缺省 false = 不自动保存。
+const mockGetPreferences = vi.fn(
+  (): Promise<unknown> => Promise.resolve({ autosaveEnabled: false }),
+);
 vi.mock("@/lib/contract-client", () => ({
   client: {
     createArtifactVersion: (input: unknown) =>
       mockCreateArtifactVersion(input),
+    getPreferences: () => mockGetPreferences(),
   },
 }));
 
@@ -40,6 +45,8 @@ afterEach(() => cleanup());
 beforeEach(() => {
   mockRouter.refresh.mockClear();
   mockCreateArtifactVersion.mockClear();
+  mockGetPreferences.mockClear();
+  mockGetPreferences.mockResolvedValue({ autosaveEnabled: false });
 });
 
 const INITIAL_HTML =
@@ -217,6 +224,64 @@ describe("ScriptRichEditor (TipTap)", () => {
     await waitFor(() =>
       expect(status.getAttribute("data-save-status")).toBe("saved"),
     );
+  });
+
+  // [T-247] 设置「偏好 · 自动保存」的真实消费:开启时失焦自动落库;关闭时失焦不动。
+  it("[T-247] autosaveEnabled=true → 编辑后失焦自动 createArtifactVersion", async () => {
+    mockGetPreferences.mockResolvedValue({ autosaveEnabled: true });
+    let editor: Editor | null = null;
+    render(
+      <ScriptRichEditor
+        initialHtml="<p>开场</p>"
+        artifactId="artifact-1"
+        onEditorReady={(e) => (editor = e)}
+      />,
+    );
+    await findProseMirror();
+    await waitFor(() => expect(editor).not.toBeNull());
+    // 偏好读回(挂载后一次)。
+    await waitFor(() => expect(mockGetPreferences).toHaveBeenCalledTimes(1));
+    editor!.chain().focus("end").insertContent("补充").run();
+    await waitFor(() => {
+      const status = document.querySelector(
+        '[data-slot="editor-status-save-status"]',
+      ) as HTMLElement;
+      expect(status.getAttribute("data-save-status")).toBe("dirty");
+    });
+    editor!.commands.blur();
+    await waitFor(() =>
+      expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(1),
+    );
+    const call = mockCreateArtifactVersion.mock.calls[0]![0] as {
+      params: { artifactId: string };
+    };
+    expect(call.params).toEqual({ artifactId: "artifact-1" });
+  });
+
+  it("[T-247] autosaveEnabled=false → 失焦不自动保存(仍走手动)", async () => {
+    mockGetPreferences.mockResolvedValue({ autosaveEnabled: false });
+    let editor: Editor | null = null;
+    render(
+      <ScriptRichEditor
+        initialHtml="<p>开场</p>"
+        artifactId="artifact-1"
+        onEditorReady={(e) => (editor = e)}
+      />,
+    );
+    await findProseMirror();
+    await waitFor(() => expect(editor).not.toBeNull());
+    await waitFor(() => expect(mockGetPreferences).toHaveBeenCalledTimes(1));
+    editor!.chain().focus("end").insertContent("补充").run();
+    await waitFor(() => {
+      const status = document.querySelector(
+        '[data-slot="editor-status-save-status"]',
+      ) as HTMLElement;
+      expect(status.getAttribute("data-save-status")).toBe("dirty");
+    });
+    editor!.commands.blur();
+    // 给潜在的错误自动保存一个 flush 窗口再断言(负向断言)。
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mockCreateArtifactVersion).not.toHaveBeenCalled();
   });
 
   it("suppresses a stale external re-sync that lands after the user has kept editing (T-024 ②)", async () => {
