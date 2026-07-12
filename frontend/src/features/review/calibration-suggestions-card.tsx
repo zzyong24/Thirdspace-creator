@@ -48,7 +48,7 @@ export function CalibrationSuggestionsCard() {
         params: undefined,
         query: { page: 1, pageSize: 50 },
         body: undefined,
-      })) as ReadonlyArray<SuggestionDto>;
+      })) as unknown as ReadonlyArray<SuggestionDto>;
       // 读侧本就 pending-only(见 calibration.service listRuleSuggestions),再滤一道兜底。
       setSuggestions(
         (Array.isArray(rows) ? rows : []).filter((s) => s.status === "pending"),

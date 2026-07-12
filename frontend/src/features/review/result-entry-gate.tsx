@@ -48,14 +48,14 @@ async function findScoreCandidate(
     params: undefined,
     query: { page: 1, pageSize: 10, taskType: "calibration.score" },
     body: undefined,
-  })) as ReadonlyArray<TaskDto>;
+  })) as unknown as ReadonlyArray<TaskDto>;
   for (const task of Array.isArray(tasks) ? tasks : []) {
     try {
       const results = (await client.listTaskResults({
         params: { taskId: task.id },
         query: undefined,
         body: undefined,
-      })) as ReadonlyArray<TaskResultDto>;
+      })) as unknown as ReadonlyArray<TaskResultDto>;
       for (const result of Array.isArray(results) ? results : []) {
         if (result.resultType !== "calibration_score") continue;
         const data = result.resultData as {

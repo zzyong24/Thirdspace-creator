@@ -14,11 +14,11 @@ vi.mock("next/navigation", () => ({
 const mockClient = {
   getKnowledge: vi.fn(),
   listKnowledgeRevisions: vi.fn(),
-  listKnowledge: vi.fn((_i: unknown) => Promise.resolve([])),
+  listKnowledge: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve([])),
   createKnowledgeRelation: vi.fn((_i: unknown) => Promise.resolve({ id: "rel" })),
   // [T-247] 已建关系列表 + 删除。
-  listKnowledgeRelations: vi.fn((_i: unknown) => Promise.resolve([])),
-  removeKnowledgeRelation: vi.fn((_i: unknown) => Promise.resolve({})),
+  listKnowledgeRelations: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve([])),
+  removeKnowledgeRelation: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve({})),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {

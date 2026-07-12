@@ -20,7 +20,7 @@
 
 - **任务契约(脑→手)**:`{ taskType(枚举), goal, inputs:[{assetId,mountAs}], params(per-taskType zod), constraints:{timeoutSec,network:deny|allowlist,maxOutputMB} }`。
 - **沙箱**:`workspaces/<taskId>/`(input/ 只读物化 + out/ 产物区);**引擎/executor 永不直连 PGlite/资产库**——输入由 sidecar 物化为文件,输出只认 out/。数据壁垒全留脑侧。
-- **executor 可插拔**:每 taskType 注册一个 executor(A 型=确定性脚本;B 型=开源引擎子进程)。**B 案启动条件与首选**:某类任务确需 agent 循环时注册,首选 **OpenCode**(MIT/官方 @opencode-ai/sdk 进程内 createOpencodeServer+Client=Node sidecar 原生形态/75+ provider 任意 OpenAI-compatible 直配 MiniMax/per-tool permission),次选 goose(Apache-2.0 Rust 单二进制+stream-json);dispatch/沙箱/确认卡零改动。**C 案(整壳迁移)明确否决**(壁垒流失+工程最大+体验不升)。
+- **executor 可插拔**:每 taskType 注册一个 executor(A 型=确定性脚本;B 型=开源引擎子进程)。**B 案启动条件与首选**:某类任务确需 agent 循环时注册,候选双首选定点实测后定(用户补充 Pi 口碑):**Pi**(earendil-works/pi,MIT,**agent loop 库直接 import 进 sidecar 最轻零子进程**,默认仅 4 工具天然契合白名单收窄哲学,风险=0.74.x 未到 1.0+弱模型实测缺数据)vs **OpenCode**(MIT,官方 Node SDK 进程内 server+client,75+ provider 实战多社区大);次选 goose(Apache-2.0 Rust 单二进制+stream-json);dispatch/沙箱/确认卡零改动。**C 案(整壳迁移)明确否决**(壁垒流失+工程最大+体验不升)。
 - **执行结果确认卡**:产物清单+预览(视频缩略/文本 diff)+ 采纳(拷入项目资产落库)/重试(带修改意见)/丢弃。**产物落 workspaces 不算落库,采纳才入**(铁律②)。与 T-253 同一权限模型两面(读=确认卡/产=确认卡),denylist 共库。
 - **安全诚实边界**:无 docker 前提下网络隔离是弱保证(v1 默认 network=deny,渲染类不需要网);超时+maxOutput 硬顶;abort 贯通。
 - **进度**:ai_task + AITaskStep(素材预处理/捕帧 N/M/编码/转码 各 step),超时/失败诚实终态绝不卡 running(T-207 sweep 兜底已在)。
@@ -58,7 +58,7 @@
 - **T-254a** HyperFrames 模板工程+props zod schema+确定性渲染 executor(video.render,含素材预处理/交付转码/ffmpeg 检测引导)。
 - **T-254b** 四决策 runner(分场/卡片/B-roll/双语字幕,runStructuredNode+registry 模板)+决策确认预览卡。
 - **T-254c** 制作视频 tab UI(6 文件改动面+上传链+SRT 匹配校验+production 状态机接线)。
-- **T-255b**(后置,条件触发)OpenCode executor 集成——某类任务确需 agent 循环时启动,先定点核实 @opencode-ai/sdk 嵌入细节;**[gate-F1 minor 处置] 许可归属义务**:MIT/Apache-2.0 依赖(OpenCode/goose/HyperFrames)集成时在 app「关于/开源许可」页收录 LICENSE+NOTICE 全文(桌面产品惯例),T-255b/T-254a 实施清单各含此项。
+- **T-255b**(后置,条件触发)agent 引擎 executor 集成——某类任务确需 agent 循环时启动:**Pi 与 OpenCode 各跑同一真任务定点实测**(MiniMax 驱动)后二选一;**[gate-F1 minor 处置] 许可归属义务**:MIT/Apache-2.0 依赖(OpenCode/goose/HyperFrames)集成时在 app「关于/开源许可」页收录 LICENSE+NOTICE 全文(桌面产品惯例),T-255b/T-254a 实施清单各含此项。
 
 ## 6. 验收
 
