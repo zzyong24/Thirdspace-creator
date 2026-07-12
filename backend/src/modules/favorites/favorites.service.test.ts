@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, projects, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createFavoritesService,
@@ -154,5 +154,83 @@ describe("favorites service", () => {
     expect((await svc.listFolders(ctxA, PAGE)).total).toBe(0);
     // 台账不随夹删(去重锚跨夹有效:重新登记同名夹也不重复进池)。
     expect((await svc.listPendingItems(ctxA, 10)).length).toBe(1);
+  });
+
+  // ── [T-235d-distill] 蒸馏链落点(transcript 落点 / 判库裁决 / 确认门读面 / origin 隔离) ──
+  describe("蒸馏链落点", () => {
+    it("listItemsForDistill:distill_status IS NULL 才入批,FIFO 限量;落裁决后出批", async () => {
+      const f = await svc.createFolder(ctxA, { name: "选题库" });
+      await svc.recordItems(ctxA, f.id, [item("aw-1"), item("aw-2"), item("aw-3")]);
+      const batch = await svc.listItemsForDistill(ctxA, 2);
+      expect(batch).toHaveLength(2); // 限量(≤N/run 防超载)
+      expect(batch[0]!.awemeId).toBe("aw-1"); // FIFO:先收藏先蒸
+      expect(batch[0]!.transcript).toBeNull(); // 未转写
+      // 落裁决 → 出 NULL 批(防 FIFO 头阻塞)。
+      await svc.saveDistillVerdict(ctxA, batch[0]!.id, {
+        status: "topic",
+        result: { reason: "纯跟拍" },
+      });
+      const rest = await svc.listItemsForDistill(ctxA, 10);
+      expect(rest.map((r) => r.awemeId)).toEqual(["aw-2", "aw-3"]);
+    });
+
+    it("saveTranscript:逐字稿落 favorites_items 自身(他人作品独立落点),复用批可读到", async () => {
+      const f = await svc.createFolder(ctxA, { name: "选题库" });
+      await svc.recordItems(ctxA, f.id, [item("aw-1")]);
+      const [it0] = await svc.listItemsForDistill(ctxA, 1);
+      await svc.saveTranscript(ctxA, it0!.id, "这是一条逐字稿正文");
+      // transcript 已落但未判库 → 仍在 NULL 批(distill_status 还没写),且 transcript 可读(省流复用)。
+      const [again] = await svc.listItemsForDistill(ctxA, 1);
+      expect(again!.transcript).toBe("这是一条逐字稿正文");
+    });
+
+    it("saveDistillVerdict(knowledge)→ listDistillPending 读到 atoms(确认门候选,人采纳才落库)", async () => {
+      const f = await svc.createFolder(ctxA, { name: "选题库" });
+      await svc.recordItems(ctxA, f.id, [item("aw-1"), item("aw-2")]);
+      const batch = await svc.listItemsForDistill(ctxA, 2);
+      await svc.saveDistillVerdict(ctxA, batch[0]!.id, {
+        status: "knowledge",
+        result: {
+          reason: "含方法论",
+          atoms: [{ type: "claim", title: "观点本体", note: "", sourceNote: "" }],
+          suggestedTags: ["方法论"],
+        },
+      });
+      await svc.saveDistillVerdict(ctxA, batch[1]!.id, {
+        status: "skip",
+        result: { reason: "无信息量" },
+      });
+      const pending = await svc.listDistillPending(ctxA, 10);
+      expect(pending).toHaveLength(1); // 只 knowledge 进确认门读面
+      expect(pending[0]!.awemeId).toBe("aw-1");
+      const atoms = pending[0]!.distillResult.atoms as Array<{ title: string }>;
+      expect(atoms[0]!.title).toBe("观点本体");
+    });
+
+    it("origin 隔离:蒸馏落点全在 favorites_items,绝不建 projects 行(他人作品≠imported)", async () => {
+      const f = await svc.createFolder(ctxA, { name: "选题库" });
+      await svc.recordItems(ctxA, f.id, [item("aw-1")]);
+      const [it0] = await svc.listItemsForDistill(ctxA, 1);
+      await svc.saveTranscript(ctxA, it0!.id, "逐字稿");
+      await svc.saveDistillVerdict(ctxA, it0!.id, {
+        status: "knowledge",
+        result: { atoms: [], suggestedTags: [] },
+      });
+      // 收藏作品蒸馏后,projects 表**零行**(逐字稿没绑成 imported script artifact,origin 隔离守住)。
+      const projectRows = await db.select().from(projects);
+      expect(projectRows).toHaveLength(0);
+    });
+
+    it("按号隔离 + 跨用户:distill 读面各自 scoped", async () => {
+      const f = await svc.createFolder(ctxA, { name: "选题库" });
+      await svc.recordItems(ctxA, f.id, [item("aw-1")]);
+      const [it0] = await svc.listItemsForDistill(ctxA, 1);
+      await svc.saveDistillVerdict(ctxA, it0!.id, {
+        status: "knowledge",
+        result: { atoms: [] },
+      });
+      expect((await svc.listDistillPending(ctxB, 10)).length).toBe(0);
+      expect((await svc.listItemsForDistill(ctxB, 10)).length).toBe(0);
+    });
   });
 });

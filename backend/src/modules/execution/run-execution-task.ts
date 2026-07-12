@@ -169,7 +169,9 @@ export async function runExecutionTask(
       executor.run(
         { ...sandbox, inputs },
         { goal: spec.goal, ...params },
-        { signal: controller.signal, reportStep: (text) => step(text) },
+        // [T-256b] ctx additive 透传:agentic executor 用它解析 model-config + 用户域端口;
+        // 确定性 executor(echo/video.render)忽略此字段。
+        { signal: controller.signal, reportStep: (text) => step(text), ctx },
       ),
       spec.constraints.timeoutSec,
       controller,

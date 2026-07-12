@@ -7,10 +7,18 @@ import { id, iso8601, aiTaskStatus } from "../primitives";
 // 不建新表 —— 本文件只定义「脑→手」的任务契约投影与产物清单(manifest)的单一真值,
 // backend execution 模块 schema 与前端执行确认卡共用(同各模块 resource re-export 约定)。
 
-// 执行任务类型枚举 —— 每个 taskType 对应一个已注册 executor(A 型确定性脚本;将来
-// B 型开源引擎 executor 零改动注册)。`echo.manifest` 是框架自检 demo executor
-// (把 inputs 清单写进 out/manifest.json);`video.render` 归 T-254a(HyperFrames)。
-export const executionTaskType = z.enum(["echo.manifest", "video.render"]);
+// 执行任务类型枚举 —— 每个 taskType 对应一个已注册 executor。`echo.manifest` 是框架自检 demo
+// executor;`video.render` 归 T-254a(HyperFrames)。
+// [T-256b/c] `agentic.*` = 受控自主任务(agentic executor + Pi 引擎循环 + 领域工具适配器):
+//   research 选题调研 / collect 抓取决策 / material 素材整理。判定规则 classifyLoopType 认 agentic.*
+//   为自主循环(SPEC §8 gate-m1),建任务/注册 executor 两处强制命名与循环类型一致。
+export const executionTaskType = z.enum([
+  "echo.manifest",
+  "video.render",
+  "agentic.research",
+  "agentic.collect",
+  "agentic.material",
+]);
 export type ExecutionTaskType = z.infer<typeof executionTaskType>;
 
 // 输入物化声明:assetId(项目资产)→ 沙箱 input/<mountAs> 只读文件。

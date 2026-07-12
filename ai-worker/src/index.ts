@@ -342,6 +342,14 @@ export {
   TOPIC_ATTRIBUTION_STRUCTURE_FORMULAS,
   type TopicAttributionOutput,
 } from "./prompt/templates/topic-attribution";
+// [T-235d-distill] 收藏夹作品判库(favorites.triage)外置模板 + 输出 schema —— 他人收藏逐字稿 →
+// 是否值得进知识库裁决(knowledge/topic/skip,先判库再落)。schema 定义在本包(有 zod);backend
+// favorites-distill-runner 引类型绑 generateObject。
+export {
+  FAVORITES_TRIAGE_TEMPLATE,
+  favoritesTriageSchema,
+  type FavoritesTriageOutput,
+} from "./prompt/templates/favorites-triage";
 // [T-254b] 制作视频四决策(video.scenes/cards/broll/subtitles)外置模板 + 输出 schema ——
 // SRT+口播稿(+素材清单投影)→ 分场/信息卡/B-roll/双语字幕结构化决策 JSON(零代码生成)。
 // schema 定义在本包(有 zod);backend video-decisions-runner 引 schema 组动态 refine

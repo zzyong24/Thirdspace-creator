@@ -44,6 +44,7 @@ export * from "./creative-context";
 export * from "./knowledge-classify-runner";
 export * from "./knowledge-distill-runner";
 export * from "./knowledge-relate-runner";
+export * from "./favorites-distill-runner";
 export * from "./llm/anthropic-adapter";
 export * from "./llm/parse";
 export * from "./llm/provider";

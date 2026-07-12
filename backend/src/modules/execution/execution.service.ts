@@ -26,6 +26,11 @@ import {
   OwnershipError,
 } from "./execution.errors";
 import { cleanupSandbox, readArtifactBytes } from "./sandbox";
+import {
+  assertLoopType,
+  LoopTypeMismatchError,
+  type LoopType,
+} from "./agentic/loop-type";
 
 // 采纳入库的 assetType 推断:mime 主类型 → 资产类型;未知 → document(octet-stream
 // 一律按文档收,诚实不冒充媒体)。srt 字幕单列(assets 契约有 subtitle 类型)。
@@ -83,6 +88,12 @@ export interface ExecutionServiceDeps {
   assets: ExecutionAssetsWritePort;
   /** executor 是否已注册(create 前置校验;registry 本体归编排层)。 */
   hasExecutor: (taskType: string) => boolean;
+  /**
+   * [T-256b] executor 声明的循环类型(判定规则真 gate,SPEC §8 gate-m1)。create 时断言
+   * classifyLoopType(taskType)===此值,不匹配 → 拒建(建任务端校验,非纯文档)。缺省视作
+   * deterministic(未注册返 null → 跳过,交 hasExecutor 挡)。
+   */
+  loopTypeOf?: (taskType: string) => LoopType | null;
   workspacesRoot: string;
   /** discard 时中止 in-flight executor(run-execution-task.abortExecutionTask)。 */
   abortRun: (taskId: string) => boolean;
@@ -141,6 +152,19 @@ export function createExecutionService(
         throw new ExecutionValidationError(
           `未注册的 executor: ${spec.taskType}`,
         );
+      }
+      // [T-256b] 判定规则建任务端 gate:taskType 命名判定的循环类型必须与其 executor 声明一致
+      // (防「什么都塞 agent」/「agentic 名挂确定性壳」)。不匹配 → 拒建(转 ValidationError 出 4xx)。
+      const declaredLoop = deps.loopTypeOf?.(spec.taskType);
+      if (declaredLoop) {
+        try {
+          assertLoopType(spec.taskType, declaredLoop);
+        } catch (e) {
+          if (e instanceof LoopTypeMismatchError) {
+            throw new ExecutionValidationError(e.message);
+          }
+          throw e;
+        }
       }
       const inputData: Record<string, unknown> = { spec };
       if (typeof body.projectId === "string" && body.projectId) {

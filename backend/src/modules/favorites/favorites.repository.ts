@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, type Db } from "@creatoros/backend";
+import { and, asc, desc, eq, isNull, type Db } from "@creatoros/backend";
 import { favoritesFolders, favoritesItems } from "./favorites.db-schema";
 import { OwnershipError } from "./favorites.errors";
 
@@ -56,6 +56,25 @@ export interface FavoritesRepository {
   listPendingItems(accountId: string | null, limit: number): Promise<FavoritesItemRow[]>;
   /** 进池流转:status→promoted + candidate_id 溯源(ownership gate)。 */
   markItemPromoted(itemId: string, candidateId: string): Promise<FavoritesItemRow>;
+
+  // ── [T-235d-distill] 蒸馏链落点(与进池 status 正交:一条收藏既是跟拍候选,又可判知识) ──
+  /** 待入蒸馏链条目(distill_status IS NULL,createdAt 升序 = 先收藏先蒸),限量。 */
+  listItemsForDistill(
+    accountId: string | null,
+    limit: number,
+  ): Promise<FavoritesItemRow[]>;
+  /** 落逐字稿(他人作品独立落点,不建 project artifact;ownership gate)。 */
+  saveTranscript(itemId: string, transcript: string): Promise<FavoritesItemRow>;
+  /** 落判库裁决 + 蒸馏产物(distill_status + distill_result;ownership gate)。 */
+  saveDistillVerdict(
+    itemId: string,
+    verdict: { status: string; result: Record<string, unknown> },
+  ): Promise<FavoritesItemRow>;
+  /** 知识确认门待采纳读面(distill_status='knowledge',updatedAt 降序 = 新蒸的先看),限量。 */
+  listDistillPending(
+    accountId: string | null,
+    limit: number,
+  ): Promise<FavoritesItemRow[]>;
 }
 
 export function createFavoritesRepository(
@@ -251,6 +270,87 @@ export function createFavoritesRepository(
         )
         .returning();
       return updated[0]!;
+    },
+
+    // ── [T-235d-distill] 蒸馏链落点 ──
+    async listItemsForDistill(accountId, limit) {
+      const where = accountId
+        ? and(
+            eq(favoritesItems.userId, deps.userId),
+            eq(favoritesItems.accountId, accountId),
+            isNull(favoritesItems.distillStatus),
+          )
+        : and(
+            eq(favoritesItems.userId, deps.userId),
+            isNull(favoritesItems.distillStatus),
+          );
+      return db
+        .select()
+        .from(favoritesItems)
+        .where(where)
+        .orderBy(asc(favoritesItems.createdAt)) // 先收藏先蒸(FIFO,可预期)
+        .limit(limit);
+    },
+
+    async saveTranscript(itemId, transcript) {
+      const updated = await db
+        .update(favoritesItems)
+        .set({ transcript, updatedAt: deps.now() })
+        .where(
+          and(
+            eq(favoritesItems.userId, deps.userId),
+            eq(favoritesItems.id, itemId),
+          ),
+        )
+        .returning();
+      if (!updated[0]) {
+        throw new OwnershipError(
+          `OwnershipError: favorites item not found: ${itemId}`,
+        );
+      }
+      return updated[0];
+    },
+
+    async saveDistillVerdict(itemId, verdict) {
+      const updated = await db
+        .update(favoritesItems)
+        .set({
+          distillStatus: verdict.status,
+          distillResult: verdict.result,
+          updatedAt: deps.now(),
+        })
+        .where(
+          and(
+            eq(favoritesItems.userId, deps.userId),
+            eq(favoritesItems.id, itemId),
+          ),
+        )
+        .returning();
+      if (!updated[0]) {
+        throw new OwnershipError(
+          `OwnershipError: favorites item not found: ${itemId}`,
+        );
+      }
+      return updated[0];
+    },
+
+    async listDistillPending(accountId, limit) {
+      const where = accountId
+        ? and(
+            eq(favoritesItems.userId, deps.userId),
+            eq(favoritesItems.accountId, accountId),
+            eq(favoritesItems.distillStatus, "knowledge"),
+          )
+        : and(
+            eq(favoritesItems.userId, deps.userId),
+            eq(favoritesItems.distillStatus, "knowledge"),
+          );
+      return db
+        .select()
+        .from(favoritesItems)
+        .where(where)
+        .orderBy(desc(favoritesItems.updatedAt)) // 新蒸的先看(确认门读面)
+        .limit(limit);
     },
   };
 }

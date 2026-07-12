@@ -8,15 +8,22 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type { z } from "zod";
-import type { ExecutionTaskType } from "@creatoros/contract";
+import type { ExecutionTaskType, RequestContext } from "@creatoros/contract";
 import type { MaterializedInput, SandboxPaths } from "./sandbox";
 import { createVideoRenderExecutor } from "./video-render/executor";
+import { assertLoopType, classifyLoopType, type LoopType } from "./agentic/loop-type";
 
 export interface ExecutorRunOpts {
   /** 超时/丢弃中止贯通(T-239c 模式):executor 应尽早响应 abort。 */
   signal: AbortSignal;
   /** 步骤流上报(落 ai_task_steps,喂前端步骤日志)。 */
   reportStep: (text: string) => Promise<void>;
+  /**
+   * [T-256b] 请求上下文 —— agentic executor 用它解析 model-config(§6.1 回接)与用户域领域端口
+   * (buildLlm(ctx)/buildTools(ctx))。确定性 executor(echo/video.render)不需要,可忽略。
+   * 编排 runExecutionTask 已持 ctx,additive 透传。
+   */
+  ctx?: RequestContext;
 }
 
 export interface ExecutorSandboxView extends SandboxPaths {
@@ -26,6 +33,12 @@ export interface ExecutorSandboxView extends SandboxPaths {
 
 export interface ExecutionExecutor {
   taskType: ExecutionTaskType;
+  /**
+   * [T-256b] 声明的循环类型(判定规则 SPEC §8 gate-m1)。缺省 deterministic(A 型脚本);
+   * agentic executor 声明 "agentic"。register 期强制 classifyLoopType(taskType)===此值(结构门:
+   * 命名与循环类型不一致的 executor 装配就被拒,防「什么都塞 agent」/「agentic 名挂确定性壳」)。
+   */
+  loopType?: LoopType;
   /** per-taskType params 细化校验(可选);编排在执行前 parse,失败 → 任务 failed。 */
   paramsSchema?: z.ZodTypeAny;
   /**
@@ -44,6 +57,8 @@ export interface ExecutorRegistry {
   get(taskType: string): ExecutionExecutor | null;
   has(taskType: string): boolean;
   types(): string[];
+  /** [T-256b] 某 taskType 的声明循环类型(建任务端 gate 用;未注册 → null)。 */
+  loopTypeOf(taskType: string): LoopType | null;
 }
 
 export function createExecutorRegistry(): ExecutorRegistry {
@@ -53,6 +68,8 @@ export function createExecutorRegistry(): ExecutorRegistry {
       if (executors.has(executor.taskType)) {
         throw new Error(`executor already registered: ${executor.taskType}`);
       }
+      // [T-256b] 判定规则结构门:声明循环类型必须与 taskType 命名判定一致(SPEC §8 gate-m1)。
+      assertLoopType(executor.taskType, executor.loopType ?? "deterministic");
       executors.set(executor.taskType, executor);
     },
     get(taskType) {
@@ -63,6 +80,11 @@ export function createExecutorRegistry(): ExecutorRegistry {
     },
     types() {
       return [...executors.keys()];
+    },
+    loopTypeOf(taskType) {
+      const e = executors.get(taskType);
+      if (!e) return null;
+      return e.loopType ?? classifyLoopType(taskType);
     },
   };
 }

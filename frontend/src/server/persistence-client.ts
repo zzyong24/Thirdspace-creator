@@ -177,6 +177,17 @@ import {
   resolveWorkspacesRoot,
   sweepOrphanSandboxes,
   EXECUTION_OP_IDS,
+  // [T-256b/c] 自主任务运行时:agentic executor + 确定性引擎(Pi 就绪前默认)+ 三领域适配器 + token 估算。
+  createAgenticExecutor,
+  createDeterministicAgenticEngine,
+  createResearchTools,
+  createCollectionTools,
+  createMaterialTools,
+  estimateTokens as estimateAgenticTokens,
+  type EngineLlm as AgenticEngineLlm,
+  type ResearchPorts,
+  type CollectionPorts,
+  type MaterialPorts,
 } from "@creatoros/backend/modules/execution";
 import type {
   ContextDeps as ChatContextDeps,
@@ -289,6 +300,10 @@ import {
   // [T-212c] 对标爆款拆解 → 转化进选题池(采集落库后 best-effort 触发)。
   runBenchmarkTeardown,
   createBenchmarkTeardownPort,
+  // [T-235d-distill] 收藏夹作品蒸馏链(收藏采集落库后 best-effort 触发):transcribe→判库→知识蒸馏确认门。
+  runFavoritesDistill,
+  createFavoritesTriagePort,
+  runKnowledgeDistill,
   // [T-212d] 防茧房校准:淘汰原因蒸馏(选题淘汰写原因后 best-effort 触发)。
   runTopicPreferenceDistill,
   createTopicPreferenceDistillPort,
@@ -4073,6 +4088,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
     hasExecutor: (t) => executorRegistry.has(t),
+    // [T-256b] 判定规则建任务端 gate:taskType 命名判定的循环类型必须与其 executor 声明一致
+    // (agentic 执行器在下方 llmCompleter 就绪后追加注册;请求期才读,注册已完成)。
+    loopTypeOf: (t) => executorRegistry.loopTypeOf(t),
     workspacesRoot: executionWorkspacesRoot,
     // 丢弃在跑任务 → 中止其 executor(abort signal 贯通,T-239c 模式)。
     abortRun: abortExecutionTask,
@@ -5523,11 +5541,60 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         }
       }
 
+      // ⑤ [T-235d-distill] 蒸馏链(best-effort,采集主流程绝不受影响):transcribe→判库→知识蒸馏确认门。
+      //   与④进池路径**正交**:一条收藏既是跟拍候选(④),又可判知识(⑤)——各答各的问题,不去重。
+      //   **origin 隔离**:逐字稿落 favorites_items.transcript,**永不建 imported project/artifact**
+      //   (见 favorites-distill-runner);故 transcribeOne 复用 transcribe 原语但**不**走 ensureTranscriptArtifact。
+      //   ≤3/run(runner 默认)防超载;整体 try/catch 兜底(runner 内已 best-effort 逐条,这里再保一层)。
+      let distilled = { processed: 0, knowledge: 0, topic: 0, skip: 0, failed: 0 };
+      try {
+        distilled = await runFavoritesDistill(ctx, {
+          listItemsForDistill: (c, limit) =>
+            favoritesService.listItemsForDistill(c, limit),
+          saveTranscript: (c, itemId, t) =>
+            favoritesService.saveTranscript(c, itemId, t),
+          saveVerdict: (c, itemId, v) =>
+            favoritesService.saveDistillVerdict(c, itemId, v),
+          // 取逐字稿:复用与 transcribe-runner 同一套原语(iesdouyin 直链 → ffmpeg 抽音 → 云 ASR)。
+          //   图集/无口播 → 返 null(runner 诚实 skip)。[T-136] 按当前号登录态。
+          transcribeOne: async (c, awemeId) => {
+            const src = await fetchDouyinVideoSource({
+              awemeId,
+              authDir: douyinAuthDirFor(c.accountId),
+              gateway: douyinGateway,
+            });
+            if (src.kind === "image-album") return null;
+            const audioBytes = await streamAudioFromVideo(src.playUrl);
+            const spec = await resolveTranscribeSpecFn(c, {
+              getModelConfig: (cc, cap) => settingsService.getModelConfig(cc, cap),
+              env: process.env,
+            });
+            const { text } = await transcribeAudioFn(
+              spec,
+              { audioBytes, language: "zh" },
+              asrRegistry,
+            );
+            return text && text.trim() ? text : null;
+          },
+          // 判库(favorites.triage)+ 知识蒸馏(knowledge.distill)—— capability 经 model-config 解析,不写死。
+          triage: createFavoritesTriagePort({ resolveModelSpec }),
+          distillKnowledge: (c, content) =>
+            runKnowledgeDistill(c, { content }, { resolveModelSpec }),
+        });
+      } catch (err) {
+        // 蒸馏链整体失败(不该发生;runner 内已逐条 best-effort)→ 记日志,采集主流程照常返回。
+        console.error(`[favorites] 蒸馏链触发失败(不影响采集):`, err);
+      }
+
+      const distillNote =
+        distilled.processed > 0
+          ? `,蒸馏 ${distilled.processed} 条(知识 ${distilled.knowledge}/选题 ${distilled.topic}/跳过 ${distilled.skip}/失败 ${distilled.failed})`
+          : "";
       report({
         stage: "favorites",
         processed: matched.length,
         total: matched.length,
-        message: `收藏夹采集完成:台账新增 ${recordedNew} 条,进池 ${promoted} 条`,
+        message: `收藏夹采集完成:台账新增 ${recordedNew} 条,进池 ${promoted} 条${distillNote}`,
       });
       // itemsNew=台账真新增;itemsUpdated=本轮真进池数(诚实);message 汇总匹配失败/引导。
       return {
@@ -6565,6 +6632,91 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     resolveLlmConfig(ctx, capability, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
       env: process.env,
+    }),
+  );
+
+  // ── [T-256b/c] 自主任务运行时装配(独立区域,additive:三 agentic executor 追加进上方
+  //    executorRegistry;dispatch/沙箱/确认门/步骤流零改动,复用 T-255a 编排)──────────────
+  //  引擎:确定性引擎(Pi 就绪前默认;真 Pi = createPiAgenticEngine + streamFn,见 pi-engine.ts + 报告)。
+  //  §6.1 硬门:引擎每步推理回接 model-config —— buildAgenticLlm 闭包走上面同一 llmCompleter
+  //    (resolveLlmConfig 解析用户 provider),token 由 estimateAgenticTokens 兜(喂预算硬顶)。
+  //  领域端口:本轮为**诚实 bundle seam**(读诚实降级 / 写只 staged 不碰 live 数据,守铁律②/封号纪律);
+  //    真联网检索端口(resolveSearchSpec,在 chat route)、真 ingestion 采集端口、真 pending 知识写入
+  //    的接线为 follow-up(见交付报告「差最后一步」)。框架校验(循环/白名单/预算硬顶/干跑/manifest/
+  //    确认门)不依赖端口真伪。
+  const buildAgenticLlm = (
+    ctx: RequestContext,
+    capability: string,
+  ): AgenticEngineLlm => {
+    return async (prompt, opts) => {
+      const r = await llmCompleter(ctx, capability, prompt, {
+        system: opts?.system,
+        maxTokens: opts?.maxTokens,
+      });
+      return {
+        text: r.text,
+        tokensUsed:
+          estimateAgenticTokens(prompt) + estimateAgenticTokens(r.text ?? ""),
+      };
+    };
+  };
+  const agenticResearchPorts: ResearchPorts = {
+    // 真联网检索端口未接进本路径 → 诚实降级(grounding=model_memory,需核实);真接见报告。
+    async webSearch() {
+      return { grounding: "model_memory", results: [] };
+    },
+    async webRead({ url }) {
+      return { needLogin: false, title: "", fullText: "", sourceUrl: url };
+    },
+    // 铁律②:staged seam(不碰 live 知识库);真 pending 落库为 follow-up。
+    async knowledgeWrite() {
+      return { pendingId: `staged-${Date.now()}` };
+    },
+  };
+  const agenticCollectionPorts: CollectionPorts = {
+    async listTargets() {
+      return { targets: [] };
+    },
+    async runCollection() {
+      // 真 ingestion 采集端口(限流/防封在端口)为 follow-up;此 seam 不触发真采集。
+      return { ok: true, itemsNew: 0, itemsUpdated: 0 };
+    },
+  };
+  const agenticMaterialPorts: MaterialPorts = {
+    async searchMaterials() {
+      return { items: [] };
+    },
+    async organizeMaterials({ assetIds }) {
+      return { affected: assetIds.length };
+    },
+  };
+  const agenticEngine = createDeterministicAgenticEngine();
+  const AGENTIC_DEFAULT_BUDGET = { maxSteps: 8, maxTokens: 20000 };
+  executorRegistry.register(
+    createAgenticExecutor({
+      taskType: "agentic.research",
+      engine: agenticEngine,
+      resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.research"),
+      resolveTools: () => createResearchTools(agenticResearchPorts),
+      defaultBudget: AGENTIC_DEFAULT_BUDGET,
+    }),
+  );
+  executorRegistry.register(
+    createAgenticExecutor({
+      taskType: "agentic.collect",
+      engine: agenticEngine,
+      resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.collect"),
+      resolveTools: () => createCollectionTools(agenticCollectionPorts),
+      defaultBudget: AGENTIC_DEFAULT_BUDGET,
+    }),
+  );
+  executorRegistry.register(
+    createAgenticExecutor({
+      taskType: "agentic.material",
+      engine: agenticEngine,
+      resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.material"),
+      resolveTools: () => createMaterialTools(agenticMaterialPorts),
+      defaultBudget: AGENTIC_DEFAULT_BUDGET,
     }),
   );
 

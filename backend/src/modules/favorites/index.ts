@@ -8,6 +8,9 @@ export {
   type EnabledFavoritesFolder,
   type RecordFavoriteItemInput,
   type PendingFavoriteItem,
+  type DistillCandidateItem,
+  type DistillVerdict,
+  type DistillPendingItem,
 } from "./favorites.service";
 
 export {

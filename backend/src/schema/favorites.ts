@@ -1,4 +1,4 @@
-import { pgTable, text, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, jsonb } from "drizzle-orm/pg-core";
 
 // [T-235c] 指定抖音收藏夹采集(收藏夹跟拍信号源,SPEC 2026-07-11 daily-topic-autopilot 追加)。
 //
@@ -43,6 +43,16 @@ export const favoritesItems = pgTable("favorites_items", {
   url: text("url").notNull().default(""), // https://www.douyin.com/video/<awemeId>
   status: text("status").notNull().default("pending"), // pending | promoted
   candidateId: text("candidate_id"), // promoted 后回填(soft FK → candidates.id,溯源)
+  // [T-235d-distill] 收藏夹蒸馏链落点(迁移 0039,additive)。**origin 隔离铁律**:他人收藏作品
+  //   逐字稿落在**本行**,永不建 imported project / artifact(否则污染 imported/reconstructed
+  //   origin 隔离)。见 favorites-distill-runner.ts。
+  transcript: text("transcript"), // 他人作品逐字稿(独立落点,非 project artifact);NULL=未转写
+  // 蒸馏链状态:NULL(未入链)| knowledge(判为知识,atoms 待确认门采纳)| topic(判为纯选题,
+  //   已有跟拍候选无额外动作)| skip(无沉淀价值/图集)| failed(带 error)。
+  distillStatus: text("distill_status"),
+  // 蒸馏产物:{ reason?, atoms?, suggestedTags?, error? }。knowledge verdict 存 atoms(**确认门
+  //   候选**,AI 只产候选、人采纳才 knowledge.create,铁律②);jsonb 免迁移扩展(同 candidates.card)。
+  distillResult: jsonb("distill_result").notNull().default({}),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -74,9 +84,14 @@ CREATE TABLE IF NOT EXISTS favorites_items (
   url TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'pending',
   candidate_id TEXT,
+  transcript TEXT,
+  distill_status TEXT,
+  distill_result JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_items_identity ON favorites_items (user_id, aweme_id);
 CREATE INDEX IF NOT EXISTS ix_favorites_items_user_account ON favorites_items (user_id, account_id);
+-- [T-235d-distill] 蒸馏链批取/确认门读面索引(迁移 0039)。
+CREATE INDEX IF NOT EXISTS ix_favorites_items_distill ON favorites_items (user_id, distill_status);
 `;

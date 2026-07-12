@@ -31,6 +31,13 @@ describe("executionTaskSpec", () => {
     expect(res.success).toBe(false);
   });
 
+  it("[T-256b] accepts agentic.* taskTypes(自主任务:research/collect/material)", () => {
+    for (const t of ["agentic.research", "agentic.collect", "agentic.material"]) {
+      const res = executionTaskSpec.safeParse({ taskType: t, goal: "调研 A" });
+      expect(res.success).toBe(true);
+    }
+  });
+
   it("rejects an empty goal and empty mountAs", () => {
     expect(
       executionTaskSpec.safeParse({ taskType: "echo.manifest", goal: "" })

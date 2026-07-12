@@ -57,7 +57,7 @@
 
 ## 6. 引擎选型(承接 T-255b 实测)
 
-- 自主循环运行时 = **Pi vs OpenCode 定点实测二选一**(MiniMax 驱动,同一真任务=一次真选题调研循环):Pi(MIT/库级嵌入最轻/默认4工具契合白名单)vs OpenCode(MIT/官方 Node SDK/社区大)。次选 goose。**C 案整壳否决不变**。
+- 自主循环运行时 = **Pi**(earendil-works/pi,MIT/库级嵌入最轻/默认4工具契合白名单)——**用户 2026-07-12 拍板直接选定,不做 Pi/OpenCode 实测,T-256d 关闭**。OpenCode/goose 为备选记录在案。**C 案整壳否决不变**。Pi LLM 回接 model-config(§6.1);NOTICE(MIT)进关于页。
 - 集成形状 = T-255a 执行层的 executor 一种(agentic executor):dispatch/沙箱/确认卡/步骤流零改动;引擎注入我方领域工具适配器(把领域端口包成引擎认的 tool 接口)。
 - NOTICE/许可义务进 app「关于/开源许可」页(gate-F1 处置沿用)。
 

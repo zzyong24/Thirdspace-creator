@@ -146,6 +146,25 @@ async function openAndMigrate(dataDir?: string): Promise<{
         "CREATE UNIQUE INDEX IF NOT EXISTS platform_accounts_external_ux ON platform_accounts(user_id, platform, external_account_id)",
       );
     }
+    // [T-235d-distill fixup] 同款兜底:老 pglite 无 favorites_items 蒸馏链三列(0039 前装机),
+    // migrator 若因 journal 不同步没跑 0039 → 收藏夹蒸馏链读写报「column 不存在」。缺就补(幂等)。
+    const favDistillColCheck = await client.query<{ exists: boolean }>(
+      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'favorites_items' AND column_name = 'distill_status') AS exists",
+    );
+    if (!favDistillColCheck.rows[0]?.exists) {
+      await client.exec(
+        "ALTER TABLE favorites_items ADD COLUMN IF NOT EXISTS transcript TEXT",
+      );
+      await client.exec(
+        "ALTER TABLE favorites_items ADD COLUMN IF NOT EXISTS distill_status TEXT",
+      );
+      await client.exec(
+        "ALTER TABLE favorites_items ADD COLUMN IF NOT EXISTS distill_result JSONB NOT NULL DEFAULT '{}'::jsonb",
+      );
+      await client.exec(
+        "CREATE INDEX IF NOT EXISTS ix_favorites_items_distill ON favorites_items (user_id, distill_status)",
+      );
+    }
     return { db, client };
   } catch (err) {
     // client 可能已半开占着目录 —— 关掉(自身也可能因 WASM 已 abort 再抛,吞掉)。

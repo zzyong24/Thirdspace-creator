@@ -57,6 +57,38 @@ export interface PendingFavoriteItem {
   url: string;
 }
 
+/** [T-235d-distill] 待蒸馏条目投影(蒸馏链 runner 用)。transcript 已存则跳过转写(省流)。 */
+export interface DistillCandidateItem {
+  id: string;
+  folderId: string;
+  awemeId: string;
+  title: string;
+  authorNickname: string;
+  url: string;
+  /** 已转写的逐字稿(NULL=未转,runner 需先转写);他人作品独立落点,非 project artifact。 */
+  transcript: string | null;
+}
+
+/** [T-235d-distill] 判库裁决 + 蒸馏产物落库入参。 */
+export interface DistillVerdict {
+  /** knowledge(判为知识,atoms 待确认门)| topic(纯选题,已有跟拍候选)| skip | failed。 */
+  status: "knowledge" | "topic" | "skip" | "failed";
+  /** { reason?, atoms?, suggestedTags?, error? };knowledge 存 atoms(确认门候选,人采纳才落库)。 */
+  result: Record<string, unknown>;
+}
+
+/** [T-235d-distill] 知识确认门待采纳投影(distill_status='knowledge' 读面,供 UI 复用共享确认门)。 */
+export interface DistillPendingItem {
+  id: string;
+  awemeId: string;
+  title: string;
+  authorNickname: string;
+  url: string;
+  transcript: string | null;
+  /** 蒸馏产物:{ reason?, atoms?, suggestedTags? }(atoms = 确认门每行卡预填)。 */
+  distillResult: Record<string, unknown>;
+}
+
 export interface FavoritesService {
   listFolders(
     ctx: RequestContext,
@@ -100,6 +132,30 @@ export interface FavoritesService {
     itemId: string,
     candidateId: string,
   ): Promise<void>;
+
+  // ── [T-235d-distill] 蒸馏链落点(与 status 正交) ──
+  /** 待入蒸馏链条目(distill_status IS NULL,FIFO,限量;蒸馏 runner 每 run ≤N 防超载)。 */
+  listItemsForDistill(
+    ctx: RequestContext,
+    limit: number,
+  ): Promise<DistillCandidateItem[]>;
+  /** 落逐字稿(他人作品独立落点,不建 project artifact)。 */
+  saveTranscript(
+    ctx: RequestContext,
+    itemId: string,
+    transcript: string,
+  ): Promise<void>;
+  /** 落判库裁决 + 蒸馏产物(distill_status + distill_result)。 */
+  saveDistillVerdict(
+    ctx: RequestContext,
+    itemId: string,
+    verdict: DistillVerdict,
+  ): Promise<void>;
+  /** 知识确认门待采纳读面(distill_status='knowledge',限量)。 */
+  listDistillPending(
+    ctx: RequestContext,
+    limit: number,
+  ): Promise<DistillPendingItem[]>;
 }
 
 function guardCreate(input: CreateFavoritesFolderInput): void {
@@ -123,6 +179,30 @@ function toPendingItem(row: FavoritesItemRow): PendingFavoriteItem {
     title: row.title,
     authorNickname: row.authorNickname,
     url: row.url,
+  };
+}
+
+function toDistillCandidate(row: FavoritesItemRow): DistillCandidateItem {
+  return {
+    id: row.id,
+    folderId: row.folderId,
+    awemeId: row.awemeId,
+    title: row.title,
+    authorNickname: row.authorNickname,
+    url: row.url,
+    transcript: row.transcript ?? null,
+  };
+}
+
+function toDistillPending(row: FavoritesItemRow): DistillPendingItem {
+  return {
+    id: row.id,
+    awemeId: row.awemeId,
+    title: row.title,
+    authorNickname: row.authorNickname,
+    url: row.url,
+    transcript: row.transcript ?? null,
+    distillResult: (row.distillResult ?? {}) as Record<string, unknown>,
   };
 }
 
@@ -206,6 +286,34 @@ export function createFavoritesService(deps: ServiceDeps): FavoritesService {
 
     async markItemPromoted(ctx, itemId, candidateId) {
       await repoFor(ctx).markItemPromoted(itemId, candidateId);
+    },
+
+    // ── [T-235d-distill] 蒸馏链落点 ──
+    async listItemsForDistill(ctx, limit) {
+      const rows = await repoFor(ctx).listItemsForDistill(
+        ctx.accountId ?? null,
+        limit,
+      );
+      return rows.map(toDistillCandidate);
+    },
+
+    async saveTranscript(ctx, itemId, transcript) {
+      await repoFor(ctx).saveTranscript(itemId, transcript);
+    },
+
+    async saveDistillVerdict(ctx, itemId, verdict) {
+      await repoFor(ctx).saveDistillVerdict(itemId, {
+        status: verdict.status,
+        result: verdict.result,
+      });
+    },
+
+    async listDistillPending(ctx, limit) {
+      const rows = await repoFor(ctx).listDistillPending(
+        ctx.accountId ?? null,
+        limit,
+      );
+      return rows.map(toDistillPending);
     },
   };
 }
