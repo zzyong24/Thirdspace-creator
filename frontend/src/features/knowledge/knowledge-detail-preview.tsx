@@ -11,7 +11,6 @@
  */
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -45,8 +44,20 @@ interface PreviewState {
 
 const INITIAL: PreviewState = { phase: "loading", item: null, content: "", error: null };
 
-export function KnowledgeDetailPreview({ knowledgeId }: { knowledgeId: string }) {
+export function KnowledgeDetailPreview({
+  knowledgeId,
+  onContentLoaded,
+}: {
+  knowledgeId: string;
+  /**
+   * [T-260c] 最新修订正文读回回调 —— 交互岛用它给「编辑」预填全文(全文就地编辑,
+   * 保存为新版本)。用 ref 镜像,避免进 effect 依赖导致重复拉取。
+   */
+  onContentLoaded?: (content: string) => void;
+}) {
   const [state, setState] = React.useState<PreviewState>(INITIAL);
+  const onContentLoadedRef = React.useRef(onContentLoaded);
+  onContentLoadedRef.current = onContentLoaded;
 
   React.useEffect(() => {
     let cancelled = false;
@@ -73,12 +84,15 @@ export function KnowledgeDetailPreview({ knowledgeId }: { knowledgeId: string })
         const current =
           list.find((rev) => rev.id === item.currentRevisionId) ??
           list.slice().sort((a, b) => b.revisionNumber - a.revisionNumber)[0];
+        const content = current?.content ?? "";
         setState({
           phase: "ready",
           item,
-          content: current?.content ?? "",
+          content,
           error: null,
         });
+        // 回传最新正文(编辑预填源);读失败/空正文回传空串(诚实,不编内容)。
+        onContentLoadedRef.current?.(content);
       } catch (err) {
         if (cancelled) return;
         setState({
@@ -135,157 +149,13 @@ export function KnowledgeDetailPreview({ knowledgeId }: { knowledgeId: string })
           ) : (
             <KnowledgeContentBody content={state.content} />
           )}
-          {/* [T-247] 已建关系列表 + 逐条删除(knowledge.relations.delete)。 */}
-          <KnowledgeRelationsList knowledgeId={knowledgeId} />
-          {/* [T-091] 手动建边入口:「关联到…」→ 同一 create op(createdByType='user')。 */}
-          <KnowledgeRelateEntry knowledgeId={knowledgeId} />
+          {/* [T-260b] 关系管理(建边 + 删边)整体移到关系图主面:
+              - 建边全 AI(图面「AI 找关联」→ 候选确认门,createdByType='ai'),不给人手连;
+              - 删边唯一入口在图面「已建关联」清单。
+              详情抽屉回归「预览 + 归档」两件事,不再挂 KnowledgeRelateEntry /
+              KnowledgeRelationsList。 */}
         </>
       )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// KnowledgeRelationsList — [T-247] 详情预览内的已建关系列表 + 删除
-//   knowledge.relations.list 读本条目(source 端)的既有边;目标标题经一次
-//   knowledge.list 反查(与 RelateEntry 同款读法)。每行「删除」→
-//   knowledge.relations.delete(body 带 targetKnowledgeId + relationType)→
-//   本地重拉列表。读失败 → 行内提示;无边 → 不渲(不摆空区)。
-// ---------------------------------------------------------------------------
-
-interface RelationDto {
-  readonly id: string;
-  readonly sourceKnowledgeId: string;
-  readonly targetKnowledgeId: string;
-  readonly relationType: string;
-}
-
-const RELATION_TYPE_LABELS: Record<string, string> = {
-  supports: "支撑",
-  contradicts: "矛盾",
-  references: "引用",
-  extends: "延伸",
-};
-
-function KnowledgeRelationsList({ knowledgeId }: { knowledgeId: string }) {
-  const [relations, setRelations] = React.useState<ReadonlyArray<RelationDto> | null>(
-    null,
-  );
-  const [titles, setTitles] = React.useState<ReadonlyMap<string, string>>(
-    new Map(),
-  );
-  const [busyId, setBusyId] = React.useState<string | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-
-  const load = React.useCallback(async () => {
-    try {
-      const rels = (await client.listKnowledgeRelations({
-        params: { knowledgeId },
-        query: undefined,
-        body: undefined,
-      })) as unknown as ReadonlyArray<RelationDto>;
-      const list = Array.isArray(rels) ? rels : [];
-      setRelations(list);
-      setError(null);
-      if (list.length > 0) {
-        // 目标标题反查(一次 list,同 RelateEntry 的读法;失败只降级显 id)。
-        try {
-          const rows = (await client.listKnowledge({
-            params: undefined,
-            query: { page: 1, pageSize: 200 },
-            body: undefined,
-          })) as unknown as ReadonlyArray<{ id: string; title: string }>;
-          setTitles(
-            new Map(
-              (Array.isArray(rows) ? rows : []).map((r) => [r.id, r.title]),
-            ),
-          );
-        } catch {
-          // 标题读不到 → 行内显目标 id(诚实降级,不编标题)。
-        }
-      }
-    } catch (err) {
-      setRelations([]);
-      setError(describeUserError(err, "关联读取失败。"));
-    }
-  }, [knowledgeId]);
-
-  React.useEffect(() => {
-    setRelations(null);
-    void load();
-  }, [load]);
-
-  const handleDelete = React.useCallback(
-    async (rel: RelationDto) => {
-      if (busyId !== null) return;
-      setBusyId(rel.id);
-      setError(null);
-      try {
-        await client.removeKnowledgeRelation({
-          params: { knowledgeId },
-          query: undefined,
-          body: {
-            targetKnowledgeId: rel.targetKnowledgeId,
-            relationType: rel.relationType,
-          },
-        });
-        await load(); // 以服务端读回为准,不做乐观假删。
-      } catch (err) {
-        setError(describeUserError(err, "删除关联失败，请重试。"));
-      } finally {
-        setBusyId(null);
-      }
-    },
-    [busyId, knowledgeId, load],
-  );
-
-  // 未加载完(null)或无边 → 不渲区块(详情不摆空「关联」区)。读错误仍要露出来。
-  if (relations === null) return null;
-  if (relations.length === 0 && !error) return null;
-
-  return (
-    <div
-      data-slot="knowledge-relations-list"
-      className="flex flex-col gap-1.5 border-t border-border/60 pt-2"
-    >
-      <p className="text-[11px] font-medium text-muted-foreground">
-        已建关联({relations.length})
-      </p>
-      <ul className="flex flex-col gap-1">
-        {relations.map((rel) => (
-          <li
-            key={rel.id}
-            data-slot="knowledge-relation-row"
-            data-relation-type={rel.relationType}
-            className="flex items-center gap-1.5 text-[12px] text-foreground"
-          >
-            <span className="rounded-full bg-surface-subtle px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              {RELATION_TYPE_LABELS[rel.relationType] ?? rel.relationType}
-            </span>
-            <span className="min-w-0 flex-1 truncate">
-              {titles.get(rel.targetKnowledgeId) ?? rel.targetKnowledgeId}
-            </span>
-            <button
-              type="button"
-              data-slot="knowledge-relation-delete"
-              disabled={busyId !== null}
-              onClick={() => void handleDelete(rel)}
-              className="shrink-0 text-[11px] text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50"
-            >
-              {busyId === rel.id ? "删除中…" : "删除"}
-            </button>
-          </li>
-        ))}
-      </ul>
-      {error ? (
-        <p
-          data-slot="knowledge-relations-error"
-          role="alert"
-          className="text-[11px] text-destructive"
-        >
-          {error}
-        </p>
-      ) : null}
     </div>
   );
 }
@@ -464,143 +334,3 @@ function LessonProse({ text }: { text: string }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// KnowledgeRelateEntry — [T-091] 详情预览内的手动关联入口
-//   展开时拉一次 knowledge.list(排除自身)供选目标;关联走既有
-//   knowledge.relations.create(缺省 createdByType='user');幂等由 service 兜底
-//   (重复同向同类型边返回既有边,不重插)。
-// ---------------------------------------------------------------------------
-
-const MANUAL_RELATION_TYPES: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "supports", label: "支撑(supports)" },
-  { value: "contradicts", label: "矛盾(contradicts)" },
-  { value: "references", label: "引用(references)" },
-  { value: "extends", label: "延伸(extends)" },
-];
-
-function KnowledgeRelateEntry({ knowledgeId }: { knowledgeId: string }) {
-  const router = useRouter();
-  const [open, setOpen] = React.useState(false);
-  const [targets, setTargets] = React.useState<
-    ReadonlyArray<{ id: string; title: string }> | null
-  >(null);
-  const [targetId, setTargetId] = React.useState("");
-  const [relationType, setRelationType] = React.useState("references");
-  const [busy, setBusy] = React.useState(false);
-  const [message, setMessage] = React.useState<string | null>(null);
-
-  const handleToggle = React.useCallback(async () => {
-    const next = !open;
-    setOpen(next);
-    setMessage(null);
-    if (next && targets === null) {
-      try {
-        const rows = (await client.listKnowledge({
-          params: undefined,
-          query: { page: 1, pageSize: 200 },
-          body: undefined,
-        })) as unknown as ReadonlyArray<{
-          id: string;
-          title: string;
-          status: string;
-        }>;
-        setTargets(
-          (Array.isArray(rows) ? rows : [])
-            .filter((r) => r.status === "active" && r.id !== knowledgeId)
-            .map((r) => ({ id: r.id, title: r.title })),
-        );
-      } catch {
-        setTargets([]);
-        setMessage("知识列表读取失败,稍后重试。");
-      }
-    }
-  }, [open, targets, knowledgeId]);
-
-  const handleRelate = React.useCallback(async () => {
-    if (!targetId || busy) return;
-    setBusy(true);
-    setMessage(null);
-    try {
-      await client.createKnowledgeRelation({
-        params: { knowledgeId },
-        query: undefined,
-        body: { targetKnowledgeId: targetId, relationType },
-      });
-      setMessage("已关联。");
-      setTargetId("");
-      router.refresh();
-    } catch (err) {
-      setMessage(describeUserError(err, "关联失败，请重试。"));
-    } finally {
-      setBusy(false);
-    }
-  }, [targetId, busy, knowledgeId, relationType, router]);
-
-  return (
-    <div data-slot="knowledge-relate-entry" className="flex flex-col gap-1.5">
-      <button
-        type="button"
-        data-slot="knowledge-relate-toggle"
-        aria-expanded={open}
-        onClick={() => void handleToggle()}
-        className="w-fit text-[11px] text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-      >
-        {open ? "收起关联" : "关联到…"}
-      </button>
-      {open ? (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <label className="sr-only" htmlFor="knowledge-relate-target">
-            目标知识
-          </label>
-          <select
-            id="knowledge-relate-target"
-            data-slot="knowledge-relate-target"
-            value={targetId}
-            onChange={(e) => setTargetId(e.target.value)}
-            className="h-7 max-w-56 rounded-md border border-border bg-surface px-1.5 text-[12px] text-foreground"
-          >
-            <option value="">选择要关联的知识…</option>
-            {(targets ?? []).map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.title.slice(0, 30)}
-              </option>
-            ))}
-          </select>
-          <label className="sr-only" htmlFor="knowledge-relate-manual-type">
-            关联类型
-          </label>
-          <select
-            id="knowledge-relate-manual-type"
-            data-slot="knowledge-relate-manual-type"
-            value={relationType}
-            onChange={(e) => setRelationType(e.target.value)}
-            className="h-7 rounded-md border border-border bg-surface px-1.5 text-[12px] text-foreground"
-          >
-            {MANUAL_RELATION_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            data-slot="knowledge-relate-submit"
-            disabled={busy || !targetId}
-            onClick={() => void handleRelate()}
-            className="inline-flex h-7 items-center rounded-md bg-brand px-2 text-[12px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
-          >
-            {busy ? "关联中…" : "关联"}
-          </button>
-          {message ? (
-            <span
-              data-slot="knowledge-relate-message"
-              className="text-[11px] text-muted-foreground"
-            >
-              {message}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
-  );
-}

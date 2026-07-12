@@ -98,6 +98,13 @@ export interface KnowledgeViewModel extends BasePageViewModel {
    * 既有结构性契约测试(toolbar/grid 三列)不受影响。
    */
   readonly atlas?: import("./knowledge-atlas-vm").KnowledgeAtlasVm | null;
+  /**
+   * [T-260a 复原] 力导向知识关系图 VM(server 侧一次装配的全真值:节点 = active
+   * 知识 + 被引用 project 锚,边 = AI 建的语义边 + materialLinks 引用边)。真实装配层
+   * (knowledge-data)始终提供(读失败 → null);可选是兼容缝:fixture 构建器/旧测试
+   * VM 不设置时,交互岛不渲「关系图」视图(既有结构性契约测试不受影响)。
+   */
+  readonly graph?: import("./knowledge-graph-vm").KnowledgeGraphVm | null;
 }
 
 export interface KnowledgeCategory {

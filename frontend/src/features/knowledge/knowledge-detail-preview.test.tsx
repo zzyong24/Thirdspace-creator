@@ -1,33 +1,23 @@
 /**
- * [T-198] 知识详情预览的正文渲染测试。
+ * [T-198 / T-260b·c] 知识详情预览测试。
  *  ① 课程 YAML 内容 → 结构化区块(带小标题:一句话/正文/案例/易错点/苏格拉底提问/要点)。
  *  ② 普通 markdown / 纯文本 → 诚实退回 markdown 渲染,绝不崩。
+ *  ③ [T-260c] 读回最新正文经 onContentLoaded 回传(编辑全文预填源)。
+ *  ④ [T-260b] 关系管理(建边/删边)已移到关系图主面 —— 预览里不再挂
+ *     「关联到…」(KnowledgeRelateEntry)/「已建关联」删除(KnowledgeRelationsList)。
  */
 
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn() }),
-}));
 
 const mockClient = {
   getKnowledge: vi.fn(),
   listKnowledgeRevisions: vi.fn(),
-  listKnowledge: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve([])),
-  createKnowledgeRelation: vi.fn((_i: unknown) => Promise.resolve({ id: "rel" })),
-  // [T-247] 已建关系列表 + 删除。
-  listKnowledgeRelations: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve([])),
-  removeKnowledgeRelation: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve({})),
 };
 vi.mock("@/lib/contract-client", () => ({
   client: {
     getKnowledge: (i: unknown) => mockClient.getKnowledge(i),
     listKnowledgeRevisions: (i: unknown) => mockClient.listKnowledgeRevisions(i),
-    listKnowledge: (i: unknown) => mockClient.listKnowledge(i),
-    createKnowledgeRelation: (i: unknown) => mockClient.createKnowledgeRelation(i),
-    listKnowledgeRelations: (i: unknown) => mockClient.listKnowledgeRelations(i),
-    removeKnowledgeRelation: (i: unknown) => mockClient.removeKnowledgeRelation(i),
   },
 }));
 
@@ -70,19 +60,17 @@ function setRevision(content: string, sourceType = "import") {
   ]);
 }
 
-async function renderPreview() {
+async function renderPreview(
+  props: Partial<{ onContentLoaded: (c: string) => void }> = {},
+) {
   const { KnowledgeDetailPreview } = await import("./knowledge-detail-preview");
-  return render(<KnowledgeDetailPreview knowledgeId="k-1" />);
+  return render(<KnowledgeDetailPreview knowledgeId="k-1" {...props} />);
 }
 
 afterEach(() => cleanup());
 beforeEach(() => {
   mockClient.getKnowledge.mockReset();
   mockClient.listKnowledgeRevisions.mockReset();
-  mockClient.listKnowledgeRelations.mockClear();
-  mockClient.listKnowledgeRelations.mockResolvedValue([]);
-  mockClient.removeKnowledgeRelation.mockClear();
-  mockClient.removeKnowledgeRelation.mockResolvedValue({});
 });
 
 describe("KnowledgeDetailPreview 正文渲染 (T-198)", () => {
@@ -154,62 +142,26 @@ describe("KnowledgeDetailPreview 正文渲染 (T-198)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// [T-247] 已建关系列表 + 删除(knowledge.relations.delete)
+// [T-260c] 最新正文回传(编辑全文预填源)
 // ---------------------------------------------------------------------------
 
-describe("KnowledgeRelationsList 关联删除 (T-247)", () => {
-  it("有既有边 → 渲染关系行(类型 + 目标标题);点删除 → removeKnowledgeRelation + 重拉", async () => {
-    setRevision("正文");
-    mockClient.listKnowledgeRelations
-      .mockResolvedValueOnce([
-        {
-          id: "rel-1",
-          sourceKnowledgeId: "k-1",
-          targetKnowledgeId: "k-2",
-          relationType: "references",
-        },
-      ])
-      // 删除后的重拉 → 空列表(行消失)。
-      .mockResolvedValueOnce([]);
-    mockClient.listKnowledge.mockResolvedValue([
-      { id: "k-2", title: "目标条目" },
-    ]);
-    const { container } = await renderPreview();
-
+describe("KnowledgeDetailPreview onContentLoaded (T-260c)", () => {
+  it("读回最新修订正文 → 经 onContentLoaded 回传(供编辑全文预填)", async () => {
+    setRevision("# 标题\n\n正文全文");
+    const onContentLoaded = vi.fn();
+    await renderPreview({ onContentLoaded });
     await waitFor(() =>
-      expect(
-        container.querySelector('[data-slot="knowledge-relation-row"]'),
-      ).not.toBeNull(),
-    );
-    const row = container.querySelector(
-      '[data-slot="knowledge-relation-row"]',
-    ) as HTMLElement;
-    expect(row.getAttribute("data-relation-type")).toBe("references");
-    expect(row.textContent).toContain("目标条目");
-
-    const del = row.querySelector(
-      '[data-slot="knowledge-relation-delete"]',
-    ) as HTMLButtonElement;
-    fireEvent.click(del);
-
-    await waitFor(() =>
-      expect(mockClient.removeKnowledgeRelation).toHaveBeenCalledTimes(1),
-    );
-    expect(mockClient.removeKnowledgeRelation).toHaveBeenCalledWith(
-      expect.objectContaining({
-        params: { knowledgeId: "k-1" },
-        body: { targetKnowledgeId: "k-2", relationType: "references" },
-      }),
-    );
-    // 重拉后空列表 → 行消失(以服务端读回为准,不做乐观假删)。
-    await waitFor(() =>
-      expect(
-        container.querySelector('[data-slot="knowledge-relation-row"]'),
-      ).toBeNull(),
+      expect(onContentLoaded).toHaveBeenCalledWith("# 标题\n\n正文全文"),
     );
   });
+});
 
-  it("无既有边 → 不渲染「已建关联」区(不摆空区)", async () => {
+// ---------------------------------------------------------------------------
+// [T-260b] 关系管理已移图面 —— 详情预览回归「预览 + 归档」,不再挂建边/删边入口
+// ---------------------------------------------------------------------------
+
+describe("KnowledgeDetailPreview 关系管理已下线 (T-260b)", () => {
+  it("预览里不再渲染「关联到…」建边入口 / 「已建关联」删除清单", async () => {
     setRevision("正文");
     const { container } = await renderPreview();
     await waitFor(() =>
@@ -219,6 +171,14 @@ describe("KnowledgeRelationsList 关联删除 (T-247)", () => {
         ),
       ).not.toBeNull(),
     );
+    // 人手动建边入口(T-091)已移除。
+    expect(
+      container.querySelector('[data-slot="knowledge-relate-entry"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="knowledge-relate-toggle"]'),
+    ).toBeNull();
+    // 详情内的删边清单(T-247)已移到关系图主面。
     expect(
       container.querySelector('[data-slot="knowledge-relations-list"]'),
     ).toBeNull();

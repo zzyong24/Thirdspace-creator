@@ -294,21 +294,33 @@ describe("[T-118b] 经验行只读渲染", () => {
     expect(document.querySelector('[data-slot="knowledge-add-revision"]')).toBeNull();
   });
 
-  it("点开知识卡行 → 走 KnowledgeDetailPreview + 修订表单(非只读)", async () => {
+  it("点开知识卡行 → 走 KnowledgeDetailPreview + 可编辑(非只读:编辑正文次级入口)", async () => {
     const { container } = await renderWithExperience();
     const kRow = container.querySelector<HTMLElement>(
       '[data-slot="recent-knowledge-row"][data-origin="knowledge"]',
     )!;
     fireEvent.click(kRow);
-    // T-192:知识卡走弹窗(portal → document.body);不渲经验只读详情,渲修订表单。
+    // T-192/T-260c:知识卡走弹窗(portal → document.body);不渲经验只读详情,
+    // 主区默认「预览 + 归档」,「编辑」收进次级入口(点开即全文可改)。
+    const editToggle = await waitFor(() => {
+      const el = document.querySelector('[data-slot="knowledge-edit-toggle"]');
+      expect(el).not.toBeNull();
+      return el as HTMLButtonElement;
+    });
+    // 经验只读详情不渲(知识卡非只读)。
+    expect(
+      document.querySelector('[data-slot="experience-detail-preview"]'),
+    ).toBeNull();
+    // 编辑前不摆编辑框;点「编辑正文」→ 就地编辑框铺出。
+    expect(
+      document.querySelector('[data-slot="knowledge-add-revision"]'),
+    ).toBeNull();
+    fireEvent.click(editToggle);
     await waitFor(() =>
       expect(
         document.querySelector('[data-slot="knowledge-add-revision"]'),
       ).not.toBeNull(),
     );
-    expect(
-      document.querySelector('[data-slot="experience-detail-preview"]'),
-    ).toBeNull();
   });
 });
 

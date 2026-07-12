@@ -327,7 +327,7 @@ describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
     expect(mockRouter.push).not.toHaveBeenCalled();
   });
 
-  it("selecting a row + 保存修订 calls client.createKnowledgeRevision with the knowledgeId", async () => {
+  it("[T-260c] 修订就地编辑:点『编辑正文』→ 全文预填可编辑框 → 改 → 保存为新版本(append-only,不覆盖)", async () => {
     const { container } = await renderKnowledge();
     const row = container.querySelector<HTMLTableRowElement>(
       '[data-slot="recent-knowledge-row"]',
@@ -335,6 +335,29 @@ describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
     const knowledgeId = row!.getAttribute("data-knowledge-id");
     fireEvent.click(row!);
 
+    // 主区默认「预览 + 归档」:先出「编辑正文」次级入口,不是吓人的空框。
+    const editToggle = await waitFor(() => {
+      const el = document.querySelector<HTMLButtonElement>(
+        '[data-slot="knowledge-edit-toggle"]',
+      );
+      expect(el).not.toBeNull();
+      return el!;
+    });
+    // 编辑前不渲编辑框(收进次级入口)。
+    expect(
+      document.querySelector('[data-slot="knowledge-revision-content"]'),
+    ).toBeNull();
+    // 等详情预览读回最新正文(onContentLoaded 回传后才有预填源)。
+    await waitFor(() =>
+      expect(
+        document.querySelector(
+          '[data-slot="knowledge-detail-preview"][data-phase="ready"]',
+        ),
+      ).not.toBeNull(),
+    );
+
+    // 点开 → 抽屉铺出当前正文全文,预填进可编辑框(script-rich-editor 同款体验)。
+    fireEvent.click(editToggle);
     const textarea = await waitFor(() => {
       const el = document.querySelector<HTMLTextAreaElement>(
         '[data-slot="knowledge-revision-content"]',
@@ -342,8 +365,13 @@ describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
       expect(el).not.toBeNull();
       return el!;
     });
-    fireEvent.change(textarea, { target: { value: "新的修订" } });
+    // 预填 = 当前最新修订正文全文(不是空框),人可就地改。
+    expect(textarea.value).toBe("# 标题\n\n正文**加粗**内容");
 
+    // 就地改 → 保存 = createKnowledgeRevision 存**新版本**(append-only,不覆盖)。
+    fireEvent.change(textarea, {
+      target: { value: "# 标题\n\n正文**加粗**内容\n\n补一段新内容" },
+    });
     const form = document.querySelector<HTMLFormElement>(
       '[data-slot="knowledge-add-revision"]',
     );
@@ -355,7 +383,7 @@ describe("KnowledgePage writes (T-062c 录入迁倾倒场)", () => {
     expect(mockClient.createKnowledgeRevision).toHaveBeenCalledWith(
       expect.objectContaining({
         params: { knowledgeId },
-        body: { content: "新的修订" },
+        body: { content: "# 标题\n\n正文**加粗**内容\n\n补一段新内容" },
       }),
     );
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());

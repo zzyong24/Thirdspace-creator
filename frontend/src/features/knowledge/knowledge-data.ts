@@ -21,6 +21,12 @@ import {
   type AtlasTagAssignment,
   type KnowledgeAtlasVm,
 } from "./knowledge-atlas-vm";
+// [T-260a] 知识关系图装配(T-199 误删,连 assembleGraph 胶水一起删)—— 复原:
+// server 侧一次 fan-out 装配成 GraphVm,前端只渲不拼。
+import {
+  buildKnowledgeGraphVm,
+  type KnowledgeGraphVm,
+} from "./knowledge-graph-vm";
 
 /**
  * Knowledge & Memory READ-side data assembly ("知识库读侧做真").
@@ -280,6 +286,8 @@ export async function buildKnowledgeDashboardViewModel(
       recentTotal: 0,
       // 读失败没有地图可组;null 让交互岛不渲观点地图(错误态本来也不渲内容区)。
       atlas: null,
+      // [T-260a] 读失败没有图可组;null 让交互岛不渲关系图(错误态本来也不渲内容区)。
+      graph: null,
     };
   }
 
@@ -325,6 +333,10 @@ export async function buildKnowledgeDashboardViewModel(
   // KNOW-13 过滤同一读法),分组/排序交给纯函数 buildKnowledgeAtlas。
   const atlas = await assembleAtlas(client, tags, items);
 
+  // [T-260a 复原] 知识关系图:三份真值(全量语义边 + materialLinks 引用边 + 项目标题)
+  // server 侧一次装配成 GraphVm;任一读失败 → null(诚实降级,交互岛不渲关系图 tab)。
+  const graph = await assembleGraph(client, items);
+
   return {
     ...base,
     scenario: "default",
@@ -342,6 +354,7 @@ export async function buildKnowledgeDashboardViewModel(
     popularTags,
     activeTag,
     atlas,
+    graph,
   };
 }
 
@@ -489,6 +502,92 @@ async function assembleAtlas(
   ).filter((row): row is AtlasTagAssignment => row !== null);
 
   return buildKnowledgeAtlas(sourceItems, assignments);
+}
+
+// [T-260a 复原] 知识关系图装配的最小结构投影。
+interface MaterialLinkDto {
+  readonly projectId: string;
+  readonly entityType: string;
+  readonly entityId: string;
+  readonly role: string;
+  readonly stage: string;
+  readonly createdAt: string;
+}
+
+interface ProjectDto {
+  readonly id: string;
+  readonly title: string;
+}
+
+// 全量语义边行(listAllKnowledgeRelations)—— 比 per-source 的 KnowledgeRelationDto
+// 多带 strength / createdByType(边 tooltip 溯源 + 图上「谁建的」)。
+interface RelationRowDto {
+  readonly sourceKnowledgeId: string;
+  readonly targetKnowledgeId: string;
+  readonly relationType: string;
+  readonly strength: number;
+  readonly createdByType: string;
+}
+
+/**
+ * [T-260a 复原] 图谱装配:knowledge.list(节点,已读回)+ relations.listAll(语义边)
+ * + materialLinks.list(引用边)+ projects.list(战绩锚标题)→ 纯函数
+ * buildKnowledgeGraphVm。语义边/引用边任一读失败 → null(诚实降级,不画残图);
+ * projects 读失败只降级标题(以 projectId 兜底显示,不阻断)。三个读 op 标 optional 是
+ * 兼容缝(旧 fake client 不带这三读)→ 缺任一即返 null,交互岛不渲关系图 tab。
+ */
+async function assembleGraph(
+  client: KnowledgeDataClient,
+  items: ReadonlyArray<KnowledgeListDto>,
+): Promise<KnowledgeGraphVm | null> {
+  if (
+    !client.listAllKnowledgeRelations ||
+    !client.listMaterialLinks ||
+    !client.listProjects
+  ) {
+    return null;
+  }
+  let relations: ReadonlyArray<RelationRowDto>;
+  let links: ReadonlyArray<MaterialLinkDto>;
+  try {
+    [relations, links] = (await Promise.all([
+      client.listAllKnowledgeRelations({
+        params: undefined,
+        query: { page: 1, pageSize: 200 },
+        body: undefined,
+      }),
+      client.listMaterialLinks({
+        params: undefined,
+        query: { page: 1, pageSize: 200 },
+        body: undefined,
+      }),
+    ])) as [ReadonlyArray<RelationRowDto>, ReadonlyArray<MaterialLinkDto>];
+  } catch {
+    return null;
+  }
+  let projects: ReadonlyArray<ProjectDto> = [];
+  try {
+    projects = (await client.listProjects({
+      params: undefined,
+      query: { page: 1, pageSize: 200 },
+      body: undefined,
+    })) as ReadonlyArray<ProjectDto>;
+  } catch {
+    projects = []; // 标题降级为 projectId 兜底(buildKnowledgeGraphVm 内诚实处理)。
+  }
+  return buildKnowledgeGraphVm(
+    items.map((i) => ({
+      id: i.id,
+      title: i.title,
+      knowledgeType: i.knowledgeType,
+      status: i.status,
+      usedCount: i.usedCount ?? 0,
+      usedInPublished: i.usedInPublished ?? false,
+    })),
+    Array.isArray(relations) ? relations : [],
+    Array.isArray(links) ? links : [],
+    Array.isArray(projects) ? projects : [],
+  );
 }
 
 // Normalize the raw `?tag=` value: trim; empty/undefined → null (no filter).

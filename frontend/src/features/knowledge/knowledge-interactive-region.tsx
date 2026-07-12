@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { KnowledgeAtlas } from "./knowledge-atlas";
 import { KnowledgeDetailPreview } from "./knowledge-detail-preview";
+import { KnowledgeGraphView } from "./knowledge-graph-view";
 import { KnowledgeTagManager } from "./knowledge-tag-manager";
 import { MetricCard } from "@/components/project/metric-card";
 import { SectionCard } from "@/components/project/section-card";
@@ -150,9 +151,16 @@ export function KnowledgeInteractiveRegion({
   //   - `?tag=` 生效(KNOW-13 标签筛选)→ 「全部」:标签过滤作用在时间流列表
   //     上,用户点 tag chip 进来要看的就是过滤后的列表,不是地图。
   const atlas = viewModel.atlas ?? null;
-  const [view, setView] = React.useState<"atlas" | "all">(
-    atlas !== null && !viewModel.activeTag ? "atlas" : "all",
-  );
+  // [T-260a 复原] 力导向关系图 = 知识区探索主面。视图优先级:关系图 > 观点地图 > 全部。
+  //   - `?tag=` 生效(KNOW-13)→ 「全部」:标签过滤作用在时间流列表,不是图/地图;
+  //   - VM 不带 graph/atlas(旧 fixture / 测试 override)→ 该视图不出现,回落既有行为。
+  const graph = viewModel.graph ?? null;
+  const [view, setView] = React.useState<"graph" | "atlas" | "all">(() => {
+    if (viewModel.activeTag) return "all";
+    if (graph !== null) return "graph";
+    if (atlas !== null) return "atlas";
+    return "all";
+  });
 
   // [T-093] AI 搜索(回车触发 hybrid;输入即时过滤手感不动):
   // null = 未搜;phase 区分加载/结果/错误;结果卡点开走 selectedId 详情预览。
@@ -215,7 +223,21 @@ export function KnowledgeInteractiveRegion({
   // (AI 归类确认门 + 手动补录次入口),本岛只保留筛选/选择/预览/修订。
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
+  // [T-260c] 修订就地编辑(全文预填):点「编辑」→ 抽屉铺出当前正文全文进可编辑框,人
+  // 就地改 → 保存 = createKnowledgeRevision 存**新版本**(append-only,旧版留痕,绝不覆盖)。
+  //   - revisionContent:编辑框内容(打开时预填 loadedBody);
+  //   - editing:是否在编辑态(「编辑」收进次级入口,点开即全文可改);
+  //   - loadedBody:详情预览读回的最新正文(prefill 源,经 onContentLoaded 回传)。
   const [revisionContent, setRevisionContent] = React.useState("");
+  const [editing, setEditing] = React.useState(false);
+  const [loadedBody, setLoadedBody] = React.useState("");
+
+  // 换选中项 → 复位编辑态/草稿/预填正文,防上一条的编辑残留串到新条目。
+  React.useEffect(() => {
+    setEditing(false);
+    setRevisionContent("");
+    setLoadedBody("");
+  }, [selectedId]);
 
   // [T-247] 归档入口(knowledge.archive,soft-delete):两步确认防误触 ——
   // 第一次点「归档」→ 翻确认态;再点「确认归档」→ 打 op → 关弹窗 + refresh
@@ -256,7 +278,9 @@ export function KnowledgeInteractiveRegion({
           query: undefined,
           body: { content },
         });
+        // 存成新版本后收起编辑框;router.refresh 让详情预览重读最新版本正文。
         setRevisionContent("");
+        setEditing(false);
         router.refresh();
       });
     },
@@ -294,9 +318,15 @@ export function KnowledgeInteractiveRegion({
 
   return (
     <>
-      {/* T-079c 视图切换:atlas VM 在场才渲切换器(旧 VM 无地图可切)。 */}
-      {atlas !== null ? (
-        <KnowledgeViewSwitch view={view} onViewChange={setView} />
+      {/* T-079c / T-260a 视图切换:关系图 / 观点地图 / 全部。有 graph 或 atlas 才渲切换器
+          (旧 VM 无图/地图可切 → 只有「全部」,不摆单选切换器)。 */}
+      {graph !== null || atlas !== null ? (
+        <KnowledgeViewSwitch
+          view={view}
+          onViewChange={setView}
+          hasGraph={graph !== null}
+          hasAtlas={atlas !== null}
+        />
       ) : null}
       {/* [T-093] 搜索入口醒目化:工具栏在三视图常驻(输入即时=客户端过滤不动;
           回车=服务端 hybrid AI 搜索);类型 chips 只作用于「全部」列表。 */}
@@ -317,8 +347,18 @@ export function KnowledgeInteractiveRegion({
         />
       ) : null}
       <KnowledgeMetrics metrics={viewModel.metrics} />
-      {/* T-079c 默认视图 = 观点地图(按 tag 主题聚类分组卡墙;未归类固定底部
-          默认折叠 [gate-F3])。选中卡片复用下方 T-062c 详情预览。 */}
+      {/* [T-260a 复原] 力导向关系图探索主面:填满可用高度(min-h,不再固定 480 塞底);
+          点节点 → 复用下方详情预览;「AI 找关联」建边 + 图面删边都在视图内。 */}
+      {view === "graph" && graph !== null ? (
+        <div
+          data-slot="knowledge-graph-region"
+          className="flex min-h-[560px] flex-col"
+        >
+          <KnowledgeGraphView graph={graph} onSelectKnowledge={setSelectedId} />
+        </div>
+      ) : null}
+      {/* T-079c 观点地图(按 tag 主题聚类分组卡墙;未归类固定底部默认折叠 [gate-F3])。
+          选中卡片复用下方 T-062c 详情预览。 */}
       {view === "atlas" && atlas !== null ? (
         <KnowledgeAtlas
           atlas={atlas}
@@ -387,6 +427,9 @@ export function KnowledgeInteractiveRegion({
           if (!open) {
             setSelectedId(null);
             setRevisionContent("");
+            // [T-260c] 关弹窗收起编辑态 + 清预填正文,防下次打开残留旧编辑。
+            setEditing(false);
+            setLoadedBody("");
             // [T-247] 关弹窗清归档确认/错误态,防下次打开残留。
             setArchiveConfirming(false);
             setArchiveError(null);
@@ -413,34 +456,80 @@ export function KnowledgeInteractiveRegion({
           ) : selectedId !== null ? (
             <>
               {/* T-062c:知识卡内容预览 —— 读元数据 + 最新修订正文,markdown 渲染;
-                  source=web 型显来源链接(诚实三态)。 */}
-              <KnowledgeDetailPreview knowledgeId={selectedId} />
-              <form
-                data-slot="knowledge-add-revision"
-                onSubmit={handleRevisionSubmit}
-                className="flex flex-col gap-2 rounded-md border border-border bg-surface-subtle p-2.5"
-              >
-                <label className="sr-only" htmlFor="knowledge-revision-content">
-                  修订内容
-                </label>
-                <textarea
-                  id="knowledge-revision-content"
-                  data-slot="knowledge-revision-content"
-                  placeholder="为所选条目添加新的修订内容"
-                  value={revisionContent}
-                  onChange={(event) => setRevisionContent(event.target.value)}
-                  rows={3}
-                  className="rounded-md border border-border bg-surface px-3 py-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                />
-                <button
-                  type="submit"
-                  data-slot="knowledge-revision-submit"
-                  disabled={pending || revisionContent.trim().length === 0}
-                  className="inline-flex h-8 w-fit items-center rounded-md bg-brand px-3 text-[13px] font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
+                  source=web 型显来源链接(诚实三态)。onContentLoaded 把最新正文回传,
+                  供 [T-260c] 编辑时全文预填。 */}
+              <KnowledgeDetailPreview
+                knowledgeId={selectedId}
+                onContentLoaded={setLoadedBody}
+              />
+              {/* [T-260c] 修订就地编辑:主区默认只「预览 + 归档」;「编辑」收进次级入口,
+                  点开即铺出当前正文全文进可编辑框(script-rich-editor 同款体验),就地改 →
+                  保存为**新版本**(append-only,旧版留痕,绝不覆盖)。不再是吓人的空框。 */}
+              {editing ? (
+                <form
+                  data-slot="knowledge-add-revision"
+                  onSubmit={handleRevisionSubmit}
+                  className="flex flex-col gap-2 rounded-md border border-border bg-surface-subtle p-2.5"
                 >
-                  保存修订
-                </button>
-              </form>
+                  <div className="flex items-center justify-between">
+                    <label
+                      className="text-[11px] font-medium text-muted-foreground"
+                      htmlFor="knowledge-revision-content"
+                    >
+                      编辑正文(保存为新版本,旧版本保留可追溯)
+                    </label>
+                  </div>
+                  <textarea
+                    id="knowledge-revision-content"
+                    data-slot="knowledge-revision-content"
+                    placeholder="就地修改这条知识的正文…"
+                    value={revisionContent}
+                    onChange={(event) => setRevisionContent(event.target.value)}
+                    rows={12}
+                    className="min-h-[220px] rounded-md border border-border bg-surface px-3 py-2 text-[13px] leading-relaxed text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="submit"
+                      data-slot="knowledge-revision-submit"
+                      disabled={pending || revisionContent.trim().length === 0}
+                      className="inline-flex h-8 w-fit items-center rounded-md bg-brand px-3 text-[13px] font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"
+                    >
+                      {pending ? "保存中…" : "保存为新版本"}
+                    </button>
+                    <button
+                      type="button"
+                      data-slot="knowledge-revision-cancel"
+                      disabled={pending}
+                      onClick={() => {
+                        setEditing(false);
+                        setRevisionContent("");
+                      }}
+                      className="text-[12px] text-muted-foreground hover:underline disabled:opacity-50"
+                    >
+                      取消
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div
+                  data-slot="knowledge-edit-entry"
+                  className="flex items-center"
+                >
+                  <button
+                    type="button"
+                    data-slot="knowledge-edit-toggle"
+                    onClick={() => {
+                      // 点开即预填当前正文全文 → 就地改(不是空框)。
+                      setRevisionContent(loadedBody);
+                      setEditing(true);
+                    }}
+                    className="inline-flex h-8 w-fit items-center rounded-md border border-border bg-surface px-3 text-[13px] font-medium text-muted-foreground hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  >
+                    编辑正文
+                  </button>
+                </div>
+              )}
               {/* [T-247] 归档入口(soft-delete):两步确认防误触;归档后条目从
                   列表/地图消失(读侧滤 archived),恒可在库里追溯(status='archived')。 */}
               <div
@@ -557,12 +646,18 @@ function ExperienceDetailPreview({ row }: { readonly row: KnowledgeRow }) {
 function KnowledgeViewSwitch({
   view,
   onViewChange,
+  hasGraph,
+  hasAtlas,
 }: {
-  readonly view: "atlas" | "all";
-  readonly onViewChange: (view: "atlas" | "all") => void;
+  readonly view: "graph" | "atlas" | "all";
+  readonly onViewChange: (view: "graph" | "atlas" | "all") => void;
+  readonly hasGraph: boolean;
+  readonly hasAtlas: boolean;
 }) {
+  // [T-260a] 关系图排首(探索主面);地图/关系图各自在 VM 提供时才出现,「全部」恒在。
   const options = [
-    { id: "atlas" as const, label: "观点地图" },
+    ...(hasGraph ? [{ id: "graph" as const, label: "关系图" }] : []),
+    ...(hasAtlas ? [{ id: "atlas" as const, label: "观点地图" }] : []),
     { id: "all" as const, label: "全部" },
   ];
   return (

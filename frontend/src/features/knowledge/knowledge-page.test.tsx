@@ -208,18 +208,39 @@ describe("KnowledgePage", () => {
     expect(items.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("T-199 不再渲染知识图谱区块(已从知识库页移除)", async () => {
-    const { container } = await renderKnowledge();
-    // 底部 KnowledgeGraph 图表区块与图谱 force 视图均已移除。
-    expect(container.querySelector('[data-slot="knowledge-graph"]')).toBeNull();
+  it("[T-260a] 复原力导向关系图为探索主面;仍不复原摘要 bar 图(那才是 T-199 空白源)", async () => {
+    const { buildKnowledgeViewModel } = await import("@/fixtures/selectors");
+    const base = buildKnowledgeViewModel();
+    // VM 提供 graph → 交互岛渲「关系图」视图并作探索主面(默认视图)。
+    const graph: import("./knowledge-graph-vm").KnowledgeGraphVm = {
+      nodes: [
+        { id: "k-1", kind: "knowledge", knowledgeType: "claim", title: "观点A", usedCount: 1, usedInPublished: false },
+        { id: "k-2", kind: "knowledge", knowledgeType: "evidence", title: "证据B", usedCount: 0, usedInPublished: false },
+      ],
+      edges: [],
+      stats: {
+        knowledgeNodes: 2,
+        projectNodes: 0,
+        relationEdges: 0,
+        usageEdges: 0,
+        isolatedCount: 2,
+      },
+    };
+    const { container } = await renderKnowledge({
+      viewModel: { ...base, graph },
+    });
+    // 力导向关系图视图已复原(探索主面)。
     expect(
       container.querySelector('[data-slot="knowledge-graph-view"]'),
-    ).toBeNull();
-    // 三态视图切换里不再有「知识图谱」选项(只剩 观点地图 / 全部)。
-    const graphTab = container.querySelector(
-      '[data-slot="knowledge-view-switch-option"][data-view-id="graph"]',
-    );
-    expect(graphTab).toBeNull();
+    ).not.toBeNull();
+    // 视图切换出现「关系图」tab。
+    expect(
+      container.querySelector(
+        '[data-slot="knowledge-view-switch-option"][data-view-id="graph"]',
+      ),
+    ).not.toBeNull();
+    // 但 T-199 该删的摘要 bar 图(KnowledgeGraph ChartFrame)保持删除 —— 那才是空白源。
+    expect(container.querySelector('[data-slot="knowledge-graph"]')).toBeNull();
     // 页面仍是单一 AppShell + 单一 <main>。
     const shells = container.querySelectorAll('[data-slot="app-shell"]');
     expect(shells).toHaveLength(1);
