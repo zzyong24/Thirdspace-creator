@@ -1582,3 +1582,210 @@ describe("[T-235b] fetchDouyinSearchVideos(fake context)", () => {
     expect(out).toEqual([]);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// [T-243] 逐字稿覆盖率修复:parseAwemeDetail 纯函数 + fetchDouyinVideoUrlViaDetail
+//   (fake context:登录校验 / 验证码 / detail 解析)+ fetchDouyinVideoSource 回落编排。
+// ═══════════════════════════════════════════════════════════════════════════
+
+// 真实 aweme/detail API 形状 fixture(video.play_addr.url_list + cover)。
+const AWEME_DETAIL_VIDEO_JSON = {
+  aweme_detail: {
+    aweme_id: "7600000000000000001",
+    aweme_type: 0,
+    video: {
+      play_addr: {
+        url_list: ["https://v.douyin.example/playwm/abc?sig=1"],
+      },
+      download_addr: { url_list: [] },
+      cover: { url_list: ["https://p.douyin.example/cover.jpg"] },
+    },
+  },
+};
+
+// 图集作品 fixture(images 非空;aweme_type=68)。
+const AWEME_DETAIL_ALBUM_JSON = {
+  aweme_detail: {
+    aweme_id: "7600000000000000002",
+    aweme_type: 68,
+    images: [{ url_list: ["https://p.douyin.example/img1.jpg"] }],
+    video: null,
+  },
+};
+
+describe("[T-243] parseAwemeDetail 纯函数", () => {
+  it("视频作品:play_addr 直链 + playwm→play 去水印 + cover", async () => {
+    const { parseAwemeDetail } = await import("./douyin-cdp");
+    const out = parseAwemeDetail(AWEME_DETAIL_VIDEO_JSON);
+    expect(out).toEqual({
+      kind: "video",
+      playUrl: "https://v.douyin.example/play/abc?sig=1",
+      coverUrl: "https://p.douyin.example/cover.jpg",
+    });
+  });
+
+  it("图集作品(images 非空 / aweme_type=68)→ { kind:'image-album' }(结构化非视频,不抛)", async () => {
+    const { parseAwemeDetail } = await import("./douyin-cdp");
+    expect(parseAwemeDetail(AWEME_DETAIL_ALBUM_JSON)).toEqual({
+      kind: "image-album",
+    });
+    // 无 video 字段也判图集(任务判据:images 非空/无 video)。
+    expect(
+      parseAwemeDetail({ aweme_detail: { aweme_id: "x", aweme_type: 0 } }),
+    ).toEqual({ kind: "image-album" });
+  });
+
+  it("aweme_detail 缺失 → DouyinAudioFetchError(作品不存在/不可见/风控)", async () => {
+    const { parseAwemeDetail } = await import("./douyin-cdp");
+    expect(() => parseAwemeDetail(null)).toThrow(DouyinAudioFetchError);
+    expect(() => parseAwemeDetail({ status_code: 2053 })).toThrow(
+      /aweme_detail 为空/,
+    );
+  });
+
+  it("有 video 但 play_addr/download_addr 皆空 → DouyinAudioFetchError", async () => {
+    const { parseAwemeDetail } = await import("./douyin-cdp");
+    expect(() =>
+      parseAwemeDetail({
+        aweme_detail: { aweme_type: 0, video: { play_addr: { url_list: [] } } },
+      }),
+    ).toThrow(/未找到视频播放地址/);
+  });
+});
+
+describe("[T-243] fetchDouyinVideoUrlViaDetail(fake context)", () => {
+  it("登录态在 → 导航作品页 + 页内 fetch detail → 解析直链;context 关一次", async () => {
+    const { fetchDouyinVideoUrlViaDetail } = await import("./douyin-cdp");
+    const { ctx, calls } = makeSearchContext({
+      loggedIn: true,
+      fetchJson: AWEME_DETAIL_VIDEO_JSON,
+    });
+    const out = await fetchDouyinVideoUrlViaDetail(
+      { awemeId: "7600000000000000001", authDir: "/fake/.auth" },
+      { openContext: async () => ctx },
+    );
+    expect(out).toEqual({
+      kind: "video",
+      playUrl: "https://v.douyin.example/play/abc?sig=1",
+      coverUrl: "https://p.douyin.example/cover.jpg",
+    });
+    expect(calls.goto).toBe(1);
+    expect(calls.close).toBe(1);
+  });
+
+  it("图集作品 → { kind:'image-album' }(结构化返回,调用方诚实跳过)", async () => {
+    const { fetchDouyinVideoUrlViaDetail } = await import("./douyin-cdp");
+    const { ctx } = makeSearchContext({
+      loggedIn: true,
+      fetchJson: AWEME_DETAIL_ALBUM_JSON,
+    });
+    const out = await fetchDouyinVideoUrlViaDetail(
+      { awemeId: "7600000000000000002", authDir: "/fake/.auth" },
+      { openContext: async () => ctx },
+    );
+    expect(out).toEqual({ kind: "image-album" });
+  });
+
+  it("未登录 → DouyinNotLoggedInError(context 仍关闭)", async () => {
+    const { fetchDouyinVideoUrlViaDetail } = await import("./douyin-cdp");
+    const { ctx, calls } = makeSearchContext({ loggedIn: false });
+    await expect(
+      fetchDouyinVideoUrlViaDetail(
+        { awemeId: "x", authDir: "/fake/.auth" },
+        { openContext: async () => ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+    expect(calls.close).toBe(1);
+  });
+
+  it("验证码命中(body 含「验证」)→ 抛 DouyinAudioFetchError(消息含「验证码」),不硬闯", async () => {
+    const { fetchDouyinVideoUrlViaDetail } = await import("./douyin-cdp");
+    const { ctx } = makeSearchContext({
+      loggedIn: true,
+      bodyText: "请完成安全验证后继续访问",
+    });
+    await expect(
+      fetchDouyinVideoUrlViaDetail(
+        { awemeId: "x", authDir: "/fake/.auth" },
+        { openContext: async () => ctx },
+      ),
+    ).rejects.toThrow(/验证码/);
+  });
+});
+
+describe("[T-243] fetchDouyinVideoSource(iesdouyin → detail 回落编排)", () => {
+  it("iesdouyin 成功 → 直接返回 video,不触发回落", async () => {
+    const { fetchDouyinVideoSource } = await import("./douyin-cdp");
+    let detailCalled = 0;
+    const out = await fetchDouyinVideoSource(
+      { awemeId: "a1", authDir: "/fake/.auth" },
+      {
+        fetchIesdouyin: async () => ({ playUrl: "https://v/play/a1" }),
+        fetchViaDetail: async () => {
+          detailCalled += 1;
+          return { kind: "image-album" };
+        },
+      },
+    );
+    expect(out).toEqual({ kind: "video", playUrl: "https://v/play/a1" });
+    expect(detailCalled).toBe(0);
+  });
+
+  it("iesdouyin 解析失败(item_list 空)→ 回落 detail 路径拿到直链", async () => {
+    const { fetchDouyinVideoSource } = await import("./douyin-cdp");
+    const out = await fetchDouyinVideoSource(
+      { awemeId: "a2", authDir: "/fake/.auth" },
+      {
+        fetchIesdouyin: async () => {
+          throw new DouyinAudioFetchError(
+            "parseDouyinVideoUrl: 无法从 _ROUTER_DATA 中解析视频信息(item_list 为空)",
+          );
+        },
+        fetchViaDetail: async (o) => {
+          expect(o.awemeId).toBe("a2");
+          expect(o.authDir).toBe("/fake/.auth");
+          return { kind: "video", playUrl: "https://v/play/a2-detail" };
+        },
+      },
+    );
+    expect(out).toEqual({ kind: "video", playUrl: "https://v/play/a2-detail" });
+  });
+
+  it("iesdouyin 网络/HTTP 类失败(非解析)→ 不回落,原错向上(避免双倍撞风控)", async () => {
+    const { fetchDouyinVideoSource } = await import("./douyin-cdp");
+    let detailCalled = 0;
+    await expect(
+      fetchDouyinVideoSource(
+        { awemeId: "a3", authDir: "/fake/.auth" },
+        {
+          fetchIesdouyin: async () => {
+            throw new DouyinAudioFetchError(
+              "fetchDouyinVideoUrl: iesdouyin HTTP 503 (aweme a3)",
+            );
+          },
+          fetchViaDetail: async () => {
+            detailCalled += 1;
+            return { kind: "image-album" };
+          },
+        },
+      ),
+    ).rejects.toThrow(/HTTP 503/);
+    expect(detailCalled).toBe(0);
+  });
+
+  it("回落路径识别出图集 → 透传 { kind:'image-album' }", async () => {
+    const { fetchDouyinVideoSource } = await import("./douyin-cdp");
+    const out = await fetchDouyinVideoSource(
+      { awemeId: "a4", authDir: "/fake/.auth" },
+      {
+        fetchIesdouyin: async () => {
+          throw new DouyinAudioFetchError(
+            "parseDouyinVideoUrl: 无法从 _ROUTER_DATA 中解析视频信息(item_list 为空)",
+          );
+        },
+        fetchViaDetail: async () => ({ kind: "image-album" }),
+      },
+    );
+    expect(out).toEqual({ kind: "image-album" });
+  });
+});

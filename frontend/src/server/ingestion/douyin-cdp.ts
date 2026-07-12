@@ -1327,6 +1327,232 @@ export async function fetchDouyinSearchVideos(
   }
 }
 
+// ---------------------------------------------------------------------------
+// [T-243] 逐字稿覆盖率修复 —— iesdouyin 匿名分享页对相当一部分作品(含可见作品)就是解析
+//   不出(item_list 为空),27/50 条逐字稿因此 fetch 失败。加**登录态 detail 回落**:
+//   iesdouyin 解析失败 → openContext(.auth/douyin/<accountId>)+ 页内 fetch
+//   `/aweme/v1/web/aweme/detail/?aweme_id=<id>`(credentials:include 借登录态,
+//   fetchDouyinSearchVideos T-235b 同款范式)→ 从 aweme_detail.video.play_addr 拿直链。
+//   同时识别**图集作品**(images 非空 / 无 video)→ 返回结构化「非视频」,调用方
+//   (transcribe-runner)诚实跳过,不再当失败重试。
+// ---------------------------------------------------------------------------
+
+/** 取流结果:视频(带直链)或图集(非视频作品,无口播音频可转写)。
+ *  video 变体的 kind 可省略 —— 兼容既有 fetchDouyinVideoUrl 返回的裸 DouyinVideoUrl。 */
+export type DouyinVideoSource =
+  | ({ kind?: "video" } & DouyinVideoUrl)
+  | { kind: "image-album" };
+
+// detail 接口(darkhorse.py / SEARCH_ITEM_API 同款 webapp 公参;页内 fetch 借登录态)。
+const AWEME_DETAIL_API =
+  "https://www.douyin.com/aweme/v1/web/aweme/detail/?device_platform=webapp&aid=6383" +
+  "&channel=channel_pc_web&pc_client_type=1&version_code=170400&version_name=17.4.0" +
+  "&cookie_enabled=true&screen_width=1920&screen_height=1080&browser_language=zh-CN" +
+  "&browser_platform=Win32&browser_name=Chrome&browser_version=126.0.0.0" +
+  "&browser_online=true&platform=PC&aweme_id={id}";
+
+// 抖音图集类 aweme_type(68 = 图文/图集)。images 非空是首要判据,这个是兜底。
+const AWEME_TYPE_IMAGE_ALBUM = 68;
+
+/**
+ * 解析 detail 接口 JSON(纯函数,可喂 canned JSON 单测):
+ *   - aweme_detail 缺失 → 抛 DouyinAudioFetchError(作品不存在/不可见/接口风控)。
+ *   - images 非空 / aweme_type=68 / 无 video 字段 → { kind:"image-album" }(结构化非视频,不算失败)。
+ *   - 否则 video.play_addr.url_list[0](缺时 download_addr 兜底)→ playUrl(playwm→play 去水印)。
+ */
+export function parseAwemeDetail(json: unknown): DouyinVideoSource {
+  const root = (json ?? {}) as Record<string, unknown>;
+  const detail = root.aweme_detail;
+  if (!detail || typeof detail !== "object" || Array.isArray(detail)) {
+    throw new DouyinAudioFetchError(
+      "parseAwemeDetail: aweme_detail 为空(作品不存在/不可见/接口风控)",
+    );
+  }
+  const d = detail as Record<string, unknown>;
+
+  // 图集识别:images 非空 / aweme_type=68 / 根本没有 video 字段 → 非视频作品(诚实跳过,非失败)。
+  const images = d.images;
+  if (Array.isArray(images) && images.length > 0) return { kind: "image-album" };
+  if (num(d.aweme_type) === AWEME_TYPE_IMAGE_ALBUM) return { kind: "image-album" };
+  if (d.video == null) return { kind: "image-album" };
+
+  const video = (d.video ?? {}) as Record<string, unknown>;
+  const playAddr = (video.play_addr ?? {}) as Record<string, unknown>;
+  const downloadAddr = (video.download_addr ?? {}) as Record<string, unknown>;
+  const playList = Array.isArray(playAddr.url_list) ? playAddr.url_list : [];
+  const downloadList = Array.isArray(downloadAddr.url_list)
+    ? downloadAddr.url_list
+    : [];
+  const rawUrl =
+    (typeof playList[0] === "string" && playList[0]) ||
+    (typeof downloadList[0] === "string" && downloadList[0]) ||
+    "";
+  if (!rawUrl) {
+    throw new DouyinAudioFetchError(
+      "parseAwemeDetail: 未找到视频播放地址(play_addr/download_addr 皆空)",
+    );
+  }
+  const playUrl = rawUrl.replace("playwm", "play");
+  const cover = (video.cover ?? {}) as Record<string, unknown>;
+  const coverList = Array.isArray(cover.url_list) ? cover.url_list : [];
+  const coverUrl = typeof coverList[0] === "string" ? coverList[0] : undefined;
+  return coverUrl
+    ? { kind: "video", playUrl, coverUrl }
+    : { kind: "video", playUrl };
+}
+
+export interface FetchVideoUrlViaDetailOptions {
+  awemeId: string;
+  /** 按号登录态目录(.auth/douyin/<accountId>);detail 接口页内 fetch 借它的 cookie。 */
+  authDir: string;
+  gateway?: DouyinChannelGate;
+}
+
+/** fetchDouyinVideoUrlViaDetail 的可注入依赖(默认真 openContext;单测注 fake context)。 */
+export interface FetchVideoUrlViaDetailDeps {
+  openContext?: (
+    authDir: string,
+    headless: boolean,
+  ) => Promise<SearchCapableContext>;
+}
+
+// detail 回落的错误 → classify 输入映射:验证码 → captcha(明确风控,顶退避);
+// aweme_detail 空(已删除/不可见,内容性质)→ empty-item-list(content-error 不退避);
+// 其余(网络/导航)→ net-timeout 单次。
+function mapDetailErr(err: unknown): ClassifyInput {
+  const raw = err instanceof Error ? err.message : String(err ?? "");
+  if (raw.includes("验证码")) return { kind: "captcha" };
+  if (raw.includes("aweme_detail 为空")) return { kind: "empty-item-list" };
+  return { kind: "net-timeout", consecutiveTimeouts: 1 };
+}
+
+/**
+ * [T-243] 登录态回落取流:openContext(.auth/)→ 落到该作品页(建立 referer/风控上下文)→
+ * 页内 fetch detail 接口(credentials:include 借登录态)→ parseAwemeDetail。
+ * 未登录抛 DouyinNotLoggedInError;**验证码命中 → 抛 DouyinAudioFetchError(消息含「验证码」)**
+ * 不硬闯(单作品跳过,调用方分类计数)。每次调用 acquire 一次 creator-center gate(限流纪律)。
+ * openContext 端口注入,故图集/验证码/解析分支可确定性单测。
+ */
+export async function fetchDouyinVideoUrlViaDetail(
+  opts: FetchVideoUrlViaDetailOptions,
+  deps: FetchVideoUrlViaDetailDeps = {},
+): Promise<DouyinVideoSource> {
+  const gateway = opts.gateway ?? instantNoopGateway;
+  const openCtx =
+    deps.openContext ??
+    ((authDir: string, headless: boolean) =>
+      openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
+  const ctx = await openCtx(opts.authDir, true);
+  try {
+    // 登录态校验(页内 fetch credentials:include 要借它;未登录 → 提示扫码,同 search/user-posts)。
+    const cookies = await ctx.cookies("https://www.douyin.com");
+    const loggedIn = cookies.some(
+      (c) => c.name === "sessionid" || c.name === "sessionid_ss",
+    );
+    if (!loggedIn) throw new DouyinNotLoggedInError();
+    const page = ctx.pages()[0] ?? (await ctx.newPage());
+
+    const id = encodeURIComponent(opts.awemeId);
+    // 每 aweme acquire 一次限流网关(导航 + 页内 fetch 算一次请求节奏,同现有纪律)。
+    return await withDouyinChannel(
+      gateway,
+      "creator-center",
+      async () => {
+        // 先落到作品页(建立 referer/风控上下文),再页内 fetch detail(T-235b 搜索同款)。
+        await gotoWithRetry(
+          page as unknown as GotoCapablePage,
+          `https://www.douyin.com/video/${id}`,
+          { timeoutMs: 60_000, label: `作品详情(${opts.awemeId})` },
+        );
+        await page.waitForTimeout(3000); // 等页面就绪(建立会话上下文)
+
+        // 验证码检测:body 前 300 字含「验证」→ 不硬闯,该作品跳过(抛出让调用方分类计数)。
+        const bodyHead = await page
+          .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
+          .catch(() => "");
+        if (bodyHead.includes("验证")) {
+          throw new DouyinAudioFetchError(
+            `fetchDouyinVideoUrlViaDetail: 作品页命中验证码,跳过 (aweme ${opts.awemeId})`,
+          );
+        }
+
+        // 页内 fetch detail 接口(credentials:include 借登录态;fn 自包含,只引用页面全局)。
+        const json = await page.evaluate<unknown, string>(async (u: string) => {
+          try {
+            const r = await fetch(u, { credentials: "include" });
+            return (await r.json()) as unknown;
+          } catch (e) {
+            return { error: e instanceof Error ? e.message : String(e) };
+          }
+        }, AWEME_DETAIL_API.replace("{id}", id));
+
+        return parseAwemeDetail(json);
+      },
+      mapDetailErr,
+    );
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+  }
+}
+
+/** fetchDouyinVideoSource 的可注入依赖(单测注 fake 的两条路;默认绑真实现)。 */
+export interface FetchVideoSourceDeps {
+  /** 首选:iesdouyin 匿名分享页(无 cookie,快)。默认 fetchDouyinVideoUrl。 */
+  fetchIesdouyin?: (awemeId: string) => Promise<DouyinVideoUrl>;
+  /** 回落:登录态 detail 接口。默认 fetchDouyinVideoUrlViaDetail。 */
+  fetchViaDetail?: (
+    opts: FetchVideoUrlViaDetailOptions,
+  ) => Promise<DouyinVideoSource>;
+}
+
+export interface FetchVideoSourceOptions {
+  awemeId: string;
+  /** 登录态目录(回落路径用;iesdouyin 匿名路径不需要)。 */
+  authDir: string;
+  /** iesdouyin 匿名 channel 的限流网关(首选路径)。 */
+  gateway?: DouyinChannelGate;
+}
+
+/**
+ * [T-243] 组合取流入口(transcribe-runner 的 fetchVideoUrl 端口绑它):
+ *   ① fetchDouyinVideoUrl(iesdouyin 匿名,快)——成功 → { kind:"video", ... }。
+ *   ② 解析类失败(消息含 parseDouyinVideoUrl:item_list 空 / _ROUTER_DATA 缺失 / JSON 解析失败 /
+ *      无播放地址 —— 页面拿到了但解出不来,重试同路无意义)→ 回落登录态 detail 路径。
+ *   网络/HTTP 类失败(请求 iesdouyin 失败 / 非 2xx)不回落 —— 那是瞬时/风控问题,回落只会
+ *   双倍撞风控;交给现有 gateway 退避语义。
+ */
+export async function fetchDouyinVideoSource(
+  opts: FetchVideoSourceOptions,
+  deps: FetchVideoSourceDeps = {},
+): Promise<DouyinVideoSource> {
+  const fetchIesdouyin =
+    deps.fetchIesdouyin ??
+    ((awemeId: string) =>
+      fetchDouyinVideoUrl(awemeId, {
+        fetch: (...args) => fetch(...args),
+        gateway: opts.gateway,
+      }));
+  const fetchViaDetail = deps.fetchViaDetail ?? fetchDouyinVideoUrlViaDetail;
+
+  try {
+    const url = await fetchIesdouyin(opts.awemeId);
+    return { kind: "video", ...url };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err ?? "");
+    const parseFailed =
+      err instanceof DouyinAudioFetchError && msg.includes("parseDouyinVideoUrl");
+    if (!parseFailed) throw err;
+    console.log(
+      `[transcribe] aweme ${opts.awemeId} iesdouyin 解析失败,回落登录态 detail 路径:${msg}`,
+    );
+    return fetchViaDetail({
+      awemeId: opts.awemeId,
+      authDir: opts.authDir,
+      gateway: opts.gateway,
+    });
+  }
+}
+
 export interface FetchCommentsTarget {
   /** 目标作品 aweme_id(评论管理页 item_id 过滤 → 只抓这条作品的评论)。 */
   awemeId: string;

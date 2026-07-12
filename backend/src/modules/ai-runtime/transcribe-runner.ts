@@ -18,6 +18,63 @@ export interface DouyinVideoUrl {
   coverUrl?: string;
 }
 
+/** [T-243] fetchVideoUrl 端口的扩展返回:视频(带直链)或图集(非视频作品,诚实跳过)。
+ *  video 变体的 kind 可省略 —— 既有 host/fake 返回裸 { playUrl } 仍类型兼容(零回归)。
+ *  与 ingestion 侧 DouyinVideoSource 结构兼容(runner 本地镜像,保持包边界,同上)。 */
+export type DouyinVideoSource =
+  | ({ kind?: "video" } & DouyinVideoUrl)
+  | { kind: "image-album" };
+
+/** [T-243] 图集占位逐字稿(写进 ensureTranscriptArtifact 现有幂等锚,防每轮重查;
+ *  文本本身诚实标注非口播,不会被误当真逐字稿)。 */
+export const IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER = "(图集作品,无口播音频)";
+
+/** [T-243] 失败原因分类(观测覆盖率用;errorMessage/汇总 step 按类计数)。 */
+export type TranscribeFailureCategory =
+  | "parse-failed" // 直链解析失败(iesdouyin _ROUTER_DATA / detail aweme_detail)
+  | "ffmpeg" // ffmpeg 抽音非 0 退出 / 无字节(已含单次重试后仍失败)
+  | "captcha" // 登录态回落路径命中验证码
+  | "other"; // 其余(ASR / 网络 / 未知)
+
+const FAILURE_CATEGORY_LABELS: Record<TranscribeFailureCategory, string> = {
+  "parse-failed": "解析失败",
+  ffmpeg: "ffmpeg",
+  captcha: "验证码",
+  other: "其他",
+};
+
+/** [T-243] 按错误消息把单作品失败归类(纯函数,可单测)。与取流层的错误文案约定对齐:
+ *  验证码 → captcha;streamAudioFromVideo → ffmpeg;parseDouyinVideoUrl / parseAwemeDetail /
+ *  fetchDouyinVideoUrl(HTTP/请求失败也归解析取流类)→ parse-failed;其余 → other。 */
+export function classifyTranscribeFailure(
+  reason: string,
+): TranscribeFailureCategory {
+  if (reason.includes("验证码")) return "captcha";
+  if (reason.includes("streamAudioFromVideo")) return "ffmpeg";
+  if (
+    reason.includes("parseDouyinVideoUrl") ||
+    reason.includes("parseAwemeDetail") ||
+    reason.includes("fetchDouyinVideoUrl")
+  ) {
+    return "parse-failed";
+  }
+  return "other";
+}
+
+/** [T-243] 失败分类计数拼汇总文案,如「解析失败 2 / ffmpeg 1」;空失败返回 ""。 */
+function formatFailureBreakdown(
+  failures: Array<{ category: TranscribeFailureCategory }>,
+): string {
+  if (failures.length === 0) return "";
+  const counts = new Map<TranscribeFailureCategory, number>();
+  for (const f of failures) {
+    counts.set(f.category, (counts.get(f.category) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([cat, n]) => `${FAILURE_CATEGORY_LABELS[cat]} ${n}`)
+    .join(" / ");
+}
+
 // 抖音逐字稿采集 runner(T-030-D2,SPEC §5.2/§5.3)—— 又一个确定性 live dispatch runner,
 // 但**取音频 + 云端 ASR + 绑作品**三步串成一条批处理。dispatch(persistence-client)见
 // `transcribe.douyin` queued task → `void runTranscribe(...)`(仿 asset-generate-runner /
@@ -60,11 +117,13 @@ export interface TranscribeAiPort {
 
 export interface TranscribeRunnerDeps {
   ai: TranscribeAiPort;
-  /** 取无水印直链(iesdouyin)。host 绑 fetchDouyinVideoUrl(注入真 fetch);测试注 fake。 */
+  /** 取无水印直链。[T-243] host 绑 fetchDouyinVideoSource(iesdouyin 匿名 → 登录态 detail
+   *  回落);返回可为图集(kind:"image-album",runner 诚实跳过)。既有 fake 返回裸
+   *  { playUrl } 仍兼容(kind 可省略视作 video)。测试注 fake。 */
   fetchVideoUrl: (
     ctx: RequestContext,
     awemeId: string,
-  ) => Promise<DouyinVideoUrl>;
+  ) => Promise<DouyinVideoSource>;
   /** 从直链抽音频 bytes(ffmpeg)。host 绑 streamAudioFromVideo(注入真 spawn);测试注 fake。 */
   streamAudio: (
     ctx: RequestContext,
@@ -138,7 +197,12 @@ export async function runTranscribe(
   const awemeIds = readAwemeIds(task.inputData);
   let stepNo = 0;
   let ok = 0;
-  const failures: Array<{ awemeId: string; reason: string }> = [];
+  let albums = 0; // [T-243] 图集诚实跳过计数(单列,不算失败、不算成功转写)
+  const failures: Array<{
+    awemeId: string;
+    reason: string;
+    category: TranscribeFailureCategory; // [T-243] 失败分类(观测覆盖率)
+  }> = [];
 
   try {
     await deps.ai.markRunning(ctx, task.id); // honest status while 逐条采集+转写
@@ -170,8 +234,48 @@ export async function runTranscribe(
       //    兜底,transcribe.audio capability 永远能解析出 MultimodalSpec —— TranscribeConfigError
       //    类保留只做向后兼容(永不触发),runner 也就不需要 catch 它去「整任务停」。
       try {
-        const { playUrl } = await deps.fetchVideoUrl(ctx, awemeId);
-        const audioBytes = await deps.streamAudio(ctx, playUrl);
+        const src = await deps.fetchVideoUrl(ctx, awemeId);
+
+        // [T-243] 图集作品(无口播音频)→ 诚实跳过:写占位锚(ensureTranscriptArtifact 现有
+        // 幂等锚,hasTranscriptArtifact 下轮命中即 skip,防每轮重查);skipMasterScript 避免把
+        // 占位文本灌进稿面「口播脚本」编辑器。计数单列 albums,不算失败、不重试。
+        if (src.kind === "image-album") {
+          albums += 1;
+          const anchored = await deps.ensureTranscriptArtifact(ctx, {
+            awemeId,
+            transcript: IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER,
+            source: "image-album",
+            skipMasterScript: true,
+          });
+          stepNo += 1;
+          const anchorNote =
+            anchored.status === "skipped" &&
+            anchored.reason === "no-imported-project"
+              ? "未找到对应 imported 作品(无锚,下轮仍会探测)"
+              : "已写占位锚(下轮幂等跳过)";
+          await deps.ai.recordStep(ctx, task.id, {
+            stepNo,
+            kind: "transcribe",
+            text: `作品 ${awemeId}:图集作品,无口播音频,诚实跳过 · ${anchorNote}`,
+            toolCalls: [],
+          });
+          continue;
+        }
+
+        // [T-243] ffmpeg 失败单次重试:直链可能瞬时失效(CDN 签名过期)→ 重取直链再试一次;
+        // 再失败照旧单作品失败继续(抛给外层 catch 分类计数)。
+        let audioBytes: Uint8Array;
+        try {
+          audioBytes = await deps.streamAudio(ctx, src.playUrl);
+        } catch (ffErr) {
+          console.warn(
+            `[transcribe-runner] aweme ${awemeId} 抽音失败,重取直链重试一次:`,
+            ffErr instanceof Error ? ffErr.message : ffErr,
+          );
+          const retrySrc = await deps.fetchVideoUrl(ctx, awemeId);
+          if (retrySrc.kind === "image-album") throw ffErr; // 重取竟变图集(极罕见)→ 按原错处理
+          audioBytes = await deps.streamAudio(ctx, retrySrc.playUrl);
+        }
         // [T-160] resolveTranscribeSpec 永远不抛 TranscribeConfigError(Tier 3 whisper-local 兜底)。
         const spec = await deps.resolveTranscribeSpec(ctx);
         const { text } = await deps.transcribeAudio(
@@ -208,12 +312,13 @@ export async function runTranscribe(
         // 其它(取音频 / 直链 / 去水印 / ASR provider HTTP / 空文本)→ 标该 aweme 失败,其余继续。
         const reason =
           err instanceof Error ? err.message : String(err ?? "unknown error");
-        failures.push({ awemeId, reason });
+        const category = classifyTranscribeFailure(reason); // [T-243] 分类计数
+        failures.push({ awemeId, reason, category });
         stepNo += 1;
         await deps.ai.recordStep(ctx, task.id, {
           stepNo,
           kind: "transcribe",
-          text: `作品 ${awemeId}:取音频/转写失败,跳过 —— ${reason}`,
+          text: `作品 ${awemeId}:取音频/转写失败(${FAILURE_CATEGORY_LABELS[category]}),跳过 —— ${reason}`,
           toolCalls: [],
         });
         console.error(
@@ -223,23 +328,27 @@ export async function runTranscribe(
       }
     }
 
-    // 末尾终态:全失败 → markFailed;有成功 → markSucceeded(带失败计数写在最后一条 step)。
-    if (ok === 0) {
+    // 末尾终态:全失败(成功 0 且图集 0)→ markFailed;否则 markSucceeded(带分类计数)。
+    // [T-243] 图集跳过是诚实处理结果(非失败):只有图集、零转写也算任务成功。
+    const breakdown = formatFailureBreakdown(failures); // 如「解析失败 2 / ffmpeg 1」
+    if (ok === 0 && albums === 0) {
       const detail = failures
         .map((f) => `${f.awemeId}: ${f.reason}`)
         .join("; ");
       await deps.ai.markFailed(
         ctx,
         task.id,
-        `逐字稿采集全部失败(${failures.length}/${awemeIds.length}):${detail}`,
+        `逐字稿采集全部失败(${failures.length}/${awemeIds.length};${breakdown}):${detail}`,
       );
       return;
     }
     stepNo += 1;
+    const albumNote = albums > 0 ? `,图集跳过 ${albums} 条` : "";
+    const breakdownNote = breakdown ? `(${breakdown})` : "";
     await deps.ai.recordStep(ctx, task.id, {
       stepNo,
       kind: "transcribe",
-      text: `逐字稿采集完成:成功 ${ok} 条,失败 ${failures.length} 条(共 ${awemeIds.length} 条)`,
+      text: `逐字稿采集完成:成功 ${ok} 条${albumNote},失败 ${failures.length} 条${breakdownNote}(共 ${awemeIds.length} 条)`,
       toolCalls: [],
     });
     await deps.ai.markSucceeded(ctx, task.id);

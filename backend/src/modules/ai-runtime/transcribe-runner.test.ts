@@ -10,7 +10,13 @@ import type {
   EnsureTranscriptArtifactResult,
 } from "@creatoros/backend/modules/projects";
 import { TranscribeConfigError } from "./multimodal/resolve";
-import { runTranscribe, type TranscribeRunnerDeps } from "./transcribe-runner";
+import {
+  runTranscribe,
+  classifyTranscribeFailure,
+  IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER,
+  type TranscribeRunnerDeps,
+  type DouyinVideoSource,
+} from "./transcribe-runner";
 
 // transcribe.douyin runner 单测(T-030-D2,SPEC §5.2/§5.3)。全 fake IO(fake fetchVideoUrl /
 // streamAudio / transcribeAudio / ensureTranscriptArtifact),**不碰真抖音 / 真 ffmpeg / 真 ASR**。
@@ -33,6 +39,11 @@ const FAKE_REGISTRY: MultimodalProviderRegistry = {}; // runner 不直接 index 
 function makeDeps(opts: {
   awemeIds: string[];
   streamThrowsFor?: (awemeId: string) => Error | null;
+  /** [T-243] streamThrowsFor 命中的 aweme 抛几次后恢复(默认 Infinity=次次抛,旧行为)。
+   *  设 1 → 首抽抛、重试成功(覆盖 ffmpeg 单次重试路径)。 */
+  streamFailTimes?: number;
+  /** [T-243] 自定义 fetchVideoUrl 返回(图集 / kind 显式 video);缺省裸 { playUrl }(旧行为)。 */
+  videoSourceFor?: (awemeId: string) => DouyinVideoSource;
   resolveThrows?: Error | null;
   /** 只读幂等探测:哪些 aweme 已有逐字稿(→ 跳过 fetch/ASR)。默认全 false。 */
   alreadyHas?: (awemeId: string) => boolean;
@@ -63,13 +74,27 @@ function makeDeps(opts: {
     async (_c: RequestContext, _id: string, _err?: string) => undefined,
   );
 
-  const fetchVideoUrl = vi.fn(async (_c: RequestContext, awemeId: string) => ({
-    playUrl: `https://v.example/${awemeId}?play=1`,
-  }));
+  const fetchVideoUrl = vi.fn(
+    async (
+      _c: RequestContext,
+      awemeId: string,
+    ): Promise<DouyinVideoSource> =>
+      opts.videoSourceFor?.(awemeId) ?? {
+        playUrl: `https://v.example/${awemeId}?play=1`,
+      },
+  );
+  const streamFailCounts = new Map<string, number>(); // [T-243] 每 aweme 已抛次数(重试预算)
   const streamAudio = vi.fn(async (_c: RequestContext, playUrl: string) => {
     const awemeId = playUrl.split("/").pop()!.split("?")[0]!;
     const boom = opts.streamThrowsFor?.(awemeId) ?? null;
-    if (boom) throw boom;
+    if (boom) {
+      const budget = opts.streamFailTimes ?? Number.POSITIVE_INFINITY;
+      const n = streamFailCounts.get(awemeId) ?? 0;
+      if (n < budget) {
+        streamFailCounts.set(awemeId, n + 1);
+        throw boom;
+      }
+    }
     return new Uint8Array([1, 2, 3, 4]); // 固定 fake mp3 bytes
   });
   const resolveTranscribeSpec = vi.fn(async () => {
@@ -250,5 +275,139 @@ describe("runTranscribe(transcribe.douyin, T-030-D2)", () => {
     // 已跳过的 aweme 记一条 step + 计入成功 → markSucceeded。
     expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
     expect(spies.markFailed).not.toHaveBeenCalled();
+  });
+});
+
+// [T-243] 逐字稿覆盖率修复:图集诚实跳过 / ffmpeg 单次重试 / 失败分类计数。
+describe("[T-243] runTranscribe 图集跳过 + ffmpeg 重试 + 失败分类", () => {
+  it("图集作品 → 写占位锚(source:image-album + skipMasterScript),不抽音不 ASR,计数单列不算失败", async () => {
+    const { deps, spies, ensureCalls } = makeDeps({
+      awemeIds: ["album1", "vid1"],
+      videoSourceFor: (id) =>
+        id === "album1"
+          ? { kind: "image-album" }
+          : { kind: "video", playUrl: `https://v.example/${id}?play=1` },
+    });
+    await runTranscribe(
+      ctx,
+      {
+        id: "task-5",
+        taskType: "transcribe.douyin",
+        inputData: { awemeIds: ["album1", "vid1"] },
+      },
+      deps,
+    );
+    // 图集:不抽音、不 ASR;占位锚经 ensureTranscriptArtifact 写入(幂等锚防每轮重查)。
+    expect(spies.streamAudio).toHaveBeenCalledTimes(1); // 仅 vid1
+    expect(spies.transcribeAudio).toHaveBeenCalledTimes(1); // 仅 vid1
+    const albumWrite = ensureCalls.find((c) => c.awemeId === "album1");
+    expect(albumWrite?.transcript).toBe(IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER);
+    expect(albumWrite?.source).toBe("image-album");
+    expect(albumWrite?.skipMasterScript).toBe(true);
+    // 图集不算失败 → markSucceeded;汇总含「图集跳过 1 条」且失败 0。
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+    expect(spies.markFailed).not.toHaveBeenCalled();
+    const summary = spies.recordStep.mock.calls
+      .map((c) => (c[2] as { text: string }).text)
+      .find((t) => t.includes("采集完成"))!;
+    expect(summary).toContain("图集跳过 1 条");
+    expect(summary).toContain("失败 0 条");
+  });
+
+  it("全图集(0 转写成功)→ 仍 markSucceeded(诚实处理结果,非失败)", async () => {
+    const { deps, spies } = makeDeps({
+      awemeIds: ["album1"],
+      videoSourceFor: () => ({ kind: "image-album" }),
+    });
+    await runTranscribe(
+      ctx,
+      {
+        id: "task-6",
+        taskType: "transcribe.douyin",
+        inputData: { awemeIds: ["album1"] },
+      },
+      deps,
+    );
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+    expect(spies.markFailed).not.toHaveBeenCalled();
+  });
+
+  it("ffmpeg 首抽失败 → 重取直链重试一次成功(fetchVideoUrl 调 2 次,任务成功零失败)", async () => {
+    const { deps, spies } = makeDeps({
+      awemeIds: ["flaky"],
+      streamThrowsFor: (id) =>
+        id === "flaky"
+          ? new Error("streamAudioFromVideo: ffmpeg 非 0 退出 (code=1): 403")
+          : null,
+      streamFailTimes: 1, // 首抽抛,重试恢复(直链瞬时失效场景)
+    });
+    await runTranscribe(
+      ctx,
+      {
+        id: "task-7",
+        taskType: "transcribe.douyin",
+        inputData: { awemeIds: ["flaky"] },
+      },
+      deps,
+    );
+    expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(2); // 首取 + 重取直链
+    expect(spies.streamAudio).toHaveBeenCalledTimes(2); // 首抽失败 + 重试成功
+    expect(spies.transcribeAudio).toHaveBeenCalledTimes(1);
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+    expect(spies.markFailed).not.toHaveBeenCalled();
+  });
+
+  it("ffmpeg 重试后仍失败 → 单作品失败继续,汇总带分类计数(ffmpeg 1)", async () => {
+    const { deps, spies } = makeDeps({
+      awemeIds: ["dead", "ok1"],
+      streamThrowsFor: (id) =>
+        id === "dead"
+          ? new Error("streamAudioFromVideo: ffmpeg 非 0 退出 (code=1): 403")
+          : null,
+      // streamFailTimes 缺省 = 次次抛 → 重试也失败。
+    });
+    await runTranscribe(
+      ctx,
+      {
+        id: "task-8",
+        taskType: "transcribe.douyin",
+        inputData: { awemeIds: ["dead", "ok1"] },
+      },
+      deps,
+    );
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1); // ok1 成功,不整体崩
+    const summary = spies.recordStep.mock.calls
+      .map((c) => (c[2] as { text: string }).text)
+      .find((t) => t.includes("采集完成"))!;
+    expect(summary).toContain("失败 1 条");
+    expect(summary).toContain("ffmpeg 1");
+    // 单条失败 step 也标了分类。
+    const failStep = spies.recordStep.mock.calls
+      .map((c) => (c[2] as { text: string }).text)
+      .find((t) => t.includes("dead") && t.includes("失败"))!;
+    expect(failStep).toContain("ffmpeg");
+  });
+
+  it("classifyTranscribeFailure 纯函数:按消息归类(解析/ffmpeg/验证码/其他)", () => {
+    expect(
+      classifyTranscribeFailure(
+        "parseDouyinVideoUrl: 无法从 _ROUTER_DATA 中解析视频信息(item_list 为空)",
+      ),
+    ).toBe("parse-failed");
+    expect(
+      classifyTranscribeFailure("parseAwemeDetail: aweme_detail 为空(作品不存在/不可见/接口风控)"),
+    ).toBe("parse-failed");
+    expect(
+      classifyTranscribeFailure("fetchDouyinVideoUrl: iesdouyin HTTP 503 (aweme x)"),
+    ).toBe("parse-failed");
+    expect(
+      classifyTranscribeFailure("streamAudioFromVideo: ffmpeg 非 0 退出 (code=1)"),
+    ).toBe("ffmpeg");
+    expect(
+      classifyTranscribeFailure(
+        "fetchDouyinVideoUrlViaDetail: 作品页命中验证码,跳过 (aweme x)",
+      ),
+    ).toBe("captcha");
+    expect(classifyTranscribeFailure("ASR 返回空逐字稿")).toBe("other");
   });
 });

@@ -33,6 +33,9 @@ export interface EnsureTranscriptArtifactInput {
   transcript: string;
   /** 默认 "transcribed"(存量回填)。 */
   source?: string;
+  /** [T-243] true → 不同步建 master_script(口播脚本)。图集占位锚等**非真逐字稿**场景用:
+   *  占位文本只该当幂等锚(output_script),别灌进稿面「口播脚本」编辑器污染创作起点。 */
+  skipMasterScript?: boolean;
 }
 
 /** 单条绑定的结果:bound=新建了 artifact;skipped=已存在或无对应作品(带 reason)。 */
@@ -196,10 +199,13 @@ export async function ensureTranscriptArtifact(
   // 否则按 transcript 建一份,让它在稿面非空,用户可自由编辑。幂等:同 project 多次调不重复建。
   // [Bug-5 T-018] Note:本步失败(网络/库瞬时错)仅记 warn,**不**把 transcript 整批翻 failed
   // —— transcript 自身已成功落地,master_script 是锦上添花。
+  // [T-243] 非真逐字稿(图集占位锚等)→ 只落 output_script 幂等锚,跳过 master_script 同步建。
   const existingMaster = artifacts.find(
     (a) => a.artifactType === MASTER_SCRIPT_ARTIFACT_TYPE,
   );
-  if (existingMaster) {
+  if (input.skipMasterScript) {
+    // 占位锚场景:不建也不警告(没有 master_script 是预期状态)。
+  } else if (existingMaster) {
     warn(
       `[ensureTranscriptArtifact] master_script 已存在(已由用户/其它路径编辑),不覆盖 ` +
         `(projectId=${projectId}, artifactId=${existingMaster.id})`,
