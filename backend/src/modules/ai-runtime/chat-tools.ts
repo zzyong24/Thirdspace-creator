@@ -191,6 +191,8 @@ export interface ChatToolDeps {
   captureScreenshot: (input: {
     url: string;
     fullPage?: boolean;
+    /** [T-239c] 本轮中断信号(SDK execute 第二参 abortSignal 透传)—— 用户停止时浏览器提前退出。 */
+    signal?: AbortSignal;
   }) => Promise<{
     assetId: string;
     name: string;
@@ -205,7 +207,11 @@ export interface ChatToolDeps {
    * 无会话/过期 → 返回 { needLogin:true, domain }(引导用户去保管库登录,不落库);其余失败(打不开/
    * HTTP 码/抽不出正文)**抛错**,工具 execute 接住转人话。
    */
-  readWeb: (input: { url: string }) => Promise<
+  readWeb: (input: {
+    url: string;
+    /** [T-239c] 本轮中断信号(SDK execute 第二参 abortSignal 透传)—— 用户停止时读取提前退出。 */
+    signal?: AbortSignal;
+  }) => Promise<
     | {
         needLogin: false;
         assetId: string;
@@ -1798,7 +1804,14 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       description:
         "给一个**公开**网页 URL,服务端真开浏览器截图(带来源 URL 存证)。截图是不可抵赖的真证据(不同于搜集/生成的素材)。当用户要「截个图/把这个页面截下来/存这个网页的样子」时调用。当前只支持公开页面——登录墙/需登录页会诚实报错,不产垃圾图。截好的图渲成卡片**待用户确认**:点「存入素材库」才进库(铁律②:AI 写入需人确认),入库后可再「加入弹药」挂进这条内容的用料链。",
       inputSchema: MATERIAL_SCREENSHOT_PARAMS,
-      execute: async ({ url, fullPage }): Promise<MaterialScreenshotToolResult> => {
+      // [T-239c] execute 第二参是 SDK 的 ToolExecutionOptions(含 abortSignal)—— chat-tool-gate
+      // 原样透传;长工具把它接进端口,用户点「停止」时 Playwright 提前退出(不空烧)。
+      execute: async (
+        { url, fullPage },
+        callOptions,
+      ): Promise<MaterialScreenshotToolResult> => {
+        const signal = (callOptions as { abortSignal?: AbortSignal } | undefined)
+          ?.abortSignal;
         const target = typeof url === "string" ? url.trim() : "";
         if (!target) {
           return {
@@ -1808,7 +1821,11 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           };
         }
         try {
-          const asset = await deps.captureScreenshot({ url: target, fullPage });
+          const asset = await deps.captureScreenshot({
+            url: target,
+            fullPage,
+            signal,
+          });
           return {
             kind: "material.screenshot",
             asset: {
@@ -1836,7 +1853,10 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       description:
         "读一个网页的**正文全文**(带你在保管库登录后的登录态,能读需登录内容:ChatGPT 分享链接、知乎、公众号、飞书文档等)。抽出的是干净正文文本(ChatGPT 分享抽逐轮对话全文),比截图准、不 OCR 失真。当用户粘一个链接要你「读一下/看看这篇/这段对话讲了啥/据此出选题」时**优先用它**(而不是截图)。读到的正文渲成卡片**待用户确认**存入素材库(铁律②)。若该站还没登录会返回「需登录」——这时引导用户去『设置→网站登录保管库』登录一次,别改用截图糊弄。",
       inputSchema: WEB_READ_PARAMS,
-      execute: async ({ url }): Promise<WebReadToolResult> => {
+      // [T-239c] 同 material.screenshot:abortSignal 经端口进 Playwright 层,中断提前退出。
+      execute: async ({ url }, callOptions): Promise<WebReadToolResult> => {
+        const signal = (callOptions as { abortSignal?: AbortSignal } | undefined)
+          ?.abortSignal;
         const target = typeof url === "string" ? url.trim() : "";
         if (!target) {
           return {
@@ -1847,7 +1867,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           };
         }
         try {
-          const res = await deps.readWeb({ url: target });
+          const res = await deps.readWeb({ url: target, signal });
           if (res.needLogin) {
             return {
               kind: "web.read",

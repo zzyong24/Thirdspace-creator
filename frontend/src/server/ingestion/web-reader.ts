@@ -20,7 +20,7 @@ import "server-only";
 // **纯函数**(HTML 字符串进、文本出),可确定性单测;readUrl 经 openContext 端口注入(默认真
 // launchPersistentContext;单测注 fake page/context 返回 fixture HTML),不起真浏览器。
 
-import { WebCaptureError, detectLoginWall } from "./web-capture";
+import { WebCaptureError, detectLoginWall, makeAbortError } from "./web-capture";
 import { webDomainFromUrl } from "./web-session";
 
 /** 无有效会话 / 会话过期 —— 结构化降级信号(不截登录页糊弄)。携带 domain 供编导引导用户
@@ -460,7 +460,11 @@ export async function extractReadable(
  */
 export async function readUrl(
   url: string,
-  opts: { authDir: string },
+  opts: {
+    authDir: string;
+    /** [T-239c] 中断信号(additive):用户停止本轮对话 → 关浏览器提前退出,抛 AbortError。 */
+    signal?: AbortSignal;
+  },
   deps: ReadUrlDeps = {},
 ): Promise<ReadResult> {
   const target = url.trim();
@@ -469,9 +473,18 @@ export async function readUrl(
       `页面打不开:只支持 http/https 链接(收到「${target.slice(0, 80)}」)`,
     );
   }
+  // [T-239c] 入口即断:已中断的信号不再起浏览器。
+  const signal = opts.signal;
+  if (signal?.aborted) throw makeAbortError("网页读取");
   const domain = webDomainFromUrl(target);
   const openContext = deps.openContext ?? realOpenReaderContext;
   const ctx = await openContext(opts.authDir);
+  // [T-239c] abort → 关 context 让挂起导航/求值立刻 reject;各 catch 先查 aborted 改抛
+  // AbortError(不误报「页面打不开」→ 不被编导转述成假故障)。
+  const onAbort = () => {
+    void ctx.close().catch(() => {});
+  };
+  signal?.addEventListener("abort", onAbort, { once: true });
   try {
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     let resp: ReaderNavResponse | null;
@@ -481,10 +494,12 @@ export async function readUrl(
         timeout: NAV_TIMEOUT_MS,
       });
     } catch (err) {
+      if (signal?.aborted) throw makeAbortError("网页读取");
       throw new WebCaptureError(
         `页面打不开:${err instanceof Error ? err.message : String(err)}`,
       );
     }
+    if (signal?.aborted) throw makeAbortError("网页读取");
     const status = resp ? resp.status() : 0;
     if (status >= 400) {
       throw new WebCaptureError(
@@ -577,10 +592,14 @@ export async function readUrl(
         turnCount: null,
       };
     }
+    // [T-239c] 中断关 context 会让上方 content()/evaluate 走 catch 兜底(html 空)最终落到这里
+    // —— 如实抛 AbortError,不误报「抽不出正文」。
+    if (signal?.aborted) throw makeAbortError("网页读取");
     throw new WebCaptureError(
       "读到页面但抽不出正文(可能是纯交互页/空页)——换一个有正文内容的链接,或用截图存网页样子。",
     );
   } finally {
+    signal?.removeEventListener("abort", onAbort);
     await ctx.close().catch(() => {});
   }
 }

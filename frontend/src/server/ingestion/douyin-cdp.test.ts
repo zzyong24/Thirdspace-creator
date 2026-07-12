@@ -21,6 +21,11 @@ import {
   type CommentRecord,
   type CommentIngestPorts,
 } from "./douyin-cdp";
+// [T-232] 额度截断即停:撞冷却 → 立即停剩余作品,带回部分结果。
+import {
+  DouyinCooldownActiveError,
+  type DouyinChannelGate,
+} from "./douyin-request-gateway";
 
 // 真实 work_list XHR 形状的 fixture(对齐 cheat-on-content 抓到的字段)。
 const WORK_LIST = {
@@ -743,7 +748,7 @@ describe("fetchDouyinCommentsForWorks 复用单 context 跨作品(T-033b)", () =
   it("openContext 开一次 → 循环 N 作品各 parse → close 一次", async () => {
     const { calls, gotoUrls, openContext } = makeFakeCommentContext(true);
     const awemeIds = ["7401", "7402", "7403"];
-    const results = await fetchDouyinCommentsForWorks(
+    const batch = await fetchDouyinCommentsForWorks(
       awemeIds,
       { authDir: "/fake/.auth", maxPages: 1 },
       { openContext },
@@ -755,7 +760,11 @@ describe("fetchDouyinCommentsForWorks 复用单 context 跨作品(T-033b)", () =
     expect(calls.goto).toBe(awemeIds.length);
     // T-041:评论页 URL 从旧 content/comment-manage 改到 interactive/comment(旧的被重定向到 upload)。
     expect(gotoUrls.every((u) => u.includes("interactive/comment"))).toBe(true);
+    // [T-232] 全量完成 → 不截断。
+    expect(batch.truncated).toBe(false);
+    expect(batch.cooldownRemainMs).toBe(0);
     // 逐作品 parse 出各自评论(按 aweme 派生的 cid/text,证明用对了每作品的 item_id)。
+    const results = batch.works;
     expect(results).toHaveLength(3);
     expect(results.map((r) => r.awemeId)).toEqual(awemeIds);
     for (const { awemeId, records } of results) {
@@ -768,12 +777,13 @@ describe("fetchDouyinCommentsForWorks 复用单 context 跨作品(T-033b)", () =
 
   it("空作品列表 → 仍开一次做登录校验、关一次,返回空", async () => {
     const { calls, openContext } = makeFakeCommentContext(true);
-    const results = await fetchDouyinCommentsForWorks(
+    const batch = await fetchDouyinCommentsForWorks(
       [],
       { authDir: "/fake/.auth" },
       { openContext },
     );
-    expect(results).toEqual([]);
+    expect(batch.works).toEqual([]);
+    expect(batch.truncated).toBe(false);
     expect(calls.openContext).toBe(1);
     expect(calls.close).toBe(1);
     expect(calls.goto).toBe(0); // 无作品 → 不导航
@@ -791,6 +801,37 @@ describe("fetchDouyinCommentsForWorks 复用单 context 跨作品(T-033b)", () =
     expect(calls.openContext).toBe(1);
     expect(calls.close).toBe(1); // finally 仍关一次
     expect(calls.goto).toBe(0); // 登录校验先于任何作品导航 → 未抓任何作品
+  });
+
+  // [T-232] 额度截断即停:第 3 个作品的作品级 acquire 撞 DouyinCooldownActiveError →
+  // 立即停止剩余作品(不逐个白撞),返回已抓到的 2 个作品 + truncated=true + 剩余冷却。
+  it("[T-232] 撞限流冷却 → 立即停剩余作品,返回部分结果 + truncated", async () => {
+    const { calls, openContext } = makeFakeCommentContext(true);
+    let acquires = 0;
+    const gateway: DouyinChannelGate = {
+      async acquire() {
+        acquires += 1;
+        // maxPages=0 → 无翻页级 acquire,只剩作品级:第 3 个作品撞冷却。
+        if (acquires >= 3) {
+          throw new DouyinCooldownActiveError("creator-center", 960_000);
+        }
+      },
+      report() {
+        /* no-op */
+      },
+    };
+    const batch = await fetchDouyinCommentsForWorks(
+      ["7401", "7402", "7403", "7404"],
+      { authDir: "/fake/.auth", maxPages: 0 },
+      { openContext, gateway },
+    );
+    expect(batch.truncated).toBe(true);
+    expect(batch.cooldownRemainMs).toBe(960_000);
+    // 前 2 个采到;第 3 个撞冷却记未采;第 4 个**没再去撞**(acquire 恰 3 次,立即停)。
+    expect(batch.works.map((w) => w.awemeId)).toEqual(["7401", "7402"]);
+    expect(acquires).toBe(3);
+    expect(calls.goto).toBe(2); // 撞冷却发生在 acquire,第 3 个作品未导航
+    expect(calls.close).toBe(1); // finally 仍关一次
   });
 });
 

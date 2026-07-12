@@ -203,6 +203,12 @@ import {
   // [T-235b] 黑马雷达搜索(按关键词搜近1天最多赞,页内 fetch 借登录态 + gateway 限流)。
   fetchDouyinSearchVideos,
 } from "@/server/ingestion/douyin-cdp";
+// [T-232] 评论批量采集预算规划(纯逻辑):未采优先 + 爆款优先排序 + 全量/截断诚实 message。
+import {
+  orderCommentCollection,
+  buildCommentCoverageMessage,
+  type CommentCollectionCandidate,
+} from "@/server/ingestion/comment-collection-plan";
 import {
   parseDouyinWorkListXlsx,
   matchDetailsToPublications,
@@ -220,8 +226,10 @@ import {
 //   多闸幂等在子 helper 内(runner 逐 aweme 跳已转写 / 已有 reconstructed artifact 跳过 / createTask 去重)。
 import { runDouyinHeavyBackfill } from "@/server/ingestion/douyin-heavy-backfill";
 // T-038b 抖音采集限流网关(单例接线):所有对外抖音请求经它 acquire/report(SPEC §4.4)。
+// [T-230] DouyinCooldownActiveError:transcribe-runner 冷却延迟重试的判别锚(isCooldownError)。
 import {
   DouyinRequestGateway,
+  DouyinCooldownActiveError,
   type DouyinChannel,
 } from "@/server/ingestion/douyin-request-gateway";
 import { resolveDouyinThrottleConfig } from "@/server/ingestion/douyin-throttle-config";
@@ -269,6 +277,8 @@ import {
   triggerScheduledJob,
   startScheduler,
   sweepStaleRuns,
+  // [T-207] 启动 sweep 僵尸 ai_task(与 sweepStaleRuns 同族;running 超时标 failed)。
+  sweepStaleAiTasks,
   type CronJob as SchedulableCronJob,
   type TriggerDeps,
 } from "@creatoros/backend/modules/ai-runtime";
@@ -1028,9 +1038,10 @@ export interface ChatRuntime {
   // [T-084b] material.screenshot 端口 —— captureUrl(真无头浏览器截图公开页)→
   // assetsService.createGeneratedAsset(落字节 + 建 asset,带 sourceUrl 存证)→ 换签名预览 URL。
   // 失败(打不开/HTTP/登录墙)抛错,chat-runner 工具 execute 接住转人话。
+  // [T-239c] input.signal(additive):用户中断本轮 → Playwright 导航/截图提前退出,不空烧。
   captureScreenshot: (
     ctx: RequestContext,
-    input: { url: string; fullPage?: boolean },
+    input: { url: string; fullPage?: boolean; signal?: AbortSignal },
   ) => Promise<{
     assetId: string;
     name: string;
@@ -1040,9 +1051,10 @@ export interface ChatRuntime {
   // [T-217b/c] web.read 端口 —— 带 .auth/web 登录态读正文全文 → createGeneratedAsset 落**逐字稿
   //   文本素材**(assetType document,pending 走 T-219 确认门,带 sourceUrl 存证)。无会话/过期 →
   //   返回 { needLogin:true, domain }(编导据此引导「去保管库登录」,不落库、不截登录页)。
+  // [T-239c] input.signal(additive):用户中断本轮 → 带登录态浏览器导航/抽取提前退出。
   readWebUrl: (
     ctx: RequestContext,
-    input: { url: string },
+    input: { url: string; signal?: AbortSignal },
   ) => Promise<
     | {
         needLogin: false;
@@ -3580,6 +3592,27 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 }
                 return false;
               },
+              // [T-230] 冷却延迟重试三件套:runner 检测到冷却类失败 → 查通道剩余 → 上限内
+              //   sleep 到冷却结束重试失败子集一次(幂等锚已保成功子集不重转)。
+              //   判别用 instanceof(runner 不 import 前端 ingestion,经注入,同 isNotLoggedInError 先例)。
+              isCooldownError: (e) => e instanceof DouyinCooldownActiveError,
+              //   剩余冷却取两通道 max:transcribe 主路走 iesdouyin,解析失败回落登录态 detail
+              //   走 creator-center —— 任一在冷却都会让重试再撞,保守等最长的。
+              getCooldownRemainMs: () =>
+                Math.max(
+                  douyinGateway.getChannelStatus("iesdouyin").cooldownEtaMs,
+                  douyinGateway.getChannelStatus("creator-center").cooldownEtaMs,
+                ),
+              //   等待上限 env 可配(默认 30min;> gateway 单通道 maxAcquireWaitMs 15min,
+              //   覆盖真机撞到的「剩 960s」场景;仍 < T-207 ai_task 僵尸阈值 2h,不会被误扫)。
+              maxCooldownWaitMs: (() => {
+                const raw = Number(
+                  process.env.CREATOROS_TRANSCRIBE_COOLDOWN_WAIT_MAX_MS,
+                );
+                return Number.isFinite(raw) && raw > 0
+                  ? Math.floor(raw)
+                  : 30 * 60 * 1000;
+              })(),
               // 幂等绑作品:ensureTranscriptArtifact + 其 5 端口(projectsRepo/artifactsService 现成实例)。
               ensureTranscriptArtifact: (c, ensureInput) =>
                 ensureTranscriptArtifact(c, ensureInput, {
@@ -4341,9 +4374,49 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
         limit: 500,
       });
-      const awemeIds = pubs
-        .filter((p) => p.platform === "douyin" && p.externalId)
-        .map((p) => p.externalId as string);
+      const douyinPubs = pubs.filter(
+        (p) => p.platform === "douyin" && p.externalId,
+      );
+      // [T-232 断点续采] 逐作品预取 watermark:一石二鸟 ——「已采与否」的判据(非空 = 采过,
+      //   复用 T-177 既有机制不新造持久锚)+ 直接喂给抓取层做增量 early-break(免每作品双读)。
+      const watermarks = new Map<string, Set<string>>();
+      for (const p of douyinPubs) {
+        const aweme = p.externalId as string;
+        watermarks.set(
+          aweme,
+          await commentWatermark(aweme).catch(() => new Set<string>()),
+        );
+      }
+      // [T-232 爆款优先] 逐作品取 analytics 最新快照的评论数(采集顺序依据:330 评的先采,
+      //   额度别烧在 0 评作品上)。读不到/无快照 → 0(诚实降级排后,不编)。
+      const candidates: CommentCollectionCandidate[] = [];
+      for (const p of douyinPubs) {
+        const aweme = p.externalId as string;
+        let commentCount = 0;
+        try {
+          const pageOfSnapshots = await analyticsService.getPublicationAnalytics(
+            ctx,
+            p.id,
+            1,
+            1, // capturedAt 降序 → 第 1 条即最新快照
+          );
+          const raw = pageOfSnapshots.rows[0]?.rawMetrics as
+            | Record<string, unknown>
+            | undefined;
+          const n = Number(raw?.comments);
+          if (Number.isFinite(n) && n > 0) commentCount = n;
+        } catch {
+          /* 快照读不到 → 0,排序自然靠后 */
+        }
+        candidates.push({
+          awemeId: aweme,
+          commentCount,
+          collected: (watermarks.get(aweme)?.size ?? 0) > 0,
+        });
+      }
+      // [T-232] 顺序 = 未采优先(断点续采:上轮截断后下轮自动从未采作品继续)→ 组内评论数
+      //   降序(爆款优先)。已采作品排后,额度富余时增量补新评论(watermark early-break 保便宜)。
+      const awemeIds = orderCommentCollection(candidates);
       // 复用单 context 一次性抓完所有作品评论(未登录 → 一次性抛 DouyinNotLoggedInError,
       // runner catch → needs_reconnect),再逐作品 ingestComments 落库(落库逻辑不变)。
       // [gate-F7 插装点③④] creator-center:每作品 acquire 一次 + 作品内翻页每页 acquire(注真单例)。
@@ -4352,30 +4425,51 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         stage: "comments",
         processed: 0,
         total: awemeIds.length,
-        message: `抓取 ${awemeIds.length} 个作品的评论`,
+        message: `抓取 ${awemeIds.length} 个作品的评论(未采/爆款优先)`,
       });
-      const perWork = await fetchDouyinCommentsForWorks(
+      // [T-232 额度断点] 抓取层撞 DouyinCooldownActiveError → 立即停剩余作品,带回部分结果
+      //   (truncated=true);不再逐作品白撞冷却。
+      const batch = await fetchDouyinCommentsForWorks(
         awemeIds,
         {
           authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
           maxPages,
         },
-        { gateway: douyinGateway, commentWatermark }, // [T-177] 每作品增量 early-break
+        {
+          gateway: douyinGateway,
+          // [T-177] 每作品增量 early-break(预取缓存版;缺失键退化空集全量)。
+          commentWatermark: async (aweme) =>
+            watermarks.get(aweme) ?? new Set<string>(),
+        },
       );
       let total = 0;
       let doneWorks = 0;
-      for (const { awemeId, records } of perWork) {
+      for (const { awemeId, records } of batch.works) {
         total += await ingestRecordsForWork(awemeId, records);
         // [T-152] 逐作品上报进度(M/N;runner 节流写库)。processed=已落库作品数,累计评论数入 message。
         doneWorks += 1;
         report({
           stage: "comments",
           processed: doneWorks,
-          total: perWork.length,
-          message: `已处理 ${doneWorks}/${perWork.length} 个作品 · 累计 ${total} 条评论`,
+          total: awemeIds.length,
+          message: `已处理 ${doneWorks}/${awemeIds.length} 个作品 · 累计 ${total} 条评论`,
         });
       }
-      return { itemsNew: total, itemsUpdated: 0 };
+      // [T-232 run 诚实] 全量完成 vs 额度截断,message 走 CollectResult.message(T-235a 既有
+      //   机制,runner 拼进合成 step 文本供运行详情展示);itemsNew 照实,不假装全量。
+      const coverageMessage = buildCommentCoverageMessage({
+        collectedWorks: batch.works.length,
+        totalWorks: awemeIds.length,
+        truncated: batch.truncated,
+        cooldownRemainMs: batch.cooldownRemainMs,
+      });
+      report({
+        stage: "comments",
+        processed: batch.works.length,
+        total: awemeIds.length,
+        message: coverageMessage,
+      });
+      return { itemsNew: total, itemsUpdated: 0, message: coverageMessage };
     },
     // 作品明细导出(T-030-D8a,SPEC §9b):fetchDouyinWorkListExport(headless 复用 .auth/ →
     // 导航数据中心作品分析 → 点「刷新数据」+「导出数据」→ 截 xlsx 校验 PK 头)→ parseDouyin
@@ -5276,9 +5370,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
 
-  // 启动扫超时(gate finding 3):进程(重)启动时,扫上一进程留下仍 running 且 started_at
-  // 超时(>30min)的 job_run → 标 failed,兜"进程崩在 running"的残留。best-effort:失败不
-  // 阻断 build。
+  // [T-207] sweep 阈值 env 可配(毫秒;非法/缺省 → fallback)。job_run 默认 30min;
+  //   ai_task 默认 2h(转录等长活合法,阈值更宽)。
+  const envMsOf = (name: string, fallback: number): number => {
+    const raw = Number(process.env[name]);
+    return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : fallback;
+  };
+
+  // 启动扫超时(gate finding 3 / T-207):进程(重)启动时,扫上一进程留下仍 running 且
+  // started_at 超时(默认 >30min,CREATOROS_STALE_JOB_RUN_MS 可配)的 job_run → 标 failed
+  // (reason=stale-on-boot),兜"进程崩在 running"的残留——僵尸 run 会把当天幂等闸挡死。
+  // best-effort:失败不阻断 build。
   void sweepStaleRuns({
     runs: {
       // sweep 只用 updateRun;createRun/listRunsByJob 此路径不触达,给 no-op 满足端口形状。
@@ -5292,7 +5394,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     ctx: schedulerCtx,
     now: deps.now,
+    staleMs: envMsOf("CREATOROS_STALE_JOB_RUN_MS", 30 * 60 * 1000),
   }).catch((e) => console.error("[scheduler] 启动扫超时失败:", e));
+
+  // [T-207] 启动 sweep 僵尸 ai_task:app 被杀后 ai_tasks 也会留 running 僵尸(真机逮到
+  // transcribe 挂 running 2.5h+),撞 createTask 的 in-flight 幂等闸挡后续同键任务。
+  // running 且 startedAt(缺失退 requestedAt)超 2h(CREATOROS_STALE_AI_TASK_MS 可配)→
+  // markFailed(stale-on-boot)。fire-and-forget,不阻断启动。
+  void sweepStaleAiTasks({
+    listRunningTasks: async (c) => {
+      const { rows } = await aiService.listTasks(c, { limit: 500, offset: 0 });
+      return rows
+        .filter((t) => t.status === "running")
+        .map((t) => ({ id: t.id, startedAt: t.startedAt ?? t.requestedAt }));
+    },
+    markFailed: (c, taskId, msg) => aiService.markFailed(c, taskId, msg),
+    ctx: schedulerCtx,
+    now: deps.now,
+    staleMs: envMsOf("CREATOROS_STALE_AI_TASK_MS", 2 * 60 * 60 * 1000),
+  }).catch((e) => console.error("[scheduler] 启动扫僵尸 ai_task 失败:", e));
 
   // node-cron 进程内调度:每分钟轮询 enabled 且"最近一次 run 非 needs_reconnect"的 job(§6:
   // 登录态过期停跑),cron 到点 → triggerScheduledJob。测试/build 环境不启动(startScheduler
@@ -7478,9 +7598,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // captureUrl 逐类抛错(打不开/HTTP/登录墙),原样上抛给工具 execute 转人话渲错误态。
     captureScreenshot: async (
       ctx: RequestContext,
-      input: { url: string; fullPage?: boolean },
+      input: { url: string; fullPage?: boolean; signal?: AbortSignal },
     ) => {
-      const shot = await captureUrl(input.url, { fullPage: input.fullPage });
+      // [T-239c] signal 透传进 captureUrl:用户点「停止」→ 关无头浏览器提前退出(AbortError)。
+      const shot = await captureUrl(input.url, {
+        fullPage: input.fullPage,
+        signal: input.signal,
+      });
       const name = `截图·${(shot.title || shot.finalUrl).slice(0, 40)}`;
       // [T-219] 铁律②:AI 写入需人确认。截图落 **pending** asset(素材库 list 按 active 过滤 →
       //   不显示、不进库),对话确认门卡「存入素材库」→ assets.commit 翻 active 才入库。
@@ -7512,12 +7636,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     //   createGeneratedAsset 落**逐字稿文本素材**(assetType document,text/plain,pending 走
     //   T-219 确认门,不自动入库)+ sourceUrl 存证(mergeAiAnnotation,同截图路径)。无会话/过期
     //   (WebReaderLoginRequiredError)→ 不落库,返回 { needLogin:true, domain } 供编导引导登录。
-    readWebUrl: async (ctx: RequestContext, input: { url: string }) => {
+    readWebUrl: async (
+      ctx: RequestContext,
+      input: { url: string; signal?: AbortSignal },
+    ) => {
       const domain = webDomainFromUrl(input.url);
       let read;
       try {
+        // [T-239c] signal 透传进 readUrl:用户点「停止」→ 关带登录态浏览器提前退出(AbortError)。
         read = await readWebUrlSidecar(input.url, {
           authDir: webAuthDirFor(domain),
+          signal: input.signal,
         });
       } catch (err) {
         if (err instanceof WebReaderLoginRequiredError) {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { UIMessage } from "ai";
+import { consumeStream, type UIMessage } from "ai";
 import type { RequestContext } from "@creatoros/contract";
 import {
   AuthenticationError,
@@ -35,6 +35,11 @@ interface ChatRequestBody {
   messages?: UIMessage[];
   chatContext?: Partial<ChatContext> & { scope?: string };
   conversationId?: string;
+  // [T-239f] useChat(DefaultChatTransport)默认 body 自带:trigger 区分「新消息」与
+  // 「regenerate 重发」(d.ts 核实:'submit-message' | 'regenerate-message')。regenerate
+  // 重发的是**同一条** user 消息 —— 不再重复 insert(幂等,治重复行真 bug)。
+  trigger?: string;
+  messageId?: string;
 }
 
 // scope 文法校验(宽松:三段式前缀;非法声明视为未声明,回落推导)。
@@ -119,6 +124,8 @@ export async function POST(req: Request): Promise<Response> {
     (chatContext.projectId ? `project:${chatContext.projectId}` : "global");
 
   let conversationId = body.conversationId ?? "";
+  // [T-239f] 是否续接既有会话(user 去重只对续接轮做:首轮新会话不可能有旧行)。
+  const isExistingConversation = Boolean(conversationId);
 
   // [T-096] 续接校验(服务端硬门,SPEC §1.3-3):带 conversationId 且显式声明了 scope 时,
   // 核对库中会话的 scope 与声明一致。不一致 = 跨作用域续接(泄漏路径)→ 4xx 拒绝,不续写、
@@ -155,7 +162,29 @@ export async function POST(req: Request): Promise<Response> {
       conversationId = conv.id;
     }
     if (userText) {
-      await runtime.ai.createMessage(ctx, conversationId, { content: userText });
+      // [T-239f S6] user 消息幂等 —— regenerate(useChat 重发同一条 user 消息)不再写重复行:
+      //   ① trigger==='regenerate-message'(DefaultChatTransport 默认 body 自带,d.ts 核实)
+      //     = 明确的重发信号 → 直接跳过 insert;
+      //   ② 兜底(老客户端/手工请求无 trigger):续接会话时查库中最后一条消息 —— 若它就是
+      //     同内容的 user 行(上一轮流失败/中断,assistant 未落库),说明这条 user 已在库里,
+      //     不重插。查失败(best-effort)→ 照常 insert(宁多勿丢)。
+      let skipInsert = body.trigger === "regenerate-message";
+      if (!skipInsert && isExistingConversation) {
+        try {
+          const history = await runtime.ai.listMessages(ctx, conversationId);
+          const last = history[history.length - 1];
+          if (last && last.role === "user" && last.content === userText) {
+            skipInsert = true;
+          }
+        } catch {
+          skipInsert = false; // 去重是增强;读历史失败绝不阻断本轮落库
+        }
+      }
+      if (!skipInsert) {
+        await runtime.ai.createMessage(ctx, conversationId, {
+          content: userText,
+        });
+      }
     }
   } catch (err) {
     console.error("[api/chat] persist user turn failed:", err);
@@ -164,7 +193,9 @@ export async function POST(req: Request): Promise<Response> {
   try {
     const result = await runChatStream(
       ctx,
-      { messages, chatContext },
+      // [T-239c] req.signal 贯通:用户点「停止」/关页 → streamText abort(服务端 1s 内停,
+      // 不再空跑后续工具烧钱);signal 同时经工具 execute 第二参透传给长工具提前退出。
+      { messages, chatContext, abortSignal: req.signal },
       {
         // 展开 runtime.context 里所有已绑定的 CreativeContext reader(positioning / learnings /
         // signals / knowledge / accounts / reviewSubject …)。原来手列 4 个,漏了 reviewSubject
@@ -200,6 +231,10 @@ export async function POST(req: Request): Promise<Response> {
     // 人话规则未命中时回落原始 message(诚实)。前端错误气泡直接渲这段文案。
     return result.toUIMessageStreamResponse({
       headers: { "x-conversation-id": conversationId },
+      // [T-239c] 关键:客户端 abort/断开后没人消费 SSE 流 → onFinish 不会触发、部分产出落不了库。
+      // consumeSseStream 让服务端自己把流消费完(SDK 官方中断持久化形态),onFinish 才能在中断轮
+      // 也拿到 isAborted + 已组装的部分 responseMessage。
+      consumeSseStream: consumeStream,
       onError: (error) => {
         console.error("[api/chat] stream errored:", error);
         const human = humanizeAiError(error);
@@ -211,14 +246,18 @@ export async function POST(req: Request): Promise<Response> {
       // (用户实录)。这里的 responseMessage 是 SDK 组装好的这轮 assistant UIMessage,与 useChat 内存
       // 态同形,存它 → 恢复时 toUIMessages 原样回放 parts → 复用现有卡渲染分支,卡不再丢。
       // best-effort:落库失败不影响已流给前端的内容(对话优先)。
-      onFinish: async ({ responseMessage }) => {
+      // [T-239c] isAborted:中断轮也进这里(consumeSseStream 兜底消费)—— 已产出的部分文本 +
+      // 已完成 tool parts 照落库,带 aborted 标记(modelMetadata.aborted=true,同存储不建新表),
+      // 刷新后该轮仍在(不再丢半轮)。
+      onFinish: async ({ responseMessage, isAborted }) => {
         if (!conversationId) return;
         const rawParts = (responseMessage as { parts?: unknown[] } | undefined)
           ?.parts;
         const parts = Array.isArray(rawParts) ? rawParts : [];
         const text = textOf(responseMessage as UIMessage | undefined);
         // 有文本 或 有可渲染的 tool-result 部件才落库(纯空轮不留空气泡);tool part 的 type 形如
-        // `tool-<name>`(AI SDK v5 ToolUIPart),据此判定「这轮产出了卡」。
+        // `tool-<name>`(AI SDK v5 ToolUIPart),据此判定「这轮产出了卡」。中断轮同判:开头即停
+        // (毫无产出)不留空气泡,产出过半的落库保住。
         const hasRenderable =
           text.length > 0 ||
           parts.some(
@@ -228,12 +267,23 @@ export async function POST(req: Request): Promise<Response> {
           );
         if (!hasRenderable) return;
         try {
-          await runtime.ai.appendAssistantMessage(
-            ctx,
-            conversationId,
-            text,
-            parts,
-          );
+          if (isAborted) {
+            // 中断轮:带 aborted 标记落库(modelMetadata.aborted=true)。
+            await runtime.ai.appendAssistantMessage(
+              ctx,
+              conversationId,
+              text,
+              parts,
+              { aborted: true },
+            );
+          } else {
+            await runtime.ai.appendAssistantMessage(
+              ctx,
+              conversationId,
+              text,
+              parts,
+            );
+          }
         } catch (err) {
           console.error("[api/chat] persist assistant reply failed:", err);
         }

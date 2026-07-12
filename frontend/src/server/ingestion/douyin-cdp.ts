@@ -7,6 +7,8 @@ import type { MetricRecord } from "@creatoros/backend/modules/ingestion";
 import {
   withDouyinChannel,
   instantNoopGateway,
+  // [T-232] 评论批量采集的额度断点判别:撞冷却 → 立即停剩余作品(不逐个白撞)。
+  DouyinCooldownActiveError,
   type DouyinChannelGate,
   type ClassifyInput,
 } from "./douyin-request-gateway";
@@ -1770,6 +1772,16 @@ export interface FetchCommentsForWorksResult {
   records: CommentRecord[];
 }
 
+/** [T-232] 多作品评论抓取的批结果:works = 已成功抓到的作品(逐作品评论);truncated = 是否因
+ *  限流额度耗尽(DouyinCooldownActiveError)提前停(此时剩余作品**未采**,调用方在 run
+ *  message 里诚实注明「额度截断:已采 X/N,下轮续」);cooldownRemainMs = 截断时通道剩余
+ *  冷却毫秒(未截断为 0,供 message 展示)。 */
+export interface FetchCommentsForWorksBatch {
+  works: FetchCommentsForWorksResult[];
+  truncated: boolean;
+  cooldownRemainMs: number;
+}
+
 export interface FetchDouyinCommentsForWorksOptions {
   /** 持久化 profile 目录(复用 .auth/ 扫码登录态)。 */
   authDir: string;
@@ -1785,12 +1797,17 @@ export interface FetchDouyinCommentsForWorksOptions {
  * 单 context 循环)。**不落库**(落库由调用方逐作品 ingestComments 负责,ingest 逻辑不变)。
  * openContext 端口注入(默认真 openContext),故可确定性单测:断言 openContext 被调 1 次、
  * 循环 N 个 awemeId 各 parse、close 一次,不碰真抖音。
+ *
+ * [T-232] 限流预算断点:任一作品(作品级或翻页级 acquire)撞 DouyinCooldownActiveError →
+ * **立即停止剩余作品**(不再逐个撞冷却白烧时间),返回已抓到的部分 + truncated=true。
+ * 撞冷却的那个作品本轮记未采(其已拦到的零散 XHR 丢弃,下轮完整重采,watermark 保幂等)。
+ * 其它异常照旧向上抛(登录态/网络问题不该被吞成"截断")。
  */
 export async function fetchDouyinCommentsForWorks(
   awemeIds: string[],
   opts: FetchDouyinCommentsForWorksOptions,
   deps: FetchDouyinCommentsDeps = {},
-): Promise<FetchCommentsForWorksResult[]> {
+): Promise<FetchCommentsForWorksBatch> {
   const maxPages = opts.maxPages ?? DEFAULT_COMMENT_MAX_PAGES;
   const openCtx = deps.openContext ?? realCommentOpenContext;
   const gateway = deps.gateway ?? instantNoopGateway;
@@ -1806,15 +1823,26 @@ export async function fetchDouyinCommentsForWorks(
       const watermark = deps.commentWatermark
         ? await deps.commentWatermark(awemeId)
         : new Set<string>();
-      // [gate-F7 插装点④] **每作品 acquire 一次** creator-center(把 72 作品逐个导航真正限速);
-      // 作品内翻页再由 scrapeCommentsForWork 内部 acquire(插装点③),两层正交、均串行到 creator-center。
-      const records = await withDouyinChannel(gateway, "creator-center", () =>
-        // 同一 context / 同一 page 逐作品导航抓取(评论管理页每作品 item_id 过滤,goto 会换页)。
-        scrapeCommentsForWork(page, awemeId, maxPages, gateway, watermark),
-      );
-      out.push({ awemeId, records });
+      try {
+        // [gate-F7 插装点④] **每作品 acquire 一次** creator-center(把 72 作品逐个导航真正限速);
+        // 作品内翻页再由 scrapeCommentsForWork 内部 acquire(插装点③),两层正交、均串行到 creator-center。
+        const records = await withDouyinChannel(gateway, "creator-center", () =>
+          // 同一 context / 同一 page 逐作品导航抓取(评论管理页每作品 item_id 过滤,goto 会换页)。
+          scrapeCommentsForWork(page, awemeId, maxPages, gateway, watermark),
+        );
+        out.push({ awemeId, records });
+      } catch (e) {
+        // [T-232] 额度耗尽(通道冷却剩余超 acquire 上限)→ 立即停剩余作品,带回部分结果。
+        if (e instanceof DouyinCooldownActiveError) {
+          console.warn(
+            `[douyin-comments] 限流额度耗尽,截断本轮评论采集:已采 ${out.length}/${awemeIds.length} 个作品(通道 ${e.channel} 冷却剩 ${Math.ceil(e.remainMs / 1000)}s)`,
+          );
+          return { works: out, truncated: true, cooldownRemainMs: e.remainMs };
+        }
+        throw e; // 非额度类异常照旧向上抛(未登录/网络等,runner 归类处理)
+      }
     }
-    return out;
+    return { works: out, truncated: false, cooldownRemainMs: 0 };
   } finally {
     await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)一次
   }

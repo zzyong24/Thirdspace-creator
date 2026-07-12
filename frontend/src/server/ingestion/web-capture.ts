@@ -25,6 +25,18 @@ export interface CaptureResult {
 export interface CaptureUrlOptions {
   /** true = 全页截图;缺省/false = 视口截图(默认视口,SPEC §2.1)。 */
   fullPage?: boolean;
+  /** [T-239c] 中断信号(additive):用户停止本轮对话 → 关无头浏览器提前退出,抛 AbortError
+   *  (name='AbortError',与 retry-policy 的「aborted 不可重试」分类对齐,不会被误判成
+   *  「页面打不开」去转述/重试)。 */
+  signal?: AbortSignal;
+}
+
+/** [T-239c] 中断错误(name='AbortError'):Playwright 的 goto/screenshot 不吃 AbortSignal,
+ *  这里用「abort 监听 → 关 context」让挂起的导航立刻 reject,再统一改抛本错误。 */
+export function makeAbortError(what: string): Error {
+  const err = new Error(`已中断:用户停止了本轮对话,${what}已取消。`);
+  err.name = "AbortError";
+  return err;
 }
 
 /** 截图失败 —— 逐类诚实(导航打不开 / HTTP 错误码 / 登录墙·验证码)。工具 execute 接住原样
@@ -151,8 +163,17 @@ export async function captureUrl(
       `页面打不开:只支持 http/https 链接(收到「${target.slice(0, 80)}」)`,
     );
   }
+  // [T-239c] 入口即断:已中断的信号不再起浏览器(省一次 launch)。
+  const signal = opts.signal;
+  if (signal?.aborted) throw makeAbortError("截图");
   const openContext = deps.openContext ?? realOpenContext;
   const ctx = await openContext();
+  // [T-239c] abort → 关 context:Playwright goto/screenshot 不吃 AbortSignal,关掉浏览器让
+  // 挂起操作立刻 reject(下方各 catch 先查 signal.aborted,改抛 AbortError 不误报「打不开」)。
+  const onAbort = () => {
+    void ctx.close().catch(() => {});
+  };
+  signal?.addEventListener("abort", onAbort, { once: true });
   try {
     const page = await ctx.newPage();
     // 导航:networkidle + 20s 超时。导航失败(超时/DNS/net error)→ 「页面打不开」。
@@ -163,10 +184,12 @@ export async function captureUrl(
         timeout: NAV_TIMEOUT_MS,
       });
     } catch (err) {
+      if (signal?.aborted) throw makeAbortError("截图");
       throw new WebCaptureError(
         `页面打不开:${err instanceof Error ? err.message : String(err)}`,
       );
     }
+    if (signal?.aborted) throw makeAbortError("截图");
     // HTTP 4xx/5xx → 带状态码诚实报错(有 response 才判;about:blank 等无 response 不判)。
     const status = resp ? resp.status() : 0;
     if (status >= 400) {
@@ -183,10 +206,17 @@ export async function captureUrl(
       );
     }
     const title = (await page.title().catch(() => "")).trim();
-    const bytes = await page.screenshot({
-      type: "png",
-      fullPage: opts.fullPage === true,
-    });
+    let bytes: Uint8Array;
+    try {
+      bytes = await page.screenshot({
+        type: "png",
+        fullPage: opts.fullPage === true,
+      });
+    } catch (err) {
+      // [T-239c] 中断关 context 会让 screenshot reject —— 如实抛 AbortError,不误报渲染失败。
+      if (signal?.aborted) throw makeAbortError("截图");
+      throw err;
+    }
     if (!bytes || bytes.byteLength === 0) {
       throw new WebCaptureError("截图失败:页面渲染为空(可能是纯白页或加载被拦)。");
     }
@@ -197,6 +227,7 @@ export async function captureUrl(
       title: title || finalUrl,
     };
   } finally {
+    signal?.removeEventListener("abort", onAbort);
     await ctx.close().catch(() => {}); // 关我们自起的 Chromium(独立无头,非用户浏览器)
   }
 }

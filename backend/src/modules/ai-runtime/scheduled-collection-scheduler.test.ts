@@ -5,6 +5,8 @@ import {
   dayKeyOf,
   cronMatchesMinute,
   sweepStaleRuns,
+  // [T-207] 启动 sweep 僵尸 ai_task。
+  sweepStaleAiTasks,
   type TriggerDeps,
   type SchedulableJob,
   type SweepStaleDeps,
@@ -343,7 +345,72 @@ describe("sweepStaleRuns(gate finding-3 启动扫超时)", () => {
     expect(updateRun).toHaveBeenCalledWith(
       ctx,
       "stale",
-      expect.objectContaining({ status: "failed", finishedAt: "2026-07-01T09:00:00.000Z" }),
+      expect.objectContaining({
+        status: "failed",
+        finishedAt: "2026-07-01T09:00:00.000Z",
+        // [T-207] reason=stale-on-boot(启动 sweep 的诚实标注)。
+        error: expect.stringContaining("stale-on-boot"),
+      }),
     );
+  });
+});
+
+// [T-207] 启动 sweep 僵尸 ai_task:app 被杀后 ai_tasks 也会留 running 僵尸(真机逮到
+// transcribe 挂 running 2.5h+),撞 createTask in-flight 幂等闸。默认阈值 2h,可注入覆盖。
+describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
+  const NOW = "2026-07-11T12:00:00.000Z";
+
+  it("running 超 2h → markFailed(stale-on-boot);未超时/无时间锚 → 留着", async () => {
+    const markFailed = vi.fn(async () => undefined);
+    const swept = await sweepStaleAiTasks({
+      listRunningTasks: async () => [
+        { id: "zombie", startedAt: "2026-07-11T09:00:00.000Z" }, // 3h 前(>2h)
+        { id: "fresh", startedAt: "2026-07-11T11:30:00.000Z" }, // 30min 前
+        { id: "no-anchor", startedAt: null }, // 无时间锚 → 不乱标
+      ],
+      markFailed,
+      ctx,
+      now: () => NOW,
+    });
+    expect(swept).toBe(1);
+    expect(markFailed).toHaveBeenCalledTimes(1);
+    expect(markFailed).toHaveBeenCalledWith(
+      ctx,
+      "zombie",
+      expect.stringContaining("stale-on-boot"),
+    );
+  });
+
+  it("阈值可注入(env 由 host 解析后传入):staleMs=10min 时 30min 前的也被扫", async () => {
+    const markFailed = vi.fn(async () => undefined);
+    const swept = await sweepStaleAiTasks({
+      listRunningTasks: async () => [
+        { id: "t1", startedAt: "2026-07-11T11:30:00.000Z" }, // 30min 前
+      ],
+      markFailed,
+      ctx,
+      now: () => NOW,
+      staleMs: 10 * 60 * 1000,
+    });
+    expect(swept).toBe(1);
+  });
+
+  it("单条 markFailed 抛错不阻断其余(best-effort)", async () => {
+    const markFailed = vi
+      .fn(async (_c: typeof ctx, id: string) => {
+        if (id === "boom") throw new Error("already terminal");
+      })
+      .mockName("markFailed");
+    const swept = await sweepStaleAiTasks({
+      listRunningTasks: async () => [
+        { id: "boom", startedAt: "2026-07-11T08:00:00.000Z" },
+        { id: "zombie2", startedAt: "2026-07-11T08:00:00.000Z" },
+      ],
+      markFailed,
+      ctx,
+      now: () => NOW,
+    });
+    expect(swept).toBe(1); // boom 失败不计,zombie2 照扫
+    expect(markFailed).toHaveBeenCalledTimes(2);
   });
 });

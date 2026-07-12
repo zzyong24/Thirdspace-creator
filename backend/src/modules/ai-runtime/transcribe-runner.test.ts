@@ -411,3 +411,120 @@ describe("[T-243] runTranscribe 图集跳过 + ffmpeg 重试 + 失败分类", ()
     expect(classifyTranscribeFailure("ASR 返回空逐字稿")).toBe("other");
   });
 });
+
+// ---------------------------------------------------------------------------
+// [T-230] 限流冷却批级延迟重试:self.detail 重活先烧通道 → transcribe 紧跟撞
+// DouyinCooldownActiveError 快速失败。修 = 检测冷却类失败 → 等冷却结束(fake gateway 可查
+// 剩余)→ 只重跑冷却失败子集一次。全 fake(fake sleep 不真等),确定性单测。
+// ---------------------------------------------------------------------------
+describe("[T-230] 冷却类失败 → 延迟重试一次", () => {
+  // gateway 冷却快速失败的形状(runner 经注入 isCooldownError 判别,不 import 前端错误类)。
+  class FakeCooldownError extends Error {
+    constructor(readonly remainMs: number) {
+      super(
+        `[douyin-gateway] channel "iesdouyin" 冷却中,剩余 ${Math.ceil(remainMs / 1000)}s 超过单次 acquire 等待上限,快速失败本轮`,
+      );
+      this.name = "DouyinCooldownActiveError";
+    }
+  }
+
+  it("classifyTranscribeFailure:冷却消息归 cooldown 类", () => {
+    expect(
+      classifyTranscribeFailure(new FakeCooldownError(960_000).message),
+    ).toBe("cooldown");
+  });
+
+  it("全批撞冷却 → 等冷却结束重试子集一次 → 全部成功,任务 markSucceeded", async () => {
+    const awemeIds = ["a1", "a2"];
+    const { deps, spies, ensureCalls } = makeDeps({ awemeIds });
+    // 首轮每个 aweme 的 fetchVideoUrl 都撞冷却;重试轮放行。
+    const attempts = new Map<string, number>();
+    spies.fetchVideoUrl.mockImplementation(async (_c, awemeId: string) => {
+      const n = (attempts.get(awemeId) ?? 0) + 1;
+      attempts.set(awemeId, n);
+      if (n === 1) throw new FakeCooldownError(960_000);
+      return { playUrl: `https://v.example/${awemeId}?play=1` };
+    });
+    const sleep = vi.fn(async (_ms: number) => undefined);
+    let cooldownRemain = 960_000;
+    await runTranscribe(
+      ctx,
+      { id: "task-cd", taskType: "transcribe.douyin", inputData: { awemeIds } },
+      {
+        ...deps,
+        isCooldownError: (e) => e instanceof FakeCooldownError,
+        getCooldownRemainMs: () => cooldownRemain,
+        maxCooldownWaitMs: 30 * 60 * 1000, // 30min 上限 > 剩余 16min → 等
+        sleep: async (ms) => {
+          await sleep(ms);
+          cooldownRemain = 0; // 睡醒 = 冷却已过
+        },
+      },
+    );
+    // 等待了一次(剩余 + 5s buffer),且重试子集全部成功 → markSucceeded、非 markFailed。
+    expect(sleep).toHaveBeenCalledTimes(1);
+    expect(sleep).toHaveBeenCalledWith(960_000 + 5000);
+    expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+    expect(spies.markFailed).not.toHaveBeenCalled();
+    // 每 aweme 恰好两次 fetch(首轮撞冷却 + 重试成功),真转写写入两条。
+    expect(attempts.get("a1")).toBe(2);
+    expect(attempts.get("a2")).toBe(2);
+    expect(
+      ensureCalls.filter((c) => c.transcript === "逐字稿X"),
+    ).toHaveLength(2);
+    // 汇总 step 不再有失败计数(失败 0 条)。
+    const texts = spies.recordStep.mock.calls.map(
+      (c) => (c[2] as { text: string }).text,
+    );
+    expect(texts.some((t) => t.includes("限流冷却") && t.includes("重试"))).toBe(
+      true,
+    );
+    expect(texts.some((t) => t.includes("失败 0 条"))).toBe(true);
+  });
+
+  it("冷却剩余超等待上限 → 诚实不等(sleep 不被调),失败照旧终态", async () => {
+    const awemeIds = ["a1"];
+    const { deps, spies } = makeDeps({ awemeIds });
+    spies.fetchVideoUrl.mockImplementation(async () => {
+      throw new FakeCooldownError(3_600_000); // 剩 60min
+    });
+    const sleep = vi.fn(async (_ms: number) => undefined);
+    await runTranscribe(
+      ctx,
+      { id: "task-cd2", taskType: "transcribe.douyin", inputData: { awemeIds } },
+      {
+        ...deps,
+        isCooldownError: (e) => e instanceof FakeCooldownError,
+        getCooldownRemainMs: () => 3_600_000,
+        maxCooldownWaitMs: 30 * 60 * 1000, // 上限 30min < 剩余 60min → 不等
+        sleep,
+      },
+    );
+    expect(sleep).not.toHaveBeenCalled();
+    // 全失败 → markFailed,消息带冷却分类计数。
+    expect(spies.markSucceeded).not.toHaveBeenCalled();
+    expect(spies.markFailed).toHaveBeenCalledTimes(1);
+    const msg = spies.markFailed.mock.calls[0]?.[2] as string;
+    expect(msg).toContain("限流冷却 1");
+    // 诚实 step:说明不等待、下轮幂等自动补。
+    const texts = spies.recordStep.mock.calls.map(
+      (c) => (c[2] as { text: string }).text,
+    );
+    expect(texts.some((t) => t.includes("超过等待上限"))).toBe(true);
+  });
+
+  it("未注入冷却端口(旧 host)→ 零回归:冷却失败按原样终态,不重试", async () => {
+    const awemeIds = ["a1"];
+    const { deps, spies } = makeDeps({ awemeIds });
+    spies.fetchVideoUrl.mockImplementation(async () => {
+      throw new FakeCooldownError(960_000);
+    });
+    await runTranscribe(
+      ctx,
+      { id: "task-cd3", taskType: "transcribe.douyin", inputData: { awemeIds } },
+      deps, // 不带 isCooldownError/getCooldownRemainMs/sleep
+    );
+    expect(spies.markFailed).toHaveBeenCalledTimes(1);
+    expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1); // 无重试
+  });
+});

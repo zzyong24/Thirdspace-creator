@@ -7,6 +7,8 @@ import {
   EXTRA_BRIEF_HEADING,
   type AssembleChatDeps,
   parseHookItems,
+  resolveChatMaxSteps,
+  buildChatPrepareStep,
 } from "./chat-runner";
 import type { ChatContext } from "./chat-context";
 
@@ -1405,5 +1407,102 @@ describe("parseHookItems", () => {
   it("不合形输出 → 诚实空数组", () => {
     expect(parseHookItems("抱歉,我无法生成。")).toEqual([]);
     expect(parseHookItems('{"not":"array"}')).toEqual([]);
+  });
+});
+
+// ── [T-239f S6] 步数收尾:上限可配 + 最后一步禁工具强制总结(prepareStep 纯函数)────────
+describe("[T-239f] resolveChatMaxSteps — 步数上限可配", () => {
+  it("未配 → 默认 6;非法值 → 默认 6", () => {
+    expect(resolveChatMaxSteps({})).toBe(6);
+    expect(resolveChatMaxSteps({ CREATOROS_CHAT_MAX_STEPS: "abc" })).toBe(6);
+    expect(resolveChatMaxSteps({ CREATOROS_CHAT_MAX_STEPS: "" })).toBe(6);
+  });
+
+  it("可配且夹在 [2,12](至少留 1 步给禁工具收尾)", () => {
+    expect(resolveChatMaxSteps({ CREATOROS_CHAT_MAX_STEPS: "8" })).toBe(8);
+    expect(resolveChatMaxSteps({ CREATOROS_CHAT_MAX_STEPS: "1" })).toBe(2);
+    expect(resolveChatMaxSteps({ CREATOROS_CHAT_MAX_STEPS: "99" })).toBe(12);
+  });
+});
+
+describe("[T-239f] buildChatPrepareStep — 末步禁工具收尾 + T-117 强制工具兼容", () => {
+  it("最后一步(stepNumber === maxSteps-1)→ toolChoice:'none'(模型必须文字总结,不再被 stopWhen 静默腰斩)", () => {
+    const prep = buildChatPrepareStep({ maxSteps: 6 });
+    expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });
+    // 中间步不干预(auto)。
+    expect(prep({ stepNumber: 0 })).toEqual({});
+    expect(prep({ stepNumber: 4 })).toEqual({});
+  });
+
+  it("[T-117 兼容] forcedTool:第 0 步仍强制该工具;末步照旧禁工具", () => {
+    const prep = buildChatPrepareStep({
+      forcedTool: "topic.enrich",
+      maxSteps: 6,
+    });
+    expect(prep({ stepNumber: 0 })).toEqual({
+      toolChoice: { type: "tool", toolName: "topic.enrich" },
+    });
+    expect(prep({ stepNumber: 1 })).toEqual({});
+    expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });
+  });
+});
+
+// ── [T-239c S2] 长工具可中断:execute 第二参 abortSignal → 端口 signal(提前退出)────────
+describe("[T-239c] 长工具 signal 透传(material.screenshot / web.read)", () => {
+  it("material.screenshot:SDK callOptions.abortSignal 经工具 execute 透传到 captureScreenshotPort", async () => {
+    const captured: { signal?: AbortSignal } = {};
+    const captureScreenshotPort = vi.fn(
+      async (
+        _ctx: unknown,
+        input: { url: string; fullPage?: boolean; signal?: AbortSignal },
+      ) => {
+        captured.signal = input.signal;
+        return {
+          assetId: "as-1",
+          name: "截图·x",
+          previewUrl: null,
+          sourceUrl: input.url,
+        };
+      },
+    );
+    const { deps } = makeDeps({ captureScreenshotPort });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const tool = a.tools["material.screenshot"]! as { execute?: unknown };
+    const ac = new AbortController();
+    const exec = tool.execute as (i: unknown, o: unknown) => Promise<unknown>;
+    const res = (await exec(
+      { url: "https://example.com" },
+      { toolCallId: "tc", messages: [], context: {}, abortSignal: ac.signal },
+    )) as { kind: string; error: string | null };
+    expect(res.kind).toBe("material.screenshot");
+    expect(res.error).toBeNull();
+    // 端口收到的就是本轮请求的 abortSignal(用户点「停止」→ Playwright 层提前退出)。
+    expect(captured.signal).toBe(ac.signal);
+  });
+
+  it("web.read:同款透传到 readWebUrlPort;端口抛 AbortError → 工具信封人话(不裸抛给 SDK)", async () => {
+    const captured: { signal?: AbortSignal } = {};
+    const readWebUrlPort = vi.fn(
+      async (_ctx: unknown, input: { url: string; signal?: AbortSignal }) => {
+        captured.signal = input.signal;
+        const err = new Error("已中断:用户停止了本轮对话,网页读取已取消。");
+        err.name = "AbortError";
+        throw err;
+      },
+    );
+    const { deps } = makeDeps({ readWebUrlPort });
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    const tool = a.tools["web.read"]! as { execute?: unknown };
+    const ac = new AbortController();
+    ac.abort();
+    const exec = tool.execute as (i: unknown, o: unknown) => Promise<unknown>;
+    const res = (await exec(
+      { url: "https://chatgpt.com/share/x" },
+      { toolCallId: "tc", messages: [], context: {}, abortSignal: ac.signal },
+    )) as { kind: string; error: string | null };
+    expect(captured.signal).toBe(ac.signal);
+    // 中断错误进结果信封(execute 内 catch 转人话),kind 不变 → 前端卡渲错误态不崩。
+    expect(res.kind).toBe("web.read");
+    expect(res.error).toContain("已中断");
   });
 });

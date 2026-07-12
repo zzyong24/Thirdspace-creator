@@ -382,3 +382,45 @@ describe("readUrl(三墙分类 + 抽取器选择)", () => {
     expect(res.text).toContain("正文内容");
   });
 });
+
+// ── [T-239c S2] 长工具可中断:readUrl 的 AbortSignal 提前退出 ─────────────────────────
+describe("[T-239c] readUrl — AbortSignal 提前退出", () => {
+  it("入口已中断的 signal → 立刻抛 AbortError,不起浏览器", async () => {
+    const openContext = vi.fn(async () => makeCtx({}));
+    const ac = new AbortController();
+    ac.abort();
+    await expect(
+      readUrl(
+        "https://example.com/post",
+        { authDir: "/tmp/x", signal: ac.signal },
+        { openContext },
+      ),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(openContext).not.toHaveBeenCalled();
+  });
+
+  it("导航挂起时中断 → 关 context 让 goto reject,改抛 AbortError(不误报「页面打不开」)", async () => {
+    let rejectGoto: ((e: Error) => void) | null = null;
+    const base = makeCtx({
+      goto: () =>
+        new Promise((_resolve, reject) => {
+          rejectGoto = reject;
+        }),
+    });
+    const ctx = {
+      ...base,
+      close: async () => {
+        rejectGoto?.(new Error("Target page, context or browser has been closed"));
+      },
+    };
+    const ac = new AbortController();
+    const pending = readUrl(
+      "https://example.com/post",
+      { authDir: "/tmp/x", signal: ac.signal },
+      { openContext: async () => ctx },
+    );
+    await new Promise((r) => setTimeout(r, 10));
+    ac.abort();
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  });
+});

@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { streamText, simulateReadableStream } from "ai";
+import { describe, it, expect, vi } from "vitest";
+import { streamText, simulateReadableStream, consumeStream } from "ai";
 import { MockLanguageModelV3 } from "ai/test";
 
 // [T-163 Batch 3 / gate 关切③] chat 流式管线本地验证 —— 用 mock 模型(ai/test 的
@@ -87,5 +87,70 @@ describe("[T-163] chat 流式管线(mock 模型,无真 key)", () => {
     await reader.cancel(); // 中途取消
     // 没有未捕获异常即通过(cancel 后不再读)。
     expect(true).toBe(true);
+  });
+
+  // [T-239c S2] 中断真一致:abortSignal 触发后,已产出的部分文本仍能经
+  // toUIMessageStreamResponse 的 onFinish 拿到(isAborted=true)—— 这正是 route.ts 的
+  // 「中断轮部分产出落库」路径(consumeSseStream 兜底消费:客户端断开也能触发 onFinish)。
+  it("[T-239c] abort 后 onFinish 仍触发:isAborted=true + 已产出部分文本(部分落库路径)", async () => {
+    // 吐出第一段后挂起、收到 abortSignal 时以 AbortError reject 的模型 —— 与真 provider
+    // (fetch 流)同形:SDK 的 abort part 只在 reader.read() 结算时发得出去(index.js pull
+    // 循环核实),故 mock 必须像真流一样在 abort 时 error,否则挂死。
+    const model = new MockLanguageModelV3({
+      doStream: async ({ abortSignal }): Promise<DoStreamReturn> => ({
+        stream: new ReadableStream({
+          start(c) {
+            c.enqueue({ type: "text-start", id: "0" });
+            c.enqueue({ type: "text-delta", id: "0", delta: "部分产出" });
+            // 故意不 close —— 等 abortSignal 掐断(真 provider 的 fetch 流被 abort 时 reject)。
+            abortSignal?.addEventListener("abort", () => {
+              const err = new Error("aborted");
+              err.name = "AbortError";
+              try {
+                c.error(err);
+              } catch {
+                /* 已关闭 */
+              }
+            });
+          },
+        }) as DoStreamReturn["stream"],
+      }),
+    });
+    const ac = new AbortController();
+    const result = streamText({
+      model,
+      prompt: "hi",
+      abortSignal: ac.signal,
+    });
+    let finished: {
+      isAborted: boolean;
+      text: string;
+    } | null = null;
+    // 与 route.ts 同形:consumeSseStream 服务端自消费(模拟客户端 abort 后没人读响应体),
+    // onFinish 拿 isAborted + 组装好的部分 responseMessage。
+    result.toUIMessageStreamResponse({
+      consumeSseStream: consumeStream,
+      onFinish: ({ isAborted, responseMessage }) => {
+        const parts = (
+          responseMessage as { parts?: Array<{ type: string; text?: string }> }
+        ).parts;
+        finished = {
+          isAborted,
+          text: (Array.isArray(parts) ? parts : [])
+            .filter((p) => p.type === "text" && typeof p.text === "string")
+            .map((p) => p.text as string)
+            .join(""),
+        };
+      },
+    });
+    // 等首段进 UI 流后中断(macrotask 让消费泵先跑起来)。
+    await new Promise((r) => setTimeout(r, 30));
+    ac.abort();
+    await vi.waitFor(() => {
+      expect(finished).not.toBeNull();
+    });
+    expect(finished!.isAborted).toBe(true);
+    // 已产出的部分文本仍在(刷新后该轮不丢的服务端前提)。
+    expect(finished!.text).toBe("部分产出");
   });
 });

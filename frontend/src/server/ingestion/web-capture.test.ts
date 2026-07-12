@@ -162,3 +162,61 @@ describe("detectLoginWall — 启发式纯函数", () => {
     ).toBe(false);
   });
 });
+
+// ── [T-239c S2] 长工具可中断:signal 提前退出(不空烧浏览器)────────────────────────
+describe("[T-239c] captureUrl — AbortSignal 提前退出", () => {
+  it("入口已中断的 signal → 立刻抛 AbortError,不开浏览器", async () => {
+    const openContext = vi.fn(async () => makeFakeContext({}).ctx);
+    const ac = new AbortController();
+    ac.abort();
+    await expect(
+      captureUrl("https://example.com", { signal: ac.signal }, { openContext }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(openContext).not.toHaveBeenCalled();
+  });
+
+  it("导航挂起时中断 → 关 context 让 goto reject,改抛 AbortError(不误报「页面打不开」)", async () => {
+    // goto 挂起直到 close 被调(模拟真 Playwright:关 context 时挂起导航 reject)。
+    const calls = { closed: 0 };
+    let rejectGoto: ((e: Error) => void) | null = null;
+    const page: CaptureCapablePage = {
+      goto: () =>
+        new Promise((_resolve, reject) => {
+          rejectGoto = reject;
+        }),
+      url: () => "https://example.com",
+      title: async () => "",
+      content: async () => "",
+      screenshot: async () => new Uint8Array([1]),
+    };
+    const ctx: CaptureCapableContext = {
+      newPage: async () => page,
+      close: async () => {
+        calls.closed += 1;
+        rejectGoto?.(new Error("Target page, context or browser has been closed"));
+      },
+    };
+    const ac = new AbortController();
+    const pending = captureUrl(
+      "https://example.com",
+      { signal: ac.signal },
+      { openContext: async () => ctx },
+    );
+    // 让 goto 先挂起,再中断(用户点「停止」)。
+    await new Promise((r) => setTimeout(r, 10));
+    ac.abort();
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    // abort 监听 + finally 都会 close(幂等,≥1 次即真关了浏览器)。
+    expect(calls.closed).toBeGreaterThanOrEqual(1);
+  });
+
+  it("无 signal(旧调用面)→ 行为不变(成功路径回归)", async () => {
+    const { ctx } = makeFakeContext({ title: "公开页" });
+    const res = await captureUrl(
+      "https://example.com",
+      {},
+      { openContext: async () => ctx },
+    );
+    expect(res.title).toBe("公开页");
+  });
+});

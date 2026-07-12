@@ -108,10 +108,11 @@ export interface AssembleChatDeps extends ContextDeps {
    * 落库(带 sourceUrl 存证)→ 返回落库 asset 摘要 + 签名预览 URL。由 composition root 绑
    * (captureUrl + assetsService.createGeneratedAsset + downloadUrl)。截图/落库失败**抛错**,
    * 由工具 execute 接住转人话。可选:未装配 → 工具报「截图能力未接入」(诚实降级)。
+   * [T-239c] input.signal(additive):用户中断本轮 → Playwright 导航/截图提前退出,不空烧。
    */
   captureScreenshotPort?: (
     ctx: RequestContext,
-    input: { url: string; fullPage?: boolean },
+    input: { url: string; fullPage?: boolean; signal?: AbortSignal },
   ) => Promise<{
     assetId: string;
     name: string;
@@ -123,10 +124,11 @@ export interface AssembleChatDeps extends ContextDeps {
    * 落**逐字稿文本素材**(pending 走确认门,带 sourceUrl)。无会话/过期 → 返回 { needLogin, domain }
    * (编导引导「去保管库登录」,不落库、不截登录页)。由 composition root 绑(readUrl + assetsService)。
    * 可选:未装配 → 工具报「网页正文读取能力未接入」(诚实降级)。
+   * [T-239c] input.signal(additive):用户中断本轮 → 带登录态浏览器导航/抽取提前退出。
    */
   readWebUrlPort?: (
     ctx: RequestContext,
-    input: { url: string },
+    input: { url: string; signal?: AbortSignal },
   ) => Promise<
     | {
         needLogin: false;
@@ -794,23 +796,25 @@ export async function buildChatAssembly(
     },
     // [T-084b] material.screenshot:端口未装配 → 诚实抛错(工具 execute 接住转人话渲错误态,
     // 「截图能力未接入」);装配了则真截图 → createGeneratedAsset → 返回 asset + 预览 URL。
-    captureScreenshot: async ({ url, fullPage }) => {
+    // [T-239c] signal 透传:工具 execute 从 SDK 第二参 { abortSignal } 拿到本轮中断信号,
+    // 经这里进端口 → Playwright 层提前退出(用户点「停止」长工具不再空烧)。
+    captureScreenshot: async ({ url, fullPage, signal }) => {
       if (!deps.captureScreenshotPort) {
         throw new Error(
           "截图能力当前未接入(服务端未装配无头浏览器) —— 暂时无法截图。",
         );
       }
-      return deps.captureScreenshotPort(ctx, { url, fullPage });
+      return deps.captureScreenshotPort(ctx, { url, fullPage, signal });
     },
     // [T-217c] web.read:端口未装配 → 诚实抛错;装配了则带登录态读正文 → 落逐字稿素材(pending
     // 确认门)或返回需登录降级(编导引导去保管库登录)。
-    readWeb: async ({ url }) => {
+    readWeb: async ({ url, signal }) => {
       if (!deps.readWebUrlPort) {
         throw new Error(
           "网页正文读取能力当前未接入(服务端未装配带登录态浏览器) —— 暂时无法读取。",
         );
       }
-      return deps.readWebUrlPort(ctx, { url });
+      return deps.readWebUrlPort(ctx, { url, signal });
     },
     // [T-084c] material.generate:端口未装配 → 诚实抛错;装配了则 dispatch 既有 asset.generate
     // task(不直接生成,视频异步分钟级不阻塞对话回合),立即返回 taskId 供前端卡轮询。
@@ -1111,14 +1115,59 @@ export async function buildChatAssembly(
   return { skillId, system, tools, modelSpec, forcedTool };
 }
 
+// ── [T-239f S6] 步数收尾 ────────────────────────────────────────────────────
+/** 对话工具循环步数上限:env CREATOROS_CHAT_MAX_STEPS,默认 6,夹在 [2, 12](至少留 1 步
+ *  给「禁工具强制收尾」;上限防误配无限循环)。 */
+export function resolveChatMaxSteps(
+  env: Record<string, string | undefined>,
+): number {
+  const raw = env.CREATOROS_CHAT_MAX_STEPS?.trim();
+  if (!raw) return 6;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return 6;
+  return Math.min(12, Math.max(2, Math.floor(n)));
+}
+
+/**
+ * [T-117 强制工具 + T-239f 末步禁工具] 的 prepareStep 纯函数(可单测):
+ *   - 第 0 步:forcedTool 有值 → toolChoice 强制调它(深链按钮的显式意图,防弱模型吐文本谎称渲卡);
+ *   - 最后一步(stepNumber === maxSteps-1):toolChoice:'none' 禁工具 —— stopWhen 只会「掐断」,
+ *     模型没机会总结;末步禁工具让它**必须**用文字把已有工具结果收尾,多工具任务不再静默腰斩;
+ *   - 其余步:{}(auto,行为不变)。
+ */
+export function buildChatPrepareStep(opts: {
+  forcedTool?: string;
+  maxSteps: number;
+}): (step: { stepNumber: number }) => {
+  toolChoice?: "none" | { type: "tool"; toolName: string };
+} {
+  return ({ stepNumber }) => {
+    if (opts.forcedTool && stepNumber === 0) {
+      return {
+        toolChoice: { type: "tool" as const, toolName: opts.forcedTool },
+      };
+    }
+    if (stepNumber >= opts.maxSteps - 1) {
+      return { toolChoice: "none" as const };
+    }
+    return {};
+  };
+}
+
 /**
  * 串起 streamText(SPEC §3.3)—— 装配 + 把 UIMessage[] 转成 ModelMessage[] 喂模型,流式产出。
  * `onFinish` 由路由传入(落 ai_messages 的 assistant 文本)。返回 StreamTextResult,路由用
  * `toUIMessageStreamResponse()` 流回前端(useChat 消费)。
+ * [T-239c S2] input.abortSignal = 请求的 req.signal:用户点「停止」/关页 → streamText 立停
+ * (不再空烧后续步),且经工具 execute 第二参 { abortSignal } 透传给长工具(截图/web.read)提前退出。
  */
 export async function runChatStream(
   ctx: RequestContext,
-  input: { messages: UIMessage[]; chatContext: ChatContext },
+  input: {
+    messages: UIMessage[];
+    chatContext: ChatContext;
+    abortSignal?: AbortSignal;
+  },
   deps: AssembleChatDeps,
   onFinish?: (finalText: string) => void | Promise<void>,
 ) {
@@ -1172,28 +1221,28 @@ export async function runChatStream(
     },
   });
 
+  // [T-239f S6] 步数上限可配(默认 6)+ 最后一步禁工具强制收尾(buildChatPrepareStep 纯函数,
+  // 兼管 [T-117] forcedTool 第 0 步强制)—— 多工具任务不再被 stopWhen 静默腰斩。
+  const maxSteps = resolveChatMaxSteps(process.env);
+
   const result = streamText({
     model,
     maxRetries: 0,
+    // [T-239c S2] 中断真一致:route 传 req.signal —— 用户点「停止」/断开,服务端本轮立停
+    // (不再跑后续工具烧钱);SDK 会把 signal 经工具 execute 第二参 { abortSignal } 透传。
+    abortSignal: input.abortSignal,
     system: assembly.system,
     messages: modelMessages,
     tools: assembly.tools,
     // [T-117 确定性修] functionKey 命中真工具时,第 0 步 toolChoice 强制调它 → 必产 tool-result
     // → 前端渲真卡(弱 tool-calling 模型不再把卡当文本吐 + 谎称已渲卡);之后步恢复 auto,让模型
-    // 据工具结果把话说完。非强制轮(自由对话)prepareStep=undefined,行为不变。
-    prepareStep: assembly.forcedTool
-      ? ({ stepNumber }) =>
-          stepNumber === 0
-            ? {
-                toolChoice: {
-                  type: "tool" as const,
-                  toolName: assembly.forcedTool!,
-                },
-              }
-            : {}
-      : undefined,
+    // 据工具结果把话说完。[T-239f] 最后一步 toolChoice:'none' 禁工具,模型必须文字总结收尾。
+    prepareStep: buildChatPrepareStep({
+      forcedTool: assembly.forcedTool,
+      maxSteps,
+    }),
     // 工具调用后让模型据工具结果继续把话说完(候选已在 tool-result part 里流回前端渲卡)。
-    stopWhen: stepCountIs(5),
+    stopWhen: stepCountIs(maxSteps),
     // [T-239b] typed 终止原因:成功轮按恢复层事件归纳;错误轮区分「可重试耗尽」与其它;
     // 中断轮(abortSignal / 客户端断开)单独记 aborted。打点不影响既有 onFinish 落库语义。
     onAbort: () => {

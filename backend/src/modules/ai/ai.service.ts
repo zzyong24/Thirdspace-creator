@@ -239,11 +239,14 @@ export interface AiService {
   // [T-128] parts:落库 assistant 回复的完整 useChat UIMessage parts(text + tool-result 部件),
   // 让刷新后会话恢复能重建候选卡/素材卡/审核报告卡(此前只存 content 纯文本 → 卡刷新即丢)。
   // 缺省(旧调用/纯文本回复)→ [](恢复时回落 content 文本气泡,向后兼容)。
+  // [T-239c] opts.aborted(additive,可选):本轮被用户中断 —— 已产出的部分文本/已完成
+  // tool parts 仍落库(刷新后该轮不丢),modelMetadata.aborted=true 标记(同存储不建新表)。
   appendAssistantMessage(
     ctx: RequestContext,
     conversationId: string,
     content: string,
     parts?: unknown[],
+    opts?: { aborted?: boolean },
   ): Promise<AIMessageResource>;
   listMessages(
     ctx: RequestContext,
@@ -441,14 +444,15 @@ export function createAiService(deps: ServiceDeps): AiService {
       return toMessageDto(userRow);
     },
 
-    async appendAssistantMessage(ctx, conversationId, content, parts) {
+    async appendAssistantMessage(ctx, conversationId, content, parts, opts) {
       const row = await repoFor(ctx).createMessage(conversationId, {
         role: "assistant",
         content,
         // [T-128] 存全 parts(含 tool-result 卡数据),恢复时据它重建卡渲染。
         parts: parts ?? [],
         attachments: [],
-        modelMetadata: {},
+        // [T-239c] 中断标记进 modelMetadata(同存储不建新表):部分产出轮刷新后仍在,且可辨识。
+        modelMetadata: opts?.aborted ? { aborted: true } : {},
       });
       return toMessageDto(row);
     },

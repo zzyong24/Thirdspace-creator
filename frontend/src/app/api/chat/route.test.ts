@@ -12,14 +12,20 @@ const createMessage = vi.fn();
 const appendAssistantMessage = vi.fn();
 // [T-096] 续接校验读会话 scope 用。
 const getConversation = vi.fn();
+// [T-239f] user 去重的历史读(兜底路径:无 trigger 的老客户端按「最后一条=同内容 user 行」判)。
+const listMessages = vi.fn();
 const runChatStream = vi.fn();
 
 // [T-128] 捕获路由传给 toUIMessageStreamResponse 的 init(headers + onFinish),让测试能手动
-// 触发 onFinish 断言 assistant 回复(text + parts)落库。
+// 触发 onFinish 断言 assistant 回复(text + parts)落库。[T-239c] onFinish 现带 isAborted。
 let capturedStreamInit:
   | {
       headers?: Record<string, string>;
-      onFinish?: (e: { responseMessage: unknown }) => Promise<void> | void;
+      consumeSseStream?: unknown;
+      onFinish?: (e: {
+        responseMessage: unknown;
+        isAborted?: boolean;
+      }) => Promise<void> | void;
     }
   | null = null;
 
@@ -34,6 +40,7 @@ vi.mock("@/server/persistence-client", () => ({
       createMessage,
       appendAssistantMessage,
       getConversation,
+      listMessages,
     },
     resolveModelSpec: vi.fn(),
     context: {
@@ -79,6 +86,8 @@ beforeEach(() => {
   getConversation.mockResolvedValue({ id: "conv-existing", scope: "global" });
   createMessage.mockReset();
   createMessage.mockResolvedValue({ id: "m-1" });
+  listMessages.mockReset();
+  listMessages.mockResolvedValue([]);
   appendAssistantMessage.mockReset();
   appendAssistantMessage.mockResolvedValue({ id: "m-2" });
   runChatStream.mockReset();
@@ -88,7 +97,11 @@ beforeEach(() => {
   runChatStream.mockResolvedValue({
     toUIMessageStreamResponse: (init?: {
       headers?: Record<string, string>;
-      onFinish?: (e: { responseMessage: unknown }) => Promise<void> | void;
+      consumeSseStream?: unknown;
+      onFinish?: (e: {
+        responseMessage: unknown;
+        isAborted?: boolean;
+      }) => Promise<void> | void;
     }) => {
       capturedStreamInit = init ?? null;
       return new Response("stream", { status: 200, headers: init?.headers });
@@ -315,5 +328,122 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     );
     expect(res.status).toBe(200);
     expect(runChatStream).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ── [T-239c S2] 中断真一致:signal 贯通 + 中断轮部分产出落库 ─────────────────────────
+describe("[T-239c] POST /api/chat — 中断真一致", () => {
+  it("req.signal 贯通到 runChatStream(input.abortSignal)—— 用户点「停止」服务端立停", async () => {
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    const [, input] = runChatStream.mock.calls[0];
+    // Request.signal 是 AbortSignal 实例,原样透传给 streamText。
+    expect(input.abortSignal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("挂 consumeSseStream 兜底消费 —— 客户端断开后 onFinish 仍能触发(中断落库前提)", async () => {
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    expect(capturedStreamInit?.consumeSseStream).toBeTypeOf("function");
+  });
+
+  it("中断轮(isAborted=true)→ 部分文本+已完成 tool parts 带 aborted 标记落库(刷新后该轮仍在)", async () => {
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    const parts = [
+      { type: "text", text: "已产出的半截回答" },
+      {
+        type: "tool-material.gather",
+        toolCallId: "tc-1",
+        state: "output-available",
+        input: {},
+        output: { kind: "material.gather", items: [], grounding: "web" },
+      },
+    ];
+    await capturedStreamInit!.onFinish!({
+      responseMessage: { id: "m-a", role: "assistant", parts },
+      isAborted: true,
+    });
+    expect(appendAssistantMessage).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      "conv-1",
+      "已产出的半截回答",
+      parts,
+      { aborted: true },
+    );
+  });
+
+  it("中断轮毫无产出(无文本无 tool part)→ 不落空气泡", async () => {
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    await capturedStreamInit!.onFinish!({
+      responseMessage: { id: "m-a", role: "assistant", parts: [{ type: "step-start" }] },
+      isAborted: true,
+    });
+    expect(appendAssistantMessage).not.toHaveBeenCalled();
+  });
+});
+
+// ── [T-239f S6] regenerate 幂等:user 消息不重复落库 ────────────────────────────────
+describe("[T-239f] POST /api/chat — user 消息去重", () => {
+  it("trigger='regenerate-message'(useChat regenerate 重发同一条 user)→ 不重复 insert,流式照跑", async () => {
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("hi")],
+          conversationId: "conv-existing",
+          trigger: "regenerate-message",
+          messageId: "u-1",
+        },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(res.status).toBe(200);
+    expect(createMessage).not.toHaveBeenCalled();
+    expect(runChatStream).toHaveBeenCalledTimes(1);
+  });
+
+  it("兜底(无 trigger 的老客户端):续接会话且库中最后一条=同内容 user 行 → 不重插", async () => {
+    listMessages.mockResolvedValue([
+      { id: "m-0", role: "assistant", content: "上一轮回答" },
+      { id: "m-1", role: "user", content: "hi" },
+    ]);
+    await POST(
+      chatReq(
+        { messages: [userMessage("hi")], conversationId: "conv-existing" },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(createMessage).not.toHaveBeenCalled();
+    expect(runChatStream).toHaveBeenCalledTimes(1);
+  });
+
+  it("兜底不误伤:最后一条是 assistant(正常新一轮,即使内容与更早 user 相同)→ 照常 insert", async () => {
+    listMessages.mockResolvedValue([
+      { id: "m-1", role: "user", content: "hi" },
+      { id: "m-2", role: "assistant", content: "答" },
+    ]);
+    await POST(
+      chatReq(
+        { messages: [userMessage("hi")], conversationId: "conv-existing" },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1" }, "conv-existing", {
+      content: "hi",
+    });
+  });
+
+  it("兜底读历史失败(best-effort)→ 照常 insert(宁多勿丢,不阻断)", async () => {
+    listMessages.mockRejectedValue(new Error("db down"));
+    await POST(
+      chatReq(
+        { messages: [userMessage("hi")], conversationId: "conv-existing" },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(createMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it("首轮新会话(无 conversationId)不读历史,直接落 user 消息", async () => {
+    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
+    expect(listMessages).not.toHaveBeenCalled();
+    expect(createMessage).toHaveBeenCalledTimes(1);
   });
 });

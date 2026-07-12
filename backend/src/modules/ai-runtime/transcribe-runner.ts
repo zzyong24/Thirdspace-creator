@@ -29,26 +29,33 @@ export type DouyinVideoSource =
  *  文本本身诚实标注非口播,不会被误当真逐字稿)。 */
 export const IMAGE_ALBUM_TRANSCRIPT_PLACEHOLDER = "(图集作品,无口播音频)";
 
-/** [T-243] 失败原因分类(观测覆盖率用;errorMessage/汇总 step 按类计数)。 */
+/** [T-243] 失败原因分类(观测覆盖率用;errorMessage/汇总 step 按类计数)。
+ *  [T-230] 新增 cooldown:限流冷却类(DouyinCooldownActiveError)——批级延迟重试的选取依据。 */
 export type TranscribeFailureCategory =
   | "parse-failed" // 直链解析失败(iesdouyin _ROUTER_DATA / detail aweme_detail)
   | "ffmpeg" // ffmpeg 抽音非 0 退出 / 无字节(已含单次重试后仍失败)
   | "captcha" // 登录态回落路径命中验证码
+  | "cooldown" // [T-230] 撞限流冷却快速失败(通道 cooldown 中)——等冷却结束可重试
   | "other"; // 其余(ASR / 网络 / 未知)
 
 const FAILURE_CATEGORY_LABELS: Record<TranscribeFailureCategory, string> = {
   "parse-failed": "解析失败",
   ffmpeg: "ffmpeg",
   captcha: "验证码",
+  cooldown: "限流冷却",
   other: "其他",
 };
 
 /** [T-243] 按错误消息把单作品失败归类(纯函数,可单测)。与取流层的错误文案约定对齐:
  *  验证码 → captcha;streamAudioFromVideo → ffmpeg;parseDouyinVideoUrl / parseAwemeDetail /
- *  fetchDouyinVideoUrl(HTTP/请求失败也归解析取流类)→ parse-failed;其余 → other。 */
+ *  fetchDouyinVideoUrl(HTTP/请求失败也归解析取流类)→ parse-failed;其余 → other。
+ *  [T-230] 冷却类优先判(gateway 的 DouyinCooldownActiveError 消息含「冷却中」/类名)。 */
 export function classifyTranscribeFailure(
   reason: string,
 ): TranscribeFailureCategory {
+  if (reason.includes("冷却中") || reason.includes("CooldownActive")) {
+    return "cooldown";
+  }
   if (reason.includes("验证码")) return "captcha";
   if (reason.includes("streamAudioFromVideo")) return "ffmpeg";
   if (
@@ -158,6 +165,21 @@ export interface TranscribeRunnerDeps {
   ) => Promise<EnsureTranscriptArtifactResult>;
   /** 可选语言提示(默认 "zh";省略让端点自动检测)。 */
   language?: string;
+
+  // ── [T-230] 限流冷却批级延迟重试的可选端口(全部缺省 → 旧行为:冷却失败即终态,零回归)──
+  /** 判一个异常是否是「限流冷却快速失败」(host 绑 `(e) => e instanceof DouyinCooldownActiveError`;
+   *  runner 不 import 前端 ingestion 的错误类,保持包边界,同 scheduled-collection-runner 的
+   *  isNotLoggedInError 先例)。缺省 → 退化按错误消息分类(classifyTranscribeFailure)。 */
+  isCooldownError?: (err: unknown) => boolean;
+  /** 查抖音通道当前冷却剩余毫秒(host 绑 douyinGateway.getChannelStatus 两通道取 max;
+   *  0 = 无冷却)。缺省 → 不做延迟重试。 */
+  getCooldownRemainMs?: () => number;
+  /** 延迟重试等待上限(毫秒;默认 30min)。冷却剩余超过它 → 诚实不等(失败照旧终态,
+   *  下轮幂等自动补——hasTranscriptArtifact 锚已保成功子集不重转)。host 可从
+   *  env(CREATOROS_TRANSCRIBE_COOLDOWN_WAIT_MAX_MS)注入覆盖。 */
+  maxCooldownWaitMs?: number;
+  /** 注入 sleep(测试注 fake 不真等;缺省真 setTimeout)。 */
+  sleep?: (ms: number) => Promise<void>;
 }
 
 export interface TranscribeTask {
@@ -213,7 +235,10 @@ export async function runTranscribe(
       );
     }
 
-    for (const awemeId of awemeIds) {
+    // [T-230] 单 aweme 全流程收敛成闭包:主循环与「冷却延迟重试」共用同一段逻辑(幂等探测/
+    //   取流/抽音/ASR/绑作品/失败分类计数都只写一遍)。闭包直接读写外层计数器(stepNo/ok/
+    //   albums/failures),重试成功即 ok+1、重试再失败即重新 push failures。
+    const processOne = async (awemeId: string): Promise<void> => {
       // 1) 幂等前置(只读探测):已有 transcript artifact 则 skip,**不重复 fetch/ASR**(省流)。
       //    用 hasTranscriptArtifact(只读)而非 ensureTranscriptArtifact —— 后者「不存在则建」,
       //    拿空 transcript 当探针会写脏空稿。真正的写入在下面 §3 用真 text 调 ensure(它自身也幂等)。
@@ -226,7 +251,7 @@ export async function runTranscribe(
           toolCalls: [],
         });
         ok += 1;
-        continue;
+        return;
       }
 
       // 2) 取音频 + 转写。取音频失败(DouyinAudioFetchError 等)→ 标该 aweme 失败、其余继续。
@@ -259,7 +284,7 @@ export async function runTranscribe(
             text: `作品 ${awemeId}:图集作品,无口播音频,诚实跳过 · ${anchorNote}`,
             toolCalls: [],
           });
-          continue;
+          return;
         }
 
         // [T-243] ffmpeg 失败单次重试:直链可能瞬时失效(CDN 签名过期)→ 重取直链再试一次;
@@ -312,7 +337,10 @@ export async function runTranscribe(
         // 其它(取音频 / 直链 / 去水印 / ASR provider HTTP / 空文本)→ 标该 aweme 失败,其余继续。
         const reason =
           err instanceof Error ? err.message : String(err ?? "unknown error");
-        const category = classifyTranscribeFailure(reason); // [T-243] 分类计数
+        // [T-230] 冷却类优先用注入判别(instanceof,最可靠);缺省退化按消息分类。
+        const category = deps.isCooldownError?.(err)
+          ? "cooldown"
+          : classifyTranscribeFailure(reason); // [T-243] 分类计数
         failures.push({ awemeId, reason, category });
         stepNo += 1;
         await deps.ai.recordStep(ctx, task.id, {
@@ -325,6 +353,60 @@ export async function runTranscribe(
           `[transcribe-runner] aweme ${awemeId} 失败(其余继续):`,
           err,
         );
+      }
+    };
+
+    // 主批次:逐 aweme 跑一遍。
+    for (const awemeId of awemeIds) {
+      await processOne(awemeId);
+    }
+
+    // [T-230] 冷却延迟重试(批级、上限一次):真机时序 = self.detail 重活先烧 iesdouyin 通道
+    //   → transcribe 紧跟排队 → 通道 cooldown(剩余 > acquire 上限)→ 全批快速失败等明天。
+    //   修:检测到冷却类失败 → 查 gateway 冷却剩余 → 在等待上限内 sleep 到冷却结束 → 只重跑
+    //   冷却失败子集一次(幂等锚 hasTranscriptArtifact 保证已成功的不重转)。剩余超上限 →
+    //   诚实不等(失败照旧终态,下轮任务幂等自动补),绝不无限等/不做调度框架。
+    const cooldownFailedIds = failures
+      .filter((f) => f.category === "cooldown")
+      .map((f) => f.awemeId);
+    if (cooldownFailedIds.length > 0 && deps.getCooldownRemainMs) {
+      const remainMs = deps.getCooldownRemainMs();
+      const capMs = deps.maxCooldownWaitMs ?? 30 * 60 * 1000;
+      if (remainMs <= capMs) {
+        // 从失败清单摘掉冷却子集(重试再失败会由 processOne 重新 push,计数不重复)。
+        for (const id of cooldownFailedIds) {
+          const idx = failures.findIndex(
+            (f) => f.awemeId === id && f.category === "cooldown",
+          );
+          if (idx >= 0) failures.splice(idx, 1);
+        }
+        const waitMs = remainMs > 0 ? remainMs + 5000 : 0; // +5s buffer 让 cooldown 真到期
+        stepNo += 1;
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo,
+          kind: "transcribe",
+          text: `检测到 ${cooldownFailedIds.length} 条限流冷却失败,等待冷却结束(约 ${Math.ceil(
+            waitMs / 1000,
+          )}s)后重试该子集一次`,
+          toolCalls: [],
+        });
+        const sleep =
+          deps.sleep ??
+          ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+        if (waitMs > 0) await sleep(waitMs);
+        for (const awemeId of cooldownFailedIds) {
+          await processOne(awemeId);
+        }
+      } else {
+        stepNo += 1;
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo,
+          kind: "transcribe",
+          text: `检测到 ${cooldownFailedIds.length} 条限流冷却失败,但冷却剩余 ${Math.ceil(
+            remainMs / 1000,
+          )}s 超过等待上限 ${Math.ceil(capMs / 1000)}s,本轮不等待(失败子集下轮任务幂等自动补)`,
+          toolCalls: [],
+        });
       }
     }
 

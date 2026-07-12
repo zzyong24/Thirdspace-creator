@@ -369,14 +369,17 @@ export interface SweepStaleDeps {
   ) => Promise<{ id: string; startedAt: string }[]>;
   ctx: RequestContext;
   now: () => string;
-  /** 超时阈值(毫秒;默认 30min)。started_at 早于 now-阈值 且仍 running → 标 failed。 */
+  /** 超时阈值(毫秒;默认 30min)。started_at 早于 now-阈值 且仍 running → 标 failed。
+   *  [T-207] host 可从 env(CREATOROS_STALE_JOB_RUN_MS)注入覆盖默认。 */
   staleMs?: number;
 }
 
 /**
- * 启动扫超时(gate finding 3):进程重启后,上一进程留下的仍 `running` 且 started_at 超时
- * (>staleMs,默认 30min)的 job_run → 标 failed（+ finished_at + error），兜"进程崩在
- * running"的残留,保证 job_run 不永久悬挂。导出供 host 初始化时调 + 测试驱动。
+ * 启动扫超时(gate finding 3 / T-207):进程重启后,上一进程留下的仍 `running` 且 started_at
+ * 超时(>staleMs,默认 30min)的 job_run → 标 failed(+ finished_at + error,reason=
+ * stale-on-boot),兜"进程崩在 running"的残留 —— 僵尸 run 会撞 triggerScheduledJob 的当天
+ * in-flight 幂等闸,把「立即运行/到点采集」全 dedup 挡住(真机 T-207 逮到)。
+ * 导出供 host 初始化时调(fire-and-forget,不阻断启动)+ 测试驱动。
  */
 export async function sweepStaleRuns(deps: SweepStaleDeps): Promise<number> {
   const staleMs = deps.staleMs ?? 30 * 60 * 1000;
@@ -390,9 +393,68 @@ export async function sweepStaleRuns(deps: SweepStaleDeps): Promise<number> {
     await deps.runs.updateRun(deps.ctx, run.id, {
       status: "failed",
       finishedAt: deps.now(),
-      error: "启动扫超时:进程重启前该 run 仍悬挂在 running,标记为 failed",
+      error:
+        "启动扫超时(stale-on-boot):进程重启前该 run 仍悬挂在 running,标记为 failed",
     });
     swept += 1;
+  }
+  return swept;
+}
+
+// ---------------------------------------------------------------------------
+// [T-207] 启动 sweep 僵尸 ai_task —— 与 sweepStaleRuns 同族的第二把扫帚。
+// 真机实锤:app 被杀后除 job_run 外,ai_tasks 表也会留 running 僵尸(如 transcribe 挂
+// running 2.5h+),同样撞 createTask 的 in-flight 幂等闸(queued/running 命中返回既有)
+// 把后续同键任务挡住。启动时把「running 超过合理时长」的 task 标 failed(fire-and-forget)。
+// ---------------------------------------------------------------------------
+
+export interface SweepStaleAiTasksDeps {
+  /** 列出该用户当前 status='running' 的 ai_task 投影(host 绑 aiService.listTasks 过滤;
+   *  startedAt 缺失时 host 用 requestedAt 兜底填入)。 */
+  listRunningTasks: (
+    ctx: RequestContext,
+  ) => Promise<{ id: string; startedAt: string | null }[]>;
+  /** 标 failed(host 绑 aiService.markFailed;no-op-safe,已终态吞冲突)。 */
+  markFailed: (
+    ctx: RequestContext,
+    taskId: string,
+    errorMessage: string,
+  ) => Promise<void>;
+  ctx: RequestContext;
+  now: () => string;
+  /** 超时阈值(毫秒;默认 2h —— ai_task 里有合法长活如转录+限流冷却延迟重试,阈值比
+   *  job_run 宽)。host 可从 env(CREATOROS_STALE_AI_TASK_MS)注入覆盖。 */
+  staleMs?: number;
+}
+
+/**
+ * [T-207] 启动 sweep 僵尸 ai_task:running 且 started_at(缺失退 requestedAt,由 host 兜底)
+ * 早于 now-staleMs(默认 2h)→ markFailed(reason=stale-on-boot)。单条失败不阻断其余
+ * (best-effort,记日志继续);startedAt 解析不出 → 跳过(诚实不乱标)。返回扫掉的条数。
+ */
+export async function sweepStaleAiTasks(
+  deps: SweepStaleAiTasksDeps,
+): Promise<number> {
+  const staleMs = deps.staleMs ?? 2 * 60 * 60 * 1000;
+  const nowMs = new Date(deps.now()).getTime();
+  const running = await deps.listRunningTasks(deps.ctx);
+  let swept = 0;
+  for (const t of running) {
+    if (!t.startedAt) continue; // 无时间锚 → 不乱标(诚实跳过)
+    const startedMs = new Date(t.startedAt).getTime();
+    if (!Number.isFinite(startedMs)) continue;
+    if (nowMs - startedMs < staleMs) continue;
+    try {
+      await deps.markFailed(
+        deps.ctx,
+        t.id,
+        "启动扫超时(stale-on-boot):进程重启前该任务仍悬挂在 running,标记为 failed",
+      );
+      swept += 1;
+    } catch (e) {
+      // 单条 markFailed 失败不阻断其余(fire-and-forget 兜底语义)。
+      console.error(`[scheduler] 僵尸 ai_task ${t.id} 标 failed 失败:`, e);
+    }
   }
   return swept;
 }

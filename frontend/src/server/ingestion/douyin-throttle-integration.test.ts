@@ -352,12 +352,13 @@ describe("[gate-F7 插装点③④] 评论采集过 creator-center", () => {
     const { openContext } = makeFakeCommentContext();
     const awemeIds = ["7401", "7402", "7403"];
     // maxPages=0 → 作品内不翻页(scrapeCommentsForWork 翻页循环 0 次)→ 只剩作品级 acquire。
-    const results = await fetchDouyinCommentsForWorks(
+    const batch = await fetchDouyinCommentsForWorks(
       awemeIds,
       { authDir: "/fake/.auth", maxPages: 0 },
       { openContext, gateway: spy.gateway },
     );
-    expect(results).toHaveLength(3);
+    expect(batch.works).toHaveLength(3);
+    expect(batch.truncated).toBe(false); // [T-232] 全量完成不截断
     // 插装点④:每作品一次作品级 acquire(maxPages=0 → 无翻页 acquire),故恰好 3 次。
     expect(spy.acquireCount("creator-center")).toBe(3);
     expect(spy.acquireCount("iesdouyin")).toBe(0);
