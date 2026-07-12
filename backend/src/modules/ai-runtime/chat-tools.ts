@@ -1,4 +1,7 @@
-import { tool, jsonSchema, type Tool, type ToolSet } from "ai";
+import { jsonSchema, type Tool, type ToolSet } from "ai";
+// [T-239a] 统一工具门:所有工具经 defineChatTool 包装(错误信封/结果预算/审计打点),
+// 不再直调 tool() —— 信封元数据(kind 对齐 + 结构占位)单一真值在 CHAT_TOOL_ERROR_ENVELOPES。
+import { defineChatTool } from "./chat-tool-gate";
 
 // 首波工具(本切片 2 个):topic.generate + topic.enrich,注册为 Vercel AI SDK tool
 // (SPEC §3.4)。每个工具 = { description, parameters(JSON Schema), execute → 复用现有
@@ -1721,7 +1724,7 @@ export function knowledgeRelevanceScore(haystack: string, query: string): number
  */
 export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
   return {
-    "topic.generate": tool({
+    "topic.generate": defineChatTool("topic.generate", {
       description:
         "围绕创作者定位 + 真实信号生成一批选题候选(每条含 title/angle/理由)。结果是候选,需人逐条采纳后才入候选池——不直接写库。",
       inputSchema: TOPIC_GENERATE_PARAMS,
@@ -1732,8 +1735,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         });
         return { kind: "topic.candidates", items };
       },
-    }),
-    "topic.enrich": tool({
+    }, deps.humanizeError),
+    "topic.enrich": defineChatTool("topic.enrich", {
       description:
         "把一条已有选题补全成完整选题卡(观众/痛点/钩子/结构/风险/立项建议)。结果是候选卡,需人采纳后才落到该选题——不直接写库。",
       inputSchema: TOPIC_ENRICH_PARAMS,
@@ -1741,8 +1744,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         const card = await deps.enrichTopic({ title, angle: angle ?? "" });
         return { kind: "topic.card", card };
       },
-    }),
-    "script.hooks": tool({
+    }, deps.humanizeError),
+    "script.hooks": defineChatTool("script.hooks", {
       description:
         "为当前项目生成一组口播开场 hook 候选(3~5 条,不同切角)。创作者会逐条挑选「写入稿面」。当用户想改开头/要 hook/开场不抓人时调用。",
       inputSchema: SCRIPT_HOOKS_PARAMS,
@@ -1758,8 +1761,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         });
         return { kind: "script.hooks", items };
       },
-    }),
-    "script.draft": tool({
+    }, deps.humanizeError),
+    "script.draft": defineChatTool("script.draft", {
       description:
         "为当前项目生成一版完整的分镜口播脚本(整稿,多段分镜:口播/画面/字幕)。创作者会整稿「写入稿面」。当用户要写脚本/起草整稿/重写脚本时调用。",
       inputSchema: SCRIPT_DRAFT_PARAMS,
@@ -1775,8 +1778,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         });
         return { kind: "script.draft", sections };
       },
-    }),
-    "material.gather": tool({
+    }, deps.humanizeError),
+    "material.gather": defineChatTool("material.gather", {
       // [T-084a] 动态诚实描述:配了联网检索才说「真实搜集…带来源」;未配则明说素材来自训练
       // 记忆需核实(去掉无条件的「真实…带来源」宣称,防名实不符)。
       description: deps.searchConfigured
@@ -1787,11 +1790,11 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         const { items, grounding } = await deps.gatherMaterials({ query });
         return { kind: "material.gather", grounding, items };
       },
-    }),
+    }, deps.humanizeError),
     // [T-084b] 自动化截图:给公开 URL,服务端真开无头浏览器截图 → 落素材中心(带 sourceUrl
     // 存证)。截图 = 不可抵赖的真证据(区别于 material.gather 的模型记忆素材)。execute 接住
     // 逐类报错(打不开/HTTP/登录墙)转人话随结果卡渲错误态,不抛给 SDK(避免裸机器码/spinner)。
-    "material.screenshot": tool({
+    "material.screenshot": defineChatTool("material.screenshot", {
       description:
         "给一个**公开**网页 URL,服务端真开浏览器截图(带来源 URL 存证)。截图是不可抵赖的真证据(不同于搜集/生成的素材)。当用户要「截个图/把这个页面截下来/存这个网页的样子」时调用。当前只支持公开页面——登录墙/需登录页会诚实报错,不产垃圾图。截好的图渲成卡片**待用户确认**:点「存入素材库」才进库(铁律②:AI 写入需人确认),入库后可再「加入弹药」挂进这条内容的用料链。",
       inputSchema: MATERIAL_SCREENSHOT_PARAMS,
@@ -1825,11 +1828,11 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           };
         }
       },
-    }),
+    }, deps.humanizeError),
     // [T-217c] 带登录态读网页正文:给一个 URL(可含需登录内容),服务端用保管库登录态读正文全文
     // → 落**逐字稿文本素材**(pending 确认门)。无会话/过期 → 返回需登录降级(编导引导去保管库
     // 登录,不截登录页糊弄);其余失败逐类诚实转人话(不抛给 SDK)。
-    "web.read": tool({
+    "web.read": defineChatTool("web.read", {
       description:
         "读一个网页的**正文全文**(带你在保管库登录后的登录态,能读需登录内容:ChatGPT 分享链接、知乎、公众号、飞书文档等)。抽出的是干净正文文本(ChatGPT 分享抽逐轮对话全文),比截图准、不 OCR 失真。当用户粘一个链接要你「读一下/看看这篇/这段对话讲了啥/据此出选题」时**优先用它**(而不是截图)。读到的正文渲成卡片**待用户确认**存入素材库(铁律②)。若该站还没登录会返回「需登录」——这时引导用户去『设置→网站登录保管库』登录一次,别改用截图糊弄。",
       inputSchema: WEB_READ_PARAMS,
@@ -1880,11 +1883,11 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           };
         }
       },
-    }),
+    }, deps.humanizeError),
     // [T-084c] AI 生成素材:文生图/文生视频。execute **不直接生成**(视频异步分钟级不能阻塞
     // 对话回合)—— dispatch 既有 asset.generate task,立即返回 taskId;前端 ChatGenerateCard
     // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
-    "material.generate": tool({
+    "material.generate": defineChatTool("material.generate", {
       description:
         "用 AI 生成图片或视频素材(文生图/文生视频)。生成的是 AI 图/视频素材(非真实拍摄/截图);创作者采纳后才进素材中心。当用户要「生成一张配图/做个 B-roll/AI 出个画面」时调用。视频异步、分钟级——提交后后台跑,卡片会显示进度。若未配置生图/生视频模型,任务会失败并在卡上提示去设置(不假装能生成)。",
       inputSchema: MATERIAL_GENERATE_PARAMS,
@@ -1923,8 +1926,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           };
         }
       },
-    }),
-    "calibration.diagnose": tool({
+    }, deps.humanizeError),
+    "calibration.diagnose": defineChatTool("calibration.diagnose", {
       description:
         "对一条发布前内容(给标题,可附文稿)按创作者的变现加权评分标准逐维度盲评,估发布前表现并给综合判断/主要问题/优先修改。结果是诊断候选,需人采纳后才落预测——不直接写库。",
       inputSchema: CALIBRATION_DIAGNOSE_PARAMS,
@@ -1940,8 +1943,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         });
         return { kind: "calibration.diagnosis", diagnosis };
       },
-    }),
-    "review.analyze": tool({
+    }, deps.humanizeError),
+    "review.analyze": defineChatTool("review.analyze", {
       description:
         "从一条**具体作品**提炼 3-6 条可复用、可迁移的爆款要素/方法论。**拆某条作品必须传它的 projectId**(从 context.metrics/context.projects 每行拿):工具会先读该作品的真逐字稿再提炼,读不到真逐字稿会拒绝产卡并要你补 projectId/逐字稿——绝不凭标题、指标、账号通用规律编造方法论或数字当经验。结果是经验候选,需人逐条采纳后才沉淀经验——不直接写库。",
       inputSchema: REVIEW_ANALYZE_PARAMS,
@@ -1960,13 +1963,13 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         });
         return { kind: "review.learnings", items, error: error ?? null };
       },
-    }),
+    }, deps.humanizeError),
     // [T-103b] 稿面文案审核进对话:dispatch 既有 script.review 审核链路(L1 违禁词 lint + L2 豆包
     // 语义审,复用 T-086,别重造)→ 立即返回 taskId + projectId(不阻塞对话回合)。前端
     // ChatReviewReportCard 据 taskId 轮询 → succeeded 后读 getLatestScriptReview 渲审核报告卡
     // (verdict + findings);改写建议逐条走 createArtifactVersion append-only 应用门。无项目上下文 /
     // dispatch 失败 → error 非 null(卡渲错误态,诚实提示),不假装审过。
-    "review.script": tool({
+    "review.script": defineChatTool("review.script", {
       description:
         "对当前项目的脚本做发布前合规/表达审核(L1 违禁词 lint + L2 语义审)。当用户说「审核这份文案/审一下脚本/查违禁词/合规诊断」时调用。审核在后台跑(分钟内),结果渲成审核报告卡(verdict + 命中项 + 逐条改写建议);改写建议由用户逐条点「应用」才写入脚本新版本——你没有改稿能力,绝不口头宣称「已改」。只能审当前项目对话里的脚本;没有项目上下文时会诚实提示去项目稿面里审。若未配专用审核模型,报告会如实标注(L1 违禁词 lint 照常跑,确定性)。",
       inputSchema: REVIEW_SCRIPT_PARAMS,
@@ -1985,10 +1988,10 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           };
         }
       },
-    }),
+    }, deps.humanizeError),
     // [T-062a] 对话手录经验:「记一条经验:…」→ 模型填参 → 候选卡。execute 纯回显
     // (不读库不写库、不跑二次 LLM),故不占 ChatToolDeps —— 落库动作在前端卡上由人触发。
-    "learning.capture": tool({
+    "learning.capture": defineChatTool("learning.capture", {
       description:
         "把对话中的经验教训整理成一条结构化经验候选(title + insight + learningType)。当用户说「记一条经验/这条教训记下来/沉淀一下」时调用,从 TA 的话里提炼填参。不会直接写库:结果渲成候选卡,用户点卡上「存为经验」按钮才落入裁决队列。",
       inputSchema: LEARNING_CAPTURE_PARAMS,
@@ -2002,11 +2005,11 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           suggestion: { title, insight, learningType },
         };
       },
-    }),
+    }, deps.humanizeError),
     // [T-077b] 对话填策划:「帮我把选题卡填了,观众是 AI 新手,目标是涨粉」→ 模型从对话里
     // 提炼字段填参 → execute 回显建议 + 读当前项目 briefDetail 现状(前端卡渲「现值 → 建议值」
     // 对照)。不写库:人点卡上「写入选题卡」才 patchProject 落 brief_detail(铁律②确认门)。
-    "brief.fill": tool({
+    "brief.fill": defineChatTool("brief.fill", {
       description:
         "把对话中聊到的选题信息(目标观众/内容目标/核心信息等)整理成当前项目的选题卡填充候选。当用户说「帮我把选题卡填了/把策划补上/根据我们聊的填一下立项信息」时调用,从对话里提炼填参——只填真聊到的字段,没聊到的不编。不会直接写库:结果渲成字段对照卡(现值 vs 建议值),用户点「写入选题卡」才落库。",
       inputSchema: BRIEF_FILL_PARAMS,
@@ -2028,8 +2031,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         const current = await deps.getProjectBrief();
         return { kind: "brief.fill", suggestion, current };
       },
-    }),
-    "positioning.generate": tool({
+    }, deps.humanizeError),
+    "positioning.generate": defineChatTool("positioning.generate", {
       description:
         "结合创作者当前定位 + 抖音账号画像 + 真实作品画像,生成/进化一份结构化定位提案(人设/领域/人群/差异化/能力/一句话定位/关键词)。[T-210] 定位访谈答齐后调用:把访谈 5 问(新手/老手、领域受众、目标、内容形态、对标风格)的回答连同已翻过的真数据/聊出的定位洞察整理进 extraBrief 一并传入(否则访谈结论会丢、只会复读旧档案)。结果是定位候选,需人采纳后才写入定位母版——不直接写库。",
       inputSchema: POSITIONING_GENERATE_PARAMS,
@@ -2039,12 +2042,12 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         });
         return { kind: "positioning.suggestion", suggestion };
       },
-    }),
+    }, deps.humanizeError),
     // [T-094] 知识蒸馏(倾倒场 Copilot 化):用户在对话里粘原文 → 本工具走既有 knowledge.distill
     // 引擎产一批知识原子候选 → 前端渲蒸馏批量确认门卡(勾选/改 type/改 title),人点「采纳选中
     // N 条」才逐条 knowledge.create(铁律②)。失败不抛给 SDK(避免裸机器码/无限 spinner):
     // 接住转人话(ai-error-humanize,如 MiniMax new_sensitive/1026 内容安全拦截)随结果卡渲错误态。
-    "knowledge.distill": tool({
+    "knowledge.distill": defineChatTool("knowledge.distill", {
       description:
         "把用户粘贴的原始材料(笔记/口播逐字稿/网页摘录/评论讨论)蒸馏成一批可独立引用的知识原子候选(观点/证据/金句/观众问题)。用户在对话里倒入要存进知识库的原文时调用,content 必须是原文逐字全文(不要摘要改写)。结果是候选,渲成确认门卡由用户勾选采纳后才入知识库——不直接写库。",
       inputSchema: KNOWLEDGE_DISTILL_PARAMS,
@@ -2086,10 +2089,10 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           };
         }
       },
-    }),
+    }, deps.humanizeError),
     // ── 只读 context 工具 —— 用于当用户问「项目库 / 最新一条作品 / 素材(库)/ 知识库」时,
     //    实时拉**真实数据**给模型读进上下文再用文字回答(纯读,不产候选、不写任何实体)。
-    "context.projects": tool({
+    "context.projects": defineChatTool("context.projects", {
       description:
         "只读:拉取创作者的项目/作品列表(id/标题/阶段/状态),带 total/hasMore 可翻页(offset)。当用户问「我的项目库 / 最近在做什么 / 最新一条(作品)/ 我有哪些项目 / 全部项目」时调它拿真实数据回答。[T-081] 要盘点/浏览**全量**作品(如「结合我全部内容…」)时置 compact=true:标题截 40 字、单页上限 200,一次拿全,不用逐页翻;只看少量条目/需要完整标题时不置。hasMore=true 时继续带 offset 翻页直到看全,或如实告知还剩多少。",
       inputSchema: CONTEXT_PROJECTS_PARAMS,
@@ -2117,8 +2120,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           hasMore: effOffset + rows.length < total,
         };
       },
-    }),
-    "context.comments": tool({
+    }, deps.humanizeError),
+    "context.comments": defineChatTool("context.comments", {
       description:
         "只读:拉取创作者作品的观众评论(最新在前,带点赞数),带 total/hasMore 可翻页。当用户问「我最新视频的评论 / 观众在说什么 / 评论区反馈」时调它拿真实评论回答,不要瞎答。",
       inputSchema: CONTEXT_COMMENTS_PARAMS,
@@ -2137,8 +2140,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           hasMore: effOffset + rows.length < total,
         };
       },
-    }),
-    "context.knowledge": tool({
+    }, deps.humanizeError),
+    "context.knowledge": defineChatTool("context.knowledge", {
       description:
         "只读:搜索创作者的知识库(命中标题/摘要,返回 id/标题/片段)。当用户问「知识库里有没有 X / 我存过什么关于 X / 查一下我的资料」时调它拿真实数据来回答,不要瞎答。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_KNOWLEDGE_PARAMS,
@@ -2149,8 +2152,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         });
         return { kind: "context.knowledge", items };
       },
-    }),
-    "context.materials": tool({
+    }, deps.humanizeError),
+    "context.materials": defineChatTool("context.materials", {
       description:
         "只读:搜索创作者的素材库(assets,返回 id/名称/类型)。当用户问「我有哪些素材 / 素材库里有没有 X / 找一下我的图/视频/文件」时调它拿真实数据来回答,不要瞎答。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_MATERIALS_PARAMS,
@@ -2161,11 +2164,11 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         });
         return { kind: "context.materials", items };
       },
-    }),
+    }, deps.humanizeError),
     // ── [T-099b] 只读 context 详情工具(切片二)—— 单实体全字段。人机同源:结果同一份真值,
     //    模型读进上下文归纳,前端 CONTEXT_CARD_REGISTRY 直渲档案卡(模型只有指针权、无转录权)。
     //    §3 详情档预算:长文本字段恒 ≤200 字 + totalChars + 指针到全文工具(切片三)。
-    "context.project.detail": tool({
+    "context.project.detail": defineChatTool("context.project.detail", {
       description:
         "只读:拉取某个项目/作品的**全档**(立项 brief 全字段 + 当前阶段 + 发布状态 + 产物索引「每类产物有几个版本/多少字/何时更新」+ 最新指标摘要)。当用户问「这个项目做到哪了 / 它的策划是什么 / 有哪些产物 / 数据怎么样」时,先用 context.projects 拿到 id,再调它拿真实全档。产物正文不在这里(只给字数索引)——要读脚本/逐字稿全文用 context.artifact.text。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_PROJECT_DETAIL_PARAMS,
@@ -2193,8 +2196,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           },
         };
       },
-    }),
-    "context.positioning.detail": tool({
+    }, deps.humanizeError),
+    "context.positioning.detail": defineChatTool("context.positioning.detail", {
       description:
         "只读:拉取创作者的**定位档案全档**(定位母版 9 facets:人设/领域/人群/差异化/内容范围/不做什么/核心痛点/核心价值/表达风格 + 5 条下游硬约束 downstreamRules + 当前定位陈述 + 陈述版本数 + 抖音账号画像)。当用户问「我的定位是什么 / 我的人设 / 我在平台上是谁 / 定位约束」时调它拿真实定位档案回答。无入参(母版就一份)。纯读取上下文,不产候选、不写库(要改定位用 positioning.generate 产提案卡)。",
       inputSchema: CONTEXT_POSITIONING_DETAIL_PARAMS,
@@ -2215,8 +2218,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           positioning: raw,
         };
       },
-    }),
-    "context.knowledge.detail": tool({
+    }, deps.humanizeError),
+    "context.knowledge.detail": defineChatTool("context.knowledge.detail", {
       description:
         "只读:拉取某条知识库条目的**全档**(类型/标题/正文/出处/标签/战绩「被多少条内容引用过、是否用在已发布作品」/关联的其他知识)。当用户问「这条知识具体是什么 / 它被用过没 / 关联了哪些」时,先用 context.knowledge 搜到 id,再调它拿真实全档。正文很长时只回前 200 字 + 总字数(要读全文用 context.knowledge.text)。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_KNOWLEDGE_DETAIL_PARAMS,
@@ -2248,12 +2251,12 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           },
         };
       },
-    }),
+    }, deps.humanizeError),
     // ── [T-099c] 只读 context 全文工具(切片三,事故二根治)—— 产物清单 + 长文本窗口读取。
     //    人机同源:结果同一份真值,模型读进上下文,前端 CONTEXT_CARD_REGISTRY 直渲(产物清单卡 /
     //    全文阅读卡)。§3 全文档预算:窗口 maxChars 默认 4000/封顶 8000(execute 侧强制),返回带
     //    offset/totalChars/hasMore 真相字段,模型按需翻窗。
-    "context.artifacts": tool({
+    "context.artifacts": defineChatTool("context.artifacts", {
       description:
         "只读:列某个项目/作品的**产物清单**(每类产物「脚本/逐字稿/结构方案/论点树等」的 artifactType + 当前版本号 + 字数 + 更新时间)。当用户问「这个项目有哪些产物 / 脚本写了没 / 逐字稿多长」时,先用 context.projects 拿到 id,再调它。这里只给字数索引,不给正文——要读某类产物的正文全文用 context.artifact.text。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_ARTIFACTS_PARAMS,
@@ -2286,8 +2289,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           items: raw.items,
         };
       },
-    }),
-    "context.artifact.text": tool({
+    }, deps.humanizeError),
+    "context.artifact.text": defineChatTool("context.artifact.text", {
       description:
         "只读:按窗口读取某个项目某类产物的**正文全文**(脚本/逐字稿/结构方案等)。这是让你真正摸到作品正文的通路——绝不要拿标题脑补内容。入参 projectId + artifactType(从 context.artifacts 拿),offset/maxChars 控制窗口(默认 4000 字/封顶 8000)。返回 { artifactType, text(窗口正文), offset, totalChars, hasMore }:hasMore=true 时带 offset 继续翻窗读全,或如实告知还剩多少字没读。正文已在对话的全文阅读卡里渲给用户,你只有指针权(引用/归纳),别逐字复述整段。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_ARTIFACT_TEXT_PARAMS,
@@ -2326,8 +2329,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           ...window,
         };
       },
-    }),
-    "context.knowledge.text": tool({
+    }, deps.humanizeError),
+    "context.knowledge.text": defineChatTool("context.knowledge.text", {
       description:
         "只读:按窗口读取某条知识库条目的**长文正文全文**(逐字稿 transcript / 引用原文 reference / 笔记 note)。当 context.knowledge.detail 提示正文很长、或用户要「读全这条知识」时,用 id(从 context.knowledge 搜到)调它。offset/maxChars 控制窗口(默认 4000 字/封顶 8000),与 context.artifact.text 同窗口协议。返回 { title, knowledgeType, text(窗口), offset, totalChars, hasMore }:hasMore=true 时翻窗读全。正文已在全文阅读卡里渲给用户,你只有指针权,别逐字复述整段。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_KNOWLEDGE_TEXT_PARAMS,
@@ -2370,11 +2373,11 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           ...window,
         };
       },
-    }),
+    }, deps.humanizeError),
     // ── [T-099 切片四] 指标/发布类 context 工具 —— 清单读。人机同源:结果同一份真值,模型读进
     //    上下文归纳,前端 CONTEXT_CARD_REGISTRY 直渲(发布清单卡 / 指标表卡)。清单档预算:
     //    默认 20/封顶 50(clampContextLimit),带 total/offset/hasMore 真相字段。
-    "context.publications": tool({
+    "context.publications": defineChatTool("context.publications", {
       description:
         "只读:拉取创作者的发布记录清单(平台/链接/发布时间/关联作品标题),带 total/hasMore 可翻页(offset)。当用户问「我发过哪些 / 最近发布了什么 / 我的作品发在哪些平台」时调它拿真实发布数据回答。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_PUBLICATIONS_PARAMS,
@@ -2405,8 +2408,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           hasMore: effOffset + rows.length < total,
         };
       },
-    }),
-    "context.metrics": tool({
+    }, deps.humanizeError),
+    "context.metrics": defineChatTool("context.metrics", {
       description:
         "只读:拉取作品指标数据。给 projectId(从 context.projects 拿)→ 返回这条作品的播放/点赞/评论/分享快照 + 留存点;不给 → 返回账号级最近若干作品的指标行。当用户问「这条数据怎么样 / 播放多少 / 我最近作品的数据 / 留存曲线」时调它拿真实指标回答,别瞎报数。**账号级每行都带 projectId + 真实作品标题**:要拆某条(如「最高播放那条」)作品时,先从这里拿到它的 projectId,再调 context.artifact.text 传该 projectId 读它的真逐字稿——绝不凭标题/指标空想内容。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_METRICS_PARAMS,
@@ -2430,10 +2433,10 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           retention: raw.retention,
         };
       },
-    }),
+    }, deps.humanizeError),
     // ── [T-099 切片五] 经验/候选/校准类 context 工具 —— 清单读。人机同源:前端直渲(经验清单卡 /
     //    候选池清单卡 / 校准对照卡)。清单档预算同上。
-    "context.learnings": tool({
+    "context.learnings": defineChatTool("context.learnings", {
       description:
         "只读:拉取创作者的经验库(可复用方法论/教训),可按 query 搜、按 learningType/status 过滤。含 validated(已验证)/candidate(待验证)状态并逐条标注(系统注入只喂已验证的,这里能看全量)。当用户问「我沉淀了哪些经验 / 有没有关于 X 的经验 / 哪些经验还没验证」时调它拿真实经验回答。纯读取上下文,不产候选、不写库(要新增经验用 learning.capture 产卡)。",
       inputSchema: CONTEXT_LEARNINGS_PARAMS,
@@ -2453,8 +2456,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         });
         return { kind: "context.learnings", items: rows, total };
       },
-    }),
-    "context.candidates": tool({
+    }, deps.humanizeError),
+    "context.candidates": defineChatTool("context.candidates", {
       description:
         "只读:拉取创作者的选题候选池(title/status/预测分/来源),带 total/hasMore 可翻页(offset)。当用户问「我有哪些选题在排队 / 候选池里有什么 / 下一条做什么」时调它拿真实候选回答。纯读取上下文,不产候选、不写库(要生成新选题用 topic.generate 产卡)。",
       inputSchema: CONTEXT_CANDIDATES_PARAMS,
@@ -2485,8 +2488,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           hasMore: effOffset + rows.length < total,
         };
       },
-    }),
-    "context.predictions": tool({
+    }, deps.humanizeError),
+    "context.predictions": defineChatTool("context.predictions", {
       description:
         "只读:拉取创作者的校准对照(发布前盲预测 vs 真实表现,逐维度预测分/实绩分/偏差)+ 当前评分标准(rubric)版本摘要。当用户问「我的预测准不准 / 预测和实际差多少 / 校准做到哪了 / 当前评分标准是什么」时调它拿真实校准数据回答。纯读取上下文,不产候选、不写库。",
       inputSchema: CONTEXT_PREDICTIONS_PARAMS,
@@ -2504,7 +2507,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           total: raw.total,
         };
       },
-    }),
+    }, deps.humanizeError),
   };
 }
 
