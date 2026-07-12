@@ -123,7 +123,14 @@ export const attributionModelType = z.enum([
 ]);
 
 // §5 candidate.
-export const candidateSource = z.enum(["trend", "benchmark", "demand", "idea"]);
+// [T-235c] favorites:指定抖音收藏夹采集进池的跟拍候选(用户收藏 = 人肉选题信号)。
+export const candidateSource = z.enum([
+  "trend",
+  "benchmark",
+  "demand",
+  "idea",
+  "favorites",
+]);
 export const candidateStatus = z.enum(["pool", "promoted", "dropped"]);
 export const audienceSignalSource = z.enum([
   "comment",

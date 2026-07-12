@@ -86,20 +86,24 @@ export function isContentFillRoute(pathname: string): boolean {
 
 // [T-076] 项目两阶段化(SPEC 2026-07-03 §1):阶段条 6 项 → 2 项(脚本 | 复盘)。
 // 研究/策划/拍摄不再是独立阶段(职能由稿面的选题卡/弹药区承载),发布是稿面上的动作。
+// [T-254c] 「制作视频」段复活(SPEC 2026-07-11 §3.3):脚本之后、复盘(发布动作在稿面)
+// 之前 —— 提词录制 → 粗剪+SRT 上传 → AI 分场决策 → HyperFrames 渲染的执行层入口。
 const PROJECT_STAGES = [
   { id: "script", label: "脚本" },
+  { id: "production", label: "制作视频" },
   { id: "review", label: "复盘" },
 ] as const;
 
-// [T-076] 旧 stage 枚举 → 两段映射(展示层映射,枚举与 DB 存量 currentStage 不迁移):
-// brief/research/planning/script/production/publishing → 「脚本」段;review → 「复盘」段。
+// [T-076] 旧 stage 枚举 → 段映射(展示层映射,枚举与 DB 存量 currentStage 不迁移):
+// brief/research/planning/script/publishing → 「脚本」段;review → 「复盘」段。
+// [T-254c] production 不再折进「脚本」—— 映射回自己的「制作视频」段。
 // 未知值不映射(→ 全 pending 诚实,不硬凑)。
 const LEGACY_STAGE_SEGMENT: Record<string, string> = {
   brief: "script",
   research: "script",
   planning: "script",
   script: "script",
-  production: "script",
+  production: "production",
   publishing: "script",
   review: "review",
 };

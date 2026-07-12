@@ -267,6 +267,13 @@
       "when": 1782381590000,
       "tag": "0037_ai_messages_usage",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1782381600000,
+      "tag": "0038_favorites_folders",
+      "breakpoints": true
     }
   ]
 }

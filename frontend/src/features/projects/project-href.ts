@@ -12,10 +12,14 @@ export function projectWorkspaceHref(
   stage: ProjectStageName,
 ): string {
   // [T-076] 项目两阶段化(SPEC 2026-07-03):review → 复盘页;其余一律 → 稿面
-  // (选题/脚本/素材/发布动作全部发生在稿面;research/planning/production 不再有
-  // 独立工作台,遗留路由 301 落稿面)。
+  // (选题/脚本/素材/发布动作全部发生在稿面;research/planning 不再有独立工作台,
+  // 遗留路由 301 落稿面)。
+  // [T-254c] production「制作视频」页复活(SPEC 2026-07-11 §3.3)→ 指回自己的子路由。
   if (stage === "review") {
     return `/projects/${projectId}/review`;
+  }
+  if (stage === "production") {
+    return `/projects/${projectId}/production`;
   }
   return `/projects/${projectId}`;
 }

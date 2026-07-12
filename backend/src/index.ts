@@ -176,6 +176,12 @@ export {
   trendSources,
   TREND_SOURCES_DDL,
 } from "./schema/trend-sources";
+// [T-235c] 指定抖音收藏夹(收藏夹跟拍信号源)。
+export {
+  favoritesFolders,
+  favoritesItems,
+  FAVORITES_DDL,
+} from "./schema/favorites";
 // [T-235d] 正向归因回流(选题验证库)。
 export {
   topicAttributions,

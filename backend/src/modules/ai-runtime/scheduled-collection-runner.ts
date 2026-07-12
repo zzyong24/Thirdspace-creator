@@ -163,6 +163,8 @@ const SOURCE_LABEL: Record<string, string> = {
   benchmark: "对标他号作品",
   // [T-235a] 每天自动出题（topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool）。
   "topic.daily": "每日选题",
+  // [T-235c] 指定收藏夹采集（favorites sourceKind:登记夹按名匹配 → 拉夹内视频 → 限量进池）。
+  favorites: "收藏夹",
 };
 
 /**

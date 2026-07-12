@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "@fontsource-variable/noto-sans-sc";
 import "./globals.css";
 
+import { ExternalLinkOpener } from "@/components/shell/external-link-opener";
+
 export const metadata: Metadata = {
   title: "CreatorOS",
   description: "A personal workspace for planning and producing creator projects.",
@@ -20,6 +22,8 @@ export default function RootLayout({
     <html lang="en" className="font-sans" suppressHydrationWarning>
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* [T-257] 全局挂外链处理:覆盖 /activate 等 (creator) 外的所有页面(桌面运行时才生效)。 */}
+        <ExternalLinkOpener />
         {children}
       </body>
     </html>

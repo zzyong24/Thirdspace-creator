@@ -136,7 +136,8 @@ export interface CreateCandidateInput {
   angle?: string;
   // 人确认门的来源标注:默认 idea(手动新建);对话内 AI 出题(topic.generate)无 ai_task、
   // 只能落这条门,采纳时透传其真实 AI 渠道(trend|benchmark|demand)保住 provenance(T-149)。
-  source?: "trend" | "benchmark" | "demand" | "idea";
+  // [T-235c] favorites:指定收藏夹采集进池的跟拍候选(collector 直调,非 AI 渠道)。
+  source?: "trend" | "benchmark" | "demand" | "idea" | "favorites";
   contentRole?: "traffic" | "trust" | "conversion" | null;
   productAnchorId?: string | null;
 }
@@ -497,6 +498,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         benchmark: "对标拆解",
         demand: "受众需求",
         idea: "手动灵感",
+        favorites: "收藏夹跟拍", // [T-235c] 指定收藏夹采集进池
       };
       const sourceLabel = SOURCE_LABELS[dto.source] ?? dto.source;
       const briefText = dto.angle

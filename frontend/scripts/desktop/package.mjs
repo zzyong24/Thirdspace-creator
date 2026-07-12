@@ -13,7 +13,7 @@
 //   - 仅产本机 target。跨平台(win/mac-x64)需在对应平台跑本脚本。
 
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -53,6 +53,52 @@ const cargoBinDir = cargo === "cargo" ? "" : dirname(cargo);
 const pathEnv = cargoBinDir ? { PATH: `${cargoBinDir}${delimiter}${process.env.PATH ?? ""}` } : {};
 
 console.log("[desktop:package] CreatorOS 桌面端打包开始。");
+
+// [T-226] DMG 打包前清残留挂载/临时镜像。bundle_dmg.sh 一次中途崩(AppleScript/Finder 步)
+// 会留下 rw.PID.*.dmg 临时镜像 + 挂着的 /Volumes/CreatorOS* 卷;之后每次 DMG 打包都会因
+// 残留卷再崩,自我固化成「DMG 永远打不出来」(T-226 真因;报错里的 EcmaScript 警告是
+// next build 的无关 WARN)。此处 best-effort 预清:只 detach 镜像路径在本仓 bundle 目录
+// 下的挂载,并删两处 rw.*.dmg 残留;清不掉只告警不 fail(不动主线 app/updater 打包)。
+// 手动解卡:node scripts/desktop/package.mjs --preclean-only
+function precleanDmgLeftovers() {
+  const bundleDir = join(FRONTEND, "src-tauri", "target", "release", "bundle");
+  const info = spawnSync("hdiutil", ["info"], { encoding: "utf8" });
+  if (info.status === 0 && info.stdout) {
+    // hdiutil info 按 image 分段:image-path 行 + 其下 /dev/diskN 行。
+    let currentImage = "";
+    for (const line of info.stdout.split("\n")) {
+      const imgMatch = line.match(/^image-path\s*:\s*(.+)$/);
+      if (imgMatch) currentImage = imgMatch[1].trim();
+      const devMatch = line.match(/^(\/dev\/disk\d+)/);
+      if (devMatch && currentImage.startsWith(bundleDir)) {
+        const dev = devMatch[1].replace(/s\d+$/, "");
+        console.log(`[desktop:package] [T-226] 预清残留挂载:${dev}(${currentImage})`);
+        const r = spawnSync("hdiutil", ["detach", dev, "-force"], { stdio: "inherit" });
+        if (r.status !== 0) console.warn(`[desktop:package] ⚠ detach ${dev} 失败(继续,不阻塞)`);
+        currentImage = "";
+      }
+    }
+  }
+  for (const sub of ["macos", "dmg"]) {
+    const dir = join(bundleDir, sub);
+    if (!existsSync(dir)) continue;
+    for (const f of readdirSync(dir)) {
+      if (/^rw\.\d+\..*\.dmg$/.test(f)) {
+        console.log(`[desktop:package] [T-226] 删残留临时镜像:${join(sub, f)}`);
+        try {
+          rmSync(join(dir, f), { force: true });
+        } catch (e) {
+          console.warn(`[desktop:package] ⚠ 删除失败(继续):${e?.message ?? e}`);
+        }
+      }
+    }
+  }
+}
+precleanDmgLeftovers();
+if (process.argv.includes("--preclean-only")) {
+  console.log("[desktop:package] [T-226] --preclean-only:预清完成,退出。");
+  process.exit(0);
+}
 
 // 1) sidecar 二进制化(内部会跑 CREATOROS_DESKTOP=1 next build)。
 step("sidecar 二进制化", process.execPath, [join("scripts", "desktop", "build-sidecar.mjs")]);

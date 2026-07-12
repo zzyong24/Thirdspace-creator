@@ -49,6 +49,12 @@ const nextConfig: NextConfig = {
     "playwright",
     "playwright-core",
     "@playwright/test",
+    // [T-254c] video.render executor 运行时 require.resolve 定位 hyperframes CLI
+    // (dist/cli.js,子进程 spawn 跑渲染)与 gsap 单文件构建(注入渲染模板)。保持外置:
+    // 不打包、运行时从 node_modules 解析(Turbopack 对动态 resolve 会直接 Build Error,
+    // 必须字面量 specifier + 外置)。
+    "hyperframes",
+    "gsap",
   ],
 };
 

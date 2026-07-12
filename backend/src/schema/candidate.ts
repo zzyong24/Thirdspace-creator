@@ -34,7 +34,7 @@ export const candidates = pgTable("candidates", {
   accountId: text("account_id"), // [T-136 多账号] 按号隔离(soft FK → platform_accounts.id);nullable 稳定终态
   title: text("title").notNull(),
   angle: text("angle").notNull().default(""), // 切入角度
-  source: text("source").notNull(), // trend|benchmark|demand|idea
+  source: text("source").notNull(), // trend|benchmark|demand|idea|favorites([T-235c] 收藏夹跟拍)
   contentRole: text("content_role"), // traffic|trust|conversion (nullable)
   productAnchorId: text("product_anchor_id"), // soft FK → Product (monetization)
   positioningFit: integer("positioning_fit"), // 0–100, nullable (PositioningGate)

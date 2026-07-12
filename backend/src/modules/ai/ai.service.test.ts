@@ -204,6 +204,27 @@ describe("ai service", () => {
     );
   });
 
+  it("[T-254c] confirmTask on a video_decisions candidate flips succeeded without materializing any entity", async () => {
+    const { service, port, knowledge, materialLinks } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "video.decisions",
+      inputData: { projectId: "p-1", srtText: "1\n00:00:00,000 --> 00:00:02,000\n你好", script: "你好" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "video_decisions",
+      resultData: {
+        decisions: { scenes: [], cards: [], broll: [], subtitles: [], srtLines: [] },
+        inventory: [],
+      },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    // 采纳不落任何实体(成片经执行层确认卡入库,决策 JSON 本身不是库内产物)。
+    expect(port.createVersion).not.toHaveBeenCalled();
+    expect(knowledge.createKnowledge).not.toHaveBeenCalled();
+    expect(materialLinks.link).not.toHaveBeenCalled();
+  });
+
   it("confirmTask on a topic_card missing candidateId throws (no silent no-op)", async () => {
     const { service } = makeService(db);
     const task = await service.createTask(ctx, {

@@ -25,6 +25,10 @@ const mockClient = {
   createTrendSource: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   toggleTrendSource: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   removeTrendSource: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
+  // [T-235c] 指定收藏夹登记 CRUD(信号源弹窗 tab4)。
+  createFavoritesFolder: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
+  toggleFavoritesFolder: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
+  removeFavoritesFolder: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
   listScheduledJobs: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve([])),
   runScheduledJobNow: vi.fn((_i: unknown): Promise<unknown> => Promise.resolve({})),
   patchCandidate: vi.fn((i: unknown): Promise<unknown> => Promise.resolve(i)),
@@ -38,6 +42,9 @@ vi.mock("@/lib/contract-client", () => ({
     createTrendSource: (i: unknown) => mockClient.createTrendSource(i),
     toggleTrendSource: (i: unknown) => mockClient.toggleTrendSource(i),
     removeTrendSource: (i: unknown) => mockClient.removeTrendSource(i),
+    createFavoritesFolder: (i: unknown) => mockClient.createFavoritesFolder(i),
+    toggleFavoritesFolder: (i: unknown) => mockClient.toggleFavoritesFolder(i),
+    removeFavoritesFolder: (i: unknown) => mockClient.removeFavoritesFolder(i),
     listScheduledJobs: (i: unknown) => mockClient.listScheduledJobs(i),
     runScheduledJobNow: (i: unknown) => mockClient.runScheduledJobNow(i),
     patchCandidate: (i: unknown) => mockClient.patchCandidate(i),
@@ -59,6 +66,7 @@ import {
 import { CandidateCard } from "./topics-interactive-region";
 import type { CandidateResource } from "@creatoros/backend/modules/candidate";
 import type { TrendSourceResource } from "@creatoros/backend/modules/trend-sources";
+import type { FavoritesFolderResource } from "@creatoros/backend/modules/favorites";
 
 // 固定「今天」:本地 2026-07-11 零点(dayStartIso 由服务端算好传入,测试显式构造)。
 const DAY_START = new Date(2026, 6, 11, 0, 0, 0, 0);
@@ -86,6 +94,25 @@ function candidate(over: Partial<CandidateResource> = {}): CandidateResource {
       materialScore: null,
       productionDifficulty: null,
     },
+    createdAt: TODAY_ISO,
+    updatedAt: TODAY_ISO,
+    ...over,
+  };
+}
+
+// [T-235c] 指定收藏夹登记 fixture(信号源弹窗 tab4)。
+function favoritesFolder(
+  over: Partial<FavoritesFolderResource> = {},
+): FavoritesFolderResource {
+  return {
+    id: "ff-1",
+    userId: "user-a",
+    accountId: null,
+    name: "选题库",
+    collectsId: null,
+    note: null,
+    enabled: true,
+    lastSyncedAt: null,
     createdAt: TODAY_ISO,
     updatedAt: TODAY_ISO,
     ...over,
@@ -200,6 +227,10 @@ describe("[T-235e] 今日新选题条带", () => {
       ),
     ).toMatchObject({ badge: "实验", tone: "experiment", title: "选题标题" });
     expect(parseSupplyBadge(candidate({ source: "demand" })).badge).toBe("需求");
+    // [T-235c] 收藏夹跟拍候选徽标 = 「收藏」(STRIP_SOURCE_LABELS favorites 投影)。
+    expect(parseSupplyBadge(candidate({ source: "favorites" })).badge).toBe(
+      "收藏",
+    );
   });
 });
 
@@ -302,6 +333,90 @@ describe("[T-235e] 信号源弹窗", () => {
     expect(arg.body.url).toBe("https://news.ycombinator.com/rss");
     expect(arg.body.sourceType).toBeUndefined();
     expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  // ── [T-235c] tab4:指定收藏夹 ──────────────────────────────────────────────────
+  it("收藏夹 tab:引导文案 + 登记行(collectsId 匹配态徽标)+ 空态诚实", async () => {
+    const user = userEvent.setup();
+    render(
+      <SignalSourcesButton
+        benchmarkSources={[]}
+        trendSources={[]}
+        favoritesFolders={[
+          favoritesFolder({ id: "ff-1", name: "选题库" }), // 未匹配 → 待首采匹配
+          favoritesFolder({
+            id: "ff-2",
+            name: "对标爆款",
+            collectsId: "7372169017362909234", // 已按名匹配回填 → 已对上
+          }),
+        ]}
+      />,
+    );
+    await user.click(screen.getByTestId("signal-sources-trigger"));
+    await user.click(screen.getByTestId("signal-tab-favorites"));
+    // 引导文案:只采登记的指定夹,不碰其他收藏(隐私红线登记页就说清)。
+    expect(screen.getByTestId("favorites-folder-guide")).toHaveTextContent(
+      "只采集这里登记的指定夹",
+    );
+    const rows = screen.getAllByTestId("favorites-folder-row");
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent("待首采匹配");
+    expect(rows[1]).toHaveTextContent("已对上");
+  });
+
+  it("收藏夹登记 → client.createFavoritesFolder(夹名必填)→ refresh;空态提示", async () => {
+    const user = userEvent.setup();
+    render(
+      <SignalSourcesButton
+        benchmarkSources={[]}
+        trendSources={[]}
+        favoritesFolders={[]}
+        defaultTab="favorites"
+      />,
+    );
+    await user.click(screen.getByTestId("signal-sources-trigger"));
+    expect(screen.getByTestId("favorites-folder-empty")).toHaveTextContent(
+      "还没有登记收藏夹",
+    );
+    fireEvent.change(screen.getByLabelText("收藏夹名"), {
+      target: { value: "选题库" },
+    });
+    fireEvent.submit(screen.getByTestId("favorites-folder-form"));
+    await waitFor(() =>
+      expect(mockClient.createFavoritesFolder).toHaveBeenCalledTimes(1),
+    );
+    const arg = mockClient.createFavoritesFolder.mock.calls[0]![0] as {
+      body: { name: string };
+    };
+    expect(arg.body.name).toBe("选题库");
+    expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  it("收藏夹行停用/删除 → toggle/remove op(enabled 取反,folderId 透传)", async () => {
+    const user = userEvent.setup();
+    render(
+      <SignalSourcesButton
+        benchmarkSources={[]}
+        trendSources={[]}
+        favoritesFolders={[favoritesFolder({ id: "ff-1" })]}
+        defaultTab="favorites"
+      />,
+    );
+    await user.click(screen.getByTestId("signal-sources-trigger"));
+    await user.click(screen.getByRole("button", { name: "停用" }));
+    await waitFor(() =>
+      expect(mockClient.toggleFavoritesFolder).toHaveBeenCalledTimes(1),
+    );
+    const toggleArg = mockClient.toggleFavoritesFolder.mock.calls[0]![0] as {
+      params: { folderId: string };
+      body: { enabled: boolean };
+    };
+    expect(toggleArg.params.folderId).toBe("ff-1");
+    expect(toggleArg.body.enabled).toBe(false);
+    await user.click(screen.getByLabelText("删除收藏夹登记"));
+    await waitFor(() =>
+      expect(mockClient.removeFavoritesFolder).toHaveBeenCalledTimes(1),
+    );
   });
 
   it("黑马关键词空态:关键词跟随定位,指路定位中心(不编辑、不新建存储)", async () => {

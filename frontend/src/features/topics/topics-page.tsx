@@ -27,6 +27,8 @@ import type {
 } from "@creatoros/backend/modules/candidate";
 import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
 import type { TrendSourceResource } from "@creatoros/backend/modules/trend-sources";
+// [T-235c] 指定收藏夹登记(信号源弹窗第 4 tab)。
+import type { FavoritesFolderResource } from "@creatoros/backend/modules/favorites";
 
 import {
   TopicsWorkspace,
@@ -58,6 +60,8 @@ export type TopicsReadClient = Pick<
   | "listBenchmarkSources"
   // [T-235e] 信号源弹窗 tab1(网页信源)读源。
   | "listTrendSources"
+  // [T-235c] 信号源弹窗 tab4(指定收藏夹)读源。
+  | "listFavoritesFolders"
   // [T-235e] 供给链健康条:benchmark / topic.daily 作业 lastRunAt。
   | "listScheduledJobs"
   // [T-235e] 黑马关键词 tab(展示型 v1):定位 keywords。
@@ -85,6 +89,8 @@ export interface TopicsViewModel {
   readonly benchmarkSources?: BenchmarkSourceResource[];
   /** [T-235e] 已登记的网页信源(信号源弹窗 tab1)。可选:缺省空列表。 */
   readonly trendSources?: TrendSourceResource[];
+  /** [T-235c] 已登记的指定收藏夹(信号源弹窗 tab4)。可选:缺省空列表。 */
+  readonly favoritesFolders?: FavoritesFolderResource[];
   /** [T-235e] 供给链健康条的调度实绩;读不到 → undefined → 各环节显「—」诚实降级。 */
   readonly supplyHealth?: SupplyHealth;
   /** [T-235e] 本地自然日起点 ISO(服务端算好传入,渲染无 Date.now);缺省 → 今日条带空态。 */
@@ -128,6 +134,8 @@ const SOURCE_FILTER_KEYS: readonly CandidateSourceFilter[] = [
   "benchmark",
   "demand",
   "idea",
+  // [T-235c] 收藏夹跟拍候选(指定收藏夹采集进池)。
+  "favorites",
 ];
 
 function normalizeSourceFilter(
@@ -193,6 +201,17 @@ async function loadViewModel(
   } catch {
     trendSources = [];
   }
+  // [T-235c] 指定收藏夹登记(信号源弹窗 tab4)—— 同款独立 try/catch 诚实降级。
+  let favoritesFolders: FavoritesFolderResource[] = [];
+  try {
+    favoritesFolders = (await client.listFavoritesFolders({
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    })) as unknown as FavoritesFolderResource[];
+  } catch {
+    favoritesFolders = [];
+  }
   let supplyHealth: SupplyHealth | undefined;
   try {
     const jobsRaw = (await client.listScheduledJobs({
@@ -244,6 +263,7 @@ async function loadViewModel(
     pendingReview: null,
     benchmarkSources,
     trendSources,
+    favoritesFolders,
     supplyHealth,
     dayStartIso: dayStart.toISOString(),
     darkhorseKeywords,
@@ -265,6 +285,7 @@ export function TopicsView({
     pendingReview,
     benchmarkSources = [],
     trendSources = [],
+    favoritesFolders = [],
     supplyHealth,
     dayStartIso,
     darkhorseKeywords = [],
@@ -290,6 +311,7 @@ export function TopicsView({
         <SignalSourcesButton
           benchmarkSources={benchmarkSources}
           trendSources={trendSources}
+          favoritesFolders={favoritesFolders}
           darkhorseKeywords={darkhorseKeywords}
         />
       </header>

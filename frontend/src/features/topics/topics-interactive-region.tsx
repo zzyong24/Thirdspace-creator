@@ -69,7 +69,13 @@ const SORT_LABELS: Record<CandidateSortKey, string> = {
 
 // ── [T-244] 来源过滤(左栏来源行 → 候选池)────────────────────────────────────────
 // 契约 candidateSource 全枚举(contract/src/primitives.ts:126)—— `?source=` 的合法值域。
-export type CandidateSourceFilter = "trend" | "benchmark" | "demand" | "idea";
+// [T-235c] favorites:指定收藏夹采集进池的跟拍候选。
+export type CandidateSourceFilter =
+  | "trend"
+  | "benchmark"
+  | "demand"
+  | "idea"
+  | "favorites";
 
 /**
  * 左栏「选题来源」7 行(overview.sources key)→ candidates.source 枚举的映射。
@@ -94,6 +100,7 @@ const SOURCE_FILTER_LABELS: Record<CandidateSourceFilter, string> = {
   benchmark: "对标博主",
   demand: "观众需求",
   idea: "手动灵感",
+  favorites: "收藏夹跟拍", // [T-235c] 指定收藏夹采集进池
 };
 
 /** 拼 /topics URL:保留 sort,来源过滤有值才带(与 `?sort=` 同款 URL 导航范式)。 */

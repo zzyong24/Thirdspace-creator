@@ -31,6 +31,7 @@ import {
   Plus,
   Trash2,
   Sunrise,
+  Bookmark,
 } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
@@ -50,6 +51,8 @@ import { cn } from "@/lib/utils";
 import type { CandidateResource } from "@creatoros/backend/modules/candidate";
 import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
 import type { TrendSourceResource } from "@creatoros/backend/modules/trend-sources";
+// [T-235c] 指定收藏夹登记(信号源弹窗第 4 tab)。
+import type { FavoritesFolderResource } from "@creatoros/backend/modules/favorites";
 
 import {
   useMutation,
@@ -68,6 +71,7 @@ const STRIP_SOURCE_LABELS: Record<string, string> = {
   benchmark: "对标",
   demand: "需求",
   idea: "灵感",
+  favorites: "收藏", // [T-235c] 指定收藏夹采集进池的跟拍候选
 };
 
 export interface SupplyBadge {
@@ -492,6 +496,177 @@ function TrendSourcesTab({
   );
 }
 
+// ── ③ 信号源弹窗 tab4:收藏夹([T-235c] 指定抖音收藏夹登记,favorites.folders.* CRUD)────────
+function FavoritesFolderForm() {
+  const { pending, run, router } = useMutation();
+  const [name, setName] = React.useState("");
+  const valid = name.trim().length > 0;
+
+  function submit() {
+    if (!valid) return;
+    run(
+      () =>
+        client.createFavoritesFolder({
+          params: undefined,
+          query: undefined,
+          body: { name: name.trim() },
+        }),
+      () => {
+        setName("");
+        router.refresh();
+      },
+    );
+  }
+
+  return (
+    <form
+      data-testid="favorites-folder-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
+      className="flex flex-col gap-2.5 rounded-card border border-border bg-surface-subtle/40 p-3"
+    >
+      <FieldRow label="收藏夹名" required>
+        <Input
+          aria-label="收藏夹名"
+          placeholder="与抖音收藏夹同名,如:选题库"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </FieldRow>
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          size="sm"
+          disabled={pending || !valid}
+          className="h-8 gap-1.5 bg-brand px-3 text-xs text-brand-foreground hover:bg-brand/90"
+        >
+          <Plus className="size-3.5" />
+          {pending ? "登记中…" : "登记收藏夹"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function FavoritesFolderRow({
+  folder,
+}: {
+  readonly folder: FavoritesFolderResource;
+}) {
+  const { pending, run } = useMutation();
+
+  function toggle() {
+    run(() =>
+      client.toggleFavoritesFolder({
+        params: { folderId: folder.id },
+        query: undefined,
+        body: { enabled: !folder.enabled },
+      }),
+    );
+  }
+
+  function remove() {
+    run(() =>
+      client.removeFavoritesFolder({
+        params: { folderId: folder.id },
+        query: undefined,
+        body: undefined,
+      }),
+    );
+  }
+
+  return (
+    <li
+      data-testid="favorites-folder-row"
+      data-folder-id={folder.id}
+      data-enabled={folder.enabled ? "true" : "false"}
+      className="flex items-start justify-between gap-2 rounded-control border border-border bg-surface px-3 py-2"
+    >
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="flex items-center gap-1.5">
+          <span className="truncate text-sm font-medium text-foreground">
+            {folder.name}
+          </span>
+          {/* collectsId 已按名匹配回填 = 「已对上」;未匹配 = 等首采按名匹配(诚实状态,不装已连)。 */}
+          <Badge
+            variant={folder.collectsId ? "secondary" : "outline"}
+            className="shrink-0 text-[10px]"
+          >
+            {folder.collectsId ? "已对上" : "待首采匹配"}
+          </Badge>
+          <Badge
+            variant={folder.enabled ? "secondary" : "outline"}
+            className="shrink-0 text-[10px]"
+          >
+            {folder.enabled ? "启用" : "停用"}
+          </Badge>
+        </span>
+        {folder.note ? (
+          <span className="text-[11px] text-muted-foreground">{folder.note}</span>
+        ) : null}
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs"
+          disabled={pending}
+          onClick={toggle}
+        >
+          {folder.enabled ? "停用" : "启用"}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 text-muted-foreground"
+          aria-label="删除收藏夹登记"
+          disabled={pending}
+          onClick={remove}
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
+      </div>
+    </li>
+  );
+}
+
+function FavoritesFoldersTab({
+  folders,
+}: {
+  readonly folders: FavoritesFolderResource[];
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      {/* 引导文案:只采登记的指定夹,不碰其他收藏(隐私红线,登记页就说清)。 */}
+      <p
+        data-testid="favorites-folder-guide"
+        className="rounded-control bg-surface-subtle/60 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground"
+      >
+        在抖音建一个专门收藏夹(如『选题库』),把想跟拍的对标视频收进去;系统每天只采集这里登记的指定夹,不碰其他收藏。
+      </p>
+      <FavoritesFolderForm />
+      {folders.length === 0 ? (
+        <p
+          data-testid="favorites-folder-empty"
+          className="rounded-card border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground"
+        >
+          还没有登记收藏夹。登记与抖音同名的收藏夹,每天自动把夹内视频变成跟拍候选。
+        </p>
+      ) : (
+        <ul data-testid="favorites-folder-list" className="flex flex-col gap-2">
+          {folders.map((f) => (
+            <FavoritesFolderRow key={f.id} folder={f} />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // ── ③ 信号源弹窗 tab3:黑马关键词(展示型 v1 —— 关键词跟随定位,不新建后端存储)───────────
 function DarkhorseKeywordsTab({
   keywords,
@@ -537,18 +712,22 @@ function DarkhorseKeywordsTab({
 export function SignalSourcesButton({
   benchmarkSources,
   trendSources = [],
+  favoritesFolders = [],
   darkhorseKeywords = [],
   defaultTab = "web",
 }: {
   readonly benchmarkSources: BenchmarkSourceResource[];
   readonly trendSources?: TrendSourceResource[];
+  /** [T-235c] 已登记的指定收藏夹(第 4 tab)。可选:缺省空列表。 */
+  readonly favoritesFolders?: FavoritesFolderResource[];
   readonly darkhorseKeywords?: readonly string[];
   /** 打开弹窗时的初始 tab(默认网页信源;测试/深链可指定)。 */
-  readonly defaultTab?: "web" | "benchmark" | "darkhorse";
+  readonly defaultTab?: "web" | "benchmark" | "darkhorse" | "favorites";
 }) {
   const [open, setOpen] = React.useState(false);
   const { router } = useMutation();
-  const total = trendSources.length + benchmarkSources.length;
+  const total =
+    trendSources.length + benchmarkSources.length + favoritesFolders.length;
   return (
     <>
       <Button
@@ -579,7 +758,7 @@ export function SignalSourcesButton({
           <DialogHeader className="border-b px-5 py-4">
             <DialogTitle>选题信号源</DialogTitle>
             <DialogDescription>
-              系统每天从这些信号源自动找选题 —— 网页信源、对标博主、黑马关键词。
+              系统每天从这些信号源自动找选题 —— 网页信源、对标博主、黑马关键词、指定收藏夹。
             </DialogDescription>
           </DialogHeader>
           <Tabs
@@ -599,6 +778,11 @@ export function SignalSourcesButton({
                 <Zap className="size-3.5" />
                 黑马关键词
               </TabsTrigger>
+              {/* [T-235c] 指定收藏夹:抖音里随手收藏 = 人肉选题信号,系统只采登记的夹。 */}
+              <TabsTrigger value="favorites" data-testid="signal-tab-favorites">
+                <Bookmark className="size-3.5" />
+                收藏夹
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="web" className="min-h-0 flex-1 overflow-y-auto">
               <TrendSourcesTab sources={trendSources} />
@@ -615,6 +799,13 @@ export function SignalSourcesButton({
               className="min-h-0 flex-1 overflow-y-auto"
             >
               <DarkhorseKeywordsTab keywords={darkhorseKeywords} />
+            </TabsContent>
+            <TabsContent
+              value="favorites"
+              className="min-h-0 flex-1 overflow-y-auto"
+            >
+              {/* [T-235c] 指定收藏夹登记(favorites.folders.* CRUD,采集 9:50 定时到点)。 */}
+              <FavoritesFoldersTab folders={favoritesFolders} />
             </TabsContent>
           </Tabs>
           <DialogFooter className="border-t">

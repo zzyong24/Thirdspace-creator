@@ -109,11 +109,24 @@ async function resolvePlaywrightChromium(): Promise<string> {
   );
 }
 
-/** 解析 npm 包磁盘路径(运行时解析,包名拼接防打包器静态追踪)。 */
-function resolvePkgFile(pkgParts: string[], relFile: string): string {
-  const require = createRequire(import.meta.url);
-  const pkgJson = require.resolve(pkgParts.join("") + "/package.json");
-  return path.join(path.dirname(pkgJson), relFile);
+/** 解析 hyperframes CLI 磁盘路径(运行时解析)。
+ * [T-254c 真机逮到] 原版用「包名拼接 + 动态 require.resolve」防静态追踪 —— Turbopack
+ * 对 createRequire().resolve(<动态串>) 直接 Build Error(Module not found: <dynamic>),
+ * 整个 dev server 起不来(单测过≠live 生效的又一例)。正解走 playwright 同款先例:
+ * **字面量 specifier + next.config serverExternalPackages 外置 "hyperframes"**,
+ * bundler 静态可解析但不打包,运行时从 node_modules 解析。 */
+function resolveHyperframesCli(): string {
+  const nodeRequire = createRequire(import.meta.url);
+  const pkgJson = nodeRequire.resolve("hyperframes/package.json");
+  // hyperframes package.json 无 exports 字段,bin = dist/cli.js 直接 join。
+  return path.join(path.dirname(pkgJson), "dist/cli.js");
+}
+
+/** gsap 单文件构建磁盘路径(同上:字面量 specifier + 外置,运行时解析)。 */
+function resolveGsapMinJs(): string {
+  const nodeRequire = createRequire(import.meta.url);
+  const pkgJson = nodeRequire.resolve("gsap/package.json");
+  return path.join(path.dirname(pkgJson), "dist/gsap.min.js");
 }
 
 async function renderWithHyperframesCli(opts: {
@@ -124,8 +137,7 @@ async function renderWithHyperframesCli(opts: {
   signal: AbortSignal;
   onProgress: (line: string) => void;
 }): Promise<void> {
-  // hyperframes CLI:bin = dist/cli.js(package.json 无 exports 字段,直接 join)。
-  const cliJs = resolvePkgFile(["hyper", "frames"], "dist/cli.js");
+  const cliJs = resolveHyperframesCli();
   await new Promise<void>((resolve, reject) => {
     const child = spawn(
       process.execPath,
@@ -211,7 +223,7 @@ export function createDefaultVideoRenderEngine(): VideoRenderEngine {
     },
     resolveChromium: resolvePlaywrightChromium,
     async resolveGsapFile() {
-      return resolvePkgFile(["g", "sap"], "dist/gsap.min.js");
+      return resolveGsapMinJs();
     },
     renderComposition: renderWithHyperframesCli,
   };

@@ -78,7 +78,8 @@ export function createCandidateTransport(
           const b = (body ?? {}) as {
             title: string;
             angle?: string;
-            source?: "trend" | "benchmark" | "demand" | "idea";
+            // [T-235c] favorites:收藏夹跟拍候选(contract candidateSource 同步扩枚举)。
+            source?: "trend" | "benchmark" | "demand" | "idea" | "favorites";
             contentRole?: "traffic" | "trust" | "conversion";
             productAnchorId?: string;
           };

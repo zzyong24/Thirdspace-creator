@@ -93,6 +93,11 @@ export {
   trendSourceResource,
   type TrendSourceResource,
 } from "./resources/trend-source";
+// [T-235c] 指定抖音收藏夹(收藏夹跟拍信号源)。
+export {
+  favoritesFolderResource,
+  type FavoritesFolderResource,
+} from "./resources/favorites-folder";
 // [T-235d] 选题归因(正向归因回流,选题验证库)。
 export {
   topicAttributionResource,

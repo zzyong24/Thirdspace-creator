@@ -215,6 +215,9 @@ import {
   fetchDouyinUserPosts,
   // [T-235b] 黑马雷达搜索(按关键词搜近1天最多赞,页内 fetch 借登录态 + gateway 限流)。
   fetchDouyinSearchVideos,
+  // [T-235c] 指定收藏夹采集(收藏夹列表按名匹配 + 夹内视频,页内 fetch 借登录态 + gateway 限流)。
+  fetchDouyinCollectsFolders,
+  fetchDouyinCollectsVideos,
 } from "@/server/ingestion/douyin-cdp";
 // [T-232] 评论批量采集预算规划(纯逻辑):未采优先 + 爆款优先排序 + 全量/截断诚实 message。
 import {
@@ -441,6 +444,13 @@ import {
   TREND_SOURCES_OP_IDS,
   type TrendSourcesService,
 } from "@creatoros/backend/modules/trend-sources";
+// [T-235c] 指定抖音收藏夹(收藏夹跟拍信号源)。
+import {
+  createFavoritesService,
+  createFavoritesTransport,
+  FAVORITES_OP_IDS,
+  type FavoritesService,
+} from "@creatoros/backend/modules/favorites";
 // [T-235d] 选题归因(正向归因回流 —— 选题验证库;读侧 1 op + runner 写侧薄层)。
 import {
   createTopicAttributionService,
@@ -576,6 +586,9 @@ const PERSISTED_OPS = new Set<string>([
   // [T-235b] 热点信源 CRUD(热点多源证据,SPEC 2026-07-11 daily-topic-autopilot §2.2)。
   // user/account-scoped,出题时逐 enabled 源抓信号拼 trend brief。
   ...TREND_SOURCES_OP_IDS,
+  // [T-235c] 指定收藏夹登记 CRUD(收藏夹跟拍信号源)。user/account-scoped,采集 job 按名匹配
+  // 拉夹内视频 → 限量进候选池(source=favorites)。
+  ...FAVORITES_OP_IDS,
   // [T-235d] 选题归因只读(正向归因回流,SPEC 2026-07-11 daily-topic-autopilot §2.4)。
   // user/account-scoped;写侧由 self.detail 采集尾的归因 runner 落库,不走契约 op。
   ...TOPIC_ATTRIBUTION_OP_IDS,
@@ -857,6 +870,8 @@ const MATERIAL_LINKS_OPS = new Set<string>(MATERIAL_LINKS_OP_IDS);
 const BENCHMARK_OPS = new Set<string>(BENCHMARK_OP_IDS);
 // [T-235b] 热点信源 CRUD ops 路由集。
 const TREND_SOURCES_OPS = new Set<string>(TREND_SOURCES_OP_IDS);
+// [T-235c] 指定收藏夹登记 CRUD ops 路由集。
+const FAVORITES_OPS = new Set<string>(FAVORITES_OP_IDS);
 // [T-235d] 选题归因只读 ops 路由集。
 const TOPIC_ATTRIBUTION_OPS = new Set<string>(TOPIC_ATTRIBUTION_OP_IDS);
 
@@ -958,6 +973,8 @@ interface PersistenceBundle {
   benchmark: Transport;
   // [T-235b] 热点信源 CRUD transport(热点多源证据)。
   trendSources: Transport;
+  // [T-235c] 指定收藏夹登记 CRUD transport(收藏夹跟拍信号源)。
+  favoritesFolders: Transport;
   // [T-235d] 选题归因只读 transport(正向归因回流)。
   topicAttribution: Transport;
   // Query services (module Q, Wave 4): the composite transport for the 3 page
@@ -4334,6 +4351,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     nextId: deps.nextId,
   });
 
+  // [T-235c] 指定收藏夹服务(收藏夹跟拍信号源)。collectors["favorites"] 用它读 enabled 登记夹 +
+  //   落台账/进池流转;composite 用它服务 4 个登记 CRUD op。clock/ids 共享 deterministic deps。
+  const favoritesService: FavoritesService = createFavoritesService({
+    db,
+    now: deps.now,
+    nextId: deps.nextId,
+  });
+
   // [T-235d] 选题归因服务(正向归因回流)。self.detail 采集尾的归因 runner 用它做幂等锚
   //   (hasAttribution)+ 落库(saveAttribution);composite 用它服务 topics.attributions.list。
   //   [gate-F1] 与 learnings 零接触:独立表 topic_attributions,由发布实绩触发。
@@ -5364,6 +5389,128 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         report,
       });
     },
+    // [T-235c] 指定收藏夹采集(favorites):读该号登记的指定收藏夹(信号源→收藏夹)→ 拉本人
+    //   收藏夹列表按 name 精确匹配(回填 collectsId + lastSyncedAt)→ 逐匹配夹拉夹内视频
+    //   (≤50/夹)→ favorites_items 幂等台账((user, aweme_id) 去重只插新)→ **≤3/run 限量进池**
+    //   (照 benchmark-teardown maxPromotePerRun 语义,防灌库)→ createCandidate(source=favorites)
+    //   + markItemPromoted 溯源。**只采登记的指定夹,不碰其他收藏**(隐私红线)。
+    //   诚实降级:无登记夹 → 0 跑 + 引导 message(非失败);抖音上找不到同名夹 → message 点名;
+    //   验证码 → fetch 函数内返空跳过。未登录 → DouyinNotLoggedInError 直接上抛(runner
+    //   isNotLoggedInError → needs_reconnect,与 self.metrics/comments 同款路径)。
+    favorites: async (ctx, _target, report) => {
+      report({ stage: "favorites", processed: 0, total: null, message: "读取登记的收藏夹" });
+      const folders = await favoritesService.listEnabledFolders(ctx);
+      if (folders.length === 0) {
+        // 诚实降级(照 benchmark collector 空源 0 跑风格):没登记 = 没开这路信号,引导去登记。
+        return {
+          itemsNew: 0,
+          itemsUpdated: 0,
+          message:
+            "未指定收藏夹:在选题中心「信号源→收藏夹」登记要采集的抖音收藏夹(建议在抖音建专门收藏夹如「选题库」)",
+        };
+      }
+
+      // ① 拉本人收藏夹列表(未登录在此抛 DouyinNotLoggedInError → needs_reconnect;验证码返空)。
+      report({ stage: "favorites", processed: 0, total: folders.length, message: "拉取抖音收藏夹列表" });
+      const remoteFolders = await fetchDouyinCollectsFolders({
+        authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
+        gateway: douyinGateway,
+      });
+      const remoteByName = new Map(remoteFolders.map((f) => [f.name, f]));
+
+      // ② 按 name 精确匹配登记夹;匹配到回填 collectsId + lastSyncedAt,匹配不到记 message 点名。
+      const messages: string[] = [];
+      const matched: { id: string; name: string; collectsId: string }[] = [];
+      for (const folder of folders) {
+        const remote = remoteByName.get(folder.name);
+        if (!remote) {
+          messages.push(
+            `抖音上找不到收藏夹「${folder.name}」,请在抖音建同名夹或改登记名`,
+          );
+          continue;
+        }
+        matched.push({ id: folder.id, name: folder.name, collectsId: remote.collectsId });
+        try {
+          await favoritesService.updateFolderSync(ctx, folder.id, {
+            collectsId: remote.collectsId,
+            lastSyncedAt: deps.now(),
+          });
+        } catch (err) {
+          // 回填失败只丢诊断字段(下轮重匹配即可),不阻断该夹采集。
+          console.error(`[favorites] 夹「${folder.name}」回填 collectsId 失败:`, err);
+        }
+      }
+
+      // ③ 逐匹配夹拉视频 → 幂等落台账(单夹失败跳过不崩整批;未登录仍上抛保持 needs_reconnect)。
+      let recordedNew = 0;
+      for (let i = 0; i < matched.length; i++) {
+        const folder = matched[i]!;
+        report({
+          stage: "favorites",
+          processed: i,
+          total: matched.length,
+          message: `采集收藏夹「${folder.name}」`,
+        });
+        try {
+          const videos = await fetchDouyinCollectsVideos({
+            authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
+            collectsId: folder.collectsId,
+            maxItems: 50,
+            gateway: douyinGateway,
+          });
+          const { recordedNew: n } = await favoritesService.recordItems(
+            ctx,
+            folder.id,
+            videos.map((v) => ({
+              awemeId: v.awemeId,
+              // title = desc 截 80(展示/进池标题;空 desc 进池侧再兜「收藏夹视频」)。
+              title: v.description.slice(0, 80),
+              authorNickname: v.authorNickname,
+              url: `https://www.douyin.com/video/${v.awemeId}`,
+            })),
+          );
+          recordedNew += n;
+        } catch (err) {
+          if (err instanceof DouyinNotLoggedInError) throw err; // 登录态断 → needs_reconnect
+          // 单夹失败(验证码外的网络/解析)→ 跳过该夹,不崩整批(诚实记错,同 benchmark 单源纪律)。
+          console.error(`[favorites] 收藏夹「${folder.name}」采集失败,跳过该夹:`, err);
+          messages.push(`收藏夹「${folder.name}」本次采集失败,已跳过`);
+        }
+      }
+
+      // ④ 限量进池:pending 台账 FIFO 取 ≤3/run → createCandidate(source=favorites)→ 标 promoted。
+      //   单条失败跳过(候选门失败不吞台账;下轮 pending 仍在)。
+      const folderNameById = new Map(folders.map((f) => [f.id, f.name]));
+      const pending = await favoritesService.listPendingItems(ctx, 3);
+      let promoted = 0;
+      for (const item of pending) {
+        const folderName = folderNameById.get(item.folderId) ?? "收藏夹";
+        try {
+          const cand = await candidateService.createCandidate(ctx, {
+            title: item.title || "收藏夹视频",
+            angle: `收藏夹「${folderName}」跟拍参考 · @${item.authorNickname || "未知作者"} · ${item.url}`,
+            source: "favorites",
+          });
+          await favoritesService.markItemPromoted(ctx, item.id, cand.id);
+          promoted += 1;
+        } catch (err) {
+          console.error(`[favorites] 台账条目 ${item.id} 进池失败(下轮重试):`, err);
+        }
+      }
+
+      report({
+        stage: "favorites",
+        processed: matched.length,
+        total: matched.length,
+        message: `收藏夹采集完成:台账新增 ${recordedNew} 条,进池 ${promoted} 条`,
+      });
+      // itemsNew=台账真新增;itemsUpdated=本轮真进池数(诚实);message 汇总匹配失败/引导。
+      return {
+        itemsNew: recordedNew,
+        itemsUpdated: promoted,
+        message: messages.length > 0 ? messages.join(";") : undefined,
+      };
+    },
   };
 
   // dispatchScheduledCollection 实体:装 runner deps 后经 [gate-F5] 采集串行闸挂到链尾
@@ -5723,6 +5870,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const benchmark = createBenchmarkTransport(() => benchmarkService);
   // [T-235b] 热点信源 CRUD transport(trendSourcesService 已在 collectors 装配前创建,复用同一实例)。
   const trendSources = createTrendSourcesTransport(() => trendSourcesService);
+  // [T-235c] 指定收藏夹登记 CRUD transport(favoritesService 已在 collectors 装配前创建,复用同一实例)。
+  const favoritesFolders = createFavoritesTransport(() => favoritesService);
   // [T-235d] 选题归因只读 transport(topicAttributionService 已在 collectors 装配前创建,复用同一实例)。
   const topicAttribution = createTopicAttributionTransport(
     () => topicAttributionService,
@@ -8155,6 +8304,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     materialLinks,
     benchmark,
     trendSources,
+    favoritesFolders,
     topicAttribution,
     queryServices,
     publishingCenter,
@@ -8281,6 +8431,11 @@ async function getBenchmark(): Promise<Transport> {
 // [T-235b] 热点信源 CRUD transport 访问器。
 async function getTrendSources(): Promise<Transport> {
   return (await getBundle()).trendSources;
+}
+
+// [T-235c] 指定收藏夹登记 CRUD transport 访问器。
+async function getFavoritesFolders(): Promise<Transport> {
+  return (await getBundle()).favoritesFolders;
 }
 
 // [T-235d] 选题归因只读 transport 访问器。
@@ -8621,6 +8776,13 @@ export const compositeTransport: Transport = {
     if (TREND_SOURCES_OPS.has(endpoint.id)) {
       const trendSources = await getTrendSources();
       return trendSources.request(endpoint, input, ctx);
+    }
+    // [T-235c] 指定收藏夹登记 CRUD(收藏夹跟拍信号源)—— 4 ops(list/create/toggle/remove)由模块
+    // 自有 user/account-scoped transport 服务,同一 pglite store。toggle/remove ownership-gated
+    // (跨用户 → OwnershipError → 404)。No ctx ⇒ AuthenticationError。
+    if (FAVORITES_OPS.has(endpoint.id)) {
+      const favoritesFolders = await getFavoritesFolders();
+      return favoritesFolders.request(endpoint, input, ctx);
     }
     // [T-235d] 选题归因只读(正向归因回流)—— topics.attributions.list 由模块自有
     // user/account-scoped transport 服务,同一 pglite store。No ctx ⇒ AuthenticationError。

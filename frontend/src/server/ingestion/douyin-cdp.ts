@@ -2582,3 +2582,291 @@ export async function ingestComments(
   await ports.completeRun(run.id);
   return { runId: run.id, received: records.length, written, skipped };
 }
+
+// ---------------------------------------------------------------------------
+// [T-235c] 指定抖音收藏夹采集 —— 用户在抖音建专门收藏夹(如「选题库」),把想跟拍的对标
+//   视频收进去;系统只采集登记的指定夹,不碰其他收藏(隐私红线)。复用 fetchDouyinSearchVideos
+//   (T-235b)同款范式:openContext(.auth/ 登录态)+ 先导航收藏 tab 页(建立 referer/风控
+//   上下文)+ 页内 fetch(credentials:include 借登录态)+ douyinGateway 限流(每页 acquire
+//   一次)+ 验证码检测跳过(返 [],不硬闯)。**只读自己账号的收藏列表**(登录态即本人授权)。
+// ---------------------------------------------------------------------------
+
+/** 一个抖音收藏夹(collects/list 程序化抽取)。 */
+export interface DouyinCollectsFolder {
+  /** 收藏夹 id(**必须用 collects_id_str** —— 数字版 collects_id 超 2^53 精度丢失)。 */
+  collectsId: string;
+  name: string;
+  totalCount: number;
+  /** 最近收藏时刻(unix 秒,抖音原值;缺失 0)。 */
+  lastCollectTime: number;
+}
+
+/** 收藏夹内一条视频(collects/video/list 程序化抽取,数值兜底 0)。 */
+export interface DouyinFavoriteVideo {
+  awemeId: string;
+  description: string;
+  diggCount: number;
+  commentCount: number;
+  collectCount: number;
+  shareCount: number;
+  /** 时长(ms,抖音 duration 原值)。 */
+  durationMs: number;
+  /** 发布时间(unix 秒,抖音原值;缺失 0)。 */
+  createTime: number;
+  authorSecUid: string;
+  authorNickname: string;
+}
+
+// collects 接口公参(SEARCH_ITEM_API / AWEME_DETAIL_API 同款 webapp 公参;页内 fetch 借登录态)。
+const COLLECTS_COMMON_QUERY =
+  "device_platform=webapp&aid=6383&channel=channel_pc_web&pc_client_type=1" +
+  "&version_code=170400&version_name=17.4.0&cookie_enabled=true" +
+  "&screen_width=1920&screen_height=1080&browser_language=zh-CN&browser_platform=Win32" +
+  "&browser_name=Chrome&browser_version=126.0.0.0&browser_online=true&platform=PC";
+
+// 收藏夹列表(真机验证 200:collects_list[] + cursor/has_more/total_number)。
+const COLLECTS_LIST_API =
+  `https://www.douyin.com/aweme/v1/web/collects/list/?${COLLECTS_COMMON_QUERY}` +
+  "&cursor={cursor}&count=20";
+
+// 夹内视频列表(真机验证 200:aweme_list[] + cursor/has_more)。
+const COLLECTS_VIDEO_LIST_API =
+  `https://www.douyin.com/aweme/v1/web/collects/video/list/?${COLLECTS_COMMON_QUERY}` +
+  "&collects_id={collectsId}&cursor={cursor}&count=20";
+
+/** 解析 collects/list JSON(纯函数可单测)。collects_id_str 优先(精度),缺则 String(collects_id)。 */
+export function parseCollectsList(json: unknown): DouyinCollectsFolder[] {
+  const root = (json ?? {}) as Record<string, unknown>;
+  const list = Array.isArray(root.collects_list) ? (root.collects_list as unknown[]) : [];
+  const out: DouyinCollectsFolder[] = [];
+  for (const item of list) {
+    const c = (item ?? {}) as Record<string, unknown>;
+    // 身份键:collects_id_str 优先 —— 数字版 collects_id 是 19 位大整数,JSON.parse 后精度丢失。
+    const collectsId = str(c.collects_id_str) || (c.collects_id != null ? String(c.collects_id) : "");
+    if (!collectsId) continue; // 无 id 的脏条目跳过
+    out.push({
+      collectsId,
+      name: str(c.collects_name).trim(),
+      totalCount: num(c.total_number),
+      lastCollectTime: num(c.last_collect_time),
+    });
+  }
+  return out;
+}
+
+/** 解析 collects/video/list JSON(纯函数可单测,字段兜底同 parseSearchVideoList)。 */
+export function parseCollectsVideoList(json: unknown): DouyinFavoriteVideo[] {
+  const root = (json ?? {}) as Record<string, unknown>;
+  const list = Array.isArray(root.aweme_list) ? (root.aweme_list as unknown[]) : [];
+  const out: DouyinFavoriteVideo[] = [];
+  for (const item of list) {
+    const a = (item ?? {}) as Record<string, unknown>;
+    const awemeId = str(a.aweme_id);
+    if (!awemeId) continue; // 非视频条目/脏数据跳过
+    const stats = (a.statistics ?? {}) as Record<string, unknown>;
+    const author = (a.author ?? {}) as Record<string, unknown>;
+    const video = (a.video ?? {}) as Record<string, unknown>;
+    out.push({
+      awemeId,
+      description: str(a.desc).trim(),
+      diggCount: num(stats.digg_count),
+      commentCount: num(stats.comment_count),
+      collectCount: num(stats.collect_count),
+      shareCount: num(stats.share_count),
+      // duration 顶层为主(collects/video/list 真机形状),video.duration 兜底(同 search 条目)。
+      durationMs: num(a.duration) || num(video.duration),
+      createTime: num(a.create_time),
+      authorSecUid: str(author.sec_uid),
+      authorNickname: str(author.nickname),
+    });
+  }
+  return out;
+}
+
+export interface FetchCollectsFoldersOptions {
+  authDir: string;
+  gateway?: DouyinChannelGate;
+}
+
+export interface FetchCollectsVideosOptions {
+  authDir: string;
+  /** 目标收藏夹 id(collects_id_str)。 */
+  collectsId: string;
+  /** 最多取几条(默认 50,防灌库)。 */
+  maxItems?: number;
+  gateway?: DouyinChannelGate;
+}
+
+/** fetchDouyinCollects* 的可注入依赖(默认真 openContext(.auth/, headless);单测注 fake)。 */
+export interface FetchCollectsDeps {
+  openContext?: (
+    authDir: string,
+    headless: boolean,
+  ) => Promise<SearchCapableContext>;
+}
+
+// 收藏 tab 页(建立 referer/风控上下文后再页内 fetch collects 接口 —— 真机验证的前置导航)。
+const COLLECTS_TAB_URL = "https://www.douyin.com/user/self?showTab=favorite_collection";
+
+// 收藏夹列表分页上限(防 has_more 恒真死循环;20/页 × 5 页 = 100 夹,远超个人现实上限)。
+const COLLECTS_LIST_MAX_PAGES = 5;
+
+/** 登录校验 + 导航收藏 tab + 验证码检测(collects 两个 fetch 函数共用前置)。
+ *  未登录抛 DouyinNotLoggedInError;验证码命中返 null(调用方返空跳过,不硬闯)。 */
+async function openCollectsPage(
+  ctx: SearchCapableContext,
+  label: string,
+): Promise<SearchCapablePage | null> {
+  // 登录态校验(页内 fetch credentials:include 要借它;未登录 → 提示扫码,同 search/user-posts)。
+  const cookies = await ctx.cookies("https://www.douyin.com");
+  const loggedIn = cookies.some(
+    (c) => c.name === "sessionid" || c.name === "sessionid_ss",
+  );
+  if (!loggedIn) throw new DouyinNotLoggedInError();
+  const page = ctx.pages()[0] ?? (await ctx.newPage());
+
+  // 先落到收藏 tab 页(建立 referer/风控上下文),再页内 fetch API(T-235b 搜索同款)。
+  await gotoWithRetry(page as unknown as GotoCapablePage, COLLECTS_TAB_URL, {
+    timeoutMs: 60_000,
+    label,
+  });
+  await page.waitForTimeout(3000); // 等页面就绪(建立会话上下文)
+
+  // 验证码检测:body 前 300 字含「验证」→ 跳过本次采集(返 null,不硬闯;调用方记日志)。
+  const bodyHead = await page
+    .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
+    .catch(() => "");
+  if (bodyHead.includes("验证")) {
+    console.warn(`[favorites] ${label}命中验证码,跳过(返回空)`);
+    return null;
+  }
+  return page;
+}
+
+/** 页内 fetch 一页 collects JSON(credentials:include 借登录态;fn 自包含,只引用页面全局)。 */
+function fetchCollectsJson(
+  page: SearchCapablePage,
+  url: string,
+): Promise<unknown> {
+  return page.evaluate<unknown, string>(async (u: string) => {
+    try {
+      const r = await fetch(u, { credentials: "include" });
+      return (await r.json()) as unknown;
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : String(e) };
+    }
+  }, url);
+}
+
+/** collects 接口 has_more 读取(number/boolean 双形状兜底;缺失当 false 防死循环)。 */
+function collectsHasMore(json: unknown): boolean {
+  const root = (json ?? {}) as Record<string, unknown>;
+  return Boolean(root.has_more);
+}
+
+/** collects 接口下一页 cursor(缺失 → -1 = 停翻)。 */
+function collectsNextCursor(json: unknown): number {
+  const root = (json ?? {}) as Record<string, unknown>;
+  const v = root.cursor;
+  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+  return Number.isFinite(n) ? n : -1;
+}
+
+/**
+ * 拉本人全部收藏夹列表(collects/list,cursor 分页 ≤5 页防死循环)。复用 .auth/ 登录态、
+ * douyinGateway 限流(**每页 acquire 一次** creator-center gate)。未登录抛
+ * DouyinNotLoggedInError;**验证码命中 → 返 [] 跳过**(不硬闯风控)。openContext 端口注入,
+ * 故解析/未登录/验证码/分页分支可确定性单测。**只读自己账号的收藏夹元数据。**
+ */
+export async function fetchDouyinCollectsFolders(
+  opts: FetchCollectsFoldersOptions,
+  deps: FetchCollectsDeps = {},
+): Promise<DouyinCollectsFolder[]> {
+  const gateway = opts.gateway ?? instantNoopGateway;
+  const openCtx =
+    deps.openContext ??
+    ((authDir: string, headless: boolean) =>
+      openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
+  const ctx = await openCtx(opts.authDir, true);
+  try {
+    const page = await openCollectsPage(ctx, "收藏夹列表");
+    if (!page) return []; // 验证码 → 诚实空,调用方跳过本次采集
+
+    const byId = new Map<string, DouyinCollectsFolder>();
+    let cursor = 0;
+    for (let i = 0; i < COLLECTS_LIST_MAX_PAGES; i++) {
+      // 每翻一页 acquire 一次限流网关(降频 ≥ minInterval,防高频撞风控,同 user-posts 纪律)。
+      const json = await withDouyinChannel(gateway, "creator-center", () =>
+        fetchCollectsJson(
+          page,
+          COLLECTS_LIST_API.replace("{cursor}", String(cursor)),
+        ),
+      );
+      for (const f of parseCollectsList(json)) byId.set(f.collectsId, f);
+      if (!collectsHasMore(json)) break;
+      const next = collectsNextCursor(json);
+      if (next < 0 || next === cursor) break; // cursor 不前进兜底,防死循环
+      cursor = next;
+    }
+    const folders = [...byId.values()];
+    console.log(`[favorites] fetchDouyinCollectsFolders → ${folders.length} 个收藏夹`);
+    return folders;
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+  }
+}
+
+/**
+ * 拉指定收藏夹内视频(collects/video/list,分页直到 has_more 假/凑满 maxItems,默认 50)。
+ * 复用 .auth/ 登录态、douyinGateway 限流(**每页 acquire 一次**)。未登录抛
+ * DouyinNotLoggedInError;**验证码命中 → 返 [] 跳过**。openContext 端口注入可确定性单测。
+ * **只读自己账号指定夹的收藏条目**(不碰其他收藏夹)。
+ */
+export async function fetchDouyinCollectsVideos(
+  opts: FetchCollectsVideosOptions,
+  deps: FetchCollectsDeps = {},
+): Promise<DouyinFavoriteVideo[]> {
+  const gateway = opts.gateway ?? instantNoopGateway;
+  const maxItems = opts.maxItems ?? 50;
+  const openCtx =
+    deps.openContext ??
+    ((authDir: string, headless: boolean) =>
+      openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
+  const ctx = await openCtx(opts.authDir, true);
+  try {
+    const page = await openCollectsPage(ctx, `收藏夹视频(${opts.collectsId})`);
+    if (!page) return []; // 验证码 → 诚实空,调用方跳过该夹
+
+    const byId = new Map<string, DouyinFavoriteVideo>();
+    let cursor = 0;
+    // 页数上限 = 凑满 maxItems 所需页数 + 1 兜底(20/页;防 has_more 恒真死循环)。
+    const maxPages = Math.ceil(maxItems / 20) + 1;
+    for (let i = 0; i < maxPages && byId.size < maxItems; i++) {
+      // 每翻一页 acquire 一次限流网关(同收藏夹列表纪律)。
+      const json = await withDouyinChannel(gateway, "creator-center", () =>
+        fetchCollectsJson(
+          page,
+          COLLECTS_VIDEO_LIST_API.replace(
+            "{collectsId}",
+            encodeURIComponent(opts.collectsId),
+          ).replace("{cursor}", String(cursor)),
+        ),
+      );
+      for (const v of parseCollectsVideoList(json)) {
+        if (byId.size >= maxItems) break; // maxItems 截断(防灌库)
+        byId.set(v.awemeId, v);
+      }
+      if (!collectsHasMore(json)) break;
+      const next = collectsNextCursor(json);
+      if (next < 0 || next === cursor) break; // cursor 不前进兜底,防死循环
+      cursor = next;
+    }
+    const videos = [...byId.values()];
+    console.log(
+      `[favorites] fetchDouyinCollectsVideos 夹 ${opts.collectsId} → ${videos.length} 条(上限 ${maxItems})`,
+    );
+    return videos;
+  } finally {
+    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+  }
+}

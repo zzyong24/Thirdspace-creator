@@ -1830,3 +1830,299 @@ describe("[T-243] fetchDouyinVideoSource(iesdouyin → detail 回落编排)", ()
     expect(out).toEqual({ kind: "image-album" });
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// [T-235c] 指定收藏夹采集:parseCollectsList / parseCollectsVideoList 纯函数 +
+//   fetchDouyinCollectsFolders / fetchDouyinCollectsVideos(fake context:
+//   登录校验 / 验证码跳过 / cursor 分页聚合 / maxItems 截断)。
+// ═══════════════════════════════════════════════════════════════════════════
+
+// 真实 collects/list API 形状 fixture(collects_list[] + cursor/has_more/total_number)。
+// collects_id 数字版是 19 位大整数 —— JSON 数字精度丢失,**必须用 collects_id_str**。
+const COLLECTS_LIST_JSON = {
+  status_code: 0,
+  collects_list: [
+    {
+      collects_id: 7372169017362909000, // 数字版已精度丢失(...909000 ≠ 真 id)
+      collects_id_str: "7372169017362909234",
+      collects_name: "选题库",
+      total_number: 12,
+      last_collect_time: 1_799_990_000,
+    },
+    {
+      // 缺 collects_id_str 的兜底路径 → String(collects_id)。
+      collects_id: 123456,
+      collects_name: "美食",
+      total_number: 3,
+    },
+    // 无 id 的脏条目 → 跳过。
+    { collects_name: "脏数据" },
+  ],
+  cursor: 20,
+  has_more: 0,
+  total_number: 2,
+};
+
+describe("[T-235c] parseCollectsList 纯函数", () => {
+  it("collects_id_str 优先(数字版精度丢失);缺则 String(collects_id);无 id 跳过", async () => {
+    const { parseCollectsList } = await import("./douyin-cdp");
+    const out = parseCollectsList(COLLECTS_LIST_JSON);
+    expect(out).toHaveLength(2);
+    expect(out[0]).toEqual({
+      collectsId: "7372169017362909234", // _str 原值,不是精度丢失的 ...909000
+      name: "选题库",
+      totalCount: 12,
+      lastCollectTime: 1_799_990_000,
+    });
+    expect(out[1]!.collectsId).toBe("123456");
+    expect(out[1]!.lastCollectTime).toBe(0); // 缺字段兜底 0
+  });
+
+  it("脏 JSON / 空 collects_list → [](诚实空,不抛)", async () => {
+    const { parseCollectsList } = await import("./douyin-cdp");
+    expect(parseCollectsList(null)).toEqual([]);
+    expect(parseCollectsList({ error: "x" })).toEqual([]);
+    expect(parseCollectsList({ collects_list: [] })).toEqual([]);
+  });
+});
+
+// 真实 collects/video/list API 形状 fixture(aweme_list[] + cursor/has_more)。
+const COLLECTS_VIDEO_JSON = {
+  status_code: 0,
+  aweme_list: [
+    {
+      aweme_id: "7510000000000000001",
+      desc: " 三个月涨粉 10 万的钩子公式 ",
+      create_time: 1_799_992_000,
+      statistics: { digg_count: 5600, comment_count: 210, collect_count: 890, share_count: 77 },
+      author: { sec_uid: "MS4wLjAByy", nickname: "运营老王" },
+      duration: 62_000,
+    },
+    // 字符串数字 + 缺字段兜底路径。
+    {
+      aweme_id: "7510000000000000002",
+      desc: "直出条目",
+      statistics: { digg_count: "3,400" },
+      video: { duration: 30_000 }, // 顶层 duration 缺 → video.duration 兜底
+    },
+    // 无 aweme_id 脏条目 → 跳过。
+    { desc: "脏数据" },
+  ],
+  cursor: 20,
+  has_more: 1,
+};
+
+describe("[T-235c] parseCollectsVideoList 纯函数", () => {
+  it("解析统计/作者/时长/发布时间;字符串数字归一;缺字段兜底 0/空串", async () => {
+    const { parseCollectsVideoList } = await import("./douyin-cdp");
+    const out = parseCollectsVideoList(COLLECTS_VIDEO_JSON);
+    expect(out).toHaveLength(2);
+    expect(out[0]).toEqual({
+      awemeId: "7510000000000000001",
+      description: "三个月涨粉 10 万的钩子公式",
+      diggCount: 5600,
+      commentCount: 210,
+      collectCount: 890,
+      shareCount: 77,
+      durationMs: 62_000,
+      createTime: 1_799_992_000,
+      authorSecUid: "MS4wLjAByy",
+      authorNickname: "运营老王",
+    });
+    expect(out[1]!.diggCount).toBe(3400);
+    expect(out[1]!.durationMs).toBe(30_000); // video.duration 兜底
+    expect(out[1]!.authorNickname).toBe("");
+  });
+
+  it("脏 JSON / 空 aweme_list → [](诚实空,不抛)", async () => {
+    const { parseCollectsVideoList } = await import("./douyin-cdp");
+    expect(parseCollectsVideoList(null)).toEqual([]);
+    expect(parseCollectsVideoList({ aweme_list: [] })).toEqual([]);
+  });
+});
+
+// fake collects context:cookies 控登录态;evaluate 无参调用返 body 文本(验证码检测),
+// 带参调用按序出队 fetchPages(cursor 分页;队列耗尽返最后一页)。照 makeSearchContext 范式。
+function makeCollectsContext(opts: {
+  loggedIn: boolean;
+  bodyText?: string;
+  fetchPages?: unknown[];
+}) {
+  const calls = { goto: 0, close: 0, fetch: 0, urls: [] as string[] };
+  const pages = opts.fetchPages ?? [COLLECTS_LIST_JSON];
+  const page = {
+    async goto(url: string) {
+      calls.goto += 1;
+      calls.urls.push(url);
+      return null;
+    },
+    async waitForTimeout() {},
+    async evaluate(fn: unknown, arg?: unknown) {
+      // 带参 = 页内 fetch(记录请求 URL,按序出队);无参 = 验证码检测读 body。
+      if (arg !== undefined) {
+        calls.urls.push(String(arg));
+        const idx = Math.min(calls.fetch, pages.length - 1);
+        calls.fetch += 1;
+        return pages[idx];
+      }
+      void fn;
+      return opts.bodyText ?? "正常收藏页";
+    },
+  };
+  const ctx = {
+    pages: () => [page],
+    newPage: async () => page,
+    cookies: async () =>
+      opts.loggedIn ? [{ name: "sessionid" }] : [{ name: "other" }],
+    close: async () => {
+      calls.close += 1;
+    },
+  };
+  return { ctx, calls };
+}
+
+describe("[T-235c] fetchDouyinCollectsFolders(fake context)", () => {
+  it("登录态在 → 导航收藏 tab + 页内 fetch → 解析收藏夹;context 关一次", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const { ctx, calls } = makeCollectsContext({ loggedIn: true });
+    const out = await fetchDouyinCollectsFolders(
+      { authDir: "/fake/.auth" },
+      { openContext: async () => ctx },
+    );
+    expect(out).toHaveLength(2);
+    expect(out[0]!.collectsId).toBe("7372169017362909234");
+    expect(calls.goto).toBe(1);
+    expect(calls.urls[0]).toContain("showTab=favorite_collection"); // 先导航建上下文
+    expect(calls.close).toBe(1);
+  });
+
+  it("cursor 分页聚合:has_more=1 翻页,同夹去重,has_more=0 停", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const page1 = {
+      collects_list: [
+        { collects_id_str: "f-1", collects_name: "选题库", total_number: 12 },
+      ],
+      cursor: 20,
+      has_more: 1,
+    };
+    const page2 = {
+      collects_list: [
+        { collects_id_str: "f-1", collects_name: "选题库", total_number: 12 }, // 重复 → 去重
+        { collects_id_str: "f-2", collects_name: "灵感夹", total_number: 5 },
+      ],
+      cursor: 40,
+      has_more: 0,
+    };
+    const { ctx, calls } = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [page1, page2],
+    });
+    const out = await fetchDouyinCollectsFolders(
+      { authDir: "/fake/.auth" },
+      { openContext: async () => ctx },
+    );
+    expect(out.map((f) => f.collectsId)).toEqual(["f-1", "f-2"]);
+    expect(calls.fetch).toBe(2); // 恰好两页(has_more=0 即停)
+    // 第二页带上第一页返回的 cursor。
+    expect(calls.urls.some((u) => u.includes("cursor=20"))).toBe(true);
+  });
+
+  it("未登录 → DouyinNotLoggedInError(context 仍关闭)", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const { ctx, calls } = makeCollectsContext({ loggedIn: false });
+    await expect(
+      fetchDouyinCollectsFolders(
+        { authDir: "/fake/.auth" },
+        { openContext: async () => ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+    expect(calls.close).toBe(1);
+  });
+
+  it("验证码命中(body 含「验证」)→ 返 [] 跳过,不硬闯", async () => {
+    const { fetchDouyinCollectsFolders } = await import("./douyin-cdp");
+    const { ctx, calls } = makeCollectsContext({
+      loggedIn: true,
+      bodyText: "请完成安全验证后继续访问",
+    });
+    const out = await fetchDouyinCollectsFolders(
+      { authDir: "/fake/.auth" },
+      { openContext: async () => ctx },
+    );
+    expect(out).toEqual([]);
+    expect(calls.fetch).toBe(0); // 验证码即停,不再打接口
+  });
+});
+
+describe("[T-235c] fetchDouyinCollectsVideos(fake context)", () => {
+  // 造一页 n 条视频(awemeId 前缀区分页)。
+  function videoPage(prefix: string, n: number, over: Record<string, unknown> = {}) {
+    return {
+      aweme_list: Array.from({ length: n }, (_, i) => ({
+        aweme_id: `${prefix}-${i}`,
+        desc: `视频 ${prefix}-${i}`,
+        statistics: { digg_count: 100 + i },
+      })),
+      cursor: 20,
+      has_more: 1,
+      ...over,
+    };
+  }
+
+  it("分页聚合直到 has_more 假;请求 URL 带 collects_id", async () => {
+    const { fetchDouyinCollectsVideos } = await import("./douyin-cdp");
+    const { ctx, calls } = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [
+        videoPage("p1", 20, { cursor: 20, has_more: 1 }),
+        videoPage("p2", 5, { cursor: 40, has_more: 0 }),
+      ],
+    });
+    const out = await fetchDouyinCollectsVideos(
+      { authDir: "/fake/.auth", collectsId: "7372169017362909234" },
+      { openContext: async () => ctx },
+    );
+    expect(out).toHaveLength(25);
+    expect(calls.fetch).toBe(2);
+    expect(
+      calls.urls.some((u) => u.includes("collects_id=7372169017362909234")),
+    ).toBe(true);
+  });
+
+  it("maxItems 截断:两页 40 条,maxItems=30 → 30 条即停", async () => {
+    const { fetchDouyinCollectsVideos } = await import("./douyin-cdp");
+    const { ctx } = makeCollectsContext({
+      loggedIn: true,
+      fetchPages: [
+        videoPage("p1", 20, { cursor: 20, has_more: 1 }),
+        videoPage("p2", 20, { cursor: 40, has_more: 1 }),
+        videoPage("p3", 20, { cursor: 60, has_more: 1 }),
+      ],
+    });
+    const out = await fetchDouyinCollectsVideos(
+      { authDir: "/fake/.auth", collectsId: "f-1", maxItems: 30 },
+      { openContext: async () => ctx },
+    );
+    expect(out).toHaveLength(30);
+  });
+
+  it("未登录 → DouyinNotLoggedInError;验证码 → 返 []", async () => {
+    const { fetchDouyinCollectsVideos } = await import("./douyin-cdp");
+    const notLogged = makeCollectsContext({ loggedIn: false });
+    await expect(
+      fetchDouyinCollectsVideos(
+        { authDir: "/fake/.auth", collectsId: "f-1" },
+        { openContext: async () => notLogged.ctx },
+      ),
+    ).rejects.toBeInstanceOf(DouyinNotLoggedInError);
+    const captcha = makeCollectsContext({
+      loggedIn: true,
+      bodyText: "安全验证",
+    });
+    const out = await fetchDouyinCollectsVideos(
+      { authDir: "/fake/.auth", collectsId: "f-1" },
+      { openContext: async () => captcha.ctx },
+    );
+    expect(out).toEqual([]);
+  });
+});

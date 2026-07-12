@@ -71,6 +71,16 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     prompt: "每天结合我的定位、评论信号、知识库和当下热点,自动出一批选题进选题池",
     schedule: "40 9 * * *",
   },
+  // [T-235c] 指定收藏夹采集:读该号登记的指定抖音收藏夹(信号源→收藏夹)→ 按名匹配回填
+  //   collects_id → 拉夹内视频落台账 → 限量(≤3/run)进候选池(source=favorites)。过
+  //   douyinGateway 限流(采集类 job,页内 fetch 每页 acquire)。无登记夹时诚实空跑(非失败,
+  //   message 引导去登记)。错峰 9:50(排 topic.daily 9:40 后,采集类互不同时到点)。
+  {
+    sourceKind: "favorites",
+    name: "每天采我的指定收藏夹",
+    prompt: "每天采集我登记的抖音指定收藏夹里的视频,作为跟拍选题候选",
+    schedule: "50 9 * * *",
+  },
 ];
 
 export interface CollectionBootstrapDeps {

@@ -552,6 +552,19 @@ export function createAiService(deps: ServiceDeps): AiService {
         throw new ConflictError(`AI task ${taskId} has no candidate result`);
       }
 
+      // video_decisions (video.decisions node, T-254b/c 制作视频管线) — the confirm 门
+      // itself lives in the 分场预览卡:用户过目/删卡/换选后,前端把编辑后的决策组装成
+      // 渲染 props 并另起 execution.tasks.create(video.render)跟踪渲染。这里的采纳
+      // **不落任何实体**(决策 JSON 不是库内产物;成片经执行层确认卡采纳才入库,铁律②),
+      // 只把决策任务收口到 succeeded —— 不加这支,确认后任务永卡 awaiting_confirmation。
+      if (candidate.resultType === "video_decisions") {
+        const updated = await repo.updateTaskStatus(taskId, {
+          status: "succeeded",
+          completedAt: deps.now(),
+        });
+        return toTaskDto(updated);
+      }
+
       // material_list (research_gather node, 机制④) — formalize each gathered material
       // into a KnowledgeItem via the Knowledge module (AI never writes the entity). The
       // candidate carries `resultData.items: [{ title, url, source, why_relevant }]`.
