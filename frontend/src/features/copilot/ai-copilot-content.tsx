@@ -168,6 +168,11 @@ import {
 } from "./conversation-persistence";
 // [T-096] 会话作用域:入口参数 → scope(纯函数),历史/恢复/新对话全按它分桶。
 import { resolveChatScope, scopeHistoryLabel } from "./chat-scope";
+// [T-239g] 长任务完成 → 对话内通知卡:纯检测逻辑(轮询 feed 检出「新到终态」的任务)。
+import {
+  detectTaskNotifications,
+  type TaskNotification,
+} from "./task-notifications";
 import {
   detectMentionQuery,
   filterProjectOptions,
@@ -458,6 +463,9 @@ interface WireTask {
     | "failed"
     | "cancelled";
   readonly requestedAt: string;
+  // [T-239g] 失败通知需诚实带原因 —— ai.tasks.list 返回 aiTaskResource 已含 errorMessage,
+  // 此前 WireTask cast 未取(feed 用不到);通知卡要读它,故在此补齐(老调用侧零影响)。
+  readonly errorMessage?: string | null;
 }
 
 // ai_conversations 的一行(契约 aiConversationResource 的子集)—— 历史记录面板只需
@@ -513,13 +521,16 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
 
 // taskType → 中文标题(bug #6)。命中映射用中文 label;否则回退到原 taskType 串(诚实,不伪造)。
 // [T-095] 调度采集任务(scheduled.*)走统一词表 SCHEDULED_TASK_TYPE_LABELS(lib/chat-tool-labels),
-// 不再满屏渲内部 op id。
-function taskTitle(t: WireTask): string {
+// 不再满屏渲内部 op id。[T-239g] 抽出 taskTypeLabel(纯 taskType 入参)供通知卡复用同一词表。
+function taskTypeLabel(taskType: string): string {
   return (
-    TASK_TYPE_LABEL[t.taskType]?.label ??
-    SCHEDULED_TASK_TYPE_LABELS[t.taskType]?.label ??
-    t.taskType
+    TASK_TYPE_LABEL[taskType]?.label ??
+    SCHEDULED_TASK_TYPE_LABELS[taskType]?.label ??
+    taskType
   );
+}
+function taskTitle(t: WireTask): string {
+  return taskTypeLabel(t.taskType);
 }
 
 // taskType → 中文副文(任务卡第二行)。未命中返回 null(不渲染副文)。
@@ -565,6 +576,35 @@ const CONTINUING_STATUSES: ReadonlySet<WireTask["status"]> = new Set([
   "running",
   "awaiting_confirmation",
 ]);
+
+// [T-239g] 在途任务存在时,以此间隔轮询 ai.tasks.list 检测其到终态 → 推通知(无在途则不轮询,
+// 见下方 effect)。8s 比 ExecutionTaskCard 的 4s 宽松 —— 通知不追求秒级实时,省网络。
+const TASK_FEED_POLL_MS = 8000;
+
+// [T-239g] 通知卡按状态选文案 + 配色 token(复用全站 success/destructive/amber 语义,不手搓颜色)。
+const NOTIFY_STATUS_META: Record<
+  TaskNotification["status"],
+  { verb: string; hint: string; dot: string; text: string }
+> = {
+  succeeded: {
+    verb: "已完成",
+    hint: "任务跑完了，结果可在任务列表查看。",
+    dot: "bg-success",
+    text: "text-success",
+  },
+  awaiting_confirmation: {
+    verb: "待确认",
+    hint: "已跑完初稿，等待你确认结果。",
+    dot: "bg-amber-500",
+    text: "text-amber-600",
+  },
+  failed: {
+    verb: "执行失败",
+    hint: "",
+    dot: "bg-destructive",
+    text: "text-destructive",
+  },
+};
 
 // taskType prefix (the segment before the first ".") → the creator project STAGE
 // route segment that owns that node. [T-076] 两阶段化:review.* 落复盘页,其余全部
@@ -1186,6 +1226,20 @@ export function AICopilotContent({
   const [recentTasks, setRecentTasks] = React.useState<
     ReadonlyArray<WireTask> | null
   >(null);
+  // [T-239g] 长任务完成 → 对话内通知卡:轮询 feed 检出「新到终态」的任务。
+  //   - notifSnapshotRef:上一轮 taskId→status 快照(纯 diff 的对比基线,不进 render);
+  //   - notifSeededRef:首帧只播种不通知(避免每次进面板把历史已完成任务刷成一堆通知);
+  //   - taskNotifications:待展示的通知(用户可逐条关掉;同 taskId 后续迁移覆盖同一条)。
+  const notifSnapshotRef = React.useRef<Map<string, string>>(new Map());
+  const notifSeededRef = React.useRef(false);
+  const [taskNotifications, setTaskNotifications] = React.useState<
+    ReadonlyArray<TaskNotification>
+  >([]);
+  const dismissTaskNotification = React.useCallback((taskId: string) => {
+    // 关掉仅移出展示;快照已记该 status → 同状态不会二次通知,后续「不同状态迁移」
+    // (如 awaiting_confirmation→succeeded)仍会再推(那是新事件,理应再知会)。
+    setTaskNotifications((prev) => prev.filter((n) => n.taskId !== taskId));
+  }, []);
   // [T-248B①] 拉取逻辑抽成可复用回调:首屏 useEffect 用它,任务「取消」成功后也用它
   // 重拉刷新 feed(与本文件其它「变更后重拉」模式一致,不引入第二套刷新机制)。
   const tasksFetchEpochRef = React.useRef(0);
@@ -1202,8 +1256,27 @@ export function AICopilotContent({
         })) as unknown as ReadonlyArray<WireTask> | null | undefined;
         // null→[] 收敛:若 op 成功 resolve 但返回 null/undefined(空 DB 的某些 transport
         // 路径),仍要把状态推进到空数组,否则 spinner 会一直转。empty array 触发诚实空态。
-        if (epoch === tasksFetchEpochRef.current)
-          setRecentTasks((rows ?? []).filter(isCreativeTask).slice(0, 6));
+        if (epoch !== tasksFetchEpochRef.current) return; // 过期请求(有更新的在途)——丢弃
+        const creative = (rows ?? []).filter(isCreativeTask);
+        setRecentTasks(creative.slice(0, 6));
+        // [T-239g] 状态迁移检测:在**全量创作任务**(非仅 top 6)上 diff,避免通知被截断漏掉。
+        // scheduled.* 已被 isCreativeTask 滤掉(巡航噪音有自动化页承载,不进对话通知)。
+        const { notifications, nextSnapshot } = detectTaskNotifications(
+          notifSnapshotRef.current,
+          creative,
+          notifSeededRef.current,
+        );
+        notifSnapshotRef.current = nextSnapshot;
+        notifSeededRef.current = true;
+        if (notifications.length > 0) {
+          setTaskNotifications((prev) => {
+            // 同 taskId 用最新一条覆盖(awaiting_confirmation→succeeded 就地更新文案),
+            // 新任务追加在后。保持插入顺序。
+            const byId = new Map(prev.map((n) => [n.taskId, n]));
+            for (const n of notifications) byId.set(n.taskId, n);
+            return Array.from(byId.values());
+          });
+        }
       } catch {
         // Feed unavailable (e.g. unauthenticated dispatch) — fall back to an empty,
         // honest feed rather than fixture rows.
@@ -1227,6 +1300,25 @@ export function AICopilotContent({
     if (recentTasks === null) return null;
     return recentTasks.filter((t) => CONTINUING_STATUSES.has(t.status));
   }, [recentTasks]);
+
+  // [T-239g] 有在途任务时才轮询 feed(检测其到终态 → 推通知);全部终态即停,省网络、不空转。
+  // 一旦某在途任务转终态,通知已推 + 它移出 continuingTasks → 无在途则本 effect 清 interval。
+  const hasInflightTasks = (recentTasks ?? []).some((t) =>
+    CONTINUING_STATUSES.has(t.status),
+  );
+  React.useEffect(() => {
+    if (!hasInflightTasks) return;
+    const timer = setInterval(refreshRecentTasks, TASK_FEED_POLL_MS);
+    return () => clearInterval(timer);
+  }, [hasInflightTasks, refreshRecentTasks]);
+
+  // [T-239g] 每轮对话结束(streaming→ready)刷新 feed:本轮可能经工具 dispatch 了后台长任务
+  // (拆片/渲染/审核),早点纳入轮询,其完成时才能推通知。仅在「刚从流式落回」的沿触发一次。
+  const prevStreamingRef = React.useRef(false);
+  React.useEffect(() => {
+    if (prevStreamingRef.current && !streaming) refreshRecentTasks();
+    prevStreamingRef.current = streaming;
+  }, [streaming, refreshRecentTasks]);
 
   // ── @项目引用(T-039b)────────────────────────────────────────────────────
   // 项目列表懒加载:首次输入 `@` 触发一次拉取(复用现有只读 op client.listProjects,不新造 repo
@@ -1611,6 +1703,64 @@ export function AICopilotContent({
         data-slot-region="copilot-region"
         className="flex min-h-0 flex-1 flex-col gap-2"
       >
+        {/* [T-239g] 长任务完成通知卡 —— 轮询 ai.tasks.list 检出「新到终态」的任务时,在对话区
+            顶部推一张轻通知(不滚走、可逐条关掉)。终态才推、进行中不打扰;失败诚实带原因。
+            这是前端会话期的瞬态提示,不落库、不进 useChat 消息流(存储零改动)。 */}
+        {taskNotifications.length > 0 ? (
+          <ul
+            data-slot="task-notifications"
+            aria-live="polite"
+            className="flex shrink-0 flex-col gap-1.5"
+          >
+            {taskNotifications.map((n) => {
+              const meta = NOTIFY_STATUS_META[n.status];
+              // 失败诚实带原因(先过共享人话映射,兜底原串,截断防超长)。
+              const rawReason = (n.errorMessage ?? "").trim();
+              const reason =
+                n.status === "failed" && rawReason
+                  ? (humanizeAiErrorMessage(rawReason)?.message ?? rawReason).slice(0, 140)
+                  : "";
+              const detail = n.status === "failed" ? reason : meta.hint;
+              return (
+                <li
+                  key={n.taskId}
+                  data-slot="task-notification"
+                  data-task-id={n.taskId}
+                  data-status={n.status}
+                  className="flex items-start gap-2 rounded-lg border border-border bg-surface px-3 py-2"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`mt-1 size-2 shrink-0 rounded-full ${meta.dot}`}
+                  />
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-[12px] font-medium leading-snug text-foreground">
+                      「{taskTypeLabel(n.taskType)}」
+                      <span className={meta.text}>{meta.verb}</span>
+                    </span>
+                    {detail ? (
+                      <span
+                        data-slot="task-notification-detail"
+                        className="text-[11px] leading-snug text-muted-foreground"
+                      >
+                        {detail}
+                      </span>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="关闭通知"
+                    data-slot="task-notification-dismiss"
+                    onClick={() => dismissTaskNotification(n.taskId)}
+                    className="shrink-0 rounded text-muted-foreground/70 transition-colors hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  >
+                    ×
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
         {/* 消息流(可滚)—— 给一个 min-h 下限,保证对话区是视觉主区,不被次区压扁(bug #5)。 */}
         <div
           ref={messagesScrollRef}

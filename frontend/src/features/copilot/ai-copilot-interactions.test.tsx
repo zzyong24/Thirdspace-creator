@@ -811,4 +811,110 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       ).toBeNull();
     });
   });
+
+  // [T-239g] 长任务完成 → 对话内通知卡(SPEC §2-S7)。轮询 ai.tasks.list 检出「新到终态」的
+  // 任务 → 推轻通知。本用例用「流式结束刷新」这条确定性通路驱动第二次 fetch(轮询同 refresh
+  // 路径,pure diff 逻辑另在 task-notifications.test.ts 全量覆盖)。
+  describe("[T-239g] 长任务完成对话内通知卡", () => {
+    const wireTask = (over: Record<string, unknown>) => ({
+      id: "t1",
+      projectId: null,
+      taskType: "script.draft",
+      status: "running",
+      requestedAt: "2026-07-11T00:00:00.000Z",
+      errorMessage: null,
+      ...over,
+    });
+
+    // ready → streaming → ready 触发组件的「流式结束刷新 feed」,拿到本次 listTasks 的新结果。
+    async function driveStreamingEnd(rerender: (ui: React.ReactElement) => void) {
+      mockStatus = "streaming";
+      rerender(<AICopilotContent viewModel={VM} />);
+      mockStatus = "ready";
+      rerender(<AICopilotContent viewModel={VM} />);
+    }
+
+    it("首帧已是终态的历史任务不推通知(只播种)", async () => {
+      listTasks.mockResolvedValue([wireTask({ status: "succeeded" })]);
+      render(<AICopilotContent viewModel={VM} />);
+      // 首屏 feed 载入(最近任务出现),但不该有任何通知卡。
+      await waitFor(() =>
+        expect(listTasks).toHaveBeenCalled(),
+      );
+      await waitFor(() =>
+        expect(
+          document.querySelector('[data-slot="recent-task"][data-task-id="t1"]'),
+        ).not.toBeNull(),
+      );
+      expect(
+        document.querySelector('[data-slot="task-notification"]'),
+      ).toBeNull();
+    });
+
+    it("在途任务跑完 → 推 succeeded 通知卡,点 × 可关闭", async () => {
+      const user = userEvent.setup();
+      // 首帧:running(播种快照,不通知)。
+      listTasks.mockResolvedValue([wireTask({ status: "running" })]);
+      const { rerender } = render(<AICopilotContent viewModel={VM} />);
+      await waitFor(() =>
+        expect(
+          document.querySelector('[data-slot="continuing-task"][data-task-id="t1"]'),
+        ).not.toBeNull(),
+      );
+      expect(
+        document.querySelector('[data-slot="task-notification"]'),
+      ).toBeNull();
+
+      // 任务转 succeeded + 触发一轮流式结束刷新 → 检出迁移 → 推通知。
+      listTasks.mockResolvedValue([wireTask({ status: "succeeded" })]);
+      await driveStreamingEnd(rerender);
+
+      const card = await waitFor(() => {
+        const el = document.querySelector(
+          '[data-slot="task-notification"][data-task-id="t1"]',
+        );
+        expect(el).not.toBeNull();
+        return el as HTMLElement;
+      });
+      expect(card.getAttribute("data-status")).toBe("succeeded");
+      expect(card.textContent).toContain("脚本初稿");
+      expect(card.textContent).toContain("已完成");
+
+      // 关闭 → 通知移除。
+      await user.click(
+        card.querySelector(
+          '[data-slot="task-notification-dismiss"]',
+        ) as HTMLButtonElement,
+      );
+      await waitFor(() =>
+        expect(
+          document.querySelector('[data-slot="task-notification"][data-task-id="t1"]'),
+        ).toBeNull(),
+      );
+    });
+
+    it("失败任务 → 通知诚实带原因", async () => {
+      listTasks.mockResolvedValue([wireTask({ status: "running" })]);
+      const { rerender } = render(<AICopilotContent viewModel={VM} />);
+      await waitFor(() =>
+        expect(
+          document.querySelector('[data-slot="continuing-task"][data-task-id="t1"]'),
+        ).not.toBeNull(),
+      );
+
+      listTasks.mockResolvedValue([
+        wireTask({ status: "failed", errorMessage: "渲染器超时,请重试" }),
+      ]);
+      await driveStreamingEnd(rerender);
+
+      const detail = await waitFor(() => {
+        const el = document.querySelector(
+          '[data-slot="task-notification"][data-task-id="t1"] [data-slot="task-notification-detail"]',
+        );
+        expect(el).not.toBeNull();
+        return el as HTMLElement;
+      });
+      expect(detail.textContent).toContain("渲染器超时");
+    });
+  });
 });
