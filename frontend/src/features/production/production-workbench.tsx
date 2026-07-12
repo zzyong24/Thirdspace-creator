@@ -219,6 +219,9 @@ export function ProductionWorkbench({
   const [uploadBusy, setUploadBusy] = React.useState<"" | "video" | "srt">("");
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [override, setOverride] = React.useState(false);
+  // [T-254c 打磨] 隐藏原生 file input,用样式化点击区触发(裸 input 显浏览器默认 "Choose File" 与暗色 UI 不搭)。
+  const videoInputRef = React.useRef<HTMLInputElement>(null);
+  const srtInputRef = React.useRef<HTMLInputElement>(null);
 
   const [decisionsTaskId, setDecisionsTaskId] = React.useState<string | null>(
     null,
@@ -708,20 +711,38 @@ export function ProductionWorkbench({
       >
         <h3 className="text-sm font-medium">② 上传粗剪人物视频 + SRT 字幕</h3>
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
-          <label className="flex flex-1 flex-col gap-1 text-xs">
-            <span className="font-medium">
-              粗剪人物视频{video ? ` · 已上传:${video.name}` : ""}
-            </span>
+          <div className="flex flex-1 flex-col gap-1.5 text-xs">
+            <span className="font-medium">粗剪人物视频</span>
             <input
+              ref={videoInputRef}
               type="file"
               accept="video/*"
               aria-label="上传粗剪人物视频"
+              className="sr-only"
               disabled={uploadBusy !== ""}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) void onVideoFile(f);
               }}
             />
+            <button
+              type="button"
+              data-slot="production-video-picker"
+              disabled={uploadBusy !== ""}
+              onClick={() => videoInputRef.current?.click()}
+              className={`flex flex-col items-center justify-center gap-1 rounded-control border border-dashed px-3 py-5 text-center transition disabled:opacity-50 ${
+                video
+                  ? "border-brand/50 bg-brand/5 text-foreground"
+                  : "border-border bg-surface-subtle/40 text-muted-foreground hover:border-brand/60 hover:text-foreground"
+              }`}
+            >
+              <span className="font-medium">
+                {video ? "✓ 已上传:" + video.name : "点击选择粗剪视频"}
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                {video ? "点此重新选择" : "mp4/mov 等,剪辑软件导出的纯人物视频"}
+              </span>
+            </button>
             {video?.durationSec != null ? (
               <span className="text-muted-foreground">
                 视频时长 {Math.round(video.durationSec)}s
@@ -731,22 +752,42 @@ export function ProductionWorkbench({
                 读不到视频时长(浏览器不支持该编码的 metadata)—— 时长校验诚实跳过
               </span>
             ) : null}
-          </label>
-          <label className="flex flex-1 flex-col gap-1 text-xs">
-            <span className="font-medium">
-              SRT 字幕{srt ? ` · 已上传:${srt.name}(${srt.lines.length} 行)` : ""}
-            </span>
+          </div>
+          <div className="flex flex-1 flex-col gap-1.5 text-xs">
+            <span className="font-medium">SRT 字幕</span>
             <input
+              ref={srtInputRef}
               type="file"
               accept=".srt,application/x-subrip,text/plain"
               aria-label="上传 SRT 字幕"
+              className="sr-only"
               disabled={uploadBusy !== ""}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) void onSrtFile(f);
               }}
             />
-          </label>
+            <button
+              type="button"
+              data-slot="production-srt-picker"
+              disabled={uploadBusy !== ""}
+              onClick={() => srtInputRef.current?.click()}
+              className={`flex flex-col items-center justify-center gap-1 rounded-control border border-dashed px-3 py-5 text-center transition disabled:opacity-50 ${
+                srt
+                  ? "border-brand/50 bg-brand/5 text-foreground"
+                  : "border-border bg-surface-subtle/40 text-muted-foreground hover:border-brand/60 hover:text-foreground"
+              }`}
+            >
+              <span className="font-medium">
+                {srt ? `✓ 已上传:${srt.name}` : "点击选择 SRT 字幕"}
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                {srt
+                  ? `${srt.lines.length} 行 · 点此重新选择`
+                  : "剪映等导出的 .srt 字幕文件"}
+              </span>
+            </button>
+          </div>
         </div>
         {uploadBusy ? (
           <p className="text-xs text-muted-foreground">
