@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { Tool } from "ai";
+// [T-263] HITL 授权门装配(local.read needsApproval → toolApproval 映射)。
+import { buildChatToolApproval } from "./chat-tool-gate";
 import {
   buildChatTools,
   allChatTools,
@@ -293,9 +295,12 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     ],
     total: 1,
   }));
-  const draftScript = vi.fn(async () => [
-    { heading: "1. 开场", body: "口播：90% 文档没人看" },
-  ]);
+  // [T-268] script.draft 核心(fake:dispatch 异步整稿 runner → 返回 taskId + projectId)。
+  const dispatchScriptDraft = vi.fn(async () => ({
+    taskId: "task-draft-1",
+    projectId: "proj-1",
+    error: null as string | null,
+  }));
   const gatherMaterials = vi.fn(async () => ({
     grounding: "model_memory" as const,
     items: [
@@ -417,7 +422,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     generateTopics,
     enrichTopic,
     generateHooks,
-    draftScript,
+    dispatchScriptDraft,
     gatherMaterials,
     captureScreenshot,
     readWeb,
@@ -1022,6 +1027,114 @@ describe("[T-265] planning.thesis 工具 — 论点树对话内真生成", () =>
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();
     expect(result.error).toContain("未接入");
+  });
+});
+
+// [T-268] 整稿改异步 dispatch —— execute 不再 inline 同步跑 runScriptNode(整稿分钟级必超时→退回
+// hooks),而是 dispatch 既有异步 runner runScriptDraft,返回 { taskId, projectId, error }。
+describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑)", () => {
+  const WHITELIST = ["script.draft"] as const;
+
+  it("execute 调注入的 dispatchScriptDraft,返回 taskId + projectId(kind=script.draft,异步 dispatch 非 sections)", async () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools([...WHITELIST], deps);
+    const result = (await runExecute(tools["script.draft"]!, {
+      topic: "  上下文工程  ",
+      angle: "  三段式  ",
+    })) as {
+      kind: string;
+      taskId: string | null;
+      projectId: string | null;
+      error: string | null;
+      sections?: unknown;
+    };
+    // topic/angle trim 后透传;不直接生成(异步 dispatch,不阻塞对话回合)。
+    expect(deps.dispatchScriptDraft).toHaveBeenCalledWith({
+      topic: "上下文工程",
+      angle: "三段式",
+      extraBrief: undefined,
+    });
+    expect(result.kind).toBe("script.draft");
+    expect(result.taskId).toBe("task-draft-1");
+    expect(result.projectId).toBe("proj-1");
+    expect(result.error).toBeNull();
+    // 关键回归:结果**不再**带 sections(前端改轮询 taskId 拿整稿候选,非同步回 sections)。
+    expect(result.sections).toBeUndefined();
+  });
+
+  it("端口回 error(无项目上下文)→ 工具透传 error(诚实,不假装写好)", async () => {
+    const { deps } = makeDeps({
+      dispatchScriptDraft: async () => ({
+        taskId: null,
+        projectId: null,
+        error: "整稿要落进具体项目的稿面 —— 请在项目稿面右栏让我写脚本。",
+      }),
+    });
+    const tools = buildChatTools([...WHITELIST], deps);
+    const result = (await runExecute(tools["script.draft"]!, {})) as {
+      taskId: string | null;
+      error: string | null;
+    };
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("稿面");
+  });
+
+  it("dispatch 抛错 → 不抛,taskId=null + error(诚实降级,不裸机器码)", async () => {
+    const { deps } = makeDeps({
+      dispatchScriptDraft: async () => {
+        throw new Error("整稿能力当前未接入");
+      },
+    });
+    const tools = buildChatTools([...WHITELIST], deps);
+    const result = (await runExecute(tools["script.draft"]!, {
+      topic: "x",
+    })) as { taskId: string | null; error: string | null };
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("未接入");
+  });
+});
+
+// [T-263] local.read HITL 授权门 —— defineChatTool 的 needsApproval 判定器(装配了 decideLocalRead
+// 端口时)把「判定授权」与「执行读取」拆开:未授权→'user-approval' 挂起弹卡,已授权→'not-applicable',
+// 敏感→'denied'。装配到 buildChatToolApproval 的 toolApproval 映射(streamText 用)。
+describe("[T-263] local.read needsApproval 授权判定(HITL 门,判定与执行拆开)", () => {
+  const WHITELIST = ["local.read"] as const;
+
+  it("装配 decideLocalRead → 工具挂上 needsApproval 判定器;buildChatToolApproval 收录 local.read", async () => {
+    const decide = vi.fn(async () => ({ status: "needApproval" as const }));
+    const { deps } = makeDeps({ decideLocalRead: decide });
+    const tools = buildChatTools([...WHITELIST], deps);
+    const approval = buildChatToolApproval(tools);
+    expect(approval).toBeDefined();
+    expect(Object.keys(approval!)).toEqual(["local.read"]);
+    // 未授权 → 'user-approval'(SDK 挂起、surface 确认卡)。
+    await expect(approval!["local.read"]!({ path: "~/Desktop/x.md" })).resolves.toBe(
+      "user-approval",
+    );
+    expect(decide).toHaveBeenCalledWith({ path: "~/Desktop/x.md" });
+  });
+
+  it("已授权 → 'not-applicable'(免卡直接执行);敏感 → { type:'denied', reason }", async () => {
+    const decide = vi.fn(async ({ path }: { path: string }) => {
+      if (path.includes(".env")) return { status: "denied" as const, reason: "敏感文件不可读" };
+      return { status: "granted" as const };
+    });
+    const { deps } = makeDeps({ decideLocalRead: decide });
+    const tools = buildChatTools([...WHITELIST], deps);
+    const approval = buildChatToolApproval(tools);
+    await expect(approval!["local.read"]!({ path: "~/granted.md" })).resolves.toBe(
+      "not-applicable",
+    );
+    await expect(approval!["local.read"]!({ path: "~/proj/.env" })).resolves.toEqual({
+      type: "denied",
+      reason: "敏感文件不可读",
+    });
+  });
+
+  it("未装配 decideLocalRead(端口缺席)→ 无授权门(buildChatToolApproval 不收录 local.read → undefined)", () => {
+    const { deps } = makeDeps({ decideLocalRead: undefined });
+    const tools = buildChatTools([...WHITELIST], deps);
+    expect(buildChatToolApproval(tools)).toBeUndefined();
   });
 });
 
@@ -1827,7 +1940,7 @@ describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道"
     });
   });
 
-  it("script.hooks / script.draft:extraBrief 透传到 generateHooks / draftScript", async () => {
+  it("script.hooks / script.draft:extraBrief 透传到 generateHooks / dispatchScriptDraft", async () => {
     const { deps } = makeDeps();
     const tools = buildChatTools([...ALL], deps);
     await runExecute(tools["script.hooks"]!, {
@@ -1839,11 +1952,12 @@ describe("[T-081①] extraBrief 透传 — 产内容工具的对话洞察通道"
       direction: undefined,
       extraBrief: "hook 要带真实数据",
     });
+    // [T-268] script.draft 改异步 dispatch:extraBrief 透传进 dispatchScriptDraft(不再 inline)。
     await runExecute(tools["script.draft"]!, {
       topic: "RAG",
       extraBrief: "按我们刚聊的三段式结构写",
     });
-    expect(deps.draftScript).toHaveBeenCalledWith({
+    expect(deps.dispatchScriptDraft).toHaveBeenCalledWith({
       topic: "RAG",
       angle: undefined,
       extraBrief: "按我们刚聊的三段式结构写",

@@ -1,4 +1,10 @@
-import { tool, type Tool, type Schema } from "ai";
+import {
+  tool,
+  type Tool,
+  type Schema,
+  type ToolApprovalStatus,
+  type ToolSet,
+} from "ai";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // [T-239a] 统一工具门 defineChatTool —— 治「30 工具遇错体验抽奖」(T-229 审计实锤)。
@@ -53,7 +59,9 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   "topic.generate": { kind: "topic.candidates", extras: { items: [] } },
   "topic.enrich": { kind: "topic.card", extras: { card: null } },
   "script.hooks": { kind: "script.hooks", extras: { items: [] } },
-  "script.draft": { kind: "script.draft", extras: { sections: [] } },
+  // [T-268] script.draft —— 异步 dispatch(kind === 工具名)。dispatch 失败/无项目上下文 →
+  // 门兜结构占位(taskId/projectId=null,卡渲诚实错误态)。
+  "script.draft": { kind: "script.draft", extras: { taskId: null, projectId: null } },
   "material.gather": {
     kind: "material.gather",
     // grounding 占位取保守值(错误态卡渲空列表;model_memory 对应「需核实」黄条,不夸大)。
@@ -267,10 +275,78 @@ export function enforceChatToolResultBudget<T>(result: T, budgetChars: number): 
   return clone as T;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// [T-263] 统一「人在环工具授权」门(HITL)—— 把 needApproval 从「工具完整输出」升级为「未决工具
+// 调用」的通用能力,抽进本门(defineChatTool),后续任何 needApproval 类工具(将来 local.write /
+// T-262 多命中选择等)复用同一阻塞范式,不各写一遍。当前仅 local.read 用。
+//
+// 走 **Vercel AI SDK 原生工具授权**(ai@7.0.4:streamText 的 `toolApproval` 配置,非已废弃的
+// tool-level needsApproval)。判定器返回我们自己的三态,buildChatToolApproval 映射到 SDK
+// ToolApprovalStatus:授权未命中 → 'user-approval'(SDK 挂起本工具调用、以 approval-requested 态
+// surface 前端,execute 暂不跑)→ 前端确认卡「允许」写 grant + addToolApprovalResponse(approved)→
+// useChat 挂 sendAutomaticallyWhen(lastAssistantMessageIsCompleteWithApprovalResponses)**同回合
+// resume 续跑** execute(此时 grant 已写,readLocalFile 直接读到)→ 无新 user 消息、无第二回合叙述;
+// 「拒绝」→ addToolApprovalResponse(denied)→ SDK 标 output-denied、execute 不跑。
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** [T-263] 工具授权判定结果(我们自己的三态;buildChatToolApproval 映射到 SDK ToolApprovalStatus)。 */
+export type ChatToolApprovalDecision =
+  | { status: "user-approval" } // 需用户在确认卡上放行(SDK surface approval-requested)
+  | { status: "not-applicable" } // 免确认直接执行(已授权/无需门)
+  | { status: "denied"; reason: string }; // 硬拒(如敏感文件),不弹卡、直接拒 + 原因
+
+/** [T-263] 工具的授权判定器(闭包已 ctx-bound 端口;入参 = 该工具入参)。 */
+export type ChatToolApprovalDecider<INPUT> = (
+  input: INPUT,
+) => Promise<ChatToolApprovalDecision> | ChatToolApprovalDecision;
+
+// tool → 授权判定器 的旁挂表(WeakMap,不污染 tool 对象可枚举字段;tool GC 时自动清)。
+const CHAT_TOOL_APPROVAL_DECIDERS = new WeakMap<
+  Tool,
+  ChatToolApprovalDecider<unknown>
+>();
+
+/** 取某 tool 登记的授权判定器(无 = 该工具无需授权门)。buildChatToolApproval 内部用。 */
+export function getChatToolApprovalDecider(
+  t: Tool,
+): ChatToolApprovalDecider<unknown> | undefined {
+  return CHAT_TOOL_APPROVAL_DECIDERS.get(t);
+}
+
+/**
+ * [T-263] 从一组已挂工具装配 streamText 的 `toolApproval` 配置(per-tool 判定函数映射)。
+ * 只收录登记了判定器的工具(当前仅 local.read);全无 → 返回 undefined(streamText 不传该配置)。
+ * 我们的三态映射:denied → { type:'denied', reason };user-approval → 'user-approval';其它 →
+ * 'not-applicable'。判定器抛错 → 保守回 'not-applicable'(让 execute 自己按既有四态诚实处理,
+ * 不因判定器抖动误挂授权门)。
+ */
+export function buildChatToolApproval(
+  tools: ToolSet,
+): Record<string, (input: unknown) => Promise<ToolApprovalStatus>> | undefined {
+  const out: Record<string, (input: unknown) => Promise<ToolApprovalStatus>> = {};
+  for (const [name, t] of Object.entries(tools)) {
+    const decider = getChatToolApprovalDecider(t as Tool);
+    if (!decider) continue;
+    out[name] = async (input: unknown): Promise<ToolApprovalStatus> => {
+      try {
+        const d = await decider(input);
+        if (d.status === "denied") return { type: "denied", reason: d.reason };
+        if (d.status === "user-approval") return "user-approval";
+        return "not-applicable";
+      } catch {
+        return "not-applicable";
+      }
+    };
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 /**
  * [T-239a] 统一工具门:在 Vercel AI SDK tool() 之上薄包(错误信封 + 结果预算 + 审计打点)。
  * 迁移形态:`"xxx": tool({...})` → `"xxx": defineChatTool("xxx", {...}, deps.humanizeError)`,
  * execute 签名/schema/描述零变;错误信封元数据查 CHAT_TOOL_ERROR_ENVELOPES(单一真值表)。
+ * [T-263] 可选 needsApproval:登记该工具的授权判定器(旁挂 WeakMap),streamText 装配期由
+ * buildChatToolApproval 收成 toolApproval 配置 → 走 SDK 原生 HITL 挂起/续跑。
  */
 export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
   name: string,
@@ -279,6 +355,8 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     /** jsonSchema<INPUT>(...) —— 泛型携带入参类型,execute 的解构参数由此获得上下文类型(与直调 tool() 等价)。 */
     inputSchema: Schema<INPUT>;
     execute: (input: INPUT, callOptions?: unknown) => Promise<OUTPUT> | OUTPUT;
+    /** [T-263] 授权判定器(可选)—— 有则该工具走 HITL 授权门(user-approval 时挂起等确认)。 */
+    needsApproval?: ChatToolApprovalDecider<INPUT>;
   },
   humanizeError?: HumanizeErrorPort,
 ): Tool {
@@ -308,9 +386,17 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     }
   };
   // 内部仍是官方 tool()(schema/描述原样透传);类型上收窄为 Tool 供 allChatTools 表使用。
-  return tool({
+  const built = tool({
     description: config.description,
     inputSchema: config.inputSchema,
     execute: gatedExecute,
   } as never) as Tool;
+  // [T-263] 登记授权判定器(旁挂 WeakMap)—— buildChatToolApproval 据此装配 SDK toolApproval 配置。
+  if (config.needsApproval) {
+    CHAT_TOOL_APPROVAL_DECIDERS.set(
+      built,
+      config.needsApproval as ChatToolApprovalDecider<unknown>,
+    );
+  }
+  return built;
 }

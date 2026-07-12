@@ -1170,6 +1170,17 @@ export interface ChatRuntime {
         total: number;
       }
   >;
+  // [T-263] local.read 授权判定端口(HITL 门用,与执行读取 readLocalFile 拆开)—— 只跑归一/realpath/
+  // 敏感/授权表判定,不读内容、不消费一次授权。三态:needApproval(未授权→挂起弹卡)/denied(敏感
+  // 硬拒)/granted(已授权或无法判定→放行,execute 时 readLocalFile 再权威处理)。
+  decideLocalReadAccess: (
+    ctx: RequestContext,
+    input: { path: string },
+  ) => Promise<
+    | { status: "needApproval" }
+    | { status: "denied"; reason: string }
+    | { status: "granted" }
+  >;
   // [T-256a] local.tools 端口 —— 探测系统已装工具(ffmpeg/node/python3/git…)。端口内:白名单过滤
   // (resolveToolsToProbe,非法/非白名单名落 rejected)→ 固定 arg 数组 spawn which/--version(绝不
   // 拼 shell 串)→ parseToolVersion。只读探测,不执行任意命令。返回每个工具 installed/path/version +
@@ -1210,6 +1221,14 @@ export interface ChatRuntime {
   dispatchPlanningThesis: (
     ctx: RequestContext,
     input: { projectId: string; topic?: string },
+  ) => Promise<{ taskId: string }>;
+  // [T-268] script.draft 端口 —— ensure 项目 output_script artifact + dispatch 既有异步 runner
+  // runScriptDraft(复活孤儿:整稿分钟级不能 inline 阻塞对话回合),立即返回 taskId。对话整稿工具
+  // (script.draft)据此触发,前端 ChatScriptDraftCard 轮询 getTask → awaiting_confirmation 渲整稿
+  // 候选 → 采纳 confirmTask(artifact_version append 进 output_script → 稿面编辑器局部刷新读回)。
+  dispatchScriptDraft: (
+    ctx: RequestContext,
+    input: { projectId: string; topic?: string; angle?: string; extraBrief?: string },
   ) => Promise<{ taskId: string }>;
 }
 
@@ -8416,6 +8435,44 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         fullText: bytes.toString("utf8"),
       };
     },
+    // [T-263] local.read 授权**判定**(HITL 门用)—— 与 readLocalFile 的「执行读取」拆开:只跑
+    // 「归一/realpath 穿越防护 → 敏感 denylist → 授权表查询」,**不读文件内容、不消费一次授权**
+    // (真读时 readLocalFile 会再查一遍授权表并消费)。三态:
+    //   denied      = 归一失败 / 敏感硬门(无论授权与否);
+    //   needApproval = 路径已解析但未授权 → HITL 门返 'user-approval' 挂起弹卡;
+    //   granted     = 已授权(免卡)**或路径尚无法解析**(realpath 失败等)→ 放行,让 readLocalFile
+    //                 执行时按四态权威处理(不存在 → 它抛错转 error;不弹一张读不到的授权卡)。
+    decideLocalReadAccess: async (
+      ctx: RequestContext,
+      input: { path: string },
+    ) => {
+      const { homedir } = await import("node:os");
+      const fsp = await import("node:fs/promises");
+      const normalized = normalizeLocalPath(input.path, homedir());
+      if (!normalized) {
+        return {
+          status: "denied" as const,
+          reason:
+            "路径必须是绝对路径(以 / 开头,或 ~ 开头的家目录路径)—— 相对路径无法确定基准,已拒绝。",
+        };
+      }
+      const reason1 = sensitivePathReason(normalized);
+      if (reason1) return { status: "denied" as const, reason: reason1 };
+      // realpath 失败(不存在/不可访问)→ 不在判定期弹卡:交给 readLocalFile 执行时如实抛「不存在」。
+      let real: string;
+      try {
+        real = await fsp.realpath(normalized);
+      } catch {
+        return { status: "granted" as const };
+      }
+      const reason2 = sensitivePathReason(real);
+      if (reason2) return { status: "denied" as const, reason: reason2 };
+      // 授权表:命中(once/dir)→ granted(免卡);未命中 → needApproval(HITL 挂起弹卡)。
+      const grant = checkLocalReadGrant(ctx.userId, real);
+      return grant
+        ? { status: "granted" as const }
+        : { status: "needApproval" as const };
+    },
     // [T-256a] local.tools 端口 —— 探测系统已装工具。安全铁律:工具名一律来自 local-env-probe 白名单
     // 常量(resolveToolsToProbe 已把非法/非白名单请求过滤进 rejected),用**固定 arg 数组** execFile
     // spawn `which <name>` / `<name> --version`,绝不拼 shell 字符串。只读探测、不执行任意命令。
@@ -8568,6 +8625,62 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const taskId = task && typeof task.id === "string" ? task.id : "";
       if (!taskId) {
         throw new Error("dispatchPlanningThesis: 起 planning.thesis task 失败(无 taskId)");
+      }
+      return { taskId };
+    },
+    // [T-268] script.draft 端口 —— 复活孤儿 runScriptDraft 的创建端(此前全仓无任何
+    // createTask({taskType:'script.draft'}),runner 是死链;对话整稿 inline 同步跑必超时)。整稿
+    // runner 要求 inputData.artifactId(采纳时 confirmTask 的 artifact_version 分支 append 新
+    // ArtifactVersion 到该 output_script artifact → 稿面编辑器读回),故先 ensure 项目的
+    // output_script/master_script artifact(无则建 output_script,stage=script),再经 ai transport
+    // 的 ai.tasks.create 起 script.draft task(inputData.projectId 让 service createTask 归属项目 →
+    // dispatch 分支 task.taskType==="script.draft" 触发 void runScriptDraft)。立即返回 { taskId },
+    // 不阻塞对话回合(整稿重、分钟级)。artifactsService 与本工厂同作用域(同 aiService 装配)。
+    dispatchScriptDraft: async (
+      ctx: RequestContext,
+      input: { projectId: string; topic?: string; angle?: string; extraBrief?: string },
+    ) => {
+      // ensure output_script artifact(读写同一目标:采纳 append 版本、稿面编辑器读当前版本)。
+      // 与前端 ensureScriptArtifact / 读侧 resolveScriptArtifactIdFromDb 同口径:优先复用已有
+      // output_script,其次 master_script,都没有才建 output_script(读写同一目标)。
+      const arts = await artifactsService.listProjectArtifacts(ctx, input.projectId);
+      const scriptArts = arts.filter((a) => a.stage === "script");
+      const existing =
+        scriptArts.find((a) => a.artifactType === "output_script") ??
+        scriptArts.find((a) => a.artifactType === "master_script");
+      const artifactId =
+        existing?.id ??
+        (
+          await artifactsService.createArtifact(ctx, {
+            projectId: input.projectId,
+            title: "分镜脚本",
+            artifactType: "output_script",
+            stage: "script",
+          })
+        ).id;
+      const res = await ai.request(
+        // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
+        ENDPOINTS.createAITask,
+        {
+          params: undefined,
+          query: undefined,
+          body: {
+            taskType: "script.draft",
+            inputData: {
+              artifactId,
+              projectId: input.projectId,
+              ...(input.topic ? { topic: input.topic } : {}),
+              ...(input.angle ? { angle: input.angle } : {}),
+              ...(input.extraBrief ? { extraBrief: input.extraBrief } : {}),
+            },
+          },
+        },
+        ctx,
+      );
+      const task = (res as { data?: { id?: unknown } }).data;
+      const taskId = task && typeof task.id === "string" ? task.id : "";
+      if (!taskId) {
+        throw new Error("dispatchScriptDraft: 起 script.draft task 失败(无 taskId)");
       }
       return { taskId };
     },

@@ -63,15 +63,15 @@ import {
   DefaultChatTransport,
   isToolUIPart,
   getToolName,
+  // [T-263] HITL 授权:工具调用挂起(approval-requested)时,用户「允许/拒绝」经 addToolApprovalResponse
+  // 回执;sendAutomaticallyWhen 挂此判定 → 授权响应齐了就**同回合自动 resume 续跑**(无新 user 消息)。
+  lastAssistantMessageIsCompleteWithApprovalResponses,
   type UIMessage,
 } from "ai";
 import { ChatCandidateCard, type ChatTopicCandidate } from "./chat-candidate-card";
 import { ChatEnrichCard, type ChatEnrichCardData } from "./chat-enrich-card";
 import { ChatHookCard, type ChatHookItem } from "./chat-hook-card";
-import {
-  ChatScriptDraftCard,
-  type ChatScriptSection,
-} from "./chat-script-draft-card";
+import { ChatScriptDraftCard } from "./chat-script-draft-card";
 import { ChatGatherCard, type ChatGatherItem } from "./chat-gather-card";
 // [T-084b/c] 截图卡(公开页真截图 → 加入弹药)+ 生成卡(dispatch asset.generate → 轮询采纳)。
 import {
@@ -945,10 +945,22 @@ export function AICopilotContent({
     [chatContextBody, captureConversationId],
   );
   // [T-231⑩] regenerate:@ai-sdk/react 现成的「重发最后一轮」API(对话出错时的重试通路)。
-  const { messages, sendMessage, status, stop, setMessages, error, regenerate } =
-    useChat({
-      transport,
-    });
+  // [T-263] addToolApprovalResponse:HITL 授权卡「允许/拒绝」的回执口。sendAutomaticallyWhen 挂
+  // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 授权响应齐了就**同回合自动
+  // resume 续跑** execute(读到文件),无新 user 消息、无第二回合叙述(根治「点了还得手动发」)。
+  const {
+    messages,
+    sendMessage,
+    status,
+    stop,
+    setMessages,
+    error,
+    regenerate,
+    addToolApprovalResponse,
+  } = useChat({
+    transport,
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
+  });
   const streaming = status === "streaming" || status === "submitted";
 
   // [T-105] 自动滚到最新:发消息/回复开始(条数增)强制跟随到底;流式增长按「跟随态」滚;
@@ -1817,6 +1829,51 @@ export function AICopilotContent({
                     if (!isToolUIPart(part)) return null;
                     const name = getToolName(part);
                     const traceLabel = CHAT_TOOL_LABELS[name]?.name ?? name;
+                    // [T-263] local.read 原生授权挂起(approval-requested)→ 渲**阻塞式确认卡**:
+                    // 用户「允许」写 grant + addToolApprovalResponse(approved) → 同回合 resume 续跑
+                    // execute 读到内容;「拒绝」→ addToolApprovalResponse(denied)。放在通用 spinner 前
+                    // (否则挂起态会被误渲成「正在调用…」)。
+                    if (
+                      name === "local.read" &&
+                      part.state === "approval-requested"
+                    ) {
+                      const inp = (part.input ?? {}) as { path?: string };
+                      const approvalId = part.approval?.id ?? "";
+                      return (
+                        <ChatLocalReadCard
+                          key={`${message.id}-approval-${idx}`}
+                          approvalRequest={{
+                            approvalId,
+                            path: typeof inp.path === "string" ? inp.path : "",
+                          }}
+                          needApproval={null}
+                          file={null}
+                          listing={null}
+                          error={null}
+                          onApprove={(id) =>
+                            void addToolApprovalResponse({ id, approved: true })
+                          }
+                          onDeny={(id) =>
+                            void addToolApprovalResponse({ id, approved: false })
+                          }
+                        />
+                      );
+                    }
+                    // [T-263] local.read 用户已拒绝(output-denied)→ 渲「已拒绝」终态(execute 未跑,
+                    // 无 output)。同样在通用 spinner 前拦掉,别渲成「正在调用…」死转。
+                    if (name === "local.read" && part.state === "output-denied") {
+                      return (
+                        <ChatLocalReadCard
+                          key={`${message.id}-denied-${idx}`}
+                          approvalRequest={null}
+                          needApproval={null}
+                          file={null}
+                          listing={null}
+                          error={null}
+                          deniedTerminal
+                        />
+                      );
+                    }
                     // [T-060②] 调用中 → 进行态 trace 行(WorkBuddy 式过程可见)。
                     if (part.state !== "output-available") {
                       return (
@@ -1903,15 +1960,24 @@ export function AICopilotContent({
                         />
                       );
                     }
-                    // [T-057⑤] 整稿分镜脚本(script.draft)→ 整稿「写入稿面」。
+                    // [T-268] 整稿分镜脚本(script.draft)→ 据 taskId 轮询 → awaiting_confirmation 渲
+                    // 整稿候选 → 「采纳写入稿面」(confirmTask → output_script append → 稿面编辑器局部刷新)。
+                    // dispatch 失败/无项目上下文 → 卡渲诚实错误态(去项目稿面写脚本)。
                     if (name === "script.draft" && out.kind === "script.draft") {
-                      const o = out as { sections?: ChatScriptSection[] };
+                      const o = out as {
+                        taskId?: string | null;
+                        projectId?: string | null;
+                        error?: string | null;
+                      };
                       return (
-                        <ChatScriptDraftCard
-                          key={key}
-                          sections={o.sections ?? []}
-                          projectId={activeProjectChip?.id ?? null}
-                        />
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatScriptDraftCard
+                            taskId={o.taskId ?? null}
+                            projectId={o.projectId ?? activeProjectChip?.id ?? null}
+                            error={o.error ?? null}
+                          />
+                        </React.Fragment>
                       );
                     }
                     // [T-057④/T-084a] 搜素材(material.gather)→ 逐条「存入弹药」(knowledge+
@@ -1969,9 +2035,9 @@ export function AICopilotContent({
                         />
                       );
                     }
-                    // [T-253] 本机文件读取(local.read)→ 运行时确认卡(允许一次/总是允许该目录/
-                    // 拒绝)/ 文本窗口卡 / 目录清单 / 拒读态。用户在卡上做出决定后经 sendMessage
-                    // 发一句话回对话,让编导重调同一路径(允许)或停止尝试(拒绝)。
+                    // [T-253] 本机文件读取(local.read)结果态:文本窗口卡 / 目录清单 / 拒读态。
+                    // 未授权在正常路径已由上面的 approval-requested 分支(T-263 原生 HITL 挂起)接管;
+                    // 这里 needApproval 仅在**授权门未装配**(端口缺席)时作为旧四态兜底出现。
                     if (name === "local.read" && out.kind === "local.read") {
                       const o = out as {
                         needApproval?: LocalReadApproval | null;
@@ -1983,12 +2049,15 @@ export function AICopilotContent({
                         <React.Fragment key={key}>
                           {traceRow}
                           <ChatLocalReadCard
+                            approvalRequest={null}
                             needApproval={o.needApproval ?? null}
                             file={o.file ?? null}
                             listing={o.listing ?? null}
                             error={o.error ?? null}
+                            // [T-263 快修吞点] 去掉 `if(streaming)return` 吞点:兜底态用户点「允许」后
+                            // 的自动重读不再被流式期直接丢弃(原「点了还得手动再发」的确切根因)。极窄
+                            // 竞态下 sendMessage 由 useChat 自行排队/处理,不在这里静默 drop。
                             onDecision={(text) => {
-                              if (streaming) return;
                               void sendMessage({ text });
                             }}
                           />

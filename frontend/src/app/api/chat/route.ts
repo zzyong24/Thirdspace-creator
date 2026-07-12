@@ -274,6 +274,8 @@ export async function POST(req: Request): Promise<Response> {
         readWebUrlPort: runtime.readWebUrl,
         // [T-253] local.read 端口 —— 本机文件读取(运行时逐次授权 + 敏感 denylist 硬门)。
         readLocalFilePort: runtime.readLocalFile,
+        // [T-263] local.read 授权判定端口(HITL 门)—— 判定与执行拆开,未授权 → SDK 挂起弹确认卡。
+        decideLocalReadAccessPort: runtime.decideLocalReadAccess,
         // [T-256a] local.tools 端口 —— 环境工具探测(白名单 which/--version,只读不执行任意命令)。
         detectToolsPort: runtime.detectTools,
         // [T-256a] local.workspace 端口 —— 列已授权本地目录(复用 T-253 授权表)。
@@ -284,6 +286,8 @@ export async function POST(req: Request): Promise<Response> {
         dispatchScriptReviewPort: runtime.dispatchScriptReview,
         // [T-265] planning.thesis 端口 —— ensure thesis_tree artifact + dispatch 论点树生成(采纳落面板)。
         dispatchPlanningThesisPort: runtime.dispatchPlanningThesis,
+        // [T-268] script.draft 端口 —— ensure output_script artifact + dispatch 异步整稿(采纳写稿面)。
+        dispatchScriptDraftPort: runtime.dispatchScriptDraft,
       },
     );
     // 流式回前端(useChat 消费 UIMessage stream);回带 conversationId 头供客户端复用会话。
@@ -327,7 +331,23 @@ export async function POST(req: Request): Promise<Response> {
         if (!conversationId) return;
         const rawParts = (responseMessage as { parts?: unknown[] } | undefined)
           ?.parts;
-        const parts = Array.isArray(rawParts) ? rawParts : [];
+        const rawPartsArr = Array.isArray(rawParts) ? rawParts : [];
+        // [T-263] HITL 授权门:local.read 未授权时本回合**挂起**(approval-requested),onFinish 也会
+        // 携该「未决态」tool part。**不落库未决/已回执但未出结果的 tool part**(state ∈
+        // {approval-requested, approval-responded})—— 否则 reload 会回放一张点不动的旧授权卡(该调用
+        // 的真实结果落在续跑那一轮:output-available/output-denied,由那轮独立落库)。其余 part 照落。
+        const parts = rawPartsArr.filter((p) => {
+          const rec = p as { type?: unknown; state?: unknown };
+          if (
+            typeof rec.type === "string" &&
+            rec.type.startsWith("tool-") &&
+            (rec.state === "approval-requested" ||
+              rec.state === "approval-responded")
+          ) {
+            return false;
+          }
+          return true;
+        });
         const text = textOf(responseMessage as UIMessage | undefined);
         // 有文本 或 有可渲染的 tool-result 部件才落库(纯空轮不留空气泡);tool part 的 type 形如
         // `tool-<name>`(AI SDK v5 ToolUIPart),据此判定「这轮产出了卡」。中断轮同判:开头即停

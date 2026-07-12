@@ -1,7 +1,10 @@
 import { jsonSchema, type Tool, type ToolSet } from "ai";
 // [T-239a] 统一工具门:所有工具经 defineChatTool 包装(错误信封/结果预算/审计打点),
 // 不再直调 tool() —— 信封元数据(kind 对齐 + 结构占位)单一真值在 CHAT_TOOL_ERROR_ENVELOPES。
-import { defineChatTool } from "./chat-tool-gate";
+import {
+  defineChatTool,
+  type ChatToolApprovalDecision,
+} from "./chat-tool-gate";
 // [T-256a] 环境感知扩展:工具探测结果类型(纯函数层白名单/防注入在 local-env-probe,IO 在端口)。
 import type { DetectToolsResult } from "./local-env-probe";
 
@@ -88,15 +91,26 @@ export interface ChatToolDeps {
     extraBrief?: string;
   }) => Promise<Array<{ text: string; angle: string }>>;
   /**
-   * [T-057⑤] script.draft 核心 —— 整稿分镜口播脚本候选(复用 runScriptNode,与旧
-   * ScriptDraftIsland 同引擎)。产 sections 经 ChatScriptDraftCard「写入稿面」物化。
+   * [T-057⑤ → T-268] script.draft 核心 —— **不再 inline 同步跑 runScriptNode**(整稿分钟级,
+   * 弱模型下同步必超时→回合被腰斩→退回 hooks,「点生成脚本只出 hook」的根因)。改 dispatch 既有
+   * 异步 runner runScriptDraft(script-runner.ts,早已存在只是没接):ensure 项目 output_script
+   * artifact + createTask(taskType script.draft,inputData.artifactId)→ live dispatch,立即返回
+   * { taskId, projectId }(不阻塞对话回合)。前端 ChatScriptDraftCard 据 taskId 轮询 getTask →
+   * awaiting_confirmation 渲整稿候选 → 采纳 confirmTask(artifact_version append 进 output_script
+   * → 稿面编辑器局部刷新读回)。runScriptDraft 已吃波1接地(brief 硬锚 + 素材可溯 + anti-fabrication),
+   * 保持。projectId 由 chat-runner 从 chatContext 注入(项目对话才有;无项目上下文 → 不 dispatch,
+   * 诚实回 error 卡渲「去项目稿面写脚本」)。
    */
-  draftScript: (input: {
+  dispatchScriptDraft: (input: {
+    /** 显式项目 id(模型从 selection 拿到时可传);缺省用 chatContext.projectId。 */
+    projectId?: string;
+    /** 本期选题(可选,喂进整稿生成上下文);缺省用 chatContext.selection 兜底。 */
     topic?: string;
+    /** 切入角度/风格要求,可选(随 inputData 进 runScriptDraft 上下文)。 */
     angle?: string;
     /** [T-081] 对话中获得的补充指令/洞察,原样进生成 prompt(优先级高于既有档案)。 */
     extraBrief?: string;
-  }) => Promise<Array<{ heading: string; body: string }>>;
+  }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
   /**
    * [T-057④/T-084a] material.gather 核心 —— 先真联网检索(resolveSearchSpec+searchWeb),再
    * runResearchNode 结构化综合(检索结果前置注入,非模型工具),诚实降级。产物经 ChatGatherCard
@@ -260,6 +274,22 @@ export interface ChatToolDeps {
         entries: Array<{ name: string; kind: "file" | "dir"; size: number | null }>;
         total: number;
       }
+  >;
+  /**
+   * [T-263] local.read 授权**判定**(HITL 门用,与「执行读取」readLocal 拆开)—— 只跑「路径归一/
+   * realpath 穿越防护 → 敏感 denylist → 授权表查询」的判定链,**不读文件内容、不消费一次授权**。
+   * 三态:
+   *   needApproval = 未授权 → 门返 'user-approval'(SDK 挂起工具调用、surface 确认卡);
+   *   denied      = 安全硬门拒读(denylist)→ 门返 'denied'(不弹卡、直接拒 + 原因);
+   *   granted     = 已授权(或路径无法判定,交给 readLocal 执行时按四态诚实处理)→ 门返
+   *                 'not-applicable'(execute 直接跑;readLocal 再查一遍授权表,此时 grant 已在)。
+   * 判定与执行拆开:确认卡「允许」先写 grant,再 addToolApprovalResponse → 续跑 execute 时 readLocal
+   * 查授权表命中即读到(同回合 resume,无需第二回合)。未装配 → 授权门自然缺席(工具回落既有四态)。
+   */
+  decideLocalRead?: (input: { path: string }) => Promise<
+    | { status: "needApproval" }
+    | { status: "denied"; reason: string }
+    | { status: "granted" }
   >;
   /**
    * [T-256a] local.tools 核心 —— 探测系统已装工具(ffmpeg/node/python3/git…)。**端口内做**:
@@ -712,9 +742,18 @@ export interface ScriptHooksToolResult {
   items: Array<{ text: string; angle: string }>;
 }
 
+// [T-268] script.draft 工具结果 —— dispatch 了一次异步整稿生成(立即返回,后台跑,不阻塞对话回合)。
+// 前端 ChatScriptDraftCard 据 taskId 轮询 getTask → awaiting_confirmation 后 listTaskResults 拿候选
+// 整稿 → 用户「采纳写入稿面」confirmTask(artifact_version append 进 output_script → 稿面编辑器局部刷新
+// 读回)。projectId 供卡兜底(采纳/局部刷新定位)。dispatch 失败 / 无项目上下文 → error 非 null。
 export interface ScriptDraftToolResult {
   kind: "script.draft";
-  sections: Array<{ heading: string; body: string }>;
+  /** dispatch 出的 script.draft 任务 id(卡据此轮询 getTask;失败为 null)。 */
+  taskId: string | null;
+  /** 目标项目 id(卡兜底 + 局部刷新定位;无项目上下文为 null)。 */
+  projectId: string | null;
+  /** dispatch 失败 / 无项目上下文时的诚实错误(成功为 null)。 */
+  error: string | null;
 }
 
 export interface MaterialGatherToolResult {
@@ -2024,21 +2063,35 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         return { kind: "script.hooks", items };
       },
     }, deps.humanizeError),
+    // [T-268] 整稿改异步 dispatch(同 review.script / planning.thesis 范式):execute **不直接生成**
+    // (整稿分钟级,同步必超时→回合被腰斩→退回 hooks,「点生成脚本只出 hook」的根因)—— dispatch
+    // 既有异步 runner runScriptDraft(script-runner.ts,复活孤儿),立即返回 { taskId, projectId }。
+    // 前端 ChatScriptDraftCard 据 taskId 轮询 → awaiting_confirmation 渲整稿候选 → 采纳写入稿面。
+    // 无项目上下文 / dispatch 失败 → error 非 null(卡渲诚实错误态,提示去项目稿面写脚本)。
     "script.draft": defineChatTool("script.draft", {
       description:
-        "为当前项目生成一版完整的分镜口播脚本(整稿,多段分镜:口播/画面/字幕)。创作者会整稿「写入稿面」。当用户要写脚本/起草整稿/重写脚本时调用。",
+        "为**当前项目**生成一版完整的分镜口播脚本(整稿,多段分镜:口播/画面/字幕)。当用户要写脚本/起草整稿/重写脚本、点「生成脚本」时调用。整稿生成在后台跑(不阻塞对话,整稿较重、分钟级),结果渲成整稿候选卡;用户点卡上「采纳写入稿面」才落成脚本新版本、写进稿面编辑器(铁律②确认门)——你没有直接写稿的能力,绝不口头宣称「脚本已写好/已写入稿面」,也**绝不因为整稿重就退回只给几组钩子**(整稿是后台异步跑的,不会占用你这回合)。只能为当前项目对话写整稿;没有项目上下文时会诚实提示去项目稿面里写。",
       inputSchema: SCRIPT_DRAFT_PARAMS,
       execute: async ({
         topic,
         angle,
         extraBrief,
       }): Promise<ScriptDraftToolResult> => {
-        const sections = await deps.draftScript({
-          topic,
-          angle,
-          extraBrief: clampExtraBrief(extraBrief),
-        });
-        return { kind: "script.draft", sections };
+        try {
+          const { taskId, projectId: pid, error } = await deps.dispatchScriptDraft({
+            topic: typeof topic === "string" && topic.trim() ? topic.trim() : undefined,
+            angle: typeof angle === "string" && angle.trim() ? angle.trim() : undefined,
+            extraBrief: clampExtraBrief(extraBrief),
+          });
+          return { kind: "script.draft", taskId, projectId: pid, error };
+        } catch (err) {
+          return {
+            kind: "script.draft",
+            taskId: null,
+            projectId: null,
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
       },
     }, deps.humanizeError),
     "material.gather": defineChatTool("material.gather", {
@@ -2197,8 +2250,23 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 明说原因;大小上限 1MB + 二进制拒读;目录返回清单。窗口截断在 execute 侧(4000/8000 同协议)。
     "local.read": defineChatTool("local.read", {
       description:
-        "读用户**本机**的一个文件或目录(任意绝对路径,支持 ~ 展开)。当用户说「读一下 ~/xx/某文件 / 看看我桌面那份稿子 / 把这个本地 md 读进来」时调用。**授权协议**:首次读某路径会返回 needApproval(这不是失败)——告诉用户「已弹出确认卡,请在卡上选择」,用户点「允许」后你**再次调用本工具传同一 path** 才能读到内容;用户拒绝就不再尝试、换其他方式,**绝不换路径绕行**。**安全边界(如实转述,绝不绕)**:敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论用户是否授权都会拒读并说明原因;超过 1MB 或二进制文件拒读(建议用户直接上传到素材库)。目录路径返回文件清单。文本结果按窗返回(offset/totalChars/hasMore,默认 4000 字/封顶 8000):hasMore=true 时带 offset 翻窗读完再归纳。读到的内容直接进对话;用户要「存为素材/知识」时走对应确认门(knowledge.distill 等),不自动落库。",
+        "读用户**本机**的一个文件或目录(任意绝对路径,支持 ~ 展开)。当用户说「读一下 ~/xx/某文件 / 看看我桌面那份稿子 / 把这个本地 md 读进来」时调用。**授权协议(HITL 阻塞式)**:首次读某路径会**弹出确认卡并把本次调用挂起**(这不是失败,也不需要你重发)——用户点「允许」后系统会在**同一回合自动续跑**、直接把文件内容读回给你;用户点「拒绝」则本次读取作废,你就不再尝试、换其他方式,**绝不换路径绕行**。**安全边界(如实转述,绝不绕)**:敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论用户是否授权都会拒读并说明原因;超过 1MB 或二进制文件拒读(建议用户直接上传到素材库)。目录路径返回文件清单。文本结果按窗返回(offset/totalChars/hasMore,默认 4000 字/封顶 8000):hasMore=true 时带 offset 翻窗读完再归纳。读到的内容直接进对话;用户要「存为素材/知识」时走对应确认门(knowledge.distill 等),不自动落库。",
       inputSchema: LOCAL_READ_PARAMS,
+      // [T-263] HITL 授权门:判定与执行拆开 —— needsApproval 只跑授权判定(decideLocalRead),
+      // 未授权 → 'user-approval' 挂起本工具调用、surface 确认卡(execute 暂不跑);已授权/敏感硬拒
+      // 直接放行/拒。用户「允许」写 grant + addToolApprovalResponse → 同回合续跑 execute 读到内容。
+      // 端口未装配(decideLocalRead 缺席)→ 无授权门,execute 走既有四态(needApproval 输出兜底)。
+      needsApproval: deps.decideLocalRead
+        ? async ({ path }): Promise<ChatToolApprovalDecision> => {
+            const target = typeof path === "string" ? path.trim() : "";
+            if (!target) return { status: "not-applicable" };
+            const d = await deps.decideLocalRead!({ path: target });
+            if (d.status === "denied")
+              return { status: "denied", reason: d.reason };
+            if (d.status === "needApproval") return { status: "user-approval" };
+            return { status: "not-applicable" };
+          }
+        : undefined,
       execute: async (
         { path, offset, maxChars },
         callOptions,

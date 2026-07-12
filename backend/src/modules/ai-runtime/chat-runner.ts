@@ -4,7 +4,10 @@ import {
   stepCountIs,
   type UIMessage,
   type ToolSet,
+  type ToolApprovalStatus,
 } from "ai";
+// [T-263] HITL 授权门:从已挂工具装配 streamText 的 toolApproval 配置(单一真值在 chat-tool-gate)。
+import { buildChatToolApproval } from "./chat-tool-gate";
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelSpec } from "@creatoros/ai-worker";
 import {
@@ -195,6 +198,19 @@ export interface AssembleChatDeps extends ContextDeps {
       }
   >;
   /**
+   * [T-263] local.read 授权**判定**端口(HITL 门用,与执行读取 readLocalFilePort 拆开)—— 只跑
+   * 归一/realpath/敏感/授权表判定,不读内容、不消费一次授权。composition root(persistence-client)
+   * 绑 decideLocalReadAccess。可选:未装配 → local.read 无授权门(工具回落既有 needApproval 四态)。
+   */
+  decideLocalReadAccessPort?: (
+    ctx: RequestContext,
+    input: { path: string },
+  ) => Promise<
+    | { status: "needApproval" }
+    | { status: "denied"; reason: string }
+    | { status: "granted" }
+  >;
+  /**
    * [T-256a] local.tools 端口 —— 探测系统已装工具(ffmpeg/node/python3/git…)。composition root
    * (persistence-client)绑:白名单过滤(resolveToolsToProbe)→ 固定 arg 数组 spawn which/--version
    * → parseToolVersion。只读探测、不执行任意命令。可选:未装配 → 工具报「环境探测能力未接入」。
@@ -240,6 +256,17 @@ export interface AssembleChatDeps extends ContextDeps {
   dispatchPlanningThesisPort?: (
     ctx: RequestContext,
     input: { projectId: string; topic?: string },
+  ) => Promise<{ taskId: string }>;
+  /**
+   * [T-268] script.draft 端口 —— dispatch 既有异步 runner runScriptDraft(script-runner.ts,复活
+   * 孤儿;整稿分钟级不能 inline 阻塞对话回合)。绑定层先 ensure 项目的 output_script artifact 并把
+   * artifactId 写进 task.inputData(采纳时 append 新版本 → 稿面编辑器读回),再 createTask。由
+   * composition root 绑(ai transport 的 ai.tasks.create + artifactsService)。可选:未装配 →
+   * 工具报「整稿能力未接入」(诚实降级)。
+   */
+  dispatchScriptDraftPort?: (
+    ctx: RequestContext,
+    input: { projectId: string; topic?: string; angle?: string; extraBrief?: string },
   ) => Promise<{ taskId: string }>;
 }
 
@@ -499,6 +526,12 @@ export interface ChatAssembly {
    * 强制它,之后步恢复 auto。undefined = 不强制(自由对话)。
    */
   forcedTool?: string;
+  /**
+   * [T-263] SDK 原生工具授权(HITL)配置 —— 从已挂工具收录登记了授权判定器的工具(当前仅
+   * local.read)装配的 per-tool 判定映射,喂给 streamText 的 `toolApproval`。undefined = 本轮无
+   * 需授权门的工具(streamText 不传该配置,行为与旧一致)。
+   */
+  toolApproval?: Record<string, (input: unknown) => Promise<ToolApprovalStatus>>;
 }
 
 /**
@@ -915,42 +948,50 @@ export async function buildChatAssembly(
         text: annotateUngroundedClaims(h.text, haystack).text,
       }));
     },
-    draftScript: async ({ topic, angle, extraBrief }) => {
-      // [T-057⑤] 复用 runScriptNode(与旧 ScriptDraftIsland/任务链同引擎,script.draft
-      // capability 的用户配模型);shots → 编辑器 sections(与 script-runner renderSections 同形)。
-      const effTopic = topic?.trim() || selectionTitle || "";
-      const spec = await deps.resolveModelSpec(ctx, "script.draft");
-      const { runScriptNode } = await import("@creatoros/ai-worker");
-      const { shots } = await runScriptNode({
-        model: modelFor(spec),
-        positioningBrief: context.positioningBrief,
-        // [T-270] 立项 Brief 硬锚(项目态对话整稿也吃钦定核心信息/避免X/内容形式/目标观众,
-        // 与任务链一致;账号态对话 projectId=null → context.projectBriefHard 为空,整段省略)。
-        projectBriefHardBrief: context.projectBriefHard || undefined,
-        learningsBrief: context.learningsBrief,
-        topicTitle: effTopic,
-        topicAngle: angle ?? "",
-        // [T-081①] 对话洞察/补充指令进整稿 prompt(script-node 空则整段省略)。
-        extraBrief,
-        // [T-146c] 用户上传素材主权:高优先进「必须遵守」硬约束段,normal 进参考段(context 已按
-        // material_link.priority 分流并装配段头)。稿面对话里整稿也吃这条主权,与任务链一致。
-        userMaterialHardBrief: context.userMaterialHardBrief || undefined,
-        userMaterialRefBrief: context.userMaterialRefBrief || undefined,
-      });
-      return shots.map((shot, i) => {
-        const label = shot.口播 ? shot.口播.slice(0, 16) : `分镜 ${i + 1}`;
-        const heading = shot.时长
-          ? `${i + 1}. ${label}（${shot.时长}）`
-          : `${i + 1}. ${label}`;
-        const body = [
-          shot.口播 && `口播：${shot.口播}`,
-          shot.画面 && `画面：${shot.画面}`,
-          shot.字幕 && `字幕：${shot.字幕}`,
-        ]
-          .filter((l): l is string => Boolean(l))
-          .join("\n");
-        return { heading, body };
-      });
+    // [T-268] 整稿改异步 dispatch(不再 inline 同步 runScriptNode —— 整稿分钟级,弱模型下同步必超时
+    // → 回合被腰斩 → 退回轻量 hooks,「点生成脚本只出 hook」的根因)。整稿恒是「当前项目的」(要落成
+    // output_script 版本写进稿面),项目从模型显式传参优先,否则用 chatContext.projectId(稿面右栏对话
+    // 恒有)。无项目上下文 → 不 dispatch,诚实回 error(卡渲「去项目稿面写脚本」);端口未装配 → 同样
+    // 诚实 error(不抛裸码)。topic 缺省用工作台选中标题兜底(与写稿/复盘同款 selection.label 派生)。
+    dispatchScriptDraft: async ({ projectId, topic, angle, extraBrief }) => {
+      const pid =
+        (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
+        chatContext.projectId ||
+        "";
+      if (!pid) {
+        return {
+          taskId: null,
+          projectId: null,
+          error:
+            "整稿要落进具体项目的稿面 —— 请在项目稿面右栏的编导对话里让我写脚本,我会把整稿写进这个项目。",
+        };
+      }
+      if (!deps.dispatchScriptDraftPort) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: "整稿能力当前未接入(服务端未装配整稿分派) —— 暂时无法生成整稿。",
+        };
+      }
+      const effTopic =
+        (typeof topic === "string" && topic.trim() ? topic.trim() : "") ||
+        selectionTitle ||
+        "";
+      try {
+        const { taskId } = await deps.dispatchScriptDraftPort(ctx, {
+          projectId: pid,
+          ...(effTopic ? { topic: effTopic } : {}),
+          ...(angle ? { angle } : {}),
+          ...(extraBrief ? { extraBrief } : {}),
+        });
+        return { taskId, projectId: pid, error: null };
+      } catch (err) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: err instanceof Error ? err.message : String(err),
+        };
+      }
     },
     gatherMaterials: async ({ query }) => {
       // [T-057④/T-084a] 两步:①先真联网检索(searchWeb,失败/未配降级)②runResearchNode 结构化
@@ -1042,6 +1083,11 @@ export async function buildChatAssembly(
       }
       return deps.readLocalFilePort(ctx, { path, signal });
     },
+    // [T-263] local.read 授权判定(HITL 门用)—— 端口未装配 → 缺席(local.read 无授权门,回落既有
+    // needApproval 四态);装配了则只跑判定(不读内容),给 defineChatTool 的 needsApproval 用。
+    decideLocalRead: deps.decideLocalReadAccessPort
+      ? async ({ path }) => deps.decideLocalReadAccessPort!(ctx, { path })
+      : undefined,
     // [T-256a] local.tools:端口未装配 → 诚实抛错(工具 execute 接住转 error);装配了则端口内走
     // 白名单过滤 + 固定 arg 数组 spawn which/--version(只读探测,不执行任意命令)。
     detectTools: async ({ tools }) => {
@@ -1400,7 +1446,11 @@ export async function buildChatAssembly(
       ? chatContext.functionKey
       : undefined;
 
-  return { skillId, system, tools, modelSpec, forcedTool };
+  // [T-263] HITL 授权门:从本轮已挂工具收录登记了授权判定器的工具(当前仅 local.read),装配
+  // streamText 的 toolApproval 配置。工具不在白名单 / decideLocalRead 端口未装配 → 自然缺席。
+  const toolApproval = buildChatToolApproval(tools);
+
+  return { skillId, system, tools, modelSpec, forcedTool, toolApproval };
 }
 
 // ── [T-239f S6] 步数收尾 ────────────────────────────────────────────────────
@@ -1595,6 +1645,10 @@ export async function runChatStream(
       forcedTool: assembly.forcedTool,
       maxSteps,
     }),
+    // [T-263] 原生工具授权(HITL):local.read 未授权 → SDK 挂起该工具调用、以 approval-requested
+    // 态 surface 前端确认卡(execute 暂不跑),用户「允许」写 grant + addToolApprovalResponse →
+    // sendAutomaticallyWhen 同回合 resume 续跑 execute 读到内容。无需授权门时 undefined(行为不变)。
+    ...(assembly.toolApproval ? { toolApproval: assembly.toolApproval } : {}),
     // 工具调用后让模型据工具结果继续把话说完(候选已在 tool-result part 里流回前端渲卡)。
     stopWhen: stepCountIs(maxSteps),
     // [T-239b] typed 终止原因:成功轮按恢复层事件归纳;错误轮区分「可重试耗尽」与其它;

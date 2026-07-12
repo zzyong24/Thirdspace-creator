@@ -379,4 +379,35 @@ describe("ScriptRichEditor (TipTap)", () => {
     await user.click(screen.getByRole("button", { name: "保存" }));
     expect(mockCreateArtifactVersion).not.toHaveBeenCalled();
   });
+
+  // [T-268] 对话整稿「采纳写入稿面」的局部刷新:卡片发 SCRIPT_WRITE 信号带新整稿 HTML → 编辑器
+  // setContent 直接吃(不 router.refresh 整页重挂)。这是消掉「写入稿面卡顿」的关键路径。
+  it("收到 SCRIPT_WRITE 信号 → setContent 局部刷新整稿(不 router.refresh)", async () => {
+    let editor: Editor | null = null;
+    render(
+      <ScriptRichEditor
+        initialHtml="<p>旧稿</p>"
+        artifactId="art-1"
+        projectId="proj-1"
+        onEditorReady={(e) => (editor = e)}
+      />,
+    );
+    const pm = await findProseMirror();
+    await waitFor(() => expect(editor).not.toBeNull());
+    expect(pm.textContent).toContain("旧稿");
+
+    const { emitScriptWrite } = await import("./script-write-signal");
+    emitScriptWrite({
+      artifactId: null,
+      html: "<h2>新整稿标题</h2><p>新整稿口播正文</p>",
+    });
+
+    await waitFor(() => {
+      expect(pm.textContent).toContain("新整稿标题");
+      expect(pm.textContent).toContain("新整稿口播正文");
+    });
+    expect(pm.textContent).not.toContain("旧稿");
+    // 局部刷新走 setContent,**不**触发整页 router.refresh。
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+  });
 });

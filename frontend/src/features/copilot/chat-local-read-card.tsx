@@ -1,13 +1,20 @@
 "use client";
 
 /**
- * 对话内本机文件读取卡(T-253)。local.read 工具四态(照 ChatWebReadCard 的 needLogin 范式):
- *   ① needApproval 非 null → **运行时确认卡**:「编导想读 <path>(大小/类型)」+ 三按钮
- *      (允许一次 / 总是允许该目录 / 拒绝)。允许 → POST /api/v1/local/read-grant 写授权表,
- *      然后经 onDecision 发一句话让编导**重调同一路径**;拒绝 → 本地渲「已拒绝」+ 告知编导别再试。
- *   ② file 非 null → 已读到文本:文件名/路径 + 窗口进度(offset/totalChars/hasMore)+ 正文预览。
- *   ③ listing 非 null → 目录清单。
- *   ④ error 非 null → 拒读(敏感 denylist/超限/二进制,带原因)或 IO 失败 —— 诚实渲错误。
+ * 对话内本机文件读取卡(T-253;T-263 升级为**阻塞式 HITL 授权**)。
+ *
+ * 授权态(两条路,共用同一张确认卡 UI):
+ *   ①【T-263 主】approvalRequest 非 null → **原生工具授权挂起**(SDK approval-requested):工具调用
+ *      被挂起、execute 暂不跑。用户点「允许一次/总是允许该目录」→ 先写 grant(POST read-grant,
+ *      服务端 realpath 后落授权表)→ 再 addToolApprovalResponse(approved) → useChat 挂
+ *      sendAutomaticallyWhen **同回合 resume 续跑** execute 读到内容(卡随即变成读取结果);「拒绝」
+ *      → addToolApprovalResponse(denied) → SDK 标 output-denied、execute 不跑。**无新 user 消息、
+ *      无第二回合叙述**(根治「点了还得手动再发」)。
+ *   ②【T-253 兜底】needApproval 非 null(端口未装授权门时的旧四态输出)→ 写 grant 后经 onDecision
+ *      发一句话让编导重调同一路径(双回合;快修:去掉 streaming 吞点,允许自动重读)。
+ *
+ * 结果态:file/listing/error(拒读:敏感 denylist/超限/二进制,带原因)。deniedTerminal = 用户已
+ * 拒绝的终态(output-denied / reload 回放)。
  */
 
 import * as React from "react";
@@ -16,6 +23,12 @@ export interface LocalReadApproval {
   path: string;
   size: number | null;
   type: string;
+}
+
+/** [T-263] 原生工具授权挂起态(approval-requested part)—— approvalId + 待读路径(模型原始入参)。 */
+export interface LocalReadApprovalRequest {
+  approvalId: string;
+  path: string;
 }
 
 export interface LocalReadFile {
@@ -41,17 +54,30 @@ function humanSize(size: number | null): string {
 }
 
 export function ChatLocalReadCard({
+  approvalRequest = null,
   needApproval,
   file,
   listing,
   error,
+  deniedTerminal = false,
+  onApprove,
+  onDeny,
   onDecision,
 }: {
+  /** [T-263] 原生授权挂起态(非 null → 渲阻塞式确认卡,允许/拒绝走 addToolApprovalResponse)。 */
+  approvalRequest?: LocalReadApprovalRequest | null;
+  /** [T-253 兜底] 旧四态输出的未授权态(端口未装授权门时);与 approvalRequest 二选一。 */
   needApproval: LocalReadApproval | null;
   file: LocalReadFile | null;
   listing: LocalReadListing | null;
   error: string | null;
-  /** 用户在确认卡上做出决定后,把一句话发回对话(让编导重调 / 停止尝试)。流式中可为空。 */
+  /** [T-263] 用户已拒绝的终态(output-denied / reload 回放)→ 渲「已拒绝」,不再弹按钮。 */
+  deniedTerminal?: boolean;
+  /** [T-263] 原生授权「允许」回执(写 grant 成功后调,续跑 execute)。 */
+  onApprove?: (approvalId: string) => void;
+  /** [T-263] 原生授权「拒绝」回执(标 output-denied,execute 不跑)。 */
+  onDeny?: (approvalId: string) => void;
+  /** [T-253 兜底] 旧四态:用户决定后把一句话发回对话(让编导重调/停止)。 */
   onDecision?: (text: string) => void;
 }) {
   const [state, setState] = React.useState<
@@ -59,16 +85,22 @@ export function ChatLocalReadCard({
   >("idle");
   const [grantError, setGrantError] = React.useState<string | null>(null);
 
+  // 待读路径:原生授权态取 approvalRequest.path(模型原始入参,read-grant 端点会 realpath);
+  // 兜底态取 needApproval.path(已 realpath)。
+  const pendingPath = approvalRequest?.path ?? needApproval?.path ?? "";
+  const isNative = approvalRequest != null;
+
   const grant = React.useCallback(
     async (mode: "once" | "dir") => {
-      if (!needApproval) return;
+      if (!pendingPath) return;
       setState("granting");
       setGrantError(null);
       try {
+        // 先写 grant(服务端 realpath 后落授权表)—— 续跑 execute 时 readLocalFile 查授权表命中即读到。
         const res = await fetch("/api/v1/local/read-grant", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: needApproval.path, mode }),
+          body: JSON.stringify({ path: pendingPath, mode }),
         });
         const data = (await res.json()) as { error?: string };
         if (!res.ok) {
@@ -77,33 +109,62 @@ export function ChatLocalReadCard({
           return;
         }
         setState("granted");
-        onDecision?.(
-          mode === "dir"
-            ? `我已允许你读取该目录(${needApproval.path} 所在目录今后免确认),请再次调用 local.read 读取 ${needApproval.path}。`
-            : `我已允许你读取一次,请再次调用 local.read 读取 ${needApproval.path}。`,
-        );
+        if (isNative && approvalRequest) {
+          // [T-263] 同回合 resume:回执「已批准」→ SDK 续跑 execute 读到内容(卡随即变读取结果)。
+          onApprove?.(approvalRequest.approvalId);
+        } else {
+          // [T-253 兜底] 双回合:发一句话让编导重调同一路径。
+          onDecision?.(
+            mode === "dir"
+              ? `我已允许你读取该目录(${pendingPath} 所在目录今后免确认),请再次调用 local.read 读取 ${pendingPath}。`
+              : `我已允许你读取一次,请再次调用 local.read 读取 ${pendingPath}。`,
+          );
+        }
       } catch {
         setState("error");
         setGrantError("授权请求失败,请重试");
       }
     },
-    [needApproval, onDecision],
+    [pendingPath, isNative, approvalRequest, onApprove, onDecision],
   );
 
   const deny = React.useCallback(() => {
-    if (!needApproval) return;
+    if (!pendingPath) return;
     setState("denied");
-    onDecision?.(
-      `我拒绝了读取 ${needApproval.path}。请不要再尝试读取这个文件,换其他方式继续。`,
-    );
-  }, [needApproval, onDecision]);
+    if (isNative && approvalRequest) {
+      onDeny?.(approvalRequest.approvalId);
+    } else {
+      onDecision?.(
+        `我拒绝了读取 ${pendingPath}。请不要再尝试读取这个文件,换其他方式继续。`,
+      );
+    }
+  }, [pendingPath, isNative, approvalRequest, onDeny, onDecision]);
 
-  // ① 运行时确认卡(needApproval)。
-  if (needApproval) {
+  // [T-263] 用户已拒绝的终态(output-denied / reload)—— 直接渲「已拒绝」,不再弹按钮。
+  if (deniedTerminal) {
+    return (
+      <div
+        data-slot="chat-local-read-card"
+        data-denied="true"
+        className="mt-1 flex w-full max-w-[420px] flex-col gap-1 rounded-[10px] border border-border bg-surface-subtle/60 px-3 py-2"
+      >
+        <span className="text-[10px] font-medium uppercase tracking-wide text-text-subtle">
+          本机文件读取 · 已拒绝
+        </span>
+        <p className="text-[12px] text-text-subtle">
+          你拒绝了这次读取 —— 编导不会读这个路径。
+        </p>
+      </div>
+    );
+  }
+
+  // ① 运行时确认卡(approvalRequest 原生挂起 / needApproval 兜底,同一 UI)。
+  if (approvalRequest || needApproval) {
     return (
       <div
         data-slot="chat-local-read-card"
         data-need-approval="true"
+        data-native-approval={isNative ? "true" : "false"}
         className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-warning/40 bg-warning/5 px-3 py-2"
       >
         <span className="text-[10px] font-medium uppercase tracking-wide text-warning">
@@ -114,22 +175,26 @@ export function ChatLocalReadCard({
         </p>
         <code
           className="break-all rounded-md border border-border bg-surface-subtle px-2 py-1 text-[11px] text-foreground"
-          title={needApproval.path}
+          title={pendingPath}
         >
-          {needApproval.path}
+          {pendingPath}
         </code>
-        <p className="text-[11px] text-text-subtle">
-          {needApproval.type === "directory"
-            ? "类型:目录(将返回文件清单)"
-            : `类型:${needApproval.type}${
-                needApproval.size != null
-                  ? ` · 大小:${humanSize(needApproval.size)}`
-                  : ""
-              }`}
-        </p>
+        {needApproval ? (
+          <p className="text-[11px] text-text-subtle">
+            {needApproval.type === "directory"
+              ? "类型:目录(将返回文件清单)"
+              : `类型:${needApproval.type}${
+                  needApproval.size != null
+                    ? ` · 大小:${humanSize(needApproval.size)}`
+                    : ""
+                }`}
+          </p>
+        ) : null}
         {state === "granted" ? (
           <span className="text-[11px] font-medium text-success">
-            已允许 —— 编导会重新读取。
+            {isNative
+              ? "已允许 —— 正在同一回合读取…"
+              : "已允许 —— 编导会重新读取。"}
           </span>
         ) : state === "denied" ? (
           <span className="text-[11px] font-medium text-text-subtle">

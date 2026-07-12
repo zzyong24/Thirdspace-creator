@@ -5,9 +5,12 @@ import {
   BUDGET_TRUNCATION_SUFFIX,
   CHAT_TOOL_ERROR_ENVELOPES,
   CHAT_TOOL_RESULT_BUDGET_CHARS,
+  buildChatToolApproval,
   defineChatTool,
   enforceChatToolResultBudget,
+  getChatToolApprovalDecider,
 } from "./chat-tool-gate";
+import type { ToolSet } from "ai";
 import { ALL_CHAT_TOOL_NAMES } from "./chat-tools";
 
 // ── [T-239a] 统一工具门单测:裸抛→信封化 kind 对齐 / 超预算只截字符串 / 审计日志格式 ──
@@ -15,6 +18,12 @@ import { ALL_CHAT_TOOL_NAMES } from "./chat-tools";
 const NOOP_SCHEMA = jsonSchema<{ q?: string }>({
   type: "object",
   properties: { q: { type: "string" } },
+});
+
+// [T-263] 授权判定器读 input.path,故授权门用例用带 path 的 schema(INPUT 类型对齐)。
+const PATH_SCHEMA = jsonSchema<{ path?: string }>({
+  type: "object",
+  properties: { path: { type: "string" } },
 });
 
 /** 取包装后 tool 的 execute(SDK Tool 类型上 execute 可选,单测里断言存在后调用)。 */
@@ -76,7 +85,9 @@ describe("defineChatTool 错误信封", () => {
     const out2 = (await executeOf(raw)({}, {})) as Record<string, unknown>;
     expect(out2.kind).toBe("script.draft");
     expect(out2.error).toBe("weird string throw");
-    expect(out2.sections).toEqual([]);
+    // [T-268] script.draft 改异步 dispatch:错误信封占位改为 { taskId, projectId }(不再 sections)。
+    expect(out2.taskId).toBeNull();
+    expect(out2.projectId).toBeNull();
   });
 
   it("未登记 CHAT_TOOL_ERROR_ENVELOPES 的工具名 → 装配期即抛(新工具须同步登记信封)", () => {
@@ -191,6 +202,75 @@ describe("defineChatTool 审计打点", () => {
     await executeOf(bad)({}, {});
     expect(spy).toHaveBeenCalledWith(
       expect.stringMatching(/^\[chat-tool\] name=context\.materials error durationMs=\d+$/),
+    );
+  });
+});
+
+// ── [T-263] HITL 授权门:通用「未决→续跑」能力抽进 defineChatTool + buildChatToolApproval ──
+describe("defineChatTool needsApproval + buildChatToolApproval(HITL 通用门)", () => {
+  it("无 needsApproval 的工具 → getChatToolApprovalDecider 返 undefined,不进 toolApproval 配置", () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const t = defineChatTool("local.read", {
+      description: "d",
+      inputSchema: NOOP_SCHEMA,
+      execute: async () => ({ kind: "local.read" }),
+    });
+    expect(getChatToolApprovalDecider(t)).toBeUndefined();
+    expect(buildChatToolApproval({ "local.read": t } as unknown as ToolSet)).toBeUndefined();
+  });
+
+  it("登记 needsApproval → buildChatToolApproval 映射三态:user-approval / not-applicable / denied", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const decide = vi.fn(
+      async (
+        input: { path?: string },
+      ): Promise<
+        | { status: "user-approval" }
+        | { status: "not-applicable" }
+        | { status: "denied"; reason: string }
+      > => {
+        if (input.path === "~/.env") return { status: "denied", reason: "敏感文件不可读" };
+        if (input.path === "~/granted.md") return { status: "not-applicable" };
+        return { status: "user-approval" };
+      },
+    );
+    const t = defineChatTool("local.read", {
+      description: "d",
+      inputSchema: PATH_SCHEMA,
+      execute: async () => ({ kind: "local.read" }),
+      needsApproval: decide,
+    });
+    // 判定器旁挂成功。
+    expect(getChatToolApprovalDecider(t)).toBe(decide);
+
+    const approval = buildChatToolApproval({ "local.read": t } as unknown as ToolSet);
+    expect(approval).toBeDefined();
+    const fn = approval!["local.read"]!;
+
+    // 未授权 → 'user-approval'(SDK 挂起弹卡)。
+    await expect(fn({ path: "~/Desktop/x.md" })).resolves.toBe("user-approval");
+    // 已授权 → 'not-applicable'(免卡直接执行)。
+    await expect(fn({ path: "~/granted.md" })).resolves.toBe("not-applicable");
+    // 敏感硬拒 → { type:'denied', reason }(不弹卡、直接拒 + 原因)。
+    await expect(fn({ path: "~/.env" })).resolves.toEqual({
+      type: "denied",
+      reason: "敏感文件不可读",
+    });
+  });
+
+  it("判定器抛错 → 保守回 'not-applicable'(不因判定器抖动误挂授权门)", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const t = defineChatTool("local.read", {
+      description: "d",
+      inputSchema: NOOP_SCHEMA,
+      execute: async () => ({ kind: "local.read" }),
+      needsApproval: async () => {
+        throw new Error("decide boom");
+      },
+    });
+    const approval = buildChatToolApproval({ "local.read": t } as unknown as ToolSet);
+    await expect(approval!["local.read"]!({ path: "x" })).resolves.toBe(
+      "not-applicable",
     );
   });
 });

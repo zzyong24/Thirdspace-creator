@@ -42,6 +42,7 @@ import { client } from "@/lib/contract-client";
 import { useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
 import { ensureScriptArtifact } from "./ensure-script-artifact";
 import { htmlToSections } from "./script-editor-bridge";
+import { subscribeScriptWrite } from "./script-write-signal";
 
 type SaveStatus = "saved" | "saving" | "dirty";
 
@@ -271,6 +272,30 @@ export function ScriptRichEditor({
     if (editor && onEditorReady) onEditorReady(editor);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
+
+  // [T-268] 对话整稿「采纳写入稿面」的**局部刷新**:采纳后卡片发 SCRIPT_WRITE 信号带新整稿 HTML,
+  // 这里直接 setContent 灌进编辑器(不 router.refresh 整页重挂 = 消掉「写入稿面卡顿」)。稿面只有
+  // 一个编辑器,故 artifactId 有则校验、无(卡片默认 null)则直接应用。setContent 后同步派生态:
+  // 标「已保存」(采纳已 append 新版本,editor 内容 == DB 当前版本)+ 刷字数 + 记 appliedHtmlRef
+  // (避免随后的 initialHtml 回流被误判为外部新值再覆盖一次)。
+  React.useEffect(() => {
+    if (!editor) return;
+    return subscribeScriptWrite((detail) => {
+      if (
+        detail.artifactId &&
+        artifactId &&
+        detail.artifactId !== artifactId
+      ) {
+        return; // 明确指向了别的 artifact(理论不会发生:稿面单编辑器)→ 不误灌。
+      }
+      const next = detail.html || "<p></p>";
+      appliedHtmlRef.current = next;
+      lastSavedHtmlRef.current = null;
+      editor.commands.setContent(next, { emitUpdate: false });
+      setSaveStatus("saved");
+      setWordCount(editor.getText().length);
+    });
+  }, [editor, artifactId]);
 
   // 保存核心(awaitable)—— 把编辑器当前 html/text append 成新 ArtifactVersion,resolve 后
   // DB = 最新。抽出成 promise(原 handleSave 只 startTransition 无从 await),供:

@@ -131,6 +131,99 @@ describe("ChatLocalReadCard — needApproval 确认卡", () => {
   });
 });
 
+// [T-263] HITL 原生授权挂起态(approval-requested)—— 允许:写 grant + onApprove(approvalId)
+// (同回合 resume,**不** onDecision 发新消息);拒绝:onDeny(approvalId)。
+describe("ChatLocalReadCard — T-263 原生授权挂起(approval-requested)", () => {
+  const REQ = { approvalId: "appr-1", path: "/Users/u/Desktop/稿子.md" };
+
+  it("允许一次 → 写 grant(once)+ onApprove(approvalId),不走 onDecision(同回合 resume,无新消息)", async () => {
+    const onApprove = vi.fn();
+    const onDeny = vi.fn();
+    const onDecision = vi.fn();
+    render(
+      <ChatLocalReadCard
+        approvalRequest={REQ}
+        needApproval={null}
+        file={null}
+        listing={null}
+        error={null}
+        onApprove={onApprove}
+        onDeny={onDeny}
+        onDecision={onDecision}
+      />,
+    );
+    await userEvent.click(screen.getByText("允许一次"));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [url, init] = fetchMock.mock.calls[0]! as [string, RequestInit];
+    expect(url).toBe("/api/v1/local/read-grant");
+    expect(JSON.parse(init.body as string)).toEqual({
+      path: REQ.path,
+      mode: "once",
+    });
+    await waitFor(() => expect(onApprove).toHaveBeenCalledWith("appr-1"));
+    // 关键:HITL 同回合 resume —— 不再发伪 user 消息(双回合的根)。
+    expect(onDecision).not.toHaveBeenCalled();
+    expect(screen.getByText(/同一回合读取/)).toBeTruthy();
+  });
+
+  it("总是允许该目录 → 写 grant(dir)+ onApprove(approvalId)", async () => {
+    const onApprove = vi.fn();
+    render(
+      <ChatLocalReadCard
+        approvalRequest={REQ}
+        needApproval={null}
+        file={null}
+        listing={null}
+        error={null}
+        onApprove={onApprove}
+        onDeny={vi.fn()}
+      />,
+    );
+    await userEvent.click(screen.getByText("总是允许该目录"));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [, init] = fetchMock.mock.calls[0]! as [string, RequestInit];
+    expect(JSON.parse(init.body as string).mode).toBe("dir");
+    await waitFor(() => expect(onApprove).toHaveBeenCalledWith("appr-1"));
+  });
+
+  it("拒绝 → onDeny(approvalId),不打授权接口、不走 onDecision", async () => {
+    const onDeny = vi.fn();
+    const onDecision = vi.fn();
+    render(
+      <ChatLocalReadCard
+        approvalRequest={REQ}
+        needApproval={null}
+        file={null}
+        listing={null}
+        error={null}
+        onApprove={vi.fn()}
+        onDeny={onDeny}
+        onDecision={onDecision}
+      />,
+    );
+    await userEvent.click(screen.getByText("拒绝"));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(onDeny).toHaveBeenCalledWith("appr-1");
+    expect(onDecision).not.toHaveBeenCalled();
+    expect(screen.getByText(/已拒绝/)).toBeTruthy();
+  });
+
+  it("deniedTerminal(output-denied / reload 回放)→ 渲「已拒绝」终态,不弹按钮", () => {
+    render(
+      <ChatLocalReadCard
+        approvalRequest={null}
+        needApproval={null}
+        file={null}
+        listing={null}
+        error={null}
+        deniedTerminal
+      />,
+    );
+    expect(screen.getByText(/已拒绝/)).toBeTruthy();
+    expect(screen.queryByText("允许一次")).toBeNull();
+  });
+});
+
 describe("ChatLocalReadCard — 结果态", () => {
   it("file 态:文件名/路径 + 窗口进度(hasMore 提示继续翻窗)+ 正文预览", () => {
     render(
