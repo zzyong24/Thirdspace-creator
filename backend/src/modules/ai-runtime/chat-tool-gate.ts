@@ -61,7 +61,22 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   },
   // 以下 5 个工具 execute 内已有定制 catch(人话/降级),门只兜非 Error 抛出等极端漏网。
   "material.screenshot": { kind: "material.screenshot", extras: { asset: null } },
-  "web.read": { kind: "web.read", extras: { asset: null, needLogin: null } },
+  "web.read": {
+    kind: "web.read",
+    // [T-251] 窗口真相字段占位(错误态无窗口,text/window=null、hasMore=false,卡不因缺字段崩)。
+    extras: {
+      asset: null,
+      needLogin: null,
+      text: null,
+      window: null,
+      hasMore: false,
+    },
+  },
+  // [T-253] local.read:execute 内已有定制 catch(四态诚实),门只兜非 Error 抛出等极端漏网。
+  "local.read": {
+    kind: "local.read",
+    extras: { needApproval: null, file: null, listing: null },
+  },
   "material.generate": {
     kind: "material.generate",
     extras: { taskId: null, kindOf: "image", status: "queued" },

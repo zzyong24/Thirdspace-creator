@@ -237,6 +237,8 @@ export async function POST(req: Request): Promise<Response> {
         // [T-217c] web.read 端口 —— 带 .auth/web 登录态读正文全文 → 落逐字稿素材(pending 确认门);
         //   无会话/过期返 { needLogin, domain } 供编导引导去保管库登录。
         readWebUrlPort: runtime.readWebUrl,
+        // [T-253] local.read 端口 —— 本机文件读取(运行时逐次授权 + 敏感 denylist 硬门)。
+        readLocalFilePort: runtime.readLocalFile,
         // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(立即返回 taskId)。
         dispatchGenerateAssetPort: runtime.dispatchGenerateAsset,
         // [T-103b] review.script 端口 —— dispatch 既有 script.review 审核链路(L1 lint + L2 语义审)。

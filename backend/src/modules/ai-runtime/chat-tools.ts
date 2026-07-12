@@ -219,8 +219,36 @@ export interface ChatToolDeps {
         turnCount?: number | null;
         /** [T-237] 抽取诊断人话(「抽到 N 轮(SSR 全量/DOM 可能不全)」);非对话页 null/缺省。 */
         extraction?: string | null;
+        /**
+         * [T-251] 正文**全文**(未截断)—— execute 侧按窗返回(offset/maxChars),端口只回原文。
+         * 旧端口缺省 → 工具退回 excerpt(诚实降级,无窗口真相字段)。
+         */
+        fullText?: string | null;
+        /** [T-251] true = 命中已落库的同 URL document asset(未重新抓取,读的是已存全文)。 */
+        fromCache?: boolean;
       }
     | { needLogin: true; domain: string }
+  >;
+  /**
+   * [T-253] local.read 核心 —— 读用户本机文件(任意路径 + 运行时逐次授权)。**端口内做**:
+   * 路径归一/realpath 穿越防护、敏感 denylist 硬拒(无论授权与否)、授权表查询(会话级一次授权 +
+   * 持久化「总是允许该目录」)、大小上限 + 二进制探测、目录 listing。四态返回(不抛业务错):
+   *   needApproval = 未授权,前端渲确认卡(允许一次/总是允许该目录/拒绝);
+   *   denied      = 安全硬门拒读(denylist/超限/二进制),带人话原因;
+   *   file        = 已授权文本文件,回**全文**(窗口截断在 execute 侧);
+   *   dir         = 已授权目录,回文件清单。
+   * IO 级失败(不存在/无权限)抛错,由工具 execute 接住转 error。
+   */
+  readLocal: (input: { path: string; signal?: AbortSignal }) => Promise<
+    | { status: "needApproval"; path: string; size: number | null; type: string }
+    | { status: "denied"; path: string; reason: string }
+    | { status: "file"; path: string; name: string; fullText: string }
+    | {
+        status: "dir";
+        path: string;
+        entries: Array<{ name: string; kind: "file" | "dir"; size: number | null }>;
+        total: number;
+      }
   >;
   /**
    * [T-084c] material.generate 核心 —— **不直接生成**(视频异步分钟级不能阻塞对话回合):dispatch
@@ -700,6 +728,43 @@ export interface WebReadToolResult {
   needLogin: { domain: string } | null;
   /** 失败时的诚实错误(打不开/HTTP 码/抽不出正文);成功或需登录时为 null。 */
   error: string | null;
+  /**
+   * [T-251] 正文窗口文本(从 offset 起、≤ maxChars;给模型读的主载荷,前端卡不渲它 —— 卡仍渲
+   * asset.excerpt 摘要)。旧端口无 fullText 时退回 excerpt(此时 window=null,诚实无窗口真相)。
+   */
+  text?: string | null;
+  /** [T-251] 窗口真相:本窗 offset/长度/全文总字数。null = 端口未回全文(降级,只有 excerpt)。 */
+  window?: { offset: number; length: number; total: number } | null;
+  /** [T-251] 本窗之后是否还有正文 —— true 时编导必须带 offset 继续翻窗读完再归纳。 */
+  hasMore?: boolean;
+  /** [T-251] true = 未重新抓取(命中已落库的同 URL 正文素材,直接按窗读已存全文)。 */
+  fromCache?: boolean;
+}
+
+// [T-253] local.read 工具结果 —— 本机文件读取四态(互斥):
+//   · needApproval 非 null → 未授权,前端渲**运行时确认卡**(「编导想读 <path>(大小/类型)」+
+//     允许一次/总是允许该目录/拒绝三按钮;用户点允许后引导编导重调同路径);
+//   · file 非 null → 已授权文本文件,窗口正文直接进对话上下文(offset/totalChars/hasMore 翻窗);
+//   · listing 非 null → 已授权目录,文件清单;
+//   · error 非 null → 拒读(敏感 denylist/超限/二进制,带人话原因)或 IO 失败。诚实,不装读到。
+export interface LocalReadToolResult {
+  kind: "local.read";
+  needApproval: { path: string; size: number | null; type: string } | null;
+  file: {
+    path: string;
+    name: string;
+    /** 窗口正文(从 offset 起、≤ maxChars;默认 4000/封顶 8000,与 context.artifact.text 同协议)。 */
+    text: string;
+    offset: number;
+    totalChars: number;
+    hasMore: boolean;
+  } | null;
+  listing: {
+    path: string;
+    entries: Array<{ name: string; kind: "file" | "dir"; size: number | null }>;
+    total: number;
+  } | null;
+  error: string | null;
 }
 
 // [T-084c] material.generate 工具结果 —— dispatch 了一个 asset.generate task(立即返回,不阻塞
@@ -967,16 +1032,26 @@ export interface TextWindow {
   hasMore: boolean;
 }
 
+// [T-251] web.read 的窗口上限(默认=封顶 12000):T-239a 工具门整包预算 16k chars,12k 窗口 +
+// excerpt/元数据留足余量(网页正文比库内产物长得多,4k 窗对 24 轮对话翻窗次数过多)。导出供单测。
+export const WEB_READ_WINDOW_MAX_CHARS = 12000;
+
 // [T-099c] maxChars 夹取:非法/缺省 → 默认 4000;>8000 → 封顶 8000;≤0 → 默认。导出供单测。
-export function clampWindowMaxChars(maxChars: number | undefined): number {
+// [T-251] limits 可选覆盖(web.read 用 12000/12000),缺省保持 §3 全文档预算(4000/8000)。
+export function clampWindowMaxChars(
+  maxChars: number | undefined,
+  limits?: { defaultMaxChars: number; capChars: number },
+): number {
+  const def = limits?.defaultMaxChars ?? TEXT_WINDOW_DEFAULT_MAX_CHARS;
+  const cap = limits?.capChars ?? TEXT_WINDOW_CAP_CHARS;
   if (
     typeof maxChars !== "number" ||
     !Number.isFinite(maxChars) ||
     maxChars <= 0
   ) {
-    return TEXT_WINDOW_DEFAULT_MAX_CHARS;
+    return def;
   }
-  return Math.min(Math.floor(maxChars), TEXT_WINDOW_CAP_CHARS);
+  return Math.min(Math.floor(maxChars), cap);
 }
 
 /**
@@ -987,10 +1062,12 @@ export function clampWindowMaxChars(maxChars: number | undefined): number {
 export function readTextWindow(
   fullText: unknown,
   opts: { offset?: number; maxChars?: number },
+  // [T-251] 可选窗口上限覆盖(web.read 用 12000/12000);缺省 4000/8000(§3 既有行为零变)。
+  limits?: { defaultMaxChars: number; capChars: number },
 ): TextWindow {
   const s = typeof fullText === "string" ? fullText : "";
   const totalChars = s.length;
-  const eff = clampWindowMaxChars(opts.maxChars);
+  const eff = clampWindowMaxChars(opts.maxChars, limits);
   // offset 夹到 [0, totalChars](负数/越界/非数 → 0 或末尾;不抛)。
   const rawOffset = opts.offset;
   const safeOffset =
@@ -1229,7 +1306,12 @@ const MATERIAL_SCREENSHOT_PARAMS = jsonSchema<{ url: string; fullPage?: boolean 
 });
 
 // [T-217c] web.read 入参 —— 要读正文的单个网页 URL(可含需登录内容:ChatGPT 分享/知乎/公众号等)。
-const WEB_READ_PARAMS = jsonSchema<{ url: string }>({
+// [T-251] additive:offset/maxChars 分窗读取(重读同 URL 不重新抓取,按窗返回已存全文)。
+const WEB_READ_PARAMS = jsonSchema<{
+  url: string;
+  offset?: number;
+  maxChars?: number;
+}>({
   type: "object",
   properties: {
     url: {
@@ -1237,8 +1319,45 @@ const WEB_READ_PARAMS = jsonSchema<{ url: string }>({
       description:
         "要读正文的网页 URL(http/https)。可以是**需要登录才能看到**的页面(如 ChatGPT 分享链接、知乎收藏、公众号文章)——会用你在保管库登录后的登录态读到正文全文(比截图准)。若该站还没登录,会返回「需登录」提示,引导用户去保管库登录一次。",
     },
+    offset: {
+      type: "number",
+      description:
+        "从正文第几个字符开始读(默认 0)。结果 hasMore=true(还有正文没读到)时,用 window.offset+window.length 作为新 offset **再调本工具同一 URL** 继续读——重读同 URL 不会重新抓取网页,直接按窗返回已存的全文。",
+    },
+    maxChars: {
+      type: "number",
+      description:
+        "本窗口最多读多少字(默认与封顶 12000)。超长内容分窗读完再归纳,不要只读第一窗就下结论。",
+    },
   },
   required: ["url"],
+  additionalProperties: false,
+});
+
+// [T-253] local.read 入参 —— 本机文件绝对路径(支持 ~ 展开)+ 可选窗口。
+const LOCAL_READ_PARAMS = jsonSchema<{
+  path: string;
+  offset?: number;
+  maxChars?: number;
+}>({
+  type: "object",
+  properties: {
+    path: {
+      type: "string",
+      description:
+        "要读的本机文件/目录**绝对路径**(支持 ~ 开头,如 ~/Desktop/稿子.md 或 /Users/xx/notes.txt)。相对路径会被拒绝。目录路径返回文件清单。",
+    },
+    offset: {
+      type: "number",
+      description:
+        "从正文第几个字符开始读(默认 0)。上一窗 hasMore=true 时用 offset+已读字数继续翻窗,直到读完或如实告知还剩多少。",
+    },
+    maxChars: {
+      type: "number",
+      description: "本窗口最多读多少字(默认 4000,封顶 8000)。",
+    },
+  },
+  required: ["path"],
   additionalProperties: false,
 });
 
@@ -1862,10 +1981,13 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 登录,不截登录页糊弄);其余失败逐类诚实转人话(不抛给 SDK)。
     "web.read": defineChatTool("web.read", {
       description:
-        "读一个网页的**正文全文**(带你在保管库登录后的登录态,能读需登录内容:ChatGPT 分享链接、知乎、公众号、飞书文档等)。抽出的是干净正文文本(ChatGPT 分享抽逐轮对话全文),比截图准、不 OCR 失真。当用户粘一个链接要你「读一下/看看这篇/这段对话讲了啥/据此出选题」时**优先用它**(而不是截图)。读到的正文渲成卡片**待用户确认**存入素材库(铁律②)。若该站还没登录会返回「需登录」——这时引导用户去『设置→网站登录保管库』登录一次,别改用截图糊弄。",
+        "读一个网页的**正文全文**(带你在保管库登录后的登录态,能读需登录内容:ChatGPT 分享链接、知乎、公众号、飞书文档等)。抽出的是干净正文文本(ChatGPT 分享抽逐轮对话全文),比截图准、不 OCR 失真。当用户粘一个链接要你「读一下/看看这篇/这段对话讲了啥/据此出选题」时**优先用它**(而不是截图)。[T-251 翻窗协议] 结果按窗返回(window 带 offset/length/total,hasMore=true 表示还有正文没读到):**hasMore=true 时必须用 offset=window.offset+window.length 再调本工具同一 URL 继续读,直到读完全文再归纳**——重读同 URL 不会重新抓取网页(直接按窗读已存全文,秒回);绝不只读开头就下结论,读不完就如实告知还剩多少字没读。读到的正文渲成卡片**待用户确认**存入素材库(铁律②)。若该站还没登录会返回「需登录」——这时引导用户去『设置→网站登录保管库』登录一次,别改用截图糊弄。",
       inputSchema: WEB_READ_PARAMS,
       // [T-239c] 同 material.screenshot:abortSignal 经端口进 Playwright 层,中断提前退出。
-      execute: async ({ url }, callOptions): Promise<WebReadToolResult> => {
+      execute: async (
+        { url, offset, maxChars },
+        callOptions,
+      ): Promise<WebReadToolResult> => {
         const signal = (callOptions as { abortSignal?: AbortSignal } | undefined)
           ?.abortSignal;
         const target = typeof url === "string" ? url.trim() : "";
@@ -1875,6 +1997,9 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             asset: null,
             needLogin: null,
             error: "没有收到要读取的 URL —— 请给一个网页链接。",
+            text: null,
+            window: null,
+            hasMore: false,
           };
         }
         try {
@@ -1885,8 +2010,20 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
               asset: null,
               needLogin: { domain: res.domain },
               error: null,
+              text: null,
+              window: null,
+              hasMore: false,
             };
           }
+          // [T-251] 窗口化:端口回了全文 → 按窗返回(默认/封顶 12000,T-239a 16k 预算内留余量);
+          // 旧端口无 fullText → 退回 excerpt(window=null,诚实无窗口真相,不假装看全)。
+          const window =
+            typeof res.fullText === "string"
+              ? readTextWindow(res.fullText, { offset, maxChars }, {
+                  defaultMaxChars: WEB_READ_WINDOW_MAX_CHARS,
+                  capChars: WEB_READ_WINDOW_MAX_CHARS,
+                })
+              : null;
           return {
             kind: "web.read",
             asset: {
@@ -1903,6 +2040,16 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             },
             needLogin: null,
             error: null,
+            text: window ? window.text : res.excerpt,
+            window: window
+              ? {
+                  offset: window.offset,
+                  length: window.text.length,
+                  total: window.totalChars,
+                }
+              : null,
+            hasMore: window ? window.hasMore : false,
+            ...(res.fromCache ? { fromCache: true } : {}),
           };
         } catch (err) {
           // 逐类诚实报错(WebCaptureError:打不开 / HTTP 码 / 抽不出正文)原样转述。
@@ -1910,6 +2057,79 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             kind: "web.read",
             asset: null,
             needLogin: null,
+            error: err instanceof Error ? err.message : String(err),
+            text: null,
+            window: null,
+            hasMore: false,
+          };
+        }
+      },
+    }, deps.humanizeError),
+    // [T-253] 本机文件读取(任意路径 + 运行时逐次授权):execute **不直接读**——端口内先查授权表
+    // (会话级一次授权 + 持久化「总是允许该目录」),未授权返 needApproval 渲确认卡(允许一次/
+    // 总是允许该目录/拒绝);敏感 denylist(.env/*key*/*secret*/钥匙串/ssh)无论授权与否硬拒 +
+    // 明说原因;大小上限 1MB + 二进制拒读;目录返回清单。窗口截断在 execute 侧(4000/8000 同协议)。
+    "local.read": defineChatTool("local.read", {
+      description:
+        "读用户**本机**的一个文件或目录(任意绝对路径,支持 ~ 展开)。当用户说「读一下 ~/xx/某文件 / 看看我桌面那份稿子 / 把这个本地 md 读进来」时调用。**授权协议**:首次读某路径会返回 needApproval(这不是失败)——告诉用户「已弹出确认卡,请在卡上选择」,用户点「允许」后你**再次调用本工具传同一 path** 才能读到内容;用户拒绝就不再尝试、换其他方式,**绝不换路径绕行**。**安全边界(如实转述,绝不绕)**:敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论用户是否授权都会拒读并说明原因;超过 1MB 或二进制文件拒读(建议用户直接上传到素材库)。目录路径返回文件清单。文本结果按窗返回(offset/totalChars/hasMore,默认 4000 字/封顶 8000):hasMore=true 时带 offset 翻窗读完再归纳。读到的内容直接进对话;用户要「存为素材/知识」时走对应确认门(knowledge.distill 等),不自动落库。",
+      inputSchema: LOCAL_READ_PARAMS,
+      execute: async (
+        { path, offset, maxChars },
+        callOptions,
+      ): Promise<LocalReadToolResult> => {
+        const signal = (callOptions as { abortSignal?: AbortSignal } | undefined)
+          ?.abortSignal;
+        const target = typeof path === "string" ? path.trim() : "";
+        const empty = {
+          kind: "local.read" as const,
+          needApproval: null,
+          file: null,
+          listing: null,
+        };
+        if (!target) {
+          return {
+            ...empty,
+            error:
+              "没有收到要读取的路径 —— 请给一个本机绝对路径(如 ~/Desktop/稿子.md)。",
+          };
+        }
+        try {
+          const res = await deps.readLocal({ path: target, signal });
+          if (res.status === "needApproval") {
+            return {
+              ...empty,
+              needApproval: { path: res.path, size: res.size, type: res.type },
+              error: null,
+            };
+          }
+          if (res.status === "denied") {
+            // 安全硬门拒读:人话原因进 error(编导如实转述原因,绝不绕路径重试)。
+            return { ...empty, error: res.reason };
+          }
+          if (res.status === "dir") {
+            return {
+              ...empty,
+              listing: { path: res.path, entries: res.entries, total: res.total },
+              error: null,
+            };
+          }
+          // 文本文件:窗口截断在这里强制(§3 同协议:默认 4000/封顶 8000)。
+          const window = readTextWindow(res.fullText, { offset, maxChars });
+          return {
+            ...empty,
+            file: {
+              path: res.path,
+              name: res.name,
+              text: window.text,
+              offset: window.offset,
+              totalChars: window.totalChars,
+              hasMore: window.hasMore,
+            },
+            error: null,
+          };
+        } catch (err) {
+          return {
+            ...empty,
             error: err instanceof Error ? err.message : String(err),
           };
         }
@@ -2557,6 +2777,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "material.gather",
   "material.screenshot",
   "web.read",
+  // [T-253] 本机文件读取(任意路径 + 运行时确认卡 + 敏感 denylist 硬门)。
+  "local.read",
   "material.generate",
   "calibration.diagnose",
   "review.analyze",
@@ -2617,6 +2839,8 @@ const MATERIAL_TOOL_NAMES: readonly string[] = [
   "material.gather",
   "material.screenshot",
   "web.read",
+  // [T-253] 本机文件读取与 web.read 同性质(把外部真材料带进对话),全场景保留。
+  "local.read",
   "material.generate",
 ];
 

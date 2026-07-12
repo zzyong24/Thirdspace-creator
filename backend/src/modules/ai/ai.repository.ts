@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, type Db } from "@creatoros/backend";
+import { and, asc, desc, eq, like, type Db } from "@creatoros/backend";
 import {
   aiConversations,
   aiMessages,
@@ -142,6 +142,8 @@ export interface AiRepository {
     // [T-116c] additive 读过滤(纯读):可选 projectId + taskType,都不传维持全量馈。
     projectId?: string;
     taskType?: string;
+    // [T-255a] additive 前缀过滤(纯读):执行层任务命名空间窄化(`exec.` 开头)。
+    taskTypePrefix?: string;
   }): Promise<{ rows: TaskRow[]; total: number }>;
   findTaskByIdempotencyKey(idempotencyKey: string): Promise<TaskRow | null>;
   createTask(input: CreateTaskInput): Promise<TaskRow>;
@@ -311,7 +313,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .orderBy(asc(aiMessages.createdAt));
     },
 
-    async listTasks({ limit, offset, projectId, taskType }) {
+    async listTasks({ limit, offset, projectId, taskType, taskTypePrefix }) {
       // Global cross-project task feed for the copilot 「最近任务」 surface — scoped to
       // the user (mirrors listConversations), newest-requested first.
       // [T-116c] additive 读过滤:传了 projectId / taskType 就再叠一层 eq(纯读窄化,
@@ -321,6 +323,11 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       if (deps.accountId) filters.push(eq(aiTasks.accountId, deps.accountId));
       if (projectId) filters.push(eq(aiTasks.projectId, projectId));
       if (taskType) filters.push(eq(aiTasks.taskType, taskType));
+      // [T-255a] 前缀过滤(LIKE 'exec.%')。转义 %/_ 防通配注入(前缀是代码内常量,防御性)。
+      if (taskTypePrefix) {
+        const escaped = taskTypePrefix.replace(/[\\%_]/g, (m) => `\\${m}`);
+        filters.push(like(aiTasks.taskType, `${escaped}%`));
+      }
       const where = filters.length === 1 ? filters[0]! : and(...filters);
       const rows = await db
         .select()

@@ -83,7 +83,16 @@ import {
   ChatWebReadCard,
   type ChatWebReadAsset,
 } from "./chat-web-read-card";
+// [T-253] 本机文件读取卡(运行时确认卡「允许一次/总是允许该目录/拒绝」/ 文本窗口 / 目录清单 / 拒读态)。
+import {
+  ChatLocalReadCard,
+  type LocalReadApproval,
+  type LocalReadFile,
+  type LocalReadListing,
+} from "./chat-local-read-card";
 import { ChatGenerateCard } from "./chat-generate-card";
+// [T-255a] 执行结果确认卡(exec.* 任务的产物清单 + 采纳/重试/丢弃确认门)。
+import { ExecutionTaskCard } from "./execution-task-card";
 import {
   ChatLearningCard,
   type ChatLearningSuggestion,
@@ -495,6 +504,9 @@ const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
   "research.gather": { label: "找素材", sub: "收集研究素材" },
   "research.analyze": { label: "研究分析", sub: "分析研究结论" },
   "copilot.assist": { label: "AI 助手", sub: "对话式创作建议" },
+  // [T-255a] 执行层任务(exec.* 命名空间,脑手分离)。
+  "exec.echo.manifest": { label: "执行自检", sub: "沙箱执行框架演示" },
+  "exec.video.render": { label: "渲染成片", sub: "模板确定性渲染视频" },
 };
 
 // taskType → 中文标题(bug #6)。命中映射用中文 label;否则回退到原 taskType 串(诚实,不伪造)。
@@ -1782,6 +1794,32 @@ export function AICopilotContent({
                         />
                       );
                     }
+                    // [T-253] 本机文件读取(local.read)→ 运行时确认卡(允许一次/总是允许该目录/
+                    // 拒绝)/ 文本窗口卡 / 目录清单 / 拒读态。用户在卡上做出决定后经 sendMessage
+                    // 发一句话回对话,让编导重调同一路径(允许)或停止尝试(拒绝)。
+                    if (name === "local.read" && out.kind === "local.read") {
+                      const o = out as {
+                        needApproval?: LocalReadApproval | null;
+                        file?: LocalReadFile | null;
+                        listing?: LocalReadListing | null;
+                        error?: string | null;
+                      };
+                      return (
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatLocalReadCard
+                            needApproval={o.needApproval ?? null}
+                            file={o.file ?? null}
+                            listing={o.listing ?? null}
+                            error={o.error ?? null}
+                            onDecision={(text) => {
+                              if (streaming) return;
+                              void sendMessage({ text });
+                            }}
+                          />
+                        </React.Fragment>
+                      );
+                    }
                     // [T-084c] AI 生成素材(material.generate)→ 据 taskId 轮询 → 完成渲缩略图 +
                     // 「采纳进素材库」(confirmTask);未配模型 → 卡内「去设置」。
                     if (
@@ -2254,6 +2292,14 @@ export function AICopilotContent({
                       {TASK_STATUS_LABEL[task.status]}
                     </span>
                   </div>
+                  {/* [T-255a] 执行层任务(exec.*)在 feed 内嵌执行结果确认卡:进行中显
+                      步骤流,待确认渲产物清单 + 采纳/重试/丢弃(确认门,铁律②)。 */}
+                  {task.taskType.startsWith("exec.") &&
+                  CONTINUING_STATUSES.has(task.status) ? (
+                    <div className="pl-5">
+                      <ExecutionTaskCard taskId={task.id} />
+                    </div>
+                  ) : null}
                 </div>
               ))
             )}

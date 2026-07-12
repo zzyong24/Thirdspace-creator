@@ -13,6 +13,8 @@ import { reviewsOperations } from "./operations/reviews";
 import { reviewGateOperations } from "./operations/review-gate";
 import { learningsOperations } from "./operations/learnings";
 import { aiOperations } from "./operations/ai";
+// [T-255a] 执行层(脑手分离):execution.tasks 5 op(存储复用 ai_tasks,taskType `exec.*`)。
+import { executionOperations } from "./operations/execution";
 import { searchOperations } from "./operations/search";
 import { notificationsOperations } from "./operations/notifications";
 import { settingsOperations } from "./operations/settings";
@@ -96,6 +98,8 @@ export const ENDPOINTS = {
   ...reviewGateOperations,
   ...learningsOperations,
   ...aiOperations,
+  // [T-255a] 执行层任务(create/list/get/confirm/discard)。
+  ...executionOperations,
   ...searchOperations,
   ...notificationsOperations,
   ...settingsOperations,

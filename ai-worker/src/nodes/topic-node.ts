@@ -39,6 +39,9 @@ export interface RunTopicNodeInput {
   // knowledgeBrief 已进 basisBrief,调用方置空防重复)。
   knowledgeBrief?: string;
   learningsBrief?: string;
+  /** [T-238] 依据质量画像 brief(选填)—— 装配层按各依据源真实数据算好渲成「依据质量说明」段
+   *  (signal-quality.renderSignalQualityBrief);模板据它动态定权。空/未传 → 该 facet 整段省略。 */
+  signalQualityBrief?: string;
   /** 出题依据。 */
   basis: TopicBasis;
   /** 步骤回调 —— 喂窗口步骤日志。 */
@@ -60,6 +63,7 @@ function topicFacets(
   basisBrief?: string,
   knowledgeBrief?: string,
   learningsBrief?: string,
+  signalQualityBrief?: string,
 ): Record<string, string | undefined> {
   return {
     positioning:
@@ -70,6 +74,8 @@ function topicFacets(
     // [T-062b gate-F3] KNOW-X 修真:知识库参考 + 已验证经验约束,空库诚实标注不编。
     knowledgeRef: `\n\n--- 知识库参考 ---\n${knowledgeBrief || "（暂无沉淀）"}`,
     learningsConstraint: `\n\n--- 已验证经验约束 ---\n${learningsBrief || "（暂无沉淀）"}`,
+    // [T-238] 依据质量画像(装配层已渲好含段头「【依据质量画像…】」;空 → 整段省略,不注空壳)。
+    signalQuality: signalQualityBrief ? `\n\n${signalQualityBrief}` : "",
   };
 }
 
@@ -161,6 +167,7 @@ export async function runTopicNode(
       input.basisBrief,
       input.knowledgeBrief,
       input.learningsBrief,
+      input.signalQualityBrief,
     ),
   });
   const topics = normalizeTopics(object.topics);

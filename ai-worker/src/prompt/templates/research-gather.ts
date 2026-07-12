@@ -75,11 +75,14 @@ export type ResearchMaterialOutput = z.infer<typeof researchMaterialSchema>;
 
 export const RESEARCH_GATHER_TEMPLATE: PromptTemplate = {
   id: "research.gather",
+  // [T-228] v5:新增选填 facet groundingNote(降级模式硬约束块)—— 无联网检索结果(grounding=
+  // model_memory)时由 research-node 注入,硬禁「编造具体引用」(论文编号/精确百分比/榜单成绩/
+  // 机构报告名);配合节点后处理清洗(sanitizeModelMemoryCategories)prompt+清洗双管。
   // [T-146d] v4:新增选填 facet userMaterial(创作者第一手资料要点块)—— 综合优先服务于/佐证它。
   // [T-084a] v3:新增选填 facet searchResults(联网检索结果块)+ sourceUrl 信源铁律。
   // 检索走**节点前置注入**(调用方先 searchWeb 拿真结果 → 注 searchResults facet → 本模板综合),
   // 不回自由文本工具循环(保住任何模型都产可解析输出;ffb7951 教训)。
-  version: "v4",
+  version: "v5",
   // 三位一体「输出 Zod schema」位收口到 registry(SPEC §4.2):runStructuredNode 从 registry
   // 取它绑 generateObject,模型必须吐四类候选,校验失败自动重试(防发散 + 根治不可解析)。
   outputSchema: researchMaterialSchema,
@@ -92,7 +95,7 @@ export const RESEARCH_GATHER_TEMPLATE: PromptTemplate = {
 {{positioning}}
 
 【选题】{{topic}}{{angle}}
-{{userMaterial}}{{searchResults}}
+{{userMaterial}}{{searchResults}}{{groundingNote}}
 【任务】围绕这个选题,为创作者备好能直接写进脚本的素材。分四类产出:
 1. hooks（开场钩子）：能在前 3 秒抓住注意力的开头句(反直觉 / 悬念 / 痛点 / 具体数字)。每条给 text(钩子原句)+ why(为什么抓人)。
 2. cases（可讲的案例）：真实或经典的案例,讲出来有说服力。每条给 title(案例名)+ source(可信出处,如机构/报告/人物)+ opening(在视频里怎么起这个案例)+ sourceUrl(见下方信源铁律)。
@@ -102,7 +105,7 @@ export const RESEARCH_GATHER_TEMPLATE: PromptTemplate = {
 【信源铁律 —— 必须遵守】
 - 有【联网检索结果】时:cases / dataPoints 只要引用了某条检索结果,就把该结果的**真实 URL** 填进 sourceUrl(带编号回链,如引用第 3 条就填第 3 条的 URL),source 写该结果的站点名/标题。**这些是今日真抓取的真实信源,优先用它们**。
 - 检索结果**之外**的内容(靠你自身记忆产的):sourceUrl 一律留空,source 标注"模型记忆,需核实"。**绝不把记忆内容假冒成检索结果、绝不编造 URL**。
-- 没有【联网检索结果】时(未配联网检索):所有 cases/dataPoints 的 sourceUrl 都留空,source 拿不准就写"需核实";**别编 URL、别假装搜过网**。
+- 没有【联网检索结果】时(未配联网检索):所有 cases/dataPoints 的 sourceUrl 都留空,source 一律写"模型记忆,需核实"(不许填看似真实的机构/报告/论文出处);**绝不编造具体引用**——不许出现论文编号(如 arXiv 2308.00352)、精确百分比(如 85.9%)、基准/榜单成绩(如 pass@1、SWE-bench 排名)、机构报告名这类看似精确的引用;拿不准的数据宁可不给,只给方向性素材。**别编 URL、别假装搜过网**。
 
 【相关性铁律】① 跟选题强相关 ② 跟创作者定位对齐(支撑信任/转化,不是纯流量噱头) ③ 真实可信——**宁缺毋滥,绝不编造数据或来源**;某一类实在没有好素材就给空数组,不要硬凑。
 【数量】四类合计 8-14 条,质量优先。

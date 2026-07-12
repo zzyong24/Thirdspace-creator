@@ -342,3 +342,79 @@ describe("assets.repository — [T-219] pending 态 + commitPendingAsset 确认�
     expect(await repo.commitPendingAsset(A, "asset-nope", "acct-1")).toBeNull();
   });
 });
+
+// [T-251] findAssetBySourceUrl —— web.read「重读同 URL 不重新抓取」的读点:按 current file
+// mediaMetadata.sourceUrl 反查 document 类 asset,pending/active 都算,user-scoped。
+describe("assets.repository — findAssetBySourceUrl ([T-251])", () => {
+  async function makeDocWithSource(
+    userId: string,
+    sourceUrl: string,
+    status: "pending" | "active" = "pending",
+  ) {
+    const asset = await repo.insertAsset(userId, {
+      assetType: "document",
+      name: `正文·${sourceUrl}`,
+      currentFileId: null,
+      status,
+    });
+    await repo.insertAssetFile(userId, {
+      assetId: asset.id,
+      storageKey: `doc/${asset.id}.txt`,
+      mimeType: "text/plain",
+      fileSize: 10,
+      checksum: "c",
+      width: null,
+      height: null,
+      durationMs: null,
+      mediaMetadata: { sourceUrl },
+    });
+    return asset;
+  }
+
+  it("pending 的 document asset 也命中(已抓到全文、未点存入素材库)", async () => {
+    const asset = await makeDocWithSource(A, "https://chatgpt.com/share/x", "pending");
+    const hit = await repo.findAssetBySourceUrl(A, "https://chatgpt.com/share/x");
+    expect(hit?.id).toBe(asset.id);
+  });
+
+  it("active 命中;URL 不匹配 / 其他 user → null(user-scoped,不泄漏)", async () => {
+    const asset = await makeDocWithSource(A, "https://example.com/a", "active");
+    expect(
+      (await repo.findAssetBySourceUrl(A, "https://example.com/a"))?.id,
+    ).toBe(asset.id);
+    expect(await repo.findAssetBySourceUrl(A, "https://example.com/other")).toBeNull();
+    expect(await repo.findAssetBySourceUrl(B, "https://example.com/a")).toBeNull();
+  });
+
+  it("非 document 类(截图 image 也带 sourceUrl)不命中 —— 只复用正文素材", async () => {
+    const img = await repo.insertAsset(A, {
+      assetType: "image",
+      name: "截图·页",
+      currentFileId: null,
+      status: "pending",
+    });
+    await repo.insertAssetFile(A, {
+      assetId: img.id,
+      storageKey: `img/${img.id}.png`,
+      mimeType: "image/png",
+      fileSize: 10,
+      checksum: "c",
+      width: 1,
+      height: 1,
+      durationMs: null,
+      mediaMetadata: { sourceUrl: "https://example.com/shot" },
+    });
+    expect(await repo.findAssetBySourceUrl(A, "https://example.com/shot")).toBeNull();
+  });
+
+  it("同 URL 多条 → 命中其一(生产按 createdAt 最新;测试钟固定只锚定命中);deleted 不算", async () => {
+    const first = await makeDocWithSource(A, "https://example.com/dup", "active");
+    const second = await makeDocWithSource(A, "https://example.com/dup", "pending");
+    const hit = await repo.findAssetBySourceUrl(A, "https://example.com/dup");
+    expect([first.id, second.id]).toContain(hit?.id);
+    // 两条都翻 deleted → 不再命中(pending/active 之外的状态不算)。
+    await repo.updateAssetStatus(A, first.id, { status: "deleted" });
+    await repo.updateAssetStatus(A, second.id, { status: "deleted" });
+    expect(await repo.findAssetBySourceUrl(A, "https://example.com/dup")).toBeNull();
+  });
+});

@@ -61,6 +61,14 @@ export interface AssetsService {
   /** [T-061] Batch-read current files for the list/get 投影(ids 来自 user-scoped rows)。 */
   listFilesByIds(ctx: RequestContext, fileIds: string[]): Promise<AssetFileRow[]>;
   getAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
+  /**
+   * [T-251] 按来源 URL 反查最近一条 document 类 asset(pending/active 都算)—— web.read
+   * 「重读同 URL 不重新抓取」的读点。查不到 → null(诚实,不抛)。
+   */
+  findAssetBySourceUrl(
+    ctx: RequestContext,
+    sourceUrl: string,
+  ): Promise<AssetRow | null>;
   createUpload(
     ctx: RequestContext,
     input: {
@@ -201,6 +209,14 @@ export function createAssetsService(
 
     async getAsset(ctx, assetId) {
       return requireAsset(ctx, assetId);
+    },
+
+    async findAssetBySourceUrl(ctx, sourceUrl) {
+      return repo.findAssetBySourceUrl(
+        ctx.userId,
+        sourceUrl,
+        ctx.accountId ?? null,
+      );
     },
 
     async getDownloadUrl(ctx, assetId) {

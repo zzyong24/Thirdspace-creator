@@ -1,0 +1,87 @@
+import { z } from "zod";
+import { id, iso8601, aiTaskStatus } from "../primitives";
+
+// [T-255a] 执行层(脑手分离,SPEC 2026-07-11 execution-layer §2)资源契约。
+//
+// 存储上**复用 ai_tasks 六态 + 步骤流 + 结果表**(taskType 命名空间 `exec.<type>`),
+// 不建新表 —— 本文件只定义「脑→手」的任务契约投影与产物清单(manifest)的单一真值,
+// backend execution 模块 schema 与前端执行确认卡共用(同各模块 resource re-export 约定)。
+
+// 执行任务类型枚举 —— 每个 taskType 对应一个已注册 executor(A 型确定性脚本;将来
+// B 型开源引擎 executor 零改动注册)。`echo.manifest` 是框架自检 demo executor
+// (把 inputs 清单写进 out/manifest.json);`video.render` 归 T-254a(HyperFrames)。
+export const executionTaskType = z.enum(["echo.manifest", "video.render"]);
+export type ExecutionTaskType = z.infer<typeof executionTaskType>;
+
+// 输入物化声明:assetId(项目资产)→ 沙箱 input/<mountAs> 只读文件。
+// mountAs 是相对路径(服务端有路径穿越防护 + 敏感文件 denylist 双重校验)。
+export const executionTaskInput = z.object({
+  assetId: id,
+  mountAs: z.string().min(1),
+});
+export type ExecutionTaskInput = z.infer<typeof executionTaskInput>;
+
+// 执行约束:超时硬顶 + 网络策略(无 docker 前提下网络隔离是弱保证,v1 默认 deny,
+// 渲染类本就不需要网)+ 产物总量硬顶(收割时超限 → 任务失败,诚实不截断)。
+export const executionConstraints = z.object({
+  timeoutSec: z.number().int().positive().max(3600).default(600),
+  network: z.enum(["deny", "allowlist"]).default("deny"),
+  maxOutputMB: z.number().int().positive().max(2048).default(512),
+});
+export type ExecutionConstraints = z.infer<typeof executionConstraints>;
+
+// 任务契约(脑→手):taskType 枚举 + goal + inputs 物化声明 + per-taskType params
+// (params 的细化 zod 由各 executor 自带 paramsSchema 二次校验)+ constraints。
+export const executionTaskSpec = z.object({
+  taskType: executionTaskType,
+  goal: z.string().min(1),
+  inputs: z.array(executionTaskInput).default([]),
+  params: z.record(z.string(), z.unknown()).default({}),
+  constraints: executionConstraints.default({
+    timeoutSec: 600,
+    network: "deny",
+    maxOutputMB: 512,
+  }),
+});
+export type ExecutionTaskSpec = z.infer<typeof executionTaskSpec>;
+
+// 单个产物(收割自沙箱 out/):path 是相对 out/ 的路径(采纳时服务端按它读实体,
+// 带路径防护),fileName/size/mimeType 供确认卡渲染清单。
+export const executionArtifact = z.object({
+  path: z.string().min(1),
+  fileName: z.string().min(1),
+  size: z.number().int().nonnegative(),
+  mimeType: z.string().nullable().default(null),
+});
+export type ExecutionArtifact = z.infer<typeof executionArtifact>;
+
+// 产物清单(手→脑):executor 跑完后由编排收割 out/ 生成,落 ai_task_results
+// (resultType `execution_manifest`)等待确认门。产物落 workspaces **不算落库**,
+// 采纳才经 createGeneratedAsset 入资产库(铁律②)。
+export const executionManifest = z.object({
+  taskType: executionTaskType,
+  artifacts: z.array(executionArtifact),
+  summary: z.string().default(""),
+  meta: z.record(z.string(), z.unknown()).default({}),
+});
+export type ExecutionManifest = z.infer<typeof executionManifest>;
+
+// 执行任务 DTO —— ai_tasks 行(taskType=`exec.<type>`)+ spec(input_data.spec)+
+// 最新 manifest(结果表投影)+ 采纳落库的资产 id(execution_adopted 结果投影)。
+export const executionTaskResource = z.object({
+  id,
+  userId: id,
+  projectId: id.nullable(),
+  // 全名(`exec.echo.manifest`)—— 与 ai.tasks feed / 步骤流共用同一 taskId 域。
+  taskType: z.string(),
+  execType: executionTaskType,
+  status: aiTaskStatus,
+  spec: executionTaskSpec,
+  manifest: executionManifest.nullable(),
+  adoptedAssetIds: z.array(id).default([]),
+  requestedAt: iso8601,
+  startedAt: iso8601.nullable(),
+  completedAt: iso8601.nullable(),
+  errorMessage: z.string().nullable(),
+});
+export type ExecutionTaskResource = z.infer<typeof executionTaskResource>;

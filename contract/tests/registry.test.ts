@@ -225,6 +225,12 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["DELETE", "/review-rules/:ruleId"],
   ["GET", "/projects/:projectId/script-review/latest"],
   ["POST", "/projects/:projectId/script-review"],
+  // [T-255a] 执行层任务(脑手分离,SPEC 2026-07-11 execution-layer §2)
+  ["POST", "/execution/tasks"],
+  ["GET", "/execution/tasks"],
+  ["GET", "/execution/tasks/:taskId"],
+  ["POST", "/execution/tasks/:taskId/confirm"],
+  ["POST", "/execution/tasks/:taskId/discard"],
 ];
 
 describe("endpoint registry", () => {

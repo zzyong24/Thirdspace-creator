@@ -139,6 +139,25 @@ export {
   type PublishingCenterPage,
 } from "./pages/publishing-center";
 
+// [T-255a] 执行层(脑手分离)契约 —— backend execution 模块 schema 与前端执行确认卡
+// 共用单一真值(同各模块 resource re-export 约定,additive)。
+export {
+  executionTaskType,
+  executionTaskInput,
+  executionConstraints,
+  executionTaskSpec,
+  executionArtifact,
+  executionManifest,
+  executionTaskResource,
+  type ExecutionTaskType,
+  type ExecutionTaskInput,
+  type ExecutionConstraints,
+  type ExecutionTaskSpec,
+  type ExecutionArtifact,
+  type ExecutionManifest,
+  type ExecutionTaskResource,
+} from "./resources/execution";
+
 // Settings skill 覆盖行 DTO(T-040/T-077a)—— 设置「技能」页签(frontend route/纯数据层)
 // 需要按 override 行判「已定制」与生效值投影,与上面各模块 resource 同约定从根出口复用
 // 单一真值(additive re-export,契约零删除)。

@@ -7,6 +7,9 @@ import {
   formatSearchResultsFacet,
   formatUserMaterialFacet,
   anthropicWebSearchTools,
+  hasPseudoCitation,
+  sanitizeModelMemoryCategories,
+  MODEL_MEMORY_SOURCE_LABEL,
   type ResearchCategories,
 } from "./research-node";
 import type { SearchResult } from "../runtime/search-factory";
@@ -64,9 +67,11 @@ describe("runResearchNode（结构化四类候选)", () => {
       "数据",
       "金句",
     ]);
-    // 钩子的 why → why_relevant;案例的 opening → why_relevant + source 保留
+    // 钩子的 why → why_relevant;案例的 opening → why_relevant
     expect(res.items[0]?.why_relevant).toContain("反直觉");
-    expect(res.items[1]?.source).toBe("公开复盘");
+    // [T-228] 本 run 无 searchResults(grounding=model_memory)→ source 被诚实门归一为
+    // 「模型记忆,需核实」(不留看似真实的出处);web 路径的 source 保留见 T-228 测试组。
+    expect(res.items[1]?.source).toBe(MODEL_MEMORY_SOURCE_LABEL);
   });
 
   it("四类全空 → 抛错(不假成功)", async () => {
@@ -244,5 +249,148 @@ describe("runResearchNode（结构化四类候选)", () => {
   it("anthropicWebSearchTools 仍暴露 provider 内置 web_search(真 Anthropic 路径备用)", () => {
     const tools = anthropicWebSearchTools();
     expect(tools.web_search).toBeDefined();
+  });
+});
+
+// [T-228] 搜索诚实门:model_memory 模式禁假精度 —— 伪引用检测 + 输出后处理清洗。
+// 实录病例:16 条素材只 1 条真 URL,其余是记忆编的 arXiv 2308.00352 / 85.9% pass@1 /
+// SWE-bench 榜单,标「需核实」冒充真源。
+describe("[T-228] hasPseudoCitation(伪引用检测)", () => {
+  it.each([
+    "MetaGPT 论文 arXiv 2308.00352 提出多智能体框架",
+    "arxiv:2402.01030 显示……",
+    "GPT-4 在 HumanEval 上 85.9% pass@1",
+    "准确率提升 12.3%",
+    "详见 DOI: 10.1145/3512345",
+    "SWE-bench 榜单第一",
+  ])("命中:%s", (text) => {
+    expect(hasPseudoCitation(text)).toBe(true);
+  });
+
+  it.each([
+    "90% 的人用 AI 反而更慢了", // 整数百分比 = 方向性常识,不算假精度
+    "知识工作者每天大量时间在找信息",
+    "2023 年之后大模型迭代明显加快",
+  ])("不命中(方向性陈述):%s", (text) => {
+    expect(hasPseudoCitation(text)).toBe(false);
+  });
+});
+
+describe("[T-228] sanitizeModelMemoryCategories(model_memory 清洗)", () => {
+  const dirty: ResearchCategories = {
+    hooks: [
+      { text: "90% 的人都做错了", why: "反直觉" },
+      { text: "SWE-bench 榜单第一的秘密", why: "蹭榜单" },
+    ],
+    cases: [
+      {
+        title: "MetaGPT 多智能体",
+        source: "arXiv 2308.00352",
+        opening: "从论文讲起",
+        sourceUrl: "https://fake.example.com/paper",
+      },
+      {
+        title: "某团队用 RAG 提效",
+        source: "斯坦福 2024 报告",
+        opening: "先抛结果",
+        sourceUrl: "",
+      },
+    ],
+    dataPoints: [
+      { stat: "GPT-4 达到 85.9% pass@1", source: "需核实", sourceUrl: "" },
+      { stat: "多数团队没有知识管理流程", source: "行业共识", sourceUrl: "" },
+    ],
+    quotes: [{ line: "工具不会替你思考" }],
+  };
+
+  it("伪引用条目整条剔除(arXiv 案例 / 85.9% 数据点 / 榜单钩子),dropped 计数", () => {
+    const { categories, dropped } = sanitizeModelMemoryCategories(dirty);
+    expect(dropped).toBe(3);
+    expect(categories.hooks.map((h) => h.text)).toEqual(["90% 的人都做错了"]);
+    expect(categories.cases.map((c) => c.title)).toEqual(["某团队用 RAG 提效"]);
+    expect(categories.dataPoints.map((d) => d.stat)).toEqual([
+      "多数团队没有知识管理流程",
+    ]);
+    expect(categories.quotes).toHaveLength(1);
+  });
+
+  it("存留的 cases/dataPoints:sourceUrl 强制清空,source 归一「模型记忆,需核实」(不留看似真实的出处)", () => {
+    const { categories } = sanitizeModelMemoryCategories(dirty);
+    for (const c of categories.cases) {
+      expect(c.sourceUrl).toBe("");
+      expect(c.source).toBe(MODEL_MEMORY_SOURCE_LABEL);
+    }
+    for (const d of categories.dataPoints) {
+      expect(d.sourceUrl).toBe("");
+      expect(d.source).toBe(MODEL_MEMORY_SOURCE_LABEL);
+    }
+  });
+
+  it("runResearchNode 无检索结果 → 清洗生效:伪引用条目被剔、来源归一、降级硬约束块进 prompt", async () => {
+    let capturedPrompt = "";
+    const model = new MockLanguageModelV4({
+      doGenerate: async (opts) => {
+        capturedPrompt = JSON.stringify(opts.prompt);
+        return finalText(JSON.stringify(dirty));
+      },
+    });
+    const res = await runResearchNode({
+      model,
+      positioningBrief: "x",
+      topicTitle: "AI 工具",
+    });
+    expect(res.grounding).toBe("model_memory");
+    // 伪引用条目不在产物里
+    const titles = res.items.map((i) => i.title).join("|");
+    expect(titles).not.toContain("MetaGPT");
+    expect(titles).not.toContain("85.9%");
+    expect(titles).not.toContain("SWE-bench");
+    // 来源归一 + 编造 URL 清空
+    const caseItem = res.items.find((i) => i.title.startsWith("案例："));
+    expect(caseItem?.source).toBe(MODEL_MEMORY_SOURCE_LABEL);
+    expect(caseItem?.url).toBe("");
+    // 降级硬约束块真进了 prompt
+    expect(capturedPrompt).toContain("降级模式");
+    expect(capturedPrompt).toContain("绝不编造任何具体引用");
+  });
+
+  it("runResearchNode 有检索结果(web)→ 不清洗(真实检索路径不动)", async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => finalText(JSON.stringify(dirty)),
+    });
+    const results: SearchResult[] = [
+      { title: "t", url: "https://real.example.com/a", snippet: "s" },
+    ];
+    const res = await runResearchNode({
+      model,
+      positioningBrief: "x",
+      topicTitle: "AI 工具",
+      searchResults: results,
+    });
+    expect(res.grounding).toBe("web");
+    // web 路径保留模型标注(含 arXiv 案例 —— 模型可能真引用了检索结果)
+    expect(res.items.map((i) => i.title).join("|")).toContain("MetaGPT");
+  });
+
+  it("清洗后全空 → 抛「全部为编造引用」诚实错误(不假成功)", async () => {
+    const allFake: ResearchCategories = {
+      hooks: [],
+      cases: [
+        {
+          title: "MetaGPT",
+          source: "arXiv 2308.00352",
+          opening: "",
+          sourceUrl: "",
+        },
+      ],
+      dataPoints: [{ stat: "85.9% pass@1", source: "", sourceUrl: "" }],
+      quotes: [],
+    };
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => finalText(JSON.stringify(allFake)),
+    });
+    await expect(
+      runResearchNode({ model, positioningBrief: "x", topicTitle: "t" }),
+    ).rejects.toThrow(/编造引用/);
   });
 });

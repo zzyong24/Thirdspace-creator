@@ -165,6 +165,19 @@ import {
   AI_OP_IDS,
   type AiService,
 } from "@creatoros/backend/modules/ai";
+// [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
+// dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
+import {
+  createExecutionService,
+  createExecutionTransport,
+  createExecutorRegistry,
+  registerBuiltinExecutors,
+  runExecutionTask,
+  abortExecutionTask,
+  resolveWorkspacesRoot,
+  sweepOrphanSandboxes,
+  EXECUTION_OP_IDS,
+} from "@creatoros/backend/modules/execution";
 import type {
   ContextDeps as ChatContextDeps,
   ReviewSubjectReader,
@@ -248,6 +261,19 @@ import {
   readUrl as readWebUrlSidecar,
   WebReaderLoginRequiredError,
 } from "@/server/ingestion/web-reader";
+// [T-253] local.read 安全硬门(denylist/路径归一/二进制探测,backend 纯函数)+ 授权表
+// (会话级一次授权 + 持久化「总是允许该目录」,本文件旁的 server 模块)。
+import {
+  normalizeLocalPath,
+  sensitivePathReason,
+  isProbablyBinary,
+  MAX_LOCAL_READ_BYTES,
+  MAX_LOCAL_DIR_ENTRIES,
+} from "@creatoros/backend/modules/ai-runtime";
+import {
+  checkGrant as checkLocalReadGrant,
+  consumeOnce as consumeLocalReadOnceGrant,
+} from "@/server/local-read-grants";
 import {
   runScheduledCollection,
   type Collector as ScheduledCollector,
@@ -484,6 +510,9 @@ const PERSISTED_OPS = new Set<string>([
   // formalizes an artifact_version candidate through the Artifacts public service
   // (createVersion createdByType:'ai'); the Agent SDK runs only in @creatoros/ai-worker.
   ...AI_OP_IDS,
+  // [T-255a] Execution(执行层,脑手分离)— execution.tasks create/list/get/confirm/
+  // discard。存储复用 ai_tasks(taskType `exec.*`);沙箱产物过确认门才入资产库(铁律②)。
+  ...EXECUTION_OP_IDS,
   // Query services (module Q, Wave 4) — the 3 page-composition reads
   // (pages.dashboard.get / pages.projectOverview.get / pages.search.get). Composes
   // public upstream services only (SPEC §19); pages.search.get is TAKEN OVER from
@@ -611,6 +640,9 @@ const LEARNINGS_OPS = new Set<string>(LEARNINGS_OP_IDS);
 
 // The set of op ids owned by the ai module's transport (module 15).
 const AI_OPS = new Set<string>(AI_OP_IDS);
+
+// [T-255a] The set of op ids owned by the execution module's transport.
+const EXECUTION_OPS = new Set<string>(EXECUTION_OP_IDS);
 
 // The set of op ids owned by the positioning module's transport (module 17).
 const POSITIONING_OPS = new Set<string>(POSITIONING_OP_IDS);
@@ -907,6 +939,8 @@ interface PersistenceBundle {
   reviewGate: Transport;
   learnings: Transport;
   ai: Transport;
+  // [T-255a] 执行层 transport(execution.tasks.*,存储复用 ai_tasks)。
+  execution: Transport;
   positioning: Transport;
   candidate: Transport;
   calibration: Transport;
@@ -1069,8 +1103,29 @@ export interface ChatRuntime {
         turnCount?: number | null;
         /** [T-237] 抽取诊断人话(如「抽到 12 轮对话(SSR 全量)」);非对话页 null。 */
         extraction?: string | null;
+        /** [T-251] 正文全文(未截断)—— 工具 execute 侧按窗返回给模型(默认/封顶 12k)。 */
+        fullText?: string | null;
+        /** [T-251] true = 命中已落库的同 URL document asset(未重新抓取,读的是已存全文)。 */
+        fromCache?: boolean;
       }
     | { needLogin: true; domain: string }
+  >;
+  // [T-253] local.read 端口 —— 读本机文件(任意路径 + 运行时逐次授权)。端口内:路径归一/realpath
+  // 穿越防护 → 敏感 denylist 硬拒(无论授权与否)→ 授权表查询(未授权返 needApproval 渲确认卡)→
+  // 大小上限 1MB + 二进制拒读 → 文本全文/目录清单。IO 失败抛错(工具 execute 转 error)。
+  readLocalFile: (
+    ctx: RequestContext,
+    input: { path: string; signal?: AbortSignal },
+  ) => Promise<
+    | { status: "needApproval"; path: string; size: number | null; type: string }
+    | { status: "denied"; path: string; reason: string }
+    | { status: "file"; path: string; name: string; fullText: string }
+    | {
+        status: "dir";
+        path: string;
+        entries: Array<{ name: string; kind: "file" | "dir"; size: number | null }>;
+        total: number;
+      }
   >;
   // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport 的
   // ai.tasks.create,复用既有分派链 void runAssetGenerate),立即返回 taskId(不阻塞对话回合)。
@@ -2519,6 +2574,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               source: s.source,
               rawText: s.rawText,
               demandTag: s.demandTag,
+              // [T-238] 评论按作品锚(存量/非评论 null)→ 信号质量画像算覆盖作品数。
+              publicationId: s.publicationId ?? null,
             })),
         };
         // 知识库 reader (topic.generate knowledge basis + topic.enrich 素材依据) — the
@@ -2535,6 +2592,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 usedCount: k.usedCount,
                 usedInPublished: k.usedInPublished,
                 sourceNote: k.sourceNote ?? null,
+                // [T-238] 新鲜度(ISO text 列)→ 信号质量画像算近 30 天占比。
+                createdAt: k.createdAt ?? null,
               })),
           // [T-186] L3 策展护栏:按 query 相关性检索知识,复用已建 hybridSearch 运行时
           // (knowledgeSearchRuntime,entityType=knowledge,exact ILIKE 优先 + 余弦补位 + 阈值截断;
@@ -3874,6 +3933,67 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
 
+  // [T-255a] Execution 执行层装配(脑手分离,SPEC 2026-07-11 execution-layer §2)。
+  // 存储复用 ai_tasks(taskType `exec.*`,六态+步骤流+结果表现成,零新表);模块本体
+  // 零 db 依赖 —— AI 端口走 aiService,产物入库走 assetsService(SOLE object-storage
+  // caller)。executor 注册表:demo `echo.manifest` 先行(框架自检),T-254a 在
+  // registerBuiltinExecutors 追加 video.render。
+  const executorRegistry = createExecutorRegistry();
+  registerBuiltinExecutors(executorRegistry);
+  const executionWorkspacesRoot = resolveWorkspacesRoot();
+  const executionService = createExecutionService({
+    ai: {
+      createTask: (c, body) => aiService.createTask(c, body),
+      getTask: (c, taskId) => aiService.getTask(c, taskId),
+      listTasks: (c, page) => aiService.listTasks(c, page),
+      listResults: (c, taskId) => aiService.listResults(c, taskId),
+      recordAuxResult: (c, taskId, input) =>
+        aiService.recordAuxResult(c, taskId, input),
+      markSucceeded: (c, taskId) => aiService.markSucceeded(c, taskId),
+      cancelTask: (c, taskId) => aiService.cancelTask(c, taskId),
+    },
+    assets: {
+      // 采纳入库:沙箱 out/ 实体 → 对象存储 + asset 行(与 asset.generate 同一直写链)。
+      createGeneratedAsset: async (c, input) => {
+        const row = await assetsService.createGeneratedAsset(c, input);
+        return { id: row.id };
+      },
+    },
+    hasExecutor: (t) => executorRegistry.has(t),
+    workspacesRoot: executionWorkspacesRoot,
+    // 丢弃在跑任务 → 中止其 executor(abort signal 贯通,T-239c 模式)。
+    abortRun: abortExecutionTask,
+  });
+  const executionBase = createExecutionTransport(() => executionService);
+  // live dispatch 范式(MEMORY 铁律):create 落 queued 后 fire-and-forget 后台编排,
+  // HTTP 立即返回,UI 轮询 execution.tasks.get / ai.tasks.steps.list。
+  const execution: Transport = {
+    async request(endpoint, input, ctx) {
+      const res = await executionBase.request(endpoint, input, ctx);
+      if (endpoint.id === "execution.tasks.create" && ctx) {
+        const task = (
+          res as { data?: { id?: string; status?: string; spec?: unknown } }
+        ).data;
+        if (task && typeof task.id === "string" && task.status === "queued") {
+          void runExecutionTask(
+            ctx,
+            { id: task.id, inputData: { spec: task.spec } },
+            {
+              ai: aiService,
+              assets: {
+                getAssetBytes: (c, assetId) =>
+                  assetsService.getAssetBytes(c, assetId),
+              },
+              registry: executorRegistry,
+              workspacesRoot: executionWorkspacesRoot,
+            },
+          );
+        }
+      }
+      return res;
+    },
+  };
+
   // [T-052 裁决③] Monetization service/transport 装配段已随变现中心物理删除(宪法 §8)。
 
   // Candidate (module 19, Wave 5): the service builds a per-ctx user-scoped repo over
@@ -5100,6 +5220,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               source: s.source,
               rawText: s.rawText,
               demandTag: s.demandTag,
+              // [T-238] 评论按作品锚 → 信号质量画像算覆盖作品数。
+              publicationId: s.publicationId ?? null,
             })),
         },
         knowledge: {
@@ -5112,6 +5234,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 usedCount: k.usedCount,
                 usedInPublished: k.usedInPublished,
                 sourceNote: k.sourceNote ?? null,
+                // [T-238] 新鲜度 → 信号质量画像算近 30 天占比。
+                createdAt: k.createdAt ?? null,
               })),
         },
         resolveModelSpec,
@@ -5132,6 +5256,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             basisBrief: input.basisBrief,
             knowledgeBrief: input.knowledgeBrief,
             learningsBrief: input.learningsBrief,
+            // [T-238] 依据质量画像段(collector 装配)→ 模板 v3 动态定权。
+            signalQualityBrief: input.signalQualityBrief,
             basis: "positioning",
           });
           return topics;
@@ -5413,6 +5539,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: deps.now,
     staleMs: envMsOf("CREATOROS_STALE_AI_TASK_MS", 2 * 60 * 60 * 1000),
   }).catch((e) => console.error("[scheduler] 启动扫僵尸 ai_task 失败:", e));
+
+  // [T-255a] 启动清扫孤儿沙箱(T-207 sweep 兜底同族):采纳/丢弃/失败本会清沙箱,
+  // 残留 = 进程中途被杀的孤儿;超 7 天(mtime)一律清除。fire-and-forget,不阻断启动。
+  void sweepOrphanSandboxes(executionWorkspacesRoot).catch((e) =>
+    console.error("[execution] 启动清扫孤儿沙箱失败:", e),
+  );
 
   // node-cron 进程内调度:每分钟轮询 enabled 且"最近一次 run 非 needs_reconnect"的 job(§6:
   // 登录态过期停跑),cron 到点 → triggerScheduledJob。测试/build 环境不启动(startScheduler
@@ -6769,6 +6901,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             source: s.source,
             rawText: s.rawText,
             demandTag: s.demandTag,
+            // [T-238] 评论按作品锚 → 信号质量画像算覆盖作品数。
+            publicationId: s.publicationId ?? null,
           })),
       },
       knowledge: {
@@ -6783,6 +6917,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               usedCount: k.usedCount,
               usedInPublished: k.usedInPublished,
               sourceNote: k.sourceNote ?? null,
+              // [T-238] 新鲜度 → 信号质量画像算近 30 天占比。
+              createdAt: k.createdAt ?? null,
             })),
       },
       // T-039b:抖音账号画像 reader —— 定位对话(chatbox.positioning)据此把「这个人在平台上已经
@@ -7647,6 +7783,42 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       ctx: RequestContext,
       input: { url: string; signal?: AbortSignal },
     ) => {
+      // [T-251] 重读同 URL 不重新抓取:先按 sourceUrl 反查已落库的 document asset(pending/active
+      // 都算 —— pending = 已抓到全文只是用户还没点「存入素材库」),命中则直接读回其正文全文按窗
+      // 返回(fromCache=true),不再开浏览器。查/读失败(极端:字节丢失)→ 静默回落真抓。
+      try {
+        const cached = await assetsService.findAssetBySourceUrl(ctx, input.url);
+        if (cached) {
+          const blob = await assetsService.getAssetBytes(ctx, cached.id);
+          if (blob && blob.mimeType.startsWith("text/")) {
+            const fullText = new TextDecoder().decode(blob.bytes);
+            let previewUrl: string | null = null;
+            try {
+              const dl = await assetsService.getDownloadUrl(ctx, cached.id);
+              previewUrl = dl.url ?? null;
+            } catch {
+              previewUrl = null;
+            }
+            return {
+              needLogin: false as const,
+              assetId: cached.id,
+              name: cached.name,
+              previewUrl,
+              sourceUrl: input.url,
+              title: cached.name.replace(/^正文·/, ""),
+              excerpt: fullText.slice(0, 280),
+              extractor: "cached",
+              turnCount: null,
+              extraction: `复用已存正文素材(未重新抓取;全文 ${fullText.length} 字,按窗读取)`,
+              fullText,
+              fromCache: true,
+            };
+          }
+        }
+      } catch (err) {
+        // 缓存路是增强:任何失败都回落真抓,不阻断。
+        console.warn("[chat-runtime] web.read 缓存反查失败,回落真抓:", err);
+      }
       const domain = webDomainFromUrl(input.url);
       let read;
       try {
@@ -7700,6 +7872,113 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         extractor: read.extractor,
         turnCount: read.turnCount,
         extraction,
+        // [T-251] 全文透传 —— 工具 execute 侧按窗返回(首窗即含正文,不再只有 280 字 excerpt)。
+        fullText: read.text,
+        fromCache: false,
+      };
+    },
+    // [T-253] local.read 端口 —— 编导读本机文件的全链:归一/realpath 穿越防护 → 敏感 denylist
+    // 硬拒(授权之上,无论授权与否)→ 授权表(未授权 → needApproval 渲确认卡;授权经
+    // /api/v1/local/read-grant 写入)→ 大小 1MB/二进制门 → 文本全文 or 目录清单。
+    readLocalFile: async (
+      ctx: RequestContext,
+      input: { path: string; signal?: AbortSignal },
+    ) => {
+      const { homedir } = await import("node:os");
+      const fsp = await import("node:fs/promises");
+      const normalized = normalizeLocalPath(input.path, homedir());
+      if (!normalized) {
+        return {
+          status: "denied" as const,
+          path: input.path,
+          reason:
+            "路径必须是绝对路径(以 / 开头,或 ~ 开头的家目录路径)—— 相对路径无法确定基准,已拒绝。",
+        };
+      }
+      // 敏感硬门第一遍:对归一路径检查(realpath 之前就能挡住明着写的敏感路径)。
+      const reason1 = sensitivePathReason(normalized);
+      if (reason1) {
+        return { status: "denied" as const, path: normalized, reason: reason1 };
+      }
+      // realpath 复检(symlink 防绕:软链把 ~/.ssh/id_rsa 伪装成 note.txt 也会被第二遍抓住)。
+      let real: string;
+      try {
+        real = await fsp.realpath(normalized);
+      } catch {
+        throw new Error(`路径不存在或不可访问:${normalized}`);
+      }
+      const reason2 = sensitivePathReason(real);
+      if (reason2) {
+        return { status: "denied" as const, path: real, reason: reason2 };
+      }
+      const st = await fsp.stat(real);
+      const isDir = st.isDirectory();
+      // 授权表:未授权 → needApproval(前端渲「允许一次/总是允许该目录/拒绝」确认卡)。
+      const grant = checkLocalReadGrant(ctx.userId, real);
+      if (!grant) {
+        return {
+          status: "needApproval" as const,
+          path: real,
+          size: isDir ? null : Number(st.size),
+          type: isDir
+            ? "directory"
+            : nodePath.extname(real).replace(/^\./, "") || "file",
+        };
+      }
+      if (isDir) {
+        // 目录 listing:名字 + 类型 + 大小(上限 MAX_LOCAL_DIR_ENTRIES 条,防超大目录炸上下文)。
+        const dirents = await fsp.readdir(real, { withFileTypes: true });
+        const entries: Array<{
+          name: string;
+          kind: "file" | "dir";
+          size: number | null;
+        }> = [];
+        for (const d of dirents.slice(0, MAX_LOCAL_DIR_ENTRIES)) {
+          let size: number | null = null;
+          if (d.isFile()) {
+            try {
+              size = Number((await fsp.stat(nodePath.join(real, d.name))).size);
+            } catch {
+              size = null;
+            }
+          }
+          entries.push({
+            name: d.name,
+            kind: d.isDirectory() ? "dir" : "file",
+            size,
+          });
+        }
+        if (grant === "once") consumeLocalReadOnceGrant(ctx.userId, real);
+        return {
+          status: "dir" as const,
+          path: real,
+          entries,
+          total: dirents.length,
+        };
+      }
+      // 文件:大小上限(1MB 文本)→ 二进制探测 → utf8 解码全文(窗口截断在工具 execute 侧)。
+      if (Number(st.size) > MAX_LOCAL_READ_BYTES) {
+        return {
+          status: "denied" as const,
+          path: real,
+          reason: `文件 ${(Number(st.size) / 1024 / 1024).toFixed(1)}MB,超过本地读取上限 1MB —— 请裁剪后再读,或直接把它上传到素材库(素材上传支持到 20MB)。`,
+        };
+      }
+      const bytes = await fsp.readFile(real);
+      if (isProbablyBinary(new Uint8Array(bytes))) {
+        return {
+          status: "denied" as const,
+          path: real,
+          reason:
+            "这是二进制文件(非文本),对话内读取只支持文本 —— 建议直接把它上传到素材库(图/视频/文档走既有上传链)。",
+        };
+      }
+      if (grant === "once") consumeLocalReadOnceGrant(ctx.userId, real);
+      return {
+        status: "file" as const,
+        path: real,
+        name: nodePath.basename(real),
+        fullText: bytes.toString("utf8"),
       };
     },
     // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport
@@ -7795,6 +8074,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     reviewGate,
     learnings,
     ai,
+    execution,
     positioning,
     candidate,
     calibration,
@@ -7887,6 +8167,11 @@ async function getLearnings(): Promise<Transport> {
 
 async function getAi(): Promise<Transport> {
   return (await getBundle()).ai;
+}
+
+// [T-255a] 执行层 transport 取用(execution.tasks.*)。
+async function getExecution(): Promise<Transport> {
+  return (await getBundle()).execution;
 }
 
 async function getPositioning(): Promise<Transport> {
@@ -8174,6 +8459,15 @@ export const compositeTransport: Transport = {
     if (AI_OPS.has(endpoint.id)) {
       const ai = await getAi();
       return ai.request(endpoint, input, ctx);
+    }
+    // [T-255a] Execution ops — execution.tasks create/list/get/confirm/discard served
+    // by the module's own transport(存储复用 ai_tasks,taskType `exec.*`)。create 后
+    // composition 层 fire-and-forget runExecutionTask(沙箱→物化→executor→收割 manifest
+    // →awaiting_confirmation);confirm 采纳产物入资产库(铁律②),discard 中止+清沙箱。
+    // No ctx ⇒ AuthenticationError.
+    if (EXECUTION_OPS.has(endpoint.id)) {
+      const execution = await getExecution();
+      return execution.request(endpoint, input, ctx);
     }
     // Positioning ops (module 17, Wave 5) — profile get/upsert + statements
     // list/create/get + gate.evaluate + pages.positioning.get served by the module's

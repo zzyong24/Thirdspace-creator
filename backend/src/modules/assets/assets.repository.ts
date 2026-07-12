@@ -90,6 +90,17 @@ export interface AssetRepository {
     assetId: string,
     accountId?: string | null,
   ): Promise<AssetRow | null>;
+  /**
+   * [T-251] 按来源 URL 反查最近一条 document 类 asset(web.read 落库时把 sourceUrl 存进
+   * current file 的 mediaMetadata)。**pending/active 都算**(pending = 已抓到全文但用户还没点
+   * 「存入素材库」——重读同 URL 不重新抓取的语义对它同样成立)。查不到 → null。user-scoped;
+   * accountId 可选叠加(与 getAsset 同门)。
+   */
+  findAssetBySourceUrl(
+    userId: string,
+    sourceUrl: string,
+    accountId?: string | null,
+  ): Promise<AssetRow | null>;
   insertAsset(
     userId: string,
     input: {
@@ -277,6 +288,45 @@ export function createAssetRepository(
           ),
         );
       return rows[0] ?? null;
+    },
+
+    async findAssetBySourceUrl(userId, sourceUrl, accountId) {
+      // [T-251] 两步查(jsonb 键匹配放 JS 侧,PGlite/PG 双栈无 SQL 方言分歧):
+      //   ① 该 user 的 document 类 asset(pending/active),新→旧;
+      //   ② 批量拉它们的文件行,按 mediaMetadata.sourceUrl 精确匹配,取最新命中。
+      const candidates = await db
+        .select()
+        .from(assets)
+        .where(
+          and(
+            eq(assets.userId, userId),
+            eq(assets.assetType, "document"),
+            inArray(assets.status, ["pending", "active"]),
+            accountGate(accountId),
+          ),
+        )
+        .orderBy(desc(assets.createdAt), asc(assets.id));
+      if (candidates.length === 0) return null;
+      const files = await db
+        .select()
+        .from(assetFiles)
+        .where(
+          inArray(
+            assetFiles.assetId,
+            candidates.map((a) => a.id),
+          ),
+        );
+      const matchedAssetIds = new Set(
+        files
+          .filter(
+            (f) =>
+              ((f.mediaMetadata as Record<string, unknown> | null) ?? {})[
+                "sourceUrl"
+              ] === sourceUrl,
+          )
+          .map((f) => f.assetId),
+      );
+      return candidates.find((a) => matchedAssetIds.has(a.id)) ?? null;
     },
 
     async insertAsset(userId, input, accountId) {

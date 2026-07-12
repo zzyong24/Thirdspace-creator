@@ -187,7 +187,13 @@ describe("assembleTrendBriefDetailed 装配明细(T-245)", () => {
     expect(detail.brief).toBe(await assembleTrendBrief(ctx, "母婴定位", deps));
 
     const none = await assembleTrendBriefDetailed(ctx, "母婴定位", {});
-    expect(none).toEqual({ brief: "", sourceSignalCount: 0, searchHitCount: 0 });
+    // [T-238] additive:sourceNameCount(distinct 已登记信源名,质量画像「几路信源」用)。
+    expect(none).toEqual({
+      brief: "",
+      sourceSignalCount: 0,
+      searchHitCount: 0,
+      sourceNameCount: 0,
+    });
 
     const failed = await assembleTrendBriefDetailed(ctx, "母婴定位", {
       trendSourceSignals: async () => {

@@ -31,6 +31,8 @@ export interface RunTopicTaskInput {
   // [T-062b gate-F3] 知识库参考 + 已验证经验约束(选填,creative-context 装配)。
   knowledgeBrief?: string;
   learningsBrief?: string;
+  /** [T-238] 依据质量画像 brief(选填,装配层算好)—— 透传 topic-node,模板据它动态定权。 */
+  signalQualityBrief?: string;
   basis: TopicBasis;
   ports: TopicTaskPorts;
 }
@@ -44,6 +46,7 @@ export async function runTopicTask(input: RunTopicTaskInput): Promise<void> {
     basisBrief,
     knowledgeBrief,
     learningsBrief,
+    signalQualityBrief,
     basis,
     ports,
   } = input;
@@ -55,6 +58,7 @@ export async function runTopicTask(input: RunTopicTaskInput): Promise<void> {
       basisBrief,
       knowledgeBrief,
       learningsBrief,
+      signalQualityBrief,
       basis,
       onStep: async (e) => {
         await ports.recordStep(taskId, {

@@ -23,6 +23,8 @@ export * from "./benchmark-teardown-runner";
 export * from "./darkhorse-collector";
 // [T-235b] 热点信源信号采集(通用网页信源主路 readUrl+AI 抽取 / RSS 辅路 feed 解析)。
 export * from "./trend-source-signals";
+// [T-238] 出题依据信号质量画像(纯函数)+ 评论强信号过滤 —— chat 出题 / topic.daily 共享装配。
+export * from "./signal-quality";
 // [T-212d] 防茧房校准:淘汰原因蒸馏(runTopicPreferenceDistill 编排 + createTopicPreferenceDistillPort AI 端口)。
 export * from "./topic-preference-distill-runner";
 // [T-163 Batch 3] chat 流式(runChatStream + tools + context 装配)—— streamText/tool/jsonSchema
@@ -30,6 +32,9 @@ export * from "./topic-preference-distill-runner";
 export * from "./chat-context";
 export * from "./chat-runner";
 export * from "./chat-tools";
+// [T-253] local.read 安全硬门(denylist/路径归一/二进制探测,纯函数)—— composition root
+// (persistence-client readLocalFile 端口)与授权 route 共用。
+export * from "./local-read-security";
 export * from "./comment-qa-sift-runner";
 export * from "./embed";
 export * from "./copilot-runner";

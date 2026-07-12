@@ -45,7 +45,12 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
   },
   "web.read": {
     name: "读网页正文",
-    purpose: "带登录态读一个网页的正文全文(含需登录内容),存成逐字稿素材",
+    purpose: "带登录态读一个网页的正文全文(含需登录内容),存成逐字稿素材;超长内容按窗翻读",
+  },
+  // [T-253] 本机文件读取(任意路径 + 运行时确认卡 + 敏感 denylist 硬门)。
+  "local.read": {
+    name: "读本机文件",
+    purpose: "经你确认后读本机文件/目录(敏感文件硬拒),内容直接进对话",
   },
   "material.generate": {
     name: "AI 生成素材",

@@ -10,6 +10,15 @@ import {
   formatTrendSourceBrief,
   type TrendSourceSignal,
 } from "./trend-source-signals";
+// [T-238] 信号质量画像:各依据源真实数据 → 确定性画像 → 渲成「依据质量画像」段注入出题 prompt,
+// 让 AI 动态定权(评论少且噪声高→降权只取强信号;定位完整→当骨架)。评论进 brief 前滤噪
+// (666/纯 emoji/夸赞不进,强信号带 ★)。chat 出题(本文件)与 topic.daily(collector)共享。
+import {
+  assembleSignalQualityInputs,
+  buildSignalQualityProfile,
+  formatFilteredSignalsBrief,
+  renderSignalQualityBrief,
+} from "./signal-quality";
 
 // 选题节点 live 接线(Phase 3 A 路径)—— 把 topic.generate 任务跑在新 Agent Runtime 上,
 // 而不是旧的 runClaudeAgent 订阅路径。这层只做「装配 + 注入」:解析按 capability 配的 model
@@ -106,6 +115,8 @@ export interface TrendBriefDetail {
   sourceSignalCount: number;
   /** web 联网搜索命中条数(未配/失败 → 0,诚实)。 */
   searchHitCount: number;
+  /** [T-238] 实拉到信号的 distinct 信源名个数(质量画像「几路信源」用;additive)。 */
+  sourceNameCount: number;
 }
 
 export async function assembleTrendBriefDetailed(
@@ -124,8 +135,15 @@ export async function assembleTrendBriefDetailed(
   const sections: string[] = [];
   let sourceSignalCount = 0;
   let searchHitCount = 0;
+  let sourceNameCount = 0;
   if (signalsSettled.status === "fulfilled") {
     sourceSignalCount = signalsSettled.value.length;
+    // [T-238] distinct 信源名(质量画像「几路信源」;空名不计)。
+    sourceNameCount = new Set(
+      signalsSettled.value
+        .map((s) => (s.sourceName ?? "").trim())
+        .filter(Boolean),
+    ).size;
     const brief = formatTrendSourceBrief(signalsSettled.value);
     if (brief) sections.push(brief);
   } // rejected → 信源段空(collectTrendSourceSignals 内已单源容错,这里兜整体失败)
@@ -134,7 +152,24 @@ export async function assembleTrendBriefDetailed(
     const brief = formatTrendBrief(searchSettled.value);
     if (brief) sections.push(brief);
   } // rejected(未配 web.search / 检索失败)→ 搜索段空,诚实降级
-  return { brief: sections.join("\n\n"), sourceSignalCount, searchHitCount };
+  return {
+    brief: sections.join("\n\n"),
+    sourceSignalCount,
+    searchHitCount,
+    sourceNameCount,
+  };
+}
+
+/** [T-238] 由 trend 装配明细派生画像的 trend 指标:信源路数 = distinct 已登记信源名 + web 搜索
+ *  算一路(有命中才算);信号总数 = 两路条数之和。纯函数,导出供单测。 */
+export function trendQualityFromDetail(detail: TrendBriefDetail): {
+  sourceCount: number;
+  signalCount: number;
+} {
+  return {
+    sourceCount: detail.sourceNameCount + (detail.searchHitCount > 0 ? 1 : 0),
+    signalCount: detail.sourceSignalCount + detail.searchHitCount,
+  };
 }
 
 export interface TopicTask {
@@ -160,19 +195,43 @@ export async function runTopicGenerateV2(
       { projectId: null, topic: "" },
       deps,
     );
+    // [T-238] 信号质量画像输入:best-effort 读评论信号/定位中心/知识库原始行(单源失败 → 空,
+    // 绝不阻断出题)。signals 行同时供 comments basis 滤噪 brief 复用(不双读)。
+    const qualityInputs = await assembleSignalQualityInputs(ctx, deps);
+    let trendQuality = { sourceCount: 0, signalCount: 0 };
     // Sfix(basis 装配 bug):按出题依据装配对应 brief 一起喂进去,让 4 个按钮真的不同
     // (评论→评论信号 / 知识→知识库 / 热点→联网检索)。之前只传 positioningBrief,导致各 basis 出一样的题。
     let basisBrief = "";
     if (basis === "comments") {
-      basisBrief = context.signalsBrief;
+      // [T-238] 强信号过滤:666/纯 emoji/夸赞类噪声不进 brief,强信号条目带 ★ 标注。
+      // 信号读源未绑/读空 → 退回 context.signalsBrief(与旧行为一致,诚实降级)。
+      basisBrief =
+        qualityInputs.signals.length > 0
+          ? formatFilteredSignalsBrief(qualityInputs.signals)
+          : context.signalsBrief;
     } else if (basis === "knowledge") {
       basisBrief = context.knowledgeBrief;
     } else if (basis === "trend") {
       // [T-182c→T-235b] trend 出题多源并行:已登记信源信号(readUrl+AI 抽取 / rss feed,主路)
       // + T-126 联网检索(既有)拼分段 brief。单路失败只丢该段;两路全空 → 空 brief,basis="trend"
       // 仍透传给节点当降级 hint,不崩。
-      basisBrief = await assembleTrendBrief(ctx, context.positioningBrief, deps);
+      const detail = await assembleTrendBriefDetailed(
+        ctx,
+        context.positioningBrief,
+        deps,
+      );
+      basisBrief = detail.brief;
+      trendQuality = trendQualityFromDetail(detail);
     }
+    // [T-238] 画像 → 「依据质量画像」段,注入 topic.generate prompt(模板 v3 指引动态定权)。
+    const signalQualityBrief = renderSignalQualityBrief(
+      buildSignalQualityProfile({
+        signals: qualityInputs.signals,
+        positioning: qualityInputs.positioning,
+        knowledge: qualityInputs.knowledge,
+        trend: trendQuality,
+      }),
+    );
     // 4) 跑整条编排:markRunning → 跑节点(发步骤)→ recordCandidate;失败 cancelTask。
     await runTopicTask({
       taskId: task.id,
@@ -183,6 +242,8 @@ export async function runTopicGenerateV2(
       // basis=knowledge 时知识已进 basisBrief,置空防重复。
       knowledgeBrief: basis === "knowledge" ? undefined : context.knowledgeBrief || undefined,
       learningsBrief: context.learningsBrief || undefined,
+      // [T-238] 依据质量画像段(恒非空;模板 v3 据它动态定权、reason 注明主要依据+权重理由)。
+      signalQualityBrief,
       basis,
       ports: {
         markRunning: (id: string) => deps.ai.markRunning(ctx, id),

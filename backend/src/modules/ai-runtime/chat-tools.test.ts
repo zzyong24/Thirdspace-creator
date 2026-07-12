@@ -16,6 +16,7 @@ import {
   clampWindowMaxChars,
   TEXT_WINDOW_DEFAULT_MAX_CHARS,
   TEXT_WINDOW_CAP_CHARS,
+  WEB_READ_WINDOW_MAX_CHARS,
   type ChatToolDeps,
 } from "./chat-tools";
 
@@ -30,6 +31,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   enrichTopic: ReturnType<typeof vi.fn>;
   captureScreenshot: ReturnType<typeof vi.fn>;
   readWeb: ReturnType<typeof vi.fn>;
+  readLocal: ReturnType<typeof vi.fn>;
   dispatchGenerateAsset: ReturnType<typeof vi.fn>;
   dispatchScriptReview: ReturnType<typeof vi.fn>;
   diagnoseContent: ReturnType<typeof vi.fn>;
@@ -344,6 +346,13 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     excerpt: "这是正文摘要…",
     extractor: "readability",
   }));
+  // [T-253] local.read 核心(fake:默认「已授权的文本文件」态;其余态由用例经 over 覆盖)。
+  const readLocal = vi.fn(async () => ({
+    status: "file" as const,
+    path: "/Users/u/Desktop/note.md",
+    name: "note.md",
+    fullText: "本地笔记正文",
+  }));
   // [T-084c] material.generate 核心(fake:dispatch asset.generate task → 返回 taskId)。
   const dispatchGenerateAsset = vi.fn(async () => ({ taskId: "task-gen-1" }));
   // [T-103b] review.script 核心(fake:dispatch script.review → 返回 taskId + projectId)。
@@ -373,6 +382,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     gatherMaterials,
     captureScreenshot,
     readWeb,
+    readLocal,
     dispatchGenerateAsset,
     dispatchScriptReview,
     diagnoseContent,
@@ -403,6 +413,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     enrichTopic,
     captureScreenshot,
     readWeb,
+    readLocal,
     dispatchGenerateAsset,
     dispatchScriptReview,
     diagnoseContent,
@@ -2016,5 +2027,233 @@ describe("[T-245] 热点能力认知 — 描述话术 + trendNote 透传", () =>
     })) as Record<string, unknown>;
     expect(result.kind).toBe("topic.candidates");
     expect("trendNote" in result).toBe(false);
+  });
+});
+
+// ── [T-251] web.read 全文分窗读取 —— 端口回全文 → execute 按窗返回(默认/封顶 12000);
+//    旧端口无 fullText → 退回 excerpt(window=null 诚实无窗口真相);fromCache 透传。
+describe("[T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段)", () => {
+  const WHITELIST = ["web.read"] as const;
+  const longText = "字".repeat(30000);
+
+  function depsWithFullText(fromCache = false) {
+    return makeDeps({
+      readWeb: async () => ({
+        needLogin: false as const,
+        assetId: "as-read-1",
+        name: "正文·长文",
+        previewUrl: null,
+        sourceUrl: "https://example.com/long",
+        title: "长文",
+        excerpt: longText.slice(0, 280),
+        extractor: fromCache ? "cached" : "readability",
+        fullText: longText,
+        ...(fromCache ? { fromCache: true } : {}),
+      }),
+    });
+  }
+
+  it("端口回 fullText → 首窗 12000 字 + window 真相字段 + hasMore=true(16k 预算内安全值)", async () => {
+    const { deps } = depsWithFullText();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://example.com/long",
+    })) as {
+      text: string | null;
+      window: { offset: number; length: number; total: number } | null;
+      hasMore: boolean;
+      asset: { excerpt: string } | null;
+    };
+    expect(result.text).toHaveLength(WEB_READ_WINDOW_MAX_CHARS);
+    expect(result.window).toEqual({
+      offset: 0,
+      length: WEB_READ_WINDOW_MAX_CHARS,
+      total: 30000,
+    });
+    expect(result.hasMore).toBe(true);
+    // 卡片摘要保持 280 字预览(前端卡不渲整窗)。
+    expect(result.asset?.excerpt).toHaveLength(280);
+  });
+
+  it("offset 翻窗:offset=12000 读第二窗;末窗 hasMore=false(窗口边界)", async () => {
+    const { deps } = depsWithFullText();
+    const tools = buildChatTools(WHITELIST, deps);
+    const second = (await runExecute(tools["web.read"]!, {
+      url: "https://example.com/long",
+      offset: 12000,
+    })) as { window: { offset: number; length: number } | null; hasMore: boolean };
+    expect(second.window?.offset).toBe(12000);
+    expect(second.window?.length).toBe(12000);
+    expect(second.hasMore).toBe(true);
+    const last = (await runExecute(tools["web.read"]!, {
+      url: "https://example.com/long",
+      offset: 24000,
+    })) as { window: { offset: number; length: number } | null; hasMore: boolean };
+    expect(last.window?.length).toBe(6000);
+    expect(last.hasMore).toBe(false);
+  });
+
+  it("maxChars 超封顶被夹到 12000(execute 侧强制,非君子协定)", async () => {
+    const { deps } = depsWithFullText();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://example.com/long",
+      maxChars: 999999,
+    })) as { window: { length: number } | null };
+    expect(result.window?.length).toBe(WEB_READ_WINDOW_MAX_CHARS);
+  });
+
+  it("fromCache 透传:命中已存 asset(不重抓)时结果带 fromCache=true", async () => {
+    const { deps } = depsWithFullText(true);
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://example.com/long",
+    })) as { fromCache?: boolean };
+    expect(result.fromCache).toBe(true);
+  });
+
+  it("旧端口无 fullText → text 退回 excerpt、window=null(诚实无窗口真相,不假装看全)", async () => {
+    const { deps } = makeDeps(); // makeDeps 默认 readWeb 不带 fullText
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["web.read"]!, {
+      url: "https://example.com/article",
+    })) as { text: string | null; window: unknown; hasMore: boolean };
+    expect(result.text).toBe("这是正文摘要…");
+    expect(result.window).toBeNull();
+    expect(result.hasMore).toBe(false);
+  });
+});
+
+// ── [T-253] local.read 工具 —— 本机文件读取:未授权 needApproval / denied 硬拒 / 文本窗口 /
+//    目录清单 / 空路径与端口抛错诚实转 error。
+describe("[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门)", () => {
+  const WHITELIST = ["local.read"] as const;
+
+  it("未授权 → needApproval 透传(path/size/type),file/listing/error 为空", async () => {
+    const { deps } = makeDeps({
+      readLocal: async () => ({
+        status: "needApproval" as const,
+        path: "/Users/u/Desktop/稿子.md",
+        size: 2048,
+        type: "md",
+      }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.read"]!, {
+      path: "~/Desktop/稿子.md",
+    })) as {
+      kind: string;
+      needApproval: { path: string; size: number | null; type: string } | null;
+      file: unknown;
+      listing: unknown;
+      error: string | null;
+    };
+    expect(result.kind).toBe("local.read");
+    expect(result.needApproval).toEqual({
+      path: "/Users/u/Desktop/稿子.md",
+      size: 2048,
+      type: "md",
+    });
+    expect(result.file).toBeNull();
+    expect(result.listing).toBeNull();
+    expect(result.error).toBeNull();
+  });
+
+  it("denied(敏感 denylist 硬拒)→ error 带人话原因,不产 file", async () => {
+    const { deps } = makeDeps({
+      readLocal: async () => ({
+        status: "denied" as const,
+        path: "/Users/u/.env",
+        reason: "「.env」环境变量文件通常含密钥/凭据,无论是否授权都不读取。",
+      }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.read"]!, {
+      path: "/Users/u/.env",
+    })) as { file: unknown; error: string | null };
+    expect(result.file).toBeNull();
+    expect(result.error).toContain(".env");
+  });
+
+  it("已授权文本文件 → 窗口截断在 execute 侧(默认 4000/封顶 8000,同 §3 协议)+ 翻窗", async () => {
+    const long = "文".repeat(9000);
+    const readLocal = vi.fn(async () => ({
+      status: "file" as const,
+      path: "/Users/u/notes/long.md",
+      name: "long.md",
+      fullText: long,
+    }));
+    const { deps } = makeDeps({ readLocal });
+    const tools = buildChatTools(WHITELIST, deps);
+    const first = (await runExecute(tools["local.read"]!, {
+      path: "/Users/u/notes/long.md",
+    })) as {
+      file: {
+        text: string;
+        offset: number;
+        totalChars: number;
+        hasMore: boolean;
+      } | null;
+    };
+    expect(readLocal).toHaveBeenCalled();
+    expect(first.file?.text).toHaveLength(TEXT_WINDOW_DEFAULT_MAX_CHARS);
+    expect(first.file?.totalChars).toBe(9000);
+    expect(first.file?.hasMore).toBe(true);
+    const second = (await runExecute(tools["local.read"]!, {
+      path: "/Users/u/notes/long.md",
+      offset: 8000,
+      maxChars: 8000,
+    })) as { file: { text: string; offset: number; hasMore: boolean } | null };
+    expect(second.file?.offset).toBe(8000);
+    expect(second.file?.text).toHaveLength(1000);
+    expect(second.file?.hasMore).toBe(false);
+  });
+
+  it("目录 → listing 透传(entries + total)", async () => {
+    const { deps } = makeDeps({
+      readLocal: async () => ({
+        status: "dir" as const,
+        path: "/Users/u/notes",
+        entries: [
+          { name: "a.md", kind: "file" as const, size: 12 },
+          { name: "sub", kind: "dir" as const, size: null },
+        ],
+        total: 2,
+      }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.read"]!, {
+      path: "/Users/u/notes",
+    })) as {
+      listing: { path: string; entries: unknown[]; total: number } | null;
+      error: string | null;
+    };
+    expect(result.listing?.total).toBe(2);
+    expect(result.listing?.entries).toHaveLength(2);
+    expect(result.error).toBeNull();
+  });
+
+  it("空路径 → 诚实报错,不调端口", async () => {
+    const { deps, readLocal } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.read"]!, { path: "  " })) as {
+      error: string | null;
+    };
+    expect(readLocal).not.toHaveBeenCalled();
+    expect(result.error).toContain("路径");
+  });
+
+  it("端口抛错(不存在/无权限)→ 不抛,error 人话", async () => {
+    const { deps } = makeDeps({
+      readLocal: async () => {
+        throw new Error("路径不存在或不可访问:/Users/u/nope.md");
+      },
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.read"]!, {
+      path: "/Users/u/nope.md",
+    })) as { error: string | null; needApproval: unknown };
+    expect(result.error).toContain("不存在");
+    expect(result.needApproval).toBeNull();
   });
 });

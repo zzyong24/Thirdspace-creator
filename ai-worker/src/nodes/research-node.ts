@@ -141,6 +141,75 @@ export function anthropicWebSearchTools(opts?: { maxUses?: number }): {
 
 const trim = (s: unknown): string => (typeof s === "string" ? s.trim() : "");
 
+// ── [T-228] model_memory 降级模式的「搜索诚实门」────────────────────────────────────
+// 实录病例:联网搜素材 16 条只 1 条真 URL,其余是模型记忆编的**精确引用**(arXiv 2308.00352 /
+// 85.9% pass@1 / SWE-bench 榜单)标「需核实」凑数 —— 看着像真源,实为编造。双管修法:
+//   ① prompt 硬约束(groundingNote facet,见下 MODEL_MEMORY_GROUNDING_NOTE);
+//   ② 输出后处理清洗(sanitizeModelMemoryCategories):兜住不听话的模型 —— 带伪引用模式的
+//      条目整条剔除;来源字段强制归一(不许留看似真实的出处),sourceUrl 强制清空。
+// 只作用于 grounding=model_memory(无真实检索结果);真实检索路径(web)不动。
+
+/** [T-228] 伪引用模式 —— model_memory 模式下带这些「假精度引用」的条目整条剔除:
+ *  论文编号(arXiv xxxx.xxxxx)/ DOI / 小数点精度百分比(85.9%)/ 基准成绩(pass@1)/
+ *  常见 LLM 榜单名(SWE-bench/HumanEval/MMLU/GSM8K,实录病灶)。整数百分比(90%)不算
+ *  伪精度(方向性常识陈述常用),不剔。 */
+export const PSEUDO_CITATION_PATTERNS: readonly RegExp[] = [
+  /arxiv\s*[:：]?\s*\d{4}\.\d{4,5}/i, // arXiv 2308.00352
+  /\b10\.\d{4,}\/\S+/, // DOI 10.1234/xxx
+  /\bdoi\s*[:：]/i,
+  /\d+\.\d+\s*%/, // 小数点精度百分比(85.9%)= 假精度
+  /pass@\d+/i, // 基准成绩(pass@1)
+  /\b(swe-?bench|humaneval|mmlu|gsm8k)\b/i, // 常见 LLM 榜单/基准名(实录病灶)
+];
+
+/** [T-228] 一段文本是否含伪引用(假精度引用)。纯函数,导出供单测。 */
+export function hasPseudoCitation(text: string): boolean {
+  const t = text ?? "";
+  return PSEUDO_CITATION_PATTERNS.some((re) => re.test(t));
+}
+
+/** [T-228] model_memory 模式的来源归一标签(不许留看似真实的机构/报告/论文出处)。 */
+export const MODEL_MEMORY_SOURCE_LABEL = "模型记忆,需核实";
+
+/**
+ * [T-228] model_memory 模式输出清洗(纯函数,导出供单测):
+ *   - 四类中任何字段含伪引用模式的条目 → 整条剔除(dropped 计数,调用方可观测);
+ *   - cases/dataPoints 的 sourceUrl 强制清空(无检索结果不可能有真 URL);
+ *   - cases/dataPoints 的 source 强制归一为「模型记忆,需核实」(不留看似真实的出处)。
+ */
+export function sanitizeModelMemoryCategories(cats: ResearchCategories): {
+  categories: ResearchCategories;
+  dropped: number;
+} {
+  let dropped = 0;
+  const keep = (texts: Array<string | undefined>): boolean => {
+    const bad = texts.some((t) => hasPseudoCitation(t ?? ""));
+    if (bad) dropped += 1;
+    return !bad;
+  };
+  const categories: ResearchCategories = {
+    hooks: (cats.hooks ?? []).filter((h) => keep([h.text, h.why])),
+    cases: (cats.cases ?? [])
+      .filter((c) => keep([c.title, c.source, c.opening]))
+      .map((c) => ({ ...c, source: MODEL_MEMORY_SOURCE_LABEL, sourceUrl: "" })),
+    dataPoints: (cats.dataPoints ?? [])
+      .filter((d) => keep([d.stat, d.source]))
+      .map((d) => ({ ...d, source: MODEL_MEMORY_SOURCE_LABEL, sourceUrl: "" })),
+    quotes: (cats.quotes ?? []).filter((q) => keep([q.line])),
+  };
+  return { categories, dropped };
+}
+
+/** [T-228] 降级模式硬约束块(groundingNote facet)—— 只在 grounding=model_memory 注入。 */
+export const MODEL_MEMORY_GROUNDING_NOTE = [
+  "",
+  "【降级模式 —— 本次没有联网检索结果,你只能依靠模型记忆。以下为硬约束】",
+  "- **绝不编造任何具体引用**:不许出现论文编号(如 arXiv 2308.00352)、精确百分比(如 85.9%)、基准/榜单成绩(如 pass@1、SWE-bench 排名)、机构报告名等看似精确的出处。",
+  "- 没有真实来源时只给**方向性**素材(思路/角度/通识),source 一律写「模型记忆,需核实」,sourceUrl 一律留空。",
+  "- 拿不准的数据宁可不给 —— 宁缺毋滥;带假精度引用的条目会被系统整条剔除。",
+  "",
+].join("\n");
+
 /**
  * 把四类创作向候选摊平成 MaterialItem[](喂既有 material_list 采纳→KnowledgeItem 路径)。
  * 每条 title 带分类前缀(钩子/案例/数据/金句)→ 知识库里一眼看出是哪类素材;why_relevant
@@ -210,12 +279,33 @@ export async function runResearchNode(
       searchResults: formatSearchResultsFacet(searchResults),
       // [T-146d] 用户第一手资料要点块(空 → 整段省略;有则综合贴着资料产,非泛搜)。
       userMaterial: input.userMaterialFacet ?? "",
+      // [T-228] 降级模式硬约束块(只在无检索结果时注入;有检索 → 整段省略)。
+      groundingNote:
+        grounding === "model_memory" ? MODEL_MEMORY_GROUNDING_NOTE : "",
     },
     maxRetries: input.maxRetries,
   });
-  const items = flattenCategories(object);
-  if (items.length === 0) {
-    throw new Error("research-node: agent 未产出可解析素材");
+  // [T-228] model_memory 后处理清洗:剔伪引用条目 + 强制清 sourceUrl / 归一 source。
+  // prompt 硬约束是第一道,这里兜住不听话的模型(实录:MiniMax 记忆编 arXiv/85.9% 标需核实)。
+  let categories = object;
+  if (grounding === "model_memory") {
+    const { categories: cleaned, dropped } =
+      sanitizeModelMemoryCategories(object);
+    categories = cleaned;
+    if (dropped > 0) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[research-node] model_memory 降级:剔除 ${dropped} 条带伪引用(论文编号/精确百分比/榜单成绩)的编造素材`,
+      );
+    }
   }
-  return { items, categories: object, grounding };
+  const items = flattenCategories(categories);
+  if (items.length === 0) {
+    throw new Error(
+      grounding === "model_memory" && flattenCategories(object).length > 0
+        ? "research-node: 降级模式(模型记忆)产出全部为编造引用,已整批剔除 —— 建议配置联网搜索(设置→模型→联网搜索)后重试"
+        : "research-node: agent 未产出可解析素材",
+    );
+  }
+  return { items, categories, grounding };
 }

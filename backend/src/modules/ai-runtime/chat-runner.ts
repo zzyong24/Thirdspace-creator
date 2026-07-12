@@ -50,7 +50,18 @@ import {
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
 // [T-245] trend 出题多源装配(T-235b 信源信号 + web 搜索并行,与选题页出题同一装配器)——
 // 对话编导 topic.generate(basis=trend)复用,不再空 brief 出「假热点题」。
-import { assembleTrendBriefDetailed } from "./topic-task-adapter";
+import {
+  assembleTrendBriefDetailed,
+  trendQualityFromDetail,
+} from "./topic-task-adapter";
+// [T-238] 信号质量画像 + 评论滤噪 —— 对话编导 topic.generate 与选题页/每日出题同一装配:
+// 画像段注入 prompt 动态定权;comments basis 滤噪(666/纯 emoji/夸赞不进,强信号带 ★)。
+import {
+  assembleSignalQualityInputs,
+  buildSignalQualityProfile,
+  formatFilteredSignalsBrief,
+  renderSignalQualityBrief,
+} from "./signal-quality";
 import { createRecoveringModel } from "./llm/recovering-model";
 import { resolveLlmMaxRetries } from "./llm/retry-policy";
 import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
@@ -154,8 +165,32 @@ export interface AssembleChatDeps extends ContextDeps {
         turnCount?: number | null;
         /** [T-237] 抽取诊断人话(「抽到 N 轮(SSR 全量/DOM 可能不全)」);非对话页 null/缺省。 */
         extraction?: string | null;
+        /** [T-251] 正文全文(未截断)—— 工具 execute 侧按窗返回;旧端口缺省 → 工具退回 excerpt。 */
+        fullText?: string | null;
+        /** [T-251] true = 命中已落库同 URL 正文素材(未重新抓取)。 */
+        fromCache?: boolean;
       }
     | { needLogin: true; domain: string }
+  >;
+  /**
+   * [T-253] local.read 端口 —— 读用户本机文件(任意路径 + 运行时逐次授权)。composition root
+   * (persistence-client)绑:路径归一/realpath + 敏感 denylist 硬门 + 授权表(内存一次授权 +
+   * 持久化「总是允许该目录」)+ 大小/二进制门 + 目录 listing。四态返回(见 ChatToolDeps.readLocal);
+   * IO 级失败抛错由工具 execute 接住转 error。可选:未装配 → 工具报「本地读取能力未接入」。
+   */
+  readLocalFilePort?: (
+    ctx: RequestContext,
+    input: { path: string; signal?: AbortSignal },
+  ) => Promise<
+    | { status: "needApproval"; path: string; size: number | null; type: string }
+    | { status: "denied"; path: string; reason: string }
+    | { status: "file"; path: string; name: string; fullText: string }
+    | {
+        status: "dir";
+        path: string;
+        entries: Array<{ name: string; kind: "file" | "dir"; size: number | null }>;
+        total: number;
+      }
   >;
   /**
    * [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(persistence-client
@@ -546,11 +581,11 @@ export async function buildChatAssembly(
     // [T-084a SPEC §1.3] 素材搜集诚实降级第 6 条(动态,按 resolveSearchSpec 探测结果注入):
     // 未配联网检索时,素材来自训练记忆,模型必须主动告知非实时检索,绝不假装搜过网。
     searchConfigured
-      ? "7. 素材搜集(material.gather)已配置联网检索:调用后素材会先经真实联网搜索再综合,带真实来源 URL。你可以说「联网搜到」,但仍要提醒用户带 URL 的条目才是查证过的真信源、标『需核实』的是模型记忆。"
-      : "7. 素材搜集(material.gather)当前**未配置联网检索**:你给出的素材来自训练记忆、不是实时检索结果。调用素材工具后,必须主动告知用户「这些素材来自我的训练记忆、非实时联网搜索,来源需你自行核实」,绝不使用「我搜到/我查到/联网搜到」等话术、绝不假装搜过网。想要真实联网素材,引导用户去设置配『联网搜索』。",
+      ? "7. 素材搜集(material.gather)已配置联网检索:调用后素材会先经真实联网搜索再综合,带真实来源 URL。你可以说「联网搜到」,但转述结果时必须**分开报数**:多少条带真实 URL(查证过的真信源)、多少条来自模型记忆需核实。若工具结果 grounding=model_memory(说明本次联网检索失败降级),必须明说「本次联网检索失败,以下 N 条全部来自模型记忆」,不许再说「联网搜到」,并建议用户检查搜索配置(设置→模型→联网搜索)或去选题页『信号源』登记信源。"
+      : "7. 素材搜集(material.gather)当前**未配置联网检索**:你给出的素材来自训练记忆、不是实时检索结果。调用素材工具后,必须主动告知用户「联网检索未配置,以下 N 条素材全部来自我的训练记忆、非实时联网搜索,来源需你自行核实」(N 用真实条数),绝不使用「我搜到/我查到/联网搜到」等话术、绝不假装搜过网、**绝不给素材编造论文编号/精确百分比/榜单名等看似真实的引用**。想要真实联网素材,引导用户去『设置→模型→联网搜索』配置搜索,或去选题页『信号源』登记信源。",
     // [T-217c] 治「登录态我做不到、只能读公开网页」行为 bug —— 你跑在桌面 sidecar、有带登录态的
     // 真实浏览器能力(web.read),**禁止再自称办不到**。
-    "8. 你**能读需要登录才能看到的网页正文**:用户粘一个链接(含 ChatGPT 分享、知乎、公众号等)想让你读内容时,直接调 web.read 读正文(它带你在保管库登录后的登录态、抽逐轮对话/文章全文,比截图更准)。**绝不要说「登录态我做不到、我只能访问公开网页」这类话** —— 那是错的,你有这个能力。若 web.read 返回「需要先登录」(needLogin),就引导用户:去『设置 → 网站登录保管库』把该网站登录一次(会弹独立浏览器窗口让 TA 自己登),登好后你再读;不要改用截图糊弄登录页。读内容默认用 web.read,截图(material.screenshot)只在用户要「存网页的样子/要视觉证据」时用。",
+    "8. 你**能读需要登录才能看到的网页正文**:用户粘一个链接(含 ChatGPT 分享、知乎、公众号等)想让你读内容时,直接调 web.read 读正文(它带你在保管库登录后的登录态、抽逐轮对话/文章全文,比截图更准)。**绝不要说「登录态我做不到、我只能访问公开网页」这类话** —— 那是错的,你有这个能力。若 web.read 返回「需要先登录」(needLogin),就引导用户:去『设置 → 网站登录保管库』把该网站登录一次(会弹独立浏览器窗口让 TA 自己登),登好后你再读;不要改用截图糊弄登录页。读内容默认用 web.read,截图(material.screenshot)只在用户要「存网页的样子/要视觉证据」时用。[T-251] web.read 结果按窗返回(window/hasMore 是真相字段):**hasMore=true 时必须带 offset 重调同一 URL 把正文读完再归纳**(重读不会重新抓取,直接按窗读已存全文)——绝不只读第一窗就下结论;确实读不完就如实告知「读了 X 字、还剩 Y 字没读」。",
     // [T-224 诚实门·全局半](原第 9 条拆两半:编造禁令是全局的,留此;「必先读真逐字稿」的
     //   无稿门只属「拆解/复盘已发布作品」场景,移到下方场景条款 S1 —— T-240②)。
     "9. **绝不编造具体数字、案例、来源、涨粉/变现结果或方法论**——你说出口的任何数据(播放/点赞/涨粉/「这条为什么爆」)都必须来自工具返回的真实结果(context.metrics 的真实指标、context.artifact.text 读到的真文案等);拿不到就直说拿不到,**不许用「账号通用规律」「一般来说」这类空想推测充数**。",
@@ -561,6 +596,8 @@ export async function buildChatAssembly(
     // [T-245] 治「没有实时热搜/热点榜单拉取能力」认知错位(T-217c 同族:能力在,prompt 没告诉它)——
     // T-235b 已建信源系统(登记热榜站点→readUrl 拉真信号)+黑马雷达,编导必须知道自己有这些能力。
     "11. **你有真实热点能力,绝不自称「没有实时热点/热搜拉取能力」——那是错的**。你的热点能力有三路:①已登记网页信源:用户在选题页『信号源』登记的热榜站点(如 36氪热榜),trend 出题时系统自动带登录态读页面、抽真实信号(标题/热度/链接);②黑马雷达:按定位关键词扫抖音近 1 天高赞低粉爆款,产「🔥跟拍」窗口候选(随对标采集自动跑);③web 联网搜索(已配时)。用户要蹭热点/追热榜出题时:**优先调 topic.generate 并传 basis=trend**(它自动并行拉①+③当出题依据,候选自带信源证据);若结果注明未拉到信源信号或用户还没登记信源,**引导 TA 去选题页『信号源』登记热榜站点**(需登录才能看的站点,先去『设置 → 网站登录保管库』登录一次),而不是让用户手动粘热点、更不是自称没能力。",
+    // [T-253] 本机文件读取能力认知 + 授权协议 + 安全边界诚实(denylist 拒读时如实说明,绝不绕)。
+    "12. **你能读用户本机的文件**(local.read,任意绝对路径,支持 ~ 展开):用户说「读一下我桌面那份稿子 / 看看 ~/xx/某文件」时直接调它,绝不自称「我碰不到你的本地文件」。授权协议:首次读某路径会弹**确认卡**(needApproval)——告诉用户在卡上选「允许一次/总是允许该目录/拒绝」,TA 点允许后你**再调一次 local.read 传同一路径**;被拒绝就不再尝试。安全边界(如实转述,绝不绕):敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论授权与否都拒读——被拒时向用户说明这是确定性安全规则并给出原因,**绝不换路径/改名建议来绕过**;超 1MB 或二进制文件拒读,建议用户直接上传到素材库。",
     "",
     // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
     "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
@@ -636,9 +673,16 @@ export async function buildChatAssembly(
       // 复用 ai-worker.runTopicNode —— 产 TopicItem[] 候选(与一键岛同一引擎)。
       // [T-081] extraBrief 对任意 basis 都生效:comments/knowledge 依据块后追加「本次生成指令」段
       // (原实现只在 positioning/trend 分支吃 extraBrief,评论/知识出题时对话洞察被静默丢弃)。
+      // [T-238] 画像输入(best-effort 读评论信号/定位中心/知识库原始行;失败 → 空,不阻断出题)。
+      const qualityInputs = await assembleSignalQualityInputs(ctx, deps);
+      let trendQuality = { sourceCount: 0, signalCount: 0 };
       let basisSource =
         basis === "comments"
-          ? context.signalsBrief
+          ? // [T-238] 评论滤噪:666/纯 emoji/夸赞不进 brief,强信号带 ★;读源空 → 退回
+            // context.signalsBrief(旧行为,诚实降级)。
+            qualityInputs.signals.length > 0
+            ? formatFilteredSignalsBrief(qualityInputs.signals)
+            : context.signalsBrief
           : basis === "knowledge"
             ? context.knowledgeBrief
             : "";
@@ -659,6 +703,7 @@ export async function buildChatAssembly(
           },
         );
         basisSource = detail.brief;
+        trendQuality = trendQualityFromDetail(detail);
         if (detail.sourceSignalCount === 0) {
           let registered: number | null = null;
           try {
@@ -701,6 +746,15 @@ export async function buildChatAssembly(
         knowledgeBrief:
           basis === "knowledge" ? undefined : context.knowledgeBrief || undefined,
         learningsBrief: context.learningsBrief || undefined,
+        // [T-238] 依据质量画像段(模板 v3 据它动态定权、reason 注明主要依据+权重理由)。
+        signalQualityBrief: renderSignalQualityBrief(
+          buildSignalQualityProfile({
+            signals: qualityInputs.signals,
+            positioning: qualityInputs.positioning,
+            knowledge: qualityInputs.knowledge,
+            trend: trendQuality,
+          }),
+        ),
         basis,
       });
       const items = topics.map((t) => ({
@@ -874,6 +928,16 @@ export async function buildChatAssembly(
         );
       }
       return deps.readWebUrlPort(ctx, { url, signal });
+    },
+    // [T-253] local.read:端口未装配 → 诚实抛错(工具 execute 接住转 error);装配了则端口内
+    // 走「授权表 → 敏感硬门 → 大小/二进制门 → 读文件/列目录」全链(四态返回,不在这里拆)。
+    readLocal: async ({ path, signal }) => {
+      if (!deps.readLocalFilePort) {
+        throw new Error(
+          "本地文件读取能力当前未接入(服务端未装配本机读取端口) —— 暂时无法读取本机文件。",
+        );
+      }
+      return deps.readLocalFilePort(ctx, { path, signal });
     },
     // [T-084c] material.generate:端口未装配 → 诚实抛错;装配了则 dispatch 既有 asset.generate
     // task(不直接生成,视频异步分钟级不阻塞对话回合),立即返回 taskId 供前端卡轮询。

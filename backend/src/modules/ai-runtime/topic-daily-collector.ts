@@ -5,10 +5,18 @@ import {
   type ContextDeps,
 } from "./creative-context";
 import {
-  assembleTrendBrief,
+  assembleTrendBriefDetailed,
+  trendQualityFromDetail,
   type ModelSpec,
   type TrendHit,
 } from "./topic-task-adapter";
+// [T-238] 信号质量画像 + 评论滤噪(与 topic-task-adapter 的 chat 出题共享同一装配)。
+import {
+  assembleSignalQualityInputs,
+  buildSignalQualityProfile,
+  formatFilteredSignalsBrief,
+  renderSignalQualityBrief,
+} from "./signal-quality";
 // [T-235b] 已登记信源信号(通用网页信源主路 + RSS 辅路)—— 与 web 搜索并行拼热点段。
 import { type TrendSourceSignal } from "./trend-source-signals";
 // [T-212d] 防茧房护栏纯函数(与 candidate.service 的 rankGuardrail 同一真源;跨模块只引纯函数,
@@ -88,6 +96,8 @@ export interface TopicDailyCollectorDeps extends ContextDeps {
       basisBrief: string;
       knowledgeBrief?: string;
       learningsBrief?: string;
+      /** [T-238] 依据质量画像段(装配好;host 透传 runTopicNode → 模板动态定权)。 */
+      signalQualityBrief?: string;
     },
   ) => Promise<DailyTopicItem[]>;
   /** [T-212d] 该用户 active 硬偏好(host 绑 candidateService.listActiveTopicPreferences)。
@@ -164,17 +174,36 @@ export async function collectDailyTopics(
   );
   // [T-235b] 热点段多源并行:已登记信源信号(readUrl+AI 抽取 / rss feed,主路)+ web 搜索
   //   (既有)。单路失败只丢该段;两路全空 → 热点段空(诚实降级,其余依据照常)。
-  const trendBrief = await assembleTrendBrief(
+  //   [T-238] 用 Detailed 变体拿两路条数 → 质量画像的 trend 指标。
+  const trendDetail = await assembleTrendBriefDetailed(
     ctx,
     context.positioningBrief,
     deps,
   );
+  const trendBrief = trendDetail.brief;
+  // [T-238] 画像输入(best-effort 读原始行;signals 行同时供滤噪 brief 复用,不双读)。
+  const qualityInputs = await assembleSignalQualityInputs(ctx, deps);
   const basisSections: string[] = [];
-  if (context.signalsBrief) {
-    basisSections.push(`【受众评论信号】\n${context.signalsBrief}`);
+  // [T-238] 评论滤噪进 brief:666/纯 emoji/夸赞不进,强信号带 ★;滤后全空 → 该段省略。
+  // 信号读源空 → 退回 context.signalsBrief(旧行为,诚实降级)。
+  const commentsBrief =
+    qualityInputs.signals.length > 0
+      ? formatFilteredSignalsBrief(qualityInputs.signals)
+      : context.signalsBrief;
+  if (commentsBrief) {
+    basisSections.push(`【受众评论信号】\n${commentsBrief}`);
   }
   if (trendBrief) basisSections.push(trendBrief); // 自带【已登记信源信号】/【当前热点(联网检索)】段头
   const basisBrief = basisSections.join("\n\n");
+  // [T-238] 依据质量画像段(确定性画像 + 模板 v3 动态定权指引)。
+  const signalQualityBrief = renderSignalQualityBrief(
+    buildSignalQualityProfile({
+      signals: qualityInputs.signals,
+      positioning: qualityInputs.positioning,
+      knowledge: qualityInputs.knowledge,
+      trend: trendQualityFromDetail(trendDetail),
+    }),
+  );
 
   // ② 出题(topic.generate 同模板,host 绑 runTopicNode;knowledgeBrief/learningsBrief 走模板
   //   的知识库参考/经验约束 facet,与手动出题同口径)。节点抛错 → 上抛给 runner 落诚实失败。
@@ -185,6 +214,7 @@ export async function collectDailyTopics(
     basisBrief,
     knowledgeBrief: context.knowledgeBrief || undefined,
     learningsBrief: context.learningsBrief || undefined,
+    signalQualityBrief,
   });
   if (topics.length === 0) {
     const message = "本次未产出选题(节点空产)";

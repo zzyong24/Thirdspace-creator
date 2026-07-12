@@ -457,6 +457,8 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "context.publications",
       "knowledge.distill",
       "learning.capture",
+      // [T-253] 本机文件读取(素材类,全场景保留;'lo' > 'le')。
+      "local.read",
       "material.gather",
       // [T-084c] AI 生成素材(dispatch asset.generate)。
       "material.generate",
@@ -519,13 +521,13 @@ describe("buildChatAssembly — 三层注入装配", () => {
     const { deps, resolveModelSpec } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "calibration" }, deps);
     expect(a.skillId).toBe("chatbox.calibration");
-    // [T-240③] 场景白名单:盲评 + 记经验 + 素材(4)+ 全量只读(15)= 21;创作产出工具被砍。
+    // [T-240③] 场景白名单:盲评 + 记经验 + 素材(5,[T-253] 含 local.read)+ 全量只读(15)= 22;创作产出工具被砍。
     const names = Object.keys(a.tools);
     expect(names).toContain("calibration.diagnose");
     expect(names).toContain("learning.capture");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("script.draft");
-    expect(names.length).toBe(21);
+    expect(names.length).toBe(22);
     // 主能力档按 calibration.diagnose 解析(各 surface 复用对应节点的模型配置)。
     expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "calibration.diagnose");
   });
@@ -538,7 +540,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).toContain("positioning.generate");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("review.analyze");
-    expect(names.length).toBe(21);
+    expect(names.length).toBe(22);
   });
 
   it("T-039b:surface=positioning → 把账号画像(accountsBrief)注进定位对话 system(定位提案立足真实账号)", async () => {
@@ -592,7 +594,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(names).toContain("context.metrics");
     expect(names).not.toContain("topic.generate");
     expect(names).not.toContain("script.draft");
-    expect(names.length).toBe(21); // 2 产出 + 4 素材 + 15 只读
+    expect(names.length).toBe(22); // 2 产出 + 5 素材([T-253] 含 local.read)+ 15 只读
   });
 
   it("T-039a:surface=review + projectId → 装配期把 projectId 传给 reviewSubject reader(全链路后端段)", async () => {
@@ -658,7 +660,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(28); // [T-240③] topics 场景集(9 产出 + 4 素材 + 15 只读)
+    expect(names.length).toBe(29); // [T-240③] topics 场景集(9 产出 + 5 素材 + 15 只读)
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });
@@ -741,7 +743,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(names).not.toContain("review.analyze");
       expect(names).toContain("review.script"); // 稿面审核按钮深链落 project
       expect(names).toContain("calibration.diagnose"); // 盲预测按钮深链落 project
-      expect(names.length).toBe(29);
+      expect(names.length).toBe(30);
     });
 
     it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
@@ -762,7 +764,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
         deps,
       );
       expect(Object.keys(a.tools)).toContain("review.analyze");
-      expect(Object.keys(a.tools).length).toBe(30);
+      expect(Object.keys(a.tools).length).toBe(31);
       // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
       const { deps: noReaders } = makeDeps({
         contextReaders: undefined,
@@ -773,13 +775,13 @@ describe("buildChatAssembly — 三层注入装配", () => {
         noReaders,
       );
       expect(Object.keys(b.tools)).toContain("review.analyze");
-      expect(Object.keys(b.tools).length).toBe(30);
+      expect(Object.keys(b.tools).length).toBe(31);
     });
 
-    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 30 工具(向后兼容)", async () => {
+    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 31 工具(向后兼容)", async () => {
       const { deps } = makeDeps();
       const a = await buildChatAssembly(ctx, { surface: "nope" }, deps);
-      expect(Object.keys(a.tools).length).toBe(30);
+      expect(Object.keys(a.tools).length).toBe(31);
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("topic.generate");
     });
@@ -794,7 +796,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(a.tools)).toContain("review.script");
       expect(a.forcedTool).toBe("review.script");
-      expect(Object.keys(a.tools).length).toBe(29); // 28 + 补回的 1
+      expect(Object.keys(a.tools).length).toBe(30); // 29 + 补回的 1
     });
   });
 

@@ -273,6 +273,8 @@ export interface AiService {
       offset: number;
       projectId?: string;
       taskType?: string;
+      // [T-255a] additive:执行层任务命名空间前缀窄化(`exec.`)。
+      taskTypePrefix?: string;
     },
   ): Promise<{ rows: AITaskResource[]; total: number }>;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
@@ -320,6 +322,14 @@ export interface AiService {
     taskId: string,
     input: RecordCandidateInput,
   ): Promise<AITaskResource>;
+  // [T-255a] 附加结果写 seam(不驱动状态机):执行层确认门在「采纳」时把落库的资产 id
+  // 记成一条 `execution_adopted` 结果行(审计 + DTO 投影),任务状态由 markSucceeded 单独收尾。
+  // 区别于 recordCandidate(它强制 → awaiting_confirmation,只用于候选)。ownership-gated。
+  recordAuxResult(
+    ctx: RequestContext,
+    taskId: string,
+    input: RecordCandidateInput,
+  ): Promise<void>;
   // Agent Runtime 步骤流(Phase 3):runtime 每步把一个事件落库,喂窗口步骤日志 + 审计。
   recordStep(
     ctx: RequestContext,
@@ -1061,6 +1071,19 @@ export function createAiService(deps: ServiceDeps): AiService {
       const repo = repoFor(ctx);
       const row = await repo.patchLatestResultItems(taskId, items);
       return toResultDto(row);
+    },
+
+    async recordAuxResult(ctx, taskId, input) {
+      const repo = repoFor(ctx);
+      await repo.requireTask(taskId); // ownership gate (404 on cross-user)
+      await repo.insertResult({
+        aiTaskId: taskId,
+        resultType: input.resultType,
+        artifactId: input.artifactId ?? null,
+        knowledgeItemId: input.knowledgeItemId ?? null,
+        assetId: input.assetId ?? null,
+        resultData: input.resultData,
+      });
     },
 
     async recordStep(ctx, taskId, input) {

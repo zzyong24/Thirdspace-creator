@@ -179,11 +179,18 @@ export interface AccountsReader {
 // 受众信号 reader — the creator's audience signals (评论/私信/咨询/复盘). Optional: only
 // the topic.generate node (comments basis) passes it. The composition root binds it to
 // the candidate public service's listSignals method.
+// [T-238] 信号行形状抽名 + 补选填 publicationId(评论按作品锚,迁移 0011 回填;存量/非评论为
+// null)—— 信号质量画像用它算「评论覆盖了几个作品」(coveredWorks)。additive:旧绑定/测试 fake
+// 不给该字段也照常跑(画像按 0 兜底,诚实)。
+export interface SignalRow {
+  source: string;
+  rawText: string;
+  demandTag: string | null;
+  publicationId?: string | null;
+}
+
 export interface SignalsReader {
-  list(
-    ctx: RequestContext,
-    opts: { limit?: number },
-  ): Promise<Array<{ source: string; rawText: string; demandTag: string | null }>>;
+  list(ctx: RequestContext, opts: { limit?: number }): Promise<SignalRow[]>;
 }
 
 // 知识库 reader — the creator's KnowledgeItems. Optional: only the
@@ -200,6 +207,9 @@ export interface KnowledgeRow {
   usedCount?: number;
   usedInPublished?: boolean;
   sourceNote?: string | null;
+  /** [T-238] 创建时间(选填)—— 信号质量画像算知识新鲜度(recentRatio)用;旧绑定/fake 不给
+   *  也照常跑(画像 recentRatio=null,诚实「新鲜度未知」)。 */
+  createdAt?: string | null;
 }
 
 export interface KnowledgeReader {
