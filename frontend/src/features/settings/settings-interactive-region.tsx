@@ -74,6 +74,8 @@ import {
   ChevronRightIcon,
   Download,
   RefreshCw,
+  FileText,
+  FolderOpen,
   type LucideIcon,
 } from "lucide-react";
 // [T-180] 桌面软件更新的前端薄封装(client-only,web/SSR 安全降级)。
@@ -370,6 +372,8 @@ export function SettingsDialog({
                 <ActivationStatusCard activation={activation} />
                 {/* [T-180] 软件更新卡:桌面端「检查更新」+ 下载并安装 + 重启;web → 桌面端专属空态。 */}
                 <CheckUpdateCard />
+                {/* [T-259] 诊断日志卡:桌面端一键在 Finder 打开日志目录发给开发者;web → 桌面端专属空态。 */}
+                <DiagnosticLogsCard />
               </div>
             </SettingsPanel>
             <SettingsPanel tabId="preferences" active={tab}>
@@ -1414,6 +1418,130 @@ function CheckUpdateCard() {
             {message}
           </p>
         ) : null}
+      </div>
+    </SectionCard>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// DiagnosticLogsCard — 诊断日志 (T-259)
+// ---------------------------------------------------------------------------
+//
+// Rust 壳把 sidecar 的 stdout/stderr 每行 tee 到 <appDataDir>/logs/sidecar.log(脱敏 + 轮转,
+// 见 src-tauri/src/logging.rs)。本卡是**前端入口**:桌面端点「在 Finder 打开日志文件夹」→
+// fetch /api/v1/local/reveal-logs → sidecar 跑平台 `open` 命令在文件管理器打开 logs 目录,
+// 用户把 sidecar.log / sidecar.prev.log 发给开发者即可排障(真实用户撞 bug 的头号打磨)。
+//
+// **只桌面态有意义**:挂载后经 isDesktopRuntimeClient() 探测;web/SSR → 显「桌面端专属」诚实
+// 空态(无入口),绝不假装能打开本机目录。SSR 首帧走空态(desktop=false),挂载后翻真(免水合漂移)。
+
+function DiagnosticLogsCard() {
+  // SSR 首帧 desktop=false → 渲空态;挂载后 isDesktopRuntimeClient() 翻真(无水合漂移)。
+  const [isDesktop, setIsDesktop] = React.useState(false);
+  const [state, setState] = React.useState<"idle" | "opening" | "error">("idle");
+
+  React.useEffect(() => {
+    setIsDesktop(isDesktopRuntimeClient());
+  }, []);
+
+  const reveal = React.useCallback(() => {
+    if (state === "opening") return;
+    setState("opening");
+    void (async () => {
+      try {
+        const res = await fetch("/api/v1/local/reveal-logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        });
+        const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
+        setState(res.ok && data.ok ? "idle" : "error");
+      } catch {
+        setState("error");
+      }
+    })();
+  }, [state]);
+
+  // web / SSR → 诚实空态:诊断日志是桌面端功能(sidecar 落盘),web 端无本地日志文件。
+  if (!isDesktop) {
+    return (
+      <SectionCard
+        title="诊断日志"
+        description="桌面端排障日志"
+        action={
+          <Badge
+            data-slot="diagnostic-logs-badge"
+            data-status="unavailable"
+            variant="outline"
+            className="border-border bg-surface-subtle text-muted-foreground"
+          >
+            桌面端专属
+          </Badge>
+        }
+      >
+        <div
+          data-slot="diagnostic-logs-card"
+          data-desktop="false"
+          className="flex items-start gap-3 rounded-md border border-border bg-surface-subtle p-3"
+        >
+          <div
+            aria-hidden="true"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"
+          >
+            <FileText className="size-5" />
+          </div>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-sm font-medium text-foreground">
+              诊断日志为桌面端功能
+            </span>
+            <span className="text-xs text-muted-foreground">
+              桌面客户端把运行日志落盘到本地,撞 bug 时可一键导出发给开发者。Web 端无本地日志文件。
+            </span>
+          </div>
+        </div>
+      </SectionCard>
+    );
+  }
+
+  return (
+    <SectionCard title="诊断日志" description="导出运行日志用于排障">
+      <div
+        data-slot="diagnostic-logs-card"
+        data-desktop="true"
+        className="flex flex-col gap-3"
+      >
+        <div className="flex items-center gap-3 rounded-md border border-border bg-surface-subtle p-3">
+          <div
+            aria-hidden="true"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand"
+          >
+            <FileText className="size-5" />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="text-sm font-medium text-foreground">
+              运行日志
+            </span>
+            <span className="text-xs text-muted-foreground">
+              撞到问题时点此打开日志文件夹,把 sidecar.log 发给开发者即可定位。日志已自动脱敏。
+            </span>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            data-slot="diagnostic-logs-action"
+            disabled={state === "opening"}
+            onClick={reveal}
+            title="在 Finder 打开诊断日志文件夹(sidecar.log / sidecar.prev.log)"
+          >
+            {state === "opening" ? (
+              <Loader2 aria-hidden="true" className="size-4 shrink-0 animate-spin" />
+            ) : (
+              <FolderOpen aria-hidden="true" className="size-4 shrink-0" />
+            )}
+            {state === "error" ? "打开失败,重试" : "导出诊断日志"}
+          </Button>
+        </div>
       </div>
     </SectionCard>
   );

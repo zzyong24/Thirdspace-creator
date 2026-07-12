@@ -12,6 +12,9 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::Duration;
 
+// [T-259] 桌面日志系统:sidecar stdout/stderr tee 落盘 + 脱敏 + 轮转(见 logging.rs)。
+mod logging;
+
 use base64::Engine as _;
 use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
 // [T-172] CommandChild / CommandEvent / ShellExt 只在非 macOS(走 tauri sidecar externalBin)分支用;
@@ -347,6 +350,16 @@ pub fn run() {
                 .parent()
                 .map(|p| p.to_path_buf())
                 .unwrap_or_else(|| std::path::PathBuf::from(".creatoros"));
+
+            // [T-259] 桌面日志系统:初始化落盘日志(建 logs/ + 轮转上次会话 + 开新 sidecar.log)。
+            //   sidecar 的 stdout/stderr 每行既 eprintln 给 app stderr(dev/终端可见),也 tee 到
+            //   <appDataDir>/logs/sidecar.log —— 打包态 `open -a` 拿不到 stderr 时,靠这份文件排障。
+            //   注入 env `CREATOROS_LOG_DIR` 给 sidecar,供设置页「导出诊断日志」route 定位目录。
+            //   init 失败(建目录/开文件不了)→ None,降级为仅 eprintln(不落盘但不崩)。
+            let logs_dir = app_data_dir.join("logs");
+            let logger = logging::init_sidecar_logger(&logs_dir);
+            let log_dir_str = logs_dir.to_string_lossy().to_string();
+
             let master_key = resolve_or_create_master_key(&app_data_dir);
 
             // T-147 P5 —— 机器指纹(multi-factor)。注入 sidecar env `CREATOROS_MACHINE_ID`,
@@ -418,6 +431,8 @@ pub fn run() {
                     .env("CREATOROS_DOUYIN_AUTH_DIR", &douyin_auth_dir_str)
                     // [T-217a] 网站登录态落稳定 appDataDir/.auth/web(跨版本持久,免更新后重登)。
                     .env("CREATOROS_WEB_AUTH_DIR", &web_auth_dir_str)
+                    // [T-259] 诊断日志目录(设置页「导出诊断日志」route 据此定位 logs/)。
+                    .env("CREATOROS_LOG_DIR", &log_dir_str)
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir)
                     .stdout(Stdio::piped())
@@ -429,22 +444,38 @@ pub fn run() {
                     cmd.env("CREATOROS_MACHINE_ID", m);
                 }
 
-                let mut child = cmd
-                    .spawn()
-                    .expect("启动 creatoros-server sidecar(server.app 内层二进制)失败");
+                // [T-259] spawn 失败也落日志(排障用)再 panic —— 打包态用户拿不到 stderr,靠文件看死因。
+                let mut child = match cmd.spawn() {
+                    Ok(c) => c,
+                    Err(e) => {
+                        if let Some(l) = &logger {
+                            l.log("shell", &format!("spawn creatoros-server sidecar 失败: {e}"));
+                        }
+                        panic!("启动 creatoros-server sidecar(server.app 内层二进制)失败: {e}");
+                    }
+                };
 
-                // 把 sidecar 的 stdout/stderr 各起线程读打到本壳日志(排障用)。
+                // 把 sidecar 的 stdout/stderr 各起线程读:每行 eprintln(dev 可见)+ tee 到 logs/sidecar.log
+                // (打包态排障)。两线程各 clone 一份共享 logger(Arc,内部 Mutex 串行化写,不交错坏行)。
                 if let Some(out) = child.stdout.take() {
+                    let logger = logger.clone();
                     std::thread::spawn(move || {
                         for line in BufReader::new(out).lines().map_while(Result::ok) {
                             eprintln!("[sidecar] {line}");
+                            if let Some(l) = &logger {
+                                l.log("sidecar", &line);
+                            }
                         }
                     });
                 }
                 if let Some(err) = child.stderr.take() {
+                    let logger = logger.clone();
                     std::thread::spawn(move || {
                         for line in BufReader::new(err).lines().map_while(Result::ok) {
                             eprintln!("[sidecar:err] {line}");
+                            if let Some(l) = &logger {
+                                l.log("sidecar:err", &line);
+                            }
                         }
                     });
                 }
@@ -476,6 +507,8 @@ pub fn run() {
                     .env("CREATOROS_DOUYIN_AUTH_DIR", &douyin_auth_dir_str)
                     // [T-217a] 网站登录态落稳定 appDataDir/.auth/web(跨版本持久,免更新后重登)。
                     .env("CREATOROS_WEB_AUTH_DIR", &web_auth_dir_str)
+                    // [T-259] 诊断日志目录(设置页「导出诊断日志」route 据此定位 logs/)。
+                    .env("CREATOROS_LOG_DIR", &log_dir_str)
                     .env("DYLD_LIBRARY_PATH", &lib_dir)
                     .env("LD_LIBRARY_PATH", &lib_dir);
 
@@ -488,7 +521,16 @@ pub fn run() {
                     None => sidecar,
                 };
 
-                let (mut rx, child) = sidecar.spawn().expect("启动 creatoros-server sidecar 失败");
+                // [T-259] spawn 失败也落日志再 panic(打包态排障)。
+                let (mut rx, child) = match sidecar.spawn() {
+                    Ok(pair) => pair,
+                    Err(e) => {
+                        if let Some(l) = &logger {
+                            l.log("shell", &format!("spawn creatoros-server sidecar 失败: {e}"));
+                        }
+                        panic!("启动 creatoros-server sidecar 失败: {e}");
+                    }
+                };
 
                 handle_state
                     .0
@@ -496,21 +538,33 @@ pub fn run() {
                     .unwrap()
                     .replace(SidecarChild::Shell(child));
 
-                // 把 sidecar 的 stdout/stderr 打到本壳日志(排障用)。
+                // 把 sidecar 的 stdout/stderr 打到本壳日志:eprintln(dev 可见)+ tee 到 logs/sidecar.log
+                // (打包态排障)。terminated 亦落盘(sidecar 意外退出的死因)。
+                let logger = logger.clone();
                 tauri::async_runtime::spawn(async move {
                     while let Some(event) = rx.recv().await {
                         match event {
                             CommandEvent::Stdout(line) => {
-                                eprintln!("[sidecar] {}", String::from_utf8_lossy(&line).trim_end());
+                                let s = String::from_utf8_lossy(&line);
+                                let s = s.trim_end();
+                                eprintln!("[sidecar] {s}");
+                                if let Some(l) = &logger {
+                                    l.log("sidecar", s);
+                                }
                             }
                             CommandEvent::Stderr(line) => {
-                                eprintln!(
-                                    "[sidecar:err] {}",
-                                    String::from_utf8_lossy(&line).trim_end()
-                                );
+                                let s = String::from_utf8_lossy(&line);
+                                let s = s.trim_end();
+                                eprintln!("[sidecar:err] {s}");
+                                if let Some(l) = &logger {
+                                    l.log("sidecar:err", s);
+                                }
                             }
                             CommandEvent::Terminated(payload) => {
                                 eprintln!("[sidecar] terminated: {payload:?}");
+                                if let Some(l) = &logger {
+                                    l.log("shell", &format!("sidecar terminated: {payload:?}"));
+                                }
                                 break;
                             }
                             _ => {}
@@ -520,6 +574,8 @@ pub fn run() {
             }
 
             // 5) 另起线程等就绪 → 在主线程建窗口指向 sidecar。就绪探测跑在后台,不阻塞 setup。
+            // [T-259] clone 一份 logger 进线程,sidecar 未就绪也落盘(这是白屏/连不上的头号死因)。
+            let ready_logger = logger.clone();
             std::thread::spawn(move || {
                 let ready = wait_until_ready(port, Duration::from_secs(60));
                 let url = format!("http://127.0.0.1:{port}/");
@@ -529,6 +585,9 @@ pub fn run() {
                     // 兜底:sidecar 60s 未起,仍开窗(将显示浏览器的连接失败页,便于用户看到问题
                     //  而非白屏无提示)。诚实:P1 不做启动 splash / 重试 UI,后续子项完善。
                     eprintln!("[shell] sidecar 60s 内未就绪,窗口仍指向 {url}");
+                    if let Some(l) = &ready_logger {
+                        l.log("shell", &format!("sidecar 60s 内未就绪,窗口仍指向 {url}"));
+                    }
                     WebviewUrl::External(url.parse().expect("sidecar url 解析失败"))
                 };
                 // clone 一份给闭包用(handle 本身被 run_on_main_thread 借用,不能同时 move 进闭包)。

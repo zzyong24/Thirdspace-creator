@@ -789,3 +789,18 @@ describe("SettingsDialog — ?highlight 深链定位", () => {
     expect(accountPanel.getAttribute("data-active")).toBe("true");
   });
 });
+
+// [T-259] 诊断日志卡:桌面端「导出诊断日志」入口。jsdom 无 __TAURI_INTERNALS__ →
+// isDesktopRuntimeClient() 为 false → 渲「桌面端专属」诚实空态(挂载即在账户页签,无网络副作用)。
+describe("Settings 诊断日志卡 (T-259)", () => {
+  it("非桌面(web/jsdom)→ 渲诊断日志诚实空态,不渲导出按钮", () => {
+    const doc = renderDialog();
+    const card = doc.querySelector('[data-slot="diagnostic-logs-card"]');
+    expect(card).not.toBeNull();
+    // web 态:空态(data-desktop=false),不渲「导出诊断日志」按钮(桌面态才有,挂载后翻真)。
+    expect(card!.getAttribute("data-desktop")).toBe("false");
+    expect(
+      doc.querySelector('[data-slot="diagnostic-logs-action"]'),
+    ).toBeNull();
+  });
+});
