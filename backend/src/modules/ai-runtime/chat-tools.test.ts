@@ -70,20 +70,24 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
       sourceComments: ["博主,反直觉的开头到底怎么写?求教"],
     },
   ]);
+  // [T-266] enrichTopic 回 { card, candidateId } —— candidateId 是补全当时锚定的候选 id。
   const enrichTopic = vi.fn(async () => ({
-    oneLiner: "一句话",
-    targetAudience: "一线开发者",
-    audiencePain: "落不了地",
-    coreConflict: "看懂≠会用",
-    hook: "前 3 秒抛结果",
-    contentStructure: ["问题", "方案", "落地"],
-    format: "口播",
-    materialBasis: "现成 demo",
-    riskNote: "同质化",
-    proposal: "做",
-    audiencePainScore: 70,
-    materialScore: 60,
-    productionDifficulty: "mid" as const,
+    card: {
+      oneLiner: "一句话",
+      targetAudience: "一线开发者",
+      audiencePain: "落不了地",
+      coreConflict: "看懂≠会用",
+      hook: "前 3 秒抛结果",
+      contentStructure: ["问题", "方案", "落地"],
+      format: "口播",
+      materialBasis: "现成 demo",
+      riskNote: "同质化",
+      proposal: "做",
+      audiencePainScore: 70,
+      materialScore: 60,
+      productionDifficulty: "mid" as const,
+    },
+    candidateId: null as string | null,
   }));
   const diagnoseContent = vi.fn(async () => ({
     dimensions: [{ key: "hook", score: 4, reason: "强", suggestion: "保持" }],
@@ -586,11 +590,30 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     expect(result).toMatchObject({
       kind: "topic.card",
       card: expect.objectContaining({ oneLiner: "一句话" }),
+      // [T-266] candidateId 随结果回(此 fake 为账号态 null);持久化后前端据它 patch/新建。
+      candidateId: null,
     });
   });
 
+  it("[T-266] topic.enrich 锚定某候选(selection)→ result.candidateId 透传回(前端刷新后仍能 patch)", async () => {
+    const { deps } = makeDeps({
+      enrichTopic: vi.fn(async () => ({
+        card: { oneLiner: "锚定卡" } as never,
+        candidateId: "cand-anchor-7",
+      })),
+    });
+    const tools = buildChatTools(TOPIC_WHITELIST, deps);
+    const result = (await runExecute(tools["topic.enrich"]!, {
+      title: "X",
+    })) as { kind: string; candidateId: string | null };
+    expect(result.kind).toBe("topic.card");
+    expect(result.candidateId).toBe("cand-anchor-7");
+  });
+
   it("topic.enrich 返回 null(模型没产可解析卡)→ result.card 为 null(诚实,不假候选)", async () => {
-    const { deps } = makeDeps({ enrichTopic: vi.fn(async () => null) });
+    const { deps } = makeDeps({
+      enrichTopic: vi.fn(async () => ({ card: null, candidateId: null })),
+    });
     const tools = buildChatTools(TOPIC_WHITELIST, deps);
     const result = (await runExecute(tools["topic.enrich"]!, {
       title: "X",

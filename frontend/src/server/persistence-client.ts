@@ -406,7 +406,8 @@ import {
   type SearchProviderRegistry,
 } from "@creatoros/ai-worker";
 // [T-184] script.draft 模板的 contextRequirements 声明 —— 组合根按它 resolveContextDeps 注入 reader。
-import { SCRIPT_DRAFT_TEMPLATE } from "@creatoros/ai-worker";
+// [T-269/T-270] planning.thesis 也走声明式注入(补 brief 硬锚 + projectMaterials 素材可溯的 reader)。
+import { SCRIPT_DRAFT_TEMPLATE, PLANNING_THESIS_TEMPLATE } from "@creatoros/ai-worker";
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
 import { createBrowserScrapeAdapter } from "@/server/ai/search/search-browser";
 import {
@@ -2514,6 +2515,37 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
 
+  // [T-270] 立项 Brief reader 工厂(单一真值)—— 读项目 brief_detail jsonb 的全核心字段(画幅 +
+  // 核心信息/内容目标/内容形式/目标受众/成功标准),供 creative-context 渲成立项硬锚段。dispatch 路径
+  // (script.draft/planning.thesis)与对话路径(runtime.context → chat)共用同一份读法,不造影子。
+  // 病根:此前 dispatch 内联 briefReader 只投影 orientation + 对话路径根本没绑 brief → brief 核心字段
+  // 从读取端就被丢。best-effort:读不到 → null(绝不阻塞写文案/立论点)。
+  const makeBriefReader = (): ProjectBriefReader => ({
+    getBriefDetail: async (c, projectId) => {
+      try {
+        const row = await projectsRepo.get(c, projectId);
+        const d = (row.briefDetail ?? {}) as {
+          orientation?: "landscape" | "portrait";
+          coreMessage?: string;
+          contentGoal?: string;
+          contentFormat?: string;
+          targetAudience?: string;
+          successCriteria?: string;
+        };
+        return {
+          orientation: d.orientation,
+          coreMessage: d.coreMessage,
+          contentGoal: d.contentGoal,
+          contentFormat: d.contentFormat,
+          targetAudience: d.targetAudience,
+          successCriteria: d.successCriteria,
+        };
+      } catch {
+        return null; // best-effort;读不到 brief 绝不阻塞写文案/立论点
+      }
+    },
+  });
+
   // [T-146 切片 c/d] 项目素材 reader —— 读**当前项目**挂载的用户上传 document 素材(带 per-project
   // priority + 文档抽取投影),供写文案(script.draft)硬约束注入 + 搜索(gatherMaterials)深度结合。
   // 读法:materialLinksService.list(projectId) → 取 entityType='asset' 的边(带 priority)→ 逐个
@@ -2833,21 +2865,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // 立项 Brief reader(立项画幅 横/竖屏 → script.draft 据此调钩子与时长)。best-effort:读不到
         // 画幅返回 null,绝不阻塞写文案。[T-184] 从 script.draft dispatch 内联提到这里命名,供中央
         // registry 登记(逻辑与原内联逐字一致,零行为变化)。
-        const briefReader: ProjectBriefReader = {
-          getBriefDetail: async (c, projectId) => {
-            try {
-              const row = await projectsRepo.get(c, projectId);
-              const o = (
-                row.briefDetail as
-                  | { orientation?: "landscape" | "portrait" }
-                  | undefined
-              )?.orientation;
-              return o ? { orientation: o } : null;
-            } catch {
-              return null; // best-effort;读不到画幅绝不阻塞写文案
-            }
-          },
-        };
+        // [T-270] 立项 Brief reader —— 用共享工厂(单一真值,dispatch/对话两路同一读法,扩投影全字段)。
+        const briefReader: ProjectBriefReader = makeBriefReader();
         // [T-184] 中央 context reader registry —— key(= ContextDeps facet 字段名)→ 已构造 reader。
         // 模板用 contextRequirements 声明要哪些源,resolveContextDeps 据此自动取 reader 组 deps,取代
         // runXxx dispatch 手列(手列漏接 = facet 恒空的根因)。本切片只让 script.draft 一条 dispatch
@@ -3256,6 +3275,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // 采纳 appends a new ArtifactVersion onto the project's `thesis_tree` artifact
           // (reuses the existing artifact_version confirm path). The 策划 workspace reads
           // that version's contentData.nodes back into the 论点树 surface.
+          // [T-269/T-270] 声明式 context 注入(同 script.draft 范式):按 PLANNING_THESIS_TEMPLATE
+          // .contextRequirements 从中央 registry 自动取 reader —— 补上此前手列漏掉的 brief(立项硬锚)
+          // + projectMaterials(素材可溯弹药)+ artifactOrigin(F2 反推标注),不再只有 positioning/
+          // learnings 两项悬空。positioning 显式 pin 满足 PlanningDeps 必需类型(值同 registry,零行为变化)。
           void runPlanningThesis(
             ctx,
             {
@@ -3266,8 +3289,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             },
             {
               ai: aiService,
+              ...resolveContextDeps(
+                PLANNING_THESIS_TEMPLATE.contextRequirements,
+                contextReaderRegistry,
+              ),
               positioning: positioningReader,
-              learnings: learningsReader,
               // Vercel AI SDK 路径(弃 LlmCompleter):论点树节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },
@@ -7342,6 +7368,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // [T-146c/d] 用户上传素材主权(稿面对话路径)—— 稿面右栏对话里整稿(draftScript)吃硬约束段、
       // 搜素材(gatherMaterials)贴资料搜。与写文案 task / research task 共用同一份读法,不造影子。
       projectMaterials: makeProjectMaterialsReader(),
+      // [T-270] 立项 Brief reader(对话路径)—— 项目态对话据此把立项硬锚(核心信息/内容目标含避免X/
+      // 内容形式/目标观众)渲进 system(briefHardBlock)+ hooks/整稿子调用,让编导锚定钦定前提、不漂移。
+      // 此前对话路径根本没绑 brief → 项目态 chat 的 context.projectBriefHard 恒空(A3 注入落不了地)。
+      // 与 dispatch 路径共用 makeBriefReader(单一真值,扩投影全字段)。
+      brief: makeBriefReader(),
       // [T-245] 已登记信源信号端口 —— 对话编导 topic.generate(basis=trend)与选题页出题共用
       // 同一个 trendSourceSignalsPort(readUrl 带登录态读热榜页 + AI 结构化抽取 / rss 解析),
       // 不造影子。经 route 的 `...runtime.context` 展开注入 chat-runner,不加路由接线。

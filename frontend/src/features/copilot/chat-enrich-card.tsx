@@ -9,9 +9,15 @@
  * 的 tool-result dispatch 里**没有渲染分支**(只处理了 topic.generate 的 `topic.candidates`)→
  * 富卡被静默丢弃,模型退化成把选题卡当文本吐出来 + 谎称「已渲成候选卡」。本组件补上渲染 + 采纳门。
  *
- * 采纳走 **candidates.patch**(不是 create):enrich 是「补全一条**已存在**的候选选题」,把富卡
- * 写到该候选上(`candidates.patch` 契约收 card,与 `candidateCard` resource 同形)。铁律②:AI 只
- * 产候选,人点「采纳」才落库。无 candidateId(未选中某条候选)时诚实禁用 + 提示,绝不假装能采纳。
+ * 采纳两条路(铁律②:AI 只产候选,人点「采纳」才落库):
+ *   - **有 candidateId**(从候选池某条进入补全,或工具结果持久化了锚)→ `candidates.patch` 就地
+ *     把富卡写到那条已有候选上(与 `candidateCard` resource 同形)。
+ *   - **无 candidateId**(账号态直接补全,没绑定某条候选)→ [T-266] 不再死胡同禁用:`candidates.create`
+ *     新建一条候选(title 取一句话选题,source=idea)→ 再 `candidates.patch` 把富卡字段挂上去
+ *     (createCandidate 契约不收 card,故两步;富卡不丢)。
+ *
+ * candidateId 优先取工具结果里持久化的锚(补全当时 selection.kind==="candidate" 的候选 id,刷新后
+ * 仍准),回退当前 selection —— 见 ai-copilot-content 的 topic.enrich 渲染分支。
  */
 
 import * as React from "react";
@@ -55,33 +61,50 @@ export function ChatEnrichCard({
   const [state, setState] = React.useState<AdoptState>("idle");
 
   const adopt = React.useCallback(async () => {
-    if (!card || !candidateId) return;
+    if (!card) return;
     setState("adopting");
+    // 富卡字段(patch 到已有候选 / 新建后回填 共用);与 topics 页 patchCandidate 同款扁平 card。
+    const cardBody = {
+      oneLiner: card.oneLiner,
+      targetAudience: card.targetAudience,
+      audiencePain: card.audiencePain,
+      coreConflict: card.coreConflict,
+      hook: card.hook,
+      contentStructure: [...card.contentStructure],
+      format: card.format,
+      materialBasis: card.materialBasis,
+      riskNote: card.riskNote,
+      proposal: card.proposal,
+      audiencePainScore: card.audiencePainScore,
+      materialScore: card.materialScore,
+      productionDifficulty: card.productionDifficulty,
+    };
     try {
-      // 现有 confirm 门:人确认 → candidates.patch 把富卡写到该已有候选上(AI 不直接写)。
-      // body 是扁平 card 字段(与 topics 页 patchCandidate 同款)。
-      await client.patchCandidate({
-        params: { candidateId },
-        query: undefined,
-        // 富卡字段嵌在 `card` 下(patchCandidate body 形状:{ title?, angle?, …, card? })。
-        body: {
-          card: {
-            oneLiner: card.oneLiner,
-            targetAudience: card.targetAudience,
-            audiencePain: card.audiencePain,
-            coreConflict: card.coreConflict,
-            hook: card.hook,
-            contentStructure: [...card.contentStructure],
-            format: card.format,
-            materialBasis: card.materialBasis,
-            riskNote: card.riskNote,
-            proposal: card.proposal,
-            audiencePainScore: card.audiencePainScore,
-            materialScore: card.materialScore,
-            productionDifficulty: card.productionDifficulty,
-          },
-        },
-      });
+      if (candidateId) {
+        // 有锚 → 现有 confirm 门:人确认 → candidates.patch 就地把富卡写到该已有候选上。
+        await client.patchCandidate({
+          params: { candidateId },
+          query: undefined,
+          body: { card: cardBody },
+        });
+      } else {
+        // [T-266] 无锚(账号态直接补全,未从候选池选中某条)→ 不再禁用死胡同:新建一条候选
+        // 落库(title 取一句话选题,source=idea 手动),再把富卡字段 patch 上去(createCandidate
+        // 契约不收 card,故两步;富卡不丢)。铁律②:仍是人点「采纳」才物化。
+        const title =
+          card.oneLiner.trim() || card.coreConflict.trim() || "AI 补全选题";
+        const angle = card.coreConflict.trim() || card.hook.trim() || "";
+        const created = (await client.createCandidate({
+          params: undefined,
+          query: undefined,
+          body: { title, angle, source: "idea" },
+        })) as unknown as { id: string };
+        await client.patchCandidate({
+          params: { candidateId: created.id },
+          query: undefined,
+          body: { card: cardBody },
+        });
+      }
       setState("adopted");
       router.refresh();
     } catch {
@@ -178,9 +201,11 @@ export function ChatEnrichCard({
               data-slot="chat-enrich-adopted"
               className="text-[10px] font-medium text-success"
             >
-              ✓ 已补全进候选池
+              {/* 有锚=补全进已有候选;无锚=新建了一条候选(T-266,均已落库)。 */}
+              {candidateId ? "✓ 已补全进候选池" : "✓ 已新建进候选池"}
             </span>
-          ) : candidateId ? (
+          ) : (
+            // [T-266] 无论有无锚都能采纳:有锚 patch 就地补全,无锚 create 新建候选(不再死胡同禁用)。
             <button
               type="button"
               data-slot="chat-enrich-adopt"
@@ -188,16 +213,12 @@ export function ChatEnrichCard({
               onClick={adopt}
               className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
             >
-              {state === "adopting" ? "采纳中…" : "采纳"}
+              {state === "adopting"
+                ? "采纳中…"
+                : candidateId
+                  ? "采纳"
+                  : "采纳(新建候选)"}
             </button>
-          ) : (
-            // 诚实降级:没有绑定某条候选(未从某条选题进入补全)→ 不假装能采纳。
-            <span
-              data-slot="chat-enrich-no-target"
-              className="text-[10px] text-text-subtle"
-            >
-              先在候选池选中一条选题、从它进入补全,才能把这张卡采纳回去。
-            </span>
           )}
           {state === "error" ? (
             <span className="text-[10px] text-destructive">采纳失败,重试</span>

@@ -25,6 +25,7 @@ function makeContext(over: Partial<CreativeContext> = {}): CreativeContext {
     contractBrief: "",
     outlineBrief: "",
     orientationHint: "",
+    projectBriefHard: "",
     reviewTitle: "",
     reviewScript: "",
     reviewMetrics: "",

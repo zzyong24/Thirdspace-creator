@@ -57,7 +57,7 @@ vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
 }));
 
 // readSessionCookie reads the cookie header; keep the real impl (it's pure).
-import { POST } from "./route";
+import { POST, deriveConversationTitle } from "./route";
 
 function chatReq(body: unknown, cookie?: string): Request {
   return new Request("http://localhost/api/chat", {
@@ -109,6 +109,47 @@ beforeEach(() => {
   });
 });
 
+// ── [T-267②] 会话标题净化:斜杠命令 / 裸路径不当标题 ──────────────────────────────
+describe("[T-267②] deriveConversationTitle — 标题净化", () => {
+  it("普通消息 → 取前 24 字(原行为)", () => {
+    expect(deriveConversationTitle("基于评论出 5 个选题")).toBe(
+      "基于评论出 5 个选题",
+    );
+    const long = "一".repeat(40);
+    expect(deriveConversationTitle(long)).toHaveLength(24);
+  });
+
+  it("空 / 纯空白 → 「新对话」占位", () => {
+    expect(deriveConversationTitle("")).toBe("新对话");
+    expect(deriveConversationTitle("   ")).toBe("新对话");
+  });
+
+  it("斜杠命令 + 路径参数(用户实测坑)→ 取文件名(basename),不用命令 / 路径原文", () => {
+    // `/cheat-predict scripts/2026-07-12_x.md` → basename「2026-07-12_x.md」。
+    expect(
+      deriveConversationTitle("/cheat-predict scripts/2026-07-12_x.md"),
+    ).toBe("2026-07-12_x.md");
+  });
+
+  it("裸绝对 / 相对路径开头 → 取文件名", () => {
+    expect(deriveConversationTitle("/Users/me/notes/plan.md 帮我看看")).toBe(
+      "plan.md",
+    );
+    expect(deriveConversationTitle("scripts/foo.md")).toBe("foo.md");
+    expect(deriveConversationTitle("./a/b/draft.txt")).toBe("draft.txt");
+  });
+
+  it("斜杠命令但无可辨识文件名 → 「新对话」占位(绝不用命令原文)", () => {
+    expect(deriveConversationTitle("/cheat-status")).toBe("新对话");
+    expect(deriveConversationTitle("/cheat-seed 帮我找选题")).toBe("新对话");
+  });
+
+  it("普通句子里顺带提到路径(非开头)→ 仍取前 24 字,不误当路径", () => {
+    const t = deriveConversationTitle("帮我分析 scripts/foo.md 这个脚手架");
+    expect(t.startsWith("帮我分析")).toBe(true);
+  });
+});
+
 describe("POST /api/chat — 鉴权门", () => {
   // [T-046 单机免登录] 无 cookie 不再 401 —— 以本机主用户直通,装配照常触达。
   it("无 session cookie → 200 直通本机主用户(T-046,装配照常)", async () => {
@@ -154,6 +195,19 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     const [, input] = runChatStream.mock.calls[0];
     expect(input.chatContext.surface).toBe("topics");
     expect(input.messages).toHaveLength(1);
+  });
+
+  it("[T-267②] 首条消息是斜杠命令+路径 → lazy 建会话用净化后的标题(文件名),不用路径原文", async () => {
+    await POST(
+      chatReq(
+        { messages: [userMessage("/cheat-predict scripts/2026-07-12_x.md")] },
+        "creatoros_session=tok",
+      ),
+    );
+    expect(createConversation).toHaveBeenCalledWith(
+      { userId: "u-1" },
+      expect.objectContaining({ title: "2026-07-12_x.md" }),
+    );
   });
 
   it("缺 chatContext.surface → 默认 topics(选题编导)", async () => {

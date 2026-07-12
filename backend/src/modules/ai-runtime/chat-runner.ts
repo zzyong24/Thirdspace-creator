@@ -428,12 +428,22 @@ export const EXTRA_BRIEF_HEADING = "【本次生成指令(来自对话,优先遵
 export { formatWorksBrief, WORKS_BRIEF_MAX_ROWS } from "./creative-context";
 
 // [T-081①] script.hooks 的 prompt 拼装 —— 从 generateHooks 内联提出为纯函数(可单测):
-// 原文案不变,新增 extraBrief 段(空则整段省略,不注空噪声)。
+// extraBrief 段(空则整段省略)。
+// [T-269/T-270] 接地根修复:hook 是**最悬空**的生成环(审计定位「22 个 AI」假钩子源头)。补三样:
+//   ① projectBriefHard(立项硬锚,项目态):钩子主张锚定钦定核心信息、别硬塞 brief 明禁的角度;
+//   ② userMaterialHard/Ref(用户素材=弹药):钩子有据可溯而非脑补;
+//   ③ antiFabrication(可溯硬约束段,单一真值 grounding-facets.ANTI_FABRICATION_CLAUSE):
+//      「数据冲击」类钩子的具体数字必须可溯,不可溯则不写——治「凭空造数字撑反共识钩子」。
+// 调用方(generateHooks)从 CreativeContext 取素材/brief、从 ai-worker 动态取 antiFabrication 常量传入。
 export function buildHooksPrompt(input: {
   topic: string;
   direction?: string;
   extraBrief?: string;
   positioningBrief: string;
+  projectBriefHard?: string;
+  userMaterialHard?: string;
+  userMaterialRef?: string;
+  antiFabrication?: string;
 }): string {
   return [
     "为这条短视频内容生成 4 条口播开场 hook 候选(前 3 秒抓注意力的第一句话)。",
@@ -444,9 +454,18 @@ export function buildHooksPrompt(input: {
       ? `创作者定位:
 ${input.positioningBrief}`
       : "",
+    // [T-270] 立项硬锚(项目态):钩子必须与核心信息一致、遵守内容目标的『避免X』负向约束。
+    input.projectBriefHard ? `\n${input.projectBriefHard}` : "",
+    // [T-269] 用户素材=可溯弹药:钩子里的事实/数字优先从这里取(有出处才敢写)。
+    input.userMaterialHard ? `\n${input.userMaterialHard}` : "",
+    input.userMaterialRef
+      ? `\n【参考素材(AI 搜集,参考级)】\n${input.userMaterialRef}`
+      : "",
     input.direction ? `方向要求:${input.direction}` : "",
     input.extraBrief ? `${EXTRA_BRIEF_HEADING}\n${input.extraBrief}` : "",
-    '4 条彼此切角不同(如:反常识断言 / 数据冲击 / 场景代入 / 利益承诺)。每条 ≤40 字,口语化,不要书面腔。',
+    '4 条彼此切角不同(如:反常识断言 / 数据冲击 / 场景代入 / 利益承诺)。每条 ≤40 字,口语化,不要书面腔。选「数据冲击」角度时,数字必须能追溯到上方素材/定位/立项资料原文;追溯不到就不用具体数字,改用可溯的反差或场景。',
+    // [T-269] 可溯硬约束段(下沉自对话外层 honesty rule #9,单一真值)。
+    input.antiFabrication ? `\n${input.antiFabrication}` : "",
     '只输出 JSON 数组,形如 [{"text":"hook 文案","angle":"切角名"}],不要多余文字。',
   ]
     .filter(Boolean)
@@ -669,11 +688,18 @@ export async function buildChatAssembly(
   // [T-240①] 阶段判据块 —— 项目对话把「创作前(未发布)/已发布(可复盘)」渲成明确场景信号
   // (formatProjectStageBlock 纯函数);读不到项目详情(projectStage=null)→ 不注(不喂猜测)。
   const stageBlock = projectStage ? formatProjectStageBlock(projectStage) : "";
+  // [T-270] 立项 Brief 硬锚块 —— 项目态对话把「本条内容立项硬约束(钦定核心信息/内容目标含避免X/
+  // 内容形式/目标观众)」注进 system,让编导聊 hook/论点/整稿前就锚定钦定前提,不再漂移/自创矛盾主张。
+  // 作**权威约束块**(与 stageBlock/currentProjectBlock 同类,不套 <user_data> 数据边界——brief 是
+  // 创作者自己对本项目的钦定决策,须以「必须遵守」的指令力生效,而非当外部数据降权)。account 态
+  // (projectId=null)→ context.projectBriefHard 恒空 → filter(Boolean) 略过,不注空壳。
+  const briefHardBlock = context.projectBriefHard || "";
   const system = [
     baseSystem,
     honestyBlock,
     skillsBriefBlock,
     currentProjectBlock,
+    briefHardBlock,
     stageBlock,
     reviewSubjectBlock,
     selectionBlock,
@@ -804,36 +830,74 @@ export async function buildChatAssembly(
         selectionTitle ||
         "";
       // 复用 topic-enrich-runner 的 enrich prompt + parseCard —— 产选题卡候选(非实体)。
-      const { runAgentNode } = await import("@creatoros/ai-worker");
-      const prompt = buildEnrichPrompt(context, { title: effTitle, angle });
+      // [T-269] 反编造:对话 enrich 走自由文本(非模板),把可溯硬约束段注进 prompt + system(单一
+      // 真值 grounding-facets)——治「materialBasis 凭空称能依托某资料」的编造敞口。enrich 是账号态
+      // (projectId=null),不注 brief 硬锚(不项目化,守审计边界),只上 anti-fabrication。
+      const { runAgentNode, ANTI_FABRICATION_CLAUSE } = await import("@creatoros/ai-worker");
+      const prompt = buildEnrichPrompt(
+        context,
+        { title: effTitle, angle },
+        ANTI_FABRICATION_CLAUSE,
+      );
       const res = await runAgentNode({
         model,
         system:
-          "你是这位创作者的选题策划 agent,把一条选题补全成完整选题卡。只输出 JSON,不要多余文字。",
+          "你是这位创作者的选题策划 agent,把一条选题补全成完整选题卡。只输出 JSON,不要多余文字。\n\n" +
+          ANTI_FABRICATION_CLAUSE,
         prompt,
         maxSteps: 2,
       });
-      return parseCard(res.text);
+      // [T-266] 随卡回补全**当时**锚定的已有候选 id(selection.kind==="candidate" → 就地补全
+      // 这条);账号态/未选中某条候选 → null。持久化随 tool-result 走,刷新后前端仍据它 patch
+      // (而非依赖易失的当前 selection),null 则采纳走 createCandidate 新建(治死胡同)。
+      const candidateId =
+        chatContext.selection?.kind === "candidate"
+          ? (chatContext.selection.ids[0] ?? null)
+          : null;
+      return { card: parseCard(res.text), candidateId };
     },
     generateHooks: async ({ topic, direction, extraBrief }) => {
       // [T-055c] 复用 runAgentNode 一次调用产 hook 候选组(非实体)。主题兜底:模型没传
       // topic 时用选中项目标题(稿面右栏常驻 = 当前项目)。产出走 ChatHookCard 逐条写入稿面。
       const effTopic = topic?.trim() || selectionTitle || "";
-      const { runAgentNode } = await import("@creatoros/ai-worker");
+      // [T-269/T-270] 接地根:antiFabrication 常量 + 可溯后处理纯函数从 ai-worker 取(单一真值)。
+      const { runAgentNode, ANTI_FABRICATION_CLAUSE, buildGroundingHaystack, annotateUngroundedClaims } =
+        await import("@creatoros/ai-worker");
       const prompt = buildHooksPrompt({
         topic: effTopic,
         direction,
         extraBrief,
         positioningBrief: context.positioningBrief,
+        // [T-270] 立项硬锚(项目态;账号态对话 projectId=null → 空,整段省略)。
+        projectBriefHard: context.projectBriefHard || undefined,
+        // [T-269] 用户素材=钩子的可溯弹药(此前 hook 生成链完全没传素材)。
+        userMaterialHard: context.userMaterialHardBrief || undefined,
+        userMaterialRef: context.userMaterialRefBrief || undefined,
+        antiFabrication: ANTI_FABRICATION_CLAUSE,
       });
       const res = await runAgentNode({
         model,
+        // [T-269] hooks system 也带同款可溯硬约束段(弱模型 tool-calling 靠重复压住编造冲动)。
         system:
-          "你是这位创作者的口播编导,专门打磨前 3 秒开场 hook。只输出 JSON,不要多余文字。",
+          "你是这位创作者的口播编导,专门打磨前 3 秒开场 hook。只输出 JSON,不要多余文字。\n\n" +
+          ANTI_FABRICATION_CLAUSE,
         prompt,
         maxSteps: 2,
       });
-      return parseHookItems(res.text);
+      // [T-269] 可溯后处理(参照 T-224):校验每条 hook 的具体 claim(数字/命名)是否命中已注入的
+      // 素材/定位/立项 brief;不可溯的 → 非破坏式追加「⚠️含未溯源数据」标注(不删,让用户/下游核实)。
+      const haystack = buildGroundingHaystack(
+        context.positioningBrief,
+        context.projectBriefHard,
+        context.userMaterialHardBrief,
+        context.userMaterialRefBrief,
+        context.knowledgeBrief,
+        effTopic,
+      );
+      return parseHookItems(res.text).map((h) => ({
+        ...h,
+        text: annotateUngroundedClaims(h.text, haystack).text,
+      }));
     },
     draftScript: async ({ topic, angle, extraBrief }) => {
       // [T-057⑤] 复用 runScriptNode(与旧 ScriptDraftIsland/任务链同引擎,script.draft
@@ -844,6 +908,9 @@ export async function buildChatAssembly(
       const { shots } = await runScriptNode({
         model: modelFor(spec),
         positioningBrief: context.positioningBrief,
+        // [T-270] 立项 Brief 硬锚(项目态对话整稿也吃钦定核心信息/避免X/内容形式/目标观众,
+        // 与任务链一致;账号态对话 projectId=null → context.projectBriefHard 为空,整段省略)。
+        projectBriefHardBrief: context.projectBriefHard || undefined,
         learningsBrief: context.learningsBrief,
         topicTitle: effTopic,
         topicAngle: angle ?? "",

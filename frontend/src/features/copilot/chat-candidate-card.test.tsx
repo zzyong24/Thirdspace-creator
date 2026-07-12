@@ -7,12 +7,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // (candidates.create);AI 不直接写实体(铁律②)。
 
 const createCandidate = vi.fn();
+const patchCandidate = vi.fn();
 const routerRefresh = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: routerRefresh, push: vi.fn(), replace: vi.fn() }),
 }));
 vi.mock("@/lib/contract-client", () => ({
-  client: { createCandidate: (...a: unknown[]) => createCandidate(...a) },
+  client: {
+    createCandidate: (...a: unknown[]) => createCandidate(...a),
+    patchCandidate: (...a: unknown[]) => patchCandidate(...a),
+  },
 }));
 
 import { ChatCandidateCard } from "./chat-candidate-card";
@@ -21,6 +25,8 @@ afterEach(() => cleanup());
 beforeEach(() => {
   createCandidate.mockReset();
   createCandidate.mockResolvedValue({ id: "cand-1" });
+  patchCandidate.mockReset();
+  patchCandidate.mockResolvedValue({ id: "cand-scoped" });
   routerRefresh.mockReset();
 });
 
@@ -163,5 +169,85 @@ describe("ChatCandidateCard", () => {
     await waitFor(() => {
       expect(screen.getByText("采纳失败，重试")).not.toBeNull();
     });
+  });
+
+  // ── [T-267①] 会话 scoped 到某候选 → 采纳默认「更新当前」(patch),另给「另存为新」(create) ──
+  it("[T-267①] scoped 到某候选:点「更新当前」→ patchCandidate 就地改(非新建),并 refresh", async () => {
+    const user = userEvent.setup();
+    render(
+      <ChatCandidateCard
+        candidates={[CANDIDATES[0]]}
+        selKind="candidate"
+        selId="cand-scoped"
+      />,
+    );
+    await user.click(screen.getByText("更新当前"));
+    await waitFor(() => {
+      expect(patchCandidate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: { candidateId: "cand-scoped" },
+          body: expect.objectContaining({
+            title: "反直觉开头对你有效",
+            angle: "用数据打破直觉",
+            contentRole: "traffic",
+          }),
+        }),
+      );
+    });
+    // 不新建(治「在某选题对话里采纳却新建一条」)。
+    expect(createCandidate).not.toHaveBeenCalled();
+    expect(routerRefresh).toHaveBeenCalled();
+    expect(screen.getByText("✓ 已更新当前选题")).not.toBeNull();
+  });
+
+  it("[T-267①] scoped 下点「另存为新」→ createCandidate 新建(不动当前)", async () => {
+    const user = userEvent.setup();
+    render(
+      <ChatCandidateCard
+        candidates={[CANDIDATES[0]]}
+        selKind="candidate"
+        selId="cand-scoped"
+      />,
+    );
+    await user.click(screen.getByText("另存为新"));
+    await waitFor(() => expect(createCandidate).toHaveBeenCalledTimes(1));
+    expect(patchCandidate).not.toHaveBeenCalled();
+  });
+
+  it("[T-267①] 未 scoped(selKind≠candidate)→ 仍逐条「采纳」新建(原行为,无「更新当前」)", () => {
+    render(<ChatCandidateCard candidates={[CANDIDATES[0]]} selKind="project" selId="p-1" />);
+    expect(screen.queryByText("更新当前")).toBeNull();
+    expect(screen.getByText("采纳")).not.toBeNull();
+  });
+
+  // ── [T-264] 批量入库:采纳选中 N 条 → 逐条 create,只一次 refresh ──
+  it("[T-264] ≥2 条渲批量门;「采纳选中 N 条」逐条 create 但只 router.refresh 一次", async () => {
+    const user = userEvent.setup();
+    render(<ChatCandidateCard candidates={CANDIDATES} />);
+    // 默认全选 → 批量按钮显 2 条。
+    const batchBtn = screen.getByText("采纳选中 2 条");
+    await user.click(batchBtn);
+    await waitFor(() => expect(createCandidate).toHaveBeenCalledTimes(2));
+    // 关键:批量只刷新一次(而非逐条 N 次)。
+    expect(routerRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("[T-264] 取消勾选一条 → 批量按钮条数跟着变,未选中的不入库", async () => {
+    const user = userEvent.setup();
+    render(<ChatCandidateCard candidates={CANDIDATES} />);
+    const checkboxes = screen.getAllByRole("checkbox");
+    await user.click(checkboxes[0]); // 取消第 1 条
+    expect(screen.getByText("采纳选中 1 条")).not.toBeNull();
+    await user.click(screen.getByText("采纳选中 1 条"));
+    await waitFor(() => expect(createCandidate).toHaveBeenCalledTimes(1));
+    // 只入了第 2 条(未取消的那条)。
+    expect(createCandidate.mock.calls[0][0].body.title).toBe("第二条");
+  });
+
+  it("[T-264] 单条候选 → 不渲批量门(无意义)", () => {
+    render(<ChatCandidateCard candidates={[CANDIDATES[0]]} />);
+    expect(
+      document.querySelector('[data-slot="chat-candidate-batch"]'),
+    ).toBeNull();
   });
 });

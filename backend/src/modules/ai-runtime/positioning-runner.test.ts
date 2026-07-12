@@ -251,6 +251,7 @@ describe("buildPositioningPrompt — extraBrief / worksBrief 注入 (T-081)", ()
     contractBrief: "",
     outlineBrief: "",
     orientationHint: "",
+    projectBriefHard: "",
     reviewTitle: "",
     reviewScript: "",
     reviewMetrics: "",

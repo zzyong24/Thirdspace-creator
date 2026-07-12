@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll } from "vitest";
-import { registerAllTemplates } from "@creatoros/ai-worker";
+import { registerAllTemplates, ANTI_FABRICATION_CLAUSE } from "@creatoros/ai-worker";
 import {
   buildChatAssembly,
   buildHooksPrompt,
@@ -10,6 +10,7 @@ import {
   resolveChatMaxSteps,
   buildChatPrepareStep,
 } from "./chat-runner";
+import { buildEnrichPrompt } from "./topic-enrich-runner";
 import { SKILLS_BRIEF_MAX_LINES } from "@creatoros/contract";
 import type { ChatContext } from "./chat-context";
 
@@ -1414,6 +1415,61 @@ describe("[T-081①] buildHooksPrompt — extraBrief 注入", () => {
       positioningBrief: "AI 工程科普",
     });
     expect(prompt).not.toContain(EXTRA_BRIEF_HEADING);
+  });
+
+  // [T-269/T-270] 接地根:hook 是最悬空的生成环,补立项硬锚 + 用户素材(弹药)+ 可溯硬约束段。
+  it("projectBriefHard + userMaterial + antiFabrication 全注入", () => {
+    const prompt = buildHooksPrompt({
+      topic: "AI 编码纪律",
+      positioningBrief: "AI 编导科普",
+      projectBriefHard:
+        "【本条内容立项硬约束 —— 必须遵守】\n· 核心信息:纪律是最后护城河",
+      userMaterialHard: "【用户第一手资料】设计文档被 18 个阶段评审",
+      userMaterialRef: "某博客:AI 编码趋势",
+      antiFabrication: ANTI_FABRICATION_CLAUSE,
+    });
+    expect(prompt).toContain("纪律是最后护城河");
+    expect(prompt).toContain("设计文档被 18 个阶段评审");
+    expect(prompt).toContain("参考素材");
+    expect(prompt).toContain(ANTI_FABRICATION_CLAUSE);
+    // 「数据冲击」角度带可溯约束(不可溯不用具体数字)。
+    expect(prompt).toContain("数字必须能追溯");
+  });
+
+  it("三样都不传 → 不注入(账号态/无素材向后兼容)", () => {
+    const prompt = buildHooksPrompt({
+      topic: "RAG 实战",
+      positioningBrief: "AI 工程科普",
+    });
+    expect(prompt).not.toContain("立项硬约束");
+    expect(prompt).not.toContain("参考素材");
+    expect(prompt).not.toContain(ANTI_FABRICATION_CLAUSE);
+  });
+});
+
+// [T-269] buildEnrichPrompt —— 对话 enrich 自由文本路径注入可溯硬约束段(治 materialBasis 编造敞口)。
+describe("[T-269] buildEnrichPrompt — anti-fabrication 注入", () => {
+  const CTX = {
+    positioningBrief: "AI 编导科普",
+    learningsBrief: "",
+    signalsBrief: "",
+    knowledgeBrief: "",
+  } as unknown as Parameters<typeof buildEnrichPrompt>[0];
+
+  it("传入 antiFabrication → prompt 含可溯硬约束段 + materialBasis 禁凭空声称", () => {
+    const prompt = buildEnrichPrompt(
+      CTX,
+      { title: "提示词技巧", angle: "" },
+      ANTI_FABRICATION_CLAUSE,
+    );
+    expect(prompt).toContain(ANTI_FABRICATION_CLAUSE);
+    expect(prompt).toContain("materialBasis");
+    expect(prompt).toContain("绝不凭空声称");
+  });
+
+  it("不传 antiFabrication → 向后兼容(旧调用/单测不注该段)", () => {
+    const prompt = buildEnrichPrompt(CTX, { title: "提示词技巧", angle: "" });
+    expect(prompt).not.toContain(ANTI_FABRICATION_CLAUSE);
   });
 });
 

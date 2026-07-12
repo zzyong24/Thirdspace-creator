@@ -61,6 +61,7 @@ const EMPTY_CONTEXT: CreativeContext = {
   contractBrief: "",
   outlineBrief: "",
   orientationHint: "",
+  projectBriefHard: "",
   reviewTitle: "",
   reviewScript: "",
   reviewMetrics: "",

@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { resolveContextDeps } from "@/server/persistence-client";
-import { SCRIPT_DRAFT_TEMPLATE } from "@creatoros/ai-worker";
+import {
+  SCRIPT_DRAFT_TEMPLATE,
+  PLANNING_THESIS_TEMPLATE,
+} from "@creatoros/ai-worker";
 
 // [T-184] 声明式 context 注入的**回归证明**。核心断言:script.draft 经 resolveContextDeps 解析出的
 // facet-reader key 集合 == 旧组合根手列的那批 key(逐字冻结在下方 EXPECTED)。只要这条通过,重构就
@@ -65,6 +68,33 @@ describe("[T-184] resolveContextDeps — 声明式 context 注入", () => {
     expect(deps).not.toHaveProperty("assets");
     expect(deps).not.toHaveProperty("accounts");
     expect(deps).not.toHaveProperty("signals");
+  });
+
+  // [T-269/T-270] planning.thesis 从「零声明(手列 positioning/learnings 悬空)」升成声明式注入 ——
+  // 关键是补上 brief(立项硬锚)+ projectMaterials(素材可溯弹药),不再漏接。
+  it("planning.thesis 声明 brief + projectMaterials + positioning/learnings/artifactOrigin", () => {
+    expect(PLANNING_THESIS_TEMPLATE.contextRequirements).toBeDefined();
+    const keys = [...(PLANNING_THESIS_TEMPLATE.contextRequirements ?? [])];
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        "positioning",
+        "learnings",
+        "brief",
+        "projectMaterials",
+        "artifactOrigin",
+      ]),
+    );
+    // 经 resolver 从全源 registry 解析 → brief / projectMaterials 真被注入(此前手列漏接)。
+    const deps = resolveContextDeps(
+      PLANNING_THESIS_TEMPLATE.contextRequirements,
+      fullRegistry,
+    );
+    expect((deps as Record<string, unknown>).brief).toBe(
+      (fullRegistry as Record<string, unknown>).brief,
+    );
+    expect((deps as Record<string, unknown>).projectMaterials).toBe(
+      (fullRegistry as Record<string, unknown>).projectMaterials,
+    );
   });
 
   it("requirements=undefined → 空 deps(未声明的模板保持组合根既有手列,互不影响)", () => {

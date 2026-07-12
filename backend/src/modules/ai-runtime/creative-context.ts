@@ -52,6 +52,12 @@ export interface CreativeContext {
   // 画幅取向 hint — 项目立项 Brief 选的 横屏 / 竖屏(中文 label),喂给 script.draft 让 AI 据此
   // 调钩子与时长(竖屏更短更狠、横屏可铺陈)。空串表示创作者还没选画幅。
   orientationHint: string;
+  // [T-270] 立项 Brief 硬锚段(渲染好的 prompt 块)—— 「【本条内容立项硬约束·必须遵守】核心信息
+  // (钦定主张,不得自创与之矛盾的论点)+ 内容目标(含『避免X』作负向硬约束)+ 内容形式定调 +
+  // 目标观众锁定 + 成功标准」。**仅项目态注入**(projectId 存在 + brief reader 装配 + brief 非空);
+  // 账号态(选题链)/ 无 project / brief 全空 → 空串(下游整段省略,不注空壳)。套用 formatUserMaterialBrief
+  // 的「必须遵守」硬约束范式。注进 script.draft / planning.thesis / hooks / 对话 system(项目态)。
+  projectBriefHard: string;
   // ── 复盘专用字段(review.analyze)—— 只在有 projectId + 装配了 reviewSubject reader 时才填。
   //    复盘要「就这一条作品」提炼经验,而非账号级泛论,故把本作品的真实文案/标题/数据/评论读进来
   //    分别喂给 review prompt 的对应占位符(有则注入、空则该块在 prompt 里省略)。全部诚实空兜底:
@@ -265,13 +271,23 @@ export interface OutlineReader {
 }
 
 // 立项 Brief reader — reads the project's structured Brief so downstream nodes can ground
-// on the creator's立项 decisions. Today only `orientation`(横/竖屏)is consumed; optional
-// so nodes without a project (或未装配)just skip it. Bound to the projects public service.
+// on the creator's立项 decisions. [T-270] 扩投影:从「只回 orientation」扩到回 brief 全核心字段
+// (coreMessage/contentGoal/contentFormat/targetAudience/successCriteria),让创作生成链(script/
+// thesis/hooks/对话 system)把立项 Brief 当**硬锚**注入,不再漂移/自创与钦定核心信息矛盾的主张。
+// 病根(审计):此前绑定层 `return o ? {orientation:o} : null` 把其余字段全丢 → brief 4 核心字段
+// 从未进入任何创作上下文,`script.draft` 声明依赖 `brief` 名实不符。optional(无 project/未装配跳过)。
 export interface ProjectBriefReader {
   getBriefDetail(
     ctx: RequestContext,
     projectId: string,
-  ): Promise<{ orientation?: "landscape" | "portrait" } | null>;
+  ): Promise<{
+    orientation?: "landscape" | "portrait";
+    coreMessage?: string;
+    contentGoal?: string;
+    contentFormat?: string;
+    targetAudience?: string;
+    successCriteria?: string;
+  } | null>;
 }
 
 // 复盘对象 reader (T-039a) — 读「本次复盘的这一条作品」的真实材料,喂给 review.analyze,让复盘
@@ -554,15 +570,20 @@ export async function assembleCreativeContext(
     }
   }
 
-  // 画幅取向(横/竖屏)—— best-effort,从项目立项 Brief 读;映射中文 label 供 script.draft 用。
+  // 画幅取向(横/竖屏)+ [T-270] 立项 Brief 硬锚 —— best-effort,从项目立项 Brief 读(一次读取两用)。
+  // orientation 映射中文 label 供 script.draft 调节奏;core 字段渲成 projectBriefHard 硬约束段。
+  // **仅项目态**(deps.brief 装配 + input.projectId 有值);账号态(选题链)天然跳过(projectBriefHard="")。
   let orientationHint = "";
+  let projectBriefHard = "";
   if (deps.brief && input.projectId) {
     try {
       const detail = await deps.brief.getBriefDetail(ctx, input.projectId);
       if (detail?.orientation === "landscape") orientationHint = "横屏";
       else if (detail?.orientation === "portrait") orientationHint = "竖屏";
+      projectBriefHard = renderProjectBriefHard(detail);
     } catch {
       orientationHint = ""; // never block a node on the brief read
+      projectBriefHard = "";
     }
   }
 
@@ -643,6 +664,7 @@ export async function assembleCreativeContext(
     contractBrief,
     outlineBrief,
     orientationHint,
+    projectBriefHard,
     reviewTitle,
     reviewScript,
     reviewMetrics,
@@ -879,6 +901,55 @@ export function materialQueryTerms(materials: ProjectMaterial[]): string[] {
   }
   // 去重 + 上限。
   return Array.from(new Set(terms)).slice(0, MATERIAL_QUERY_TERMS_MAX);
+}
+
+// ── [T-270] 立项 Brief 硬锚段组装 —— 创作生成链接地根的「brief 硬锚」部分 ─────────────────
+// 立项 Brief 的 4 核心字段(核心信息/内容目标/内容形式/目标受众,+ 成功标准)是创作者对**这条内容**
+// 的钦定决策;此前从读取端就被丢(绑定层只回 orientation),导致编导 hook/论点树/整稿压根没读它 →
+// 硬塞 brief 明禁的形式、自创与核心信息矛盾的主张(实录「有了立项为啥还瞎编」)。这里把它渲成硬约束段,
+// 套用 formatUserMaterialBrief 的「必须遵守」范式:核心信息=钦定主张(不得自创矛盾论点)、内容目标含
+// 『避免X』作负向硬约束、内容形式定调、目标观众锁定。全字段空 → 空串(下游整段省略,不注空壳)。
+// 纯函数,导出供单测。仅**项目态**调用(assembleCreativeContext 内 deps.brief && projectId 时)。
+const BRIEF_FIELD_MAX = 400; // 单字段防爆(内容目标可能是长段自由文本)
+export function renderProjectBriefHard(
+  detail: {
+    coreMessage?: string;
+    contentGoal?: string;
+    contentFormat?: string;
+    targetAudience?: string;
+    successCriteria?: string;
+  } | null,
+): string {
+  if (!detail) return "";
+  const clip = (v?: string) => {
+    const s = (v ?? "").trim();
+    if (!s) return "";
+    return s.length > BRIEF_FIELD_MAX ? `${s.slice(0, BRIEF_FIELD_MAX)}…` : s;
+  };
+  const core = clip(detail.coreMessage);
+  const goal = clip(detail.contentGoal);
+  const format = clip(detail.contentFormat);
+  const audience = clip(detail.targetAudience);
+  const success = clip(detail.successCriteria);
+  const lines: string[] = [];
+  if (core) {
+    lines.push(
+      `· 核心信息(**钦定主张**,整条内容要立的那句话,不得自创与之矛盾的论点):${core}`,
+    );
+  }
+  if (goal) {
+    lines.push(
+      `· 内容目标(这条要达成什么;其中『避免/不要…』是**负向硬约束**,必须遵守):${goal}`,
+    );
+  }
+  if (format) lines.push(`· 内容形式定调(照此定调,别换成被排除的形式):${format}`);
+  if (audience) lines.push(`· 目标观众(锁定这群人,别写给别人):${audience}`);
+  if (success) lines.push(`· 成功标准(这条内容要对齐的结果):${success}`);
+  if (lines.length === 0) return "";
+  return [
+    "【本条内容立项硬约束 —— 必须遵守】以下是创作者对这条内容的立项决策,是钦定前提,不得偏离、不得自创与之矛盾的主张:",
+    ...lines,
+  ].join("\n");
 }
 
 // ── [T-240①] 项目阶段判据(「场景」一等机制的动态层)─────────────────────────────────

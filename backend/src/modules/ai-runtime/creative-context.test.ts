@@ -6,6 +6,7 @@ import {
   formatUserMaterialBrief,
   materialQueryTerms,
   markReconstructedBrief,
+  renderProjectBriefHard,
   buildKnowledgeQuery,
   truncateKnowledgeBriefToBudget,
   KNOWLEDGE_BRIEF_BUDGET_CHARS,
@@ -803,5 +804,91 @@ describe("[T-240①] formatProjectStageBlock — 阶段判据渲染", () => {
     const block = formatProjectStageBlock({ stage: "", published: false });
     expect(block).not.toContain("(stage=");
     expect(block).toContain("创作前(未发布)");
+  });
+});
+
+// [T-270] 立项 Brief 硬锚 —— 端口扩投影不丢字段 + renderProjectBriefHard 渲染 + 仅项目态注入。
+describe("[T-270] renderProjectBriefHard — 立项 Brief 硬约束段渲染", () => {
+  it("全核心字段 → 渲成「必须遵守」硬约束段(核心信息=钦定主张、内容目标含负向约束)", () => {
+    const block = renderProjectBriefHard({
+      coreMessage: "AI 编码熵增定律:纪律是最后护城河",
+      contentGoal: "讲清纪律的价值;避免做成工具分享",
+      contentFormat: "观点向口播(非教程)",
+      targetAudience: "用 AI 写代码的开发者",
+      successCriteria: "引发对纪律的讨论",
+    });
+    expect(block).toContain("必须遵守");
+    expect(block).toContain("钦定主张");
+    expect(block).toContain("纪律是最后护城河");
+    expect(block).toContain("负向硬约束");
+    expect(block).toContain("避免做成工具分享");
+    expect(block).toContain("观点向口播(非教程)");
+    expect(block).toContain("用 AI 写代码的开发者");
+  });
+
+  it("只有部分字段 → 只渲有值的行(空字段整行省略)", () => {
+    const block = renderProjectBriefHard({ coreMessage: "只写核心信息" });
+    expect(block).toContain("只写核心信息");
+    expect(block).not.toContain("内容目标");
+    expect(block).not.toContain("目标观众");
+  });
+
+  it("全空 / null → 空串(下游整段省略,不注空壳)", () => {
+    expect(renderProjectBriefHard(null)).toBe("");
+    expect(renderProjectBriefHard({})).toBe("");
+    expect(
+      renderProjectBriefHard({ coreMessage: "   ", contentGoal: "" }),
+    ).toBe("");
+  });
+});
+
+describe("[T-270] assembleCreativeContext — projectBriefHard 仅项目态注入", () => {
+  const briefDeps = (): ContextDeps => ({
+    positioning: {
+      getPositioningCenter: async () => ({ profile: null, currentStatement: null }),
+    },
+    // 端口扩投影:reader 回全字段(不再只回 orientation),装配层据此渲硬锚。
+    brief: {
+      getBriefDetail: async () => ({
+        orientation: "portrait" as const,
+        coreMessage: "纪律是最后护城河",
+        contentGoal: "避免做成工具分享",
+        contentFormat: "观点向口播",
+        targetAudience: "AI 开发者",
+        successCriteria: "引发讨论",
+      }),
+    },
+  });
+
+  it("有 projectId + brief reader → projectBriefHard 渲染(含核心信息 + 避免X)", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-1", topic: "" },
+      briefDeps(),
+    );
+    expect(context.projectBriefHard).toContain("纪律是最后护城河");
+    expect(context.projectBriefHard).toContain("避免做成工具分享");
+    // 画幅一次读取两用:orientationHint 也从同一 detail 拿到。
+    expect(context.orientationHint).toBe("竖屏");
+  });
+
+  it("账号态(projectId=null)→ projectBriefHard 空串(不项目化,守选题链边界)", async () => {
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: null, topic: "某选题" },
+      briefDeps(),
+    );
+    expect(context.projectBriefHard).toBe("");
+  });
+
+  it("未装配 brief reader → projectBriefHard 空串(降级不阻塞)", async () => {
+    const deps = briefDeps();
+    delete deps.brief;
+    const context = await assembleCreativeContext(
+      ctx,
+      { projectId: "proj-1", topic: "" },
+      deps,
+    );
+    expect(context.projectBriefHard).toBe("");
   });
 });

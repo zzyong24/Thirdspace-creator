@@ -57,7 +57,11 @@ interface ThesisNode {
 }
 
 // 把 CreativeContext 映射成 planning.thesis 模板的 facets(占位化原 buildThesisPrompt 的上下文块）。
-// 文字与兜底逻辑与原 prompt 一致,只是从内联拼串改成模板注入。
+// [T-269/T-270] 接地根:论点树此前**只**注 positioning+learnings+topic(无 brief、无素材、无 anti-
+// fabrication → 两头悬空)。补三样:
+//   ① projectBriefHard(立项硬锚,项目态):core 论点锚定钦定核心信息,不自创矛盾主张;
+//   ② userMaterialHard/Ref(用户素材=论据/证据弹药):evidence 分支有据可溯而非脑补;
+//   ③ anti-fabrication:模板正文已静态嵌 ANTI_FABRICATION_CLAUSE(单一真值),facets 无需重复注。
 function thesisFacets(
   context: CreativeContext,
 ): Record<string, string | undefined> {
@@ -65,8 +69,19 @@ function thesisFacets(
     positioning: context.positioningBrief
       ? context.positioningBrief
       : "（创作者尚未设置定位——按通用爆款逻辑构建论点树）",
+    // [T-270] 立项硬锚(项目态;creative-context 已装配含「必须遵守」段头,账号态为空则整段省略)。
+    projectBriefHard: context.projectBriefHard
+      ? `\n${context.projectBriefHard}`
+      : "",
     learnings: context.learningsBrief
       ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
+      : "",
+    // [T-269] 用户素材=论点/证据的可溯弹药(此前论点树生成链完全没传素材)。
+    userMaterialHard: context.userMaterialHardBrief
+      ? `\n${context.userMaterialHardBrief}`
+      : "",
+    userMaterialRef: context.userMaterialRefBrief
+      ? `\n【参考素材(AI 搜集,参考级)】\n${context.userMaterialRefBrief}`
       : "",
     topic: context.topic.title
       ? `\n【本期选题】${context.topic.title}${
@@ -177,7 +192,7 @@ export async function runPlanningThesis(
     const spec = await deps.resolveModelSpec(ctx, "planning.thesis");
     // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
     // 让 planning.thesis 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
-    const { modelFor, runStructuredNode, getTemplate } =
+    const { modelFor, runStructuredNode, getTemplate, buildGroundingHaystack, annotateUngroundedClaims } =
       await import("@creatoros/ai-worker");
     const { object } = await runStructuredNode<ThesisTreeOutput>({
       model: modelFor(spec),
@@ -185,6 +200,22 @@ export async function runPlanningThesis(
       facets: thesisFacets(context),
     });
     const tree = normalizeThesisTree(object);
+    // [T-269] 可溯后处理(参照 T-224):校验论点树各节点(核心/支撑/证据/反驳)的具体 claim(数字/
+    // 命名)是否命中已注入的定位/立项 brief/素材/知识库;不可溯的 → 非破坏式在 summary 追加「⚠️含未
+    // 溯源数据」标注(不删,提示用户/写脚本时核实)。治「evidence 分支凭空造数字撑论点」。
+    const haystack = buildGroundingHaystack(
+      context.positioningBrief,
+      context.projectBriefHard,
+      context.userMaterialHardBrief,
+      context.userMaterialRefBrief,
+      context.knowledgeBrief,
+      context.topic.title,
+      context.topic.angle,
+    );
+    tree.core.summary = annotateUngroundedClaims(tree.core.summary, haystack).text;
+    for (const b of tree.branches) {
+      b.summary = annotateUngroundedClaims(b.summary, haystack).text;
+    }
     const nodes = renderNodes(tree);
     if (nodes.length === 0) {
       throw new Error("planning-runner: agent returned no parseable thesis nodes");

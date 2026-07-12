@@ -1859,20 +1859,33 @@ export function AICopilotContent({
                       return (
                         <React.Fragment key={key}>
                           {traceRow}
-                          <ChatCandidateCard candidates={o.items ?? []} />
+                          {/* [T-267①] 透传当前 selection —— scoped 到某候选时采纳默认「更新当前选题」。 */}
+                          <ChatCandidateCard
+                            candidates={o.items ?? []}
+                            selKind={selKind ?? null}
+                            selId={selId ?? null}
+                          />
                         </React.Fragment>
                       );
                     }
                     // [T-117] 补全选题卡(topic.enrich)→ 富卡渲染 + 采纳(patch 到被补全的
                     // 那条候选)。此前缺此分支 → topic.card 结果被静默丢弃(用户看不到卡)。
                     if (name === "topic.enrich" && out.kind === "topic.card") {
-                      const o = out as { card?: ChatEnrichCardData | null };
+                      const o = out as {
+                        card?: ChatEnrichCardData | null;
+                        candidateId?: string | null;
+                      };
                       return (
                         <React.Fragment key={key}>
                           {traceRow}
                           <ChatEnrichCard
                             card={o.card ?? null}
-                            candidateId={selKind === "candidate" ? (selId ?? null) : null}
+                            // [T-266] 优先用工具结果里持久化的锚(补全当时锚定的候选 id)——刷新
+                            // 会话后仍准;回退当前 selection;都无 → null → 采纳走 createCandidate 新建。
+                            candidateId={
+                              o.candidateId ??
+                              (selKind === "candidate" ? (selId ?? null) : null)
+                            }
                           />
                         </React.Fragment>
                       );

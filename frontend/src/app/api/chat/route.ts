@@ -42,6 +42,40 @@ interface ChatRequestBody {
   messageId?: string;
 }
 
+// [T-267②] 会话标题净化 —— 取首条用户消息前 24 字当会话名的老逻辑,遇到「斜杠命令 / 裸文件路径」
+// 开头(如 `/cheat-predict scripts/2026-07-12_..md`)会把整条路径/命令原文渲成标题(用户实测坑:
+// 选题对话名居然是文件路径,零提炼)。这里止血:检测命令/路径模式则取文件名(basename)或落
+// 「新对话」占位,普通消息仍取前 24 字。
+//   注:这是**会话标题**(ai_conversations.title),非 candidate.title。据首轮 assistant 回复
+//   按主题**回填**真实标题需新增 conversations.rename 契约 op(跨 ai 模块),成本高 → 留后续
+//   (审计报告 T-267② 已注:先做净化 + 占位)。导出供单测。
+export function deriveConversationTitle(userText: string): string {
+  const raw = userText.trim();
+  if (!raw) return "新对话";
+
+  const firstToken = raw.split(/\s+/)[0] ?? "";
+  // 首 token 是斜杠命令(/cheat-predict)或裸路径(scripts/x.md、/Users/…、./a、~/b)——
+  // 这类首条消息是「操作指令 / 文件路径」而非主题,当标题会渲成路径(用户实测坑)。
+  const startsWithCommand = /^\/[a-zA-Z][\w-]*$/.test(firstToken);
+  const startsWithPath =
+    /^(~\/|\.\/|\/)/.test(firstToken) || // 绝对 / 家目录 / 相对路径前缀
+    /^[\w.-]+\/[\w./-]+$/.test(firstToken); // scripts/xxx.md 这类含斜杠的相对路径 token
+
+  if (startsWithCommand || startsWithPath) {
+    // 抓消息里第一个「像文件路径」的 token(含分隔符 + 带扩展名),取 basename 作标题;
+    // 没有可辨识文件名 → 「新对话」占位(绝不用路径 / 命令原文当标题)。
+    const pathToken = raw
+      .split(/\s+/)
+      .find((t) => /[/\\]/.test(t) && /\.[a-zA-Z0-9]+$/.test(t));
+    const base = pathToken
+      ? (pathToken.split(/[/\\]/).filter(Boolean).pop() ?? "")
+      : "";
+    return base ? base.slice(0, 24) : "新对话";
+  }
+
+  return raw.slice(0, 24);
+}
+
 // scope 文法校验(宽松:三段式前缀;非法声明视为未声明,回落推导)。
 function isValidScope(v: unknown): v is string {
   if (typeof v !== "string" || v.length === 0) return false;
@@ -152,7 +186,8 @@ export async function POST(req: Request): Promise<Response> {
 
   try {
     if (!conversationId) {
-      const title = userText.slice(0, 24) || "AI 助手";
+      // [T-267②] 净化:斜杠命令 / 裸文件路径开头不当标题(取文件名或「新对话」占位)。
+      const title = deriveConversationTitle(userText);
       const conv = await runtime.ai.createConversation(ctx, {
         title,
         projectId: chatContext.projectId ?? null,

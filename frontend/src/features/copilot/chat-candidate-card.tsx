@@ -2,13 +2,21 @@
 
 /**
  * `ChatCandidateCard` —— 对话内 generative UI(SPEC §3.4)。AI 的 `topic.generate` 工具结果
- * (候选,非实体)通过 tool-result part 流回前端,这里把它渲成候选卡嵌进对话气泡,人**逐条采纳**
- * 走现有 confirm 门(`candidates.create`,source=idea 的人确认入口)落候选池 —— AI 不直接写实体
- * (铁律②)。复用 CollabField 的「逐条删」交互范式;采纳是逐条物化(每条一次 createCandidate)。
+ * (候选,非实体)通过 tool-result part 流回前端,渲成候选卡嵌进对话气泡,人采纳走现有 confirm
+ * 门落候选池 —— AI 不直接写实体(铁律②)。
+ *
+ * [T-267①] 会话 scoped 到某条候选(selKind==="candidate",从候选池某条进入对话)时,采纳默认
+ * 「更新当前选题」(candidates.patch rename + angle + contentRole 就地改),另给「另存为新」
+ * (candidates.create)—— 治「在某选题对话里采纳却新建一条」。未 scoped(账号态)时逐条「采纳」=
+ * candidates.create 新建(原行为)。
+ *
+ * [T-264] 逐条采纳太繁琐 → 加「批量入库」门(复用知识链 knowledge-atom-gate 范式):每条可勾选,
+ * 底部「采纳选中 N 条」一次性 create 选中项,只 **一次 router.refresh**(而非逐条 N 次)。批量一律
+ * 新建(update-current 语义只适用于单条)。
  *
  * 为什么不直接复用 AdoptCandidateCard:那个组件自带「createAITask→轮询」生命周期(它从零发起一个
  * AI 任务再等结果)。对话里候选**已在**工具结果里,无需再起任务 —— 直接渲 + 采纳即可,起任务反而会
- * 重复调 AI。所以这里复用的是同一条**确认门**(candidates.create)+ 同一套候选形状,而非那段轮询。
+ * 重复调 AI。所以这里复用的是同一条**确认门**(candidates.create/patch)+ 同一套候选形状。
  */
 
 import * as React from "react";
@@ -60,19 +68,40 @@ function normalizeRole(
     : undefined;
 }
 
+// 逐条采纳态:idle | adopting | adopted(新建) | updated(更新当前) | error。
+type ItemState = "idle" | "adopting" | "adopted" | "updated" | "error";
+
+/** 已落库(新建/更新)—— 退出批量池、渲收尾态。 */
+function isDone(s: ItemState | undefined): boolean {
+  return s === "adopted" || s === "updated";
+}
+
 export function ChatCandidateCard({
   candidates,
+  selKind = null,
+  selId = null,
 }: {
   readonly candidates: readonly ChatTopicCandidate[];
+  /** [T-267①] 当前会话选中态(ai-copilot-content 透传)——scoped 到某候选时采纳默认「更新当前」。 */
+  readonly selKind?: string | null;
+  readonly selId?: string | null;
 }) {
   const router = useRouter();
-  // 逐条采纳态:idle | adopting | adopted | error(按下标)。
-  const [state, setState] = React.useState<
-    ReadonlyMap<number, "idle" | "adopting" | "adopted" | "error">
-  >(() => new Map());
+  // [T-267①] 会话 scoped 到某条候选 → 采纳默认「更新当前选题」(patch);否则「新建」(create)。
+  const scopedCandidateId = selKind === "candidate" ? (selId ?? null) : null;
+
+  const [state, setState] = React.useState<ReadonlyMap<number, ItemState>>(
+    () => new Map(),
+  );
+  // [T-264] 批量勾选态(默认全选;逐条采纳过的自动退出批量池)。
+  const [selected, setSelected] = React.useState<ReadonlyMap<number, boolean>>(
+    () => new Map(candidates.map((_, i) => [i, true])),
+  );
+  const [batchBusy, setBatchBusy] = React.useState(false);
+  const [batchError, setBatchError] = React.useState(false);
 
   const setAt = React.useCallback(
-    (i: number, s: "idle" | "adopting" | "adopted" | "error") =>
+    (i: number, s: ItemState) =>
       setState((prev) => {
         const next = new Map(prev);
         next.set(i, s);
@@ -81,33 +110,116 @@ export function ChatCandidateCard({
     [],
   );
 
-  const adopt = React.useCallback(
+  const toggleSelected = React.useCallback(
+    (i: number, v: boolean) =>
+      setSelected((prev) => {
+        const next = new Map(prev);
+        next.set(i, v);
+        return next;
+      }),
+    [],
+  );
+
+  // candidates.create 落候选池的 body(人确认门,AI 不直接写)。[T-149] source 透传 AI 出题真实
+  // 渠道(trend|benchmark|demand),不硬编码 idea —— 否则 AI 出的题被算进「手动灵感」统计。
+  const createBodyOf = React.useCallback(
+    (c: ChatTopicCandidate) => ({
+      title: c.title,
+      angle: c.angle,
+      source: normalizeSource(c.source),
+      ...(normalizeRole(c.contentRole)
+        ? { contentRole: normalizeRole(c.contentRole) }
+        : {}),
+    }),
+    [],
+  );
+
+  // 单条「采纳=新建」(未 scoped,或 scoped 下点「另存为新」)。
+  const adoptAsNew = React.useCallback(
     async (i: number, c: ChatTopicCandidate) => {
       setAt(i, "adopting");
       try {
-        // 人确认门:candidates.create 落候选池(AI 不直接写)。[T-149] source 透传 AI 出题的真实
-        // 渠道(trend|benchmark|demand),不再硬编码 idea —— 否则 AI 出的题被算进「手动灵感」统计。
-        // 对话内 topic.generate 无 ai_task,走不通 confirm 流,只能落这条门,故 provenance 保在这里。
         await client.createCandidate({
           params: undefined,
           query: undefined,
-          body: {
-            title: c.title,
-            angle: c.angle,
-            source: normalizeSource(c.source),
-            ...(normalizeRole(c.contentRole)
-              ? { contentRole: normalizeRole(c.contentRole) }
-              : {}),
-          },
+          body: createBodyOf(c),
         });
         setAt(i, "adopted");
+        toggleSelected(i, false);
         router.refresh();
       } catch {
         setAt(i, "error");
       }
     },
-    [router, setAt],
+    [router, setAt, toggleSelected, createBodyOf],
   );
+
+  // [T-267①] 单条「更新当前选题」(scoped 才可用):就地把标题/切入/内容角色改到会话绑定的那条候选。
+  const updateCurrent = React.useCallback(
+    async (i: number, c: ChatTopicCandidate) => {
+      if (!scopedCandidateId) return;
+      setAt(i, "adopting");
+      try {
+        await client.patchCandidate({
+          params: { candidateId: scopedCandidateId },
+          query: undefined,
+          body: {
+            title: c.title,
+            angle: c.angle,
+            ...(normalizeRole(c.contentRole)
+              ? { contentRole: normalizeRole(c.contentRole) }
+              : {}),
+          },
+        });
+        setAt(i, "updated");
+        toggleSelected(i, false);
+        router.refresh();
+      } catch {
+        setAt(i, "error");
+      }
+    },
+    [scopedCandidateId, router, setAt, toggleSelected],
+  );
+
+  // [T-264] 批量:采纳选中且未落库的条 —— 逐条 create,只 **一次 refresh**(非 N 次)。批量一律新建。
+  const batchIndices = candidates
+    .map((_, i) => i)
+    .filter((i) => (selected.get(i) ?? false) && !isDone(state.get(i)));
+  const batchAdopt = React.useCallback(async () => {
+    if (batchBusy || batchIndices.length === 0) return;
+    setBatchBusy(true);
+    setBatchError(false);
+    let anyOk = false;
+    try {
+      for (const i of batchIndices) {
+        try {
+          await client.createCandidate({
+            params: undefined,
+            query: undefined,
+            body: createBodyOf(candidates[i]!),
+          });
+          setAt(i, "adopted");
+          toggleSelected(i, false);
+          anyOk = true;
+        } catch {
+          setAt(i, "error"); // 单条失败不阻断整批(已成的不回滚,诚实呈现)。
+        }
+      }
+    } finally {
+      setBatchBusy(false);
+      if (anyOk) router.refresh(); // 一次刷新(非逐条 N 次)。
+      // 全失败 → 提示批量出错(逐条 error 已渲)。
+      setBatchError(!anyOk && batchIndices.length > 0);
+    }
+  }, [
+    batchBusy,
+    batchIndices,
+    candidates,
+    createBodyOf,
+    router,
+    setAt,
+    toggleSelected,
+  ]);
 
   if (candidates.length === 0) return null;
 
@@ -117,11 +229,14 @@ export function ChatCandidateCard({
       className="mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        AI 选题候选 · 逐条采纳进候选池
+        {scopedCandidateId
+          ? "AI 选题候选 · 更新当前选题 / 另存为新"
+          : "AI 选题候选 · 采纳进候选池"}
       </span>
       <ul className="flex flex-col gap-1.5" aria-label="对话内选题候选">
         {candidates.map((c, i) => {
           const s = state.get(i) ?? "idle";
+          const done = isDone(s);
           return (
             <li
               key={i}
@@ -129,6 +244,18 @@ export function ChatCandidateCard({
               className="flex flex-col gap-1 rounded-control border border-border bg-surface px-2.5 py-1.5"
             >
               <div className="flex items-start gap-2">
+                {/* [T-264] 批量勾选(落库后隐藏)。 */}
+                {!done ? (
+                  <input
+                    type="checkbox"
+                    data-slot="chat-candidate-select"
+                    aria-label={`选中第 ${i + 1} 条`}
+                    checked={selected.get(i) ?? false}
+                    disabled={s === "adopting" || batchBusy}
+                    onChange={(e) => toggleSelected(i, e.target.checked)}
+                    className="mt-0.5 size-3.5 shrink-0 accent-brand"
+                  />
+                ) : null}
                 <span className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-foreground">
                   {c.title}
                 </span>
@@ -175,7 +302,7 @@ export function ChatCandidateCard({
                   </ul>
                 </details>
               ) : null}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {s === "adopted" ? (
                   <span
                     data-slot="chat-candidate-adopted"
@@ -183,12 +310,41 @@ export function ChatCandidateCard({
                   >
                     ✓ 已入候选池
                   </span>
+                ) : s === "updated" ? (
+                  <span
+                    data-slot="chat-candidate-updated"
+                    className="text-[10px] font-medium text-success"
+                  >
+                    ✓ 已更新当前选题
+                  </span>
+                ) : scopedCandidateId ? (
+                  // [T-267①] scoped 到某候选 → 默认「更新当前」(patch 就地改),另给「另存为新」(create)。
+                  <>
+                    <button
+                      type="button"
+                      data-slot="chat-candidate-update-current"
+                      disabled={s === "adopting"}
+                      onClick={() => updateCurrent(i, c)}
+                      className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+                    >
+                      {s === "adopting" ? "更新中…" : "更新当前"}
+                    </button>
+                    <button
+                      type="button"
+                      data-slot="chat-candidate-adopt"
+                      disabled={s === "adopting"}
+                      onClick={() => adoptAsNew(i, c)}
+                      className="inline-flex h-6 items-center rounded-control border border-brand/40 px-2 text-[10px] font-medium text-brand hover:bg-brand-soft disabled:opacity-50"
+                    >
+                      另存为新
+                    </button>
+                  </>
                 ) : (
                   <button
                     type="button"
                     data-slot="chat-candidate-adopt"
                     disabled={s === "adopting"}
-                    onClick={() => adopt(i, c)}
+                    onClick={() => adoptAsNew(i, c)}
                     className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
                   >
                     {s === "adopting" ? "采纳中…" : "采纳"}
@@ -204,6 +360,33 @@ export function ChatCandidateCard({
           );
         })}
       </ul>
+      {/* [T-264] 批量入库门(≥2 条时显)——「采纳选中 N 条」一次 create + 一次 refresh(非逐条 N 次)。
+          scoped 下批量一律新建(update-current 语义只适用单条),故文案「另存为新」。 */}
+      {candidates.length > 1 ? (
+        <div
+          data-slot="chat-candidate-batch"
+          className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-1.5"
+        >
+          <button
+            type="button"
+            data-slot="chat-candidate-batch-adopt"
+            disabled={batchBusy || batchIndices.length === 0}
+            onClick={() => void batchAdopt()}
+            className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+          >
+            {batchBusy
+              ? "批量入库中…"
+              : scopedCandidateId
+                ? `另存选中 ${batchIndices.length} 条为新`
+                : `采纳选中 ${batchIndices.length} 条`}
+          </button>
+          {batchError ? (
+            <span className="text-[10px] text-destructive">
+              批量采纳失败，重试
+            </span>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

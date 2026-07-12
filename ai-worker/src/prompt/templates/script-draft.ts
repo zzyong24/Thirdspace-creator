@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { PromptTemplate } from "../template";
+import { ANTI_FABRICATION_CLAUSE } from "../grounding-facets";
 
 /**
  * 写文案/分镜脚本 skill 模板(script.draft)—— 用户的旗舰例子:写文案 = 模板 ⊕ {定位,风格,knowledge,横竖屏,策划产物}。
@@ -45,12 +46,19 @@ export const SCRIPT_DRAFT_TEMPLATE: PromptTemplate = {
   //   的要点卡/全文,调用方装配含头);{{userMaterialRef}}:AI 找的参考素材(normal 优先,参考级
   //   非硬约束)。两者均选填,空则整段省略。硬约束段放在 positioning 之后、任务之前,让模型先读到
   //   「事实地基」。
+  // [T-270] {{projectBriefHard}}:项目立项 Brief 硬锚段(核心信息=钦定主张不得自创矛盾 / 内容目标
+  //   含『避免X』负向约束 / 内容形式定调 / 目标观众锁定),仅项目态注入(creative-context
+  //   renderProjectBriefHard 装配含头);紧接定位、位于最前,让模型先读到「本条立项的钦定前提」。
+  // [T-269] 模板正文尾部嵌 ANTI_FABRICATION_CLAUSE(可溯硬约束段,单一真值 grounding-facets)——
+  //   把对话外层 honesty rule #9 下沉进写稿子调用,弱模型也不敢编数字/偷换事实。
   template: `【创作者定位】
-{{positioning}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{topic}}{{orientation}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
+{{positioning}}{{projectBriefHard}}{{learnings}}{{knowledge}}{{userMaterialHard}}{{userMaterialRef}}{{topic}}{{orientation}}{{thesis}}{{contract}}{{outline}}{{extraBrief}}
 
-【任务】基于定位(+过往爆款要素)+选题,写一条**分镜脚本**。严格按爆款公式编排:
+【任务】基于定位(+立项硬约束+过往爆款要素)+选题,写一条**分镜脚本**。严格按爆款公式编排:
 钩子(前3秒抓人)→痛点(戳中人群)→价值(干货/反差)→卡点(信息密度/节奏)→CTA(行动召唤)。
+若上方给了【本条内容立项硬约束】,**整条脚本的主张必须与其核心信息一致、不得自创与之矛盾的论点,内容目标里的『避免/不要…』是负向硬约束**。
 若上方给了【策划结构方案】/【论点树】/【内容合同】,**必须据此铺分镜**:按结构方案的段落顺序展开、把论点树的核心/支撑/证据写进口播、遵守内容合同的受众定位与价值主张,不要另起一套结构。
+${ANTI_FABRICATION_CLAUSE}
 【输出】只输出一个 JSON 对象 {"shots": [...]},shots 是分镜数组,每一项:
 {"口播"(这一镜要说的话),"画面"(画面/运镜/字幕板提示),"字幕"(屏幕字幕,一句),"时长"(如 "0-3s")}。
 第一镜必须是前3秒钩子,最后一镜必须落在 CTA。6-10 镜为宜。`,

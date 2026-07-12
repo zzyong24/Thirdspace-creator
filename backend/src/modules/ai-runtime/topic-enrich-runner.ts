@@ -78,6 +78,11 @@ export interface TopicEnrichTask {
 export function buildEnrichPrompt(
   context: CreativeContext,
   subject: { title: string; angle: string },
+  // [T-269] 可溯硬约束段(下沉自对话外层 honesty rule #9,单一真值 grounding-facets.ANTI_FABRICATION_CLAUSE)。
+  // 对话 enrich 走 runAgentNode 自由文本(与结构化 runner 走模板不同路),故这条自由文本 prompt 也须
+  // 带同款反编造约束——治「materialBasis 凭空称能依托某资料」的编造敞口。调用方(chat-runner)传入常量;
+  // 缺省(旧调用/单测不传)→ 不注(向后兼容)。
+  antiFabrication?: string,
 ): string {
   const positioning = context.positioningBrief
     ? context.positioningBrief
@@ -91,6 +96,7 @@ export function buildEnrichPrompt(
   const knowledge = context.knowledgeBrief
     ? `\n【可依托的知识库资料】\n${context.knowledgeBrief}`
     : "";
+  const antiFab = antiFabrication ? `\n${antiFabrication}` : "";
   return `你是这位创作者的「选题策划 agent」。下面是一条**待补全的选题**,请把它扩展成一张完整的**选题卡**。
 
 【创作者定位】
@@ -100,7 +106,8 @@ ${positioning}${learnings}${signals}${knowledge}
 标题:${subject.title}
 切入角度:${subject.angle || "（未给出,请你补一个最锋利的角度)"}
 
-【任务】像一个专业自媒体主编那样,把这条选题想透——观众是谁、痛在哪、核心冲突、怎么开头钩住、内容怎么排、用什么形式、有没有素材、风险在哪、要不要立项。指标只给你有把握的,拿不准就给 null(别编)。
+【任务】像一个专业自媒体主编那样,把这条选题想透——观众是谁、痛在哪、核心冲突、怎么开头钩住、内容怎么排、用什么形式、有没有素材、风险在哪、要不要立项。指标只给你有把握的,拿不准就给 null(别编)。${antiFab}
+特别地:materialBasis(素材依据)只能写**真实存在**的资料/经历,绝不凭空声称「能依托某资料」;没有可依托素材就如实写「暂无现成素材,需搜集」。
 
 【输出】只输出一个 JSON 对象(不要多余文字、不要代码块包裹),形如:
 {"oneLiner":"一句话选题(把这条选题浓缩成一句)",

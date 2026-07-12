@@ -7,12 +7,22 @@ import type { RequestContext } from "@creatoros/contract";
 // 这里把 runStructuredNode 打桩成返回固定 object,验证:capability 被正确解析、候选被记录、
 // 归一逻辑(论点树 nodes)仍按约定产出。
 const runStructuredNode = vi.fn(async () => ({ object: {} }));
-vi.mock("@creatoros/ai-worker", () => ({
-  modelFor: vi.fn(() => ({}) as never),
-  runStructuredNode,
-  // T-040b:runner 改运行时 getTemplate(id) 取被覆盖后的 REGISTRY 对象;mock 回传带该 id 的对象。
-  getTemplate: (id: string) => ({ id }),
-}));
+// T-025 mock:桩住 model/结构化节点/getTemplate;[T-269] buildGroundingHaystack /
+// annotateUngroundedClaims 用**真实**实现(纯叶子,importActual 取)——让「可溯后处理」在 runner
+// 里真跑,单测能断言未溯源标注真被追加。
+vi.mock("@creatoros/ai-worker", async () => {
+  const actual = await vi.importActual<typeof import("@creatoros/ai-worker")>(
+    "@creatoros/ai-worker",
+  );
+  return {
+    modelFor: vi.fn(() => ({}) as never),
+    runStructuredNode,
+    // T-040b:runner 改运行时 getTemplate(id) 取被覆盖后的 REGISTRY 对象;mock 回传带该 id 的对象。
+    getTemplate: (id: string) => ({ id }),
+    buildGroundingHaystack: actual.buildGroundingHaystack,
+    annotateUngroundedClaims: actual.annotateUngroundedClaims,
+  };
+});
 
 import { runPlanningThesis } from "./planning-runner";
 
@@ -85,6 +95,74 @@ describe("runPlanningThesis (runStructuredNode + 外置模板)", () => {
     const nodes = (input.resultData.contentData as { nodes: unknown[] }).nodes;
     expect(Array.isArray(nodes)).toBe(true);
     expect(nodes.length).toBe(2);
+  });
+
+  // [T-269/T-270] 接地根:论点树生成链此前只注 positioning+learnings+topic(无 brief、无素材)。
+  it("装配 brief + projectMaterials reader → thesisFacets 注入 projectBriefHard + 用户素材", async () => {
+    const tree = {
+      core: { title: "核心", summary: "展开" },
+      branches: [{ column: "support", title: "s", summary: "x" }],
+    };
+    const { deps } = makeDeps(tree);
+    // 补 brief reader(扩投影全字段)+ projectMaterials reader(高优先用户素材)。
+    (deps as Record<string, unknown>).brief = {
+      getBriefDetail: async () => ({
+        coreMessage: "纪律是最后护城河",
+        contentGoal: "避免做成工具分享",
+      }),
+    };
+    (deps as Record<string, unknown>).projectMaterials = {
+      listProjectMaterials: async () => [
+        {
+          name: "设计文档",
+          priority: "high" as const,
+          materialSummary: { keyPoints: ["18 阶段设计流程"], facts: [] },
+        },
+      ],
+    };
+    await runPlanningThesis(
+      ctx,
+      { id: "t1", projectId: "p1", inputData: { artifactId: "a1" } },
+      deps,
+    );
+    // runStructuredNode 是 module-level 共享 mock,calls 跨 test 累积 → 取**最后一次**调用。
+    // vi.fn 声明无入参类型(calls 元素被推成空元组),故显式 cast 取第 0 个入参的 facets。
+    const lastCall = runStructuredNode.mock.calls.at(-1) as unknown as [
+      { facets: Record<string, string | undefined> },
+    ];
+    const facets = lastCall[0].facets;
+    // 立项硬锚(钦定核心信息 + 避免X 负向约束)进 facets。
+    expect(facets.projectBriefHard).toContain("纪律是最后护城河");
+    expect(facets.projectBriefHard).toContain("避免做成工具分享");
+    // 用户素材(论点/证据的可溯弹药)进 facets。
+    expect(facets.userMaterialHard).toContain("18 阶段设计流程");
+  });
+
+  it("[T-269] 可溯后处理:证据分支含不可溯数字 → summary 追加未溯源标注(原文保留)", async () => {
+    // 模型吐了一个语料里没有的具体计数(「22 个 AI」),校验后应被标注。
+    const tree = {
+      core: { title: "反共识主张", summary: "纪律比工具重要" },
+      branches: [
+        {
+          column: "evidence",
+          title: "证据",
+          summary: "脚手架里有 22 个 AI 智能体互相盯着写代码",
+        },
+      ],
+    };
+    const { deps, recordCandidate } = makeDeps(tree);
+    await runPlanningThesis(
+      ctx,
+      { id: "t1", projectId: "p1", inputData: { artifactId: "a1" } },
+      deps,
+    );
+    const input = recordCandidate.mock.calls[0]![2];
+    const nodes = (input.resultData.contentData as {
+      nodes: Array<{ column: string; summary: string }>;
+    }).nodes;
+    const evidence = nodes.find((n) => n.column === "evidence")!;
+    expect(evidence.summary).toContain("22 个 AI 智能体"); // 原文不删
+    expect(evidence.summary).toContain("未溯源"); // 追加标注
   });
 
   it("cancels the task (no candidate) when the object normalizes to no nodes", async () => {

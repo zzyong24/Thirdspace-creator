@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { PromptTemplate } from "../template";
+import { ANTI_FABRICATION_CLAUSE } from "../grounding-facets";
 
 /**
  * 选题会 skill 模板(topic.generate)。从 topic-node 的内联 prompt 提取而来 —— 证明"提示词模板化解耦"。
@@ -46,6 +47,7 @@ export const TOPIC_GENERATE_TEMPLATE: PromptTemplate = {
 
 【任务】产 6-8 条高潜力选题。每条按 钩子强度/定位契合/变现潜力 衡量。
 若上方有【依据质量画像】:各依据**不平权**,按画像动态分配权重 —— 样本少/噪声高/覆盖窄的依据降权(只取其强信号条目,绝不把孤例放大成「受众普遍需求」);完整度高/证据密度高的依据升权当骨架。每条选题的 reason 里用一句话注明主要依据是什么、为何这样定权。
+${ANTI_FABRICATION_CLAUSE}
 【输出】只输出一个 JSON 对象 {"topics": [...]},topics 是选题数组,每条:{"title","angle"(切入一句),"contentRole"(traffic|trust|conversion),"source"(trend|benchmark|demand),"predictedScore"(0-100 数字),"reason"(一句中文),"sourceComments"(字符串数组)}。出题依据是评论(basis=comments)时,每条选题必须在 sourceComments 里逐字贴出它依据的 1-3 条原始评论——原文照抄,不许改写、不许概括;非评论依据时 sourceComments 给空数组 []。不要多余文字、不要代码块包裹。`,
   requiredFacets: ["positioning", "basisHint"],
 };

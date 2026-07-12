@@ -29,6 +29,12 @@ export interface RunScriptNodeInput {
   learningsBrief?: string;
   // [T-062b gate-F3] 知识库参考(选填,creative-context 装配)。
   knowledgeBrief?: string;
+  /**
+   * [T-270] 立项 Brief 硬锚段(选填,项目态):creative-context.renderProjectBriefHard 已装配含
+   * 「【本条内容立项硬约束·必须遵守】」段头(核心信息/内容目标含避免X/内容形式/目标观众)。有则注入
+   * 定位之后、任务之前,让脚本主张锚定钦定核心信息、不漂移。账号态/无 brief → 空,整段省略。
+   */
+  projectBriefHardBrief?: string;
   /** 本期选题标题/切入(选填)。 */
   topicTitle?: string;
   topicAngle?: string;
@@ -107,6 +113,11 @@ export async function runScriptNode(
       positioning:
         input.positioningBrief ||
         "（创作者尚未设置定位——按通用爆款逻辑写脚本）",
+      // [T-270] 立项 Brief 硬锚(项目态)—— creative-context 已装配含「必须遵守」段头,原样注入;
+      // 空(账号态/无 brief)则整段省略。放在 positioning 之后,让模型先读到本条立项的钦定前提。
+      projectBriefHard: input.projectBriefHardBrief
+        ? `\n${input.projectBriefHardBrief}`
+        : "",
       learnings: input.learningsBrief
         ? `\n【过往复盘爆款要素】\n${input.learningsBrief}`
         : "",

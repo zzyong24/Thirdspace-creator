@@ -52,22 +52,31 @@ export interface ChatToolDeps {
     // 随 tool-result 流回,让编导如实转述、引导用户去选题页『信号源』登记,而非猜/编。
     | { items: Array<TopicGenerateItemShape>; trendNote?: string | null }
   >;
-  /** topic.enrich 核心 —— 把一条选题补全成选题卡候选(复用 enrich prompt + parseCard)。 */
+  /**
+   * topic.enrich 核心 —— 把一条选题补全成选题卡候选(复用 enrich prompt + parseCard)。
+   * [T-266] 返回体带 `candidateId`:补全**当时**锚定的已有候选 id
+   * (chatContext.selection.kind==="candidate" 时有值;账号态/未选中某条候选 → null)。
+   * 随 tool-result 一并持久化 —— 刷新会话后前端仍能据它定位 patch 目标(而非依赖易失的
+   * 当前 selection),null 时前端采纳走 createCandidate 新建(不再死胡同禁用)。
+   */
   enrichTopic: (input: { title: string; angle: string }) => Promise<{
-    oneLiner: string;
-    targetAudience: string;
-    audiencePain: string;
-    coreConflict: string;
-    hook: string;
-    contentStructure: string[];
-    format: string;
-    materialBasis: string;
-    riskNote: string;
-    proposal: string;
-    audiencePainScore: number | null;
-    materialScore: number | null;
-    productionDifficulty: "low" | "mid" | "high" | null;
-  } | null>;
+    card: {
+      oneLiner: string;
+      targetAudience: string;
+      audiencePain: string;
+      coreConflict: string;
+      hook: string;
+      contentStructure: string[];
+      format: string;
+      materialBasis: string;
+      riskNote: string;
+      proposal: string;
+      audiencePainScore: number | null;
+      materialScore: number | null;
+      productionDifficulty: "low" | "mid" | "high" | null;
+    } | null;
+    candidateId: string | null;
+  }>;
   /**
    * [T-055c] script.hooks 核心 —— 为当前项目产一组开场 hook 候选(3~5 条,非实体)。
    * 产物经 ChatHookCard 逐条「写入稿面」(client 走 artifacts 版本门物化,铁律②不破)。
@@ -673,7 +682,12 @@ export interface TopicGenerateToolResult {
 
 export interface TopicEnrichToolResult {
   kind: "topic.card";
-  card: Awaited<ReturnType<ChatToolDeps["enrichTopic"]>>;
+  card: Awaited<ReturnType<ChatToolDeps["enrichTopic"]>>["card"];
+  /**
+   * [T-266] 补全当时锚定的已有候选 id(null=账号态/未选中某条候选)。持久化随卡走 ——
+   * 前端优先据它 patchCandidate(刷新后仍准),null 则采纳走 createCandidate 新建。
+   */
+  candidateId: string | null;
 }
 
 // calibration.diagnose 工具结果 —— 维度评分诊断候选(渲成维度评分卡)。
@@ -1934,8 +1948,13 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         "把一条已有选题补全成完整选题卡(观众/痛点/钩子/结构/风险/立项建议)。结果是候选卡,需人采纳后才落到该选题——不直接写库。",
       inputSchema: TOPIC_ENRICH_PARAMS,
       execute: async ({ title, angle }): Promise<TopicEnrichToolResult> => {
-        const card = await deps.enrichTopic({ title, angle: angle ?? "" });
-        return { kind: "topic.card", card };
+        // [T-266] enrichTopic 回 { card, candidateId } —— candidateId 是补全当时锚定的
+        // 已有候选(selection.kind==="candidate"),随结果持久化,前端据它 patch/新建二选一。
+        const { card, candidateId } = await deps.enrichTopic({
+          title,
+          angle: angle ?? "",
+        });
+        return { kind: "topic.card", card, candidateId };
       },
     }, deps.humanizeError),
     "script.hooks": defineChatTool("script.hooks", {

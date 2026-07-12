@@ -112,6 +112,9 @@ export async function runScriptDraft(
       //   reader(persistence-client.ts,与 topic.generate 同一 reader)→ assembleCreativeContext
       //   产出 context.knowledgeBrief(库空/读失败降级空)→ 此处真喂进写脚本节点。
       knowledgeBrief: context.knowledgeBrief || undefined,
+      // [T-270] 立项 Brief 硬锚(项目态):核心信息=钦定主张 / 内容目标含避免X / 内容形式 / 目标观众。
+      // creative-context 已按 projectId 决定是否装配(账号态为空,整段省略)。
+      projectBriefHardBrief: context.projectBriefHard || undefined,
       topicTitle: context.topic.title,
       topicAngle: context.topic.angle,
       orientation: context.orientationHint || undefined,

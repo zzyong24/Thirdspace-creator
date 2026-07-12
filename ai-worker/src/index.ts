@@ -129,6 +129,20 @@ export {
   type PromptTemplate,
   type BoundPrompt,
 } from "./prompt/template";
+// [T-269/T-270] 共享接地 facet 包(创作生成链接地根)—— anti-fabrication 可溯硬约束段(模板 +
+// 自由文本子调用共用单一真值)+ 可溯后处理纯函数(生成后校验具体 claim 是否命中注入素材,未命中标
+// 「未溯源」)。立项 Brief 硬锚段的渲染在 backend creative-context(读 CreativeContext,不拉 AI SDK)。
+export {
+  ANTI_FABRICATION_CLAUSE,
+  antiFabricationBlock,
+  SPECIFIC_CLAIM_PATTERNS,
+  UNGROUNDED_MARK,
+  buildGroundingHaystack,
+  extractSpecificClaims,
+  isClaimGrounded,
+  findUngroundedClaims,
+  annotateUngroundedClaims,
+} from "./prompt/grounding-facets";
 export {
   registerTemplate,
   registerAllTemplates,

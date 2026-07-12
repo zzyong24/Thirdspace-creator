@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { PromptTemplate } from "../template";
+import { ANTI_FABRICATION_CLAUSE } from "../grounding-facets";
 
 /**
  * 选题补全 skill 模板(topic.enrich)—— 从 topic-enrich-runner 的内联 buildEnrichPrompt 提取而来。
@@ -49,6 +50,8 @@ export const TOPIC_ENRICH_TEMPLATE: PromptTemplate = {
 切入角度:{{angle}}
 
 【任务】像一个专业自媒体主编那样,把这条选题想透——观众是谁、痛在哪、核心冲突、怎么开头钩住、内容怎么排、用什么形式、有没有素材、风险在哪、要不要立项。指标只给你有把握的,拿不准就给 null(别编)。
+${ANTI_FABRICATION_CLAUSE}
+特别地:materialBasis(素材依据)只能写**真实存在**的资料/经历,绝不凭空声称「能依托某资料」;没有可依托素材就如实写「暂无现成素材,需搜集」。
 
 【输出】只输出一个 JSON 对象(不要多余文字、不要代码块包裹),形如:
 {"oneLiner":"一句话选题(把这条选题浓缩成一句)",

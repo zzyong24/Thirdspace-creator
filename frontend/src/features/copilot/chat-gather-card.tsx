@@ -6,6 +6,9 @@
  * material.gather 工具产的四类素材候选(钩子/案例/数据点/金句,带来源)渲成列表卡,
  * 逐条「存入弹药」= knowledge.create(sourceUrl 带来源链)+ materialLinks 挂当前项目
  * —— 与稿面「记一条」同链,人采纳落库(铁律②)。无项目上下文 → 只读 + 显式提示。
+ *
+ * [T-264] 逐条太繁琐 → 加「批量入库」门(复用知识链 knowledge-atom-gate 范式):每条可勾选,
+ * 底部「存入选中 N 条」一次性存所有选中项,只 **一次 router.refresh**(而非逐条 N 次)。
  */
 
 import * as React from "react";
@@ -46,6 +49,49 @@ export function ChatGatherCard({
   const [states, setStates] = React.useState<
     Record<number, "saving" | "saved" | "error">
   >({});
+  // [T-264] 批量勾选:默认全选(未显式取消视为选中);批量入库运行态 + 全失败提示。
+  const [unselected, setUnselected] = React.useState<Record<number, boolean>>(
+    {},
+  );
+  const [batchBusy, setBatchBusy] = React.useState(false);
+  const [batchError, setBatchError] = React.useState(false);
+  const isSelected = React.useCallback(
+    (i: number) => !unselected[i],
+    [unselected],
+  );
+
+  // 单条落库(两步:knowledge.create + materialLink 挂项目)—— 供逐条「存入弹药」与批量共用,
+  // 不含 state/refresh 副作用(由调用方按逐条/批量收口)。
+  const persistOne = React.useCallback(
+    async (item: ChatGatherItem) => {
+      if (!projectId) return;
+      // [T-084a] 来源链:优先 sourceUrl(检索真实 URL),回退 url(镜像位)。
+      const srcUrl = item.sourceUrl || item.url;
+      const created = (await client.createKnowledge({
+        params: undefined,
+        query: undefined,
+        body: {
+          title: item.title,
+          knowledgeType: "reference",
+          content: [item.whyRelevant, srcUrl && `来源:${srcUrl}`]
+            .filter(Boolean)
+            .join("\n"),
+        },
+      })) as unknown as { id: string };
+      await client.createMaterialLink({
+        params: undefined,
+        query: undefined,
+        body: {
+          projectId,
+          entityType: "knowledge",
+          entityId: created.id,
+          role: "reference",
+          stage: "script",
+        },
+      });
+    },
+    [projectId],
+  );
 
   const save = React.useCallback(
     async (index: number) => {
@@ -53,38 +99,46 @@ export function ChatGatherCard({
       if (!item || !projectId) return;
       setStates((prev) => ({ ...prev, [index]: "saving" }));
       try {
-        // [T-084a] 来源链:优先 sourceUrl(检索真实 URL),回退 url(镜像位)。
-        const srcUrl = item.sourceUrl || item.url;
-        const created = (await client.createKnowledge({
-          params: undefined,
-          query: undefined,
-          body: {
-            title: item.title,
-            knowledgeType: "reference",
-            content: [item.whyRelevant, srcUrl && `来源:${srcUrl}`]
-              .filter(Boolean)
-              .join("\n"),
-          },
-        })) as unknown as { id: string };
-        await client.createMaterialLink({
-          params: undefined,
-          query: undefined,
-          body: {
-            projectId,
-            entityType: "knowledge",
-            entityId: created.id,
-            role: "reference",
-            stage: "script",
-          },
-        });
+        await persistOne(item);
         setStates((prev) => ({ ...prev, [index]: "saved" }));
+        setUnselected((prev) => ({ ...prev, [index]: true })); // 落库后退出批量池
         router.refresh();
       } catch {
         setStates((prev) => ({ ...prev, [index]: "error" }));
       }
     },
-    [items, projectId, router],
+    [items, projectId, persistOne, router],
   );
+
+  // [T-264] 批量入库:存所有选中且未落库的条 —— 逐条 persist,只 **一次 refresh**(非 N 次)。
+  const batchIndices = items
+    .map((_, i) => i)
+    .filter((i) => isSelected(i) && states[i] !== "saved");
+  const batchSave = React.useCallback(async () => {
+    if (batchBusy || !projectId || batchIndices.length === 0) return;
+    setBatchBusy(true);
+    setBatchError(false);
+    let anyOk = false;
+    try {
+      for (const i of batchIndices) {
+        const item = items[i];
+        if (!item) continue;
+        setStates((prev) => ({ ...prev, [i]: "saving" }));
+        try {
+          await persistOne(item);
+          setStates((prev) => ({ ...prev, [i]: "saved" }));
+          setUnselected((prev) => ({ ...prev, [i]: true }));
+          anyOk = true;
+        } catch {
+          setStates((prev) => ({ ...prev, [i]: "error" })); // 单条失败不阻断整批
+        }
+      }
+    } finally {
+      setBatchBusy(false);
+      if (anyOk) router.refresh(); // 一次刷新
+      setBatchError(!anyOk && batchIndices.length > 0);
+    }
+  }, [batchBusy, projectId, batchIndices, items, persistOne, router]);
 
   if (items.length === 0) {
     return (
@@ -126,7 +180,7 @@ export function ChatGatherCard({
         </div>
       ) : null}
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        {grounding === "web" ? "联网搜到素材" : "搜到素材"} · {items.length} 条 · 逐条存入弹药
+        {grounding === "web" ? "联网搜到素材" : "搜到素材"} · {items.length} 条 · 逐条/批量存入弹药
       </span>
       <ol className="flex flex-col gap-1.5">
         {items.map((it, i) => {
@@ -138,6 +192,23 @@ export function ChatGatherCard({
               className="flex flex-col gap-1 rounded-md border border-border/70 bg-surface-subtle/50 px-2.5 py-1.5"
             >
               <div className="flex items-start gap-2">
+                {/* [T-264] 批量勾选(有项目、未落库时显);落库后隐藏。 */}
+                {projectId && s !== "saved" ? (
+                  <input
+                    type="checkbox"
+                    data-slot="chat-gather-select"
+                    aria-label={`选中第 ${i + 1} 条素材`}
+                    checked={isSelected(i)}
+                    disabled={s === "saving" || batchBusy}
+                    onChange={(e) =>
+                      setUnselected((prev) => ({
+                        ...prev,
+                        [i]: !e.target.checked,
+                      }))
+                    }
+                    className="mt-0.5 size-3.5 shrink-0 accent-brand"
+                  />
+                ) : null}
                 <span className="shrink-0 rounded-full bg-surface-subtle px-1.5 py-0.5 text-[10px] text-muted-foreground">
                   {it.category}
                 </span>
@@ -195,6 +266,28 @@ export function ChatGatherCard({
           );
         })}
       </ol>
+      {/* [T-264] 批量入库门(有项目、≥2 条时显)——「存入选中 N 条」一次 persist + 一次 refresh。 */}
+      {projectId && items.length > 1 ? (
+        <div
+          data-slot="chat-gather-batch"
+          className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-1.5"
+        >
+          <button
+            type="button"
+            data-slot="chat-gather-batch-save"
+            disabled={batchBusy || batchIndices.length === 0}
+            onClick={() => void batchSave()}
+            className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
+          >
+            {batchBusy ? "批量存入中…" : `存入选中 ${batchIndices.length} 条`}
+          </button>
+          {batchError ? (
+            <span className="text-[10px] text-destructive">
+              批量存入失败，重试
+            </span>
+          ) : null}
+        </div>
+      ) : null}
       {!projectId ? (
         <p className="text-[11px] text-text-subtle">
           未关联项目 —— 输入 @ 引用一个项目后可把素材存进它的弹药。
