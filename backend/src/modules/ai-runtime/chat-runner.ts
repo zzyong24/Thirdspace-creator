@@ -38,6 +38,8 @@ import {
   type CandidatesListRaw,
   type PredictionsRaw,
 } from "./chat-tools";
+// [T-256a] 工具探测结果类型(端口契约共用)。
+import type { DetectToolsResult } from "./local-env-probe";
 import { buildSkillsBrief } from "@creatoros/contract";
 // [T-239d] 对话历史窗口化 —— 喂模型前投影(tool-result 清体 + token 估算截窗),存储原样。
 import {
@@ -192,6 +194,21 @@ export interface AssembleChatDeps extends ContextDeps {
         total: number;
       }
   >;
+  /**
+   * [T-256a] local.tools 端口 —— 探测系统已装工具(ffmpeg/node/python3/git…)。composition root
+   * (persistence-client)绑:白名单过滤(resolveToolsToProbe)→ 固定 arg 数组 spawn which/--version
+   * → parseToolVersion。只读探测、不执行任意命令。可选:未装配 → 工具报「环境探测能力未接入」。
+   */
+  detectToolsPort?: (
+    ctx: RequestContext,
+    input: { tools?: string[] },
+  ) => Promise<DetectToolsResult>;
+  /**
+   * [T-256a] local.workspace 端口 —— 列该用户「总是允许该目录」授权过的本地目录根(复用 T-253
+   * 授权表 local-read-grants,不新建授权机制)。composition root 绑 listAlwaysDirs(ctx.userId)。
+   * 可选:未装配 → 工具报「工作区感知能力未接入」(诚实降级)。
+   */
+  listAuthorizedDirsPort?: (ctx: RequestContext) => Promise<{ dirs: string[] }>;
   /**
    * [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(persistence-client
    * dispatch → void runAssetGenerate 范式),立即返回 taskId(不阻塞对话回合)。由 composition
@@ -598,6 +615,9 @@ export async function buildChatAssembly(
     "11. **你有真实热点能力,绝不自称「没有实时热点/热搜拉取能力」——那是错的**。你的热点能力有三路:①已登记网页信源:用户在选题页『信号源』登记的热榜站点(如 36氪热榜),trend 出题时系统自动带登录态读页面、抽真实信号(标题/热度/链接);②黑马雷达:按定位关键词扫抖音近 1 天高赞低粉爆款,产「🔥跟拍」窗口候选(随对标采集自动跑);③web 联网搜索(已配时)。用户要蹭热点/追热榜出题时:**优先调 topic.generate 并传 basis=trend**(它自动并行拉①+③当出题依据,候选自带信源证据);若结果注明未拉到信源信号或用户还没登记信源,**引导 TA 去选题页『信号源』登记热榜站点**(需登录才能看的站点,先去『设置 → 网站登录保管库』登录一次),而不是让用户手动粘热点、更不是自称没能力。",
     // [T-253] 本机文件读取能力认知 + 授权协议 + 安全边界诚实(denylist 拒读时如实说明,绝不绕)。
     "12. **你能读用户本机的文件**(local.read,任意绝对路径,支持 ~ 展开):用户说「读一下我桌面那份稿子 / 看看 ~/xx/某文件」时直接调它,绝不自称「我碰不到你的本地文件」。授权协议:首次读某路径会弹**确认卡**(needApproval)——告诉用户在卡上选「允许一次/总是允许该目录/拒绝」,TA 点允许后你**再调一次 local.read 传同一路径**;被拒绝就不再尝试。安全边界(如实转述,绝不绕):敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论授权与否都拒读——被拒时向用户说明这是确定性安全规则并给出原因,**绝不换路径/改名建议来绕过**;超 1MB 或二进制文件拒读,建议用户直接上传到素材库。",
+    // [T-256a] 环境感知能力认知(能力在,须诚实用):编导能探测本机已装工具 + 能列已授权工作区目录。
+    // 铁律:探到什么报什么,缺工具诚实引导安装,绝不假装工具存在/编造版本号/臆造未授权目录。
+    "13. **你能感知用户的电脑环境,但只能读、不能装、不能乱跑命令**。两件事:①**探测已装工具**(local.tools):要判断某能力能不能落地时先探——如用户要「抽音频/转码/渲染视频」前先看 ffmpeg 在不在,要跑脚本前看 node/python3 在不在。装了就说装了(可报版本),**没装就直说没装并给出安装命令**(如「ffmpeg 没装,装一下:brew install ffmpeg」),**绝不假装工具存在、绝不编造版本号**;你只能探内置白名单工具(ffmpeg/ffprobe/node/python3/git),传别的名字会被忽略并在结果里列出,照实说即可。②**列工作区目录**(local.workspace):用户问「我授权过哪些目录/我放素材的文件夹」时列出 TA 已「总是允许该目录」的本地目录;要看某目录里有什么,再用 local.read 读那个目录(会返回文件清单)。清单为空就说还没授权过、引导 TA 去授权,**绝不臆造用户没授权过的目录**。你没有安装工具、执行任意命令、写本地文件的能力——只有「读环境」这一层,别对用户承诺装工具或跑命令。",
     "",
     // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
     "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
@@ -938,6 +958,26 @@ export async function buildChatAssembly(
         );
       }
       return deps.readLocalFilePort(ctx, { path, signal });
+    },
+    // [T-256a] local.tools:端口未装配 → 诚实抛错(工具 execute 接住转 error);装配了则端口内走
+    // 白名单过滤 + 固定 arg 数组 spawn which/--version(只读探测,不执行任意命令)。
+    detectTools: async ({ tools }) => {
+      if (!deps.detectToolsPort) {
+        throw new Error(
+          "环境探测能力当前未接入(服务端未装配工具探测端口) —— 暂时无法探测本机已装工具。",
+        );
+      }
+      return deps.detectToolsPort(ctx, { tools });
+    },
+    // [T-256a] local.workspace:端口未装配 → 诚实抛错;装配了则列该用户「总是允许该目录」授权过的
+    // 本地目录根(复用 T-253 授权表,不新建授权机制)。
+    listAuthorizedDirs: async () => {
+      if (!deps.listAuthorizedDirsPort) {
+        throw new Error(
+          "工作区感知能力当前未接入(服务端未装配授权目录端口) —— 暂时无法列出已授权目录。",
+        );
+      }
+      return deps.listAuthorizedDirsPort(ctx);
     },
     // [T-084c] material.generate:端口未装配 → 诚实抛错;装配了则 dispatch 既有 asset.generate
     // task(不直接生成,视频异步分钟级不阻塞对话回合),立即返回 taskId 供前端卡轮询。

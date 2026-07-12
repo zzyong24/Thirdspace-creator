@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { scheduledJobSourceKind } from "@creatoros/contract";
 import {
   classifyIntent,
   COLLECTION_TEMPLATES,
@@ -79,23 +80,37 @@ describe("classifyIntent — freeform prompt → sourceKind", () => {
 });
 
 describe("COLLECTION_TEMPLATES — 模板定义", () => {
-  it("三张模板均真做(明细模板 D8a 已落地,翻真)", () => {
-    const metrics = COLLECTION_TEMPLATES.find(
-      (t) => t.id === "daily-self-metrics",
+  // 分类器覆盖域:freeform prompt 只确定性映射到这 3 个源(明细/评论/作品)。
+  // 登记源驱动的 benchmark/topic.daily/favorites 是显式(模板卡/下拉)源,分类器不覆盖(设计如此)。
+  const CLASSIFIER_KINDS = ["self.metrics", "comments", "self.detail"] as const;
+
+  it("[T-258] 六张模板,一一对齐后端 DAILY_COLLECTION_JOB_DEFAULTS", () => {
+    expect(COLLECTION_TEMPLATES).toHaveLength(6);
+
+    const byId = Object.fromEntries(
+      COLLECTION_TEMPLATES.map((t) => [t.id, t]),
     );
-    const comments = COLLECTION_TEMPLATES.find((t) => t.id === "daily-comments");
-    const detail = COLLECTION_TEMPLATES.find((t) => t.id === "daily-detail");
+    // 前三张:有 per-job 手动 target 的源(明细模板 T-030-D8a 已翻真)。
+    expect(byId["daily-self-metrics"]?.sourceKind).toBe("self.metrics");
+    expect(byId["daily-comments"]?.sourceKind).toBe("comments");
+    expect(byId["daily-detail"]?.sourceKind).toBe("self.detail");
+    // 后三张([T-258] 补齐):登记源驱动的采集器,手动补建入口。
+    expect(byId["daily-benchmark"]?.sourceKind).toBe("benchmark");
+    expect(byId["daily-topic"]?.sourceKind).toBe("topic.daily");
+    expect(byId["daily-favorites"]?.sourceKind).toBe("favorites");
 
-    expect(metrics?.sourceKind).toBe("self.metrics");
-    expect(metrics?.prompt.length).toBeGreaterThan(0);
+    for (const t of COLLECTION_TEMPLATES) {
+      expect(t.prompt.length).toBeGreaterThan(0);
+      expect(t.description.length).toBeGreaterThan(0);
+    }
+  });
 
-    expect(comments?.sourceKind).toBe("comments");
-    expect(comments?.prompt.length).toBeGreaterThan(0);
-
-    // 明细模板(T-030-D8a)已接通复盘核心指标 → 真做,sourceKind=self.detail
-    // (T-248:disabled 灰置字段已随死分支整体删除,模板不再有灰置概念)
-    expect(detail?.sourceKind).toBe("self.detail");
-    expect(detail?.prompt.length).toBeGreaterThan(0);
+  it("[T-258] 每张模板的 sourceKind 都是 contract 合法枚举值", () => {
+    // 单一真值 scheduledJobSourceKind(6 值)。任一模板卡若带非法源 → 创建/调度校验会拒。
+    const legal = new Set<string>(scheduledJobSourceKind.options);
+    for (const t of COLLECTION_TEMPLATES) {
+      expect(legal.has(t.sourceKind)).toBe(true);
+    }
   });
 
   it("每个模板都带默认频率 cadence(每天)", () => {
@@ -104,9 +119,36 @@ describe("COLLECTION_TEMPLATES — 模板定义", () => {
     }
   });
 
-  it("模板的 prompt 经分类器映射回自身 sourceKind(自洽)", () => {
-    // 全部模板(T-248 后无灰置):prompt 用确定性分类器分出的意图应与声明的 sourceKind 一致。
+  it("[T-258] 新增三张卡的 cadence 分钟与后端错峰 cron 对齐(benchmark 9:30 / topic.daily 9:40 / favorites 9:50)", () => {
+    // 新增 3 卡按 backend DAILY_COLLECTION_JOB_DEFAULTS 的 cron 分钟错峰对齐(30/40/50)。
+    // 原有 3 卡沿用 9:00 缺省(模板 cadence 只是「手动补建」时的友好预填,用户可改;与自动建 job
+    // 的实际时刻各自独立,不强行改动既有 UX)。
+    const newCardMinute: Record<string, number> = {
+      "daily-benchmark": 30,
+      "daily-topic": 40,
+      "daily-favorites": 50,
+    };
+    for (const [id, minute] of Object.entries(newCardMinute)) {
+      const t = COLLECTION_TEMPLATES.find((x) => x.id === id);
+      expect(t?.cadence.mode).toBe("period");
+      if (t?.cadence.mode === "period") {
+        expect(t.cadence.hour).toBe(9);
+        expect(t.cadence.minute).toBe(minute);
+      }
+    }
+    // 全部 6 卡都在 9 点档(period/hour=9)。
     for (const t of COLLECTION_TEMPLATES) {
+      if (t.cadence.mode === "period") expect(t.cadence.hour).toBe(9);
+    }
+  });
+
+  it("分类器覆盖域内的模板 prompt 经分类器映射回自身 sourceKind(自洽)", () => {
+    // 仅对 3 个分类器覆盖的源做自洽校验;登记源驱动源(benchmark/topic.daily/favorites)是显式源,
+    // 分类器不覆盖(prompt 里含「作品」等词会被分到 self.metrics,属预期,不参与自洽)。
+    for (const t of COLLECTION_TEMPLATES) {
+      if (!CLASSIFIER_KINDS.includes(t.sourceKind as (typeof CLASSIFIER_KINDS)[number])) {
+        continue;
+      }
       expect(classifyIntent(t.prompt).sourceKind).toBe(t.sourceKind);
     }
   });

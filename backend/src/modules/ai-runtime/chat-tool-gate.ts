@@ -77,6 +77,16 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
     kind: "local.read",
     extras: { needApproval: null, file: null, listing: null },
   },
+  // [T-256a] local.tools:execute 内已有定制 catch(诚实降级),门兜极端漏网(空探测结果)。
+  "local.tools": {
+    kind: "local.tools",
+    extras: { tools: [], rejected: [] },
+  },
+  // [T-256a] local.workspace:同上,门兜极端漏网(空目录清单)。
+  "local.workspace": {
+    kind: "local.workspace",
+    extras: { dirs: [] },
+  },
   "material.generate": {
     kind: "material.generate",
     extras: { taskId: null, kindOf: "image", status: "queued" },

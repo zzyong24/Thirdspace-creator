@@ -130,14 +130,16 @@ describe("scheduling contract", () => {
     ).toThrow();
   });
 
-  it("enumerates the two new enums exactly", () => {
+  it("enumerates the sourceKind + run-status enums exactly", () => {
     // [T-235a] topic.daily = 每天自动出题(多依据合并 → 护栏排序 → 候选落 pool)。
+    // [T-258] favorites = 指定收藏夹采集(collection-bootstrap 建 job + collector 已接;补枚举修漂移)。
     expect(scheduledJobSourceKind.options).toEqual([
       "self.metrics",
       "comments",
       "self.detail",
       "benchmark",
       "topic.daily",
+      "favorites",
     ]);
     expect(jobRunStatus.options).toEqual([
       "running",

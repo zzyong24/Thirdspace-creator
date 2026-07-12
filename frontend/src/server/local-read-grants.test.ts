@@ -15,6 +15,7 @@ import {
   checkGrant,
   consumeOnce,
   grantsFilePath,
+  listAlwaysDirs,
   resetLocalReadGrantsForTest,
 } from "./local-read-grants";
 
@@ -78,5 +79,16 @@ describe("[T-253] local-read-grants — 运行时授权表", () => {
     fs.writeFileSync(tmpFile, "not-json{{{", "utf8");
     resetLocalReadGrantsForTest();
     expect(checkGrant(U, "/Users/u/notes/a.md")).toBeNull();
+  });
+
+  // [T-256a] local.workspace 端口复用本表:列「总是允许该目录」授权过的目录根。
+  it("listAlwaysDirs:列已授权目录根(排序稳定)、按 user 隔离、未授权 → 空", () => {
+    expect(listAlwaysDirs(U)).toEqual([]); // 还没授权过
+    grantAlwaysDir(U, "/Users/u/素材");
+    grantAlwaysDir(U, "/Users/u/Desktop");
+    grantOnce(U, "/Users/u/once.md"); // 一次授权不算工作区目录
+    expect(listAlwaysDirs(U)).toEqual(["/Users/u/Desktop", "/Users/u/素材"]);
+    // user 隔离:B 看不到 A 的授权目录。
+    expect(listAlwaysDirs("user-2")).toEqual([]);
   });
 });

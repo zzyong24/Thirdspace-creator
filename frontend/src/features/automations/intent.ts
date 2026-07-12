@@ -23,10 +23,15 @@
  * Determinism:纯函数,输入定则输出定;无 I/O、无 Date.now、无随机。
  */
 
+import { scheduledJobSourceKind } from "@creatoros/contract";
 import type { PeriodCadence } from "./cadence";
 
-// 与 contract `scheduledJobSourceKind` 枚举保持一致(唯一真值在 contract/src/primitives.ts)。
-export type SourceKind = "self.metrics" | "comments" | "self.detail";
+// [T-258] SourceKind **从 contract 枚举 derive**(单一真值在 contract/src/primitives.ts 的
+// scheduledJobSourceKind),避免这里再手抄漂移(历史上只列 3 个,漏了 benchmark/topic.daily/favorites)。
+// 结构化取 zod enum 的 `_output`(zod4 里 z.infer<T> 即 T["_output"];同 scheduling.schema.ts 范式,
+// 不在这个纯函数模块里直接 import z)。当前为 6 值:
+//   self.metrics | comments | self.detail | benchmark | topic.daily | favorites。
+export type SourceKind = (typeof scheduledJobSourceKind)["_output"];
 
 /** 分类结果:意图 + 置信度(low 表示走了默认兜底,UI 应提示用户确认下拉)。 */
 export interface IntentClassification {
@@ -111,6 +116,10 @@ export interface CollectionTemplate {
   readonly cadence: PeriodCadence;
 }
 
+// [T-258] 每天定时的错峰时刻常量。与后端 collection-bootstrap 的 DAILY_COLLECTION_JOB_DEFAULTS
+//   cron 一一对齐(单一真源在 backend/src/modules/ai-runtime/collection-bootstrap.ts):
+//   self.metrics 9:00 / self.detail 9:10 / comments 9:20 / benchmark 9:30 / topic.daily 9:40 /
+//   favorites 9:50。友好频率(period/daily/HH:mm)编译回同一 cron,用户仍可在弹窗改时间(T-248)。
 const CADENCE_DAILY_9: PeriodCadence = {
   mode: "period",
   unit: "daily",
@@ -118,10 +127,18 @@ const CADENCE_DAILY_9: PeriodCadence = {
   hour: 9,
   minute: 0,
 };
+const CADENCE_DAILY_930: PeriodCadence = { ...CADENCE_DAILY_9, minute: 30 };
+const CADENCE_DAILY_940: PeriodCadence = { ...CADENCE_DAILY_9, minute: 40 };
+const CADENCE_DAILY_950: PeriodCadence = { ...CADENCE_DAILY_9, minute: 50 };
 
 /**
- * 采集模板(SPEC §8.1)。三张全部可用 —— D8a 明细导出落地后原「灰置占位」机制
- * (disabled 字段 + 卡片灰置分支)已整体移除,模板卡一律可点。
+ * 采集模板(SPEC §8.1)。**六张**全部可用 —— 与后端 DAILY_COLLECTION_JOB_DEFAULTS(单一真源,
+ * 绑定 T-189a / 启动兜底 T-227 共用)一一对齐,让用户有「手动补建」这些定时采集 job 的入口。
+ * 前三张(self.metrics/comments/self.detail)是「有 per-job 手动 target」的源;后三张
+ * (benchmark/topic.daily/favorites,[T-258] 补齐)是**登记源驱动、无 per-job target**的采集器
+ * (benchmark 读登记的对标源、topic.daily 纯 AI 出题、favorites 读登记的收藏夹),点卡预填后
+ * 直接建 job(target={}),真正的信号靠各自「信号源」登记页配置。原「灰置占位」机制(disabled
+ * 字段 + 卡片灰置分支)在 D8a 落地后已整体移除,模板卡一律可点。
  */
 export const COLLECTION_TEMPLATES: readonly CollectionTemplate[] = [
   {
@@ -149,5 +166,38 @@ export const COLLECTION_TEMPLATES: readonly CollectionTemplate[] = [
     sourceKind: "self.detail",
     prompt: "每天拉取我作品的后台明细数据(完播、封面点击、留存)",
     cadence: CADENCE_DAILY_9,
+  },
+  {
+    // [T-258/T-212a] 对标他号爆款采集:读登记的对标源 → 抓公开作品 → detectViral 筛爆款落库,
+    //   供拆解转化进选题池。信号靠「信号源→对标源」登记,无 per-job target。错峰 9:30。
+    id: "daily-benchmark",
+    title: "每天抓对标号的爆款作品",
+    description:
+      "抓你登记的对标博主主页公开作品,筛出爆款拆解后喂选题池。需先在信号源登记对标账号。",
+    sourceKind: "benchmark",
+    prompt: "每天抓我登记的对标博主主页的公开爆款作品",
+    cadence: CADENCE_DAILY_930,
+  },
+  {
+    // [T-258/T-235a] 每天自动出题:多依据合并(定位+评论信号+知识库+热点)→ 护栏排序 → 候选落
+    //   pool(防灌库 ≤N/天)。纯 AI + 库内数据,无 per-job target;未配文本模型时诚实跳过。错峰 9:40。
+    id: "daily-topic",
+    title: "每天自动出题",
+    description:
+      "每天结合你的定位、评论信号、知识库与当下热点,自动出一批选题进选题池。需配置文本模型。",
+    sourceKind: "topic.daily",
+    prompt: "每天结合我的定位、评论信号、知识库和当下热点,自动出一批选题进选题池",
+    cadence: CADENCE_DAILY_940,
+  },
+  {
+    // [T-258/T-235c] 指定收藏夹采集:读登记的抖音收藏夹 → 拉夹内视频落台账 → 限量进候选池
+    //   (source=favorites)作为跟拍选题。信号靠「信号源→收藏夹」登记,无 per-job target。错峰 9:50。
+    id: "daily-favorites",
+    title: "每天采我的指定收藏夹",
+    description:
+      "采集你登记的抖音指定收藏夹里的视频,作为跟拍选题候选。需先在信号源登记要采的收藏夹。",
+    sourceKind: "favorites",
+    prompt: "每天采集我登记的抖音指定收藏夹里的视频,作为跟拍选题候选",
+    cadence: CADENCE_DAILY_950,
   },
 ];

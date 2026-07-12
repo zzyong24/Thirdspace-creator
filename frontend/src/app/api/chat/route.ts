@@ -239,6 +239,10 @@ export async function POST(req: Request): Promise<Response> {
         readWebUrlPort: runtime.readWebUrl,
         // [T-253] local.read 端口 —— 本机文件读取(运行时逐次授权 + 敏感 denylist 硬门)。
         readLocalFilePort: runtime.readLocalFile,
+        // [T-256a] local.tools 端口 —— 环境工具探测(白名单 which/--version,只读不执行任意命令)。
+        detectToolsPort: runtime.detectTools,
+        // [T-256a] local.workspace 端口 —— 列已授权本地目录(复用 T-253 授权表)。
+        listAuthorizedDirsPort: runtime.listAuthorizedDirs,
         // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(立即返回 taskId)。
         dispatchGenerateAssetPort: runtime.dispatchGenerateAsset,
         // [T-103b] review.script 端口 —— dispatch 既有 script.review 审核链路(L1 lint + L2 语义审)。

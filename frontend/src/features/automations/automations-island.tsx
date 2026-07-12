@@ -49,6 +49,9 @@ import {
   Gauge,
   Inbox,
   Sparkles,
+  Flame,
+  Lightbulb,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 
@@ -92,9 +95,14 @@ import {
   classifyIntent,
 } from "./intent";
 
-const SOURCE_META: Record<
-  SourceKind,
-  { label: string; icon: LucideIcon; targetLabel: string; targetKey: string; targetPlaceholder: string }
+// [T-258] 只覆盖「有 per-job 手动 target」的源(self.metrics/comments/self.detail)。SourceKind 现为
+//   6 值(含 benchmark/topic.daily/favorites),但后三张是登记源驱动、无 per-job target → 不进本表
+//   (故用 Partial)。其展示名走 EXTRA_SOURCE_LABELS、图标走 EXTRA_SOURCE_ICONS、新建弹窗不显 target 字段。
+const SOURCE_META: Partial<
+  Record<
+    SourceKind,
+    { label: string; icon: LucideIcon; targetLabel: string; targetKey: string; targetPlaceholder: string }
+  >
 > = {
   "self.metrics": {
     label: "自己作品",
@@ -120,11 +128,20 @@ const SOURCE_META: Record<
   },
 };
 
-// 系统自动建(collection-bootstrap 模板)、不在新建下拉里的 sourceKind 的展示名兜底
-// ([T-212a] benchmark / [T-235a] topic.daily 与 backend SOURCE_LABEL 对齐口径)。
+// 登记源驱动(collection-bootstrap 模板,无 per-job target)、不进 SOURCE_META 的 sourceKind 的
+// 展示名兜底([T-212a] benchmark / [T-235a] topic.daily / [T-258/T-235c] favorites,与 backend
+// SOURCE_LABEL 对齐口径)。这些源现有模板卡「手动补建入口」,故也进新建下拉(展示名同此)。
 const EXTRA_SOURCE_LABELS: Record<string, string> = {
   benchmark: "对标爆款",
   "topic.daily": "每日选题",
+  favorites: "收藏夹跟拍",
+};
+
+// [T-258] 登记源驱动源的模板卡图标(SOURCE_META 无 icon 时兜底,让 6 张卡视觉可辨)。
+const EXTRA_SOURCE_ICONS: Record<string, LucideIcon> = {
+  benchmark: Flame,
+  "topic.daily": Lightbulb,
+  favorites: Star,
 };
 
 function sourceLabel(kind: string): string {
@@ -900,10 +917,13 @@ export function CreateJobDialog({
   const [submitting, setSubmitting] = React.useState(false);
 
   const meta = SOURCE_META[sourceKind];
-  // 编辑模式:被编辑作业的源是否在新建下拉的已知集合(系统自动建的 benchmark / topic.daily
-  // 等不在集合 → target 字段隐藏 + 提交不改 target)。create 模式恒 true。
-  const editSourceKnown =
-    !isEdit || !!(job && SOURCE_META[job.sourceKind as SourceKind]);
+  // [T-258] target 字段可见性:仅「有 per-job 手动 target」的源(SOURCE_META 覆盖的 3 个)才显示。
+  //   create 模式按当前选中源的 meta 判 —— 登记源驱动的 benchmark/topic.daily/favorites(模板卡预填
+  //   或下拉手动选)meta 缺 → 隐藏 target(它们无 per-job target,信号靠各自登记页配);
+  //   edit 模式按被编辑作业的源是否在已知集合判(系统作业隐藏 target,提交不改 target)。
+  const showTargetField = isEdit
+    ? !!(job && SOURCE_META[job.sourceKind as SourceKind])
+    : Boolean(meta);
   const canSubmit = name.trim().length > 0 && !submitting && !cadenceUnresolved;
 
   // 打开弹窗时应用一次预填(模板卡 / 空白新建 / 编辑预填)。open 由 false→true 触发。
@@ -958,9 +978,10 @@ export function CreateJobDialog({
       const schedule = compileCadenceToCron(cadence);
       // target 按源装配:self.metrics → {externalSourceId?}, comments → {awemeId}。
       // 空值不塞 key(service default {}),让"抓主页全部"这类无参源保持干净。
-      // 编辑模式源类型不在已知集合(benchmark 等系统作业)→ target=undefined,本次不改。
+      // 无 per-job target 的源(登记源驱动的 benchmark/topic.daily/favorites,或 edit 模式系统作业)
+      // → target=undefined:create 时下游落 {},edit 时本次不改原 target。
       let target: Record<string, unknown> | undefined;
-      if (editSourceKnown) {
+      if (showTargetField && meta) {
         target = {};
         const trimmed = targetValue.trim();
         if (trimmed) target[meta.targetKey] = trimmed;
@@ -981,7 +1002,7 @@ export function CreateJobDialog({
     cadence,
     targetValue,
     meta,
-    editSourceKnown,
+    showTargetField,
     onCreate,
     name,
     prompt,
@@ -1078,6 +1099,17 @@ export function CreateJobDialog({
                 <SelectItem value="self.detail">
                   作品明细(完播/封面点击/留存)
                 </SelectItem>
+                {/* [T-258] 登记源驱动的采集源(手动补建入口,与模板卡一致):无 per-job target,
+                    信号靠各自「信号源」登记页配置。 */}
+                <SelectItem value="benchmark">
+                  对标爆款(需登记对标源)
+                </SelectItem>
+                <SelectItem value="topic.daily">
+                  每日自动选题(需配文本模型)
+                </SelectItem>
+                <SelectItem value="favorites">
+                  收藏夹跟拍(需登记收藏夹)
+                </SelectItem>
               </SelectContent>
             </Select>
             {intentHint ? (
@@ -1118,8 +1150,9 @@ export function CreateJobDialog({
             ) : null}
           </div>
 
-          {/* target(按源)。编辑模式源不在已知集合(系统作业)→ 隐藏,本次不改 target。 */}
-          {editSourceKnown ? (
+          {/* target(按源)。仅「有 per-job 手动 target」的源显示;登记源驱动源(benchmark/
+              topic.daily/favorites)与 edit 模式系统作业 → 隐藏,不改 target。 */}
+          {showTargetField && meta ? (
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-foreground">
                 {meta.targetLabel}
@@ -1446,7 +1479,10 @@ export function TemplateCards({
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {COLLECTION_TEMPLATES.map((tpl) => {
-          const Icon = SOURCE_META[tpl.sourceKind]?.icon ?? BarChart3;
+          const Icon =
+            SOURCE_META[tpl.sourceKind]?.icon ??
+            EXTRA_SOURCE_ICONS[tpl.sourceKind] ??
+            BarChart3;
           return (
             <button
               key={tpl.id}

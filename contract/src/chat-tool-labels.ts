@@ -52,6 +52,15 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "读本机文件",
     purpose: "经你确认后读本机文件/目录(敏感文件硬拒),内容直接进对话",
   },
+  // [T-256a] 环境感知扩展:工具探测 + 工作区目录感知。
+  "local.tools": {
+    name: "探测本机工具",
+    purpose: "查本机装没装 ffmpeg/node/python3/git 等工具,缺的诚实引导安装",
+  },
+  "local.workspace": {
+    name: "列授权目录",
+    purpose: "列你已「总是允许」的本地目录(工作区),再用读本机文件看里面",
+  },
   "material.generate": {
     name: "AI 生成素材",
     purpose: "文生图/文生视频,生成 AI 素材候选,采纳后进素材中心",
@@ -146,11 +155,12 @@ export const SCHEDULED_TASK_TYPE_LABELS: Readonly<
 };
 
 /**
- * skillsBrief 每工具行数上限(SPEC §1.3 [gate-F1]:超出截断)。[T-099c] 从 20 提到 30:
- * context 层 §5 切片持续新增工具(现 23,切片四/五还会加),自感知清单应覆盖全部可调工具
- * (T-104 全放开语义 —— 模型对「能干什么」的自述须与真实工具集一致),留头量到 30。
+ * skillsBrief 每工具行数上限(SPEC §1.3 [gate-F1]:超出截断)。[T-099c] 从 20 提到 30;
+ * [T-256a] 再提到 40:环境感知扩展(local.tools + local.workspace)后全工具集达 33(project
+ * surface = 全量),原 30 会截断 project/topics 面末尾工具、破坏自感知一致性。自感知清单应覆盖
+ * 全部可调工具(T-104 全放开语义 —— 模型对「能干什么」的自述须与真实工具集一致),留头量到 40。
  */
-export const SKILLS_BRIEF_MAX_LINES = 30;
+export const SKILLS_BRIEF_MAX_LINES = 40;
 
 /**
  * [T-077c gate-F1] 技能清单 facet:当前 surface 白名单内每工具一行

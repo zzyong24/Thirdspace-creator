@@ -32,6 +32,8 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   captureScreenshot: ReturnType<typeof vi.fn>;
   readWeb: ReturnType<typeof vi.fn>;
   readLocal: ReturnType<typeof vi.fn>;
+  detectTools: ReturnType<typeof vi.fn>;
+  listAuthorizedDirs: ReturnType<typeof vi.fn>;
   dispatchGenerateAsset: ReturnType<typeof vi.fn>;
   dispatchScriptReview: ReturnType<typeof vi.fn>;
   diagnoseContent: ReturnType<typeof vi.fn>;
@@ -353,6 +355,32 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     name: "note.md",
     fullText: "本地笔记正文",
   }));
+  // [T-256a] local.tools 核心(fake:默认 ffmpeg 已装 + git 未装,带 rejected 空)。
+  const detectTools = vi.fn(async () => ({
+    tools: [
+      {
+        name: "ffmpeg",
+        installed: true,
+        path: "/opt/homebrew/bin/ffmpeg",
+        version: "6.1.1",
+        purpose: "音视频转码",
+        installHint: null,
+      },
+      {
+        name: "git",
+        installed: false,
+        path: null,
+        version: null,
+        purpose: "版本控制",
+        installHint: "brew install git",
+      },
+    ],
+    rejected: [] as string[],
+  }));
+  // [T-256a] local.workspace 核心(fake:默认一个已授权目录)。
+  const listAuthorizedDirs = vi.fn(async () => ({
+    dirs: ["/Users/u/CreatorOS/素材"],
+  }));
   // [T-084c] material.generate 核心(fake:dispatch asset.generate task → 返回 taskId)。
   const dispatchGenerateAsset = vi.fn(async () => ({ taskId: "task-gen-1" }));
   // [T-103b] review.script 核心(fake:dispatch script.review → 返回 taskId + projectId)。
@@ -383,6 +411,8 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     captureScreenshot,
     readWeb,
     readLocal,
+    detectTools,
+    listAuthorizedDirs,
     dispatchGenerateAsset,
     dispatchScriptReview,
     diagnoseContent,
@@ -414,6 +444,8 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     captureScreenshot,
     readWeb,
     readLocal,
+    detectTools,
+    listAuthorizedDirs,
     dispatchGenerateAsset,
     dispatchScriptReview,
     diagnoseContent,
@@ -2255,5 +2287,151 @@ describe("[T-253] local.read 工具 — 本机文件读取(运行时授权 + 安
     })) as { error: string | null; needApproval: unknown };
     expect(result.error).toContain("不存在");
     expect(result.needApproval).toBeNull();
+  });
+});
+
+// ── [T-256a] local.tools 工具 —— 环境工具探测(installed/version + 缺失引导 + rejected 透传)。
+describe("[T-256a] local.tools 工具 — 环境工具探测", () => {
+  const WHITELIST = ["local.tools"] as const;
+
+  it("透传探测结果:已装报 version、缺失带 installHint,rejected 原样回", async () => {
+    const detectTools = vi.fn(async () => ({
+      tools: [
+        {
+          name: "ffmpeg",
+          installed: true,
+          path: "/opt/homebrew/bin/ffmpeg",
+          version: "6.1.1",
+          purpose: "音视频转码",
+          installHint: null,
+        },
+        {
+          name: "git",
+          installed: false,
+          path: null,
+          version: null,
+          purpose: "版本控制",
+          installHint: "brew install git",
+        },
+      ],
+      rejected: ["rustc"],
+    }));
+    const { deps } = makeDeps({ detectTools });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.tools"]!, {})) as {
+      kind: string;
+      tools: Array<{
+        name: string;
+        installed: boolean;
+        version: string | null;
+        installHint: string | null;
+      }>;
+      rejected: string[];
+      error: string | null;
+    };
+    expect(result.kind).toBe("local.tools");
+    expect(result.error).toBeNull();
+    const ffmpeg = result.tools.find((t) => t.name === "ffmpeg")!;
+    expect(ffmpeg.installed).toBe(true);
+    expect(ffmpeg.version).toBe("6.1.1");
+    expect(ffmpeg.installHint).toBeNull();
+    const git = result.tools.find((t) => t.name === "git")!;
+    // 缺失诚实引导:未装 → 有安装命令、无版本
+    expect(git.installed).toBe(false);
+    expect(git.installHint).toContain("brew install git");
+    expect(git.version).toBeNull();
+    expect(result.rejected).toEqual(["rustc"]);
+  });
+
+  it("请求 tools 数组透传到端口(白名单/防注入在端口纯函数,execute 只转发)", async () => {
+    const detectTools = vi.fn(async () => ({ tools: [], rejected: [] as string[] }));
+    const { deps } = makeDeps({ detectTools });
+    const tools = buildChatTools(WHITELIST, deps);
+    await runExecute(tools["local.tools"]!, { tools: ["ffmpeg", "git"] });
+    expect(detectTools).toHaveBeenCalledWith({ tools: ["ffmpeg", "git"] });
+  });
+
+  it("端口抛错(未装配)→ 不抛,error 人话 + tools 空(诚实降级)", async () => {
+    const { deps } = makeDeps({
+      detectTools: async () => {
+        throw new Error("环境探测能力当前未接入");
+      },
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.tools"]!, {})) as {
+      tools: unknown[];
+      error: string | null;
+    };
+    expect(result.tools).toEqual([]);
+    expect(result.error).toContain("未接入");
+  });
+});
+
+// ── [T-256a] local.workspace 工具 —— 工作区目录感知。复用 T-253 授权表(listAuthorizedDirs)。
+//    **锚定「复用 listing 不重造」**:本工具只回目录根数组,自身**不产文件 entries**——目录内容
+//    列举仍归 local.read(T-253 listing 单一实现),别在此重造目录列举逻辑。
+describe("[T-256a] local.workspace 工具 — 工作区目录感知(复用授权表 + 不重造 listing)", () => {
+  const WHITELIST = ["local.workspace"] as const;
+
+  it("透传已授权目录清单(dirs 根路径),error 空", async () => {
+    const listAuthorizedDirs = vi.fn(async () => ({
+      dirs: ["/Users/u/CreatorOS/素材", "/Users/u/Desktop/稿子"],
+    }));
+    const { deps } = makeDeps({ listAuthorizedDirs });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.workspace"]!, {})) as {
+      kind: string;
+      dirs: string[];
+      error: string | null;
+    };
+    expect(result.kind).toBe("local.workspace");
+    expect(result.dirs).toEqual([
+      "/Users/u/CreatorOS/素材",
+      "/Users/u/Desktop/稿子",
+    ]);
+    expect(result.error).toBeNull();
+  });
+
+  it("不重造目录列举:结果只含 dirs 目录根,不含文件 entries(内容列举归 local.read)", async () => {
+    const { deps } = makeDeps({
+      listAuthorizedDirs: async () => ({ dirs: ["/Users/u/素材"] }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.workspace"]!, {})) as Record<
+      string,
+      unknown
+    >;
+    // 锚点:workspace 工具不产 entries/listing(T-253 listing 单一实现,不在此重造)。
+    expect(result).not.toHaveProperty("entries");
+    expect(result).not.toHaveProperty("listing");
+    expect(Object.keys(result).sort()).toEqual(["dirs", "error", "kind"]);
+  });
+
+  it("空授权(还没「总是允许」过目录)→ dirs 空,不臆造", async () => {
+    const { deps } = makeDeps({
+      listAuthorizedDirs: async () => ({ dirs: [] }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.workspace"]!, {})) as {
+      dirs: string[];
+      error: string | null;
+    };
+    expect(result.dirs).toEqual([]);
+    expect(result.error).toBeNull();
+  });
+
+  it("端口抛错(未装配)→ 不抛,error 人话 + dirs 空", async () => {
+    const { deps } = makeDeps({
+      listAuthorizedDirs: async () => {
+        throw new Error("工作区感知能力当前未接入");
+      },
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["local.workspace"]!, {})) as {
+      dirs: string[];
+      error: string | null;
+    };
+    expect(result.dirs).toEqual([]);
+    expect(result.error).toContain("未接入");
   });
 });

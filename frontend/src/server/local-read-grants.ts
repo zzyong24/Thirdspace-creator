@@ -123,6 +123,15 @@ export function consumeOnce(userId: string, resolvedPath: string): void {
   state().once.get(userId)?.delete(resolvedPath);
 }
 
+/**
+ * [T-256a] 列该用户「总是允许该目录」授权过的目录根(工作区感知 local.workspace 端口用)。
+ * 已归一 realpath,排序稳定;未授权过 → 空数组。只读,不动授权状态。**复用本表,不新建机制**。
+ */
+export function listAlwaysDirs(userId: string): string[] {
+  ensureLoaded();
+  return [...(state().dirs.get(userId) ?? [])].sort();
+}
+
 /** 测试用:清空全部授权状态(含 loaded 标记,便于换 grants 文件)。 */
 export function resetLocalReadGrantsForTest(): void {
   globalForGrants.__creatorosLocalReadGrants = {

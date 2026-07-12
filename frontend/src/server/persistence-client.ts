@@ -272,10 +272,14 @@ import {
   isProbablyBinary,
   MAX_LOCAL_READ_BYTES,
   MAX_LOCAL_DIR_ENTRIES,
+  // [T-256a] 工具探测纯函数:白名单过滤 + 防注入 + 版本解析(IO 在本文件端口)。
+  resolveToolsToProbe,
+  parseToolVersion,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
   checkGrant as checkLocalReadGrant,
   consumeOnce as consumeLocalReadOnceGrant,
+  listAlwaysDirs as listLocalReadAlwaysDirs,
 } from "@/server/local-read-grants";
 import {
   runScheduledCollection,
@@ -1150,6 +1154,27 @@ export interface ChatRuntime {
         total: number;
       }
   >;
+  // [T-256a] local.tools 端口 —— 探测系统已装工具(ffmpeg/node/python3/git…)。端口内:白名单过滤
+  // (resolveToolsToProbe,非法/非白名单名落 rejected)→ 固定 arg 数组 spawn which/--version(绝不
+  // 拼 shell 串)→ parseToolVersion。只读探测,不执行任意命令。返回每个工具 installed/path/version +
+  // 缺失安装引导 + rejected 清单。
+  detectTools: (
+    ctx: RequestContext,
+    input: { tools?: string[] },
+  ) => Promise<{
+    tools: Array<{
+      name: string;
+      installed: boolean;
+      path: string | null;
+      version: string | null;
+      purpose: string;
+      installHint: string | null;
+    }>;
+    rejected: string[];
+  }>;
+  // [T-256a] local.workspace 端口 —— 列该用户「总是允许该目录」授权过的本地目录根(复用 T-253
+  // 授权表 local-read-grants,不新建授权机制)。只读,回目录根数组(空 = 还没授权过)。
+  listAuthorizedDirs: (ctx: RequestContext) => Promise<{ dirs: string[] }>;
   // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport 的
   // ai.tasks.create,复用既有分派链 void runAssetGenerate),立即返回 taskId(不阻塞对话回合)。
   dispatchGenerateAsset: (
@@ -8200,6 +8225,65 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         name: nodePath.basename(real),
         fullText: bytes.toString("utf8"),
       };
+    },
+    // [T-256a] local.tools 端口 —— 探测系统已装工具。安全铁律:工具名一律来自 local-env-probe 白名单
+    // 常量(resolveToolsToProbe 已把非法/非白名单请求过滤进 rejected),用**固定 arg 数组** execFile
+    // spawn `which <name>` / `<name> --version`,绝不拼 shell 字符串。只读探测、不执行任意命令。
+    detectTools: async (
+      _ctx: RequestContext,
+      input: { tools?: string[] },
+    ) => {
+      const { probe, rejected } = resolveToolsToProbe(input.tools);
+      const { execFile } = await import("node:child_process");
+      const { promisify } = await import("node:util");
+      const run = promisify(execFile);
+      const PROBE_TIMEOUT_MS = 3000;
+      const tools = await Promise.all(
+        probe.map(async (spec) => {
+          let installed = false;
+          let path: string | null = null;
+          let version: string | null = null;
+          // ① which <name>(argv,无 shell):拿到可执行路径 = 已装。
+          try {
+            const { stdout } = await run("which", [spec.name], {
+              timeout: PROBE_TIMEOUT_MS,
+            });
+            const first = stdout.trim().split("\n")[0]?.trim() ?? "";
+            if (first) {
+              installed = true;
+              path = first;
+            }
+          } catch {
+            installed = false;
+          }
+          // ② 已装则读版本(<name> --version,argv;name 是白名单常量,安全)。拿不到版本仍算已装。
+          if (installed) {
+            try {
+              const { stdout, stderr } = await run(spec.name, [...spec.versionArgs], {
+                timeout: PROBE_TIMEOUT_MS,
+              });
+              version = parseToolVersion(stdout || stderr);
+            } catch {
+              version = null;
+            }
+          }
+          return {
+            name: spec.name,
+            installed,
+            path,
+            version,
+            purpose: spec.purpose,
+            // 已装不冗余给安装引导;缺失才给(诚实引导)。
+            installHint: installed ? null : spec.installHint,
+          };
+        }),
+      );
+      return { tools, rejected };
+    },
+    // [T-256a] local.workspace 端口 —— 列该用户「总是允许该目录」授权过的本地目录根。复用 T-253
+    // 授权表(local-read-grants),不新建授权机制;目录内容仍走 readLocalFile 的 listing(不重造)。
+    listAuthorizedDirs: async (ctx: RequestContext) => {
+      return { dirs: listLocalReadAlwaysDirs(ctx.userId) };
     },
     // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport
     // 的 ai.tasks.create,复用既有分派链 void runAssetGenerate;projectId 走 inputData,service

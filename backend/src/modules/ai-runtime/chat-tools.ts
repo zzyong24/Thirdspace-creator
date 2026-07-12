@@ -2,6 +2,8 @@ import { jsonSchema, type Tool, type ToolSet } from "ai";
 // [T-239a] 统一工具门:所有工具经 defineChatTool 包装(错误信封/结果预算/审计打点),
 // 不再直调 tool() —— 信封元数据(kind 对齐 + 结构占位)单一真值在 CHAT_TOOL_ERROR_ENVELOPES。
 import { defineChatTool } from "./chat-tool-gate";
+// [T-256a] 环境感知扩展:工具探测结果类型(纯函数层白名单/防注入在 local-env-probe,IO 在端口)。
+import type { DetectToolsResult } from "./local-env-probe";
 
 // 首波工具(本切片 2 个):topic.generate + topic.enrich,注册为 Vercel AI SDK tool
 // (SPEC §3.4)。每个工具 = { description, parameters(JSON Schema), execute → 复用现有
@@ -250,6 +252,21 @@ export interface ChatToolDeps {
         total: number;
       }
   >;
+  /**
+   * [T-256a] local.tools 核心 —— 探测系统已装工具(ffmpeg/node/python3/git…)。**端口内做**:
+   * 用固定 arg 数组 spawn `which <name>` / `<name> --version`(白名单工具名,绝不拼 shell 字符串);
+   * 返回每个工具 {installed/path/version/purpose/installHint}。工具名一律来自 local-env-probe 白名单,
+   * 编导请求的名字经 resolveToolsToProbe 过滤(非法/非白名单落 rejected,永不进 spawn)。只读探测、
+   * 不执行任意命令。可选:未装配 → 工具报「环境探测能力未接入」(诚实降级)。
+   */
+  detectTools: (input: { tools?: string[] }) => Promise<DetectToolsResult>;
+  /**
+   * [T-256a] local.workspace 核心 —— 列该用户**已授权(总是允许该目录)**的本地目录清单(工作区
+   * 感知)。复用 T-253 授权表(local-read-grants 的 dirs),**不新建授权机制**;目录内容清单仍走
+   * local.read(复用 T-253 listing,不重造)。端口只回目录根路径数组;编导据此再 local.read 某个
+   * 目录看里面有什么。可选:未装配 → 工具报「工作区感知能力未接入」(诚实降级)。
+   */
+  listAuthorizedDirs: () => Promise<{ dirs: string[] }>;
   /**
    * [T-084c] material.generate 核心 —— **不直接生成**(视频异步分钟级不能阻塞对话回合):dispatch
    * 既有 asset.generate task(persistence-client dispatch → void runAssetGenerate 范式),立即返回
@@ -764,6 +781,22 @@ export interface LocalReadToolResult {
     entries: Array<{ name: string; kind: "file" | "dir"; size: number | null }>;
     total: number;
   } | null;
+  error: string | null;
+}
+
+// [T-256a] local.tools 工具结果 —— 环境工具探测:每个工具 installed/path/version + 缺失引导;
+// rejected = 编导请求里被防注入门/白名单拒掉的名字(诚实回报,不静默吞)。error = 端口未装配/异常。
+export interface LocalToolsToolResult extends DetectToolsResult {
+  kind: "local.tools";
+  error: string | null;
+}
+
+// [T-256a] local.workspace 工具结果 —— 已授权(总是允许该目录)本地目录清单。dirs 为空 = 用户还
+// 没「总是允许」过任何目录(诚实空态;编导引导 TA 用 local.read 读某目录并在确认卡选「总是允许该
+// 目录」)。目录内容仍走 local.read(复用 T-253 listing,本工具不重造目录列举)。
+export interface LocalWorkspaceToolResult {
+  kind: "local.workspace";
+  dirs: string[];
   error: string | null;
 }
 
@@ -1358,6 +1391,30 @@ const LOCAL_READ_PARAMS = jsonSchema<{
     },
   },
   required: ["path"],
+  additionalProperties: false,
+});
+
+// [T-256a] local.tools 入参 —— 可选:只探某几个工具(不传 = 探全部白名单)。名字经白名单+防注入
+// 过滤(非法/非白名单诚实回报,永不当命令执行)。
+const LOCAL_TOOLS_PARAMS = jsonSchema<{ tools?: string[] }>({
+  type: "object",
+  properties: {
+    tools: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "可选:只探测这几个工具名(如 [\"ffmpeg\",\"git\"])。不传则探测全部支持的工具。只支持内置白名单(ffmpeg/ffprobe/node/python3/git);白名单外或含特殊字符的名字会被忽略并如实告知,绝不会被当命令执行。",
+    },
+  },
+  required: [],
+  additionalProperties: false,
+});
+
+// [T-256a] local.workspace 入参 —— 无参(列已授权目录根;目录内容用 local.read 看)。
+const LOCAL_WORKSPACE_PARAMS = jsonSchema<Record<string, never>>({
+  type: "object",
+  properties: {},
+  required: [],
   additionalProperties: false,
 });
 
@@ -2135,6 +2192,49 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         }
       },
     }, deps.humanizeError),
+    // [T-256a] 环境工具探测:让编导「知道」用户电脑装了哪些系统工具(ffmpeg/node/python3/git…),
+    // 缺失时诚实引导安装。只读探测(which/--version 固定 arg 数组 spawn,白名单工具名),不执行任意
+    // 命令。请求里的非法/非白名单名经端口 resolveToolsToProbe 落 rejected,编导如实回报、绝不绕。
+    "local.tools": defineChatTool("local.tools", {
+      description:
+        "探测用户**本机**装了哪些系统工具(ffmpeg / ffprobe / node / python3 / git)。当需要判断某个能力能不能落地时调用——例如用户要「抽音频/转码/渲染」前先看 ffmpeg 在不在;要跑脚本前看 node/python 在不在。返回每个工具是否已装、路径、版本;**缺失的工具会给出安装命令**(如 ffmpeg 缺 → brew install ffmpeg),你要**诚实转述**:装了就说装了(可报版本),没装就明说没装并给出安装引导,**绝不假装某工具存在、绝不编造版本号**。只读探测,不会执行任何其他命令;只支持内置白名单工具,你传的白名单外/含特殊字符的名字会被忽略(结果 rejected 里列出),照实告诉用户即可。",
+      inputSchema: LOCAL_TOOLS_PARAMS,
+      execute: async ({ tools }): Promise<LocalToolsToolResult> => {
+        try {
+          const res = await deps.detectTools({
+            tools: Array.isArray(tools) ? tools : undefined,
+          });
+          return { kind: "local.tools", tools: res.tools, rejected: res.rejected, error: null };
+        } catch (err) {
+          return {
+            kind: "local.tools",
+            tools: [],
+            rejected: [],
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
+      },
+    }, deps.humanizeError),
+    // [T-256a] 工作区感知:列用户「总是允许该目录」授权过的本地目录根(复用 T-253 授权表)。
+    // 编导据此知道「用户放素材/稿子的目录」有哪些,再用 local.read 读某个目录看里面有什么(目录
+    // 内容清单复用 T-253 listing,本工具不重造目录列举)。
+    "local.workspace": defineChatTool("local.workspace", {
+      description:
+        "列出用户**已长期授权**(在 local.read 确认卡上选过「总是允许该目录」)的本地目录清单。当用户问「看看我的工作区/我授权过哪些目录/我平时放素材的文件夹」时调用。返回的是你可以免弹卡直接读的目录根;**要看某个目录里有什么,再调 local.read 传那个目录路径**(会返回文件清单)——本工具只给目录清单、不列文件内容。若清单为空,说明用户还没「总是允许」过任何目录,引导 TA:让你 local.read 某个目录、在确认卡上选「总是允许该目录」,之后这个目录就会出现在这里。绝不臆造用户没授权过的目录。",
+      inputSchema: LOCAL_WORKSPACE_PARAMS,
+      execute: async (): Promise<LocalWorkspaceToolResult> => {
+        try {
+          const { dirs } = await deps.listAuthorizedDirs();
+          return { kind: "local.workspace", dirs: Array.isArray(dirs) ? dirs : [], error: null };
+        } catch (err) {
+          return {
+            kind: "local.workspace",
+            dirs: [],
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
+      },
+    }, deps.humanizeError),
     // [T-084c] AI 生成素材:文生图/文生视频。execute **不直接生成**(视频异步分钟级不能阻塞
     // 对话回合)—— dispatch 既有 asset.generate task,立即返回 taskId;前端 ChatGenerateCard
     // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
@@ -2779,6 +2879,9 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "web.read",
   // [T-253] 本机文件读取(任意路径 + 运行时确认卡 + 敏感 denylist 硬门)。
   "local.read",
+  // [T-256a] 环境感知扩展:工具探测(白名单 which/--version)+ 工作区目录感知(复用 T-253 授权表)。
+  "local.tools",
+  "local.workspace",
   "material.generate",
   "calibration.diagnose",
   "review.analyze",
@@ -2841,6 +2944,9 @@ const MATERIAL_TOOL_NAMES: readonly string[] = [
   "web.read",
   // [T-253] 本机文件读取与 web.read 同性质(把外部真材料带进对话),全场景保留。
   "local.read",
+  // [T-256a] 环境感知(工具探测 + 工作区目录)同性质:任何场景都可能要判断「能不能落地/素材在哪」。
+  "local.tools",
+  "local.workspace",
   "material.generate",
 ];
 

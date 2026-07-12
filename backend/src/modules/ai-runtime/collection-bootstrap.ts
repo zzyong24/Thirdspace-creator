@@ -1,7 +1,8 @@
 import type { RequestContext } from "@creatoros/contract";
 
-// 绑定抖音 → 组合根 bootstrap(T-189a):扫码绑定成功后,为该账号**幂等**建三个「每天定时」采集
-// job(self.metrics / self.detail / comments)+ **立即初始化跑一次**拉全量。
+// 绑定抖音 → 组合根 bootstrap(T-189a):扫码绑定成功后,为该账号**幂等**建**六个**「每天定时」采集
+// job(self.metrics / self.detail / comments / benchmark / topic.daily / favorites,单一真源
+// DAILY_COLLECTION_JOB_DEFAULTS)+ **立即初始化跑一次**拉全量。
 //
 // 定位:纯编排逻辑(所有 IO 经注入端口),可直接单测。ingestion.service 在 loginDouyin 成功后经
 //   注入的 onDouyinBound 回调触发本函数(backend 模块**不 import scheduling**,守 SPEC §22 模块边界)——
@@ -21,15 +22,18 @@ import type { RequestContext } from "@creatoros/contract";
 
 /** 一条默认采集 job 模板(sourceKind + 展示名 + 提示词 + 每天定时 cron)。 */
 export interface CollectionJobDefault {
-  readonly sourceKind: string; // self.metrics | self.detail | comments
+  // self.metrics | self.detail | comments | benchmark | topic.daily | favorites
+  //   ([T-258] 与 contract scheduledJobSourceKind 6 值枚举对齐,单一真源即下方 DEFAULTS 列表)。
+  readonly sourceKind: string;
   readonly name: string;
   readonly prompt: string;
   /** 每天定时 cron(5 段:minute hour dom month dow;node-cron / cronMatchesMinute 认)。 */
   readonly schedule: string;
 }
 
-// 每天定时的默认采集 job(顺序即初始化触发顺序:self.metrics → self.detail → comments)。
-//   时间**错峰**(9:00 / 9:10 / 9:20):① 每天早上一次;② 让每日 self.detail 早于 comments(接 T-190
+// 每天定时的默认采集 job(顺序即初始化触发顺序:self.metrics → self.detail → comments → benchmark
+//   → topic.daily → favorites)。时间**错峰**(9:00 / 9:10 / 9:20 / 9:30 / 9:40 / 9:50):
+//   ① 每天早上一次;② 让每日 self.detail 早于 comments(接 T-190
 //   隐藏判据在 self.detail 后可用);③ 三源不同时到点,减少并发抢占(采集本已 gate-F5 串行,错峰更稳)。
 //   名称/提示词与前端 COLLECTION_TEMPLATES 对齐(frontend/src/features/automations/intent.ts),
 //   便于用户在 /automations 里认出这三条自动建的 job。常量集中于此,便于调时间。
@@ -118,7 +122,7 @@ export interface CollectionBootstrapDeps {
    *  组合。幂等:已归属的不动;ctx.accountId 缺省(未选号)→ no-op。返回各表认领行数(诊断用)。
    *  best-effort:失败不阻断建 job / 初始化触发。 */
   claimOrphans?: (ctx: RequestContext) => Promise<Record<string, number>>;
-  /** 三个 job 的 target(默认 {} —— 采集器空 target 时自 ensureDouyinSource 兜底解析源)。 */
+  /** 各 job 的 target(默认 {} —— 采集器空 target 时自 ensureDouyinSource 兜底解析源)。 */
   target?: Record<string, unknown>;
 }
 
@@ -204,10 +208,11 @@ export async function ensureCollectionJobs(
 }
 
 /**
- * 绑定抖音成功后:幂等建三个每天定时采集 job + 按序初始化触发一次(拉全量)。
+ * 绑定抖音成功后:幂等建**六个**每天定时采集 job + 按序初始化触发一次(拉全量)。
  *
  * 幂等:每个 sourceKind 有存量 job 就复用(不重建);触发经 triggerScheduledJob 当天幂等双闸。
- * 顺序:self.metrics → self.detail → comments(await 串行 enqueue → gate-F5 串行链按序执行)。
+ * 顺序:self.metrics → self.detail → comments → benchmark → topic.daily → favorites
+ *   (await 串行 enqueue → gate-F5 串行链按序执行)。
  * best-effort:单个 job 建/触发失败不阻断其余(记日志继续),整体 fire-and-forget 不阻塞绑定返回。
  */
 export async function bootstrapDouyinCollectionJobs(
@@ -229,7 +234,8 @@ export async function bootstrapDouyinCollectionJobs(
     }
   }
 
-  // ① 幂等建 job(顺序即模板顺序 self.metrics → self.detail → comments → benchmark → topic.daily)。
+  // ① 幂等建 job(顺序即模板顺序 self.metrics → self.detail → comments → benchmark → topic.daily
+  //   → favorites)。
   //   [T-227] 实体抽到 ensureCollectionJobs(启动兜底与绑定 bootstrap 共用同一份 ensure,单一真源)。
   const { created, jobsInOrder } = await ensureCollectionJobs(ctx, deps);
 
