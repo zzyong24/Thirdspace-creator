@@ -26,3 +26,9 @@
 - **检索代码一律优先 codegraph CLI(默认手段,非可选)**:找符号定义/调用链/影响面 → `codegraph query <sym> -j` / `codegraph callers <sym>` / `codegraph impact <sym>`(本仓 `.codegraph/` 已建索引,11k+ nodes)。**grep/ripgrep 只在 codegraph 够不到时兜底**——字面量、注释、配置值、跨文件字符串;**别用 grep 找符号定义/调用关系**(那是 codegraph 的活,grep 会漏会慢)。规范:orchestrator `rules/code-retrieval-rules.md`。
 - **任务边界(做完一个 BACKLOG 项)→ checkpoint 进看板/记忆 + 压缩 + `codegraph index --force` 重建索引**(禁用 `sync`:增量检测不可靠会谎报最新;重建后用本次新建符号 `query` 验证),下个任务起步干净。
 - 单线程小改不开子代理/worktree(有成本)。硬门用 hook 强制,战术选择是清晰触发下的判断。
+
+## 调研/踩坑归档铁律(research-as-asset,hook 不注入靠此处)
+
+- **调研类子代理(盘点/对比/核查/源码蒸馏)收口必归档** `docs/research/YYYY-MM-DD-<topic>-research.md`:对比表全量保留(含被否决项+理由),结论写明谁拍板/何时/条件;SPEC 只引链接不复述。派发 prompt 末尾必带「交付报告须给出可直接归档的结构」。
+- **实施踩坑当轮进** [docs/engineering-notes/pitfalls.md](docs/engineering-notes/pitfalls.md)(坑→正解,按主题分册);跨项目通用范式再升格 orchestrator skill 的 `rules/field-lessons.md`,两处不重复。
+- 规范全文:orchestrator skill `rules/knowledge-layer-rules.md` §7(v3.5.1)。
