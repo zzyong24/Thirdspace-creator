@@ -256,6 +256,8 @@
   --creatoros-section-gap: 14px;
   --creatoros-card-gap: 10px;
 }
-:root[data-density="compact"] [data-slot="card"] {
+/* SectionCard 用 data-slot="section-card" 覆盖了 Card 默认 slot,两者都要吃到。 */
+:root[data-density="compact"] [data-slot="card"],
+:root[data-density="compact"] [data-slot="section-card"] {
   --card-spacing: calc(var(--spacing) * 3);
 }
