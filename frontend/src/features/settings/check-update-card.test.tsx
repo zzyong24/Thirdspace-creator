@@ -81,6 +81,7 @@ const VM: SettingsViewModel = {
     embed: { capability: "knowledge.search.embed", provider: "", modelName: "", baseUrl: "", hasSecret: false },
     review: { capability: "script.review", provider: "", modelName: "", baseUrl: "", hasSecret: false },
     search: { capability: "web.search", provider: "", modelName: "", baseUrl: "", hasSecret: false },
+    fallback: { capability: "chat.fallback", provider: "", modelName: "", baseUrl: "", hasSecret: false },
   },
   douyinAccount: { loggedIn: false },
 };

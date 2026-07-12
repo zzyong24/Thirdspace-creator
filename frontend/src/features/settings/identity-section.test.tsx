@@ -160,6 +160,14 @@ function buildStubViewModel(): SettingsViewModel {
       baseUrl: "",
       hasSecret: false as const,
     },
+    // [T-239b] 备用对话模型(测试 fixture 默认未配置)。
+    fallback: {
+      capability: "chat.fallback" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
     },
     douyinAccount: { loggedIn: false },
   };

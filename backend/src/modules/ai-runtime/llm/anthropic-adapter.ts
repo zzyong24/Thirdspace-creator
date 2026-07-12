@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { LlmProvider, ResolvedLlmConfig } from "./provider";
 import { buildSystem, extractText, parseJsonLoose } from "./parse";
+import { resolveLlmMaxRetries } from "./retry-policy";
 
 // The options object handed to `new Anthropic(...)`. Pure + exported so the auth/baseURL
 // mapping is unit-testable without constructing a real client or touching the network.
@@ -34,7 +35,10 @@ const defaultClientFactory: ClientFactory = (config) =>
     // readable error) instead of spinning forever. Reasoning models (MiniMax-M3)
     // can take ~40s+, so allow generous headroom but not the SDK's 10-min default.
     timeout: 150000,
-    maxRetries: 1,
+    // [T-239b S1] 重试次数可配(env CREATOROS_LLM_MAX_RETRIES,默认 3)—— 原写死 1,
+    // MiniMax cancelled 类瞬时故障一次就崩整轮。此路径(旧 @anthropic-ai/sdk)由 SDK 自带
+    // 指数退避执行重试;分类/退避语义的精细版在新 AI SDK 路径(recovering-model)。
+    maxRetries: resolveLlmMaxRetries(process.env),
   }) as unknown as MessagesClient;
 
 export function createAnthropicProvider(

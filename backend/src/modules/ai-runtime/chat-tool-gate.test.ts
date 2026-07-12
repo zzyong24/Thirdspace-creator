@@ -119,14 +119,15 @@ describe("enforceChatToolResultBudget 结果字符预算", () => {
     expect(out.items).toHaveLength(2);
     expect(out.total).toBe(42);
     expect(out.kind).toBe("context.artifacts");
-    expect(out.items[0].title).toBe("候选一");
-    expect(out.items[1].title).toBe("候选二");
+    // (noUncheckedIndexedAccess:上面已断言长度为 2,索引访问用 `!` 收窄。)
+    expect(out.items[0]!.title).toBe("候选一");
+    expect(out.items[1]!.title).toBe("候选二");
     // 最长的先截,带标记;整体进预算。
-    expect(out.items[0].body.endsWith(BUDGET_TRUNCATION_SUFFIX)).toBe(true);
-    expect(out.items[0].body.length).toBeLessThan(long.length);
+    expect(out.items[0]!.body.endsWith(BUDGET_TRUNCATION_SUFFIX)).toBe(true);
+    expect(out.items[0]!.body.length).toBeLessThan(long.length);
     expect(JSON.stringify(out).length).toBeLessThanOrEqual(4000);
     // 原对象不被就地污染(深拷贝后截)。
-    expect(result.items[0].body).toBe(long);
+    expect(result.items[0]!.body).toBe(long);
   });
 
   it("短字符串(≤最小保留)与信封字段 kind/error 永不截", () => {

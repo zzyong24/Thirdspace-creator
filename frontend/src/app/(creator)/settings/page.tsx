@@ -143,6 +143,8 @@ export default async function SettingsRoutePage() {
           modelName: found?.modelName ?? "",
           baseUrl: found?.baseUrl ?? "",
           hasSecret: found?.hasSecret ?? false,
+          // [T-239b] 备用对话模型卡消费(anthropic / openai_chat 分派);其它卡忽略。
+          apiFormat: found?.apiFormat,
         };
       };
       multimodalModels = {
@@ -156,6 +158,8 @@ export default async function SettingsRoutePage() {
         review: multimodalRow("script.review"),
         // [T-084a] 联网搜索(未配 = 素材来自模型记忆,卡片黄条+需核实徽标)。
         search: multimodalRow("web.search"),
+        // [T-239b] 备用对话模型(未配 = 主模型重试耗尽后现状报错,不静默换模型)。
+        fallback: multimodalRow("chat.fallback"),
       };
     } catch {
       // listModels unavailable (transport race) → fall back to the fixture.

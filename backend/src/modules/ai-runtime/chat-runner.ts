@@ -40,6 +40,8 @@ import {
 } from "./chat-tools";
 import { buildSkillsBrief } from "@creatoros/contract";
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
+import { createRecoveringModel } from "./llm/recovering-model";
+import { resolveLlmMaxRetries } from "./llm/retry-policy";
 import { buildPositioningPrompt, parseSuggestion } from "./positioning-runner";
 import { parseLearnings, reviewFacets } from "./review-runner";
 import { parseDiagnosis } from "./calibration-diagnose-runner";
@@ -63,6 +65,14 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     capability: string,
   ) => Promise<ModelSpec>;
+  /**
+   * [T-239b S1] 备用对话模型端口(可选)—— **只认 `chat.fallback` 专配行**(不回退 default/env,
+   * 否则「备用」会解析成主模型自己);未配返 null。主模型流开始前可重试错误耗尽时,chat-runner
+   * 用它换备用模型再启动一次(模型用户可配的铁律 —— 绝不写死 fallback 厂商)。
+   */
+  resolveFallbackModelSpec?: (
+    ctx: RequestContext,
+  ) => Promise<ModelSpec | null>;
   /**
    * [T-084a] 联网检索端口(可选)—— gatherMaterials 的「先真联网检索」用。由 composition root
    * (persistence-client)绑:内部 resolveSearchSpec(web.search)+ 按 provider 分派 REST adapter。
@@ -1115,8 +1125,56 @@ export async function runChatStream(
   const assembly = await buildChatAssembly(ctx, input.chatContext, deps);
   const { modelFor } = await import("@creatoros/ai-worker");
   const modelMessages = await convertToModelMessages(input.messages);
-  const result = streamText({
+
+  // [T-239b S1] fallback 模型(用户可配 chat.fallback,只认专配行):解析失败/未配 → null,
+  // 绝不阻断主流程(fallback 是增强,不是门)。
+  let fallbackModel: ReturnType<typeof modelFor> | null = null;
+  if (deps.resolveFallbackModelSpec) {
+    try {
+      const fallbackSpec = await deps.resolveFallbackModelSpec(ctx);
+      if (fallbackSpec) fallbackModel = modelFor(fallbackSpec);
+    } catch {
+      fallbackModel = null;
+    }
+  }
+
+  // [T-239b S1] typed 终止原因打点:恢复层事件归纳到本轮 outcome(completed|error_recovered|
+  // fallback_used|retry_exhausted|aborted|error),轻量 console 可观测(SPEC §5 验收)。
+  const startedAt = Date.now();
+  const recovery = { retried: false, fallbackUsed: false, exhausted: false };
+  const logOutcome = (outcome: string) => {
+    console.info(
+      `[chat-turn] outcome=${outcome} durationMs=${Date.now() - startedAt}`,
+    );
+  };
+
+  // 主模型包上错误恢复层(分类重试 + 500ms×2^n 封顶 32s + 25% jitter + honor retry-after +
+  // fallback 接管);streamText 的 maxRetries 置 0 —— 重试语义收归恢复层,SDK 原生重试
+  // (不分类、无 fallback)留着会与本层相乘。流中途断不重发(交前端 regenerate,SPEC 边界)。
+  const model = createRecoveringModel({
     model: modelFor(assembly.modelSpec),
+    fallbackModel,
+    maxRetries: resolveLlmMaxRetries(process.env),
+    onEvent: (e) => {
+      if (e.type === "retry") {
+        recovery.retried = true;
+        console.warn(
+          `[chat-turn] llm retry attempt=${e.attempt} delayMs=${Math.round(e.delayMs ?? 0)} reason=${e.reason}`,
+        );
+      } else if (e.type === "fallback") {
+        recovery.fallbackUsed = true;
+        console.warn(
+          `[chat-turn] fallback 接管:主模型可重试错误耗尽(reason=${e.reason}),切换用户配置的备用对话模型`,
+        );
+      } else if (e.type === "exhausted") {
+        recovery.exhausted = true;
+      }
+    },
+  });
+
+  const result = streamText({
+    model,
+    maxRetries: 0,
     system: assembly.system,
     messages: modelMessages,
     tools: assembly.tools,
@@ -1136,11 +1194,24 @@ export async function runChatStream(
       : undefined,
     // 工具调用后让模型据工具结果继续把话说完(候选已在 tool-result part 里流回前端渲卡)。
     stopWhen: stepCountIs(5),
-    onFinish: onFinish
-      ? async ({ text }) => {
-          await onFinish(text);
-        }
-      : undefined,
+    // [T-239b] typed 终止原因:成功轮按恢复层事件归纳;错误轮区分「可重试耗尽」与其它;
+    // 中断轮(abortSignal / 客户端断开)单独记 aborted。打点不影响既有 onFinish 落库语义。
+    onAbort: () => {
+      logOutcome("aborted");
+    },
+    onError: () => {
+      logOutcome(recovery.exhausted ? "retry_exhausted" : "error");
+    },
+    onFinish: async ({ text }) => {
+      logOutcome(
+        recovery.fallbackUsed
+          ? "fallback_used"
+          : recovery.retried
+            ? "error_recovered"
+            : "completed",
+      );
+      if (onFinish) await onFinish(text);
+    },
   });
   return result;
 }

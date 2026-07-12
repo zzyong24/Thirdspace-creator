@@ -175,6 +175,9 @@ export async function POST(req: Request): Promise<Response> {
         // (它含 ArtifactType 依赖),改由这里(前端边界)把 humanizeAiError 注入。
         humanizeError: humanizeAiError,
         resolveModelSpec: runtime.resolveModelSpec,
+        // [T-239b] 备用对话模型端口 —— 主模型流开始前可重试错误耗尽时,恢复层用它接管一次
+        // (只认 chat.fallback 专配行,用户没配 = 现状报错)。
+        resolveFallbackModelSpec: runtime.resolveFallbackModelSpec,
         // 只读 context 工具(context.projects/knowledge/materials)的真数据读端口(user-scoped)。
         contextReaders: runtime.contextReaders,
         // [T-084a] 联网检索端口 —— gatherMaterials 先真搜索、honestyBlock 探测未配诚实降级。

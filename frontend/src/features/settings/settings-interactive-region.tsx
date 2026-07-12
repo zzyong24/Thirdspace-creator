@@ -438,6 +438,12 @@ export function SettingsDialog({
                     kind="search"
                     state={viewModel.multimodalModels.search}
                   />
+                  {/* [T-239b] 备用对话模型(chat.fallback):主模型可重试错误耗尽时接管一次;
+                      未配 → 现状报错(诚实降级,不静默换模型)。 */}
+                  <MultimodalModelCard
+                    kind="fallback"
+                    state={viewModel.multimodalModels.fallback}
+                  />
                 </CollapsibleModelGroup>
               </div>
             </SettingsPanel>
@@ -2344,13 +2350,38 @@ const MULTIMODAL_META = {
       "rss=feed URL(逗号分隔);browser=搜索 URL 模板(留空=Bing,{q} 占位查询词);留空=provider 默认(bocha=api.bochaai.com 等)",
     disabledHint: "未配 → 素材来自模型记忆,标注需核实。",
   },
+  // [T-239b S1] 备用对话模型 —— 主对话模型「流开始前」可重试错误(限流/5xx/网络断/过载)
+  // 自动重试耗尽后由它接管一次(错误恢复层)。只认本专配行(不回退默认模型 —— 那会「备用」
+  // 成主模型自己);未配 → 现状报错(诚实降级)。文本 LLM 走 apiFormat 分派,故此卡多一个
+  // 「接口格式」选择(与文本模型卡同款,是唯一带 apiFormat 的多模态卡)。
+  fallback: {
+    capability: "chat.fallback" as const,
+    title: "备用对话模型",
+    icon: Cpu,
+    description:
+      "主对话模型故障(限流/服务端错误/网络断)自动重试仍失败时,由它接管本轮;建议配与主模型不同厂商的模型(故障不同时发生)。不配则重试耗尽后直接报错。",
+    providerSuggestions: ["anthropic", "minimax", "deepseek", "openai"] as ReadonlyArray<string>,
+    providerPlaceholder: "anthropic",
+    providerHelp: "任意厂商名,可自定义(建议与主模型不同厂商,故障不同时发生)。",
+    modelHelp: "模型 id,如 claude-opus-4-8 / MiniMax-M3 / deepseek-chat。",
+    modelPlaceholder: "",
+    baseUrlPlaceholder: "https://api.anthropic.com(留空=provider 默认)",
+    disabledHint: "未配 → 主模型重试耗尽后直接报错。",
+  },
 } as const;
 
 // [T-132] 多模态卡 kind → onboarding stepKey(?highlight=<stepKey> 深链落地定位)。
 // 只映射 onboarding 清单里有对应步的 kind;embed/vision 无 onboarding 步 → undefined
 // (不加 data-highlight,不影响定位)。
 const MULTIMODAL_HIGHLIGHT_KEY: Record<
-  "image" | "video" | "audio" | "embed" | "vision" | "review" | "search",
+  | "image"
+  | "video"
+  | "audio"
+  | "embed"
+  | "vision"
+  | "review"
+  | "search"
+  | "fallback",
   string | undefined
 > = {
   image: "image-model",
@@ -2360,19 +2391,34 @@ const MULTIMODAL_HIGHLIGHT_KEY: Record<
   search: "web-search",
   embed: undefined,
   vision: undefined,
+  // [T-239b] 备用对话模型无 onboarding 步 → 无深链锚点。
+  fallback: undefined,
 };
 
 function MultimodalModelCard({
   kind,
   state,
 }: {
-  kind: "image" | "video" | "audio" | "embed" | "vision" | "review" | "search";
+  kind:
+    | "image"
+    | "video"
+    | "audio"
+    | "embed"
+    | "vision"
+    | "review"
+    | "search"
+    | "fallback";
   state: MultimodalModelState;
 }) {
   const meta = MULTIMODAL_META[kind];
   const [provider, setProvider] = React.useState<string>(state.provider);
   const [modelName, setModelName] = React.useState<string>(state.modelName);
   const [baseUrl, setBaseUrl] = React.useState<string>(state.baseUrl);
+  // [T-239b] 仅备用对话模型卡消费:文本 LLM 走 apiFormat 分派(anthropic / OpenAI 兼容),
+  // 与文本模型卡同款下拉;其它多模态卡按 provider 分派,不渲此控件。
+  const [apiFormat, setApiFormat] = React.useState<ApiFormat>(
+    state.apiFormat ?? "anthropic",
+  );
   // Blank = keep the existing stored key (the read never returns the raw value).
   const [secret, setSecret] = React.useState<string>("");
   const { pending, run } = useSettingsMutation();
@@ -2382,6 +2428,7 @@ function MultimodalModelCard({
     setProvider(state.provider);
     setModelName(state.modelName);
     setBaseUrl(state.baseUrl);
+    setApiFormat(state.apiFormat ?? "anthropic");
     setSecret("");
   }, [state]);
 
@@ -2410,15 +2457,28 @@ function MultimodalModelCard({
             secret: secret.length > 0 ? secret : undefined,
             // [T-093/T-086] embedding 与文案审核卡显式存 openai_chat(缺省会被落成
             // anthropic;embedding 无 anthropic 协议,火山方舟 Ark 走 OpenAI 兼容协议)。
+            // [T-239b] 备用对话模型卡存用户选的接口格式(resolveModelSpec 按它分派适配器)。
             // 其余多模态卡不带 apiFormat 不变。
             ...(kind === "embed" || kind === "review"
               ? { apiFormat: "openai_chat" as const }
-              : {}),
+              : kind === "fallback"
+                ? { apiFormat }
+                : {}),
           },
         })
         .then(() => setSecret("")),
     );
-  }, [canSave, run, meta.capability, provider, modelName, baseUrl, secret]);
+  }, [
+    canSave,
+    run,
+    kind,
+    meta.capability,
+    provider,
+    modelName,
+    baseUrl,
+    apiFormat,
+    secret,
+  ]);
 
   const Icon = meta.icon;
   const providerListId = `multimodal-${kind}-provider-suggestions`;
@@ -2512,6 +2572,36 @@ function MultimodalModelCard({
             aria-label={`${meta.title}接口地址`}
           />
         </SettingsFormRow>
+        {kind === "fallback" ? (
+          // [T-239b] 备用对话模型走文本 LLM 解析链 → 需要接口格式(与文本模型卡同款下拉)。
+          <SettingsFormRow
+            label="接口格式"
+            controlId={`multimodal-${kind}-api-format`}
+            help="鉴权与请求体格式(与主模型卡同义)。"
+          >
+            <Select
+              value={apiFormat}
+              onValueChange={(value) => setApiFormat(value as ApiFormat)}
+            >
+              <SelectTrigger
+                id={`multimodal-${kind}-api-format`}
+                data-slot={`multimodal-${kind}-api-format-trigger`}
+                size="sm"
+                className="w-44"
+                disabled={pending}
+              >
+                <SelectValue placeholder="选择格式" />
+              </SelectTrigger>
+              <SelectContent data-slot={`multimodal-${kind}-api-format-content`}>
+                {API_FORMAT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingsFormRow>
+        ) : null}
         <SettingsFormRow
           label="密钥"
           controlId={`multimodal-${kind}-secret`}

@@ -194,6 +194,8 @@ import {
   type CommentRecord,
   DouyinNotLoggedInError,
   fetchDouyinVideoUrl,
+  // [T-243] 逐字稿取流组合入口(iesdouyin 匿名 → 登录态 detail 回落 + 图集识别)。
+  fetchDouyinVideoSource,
   streamAudioFromVideo,
   fetchDouyinWorkListExport,
   // [T-212a] 对标他号作品采集(sec_uid 主页 aweme/post,只读公开统计)。
@@ -305,7 +307,10 @@ import {
   fetchRemotePromptOverrides,
 } from "@creatoros/backend/modules/ai-runtime";
 import { createLlmCompleter, LlmCredentialError } from "@creatoros/backend/modules/ai-runtime";
-import { resolveLlmConfig } from "@creatoros/backend/modules/ai-runtime";
+import {
+  resolveLlmConfig,
+  resolveDedicatedLlmConfig,
+} from "@creatoros/backend/modules/ai-runtime";
 import {
   resolveMultimodalSpec as resolveMultimodalSpecFn,
   resolveTranscribeSpec as resolveTranscribeSpecFn,
@@ -988,6 +993,15 @@ export interface ChatRuntime {
     model: string;
     token: string;
   }>;
+  // [T-239b S1] 备用对话模型解析 —— **只认 `chat.fallback` 专配行**(resolveDedicatedLlmConfig,
+  // 不回退 default/env,否则「备用」会解析成主模型自己);未配/无 key → null(现状报错,诚实降级)。
+  // chat-runner 在主模型流开始前可重试错误耗尽时用它接管一次。
+  resolveFallbackModelSpec: (ctx: RequestContext) => Promise<{
+    apiFormat: "anthropic" | "openai_chat";
+    baseUrl: string | null;
+    model: string;
+    token: string;
+  } | null>;
   context: ChatContextDeps;
   // 只读 context 工具(context.projects / context.knowledge / context.materials)的真数据读端口。
   // 与 `context`(CreativeContext facet reader,进 system 的记忆)不同:这些是「用户问才实时拉」的
@@ -3510,11 +3524,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 markSucceeded: (c, id) => aiService.markSucceeded(c, id),
                 markFailed: (c, id, err) => aiService.markFailed(c, id, err),
               },
-              // 取音频(iesdouyin 无水印直链)—— host 绑真 fetchDouyinVideoUrl(默认真 fetch)。
-              // [gate-F7 插装点①] iesdouyin channel 限流(注真单例;逐字稿全量撞 IP 风控的主战场)。
-              fetchVideoUrl: (_c, awemeId) =>
-                fetchDouyinVideoUrl(awemeId, {
-                  fetch: (...args) => fetch(...args),
+              // 取无水印直链 —— [T-243] host 绑组合入口 fetchDouyinVideoSource:
+              //   ① iesdouyin 匿名分享页(快,无 cookie);② 解析失败(item_list 空等,对部分
+              //   可见作品就是解析不出)→ 回落登录态 detail 接口(.auth/douyin/<accountId>,
+              //   页内 fetch 借 cookie);③ 图集识别 → { kind:"image-album" }(runner 诚实跳过)。
+              // [gate-F7 插装点①] 两条路各走各的 channel 限流(iesdouyin / creator-center),注真单例。
+              fetchVideoUrl: (c, awemeId) =>
+                fetchDouyinVideoSource({
+                  awemeId,
+                  authDir: douyinAuthDirFor(c.accountId), // [T-136] 按当前号登录态
                   gateway: douyinGateway,
                 }),
               // 抽音频 bytes(ffmpeg)—— host 绑真 streamAudioFromVideo(默认 child_process.spawn)。
@@ -6069,6 +6087,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     };
   };
 
+  // [T-239b S1] 备用对话模型 —— 只认 chat.fallback 专配行(不回退 default/env;回退会把
+  // 「备用」解析成主模型自己,fallback 失去意义)。未配/无 key → null(chat-runner 按现状报错)。
+  const resolveFallbackModelSpec = async (ctx: RequestContext) => {
+    const cfg = await resolveDedicatedLlmConfig(ctx, "chat.fallback", {
+      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      env: process.env,
+    });
+    if (!cfg) return null;
+    return {
+      apiFormat: cfg.apiFormat,
+      baseUrl: cfg.baseUrl,
+      model: cfg.model,
+      token: cfg.token,
+    };
+  };
+
   // T-086 文案审核 dispatch 实体(forward-declared 于 build 顶部):此处所有依赖已就绪
   // (aiService/positioningService/settingsService/artifactsService/reviewGateService/
   // resolveModelSpec)。两条起任务路径共用它:① 审核门 op(reviewGateService.createTask 直起
@@ -6593,6 +6627,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const chatRuntime: ChatRuntime = {
     ai: aiService,
     resolveModelSpec,
+    // [T-239b] 备用对话模型端口(只认 chat.fallback 专配行)。
+    resolveFallbackModelSpec,
     context: {
       positioning: {
         getPositioningCenter: (c: RequestContext) =>

@@ -268,7 +268,9 @@ export interface MultimodalModelState {
     // [T-086] 编导文案审核 L2 语义审(豆包/火山方舟预设;未配回退默认并标注非专用)。
     | "script.review"
     // [T-084a] 联网搜索(素材搜集前置真检索;未配 → 素材来自模型记忆需核实)。
-    | "web.search";
+    | "web.search"
+    // [T-239b] 备用对话模型(主模型可重试错误耗尽时接管一次;未配 → 现状报错)。
+    | "chat.fallback";
   /** Free-form provider name (the dispatch switch; "minimax"/"siliconflow" today, extensible). */
   readonly provider: string;
   /** Free-form model id (e.g. image-01 / video-01 / FunAudioLLM/SenseVoiceSmall). */
@@ -277,6 +279,12 @@ export interface MultimodalModelState {
   readonly baseUrl: string;
   /** Masked: a secret is configured (raw value never sent to the client). */
   readonly hasSecret: boolean;
+  /**
+   * [T-239b] 接口格式 —— 仅 chat.fallback 卡消费(备用**对话**模型走文本 LLM 解析链,
+   * resolveModelSpec 按 apiFormat 分派 anthropic / OpenAI 兼容适配器;其它多模态卡的
+   * 解析器按 provider 分派、忽略此字段,故可选)。
+   */
+  readonly apiFormat?: "anthropic" | "openai_chat";
 }
 
 export interface MultimodalModelsState {
@@ -314,6 +322,13 @@ export interface MultimodalModelsState {
    * 需核实徽标 + honestyBlock 声明非实时检索,诚实降级不假搜)。
    */
   readonly search: MultimodalModelState;
+  /**
+   * [T-239b] 备用对话模型 — capability "chat.fallback"。主对话模型「流开始前」可重试错误
+   * (5xx/429/网络断/overloaded)重试耗尽时,由它接管一次(错误恢复层 S1)。同一
+   * `settings.models.put` op(capability 自由字符串,零契约改动);**只认专配行** —— 未配 =
+   * 现状报错(诚实,不静默换模型)。模型用户可配的铁律:绝不写死 fallback 厂商。
+   */
+  readonly fallback: MultimodalModelState;
 }
 
 // ---------------------------------------------------------------------------

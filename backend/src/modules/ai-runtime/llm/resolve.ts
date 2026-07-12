@@ -59,6 +59,19 @@ function tryDbRow(
   };
 }
 
+/**
+ * [T-239b] **只认专配行**的解析(不回退 "default" 行、不回退 env)—— 给「必须与主模型不同」
+ * 的能力用(如 chat.fallback 备用对话模型:回退 default 会解析成主模型自己,fallback 失去意义)。
+ * 未配 / 无可用 token → null(诚实降级,调用方按未配处理)。
+ */
+export async function resolveDedicatedLlmConfig(
+  ctx: RequestContext,
+  capability: string,
+  deps: ResolveDeps,
+): Promise<ResolvedLlmConfig | null> {
+  return tryDbRow(await deps.getModelConfig(ctx, capability), deps.env);
+}
+
 export async function resolveLlmConfig(
   ctx: RequestContext,
   capability: string,

@@ -40,7 +40,10 @@ export * from "./knowledge-relate-runner";
 export * from "./llm/anthropic-adapter";
 export * from "./llm/parse";
 export * from "./llm/provider";
+// [T-239b S1] 错误恢复层:分类重试/退避纯函数 + 恢复模型包装器(chat 主链路 + 组合根消费)。
+export * from "./llm/recovering-model";
 export * from "./llm/resolve";
+export * from "./llm/retry-policy";
 export * from "./material-extract-runner";
 export * from "./material-match-runner";
 export * from "./material-summary";

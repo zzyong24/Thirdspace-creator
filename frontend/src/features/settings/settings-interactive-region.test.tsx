@@ -139,6 +139,14 @@ const VM: SettingsViewModel = {
       baseUrl: "",
       hasSecret: false as const,
     },
+    // [T-239b] 备用对话模型(测试 fixture 默认未配置)。
+    fallback: {
+      capability: "chat.fallback" as const,
+      provider: "",
+      modelName: "",
+      baseUrl: "",
+      hasSecret: false as const,
+    },
   },
   douyinAccount: { loggedIn: false },
 };
@@ -368,6 +376,7 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
         embed: VM.multimodalModels.embed,
         review: VM.multimodalModels.review,
         search: VM.multimodalModels.search,
+        fallback: VM.multimodalModels.fallback,
       },
     };
     const doc = renderDialog(VM_MULTIMODAL);
