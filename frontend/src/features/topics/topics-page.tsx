@@ -1,13 +1,15 @@
 /**
  * 选题中心 page (选题中心大改 · Slice 2 三栏重构) — the 选题情报 surface.
  *
- * Layout (照目标设计):
- *   1. AI 选题会 带 (紫色 accent): 4 出题按钮 (基于定位/评论/知识库/热点) + 「当前依据」面板.
- *   2. 三栏 grid (左 选题来源 7 来源 · 中 选题候选池 富候选卡 · 右 选题卡详情).
- *   3. 选题流转漏斗: 6 态 (待收集/待评估/待补充/已立项/已丢弃/已发布回流).
+ * Layout ([T-242] 候选池 C 位,漏斗移除 —— 用户拍板「最核心的应该是选题候选池」):
+ *   1. 供给链健康条 + 今日新选题条带 (紧凑,shrink-0 钉住).
+ *   2. AI 选题会 带 (一行紧凑排布,「手动加餐」定位): 4 出题按钮 + 内联「当前依据」.
+ *   3. 三栏 grid (左 选题来源 · 中 选题候选池 · 右 选题卡详情) —— flex-1 占满剩余高度,
+ *      是页面绝对主体 (视觉权重 ≥60% 屏).
+ *   (原页尾 6 态流转漏斗已移除;`overview.funnel` 仍随复合读返回但不再渲染.)
  *
  * Server-component shell with a `viewModel?` test seam. The default render reads
- * `candidates.list` (sorted) + `topics.overview` (出题依据 + 7 来源 + 6 态漏斗, every count
+ * `candidates.list` (sorted) + `topics.overview` (出题依据 + 7 来源, every count
  * DERIVED from real rows — composite transport → Drizzle/pglite, NOT fixtures-only). The
  * selection-driven three-column body (中候选池 ⇄ 右详情 共享 selected-candidate state) lives
  * in the client island `topics-interactive-region.tsx`; the AI 选题会 带 in
@@ -18,20 +20,7 @@
  * 选题卡 字段 are dropped (never invented); null 指标 render 「—」.
  */
 
-import * as React from "react";
-import {
-  Inbox,
-  ClipboardList,
-  Sparkles,
-  Rocket,
-  Trash2,
-  RefreshCw,
-  ArrowRight,
-  type LucideIcon,
-} from "lucide-react";
-
 import { client as defaultClient } from "@/lib/contract-client.server";
-import { cn } from "@/lib/utils";
 import type {
   CandidateResource,
   TopicsOverviewResource,
@@ -233,8 +222,8 @@ export function TopicsView({
   } = viewModel;
 
   return (
-    // 固定高度填满：页头 + AI 选题会带 + 漏斗 shrink-0 钉住,中间三栏 flex-1 占满剩余
-    // 高度、每列框内独立滚动 (整页不再滚动)。
+    // [T-242] 固定高度填满：页头 + 健康条 + 今日条带 + AI 选题会带(一行紧凑) shrink-0
+    // 钉住,候选池三栏 flex-1 占满全部剩余高度 (页面主体)、每列框内独立滚动。
     <div
       data-slot="topics"
       data-testid="topics"
@@ -266,87 +255,18 @@ export function TopicsView({
       {/* [T-235e·①] 今日新选题:页顶横向滚动卡片带(来源徽标 + 一句依据;空态诚实)。 */}
       <TodayTopicsStrip candidates={candidates} dayStartIso={dayStartIso} />
 
-      {/* 1. AI 选题会 带 (钉住·固定高度,候选/步骤进弹窗) —— 4 依据按钮保留降级为「手动加餐」。 */}
+      {/* [T-242] AI 选题会 带 (一行紧凑排布 ——「手动加餐」定位,不与候选池抢视觉权重)。 */}
       <div className="shrink-0">
         <TopicGenerateBand basis={overview.basis} pendingReview={pendingReview} />
       </div>
 
-      {/* 2. 三栏：来源 / 候选池 / 详情 (flex-1 占满,每列各自框内滚) */}
+      {/* [T-242] 候选池三栏 C 位：来源 / 候选池 / 详情 —— flex-1 占满全部剩余高度,
+          页面主体 (原页尾 6 态漏斗已移除,高度全部让给候选池)。 */}
       <TopicsWorkspace
         candidates={candidates}
         sources={overview.sources}
         sort={sort}
       />
-
-      {/* 3. 选题流转漏斗 (钉住底部) */}
-      <div className="shrink-0">
-        <FunnelStrip funnel={overview.funnel} />
-      </div>
     </div>
-  );
-}
-
-// ── 选题流转漏斗 (6 态横向) ───────────────────────────────────────────────────────
-const FUNNEL_ICONS: Record<string, LucideIcon> = {
-  collecting: Inbox,
-  evaluating: ClipboardList,
-  enriching: Sparkles,
-  promoted: Rocket,
-  dropped: Trash2,
-  recycled: RefreshCw,
-};
-
-function FunnelStrip({
-  funnel,
-}: {
-  readonly funnel: TopicsOverviewResource["funnel"];
-}) {
-  return (
-    <section
-      data-testid="topics-funnel"
-      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4"
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">选题流转漏斗</h3>
-        <span className="text-xs text-text-subtle">全部流转</span>
-      </div>
-      <div className="flex flex-wrap items-stretch gap-2">
-        {funnel.map((stage, i) => {
-          const Icon = FUNNEL_ICONS[stage.key] ?? Inbox;
-          const isTerminal = stage.key === "dropped";
-          return (
-            <React.Fragment key={stage.key}>
-              <div
-                data-testid="funnel-stage"
-                data-stage={stage.key}
-                className="flex min-w-[110px] flex-1 flex-col items-center gap-1.5 rounded-control border border-border bg-surface-subtle/50 px-3 py-3"
-              >
-                <span
-                  className={cn(
-                    "flex size-8 items-center justify-center rounded-control",
-                    isTerminal
-                      ? "bg-surface-subtle text-text-subtle"
-                      : "bg-brand-soft text-brand",
-                  )}
-                >
-                  <Icon className="size-4" strokeWidth={2} />
-                </span>
-                <span className="text-lg font-semibold tabular-nums text-foreground">
-                  {stage.count}
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  {stage.label}
-                </span>
-              </div>
-              {i < funnel.length - 1 ? (
-                <span className="hidden items-center self-center text-text-subtle md:flex">
-                  <ArrowRight className="size-4" />
-                </span>
-              ) : null}
-            </React.Fragment>
-          );
-        })}
-      </div>
-    </section>
   );
 }

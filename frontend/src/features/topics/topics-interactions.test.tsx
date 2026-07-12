@@ -13,8 +13,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // controls each issue their mapped contract op then the right navigation (promote → push
 // to the new /projects/:id; drop/create → router.refresh()), the three-column body wires
 // 选中态 (click a candidate → drives the right 详情 column), the AI 选题会 band renders the
-// 4 出题按钮 + 当前依据 panel, and the funnel renders the 6 states — all from a fixed VM
-// (deterministic: no Date.now / Math.random / fetch). The mock client resolves immediately.
+// 4 出题按钮 + 当前依据 panel, and the funnel is GONE ([T-242] 候选池 C 位,漏斗移除 ——
+// overview.funnel 仍随复合读返回但不再渲染) — all from a fixed VM (deterministic: no
+// Date.now / Math.random / fetch). The mock client resolves immediately.
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => mockRouter }));
@@ -164,7 +165,7 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe("topics view (pure render, deterministic)", () => {
-  it("renders the three columns, the AI band (4 buttons + basis panel) and the 6-state funnel", () => {
+  it("renders the three columns and the AI band (4 buttons + basis panel), with NO funnel ([T-242])", () => {
     render(
       <TopicsView
         viewModel={{
@@ -189,8 +190,9 @@ describe("topics view (pure render, deterministic)", () => {
     expect(within(basis).getByText("AI 工程 / 应用落地")).toBeInTheDocument();
     // 7 source rows
     expect(screen.getAllByTestId("topics-source-row")).toHaveLength(7);
-    // 6 funnel stages
-    expect(screen.getAllByTestId("funnel-stage")).toHaveLength(6);
+    // [T-242] 漏斗已移除:即便 VM 带 funnel 数据也不渲染(候选池 C 位,反向断言)。
+    expect(screen.queryByTestId("topics-funnel")).not.toBeInTheDocument();
+    expect(screen.queryAllByTestId("funnel-stage")).toHaveLength(0);
   });
 
   it("hides dropped candidates from the pool board", () => {

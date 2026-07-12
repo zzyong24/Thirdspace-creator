@@ -110,7 +110,8 @@ export function filterTodayCandidates(
   });
 }
 
-// ── ① 今日新选题条带(页顶横向滚动卡片带)───────────────────────────────────────────
+// ── ① 今日新选题条带(页顶横向滚动卡片带;[T-242] 紧凑化 —— 徽标+标题同行、依据单行,
+//     卡片降高,把垂直空间让给候选池 C 位)──────────────────────────────────────────
 export function TodayTopicsStrip({
   candidates,
   dayStartIso,
@@ -123,7 +124,7 @@ export function TodayTopicsStrip({
   return (
     <section
       data-testid="today-topics-strip"
-      className="flex shrink-0 flex-col gap-2 rounded-card border border-border bg-surface p-3"
+      className="flex shrink-0 flex-col gap-1.5 rounded-card border border-border bg-surface px-3 py-2"
     >
       <div className="flex items-center gap-2">
         <Sunrise className="size-4 text-brand" />
@@ -140,7 +141,7 @@ export function TodayTopicsStrip({
       {today.length === 0 ? (
         <p
           data-testid="today-topics-empty"
-          className="rounded-control border border-dashed border-border px-3 py-3 text-xs text-muted-foreground"
+          className="rounded-control border border-dashed border-border px-3 py-2 text-xs text-muted-foreground"
         >
           今晨采集无新信号 —— 定时供给跑过但没有新候选,或作业还没到点。
         </p>
@@ -153,13 +154,14 @@ export function TodayTopicsStrip({
             const parsed = parseSupplyBadge(c);
             const reason = c.card.oneLiner || c.angle || "";
             return (
+              // [T-242] 紧凑卡:徽标与标题同行 + 依据单行截断(原三行叠 → 两行)。
               <li
                 key={c.id}
                 data-testid="today-topic-card"
                 data-tone={parsed.tone}
-                className="flex w-60 shrink-0 flex-col gap-1.5 rounded-card border border-border bg-surface-subtle/40 px-3 py-2.5"
+                className="flex w-64 shrink-0 flex-col gap-1 rounded-card border border-border bg-surface-subtle/40 px-3 py-1.5"
               >
-                <span className="flex items-center gap-1.5">
+                <span className="flex min-w-0 items-center gap-1.5">
                   <Badge
                     variant={parsed.tone === "plain" ? "secondary" : "outline"}
                     className={cn(
@@ -170,12 +172,12 @@ export function TodayTopicsStrip({
                   >
                     {parsed.badge}
                   </Badge>
-                </span>
-                <span className="line-clamp-2 text-xs font-medium leading-snug text-foreground">
-                  {parsed.title}
+                  <span className="truncate text-xs font-medium text-foreground">
+                    {parsed.title}
+                  </span>
                 </span>
                 {reason ? (
-                  <span className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+                  <span className="truncate text-[11px] text-muted-foreground">
                     {reason}
                   </span>
                 ) : null}

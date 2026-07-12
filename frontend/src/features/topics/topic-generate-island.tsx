@@ -9,6 +9,9 @@
  * topic.generate 工具产 ChatCandidateCard,逐条采纳(同一确认门,对话内完成)。
  *
  * BasisPanel(当前依据真数据面板)保留 —— 它是读侧事实,不是任务流。
+ *
+ * [T-242] 整带收窄为**一行紧凑排布**(标题 + 4 深链小按钮 + 内联依据 chips):它已是
+ * 「手动加餐」定位,不与候选池三栏抢视觉权重 —— 候选池是页面 C 位。
  */
 
 import * as React from "react";
@@ -67,48 +70,43 @@ export function TopicGenerateBand({
   readonly pendingReview?: unknown;
 }) {
   return (
+    // [T-242] 一行紧凑排布:标题 + 4 深链小按钮 + 内联依据 chips(窄屏 wrap 换行,不撑高)。
     <section
       data-testid="topics-generate-band"
-      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-3.5 lg:flex-row lg:items-stretch"
+      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-card border border-border bg-surface px-3 py-2"
     >
-      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex size-7 items-center justify-center rounded-lg bg-brand-soft text-brand">
-            <Sparkles className="size-4" aria-hidden="true" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">AI 选题会</p>
-            <p className="truncate text-xs text-text-subtle">
-              挑一种依据开聊 —— 编导在对话里出题,逐条采纳进候选池
-            </p>
-          </div>
-        </div>
-        <div
-          data-testid="topics-generate-actions"
-          className="grid grid-cols-2 gap-2 sm:grid-cols-4"
-        >
-          {GENERATE_ACTIONS.map((a) => (
-            <Link
-              key={a.basis}
-              href={copilotDeepLink("topics", "topic.generate", undefined, a.prefill)}
-              data-testid={`topics-generate-${a.basis}`}
-              data-basis={a.basis}
-              className="flex flex-col items-start gap-1 rounded-control border border-border bg-surface-subtle/60 px-3 py-2.5 transition-colors hover:border-brand/50 hover:bg-brand-soft/40"
-            >
-              <a.icon className="size-4 text-brand" aria-hidden="true" />
-              <span className="text-xs font-medium text-foreground">
-                {a.label}
-              </span>
-            </Link>
-          ))}
-        </div>
+      <span className="flex shrink-0 items-center gap-1.5">
+        <Sparkles className="size-4 text-brand" aria-hidden="true" />
+        <span className="text-sm font-semibold text-foreground">AI 选题会</span>
+        <span className="hidden text-[11px] text-text-subtle 2xl:inline">
+          手动加餐 —— 挑一种依据开聊,逐条采纳进候选池
+        </span>
+      </span>
+      <div
+        data-testid="topics-generate-actions"
+        className="flex flex-wrap items-center gap-1.5"
+      >
+        {GENERATE_ACTIONS.map((a) => (
+          <Link
+            key={a.basis}
+            href={copilotDeepLink("topics", "topic.generate", undefined, a.prefill)}
+            data-testid={`topics-generate-${a.basis}`}
+            data-basis={a.basis}
+            className="flex items-center gap-1.5 rounded-control border border-border bg-surface-subtle/60 px-2.5 py-1.5 transition-colors hover:border-brand/50 hover:bg-brand-soft/40"
+          >
+            <a.icon className="size-3.5 text-brand" aria-hidden="true" />
+            <span className="text-xs font-medium text-foreground">
+              {a.label}
+            </span>
+          </Link>
+        ))}
       </div>
       <BasisPanel basis={basis} />
     </section>
   );
 }
 
-// ── 当前依据 面板(读侧真数据,保留) ─────────────────────────────────────────────
+// ── 当前依据 面板(读侧真数据,保留;[T-242] 收为内联 chips 一行) ─────────────────────
 function BasisPanel({
   basis,
 }: {
@@ -123,22 +121,20 @@ function BasisPanel({
   return (
     <div
       data-testid="topics-basis-panel"
-      className="flex w-full shrink-0 flex-col gap-2 rounded-card border border-brand/20 bg-surface/70 p-3 lg:w-[300px]"
+      className="ml-auto flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1"
     >
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-brand">
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-brand">
         当前依据
       </span>
-      <ul className="flex flex-col gap-1.5">
-        {rows.map((r) => (
-          <li key={r.label} className="flex items-center gap-2 text-xs">
-            <r.icon className="size-3.5 shrink-0 text-brand" />
-            <span className="text-text-subtle">{r.label}</span>
-            <span className="ml-auto max-w-[170px] truncate font-medium text-foreground">
-              {r.value}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {rows.map((r) => (
+        <span key={r.label} className="flex items-center gap-1 text-[11px]">
+          <r.icon className="size-3 shrink-0 text-brand" aria-hidden="true" />
+          <span className="text-text-subtle">{r.label}</span>
+          <span className="max-w-[140px] truncate font-medium text-foreground">
+            {r.value}
+          </span>
+        </span>
+      ))}
     </div>
   );
 }
