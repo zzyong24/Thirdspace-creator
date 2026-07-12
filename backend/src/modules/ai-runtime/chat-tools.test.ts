@@ -36,6 +36,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
   listAuthorizedDirs: ReturnType<typeof vi.fn>;
   dispatchGenerateAsset: ReturnType<typeof vi.fn>;
   dispatchScriptReview: ReturnType<typeof vi.fn>;
+  dispatchPlanningThesis: ReturnType<typeof vi.fn>;
   diagnoseContent: ReturnType<typeof vi.fn>;
   analyzeReview: ReturnType<typeof vi.fn>;
   generatePositioning: ReturnType<typeof vi.fn>;
@@ -393,6 +394,12 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     projectId: "proj-1",
     error: null as string | null,
   }));
+  // [T-265] planning.thesis 核心(fake:dispatch planning.thesis → 返回 taskId + projectId)。
+  const dispatchPlanningThesis = vi.fn(async () => ({
+    taskId: "task-thesis-1",
+    projectId: "proj-1",
+    error: null as string | null,
+  }));
   const deps: ChatToolDeps = {
     // [T-163] humanizeError 端口(下沉 backend 后经注入,原直连前端 ai-error-humanize)。测试
     // 复刻其对 new_sensitive(内容安全审核)的映射,使 distill 失败用例断言不变即过;其余回落 null。
@@ -419,6 +426,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     listAuthorizedDirs,
     dispatchGenerateAsset,
     dispatchScriptReview,
+    dispatchPlanningThesis,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -452,6 +460,7 @@ function makeDeps(over: Partial<ChatToolDeps> = {}): {
     listAuthorizedDirs,
     dispatchGenerateAsset,
     dispatchScriptReview,
+    dispatchPlanningThesis,
     diagnoseContent,
     analyzeReview,
     generatePositioning,
@@ -933,6 +942,83 @@ describe("[T-084c] material.generate 工具 — AI 生成素材对话化", () =>
     const result = (await runExecute(tools["material.generate"]!, {
       kind: "image",
       prompt: "一张配图",
+    })) as { taskId: string | null; error: string | null };
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("未接入");
+  });
+});
+
+// [T-265] 论点树对话内真生成 —— 复活断链的 chat 工具半(execute → dispatchPlanningThesis)。
+describe("[T-265] planning.thesis 工具 — 论点树对话内真生成", () => {
+  const WHITELIST = ["planning.thesis"] as const;
+
+  it("[T-265] planning.thesis 可挂(此前不在 ALL_CHAT_TOOL_NAMES → 深链死链)", () => {
+    const { deps } = makeDeps();
+    const tools = buildChatTools([...WHITELIST], deps);
+    expect(Object.keys(tools)).toEqual(["planning.thesis"]);
+    // 也在单一真值里(否则 functionKey=planning.thesis 深链的 forcedTool 恒 undefined)。
+    expect(ALL_CHAT_TOOL_NAMES).toContain("planning.thesis");
+  });
+
+  it("execute 调注入的 dispatchPlanningThesis,返回 taskId + projectId(kind=planning.thesis,异步 dispatch)", async () => {
+    const { deps, dispatchPlanningThesis } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["planning.thesis"]!, {
+      projectId: "  proj-1  ",
+      topic: "  AI 原生浏览器  ",
+    })) as {
+      kind: string;
+      taskId: string | null;
+      projectId: string | null;
+      error: string | null;
+    };
+    // projectId/topic trim 后透传;不直接生成(异步 dispatch,不阻塞对话回合)。
+    expect(dispatchPlanningThesis).toHaveBeenCalledWith({
+      projectId: "proj-1",
+      topic: "AI 原生浏览器",
+    });
+    expect(result.kind).toBe("planning.thesis");
+    expect(result.taskId).toBe("task-thesis-1");
+    expect(result.projectId).toBe("proj-1");
+    expect(result.error).toBeNull();
+  });
+
+  it("无参(稿面右栏对话)→ projectId/topic 缺省不传,由 chat-runner 端口从 chatContext 兜底", async () => {
+    const { deps, dispatchPlanningThesis } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    await runExecute(tools["planning.thesis"]!, {});
+    expect(dispatchPlanningThesis).toHaveBeenCalledWith({
+      projectId: undefined,
+      topic: undefined,
+    });
+  });
+
+  it("端口回 error(无项目上下文)→ 工具透传 error(诚实,不假装立好)", async () => {
+    const { deps } = makeDeps({
+      dispatchPlanningThesis: async () => ({
+        taskId: null,
+        projectId: null,
+        error: "论点树要挂进具体项目的稿面「论点骨架」面板 —— 请在项目稿面右栏立论点。",
+      }),
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["planning.thesis"]!, {})) as {
+      taskId: string | null;
+      error: string | null;
+    };
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("论点骨架");
+  });
+
+  it("dispatch 抛错(端口未接入)→ 不抛,taskId=null + error(诚实降级,不裸机器码)", async () => {
+    const { deps } = makeDeps({
+      dispatchPlanningThesis: async () => {
+        throw new Error("论点树能力当前未接入");
+      },
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["planning.thesis"]!, {
+      projectId: "proj-1",
     })) as { taskId: string | null; error: string | null };
     expect(result.taskId).toBeNull();
     expect(result.error).toContain("未接入");

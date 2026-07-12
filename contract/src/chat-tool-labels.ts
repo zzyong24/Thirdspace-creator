@@ -65,6 +65,12 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     name: "AI 生成素材",
     purpose: "文生图/文生视频,生成 AI 素材候选,采纳后进素材中心",
   },
+  // [T-265] 论点树对话内真生成 —— 产 thesis_tree 候选,采纳后挂进稿面「论点骨架」面板。
+  "planning.thesis": {
+    name: "立论点树",
+    purpose:
+      "基于定位/选题/立项 brief/已搜素材生成一棵论点树(核心论点+支撑/证据/反驳),采纳后挂进稿面「论点骨架」面板、写脚本时作为依据",
+  },
   "learning.capture": {
     name: "记录经验",
     purpose: "把对话里口述的经验整理成结构化经验卡,采纳后沉淀进飞轮",

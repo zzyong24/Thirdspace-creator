@@ -1204,6 +1204,13 @@ export interface ChatRuntime {
     ctx: RequestContext,
     input: { projectId: string },
   ) => Promise<{ taskId: string }>;
+  // [T-265] planning.thesis 端口 —— ensure 项目 thesis_tree artifact + dispatch 既有 planning.thesis
+  // ai_task(复活孤儿 runPlanningThesis),立即返回 taskId(不阻塞对话回合)。对话论点树工具
+  // (planning.thesis)据此触发,前端 ChatThesisCard 轮询 getTask → awaiting_confirmation 渲候选 → 采纳落面板。
+  dispatchPlanningThesis: (
+    ctx: RequestContext,
+    input: { projectId: string; topic?: string },
+  ) => Promise<{ taskId: string }>;
 }
 
 const globalForPersistence = globalThis as unknown as {
@@ -8513,6 +8520,54 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const taskId = task && typeof task.id === "string" ? task.id : "";
       if (!taskId) {
         throw new Error("dispatchScriptReview: 起 script.review task 失败(无 taskId)");
+      }
+      return { taskId };
+    },
+    // [T-265] planning.thesis 端口 —— 复活孤儿 runPlanningThesis 的创建端(T-127 改路由时删了)。
+    // 论点树 runner 要求 inputData.artifactId(采纳时 confirmTask 的 artifact_version 分支 append 新
+    // ArtifactVersion 到该 thesis_tree artifact → 稿面「论点骨架」面板读回),故先 ensure 项目的
+    // thesis_tree artifact(无则建,stage=planning),再经 ai transport 的 ai.tasks.create 起
+    // planning.thesis task(inputData.projectId 让 service createTask 归属项目 → dispatch 分支
+    // task.taskType==="planning.thesis" 触发 void runPlanningThesis)。立即返回 { taskId, projectId },
+    // 不阻塞对话回合(论点树生成重、分钟级)。artifactsService 与本工厂同作用域(同 aiService 装配)。
+    dispatchPlanningThesis: async (
+      ctx: RequestContext,
+      input: { projectId: string; topic?: string },
+    ) => {
+      // ensure thesis_tree artifact(读写同一目标:采纳 append 版本、面板读当前版本)。
+      const arts = await artifactsService.listProjectArtifacts(ctx, input.projectId);
+      const existing = arts.find((a) => a.artifactType === "thesis_tree");
+      const artifactId =
+        existing?.id ??
+        (
+          await artifactsService.createArtifact(ctx, {
+            projectId: input.projectId,
+            title: "论点树",
+            artifactType: "thesis_tree",
+            stage: "planning",
+          })
+        ).id;
+      const res = await ai.request(
+        // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
+        ENDPOINTS.createAITask,
+        {
+          params: undefined,
+          query: undefined,
+          body: {
+            taskType: "planning.thesis",
+            inputData: {
+              artifactId,
+              projectId: input.projectId,
+              ...(input.topic ? { topic: input.topic } : {}),
+            },
+          },
+        },
+        ctx,
+      );
+      const task = (res as { data?: { id?: unknown } }).data;
+      const taskId = task && typeof task.id === "string" ? task.id : "";
+      if (!taskId) {
+        throw new Error("dispatchPlanningThesis: 起 planning.thesis task 失败(无 taskId)");
       }
       return { taskId };
     },

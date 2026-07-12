@@ -110,6 +110,8 @@ import type {
 import { renderContextCard } from "./context-card-registry";
 // [T-103b] 对话内审核报告卡:review.script 工具结果 → 轮询报告 + verdict/findings + 逐条改写门。
 import { ChatReviewReportCard } from "./chat-review-report-card";
+// [T-265] 对话内论点树卡:planning.thesis 工具结果 → 轮询候选 → 采纳落稿面「论点骨架」面板。
+import { ChatThesisCard } from "./chat-thesis-card";
 import {
   ChatDiagnosisCard,
   ChatLearningsCard,
@@ -2138,6 +2140,27 @@ export function AICopilotContent({
                           <ChatReviewReportCard
                             taskId={o.taskId ?? null}
                             projectId={o.projectId ?? activeProjectChip?.id ?? null}
+                            error={o.error ?? null}
+                          />
+                        </React.Fragment>
+                      );
+                    }
+                    // [T-265] 论点树(planning.thesis)→ 据 taskId 轮询 → awaiting_confirmation 渲
+                    // 候选论点树 → 「采纳进论点骨架」(confirmTask → thesis_tree append → 稿面面板)。
+                    // dispatch 失败/无项目上下文 → 卡渲诚实错误态(去项目稿面立论点)。
+                    if (
+                      name === "planning.thesis" &&
+                      out.kind === "planning.thesis"
+                    ) {
+                      const o = out as {
+                        taskId?: string | null;
+                        error?: string | null;
+                      };
+                      return (
+                        <React.Fragment key={key}>
+                          {traceRow}
+                          <ChatThesisCard
+                            taskId={o.taskId ?? null}
                             error={o.error ?? null}
                           />
                         </React.Fragment>

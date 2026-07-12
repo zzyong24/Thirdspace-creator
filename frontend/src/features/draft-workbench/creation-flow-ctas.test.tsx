@@ -43,12 +43,12 @@ describe("CreationFlowCtas(T-127 创作流引导 CTA)", () => {
     expect(input!.getAttribute("accept")).toContain(".md");
   });
 
-  it("点「搜素材」→ openChat functionKey=research.gather_material + autoSend", () => {
+  it("[T-265] 点「搜素材」→ openChat functionKey=material.gather + autoSend(死链修:原 research.gather_material 不在 ALL_CHAT_TOOL_NAMES → 空点)", () => {
     render(<CreationFlowCtas projectId="project-x" />);
     fireEvent.click(screen.getByRole("button", { name: /搜素材/ }));
     expect(openChat).toHaveBeenCalledTimes(1);
     expect(openChat.mock.calls[0][0]).toMatchObject({
-      functionKey: "research.gather_material",
+      functionKey: "material.gather",
       autoSend: true,
     });
   });

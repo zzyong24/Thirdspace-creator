@@ -428,6 +428,20 @@ describe("buildChatAssembly — 三层注入装配", () => {
     expect(bogus.forcedTool).toBeUndefined();
   });
 
+  it("[T-265] 死链修:functionKey=planning.thesis(稿面「立论点」深链)→ 挂上工具 + forcedTool 命中(第0步强制调,不再空点/被 topic.enrich 冒充)", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(
+      ctx,
+      { surface: "project", projectId: "proj-1", functionKey: "planning.thesis" },
+      deps,
+    );
+    // 此前 planning.thesis 不在 ALL_CHAT_TOOL_NAMES → forcedTool 恒 undefined、functionKey 静默丢弃。
+    // 现在:挂上工具 + forcedTool 命中 → runChatStream 第0步 toolChoice 强制调它(弱模型也压得住,
+    // 不再吐文本谎称/抓 topic.enrich 冒充)。深链落 forcedTool 即真值,不依赖它在工具列表里的排位。
+    expect(Object.keys(a.tools)).toContain("planning.thesis");
+    expect(a.forcedTool).toBe("planning.thesis");
+  });
+
   it("[T-240③] 场景白名单真收窄:topics(选题页)= 创作产出 + 素材 + 全量只读,不含 review.analyze/review.script", async () => {
     const { deps } = makeDeps();
     const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
@@ -469,6 +483,8 @@ describe("buildChatAssembly — 三层注入装配", () => {
       "material.generate",
       // [T-084b] 网页截图(公开页真截图落 asset)。
       "material.screenshot",
+      // [T-265] 论点树对话内真生成(创作产出工具,dispatch planning.thesis;排序:'pl' < 'po')。
+      "planning.thesis",
       "positioning.generate",
       // [T-240③] review.analyze / review.script 被场景砍掉:选题页无单条作品的复盘/审核语境。
       "script.draft",
@@ -666,7 +682,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       deps,
     );
     const names = Object.keys(a.tools);
-    expect(names.length).toBe(31); // [T-240③] topics 场景集(9 产出 + 7 素材 + 15 只读)
+    expect(names.length).toBe(32); // [T-240③] topics 场景集(10 产出[T-265 含 planning.thesis] + 7 素材 + 15 只读)
     expect(names).toContain("calibration.diagnose"); // 可调
     expect(names[0]).not.toBe("calibration.diagnose"); // 但越权不置顶
   });
@@ -738,6 +754,26 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(a.system).toContain("不适用 S1 的无稿门");
     });
 
+    it("[T-265] 论点树铁律订正:指向对话里的 planning.thesis 工具(现在有这条路了)+ 禁 topic.enrich 冒充", async () => {
+      const { deps } = makeDeps();
+      const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+      // 订正后 rule #10 要用户「直接调 planning.thesis 工具」(此前只说文本树不算成品、没给工具路径)。
+      expect(a.system).toContain("直接调 planning.thesis 工具");
+      expect(a.system).toContain(
+        "绝不用别的工具(如 topic.enrich 补全选题卡)冒充论点树",
+      );
+    });
+
+    it("[T-265] 全局反工具冒充条款在场(治「深链死链 → 编导抓 topic.enrich 冒充论点树」)", async () => {
+      const { deps } = makeDeps();
+      const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+      expect(a.system).toContain(
+        "绝不用「用途不同的工具」冒充用户真正要的能力",
+      );
+      // 诚实优先于硬凑:清单没对应工具就说没有。
+      expect(a.system).toContain("没有就诚实告诉用户");
+    });
+
     it("③ 创作前 project surface → review.analyze 被阶段感知砍掉(review.script/calibration.diagnose 保留)", async () => {
       const { deps } = makeDeps(); // published=false
       const a = await buildChatAssembly(
@@ -749,7 +785,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(names).not.toContain("review.analyze");
       expect(names).toContain("review.script"); // 稿面审核按钮深链落 project
       expect(names).toContain("calibration.diagnose"); // 盲预测按钮深链落 project
-      expect(names.length).toBe(32); // [T-256a] project 全集 33 − 阶段感知砍掉的 review.analyze
+      expect(names.length).toBe(33); // project 全集 34（[T-265] 含 planning.thesis）− 阶段感知砍掉的 review.analyze
     });
 
     it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
@@ -770,7 +806,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
         deps,
       );
       expect(Object.keys(a.tools)).toContain("review.analyze");
-      expect(Object.keys(a.tools).length).toBe(33);
+      expect(Object.keys(a.tools).length).toBe(34);
       // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
       const { deps: noReaders } = makeDeps({
         contextReaders: undefined,
@@ -781,13 +817,13 @@ describe("buildChatAssembly — 三层注入装配", () => {
         noReaders,
       );
       expect(Object.keys(b.tools)).toContain("review.analyze");
-      expect(Object.keys(b.tools).length).toBe(33);
+      expect(Object.keys(b.tools).length).toBe(34);
     });
 
-    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 33 工具(向后兼容)", async () => {
+    it("③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量 34 工具(向后兼容)", async () => {
       const { deps } = makeDeps();
       const a = await buildChatAssembly(ctx, { surface: "nope" }, deps);
-      expect(Object.keys(a.tools).length).toBe(33);
+      expect(Object.keys(a.tools).length).toBe(34);
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("topic.generate");
     });
@@ -802,7 +838,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       );
       expect(Object.keys(a.tools)).toContain("review.script");
       expect(a.forcedTool).toBe("review.script");
-      expect(Object.keys(a.tools).length).toBe(32); // 31 + 补回的 1
+      expect(Object.keys(a.tools).length).toBe(33); // 32(topics 场景集)+ 补回的 1
     });
   });
 

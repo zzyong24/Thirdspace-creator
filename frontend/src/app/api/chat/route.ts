@@ -282,6 +282,8 @@ export async function POST(req: Request): Promise<Response> {
         dispatchGenerateAssetPort: runtime.dispatchGenerateAsset,
         // [T-103b] review.script 端口 —— dispatch 既有 script.review 审核链路(L1 lint + L2 语义审)。
         dispatchScriptReviewPort: runtime.dispatchScriptReview,
+        // [T-265] planning.thesis 端口 —— ensure thesis_tree artifact + dispatch 论点树生成(采纳落面板)。
+        dispatchPlanningThesisPort: runtime.dispatchPlanningThesis,
       },
     );
     // 流式回前端(useChat 消费 UIMessage stream);回带 conversationId 头供客户端复用会话。

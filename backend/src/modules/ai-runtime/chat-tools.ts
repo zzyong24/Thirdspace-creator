@@ -301,6 +301,22 @@ export interface ChatToolDeps {
     projectId?: string;
   }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
   /**
+   * [T-265] planning.thesis 核心 —— **不直接生成**(论点树生成重,同步会像 script.draft 一样
+   * 超时,见 T-268):dispatch 既有 planning.thesis ai_task(复活孤儿 runPlanningThesis,persistence
+   * -client dispatch → 声明式 context 注入的接地模板),立即返回 { taskId, projectId }。绑定层先
+   * ensure 项目的 thesis_tree artifact(采纳时 append 新版本挂进「论点骨架」面板),把 artifactId
+   * 写进 task.inputData。前端 ChatThesisCard 据 taskId 轮询 getTask → awaiting_confirmation 后
+   * listTaskResults 拿候选 nodes 渲论点树 → 用户「采纳」confirmTask(artifact_version 分支 append
+   * → thesis_tree 当前版本 → 稿面论点骨架面板 router.refresh 读回)。projectId 由 chat-runner 从
+   * chatContext 注入(项目对话才有;无项目上下文 → 不 dispatch,诚实回 error 卡渲「去项目稿面立」)。
+   */
+  dispatchPlanningThesis: (input: {
+    /** 显式项目 id(模型从 selection 拿到时可传);缺省用 chatContext.projectId。 */
+    projectId?: string;
+    /** 本期选题(可选,喂进论点树生成上下文);缺省用 chatContext.selection 兜底。 */
+    topic?: string;
+  }) => Promise<{ taskId: string | null; projectId: string | null; error: string | null }>;
+  /**
    * context.projects 只读端口 —— 列该用户最近的项目/作品(项目库 / 「最新一条」)。
    * **纯读上下文**(与上面的候选工具不同):不产候选、不写实体,只把真数据回给模型读进去用文字回答。
    * 按当前用户过滤(端口在 composition root 绑到 user-scoped 读源);limit 由 execute 兜(默认 5,封顶 10)。
@@ -841,6 +857,21 @@ export interface ReviewScriptToolResult {
   /** dispatch 出的 script.review 任务 id(卡据此轮询 getTask;失败为 null)。 */
   taskId: string | null;
   /** 被审项目 id(卡据此读 getLatestScriptReview + 定位脚本 artifact;无项目上下文为 null)。 */
+  projectId: string | null;
+  /** dispatch 失败 / 无项目上下文时的诚实错误(成功为 null)。 */
+  error: string | null;
+}
+
+// [T-265] planning.thesis 工具结果 —— dispatch 了一次 planning.thesis 论点树生成(立即返回,后台跑,
+// 不阻塞对话回合)。前端 ChatThesisCard 据 taskId 轮询 getTask → awaiting_confirmation 后
+// listTaskResults 拿候选 nodes 渲论点树 → 用户「采纳」confirmTask(artifact_version 分支 append 进
+// thesis_tree 当前版本 → 稿面「论点骨架」面板读回)。projectId 供卡兜底(候选采纳/面板刷新定位)。
+// dispatch 失败 / 无项目上下文 → error 非 null(卡渲错误态,诚实提示去项目稿面立论点)。
+export interface PlanningThesisToolResult {
+  kind: "planning.thesis";
+  /** dispatch 出的 planning.thesis 任务 id(卡据此轮询 getTask;失败为 null)。 */
+  taskId: string | null;
+  /** 目标项目 id(卡兜底 + 面板刷新定位;无项目上下文为 null)。 */
   projectId: string | null;
   /** dispatch 失败 / 无项目上下文时的诚实错误(成功为 null)。 */
   error: string | null;
@@ -1508,6 +1539,25 @@ const REVIEW_SCRIPT_PARAMS = jsonSchema<{ projectId?: string }>({
       type: "string",
       description:
         "要审核脚本的项目 id(可选)。缺省用当前项目对话的项目——所以在稿面右栏对话里直接调、不用传。",
+    },
+  },
+  additionalProperties: false,
+});
+
+// [T-265] planning.thesis 入参 —— 可选显式 projectId(缺省用当前项目对话的 projectId)+ 可选选题
+// (喂进论点树生成上下文;缺省用工作台选中标题兜底)。全可选:稿面右栏对话里直接调、不用传。
+const PLANNING_THESIS_PARAMS = jsonSchema<{ projectId?: string; topic?: string }>({
+  type: "object",
+  properties: {
+    projectId: {
+      type: "string",
+      description:
+        "要立论点树的项目 id(可选)。缺省用当前项目对话的项目——在稿面右栏对话里直接调、不用传。",
+    },
+    topic: {
+      type: "string",
+      description:
+        "本期选题/主题(可选)。论点树会围绕它 + 定位 + 立项 brief + 已搜素材构建;缺省用工作台选中的作品标题兜底。",
     },
   },
   additionalProperties: false,
@@ -2359,6 +2409,36 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         }
       },
     }, deps.humanizeError),
+    // [T-265] 论点树对话内真生成:execute **不直接生成**(论点树生成重,同步会像 script.draft 一样
+    // 超时,见 T-268)—— dispatch 既有 planning.thesis ai_task(复活孤儿 runPlanningThesis,吃波1
+    // 接地模板:brief 硬锚 + 素材可溯 + anti-fabrication),立即返回 { taskId, projectId }。前端
+    // ChatThesisCard 据 taskId 轮询 → awaiting_confirmation 渲候选论点树 → 用户采纳落 thesis_tree
+    // 产物挂进稿面「论点骨架」面板。无项目上下文 / dispatch 失败 → error 非 null(卡渲诚实错误态)。
+    "planning.thesis": defineChatTool("planning.thesis", {
+      description:
+        "为**当前项目**生成一棵论点树(核心论点 + 支撑/证据/反驳分支),产出可挂进稿面「论点骨架」面板、写脚本时被引用的 thesis_tree 产物。当用户说「立论点树 / 帮我立论点 / 搭个论点骨架 / 核心论点加支撑证据反驳」时调用。论点树基于创作者的定位、选题、立项 brief 与已搜集素材构建(有据可依,不凭空编数字)。生成在后台跑(不阻塞对话),结果渲成论点树候选卡;用户点卡上「采纳」才落成 thesis_tree 产物、挂进论点骨架面板(铁律②确认门)——你没有直接写树的能力,绝不口头宣称「论点树已立好/已写入骨架」。只能为当前项目对话立论点;没有项目上下文时会诚实提示去项目稿面里立。",
+      inputSchema: PLANNING_THESIS_PARAMS,
+      execute: async ({ projectId, topic }): Promise<PlanningThesisToolResult> => {
+        try {
+          const { taskId, projectId: pid, error } = await deps.dispatchPlanningThesis({
+            projectId:
+              typeof projectId === "string" && projectId.trim()
+                ? projectId.trim()
+                : undefined,
+            topic:
+              typeof topic === "string" && topic.trim() ? topic.trim() : undefined,
+          });
+          return { kind: "planning.thesis", taskId, projectId: pid, error };
+        } catch (err) {
+          return {
+            kind: "planning.thesis",
+            taskId: null,
+            projectId: null,
+            error: err instanceof Error ? err.message : String(err),
+          };
+        }
+      },
+    }, deps.humanizeError),
     // [T-062a] 对话手录经验:「记一条经验:…」→ 模型填参 → 候选卡。execute 纯回显
     // (不读库不写库、不跑二次 LLM),故不占 ChatToolDeps —— 落库动作在前端卡上由人触发。
     "learning.capture": defineChatTool("learning.capture", {
@@ -2906,6 +2986,8 @@ export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
   "review.analyze",
   // [T-103b] 稿面文案审核进对话(dispatch script.review → 审核报告卡 + 改写 apply 门)。
   "review.script",
+  // [T-265] 论点树对话内真生成(dispatch planning.thesis → 论点树候选卡 + 采纳落 thesis_tree 面板)。
+  "planning.thesis",
   "learning.capture",
   "brief.fill",
   "positioning.generate",
@@ -2969,12 +3051,14 @@ const MATERIAL_TOOL_NAMES: readonly string[] = [
   "material.generate",
 ];
 
-/** 创作类产出工具(选题/写稿/填卡/记经验/蒸馏/定位卡/发布前盲评)。 */
+/** 创作类产出工具(选题/写稿/立论点/填卡/记经验/蒸馏/定位卡/发布前盲评)。 */
 const CREATION_TOOL_NAMES: readonly string[] = [
   "topic.generate",
   "topic.enrich",
   "script.hooks",
   "script.draft",
+  // [T-265] 论点树是创作产出工具(需项目上下文;无项目时工具诚实降级报「去项目稿面立」)。
+  "planning.thesis",
   "brief.fill",
   "learning.capture",
   "knowledge.distill",

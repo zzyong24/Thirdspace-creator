@@ -229,6 +229,18 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     input: { projectId: string },
   ) => Promise<{ taskId: string }>;
+  /**
+   * [T-265] planning.thesis 端口 —— dispatch 既有 planning.thesis ai_task(复活孤儿
+   * runPlanningThesis:persistence-client dispatch → 声明式 context 注入的接地模板),立即返回
+   * taskId(不阻塞对话回合;论点树生成重,同步会超时)。绑定层先 ensure 项目的 thesis_tree
+   * artifact 并把 artifactId 写进 task.inputData(采纳时 append 新版本挂进「论点骨架」面板)。
+   * 由 composition root 绑(ai transport 的 ai.tasks.create + artifactsService)。可选:未装配 →
+   * 工具报「论点树能力未接入」(诚实降级)。
+   */
+  dispatchPlanningThesisPort?: (
+    ctx: RequestContext,
+    input: { projectId: string; topic?: string },
+  ) => Promise<{ taskId: string }>;
 }
 
 /**
@@ -625,10 +637,11 @@ export async function buildChatAssembly(
     // [T-224 诚实门·全局半](原第 9 条拆两半:编造禁令是全局的,留此;「必先读真逐字稿」的
     //   无稿门只属「拆解/复盘已发布作品」场景,移到下方场景条款 S1 —— T-240②)。
     "9. **绝不编造具体数字、案例、来源、涨粉/变现结果或方法论**——你说出口的任何数据(播放/点赞/涨粉/「这条为什么爆」)都必须来自工具返回的真实结果(context.metrics 的真实指标、context.artifact.text 读到的真文案等);拿不到就直说拿不到,**不许用「账号通用规律」「一般来说」这类空想推测充数**。",
-    // [T-240②] 论点树铁律(同定位铁律「文本写的无法被采纳」先例)。治实录病例:编导被纠正后
-    //   「直接写不走工具」产文本论点树 —— thesis_tree 只有 planning.thesis 产的才落 artifact,
-    //   文本树挂不进稿面论点骨架面板、写脚本时不会被引用。
-    "10. **论点树铁律**:能挂进稿面「论点骨架」面板、写脚本时被引用的论点树,只能由 planning.thesis 产出并经采纳落成 thesis_tree 产物——**你在对话文本里写的论点树只是讨论稿,挂不进论点骨架面板、写脚本时不会被引用**。用户要立论点时:可以在对话里帮 TA 把核心论点/支撑/证据/反驳聊清楚(这有价值),但必须明确告知文本树不是成品、要在稿面「论点骨架」面板落成才算立好;**绝不谎称「论点树已立好/已写入骨架」**。",
+    // [T-240②/T-265] 论点树铁律(同定位铁律「文本写的无法被采纳」先例)。治实录病例:编导被纠正后
+    //   「直接写不走工具」产文本论点树 —— thesis_tree 只有 planning.thesis 工具产的才落 artifact,
+    //   文本树挂不进稿面论点骨架面板、写脚本时不会被引用。[T-265] 现在对话里**有** planning.thesis
+    //   工具了(此前是死链,编导误抓 topic.enrich 冒充):用户要立论点树就调它,别再只写文本树。
+    "10. **论点树铁律**:能挂进稿面「论点骨架」面板、写脚本时被引用的论点树,只能由**对话里的 planning.thesis 工具**产出、经用户采纳落成 thesis_tree 产物——**你在对话文本里写的论点树只是讨论稿,挂不进论点骨架面板、写脚本时不会被引用**。用户要立论点树时:**直接调 planning.thesis 工具**产出论点树候选卡(它会基于定位/选题/立项 brief/已搜素材构建),让 TA 点卡上「采纳」落进论点骨架面板;你可以在对话里先帮 TA 把核心论点/支撑/证据/反驳聊清楚(这有价值),但要落成成品必须走 planning.thesis 工具。**绝不用别的工具(如 topic.enrich 补全选题卡)冒充论点树,绝不谎称「论点树已立好/已写入骨架」**。",
     // [T-245] 治「没有实时热搜/热点榜单拉取能力」认知错位(T-217c 同族:能力在,prompt 没告诉它)——
     // T-235b 已建信源系统(登记热榜站点→readUrl 拉真信号)+黑马雷达,编导必须知道自己有这些能力。
     "11. **你有真实热点能力,绝不自称「没有实时热点/热搜拉取能力」——那是错的**。你的热点能力有三路:①已登记网页信源:用户在选题页『信号源』登记的热榜站点(如 36氪热榜),trend 出题时系统自动带登录态读页面、抽真实信号(标题/热度/链接);②黑马雷达:按定位关键词扫抖音近 1 天高赞低粉爆款,产「🔥跟拍」窗口候选(随对标采集自动跑);③web 联网搜索(已配时)。用户要蹭热点/追热榜出题时:**优先调 topic.generate 并传 basis=trend**(它自动并行拉①+③当出题依据,候选自带信源证据);若结果注明未拉到信源信号或用户还没登记信源,**引导 TA 去选题页『信号源』登记热榜站点**(需登录才能看的站点,先去『设置 → 网站登录保管库』登录一次),而不是让用户手动粘热点、更不是自称没能力。",
@@ -637,6 +650,9 @@ export async function buildChatAssembly(
     // [T-256a] 环境感知能力认知(能力在,须诚实用):编导能探测本机已装工具 + 能列已授权工作区目录。
     // 铁律:探到什么报什么,缺工具诚实引导安装,绝不假装工具存在/编造版本号/臆造未授权目录。
     "13. **你能感知用户的电脑环境,但只能读、不能装、不能乱跑命令**。两件事:①**探测已装工具**(local.tools):要判断某能力能不能落地时先探——如用户要「抽音频/转码/渲染视频」前先看 ffmpeg 在不在,要跑脚本前看 node/python3 在不在。装了就说装了(可报版本),**没装就直说没装并给出安装命令**(如「ffmpeg 没装,装一下:brew install ffmpeg」),**绝不假装工具存在、绝不编造版本号**;你只能探内置白名单工具(ffmpeg/ffprobe/node/python3/git),传别的名字会被忽略并在结果里列出,照实说即可。②**列工作区目录**(local.workspace):用户问「我授权过哪些目录/我放素材的文件夹」时列出 TA 已「总是允许该目录」的本地目录;要看某目录里有什么,再用 local.read 读那个目录(会返回文件清单)。清单为空就说还没授权过、引导 TA 去授权,**绝不臆造用户没授权过的目录**。你没有安装工具、执行任意命令、写本地文件的能力——只有「读环境」这一层,别对用户承诺装工具或跑命令。",
+    // [T-265] 反工具冒充(治实录病例:论点树深链曾是死链 → 编导抓最近的 topic.enrich 冒充论点树)。
+    //   工具清单(上方「你的技能清单」)是你能力的单一真值:清单没列的能力=你现在没有。
+    "14. **绝不用「用途不同的工具」冒充用户真正要的能力**。用户要某能力(如立论点树、生成封面、做某种产物)时,先看你的技能清单里**有没有对应的工具**:有就调那个对的工具;**没有就诚实告诉用户「这个能力我现在没有对应工具」**,并说明现有工具能做到的最接近的事——**绝不拿一个用途不同的工具(比如用『补全选题卡 topic.enrich』冒充『立论点树』)硬凑,更不把它的产物说成用户要的东西**。宁可诚实说没有,也不误接工具骗过去。",
     "",
     // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
     "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
@@ -1088,6 +1104,48 @@ export async function buildChatAssembly(
       }
       try {
         const { taskId } = await deps.dispatchScriptReviewPort(ctx, { projectId: pid });
+        return { taskId, projectId: pid, error: null };
+      } catch (err) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: err instanceof Error ? err.message : String(err),
+        };
+      }
+    },
+    // [T-265] planning.thesis:论点树恒是「当前项目的」(要挂进该项目稿面论点骨架面板)。项目
+    // 从模型显式传参优先,否则用 chatContext.projectId(稿面右栏对话恒有)。无项目上下文 → 不
+    // dispatch,诚实回 error(卡渲「去项目稿面立论点」);端口未装配 → 同样诚实 error(不抛裸码)。
+    // topic 缺省用工作台选中标题兜底(与写稿/复盘同款 selection.label 派生)。
+    dispatchPlanningThesis: async ({ projectId, topic }) => {
+      const pid =
+        (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
+        chatContext.projectId ||
+        "";
+      if (!pid) {
+        return {
+          taskId: null,
+          projectId: null,
+          error:
+            "论点树要挂进具体项目的稿面「论点骨架」面板 —— 请在项目稿面右栏的编导对话里让我立论点。",
+        };
+      }
+      if (!deps.dispatchPlanningThesisPort) {
+        return {
+          taskId: null,
+          projectId: pid,
+          error: "论点树能力当前未接入(服务端未装配论点树分派) —— 暂时无法立论点。",
+        };
+      }
+      const effTopic =
+        (typeof topic === "string" && topic.trim() ? topic.trim() : "") ||
+        selectionTitle ||
+        "";
+      try {
+        const { taskId } = await deps.dispatchPlanningThesisPort(ctx, {
+          projectId: pid,
+          ...(effTopic ? { topic: effTopic } : {}),
+        });
         return { taskId, projectId: pid, error: null };
       } catch (err) {
         return {

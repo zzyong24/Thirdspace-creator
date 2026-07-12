@@ -107,7 +107,9 @@ export function CreationFlowCtas({ projectId }: { projectId: string }) {
         className="h-7 gap-1.5 text-xs"
         onClick={() =>
           openChat({
-            functionKey: "research.gather_material",
+            // [T-265] 死链修:原 functionKey="research.gather_material" 不在 ALL_CHAT_TOOL_NAMES →
+            // forcedTool 恒 undefined(空点)。对话搜素材的真工具是 material.gather,对齐它,第0步强制调。
+            functionKey: "material.gather",
             prefill:
               "围绕这条内容的主题,联网搜集一批可用素材(案例、数据、金句),给出来源。",
             autoSend: true,
