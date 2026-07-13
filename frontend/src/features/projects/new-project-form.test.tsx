@@ -173,8 +173,40 @@ describe("NewProjectForm — project name field", () => {
     const input = screen.getByLabelText(/项目名称/i);
     await user.type(input, "AI Native Browser 深度解析");
     expect(input).toHaveValue("AI Native Browser 深度解析");
-    // The Create button must become enabled once a name is present.
     const create = screen.getByRole("button", { name: /^创建$/ });
+    // [T-293] 画幅改必填、无默认预选:仅有名称时创建仍禁用,选画幅后才启用。
+    expect(create).toBeDisabled();
+    const landscape = within(
+      screen.getByTestId("new-project-orientation"),
+    ).getByRole("radio", { name: /横屏/i });
+    landscape.focus();
+    await user.keyboard("{Enter}");
+    expect(create).toBeEnabled();
+    expect(createSpy).not.toHaveBeenCalled();
+  });
+
+  it("[T-293] 画幅必填:未选画幅时创建禁用,选后启用", async () => {
+    await importForm();
+    const user = userEvent.setup();
+    const { createSpy } = renderForm();
+    await user.type(
+      screen.getByLabelText(/项目名称/i),
+      "AI Native Browser",
+    );
+    const create = screen.getByRole("button", { name: /^创建$/ });
+    // 名称有了但画幅未选 → 仍禁用(无默认预选)。
+    expect(create).toBeDisabled();
+    // 画幅无任何 radio 预选中。
+    const orientationField = screen.getByTestId("new-project-orientation");
+    within(orientationField)
+      .getAllByRole("radio")
+      .forEach((radio) => expect(radio).not.toBeChecked());
+    // 选竖屏 → 启用。
+    const portrait = within(orientationField).getByRole("radio", {
+      name: /竖屏/i,
+    });
+    portrait.focus();
+    await user.keyboard("{Enter}");
     expect(create).toBeEnabled();
     expect(createSpy).not.toHaveBeenCalled();
   });
@@ -303,6 +335,13 @@ describe("NewProjectForm — footer actions", () => {
     expect(create).toBeDisabled();
     await user.clear(input);
     await user.type(input, "AI Native Browser");
+    // [T-293] 名称合法但画幅未选仍禁用;选画幅后启用。
+    expect(create).toBeDisabled();
+    const landscape = within(
+      screen.getByTestId("new-project-orientation"),
+    ).getByRole("radio", { name: /横屏/i });
+    landscape.focus();
+    await user.keyboard("{Enter}");
     expect(create).toBeEnabled();
   });
 
@@ -339,7 +378,7 @@ describe("NewProjectForm — footer actions", () => {
     );
     await user.type(screen.getByLabelText(/项目名称/i), "AI Native Browser");
     await user.type(screen.getByLabelText(/一句话描述/i), "深度拆解浏览器趋势");
-    // 画幅默认竖屏,切到横屏验证 radio 路径与提交值。
+    // [T-293] 画幅必填无默认;选横屏验证 radio 路径与提交值。
     const landscape = within(screen.getByTestId("new-project-orientation")).getByRole(
       "radio",
       { name: /横屏/i },

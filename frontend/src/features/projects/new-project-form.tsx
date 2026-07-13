@@ -53,6 +53,13 @@ export interface NewProjectFormValues {
   readonly enterAfterCreate: boolean;
 }
 
+// [T-293] 画幅改必填(无默认预选):内部 draft 允许未选态 `""` 强制用户主动选;
+// handleSubmit 收窄后再调 onCreate,故对外输出契约 orientation 仍是干净的两值枚举。
+type OrientationChoice = "" | "portrait" | "landscape";
+type NewProjectFormDraft = Omit<NewProjectFormValues, "orientation"> & {
+  readonly orientation: OrientationChoice;
+};
+
 export interface NewProjectFormProps {
   /** Initial values used when the dialog re-opens with state to restore. */
   readonly defaultValues?: Partial<NewProjectFormValues>;
@@ -112,10 +119,10 @@ const CREATION_MODE_OPTIONS: ReadonlyArray<RadioOption<CreationMode>> = [
 // Component
 // ---------------------------------------------------------------------------
 
-const EMPTY_DEFAULTS: NewProjectFormValues = {
+const EMPTY_DEFAULTS: NewProjectFormDraft = {
   name: "",
   brief: "",
-  orientation: "portrait",
+  orientation: "", // [T-293] 无默认预选,强制用户主动选画幅
   creationMode: "guided",
   enterAfterCreate: true,
 };
@@ -128,7 +135,7 @@ export function NewProjectForm({
 }: NewProjectFormProps) {
   // Hold the form state in a single object so the reset path is a single
   // setter call (no juggling of useState for each field).
-  const initial = React.useMemo<NewProjectFormValues>(
+  const initial = React.useMemo<NewProjectFormDraft>(
     () => ({
       ...EMPTY_DEFAULTS,
       ...defaultValues,
@@ -136,7 +143,7 @@ export function NewProjectForm({
     [defaultValues],
   );
 
-  const [values, setValues] = React.useState<NewProjectFormValues>(initial);
+  const [values, setValues] = React.useState<NewProjectFormDraft>(initial);
   // Submission lifecycle: idle -> submitting -> (idle on success | error on
   // reject). `errorMsg` carries the inline alert text; values are never reset
   // on error so the user keeps their input.
@@ -152,18 +159,24 @@ export function NewProjectForm({
 
   const trimmedName = values.name.trim();
   const submitting = status === "submitting";
-  const canCreate = trimmedName.length > 0 && !submitting;
+  // [T-293] 画幅必填:未选(orientation==="")时禁用创建。
+  const canCreate =
+    trimmedName.length > 0 && values.orientation !== "" && !submitting;
 
   const handleSubmit = React.useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       if (trimmedName.length === 0 || submitting) return;
+      // [T-293] 画幅未选则拒绝提交;此处收窄 orientation 为两值枚举,输出契约干净。
+      if (values.orientation === "") return;
+      const orientation = values.orientation;
       setStatus("submitting");
       setErrorMsg(null);
       try {
         await onCreateRef.current({
           ...values,
           name: trimmedName,
+          orientation,
         });
         // Local success transition: reset the form so the next mount starts
         // clean. The parent is expected to close the dialog/navigate.
@@ -331,10 +344,13 @@ interface RadioCardGroupProps<TValue extends string> {
   readonly section: string;
   readonly legend: string;
   readonly options: ReadonlyArray<RadioOption<TValue>>;
-  readonly value: TValue;
+  // [T-293] 当前值允许未选态 `""`(与选项/onChange 的 TValue 解耦):必填但无默认预选。
+  readonly value: TValue | "";
   readonly onChange: (next: TValue) => void;
   /** Optional card description formatter. */
   readonly renderOption?: (option: RadioOption<TValue>) => React.ReactNode;
+  /** [T-293] 必填项:legend 显红色 `*`(同项目名称)。 */
+  readonly required?: boolean;
 }
 
 function RadioCardGroup<TValue extends string>({
@@ -346,6 +362,7 @@ function RadioCardGroup<TValue extends string>({
   value,
   onChange,
   renderOption,
+  required = false,
 }: RadioCardGroupProps<TValue>) {
   return (
     <fieldset
@@ -356,7 +373,14 @@ function RadioCardGroup<TValue extends string>({
       data-section={section}
       className="grid gap-1.5"
     >
-      <legend className="text-[13px] font-medium text-foreground">{legend}</legend>
+      <legend className="text-[13px] font-medium text-foreground">
+        {legend}
+        {required ? (
+          <span aria-hidden="true" className="ml-1 text-destructive">
+            *
+          </span>
+        ) : null}
+      </legend>
       <div
         role="radiogroup"
         aria-label={legend}
@@ -447,7 +471,8 @@ function OrientationSelector({
   value,
   onChange,
 }: {
-  readonly value: "portrait" | "landscape";
+  // [T-293] 允许未选态 `""`(必填但无默认预选);选中后回调仍是两值。
+  readonly value: OrientationChoice;
   readonly onChange: (next: "portrait" | "landscape") => void;
 }) {
   return (
@@ -456,6 +481,7 @@ function OrientationSelector({
       name="orientation"
       section="orientation"
       legend="画幅"
+      required
       value={value}
       onChange={onChange}
       options={ORIENTATION_OPTIONS.map((o) => ({
