@@ -45,6 +45,18 @@
 - `ignoreIncompleteToolCalls` 只丢 `input-streaming`/`input-available` 两态(源码 convert-to-model-messages.ts),**不碰** approval-* 态——别指望它单独治 HITL 悬空崩。
 - **一步内并发授权 = 弹 N 张卡**:模型对一个文件夹并发发 N 个 local.read,同一步全部先于任何授权判定 needApproval → N 张卡;首张点「总是允许该目录」时卡 2..N 已生成、不回溯解除(授权表覆盖子路径没用,因为判定发生在授权落库之前)。治法:一张卡点目录授权 → 父组件据服务端已落的目录授权,把**直接父目录相同**的其它待决卡一并 addToolApprovalResponse 批准;有待授权时 submit 排队(button disabled),不并发触发新一轮(T-276,仿 Claude Code 权限门)。
 
+## 打包/bundle 上下文的模块解析(playwright/hyperframes 等外置包)
+
+- **同一份 `require.resolve` 代码,frontend 上下文能跑、backend 包里崩**:`createRequire(import.meta.url).resolve(...)` 的解析基准是 `import.meta.url`。frontend/src/server 的模块,基准指向能 resolve 到外置包的位置;`@creatoros/backend` 里的模块被打进另一个 chunk,基准指向 bundled chunk → resolve 不到 → 运行时崩。**跨包搬「运行时 resolve 外置包」的代码前先想清楚解析基准**(T-281:把 douyin-cdp 能跑的 `require.resolve(playwright)` 抄进 backend executor → 运行时「Cannot find module as expression is too dynamic」)。正解:把这类定位留在 frontend 上下文,经依赖注入把能力传进 backend executor。
+- **`require.resolve(<外置包>/package.json)` 字面量 vs 包名拼接**:字面量能不能过 Turbopack 取决于该包的 `exports` 字段。`hyperframes` 无 exports → 字面量 `require.resolve("hyperframes/package.json")` OK;`playwright` 的 exports 挡 subpath → 字面量 → **build error `Can't resolve`**;包名拼接动态串藏过静态解析但会 build 期 `<dynamic>` 警告 + 某些 chunk 里运行时 too-dynamic。**别假设两个外置包能用同一种写法**。
+- **教训(验证纪律)**:T-281 首修单测过、build17 装机冒烟也过(冒烟只测 GET/dispatch,没触发「缺 Chromium 时渲染视频」这条真实路径)→ 用户一渲染就崩。**打包冒烟 ≠ 覆盖真实功能路径**;前端/服务端 bug 优先起 dev server 用 preview 工具走真实路径(build error/运行时错当场现形),别只靠打包冒烟。
+
+## ECharts 在 flex 容器里高度塌成 ~100px
+
+- **症状**:force-graph 节点全挤画布顶部一条横带、互相重叠、下方大片空白(看似 force 参数问题,其实不是)。
+- **根因**:echarts-for-react 的 div `height:100%`,但**祖先链没有一处 definite 像素高度**(全 `h-full`/`flex-1`/`min-h-*`)→ CSS 百分比高需父级 definite,否则坍缩成 auto → echarts init 时量到 ~100px 并定死 canvas → force 在 100px 薄条里跑。
+- **正解**:共享 EChart 渲染器里用 `ResizeObserver` 量外层容器真实像素高,把 **definite px** 喂给 echarts-for-react;容器变高时重量 → 自动 resize。别指望 `height:100%` 在 flex 链里生效(T-283;dev preview 逐层量 DOM 才逮到,盲调 force 参数会跑偏)。
+
 ## Tauri webview 细节
 
 - webview 吞 target=_blank;tauri-plugin-opener 自带注入脚本(拦 _blank 链接);自己再拦截会双输(stopPropagation 废掉官方脚本)→ 只把缺 target 的跨域链接补成 _blank,让官方脚本接管(T-252)。
