@@ -398,6 +398,10 @@ describe("NewProjectDialog (intercepting route shell)", () => {
     // Fill the required name field and submit (enterAfterCreate defaults true).
     const name = screen.getByRole("textbox", { name: /项目名称/i });
     await userEvent.type(name, "新选题");
+    // [T-293] 画幅改必填(无默认预选):先选画幅,创建按钮才启用。
+    const landscape = screen.getByRole("radio", { name: /横屏/i });
+    landscape.focus();
+    await userEvent.keyboard("{Enter}");
     const create = screen.getByRole("button", { name: /^创建$/ });
     await userEvent.click(create);
 
