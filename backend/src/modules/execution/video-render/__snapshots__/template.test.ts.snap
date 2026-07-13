@@ -12,7 +12,7 @@ html,body{width:1920px;height:1080px;background:#08090a;overflow:hidden;font-fam
 <div id="bg" class="clip" data-start="0.00" data-duration="60.00" data-track-index="0" style="position:absolute;inset:0;background:#08090a;"></div>
 <div id="grid" class="clip" data-start="0.00" data-duration="60.00" data-track-index="1" style="position:absolute;inset:0;opacity:.5;background:linear-gradient(rgba(255,255,255,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.05) 1px,transparent 1px);background-size:64px 64px;"></div>
 <div id="glow" class="clip" data-start="0.00" data-duration="60.00" data-track-index="2" style="position:absolute;inset:0;background:radial-gradient(900px 520px at 24% 36%,#5e6ad222,transparent 60%);"></div>
-<video id="th" class="clip" src="media/th.mp4" data-has-audio="true" data-start="0" data-duration="60.00" data-track-index="900" style="position:absolute;left:1330px;top:138px;width:500px;height:804px;border-radius:18px;object-fit:cover;object-position:center 20%;border:2px solid #5e6ad2;box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px #5e6ad21f;"></video>
+<video id="th" class="clip" src="media/th.mp4" data-has-audio="true" data-start="0" data-duration="60.00" data-track-index="900" style="position:absolute;left:1330px;top:138px;width:500px;height:804px;border-radius:18px;object-fit:contain;background:#08090a;border:2px solid #5e6ad2;box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px #5e6ad21f;"></video>
 <div id="h10" class="clip" data-start="0.00" data-duration="8.00" data-track-index="11" style="position:absolute;left:120px;top:132px;right:720px;"><div style="color:#828fff;font-size:18px;font-weight:700;letter-spacing:.22em">REAL STORY</div><div style="color:#f7f8f8;font-size:58px;font-weight:800;letter-spacing:-.022em;line-height:1.06;margin-top:12px">一个下班路上的想法</div><div style="color:#8a8f98;font-size:25px;font-weight:500;margin-top:12px">和朋友瞎聊碰出来的</div></div>
 <div id="c12" class="clip" data-start="2.00" data-duration="6.00" data-track-index="13" style="position:absolute;left:120px;top:320px;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;box-shadow:rgba(0,0,0,.4) 0 2px 4px;padding:18px 22px;min-width:340px;"><div style="color:#8a8f98;font-size:17px;font-weight:600">从想法到能用</div><div style="display:flex;align-items:baseline;gap:10px"><span style="position:relative;color:#eab308;font-size:84px;font-weight:800;letter-spacing:-.03em;line-height:1">2–3</span><span style="color:#d0d6e0;font-size:30px;font-weight:600">小时</span></div></div>
 <div id="h14" class="clip" data-start="8.00" data-duration="22.00" data-track-index="15" style="position:absolute;left:120px;top:132px;right:120px;"><div style="color:#828fff;font-size:18px;font-weight:700;letter-spacing:.22em">SIX KINDS</div><div style="color:#f7f8f8;font-size:58px;font-weight:800;letter-spacing:-.022em;line-height:1.06;margin-top:12px">六种信息卡</div></div>
@@ -51,7 +51,7 @@ pnpm dev</pre></div>
 </div>
 <script>
 const tl = gsap.timeline({paused:true});
-tl.to("#th",{left:84,top:712,width:286,height:286,borderRadius:143,duration:.7,ease:"power2.inOut"},7.30);
+tl.to("#th",{left:84,top:712,width:286,height:286,borderRadius:24,duration:.7,ease:"power2.inOut"},7.30);
 tl.to("#th",{left:1330,top:138,width:500,height:804,borderRadius:18,duration:.7,ease:"power2.inOut"},51.30);
 tl.fromTo("#h10",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},0.05);
 tl.to("#h10",{autoAlpha:0,duration:.3},7.70);

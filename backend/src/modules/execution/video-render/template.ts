@@ -77,14 +77,16 @@ export function resolveSceneMode(scene: VideoRenderScene, brollCount: number): "
 }
 
 // 口播头两个落位(1920x1080 基准;delivery 变更时等比缩放归后续,v1 固定)。
+// [T-291] PiP 由整圆(143)改圆角矩形(24):配 object-fit:contain 时整圆会在圆内留黑弧,
+// 圆角矩形的深色 letterbox 更干净。按 SPEC §2「保完整 > 圆形」。
 const TH_RIGHT = { left: 1330, top: 138, width: 500, height: 804, borderRadius: 18 };
-const TH_PIP = { left: 84, top: 712, width: 286, height: 286, borderRadius: 143 };
+const TH_PIP = { left: 84, top: 712, width: 286, height: 286, borderRadius: 24 };
 
 // 布局常量(内容区 flow 排布 + PiP 安全区避让,e03 同款)。
 const CONTENT_X = 120;
 const CONTENT_Y = 320;
 const GAP = 18;
-const PIP_SAFE_X = 405; // 左下圆 PiP 安全区:x < PIP_SAFE_X 且 y+h > PIP_SAFE_Y 禁放
+const PIP_SAFE_X = 405; // 左下 PiP 安全区(286×286 圆角矩形):x < PIP_SAFE_X 且 y+h > PIP_SAFE_Y 禁放
 const PIP_SAFE_Y = 660;
 
 interface Ctx {
@@ -372,7 +374,7 @@ export function generateVideoRenderHtml(
     brollByScene.set(scene.id, list);
   }
 
-  // 口播头(整片连续 = master 音频;右 ↔ 圆 PiP 由 GSAP 切换)
+  // 口播头(整片连续 = master 音频;右侧竖卡 ↔ 左下 PiP 由 GSAP 切换)
   const modes = props.scenes.map((s) =>
     resolveSceneMode(s, (brollByScene.get(s.id) ?? []).length),
   );
@@ -380,7 +382,10 @@ export function generateVideoRenderHtml(
   const initPos = initialMode === "right" ? TH_RIGHT : TH_PIP;
   ctx.clips.push(
     `<video id="th" class="clip" src="${esc(mediaPrefix + props.talkingHead.file)}"${props.talkingHead.hasAudio ? ' data-has-audio="true"' : ""} data-start="0" data-duration="${fmt(DUR)}" data-track-index="900" ` +
-      `style="position:absolute;left:${initPos.left}px;top:${initPos.top}px;width:${initPos.width}px;height:${initPos.height}px;border-radius:${initPos.borderRadius}px;object-fit:cover;object-position:center 20%;` +
+      // [T-291] 口播头改 object-fit:contain(完整不裁,治「脸没在框」)+ 深色底补边。
+      // 原 cover+object-position:center 20% 会裁掉竖屏源上下大半、位置写死猜测无人脸检测 → 脸出框。
+      // 合 video-editing skill 铁律「不随意裁切口播画面」。深色 letterbox 是「保完整」的可接受代价。
+      `style="position:absolute;left:${initPos.left}px;top:${initPos.top}px;width:${initPos.width}px;height:${initPos.height}px;border-radius:${initPos.borderRadius}px;object-fit:contain;background:#08090a;` +
       `border:2px solid ${TK.accent};box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px ${TK.accent}1f;"></video>`,
   );
   // 形态切换 tween:在模式变化的场景边界前 0.7s 开始(首场景不切)
