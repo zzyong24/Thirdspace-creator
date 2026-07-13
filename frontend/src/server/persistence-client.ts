@@ -3566,6 +3566,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   });
                   for (const link of links) {
                     if (link.entityType !== "asset") continue;
+                    // [T-294] 排除粗剪口播原片(role=clip):它是成片主体,不能被当空镜 B-roll 插回。
+                    if (link.role === "clip") continue;
                     try {
                       pushAsset(await assetsService.getAsset(c, link.entityId));
                     } catch {

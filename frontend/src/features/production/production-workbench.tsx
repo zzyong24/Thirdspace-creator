@@ -126,11 +126,17 @@ async function readFileText(file: File): Promise<string> {
 async function uploadProductionAsset(
   projectId: string,
   file: File,
-  assetType: "video" | "subtitle",
+  assetType: "video" | "subtitle" | "image",
+  // [T-294] 用料链 role 可覆盖:B-roll 素材传 "broll"(缺省按类型:video=clip / 其它=reference)。
+  role?: string,
 ): Promise<string> {
   const mimeType =
     file.type ||
-    (assetType === "video" ? "video/mp4" : "application/x-subrip");
+    (assetType === "video"
+      ? "video/mp4"
+      : assetType === "image"
+        ? "image/png"
+        : "application/x-subrip");
   const upload = (await client.createUpload({
     params: undefined,
     query: undefined,
@@ -165,7 +171,7 @@ async function uploadProductionAsset(
         projectId,
         entityType: "asset",
         entityId: asset.id,
-        role: assetType === "video" ? "clip" : "reference",
+        role: role ?? (assetType === "video" ? "clip" : "reference"),
         stage: "production",
       },
     })
@@ -238,6 +244,11 @@ export function ProductionWorkbench({
   const [decisions, setDecisions] = React.useState<VideoDecisions | null>(null);
   const [inventory, setInventory] = React.useState<readonly BrollAssetRef[]>([]);
   const [recoveredDecisions, setRecoveredDecisions] = React.useState(false);
+  // [T-294] 制作页 B-roll 素材(role=broll):列/补传/剔除;决策读它们做 B-roll 匹配。
+  const [brollItems, setBrollItems] = React.useState<
+    ReadonlyArray<{ linkId: string; assetId: string; kind: string; name: string }>
+  >([]);
+  const [brollBusy, setBrollBusy] = React.useState(false);
 
   const [renderTaskId, setRenderTaskId] = React.useState<string | null>(null);
   const [renderEnvHint, setRenderEnvHint] = React.useState<string | null>(null);
@@ -421,6 +432,92 @@ export function ProductionWorkbench({
       }
     },
     [projectId, advanceStatus, video],
+  );
+
+  // ── [T-294] B-roll 素材:列 / 补传(role=broll)/ 剔除 ────────────────────────
+  const loadBroll = React.useCallback(async () => {
+    try {
+      const links = (await client.listMaterialLinks({
+        params: undefined,
+        query: { projectId, page: 1, pageSize: 100 },
+        body: undefined,
+      })) as unknown as ReadonlyArray<{
+        id: string;
+        entityType: string;
+        entityId: string;
+        role: string;
+      }>;
+      const brollLinks = links.filter(
+        (l) => l.entityType === "asset" && l.role === "broll",
+      );
+      const items = await Promise.all(
+        brollLinks.map(async (l) => {
+          try {
+            const a = (await client.getAsset({
+              params: { assetId: l.entityId },
+              query: undefined,
+              body: undefined,
+            })) as unknown as { assetType: string; name: string };
+            return {
+              linkId: l.id,
+              assetId: l.entityId,
+              kind: a.assetType,
+              name: a.name,
+            };
+          } catch {
+            return null; // 单条越权/已删跳过,不牵连整批
+          }
+        }),
+      );
+      setBrollItems(items.filter((i): i is NonNullable<typeof i> => i !== null));
+    } catch {
+      /* 读失败静默(可重传) */
+    }
+  }, [projectId]);
+
+  React.useEffect(() => {
+    void loadBroll();
+  }, [loadBroll]);
+
+  const onBrollFiles = React.useCallback(
+    async (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+      setBrollBusy(true);
+      setUploadError(null);
+      try {
+        for (const file of Array.from(files)) {
+          const kind = file.type.startsWith("image/") ? "image" : "video";
+          await uploadProductionAsset(projectId, file, kind, "broll");
+        }
+        await loadBroll();
+      } catch (err) {
+        setUploadError(
+          err instanceof Error ? err.message : "B-roll 素材上传失败,请重试",
+        );
+      } finally {
+        setBrollBusy(false);
+      }
+    },
+    [projectId, loadBroll],
+  );
+
+  const onRemoveBroll = React.useCallback(
+    async (linkId: string) => {
+      setBrollBusy(true);
+      try {
+        await client.deleteMaterialLink({
+          params: { linkId },
+          query: undefined,
+          body: undefined,
+        });
+        await loadBroll();
+      } catch {
+        /* 删除失败静默(下次可再试) */
+      } finally {
+        setBrollBusy(false);
+      }
+    },
+    [loadBroll],
   );
 
   // ── ② AI 分场决策 dispatch + 轮询 ───────────────────────────────────────────
@@ -935,12 +1032,78 @@ export function ProductionWorkbench({
         ) : null}
       </section>
 
-      {/* ② AI 分场决策 */}
+      {/* [T-294] ③ B-roll 素材:决策前备好,AI 分场决策据此匹配空镜/截图 */}
+      <section
+        data-slot="production-broll"
+        className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
+      >
+        <h3 className="text-sm font-medium">③ B-roll 素材(截图 / 录屏,可选)</h3>
+        <p className="text-xs text-muted-foreground">
+          备好要插进成片的截图 / 录屏,AI 分场决策会从这里为对应画面挑 B-roll。
+          <b className="text-foreground">先备素材,再点下方「AI 分场决策」,新素材才会被用上。</b>
+        </p>
+        <label
+          data-slot="broll-picker"
+          className="inline-flex h-8 w-fit cursor-pointer items-center rounded-control border border-border px-3 text-sm hover:bg-muted/50"
+        >
+          {brollBusy ? "上传中…" : "+ 上传素材"}
+          <input
+            type="file"
+            accept="video/*,image/*"
+            multiple
+            className="hidden"
+            disabled={brollBusy}
+            onChange={(e) => {
+              void onBrollFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        {brollItems.length > 0 ? (
+          <ul
+            data-slot="broll-list"
+            className="grid grid-cols-3 gap-2 sm:grid-cols-4"
+          >
+            {brollItems.map((it) => (
+              <li key={it.linkId} className="relative flex flex-col gap-1">
+                <BrollThumb assetId={it.assetId} kind={it.kind} name={it.name} />
+                <button
+                  type="button"
+                  aria-label={`移除 ${it.name}`}
+                  data-slot="broll-remove"
+                  disabled={brollBusy}
+                  onClick={() => void onRemoveBroll(it.linkId)}
+                  className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 text-xs leading-tight text-white hover:bg-black/80 disabled:opacity-50"
+                >
+                  ×
+                </button>
+                <span className="truncate text-[11px] text-muted-foreground">
+                  {it.name}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            还没有 B-roll 素材;不传也能出片(成片只有口播 + 信息卡)。
+          </p>
+        )}
+        {decisions && brollItems.length > 0 ? (
+          <p
+            data-slot="broll-restale-hint"
+            className="text-xs text-amber-600 dark:text-amber-400"
+          >
+            已生成分场决策 —— 刚改了素材?到下方决策卡「丢弃」后重新「AI 分场决策」,新素材才会进片。
+          </p>
+        ) : null}
+      </section>
+
+      {/* ④ AI 分场决策 */}
       <section
         data-slot="production-decisions"
         className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
       >
-        <h3 className="text-sm font-medium">③ AI 分场决策</h3>
+        <h3 className="text-sm font-medium">④ AI 分场决策</h3>
         {!decisionsTaskId && !decisions ? (
           <>
             <button
@@ -1007,7 +1170,7 @@ export function ProductionWorkbench({
           data-slot="production-render"
           className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
         >
-          <h3 className="text-sm font-medium">④ 渲染成片</h3>
+          <h3 className="text-sm font-medium">⑤ 渲染成片</h3>
           {renderEnvHint ? (
             <p
               data-slot="render-env-hint"
@@ -1035,6 +1198,51 @@ export function ProductionWorkbench({
         </section>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * [T-294] B-roll 素材缩略:assetId → 签名 URL → 视频/图片缩略;取不到 URL 显类型占位。
+ */
+function BrollThumb({
+  assetId,
+  kind,
+  name,
+}: {
+  assetId: string;
+  kind: string;
+  name: string;
+}) {
+  const [url, setUrl] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    void resolveAssetPreviewUrl(assetId).then((u) => {
+      if (!cancelled) setUrl(u ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [assetId]);
+  const cls =
+    "aspect-video w-full rounded-control border border-border bg-black object-cover";
+  if (!url) {
+    return (
+      <div
+        className={`${cls} flex items-center justify-center text-[10px] text-muted-foreground`}
+      >
+        {kind}
+      </div>
+    );
+  }
+  if (kind === "image") {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={url} alt={name} className={cls} />
+    );
+  }
+  return (
+    // eslint-disable-next-line jsx-a11y/media-has-caption
+    <video src={url} muted preload="metadata" className={cls} />
   );
 }
 
