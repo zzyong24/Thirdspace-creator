@@ -205,8 +205,29 @@ export interface EChartProps {
 }
 
 export function EChart({ option, className, style, testId, onEvents }: EChartProps) {
+  // [T-283] 用 ResizeObserver 量外层容器的**真实像素高**,把 definite px 喂给 echarts-for-react。
+  //   根因:知识图谱等容器走 `h-full / flex-1 / min-h-*`,祖先链**没有一处 definite 高度**,
+  //   于是内层 `height:100%` 坍缩成 auto → echarts 在 init 时量到 ~100px 并定死 canvas → force
+  //   布局在 100px 薄条里跑 → 节点全挤成一坨堆顶部(用户实测的图谱 bug)。给 definite px 后
+  //   canvas 填满、force 铺开。容器随窗口/布局变高时 RO 重量 → px 更新 → echarts-for-react
+  //   componentDidUpdate 侦测 style 变化自动 resize。measure 到 0(未布局完)时回落 "100%"。
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [pxHeight, setPxHeight] = React.useState<number | null>(null);
+  React.useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = (): void => {
+      const h = el.clientHeight;
+      setPxHeight((prev) => (h > 0 && h !== prev ? h : prev));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
     <div
+      ref={containerRef}
       data-slot="echart"
       data-testid={testId}
       className={className}
@@ -214,7 +235,7 @@ export function EChart({ option, className, style, testId, onEvents }: EChartPro
     >
       <ReactEChartsCore
         option={option}
-        style={{ height: "100%", width: "100%" }}
+        style={{ height: pxHeight ?? "100%", width: "100%" }}
         onEvents={onEvents}
       />
     </div>
