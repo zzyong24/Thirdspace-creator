@@ -744,7 +744,9 @@ async function clearSingletonLocks(authDir: string): Promise<void> {
 //   走 playwright CLI `install chromium`,平台差异由 Playwright 自己处理。装过即秒过(检查 executablePath
 //   实际存在)。用 bundled node(process.execPath)跑 CLI —— 桌面包里就是它。
 let chromiumEnsured = false;
-async function ensureChromiumInstalled(): Promise<void> {
+// [T-281] 导出复用:video.render executor 的 Chromium 下载走这份 frontend-context 实现
+//   (playwright CLI 定位只在 frontend 解析基准下可行;executor 在 backend chunk 里 resolve 会崩)。
+export async function ensureChromiumInstalled(): Promise<void> {
   if (chromiumEnsured) return;
   const { chromium } = await import("@playwright/test");
   const { existsSync } = await import("node:fs");

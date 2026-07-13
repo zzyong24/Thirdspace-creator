@@ -229,6 +229,8 @@ import {
   // [T-235c] 指定收藏夹采集(收藏夹列表按名匹配 + 夹内视频,页内 fetch 借登录态 + gateway 限流)。
   fetchDouyinCollectsFolders,
   fetchDouyinCollectsVideos,
+  // [T-281] 复用 douyin 的 Chromium 首装(frontend 上下文,proven)注入进 video.render executor。
+  ensureChromiumInstalled,
 } from "@/server/ingestion/douyin-cdp";
 // [T-232] 评论批量采集预算规划(纯逻辑):未采优先 + 爆款优先排序 + 全量/截断诚实 message。
 import {
@@ -4210,7 +4212,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // caller)。executor 注册表:demo `echo.manifest` 先行(框架自检),T-254a 在
   // registerBuiltinExecutors 追加 video.render。
   const executorRegistry = createExecutorRegistry();
-  registerBuiltinExecutors(executorRegistry);
+  // [T-281] 注入 Chromium 下载器:未装时 video.render 自动 `playwright install chromium`
+  //   (复用 douyin 的 frontend-context 实现,解析基准对;executor 在 backend chunk 里 resolve
+  //   playwright 会「too dynamic」运行时崩)。下载 ~340MB 前后回步骤流报诚实进度,装过秒过。
+  registerBuiltinExecutors(executorRegistry, {
+    videoDownloadChromium: async (onProgress) => {
+      onProgress?.("首次渲染需下载 Chromium(~340MB),下载中…(之后共享缓存,秒过)");
+      await ensureChromiumInstalled();
+      onProgress?.("Chromium 下载完成");
+    },
+  });
   const executionWorkspacesRoot = resolveWorkspacesRoot();
   const executionService = createExecutionService({
     ai: {

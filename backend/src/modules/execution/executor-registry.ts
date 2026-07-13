@@ -10,7 +10,11 @@ import * as path from "node:path";
 import type { z } from "zod";
 import type { ExecutionTaskType, RequestContext } from "@creatoros/contract";
 import type { MaterializedInput, SandboxPaths } from "./sandbox";
-import { createVideoRenderExecutor } from "./video-render/executor";
+import {
+  createVideoRenderExecutor,
+  createDefaultVideoRenderEngine,
+  type ChromiumDownloader,
+} from "./video-render/executor";
 import { assertLoopType, classifyLoopType, type LoopType } from "./agentic/loop-type";
 
 export interface ExecutorRunOpts {
@@ -124,9 +128,20 @@ export function createEchoManifestExecutor(): ExecutionExecutor {
 }
 
 /** 内置 executor 一次性登记(composition 层调用)。 */
-export function registerBuiltinExecutors(registry: ExecutorRegistry): void {
+export function registerBuiltinExecutors(
+  registry: ExecutorRegistry,
+  // [T-281] video.render 的 Chromium 下载器由组合根(frontend)注入 —— playwright CLI 定位
+  //   只能在 frontend 上下文做(见 executor.ts ChromiumDownloader 注释)。缺省不注入 →
+  //   未装 Chromium 时诚实报错引导(不自动下载)。
+  opts?: { videoDownloadChromium?: ChromiumDownloader },
+): void {
   registry.register(createEchoManifestExecutor());
-  // [T-254a] video.render(HyperFrames 确定性渲染)。构造零 IO(工具链检测在 run 内),
-  // 登记无副作用;persistence-client 组装点零改动。
-  registry.register(createVideoRenderExecutor());
+  // [T-254a] video.render(HyperFrames 确定性渲染)。构造零 IO(工具链检测在 run 内)。
+  registry.register(
+    createVideoRenderExecutor(
+      createDefaultVideoRenderEngine({
+        downloadChromium: opts?.videoDownloadChromium,
+      }),
+    ),
+  );
 }

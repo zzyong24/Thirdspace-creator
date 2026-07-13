@@ -112,52 +112,34 @@ async function locatePlaywrightChromium(): Promise<string | null> {
 }
 
 /**
- * [T-281] 未装 Chromium → 自动下载(playwright install chromium)。与 douyin-cdp/T-173 同源:
- * **包名拼接**避开 Next 构建期静态解析(否则 trace 到 ESM 入口 build error),运行时才真解析
- * (sidecar 内 bundlePlaywright 已实拷 playwright)。装过秒过;下载 ~340MB 走诚实进度回调,
- * 不静默、不逼用户先去抖音扫码。
+ * [T-281 修回归] Chromium 未就绪时的**下载器**由组合根注入(不在本 executor 里 resolve
+ * playwright)。根因:playwright 的 CLI 定位只能在 **frontend 上下文**做——
+ *   · 字面量 `require.resolve("playwright/package.json")` → Turbopack 被 playwright 的 exports
+ *     挡住 → **build error**(hyperframes 无 exports 才能字面量);
+ *   · 包名拼接动态串藏过静态解析,但在 executor 所在的 `@creatoros/backend` chunk 里,
+ *     `createRequire(import.meta.url)` 的解析基准指向 bundled chunk → 运行时「Cannot find
+ *     module as expression is too dynamic」(用户实测)。
+ * douyin-cdp 的 ensureChromiumInstalled 在 frontend/src/server(解析基准对、历史验证可下载),
+ * 组合根 persistence-client 把它经 deps.downloadChromium 注入进来即可。未注入 → 诚实报错引导。
  */
-async function downloadChromium(onProgress?: (line: string) => void): Promise<void> {
-  const nodeRequire = createRequire(import.meta.url);
-  const pwPkgJson = nodeRequire.resolve(["play", "wright/package.json"].join(""));
-  const cli = path.join(path.dirname(pwPkgJson), "cli.js");
-  onProgress?.("首次渲染需下载 Chromium(~340MB),下载中…(之后共享缓存,秒过)");
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(process.execPath, [cli, "install", "chromium"], {
-      stdio: ["ignore", "pipe", "pipe"],
-      env: process.env,
-    });
-    let lastErr = "";
-    const onData = (b: Buffer): void => {
-      lastErr = b.toString("utf8").slice(-400);
-    };
-    child.stdout.on("data", onData);
-    child.stderr.on("data", onData);
-    child.on("exit", (code) =>
-      code === 0
-        ? resolve()
-        : reject(
-            new Error(
-              `playwright install chromium 退出码 ${code}: ${lastErr.replace(/\s+/g, " ").trim().slice(-200)}`,
-            ),
-          ),
-    );
-    child.on("error", reject);
-  });
-  onProgress?.("Chromium 下载完成");
-}
+export type ChromiumDownloader = (
+  onProgress?: (line: string) => void,
+) => Promise<void>;
 
 async function resolvePlaywrightChromium(
   onProgress?: (line: string) => void,
+  download?: ChromiumDownloader,
 ): Promise<string> {
   const found = await locatePlaywrightChromium();
   if (found) return found;
-  // [T-281] 未装 → 自动下载(带诚实进度),再解析一次。
-  await downloadChromium(onProgress);
-  const after = await locatePlaywrightChromium();
-  if (after) return after;
+  // [T-281] 注入了下载器 → 自动下载(带诚实进度),再解析一次;没注入 → 诚实报错引导。
+  if (download) {
+    await download(onProgress);
+    const after = await locatePlaywrightChromium();
+    if (after) return after;
+  }
   throw new Error(
-    "渲染用 Chromium 下载后仍未就绪 —— 请在终端手动执行 `npx playwright install chromium` 后重试渲染",
+    "渲染用 Chromium 未就绪 —— 请在终端执行 `npx playwright install chromium`,或先在「抖音号」页扫码采集一次(会自动下载),再重试渲染",
   );
 }
 
@@ -238,7 +220,11 @@ async function renderWithHyperframesCli(opts: {
   });
 }
 
-export function createDefaultVideoRenderEngine(): VideoRenderEngine {
+export function createDefaultVideoRenderEngine(
+  // [T-281] Chromium 下载器由组合根(frontend)注入(见 ChromiumDownloader 注释);缺省 =
+  //   不注入 → resolveChromium 未装时诚实报错引导(不在 backend 里 resolve playwright)。
+  opts?: { downloadChromium?: ChromiumDownloader },
+): VideoRenderEngine {
   return {
     findBinary: whichBinary,
     async probeVideo(ffprobe, file, signal) {
@@ -273,7 +259,8 @@ export function createDefaultVideoRenderEngine(): VideoRenderEngine {
     async runFfmpeg(ffmpeg, args, signal) {
       await execFileAsync(ffmpeg, args, signal);
     },
-    resolveChromium: resolvePlaywrightChromium,
+    resolveChromium: (onProgress) =>
+      resolvePlaywrightChromium(onProgress, opts?.downloadChromium),
     async resolveGsapFile() {
       return resolveGsapMinJs();
     },
