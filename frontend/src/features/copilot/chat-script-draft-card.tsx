@@ -18,6 +18,7 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
 import { sectionsToHtml } from "@/features/script/script-editor-bridge";
@@ -83,6 +84,7 @@ export function ChatScriptDraftCard({
   /** 轮询间隔(测试注 0 免等实时;默认 4s)。 */
   pollIntervalMs?: number;
 }) {
+  const router = useRouter();
   const [phase, setPhase] = React.useState<Phase>(
     error || !taskId ? "error" : "running",
   );
@@ -156,18 +158,21 @@ export function ChatScriptDraftCard({
         query: undefined,
         body: undefined,
       });
-      // [T-268] 局部刷新:把新整稿 HTML 直接推给稿面编辑器 setContent(不 router.refresh 整页重挂)。
+      // [T-268] 局部刷新:整稿 HTML 直接推给稿面编辑器 setContent(在稿面/脚本页时**当场生效、不重挂**)。
       emitScriptWrite({
         artifactId: null,
         html: sectionsToEditorHtml(sections),
       });
+      // [T-273] 兜底:用户在稿面**外**(copilot 覆盖选题/别的页)采纳时编辑器没挂载、事件 no-op →
+      // 看不到「已写入」。router.refresh 让服务端重读——去脚本阶段即见最新版,不再「已写入但没反应」。
+      router.refresh();
       setPhase("done");
     } catch {
       setPhase("error");
     } finally {
       setConfirming(false);
     }
-  }, [taskId, sections]);
+  }, [taskId, sections, router]);
 
   const shown = expanded ? sections : sections.slice(0, 3);
   return (

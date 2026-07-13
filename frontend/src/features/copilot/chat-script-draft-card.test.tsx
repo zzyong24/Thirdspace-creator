@@ -15,6 +15,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 //   - 轮询到 awaiting_confirmation → 渲整稿分段 + 采纳按钮。
 //   - 点采纳 → confirmTask + emitScriptWrite(稿面编辑器局部刷新,不整页 refresh)。
 
+// [T-273] 采纳后 emit(在稿面时当场刷新)+ router.refresh 兜底(在稿面外时服务端重读)。
+const routerRefresh = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: routerRefresh, push: vi.fn(), replace: vi.fn() }),
+}));
+
 const getTask = vi.fn();
 const listTaskResults = vi.fn();
 const confirmTask = vi.fn();
