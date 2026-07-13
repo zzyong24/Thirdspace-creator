@@ -36,6 +36,14 @@
 - 编造病治法:枚举收窄+「只从原文提取」硬约束+可溯校验(关键词须在原文出现)+伪引用模式剔除(arXiv/DOI/小数精度%/榜单名)。
 - 插点/边界类输出跨模型不稳 → zod refine+后处理吸附合法值集合(SRT 行 start)。
 - 降级路径(model_memory)必须显式声明来源与局限,绝不填看似真实的出处。
+- **接地≠结构**:anti-fabrication(禁编数字/偷换事实)只治「像编的数据」,治不了「像编的叙事」——脚本仍会镜与镜脱节、突然抛概念、用「很多人都…」空话开场。叙事质量要单独下硬约束:真实场景开场(禁抽象结论)+前因后果链不跳步+专有概念首次出现即用大白话讲清「是什么/跟主题啥关系」+用真实素材不足不编(T-275)。两类约束正交,都要有。
+
+## Vercel AI SDK(ai@7)HITL 授权 + 历史合法性
+
+- **悬空工具调用崩整流(MissingToolResultsError)**:HITL 授权卡处于 `approval-requested`(用户没点)时,用户改发新消息 → useChat 内存历史把这条「未批准、无结果」的 tool-call 随新消息 POST 回来 → `convert-to-language-model-prompt` 遇到其后的 user 消息发现有 tool-call 没配对 tool-result → 抛 `MissingToolResultsError` → 整条流 error(前端「出错了,请重试」)。表现为「上一轮授权没处理干净,下一轮任意功能都报错」。
+- 治法(两层,喂模型前净化,存储层不动):① 纯函数摘掉**最后一条 user 消息之前**、assistant 里 {approval-requested,input-available,input-streaming} 的悬空 tool 部件(被新对话遗弃);② `convertToModelMessages(msgs,{ignoreIncompleteToolCalls:true})` 兜 input-available/input-streaming 中断态。**不误伤正常批准 resume**:源码核实 resume 是 sendAutomaticallyWhen 自动重发,末条是 approval-responded 且其后无 user 消息;已批准的会在校验前从 toolCallIds 剔除、被拒的有合成 denied 结果,两者都不崩——只有 approval-requested 崩(T-274)。
+- `ignoreIncompleteToolCalls` 只丢 `input-streaming`/`input-available` 两态(源码 convert-to-model-messages.ts),**不碰** approval-* 态——别指望它单独治 HITL 悬空崩。
+- **一步内并发授权 = 弹 N 张卡**:模型对一个文件夹并发发 N 个 local.read,同一步全部先于任何授权判定 needApproval → N 张卡;首张点「总是允许该目录」时卡 2..N 已生成、不回溯解除(授权表覆盖子路径没用,因为判定发生在授权落库之前)。治法:一张卡点目录授权 → 父组件据服务端已落的目录授权,把**直接父目录相同**的其它待决卡一并 addToolApprovalResponse 批准;有待授权时 submit 排队(button disabled),不并发触发新一轮(T-276,仿 Claude Code 权限门)。
 
 ## Tauri webview 细节
 
