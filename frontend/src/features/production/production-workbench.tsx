@@ -26,6 +26,8 @@
 import * as React from "react";
 
 import { client } from "@/lib/contract-client";
+// [T-285] mount 恢复已上传素材:取 SRT 资产签名下载 URL 回读文本。
+import { resolveAssetPreviewUrl } from "@/components/resources/asset-preview-url";
 import { ExecutionTaskCard } from "@/features/copilot/execution-task-card";
 import { VideoDecisionPreview } from "./video-decision-preview";
 import type { VideoDecisions, BrollAssetRef } from "@creatoros/backend/modules/ai-runtime";
@@ -238,6 +240,74 @@ export function ProductionWorkbench({
   const [renderEnvHint, setRenderEnvHint] = React.useState<string | null>(null);
   const [exportId, setExportId] = React.useState<string | null>(null);
   const [flowError, setFlowError] = React.useState<string | null>(null);
+
+  // ── [T-285] mount 恢复已上传素材 ─────────────────────────────────────────────
+  //   病根:粗剪视频 + SRT 两阶段上传已落库(materialLink stage=production),但 video/srt 只
+  //   在组件 state → 离开本页组件卸载即清,回来空白、被迫从零重传(用户实测)。这里 mount 时按
+  //   项目拉 production 用料链,恢复最近的 video(role=clip)+ subtitle(role=reference);SRT
+  //   文本经签名下载 URL 回读(AI 分场决策要 srt.text、相似度校验要 srt.lines)。只在初始空态跑
+  //   一次,不覆盖本会话内刚上传的(setX(prev => prev ?? …))。恢复是增强,失败静默(可重传)。
+  const restoredRef = React.useRef(false);
+  React.useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    void (async () => {
+      try {
+        const links = (await client.listMaterialLinks({
+          params: undefined,
+          query: { projectId, page: 1, pageSize: 100 },
+          body: undefined,
+        })) as unknown as ReadonlyArray<{
+          entityType: string;
+          entityId: string;
+          role: string;
+          stage: string;
+          createdAt: string;
+        }>;
+        const prod = links.filter(
+          (l) => l.stage === "production" && l.entityType === "asset",
+        );
+        const latestOf = (role: string) =>
+          prod
+            .filter((l) => l.role === role)
+            .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0] ?? null;
+        const videoLink = latestOf("clip");
+        const srtLink = latestOf("reference");
+        if (videoLink) {
+          // 视频时长在上传时由 File 客户端读得,离开后无源 → null(时长校验优雅跳过,不阻断)。
+          setVideo((prev) =>
+            prev ?? {
+              assetId: videoLink.entityId,
+              name: "已上传的粗剪视频",
+              durationSec: null,
+            },
+          );
+        }
+        if (srtLink) {
+          const url = await resolveAssetPreviewUrl(srtLink.entityId);
+          if (url) {
+            const res = await fetch(url);
+            if (res.ok) {
+              const text = await res.text();
+              const lines = parseSrt(text);
+              if (lines.length > 0) {
+                setSrt((prev) =>
+                  prev ?? {
+                    assetId: srtLink.entityId,
+                    name: "已上传的 SRT 字幕",
+                    text,
+                    lines,
+                  },
+                );
+              }
+            }
+          }
+        }
+      } catch {
+        // 恢复失败不阻断(用户可重新上传)。
+      }
+    })();
+  }, [projectId]);
 
   // ── SRT 匹配校验(挡在提交前)──────────────────────────────────────────────
   const durationCheck: SrtDurationCheck | null = React.useMemo(() => {
@@ -820,8 +890,8 @@ export function ProductionWorkbench({
             {scriptCheck ? (
               <p data-check="script" data-ok={scriptCheck.ok}>
                 {scriptCheck.ok
-                  ? `✓ 内容匹配:与口播稿相似度 ${(scriptCheck.similarity * 100).toFixed(0)}%`
-                  : `✕ 内容不匹配:SRT 全文与口播稿相似度仅 ${(scriptCheck.similarity * 100).toFixed(0)}%(阈值 ${(scriptCheck.threshold * 100).toFixed(0)}%)—— 像是另一条视频的字幕`}
+                  ? `✓ 内容匹配:与当前口播稿相似度 ${(scriptCheck.similarity * 100).toFixed(0)}%`
+                  : `✕ 内容不匹配:SRT 全文与当前口播稿相似度仅 ${(scriptCheck.similarity * 100).toFixed(0)}%(阈值 ${(scriptCheck.threshold * 100).toFixed(0)}%)—— 像是另一条视频的字幕,或口播稿改过了`}
               </p>
             ) : (
               <p className="text-muted-foreground">

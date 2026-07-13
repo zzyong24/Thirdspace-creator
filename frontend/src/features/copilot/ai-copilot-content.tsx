@@ -535,6 +535,15 @@ function taskTypeLabel(taskType: string): string {
   );
 }
 
+// [T-286] token 计数紧凑显示(1,191,893 → 1.2M / 26,262 → 26.3K)—— 会话成本角标里的原始
+// toLocaleString 长串(百万级)在窄栏(制作视频右栏)把标题挤成竖排;紧凑后大幅省宽。
+function formatCompactTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 10_000) return `${Math.round(n / 1_000)}K`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
+}
+
 // [T-276] 取路径的直接父目录字符串(纯字符串,不 realpath)—— 供「一次目录授权批量放行同目录
 // 兄弟卡」匹配。读文件夹的多文件读,各卡的原始路径共享同一父目录,据此收敛为一次授权。
 function parentDirOf(p: string): string {
@@ -1600,14 +1609,16 @@ export function AICopilotContent({
         >
           <Sparkles className="size-4" />
         </span>
-        <div className="flex flex-col">
+        {/* [T-286] min-w-0 flex-1 + truncate:窄栏(制作视频右栏)下动作区(token 角标+按钮)
+            不再把标题列挤成近零宽 → 「编导对话」竖排单字。标题超窄时优雅省略号,不竖排。 */}
+        <div className="flex min-w-0 flex-1 flex-col">
           <h2
             data-slot="copilot-header-title"
-            className="text-sm font-semibold text-foreground"
+            className="truncate text-sm font-semibold text-foreground"
           >
             {embed?.title ?? "AI 助手"}
           </h2>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="truncate text-[11px] text-muted-foreground">
             {embed?.subtitle ?? "描述你的目标，我来帮你规划下一步"}
           </p>
         </div>
@@ -1620,9 +1631,9 @@ export function AICopilotContent({
             <span
               data-slot="copilot-usage-badge"
               title="本会话累计 token 用量(↑输入 ↓输出)。费用换算后续可在模型配置里配置单价。"
-              className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10px] tabular-nums text-text-subtle"
+              className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[10px] tabular-nums text-text-subtle"
             >
-              ↑{usageInput.toLocaleString()} ↓{usageOutput.toLocaleString()} tokens
+              ↑{formatCompactTokens(usageInput)} ↓{formatCompactTokens(usageOutput)}
             </span>
           )}
           <button

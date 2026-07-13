@@ -28,11 +28,11 @@ export default async function Page({
   const parsed = Number(raw);
   const page = Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
   // [T-051 2b] 状态筛选 + 排序从 URL 读(三件套接真;非法值回默认)。
-  // [T-153] 默认 status 改「已发布」:用户列表以已发布作品为主视图(URL 无 ?status= 时
-  //   落 published;显式传 ?status=all 仍可回全部)。仅改 route 默认,ProjectsPage 组件
-  //   默认参数保持 "all"(测试 seam 不受影响)。
+  // [T-288] 默认 status 回「全部」:用户实测点「项目」默认落到已发布不合适(在制作/草稿里的
+  //   作品被藏)。改回默认 all —— 进来看全部,published 只作可选过滤(点 tab 才筛)。
+  //   (原 T-153 默认 published 撤回。)
   const rawStatus = Array.isArray(params.status) ? params.status[0] : params.status;
-  const status = rawStatus && /^[a-z]+$/.test(rawStatus) ? rawStatus : "published";
+  const status = rawStatus && /^[a-z]+$/.test(rawStatus) ? rawStatus : "all";
   const rawSort = Array.isArray(params.sort) ? params.sort[0] : params.sort;
   const sort =
     rawSort &&
