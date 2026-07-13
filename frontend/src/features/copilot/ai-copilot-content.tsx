@@ -534,6 +534,14 @@ function taskTypeLabel(taskType: string): string {
     taskType
   );
 }
+
+// [T-276] 取路径的直接父目录字符串(纯字符串,不 realpath)—— 供「一次目录授权批量放行同目录
+// 兄弟卡」匹配。读文件夹的多文件读,各卡的原始路径共享同一父目录,据此收敛为一次授权。
+function parentDirOf(p: string): string {
+  const trimmed = p.replace(/\/+$/, "");
+  const idx = trimmed.lastIndexOf("/");
+  return idx > 0 ? trimmed.slice(0, idx) : "";
+}
 function taskTitle(t: WireTask): string {
   return taskTypeLabel(t.taskType);
 }
@@ -969,6 +977,46 @@ export function AICopilotContent({
   });
   const streaming = status === "streaming" || status === "submitted";
 
+  // [T-276] 待决的 local.read 授权(approval-requested)—— 支撑两件事:
+  //   ① 一次「总是允许该目录」批量放行同目录其它待决卡(读文件夹别逐个弹);
+  //   ② 有待授权时提交排队(不并发触发新一轮,仿 Claude Code 的权限门)。
+  const pendingLocalReads = React.useMemo(() => {
+    const out: Array<{ approvalId: string; path: string }> = [];
+    for (const m of messages) {
+      if (m.role !== "assistant") continue;
+      for (const p of m.parts) {
+        if (!isToolUIPart(p)) continue;
+        if (getToolName(p) !== "local.read") continue;
+        if (p.state !== "approval-requested") continue;
+        const id = p.approval?.id ?? "";
+        const path = ((p.input ?? {}) as { path?: string }).path ?? "";
+        if (id) out.push({ approvalId: id, path });
+      }
+    }
+    return out;
+  }, [messages]);
+  const hasPendingApproval = pendingLocalReads.length > 0;
+
+  // [T-276] 目录授权批量放行:一张卡点「总是允许该目录」→ 服务端已把该文件所在目录落进授权表,
+  //   把**直接父目录相同**的其它待决 local.read 卡一并批准(读文件夹的多文件读共享父目录)。
+  //   只匹配同一层目录(不递归、不跨目录),稳妥;匹配不到的保持独立待决。全部批准后
+  //   sendAutomaticallyWhen 一次性 resume 续跑各读取。
+  const approveDirBatch = React.useCallback(
+    (approvalId: string) => {
+      void addToolApprovalResponse({ id: approvalId, approved: true });
+      const self = pendingLocalReads.find((x) => x.approvalId === approvalId);
+      const dir = self?.path ? parentDirOf(self.path) : "";
+      if (!dir) return;
+      for (const pr of pendingLocalReads) {
+        if (pr.approvalId === approvalId || !pr.path) continue;
+        if (parentDirOf(pr.path) === dir) {
+          void addToolApprovalResponse({ id: pr.approvalId, approved: true });
+        }
+      }
+    },
+    [pendingLocalReads, addToolApprovalResponse],
+  );
+
   // [T-105] 自动滚到最新:发消息/回复开始(条数增)强制跟随到底;流式增长按「跟随态」滚;
   // 用户手动上滚离底则暂停跟随(读历史不被打断),滚回接近底部恢复。免得每次发消息还得手动滚。
   const messagesScrollRef = React.useRef<HTMLDivElement | null>(null);
@@ -1069,10 +1117,12 @@ export function AICopilotContent({
 
   const submit = React.useCallback(() => {
     const value = prompt.trim();
-    if (value.length === 0 || streaming) return;
+    // [T-276] 有待确认的本机读取授权时,提交排队(不发)—— 先处理上方授权卡,避免并发触发新一轮
+    // (仿 Claude Code 权限门;与 T-274 悬空调用净化互补:那边止崩,这边治源不让它并发)。
+    if (value.length === 0 || streaming || hasPendingApproval) return;
     void sendMessage({ text: value });
     setPrompt("");
-  }, [prompt, streaming, sendMessage]);
+  }, [prompt, streaming, hasPendingApproval, sendMessage]);
 
   // [T-231⑨] 快捷按钮(composer chips / 推荐指令 / 快速开始)统一走真预调:完整话术预填
   // 输入框 + 语义工具一次性置顶(quickFunctionKeyRef,下一次发送生效)。**预填不自动发**
@@ -1859,6 +1909,7 @@ export function AICopilotContent({
                           onApprove={(id) =>
                             void addToolApprovalResponse({ id, approved: true })
                           }
+                          onApproveDir={(id) => approveDirBatch(id)}
                           onDeny={(id) =>
                             void addToolApprovalResponse({ id, approved: false })
                           }
@@ -2423,9 +2474,13 @@ export function AICopilotContent({
                 {/* [T-233] 发送快捷键提示:Enter 已改为换行,明示修饰键才发送(不然用户不知道怎么发)。 */}
                 <span
                   data-slot="prompt-send-hint"
-                  className="whitespace-nowrap text-[10px] text-muted-foreground"
+                  className={`whitespace-nowrap text-[10px] ${
+                    hasPendingApproval ? "text-warning" : "text-muted-foreground"
+                  }`}
                 >
-                  ⌘/Ctrl ↩ 发送 · Enter 换行
+                  {hasPendingApproval
+                    ? "有待确认的本机读取 · 先处理上方授权卡再发"
+                    : "⌘/Ctrl ↩ 发送 · Enter 换行"}
                 </span>
                 <button
                   type="button"
@@ -2460,7 +2515,7 @@ export function AICopilotContent({
                 ) : (
                   <button
                     type="submit"
-                    disabled={isEmpty}
+                    disabled={isEmpty || hasPendingApproval}
                     data-slot="submit-button"
                     data-testid="submit-button"
                     aria-label="提交提示给 Copilot"

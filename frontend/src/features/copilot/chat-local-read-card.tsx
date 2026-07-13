@@ -75,6 +75,7 @@ export function ChatLocalReadCard({
   error,
   deniedTerminal = false,
   onApprove,
+  onApproveDir,
   onDeny,
   onDecision,
 }: {
@@ -91,8 +92,10 @@ export function ChatLocalReadCard({
   error: string | null;
   /** [T-263] 用户已拒绝的终态(output-denied / reload 回放)→ 渲「已拒绝」,不再弹按钮。 */
   deniedTerminal?: boolean;
-  /** [T-263] 原生授权「允许」回执(写 grant 成功后调,续跑 execute)。 */
+  /** [T-263] 原生授权「允许一次」回执(写 grant 成功后调,续跑 execute)。 */
   onApprove?: (approvalId: string) => void;
+  /** [T-276] 原生授权「总是允许该目录」回执 —— 走批量口(父组件把同目录其它待决卡一并放行)。 */
+  onApproveDir?: (approvalId: string) => void;
   /** [T-263] 原生授权「拒绝」回执(标 output-denied,execute 不跑)。 */
   onDeny?: (approvalId: string) => void;
   /** [T-253 兜底] 旧四态:用户决定后把一句话发回对话(让编导重调/停止)。 */
@@ -132,7 +135,10 @@ export function ChatLocalReadCard({
         setState("granted");
         if (isNative && approvalRequest && !pathOverride) {
           // [T-263] 同回合 resume:回执「已批准」→ SDK 续跑 execute 读到内容(卡随即变读取结果)。
-          onApprove?.(approvalRequest.approvalId);
+          // [T-276] 目录授权走批量口:服务端已把该文件所在目录落进授权表,父组件据此把**同目录**
+          //   其它待决卡一并放行(读文件夹的多文件读不再逐个弹);一次授权仍走单卡批准。
+          if (mode === "dir") onApproveDir?.(approvalRequest.approvalId);
+          else onApprove?.(approvalRequest.approvalId);
         } else {
           // [T-253 兜底 / T-262 按名命中] 双回合:发一句话让编导重调该真实路径。
           onDecision?.(
@@ -146,7 +152,7 @@ export function ChatLocalReadCard({
         setGrantError("授权请求失败,请重试");
       }
     },
-    [pendingPath, isNative, approvalRequest, onApprove, onDecision],
+    [pendingPath, isNative, approvalRequest, onApprove, onApproveDir, onDecision],
   );
 
   const deny = React.useCallback(() => {

@@ -166,8 +166,9 @@ describe("ChatLocalReadCard — T-263 原生授权挂起(approval-requested)", (
     expect(screen.getByText(/同一回合读取/)).toBeTruthy();
   });
 
-  it("总是允许该目录 → 写 grant(dir)+ onApprove(approvalId)", async () => {
+  it("[T-276] 总是允许该目录 → 写 grant(dir)+ onApproveDir(approvalId)(走批量放行口,不是单卡 onApprove)", async () => {
     const onApprove = vi.fn();
+    const onApproveDir = vi.fn();
     render(
       <ChatLocalReadCard
         approvalRequest={REQ}
@@ -176,6 +177,7 @@ describe("ChatLocalReadCard — T-263 原生授权挂起(approval-requested)", (
         listing={null}
         error={null}
         onApprove={onApprove}
+        onApproveDir={onApproveDir}
         onDeny={vi.fn()}
       />,
     );
@@ -183,7 +185,9 @@ describe("ChatLocalReadCard — T-263 原生授权挂起(approval-requested)", (
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     const [, init] = fetchMock.mock.calls[0]! as [string, RequestInit];
     expect(JSON.parse(init.body as string).mode).toBe("dir");
-    await waitFor(() => expect(onApprove).toHaveBeenCalledWith("appr-1"));
+    // 目录授权走批量口(父组件据此放行同目录兄弟卡);不走单卡 onApprove
+    await waitFor(() => expect(onApproveDir).toHaveBeenCalledWith("appr-1"));
+    expect(onApprove).not.toHaveBeenCalled();
   });
 
   it("拒绝 → onDeny(approvalId),不打授权接口、不走 onDecision", async () => {
