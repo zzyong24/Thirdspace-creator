@@ -76,18 +76,62 @@ export function resolveSceneMode(scene: VideoRenderScene, brollCount: number): "
   return "pip";
 }
 
-// 口播头两个落位(1920x1080 基准;delivery 变更时等比缩放归后续,v1 固定)。
+const GAP = 18;
+
 // [T-291] PiP 由整圆(143)改圆角矩形(24):配 object-fit:contain 时整圆会在圆内留黑弧,
 // 圆角矩形的深色 letterbox 更干净。按 SPEC §2「保完整 > 圆形」。
-const TH_RIGHT = { left: 1330, top: 138, width: 500, height: 804, borderRadius: 18 };
-const TH_PIP = { left: 84, top: 712, width: 286, height: 286, borderRadius: 24 };
+interface LayoutBox {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  borderRadius: number;
+}
 
-// 布局常量(内容区 flow 排布 + PiP 安全区避让,e03 同款)。
-const CONTENT_X = 120;
-const CONTENT_Y = 320;
-const GAP = 18;
-const PIP_SAFE_X = 405; // 左下 PiP 安全区(286×286 圆角矩形):x < PIP_SAFE_X 且 y+h > PIP_SAFE_Y 禁放
-const PIP_SAFE_Y = 660;
+// [T-290] 全套布局常量随画幅解析:横版(w≥h)沿用 1920x1080 原布局;竖版(h>w,抖音 9:16)
+// 重排——口播头「主」态为居中 9:16 上半屏大图、「pip」态为左下气泡(在字幕之上);卡片 flow
+// 内容区与 PiP 安全区按竖屏坐标重算。thRight=口播「主/right」态位,thPip=小窗态位;contentY/
+// headRightInset/rightEdge 按态(right/pip)取值。竖版口播头默认按竖屏源(9:16)构图(contain)。
+interface Layout {
+  thRight: LayoutBox;
+  thPip: LayoutBox;
+  contentX: number;
+  headTop: number;
+  contentY: Record<"right" | "pip", number>;
+  headRightInset: Record<"right" | "pip", number>;
+  rightEdge: Record<"right" | "pip", number>;
+  pipSafeX: number;
+  pipSafeY: number;
+}
+
+function resolveLayout(width: number, height: number): Layout {
+  if (height > width) {
+    // 竖版 1080x1920(及等比):口播头上半屏、卡片下半屏纵向流。
+    return {
+      thRight: { left: 210, top: 200, width: 600, height: 1066, borderRadius: 20 },
+      thPip: { left: 60, top: 1440, width: 300, height: 300, borderRadius: 24 },
+      contentX: 60,
+      headTop: 96,
+      contentY: { right: 1300, pip: 340 },
+      headRightInset: { right: 60, pip: 60 },
+      rightEdge: { right: 1020, pip: 1020 },
+      pipSafeX: 388,
+      pipSafeY: 1420, // 左下 PiP 安全区(竖版):x < pipSafeX 且 y+h > pipSafeY 禁放
+    };
+  }
+  // 横版 1920x1080(原布局,快照锚定不变)。
+  return {
+    thRight: { left: 1330, top: 138, width: 500, height: 804, borderRadius: 18 },
+    thPip: { left: 84, top: 712, width: 286, height: 286, borderRadius: 24 },
+    contentX: 120,
+    headTop: 132,
+    contentY: { right: 320, pip: 320 },
+    headRightInset: { right: 720, pip: 120 },
+    rightEdge: { right: 1180, pip: 1800 },
+    pipSafeX: 405,
+    pipSafeY: 660, // 左下 PiP 安全区(286×286 圆角矩形):x < pipSafeX 且 y+h > pipSafeY 禁放
+  };
+}
 
 interface Ctx {
   clips: string[];
@@ -225,6 +269,9 @@ function renderCard(card: VideoRenderCard, mediaPrefix: string): CardBox {
 }
 
 // ── special 预设动画(枚举 3)────────────────────────────────────────────────────
+// [T-290/T-295] special 目前是死代码(decideScenes 从不产 special);坐标仍按横版硬编码。
+// T-295 接入富动画时会把 special 决策产出打通并按画幅(L)重排;此处保留横版 CONTENT_X 兜编译。
+const CONTENT_X = 120;
 function renderSpecial(ctx: Ctx, special: VideoRenderSpecial, scene: VideoRenderScene): void {
   const S = scene.startSec;
   const E = scene.endSec;
@@ -342,6 +389,7 @@ export function generateVideoRenderHtml(
   const DUR = f2(props.talkingHead.durationSec);
   const { width, height, fps } = props.delivery;
   void fps; // fps 由渲染命令行控制;合成本身以秒为时钟
+  const L = resolveLayout(width, height); // [T-290] 布局随画幅(横/竖版)
 
   const ctx: Ctx = { clips: [], tweens: [], trackNo: 9, mediaPrefix };
 
@@ -379,7 +427,7 @@ export function generateVideoRenderHtml(
     resolveSceneMode(s, (brollByScene.get(s.id) ?? []).length),
   );
   const initialMode = modes[0] ?? "pip";
-  const initPos = initialMode === "right" ? TH_RIGHT : TH_PIP;
+  const initPos = initialMode === "right" ? L.thRight : L.thPip;
   ctx.clips.push(
     `<video id="th" class="clip" src="${esc(mediaPrefix + props.talkingHead.file)}"${props.talkingHead.hasAudio ? ' data-has-audio="true"' : ""} data-start="0" data-duration="${fmt(DUR)}" data-track-index="900" ` +
       // [T-291] 口播头改 object-fit:contain(完整不裁,治「脸没在框」)+ 深色底补边。
@@ -391,7 +439,7 @@ export function generateVideoRenderHtml(
   // 形态切换 tween:在模式变化的场景边界前 0.7s 开始(首场景不切)
   for (let i = 1; i < props.scenes.length; i++) {
     if (modes[i] === modes[i - 1]) continue;
-    const to = modes[i] === "right" ? TH_RIGHT : TH_PIP;
+    const to = modes[i] === "right" ? L.thRight : L.thPip;
     const at = Math.max(0, props.scenes[i]!.startSec - 0.7);
     ctx.tweens.push(
       `tl.to("#th",{left:${to.left},top:${to.top},width:${to.width},height:${to.height},borderRadius:${to.borderRadius},duration:.7,ease:"power2.inOut"},${fmt(at)});`,
@@ -406,14 +454,14 @@ export function generateVideoRenderHtml(
     const sub = scene.sub
       ? `<div style="color:${TK.muted};font-size:25px;font-weight:500;margin-top:12px">${esc(scene.sub)}</div>`
       : "";
-    const rightInset = mode === "right" ? 720 : 120;
+    const rightInset = L.headRightInset[mode];
     clip(
       ctx,
       headId,
       nextTrack(ctx),
       scene.startSec,
       sceneDur,
-      `left:${CONTENT_X}px;top:132px;right:${rightInset}px;`,
+      `left:${L.contentX}px;top:${L.headTop}px;right:${rightInset}px;`,
       `<div style="color:${TK.accentH};font-size:18px;font-weight:700;letter-spacing:.22em">${esc(scene.label)}</div>` +
         `<div style="color:${TK.fg};font-size:58px;font-weight:800;letter-spacing:-.022em;line-height:1.06;margin-top:12px">${esc(scene.title)}</div>${sub}`,
     );
@@ -436,23 +484,23 @@ export function generateVideoRenderHtml(
       })),
     ].sort((a, b) => a.at - b.at);
 
-    const rightEdge = mode === "right" ? 1180 : 1800;
-    let px = CONTENT_X;
-    let py = CONTENT_Y;
+    const rightEdge = L.rightEdge[mode];
+    let px = L.contentX;
+    let py = L.contentY[mode];
     let rowH = 0;
     const place = (w: number, h: number): { x: number; y: number } => {
       if (px + w > rightEdge) {
-        px = CONTENT_X;
+        px = L.contentX;
         py += rowH + GAP;
         rowH = 0;
       }
-      if (mode === "pip" && px < PIP_SAFE_X && py + h > PIP_SAFE_Y) {
-        px = PIP_SAFE_X + 16;
+      if (mode === "pip" && px < L.pipSafeX && py + h > L.pipSafeY) {
+        px = L.pipSafeX + 16;
         if (px + w > rightEdge) {
-          px = CONTENT_X;
+          px = L.contentX;
           py += rowH + GAP;
           rowH = 0;
-          if (px < PIP_SAFE_X && py + h > PIP_SAFE_Y) px = PIP_SAFE_X + 16;
+          if (px < L.pipSafeX && py + h > L.pipSafeY) px = L.pipSafeX + 16;
         }
       }
       const pos = { x: px, y: py };

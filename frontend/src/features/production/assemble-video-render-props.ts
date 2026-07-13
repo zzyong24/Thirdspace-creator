@@ -39,6 +39,18 @@ export interface AssembleOptions {
   talkingHeadDurationSec?: number;
   /** 素材清单快照 —— B-roll label 来源(契约 label 禁内部词);查不到回退 assetId。 */
   inventory?: readonly BrollAssetRef[];
+  /** [T-290] 项目画幅 → delivery 尺寸。portrait=1080x1920(抖音 9:16),landscape=1920x1080。
+   *  缺省 landscape(兜底,不破坏存量;立项已改必填,新项目必带此值)。 */
+  orientation?: "portrait" | "landscape";
+}
+
+/** [T-290] 画幅 → delivery 交付尺寸(fps 30 固定;编码细节归渲染 executor)。 */
+function deliveryForOrientation(
+  orientation: "portrait" | "landscape" | undefined,
+): { width: number; height: number; fps: number } {
+  return orientation === "portrait"
+    ? { width: 1080, height: 1920, fps: 30 }
+    : { width: 1920, height: 1080, fps: 30 };
 }
 
 /** content 里第一个数值 token(供 stat 卡 value;与 runner 可溯校验同域的数字形态)。 */
@@ -162,7 +174,7 @@ export function assembleVideoRenderProps(
         .map(toContractCard),
     })),
     broll,
-    // SPEC §3.1 步骤 4 的交付固定参数(1920x1080/30fps;编码细节归渲染 executor)。
-    delivery: { width: 1920, height: 1080, fps: 30 },
+    // [T-290] delivery 尺寸随项目画幅(portrait 1080x1920 / landscape 1920x1080)。
+    delivery: deliveryForOrientation(opts.orientation),
   });
 }

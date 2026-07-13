@@ -53,6 +53,8 @@ export interface VideoDecisionPreviewProps {
   talkingHeadAssetId?: string | null;
   /** 粗剪人物视频真实时长(秒,T-254c ffprobe 探针带入);缺省按场景/字幕末尾推导。 */
   talkingHeadDurationSec?: number;
+  /** [T-290] 项目画幅 → 渲染 delivery 尺寸(portrait 竖版 / landscape 横版)。 */
+  orientation?: "portrait" | "landscape";
 }
 
 export function VideoDecisionPreview({
@@ -63,6 +65,7 @@ export function VideoDecisionPreview({
   title,
   talkingHeadAssetId,
   talkingHeadDurationSec,
+  orientation,
 }: VideoDecisionPreviewProps) {
   // 可编辑的两轴:删卡(cards)/ B-roll 换选与移除(broll)。场景/字幕本期只读展示。
   const [cards, setCards] = React.useState(decisions.cards);
@@ -251,6 +254,7 @@ export function VideoDecisionPreview({
                 talkingHeadAssetId,
                 talkingHeadDurationSec,
                 inventory,
+                orientation,
               }),
             })
           }

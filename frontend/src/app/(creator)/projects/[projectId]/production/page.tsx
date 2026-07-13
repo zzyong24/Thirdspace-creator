@@ -61,17 +61,36 @@ interface ScopedClient {
 async function resolveProject(
   client: ScopedClient,
   param: string,
-): Promise<{ id: string; title: string } | null> {
+): Promise<{
+  id: string;
+  title: string;
+  // [T-290] 画幅(briefDetail.orientation)→ 渲染 delivery 尺寸;listProjects 返回全量 projectResource(含 briefDetail)。
+  orientation?: "portrait" | "landscape";
+} | null> {
   try {
     const projects = (await client.listProjects({
       params: undefined,
       query: { page: 1, pageSize: 100 },
       body: undefined,
-    })) as ReadonlyArray<{ id: string; title: string }>;
+    })) as ReadonlyArray<{
+      id: string;
+      title: string;
+      briefDetail?: { orientation?: "portrait" | "landscape" | null } | null;
+    }>;
+    const pick = (p: {
+      id: string;
+      title: string;
+      briefDetail?: { orientation?: "portrait" | "landscape" | null } | null;
+    }) => ({
+      id: p.id,
+      title: p.title,
+      orientation: p.briefDetail?.orientation ?? undefined,
+    });
     const byId = projects.find((p) => p.id === param);
-    if (byId) return byId;
+    if (byId) return pick(byId);
     const slug = param.toLowerCase();
-    return projects.find((p) => slugifyTitle(p.title) === slug) ?? null;
+    const bySlug = projects.find((p) => slugifyTitle(p.title) === slug);
+    return bySlug ? pick(bySlug) : null;
   } catch {
     return null;
   }
@@ -158,6 +177,7 @@ export default async function ProductionRoute({ params }: ProductionRouteProps) 
       outputId={outputId}
       initialStatus={initialStatus}
       initialSegmentCount={initialSegmentCount}
+      orientation={project?.orientation}
     />
   );
 }

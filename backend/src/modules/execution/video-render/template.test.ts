@@ -126,6 +126,28 @@ describe("generateVideoRenderHtml", () => {
     expect(html).toContain('src="media/th.mp4"');
   });
 
+  it("[T-290] 竖版(1080x1920):root 尺寸随 delivery + 口播头用竖版布局坐标", () => {
+    const html = generateVideoRenderHtml({
+      ...fullProps(),
+      delivery: { width: 1080, height: 1920, fps: 30 },
+    });
+    // root 画布随 delivery 竖版尺寸
+    expect(html).toContain('data-width="1080" data-height="1920"');
+    expect(html).toContain("width:1080px;height:1920px");
+    // 首场 hook(1 卡)→ right 态:竖版口播头居中 9:16 上半屏(thRight 竖版坐标)
+    expect(html).toContain("left:210px;top:200px;width:600px;height:1066px");
+    // 竖版不含横版口播头右侧坐标(1330)
+    expect(html).not.toContain("left:1330px");
+  });
+
+  it("[T-290] 竖版整体输出快照锚定(改竖版布局需显式重锚)", () => {
+    const html = generateVideoRenderHtml({
+      ...fullProps(),
+      delivery: { width: 1080, height: 1920, fps: 30 },
+    });
+    expect(html).toMatchSnapshot();
+  });
+
   it("双语字幕:SRT 主时钟,重叠行被夹断(end 夹到下一行 start-0.02)", () => {
     const html = generateVideoRenderHtml(fullProps());
     // 第 2 行 end=5.2 但下一行 start=5.3 → duration = 5.28-2.50 = 2.78

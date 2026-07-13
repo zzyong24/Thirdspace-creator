@@ -186,6 +186,8 @@ export interface ProductionWorkbenchProps {
   initialStatus: string | null;
   /** 已登记分场段数(listSegments 服务端读)。 */
   initialSegmentCount: number;
+  /** [T-290] 项目画幅(briefDetail.orientation 投影)→ 渲染 delivery 尺寸。缺省 = 未设(按 landscape 兜底)。 */
+  orientation?: "portrait" | "landscape";
   /** 测试注入:读视频时长(默认 <video> metadata)。 */
   readVideoDuration?: (file: File) => Promise<number | null>;
 }
@@ -210,6 +212,7 @@ export function ProductionWorkbench({
   outputId: initialOutputId,
   initialStatus,
   initialSegmentCount,
+  orientation,
   readVideoDuration = readVideoDurationViaElement,
 }: ProductionWorkbenchProps) {
   const [outputId, setOutputId] = React.useState(initialOutputId);
@@ -968,6 +971,7 @@ export function ProductionWorkbench({
               title={projectTitle}
               talkingHeadAssetId={video?.assetId ?? null}
               talkingHeadDurationSec={video?.durationSec ?? undefined}
+              orientation={orientation}
               onConfirm={(payload) => void onConfirmDecisions(payload)}
               onDiscard={onDiscardDecisions}
             />
