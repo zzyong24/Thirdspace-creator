@@ -27,11 +27,12 @@
 //   - 未签名/未公证(证书=用户的,P6 补)。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, cpSync, chmodSync, copyFileSync, lstatSync, readdirSync, writeFileSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { platform, arch } from "node:process";
+import { homedir } from "node:os";
 
 // 统计目录树里的 symlink 数(诊断/日志用)。
 function countSymlinks(root) {
@@ -152,6 +153,8 @@ function bundlePlaywright() {
     console.log(`[build-sidecar]   实拷 ${pkg} ← ${srcDir}`);
   }
   console.log(`[build-sidecar]   覆盖 .pnpm 残缺版 ${pnpmOverwrote} 处`);
+  // [T-284] 顺带把 Chromium 浏览器二进制打进 sidecar(见 bundleChromiumBrowser 注释)。
+  bundleChromiumBrowser();
   // 自检①:sidecar node 从 frontend/ 能否解析 @playwright/test。
   const check = spawnSync(
     process.execPath,
@@ -176,6 +179,63 @@ function bundlePlaywright() {
     console.log(`[build-sidecar]   ✓ 自检②:${cores.length} 个 .pnpm playwright-core 均含 browsers.json`);
   }
   console.log("[build-sidecar]   ✓ 自检①:sidecar 内 @playwright/test 可解析");
+}
+
+// [T-284] 把 Chromium 浏览器二进制打进 sidecar(用户拍板:视频渲染永不下载 / 永不「Chromium
+//   未就绪」)。根因:打包版 sidecar 的 playwright 在混淆 bundle runtime 里对默认缓存
+//   `~/Library/Caches/ms-playwright` 的浏览器路径解析失效(即便机器上有 chromium-<rev> 也找不到),
+//   自动下载注入也因同层 bundle 问题没跑起来。正解:随包打 Chromium + 运行时
+//   `PLAYWRIGHT_BROWSERS_PATH` 显式指向 bundle 内目录(见 frontend/src/instrumentation.ts)。
+//   revision 从**已实拷进 sidecar 的 playwright-core browsers.json** 读(与 executablePath 同源,
+//   保证版本一致)。~341MB(headed chromium)—— 换 app 体积保渲染稳,用户已认。放在打 tarball 前,
+//   让浏览器进 tarball。本机未装该 rev / 非 mac → 跳过(不阻塞打包;渲染回落运行时下载兜底)。
+function bundleChromiumBrowser() {
+  const bj = join(
+    SIDECAR_RUNTIME,
+    "frontend",
+    "node_modules",
+    "playwright-core",
+    "browsers.json",
+  );
+  let rev = null;
+  try {
+    const data = JSON.parse(readFileSync(bj, "utf8"));
+    const chr = (data.browsers || []).find((b) => b.name === "chromium");
+    rev = chr?.revision ?? null;
+  } catch (e) {
+    console.warn(
+      `[build-sidecar] ⚠ 读 browsers.json revision 失败,跳过 Chromium 打包(渲染回落运行时下载):${e.message}`,
+    );
+    return;
+  }
+  if (!rev) {
+    console.warn("[build-sidecar] ⚠ browsers.json 无 chromium revision,跳过 Chromium 打包");
+    return;
+  }
+  // 目前只覆盖 mac 缓存路径(P1 本机 target);Win/Linux 缓存路径不同,留位回落下载。
+  if (platform !== "darwin") {
+    console.warn(`[build-sidecar] ⚠ 非 mac 平台暂不打包 Chromium(缓存路径不同),渲染回落运行时下载`);
+    return;
+  }
+  const cacheRoot = join(homedir(), "Library", "Caches", "ms-playwright");
+  const srcBrowser = join(cacheRoot, `chromium-${rev}`);
+  if (!existsSync(srcBrowser)) {
+    console.warn(
+      `[build-sidecar] ⚠ 本机未装 chromium-${rev}(${srcBrowser} 不存在)—— 先跑 \`pnpm -C frontend exec playwright install chromium\` 再打包。跳过 Chromium 打包(渲染回落运行时下载)。`,
+    );
+    return;
+  }
+  const destBrowsers = join(SIDECAR_RUNTIME, "frontend", "browsers");
+  const destBrowser = join(destBrowsers, `chromium-${rev}`);
+  rmSync(destBrowser, { recursive: true, force: true });
+  mkdirSync(destBrowsers, { recursive: true });
+  console.log(
+    `[build-sidecar] 打包 Chromium 浏览器 chromium-${rev}(~341MB)→ sidecar/frontend/browsers/…`,
+  );
+  cpSync(srcBrowser, destBrowser, { recursive: true, dereference: true });
+  console.log(
+    `[build-sidecar]   ✓ Chromium 已打进 bundle(运行时 instrumentation 设 PLAYWRIGHT_BROWSERS_PATH → frontend/browsers)`,
+  );
 }
 
 // [T-172] macOS：产出 sidecar 内的 mini `.app`，让 node sidecar 在 Dock 里隐身。
