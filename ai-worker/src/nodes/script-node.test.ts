@@ -145,7 +145,11 @@ describe("runScriptNode", () => {
       },
     });
     await runScriptNode({ model, positioningBrief: "x" });
-    expect(seenPrompt).not.toContain("用户第一手资料");
+    // [T-275] 探针改探「真绑定时才出现的段头」:script.draft 模板正文本身(叙事纪律 v4)已会
+    // 提及「用户第一手资料」当引导词,故不能再拿裸词当「素材段有没有注入」的探针。素材段真注入
+    // 时才有的唯一标记 = 硬素材段头「最高优先 · 必须遵守」/ 参考素材段头「创作者素材（参考级）」。
+    expect(seenPrompt).not.toContain("最高优先 · 必须遵守");
+    expect(seenPrompt).not.toContain("创作者素材（参考级）");
   });
 
   it("空 shots(模型没产出分镜)→ 抛错(不假成功)", async () => {
