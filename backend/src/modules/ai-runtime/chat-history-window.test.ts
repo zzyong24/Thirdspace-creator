@@ -9,6 +9,7 @@ import {
   estimateTokens,
   projectChatHistory,
   formatChatContextLog,
+  dropAbandonedApprovalParts,
 } from "./chat-history-window";
 
 // [T-239d] 对话历史窗口化 —— 投影层单测:①tool-result 清体只影响 N 轮之前、近轮原样;
@@ -163,5 +164,100 @@ describe("[T-239d] 日志格式(SPEC 验收锚定)", () => {
       truncated: 2,
     });
     expect(line).toBe("[chat-context] est=1234→567 tokens cleared=3 truncated=2");
+  });
+});
+
+// [T-274] 被遗弃的授权请求净化 —— HITL 授权卡没点就发新消息导致的悬空 tool-call → 崩整流。
+function assistantWithToolState(
+  id: string,
+  state: string,
+  extra: Record<string, unknown> = {},
+): UIMessage {
+  return {
+    id,
+    role: "assistant",
+    parts: [
+      { type: "text", text: `准备读文件 ${id}` },
+      {
+        type: "tool-local.read",
+        toolCallId: `tc-${id}`,
+        state,
+        input: { path: "/Users/x/note.md" },
+        ...extra,
+      },
+    ],
+  } as UIMessage;
+}
+
+function toolStatesOf(m: UIMessage): string[] {
+  const parts = (m as { parts?: Array<{ type?: string; state?: string }> }).parts ?? [];
+  return parts.filter((p) => p.type?.startsWith("tool-")).map((p) => p.state ?? "");
+}
+
+describe("[T-274] dropAbandonedApprovalParts", () => {
+  it("approval-requested 后面跟了新 user 消息 → 摘掉该悬空 tool 部件(text 保留)", () => {
+    const msgs = [
+      userMsg("u0", "读一下这个文件夹"),
+      assistantWithToolState("a0", "approval-requested"),
+      userMsg("u1", "帮我立一棵论点树"),
+    ];
+    const out = dropAbandonedApprovalParts(msgs);
+    // 中间 assistant 的 tool 部件被摘,text 还在
+    expect(toolStatesOf(out[1]!)).toEqual([]);
+    const parts = (out[1] as { parts?: Array<{ type?: string }> }).parts ?? [];
+    expect(parts.some((p) => p.type === "text")).toBe(true);
+    // 入参不被改(纯函数,存储副本)
+    expect(toolStatesOf(msgs[1]!)).toEqual(["approval-requested"]);
+  });
+
+  it("input-available/input-streaming 中断残留在 user 之前 → 一并摘", () => {
+    const msgs = [
+      userMsg("u0", "查一下"),
+      assistantWithToolState("a0", "input-available"),
+      assistantWithToolState("a1", "input-streaming"),
+      userMsg("u1", "换个话题"),
+    ];
+    const out = dropAbandonedApprovalParts(msgs);
+    expect(toolStatesOf(out[1]!)).toEqual([]);
+    expect(toolStatesOf(out[2]!)).toEqual([]);
+  });
+
+  it("live 授权卡(末条 user 之后,无新 user 消息)→ 不动(不误伤当前轮/正常 resume)", () => {
+    const msgs = [
+      userMsg("u0", "读一下这个文件夹"),
+      assistantWithToolState("a0", "approval-requested"),
+    ];
+    const out = dropAbandonedApprovalParts(msgs);
+    expect(out).toBe(msgs); // 无改动 → 原引用返回
+    expect(toolStatesOf(out[1]!)).toEqual(["approval-requested"]);
+  });
+
+  it("已批准 resume(approval-responded)在 user 之前也不摘 —— SDK 会执行/合成结果,不崩", () => {
+    const msgs = [
+      userMsg("u0", "读一下"),
+      assistantWithToolState("a0", "approval-responded", {
+        approval: { id: "ap0", approved: true },
+      }),
+      userMsg("u1", "继续"),
+    ];
+    const out = dropAbandonedApprovalParts(msgs);
+    expect(toolStatesOf(out[1]!)).toEqual(["approval-responded"]);
+  });
+
+  it("已完成的 tool(output-available)不动", () => {
+    const msgs = [
+      userMsg("u0", "读一下"),
+      assistantWithToolState("a0", "output-available", { output: { ok: true } }),
+      userMsg("u1", "再来"),
+    ];
+    const out = dropAbandonedApprovalParts(msgs);
+    expect(toolStatesOf(out[1]!)).toEqual(["output-available"]);
+  });
+
+  it("无 user 消息 / user 是首条 → 原样返回", () => {
+    const only = [assistantWithToolState("a0", "approval-requested")];
+    expect(dropAbandonedApprovalParts(only)).toBe(only);
+    const firstUser = [userMsg("u0", "hi"), assistantWithToolState("a0", "approval-requested")];
+    expect(dropAbandonedApprovalParts(firstUser)).toBe(firstUser);
   });
 });

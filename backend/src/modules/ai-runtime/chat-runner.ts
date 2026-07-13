@@ -51,6 +51,7 @@ import {
   resolveToolResultKeepTurns,
   resolveTruncateKeepTurns,
   resolveContextWindowTokens,
+  dropAbandonedApprovalParts,
 } from "./chat-history-window";
 import { buildEnrichPrompt, parseCard } from "./topic-enrich-runner";
 // [T-245] trend 出题多源装配(T-235b 信源信号 + web 搜索并行,与选题页出题同一装配器)——
@@ -1592,14 +1593,21 @@ export async function runChatStream(
   // 给用户,模型只有指针权 —— honesty 规则 6);② 清体后仍超「窗口×80%」→ 只保 system+近 K 轮,
   // 更早整轮截掉 + 首条注入「更早历史已省略」。切点选 convertToModelMessages **之前**:
   // UIMessage 层按「轮」操作最薄;转 ModelMessage 后 tool-call/result 拆散成对,再截会拦腰断对。
-  const projection = projectChatHistory(input.messages, {
+  // [T-274] 先净化「被后续对话遗弃的未完成 tool 调用」(HITL 授权卡没点就发新消息 → 悬空
+  // tool-call → convertToLanguageModelPrompt 抛 MissingToolResultsError 崩整流)。再投影窗口。
+  const sanitized = dropAbandonedApprovalParts(input.messages);
+  const projection = projectChatHistory(sanitized, {
     systemText: assembly.system,
     keepToolResultTurns: resolveToolResultKeepTurns(process.env),
     keepTurns: resolveTruncateKeepTurns(process.env),
     contextWindowTokens: resolveContextWindowTokens(process.env),
   });
   console.info(formatChatContextLog(projection));
-  const modelMessages = await convertToModelMessages(projection.messages);
+  // [T-274] ignoreIncompleteToolCalls:兜住 input-available/input-streaming 中断态残留(净化器
+  // 已摘 approval-requested;两者叠加 = 悬空 tool-call 全覆盖,不误伤正常批准 resume)。
+  const modelMessages = await convertToModelMessages(projection.messages, {
+    ignoreIncompleteToolCalls: true,
+  });
 
   // [T-239e] token 用量累计(usage 可见):onStepEnd 逐步累加并回报(中断轮已完成步不丢);
   // finish 时以 totalUsage 权威值覆盖。字段名以 ai@7.0.4 d.ts LanguageModelUsage 为准:

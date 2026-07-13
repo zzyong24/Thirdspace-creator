@@ -210,3 +210,54 @@ export function projectChatHistory(
 export function formatChatContextLog(p: ChatHistoryProjection): string {
   return `[chat-context] est=${p.estBefore}→${p.estAfter} tokens cleared=${p.cleared} truncated=${p.truncated}`;
 }
+
+// [T-274] 无结果的未完成 tool 态 —— 这些部件转 ModelMessage 后是「有 tool-call、无 tool-result」:
+//   · approval-requested = HITL 授权卡弹出但用户从没点(local.read 授权门);
+//   · input-available / input-streaming = 工具调用已发出但执行没产出(上一轮中断/腰斩)。
+// approval-responded 不在此列:已批准的会在续跑轮执行、被拒的有合成 denied 结果,SDK 两者都不崩。
+const ABANDONED_TOOL_STATES = new Set([
+  "approval-requested",
+  "input-available",
+  "input-streaming",
+]);
+
+/**
+ * [T-274] 净化「被后续对话遗弃的未完成 tool 调用」(纯函数,喂模型前调用,存储层原样不动)。
+ *
+ * 根因:HITL 授权卡(local.read)处于 `approval-requested`(用户没点)时,用户改发新消息,这条
+ * 「未批准、无结果」的 tool-call 会随 useChat 内存历史一起 POST 回来;ai@7 的
+ * `convert-to-language-model-prompt` 在遇到其**后面**的 user 消息时,发现有 tool-call 没配对
+ * tool-result → 抛 `MissingToolResultsError` → 整条流 error(前端「出错了,请重试」;build15
+ * sidecar 日志实锤)。
+ *
+ * 修法:把**最后一条 user 消息之前**、assistant 里处于 {@link ABANDONED_TOOL_STATES} 的 tool
+ * 部件摘掉(它们被新一轮对话遗弃,不该再作为悬空调用喂模型)。
+ *
+ * **不误伤正常 HITL 流**(源码核实):
+ *   · 当前 live 轮的授权卡 / 正常「批准后 resume」都在**最后一条 user 消息之后**(resume 是
+ *     sendAutomaticallyWhen 自动重发,末条 assistant 的态是 approval-responded、其后无 user 消息)
+ *     → i >= lastUserIdx,一律不动;
+ *   · 只摘无结果的未完成态,已批准/已拒绝的授权部件不动。
+ */
+export function dropAbandonedApprovalParts(messages: UIMessage[]): UIMessage[] {
+  let lastUserIdx = -1;
+  for (let i = 0; i < messages.length; i++) {
+    if (messages[i]!.role === "user") lastUserIdx = i;
+  }
+  if (lastUserIdx <= 0) return messages; // 无 user 消息、或它是首条 → 无「之前」可遗弃
+  let changed = false;
+  const out = messages.map((m, i) => {
+    if (i >= lastUserIdx || m.role !== "assistant") return m;
+    const parts = (m as { parts?: unknown[] }).parts;
+    if (!Array.isArray(parts)) return m;
+    const nextParts = parts.filter((p) => {
+      if (!isToolPart(p)) return true;
+      const state = (p as { state?: unknown }).state;
+      return !(typeof state === "string" && ABANDONED_TOOL_STATES.has(state));
+    });
+    if (nextParts.length === parts.length) return m;
+    changed = true;
+    return { ...(m as object), parts: nextParts } as UIMessage;
+  });
+  return changed ? out : messages;
+}
