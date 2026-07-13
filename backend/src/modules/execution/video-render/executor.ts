@@ -92,11 +92,50 @@ async function whichBinary(name: string): Promise<string | null> {
 }
 
 /**
- * 渲染用 Chromium = playwright 已装浏览器(douyin-cdp/T-173 同一份缓存:
- * Mac ~/Library/Caches/ms-playwright,桌面包 bundlePlaywright 同源)。**包名拼接**
- * 避开 Next 构建期静态解析(douyin-cdp 同款手法)。
+ * [T-284 修] **确定性兜底**:直接扫 PLAYWRIGHT_BROWSERS_PATH(instrumentation 设的随包
+ * Chromium 目录)下的 `chromium-<rev>/<平台>/…` 二进制,不依赖 playwright 的 `executablePath()`。
+ * 根因:随包 Chromium 就位、PLAYWRIGHT_BROWSERS_PATH 也设了、脱离 bundle 的忠实测试里
+ * `executablePath()` 都命中——但打包混淆 runtime 里 executor 的 `executablePath()` 仍返回不到
+ * (bundle 运行时的 playwright registry 路径解析脆弱),locate 的 try/catch 把错吞了 → 「未就绪」。
+ * 这里不走 playwright registry,按已知目录结构自己拼路径,稳。
+ */
+async function locateBundledChromium(): Promise<string | null> {
+  const browsersDir =
+    process.env.PLAYWRIGHT_BROWSERS_PATH || path.join(process.cwd(), "browsers");
+  try {
+    const entries = await fs.readdir(browsersDir).catch(() => [] as string[]);
+    // headed chromium-<rev>(executablePath 返回的那个;hyperframes 用它)。取最大 rev。
+    const dir = entries
+      .filter((e) => /^chromium-\d+$/.test(e))
+      .sort((a, b) => Number(b.slice(9)) - Number(a.slice(9)))[0];
+    if (!dir) return null;
+    // 各平台二进制子路径(mac arm64 / mac x64 / linux / win)。
+    const rels = [
+      "chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "chrome-linux/chrome",
+      "chrome-win/chrome.exe",
+    ];
+    for (const rel of rels) {
+      const p = path.join(browsersDir, dir, rel);
+      const st = await fs.stat(p).catch(() => null);
+      if (st?.isFile()) return p;
+    }
+  } catch {
+    // fall through → null
+  }
+  return null;
+}
+
+/**
+ * 渲染用 Chromium 定位:先确定性扫随包目录(T-284,打包版稳),再回落 playwright
+ * `executablePath()`(dev / 系统缓存路径)。都拿不到 → null(调用方走注入下载兜底)。
  */
 async function locatePlaywrightChromium(): Promise<string | null> {
+  // ① 随包目录确定性命中(打包版主路径,不依赖 bundle runtime 的 playwright registry)。
+  const bundled = await locateBundledChromium();
+  if (bundled) return bundled;
+  // ② 回落 playwright executablePath(dev 装在系统缓存;混淆 runtime 里可能失效,故仅兜底)。
   try {
     const modName = ["@playwright", "/test"].join("");
     const { chromium } = (await import(/* webpackIgnore: true */ modName)) as {
@@ -105,8 +144,11 @@ async function locatePlaywrightChromium(): Promise<string | null> {
     const p = chromium.executablePath();
     const stat = await fs.stat(p).catch(() => null);
     if (stat?.isFile()) return p;
-  } catch {
-    // 版本/注册表异常 → 交调用方走下载兜底。
+  } catch (err) {
+    // [T-284] 打包版这里常被吞;打一行诊断(万一兜底也没命中,日志能看到真因)。
+    console.warn(
+      `[video-render] playwright executablePath 兜底失败: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
   return null;
 }
