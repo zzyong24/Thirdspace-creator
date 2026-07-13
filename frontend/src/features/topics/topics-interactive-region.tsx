@@ -52,6 +52,8 @@ import type {
   TopicsOverviewResource,
 } from "@creatoros/backend/modules/candidate";
 import type { BenchmarkSourceResource } from "@creatoros/backend/modules/benchmark";
+// [T-279] 今日新选题条带卡点击的跨 island 选中信号(条带在本 island 外发,这里订阅)。
+import { subscribeTopicFocus } from "./topic-focus-signal";
 
 export type CandidateSortKey =
   | "predictedScore"
@@ -1685,6 +1687,20 @@ export function TopicsWorkspace({
   const [pickedId, setPickedId] = React.useState<string | null>(null);
   const selectedId =
     pickedId && pool.some((c) => c.id === pickedId) ? pickedId : fallbackId;
+
+  // [T-279] 订阅「今日新选题」条带卡点击 → 选中该候选 + 把它在候选池里滚进视野
+  //   (条带在本 island 外,靠 CustomEvent 跨过来;见 topic-focus-signal)。
+  React.useEffect(() => {
+    return subscribeTopicFocus((candidateId) => {
+      setPickedId(candidateId);
+      // 下一帧滚动(等选中态 rerender 后卡在 DOM 里)。
+      requestAnimationFrame(() => {
+        document
+          .querySelector(`[data-candidate-id="${CSS.escape(candidateId)}"]`)
+          ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      });
+    });
+  }, []);
 
   const selected = pool.find((c) => c.id === selectedId) ?? null;
   // The React Compiler memoizes this object; a manual useMemo would mis-track the stable

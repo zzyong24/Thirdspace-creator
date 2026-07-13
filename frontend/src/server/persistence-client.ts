@@ -916,6 +916,10 @@ const CANONICAL_RUBRIC_ID = "rubric-canonical";
 // 6-10 镜的真实分镜脚本正文恒在数百字级,25 字级的陈旧占位稿会被这道门拦下,不进审核。
 const MIN_REVIEWABLE_SCRIPT_CHARS = 40;
 
+// [T-278] 收藏夹每轮进池上限 —— 收藏夹是用户亲手挑的(非自动信息流),不限速。50 = 单夹抓取
+// 上限 ≤50/夹,一轮就把用户新存的全部转候选,当天即见(治「采 13 条今日只见 3 条」)。
+const FAVORITES_PROMOTE_PER_RUN = 50;
+
 // [T-135] canonical + douyin knowledge seed 全退役 → CanonicalKnowledge/CanonicalRevision 类型
 // + toKnowledgeRow/toRevisionRow mapper 一并移除(知识全由用户真实采集/录入进库,不再 seed)。
 
@@ -5660,10 +5664,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         }
       }
 
-      // ④ 限量进池:pending 台账 FIFO 取 ≤3/run → createCandidate(source=favorites)→ 标 promoted。
-      //   单条失败跳过(候选门失败不吞台账;下轮 pending 仍在)。
+      // ④ 进池:pending 台账 FIFO → createCandidate(source=favorites)→ 标 promoted。单条失败跳过
+      //   (候选门失败不吞台账;下轮 pending 仍在)。
+      //   [T-278] 上限 3→50:收藏夹是**用户亲手挑的**,不是自动发现的信息流(benchmark/darkhorse
+      //   那种才需 ≤3/run「防灌库」)。3/run + 每天只跑一次 → 用户存 13 条要 ~5 天才全进池,实测
+      //   「采集 13 条但今日新选题只见 3 条」的根因。50 = 匹配单夹抓取上限 ≤50/夹,一轮把用户新存
+      //   的全部进池,当天即见。
       const folderNameById = new Map(folders.map((f) => [f.id, f.name]));
-      const pending = await favoritesService.listPendingItems(ctx, 3);
+      const pending = await favoritesService.listPendingItems(
+        ctx,
+        FAVORITES_PROMOTE_PER_RUN,
+      );
       let promoted = 0;
       for (const item of pending) {
         const folderName = folderNameById.get(item.folderId) ?? "收藏夹";

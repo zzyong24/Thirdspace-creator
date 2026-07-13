@@ -61,6 +61,8 @@ import {
 } from "./topics-interactive-region";
 // [T-248B②] 受众信号入口(独立按钮+弹窗,audienceSignals.list / linkToCandidate 接线)。
 import { AudienceSignalsButton } from "./topics-audience-signals";
+// [T-279] 今日新选题卡点击 → 跨 island 选中候选池详情(见 topic-focus-signal 注释)。
+import { emitTopicFocus } from "./topic-focus-signal";
 
 // ── 供给来源徽标解析(title 前缀 > source 枚举)────────────────────────────────────
 // T-235b 黑马转化候选 title 前缀「🔥跟拍|」(benchmark-teardown-runner.ts:204);
@@ -161,11 +163,22 @@ export function TodayTopicsStrip({
             const reason = c.card.oneLiner || c.angle || "";
             return (
               // [T-242] 紧凑卡:徽标与标题同行 + 依据单行截断(原三行叠 → 两行)。
+              // [T-279] 可点:点卡 → 发 TOPIC_FOCUS 信号 → TopicsWorkspace 选中该候选 + 滚进视野
+              //   (治「今日新选题点不进去」)。role/tabIndex/onKeyDown 补键盘可达 + hover 态。
               <li
                 key={c.id}
                 data-testid="today-topic-card"
                 data-tone={parsed.tone}
-                className="flex w-64 shrink-0 flex-col gap-1 rounded-card border border-border bg-surface-subtle/40 px-3 py-1.5"
+                role="button"
+                tabIndex={0}
+                onClick={() => emitTopicFocus(c.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    emitTopicFocus(c.id);
+                  }
+                }}
+                className="flex w-64 shrink-0 cursor-pointer flex-col gap-1 rounded-card border border-border bg-surface-subtle/40 px-3 py-1.5 transition-colors hover:border-brand/40 hover:bg-surface-subtle focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
               >
                 <span className="flex min-w-0 items-center gap-1.5">
                   <Badge
@@ -730,26 +743,31 @@ export function SignalSourcesButton({
     trendSources.length + benchmarkSources.length + favoritesFolders.length;
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        data-testid="signal-sources-trigger"
-        className="h-8 shrink-0 gap-1.5 px-3 text-xs"
-        onClick={() => setOpen(true)}
-      >
-        <Radar className="size-3.5" />
-        信号源
-        {total > 0 ? (
-          <Badge variant="secondary" className="ml-0.5 text-[10px] tabular-nums">
-            {total}
-          </Badge>
-        ) : null}
-      </Button>
-      {/* [T-248B②] 受众信号入口 —— 与「信号源」并排的独立按钮+弹窗(不并入三 tab:
-          信号源管「从哪采」,受众信号管「采到了什么 + 转候选」,语义不同;转候选成功后
-          router.refresh() 让候选池吃到新孵化的 demand 候选)。 */}
-      <AudienceSignalsButton onRefresh={() => router.refresh()} />
+      {/* [T-280] 「信号源」+「受众信号」包成一组(shrink-0 flex,彼此小间距)——否则裸平铺进
+          页头 justify-between 容器会和标题一起被当成 3 个子元素撑满整行(标题左·信号源中·受众
+          信号最右,间距巨大)。包一层后页头只剩「标题 + 按钮组」两个子元素,两按钮紧挨在右侧。 */}
+      <div className="flex shrink-0 items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          data-testid="signal-sources-trigger"
+          className="h-8 shrink-0 gap-1.5 px-3 text-xs"
+          onClick={() => setOpen(true)}
+        >
+          <Radar className="size-3.5" />
+          信号源
+          {total > 0 ? (
+            <Badge variant="secondary" className="ml-0.5 text-[10px] tabular-nums">
+              {total}
+            </Badge>
+          ) : null}
+        </Button>
+        {/* [T-248B②] 受众信号入口 —— 与「信号源」并排的独立按钮+弹窗(不并入三 tab:
+            信号源管「从哪采」,受众信号管「采到了什么 + 转候选」,语义不同;转候选成功后
+            router.refresh() 让候选池吃到新孵化的 demand 候选)。 */}
+        <AudienceSignalsButton onRefresh={() => router.refresh()} />
+      </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           data-testid="signal-sources-dialog"

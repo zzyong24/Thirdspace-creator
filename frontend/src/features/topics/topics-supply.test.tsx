@@ -195,6 +195,25 @@ describe("[T-235e] 今日新选题条带", () => {
     expect(screen.queryByText("昨天的旧候选")).toBeNull();
   });
 
+  it("[T-279] 点今日新选题卡 → 派 TOPIC_FOCUS 信号(带 candidateId)+ 键盘 Enter 同效", async () => {
+    const seen: string[] = [];
+    const listener = (e: Event): void => {
+      seen.push((e as CustomEvent<{ candidateId: string }>).detail.candidateId);
+    };
+    window.addEventListener("creatoros:topic-focus", listener);
+    render(
+      <TodayTopicsStrip
+        dayStartIso={DAY_START_ISO}
+        candidates={[candidate({ id: "c-click", title: "可点的今日候选" })]}
+      />,
+    );
+    const card = screen.getByTestId("today-topic-card");
+    fireEvent.click(card);
+    fireEvent.keyDown(card, { key: "Enter" });
+    expect(seen).toEqual(["c-click", "c-click"]);
+    window.removeEventListener("creatoros:topic-focus", listener);
+  });
+
   it("空态诚实:今日无新候选 → 「今晨采集无新信号」", () => {
     render(
       <TodayTopicsStrip

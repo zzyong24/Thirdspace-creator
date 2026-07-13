@@ -36,8 +36,12 @@ export interface VideoRenderEngine {
   ): Promise<{ codec: string; durationSec: number }>;
   /** 跑一条 ffmpeg 命令(转码);非 0 退出 → throw。 */
   runFfmpeg(ffmpeg: string, args: string[], signal: AbortSignal): Promise<void>;
-  /** 解析渲染用 Chromium(playwright 已装);未装 → throw 诚实引导。 */
-  resolveChromium(): Promise<string>;
+  /**
+   * 解析渲染用 Chromium(playwright 已装);[T-281] 未装 → **自动下载**(playwright install
+   * chromium,与 douyin-cdp/T-173 同源;带诚实进度回调,不静默、不逼用户先去别处扫码)。
+   * onProgress:下载进度/阶段回给步骤流(可选)。
+   */
+  resolveChromium(onProgress?: (line: string) => void): Promise<string>;
   /** 解析 gsap.min.js 磁盘路径(npm gsap 包)。 */
   resolveGsapFile(): Promise<string>;
   /** hyperframes CLI 渲染 work/ → outputFile;进度回调喂步骤流。 */
@@ -92,7 +96,7 @@ async function whichBinary(name: string): Promise<string | null> {
  * Mac ~/Library/Caches/ms-playwright,桌面包 bundlePlaywright 同源)。**包名拼接**
  * 避开 Next 构建期静态解析(douyin-cdp 同款手法)。
  */
-async function resolvePlaywrightChromium(): Promise<string> {
+async function locatePlaywrightChromium(): Promise<string | null> {
   try {
     const modName = ["@playwright", "/test"].join("");
     const { chromium } = (await import(/* webpackIgnore: true */ modName)) as {
@@ -102,10 +106,58 @@ async function resolvePlaywrightChromium(): Promise<string> {
     const stat = await fs.stat(p).catch(() => null);
     if (stat?.isFile()) return p;
   } catch {
-    // fallthrough → 诚实报错
+    // 版本/注册表异常 → 交调用方走下载兜底。
   }
+  return null;
+}
+
+/**
+ * [T-281] 未装 Chromium → 自动下载(playwright install chromium)。与 douyin-cdp/T-173 同源:
+ * **包名拼接**避开 Next 构建期静态解析(否则 trace 到 ESM 入口 build error),运行时才真解析
+ * (sidecar 内 bundlePlaywright 已实拷 playwright)。装过秒过;下载 ~340MB 走诚实进度回调,
+ * 不静默、不逼用户先去抖音扫码。
+ */
+async function downloadChromium(onProgress?: (line: string) => void): Promise<void> {
+  const nodeRequire = createRequire(import.meta.url);
+  const pwPkgJson = nodeRequire.resolve(["play", "wright/package.json"].join(""));
+  const cli = path.join(path.dirname(pwPkgJson), "cli.js");
+  onProgress?.("首次渲染需下载 Chromium(~340MB),下载中…(之后共享缓存,秒过)");
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(process.execPath, [cli, "install", "chromium"], {
+      stdio: ["ignore", "pipe", "pipe"],
+      env: process.env,
+    });
+    let lastErr = "";
+    const onData = (b: Buffer): void => {
+      lastErr = b.toString("utf8").slice(-400);
+    };
+    child.stdout.on("data", onData);
+    child.stderr.on("data", onData);
+    child.on("exit", (code) =>
+      code === 0
+        ? resolve()
+        : reject(
+            new Error(
+              `playwright install chromium 退出码 ${code}: ${lastErr.replace(/\s+/g, " ").trim().slice(-200)}`,
+            ),
+          ),
+    );
+    child.on("error", reject);
+  });
+  onProgress?.("Chromium 下载完成");
+}
+
+async function resolvePlaywrightChromium(
+  onProgress?: (line: string) => void,
+): Promise<string> {
+  const found = await locatePlaywrightChromium();
+  if (found) return found;
+  // [T-281] 未装 → 自动下载(带诚实进度),再解析一次。
+  await downloadChromium(onProgress);
+  const after = await locatePlaywrightChromium();
+  if (after) return after;
   throw new Error(
-    "渲染用 Chromium 未就绪:请先在「采集/扫码」功能触发一次浏览器下载(playwright install chromium),再重试渲染",
+    "渲染用 Chromium 下载后仍未就绪 —— 请在终端手动执行 `npx playwright install chromium` 后重试渲染",
   );
 }
 
@@ -273,7 +325,11 @@ export function createVideoRenderExecutor(
           `未检测到系统 ffmpeg/ffprobe(视频渲染必需)。请安装后重试:${FFMPEG_INSTALL_HINT}`,
         );
       }
-      const chromiumPath = await engine.resolveChromium();
+      // [T-281] Chromium 未装 → 引擎自动下载(playwright install chromium),进度回步骤流
+      // (不再直接报错逼用户先去抖音扫码;下载 ~340MB 有诚实进度,装过秒过)。
+      const chromiumPath = await engine.resolveChromium((line) => {
+        void reportStep(line).catch(() => {});
+      });
       throwIfAborted(signal);
 
       // 1) 输入核对:props 引用的每个文件必须已物化在 input/(路径防护同沙箱)
