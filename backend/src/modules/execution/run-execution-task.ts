@@ -195,6 +195,12 @@ export async function runExecutionTask(
     await step(`完成:${artifacts.length} 个产物待确认`, "final");
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // [T-289 诊断] 打全栈到 sidecar 日志(任务失败态只存 message、无栈,定位不到哪一行)。
+    //   如「path 参数收到 number」这类,栈里能看到确切文件:行 + 哪步。
+    console.error(
+      `[run-execution-task] task ${taskId} 失败:`,
+      err instanceof Error ? (err.stack ?? err.message) : String(err),
+    );
     await step(`失败:${message}`, "final");
     // 诚实终态。若任务已被 discard(cancelled),markFailed 的状态机守卫会 no-op。
     await deps.ai.markFailed(ctx, taskId, message).catch(() => {});

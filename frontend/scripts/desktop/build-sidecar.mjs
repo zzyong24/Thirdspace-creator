@@ -181,6 +181,45 @@ function bundlePlaywright() {
   console.log("[build-sidecar]   ✓ 自检①:sidecar 内 @playwright/test 可解析");
 }
 
+// [T-289 真机逮到根因] 实拷 gsap + hyperframes 完整包(补 Next tracing 漏的 dist 文件)。
+//   病根:视频渲染的 gsap.min.js / hyperframes dist/cli.js 是 executor **运行时 require 的文件**,
+//   Next tracing 追不到 → 打包后 sidecar 的 .pnpm 里这俩包只剩 package.json、dist 全缺 → executor
+//   `resolveGsapMinJs/resolveHyperframesCli` 拿不到文件(且打包混淆 runtime 里 require.resolve 还
+//   返回数字模块 ID → path.dirname(number) 崩「path 收到 number 371609」)。**视频渲染在打包版
+//   从没成功过**。这里从源仓 .pnpm 整份实拷覆盖(dereference,把 hyperframes 的 dep 符号链接也拷成
+//   真目录),补齐 dist + deps。与 bundlePlaywright 同款手法。
+function bundleRenderDeps() {
+  console.log("[build-sidecar] 实拷 gsap/hyperframes(补 Next tracing 漏的 dist/cli.js,T-289)…");
+  const srcPnpm = join(REPO, "node_modules", ".pnpm");
+  const destPnpm = join(SIDECAR_RUNTIME, "node_modules", ".pnpm");
+  if (!existsSync(srcPnpm) || !existsSync(destPnpm)) {
+    throw new Error(`[build-sidecar] .pnpm 目录缺(src=${existsSync(srcPnpm)} dest=${existsSync(destPnpm)})`);
+  }
+  const srcEntries = readdirSync(srcPnpm);
+  for (const pkg of ["gsap", "hyperframes"]) {
+    const match = srcEntries.find((e) => e.startsWith(`${pkg}@`));
+    if (!match) {
+      throw new Error(`[build-sidecar] 源 .pnpm 无 ${pkg}@*(装依赖?)`);
+    }
+    const src = join(srcPnpm, match);
+    const dest = join(destPnpm, match);
+    rmSync(dest, { recursive: true, force: true });
+    mkdirSync(dirname(dest), { recursive: true });
+    cpSync(src, dest, { recursive: true, dereference: true });
+    console.log(`[build-sidecar]   实拷 ${match}`);
+  }
+  // 自检(硬):关键 dist 文件必须到位(上一版渲染崩的教训 —— 只拷目录不查文件不够)。
+  const destEntries = readdirSync(destPnpm);
+  for (const [pkg, sub] of [["gsap", "dist/gsap.min.js"], ["hyperframes", "dist/cli.js"]]) {
+    const m = destEntries.find((e) => e.startsWith(`${pkg}@`));
+    const f = m ? join(destPnpm, m, "node_modules", pkg, sub) : "";
+    if (!f || !existsSync(f)) {
+      throw new Error(`[build-sidecar] 自检失败:${pkg}/${sub} 实拷后仍缺 → 视频渲染必崩`);
+    }
+  }
+  console.log("[build-sidecar]   ✓ 自检:gsap.min.js + hyperframes cli.js 到位");
+}
+
 // [T-284] 把 Chromium 浏览器二进制打进 sidecar(用户拍板:视频渲染永不下载 / 永不「Chromium
 //   未就绪」)。根因:打包版 sidecar 的 playwright 在混淆 bundle runtime 里对默认缓存
 //   `~/Library/Caches/ms-playwright` 的浏览器路径解析失效(即便机器上有 chromium-<rev> 也找不到),
@@ -538,6 +577,10 @@ function main() {
   // [T-170] 实拷 Playwright 包进 sidecar(修 Next tracing 漏 @playwright/test → 打包扫码崩)。
   //   放在打 tarball 之前,让 playwright 包进 tarball。
   bundlePlaywright();
+
+  // [T-289] 实拷 gsap/hyperframes 完整包(补 Next tracing 漏的 dist/cli.js/gsap.min.js)——
+  //   视频渲染「生成合成模板」步的依赖,不补齐必崩(见 bundleRenderDeps 注释)。放打 tarball 前。
+  bundleRenderDeps();
 
   // [T-225] onnxruntime 原生库补拷(修 whisper-local 逐字稿转录 dlopen 崩)—— 在打 tarball 前，让 dylib 进包。
   ensureOnnxRuntimeDylib();

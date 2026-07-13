@@ -17,7 +17,6 @@
 // 全部外部调用走 deps 注入(默认真实现)—— 编排/步骤/失败路径可 fake 引擎单测,不真渲。
 import { execFile, spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
-import { createRequire } from "node:module";
 import * as path from "node:path";
 import { videoRenderParams, type VideoRenderProps } from "@creatoros/contract";
 import type { ExecutionExecutor, ExecutorRunOpts, ExecutorSandboxView } from "../executor-registry";
@@ -185,24 +184,62 @@ async function resolvePlaywrightChromium(
   );
 }
 
-/** 解析 hyperframes CLI 磁盘路径(运行时解析)。
- * [T-254c 真机逮到] 原版用「包名拼接 + 动态 require.resolve」防静态追踪 —— Turbopack
- * 对 createRequire().resolve(<动态串>) 直接 Build Error(Module not found: <dynamic>),
- * 整个 dev server 起不来(单测过≠live 生效的又一例)。正解走 playwright 同款先例:
- * **字面量 specifier + next.config serverExternalPackages 外置 "hyperframes"**,
- * bundler 静态可解析但不打包,运行时从 node_modules 解析。 */
-function resolveHyperframesCli(): string {
-  const nodeRequire = createRequire(import.meta.url);
-  const pkgJson = nodeRequire.resolve("hyperframes/package.json");
-  // hyperframes package.json 无 exports 字段,bin = dist/cli.js 直接 join。
-  return path.join(path.dirname(pkgJson), "dist/cli.js");
+/**
+ * [T-289 真机逮到根因] 确定性 fs 定位 node_modules 里的文件 —— **不用 require.resolve**。
+ * 病根:executor 打进 Next 混淆 bundle 后,`createRequire(import.meta.url).resolve("gsap/
+ * package.json")` 被 Turbopack 转换,**返回 webpack 数字模块 ID(如 371609)而非文件路径**
+ * → `path.dirname(371609)` 抛「The "path" argument must be of type string. Received type
+ * number (371609)」——这正是用户实测「视频渲染卡了好久」的根,渲染在「生成合成模板」步崩(
+ * 步骤流实锤 step6);dev 里同一 resolve 返回 `[externals]/gsap/package.json` 占位同样坏。
+ * (T-254c 以为「字面量 specifier + serverExternalPackages」能修,实际打包混淆 runtime 仍坏。)
+ *
+ * 正解:从 process.cwd()(sidecar/frontend)起,按 `node_modules/<pkg>/<sub>` 及
+ * `node_modules/.pnpm/<pkg>@ver/node_modules/<pkg>/<sub>` 直接扫真实文件。build-sidecar 已实拷
+ * 完整 gsap/hyperframes(含 dist),这里保证运行时定位到。
+ */
+async function locateNodeModuleFile(
+  pkg: string,
+  sub: string,
+): Promise<string | null> {
+  const isFile = (p: string) =>
+    fs.stat(p).then((s) => s.isFile()).catch(() => false);
+  const roots = [
+    path.join(process.cwd(), "node_modules"),
+    path.resolve(process.cwd(), "..", "node_modules"), // sidecar/node_modules(frontend 的父)
+  ];
+  for (const root of roots) {
+    const direct = path.join(root, pkg, sub);
+    if (await isFile(direct)) return direct;
+    const pnpm = path.join(root, ".pnpm");
+    const entries = await fs.readdir(pnpm).catch(() => [] as string[]);
+    for (const e of entries.filter((x) => x.startsWith(`${pkg}@`))) {
+      const p = path.join(pnpm, e, "node_modules", pkg, sub);
+      if (await isFile(p)) return p;
+    }
+  }
+  return null;
 }
 
-/** gsap 单文件构建磁盘路径(同上:字面量 specifier + 外置,运行时解析)。 */
-function resolveGsapMinJs(): string {
-  const nodeRequire = createRequire(import.meta.url);
-  const pkgJson = nodeRequire.resolve("gsap/package.json");
-  return path.join(path.dirname(pkgJson), "dist/gsap.min.js");
+/** hyperframes CLI(dist/cli.js)磁盘路径 —— 确定性 fs 定位(不用 require.resolve,见上注释)。 */
+async function resolveHyperframesCli(): Promise<string> {
+  const p = await locateNodeModuleFile("hyperframes", "dist/cli.js");
+  if (!p) {
+    throw new Error(
+      "渲染引擎 hyperframes(dist/cli.js)未找到 —— 打包实拷缺失,请重打包(desktop:package)",
+    );
+  }
+  return p;
+}
+
+/** gsap 单文件(dist/gsap.min.js)磁盘路径 —— 确定性 fs 定位(同上)。 */
+async function resolveGsapMinJs(): Promise<string> {
+  const p = await locateNodeModuleFile("gsap", "dist/gsap.min.js");
+  if (!p) {
+    throw new Error(
+      "渲染动效依赖 gsap(dist/gsap.min.js)未找到 —— 打包实拷缺失,请重打包(desktop:package)",
+    );
+  }
+  return p;
 }
 
 async function renderWithHyperframesCli(opts: {
@@ -213,7 +250,7 @@ async function renderWithHyperframesCli(opts: {
   signal: AbortSignal;
   onProgress: (line: string) => void;
 }): Promise<void> {
-  const cliJs = resolveHyperframesCli();
+  const cliJs = await resolveHyperframesCli();
   await new Promise<void>((resolve, reject) => {
     const child = spawn(
       process.execPath,
