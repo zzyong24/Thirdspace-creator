@@ -242,6 +242,10 @@ export function ProductionWorkbench({
   const [renderTaskId, setRenderTaskId] = React.useState<string | null>(null);
   const [renderEnvHint, setRenderEnvHint] = React.useState<string | null>(null);
   const [exportId, setExportId] = React.useState<string | null>(null);
+  // [T-292] 采纳后的成片 assetId → 产出区 <video> 预览。
+  const [finalVideoAssetId, setFinalVideoAssetId] = React.useState<string | null>(
+    null,
+  );
   const [flowError, setFlowError] = React.useState<string | null>(null);
 
   // ── [T-285] mount 恢复已上传素材 ─────────────────────────────────────────────
@@ -628,6 +632,7 @@ export function ProductionWorkbench({
           setRenderEnvHint(humanizeRenderError(task.errorMessage));
           if (task.status === "succeeded") {
             const resultAssetId = task.adoptedAssetIds[0];
+            if (resultAssetId) setFinalVideoAssetId(resultAssetId); // [T-292] 成片可预览
             if (exportId && resultAssetId) {
               void client
                 .completeExport({
@@ -673,6 +678,18 @@ export function ProductionWorkbench({
         if (live && !abandoned) {
           setRenderTaskId((prev) => prev ?? live.id);
           return; // 渲染在途优先;决策候选不再恢复(已消费)
+        }
+        // [T-292] 已成功的渲染:恢复成片预览(回到本页仍能看/播成片)。
+        const doneRender = execs.find(
+          (t) => t.execType === "video.render" && t.status === "succeeded",
+        );
+        if (doneRender && !abandoned) {
+          const aid = doneRender.adoptedAssetIds?.[0];
+          if (aid) {
+            setFinalVideoAssetId((prev) => prev ?? aid);
+            setRenderTaskId((prev) => prev ?? doneRender.id);
+            return; // 已出片,不再恢复决策候选
+          }
         }
         const tasks = (await client.listAITasks({
           params: undefined,
@@ -1000,12 +1017,63 @@ export function ProductionWorkbench({
             </p>
           ) : null}
           <ExecutionTaskCard taskId={renderTaskId} />
-          <p className="text-xs text-muted-foreground">
-            渲染完成后在上方卡片「采纳进素材库」—— 采纳才入库(exportRecord 同步
-            ready),丢弃/重试都在卡内。
-          </p>
+          {/* [T-292] 采纳后的成片在产出区内联预览(签名 URL,画幅决定播放器比例)。 */}
+          {finalVideoAssetId ? (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-medium text-foreground">成片预览</p>
+              <FinalVideoPreview
+                assetId={finalVideoAssetId}
+                orientation={orientation}
+              />
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              渲染完成后在上方卡片「采纳进素材库」—— 采纳才入库(exportRecord 同步
+              ready),丢弃/重试都在卡内;采纳后成片在此内联预览。
+            </p>
+          )}
         </section>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * [T-292] 成片预览:采纳后的 final.mp4 assetId → 签名 URL → 内联 <video>。
+ * 画幅决定播放器比例(竖版 9:16 居中限高 / 横版 16:9);取不到 URL 诚实不渲染。
+ */
+function FinalVideoPreview({
+  assetId,
+  orientation,
+}: {
+  assetId: string;
+  orientation?: "portrait" | "landscape";
+}) {
+  const [url, setUrl] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 换素材时重置,避免旧片闪
+    setUrl(null);
+    void resolveAssetPreviewUrl(assetId).then((u) => {
+      if (!cancelled) setUrl(u ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [assetId]);
+  if (!url) return null;
+  const shape =
+    orientation === "portrait"
+      ? "mx-auto aspect-[9/16] max-h-[70vh]"
+      : "aspect-video";
+  return (
+    // eslint-disable-next-line jsx-a11y/media-has-caption
+    <video
+      src={url}
+      controls
+      preload="metadata"
+      data-slot="production-final-video"
+      className={`w-full rounded-control border border-border bg-black object-contain ${shape}`}
+    />
   );
 }
