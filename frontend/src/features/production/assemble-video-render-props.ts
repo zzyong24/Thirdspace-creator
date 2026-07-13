@@ -59,7 +59,8 @@ const FIRST_NUMBER_RE = /\d+(?:[.,]\d+)?\s*[%万亿kKmMxX×倍]?/;
 /** 决策卡(kind+content 单字符串)→ 契约六 kind 卡的确定性映射(schema 由 parse 兜底)。 */
 function toContractCard(card: VideoInfoCard): Record<string, unknown> {
   const content = card.content.trim();
-  const base = { at: card.at };
+  // [T-295] motion 透传:有则随卡走(compare/image 降级 quote 时 base 已含 motion,一并带走)。
+  const base = { at: card.at, ...(card.motion ? { motion: card.motion } : {}) };
   switch (card.kind) {
     case "stat": {
       const value = content.match(FIRST_NUMBER_RE)?.[0]?.trim() ?? content;

@@ -41,6 +41,39 @@ describe("videoRenderProps", () => {
     expect(parsed.talkingHead.hasAudio).toBe(true);
   });
 
+  it("[T-295] motion 可选:缺省不带该字段;显式六值皆可校验、往返保留", () => {
+    // 缺省:不产 motion(弱模型兜底靠 template 派生)。
+    const noMotion = videoRenderProps.parse(base);
+    expect(noMotion.scenes[0]!.cards[0]!.motion).toBeUndefined();
+    // 显式:六个枚举值都合法且往返保留。
+    for (const m of ["bar", "counter", "metaphor", "strike", "reveal", "plain"] as const) {
+      const parsed = videoRenderProps.parse({
+        ...base,
+        scenes: [
+          {
+            ...base.scenes[0],
+            cards: [{ kind: "quote" as const, at: 2, text: "x", motion: m }],
+          },
+          base.scenes[1],
+        ],
+      });
+      expect(parsed.scenes[0]!.cards[0]!.motion).toBe(m);
+    }
+    // 非法枚举值即废。
+    expect(() =>
+      videoRenderProps.parse({
+        ...base,
+        scenes: [
+          {
+            ...base.scenes[0],
+            cards: [{ kind: "quote" as const, at: 2, text: "x", motion: "spin" }],
+          },
+          base.scenes[1],
+        ],
+      }),
+    ).toThrow();
+  });
+
   it("六 kind 卡片全部可校验", () => {
     const cards = [
       { kind: "stat", at: 1, value: "0", label: "行代码", strike: true },

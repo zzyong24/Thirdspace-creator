@@ -22,6 +22,25 @@ export const videoRenderTone = z.enum([
 ]);
 export type VideoRenderTone = z.infer<typeof videoRenderTone>;
 
+// [T-295] 信息卡动画意图(决策层「5 问」产出,template 落对应 GSAP 富动画配方,替换整块淡入)。
+//   bar     = 对比条生长(前后/多少/快慢对比)
+//   counter = 数字递增计数器(数字/规模/速度)
+//   metaphor= 视觉隐喻/强进度式揭示(抽象概念可具象)
+//   strike  = 建立→推翻(元素先亮起像要用,再被划掉/盖红戳)
+//   reveal  = 逐条/逐元素进度式揭示(列举/步骤)
+//   plain   = 精炼进场(纯陈述;非整块闷淡入,轻错峰)
+// **必须 optional**:弱模型(用户配 MiniMax 等)可能不产 motion,template 缺省时按卡类型派生兜底,
+// 保证仍有富动画(stat→counter / compare→bar / list·code→reveal / quote·image→plain)。
+export const videoCardMotion = z.enum([
+  "bar",
+  "counter",
+  "metaphor",
+  "strike",
+  "reveal",
+  "plain",
+]);
+export type VideoCardMotion = z.infer<typeof videoCardMotion>;
+
 // 交付规格:v1 固定 1920x1080 / 30fps(默认值即规格;留字段是为了将来竖版/60fps
 // 不改契约形状)。
 export const videoRenderDelivery = z.object({
@@ -69,6 +88,8 @@ export type VideoRenderCaption = z.infer<typeof videoRenderCaption>;
 const cardBase = {
   /** 出现时刻(绝对秒)。 */
   at: z.number().nonnegative(),
+  /** [T-295] 动画意图(决策层可选产出;缺省 template 按 kind 派生富动画)。 */
+  motion: videoCardMotion.optional(),
 };
 
 export const videoRenderStatCard = z.object({

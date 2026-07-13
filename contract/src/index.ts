@@ -175,6 +175,7 @@ export {
 // backend execution video.render executor(读侧)共用单一真值(additive re-export)。
 export {
   videoRenderTone,
+  videoCardMotion,
   videoRenderDelivery,
   videoRenderMeta,
   videoRenderTalkingHead,
@@ -186,6 +187,7 @@ export {
   videoRenderProps,
   videoRenderParams,
   type VideoRenderTone,
+  type VideoCardMotion,
   type VideoRenderDelivery,
   type VideoRenderMeta,
   type VideoRenderTalkingHead,

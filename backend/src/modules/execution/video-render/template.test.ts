@@ -171,6 +171,111 @@ describe("generateVideoRenderHtml", () => {
   });
 });
 
+// [T-295] 富动画 motion:决策意图 → GSAP 配方分派 + 缺省按 kind 派生。
+describe("generateVideoRenderHtml · [T-295] card.motion 富动画配方", () => {
+  /** 单场景最小 props(只装待测卡片,聚焦 motion 断言)。 */
+  function motionProps(cards: unknown[]): VideoRenderProps {
+    return videoRenderProps.parse({
+      meta: { title: "motion 测试" },
+      talkingHead: { file: "th.mp4", durationSec: 30 },
+      scenes: [
+        { id: "s1", label: "L", title: "T", startSec: 0, endSec: 30, cards },
+      ],
+    });
+  }
+
+  it("缺省派生:stat→counter(纯数字 value 走 onUpdate 递增 + .stat-val 钩子)", () => {
+    const html = generateVideoRenderHtml(
+      motionProps([{ kind: "stat", at: 1, value: "47", label: "效率提升" }]),
+    );
+    expect(html).toContain('<span class="stat-val">47</span>'); // 数值钩子
+    expect(html).toContain("onUpdate:function()"); // 计数器逐帧写文本
+    expect(html).toContain("{v:47,"); // 递增到目标值
+    expect(html).toContain("toFixed(0)"); // 整数格式化
+  });
+
+  it("counter 容忍单位后缀:value '47%' 递增数字并原样保留后缀(组装器常带 %/倍)", () => {
+    const html = generateVideoRenderHtml(
+      motionProps([{ kind: "stat", at: 1, value: "47%", label: "留存率" }]),
+    );
+    expect(html).toContain("onUpdate:function()");
+    expect(html).toContain("{v:47,"); // 数字递增到 47
+    expect(html).toContain('.toFixed(0)+"%"'); // 后缀 % 保留
+  });
+
+  it("counter 优雅降级:非纯数字 value(如 2–3)不走 onUpdate,退回 plain 强调进场", () => {
+    const html = generateVideoRenderHtml(
+      motionProps([{ kind: "stat", at: 1, value: "2–3", unit: "小时", label: "耗时" }]),
+    );
+    expect(html).toContain('<span class="stat-val">2–3</span>');
+    expect(html).not.toContain("onUpdate"); // 无计数器
+    expect(html).toContain('{autoAlpha:0,scale:1.02}'); // plain 进场
+  });
+
+  it("缺省派生:compare→bar(两侧 .growbar 各一根,scaleX 0→1 依次生长)", () => {
+    const html = generateVideoRenderHtml(
+      motionProps([
+        {
+          kind: "compare",
+          at: 1,
+          left: { title: "原来", items: ["慢"] },
+          right: { title: "现在", items: ["快"] },
+        },
+      ]),
+    );
+    expect((html.match(/class="growbar"/g) ?? []).length).toBe(2); // 左右各一条
+    expect(html).toContain('.growbar",{scaleX:0'); // 起始 0
+    expect(html).toContain("scaleX:1,duration:.8"); // 生长到满
+  });
+
+  it("缺省派生:list→reveal(容器淡入 + 逐条 .li 错峰,复用现有逐条)", () => {
+    const html = generateVideoRenderHtml(
+      motionProps([
+        { kind: "list", at: 1, items: [{ text: "第一" }, { text: "第二" }] },
+      ]),
+    );
+    expect(html).toContain(".li0"); // 逐条钩子仍在
+    expect(html).toContain(".li1");
+    expect(html).toContain('{autoAlpha:1,duration:.3,ease:"power2.out"}'); // reveal 容器淡入
+  });
+
+  it("缺省派生:quote→plain(轻错峰进场,非整块闷淡入,无计数器/条)", () => {
+    const html = generateVideoRenderHtml(
+      motionProps([{ kind: "quote", at: 1, text: "一句金句" }]),
+    );
+    expect(html).toContain('> *:not(.ovl)",{autoAlpha:0,y:8}'); // 直接子元素错峰
+    expect(html).not.toContain("onUpdate");
+    expect(html).not.toContain("growbar");
+  });
+
+  it("显式覆盖 motion=strike:红删除线 .strikeline 由 scaleX 划过(建立→推翻)", () => {
+    const html = generateVideoRenderHtml(
+      motionProps([{ kind: "quote", at: 1, text: "别以为它很难", motion: "strike" }]),
+    );
+    expect(html).toContain('class="strikeline ovl"');
+    expect(html).toContain('.strikeline",{scaleX:0'); // 先 0
+    expect(html).toContain("opacity:.5"); // 划掉后变暗
+  });
+
+  it("显式覆盖 motion=metaphor:底部绿线 .metaline 收束 + back.out 弹入(强揭示)", () => {
+    const html = generateVideoRenderHtml(
+      motionProps([{ kind: "quote", at: 1, text: "抽象概念", motion: "metaphor" }]),
+    );
+    expect(html).toContain('class="metaline ovl"');
+    expect(html).toContain('ease:"back.out(1.5)"'); // 弹入
+    expect(html).toContain('.metaline",{scaleX:0'); // 绿线生长
+  });
+
+  it("方向无关:竖版下 motion 配方同样是相对变换(counter onUpdate 不含绝对坐标)", () => {
+    const html = generateVideoRenderHtml({
+      ...motionProps([{ kind: "stat", at: 1, value: "100", label: "规模" }]),
+      delivery: { width: 1080, height: 1920, fps: 30 },
+    });
+    expect(html).toContain("onUpdate:function()");
+    expect(html).toContain("{v:100,");
+  });
+});
+
 describe("resolveSceneMode(PiP 规则:≥3 视觉节点→圆;hook/cta 且 <3 →右大卡)", () => {
   const props = fullProps();
   it("hook 场景 1 张卡 → right;cta 场景 → right", () => {

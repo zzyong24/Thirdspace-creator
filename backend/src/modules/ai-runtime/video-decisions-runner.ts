@@ -7,6 +7,7 @@ import type {
   VideoBrollOutput,
   VideoSubtitlesOutput,
   VideoCardKind,
+  VideoCardMotion,
 } from "@creatoros/ai-worker";
 import {
   videoScenesSchema,
@@ -62,6 +63,8 @@ export interface VideoInfoCard {
   kind: VideoCardKind;
   content: string;
   at: number;
+  /** [T-295] 动画意图(决策层可选产出;缺省组装器/template 按 kind 派生)。 */
+  motion?: VideoCardMotion;
 }
 
 export interface VideoBrollPick {
@@ -300,7 +303,14 @@ export async function decideCards(
       clamped,
       sceneStarts.length > 0 ? sceneStarts : starts,
     );
-    kept.push({ sceneIdx: c.sceneIdx, kind: c.kind, content, at });
+    // [T-295] motion 原样透传(模型不产就不带;缺省由 template 按 kind 派生)。
+    kept.push({
+      sceneIdx: c.sceneIdx,
+      kind: c.kind,
+      content,
+      at,
+      ...(c.motion ? { motion: c.motion } : {}),
+    });
   }
   return kept;
 }

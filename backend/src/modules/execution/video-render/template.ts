@@ -14,6 +14,7 @@
 //   + GSAP timeline 挂 window.__timelines["main"]。渲染器无关性留在 props 契约侧,
 //   本文件是 HyperFrames 专用实现。
 import type {
+  VideoCardMotion,
   VideoRenderBroll,
   VideoRenderCard,
   VideoRenderProps,
@@ -168,6 +169,174 @@ function appear(ctx: Ctx, id: string, at: number, endAt: number, y = 16): void {
   ctx.tweens.push(`tl.set("#${id}",{autoAlpha:0},${fmt(endAt)});`);
 }
 
+// ── [T-295] 富动画:card.motion 决策意图 → GSAP 配方分派 ──────────────────────────
+// 现状(治的病):卡片全走整块 `appear`(淡入弹出)= video-editing skill 判为「偷懒」的形态。
+// 改为:决策层给每卡产 motion(可选),template 按 motion 落「长出来」的富动画;motion 缺省时
+// **按 kind 派生**(弱模型不产也保底有富动画)。配方全用相对变换(scaleX/autoAlpha/位移/onUpdate
+// 文本),不写绝对坐标 → 横竖版通吃(布局坐标归 resolveLayout,此处不碰)。
+
+/** motion 缺省时按卡类型派生(SPEC §7 映射;保证弱模型不产 motion 仍有富动画)。 */
+function resolveMotion(card: VideoRenderCard): VideoCardMotion {
+  if (card.motion) return card.motion;
+  switch (card.kind) {
+    case "stat":
+      return "counter";
+    case "compare":
+      return "bar";
+    case "list":
+    case "code":
+      return "reveal";
+    case "quote":
+    case "image":
+      return "plain";
+  }
+}
+
+// counter 只吃「数字 + 至多一个单位后缀」(如 "47"/"0"/"3.5"/"47%"/"3倍"/"1.2x")。
+// 组装器 stat value 常带 %/万/倍 后缀(FIRST_NUMBER_RE),故须容忍后缀(递增数字、原样保留后缀)。
+// 真正的区间/非数值(如 "2–3")解析失败 → null → 降级 plain 强调进场。
+const COUNTER_RE = /^(\d+(?:\.\d+)?)\s*([%‰万亿kKmMxX×倍+]?)$/;
+function parseCounter(v: string): { target: number; dec: number; suffix: string } | null {
+  const m = COUNTER_RE.exec(v.trim());
+  if (!m) return null;
+  const num = m[1]!;
+  return {
+    target: Number(num),
+    dec: num.includes(".") ? num.split(".")[1]!.length : 0,
+    suffix: m[2] ?? "",
+  };
+}
+
+// 动画叠层钩子(绝对定位,不占 flow、不改卡尺寸;class .ovl 让进场 stagger 用 :not(.ovl) 排除)。
+function strikeOverlay(): string {
+  // 建立→推翻:一条红删除线(scaleX 由 motionTween 从 0 划到 1)。
+  return `<span class="strikeline ovl" style="position:absolute;left:14px;right:14px;top:52%;height:5px;border-radius:3px;background:${TK.danger};transform:rotate(-3deg);transform-origin:left center"></span>`;
+}
+function metaOverlay(): string {
+  // 强揭示收束:底部绿线(scaleX 生长)。
+  return `<span class="metaline ovl" style="position:absolute;left:0;right:0;bottom:0;height:3px;background:${TK.green};transform-origin:left center"></span>`;
+}
+function growbarTop(): string {
+  // 非 compare 卡拿到 bar 时的顶部生长条(compare 的两条在各侧内,见 renderCard)。
+  return `<div class="growbar ovl" style="height:8px;border-radius:4px;background:${TK.accent};transform-origin:left center;margin-bottom:12px"></div>`;
+}
+
+/**
+ * 卡片富动画分派:按 motion 生成进场配方(编排在 [at, endAt) 可见窗内),替换整块 `appear`。
+ * 末尾统一淡出 + 硬关(沿用 appear 收尾)。进场选择器一律 `:not(.ovl)` 排除叠层钩子。
+ */
+function motionTween(
+  ctx: Ctx,
+  id: string,
+  card: VideoRenderCard,
+  at: number,
+  endAt: number,
+): void {
+  const motion = resolveMotion(card);
+  const t = ctx.tweens;
+  const S = fmt(at);
+  const kids = `#${id} > *:not(.ovl)`;
+
+  // 精炼进场(plain / counter 降级 / 兜底):容器轻淡入 + 直接子元素 .08s 错峰(非整块闷淡入)。
+  const plainEntrance = (): void => {
+    t.push(
+      `tl.fromTo("#${id}",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},${S});`,
+    );
+    t.push(
+      `tl.fromTo("${kids}",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},${S});`,
+    );
+  };
+
+  switch (motion) {
+    case "counter": {
+      // 数字递增计数器:GSAP proxy {v:0} → target,onUpdate 写 .stat-val 文本(不碰 strike 子层)。
+      // 渲染器帧捕获走 totalTime(t,false) 不 suppress 事件 → onUpdate 逐帧生效(已核实 hyperframes runtime)。
+      const cnt = card.kind === "stat" ? parseCounter(card.value) : null;
+      if (cnt) {
+        const suffix = JSON.stringify(cnt.suffix); // 后缀原样拼接(单字符安全集,JSON 转义兜底)
+        t.push(
+          `tl.fromTo("#${id}",{autoAlpha:0,y:10,scale:1.03},{autoAlpha:1,y:0,scale:1,duration:.4,ease:"power3.out"},${S});`,
+        );
+        t.push(
+          `(function(){var o={v:0},s="#${id} .stat-val";tl.fromTo(o,{v:0},{v:${cnt.target},duration:.9,ease:"power2.out",onUpdate:function(){var e=document.querySelector(s);if(e)e.textContent=o.v.toFixed(${cnt.dec})+${suffix};}},${S});})();`,
+        );
+      } else {
+        plainEntrance(); // 区间/非数值 value 优雅降级
+      }
+      break;
+    }
+    case "bar": {
+      // 对比条生长:容器淡入 → 条 scaleX 0→1 依次(stagger)→ 内容随容器出现。
+      t.push(
+        `tl.fromTo("#${id}",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,ease:"power2.out"},${S});`,
+      );
+      t.push(`tl.set("#${id} .growbar",{scaleX:0,transformOrigin:"left center"},${S});`);
+      t.push(
+        `tl.to("#${id} .growbar",{scaleX:1,duration:.8,ease:"power2.out",stagger:.18},${fmt(at + 0.15)});`,
+      );
+      break;
+    }
+    case "reveal": {
+      // 逐条/逐元素揭示(「建起来」的过程感)。list 复用现有逐条 delaySec;其余错峰直接子元素。
+      t.push(
+        `tl.fromTo("#${id}",{autoAlpha:0},{autoAlpha:1,duration:.3,ease:"power2.out"},${S});`,
+      );
+      if (card.kind === "list") {
+        card.items.forEach((li, i) => {
+          const delay = li.delaySec ?? i * 0.6;
+          t.push(
+            `tl.fromTo("#${id} .li${i}",{autoAlpha:0,x:-10},{autoAlpha:1,x:0,duration:.35,ease:"power2.out"},${fmt(at + 0.2 + delay)});`,
+          );
+        });
+      } else {
+        t.push(
+          `tl.fromTo("${kids}",{autoAlpha:0,x:-12},{autoAlpha:1,x:0,duration:.4,stagger:.16,ease:"power2.out"},${S});`,
+        );
+      }
+      break;
+    }
+    case "strike": {
+      // 建立→推翻:元素先正常进场(像要用)→ 中后段红线划掉 + 整卡变暗(删除张力)。
+      t.push(
+        `tl.fromTo("#${id}",{autoAlpha:0,y:10,scale:1.02},{autoAlpha:1,y:0,scale:1,duration:.4,ease:"power3.out"},${S});`,
+      );
+      t.push(
+        `tl.fromTo("${kids}",{autoAlpha:0,y:6},{autoAlpha:1,y:0,duration:.3,stagger:.08,ease:"power2.out"},${S});`,
+      );
+      const strikeAt = at + Math.max(0.8, (endAt - at) * 0.45);
+      t.push(`tl.set("#${id} .strikeline",{scaleX:0,transformOrigin:"left center"},${S});`);
+      t.push(
+        `tl.to("#${id} .strikeline",{scaleX:1,duration:.4,ease:"power2.in"},${fmt(strikeAt)});`,
+      );
+      t.push(`tl.to("#${id}",{opacity:.5,duration:.5,ease:"power1.out"},${fmt(strikeAt + 0.1)});`);
+      break;
+    }
+    case "metaphor": {
+      // 强进度式揭示:分节 stagger 弹入(back.out)+ 底部绿线 scaleX 收束。专属隐喻(墙崩/门开)
+      // 需按具体文案定制,本期做「强建立」通用形态,不硬编死某场景。
+      t.push(
+        `tl.fromTo("#${id}",{autoAlpha:0,y:14},{autoAlpha:1,y:0,duration:.45,ease:"power3.out"},${S});`,
+      );
+      t.push(
+        `tl.fromTo("${kids}",{autoAlpha:0,y:12},{autoAlpha:1,y:0,duration:.45,stagger:.16,ease:"back.out(1.5)"},${fmt(at + 0.1)});`,
+      );
+      t.push(`tl.set("#${id} .metaline",{scaleX:0,transformOrigin:"left center"},${S});`);
+      t.push(
+        `tl.to("#${id} .metaline",{scaleX:1,duration:.7,ease:"power2.out"},${fmt(at + 0.4)});`,
+      );
+      break;
+    }
+    case "plain":
+    default:
+      plainEntrance();
+      break;
+  }
+
+  // 共用收尾:淡出 + 硬关(编排在场景末尾,沿用 appear 收尾)。
+  t.push(`tl.to("#${id}",{autoAlpha:0,duration:.3},${fmt(Math.max(at, endAt - 0.3))});`);
+  t.push(`tl.set("#${id}",{autoAlpha:0},${fmt(endAt)});`);
+}
+
 const CARD_BASE = `background:${TK.surface};border:1px solid ${TK.border};border-radius:12px;box-shadow:rgba(0,0,0,.4) 0 2px 4px;`;
 
 interface CardBox {
@@ -178,7 +347,12 @@ interface CardBox {
 }
 
 // ── 六 kind 卡片渲染(尺寸为 flow 排布的预估占位)─────────────────────────────────
-function renderCard(card: VideoRenderCard, mediaPrefix: string): CardBox {
+// [T-295] 接受 motion:renderCardBase 产 kind 专属结构,renderCard 再叠加 motion 动画钩子。
+function renderCardBase(
+  card: VideoRenderCard,
+  mediaPrefix: string,
+  motion: VideoCardMotion,
+): CardBox {
   switch (card.kind) {
     case "stat": {
       const strike = card.strike
@@ -187,13 +361,14 @@ function renderCard(card: VideoRenderCard, mediaPrefix: string): CardBox {
       const unit = card.unit
         ? `<span style="color:${TK.fg2};font-size:30px;font-weight:600">${esc(card.unit)}</span>`
         : "";
+      // [T-295] 数值裹进 .stat-val 独立 span:counter 的 onUpdate 只写它、不吞掉 strike 子层。
       return {
         width: 360,
         height: 160,
         style: `${CARD_BASE}padding:18px 22px;min-width:340px;`,
         inner:
           `<div style="color:${TK.muted};font-size:17px;font-weight:600">${esc(card.label)}</div>` +
-          `<div style="display:flex;align-items:baseline;gap:10px"><span style="position:relative;color:${col(card.tone)};font-size:84px;font-weight:800;letter-spacing:-.03em;line-height:1">${esc(card.value)}${strike}</span>${unit}</div>`,
+          `<div style="display:flex;align-items:baseline;gap:10px"><span style="position:relative;color:${col(card.tone)};font-size:84px;font-weight:800;letter-spacing:-.03em;line-height:1"><span class="stat-val">${esc(card.value)}</span>${strike}</span>${unit}</div>`,
       };
     }
     case "quote":
@@ -223,8 +398,13 @@ function renderCard(card: VideoRenderCard, mediaPrefix: string): CardBox {
       };
     }
     case "compare": {
+      // [T-295] bar motion:两侧各放一根 .growbar(左/右对比条 scaleX 依次生长,SPEC §7)。
+      const withBar = motion === "bar";
       const side = (s: { title: string; items: string[]; tone: VideoRenderTone }): string =>
         `<div style="flex:1;background:${col(s.tone)}10;border:1px solid ${col(s.tone)}66;border-radius:10px;padding:14px 16px">` +
+        (withBar
+          ? `<div class="growbar" style="height:8px;border-radius:4px;background:${col(s.tone)};transform-origin:left center;margin-bottom:10px"></div>`
+          : "") +
         `<div style="color:${col(s.tone)};font-size:20px;font-weight:800">${esc(s.title)}</div>` +
         s.items
           .map(
@@ -236,7 +416,7 @@ function renderCard(card: VideoRenderCard, mediaPrefix: string): CardBox {
       const rows = Math.max(card.left.items.length, card.right.items.length);
       return {
         width: 760,
-        height: 96 + rows * 32,
+        height: 96 + rows * 32 + (withBar ? 18 : 0),
         style: `${CARD_BASE}padding:14px;`,
         inner: `<div style="display:flex;gap:12px">${side(card.left)}${side(card.right)}</div>`,
       };
@@ -266,6 +446,25 @@ function renderCard(card: VideoRenderCard, mediaPrefix: string): CardBox {
           `<div style="color:${TK.fg2};font-size:19px;font-weight:600;margin-top:8px;text-align:center">${esc(card.label)}</div>`,
       };
   }
+}
+
+/**
+ * [T-295] 卡片渲染 = kind 专属结构(renderCardBase)+ motion 动画钩子叠层。
+ * 钩子绝对定位(.ovl,不占 flow):strike→红删除线、metaphor→底部绿线;非 compare 的 bar 补顶部生长条
+ * (compare 的两条在 renderCardBase 各侧内)。motionTween 按 motion 选中这些钩子做 GSAP 动画。
+ */
+function renderCard(card: VideoRenderCard, mediaPrefix: string): CardBox {
+  const motion = resolveMotion(card);
+  const box = renderCardBase(card, mediaPrefix, motion);
+  let inner = box.inner;
+  let height = box.height;
+  if (motion === "bar" && card.kind !== "compare") {
+    inner = growbarTop() + inner; // 顶部生长条(compare 的条已在两侧内)
+    height += 20;
+  }
+  if (motion === "strike") inner += strikeOverlay();
+  if (motion === "metaphor") inner += metaOverlay();
+  return { ...box, inner, height };
 }
 
 // ── special 预设动画(枚举 3)────────────────────────────────────────────────────
@@ -524,16 +723,9 @@ export function generateVideoRenderHtml(
           `left:${pos.x}px;top:${pos.y}px;${box.style}`,
           box.inner,
         );
-        appear(ctx, id, item.at, endAt);
-        // list 卡逐条进场(相对卡片 at;默认 0.6s 步进)
-        if (item.card.kind === "list") {
-          item.card.items.forEach((li, i) => {
-            const delay = li.delaySec ?? i * 0.6;
-            ctx.tweens.push(
-              `tl.fromTo("#${id} .li${i}",{autoAlpha:0,x:-10},{autoAlpha:1,x:0,duration:.35,ease:"power2.out"},${fmt(item.at + 0.2 + delay)});`,
-            );
-          });
-        }
+        // [T-295] 富动画:按 card.motion(缺省按 kind 派生)落配方,替换整块 appear。
+        // list 逐条进场已并入 motionTween 的 reveal 分支。
+        motionTween(ctx, id, item.card, item.at, endAt);
       } else {
         // B-roll:视频必须自身是 clip(帧捕获协议);框卡 + 视频两层
         const b = item.broll;

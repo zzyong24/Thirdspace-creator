@@ -30,6 +30,21 @@ export const VIDEO_CARD_KINDS = [
 ] as const;
 export type VideoCardKind = (typeof VIDEO_CARD_KINDS)[number];
 
+/**
+ * [T-295] 信息卡动画意图枚举(「5 问」产出;template 落对应 GSAP 富动画配方)。
+ * **可选产出**:缺省时 backend/template 按 kind 派生兜底(弱模型不产也仍有富动画),
+ * 故 videoCardSchema 用 `.optional()`,绝不 required(会崩 MiniMax 等弱模型)。
+ */
+export const VIDEO_CARD_MOTIONS = [
+  "bar",
+  "counter",
+  "metaphor",
+  "strike",
+  "reveal",
+  "plain",
+] as const;
+export type VideoCardMotion = (typeof VIDEO_CARD_MOTIONS)[number];
+
 // ── ① 语义分场(video.scenes)────────────────────────────────────────────────
 
 export const videoSceneSchema = z.object({
@@ -76,6 +91,8 @@ export const videoCardSchema = z.object({
   kind: z.enum(VIDEO_CARD_KINDS),
   content: z.string().default(""),
   at: z.number().default(0),
+  // [T-295] 动画意图(可选;弱模型不产 → template 按 kind 派生)。
+  motion: z.enum(VIDEO_CARD_MOTIONS).optional(),
 });
 export const videoCardsSchema = z.object({
   cards: z.array(videoCardSchema).default([]),
@@ -106,8 +123,19 @@ export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
 - kind 只能是 stat/quote/list/compare/code/image 六选一。
 - at(卡片出现时刻,秒)**必须等于某一 SRT 行的起秒**,且落在所属场景的时间范围内。
 - sceneIdx 是上面场景列表的场景序号(从 0 起)。
+【动画意图 motion(每张卡按「5 问」选一个,让画面"长出来"而非"整块淡入弹出")】
+  1. 有前后/多少/快慢**对比**? → bar(对比条从 0 生长)
+  2. 有**数字/规模/速度**? → counter(数字从 0 递增到目标)
+  3. **抽象概念可具象**(能画出来)? → metaphor(视觉隐喻/强揭示)
+  4. 先**建立再否定/推翻**(说"别以为…其实不是")? → strike(元素先亮起像要用,再被划掉)
+  5. **列举/步骤/接力**? → reveal(逐条依次揭示)
+  6. 其它纯陈述 → plain(精炼进场)
+  motion 是**可选**产出:拿不准就不填,系统会按卡类型派生兜底(stat→counter / compare→bar / list·code→reveal / quote·image→plain)。别硬凑。
+【构图约束(给成片留呼吸感,别把画面堆满)】
+- 口播人物是画面主体,**不拉伸、不裁切**;用户上传的素材一律完整展示(contain),不裁。
+- **一个 beat 一个强视觉**:同一时刻别堆两张大卡/两个大动画;情绪句、重要陈述留白,不配卡。
 【输出】只输出一个 JSON 对象 {"cards": [...]}(不要多余文字、不要代码块),每张:
-{"sceneIdx"(整数),"kind"(六选一),"content"(卡片文案,原文提取),"at"(数字,秒)}。没有值得做卡的就返回 {"cards": []}。`,
+{"sceneIdx"(整数),"kind"(六选一),"content"(卡片文案,原文提取),"at"(数字,秒),"motion"(可选,六选一)}。没有值得做卡的就返回 {"cards": []}。`,
   requiredFacets: ["scenes", "srt", "script"],
 };
 
