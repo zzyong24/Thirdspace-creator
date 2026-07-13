@@ -912,6 +912,10 @@ const SCHEDULING_OPS = new Set<string>(SCHEDULING_OP_IDS);
 // agree on the same key.
 const CANONICAL_RUBRIC_ID = "rubric-canonical";
 
+// [T-277] 可审整稿的最短正文阈值 —— 低于此视作「还没有整稿」(空稿/占位/整稿未落地)。一份
+// 6-10 镜的真实分镜脚本正文恒在数百字级,25 字级的陈旧占位稿会被这道门拦下,不进审核。
+const MIN_REVIEWABLE_SCRIPT_CHARS = 40;
+
 // [T-135] canonical + douyin knowledge seed 全退役 → CanonicalKnowledge/CanonicalRevision 类型
 // + toKnowledgeRow/toRevisionRow mapper 一并移除(知识全由用户真实采集/录入进库,不再 seed)。
 
@@ -8727,6 +8731,40 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       ctx: RequestContext,
       input: { projectId: string },
     ) => {
+      // [T-277] 防「审核跑在整稿前 → 审到旧空稿」(用户实测:审核结论基于 25 字/2 版本的陈旧稿,
+      //   编导自己都标注「审核跑在整稿前面是 bug」)。触发前两道诚实门:
+      //   ① 整稿任务在飞:该项目有未终态的 script.draft 任务(queued/running/awaiting_confirmation)
+      //      → 新整稿还没落地/待采纳,此刻审的是旧版本 → 拦下,让用户等整稿采纳后再审;
+      //   ② 空/过短稿:当前 output_script 正文不足 → 没有可审内容 → 拦下,不白起审空稿的 task。
+      //   两道门都抛友好错误 → review.script 工具 execute 接住 → ChatReviewReportCard 渲诚实提示。
+      let draftInFlight = false;
+      try {
+        const { rows } = await aiService.listTasks(ctx, {
+          limit: 20,
+          offset: 0,
+          projectId: input.projectId,
+          taskType: "script.draft",
+        });
+        draftInFlight = rows.some(
+          (t) => !["succeeded", "failed", "cancelled"].includes(t.status),
+        );
+      } catch {
+        // 探测失败(极少)不阻断:宁可少拦一层,也不因探测异常挡住正常审核。
+      }
+      if (draftInFlight) {
+        throw new Error(
+          "整稿还在生成中或待采纳 —— 现在审核会审到旧版本。请等整稿候选卡出结果、点「采纳写入稿面」后再审核。",
+        );
+      }
+      const currentScript = await makeReviewSubjectReader().getScript(
+        ctx,
+        input.projectId,
+      );
+      if (currentScript.trim().length < MIN_REVIEWABLE_SCRIPT_CHARS) {
+        throw new Error(
+          "当前项目还没有可审的整稿(稿面为空或太短)—— 先生成整稿并采纳写入稿面,再来审核,别审一份空稿。",
+        );
+      }
       const task = (await reviewGateService.triggerReview(
         ctx,
         input.projectId,
