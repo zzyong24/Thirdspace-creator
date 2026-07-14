@@ -161,6 +161,16 @@ describe("detectLoginWall — 启发式纯函数", () => {
       detectLoginWall("https://blog.example.com/post", "<a>Log in</a> 页脚"),
     ).toBe(false);
   });
+  it("[T-311] 关键词仅出现在内联 <script>/JSON(如 GitHub octocaptcha 开关)→ false(不误报未登录)", () => {
+    // 用户实测:登录了 GitHub 仍报未登录。真因=GitHub 登录后首页内联 JS 含 feature-flag
+    //   "octocaptcha_origin_optimization",裸 "captcha" 撞整段 HTML 误命中。剥 script 后可见正文无 captcha。
+    const gh = `<html><head><meta name="user-login" content="zzyong24"><script type="application/json">{"features":["octocaptcha_origin_optimization","swp_forms_disable_octocaptcha"]}</script></head><body><h1>Home</h1><nav>Dashboard</nav></body></html>`;
+    expect(detectLoginWall("https://github.com/", gh)).toBe(false);
+    // 反向保证:真验证码页的可见文案照样命中。
+    expect(
+      detectLoginWall("https://x.com/a", "<body>请完成验证码后继续</body>"),
+    ).toBe(true);
+  });
 });
 
 // ── [T-239c S2] 长工具可中断:signal 提前退出(不空烧浏览器)────────────────────────

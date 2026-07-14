@@ -142,10 +142,23 @@ const WALL_CONTENT_HINTS = [
   "log in to get smarter responses",
 ];
 
+// [T-311] 只保留**可见文本**再匹配登录墙关键词:剥掉 <script>/<style>/<noscript>/注释/标签。
+//   否则裸子串会撞进内联 JS/JSON——GitHub 登录后首页把 feature-flag 名 `octocaptcha_origin_optimization`
+//   写在内联脚本里,让 "captcha" 误命中 → 明明登录了却报"需要登录"(用户实测:ChatGPT 能读、GitHub 不行,
+//   正因 GitHub 页含 octocaptcha 而 ChatGPT 不含)。真验证码页的可见文案(验证码 / verify you are human)照样命中。
+function visibleText(html: string): string {
+  return html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<[^>]+>/g, " ");
+}
+
 export function detectLoginWall(finalUrl: string, html: string): boolean {
   const url = finalUrl.toLowerCase();
   if (LOGIN_URL_HINTS.some((h) => url.includes(h))) return true;
-  const body = html.toLowerCase();
+  const body = visibleText(html).toLowerCase();
   return WALL_CONTENT_HINTS.some((h) => body.includes(h.toLowerCase()));
 }
 
