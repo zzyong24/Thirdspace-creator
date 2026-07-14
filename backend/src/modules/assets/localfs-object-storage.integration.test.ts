@@ -56,7 +56,8 @@ describe("localfs-object-storage", () => {
       await fs.readFile(path.join(root, `${up.storageKey}.meta.json`), "utf8"),
     );
     expect(sidecar.mimeType).toBe("image/png");
-    expect(sidecar.width).toBe(1920);
+    // [T-296] create 阶段字节还没上传 → 尺寸未知 = null(真尺寸由 headObject 的 ffprobe 在 complete 阶段探)。
+    expect(sidecar.width).toBeNull();
   });
 
   it("[T-157] createPresignedUpload 按 accountId 分区 key 头段(存量回退 _default)", async () => {
@@ -117,12 +118,13 @@ describe("localfs-object-storage", () => {
     // Bytes really landed on disk under the key.
     const onDisk = await fs.readFile(path.join(root, up.storageKey));
     expect(Array.from(onDisk)).toEqual([1, 2, 3, 4, 5, 6]);
-    // headObject echoes the real size + refreshed MIME/dims + a real sha256.
+    // headObject echoes the real size + real sha256. [T-296] dims/时长走 ffprobe:
+    // 这里是 6 个假字节(非真视频)→ ffprobe 探不出 → width/durationMs 为 null(诚实,不再假 1920/1000)。
     const head = await storage.headObject(up.storageKey);
     expect(head.fileSize).toBe(6);
     expect(head.mimeType).toBe("video/mp4");
-    expect(head.width).toBe(1920);
-    expect(head.durationMs).toBe(1000);
+    expect(head.width).toBeNull();
+    expect(head.durationMs).toBeNull();
     expect(head.checksum).toMatch(/^[0-9a-f]{64}$/);
   });
 

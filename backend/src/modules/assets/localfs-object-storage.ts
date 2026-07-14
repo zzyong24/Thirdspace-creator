@@ -14,6 +14,7 @@
 // vitest). Path-traversal + token signing live in ./blob-security (pure, unit-
 // tested separately).
 import { createHash } from "node:crypto";
+import { execFile } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type {
@@ -49,6 +50,57 @@ interface SidecarMeta {
   width: number | null;
   height: number | null;
   durationMs: number | null;
+}
+
+// [T-296] 真媒体探针(ffprobe):替换原「durationMs 硬编码 1000 + 尺寸 1920×1080」的占位。
+// 系统缺 ffprobe / 非媒体 / 探针失败 → 一律返回 null(诚实空,绝不填假值,好过假的「1 秒」)。
+interface ProbedMedia {
+  durationMs: number | null;
+  width: number | null;
+  height: number | null;
+}
+const EMPTY_PROBE: ProbedMedia = { durationMs: null, width: null, height: null };
+
+function locateFfprobe(): Promise<string | null> {
+  return new Promise((resolve) => {
+    const cmd = process.platform === "win32" ? "where" : "which";
+    execFile(cmd, ["ffprobe"], (err, stdout) => {
+      if (err) return resolve(null);
+      const first = stdout
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .find(Boolean);
+      resolve(first || null);
+    });
+  });
+}
+
+function probeMedia(ffprobe: string, absKey: string): Promise<ProbedMedia> {
+  return new Promise((resolve) => {
+    execFile(
+      ffprobe,
+      ["-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", absKey],
+      { maxBuffer: 8 * 1024 * 1024, timeout: 15000 },
+      (err, stdout) => {
+        if (err) return resolve(EMPTY_PROBE);
+        try {
+          const j = JSON.parse(stdout) as {
+            format?: { duration?: string };
+            streams?: Array<{ codec_type?: string; width?: number; height?: number }>;
+          };
+          const dur = Number(j.format?.duration);
+          const v = (j.streams ?? []).find((s) => s.codec_type === "video");
+          resolve({
+            durationMs: Number.isFinite(dur) && dur > 0 ? Math.round(dur * 1000) : null,
+            width: typeof v?.width === "number" ? v.width : null,
+            height: typeof v?.height === "number" ? v.height : null,
+          });
+        } catch {
+          resolve(EMPTY_PROBE);
+        }
+      },
+    );
+  });
 }
 
 // Build the public URL the FE PUTs to / GETs from. The key is percent-encoded as
@@ -112,12 +164,11 @@ export function createLocalFsObjectStorage(
       const meta: SidecarMeta = {
         mimeType,
         fileSize,
-        // Image/video carry deterministic placeholder dims (the real probe is a
-        // future enhancement); others null — mirrors the mock's shape.
-        width: assetType === "image" || assetType === "video" ? 1920 : null,
-        height: assetType === "image" || assetType === "video" ? 1080 : null,
-        durationMs:
-          assetType === "video" || assetType === "audio" ? 1000 : null,
+        // [T-296] 尺寸/时长在 create 阶段字节还没上传,无从知道 → 一律 null。
+        // 真值由 headObject(complete 阶段,字节已落盘)跑 ffprobe 探出,不再填 1920×1080/1000 假占位。
+        width: null,
+        height: null,
+        durationMs: null,
       };
       await fs.writeFile(sidecarPath(absKey), JSON.stringify(meta), "utf8");
       const exp = now() + expiresInMs;
@@ -133,16 +184,25 @@ export function createLocalFsObjectStorage(
       // leave them, plus a refreshed sidecar so headObject echoes the real MIME/dims.
       const absKey = safeJoin(cfg.rootPath, storageKey);
       await fs.mkdir(path.dirname(absKey), { recursive: true });
+      await fs.writeFile(absKey, bytes);
+      // [T-296] 字节已落盘 → 对 media 跑 ffprobe 探真尺寸/时长(缺 ffprobe/非媒体 → null,不填假占位)。
+      let probed: ProbedMedia = EMPTY_PROBE;
+      if (
+        assetType === "image" ||
+        assetType === "video" ||
+        assetType === "audio"
+      ) {
+        const ffprobe = await locateFfprobe();
+        if (ffprobe) probed = await probeMedia(ffprobe, absKey);
+      }
       const meta: SidecarMeta = {
         mimeType,
         fileSize: bytes.byteLength,
-        width: assetType === "image" || assetType === "video" ? 1920 : null,
-        height: assetType === "image" || assetType === "video" ? 1080 : null,
-        durationMs:
-          assetType === "video" || assetType === "audio" ? 1000 : null,
+        width: probed.width,
+        height: probed.height,
+        durationMs: probed.durationMs,
       };
       await fs.writeFile(sidecarPath(absKey), JSON.stringify(meta), "utf8");
-      await fs.writeFile(absKey, bytes);
     },
 
     async getObject(storageKey) {
@@ -168,13 +228,34 @@ export function createLocalFsObjectStorage(
       }
       const bytes = await fs.readFile(absKey);
       const checksum = createHash("sha256").update(bytes).digest("hex");
+      // [T-296] complete 阶段字节已落盘 → 对 media 跑 ffprobe 探真时长/尺寸,覆盖 create 阶段的
+      //   null 占位(治「录屏时长全显 1 秒」的假占位)。缺 ffprobe/非媒体/探针失败 → 保持 null(诚实)。
+      const mime = meta?.mimeType || "";
+      let durationMs = meta?.durationMs ?? null;
+      let width = meta?.width ?? null;
+      let height = meta?.height ?? null;
+      if (
+        mime.startsWith("video/") ||
+        mime.startsWith("audio/") ||
+        mime.startsWith("image/")
+      ) {
+        const ffprobe = await locateFfprobe();
+        if (ffprobe) {
+          const probed = await probeMedia(ffprobe, absKey);
+          durationMs = probed.durationMs;
+          if (!mime.startsWith("audio/")) {
+            width = probed.width;
+            height = probed.height;
+          }
+        }
+      }
       return {
         mimeType: meta?.mimeType || "application/octet-stream",
         fileSize: stat.size,
         checksum,
-        width: meta?.width ?? null,
-        height: meta?.height ?? null,
-        durationMs: meta?.durationMs ?? null,
+        width,
+        height,
+        durationMs,
         mediaMetadata: {},
       } satisfies HeadObjectResult;
     },
