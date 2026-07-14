@@ -73,11 +73,23 @@ export function AssetThumbnail({ asset }: { readonly asset: ResourceAsset }) {
   }
   return (
     // 首帧当缩略图:muted + preload=metadata,不自动播(播放在详情栏)。
+    // [T-304] WebKit 下 preload=metadata 只加载元数据、不解码首帧 → 缩略图全黑。
+    //   loadedmetadata 后 seek 到 0.1s 逼浏览器解码 + 画出该帧当封面(仍不播,静止首帧)。
     // eslint-disable-next-line jsx-a11y/media-has-caption
     <video
       src={url}
       muted
       preload="metadata"
+      onLoadedMetadata={(e) => {
+        const v = e.currentTarget;
+        if (v.currentTime < 0.05) {
+          try {
+            v.currentTime = 0.1;
+          } catch {
+            /* seek 不支持 → 保持黑框(诚实降级) */
+          }
+        }
+      }}
       onError={handleLoadError}
       data-slot="asset-thumbnail"
       data-preview-type="video"
