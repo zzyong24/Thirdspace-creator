@@ -788,6 +788,51 @@ export async function ensureChromiumInstalled(): Promise<void> {
 }
 
 // 自起 Chromium + 持久化 profile(.auth/),不连用户现成浏览器(connectOverCDP 那条路对真实
+// [T-299] 解析已打包的**全量** chromium 可执行路径。根因:headless 的 launchPersistentContext 默认
+//   找 chrome-headless-shell(playwright 的独立 headless 浏览器),而打包只 bundle 了全量 chromium-<rev>
+//   (bundleChromiumBrowser,T-284),没打 headless_shell → 装机版采集(评论/收藏夹/选题,都 headless)
+//   崩「Executable doesn't exist …chromium_headless_shell-…」。修:显式传 executablePath=全量 chromium
+//   → headless 也用全量(--headless),复用已打包的 341MB,不再多打 ~100MB。优先确定性扫
+//   PLAYWRIGHT_BROWSERS_PATH(打包混淆 runtime 稳,复用视频渲染 locateBundledChromium 同款),
+//   回落 chromium.executablePath()(dev 系统缓存)。都取不到 → undefined(交回 playwright 默认,
+//   dev 环境有 headless_shell 不受影响)。
+export async function resolveChromiumExecutable(): Promise<string | undefined> {
+  const { join } = await import("node:path");
+  const { readdir, stat } = await import("node:fs/promises");
+  const browsersDir =
+    process.env.PLAYWRIGHT_BROWSERS_PATH || join(process.cwd(), "browsers");
+  try {
+    const entries = await readdir(browsersDir).catch(() => [] as string[]);
+    const dir = entries
+      .filter((e) => /^chromium-\d+$/.test(e))
+      .sort((a, b) => Number(b.slice(9)) - Number(a.slice(9)))[0];
+    if (dir) {
+      const rels = [
+        "chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+        "chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+        "chrome-linux/chrome",
+        "chrome-win/chrome.exe",
+      ];
+      for (const rel of rels) {
+        const p = join(browsersDir, dir, rel);
+        const st = await stat(p).catch(() => null);
+        if (st?.isFile()) return p;
+      }
+    }
+  } catch {
+    // fall through → executablePath 兜底
+  }
+  try {
+    const { chromium } = await import("@playwright/test");
+    const { existsSync } = await import("node:fs");
+    const p = chromium.executablePath();
+    if (p && existsSync(p)) return p;
+  } catch {
+    // ignore → undefined(交回 playwright 默认)
+  }
+  return undefined;
+}
+
 // 用户 Chrome 不稳)。headless=false 用于扫码登录;true 用于复刷抓取。
 async function openContext(authDir: string, headless: boolean) {
   await ensureChromiumInstalled(); // [T-173] 首启自动下载 Chromium(装过秒过)
@@ -795,8 +840,11 @@ async function openContext(authDir: string, headless: boolean) {
   const { mkdir } = await import("node:fs/promises");
   await mkdir(authDir, { recursive: true }).catch(() => {});
   await clearSingletonLocks(authDir);
+  // [T-299] 显式全量 chromium(headless 也用它,绕开缺失的 chrome-headless-shell)。
+  const executablePath = await resolveChromiumExecutable();
   return chromium.launchPersistentContext(authDir, {
     headless,
+    ...(executablePath ? { executablePath } : {}),
     viewport: { width: 1440, height: 900 },
     acceptDownloads: true, // 明细导出走 download 事件截 xlsx;现代 Playwright 默认 true,显式设上保险
     args: [

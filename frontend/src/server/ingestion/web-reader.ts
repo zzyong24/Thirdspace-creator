@@ -102,8 +102,12 @@ async function realOpenReaderContext(
     await rm(join(authDir, f), { force: true }).catch(() => {});
   }
   // 有头/无头:读取用 headless(不弹窗,复用 .auth/web 登录态);与 web-session.loginWeb 分工。
+  // [T-299] 同 douyin openContext:显式全量 chromium(headless 也用它),绕开打包缺失的 chrome-headless-shell。
+  const { resolveChromiumExecutable } = await import("./douyin-cdp");
+  const executablePath = await resolveChromiumExecutable();
   const ctx = await chromium.launchPersistentContext(authDir, {
     headless: true,
+    ...(executablePath ? { executablePath } : {}),
     viewport: { width: 1440, height: 900 },
     args: ["--disable-blink-features=AutomationControlled"],
   });
