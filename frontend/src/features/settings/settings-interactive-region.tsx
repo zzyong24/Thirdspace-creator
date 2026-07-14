@@ -1692,17 +1692,17 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
   // 语言/locale: i18n 本期不落地 → 切换 locale 没有任何可见效果(界面始终中文)。
   // 一个切了没反应的下拉 = 假控件,本期移除(铁律:真实有效或删除)。当前 locale
   // 仍在账户卡作只读 chip 展示(读自真实 identity)。等 i18n 落地后再加回可切换控件。
-  const [theme, setTheme] = React.useState<Theme>(viewModel.system.theme);
+  // [T-305] 主题默认 'system' —— 必须与 layout.tsx 防闪脚本(默认 'system')一致。
+  //   原来初始态/兜底用 viewModel.system.theme(fixture 死值,非 'system')→ localStorage 未
+  //   存过主题时,进设置页挂载会把「系统暗」刷成 viewModel 值(亮)→ 主题翻转。主题偏好只存
+  //   localStorage(无服务端字段),故 viewModel.system.theme 不该参与默认判定。density 同理。
+  const [theme, setTheme] = React.useState<Theme>("system");
   const [density, setDensity] = React.useState<Density>(
     viewModel.system.density,
   );
 
   React.useEffect(() => {
-    const storedTheme = readStored(
-      THEME_STORAGE_KEY,
-      THEME_VALUES,
-      viewModel.system.theme,
-    );
+    const storedTheme = readStored(THEME_STORAGE_KEY, THEME_VALUES, "system");
     const storedDensity = readStored(
       DENSITY_STORAGE_KEY,
       DENSITY_VALUES,
