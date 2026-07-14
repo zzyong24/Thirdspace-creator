@@ -29,6 +29,7 @@
 
 - **迁移文件多语句必须 `--> statement-breakpoint`**(0037 踩过,pglite 单语句执行)。
 - PGlite/PG 双栈避免方言分歧:jsonb 复杂匹配放 JS 侧过滤。
+- **PGlite 单写:两个 CreatorOS 实例同连一个库 = 必写坏**(T-305 会话踩:排障期反复起打包 app,又撞上另一会话的 `desktop:dev` sidecar,两个 next-server 并发读写 `~/Library/Application Support/cloud.aitongban.creatoros/db` → 04:32 库损坏,损坏保护把它改名 `db.corrupt-<ms>` 并新建空库顶上 → 新 app 读空库(0 素材)、老 sidecar 靠已打开的 inode 句柄仍服务旧数据,现象自相矛盾极难定位)。**排障/验证打包 app 前先确认没有 dev server 在跑同一个库**;数据本体没丢(`.corrupt-<ms>` 是完整可读的原库,改名回去即恢复;asset 字节在 `~/CreatorOS/media` 从不受影响)。定位靠 `lsof -p <sidecar-pid> | grep db.corrupt` 看有没有 `.corrupt` 句柄 + 比 `db` vs `db.corrupt-*` 目录大小/时间戳。
 
 ## AI 行为工程(MiniMax/弱模型)
 
