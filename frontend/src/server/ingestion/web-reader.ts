@@ -102,15 +102,18 @@ async function realOpenReaderContext(
     await rm(join(authDir, f), { force: true }).catch(() => {});
   }
   // 有头/无头:读取用 headless(不弹窗,复用 .auth/web 登录态);与 web-session.loginWeb 分工。
-  // [T-299] 同 douyin openContext:显式全量 chromium(headless 也用它),绕开打包缺失的 chrome-headless-shell。
-  const { resolveChromiumExecutable } = await import("./douyin-cdp");
-  const executablePath = await resolveChromiumExecutable();
-  const ctx = await chromium.launchPersistentContext(authDir, {
-    headless: true,
-    ...(executablePath ? { executablePath } : {}),
-    viewport: { width: 1440, height: 900 },
-    args: ["--disable-blink-features=AutomationControlled"],
-  });
+  // [T-307] 必须和 web-session.loginWeb **同一套浏览器选择**(优先系统 Chrome → 回落打包 chromium):
+  //   登录写 profile 的浏览器和读 profile 的浏览器不一致 → Chrome 钥匙串加密的 cookie 读不出 → 误报「未登录」。
+  //   channel:"chrome" headless 用系统 Chrome 二进制(非 chrome-headless-shell),顺带绕 T-299 那个坑。
+  const { launchWithBrowser } = await import("./douyin-cdp");
+  const ctx = await launchWithBrowser((sel) =>
+    chromium.launchPersistentContext(authDir, {
+      headless: true,
+      ...sel,
+      viewport: { width: 1440, height: 900 },
+      args: ["--disable-blink-features=AutomationControlled"],
+    }),
+  );
   return ctx as unknown as ReaderCapableContext;
 }
 

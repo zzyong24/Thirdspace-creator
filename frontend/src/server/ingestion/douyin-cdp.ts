@@ -833,6 +833,21 @@ export async function resolveChromiumExecutable(): Promise<string | undefined> {
   return undefined;
 }
 
+// [T-307] 统一浏览器选择:**优先系统 Chrome**(channel:"chrome" —— 登录 profile 兼容 + OAuth 友好),
+//   起不来回落**已打包全量 chromium**(executablePath,绕缺失的 chrome-headless-shell)。
+//   `chromium.launch` 与 `launchPersistentContext` 都经此双试——关键是保证「谁写登录态、谁读登录态」
+//   用**同一个浏览器**:否则系统 Chrome 用钥匙串加密的 cookie,Chromium-for-Testing 解不开 → 读不到登录态。
+export async function launchWithBrowser<T>(
+  run: (sel: { channel?: string; executablePath?: string }) => Promise<T>,
+): Promise<T> {
+  try {
+    return await run({ channel: "chrome" });
+  } catch {
+    const executablePath = await resolveChromiumExecutable();
+    return await run(executablePath ? { executablePath } : {});
+  }
+}
+
 // 用户 Chrome 不稳)。headless=false 用于扫码登录;true 用于复刷抓取。
 async function openContext(authDir: string, headless: boolean) {
   await ensureChromiumInstalled(); // [T-173] 首启自动下载 Chromium(装过秒过)

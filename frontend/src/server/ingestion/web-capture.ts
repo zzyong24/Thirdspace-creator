@@ -87,13 +87,19 @@ export interface CaptureUrlDeps {
 // [T-126b] 导出复用:浏览器搜索适配器(search-browser.ts)复用同一套干净无头 context 起法。
 export async function realOpenContext(): Promise<CaptureCapableContext> {
   const { chromium } = await import("@playwright/test");
-  const browser = await chromium.launch({
-    headless: true,
-    args: [
-      "--disable-blink-features=AutomationControlled",
-      "--no-proxy-server",
-    ],
-  });
+  const { launchWithBrowser } = await import("./douyin-cdp");
+  // [T-307] 统一浏览器选择(优先系统 Chrome → 回落打包全量 chromium):原来裸 chromium.launch
+  //   在打包版 headless 下找 chrome-headless-shell(没打)→ 截图崩,同 T-299 漏网点。
+  const browser = await launchWithBrowser((sel) =>
+    chromium.launch({
+      headless: true,
+      ...sel,
+      args: [
+        "--disable-blink-features=AutomationControlled",
+        "--no-proxy-server",
+      ],
+    }),
+  );
   const context = await browser.newContext({
     userAgent: DESKTOP_UA,
     viewport: { width: 1440, height: 900 },

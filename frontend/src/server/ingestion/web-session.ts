@@ -118,16 +118,13 @@ async function realOpenWebContext(
     args: ["--disable-blink-features=AutomationControlled"],
     ignoreDefaultArgs: ["--enable-automation"],
   };
-  let ctx;
-  try {
-    ctx = await chromium.launchPersistentContext(authDir, {
-      ...baseOpts,
-      channel: "chrome",
-    });
-  } catch {
-    // 系统无正式 Chrome(或 channel 启动失败)→ 回落 Playwright 自带 Chromium。
-    ctx = await chromium.launchPersistentContext(authDir, baseOpts);
-  }
+  // [T-307] 统一浏览器选择(优先系统 Chrome → 回落**打包全量 chromium**):原来 catch 分支回落
+  //   裸 baseOpts(无 executablePath)→ 无系统 Chrome 时 headless 状态探针会找 chrome-headless-shell 崩;
+  //   且必须和 web-reader 读取用**同一套**选择,登录态 profile 才互通。
+  const { launchWithBrowser } = await import("./douyin-cdp");
+  const ctx = await launchWithBrowser((sel) =>
+    chromium.launchPersistentContext(authDir, { ...baseOpts, ...sel }),
+  );
   return ctx as unknown as WebSessionCapableContext;
 }
 
