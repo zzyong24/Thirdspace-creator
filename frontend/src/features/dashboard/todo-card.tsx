@@ -153,28 +153,40 @@ export function TodoCard({ todos }: { todos: ReadonlyArray<TodoRow> }) {
                     done ? "opacity-60" : "hover:border-brand/40 hover:bg-surface-subtle",
                   )}
                 >
-                  {/* [T-247] 完成勾选 → tasks.patch { status: 'done' }。 */}
-                  <button
-                    type="button"
-                    data-slot="todo-complete"
-                    aria-label={`完成任务:${todo.title}`}
-                    aria-pressed={done}
-                    disabled={pendingId !== null || done}
-                    onClick={() => complete(todo.id)}
-                    className={cn(
-                      "mt-0.5 flex size-4.5 shrink-0 items-center justify-center rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      done
-                        ? "border-brand bg-brand text-brand-foreground"
-                        : "border-border-strong bg-surface hover:border-brand",
-                    )}
-                  >
-                    {done ? (
-                      <Check aria-hidden="true" className="size-3" />
-                    ) : null}
-                  </button>
-                  {/* D3: each todo deep-links to its project. */}
+                  {/* [T-247] 完成勾选 → tasks.patch { status: 'done' }。
+                      [T-302] 派生待办(completable===false,如「成片待采纳」)不给勾选:
+                      它由当前状态驱动(采纳/丢弃后自动消失),不经 tasks.patch;占位圆点保持对齐。 */}
+                  {todo.completable === false ? (
+                    <span
+                      aria-hidden="true"
+                      data-slot="todo-derived-dot"
+                      className="mt-0.5 flex size-4.5 shrink-0 items-center justify-center rounded-full border border-border-strong bg-surface-subtle"
+                    >
+                      <span className="size-1.5 rounded-full bg-brand" />
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      data-slot="todo-complete"
+                      aria-label={`完成任务:${todo.title}`}
+                      aria-pressed={done}
+                      disabled={pendingId !== null || done}
+                      onClick={() => complete(todo.id)}
+                      className={cn(
+                        "mt-0.5 flex size-4.5 shrink-0 items-center justify-center rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        done
+                          ? "border-brand bg-brand text-brand-foreground"
+                          : "border-border-strong bg-surface hover:border-brand",
+                      )}
+                    >
+                      {done ? (
+                        <Check aria-hidden="true" className="size-3" />
+                      ) : null}
+                    </button>
+                  )}
+                  {/* D3: each todo deep-links to its project(派生项走 href 直达对应页)。 */}
                   <Link
-                    href={todoHref(todo)}
+                    href={todo.href ?? todoHref(todo)}
                     data-slot="todo-row-link"
                     className="flex min-w-0 flex-1 flex-col gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >

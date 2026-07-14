@@ -104,6 +104,10 @@ export interface TodoRow {
   readonly dueAt: Iso8601 | null;
   readonly priority: 1 | 2 | 3 | 4 | 5;
   readonly status: TaskStatus;
+  // [T-302] 派生待办(读时按状态算出,如「成片待采纳」):href=显式跳转目标(缺省按 stage 推);
+  //   completable=false → 该行不给「完成」勾选(派生项状态变了自动消失,不经 tasks.patch)。
+  readonly href?: string;
+  readonly completable?: boolean;
 }
 
 export interface TopicRow {

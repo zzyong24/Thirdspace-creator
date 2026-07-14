@@ -6164,6 +6164,62 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const s = await projectsService.getDashboardSummary(ctx);
         const clampPriority = (p: number): 1 | 2 | 3 | 4 | 5 =>
           Math.min(5, Math.max(1, Math.round(p))) as 1 | 2 | 3 | 4 | 5;
+        // [T-302] 派生待办:待确认渲染(exec.video.render 处 awaiting_confirmation → 采纳成片)。
+        //   读时按当前状态算——采纳/丢弃后该任务离开 awaiting_confirmation → 待办自动消失,
+        //   不依赖没人写的 stored task。派生项 completable=false(不给「完成」勾,状态驱动),
+        //   href 直达制作视频页去采纳。读失败不崩看板。
+        let derivedTodos: Array<{
+          id: string;
+          title: string;
+          projectId: string;
+          projectTitle: string;
+          stage: ProjectStageName;
+          dueAt: string | null;
+          priority: 1 | 2 | 3 | 4 | 5;
+          status: TaskStatus;
+          href: string;
+          completable: boolean;
+        }> = [];
+        try {
+          const { rows } = await executionService.list(ctx, {
+            limit: 30,
+            offset: 0,
+          });
+          derivedTodos = rows
+            .filter(
+              (t) =>
+                t.status === "awaiting_confirmation" &&
+                t.execType === "video.render" &&
+                typeof t.projectId === "string",
+            )
+            .slice(0, 3)
+            .map((t) => ({
+              id: t.id,
+              title: "成片待采纳",
+              projectId: t.projectId as string,
+              projectTitle: "制作视频",
+              stage: "production" as ProjectStageName,
+              dueAt: null,
+              priority: 2 as const,
+              status: "todo" as TaskStatus,
+              href: `/projects/${t.projectId}/production`,
+              completable: false,
+            }));
+        } catch {
+          // 派生待办读失败 → 只出 stored 待办(通常也空),不崩看板。
+        }
+        const storedTodos = s.todos.map((t) => ({
+          id: t.id,
+          title: t.title,
+          projectId: t.projectId,
+          projectTitle: t.projectTitle,
+          stage: t.stage as ProjectStageName,
+          dueAt: t.dueAt,
+          priority: clampPriority(t.priority),
+          status: t.status as TaskStatus,
+          href: undefined,
+          completable: true,
+        }));
         return {
           continueCreating: s.continueCreating
             ? {
@@ -6175,16 +6231,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 updatedAt: s.continueCreating.updatedAt,
               }
             : null,
-          todos: s.todos.map((t) => ({
-            id: t.id,
-            title: t.title,
-            projectId: t.projectId,
-            projectTitle: t.projectTitle,
-            stage: t.stage as ProjectStageName,
-            dueAt: t.dueAt,
-            priority: clampPriority(t.priority),
-            status: t.status as TaskStatus,
-          })),
+          // 派生(actionable now)排前,再接 stored;总取前 5。
+          todos: [...derivedTodos, ...storedTodos].slice(0, 5),
         };
       },
     },
