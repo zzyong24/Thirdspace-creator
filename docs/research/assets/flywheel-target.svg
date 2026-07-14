@@ -1,0 +1,102 @@
+<svg viewBox="0 0 900 680" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, 'PingFang SC', sans-serif">
+  <title>CreatorOS 数据串联地图·补链后目标:四条断链接通,复刻/复盘飞轮自转</title>
+  <style>
+    :root{
+      --ink:#1e293b; --sub:#64748b;
+      --card:#ffffff; --card-brd:#cbd5e1;
+      --ok:#16a34a; --ok-soft:#dcfce7;
+      --hub:#7c3aed; --hub-soft:#ede9fe;
+      --panel:#f8fafc; --panel-brd:#e2e8f0; --bg:#ffffff;
+      --fix:#0369a1; --fix-soft:#e0f2fe;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --ink:#e2e8f0; --sub:#94a3b8; --card:#1e293b; --card-brd:#475569;
+        --ok:#4ade80; --ok-soft:#14351f; --hub:#a78bfa; --hub-soft:#241a44;
+        --panel:#0f172a; --panel-brd:#334155; --bg:#0b1220;
+        --fix:#38bdf8; --fix-soft:#082f42;
+      }
+    }
+    .t{fill:var(--ink);} .s{fill:var(--sub);} .lbl{fill:var(--sub);}
+    .title{fill:var(--ink);font-weight:700;}
+  </style>
+  <defs>
+    <marker id="ah-ok" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="var(--ok)"/></marker>
+  </defs>
+  <rect x="0" y="0" width="900" height="680" fill="var(--bg)"/>
+
+  <text x="24" y="30" font-size="15.5" class="title">CreatorOS 数据串联地图 · 补链后目标(T-284 完成态)</text>
+  <g transform="translate(24,44)">
+    <line x1="0" y1="8" x2="34" y2="8" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#ah-ok)"/>
+    <text x="40" y="12" font-size="12.5" class="s">已串联(全绿)</text>
+    <rect x="170" y="1" width="14" height="14" rx="3" fill="var(--fix-soft)" stroke="var(--fix)"/>
+    <text x="190" y="12" font-size="12.5" class="s">本次补链点(T-284a–d)</text>
+    <text x="700" y="12" font-size="11.5" class="s" font-style="italic">对照 flywheel-current.svg 看差异</text>
+  </g>
+
+  <!-- ===================== PANEL 1: 出新选题(原本就通) ===================== -->
+  <rect x="16" y="66" width="868" height="196" rx="12" fill="var(--panel)" stroke="var(--panel-brd)"/>
+  <text x="34" y="92" font-size="14.5" class="title">① 出新选题 —— 原本就通(不动)</text>
+  <g font-size="12.5">
+    <rect x="34" y="114" width="176" height="52" rx="9" fill="var(--card)" stroke="var(--card-brd)"/>
+    <text x="122" y="136" text-anchor="middle" class="t" font-weight="600">对标爆款拆解</text>
+    <text x="122" y="154" text-anchor="middle" class="s" font-size="11">benchmark.teardown</text>
+    <rect x="34" y="180" width="176" height="52" rx="9" fill="var(--card)" stroke="var(--card-brd)"/>
+    <text x="122" y="202" text-anchor="middle" class="t" font-weight="600">自己作品正向归因</text>
+    <text x="122" y="220" text-anchor="middle" class="s" font-size="11">topic.attribution</text>
+  </g>
+  <rect x="420" y="142" width="168" height="60" rx="10" fill="var(--ok-soft)" stroke="var(--ok)" stroke-width="1.5"/>
+  <text x="504" y="168" text-anchor="middle" class="t" font-size="13.5" font-weight="700">候选池 candidates</text>
+  <text x="504" y="187" text-anchor="middle" class="s" font-size="11">source=benchmark / demand</text>
+  <rect x="700" y="142" width="150" height="60" rx="10" fill="var(--card)" stroke="var(--ok)" stroke-width="1.5"/>
+  <text x="775" y="168" text-anchor="middle" class="t" font-size="13.5" font-weight="700">选题页</text>
+  <text x="775" y="187" text-anchor="middle" class="s" font-size="11">topics.overview</text>
+  <path d="M210,140 C300,140 340,172 418,172" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#ah-ok)"/>
+  <text x="300" y="134" font-size="11" class="lbl">转化选题(fit=high)</text>
+  <path d="M210,206 C300,206 340,172 418,172" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#ah-ok)"/>
+  <text x="300" y="225" font-size="11" class="lbl">实验选题(next_experiments)</text>
+  <path d="M588,172 L698,172" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#ah-ok)"/>
+
+  <!-- ===================== PANEL 2: 要素回流(补链后全绿) ===================== -->
+  <rect x="16" y="278" width="868" height="386" rx="12" fill="var(--panel)" stroke="var(--panel-brd)"/>
+  <text x="34" y="304" font-size="14.5" class="title">② 要素回流 —— 补链后全部接通(绿=串起，蓝框=改动点)</text>
+  <g font-size="12">
+    <rect x="34" y="322" width="210" height="58" rx="9" fill="var(--fix-soft)" stroke="var(--fix)" stroke-width="1.6"/>
+    <text x="139" y="344" text-anchor="middle" class="t" font-weight="600" font-size="12.5">爆款拆解要素</text>
+    <text x="139" y="362" text-anchor="middle" class="s" font-size="10.5">落 card.teardown → 立项携带</text>
+    <text x="139" y="376" text-anchor="middle" font-size="10.5" fill="var(--fix)" font-weight="700">T-284a · G1</text>
+    <rect x="34" y="394" width="210" height="58" rx="9" fill="var(--fix-soft)" stroke="var(--fix)" stroke-width="1.6"/>
+    <text x="139" y="416" text-anchor="middle" class="t" font-weight="600" font-size="12.5">可复用公式</text>
+    <text x="139" y="434" text-anchor="middle" class="s" font-size="10.5">capture 成 learning 回流</text>
+    <text x="139" y="448" text-anchor="middle" font-size="10.5" fill="var(--fix)" font-weight="700">T-284b · G2</text>
+    <rect x="34" y="466" width="210" height="58" rx="9" fill="var(--fix-soft)" stroke="var(--fix)" stroke-width="1.6"/>
+    <text x="139" y="488" text-anchor="middle" class="t" font-weight="600" font-size="12.5">复盘经验 learnings</text>
+    <text x="139" y="506" text-anchor="middle" class="s" font-size="10.5">有真实数据背书→自动晋级</text>
+    <text x="139" y="520" text-anchor="middle" font-size="10.5" fill="var(--fix)" font-weight="700">T-284c · G3-A</text>
+  </g>
+  <rect x="34" y="558" width="210" height="72" rx="9" fill="var(--ok-soft)" stroke="var(--ok)" stroke-width="1.4"/>
+  <text x="139" y="584" text-anchor="middle" class="t" font-weight="600" font-size="12.5">知识库·评论·热点·策划</text>
+  <text x="139" y="602" text-anchor="middle" class="s" font-size="10.5">knowledge / signals / trend</text>
+  <text x="139" y="618" text-anchor="middle" class="s" font-size="10.5">thesis / contract / outline</text>
+
+  <rect x="368" y="432" width="184" height="80" rx="12" fill="var(--hub-soft)" stroke="var(--hub)" stroke-width="2"/>
+  <text x="460" y="462" text-anchor="middle" class="t" font-size="14.5" font-weight="700">creative-context</text>
+  <text x="460" y="482" text-anchor="middle" class="s" font-size="11.5">生成中枢</text>
+  <text x="460" y="500" text-anchor="middle" class="s" font-size="11">assembleCreativeContext</text>
+
+  <rect x="690" y="382" width="164" height="58" rx="10" fill="var(--card)" stroke="var(--ok)" stroke-width="1.5"/>
+  <text x="772" y="406" text-anchor="middle" class="t" font-size="13" font-weight="700">写文案 script.draft</text>
+  <text x="772" y="424" text-anchor="middle" class="s" font-size="10.5">拿到对标参照+公式+经验</text>
+  <rect x="690" y="472" width="164" height="66" rx="10" fill="var(--fix-soft)" stroke="var(--fix)" stroke-width="1.6"/>
+  <text x="772" y="496" text-anchor="middle" class="t" font-size="13" font-weight="700">选题 topic.generate</text>
+  <text x="772" y="514" text-anchor="middle" class="s" font-size="10.5">透传 projectId</text>
+  <text x="772" y="529" text-anchor="middle" font-size="10.5" fill="var(--fix)" font-weight="700">T-284d · G4</text>
+
+  <path d="M244,351 C320,357 320,442 366,452" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#ah-ok)"/>
+  <path d="M244,423 C310,432 320,454 366,462" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#ah-ok)"/>
+  <path d="M244,495 C310,490 320,480 366,474" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#ah-ok)"/>
+  <path d="M244,590 C320,588 330,522 372,508" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#ah-ok)"/>
+  <path d="M552,462 C620,442 640,422 688,414" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#ah-ok)"/>
+  <path d="M552,484 C620,492 640,500 688,504" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#ah-ok)"/>
+  <text x="460" y="650" text-anchor="middle" font-size="11.5" class="s" font-style="italic">四条高价值沉淀全部回流中枢 → 写文案时能照「它为什么爆 + 本账号可复用公式 + 复盘经验」重做 = 复刻/复盘飞轮自转</text>
+</svg>

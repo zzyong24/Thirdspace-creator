@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product-to-Code Orchestrator · 导航地图</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@600;900&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06090f;
+  --bg2:#0a0f18;
+  --ink:#e8edf5;
+  --dim:#8b96a8;
+  --faint:#3a4456;
+  --line:#1a2333;
+  --green:#3dffa0;      /* 证据/通过 */
+  --green-dk:#0d3b26;
+  --amber:#ffc14d;      /* 人类确认 */
+  --red:#ff5470;        /* 事故/拦截 */
+  --blue:#5aa2ff;       /* 结构 */
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Noto Sans SC',sans-serif;
+  --serif:'Noto Serif SC',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--sans);
+  overflow-x:hidden;line-height:1.6;position:relative;
+}
+/* 蓝图网格 + 氛围(absolute 随文档铺满——fixed 装饰层在截图/webview 合成器下会整屏变黑,别改回去) */
+body::before{
+  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%,rgba(90,162,255,.10),transparent 46%),
+    linear-gradient(rgba(90,162,255,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(90,162,255,.045) 1px,transparent 1px);
+  background-size:100% 1400px,48px 48px,48px 48px;
+  background-repeat:no-repeat,repeat,repeat;
+}
+/* 噪点 */
+body::after{
+  content:'';position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.35;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+main{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:0 48px}
+section{padding:110px 0}
+
+/* ============ 通用 ============ */
+.tag{
+  font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.28em;
+  color:var(--green);text-transform:uppercase;
+}
+.tag::before{content:'▸ ';color:var(--faint)}
+h2{
+  font-size:56px;font-weight:900;line-height:1.15;margin:18px 0 14px;
+  letter-spacing:-.01em;
+}
+.sub{color:var(--dim);font-size:20px;max-width:640px}
+.mono{font-family:var(--mono)}
+.green{color:var(--green)}.amber{color:var(--amber)}.red{color:var(--red)}.blue{color:var(--blue)}
+
+/* 滚动点亮 */
+.rv{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.rv.on{opacity:1;transform:none}
+.rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}.rv.d4{transition-delay:.32s}
+
+/* ============ HERO ============ */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;position:relative;padding:80px 0}
+.hero .coord{
+  position:absolute;font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.2em;
+}
+.coord.tl{top:36px;left:0}.coord.tr{top:36px;right:0}.coord.bl{bottom:36px;left:0}.coord.br{bottom:36px;right:0}
+.hero h1{
+  font-size:clamp(56px,8.5vw,104px);font-weight:900;line-height:1.04;letter-spacing:-.02em;margin:26px 0 8px;
+}
+.hero h1 .hl{
+  color:var(--green);
+  text-shadow:0 0 40px rgba(61,255,160,.35);
+}
+.hero .en{
+  font-family:var(--mono);font-weight:800;font-size:clamp(15px,1.6vw,19px);
+  color:var(--blue);letter-spacing:.12em;margin-top:6px;
+}
+.vs{
+  margin-top:56px;display:grid;grid-template-columns:1fr 60px 1fr;align-items:stretch;gap:0;
+  border:1px solid var(--line);background:rgba(10,15,24,.72);backdrop-filter:blur(6px);
+}
+.vs>div{padding:30px 34px}
+.vs .l{border-right:1px dashed var(--line)}
+.vs .m{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:800;color:var(--faint);font-size:15px;border-right:1px dashed var(--line)}
+.vs .cap{font-family:var(--mono);font-size:12px;letter-spacing:.24em;margin-bottom:12px}
+.vs .l .cap{color:var(--dim)}
+.vs .r .cap{color:var(--green)}
+.vs p{font-size:23px;font-weight:700;line-height:1.5}
+.vs .l p{color:var(--dim)}
+.vs .r p .u{border-bottom:3px solid var(--green);padding-bottom:2px}
+.scrollcue{margin-top:64px;font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.3em;animation:bob 2.2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ============ 痛点 ============ */
+.pains{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:56px}
+.pain{
+  border:1px solid var(--line);background:var(--bg2);padding:30px 32px;position:relative;overflow:hidden;
+  transition:transform .35s ease,border-color .35s ease;
+}
+.pain:hover{transform:translateY(-4px);border-color:rgba(255,84,112,.5)}
+.pain::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red)}
+.pain .no{font-family:var(--mono);font-size:12px;color:var(--red);letter-spacing:.2em;font-weight:700}
+.pain h3{font-size:25px;font-weight:900;margin:10px 0 8px}
+.pain p{color:var(--dim);font-size:16px}
+.pain .real{
+  margin-top:16px;font-family:var(--mono);font-size:12.5px;color:var(--faint);
+  border-top:1px dashed var(--line);padding-top:12px;
+}
+.pain .real b{color:var(--red);font-weight:700}
+
+/* ============ 管线五步 ============ */
+.pipe{position:relative;margin-top:80px}
+.pipe::before{
+  content:'';position:absolute;left:50%;top:0;bottom:0;width:4px;transform:translateX(-50%);
+  background:linear-gradient(var(--green) 0%,var(--green) 100%);
+  background:repeating-linear-gradient(180deg,var(--green) 0 14px,rgba(61,255,160,.25) 14px 24px);
+  box-shadow:0 0 24px rgba(61,255,160,.45);
+  animation:flow 1.4s linear infinite;
+}
+@keyframes flow{to{background-position:0 24px}}
+.st{
+  position:relative;display:grid;grid-template-columns:1fr 1fr;gap:0;margin:0 0 96px;
+}
+.st .card{
+  border:1px solid var(--line);background:rgba(10,15,24,.9);padding:38px 40px;position:relative;
+  transition:border-color .35s ease,box-shadow .35s ease;
+}
+.st .card:hover{border-color:rgba(61,255,160,.45);box-shadow:0 10px 60px rgba(61,255,160,.07)}
+.st.left .card{grid-column:1;margin-right:72px}
+.st.right .card{grid-column:2;margin-left:72px}
+.st .bignum{
+  position:absolute;top:-46px;font-family:var(--mono);font-weight:800;
+  font-size:150px;line-height:1;color:transparent;-webkit-text-stroke:2px rgba(61,255,160,.28);
+  z-index:0;pointer-events:none;user-select:none;
+}
+.st.left .bignum{right:-24px}
+.st.right .bignum{left:-24px}
+.st .node{
+  position:absolute;left:50%;top:44px;transform:translate(-50%,0);
+  width:26px;height:26px;border-radius:50%;background:var(--bg);
+  border:4px solid var(--green);box-shadow:0 0 0 6px rgba(61,255,160,.15),0 0 30px rgba(61,255,160,.5);
+  z-index:2;
+}
+.st .node::after{
+  content:'';position:absolute;inset:-14px;border-radius:50%;border:1px solid rgba(61,255,160,.3);
+  animation:pulse 2.4s ease-out infinite;
+}
+@keyframes pulse{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.5);opacity:0}}
+.st .stage-tag{font-family:var(--mono);font-size:12px;letter-spacing:.26em;color:var(--blue);font-weight:700}
+.st h3{font-size:40px;font-weight:900;margin:12px 0 4px;position:relative;z-index:1}
+.st h3 .en{font-family:var(--mono);font-size:15px;color:var(--faint);font-weight:700;margin-left:12px;letter-spacing:.1em}
+.st .what{font-size:18px;color:var(--ink);margin:14px 0 0;position:relative;z-index:1}
+.st .what b{color:var(--green)}
+.st ul{list-style:none;margin-top:20px;position:relative;z-index:1}
+.st ul li{
+  font-size:15.5px;color:var(--dim);padding:7px 0 7px 26px;position:relative;border-top:1px dashed var(--line);
+}
+.st ul li::before{content:'▸';position:absolute;left:4px;color:var(--green);font-family:var(--mono)}
+.st .stops{
+  margin-top:22px;padding:14px 18px;background:rgba(255,84,112,.06);border:1px dashed rgba(255,84,112,.4);
+  font-size:14px;color:var(--dim);position:relative;z-index:1;
+}
+.st .stops b{color:var(--red);font-family:var(--mono);font-size:12px;letter-spacing:.2em;display:block;margin-bottom:6px}
+/* 人类闸门 */
+.gate{position:relative;margin:-40px 0 96px;display:flex;justify-content:center}
+.gate .g{
+  position:relative;z-index:2;background:var(--bg);border:2px solid var(--amber);
+  padding:16px 34px;display:flex;align-items:center;gap:16px;
+  box-shadow:0 0 40px rgba(255,193,77,.18);
+}
+.gate .badge{
+  width:38px;height:38px;border-radius:50%;background:var(--amber);color:#100b00;
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:19px;font-family:var(--mono);
+}
+.gate .t{font-size:17px;font-weight:700}
+.gate .t small{display:block;font-weight:400;font-size:13px;color:var(--dim);font-family:var(--mono);letter-spacing:.06em}
+
+/* ============ 怎么用 ============ */
+.use{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:56px}
+.chat{border:1px solid var(--line);background:var(--bg2);padding:0;overflow:hidden;display:flex;flex-direction:column}
+.chat .bar{
+  padding:12px 20px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;
+  color:var(--faint);letter-spacing:.18em;display:flex;gap:8px;align-items:center;
+}
+.chat .bar::before{content:'●●●';color:var(--faint);font-size:9px;letter-spacing:.3em}
+.chat .body{padding:24px 22px;flex:1;display:flex;flex-direction:column;gap:14px}
+.bub{max-width:92%;padding:13px 18px;font-size:16px;line-height:1.55}
+.bub.you{align-self:flex-end;background:var(--green);color:#04140c;font-weight:700;border-radius:14px 14px 3px 14px}
+.bub.ai{align-self:flex-start;background:#121a29;border:1px solid var(--line);color:var(--dim);border-radius:14px 14px 14px 3px;font-size:14.5px}
+.bub.ai b{color:var(--ink)}
+.bub.ai .ok{color:var(--green);font-family:var(--mono);font-size:13px}
+.usehint{margin-top:34px;text-align:center;font-size:18px;color:var(--dim)}
+.usehint b{color:var(--green)}
+
+/* ============ 防呆 ============ */
+.guards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px}
+.guard{
+  border:1px solid var(--line);background:var(--bg2);padding:26px 26px 22px;
+  transition:transform .3s ease,border-color .3s ease;position:relative;
+}
+.guard:hover{transform:translateY(-4px);border-color:rgba(61,255,160,.45)}
+.guard .ico{font-size:26px;margin-bottom:12px}
+.guard h4{font-size:19px;font-weight:900;margin-bottom:8px}
+.guard p{font-size:14px;color:var(--dim)}
+.guard .k{font-family:var(--mono);font-size:11.5px;color:var(--green);letter-spacing:.06em;display:block;margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+
+/* ============ 尾板 ============ */
+.final{min-height:88vh;display:flex;flex-direction:column;justify-content:center;text-align:center;position:relative}
+.final .big{
+  font-family:var(--serif);font-weight:900;font-size:clamp(38px,5.6vw,64px);line-height:1.35;letter-spacing:.01em;
+}
+.final .big .hl{color:var(--green);text-shadow:0 0 40px rgba(61,255,160,.3)}
+.final .who{
+  margin-top:44px;font-family:var(--mono);font-size:16px;color:var(--dim);letter-spacing:.22em;
+}
+.final .who b{color:var(--amber)}
+.final .rule{width:120px;height:3px;background:var(--green);margin:38px auto 0;box-shadow:0 0 20px rgba(61,255,160,.6)}
+
+@media (max-width:900px){
+  main{padding:0 22px}
+  h2{font-size:40px}
+  .pains,.use,.guards{grid-template-columns:1fr}
+  .pipe::before{left:14px}
+  .st{grid-template-columns:1fr}
+  .st.left .card,.st.right .card{grid-column:1;margin:0 0 0 44px}
+  .st .node{left:14px}
+  .st .bignum{font-size:90px;top:-30px;right:8px !important;left:auto !important}
+  .vs{grid-template-columns:1fr}
+  .vs .m{display:none}.vs .l{border-right:none;border-bottom:1px dashed var(--line)}
+}
+</style>
+</head>
+<body>
+<main>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <span class="coord tl">BLUEPRINT&nbsp;/&nbsp;REV&nbsp;3.5</span>
+  <span class="coord tr">SOLO&nbsp;×&nbsp;AGENTS</span>
+  <span class="coord bl">五阶段&nbsp;·&nbsp;三次确认&nbsp;·&nbsp;全程证据链</span>
+  <span class="coord br">FAIL-CLOSED&nbsp;SYSTEM</span>
+
+  <div class="rv on">
+    <span class="tag">AI-Native 开发框架 · 导航地图</span>
+    <h1>一个人,<br>把想法做成<span class="hl">真的软件</span></h1>
+    <div class="en">PRODUCT-TO-CODE ORCHESTRATOR</div>
+  </div>
+
+  <div class="vs rv on d2">
+    <div class="l">
+      <div class="cap">一般的 AI 脚手架</div>
+      <p>提醒 AI<br>「现在该做什么」</p>
+    </div>
+    <div class="m">VS</div>
+    <div class="r">
+      <div class="cap">这个框架</div>
+      <p>证明<span class="u">「做出来的东西是真的」</span></p>
+    </div>
+  </div>
+
+  <div class="scrollcue">▼&nbsp;&nbsp;SCROLL&nbsp;&nbsp;▼</div>
+</section>
+
+<!-- ================= 痛点 ================= -->
+<section>
+  <div class="rv">
+    <span class="tag">Why · 它解决什么问题</span>
+    <h2>AI 写代码,<br>最贵的不是写错,是<span class="red">骗你</span></h2>
+    <p class="sub">框架的基本假设:AI 会遗忘、会跑偏、会谎报"已完成"。所以状态、验证、恢复全部放在模型之外——这些事发生时,流程依然不被破坏。</p>
+  </div>
+  <div class="pains">
+    <div class="pain rv d1">
+      <span class="no">INCIDENT / 01</span>
+      <h3>假完成</h3>
+      <p>"修好了""做完了"——但从没在真实环境跑过。单测绿 ≠ 真的能用。</p>
+      <div class="real">实录:几十个任务全绿,集成走查发现 <b>394 个缺陷</b>、主流程 4 处断点。</div>
+    </div>
+    <div class="pain rv d2">
+      <span class="no">INCIDENT / 02</span>
+      <h3>假按钮</h3>
+      <p>界面很漂亮,点开全是壳。UI 先画了,数据链路根本撑不住。</p>
+      <div class="real">实录:详情页整排按钮 <b>全部点不动</b>——"先画后接"从此被禁止。</div>
+    </div>
+    <div class="pain rv d3">
+      <span class="no">INCIDENT / 03</span>
+      <h3>重造轮子</h3>
+      <p>仓库里明明有现成实现,AI 不查就从零再写一遍,白烧几小时。</p>
+      <div class="real">实录:一次会话内 <b>3 次</b>差点重造整个子系统,全靠开工前强制反证拦下。</div>
+    </div>
+    <div class="pain rv d4">
+      <span class="no">INCIDENT / 04</span>
+      <h3>上下文腐化</h3>
+      <p>会话越长越糊,任务清单膨胀到塞不进上下文,新会话看不懂旧现场。</p>
+      <div class="real">实录:任务看板膨胀到 <b>204KB</b>,单行 5933 字——注入即爆仓。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 五步管线 ================= -->
+<section>
+  <div class="rv">
+    <span class="tag">How · 五步交付管线</span>
+    <h2>从一句想法,<br>到可发布的系统</h2>
+    <p class="sub">五个阶段,只打扰你三次(<span class="amber mono">①②③</span>)。其余时间 agent 在门与证据链的约束下自己推进。</p>
+  </div>
+
+  <div class="pipe">
+
+    <!-- STEP 1 -->
+    <div class="st left">
+      <span class="node"></span>
+      <div class="card rv">
+        <span class="bignum">01</span>
+        <span class="stage-tag">STAGE 1 / PLAN</span>
+        <h3>规划<span class="en">一份章节化 SPEC</span></h3>
+        <p class="what">你说一句产品想法,agent 产出<b>一份完整规格书</b>:定位、用户、功能、流程、数据模型、信息架构。</p>
+        <ul>
+          <li>产品定位 = 项目宪法,之后每个决定都对照它</li>
+          <li>跨模型审查:换一个"别家的 AI"来挑毛病,过审才继续</li>
+          <li>自动判项目大小(S/M/L),小工具不搞大仪式</li>
+        </ul>
+        <div class="stops"><b>▌这一步拦住</b>方向跑偏、需求散落在聊天里丢失、spec 里"仓库明明有却说没有"的空断言。</div>
+      </div>
+    </div>
+
+    <div class="gate">
+      <div class="g rv">
+        <span class="badge">①</span>
+        <div class="t">人类确认:这个产品是不是你想要的<small>CONFIRM / PRODUCT_SPEC.md</small></div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="st right">
+      <span class="node"></span>
+      <div class="card rv">
+        <span class="bignum">02</span>
+        <span class="stage-tag">STAGE 2 / CONTRACT</span>
+        <h3>契约<span class="en">先证数据,再画界面</span></h3>
+        <p class="what">每一条功能,先回答:<b>数据从哪来、存在哪、怎么读回来?</b>逐条判定:可行 / 硬骨头 / 砍掉——不许留空。</p>
+        <ul>
+          <li>接口契约 = 前后端唯一真相源</li>
+          <li>数据链路证明不了的功能,根本不允许进设计稿</li>
+          <li>硬骨头(HARD)登记在案、指定归属,不许"以后再说"</li>
+        </ul>
+        <div class="stops"><b>▌这一步拦住</b>"UI 画得出来、功能接不上线"——所有假按钮的总根源。</div>
+      </div>
+    </div>
+
+    <div class="gate">
+      <div class="g rv">
+        <span class="badge">②</span>
+        <div class="t">人类确认:范围信封,这就是要做的全部<small>CONFIRM / SCOPE ENVELOPE</small></div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="st left">
+      <span class="node"></span>
+      <div class="card rv">
+        <span class="bignum">03</span>
+        <span class="stage-tag">STAGE 3 / DESIGN</span>
+        <h3>设计<span class="en">受契约约束的界面</span></h3>
+        <p class="what">现在才画界面。<b>每个真实可点的控件,必须绑定到契约里已存在的操作</b>——"No API, no UI"。</p>
+        <ul>
+          <li>绑不上的控件:要么改契约,要么明标「规划中」,要么不画</li>
+          <li>每页四态齐全:加载中 / 空 / 出错 / 真数据</li>
+          <li>探索性设计稿盖章「未经可行性核对」,不许直接开工</li>
+        </ul>
+        <div class="stops"><b>▌这一步拦住</b>死 tab、假筛选、装样子的图表——界面不许承诺数据给不了的东西。</div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="st right">
+      <span class="node"></span>
+      <div class="card rv">
+        <span class="bignum">04</span>
+        <span class="stage-tag">STAGE 4 / BUILD</span>
+        <h3>实现<span class="en">垂直切片,数据第一天就是真的</span></h3>
+        <p class="what">一次做透一个能力:<b>契约 → 后端(测试先行) → 前端接真 → 端到端回显</b>,做完一片再拿下一片。</p>
+        <ul>
+          <li>每个任务先领"任务包":最小上下文 + 验收命令 + 改动边界</li>
+          <li>并行 agent 各管各的文件区,唯一集成人串行合并</li>
+          <li>假数据一出生就登记退役日期,健康项目的假数据账本接近空</li>
+        </ul>
+        <div class="stops"><b>▌这一步拦住</b>"单测绿但没真跑过"、子代理死循环烧钱、并行互相踩脏文件。</div>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="st left">
+      <span class="node"></span>
+      <div class="card rv">
+        <span class="bignum">05</span>
+        <span class="stage-tag">STAGE 5 / SHIP</span>
+        <h3>发布<span class="en">当一个真用户走一遍</span></h3>
+        <p class="what">不是看测试报告,是<b>用真实数据把核心旅程亲手走通</b>:每一步有命令、有输出、有截图,证据不齐不算完。</p>
+        <ul>
+          <li>集成走查:测试全绿也要人视角走主流程(缝隙里才有鬼)</li>
+          <li>假数据账本清零、文档与代码零漂移,才准发</li>
+          <li>发布评审留档:known risks 写明,别装完美</li>
+        </ul>
+        <div class="stops"><b>▌这一步拦住</b>"每片都对、合起来是坏的"——切片验收 ≠ 产品验收。</div>
+      </div>
+    </div>
+
+    <div class="gate">
+      <div class="g rv">
+        <span class="badge">③</span>
+        <div class="t">人类确认:发布放行<small>CONFIRM / RELEASE_REVIEW.md</small></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= 怎么用 ================= -->
+<section>
+  <div class="rv">
+    <span class="tag">Usage · 具体怎么用</span>
+    <h2>你不用跑任何脚本,<br><span class="green">说人话</span>就行</h2>
+    <p class="sub">Agent-Native 契约:所有脚本都是 agent 的手,不是你的作业。你说意图,它干活、报结果。</p>
+  </div>
+  <div class="use">
+    <div class="chat rv d1">
+      <div class="bar">SCENE 01 · 起项目</div>
+      <div class="body">
+        <div class="bub you">我想做一个记账工具,初始化一下</div>
+        <div class="bub ai">已搭好控制面:任务看板 + 规格账本 + 检查门 + 钩子。<br>判定 <b>S 类小工具</b>(轻流程)。<br><span class="ok">✓ 首次体检通过,从 PLAN 开始</span></div>
+      </div>
+    </div>
+    <div class="chat rv d2">
+      <div class="bar">SCENE 02 · 提需求</div>
+      <div class="body">
+        <div class="bub you">对了,再加个月度报表导出</div>
+        <div class="bub ai">已立即记入看板 <b>T-023</b>(不靠记忆,聊天里的需求落了账才不会丢)。<br><span class="ok">✓ 排队中,按顺序开工</span></div>
+      </div>
+    </div>
+    <div class="chat rv d3">
+      <div class="bar">SCENE 03 · 验收</div>
+      <div class="body">
+        <div class="bub you">导出功能做好了吗?</div>
+        <div class="bub ai">已完成并<b>带证据</b>:测试 12/12 绿 + 真数据导出了一份真实报表(截图)+ commit a3f92c。<br><span class="ok">✓ 无证据的"做好了"会被系统拒收</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="usehint rv">口诀:<b>需求即任务 · 开工从看板顶取 · 完成必须带证据</b></p>
+</section>
+
+<!-- ================= 防呆 ================= -->
+<section>
+  <div class="rv">
+    <span class="tag">Guards · 六道防呆门</span>
+    <h2>每道门,<br>都是真实付过的学费</h2>
+    <p class="sub">规则不是口号——全部是可执行脚本,每次收工自动跑。AI 骗不过一个不看它脸色的检查器。</p>
+  </div>
+  <div class="guards">
+    <div class="guard rv d1">
+      <span class="ico">🚦</span>
+      <h4>宁可误停,不可放行</h4>
+      <p>审查者没吭声?状态文件丢了?一律 HOLD。沉默永远不等于通过。</p>
+      <span class="k">fail-closed harness</span>
+    </div>
+    <div class="guard rv d2">
+      <span class="ico">🧾</span>
+      <h4>无证据,不完成</h4>
+      <p>标记"完成"必须附命令与输出。硬检查(类型/测试/边界)一票否决,AI 的共识推翻不了。</p>
+      <span class="k">taskctl --evidence</span>
+    </div>
+    <div class="guard rv d3">
+      <span class="ico">🏗️</span>
+      <h4>结构不许腐烂</h4>
+      <p>谁住哪个目录、谁能 import 谁、谁写数据库——违规只许减少,新增一条就报警。</p>
+      <span class="k">boundary-scan · ratchet</span>
+    </div>
+    <div class="guard rv d1">
+      <span class="ico">📚</span>
+      <h4>文档不许说谎</h4>
+      <p>业务语义人来写,代码事实脚本生成。契约变了文档没刷新?立刻红。</p>
+      <span class="k">feature-sync ⇄ drift</span>
+    </div>
+    <div class="guard rv d2">
+      <span class="ico">📦</span>
+      <h4>上下文按任务配给</h4>
+      <p>每个任务编译一个最小任务包,agent 不用扫全仓;历史归档永不混进当前真值。</p>
+      <span class="k">Task Packet · 真值四级</span>
+    </div>
+    <div class="guard rv d3">
+      <span class="ico">🔁</span>
+      <h4>崩了也能接着干</h4>
+      <p>状态全在文件里:看板、账本、事件流水。换会话、换模型,从文件冷启动即可续作。</p>
+      <span class="k">events.ndjson · 版本锚</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 尾板 ================= -->
+<section class="final">
+  <div class="rv">
+    <p class="big">状态、验证、恢复,<br>全部放在<span class="hl">模型之外</span>。<br>AI 可以遗忘、跑偏、说谎——<br>流程<span class="hl">依然成立</span>。</p>
+    <div class="rule"></div>
+    <p class="who">ONE&nbsp;HUMAN&nbsp;&nbsp;<b>×</b>&nbsp;&nbsp;A&nbsp;FLEET&nbsp;OF&nbsp;AGENTS</p>
+  </div>
+</section>
+
+</main>
+<script>
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}})
+},{threshold:.18});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

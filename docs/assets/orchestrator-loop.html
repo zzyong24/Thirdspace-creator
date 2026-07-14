@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闭环全景图 · Product-to-Code Orchestrator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06090f;--bg2:#0b111c;--ink:#e8edf5;--dim:#8b96a8;--faint:#4a5568;--line:#1c2536;
+  --green:#3dffa0;--amber:#ffc14d;--red:#ff5470;--blue:#5aa2ff;
+  --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Noto Sans SC',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden;position:relative;
+}
+body::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 0%,rgba(90,162,255,.08),transparent 55%),
+    linear-gradient(rgba(90,162,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(90,162,255,.04) 1px,transparent 1px);
+  background-size:100% 100%,48px 48px,48px 48px;
+}
+#fit{position:absolute;top:50%;left:50%;transform-origin:0 0}
+#stage{position:relative;width:1760px;height:990px}
+
+/* ====== 标题 ====== */
+.hd{position:absolute;left:36px;top:18px}
+.hd .tag{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.3em;color:var(--green)}
+.hd h1{font-size:30px;font-weight:900;letter-spacing:.01em;margin-top:4px}
+.hd h1 .g{color:var(--green)}
+.legend{
+  position:absolute;right:36px;top:30px;display:flex;gap:22px;
+  font-family:var(--mono);font-size:11.5px;color:var(--dim);
+}
+.legend i{display:inline-block;width:22px;height:3px;margin-right:7px;vertical-align:middle;border-radius:2px}
+.legend .lg i{background:var(--green)}.legend .lr i{background:var(--red)}
+.legend .la i{background:var(--amber)}.legend .lb i{background:var(--blue);height:0;border-top:3px dashed var(--blue)}
+
+/* ====== 通用节点 ====== */
+.node{
+  position:absolute;background:var(--bg2);border:1px solid var(--line);
+  padding:12px 14px 10px;border-left:3px solid var(--green);
+  box-shadow:0 6px 30px rgba(0,0,0,.5);
+}
+.node .idx{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--faint);font-weight:700}
+.node h3{font-size:17px;font-weight:900;line-height:1.25;margin:3px 0 3px}
+.node p{font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.5}
+.node.red{border-left-color:var(--red)}
+.node.amber{border-left-color:var(--amber)}
+.node.blue{border-left-color:var(--blue)}
+/* Worker 编队:堆叠卡表示"不止一个,并行干" */
+.fleet{box-shadow:7px 7px 0 -1px var(--bg2),7px 7px 0 0 var(--line),14px 14px 0 -1px var(--bg2),14px 14px 0 0 var(--line),0 6px 30px rgba(0,0,0,.5)}
+.nbadge{position:absolute;top:-10px;right:-10px;background:var(--green);color:#04140c;font-family:var(--mono);font-weight:800;font-size:10px;padding:2px 8px;border-radius:11px;letter-spacing:.03em;box-shadow:0 0 14px rgba(61,255,160,.5)}
+/* 双评审:两个不同模型的独立 Agent */
+.dual .rev{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:5px 0 4px;border-top:1px dashed var(--line);margin-top:3px}
+.dual .rev b{font-size:13px;font-weight:800;color:var(--ink)}
+.dual .rev span{font-family:var(--mono);font-size:9.5px;color:var(--blue);white-space:nowrap}
+.dual .rev b::before{content:'🔍 ';font-size:11px}
+/* 图标图例 */
+.iconleg{position:absolute;left:120px;top:205px;display:flex;gap:20px;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.iconleg b{color:var(--ink);font-weight:400}
+
+/* 顶部阶段 chip */
+.chip{
+  position:absolute;top:120px;width:200px;height:78px;background:var(--bg2);
+  border:1px solid var(--line);border-top:3px solid var(--blue);padding:10px 14px;
+}
+.chip .idx{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:.2em;font-weight:700}
+.chip h3{font-size:21px;font-weight:900;line-height:1.2}
+.chip h3 small{font-family:var(--mono);font-size:10px;color:var(--faint);font-weight:700;margin-left:6px;letter-spacing:.06em}
+.chip p{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:2px}
+.chip.hot{border-top-color:var(--green);box-shadow:0 0 34px rgba(61,255,160,.12)}
+
+/* 闸门菱形 */
+.gate{
+  position:absolute;width:30px;height:30px;transform:rotate(45deg);
+  background:var(--bg);border:2px solid var(--amber);box-shadow:0 0 18px rgba(255,193,77,.35);
+}
+.gate b{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  transform:rotate(-45deg);color:var(--amber);font-family:var(--mono);font-weight:800;font-size:14px;
+}
+/* 发布圆 */
+.rc{
+  position:absolute;width:64px;height:64px;border-radius:50%;border:2px solid var(--green);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);
+  box-shadow:0 0 30px rgba(61,255,160,.35);font-family:var(--mono);
+}
+.rc b{color:var(--green);font-size:13px;font-weight:800}
+.rc small{font-size:9px;color:var(--dim);letter-spacing:.1em}
+
+/* Harness 引擎室 */
+.engine{
+  position:absolute;left:120px;top:272px;width:1290px;height:452px;
+  border:1.5px dashed rgba(61,255,160,.4);background:rgba(61,255,160,.02);
+}
+.engine .cap{
+  position:absolute;top:-13px;left:26px;background:var(--bg);padding:0 14px;
+  font-family:var(--mono);font-size:13px;font-weight:800;letter-spacing:.2em;color:var(--green);
+}
+.engine .cap2{
+  position:absolute;top:-11px;right:26px;background:var(--bg);padding:0 12px;
+  font-family:var(--mono);font-size:10.5px;color:var(--faint);letter-spacing:.08em;
+}
+/* HOLD 印章 */
+.hold{
+  position:absolute;left:906px;top:466px;transform:rotate(-8deg);
+  border:2px solid var(--red);color:var(--red);font-family:var(--mono);font-weight:800;
+  font-size:13px;letter-spacing:.28em;padding:3px 10px;background:rgba(255,84,112,.06);
+}
+
+/* 人类面板 */
+.human{
+  position:absolute;left:1470px;top:272px;width:254px;height:452px;
+  border:1.5px solid rgba(255,193,77,.45);background:rgba(255,193,77,.03);padding:18px 18px;
+}
+.human .cap{
+  position:absolute;top:-13px;left:20px;background:var(--bg);padding:0 12px;
+  font-family:var(--mono);font-size:13px;font-weight:800;letter-spacing:.18em;color:var(--amber);
+}
+.human ul{list-style:none;margin-top:10px}
+.human li{
+  padding:11px 0;border-bottom:1px dashed rgba(255,193,77,.25);
+  font-size:14.5px;font-weight:700;display:flex;gap:10px;align-items:flex-start;line-height:1.4;
+}
+.human li:last-child{border-bottom:none}
+.human .b{
+  flex:none;width:24px;height:24px;border-radius:50%;background:var(--amber);color:#140d00;
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:800;font-size:12.5px;
+}
+.human li small{display:block;font-weight:400;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px}
+.human .note{margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.06em}
+
+/* 进化带 */
+.evo-cap{
+  position:absolute;left:120px;top:768px;font-family:var(--mono);font-size:13px;font-weight:800;
+  letter-spacing:.2em;color:var(--blue);
+}
+.evo-cap small{color:var(--faint);font-weight:400;letter-spacing:.08em;margin-left:14px}
+
+/* 箭头标签 */
+.al{
+  position:absolute;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--dim);
+  background:var(--bg);padding:1px 7px;border:1px solid var(--line);white-space:nowrap;
+}
+.al.g{color:var(--green);border-color:rgba(61,255,160,.35)}
+.al.r{color:var(--red);border-color:rgba(255,84,112,.4)}
+.al.a{color:var(--amber);border-color:rgba(255,193,77,.4)}
+.al.b{color:var(--blue);border-color:rgba(90,162,255,.4)}
+
+/* SVG 连线 */
+svg.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.w{fill:none;stroke-width:2.5}
+.w.g{stroke:var(--green);filter:drop-shadow(0 0 6px rgba(61,255,160,.5))}
+.w.gthick{stroke:var(--green);stroke-width:4;filter:drop-shadow(0 0 10px rgba(61,255,160,.55))}
+.w.r{stroke:var(--red)}
+.w.a{stroke:var(--amber)}
+.w.b{stroke:var(--blue);stroke-dasharray:7 6 !important}
+.w.plain{stroke:var(--faint);stroke-width:2}
+
+/* 借鉴来源(标题下)*/
+.credit{margin-top:9px;font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.03em;max-width:1050px;line-height:1.55}
+.credit b{color:var(--blue);font-weight:400}
+.foot{
+  position:absolute;left:36px;bottom:30px;font-family:var(--mono);font-size:11.5px;color:var(--faint);letter-spacing:.14em;
+}
+.foot b{color:var(--green)}
+
+/* ===== 悬浮讲解 tooltip ===== */
+.clickable{cursor:pointer;transition:box-shadow .2s}
+.node.clickable:hover{box-shadow:0 0 0 1px var(--green),0 10px 40px rgba(61,255,160,.16)}
+.chip.clickable:hover,.gate.clickable:hover,.rc.clickable:hover,.human.clickable:hover,.hold.clickable:hover{box-shadow:0 0 0 1px var(--green),0 0 24px rgba(61,255,160,.18)}
+.node.pinned,.chip.pinned,.gate.pinned,.rc.pinned,.human.pinned,.hold.pinned{box-shadow:0 0 0 2px var(--green),0 0 30px rgba(61,255,160,.3)}
+#tip{
+  position:fixed;z-index:60;width:372px;max-width:92vw;pointer-events:none;opacity:0;transform:translateY(6px);
+  transition:opacity .18s,transform .18s;background:var(--bg2);border:1px solid var(--green);border-left:5px solid var(--green);
+  box-shadow:0 24px 70px rgba(0,0,0,.78),0 0 44px rgba(61,255,160,.12);padding:17px 20px 15px;
+}
+#tip.on{opacity:1;transform:none}
+#tip .kk{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--dim);font-weight:700}
+#tip .tterm{display:none;margin-top:7px;font-family:var(--mono);font-size:10.5px;font-weight:700;color:#04140c;background:var(--green);padding:3px 9px;border-radius:3px;letter-spacing:.01em}
+#tip h4{font-size:19px;font-weight:900;color:var(--ink);margin:9px 0 0;line-height:1.3}
+#tip .mp{font-size:14px;line-height:1.66;color:var(--ink);margin-top:10px}
+#tip .mh{font-size:12.5px;line-height:1.55;color:var(--dim);margin-top:10px;border-top:1px dashed var(--line);padding-top:9px}
+#tip .mh b{color:var(--green);font-family:var(--mono);font-size:11px}
+#tip .mpit{font-size:12px;line-height:1.5;color:var(--amber);margin-top:10px;background:rgba(255,193,77,.06);padding:8px 10px;border:1px dashed rgba(255,193,77,.38)}
+/* 悬浮提示 */
+.usehint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:50;font-family:var(--mono);font-size:11.5px;color:var(--faint);letter-spacing:.06em;white-space:nowrap;background:rgba(8,14,20,.82);padding:6px 16px;border-radius:18px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div id="fit"><div id="stage">
+
+  <!-- 标题 / 图例 -->
+  <div class="hd an" style="animation-delay:.05s">
+    <div class="tag">▸ HOW THE LOOP CLOSES · 闭环全景</div>
+    <h1>一个想法怎么变成<span class="g">真的软件</span>——AI 为什么骗不过这套系统</h1>
+    <div class="credit">取百家之长 · DISTILLED FROM　<b>spec-kit</b>(SDD 规格驱动)· <b>superpowers</b>(判例法 gate / 反合理化)· <b>BMAD</b>(规模分级)· <b>metaswarm</b>(量规化评审)· <b>tdd-guard</b>(TDD 强制)· <b>conductor</b>(preflight)· <b>gsd</b>(缩水黑名单)—— 蒸馏其精华,不照搬</div>
+  </div>
+  <div class="legend an" style="animation-delay:.2s">
+    <span class="lg"><i></i>证据流</span>
+    <span class="lr"><i></i>拦截·回炉</span>
+    <span class="la"><i></i>人类时刻</span>
+    <span class="lb"><i></i>回流·进化</span>
+  </div>
+  <div class="iconleg an" style="animation-delay:1.28s">
+    <span>⚙️ <b>机器检查</b>·骗不过</span>
+    <span>🤖 <b>干活 Agent</b>·可并行</span>
+    <span>🔍 <b>审查 Agent</b>·换个模型</span>
+    <span>🧭 <b>总承包</b>·唯一集成</span>
+    <span>📋 账本</span>
+  </div>
+
+  <!-- ====== 顶带:五阶段主管线 ====== -->
+  <div class="chip an" style="left:120px;animation-delay:.3s">
+    <span class="idx">STAGE 1 ▸</span><h3>规划<small>PLAN</small></h3>
+    <p>一份 SPEC · 🔍 跨模型审</p>
+  </div>
+  <div class="chip an" style="left:430px;animation-delay:.42s">
+    <span class="idx">STAGE 2 ▸</span><h3>契约<small>CONTRACT</small></h3>
+    <p>逐条功能证数据可行</p>
+  </div>
+  <div class="chip an" style="left:740px;animation-delay:.54s">
+    <span class="idx">STAGE 3 ▸</span><h3>设计<small>DESIGN</small></h3>
+    <p>No API, no UI</p>
+  </div>
+  <div class="chip hot an" style="left:1050px;animation-delay:.66s">
+    <span class="idx">STAGE 4 ▸</span><h3>实现<small>BUILD</small></h3>
+    <p>垂直切片 ↓ 进引擎室循环</p>
+  </div>
+  <div class="chip an" style="left:1360px;animation-delay:.78s">
+    <span class="idx">STAGE 5 ▸</span><h3>发布<small>SHIP</small></h3>
+    <p>真数据走查 · 销账</p>
+  </div>
+  <div class="gate an" style="left:359px;top:143px;animation-delay:.9s"><b>①</b></div>
+  <div class="gate an" style="left:669px;top:143px;animation-delay:.98s"><b>②</b></div>
+  <div class="rc an" style="left:1630px;top:127px;animation-delay:1.15s"><b>RC</b><small>发布</small></div>
+  <div class="gate an" style="left:1580px;top:143px;animation-delay:1.06s"><b>③</b></div>
+
+  <!-- ====== Harness 引擎室 ====== -->
+  <div class="engine an" style="animation-delay:1.25s">
+    <span class="cap">HARNESS · 自治执行引擎(MANAGER 模式)</span>
+    <span class="cap2">一个总承包指挥 · 一队 Worker 并行干 · 另一队 Agent 独立审(换模型)· 判决只认证据不认口供(FAIL-CLOSED)</span>
+  </div>
+
+  <!-- 主 Agent(总承包 / Manager) -->
+  <div class="node blue an" style="left:150px;top:300px;width:224px;animation-delay:1.34s">
+    <span class="idx">🧭 指挥 · MANAGER</span><h3>主 Agent · 总承包</h3>
+    <p>派任务包给 Worker 队 · 只它能合并主线<br>不写业务代码,只调度+集成+验收</p>
+  </div>
+
+  <!-- 引擎室环形八节点:A→B→C→D→E→F→G→H→A -->
+  <div class="node an" style="left:150px;top:445px;width:200px;animation-delay:1.4s">
+    <span class="idx">📋 A ▸ 队列</span><h3>BACKLOG 看板</h3>
+    <p>单一执行真相<br>需求即任务 · 从顶取活</p>
+  </div>
+  <div class="node an" style="left:400px;top:330px;width:200px;animation-delay:1.5s">
+    <span class="idx">⚙️ B ▸ 闸</span><h3>taskctl 审核闸</h3>
+    <p>未过审不准开工<br>状态转换唯一入口</p>
+  </div>
+  <div class="node an" style="left:650px;top:330px;width:200px;animation-delay:1.6s">
+    <span class="idx">⚙️ C ▸ 装配</span><h3>任务包编译</h3>
+    <p>context-compile<br>最小上下文+验收判据</p>
+  </div>
+  <div class="node fleet an" style="left:900px;top:330px;width:200px;animation-delay:1.7s">
+    <span class="nbadge">×N 并行</span>
+    <span class="idx">🤖 D ▸ 干活</span><h3>Worker 编队</h3>
+    <p>各领一个任务包 · TDD 红→绿<br>隔离 worktree · write_set 不相交</p>
+  </div>
+  <div class="node an" style="left:1150px;top:330px;width:200px;animation-delay:1.8s">
+    <span class="idx">⚙️ E ▸ 铁面</span><h3>硬检查</h3>
+    <p>类型·测试·架构边界<br>任一红 = 一票否决</p>
+  </div>
+  <div class="node dual an" style="left:1150px;top:552px;width:210px;animation-delay:1.9s">
+    <span class="idx">🔍 F ▸ 双评审(独立)</span>
+    <div class="rev"><b>evaluator</b><span>模型 A · 只读</span></div>
+    <div class="rev"><b>rebuttal</b><span>模型 B · 假设有罪</span></div>
+    <p style="margin-top:5px">两个不同模型 · 互不通气 · 只出 verdict</p>
+  </div>
+  <div class="node an" style="left:900px;top:560px;width:200px;animation-delay:2.0s">
+    <span class="idx">⚙️ G ▸ 判决</span><h3>run.sh 判决器</h3>
+    <p>PASS+PASS 才盖章<br>缺 verdict = HOLD</p>
+  </div>
+  <div class="node an" style="left:650px;top:560px;width:200px;animation-delay:2.1s">
+    <span class="idx">📋 H ▸ 记账</span><h3>证据落账</h3>
+    <p>complete --evidence<br>events.ndjson 流水</p>
+  </div>
+  <div class="hold an" style="animation-delay:2.75s">HOLD</div>
+
+  <!-- ====== 人类面板 ====== -->
+  <div class="human an" style="animation-delay:2.9s">
+    <span class="cap">人类时刻</span>
+    <ul>
+      <li><span class="b">①</span><div>产品确认<small>这是不是你要的</small></div></li>
+      <li><span class="b">②</span><div>范围确认<small>要做的全部,就这些</small></div></li>
+      <li><span class="b">③</span><div>发布放行<small>证据齐了才有资格问你</small></div></li>
+      <li><span class="b">✋</span><div>HOLD 仲裁<small>高危/分歧 → 升级给人</small></div></li>
+    </ul>
+    <div class="note">▸ 其余时间,不打扰。</div>
+  </div>
+
+  <!-- ====== 进化带 ====== -->
+  <div class="evo-cap an" style="animation-delay:3.1s">EVOLUTION · 进化回流<small>学费只交一次:坑 → 教训 → 门</small></div>
+  <div class="node blue an" style="left:180px;top:820px;width:250px;animation-delay:3.2s">
+    <span class="idx">V1 ▸ 发现</span><h3>问题浮出水面</h3>
+    <p>SHIP 走查 · 每10任务整体审计 · 真实事故</p>
+  </div>
+  <div class="node blue an" style="left:520px;top:820px;width:250px;animation-delay:3.3s">
+    <span class="idx">V2 ▸ 归因</span><h3>登记教训</h3>
+    <p>LESSON_LEDGER<br>根因,不是现象</p>
+  </div>
+  <div class="node blue an" style="left:860px;top:820px;width:280px;animation-delay:3.4s">
+    <span class="idx">V3 ▸ 固化</span><h3>教训变守卫脚本</h3>
+    <p>boundary-scan · backlog-health · knowledge-drift</p>
+  </div>
+  <div class="node blue an" style="left:1230px;top:820px;width:250px;animation-delay:3.5s">
+    <span class="idx">V4 ▸ 常驻</span><h3>reconcile 每轮重跑</h3>
+    <p>同一个坑复发 = 直接报错</p>
+  </div>
+
+  <!-- ====== SVG 连线层 ====== -->
+  <svg class="wires" viewBox="0 0 1760 990" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="mg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#3dffa0"/></marker>
+      <marker id="mr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ff5470"/></marker>
+      <marker id="ma" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ffc14d"/></marker>
+      <marker id="mb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5aa2ff"/></marker>
+      <marker id="mp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#4a5568"/></marker>
+    </defs>
+    <!-- 顶带连接 -->
+    <path class="w plain" pathLength="1" marker-end="url(#mp)" d="M322 159 L356 159" style="animation-delay:.86s"/>
+    <path class="w plain" pathLength="1" marker-end="url(#mp)" d="M392 159 L426 159" style="animation-delay:.9s"/>
+    <path class="w plain" pathLength="1" marker-end="url(#mp)" d="M632 159 L666 159" style="animation-delay:.96s"/>
+    <path class="w plain" pathLength="1" marker-end="url(#mp)" d="M702 159 L736 159" style="animation-delay:1s"/>
+    <path class="w plain" pathLength="1" marker-end="url(#mp)" d="M942 159 L1046 159" style="animation-delay:1.04s"/>
+    <path class="w plain" pathLength="1" marker-end="url(#mp)" d="M1252 159 L1356 159" style="animation-delay:1.08s"/>
+    <path class="w plain" pathLength="1" marker-end="url(#mp)" d="M1562 159 L1577 159" style="animation-delay:1.1s"/>
+    <path class="w g" pathLength="1" marker-end="url(#mg)" d="M1613 159 L1626 159" style="animation-delay:1.15s"/>
+    <!-- BUILD ↓ 引擎室 -->
+    <path class="w gthick" pathLength="1" marker-end="url(#mg)" d="M1150 200 L1150 268" style="animation-delay:1.3s"/>
+    <!-- 引擎环 A→B→C→D→E→F→G→H→A -->
+    <path class="w g" pathLength="1" marker-end="url(#mg)" d="M350 470 C 382 458 366 373 396 373" style="animation-delay:1.5s"/>
+    <path class="w g" pathLength="1" marker-end="url(#mg)" d="M602 373 L646 373" style="animation-delay:1.6s"/>
+    <path class="w g" pathLength="1" marker-end="url(#mg)" d="M852 373 L896 373" style="animation-delay:1.7s"/>
+    <path class="w g" pathLength="1" marker-end="url(#mg)" d="M1102 373 L1146 373" style="animation-delay:1.8s"/>
+    <path class="w g" pathLength="1" marker-end="url(#mg)" d="M1250 418 L1250 556" style="animation-delay:1.9s"/>
+    <path class="w g" pathLength="1" marker-end="url(#mg)" d="M1146 603 L1106 603" style="animation-delay:2.0s"/>
+    <path class="w g" pathLength="1" marker-end="url(#mg)" d="M896 603 L856 603" style="animation-delay:2.1s"/>
+    <path class="w g" pathLength="1" marker-end="url(#mg)" d="M646 603 C 520 603 420 560 340 522" style="animation-delay:2.2s"/>
+    <!-- 拦截红线:E 硬检查红 → 回炉 D;G HOLD → 回炉 D -->
+    <path class="w r" pathLength="1" marker-end="url(#mr)" d="M1152 340 C 1128 314 1122 314 1100 340" style="animation-delay:2.5s"/>
+    <path class="w r" pathLength="1" marker-end="url(#mr)" d="M1000 556 L1000 422" style="animation-delay:2.6s"/>
+    <!-- ESCALATE 琥珀 → 人类 -->
+    <path class="w a" pathLength="1" marker-end="url(#ma)" d="M1352 620 C 1420 640 1420 600 1464 566" style="animation-delay:2.9s"/>
+    <!-- 进化带 -->
+    <path class="w b" pathLength="1" marker-end="url(#mb)" d="M432 858 L516 858" style="animation-delay:3.3s"/>
+    <path class="w b" pathLength="1" marker-end="url(#mb)" d="M772 858 L856 858" style="animation-delay:3.4s"/>
+    <path class="w b" pathLength="1" marker-end="url(#mb)" d="M1142 858 L1226 858" style="animation-delay:3.5s"/>
+    <!-- 回流:H 复盘证据 → V1;V1 根因任务 → A;V4 守卫 → E -->
+    <path class="w b" pathLength="1" marker-end="url(#mb)" d="M750 650 C 750 748 480 770 400 816" style="animation-delay:3.6s"/>
+    <path class="w b" pathLength="1" marker-end="url(#mb)" d="M290 816 C 268 740 258 640 253 536" style="animation-delay:3.7s"/>
+    <path class="w b" pathLength="1" marker-end="url(#mb)" d="M1355 816 C 1412 700 1404 520 1298 430" style="animation-delay:3.8s"/>
+    <!-- 主 agent 派发到 Worker 编队(顶部走廊,不压 B/C) -->
+    <path class="w g" pathLength="1" marker-end="url(#mg)" style="stroke-dasharray:6 5;animation-delay:1.72s" d="M376 330 C 560 300 720 300 898 346"/>
+  </svg>
+
+  <!-- 箭头标签(SVG 之上) -->
+  <span class="al g" style="left:1162px;top:224px;animation-delay:1.35s">每个切片进引擎循环</span>
+  <span class="al g" style="left:548px;top:286px;animation-delay:1.78s">派发 · 各领任务包</span>
+  <span class="al r" style="left:1082px;top:292px;animation-delay:2.55s">检查红 → 回炉重做</span>
+  <span class="al r" style="left:1022px;top:480px;animation-delay:2.65s">缺 verdict / REJECT</span>
+  <span class="al a" style="left:1380px;top:648px;animation-delay:2.95s">高危 ESCALATE</span>
+  <span class="al g" style="left:432px;top:632px;animation-delay:2.25s">✅ 主 agent 集成 · 带证据销账 → 下一片</span>
+  <span class="al b" style="left:530px;top:742px;animation-delay:3.65s">复盘 / 审计</span>
+  <span class="al b" style="left:150px;top:660px;animation-delay:3.75s">根因任务进队列</span>
+  <span class="al b" style="left:1290px;top:560px;animation-delay:3.85s">坑变成门 · 防复发</span>
+
+  <div class="foot an" style="animation-delay:4s">状态·验证·恢复 全在<b>模型之外</b> —— AI 可以遗忘、跑偏、说谎,流程依然成立</div>
+
+</div></div>
+
+<!-- 悬浮讲解 tooltip(在 #fit 之外,不随缩放) -->
+<div id="tip">
+  <div class="kk" id="tkk"></div>
+  <span class="tterm" id="tterm"></span>
+  <h4 id="ttitle"></h4>
+  <div id="tbody"></div>
+</div>
+<div class="usehint">悬浮任意方块看详解 · 点方块可钉住 · Esc 松开</div>
+
+<script>
+function fit(){
+  const s=Math.min(innerWidth/1760,innerHeight/990)*0.98;
+  const el=document.getElementById('fit');
+  el.style.transform=`translate(${-1760*s/2}px,${-990*s/2}px) scale(${s})`;
+}
+addEventListener('resize',fit);fit();
+/* ===== 讲解内容 + 分步揭示(可当提词器)===== */
+const EXPLAIN={
+  stage1:{k:'STAGE 1 · PLAN',t:'规划:先想清楚,再动手',p:'你就说一句话,比如"我想做个记账工具"。它不急着写代码,先帮你把这事想透:给谁用、解决什么、有哪些功能、数据长什么样,写成一份完整的规格书。这份规格书就是整个项目的宪法,后面每个决定都得对着它。',h:'写完还不算数,它会换一个别家的 AI 来挑毛病,挑不过关,不许往下走。'},
+  stage2:{k:'STAGE 2 · CONTRACT',t:'契约:先证明数据接得上,才准画界面',p:'这一步最较真。大多数人是先画界面,好看了再想数据怎么接。这套反过来:每条功能,先证明数据从哪来、存哪、怎么读回来。证不出来的功能,根本不许画界面。',h:'一条一条判:能做、是块硬骨头、还是干脆砍掉,不许留空白。',pit:'我踩过的坑:界面做得漂亮,点进去一整排按钮全是死的。就是因为先画后接。'},
+  stage3:{k:'STAGE 3 · DESIGN',t:'设计:界面不许承诺数据给不了的东西',p:'到这儿才画界面。规矩就一条:界面上每个能点的按钮,背后都得连着上一步证过的真功能。连不上的,要么去改契约,要么老实标上"规划中",要么就别画。',h:'每个页面还得把四种状态想全:加载中、没数据、出错、真数据。省一个都不行。'},
+  stage4:{k:'STAGE 4 · BUILD',t:'实现:一次做透一个,数据从第一天就是真的',p:'开始真写代码。一次只做透一个功能,从数据到界面一条龙打通,做完一个再拿下一个。',h:'干活的不是一个 AI,是一队,各领一小块同时开工。而且测试先写、先让它红,再写到绿。'},
+  stage5:{k:'STAGE 5 · SHIP',t:'发布:当个真用户,亲手走一遍',p:'最后不是看报告,是拿真数据、当一个真用户,把整个流程亲手走通。走通了、假数据清干净了、文档和代码对得上,才准发。',h:'专门防"每个零件都对、装起来是坏的"。',pit:'我吃过这亏:几十个任务显示全绿,合起来一跑,394 个 bug。'},
+  conf1:{k:'人类时刻 ①',t:'第一次确认:这是你要的产品吗',p:'整条流水线只在几个地方需要你出场,这是第一个。AI 把产品规格写好了,给你看一眼:这是不是你想要的?你点头,才往下走。'},
+  conf2:{k:'人类时刻 ②',t:'第二次确认:范围就这些,不多不少',p:'到这儿要做的东西已经全钉死了,给你一个"范围信封":就这些。你确认之后,它后面就能放开手自己干,不用一直问你。'},
+  conf3:{k:'人类时刻 ③',t:'第三次确认:能发吗',p:'最后一次。所有证据都齐了,它才有资格来问你:能发吗?你说发,才发。之前它连问都没资格问。'},
+  rc:{k:'成品 · RELEASE',t:'交付:一个带完整证据链的版本',p:'这就是最后交出来的东西。不是"应该能用",是每一步都验过、每个功能都有证据的可发布版本。'},
+  manager:{k:'总承包 · MANAGER',t:'主 Agent:工地的包工头',p:'这是整个工地的总指挥。它不亲自砌墙,它干三件事:把活派下去、把干完的合到一起、盯着质量。',h:'关键是,只有它一个人能把代码合进主线。所以再多 AI 同时干,也乱不了。'},
+  A:{k:'引擎 · A',t:'任务看板:唯一的一张活清单',p:'所有要干的活都在这张清单上,这是唯一的真相。你随口提个需求,它立刻记上去,绝不让需求消失在聊天记录里。',h:'干活永远从清单最上面往下拿,不是你最后一句话说什么就干什么。'},
+  B:{k:'引擎 · B(机器门)',t:'审核闸:没许可证不准动工',p:'想开工?先过这道闸。这个功能没通过审核,门直接把你拦在外面,想都别想。',h:'它是个机器,不是 AI。AI 再想抄近道,机器不认。'},
+  C:{k:'引擎 · C',t:'任务包编译:只给它这次要用的一小块',p:'派活之前,先给这个 AI 编一份刚好够用的工单:这次干什么、能改哪些文件、做完拿什么验收。',h:'不是把整个仓库丢给它。信息太多它会淹死、干着干着就糊涂。上下文只给这一小块。'},
+  D:{k:'引擎 · D(一队 AI)',t:'Worker 编队:一群 AI 同时在干',p:'真正写代码的地方。干活的不是一个 AI,是一队,每个领一个工单,同时开工。',h:'每个在自己隔离的工作区里干,谁也别踩谁的文件。卡住了试两次不行就停下来喊人,绝不原地打转烧钱。'},
+  E:{k:'引擎 · E(铁面机器)',t:'硬检查:机器说不合格就是不合格',p:'活干完,机器先查:类型对不对、测试过没过、代码有没有放错地方。',h:'任何一项红了,一票否决,打回重做。这里机器说了算,AI 说"我觉得没问题"没用。'},
+  F:{k:'引擎 · F(两个 AI 互审)',t:'双评审:两个不同模型,互相挑刺',p:'机器查完,再上两个 AI 审查员。两个不同的模型,互相不通气,其中一个还专门假设"这活是坏的"来找茬。',h:'它俩只有看的权限,只能说过或不过,碰不了任何东西。一个模型的盲区,另一个能补上。'},
+  G:{k:'引擎 · G(机器盖章)',t:'判决器:两个都点头才算过',p:'收齐审查意见,机器来判。两个审查员都说"过",才盖章通过。',h:'只要有一个没吭声,哪怕它是去上厕所忘了回话,一律挂起。沉默,永远不等于通过。'},
+  H:{k:'引擎 · H',t:'证据落账:没发票不给报销',p:'通过的活,必须附上证据才算完成:测试跑过的记录、真数据的截图、提交号。',h:'没有证据的"我做完了",系统直接拒收。全记进一本谁也改不了的流水账,随时能查。'},
+  hold:{k:'拦截 · HOLD',t:'挂起:宁可误停,不可放行',p:'只要没拿到两个"通过",活就卡在这,红章一盖,绝不放行。宁可错拦一个,也不放一个没验过的东西出去。'},
+  human:{k:'人类时刻',t:'你只管这几件事,其余不打扰',p:'整条流水线,只在四个地方需要你:确认产品、确认范围、放行发布,还有遇到高风险的活它会主动升级上来问你。剩下的时间,它自己扛,不烦你。'},
+  V1:{k:'进化 · V1',t:'发现:让问题浮出水面',p:'每次踩了坑、或发现哪不对劲,先让它冒出来。发布走查、每干十个任务做一次整体体检,专门抓这些。'},
+  V2:{k:'进化 · V2',t:'归因:记根子,不记表面',p:'把这个坑记下来,记的是根子上的原因,不是"这次碰巧错了"这种表面现象。'},
+  V3:{k:'进化 · V3(精髓)',t:'固化:把坑变成一道自动的门',p:'这一步是精髓。它不是让我"下次小心",而是把这个坑变成一个自动执行的守卫脚本,装回流水线里。',h:'学费只交一次。以后同样的坑再想犯,系统直接报错拦住。'},
+  V4:{k:'进化 · V4',t:'常驻:每一轮都自动重跑',p:'这些守卫每一轮都自动跑一遍。所以这套系统会自己长,越用越结实,踩过的坑越多,它越难被骗。'}
+};
+function keyOf(el){
+  if(el.classList.contains('chip')){const m=el.textContent.match(/STAGE\s*(\d)/);return m?'stage'+m[1]:null;}
+  if(el.classList.contains('gate')){const t=(el.querySelector('b')||{}).textContent||'';if(t.indexOf('①')>=0)return 'conf1';if(t.indexOf('②')>=0)return 'conf2';if(t.indexOf('③')>=0)return 'conf3';return null;}
+  if(el.classList.contains('rc'))return 'rc';
+  if(el.classList.contains('hold'))return 'hold';
+  if(el.classList.contains('human'))return 'human';
+  if(el.classList.contains('node')){const idx=((el.querySelector('.idx')||{}).textContent)||'';if(idx.indexOf('MANAGER')>=0)return 'manager';const m=idx.match(/\b([A-H])\b|\b(V[1-4])\b/);return m?(m[1]||m[2]):null;}
+  return null;
+}
+/* 学术名词 + 借鉴来源(悬浮时以绿标显示)*/
+const TERM={
+  stage1:'SDD 规格驱动开发 · 借鉴 spec-kit', stage2:'Contract-First 契约优先',
+  stage3:'No API, no UI · 绑定完整性', stage4:'TDD 测试驱动 · 垂直切片 · 借鉴 tdd-guard',
+  stage5:'集成验收 · 产品完整性审计', conf1:'Human-in-the-loop 关键确认',
+  conf2:'Scope Envelope 范围信封', conf3:'Release Gate 发布门',
+  rc:'Release Candidate · 证据链交付', manager:'Manager 模式 · Orchestrator · 借鉴 OpenAI Agents',
+  A:'单一真相源 SSOT · 需求即任务', B:'确定性 Gate · hook 强制 · 借鉴 tdd-guard',
+  C:'上下文工程 · 注意力预算(Anthropic)', D:'并行子代理 · Write-set 隔离 · Worktree',
+  E:'判例法 Gate · 反合理化 · 借鉴 superpowers', F:'对抗式异构评审 · Rubric 量规 · 借鉴 metaswarm',
+  G:'Fail-Closed · 双人同意 Two-man rule', H:'事件溯源 Event Sourcing · Append-only',
+  hold:'Fail-Closed · 拦截优先', human:'Human-in-the-loop · Blast-radius 分级 · 借鉴 BMAD',
+  V1:'产品完整性审计 · Journey Walk', V2:'根因归因 Root-Cause',
+  V3:'棘轮基线 Ratchet · 教训即守卫', V4:'持续对账 Reconcile · 回归门'
+};
+/* ===== 悬浮 tooltip ===== */
+const tip=document.getElementById('tip'),tkk=document.getElementById('tkk'),tterm=document.getElementById('tterm'),
+      ttitle=document.getElementById('ttitle'),tbody=document.getElementById('tbody');
+let pinnedEl=null,hideTO=null;
+function showTip(k,el){
+  const e=EXPLAIN[k];if(!e)return;
+  tkk.textContent=e.k||'';
+  if(TERM[k]){tterm.style.display='inline-block';tterm.textContent=TERM[k];}else{tterm.style.display='none';}
+  ttitle.textContent=e.t;
+  tbody.innerHTML='<div class="mp">'+e.p+'</div>'+(e.h?'<div class="mh"><b>怎么做到 ▸</b> '+e.h+'</div>':'')+(e.pit?'<div class="mpit">💥 '+e.pit+'</div>':'');
+  tip.classList.add('on');
+  const r=el.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;
+  let left=r.left+r.width/2-tw/2;left=Math.max(10,Math.min(left,innerWidth-tw-10));
+  let top=r.top-th-12;if(top<10)top=r.bottom+12;top=Math.min(top,innerHeight-th-10);
+  tip.style.left=left+'px';tip.style.top=top+'px';
+}
+function hideTip(){if(!pinnedEl)tip.classList.remove('on');}
+function unpin(){if(pinnedEl){pinnedEl.classList.remove('pinned');pinnedEl=null;}tip.classList.remove('on');}
+const byK={};
+[...document.querySelectorAll('.chip,.gate,.rc,.hold,.human,.node')].forEach(el=>{
+  const k=keyOf(el);if(!k||!EXPLAIN[k])return;
+  el.dataset.k=k;el.classList.add('clickable');byK[k]=el;
+  el.addEventListener('mouseenter',()=>{if(hideTO)clearTimeout(hideTO);if(!pinnedEl)showTip(k,el);});
+  el.addEventListener('mouseleave',()=>{hideTO=setTimeout(hideTip,80);});
+  el.addEventListener('click',ev=>{ev.stopPropagation();if(pinnedEl===el){unpin();}else{if(pinnedEl)pinnedEl.classList.remove('pinned');pinnedEl=el;el.classList.add('pinned');showTip(k,el);}});
+});
+document.addEventListener('click',unpin);
+/* Esc 取消钉住 · 缩放时重定位钉住卡 */
+document.addEventListener('keydown',e=>{if(e.key==='Escape')unpin();});
+addEventListener('resize',()=>{if(pinnedEl)showTip(pinnedEl.dataset.k,pinnedEl);});
+</script>
+</body>
+</html>
