@@ -140,6 +140,9 @@ export interface CreateCandidateInput {
   source?: "trend" | "benchmark" | "demand" | "idea" | "favorites";
   contentRole?: "traffic" | "trust" | "conversion" | null;
   productAnchorId?: string | null;
+  // [T-303] 预测分(0–100)。每日出题器已算出 adjustedScore,经此落库(原来被丢弃 → 热度死列)。
+  //   缺省 null(手动新建无预测,诚实空 → 读端兜底 positioningFit)。
+  predictedScore?: number | null;
 }
 
 export interface PatchCandidateInput {
@@ -437,7 +440,8 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         contentRole: input.contentRole ?? null,
         productAnchorId: input.productAnchorId ?? null,
         positioningFit,
-        predictedScore: null,
+        // [T-303] 落库预测分(每日出题器传 adjustedScore;手动新建缺省 null)。
+        predictedScore: input.predictedScore ?? null,
         aiTaskId: null,
       });
       return toCandidateDto(row);

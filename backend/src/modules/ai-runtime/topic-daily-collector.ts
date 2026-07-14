@@ -115,6 +115,7 @@ export interface TopicDailyCollectorDeps extends ContextDeps {
       title: string;
       angle?: string;
       source: "trend" | "benchmark" | "demand";
+      predictedScore?: number | null; // [T-303] 落库预测分(治热度死列)
     },
   ) => Promise<{ id: string }>;
   now: () => string;
@@ -259,6 +260,8 @@ export async function collectDailyTopics(
         title: s.topic.title,
         angle: s.topic.angle,
         source: normalizeSource(s.topic.source),
+        // [T-303] 落库算好的预测分(原来丢弃 → 首页热度死列恒 0)。
+        predictedScore: s.adjustedScore,
       });
       itemsNew += 1;
       report?.({

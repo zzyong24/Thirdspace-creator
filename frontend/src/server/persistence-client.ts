@@ -6388,10 +6388,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           return rows.map((c) => ({
             id: c.id,
             title: c.title,
+            // [T-303] 热度优先预测分(每日出题落库);为空/0 时兜底 positioningFit(每候选都有的
+            //   0–100 契合分)→ 存量/手动候选也有真热度,不再死列恒 0。都无 → 0(诚实)。
             heat:
               typeof c.predictedScore === "number" && c.predictedScore > 0
                 ? Math.round(c.predictedScore)
-                : 0,
+                : typeof c.positioningFit === "number" && c.positioningFit > 0
+                  ? Math.round(c.positioningFit)
+                  : 0,
             trend: "up" as const,
           }));
         } catch {
