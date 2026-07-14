@@ -55,6 +55,16 @@ const nextConfig: NextConfig = {
     // 必须字面量 specifier + 外置)。
     "hyperframes",
     "gsap",
+    // [T-313] Pi 受控自主运行时:pi-engine 运行时**深导入** `@earendil-works/pi-coding-agent`
+    //   的 `dist/core/*.js`(绕 barrel 的 TUI/main;确定性 fs 定位)+ `@earendil-works/pi-ai`
+    //   自建 provider。保持外置:不让 Next 打包(纯 ESM + typebox/undici/photon-node 动态加载)。
+    //   桌面包由 build-sidecar **实拷完整包**(含 dist 全树 + 依赖树:pi-agent-core/pi-ai/pi-tui/
+    //   photon-node/openai/@anthropic-ai/sdk 等);Next tracing 对深 file-URL import 会漏 → 主 agent
+    //   打包时按 playwright/hyperframes 同款「覆盖 Next-traced 残缺版」机制实拷(本任务不做打包)。
+    "@earendil-works/pi-coding-agent",
+    "@earendil-works/pi-ai",
+    "@earendil-works/pi-agent-core",
+    "@earendil-works/pi-tui",
   ],
 };
 

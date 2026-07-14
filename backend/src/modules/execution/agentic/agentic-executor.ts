@@ -21,7 +21,12 @@ import type {
   ExecutorRunOpts,
   ExecutorSandboxView,
 } from "../executor-registry";
-import type { AgenticEngine, AgenticTool, EngineLlm } from "./engine";
+import type {
+  AgenticEngine,
+  AgenticTool,
+  EngineLlm,
+  RawLlmConfig,
+} from "./engine";
 import { createLoopController, type LoopBudget } from "./loop-control";
 import { filterToolsToScope } from "./tool-scopes";
 
@@ -35,6 +40,14 @@ export interface AgenticExecutorDeps {
    * persistence-client 绑:ctx → 走既有 llmCompleter(resolveLlmConfig)。
    */
   resolveLlm: (ctx: RequestContext) => EngineLlm;
+  /**
+   * [T-313 §6.1] 每请求解析 raw model-config —— Pi 引擎自建 provider 用(base_url+key+model+
+   * api_format+auth_style)。确定性引擎不读此项(走 resolveLlm 文本端口)。未提供 → 引擎收不到
+   * llmConfig,Pi 引擎会诚实退回确定性兜底。persistence-client 绑 resolveLlmConfig(同 llmCompleter)。
+   */
+  resolveLlmConfig?: (
+    ctx: RequestContext,
+  ) => RawLlmConfig | Promise<RawLlmConfig>;
   /**
    * 每请求解析领域工具集(用户域端口已 ctx-bound;封号限流/登录态/pending 烤在端口里,SPEC §3)。
    * 执行器再经 filterToolsToScope 二次白名单(纵深防御)。
@@ -132,6 +145,10 @@ export function createAgenticExecutor(
 
       // §6.1 回接:引擎每步推理烧用户配的模型(persistence-client 绑 llmCompleter→resolveLlmConfig)。
       const llm = deps.resolveLlm(ctx);
+      // §6.1 raw config:Pi 引擎自建 provider 用;确定性引擎忽略(无 resolveLlmConfig 时 undefined)。
+      const llmConfig = deps.resolveLlmConfig
+        ? await deps.resolveLlmConfig(ctx)
+        : undefined;
 
       // 跑引擎循环(⑦ abort 贯通:signal 透传)。
       const final = await deps.engine.run({
@@ -141,6 +158,7 @@ export function createAgenticExecutor(
           "你是编导的自主任务助手。多步搜集/判断/整理,到步数或预算上限就诚实停止,别无限绕圈。",
         tools,
         llm,
+        llmConfig,
         controller,
         decideDryRun,
         onStep: (text) => reportStep(text),

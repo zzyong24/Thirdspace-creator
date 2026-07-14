@@ -177,9 +177,10 @@ import {
   resolveWorkspacesRoot,
   sweepOrphanSandboxes,
   EXECUTION_OP_IDS,
-  // [T-256b/c] 自主任务运行时:agentic executor + 确定性引擎(Pi 就绪前默认)+ 三领域适配器 + token 估算。
+  // [T-256b/c/T-313] 自主任务运行时:agentic executor + Pi 引擎(带确定性兜底)+ 三领域适配器 + token 估算。
   createAgenticExecutor,
   createDeterministicAgenticEngine,
+  createPiAgenticEngine,
   createResearchTools,
   createCollectionTools,
   createMaterialTools,
@@ -6905,13 +6906,24 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return { affected: assetIds.length };
     },
   };
-  const agenticEngine = createDeterministicAgenticEngine();
+  // [T-313] 引擎切 Pi:createPiAgenticEngine 真接 pi-coding-agent SDK 自主循环;**保留确定性兜底**
+  //   (依赖缺席 / 打包实拷缺失 / 无 §6.1 raw config / 运行异常 → 退 deterministicEngine,现有全绿路径)。
+  //   §6.1 raw config 经 resolveLlmConfig(同 llmCompleter 一套 getModelConfig+env)注入引擎自建 provider;
+  //   production 不传 buildStreamSimple(走 pi 内建 anthropic-messages/openai-completions api,真烧用户 provider)。
+  const deterministicEngine = createDeterministicAgenticEngine();
+  const agenticEngine = createPiAgenticEngine({ fallback: deterministicEngine });
+  const buildAgenticLlmConfig = (ctx: RequestContext, capability: string) =>
+    resolveLlmConfig(ctx, capability, {
+      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
+      env: process.env,
+    });
   const AGENTIC_DEFAULT_BUDGET = { maxSteps: 8, maxTokens: 20000 };
   executorRegistry.register(
     createAgenticExecutor({
       taskType: "agentic.research",
       engine: agenticEngine,
       resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.research"),
+      resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.research"),
       resolveTools: () => createResearchTools(agenticResearchPorts),
       defaultBudget: AGENTIC_DEFAULT_BUDGET,
     }),
@@ -6921,6 +6933,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       taskType: "agentic.collect",
       engine: agenticEngine,
       resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.collect"),
+      resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.collect"),
       resolveTools: () => createCollectionTools(agenticCollectionPorts),
       defaultBudget: AGENTIC_DEFAULT_BUDGET,
     }),
@@ -6930,6 +6943,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       taskType: "agentic.material",
       engine: agenticEngine,
       resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.material"),
+      resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.material"),
       resolveTools: () => createMaterialTools(agenticMaterialPorts),
       defaultBudget: AGENTIC_DEFAULT_BUDGET,
     }),

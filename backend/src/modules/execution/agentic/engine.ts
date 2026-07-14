@@ -79,6 +79,23 @@ export interface EngineLlmResult {
 }
 
 /**
+ * [T-313] Pi 引擎专用 —— **§6.1 raw model-config**。Pi 做原生 function-calling,不吃
+ * `EngineLlm` 文本端口(见 pi-engine.ts),须拿到 `resolveLlmConfig` 解析出的原始 provider
+ * 配置(base_url + key + model + api_format + auth_style)自建 pi-ai custom provider。
+ *
+ * 结构与 `@creatoros/backend/modules/ai-runtime` 的 `ResolvedLlmConfig` 兼容(其超集可直接赋值),
+ * 但在 engine.ts 里**只声明结构类型**(不 import ai 层,守分层:执行/引擎层不反向依赖 ai-runtime)。
+ * 确定性引擎 / 测试忽略此字段(它们走 `llm` 文本端口)。
+ */
+export interface RawLlmConfig {
+  apiFormat: "anthropic" | "openai_chat";
+  baseUrl: string | null;
+  model: string;
+  authStyle: "bearer" | "x-api-key";
+  token: string;
+}
+
+/**
  * 引擎每步推理的 LLM 端口 —— **§6.1 硬门:回接 model-config**。
  * 真 Pi:映射为 `Agent.streamFn`(pi-ai OpenAI-compatible provider ← resolveLlmConfig 解析出的
  * 用户 provider:base_url + key + model)—— 引擎的自由循环仍烧用户配的模型,不引第二套模型解析。
@@ -97,8 +114,13 @@ export interface AgenticEngineRunInput {
   systemPrompt: string;
   /** 可用领域工具集 = **工具白名单**(物理只暴露这些;引擎调不到别的,SPEC §4.1)。 */
   tools: readonly AgenticTool[];
-  /** LLM 端口(§6.1 回接 model-config;Pi: streamFn)。 */
+  /** LLM 端口(§6.1 回接 model-config;确定性引擎每步「想」用)。 */
   llm: EngineLlm;
+  /**
+   * [T-313] raw model-config(§6.1)—— Pi 引擎自建 provider 用;确定性引擎忽略。
+   * 执行器经 `deps.resolveLlmConfig(ctx)` 注入;未注入(deterministic-only 装配)→ undefined。
+   */
+  llmConfig?: RawLlmConfig;
   /** 循环控制器(步数/预算硬顶;Pi: shouldStopAfterTurn)。 */
   controller: LoopController;
   /** 干跑决策(每工具;Pi: beforeToolCall)。发布/删除恒 true,余按任务级 dryRun。 */

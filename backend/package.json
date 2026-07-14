@@ -25,6 +25,8 @@
     "@aws-sdk/s3-request-presigner": "^3.1075.0",
     "@creatoros/ai-worker": "workspace:*",
     "@creatoros/contract": "workspace:*",
+    "@earendil-works/pi-ai": "0.80.7",
+    "@earendil-works/pi-coding-agent": "0.80.7",
     "@electric-sql/pglite": "^0.2.0",
     "ai": "7.0.4",
     "drizzle-orm": "^0.36.0",
