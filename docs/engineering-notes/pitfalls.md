@@ -10,6 +10,7 @@
 - **playwright 走 .pnpm 的模块解析**:Next tracing 漏动态 import → 实拷完整包(含 browsers.json)。
 - **混淆 turbopack chunk 会崩** → chunks 目录 rename-only;混淆后必跑运行时冒烟。
 - **打包版必须隔离验证**:dev 跑通/单测过 ≠ 分发包能跑(ESM/路径/资源差异)。
+- **ffmpeg/Whisper 硬编码 `/opt/homebrew/bin/ffmpeg`,sidecar 打包脚本不打 ffmpeg**(T-326 RT-H09:douyin-cdp.ts + multimodal-whisper-local.ts):Intel Mac/Windows/无 Homebrew 用户转录稳定失败。正解:外部二进制随包分发,或启动硬预检 + 缺失时 UI 诚实禁用;禁止硬编码本机路径。
 
 ## 验证纪律(最重要的一册)
 
@@ -30,6 +31,7 @@
 - **迁移文件多语句必须 `--> statement-breakpoint`**(0037 踩过,pglite 单语句执行)。
 - PGlite/PG 双栈避免方言分歧:jsonb 复杂匹配放 JS 侧过滤。
 - **PGlite 单写:两个 CreatorOS 实例同连一个库 = 必写坏**(T-305 会话踩:排障期反复起打包 app,又撞上另一会话的 `desktop:dev` sidecar,两个 next-server 并发读写 `~/Library/Application Support/cloud.aitongban.creatoros/db` → 04:32 库损坏,损坏保护把它改名 `db.corrupt-<ms>` 并新建空库顶上 → 新 app 读空库(0 素材)、老 sidecar 靠已打开的 inode 句柄仍服务旧数据,现象自相矛盾极难定位)。**排障/验证打包 app 前先确认没有 dev server 在跑同一个库**;数据本体没丢(`.corrupt-<ms>` 是完整可读的原库,改名回去即恢复;asset 字节在 `~/CreatorOS/media` 从不受影响)。定位靠 `lsof -p <sidecar-pid> | grep db.corrupt` 看有没有 `.corrupt` 句柄 + 比 `db` vs `db.corrupt-*` 目录大小/时间戳。
+- **T-305 现象的设计根因(T-326 DATA-H09)**:`backend/src/db.ts` 的 createDb 把 file-PGlite **一切**异常(迁移 SQL 错/权限/磁盘满)都当"库损坏"→ 改名 `.corrupt-*` + 空库顶上——自愈过宽,普通可修复错误也表现为"数据全没了",且用户无恢复入口。正解:窄匹配真正的损坏错误类型,其余 fail-stop 保留原库;自愈前留备份并给 UI 恢复入口。
 
 ## AI 行为工程(MiniMax/弱模型)
 
@@ -64,3 +66,49 @@
 ## Tauri webview 细节
 
 - webview 吞 target=_blank;tauri-plugin-opener 自带注入脚本(拦 _blank 链接);自己再拦截会双输(stopPropagation 废掉官方脚本)→ 只把缺 target 的跨域链接补成 _blank,让官方脚本接管(T-252)。
+
+## Next build / 工程门禁(T-326 ENG-H02 / B-04)
+
+- **`next build` 会真跑你的组合根**:静态生成(Generating static pages)worker 里任何一次 `getBundle()` 就把 buildPersistence 全套副作用带进 build——连 DB、跑迁移、seed、sweep、起 node-cron;且 11 个预渲染 worker 各自进程各建一份连接(并发写同一 PGlite,违反单写者)。**正解:组合根唯一入口处判 `process.env.NEXT_PHASE === "phase-production-build"` 直接拒绝**(Next 16 在 `build/index.js` 设该 env、worker 继承,Next 自己运行时代码也用这字符串判 build 阶段——官方语义信号);scheduler 等副作用点再各留一道纵深守卫。验证判据:build 全程 0 条 seed/cron/master-key 日志 + 指过去的 PGLITE_DATA_DIR 目录保持**空**。
+- **backend 自己的 tsc 过 ≠ 跨包 frontend tsc 过**:frontend 带 Next 全局类型增强(`ProcessEnv.NODE_ENV` 必填 readonly),backend 源码里 `spawn/execFile` 的 `env: Record<string,string>` 在 frontend tsc 视角不再兼容 ProcessEnv → overload 解析失败连环崩成 never(报错样子像 @types/node 坏了)。正解:构造用普通 Record、**出口断言为 `NodeJS.ProcessEnv`**(child-env.ts);改 backend 里会被 frontend 引用的代码,收口必须把 frontend `tsc --noEmit` 也跑一遍(aa64e83 只验 backend → 挡住 T-326 验证门)。
+- **Playwright webServer 两坑**:① 默认 `pnpm dev` 继承 .env.local → E2E 直连开发/装机真库(PGlite 单写者 + 脏数据);正解 webServer.env 显式 `DATABASE_URL=""` + `PGLITE_DATA_DIR=mkdtemp(...)`(fresh 库 seed canonical user → 单机免登录直通,测试开箱可用)。② 根路由**冷 Turbopack 首编译 + fresh 库迁移/seed 实测 ~2.8min**,旧 timeout 120s 必超时(审计 B-04「停在 Compiling」的真相);按实测+余量设 300s。config 顶层 `mkdtempSync` 要用 env 记忆化——worker 进程会重复加载 config,否则每 worker 白建一个空临时目录。
+- **仓里唯一 workflow 不是验证 CI**(T-326 ENG-H01):`.github/workflows/harness.yml` 是可写仓的 Autonomous Harness,锁死旧分支 `feat/service-contract`,不跑 typecheck/test/build/lint/boundary,且用 Node 24 而根 `engines` 要求 `>=25 <26`——main 可以在零门禁下进分发。正解:补 main/PR 验证 CI(五件套全跑),Node 版本与 engines 对齐;"本地跑过"不算发布证据。
+- **lint 默认扫进 `src-tauri/sidecar` 生成物:81,593 problems**(T-326 ENG-M01):真信号(剥离后 55 errors/153 warnings)被噪声淹没。eslint.config.mjs 必须 ignore 生成物;见到异常大的数字先查 scope 再评代码。
+- **updater 缺 `CREATOROS_UPDATE_BASE_URL` 时产出占位下载 URL 的 latest.json,只 warn 不失败**(T-326 ENG-H03):签名正常但客户端永远下载失败。release 脚本缺关键配置要 fail,不要 warn——发布链上的 warning 没人看。
+
+## 本地 loopback / 文件系统 / 注入安全(T-326 审计,证据全文见 docs/research/2026-07-15-prelaunch-full-engineering-data-audit-research.md)
+
+- **用户输入拼路径 + 递归删除 = 可删到 appData 之上**(B-01):web-session route 只查 `domain` 非空就 `path.join(webAuthDirBase, domain)`,remove 走 `rm(target,{recursive:true,force:true})` → `domain="../.."` 能删数据库/master key/浏览器 profile。正解:hostname 白名单解析 + `resolve/relative` containment + realpath 复查;**新增任何"外部输入拼路径"的 route 照此办理**,并覆盖 `../`/绝对路径/编码分隔符测试(本仓 local-read 已有 containment 可抄,见审计"已核对的正向控制")。
+- **随机端口不是鉴权**(RT-H01):loopback API 无/坏 cookie 会静默回退本地主用户,dispatch/chat/web-session 均无启动级 token 和精确 Origin/Host 校验——与 B-01 组合 = 恶意网页可驱动删除。正解:启动级本机令牌统一中间件,新 route 禁止各自裸奔。
+- **web reader/capture 有 SSRF**(RT-H04):只查 http/https 就 `page.goto`,无私网/loopback/link-local/云元数据地址阻断,重定向不逐跳复检。
+- **不可信网页正文原样回模型,同一会话挂着付费/有副作用工具**(RT-H05):恶意页面可诱导消耗额度、推进流程。注入面(网页/文件正文)与副作用工具必须隔离或加人工确认。
+
+## 执行层(Pi / execution)边界(T-326)
+
+- **构造了 systemPrompt ≠ Pi 收到**(RT-H02):agentic-executor 组装了 `input.systemPrompt`,但 pi-engine 的 `createAgentSession` 没传受控 ResourceLoader、之后只 `session.prompt(input.goal)`——Pi 实际从 ResourceLoader 构造 system prompt(依赖源码 agent-session.js),CreatorOS 的诚实/预算/工具策略模型根本没收到。**改 Pi 行为前先读依赖源码确认消费链,别信自己这侧的组装代码**。
+- **Pi 默认 ResourceLoader 扫 cwd 和 `~/.pi/agent` 并自动加载 extensions/custom tools;`noTools:"builtin"` 只禁 builtin**(RT-H03):"工具白名单物理隔离"必须显式传受控(空)loader,测试要断言**生效工具集合 == 白名单**,不是"那四个 builtin 不在"。
+- **contract 声明 `network:"deny"` 但 runExecutionTask 只消费 timeout/output;video child 直接继承全部 `process.env`**(RT-H06):沙箱内代码可读模型 key/DB 配置并外传。策略字段动手前先找消费点,child env 显式白名单。
+- **execution timeout 只放弃 Promise,子进程树还在跑**(RT-M03):要进程组 kill 并等退出再清 sandbox。
+- **Pi 发生工具副作用后异常会整体 fallback = 重放副作用**(RT-M01):只有零副作用才允许整体回退,否则 checkpoint + 幂等工具。
+
+## 发布/指标双轨数据链路(imported vs manual,T-326)
+
+- **external key 先到先得,publication 永不迁移**(B-03,T-323 的源码根因):`createImportedPublication` 按 external key 命中既有行就直接返回(不比较 `contentOutputId`);register 只把请求 output 标已发布、不迁 publication;后续日拉继续按旧 publication 的 output 归属指标 → 同一作品永久分叉 imported/manual 两个项目,指标/封面/复盘流向空壳。正解:事务化 re-parent + 合并派生数据 + 归档空壳 + external key 唯一约束;**动发布/登记/日拉链路前先读这段归属逻辑**。
+- **imported 发布 `currentRevisionId=null`,transport 伪装成 `""` 过 contract 的 `z.string().min(1)`**(B-02):client 对 envelope 做 Zod parse → 日拉一条作品就能让 publication list/detail 整体解析失败。空值语义在 contract 层一次说清(允许 null 或导入时原子建 revision-1),**禁止占位假值**。
+- **并发日拉先 `ensureImportedProject`(先查后建、项目无外部键唯一约束)后建幂等 run**(DATA-H08):幂等键挡不住已建的重复空壳项目——幂等键要在链路第一个写操作上。
+- **publishing create 不校验 outputId 归属且 schema 无 FK**(DATA-H03):可建跨属主/悬空 publication。**先调平台、再写 publication、最后更新 output/project,同状态重试直接返回**(DATA-H04):中断后可能重复发平台或本地永不跃迁——外部副作用要有意图记录 + 对账路径。
+- **scheduler 先查当日 run 再建,无 DB 唯一约束**(RT-H08):两个 tick 并发通过 = 重复运行重复计费。去重靠唯一键,不靠先查后建。
+
+## 数据完整性:多账号 / 事务 / AI 采纳(T-326)
+
+- **多账号 scope 三处缺一即串号**(DATA-H01/H02):publication 所有权与列表只按 `userId`;analytics 写入 stamp account、读取聚合只传 user;favorites 唯一键 `(user_id,name)`/`(user_id,aweme_id)`、topic_preferences 唯一键与 conflict target 均不含 account → 双抖音号混读、第二账号建不了或改写第一账号数据。**新表口诀:凡用户级数据先问"要不要 account 维度";要,就唯一键/查询 where/upsert conflict target 三处全带**。
+- **AI 批量采纳逐条落库、最后才标 task 成功,无事务无逐项幂等**(DATA-H06/RT-H10,ai.service + execution.service 同坑):第 N 条失败重试 = 重复前 N-1 条。
+- **asset-generate-runner 在生成阶段就持久化资产,拒绝/失败不清理**(DATA-H07):违反本仓"AI 只产候选、人确认后落库"铁律,产生永久孤儿资产。新 runner 一律 candidate→adopt 两段式。
+- **projects 删除事务遗漏 production/analytics/attribution/learning**(DATA-H05):这四组全是无 FK 软引用,删完 dashboard 仍聚合已删项目。删除/归档实体时对照"谁软引用了我"清单逐表清。
+
+## 前端诚实与恢复(T-326)
+
+- **`fixtures/selectors` 层的 catch→fixture 兜底已成惯性模式**:settings 读取失败回退 fixture(伪造模型/路径/18GB 占用,FE-H02)、shell-router 真实项目阶段回退 `research`/0%(FE-M07)、dashboard 缺数据伪造"全部处理完/多平台"(FE-M04)。本仓铁律:读失败显 ErrorState,缺数据诚实置 0/「未设置」;**新页面禁用该模式,审查 grep catch 块里的 fixture 引用**。
+- **creator layout 无降级地等待通知请求**(FE-H03):铃铛接口一坏,首页/项目/素材/发布/设置全部不可用。次要功能的请求失败不得阻塞 layout。
+- **长任务轮询三件套缺一不可**(FE-H01,production-workbench):决策轮询 ~10 分钟静默退出、渲染轮询不处理 `failed` 永久转圈、刷新恢复漏 `queued/running` 与 failed render——全终态匹配 + 超时上限 + 刷新恢复枚举中间态。
+- **日历"今天"写死 `REFERENCE_INSTANT=2026-07-03`**(FE-H04):过去/未来/默认月份全由它派生,7 月 15 日还允许把 7 月 10 日排为未来。时钟必须注入,写死的参考时钟属于"非数据 fixture",出生即登记退役条件。
