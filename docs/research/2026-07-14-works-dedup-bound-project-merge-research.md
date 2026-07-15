@@ -115,3 +115,25 @@
 **关键决策 —— source 不翻 imported**:manual 属主翻 imported 会被 `reconstruct-runner`(断言仅 imported,:57)+ transcribe auto-fill(遍历 `listImportedWorks`=source='imported')吃到 → AI 重建逐字稿/研究/策划覆盖用户手写内容(§④)。去重已由 `publications.externalId` 主键承担(manual 也能被 `resolvePublication` 再命中,不依赖 `findImportedByRef`),故**保持原 source**、只补真实数据 + 显已发布。幂等由「同 aweme resolve 到同一 publication → 同一属主 → 同一 project」保证。
 
 **测试**(`ingestion.merge-bound-project.integration.test.ts`,真 pglite,5 例全绿):命中 manual 属主 merge+不新建+保持 manual+不在 listImported;空 desc/未变 title 不覆盖用户 brief/title;二次日拉幂等不累积;未命中照旧建 imported;register `markOwnerPublished` 跃迁 review/100 不改 source。**回归**:ingestion/projects/publishing 全 17 文件 200 例通过;`backend tsc` 干净。
+
+---
+
+## ⑦ 复盘:T-321 没根治 —— register 侧 publication「抢锚」真根因(T-323,2026-07-15)
+
+用户 2026-07-15 重装后仍见同名作品两条(一条已发布 / 一条复盘中)。读码链路锁定 **T-321 漏掉的一步**:
+
+**真根因(register 侧,非日拉侧)**:
+1. `register-published-form` → `outputs.publications.register` → backend **复用 `createImportedPublication(manualOutputId, {externalId: aweme})`**(register-published-form.tsx:7 明注)。
+2. `createImportedPublication`(publishing.service.ts:491-495)**先 `findByExternalKey(platform, aweme)`,命中即 `return existing`** —— 若该 aweme 已被**上一轮日拉自动建的 imported 重复项目**的 publication 占了(锚在 imported output),就直接返回那条,**根本不在 manual output 上建 publication**((platform, external_id) 有 partial-unique,第二条本也插不进)。
+3. 后果:用户 manual 真项目**没有自己的 publication** → 日拉的指标/封面全落 imported 重复上;T-321 的 merge 按 publication 反查属主 = **imported 重复**,于是一直 merge 到重复、manual 被晾着。register 的 `markOwnerPublished(manualOutputId)` 只把 manual 项目 stage 翻已发布(空壳),数据仍在重复上 → **两个项目、真数据在错的那个**。
+
+**为何 T-321 没覆盖**:T-321 治的是「日拉命中 publication → merge 到持有它的项目」,默认「持有 publication 的就是正主」。但当 publication 被**空壳 imported 抢先占锚**时,持有者恰恰是**错的**那个。T-321 的「顺带修 stage(可选)」只翻了 stage、没重锚 publication 归属。
+
+**T-323 修法(register/日拉命中 imported 空壳占锚时重锚)**:
+- 命中的既有 publication 属主项目 `source==='imported'`(自动导入空壳,无用户手写内容),而本次 register 的 output 属于用户 manual 项目时:
+  - 把该 publication **重锚到 manual output**(`content_output_id = manualOutputId`),或在 manual output 建新 publication 并把 imported 的真实指标/快照并过来;
+  - imported 重复项目 **归档(archive,非删)**——保留可追溯,但不再作独立作品显示;
+  - manual 项目跃迁已发布 + 吃到真实指标/封面。
+- 数据归属沿用 T-321 已过审「**manual 为 canonical**」原则(manual 有用户手写内容,imported 是自动空壳),不新开 gate。
+- 幂等 + 边界:manual↔manual 命中不动;两个都 imported 时按 T-321 现状 merge;archive 幂等。
+- **验证**:重打包后真机 —— 已发布并绑定链接的 manual 项目,日拉后作品并入它(数据/封面到位)、不再出现孤儿 imported 重复。

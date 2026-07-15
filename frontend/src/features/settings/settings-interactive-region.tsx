@@ -54,6 +54,13 @@ import { ProgressBar } from "@/components/project/progress-bar";
 import { SectionCard } from "@/components/project/section-card";
 import { WebSessionVaultCard } from "./web-session-vault-card";
 import { TagChip } from "@/components/content/tag-chip";
+import {
+  MODEL_PROVIDER_PRESETS,
+  CUSTOM_PRESET_ID,
+  matchPresetByConfig,
+  presetModels,
+  type ModelProviderPreset,
+} from "./model-provider-presets";
 import { cn } from "@/lib/utils";
 import {
   UserRound,
@@ -1956,11 +1963,70 @@ const PROVIDER_SUGGESTIONS: ReadonlyArray<string> = [
   "deepseek",
 ];
 
+// [T-325] 供应商预设行 —— cc-switch 风格「选一家 → 一次性填 baseUrl/接口格式/模型候选」。
+// 复用于文本模型卡(ModelConfigurationCard)与备用对话卡(MultimodalModelCard/fallback):
+// 两者都是「apiFormat 分派的文本 LLM」,预设目录(MODEL_PROVIDER_PRESETS)对它们同义。
+// presetId 由宿主卡按当前 (baseUrl, apiFormat) 反推(matchPresetByConfig)得出并高亮;
+// 选中回调把整条预设交给宿主卡填充(custom → 宿主不填,回全自由填)。用现有 shadcn
+// Select,与「接口格式」下拉同款。
+function ProviderPresetRow({
+  idPrefix,
+  presetId,
+  disabled,
+  onSelectPreset,
+}: {
+  /** data-slot / controlId 前缀,如 "model" | "multimodal-fallback"。 */
+  idPrefix: string;
+  /** 当前高亮的预设 id(宿主卡按 baseUrl/apiFormat 反推;匹配不到 = custom)。 */
+  presetId: string;
+  disabled: boolean;
+  /** 选中某预设 → 交回宿主卡决定如何填充字段。 */
+  onSelectPreset: (preset: ModelProviderPreset) => void;
+}) {
+  return (
+    <SettingsFormRow
+      label="供应商预设"
+      controlId={`${idPrefix}-preset`}
+      help="选一个供应商快速填入接口地址 / 格式 / 模型候选;所有字段仍可自由改(参考起始值,可能随供应商变动)。选「自定义」不填充。"
+    >
+      <Select
+        value={presetId}
+        onValueChange={(id) => {
+          const preset = MODEL_PROVIDER_PRESETS.find((p) => p.id === id);
+          if (preset) onSelectPreset(preset);
+        }}
+      >
+        <SelectTrigger
+          id={`${idPrefix}-preset`}
+          data-slot={`${idPrefix}-preset-trigger`}
+          size="sm"
+          className="w-full md:w-72"
+          disabled={disabled}
+        >
+          <SelectValue placeholder="选择供应商" />
+        </SelectTrigger>
+        <SelectContent data-slot={`${idPrefix}-preset-content`}>
+          {MODEL_PROVIDER_PRESETS.map((preset) => (
+            <SelectItem
+              key={preset.id}
+              value={preset.id}
+              data-slot={`${idPrefix}-preset-item-${preset.id}`}
+            >
+              {preset.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </SettingsFormRow>
+  );
+}
+
 // cc-switch-style configurable provider binding. provider / model / baseUrl /
 // apiFormat are free-form; the API key is stored in the LOCAL db (masked to
 // `hasSecret` on read — the raw key is never echoed back). A single 保存 upserts
 // the "default" capability via `settings.models.put`; resolve.ts then reads it
 // (stored key preferred over env-ref) with a global-default fallback.
+// [T-325] 顶部加「供应商预设」下拉:选一家 → 填 baseUrl/接口格式 + 切模型候选 datalist。
 function ModelConfigurationCard({
   model,
 }: {
@@ -1970,6 +2036,12 @@ function ModelConfigurationCard({
   const [modelName, setModelName] = React.useState<string>(model.modelName);
   const [baseUrl, setBaseUrl] = React.useState<string>(model.baseUrl);
   const [apiFormat, setApiFormat] = React.useState<ApiFormat>(model.apiFormat);
+  // [T-325] 当前高亮的供应商预设 id:按 (baseUrl, apiFormat) 反推(回显匹配);匹配
+  // 不到 = custom。手改字段时重算,选预设时直接置位。仅驱动下拉高亮 + 模型候选,
+  // 不进 PUT(后端不认 presetId)。
+  const [presetId, setPresetId] = React.useState<string>(
+    () => matchPresetByConfig(model.baseUrl, model.apiFormat)?.id ?? CUSTOM_PRESET_ID,
+  );
   // Blank = keep the existing stored key (the read never returns the raw value).
   const [secret, setSecret] = React.useState<string>("");
   const [temperature, setTemperature] = React.useState<number>(
@@ -1983,9 +2055,22 @@ function ModelConfigurationCard({
     setModelName(model.modelName);
     setBaseUrl(model.baseUrl);
     setApiFormat(model.apiFormat);
+    setPresetId(
+      matchPresetByConfig(model.baseUrl, model.apiFormat)?.id ?? CUSTOM_PRESET_ID,
+    );
     setTemperature(model.temperature);
     setSecret("");
   }, [model]);
+
+  // [T-325] 选中预设:一次性填 provider/baseUrl/接口格式(custom 不填,回全自由填)。
+  // 模型不强制覆盖(预设是起点不锁死),只把候选切成该家 —— 见下方 datalist。
+  const handleSelectPreset = React.useCallback((preset: ModelProviderPreset) => {
+    setPresetId(preset.id);
+    if (preset.id === CUSTOM_PRESET_ID) return;
+    setProvider(preset.id);
+    setBaseUrl(preset.baseUrl);
+    setApiFormat(preset.apiFormat);
+  }, []);
 
   const canSave =
     provider.trim().length > 0 && modelName.trim().length > 0 && !pending;
@@ -2022,6 +2107,12 @@ function ModelConfigurationCard({
         data-highlight="text-model"
         className="flex flex-col gap-3"
       >
+        <ProviderPresetRow
+          idPrefix="model"
+          presetId={presetId}
+          disabled={pending}
+          onSelectPreset={handleSelectPreset}
+        />
         <SettingsFormRow
           label="提供商"
           controlId="model-provider"
@@ -2045,16 +2136,23 @@ function ModelConfigurationCard({
         <SettingsFormRow
           label="模型"
           controlId="model-name"
-          help="模型 id,如 claude-opus-4-8 / MiniMax-M3。"
+          help="模型 id,如 claude-opus-4-8 / MiniMax-M3。选预设后可从候选下拉挑,也可自由输入。"
         >
           <Input
             id="model-name"
             data-slot="model-name-input"
+            list="model-name-suggestions"
             value={modelName}
             disabled={pending}
             onChange={(event) => setModelName(event.target.value)}
             aria-label="模型名称"
           />
+          {/* [T-325] 候选随选中预设切换;custom / 无候选时为空(纯自由输入)。 */}
+          <datalist id="model-name-suggestions">
+            {presetModels(presetId).map((m) => (
+              <option key={m} value={m} />
+            ))}
+          </datalist>
         </SettingsFormRow>
         <SettingsFormRow
           label="接口地址"
@@ -2067,7 +2165,14 @@ function ModelConfigurationCard({
             value={baseUrl}
             disabled={pending}
             placeholder="https://api.anthropic.com(留空=默认)"
-            onChange={(event) => setBaseUrl(event.target.value)}
+            onChange={(event) => {
+              const next = event.target.value;
+              setBaseUrl(next);
+              // [T-325] 手改地址 → 按新 (baseUrl, apiFormat) 重算预设高亮(匹配不到 = 自定义)。
+              setPresetId(
+                matchPresetByConfig(next, apiFormat)?.id ?? CUSTOM_PRESET_ID,
+              );
+            }}
             aria-label="接口地址"
           />
         </SettingsFormRow>
@@ -2078,7 +2183,14 @@ function ModelConfigurationCard({
         >
           <Select
             value={apiFormat}
-            onValueChange={(value) => setApiFormat(value as ApiFormat)}
+            onValueChange={(value) => {
+              const next = value as ApiFormat;
+              setApiFormat(next);
+              // [T-325] 改格式 → 重算预设高亮(匹配不到 = 自定义)。
+              setPresetId(
+                matchPresetByConfig(baseUrl, next)?.id ?? CUSTOM_PRESET_ID,
+              );
+            }}
           >
             <SelectTrigger
               id="model-api-format"
@@ -2452,6 +2564,16 @@ function MultimodalModelCard({
   const [apiFormat, setApiFormat] = React.useState<ApiFormat>(
     state.apiFormat ?? "anthropic",
   );
+  // [T-325] 仅备用对话卡(fallback,apiFormat 分派的文本 LLM)复用供应商预设 —— 与文本
+  // 模型卡同款目录。其它多模态卡按 provider 分派、字段语义不同,不挂预设(state 恒存
+  // 但仅 fallback 渲染,遵守 Hooks 规则)。
+  const isFallback = kind === "fallback";
+  const [presetId, setPresetId] = React.useState<string>(() =>
+    isFallback
+      ? matchPresetByConfig(state.baseUrl, state.apiFormat ?? "anthropic")?.id ??
+        CUSTOM_PRESET_ID
+      : CUSTOM_PRESET_ID,
+  );
   // Blank = keep the existing stored key (the read never returns the raw value).
   const [secret, setSecret] = React.useState<string>("");
   const { pending, run } = useSettingsMutation();
@@ -2462,8 +2584,23 @@ function MultimodalModelCard({
     setModelName(state.modelName);
     setBaseUrl(state.baseUrl);
     setApiFormat(state.apiFormat ?? "anthropic");
+    if (isFallback) {
+      setPresetId(
+        matchPresetByConfig(state.baseUrl, state.apiFormat ?? "anthropic")?.id ??
+          CUSTOM_PRESET_ID,
+      );
+    }
     setSecret("");
-  }, [state]);
+  }, [state, isFallback]);
+
+  // [T-325] 备用对话卡选中预设:填 provider/baseUrl/接口格式(custom 不填)。
+  const handleSelectPreset = React.useCallback((preset: ModelProviderPreset) => {
+    setPresetId(preset.id);
+    if (preset.id === CUSTOM_PRESET_ID) return;
+    setProvider(preset.id);
+    setBaseUrl(preset.baseUrl);
+    setApiFormat(preset.apiFormat);
+  }, []);
 
   // 多数档要 provider + model 齐全;搜索档(web.search)model 选填,只需 provider(serpapi 用
   // model 当 engine、留空默认 google;bocha/tavily 无模型概念)。
@@ -2554,6 +2691,15 @@ function MultimodalModelCard({
             provider / model / 接口地址 / 密钥(与文本模型同款配置;密钥存本地库)
           </span>
         </div>
+        {isFallback ? (
+          // [T-325] 备用对话卡复用供应商预设(与文本模型卡同款)。
+          <ProviderPresetRow
+            idPrefix={`multimodal-${kind}`}
+            presetId={presetId}
+            disabled={pending}
+            onSelectPreset={handleSelectPreset}
+          />
+        ) : null}
         <SettingsFormRow
           label="提供商"
           controlId={`multimodal-${kind}-provider`}
@@ -2583,12 +2729,21 @@ function MultimodalModelCard({
           <Input
             id={`multimodal-${kind}-model`}
             data-slot={`multimodal-${kind}-model-input`}
+            list={isFallback ? `multimodal-${kind}-model-suggestions` : undefined}
             value={modelName}
             disabled={pending}
             placeholder={meta.modelPlaceholder}
             onChange={(event) => setModelName(event.target.value)}
             aria-label={`${meta.title}名称`}
           />
+          {/* [T-325] 备用对话卡:候选随选中预设切换;custom / 无候选时为空。 */}
+          {isFallback ? (
+            <datalist id={`multimodal-${kind}-model-suggestions`}>
+              {presetModels(presetId).map((m) => (
+                <option key={m} value={m} />
+              ))}
+            </datalist>
+          ) : null}
         </SettingsFormRow>
         <SettingsFormRow
           label="接口地址"
@@ -2601,7 +2756,16 @@ function MultimodalModelCard({
             value={baseUrl}
             disabled={pending}
             placeholder={meta.baseUrlPlaceholder}
-            onChange={(event) => setBaseUrl(event.target.value)}
+            onChange={(event) => {
+              const next = event.target.value;
+              setBaseUrl(next);
+              // [T-325] 备用对话卡:手改地址 → 重算预设高亮(其它卡无预设,不需重算)。
+              if (isFallback) {
+                setPresetId(
+                  matchPresetByConfig(next, apiFormat)?.id ?? CUSTOM_PRESET_ID,
+                );
+              }
+            }}
             aria-label={`${meta.title}接口地址`}
           />
         </SettingsFormRow>
@@ -2614,7 +2778,14 @@ function MultimodalModelCard({
           >
             <Select
               value={apiFormat}
-              onValueChange={(value) => setApiFormat(value as ApiFormat)}
+              onValueChange={(value) => {
+                const next = value as ApiFormat;
+                setApiFormat(next);
+                // [T-325] 改格式 → 重算预设高亮(匹配不到 = 自定义)。
+                setPresetId(
+                  matchPresetByConfig(baseUrl, next)?.id ?? CUSTOM_PRESET_ID,
+                );
+              }}
             >
               <SelectTrigger
                 id={`multimodal-${kind}-api-format`}

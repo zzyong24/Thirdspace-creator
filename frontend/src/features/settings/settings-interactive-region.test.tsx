@@ -9,6 +9,7 @@
 
 import * as React from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockRouter = { refresh: vi.fn(), push: vi.fn(), replace: vi.fn() };
@@ -280,6 +281,184 @@ describe("Settings island wiring (needs-backend → op + refresh)", () => {
       }),
     );
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  // --- [T-325] 供应商预设目录(cc-switch 风格)-------------------------------
+
+  // 取模型输入 datalist 的候选(随选中/匹配的预设切换)。
+  function modelDatalistValues(doc: Document): string[] {
+    const dl = doc.querySelector(
+      "#model-name-suggestions",
+    ) as HTMLDataListElement | null;
+    if (!dl) return [];
+    return Array.from(dl.querySelectorAll("option")).map((o) => o.value);
+  }
+
+  it("[T-325] 默认(空 baseUrl + anthropic)回显 Anthropic 官方预设,模型候选=claude 家族", () => {
+    const doc = renderDialog();
+    const trigger = doc.querySelector(
+      '[data-slot="model-preset-trigger"]',
+    ) as HTMLElement;
+    expect(trigger).not.toBeNull();
+    // 关闭态即高亮匹配到的预设(SelectValue 显示 label)。
+    expect(trigger.textContent ?? "").toContain("Anthropic 官方");
+    expect(modelDatalistValues(doc)).toEqual([
+      "claude-opus-4-8",
+      "claude-sonnet-5",
+      "claude-haiku-4-5",
+    ]);
+  });
+
+  it("[T-325] 已保存配置按 baseUrl/apiFormat 回显匹配预设(DeepSeek),匹配不到显示自定义", () => {
+    const deepseekDoc = renderDialog({
+      ...VM,
+      model: {
+        ...VM.model,
+        baseUrl: "https://api.deepseek.com",
+        apiFormat: "openai_chat",
+      },
+    });
+    const trigger = deepseekDoc.querySelector(
+      '[data-slot="model-preset-trigger"]',
+    ) as HTMLElement;
+    expect(trigger.textContent ?? "").toContain("DeepSeek");
+    expect(modelDatalistValues(deepseekDoc)).toEqual([
+      "deepseek-chat",
+      "deepseek-reasoner",
+    ]);
+
+    cleanup();
+
+    const customDoc = renderDialog({
+      ...VM,
+      model: {
+        ...VM.model,
+        baseUrl: "https://relay.example.com/v1",
+        apiFormat: "openai_chat",
+      },
+    });
+    const customTrigger = customDoc.querySelector(
+      '[data-slot="model-preset-trigger"]',
+    ) as HTMLElement;
+    expect(customTrigger.textContent ?? "").toContain("自定义");
+    // 自定义 → 无候选(纯自由输入)。
+    expect(modelDatalistValues(customDoc)).toEqual([]);
+  });
+
+  it("[T-325] 手改接口地址 → 预设高亮与模型候选按 baseUrl 重算(匹配→切,乱填→自定义)", () => {
+    const doc = renderDialog();
+    const baseUrl = doc.querySelector(
+      '[data-slot="model-base-url-input"]',
+    ) as HTMLInputElement;
+    const trigger = doc.querySelector(
+      '[data-slot="model-preset-trigger"]',
+    ) as HTMLElement;
+
+    fireEvent.change(baseUrl, {
+      target: { value: "https://api.deepseek.com" },
+    });
+    // baseUrl 命中 deepseek(apiFormat 仍 anthropic → 其实不命中 openai_chat 的 deepseek)。
+    // deepseek 预设是 openai_chat,故此处 apiFormat=anthropic 时匹配不到 → 自定义。
+    expect(trigger.textContent ?? "").toContain("自定义");
+    expect(modelDatalistValues(doc)).toEqual([]);
+
+    // 换成 anthropic 家的中转端点(MiniMax,anthropic 格式)→ 命中 minimax。
+    fireEvent.change(baseUrl, {
+      target: { value: "https://api.minimaxi.com/anthropic" },
+    });
+    expect(trigger.textContent ?? "").toContain("MiniMax");
+    expect(modelDatalistValues(doc)).toEqual(["MiniMax-M2", "abab6.5s-chat"]);
+  });
+
+  it("[T-325] 选预设填 baseUrl/接口格式 + 切模型候选;仍可自由输入模型,保存带回填字段", async () => {
+    const user = userEvent.setup();
+    const doc = renderDialog();
+    const trigger = doc.querySelector(
+      '[data-slot="model-preset-trigger"]',
+    ) as HTMLElement;
+
+    // 打开预设下拉,选 DeepSeek。
+    await user.click(trigger);
+    const deepseekItem = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-slot="model-preset-item-deepseek"]',
+      );
+      if (!el) throw new Error("preset item not mounted yet");
+      return el as HTMLElement;
+    });
+    await user.click(deepseekItem);
+
+    const baseUrl = doc.querySelector(
+      '[data-slot="model-base-url-input"]',
+    ) as HTMLInputElement;
+    const provider = doc.querySelector(
+      '[data-slot="model-provider-input"]',
+    ) as HTMLInputElement;
+    // 预设一次性填 baseUrl / provider;接口格式 → openai_chat;模型候选切成 deepseek。
+    await waitFor(() =>
+      expect(baseUrl.value).toBe("https://api.deepseek.com"),
+    );
+    expect(provider.value).toBe("deepseek");
+    expect(modelDatalistValues(doc)).toEqual([
+      "deepseek-chat",
+      "deepseek-reasoner",
+    ]);
+
+    // 模型仍可自由输入(不锁死候选)。
+    const modelName = doc.querySelector(
+      '[data-slot="model-name-input"]',
+    ) as HTMLInputElement;
+    fireEvent.change(modelName, { target: { value: "deepseek-custom-xyz" } });
+    const secret = doc.querySelector(
+      '[data-slot="model-secret-input"]',
+    ) as HTMLInputElement;
+    fireEvent.change(secret, { target: { value: "sk-ds" } });
+    fireEvent.click(
+      doc.querySelector('[data-slot="model-save"]') as HTMLButtonElement,
+    );
+
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1));
+    expect(mockClient.putModel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: { capability: "default" },
+        body: expect.objectContaining({
+          provider: "deepseek",
+          modelName: "deepseek-custom-xyz",
+          baseUrl: "https://api.deepseek.com",
+          apiFormat: "openai_chat",
+          secret: "sk-ds",
+        }),
+      }),
+    );
+  });
+
+  it("[T-325] 备用对话卡(chat.fallback)复用预设:回显匹配 + 候选切换", () => {
+    const doc = renderDialog({
+      ...VM,
+      multimodalModels: {
+        ...VM.multimodalModels,
+        fallback: {
+          ...VM.multimodalModels.fallback,
+          baseUrl: "https://api.deepseek.com",
+          apiFormat: "openai_chat" as const,
+        },
+      },
+    });
+    const trigger = doc.querySelector(
+      '[data-slot="multimodal-fallback-preset-trigger"]',
+    ) as HTMLElement;
+    expect(trigger).not.toBeNull();
+    expect(trigger.textContent ?? "").toContain("DeepSeek");
+    const dl = doc.querySelector(
+      "#multimodal-fallback-model-suggestions",
+    ) as HTMLDataListElement;
+    expect(Array.from(dl.querySelectorAll("option")).map((o) => o.value)).toEqual(
+      ["deepseek-chat", "deepseek-reasoner"],
+    );
+    // 预设行只挂在 fallback 卡,其它文本模态卡(如文生图)不渲染。
+    expect(
+      doc.querySelector('[data-slot="multimodal-image-preset-trigger"]'),
+    ).toBeNull();
   });
 
   // --- Multimodal model config (SPEC 2026-07-01 M3) -------------------------
