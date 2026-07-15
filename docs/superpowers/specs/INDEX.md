@@ -97,6 +97,7 @@
 
 | 文件 | 摘要 | 状态 |
 |---|---|---|
+| [2026-07-15-account-full-isolation-spec.md](2026-07-15-account-full-isolation-spec.md) | 账号全域隔离:切号=切整个工作区,strict 门统一 + NOT NULL 收口 + 清库重来(T-332) | 📝 待 spec-review gate |
 | [2026-07-05-multi-account-persona-design.md](2026-07-05-multi-account-persona-design.md) | 多抖音号=多独立人设的绑定/切换/管理(T-136) | 📝 待用户审(先出 SPEC) |
 | [2026-07-05-desktop-app-architecture-overview.md](2026-07-05-desktop-app-architecture-overview.md) | 桌面化(Tauri)+ 资产保护(prompt/key 防泄漏)架构总纲(T-147) | 架构总纲,拆 P1–P6 |
 
