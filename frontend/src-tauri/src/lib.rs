@@ -14,6 +14,8 @@ use std::time::Duration;
 
 // [T-259] 桌面日志系统:sidecar stdout/stderr tee 落盘 + 脱敏 + 轮转(见 logging.rs)。
 mod logging;
+// [T-332 S5] 「重置工作区」启动期归档:检测 reset-pending 标记 → db/.auth 归档改名 → 清标记。
+mod workspace_reset;
 
 use base64::Engine as _;
 use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
@@ -314,7 +316,32 @@ pub fn run() {
                 .app_data_dir()
                 .map(|d| d.join("db"))
                 .unwrap_or_else(|_| std::path::PathBuf::from(".creatoros/db"));
+            // appData 根目录(db 的父级;.auth / logs / .master-key / 标记文件都在这层)。
+            let app_data_dir = db_dir
+                .parent()
+                .map(|p| p.to_path_buf())
+                .unwrap_or_else(|| std::path::PathBuf::from(".creatoros"));
+
+            // [T-332 S5] 「重置工作区」归档 —— **必须在 spawn sidecar 之前、建 db 目录之前**:
+            //   此刻 PGlite 库无任何进程持有,rename 整目录才安全(设置页 route 只落标记,
+            //   活库改名的风险由这里的启动时序消解)。检测 reset-pending.json → 把 db/ 与
+            //   .auth/ 改名成 *.archived-<ts>(不物理删除,可手动改回恢复)→ 清标记。
+            //   摘要先存着,等 logger 起来后再 tee 进 sidecar.log(打包态可排障)。
+            let reset_summary = workspace_reset::apply_pending_workspace_reset(&app_data_dir)
+                .map(|o| {
+                    // 失败项加显式前缀,日志里一眼可辨(标记保留,下次启动会重试)。
+                    if o.ok {
+                        o.summary
+                    } else {
+                        format!("⚠️ {}", o.summary)
+                    }
+                });
+            if let Some(s) = &reset_summary {
+                eprintln!("[shell] {s}");
+            }
+
             // 首次启动 appDataDir 不存在 → PGlite mkdir(非递归)会 ENOENT。这里先建全父目录。
+            // (刚归档过时 db/ 已改名走人,这里重建出全新空目录 = 干净首启,seed 会跑。)
             if let Err(e) = std::fs::create_dir_all(&db_dir) {
                 eprintln!("[shell] 建 DB 目录失败 {}: {e}", db_dir.display());
             }
@@ -346,10 +373,7 @@ pub fn run() {
             //   key / 激活码的 AES-256-GCM 加解密。keychain 优先(签名 app 稳定+安全),**文件兜底**
             //   (未签名下 keychain 不持久 → <appDataDir>/.master-key,稳定;避免每次启动重生成 key
             //   致数据解不开、每次重激活)。取不到(连文件都写不了)→ 不注入,sidecar 降级(弱安全不崩)。
-            let app_data_dir = db_dir
-                .parent()
-                .map(|p| p.to_path_buf())
-                .unwrap_or_else(|| std::path::PathBuf::from(".creatoros"));
+            //   (app_data_dir 已在上方 [T-332] 归档步骤前算出,此处直接复用。)
 
             // [T-259] 桌面日志系统:初始化落盘日志(建 logs/ + 轮转上次会话 + 开新 sidecar.log)。
             //   sidecar 的 stdout/stderr 每行既 eprintln 给 app stderr(dev/终端可见),也 tee 到
@@ -359,6 +383,12 @@ pub fn run() {
             let logs_dir = app_data_dir.join("logs");
             let logger = logging::init_sidecar_logger(&logs_dir);
             let log_dir_str = logs_dir.to_string_lossy().to_string();
+
+            // [T-332 S5] 归档摘要 tee 进 sidecar.log(归档发生在 logger 起来之前,补记一行,
+            //   打包态用户报「重置后数据没了/还在」时可凭日志核实到底归没归档)。
+            if let (Some(s), Some(l)) = (&reset_summary, &logger) {
+                l.log("shell", s);
+            }
 
             let master_key = resolve_or_create_master_key(&app_data_dir);
 

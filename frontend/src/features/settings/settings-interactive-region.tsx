@@ -53,6 +53,8 @@ import {
 import { ProgressBar } from "@/components/project/progress-bar";
 import { SectionCard } from "@/components/project/section-card";
 import { WebSessionVaultCard } from "./web-session-vault-card";
+// [T-332 S5] 重置工作区危险区卡(存储页签底部;桌面端专属)。
+import { ResetWorkspaceCard } from "./reset-workspace-card";
 import { TagChip } from "@/components/content/tag-chip";
 import {
   MODEL_PROVIDER_PRESETS,
@@ -462,7 +464,11 @@ export function SettingsDialog({
               <SkillsSection skills={skills} />
             </SettingsPanel>
             <SettingsPanel tabId="storage" active={tab}>
-              <StorageUsageCard storage={viewModel.storage} />
+              <div className="flex flex-col gap-card-gap">
+                <StorageUsageCard storage={viewModel.storage} />
+                {/* [T-332 S5] 危险区:重置工作区(二次确认 + 落 reset-pending 标记,重启归档生效)。 */}
+                <ResetWorkspaceCard />
+              </div>
             </SettingsPanel>
           </div>
         </div>
