@@ -23,6 +23,18 @@
     ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash orchestrator/process/harness/risk-hook.sh",
+            "$comment": "Advisory risk classifier (OpenHands security_risk style) — logs HIGH-risk (contract/schema/migration/control) edits to harness/risk.log so a human reviews them. Set HARNESS_RISK_ADVISORY=0 to BLOCK instead of warn."
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",

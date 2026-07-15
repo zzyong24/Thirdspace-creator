@@ -1,0 +1,27 @@
+{
+  "_meta": "模板 — 复制为 knowledge.config.json 并按项目改。knowledge-coverage / docs-health / feature-sync / knowledge-drift 四脚本共用本配置;配置里的相对路径一律相对本文件所在目录解析。没有本文件 = 项目未启用知识层,四脚本全部优雅跳过 exit 0。",
+
+  "docs_dir": "docs",
+  "_docs_dir": "docs-health.mjs 的检查范围根目录(archive/ 子树跳过不查)。",
+
+  "features_dir": "docs/features",
+  "_features_dir": "模块知识目录:每个子目录 = 一个模块(README.md 必有)。knowledge-coverage 按此遍历;feature-sync 把 CONTRACTS.generated.md 生成到 <features_dir>/<dir>/ 下。",
+
+  "journeys_dir": "docs/journeys",
+  "_journeys_dir": "跨模块业务旅程(FLOW-xxx)所在目录。",
+
+  "data_flows_dir": "docs/data-flows",
+  "_data_flows_dir": "跨模块数据工作流(DFLOW-xxx)所在目录。",
+
+  "contract_globs": ["contract/src/**/*.ts"],
+  "_contract_globs": "全局默认的 contract 源码 glob;feature_map 里某 feature 不写自己的 contract_globs 时用这个。支持 ** / * / ?,相对本文件目录。",
+
+  "feature_map": {
+    "_doc": "键 = FEAT id;每个 feature 声明自己的 contract 输入(feature-sync 只抽这些文件的 export const 声明)。dir 缺省时用 FEAT id 作目录名。",
+    "FEAT-001": {
+      "title": "示例模块(发布)",
+      "dir": "publishing",
+      "contract_globs": ["contract/src/operations/publishing.ts", "contract/src/resources/publishing.ts"]
+    }
+  }
+}

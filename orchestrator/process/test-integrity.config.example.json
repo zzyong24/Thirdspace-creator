@@ -1,0 +1,33 @@
+{
+  "_meta": "TEMPLATE — copy to test-integrity.config.json and tune for THIS project's stack. Drives test-integrity.mjs (the anti-tamper gate). ALL keys are optional; omitting one keeps the built-in JS/TS default. The gate is comment/string-aware: assertion/test-case/skip tokens are counted in CODE only (a token inside a string literal is ignored), and suppression directives are counted in COMMENTS only — so listing a pattern like \"@ts-ignore\" as a string here or in docs is NOT mistaken for a real suppression.",
+
+  "_base_ref": "Ref to diff against. If omitted: merge-base(HEAD, work_branch) (work_branch from reconcile.config.json), then HEAD~1, then HEAD. A degraded base (HEAD~1/HEAD) only sees the last commit, so the autonomous loop (verify runs AFTER the per-task commit) should set this to the integration branch, e.g. \"origin/main\", so the whole task range is in view.",
+  "base_ref": null,
+
+  "_excludeGlobs": "Paths to SKIP entirely (substring, case-insensitive). The gate protects a PROJECT's tests, not the orchestrator's own tooling or its prose docs (both legitimately contain pattern strings / examples). Add build dirs or generated code here.",
+  "excludeGlobs": ["orchestrator/process/", "/docs/", "docs/", "node_modules/", ".md"],
+
+  "_testGlobs": "A changed file counts as a TEST when its repo-relative path contains ANY of these substrings (case-insensitive). Python: [\"test_\", \"_test.py\", \"/tests/\"]. Go: [\"_test.go\"].",
+  "testGlobs": [".test.", ".spec.", "_test.", "test_", "/tests/", "/__tests__/", "tests/"],
+
+  "_assertionKeywords": "Call-site shapes that count as ONE assertion each (anchored to a '(' or '.' to avoid identifier inflation like 'shouldRetry' matching 'should'). A DROP in total across changed test files ⇒ ERROR. pytest: [\"assert \"]. Go: [\"require.\", \"assert.\", \".Errorf(\"]. JUnit: [\"assertThat\", \"assertEquals(\"].",
+  "assertionKeywords": ["assert(", "assert.", "expect(", ".should.", "should(", "assertEqual", "assertTrue", "assertRaises", "assertThat", "require.Equal", "require.NoError", "t.is(", "t.deepEqual(", "XCTAssert", "EXPECT_", "ASSERT_"],
+
+  "_testCaseKeywords": "Call-site shapes that count as ONE test case each. DROP ⇒ ERROR. pytest: [\"def test_\"]. Go: [\"func Test\"]. JUnit: [\"@Test\"].",
+  "testCaseKeywords": ["it(", "it.each", "test(", "test.each", "describe(", "def test_", "func Test", "@Test", "Scenario:"],
+
+  "_skipPatterns": "Disable/skip/only markers (counted in CODE). INCREASE in total across changed test files ⇒ ERROR (silently disabling judgment). pytest: [\"@pytest.mark.skip\", \"@pytest.mark.xfail\"]. Go: [\"t.Skip(\"].",
+  "skipPatterns": [".skip(", ".skip ", ".only(", ".only ", "xit(", "xdescribe(", "fit(", "fdescribe(", "test.skip", "it.skip", "describe.skip", "test.only", "it.only", "describe.only", "@pytest.mark.skip", "@pytest.mark.xfail", "@unittest.skip", "t.Skip(", "testing.Short()"],
+
+  "_ignorePatterns": "Type/lint suppressions that hide failing checks (counted in COMMENTS only). INCREASE ⇒ ERROR — checked in test AND non-test files. Python: [\"type: ignore\", \"noqa\"]. Go: [\"nolint\"].",
+  "ignorePatterns": ["@ts-ignore", "@ts-expect-error", "eslint-disable", "eslint-disable-next-line", "nolint", "nosec", "type: ignore", "noqa", "istanbul ignore", "c8 ignore", "v8 ignore", "prettier-ignore"],
+
+  "_lineComments": "Line-comment lead-ins used to separate code from comments. '#' counts as a comment only at a token boundary (so JS private fields like this.#x are not treated as comments). SQL/Lua projects can add \"--\" (NOT a default — it collides with JS i--).",
+  "lineComments": ["//", "#"],
+
+  "_coverageConfigPath": "Repo-relative path to the file that holds coverage thresholds. A LOWERED numeric threshold ⇒ ERROR; a deleted file ⇒ ERROR. Examples: \"vitest.config.ts\", \"jest.config.js\", \"pyproject.toml\" (tool.coverage fail_under), \".nycrc\", \".coveragerc\". Leave null to skip.",
+  "coverageConfigPath": null,
+
+  "_coverageThresholdKeys": "Threshold field names to track (matched as `<key> : | = <number>`, key optionally quoted). Kept SPECIFIC (not generic words like 'min'/'global') so prose such as '# minimum node version 20' is not mistaken for a threshold. pytest-cov uses \"fail_under\"; nyc/jest/vitest use statements/branches/functions/lines.",
+  "coverageThresholdKeys": ["statements", "branches", "functions", "lines", "fail_under"]
+}

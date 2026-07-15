@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "reuse-candidate/v1",
+  "title": "Reuse Candidate (④→② seam, single-direction fire-and-forget)",
+  "description": "④进化引擎 emit、②复用引擎消费的唯一接缝契约。append-only 写入 <control_root>/REUSE_OUTBOX.jsonl,每行一条。破坏性变更才 bump $id 版本。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "kind", "description", "evidence", "provenance", "suggested_scope"],
+  "properties": {
+    "schema": { "const": "reuse-candidate/v1" },
+    "id": { "type": "string", "description": "runId 前缀+seq,幂等键(防跨项目碰撞)" },
+    "kind": { "enum": ["asset", "pattern", "lesson"] },
+    "description": { "type": "string", "description": "给谁/哪个 stage/解决什么(②做检索的 key)" },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command"],
+      "properties": {
+        "command": { "type": "string", "description": "可重跑的验证命令" },
+        "test": { "type": "string", "description": "测试路径(可选)" },
+        "commit": { "type": "string", "description": "落地 commit hash(可选)" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "project", "stage", "originRef"],
+      "properties": {
+        "runId": { "type": "string" },
+        "project": { "type": "string" },
+        "stage": { "type": "string" },
+        "originRef": { "type": "string", "description": "来源 DEC/PAT/LED/commit" }
+      }
+    },
+    "suggested_scope": { "enum": ["gen", "prj"] }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://creatoros/orchestrator/manifest.schema.json",
+  "$id": "https://project/orchestrator/manifest.schema.json",
   "title": "Product-to-Code Orchestrator — Artifact Manifest",
   "description": "Structural + enum contract for ARTIFACT_MANIFEST.yaml. Convert YAML to JSON and validate with any draft-07 validator (e.g. ajv), or rely on orchestrator/process/reconcile.mjs which performs equivalent checks dependency-free.",
   "type": "object",

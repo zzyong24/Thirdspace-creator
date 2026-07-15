@@ -1,0 +1,16 @@
+{
+  "LED-001": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-07-15T18:26:37.060Z",
+    "deterrence": false
+  },
+  "LED-003": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-07-15T18:26:37.060Z",
+    "deterrence": false
+  }
+}

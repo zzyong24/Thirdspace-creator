@@ -1,0 +1,30 @@
+{
+  "_doc": "TEMPLATE — 物理架构边界规则(SYSTEM_ARCHITECTURE.md 的可执行版)。cp 成 boundaries.config.json 并按你项目的房间/依赖方向改。boundary-scan.mjs 读它扫违规。ratchet:新违规才 fail,已知违规进 boundary-baseline.json 随重构消减。下面 R1/R2/R3 是「前后端分离 + AI SDK 隔离 + 模块间只走 service port」的通用范例,按需增删。",
+  "ignoreDirs": ["node_modules", ".next", ".git", ".codegraph", "dist", "out", "coverage", ".worktrees", ".claude", ".codex", "__artifacts__"],
+  "rules": [
+    {
+      "id": "R1-no-backend-in-frontend",
+      "desc": "后端业务模块不准放在 frontend(前后端必须分离)。",
+      "type": "forbidden-paths",
+      "dirs": ["frontend/src/server/modules"],
+      "ext": [".ts", ".tsx"]
+    },
+    {
+      "id": "R2-no-agent-sdk-in-frontend-pages",
+      "desc": "Agent SDK / AI SDK 只准在 worker / ai-runtime,不准在 frontend 页面或 server 杂处。",
+      "type": "forbidden-import",
+      "scopeDirs": ["frontend/src/app", "frontend/src/features", "frontend/src/components"],
+      "specifiers": ["@anthropic-ai/claude-agent-sdk", "ai", "@ai-sdk/"],
+      "ext": [".ts", ".tsx"]
+    },
+    {
+      "id": "R3-no-cross-module-repository-import",
+      "desc": "模块之间不准直接 import 对方的 repository(只能走 service port)。",
+      "type": "forbidden-import",
+      "scopeDirs": ["frontend/src/server/modules", "backend/src/modules"],
+      "specifiers": [".repository", "/repository"],
+      "ext": [".ts"],
+      "allowSameModule": true
+    }
+  ]
+}

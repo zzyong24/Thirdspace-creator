@@ -57,3 +57,32 @@ and the page→entity table in `docs/CreatorOS-storage-and-business-logic.md` §
 - Every page and API traces back to a product requirement or explicit decision.
 - Every release-critical journey has test or browser-validation evidence.
 - Any unimplemented confirmed requirement is listed as a gap, deferred work, or accepted risk.
+
+## Canonical block(机器可读真值 —— orphan-scan 只读此块;上方人读表与叙事仅作导航)
+
+> 2026-07-15 引擎升级(v3.6.3 --update)时迁入 canonical 格式。**PLANNED 在此的语义**:前端链
+> (FLOW→ENT→PAGE)成立;契约(76 操作)与后端测试(188 文件)已落地但**尚未回挂到本矩阵**
+> (API/Test 列 NONE 是登记欠账,不是实现欠账,见 GAP-002/003 与 BACKLOG 补账任务)。
+> SHIP 前每行必须重挂并翻成 OK/DEFERRED/RISK(gate 14 检查)。
+
+```traceability
+| Product | Flow | Entity | Page | API | Test | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| NONE | FLOW-001 | ENT-003, ENT-009, ENT-037, ENT-040, ENT-024 | PAGE-001 | NONE | NONE | PLANNED |
+| NONE | FLOW-002, FLOW-003, FLOW-004 | ENT-003, ENT-005, ENT-007, ENT-008 | PAGE-002 | NONE | NONE | PLANNED |
+| NONE | FLOW-005 | ENT-003, ENT-005, ENT-006, ENT-007 | PAGE-003 | NONE | NONE | PLANNED |
+| NONE | FLOW-002, FLOW-005 | ENT-003, ENT-005, ENT-012, ENT-022, ENT-010, ENT-011 | PAGE-004 | NONE | NONE | PLANNED |
+| NONE | FLOW-006 | ENT-012, ENT-019, ENT-017, ENT-021 | PAGE-005 | NONE | NONE | PLANNED |
+| NONE | FLOW-007 | ENT-012, ENT-015, ENT-017, ENT-007 | PAGE-006 | NONE | NONE | PLANNED |
+| NONE | FLOW-008, FLOW-009, FLOW-010 | ENT-012, ENT-013, ENT-016, ENT-048 | PAGE-007 | NONE | NONE | PLANNED |
+| NONE | FLOW-011, FLOW-012 | ENT-033, ENT-034, ENT-022, ENT-036 | PAGE-008 | NONE | NONE | PLANNED |
+| NONE | FLOW-013, FLOW-014 | ENT-037, ENT-038, ENT-022 | PAGE-009 | NONE | NONE | PLANNED |
+| NONE | FLOW-015, FLOW-016 | ENT-039, ENT-040, ENT-041, ENT-043, ENT-024 | PAGE-010 | NONE | NONE | PLANNED |
+| NONE | FLOW-006 | ENT-019, ENT-020, ENT-021, ENT-026 | PAGE-011 | NONE | NONE | PLANNED |
+| NONE | FLOW-021 | ENT-022, ENT-023, ENT-029, ENT-031, ENT-032 | PAGE-012 | NONE | NONE | PLANNED |
+| NONE | FLOW-013, FLOW-020 | ENT-037, ENT-007, ENT-003, ENT-040 | PAGE-013 | NONE | NONE | PLANNED |
+| NONE | FLOW-015, FLOW-016 | ENT-024, ENT-025, ENT-043 | PAGE-014 | NONE | NONE | PLANNED |
+| NONE | FLOW-017 | ENT-058, ENT-057 | PAGE-015 | NONE | NONE | PLANNED |
+| NONE | FLOW-018 | ENT-046, ENT-047, ENT-048 | PAGE-016 | NONE | NONE | PLANNED |
+| NONE | FLOW-021 | ENT-001, ENT-002, ENT-051, ENT-052, ENT-023 | PAGE-017 | NONE | NONE | PLANNED |
+```

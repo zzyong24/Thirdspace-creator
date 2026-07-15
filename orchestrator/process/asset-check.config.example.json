@@ -1,0 +1,10 @@
+{
+  "assets_dir": "decisions/assets",
+  "patterns_dir": "decisions/patterns",
+  "index_file": "ASSET_INDEX.md",
+  "required_module_fields": ["id","kind","title","problem_tag","when_to_use","when_not_to_use","keywords","status","license","files","example"],
+  "required_provenance_fields_for_BC": ["source","origin_commit","content_hash"],
+  "valid_status": ["candidate","active","deprecated","retracted","quarantined"],
+  "copyleft_block_spdx": ["GPL-2.0","GPL-3.0","AGPL-3.0","LGPL-3.0","GPL-2.0-only","GPL-3.0-only","AGPL-3.0-only"],
+  "license_unknown_tokens": ["待核","UNKNOWN","TBD",""]
+}

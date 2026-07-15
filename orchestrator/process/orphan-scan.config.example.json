@@ -1,0 +1,21 @@
+{
+  "_meta": "TEMPLATE — copy to orphan-scan.config.json and tune per project. All keys are OPTIONAL; defaults match orphan-scan.mjs and suit the JS/TS reference stack. STACK-AGNOSTIC: classification prefers the registry Type column and falls back to prefix, so a project using PG instead of PAGE works without code changes — set realizing_types/test_types to your registry's Type vocabulary, or add e.g. \"PYTEST\" to test_prefixes.",
+  "control_dir": ".",
+  "_control_dir": "Dir holding ID_REGISTRY.md + TRACEABILITY_MATRIX.md, resolved RELATIVE TO THE ORCHESTRATOR DIR (same place reconcile.mjs reads control artifacts). \".\" = the orchestrator dir itself; use \"../control\" if they live in a sibling control/ folder (as the self-test does). The --control-dir CLI flag, for ad-hoc runs, resolves relative to your CWD instead.",
+  "upstream_prefixes": ["FR", "NFR", "FLOW", "DEC"],
+  "_rule_prefixes": "Requirement-like rules (business rules). Rows naming these are checked for realizing+test like requirements, so an unrealized/untested rule with Status OK cannot pass invisibly.",
+  "rule_prefixes": ["BR"],
+  "downstream_prefixes": ["PAGE", "PG", "COMP", "API", "TEST"],
+  "realizing_prefixes": ["API", "PAGE", "PG", "COMP"],
+  "test_prefixes": ["TEST", "TC", "INT"],
+  "_realizing_types": "PREFERRED classifier: registry Type-column values that count as a realizing op (robust to prefix vocab like PG vs PAGE).",
+  "realizing_types": ["page", "api", "component", "comp", "screen", "endpoint", "route", "service"],
+  "_test_types": "PREFERRED classifier: registry Type-column values that count as a test.",
+  "test_types": ["test"],
+  "_justification_prefixes": "A DEFERRED/RISK row with a broken chain must link one of these (in the row, or via the requirement's Source IDs) — otherwise the deferral is a SILENT DROP and fails the gate.",
+  "justification_prefixes": ["DEC", "RISK"],
+  "confirmed_statuses": ["OK", "DEFERRED", "RISK", "BROKEN"],
+  "release_critical_statuses": ["OK", "BROKEN"],
+  "id_registry": "ID_REGISTRY.md",
+  "traceability_matrix": "TRACEABILITY_MATRIX.md"
+}

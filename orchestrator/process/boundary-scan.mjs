@@ -1,30 +1,43 @@
 #!/usr/bin/env node
-// boundary-scan.mjs — 门卫脚本 (LED-002). 物理架构边界守卫,ratchet(棘轮)模式。
+// boundary-scan.mjs — 物理架构边界门卫,ratchet(棘轮)模式。
 //
-// 读 boundaries.config.json 的规则,扫描违规,和 boundary-baseline.json 对比:
-//   • 新违规(不在 baseline) → exit 1,拦住结构回归(脚手架犯的"低级错误"从此挡住)
+// 逻辑架构(spec→contract→design→build)管"做什么";物理架构管"代码住哪、谁 import 谁、谁写库"。
+// 本门卫是 SYSTEM_ARCHITECTURE.md 的可执行版:读 boundaries.config.json 的规则,扫违规,和
+// boundary-baseline.json 对比 ——
+//   • 新违规(不在 baseline) → exit 1,拦住结构回归(脚手架/AI 犯的"低级错误"从此挡住)
 //   • 已修(在 baseline 但已消失) → 提示 ratchet down(从 baseline 移除)
 //   • 当前违规 ⊆ baseline → exit 0,放行,报剩余数(随重构逐条清零)
 //
-// 用法:
-//   node boundary-scan.mjs                 # 检查(CI / reconcile 用)
-//   node boundary-scan.mjs --quiet         # 只在失败时输出
-//   node boundary-scan.mjs --update-baseline# 把当前违规写成新基线(重构消减后调用)
+// 项目无 boundaries.config.json 时(S 类 / 尚未启用物理边界)→ 友好跳过,exit 0(reconcile 里可安全常挂)。
 //
-// 零依赖(纯 node:fs)。
+// 用法(vendored 到 <project>/orchestrator/process/ 后):
+//   node orchestrator/process/boundary-scan.mjs                  # 检查(CI / reconcile 用)
+//   node orchestrator/process/boundary-scan.mjs --quiet          # 只在失败时输出
+//   node orchestrator/process/boundary-scan.mjs --update-baseline# 把当前违规写成新基线(重构消减后调用)
+//
+// 零依赖(纯 node:fs)。规则模型 forbidden-paths / forbidden-import 借鉴 dependency-cruiser / Nx。
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO = path.resolve(HERE, "..", "..");
+const REPO = path.resolve(HERE, "..", ".."); // orchestrator/process/ → 项目根
 const CFG = path.join(HERE, "boundaries.config.json");
 const BASELINE = path.join(HERE, "boundary-baseline.json");
 
 const args = new Set(process.argv.slice(2));
 const QUIET = args.has("--quiet");
 const UPDATE = args.has("--update-baseline");
+
+// 优雅缺失:没配置 = 该项目没启用物理边界门(S 类或尚未 setup)→ 跳过,不当失败。
+if (!fs.existsSync(CFG)) {
+  if (!QUIET)
+    console.log(
+      "· boundary-scan:未找到 boundaries.config.json — 物理架构门未启用(S 类或尚未配置),跳过。\n  启用:cp boundaries.config.example.json boundaries.config.json 并按 SYSTEM_ARCHITECTURE.md 填规则。",
+    );
+  process.exit(0);
+}
 
 const cfg = JSON.parse(fs.readFileSync(CFG, "utf8"));
 const IGNORE = new Set(cfg.ignoreDirs ?? []);
@@ -74,11 +87,10 @@ function moduleOf(p) {
   return m ? m[1] : null;
 }
 
-// specifier 匹配 —— **不用裸 includes**(会把 "ai" 误伤成 "@/types/domain"、"asset-detail"、
-// "@/components/ai/*" 等含子串的本地路径,门卫沦为噪音)。分三态:
+// specifier 匹配 —— **不用裸 includes**(会把 "ai" 误伤成含子串的本地路径,门卫沦为噪音)。分三态:
 //   • 以 "/" 结尾 = 包 scope 前缀规则(如 "@ai-sdk/") → startsWith
-//   • 以 "." 或 "/" 开头 = 路径后缀规则(如 ".repository"/"/repository",R3 用) → endsWith
-//   • 否则 = 精确包名(如 "ai"/"@anthropic-ai/claude-agent-sdk") → 精确相等或其子路径 pkg/xxx
+//   • 以 "." 或 "/" 开头 = 路径后缀规则(如 ".repository"/"/repository") → endsWith
+//   • 否则 = 精确包名(如 "ai") → 精确相等或其子路径 pkg/xxx
 function specMatches(spec, patterns) {
   for (const s of patterns) {
     if (s.endsWith("/")) {

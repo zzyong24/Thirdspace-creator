@@ -1,0 +1,29 @@
+{
+  "_meta": {
+    "purpose": "TEMPLATE — copy to modules.config.json and fill for THIS project. Drives progress.mjs.",
+    "LESSON": "Define each task's done_signals against the layer the APP ACTUALLY USES. Verify where real persistence/UI/data live BEFORE writing signals — a wrong path makes the queue lie and agents build dead code (happened 2026-06-22). Steps with NO done_signals are human/evaluator-set via `progress.mjs done`.",
+    "task_types": "repo (persist+invariants) · data-source (ingest/AI/derive/upload) · flow (cross-module wiring) · frontend (wire UI) · e2e (round-trip+visual). A module instantiates only the applicable subset, in dependency order.",
+    "blast_radius": "OPTIONAL per-module knob, \"high\" | \"normal\" (default normal). \"high\" = a defect here is expensive/hard to undo (auth, payments, data-ownership, schema/migrations, cross-module wiring). The harness requires a MAJORITY of >=2 independent heterogeneous reviewers to pass a high-blast module — the two-pass agreement alone is not enough. Run-level override: HARNESS_HIGH_BLAST=\"id1,id2\".",
+    "done_signals": "Per step, an array of repo-relative paths checked on work_branch (git). If ANY exists → that step is `done`. Point these at files the app truly imports/uses, not a parallel/unused layer.",
+    "verify_commands": "REQUIRED for the harness: per-step shell commands verify-task.sh runs (fail-closed — a step with no command configured is an explicit ERROR, never a guessed default). Top-level = global; modules.<id>.verify_commands.<step> overrides per module. Example below."
+  },
+  "verify_commands": {
+    "repo": "cd backend && pnpm typecheck && pnpm test",
+    "frontend": "cd frontend && pnpm verify",
+    "e2e": "cd frontend && pnpm verify && pnpm test:visual"
+  },
+  "modules": {
+    "example-entity": {
+      "archetype": ["user-authored", "orchestration"],
+      "blast_radius": "normal",
+      "tasks": ["repo", "frontend", "e2e"],
+      "data_source": "how real data enters this module (forms / ingest / AI / derived)",
+      "flows": "what triggers it and what it triggers across modules",
+      "oss": ["owner/repo — what pattern to borrow"],
+      "done_signals": {
+        "repo": ["<path the APP uses, e.g. src/server/modules/example/example.repository.ts>"],
+        "frontend": ["<e.g. src/server/modules/example/example.repo.test.ts>"]
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "_meta": "TEMPLATE — copy to reconcile.config.json and fill per project.",
+  "work_branch": "<the branch where implementation lives, e.g. main or feat/x>",
+  "control_root": "orchestrator",
+  "_control_root_note": "Repo-relative dir holding the control artifacts (manifest, logs, registry). Default layout is orchestrator/ (SKILL.md Startup 2); omit or keep as-is unless the project uses a custom control dir.",
+  "probes": [
+    { "stage": "00-intake", "path": "PROJECT_CONTEXT.md" },
+    { "stage": "00-intake", "path": "orchestrator/DEFAULT_ASSUMPTIONS.md" },
+    { "stage": "01-project-kickoff", "path": "AGENTS.md" },
+    { "stage": "02-product-brainstorming", "path": "docs/FUNCTION_OUTLINE.md" },
+    { "stage": "03-product-spec", "path": "docs/PRODUCT_SPEC.md" },
+    { "stage": "06-ia-spec", "path": "docs/IA_SPEC.md" },
+    { "stage": "13-backend-spec", "path": "docs/BACKEND_SPEC.md" },
+    { "stage": "17-integration-release", "path": "docs/RELEASE_REVIEW.md" }
+  ],
+  "_probes_note": "path 为仓库相对路径,必须在该 stage 离开 not-started 后存在。示例用 docs/ 布局 — 按项目真实产物路径改;模块扇出阶段若产物落在 <module>/ 子目录,完成时把对应 probe path 改成真实模块路径。",
+  "calibration_mode": true,
+  "_calibration_note": "默认 ON:攒够真实 run 前,所有基于阈值的自动动作(stale 剪枝/quarantine/reuse emit 阈值)只 print '[calibration] would …' 不 act。攒够后人工 flip false + 回填阈值 + 留痕。",
+  "stale_age_days": 90,
+  "_stale_note": "未校准·占位:active rule 超此天数从未 fire 且非 deterrence → never-fired WARN(候选剪枝提示)。",
+  "quarantine_threshold": 3,
+  "_quarantine_note": "占位·未校准:lesson 误报 ≥ 此值 → 提议 quarantine(calibration ON 时只 print would)。",
+  "lessons": [
+    {
+      "led": "LED-001",
+      "what": ".env.local 含密钥/密码,绝不可进 git",
+      "check": "! git ls-files --error-unmatch frontend/.env.local 2>/dev/null",
+      "onFail": ".env.local 被 git 跟踪 — 立即 git rm --cached 并确认 .gitignore",
+      "deterrence": true,
+      "antiCheck": { "setup": "touch frontend/.env.local && git add -f frontend/.env.local", "teardown": "git rm --cached frontend/.env.local >/dev/null 2>&1; rm -f frontend/.env.local" }
+    },
+    {
+      "led": "LED-002",
+      "what": "假外链/示例占位域名当真链渲染(如 docs.example.com 被渲染成「查看完整文档」可点击真链),上线即死链;裸禁 example.com 会误杀脱敏邮箱/占位头像,故收窄为「代码文件里的 *.example.com,排除 avatars.example.com 与 @example.com」",
+      "check": "test -z \"$(rg -n 'example\\.com' --glob '*.{ts,tsx,js,jsx,vue,svelte,py,go,rb,java}' --glob '!**/node_modules/**' --glob '!**/mocks/**' --glob '!**/__mocks__/**' --glob '!**/fixtures/**' --glob '!**/*.test.*' --glob '!**/*.spec.*' --glob '!**/*seed*' 2>/dev/null | rg -v 'avatars\\.example\\.com|@example\\.com')\"",
+      "onFail": "生产代码出现 *.example.com 外链(非占位头像/脱敏邮箱)— 换成真实链接或移除;占位文档链接不得渲染成可点击真链。命中行见 rg 输出",
+      "deterrence": true,
+      "antiCheck": { "setup": "printf 'const X={docsUrl:\"https://docs.example.com/x\"};\\n' > __guard_leak.ts", "teardown": "rm -f __guard_leak.ts" }
+    }
+  ],
+  "_lessons_note": "每条 LED 可执行守卫:check 非零退出=复发=ERROR exit 1。deterrence:true=理想终态永不 fire(如 .env.local 守卫),never-fired 不剪它。antiCheck:复现态命令,T6 验证守卫的牙没掉(假绿稻草人)。"
+}
