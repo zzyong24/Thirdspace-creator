@@ -11,6 +11,25 @@ export function normalizeMonth(raw: string | undefined): string | null {
   return raw && MONTH_RE.test(raw) ? raw : null;
 }
 
+/**
+ * Date → 本地日历日 "YYYY-MM-DD"(用户所在时区的「今天」)。
+ *
+ * 用本地日历字段(getFullYear/getMonth/getDate)而非 toISOString 的 UTC 切片:
+ * 月历格的过去/今天/未来分界是「日历日」的人类概念,应按用户此刻本地日判定
+ * (UTC 切片会在午夜前后差一天,把「今天」误判成昨天/明天)。
+ */
+export function localDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Date → 本地日历月 "YYYY-MM"(缺省渲染月)。 */
+export function localMonthKey(d: Date): string {
+  return localDateKey(d).slice(0, 7);
+}
+
 /** "YYYY-MM" 前后平移 delta 个月(纯字符串数学)。 */
 export function shiftMonth(month: string, delta: number): string {
   const year = Number(month.slice(0, 4));

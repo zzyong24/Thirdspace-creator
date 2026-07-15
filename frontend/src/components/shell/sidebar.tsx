@@ -97,7 +97,9 @@ const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   { id: "projects", label: "项目", href: "/projects", icon: creatorIcons.projects, match: matchPrefix("/projects") },
   { id: "knowledge", label: "知识库", href: "/knowledge", icon: creatorIcons.knowledge, match: matchExact("/knowledge") },
   { id: "assets", label: "素材中心", href: "/assets", icon: creatorIcons.assets, match: matchExact("/assets") },
-  { id: "publishing", label: "发布中心", href: "/publishing", icon: creatorIcons.publishing, match: matchExact("/publishing") },
+  // [FE-M03] `/calendar`(内容日历)是发布中心的子面(shell-router 标题即「内容日历(发布中心)」),
+  // 故其高亮跟随「发布中心」。`/accounts`、`/search` 无对应导航项 → 不高亮任何项(见 findActiveNav)。
+  { id: "publishing", label: "发布中心", href: "/publishing", icon: creatorIcons.publishing, match: (pathname) => pathname === "/publishing" || pathname === "/calendar" },
   // 自动化 — 七步下游数据采集(T-007, data-source-pipeline §9 D6): 周期抓「自己作品指标/评论」
   // 的调度作业, 数据落库供 Dashboard/选题消费. 归在运营/采集类, 紧跟发布中心.
   { id: "automations", label: "自动化", href: "/automations", icon: creatorIcons.automations, match: matchPrefix("/automations") },
@@ -119,8 +121,10 @@ function matchPrefix(prefix: string) {
   return (pathname: string) => pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
-function findActiveNav(pathname: string): string {
-  return PRIMARY_NAV.find((entry) => entry.match(pathname))?.id ?? "dashboard";
+// [FE-M03] 无匹配 → null(不再错误兜底高亮「首页」)。`/accounts`、`/search` 等无导航项的
+// 路由下,不选中任何项;aria-current 也随之不落在任何链接上。
+function findActiveNav(pathname: string): string | null {
+  return PRIMARY_NAV.find((entry) => entry.match(pathname))?.id ?? null;
 }
 
 function initialsFromName(name: string): string {
@@ -295,7 +299,7 @@ function PrimaryNav({
   activeId,
   collapsed,
 }: {
-  activeId: string;
+  activeId: string | null;
   collapsed: boolean;
 }) {
   return (

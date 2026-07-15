@@ -7,14 +7,22 @@
  * 月历格视图(`ContentCalendarView`),日详情抽屉本片只读。
  *
  * Server-component shell with a `viewModel?` test seam。月份来自路由
- * `?month=YYYY-MM`(静态跳转),缺省取 REFERENCE_INSTANT 所在月。
+ * `?month=YYYY-MM`(静态跳转),缺省取「今天」所在月。
  *
- * Determinism (C-5): 月窗从注入的 `referenceInstant`(固定常量)+ month 参数派生,
- * NEVER wall-clock。No Date.now / Math.random / fetch in render or selectors。
+ * [FE-H04] 「今天」= 真实系统 now(经可注入的 `now` clock,默认 `new Date()`)。
+ * 参考日 `referenceDateKey` 取本地日历日(见 `localDateKey`),分界过去/今天/未来。
+ * 时钟只在 server 组件加载时读一次,派生出的 `referenceDateKey` / `month` 作为**纯 props**
+ * 喂给下游 view;view/selectors 仍是确定性的(不含 Date.now / Math.random / fetch),
+ * 满足 C-5——时钟注入被收敛在这一处边界。
  */
 
 import { ContentCalendarView } from "./content-calendar-view";
-import { nextMonthOf, normalizeMonth } from "./calendar-month";
+import {
+  localDateKey,
+  localMonthKey,
+  nextMonthOf,
+  normalizeMonth,
+} from "./calendar-month";
 import { client as defaultClient } from "@/lib/contract-client.server";
 import {
   buildPublishingCenterViewModelReal,
@@ -45,10 +53,6 @@ export type ContentCalendarReadClient = Pick<
   | "listPublicationRevisions"
   | "getPublicationAnalytics"
 >;
-
-// 注入的参考时刻(C-5 决定论 — 不用 wall-clock)。派生「当前月」缺省值与
-// 过去/未来分界(空窗淡色只标过去格)。T-083b 全量时改为路由注入的真实 now。
-const REFERENCE_INSTANT = "2026-07-03T00:00:00.000Z";
 
 /** 单条已发布作品在月历格/抽屉里需要的最小投影(publications 真数据)。 */
 export interface CalendarPublicationItem {
@@ -92,7 +96,7 @@ export interface ContentCalendarViewModel {
 export interface ContentCalendarPageProps {
   /** Override hook for tests; defaults to the server reads. */
   readonly viewModel?: ContentCalendarViewModel;
-  /** 路由 `?month=YYYY-MM`;非法/缺省 → REFERENCE_INSTANT 所在月。 */
+  /** 路由 `?month=YYYY-MM`;非法/缺省 → 「今天」(clock)所在月。 */
   readonly month?: string;
   /**
    * Session-scoped contract client for the production read path. The route
@@ -100,23 +104,31 @@ export interface ContentCalendarPageProps {
    * SSR / direct render still resolves.
    */
   readonly client?: ContentCalendarReadClient;
+  /**
+   * [FE-H04] 可注入的「今天」时钟(默认真实系统 now)。生产不传 → 每次请求取当天;
+   * 测试可传固定 `Date` 断言分界行为(过去/今天/未来)不再写死某日。
+   */
+  readonly now?: Date;
 }
 
 export async function ContentCalendarPage({
   viewModel,
   month,
   client = defaultClient,
+  now,
 }: ContentCalendarPageProps) {
-  const vm = viewModel ?? (await loadViewModel(client, month));
+  const vm = viewModel ?? (await loadViewModel(client, month, now ?? new Date()));
   return <ContentCalendarView viewModel={vm} />;
 }
 
 async function loadViewModel(
   client: ContentCalendarReadClient,
   monthParam: string | undefined,
+  now: Date,
 ): Promise<ContentCalendarViewModel> {
-  const month = normalizeMonth(monthParam) ?? REFERENCE_INSTANT.slice(0, 7);
-  const referenceDateKey = REFERENCE_INSTANT.slice(0, 10);
+  // [FE-H04] 参考日/缺省月都从真实 now 派生(本地日历日/月),不再写死 2026-07-03。
+  const referenceDateKey = localDateKey(now);
+  const month = normalizeMonth(monthParam) ?? localMonthKey(now);
   // 月窗 [本月 1 号, 下月 1 号) — entries/attainment 都按这个窗读。
   const window = {
     from: `${month}-01T00:00:00.000Z`,
@@ -211,5 +223,3 @@ async function loadViewModel(
     window,
   };
 }
-
-export { REFERENCE_INSTANT };

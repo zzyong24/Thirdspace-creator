@@ -12,6 +12,8 @@ import {
   nextMonthOf,
   prevMonthOf,
   normalizeMonth,
+  localDateKey,
+  localMonthKey,
 } from "./calendar-month";
 import type {
   CalendarPublicationItem,
@@ -66,6 +68,16 @@ describe("content-calendar month grid (T-083a)", () => {
     expect(normalizeMonth("2026-13")).toBeNull();
     expect(normalizeMonth("bogus")).toBeNull();
     expect(normalizeMonth(undefined)).toBeNull();
+  });
+
+  // [FE-H04] 「今天」派生:本地日历日/月(用户所在时区),供 page 缺省月/参考日用。
+  // 用本地构造器固定日期,与测试机时区无关(TZ-robust)。
+  it("localDateKey / localMonthKey derive the local calendar day/month of a Date", () => {
+    const d = new Date(2026, 6, 15, 10, 30, 0); // 本地 2026-07-15 10:30
+    expect(localDateKey(d)).toBe("2026-07-15");
+    expect(localMonthKey(d)).toBe("2026-07");
+    // 个位月/日补零。
+    expect(localDateKey(new Date(2026, 0, 3, 0, 0, 0))).toBe("2026-01-03");
   });
 
   it("buildMonthGrid lays out 2026-03 Monday-first with correct padding", () => {
@@ -164,14 +176,53 @@ describe("content-calendar month grid (T-083a)", () => {
     expect(items[1]!.textContent).toContain("暂无数据");
     const links = screen.getAllByTestId("calendar-drawer-pub-link");
     expect(links[0]!.getAttribute("href")).toBe("/projects/proj-p1");
-    // 关闭:点遮罩。
-    fireEvent.click(screen.getByTestId("calendar-drawer-overlay"));
+    // [FE-M01] 关闭:抽屉是 Sheet(Radix Dialog),点内置关闭按钮(sr-only「Close」)即关。
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByTestId("calendar-day-drawer")).toBeNull();
   });
 
   it("empty day cells are not clickable (no drawer)", () => {
     render(<ContentCalendarView viewModel={vm({})} />);
     fireEvent.click(screen.getByTestId("calendar-day-2026-03-10"));
+    expect(screen.queryByTestId("calendar-day-drawer")).toBeNull();
+  });
+
+  // [FE-M01] 无障碍:可点开的日历格是原生 <button>(键盘可聚焦 + Enter/Space 触发),
+  // 过去空窗格不是 button(不可聚焦);抽屉是 role=dialog,Escape 可关。
+  it("openable day cells are real <button>s (keyboard-reachable); gap cells are not", () => {
+    render(
+      <ContentCalendarView
+        viewModel={vm({
+          month: "2026-07",
+          referenceDateKey: "2026-07-03",
+          publications: [pub("p1", "2026-07-01", "七月发布")],
+          window: {
+            from: "2026-07-01T00:00:00.000Z",
+            to: "2026-08-01T00:00:00.000Z",
+          },
+        })}
+      />,
+    );
+    // 未来空格 07-15 可点 → <button>。
+    const future = screen.getByTestId("calendar-day-2026-07-15");
+    expect(future.tagName).toBe("BUTTON");
+    expect(future).toHaveAttribute("type", "button");
+    // 过去空窗 07-02 不可点 → <div>(非 button)。
+    const gap = screen.getByTestId("calendar-day-2026-07-02");
+    expect(gap.tagName).toBe("DIV");
+  });
+
+  it("day-cell drawer is a role=dialog and closes on Escape (Sheet focus-trap)", () => {
+    render(
+      <ContentCalendarView
+        viewModel={vm({ publications: [pub("p1", "2026-03-24", "抽屉作品")] })}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("calendar-day-2026-03-24"));
+    // Radix Dialog content 暴露 role=dialog(focus trap 容器)。
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    // Escape 关闭(键盘可达)。
+    fireEvent.keyDown(document, { key: "Escape", code: "Escape" });
     expect(screen.queryByTestId("calendar-day-drawer")).toBeNull();
   });
 });

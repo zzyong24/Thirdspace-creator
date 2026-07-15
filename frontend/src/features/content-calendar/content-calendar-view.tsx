@@ -8,6 +8,10 @@
  * 断更空窗一眼可辨。点格开只读抽屉:当天发布列表(封面缩略 + 标题 + 表现 +
  * 跳稿面链接)。月份切换为静态跳转(`/calendar?month=YYYY-MM` 锚点)。
  *
+ * [FE-M01] 无障碍:日历格是原生 `<button>`(键盘可聚焦、Enter/Space 触发),不再是
+ * click-only `<div>`;日详情抽屉改用 Sheet(Radix Dialog 底座)——自带 focus trap、
+ * Escape 关闭、关闭后焦点回落到触发格。
+ *
  * Determinism (C-5): everything renders from the server-fed viewModel props
  * (month / referenceDateKey 都是注入值); no Date.now / Math.random / fetch in
  * render or selectors。周起点为周一(中文习惯)。
@@ -17,6 +21,13 @@ import * as React from "react";
 
 import { SectionCard } from "@/components/project/section-card";
 import { CoverThumb } from "@/components/resources/cover-thumb";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { buildMonthGrid, shiftMonth, type DayCell } from "./calendar-month";
 import { ScheduleEntryForm, DrawerEntryRow } from "./content-calendar-schedule";
 import type {
@@ -193,99 +204,95 @@ export function ContentCalendarView({
         </span>
       </div>
 
-      {/* 日详情抽屉(只读,T-083a):当天发布列表 + 跳稿面 */}
-      {selectedDay ? (
-        <>
-          <div
-            data-testid="calendar-drawer-overlay"
-            className="fixed inset-0 z-40 bg-black/30"
-            onClick={() => setSelectedDay(null)}
-          />
-          <aside
-            data-testid="calendar-day-drawer"
-            data-date={selectedDay}
-            className="fixed inset-y-0 right-0 z-50 flex w-96 max-w-full flex-col gap-3 overflow-y-auto border-l border-border bg-background p-4 shadow-xl"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold">
-                {dayTitle(selectedDay)} · 发布 {selectedPubs.length} 条
-              </h3>
-              <button
-                type="button"
-                aria-label="关闭"
-                onClick={() => setSelectedDay(null)}
-                className="rounded-md border border-border px-2 py-0.5 text-sm text-muted-foreground hover:bg-surface-subtle"
+      {/* 日详情抽屉(只读,T-083a):当天发布列表 + 跳稿面。
+          [FE-M01] Sheet 底座 = Radix Dialog:focus trap + Escape 关闭 + 关闭回焦触发格。 */}
+      <Sheet
+        open={selectedDay !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedDay(null);
+        }}
+      >
+        <SheetContent
+          side="right"
+          data-testid="calendar-day-drawer"
+          data-date={selectedDay ?? undefined}
+          className="w-full gap-3 overflow-y-auto p-4 sm:max-w-md"
+        >
+          <SheetHeader className="p-0">
+            <SheetTitle>
+              {selectedDay ? dayTitle(selectedDay) : ""} · 发布{" "}
+              {selectedPubs.length} 条
+            </SheetTitle>
+            <SheetDescription>
+              发布 {selectedPubs.length} 条 · 排期 {selectedEntries.length} 条
+            </SheetDescription>
+          </SheetHeader>
+
+          {selectedPubs.length === 0 && selectedEntries.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {selectedCanSchedule
+                ? "这一天还没有排期。点下方「+ 排期」规划一条。"
+                : "这一天没有发布记录，也没有排期。"}
+            </p>
+          ) : null}
+
+          <ul className="flex flex-col gap-2">
+            {selectedPubs.map((pub) => (
+              <li
+                key={pub.id}
+                data-testid="calendar-drawer-pub"
+                className="flex items-center gap-3 rounded-md border border-border p-2"
               >
-                ✕
-              </button>
-            </div>
-
-            {selectedPubs.length === 0 && selectedEntries.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {selectedCanSchedule
-                  ? "这一天还没有排期。点下方「+ 排期」规划一条。"
-                  : "这一天没有发布记录，也没有排期。"}
-              </p>
-            ) : null}
-
-            <ul className="flex flex-col gap-2">
-              {selectedPubs.map((pub) => (
-                <li
-                  key={pub.id}
-                  data-testid="calendar-drawer-pub"
-                  className="flex items-center gap-3 rounded-md border border-border p-2"
-                >
-                  <CoverThumb
-                    assetId={pub.coverAssetId}
-                    alt={pub.title}
-                    className="h-12 w-20 shrink-0 rounded-md border border-border bg-surface-subtle object-cover"
-                    fallback={
-                      <span className="h-12 w-20 shrink-0 rounded-md bg-gradient-to-br from-muted to-surface-subtle" />
-                    }
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{pub.title}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {pub.platformLabel} · {pub.views}
-                    </p>
-                  </div>
-                  <a
-                    href={pub.projectId ? `/projects/${pub.projectId}` : "/projects"}
-                    data-testid="calendar-drawer-pub-link"
-                    className="shrink-0 text-xs text-primary underline-offset-2 hover:underline"
-                  >
-                    打开稿面
-                  </a>
-                </li>
-              ))}
-            </ul>
-
-            {selectedEntries.length > 0 ? (
-              <div className="flex flex-col gap-2">
-                <h4 className="text-sm font-medium text-muted-foreground">
-                  排期({selectedEntries.length}）
-                </h4>
-                <ul className="flex flex-col gap-1.5">
-                  {selectedEntries.map((entry) => (
-                    <DrawerEntryRow key={entry.id} entry={entry} />
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {/* 未来/今天:排期写路径入口(过去日不展示——只读复盘)。 */}
-            {selectedCanSchedule && selectedDay ? (
-              <div className="mt-1">
-                <ScheduleEntryForm
-                  accountId={accountId}
-                  dateKey={selectedDay}
-                  projects={projects}
+                <CoverThumb
+                  assetId={pub.coverAssetId}
+                  alt={pub.title}
+                  className="h-12 w-20 shrink-0 rounded-md border border-border bg-surface-subtle object-cover"
+                  fallback={
+                    <span className="h-12 w-20 shrink-0 rounded-md bg-gradient-to-br from-muted to-surface-subtle" />
+                  }
                 />
-              </div>
-            ) : null}
-          </aside>
-        </>
-      ) : null}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{pub.title}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {pub.platformLabel} · {pub.views}
+                  </p>
+                </div>
+                <a
+                  href={pub.projectId ? `/projects/${pub.projectId}` : "/projects"}
+                  data-testid="calendar-drawer-pub-link"
+                  className="shrink-0 text-xs text-primary underline-offset-2 hover:underline"
+                >
+                  打开稿面
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          {selectedEntries.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                排期({selectedEntries.length}）
+              </h4>
+              <ul className="flex flex-col gap-1.5">
+                {selectedEntries.map((entry) => (
+                  <DrawerEntryRow key={entry.id} entry={entry} />
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {/* 未来/今天:排期写路径入口(过去日不展示——只读复盘)。 */}
+          {selectedCanSchedule && selectedDay ? (
+            <div className="mt-1">
+              <ScheduleEntryForm
+                accountId={accountId}
+                dateKey={selectedDay}
+                projects={projects}
+              />
+            </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -318,23 +325,27 @@ function CalendarDayCell({
       : entries.slice(0, MAX_CHIPS_PER_CELL - pubs.length);
   const hiddenCount = total - visiblePubs.length - visibleEntries.length;
 
-  return (
-    <div
-      data-testid={`calendar-day-${cell.dateKey}`}
-      data-in-month={cell.inMonth}
-      data-count={total}
-      data-gap={isGap || undefined}
-      data-openable={openable || undefined}
-      onClick={openable ? onOpen : undefined}
-      className={[
-        "min-h-24 border-r border-border p-1.5 last:border-r-0",
-        cell.inMonth ? "" : "bg-surface-subtle/60",
-        isGap ? "bg-muted" : "",
-        openable ? "cursor-pointer hover:bg-surface-subtle" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
+  // 共享的格样式 + data-* 标记(button/div 两分支都用)。
+  const className = [
+    "min-h-24 w-full border-r border-border p-1.5 text-left last:border-r-0",
+    cell.inMonth ? "" : "bg-surface-subtle/60",
+    isGap ? "bg-muted" : "",
+    openable
+      ? "cursor-pointer hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const dataProps = {
+    "data-testid": `calendar-day-${cell.dateKey}`,
+    "data-in-month": cell.inMonth,
+    "data-count": total,
+    "data-gap": isGap || undefined,
+    "data-openable": openable || undefined,
+  } as const;
+
+  const inner = (
+    <>
       <div className="flex items-center justify-between">
         <span
           className={[
@@ -394,6 +405,27 @@ function CalendarDayCell({
           ) : null}
         </div>
       ) : null}
+    </>
+  );
+
+  // [FE-M01] 可点开的格 = 原生 <button>(键盘可达、Enter/Space 触发);其余(补位格 /
+  // 过去空窗格)是纯展示 <div>,不可聚焦、不可点。
+  if (openable) {
+    return (
+      <button
+        type="button"
+        {...dataProps}
+        onClick={onOpen}
+        aria-label={`${cell.dateKey}${isToday ? " 今天" : ""}，发布 ${pubs.length} 条，排期 ${entries.length} 条，查看当天详情`}
+        className={className}
+      >
+        {inner}
+      </button>
+    );
+  }
+  return (
+    <div {...dataProps} className={className}>
+      {inner}
     </div>
   );
 }

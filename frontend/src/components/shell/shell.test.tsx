@@ -344,6 +344,32 @@ describe("AppShell", () => {
     expect(current).toHaveAttribute("href", "/projects");
   });
 
+  // [FE-M03] 路由→导航项映射补全:`/calendar` 高亮「发布中心」(内容日历是发布中心子面);
+  // `/accounts`、`/search` 无对应导航项 → 不再错误高亮「首页」,不选中任何项。
+  it("[FE-M03] /calendar highlights 发布中心 (calendar is a sub-surface of publishing)", async () => {
+    await renderShell({ pathname: "/calendar" });
+    const sidebar = screen.getByRole("complementary", { name: /主侧栏/ });
+    const current = within(sidebar).getByRole("link", { current: "page" });
+    expect(current).toHaveAttribute("href", "/publishing");
+    expect(current.textContent?.trim()).toBe("发布中心");
+  });
+
+  it("[FE-M03] /accounts highlights NO nav item (no wrong 首页 highlight)", async () => {
+    await renderShell({ pathname: "/accounts" });
+    const sidebar = screen.getByRole("complementary", { name: /主侧栏/ });
+    expect(
+      within(sidebar).queryByRole("link", { current: "page" }),
+    ).toBeNull();
+  });
+
+  it("[FE-M03] /search highlights NO nav item", async () => {
+    await renderShell({ pathname: "/search" });
+    const sidebar = screen.getByRole("complementary", { name: /主侧栏/ });
+    expect(
+      within(sidebar).queryByRole("link", { current: "page" }),
+    ).toBeNull();
+  });
+
   it("sidebar contextual card default variant is assistant and includes brand color", async () => {
     const { container } = await renderShell();
     const card = container.querySelector(
