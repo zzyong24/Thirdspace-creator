@@ -22,9 +22,10 @@ export interface RepoDeps {
   now: () => string; // ISO-8601 clock (injected for deterministic tests)
   nextId: (prefix: string) => string; // id generator (deterministic in tests)
   userId: string; // owner — baked in; the service mints one repo per ctx
-  // [T-136 §D 切片 c] 第二属主维度(按号)。激活 publications 预留的 account_id 列 —— 采集
-  //   导入作品 create 时 stamp 归号。null = 未选号 / 存量兜底(write stamp null)。本切片只做
-  //   写 stamp(采集写路径 createImportedPublication);读点按号隔离归其他切片,故读门不改。
+  // [T-136 §D 切片 c → T-326 DATA-H01] 第二属主维度(按号)。写路径 create 时 stamp 归号;
+  //   null = 未选号 / 存量兜底(write stamp null)。读路径:**列表/聚合读**叠加按号门(语义
+  //   为「当前号 OR 未标记(account_id IS NULL)」,存量 NULL 数据不消失,claimOrphan 逐步
+  //   收编后 NULL 桶收敛);by-id / external-key 读仍只按 userId(见 accountGate 注释)。
   accountId?: string | null;
 }
 
@@ -154,6 +155,23 @@ export function createPublishingRepository(
   deps: RepoDeps,
 ): PublishingRepository {
   const userId = deps.userId;
+
+  // [T-326 DATA-H01] 按号隔离条件门(列表/聚合读用)。语义 =「当前号 OR 未标记」:
+  //   有号 → (account_id = 当前号 OR account_id IS NULL) —— 存量/未选号写入的 NULL 行仍可见
+  //   (老数据不凭空消失;T-200 claimOrphanPublications 在采集 bootstrap 时逐步把 NULL 行
+  //   收编到真号,NULL 桶随之收敛);无号(ctx 未选号)→ undefined → and() 忽略 → 退化只按
+  //   userId(全量,现状不变)。
+  //   **不加此门的读**(有意为之,别扩大):
+  //   · getPublicationRowById(by-id 所有权门)—— id 不可枚举,user 级已是安全边界;加号门
+  //     会让跨号打开详情/状态机操作 404,误伤 ingestion / UI 深链。
+  //   · findByExternalKey —— (platform, external_id) 唯一索引是**用户级**幂等锚;加号门会让
+  //     跨号/存量行不可见 → createImportedPublication 重复 INSERT → 唯一索引违约炸采集。
+  const accountGate = deps.accountId
+    ? or(
+        eq(publications.accountId, deps.accountId),
+        isNull(publications.accountId),
+      )
+    : undefined;
 
   // Private ownership gate — a cross-user / unknown id is indistinguishable from a
   // missing one (foundation §2: 404, never reveal existence) → OwnershipError.
@@ -288,6 +306,7 @@ export function createPublishingRepository(
         .where(
           and(
             eq(publications.userId, userId),
+            accountGate, // [T-326 DATA-H01] 按号(当前号 or 未标记);无号 → 忽略
             eq(publications.contentOutputId, outputId),
             visibility,
           ),
@@ -312,7 +331,13 @@ export function createPublishingRepository(
       return db
         .select()
         .from(publications)
-        .where(and(eq(publications.userId, userId), visibility))
+        .where(
+          and(
+            eq(publications.userId, userId),
+            accountGate, // [T-326 DATA-H01] 发布列表/最近发布按号隔离(当前号 or 未标记)
+            visibility,
+          ),
+        )
         .orderBy(
           desc(sql`coalesce(${publications.publishedAt}, ${publications.createdAt})`),
         )
@@ -328,6 +353,7 @@ export function createPublishingRepository(
         .where(
           and(
             eq(publications.userId, userId),
+            accountGate, // [T-326 DATA-H01] 项目→发布解析按号(Analytics 项目读随之隔离)
             inArray(publications.contentOutputId, [...outputIds]),
           ),
         );
@@ -489,6 +515,7 @@ export function createPublishingRepository(
         .where(
           and(
             eq(publications.userId, userId),
+            accountGate, // [T-326 DATA-H01] 封面回填候选按号(别烧别号的限流预算)
             eq(publications.platform, platform),
             eq(publications.status, "published"),
             isNull(publications.hiddenAt),

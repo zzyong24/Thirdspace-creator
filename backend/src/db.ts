@@ -208,6 +208,26 @@ async function migrateOpenedDb(client: PGlite): Promise<Db> {
         "CREATE INDEX IF NOT EXISTS ix_favorites_items_distill ON favorites_items (user_id, distill_status)",
       );
     }
+    // [T-326 DATA-H02 fixup] 同款兜底:老装机若因 journal 不同步没跑 0041(账号维度唯一键),
+    // 代码侧 onConflict target 已改为含 account_id → PG 报「no unique or exclusion constraint
+    // matching the ON CONFLICT specification」。缺 _v2 索引就补(先建新后删旧,与 0041 同序、幂等)。
+    const acctUxCheck = await client.query<{ exists: boolean }>(
+      "SELECT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'ux_topic_preferences_identity_v2') AS exists",
+    );
+    if (!acctUxCheck.rows[0]?.exists) {
+      await client.exec(
+        "CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_folders_identity_v2 ON favorites_folders (user_id, account_id, name) NULLS NOT DISTINCT",
+      );
+      await client.exec("DROP INDEX IF EXISTS ux_favorites_folders_identity");
+      await client.exec(
+        "CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_items_identity_v2 ON favorites_items (user_id, account_id, aweme_id) NULLS NOT DISTINCT",
+      );
+      await client.exec("DROP INDEX IF EXISTS ux_favorites_items_identity");
+      await client.exec(
+        "CREATE UNIQUE INDEX IF NOT EXISTS ux_topic_preferences_identity_v2 ON topic_preferences (user_id, account_id, keyword, direction) NULLS NOT DISTINCT",
+      );
+      await client.exec("DROP INDEX IF EXISTS ux_topic_preferences_identity");
+    }
   return db;
 }
 

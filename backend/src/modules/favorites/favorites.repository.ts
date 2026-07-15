@@ -39,7 +39,7 @@ export interface FavoritesRepository {
   ): Promise<{ rows: FavoritesFolderRow[]; total: number }>;
   /** 采集用:列该号(accountId=null → 全量)enabled 的收藏夹。 */
   listEnabledFolders(accountId: string | null): Promise<FavoritesFolderRow[]>;
-  /** 幂等 create:同 (user, name) 已存在 → 更新展示字段/enabled 并返回既有(不新建)。 */
+  /** 幂等 create:同 (user, account, name) 已存在 → 更新展示字段/enabled 并返回既有(不新建)。 */
   createFolder(input: CreateFolderInput): Promise<FavoritesFolderRow>;
   /** 切 enabled(ownership gate;不存在 → OwnershipError 404)。 */
   setFolderEnabled(folderId: string, enabled: boolean): Promise<FavoritesFolderRow>;
@@ -50,7 +50,7 @@ export interface FavoritesRepository {
     folderId: string,
     patch: { collectsId?: string | null; lastSyncedAt?: string | null },
   ): Promise<FavoritesFolderRow>;
-  /** 幂等落台账:按 (user_id, aweme_id) 去重,只插新;返回真写入条数。 */
+  /** 幂等落台账:按 (user_id, account_id, aweme_id) 去重,只插新;返回真写入条数。 */
   recordItems(items: RecordItemInput[]): Promise<{ recordedNew: number }>;
   /** 待进池条目(status=pending,createdAt 升序 = 先收藏先进池),限量。 */
   listPendingItems(accountId: string | null, limit: number): Promise<FavoritesItemRow[]>;
@@ -133,9 +133,15 @@ export function createFavoritesRepository(
           createdAt: nowIso,
           updatedAt: nowIso,
         })
-        // 幂等:命中 (user, name) 唯一 → 更新展示字段/enabled(不冒重复夹;collectsId 保留既有匹配)。
+        // [T-326 DATA-H02] 幂等:命中 (user, account, name) 唯一(迁移 0041,NULLS NOT
+        // DISTINCT)→ 更新展示字段/enabled(不冒重复夹;collectsId 保留既有匹配)。不同号可
+        // 各自登记同名夹(第二账号不再复用/改写第一账号的登记)。
         .onConflictDoUpdate({
-          target: [favoritesFolders.userId, favoritesFolders.name],
+          target: [
+            favoritesFolders.userId,
+            favoritesFolders.accountId,
+            favoritesFolders.name,
+          ],
           set: {
             note: input.note ?? null,
             enabled: input.enabled ?? true,
@@ -215,9 +221,15 @@ export function createFavoritesRepository(
             createdAt: nowIso,
             updatedAt: nowIso,
           })
-          // 幂等:命中 (user, aweme_id) 唯一 → 跳过(已记过的视频不重复进台账/进池)。
+          // [T-326 DATA-H02] 幂等:命中 (user, account, aweme_id) 唯一(迁移 0041,NULLS NOT
+          // DISTINCT)→ 跳过(同号已记过的视频不重复进台账/进池)。不同号收藏同一视频各记
+          // 一行(账号隔离,第二账号不再被第一账号的台账吞掉)。
           .onConflictDoNothing({
-            target: [favoritesItems.userId, favoritesItems.awemeId],
+            target: [
+              favoritesItems.userId,
+              favoritesItems.accountId,
+              favoritesItems.awemeId,
+            ],
           })
           .returning({ id: favoritesItems.id });
         if (inserted.length > 0) recordedNew += 1;

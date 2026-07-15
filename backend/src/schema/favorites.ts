@@ -71,7 +71,8 @@ CREATE TABLE IF NOT EXISTS favorites_folders (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_folders_identity ON favorites_folders (user_id, name);
+-- [T-326 DATA-H02] 唯一键含账号维度(迁移 0041;NULLS NOT DISTINCT 让未选号的 NULL 桶也幂等)。
+CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_folders_identity_v2 ON favorites_folders (user_id, account_id, name) NULLS NOT DISTINCT;
 CREATE INDEX IF NOT EXISTS ix_favorites_folders_user_account ON favorites_folders (user_id, account_id);
 CREATE TABLE IF NOT EXISTS favorites_items (
   id TEXT PRIMARY KEY,
@@ -90,7 +91,8 @@ CREATE TABLE IF NOT EXISTS favorites_items (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_items_identity ON favorites_items (user_id, aweme_id);
+-- [T-326 DATA-H02] 唯一键含账号维度(迁移 0041)。
+CREATE UNIQUE INDEX IF NOT EXISTS ux_favorites_items_identity_v2 ON favorites_items (user_id, account_id, aweme_id) NULLS NOT DISTINCT;
 CREATE INDEX IF NOT EXISTS ix_favorites_items_user_account ON favorites_items (user_id, account_id);
 -- [T-235d-distill] 蒸馏链批取/确认门读面索引(迁移 0039)。
 CREATE INDEX IF NOT EXISTS ix_favorites_items_distill ON favorites_items (user_id, distill_status);

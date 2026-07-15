@@ -177,4 +177,52 @@ describe("analytics service", () => {
       snapshotCount: 0,
     });
   });
+
+  // [T-326 DATA-H01] service 把 ctx.accountId 贯穿进聚合读:选号 ctx 的 dashboard/趋势
+  //   只含本号 + 存量 NULL 快照(「当前号 or 未标记」语义);无号 ctx 全量(现状不变)。
+  it("getDashboardRollup / getDailyPlayTrend thread ctx.accountId (按号隔离 + 存量 NULL 可见)", async () => {
+    const publishing: AnalyticsPublishingPort = {
+      resolvePublication: () => Promise.resolve(),
+      listPublicationIdsByProject: () => Promise.resolve([]),
+    };
+    const service = makeService(db, publishing);
+    const ctxAcct1: RequestContext = {
+      userId: "user-a",
+      requestId: "ra1",
+      source: "user",
+      accountId: "acct-1",
+    };
+    // 号1 采集(ctx 带号 → stamp acct-1)。
+    await service.appendSnapshot(ctxAcct1, {
+      publicationId: "pub-acct1",
+      capturedAt: "2026-06-12T10:00:00.000Z",
+      source: "ingestion",
+      rawMetrics: { views: 100 },
+      values: [],
+    });
+    // 号2 采集(input 显式带号)。
+    await service.appendSnapshot(ctxA, {
+      publicationId: "pub-acct2",
+      capturedAt: "2026-06-12T10:00:00.000Z",
+      source: "ingestion",
+      rawMetrics: { views: 1000 },
+      accountId: "acct-2",
+      values: [],
+    });
+    // 存量 NULL(无号 ctx)。
+    await service.appendSnapshot(ctxA, {
+      publicationId: "pub-legacy",
+      capturedAt: "2026-06-12T10:00:00.000Z",
+      source: "ingestion",
+      rawMetrics: { views: 10 },
+      values: [],
+    });
+
+    const r1 = await service.getDashboardRollup(ctxAcct1);
+    expect(r1.snapshotCount).toBe(2); // 本号 + 存量 NULL,不含 acct-2
+    expect(r1.plays).toBe(110);
+    const rAll = await service.getDashboardRollup(ctxA); // 无号 ctx → 全量
+    expect(rAll.snapshotCount).toBe(3);
+    expect(rAll.plays).toBe(1110);
+  });
 });

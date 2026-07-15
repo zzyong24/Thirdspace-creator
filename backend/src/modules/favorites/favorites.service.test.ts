@@ -233,4 +233,64 @@ describe("favorites service", () => {
       expect((await svc.listItemsForDistill(ctxB, 10)).length).toBe(0);
     });
   });
+
+  // [T-326 DATA-H02] 唯一键升级为账号维度(迁移 0041,NULLS NOT DISTINCT):同一用户的
+  //   第二个号可以登记同名夹 / 收藏同一视频(各自成行),不再复用/改写第一号的数据;
+  //   同号(含"未选号"的 NULL 桶)重复写仍幂等。
+  describe("账号维度唯一键 (T-326 DATA-H02)", () => {
+    const ctxA1: RequestContext = {
+      userId: "user-a",
+      requestId: "r-a1",
+      source: "user",
+      accountId: "acct-1",
+    };
+    const ctxA2: RequestContext = {
+      userId: "user-a",
+      requestId: "r-a2",
+      source: "user",
+      accountId: "acct-2",
+    };
+    // 未选号 ctx(存量/兜底写路径 → account_id NULL 桶)。
+    const ctxANull: RequestContext = {
+      userId: "user-a",
+      requestId: "r-an",
+      source: "user",
+    };
+
+    it("同 user 两个号登记同名夹 → 各自成行,互不改写", async () => {
+      const f1 = await svc.createFolder(ctxA1, { name: "选题库", note: "号1" });
+      const f2 = await svc.createFolder(ctxA2, { name: "选题库", note: "号2" });
+      expect(f2.id).not.toBe(f1.id); // 第二号新建,不复用第一号的行
+      expect(f1.accountId).toBe("acct-1");
+      expect(f2.accountId).toBe("acct-2");
+      // 号1 视图只见自己的夹,note 未被号2 改写。
+      const { rows: rows1 } = await svc.listFolders(ctxA1, PAGE);
+      expect(rows1.length).toBe(1);
+      expect(rows1[0]!.note).toBe("号1");
+    });
+
+    it("未选号(NULL 桶)同名重复登记仍幂等(NULLS NOT DISTINCT)", async () => {
+      const first = await svc.createFolder(ctxANull, { name: "存量夹" });
+      const second = await svc.createFolder(ctxANull, { name: "存量夹", note: "更新" });
+      expect(second.id).toBe(first.id); // NULL 桶自身归并,不产平行行
+      // 存量 NULL 行在全局视图(未选号)仍可读。
+      const { rows } = await svc.listFolders(ctxANull, PAGE);
+      expect(rows.some((r) => r.id === first.id)).toBe(true);
+    });
+
+    it("两个号收藏同一视频 → 各记一行台账(第二号不再被吞)", async () => {
+      const f1 = await svc.createFolder(ctxA1, { name: "夹1" });
+      const f2 = await svc.createFolder(ctxA2, { name: "夹2" });
+      const r1 = await svc.recordItems(ctxA1, f1.id, [item("aw-1")]);
+      expect(r1.recordedNew).toBe(1);
+      const r2 = await svc.recordItems(ctxA2, f2.id, [item("aw-1")]);
+      expect(r2.recordedNew).toBe(1); // 旧唯一键 (user, aweme) 下这里会是 0(被号1吞掉)
+      // 同号重复收藏仍去重。
+      const r1again = await svc.recordItems(ctxA1, f1.id, [item("aw-1")]);
+      expect(r1again.recordedNew).toBe(0);
+      // 各号 pending 各自可见一条。
+      expect((await svc.listPendingItems(ctxA1, 10)).length).toBe(1);
+      expect((await svc.listPendingItems(ctxA2, 10)).length).toBe(1);
+    });
+  });
 });

@@ -322,4 +322,64 @@ describe("candidate repository — per-account isolation (T-136 slice b)", () =>
     const countsG = await repoGlobal.topicsOverviewCounts();
     expect(countsG.promotionsCount).toBe(2);
   });
+
+  // [T-326 DATA-H02] topic preference 身份键升级为 (user_id, account_id, keyword,
+  //   direction)(迁移 0041,NULLS NOT DISTINCT):第二账号同关键词偏好独立成行,不再
+  //   改写第一账号;同号(含"未选号"的 NULL 桶)重复 upsert 仍归并强化。
+  describe("upsertTopicPreference — 账号维度身份键 (T-326 DATA-H02)", () => {
+    const prefInput = {
+      keyword: "职场",
+      direction: "avoid" as const,
+      signal: "淘汰原因:太宽泛",
+      exampleCount: 3,
+      weight: -5,
+      status: "active" as const,
+    };
+
+    it("两个号同 keyword+direction 各自成行,互不改写", async () => {
+      const repo1 = repoFor(db, "user-a", "acct-1");
+      const repo2 = repoFor(db, "user-a", "acct-2");
+      const r1 = await repo1.upsertTopicPreference(prefInput);
+      const r2 = await repo2.upsertTopicPreference({
+        ...prefInput,
+        weight: -9,
+        signal: "号2独立信号",
+      });
+      expect(r1.id).not.toBe(r2.id); // 不同号 → 两行(不是 upsert 改写)
+      expect(r1.accountId).toBe("acct-1");
+      expect(r2.accountId).toBe("acct-2");
+      // 号1 的行未被号2 的写入改动。
+      const list1 = await repo1.listActiveTopicPreferences();
+      expect(list1.length).toBe(1);
+      expect(list1[0]!.weight).toBe(-5);
+      expect(list1[0]!.signal).toBe("淘汰原因:太宽泛");
+    });
+
+    it("同号重复 upsert 归并强化(不新插平行行)", async () => {
+      const repo1 = repoFor(db, "user-a", "acct-1");
+      const first = await repo1.upsertTopicPreference(prefInput);
+      const second = await repo1.upsertTopicPreference({
+        ...prefInput,
+        exampleCount: 4,
+        weight: -7,
+      });
+      expect(second.id).toBe(first.id); // 命中同号身份键 → 更新
+      expect(second.exampleCount).toBe(4);
+      expect(second.weight).toBe(-7);
+    });
+
+    it("未选号(NULL 桶)重复 upsert 仍幂等(NULLS NOT DISTINCT 根治多 NULL 互不冲突)", async () => {
+      const repoNull = repoFor(db, "user-a", null);
+      const first = await repoNull.upsertTopicPreference(prefInput);
+      const second = await repoNull.upsertTopicPreference({
+        ...prefInput,
+        exampleCount: 5,
+      });
+      expect(second.id).toBe(first.id); // NULL 桶自身归并,不产平行行
+      expect(second.exampleCount).toBe(5);
+      // 存量 NULL 行在全局视图可读(不凭空消失)。
+      const listNull = await repoNull.listActiveTopicPreferences();
+      expect(listNull.length).toBe(1);
+    });
+  });
 });

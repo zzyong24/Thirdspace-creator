@@ -186,6 +186,7 @@ CREATE TABLE IF NOT EXISTS topic_preferences (
   updated_at TEXT NOT NULL,
   last_reinforced_at TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ux_topic_preferences_identity ON topic_preferences (user_id, keyword, direction);
+-- [T-326 DATA-H02] 唯一键含账号维度(迁移 0041;NULLS NOT DISTINCT 让未选号的 NULL 桶也幂等)。
+CREATE UNIQUE INDEX IF NOT EXISTS ux_topic_preferences_identity_v2 ON topic_preferences (user_id, account_id, keyword, direction) NULLS NOT DISTINCT;
 CREATE INDEX IF NOT EXISTS ix_topic_preferences_user_status ON topic_preferences (user_id, status);
 `;

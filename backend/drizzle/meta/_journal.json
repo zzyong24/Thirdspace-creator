@@ -288,6 +288,13 @@
       "when": 1782381620000,
       "tag": "0040_backfill_imported_publication_revision",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1782381630000,
+      "tag": "0041_account_scoped_unique_identity",
+      "breakpoints": true
     }
   ]
 }

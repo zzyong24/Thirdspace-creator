@@ -5,6 +5,7 @@ import {
   eq,
   inArray,
   isNull,
+  or,
   sql,
   type Db,
 } from "@creatoros/backend";
@@ -119,15 +120,23 @@ export interface AnalyticsRepository {
    * 播放,按日求和后与前一日差分 = 当日新增播放。第一天无前日基线不产点;有效
    * 天数 < 2 → 空数组(上层显引导,不编固定形状假曲线)。
    */
+  // [T-326 DATA-H01] 聚合读贯穿 accountId(语义 =「当前号 OR 未标记」:有号 →
+  // (account_id = 号 OR account_id IS NULL),存量 NULL 快照不消失;无号/缺省 → 全量
+  // user-scoped,现状不变)。写侧 stamp(appendSnapshot)早已按号;此前读侧只按 user →
+  // 两个号的趋势/dashboard 混读,本参数补上读门。by-id 读(listSnapshotsByPublication /
+  // listSnapshotsByProject / listValuesBySnapshot)不加号门:publication id 已经过 Publishing
+  // 的所有权/按号解析,一条 publication 的快照不可能跨号混。
   getDailyPlayTrend(
     userId: string,
     publicationIds: readonly string[] | undefined,
     days: number,
+    accountId?: string | null,
   ): Promise<Array<{ day: string; plays: number }>>;
 
   getDashboardRollup(
     userId: string,
     publicationIds?: readonly string[],
+    accountId?: string | null,
   ): Promise<DashboardRollup>;
   // [T-200] 认领存量 account_id IS NULL 的 metric_snapshots + metric_values 给 accountId
   //   (该 user 名下)。修采集在无号 ctx 下落的 null 号(串号根因)。幂等;返回 { snapshots, values }。
@@ -298,21 +307,29 @@ export function createAnalyticsRepository(
         .orderBy(asc(metricValues.metricKey));
     },
 
-    async getDailyPlayTrend(userId, publicationIds, days) {
+    async getDailyPlayTrend(userId, publicationIds, days, accountId) {
       // [T-071] 真逐日趋势:替换掉「总量按固定周形状分摊」的假曲线(用户实锤)。
       // 每 (publication, 日) 取当日最新快照的累计播放 → 按日求和 → 与前一日差分 =
       // 当日新增播放。第一天没有前日基线,不产点;有效点 < 2 → 空(上层显引导)。
       if (publicationIds && publicationIds.length === 0) return [];
+      // [T-326 DATA-H01] 按号门(当前号 or 未标记);无号 → undefined → and() 忽略。
+      const accountGate = accountId
+        ? or(
+            eq(metricSnapshots.accountId, accountId),
+            isNull(metricSnapshots.accountId),
+          )
+        : undefined;
       const rows = await db
         .select()
         .from(metricSnapshots)
         .where(
-          publicationIds
-            ? and(
-                eq(metricSnapshots.userId, userId),
-                inArray(metricSnapshots.publicationId, [...publicationIds]),
-              )
-            : eq(metricSnapshots.userId, userId),
+          and(
+            eq(metricSnapshots.userId, userId),
+            accountGate,
+            publicationIds
+              ? inArray(metricSnapshots.publicationId, [...publicationIds])
+              : undefined,
+          ),
         )
         .orderBy(desc(metricSnapshots.capturedAt));
       const numOf = (m: Record<string, unknown>, key: string): number => {
@@ -357,7 +374,7 @@ export function createAnalyticsRepository(
       return trend.slice(-days);
     },
 
-    async getDashboardRollup(userId, publicationIds) {
+    async getDashboardRollup(userId, publicationIds, accountId) {
       // Pull ALL of the user's snapshots newest-first, then in JS keep the first
       // (newest) row per publicationId. Data volume per user is small, so the
       // dedup-then-reduce path is correct and simple (the task explicitly allows
@@ -380,16 +397,25 @@ export function createAnalyticsRepository(
           snapshotCount: 0,
         };
       }
+      // [T-326 DATA-H01] 按号门(当前号 or 未标记):写侧早已 stamp accountId,读侧此前
+      // 只按 user → 两个号的 dashboard 混读。无号 → undefined → and() 忽略(现状不变)。
+      const accountGate = accountId
+        ? or(
+            eq(metricSnapshots.accountId, accountId),
+            isNull(metricSnapshots.accountId),
+          )
+        : undefined;
       const rows = await db
         .select()
         .from(metricSnapshots)
         .where(
-          publicationIds
-            ? and(
-                eq(metricSnapshots.userId, userId),
-                inArray(metricSnapshots.publicationId, [...publicationIds]),
-              )
-            : eq(metricSnapshots.userId, userId),
+          and(
+            eq(metricSnapshots.userId, userId),
+            accountGate,
+            publicationIds
+              ? inArray(metricSnapshots.publicationId, [...publicationIds])
+              : undefined,
+          ),
         )
         .orderBy(desc(metricSnapshots.capturedAt));
 

@@ -676,8 +676,10 @@ export function createCandidateRepository(
 
     async upsertTopicPreference(input) {
       const nowTs = deps.now();
-      // 身份键 (user_id, keyword, direction) 归并同一偏好:命中即累计强化(更新计数/权重/信号 +
-      // 刷新 last_reinforced_at 重置 8 周衰减时钟,并复活可能已归档的行 → 回到传入 status)。
+      // [T-326 DATA-H02] 身份键升级为 (user_id, account_id, keyword, direction)(迁移 0041,
+      // NULLS NOT DISTINCT):同号命中即累计强化(更新计数/权重/信号 + 刷新 last_reinforced_at
+      // 重置 8 周衰减时钟,并复活可能已归档的行 → 回到传入 status);不同号(含"未选号"的
+      // NULL 桶 vs 真号)互不冲突 → 第二账号的偏好独立成行,不再改写第一账号数据。
       const inserted = await db
         .insert(topicPreferences)
         .values({
@@ -697,6 +699,7 @@ export function createCandidateRepository(
         .onConflictDoUpdate({
           target: [
             topicPreferences.userId,
+            topicPreferences.accountId,
             topicPreferences.keyword,
             topicPreferences.direction,
           ],

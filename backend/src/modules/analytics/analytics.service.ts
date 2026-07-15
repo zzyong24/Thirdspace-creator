@@ -129,10 +129,13 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
     },
 
     async getDailyPlayTrend(ctx, opts) {
+      // [T-326 DATA-H01] 贯穿 ctx.accountId:写侧 stamp 早已按号,读侧补上号门
+      // (「当前号 or 未标记」,存量 NULL 快照不消失;未选号 → 全量,现状不变)。
       return repo.getDailyPlayTrend(
         ctx.userId,
         opts?.publicationIds,
         opts?.days ?? 7,
+        ctx.accountId ?? null,
       );
     },
 
@@ -141,7 +144,12 @@ export function createAnalyticsService(deps: ServiceDeps): AnalyticsService {
       // user-scoped metric_snapshots. Empty store → repo returns the all-zero
       // rollup (snapshotCount 0); we never throw. 数据底座(SPEC §1.4):传入
       // publicationIds 时把汇总收窄到这批发布(imported 让位);空数组 → all-zero。
-      return repo.getDashboardRollup(ctx.userId, opts?.publicationIds);
+      // [T-326 DATA-H01] 贯穿 ctx.accountId(号门语义同 getDailyPlayTrend)。
+      return repo.getDashboardRollup(
+        ctx.userId,
+        opts?.publicationIds,
+        ctx.accountId ?? null,
+      );
     },
 
     async claimOrphanMetrics(ctx) {

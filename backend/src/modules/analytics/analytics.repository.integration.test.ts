@@ -284,4 +284,95 @@ describe("analytics repository (user-scoped, append-idempotent)", () => {
     });
     expect(res.snapshot.accountId).toBeNull();
   });
+
+  // [T-326 DATA-H01] 聚合读按号隔离:语义 =「当前号 OR 未标记(account_id IS NULL)」。
+  //   两个号的 dashboard/趋势不再混读;存量 NULL 快照(老数据/未选号采集)不凭空消失;
+  //   未选号(不传 accountId)→ 全量 user-scoped,现状不变。
+  describe("[T-326 DATA-H01] account-scoped aggregate reads", () => {
+    // 三形态数据:acct-1 stamp / acct-2 stamp / 存量 NULL。
+    async function seedTwoAccountsWithLegacy(repo: AnalyticsRepository) {
+      await repo.seedSnapshots([
+        // acct-1 的作品,两天(day1 累计 100 → day2 累计 150)
+        snapshotRow({
+          id: "ms-a1-d1",
+          userId: "user-a",
+          publicationId: "pub-a1",
+          capturedAt: "2026-06-11T10:00:00.000Z",
+          rawMetrics: { views: 100 },
+          accountId: "acct-1",
+        }),
+        snapshotRow({
+          id: "ms-a1-d2",
+          userId: "user-a",
+          publicationId: "pub-a1",
+          capturedAt: "2026-06-12T10:00:00.000Z",
+          rawMetrics: { views: 150 },
+          accountId: "acct-1",
+        }),
+        // acct-2 的作品,两天(1000 → 3000)—— 若泄漏会把 acct-1 的数字顶爆
+        snapshotRow({
+          id: "ms-b1-d1",
+          userId: "user-a",
+          publicationId: "pub-b1",
+          capturedAt: "2026-06-11T10:00:00.000Z",
+          rawMetrics: { views: 1000 },
+          accountId: "acct-2",
+        }),
+        snapshotRow({
+          id: "ms-b1-d2",
+          userId: "user-a",
+          publicationId: "pub-b1",
+          capturedAt: "2026-06-12T10:00:00.000Z",
+          rawMetrics: { views: 3000 },
+          accountId: "acct-2",
+        }),
+        // 存量 NULL(未标记)作品,两天(10 → 20)—— 任一号下都仍可见
+        snapshotRow({
+          id: "ms-n1-d1",
+          userId: "user-a",
+          publicationId: "pub-n1",
+          capturedAt: "2026-06-11T10:00:00.000Z",
+          rawMetrics: { views: 10 },
+          accountId: null,
+        }),
+        snapshotRow({
+          id: "ms-n1-d2",
+          userId: "user-a",
+          publicationId: "pub-n1",
+          capturedAt: "2026-06-12T10:00:00.000Z",
+          rawMetrics: { views: 20 },
+          accountId: null,
+        }),
+      ]);
+    }
+
+    it("getDashboardRollup(acct-1) = 本号 + 存量 NULL,不含 acct-2", async () => {
+      const repo = makeRepo(db);
+      await seedTwoAccountsWithLegacy(repo);
+      const r1 = await repo.getDashboardRollup("user-a", undefined, "acct-1");
+      expect(r1.snapshotCount).toBe(2); // pub-a1 + 存量 pub-n1
+      expect(r1.plays).toBe(150 + 20); // 不含 acct-2 的 3000
+      const r2 = await repo.getDashboardRollup("user-a", undefined, "acct-2");
+      expect(r2.snapshotCount).toBe(2); // pub-b1 + 存量 pub-n1
+      expect(r2.plays).toBe(3000 + 20);
+    });
+
+    it("getDashboardRollup 未选号 → 全量 user-scoped(现状不变)", async () => {
+      const repo = makeRepo(db);
+      await seedTwoAccountsWithLegacy(repo);
+      const r = await repo.getDashboardRollup("user-a");
+      expect(r.snapshotCount).toBe(3);
+      expect(r.plays).toBe(150 + 3000 + 20);
+    });
+
+    it("getDailyPlayTrend(acct-1) 差分只含本号 + 存量 NULL", async () => {
+      const repo = makeRepo(db);
+      await seedTwoAccountsWithLegacy(repo);
+      const t1 = await repo.getDailyPlayTrend("user-a", undefined, 7, "acct-1");
+      // day2 新增 = (150+20) - (100+10) = 60(若混入 acct-2 会是 2060)
+      expect(t1).toEqual([{ day: "2026-06-12", plays: 60 }]);
+      const tAll = await repo.getDailyPlayTrend("user-a", undefined, 7);
+      expect(tAll).toEqual([{ day: "2026-06-12", plays: 2060 }]);
+    });
+  });
 });

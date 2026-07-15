@@ -236,3 +236,83 @@ describe("publishing.repository — account stamp (T-136)", () => {
     expect(rowB!.accountId).toBeNull();
   });
 });
+
+// [T-326 DATA-H01] 发布读路径按号隔离。语义 =「当前号 OR 未标记(account_id IS NULL)」:
+//   两个号的发布列表不再混读;存量 NULL 行(老数据/未选号写入)任一号下仍可见(不凭空
+//   消失,T-200 claimOrphan 逐步收编);未选号 ctx → 全量 user-scoped(现状不变)。
+describe("publishing.repository — account-scoped reads (T-326 DATA-H01)", () => {
+  async function seedTwoAccountsWithLegacy(db: Db) {
+    const repo1 = createPublishingRepository(db, {
+      ...deterministicDeps(A),
+      nextId: (p: string) => `${p}-acct1-${Math.random().toString(36).slice(2)}`,
+      accountId: "acct-1",
+    });
+    const repo2 = createPublishingRepository(db, {
+      ...deterministicDeps(A),
+      nextId: (p: string) => `${p}-acct2-${Math.random().toString(36).slice(2)}`,
+      accountId: "acct-2",
+    });
+    const repoLegacy = createPublishingRepository(db, {
+      ...deterministicDeps(A),
+      nextId: (p: string) => `${p}-null-${Math.random().toString(36).slice(2)}`,
+      accountId: null,
+    });
+    const p1 = await repo1.createPublication("out-shared", {
+      platform: "douyin",
+      accountReference: "@acct1",
+    });
+    const p2 = await repo2.createPublication("out-shared", {
+      platform: "douyin",
+      accountReference: "@acct2",
+    });
+    const pNull = await repoLegacy.createPublication("out-shared", {
+      platform: "douyin",
+      accountReference: "@legacy",
+    });
+    return { repo1, repo2, repoLegacy, p1, p2, pNull };
+  }
+
+  it("listPublicationsForUser:acct-1 只见本号 + 存量 NULL,不见 acct-2", async () => {
+    const { db } = await createDb();
+    const { repo1, repo2, p1, p2, pNull } = await seedTwoAccountsWithLegacy(db);
+    const seen1 = await repo1.listPublicationsForUser({ limit: 10, offset: 0 });
+    expect(seen1.map((r) => r.id).sort()).toEqual([p1.id, pNull.id].sort());
+    const seen2 = await repo2.listPublicationsForUser({ limit: 10, offset: 0 });
+    expect(seen2.map((r) => r.id).sort()).toEqual([p2.id, pNull.id].sort());
+  });
+
+  it("listPublicationsByOutput / listPublicationIdsByOutputs 按号隔离且存量 NULL 可见", async () => {
+    const { db } = await createDb();
+    const { repo1, p1, p2, pNull } = await seedTwoAccountsWithLegacy(db);
+    const byOutput = await repo1.listPublicationsByOutput("out-shared", {
+      limit: 10,
+      offset: 0,
+    });
+    expect(byOutput.map((r) => r.id).sort()).toEqual([p1.id, pNull.id].sort());
+    expect(byOutput.map((r) => r.id)).not.toContain(p2.id);
+    const ids = await repo1.listPublicationIdsByOutputs(["out-shared"]);
+    expect(ids.sort()).toEqual([p1.id, pNull.id].sort());
+  });
+
+  it("未选号(accountId null)→ 退化全量 user-scoped(现状不变)", async () => {
+    const { db } = await createDb();
+    const { repoLegacy, p1, p2, pNull } = await seedTwoAccountsWithLegacy(db);
+    const all = await repoLegacy.listPublicationsForUser({ limit: 10, offset: 0 });
+    expect(all.map((r) => r.id).sort()).toEqual([p1.id, p2.id, pNull.id].sort());
+  });
+
+  it("findByExternalKey 保持用户级(幂等锚,不按号隔离 —— 防重复导入炸唯一索引)", async () => {
+    const { db } = await createDb();
+    const { repo1, repo2 } = await seedTwoAccountsWithLegacy(db);
+    // acct-2 导入的作品(external key 落在 acct-2 行上)
+    const imported = await repo2.createImportedPublication("out-imp", {
+      platform: "douyin",
+      accountReference: "douyin 导入",
+      externalId: "aweme-xkey",
+    });
+    // acct-1 ctx 下按 external key 查:仍能命中(幂等锚是用户级事实,防止
+    // createImportedPublication 在跨号 ctx 下重复 INSERT → (platform, external_id) 唯一索引违约)。
+    const hit = await repo1.findByExternalKey("douyin", "aweme-xkey");
+    expect(hit?.id).toBe(imported.id);
+  });
+});
