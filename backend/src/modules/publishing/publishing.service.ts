@@ -97,6 +97,19 @@ export interface ServiceDeps {
     ctx: RequestContext,
     outputId: string,
   ) => Promise<void>;
+  // [T-323] register 重锚判据端口(可选,best-effort)。
+  //   resolveOutputOwner:反查一个 content_output 的属主项目 + source(判 imported 空壳 vs
+  //     用户手动项目)。**未注入 → 重锚分支拿不到 owner 信息,退化走保守「不抢」**(不误伤)。
+  //   archiveProjectSeam:归档被让位的 imported 空壳项目。未注入 → 跳过归档(重锚仍完成,
+  //     残留空壳可后续清理)。
+  resolveOutputOwner?: (
+    ctx: RequestContext,
+    outputId: string,
+  ) => Promise<{ projectId: string; source: string } | null>;
+  archiveProjectSeam?: (
+    ctx: RequestContext,
+    projectId: string,
+  ) => Promise<void>;
 }
 
 export interface PublishingService {
@@ -222,6 +235,23 @@ export interface PublishingService {
   // [T-321 治本] register(登记已发布)成功后跃迁该 output 属主项目到已发布态(best-effort,
   //   经注入的 markOwnerProjectPublished 端口;未注入/失败 → 静默 no-op,绝不阻断登记)。
   markOwnerPublished(ctx: RequestContext, outputId: string): Promise<void>;
+  // [T-323] register(登记已发布)专用入口:落/命中 published publication 并处理「作品已被
+  //   日拉自动建的 imported 空壳占用」的重锚。四分支(见实现分支表):无 existing → 新建;
+  //   existing 锚在同 output → 幂等;existing 锚在别的 output 且「旧属主 imported 空壳、
+  //   新属主非 imported」→ 重锚到本 output + 归档空壳;否则(existing 已属真实手动项目 / 归属
+  //   不明)→ 不抢(保守返 existing,绝不误伤用户已有项目)。**仅供 register transport 用**;
+  //   ingestion 日拉仍走 createImportedPublication(语义不变,不动)。
+  registerOwnerPublication(
+    ctx: RequestContext,
+    outputId: string,
+    input: {
+      platform: string;
+      externalId: string;
+      accountReference?: string;
+      externalUrl?: string | null;
+      publishedAt?: string | null;
+    },
+  ): Promise<PublicationRow>;
 }
 
 export function createPublishingService(deps: ServiceDeps): PublishingService {
@@ -235,6 +265,33 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     });
   }
 
+  // [T-321/T-323] best-effort 跃迁 output 属主项目到已发布态。未注入端口或任何失败都吞掉
+  //   —— 登记发布(publication)已落是真的,项目 stage 是派生显示,失败绝不回滚发布事实。
+  async function markOwnerPublishedBestEffort(
+    ctx: RequestContext,
+    outputId: string,
+  ): Promise<void> {
+    if (!deps.markOwnerProjectPublished || !outputId) return;
+    try {
+      await deps.markOwnerProjectPublished(ctx, outputId);
+    } catch {
+      // 静默降级:不阻断登记主流程(与 SPEC §11 post-commit 副作用不回滚同款)。
+    }
+  }
+
+  // [T-323] 反查 output 属主 + source;未注入端口或失败 → null(重锚分支据此退化走保守「不抢」)。
+  async function safeResolveOwner(
+    ctx: RequestContext,
+    outputId: string,
+  ): Promise<{ projectId: string; source: string } | null> {
+    if (!deps.resolveOutputOwner) return null;
+    try {
+      return await deps.resolveOutputOwner(ctx, outputId);
+    } catch {
+      return null;
+    }
+  }
+
   return {
     async claimOrphanPublications(ctx) {
       if (!ctx.accountId) return 0; // 未选号:无号可认领
@@ -242,14 +299,8 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     },
 
     async markOwnerPublished(ctx, outputId) {
-      // [T-321 治本] best-effort:属主项目跃迁到已发布态。未注入端口或任何失败都吞掉
-      //   —— 登记发布(publication)已落是真的,项目 stage 是派生显示,失败不能回滚发布事实。
-      if (!deps.markOwnerProjectPublished || !outputId) return;
-      try {
-        await deps.markOwnerProjectPublished(ctx, outputId);
-      } catch {
-        // 静默降级:不阻断登记主流程(与 SPEC §11 post-commit 副作用不回滚同款)。
-      }
+      // [T-321 治本] best-effort:属主项目跃迁到已发布态(实现见 markOwnerPublishedBestEffort)。
+      await markOwnerPublishedBestEffort(ctx, outputId);
     },
 
     async listPublications(ctx, outputId, pagination) {
@@ -500,6 +551,86 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         externalUrl: input.externalUrl ?? null,
         publishedAt: input.publishedAt ?? null,
       });
+    },
+
+    async registerOwnerPublication(ctx, outputId, input) {
+      // [T-323] register(登记已发布)入口。根因:日拉会先为一条真实作品自动建一个 imported
+      //   空壳项目 + 空壳 content_output,并把 aweme(platform+externalId)锚在空壳上;之后用户
+      //   手动新建项目绑定同链接来 register,若仍走 createImportedPublication 只会命中既有 pub
+      //   (锚在空壳)返回,用户手动项目永远成不了正主。本方法在这种情况下**重锚 + 归档空壳**。
+      //
+      //   四分支:
+      //   ① 无 existing → 建 published pub(同 createImportedPublication 语义)+ 跃迁本 output 属主。
+      //   ② existing 锚在同一 output → 幂等:只跃迁本 output 属主,返回 existing。
+      //   ③ existing 锚在别的 output 且「旧属主 = imported 空壳、新属主 = 非 imported(用户手动
+      //      项目)」→ 重锚到本 output + 跃迁本 output 属主 + 归档旧空壳,返回重锚后 pub。
+      //   ④ 其余(existing 已属真实手动项目 / 归属不明 / 端口未注入退化)→ 不抢:跃迁 existing
+      //      的属主后返回 existing(保持现状,绝不误伤用户已有项目)。
+      //   全程 best-effort:跨模块端口(markOwnerProjectPublished / resolveOutputOwner /
+      //   archiveProjectSeam)失败绝不回滚已落的 publication 事实(SPEC §11/§16)。
+      if (!PLATFORMS.has(input.platform)) {
+        throw new ValidationError(
+          `ValidationError: unknown platform: ${input.platform}`,
+        );
+      }
+      const repo = repoFor(ctx);
+      const existing = await repo.findByExternalKey(
+        input.platform,
+        input.externalId,
+      );
+
+      // ① 无 existing → 建 published pub。
+      if (!existing) {
+        const created = await repo.createImportedPublication(outputId, {
+          platform: input.platform,
+          accountReference: input.accountReference ?? `${input.platform} 导入`,
+          externalId: input.externalId,
+          externalUrl: input.externalUrl ?? null,
+          publishedAt: input.publishedAt ?? null,
+        });
+        await markOwnerPublishedBestEffort(ctx, outputId);
+        return created;
+      }
+
+      // ② existing 已锚在本 output → 幂等,只跃迁属主项目。
+      if (existing.contentOutputId === outputId) {
+        await markOwnerPublishedBestEffort(ctx, outputId);
+        return existing;
+      }
+
+      // existing 锚在别的 output —— 用两端属主 source 决定是否重锚。
+      const ownerOld = await safeResolveOwner(ctx, existing.contentOutputId);
+      const ownerNew = await safeResolveOwner(ctx, outputId);
+
+      // ③ 仅当「旧属主是 imported 空壳」且「新属主是非 imported(用户手动项目)」→ 重锚。
+      if (
+        ownerOld?.source === "imported" &&
+        ownerNew != null &&
+        ownerNew.source !== "imported"
+      ) {
+        const reAnchored = await repo.reAnchorPublicationOutput(
+          existing.id,
+          outputId,
+        );
+        await markOwnerPublishedBestEffort(ctx, outputId);
+        // 归档被让位的 imported 空壳(best-effort:archiveProject 对 already-archived 会抛
+        //   ProjectStateError,这里 catch 吞掉,绝不阻断重锚)。
+        // 封面不在本切片迁移:重锚后下次日拉的封面回填(T-322 已修)会落到现属主(手动
+        //   项目)的 publication 上,自愈即可 —— 无需在此搬运封面。
+        if (deps.archiveProjectSeam) {
+          try {
+            await deps.archiveProjectSeam(ctx, ownerOld.projectId);
+          } catch {
+            // 空壳已归档 / 归档失败 → 吞掉:重锚事实已落,归档是派生清理。
+          }
+        }
+        return reAnchored;
+      }
+
+      // ④ 不抢:existing 属真实手动项目 / 归属不明 / 端口未注入退化 → 保持现状,只跃迁
+      //    existing 的属主 output(绝不重锚、绝不归档,防误伤用户已有项目)。
+      await markOwnerPublishedBestEffort(ctx, existing.contentOutputId);
+      return existing;
     },
 
     async listPublicationIdsByProject(ctx, projectId) {

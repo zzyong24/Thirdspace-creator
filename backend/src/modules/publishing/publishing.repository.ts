@@ -115,6 +115,14 @@ export interface PublishingRepository {
     platform: string,
     externalId: string,
   ): Promise<PublicationRow | null>;
+  // [T-323] 重锚:把一条 publication 的 content_output_id 改到另一个 output(user-scoped)。
+  //   只动 content_output_id + updated_at —— 绝不碰 status / external_id / hidden_at
+  //   (重锚不改作品的发布事实与可见性,只换属主 output)。register 命中「imported 空壳占用
+  //   的作品」时让位给用户手动项目的 output 用。返回更新后的 PublicationRow。
+  reAnchorPublicationOutput(
+    publicationId: string,
+    newOutputId: string,
+  ): Promise<PublicationRow>;
   // [T-073] 平台侧可见性:置/清 hidden_at(非空 = 抖音端「仅自己可见/已隐藏」)。
   // 只动 hidden_at + updated_at,不碰 status 状态机(hidden 与生命周期正交)。
   setHiddenAt(
@@ -487,6 +495,22 @@ export function createPublishingRepository(
           ),
         );
       return rows[0] ?? null;
+    },
+
+    async reAnchorPublicationOutput(publicationId, newOutputId) {
+      // [T-323] ownership gate 后只 UPDATE content_output_id(+ updated_at)。不动
+      //   status / external_id / hidden_at —— 换锚不改发布事实与可见性。
+      await getPublicationRowById(publicationId);
+      await db
+        .update(publications)
+        .set({ contentOutputId: newOutputId, updatedAt: deps.now() })
+        .where(
+          and(
+            eq(publications.id, publicationId),
+            eq(publications.userId, userId),
+          ),
+        );
+      return getPublicationRowById(publicationId);
     },
   };
 }

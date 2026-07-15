@@ -201,6 +201,14 @@ export interface ProjectsService {
     ctx: RequestContext,
     outputId: string,
   ): Promise<string | null>;
+  // [T-323] 反查一个 content_output 的属主项目 id + 其 source(重锚判据)。register
+  //   (登记已发布)命中「已被别的 output 占用的作品」时,靠 source 判断该 output 属主是
+  //   imported 空壳(日拉自动建的)还是用户手动项目,据此决定是否重锚让位。越权/不存在 →
+  //   null(诚实降级,重锚分支据此走保守「不抢」)。= getProjectIdByOutput + repo.get 取 source。
+  getOutputOwnerSummary(
+    ctx: RequestContext,
+    outputId: string,
+  ): Promise<{ projectId: string; source: string } | null>;
   // [T-321] 幂等把项目跃迁到「已发布/复盘」态(currentStage=review、前置阶段 completed、
   //   全阶段进度 100 → recomputeProgress=100),复用 createProject 的 imported 阶段布局
   //   (:701-726)。**不改 source**(manual 项目登记发布后仍 manual,绝不因此被 reconstruct
@@ -823,6 +831,19 @@ export function createProjectsService(
       try {
         const output = await repo.getOutput(ctx, outputId);
         return output.projectId ?? null;
+      } catch {
+        return null;
+      }
+    },
+
+    async getOutputOwnerSummary(ctx, outputId) {
+      // [T-323] = getProjectIdByOutput(所有权门拿属主 projectId)+ repo.get 取该项目 source。
+      //   任何一步越权/不存在都吞成 null(诚实降级 → register 重锚分支据此走保守「不抢」)。
+      const projectId = await service.getProjectIdByOutput(ctx, outputId);
+      if (!projectId) return null;
+      try {
+        const project = await repo.get(ctx, projectId);
+        return { projectId, source: project.source };
       } catch {
         return null;
       }

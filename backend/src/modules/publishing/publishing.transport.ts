@@ -149,10 +149,13 @@ export function createPublishingTransport(
         }
         case "outputs.publications.register": {
           // [T-055h③/T-063c] 登记已发布:粘链接解析出的 external_id 直接落一条
-          // published publication —— 复用数据底座的 createImportedPublication
-          // (幂等于 (platform, externalId),重复登记返回既有行)。contract 的
-          // currentRevisionId 非空,故行上没有 revision 时补铸一条(title 取 body.title,
-          // 缺省空)再回读 —— 与 createPublication 的 OQ4 auto-mint 同语义。
+          // published publication。[T-323 治本] 改走 registerOwnerPublication —— 它内部
+          // 处理「作品已被日拉自动建的 imported 空壳占用」:命中空壳时把作品重锚到用户手动
+          // 项目的 output + 归档空壳(而非返回锚在空壳上的既有行,让用户项目永远卡立项)。
+          // 幂等于 (platform, externalId);属主项目跃迁已发布(markOwnerPublished)已合并进
+          // 该方法(best-effort,内部吞错不阻断登记),故此处不再单独调。contract 的
+          // currentRevisionId 非空,行上没有 revision 时补铸一条(title 取 body.title,缺省
+          // 空)再回读 —— 与 createPublication 的 OQ4 auto-mint 同语义。
           const b = (body ?? {}) as {
             platform: string;
             externalId: string;
@@ -160,7 +163,7 @@ export function createPublishingTransport(
             publishedAt?: string | null;
             title?: string;
           };
-          let row = await service.createImportedPublication(
+          let row = await service.registerOwnerPublication(
             ctx,
             p.outputId ?? "",
             {
@@ -177,9 +180,6 @@ export function createPublishingTransport(
             });
             row = await service.getPublication(ctx, row.id);
           }
-          // [T-321 治本] 登记已发布顺带把属主项目跃迁到「已发布/复盘」态,绑定后立刻显已发布
-          //   (不用等日拉)。best-effort:内部吞错,绝不阻断登记主流程。
-          await service.markOwnerPublished(ctx, p.outputId ?? "");
           return { data: toPublicationResource(row), meta: { requestId } };
         }
         case "publications.get": {

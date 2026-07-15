@@ -394,3 +394,145 @@ describe("listPublicationsMissingCover / setCover ([T-078] 作品封面)", () =>
     expect(ok.coverAssetId).toBe("asset-mine");
   });
 });
+
+// [T-323] register 重锚:日拉自动建的 imported 空壳占用了作品,用户手动项目 register 时
+// 让位重锚(把作品换锚到手动 output)+ 归档空壳。用 fake 端口注入 owner 判据 + 归档 seam。
+describe("registerOwnerPublication ([T-323] 重锚 + 归档空壳)", () => {
+  let markedOwners: string[];
+  let archived: string[];
+  let owners: Map<string, { projectId: string; source: string }>;
+
+  // injectOwnerSeams=false 模拟组合根未注入 resolveOutputOwner/archiveProjectSeam 的退化态。
+  function buildWithSeams(injectOwnerSeams: boolean): PublishingService {
+    let seq = 0;
+    markedOwners = [];
+    archived = [];
+    owners = new Map();
+    return createPublishingService({
+      db,
+      now: () => NOW,
+      nextId: (p: string) => `${p}-${++seq}`,
+      publisher: createMockPublisher(),
+      markOwnerProjectPublished: (_c, outputId) => {
+        markedOwners.push(outputId);
+        return Promise.resolve();
+      },
+      ...(injectOwnerSeams
+        ? {
+            resolveOutputOwner: (_c: RequestContext, outputId: string) =>
+              Promise.resolve(owners.get(outputId) ?? null),
+            archiveProjectSeam: (_c: RequestContext, projectId: string) => {
+              archived.push(projectId);
+              return Promise.resolve();
+            },
+          }
+        : {}),
+    });
+  }
+
+  it("重锚:imported 空壳持有 aweme → 手动 output register → 换锚 + 归档空壳 + markPublished(手动 output)", async () => {
+    const svc = buildWithSeams(true);
+    owners.set("output-shell", { projectId: "proj-shell", source: "imported" });
+    owners.set("output-manual", { projectId: "proj-manual", source: "manual" });
+    // 日拉先为真实作品建了 imported 空壳,pub 锚在空壳 output。
+    const shellPub = await svc.createImportedPublication(ctx, "output-shell", {
+      platform: "douyin",
+      externalId: "aweme-reanchor",
+    });
+    // 用户手动新建项目,同链接登记已发布 → 命中被空壳占用的作品。
+    const result = await svc.registerOwnerPublication(ctx, "output-manual", {
+      platform: "douyin",
+      externalId: "aweme-reanchor",
+    });
+    // 同一 pub 行(未新建),content_output 重锚到手动 output。
+    expect(result.id).toBe(shellPub.id);
+    expect(result.contentOutputId).toBe("output-manual");
+    // 旧空壳项目被归档。
+    expect(archived).toContain("proj-shell");
+    // 手动 output 属主项目跃迁已发布。
+    expect(markedOwners).toContain("output-manual");
+    // 落库确认重锚是持久的,且 status/external_id 不变(只换锚)。
+    const after = await svc.getPublication(ctx, shellPub.id);
+    expect(after.contentOutputId).toBe("output-manual");
+    expect(after.status).toBe("published");
+    expect(after.externalId).toBe("aweme-reanchor");
+  });
+
+  it("不抢:existing 已属真实手动项目 → 不 archive、不重锚、返回 existing", async () => {
+    const svc = buildWithSeams(true);
+    owners.set("output-A", { projectId: "proj-A", source: "manual" });
+    owners.set("output-B", { projectId: "proj-B", source: "manual" });
+    const pubA = await svc.createImportedPublication(ctx, "output-A", {
+      platform: "douyin",
+      externalId: "aweme-nosteal",
+    });
+    const result = await svc.registerOwnerPublication(ctx, "output-B", {
+      platform: "douyin",
+      externalId: "aweme-nosteal",
+    });
+    expect(result.id).toBe(pubA.id);
+    expect(result.contentOutputId).toBe("output-A"); // 未重锚
+    expect(archived).toEqual([]); // 未归档
+    // 保守跃迁 existing 的属主 output(不动用户项目归属)。
+    expect(markedOwners).toContain("output-A");
+  });
+
+  it("幂等:existing 已锚在同 output → 只 markPublished、不重锚、不归档", async () => {
+    const svc = buildWithSeams(true);
+    owners.set("output-X", { projectId: "proj-X", source: "manual" });
+    const pub = await svc.createImportedPublication(ctx, "output-X", {
+      platform: "douyin",
+      externalId: "aweme-idem",
+    });
+    const result = await svc.registerOwnerPublication(ctx, "output-X", {
+      platform: "douyin",
+      externalId: "aweme-idem",
+    });
+    expect(result.id).toBe(pub.id);
+    expect(result.contentOutputId).toBe("output-X");
+    expect(archived).toEqual([]);
+    expect(markedOwners).toContain("output-X");
+  });
+
+  it("新建:无 existing → 建 published pub(带 external_id)+ markPublished(本 output)", async () => {
+    const svc = buildWithSeams(true);
+    const result = await svc.registerOwnerPublication(ctx, "output-new", {
+      platform: "douyin",
+      externalId: "aweme-fresh",
+      externalUrl: "https://douyin.example/aweme-fresh",
+    });
+    expect(result.status).toBe("published");
+    expect(result.externalId).toBe("aweme-fresh");
+    expect(result.contentOutputId).toBe("output-new");
+    expect(markedOwners).toContain("output-new");
+    expect(archived).toEqual([]);
+  });
+
+  it("端口未注入退化:缺 resolveOutputOwner/archiveProjectSeam → 走保守「不抢」,不炸", async () => {
+    const svc = buildWithSeams(false); // 不注入 owner seams(仅 markOwnerProjectPublished 在)
+    const shellPub = await svc.createImportedPublication(ctx, "output-shell", {
+      platform: "douyin",
+      externalId: "aweme-degraded",
+    });
+    const result = await svc.registerOwnerPublication(ctx, "output-manual", {
+      platform: "douyin",
+      externalId: "aweme-degraded",
+    });
+    // 拿不到 owner 信息 → 不重锚(保守),返回 existing(锚在空壳,未动)。
+    expect(result.id).toBe(shellPub.id);
+    expect(result.contentOutputId).toBe("output-shell");
+    expect(archived).toEqual([]);
+    // 仍 best-effort 跃迁 existing 的属主(markOwnerProjectPublished 已注入)。
+    expect(markedOwners).toContain("output-shell");
+  });
+
+  it("未知平台 → ValidationError(与 createImportedPublication 同门禁)", async () => {
+    const svc = buildWithSeams(true);
+    await expect(
+      svc.registerOwnerPublication(ctx, "output-1", {
+        platform: "myspace",
+        externalId: "x-1",
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+});

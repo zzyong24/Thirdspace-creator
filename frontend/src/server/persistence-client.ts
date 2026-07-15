@@ -1848,6 +1848,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const projectId = await projectsService.getProjectIdByOutput(ctx, outputId);
       if (projectId) await projectsService.markPublished(ctx, projectId);
     },
+    // [T-323 治本] register 重锚判据端口:反查 output 属主项目 + source(判 imported 空壳 vs
+    //   用户手动项目),及归档被让位的空壳。经公共 service,不跨模块直连 repo(守 SPEC §22)。
+    //   命中「日拉自动建的 imported 空壳占用的作品」→ 重锚到用户手动项目 + 归档空壳,让手动
+    //   项目成正主(不再卡「立项中」),而非返回锚在空壳上的既有 pub。
+    resolveOutputOwner: (ctx, outputId) =>
+      projectsService.getOutputOwnerSummary(ctx, outputId),
+    archiveProjectSeam: (ctx, projectId) =>
+      projectsService.archiveProject(ctx, projectId).then(() => {}),
   });
   const publishing = createPublishingTransport(() => publishingService);
 
