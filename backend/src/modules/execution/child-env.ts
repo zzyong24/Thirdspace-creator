@@ -64,9 +64,11 @@ const CHILD_ENV_ALLOWLIST: readonly string[] = [
  */
 export function buildChildEnv(
   extra: Record<string, string> = {},
-  source: NodeJS.ProcessEnv = process.env,
-): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = {};
+  source: Record<string, string | undefined> = process.env,
+): Record<string, string> {
+  // 不用 NodeJS.ProcessEnv:frontend 的全局类型增强把 NODE_ENV 声明为必填,
+  // 该类型在跨包 tsc 视角下无法用 {} 初始化;spawn/execFile 的 env 形参兼容普通 Record。
+  const env: Record<string, string> = {};
   for (const key of CHILD_ENV_ALLOWLIST) {
     const v = source[key];
     if (typeof v === "string") env[key] = v;
