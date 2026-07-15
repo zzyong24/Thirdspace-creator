@@ -22,6 +22,11 @@ import "server-only";
 
 import { WebCaptureError, detectLoginWall, makeAbortError } from "./web-capture";
 import { webDomainFromUrl } from "./web-session";
+import {
+  UrlBlockedError,
+  assertUrlAllowed,
+  collectRedirectChainUrls,
+} from "./url-guard";
 
 /** 无有效会话 / 会话过期 —— 结构化降级信号(不截登录页糊弄)。携带 domain 供编导引导用户
  *  「去保管库登录一次」。是 WebCaptureError 的子类,复用三墙分类的 catch 通路。 */
@@ -62,6 +67,8 @@ const NAV_TIMEOUT_MS = 30_000; // SPA 正文渲染比截图慢,给 30s
 interface ReaderNavResponse {
   status(): number;
   url(): string;
+  /** [T-326·RT-H04] 真实 Playwright Response 有 request()(供重定向链复检);fake 可缺省。 */
+  request?(): unknown;
 }
 export interface ReaderCapablePage {
   goto(
@@ -89,6 +96,15 @@ export interface ReaderCapableContext {
 /** readUrl 的可注入依赖(默认真 launchPersistentContext(webAuthDirFor(domain));单测注 fake ctx)。 */
 export interface ReadUrlDeps {
   openContext?: (authDir: string) => Promise<ReaderCapableContext>;
+  /** [T-326·RT-H04] SSRF 守卫(默认真 assertUrlAllowed:协议白名单 + 私网/回环/链路本地/
+   *  云元数据阻断 + DNS 解析复核);单测可注 fake lookup 的守卫,不打真 DNS。 */
+  guardUrl?: (url: string) => Promise<void>;
+}
+
+/** UrlBlockedError → WebCaptureError(保持三墙错误分类通路;message 已是人话原样带过)。 */
+function toReaderError(err: unknown): Error {
+  if (err instanceof UrlBlockedError) return new WebCaptureError(err.message);
+  return err instanceof Error ? err : new Error(String(err));
 }
 
 async function realOpenReaderContext(
@@ -480,6 +496,14 @@ export async function readUrl(
       `页面打不开:只支持 http/https 链接(收到「${target.slice(0, 80)}」)`,
     );
   }
+  // [T-326·RT-H04] SSRF 前置守卫:私网/回环/链路本地/云元数据地址在**起浏览器之前**就拒
+  // (协议白名单 + IP 字面量直接判 + 域名 DNS 解析逐地址判;DNS 解析失败放行,goto 会诚实失败)。
+  const guardUrl = deps.guardUrl ?? assertUrlAllowed;
+  try {
+    await guardUrl(target);
+  } catch (err) {
+    throw toReaderError(err);
+  }
   // [T-239c] 入口即断:已中断的信号不再起浏览器。
   const signal = opts.signal;
   if (signal?.aborted) throw makeAbortError("网页读取");
@@ -514,6 +538,21 @@ export async function readUrl(
       );
     }
     const finalUrl = (resp ? resp.url() : "") || page.url();
+    // [T-326·RT-H04] 重定向逐跳复检(事后链审计,选型见 url-guard 文件头):goto 已跟随的每一跳
+    // + 最终 URL 逐个重过守卫 —— 命中私网/元数据即抛错,正文绝不抽取返回。残留:命中跳的 HTTP
+    // 请求本身已被浏览器发出(无法事前拦,Playwright route 不触发于 redirect 跳)。
+    {
+      const checked = new Set<string>([target]);
+      for (const hop of [...collectRedirectChainUrls(resp), finalUrl]) {
+        if (!hop || checked.has(hop)) continue;
+        checked.add(hop);
+        try {
+          await guardUrl(hop);
+        } catch (err) {
+          throw toReaderError(err);
+        }
+      }
+    }
     // 等 SPA 正文渲染 + 滚动到底触发懒加载/长对话全量(拿不到 selector/滚动失败都不抛,兜底用当前 DOM)。
     await page.waitForSelector("main, article, [data-message-author-role]", { timeout: 8_000 }).catch(() => {});
     await page

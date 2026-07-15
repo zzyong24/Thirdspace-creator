@@ -16,6 +16,12 @@ import { WebCaptureError } from "./web-capture";
 // [T-217b] Web Reader:抽取器纯函数 + readUrl 三墙分类/抽取器选择(openContext 注 fake page,
 // 不起真浏览器)。
 
+// [T-326·RT-H04] 默认 SSRF 守卫会 DNS 解析域名 —— mock 掉 node:dns/promises 让既有用例的
+// example.com / chatgpt.com 等域名都「解析到公网 IP」,单测不打真 DNS、不受网络环境影响。
+vi.mock("node:dns/promises", () => ({
+  lookup: vi.fn(async () => [{ address: "93.184.216.34", family: 4 }]),
+}));
+
 describe("extractChatGptShare", () => {
   it("从 __NEXT_DATA__ SSR JSON 抽逐轮对话全文", () => {
     const payload = {
@@ -422,5 +428,82 @@ describe("[T-239c] readUrl — AbortSignal 提前退出", () => {
     await new Promise((r) => setTimeout(r, 10));
     ac.abort();
     await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  });
+});
+
+// ── [T-326·RT-H04] SSRF 守卫接入 readUrl:私网/元数据前置拒(不开浏览器)+ 重定向逐跳复检 ──
+describe("[T-326·RT-H04] readUrl — SSRF 守卫", () => {
+  it("私网/回环/元数据目标 → WebCaptureError(SSRF),且不开浏览器", async () => {
+    for (const url of [
+      "http://127.0.0.1:8080/admin",
+      "http://10.0.0.5/",
+      "http://192.168.1.1/router",
+      "http://169.254.169.254/latest/meta-data/",
+      "http://[::1]/",
+      "http://localhost:3000/",
+    ]) {
+      const openContext = vi.fn(async () => makeCtx({}));
+      await expect(
+        readUrl(url, { authDir: "/tmp/x" }, { openContext }),
+      ).rejects.toBeInstanceOf(WebCaptureError);
+      expect(openContext).not.toHaveBeenCalled(); // 起浏览器之前就拒
+    }
+  });
+
+  it("合法公网 URL(域名解析到公网 IP)→ 放行,正常读到正文(不误杀)", async () => {
+    const ctx = makeCtx({
+      goto: async () => ({ status: () => 200, url: () => "https://blog.example.com/p" }),
+      url: () => "https://blog.example.com/p",
+      content: async () =>
+        `<html><head><title>好文</title></head><body><article><h1>好文</h1>${"<p>这是一段足够长的正文内容,用来让 Readability 认定这是文章主体。</p>".repeat(8)}</article></body></html>`,
+    });
+    const res = await readUrl(
+      "https://blog.example.com/p",
+      { authDir: "/tmp/x" },
+      { openContext: async () => ctx },
+    );
+    expect(res.extractor).toBe("readability");
+    expect(res.text).toContain("正文内容");
+  });
+
+  it("重定向到私网/元数据地址 → 逐跳复检拒绝,正文绝不返回", async () => {
+    // 伪造 Playwright 重定向链:公网起跳 → 169.254.169.254 → 公网落地(finalUrl 公网,
+    // 只查 finalUrl 会漏 —— 必须逐跳复检才拦得住)。
+    const first = {
+      url: () => "https://example.com/start",
+      redirectedFrom: () => null,
+    };
+    const meta = {
+      url: () => "http://169.254.169.254/latest/meta-data/",
+      redirectedFrom: () => first,
+    };
+    const finalReq = {
+      url: () => "https://example.com/landing",
+      redirectedFrom: () => meta,
+    };
+    const content = vi.fn(async () => "<html><body>敏感元数据</body></html>");
+    const ctx = makeCtx({
+      goto: async () => ({
+        status: () => 200,
+        url: () => "https://example.com/landing",
+        request: () => finalReq,
+      }),
+      url: () => "https://example.com/landing",
+      content,
+    });
+    await expect(
+      readUrl("https://example.com/start", { authDir: "/tmp/x" }, { openContext: async () => ctx }),
+    ).rejects.toThrow(/SSRF/);
+    expect(content).not.toHaveBeenCalled(); // 正文抽取根本没跑
+  });
+
+  it("重定向落到私网 finalUrl(fake resp 无 request 链)→ finalUrl 复检也拦得住", async () => {
+    const ctx = makeCtx({
+      goto: async () => ({ status: () => 200, url: () => "http://10.0.0.8/internal" }),
+      url: () => "http://10.0.0.8/internal",
+    });
+    await expect(
+      readUrl("https://example.com/jump", { authDir: "/tmp/x" }, { openContext: async () => ctx }),
+    ).rejects.toThrow(/SSRF/);
   });
 });

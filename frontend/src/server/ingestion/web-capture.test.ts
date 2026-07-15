@@ -11,6 +11,12 @@ import {
 // 覆盖三类诚实报错:导航打不开(goto reject)/ HTTP 4xx-5xx / 登录墙·验证码启发式;
 // 以及成功路径(返回 PNG 字节 + finalUrl + title)。
 
+// [T-326·RT-H04] 默认 SSRF 守卫会 DNS 解析域名 —— mock 掉 node:dns/promises 让既有用例的
+// example.com 等域名都「解析到公网 IP」,单测不打真 DNS、不受网络环境影响。
+vi.mock("node:dns/promises", () => ({
+  lookup: vi.fn(async () => [{ address: "93.184.216.34", family: 4 }]),
+}));
+
 // 造一个 fake page/context:各能力可按用例覆写,记录 close/screenshot 调用。
 function makeFakeContext(over: {
   gotoReject?: Error;
@@ -228,5 +234,86 @@ describe("[T-239c] captureUrl — AbortSignal 提前退出", () => {
       { openContext: async () => ctx },
     );
     expect(res.title).toBe("公开页");
+  });
+});
+
+// ── [T-326·RT-H04] SSRF 守卫接入 captureUrl:私网/元数据前置拒(不开浏览器)+ 重定向逐跳复检 ──
+describe("[T-326·RT-H04] captureUrl — SSRF 守卫", () => {
+  it("私网/回环/元数据目标 → WebCaptureError(SSRF),且不开浏览器", async () => {
+    for (const url of [
+      "http://127.0.0.1:8080/admin",
+      "http://10.0.0.5/",
+      "http://192.168.1.1/router",
+      "http://169.254.169.254/latest/meta-data/",
+      "http://[::1]/",
+      "http://localhost:3000/",
+    ]) {
+      const openContext = vi.fn(async () => makeFakeContext({}).ctx);
+      await expect(
+        captureUrl(url, {}, { openContext }),
+      ).rejects.toBeInstanceOf(WebCaptureError);
+      expect(openContext).not.toHaveBeenCalled(); // 起浏览器之前就拒
+    }
+  });
+
+  it("合法公网 URL(域名解析到公网 IP)→ 放行,成功截图(不误杀)", async () => {
+    const { ctx } = makeFakeContext({ title: "公开文章" });
+    const res = await captureUrl(
+      "https://example.com/post",
+      {},
+      { openContext: async () => ctx },
+    );
+    expect(res.title).toBe("公开文章");
+  });
+
+  it("重定向到私网/元数据地址 → 逐跳复检拒绝,不返回截图", async () => {
+    // 伪造 Playwright 重定向链:公网起跳 → 169.254.169.254 → 公网落地(finalUrl 公网,
+    // 只查 finalUrl 会漏 —— 必须逐跳复检才拦得住)。
+    const first = {
+      url: () => "https://example.com/start",
+      redirectedFrom: () => null,
+    };
+    const meta = {
+      url: () => "http://169.254.169.254/latest/meta-data/",
+      redirectedFrom: () => first,
+    };
+    const finalReq = {
+      url: () => "https://example.com/landing",
+      redirectedFrom: () => meta,
+    };
+    const calls = { shot: 0 };
+    const page: CaptureCapablePage = {
+      goto: async () => ({
+        status: () => 200,
+        url: () => "https://example.com/landing",
+        request: () => finalReq,
+      }),
+      url: () => "https://example.com/landing",
+      title: async () => "落地页",
+      content: async () => "<html><body>正常内容</body></html>",
+      screenshot: async () => {
+        calls.shot += 1;
+        return new Uint8Array([1]);
+      },
+    };
+    const ctx: CaptureCapableContext = {
+      newPage: async () => page,
+      close: async () => {},
+    };
+    await expect(
+      captureUrl("https://example.com/start", {}, { openContext: async () => ctx }),
+    ).rejects.toThrow(/SSRF/);
+    expect(calls.shot).toBe(0); // 内容(截图)绝不返回
+  });
+
+  it("重定向落到私网 finalUrl(fake resp 无 request 链)→ finalUrl 复检也拦得住", async () => {
+    const { ctx, calls } = makeFakeContext({
+      status: 200,
+      finalUrl: "http://10.0.0.8/internal",
+    });
+    await expect(
+      captureUrl("https://example.com/jump", {}, { openContext: async () => ctx }),
+    ).rejects.toThrow(/SSRF/);
+    expect(calls.shot).toBe(0);
   });
 });
