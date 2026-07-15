@@ -280,6 +280,10 @@ export interface AiService {
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
   confirmTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
   cancelTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
+  // [DATA-H07] runner 失败清理 seam:asset.generate / cover.generate 在「asset 已建、
+  // recordCandidate 失败」的窗口里调用它,把仍 pending 的生成资产软删进回收站(不留隐身孤儿)。
+  // 只清 pending(已采纳 active 绝不误动);越权/不存在 → 静默 no-op(best-effort 语义)。
+  discardGeneratedAsset(ctx: RequestContext, assetId: string): Promise<void>;
   getTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
   // The composition-layer runner flips queued→running when the agent STARTS (so the UI's
   // status is honest while the agent works), before recordCandidate flips it to
@@ -350,6 +354,31 @@ export interface AiService {
   >;
   // [T-248 批C] getPendingTopicReview 已删 —— 唯一调用方 op
   // ai.tasks.pending_topic_review 随 T-060 弹窗任务流退役而移除。
+}
+
+// [DATA-H06] 批量采纳的**逐项幂等日志**(adopted-keys journal)。
+//
+// 病根:material_list / learning_list / publication_drafts 等批量采纳分支逐条经端口落库,
+// 最后才标 task succeeded —— 第 N 条失败后任务停在 awaiting_confirmation,用户重试 confirm
+// 会把前 N-1 条**再落一遍**(审计 DATA-H06)。
+//
+// 为什么不是「整批包一个 Drizzle 事务」:落库走的是跨模块端口(knowledge / learnings /
+// publishing…),端口实现绑的是**根 db**(组合根 persistence-client,本波冻结)。drizzle 的
+// pglite driver 用 `client.transaction()`(独占 PGlite transactionMutex)—— 事务回调里任何
+// 经根 db 的查询都会排在 mutex 后面等事务结束 → **死锁**(本仓已实测复现)。裸 BEGIN/COMMIT
+// 则在单连接上会把并发请求的写一并卷进来(误滚/误提交),更不可接受。
+//
+// 故取「采纳日志」达成同一不变量(重试不重复):每采纳完一条,把该条的**稳定键**记进候选结果行
+// 的 result_data.adoptedKeys;重试时跳过已记键。残余窗口:单条内部「实体已建、键未记」之间
+// 崩溃 → 重试最多重复**这一条**(相对旧行为的 N-1 条重复,收敛到常数),诚实标注于此。
+const ADOPT_KEY_SEP = "\u001f"; // unit separator —— 字段值里几乎不可能出现,防拼接歧义
+function adoptKey(...parts: string[]): string {
+  return parts.join(ADOPT_KEY_SEP);
+}
+function readAdoptedKeys(resultData: unknown): Set<string> {
+  const data = (resultData ?? {}) as Record<string, unknown>;
+  const raw = Array.isArray(data.adoptedKeys) ? data.adoptedKeys : [];
+  return new Set(raw.filter((k): k is string => typeof k === "string"));
 }
 
 // Allowed AI Task transitions — IDENTICAL to @creatoros/ai-worker state-machine.ts
@@ -552,6 +581,15 @@ export function createAiService(deps: ServiceDeps): AiService {
         throw new ConflictError(`AI task ${taskId} has no candidate result`);
       }
 
+      // [DATA-H06] 逐项幂等:候选行上已记的采纳键(上次 confirm 半途失败留下的进度)。批量
+      // 分支逐条落库前先查 adopted、落完即 markAdopted(写回 result_data.adoptedKeys)——
+      // 第 N 条失败 → 任务停在 awaiting_confirmation,重试跳过前 N-1 条,不再重复落库。
+      const adopted = readAdoptedKeys(candidate.resultData);
+      const markAdopted = async (key: string): Promise<void> => {
+        adopted.add(key); // 同批内重复项(同稳定键)也只落一次
+        await repo.recordAdoptedKey(candidate.id, key);
+      };
+
       // video_decisions (video.decisions node, T-254b/c 制作视频管线) — the confirm 门
       // itself lives in the 分场预览卡:用户过目/删卡/换选后,前端把编辑后的决策组装成
       // 渲染 props 并另起 execution.tasks.create(video.render)跟踪渲染。这里的采纳
@@ -585,6 +623,10 @@ export function createAiService(deps: ServiceDeps): AiService {
           ]
             .filter(Boolean)
             .join("\n");
+          // [DATA-H06] 稳定键 = 内容键(title+url):重试/同批重复项只落一次;用户在采纳前
+          // 经 CollabField 改/删条目也不串位(键随内容,不随下标)。
+          const key = adoptKey("material", title, url);
+          if (adopted.has(key)) continue; // 上次已采纳 → 跳过,不重复建 KnowledgeItem
           const created = await deps.knowledge.createKnowledge(ctx, {
             title,
             knowledgeType: "reference",
@@ -603,6 +645,8 @@ export function createAiService(deps: ServiceDeps): AiService {
               addedByType: "ai",
             });
           }
+          // 该条(实体 + 链接)整体落完才记键 —— 半途崩溃重试最多重做**本条**,绝不重复前面的。
+          await markAdopted(key);
         }
         const updated = await repo.updateTaskStatus(taskId, {
           status: "succeeded",
@@ -635,16 +679,26 @@ export function createAiService(deps: ServiceDeps): AiService {
             `AI task ${taskId} generated_asset candidate is missing assetId`,
           );
         }
+        // [DATA-H07] 采纳门先把生成资产 pending → active(runner 现在生的是 pending 候选态,
+        // 采纳前不进素材库)。幂等:已 active(重试 / 存量老资产直落 active)→ no-op。必须在
+        // 绑用料链**之前**翻转 —— 链接一个仍 pending 的资产会让用料链指向隐身行。
+        await repo.commitGeneratedAsset(assetId);
         if (typeof task.projectId === "string" && task.projectId.length > 0) {
-          await deps.materialLinks.link(ctx, {
-            projectId: task.projectId,
-            entityType: "asset",
-            entityId: assetId,
-            role: "clip",
-            stage: "production",
-            // [T-146 切片 b] AI 生成素材(asset.generate)采纳 → priority='normal'。
-            addedByType: "ai",
-          });
+          // [DATA-H06] 稳定键防重试重复绑链(link 无自身幂等;上次「链已绑、状态没落」的
+          // 重试不再加第二条同链)。
+          const key = adoptKey("generated_asset_link", assetId);
+          if (!adopted.has(key)) {
+            await deps.materialLinks.link(ctx, {
+              projectId: task.projectId,
+              entityType: "asset",
+              entityId: assetId,
+              role: "clip",
+              stage: "production",
+              // [T-146 切片 b] AI 生成素材(asset.generate)采纳 → priority='normal'。
+              addedByType: "ai",
+            });
+            await markAdopted(key);
+          }
         }
         const updated = await repo.updateTaskStatus(taskId, {
           status: "succeeded",
@@ -667,6 +721,9 @@ export function createAiService(deps: ServiceDeps): AiService {
           if (!assetId) continue;
           const role = typeof m.role === "string" && m.role ? m.role : "clip";
           if (typeof task.projectId === "string" && task.projectId.length > 0) {
+            // [DATA-H06] 稳定键 = assetId+role:第 N 条失败重试不重复绑前 N-1 条链。
+            const key = adoptKey("material_link", assetId, role);
+            if (adopted.has(key)) continue;
             await deps.materialLinks.link(ctx, {
               projectId: task.projectId,
               entityType: "asset",
@@ -676,6 +733,7 @@ export function createAiService(deps: ServiceDeps): AiService {
               // [T-146 切片 b] AI 匹配素材(material.match)采纳 → priority='normal'。
               addedByType: "ai",
             });
+            await markAdopted(key);
           }
         }
         const updated = await repo.updateTaskStatus(taskId, {
@@ -860,11 +918,16 @@ export function createAiService(deps: ServiceDeps): AiService {
           const m = (raw ?? {}) as Record<string, unknown>;
           const title = typeof m.title === "string" ? m.title : "";
           if (!title) continue;
+          const insight = typeof m.insight === "string" ? m.insight : "";
+          // [DATA-H06] 稳定键 = title+insight:第 N 条失败重试不重复建前 N-1 条 Learning。
+          const key = adoptKey("learning", title, insight);
+          if (adopted.has(key)) continue;
           await deps.learnings.createLearning(ctx, {
             title,
-            insight: typeof m.insight === "string" ? m.insight : "",
+            insight,
             projectId,
           });
+          await markAdopted(key);
         }
         const updated = await repo.updateTaskStatus(taskId, {
           status: "succeeded",
@@ -895,6 +958,10 @@ export function createAiService(deps: ServiceDeps): AiService {
           const platform = typeof m.platform === "string" ? m.platform : "";
           const title = typeof m.title === "string" ? m.title : "";
           if (!platform || !title) continue;
+          // [DATA-H06] 稳定键 = platform+title:第 N 个平台稿失败重试不重复建前 N-1 个
+          // Publication(旧行为会给同平台再铸一条 + revision,发布面直接出重复稿)。
+          const key = adoptKey("publication", platform, title);
+          if (adopted.has(key)) continue;
           await deps.publishing.createPublicationFromDraft(ctx, outputId, {
             platform,
             title,
@@ -904,6 +971,7 @@ export function createAiService(deps: ServiceDeps): AiService {
               : [],
             coverIdea: typeof m.coverIdea === "string" ? m.coverIdea : "",
           });
+          await markAdopted(key);
         }
         const updated = await repo.updateTaskStatus(taskId, {
           status: "succeeded",
@@ -1013,11 +1081,33 @@ export function createAiService(deps: ServiceDeps): AiService {
           `AI task ${taskId} cannot be cancelled from ${task.status}`,
         );
       }
+      // [DATA-H07] 拒绝清理:取消一个带 generated_asset 候选的任务(= 用户拒绝这份 AI 生成
+      // 素材)时,把仍 pending(未采纳)的资产软删进回收站 —— 不留永久隐身孤儿。先清理后落
+      // cancelled:若清理失败任务仍可再次 cancel(重试);若清理成功但落态失败,重试时清理
+      // no-op(已非 pending)。只清 pending,已采纳(active)的绝不误动。
+      const results = await repo.listResults(taskId);
+      const last = results[results.length - 1];
+      if (last?.resultType === "generated_asset") {
+        const data = (last.resultData ?? {}) as { assetId?: unknown };
+        const assetId =
+          typeof data.assetId === "string" && data.assetId
+            ? data.assetId
+            : typeof last.assetId === "string"
+              ? last.assetId
+              : "";
+        if (assetId) await repo.discardGeneratedAsset(assetId);
+      }
       const updated = await repo.updateTaskStatus(taskId, {
         status: "cancelled",
         completedAt: deps.now(),
       });
       return toTaskDto(updated);
+    },
+
+    async discardGeneratedAsset(ctx, assetId) {
+      // [DATA-H07] runner 失败清理 seam(asset 已建、recordCandidate 失败的窗口)。
+      // repo 层只清 pending + user_id 收窄 → 越权/已采纳/不存在均静默 no-op。
+      await repoFor(ctx).discardGeneratedAsset(assetId);
     },
 
     async listTasks(ctx, page) {

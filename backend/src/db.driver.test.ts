@@ -7,6 +7,7 @@ import {
   defaultPgliteDataDir,
   createConfiguredDb,
   createDb,
+  isFilesystemAccessError,
 } from "./index";
 import { projects } from "./schema/projects";
 import { users } from "./schema/identity";
@@ -220,6 +221,43 @@ describe("[T-175] 打不开的落盘目录 → 隔离坏目录 + 全新初始化
     const r = await mem.client.query<{ ok: number }>("SELECT 1 AS ok");
     expect(r.rows[0]?.ok).toBe(1);
     await mem.client.close();
+  });
+});
+
+describe("[DATA-H09] isFilesystemAccessError —— 权限/磁盘/资源类 OS 错误判据(不当作库损坏)", () => {
+  it("EACCES / EPERM / ENOSPC / EROFS / EDQUOT / EMFILE / EBUSY → true(OS 错误,绝不隔离+空库)", () => {
+    for (const code of [
+      "EACCES",
+      "EPERM",
+      "ENOSPC",
+      "EROFS",
+      "EDQUOT",
+      "EMFILE",
+      "ENFILE",
+      "EBUSY",
+      "ETXTBSY",
+      "EISDIR",
+      "ENOTDIR",
+    ]) {
+      const err = Object.assign(new Error(`fs failure ${code}`), { code });
+      expect(isFilesystemAccessError(err)).toBe(true);
+    }
+  });
+
+  it("WASM `RuntimeError: Aborted()`(无 .code)→ false(这才是真库损坏,走隔离+重建)", () => {
+    const abort = new Error("Aborted(). Build with -sASSERTIONS for more info.");
+    abort.name = "RuntimeError";
+    expect(isFilesystemAccessError(abort)).toBe(false);
+    // Postgres 迁移 SQL 报错(无 fs code)也不算 OS 错误 —— 归「迁移阶段」由 createDb 如实上抛。
+    const migErr = new Error('relation "publications" already exists');
+    expect(isFilesystemAccessError(migErr)).toBe(false);
+  });
+
+  it("null / undefined / 非 Error / 未知 code → false(保守:非明确 OS 错误一律不当 fs 错)", () => {
+    expect(isFilesystemAccessError(null)).toBe(false);
+    expect(isFilesystemAccessError(undefined)).toBe(false);
+    expect(isFilesystemAccessError("EACCES")).toBe(false); // 字符串不是带 .code 的 Error
+    expect(isFilesystemAccessError(Object.assign(new Error("x"), { code: "EXYZ" }))).toBe(false);
   });
 });
 

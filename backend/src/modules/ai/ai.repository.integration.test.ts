@@ -404,3 +404,64 @@ describe("ai repository (pglite)", () => {
     );
   });
 });
+
+// [DATA-H06] recordAdoptedKey —— 逐项幂等日志:append 去重 + 透传属主门。
+describe("[DATA-H06] recordAdoptedKey(adopted-keys journal)", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  async function seedTaskWithResult(repo: ReturnType<typeof repoFor>) {
+    const task = await repo.createTask({
+      projectId: "project-1",
+      contentOutputId: null,
+      taskType: "research.gather",
+      inputData: {},
+      modelKey: "claude-fable-5",
+      idempotencyKey: `idem-${Math.random()}`,
+      requestedAt: NOW,
+    });
+    const result = await repo.insertResult({
+      aiTaskId: task.id,
+      resultType: "material_list",
+      artifactId: null,
+      knowledgeItemId: null,
+      assetId: null,
+      resultData: { items: [] },
+    });
+    return { task, result };
+  }
+
+  it("append 去重:同键记两次只落一条;不同键按序累积;原 result_data 字段保留", async () => {
+    const repo = repoFor(db, "user-a");
+    const { result } = await seedTaskWithResult(repo);
+    await repo.recordAdoptedKey(result.id, "k1");
+    await repo.recordAdoptedKey(result.id, "k1"); // 幂等 no-op
+    await repo.recordAdoptedKey(result.id, "k2");
+    const rows = await repo.listResults(result.aiTaskId);
+    const data = rows[0]!.resultData as { adoptedKeys?: string[]; items?: unknown[] };
+    expect(data.adoptedKeys).toEqual(["k1", "k2"]);
+    expect(data.items).toEqual([]); // 原字段不被覆盖
+  });
+
+  it("透传属主门:B 用户对 A 的结果行 recordAdoptedKey → OwnershipError(不落键)", async () => {
+    const repoA = repoFor(db, "user-a");
+    const repoB = repoFor(db, "user-b");
+    const { result } = await seedTaskWithResult(repoA);
+    await expect(repoB.recordAdoptedKey(result.id, "kx")).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+    const rows = await repoA.listResults(result.aiTaskId);
+    expect(
+      (rows[0]!.resultData as { adoptedKeys?: string[] }).adoptedKeys,
+    ).toBeUndefined();
+  });
+
+  it("未知结果 id → OwnershipError(与 getResult 同语义,不泄露存在性)", async () => {
+    const repo = repoFor(db, "user-a");
+    await expect(repo.recordAdoptedKey("nope", "k")).rejects.toBeInstanceOf(
+      OwnershipError,
+    );
+  });
+});

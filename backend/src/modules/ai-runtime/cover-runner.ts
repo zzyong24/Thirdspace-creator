@@ -38,6 +38,9 @@ export interface CoverGenerateAssetsPort {
       name: string;
       bytes: Uint8Array;
       mimeType: string;
+      // [DATA-H07] true → 封面资产生为 pending 候选态(采纳前不进素材库;与 asset.generate
+      // 同一采纳门/同一清理路)。host 端口把 input 原样透传给 assetsService.createGeneratedAsset。
+      pending?: boolean;
     },
   ): Promise<{ id: string; name: string; assetType: string }>;
 }
@@ -195,6 +198,8 @@ export async function runCoverGenerate(
   task: CoverGenerateTask,
   deps: CoverGenerateDeps,
 ): Promise<void> {
+  // [DATA-H07] 「asset 已建、候选未记成」失败窗口的清理锚(与 asset-generate-runner 同款)。
+  let createdAssetId: string | null = null;
   try {
     await deps.ai.markRunning(ctx, task.id);
 
@@ -265,14 +270,17 @@ export async function runCoverGenerate(
       throw new Error("cover-runner: provider returned no bytes");
     }
 
-    // 5) 落对象存储 + 建 asset(候选态:active 但未绑项目;字节此刻已持久化）。
+    // 5) 落对象存储 + 建 asset。[DATA-H07] 生为 **pending 候选态**(采纳门翻 active,拒绝/
+    //    失败清理 —— 与 asset.generate 同一 generated_asset 采纳门)。
     const name = deriveCoverName(plan.headline);
     const asset = await deps.generatedAssets.createGeneratedAsset(ctx, {
       assetType: "image",
       name,
       bytes: assetBytes,
       mimeType: "image/png",
+      pending: true,
     });
+    createdAssetId = asset.id;
 
     // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:文案 + 图两产物一步出)。
     await deps.ai.recordStep(ctx, task.id, {
@@ -307,6 +315,19 @@ export async function runCoverGenerate(
       },
     });
   } catch (err) {
+    // [DATA-H07] asset 已建但候选没记成 → best-effort 丢弃 pending 资产(不留隐身孤儿;
+    // 清理失败只记日志,不盖原始错误)。
+    if (createdAssetId) {
+      try {
+        await deps.ai.discardGeneratedAsset(ctx, createdAssetId);
+      } catch (cleanupErr) {
+        // eslint-disable-next-line no-console
+        console.error(
+          `[cover-runner] cleanup of pending asset ${createdAssetId} failed:`,
+          cleanupErr,
+        );
+      }
+    }
     // Best-effort cancel; swallow so a background failure never crashes the server.
     // 「未配文本/生图模型 / 生成失败 / 内容审核 / 轮询超时」全部坍缩到这里 → 诚实终态(cancelled)。
     try {

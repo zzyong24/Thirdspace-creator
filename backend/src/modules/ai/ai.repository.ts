@@ -1,4 +1,10 @@
 import { and, asc, desc, eq, like, type Db } from "@creatoros/backend";
+// [DATA-H07] 跨模块表(assets)—— canonical 定义在共享基座 @creatoros/backend(与 T-102
+// projects.repository 级联删除同一先例):AI 生成资产的「采纳翻 active / 拒绝清理」是 AI 采纳门
+// 的生命周期职责,但组合根(persistence-client)本波冻结、无法新增 assets 端口 —— 故按 T-102
+// 裁决的既有范式,在本模块 repository 内经共享 schema 直写 assets 行(只碰 status/deleted_at/
+// account_id 三列,不动 assets 模块的服务/契约)。
+import { assets } from "@creatoros/backend";
 import {
   aiConversations,
   aiMessages,
@@ -151,6 +157,19 @@ export interface AiRepository {
   listResults(taskId: string): Promise<ResultRow[]>;
   /** CollabField:用人编辑后的 items 替换最新结果的 result_data.items(采纳前可改/删)。 */
   patchLatestResultItems(taskId: string, items: unknown[]): Promise<ResultRow>;
+  /** [DATA-H06] 逐项幂等采纳:把已采纳的稳定键追加进某结果行的 result_data.adoptedKeys(去重)。
+   *  确认门逐条落库时,失败重试据此跳过已采纳项 —— 保证「第 N 条失败后重试不重复前 N-1 条」。
+   *  ownership 经父任务门(与 getResult 同款透传属主),跨用户/未知 id → OwnershipError。 */
+  recordAdoptedKey(resultId: string, key: string): Promise<void>;
+  /** [DATA-H07] 采纳门翻转:AI 生成资产 pending → active(+ stamp 当前号,镜像 assets 模块
+   *  commitPendingAsset 语义)。WHERE status='pending' 保证幂等:已 active(重试/存量直落 active
+   *  的旧资产)→ no-op 不误动。user_id 收窄 → 跨用户静默不命中(不泄露存在性)。 */
+  commitGeneratedAsset(assetId: string): Promise<void>;
+  /** [DATA-H07] 拒绝/失败清理:**仍 pending**(未被采纳)的 AI 生成资产 → 软删进回收站
+   *  (status='deleted' + deleted_at,复用 assets §12 既有 trash 终态,可人工恢复/清理;不硬删
+   *  行 —— 硬删会把 storage_key 引用一并抹掉,对象字节反而成永久无主孤儿)。已 active(已采纳)
+   *  / 不存在 / 越权 → no-op 返 false。返回是否真的清理了。 */
+  discardGeneratedAsset(assetId: string): Promise<boolean>;
   insertStep(rec: InsertStepInput): Promise<StepRow>;
   listSteps(taskId: string): Promise<StepRow[]>;
 
@@ -475,6 +494,69 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .where(eq(aiTaskResults.id, last.id))
         .returning();
       return updated[0]!;
+    },
+
+    async recordAdoptedKey(resultId, key) {
+      // 透传属主(与 getResult 同款):先取结果行,再经父任务门;跨用户/未知 → OwnershipError。
+      const rows = await db
+        .select()
+        .from(aiTaskResults)
+        .where(eq(aiTaskResults.id, resultId));
+      const row = rows[0];
+      if (!row) {
+        throw new OwnershipError(`OwnershipError: result not found: ${resultId}`);
+      }
+      await getTask(row.aiTaskId); // transitive ownership: throws if not owned
+      const data = (row.resultData ?? {}) as Record<string, unknown>;
+      const existing = Array.isArray(data.adoptedKeys)
+        ? data.adoptedKeys.filter((k): k is string => typeof k === "string")
+        : [];
+      if (existing.includes(key)) return; // 已记过 → 幂等 no-op
+      await db
+        .update(aiTaskResults)
+        .set({ resultData: { ...data, adoptedKeys: [...existing, key] } })
+        .where(eq(aiTaskResults.id, resultId));
+    },
+
+    async commitGeneratedAsset(assetId) {
+      // [DATA-H07] pending → active + stamp 当前号(镜像 assets repo commitPendingAsset:
+      // pending 若 account_id=NULL 在此补号)。WHERE status='pending' → 已 active/已删的行
+      // 不误动(幂等);user_id 收窄 → 跨用户静默不命中。
+      await db
+        .update(assets)
+        .set({
+          status: "active",
+          accountId: deps.accountId ?? null,
+          updatedAt: deps.now(),
+        })
+        .where(
+          and(
+            eq(assets.id, assetId),
+            eq(assets.userId, deps.userId),
+            eq(assets.status, "pending"),
+          ),
+        );
+    },
+
+    async discardGeneratedAsset(assetId) {
+      // [DATA-H07] 只清理**仍 pending**(未采纳)的行 → 软删进回收站(§12 既有 deleted 终态)。
+      // 已采纳(active)/已删/越权/不存在 → WHERE 不命中 → no-op(绝不误删已入库素材)。
+      const updated = await db
+        .update(assets)
+        .set({
+          status: "deleted",
+          deletedAt: deps.now(),
+          updatedAt: deps.now(),
+        })
+        .where(
+          and(
+            eq(assets.id, assetId),
+            eq(assets.userId, deps.userId),
+            eq(assets.status, "pending"),
+          ),
+        )
+        .returning({ id: assets.id });
+      return updated.length > 0;
     },
 
     async insertStep(rec) {

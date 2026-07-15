@@ -96,19 +96,62 @@ export interface CreateDbOptions {
   dataDir?: string;
 }
 
-// 打开 PGlite(内存或落盘)并把版本化迁移跑齐。抛错(含 WASM `Aborted()`)时先关掉半开
-// 的 client 释放句柄,再上抛 —— 让 createDb 的降级层决定是否隔离数据目录后重来。
-async function openAndMigrate(dataDir?: string): Promise<{
-  db: Db;
-  client: PGlite;
-}> {
+// [DATA-H09] file-PGlite 启动失败的**两阶段**判据 —— 只有「真库损坏」才隔离+重建,迁移/
+// 权限/磁盘错误一律如实上抛(见 createDb 注释)。
+//
+// 文件系统/OS 级错误码 —— 权限不足 / 磁盘满 / 只读 / 资源耗尽等。这些**不是**「库损坏」:
+// 改名+空库既治不了(下次同样失败),又会把用户以为丢了的数据藏进 .corrupt-*。见到就如实
+// 上抛,绝不隔离原目录。Node 系统错误在 `.code` 上带 errno 名;PGlite 的 NodeFS 后端把底层
+// fs 错误透传时通常保留该 code,而 WASM 引擎自身崩溃(真损坏)抛的是无 code 的 RuntimeError。
+const FS_ACCESS_ERROR_CODES = new Set([
+  "EACCES", // 权限拒绝
+  "EPERM", // 操作不允许
+  "EROFS", // 只读文件系统
+  "ENOSPC", // 磁盘/inode 满
+  "EDQUOT", // 超配额
+  "EMFILE", // 进程 fd 耗尽
+  "ENFILE", // 系统 fd 耗尽
+  "EBUSY", // 目录/文件被占用
+  "ETXTBSY", // 文本文件忙
+  "EISDIR", // 期望文件却是目录
+  "ENOTDIR", // 期望目录却是文件
+]);
+
+// 判「打开阶段的失败是否为 OS 级(权限/磁盘/资源)错误」。是 → 不是库损坏,不隔离。
+export function isFilesystemAccessError(err: unknown): boolean {
+  const code = (err as { code?: unknown } | null | undefined)?.code;
+  return typeof code === "string" && FS_ACCESS_ERROR_CODES.has(code);
+}
+
+// 打开阶段的探针:一条最廉价的 query,强制 WASM 引导 / crash-recovery 真的跑完(见 openPglite)。
+const DB_OPEN_PROBE_SQL = "SELECT 1";
+
+// 「打开阶段」:实例化 PGlite 并**强制触发** WASM 引导 / crash-recovery。真正的库损坏
+// (pg_control 缺失、文件头损坏、跨版本读不了)在这一步以 `RuntimeError: Aborted()` 一类抛出。
+// waitReady + 一条探针 query 双保险,确保引导真的跑完 —— 否则损坏会拖到迁移阶段才暴露,被
+// createDb 误判成「迁移错误」而放过(反之亦然,阶段必须泾渭分明,DATA-H09 的关键)。
+async function openPglite(dataDir?: string): Promise<PGlite> {
   const client = dataDir ? new PGlite(dataDir) : new PGlite();
   try {
-    const db = drizzle(client, { schema });
-    // Apply the same versioned migrations the runtime uses. pglite is Postgres-WASM, so the
-    // baseline drizzle/0000_init.sql is identical across drivers. Replaces the old
-    // per-module client.exec(*_DDL) sequence — the schema is now built by the migration.
-    await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
+    await client.waitReady;
+    await client.query(DB_OPEN_PROBE_SQL);
+    return client;
+  } catch (err) {
+    // 半开的 client 可能已占着目录 —— 关掉释放句柄(自身也可能因 WASM 已 abort 再抛,吞掉)。
+    await client.close().catch(() => {});
+    throw err;
+  }
+}
+
+// 「迁移阶段」:对**已成功打开**的库跑版本化迁移 + 历史装机的列兜底。这里的任何失败都是
+// **迁移 SQL / 权限 / 磁盘**错误 —— 库其实完好、数据都在。故本阶段错误由 createDb 如实上抛,
+// **永不**改名 + 空库(那才是 DATA-H09 报告里「数据全没了」的错误路径)。
+async function migrateOpenedDb(client: PGlite): Promise<Db> {
+  const db = drizzle(client, { schema });
+  // Apply the same versioned migrations the runtime uses. pglite is Postgres-WASM, so the
+  // baseline drizzle/0000_init.sql is identical across drivers. Replaces the old
+  // per-module client.exec(*_DDL) sequence — the schema is now built by the migration.
+  await migratePglite(db, { migrationsFolder: MIGRATIONS_FOLDER });
     // [T-033 fixup] 老 pglite(< 2026-07-08 build 前的 .dmg 装的)schema 不带 publications.platform_status 列,
     // 旧 journal 也没记 0029 → migrator 不会跑 → 启动 SSR list 报「column 不存在」500。
     // 这里用 information_schema 查列存不存在,缺就 ALTER TABLE 加(IF NOT EXISTS 兜幂等)。
@@ -165,46 +208,93 @@ async function openAndMigrate(dataDir?: string): Promise<{
         "CREATE INDEX IF NOT EXISTS ix_favorites_items_distill ON favorites_items (user_id, distill_status)",
       );
     }
-    return { db, client };
-  } catch (err) {
-    // client 可能已半开占着目录 —— 关掉(自身也可能因 WASM 已 abort 再抛,吞掉)。
-    await client.close().catch(() => {});
-    throw err;
-  }
+  return db;
 }
 
 // Creates a pglite-backed Drizzle db with the Projects-slice schema applied.
 // pglite is pure-WASM Postgres — runs in Node, vitest, and the Next server with
 // no Docker. Returns the db plus the underlying client for raw exec/teardown.
 //
-// [T-175] 打不开落盘目录的降级:旧版/异常退出留下的 PGlite 数据目录,被新构建打开时可能
-// WASM `Aborted()`(crash-recovery/跨版本读不了)。实测该 abort 是可 catch 的 rejection、
-// 且同进程内可重建新实例。故:落盘库打开失败 → 把坏目录移到 `<dir>.corrupt-<ts>`(保留、
-// 不删,可人工恢复)后全新初始化,让 app 能启动而不是每页 500(升级路径 bug 的根治)。
-// 内存库(无 dataDir)不可能"损坏" → 直接上抛。
+// [T-175 / DATA-H09] 打不开落盘目录的降级,**精确收窄触发条件**:
+//
+//   旧版/异常退出留下的 PGlite 数据目录,被新构建打开时可能 WASM `Aborted()`
+//   (crash-recovery / 跨版本读不了)—— 这才是「真库损坏」,可 catch、同进程可重建新实例。
+//   故对**真损坏**:把坏目录移到 `<dir>.corrupt-<ts>`(保留、不删,可人工恢复)后全新初始化,
+//   让 app 能启动而不是每页 500(升级路径 bug 的根治)。
+//
+//   但**迁移 SQL 错 / 权限不足 / 磁盘满**等**不是**库损坏 —— 库其实完好、数据都在。老实现
+//   把这些也一并当损坏 → 改名 + 空库 → 用户表现为「数据全没了」且无恢复入口(DATA-H09)。
+//   现在按**阶段**精确区分:
+//     · 打开阶段(openPglite:WASM 引导 / crash-recovery)失败 → 可能是真损坏,**但**若错误
+//       是 OS 级(权限/磁盘/资源,`.code` ∈ FS_ACCESS_ERROR_CODES)则仍不算损坏 → 如实上抛;
+//       否则(WASM Aborted / 文件头损坏一类)才隔离 + 重建。
+//     · 迁移阶段(migrateOpenedDb:库已成功打开后跑迁移/列兜底)失败 → **一律**如实上抛,
+//       绝不改名 + 空库(库已打开,数据完好,是可修复的迁移/环境错误)。
+//   内存库(无 dataDir)不可能"损坏"、也无目录可隔离 → 任何失败直接上抛。
 export async function createDb(options: CreateDbOptions = {}): Promise<{
   db: Db;
   client: PGlite;
 }> {
   const dataDir = options.dataDir;
+
+  // ── 打开阶段 ────────────────────────────────────────────────────────────────
+  let client: PGlite;
   try {
-    return await openAndMigrate(dataDir);
-  } catch (err) {
-    if (!dataDir) throw err;
-    const quarantine = `${dataDir}.corrupt-${Date.now()}`;
-    const e = err as Error;
-    console.error(
-      `[db] PGlite 落盘目录打不开(${e?.name}: ${e?.message});移至 ${quarantine} 并全新初始化。原数据保留可人工恢复。`,
-    );
-    try {
-      await rename(dataDir, quarantine);
-    } catch (mvErr) {
-      // 连移开都失败(权限/占用)→ 无法安全降级,把原始错误上抛(别吞根因)。
-      console.error(`[db] 隔离坏目录失败,放弃降级:`, mvErr);
-      throw err;
+    client = await openPglite(dataDir);
+  } catch (openErr) {
+    // 内存库无目录可隔离、不可能损坏 —— 直接上抛。
+    if (!dataDir) throw openErr;
+    // 权限/磁盘/资源类 OS 错误:不是库损坏。改名 + 空库既治不了下次启动,又把数据藏进
+    // .corrupt-* 误导用户 —— 如实上抛以便定位修复(改权限 / 清磁盘)。原数据分毫未动。
+    if (isFilesystemAccessError(openErr)) {
+      const e = openErr as Error & { code?: string };
+      console.error(
+        `[db] PGlite 落盘目录打开失败,但判定为**非库损坏**(OS 错误 code=${e?.code};权限/磁盘/资源一类)。` +
+          `不隔离、不重建,如实上抛以便修复。原数据完好保留。`,
+      );
+      throw openErr;
     }
-    return await openAndMigrate(dataDir);
+    // 真库损坏(WASM Aborted / 文件头损坏 / crash-recovery 失败)→ 隔离坏目录 + 全新初始化。
+    return quarantineAndRebuild(dataDir, openErr);
   }
+
+  // ── 迁移阶段 ────────────────────────────────────────────────────────────────
+  try {
+    const db = await migrateOpenedDb(client);
+    return { db, client };
+  } catch (migErr) {
+    // 半开的 client 关掉释放句柄。库已成功打开 → 这**不是**损坏:如实上抛,绝不隔离 + 空库。
+    await client.close().catch(() => {});
+    const e = migErr as Error & { code?: string };
+    console.error(
+      `[db] PGlite 迁移阶段失败(${e?.name}: ${e?.message}${e?.code ? `, code=${e.code}` : ""})。` +
+        `库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。` +
+        `不隔离、不重建,如实上抛以便修复。`,
+    );
+    throw migErr;
+  }
+}
+
+// 真损坏降级:把坏目录改名保留(可人工恢复)后,在原路径全新初始化一个空库(打开 + 迁移)。
+// 连改名都失败(权限/占用)→ 无法安全降级,把原始损坏错误上抛(别吞根因)。
+async function quarantineAndRebuild(
+  dataDir: string,
+  cause: unknown,
+): Promise<{ db: Db; client: PGlite }> {
+  const quarantine = `${dataDir}.corrupt-${Date.now()}`;
+  const e = cause as Error;
+  console.error(
+    `[db] PGlite 落盘目录**损坏**打不开(${e?.name}: ${e?.message});移至 ${quarantine} 并全新初始化。原数据保留可人工恢复。`,
+  );
+  try {
+    await rename(dataDir, quarantine);
+  } catch (mvErr) {
+    console.error(`[db] 隔离坏目录失败,放弃降级:`, mvErr);
+    throw cause;
+  }
+  const client = await openPglite(dataDir);
+  const db = await migrateOpenedDb(client);
+  return { db, client };
 }
 
 export interface RuntimeDb {

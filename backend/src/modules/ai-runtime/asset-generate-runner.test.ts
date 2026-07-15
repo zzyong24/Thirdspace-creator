@@ -42,6 +42,8 @@ function makeDeps(opts: {
     ) => undefined,
   );
   const cancelTask = vi.fn(async () => undefined);
+  // [DATA-H07] runner 失败清理 seam(asset 已建、候选未记成 → best-effort 丢弃 pending 资产)。
+  const discardGeneratedAsset = vi.fn(async () => undefined);
   const createGeneratedAsset = vi.fn(
     async (
       _c: RequestContext,
@@ -50,6 +52,7 @@ function makeDeps(opts: {
         name: string;
         bytes: Uint8Array;
         mimeType: string;
+        pending?: boolean;
       },
     ) => ({
       id: opts.createdAssetId ?? "asset-gen-1",
@@ -80,7 +83,12 @@ function makeDeps(opts: {
   );
   return {
     deps: {
-      ai: { markRunning, recordCandidate, cancelTask } as never,
+      ai: {
+        markRunning,
+        recordCandidate,
+        cancelTask,
+        discardGeneratedAsset,
+      } as never,
       resolveMultimodalSpec,
       registry: opts.registry,
       assets: { createGeneratedAsset },
@@ -88,6 +96,7 @@ function makeDeps(opts: {
     markRunning,
     recordCandidate,
     cancelTask,
+    discardGeneratedAsset,
     createGeneratedAsset,
     resolveMultimodalSpec,
   };
@@ -118,6 +127,8 @@ describe("runAssetGenerate — image(同步)装配", () => {
     expect(assetArg.assetType).toBe("image");
     expect(assetArg.mimeType).toBe("image/png");
     expect(Array.from(assetArg.bytes)).toEqual([10, 20, 30]);
+    // [DATA-H07] 资产生为 pending 候选态(采纳前不进素材库,人采纳才翻 active,铁律②)。
+    expect(assetArg.pending).toBe(true);
     // 候选:generated_asset + 真 assetId(既在 assetId 列,也在 resultData)。
     expect(recordCandidate).toHaveBeenCalledTimes(1);
     const cand = recordCandidate.mock.calls[0]![2];
@@ -247,6 +258,49 @@ describe("runAssetGenerate — 失败诚实处置(cancelTask,不假成功)", () 
 
     expect(resolveMultimodalSpec).not.toHaveBeenCalled();
     expect(recordCandidate).not.toHaveBeenCalled();
+    expect(cancelTask).toHaveBeenCalledTimes(1);
+  });
+
+  it("[DATA-H07] asset 已建、recordCandidate 失败 → 丢弃该 pending 资产(不留隐身孤儿)+ cancelTask", async () => {
+    const registry = { fake: createFakeAdapter({ image: new Uint8Array([1, 2]) }) };
+    const {
+      deps,
+      recordCandidate,
+      cancelTask,
+      discardGeneratedAsset,
+      createGeneratedAsset,
+    } = makeDeps({ registry, createdAssetId: "asset-orphan-1" });
+    recordCandidate.mockImplementationOnce(async () => {
+      throw new Error("record down");
+    });
+
+    await runAssetGenerate(
+      ctx,
+      { id: "t7", projectId: "p1", inputData: { prompt: "x", kind: "image" } },
+      deps,
+    );
+
+    expect(createGeneratedAsset).toHaveBeenCalledTimes(1);
+    // 失败窗口清理:刚建的 pending 资产被 best-effort 丢弃,任务坍缩为 cancelled。
+    expect(discardGeneratedAsset).toHaveBeenCalledTimes(1);
+    expect(discardGeneratedAsset).toHaveBeenCalledWith(ctx, "asset-orphan-1");
+    expect(cancelTask).toHaveBeenCalledTimes(1);
+  });
+
+  it("[DATA-H07] 生成阶段就失败(asset 未建)→ 不调丢弃(没有可清理的资产)", async () => {
+    const registry = { fake: createFakeAdapter() };
+    const { deps, discardGeneratedAsset, cancelTask } = makeDeps({
+      registry,
+      resolveThrows: true,
+    });
+
+    await runAssetGenerate(
+      ctx,
+      { id: "t8", projectId: "p1", inputData: { prompt: "x", kind: "image" } },
+      deps,
+    );
+
+    expect(discardGeneratedAsset).not.toHaveBeenCalled();
     expect(cancelTask).toHaveBeenCalledTimes(1);
   });
 });

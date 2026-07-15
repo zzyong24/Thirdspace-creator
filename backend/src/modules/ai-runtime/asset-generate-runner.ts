@@ -22,16 +22,20 @@ import type {
 //   - 单测用 M1 的 fake 异步 provider(先 taskId、N 次轮询后返 bytes)验:submit→轮询→拿 bytes→
 //     落存储→建 asset→候选;以及一个「永不 ready」的 fake 验轮询超时 → cancelTask。
 //
-// ── [gate-F6] 采纳门:generated_asset(create-then-bind)───────────────────────────
+// ── [gate-F6 / DATA-H07] 采纳门:generated_asset(create-then-bind,候选态 pending)──
 // 现有唯一的 asset 采纳门是 material_link_list(material.match),它绑定**已存在于素材库**的
 // asset(assetId 已在库)。asset.generate 的 asset 是从 AI 字节**新生**的 —— 故:
-//   1) 本 runner 在生成期就建好 asset(字节落存储 + asset 行),不管采纳与否字节都已持久化
-//      (与 research-runner 产出具体候选同构;asset 生下来是 active 但**未绑任何项目**)。
+//   1) 本 runner 在生成期建 asset(字节落存储 + asset 行),但 [DATA-H07] 资产生为
+//      **pending 候选态**(T-219 同款机制:素材库 list 按 active 过滤,采纳前不进库、不冒充
+//      已入库素材 —— 铁律②「AI 只产候选、人确认后落库」)。
 //   2) recordCandidate resultType="generated_asset",携带真 assetId + 预览元信息。
-//   3) 采纳门(ai.service confirmTask 的 generated_asset 分支)把该 asset 经**现有 用料链端口**
-//      (AiMaterialLinksPort,与 material_link_list 同一个 link 调用)绑定到当前项目
-//      (entityType:"asset", stage:"production")。即复用了现有 asset 绑定门的**端口/动作**,
-//      新增的只是「先建后绑」这条 create-then-bind 语义所必需的薄 resultType。
+//   3) 采纳门(ai.service confirmTask 的 generated_asset 分支)先把该 asset pending → active
+//      (repo.commitGeneratedAsset,幂等),再经**现有 用料链端口**(AiMaterialLinksPort,与
+//      material_link_list 同一个 link 调用)绑定到当前项目(entityType:"asset",
+//      stage:"production")。
+//   4) [DATA-H07] 拒绝(cancelTask)→ ai.service 把仍 pending 的资产软删进回收站;本 runner
+//      「asset 已建、recordCandidate 失败」的失败窗口 → catch 里 ai.discardGeneratedAsset
+//      best-effort 清理 —— 两条路都不留永久隐身孤儿。
 
 /** 生成一份素材需要的最小规格投影(与 ai-worker MultimodalSpec 结构对齐;host 用
  *  resolveMultimodalSpec 解析后传入)。 */
@@ -47,6 +51,9 @@ export interface AssetGenerateAssetsPort {
       name: string;
       bytes: Uint8Array;
       mimeType: string;
+      // [DATA-H07] true → 资产生为 pending 候选态(采纳前不进素材库;T-219 机制)。host 端口
+      // 把 input 原样透传给 assetsService.createGeneratedAsset(它已支持该字段)。
+      pending?: boolean;
     },
   ): Promise<{ id: string; name: string; assetType: string }>;
 }
@@ -87,6 +94,8 @@ export async function runAssetGenerate(
   task: AssetGenerateTask,
   deps: AssetGenerateDeps,
 ): Promise<void> {
+  // [DATA-H07] 「asset 已建、候选未记成」失败窗口的清理锚:catch 里据此 best-effort 丢弃。
+  let createdAssetId: string | null = null;
   try {
     await deps.ai.markRunning(ctx, task.id); // honest status while生成(可能数十秒~分钟)
 
@@ -119,15 +128,17 @@ export async function runAssetGenerate(
       throw new Error("asset-generate-runner: provider returned no bytes");
     }
 
-    // 3) 落对象存储 + 建 asset(候选态:asset 生下来 active 但未绑项目)。字节此刻已持久化,
-    //    不管采纳与否都在(用户可在素材库看到);采纳只做「绑定到项目/入用料链」。
+    // 3) 落对象存储 + 建 asset。[DATA-H07] 资产生为 **pending 候选态**(采纳前不进素材库
+    //    list;预览经 assets.get/签名 URL 仍可看)。采纳门翻 active + 绑项目;拒绝/失败清理。
     const name = deriveName(prompt, kind);
     const asset = await deps.assets.createGeneratedAsset(ctx, {
       assetType: kind,
       name,
       bytes: assetBytes,
       mimeType: MIME_BY_KIND[kind],
+      pending: true,
     });
+    createdAssetId = asset.id;
 
     // 4) 记候选(非直接物化,铁律②)。resultType="generated_asset";assetId 走 recordCandidate
     //    的 assetId 列(provenance);resultData 带预览元信息供录制页候选卡渲染 + 采纳。
@@ -143,6 +154,19 @@ export async function runAssetGenerate(
       },
     });
   } catch (err) {
+    // [DATA-H07] asset 已建但候选没记成(recordCandidate 失败)→ 该 pending 资产没有任何
+    // 候选卡指向它,永远无法被采纳/拒绝 → 在这里 best-effort 丢弃(软删进回收站),不留
+    // 隐身孤儿。丢弃自身失败只记日志(绝不让清理失败盖掉原始错误)。
+    if (createdAssetId) {
+      try {
+        await deps.ai.discardGeneratedAsset(ctx, createdAssetId);
+      } catch (cleanupErr) {
+        console.error(
+          `[asset-generate-runner] cleanup of pending asset ${createdAssetId} failed:`,
+          cleanupErr,
+        );
+      }
+    }
     // Best-effort cancel; swallow so a background failure never crashes the server.
     // 「轮询超时 / 未配 key / 生成失败 / 内容审核」全部坍缩到这里 → 诚实终态(cancelled)。
     try {

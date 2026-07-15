@@ -4,6 +4,7 @@ export {
   createConfiguredDb,
   resolveDbDriver,
   defaultPgliteDataDir,
+  isFilesystemAccessError,
   schema,
   type Db,
   type CreateDbOptions,

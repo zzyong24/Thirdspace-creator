@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, assets, eq, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createAiService,
@@ -741,5 +741,295 @@ describe("ai service", () => {
     await expect(service.getConversation(ctxB, conv.id)).rejects.toThrow(
       /OwnershipError/,
     );
+  });
+});
+
+// [DATA-H06] 批量采纳逐项幂等(adopted-keys journal):第 N 条失败 → 任务留在
+// awaiting_confirmation;重试跳过已采纳项,不重复落库(旧行为会把前 N-1 条再落一遍)。
+describe("[DATA-H06] confirmTask 批量采纳:第 N 条失败 → 重试不重复前 N-1 条", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  it("material_list:第 2 条 createKnowledge 抛 → 任务仍 awaiting;重试只补第 2/3 条,第 1 条不重复(实体 + 用料链)", async () => {
+    let calls = 0;
+    const createKnowledge = vi.fn(
+      async (_c: RequestContext, input: { title: string }) => {
+        calls++;
+        if (calls === 2) throw new Error("createKnowledge down"); // 第一轮第 2 条崩
+        return { id: `k-${input.title}` };
+      },
+    );
+    const { service, materialLinks } = makeService(db, undefined, {
+      createKnowledge,
+    });
+    const task = await service.createTask(ctx, {
+      taskType: "research.gather",
+      inputData: { projectId: "p-1", topic: "t" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "material_list",
+      resultData: {
+        items: [
+          { title: "甲", url: "https://a", source: "web", why_relevant: "ra" },
+          { title: "乙", url: "https://b", source: "web", why_relevant: "rb" },
+          { title: "丙", url: "https://c", source: "web", why_relevant: "rc" },
+        ],
+      },
+    });
+
+    // 第一轮:甲落库成功,乙抛 → confirm 整体失败,任务**不**假成功。
+    await expect(service.confirmTask(ctx, task.id)).rejects.toThrow(
+      "createKnowledge down",
+    );
+    expect((await service.getTask(ctx, task.id)).status).toBe(
+      "awaiting_confirmation",
+    );
+    expect(createKnowledge).toHaveBeenCalledTimes(2); // 甲(成)+ 乙(抛)
+    expect(materialLinks.link).toHaveBeenCalledTimes(1); // 只有甲的链
+
+    // 采纳进度已持久化在候选行(journal 不靠内存,进程重启后重试同样生效)。
+    const results = await service.listResults(ctx, task.id);
+    const adoptedKeys = (results[results.length - 1]!.resultData as {
+      adoptedKeys?: string[];
+    }).adoptedKeys;
+    expect(adoptedKeys).toHaveLength(1);
+    expect(adoptedKeys![0]).toContain("甲");
+
+    // 第二轮(重试):甲被跳过,乙丙落库 → succeeded;全程甲只建了一次。
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    const titles = createKnowledge.mock.calls.map((c) => c[1].title);
+    expect(titles).toEqual(["甲", "乙", "乙", "丙"]); // 重试从乙续起,甲不重复
+    expect(materialLinks.link).toHaveBeenCalledTimes(3); // 甲乙丙各一条链,无重复
+  });
+
+  it("learning_list:第 2 条 createLearning 抛 → 重试不重复第 1 条 Learning", async () => {
+    const { service, learnings } = makeService(db);
+    let calls = 0;
+    (learnings.createLearning as ReturnType<typeof vi.fn>).mockImplementation(
+      async (_c: RequestContext, body: { title: string }) => {
+        calls++;
+        if (calls === 2) throw new Error("createLearning down");
+        return { id: `learn-${body.title}` };
+      },
+    );
+    const task = await service.createTask(ctx, {
+      taskType: "review.analyze",
+      inputData: { projectId: "p-1" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "learning_list",
+      resultData: {
+        items: [
+          { title: "钩子前置", insight: "i1" },
+          { title: "留人节奏", insight: "i2" },
+        ],
+      },
+    });
+    await expect(service.confirmTask(ctx, task.id)).rejects.toThrow(
+      "createLearning down",
+    );
+    expect((await service.getTask(ctx, task.id)).status).toBe(
+      "awaiting_confirmation",
+    );
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    const titles = (learnings.createLearning as ReturnType<typeof vi.fn>).mock
+      .calls.map((c: unknown[]) => (c[1] as { title: string }).title);
+    // 第一轮:钩子前置(成)+ 留人节奏(抛);重试:只补留人节奏 —— 第 1 条不重复。
+    expect(titles).toEqual(["钩子前置", "留人节奏", "留人节奏"]);
+  });
+
+  it("publication_drafts:第 2 个平台稿抛 → 重试不给第 1 个平台重复铸 Publication", async () => {
+    const { service, publishing } = makeService(db);
+    let calls = 0;
+    (
+      publishing.createPublicationFromDraft as ReturnType<typeof vi.fn>
+    ).mockImplementation(
+      async (_c: RequestContext, _outputId: string, draft: { platform: string }) => {
+        calls++;
+        if (calls === 2) throw new Error("createPublication down");
+        return { id: `pub-${draft.platform}` };
+      },
+    );
+    const task = await service.createTask(ctx, {
+      taskType: "publish.platform_adapt",
+      inputData: { outputId: "out-1" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "publication_drafts",
+      resultData: {
+        outputId: "out-1",
+        drafts: [
+          { platform: "douyin", title: "标题A", body: "b", tags: [] },
+          { platform: "xiaohongshu", title: "标题B", body: "b", tags: [] },
+        ],
+      },
+    });
+    await expect(service.confirmTask(ctx, task.id)).rejects.toThrow(
+      "createPublication down",
+    );
+    expect((await service.getTask(ctx, task.id)).status).toBe(
+      "awaiting_confirmation",
+    );
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    const platforms = (
+      publishing.createPublicationFromDraft as ReturnType<typeof vi.fn>
+    ).mock.calls.map((c: unknown[]) => (c[2] as { platform: string }).platform);
+    // douyin 只铸一次;xiaohongshu 第一轮抛、重试补上。
+    expect(platforms).toEqual(["douyin", "xiaohongshu", "xiaohongshu"]);
+  });
+
+  it("同批内重复项(同稳定键)只落一次(journal 同批去重)", async () => {
+    const { service, knowledge } = makeService(db);
+    const task = await service.createTask(ctx, {
+      taskType: "research.gather",
+      inputData: { projectId: "p-1" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "material_list",
+      resultData: {
+        items: [
+          { title: "同一篇", url: "https://same", source: "web" },
+          { title: "同一篇", url: "https://same", source: "web" },
+        ],
+      },
+    });
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    expect(knowledge.createKnowledge).toHaveBeenCalledTimes(1);
+  });
+});
+
+// [DATA-H07] AI 生成资产候选态生命周期:pending(采纳前不入库)→ 采纳翻 active / 拒绝软删
+// 进回收站。资产行直接种进真 assets 表(runner 现在以 pending 建档),断言走真 DB 行状态。
+describe("[DATA-H07] generated_asset:pending 候选态 → 采纳 active / 拒绝清理", () => {
+  let db: Db;
+  beforeEach(async () => {
+    ({ db } = await createDb());
+  });
+
+  async function seedAsset(id: string, status: string, userId = "user-a") {
+    await db.insert(assets).values({
+      id,
+      userId,
+      assetType: "image",
+      name: `asset-${id}`,
+      status,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+  }
+  async function assetRow(id: string) {
+    const rows = await db.select().from(assets).where(eq(assets.id, id));
+    return rows[0]!;
+  }
+
+  it("采纳:confirmTask 把 pending 资产翻 active(先翻再绑用料链),任务 succeeded", async () => {
+    const { service, materialLinks } = makeService(db);
+    await seedAsset("asset-p1", "pending");
+    const task = await service.createTask(ctx, {
+      taskType: "asset.generate",
+      inputData: { projectId: "p-1", prompt: "隐喻图" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "generated_asset",
+      assetId: "asset-p1",
+      resultData: { assetId: "asset-p1", assetType: "image", name: "n" },
+    });
+    // 采纳前:仍 pending(素材库 list 按 active 过滤 → 不可见,铁律②)。
+    expect((await assetRow("asset-p1")).status).toBe("pending");
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    expect((await assetRow("asset-p1")).status).toBe("active");
+    expect(materialLinks.link).toHaveBeenCalledTimes(1);
+    expect(materialLinks.link).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({ entityType: "asset", entityId: "asset-p1" }),
+    );
+  });
+
+  it("采纳重试:绑链第一次抛 → 资产已 active、任务仍 awaiting;重试续绑成功且不重复绑", async () => {
+    const { service, materialLinks } = makeService(db);
+    await seedAsset("asset-p2", "pending");
+    (materialLinks.link as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      async () => {
+        throw new Error("link down");
+      },
+    );
+    const task = await service.createTask(ctx, {
+      taskType: "asset.generate",
+      inputData: { projectId: "p-1", prompt: "x" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "generated_asset",
+      assetId: "asset-p2",
+      resultData: { assetId: "asset-p2", assetType: "image", name: "n" },
+    });
+    await expect(service.confirmTask(ctx, task.id)).rejects.toThrow("link down");
+    // commit 在绑链前已幂等落地;任务留在 awaiting 可重试。
+    expect((await assetRow("asset-p2")).status).toBe("active");
+    expect((await service.getTask(ctx, task.id)).status).toBe(
+      "awaiting_confirmation",
+    );
+    const done = await service.confirmTask(ctx, task.id);
+    expect(done.status).toBe("succeeded");
+    // 两轮共两次调用(1 抛 + 1 成)—— journal 保证成功的链只有一条。
+    expect(materialLinks.link).toHaveBeenCalledTimes(2);
+  });
+
+  it("拒绝:cancelTask 把 pending 资产软删进回收站(status=deleted + deletedAt),不留隐身孤儿", async () => {
+    const { service } = makeService(db);
+    await seedAsset("asset-p3", "pending");
+    const task = await service.createTask(ctx, {
+      taskType: "asset.generate",
+      inputData: { projectId: "p-1", prompt: "x" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "generated_asset",
+      assetId: "asset-p3",
+      resultData: { assetId: "asset-p3", assetType: "image", name: "n" },
+    });
+    const cancelled = await service.cancelTask(ctx, task.id);
+    expect(cancelled.status).toBe("cancelled");
+    const row = await assetRow("asset-p3");
+    expect(row.status).toBe("deleted");
+    expect(row.deletedAt).toBe(NOW);
+  });
+
+  it("拒绝不误伤:已 active(已入库)的资产,cancelTask 绝不动它", async () => {
+    const { service } = makeService(db);
+    await seedAsset("asset-a1", "active");
+    const task = await service.createTask(ctx, {
+      taskType: "asset.generate",
+      inputData: { projectId: "p-1", prompt: "x" },
+    });
+    await service.recordCandidate(ctx, task.id, {
+      resultType: "generated_asset",
+      assetId: "asset-a1",
+      resultData: { assetId: "asset-a1", assetType: "image", name: "n" },
+    });
+    await service.cancelTask(ctx, task.id);
+    const row = await assetRow("asset-a1");
+    expect(row.status).toBe("active");
+    expect(row.deletedAt).toBeNull();
+  });
+
+  it("跨用户静默 no-op:B 用户的 discardGeneratedAsset 动不了 A 的 pending 资产", async () => {
+    const { service } = makeService(db);
+    await seedAsset("asset-p4", "pending", "user-a");
+    const ctxB: RequestContext = {
+      userId: "user-b",
+      requestId: "r2",
+      source: "user",
+    };
+    await service.discardGeneratedAsset(ctxB, "asset-p4");
+    expect((await assetRow("asset-p4")).status).toBe("pending"); // 分毫未动
+    // 属主自己清理才生效(runner 失败窗口 seam)。
+    await service.discardGeneratedAsset(ctx, "asset-p4");
+    expect((await assetRow("asset-p4")).status).toBe("deleted");
   });
 });
