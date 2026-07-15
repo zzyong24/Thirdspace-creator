@@ -113,7 +113,14 @@ export default async function CreatorLayout({
   };
 
   // G1: real notifications for the Shell bell, read under the session ctx.
-  const notifications = await loadNotifications(session.ctx);
+  // [FE-H03] 通知是次要功能(铃铛)——读取失败绝不能拖垮整个登录后布局(首页/项目/素材/
+  // 发布/设置全靠这个 layout 渲染)。优雅降级:读失败 → 空通知(0 未读),铃铛为空,其余页面照常。
+  let notifications: NotificationsViewModel;
+  try {
+    notifications = await loadNotifications(session.ctx);
+  } catch {
+    notifications = { items: [], unreadCount: 0 };
+  }
 
   return (
     <>

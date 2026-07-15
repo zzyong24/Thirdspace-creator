@@ -230,16 +230,20 @@ export function resolveRoute(
     // T-039b item②:真项目标题优先级 —— override(server 读真值)> fixture project.title > 中性态。
     // override 仅在 URL 段与它匹配时采信(它就是据本 pathname 的 projectId 在 layout 里解析出来的,
     // 但多加一道 routeParam 校验,防串味)。有真标题 → header + 左下角指示器都显真名,不再退中性。
-    const overrideTitle =
-      override && override.routeParam === projectId ? override.title.trim() : "";
+    const overrideMatches = Boolean(override && override.routeParam === projectId);
+    const overrideTitle = overrideMatches ? override!.title.trim() : "";
     const realTitle = overrideTitle || project?.title || "";
+    // [FE-M07] 阶段/进度优先取 override 的真值(fixture 查不到真项目时,原来一律退回
+    // research/0%,把制作/复盘项目误显为脚本阶段)。override(server 读真值)> fixture > 中性默认。
+    const overrideStage = overrideMatches ? override!.stage : undefined;
+    const overrideProgress = overrideMatches ? override!.progressPct : undefined;
     const identity: TopHeaderProjectIdentity | undefined =
       project || realTitle
         ? {
             projectId: project?.id ?? resolvedProjectId,
             title: realTitle || "项目",
-            stage: project?.currentStage ?? "research",
-            stageProgressPct: project?.progressPct ?? 0,
+            stage: overrideStage ?? project?.currentStage ?? "research",
+            stageProgressPct: overrideProgress ?? project?.progressPct ?? 0,
             // T-010: 真实「<阶段> · 更新于 …」,派生自 fixture project 真值(有则);override 只带
             // 标题(shell 指示器/header 主要需要它),阶段/时间等仍走 fixture 兜底,无 fixture 则空串
             // (header 用 `updatedLabel ? … : "最近更新 —"` 兜底,不摆假时间)。

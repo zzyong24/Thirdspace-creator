@@ -49,10 +49,13 @@ export function buildSettingsViewModel(): SettingsViewModel {
       locale: user.locale,
     },
     storage: buildStorage(),
+    // [FE-H02] 诚实空态:fixture 不再伪造具体模型(原 anthropic / claude-opus-4-8)。
+    // 真实读取走 (creator)/settings 路由的 settings.models.list;读失败/未配置一律显「未配置」
+    // (数据缺失诚实置空,绝不假装绑了某个模型)。这里只是让 SSR/单测的兜底不空/不假。
     model: {
       capability: "default",
-      provider: "anthropic",
-      modelName: "claude-opus-4-8",
+      provider: "",
+      modelName: "",
       baseUrl: "",
       apiFormat: "anthropic",
       hasSecret: false,
@@ -168,20 +171,16 @@ function computeInitials(name: string): string {
   return `${parts[0]!.charAt(0)}${parts[parts.length - 1]!.charAt(0)}`.toUpperCase();
 }
 
-// Deterministic fixture fallback (item B — real shape: bytes, not GB). The
-// `(creator)/settings` route overlays the real `settings.storage.get` values;
-// this fixture only keeps SSR non-empty before the read resolves.
+// [FE-H02] 诚实空态兜底(real shape: bytes,不是 GB)。原 fixture 伪造了 18GB/64GB 占用与
+// 路径 —— 读取失败时把不存在的磁盘数据当真,违反「数据缺失诚实置 0」。真实值由
+// `(creator)/settings` 路由的 `settings.storage.get` 覆盖;这里只保证 SSR/单测兜底非空、且
+// 一律置 0 / 空(未知就是未知,绝不编造占用)。
 function buildStorage(): StorageState {
   return {
     backend: "local",
-    rootPath: "~/CreatorOS/media",
-    usedBytes: 18_000_000_000,
-    totalBytes: 64_000_000_000,
-    breakdown: [
-      { assetType: "video", label: "视频素材", bytes: 9_200_000_000, tone: "brand" },
-      { assetType: "image", label: "图片素材", bytes: 4_400_000_000, tone: "success" },
-      { assetType: "audio", label: "音频素材", bytes: 2_100_000_000, tone: "warning" },
-      { assetType: "document", label: "文档与导出", bytes: 2_300_000_000, tone: "neutral" },
-    ],
+    rootPath: "",
+    usedBytes: 0,
+    totalBytes: 0,
+    breakdown: [],
   };
 }

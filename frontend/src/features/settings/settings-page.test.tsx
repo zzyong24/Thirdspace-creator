@@ -221,6 +221,40 @@ describe("SettingsPage", () => {
     expect(bar).not.toBeNull();
   });
 
+  // [FE-H02] fixture(读取失败/SSR 的兜底)不再伪造模型/占用:数据缺失诚实置空/置 0,
+  // 绝不把不存在的 claude-opus-4-8 / 18GB/64GB 当真。
+  describe("honest fallback (FE-H02)", () => {
+    it("fixture 兜底不伪造模型与占用(provider/model 空、占用置 0、无分布)", async () => {
+      const { buildSettingsViewModel } = await import("@/fixtures/selectors");
+      const vm = buildSettingsViewModel();
+      expect(vm.model.provider).toBe("");
+      expect(vm.model.modelName).toBe("");
+      expect(vm.storage.usedBytes).toBe(0);
+      expect(vm.storage.totalBytes).toBe(0);
+      expect(vm.storage.breakdown).toHaveLength(0);
+    });
+
+    it("无 model/storage props(读取失败态)→ 模型卡输入为空(不预填伪造模型),存储诚实显 0.0 GB", async () => {
+      await renderSettings();
+      // 模型卡的供应商 / 模型输入不被伪造值预填(原来 fixture 会填 anthropic / claude-opus-4-8)。
+      const provider = document.querySelector(
+        "#model-provider",
+      ) as HTMLInputElement | null;
+      const modelName = document.querySelector(
+        "#model-name",
+      ) as HTMLInputElement | null;
+      expect(provider).not.toBeNull();
+      expect(provider!.value).toBe("");
+      expect(modelName!.value).toBe("");
+      // 存储卡诚实显示已用 0.0 GB(数据缺失置 0),绝不显伪造的 18GB/64GB。
+      const storage = document.querySelector(
+        '[data-slot="storage-usage-card"]',
+      ) as HTMLElement;
+      expect(storage.textContent ?? "").toContain("0.0 GB");
+      expect(storage.textContent ?? "").not.toContain("18.0 GB");
+    });
+  });
+
   it("keeps the page inside the single AppShell — no second Sidebar/TopHeader", async () => {
     const { container } = await renderSettings();
     const sidebars = container.querySelectorAll('[data-slot="app-sidebar"]');

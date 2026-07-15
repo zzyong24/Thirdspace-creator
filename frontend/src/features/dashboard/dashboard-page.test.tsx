@@ -254,4 +254,50 @@ describe("DashboardPage", () => {
     expect(active).toHaveAttribute("href", "/");
     expect(active.textContent?.trim()).toBe("首页");
   });
+
+  // [FE-M04] 副标题聚合真实待办;有待办时不谎报「全部处理完」。
+  it("有待办但无建议时,副标题反映真实待办,不谎报「所有任务都已处理完」", async () => {
+    const { buildDashboardViewModel } = await import("@/fixtures/selectors");
+    const base = buildDashboardViewModel();
+    // todos 非空(fixture 有),suggestions 置空 —— 命中原 bug 场景。
+    const viewModel = { ...base, suggestions: [] };
+    expect(viewModel.todos.length).toBeGreaterThan(0);
+    const { container } = await renderDashboard({ viewModel });
+    const subtext = container.querySelector('[data-slot="dashboard-subtext"]');
+    expect(subtext).not.toBeNull();
+    expect(subtext!.textContent ?? "").toContain("待办");
+    expect(subtext!.textContent ?? "").not.toContain("处理完");
+  });
+
+  it("待办与建议都为空时,副标题诚实显示「暂无」,不伪造", async () => {
+    const { buildDashboardViewModel } = await import("@/fixtures/selectors");
+    const base = buildDashboardViewModel();
+    const viewModel = { ...base, todos: [], suggestions: [] };
+    const { container } = await renderDashboard({ viewModel });
+    const subtext = container.querySelector('[data-slot="dashboard-subtext"]');
+    expect(subtext!.textContent ?? "").toContain("暂无");
+  });
+
+  // [FE-M04] 缺平台值显示「未设置」,不伪造「多平台」。
+  it("继续创作项目无目标平台时显示「未设置」而非伪造的「多平台」", async () => {
+    const { buildDashboardViewModel } = await import("@/fixtures/selectors");
+    const base = buildDashboardViewModel();
+    const viewModel = {
+      ...base,
+      continueCreating: {
+        heading: "继续创作",
+        projectId: "no-such-project-xyz",
+        projectTitle: "无平台真项目",
+        stage: "script" as const,
+        progressPct: 40,
+        updatedAt: "2026-07-15T00:00:00+08:00",
+      },
+    };
+    const { container } = await renderDashboard({ viewModel });
+    const card = container.querySelector(
+      '[data-slot="continue-creating-card"]',
+    ) as HTMLElement;
+    expect(card.textContent ?? "").toContain("未设置");
+    expect(card.textContent ?? "").not.toContain("多平台");
+  });
 });

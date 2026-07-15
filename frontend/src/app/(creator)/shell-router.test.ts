@@ -107,6 +107,36 @@ describe("resolveRoute", () => {
     expect(res.project?.title).not.toBe("串味的标题");
   });
 
+  // [FE-M07] override 带真实 stage/progress → header 显真阶段/进度,而非恒退回 research/0%
+  // (原来 fixture 查不到的真项目一律显脚本阶段 0%,制作/复盘项目被误显)。
+  it("override 带真实 stage/progress → header 显真阶段与进度(不再恒退回 research/0%)", () => {
+    const override = {
+      routeParam: "proj-real-xyz",
+      projectId: "proj-real-xyz",
+      title: "已进入复盘的真项目",
+      stage: "review",
+      progressPct: 80,
+    };
+    const res = resolveRoute("/projects/proj-real-xyz", override);
+    expect(res.project?.stage).toBe("review");
+    expect(res.project?.stageProgressPct).toBe(80);
+    // 稿面根路由的阶段条据真实阶段高亮:review 段 in_progress,前两段 completed。
+    expect(res.projectStages?.[0]?.status).toBe("completed");
+    expect(res.projectStages?.[1]?.status).toBe("completed");
+    expect(res.projectStages?.[2]?.status).toBe("in_progress");
+  });
+
+  it("override 缺 stage/progress(旧形状)→ 兜底 research/0%(向后兼容,不炸)", () => {
+    const override = {
+      routeParam: "proj-real-xyz",
+      projectId: "proj-real-xyz",
+      title: "无阶段信息的真项目",
+    };
+    const res = resolveRoute("/projects/proj-real-xyz", override);
+    expect(res.project?.stage).toBe("research");
+    expect(res.project?.stageProgressPct).toBe(0);
+  });
+
   it("override 优先于 fixture:fixture 命中的项目也用 override 的真标题(标题以真值为准)", () => {
     // ai-native-browser 在 fixture 里能命中;给一个 override → 标题应以 override 为准。
     const override = {

@@ -60,11 +60,12 @@ const mockClient = vi.hoisted(() => ({
   getExecutionTask: vi.fn(async () => ({
     id: "exec-1",
     execType: "video.render",
-    status: "queued",
+    status: "queued" as string,
     spec: { taskType: "video.render", goal: "g", inputs: [], params: {}, constraints: {} },
     manifest: null,
-    adoptedAssetIds: [],
-    errorMessage: null,
+    adoptedAssetIds: [] as string[],
+    // string | null,允许失败态用例覆盖真实错误文案(默认 null)。
+    errorMessage: null as string | null,
   })),
   listExecutionTasks: vi.fn(async (): Promise<unknown[]> => []),
 }));
@@ -144,6 +145,22 @@ beforeEach(() => {
   vi.clearAllMocks();
   state.prodStatus = "drafting";
   state.lastUploadAssetType = "";
+  // [FE-H01 测试] clearAllMocks 只清调用记录、不复位实现:本文件部分用例用 mockResolvedValue
+  // 持久覆盖轮询类 mock,这里显式复位默认实现,防跨用例泄漏。
+  mockClient.getTask.mockResolvedValue({ id: "ai-task-1", status: "running" });
+  mockClient.listAITasks.mockResolvedValue([]);
+  mockClient.listTaskResults.mockResolvedValue([]);
+  mockClient.listTaskSteps.mockResolvedValue([]);
+  mockClient.listExecutionTasks.mockResolvedValue([]);
+  mockClient.getExecutionTask.mockResolvedValue({
+    id: "exec-1",
+    execType: "video.render",
+    status: "queued",
+    spec: { taskType: "video.render", goal: "g", inputs: [], params: {}, constraints: {} },
+    manifest: null,
+    adoptedAssetIds: [],
+    errorMessage: null,
+  });
 });
 
 afterEach(cleanup);
@@ -347,5 +364,97 @@ describe("ProductionWorkbench", () => {
         container.querySelector('[data-slot="execution-task-card"]'),
       ).toBeTruthy(),
     );
+  });
+
+  // ── [FE-H01] 「后台运行,可离开」承诺:进度不丢、不重复付费、失败可见可恢复 ──────────
+
+  it("[FE-H01] 刷新恢复:渲染已 failed → 接回跟踪(失败可见:卡内显错误 + 环境引导 + 重试)", async () => {
+    // 恢复读命中一个已失败的渲染任务(离开时失败)。
+    mockClient.listExecutionTasks.mockResolvedValueOnce([
+      {
+        id: "exec-fail",
+        execType: "video.render",
+        status: "failed",
+        adoptedAssetIds: [],
+        errorMessage: "ffmpeg not found on PATH",
+      },
+    ]);
+    mockClient.getExecutionTask.mockResolvedValue({
+      id: "exec-fail",
+      execType: "video.render",
+      status: "failed",
+      spec: { taskType: "video.render", goal: "渲染成片", inputs: [], params: {}, constraints: {} },
+      manifest: null,
+      adoptedAssetIds: [],
+      errorMessage: "ffmpeg not found on PATH",
+    });
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+
+    // 渲染跟踪区被接回(失败不再无声无息)。
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="production-render"]'),
+      ).toBeTruthy(),
+    );
+    // ExecutionTaskCard 显失败原因 + 重试(失败可恢复)。
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="execution-task-error"]')
+          ?.textContent ?? "",
+      ).toContain("执行失败"),
+    );
+    // ffmpeg 环境错误被 humanize 成安装引导(workbench 的 render-env-hint)。
+    await waitFor(() =>
+      expect(
+        container.querySelector('[data-slot="render-env-hint"]')?.textContent ??
+          "",
+      ).toContain("ffmpeg"),
+    );
+    // 状态机不因失败被推进到 ready(诚实停住)。
+    const statuses = mockClient.putOutputProduction.mock.calls.map(
+      (c) => (c[0] as { body: { status?: string } }).body.status,
+    );
+    expect(statuses).not.toContain("ready");
+  });
+
+  it("[FE-H01] 刷新恢复:决策任务仍在后台跑(running)→ 重挂轮询,决不重新发起(不重复付费)", async () => {
+    // 离开时四决策还在跑;回到本页应接着轮询同一任务,而不是从零重发(付费/分场任务不能重复)。
+    mockClient.listAITasks.mockResolvedValueOnce([
+      { id: "dec-run", status: "running" },
+    ]);
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+
+    // 轮询用恢复出的 taskId 重挂(getTask 收到 dec-run)。
+    await waitFor(() =>
+      expect(mockClient.getTask).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { taskId: "dec-run" } }),
+      ),
+    );
+    // 决不重新 createAITask(不重复触发付费决策)。
+    expect(mockClient.createAITask).not.toHaveBeenCalled();
+    // 进行中态可见(承诺「后台跑,可离开」)。
+    expect(container.textContent).toContain("四决策进行中");
+  });
+
+  it("[FE-H01] 决策轮询持续不放弃:远超旧「~10 分钟(150 次)」上限仍在轮询(不静默退出)", async () => {
+    vi.useFakeTimers();
+    try {
+      // 用恢复路径把一个 running 决策任务挂上轮询;getTask 默认恒 running → 永不遇终态。
+      mockClient.listAITasks.mockResolvedValueOnce([
+        { id: "dec-run", status: "running" },
+      ]);
+      render(<ProductionWorkbench {...makeProps()} />);
+      // 冲洗挂载副作用(恢复读 + 首次轮询)。
+      await vi.advanceTimersByTimeAsync(0);
+      // 退避封顶 30s;推进远超旧 150 次上限的时间,证明轮询没有「轮满就退」。
+      for (let i = 0; i < 200; i += 1) {
+        await vi.advanceTimersByTimeAsync(30_000);
+      }
+      expect(mockClient.getTask.mock.calls.length).toBeGreaterThan(160);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

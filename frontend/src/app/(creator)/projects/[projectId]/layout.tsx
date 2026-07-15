@@ -46,9 +46,11 @@ function slugifyTitle(title: string): string {
 // Resolve the URL [projectId] segment to the REAL {id, title} against the persisted project
 // list (projects.list, user-scoped via the session ctx). Matches by canonical id first, then
 // by title-slug. Returns null when nothing matches or the read fails (honest → neutral shell).
+// [FE-M07] 也读 currentStage / progressPct:shell 的 fixture 里查不到真项目时,靠这两个真值
+// 显示正确阶段与进度(否则 shell 恒退回 research/0%,把制作/复盘项目误显为脚本阶段)。
 async function resolveRealProject(
   projectId: string,
-): Promise<{ id: string; title: string } | null> {
+): Promise<{ id: string; title: string; stage: string; progressPct: number } | null> {
   if (!projectId) return null;
   const session = await resolveSession();
   if (!session) return null;
@@ -57,12 +59,28 @@ async function resolveRealProject(
       params: undefined,
       query: { page: 1, pageSize: 100 },
       body: undefined,
-    })) as unknown as ReadonlyArray<{ id: string; title: string }>;
+    })) as unknown as ReadonlyArray<{
+      id: string;
+      title: string;
+      currentStage: string;
+      progressPct: number;
+    }>;
+    const pick = (p: {
+      id: string;
+      title: string;
+      currentStage: string;
+      progressPct: number;
+    }) => ({
+      id: p.id,
+      title: p.title,
+      stage: p.currentStage,
+      progressPct: p.progressPct,
+    });
     const byId = projects.find((p) => p.id === projectId);
-    if (byId) return { id: byId.id, title: byId.title };
+    if (byId) return pick(byId);
     const slug = projectId.toLowerCase();
     const bySlug = projects.find((p) => slugifyTitle(p.title) === slug);
-    return bySlug ? { id: bySlug.id, title: bySlug.title } : null;
+    return bySlug ? pick(bySlug) : null;
   } catch {
     return null;
   }
@@ -79,7 +97,14 @@ export default async function ProjectIdLayout({
     <CurrentProjectProvider
       value={
         real
-          ? { routeParam: projectId, projectId: real.id, title: real.title }
+          ? {
+              routeParam: projectId,
+              projectId: real.id,
+              title: real.title,
+              // [FE-M07] 灌真实阶段/进度,shell header 的阶段条与进度不再恒退回 research/0%。
+              stage: real.stage,
+              progressPct: real.progressPct,
+            }
           : null
       }
     >

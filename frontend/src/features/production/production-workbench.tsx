@@ -50,7 +50,16 @@ import {
 } from "./production-flow";
 
 const POLL_MS = 4000;
-const MAX_DECISION_POLLS = 150; // ~10 分钟(四决策 MiniMax 下分钟级)
+// [FE-H01] 后台长任务轮询退避上限:决策/渲染都是分钟级(MiniMax 下更久),不能设「最多轮
+// N 次就静默放弃」——那样「后台运行,可离开」承诺不成立(进度会丢)。改为持续轮询,前若干次
+// 密集(4s),之后指数退避拉长到 30s 封顶,绝不放弃(只在终态或组件卸载时停)。
+const POLL_MAX_MS = 30_000;
+
+/** 决策轮询退避间隔:前 15 次 4s,之后每 15 次翻倍,封顶 30s。持续轮询、绝不静默退出。 */
+function pollDelay(attempt: number): number {
+  const backed = POLL_MS * 2 ** Math.floor(attempt / 15);
+  return Math.min(backed, POLL_MAX_MS);
+}
 
 // ── wire 形状(只声明本组件读的字段;服务端 zod 是单一真值)────────────────────
 
@@ -575,7 +584,10 @@ export function ProductionWorkbench({
     if (!decisionsTaskId || decisions) return;
     let abandoned = false;
     void (async () => {
-      for (let i = 0; i < MAX_DECISION_POLLS; i++) {
+      // [FE-H01] 持续轮询(退避到 30s 封顶),绝不因「轮询次数用尽」静默退出:四决策后台跑
+      // 分钟级,离开再回来仍能接着看进度/终态。只在 awaiting_confirmation / failed / cancelled
+      // 终态或组件卸载(abandoned)时停。
+      for (let attempt = 0; ; attempt++) {
         try {
           const task = (await client.getTask({
             params: { taskId: decisionsTaskId },
@@ -607,7 +619,7 @@ export function ProductionWorkbench({
         } catch {
           /* 单次拉取失败下轮再试 */
         }
-        await new Promise((r) => setTimeout(r, POLL_MS));
+        await new Promise((r) => setTimeout(r, pollDelay(attempt)));
         if (abandoned) return;
       }
     })();
@@ -718,7 +730,8 @@ export function ProductionWorkbench({
     if (!renderTaskId) return;
     let abandoned = false;
     void (async () => {
-      for (;;) {
+      // [FE-H01] 同决策轮询:持续轮询 + 退避,只在 succeeded / failed / cancelled 终态或卸载时停。
+      for (let attempt = 0; ; attempt++) {
         try {
           const task = (await client.getExecutionTask({
             params: { taskId: renderTaskId },
@@ -742,11 +755,15 @@ export function ProductionWorkbench({
             void advanceStatus("ready");
             return;
           }
+          // [FE-H01] failed 是终态:必须停止轮询(否则对已失败任务永久查询、转圈不散)。
+          // 环境类错误上面已 humanize 成安装引导;通用错误由 ExecutionTaskCard 显「执行失败:…」
+          // + 重试。状态机不推进(诚实停在 rendering 前),失败可见可恢复。
+          if (task.status === "failed") return;
           if (task.status === "cancelled") return;
         } catch {
           /* 单次拉取失败下轮再试 */
         }
-        await new Promise((r) => setTimeout(r, POLL_MS));
+        await new Promise((r) => setTimeout(r, pollDelay(attempt)));
         if (abandoned) return;
       }
     })();
@@ -755,7 +772,11 @@ export function ProductionWorkbench({
     };
   }, [renderTaskId, exportId, advanceStatus]);
 
-  // ── 刷新恢复(best-effort):未收口的决策候选 / 在跑的渲染任务接回跟踪 ─────────
+  // ── 刷新恢复(best-effort):未收口的决策候选 / 在跑 / 已失败的任务接回跟踪 ────────
+  //   [FE-H01] 目标:进度不丢、不重复发起付费任务、失败可见可恢复。按「当前最该看的」优先级恢复:
+  //   ① 渲染在途 → 接回跟踪;② 渲染已成功 → 恢复成片预览;③ 决策候选待确认 → 重挂预览卡;
+  //   ④ 决策任务仍在后台跑(queued/running)→ 重挂轮询(**绝不 re-createAITask**,否则重复付费/重复分场);
+  //   ⑤ 渲染失败 → 接回跟踪(ExecutionTaskCard 显失败原因 + 重试,失败可见可恢复)。
   React.useEffect(() => {
     let abandoned = false;
     void (async () => {
@@ -801,10 +822,28 @@ export function ProductionWorkbench({
         const pending = tasks.find((t) => t.status === "awaiting_confirmation");
         if (pending && !abandoned) {
           const loaded = await loadDecisionResult(pending.id);
-          if (loaded && !abandoned) {
+          if (!abandoned) {
+            // 重挂轮询(loaded → decisions 已就位,轮询早退;未 loaded → 轮询会补读)。
             setDecisionsTaskId(pending.id);
-            setRecoveredDecisions(true);
+            if (loaded) setRecoveredDecisions(true);
           }
+          return;
+        }
+        // [FE-H01] 决策任务仍在后台跑 → 重挂轮询,决不重新发起(付费/分场任务不能重复)。
+        const runningDecision = tasks.find(
+          (t) => t.status === "queued" || t.status === "running",
+        );
+        if (runningDecision && !abandoned) {
+          setDecisionsTaskId((prev) => prev ?? runningDecision.id);
+          return;
+        }
+        // [FE-H01] 渲染失败 → 接回跟踪(失败可见可恢复):放在决策恢复之后,让「重新决策」优先。
+        const failedRender = execs.find(
+          (t) => t.execType === "video.render" && t.status === "failed",
+        );
+        if (failedRender && !abandoned) {
+          setRenderTaskId((prev) => prev ?? failedRender.id);
+          return;
         }
       } catch {
         /* 恢复失败诚实从头开始 */

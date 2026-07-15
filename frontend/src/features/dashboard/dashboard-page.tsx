@@ -105,10 +105,11 @@ export async function DashboardPage({
         >
           {greeting}
         </h1>
-        <p className="text-sm text-muted-foreground">
-          {vm.suggestions.length > 0
-            ? `今天有 ${vm.suggestions.length} 条创作建议等待处理。`
-            : "今天所有任务都已处理完。"}
+        <p
+          data-slot="dashboard-subtext"
+          className="text-sm text-muted-foreground"
+        >
+          {buildDashboardSubtext(vm.todos.length, vm.suggestions.length)}
         </p>
       </header>
 
@@ -245,9 +246,14 @@ function ContinueCreatingCard({
             <StatusBadge status="active" />
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            {projectPlatforms.map((platform) => (
-              <TagChip key={platform} label={platform} tone="brand" size="sm" />
-            ))}
+            {projectPlatforms.length > 0 ? (
+              projectPlatforms.map((platform) => (
+                <TagChip key={platform} label={platform} tone="brand" size="sm" />
+              ))
+            ) : (
+              // [FE-M04] 缺平台值显示「未设置」中性标签,不伪造「多平台」。
+              <TagChip label="未设置" tone="neutral" size="sm" />
+            )}
             <TagChip label={stageLabel(continueCreating.stage)} tone="info" size="sm" />
           </div>
           <ProgressBar
@@ -579,10 +585,9 @@ function categoryLabel(category: string): string {
 }
 
 function getProjectPlatformLabels(projectId: string): ReadonlyArray<string> {
-  const platforms = getProjectPlatforms(projectId);
-  if (platforms.length > 0) return platforms;
-  // Fall back to a single "多平台" label so the row never renders empty.
-  return ["多平台"];
+  // [FE-M04] 只返回真实目标平台;缺失就返回空(不再伪造「多平台」)。空数组时由
+  // ContinueCreatingCard 显示「未设置」中性标签,诚实反映「还没配发布平台」。
+  return getProjectPlatforms(projectId);
 }
 
 function buildTrendSummary(
@@ -607,4 +612,23 @@ function buildGreeting(
   const firstName = displayName.split(/\s+/)[0] ?? displayName;
   void vm; // reserved for future variation by todos/suggestions count
   return `早上好, ${firstName}!`;
+}
+
+/**
+ * [FE-M04] 首页副标题:聚合**真实**待办(未完成任务 + 创作建议)。原实现只看
+ * suggestions,todos>0 时仍谎报「所有任务都已处理完」。只有两者都为空才说「暂无」——
+ * 诚实,不伪造「全部处理完」。
+ */
+export function buildDashboardSubtext(
+  todoCount: number,
+  suggestionCount: number,
+): string {
+  if (todoCount + suggestionCount === 0) {
+    return "今天暂无待办与创作建议。";
+  }
+  const parts = [
+    todoCount > 0 ? `${todoCount} 项待办` : null,
+    suggestionCount > 0 ? `${suggestionCount} 条创作建议` : null,
+  ].filter(Boolean);
+  return `今天有 ${parts.join("、")}待处理。`;
 }

@@ -78,7 +78,11 @@ const VM: NotificationsViewModel = {
 
 beforeEach(() => {
   mockRouter.refresh.mockClear();
-  markNotificationRead.mockClear();
+  // 复位实现(mockClear 只清调用记录):防某用例的 mockImplementation 泄漏到后续用例。
+  markNotificationRead.mockReset();
+  markNotificationRead.mockImplementation(
+    (input: unknown): Promise<unknown> => Promise.resolve({ input }),
+  );
 });
 
 afterEach(() => cleanup());
@@ -127,6 +131,35 @@ describe("NotificationPopover", () => {
     expect(markedIds).not.toContain("n-2");
 
     // After awaiting all marks, the server re-read is triggered.
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  // [FE-M05] allSettled + 失败回滚:一条失败不能连累其余,也不能把失败项悄悄留在「已读」
+  //  (那样 badge 显示的未读数比真实少)。失败项回滚未读态;成功项照常并 router.refresh()。
+  it("部分标记失败时回滚失败项的未读态(badge 恢复真实未读),成功项仍触发 refresh", async () => {
+    const user = userEvent.setup();
+    // n-1 标记失败,n-3 成功。
+    markNotificationRead.mockImplementation((input: unknown) => {
+      const id = (input as { params: { notificationId: string } }).params
+        .notificationId;
+      return id === "n-1"
+        ? Promise.reject(new Error("mark failed"))
+        : Promise.resolve({ ok: true });
+    });
+    render(<NotificationPopover viewModel={VM} />);
+    await user.click(screen.getByRole("button", { name: "通知" }));
+    await user.click(await screen.findByText("全部标记为已读"));
+
+    // 两个未读都被尝试标记。
+    await waitFor(() => expect(markNotificationRead).toHaveBeenCalledTimes(2));
+    // 失败的 n-1 回滚 → badge 恢复为 1(而不是被乐观清成 0)。
+    await waitFor(() => {
+      const badge = document.querySelector(
+        '[data-slot="notification-unread-badge"]',
+      );
+      expect(badge?.textContent).toBe("1");
+    });
+    // 成功项的真值仍要回流(refresh 照常触发)。
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1));
   });
 

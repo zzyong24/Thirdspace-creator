@@ -11,12 +11,17 @@
  * Step 6 (Settings module): the account card now reads the REAL
  * `settings.get` op through the server-bound contract client (in-process
  * over the seeded pglite store), exercising the module's transport on the
- * server read path. The preference / model / storage rows stay
- * fixture-derived (the seed mirrors the fixture exactly, so SSR stays
- * deterministic against the canonical user); their mutations persist through
- * the island ops and a `router.refresh()` re-runs this read. Falls back to
- * the session identity when the op read is unavailable (race / direct
- * render), then to the fixture default.
+ * server read path. The model / storage rows read the REAL
+ * `settings.models.list` / `settings.storage.get` ops; their mutations
+ * persist through the island ops and a `router.refresh()` re-runs this read.
+ *
+ * [FE-H02] Honesty on read failure: when a read is unavailable or the value
+ * is unconfigured, this route passes an EXPLICIT honest empty state
+ * (UNCONFIGURED_MODEL / EMPTY_STORAGE) — NEVER the fixture's fabricated model
+ * (anthropic / claude-opus-4-8) or disk usage (18GB/64GB). The fixture is a
+ * test-only SSR-non-empty fallback; production must not present it as real.
+ * The account card falls back to the session identity DTO when its op read is
+ * unavailable (race / direct render).
  */
 import {
   SettingsPage,
@@ -56,6 +61,26 @@ const STORAGE_TYPE_LABELS: Record<
   audio: { label: "音频素材", tone: "warning" },
   document: { label: "文档与导出", tone: "neutral" },
   subtitle: { label: "字幕文件", tone: "neutral" },
+};
+
+// [FE-H02] 生产读取失败 / 未配置的诚实兜底。绝不回退到 fixture 的伪造模型 / 占用
+// (fixture 仅供单测与 SSR 首帧,不能当真实数据喂给用户)。模型未配置 = 空供应商/模型
+// (卡片渲染成「未配置」表单);存储读取失败 = 诚实置 0(数据缺失置 0 铁律)。
+const UNCONFIGURED_MODEL: ModelState = {
+  capability: "default",
+  provider: "",
+  modelName: "",
+  baseUrl: "",
+  apiFormat: "anthropic",
+  hasSecret: false,
+  temperature: 0.6,
+};
+const EMPTY_STORAGE: StorageState = {
+  backend: "local",
+  rootPath: "",
+  usedBytes: 0,
+  totalBytes: 0,
+  breakdown: [],
 };
 
 export default async function SettingsRoutePage() {
@@ -100,11 +125,13 @@ export default async function SettingsRoutePage() {
   }
 
   // Read the real DB-backed model configs (settings.models.list) so the cards
-  // reflect the stored provider / model / baseUrl / format / hasSecret. A read
-  // failure leaves them undefined → the cards show the fixture default
-  // (deterministic SSR fallback). A single list call feeds BOTH the text "default"
-  // card AND the two multimodal (image.generate / video.generate) cards.
-  let model: ModelState | undefined;
+  // reflect the stored provider / model / baseUrl / format / hasSecret. A single
+  // list call feeds BOTH the text "default" card AND the two multimodal
+  // (image.generate / video.generate) cards.
+  // [FE-H02] 读取失败 / 未配置默认模型 → 诚实的「未配置」态(UNCONFIGURED_MODEL),绝不
+  // 回退 fixture 的伪造模型(原来 undefined 会让页面渲染 fixture 的 anthropic/claude-opus-4-8,
+  // 把不存在的模型当真)。
+  let model: ModelState = UNCONFIGURED_MODEL;
   let multimodalModels: MultimodalModelsState | undefined;
   if (session) {
     try {
@@ -128,6 +155,7 @@ export default async function SettingsRoutePage() {
           temperature: typeof temp === "number" ? temp : 0.6,
         };
       }
+      // 没有 default 行 → model 保持 UNCONFIGURED_MODEL(诚实「未配置」,不假装绑了模型)。
 
       // Project the two multimodal capability rows (if configured). No apiFormat/
       // temperature — resolveMultimodalSpec dispatches on provider alone. An absent
@@ -162,15 +190,17 @@ export default async function SettingsRoutePage() {
         fallback: multimodalRow("chat.fallback"),
       };
     } catch {
-      // listModels unavailable (transport race) → fall back to the fixture.
+      // [FE-H02] listModels 读失败 → 文本模型卡诚实显「未配置」(model 保持 UNCONFIGURED_MODEL);
+      // multimodalModels 留 undefined → 走 fixture 的**全空**多模态默认(本就诚实未配置,非伪造)。
+      model = UNCONFIGURED_MODEL;
     }
   }
 
   // Read the real DB-backed storage config + usage (settings.storage.get) so the
   // StorageUsageCard shows the real media root / backend / used-vs-capacity /
-  // per-type breakdown. A read failure leaves it undefined → the card shows the
-  // fixture default (deterministic SSR fallback).
-  let storage: StorageState | undefined;
+  // per-type breakdown.
+  // [FE-H02] 读取失败 → 诚实置 0(EMPTY_STORAGE),绝不回退 fixture 伪造的 18GB/64GB 占用。
+  let storage: StorageState = EMPTY_STORAGE;
   if (session) {
     try {
       const s = await createServerClient(session.ctx).getStorage({
@@ -197,7 +227,8 @@ export default async function SettingsRoutePage() {
         }),
       };
     } catch {
-      // getStorage unavailable (transport race) → fall back to the fixture.
+      // [FE-H02] getStorage 读失败 → 诚实置 0(storage 保持 EMPTY_STORAGE),绝不回退 fixture 假占用。
+      storage = EMPTY_STORAGE;
     }
   }
 

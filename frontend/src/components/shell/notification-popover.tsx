@@ -73,23 +73,37 @@ export function NotificationPopover({
     // Optimistically clear the badge before the round-trip.
     setReadIds((prev) => new Set([...prev, ...ids]));
     setPending(true);
-    // No bulk endpoint (roadmap §428): N per-id reads, then revalidate so the
-    // server re-read (G1) is the source of truth.
-    void Promise.all(
-      ids.map((id) =>
-        client.markNotificationRead({
-          params: { notificationId: id },
-          query: undefined,
-          body: undefined,
-        }),
-      ),
-    )
-      .then(() => {
+    // No bulk endpoint (roadmap §428): N per-id reads.
+    // [FE-M05] 用 allSettled(不是 all):一条失败不能连累其余,也不能让失败项悄悄留在
+    // 「已读」乐观集里(那样 badge 显示的未读数比真实少)。对失败的 id 回滚乐观已读,让铃铛
+    // 重新反映真实未读态;成功项经 router.refresh() 由服务端真值回流。
+    void (async () => {
+      try {
+        const results = await Promise.allSettled(
+          ids.map((id) =>
+            client.markNotificationRead({
+              params: { notificationId: id },
+              query: undefined,
+              body: undefined,
+            }),
+          ),
+        );
+        const failedIds = ids.filter(
+          (_, i) => results[i]!.status === "rejected",
+        );
+        if (failedIds.length > 0) {
+          setReadIds((prev) => {
+            const next = new Set(prev);
+            for (const id of failedIds) next.delete(id);
+            return next;
+          });
+        }
+        // 让服务端 re-read(G1)成为真值来源(成功标记的确实已读)。
         router.refresh();
-      })
-      .finally(() => {
+      } finally {
         setPending(false);
-      });
+      }
+    })();
   }, [pending, router, unreadItems]);
 
   return (

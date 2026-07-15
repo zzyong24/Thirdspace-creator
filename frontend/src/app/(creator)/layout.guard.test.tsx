@@ -167,6 +167,34 @@ describe("(creator) layout — session guard", () => {
     expect(screen.getByTestId("guarded-child")).toBeInTheDocument();
   });
 
+  // [FE-H03] 通知读取失败绝不拖垮整个登录后布局(首页/项目/素材/发布/设置全靠这个 layout)。
+  it("通知读取失败 → 优雅降级(空铃铛),children 仍正常渲染,不弹 /login、不抛错", async () => {
+    cookieValue = "valid-raw-token";
+    resolveContextFromToken.mockResolvedValue({
+      userId: "user-zyongzhu",
+      requestId: "req-notif-fail",
+      source: "user",
+    });
+    getCurrentUser.mockResolvedValue(CANONICAL_USER);
+    // 通知请求炸掉(transport / DB error)。
+    listNotifications.mockRejectedValueOnce(new Error("notifications transport down"));
+
+    const Layout = await importLayout();
+    const tree = await Layout({
+      children: <div data-testid="guarded-child">guarded</div>,
+      modal: null,
+    });
+    render(tree);
+
+    expect(redirect).not.toHaveBeenCalled();
+    // 布局照常渲染 children —— 次要铃铛失败没有拖垮页面。
+    expect(screen.getByTestId("guarded-child")).toBeInTheDocument();
+    // 铃铛降级为空(无未读徽标)。
+    expect(
+      document.querySelector('[data-slot="notification-unread-badge"]'),
+    ).toBeNull();
+  });
+
   it("renders children + the user card bound to the canonical user on a valid session", async () => {
     cookieValue = "valid-raw-token";
     resolveContextFromToken.mockResolvedValue({

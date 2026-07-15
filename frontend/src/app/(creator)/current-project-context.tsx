@@ -25,6 +25,13 @@ export interface CurrentProjectOverride {
   readonly projectId: string;
   /** 真项目标题(server 端用 projects.get / projects.list 读到)。 */
   readonly title: string;
+  /**
+   * [FE-M07] 真实当前阶段(projects.list 的 currentStage)。给 fixture 里查不到的真项目用:
+   * 没有它,shell 会把真项目一律当 research/0% 显示(制作/复盘项目被误显为脚本阶段)。
+   */
+  readonly stage?: string;
+  /** [FE-M07] 真实进度百分比(projects.list 的 progressPct,0-100)。同上,避免恒显 0%。 */
+  readonly progressPct?: number;
 }
 
 // ---------------------------------------------------------------------------
