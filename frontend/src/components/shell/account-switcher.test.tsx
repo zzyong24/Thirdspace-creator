@@ -21,7 +21,14 @@ vi.mock("@/lib/contract-client", () => ({
 }));
 
 import { AccountSwitcher } from "./account-switcher";
-import { CURRENT_ACCOUNT_KEY } from "@/lib/http-transport";
+import {
+  CURRENT_ACCOUNT_KEY,
+  CURRENT_ACCOUNT_COOKIE,
+} from "@/lib/http-transport";
+import {
+  beginForegroundActivity,
+  resetForegroundActivitiesForTest,
+} from "@/lib/foreground-activity";
 
 function row(
   id: string,
@@ -44,6 +51,9 @@ beforeEach(() => {
   mockRouter.refresh.mockReset();
   listAccounts.mockReset();
   window.localStorage.clear();
+  // [T-332 S4] cookie / 前台操作注册表也是切换器状态,测试间必须隔离。
+  document.cookie = `${CURRENT_ACCOUNT_COOKIE}=; Path=/; Max-Age=0`;
+  resetForegroundActivitiesForTest();
 });
 
 afterEach(() => cleanup());
@@ -89,6 +99,129 @@ describe("AccountSwitcher", () => {
       expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("b");
     });
     expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  // [T-332 S4] 切号 = 切整个工作区(SPEC §6.1):cookie 镜像 + accountsChanged 广播。
+  it("切号 → 同步镜像 current-account cookie(RSC 首个 refresh 即新号)", async () => {
+    const user = userEvent.setup();
+    listAccounts.mockResolvedValue([row("a"), row("b")]);
+    render(<AccountSwitcher collapsed={false} />);
+    await waitFor(() =>
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("a"),
+    );
+    await user.click(screen.getByTestId("account-switcher-trigger"));
+    const items = await screen.findAllByTestId("account-switcher-item");
+    await user.click(
+      items.find((el) => el.getAttribute("data-account-id") === "b")!,
+    );
+    await waitFor(() => {
+      expect(document.cookie).toContain(`${CURRENT_ACCOUNT_COOKIE}=b`);
+    });
+  });
+
+  it("切号 → 广播 accountsChanged(island 内部缓存态统一失效重取)", async () => {
+    const user = userEvent.setup();
+    listAccounts.mockResolvedValue([row("a"), row("b")]);
+    const onChanged = vi.fn();
+    window.addEventListener("creatoros:accounts-changed", onChanged);
+    try {
+      render(<AccountSwitcher collapsed={false} />);
+      await waitFor(() =>
+        expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("a"),
+      );
+      expect(onChanged).not.toHaveBeenCalled(); // 挂载归一不广播,只有真切号才广播
+      await user.click(screen.getByTestId("account-switcher-trigger"));
+      const items = await screen.findAllByTestId("account-switcher-item");
+      await user.click(
+        items.find((el) => el.getAttribute("data-account-id") === "b")!,
+      );
+      await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
+    } finally {
+      window.removeEventListener("creatoros:accounts-changed", onChanged);
+    }
+  });
+
+  it("stored 失效自愈(回落自动选号)→ 补 router.refresh(RSC 首屏按归一号重渲)", async () => {
+    window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "ghost");
+    listAccounts.mockResolvedValue([row("a")]);
+    render(<AccountSwitcher collapsed={false} />);
+    await waitFor(() =>
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("a"),
+    );
+    expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  // [T-332 S4·§6.1] 有进行中的前台操作 → 弹确认;取消留在原号,确认才切。
+  it("前台操作进行中 → 切号先弹确认;取消不切", async () => {
+    const user = userEvent.setup();
+    listAccounts.mockResolvedValue([row("a"), row("b")]);
+    render(<AccountSwitcher collapsed={false} />);
+    await waitFor(() =>
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("a"),
+    );
+    const end = beginForegroundActivity("AI 编导正在生成回复");
+    try {
+      await user.click(screen.getByTestId("account-switcher-trigger"));
+      const items = await screen.findAllByTestId("account-switcher-item");
+      await user.click(
+        items.find((el) => el.getAttribute("data-account-id") === "b")!,
+      );
+      // 弹确认,未切号
+      expect(await screen.findByTestId("account-switch-confirm")).toBeTruthy();
+      expect(
+        screen.getByText("AI 编导正在生成回复"),
+      ).toBeInTheDocument();
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("a");
+      // 取消 → 留在当前号
+      await user.click(screen.getByTestId("account-switch-cancel"));
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("a");
+    } finally {
+      end();
+    }
+  });
+
+  it("前台操作进行中 → 确认「仍要切换」后才真切号", async () => {
+    const user = userEvent.setup();
+    listAccounts.mockResolvedValue([row("a"), row("b")]);
+    render(<AccountSwitcher collapsed={false} />);
+    await waitFor(() =>
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("a"),
+    );
+    const end = beginForegroundActivity("表单提交中");
+    try {
+      await user.click(screen.getByTestId("account-switcher-trigger"));
+      const items = await screen.findAllByTestId("account-switcher-item");
+      await user.click(
+        items.find((el) => el.getAttribute("data-account-id") === "b")!,
+      );
+      await user.click(
+        await screen.findByTestId("account-switch-confirm-action"),
+      );
+      await waitFor(() =>
+        expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("b"),
+      );
+      expect(mockRouter.refresh).toHaveBeenCalled();
+    } finally {
+      end();
+    }
+  });
+
+  it("无前台操作 → 直切,不弹确认(SPEC §6.1 默认直切)", async () => {
+    const user = userEvent.setup();
+    listAccounts.mockResolvedValue([row("a"), row("b")]);
+    render(<AccountSwitcher collapsed={false} />);
+    await waitFor(() =>
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("a"),
+    );
+    await user.click(screen.getByTestId("account-switcher-trigger"));
+    const items = await screen.findAllByTestId("account-switcher-item");
+    await user.click(
+      items.find((el) => el.getAttribute("data-account-id") === "b")!,
+    );
+    await waitFor(() =>
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("b"),
+    );
+    expect(screen.queryByTestId("account-switch-confirm")).toBeNull();
   });
 
   it("0 个号 → 显绑定引导(§E ①,不崩)", async () => {

@@ -17,6 +17,7 @@ import {
   type DraftWorkbenchClient,
 } from "@/features/draft-workbench/draft-workbench-data";
 import { isOwnershipError } from "@/features/project-overview/project-overview-workspace-data";
+import { CrossAccountEmptyState } from "@/components/state/page-state";
 import { resolveSession } from "@/lib/session.server";
 import { createServerClient, client } from "@/lib/contract-client.server";
 
@@ -41,7 +42,24 @@ export default async function DraftWorkbenchRoute({
     const vm = await buildDraftWorkbenchVm(resolvedId, scoped);
     return <DraftWorkbenchPage vm={vm} />;
   } catch (err) {
-    if (isOwnershipError(err)) notFound();
+    // [T-332 S4] 跨号/未知 by-id → OwnershipError 404(后端语义,不泄露存在性)。
+    // 对用户最常见的成因是「切号后打开旧账号的项目深链」——裸 404 页不可理解,
+    // 渲染可理解空态:解释「不属于当前账号」+ 回项目列表(SPEC §4.5/§6.4)。
+    if (isOwnershipError(err)) {
+      return (
+        <main
+          data-app="creatoros"
+          data-page="project-cross-account-404"
+          className="flex flex-col gap-card-gap"
+        >
+          <CrossAccountEmptyState
+            entityLabel="项目"
+            backHref="/projects"
+            backLabel="回项目列表"
+          />
+        </main>
+      );
+    }
     // 项目读失败(未知 id 等)→ 404,与旧总览语义一致。
     notFound();
   }

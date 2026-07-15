@@ -37,6 +37,8 @@ export default async function CalendarRoutePage({
     <ContentCalendarPage
       month={month}
       client={createServerClient(session.ctx)}
+      // [T-332 S4] 当前号来自 RSC ctx(S3 的 current-account cookie 解析),页面不再自选首号。
+      currentAccountId={session.ctx.accountId ?? null}
     />
   );
 }

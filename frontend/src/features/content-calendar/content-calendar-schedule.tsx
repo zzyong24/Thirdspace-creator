@@ -27,6 +27,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { translateClientError } from "@/lib/account-error-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -100,7 +101,8 @@ function useMutation() {
         } catch (err) {
           // 失败可见:优先透传后端 message,否则给通用中文提示。onDone 不执行 →
           // 表单不 reset、不关闭,用户已填内容保留。
-          setError(err instanceof Error && err.message ? err.message : "操作失败，请重试");
+          // [T-332 S4] 未选号(AccountRequiredError 428)→ 翻译成选号引导,不是红色技术报错。
+          setError(translateClientError(err, "操作失败，请重试"));
         } finally {
           pendingRef.current = false;
           setPending(false);

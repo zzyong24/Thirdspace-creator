@@ -31,6 +31,10 @@ import { redirect } from "next/navigation";
 
 import { ShellRouter, type ShellUser } from "./shell-router";
 import { GlobalSearchHotkey } from "@/components/shell/global-search-hotkey";
+import {
+  ZeroAccountGuidance,
+  isZeroAccountAllowedPath,
+} from "@/components/shell/zero-account-guidance";
 import { resolveSession, currentPathname } from "@/lib/session.server";
 // T-147 P5 桌面激活授权 —— 桌面态未激活/到期则弹回 /activate;web/dev 永远放行(门不触发)。
 import { isActivationAllowed } from "@/lib/activation-gate.server";
@@ -112,6 +116,26 @@ export default async function CreatorLayout({
     initials: initialsFromName(session.user.displayName),
   };
 
+  // [T-332 S4] 0 号全局引导守卫(SPEC §4.2):该 user 名下没有任何 active 抖音号 →
+  // per-account 创作域页面整页替换为绑定引导(壳/侧栏保留);账号管理/设置等 user 级
+  // 页面放行(白名单),否则用户没入口去绑号。判定读 accounts.list(user 级读,不需要
+  // 当前号);读失败 fail-open 照常渲染 children —— 守卫是引导,不是安全门(安全边界
+  // 在 backend strict 门),绝不能因一次读失败把整个 app 锁死。
+  let hasActiveAccount = true;
+  try {
+    const accounts = (await createServerClient(session.ctx).listAccounts({
+      params: undefined,
+      query: { page: 1, pageSize: 100, platform: "douyin" },
+      body: undefined,
+    })) as unknown as ReadonlyArray<{ status: "active" | "archived" }>;
+    hasActiveAccount = (accounts ?? []).some((a) => a.status === "active");
+  } catch {
+    hasActiveAccount = true; // fail-open:读失败不误锁
+  }
+  const pathname = await currentPathname();
+  const zeroAccountGuarded =
+    !hasActiveAccount && !isZeroAccountAllowedPath(pathname);
+
   // G1: real notifications for the Shell bell, read under the session ctx.
   // [FE-H03] 通知是次要功能(铃铛)——读取失败绝不能拖垮整个登录后布局(首页/项目/素材/
   // 发布/设置全靠这个 layout 渲染)。优雅降级:读失败 → 空通知(0 未读),铃铛为空,其余页面照常。
@@ -128,7 +152,9 @@ export default async function CreatorLayout({
       <GlobalSearchHotkey />
       {/* [T-257] 外链处理已上移到根 layout(app/layout.tsx),覆盖 (creator) 外的页面;此处不再重复挂,避免双监听外链开两次。 */}
       <ShellRouter user={user} notifications={notifications}>
-        {children}
+        {/* [T-332 S4] 0 号 → per-account 页面整页绑定引导(不渲染 children,防各页
+            读 per-account op 撞 AccountRequiredError 的裸错;白名单页照常)。 */}
+        {zeroAccountGuarded ? <ZeroAccountGuidance /> : children}
       </ShellRouter>
       {/* The @modal parallel slot renders intercepting-route overlays
           (currently `/projects/new`). It is rendered above the AppShell

@@ -219,8 +219,10 @@ export async function KnowledgePage({ viewModel }: KnowledgePageProps = {}) {
         <ErrorState error={vm.error} />
       ) : state === "empty" ? (
         <EmptyState
-          title="知识库暂无内容"
-          description="把笔记、金句、逐字稿倒进上方的倾倒场,AI 自动归类后确认入库。"
+          title="这个账号的知识库还是空的"
+          // [T-332 S4·§6.2] C-01 A 案:知识库按账号独立 —— 空态明示「切号 = 换库」,
+          // 录入入口(倾倒场)已常驻上方,这里指过去。
+          description="知识库按账号独立:每个抖音号一套库,切号即切库。把这个号的笔记、金句、逐字稿倒进上方的倾倒场,AI 自动归类后确认入库。"
         />
       ) : (
         <KnowledgeInteractiveRegion viewModel={vm} />

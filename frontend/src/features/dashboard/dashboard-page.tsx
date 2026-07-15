@@ -203,6 +203,22 @@ function ContinueCreatingCard({
               <p className="text-xs text-muted-foreground">
                 创建第一个项目,把选题变成可执行的创作流程。
               </p>
+              {/* [T-332 S4·§6.2] 新号从零开始的引导:先定位(账号的创作方向是一切上游),
+                  数据面等首轮采集(绑号 bootstrap 自动建的任务)跑完自然充实,诚实告知。 */}
+              <p
+                data-slot="dashboard-empty-bootstrap-hint"
+                className="text-xs text-muted-foreground"
+              >
+                新账号建议先
+                <Link
+                  href="/positioning"
+                  data-slot="dashboard-empty-positioning-link"
+                  className="mx-0.5 font-medium text-brand underline-offset-4 hover:underline"
+                >
+                  完成这个号的定位
+                </Link>
+                ;数据类卡片会在首轮采集任务跑完后自动充实。
+              </p>
             </div>
             <Link
               href="/projects/new"

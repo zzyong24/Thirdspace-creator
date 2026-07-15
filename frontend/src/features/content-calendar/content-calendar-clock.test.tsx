@@ -31,7 +31,12 @@ describe("content-calendar 今天=真实 now (FE-H04, 可注入 clock)", () => {
   it("注入固定 now → 缺省月/参考日从 now 派生;过去日=空窗,今天/未来可点", async () => {
     // 用本地构造器固定「今天」= 本地 2026-07-15,localDateKey 与测试机时区无关。
     const now = new Date(2026, 6, 15, 10, 0, 0);
-    const ui = await ContentCalendarPage({ now, client: mockClient as never });
+    // [T-332 S4] 页面不再自选首号:显式传 ctx 当前号(本测关注时钟派生,不关注选号)。
+    const ui = await ContentCalendarPage({
+      now,
+      client: mockClient as never,
+      currentAccountId: "acct-x",
+    });
     render(ui);
 
     // 缺省月 = now 所在本地月。
@@ -62,6 +67,7 @@ describe("content-calendar 今天=真实 now (FE-H04, 可注入 clock)", () => {
       now,
       month: "2026-09",
       client: mockClient as never,
+      currentAccountId: "acct-x", // [T-332 S4] 同上:显式当前号
     });
     render(ui);
     expect(

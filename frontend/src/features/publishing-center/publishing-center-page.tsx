@@ -181,8 +181,19 @@ export function PublishingCenterPage({
         <ErrorState error={vm.error} />
       ) : state === "empty" ? (
         <EmptyState
-          title="暂无发布内容"
-          description="发布内容后即可在此查看表现与排期。"
+          title="这个账号还没有发布内容"
+          // [T-332 S4·§6.2] 新号引导:从项目稿面登记第一条作品;历史表现数据靠该号的
+          // 日常采集任务(绑号 bootstrap 自动建)拉回,诚实告知「等待日拉」而非装空白。
+          description="发布数据按抖音号隔离。到项目稿面登记第一条作品;已发布作品的表现数据会随这个号的日常采集任务自动拉回。"
+          action={
+            <Link
+              href="/projects"
+              data-slot="publishing-empty-projects-link"
+              className="text-sm font-medium text-brand underline-offset-4 hover:underline"
+            >
+              去项目登记第一条作品 →
+            </Link>
+          }
         />
       ) : (
         <PublishingCenterInteractiveRegion viewModel={vm} />

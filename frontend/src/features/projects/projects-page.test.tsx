@@ -78,6 +78,28 @@ describe("ProjectsPage", () => {
     expect(heading.textContent ?? "").toMatch(/项目/);
   });
 
+  // [T-332 S4·§6.2] 新号零项目:诚实空态 + 「新建项目 / 从选题立项」引导,不渲空表格。
+  it("零项目 → 空态引导(新建项目 + 从选题立项),不渲染空列表表头", async () => {
+    const { buildProjectsViewModel } = await import("@/fixtures/selectors");
+    const { container } = await renderProjects({
+      viewModel: buildProjectsViewModel([]),
+    });
+    expect(
+      screen.getByText("这个账号还没有项目"),
+    ).toBeInTheDocument();
+    const newLink = container.querySelector(
+      '[data-slot="projects-empty-new"]',
+    ) as HTMLAnchorElement;
+    expect(newLink).not.toBeNull();
+    expect(newLink.getAttribute("href")).toBe("/projects/new");
+    const topicsLink = container.querySelector(
+      '[data-slot="projects-empty-topics"]',
+    ) as HTMLAnchorElement;
+    expect(topicsLink.getAttribute("href")).toBe("/topics");
+    // 空表格(只有列头)不再出现。
+    expect(container.querySelector('[data-slot="project-list"]')).toBeNull();
+  });
+
   it("renders the seven status tabs in the locked order", async () => {
     const { container } = await renderProjects();
     const tabsRegion = container.querySelector('[data-slot="status-tabs"]');

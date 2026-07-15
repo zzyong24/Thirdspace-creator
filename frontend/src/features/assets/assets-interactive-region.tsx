@@ -606,6 +606,24 @@ interface AssetCardGridProps {
 }
 
 function AssetCardGrid({ assets, selectedId, onSelect }: AssetCardGridProps) {
+  // [T-332 S4·§6.2] 新号零素材:诚实空态 + 指向常驻上传入口(工具栏「上传」),
+  // 不渲染空网格(一片空白像坏了)。
+  if (assets.length === 0) {
+    return (
+      <div
+        data-slot="assets-gallery-empty"
+        data-testid="assets-gallery-empty"
+        className="flex flex-col items-center gap-1.5 rounded-card border border-dashed border-border bg-surface p-10 text-center"
+      >
+        <p className="text-sm font-medium text-foreground">
+          这个账号还没有素材
+        </p>
+        <p className="max-w-md text-xs text-muted-foreground">
+          素材库按抖音号隔离。用上方工具栏的「上传」放入第一批素材;采集/制作产出的封面、截图也会自动落到这里。
+        </p>
+      </div>
+    );
+  }
   return (
     <div
       data-slot="asset-card-grid"

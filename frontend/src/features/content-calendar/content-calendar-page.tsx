@@ -109,6 +109,13 @@ export interface ContentCalendarPageProps {
    * 测试可传固定 `Date` 断言分界行为(过去/今天/未来)不再写死某日。
    */
   readonly now?: Date;
+  /**
+   * [T-332 S4] 当前选中的抖音号(route 传 `session.ctx.accountId`;S3 已把当前号
+   * cookie 解析进 RSC ctx)。以前这里自选「第一个 active 号」——账号全域隔离后,
+   * 自选号 ≠ ctx 当前号会撞 S2 的号一致性门(OwnershipError 404)。null/缺省 =
+   * 未选号 → 诚实空态引导,绝不代用户猜号。
+   */
+  readonly currentAccountId?: string | null;
 }
 
 export async function ContentCalendarPage({
@@ -116,8 +123,11 @@ export async function ContentCalendarPage({
   month,
   client = defaultClient,
   now,
+  currentAccountId = null,
 }: ContentCalendarPageProps) {
-  const vm = viewModel ?? (await loadViewModel(client, month, now ?? new Date()));
+  const vm =
+    viewModel ??
+    (await loadViewModel(client, month, now ?? new Date(), currentAccountId));
   return <ContentCalendarView viewModel={vm} />;
 }
 
@@ -125,6 +135,7 @@ async function loadViewModel(
   client: ContentCalendarReadClient,
   monthParam: string | undefined,
   now: Date,
+  currentAccountId: string | null,
 ): Promise<ContentCalendarViewModel> {
   // [FE-H04] 参考日/缺省月都从真实 now 派生(本地日历日/月),不再写死 2026-07-03。
   const referenceDateKey = localDateKey(now);
@@ -141,7 +152,14 @@ async function loadViewModel(
     body: undefined,
   })) as unknown as PlatformAccountResource[];
 
-  const active = accounts.find((a) => a.status === "active") ?? accounts[0];
+  // [T-332 S4] 只认 ctx 当前号(切号 = 切工作区,SPEC §6.1):当前号必须在本 user 的
+  // active 号里;未选号 / 号已删 / 已归档 → 诚实空态(view 按 accounts 区分「没号要绑」
+  // vs「有号未选」),不再自选第一个 active(那会与 ctx 撞 S2 的号一致性门 404)。
+  const active = currentAccountId
+    ? (accounts.find(
+        (a) => a.id === currentAccountId && a.status === "active",
+      ) ?? null)
+    : null;
   if (!active) {
     return {
       accountId: null,

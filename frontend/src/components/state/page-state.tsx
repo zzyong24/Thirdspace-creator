@@ -142,10 +142,16 @@ export function ErrorState({
 export function EmptyState({
   title = "暂无内容",
   description,
+  action,
   className,
 }: {
   readonly title?: string;
   readonly description?: string;
+  /**
+   * [T-332 S4] 可选引导动作(SPEC §6.2:新号空态不是干瘪的 0,给「从零开始」的入口)。
+   * 传 Link / button 等 server-safe 节点,渲染在文案下方。
+   */
+  readonly action?: React.ReactNode;
   readonly className?: string;
 }) {
   return (
@@ -172,6 +178,64 @@ export function EmptyState({
       {description ? (
         <p className="text-[12px] text-muted-foreground">{description}</p>
       ) : null}
+      {action ? (
+        <div data-slot="page-state-empty-action" className="mt-2">
+          {action}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CrossAccountEmptyState — 深链 404(跨号 by-id)的可理解空态
+// ---------------------------------------------------------------------------
+
+/**
+ * [T-332 S4] 跨号深链空态(SPEC §4.5/§6.4,spec-review minor #3 点名补进 §6.2 矩阵)。
+ *
+ * 账号全域隔离下,by-id 读命中别号内容 → 后端按 OwnershipError 404(与「不存在」同貌,
+ * 不泄露存在性)。对用户而言这常是「切了号之后打开旧收藏链接」——裸 404 不可理解,
+ * 这里给诚实解释 + 回列表动作。刻意**不做**「去 B 号查看」跳转(C-03 裁决:探测 op
+ * 泄露跨号存在性,本期不做)。
+ */
+export function CrossAccountEmptyState({
+  entityLabel = "内容",
+  backHref,
+  backLabel,
+}: {
+  /** 实体名(「项目」「作品」…),拼进主文案。 */
+  readonly entityLabel?: string;
+  /** 回列表深链(如 /projects)。 */
+  readonly backHref: string;
+  readonly backLabel: string;
+}) {
+  return (
+    <div
+      data-slot="cross-account-empty"
+      data-page-state="empty"
+      className="flex flex-col items-center gap-2 rounded-card border border-dashed border-border bg-surface p-10 text-center"
+    >
+      <span
+        aria-hidden="true"
+        className="inline-flex size-9 items-center justify-center rounded-full bg-surface-subtle text-base text-muted-foreground"
+      >
+        ∅
+      </span>
+      <p className="text-sm font-medium text-foreground">
+        未找到该{entityLabel},或它不属于当前账号
+      </p>
+      <p className="max-w-md text-[12px] text-muted-foreground">
+        切换抖音号 = 切换整个工作区:另一个账号的{entityLabel}
+        在当前账号下不可见。若这条链接来自别的账号,请先在左下角切换到对应账号后再打开。
+      </p>
+      <a
+        href={backHref}
+        data-slot="cross-account-empty-back"
+        className="mt-2 text-sm font-medium text-brand underline-offset-4 hover:underline"
+      >
+        {backLabel}
+      </a>
     </div>
   );
 }

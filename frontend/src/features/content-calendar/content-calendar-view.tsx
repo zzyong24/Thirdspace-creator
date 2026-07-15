@@ -72,6 +72,10 @@ export function ContentCalendarView({
   const [selectedDay, setSelectedDay] = React.useState<string | null>(null);
 
   if (!accountId) {
+    // [T-332 S4] 区分两种「没当前号」(SPEC §6.2/§4.2):
+    //  - 0 个 active 号 → 绑定引导(去账号管理);
+    //  - 有号但未选(cookie 失效等边缘,切换器挂载后会自愈)→ 提示选号,不代猜。
+    const hasActive = viewModel.accounts.some((a) => a.status === "active");
     return (
       <div
         data-slot="content-calendar"
@@ -79,12 +83,25 @@ export function ContentCalendarView({
         className="flex flex-col gap-section-gap"
       >
         <SectionCard title="内容日历">
-          <p
-            data-testid="calendar-empty-state"
-            className="py-2 text-sm text-muted-foreground"
-          >
-            还没有账号。先到「账号管理」新增一个矩阵号，再规划发布节奏。
-          </p>
+          <div className="flex flex-col items-start gap-2 py-2">
+            <p
+              data-testid="calendar-empty-state"
+              className="text-sm text-muted-foreground"
+            >
+              {hasActive
+                ? "还没有确定当前账号。在左下角的账号切换器里选择一个抖音号,日历会按该号展示发布与排期。"
+                : "还没有绑定抖音号。先到「账号管理」绑定一个号,再规划这个号的发布节奏。"}
+            </p>
+            {!hasActive ? (
+              <a
+                href="/accounts"
+                data-testid="calendar-empty-bind-link"
+                className="text-sm font-medium text-brand underline-offset-4 hover:underline"
+              >
+                去绑定抖音号 →
+              </a>
+            ) : null}
+          </div>
         </SectionCard>
       </div>
     );

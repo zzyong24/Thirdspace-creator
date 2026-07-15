@@ -39,6 +39,7 @@ import {
   Plus,
   Pencil,
   Clock,
+  AtSign,
   PlayCircle,
   AlertTriangle,
   CheckCircle2,
@@ -361,10 +362,17 @@ interface TaskStep {
 // D4「登录抖音」恢复的按钮相位(某行 needs_reconnect 时)。
 export type LoginPhase = "idle" | "logging_in" | "recovering";
 
+// [T-332 S4·§6.3] 当前号 badge 数据(server 页解析好 handle 传下来;island 不自拉)。
+export interface CurrentAccountBadge {
+  readonly id: string;
+  readonly handle: string;
+}
+
 export function JobRow({
   job,
   latestRun,
   channelThrottle,
+  currentAccount,
   onToggle,
   onOpenDetail,
   onEdit,
@@ -376,6 +384,8 @@ export function JobRow({
 }: {
   readonly job: ScheduledJobResource;
   readonly latestRun: JobRunResource | null;
+  /** [T-332 S4·§6.3] 当前号(渲行内归属号 badge);null = 未解析到,不渲不猜。 */
+  readonly currentAccount?: CurrentAccountBadge | null;
   // T-038c:该 job 对应网关 channel 的实时退避快照(cooldown 时显限流横幅);null = 未知/未拉到。
   readonly channelThrottle: ChannelThrottle | null;
   readonly onToggle: (enabled: boolean) => void;
@@ -442,6 +452,22 @@ export function JobRow({
               {sourceLabel(job.sourceKind)}
             </span>
           )}
+          {/* [T-332 S4·§6.3] 归属号 badge:列表虽已按当前号 strict 过滤,行上仍标归属
+              (运行详情/通知里要能看出是哪个号的任务);若数据异常混进非当前号行,
+              诚实标「其他账号」把问题暴露出来,绝不伪装。 */}
+          {job.accountId ? (
+            <span
+              data-slot="automation-account-badge"
+              data-testid="automation-account-badge"
+              data-account-id={job.accountId}
+              className="inline-flex w-fit items-center gap-1 rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+            >
+              <AtSign className="size-3" aria-hidden="true" />
+              {currentAccount && job.accountId === currentAccount.id
+                ? currentAccount.handle
+                : "其他账号"}
+            </span>
+          ) : null}
           {/* [T-152] running 态:行内实时进度(阶段 + 累计条数 + 进度条)。点作业名进抽屉看 2s 轮询刷新。 */}
           {running && rowProgress ? (
             <RunProgressBar progress={rowProgress} />
@@ -1522,8 +1548,11 @@ export function TemplateCards({
 
 export function AutomationsIsland({
   jobs,
+  currentAccount = null,
 }: {
   readonly jobs: ReadonlyArray<ScheduledJobResource>;
+  /** [T-332 S4·§6.3] 当前号(server 页解析);null = 未选号/解析失败 → 显引导不猜。 */
+  readonly currentAccount?: CurrentAccountBadge | null;
 }) {
   const router = useRouter();
   // [Bug-7 T-020] 跨页失效广播:settings / account-manager / automations 本岛 loginDouyin
@@ -1809,8 +1838,26 @@ export function AutomationsIsland({
 
       {/* 顶部操作条 */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          共 {jobs.length} 个任务
+        <span className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>共 {jobs.length} 个任务</span>
+          {/* [T-332 S4·§6.3] 当前号 badge:明示「列表只显当前号的任务」(切号 = 切工作区)。 */}
+          {currentAccount ? (
+            <span
+              data-testid="automations-current-account"
+              data-account-id={currentAccount.id}
+              className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand"
+            >
+              <AtSign className="size-3" aria-hidden="true" />
+              仅当前号 {currentAccount.handle}
+            </span>
+          ) : (
+            <span
+              data-testid="automations-no-account"
+              className="inline-flex items-center gap-1 rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+            >
+              未选择账号 —— 在左下角切换器选号后查看该号任务
+            </span>
+          )}
         </span>
         <button
           type="button"
@@ -1831,9 +1878,17 @@ export function AutomationsIsland({
         >
           <Inbox className="size-10 text-muted-foreground/50" />
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-foreground">还没有采集任务</p>
+            <p className="text-sm font-medium text-foreground">
+              {currentAccount
+                ? `${currentAccount.handle} 还没有采集任务`
+                : "还没有采集任务"}
+            </p>
             <p className="max-w-md text-xs text-muted-foreground">
-              从上方模板一键新建,或自定义一个任务来周期性抓取「自己作品指标」或「评论」。到点自动跑、数据落库,供 Dashboard 与选题消费。
+              {/* [T-332 S4·§6.2] 新号诚实空态:绑号 bootstrap 会自动建好该号的日常采集
+                  任务;这里为空通常是「还没绑号/没选号」,给对应引导而不是干瘪的 0。 */}
+              {currentAccount
+                ? "绑定抖音号时系统会自动建好该号的日常采集任务;也可从上方模板一键新建,或自定义一个任务周期性抓取「自己作品指标」或「评论」。到点自动跑、数据落库,供 Dashboard 与选题消费。"
+                : "任务按抖音号隔离。先在左下角切换器绑定/选择一个抖音号 —— 绑号时系统会自动建好该号的日常采集任务。"}
             </p>
           </div>
           <button
@@ -1865,6 +1920,7 @@ export function AutomationsIsland({
               <li key={job.id} className="list-none">
                 <JobRow
                   job={job}
+                  currentAccount={currentAccount}
                   latestRun={latestRuns[job.id] ?? null}
                   channelThrottle={
                     throttleByChannel[

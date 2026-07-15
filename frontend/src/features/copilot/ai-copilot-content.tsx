@@ -57,6 +57,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
+import { useForegroundActivity } from "@/lib/foreground-activity";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -985,6 +986,9 @@ export function AICopilotContent({
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
   });
   const streaming = status === "streaming" || status === "submitted";
+  // [T-332 S4] AI 流式生成中 = 进行中的前台操作:登记进 foreground-activity 注册表,
+  // 账号切换器切号前会据此弹确认「有进行中的操作,切号会离开当前页面」(SPEC §6.1)。
+  useForegroundActivity("AI 编导正在生成回复", streaming);
 
   // [T-276] 待决的 local.read 授权(approval-requested)—— 支撑两件事:
   //   ① 一次「总是允许该目录」批量放行同目录其它待决卡(读文件夹别逐个弹);

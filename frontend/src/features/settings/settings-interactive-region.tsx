@@ -32,6 +32,7 @@ import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
+import { isAccountRequiredError } from "@/lib/http-transport";
 import { Badge } from "@/components/ui/badge";
 import { notifyAccountsChanged } from "@/lib/account-events";
 import { Button } from "@/components/ui/button";
@@ -693,6 +694,9 @@ function AccountBindingCard({
   const [feedback, setFeedback] = React.useState<BindingFeedback>({
     kind: "none",
   });
+  // [T-332 S4] 未选号态:statusDouyin 抛 AccountRequiredError(428)时置真 —— 徽标从
+  // 灰「未连接」翻译成「未绑定账号」绑定引导(SPEC §4.2:引导,不是报错/不是误导的连接态)。
+  const [accountRequired, setAccountRequired] = React.useState(false);
 
   // SSR 值变化(切账号 / 首次水合)时同步徽标。
   React.useEffect(() => {
@@ -718,8 +722,11 @@ function AccountBindingCard({
         if (alive && typeof status.sourceReady === "boolean") {
           setSourceReady(status.sourceReady);
         }
-      } catch {
-        // 探针失败 → 保持 SSR 兜底(未连接),诚实不误报。
+        if (alive) setAccountRequired(false);
+      } catch (err) {
+        // [T-332 S4] 未选号(428)→ 徽标转绑定引导;其它探针失败(无浏览器/transport
+        // race)→ 保持 SSR 兜底(未连接),诚实不误报。
+        if (alive && isAccountRequiredError(err)) setAccountRequired(true);
       }
     })();
     return () => {
@@ -762,6 +769,8 @@ function AccountBindingCard({
             confirmed = true;
           }
           setLoggedIn(confirmed);
+          // [T-332 S4] 扫码绑定成功 → 未选号引导态清除(切换器会收 accountsChanged 自动选号)。
+          if (confirmed) setAccountRequired(false);
           setFeedback({
             kind: "success",
             text: confirmed
@@ -803,7 +812,18 @@ function AccountBindingCard({
       title="账号绑定"
       description="连接平台账号,供采集作品数据 / 评论使用"
       action={
-        loggedIn ? (
+        accountRequired ? (
+          // [T-332 S4] 未选号 ≠ 连接故障:徽标给绑定引导语义(点下方扫码按钮即绑定)。
+          <Badge
+            data-slot="douyin-binding-status"
+            data-connected="false"
+            data-account-required="true"
+            variant="outline"
+            className="border-brand/40 bg-brand-soft text-brand"
+          >
+            未绑定账号 —— 扫码即可绑定
+          </Badge>
+        ) : loggedIn ? (
           <Badge
             data-slot="douyin-binding-status"
             data-connected="true"

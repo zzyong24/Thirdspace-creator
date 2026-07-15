@@ -25,6 +25,7 @@
 import * as React from "react";
 import Link from "next/link";
 
+import { EmptyState } from "@/components/state/page-state";
 import { ProgressBar } from "@/components/project/progress-bar";
 import { CoverThumb } from "@/components/resources/cover-thumb";
 import { PlatformIcon } from "@/components/publishing/platform-icon";
@@ -250,6 +251,34 @@ export async function ProjectsPage({
 // ---------------------------------------------------------------------------
 
 function ProjectList({ rows }: { rows: ReadonlyArray<ProjectListRow> }) {
+  // [T-332 S4·§6.2] 新号零项目:诚实空态 + 从零开始的两个入口(新建 / 从选题立项),
+  // 不再渲染只有列头的空表格(看着像坏了)。
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        title="这个账号还没有项目"
+        description="项目按抖音号隔离。新建一个项目,或先去选题池挑一条候选立项。"
+        action={
+          <div className="flex items-center gap-4">
+            <Link
+              href="/projects/new"
+              data-slot="projects-empty-new"
+              className="inline-flex h-9 items-center justify-center rounded-card bg-brand px-4 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
+            >
+              ＋ 新建项目
+            </Link>
+            <Link
+              href="/topics"
+              data-slot="projects-empty-topics"
+              className="text-sm font-medium text-brand underline-offset-4 hover:underline"
+            >
+              从选题立项 →
+            </Link>
+          </div>
+        }
+      />
+    );
+  }
   return (
     <div
       data-slot="project-list"

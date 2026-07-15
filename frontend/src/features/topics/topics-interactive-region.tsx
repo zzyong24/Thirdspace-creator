@@ -1638,6 +1638,20 @@ function PoolColumn({
                 还没有候选。
                 <span className="text-brand">用上面一句话让编导起草</span>
                 ，或开一场 AI 选题会 —— 编导基于你的定位 + 评论 + 爆款经验主动出题。
+                {/* [T-332 S4·§6.2] 新号无信号的诚实引导:候选为空可能是「这个号的采集
+                    作业还没跑 / 跑了但还没攒出信号」——给「跑一次采集」入口,别让用户
+                    以为功能坏了。 */}
+                <span className="mt-2 block text-xs text-muted-foreground">
+                  新账号提示:选题信号来自这个号的采集数据。若还没跑过采集,先到
+                  <a
+                    href="/automations"
+                    data-testid="candidate-empty-run-ingestion"
+                    className="mx-0.5 font-medium text-brand underline-offset-4 hover:underline"
+                  >
+                    自动化中心跑一次采集
+                  </a>
+                  ,攒到评论/爆款信号后编导出题更准。
+                </span>
               </>
             )}
           </li>

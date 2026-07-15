@@ -111,6 +111,41 @@ describe("AutomationsIsland — 列表渲染", () => {
     expect(screen.getAllByText("新建任务").length).toBeGreaterThanOrEqual(1);
   });
 
+  // [T-332 S4·§6.3] 自动化页按号过滤的**明示**:当前号 badge + 行内归属号 badge。
+  it("当前号 badge:传 currentAccount → 顶条显「仅当前号 @handle」,行上标归属号", () => {
+    render(
+      <AutomationsIsland
+        jobs={[makeJob({ accountId: "acct-a" })]}
+        currentAccount={{ id: "acct-a", handle: "@主号" }}
+      />,
+    );
+    const head = screen.getByTestId("automations-current-account");
+    expect(head.textContent).toContain("仅当前号 @主号");
+    const rowBadge = screen.getByTestId("automation-account-badge");
+    expect(rowBadge.textContent).toContain("@主号");
+    expect(rowBadge).toHaveAttribute("data-account-id", "acct-a");
+  });
+
+  it("未选号:currentAccount=null → 顶条显选号引导,空态给绑号/选号文案", () => {
+    render(<AutomationsIsland jobs={[]} currentAccount={null} />);
+    expect(screen.getByTestId("automations-no-account")).toBeInTheDocument();
+    expect(
+      screen.getByText(/先在左下角切换器绑定\/选择一个抖音号/),
+    ).toBeInTheDocument();
+  });
+
+  it("行归属号 ≠ 当前号(数据异常)→ 诚实标「其他账号」暴露问题,不伪装", () => {
+    render(
+      <AutomationsIsland
+        jobs={[makeJob({ accountId: "acct-b" })]}
+        currentAccount={{ id: "acct-a", handle: "@主号" }}
+      />,
+    );
+    expect(
+      screen.getByTestId("automation-account-badge").textContent,
+    ).toContain("其他账号");
+  });
+
   it("有作业:渲染 name / source 中文 / 友好频率(非裸 cron)/ 上次·下次", () => {
     render(
       <AutomationsIsland
