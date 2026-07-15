@@ -15,6 +15,12 @@ import { isDesktopRuntime } from "@/server/activation";
 //   PURCHASE_URL 同址;桌面端 <a> 外开浏览器。DNS(creatoros.aitongban.cloud→152.136.151.58)配好即达。
 const CONTACT_URL = "https://creatoros.aitongban.cloud/#buy";
 
+// [T-326 ENG-H02 配套] 激活状态是请求期运行时数据(读本地持久层),不该在 next build 预渲染
+//   (build 守卫 PersistenceUnavailableDuringBuildError 会正确拦下;旧包能过是因为当时 build
+//   真的碰了 DB——正是 ENG-H02 修掉的副作用)。(creator) 树因 resolveSession 用 cookies()
+//   天然动态,本页无请求期 API,须显式声明 force-dynamic。
+export const dynamic = "force-dynamic";
+
 export default async function ActivatePage(): Promise<React.JSX.Element> {
   // web/dev:无激活门,/activate 无意义 → 回首页。
   if (!isDesktopRuntime(process.env)) {
