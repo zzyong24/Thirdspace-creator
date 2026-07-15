@@ -104,11 +104,14 @@ export function CreateAccountForm() {
     setFeedback({ kind: "none" });
     void (async () => {
       try {
-        // 复用设置页同款:client.loginDouyin({}) → headed 扫码。返回 {loggedIn}。
+        // [T-330] 绑**新**号必传 forceNew:后端走 staging 隔离扫码(全新空 profile 必出
+        // 二维码,不会命中当前号/_default 旧 sessionid 直接"登进"旧号)→ 同步读回身份 →
+        // 按 sec_uid upsert(同号重扫命中既有行=更新不重复)→ 登录态搬该号正式目录。
+        // 设置页「重新扫码/重连当前号」不传 forceNew(重连复用现 profile 合理),与此有别。
         const res = (await client.loginDouyin({
           params: undefined,
           query: undefined,
-          body: {},
+          body: { forceNew: true },
         })) as { loggedIn?: boolean };
         if (res.loggedIn) {
           // 登录成功 → 后端 upsert 按 secUid 去重 + 占位号合并;refresh 读回真实号。
@@ -127,8 +130,14 @@ export function CreateAccountForm() {
             text: "未检测到登录，请重试（需在弹出的 Chrome 窗口内扫码）。",
           });
         }
-      } catch {
-        setFeedback({ kind: "error", text: "扫码登录失败，请重试。" });
+      } catch (err) {
+        // [T-330] 诚实失败内联可见(沿 T-209 模式):后端 forceNew 链的明确错误(如「扫码
+        // 成功但读不回账号身份」)透传给用户,不吞成笼统文案;无 message 才退化通用提示。
+        const msg =
+          err instanceof Error && err.message.trim()
+            ? err.message
+            : "扫码登录失败，请重试。";
+        setFeedback({ kind: "error", text: msg });
       } finally {
         setPhase("idle");
       }

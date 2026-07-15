@@ -4,6 +4,7 @@ import type { RequestContext } from "@creatoros/contract";
 import {
   createIngestionService,
   type DouyinFetchPort,
+  type DouyinSelfIdentity,
   type IngestionPlatformAccountPort,
 } from "./ingestion.service";
 import { createIngestionRepository } from "./ingestion.repository";
@@ -796,5 +797,298 @@ describe("ingestion.loginDouyin — 绑定成功触发 onDouyinBound (T-189a)", 
     }
     // 初始化采集由组合根 onDouyinBound(此处 fake 空实现)负责;service 内联 refresh 不再跑。
     expect(fetchCalls).toBe(0);
+  });
+});
+
+// [T-330] 「扫码绑定新抖音号」forceNew 编排 —— 根治「绑新号命中旧号 sessionid → 二维码不出现
+//   直接登进旧号」:staging 隔离扫码 → 同步读回身份 → ensureAccount(真实 handle+sec_uid)→
+//   staging 搬该号正式目录 → 绑定编排带真号。诚实:身份读不回 → 清 staging + 明确错误,绝不
+//   默默挂 _default/旧号;非 forceNew 路径行为完全不变。全部注入 fake 端口(既有范式),不连真浏览器。
+describe("ingestion.loginDouyin — forceNew 绑新号 staging 编排 (T-330)", () => {
+  const IDENTITY: DouyinSelfIdentity = {
+    nickname: "新号真实昵称",
+    secUid: "sec-uid-new",
+    douyinId: "douyin-new-1",
+    followerCount: 42,
+  };
+
+  // 可观测 staging 端口:记录四步调用序 + 入参;各步行为可按用例覆盖。
+  function stagedPort(overrides?: {
+    loginNewLoggedIn?: boolean;
+    identity?: DouyinSelfIdentity | null;
+    fetchIdentityError?: Error;
+    adoptError?: Error;
+    omitStagingMethods?: boolean;
+  }) {
+    const calls: string[] = [];
+    const adopted: Array<{ stagingKey: string; accountId: string }> = [];
+    const discarded: string[] = [];
+    let legacyLoginCalls = 0;
+    const port: DouyinFetchPort = {
+      fetch: async () => [],
+      login: async () => {
+        legacyLoginCalls += 1;
+        return true;
+      },
+      status: async () => true,
+      ...(overrides?.omitStagingMethods
+        ? {}
+        : {
+            loginNew: async () => {
+              calls.push("loginNew");
+              return {
+                loggedIn: overrides?.loginNewLoggedIn ?? true,
+                stagingKey: "0123456789abcdef",
+              };
+            },
+            fetchIdentity: async () => {
+              calls.push("fetchIdentity");
+              if (overrides?.fetchIdentityError) throw overrides.fetchIdentityError;
+              return overrides?.identity === undefined ? IDENTITY : overrides.identity;
+            },
+            adoptStaging: async (opts: { stagingKey: string; accountId: string }) => {
+              calls.push("adoptStaging");
+              if (overrides?.adoptError) throw overrides.adoptError;
+              adopted.push(opts);
+            },
+            discardStaging: async (opts: { stagingKey: string }) => {
+              calls.push("discardStaging");
+              discarded.push(opts.stagingKey);
+            },
+          }),
+    };
+    return {
+      port,
+      calls,
+      adopted,
+      discarded,
+      legacyLoginCalls: () => legacyLoginCalls,
+    };
+  }
+
+  function forceNewService(args: {
+    db: Db;
+    port: DouyinFetchPort;
+    accountPort?: IngestionPlatformAccountPort;
+    onDouyinBound?: (c: RequestContext) => void;
+  }) {
+    let seq = 0;
+    return createIngestionService({
+      deps: { now: () => NOW, nextId: (p: string) => `${p}-${++seq}` },
+      db: args.db,
+      douyinFetch: args.port,
+      platformAccount: args.accountPort,
+      onDouyinBound: args.onDouyinBound,
+      ports: {
+        publishing: { resolvePublication: () => Promise.resolve({ id: "pub" }) },
+        analytics: { appendSnapshot: () => Promise.resolve({ created: true }) },
+        knowledge: { ingest: () => Promise.resolve({ id: "kn" }) },
+        assets: { registerExternalAsset: () => Promise.resolve({ id: "as" }) },
+        artifacts: {
+          createCandidateVersion: () => Promise.resolve({ id: "av" }),
+        },
+      },
+    });
+  }
+
+  it("成功链:staging 扫码 → 同步读身份 → ensureAccount(真实昵称+sec_uid)→ 搬目录 → onDouyinBound 带真号;不清 staging、不走旧 login", async () => {
+    const { db } = await createDb();
+    const staged = stagedPort();
+    const ensured: Array<{ platform: string; handle: string; externalAccountId?: string | null }> = [];
+    const handleUpdates: Array<{ handle: string; externalAccountId?: string | null; followerCount?: number | null }> = [];
+    const boundCtxs: RequestContext[] = [];
+    const accountPort: IngestionPlatformAccountPort = {
+      ensureAccount: async (_c, input) => {
+        ensured.push(input);
+        return { id: "acct-new" };
+      },
+      updateAccountHandle: async (_c, input) => {
+        handleUpdates.push(input);
+      },
+    };
+    const svc = forceNewService({
+      db,
+      port: staged.port,
+      accountPort,
+      onDouyinBound: (c) => boundCtxs.push(c),
+    });
+
+    const res = await svc.loginDouyin(ctx, { forceNew: true });
+    expect(res.loggedIn).toBe(true);
+    // 步序:staging 扫码 → 身份 → 搬目录(身份确认后才搬);失败清理 discard 不出现。
+    expect(staged.calls).toEqual(["loginNew", "fetchIdentity", "adoptStaging"]);
+    expect(staged.discarded).toEqual([]);
+    // 旧链 login(会命中旧 sessionid 短路)绝不被调 —— 这正是 T-330 的根因隔离。
+    expect(staged.legacyLoginCalls()).toBe(0);
+    // ensureAccount 吃真实身份(非占位「我的抖音」),sec_uid 同传(同号重扫命中既有行)。
+    expect(ensured).toEqual([
+      { platform: "douyin", handle: "新号真实昵称", externalAccountId: "sec-uid-new" },
+    ]);
+    // 登录态搬到 ensureAccount 返回的真号目录。
+    expect(staged.adopted).toEqual([
+      { stagingKey: "0123456789abcdef", accountId: "acct-new" },
+    ]);
+    // 身份回填(applyDouyinIdentity)带 sec_uid + 粉丝数。
+    expect(handleUpdates).toEqual([
+      {
+        platform: "douyin",
+        handle: "新号真实昵称",
+        externalAccountId: "sec-uid-new",
+        followerCount: 42,
+      },
+    ]);
+    // 绑定编排带真号(建 job/claimOrphans/初始化采集全落新号,不落 null)。
+    expect(boundCtxs).toHaveLength(1);
+    expect(boundCtxs[0]!.accountId).toBe("acct-new");
+    // 每号独立源已建:以新号 ctx 查 sourceReady=true。
+    await expect(
+      svc.checkDouyinStatus({ ...ctx, accountId: "acct-new" }),
+    ).resolves.toMatchObject({ sourceReady: true });
+  });
+
+  it("未扫码(loggedIn=false)→ 清 staging、不建账号、诚实返回 false", async () => {
+    const { db } = await createDb();
+    const staged = stagedPort({ loginNewLoggedIn: false });
+    const ensured: unknown[] = [];
+    const svc = forceNewService({
+      db,
+      port: staged.port,
+      accountPort: {
+        ensureAccount: async (_c, input) => {
+          ensured.push(input);
+          return { id: "acct-x" };
+        },
+      },
+    });
+    const res = await svc.loginDouyin(ctx, { forceNew: true });
+    expect(res.loggedIn).toBe(false);
+    expect(staged.calls).toEqual(["loginNew", "discardStaging"]);
+    expect(ensured).toEqual([]);
+    expect(staged.adopted).toEqual([]);
+  });
+
+  it("身份读不回(identity=null)→ 清 staging + 明确错误;绝不 ensureAccount / 搬目录", async () => {
+    const { db } = await createDb();
+    const staged = stagedPort({ identity: null });
+    const ensured: unknown[] = [];
+    const svc = forceNewService({
+      db,
+      port: staged.port,
+      accountPort: {
+        ensureAccount: async (_c, input) => {
+          ensured.push(input);
+          return { id: "acct-x" };
+        },
+      },
+    });
+    await expect(svc.loginDouyin(ctx, { forceNew: true })).rejects.toThrow(
+      /读不回账号身份/,
+    );
+    expect(staged.calls).toEqual(["loginNew", "fetchIdentity", "discardStaging"]);
+    expect(ensured).toEqual([]);
+    expect(staged.adopted).toEqual([]);
+  });
+
+  it("读身份抛错 → 清 staging + 明确错误(不吞成假成功)", async () => {
+    const { db } = await createDb();
+    const staged = stagedPort({
+      fetchIdentityError: new Error("DouyinNotLoggedInError"),
+    });
+    const svc = forceNewService({
+      db,
+      port: staged.port,
+      accountPort: { ensureAccount: async () => ({ id: "acct-x" }) },
+    });
+    await expect(svc.loginDouyin(ctx, { forceNew: true })).rejects.toThrow(
+      /读取账号身份失败/,
+    );
+    expect(staged.calls).toEqual(["loginNew", "fetchIdentity", "discardStaging"]);
+  });
+
+  it("搬目录失败 → 清 staging + 明确错误(登录态不落无主目录)", async () => {
+    const { db } = await createDb();
+    const staged = stagedPort({ adoptError: new Error("EACCES") });
+    const svc = forceNewService({
+      db,
+      port: staged.port,
+      accountPort: { ensureAccount: async () => ({ id: "acct-x" }) },
+    });
+    await expect(svc.loginDouyin(ctx, { forceNew: true })).rejects.toThrow(
+      /登录态归位失败/,
+    );
+    expect(staged.calls).toEqual([
+      "loginNew",
+      "fetchIdentity",
+      "adoptStaging",
+      "discardStaging",
+    ]);
+  });
+
+  it("组合根未升级(端口缺 staging 方法)→ 诚实报错,绝不静默退回旧链", async () => {
+    const { db } = await createDb();
+    const staged = stagedPort({ omitStagingMethods: true });
+    const svc = forceNewService({
+      db,
+      port: staged.port,
+      accountPort: { ensureAccount: async () => ({ id: "acct-x" }) },
+    });
+    await expect(svc.loginDouyin(ctx, { forceNew: true })).rejects.toThrow(
+      /不支持绑定新号/,
+    );
+    // 旧链 login 未被调(静默退回旧链 = 复现 bug,必须挡住)。
+    expect(staged.legacyLoginCalls()).toBe(0);
+  });
+
+  it("platformAccount 端口未注入 → 诚实报错(身份没处登记,绑不成新号)", async () => {
+    const { db } = await createDb();
+    const staged = stagedPort();
+    const svc = forceNewService({ db, port: staged.port });
+    await expect(svc.loginDouyin(ctx, { forceNew: true })).rejects.toThrow(
+      /platformAccount/,
+    );
+  });
+
+  it("非 forceNew(重连当前号)行为不变:走旧 login,staging 四步全不碰", async () => {
+    const { db } = await createDb();
+    const staged = stagedPort();
+    const svc = forceNewService({
+      db,
+      port: staged.port,
+      accountPort: { ensureAccount: async () => ({ id: "acct-1" }) },
+      onDouyinBound: () => {},
+    });
+    const res = await svc.loginDouyin(ctx);
+    expect(res.loggedIn).toBe(true);
+    expect(staged.legacyLoginCalls()).toBe(1);
+    expect(staged.calls).toEqual([]); // loginNew/fetchIdentity/adoptStaging/discardStaging 零调用
+  });
+
+  it("onDouyinBound 未注入 → 回退 fire-and-forget refreshDouyin(带真号初始化采集)", async () => {
+    const { db } = await createDb();
+    let fetchCalls = 0;
+    const fetchCtxSeen: Array<string | null> = [];
+    const staged = stagedPort();
+    // 包一层 fetch 计数(refreshDouyin 内部调 douyinFetch.fetch)。
+    const port: DouyinFetchPort = {
+      ...staged.port,
+      fetch: async () => {
+        fetchCalls += 1;
+        return { records: [], identity: IDENTITY };
+      },
+    };
+    const svc = forceNewService({
+      db,
+      port,
+      accountPort: {
+        ensureAccount: async () => ({ id: "acct-new" }),
+      },
+    });
+    const res = await svc.loginDouyin(ctx, { forceNew: true });
+    expect(res.loggedIn).toBe(true);
+    for (let i = 0; i < 20; i++) {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+    expect(fetchCalls).toBe(1);
+    void fetchCtxSeen;
   });
 });

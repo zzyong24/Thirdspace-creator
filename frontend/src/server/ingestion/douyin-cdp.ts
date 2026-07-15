@@ -1113,6 +1113,26 @@ export async function fetchDouyinMetrics(
   }
 }
 
+/**
+ * [T-330] 轻量身份读回 —— 「扫码绑定新号」staging 登录态下同步读回登录用户是谁。
+ * 实现选型:**复用 fetchDouyinMetrics 全套**(登录校验 + 作品列表 XHR 拦截 + parseSelfIdentity
+ * 反解),只把 maxPages 压到 1(首屏 work_list 即含 author=本人,不深翻页)—— 不新写一条
+ * XHR 拦截链(维护面最小,身份口径与 refresh 采集完全同源)。
+ * 读不到(该号零作品/脏 JSON)→ null,由调用方诚实失败(绝不猜身份);staging 目录未登录
+ * → 照抛 DouyinNotLoggedInError(调用方同样按失败清理)。records 顺带抓到也不落库(本函数
+ * 只取 identity;正式全量采集由绑定成功后的初始化 refreshDouyin 负责)。
+ */
+export async function fetchDouyinIdentity(opts: {
+  authDir: string;
+}): Promise<DouyinSelfIdentity | null> {
+  const { identity } = await fetchDouyinMetrics({
+    authDir: opts.authDir,
+    capturedAt: new Date().toISOString(),
+    maxPages: 1,
+  });
+  return identity;
+}
+
 // ---------------------------------------------------------------------------
 // [T-212a] 对标他号作品采集 —— 抓一个对标博主(sec_uid)主页的公开作品列表(digg/评论/收藏/
 //   分享/时长/发布时间)。复用登录态指纹(蹭 .auth/ 的 douyin.com cookie),走用户主页

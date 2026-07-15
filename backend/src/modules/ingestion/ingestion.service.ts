@@ -160,9 +160,12 @@ export interface IngestionPorts {
 // 幂等:同 (userId, platform, handle) 复用既有账号(handle 拿不到时用占位「我的抖音」)。
 // 边界:T-136 §D 会把 account 维度下推到采集/登录态目录;此端口是其单账号退化,兼容扩展。
 export interface IngestionPlatformAccountPort {
+  // [T-330] additive externalAccountId(sec_uid)—— forceNew 链身份先行:ensureAccount 拿到
+  //   真实身份再建/复用账号(实现侧 ensureDouyinAccountUpsert 优先按 sec_uid 幂等命中既有行 =
+  //   「同号重扫自动更新,不重复」)。旧调用不传 → 占位 handle 语义不变。
   ensureAccount(
     ctx: RequestContext,
-    input: { platform: string; handle: string },
+    input: { platform: string; handle: string; externalAccountId?: string | null },
   ): Promise<{ id: string }>;
   // [T-136 §D] 用采集到的真实身份把当前号的占位 handle(「我的抖音」)更新为真实昵称
   //   (幂等:handle 已是真实值 / 传入空 → no-op)。可选 —— 未实现时 refreshDouyin 跳过账号
@@ -218,6 +221,19 @@ export interface DouyinFetchPort {
   login(opts?: { accountId?: string | null }): Promise<boolean>;
   // 被动探针(T-032a):headless 快查登录态,不弹窗。设置页「账号绑定」徽标读它。
   status(opts?: { accountId?: string | null }): Promise<boolean>;
+  // [T-330] 「绑定新号」staging 四步端口(全部可选,additive;组合根未升级装配时 forceNew
+  //   诚实报错,不假装支持)。stagingKey 是组合根发的**不透明句柄**(service 不碰文件路径):
+  //   - loginNew:在全新 staging 临时目录弹扫码 —— 空 profile 必出二维码,绝不因目录里
+  //     已有旧号 sessionid 而被 isLoggedIn 短路(T-330 「扫码绑新号直接登进旧号」的根因)。
+  //   - fetchIdentity:staging 登录态下**同步**读回登录用户身份(轻量:作品列表首屏反解);
+  //     读不到 → null(调用方诚实失败,绝不猜身份)。
+  //   - adoptStaging:身份确认后把 staging 登录态搬到该号正式目录 `.auth/douyin/<accountId>`
+  //     (同号重扫 = 旧登录态被替换,即登录态更新)。
+  //   - discardStaging:任何失败路径清理 staging(诚实:绝不把无主登录态默默挂 _default/旧号)。
+  loginNew?(): Promise<{ loggedIn: boolean; stagingKey: string }>;
+  fetchIdentity?(opts: { stagingKey: string }): Promise<DouyinSelfIdentity | null>;
+  adoptStaging?(opts: { stagingKey: string; accountId: string }): Promise<void>;
+  discardStaging?(opts: { stagingKey: string }): Promise<void>;
 }
 
 // [T-136 §D] 归一 fetch 返回:旧数组形状 → { records, identity: null };新对象形状原样返回。
@@ -300,7 +316,13 @@ export interface IngestionService {
   // 抖音扫码登录:弹 Chromium 窗口让用户扫码,落 .auth/ 持久化,返回是否成功(供 refresh 复用)。
   // T-144:扫码成功后同时 ensure external_source + platform_account(端口注入时),让三处账号
   // 状态同源(设置徽标/切换器/日历都读真实绑定);失败不建任何东西(不假装绑定)。
-  loginDouyin(ctx: RequestContext): Promise<{ loggedIn: boolean }>;
+  // [T-330] input.forceNew=true(「扫码绑定新抖音号」)→ staging 隔离扫码 → 同步读回身份 →
+  //   按 sec_uid upsert 账号 → staging 搬正式目录;身份读不回 → 清 staging + 抛明确错误
+  //   (诚实失败)。不传/false = 现行为(重连当前号复用既有 profile)。
+  loginDouyin(
+    ctx: RequestContext,
+    input?: { forceNew?: boolean },
+  ): Promise<{ loggedIn: boolean }>;
   // 抖音登录态被动探针(T-032a):headless 快查 sessionid cookie(不弹窗),返回是否有效登录。
   // 设置页「账号绑定」徽标读它;false 覆盖「未连接」与「登录态已过期」两态(cookie 失效即 false)。
   // T-144:additive 返回 sourceReady —— 是否已有真实采集源。登录态有效但 sourceReady=false 时
@@ -441,6 +463,139 @@ export function createIngestionService(args: {
         console.error("[ingestion] applyDouyinIdentity: 回填 platform_account handle 失败:", err);
       }
     }
+  }
+
+  // [T-330] 「扫码绑定新抖音号」(forceNew)编排 —— 根治「绑新号直接登进旧号,二维码不出现」:
+  //   旧链 login 落在当前号/_default 的持久 profile,里面已有旧号 sessionid → douyin-cdp
+  //   loginDouyin 首轮 isLoggedIn 即 true 直接 return,永远读回旧号。本链改为:
+  //   ① staging 隔离扫码(全新空目录必出二维码)→ ② 同步读回身份(不再依赖 fire-and-forget
+  //   刷新;身份是 ensureAccount 的输入)→ ③ 按 sec_uid/昵称 upsert 账号(同号重扫命中既有行
+  //   =自动更新不重复)→ ④ staging 搬到 `.auth/douyin/<accountId>` 正式目录 → ⑤ 身份回填 +
+  //   每号独立源 → ⑥ 绑定编排(建 job/claimOrphans/初始化采集)沿现链传真号。
+  //   诚实(铁律):身份读不回 → 清理 staging + 抛明确错误;**绝不**把 staging 默默挂到
+  //   _default/旧号,也绝不建占位账号冒充绑定成功。
+  async function loginDouyinForceNew(
+    ctx: RequestContext,
+  ): Promise<{ loggedIn: boolean }> {
+    const fetchPort = douyinFetch!;
+    if (
+      !fetchPort.loginNew ||
+      !fetchPort.fetchIdentity ||
+      !fetchPort.adoptStaging ||
+      !fetchPort.discardStaging
+    ) {
+      // 组合根装配未升级 → 诚实报错(绝不静默退回旧链,旧链正是本 bug)。
+      throw new Error(
+        "抖音抓取端口不支持绑定新号(缺 staging 扫码能力),请升级组合根装配",
+      );
+    }
+    if (!platformAccount) {
+      throw new Error("绑定新抖音号需要 platformAccount 端口(未注入)");
+    }
+    // ① staging 隔离扫码:全新空 profile 必出二维码,不会被旧 sessionid 短路。
+    const { loggedIn, stagingKey } = await fetchPort.loginNew();
+    const discardStaging = async () => {
+      try {
+        await fetchPort.discardStaging!({ stagingKey });
+      } catch (err) {
+        console.error(
+          "[ingestion] loginDouyin(forceNew): 清理 staging 登录态失败:",
+          err,
+        );
+      }
+    };
+    if (!loggedIn) {
+      // 未扫/超时 → 清理 staging(不留半截 profile),诚实返回未登录;不建任何东西。
+      await discardStaging();
+      return { loggedIn: false };
+    }
+    // ② 同步读回身份(staging 登录态下轻量抓作品列表首屏反解;见组合根 fetchDouyinIdentity)。
+    let identity: DouyinSelfIdentity | null = null;
+    try {
+      identity = await fetchPort.fetchIdentity({ stagingKey });
+    } catch (err) {
+      await discardStaging();
+      throw new Error(
+        `扫码成功但读取账号身份失败,已放弃本次绑定(临时登录态已清理),请重试:${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+    const nickname = identity?.nickname?.trim();
+    if (!identity || !nickname) {
+      // 诚实失败:读不回身份就没法归属账号 —— 清 staging + 明确报错,绝不默默挂旧号。
+      await discardStaging();
+      throw new Error(
+        "扫码成功但读不回账号身份(该号可能暂无作品),已放弃本次绑定,请重试",
+      );
+    }
+    // ③ 身份 → 账号行:ensureDouyinAccountUpsert 优先按 sec_uid 幂等命中既有行(同号重扫=
+    //   复用并更新,不冒第二行),无命中才建新号(真实昵称,不再是占位「我的抖音」)。
+    let ensured: { id: string };
+    try {
+      ensured = await platformAccount.ensureAccount(ctx, {
+        platform: "douyin",
+        handle: nickname,
+        externalAccountId: identity.secUid || null,
+      });
+    } catch (err) {
+      await discardStaging();
+      throw new Error(
+        `扫码成功但账号登记失败,已放弃本次绑定(临时登录态已清理),请重试:${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+    // ④ staging → 正式目录(同号重扫:旧目录被替换 = 登录态更新)。失败也诚实:清 staging +
+    //   报错(账号行已建/复用无妨 —— 该号显「未连接」,用户可重扫)。
+    try {
+      await fetchPort.adoptStaging({ stagingKey, accountId: ensured.id });
+    } catch (err) {
+      await discardStaging();
+      throw new Error(
+        `扫码成功但登录态归位失败,已清理临时登录态,请重试:${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+    // ⑤ 之后编排全带真号(boundCtx):每号独立源 + 身份回填(源 name/sourceIdentifier +
+    //   账号 handle/sec_uid/粉丝基线 + 占位合并)。best-effort:绑定已真实成功(登录态已归位),
+    //   回填失败不翻成失败,吞错记日志(applyDouyinIdentity 内部本就逐步吞错)。
+    const boundCtx: RequestContext = { ...ctx, accountId: ensured.id };
+    let sourceId: string | null = null;
+    try {
+      sourceId = await service.ensureDouyinSource(boundCtx);
+    } catch (err) {
+      console.error(
+        "[ingestion] loginDouyin(forceNew): ensure external_source 失败:",
+        err,
+      );
+    }
+    if (sourceId) {
+      await applyDouyinIdentity(boundCtx, sourceId, identity);
+    }
+    // ⑥ 绑定成功编排沿现链(T-189a):onDouyinBound(建 job + claimOrphans + 初始化采集)
+    //   fire-and-forget,传真号;未注入时回退 Bug-13 内联 refreshDouyin(同现链语义)。
+    if (onDouyinBound) {
+      try {
+        onDouyinBound(boundCtx);
+      } catch (err) {
+        console.error(
+          "[ingestion] loginDouyin(forceNew): onDouyinBound 建 job/初始化触发失败:",
+          err,
+        );
+      }
+    } else if (sourceId) {
+      void service
+        .refreshDouyin(boundCtx, { externalSourceId: sourceId })
+        .catch((refreshErr) => {
+          console.error(
+            "[ingestion] loginDouyin(forceNew): refreshDouyin 初始化刷新失败:",
+            refreshErr instanceof Error ? refreshErr.message : refreshErr,
+          );
+        });
+    }
+    return { loggedIn: true };
   }
 
   // Shared per-record loop for the four push methods. Marks the run running,
@@ -816,9 +971,14 @@ export function createIngestionService(args: {
       return sourceId;
     },
 
-    async loginDouyin(ctx) {
+    async loginDouyin(ctx, input) {
       if (!douyinFetch) {
         throw new Error("抖音抓取端口未配置(douyinFetch)");
+      }
+      // [T-330] 「扫码绑定新抖音号」→ staging 隔离链(见 loginDouyinForceNew)。非 forceNew
+      //   (重连当前号)保持现行为:复用 `.auth/douyin/<accountId>`/_default 既有 profile 合理。
+      if (input?.forceNew) {
+        return loginDouyinForceNew(ctx);
       }
       // 弹 Chromium 窗口扫码;成功后登录态落 .auth/,后续 refreshDouyin 直接 headless 复用。
       // [T-136 §D 切片 c] 带当前号 → 落 `.auth/douyin/<accountId>` 独立登录态(每号各自扫码)。

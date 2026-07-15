@@ -221,6 +221,14 @@ import type {
   CommentRecord,
 } from "@/server/ingestion/douyin-cdp";
 import { DouyinNotLoggedInError } from "@/server/ingestion/douyin-errors";
+// [T-330] 绑新号 staging 登录态目录 helpers —— 纯 fs 叶子模块(零 playwright 依赖,静态
+//   import 不破 douyin-cdp 懒加载);token→路径映射收在组合根,service 只见不透明 stagingKey。
+import {
+  adoptDouyinStagingDir,
+  createDouyinStagingToken,
+  discardDouyinStagingDir,
+  douyinStagingDirFor,
+} from "@/server/ingestion/douyin-auth-staging";
 
 // douyin-cdp 懒加载单例(模块加载幂等,天然可并发复用;失败不缓存 → 下次调用重试)。
 type DouyinCdpModule = typeof import("@/server/ingestion/douyin-cdp");
@@ -2064,6 +2072,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         (await loadDouyinCdp()).loginDouyin({
           authDir: douyinAuthDirFor(opts?.accountId),
         }),
+      // [T-330] 绑新号 staging 四步端口(service loginDouyinForceNew 编排;根治「绑新号命中
+      //   当前号/_default 旧 sessionid → 二维码不出现直接登进旧号」):
+      //   loginNew 在全新 `_staging-<token>` 空目录扫码(必出二维码);fetchIdentity 同步读回
+      //   身份(轻量 maxPages=1,口径同 refresh 采集);adoptStaging 身份确认后整目录搬到
+      //   `.auth/douyin/<accountId>`(已存在先删=登录态更新;EXDEV 回退 copy+rm);
+      //   discardStaging 失败路径清理。token→路径映射收在此组合根,service 不碰文件路径。
+      loginNew: async () => {
+        const stagingKey = createDouyinStagingToken();
+        const loggedIn = await (await loadDouyinCdp()).loginDouyin({
+          authDir: douyinStagingDirFor(douyinAuthDirBase, stagingKey),
+        });
+        return { loggedIn, stagingKey };
+      },
+      fetchIdentity: async (opts) =>
+        (await loadDouyinCdp()).fetchDouyinIdentity({
+          authDir: douyinStagingDirFor(douyinAuthDirBase, opts.stagingKey),
+        }),
+      adoptStaging: async (opts) =>
+        adoptDouyinStagingDir(
+          douyinStagingDirFor(douyinAuthDirBase, opts.stagingKey),
+          douyinAuthDirFor(opts.accountId),
+        ),
+      discardStaging: async (opts) =>
+        discardDouyinStagingDir(
+          douyinStagingDirFor(douyinAuthDirBase, opts.stagingKey),
+        ),
       // T-032a:被动状态探针 —— headless 快查登录态(不弹窗),设置页「账号绑定」徽标读它。
       status: async (opts) =>
         (await loadDouyinCdp()).checkDouyinStatus({

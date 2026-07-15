@@ -47,7 +47,13 @@ export const ingestionOperations = {
     path: "/ingestion/douyin/login",
     // [T-136 §D 切片 c] additive 带号 —— 扫码建/复用该号独立源 + 登录态落 `.auth/douyin/<accountId>`。
     // body 整体仍 optional(旧空调用不破);不传 accountId 退化单号(authDir `_default`,源用 userId)。
-    body: z.object({ accountId: id.optional() }).optional(),
+    // [T-330] additive forceNew —— 「扫码绑定新抖音号」置 true:登录走全新 staging 临时目录
+    // (空 profile 必出二维码,绝不命中当前号/_default 的旧 sessionid 直接短路),扫码成功后
+    // 同步读回身份 → 按 sec_uid upsert 账号 → staging 搬到该号正式目录。不传/false = 现行为
+    // (重连当前号复用既有 profile,合理)。
+    body: z
+      .object({ accountId: id.optional(), forceNew: z.boolean().optional() })
+      .optional(),
     response: z.object({ loggedIn: z.boolean() }),
     fr: ["FR-INGESTION-DOUYIN"],
   }),

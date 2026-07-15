@@ -68,15 +68,30 @@ describe("account-manager 极简版 island wiring", () => {
     expect([...PLATFORMS]).toEqual(["douyin"]);
   });
 
-  // 扫码绑定新抖音号:点扫码 → 复用设置页同款 client.loginDouyin,成功后 router.refresh()
-  // 读回真实号(后端 upsert 去重 + 占位合并;端到端 headed 扫码真机待验)。
-  it("扫码绑定新抖音号 issues client.loginDouyin then router.refresh", async () => {
+  // 扫码绑定新抖音号:点扫码 → client.loginDouyin **必带 forceNew: true**([T-330] 后端走
+  // staging 隔离扫码,不会命中旧号 sessionid 直接登进旧号),成功后 router.refresh()
+  // 读回真实号(后端按 sec_uid upsert 去重 + 占位合并;端到端 headed 扫码真机待验)。
+  it("扫码绑定新抖音号 issues client.loginDouyin(forceNew) then router.refresh", async () => {
     render(<CreateAccountForm />);
     fireEvent.click(screen.getByTestId("bind-douyin-scan"));
     await waitFor(() => expect(mockClient.loginDouyin).toHaveBeenCalledTimes(1));
     const arg = mockClient.loginDouyin.mock.calls[0]![0] as { body: unknown };
-    expect(arg.body).toEqual({});
+    expect(arg.body).toEqual({ forceNew: true });
     await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+  });
+
+  // [T-330] 后端诚实失败(如「扫码成功但读不回账号身份」)→ 错误 message 内联透传给用户,
+  // 不吞成笼统文案;且不 refresh(没有假成功)。
+  it("扫码绑定失败时透传后端明确错误文案且不 refresh", async () => {
+    mockClient.loginDouyin.mockRejectedValueOnce(
+      new Error("扫码成功但读不回账号身份(该号可能暂无作品),已放弃本次绑定,请重试"),
+    );
+    render(<CreateAccountForm />);
+    fireEvent.click(screen.getByTestId("bind-douyin-scan"));
+    await waitFor(() =>
+      expect(screen.getByText(/读不回账号身份/)).toBeTruthy(),
+    );
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
   });
 
   it("扫码超时(loggedIn=false)提示重试且不 refresh", async () => {
