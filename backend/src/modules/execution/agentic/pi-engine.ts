@@ -7,6 +7,13 @@
 //   · L3 物理排除:`createAgentSession({ noTools:"builtin", excludeTools:[...] })` → 自带
 //     read/bash/edit/write 不进工具注册表(getAllTools 只剩 customTools)。**不是** "all"(那会连
 //     customTools 一起禁掉)。单测断言(pi-engine.test.ts)。
+//   · [RT-H02/H03] 受控 ResourceLoader 隔离:不传 loader 时 pi 用 DefaultResourceLoader 扫 cwd +
+//     `~/.pi/agent`,加载项目/用户 extension、custom tool、skill、AGENTS.md/CLAUDE.md,并且**我方
+//     systemPrompt 被丢弃**(pi 的 system prompt 由 ResourceLoader 经 buildSystemPrompt 构造,见
+//     agent-session.js:708 / system-prompt.js:13)。→ 传一个指向**隔离空目录**、`no{Extensions,
+//     Skills,PromptTemplates,Themes,ContextFiles}:true` 的 DefaultResourceLoader,并用
+//     `systemPromptOverride` 强注我方 systemPrompt(替换 pi 默认「expert coding assistant」提示):
+//     零 extension / 零外部 custom tool / 零 skill / 零 context 文件,仅显式 customTools 生效。
 //   · §6.1 回接:走 pi 自己的 custom-provider 机制 `ModelRegistry.registerProvider(name,{api,
 //     baseUrl,apiKey,authHeader,models})` + `find()` → `createAgentSession({model,modelRegistry})`。
 //     authHeader:true=Authorization Bearer(anthropic relay/MiniMax);falsy=api 默认(anthropic x-api-key)。
@@ -16,6 +23,7 @@
 //     pi 的 validateToolArguments 走非-TypeBox 分支校验+coerce;**权威校验仍在 execute 内我方 zod safeParse**。
 //   · 依赖缺席/打包实拷缺失/无 llmConfig/运行异常 → 退 deterministic 兜底(保留现有全绿默认路径)。
 import * as fs from "node:fs/promises";
+import * as os from "node:os";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
@@ -164,6 +172,11 @@ interface PiToolBridgeCtx {
   onStep: (text: string, kind?: string) => Promise<void>;
   toolLog: Array<{ tool: string; dryRun: boolean; summary: string }>;
   outputs: Record<string, unknown>;
+  /**
+   * [RT-M01] 真实(非干跑)工具执行前回调 —— 记一次「已提交副作用」。运行异常时据此判定:
+   * 本轮有真实副作用则**禁止**整体回退确定性引擎(否则会重放 = 重复付费/重复落库)。
+   */
+  onRealExecute?: () => void;
 }
 
 /** AgenticTool → pi ToolDefinition(customTools)。execute 包我方端口,zod safeParse 权威校验。 */
@@ -196,6 +209,9 @@ export function toPiCustomTool(
         };
       }
       const dryRun = ctx.decideDryRun(tool);
+      // RT-M01:真实(非干跑)执行**动手前**就记副作用 —— 即便 execute 中途抛错也算「可能已提交」,
+      // 异常时据此禁止整体重放(保守:宁可不重放,不可重复付费/重复落库)。
+      if (!dryRun) ctx.onRealExecute?.();
       const result = await tool.execute(parsed.data, {
         signal: ctx.signal,
         dryRun,
@@ -256,6 +272,24 @@ interface PiSdk {
   };
   AuthStorage: { inMemory: () => unknown };
   SessionManager: { inMemory: () => unknown };
+  /**
+   * [RT-H02/H03] pi 的 DefaultResourceLoader 构造器 —— 用它造**受控/隔离**的 ResourceLoader
+   * (指向空目录 + 关掉所有资源发现 + 强注我方 systemPrompt),替代 createAgentSession 默认自建的、
+   * 会扫 cwd + `~/.pi/agent` 的那个。
+   */
+  DefaultResourceLoader: new (opts: Record<string, unknown>) => PiResourceLoader;
+}
+/**
+ * [RT-H02/H03] pi ResourceLoader 契约裁剪 —— createAgentSession 经它取 system prompt / extensions /
+ * skills / prompts / context 文件(agent-session.js:708、2002)。受控 loader 让这些全部归零/受控。
+ */
+interface PiResourceLoader {
+  reload: () => Promise<void>;
+  getSystemPrompt: () => string | undefined;
+  getExtensions: () => { extensions: unknown[] };
+  getSkills: () => { skills: unknown[] };
+  getPrompts: () => { prompts: unknown[] };
+  getAgentsFiles: () => { agentsFiles: unknown[] };
 }
 interface PiModelRegistry {
   registerProvider: (name: string, config: Record<string, unknown>) => void;
@@ -293,23 +327,26 @@ async function loadPiSdk(): Promise<PiSdk | null> {
       import(
         /* webpackIgnore: true */ pathToFileURL(path.join(coreDir, f)).href
       ) as Promise<Record<string, unknown>>;
-    const [sdk, mr, as, sm] = await Promise.all([
+    const [sdk, mr, as, sm, rl] = await Promise.all([
       imp("sdk.js"),
       imp("model-registry.js"),
       imp("auth-storage.js"),
       imp("session-manager.js"),
+      imp("resource-loader.js"), // RT-H02/H03:受控 ResourceLoader 隔离用
     ]);
     const loaded = {
       createAgentSession: sdk.createAgentSession,
       ModelRegistry: mr.ModelRegistry,
       AuthStorage: as.AuthStorage,
       SessionManager: sm.SessionManager,
+      DefaultResourceLoader: rl.DefaultResourceLoader,
     } as unknown as PiSdk;
     if (
       typeof loaded.createAgentSession !== "function" ||
       !loaded.ModelRegistry ||
       !loaded.AuthStorage ||
-      !loaded.SessionManager
+      !loaded.SessionManager ||
+      typeof loaded.DefaultResourceLoader !== "function"
     ) {
       return null;
     }
@@ -332,6 +369,51 @@ export function __setPiSdkForTest(sdk: PiSdk | null | undefined): void {
 }
 /** [测试用] pi-engine 内部 SDK 句柄类型(测试注入真 SDK 时用)。 */
 export type PiSdkHandle = PiSdk;
+
+// ── [RT-H02/H03] 受控 ResourceLoader 隔离 ───────────────────────────────────────────────────
+let cachedIsolatedDir: string | null = null;
+/**
+ * 备一个**隔离空目录**当 Pi 会话的 cwd + agentDir —— 让 SettingsManager / DefaultResourceLoader /
+ * packageManager 的所有磁盘发现都指向它(空 → 零发现),**绝不扫真实项目 cwd 或 `~/.pi/agent`**。
+ * 复用同一目录(memoize):无副作用、幂等。
+ */
+async function ensureIsolatedResourceDir(): Promise<string> {
+  if (cachedIsolatedDir) return cachedIsolatedDir;
+  const dir = path.join(os.tmpdir(), "creatoros-pi-isolated");
+  await fs.mkdir(dir, { recursive: true });
+  cachedIsolatedDir = dir;
+  return dir;
+}
+
+/**
+ * [RT-H02/H03] 造受控 ResourceLoader:
+ *   - cwd/agentDir 指向隔离空目录 `isolatedDir` —— 即便有磁盘发现也扫到空;
+ *   - no{Extensions,Skills,PromptTemplates,Themes,ContextFiles}:true —— 物理关掉全部资源发现,
+ *     确保**零 extension、零外部 custom tool、零 skill、零 AGENTS.md/CLAUDE.md** 进会话;
+ *   - `systemPromptOverride: () => systemPrompt` —— **强注**我方 systemPrompt,绕开 pi 的
+ *     SYSTEM.md 发现与「把入参当文件路径读」的 resolvePromptInput(RT-H02);buildSystemPrompt 见到
+ *     customPrompt 会**整段替换** pi 默认「expert coding assistant」提示(system-prompt.js:13-34)。
+ * 导出供单测直接断言(零发现 + systemPrompt 生效)。
+ */
+export async function buildIsolatedResourceLoader(
+  sdk: PiSdk,
+  systemPrompt: string | undefined,
+  isolatedDir: string,
+): Promise<PiResourceLoader> {
+  const loader = new sdk.DefaultResourceLoader({
+    cwd: isolatedDir,
+    agentDir: isolatedDir,
+    noExtensions: true,
+    noSkills: true,
+    noPromptTemplates: true,
+    noThemes: true,
+    noContextFiles: true,
+    // override 回调恒返回我方 prompt(无视磁盘发现结果),airtight 注入。
+    systemPromptOverride: () => systemPrompt,
+  });
+  await loader.reload();
+  return loader;
+}
 
 /**
  * 真 Pi 引擎。装好 `@earendil-works/pi-coding-agent` + 执行器注入 §6.1 llmConfig 后真跑;
@@ -364,6 +446,13 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
         [];
       let stopReason: StopReason = "completed";
 
+      // [RT-M01] 本轮已提交的真实(非干跑)工具副作用计数 —— 异常时>0 则**禁止**整体重放。
+      let sideEffectsCommitted = 0;
+      // [RT-M02] 会话 / 订阅 / abort 监听句柄提到 try 外,单一最外层 finally 统一清理(不泄漏)。
+      let session: PiSession | undefined;
+      let unsub: (() => void) | void = undefined;
+      let onAbort: (() => void) | undefined;
+
       try {
         // §6.1 provider 装配(pi custom-provider;测试注 faux streamSimple 不打网络)。
         const streamSimple = deps.buildStreamSimple?.(llmConfig);
@@ -380,7 +469,7 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
             "Pi provider 装配失败(model 未解析)—— 退确定性兜底",
             "warn",
           );
-          return deps.fallback.run(input);
+          return deps.fallback.run(input); // 未创建会话/未动工具 → 零副作用,回退安全
         }
 
         // L3 物理排除 + customTools(白名单已上游 filterToolsToScope 过;此处只映射在册工具)。
@@ -391,38 +480,55 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
             onStep: input.onStep,
             toolLog,
             outputs,
+            onRealExecute: () => {
+              sideEffectsCommitted += 1; // RT-M01:真实执行 = 已提交副作用
+            },
           }),
         );
 
-        const { session } = await sdk.createAgentSession({
+        // [RT-H02/H03] 受控 ResourceLoader:注我方 systemPrompt + 零 extension/skill/prompt/context;
+        // cwd/agentDir 同指隔离空目录 —— SettingsManager / 工具 cwd 也不落到真实项目或 `~/.pi`。
+        const isolatedDir = await ensureIsolatedResourceDir();
+        const resourceLoader = await buildIsolatedResourceLoader(
+          sdk,
+          input.systemPrompt,
+          isolatedDir,
+        );
+
+        const created = await sdk.createAgentSession({
           model,
           modelRegistry,
           noTools: "builtin",
           excludeTools: [...EXCLUDED_BUILTIN_TOOLS],
           customTools,
           sessionManager: sdk.SessionManager.inMemory(),
+          resourceLoader, // RT-H02/H03:我方受控 loader 取代默认(默认会扫 cwd + ~/.pi 并吞掉 systemPrompt)
+          cwd: isolatedDir,
+          agentDir: isolatedDir,
         });
+        session = created.session;
+        const sess = session; // 收窄:闭包内用非空引用
 
         // 关 pi 自带 auto-retry:retry/backoff 由我方层(端口 + LoopController 预算)掌控;
         // 放任 pi 自动重试会不受预算约束地绕圈 + 报错不及时浮现(诚实原则:fail fast)。
-        session.setAutoRetryEnabled?.(false);
+        sess.setAutoRetryEnabled?.(false);
 
         // abort 贯通(input.signal → session.abort)。
-        const onAbort = (): void => {
+        onAbort = (): void => {
           controller.markAborted();
           stopReason = "aborted";
-          void session.abort();
+          void sess.abort();
         };
         if (signal.aborted) onAbort();
         else signal.addEventListener("abort", onAbort, { once: true });
 
         // 事件流 → LoopController 桥接(每 turn 记步 + 记真 token;超顶 abort 诚实停)。
-        const unsub = session.subscribe((ev: PiEvent) => {
+        unsub = sess.subscribe((ev: PiEvent) => {
           try {
             if (ev.type !== "turn_end") return;
             if (!controller.beginStep()) {
               stopReason = controller.terminationReason() ?? "max_steps";
-              void session.abort();
+              void sess.abort();
               return;
             }
             const usage = ev.message?.usage;
@@ -431,27 +537,21 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
               : 0;
             if (charged > 0 && !controller.chargeTokens(charged)) {
               stopReason = "budget_exhausted";
-              void session.abort();
+              void sess.abort();
             }
           } catch {
             // 事件处理异常不打断循环(诚实:控制器状态已尽力更新)。
           }
         });
 
-        try {
-          await session.prompt(input.goal);
-          await session.waitForIdle();
-        } finally {
-          if (typeof unsub === "function") unsub();
-        }
+        await sess.prompt(input.goal);
+        await sess.waitForIdle();
 
         // 诚实:LLM 调用报错(未配/凭据错/网络)→ 末条助手消息 stopReason "error" → 记 llm_error,
         // 不假成功(与确定性引擎 llm_error 同口径,SPEC honesty)。
         let llmErrorMsg: string | undefined;
         if (stopReason === "completed") {
-          const errored = session.messages?.find(
-            (m) => m.stopReason === "error",
-          );
+          const errored = sess.messages?.find((m) => m.stopReason === "error");
           if (errored) {
             stopReason = "llm_error";
             llmErrorMsg = errored.errorMessage;
@@ -465,9 +565,8 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
         if (stopReason === "completed" && controller.terminationReason() == null) {
           controller.markCompleted();
         }
-        const finalText = session.getLastAssistantText?.() ?? "";
-        const stats = session.getSessionStats?.();
-        session.dispose?.();
+        const finalText = sess.getLastAssistantText?.() ?? "";
+        const stats = sess.getSessionStats?.();
 
         const detail =
           `Pi 自主循环结束(${stopReason}):${toolLog.length} 次工具调用,` +
@@ -489,13 +588,49 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
           stopReason,
         };
       } catch (err) {
-        // 运行中未预期错误 → 诚实退确定性兜底(不假成功;记真因)。
         const msg = err instanceof Error ? err.message : String(err);
+        // [RT-M01] 仅当**本轮零真实副作用**时,整体回退确定性兜底才安全(保命路径,SPEC §3.1)。
+        if (sideEffectsCommitted === 0) {
+          await input.onStep(
+            `Pi 引擎运行异常(${msg.slice(0, 160)})—— 本轮零副作用,退确定性兜底`,
+            "warn",
+          );
+          return deps.fallback.run(input);
+        }
+        // 已提交真实副作用 → **绝不**整体重放(否则重复付费/重复落库);诚实返回已完成部分做检查点。
+        stopReason = "llm_error";
         await input.onStep(
-          `Pi 引擎运行异常(${msg.slice(0, 160)})—— 退确定性兜底`,
+          `Pi 引擎运行异常(${msg.slice(0, 160)})—— 已提交 ${sideEffectsCommitted} 次真实工具副作用,不整体重放;返回部分产物供检查点`,
           "warn",
         );
-        return deps.fallback.run(input);
+        const detail =
+          `Pi 自主循环异常中断(${stopReason}):${toolLog.length} 次工具调用,` +
+          `步 ${controller.stepsUsed()}/${controller.budget.maxSteps},` +
+          `token ~${controller.tokensUsed()}/${controller.budget.maxTokens}`;
+        return {
+          summary: detail,
+          output: {
+            goal: input.goal,
+            engineDetail: detail,
+            finalText: "",
+            outputs,
+            toolLog,
+            stopReason,
+            error: msg,
+            // 检查点:续跑时喂回 params.checkpoint(硬顶跨续跑生效,不重置预算)。
+            checkpoint: {
+              stepsUsed: controller.stepsUsed(),
+              tokensUsed: controller.tokensUsed(),
+            },
+          },
+          steps: controller.stepsUsed(),
+          stopReason,
+        };
+      } finally {
+        // [RT-M02] 单一最外层清理:退订事件 → 摘 abort 监听 → dispose 会话(任一句柄可能未建,全防空)。
+        if (typeof unsub === "function") unsub();
+        if (onAbort) signal.removeEventListener("abort", onAbort);
+        session?.dispose?.();
       }
     },
   };

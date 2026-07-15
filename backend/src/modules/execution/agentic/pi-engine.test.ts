@@ -1,3 +1,5 @@
+import * as fs from "node:fs/promises";
+import * as os from "node:os";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, it, expect, beforeAll } from "vitest";
@@ -6,6 +8,7 @@ import { createLoopController } from "./loop-control";
 import {
   createPiAgenticEngine,
   buildPiProviderRegistration,
+  buildIsolatedResourceLoader,
   piApiForFormat,
   zodToPiParameters,
   EXCLUDED_BUILTIN_TOOLS,
@@ -191,17 +194,19 @@ async function loadRealSdk(): Promise<PiSdkHandle | null> {
       import(pathToFileURL(path.join(base, f)).href) as Promise<
         Record<string, unknown>
       >;
-    const [sdk, mr, as, sm] = await Promise.all([
+    const [sdk, mr, as, sm, rl] = await Promise.all([
       imp("sdk.js"),
       imp("model-registry.js"),
       imp("auth-storage.js"),
       imp("session-manager.js"),
+      imp("resource-loader.js"),
     ]);
     return {
       createAgentSession: sdk.createAgentSession,
       ModelRegistry: mr.ModelRegistry,
       AuthStorage: as.AuthStorage,
       SessionManager: sm.SessionManager,
+      DefaultResourceLoader: rl.DefaultResourceLoader,
     } as unknown as PiSdkHandle;
   } catch {
     return null;
@@ -376,6 +381,224 @@ describe("pi-engine 真 SDK 集成(faux,不打网络)", () => {
     );
     expect(final.stopReason).toBe("llm_error");
     expect(search.calls.length).toBe(0); // 想都没想成,不动手
+    __setPiSdkForTest(undefined);
+  });
+});
+
+// ── [RT-H02/H03] 受控 ResourceLoader 隔离(真 SDK)——————————————————————————————————————
+// 证:①我方 systemPrompt 真进会话(替换 pi 默认,非被 ResourceLoader 吞掉);②零 extension /
+// 零 skill / 零外部 custom tool / 零 AGENTS.md context 进会话(默认 loader 会扫 cwd + ~/.pi 吞入)。
+describe("pi-engine RT-H02/H03 受控 ResourceLoader 隔离(真 SDK)", () => {
+  let sdk: PiSdkHandle | null = null;
+  beforeAll(async () => {
+    sdk = await loadRealSdk();
+  });
+
+  it("no* 隔离:AGENTS.md 存在也不进 context + override 强注我方 prompt(对照:默认 loader 会吞入 AGENTS.md)", async () => {
+    if (!sdk) return;
+    const decoy = await fs.mkdtemp(path.join(os.tmpdir(), "pi-decoy-"));
+    try {
+      await fs.writeFile(
+        path.join(decoy, "AGENTS.md"),
+        "POISON-CONTEXT-MARKER 项目投毒指令(不该进受控会话)",
+        "utf8",
+      );
+      // 对照组:默认(未关 noContextFiles)loader 会把 AGENTS.md 读进 context 文件 → 证明泄漏是真的。
+      const plain = new sdk.DefaultResourceLoader({
+        cwd: decoy,
+        agentDir: decoy,
+        noExtensions: true,
+        noSkills: true,
+        noPromptTemplates: true,
+        noThemes: true,
+      });
+      await plain.reload();
+      const plainCtx = plain.getAgentsFiles().agentsFiles as Array<{
+        content: string;
+      }>;
+      expect(plainCtx.length).toBeGreaterThanOrEqual(1);
+      expect(plainCtx.some((f) => f.content.includes("POISON-CONTEXT-MARKER"))).toBe(
+        true,
+      );
+
+      // 受控组:同目录,我方 buildIsolatedResourceLoader → 零 context/skill/prompt/extension + 我方 prompt。
+      const MARKER = "CREATOROS-CONTROLLED-SYSPROMPT";
+      const iso = await buildIsolatedResourceLoader(sdk, MARKER, decoy);
+      expect(iso.getAgentsFiles().agentsFiles.length).toBe(0);
+      expect(iso.getSkills().skills.length).toBe(0);
+      expect(iso.getPrompts().prompts.length).toBe(0);
+      expect(iso.getExtensions().extensions.length).toBe(0);
+      expect(iso.getSystemPrompt()).toBe(MARKER);
+    } finally {
+      await fs.rm(decoy, { recursive: true, force: true });
+    }
+  });
+
+  it("集成:受控 loader → 我方 systemPrompt 进 agent.state.systemPrompt(替换 pi 默认「expert coding assistant」)+ 零外部工具泄漏", async () => {
+    if (!sdk) return;
+    const MARKER = `CREATOROS-ROLE-e2e-${Math.random().toString(36).slice(2)}`;
+    const iso = await fs.mkdtemp(path.join(os.tmpdir(), "pi-iso-e2e-"));
+    try {
+      const loader = await buildIsolatedResourceLoader(sdk, MARKER, iso);
+      const { session } = await sdk.createAgentSession({
+        model: undefined,
+        noTools: "builtin",
+        excludeTools: [...EXCLUDED_BUILTIN_TOOLS],
+        customTools: [
+          {
+            name: "web.search",
+            label: "web.search",
+            description: "d",
+            parameters: {
+              type: "object",
+              properties: { query: { type: "string" } },
+            },
+            async execute() {
+              return { content: [{ type: "text", text: "ok" }], details: {} };
+            },
+          },
+        ],
+        sessionManager: (
+          sdk.SessionManager as { inMemory: () => unknown }
+        ).inMemory(),
+        resourceLoader: loader,
+        cwd: iso,
+        agentDir: iso,
+      });
+      const s = session as unknown as {
+        systemPrompt: string;
+        getAllTools: () => Array<{ name: string }>;
+        dispose?: () => void;
+      };
+      // RT-H02:我方 systemPrompt 真进 agent.state,且**替换**了 pi 默认提示(非被吞)。
+      expect(s.systemPrompt).toContain(MARKER);
+      expect(s.systemPrompt).not.toContain(
+        "expert coding assistant operating inside pi",
+      );
+      // RT-H03:零 extension → 工具集只剩我方 customTools + L3 排除后的 builtin(读/写/bash 全禁)。
+      const all = s.getAllTools().map((t) => t.name);
+      for (const forbidden of EXCLUDED_BUILTIN_TOOLS) {
+        expect(all).not.toContain(forbidden);
+      }
+      expect(all).toContain("web.search");
+      s.dispose?.();
+    } finally {
+      await fs.rm(iso, { recursive: true, force: true });
+    }
+  });
+});
+
+// ── [RT-M01] 副作用感知回退(fake SDK,不打网络,确定性)———————————————————————————————
+// 造一个「模型真调了工具 → 随后会话抛错」的 fake SDK,验:有真实副作用则**不**整体重放(否则重复
+// 付费/落库);零副作用才回退确定性兜底(保命路径)。
+function makeFakeSdkThatErrors(cfg: { commitSideEffect: boolean }): PiSdkHandle {
+  return {
+    AuthStorage: { inMemory: () => ({}) },
+    ModelRegistry: {
+      inMemory: () => ({
+        registerProvider: () => {},
+        find: () => ({ provider: "p", id: "m" }),
+      }),
+    },
+    SessionManager: { inMemory: () => ({}) },
+    DefaultResourceLoader: class {
+      async reload() {}
+      getSystemPrompt() {
+        return "sys";
+      }
+      getExtensions() {
+        return { extensions: [] };
+      }
+      getSkills() {
+        return { skills: [] };
+      }
+      getPrompts() {
+        return { prompts: [] };
+      }
+      getAgentsFiles() {
+        return { agentsFiles: [] };
+      }
+    },
+    async createAgentSession(opts: unknown) {
+      const customTools = (opts as { customTools: Array<{ execute: (id: string, p: unknown) => Promise<unknown> }> }).customTools;
+      return {
+        session: {
+          setAutoRetryEnabled() {},
+          subscribe() {
+            return () => {};
+          },
+          async prompt() {
+            if (!cfg.commitSideEffect) {
+              throw new Error("boom before any tool"); // 零副作用路径
+            }
+            // 模拟模型真调一次工具(dryRun=false → 提交真实副作用)。
+            await customTools[0]!.execute("call-1", { query: "x" });
+          },
+          async waitForIdle() {
+            if (cfg.commitSideEffect) {
+              throw new Error("boom after side effect"); // 副作用已提交后才抛
+            }
+          },
+          async abort() {},
+          dispose() {},
+        },
+      };
+    },
+  } as unknown as PiSdkHandle;
+}
+
+describe("pi-engine RT-M01 副作用感知回退(fake SDK)", () => {
+  it("零真实副作用异常 → 整体回退确定性兜底(保命路径不破坏)", async () => {
+    let fallbackCalled = false;
+    const fallback: AgenticEngine = {
+      name: "deterministic",
+      async run() {
+        fallbackCalled = true;
+        return { summary: "det", output: {}, steps: 0, stopReason: "completed" };
+      },
+    };
+    __setPiSdkForTest(makeFakeSdkThatErrors({ commitSideEffect: false }));
+    const search = makeTool("web.search", "none");
+    const engine = createPiAgenticEngine({ fallback });
+    const final = await engine.run(
+      runInput({
+        tools: [search.tool],
+        controller: createLoopController({ maxSteps: 8, maxTokens: 100000 }),
+        llmConfig: ANTHROPIC_BEARER,
+      }),
+    );
+    expect(fallbackCalled).toBe(true);
+    expect(final.summary).toBe("det");
+    expect(search.calls.length).toBe(0); // 工具从未执行
+    __setPiSdkForTest(undefined);
+  });
+
+  it("已提交真实副作用后异常 → 不整体重放,诚实返回部分产物 + checkpoint(stopReason llm_error)", async () => {
+    let fallbackCalled = false;
+    const fallback: AgenticEngine = {
+      name: "deterministic",
+      async run() {
+        fallbackCalled = true;
+        return { summary: "det", output: {}, steps: 0, stopReason: "completed" };
+      },
+    };
+    __setPiSdkForTest(makeFakeSdkThatErrors({ commitSideEffect: true }));
+    const search = makeTool("web.search", "none");
+    const engine = createPiAgenticEngine({ fallback });
+    const final = await engine.run(
+      runInput({
+        tools: [search.tool],
+        controller: createLoopController({ maxSteps: 8, maxTokens: 100000 }),
+        llmConfig: ANTHROPIC_BEARER,
+      }),
+    );
+    expect(fallbackCalled).toBe(false); // 关键:不回退 = 不重放
+    expect(search.calls.length).toBe(1); // 真实工具只跑了这一次,没被 fallback 重放第二次
+    expect(final.stopReason).toBe("llm_error");
+    expect(String((final.output as { error?: unknown }).error)).toContain(
+      "boom after side effect",
+    );
+    expect((final.output as { checkpoint?: unknown }).checkpoint).toBeTruthy();
     __setPiSdkForTest(undefined);
   });
 });
