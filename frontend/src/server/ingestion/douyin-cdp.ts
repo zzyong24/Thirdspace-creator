@@ -1,6 +1,8 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import type { MetricRecord } from "@creatoros/backend/modules/ingestion";
+// [T-326 B-04] 错误类抽到零依赖叶子模块(见下方 re-export 注释);本文件内部 throw/instanceof 用它。
+import { DouyinNotLoggedInError } from "./douyin-errors";
 // T-038b 限流网关集成:每个对外抖音请求过 withDouyinChannel(acquire→跑→report)。
 // gateway 走**可注入窄端口**(DouyinChannelGate),默认 instantNoopGateway(不真等)——
 // 既有单测不传 gateway 即用它,零回归;runtime 由 persistence-client 注真单例。
@@ -699,13 +701,10 @@ export interface LoginDouyinOptions {
   timeoutSec?: number;
 }
 
-// 未登录抖音创作者中心 —— 调用方据此提示用户先「登录抖音」(弹窗扫码),区别于真正抓取失败。
-export class DouyinNotLoggedInError extends Error {
-  constructor() {
-    super("DouyinNotLoggedInError: 未检测到抖音创作者中心登录态,请先扫码登录");
-    this.name = "DouyinNotLoggedInError";
-  }
-}
+// 未登录抖音创作者中心 —— 类本体已抽到零依赖叶子模块 douyin-errors.ts([T-326 B-04]:
+// persistence-client 的同步 instanceof 判别点不必加载本重模块);顶部 import + 此处 re-export
+// 保持既有 `from "./douyin-cdp"` 的 import 路径与错误类身份(同一 class 实例)全部兼容。
+export { DouyinNotLoggedInError } from "./douyin-errors";
 
 const CREATOR_LOGIN_HOME = "https://creator.douyin.com/creator-micro/home";
 const CREATOR_CONTENT = "https://creator.douyin.com/creator-micro/content/manage";

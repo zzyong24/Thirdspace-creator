@@ -260,11 +260,16 @@ declare global {
  * node-cron 动态 import(纯逻辑 triggerScheduledJob 单测不依赖它)。
  */
 export async function startScheduler(deps: SchedulerLoopDeps): Promise<void> {
-  // 环境守卫:测试/CI 不启动(与 persistence-client localFsEnabled 的守卫同口径)。
+  // 环境守卫:测试/CI/Next production build 不启动(与 persistence-client localFsEnabled
+  // 的守卫同口径)。[T-326 ENG-H02] NEXT_PHASE===phase-production-build = `next build`
+  // 预渲染 worker(Next 16 在 build/index.js 设该 env,worker 继承)—— build 阶段起 cron
+  // 是纯副作用泄漏。组合根 getBundle() 已在 build 阶段整体拒绝构造持久层,此处是纵深防御
+  // (防未来别的组合根/脚本在 build 语境误调 startScheduler)。
   if (
     process.env.NODE_ENV === "test" ||
     process.env.VITEST ||
     process.env.CI ||
+    process.env.NEXT_PHASE === "phase-production-build" ||
     process.env.CREATOROS_DISABLE_SCHEDULER === "1"
   ) {
     return;

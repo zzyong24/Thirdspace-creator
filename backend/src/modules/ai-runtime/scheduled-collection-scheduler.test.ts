@@ -7,6 +7,9 @@ import {
   sweepStaleRuns,
   // [T-207] 启动 sweep 僵尸 ai_task。
   sweepStaleAiTasks,
+  // [T-326 ENG-H02] 环境守卫回归(next build 阶段不起 cron)。
+  startScheduler,
+  type SchedulerLoopDeps,
   type TriggerDeps,
   type SchedulableJob,
   type SweepStaleDeps,
@@ -412,5 +415,35 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
     });
     expect(swept).toBe(1); // boom 失败不计,zombie2 照扫
     expect(markFailed).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("[T-326 ENG-H02] startScheduler 环境守卫", () => {
+  // listRunnableJobs 一旦被调 = 守卫失守(cron 起来了)—— 用抛错的 stub 让失守必炸。
+  const forbiddenDeps = {
+    ...makeTriggerDeps(),
+    ctx,
+    listRunnableJobs: vi.fn(async () => {
+      throw new Error("guard breached: scheduler tick ran");
+    }),
+  } as unknown as SchedulerLoopDeps;
+
+  it("NEXT_PHASE=phase-production-build(next build 预渲染 worker)→ 直接返回,不置单例、不起 cron", async () => {
+    // 依次压掉 test/VITEST/CI 三个先行守卫,单独验 build 阶段这条新分支。
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VITEST", "");
+    vi.stubEnv("CI", "");
+    vi.stubEnv("NEXT_PHASE", "phase-production-build");
+    try {
+      await startScheduler(forbiddenDeps);
+      expect(globalThis.__creatorosSchedulerStarted).toBeUndefined();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("NODE_ENV=test(vitest 常态)→ 同样直接返回(既有守卫回归)", async () => {
+    await startScheduler(forbiddenDeps);
+    expect(globalThis.__creatorosSchedulerStarted).toBeUndefined();
   });
 });

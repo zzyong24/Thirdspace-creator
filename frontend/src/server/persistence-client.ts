@@ -208,31 +208,34 @@ import { runGatherMaterial } from "@creatoros/backend/modules/ai-runtime";
 import { runTopicGenerateV2 } from "@creatoros/backend/modules/ai-runtime";
 import * as nodePath from "node:path";
 import { existsSync, renameSync } from "node:fs";
-import {
-  fetchDouyinMetrics,
-  loginDouyin,
-  checkDouyinStatus,
-  fetchDouyinComments,
-  fetchDouyinCommentsForWorks,
-  ingestComments,
-  type CommentIngestPorts,
-  type CommentRecord,
-  DouyinNotLoggedInError,
-  fetchDouyinVideoUrl,
-  // [T-243] 逐字稿取流组合入口(iesdouyin 匿名 → 登录态 detail 回落 + 图集识别)。
-  fetchDouyinVideoSource,
-  streamAudioFromVideo,
-  fetchDouyinWorkListExport,
-  // [T-212a] 对标他号作品采集(sec_uid 主页 aweme/post,只读公开统计)。
-  fetchDouyinUserPosts,
-  // [T-235b] 黑马雷达搜索(按关键词搜近1天最多赞,页内 fetch 借登录态 + gateway 限流)。
-  fetchDouyinSearchVideos,
-  // [T-235c] 指定收藏夹采集(收藏夹列表按名匹配 + 夹内视频,页内 fetch 借登录态 + gateway 限流)。
-  fetchDouyinCollectsFolders,
-  fetchDouyinCollectsVideos,
-  // [T-281] 复用 douyin 的 Chromium 首装(frontend 上下文,proven)注入进 video.render executor。
-  ensureChromiumInstalled,
+// [T-326 B-04] douyin-cdp(抖音浏览器采集,拉 Playwright/Chromium 链)改**真正的懒加载**:
+//   原静态 import 把这棵重依赖树钉进了所有经 contract-client.server / dispatch 进本文件的
+//   路由编译图(审计 B-04:根路由 dev 首编译超时,build 全程报 douyin-cdp
+//   `Module not found: Can't resolve <dynamic>` 警告)。现只静态引 **type**(编译期擦除)+
+//   零依赖错误类(douyin-errors.ts,同步 instanceof 判别点用);函数体一律经下方
+//   loadDouyinCdp() 在调用点动态 import —— 与 web-session/web-capture/web-reader 内部
+//   `await import("./douyin-cdp")` 同款、字面量 specifier(Turbopack 可解析,运行时真实
+//   调用路径不变:dispatch → 采集端口 → await loadDouyinCdp() → 真函数)。
+import type {
+  CommentIngestPorts,
+  CommentRecord,
 } from "@/server/ingestion/douyin-cdp";
+import { DouyinNotLoggedInError } from "@/server/ingestion/douyin-errors";
+
+// douyin-cdp 懒加载单例(模块加载幂等,天然可并发复用;失败不缓存 → 下次调用重试)。
+type DouyinCdpModule = typeof import("@/server/ingestion/douyin-cdp");
+let douyinCdpModulePromise: Promise<DouyinCdpModule> | null = null;
+function loadDouyinCdp(): Promise<DouyinCdpModule> {
+  if (!douyinCdpModulePromise) {
+    douyinCdpModulePromise = import("@/server/ingestion/douyin-cdp").catch(
+      (err) => {
+        douyinCdpModulePromise = null; // 失败不缓存,后续调用可重试
+        throw err;
+      },
+    );
+  }
+  return douyinCdpModulePromise;
+}
 // [T-232] 评论批量采集预算规划(纯逻辑):未采优先 + 爆款优先排序 + 全量/截断诚实 message。
 import {
   orderCommentCollection,
@@ -2049,20 +2052,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     douyinFetch: {
       // [T-136 §D] fetchDouyinMetrics 现返回 { records, identity }(identity=登录用户自己的
       //   身份,抓不到 null)—— 直接透传;service 用真实昵称替占位「我的抖音」。
-      fetch: (opts) =>
-        fetchDouyinMetrics({
+      // [T-326 B-04] douyin-cdp 懒加载:运行时被调时才 import(端口本就返回 Promise,语义不变)。
+      fetch: async (opts) =>
+        (await loadDouyinCdp()).fetchDouyinMetrics({
           capturedAt: opts.capturedAt,
           authDir: douyinAuthDirFor(opts.accountId),
           gateway: douyinGateway, // [gate-F7 插装点②] creator-center 翻页限流(注真单例)
           knownAwemeIds: opts.knownAwemeIds, // [T-177] 翻页 early-stop 锚(undefined → 全量)
         }),
-      login: (opts) =>
-        loginDouyin({
+      login: async (opts) =>
+        (await loadDouyinCdp()).loginDouyin({
           authDir: douyinAuthDirFor(opts?.accountId),
         }),
       // T-032a:被动状态探针 —— headless 快查登录态(不弹窗),设置页「账号绑定」徽标读它。
-      status: (opts) =>
-        checkDouyinStatus({
+      status: async (opts) =>
+        (await loadDouyinCdp()).checkDouyinStatus({
           authDir: douyinAuthDirFor(opts?.accountId),
         }),
     },
@@ -3950,14 +3954,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               //   可见作品就是解析不出)→ 回落登录态 detail 接口(.auth/douyin/<accountId>,
               //   页内 fetch 借 cookie);③ 图集识别 → { kind:"image-album" }(runner 诚实跳过)。
               // [gate-F7 插装点①] 两条路各走各的 channel 限流(iesdouyin / creator-center),注真单例。
-              fetchVideoUrl: (c, awemeId) =>
-                fetchDouyinVideoSource({
+              fetchVideoUrl: async (c, awemeId) =>
+                (await loadDouyinCdp()).fetchDouyinVideoSource({
                   awemeId,
                   authDir: douyinAuthDirFor(c.accountId), // [T-136] 按当前号登录态
                   gateway: douyinGateway,
                 }),
               // 抽音频 bytes(ffmpeg)—— host 绑真 streamAudioFromVideo(默认 child_process.spawn)。
-              streamAudio: (_c, playUrl) => streamAudioFromVideo(playUrl),
+              streamAudio: async (_c, playUrl) =>
+                (await loadDouyinCdp()).streamAudioFromVideo(playUrl),
               // 解析用户配的 ASR model(transcribe.audio;未配抛 TranscribeConfigError → 整任务停)。
               resolveTranscribeSpec: (c) =>
                 resolveTranscribeSpecFn(c, {
@@ -4295,7 +4300,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   registerBuiltinExecutors(executorRegistry, {
     videoDownloadChromium: async (onProgress) => {
       onProgress?.("首次渲染需下载 Chromium(~340MB),下载中…(之后共享缓存,秒过)");
-      await ensureChromiumInstalled();
+      await (await loadDouyinCdp()).ensureChromiumInstalled();
       onProgress?.("Chromium 下载完成");
     },
   });
@@ -4799,11 +4804,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         records: CommentRecord[],
       ): Promise<number> => {
         const capturedAt = deps.now();
-        const result = await ingestComments(awemeId, records, {
-          externalSourceId,
-          capturedAt,
-          ports: commentPorts,
-        });
+        const result = await (await loadDouyinCdp()).ingestComments(
+          awemeId,
+          records,
+          {
+            externalSourceId,
+            capturedAt,
+            ports: commentPorts,
+          },
+        );
         return result.written;
       };
       // [T-177 增量化] 评论 watermark 只读端口:按 awemeId 反查库里该作品已知评论的 externalId 集
@@ -4844,7 +4853,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           total: 1,
           message: "抓取该作品评论",
         });
-        const records = await fetchDouyinComments(
+        const records = await (await loadDouyinCdp()).fetchDouyinComments(
           {
             awemeId: single,
             authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
@@ -4919,7 +4928,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
       // [T-232 额度断点] 抓取层撞 DouyinCooldownActiveError → 立即停剩余作品,带回部分结果
       //   (truncated=true);不再逐作品白撞冷却。
-      const batch = await fetchDouyinCommentsForWorks(
+      const batch = await (await loadDouyinCdp()).fetchDouyinCommentsForWorks(
         awemeIds,
         {
           authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
@@ -4988,7 +4997,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // [gate-F7 插装点⑤] creator-center 导出限流(注真单例)。
         // [T-152] 阶段②:导出明细 xlsx(点「刷新数据」+「导出数据」,慢阶段)。
         report({ stage: "export", processed: 0, total: null, message: "导出作品明细数据" });
-        const bytes = await fetchDouyinWorkListExport(
+        const bytes = await (await loadDouyinCdp()).fetchDouyinWorkListExport(
           { authDir: douyinAuthDirFor(ctx.accountId) }, // [T-136] 按当前号登录态
           { gateway: douyinGateway },
         );
@@ -5204,8 +5213,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               platformStatus: p.platformStatus,
             })),
           // [gate-F7] iesdouyin channel 限流:注真网关单例(与逐字稿取直链同一 channel)。
-          fetchVideoUrl: (awemeId) =>
-            fetchDouyinVideoUrl(awemeId, {
+          fetchVideoUrl: async (awemeId) =>
+            (await loadDouyinCdp()).fetchDouyinVideoUrl(awemeId, {
               fetch: (...args) => fetch(...args),
               gateway: douyinGateway,
             }),
@@ -5458,7 +5467,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const result = await collectBenchmark(ctx, {
         listEnabledSources: (c) => benchmarkService.listEnabledSources(c),
         fetchSourcePosts: async (c, source) => {
-          const works = await fetchDouyinUserPosts(
+          const works = await (await loadDouyinCdp()).fetchDouyinUserPosts(
             {
               authDir: douyinAuthDirFor(c.accountId), // [T-136] 按当前号登录态指纹
               secUid: source.externalAccountId,
@@ -5503,7 +5512,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             return [...positioningKeywords, ...envKeywords];
           },
           searchVideos: async (c, keyword) => {
-            const videos = await fetchDouyinSearchVideos(
+            const videos = await (await loadDouyinCdp()).fetchDouyinSearchVideos(
               {
                 authDir: douyinAuthDirFor(c.accountId), // [T-136] 按当前号登录态
                 keyword,
@@ -5705,7 +5714,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
       // ① 拉本人收藏夹列表(未登录在此抛 DouyinNotLoggedInError → needs_reconnect;验证码返空)。
       report({ stage: "favorites", processed: 0, total: folders.length, message: "拉取抖音收藏夹列表" });
-      const remoteFolders = await fetchDouyinCollectsFolders({
+      const remoteFolders = await (await loadDouyinCdp()).fetchDouyinCollectsFolders({
         authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
         gateway: douyinGateway,
       });
@@ -5745,7 +5754,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           message: `采集收藏夹「${folder.name}」`,
         });
         try {
-          const videos = await fetchDouyinCollectsVideos({
+          const videos = await (await loadDouyinCdp()).fetchDouyinCollectsVideos({
             authDir: douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
             collectsId: folder.collectsId,
             maxItems: 50,
@@ -5815,13 +5824,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // 取逐字稿:复用与 transcribe-runner 同一套原语(iesdouyin 直链 → ffmpeg 抽音 → 云 ASR)。
           //   图集/无口播 → 返 null(runner 诚实 skip)。[T-136] 按当前号登录态。
           transcribeOne: async (c, awemeId) => {
-            const src = await fetchDouyinVideoSource({
+            const cdp = await loadDouyinCdp();
+            const src = await cdp.fetchDouyinVideoSource({
               awemeId,
               authDir: douyinAuthDirFor(c.accountId),
               gateway: douyinGateway,
             });
             if (src.kind === "image-album") return null;
-            const audioBytes = await streamAudioFromVideo(src.playUrl);
+            const audioBytes = await cdp.streamAudioFromVideo(src.playUrl);
             const spec = await resolveTranscribeSpecFn(c, {
               getModelConfig: (cc, cap) => settingsService.getModelConfig(cc, cap),
               env: process.env,
@@ -9175,7 +9185,38 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   };
 }
 
+// [T-326 ENG-H02] `next build` 绝不允许触碰持久层。build(预渲染/收集页面数据)是产编译
+// 产物的阶段,不是运行时 —— 而 buildPersistence() 一旦执行就会:建 DB 连接 + 跑迁移、seed
+// canonical user/课程 + 回填 tag、sweep 僵尸 job_run/ai_task/沙箱、解析 master key(无 keychain
+// 即降级告警)、startScheduler 起 node-cron(审计实录:普通 web build 日志已出现上述全部副作
+// 用;且多个预渲染 worker 进程并发各建一个连接,还违反 PGlite 单写者)。
+//
+// 信号选择:`process.env.NEXT_PHASE === "phase-production-build"`。依据(Next 16.2.9 实查):
+//   - build 主进程在 `next/dist/build/index.js` 里显式 `process.env.NEXT_PHASE =
+//     PHASE_PRODUCTION_BUILD`,预渲染 worker 继承该 env;
+//   - Next 自己的运行时代码(`server/web/globals.js`、`server/lib/router-utils/
+//     instrumentation-globals.external.js`)判 build 阶段用的正是同一字符串 —— 官方语义信号,
+//     非私约猜测。运行时(next dev / next start / 桌面 sidecar)NEXT_PHASE 不为该值,行为不变。
+//
+// 守卫落点 = 组合根**唯一入口** getBundle():所有 transport/service getter(getProjects/
+// getIdentityService/getChatRuntime/…)都经它,buildPersistence 里的 createConfiguredDb/
+// seed/sweep/startScheduler 因此一个都不会执行 —— 不是只挡一半。同步 throw(先于单例缓存
+// 赋值),不会把 rejected promise 钉进 globalThis。
+export class PersistenceUnavailableDuringBuildError extends Error {
+  constructor() {
+    super(
+      "PersistenceUnavailableDuringBuildError: next build(phase-production-build)阶段" +
+        "禁止初始化持久层(DB 连接/seed/sweep/cron 都是运行时副作用)。预渲染页面不应读取" +
+        "持久层数据;该数据属于请求期动态渲染。",
+    );
+    this.name = "PersistenceUnavailableDuringBuildError";
+  }
+}
+
 function getBundle(): Promise<PersistenceBundle> {
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    throw new PersistenceUnavailableDuringBuildError();
+  }
   if (!globalForPersistence.__creatorosPersistence) {
     globalForPersistence.__creatorosPersistence = buildPersistence();
   }
