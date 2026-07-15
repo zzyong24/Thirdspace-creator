@@ -149,7 +149,19 @@ describe("实体 create/update/delete 写搜索索引(全局搜索可用)", () =
 
   it("5. 发布作品索引 entity_type='video',video 作品 tab 能搜到(tab 对齐)", async () => {
     const owner = ctx(canonicalDataset.user.id);
-    const outputId = canonicalDataset.contentOutputs[0]!.id;
+    // [T-326 DATA-H03] createPublication 有归属门,fixture output id 在 seeded 库不存在
+    //   会被正确拒绝 —— 走真 op 链现建 project + output。
+    const projectId = await createProject(owner, "视频tab探针项目", "简介");
+    const outputCreated = (await compositeTransport.request(
+      ep("projects.outputs.create"),
+      {
+        params: { projectId },
+        query: undefined,
+        body: { title: "视频tab探针作品" },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+    const outputId = outputCreated.data.id;
 
     // 建 publication(draft)→ transition published。发布索引 title=`${platform} 发布`。
     const created = (await compositeTransport.request(

@@ -26,8 +26,30 @@ beforeEach(() => {
   __resetPersistenceForTests();
 });
 
-// A seeded content output owned by the canonical user.
-const OUTPUT_ID = canonicalDataset.contentOutputs[0]!.id;
+// [T-326 DATA-H03] createPublication 现在有 output 归属门(assertOutputOwned 经
+//   resolveOutputOwner 查真实 projects 库)—— fixture 数据集里的 output id 在 seeded
+//   PGlite 里不存在,会被安全门正确拒绝。测试改走真 op 链现建 project + output。
+async function createRealOutput(owner: RequestContext): Promise<string> {
+  const proj = (await compositeTransport.request(
+    ep("projects.create"),
+    {
+      params: undefined,
+      query: undefined,
+      body: { title: "publishing 集成测试项目" },
+    } as never,
+    owner,
+  )) as { data: { id: string } };
+  const output = (await compositeTransport.request(
+    ep("projects.outputs.create"),
+    {
+      params: { projectId: proj.data.id },
+      query: undefined,
+      body: { title: "publishing 集成测试作品" },
+    } as never,
+    owner,
+  )) as { data: { id: string } };
+  return output.data.id;
+}
 
 describe("publishing ops registered in the composite transport", () => {
   it("the 6 publishing op ids are persistence-backed (not the mock)", async () => {
@@ -44,6 +66,7 @@ describe("publishing ops registered in the composite transport", () => {
 
   it("create → list → revise → transition(published) round-trips over the shared store", async () => {
     const owner = ctx(canonicalDataset.user.id);
+    const OUTPUT_ID = await createRealOutput(owner);
 
     // POST create a publication for the seeded output (draft, auto-mints rev-1).
     const created = (await compositeTransport.request(
@@ -128,6 +151,7 @@ describe("publishing ops registered in the composite transport", () => {
   // published publication(revision 补铸,幂等)—— 稿面/排期「登记已发布」的服务端链路。
   it("outputs.publications.register 落 published+external_id 且幂等(同 external key 返回既有行)", async () => {
     const owner = ctx(canonicalDataset.user.id);
+    const OUTPUT_ID = await createRealOutput(owner);
     const registered = (await compositeTransport.request(
       ep("outputs.publications.register"),
       {
