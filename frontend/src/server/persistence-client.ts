@@ -1842,6 +1842,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // Analytics cross-module join. The project-ownership gate lives in Projects.
     listOutputIdsByProject: (ctx, projectId) =>
       projectsService.listOutputIdsByProject(ctx, projectId),
+    // [T-321 治本] 登记已发布 → 属主项目跃迁到已发布态(getProjectIdByOutput + markPublished,
+    //   经公共 service,不跨模块直连 repo)。best-effort:失败在 service 内被吞,不阻断登记。
+    markOwnerProjectPublished: async (ctx, outputId) => {
+      const projectId = await projectsService.getProjectIdByOutput(ctx, outputId);
+      if (projectId) await projectsService.markPublished(ctx, projectId);
+    },
   });
   const publishing = createPublishingTransport(() => publishingService);
 
@@ -1933,6 +1939,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       projects: {
         ensureImportedProject: (ctx, input) =>
           projectsService.ensureImportedProject(ctx, input),
+        // [T-321] 日拉去重主键 = publications.externalId → 反查属主项目 → merge 更新(不新建
+        //   重复项目)。让用户手建 manual 项目「登记已发布」绑定的作品被日拉命中合并,而不是
+        //   另建一条 imported 重复。merge 保持原 source(不翻 imported → 不触发 reconstruct
+        //   覆盖用户手写内容),只补真实发布数据 + 跃迁 stage 显已发布。
+        getProjectIdByOutput: (ctx, outputId) =>
+          projectsService.getProjectIdByOutput(ctx, outputId),
+        mergePublishedWork: (ctx, projectId, input) =>
+          projectsService.mergePublishedWork(ctx, projectId, input),
       },
       analytics: {
         appendSnapshot: (ctx, input) =>

@@ -90,6 +90,13 @@ export interface ServiceDeps {
     ctx: RequestContext,
     projectId: string,
   ) => Promise<string[]>;
+  // [T-321 治本] 「登记已发布」(register)成功落 published publication 后,把该 output 的
+  //   属主项目跃迁到「已发布/复盘」态(projectsService.getProjectIdByOutput + markPublished),
+  //   让用户绑定后立刻显已发布(不用等日拉)。可选、best-effort:未注入或失败绝不阻断登记主流程。
+  markOwnerProjectPublished?: (
+    ctx: RequestContext,
+    outputId: string,
+  ) => Promise<void>;
 }
 
 export interface PublishingService {
@@ -212,6 +219,9 @@ export interface PublishingService {
   // [T-200] 认领存量无号 publications 给 ctx.accountId(修采集导入作品在无号 ctx 下落的 null 号)。
   //   幂等;ctx.accountId 缺省 → no-op(返回 0)。返回改动行数(诊断用)。
   claimOrphanPublications(ctx: RequestContext): Promise<number>;
+  // [T-321 治本] register(登记已发布)成功后跃迁该 output 属主项目到已发布态(best-effort,
+  //   经注入的 markOwnerProjectPublished 端口;未注入/失败 → 静默 no-op,绝不阻断登记)。
+  markOwnerPublished(ctx: RequestContext, outputId: string): Promise<void>;
 }
 
 export function createPublishingService(deps: ServiceDeps): PublishingService {
@@ -229,6 +239,17 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     async claimOrphanPublications(ctx) {
       if (!ctx.accountId) return 0; // 未选号:无号可认领
       return repoFor(ctx).claimOrphanPublications(ctx.accountId);
+    },
+
+    async markOwnerPublished(ctx, outputId) {
+      // [T-321 治本] best-effort:属主项目跃迁到已发布态。未注入端口或任何失败都吞掉
+      //   —— 登记发布(publication)已落是真的,项目 stage 是派生显示,失败不能回滚发布事实。
+      if (!deps.markOwnerProjectPublished || !outputId) return;
+      try {
+        await deps.markOwnerProjectPublished(ctx, outputId);
+      } catch {
+        // 静默降级:不阻断登记主流程(与 SPEC §11 post-commit 副作用不回滚同款)。
+      }
     },
 
     async listPublications(ctx, outputId, pagination) {

@@ -177,6 +177,9 @@ export function createPublishingTransport(
             });
             row = await service.getPublication(ctx, row.id);
           }
+          // [T-321 治本] 登记已发布顺带把属主项目跃迁到「已发布/复盘」态,绑定后立刻显已发布
+          //   (不用等日拉)。best-effort:内部吞错,绝不阻断登记主流程。
+          await service.markOwnerPublished(ctx, p.outputId ?? "");
           return { data: toPublicationResource(row), meta: { requestId } };
         }
         case "publications.get": {

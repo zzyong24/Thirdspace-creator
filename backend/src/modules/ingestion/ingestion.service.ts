@@ -40,7 +40,9 @@ export interface IngestionPublishingPort {
   resolvePublication(
     ctx: RequestContext,
     ref: { platform: string; externalId: string },
-  ): Promise<{ id: string } | null>;
+    // [T-321] 返回也带 contentOutputId —— 日拉去重用它反查属主项目(某项目「登记已发布」
+    //   把 aweme_id 落 publications.externalId,contentOutputId 指向该项目的 content_output)。
+  ): Promise<{ id: string; contentOutputId?: string | null } | null>;
   // [T-177 增量化] 列出该平台库里已知作品的 externalId(=aweme_id)集,供 refreshDouyin 传给
   //   fetch 做翻页 early-stop(某页作品全已知 → 停翻页)。可选 —— 未注入时 refreshDouyin 不传
   //   knownAwemeIds,fetch 退化为原全量滚动(向后兼容旧最小组合/旧 fake,零回归)。
@@ -79,6 +81,26 @@ export interface IngestionProjectsPort {
       publishedAt?: string;
     },
   ): Promise<{ projectId: string; outputId: string; created: boolean }>;
+  // [T-321] 反查一个 content_output 的属主项目 id(判「该作品已绑定到某项目」)。可选 ——
+  //   未注入时 ensureImportedProject 退回原「先 create imported 后 resolve」路径(旧组合根不破)。
+  getProjectIdByOutput?(
+    ctx: RequestContext,
+    outputId: string,
+  ): Promise<string | null>;
+  // [T-321] 命中已绑定属主项目 → 合并日拉真实发布数据(不新建重复项目 + 不覆盖用户手写内容 +
+  //   跃迁 stage 显已发布)。可选 —— 与 getProjectIdByOutput 成对注入才启用 merge 去重路径。
+  mergePublishedWork?(
+    ctx: RequestContext,
+    projectId: string,
+    input: {
+      title?: string;
+      brief?: string;
+      platform: string;
+      externalId: string;
+      shareUrl?: string;
+      publishedAt?: string;
+    },
+  ): Promise<unknown>;
 }
 
 export interface IngestionAnalyticsPort {
@@ -518,6 +540,43 @@ export function createIngestionService(args: {
     async ensureImportedProject(ctx, input) {
       // 数据底座(SPEC §1.3)。projects 端口未注入(旧最小组合)→ 返回 null,调用方回退。
       if (!ports.projects) return null;
+      // [T-321] 主去重键 = publications.externalId(不是 projects.platform_ref)。先按
+      //   (platform, externalId) 查既有 publication:命中即该作品已绑定到某属主项目
+      //   (用户手建 manual 项目「登记已发布」把 aweme_id 落这里,或上一轮日拉建的 imported
+      //   项目)。用它反查属主 → merge 更新(不新建重复)。这样 manual 项目也能被再次命中而
+      //   不重建(旧 findImportedByRef 只认 source='imported',对 manual 视而不见 → 建重复)。
+      const boundPub = await ports.publishing.resolvePublication(ctx, {
+        platform: input.platform,
+        externalId: input.externalId,
+      });
+      if (
+        boundPub?.contentOutputId &&
+        ports.projects.getProjectIdByOutput &&
+        ports.projects.mergePublishedWork
+      ) {
+        const ownerProjectId = await ports.projects.getProjectIdByOutput(
+          ctx,
+          boundPub.contentOutputId,
+        );
+        if (ownerProjectId) {
+          // 命中已绑定属主项目 → 合并更新(补真实发布数据 + 显已发布,不覆盖用户手写内容,
+          //   保持原 source)。**不 create 新项目**。幂等:重复日拉稳定落同一项目。
+          await ports.projects.mergePublishedWork(ctx, ownerProjectId, {
+            title: input.title,
+            brief: input.brief,
+            platform: input.platform,
+            externalId: input.externalId,
+            shareUrl: input.shareUrl,
+            publishedAt: input.publishedAt,
+          });
+          return {
+            projectId: ownerProjectId,
+            outputId: boundPub.contentOutputId,
+            publicationId: boundPub.id,
+          };
+        }
+      }
+      // 未命中既有 publication(真·纯导入新作品)→ 原「create imported + 建 publication」路径不变。
       const ensured = await ports.projects.ensureImportedProject(ctx, {
         title: input.title,
         brief: input.brief, // [T-089] 文案全文透传(新建项目落 brief)
@@ -526,13 +585,10 @@ export function createIngestionService(args: {
         shareUrl: input.shareUrl,
         publishedAt: input.publishedAt,
       });
-      // 确保对应 publication 存在(external_id=externalId),metrics 才能命中。先查既有,
-      // 无则经 publishing 端口建(端口未提供 create 时退回 resolve,缺则报错 —— 不静默)。
-      const existing = await ports.publishing.resolvePublication(ctx, {
-        platform: input.platform,
-        externalId: input.externalId,
-      });
-      let publicationId = existing?.id ?? null;
+      // 确保对应 publication 存在(external_id=externalId),metrics 才能命中。既有查询
+      // 已在上方 boundPub 完成(复用,不重复查);无则经 publishing 端口建(端口未提供 create
+      // 时退回 resolve,缺则报错 —— 不静默)。
+      let publicationId = boundPub?.id ?? null;
       if (!publicationId) {
         if (!ports.publishing.createImportedPublication) {
           throw new Error(

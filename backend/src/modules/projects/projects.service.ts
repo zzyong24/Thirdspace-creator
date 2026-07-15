@@ -194,6 +194,36 @@ export interface ProjectsService {
       publishedAt?: string;
     },
   ): Promise<EnsureImportedProjectResult>;
+  // [T-321] 反查一个 content_output 的属主项目 id(经 repo.getOutput 的所有权门 join)。
+  //   ingestion 日拉去重用它:resolvePublication 命中的 publication → contentOutputId →
+  //   属主项目,判定「该作品已绑定到某项目」。找不到(越权/不存在)→ null(诚实,不硬造)。
+  getProjectIdByOutput(
+    ctx: RequestContext,
+    outputId: string,
+  ): Promise<string | null>;
+  // [T-321] 幂等把项目跃迁到「已发布/复盘」态(currentStage=review、前置阶段 completed、
+  //   全阶段进度 100 → recomputeProgress=100),复用 createProject 的 imported 阶段布局
+  //   (:701-726)。**不改 source**(manual 项目登记发布后仍 manual,绝不因此被 reconstruct
+  //   auto-fill 吃到覆盖用户手写内容;见 mergePublishedWork 决策注释)。归档项目只读 → no-op。
+  markPublished(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
+  // [T-321] 日拉命中「已绑定链接的已发布项目」→ 合并更新(不新建重复项目)。把日拉拿到的
+  //   真实发布数据补进属主项目:title/brief 仅在有变化时更新、platform_ref 落 aweme 引用
+  //   (供以后去重 + 复盘态)、并 markPublished 跃迁 stage。**保持原 source 不翻 imported**
+  //   (核心:manual 属主项目若翻 imported 会被 reconstruct-runner 断言吃到 → AI 重建逐字稿/
+  //   研究策划覆盖用户手写内容;而去重已由 publications.externalId 主键承担,manual 也能再命中,
+  //   故不需要翻 source)。幂等:同一 awemeId 多次日拉稳定更新同一项目。归档 → no-op 返回原行。
+  mergePublishedWork(
+    ctx: RequestContext,
+    projectId: string,
+    input: {
+      title?: string;
+      brief?: string;
+      platform: string;
+      externalId: string;
+      shareUrl?: string;
+      publishedAt?: string;
+    },
+  ): Promise<ProjectRow>;
   // [T-073] 平台侧可见性同步:按 (platform, externalId) 找 imported 项目,把抖音端
   // 「仅自己可见/已隐藏」写进 platform_ref.hidden(jsonb,merge 不丢既有键)。幂等;
   // 找不到(该作品未导入)诚实返 null。采集 self.detail 落库路径经此同步。
@@ -785,6 +815,100 @@ export function createProjectsService(
         updatedAt: deps.now(),
       });
       return { projectId: project.id, outputId: output.id, created: true };
+    },
+
+    async getProjectIdByOutput(ctx, outputId) {
+      // [T-321] 经 repo.getOutput(所有权门 join output→project)拿属主 projectId。
+      //   越权/不存在 → OwnershipError,吞成 null(诚实降级,调用方据此回退到 create 路径)。
+      try {
+        const output = await repo.getOutput(ctx, outputId);
+        return output.projectId ?? null;
+      } catch {
+        return null;
+      }
+    },
+
+    async markPublished(ctx, projectId) {
+      // [T-321] 幂等跃迁到「已发布/复盘」态,复用 createProject 的 imported 阶段布局
+      //   (前置阶段 completed、review in_progress、全阶段进度 100 → recomputeProgress=100)。
+      //   不改 source:manual 项目登记发布后仍 manual(不被 reconstruct/transcribe auto-fill 吃到)。
+      const project = await repo.get(ctx, projectId);
+      if (project.status === "archived") return project; // 归档只读:不复活
+      const ts = deps.now();
+      const stages = await repo.listStages(ctx, projectId);
+      const reviewIdx = PROJECT_STAGES.indexOf("review");
+      for (const row of stages) {
+        const idx = PROJECT_STAGES.indexOf(row.stage as ProjectStageName);
+        const desiredStatus: StageStatus =
+          row.stage === "review"
+            ? "in_progress"
+            : idx < reviewIdx
+              ? "completed"
+              : "pending";
+        // 已是目标态 + 满进度 → 跳过写(幂等,少写)。
+        if (row.status === desiredStatus && row.progressPct === 100) continue;
+        await repo.updateStage(ctx, row.id, {
+          status: desiredStatus,
+          progressPct: 100,
+          startedAt:
+            row.startedAt ??
+            (desiredStatus === "pending" ? null : ts),
+          completedAt:
+            desiredStatus === "completed" ? (row.completedAt ?? ts) : row.completedAt,
+          updatedAt: ts,
+        });
+      }
+      const refreshed = await repo.listStages(ctx, projectId);
+      return repo.updateProjectRow(ctx, projectId, {
+        currentStage: "review",
+        progressPct: recomputeProgress(refreshed),
+        updatedAt: ts,
+      });
+    },
+
+    async mergePublishedWork(ctx, projectId, input) {
+      // [T-321] 合并日拉真实发布数据进属主项目(不新建重复)。决策:**保持原 source**
+      //   —— 若把 manual 属主翻 imported,reconstruct-runner(断言仅 imported)会把该项目当
+      //   历史作品 AI 重建逐字稿/研究/策划,覆盖用户手写内容(见 reconstruct-runner.ts:57 +
+      //   调研 §④);而去重已由 ingestion 端 publications.externalId 主键承担(manual 也能被
+      //   resolvePublication 再命中),不需要翻 source。故这里只**补充**真实数据 + 显已发布。
+      const current = await repo.get(ctx, projectId);
+      if (current.status === "archived") return current; // 归档只读:不动
+      const ts = deps.now();
+      const set: Partial<ProjectRow> = {};
+      // 标题/简介仅在有变化时更新(绝不用空值抹掉用户手写内容)。
+      if (
+        input.title !== undefined &&
+        input.title.length > 0 &&
+        input.title !== current.title
+      ) {
+        set.title = input.title;
+      }
+      if (
+        input.brief !== undefined &&
+        input.brief.length > 0 &&
+        input.brief !== current.brief
+      ) {
+        set.brief = input.brief;
+      }
+      // platform_ref 落 aweme 引用(供以后去重 + 复盘态);merge 保留既有键(如 hidden)。
+      const existingRef = normalizePlatformRef(current.platformRef);
+      const nextRef = normalizePlatformRef({
+        platform: input.platform,
+        externalId: input.externalId,
+        shareUrl: input.shareUrl ?? existingRef.shareUrl,
+        publishedAt: input.publishedAt ?? existingRef.publishedAt,
+      });
+      if (existingRef.hidden === true) nextRef.hidden = true; // 不丢可见性标
+      if (JSON.stringify(existingRef) !== JSON.stringify(nextRef)) {
+        set.platformRef = nextRef;
+      }
+      if (Object.keys(set).length > 0) {
+        set.updatedAt = ts;
+        await repo.updateProjectRow(ctx, projectId, set);
+      }
+      // stage 跃迁到已发布(幂等)。**不改 source**。
+      return service.markPublished(ctx, projectId);
     },
 
     async setImportedProjectHidden(ctx, input) {
