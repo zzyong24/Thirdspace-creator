@@ -341,6 +341,11 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     },
 
     async listPublications(ctx, outputId, pagination) {
+      // [T-332 S6 · §4.5 父锚号一致性门] 跨号/跨用户/不存在的 outputId → 404 同貌,
+      //   与 projects.outputs.list(经 requireProject)语义一致 —— 此前只有 strict 行过滤
+      //   (空 200),「B 号摸 A 号成片的发布列表」会得到一个假空态而非深链 404
+      //   (S6 双号验收暴露)。建侧 createPublication/register 的 DATA-H03 门是同一端口。
+      await assertOutputOwned(ctx, outputId);
       return repoFor(ctx).listPublicationsByOutput(outputId, pagination);
     },
 
